@@ -1,0 +1,264 @@
+{<section id="${general_prefix}.global" >}
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS
+   DEFINE gwin_curr  ui.Window
+   DEFINE gfrm_curr  ui.Form
+   DEFINE g_schedule RECORD
+      cycle    LIKE type_t.chr1,
+      gzpa002  LIKE gzpa_t.gzpa002, #排程說明
+      gzpa003  LIKE gzpa_t.gzpa003, #排程執行週期 (D:每天)
+      gzpa004  LIKE gzpa_t.gzpa004, #排程起始時間
+      gzpa005  LIKE gzpa_t.gzpa005, #排程結束時間
+      gzpa008  LIKE gzpa_t.gzpa008, #執行結果處理
+      gzpa009  LIKE gzpa_t.gzpa009  #執行結果郵件通知人
+                    END RECORD
+END GLOBALS
+ 
+{<Module define>}
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+
+{<section id="${general_prefix}.main" >}
+MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("${general_module}","${jobmode}")
+
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL ${general_prefix}_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_${general_prefix} WITH FORM cl_ap_formpath("${general_module}",g_code)
+
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+
+      #程式初始化
+      CALL ${general_prefix}_init()
+
+      #進入選單 Menu (="N")
+      CALL ${general_prefix}_ui_dialog()
+
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+   END IF
+
+   CALL cl_ap_exitprogram("0")
+END MAIN
+{</section>}
+
+{<section id="${general_prefix}.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION ${general_prefix}_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("cycle","75")
+   CALL cl_set_combo_scc("gzpa003","80")
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+
+{<section id="${general_prefix}.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ${general_prefix}_ui_dialog()
+   {<Local define>}
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+
+         ON ACTION qbe_select
+#saki       CALL cl_qbe_select()
+
+         ON ACTION qbe_save
+#saki       CALL cl_qbe_save()
+
+         ON ACTION accept
+            ACCEPT DIALOG
+
+         ON ACTION cancel
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+      END DIALOG
+
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+
+      LET ls_js = util.JSON.stringify(lc_param)
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         CASE
+            WHEN g_schedule.cycle = 0
+               CALL ${general_prefix}_process(ls_js)
+            WHEN g_schedule.cycle = 1
+               LET ls_js = ${general_prefix}_transfer_argv(ls_js)
+               CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.cycle = 2
+               DISPLAY "INFO:寫入排程"
+         END CASE
+      END IF
+   END WHILE
+
+END FUNCTION
+
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION ${general_prefix}_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+
+   CALL util.JSON.parse(ls_js,la_param)
+
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+
+#+ 資料處理
+PRIVATE FUNCTION ${general_prefix}_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+
+   CALL util.JSON.parse(ls_js,lc_param)
+
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+
+      CALL cl_progress_bar(li_count)
+   END IF
+
+   #主SQL及相關FOREACH前置處理
+#  DECLARE ${general_prefix}_process_cs CURSOR FROM ls_sql
+#  FOREACH ${general_prefix}_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+
+   IF g_bgjob = "N" THEN
+      CALL cl_progress_bar_close()
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+   ELSE
+      IF g_schedule.cycle = 1 THEN 
+         IF cl_chk_process_exists(g_parentsession,g_account) THEN
+            CALL cl_ask_confirm("std-00012") RETURNING li_stus
+         END IF
+      END IF
+
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+
+#add-point:自定義元件(Function)
+{<section id="${general_prefix}.other_function" >}
+{<point name="other.function"/>}
+{</section>}
+#end add-point
+

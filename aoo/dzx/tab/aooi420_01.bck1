@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi420_01" module="aoo" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01258" crtdt="2013-08-16 10:53:55" modid="02294" moddt="2016-09-26 14:27:56" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="行事曆產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="oogc001,oogc001_desc(chr80),oogc002,oogc015,eyear(num5),bdate(dat),edate(dat),oogc004,oogc004_desc(chr80),oogc009,type(chr500),season(chr500),week(chr500),mw1b(num5),mw1e(num5),mw2b(num5),mw2e(num5),mw3b(num5),mw3e(num5),mw4b(num5),mw4e(num5),mw5b(num5),mw5e(num5)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aoo" filename="aooi420_01" method="dialog">
+    <section id="input">
+      <input id="head" field="oogc001,oogc002,oogc015,eyear,bdate,edate,oogc004,oogc009,type,season,week,mw1b,mw1e,mw2b,mw2e,mw3b,mw3e,mw4b,mw4e,mw5b,mw5e"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="oogc001">
+        <after>
+          <reference field="oogc001_desc" ref_field="oogc_t.oogc001" map_field="oogcent,oogc001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+      </column>
+      <column id="oogc001_desc"/>
+      <column id="oogc002" type="S" default="2" def_scc="25"/>
+      <column id="oogc015"/>
+      <column id="eyear"/>
+      <column id="bdate"/>
+      <column id="edate"/>
+      <column id="oogc004">
+        <after>
+          <reference field="oogc004_desc" ref_field="oogc004" map_field="oogc004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;6&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oogc004_desc"/>
+      <column id="oogc009">
+        <after>
+          <check id="range" bt="0.00" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="type"/>
+      <column id="season" type="S" default="Y"/>
+      <column id="week" type="S" default="Y"/>
+      <column id="mw1b"/>
+      <column id="mw1e"/>
+      <column id="mw2b"/>
+      <column id="mw2e"/>
+      <column id="mw3b"/>
+      <column id="mw3e"/>
+      <column id="mw4b"/>
+      <column id="mw4e"/>
+      <column id="mw5b"/>
+      <column id="mw5e"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="oogc_t" pk="oogc001,oogc002,oogc003,oogc015">
+      <sql id="forupd_sql" type="sql" query="SELECT oogc001,&apos;&apos;,oogc002,oogc015,&apos;&apos;,&apos;&apos;,&apos;&apos;,oogc004,&apos;&apos;,oogc009,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM oogc_t WHERE oogcent= ? AND oogc001=? AND oogc002=? AND oogc003=? AND oogc015=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="oogc001,oogc002,oogc003,oogc015"/>
+    </head>
+  </dataset>
+</assembly>
+

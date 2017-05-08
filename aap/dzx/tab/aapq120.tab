@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapq120" module="aap" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="05016" crtdt="2014-12-30 09:41:45" modid="08171" moddt="2016-11-09 11:03:10" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="供應商發票付款查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isamseq,isamcomp,isam002,isam002_desc(chr500),isamdocno,isam011,isam009,isam010,apcadocdt,isam014,isam023,isam024,isam025,isam036,isam050,l_amt1(num20_6),l_amt2(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isamseq(b_isamseq),isamcomp(b_isamcomp),isam002(b_isam002),isam002_desc(b_isam002_desc),isamdocno(b_isamdocno),isam011(b_isam011),isam009(b_isam009),isam010(b_isam010),apcadocdt(b_apcadocdt),isam014(b_isam014),isam023(b_isam023),isam024(b_isam024),isam025(b_isam025),isam036(b_isam036),isam050(b_isam050),l_amt1(l_amt1),l_amt2(l_amt2)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapq120" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isamseq,isamcomp,isam002,isam002_desc,isamdocno,isam011,isam009,isam010,apcadocdt,isam014,isam023,isam024,isam025,isam036,isam050" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isamseq(b_isamseq),isamcomp(b_isamcomp),isam002(b_isam002),isamdocno(b_isamdocno),isam011(b_isam011),isam009(b_isam009),isam010(b_isam010),apcadocdt(b_apcadocdt),isam014(b_isam014),isam023(b_isam023),isam024(b_isam024),isam025(b_isam025),isam036(b_isam036),isam050(b_isam050)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isamseq"/>
+      <column id="isamcomp"/>
+      <column id="isam002">
+        <after/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="isam002_desc"/>
+      <column id="isamdocno">
+        <controlp form="q_isamdocno" state="c"/>
+      </column>
+      <column id="isam011"/>
+      <column id="isam009"/>
+      <column id="isam010">
+        <controlp form="q_isam010" state="c"/>
+      </column>
+      <column id="apcadocdt"/>
+      <column id="isam014">
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="isam023"/>
+      <column id="isam024"/>
+      <column id="isam025"/>
+      <column id="isam036" def_scc="9716"/>
+      <column id="isam050"/>
+      <column id="l_amt1"/>
+      <column id="l_amt2"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isam_t" page="1" linked="" pk="isamdocno,isamseq">
+      <sql id="b_fill_sql" query="SELECT isamseq,isamcomp,isam002,&apos;&apos;,isamdocno,isam011,isam009,isam010,&apos;&apos;,isam014,isam023,isam024,isam025,isam036,isam050,&apos;&apos;,&apos;&apos; FROM isam_t WHERE isament= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

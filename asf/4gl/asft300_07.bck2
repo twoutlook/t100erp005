@@ -1,0 +1,440 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asft300_07.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2015-07-30 15:11:26), PR版次:0003(2016-06-15 15:29:48)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000036
+#+ Filename...: asft300_07
+#+ Description: 拆件工單料號明細產生
+#+ Creator....: 01258(2015-07-30 12:01:07)
+#+ Modifier...: 01258 -SD/PR- 03079
+ 
+{</section>}
+ 
+{<section id="asft300_07.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160512-00016#14   2016/05/27 By ming     s_asft300_02_bom增加參數 
+#160601-00015#1    2016/06/15 By ming     1. asft300_07.4gl 中的函式asft300_07_gen_sfac() 定義的l_bmba要和s_asft300_02.4gl的r_bmba一樣
+#                                         2. 拆件式工單產生call s_asft300_02_bom的地方，保稅否傳工單單頭的保稅否sfaa072 
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_sfaa_m        RECORD
+       rd LIKE type_t.chr500
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_sfaadocno     LIKE sfaa_t.sfaadocno
+DEFINE g_inam          DYNAMIC ARRAY OF RECORD   #記錄產品特徵
+        inam001        LIKE inam_t.inam001,
+        inam002        LIKE inam_t.inam002,
+        inam004        LIKE inam_t.inam004
+                       END RECORD
+#end add-point
+ 
+DEFINE g_sfaa_m        type_g_sfaa_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asft300_07.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION asft300_07(--)
+   #add-point:input段變數傳入
+   p_sfaadocno,p_inam
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_sfaadocno     LIKE sfaa_t.sfaadocno
+   DEFINE p_inam          DYNAMIC ARRAY OF RECORD   #記錄產品特徵
+           inam001        LIKE inam_t.inam001,
+           inam002        LIKE inam_t.inam002,
+           inam004        LIKE inam_t.inam004
+                          END RECORD
+   DEFINE l_success       LIKE type_t.num5
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asft300_07 WITH FORM cl_ap_formpath("asf","asft300_07")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET g_sfaadocno = p_sfaadocno
+   LET g_inam = p_inam
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_sfaa_m.rd ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            LET g_sfaa_m.rd = '1' 
+            DISPLAY BY NAME g_sfaa_m.rd
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rd
+            #add-point:BEFORE FIELD rd name="input.b.rd"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rd
+            
+            #add-point:AFTER FIELD rd name="input.a.rd"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rd
+            #add-point:ON CHANGE rd name="input.g.rd"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.rd
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rd
+            #add-point:ON ACTION controlp INFIELD rd name="input.c.rd"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   IF g_sfaa_m.rd != '1' THEN 
+      CALL asft300_07_gen() RETURNING l_success
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asft300_07 
+   
+   #add-point:input段after input 
+   RETURN g_sfaa_m.rd
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft300_07.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="asft300_07.other_function" readonly="Y" >}
+
+#根据画面条件产生sfac资料
+PRIVATE FUNCTION asft300_07_gen()
+DEFINE r_success              LIKE type_t.num5
+DEFINE l_n                    LIKE type_t.num5
+                              
+   LET r_success = FALSE
+   SELECT COUNT(*) INTO l_n FROM sfac_t 
+    WHERE sfacent = g_enterprise AND sfacsite = g_site 
+      AND sfacdocno = g_sfaadocno
+   IF l_n > 0 THEN
+      IF cl_ask_confirm('asf-00478') THEN
+         DELETE FROM sfac_t 
+          WHERE sfacent = g_enterprise AND sfacsite = g_site
+            AND sfacdocno = g_sfaadocno          
+         IF NOT asft300_07_gen_sfac() THEN
+            RETURN r_success
+         END IF
+      END IF
+   ELSE
+      IF NOT asft300_07_gen_sfac() THEN
+         RETURN r_success
+      END IF
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION
+
+#根据BOM资料产生生产料号明细资料
+PRIVATE FUNCTION asft300_07_gen_sfac()
+DEFINE r_success              LIKE type_t.num5
+DEFINE l_i                    LIKE type_t.num5
+DEFINE l_j                    LIKE type_t.num5
+DEFINE l_k                    LIKE type_t.num5
+DEFINE l_bmba                 DYNAMIC ARRAY OF RECORD #回传数组
+       bmba001                LIKE bmba_t.bmba001,    #bom相关资料都可以通过回传的key值抓取
+       bmba002                LIKE bmba_t.bmba002,
+       bmba003                LIKE bmba_t.bmba003,
+       bmba004                LIKE bmba_t.bmba004,
+       bmba005                DATETIME YEAR TO SECOND,
+       bmba007                LIKE bmba_t.bmba007,
+       bmba008                LIKE bmba_t.bmba008, 
+       #160601-00015#1 20160615 add by ming -----(S) 
+       bmba035                LIKE bmba_t.bmba035, 
+       #160601-00015#1 20160615 add by ming -----(S) 
+       l_bmba011              LIKE bmba_t.bmba011,     #QPA 分子，对应于原始的主件料号
+       l_bmba012              LIKE bmba_t.bmba012,     #QPA 分母，对应于原始的主件料号
+       l_inam002              LIKE inam_t.inam002      #元件对应特征
+                              END RECORD
+DEFINE l_bmba_qty             DYNAMIC ARRAY OF RECORD #回传数组
+       bmba001                LIKE bmba_t.bmba001,    #bom相关资料都可以通过回传的key值抓取
+       bmba002                LIKE bmba_t.bmba002,
+       bmba003                LIKE bmba_t.bmba003,
+       bmba004                LIKE bmba_t.bmba004,
+       bmba005                DATETIME YEAR TO SECOND,
+       bmba007                LIKE bmba_t.bmba007,
+       bmba008                LIKE bmba_t.bmba008,
+       #160512-00016#14 20160528 add by ming -----(S) 
+       bmba035                LIKE bmba_t.bmba035,     #保稅否 
+       #160512-00016#14 20160528 add by ming -----(E) 
+       l_bmba011              LIKE bmba_t.bmba011,     #QPA 分子，对应于原始的主件料号
+       l_bmba012              LIKE bmba_t.bmba012,     #QPA 分母，对应于原始的主件料号
+       l_inam002              LIKE inam_t.inam002,     #元件对应特征
+       l_qty                  LIKE sfaa_t.sfaa012      #对应数量
+                              END RECORD
+DEFINE l_sql                  STRING
+DEFINE l_sfaa                 RECORD LIKE sfaa_t.*
+DEFINE l_type                 LIKE type_t.chr1
+DEFINE l_flag                 LIKE type_t.chr1
+DEFINE l_sfacseq              LIKE sfac_t.sfacseq
+DEFINE l_sfac003              LIKE sfac_t.sfac003
+DEFINE l_sfac004              LIKE sfac_t.sfac004
+DEFINE l_bmba005_1            LIKE ooff_t.ooff007
+DEFINE l_success              LIKE type_t.num5
+   
+   LET r_success = FALSE
+   SELECT * INTO l_sfaa.* FROM sfaa_t
+    WHERE sfaaent = g_enterprise AND sfaasite = g_site
+      AND sfaadocno = g_sfaadocno
+   IF g_sfaa_m.rd = '2' THEN
+      LET l_type = 'S'
+   END IF
+   IF g_sfaa_m.rd = '3' THEN
+      LET l_type = 'Y' 
+   END IF
+   IF g_inam.getLength() > 0 AND g_inam[1].inam004 > 0 THEN
+      FOR l_i = 1 TO g_inam.getLength() 
+         #160601-00015#1 20160615 modify by ming -----(S) 
+         ##160512-00016#14 20160527 modify by ming -----(S) 
+         ##不確定是否走保稅，所以不指定Y/N
+         ##CALL s_asft300_02_bom(0,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa013,1,1,l_sfaa.sfaa015,l_type,'',g_inam[l_i].inam002,'N') RETURNING l_bmba
+         #CALL s_asft300_02_bom(0,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa013,1,1,l_sfaa.sfaa015,l_type,'',g_inam[l_i].inam002,'N','') 
+         #     RETURNING l_bmba
+         ##160512-00016#14 20160527 modify by ming -----(E) 
+         #拆件式工單產生call s_asft300_02_bom的地方，保稅否傳工單單頭的保稅否sfaa072 
+         CALL s_asft300_02_bom(0,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa013,1,1,l_sfaa.sfaa015,l_type,'',g_inam[l_i].inam002,'N',l_sfaa.sfaa072) 
+              RETURNING l_bmba
+         #160601-00015#1 20160615 modify by ming -----(E) 
+         IF l_bmba_qty.getLength() = 0 THEN
+            FOR l_j = 1 TO l_bmba.getLength()
+               LET l_bmba_qty[l_j].bmba001    =  l_bmba[l_j].bmba001
+               LET l_bmba_qty[l_j].bmba002    =  l_bmba[l_j].bmba002  
+               LET l_bmba_qty[l_j].bmba003    =  l_bmba[l_j].bmba003  
+               LET l_bmba_qty[l_j].bmba004    =  l_bmba[l_j].bmba004  
+               LET l_bmba_qty[l_j].bmba005    =  l_bmba[l_j].bmba005  
+               LET l_bmba_qty[l_j].bmba007    =  l_bmba[l_j].bmba007  
+               LET l_bmba_qty[l_j].bmba008    =  l_bmba[l_j].bmba008  
+               LET l_bmba_qty[l_j].l_bmba011  =  l_bmba[l_j].l_bmba011
+               LET l_bmba_qty[l_j].l_bmba012  =  l_bmba[l_j].l_bmba012
+               LET l_bmba_qty[l_j].l_inam002  =  l_bmba[l_j].l_inam002
+               LET l_bmba_qty[l_j].l_qty      =  g_inam[l_i].inam004
+            END FOR
+         ELSE
+            FOR l_j = 1 TO l_bmba.getLength()
+               LET l_flag = 'N'
+               FOR l_k = 1 TO l_bmba_qty.getLength()
+                  IF l_bmba_qty[l_k].bmba001    =  l_bmba[l_j].bmba001 AND 
+                     l_bmba_qty[l_k].bmba002    =  l_bmba[l_j].bmba002 AND
+                     l_bmba_qty[l_k].bmba003    =  l_bmba[l_j].bmba003 AND
+                     l_bmba_qty[l_k].bmba004    =  l_bmba[l_j].bmba004 AND
+                     l_bmba_qty[l_k].bmba005    =  l_bmba[l_j].bmba005 AND
+                     l_bmba_qty[l_k].bmba007    =  l_bmba[l_j].bmba007 AND
+                     l_bmba_qty[l_k].bmba008    =  l_bmba[l_j].bmba008 AND
+                     l_bmba_qty[l_k].l_inam002  =  l_bmba[l_j].l_inam002 THEN
+                     LET l_bmba_qty[l_k].l_qty  =  l_bmba_qty[l_k].l_qty + g_inam[l_i].inam004
+                     LET l_flag = 'Y'
+                     EXIT FOR
+                  END IF
+               END FOR
+               IF l_flag = 'N' THEN
+                  LET l_k = l_bmba_qty.getLength() + 1
+                  LET l_bmba_qty[l_k].bmba001    =  l_bmba[l_j].bmba001
+                  LET l_bmba_qty[l_k].bmba002    =  l_bmba[l_j].bmba002  
+                  LET l_bmba_qty[l_k].bmba003    =  l_bmba[l_j].bmba003  
+                  LET l_bmba_qty[l_k].bmba004    =  l_bmba[l_j].bmba004  
+                  LET l_bmba_qty[l_k].bmba005    =  l_bmba[l_j].bmba005  
+                  LET l_bmba_qty[l_k].bmba007    =  l_bmba[l_j].bmba007  
+                  LET l_bmba_qty[l_k].bmba008    =  l_bmba[l_j].bmba008  
+                  LET l_bmba_qty[l_k].l_bmba011  =  l_bmba[l_j].l_bmba011
+                  LET l_bmba_qty[l_k].l_bmba012  =  l_bmba[l_j].l_bmba012
+                  LET l_bmba_qty[l_k].l_inam002  =  l_bmba[l_j].l_inam002
+                  LET l_bmba_qty[l_k].l_qty      =  g_inam[l_i].inam004
+               END IF
+            END FOR 
+         END IF   
+      END FOR
+   ELSE
+      #160601-00015#1 20160615 modify by ming -----(S) 
+      ##160512-00016#14 20160527 modify by ming -----(S) 
+      ##不確定是否保稅，所以不指定Y/N
+      ##CALL s_asft300_02_bom(0,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa013,1,1,l_sfaa.sfaa015,l_type,'',' ','N') RETURNING l_bmba
+      #CALL s_asft300_02_bom(0,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa013,1,1,l_sfaa.sfaa015,l_type,'',' ','N','') 
+      #     RETURNING l_bmba
+      ##160512-00016#14 20160527 modify by ming -----(E) 
+      #拆件式工單產生call s_asft300_02_bom的地方，保稅否傳工單單頭的保稅否sfaa072 
+      CALL s_asft300_02_bom(0,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa013,1,1,l_sfaa.sfaa015,l_type,'',' ','N',l_sfaa.sfaa072) 
+           RETURNING l_bmba
+      #160601-00015#1 20160615 modify by ming -----(E) 
+      FOR l_i = 1 TO l_bmba.getLength()
+         LET l_bmba_qty[l_i].bmba001    =  l_bmba[l_i].bmba001
+         LET l_bmba_qty[l_i].bmba002    =  l_bmba[l_i].bmba002  
+         LET l_bmba_qty[l_i].bmba003    =  l_bmba[l_i].bmba003  
+         LET l_bmba_qty[l_i].bmba004    =  l_bmba[l_i].bmba004  
+         LET l_bmba_qty[l_i].bmba005    =  l_bmba[l_i].bmba005  
+         LET l_bmba_qty[l_i].bmba007    =  l_bmba[l_i].bmba007  
+         LET l_bmba_qty[l_i].bmba008    =  l_bmba[l_i].bmba008  
+         LET l_bmba_qty[l_i].l_bmba011  =  l_bmba[l_i].l_bmba011
+         LET l_bmba_qty[l_i].l_bmba012  =  l_bmba[l_i].l_bmba012
+         LET l_bmba_qty[l_i].l_inam002  =  l_bmba[l_i].l_inam002
+         LET l_bmba_qty[l_i].l_qty      =  l_sfaa.sfaa012
+      END FOR
+   END IF
+
+   FOR l_i = 1 TO l_bmba_qty.getLength()
+      SELECT MAX(sfacseq) INTO l_sfacseq FROM sfac_t 
+       WHERE sfacent = g_enterprise AND sfacsite = g_site 
+         AND sfacdocno = g_sfaadocno
+      IF cl_null(l_sfacseq) THEN
+         LET l_sfacseq = 1
+      ELSE 
+         LET l_sfacseq = l_sfacseq + 1
+      END IF
+      
+      LET l_sfac003 = l_bmba_qty[l_i].l_qty * l_bmba_qty[l_i].l_bmba011 / l_bmba_qty[l_i].l_bmba012
+      
+      LET l_bmba005_1 = l_bmba_qty[l_i].bmba005
+      LET l_sql="SELECT bmba010 FROM bmba_t WHERE bmbaent='",g_enterprise,"' AND bmbasite='",g_site,"'",
+         "  AND bmba001='",l_bmba_qty[l_i].bmba001,"' AND bmba002='",l_bmba_qty[l_i].bmba002,"' AND bmba003='",l_bmba_qty[l_i].bmba003,"'",
+         "  AND bmba004='",l_bmba_qty[l_i].bmba004,"' AND bmba007='",l_bmba_qty[l_i].bmba007,"' AND bmba008='",l_bmba_qty[l_i].bmba008,"'", 
+         "  AND to_char(bmba005,'yyyy-mm-dd hh24:mi:ss')='",l_bmba005_1,"'"
+      PREPARE asft300_07_gen_sfac_pre FROM l_sql
+      EXECUTE asft300_07_gen_sfac_pre INTO l_sfac004
+      IF cl_null(l_sfac004) THEN
+         SELECT imae081 INTO l_sfac004 FROM imae_t WHERE imaeent=g_enterprise AND imaesite=g_site AND imae001=l_bmba_qty[l_i].bmba003
+         IF cl_null(l_sfac004) THEN
+            SELECT imaa006 INTO l_sfac004 FROM imaa_t WHERE imaaent=g_enterprise AND imaa001=l_bmba_qty[l_i].bmba003
+         END IF
+      END IF
+      
+      CALL s_aooi250_take_decimals(l_sfac004,l_sfac003)
+           RETURNING l_success,l_sfac003
+           
+      INSERT INTO sfac_t(sfacent,sfacsite,sfacdocno,sfacseq,sfac001,sfac002,sfac003,sfac004,sfac005,sfac006)
+                  VALUES(g_enterprise,g_site,g_sfaadocno,l_sfacseq,l_bmba_qty[l_i].bmba003,'4',l_sfac003,l_sfac004,0,l_bmba_qty[l_i].l_inam002)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins sfac_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN r_success
+      END IF
+   END FOR 
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,1296 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aimt300_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2014-10-31 10:24:22), PR版次:0007(2017-01-03 11:30:06)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000223
+#+ Filename...: aimt300_01
+#+ Description: 產品特徵值
+#+ Creator....: 01258(2013-08-16 10:40:26)
+#+ Modifier...: 02294 -SD/PR- 06137
+ 
+{</section>}
+ 
+{<section id="aimt300_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#160712-00010#1 2016/07/22 By lixh  s_aimi092_chk_eigenvalue() 增加料号/类型传参
+#161124-00048#3   2016/12/08   By 08734     星号整批调整
+#160824-00007#266 2017/01/03   By 06137     修正舊值備份寫法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+GLOBALS "../../aim/4gl/aimt300_01.inc"
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_imbk_d        RECORD
+       imbkdocno LIKE imbk_t.imbkdocno, 
+   imbk002 LIKE imbk_t.imbk002, 
+   imbk002_desc LIKE type_t.chr500, 
+   imbk003 LIKE imbk_t.imbk003, 
+   imbk003_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_imba005             LIKE imba_t.imba005
+DEFINE l_success             LIKE type_t.num5
+DEFINE l_errno               LIKE gzze_t.gzze001
+DEFINE l_imeb005             LIKE imeb_t.imeb005
+
+GLOBALS
+   DEFINE g_imbk_d4          DYNAMIC ARRAY OF type_g_imbk_d
+END GLOBALS
+DEFINE g_imbk_d_o        type_g_imbk_d   #160824-00007#266 Add By Ken 170103
+#end add-point
+ 
+DEFINE g_imbk_d          DYNAMIC ARRAY OF type_g_imbk_d
+DEFINE g_imbk_d_t        type_g_imbk_d
+ 
+ 
+DEFINE g_imbk002_t   LIKE imbk_t.imbk002    #Key值備份
+DEFINE g_imbkdocno_t      LIKE imbk_t.imbkdocno    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="aimt300_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aimt300_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_imbkdocno,p_imbk001,p_imba005
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_imbkdocno     LIKE imbk_t.imbkdocno
+   DEFINE p_imbk001       LIKE imbk_t.imbk001
+   DEFINE p_imba005       LIKE imba_t.imba005
+   #DEFINE l_imbk          RECORD LIKE imbk_t.*  #161124-00048#3 2016/12/08 By 08734 mark
+   #161124-00048#3 2016/12/08 By 08734 add(S)
+   DEFINE l_imbk RECORD  #料件申請料號特徵檔
+       imbkent LIKE imbk_t.imbkent, #企业编号
+       imbk001 LIKE imbk_t.imbk001, #料件编号
+       imbk002 LIKE imbk_t.imbk002, #特征类型
+       imbk003 LIKE imbk_t.imbk003, #特征值
+       imbkdocno LIKE imbk_t.imbkdocno #申请编号
+END RECORD
+#161124-00048#3 2016/12/08 By 08734 add(E)
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_lock_sw       LIKE type_t.chr1 
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aimt300_01 WITH FORM cl_ap_formpath("aim","aimt300_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   LET g_imba005 = p_imba005
+   CALL aimt300_01_b_fill(p_imbkdocno)
+   LET l_forupd_sql = " SELECT imbkdocno,imbk002,'',imbk003,'' ",
+                      "   FROM imbk_t ",
+                      "  WHERE imbkent = '",g_enterprise,"' ",
+                      "    AND imbkdocno = ? AND imbk002 = ? FOR UPDATE"
+                      #"    AND imbkdocno = ? AND imbk002 = ? AND imbk003 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)  
+   PREPARE aimt300_01_b FROM l_forupd_sql
+   DECLARE aimt300_01_cs CURSOR FOR aimt300_01_b 
+   LET INT_FLAG = FALSE
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_imbk_d FROM s_detail1_aimt300_01.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            LET g_rec_b = g_imbk_d.getLength()
+            
+            IF g_rec_b >= l_ac THEN  
+               LET l_cmd='u'
+               LET g_imbk_d_t.* = g_imbk_d[l_ac].*  #BACKUP
+               LET g_imbk_d_o.* = g_imbk_d[l_ac].*   #160824-00007#266 Add By Ken 170103
+               #OPEN aimt300_01_cs USING p_imbkdocno,g_imbk_d[l_ac].imbk002,g_imbk_d[l_ac].imbk003
+               OPEN aimt300_01_cs USING p_imbkdocno,g_imbk_d[l_ac].imbk002
+               
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "aimt300_01_cs"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aimt300_01_cs INTO g_imbk_d[l_ac].*
+                  IF SQLCA.sqlcode THEN
+                     LET l_lock_sw = "Y"
+                  END IF  
+                  CALL aimt300_01_imbk_desc()
+       
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+         BEFORE INSERT
+            CALL s_transaction_begin()
+            LET l_cmd = 'a'
+            INITIALIZE g_imbk_d_t.* TO NULL
+            INITIALIZE g_imbk_d_o.* TO NULL   #160824-00007#266 Add By Ken 170103
+            INITIALIZE g_imbk_d[l_ac].* TO NULL 
+            
+            LET g_imbk_d_t.* = g_imbk_d[l_ac].*     #新輸入資料
+            LET g_imbk_d_o.* = g_imbk_d[l_ac].*     #新輸入資料   #160824-00007#266 Add By Ken 170103
+            CALL cl_show_fld_cont()  
+            
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            LET l_imbk.imbkent = g_enterprise
+            LET l_imbk.imbkdocno = p_imbkdocno
+            LET l_imbk.imbk001 = p_imbk001
+            LET l_imbk.imbk002 = g_imbk_d[l_ac].imbk002
+            LET l_imbk.imbk003 = g_imbk_d[l_ac].imbk003
+         
+            SELECT COUNT(*) INTO l_count FROM imbk_t 
+             WHERE imbkent = g_enterprise
+               AND imbkdocno = p_imbkdocno
+               AND imbk002 = g_imbk_d[l_ac].imbk002
+               AND imbk003 = g_imbk_d[l_ac].imbk003
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #INSERT INTO imbk_t VALUES (l_imbk.*)  #161124-00048#3 2016/12/08 By 08734 mark
+               INSERT INTO imbk_t(imbkent,imbk001,imbk002,imbk003,imbkdocno) VALUES(l_imbk.imbkent,l_imbk.imbk001,l_imbk.imbk002,l_imbk.imbk003,l_imbk.imbkdocno)  #161124-00048#3 2016/12/08 By 08734 add
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "imbk_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CONTINUE DIALOG
+               END IF
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_imbk_d[l_ac].* TO NULL
+               CALL s_transaction_end('N',0)
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "imbk_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+               CALL s_transaction_end('N',0)                   
+               CANCEL INSERT
+            ELSE
+              
+               CALL s_transaction_end('Y',0)
+               
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+ 
+        BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_imbk_d[l_ac].imbk002) AND NOT cl_null(g_imbk_d[l_ac].imbk003)THEN
+
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               DELETE FROM imbk_t
+                WHERE imbkent = g_enterprise 
+                  AND imbkdocno = p_imbkdocno 
+                  AND imbk002 = g_imbk_d[l_ac].imbk002
+                  AND imbk003 = g_imbk_d[l_ac].imbk003
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "imbk_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CALL s_transaction_end('N',0)
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  
+                  CALL s_transaction_end('Y',0)
+               END IF 
+               CLOSE aimt300_01_cs
+               LET l_count = g_imbk_d.getLength()
+            END IF 
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_imbk_d[l_ac].* = g_imbk_d_t.*
+               CLOSE aimt300_01_cs
+               CALL s_transaction_end('N',0)
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = l_imbk.imbkdocno
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_imbk_d[l_ac].* = g_imbk_d_t.*
+            ELSE
+               UPDATE imbk_t SET (imbk002,imbk003)= (g_imbk_d[l_ac].imbk002,g_imbk_d[l_ac].imbk003)
+                WHERE imbkent = g_enterprise
+                  AND imbkdocno = p_imbkdocno 
+                  AND imbk002 = g_imbk_d_t.imbk002
+                  #AND imbk003 = g_imbk_d_t.imbk003
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "imbk_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  LET g_imbk_d[l_ac].* = g_imbk_d_t.*
+                  CALL s_transaction_end('N',0)
+               ELSE
+                  CALL s_transaction_end('Y',0)               
+               END IF
+
+            END IF
+            
+         AFTER ROW
+            CLOSE aimt300_01_cs
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbkdocno
+            #add-point:BEFORE FIELD imbkdocno name="input.b.page1_aimt300_01.imbkdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbkdocno
+            
+            #add-point:AFTER FIELD imbkdocno name="input.a.page1_aimt300_01.imbkdocno"
+            #此段落由子樣板a05產生
+            #確認資料無重複
+            IF  g_imbk_d[g_detail_idx].imbk002 IS NOT NULL AND g_imbk_d[g_detail_idx].imbkdocno IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_imbk_d[g_detail_idx].imbk002 != g_imbk_d_t.imbk002 OR g_imbk_d[g_detail_idx].imbkdocno != g_imbk_d_t.imbkdocno)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM imbk_t WHERE "||"imbkent = '" ||g_enterprise|| "' AND "||"imbk002 = '"||g_imbk_d[g_detail_idx].imbk002 ||"' AND "|| "imbkdocno = '"||g_imbk_d[g_detail_idx].imbkdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbkdocno
+            #add-point:ON CHANGE imbkdocno name="input.g.page1_aimt300_01.imbkdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbk002
+            
+            #add-point:AFTER FIELD imbk002 name="input.a.page1_aimt300_01.imbk002"
+            #此段落由子樣板a05產生
+            #確認資料無重複
+            DISPLAY "" TO s_detail1_aimt300_01[l_ac].imbk002_desc
+            IF NOT cl_null(g_imbk_d[l_ac].imbk002)  THEN 
+               #IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_imbk_d[l_ac].imbk002 != g_imbk_d_t.imbk002 ))) THEN  #160824-00007#266 Mark By Ken 170103
+               IF (g_imbk_d[l_ac].imbk002 != g_imbk_d_o.imbk002 ) THEN   #160824-00007#266 Add By Ken 170103
+                  IF NOT ap_chk_notDup(g_imbk_d[l_ac].imbk002,"SELECT COUNT(*) FROM imbk_t WHERE "||"imbkent = '" ||g_enterprise|| "' AND "||"imbk002 = '"||g_imbk_d[l_ac].imbk002 ||"' AND "|| "imbkdocno = '"||p_imbkdocno ||"'",'std-00004',0) THEN 
+                     #LET g_imbk_d[l_ac].imbk002 = g_imbk_d_t.imbk002  #160824-00007#266 Mark By Ken 170103
+                     LET g_imbk_d[l_ac].imbk002 = g_imbk_d_o.imbk002   #160824-00007#266 Add By Ken 170103
+                     CALL aimt300_01_imbk_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF NOT ap_chk_isExist(g_imbk_d[l_ac].imbk002,"SELECT COUNT(*) FROM imeb_t WHERE imebent = '" ||g_enterprise||"' AND imeb001 = '" ||g_imba005||"'  AND imeb003 = '1' AND imeb004 = ? ","aim-00158",0) THEN
+                  #LET g_imbk_d[l_ac].imbk002 = g_imbk_d_t.imbk002  #160824-00007#266 Mark By Ken 170103
+                  LET g_imbk_d[l_ac].imbk002 = g_imbk_d_o.imbk002   #160824-00007#266 Add By Ken 170103                  
+                  CALL aimt300_01_imbk_desc()
+                  NEXT FIELD CURRENT
+               END IF
+               IF NOT cl_null(g_imbk_d[l_ac].imbk002) AND NOT cl_null(g_imbk_d[l_ac].imbk003) THEN
+                  LET l_errno = ''
+                  CALL s_aimi092_chk_eigenvalue(g_imba005,g_imbk_d[l_ac].imbk002,g_imbk_d[l_ac].imbk003,p_imbk001,'1') RETURNING l_success,l_errno,g_imbk_d[l_ac].imbk003  #160712-00010#1
+                  IF NOT cl_null(l_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = l_errno
+                     LET g_errparam.extend = g_imbk_d[l_ac].imbk002
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     #LET g_imbk_d[l_ac].imbk002 = g_imbk_d_t.imbk002  #160824-00007#266 Mark By Ken 170103
+                     LET g_imbk_d[l_ac].imbk002 = g_imbk_d_o.imbk002   #160824-00007#266 Add By Ken 170103                     
+                     CALL aimt300_01_imbk_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF l_cmd = 'a' THEN
+                  CALL aimt300_01_def_imbk003()
+               END IF
+               CALL aimt300_01_set_entry_b()
+               CALL aimt300_01_set_no_entry_b()
+            END IF
+            CALL aimt300_01_imbk_desc()
+            LET g_imbk_d_o.* = g_imbk_d[l_ac].*   #160824-00007#266 Add By Ken 170103 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbk002
+            #add-point:BEFORE FIELD imbk002 name="input.b.page1_aimt300_01.imbk002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbk002
+            #add-point:ON CHANGE imbk002 name="input.g.page1_aimt300_01.imbk002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbk003
+            
+            #add-point:AFTER FIELD imbk003 name="input.a.page1_aimt300_01.imbk003"
+            DISPLAY "" TO s_detail1_aimt300_01[l_ac].imbk003_desc
+            IF NOT cl_null(g_imbk_d[l_ac].imbk002) AND NOT cl_null(g_imbk_d[l_ac].imbk003) THEN
+               LET l_errno = ''
+               CALL s_aimi092_chk_eigenvalue(g_imba005,g_imbk_d[l_ac].imbk002,g_imbk_d[l_ac].imbk003,p_imbk001,'1') RETURNING l_success,l_errno,g_imbk_d[l_ac].imbk003 #160712-00010#1
+               IF NOT cl_null(l_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = l_errno
+                  LET g_errparam.extend = g_imbk_d[l_ac].imbk003
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  #LET g_imbk_d[l_ac].imbk003 = g_imbk_d_t.imbk003  #160824-00007#266 Mark By Ken 170103
+                  LET g_imbk_d[l_ac].imbk003 = g_imbk_d_o.imbk003   #160824-00007#266 Add By Ken 170103
+                  CALL aimt300_01_imbk_desc()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL aimt300_01_imbk_desc()
+            LET g_imbk_d_o.* = g_imbk_d[l_ac].*   #160824-00007#266 Add By Ken 170103
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbk003
+            #add-point:BEFORE FIELD imbk003 name="input.b.page1_aimt300_01.imbk003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbk003
+            #add-point:ON CHANGE imbk003 name="input.g.page1_aimt300_01.imbk003"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1_aimt300_01.imbkdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbkdocno
+            #add-point:ON ACTION controlp INFIELD imbkdocno name="input.c.page1_aimt300_01.imbkdocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aimt300_01.imbk002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbk002
+            #add-point:ON ACTION controlp INFIELD imbk002 name="input.c.page1_aimt300_01.imbk002"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            IF NOT cl_null(g_imba005) THEN
+               LET g_qryparam.reqry = FALSE
+   
+               LET g_qryparam.default1 = g_imbk_d[l_ac].imbk002             #給予default值
+   
+               #給予arg
+               LET g_qryparam.arg1 = g_imba005 
+               CALL q_imeb004()                                #呼叫開窗
+   
+               LET g_imbk_d[l_ac].imbk002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+   
+               DISPLAY g_imbk_d[l_ac].imbk002 TO imbk002              #顯示到畫面上
+   
+               NEXT FIELD imbk002                          #返回原欄位
+            END IF
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aimt300_01.imbk003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbk003
+            #add-point:ON ACTION controlp INFIELD imbk003 name="input.c.page1_aimt300_01.imbk003"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            IF NOT cl_null(g_imba005) AND NOT cl_null(g_imbk_d[l_ac].imbk002) THEN
+               SELECT imeb005 INTO l_imeb005
+                 FROM imeb_t
+                WHERE imebent = g_enterprise
+                  AND imeb001 = g_imba005
+                  AND imeb004 = g_imbk_d[l_ac].imbk002
+               IF l_imeb005 = '2' THEN
+                  INITIALIZE g_qryparam.* TO NULL
+                  LET g_qryparam.state = 'i'
+                  LET g_qryparam.reqry = FALSE
+      
+                  LET g_qryparam.default1 = g_imbk_d[l_ac].imbk003             #給予default值
+      
+                  #給予arg
+                  LET g_qryparam.arg1 = g_imba005 #特徵群組代碼
+                  LET g_qryparam.arg2 = g_imbk_d[l_ac].imbk002 #特徵類型
+                  CALL q_imec003()                                #呼叫開窗
+      
+                  LET g_imbk_d[l_ac].imbk003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+      
+                  DISPLAY g_imbk_d[l_ac].imbk003 TO imbk003              #顯示到畫面上
+      
+                  NEXT FIELD imbk003                          #返回原欄位
+               END IF
+            END IF
+
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aimt300_01 
+   
+   #add-point:input段after input name="input.post_input"
+   CLOSE aimt300_01_cs
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt300_01.other_dialog" readonly="Y" >}
+################################################################################
+# Descriptions...: 被主程式嵌入的單身顯示模式
+# Memo...........: 
+# Usage..........: aimt300_01_display()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/09/23 By lixiang
+# Modify.........:
+################################################################################
+DIALOG aimt300_01_display()
+   
+   DISPLAY ARRAY g_imbk_d TO s_detail1_aimt300_01.* ATTRIBUTE(COUNT=g_d_cnt_t30001)
+
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_d_idx_t30001)
+         #單身不連動, 所以進入單身時, 要重新顯示單身筆數
+         DISPLAY g_d_idx_t30001, g_d_cnt_t30001 TO FORMONLY.idx, FORMONLY.cnt
+
+      BEFORE ROW
+         LET g_d_idx_t30001 = DIALOG.getCurrentRow("s_detail1_aimt300_01")
+         DISPLAY g_d_idx_t30001 TO FORMONLY.idx
+         # 點的當筆放入g_appoint_idx中, 可讓雙擊直接進入指定筆
+         LET g_appoint_idx = g_d_idx_t30001
+      ----2015-1-9 zj mod-----
+      AFTER DISPLAY
+         LET g_imbk_d4.* = g_imbk_d.*
+      ----2015-1-9 zj mod-----
+
+   END DISPLAY
+   
+END DIALOG
+################################################################################
+# Descriptions...: 被主程式嵌入的單身查詢模式
+# Memo...........: 
+# Usage..........: CALL aimt300_01_construct()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/09/24 By lixiang
+# Modify.........:
+################################################################################
+DIALOG aimt300_01_construct()
+   
+   CONSTRUCT g_wc2_t30001 ON imbkdocno,imbk002,imbk003
+        FROM s_detail1_aimt300_01[1].imbkdocno,s_detail1_aimt300_01[1].imbk002,
+             s_detail1_aimt300_01[1].imbk003
+             
+   END CONSTRUCT
+END DIALOG
+################################################################################
+# Descriptions...: 被主程式嵌入的交易夥伴輸入模式
+# Memo...........: 
+# Usage..........: CALL aimt300_01_input()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/09/24 By lixiang
+# Modify.........:
+################################################################################
+DIALOG aimt300_01_input()
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_n             LIKE type_t.num5                #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_errno         LIKE gzze_t.gzze001
+   DEFINE l_imeb005       LIKE imeb_t.imeb005
+   #DEFINE l_imbk          RECORD LIKE imbk_t.*  #161124-00048#3 2016/12/08 By 08734 mark
+   #161124-00048#3 2016/12/08 By 08734 add(S)
+   DEFINE l_imbk RECORD  #料件申請料號特徵檔
+       imbkent LIKE imbk_t.imbkent, #企业编号
+       imbk001 LIKE imbk_t.imbk001, #料件编号
+       imbk002 LIKE imbk_t.imbk002, #特征类型
+       imbk003 LIKE imbk_t.imbk003, #特征值
+       imbkdocno LIKE imbk_t.imbkdocno #申请编号
+END RECORD
+#161124-00048#3 2016/12/08 By 08734 add(E)
+   
+   INPUT ARRAY g_imbk_d FROM s_detail1_aimt300_01.*
+          ATTRIBUTE(COUNT = g_d_cnt_t30001,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+
+         BEFORE INPUT
+            SELECT imba005 INTO g_imba005 FROM imba_t WHERE imbaent = g_enterprise AND imbadocno = g_imbadocno_d
+            LET l_forupd_sql = " SELECT imbkdocno,imbk002,'',imbk003,'' ",
+                               "   FROM imbk_t ",
+                               "  WHERE imbkent = '",g_enterprise,"' ",
+                               "    AND imbkdocno = ? AND imbk002 = ? FOR UPDATE"
+            LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)
+            PREPARE aimt300_01_dialog_b FROM l_forupd_sql
+            DECLARE aimt300_01_dialog_bcl CURSOR FOR aimt300_01_dialog_b
+            IF g_appoint_idx > 0 THEN
+               CALL DIALOG.setCurrentRow("s_detail1_aimt300_01",g_appoint_idx)
+            END IF
+            
+          BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+   
+            LET g_rec_b = g_imbk_d.getLength()
+            
+            IF g_rec_b >= l_ac THEN
+               LET l_cmd='u'
+			      LET g_imbk_d_t.* = g_imbk_d[l_ac].*  #BACKUP
+			      CALL aimt300_01_set_entry_b()
+			      CALL aimt300_01_set_no_entry_b()
+			   
+			      OPEN aimt300_01_dialog_bcl USING g_imbadocno_d,g_imbk_d[l_ac].imbk002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "aimt300_01_dialog_bcl"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aimt300_01_dialog_bcl INTO g_imbk_d[l_ac].imbkdocno,g_imbk_d[l_ac].imbk002,g_imbk_d[l_ac].imbk002_desc,g_imbk_d[l_ac].imbk003,g_imbk_d[l_ac].imbk003_desc
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_imbadocno_d
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+				      CALL aimt300_01_imbk_desc()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+        
+         BEFORE INSERT
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_imbk_d[l_ac].* TO NULL          
+            
+            LET g_imbk_d[l_ac].imbkdocno = g_imbadocno_d
+            
+            LET g_imbk_d_t.* = g_imbk_d[l_ac].*     #新輸入資料
+
+            CALL cl_show_fld_cont()
+            
+            
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               #CANCEL INSERT
+            END IF
+            
+            LET l_imbk.imbkent = g_enterprise
+            LET l_imbk.imbkdocno = g_imbadocno_d
+            LET l_imbk.imbk001 = g_imba001_d
+            LET l_imbk.imbk002 = g_imbk_d[l_ac].imbk002
+            LET l_imbk.imbk003 = g_imbk_d[l_ac].imbk003
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM imbk_t 
+             WHERE imbkent = g_enterprise
+               AND imbkdocno = g_imbadocno_d
+               AND imbk002 = g_imbk_d[l_ac].imbk002
+               AND imbk003 = g_imbk_d[l_ac].imbk003
+      
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INSERT INTO imbk_t (imbkent,imbkdocno,imbk001,imbk002,imbk003)
+                  VALUES (g_enterprise,l_imbk.imbkdocno,l_imbk.imbk001,l_imbk.imbk002,l_imbk.imbk003)
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_imbk_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               #CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "imbk_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+               #CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_imbk_d[l_ac].imbk002) AND NOT cl_null(g_imbk_d[l_ac].imbk003)THEN
+            
+               IF cl_ask_del_detail() THEN
+                  IF l_lock_sw = "Y" THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  -263
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                  
+                     #CANCEL DELETE
+                  END IF
+                  
+                  DELETE FROM imbk_t
+                    WHERE imbkent = g_enterprise 
+                      AND imbkdocno = g_imbadocno_d
+                      AND imbk002 = g_imbk_d[l_ac].imbk002
+                      AND imbk003 = g_imbk_d[l_ac].imbk003
+                      
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "imbk_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     
+                     CALL s_transaction_end('N','0')
+                     #CANCEL DELETE   
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF 
+                  CLOSE aimt300_01_dialog_bcl
+                  LET l_count = g_imbk_d.getLength()
+               END IF
+            END IF 
+            
+        AFTER DELETE
+            CALL aimt300_01_b_fill(g_imbadocno_d)
+            
+        ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_imbk_d[l_ac].* = g_imbk_d_t.*
+               CLOSE aimt300_01_dialog_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_imbadocno_d
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_imbk_d[l_ac].* = g_imbk_d_t.*
+            ELSE
+               UPDATE imbk_t SET (imbk002,imbk003)= (g_imbk_d[l_ac].imbk002,g_imbk_d[l_ac].imbk003)
+                WHERE imbkent = g_enterprise
+                  AND imbkdocno = g_imbadocno_d
+                  AND imbk002 = g_imbk_d_t.imbk002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "imbk_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_imbk_d[l_ac].* = g_imbk_d_t.*
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE aimt300_01_dialog_bcl
+            
+         
+         AFTER FIELD imbk002
+            DISPLAY "" TO s_detail1_aimt300_01[l_ac].imbk002_desc
+            IF NOT cl_null(g_imbk_d[l_ac].imbk002)  THEN 
+               #IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_imbk_d[l_ac].imbk002 != g_imbk_d_t.imbk002 ))) THEN  #160824-00007#266 Mark By Ken 170103
+               IF (g_imbk_d[l_ac].imbk002 != g_imbk_d_o.imbk002 ) THEN   #160824-00007#266 Add By Ken 170103
+                  IF NOT ap_chk_notDup(g_imbk_d[l_ac].imbk002,"SELECT COUNT(*) FROM imbk_t WHERE "||"imbkent = '" ||g_enterprise|| "' AND "||"imbk002 = '"||g_imbk_d[l_ac].imbk002 ||"' AND "|| "imbkdocno = '"||g_imbadocno_d ||"'",'std-00004',0) THEN 
+                     #LET g_imbk_d[l_ac].imbk002 = g_imbk_d_t.imbk002  #160824-00007#266 Mark By Ken 170103
+                     LET g_imbk_d[l_ac].imbk002 = g_imbk_d_o.imbk002   #160824-00007#266 Add By Ken 170103
+                     CALL aimt300_01_imbk_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF NOT ap_chk_isExist(g_imbk_d[l_ac].imbk002,"SELECT COUNT(*) FROM imeb_t WHERE imebent = '" ||g_enterprise||"' AND imeb001 = '" ||g_imba005||"'  AND imeb003 = '1' AND imeb004 = ? ","aim-00158",0) THEN
+                  #LET g_imbk_d[l_ac].imbk002 = g_imbk_d_t.imbk002  #160824-00007#266 Mark By Ken 170103
+                  LET g_imbk_d[l_ac].imbk002 = g_imbk_d_o.imbk002   #160824-00007#266 Add By Ken 170103                  
+                  CALL aimt300_01_imbk_desc()
+                  NEXT FIELD CURRENT
+               END IF
+               IF NOT cl_null(g_imbk_d[l_ac].imbk002) AND NOT cl_null(g_imbk_d[l_ac].imbk003) THEN
+                  LET l_errno = ''
+                  CALL s_aimi092_chk_eigenvalue(g_imba005,g_imbk_d[l_ac].imbk002,g_imbk_d[l_ac].imbk003,'','1') RETURNING l_success,l_errno,g_imbk_d[l_ac].imbk003  #160712-00010#1
+                  IF NOT cl_null(l_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = l_errno
+                     LET g_errparam.extend = g_imbk_d[l_ac].imbk002
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     #LET g_imbk_d[l_ac].imbk002 = g_imbk_d_t.imbk002  #160824-00007#266 Mark By Ken 170103
+                     LET g_imbk_d[l_ac].imbk002 = g_imbk_d_o.imbk002   #160824-00007#266 Add By Ken 170103                     
+                     CALL aimt300_01_imbk_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF l_cmd = 'a' THEN
+                  CALL aimt300_01_def_imbk003()
+               END IF
+               CALL aimt300_01_set_entry_b()
+               CALL aimt300_01_set_no_entry_b()
+            END IF
+            CALL aimt300_01_imbk_desc()
+            LET g_imbk_d_o.* = g_imbk_d[l_ac].*    #160824-00007#266 Add By Ken 170103                     
+
+         AFTER FIELD imbk003
+            DISPLAY "" TO s_detail1_aimt300_01[l_ac].imbk003_desc
+            IF NOT cl_null(g_imbk_d[l_ac].imbk002) AND NOT cl_null(g_imbk_d[l_ac].imbk003) THEN
+               LET l_errno = ''
+               CALL s_aimi092_chk_eigenvalue(g_imba005,g_imbk_d[l_ac].imbk002,g_imbk_d[l_ac].imbk003,'','1') RETURNING l_success,l_errno,g_imbk_d[l_ac].imbk003  #160712-00010#1
+               IF NOT cl_null(l_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = l_errno
+                  LET g_errparam.extend = g_imbk_d[l_ac].imbk003
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+ 
+                  #LET g_imbk_d[l_ac].imbk003 = g_imbk_d_t.imbk003  #160824-00007#266 Mark By Ken 170103    
+                  LET g_imbk_d[l_ac].imbk003 = g_imbk_d_o.imbk003   #160824-00007#266 Add By Ken 170103    
+                  CALL aimt300_01_imbk_desc()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL aimt300_01_imbk_desc()
+            LET g_imbk_d_o.* = g_imbk_d[l_ac].*   #160824-00007#266 Add By Ken 170103            
+
+            
+         ON ACTION controlp INFIELD imbk002            
+            #開窗i段
+            IF NOT cl_null(g_imba005) THEN
+               LET g_qryparam.reqry = FALSE
+   
+               LET g_qryparam.default1 = g_imbk_d[l_ac].imbk002             #給予default值
+   
+               #給予arg
+               LET g_qryparam.arg1 = g_imba005 
+               CALL q_imeb004()                                #呼叫開窗
+   
+               LET g_imbk_d[l_ac].imbk002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+   
+               DISPLAY g_imbk_d[l_ac].imbk002 TO imbk002              #顯示到畫面上
+   
+               NEXT FIELD imbk002                          #返回原欄位
+            END IF
+
+         ON ACTION controlp INFIELD imbk003 
+            #開窗i段
+            IF NOT cl_null(g_imba005) AND NOT cl_null(g_imbk_d[l_ac].imbk002) THEN
+               SELECT imeb005 INTO l_imeb005
+                 FROM imeb_t
+                WHERE imebent = g_enterprise
+                  AND imeb001 = g_imba005
+                  AND imeb004 = g_imbk_d[l_ac].imbk002
+               IF l_imeb005 = '2' THEN
+                  INITIALIZE g_qryparam.* TO NULL
+                  LET g_qryparam.state = 'i'
+                  LET g_qryparam.reqry = FALSE
+      
+                  LET g_qryparam.default1 = g_imbk_d[l_ac].imbk003             #給予default值
+      
+                  #給予arg
+                  LET g_qryparam.arg1 = g_imba005 #特徵群組代碼
+                  LET g_qryparam.arg2 = g_imbk_d[l_ac].imbk002 #特徵類型
+                  CALL q_imec003()                                #呼叫開窗
+      
+                  LET g_imbk_d[l_ac].imbk003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+      
+                  DISPLAY g_imbk_d[l_ac].imbk003 TO imbk003              #顯示到畫面上
+      
+                  NEXT FIELD imbk003                          #返回原欄位
+               END IF
+            END IF
+
+
+
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            ----2015-1-9 zj mod-----
+            LET g_imbk_d4.* = g_imbk_d.*
+            ----2015-1-9 zj mod-----
+            #end add-point
+            
+      END INPUT
+
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="aimt300_01.other_function" readonly="Y" >}
+# 單身陣列填充
+PUBLIC FUNCTION aimt300_01_b_fill(p_imbkdocno)
+DEFINE p_imbkdocno     LIKE imbk_t.imbkdocno
+DEFINE l_sql           STRING
+DEFINE l_ac1           LIKE type_t.num5  
+
+   LET l_sql = " SELECT imbkdocno,imbk002,'',imbk003,'' ",
+                      "   FROM imbk_t ",
+                      "  WHERE imbkent = '",g_enterprise,"' ",
+                      "    AND imbkdocno = '",p_imbkdocno,"' "
+   IF NOT cl_null(g_wc2_t30001) THEN
+      LET l_sql = l_sql CLIPPED, " AND ",g_wc2_t30001 CLIPPED
+   END IF
+   LET l_sql = l_sql CLIPPED,"  ORDER BY imbkdocno " 
+   PREPARE aimt300_01_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR aimt300_01_pb 
+   
+   CALL g_imbk_d.clear()
+   LET l_ac1 = 1
+   FOREACH b_fill_curs INTO g_imbk_d[l_ac1].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_imbk_d[l_ac1].imbk002
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND oocql001 = '273' AND oocql002 = ? AND oocql003 = '"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_imbk_d[l_ac1].imbk002_desc = g_rtn_fields[1]
+      DISPLAY g_imbk_d[l_ac1].imbk002_desc TO s_detail1_aimt300_01[l_ac1].imbk002_desc
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_imbk_d[l_ac1].imbk003
+      CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= g_imba005 AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_imbk_d[l_ac1].imbk003_desc = g_rtn_fields[1]
+      DISPLAY g_imbk_d[l_ac1].imbk003_desc TO s_detail1_aimt300_01[l_ac1].imbk003_desc
+      
+      LET l_ac1 = l_ac1 + 1
+      IF l_ac1 > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH 
+   CALL g_imbk_d.deleteElement(g_imbk_d.getLength())   
+   LET g_rec_b = l_ac1 - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   
+   #將總筆數, 目前筆數指定到共用變數中
+   IF g_rec_b > 0 THEN
+      LET g_d_idx_t30001 = 1
+   ELSE
+      LET g_d_idx_t30001 = 0
+   END IF
+   LET g_d_cnt_t30001 = g_rec_b
+   ----2015-1-9 zj mod-----
+   LET g_imbk_d4.* = g_imbk_d.*
+   ----2015-1-9 zj mod-----
+   CLOSE b_fill_curs
+   FREE aimt300_01_pb
+END FUNCTION
+################################################################################
+# Descriptions...: 參考欄位顯示
+# Memo...........:
+# Usage..........: CALL aimt300_01_imbk_desc()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2013/11/05 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aimt300_01_imbk_desc()
+DEFINE l_imeb002         LIKE imeb_t.imeb002   #20151102 by stellar add
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbk_d[l_ac].imbk002
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND oocql001 = '273' AND oocql002 = ? AND oocql003 = '"||g_lang||"'","") RETURNING g_rtn_fields
+   LET g_imbk_d[l_ac].imbk002_desc = g_rtn_fields[1]
+   DISPLAY g_imbk_d[l_ac].imbk002_desc TO s_detail1_aimt300_01[l_ac].imbk002_desc
+   
+   #20151102 by stellar add ----- (S)
+   SELECT imeb002 INTO l_imeb002
+     FROM imeb_t
+    WHERE imebent = g_enterprise
+      AND imeb001 = g_imba005
+      AND imeb004 = g_imbk_d[l_ac].imbk002
+   #20151102 by stellar add ----- (E)
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbk_d[l_ac].imbk003
+   CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||g_imba005||"' AND imecl002 = '"||l_imeb002||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields   #20151102 by stellar add imecl002
+   LET g_imbk_d[l_ac].imbk003_desc = g_rtn_fields[1]
+   DISPLAY g_imbk_d[l_ac].imbk003_desc TO s_detail1_aimt300_01[l_ac].imbk003_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 特徵值預設
+# Memo...........:
+# Usage..........: CALL aimt300_01_def_imbk003()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2013/11/05 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aimt300_01_def_imbk003()
+   SELECT imeb009 INTO g_imbk_d[l_ac].imbk003
+     FROM imeb_t
+    WHERE imebent = g_enterprise
+      AND imeb001 = g_imba005
+      AND imeb003 = '1'
+      AND imeb004 = g_imbk_d[l_ac].imbk002
+   DISPLAY BY NAME g_imbk_d[l_ac].imbk003
+END FUNCTION
+################################################################################
+# Descriptions...: 欄位無條件開啟
+# Memo...........:
+# Usage..........: CALL aimt300_01_set_entry_b()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2013/11/05 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aimt300_01_set_entry_b()
+   CALL cl_set_comp_entry("imbk003",TRUE)
+END FUNCTION
+################################################################################
+# Descriptions...: 欄位無條件開啟
+# Memo...........:
+# Usage..........: CALL aimt300_01_set_no_entry_b()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2013/11/05 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aimt300_01_set_no_entry_b()
+#DEFINE l_imeb005     LIKE imeb_t.imeb005
+#
+#   SELECT imeb005 INTO l_imeb005
+#     FROM imeb_t
+#    WHERE imebent = g_enterprise
+#      AND imeb001 = g_imba005
+#      AND imeb003 = '1'
+#      AND imeb004 =  g_imbk_d[l_ac].imbk002
+#   IF l_imeb005 = '4' THEN
+#      CALL cl_set_comp_entry("imbk003",FALSE)
+#   END IF
+END FUNCTION
+################################################################################
+# Descriptions...: 顯示對應aimi092的資料
+# Memo...........:
+# Usage..........: CALL aimt300_01_display_imeb()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2013/12/28 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aimt300_01_display_imeb()
+DEFINE l_imeb005_1          LIKE imeb_t.imeb005
+DEFINE l_imeb007_1          LIKE imeb_t.imeb007
+DEFINE l_imeb008_1          LIKE imeb_t.imeb008
+DEFINE l_imeb010_1          LIKE imeb_t.imeb010
+DEFINE l_imeb011_1          LIKE imeb_t.imeb011
+DEFINE l_gzze003            LIKE gzze_t.gzze003
+DEFINE l_gzze003_1          LIKE gzze_t.gzze003
+DEFINE l_gzze003_2          LIKE gzze_t.gzze003
+DEFINE l_msg                STRING
+DEFINE l_imeb005            STRING
+DEFINE l_imeb007            STRING
+DEFINE l_imeb008            STRING
+DEFINE l_imeb010            STRING
+DEFINE l_imeb011            STRING
+
+   LET l_imeb005 = ''
+   LET l_imeb007 = ''
+   LET l_imeb008 = ''
+   LET l_imeb010 = ''
+   LET l_imeb011 = ''
+   SELECT imeb005,imeb007,imeb008,imeb010,imeb011 INTO l_imeb005_1,l_imeb007_1,l_imeb008_1,l_imeb010_1,l_imeb011_1
+     FROM imeb_t
+    WHERE imebent = g_enterprise
+      AND imeb001 = g_imba005
+      AND imeb004 = g_imbk_d[l_ac].imbk002
+   LET l_imeb005 = l_imeb005_1
+   LET l_imeb007 = l_imeb007_1
+   LET l_imeb008 = l_imeb008_1
+   LET l_imeb010 = l_imeb010_1
+   LET l_imeb011 = l_imeb011_1
+   IF l_imeb005 = '1' THEN
+      LET l_msg =''
+      LET l_gzze003 = ''
+      LET l_gzze003_1 = ''
+      SELECT gzze003 INTO l_gzze003
+        FROM gzze_t
+       WHERE gzze001 = 'aim-00197'
+         AND gzze002 = g_dlang
+      SELECT gzze003 INTO l_gzze003_1
+        FROM gzze_t
+       WHERE gzze001 = 'aim-00198'
+         AND gzze002 = g_dlang
+      LET l_msg = l_gzze003,l_imeb007,',',l_gzze003_1,l_imeb008
+      ERROR l_msg
+   END IF
+   IF l_imeb005 = '3' THEN
+      LET l_msg =''
+      LET l_gzze003_2 = ''
+      SELECT gzze003 INTO l_gzze003_2
+        FROM gzze_t
+       WHERE gzze001 = 'aim-00199'
+         AND gzze002 = g_dlang
+      LET l_msg = l_gzze003_2,l_imeb010,'~',l_imeb011
+      ERROR l_msg
+   END IF
+END FUNCTION
+################################################################################
+# Descriptions...: 清除畫面上單身
+# Memo...........: 
+# Usage..........: CALL aimt300_01_clear_detail()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/09/23 By lixiang
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aimt300_01_clear_detail()
+
+    CALL g_imbk_d.clear()
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

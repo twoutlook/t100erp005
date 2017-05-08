@@ -1,0 +1,1380 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrt930_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2014-11-04 16:05:52), PR版次:0007(2016-10-26 11:18:07)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000073
+#+ Filename...: axrt930_01
+#+ Description: 批次產生
+#+ Creator....: 01531(2014-11-04 11:35:55)
+#+ Modifier...: 01531 -SD/PR- 06821
+ 
+{</section>}
+ 
+{<section id="axrt930_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#151125-00006#1  2015/12/03 By 06862    新增/修改/複製單據后立即審核，立即拋轉傳票
+#160318-00005#54 2016/03/29 By 07959    將重複內容的錯誤訊息置換為公用錯誤訊息
+#160125-00005#9  2016/08/02 By 01727    查詢時加上帳套人員權限條件過濾
+#160811-00009#3  2016/08/15 By 01531    账务中心/法人/账套权限控管
+#160920-00007#1  2016/09/22 By 01727    暂估税额科目改取axri011中的暂估税额科目
+#161026-00013#1  2016/10/26 By 06821    組織類型與職能開窗調整
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xrem_m        RECORD
+       xremsite LIKE xrem_t.xremsite, 
+   xremsite_desc LIKE type_t.chr80, 
+   xremld LIKE xrem_t.xremld, 
+   xremld_desc LIKE type_t.chr80, 
+   xrem004 LIKE xrem_t.xrem004, 
+   xrem004_desc LIKE type_t.chr80, 
+   xremdocno LIKE xrem_t.xremdocno, 
+   xrem001 LIKE xrem_t.xrem001, 
+   xrem002 LIKE xrem_t.xrem002, 
+   xremdocdt LIKE xrem_t.xremdocdt
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_sql STRING
+DEFINE g_argv1  LIKE type_t.chr1
+#151125-00006#1--add--s
+DEFINE l_ooba002         LIKE ooba_t.ooba002   
+DEFINE l_xremcomp        LIKE xrem_t.xremcomp
+DEFINE l_dfin0031        LIKE type_t.chr1
+DEFINE l_dfin0032        LIKE type_t.chr1
+#151125-00006#1--add--e
+#end add-point
+ 
+DEFINE g_xrem_m        type_g_xrem_m
+ 
+   DEFINE g_xremdocno_t LIKE xrem_t.xremdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrt930_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrt930_01(--)
+   #add-point:input段變數傳入
+   p_argv1
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE l_comp          LIKE xrem_t.xremcomp
+   DEFINE l_strdate       LIKE xrem_t.xremdocdt
+   DEFINE l_enddate       LIKE xrem_t.xremdocdt
+   DEFINE l_glaa024       LIKE glaa_t.glaa024
+   DEFINE l_glaa003       LIKE glaa_t.glaa003 #會計參照表號
+   DEFINE l_glav006       LIKE glav_t.glav003 #會計期別
+   DEFINE l_origin_str    STRING
+   DEFINE r_xremdocno     LIKE xrem_t.xremdocno
+   DEFINE r_success       LIKE type_t.chr1
+   DEFINE l_success       LIKE type_t.chr1   
+   DEFINE p_argv1         LIKE type_t.chr1
+   DEFINE g_bookno        LIKE glaa_t.glaald
+   DEFINE l_xrcacomp      LIKE xrca_t.xrcacomp
+   DEFINE l_glaa121       LIKE glaa_t.glaa121    #20150528 add lujh
+   DEFINE l_ooac004       LIKE ooac_t.ooac004    #20150528 add lujh
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt930_01 WITH FORM cl_ap_formpath("axr","axrt930_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   WHENEVER ERROR CONTINUE
+   LET g_argv1 = p_argv1
+   IF g_argv1 = '1' THEN LET g_prog = 'axrt930' END IF
+   IF g_argv1 = '2' THEN LET g_prog = 'axrt931' END IF
+   LET g_xrem_m.xrem001 = YEAR(g_today)
+   LET g_xrem_m.xrem002 = MONTH(g_today)
+   LET g_xrem_m.xremdocno = null   #151125-00006#1--add-
+
+
+   CALL s_fin_create_account_center_tmp()
+   #帳務中心
+   #取得預設的帳務中心,因新增階段的時候,並不會知道site,所以以登入人員做為依據
+   CALL s_fin_get_account_center('',g_user,'3',g_today) RETURNING l_success,g_xrem_m.xremsite,g_errno
+   CALL s_desc_get_department_desc(g_xrem_m.xremsite)RETURNING g_xrem_m.xremsite_desc 
+   
+   #g_bookno,先做帳務中心及g_bookno的勾稽,登入人員帳務人員時,基本上會有該g_bookno的帳務中心權限
+   #IF NOT cl_null(g_bookno) THEN
+   #   #帳務中心與帳別勾稽
+   #   CALL s_fin_account_center_with_ld_chk(g_xrem_m.xremsite,g_bookno,g_user,'3','N','',g_today) RETURNING l_success,g_errno
+  # END IF
+   #該帳務中心與帳別無法勾稽到,以登入人員g_user取得預設帳別/法人
+  #IF NOT l_success OR cl_null(g_bookno) THEN
+      CALL s_fin_ld_carry('',g_user) RETURNING l_success,g_xrem_m.xremld,l_comp,g_errno
+      CALL s_fin_account_center_with_ld_chk(g_xrem_m.xremsite,g_xrem_m.xremld,g_user,'3','N','',g_today) RETURNING l_success,g_errno
+  #ELSE
+  #    LET g_xrem_m.xremld = g_bookno
+  #END IF
+
+   #若取不出資料,則不預設帳別
+   IF NOT l_success THEN
+      LET g_xrem_m.xremld = ''
+   END IF
+   IF cl_null(g_xrem_m.xremld) THEN 
+      CALL s_fin_orga_get_comp_ld(g_xrem_m.xremsite) RETURNING l_success,g_errno,l_xrcacomp,g_xrem_m.xremld
+      CALL s_fin_account_center_with_ld_chk(g_xrem_m.xremsite,g_xrem_m.xremld,g_user,'3','N','',g_today) RETURNING l_success,g_errno
+   END IF
+   IF NOT cl_null(g_xrem_m.xremld) THEN
+      CALL s_desc_get_ld_desc(g_xrem_m.xremld) RETURNING g_xrem_m.xremld_desc
+      #單據別參照表號
+      SELECT glaa024,glaa121 INTO l_glaa024,l_glaa121    #20150528 add glaa021 lujh
+        FROM glaa_t
+       WHERE glaaent = g_enterprise
+         AND glaald = g_xrem_m.xremld 
+   END IF
+   
+   #取得會計周期參照表設定下拉   
+   CALL axrt930_01_glaa003(g_xrem_m.xremld,g_xrem_m.xrem001)RETURNING l_glaa003
+   #取得該期最大最小日期      
+   IF g_argv1 = '1' THEN
+      #下期最大最小日期 
+      CALL s_fin_date_get_period_range(l_glaa003,g_xrem_m.xrem001,g_xrem_m.xrem002+1)RETURNING l_strdate,l_enddate
+      LET g_xrem_m.xremdocdt = l_strdate
+   ELSE
+      #當月最大最小日期
+      CALL s_fin_date_get_period_range(l_glaa003,g_xrem_m.xrem001,g_xrem_m.xrem002)RETURNING l_strdate,l_enddate
+      LET g_xrem_m.xremdocdt = l_enddate
+   END IF   
+   
+   LET g_xrem_m.xrem004  = g_user
+   CALL s_desc_get_person_desc(g_xrem_m.xrem004) RETURNING g_xrem_m.xrem004_desc        
+
+   
+   DISPLAY BY NAME g_xrem_m.xremld,g_xrem_m.xrem001,g_xrem_m.xrem002,g_xrem_m.xremdocdt,g_xrem_m.xremld_desc,
+                   g_xrem_m.xremsite,g_xrem_m.xremsite_desc,g_xrem_m.xrem004_desc 
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xrem_m.xremsite,g_xrem_m.xremld,g_xrem_m.xrem004,g_xrem_m.xremdocno,g_xrem_m.xrem001, 
+          g_xrem_m.xrem002,g_xrem_m.xremdocdt ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xremsite
+            
+            #add-point:AFTER FIELD xremsite name="input.a.xremsite"
+            LET g_xrem_m.xremsite_desc = ''
+#160811-00009#3 mod s---            
+#            IF NOT cl_null(g_xrem_m.xremsite) THEN
+#               CALL s_fin_account_center_with_ld_chk(g_xrem_m.xremsite,'','','3','N','',g_today) RETURNING g_sub_success,g_errno
+#               IF NOT g_sub_success THEN
+#                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.code = g_errno
+#                  LET g_errparam.extend = ''
+#                  LET g_errparam.popup = TRUE
+#                  LET g_xrem_m.xremsite = ''
+#                  LET g_xrem_m.xremsite_desc = ''
+#                  DISPLAY BY NAME g_xrem_m.xremsite_desc
+#                  CALL cl_err()
+#                  NEXT FIELD xremsite
+#               END IF
+#            END IF
+#160811-00009#3 mod e---
+            #160811-00009#3 add s---
+            IF NOT cl_null(g_xrem_m.xremsite) THEN
+               IF p_cmd = 'a' THEN
+                  #161026-00013#1 --s add
+                  #檢核是否結算組織
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xrem_m.xremsite
+                  IF NOT cl_chk_exist("v_ooef001_212") THEN  
+                     LET g_xrem_m.xremsite = ''
+                     LET g_xrem_m.xremsite_desc = s_desc_get_department_desc(g_xrem_m.xremsite)
+                     DISPLAY BY NAME g_xrem_m.xremsite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #161026-00013#1 --e add
+               
+                  CALL s_axrt300_site_geared_ld(g_xrem_m.xremsite,g_xrem_m.xremld,g_xrem_m.xrem004,g_xrem_m.xremdocdt,'site')
+                     RETURNING l_success,g_xrem_m.xremsite,g_xrem_m.xremsite_desc,g_xrem_m.xremld,g_xrem_m.xremld_desc
+                  DISPLAY BY NAME g_xrem_m.xremsite,g_xrem_m.xremsite_desc
+                  DISPLAY BY NAME g_xrem_m.xremld,g_xrem_m.xremld_desc
+                  IF NOT l_success THEN NEXT FIELD CURRENT END IF
+               END IF
+            ELSE
+               LET g_xrem_m.xremsite_desc = ''
+            END IF                   
+            #160811-00009#3 add e---
+            LET g_xrem_m.xremsite_desc = s_desc_get_department_desc(g_xrem_m.xremsite)
+            DISPLAY BY NAME g_xrem_m.xremsite_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xremsite
+            #add-point:BEFORE FIELD xremsite name="input.b.xremsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xremsite
+            #add-point:ON CHANGE xremsite name="input.g.xremsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xremld
+            
+            #add-point:AFTER FIELD xremld name="input.a.xremld"
+            LET g_xrem_m.xremld_desc = ''
+            IF NOT cl_null(g_xrem_m.xremld) THEN
+               #檢查是否存在 帳別資料檔 中
+               IF NOT ap_chk_isExist(g_xrem_m.xremld,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? ",'agl-00016',1) THEN
+                  LET g_xrem_m.xremld = ''
+                  CALL s_desc_get_ld_desc(g_xrem_m.xremld) RETURNING g_xrem_m.xremld_desc                
+                  NEXT FIELD CURRENT
+               END IF  
+               
+               #檢查是否 有效
+#               IF NOT ap_chk_isExist(g_xrem_m.xremld,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? AND glaastus = 'Y'",'agl-00051',1) THEN   #160318-00005#54  mark
+               IF NOT ap_chk_isExist(g_xrem_m.xremld,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? AND glaastus = 'Y'",'sub-01302','agli010') THEN   #160318-00005#54  add
+                  LET g_xrem_m.xremld = ''
+                  CALL s_desc_get_ld_desc(g_xrem_m.xremld) RETURNING g_xrem_m.xremld_desc                
+                  NEXT FIELD CURRENT
+               END IF 
+               
+               CALL s_fin_account_center_sons_query('3',g_xrem_m.xremsite,g_today,'1')
+               CALL s_fin_account_center_with_ld_chk(g_xrem_m.xremsite,g_xrem_m.xremld,g_user,'3','N','',g_today) RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_xrem_m.xremld = '' 
+                  NEXT FIELD CURRENT
+                END IF
+             END IF
+            #重新取得會計週期參照表,最大期別,月份下拉
+            CALL axrt930_01_glaa003(g_xrem_m.xremld,g_xrem_m.xrem001)RETURNING l_glaa003
+            CALL s_desc_get_ld_desc(g_xrem_m.xremld) RETURNING g_xrem_m.xremld_desc
+            DISPLAY BY NAME g_xrem_m.xremld_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xremld
+            #add-point:BEFORE FIELD xremld name="input.b.xremld"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xremld
+            #add-point:ON CHANGE xremld name="input.g.xremld"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrem004
+            
+            #add-point:AFTER FIELD xrem004 name="input.a.xrem004"
+            LET g_xrem_m.xrem004_desc = ' '
+            IF NOT cl_null(g_xrem_m.xrem004) THEN        
+               CALL s_employee_chk(g_xrem_m.xrem004) RETURNING g_sub_success
+               IF NOT g_sub_success THEN
+                  LET g_xrem_m.xrem004 = ''
+                  NEXT FIELD CURRENT
+               END IF     
+            END IF
+            CALL s_desc_get_person_desc(g_xrem_m.xrem004) RETURNING g_xrem_m.xrem004_desc
+            DISPLAY BY NAME g_xrem_m.xrem004_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrem004
+            #add-point:BEFORE FIELD xrem004 name="input.b.xrem004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrem004
+            #add-point:ON CHANGE xrem004 name="input.g.xrem004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xremdocno
+            #add-point:BEFORE FIELD xremdocno name="input.b.xremdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xremdocno
+            
+            #add-point:AFTER FIELD xremdocno name="input.a.xremdocno"
+             IF NOT cl_null(g_xrem_m.xremdocno) THEN 
+               CALL s_fin_slip_chk(g_xrem_m.xremdocno,g_prog,g_xrem_m.xremld,l_glaa024)RETURNING g_sub_success,g_errno            
+               IF NOT g_sub_success THEN
+                   INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_xrem_m.xremdocno = ''
+                  NEXT FIELD CURRENT
+               END IF     
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xremdocno
+            #add-point:ON CHANGE xremdocno name="input.g.xremdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrem001
+            #add-point:BEFORE FIELD xrem001 name="input.b.xrem001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrem001
+            
+            #add-point:AFTER FIELD xrem001 name="input.a.xrem001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrem001
+            #add-point:ON CHANGE xrem001 name="input.g.xrem001"
+            CALL axrt930_01_glaa003(g_xrem_m.xremld,g_xrem_m.xrem001)RETURNING l_glaa003
+            IF g_argv1 = '1' THEN
+               #下期最大最小日期 
+               CALL s_fin_date_get_period_range(l_glaa003,g_xrem_m.xrem001,g_xrem_m.xrem002+1)RETURNING l_strdate,l_enddate
+            ELSE
+               #當月最大最小日期
+               CALL s_fin_date_get_period_range(l_glaa003,g_xrem_m.xrem001,g_xrem_m.xrem002)RETURNING l_strdate,l_enddate
+            END IF        
+            CALL axrt930_01_glaa003(g_xrem_m.xremld,g_xrem_m.xrem001)RETURNING l_glaa003
+            CALL s_fin_date_get_period_range(l_glaa003,g_xrem_m.xrem001,g_xrem_m.xrem002)RETURNING l_strdate,l_enddate
+            IF cl_null(l_strdate) OR cl_null(l_enddate)THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'agl-00129'
+               LET g_errparam.extend = g_xrem_m.xrem001
+               LET g_errparam.popup = TRUE
+               CALL cl_err()                            
+               NEXT FIELD CURRENT
+            END IF
+            IF g_argv1 = '1' THEN
+               #下期第一天
+               LET g_xrem_m.xremdocdt = l_strdate
+            ELSE
+               #當期最後一天
+               LET g_xrem_m.xremdocdt = l_enddate
+            END IF
+            DISPLAY BY NAME g_xrem_m.xremdocdt
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrem002
+            #add-point:BEFORE FIELD xrem002 name="input.b.xrem002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrem002
+            
+            #add-point:AFTER FIELD xrem002 name="input.a.xrem002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrem002
+            #add-point:ON CHANGE xrem002 name="input.g.xrem002"
+            CALL axrt930_01_glaa003(g_xrem_m.xremld,g_xrem_m.xrem001)RETURNING l_glaa003
+            IF g_argv1 = '1' THEN
+               #下期最大最小日期 
+               CALL s_fin_date_get_period_range(l_glaa003,g_xrem_m.xrem001,g_xrem_m.xrem002+1)RETURNING l_strdate,l_enddate
+            ELSE
+               #當期最大最小日期
+               CALL s_fin_date_get_period_range(l_glaa003,g_xrem_m.xrem001,g_xrem_m.xrem002)RETURNING l_strdate,l_enddate
+            END IF    
+            IF cl_null(l_strdate) OR cl_null(l_enddate)THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'agl-00129'
+               LET g_errparam.extend = g_xrem_m.xrem002
+               LET g_errparam.popup = TRUE
+               CALL cl_err()                            
+               NEXT FIELD CURRENT
+            END IF
+            IF g_argv1 = '1' THEN
+               LET g_xrem_m.xremdocdt = l_strdate
+            ELSE
+               LET g_xrem_m.xremdocdt = l_enddate
+            END IF
+            DISPLAY BY NAME g_xrem_m.xremdocdt
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xremdocdt
+            #add-point:BEFORE FIELD xremdocdt name="input.b.xremdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xremdocdt
+            
+            #add-point:AFTER FIELD xremdocdt name="input.a.xremdocdt"
+            IF g_argv1 = '1' THEN
+               #年度/期別條件加一期的日期區間
+               IF g_xrem_m.xremdocdt > l_enddate OR g_xrem_m.xremdocdt < l_strdate THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aap-00240'
+                  LET g_errparam.extend = g_xrem_m.xremdocdt
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_xrem_m.xremdocdt = l_strdate
+                  NEXT FIELD CURRENT
+               END IF
+            ELSE
+               #年度期別的日期區間
+               IF g_xrem_m.xremdocdt > l_enddate OR g_xrem_m.xremdocdt < l_strdate THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aap-00225'
+                  LET g_errparam.extend = g_xrem_m.xremdocdt
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_xrem_m.xremdocdt = l_enddate
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xremdocdt
+            #add-point:ON CHANGE xremdocdt name="input.g.xremdocdt"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xremsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xremsite
+            #add-point:ON ACTION controlp INFIELD xremsite name="input.c.xremsite"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrem_m.xremsite
+            #LET g_qryparam.where = " ooef201 = 'Y' " #160811-00009#3 
+            #CALL q_ooef001()   #161026-00013#1 mark
+            CALL q_ooef001_46() #161026-00013#1 add
+            LET g_xrem_m.xremsite = g_qryparam.return1
+            CALL s_desc_get_department_desc(g_xrem_m.xremsite) RETURNING g_xrem_m.xremsite_desc
+            DISPLAY BY NAME g_xrem_m.xremsite,g_xrem_m.xremsite_desc
+            NEXT FIELD xremsite
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xremld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xremld
+            #add-point:ON ACTION controlp INFIELD xremld name="input.c.xremld"
+            INITIALIZE g_qryparam.* TO NULL
+               
+            #取得帳務組織下所屬成員
+            CALL s_fin_account_center_sons_query('3',g_xrem_m.xremsite,g_today,'1')
+            #取得帳務組織下所屬成員之帳別   
+            CALL s_fin_account_center_comp_str() RETURNING l_origin_str
+            #將取回的字串轉換為SQL條件
+            CALL s_fin_get_wc_str(l_origin_str) RETURNING l_origin_str
+            
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrem_m.xremld
+            LET g_qryparam.arg1 = g_user                                 #人員權限
+            LET g_qryparam.arg2 = g_dept                                 #部門權限
+            LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') AND glaacomp IN ",l_origin_str,""
+            CALL q_authorised_ld()
+            LET g_xrem_m.xremld = g_qryparam.return1
+            CALL s_desc_get_ld_desc(g_xrem_m.xremld) RETURNING g_xrem_m.xremld_desc     
+            DISPLAY BY NAME g_xrem_m.xremld,g_xrem_m.xremld_desc
+            NEXT FIELD xremld 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrem004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrem004
+            #add-point:ON ACTION controlp INFIELD xrem004 name="input.c.xrem004"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrem_m.xrem004
+            CALL q_ooag001()
+            LET g_xrem_m.xrem004 = g_qryparam.return1
+            CALL s_desc_get_person_desc(g_xrem_m.xrem004) RETURNING g_xrem_m.xrem004_desc
+            DISPLAY BY NAME g_xrem_m.xrem004,g_xrem_m.xrem004_desc
+            NEXT FIELD xrem004
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xremdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xremdocno
+            #add-point:ON ACTION controlp INFIELD xremdocno name="input.c.xremdocno"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrem_m.xremdocno 
+            LET g_qryparam.arg1 = l_glaa024
+            LET g_qryparam.arg2 = g_prog
+            CALL q_ooba002_1()                          
+            LET g_xrem_m.xremdocno  = g_qryparam.return1 
+            DISPLAY g_xrem_m.xremdocno TO xremdocno      
+            NEXT FIELD xremdocno                    
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrem001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrem001
+            #add-point:ON ACTION controlp INFIELD xrem001 name="input.c.xrem001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrem002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrem002
+            #add-point:ON ACTION controlp INFIELD xrem002 name="input.c.xrem002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xremdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xremdocdt
+            #add-point:ON ACTION controlp INFIELD xremdocdt name="input.c.xremdocdt"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+
+
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      DROP TABLE s_fin_tmp1
+      CLOSE WINDOW w_axrt930_01
+      RETURN r_success,r_xremdocno
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt930_01 
+   
+   #add-point:input段after input 
+   CALL cl_err_collect_init() 
+   CALL axrt930_01_chk() RETURNING r_success
+   IF r_success = TRUE THEN    
+      CALL axrt930_01_ins_xrem(g_xrem_m.xremdocno) RETURNING g_sub_success,r_xremdocno   
+      LET r_success = g_sub_success 
+   END IF  
+
+   #20150528--add--str--lujh
+   #是否抛傳票    
+   SELECT ooac004 INTO l_ooac004
+     FROM ooac_t
+    WHERE ooacent = g_enterprise
+      AND ooac001 = l_glaa024
+      AND ooac002 = g_xrem_m.xremdocno
+      AND ooac003 = 'D-FIN-0030'  
+   
+   IF l_glaa121 = 'Y' AND l_ooac004 = 'Y' THEN 
+      CALL s_transaction_begin()
+      CALL cl_err_collect_init()
+      
+      IF g_argv[1] = '1' THEN 
+         CALL s_pre_voucher_ins('AR','R50',g_xrem_m.xremld,r_xremdocno,g_xrem_m.xremdocdt,'5') RETURNING l_success
+      ELSE
+         CALL s_pre_voucher_ins('AR','R51',g_xrem_m.xremld,r_xremdocno,g_xrem_m.xremdocdt,'6') RETURNING l_success
+      END IF
+
+      LET r_success = l_success
+
+   END IF   
+   #20150528--add--end--lujh
+   
+   #151125-00006#1--add--s
+   IF r_success = '1' THEN 
+      CALL s_transaction_end('Y','0') 
+      CALL s_aooi200_fin_get_slip(g_xrem_m.xremdocno) RETURNING l_success,l_ooba002
+      LET l_xremcomp = null
+      SELECT glaacomp INTO l_xremcomp FROM glaa_t 
+                                     WHERE glaaent = g_enterprise 
+                                       AND glaald =  g_xrem_m.xremld
+      CALL s_fin_get_doc_para(g_xrem_m.xremld,l_xremcomp,l_ooba002,'D-FIN-0031') RETURNING l_dfin0031
+      CALL s_fin_get_doc_para(g_xrem_m.xremld,l_xremcomp,l_ooba002,'D-FIN-0032') RETURNING l_dfin0032
+      IF NOT cl_null(l_dfin0031) AND l_dfin0031 MATCHES '[Yy]' THEN 
+         IF cl_ask_confirm('aap-00403') THEN
+            CALL axrt930_01_immediately_conf() RETURNING l_success
+            IF l_success = 'Y' THEN
+               IF NOT cl_null(l_dfin0032) AND l_dfin0032 MATCHES '[Yy]' THEN 
+                  IF cl_ask_confirm('axr-00888') THEN              
+                     CALL axrt930_01_immediately_gen()
+                  END IF 
+                END IF 
+            END IF 
+         END IF 
+      END IF
+   ELSE 
+      CALL s_transaction_end('N','0')        
+   END IF 
+   #151125-00006#1--add--e
+
+   CALL cl_err_collect_show()  
+   
+   RETURN r_success,r_xremdocno
+   DROP TABLE s_fin_tmp1
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrt930_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axrt930_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 設定最大期別傳回會計周期參照表
+# Memo...........:
+# Usage..........: CALL axrt930_01_glaa003(p_ld,p_xrem001)
+# Date & Author..: 2014/10/28 By Hans
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axrt930_01_glaa003(p_ld,p_xrem001)
+DEFINE p_ld       LIKE xrem_t.xremld
+DEFINE p_xrem001  LIKE xrem_t.xrem001 #年度
+DEFINE l_glav006  LIKE glav_t.glav006
+DEFINE r_glaa003  LIKE glaa_t.glaa003 #會計週期參照表
+DEFINE l_comb_value STRING
+   
+   WHENEVER ERROR CONTINUE
+   LET r_glaa003 = ''
+   LET l_comb_value = '1,2,3,4,5,6,7,8,9,10,11,12'
+   #取得會計週期參照表
+   SELECT glaa003 INTO r_glaa003
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = p_ld
+      
+   #取得年度最大期別            
+   SELECT DISTINCT MAX(glav006)  INTO l_glav006
+     FROM glav_t 
+    WHERE glavent = g_enterprise
+      AND glav001 = r_glaa003
+      AND glav002 = p_xrem001
+      
+   CALL s_fin_set_comp_scc('xrem001','43')   #年度
+   IF l_glav006 = 13 THEN
+      CALL s_fin_set_comp_scc('xrem002','111')  #13期
+   ELSE
+       CALL cl_set_combo_items('xrem002',l_comb_value,l_comb_value)#12期
+   END IF
+   
+   
+   RETURN r_glaa003
+END FUNCTION
+
+################################################################################
+# Descriptions...: 批次產生單頭
+# Memo...........:
+# Usage..........: CALL axrt930_01_ins_xrem(p_docno)
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axrt930_01_ins_xrem(p_docno)
+DEFINE l_xrem RECORD LIKE xrem_t.*
+
+DEFINE p_docno     LIKE xrem_t.xremdocno #單據別
+DEFINE r_xremdocno LIKE xrem_t.xremdocno
+DEFINE r_success   LIKE type_t.chr1
+DEFINE l_comp      LIKE xrem_t.xremcomp   
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   LET r_xremdocno = ''
+   #取得帳套所屬法人 
+   CALL s_fin_ld_carry(g_xrem_m.xremld,'')RETURNING g_sub_success,g_xrem_m.xremld,l_comp,g_errno 
+   #自動編號
+   IF g_argv1 = '1' THEN
+      CALL s_aooi200_fin_gen_docno(g_xrem_m.xremld,'','',p_docno,g_xrem_m.xremdocdt,'axrt930') RETURNING r_success,r_xremdocno
+   ELSE      
+      CALL s_aooi200_fin_gen_docno(g_xrem_m.xremld,'','',p_docno,g_xrem_m.xremdocdt,'axrt931') RETURNING r_success,r_xremdocno
+   END IF
+   
+   IF NOT r_success THEN
+      RETURN r_success,r_xremdocno
+   END IF
+   INITIALIZE l_xrem.* TO NULL
+   LET l_xrem.xrement   = g_enterprise
+   LET l_xrem.xremownid = g_user
+   LET l_xrem.xremowndp = g_dept 
+   LET l_xrem.xremcrtid = g_user
+   LET l_xrem.xremcrtdt = g_today
+   LET l_xrem.xremmodid = ''       #資料修改者
+   LET l_xrem.xremmoddt = ''       #最近修改日
+   LET l_xrem.xremcnfid = ''       #資料確認者
+   LET l_xrem.xremcnfdt = ''       #資料確認日
+   LET l_xrem.xremstus  = 'N'      #狀態碼
+   LET l_xrem.xremsite  = g_xrem_m.xremsite
+   LET l_xrem.xremld    = g_xrem_m.xremld
+   LET l_xrem.xremcomp  = l_comp
+   LET l_xrem.xremdocno = r_xremdocno
+   LET l_xrem.xremdocdt = g_xrem_m.xremdocdt
+   LET l_xrem.xrem001   = g_xrem_m.xrem001   #年度
+   LET l_xrem.xrem002   = g_xrem_m.xrem002   #期別
+   LET l_xrem.xrem003   = 'AR'               #來源模組
+   LET l_xrem.xrem004   = g_xrem_m.xrem004   #帳務人員
+   LET g_xrem_m.xremdocno = r_xremdocno      #151125-00006#1--add
+   IF g_argv1 = '1' THEN 
+      LET l_xrem.xrem006 = '1'               
+   ELSE
+      LET l_xrem.xrem006 = '2'
+   END IF      
+   
+   INSERT INTO xrem_t VALUES (l_xrem.*)
+   IF SQLCA.SQLcode  THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ins xrem_t"
+      LET g_errparam.popup = TRUE
+      LET r_success = FALSE
+      CALL cl_err()
+      RETURN r_success,r_xremdocno
+   END IF
+   CALL axrt930_01_ins_xren(r_xremdocno)RETURNING g_sub_success 
+   IF NOT g_sub_success THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ins xren_t"
+      LET g_errparam.popup = TRUE
+      LET r_success = FALSE
+      CALL cl_err()   
+   END IF   
+   
+   RETURN r_success,r_xremdocno
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生單身
+# Memo...........:
+# Usage..........: CALL axrt930_01_ins_xren(p_xremdocno)
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axrt930_01_ins_xren(p_xremdocno)
+DEFINE l_xren RECORD LIKE xren_t.*
+DEFINE l_xrea RECORD LIKE xrea_t.*
+DEFINE l_xrem RECORD LIKE xrem_t.* 
+DEFINE p_xremdocno   LIKE xrem_t.xremdocno
+DEFINE r_success     LIKE type_t.chr1
+DEFINE l_docdt       LIKE xrea_t.xrea008
+DEFINE l_xrca007     LIKE xrca_t.xrca007
+DEFINE l_count       LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   
+   LET r_success = TRUE
+   SELECT * INTO l_xrem.*
+     FROM xrem_t
+    WHERE xrement = g_enterprise
+      AND xremdocno = p_xremdocno
+      
+   LET l_docdt = MDY(l_xrem.xrem002,1,l_xrem.xrem001) #年度期別第一天
+   LET g_sql = " SELECT *                               ",
+               "   FROM xrea_t                          ",
+               "  WHERE xrea004 LIKE '0%'               ",
+               "    AND xreaent = ",g_enterprise,"      ",
+               "    AND xreald  = '",l_xrem.xremld,"'   ",
+               "    AND xrea003 = 'AR'                  ",
+               "    AND xrea001 = '",l_xrem.xrem001,"'  ",
+               "    AND xrea002 = '",l_xrem.xrem002,"'  "
+               
+   IF g_argv1 = '2' THEN
+      LET g_sql = g_sql CLIPPED, " AND xrea008 < '",l_docdt,"' "
+   END IF                          
+   PREPARE axrt930_ins_prep FROM g_sql
+   DECLARE axrt930_ins_curs CURSOR FOR axrt930_ins_prep
+
+   FOREACH axrt930_ins_curs INTO l_xrea.*     
+      #暫估費用/暫估收入科目
+      SELECT xrca036,xrca007 INTO l_xren.xren043,l_xrca007
+        FROM xrca_t
+       WHERE xrcaent   = g_enterprise
+         AND xrcadocno = l_xrea.xrea005   
+     #稅別會科
+      SELECT glab005 INTO l_xren.xren042
+        FROM glab_t
+       WHERE glabent = g_enterprise
+         AND glab003 = '8304_03'   #160920-00007#1 Mod 8304_27 --> 8304_03
+         AND glabld  = g_xrem_m.xremld
+         AND glab002 = l_xrca007      
+      
+      IF cl_null(l_xren.xrenseq) OR l_xren.xrenseq = 0 THEN
+         LET l_xren.xrenseq = 1
+      ELSE 
+         LET l_xren.xrenseq = l_xren.xrenseq +1
+      END IF      
+      LET l_xren.xrenent = g_enterprise 
+      LET l_xren.xrendocno = p_xremdocno
+      LET l_xren.xren001 = l_xrea.xrea001    #年度
+      LET l_xren.xren002 = l_xrea.xrea002    #期別
+      LET l_xren.xren003 = l_xrea.xrea003    #來源模
+      LET l_xren.xren004 = l_xrea.xrea004    #帳款單性質
+      LET l_xren.xren005 = l_xrea.xrea005    #單據號碼
+      LET l_xren.xren006 = l_xrea.xrea006
+      LET l_xren.xren007 = l_xrea.xrea007
+      LET l_xren.xren008 = l_xrea.xrea008
+      LET l_xren.xren009 = l_xrea.xrea009
+      LET l_xren.xren010 = l_xrea.xrea010
+      LET l_xren.xren011 = l_xrea.xrea011
+      LET l_xren.xren012 = l_xrea.xrea012
+      LET l_xren.xren013 = l_xrea.xrea013 
+      LET l_xren.xren014 = l_xrea.xrea014 
+      LET l_xren.xren015 = l_xrea.xrea015 
+      LET l_xren.xren016 = l_xrea.xrea016 
+      LET l_xren.xren017 = l_xrea.xrea017 
+      LET l_xren.xren018 = l_xrea.xrea018 
+      LET l_xren.xren019 = l_xrea.xrea019    #應收付科目
+      LET l_xren.xrenorga = l_xrea.xreaorga
+      LET l_xren.xren020 = l_xrea.xrea020 
+      LET l_xren.xren021 = l_xrea.xrea021 
+      LET l_xren.xren022 = l_xrea.xrea022 
+      LET l_xren.xren023 = l_xrea.xrea023 
+      LET l_xren.xren024 = l_xrea.xrea024 
+      LET l_xren.xren025 = l_xrea.xrea025 
+      LET l_xren.xren026 = l_xrea.xrea026 
+      LET l_xren.xren027 = l_xrea.xrea027 
+      LET l_xren.xren028 = l_xrea.xrea028 
+      LET l_xren.xren029 = l_xrea.xrea029 
+      LET l_xren.xren030 = l_xrea.xrea030 
+      LET l_xren.xren031 = l_xrea.xrea031 
+      LET l_xren.xren032 = l_xrea.xrea032
+      LET l_xren.xren033 = l_xrea.xrea033
+      LET l_xren.xren040 = l_xrea.xrea040
+      LET l_xren.xren041 = l_xrea.xrea041 
+      LET l_xren.xren100 = l_xrea.xrea100 
+      LET l_xren.xren101 = l_xrea.xrea102 #重評匯率 
+      LET l_xren.xren103 = l_xrea.xrea104 
+      LET l_xren.xren104 = l_xrea.xrea105 
+      LET l_xren.xren105 = l_xrea.xrea106 
+      LET l_xren.xren113 = l_xrea.xrea114 
+      LET l_xren.xren114 = l_xrea.xrea115 
+      LET l_xren.xren115 = l_xrea.xrea116 
+      LET l_xren.xren121 = l_xrea.xrea122 #重評匯率
+      LET l_xren.xren131 = l_xrea.xrea132 #重評匯率
+
+      
+      INSERT INTO xren_t VALUES (l_xren.*)
+      IF SQLCA.SQLcode OR SQLCA.SQLERRD[3]=0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins xren_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   
+   END FOREACH
+   
+   SELECT COUNT(*) INTO l_count
+     FROM xren_t
+    WHERE xrenent   = g_enterprise
+      AND xrendocno = p_xremdocno
+   IF cl_null(l_count) THEN LET l_count = 0 END IF
+   IF l_count = 0 THEN
+       INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'axc-00530'
+         LET g_errparam.extend = "ins xren_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 检查是否存在资料，询问是否重产
+# Memo...........:
+# Usage..........: CALL axrt930_01_chk()
+# Input parameter:  
+# Date & Author..: 2014/11/4 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt930_01_chk()
+DEFINE r_success   LIKE type_t.chr1
+DEFINE l_cnt       LIKE type_t.num5
+DEFINE l_cnt1      LIKE type_t.num5
+DEFINE l_xremdocno LIKE xrem_t.xremdocno
+DEFINE l_xremld    LIKE xrem_t.xremld
+DEFINE l_xremdocdt LIKE xrem_t.xremdocdt
+DEFINE l_glaa121   LIKE glaa_t.glaa121
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   SELECT glaa121 INTO l_glaa121 FROM glaa_t 
+    WHERE glaaent = g_enterprise AND glaald = g_xrem_m.xremld
+    
+   #檢查是否存在xrem_t中,根據帳套、年度、期別
+   #1.若已存在产生传票的资料，提示已存在资料
+   LET l_cnt = 0
+#mark by aiqq---s
+#   SELECT COUNT(*) INTO l_cnt FROM xrem_t
+#    WHERE xrement = g_enterprise AND xrem003 = 'AR'
+#      AND xremld  = g_xrem_m.xremld 
+#      AND xrem001 = g_xrem_m.xrem001 
+#      AND xrem002 = g_xrem_m.xrem002
+#      AND xremstus = 'Y'
+#      AND xrem005 IS NOT NULL 
+#mark by aiqq---s
+
+    #add by aiqq---s
+    IF g_argv1 = '1' THEN
+      SELECT COUNT(*) INTO l_cnt FROM xrem_t
+       WHERE xrement = g_enterprise AND xrem003 = 'AR'
+         AND xremld  = g_xrem_m.xremld
+         AND xrem001 = g_xrem_m.xrem001
+         AND xrem002 = g_xrem_m.xrem002
+         AND xremstus = 'Y'
+         AND xrem005 IS NOT NULL
+         AND xrem006 = '1'
+   ELSE
+      SELECT COUNT(*) INTO l_cnt FROM xrem_t
+       WHERE xrement = g_enterprise AND xrem003 = 'AR'
+         AND xremld  = g_xrem_m.xremld
+         AND xrem001 = g_xrem_m.xrem001
+         AND xrem002 = g_xrem_m.xrem002
+         AND xremstus = 'Y'
+         AND xrem005 IS NOT NULL
+         AND xrem006 = '2'
+   END IF
+  #add by aiqq---e
+   IF l_cnt > 0 THEN 
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "axr-00229"
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()  
+      LET r_success = FALSE      
+   END IF   
+   
+   #2.若不存在产生传票的资料，询问是否删除重产
+   LET l_cnt1 = 0
+   SELECT COUNT(*) INTO l_cnt1 FROM xrem_t
+    WHERE xrement = g_enterprise AND xrem003 = 'AR'
+      AND xremld  = g_xrem_m.xremld 
+      AND xrem001 = g_xrem_m.xrem001 
+      AND xrem002 = g_xrem_m.xrem002
+      AND (xrem005 IS NULL OR xrem005 = ' ')  
+      AND xremstus<>'X'    #20150526 add lujh
+      AND xrem006 = g_argv1 #160125-00005#9 Add
+   IF l_cnt1 > 0 THEN 
+      IF cl_ask_confirm('axr-00230') THEN   #是，删除资料新增
+         LET r_success = TRUE    
+      
+         #获取单据编号
+         SELECT xremdocno,xremld,xremdocdt INTO l_xremdocno,l_xremld,l_xremdocdt
+           FROM xrem_t
+          WHERE xrement = g_enterprise
+            AND xremld  = g_xrem_m.xremld 
+            AND xrem001 = g_xrem_m.xrem001 
+            AND xrem002 = g_xrem_m.xrem002
+            AND xrem006 = g_argv1 #160125-00005#9 Add
+            AND xrem003 = 'AR'
+         
+         #删除单头
+         DELETE FROM xrem_t  
+          WHERE xrement = g_enterprise
+            AND xremdocno = l_xremdocno
+            AND xremld  = g_xrem_m.xremld 
+            AND xrem001 = g_xrem_m.xrem001 
+            AND xrem002 = g_xrem_m.xrem002
+            AND xrem003 = 'AR'            
+            
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "del xrem" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         
+            LET r_success = FALSE
+         END IF    
+        
+         #删除单身
+         DELETE FROM xren_t          
+          WHERE xrenent = g_enterprise
+            AND xrendocno = l_xremdocno
+            AND xren001 = g_xrem_m.xrem001 
+            AND xren002 = g_xrem_m.xrem002
+            AND xren003 = 'AR'
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "del xren" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         
+            LET r_success = FALSE
+         END IF 
+         IF l_glaa121 = 'Y' THEN  ##删除分录底稿
+            IF g_argv[1] = '1' THEN
+               CALL s_pre_voucher_del('AR','R50',g_xrem_m.xremld,g_xrem_m.xremdocno) RETURNING r_success
+            ELSE
+               CALL s_pre_voucher_del('AR','R51',g_xrem_m.xremld,g_xrem_m.xremdocno) RETURNING r_success
+            END IF 
+         END IF
+         ##删除单号
+         IF NOT s_aooi200_fin_del_docno(l_xremld,l_xremdocno,l_xremdocdt) THEN
+            LET r_success=FALSE
+         END IF 
+      ELSE
+         LET r_success = FALSE
+      END IF
+   END IF 
+   RETURN r_success   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 編輯完單據立即審核
+# Memo...........:
+# Usage..........: CALL axrt930_01_immediately_conf()
+#                  RETURNING r_success
+# Date & Author..: 2015/11/30 By aiqq
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt930_01_immediately_conf()
+   DEFINE l_xremcomp        LIKE xrem_t.xremcomp
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_doc_success     LIKE type_t.num5
+   DEFINE l_slip            LIKE ooba_t.ooba002
+   DEFINE l_dfin0031        LIKE type_t.chr1
+   DEFINE l_count           LIKE type_t.num5
+   DEFINE r_success         LIKE type_t.chr1
+   DEFINE l_efin5001        LIKE type_t.chr1
+   DEFINE l_ooba002         LIKE ooba_t.ooba002
+
+   LET r_success = 'Y' 
+   #無資料直接返回不做處理
+   IF cl_null(g_xrem_m.xremld)  THEN 
+      LET r_success='N'
+      RETURN r_success
+   END IF   
+   
+   LET l_xremcomp = null
+   SELECT glaacomp INTO l_xremcomp FROM glaa_t 
+                                  WHERE glaaent = g_enterprise 
+                                    AND glaald =  g_xrem_m.xremld
+   #無資料直接返回不做處理                                 
+   IF cl_null(l_xremcomp)  THEN 
+      LET r_success='N'
+      RETURN r_success   
+   END IF
+   #無資料直接返回不做處理
+   IF cl_null(g_xrem_m.xremdocno) THEN 
+      LET r_success='N'
+      RETURN r_success   
+   END IF   
+   
+   CALL cl_err_collect_init()
+   CALL s_transaction_begin()
+   
+   LET l_doc_success = TRUE 
+   
+   CALL s_aooi200_fin_get_slip(g_xrem_m.xremdocno) RETURNING l_doc_success,l_ooba002
+                                    
+   CALL s_fin_chk_E5001(g_xrem_m.xremld,l_xremcomp,l_ooba002) RETURNING l_efin5001
+   IF l_efin5001 = 'N' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axr-00346'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CALL cl_err_collect_show()
+      CALL s_transaction_end('N','0')
+      LET r_success = 'N'
+      RETURN r_success 
+   END IF 
+   CALL s_axrt940_conf_chk_em(g_xrem_m.xremdocno) RETURNING l_doc_success 
+   IF l_doc_success = TRUE THEN
+      CALL s_axrt940_conf_upd_em(g_xrem_m.xremdocno) RETURNING l_doc_success
+   END IF   
+  
+  #異動狀態碼欄位/修改人/修改日期
+   UPDATE xrem_t SET xremstus = 'Y',
+                     xremmodid= g_user
+    WHERE xrement = g_enterprise AND xremld = g_xrem_m.xremld
+      AND xremdocno = g_xrem_m.xremdocno
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      LET l_doc_success = FALSE
+   END IF
+  
+   IF l_doc_success THEN
+      CALL s_transaction_end('Y',1)
+      LET r_success = 'Y'
+   ELSE
+      LET r_success = 'N'
+      CALL s_transaction_end('N',1)
+   END IF
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 審核完單據立即拋轉傳票
+# Memo...........:
+# Usage..........: CALL axrt930_01_immediately_gen()
+# Date & Author..: 2015/11/30 By aiqq
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt930_01_immediately_gen()
+   DEFINE l_xremcomp        LIKE xrem_t.xremcomp
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_doc_success     LIKE type_t.num5
+   DEFINE l_slip            LIKE ooba_t.ooba002
+   DEFINE l_dfin0032        LIKE type_t.chr1
+   DEFINE l_count           LIKE type_t.num5
+   DEFINE l_glap001         LIKE glap_t.glap001
+   DEFINE l_prog            STRING 
+   DEFINE ls_js             STRING
+   DEFINE l_glaa024         LIKE glaa_t.glaa024
+   DEFINE l_ooac004         LIKE ooac_t.ooac004
+   DEFINE l_xremstus        LIKE xrem_t.xremstus
+   DEFINE l_wc_t            STRING
+   DEFINE l_glaa121         LIKE glaa_t.glaa121
+   DEFINE l_success_t       LIKE type_t.num5
+   DEFINE r_start_no        LIKE glap_t.glapdocno
+   DEFINE r_end_no          LIKE glap_t.glapdocno   
+   DEFINE l_s               LIKE type_t.chr1  
+   DEFINE l_glca002         LIKE glca_t.glca002
+   DEFINE l_xrem006         LIKE xrem_t.xrem006
+   DEFINE r_success         LIKE type_t.num5
+   DEFINE l_xrem005         LIKE xrem_t.xrem005
+  
+   
+   IF cl_null(g_xrem_m.xremld)    THEN RETURN END IF   #無資料直接返回不做處理
+   
+   LET l_xremcomp = null
+   SELECT glaacomp INTO l_xremcomp FROM glaa_t 
+                                  WHERE glaaent = g_enterprise 
+                                    AND glaald =  g_xrem_m.xremld
+                                    
+   IF cl_null(l_xremcomp)  THEN RETURN END IF   #無資料直接返回不做處理
+   IF cl_null(g_xrem_m.xremdocno) THEN RETURN END IF   #無資料直接返回不做處理
+
+    #取得單別
+    CALL s_aooi200_fin_get_slip(g_xrem_m.xremdocno) RETURNING l_success,l_slip
+    LET l_glaa024 = NULL
+    LET l_glaa121 = NULL
+    SELECT glaa024,glaa121 INTO l_glaa024,l_glaa121 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_xrem_m.xremld
+   
+    SELECT ooac004 INTO l_ooac004 FROM ooac_t WHERE ooacent = g_enterprise
+                                   AND ooac001 = l_glaa024
+                                   AND ooac002 = l_slip
+                                   AND ooac003 = 'D-FIN-2002'
+    
+    SELECT glca002 INTO l_glca002 FROM glca_t WHERE glcaent = g_enterprise AND glcald = g_xrem_m.xremld AND glca001 = 'AR'    
+    IF l_glca002 = '2' THEN
+       LET l_prog = 'aglt350'
+    ELSE
+       LET l_prog = 'aglt310'
+    END IF
+    
+    IF NOT cl_null(l_ooac004) THEN 
+       CALL s_transaction_begin()
+       LET l_wc_t = "xremdocno = '",g_xrem_m.xremdocno,"'"
+       SELECT xrem006 INTO l_xrem006 FROM xrem_t 
+                                    WHERE xrement=g_enterprise 
+                                    AND xremdocno=g_xrem_m.xremdocno
+                                    
+       IF l_xrem006 = '1' THEN 
+          IF l_glaa121 = 'Y' THEN 
+             LET l_wc_t = "glgbdocno = '",g_xrem_m.xremdocno,"'"
+             CALL s_pre_voucher_ins_glap('AR','R50',g_xrem_m.xremld,g_xrem_m.xremdocdt,l_ooac004,'1',l_wc_t) 
+             RETURNING r_success,r_start_no,r_end_no
+          ELSE                
+             CALL s_axrt940_gen_ar('5',g_xrem_m.xremld,g_xrem_m.xremdocdt,l_ooac004,1,l_wc_t,'N') 
+             RETURNING r_success,r_start_no,r_end_no
+          END IF
+       ELSE #axrt931
+          IF l_glaa121 = 'Y' THEN 
+             LET l_wc_t = "glgbdocno = '",g_xrem_m.xremdocno,"'"
+             CALL s_pre_voucher_ins_glap('AR','R51',g_xrem_m.xremld,g_xrem_m.xremdocdt,g_xrem_m.xremld,'1',l_wc_t) 
+             RETURNING r_success,r_start_no,r_end_no
+          ELSE  
+             CALL s_axrt940_gen_ar('6',g_xrem_m.xremld,g_xrem_m.xremdocdt,g_xrem_m.xremld,1,l_wc_t,'N') 
+             RETURNING r_success,r_start_no,r_end_no
+          END IF
+       END IF
+       
+       IF r_success = TRUE AND NOT cl_null(r_start_no) THEN
+          UPDATE xrem_t SET xrem005=r_start_no 
+                      WHERE xrement=g_enterprise 
+                      AND xremdocno=g_xrem_m.xremdocno
+          IF SQLCA.SQLCODE THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "update xrem_t"
+             LET g_errparam.code   = SQLCA.SQLCODE
+             LET g_errparam.popup  = TRUE      
+             CALL cl_err()
+             LET r_success = FALSE 
+          END IF 
+       END IF
+       
+    ELSE 
+        CALL axrt940_02(g_xrem_m.xremld,l_xremcomp,g_xrem_m.xremdocno,'2') RETURNING l_xrem005
+        IF NOT cl_null(l_xrem005) THEN
+           INITIALIZE g_errparam TO NULL 
+           LET g_errparam.extend = g_xrem_m.xremdocno
+           LET g_errparam.code   = "axr-00119"
+           LET g_errparam.popup  = FALSE      
+           CALL cl_err()    
+        ELSE 
+           INITIALIZE g_errparam TO NULL 
+           LET g_errparam.extend = g_xrem_m.xremdocno
+           LET g_errparam.code   = "axr-00120"
+           LET g_errparam.popup  = FALSE      
+           CALL cl_err()    
+           LET l_xrem005=''
+        END IF
+    END IF  
+END FUNCTION
+
+ 
+{</section>}
+ 

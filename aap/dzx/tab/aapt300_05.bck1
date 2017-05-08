@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt300_05" module="aap" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01727" crtdt="2014-01-28 10:34:31" modid="01727" moddt="2015-12-04 15:24:36" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="應付帳款差異處理">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apcadocno,apcald,ra1(chr500),apca030,apca030_desc(chr80),apca031,isam010,isam023,isam024,isam026,isam027,apca103(chr500),apca104(chr500),apca113(chr500),apca114(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt300_05" method="dialog">
+    <section id="input">
+      <input id="head" field="apcadocno,apcald,ra1,apca030,apca031,isam010"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="apcadocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_apcadocno" state="c"/>
+      </column>
+      <column id="apcald">
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="ra1" type="S" default="0"/>
+      <column id="apca030">
+        <after>
+          <reference field="apca030_desc" ref_field="apca030" map_field="apca030" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+      </column>
+      <column id="apca030_desc"/>
+      <column id="apca031">
+        <controlp form="q_apca019_1" state="c"/>
+      </column>
+      <column id="isam010">
+        <controlp form="q_isam010" state="i"/>
+      </column>
+      <column id="isam023"/>
+      <column id="isam024"/>
+      <column id="isam026"/>
+      <column id="isam027"/>
+      <column id="apca103"/>
+      <column id="apca104"/>
+      <column id="apca113"/>
+      <column id="apca114"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apca_t" pk="apcald,apcadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT apcadocno,apcald,&apos;&apos;,apca030,&apos;&apos;,apca031,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM apca_t WHERE apcaent= ? AND apcald=? AND apcadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="apcald,apcadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

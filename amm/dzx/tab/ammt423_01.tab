@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammt423_01" module="amm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02331" crtdt="2013-09-10 14:16:51" modid="01726" moddt="2015-01-23 17:59:19" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="會員卡續期批次產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmbnsite,mmbnsite_desc(chr80),mman001,mman001_desc(chr80),mmbn004,mmbn001,mman005(chr80),mman007(chr80),mman008(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="amm" filename="ammt423_01" method="dialog">
+    <section id="input">
+      <input id="head" field="mmbnsite,mman001,mmbn004"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="mmbnsite">
+        <after>
+          <reference field="mmbnsite_desc" ref_field="mmbn_t.mmbnsite" map_field="mmbnsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmbnsite_desc"/>
+      <column id="mman001">
+        <after/>
+        <controlp form="q_mman001_1" state="i"/>
+      </column>
+      <column id="mman001_desc"/>
+      <column id="mmbn004"/>
+      <column id="mmbn001">
+        <controlp form="q_mmbn001_1" state="c"/>
+      </column>
+      <column id="mman005"/>
+      <column id="mman007"/>
+      <column id="mman008"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmbn_t" pk="mmbndocno,mmbnseq">
+      <sql id="forupd_sql" type="sql" query="SELECT mmbnsite,&apos;&apos;,&apos;&apos;,&apos;&apos;,mmbn004,mmbn001,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mmbn_t WHERE mmbnent= ? AND mmbndocno=? AND mmbnseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="mmbndocno,mmbnseq"/>
+    </head>
+  </dataset>
+</assembly>
+

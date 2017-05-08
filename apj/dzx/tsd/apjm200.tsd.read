@@ -1,0 +1,844 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apjm200" std_prog="apjm200" erpver="1.0" ver="3" module="APJ" type="M" booking="N" designer_ver="1.0" class="m" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="pjba_t" main="N" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+    <tbl name="pjbb_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Tree" status=""/>
+    </tbl>
+    <tbl name="pjbc_t" main="N" head="N" pk="" fk_detail="" parent="pjba_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail5" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pjbd_t" main="N" head="N" pk="" fk_detail="" parent="pjbb_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pjbe_t" main="N" head="N" pk="" fk_detail="" parent="pjbb_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pjbf_t" main="N" head="N" pk="" fk_detail="" parent="pjbb_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pjbg_t" main="N" head="N" pk="" fk_detail="" parent="pjbb_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail4" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <tree name="s_browse" ver="1" src="s" kind="recu_01" att="type,id,pid,desc,speed,stype,sid,spid" cite_std="N" status="">
+    <type no="1" table="pjbb_t" col="pjbb001"/>
+    <id no="7" table="pjbb_t" col="pjbb002"/>
+    <pid no="8" table="pjbb_t" col="pjbb003"/>
+    <desc no="9" table="" col=""/>
+    <speed no="10" table="pjbbs_t" col=""/>
+    <stype no="11" table="pjbbs_t" col="pjbbs001"/>
+    <sid no="12" table="pjbbs_t" col="pjbbs002"/>
+    <spid no="13" table="pjbbs_t" col="pjbbs003"/>
+    <type2 no="" table="" col=""/>
+    <type3 no="" table="" col=""/>
+    <type4 no="" table="" col=""/>
+    <type5 no="" table="" col=""/>
+    <type6 no="" table="" col=""/>
+  </tree>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護專案與WBS的資料。
+標準作業功能取消：無
+狀態功能：未確認/已確認/無效
+作業類型：主檔維護作業
+輸入模式：Free Style
+作業資料來源(Master)：
+ 資料來源表：pjba_t(專案資料單頭檔)
+             pjbal_t(專案資料多語言檔)
+作業資料來源(Detail)：
+ 資料來源表：pjbb_t(專案WBS單身檔)
+             pjbbl_t(專案WBS多語言檔)
+             pjbc_t(專案成員檔)
+             pjbd_t(專案WBS材料預算檔)
+             pjbe_t(專案WBS人力預算檔)
+             pjbf_t(專案WBS設備預算檔)
+             pjbg_t(專案WBS費用預算檔)
+ 關聯資料表：pjbbs_t(專案資料提速檔)
+樹狀設定：
+    根結點  ：pjba001(專案編號)
+    上層結點：pjbb003(上階WBS)
+    下層結點：pjbb002(本階WBS)
+
+1.查詢時,需過濾只抓出專案類型的專案結構(pjaa006)=3.多階WBS的專案資料
+2.依據樹狀結構點到哪一筆WBS編號,底下pgae"材料預算/人力預算/設備預算/費用預算"的資料就需要跟著
+  變動顯示該WBS編號的資料
+3.page"成員"的資料內容是針對整個專案,所以只有當上下筆移動專案編號時,才需要跟著變動顯示
+
+]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.當單頭的pjba003有值,於單頭新增完後,彈出子畫面apjm200_s01,維護WBS00的計畫起始日,
+  WBS計畫起始/截止日遇非工作日的處理方式(pjba007), 參考行事曆參照表號(pjba008)
+2.關閉apjm200_s01後
+  (1)依據子畫面中輸入的計畫起始日推算其他WBS的計畫起始日與計畫截止日。
+     新專案WBS的計畫起始、截止日是以子畫面輸入的計畫起始日跟範本專案WBS00的計畫起始日
+     的差距計算出來的。
+     例:範本專案A，WBS00的計畫起始日是2011/05/01,截止日是2011/05/30
+                   WBS01的計畫起始日是2011/05/10,截止日是2011/05/20
+                   WBS02的計畫起始日是2011/05/20,截止日是2011/05/30
+                   WBS03的計畫起始日是2011/05/25,截止日是2011/05/30
+        新增專案B時，選擇範本專案為A，子畫面的計畫起始日輸入2013/06/01
+        則新專案WBS00的計畫起始日是2013/06/01,
+                           截止日是2013/06/01+(2011/05/30-2011/05/01)=2013/06/30
+                WBS01的計畫起始日是2013/06/01+(2011/05/10-2011/05/01)=2013/06/10
+                           截止日是2013/06/01+(2011/05/20-2011/05/01)=2013/06/20
+                WBS02的計畫起始日是2013/06/01+(2011/05/20-2011/05/01)=2013/06/20
+                           截止日是2013/06/01+(2011/05/30-2011/05/01)=2013/06/30
+                WBS03的計畫起始日是2013/06/01+(2011/05/25-2011/05/01)=2013/06/25
+                           截止日是2013/06/01+(2011/05/30-2011/05/01)=2013/06/30
+        *計算方式:新專案WBS00計畫起始日+(範本WBS計畫起始/截止日-範本WBS00計畫起始日期)
+  (2)成員這個單身頁籤裡的生、失效日期也依此方式推算
+     計算方式:新專案WBS00計畫起始日+(生/失效日期-範本WBS00計畫起始日期)
+  (3)推算完的日期,需搭配pjba007(1或2才須處理,3不做處理)與pjba008的設定,
+     呼叫應用元件,做往前、往後推算工作日的處理
+     s_date_get_latest_work_date(g_site,pjba008,'2',p_flag,推算完的計畫日期)
+     ↑傳入參數說明(營運據點,行事曆參照表號,行事曆類別,往前往後推算的flag,推算的基準日期)
+     =>pjba007=1時p_flag=-1; pjba007=2時p_flag=0; pjba007=3時不需呼叫應用元件
+]]>
+  </mi_all>
+  <field cite_std="N" name="b_pjbb001" ver="1" src="s" column="pjbb001" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb002" ver="1" src="s" column="pjbb002" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_pjbb002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb003" ver="1" src="s" column="pjbb003" table="pjbb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb004" ver="1" src="s" column="pjbb004" table="pjbb_t" attribute="" type="" req="Y" i_zoom="q_oocq002_1" c_zoom="q_oocq002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb005" ver="1" src="s" column="pjbb005" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb006" ver="1" src="s" column="pjbb006" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb007" ver="1" src="s" column="pjbb007" table="pjbb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb008" ver="1" src="s" column="pjbb008" table="pjbb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb009" ver="1" src="s" column="pjbb009" table="pjbb_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb010" ver="1" src="s" column="pjbb010" table="pjbb_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb011" ver="1" src="s" column="pjbb011" table="pjbb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pjbb012" ver="1" src="s" column="pjbb012" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="16003" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjba000" ver="1" src="s" column="pjba000" table="pjba_t" attribute="" type="" req="Y" i_zoom="q_pjaa001" c_zoom="q_pjaa001" chk_ref="v_pjaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[專案類型：
+  1.資料欄位:pjba000/可Display可Input
+  2.欄位校驗v_pjaa001 傳入參數:pjba000
+  4.依據pjba000的值
+    (1)抓取pjaa002(參照範本)當pjba003(範本專案編號)預設值
+    (2)抓取pjaa006(專案結構)、pjaa007(專案編號編碼分類、pjaa009(WBS編碼各段碼長)、pjaa002(參照範本),
+       若pjaa006=1.僅專案編號,
+       則pjba_t新增完後自動寫入一筆本階WBS='00'(這邊的WBS編碼需參考pjaa009的碼長設定,若pjaa009=3,則
+       編出來的WBS編碼就為'000',其他情況以此類推)的資料進pjbb_t,可修改本階WBS='00'的資料,但不可再新
+       增其他單身                     
+  5.開窗欄位  新增過濾條件：pjaa006=3.多階WBS
+]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjba001" ver="1" src="s" column="pjba001" table="pjba_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_pjba001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[專案編號：
+  1.新增時,若前一欄位抓到的pjaa007有值,則呼叫應用元件s_aooi390來編專案編號,傳入參數:'15'
+  
+]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjba002" ver="1" src="s" column="pjba002" table="pjba_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[範本：
+  1.說明:若本欄位值為Y,表示這是範本專案,供後續新增專案時可選擇本範本來複製產生專案資料
+  2.本欄位值為Y時,請將pjba003設為Noentry
+]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjba003" ver="1" src="s" column="pjba003" table="pjba_t" attribute="" type="" req="N" i_zoom="q_pjba001" c_zoom="q_pjba001" chk_ref="v_pjba001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[範本專案編號：
+  2.當pjba002為N時,才可維護本欄位
+  3.預設值:pjaa002(參照範本)
+  3.新增存檔時,
+    若本欄位有輸入值,則複製pjba003的專案資料(所有單頭、單身、多語言表、提速檔都複製,只是把
+    專案編號換成這次新增的專案編號)後,直接進入修改狀態;
+    如果本欄位沒有輸入值,則由User自行新增輸入後面所有的資料。
+    複製產生後,單頭的狀態碼請改為'N',單身的pjbb012請改為'0'
+  4.查詢欄位 過濾條件：pjba002='Y'
+]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjba004" ver="1" src="s" column="pjba004" table="pjba_t" attribute="" type="" req="Y" i_zoom="q_ooaj002_1" c_zoom="q_ooaj002_1" chk_ref="v_ooaj002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[專案計算幣別：
+  1.預設值:(1)若pjba003有值,則抓取範本專案的pjba004來當預設值
+           (2)前一步驟沒抓到值,則抓取ALL這個site的ooef016(主幣別編號)當預設值
+  2.校驗v_ooaj002 傳入參數 pjba004
+  6.開窗代號  傳參:ALL
+]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjba005" ver="1" src="s" column="pjba005" table="pjba_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[預設值:g_today]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjba006" ver="1" src="s" column="pjba006" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjba007" ver="1" src="s" column="pjba007" table="pjba_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="16008" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="RadioGroup" status="">
+    <![CDATA[WBS計畫起始/截止日遇非工作日的處理方式：
+  1.這邊的選擇會影響後面推算WBS計畫起始、截止日遇到非工作日時的處理方式,
+    若選擇1.提前達成,則將推算日往前移到前一個工作日;
+    若選擇2.往後遞延,則將推算日往後移到下一個工作日;
+    若選擇3.人工調整,則依照推算結果寫入,由User後續自行手動修改
+]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjba008" ver="1" src="s" column="pjba008" table="pjba_t" attribute="" type="" req="Y" i_zoom="q_ooal002_0" c_zoom="q_ooal002_0" chk_ref="v_ooal002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[參考行事曆參照表號：
+  1.預設值:ALL這個site的工廠行事曆參照表號(ooef008)
+  2.輸入值須存在aooi074的ooal002、ooal001=4且為有效資料
+  3.開窗代號:q_ooal002_0
+    arg1:4
+]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjba009" ver="3" src="s" column="pjba009" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjbacnfdt" ver="1" src="s" column="pjbacnfdt" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjbacnfid" ver="1" src="s" column="pjbacnfid" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjbacrtdp" ver="1" src="s" column="pjbacrtdp" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjbacrtdt" ver="1" src="s" column="pjbacrtdt" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjbacrtid" ver="1" src="s" column="pjbacrtid" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjbamoddt" ver="1" src="s" column="pjbamoddt" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjbamodid" ver="1" src="s" column="pjbamodid" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjbaowndp" ver="1" src="s" column="pjbaowndp" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjbaownid" ver="1" src="s" column="pjbaownid" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjba_t.pjbastus" ver="1" src="s" column="pjbastus" table="pjba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb001" ver="1" src="s" column="pjbb001" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb002" ver="1" src="s" column="pjbb002" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_pjbb002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[本階WBS：
+  2.專案編號+本欄位為key值,不可重複
+  3.依據pjba00的值抓取pjaa008(WBS編碼原則)與pjaa009(WBS編碼各段碼長),
+    (1)當pjaa006=3.多階WBS,則pjba_t新增完後自動寫入一筆本階WBS='00'(控卡同a.的說明)的資料進pjbb_t,
+       可再新增其他單身
+    (2)pjaa008='1'則編出來的WBS編號為純流水號,例如:01,02,03,....;
+       pjaa008='2'則編出來的WBS編號是多段流水號組合,中間以"-"當間隔符號,
+       例如:00
+               01
+                  01-01
+                  01-02
+                        01-02-01
+               02
+                  02-01
+                        02-01-01
+                  02-02
+               ....
+]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb003" ver="1" src="s" column="pjbb003" table="pjbb_t" attribute="" type="" req="Y" i_zoom="q_pjbb002" c_zoom="q_pjbb002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[上階WBS：
+  1.預設值:
+    a.若pjaa008=1.單階流水,則上階WBS='00'(依據pjaa009碼長設定決定長度);
+    b.若pjaa008=2.依階層編號,則上階WBS=本階WBS去掉'-'與最後一段流水號 或者 '00'
+      例(1):本階WBS='02-01-01',則上階WBS='02-01'
+      例(2):本階WBS='02',則上階WBS='00' (WBS編號裡沒有'-'符號,表示是'00'的下一階)
+  2.開窗欄位：pjbb001,pjbal003,pjbb002,pjbbl004   回傳：pjbb002
+    新增過濾條件：同一專案的WBS編號,只開出限制WBS階層比本階小的WBS編號
+    where pjbb004 in (select oocq002 from oocq_t
+                       where oocq001=8001
+                         and oocq009<(select oocq009 from oocq_t
+                                       where oocq001=8001 and oocq002=g_pjbb.pjbb004))
+]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb004" ver="1" src="s" column="pjbb004" table="pjbb_t" attribute="" type="" req="Y" i_zoom="q_oocq002_1" c_zoom="q_oocq002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[WBS類型：
+  1.輸入值須存在apji020的WBS類型、且為有效資料
+
+]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb005" ver="1" src="s" column="pjbb005" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[計畫起始日：
+  1.檢查計畫起始日不可大於計畫截止日
+  2.依據pjba007('1'或'2')的設定來做工作日日期的推算處理,輸入完也需檢查是不是工作日,
+    不是的話需提示並卡住;若pjba007='3'則由User自行維護,不做工作日的卡關
+]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb006" ver="1" src="s" column="pjbb006" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[計畫截止日：
+  1.檢查計畫起始日不可大於計畫截止日
+  2.依據pjba007('1'或'2')的設定來做工作日日期的推算處理,輸入完也需檢查是不是工作日,
+    不是的話需提示並卡住;若pjba007='3'則由User自行維護,不做工作日的卡關
+]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb007" ver="2" src="s" column="pjbb007" table="pjbb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[工期天數：
+  1.預設值:使用s_date_get_workdays元件來獲取工期天數
+]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb008" ver="1" src="s" column="pjbb008" table="pjbb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[工期時數：
+  1.預設值:pjbb007 * E-COM-0007參數值(E-COM-0007:專案工期一天對應時數)
+]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb009" ver="1" src="s" column="pjbb009" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[里程碑：
+  說明:(勾選代表本WBS為專案過程中重大事件、時程點、檢驗點或階段分界點)
+]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb010" ver="1" src="s" column="pjbb010" table="pjbb_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[負責人員：
+  校驗代號:v_ooag001 傳入參數 pjbb010
+]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb011" ver="1" src="s" column="pjbb011" table="pjbb_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[負責部門：
+  校驗代號:v_ooeg001 傳入參數pjbb011
+]]>
+  </field>
+  <field cite_std="N" name="pjbb_t.pjbb012" ver="1" src="s" column="pjbb012" table="pjbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="16003" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[狀態碼：
+  1.狀態的變更需透過Topmenu"明細操作"的Action改變值,不可直接修改
+  2.當狀態碼不為'0'時,不可異動WBS資料
+]]>
+  </field>
+  <field cite_std="N" name="pjbc_t.pjbc002" ver="1" src="s" column="pjbc002" table="pjbc_t" attribute="" type="" req="Y" i_zoom="q_oocq002_1" c_zoom="q_oocq002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[專案角色：
+  1.輸入值須存在apji030的專案角色編號、且為有效資料
+]]>
+  </field>
+  <field cite_std="N" name="pjbc_t.pjbc003" ver="1" src="s" column="pjbc003" table="pjbc_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[員工編號：
+  2.校驗代號:v_ooag001 傳入參數 pjbc003
+]]>
+  </field>
+  <field cite_std="N" name="pjbc_t.pjbc004" ver="1" src="s" column="pjbc004" table="pjbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期：
+  1.預設值:g_today
+  2.若失效日期有值,本欄位值不可大於失效日期
+]]>
+  </field>
+  <field cite_std="N" name="pjbc_t.pjbc005" ver="1" src="s" column="pjbc005" table="pjbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期：
+  1.若本欄位有輸入值不可小於生效日期
+]]>
+  </field>
+  <field cite_std="N" name="pjbc_t.pjbc006" ver="1" src="s" column="pjbc006" table="pjbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjbd_t.pjbd003" ver="1" src="s" column="pjbd003" table="pjbd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次：
+  1.預設值:MAX(pjbd003)+1,抓不到最大值則預設為1
+]]>
+  </field>
+  <field cite_std="N" name="pjbd_t.pjbd004" ver="1" src="s" column="pjbd004" table="pjbd_t" attribute="" type="" req="N" i_zoom="q_rtax001" c_zoom="q_rtax001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品分類：
+  1.本欄位與限定料號需擇一輸入,不可都不輸入
+  2.若有輸入值,在本專案中不可重複
+  3.輸入值須存在aimi010的品類編號、且為有效的資料
+
+]]>
+  </field>
+  <field cite_std="N" name="pjbd_t.pjbd005" ver="1" src="s" column="pjbd005" table="pjbd_t" attribute="" type="" req="N" i_zoom="q_imaa001" c_zoom="q_imaa001" chk_ref="v_imaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[限定料號：
+  2.本欄位與產品分類需擇一輸入,不可都不輸入
+  3.若有輸入值,在本專案中不可重複
+  4.校驗代號v_imaa001  傳入參數 pjbd005
+  5. 抓取imaa006當pjbd006的預設值
+]]>
+  </field>
+  <field cite_std="N" name="pjbd_t.pjbd006" ver="1" src="s" column="pjbd006" table="pjbd_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單位：
+  1.校驗代號v_ooca001  傳入參數 pjbd006
+
+]]>
+  </field>
+  <field cite_std="N" name="pjbd_t.pjbd007" ver="1" src="s" column="pjbd007" table="pjbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[數量：
+  1.本欄位可不輸入,若有輸入值須>0
+]]>
+  </field>
+  <field cite_std="N" name="pjbd_t.pjbd008" ver="1" src="s" column="pjbd008" table="pjbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單價：
+  1.本欄位可不輸入,若有輸入值須>0
+  2.若數量與本欄位有輸入,則pjbd007=pjbd005*pjbd006
+    依據專案計算幣別的金額取位小數位數做計算後的捨入,
+    捨入類型請抓E-COM-0006參數值(1.四捨五入 2.四捨六入五成雙 3.無條件捨棄 4.無條件進位)
+]]>
+  </field>
+  <field cite_std="N" name="pjbd_t.pjbd009" ver="1" src="s" column="pjbd009" table="pjbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[金額：
+  1.不管數量、單價有沒有輸入值,都可人工直接手調金額
+  2.若有輸入值須>0,依據專案計算幣別的金額取位小數位數做計算後的捨入,
+    捨入類型請抓E-COM-0006參數值(1.四捨五入 2.四捨六入五成雙 3.無條件捨棄 4.無條件進位)
+]]>
+  </field>
+  <field cite_std="N" name="pjbd_t.pjbd010" ver="1" src="s" column="pjbd010" table="pjbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjbe_t.pjbe003" ver="1" src="s" column="pjbe003" table="pjbe_t" attribute="" type="" req="Y" i_zoom="q_oocq002_1" c_zoom="q_oocq002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[專案角色：
+  1.輸入值須存在apji030的專案角色編號、且為有效資料
+]]>
+  </field>
+  <field cite_std="N" name="pjbe_t.pjbe004" ver="1" src="s" column="pjbe004" table="pjbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[時數：
+  1.本欄位可不輸入,若有輸入值須>0
+]]>
+  </field>
+  <field cite_std="N" name="pjbe_t.pjbe005" ver="1" src="s" column="pjbe005" table="pjbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[天數：
+  1.本欄位可不輸入,若有輸入值須>0
+]]>
+  </field>
+  <field cite_std="N" name="pjbe_t.pjbe006" ver="1" src="s" column="pjbe006" table="pjbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[職能成本單價/時：
+  1.本欄位可不輸入,若有輸入值須>0
+]]>
+  </field>
+  <field cite_std="N" name="pjbe_t.pjbe007" ver="1" src="s" column="pjbe007" table="pjbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[職能成本單價/天：
+  1.本欄位可不輸入,若有輸入值須>0
+  2.若天數與本欄位有輸入,則pjbe008=pjbe005*pjbe007
+    依據專案計算幣別的金額取位小數位數做計算後的捨入,
+    捨入類型請抓E-COM-0006參數值(1.四捨五入 2.四捨六入五成雙 3.無條件捨棄 4.無條件進位)
+]]>
+  </field>
+  <field cite_std="N" name="pjbe_t.pjbe008" ver="1" src="s" column="pjbe008" table="pjbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[職能成本金額：
+  1.不管天數、單價有沒有輸入值,都可人工直接手調成本金額
+  2.若有輸入值須>0,依據專案計算幣別的金額取位小數位數做計算後的捨入,
+    捨入類型請抓E-COM-0006參數值(1.四捨五入 2.四捨六入五成雙 3.無條件捨棄 4.無條件進位)
+]]>
+  </field>
+  <field cite_std="N" name="pjbe_t.pjbe009" ver="1" src="s" column="pjbe009" table="pjbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjbf_t.pjbf003" ver="1" src="s" column="pjbf003" table="pjbf_t" attribute="" type="" req="Y" i_zoom="q_mrba001" c_zoom="q_mrba001" chk_ref="v_mrba001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[限定機器：
+  1.校驗編號 v_mrba001_1  傳入參數:pjbf003]]>
+  </field>
+  <field cite_std="N" name="pjbf_t.pjbf004" ver="1" src="s" column="pjbf004" table="pjbf_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[耗用單位：
+  1.校驗代號v_ooca001  傳入參數 pjbf004
+]]>
+  </field>
+  <field cite_std="N" name="pjbf_t.pjbf005" ver="1" src="s" column="pjbf005" table="pjbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[耗用數量：
+  1.本欄位可不輸入,若有輸入值須>0
+]]>
+  </field>
+  <field cite_std="N" name="pjbf_t.pjbf006" ver="1" src="s" column="pjbf006" table="pjbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單位成本率：
+  1.本欄位可不輸入,若有輸入值須>0
+  2.若耗用數量與本欄位有輸入,則pjbf007=pjbf005*pjbf006
+    依據專案計算幣別的金額取位小數位數做計算後的捨入,
+    捨入類型請抓E-COM-0006參數值(1.四捨五入 2.四捨六入五成雙 3.無條件捨棄 4.無條件進位)
+]]>
+  </field>
+  <field cite_std="N" name="pjbf_t.pjbf007" ver="1" src="s" column="pjbf007" table="pjbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[金額:
+  1.不管耗用數量、單位成本率有沒有輸入值,都可人工直接手調金額
+  2.若有輸入值須>0,依據專案計算幣別的金額取位小數位數做計算後的捨入,
+    捨入類型請抓E-COM-0006參數值(1.四捨五入 2.四捨六入五成雙 3.無條件捨棄 4.無條件進位)
+]]>
+  </field>
+  <field cite_std="N" name="pjbf_t.pjbf008" ver="1" src="s" column="pjbf008" table="pjbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjbg_t.pjbg003" ver="1" src="s" column="pjbg003" table="pjbg_t" attribute="" type="" req="Y" i_zoom="q_oocq002_1" c_zoom="q_oocq002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[費用類型：
+  1.輸入值須存在apji040的費用類型,且為有效的資料
+]]>
+  </field>
+  <field cite_std="N" name="pjbg_t.pjbg004" ver="1" src="s" column="pjbg004" table="pjbg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[規劃金額：
+  1.不允許空白,輸入值須>0,依據專案計算幣別的金額取位小數位數做計算後的捨入,
+    捨入類型請抓E-COM-0006參數值(1.四捨五入 2.四捨六入五成雙 3.無條件捨棄 4.無條件進位)
+]]>
+  </field>
+  <field cite_std="N" name="pjbg_t.pjbg005" ver="1" src="s" column="pjbg005" table="pjbg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="3" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjbn_t.pjba009" ver="3" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pjbn_t.pjbn009" ver="3" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="3" name="b_pjbb002_desc" src="s" depend_field="b_pjbb002" correspon_key="pjbb001,pjbb002" ref_table="pjbbl_t" ref_fk="pjbbl001,pjbbl002" ref_dlang="pjbbl003" ref_rtn="pjbbl004" status="u"/>
+    <rfield cite_std="N" ver="3" name="b_pjbb004_desc" src="s" depend_field="b_pjbb004" correspon_key="&apos;8001&apos;,pjbb004" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status="u"/>
+    <rfield cite_std="N" ver="1" name="pjba000_desc" src="s" depend_field="pjba_t.pjba000" correspon_key="pjba000" ref_table="pjaal_t" ref_fk="pjaal001" ref_dlang="pjaal002" ref_rtn="pjaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pjba003_desc" src="s" depend_field="pjba_t.pjba003" correspon_key="pjba003" ref_table="pjbal_t" ref_fk="pjbal001" ref_dlang="pjbal002" ref_rtn="pjbal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pjba004_desc" src="s" depend_field="pjba_t.pjba004" correspon_key="pjba004" ref_table="ooail_t" ref_fk="ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="pjba008_desc" src="s" depend_field="pjba_t.pjba008" correspon_key="&apos;4&apos;,pjba008" ref_table="ooall_t" ref_fk="ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbacnfid_desc" src="s" depend_field="pjba_t.pjbacnfid" correspon_key="pjbacnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbacrtdp_desc" src="s" depend_field="pjba_t.pjbacrtdp" correspon_key="pjbacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbacrtid_desc" src="s" depend_field="pjba_t.pjbacrtid" correspon_key="pjbacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbamodid_desc" src="s" depend_field="pjba_t.pjbamodid" correspon_key="pjbamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbaowndp_desc" src="s" depend_field="pjba_t.pjbaowndp" correspon_key="pjbaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbaownid_desc" src="s" depend_field="pjba_t.pjbaownid" correspon_key="pjbaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="3" name="pjbb002_desc" src="s" depend_field="pjbb_t.pjbb002" correspon_key="pjbb001,pjbb002" ref_table="pjbbl_t" ref_fk="pjbbl001,pjbbl002" ref_dlang="pjbbl003" ref_rtn="pjbbl004" status="d"/>
+    <rfield cite_std="N" ver="1" name="pjbb003_desc" src="s" depend_field="pjbb_t.pjbb003" correspon_key="pjbb001,pjbb003" ref_table="pjbbl_t" ref_fk="pjbbl001,pjbbl002" ref_dlang="pjbbl003" ref_rtn="pjbbl004" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbb004_desc" src="s" depend_field="pjbb_t.pjbb004" correspon_key="&apos;8001&apos;,pjbb004" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbb010_desc" src="s" depend_field="pjbb_t.pjbb010" correspon_key="pjbb010" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbb011_desc" src="s" depend_field="pjbb_t.pjbb011" correspon_key="pjbb011" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbc002_desc" src="s" depend_field="pjbc_t.pjbc002" correspon_key="&apos;8002&apos;,pjbc002" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbc003_desc" src="s" depend_field="pjbc_t.pjbc003" correspon_key="pjbc003" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbd004_desc" src="s" depend_field="pjbd_t.pjbd004" correspon_key="pjbd004" ref_table="rtaxl_t" ref_fk="rtaxl001" ref_dlang="rtaxl002" ref_rtn="rtaxl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbd005_desc" src="s" depend_field="pjbd_t.pjbd005" correspon_key="pjbd005" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbd005_desc1" src="s" depend_field="pjbd_t.pjbd005" correspon_key="pjbd005" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbd006_desc" src="s" depend_field="pjbd_t.pjbd006" correspon_key="pjbd006" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbe003_desc" src="s" depend_field="pjbe_t.pjbe003" correspon_key="&apos;8002&apos;,pjbe003" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbf003_desc" src="s" depend_field="pjbf_t.pjbf003" correspon_key="pjbf003" ref_table="mrba_t" ref_fk="mrba001" ref_dlang="" ref_rtn="mrba004" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbf004_desc" src="s" depend_field="pjbf_t.pjbf004" correspon_key="pjbf004" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pjbg003_desc" src="s" depend_field="pjbg_t.pjbg003" correspon_key="&apos;8003&apos;,pjbg003" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="pjbal_t.pjbal003" src="s" depend_field="pjba_t.pjba001" correspon_key="pjba001" lang_table="pjbal_t" lang_fk="pjbal001" lang_dlang="pjbal002" lang_rtn="pjbal003" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="pjbal_t.pjbal004" src="s" depend_field="pjba_t.pjba001" correspon_key="pjba001" lang_table="pjbal_t" lang_fk="pjbal001" lang_dlang="pjbal002" lang_rtn="pjbal004" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="pjbbl_t.pjbbl004" src="s" depend_field="pjbb_t.pjbb002" correspon_key="pjbb001,pjbb002" lang_table="pjbbl_t" lang_fk="pjbbl001,pjbbl002" lang_dlang="pjbbl003" lang_rtn="pjbbl004" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="pjbbl_t.pjbbl005" src="s" depend_field="pjbb_t.pjbb002" correspon_key="pjbb001,pjbb002" lang_table="pjbbl_t" lang_fk="pjbbl001,pjbbl002" lang_dlang="pjbbl003" lang_rtn="pjbbl005" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_pjbb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pjbb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjba000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjba001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjba002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjba003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjba004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjba005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjba006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjba007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjba008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="pjba_t.pjba009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjbacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjbacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjbacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjbacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjbacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjbamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjbamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjbaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjbaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjba_t.pjbastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pjbb_t.pjbb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbb_t.pjbb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbc_t.pjbc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbc_t.pjbc003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbc_t.pjbc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbc_t.pjbc005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbc_t.pjbc006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbd_t.pjbd003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbd_t.pjbd004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbd_t.pjbd005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbd_t.pjbd006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbd_t.pjbd007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbd_t.pjbd008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbd_t.pjbd009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbd_t.pjbd010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbe_t.pjbe003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbe_t.pjbe004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbe_t.pjbe005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbe_t.pjbe006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbe_t.pjbe007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbe_t.pjbe008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbe_t.pjbe009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbf_t.pjbf003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbf_t.pjbf004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbf_t.pjbf005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbf_t.pjbf006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbf_t.pjbf007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbf_t.pjbf008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbg_t.pjbg003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbg_t.pjbg004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pjbg_t.pjbg005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="pjbn_t.pjba009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="pjbn_t.pjbn009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="first" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert_detail" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="jump" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="last" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify_detail" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="next" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="previous" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="statechange" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[確認：
+  1.呼叫s_apjm200_conf_chk做檢核
+  2.詢問是否執行確認功能,是才繼續下一步驟
+  3.呼叫s_apjm200_conf_upd更新狀態碼
+取消確認：
+  1.呼叫s_apjm200_unconf_chk做檢核
+  2.詢問是否執行取消確認功能,是才繼續下一步驟
+  3.呼叫s_apjm200_unconf_upd更新狀態碼
+無效：
+  1.呼叫s_apjm200_void_chk做檢核
+  2.詢問是否執行無效功能,是才繼續下一步驟
+  3.呼叫s_apjm200_void_upd更新狀態碼
+恢復有效：
+  1.呼叫s_apjm200_unvoid_chk做檢核
+  2.詢問是否執行恢復有效功能,是才繼續下一步驟
+  3.呼叫s_apjm200_unvoid_upd更新狀態碼
+]]>
+  </act>
+  <act cite_std="N" id="upd_1" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="upd_2" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="upd_9" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="upd_un1" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="upd_un2" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="upd_un9" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_pjba005" text="計畫起始日" lstr=""/>
+    <sfield name="group1" text="WBS計畫起始/截止日遇非工作日的處理方式" lstr=""/>
+    <sfield name="lbl_pjba008" text="參考行事曆參照表號" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_pjba000" text="專案類型" lstr=""/>
+    <sfield name="lbl_pjaal003" text="說明" lstr=""/>
+    <sfield name="lbl_pjba001" text="專案編號" lstr=""/>
+    <sfield name="lbl_pjba002" text="範本" lstr=""/>
+    <sfield name="lbl_pjbal003" text="說明" lstr=""/>
+    <sfield name="lbl_pjbal004" text="助記碼" lstr=""/>
+    <sfield name="lbl_pjba003" text="範本專案編號" lstr=""/>
+    <sfield name="lbl_pjba004" text="專案計算幣別" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_pjba006" text="備註" lstr=""/>
+    <sfield name="page_7" text="WBS計畫日推算條件" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_pjbaownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_pjbacrtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_pjbaowndp" text="資料所屬部門" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_pjbacrtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_pjbacrtdt" text="資料創建日" lstr=""/>
+    <sfield name="group_stateinfo" text="資料異動" lstr=""/>
+    <sfield name="lbl_pjbamodid" text="資料修改者" lstr=""/>
+    <sfield name="lbl_pjbacnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_pjbamoddt" text="最近修改日" lstr=""/>
+    <sfield name="lbl_pjbacnfdt" text="資料確認日" lstr=""/>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_pjbb001" text="專案編號" lstr=""/>
+    <sfield name="lbl_pjbb002" text="本階WBS" lstr=""/>
+    <sfield name="lbl_pjbb003" text="上階WBS" lstr=""/>
+    <sfield name="lbl_pjbb004" text="WBS類型" lstr=""/>
+    <sfield name="lbl_pjbb005" text="計畫起始日" lstr=""/>
+    <sfield name="lbl_pjbb006" text="計畫截止日" lstr=""/>
+    <sfield name="lbl_pjbb007" text="工期天數" lstr=""/>
+    <sfield name="lbl_pjbb008" text="工期時數" lstr=""/>
+    <sfield name="lbl_pjbb009" text="里程碑" lstr=""/>
+    <sfield name="lbl_pjbb010" text="負責人員" lstr=""/>
+    <sfield name="lbl_pjbb011" text="負責部門" lstr=""/>
+    <sfield name="lbl_pjbb012" text="狀態碼" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="lbl_pjbbl004" text="說明" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_treetotal" text="共" lstr=""/>
+    <sfield name="lbl_treerows" text="筆" lstr=""/>
+    <sfield name="insert_detail" text="新增WBS" lstr=""/>
+    <sfield name="modify_detial" text="修改WBS" lstr=""/>
+    <sfield name="page_6" text="WBS資料" lstr=""/>
+    <sfield name="lbl_pjbbl005" text="助記碼" lstr=""/>
+    <sfield name="page_2" text="成員" lstr=""/>
+    <sfield name="lbl_pjbc002" text="專案角色" lstr=""/>
+    <sfield name="lbl_pjbc003" text="員工編號" lstr=""/>
+    <sfield name="lbl_pjbc004" text="生效日期" lstr=""/>
+    <sfield name="lbl_pjbc005" text="失效日期" lstr=""/>
+    <sfield name="lbl_pjbc006" text="備註" lstr=""/>
+    <sfield name="bpage_1" text="項目" lstr=""/>
+    <sfield name="lbl_pjbd003" text="項次" lstr=""/>
+    <sfield name="lbl_pjbd004" text="產品分類" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_pjbd005" text="限定料號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_pjbd010" text="補充說明" lstr=""/>
+    <sfield name="lbl_pjbd006" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_pjbd007" text="數量" lstr=""/>
+    <sfield name="lbl_pjbd008" text="單價" lstr=""/>
+    <sfield name="lbl_pjbd009" text="金額" lstr=""/>
+    <sfield name="lbl_pjbe003" text="專案角色" lstr=""/>
+    <sfield name="lbl_pjbe004" text="時數" lstr=""/>
+    <sfield name="lbl_pjbe005" text="天數" lstr=""/>
+    <sfield name="lbl_pjbe006" text="職能成本單價(時)" lstr=""/>
+    <sfield name="lbl_pjbe007" text="職能成本單價(天)" lstr=""/>
+    <sfield name="lbl_pjbe008" text="職能成本金額" lstr=""/>
+    <sfield name="lbl_pjbe009" text="備註" lstr=""/>
+    <sfield name="lbl_pjbf003" text="限定機器" lstr=""/>
+    <sfield name="lbl_mrba004" text="資源名稱" lstr=""/>
+    <sfield name="lbl_pjbf004" text="耗用單位" lstr=""/>
+    <sfield name="lbl_pjbf005" text="耗用數量" lstr=""/>
+    <sfield name="lbl_pjbf006" text="單位成本率" lstr=""/>
+    <sfield name="lbl_pjbf007" text="金額" lstr=""/>
+    <sfield name="lbl_pjbf008" text="備註" lstr=""/>
+    <sfield name="lbl_pjbg003" text="費用類型" lstr=""/>
+    <sfield name="lbl_pjbg004" text="金額" lstr=""/>
+    <sfield name="lbl_pjbg005" text="備註" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_pjbal001" text="專案編號" lstr=""/>
+    <sfield name="lbl_pjbal002" text="語言別" lstr=""/>
+    <sfield name="lbl_pjbbl001" text="專案編號" lstr=""/>
+    <sfield name="lbl_pjbbl002" text="本階WBS" lstr=""/>
+    <sfield name="lbl_pjbbl003" text="語言別" lstr=""/>
+    <sfield name="page_s_aooi390_s01_1" text="QBE條件" lstr=""/>
+    <sfield name="lbl_oofg001" text="編碼分類" lstr=""/>
+    <sfield name="lbl_oofg002" text="編碼性質" lstr=""/>
+    <sfield name="lbl_oofg005" text="節點編號" lstr=""/>
+    <sfield name="lbl_oofg006" text="前段節點編號" lstr=""/>
+    <sfield name="page_s_aooi390_s01_2" text="基本資料" lstr=""/>
+    <sfield name="lbl_n0" text="編碼分類" lstr=""/>
+    <sfield name="lbl_n1" text="編碼總長度" lstr=""/>
+    <sfield name="lbl_n2" text="編碼總段數" lstr=""/>
+    <sfield name="lbl_n3" text="自動編號" lstr=""/>
+    <sfield name="page_s_aooi390_s01_3" text="明細資料" lstr=""/>
+    <sfield name="lbl_oofg007" text="段次" lstr=""/>
+    <sfield name="lbl_oofgl004" text="節點名稱" lstr=""/>
+    <sfield name="lbl_oofg009" text="長度" lstr=""/>
+    <sfield name="lbl_oofg016" text="使用轉換表" lstr=""/>
+    <sfield name="lbl_oofg008" text="節點型態" lstr=""/>
+    <sfield name="lbl_value" text="輸入值" lstr=""/>
+    <sfield name="lbl_value_desc" text="說明" lstr=""/>
+    <sfield name="lbl_tbegin" text="第" lstr=""/>
+    <sfield name="lbl_tend" text="組" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="first" text="" lstr=""/>
+    <sact name="insert_detail" text="新增WBS" lstr=""/>
+    <sact name="jump" text="" lstr=""/>
+    <sact name="last" text="" lstr=""/>
+    <sact name="modify_detail" text="領用明細修改" lstr=""/>
+    <sact name="next" text="" lstr=""/>
+    <sact name="previous" text="previous" lstr=""/>
+    <sact name="statechange" text="" lstr=""/>
+    <sact name="upd_1" text="核准" lstr=""/>
+    <sact name="upd_2" text="凍結" lstr=""/>
+    <sact name="upd_9" text="無效" lstr=""/>
+    <sact name="upd_un1" text="取消核准" lstr=""/>
+    <sact name="upd_un2" text="取消凍結" lstr=""/>
+    <sact name="upd_un9" text="取消無效" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

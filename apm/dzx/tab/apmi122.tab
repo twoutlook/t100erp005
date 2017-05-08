@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmi122" module="apm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02294" crtdt="2016-08-23 10:40:14" modid="02294" moddt="2016-08-23 13:45:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="供應商料件分配比率維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmatsite,pmatstus,pmat001,pmat001_desc(chr500),pmat002,pmat002_desc(chr500),pmat002_desc_1(chr500),pmat003,pmat003_desc(chr500),pmat004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmatsite,pmat001,pmat002,pmat003,pmatownid,pmatownid_desc(chr500),pmatowndp,pmatowndp_desc(chr500),pmatcrtid,pmatcrtid_desc(chr500),pmatcrtdp,pmatcrtdp_desc(chr500),pmatcrtdt,pmatmodid,pmatmodid_desc(chr500),pmatmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmi122" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmatsite,pmatstus,pmat001,pmat002,pmat003,pmat004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="pmatsite,pmatstus,pmat001,pmat002,pmat003,pmat004"/>
+      <construct id="body" page="2" field="pmatownid,pmatowndp,pmatcrtid,pmatcrtdp,pmatcrtdt,pmatmodid,pmatmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmatsite"/>
+      <column id="pmatstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmat001">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+          <reference field="pmat001_desc" ref_field="pmat_t.pmat001" map_field="pmat001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmab001_1" state="i"/>
+        <controlp form="q_pmab001_1" state="c"/>
+      </column>
+      <column id="pmat001_desc"/>
+      <column id="pmat002">
+        <after>
+          <check chkid="v_imaf001_14" id="isExist"/>
+          <reference field="pmat002_desc" ref_field="pmat_t.pmat002" map_field="pmat002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_15" state="i"/>
+        <controlp form="q_imaf001_15" state="c"/>
+      </column>
+      <column id="pmat002_desc"/>
+      <column id="pmat002_desc_1"/>
+      <column id="pmat003">
+        <after>
+          <reference field="pmat003_desc" ref_field="pmat002,pmat003" map_field="pmat002,pmat003" ref_sql="SELECT inaml004 FROM inaml_t WHERE inamlent=$varg_enterprise$var AND inaml001=? AND inaml002=? AND inaml003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmat003_desc"/>
+      <column id="pmat004" type="S" default="0">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="pmatownid">
+        <after>
+          <reference field="pmatownid_desc" ref_field="pmat_t.pmatownid" map_field="pmatownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmatownid_desc"/>
+      <column id="pmatowndp">
+        <after>
+          <reference field="pmatowndp_desc" ref_field="pmat_t.pmatowndp" map_field="pmatowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmatowndp_desc"/>
+      <column id="pmatcrtid">
+        <after>
+          <reference field="pmatcrtid_desc" ref_field="pmat_t.pmatcrtid" map_field="pmatcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmatcrtid_desc"/>
+      <column id="pmatcrtdp">
+        <after>
+          <reference field="pmatcrtdp_desc" ref_field="pmat_t.pmatcrtdp" map_field="pmatcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmatcrtdp_desc"/>
+      <column id="pmatcrtdt"/>
+      <column id="pmatmodid">
+        <after>
+          <reference field="pmatmodid_desc" ref_field="pmat_t.pmatmodid" map_field="pmatmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmatmodid_desc"/>
+      <column id="pmatmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmat_t" page="1,2" linked="" pk="pmatsite,pmat001,pmat002,pmat003">
+      <sql id="forupd_sql_detail" query="SELECT pmatsite,pmatstus,pmat001,&apos;&apos;,pmat002,&apos;&apos;,&apos;&apos;,pmat003,&apos;&apos;,pmat004,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmatownid,&apos;&apos;,pmatowndp,&apos;&apos;,pmatcrtid,&apos;&apos;,pmatcrtdp,&apos;&apos;,pmatcrtdt,pmatmodid,&apos;&apos;,pmatmoddt FROM pmat_t WHERE pmatent=? AND pmatsite=? AND pmat001=? AND pmat002=? AND pmat003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmatsite,pmatstus,pmat001,&apos;&apos;,pmat002,&apos;&apos;,&apos;&apos;,pmat003,&apos;&apos;,pmat004,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmatownid,&apos;&apos;,pmatowndp,&apos;&apos;,pmatcrtid,&apos;&apos;,pmatcrtdp,&apos;&apos;,pmatcrtdt,pmatmodid,&apos;&apos;,pmatmoddt FROM pmat_t WHERE pmatent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

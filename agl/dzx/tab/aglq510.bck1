@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq510" module="agl" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02599" crtdt="2015-10-29 15:07:19" modid="02599" moddt="2015-12-01 10:09:54" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="總帳與子系統自動鉤稽">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),sys(chr500),glar001,glar001_desc(chr500),glar009,soamt(num20_6),doamt(num20_6),zoamt(num20_6),samt(num20_6),damt(num20_6),zamt(num20_6),diff(chr500),result(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),sys(sys),glar001(b_glar001),glar001_desc(b_glar001_desc),glar009(b_glar009),soamt(soamt),doamt(doamt),zoamt(zoamt),samt(samt),damt(damt),zamt(zamt),diff(diff),result(result)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq510" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glar001,glar009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glar001(b_glar001),glar009(b_glar009)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="sys"/>
+      <column id="glar001">
+        <after>
+          <reference field="glar001_desc" ref_field="glar001" map_field="glar001" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glar001_desc"/>
+      <column id="glar009">
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="soamt"/>
+      <column id="doamt"/>
+      <column id="zoamt"/>
+      <column id="samt"/>
+      <column id="damt"/>
+      <column id="zamt"/>
+      <column id="diff"/>
+      <column id="result"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glar_t" page="1" linked="" pk="glarld,glar001,glar002,glar003,glar004">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,glar001,&apos;&apos;,glar009,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glar_t WHERE glarent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

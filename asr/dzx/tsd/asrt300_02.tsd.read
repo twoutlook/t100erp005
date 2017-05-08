@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="asrt300_02" std_prog="asrt300_02" erpver="1.0" ver="2" module="ASR" type="S" booking="N" class="I" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="srac_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="srad_t" main="N" head="N" pk="" fk_detail="" parent="srac_t" fk_master="" src="s" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail4" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.製程資料在新增srab_t時，如果該筆資料使用制程，則找srac_t是否已有資料，若無資料則自動新增(此邏輯在主作業asrt300處理)
+2.當srab_t刪除，或是有修改計畫組別、生產料號、BOM特性、產品特徵、製程編號時，
+  若無其他筆相同對件對應的srab_t時，則將srac_t刪掉重新產生
+  (即不可讓srac_t變成完全無對應的srab_t)(此邏輯在主作業asrt300處理)
+3.此子作業只可顯示資料不可做新增、修改、刪除等維護的動作
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[制程資訊頁簽處理邏輯：
+1.如果生產控製組+生產料號+BOM特性+特徵+製程編號的製程資料已存在，則直接帶入顯示
+2.如果沒有的話，則自動新增
+此資料由aecm200帶入，包含多上站資料及Check in/Check out項目(製程資料帶出後不可做任何修改)
+srac007=ecbb003
+srac008=ecbb004
+srac009=ecbb005
+srac010=ecbb006
+srac011=ecbb007
+srac012=ecbb008
+srac013=ecbb009
+srac014=ecbb010
+srac015=ecbb011
+srac016=ecbb012
+srac017=ecbb013
+srac018=ecbb024
+srac019=ecbb025
+srac020=ecbb026
+srac021=ecbb015
+srac022=ecbb016
+srac023=ecbb017
+srac024=ecbb018
+srac025=ecbb019
+srac026=ecbb020
+srac027=ecbb021
+srac028=ecbb022
+srac029=ecbb023
+srac030=0
+srac031=0
+srac032=0
+srac033=0
+srac034=0
+srac035=0
+srac036=ecbb013
+srac037=ecbb014
+srac038=0
+srac039=0
+srac040=0
+srac041=0
+srac042=0
+srac043=0
+srac044=0
+srac045=0
+
+Check in/Check out頁簽：
+Check in =srad008=1
+Check out=srad008=2
+資料由aecm200_02帶入
+
+]]>
+  </db_all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[开启子作业asrt300_01]]>
+  </di_all>
+  <field cite_std="N" name="srab001" ver="1" src="s" column="srab001" table="srab_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srab004" ver="1" src="s" column="srab004" table="srab_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srab004_desc" ver="1" src="s" column="imaal003" table="imaal_t" attribute="C302" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srab004_desc1" ver="1" src="s" column="imaal004" table="imaal_t" attribute="C302" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srab005" ver="1" src="s" column="srab005" table="srab_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srab006" ver="1" src="s" column="srab006" table="srab_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srab008" ver="1" src="s" column="srab008" table="srab_t" attribute="C404" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac001_2" ver="1" src="s" column="srac001" table="srac_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac002_2" ver="1" src="s" column="srac002" table="srac_t" attribute="C404" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac004_2" ver="1" src="s" column="srac004" table="srac_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac005_2" ver="1" src="s" column="srac005" table="srac_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac006_2" ver="1" src="s" column="srac006" table="srac_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac007_2" ver="1" src="s" column="srac007" table="srac_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac007_i" ver="1" src="s" column="srac007" table="srac_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值:帶出目前正在維護的製程項次
+]]>
+  </field>
+  <field cite_std="N" name="srac007_o" ver="1" src="s" column="srac007" table="srac_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac008_i" ver="1" src="s" column="srac008" table="srac_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:帶出目前正在維護的製程本站作業]]>
+  </field>
+  <field cite_std="N" name="srac008_o" ver="1" src="s" column="srac008" table="srac_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac009_i" ver="1" src="s" column="srac009" table="srac_t" attribute="C404" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值:帶出目前正在維護的製程序]]>
+  </field>
+  <field cite_std="N" name="srac009_o" ver="1" src="s" column="srac009" table="srac_t" attribute="C404" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac001" ver="1" src="s" column="srac001" table="srac_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac002" ver="1" src="s" column="srac002" table="srac_t" attribute="C404" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac004" ver="1" src="s" column="srac004" table="srac_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac005" ver="1" src="s" column="srac005" table="srac_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac006" ver="1" src="s" column="srac006" table="srac_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac007" ver="1" src="s" column="srac007" table="srac_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac008" ver="1" src="s" column="srac008" table="srac_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac009" ver="1" src="s" column="srac009" table="srac_t" attribute="C404" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac010" ver="1" src="s" column="srac010" table="srac_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="1202" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac011" ver="1" src="s" column="srac011" table="srac_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac012" ver="1" src="s" column="srac012" table="srac_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac013" ver="1" src="s" column="srac013" table="srac_t" attribute="C404" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac014" ver="1" src="s" column="srac014" table="srac_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac015" ver="1" src="s" column="srac015" table="srac_t" attribute="C404" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac016" ver="1" src="s" column="srac016" table="srac_t" attribute="C401" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac017" ver="1" src="s" column="srac017" table="srac_t" attribute="N403" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac018" ver="1" src="s" column="srac018" table="srac_t" attribute="N403" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac019" ver="1" src="s" column="srac019" table="srac_t" attribute="N403" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac020" ver="1" src="s" column="srac020" table="srac_t" attribute="N403" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac021" ver="1" src="s" column="srac021" table="srac_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac022" ver="1" src="s" column="srac022" table="srac_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac023" ver="1" src="s" column="srac023" table="srac_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac024" ver="1" src="s" column="srac024" table="srac_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac025" ver="1" src="s" column="srac025" table="srac_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac026" ver="1" src="s" column="srac026" table="srac_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac027" ver="1" src="s" column="srac027" table="srac_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac028" ver="1" src="s" column="srac028" table="srac_t" attribute="N103" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac029" ver="1" src="s" column="srac029" table="srac_t" attribute="N103" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac030" ver="1" src="s" column="srac030" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac031" ver="1" src="s" column="srac031" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac032" ver="1" src="s" column="srac032" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac033" ver="1" src="s" column="srac033" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac034" ver="1" src="s" column="srac034" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac035" ver="1" src="s" column="srac035" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac036" ver="1" src="s" column="srac036" table="srac_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac037" ver="1" src="s" column="srac037" table="srac_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac038" ver="1" src="s" column="srac038" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac039" ver="1" src="s" column="srac039" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac040" ver="1" src="s" column="srac040" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac041" ver="1" src="s" column="srac041" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac042" ver="1" src="s" column="srac042" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac043" ver="1" src="s" column="srac043" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac044" ver="1" src="s" column="srac044" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac045" ver="1" src="s" column="srac045" table="srac_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac046" ver="1" src="s" column="srac046" table="srac_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac047" ver="1" src="s" column="srac047" table="srac_t" attribute="N103" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac048" ver="1" src="s" column="srac048" table="srac_t" attribute="N103" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad009_i" ver="1" src="s" column="srad009" table="srad_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad009_o" ver="1" src="s" column="srad009" table="srad_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad010_i" ver="1" src="s" column="srad010" table="srad_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="1201" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad010_o" ver="1" src="s" column="srad010" table="srad_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="1201" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad011_i" ver="1" src="s" column="srad011" table="srad_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad011_o" ver="1" src="s" column="srad011" table="srad_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad012_i" ver="1" src="s" column="srad012" table="srad_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad012_o" ver="1" src="s" column="srad012" table="srad_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad013_i" ver="1" src="s" column="srad013" table="srad_t" attribute="C103" type="varchar2(80)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad013_o" ver="1" src="s" column="srad013" table="srad_t" attribute="C103" type="varchar2(80)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad014_i" ver="1" src="s" column="srad014" table="srad_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srad014_o" ver="1" src="s" column="srad014" table="srad_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="srab001_desc" src="s" depend_field="srab001" correspon_key="srabent,srab001" ref_table="srza_t" ref_fk="srzaent,srza001" ref_dlang="" ref_rtn="srza002" status=""/>
+    <rfield cite_std="N" ver="1" name="srab008_desc" src="s" depend_field="srab008" correspon_key="srabent,srab004,srab008" ref_table="ecba_t" ref_fk="ecbaent,ecba001,ecba002" ref_dlang="" ref_rtn="ecba003" status=""/>
+    <rfield cite_std="N" ver="1" name="srac008_desc" src="s" depend_field="srac_t.srac008" correspon_key="srac008" ref_table="oocql_t" ref_fk="oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="srac008_i_desc" src="s" depend_field="srac008_i" correspon_key="sracent,&apos;221&apos;,srac008" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="srac008_o_desc" src="s" depend_field="srac008_o" correspon_key="sracent,&apos;221&apos;,srac008" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="srac012_desc" src="s" depend_field="srac_t.srac012" correspon_key="srac012" ref_table="oocql_t" ref_fk="oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="srac014_desc" src="s" depend_field="srac_t.srac014" correspon_key="srac014" ref_table="oocql_t" ref_fk="oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="srac016_desc" src="s" depend_field="srac_t.srac016" correspon_key="srac016" ref_table="ecaa_t" ref_fk="ecaa001" ref_dlang="" ref_rtn="ecaa002" status=""/>
+    <rfield cite_std="N" ver="2" name="srad009_i_desc" src="s" depend_field="srad009_i" correspon_key="sradent,&apos;223&apos;,srad009" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="srad009_o_desc" src="s" depend_field="srad009_o" correspon_key="sradent,&apos;223&apos;,srad009" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="srab001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srab004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srab004_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srab004_desc1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srab005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srab006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srab008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac001_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac002_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac004_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac005_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac006_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac007_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac007_i" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac007_o" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac008_i" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac008_o" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac009_i" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac009_o" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac039" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac040" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac043" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac044" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac045" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac046" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac047" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad009_i" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad009_o" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad010_i" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad010_o" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad011_i" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad011_o" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad012_i" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad012_o" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad013_i" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad013_o" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad014_i" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srad014_o" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="stand" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_srab001" text="生產計畫" lstr=""/>
+    <sfield name="lbl_srza002" text="說明" lstr=""/>
+    <sfield name="lbl_srab004" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_srab005" text="BOM特性" lstr=""/>
+    <sfield name="lbl_srab006" text="產品特徵" lstr=""/>
+    <sfield name="lbl_srab008" text="製程編號" lstr=""/>
+    <sfield name="lbl_ecba003" text="說明" lstr=""/>
+    <sfield name="lbl_stand" text="製程多上站資料" lstr=""/>
+    <sfield name="bpage_2" text="製程資訊" lstr=""/>
+    <sfield name="lbl_srac001" text="生產計畫" lstr=""/>
+    <sfield name="lbl_srac002" text="製程編號" lstr=""/>
+    <sfield name="lbl_srac004" text="料件編號" lstr=""/>
+    <sfield name="lbl_srac005" text="BOM特性" lstr=""/>
+    <sfield name="lbl_srac006" text="產品特徵" lstr=""/>
+    <sfield name="lbl_srac007" text="項次" lstr=""/>
+    <sfield name="lbl_srac008_1" text="本站作業" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_srac009" text="作業序" lstr=""/>
+    <sfield name="lbl_srac010" text="群組性質" lstr=""/>
+    <sfield name="lbl_srac011" text="群組" lstr=""/>
+    <sfield name="lbl_srac012" text="上站作業" lstr=""/>
+    <sfield name="lbl_srac013" text="上站製程序" lstr=""/>
+    <sfield name="lbl_srac014" text="下站作業" lstr=""/>
+    <sfield name="lbl_srac015" text="下站製程序" lstr=""/>
+    <sfield name="lbl_srac016" text="工作站" lstr=""/>
+    <sfield name="lbl_ecaa002" text="工作站名稱" lstr=""/>
+    <sfield name="lbl_srac017" text="固定工時" lstr=""/>
+    <sfield name="lbl_srac018" text="標準工時" lstr=""/>
+    <sfield name="lbl_srac019" text="固定機時" lstr=""/>
+    <sfield name="lbl_srac020" text="標準機時" lstr=""/>
+    <sfield name="lbl_srac036" text="委外" lstr=""/>
+    <sfield name="lbl_srac037_1" text="委外加工廠商" lstr=""/>
+    <sfield name="lbl_srac021" text="Move in" lstr=""/>
+    <sfield name="lbl_srac022" text="Check in" lstr=""/>
+    <sfield name="lbl_srac023" text="報工站" lstr=""/>
+    <sfield name="lbl_srac024" text="PQC" lstr=""/>
+    <sfield name="lbl_srac025" text="Check out" lstr=""/>
+    <sfield name="lbl_srac026" text="Move out" lstr=""/>
+    <sfield name="lbl_srac046" text="轉入單位" lstr=""/>
+    <sfield name="lbl_srac047" text="轉入單位轉換率分子" lstr=""/>
+    <sfield name="lbl_srac048" text="轉入單位轉換率分母" lstr=""/>
+    <sfield name="lbl_srac027" text="轉出單位" lstr=""/>
+    <sfield name="lbl_srac028" text="轉出單位轉換率分子" lstr=""/>
+    <sfield name="lbl_srac029" text="轉出單位轉換率分母" lstr=""/>
+    <sfield name="bpage_3" text="在製狀況" lstr=""/>
+    <sfield name="lbl_srac030" text="待Movie in 數" lstr=""/>
+    <sfield name="lbl_srac031" text="待Check in數" lstr=""/>
+    <sfield name="lbl_srac032" text="在製數" lstr=""/>
+    <sfield name="lbl_srac033" text="待PQC數" lstr=""/>
+    <sfield name="lbl_srac034" text="待Check out數" lstr=""/>
+    <sfield name="lbl_srac035" text="待Move out數" lstr=""/>
+    <sfield name="lbl_srac038_1" text="+良品轉入" lstr=""/>
+    <sfield name="lbl_srac039_1" text="+重工轉入" lstr=""/>
+    <sfield name="lbl_srac040_1" text="-良品轉出" lstr=""/>
+    <sfield name="lbl_srac041_1" text="-重工轉出" lstr=""/>
+    <sfield name="lbl_srac042_1" text="-當站報廢" lstr=""/>
+    <sfield name="lbl_srac043_1" text="-當站報廢" lstr=""/>
+    <sfield name="lbl_srac044_1" text="委外加工數量" lstr=""/>
+    <sfield name="lbl_srac045" text="委外完工數量" lstr=""/>
+    <sfield name="bpage_6" text="Check in項目" lstr=""/>
+    <sfield name="lbl_srad009" text="項目" lstr=""/>
+    <sfield name="lbl_srad010" text="型態" lstr=""/>
+    <sfield name="lbl_srad011" text="下限" lstr=""/>
+    <sfield name="lbl_srad012" text="上限" lstr=""/>
+    <sfield name="lbl_srad013" text="預設值" lstr=""/>
+    <sfield name="lbl_srad014" text="必要" lstr=""/>
+    <sfield name="bpage_5" text="Check out項目" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="stand" text="製程多上站資料" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="bpage_5" status=""/>
+    <widget name="group1" status=""/>
+    <widget name="s_detail2" status=""/>
+    <widget name="s_detail3" status=""/>
+    <widget name="s_detail4" status=""/>
+    <widget name="srac007_i" status=""/>
+    <widget name="srac007_o" status=""/>
+    <widget name="srac008_i" status=""/>
+    <widget name="srac008_i_desc" status=""/>
+    <widget name="srac008_o" status=""/>
+    <widget name="srac008_o_desc" status=""/>
+    <widget name="srac009_i" status=""/>
+    <widget name="srac009_o" status=""/>
+  </exclude>
+</spec>

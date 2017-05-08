@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axrt400_02" std_prog="axrt400_02" erpver="1.0" ver="1" module="AXR" booking="Y" class="i" template="F002_00" normal_style="N" env="s" zone="t10dev">
+  <toolbar items="delete,insert,modify,output,query"/>
+  <table ver="1">
+    <tbl name="nmba_t" parent="" main="Y" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" status=""/>
+    </tbl>
+  </table>
+  <all src="s" ver="1" cite_std="" cite_ver="" status="">
+    <![CDATA[接收參數：
+ 。帳務中心
+ 。核銷客戶
+ 。收付款客戶
+ 。來源組織
+。整合收款資料及己收票據資料。
+ 收支單號(nmcn_t)
+ 應收票據主檔（nmcn_t） 
+。開窗挑選，回傳勾選後之單據編號（可字串組合方式）。
+。選取時，加總金額勾選之金額，合計數下方表達。
+。傳回符合勾選之資料。
+。寫入　沖帳明細檔(xrce_t)
+ 。依［款別類型］判斷交易單據之來源。
+ 。逐筆寫入沖帳明細檔，資料對應關係請視EXCEL表。]]>
+  </all>
+  <db_all src="s" ver="1" cite_std="" cite_ver="" status="">
+    <![CDATA[。內容：
+　１。來源：
+ 。銀存收支單據主檔（nmba_t）、銀存收支單據明細檔（nmbb_t）
+   條件：已確認單據、同對象（nmba004 in (核銷客戶,收付款客戶)）、異動別.nmbb001= '1存入'、
+       　尚有未沖金額(原幣金額-己沖原幣金額 ＞　０）
+ 　　　　且收支日期＜＝單據日期
+ 。應收票據主檔（nmcn_t） 
+ 　條件：已確認單據、同對象（nmcn009 in (核銷客戶,收款客戶)) OR 單次交易識別碼相同者、尚有未沖金額
+ 　　　　AND 收票日期nmcndocdt＜＝單據日期 AND 非作廢資料nmcnstus='Y' AND nmcn012 NOT IN ('6','7','9')
+ 
+　２。顯示字段：
+ 。選取：checkbox, 多筆資料選取，選取後該筆資料之未沖金額，合計於下方表示。
+ 。未沖金額顯示：欄位運算後數字結果。
+ 。存提碼：　顯示對應的語言別說明。
+ 。預沖未確認額(nn)=合計於收款沖銷作業尚未確認者(非作廢單)，且同來源單及項次單。（by 帳套）
+  (n1)= sum(xrce109)
+  (n2)= sum(xrce119)
+  (n3)= sum(xrce129)
+  (n4)= sum(xrce139)
+
+　３。原幣未沖金額、本幣未沖金額：　視目前作業中＂帳套別＂，決定取用的對應欄位。
+　　　銀存收支檔（nmbb_t）:
+　　　　 主帳套者：
+  原幣未沖金額＝nmbb006-nmbb008-n1
+  本幣沖沖金額＝nmbb007-nmbb009-n2
+ 次帳套一：（取據點層參數判別）
+  原幣未沖金額＝nmbb006-nmbb020-n1
+  本幣沖沖金額＝nmbb007-nmbb021-n2
+ 次帳套二：（取據點層參數判別）
+  原幣未沖金額＝nmbb006-nmbb023-n1
+  本幣沖沖金額＝nmbb007-nmbb024-n2
+     應收票據檔（nmcn_t）:
+　 主帳套者：
+  原幣未沖金額＝nmcn011-nmcn028-n1
+  本幣沖沖金額＝nmcn013-nmcn029-n2
+ 次帳套一：（取據點層參數判別）
+  原幣未沖金額＝nmcn011-nmcn039-n1
+  本幣沖沖金額＝nmcn013-nmcn040-n2
+ 次帳套二：（取據點層參數判別）
+  原幣未沖金額＝nmcn011-nmcn042-n1
+  本幣沖沖金額＝nmcn013-nmcn043-n2
+　４。其他本位幣：
+ 。視該帳有無啟用其他本位幣，有啟用才顯示。
+ 。欄位抬頭依啟用之幣別顯示，取glaa???/glaa???；Ｅx. 名稱顯示：（ＵＳＤ）未沖金額、（ＣＮＹ）未沖金額
+　　　銀存收支檔（nmbb_t）:
+　 。本位幣二未沖金額　＝　nmbb013-nmbb014 - n3
+   本位幣三未沖金額　＝　nmbb017-nmbb018 - n4
+      應收票據檔（nmcn_t）:
+　 。本位幣二未沖金額　＝　nmcn032-nmcn033 - n3
+   本位幣三未沖金額　＝　nmcn037-nmcn038 - n4
+]]>
+  </db_all>
+  <field column="" name="check" ver="1" table="" attribute="" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="lbl_amt1" ver="1" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[。勾選時，合計已勾選資料之＂未沖金額＂合計值。
+。原幣不考慮幣別不同之問題。
+.sum(原幣未沖金額) where 選取='Y'
+]]>
+  </field>
+  <field column="" name="lbl_amt2" ver="1" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[.sum(本幣未沖金額) where 選取='Y'
+]]>
+  </field>
+  <field column="" name="lbl_amt3" ver="1" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[。該帳別有啟用＂其他本位幣＂功能者，才須顯示。
+。勾選時，合計已勾選資料之＂未沖金額＂合計值。
+.sum(本位幣二未沖金額) where 選取='Y'
+]]>
+  </field>
+  <field column="" name="lbl_amt4" ver="1" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[。該帳別有啟用＂其他本位幣＂功能者，才須顯示。
+。勾選時，合計已勾選資料之＂未沖金額＂合計值。
+.sum(本位幣三未沖金額) where 選取='Y']]>
+  </field>
+  <field column="" name="lbl_c1" ver="1" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[。SCC_8310款別類型
+。銀存收支檔-->'20銀存匯款'
+  應收票據檔-->'30票據']]>
+  </field>
+  <field column="" name="lbl_n1" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="lbl_tot1" ver="1" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[。符合條件之＂未沖金額＂合計值。故若有重新ＱＢＥ，則應重新計算顯示合計值。
+。原幣不考慮幣別不同之問題。]]>
+  </field>
+  <field column="" name="lbl_tot2" ver="1" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmbb002" name="nmbb_t.nmbb002" ver="1" table="nmbb_t" attribute="C002" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmbb003" name="nmbb_t.nmbb003" ver="1" table="nmbb_t" attribute="C002" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmbb004" name="nmbb_t.nmbb004" ver="1" table="nmbb_t" attribute="C008" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmbb006" name="nmbb_t.nmbb006" ver="1" table="nmbb_t" attribute="N202" type="number(20,6)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmbb007" name="nmbb_t.nmbb007" ver="1" table="nmbb_t" attribute="N202" type="number(20,6)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmbb008" name="nmbb_t.nmbb008" ver="1" table="nmbb_t" attribute="N202" type="number(20,6)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmbb009" name="nmbb_t.nmbb009" ver="1" table="nmbb_t" attribute="N202" type="number(20,6)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmbbdocno" name="nmbb_t.nmbbdocno" ver="1" table="nmbb_t" attribute="C203" type="varchar2(20)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmbbseq" name="nmbb_t.nmbbseq" ver="1" table="nmbb_t" attribute="N004" type="number(10,0)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmbadocdt" name="nmba_t.nmbadocdt" ver="1" table="nmba_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmba004" name="nmba_t.nmba004" ver="1" table="nmba_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="nmba005" name="nmba_t.nmba005" ver="1" table="nmba_t" attribute="C819" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield src="s" ver="1" name="nmbb002_desc" depend_filed="nmbb_t.nmbb002" correspon_key="nmbbent,nmbb002" ref_table="nmajl_t" ref_fk="nmajlent,nmajl001" ref_dlang="nmajl002" ref_rtn="nmajl003" status=""/>
+    <rfield src="s" ver="1" name="nmbb003_desc" depend_filed="nmbb_t.nmbb003" correspon_key="nmbbent,nmbb003" ref_table="nmaal_t" ref_fk="nmaalent,nmaal001" ref_dlang="nmaal002" ref_rtn="nmaal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code/>
+  <act src="s" id="pg_first" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act src="s" id="pg_last" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act src="s" id="pg_next" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act src="s" id="pg_prev" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_check" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_nmba004" text="收支對象" comment="" lstr=""/>
+    <sfield name="lbl_nmba005" text="對象名稱" comment="" lstr=""/>
+    <sfield name="lbl_c1" text="款別類型" comment="" lstr=""/>
+    <sfield name="lbl_nmbadocdt" text="收支日期" comment="" lstr=""/>
+    <sfield name="lbl_nmbb003" text="帳戶/票據號" comment="" lstr=""/>
+    <sfield name="lbl_nmaal003" text="帳戶名稱" comment="" lstr=""/>
+    <sfield name="lbl_nmbb002" text="存提碼" comment="" lstr=""/>
+    <sfield name="lbl_nmajl003" text="提存碼說明" comment="" lstr=""/>
+    <sfield name="lbl_nmbb004" text="幣別" comment="" lstr=""/>
+    <sfield name="lbl_nmbb006" text="原幣未沖金額" comment="" lstr=""/>
+    <sfield name="lbl_nmbb007" text="本幣未沖金額" comment="" lstr=""/>
+    <sfield name="lbl_nmbb008" text="本位幣三未沖" comment="" lstr=""/>
+    <sfield name="lbl_nmbb009" text="本位幣二未沖" comment="" lstr=""/>
+    <sfield name="lbl_nmbbdocno" text="收支單號" comment="" lstr=""/>
+    <sfield name="lbl_nmbbseq" text="項次" comment="" lstr=""/>
+    <sfield name="lbl_n1" text="預沖未確認額" comment="" lstr=""/>
+    <sfield name="lbl_group1" text="帳款總金額" comment="" lstr=""/>
+    <sfield name="lbl_tot_1" text="原幣金額" comment="" lstr=""/>
+    <sfield name="lbl_tot_2" text="本幣金額" comment="" lstr=""/>
+    <sfield name="lbl_group2" text="選取帳款總金額" comment="" lstr=""/>
+    <sfield name="lbl_amt_1" text="原幣金額" comment="" lstr=""/>
+    <sfield name="lbl_amt_2" text="本幣金額" comment="" lstr=""/>
+    <sfield name="lbl_group3" text="其他本位幣選取金額" comment="" lstr=""/>
+    <sfield name="lbl_amt_3" text="本位幣二金額" comment="" lstr=""/>
+    <sfield name="lbl_amt_4" text="本位幣三金額" comment="" lstr=""/>
+    <sact name="pg_first" text="" comment="" lstr=""/>
+    <sact name="pg_last" text="" comment="" lstr=""/>
+    <sact name="pg_next" text="" comment="" lstr=""/>
+    <sact name="pg_prev" text="" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1"/>
+</spec>

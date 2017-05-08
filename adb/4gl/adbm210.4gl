@@ -1,0 +1,5280 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="adbm210.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000051
+#+ 
+#+ Filename...: adbm210
+#+ Description: 配送車輛基本資料維護作業
+#+ Creator....: 04226(2014/07/15)
+#+ Modifier...: 04226(2014/07/16) -SD/PR- 02749
+#+ Buildtype..: 應用 i01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+ 
+{<section id="adbm210.global" >}
+#160328-00029#5   2016/04/06  By Jessy  將重複內容的錯誤訊息置換為公用錯誤訊息
+#160318-00025#27  2016/04/29  BY 07900  校验代码重复错误讯息的修改
+#160816-00068#2   2016/08/17  By earl   調整transaction
+#160818-00017#5   2016/08/22  by 08172  修改删除时重新检查状态
+#161006-00008#5   2016/10/19  By 08729  處理組織開窗
+#161108-00027#1   2016/11/08  By lori   調整g_browser_cnt長度變數定義為num10
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT FGL aoo_aooi350_02
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_mrba_m RECORD
+       mrbasite LIKE mrba_t.mrbasite, 
+   mrbasite_desc LIKE type_t.chr80, 
+   mrba019 LIKE mrba_t.mrba019, 
+   mrba020 LIKE mrba_t.mrba020, 
+   mrba020_desc LIKE type_t.chr80, 
+   mrba001 LIKE mrba_t.mrba001, 
+   mrba050 LIKE mrba_t.mrba050, 
+   mrba010 LIKE mrba_t.mrba010, 
+   mrba010_desc LIKE type_t.chr80, 
+   mrba011 LIKE mrba_t.mrba011, 
+   mrba011_desc LIKE type_t.chr80, 
+   mrba051 LIKE mrba_t.mrba051, 
+   mrba051_desc LIKE type_t.chr80, 
+   mrba053 LIKE mrba_t.mrba053, 
+   mrba055 LIKE mrba_t.mrba055, 
+   mrba056 LIKE mrba_t.mrba056, 
+   mrba052 LIKE mrba_t.mrba052, 
+   mrba054 LIKE mrba_t.mrba054, 
+   mrba057 LIKE mrba_t.mrba057, 
+   mrba058 LIKE mrba_t.mrba058, 
+   mrba058_desc LIKE type_t.chr80, 
+   mrba059 LIKE mrba_t.mrba059, 
+   mrba060 LIKE mrba_t.mrba060, 
+   mrba060_desc LIKE type_t.chr80, 
+   mrba065 LIKE mrba_t.mrba065, 
+   mrba065_desc LIKE type_t.chr80, 
+   mrba101 LIKE mrba_t.mrba101, 
+   mrba061 LIKE mrba_t.mrba061, 
+   mrba061_desc LIKE type_t.chr80, 
+   mrba062 LIKE mrba_t.mrba062, 
+   mrba062_desc LIKE type_t.chr80, 
+   mrba063 LIKE mrba_t.mrba063, 
+   mrba063_desc LIKE type_t.chr80, 
+   mrba064 LIKE mrba_t.mrba064, 
+   mrba064_desc LIKE type_t.chr80, 
+   mrba100 LIKE mrba_t.mrba100, 
+   mrbaunit LIKE mrba_t.mrbaunit, 
+   mrbaunit_desc LIKE type_t.chr80, 
+   mrba000  LIKE mrba_t.mrba000,
+   mrbastus LIKE mrba_t.mrbastus, 
+   mrbaownid LIKE mrba_t.mrbaownid, 
+   mrbaownid_desc LIKE type_t.chr80, 
+   mrbaowndp LIKE mrba_t.mrbaowndp, 
+   mrbaowndp_desc LIKE type_t.chr80, 
+   mrbacrtid LIKE mrba_t.mrbacrtid, 
+   mrbacrtid_desc LIKE type_t.chr80, 
+   mrbacrtdp LIKE mrba_t.mrbacrtdp, 
+   mrbacrtdp_desc LIKE type_t.chr80, 
+   mrbacrtdt DATETIME YEAR TO SECOND, 
+   mrbamodid LIKE mrba_t.mrbamodid, 
+   mrbamodid_desc LIKE type_t.chr80, 
+   mrbamoddt DATETIME YEAR TO SECOND, 
+   mrbacnfid LIKE mrba_t.mrbacnfid, 
+   mrbacnfid_desc LIKE type_t.chr80, 
+   mrbacnfdt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_mrba_m        type_g_mrba_m  #單頭變數宣告
+DEFINE g_mrba_m_t      type_g_mrba_m  #單頭舊值宣告(系統還原用)
+DEFINE g_mrba_m_o      type_g_mrba_m  #單頭舊值宣告(其他用途)
+ 
+   DEFINE g_mrbasite_t LIKE mrba_t.mrbasite
+DEFINE g_mrba001_t LIKE mrba_t.mrba001
+ 
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD  #查詢方案用陣列 
+         b_statepic     LIKE type_t.chr50,
+            b_mrbasite LIKE mrba_t.mrbasite,
+   b_mrbasite_desc LIKE type_t.chr80,
+      b_mrba019 LIKE mrba_t.mrba019,
+      b_mrba020 LIKE mrba_t.mrba020,
+   b_mrba020_desc LIKE type_t.chr80,
+      b_mrba001 LIKE mrba_t.mrba001,
+      b_mrba061 LIKE mrba_t.mrba061,
+   b_mrba061_desc LIKE type_t.chr80
+      END RECORD 
+   
+ 
+   
+ 
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num5              #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num5              #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num5              #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num5              #Browser 所在筆數(所有資料)
+#DEFINE g_browser_cnt         LIKE type_t.num5              #Browser 總筆數(所有資料)   #161108-00027#1 161108 by lori mark
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)    #161108-00027#1 161108 by lori add
+DEFINE g_row_index           LIKE type_t.num5              #階層樹狀用指標
+ 
+#add-point:自定義模組變數(Module Variable)
+GLOBALS
+   DEFINE g_detail_insert   LIKE type_t.num5   #單身的新增權限
+   DEFINE g_detail_delete   LIKE type_t.num5   #單身的刪除權限
+   DEFINE g_wc2_i35002      STRING             #通訊方式QBE條件
+   DEFINE g_d_idx_i35002    LIKE type_t.num5   #通訊方式所在筆數
+   DEFINE g_d_cnt_i35002    LIKE type_t.num5   #通訊方式總筆數
+   DEFINE g_pmaa027_d       LIKE pmaa_t.pmaa027
+   DEFINE g_appoint_idx     LIKE type_t.num5   #指定進入單身行數
+   
+#ken---add---s 需求單號：150107-00009 項次：4
+ TYPE type_g_oofc_d        RECORD
+       oofcstus LIKE oofc_t.oofcstus,
+   oofc001 LIKE oofc_t.oofc001,
+   oofc008 LIKE oofc_t.oofc008,
+   oofc009 LIKE oofc_t.oofc009,
+   oofc009_desc LIKE type_t.chr500,
+   oofc012 LIKE oofc_t.oofc012,
+   oofc010 LIKE oofc_t.oofc010,
+   oofc014 LIKE oofc_t.oofc014,
+   oofc011 LIKE oofc_t.oofc011,
+   oofc015 LIKE oofc_t.oofc015,
+   oofc013 LIKE oofc_t.oofc013
+       END RECORD
+DEFINE g_pmba2_d          DYNAMIC ARRAY OF type_g_oofc_d
+#ken---add---e   
+   
+END GLOBALS
+DEFINE g_detail_id          STRING             #紀錄停留在聯絡地址, 通訊方式或不在此兩個Page
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="adbm210.main" >}
+#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   DEFINE l_success LIKE type_t.num5 #150308-00001#1  By Ken 150309
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("adb","")
+ 
+   #add-point:作業初始化
+
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+
+   #end add-point
+   LET g_forupd_sql = " SELECT mrbasite,'',mrba019,mrba020,'',mrba001,mrba050,mrba010,'',mrba011,'', 
+       mrba051,'',mrba053,mrba055,mrba056,mrba052,mrba054,mrba057,mrba058,'',mrba059,mrba060,'',mrba065, 
+       '',mrba101,mrba061,'',mrba062,'',mrba063,'',mrba064,'',mrba100,mrbaunit,'',mrba000,mrbastus,mrbaownid, 
+       '',mrbaowndp,'',mrbacrtid,'',mrbacrtdp,'',mrbacrtdt,mrbamodid,'',mrbamoddt,mrbacnfid,'',mrbacnfdt", 
+        
+                      " FROM mrba_t",
+                      " WHERE mrbaent= ? AND mrbasite=? AND mrba001=? FOR UPDATE"
+   #add-point:SQL_define
+
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE adbm210_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  t0.mrbasite,t0.mrba019,t0.mrba020,t0.mrba001,t0.mrba050,t0.mrba010,t0.mrba011, 
+       t0.mrba051,t0.mrba053,t0.mrba055,t0.mrba056,t0.mrba052,t0.mrba054,t0.mrba057,t0.mrba058,t0.mrba059, 
+       t0.mrba060,t0.mrba065,t0.mrba101,t0.mrba061,t0.mrba062,t0.mrba063,t0.mrba064,t0.mrba100,t0.mrbaunit, 
+       t0.mrbastus,t0.mrbaownid,t0.mrbaowndp,t0.mrbacrtid,t0.mrbacrtdp,t0.mrbacrtdt,t0.mrbamodid,t0.mrbamoddt, 
+       t0.mrbacnfid,t0.mrbacnfdt,t1.ooefl003 ,t2.ooefl003 ,t3.oocql004 ,t4.oocql004 ,t5.oocql004 ,t6.oocal003 , 
+       t7.oocal003 ,t8.oocql004 ,t9.ooag011 ,t10.ooag011 ,t11.ooag011 ,t12.ooag011 ,t13.ooefl003 ,t14.ooag011 , 
+       t15.ooefl003 ,t16.ooag011 ,t17.ooefl003 ,t18.ooag011 ,t19.ooag011",
+               " FROM mrba_t t0",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent='"||g_enterprise||"' AND t1.ooefl001=t0.mrbasite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent='"||g_enterprise||"' AND t2.ooefl001=t0.mrba020 AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t3 ON t3.oocqlent='"||g_enterprise||"' AND t3.oocql001='1101' AND t3.oocql002=t0.mrba010 AND t3.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t4 ON t4.oocqlent='"||g_enterprise||"' AND t4.oocql001='1102' AND t4.oocql002=t0.mrba011 AND t4.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t5 ON t5.oocqlent='"||g_enterprise||"' AND t5.oocql001='1109' AND t5.oocql002=t0.mrba051 AND t5.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oocal_t t6 ON t6.oocalent='"||g_enterprise||"' AND t6.oocal001=t0.mrba058 AND t6.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN oocal_t t7 ON t7.oocalent='"||g_enterprise||"' AND t7.oocal001=t0.mrba060 AND t7.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t8 ON t8.oocqlent='"||g_enterprise||"' AND t8.oocql001='1108' AND t8.oocql002=t0.mrba065 AND t8.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t9 ON t9.ooagent='"||g_enterprise||"' AND t9.ooag001=t0.mrba061  ",
+               " LEFT JOIN ooag_t t10 ON t10.ooagent='"||g_enterprise||"' AND t10.ooag001=t0.mrba062  ",
+               " LEFT JOIN ooag_t t11 ON t11.ooagent='"||g_enterprise||"' AND t11.ooag001=t0.mrba063  ",
+               " LEFT JOIN ooag_t t12 ON t12.ooagent='"||g_enterprise||"' AND t12.ooag001=t0.mrba064  ",
+               " LEFT JOIN ooefl_t t13 ON t13.ooeflent='"||g_enterprise||"' AND t13.ooefl001=t0.mrbaunit AND t13.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t14 ON t14.ooagent='"||g_enterprise||"' AND t14.ooag001=t0.mrbaownid  ",
+               " LEFT JOIN ooefl_t t15 ON t15.ooeflent='"||g_enterprise||"' AND t15.ooefl001=t0.mrbaowndp AND t15.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t16 ON t16.ooagent='"||g_enterprise||"' AND t16.ooag001=t0.mrbacrtid  ",
+               " LEFT JOIN ooefl_t t17 ON t17.ooeflent='"||g_enterprise||"' AND t17.ooefl001=t0.mrbacrtdp AND t17.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t18 ON t18.ooagent='"||g_enterprise||"' AND t18.ooag001=t0.mrbamodid  ",
+               " LEFT JOIN ooag_t t19 ON t19.ooagent='"||g_enterprise||"' AND t19.ooag001=t0.mrbacnfid  ",
+ 
+               " WHERE t0.mrbaent = '" ||g_enterprise|| "' AND t0.mrbasite = ? AND t0.mrba001 = ?"
+   #LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+    LET g_sql = "SELECT t0.mrbasite,t0.mrba019,t0.mrba020,t0.mrba001,t0.mrba050,",
+                "       t0.mrba010, t0.mrba011,t0.mrba051,t0.mrba053,t0.mrba055,",
+                "       t0.mrba056, t0.mrba052,t0.mrba054,t0.mrba057,t0.mrba058,", 
+                "       t0.mrba059, t0.mrba060,t0.mrba065,t0.mrba101,t0.mrba061,",
+                "       t0.mrba062, t0.mrba063,t0.mrba064,t0.mrba100,t0.mrbaunit,",
+                "       t0.mrba000,",
+                "       t0.mrbastus,t0.mrbaownid,t0.mrbaowndp,t0.mrbacrtid,t0.mrbacrtdp,",
+                "       t0.mrbacrtdt,t0.mrbamodid,t0.mrbamoddt,t0.mrbacnfid,t0.mrbacnfdt,",
+                "       t1.ooefl003,t2.ooefl003,t3.oocql004,t4.oocql004,t5.oocql004,",
+                "       t6.oocal003,t7.oocal003,t8.oocql004,t9.ooag011,t10.ooag011,",
+                "       t11.ooag011,t12.ooag011,t13.ooefl003,t14.ooag011,t15.ooefl003,",
+                "       t16.ooag011,t17.ooefl003,t18.ooag011,t19.ooag011",
+                "  FROM mrba_t t0",
+                "  LEFT JOIN ooefl_t t1 ON t1.ooeflent='"||g_enterprise||"' AND t1.ooefl001=t0.mrbasite AND t1.ooefl002='"||g_dlang||"' ",
+                "  LEFT JOIN ooefl_t t2 ON t2.ooeflent='"||g_enterprise||"' AND t2.ooefl001=t0.mrba020 AND t2.ooefl002='"||g_dlang||"' ",
+                "  LEFT JOIN oocql_t t3 ON t3.oocqlent='"||g_enterprise||"' AND t3.oocql001='1101' AND t3.oocql002=t0.mrba010 AND t3.oocql003='"||g_dlang||"' ",
+                "  LEFT JOIN oocql_t t4 ON t4.oocqlent='"||g_enterprise||"' AND t4.oocql001='1102' AND t4.oocql002=t0.mrba011 AND t4.oocql003='"||g_dlang||"' ",
+                "  LEFT JOIN oocql_t t5 ON t5.oocqlent='"||g_enterprise||"' AND t5.oocql001='1109' AND t5.oocql002=t0.mrba051 AND t5.oocql003='"||g_dlang||"' ",
+                "  LEFT JOIN oocal_t t6 ON t6.oocalent='"||g_enterprise||"' AND t6.oocal001=t0.mrba058 AND t6.oocal002='"||g_dlang||"' ",
+                "  LEFT JOIN oocal_t t7 ON t7.oocalent='"||g_enterprise||"' AND t7.oocal001=t0.mrba060 AND t7.oocal002='"||g_dlang||"' ",
+                "  LEFT JOIN oocql_t t8 ON t8.oocqlent='"||g_enterprise||"' AND t8.oocql001='1108' AND t8.oocql002=t0.mrba065 AND t8.oocql003='"||g_dlang||"' ",
+                "  LEFT JOIN ooag_t t9 ON t9.ooagent='"||g_enterprise||"' AND t9.ooag001=t0.mrba061  ",
+                "  LEFT JOIN ooag_t t10 ON t10.ooagent='"||g_enterprise||"' AND t10.ooag001=t0.mrba062  ",
+                "  LEFT JOIN ooag_t t11 ON t11.ooagent='"||g_enterprise||"' AND t11.ooag001=t0.mrba063  ",
+                "  LEFT JOIN ooag_t t12 ON t12.ooagent='"||g_enterprise||"' AND t12.ooag001=t0.mrba064  ",
+                "  LEFT JOIN ooefl_t t13 ON t13.ooeflent='"||g_enterprise||"' AND t13.ooefl001=t0.mrbaunit AND t13.ooefl002='"||g_dlang||"' ",
+                "  LEFT JOIN ooag_t t14 ON t14.ooagent='"||g_enterprise||"' AND t14.ooag001=t0.mrbaownid  ",
+                "  LEFT JOIN ooefl_t t15 ON t15.ooeflent='"||g_enterprise||"' AND t15.ooefl001=t0.mrbaowndp AND t15.ooefl002='"||g_dlang||"' ",
+                "  LEFT JOIN ooag_t t16 ON t16.ooagent='"||g_enterprise||"' AND t16.ooag001=t0.mrbacrtid  ",
+                "  LEFT JOIN ooefl_t t17 ON t17.ooeflent='"||g_enterprise||"' AND t17.ooefl001=t0.mrbacrtdp AND t17.ooefl002='"||g_dlang||"' ",
+                "  LEFT JOIN ooag_t t18 ON t18.ooagent='"||g_enterprise||"' AND t18.ooag001=t0.mrbamodid  ",
+                "  LEFT JOIN ooag_t t19 ON t19.ooagent='"||g_enterprise||"' AND t19.ooag001=t0.mrbacnfid  ",
+                " WHERE t0.mrbaent = '" ||g_enterprise|| "' AND t0.mrbasite = ? AND t0.mrba001 = ?"
+#               "   AND EXISTS (SELECT 1",
+#               "                 FROM ooed_t ",
+#               "                WHERE ooedent = mrbaent",
+#               "                  AND ooed001 = '2' ",
+#               "                  AND ooed004 = mrbasite",
+#               "                  AND ooed006 <= '",g_today,"'",
+#               "                  AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+#               "                  AND ooed004 IN (SELECT ooed004 FROM ooed_t  ",
+#               "                                   START WITH ooed005 = '",g_site,"'",
+#               "                                     AND ooed001 = '2' ",
+#               "                                     AND ooed006 <= '",g_today,"'",
+#               "                                     AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+#               "                                 CONNECT BY NOCYCLE PRIOR ooed004 = ooed005 ",
+#               "                                                      AND ooed001 = '2' ",
+#               "                                                      AND ooed006 <= '",g_today,"'",
+#               "                                                      AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+#               "                                   UNION ",
+#               "                                  SELECT ooed004 FROM ooed_t ",
+#               "                                   WHERE ooed004 = '",g_site,"'))"
+   #end add-point
+   PREPARE adbm210_master_referesh FROM g_sql
+ 
+ 
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adbm210 WITH FORM cl_ap_formpath("adb",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL adbm210_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL adbm210_ui_dialog() 
+      
+      #add-point:畫面關閉前
+
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_adbm210
+      
+   END IF 
+   
+   CLOSE adbm210_cl
+   
+   
+ 
+   #add-point:作業離開前
+   CALL s_aooi500_drop_temp() RETURNING l_success #150308-00001#1  By Ken 150309
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adbm210.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION adbm210_init()
+   #add-point:init段define
+   DEFINE l_success LIKE type_t.num5 #150308-00001#1  By Ken 150309
+   #end add-point
+ 
+   #定義combobox狀態
+      CALL cl_set_combo_scc_part('mrbastus','50','N,X,Y')
+ 
+      CALL cl_set_combo_scc('mrba019','5201') 
+   CALL cl_set_combo_scc('mrba100','5203') 
+ 
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化
+   CALL s_aooi500_create_temp() RETURNING l_success #150308-00001#1  By Ken 150309   
+   CALL cl_set_combo_scc('b_mrba019','5201') 
+   LET g_errshow = 1
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aoo", "aooi350_02"), "grid_3", "Table", "s_detail1_aooi350_02")
+   CALL cl_set_combo_scc('oofc008','6')   #通訊類型
+   #end add-point
+   
+   #根據外部參數進行搜尋
+   CALL adbm210_default_search()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION adbm210_ui_dialog() 
+   DEFINE li_exit   LIKE type_t.num5        #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5        #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+             prog   STRING,                 #串查程式名稱
+             param  DYNAMIC ARRAY OF STRING #傳遞變數
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   #add-point:ui_dialog段define
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_errno    LIKE type_t.chr10
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   
+   #讀入查詢方案logo
+   CALL gfrm_curr.setElementImage("logo","logo/applogo.png") 
+   
+   #若有外部參數查詢, 則直接顯示資料(隱藏查詢方案)
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #+ 此段落由子樣板a42產生
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL adbm210_insert()
+            #add-point:ON ACTION insert
+
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂
+
+      #end add-point
+      OTHERWISE
+         
+   END CASE
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog 
+
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+      
+      CALL adbm210_browser_fill(g_wc,"")
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+      
+      #判斷前一個動作是否為新增或複製, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_mrbasite = g_mrbasite_t
+               AND g_browser[li_idx].b_mrba001 = g_mrba001_t
+ 
+               THEN
+               LET g_current_row = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+
+ 
+
+ 
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL adbm210_fetch("")      
+                  
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array
+            SUBDIALOG aoo_aooi350_02.aooi350_02_display
+            #end add-point
+ 
+            #查詢方案用
+            SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+            SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+         
+            BEFORE DIALOG
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #還原為原本指定筆數
+               IF g_current_row > 1 THEN
+                  #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+                  IF g_current_row > g_browser.getLength() THEN
+                     LET g_current_row = g_browser.getLength()
+                  END IF 
+                  LET g_current_idx = g_current_row
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL adbm210_fetch("")   
+               END IF               
+               
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog
+
+               #end add-point
+            
+            #狀態碼切換
+            ON ACTION statechange
+               LET g_action_choice="statechange"
+               CALL adbm210_statechange()
+               EXIT DIALOG
+         
+            #+ 此段落由子樣板a49產生
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               #add-point:filter action
+
+               #end add-point
+               CALL adbm210_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+            
+            #第一筆資料
+            ON ACTION first
+               CALL adbm210_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL adbm210_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            #指定筆資料
+            ON ACTION jump
+               CALL adbm210_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            #上一筆資料
+            ON ACTION previous
+               CALL adbm210_fetch("P")
+               LET g_current_row = g_current_idx
+          
+            #最後筆資料
+            ON ACTION last 
+               CALL adbm210_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #主頁摺疊
+            ON ACTION mainhidden       
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT DIALOG
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT DIALOG
+         
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL adbm210_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL adbm210_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+ 
+                     CLEAR FORM
+                  ELSE
+                     CALL adbm210_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL adbm210_modify()
+               #add-point:ON ACTION modify
+               #160818-00017#5 -s by 08172
+               IF g_mrba_m.mrbastus = 'N' THEN
+                  CALL cl_set_act_visible("modify,modify_detail,delete",TRUE)
+               ELSE
+                  CALL cl_set_act_visible("modify,modify_detail,delete",FALSE)
+               END IF
+               #160818-00017#5 -e by 08172
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL adbm210_delete()
+               #add-point:ON ACTION delete
+               #160818-00017#5 -s by 08172
+               IF g_mrba_m.mrbastus = 'N' THEN
+                  CALL cl_set_act_visible("modify,modify_detail,delete",TRUE)
+               ELSE
+                  CALL cl_set_act_visible("modify,modify_detail,delete",FALSE)
+               END IF
+               #160818-00017#5 -e by 08172
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL adbm210_insert()
+               #add-point:ON ACTION insert
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL adbm210_reproduce()
+               #add-point:ON ACTION reproduce
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL adbm210_query()
+               #add-point:ON ACTION query
+
+               #END add-point
+               
+            END IF
+           
+         #ken---add---s 需求單號：150107-00009 項次：4
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_pmba2_d)
+                  LET g_export_id[1]   = "s_detail1_aooi350_02"
+ 
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF            
+         #ken---add---e            
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION adbm210_cancel_scrap
+            LET g_action_choice="adbm210_cancel_scrap"
+            IF cl_auth_chk_act("adbm210_cancel_scrap") THEN
+               
+               #add-point:ON ACTION adbm210_cancel_scrap
+               IF g_mrba_m.mrba100 = '3' THEN
+               
+                  CALL s_transaction_begin()
+                  OPEN adbm210_cl USING g_enterprise,g_mrba_m.mrbasite,g_mrba_m.mrba001
+                  IF STATUS THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "OPEN adbm210_cl:" 
+                     LET g_errparam.code   = STATUS 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLOSE adbm210_cl
+                     CALL s_transaction_end('N','0')
+                     EXIT DIALOG
+                  END IF
+                  
+                  IF cl_ask_sure() THEN
+                     CALL s_adbm210_upd_status_1(g_mrba_m.mrbasite,g_mrba_m.mrba001)
+                        RETURNING l_success,l_errno
+                     IF l_success THEN
+                        CALL s_transaction_end('Y','0')
+                     ELSE
+                        CALL s_transaction_end('N','0')
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = l_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     END IF
+                  ELSE
+                     CALL s_transaction_end('N','0')
+                  END IF
+               ELSE
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'amr-00032'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+               END IF
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION adbm210_reuse
+            LET g_action_choice="adbm210_reuse"
+            IF cl_auth_chk_act("adbm210_reuse") THEN
+               
+               #add-point:ON ACTION adbm210_reuse
+               IF g_mrba_m.mrba100 = '2' THEN
+               
+                  CALL s_transaction_begin()
+                  OPEN adbm210_cl USING g_enterprise,g_mrba_m.mrbasite,g_mrba_m.mrba001
+                  IF STATUS THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "OPEN adbm210_cl:" 
+                     LET g_errparam.code   = STATUS 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLOSE adbm210_cl
+                     CALL s_transaction_end('N','0')
+                     EXIT DIALOG
+                  END IF
+                  
+                  IF cl_ask_sure() THEN
+                     CALL s_adbm210_upd_status_1(g_mrba_m.mrbasite,g_mrba_m.mrba001)
+                        RETURNING l_success,l_errno
+                     IF l_success THEN
+                        CALL s_transaction_end('Y','0')
+                     ELSE
+                        CALL s_transaction_end('N','0')
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = l_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     END IF
+                  ELSE
+                     CALL s_transaction_end('N','0')
+                  END IF
+               ELSE
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'amr-00035'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+               END IF
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION adbm210_stop_use
+            LET g_action_choice="adbm210_stop_use"
+            IF cl_auth_chk_act("adbm210_stop_use") THEN
+               
+               #add-point:ON ACTION adbm210_stop_use
+               IF g_mrba_m.mrba100 = '1' THEN
+               
+                  CALL s_transaction_begin()
+                  OPEN adbm210_cl USING g_enterprise,g_mrba_m.mrbasite,g_mrba_m.mrba001
+                  IF STATUS THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "OPEN adbm210_cl:" 
+                     LET g_errparam.code   = STATUS 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLOSE adbm210_cl
+                     CALL s_transaction_end('N','0')
+                     EXIT DIALOG
+                  END IF
+                  
+                  IF cl_ask_sure() THEN
+                     CALL s_adbm210_upd_status_2(g_mrba_m.mrbasite,g_mrba_m.mrba001)
+                        RETURNING l_success,l_errno
+                     IF l_success THEN
+                        CALL s_transaction_end('Y','0')
+                     ELSE
+                        CALL s_transaction_end('N','0')
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = l_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     END IF
+                  ELSE
+                     CALL s_transaction_end('N','0')
+                  END IF
+               ELSE
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'amr-00033'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+               END IF
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION adbm210_use
+            LET g_action_choice="adbm210_use"
+            IF cl_auth_chk_act("adbm210_use") THEN
+               
+               #add-point:ON ACTION adbm210_use
+               IF g_mrba_m.mrba100 = '0' THEN
+               
+                  CALL s_transaction_begin()
+                  OPEN adbm210_cl USING g_enterprise,g_mrba_m.mrbasite,g_mrba_m.mrba001
+                  IF STATUS THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "OPEN adbm210_cl:" 
+                     LET g_errparam.code   = STATUS 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLOSE adbm210_cl
+                     CALL s_transaction_end('N','0')
+                     EXIT DIALOG
+                  END IF
+                  
+                  IF cl_ask_sure() THEN
+                     CALL s_adbm210_upd_status_1(g_mrba_m.mrbasite,g_mrba_m.mrba001)
+                        RETURNING l_success,l_errno
+                     IF l_success THEN
+                        CALL s_transaction_end('Y','0')
+                     ELSE
+                        CALL s_transaction_end('N','0')
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = l_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     END IF
+                  ELSE
+                     CALL s_transaction_end('N','0')
+                  END IF
+               ELSE
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'amr-00035'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+               END IF
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION adbm210_wait_scrap
+            LET g_action_choice="adbm210_wait_scrap"
+            IF cl_auth_chk_act("adbm210_wait_scrap") THEN
+               
+               #add-point:ON ACTION adbm210_wait_scrap
+               IF g_mrba_m.mrba100 = '1' THEN
+                  
+                  CALL s_transaction_begin()
+                  OPEN adbm210_cl USING g_enterprise,g_mrba_m.mrbasite,g_mrba_m.mrba001
+                  IF STATUS THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "OPEN adbm210_cl:" 
+                     LET g_errparam.code   = STATUS 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLOSE adbm210_cl
+                     CALL s_transaction_end('N','0')
+                     EXIT DIALOG
+                  END IF
+                  
+                  IF cl_ask_sure() THEN
+                     CALL s_adbm210_upd_status_3(g_mrba_m.mrbasite,g_mrba_m.mrba001)
+                        RETURNING l_success,l_errno
+                     IF l_success THEN
+                        CALL s_transaction_end('Y','0')
+                     ELSE
+                        CALL s_transaction_end('N','0')
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = l_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     END IF
+                  ELSE
+                     CALL s_transaction_end('N','0')
+                  END IF
+               ELSE
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'amr-00033'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+               END IF
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+            
+            
+ 
+            #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL adbm210_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL adbm210_set_pk_array()
+            #add-point:ON ACTION agendum
+
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL adbm210_set_pk_array()
+            #add-point:ON ACTION followup
+
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.browser_fill" >}
+#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION adbm210_browser_fill(p_wc,ps_page_action) 
+   DEFINE p_wc              STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define
+   DEFINE l_where           STRING
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_mrba_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   CALL g_browser.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET l_searchcol = "mrbasite,mrba001"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   
+   #add-point:browser_fill段wc控制
+   CALL aooi350_02_clear_detail()
+   CALL s_aooi500_sql_where(g_prog,'mrbasite') RETURNING l_where
+   LET g_wc = g_wc," AND ",l_where
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(*) FROM mrba_t ",
+               "  ",
+               "  ",
+               " WHERE mrbaent = '" ||g_enterprise|| "' AND ", 
+               p_wc CLIPPED, cl_sql_add_filter("mrba_t")
+                
+   #add-point:browser_fill段cnt_sql
+ 
+   #end add-point
+                
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt
+   FREE header_cnt_pre 
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse AND g_error_show = 1 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = g_browser_cnt 
+      LET g_errparam.code   = '9035' 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+      LET g_error_show = 0
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   LET g_wc = p_wc
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   LET g_sql = " SELECT t0.mrbastus,t0.mrbasite,'',t0.mrba019,t0.mrba020,'',t0.mrba001,t0.mrba061,'', 
+       t1.ooefl003 ,t2.ooag011",
+               " FROM mrba_t t0 ",
+               "  ",
+               "  ",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent='"||g_enterprise||"' AND t1.ooefl001=t0.mrbasite AND t1.ooefl002='"||g_lang||"' ",
+               " LEFT JOIN ooag_t t2 ON t2.ooagent='"||g_enterprise||"' AND t2.ooag001=t0.mrba061  ",
+ 
+               " WHERE t0.mrbaent = '" ||g_enterprise|| "' AND ", g_wc, cl_sql_add_filter("mrba_t"),
+               "  ORDER BY ",l_searchcol," ",g_order
+   #add-point:browser_fill段before_pre
+ 
+   #end add-point                    
+ 
+   #LET g_sql = cl_sql_add_tabid(g_sql,"mrba_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_mrbasite,g_browser[g_cnt].b_mrbasite_desc, 
+       g_browser[g_cnt].b_mrba019,g_browser[g_cnt].b_mrba020,g_browser[g_cnt].b_mrba020_desc,g_browser[g_cnt].b_mrba001, 
+       g_browser[g_cnt].b_mrba061,g_browser[g_cnt].b_mrba061_desc,g_browser[g_cnt].b_mrbasite_desc,g_browser[g_cnt].b_mrba061_desc 
+ 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "foreach:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+      CASE g_browser[g_cnt].b_mrba019
+         WHEN '0' #內部
+            CALL s_desc_get_department_desc(g_browser[g_cnt].b_mrba020)
+               RETURNING g_browser[g_cnt].b_mrba020_desc
+         WHEN '1' #外部
+            CALL s_desc_get_trading_partner_abbr_desc(g_browser[g_cnt].b_mrba020)
+               RETURNING g_browser[g_cnt].b_mrba020_desc
+      END CASE
+      DISPLAY BY NAME g_browser[g_cnt].b_mrba020_desc
+      #end add-point
+      
+            #此段落由子樣板a24產生
+      #browser段落顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/open.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/void.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/valid.png"
+         
+      END CASE
+ 
+ 
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "Max_Row:"||g_max_rec USING "<<<<<" 
+         LET g_errparam.code   = "std-00002" 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser.getLength()
+   LET g_rec_b = g_cnt - 1
+   LET g_current_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   CALL adbm210_fetch("") 
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adbm210.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION adbm210_construct()
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define
+   
+   #end add-point
+   
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE g_mrba_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON mrbasite,mrba019,mrba020,mrba001,mrba050,mrba010,mrba011,mrba051,mrba053, 
+          mrba055,mrba056,mrba052,mrba054,mrba057,mrba058,mrba059,mrba060,mrba065,mrba101,mrba061,mrba062, 
+          mrba063,mrba064,mrba100,mrbaunit,mrbastus,mrbaownid,mrbaowndp,mrbacrtid,mrbacrtdp,mrbacrtdt, 
+          mrbamodid,mrbamoddt,mrbacnfid,mrbacnfdt
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct
+            
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         #此段落由子樣板a11產生
+         #共用欄位查詢處理
+         ##----<<mrbacrtdt>>----
+         AFTER FIELD mrbacrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<mrbamoddt>>----
+         AFTER FIELD mrbamoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<mrbacnfdt>>----
+         AFTER FIELD mrbacnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<mrbapstdt>>----
+ 
+ 
+      
+         #一般欄位
+                  #Ctrlp:construct.c.mrbasite
+         ON ACTION controlp INFIELD mrbasite
+            #add-point:ON ACTION controlp INFIELD mrbasite
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'mrbasite',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+            CALL q_ooef001_24()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrbasite  #顯示到畫面上
+            NEXT FIELD mrbasite                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbasite
+            #add-point:BEFORE FIELD mrbasite
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbasite
+            
+            #add-point:AFTER FIELD mrbasite
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba019
+            #add-point:BEFORE FIELD mrba019
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba019
+            
+            #add-point:AFTER FIELD mrba019
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba019
+         ON ACTION controlp INFIELD mrba019
+            #add-point:ON ACTION controlp INFIELD mrba019
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrba020
+         ON ACTION controlp INFIELD mrba020
+            #add-point:ON ACTION controlp INFIELD mrba020
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #161006-00008#5-add(s)
+            IF g_mrba_m.mrba019 = '0' THEN
+               IF s_aooi500_setpoint(g_prog,'mrba020') THEN
+                  LET g_qryparam.where = s_aooi500_q_where(g_prog,'mrba020',g_mrba_m.mrbasite,'c')
+                  CALL q_ooef001_20()
+               END IF           
+            END IF
+            #161006-00008#5-add(e)
+            CALL q_ooef001_20()                   #呼叫開窗    
+            DISPLAY g_qryparam.return1 TO mrba020  #顯示到畫面上
+            NEXT FIELD mrba020                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba020
+            #add-point:BEFORE FIELD mrba020
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba020
+            
+            #add-point:AFTER FIELD mrba020
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba001
+         ON ACTION controlp INFIELD mrba001
+            #add-point:ON ACTION controlp INFIELD mrba001
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mrba001_7()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba001  #顯示到畫面上
+            NEXT FIELD mrba001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba001
+            #add-point:BEFORE FIELD mrba001
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba001
+            
+            #add-point:AFTER FIELD mrba001
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba050
+            #add-point:BEFORE FIELD mrba050
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba050
+            
+            #add-point:AFTER FIELD mrba050
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba050
+         ON ACTION controlp INFIELD mrba050
+            #add-point:ON ACTION controlp INFIELD mrba050
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrba010
+         ON ACTION controlp INFIELD mrba010
+            #add-point:ON ACTION controlp INFIELD mrba010
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '1101'
+            LET g_qryparam.where = " oocq020 = 'Y'"
+            CALL q_oocq002()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba010  #顯示到畫面上
+            NEXT FIELD mrba010                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba010
+            #add-point:BEFORE FIELD mrba010
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba010
+            
+            #add-point:AFTER FIELD mrba010
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba011
+         ON ACTION controlp INFIELD mrba011
+            #add-point:ON ACTION controlp INFIELD mrba011
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '1102'
+            LET g_qryparam.where = " oocq020 = 'Y'"
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba011  #顯示到畫面上
+            NEXT FIELD mrba011                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba011
+            #add-point:BEFORE FIELD mrba011
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba011
+            
+            #add-point:AFTER FIELD mrba011
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba051
+         ON ACTION controlp INFIELD mrba051
+            #add-point:ON ACTION controlp INFIELD mrba051
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '1109'
+            CALL q_oocq002()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba051  #顯示到畫面上
+            NEXT FIELD mrba051                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba051
+            #add-point:BEFORE FIELD mrba051
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba051
+            
+            #add-point:AFTER FIELD mrba051
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba053
+            #add-point:BEFORE FIELD mrba053
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba053
+            
+            #add-point:AFTER FIELD mrba053
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba053
+         ON ACTION controlp INFIELD mrba053
+            #add-point:ON ACTION controlp INFIELD mrba053
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba055
+            #add-point:BEFORE FIELD mrba055
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba055
+            
+            #add-point:AFTER FIELD mrba055
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba055
+         ON ACTION controlp INFIELD mrba055
+            #add-point:ON ACTION controlp INFIELD mrba055
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba056
+            #add-point:BEFORE FIELD mrba056
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba056
+            
+            #add-point:AFTER FIELD mrba056
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba056
+         ON ACTION controlp INFIELD mrba056
+            #add-point:ON ACTION controlp INFIELD mrba056
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba052
+            #add-point:BEFORE FIELD mrba052
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba052
+            
+            #add-point:AFTER FIELD mrba052
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba052
+         ON ACTION controlp INFIELD mrba052
+            #add-point:ON ACTION controlp INFIELD mrba052
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba054
+            #add-point:BEFORE FIELD mrba054
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba054
+            
+            #add-point:AFTER FIELD mrba054
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba054
+         ON ACTION controlp INFIELD mrba054
+            #add-point:ON ACTION controlp INFIELD mrba054
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba057
+            #add-point:BEFORE FIELD mrba057
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba057
+            
+            #add-point:AFTER FIELD mrba057
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba057
+         ON ACTION controlp INFIELD mrba057
+            #add-point:ON ACTION controlp INFIELD mrba057
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrba058
+         ON ACTION controlp INFIELD mrba058
+            #add-point:ON ACTION controlp INFIELD mrba058
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba058  #顯示到畫面上
+            NEXT FIELD mrba058                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba058
+            #add-point:BEFORE FIELD mrba058
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba058
+            
+            #add-point:AFTER FIELD mrba058
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba059
+            #add-point:BEFORE FIELD mrba059
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba059
+            
+            #add-point:AFTER FIELD mrba059
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba059
+         ON ACTION controlp INFIELD mrba059
+            #add-point:ON ACTION controlp INFIELD mrba059
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrba060
+         ON ACTION controlp INFIELD mrba060
+            #add-point:ON ACTION controlp INFIELD mrba060
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba060  #顯示到畫面上
+            NEXT FIELD mrba060                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba060
+            #add-point:BEFORE FIELD mrba060
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba060
+            
+            #add-point:AFTER FIELD mrba060
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba065
+         ON ACTION controlp INFIELD mrba065
+            #add-point:ON ACTION controlp INFIELD mrba065
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '1108'
+            CALL q_oocq002()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba065  #顯示到畫面上
+            NEXT FIELD mrba065                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba065
+            #add-point:BEFORE FIELD mrba065
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba065
+            
+            #add-point:AFTER FIELD mrba065
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba101
+            #add-point:BEFORE FIELD mrba101
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba101
+            
+            #add-point:AFTER FIELD mrba101
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba101
+         ON ACTION controlp INFIELD mrba101
+            #add-point:ON ACTION controlp INFIELD mrba101
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrba061
+         ON ACTION controlp INFIELD mrba061
+            #add-point:ON ACTION controlp INFIELD mrba061
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba061  #顯示到畫面上
+            NEXT FIELD mrba061                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba061
+            #add-point:BEFORE FIELD mrba061
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba061
+            
+            #add-point:AFTER FIELD mrba061
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba062
+         ON ACTION controlp INFIELD mrba062
+            #add-point:ON ACTION controlp INFIELD mrba062
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba062  #顯示到畫面上
+            NEXT FIELD mrba062                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba062
+            #add-point:BEFORE FIELD mrba062
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba062
+            
+            #add-point:AFTER FIELD mrba062
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba063
+         ON ACTION controlp INFIELD mrba063
+            #add-point:ON ACTION controlp INFIELD mrba063
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba063  #顯示到畫面上
+            NEXT FIELD mrba063                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba063
+            #add-point:BEFORE FIELD mrba063
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba063
+            
+            #add-point:AFTER FIELD mrba063
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba064
+         ON ACTION controlp INFIELD mrba064
+            #add-point:ON ACTION controlp INFIELD mrba064
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrba064  #顯示到畫面上
+            NEXT FIELD mrba064                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba064
+            #add-point:BEFORE FIELD mrba064
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba064
+            
+            #add-point:AFTER FIELD mrba064
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba100
+            #add-point:BEFORE FIELD mrba100
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba100
+            
+            #add-point:AFTER FIELD mrba100
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrba100
+         ON ACTION controlp INFIELD mrba100
+            #add-point:ON ACTION controlp INFIELD mrba100
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrbaunit
+         ON ACTION controlp INFIELD mrbaunit
+            #add-point:ON ACTION controlp INFIELD mrbaunit
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'mrbaunit',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+            CALL q_ooef001_24()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrbaunit  #顯示到畫面上
+            NEXT FIELD mrbaunit                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbaunit
+            #add-point:BEFORE FIELD mrbaunit
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbaunit
+            
+            #add-point:AFTER FIELD mrbaunit
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbastus
+            #add-point:BEFORE FIELD mrbastus
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbastus
+            
+            #add-point:AFTER FIELD mrbastus
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrbastus
+         ON ACTION controlp INFIELD mrbastus
+            #add-point:ON ACTION controlp INFIELD mrbastus
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrbaownid
+         ON ACTION controlp INFIELD mrbaownid
+            #add-point:ON ACTION controlp INFIELD mrbaownid
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrbaownid  #顯示到畫面上
+            NEXT FIELD mrbaownid                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbaownid
+            #add-point:BEFORE FIELD mrbaownid
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbaownid
+            
+            #add-point:AFTER FIELD mrbaownid
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrbaowndp
+         ON ACTION controlp INFIELD mrbaowndp
+            #add-point:ON ACTION controlp INFIELD mrbaowndp
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrbaowndp  #顯示到畫面上
+            NEXT FIELD mrbaowndp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbaowndp
+            #add-point:BEFORE FIELD mrbaowndp
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbaowndp
+            
+            #add-point:AFTER FIELD mrbaowndp
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrbacrtid
+         ON ACTION controlp INFIELD mrbacrtid
+            #add-point:ON ACTION controlp INFIELD mrbacrtid
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrbacrtid  #顯示到畫面上
+            NEXT FIELD mrbacrtid                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbacrtid
+            #add-point:BEFORE FIELD mrbacrtid
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbacrtid
+            
+            #add-point:AFTER FIELD mrbacrtid
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrbacrtdp
+         ON ACTION controlp INFIELD mrbacrtdp
+            #add-point:ON ACTION controlp INFIELD mrbacrtdp
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrbacrtdp  #顯示到畫面上
+            NEXT FIELD mrbacrtdp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbacrtdp
+            #add-point:BEFORE FIELD mrbacrtdp
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbacrtdp
+            
+            #add-point:AFTER FIELD mrbacrtdp
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbacrtdt
+            #add-point:BEFORE FIELD mrbacrtdt
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrbamodid
+         ON ACTION controlp INFIELD mrbamodid
+            #add-point:ON ACTION controlp INFIELD mrbamodid
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrbamodid  #顯示到畫面上
+            NEXT FIELD mrbamodid                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbamodid
+            #add-point:BEFORE FIELD mrbamodid
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbamodid
+            
+            #add-point:AFTER FIELD mrbamodid
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbamoddt
+            #add-point:BEFORE FIELD mrbamoddt
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrbacnfid
+         ON ACTION controlp INFIELD mrbacnfid
+            #add-point:ON ACTION controlp INFIELD mrbacnfid
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrbacnfid  #顯示到畫面上
+            NEXT FIELD mrbacnfid                     #返回原欄位
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbacnfid
+            #add-point:BEFORE FIELD mrbacnfid
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbacnfid
+            
+            #add-point:AFTER FIELD mrbacnfid
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbacnfdt
+            #add-point:BEFORE FIELD mrbacnfdt
+            
+            #END add-point
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct
+      SUBDIALOG aoo_aooi350_02.aooi350_02_construct
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct
+   
+   #end add-point
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.filter" >}
+#+ 此段落由子樣板a50產生
+#+ filter過濾功能
+PRIVATE FUNCTION adbm210_filter()
+   #add-point:filter段define
+   
+   #end add-point   
+ 
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON mrbasite,mrba019,mrba020,mrba001,mrba061
+                          FROM s_browse[1].b_mrbasite,s_browse[1].b_mrba019,s_browse[1].b_mrba020,s_browse[1].b_mrba001, 
+                              s_browse[1].b_mrba061
+ 
+         BEFORE CONSTRUCT
+               DISPLAY adbm210_filter_parser('mrbasite') TO s_browse[1].b_mrbasite
+            DISPLAY adbm210_filter_parser('mrba019') TO s_browse[1].b_mrba019
+            DISPLAY adbm210_filter_parser('mrba020') TO s_browse[1].b_mrba020
+            DISPLAY adbm210_filter_parser('mrba001') TO s_browse[1].b_mrba001
+            DISPLAY adbm210_filter_parser('mrba061') TO s_browse[1].b_mrba061
+      
+         #add-point:filter段cs_ctrl
+         
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL adbm210_filter_show('mrbasite')
+   CALL adbm210_filter_show('mrba019')
+   CALL adbm210_filter_show('mrba020')
+   CALL adbm210_filter_show('mrba001')
+   CALL adbm210_filter_show('mrba061')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION adbm210_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION adbm210_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = adbm210_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION adbm210_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL g_browser.clear() 
+ 
+   #browser panel折疊
+   IF g_worksheet_hidden THEN
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   
+   #單頭折疊
+   IF g_header_hidden THEN
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_mrba_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL adbm210_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL adbm210_browser_fill(g_wc,"F")
+      CALL adbm210_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   #根據條件從新抓取資料
+   LET g_error_show = 1
+   CALL adbm210_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   ELSE
+      CALL adbm210_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION adbm210_fetch(p_fl)
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+
+   #end add-point  
+   
+   #根據傳入的條件決定抓取的資料
+   CASE p_fl
+      WHEN "F" 
+         LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         LET g_current_idx = g_header_cnt        
+      WHEN "/"
+         #詢問要指定的筆數
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+   
+   LET g_browser_cnt = g_browser.getLength()
+ 
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_current_idx 
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   
+   #單頭筆數顯示
+   #DISPLAY g_browser_idx TO FORMONLY.idx            #當下筆數
+   #DISPLAY g_browser_cnt TO FORMONLY.cnt            #總筆數
+   
+   
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+   CALL cl_navigator_setting(g_browser_idx, g_current_cnt) 
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   #根據選定的筆數給予key欄位值
+   LET g_mrba_m.mrbasite = g_browser[g_current_idx].b_mrbasite
+   LET g_mrba_m.mrba001 = g_browser[g_current_idx].b_mrba001
+ 
+                       
+   #讀取單頭所有欄位資料
+   EXECUTE adbm210_master_referesh USING g_mrba_m.mrbasite,g_mrba_m.mrba001 INTO g_mrba_m.mrbasite,g_mrba_m.mrba019, 
+       g_mrba_m.mrba020,g_mrba_m.mrba001,g_mrba_m.mrba050,g_mrba_m.mrba010,g_mrba_m.mrba011,g_mrba_m.mrba051, 
+       g_mrba_m.mrba053,g_mrba_m.mrba055,g_mrba_m.mrba056,g_mrba_m.mrba052,g_mrba_m.mrba054,g_mrba_m.mrba057, 
+       g_mrba_m.mrba058,g_mrba_m.mrba059,g_mrba_m.mrba060,g_mrba_m.mrba065,g_mrba_m.mrba101,g_mrba_m.mrba061, 
+       g_mrba_m.mrba062,g_mrba_m.mrba063,g_mrba_m.mrba064,g_mrba_m.mrba100,g_mrba_m.mrbaunit,g_mrba_m.mrba000,
+       g_mrba_m.mrbastus, 
+       g_mrba_m.mrbaownid,g_mrba_m.mrbaowndp,g_mrba_m.mrbacrtid,g_mrba_m.mrbacrtdp,g_mrba_m.mrbacrtdt, 
+       g_mrba_m.mrbamodid,g_mrba_m.mrbamoddt,g_mrba_m.mrbacnfid,g_mrba_m.mrbacnfdt,g_mrba_m.mrbasite_desc, 
+       g_mrba_m.mrba020_desc,g_mrba_m.mrba010_desc,g_mrba_m.mrba011_desc,g_mrba_m.mrba051_desc,g_mrba_m.mrba058_desc, 
+       g_mrba_m.mrba060_desc,g_mrba_m.mrba065_desc,g_mrba_m.mrba061_desc,g_mrba_m.mrba062_desc,g_mrba_m.mrba063_desc, 
+       g_mrba_m.mrba064_desc,g_mrba_m.mrbaunit_desc,g_mrba_m.mrbaownid_desc,g_mrba_m.mrbaowndp_desc, 
+       g_mrba_m.mrbacrtid_desc,g_mrba_m.mrbacrtdp_desc,g_mrba_m.mrbamodid_desc,g_mrba_m.mrbacnfid_desc 
+ 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "mrba_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      INITIALIZE g_mrba_m.* TO NULL
+      RETURN
+   END IF
+   
+   #add-point:fetch段action控制
+   CALL cl_set_act_visible("adbm210_use",FALSE)
+   CALL cl_set_act_visible("adbm210_stop_use",FALSE)
+   CALL cl_set_act_visible("adbm210_reuse",FALSE)
+   CALL cl_set_act_visible("adbm210_wait_scrap",FALSE)
+   CALL cl_set_act_visible("adbm210_cancel_scrap",FALSE)
+   
+   CASE g_mrba_m.mrba100
+      WHEN '0'
+         IF g_mrba_m.mrbastus = 'Y' THEN
+            CALL cl_set_act_visible("adbm210_use",TRUE)
+         END IF
+      WHEN '1'
+         CALL cl_set_act_visible("adbm210_stop_use,adbm210_wait_scrap",TRUE)
+      WHEN '2'
+         CALL cl_set_act_visible("adbm210_reuse",TRUE)
+      WHEN '3'
+         CALL cl_set_act_visible("adbm210_cancel_scrap",TRUE)
+   END CASE
+
+   CALL cl_set_act_visible("modify,delete,reproduce,modify_detail",TRUE)
+
+   IF g_mrba_m.mrbastus != 'N' THEN
+      CALL cl_set_act_visible("modify,delete,modify_detail",FALSE)
+   END IF
+
+   IF g_mrba_m.mrba100 MATCHES '[345]' THEN
+      CALL cl_set_act_visible("modify,modify_detail",FALSE)
+   END IF
+   #end add-point  
+   
+   
+   
+   #保存單頭舊值
+   LET g_mrba_m_t.* = g_mrba_m.*
+   LET g_mrba_m_o.* = g_mrba_m.*
+   
+   #重新顯示
+   CALL adbm210_show()
+ 
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION adbm210_insert()
+   #add-point:insert段define
+   DEFINE l_insert        LIKE type_t.num5
+   #end add-point    
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE g_mrba_m.* LIKE mrba_t.*             #DEFAULT 設定
+   LET g_mrbasite_t = NULL
+   LET g_mrba001_t = NULL
+ 
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      
+      #公用欄位給值
+      #此段落由子樣板a14產生    
+      #公用欄位新增給值
+      LET g_mrba_m.mrbaownid = g_user
+      LET g_mrba_m.mrbaowndp = g_dept
+      LET g_mrba_m.mrbacrtid = g_user
+      LET g_mrba_m.mrbacrtdp = g_dept 
+      LET g_mrba_m.mrbacrtdt = cl_get_current()
+      LET g_mrba_m.mrbamodid = ""
+      LET g_mrba_m.mrbamoddt = ""
+      LET g_mrba_m.mrbastus = "N"
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_mrba_m.mrba019 = "0"
+      LET g_mrba_m.mrba100 = "0"
+      LET g_mrba_m.mrba000 = "6"
+      LET g_mrba_m.mrbastus = "N"
+ 
+ 
+      #add-point:單頭預設值
+      CALL s_aooi500_default(g_prog,'mrbasite',g_mrba_m.mrbasite)
+         RETURNING l_insert,g_mrba_m.mrbasite
+      IF l_insert = FALSE THEN
+         RETURN
+      END IF
+      CALL s_aooi500_default(g_prog,'mrbaunit',g_mrba_m.mrbasite)
+         RETURNING l_insert,g_mrba_m.mrbaunit
+      IF l_insert = FALSE THEN
+         RETURN
+      END IF
+      
+      LET g_mrba_m.mrba020 = g_site
+      LET g_mrba_m.mrba058 = cl_get_para(g_enterprise,g_site,'E-CIR-0013')
+      LET g_mrba_m.mrba060 = cl_get_para(g_enterprise,g_site,'E-CIR-0012')
+      CALL s_desc_get_department_desc(g_mrba_m.mrbasite)
+         RETURNING g_mrba_m.mrbasite_desc
+      CALL s_desc_get_unit_desc(g_mrba_m.mrba058)
+         RETURNING g_mrba_m.mrba058_desc
+      CALL s_desc_get_unit_desc(g_mrba_m.mrba060)
+         RETURNING g_mrba_m.mrba060_desc
+      LET g_mrba_m.mrba020_desc = g_mrba_m.mrbasite_desc
+      LET g_mrba_m.mrbaunit_desc = g_mrba_m.mrbasite_desc
+      DISPLAY BY NAME g_mrba_m.mrbasite_desc,g_mrba_m.mrba020_desc,
+                      g_mrba_m.mrbaunit_desc,g_mrba_m.mrba058_desc,
+                      g_mrba_m.mrba060_desc
+      
+      LET g_pmaa027_d = ''
+      CALL aooi350_02_clear_detail()
+      LET g_mrba_m_t.* = g_mrba_m.*
+      LET g_mrba_m_o.* = g_mrba_m.*
+      #end add-point   
+     
+      #資料輸入
+      CALL adbm210_input("a")
+      
+      #add-point:單頭輸入後
+
+      #end add-point
+      
+      IF INT_FLAG THEN
+         #若取消則還原資料
+         LET INT_FLAG = 0
+         LET g_mrba_m.* = g_mrba_m_t.*
+         CALL adbm210_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+         EXIT WHILE
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #將新增的資料併入搜尋條件中
+   LET g_state = "Y"
+ 
+   LET g_mrbasite_t = g_mrba_m.mrbasite
+   LET g_mrba001_t = g_mrba_m.mrba001
+ 
+ 
+   LET g_wc = "(",g_wc,  
+              " OR ( mrbaent = '" ||g_enterprise|| "' AND",
+              " mrbasite = '", g_mrba_m.mrbasite CLIPPED, "' "
+              ," AND mrba001 = '", g_mrba_m.mrba001 CLIPPED, "' "
+ 
+              , ")) "
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION adbm210_modify()
+   #add-point:modify段define
+
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_mrba_m.mrbasite IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      RETURN
+   END IF 
+ 
+   ERROR ""
+  
+   #備份key值
+   LET g_mrbasite_t = g_mrba_m.mrbasite
+   LET g_mrba001_t = g_mrba_m.mrba001
+ 
+   
+   CALL s_transaction_begin()
+   
+   #先lock資料
+   OPEN adbm210_cl USING g_enterprise,g_mrba_m.mrbasite,g_mrba_m.mrba001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN adbm210_cl:" 
+      LET g_errparam.code   =  STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      CLOSE adbm210_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE adbm210_master_referesh USING g_mrba_m.mrbasite,g_mrba_m.mrba001 INTO g_mrba_m.mrbasite,g_mrba_m.mrba019, 
+       g_mrba_m.mrba020,g_mrba_m.mrba001,g_mrba_m.mrba050,g_mrba_m.mrba010,g_mrba_m.mrba011,g_mrba_m.mrba051, 
+       g_mrba_m.mrba053,g_mrba_m.mrba055,g_mrba_m.mrba056,g_mrba_m.mrba052,g_mrba_m.mrba054,g_mrba_m.mrba057, 
+       g_mrba_m.mrba058,g_mrba_m.mrba059,g_mrba_m.mrba060,g_mrba_m.mrba065,g_mrba_m.mrba101,g_mrba_m.mrba061, 
+       g_mrba_m.mrba062,g_mrba_m.mrba063,g_mrba_m.mrba064,g_mrba_m.mrba100,g_mrba_m.mrbaunit,g_mrba_m.mrba000,
+       g_mrba_m.mrbastus, 
+       g_mrba_m.mrbaownid,g_mrba_m.mrbaowndp,g_mrba_m.mrbacrtid,g_mrba_m.mrbacrtdp,g_mrba_m.mrbacrtdt, 
+       g_mrba_m.mrbamodid,g_mrba_m.mrbamoddt,g_mrba_m.mrbacnfid,g_mrba_m.mrbacnfdt,g_mrba_m.mrbasite_desc, 
+       g_mrba_m.mrba020_desc,g_mrba_m.mrba010_desc,g_mrba_m.mrba011_desc,g_mrba_m.mrba051_desc,g_mrba_m.mrba058_desc, 
+       g_mrba_m.mrba060_desc,g_mrba_m.mrba065_desc,g_mrba_m.mrba061_desc,g_mrba_m.mrba062_desc,g_mrba_m.mrba063_desc, 
+       g_mrba_m.mrba064_desc,g_mrba_m.mrbaunit_desc,g_mrba_m.mrbaownid_desc,g_mrba_m.mrbaowndp_desc, 
+       g_mrba_m.mrbacrtid_desc,g_mrba_m.mrbacrtdp_desc,g_mrba_m.mrbamodid_desc,g_mrba_m.mrbacnfid_desc 
+ 
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "mrba_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      CLOSE adbm210_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #160818-00017#5 -s by 08172
+   #檢查是否允許此動作
+   IF NOT adbm210_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   #160818-00017#5 -e by 08172
+ 
+   #顯示資料
+   CALL adbm210_show()
+   
+   WHILE TRUE
+      LET g_mrba_m.mrbasite = g_mrbasite_t
+      LET g_mrba_m.mrba001 = g_mrba001_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      LET g_mrba_m.mrbamodid = g_user 
+LET g_mrba_m.mrbamoddt = cl_get_current()
+ 
+      
+      #add-point:modify段修改前
+
+      #end add-point
+ 
+      #資料輸入
+      CALL adbm210_input("u")     
+ 
+      #add-point:modify段修改後
+
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_mrba_m.* = g_mrba_m_t.*
+         CALL adbm210_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+      UPDATE mrba_t SET (mrbamodid,mrbamoddt) = (g_mrba_m.mrbamodid,g_mrba_m.mrbamoddt)
+       WHERE mrbaent = g_enterprise AND mrbasite = g_mrbasite_t
+         AND mrba001 = g_mrba001_t
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+   
+   CLOSE adbm210_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U(暫時無用)
+   #CALL cl_flow_notify(g_mrba_m.mrbasite,"U")
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+ 
+{</section>}
+ 
+{<section id="adbm210.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION adbm210_input(p_cmd)
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define
+   DEFINE l_flag          LIKE type_t.chr1
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_errno         LIKE type_t.chr10
+   DEFINE l_where         STRING
+   #end add-point
+ 
+   #切換至輸入畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   #a-新增,r-複製,u-修改
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL adbm210_set_entry(p_cmd)
+   #add-point:set_entry後
+
+   #end add-point
+   CALL adbm210_set_no_entry(p_cmd)
+   #add-point:資料輸入前
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_detail_insert = l_allow_insert
+   LET g_detail_delete = l_allow_delete
+   LET l_flag = 'N'
+   #end add-point
+   
+   DISPLAY BY NAME g_mrba_m.mrbasite,g_mrba_m.mrba019,g_mrba_m.mrba020,g_mrba_m.mrba001,g_mrba_m.mrba050, 
+       g_mrba_m.mrba010,g_mrba_m.mrba011,g_mrba_m.mrba051,g_mrba_m.mrba053,g_mrba_m.mrba055,g_mrba_m.mrba056, 
+       g_mrba_m.mrba052,g_mrba_m.mrba054,g_mrba_m.mrba057,g_mrba_m.mrba058,g_mrba_m.mrba059,g_mrba_m.mrba060, 
+       g_mrba_m.mrba065,g_mrba_m.mrba101,g_mrba_m.mrba061,g_mrba_m.mrba062,g_mrba_m.mrba063,g_mrba_m.mrba064, 
+       g_mrba_m.mrba100,g_mrba_m.mrbaunit,g_mrba_m.mrbastus
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_mrba_m.mrbasite,g_mrba_m.mrba019,g_mrba_m.mrba020,g_mrba_m.mrba001,g_mrba_m.mrba050, 
+          g_mrba_m.mrba010,g_mrba_m.mrba011,g_mrba_m.mrba051,g_mrba_m.mrba053,g_mrba_m.mrba055,g_mrba_m.mrba056, 
+          g_mrba_m.mrba052,g_mrba_m.mrba054,g_mrba_m.mrba057,g_mrba_m.mrba058,g_mrba_m.mrba059,g_mrba_m.mrba060, 
+          g_mrba_m.mrba065,g_mrba_m.mrba101,g_mrba_m.mrba061,g_mrba_m.mrba062,g_mrba_m.mrba063,g_mrba_m.mrba064, 
+          g_mrba_m.mrba100,g_mrba_m.mrbaunit,g_mrba_m.mrbastus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前
+
+            #end add-point
+   
+                  #此段落由子樣板a02產生
+         AFTER FIELD mrbasite
+            
+            #add-point:AFTER FIELD mrbasite
+            LET g_mrba_m.mrbasite_desc = ''
+            DISPLAY BY NAME g_mrba_m.mrbasite_desc
+            IF NOT cl_null(g_mrba_m.mrbasite) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrbasite != g_mrba_m_t.mrbasite OR g_mrba_m_t.mrbasite IS NULL )) THEN #161006-00008#5 mark
+               IF g_mrba_m.mrbasite != g_mrba_m_o.mrbasite OR cl_null(g_mrba_m_o.mrbasite) THEN  #161006-00008#5 add
+                  CALL s_aooi500_chk(g_prog,'mrbasite',g_mrba_m.mrbasite,g_mrba_m.mrbasite)  
+                     RETURNING l_success,l_errno
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ""
+                     LET g_errparam.code   = l_errno
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     #LET g_mrba_m.mrbasite = g_mrba_m_t.mrbasite      #161006-00008#5 mark
+                     LET g_mrba_m.mrbasite = g_mrba_m_o.mrbasite       #161006-00008#5 add
+                     CALL s_desc_get_department_desc(g_mrba_m.mrbasite)
+                        RETURNING g_mrba_m.mrbasite_desc
+                     DISPLAY BY NAME g_mrba_m.mrbasite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_department_desc(g_mrba_m.mrbasite)
+               RETURNING g_mrba_m.mrbasite_desc
+            DISPLAY BY NAME g_mrba_m.mrbasite_desc
+            CALL adbm210_set_entry(p_cmd)
+            CALL adbm210_set_no_entry(p_cmd)
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbasite
+            #add-point:BEFORE FIELD mrbasite
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrbasite
+            #add-point:ON CHANGE mrbasite
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba019
+            #add-point:BEFORE FIELD mrba019
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba019
+            
+            #add-point:AFTER FIELD mrba019
+            IF NOT cl_null(g_mrba_m.mrba019) THEN
+               IF g_mrba_m.mrba019 != g_mrba_m_o.mrba019 OR g_mrba_m_o.mrba019 IS NULL THEN
+                  LET g_mrba_m.mrba020 = ''
+                  LET g_mrba_m.mrba020_desc = ''
+                  DISPLAY BY NAME g_mrba_m.mrba020,g_mrba_m.mrba020_desc
+               END IF
+            END IF
+            LET g_mrba_m_o.mrba019 = g_mrba_m.mrba019
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba019
+            #add-point:ON CHANGE mrba019
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba020
+            
+            #add-point:AFTER FIELD mrba020
+            LET g_mrba_m.mrba020_desc = ' '
+            DISPLAY BY NAME g_mrba_m.mrba020_desc
+            LET l_success = NULL                   #161006-00008#5 add
+            LET l_errno = NULL                     #161006-00008#5 add
+            IF NOT cl_null(g_mrba_m.mrba020) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrba020 != g_mrba_m_t.mrba020 OR g_mrba_m_t.mrba020 IS NULL )) THEN #161006-00008#5 mark
+               IF g_mrba_m.mrba020 != g_mrba_m_o.mrba020 OR cl_null ( g_mrba_m_o.mrba020) THEN   #161006-00008#5 add
+                  INITIALIZE g_chkparam.* TO NULL
+                  #161006-00008#5-add(s)
+                  IF s_aooi500_setpoint(g_prog,'mrba020') THEN
+                     CALL s_aooi500_chk(g_prog,'mrbasite',g_mrba_m.mrba020,g_mrba_m.mrbasite)
+                     RETURNING l_success,l_errno
+                     IF l_success = FALSE THEN  
+                        LET g_errparam.extend = ""
+                        LET g_errparam.code   = l_errno
+                        LET g_errparam.popup  = TRUE
+                        CALL cl_err()
+                        LET g_mrba_m.mrba020 = g_mrba_m_o.mrba020       #161006-00008#5 add
+                     END IF    
+                  END IF   
+                  #161006-00008#5-add(e)
+                  LET g_chkparam.arg1 = g_mrba_m.mrba020                  
+                  #內部
+                  IF g_mrba_m.mrba019 = '0' THEN
+                     #160318-00025#27  by 07900 --add-str
+                     LET g_errshow = TRUE #是否開窗                   
+                     LET g_chkparam.err_str[1] ="aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+                     #160318-00025#27  by 07900 --add-end
+                     
+                     IF NOT cl_chk_exist("v_ooef001") THEN
+                        #LET g_mrba_m.mrba020 = g_mrba_m_t.mrba020 #161006-00008#5 mark
+                        LET g_mrba_m.mrba020 = g_mrba_m_o.mrba020  #161006-00008#5 add
+                        CALL adbm210_mrba020_ref()
+                        NEXT FIELD CURRENT
+                     END IF
+                  #外部
+                  ELSE
+                     LET g_chkparam.arg2 = 'ALL'
+                     #160318-00025#27  by 07900 --add-str
+                     LET g_errshow = TRUE #是否開窗                   
+                     LET g_chkparam.err_str[1] ="apm-00201:sub-01302|axmm200|",cl_get_progname("axmm200",g_lang,"2"),"|:EXEPROGaxmm200"
+                     #160318-00025#27  by 07900 --add-end  
+                     IF NOT cl_chk_exist("v_pmaa001_3") THEN
+                        #LET g_mrba_m.mrba020 = g_mrba_m_t.mrba020 #161006-00008#5 mark
+                        LET g_mrba_m.mrba020 = g_mrba_m_o.mrba020  #161006-00008#5 add
+                        CALL adbm210_mrba020_ref()
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF
+            CALL adbm210_mrba020_ref()
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba020
+            #add-point:BEFORE FIELD mrba020
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba020
+            #add-point:ON CHANGE mrba020
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba001
+            #add-point:BEFORE FIELD mrba001
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba001
+            
+            #add-point:AFTER FIELD mrba001
+            IF  NOT cl_null(g_mrba_m.mrba001) THEN
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_mrba_m.mrba001 != g_mrba001_t )) THEN
+                  CALL adbm210_mrba001_chk()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ''
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_mrba_m.mrba001 = g_mrba001_t
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba001
+            #add-point:ON CHANGE mrba001
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba050
+            #add-point:BEFORE FIELD mrba050
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba050
+            
+            #add-point:AFTER FIELD mrba050
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba050
+            #add-point:ON CHANGE mrba050
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba010
+            
+            #add-point:AFTER FIELD mrba010
+            LET g_mrba_m.mrba010_desc = ' '
+            DISPLAY BY NAME g_mrba_m.mrba010_desc
+            IF NOT cl_null(g_mrba_m.mrba010) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrba010 != g_mrba_m_t.mrba010 OR g_mrba_m_t.mrba010 IS NULL )) THEN
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = '1101'
+                  LET g_chkparam.arg2 = g_mrba_m.mrba010
+                  LET g_chkparam.ls_title = g_mrba_m.mrba010
+                  #160318-00025#27  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="amr-00019:sub-01303|amri001|",cl_get_progname("amri001",g_lang,"2"),"|:EXEPROGamri001"
+                  LET g_chkparam.err_str[2] ="amr-00018:sub-01302|amri001|",cl_get_progname("amri001",g_lang,"2"),"|:EXEPROGamri001"
+                  #160318-00025#27  by 07900 --add-end 
+                  IF NOT cl_chk_exist("v_oocq002_4") THEN
+                     LET g_mrba_m.mrba010 = g_mrba_m_t.mrba010
+                     CALL s_desc_get_acc_desc('1101',g_mrba_m.mrba010)
+                        RETURNING g_mrba_m.mrba010_desc
+                     DISPLAY BY NAME g_mrba_m.mrba010_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_acc_desc('1101',g_mrba_m.mrba010)
+               RETURNING g_mrba_m.mrba010_desc
+            DISPLAY BY NAME g_mrba_m.mrba010_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba010
+            #add-point:BEFORE FIELD mrba010
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba010
+            #add-point:ON CHANGE mrba010
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba011
+            
+            #add-point:AFTER FIELD mrba011
+            LET g_mrba_m.mrba011_desc = ' '
+            DISPLAY BY NAME g_mrba_m.mrba011_desc
+            IF NOT cl_null(g_mrba_m.mrba011) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrba011 != g_mrba_m_t.mrba011 OR g_mrba_m_t.mrba011 IS NULL )) THEN
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = '1102'
+                  LET g_chkparam.arg2 = g_mrba_m.mrba011
+                  LET g_errshow = TRUE       #160328-00029#5 add
+                  
+                  LET g_chkparam.ls_title = g_mrba_m_t.mrba011
+                  LET g_chkparam.err_str[1] = "amr-00017:amr-00021"
+                  #LET g_chkparam.err_str[2] = "amr-00018:amr-00022"                                                                  #160328-00029#5 mark
+                  LET g_chkparam.err_str[2] = "amr-00018:sub-01302|amri002|",cl_get_progname("amri002",g_lang,"2"),"|:EXEPROGamri002" #160328-00029#5 add
+                  #160318-00025#27  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[3] = "amr-00019:sub-01303|amri001|",cl_get_progname("amri001",g_lang,"2"),"|:EXEPROGamri001"                  
+                  #160318-00025#27  by 07900 --add-end 
+                  IF NOT cl_chk_exist("v_oocq002_4") THEN
+                     LET g_mrba_m.mrba011 = g_mrba_m_t.mrba011
+                     CALL s_desc_get_acc_desc('1102',g_mrba_m.mrba011)
+                        RETURNING g_mrba_m.mrba011_desc
+                     DISPLAY BY NAME g_mrba_m.mrba011_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_acc_desc('1102',g_mrba_m.mrba011)
+               RETURNING g_mrba_m.mrba011_desc
+            DISPLAY BY NAME g_mrba_m.mrba011_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba011
+            #add-point:BEFORE FIELD mrba011
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba011
+            #add-point:ON CHANGE mrba011
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba051
+            
+            #add-point:AFTER FIELD mrba051
+            LET g_mrba_m.mrba051_desc = ' '
+            DISPLAY BY NAME g_mrba_m.mrba051_desc
+            IF NOT cl_null(g_mrba_m.mrba051) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrba051 != g_mrba_m_t.mrba051 OR g_mrba_m_t.mrba051 IS NULL )) THEN
+                  IF NOT cl_null(g_mrba_m.mrba011) THEN                 #有輸入廠牌
+                     #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                     INITIALIZE g_chkparam.* TO NULL
+                  
+                     #設定g_chkparam.*的參數
+                     LET g_chkparam.arg1 = '1109'
+                     LET g_chkparam.arg2 = g_mrba_m.mrba051
+                     LET g_chkparam.arg3 = g_mrba_m.mrba011          #廠牌
+                     #160318-00025#27  by 07900 --add-str
+                     LET g_errshow = TRUE #是否開窗                   
+                     LET g_chkparam.err_str[1] ="amr-00023:sub-01303|amri010|",cl_get_progname("amri010",g_lang,"2"),"|:EXEPROGamri010"
+                     LET g_chkparam.err_str[2] ="amr-00025:sub-01302|amri010|",cl_get_progname("amri010",g_lang,"2"),"|:EXEPROGamri010"
+                     #160318-00025#27  by 07900 --add-end
+                     IF NOT cl_chk_exist("v_oocq002_5") THEN
+                        LET g_mrba_m.mrba051 = g_mrba_m_t.mrba051
+                        CALL s_desc_get_acc_desc('1109',g_mrba_m.mrba051)
+                           RETURNING g_mrba_m.mrba051_desc
+                        DISPLAY BY NAME g_mrba_m.mrba051_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  
+                  ELSE        #沒輸入廠牌
+                     #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                     INITIALIZE g_chkparam.* TO NULL
+                  
+                     #設定g_chkparam.*的參數
+                     LET g_chkparam.arg1 = '1109'
+                     LET g_chkparam.arg2 = g_mrba_m.mrba051
+                     LET g_errshow = TRUE                    #160328-00029#5 add
+                  
+                     LET g_chkparam.ls_title = g_mrba_m.mrba051
+                     #LET g_chkparam.err_str[1] = "aoo-00099:amr-00023"                                                                  #160328-00029#5 mark
+                     LET g_chkparam.err_str[1] = "aoo-00099:sub-01303|amri010|",cl_get_progname("amri010",g_lang,"2"),"|:EXEPROGamri010" #160328-00029#5 add
+                     #LET g_chkparam.err_str[2] = "aqc-00032:amr-00025"                                                                  #160328-00029#5 mark
+                     LET g_chkparam.err_str[2] = "aqc-00032:sub-01302|amri010|",cl_get_progname("amri010",g_lang,"2"),"|:EXEPROGamri010" #160328-00029#5 add
+                  
+                     IF NOT cl_chk_exist("v_oocq002_1") THEN
+                        LET g_mrba_m.mrba051 = g_mrba_m_t.mrba051
+                        CALL s_desc_get_acc_desc('1109',g_mrba_m.mrba051)
+                           RETURNING g_mrba_m.mrba051_desc
+                        DISPLAY BY NAME g_mrba_m.mrba051_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_acc_desc('1109',g_mrba_m.mrba051)
+               RETURNING g_mrba_m.mrba051_desc
+            DISPLAY BY NAME g_mrba_m.mrba051_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba051
+            #add-point:BEFORE FIELD mrba051
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba051
+            #add-point:ON CHANGE mrba051
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba053
+            #此段落由子樣板a15產生
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_Range(g_mrba_m.mrba053,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD mrba053
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD mrba053
+            IF NOT cl_null(g_mrba_m.mrba053) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba053
+            #add-point:BEFORE FIELD mrba053
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba053
+            #add-point:ON CHANGE mrba053
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba055
+            #add-point:BEFORE FIELD mrba055
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba055
+            
+            #add-point:AFTER FIELD mrba055
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba055
+            #add-point:ON CHANGE mrba055
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba056
+            #add-point:BEFORE FIELD mrba056
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba056
+            
+            #add-point:AFTER FIELD mrba056
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba056
+            #add-point:ON CHANGE mrba056
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba052
+            #此段落由子樣板a15產生
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_Range(g_mrba_m.mrba052,"1950.000","1","2100.000","1","azz-00087",1) THEN
+               NEXT FIELD mrba052
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD mrba052
+            IF NOT cl_null(g_mrba_m.mrba052) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba052
+            #add-point:BEFORE FIELD mrba052
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba052
+            #add-point:ON CHANGE mrba052
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba054
+            #add-point:BEFORE FIELD mrba054
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba054
+            
+            #add-point:AFTER FIELD mrba054
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba054
+            #add-point:ON CHANGE mrba054
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba057
+            #此段落由子樣板a15產生
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_Range(g_mrba_m.mrba057,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD mrba057
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD mrba057
+            IF NOT cl_null(g_mrba_m.mrba057) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba057
+            #add-point:BEFORE FIELD mrba057
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba057
+            #add-point:ON CHANGE mrba057
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba058
+            
+            #add-point:AFTER FIELD mrba058
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba058
+            #add-point:BEFORE FIELD mrba058
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba058
+            #add-point:ON CHANGE mrba058
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba059
+            #此段落由子樣板a15產生
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_Range(g_mrba_m.mrba059,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD mrba059
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD mrba059
+            IF NOT cl_null(g_mrba_m.mrba059) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba059
+            #add-point:BEFORE FIELD mrba059
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba059
+            #add-point:ON CHANGE mrba059
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba060
+            
+            #add-point:AFTER FIELD mrba060
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba060
+            #add-point:BEFORE FIELD mrba060
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba060
+            #add-point:ON CHANGE mrba060
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba065
+            
+            #add-point:AFTER FIELD mrba065
+            LET g_mrba_m.mrba065_desc = ' '
+            DISPLAY BY NAME g_mrba_m.mrba065_desc
+            IF NOT cl_null(g_mrba_m.mrba065) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrba065 != g_mrba_m_t.mrba065 OR g_mrba_m_t.mrba065 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  IF NOT s_azzi650_chk_exist('1108',g_mrba_m.mrba065) THEN
+                     LET g_mrba_m.mrba065 = g_mrba_m_t.mrba065
+                     CALL s_desc_get_acc_desc('1108',g_mrba_m.mrba065)
+                        RETURNING g_mrba_m.mrba065_desc
+                     DISPLAY BY NAME g_mrba_m.mrba065_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_acc_desc('1108',g_mrba_m.mrba065)
+               RETURNING g_mrba_m.mrba065_desc
+            DISPLAY BY NAME g_mrba_m.mrba065_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba065
+            #add-point:BEFORE FIELD mrba065
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba065
+            #add-point:ON CHANGE mrba065
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba101
+            #add-point:BEFORE FIELD mrba101
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba101
+            
+            #add-point:AFTER FIELD mrba101
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba101
+            #add-point:ON CHANGE mrba101
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba061
+            
+            #add-point:AFTER FIELD mrba061
+            LET g_mrba_m.mrba061_desc = ' '
+            DISPLAY BY NAME g_mrba_m.mrba061_desc
+            IF NOT cl_null(g_mrba_m.mrba061) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrba061 != g_mrba_m_t.mrba061 OR g_mrba_m_t.mrba061 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_mrba_m.mrba061
+                  #160318-00025#27  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"
+                  #160318-00025#27  by 07900 --add-end 
+                  IF NOT cl_chk_exist("v_ooag001") THEN
+                     LET g_mrba_m.mrba061 = g_mrba_m_t.mrba061
+                     CALL s_desc_get_person_desc(g_mrba_m.mrba061)
+                        RETURNING g_mrba_m.mrba061_desc
+                     DISPLAY BY NAME g_mrba_m.mrba061_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               LET l_flag = 'Y'
+            ELSE
+               LET l_flag = 'N'
+               CALL aooi350_02_clear_detail()
+            END IF
+            CALL s_desc_get_person_desc(g_mrba_m.mrba061)
+               RETURNING g_mrba_m.mrba061_desc
+            DISPLAY BY NAME g_mrba_m.mrba061_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba061
+            #add-point:BEFORE FIELD mrba061
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba061
+            #add-point:ON CHANGE mrba061
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba062
+            
+            #add-point:AFTER FIELD mrba062
+            LET g_mrba_m.mrba062_desc = ' '
+            DISPLAY BY NAME g_mrba_m.mrba062_desc
+            IF NOT cl_null(g_mrba_m.mrba062) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrba062 != g_mrba_m_t.mrba062 OR g_mrba_m_t.mrba062 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_mrba_m.mrba062
+                  #160318-00025#27  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"
+                  #160318-00025#27  by 07900 --add-end 
+                  IF NOT cl_chk_exist("v_ooag001") THEN
+                     LET g_mrba_m.mrba062 = g_mrba_m_t.mrba062
+                     CALL s_desc_get_person_desc(g_mrba_m.mrba062)
+                        RETURNING g_mrba_m.mrba062_desc
+                     DISPLAY BY NAME g_mrba_m.mrba062_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_person_desc(g_mrba_m.mrba062)
+               RETURNING g_mrba_m.mrba062_desc
+            DISPLAY BY NAME g_mrba_m.mrba062_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba062
+            #add-point:BEFORE FIELD mrba062
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba062
+            #add-point:ON CHANGE mrba062
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba063
+            
+            #add-point:AFTER FIELD mrba063
+            LET g_mrba_m.mrba063_desc = ' '
+            DISPLAY BY NAME g_mrba_m.mrba063_desc
+            IF NOT cl_null(g_mrba_m.mrba063) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrba063 != g_mrba_m_t.mrba063 OR g_mrba_m_t.mrba063 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_mrba_m.mrba063
+                  #160318-00025#27  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"
+                  #160318-00025#27  by 07900 --add-end 
+                  IF NOT cl_chk_exist("v_ooag001") THEN
+                     LET g_mrba_m.mrba063 = g_mrba_m_t.mrba063
+                     CALL s_desc_get_person_desc(g_mrba_m.mrba063)
+                        RETURNING g_mrba_m.mrba063_desc
+                     DISPLAY BY NAME g_mrba_m.mrba063_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_person_desc(g_mrba_m.mrba063)
+               RETURNING g_mrba_m.mrba063_desc
+            DISPLAY BY NAME g_mrba_m.mrba063_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba063
+            #add-point:BEFORE FIELD mrba063
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba063
+            #add-point:ON CHANGE mrba063
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba064
+            
+            #add-point:AFTER FIELD mrba064
+            LET g_mrba_m.mrba064_desc = ' '
+            DISPLAY BY NAME g_mrba_m.mrba064_desc
+            IF NOT cl_null(g_mrba_m.mrba064) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrba064 != g_mrba_m_t.mrba064 OR g_mrba_m_t.mrba064 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_mrba_m.mrba064
+                  #160318-00025#27  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"
+                  #160318-00025#27  by 07900 --add-end 
+                  IF NOT cl_chk_exist("v_ooag001") THEN
+                     LET g_mrba_m.mrba064 = g_mrba_m_t.mrba064
+                     CALL s_desc_get_person_desc(g_mrba_m.mrba064)
+                        RETURNING g_mrba_m.mrba064_desc
+                     DISPLAY BY NAME g_mrba_m.mrba064_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_person_desc(g_mrba_m.mrba064)
+               RETURNING g_mrba_m.mrba064_desc
+            DISPLAY BY NAME g_mrba_m.mrba064_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba064
+            #add-point:BEFORE FIELD mrba064
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba064
+            #add-point:ON CHANGE mrba064
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrba100
+            #add-point:BEFORE FIELD mrba100
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrba100
+            
+            #add-point:AFTER FIELD mrba100
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrba100
+            #add-point:ON CHANGE mrba100
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbaunit
+            
+            #add-point:AFTER FIELD mrbaunit
+            LET g_mrba_m.mrbaunit_desc = ''
+            DISPLAY BY NAME g_mrba_m.mrbaunit_desc
+            IF NOT cl_null(g_mrba_m.mrbaunit) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrba_m.mrbaunit != g_mrba_m_t.mrbaunit OR g_mrba_m_t.mrbaunit IS NULL )) THEN #161006-00008#5 mark
+               IF g_mrba_m.mrbaunit != g_mrba_m_o.mrbaunit OR cl_null (g_mrba_m_o.mrbaunit)  THEN  #161006-00008#5 add
+                  CALL s_aooi500_chk(g_prog,'mrbaunit',g_mrba_m.mrbaunit,g_mrba_m.mrbasite)
+                     RETURNING l_success,l_errno
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ""
+                     LET g_errparam.code   = l_errno
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     #LET g_mrba_m.mrbaunit = g_mrba_m_t.mrbaunit    #161006-00008#5 mark
+                     LET g_mrba_m.mrbaunit = g_mrba_m_o.mrbaunit     #161006-00008#5 add
+                     CALL s_desc_get_department_desc(g_mrba_m.mrbaunit)
+                        RETURNING g_mrba_m.mrbaunit_desc
+                     DISPLAY BY NAME g_mrba_m.mrbaunit_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_department_desc(g_mrba_m.mrbaunit)
+               RETURNING g_mrba_m.mrbaunit_desc
+            DISPLAY BY NAME g_mrba_m.mrbaunit_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbaunit
+            #add-point:BEFORE FIELD mrbaunit
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrbaunit
+            #add-point:ON CHANGE mrbaunit
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrbastus
+            #add-point:BEFORE FIELD mrbastus
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrbastus
+            
+            #add-point:AFTER FIELD mrbastus
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrbastus
+            #add-point:ON CHANGE mrbastus
+
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.mrbasite
+         ON ACTION controlp INFIELD mrbasite
+            #add-point:ON ACTION controlp INFIELD mrbasite
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrbasite  #給予default值
+            
+            #給予arg
+            CALL s_aooi500_q_where(g_prog,'mrbasite','','i') RETURNING l_where #150308-00001#1  By Ken add 'i' 150309
+            LET g_qryparam.where = l_where
+            CALL q_ooef001_24()
+            LET g_mrba_m.mrbasite = g_qryparam.return1
+            DISPLAY g_mrba_m.mrbasite TO mrbasite
+            CALL s_desc_get_department_desc(g_mrba_m.mrbasite)
+               RETURNING g_mrba_m.mrbasite_desc
+            DISPLAY BY NAME g_mrba_m.mrbasite_desc
+            NEXT FIELD mrbasite                          #返回原欄位
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba019
+         ON ACTION controlp INFIELD mrba019
+            #add-point:ON ACTION controlp INFIELD mrba019
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba020
+         ON ACTION controlp INFIELD mrba020
+            #add-point:ON ACTION controlp INFIELD mrba020
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrba020    #給予default值
+            
+            CASE g_mrba_m.mrba019
+               WHEN '0'   #內部
+                  #161006-00008#5-add(s)
+                  IF s_aooi500_setpoint(g_prog,'mrba020') THEN
+                     CALL s_aooi500_q_where(g_prog,'mrba020',g_mrba_m.mrbasite,'i') RETURNING l_where
+                     LET g_qryparam.where = l_where
+                     CALL q_ooef001_24()                   
+                  ELSE
+                     CALL q_ooef001()
+                  END IF
+                  #161006-00008#5-add(e)
+                  #CALL q_ooef001()                        #呼叫開窗 #161006-00008#5 mark
+               WHEN '1'   #外部
+                  LET g_qryparam.arg1 = 'ALL'
+                  CALL q_pmaa001_6()                      #呼叫開窗
+            END CASE
+            
+            LET g_mrba_m.mrba020 = g_qryparam.return1
+            DISPLAY g_mrba_m.mrba020 TO mrba020
+            CALL adbm210_mrba020_ref()
+            NEXT FIELD mrba020                            #返回原欄位
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba001
+         ON ACTION controlp INFIELD mrba001
+            #add-point:ON ACTION controlp INFIELD mrba001
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba050
+         ON ACTION controlp INFIELD mrba050
+            #add-point:ON ACTION controlp INFIELD mrba050
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba010
+         ON ACTION controlp INFIELD mrba010
+            #add-point:ON ACTION controlp INFIELD mrba010
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrba010      #給予default值
+            
+            #給予arg
+            LET g_qryparam.arg1 = '1101'
+            LET g_qryparam.where = " oocq020 = 'Y'"
+            CALL q_oocq002()                                #呼叫開窗
+            LET g_mrba_m.mrba010 = g_qryparam.return1 
+            DISPLAY g_mrba_m.mrba010 TO mrba010
+            CALL s_desc_get_acc_desc('1101',g_mrba_m.mrba010)
+               RETURNING g_mrba_m.mrba010_desc
+            DISPLAY BY NAME g_mrba_m.mrba010_desc
+            NEXT FIELD mrba010                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba011
+         ON ACTION controlp INFIELD mrba011
+            #add-point:ON ACTION controlp INFIELD mrba011
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrba011      #給予default值
+            
+            #給予arg
+            LET g_qryparam.arg1 = '1102'
+            LET g_qryparam.where = " oocq020 = 'Y'"
+            CALL q_oocq002()                                #呼叫開窗
+            LET g_mrba_m.mrba011 = g_qryparam.return1
+            DISPLAY g_mrba_m.mrba011 TO mrba011
+            CALL s_desc_get_acc_desc('1102',g_mrba_m.mrba011)
+               RETURNING g_mrba_m.mrba011_desc
+            DISPLAY BY NAME g_mrba_m.mrba011_desc
+            NEXT FIELD mrba011                          #返回原欄位
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba051
+         ON ACTION controlp INFIELD mrba051
+            #add-point:ON ACTION controlp INFIELD mrba051
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrba051      #給予default值
+            
+            #給予arg
+            LET g_qryparam.arg1 = '1109'
+            IF NOT cl_null(g_mrba_m.mrba011) THEN       #有輸入廠牌
+               LET g_qryparam.where = "oocq004 = '",g_mrba_m.mrba011,"'"
+            END IF
+            CALL q_oocq002()                                #呼叫開窗
+            LET g_mrba_m.mrba051 = g_qryparam.return1 
+            DISPLAY g_mrba_m.mrba051 TO mrba051
+            CALL s_desc_get_acc_desc('1109',g_mrba_m.mrba051)
+               RETURNING g_mrba_m.mrba051_desc
+            DISPLAY BY NAME g_mrba_m.mrba051_desc
+            NEXT FIELD mrba051                              #返回原欄位
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba053
+         ON ACTION controlp INFIELD mrba053
+            #add-point:ON ACTION controlp INFIELD mrba053
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba055
+         ON ACTION controlp INFIELD mrba055
+            #add-point:ON ACTION controlp INFIELD mrba055
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba056
+         ON ACTION controlp INFIELD mrba056
+            #add-point:ON ACTION controlp INFIELD mrba056
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba052
+         ON ACTION controlp INFIELD mrba052
+            #add-point:ON ACTION controlp INFIELD mrba052
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba054
+         ON ACTION controlp INFIELD mrba054
+            #add-point:ON ACTION controlp INFIELD mrba054
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba057
+         ON ACTION controlp INFIELD mrba057
+            #add-point:ON ACTION controlp INFIELD mrba057
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba058
+         ON ACTION controlp INFIELD mrba058
+            #add-point:ON ACTION controlp INFIELD mrba058
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba059
+         ON ACTION controlp INFIELD mrba059
+            #add-point:ON ACTION controlp INFIELD mrba059
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba060
+         ON ACTION controlp INFIELD mrba060
+            #add-point:ON ACTION controlp INFIELD mrba060
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba065
+         ON ACTION controlp INFIELD mrba065
+            #add-point:ON ACTION controlp INFIELD mrba065
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrba065      #給予default值
+            
+            #給予arg
+            LET g_qryparam.arg1 = '1108'
+            CALL q_oocq002()                                #呼叫開窗
+            LET g_mrba_m.mrba065 = g_qryparam.return1
+            DISPLAY g_mrba_m.mrba065 TO mrba065
+            CALL s_desc_get_acc_desc('1108',g_mrba_m.mrba065)
+               RETURNING g_mrba_m.mrba065_desc
+            DISPLAY BY NAME g_mrba_m.mrba065_desc
+            NEXT FIELD mrba065                              #返回原欄位
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba101
+         ON ACTION controlp INFIELD mrba101
+            #add-point:ON ACTION controlp INFIELD mrba101
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba061
+         ON ACTION controlp INFIELD mrba061
+            #add-point:ON ACTION controlp INFIELD mrba061
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrba061      #給予default值
+
+            #給予arg
+            CALL q_ooag001()                                #呼叫開窗
+            LET g_mrba_m.mrba061 = g_qryparam.return1
+            DISPLAY g_mrba_m.mrba061 TO mrba061
+            CALL s_desc_get_person_desc(g_mrba_m.mrba061)
+               RETURNING g_mrba_m.mrba061_desc
+            DISPLAY BY NAME g_mrba_m.mrba061_desc
+            NEXT FIELD mrba061                              #返回原欄位
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba062
+         ON ACTION controlp INFIELD mrba062
+            #add-point:ON ACTION controlp INFIELD mrba062
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrba062             #給予default值
+
+            #給予arg
+            CALL q_ooag001()                                #呼叫開窗
+            LET g_mrba_m.mrba062 = g_qryparam.return1 
+            DISPLAY g_mrba_m.mrba062 TO mrba062
+            CALL s_desc_get_person_desc(g_mrba_m.mrba062)
+               RETURNING g_mrba_m.mrba062_desc
+            DISPLAY BY NAME g_mrba_m.mrba062_desc
+            NEXT FIELD mrba062                          #返回原欄位
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba063
+         ON ACTION controlp INFIELD mrba063
+            #add-point:ON ACTION controlp INFIELD mrba063
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrba063             #給予default值
+
+            #給予arg
+            CALL q_ooag001()                                #呼叫開窗
+            LET g_mrba_m.mrba063 = g_qryparam.return1
+            DISPLAY g_mrba_m.mrba063 TO mrba063
+            CALL s_desc_get_person_desc(g_mrba_m.mrba063)
+               RETURNING g_mrba_m.mrba063_desc
+            DISPLAY BY NAME g_mrba_m.mrba063_desc
+            NEXT FIELD mrba063                          #返回原欄位
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba064
+         ON ACTION controlp INFIELD mrba064
+            #add-point:ON ACTION controlp INFIELD mrba064
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrba064             #給予default值
+
+            CALL q_ooag001()                                #呼叫開窗
+            LET g_mrba_m.mrba064 = g_qryparam.return1
+            DISPLAY g_mrba_m.mrba064 TO mrba064
+            CALL s_desc_get_person_desc(g_mrba_m.mrba064)
+               RETURNING g_mrba_m.mrba064_desc
+            DISPLAY BY NAME g_mrba_m.mrba064_desc
+            NEXT FIELD mrba064                          #返回原欄位
+            #END add-point
+ 
+         #Ctrlp:input.c.mrba100
+         ON ACTION controlp INFIELD mrba100
+            #add-point:ON ACTION controlp INFIELD mrba100
+
+            #END add-point
+ 
+         #Ctrlp:input.c.mrbaunit
+         ON ACTION controlp INFIELD mrbaunit
+            #add-point:ON ACTION controlp INFIELD mrbaunit
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrba_m.mrbaunit  #給予default值
+            
+            #給予arg
+            CALL s_aooi500_q_where(g_prog,'mrbaunit',g_mrba_m.mrbasite,'i') RETURNING l_where #150308-00001#1  By Ken add 'i' 150309
+            LET g_qryparam.where = l_where
+            CALL q_ooef001_24()                          #呼叫開窗
+            LET g_mrba_m.mrbaunit = g_qryparam.return1 
+            DISPLAY g_mrba_m.mrbaunit TO mrbaunit
+            CALL s_desc_get_department_desc(g_mrba_m.mrbaunit)
+               RETURNING g_mrba_m.mrbaunit_desc
+            DISPLAY BY NAME g_mrba_m.mrbaunit_desc
+            NEXT FIELD mrbaunit                          #返回原欄位
+            #END add-point
+ 
+         #Ctrlp:input.c.mrbastus
+         ON ACTION controlp INFIELD mrbastus
+            #add-point:ON ACTION controlp INFIELD mrbastus
+
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #若點選cancel則離開dialog
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            IF l_flag = 'N' THEN
+               #當 所有權區分0內部  且 駕駛人員為空，不可以維護單身通訊方式！
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = g_mrba_m.mrba001
+               LET g_errparam.code   = "adb-00293"
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               NEXT FIELD mrbasite
+            END IF
+            #錯誤訊息統整顯示
+            CALL cl_showmsg()
+  
+            IF p_cmd <> "u" THEN
+               #當p_cmd不為u代表為新增/複製
+               LET l_count = 1  
+ 
+               #確定新增的資料不存在(不重複)
+               SELECT COUNT(*) INTO l_count FROM mrba_t
+                WHERE mrbaent = g_enterprise AND mrbasite = g_mrba_m.mrbasite
+                  AND mrba001 = g_mrba_m.mrba001
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前
+
+                  #end add-point
+               
+                  #將新增的單頭資料寫入資料庫
+                  INSERT INTO mrba_t (mrbaent,mrbasite,mrba019,mrba020,mrba001,mrba050,mrba010,mrba011, 
+                      mrba051,mrba053,mrba055,mrba056,mrba052,mrba054,mrba057,mrba058,mrba059,mrba060, 
+                      mrba065,mrba101,mrba061,mrba062,mrba063,mrba064,mrba100,mrbaunit,mrba000,mrbastus, 
+                      mrbaownid,mrbaowndp,mrbacrtid,mrbacrtdp,mrbacrtdt,mrbacnfid,mrbacnfdt)
+                  VALUES (g_enterprise,g_mrba_m.mrbasite,g_mrba_m.mrba019,g_mrba_m.mrba020,g_mrba_m.mrba001, 
+                      g_mrba_m.mrba050,g_mrba_m.mrba010,g_mrba_m.mrba011,g_mrba_m.mrba051,g_mrba_m.mrba053, 
+                      g_mrba_m.mrba055,g_mrba_m.mrba056,g_mrba_m.mrba052,g_mrba_m.mrba054,g_mrba_m.mrba057, 
+                      g_mrba_m.mrba058,g_mrba_m.mrba059,g_mrba_m.mrba060,g_mrba_m.mrba065,g_mrba_m.mrba101, 
+                      g_mrba_m.mrba061,g_mrba_m.mrba062,g_mrba_m.mrba063,g_mrba_m.mrba064,g_mrba_m.mrba100, 
+                      g_mrba_m.mrbaunit,g_mrba_m.mrba000,g_mrba_m.mrbastus,g_mrba_m.mrbaownid,g_mrba_m.mrbaowndp, 
+                      g_mrba_m.mrbacrtid,g_mrba_m.mrbacrtdp,g_mrba_m.mrbacrtdt,g_mrba_m.mrbacnfid,g_mrba_m.mrbacnfdt) 
+                  
+                  #add-point:單頭新增中
+
+                  #end add-point
+                  
+                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "mrba_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+ 
+                     CONTINUE DIALOG
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後
+                  IF (g_mrba_m.mrba019 = '0' AND NOT cl_null(g_mrba_m.mrba061)) OR
+                     (g_mrba_m.mrba019 = '1' AND NOT cl_null(g_mrba_m.mrba020)) THEN
+                     LET g_pmaa027_d = adbm210_get_pmaa027()
+                     CALL aooi350_02_b_fill(g_pmaa027_d)
+                  END IF
+                  LET p_cmd = 'u'
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend =  "g_mrba_m.mrbasite" 
+                  LET g_errparam.code   =  "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+ 
+                  CALL s_transaction_end('N','0')
+               END IF 
+            ELSE
+               #add-point:單頭修改前
+
+               #end add-point
+               UPDATE mrba_t SET (mrbasite,mrba019,mrba020,mrba001,mrba050,mrba010,mrba011,mrba051,mrba053, 
+                   mrba055,mrba056,mrba052,mrba054,mrba057,mrba058,mrba059,mrba060,mrba065,mrba101,mrba061, 
+                   mrba062,mrba063,mrba064,mrba100,mrbaunit,mrba000,mrbastus,mrbaownid,mrbaowndp,mrbacrtid,
+                   mrbacrtdp,mrbacrtdt,mrbacnfid,mrbacnfdt) = (g_mrba_m.mrbasite,g_mrba_m.mrba019,g_mrba_m.mrba020, 
+                   g_mrba_m.mrba001,g_mrba_m.mrba050,g_mrba_m.mrba010,g_mrba_m.mrba011,g_mrba_m.mrba051, 
+                   g_mrba_m.mrba053,g_mrba_m.mrba055,g_mrba_m.mrba056,g_mrba_m.mrba052,g_mrba_m.mrba054, 
+                   g_mrba_m.mrba057,g_mrba_m.mrba058,g_mrba_m.mrba059,g_mrba_m.mrba060,g_mrba_m.mrba065, 
+                   g_mrba_m.mrba101,g_mrba_m.mrba061,g_mrba_m.mrba062,g_mrba_m.mrba063,g_mrba_m.mrba064, 
+                   g_mrba_m.mrba100,g_mrba_m.mrbaunit,g_mrba_m.mrba000,g_mrba_m.mrbastus,g_mrba_m.mrbaownid,
+                   g_mrba_m.mrbaowndp, g_mrba_m.mrbacrtid,g_mrba_m.mrbacrtdp,g_mrba_m.mrbacrtdt,
+                   g_mrba_m.mrbacnfid,g_mrba_m.mrbacnfdt) 
+ 
+                WHERE mrbaent = g_enterprise AND mrbasite = g_mrbasite_t #
+                  AND mrba001 = g_mrba001_t
+ 
+               #add-point:單頭修改中
+
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "mrba_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+ 
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "mrba_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+ 
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     #add-point:單頭修改後
+                     IF (g_mrba_m.mrba019 = '0' AND NOT cl_null(g_mrba_m.mrba061)) OR
+                        (g_mrba_m.mrba019 = '1' AND NOT cl_null(g_mrba_m.mrba020)) THEN
+                        LET g_pmaa027_d = adbm210_get_pmaa027()
+                        CALL aooi350_02_b_fill(g_pmaa027_d)
+                     END IF
+                     #end add-point
+                     #紀錄資料更動
+                     LET g_log1 = util.JSON.stringify(g_mrba_m_t)
+                     LET g_log2 = util.JSON.stringify(g_mrba_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+            END IF
+           #controlp
+           LET g_mrbasite_t = g_mrba_m.mrbasite
+           LET g_mrba001_t = g_mrba_m.mrba001
+      END INPUT
+          
+      #add-point:input段more input 
+      SUBDIALOG aoo_aooi350_02.aooi350_02_input
+
+      BEFORE DIALOG
+         #為了修改功能doubleClick可以直接進入單身,需指定要進入哪一個單身
+         IF NOT cl_null(p_cmd) AND p_cmd != 'a' THEN
+            CASE g_aw
+               WHEN "s_detail1_aooi350_02"
+                  NEXT FIELD oofcstus
+               OTHERWISE
+                  NEXT FIELD mrbasite
+            END CASE
+         END IF
+
+         IF p_cmd = 'a' THEN
+            NEXT FIELD mrbasite
+         END IF
+      #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         LET l_flag = 'Y'
+         ACCEPT DIALOG
+         
+      #放棄輸入
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close 
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input 
+
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION adbm210_reproduce()
+   DEFINE l_newno     LIKE mrba_t.mrbasite 
+   DEFINE l_oldno     LIKE mrba_t.mrbasite 
+   DEFINE l_newno02     LIKE mrba_t.mrba001 
+   DEFINE l_oldno02     LIKE mrba_t.mrba001 
+ 
+   DEFINE l_master    RECORD LIKE mrba_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   DEFINE l_insert    LIKE type_t.num5
+   #end add-point   
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #先確定key值無遺漏
+   IF g_mrba_m.mrbasite IS NULL
+      OR g_mrba_m.mrba001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+   
+   #備份key值
+   LET g_mrbasite_t = g_mrba_m.mrbasite
+   LET g_mrba001_t = g_mrba_m.mrba001
+ 
+   
+   #清空key值
+   LET g_mrba_m.mrbasite = ""
+   LET g_mrba_m.mrba001 = ""
+ 
+    
+   CALL adbm210_set_entry("a")
+   CALL adbm210_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   #此段落由子樣板a14產生    
+      #公用欄位新增給值
+      LET g_mrba_m.mrbaownid = g_user
+      LET g_mrba_m.mrbaowndp = g_dept
+      LET g_mrba_m.mrbacrtid = g_user
+      LET g_mrba_m.mrbacrtdp = g_dept 
+      LET g_mrba_m.mrbacrtdt = cl_get_current()
+      LET g_mrba_m.mrbamodid = ""
+      LET g_mrba_m.mrbamoddt = ""
+      LET g_mrba_m.mrbastus = "N"
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前
+   CALL s_aooi500_default(g_prog,'mrbasite',g_mrba_m.mrbasite)
+      RETURNING l_insert,g_mrba_m.mrbasite
+   IF l_insert = FALSE THEN
+      RETURN
+   END IF
+   CALL s_aooi500_default(g_prog,'mrbaunit',g_mrba_m.mrbasite)
+      RETURNING l_insert,g_mrba_m.mrbaunit
+   IF l_insert = FALSE THEN
+      RETURN
+   END IF
+   LET g_mrba_m.mrba058 = cl_get_para(g_enterprise,g_site,'E-CIR-0013')
+   LET g_mrba_m.mrba060 = cl_get_para(g_enterprise,g_site,'E-CIR-0012')
+   LET g_mrba_m.mrba100 = '0'
+   CALL s_desc_get_department_desc(g_mrba_m.mrbasite)
+      RETURNING g_mrba_m.mrbasite_desc
+   CALL s_desc_get_unit_desc(g_mrba_m.mrba058)
+      RETURNING g_mrba_m.mrba058_desc
+   CALL s_desc_get_unit_desc(g_mrba_m.mrba060)
+      RETURNING g_mrba_m.mrba060_desc
+   LET g_mrba_m.mrbaunit_desc = g_mrba_m.mrbasite_desc
+   DISPLAY BY NAME g_mrba_m.mrbasite_desc,g_mrba_m.mrbaunit_desc,
+                   g_mrba_m.mrba058_desc,g_mrba_m.mrba060_desc
+   LET g_pmaa027_d = ''
+   CALL aooi350_02_clear_detail()
+   LET g_mrba_m_t.* = g_mrba_m.*
+   LET g_mrba_m_o.* = g_mrba_m.*
+   #end add-point
+   
+   #資料輸入
+   CALL adbm210_input("r")
+ 
+   #清空key欄位的desc
+      LET g_mrba_m.mrbasite_desc = ''
+   DISPLAY BY NAME g_mrba_m.mrbasite_desc
+ 
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前
+   
+   #end add-point
+   
+   #add-point:單頭複製中
+   
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "mrba_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後
+   
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   #將新增的資料併入搜尋條件中
+   LET g_state = "Y"
+   
+   LET g_wc = "(",g_wc,  
+              " OR (",
+              " mrbasite = '", g_mrba_m.mrbasite CLIPPED, "' "
+              ," AND mrba001 = '", g_mrba_m.mrba001 CLIPPED, "' "
+ 
+              , ")) "
+   
+   LET g_mrbasite_t = g_mrba_m.mrbasite
+   LET g_mrba001_t = g_mrba_m.mrba001
+ 
+   
+   #add-point:完成複製段落後
+   
+   #end add-point
+                   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.show" >}
+#+ 資料顯示 
+PRIVATE FUNCTION adbm210_show()
+   #add-point:show段define
+   
+   #end add-point  
+   
+   #add-point:show段之前
+   
+   #end add-point
+   
+   
+   
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+   
+   #帶出公用欄位reference值
+   
+ 
+    
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL adbm210_set_pk_array()
+   #add-point:ON ACTION agendum
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_mrba_m.mrbasite,g_mrba_m.mrbasite_desc,g_mrba_m.mrba019,g_mrba_m.mrba020,g_mrba_m.mrba020_desc, 
+       g_mrba_m.mrba001,g_mrba_m.mrba050,g_mrba_m.mrba010,g_mrba_m.mrba010_desc,g_mrba_m.mrba011,g_mrba_m.mrba011_desc, 
+       g_mrba_m.mrba051,g_mrba_m.mrba051_desc,g_mrba_m.mrba053,g_mrba_m.mrba055,g_mrba_m.mrba056,g_mrba_m.mrba052, 
+       g_mrba_m.mrba054,g_mrba_m.mrba057,g_mrba_m.mrba058,g_mrba_m.mrba058_desc,g_mrba_m.mrba059,g_mrba_m.mrba060, 
+       g_mrba_m.mrba060_desc,g_mrba_m.mrba065,g_mrba_m.mrba065_desc,g_mrba_m.mrba101,g_mrba_m.mrba061, 
+       g_mrba_m.mrba061_desc,g_mrba_m.mrba062,g_mrba_m.mrba062_desc,g_mrba_m.mrba063,g_mrba_m.mrba063_desc, 
+       g_mrba_m.mrba064,g_mrba_m.mrba064_desc,g_mrba_m.mrba100,g_mrba_m.mrbaunit,g_mrba_m.mrbaunit_desc, 
+       g_mrba_m.mrbastus,g_mrba_m.mrbaownid,g_mrba_m.mrbaownid_desc,g_mrba_m.mrbaowndp,g_mrba_m.mrbaowndp_desc, 
+       g_mrba_m.mrbacrtid,g_mrba_m.mrbacrtid_desc,g_mrba_m.mrbacrtdp,g_mrba_m.mrbacrtdp_desc,g_mrba_m.mrbacrtdt, 
+       g_mrba_m.mrbamodid,g_mrba_m.mrbamodid_desc,g_mrba_m.mrbamoddt,g_mrba_m.mrbacnfid,g_mrba_m.mrbacnfid_desc, 
+       g_mrba_m.mrbacnfdt
+   
+   #顯示狀態(stus)圖片
+         #此段落由子樣板a21產生
+	  #根據狀態碼顯示對應圖片
+      CASE g_mrba_m.mrbastus
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+         
+      END CASE
+ 
+ 
+ 
+   #add-point:show段之後
+   CALL aooi350_02_clear_detail()
+   IF (g_mrba_m.mrba019 = '0' AND NOT cl_null(g_mrba_m.mrba061)) OR
+      (g_mrba_m.mrba019 = '1' AND NOT cl_null(g_mrba_m.mrba020)) THEN
+      LET g_pmaa027_d = adbm210_get_pmaa027()
+      CALL aooi350_02_b_fill(g_pmaa027_d)
+   END IF
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION adbm210_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+
+   #end add-point  
+   
+   #先確定key值無遺漏
+   IF g_mrba_m.mrbasite IS NULL
+   OR g_mrba_m.mrba001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+    
+   LET g_mrbasite_t = g_mrba_m.mrbasite
+   LET g_mrba001_t = g_mrba_m.mrba001
+ 
+   
+   
+ 
+   OPEN adbm210_cl USING g_enterprise,g_mrba_m.mrbasite,g_mrba_m.mrba001
+ 
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN adbm210_cl:" 
+      LET g_errparam.code   =  STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      CLOSE adbm210_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE adbm210_master_referesh USING g_mrba_m.mrbasite,g_mrba_m.mrba001 INTO g_mrba_m.mrbasite,g_mrba_m.mrba019, 
+       g_mrba_m.mrba020,g_mrba_m.mrba001,g_mrba_m.mrba050,g_mrba_m.mrba010,g_mrba_m.mrba011,g_mrba_m.mrba051, 
+       g_mrba_m.mrba053,g_mrba_m.mrba055,g_mrba_m.mrba056,g_mrba_m.mrba052,g_mrba_m.mrba054,g_mrba_m.mrba057, 
+       g_mrba_m.mrba058,g_mrba_m.mrba059,g_mrba_m.mrba060,g_mrba_m.mrba065,g_mrba_m.mrba101,g_mrba_m.mrba061, 
+       g_mrba_m.mrba062,g_mrba_m.mrba063,g_mrba_m.mrba064,g_mrba_m.mrba100,g_mrba_m.mrbaunit,g_mrba_m.mrba000,
+       g_mrba_m.mrbastus, 
+       g_mrba_m.mrbaownid,g_mrba_m.mrbaowndp,g_mrba_m.mrbacrtid,g_mrba_m.mrbacrtdp,g_mrba_m.mrbacrtdt, 
+       g_mrba_m.mrbamodid,g_mrba_m.mrbamoddt,g_mrba_m.mrbacnfid,g_mrba_m.mrbacnfdt,g_mrba_m.mrbasite_desc, 
+       g_mrba_m.mrba020_desc,g_mrba_m.mrba010_desc,g_mrba_m.mrba011_desc,g_mrba_m.mrba051_desc,g_mrba_m.mrba058_desc, 
+       g_mrba_m.mrba060_desc,g_mrba_m.mrba065_desc,g_mrba_m.mrba061_desc,g_mrba_m.mrba062_desc,g_mrba_m.mrba063_desc, 
+       g_mrba_m.mrba064_desc,g_mrba_m.mrbaunit_desc,g_mrba_m.mrbaownid_desc,g_mrba_m.mrbaowndp_desc, 
+       g_mrba_m.mrbacrtid_desc,g_mrba_m.mrbacrtdp_desc,g_mrba_m.mrbamodid_desc,g_mrba_m.mrbacnfid_desc 
+ 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = g_mrba_m.mrbasite 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+   #160818-00017#5 -s by 08172
+   #檢查是否允許此動作
+   IF NOT adbm210_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   #160818-00017#5 -e by 08172
+   #將最新資料顯示到畫面上
+   CALL adbm210_show()
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前
+
+      #end add-point
+ 
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL adbm210_set_pk_array()
+      #add-point:相關文件刪除前
+
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+      DELETE FROM mrba_t 
+       WHERE mrbaent = g_enterprise AND mrbasite = g_mrba_m.mrbasite 
+         AND mrba001 = g_mrba_m.mrba001 
+ 
+ 
+      #add-point:單頭刪除中
+
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "mrba_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後
+
+      #end add-point
+      
+          
+      CLEAR FORM
+      #ALL adbm210_ui_browser_refresh()
+      
+      #確保畫面上保有資料
+      IF g_browser_cnt > 0 THEN
+         CALL adbm210_browser_fill(g_wc,"")
+         CALL adbm210_fetch("P")
+      ELSE
+         CALL adbm210_browser_fill(" 1=1 ","F")
+      END IF
+      
+   END IF
+ 
+   CLOSE adbm210_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_mrba_m.mrbasite,"D")
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION adbm210_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   
+   #end add-point     
+ 
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_mrbasite = g_mrba_m.mrbasite
+         AND g_browser[l_i].b_mrba001 = g_mrba_m.mrba001
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+   
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION adbm210_set_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define
+   
+   #end add-point     
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("mrbasite,mrba001",TRUE)
+      #add-point:set_entry段欄位控制
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   CALL cl_set_comp_entry("mrbaunit",TRUE)
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION adbm210_set_no_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define
+   
+   #end add-point     
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("mrbasite,mrba001",FALSE)
+      #add-point:set_no_entry段欄位控制
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   #aooi500設定的欄位控卡
+   IF NOT s_aooi500_comp_entry(g_prog,'mrbasite') THEN
+      CALL cl_set_comp_entry("mrbasite",FALSE)
+   END IF
+   IF NOT s_aooi500_comp_entry(g_prog,'mrbaunit') THEN
+      CALL cl_set_comp_entry("mrbaunit",FALSE)
+   END IF
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION adbm210_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   
+   #end add-point  
+ 
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   #根據外部參數(g_argv)組合wc
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " mrbasite = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " mrba001 = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      #若有外部參數則根據該參數組合
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=1
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbm210.state_change" >}
+   #+ 此段落由子樣板a09產生
+#+ 確認碼變更
+PRIVATE FUNCTION adbm210_statechange()
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define
+   DEFINE l_success LIKE type_t.num5
+   #end add-point  
+   
+   #add-point:statechange段開始前
+   IF g_mrba_m.mrbastus = 'X' THEN
+      RETURN
+   END IF
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_mrba_m.mrbasite IS NULL
+      OR g_mrba_m.mrba001 IS NULL
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+   #160818-00017#5 -s by 08172
+   #檢查是否允許此動作
+   IF NOT adbm210_action_chk() THEN
+      CLOSE adbm210_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   #160818-00017#5 -e by 08172
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_mrba_m.mrbastus
+            WHEN "N"
+               HIDE OPTION "open"
+            WHEN "X"
+               HIDE OPTION "void"
+            WHEN "Y"
+               HIDE OPTION "valid"
+            
+         END CASE
+     
+      #add-point:menu前
+      CALL cl_set_act_visible("open,void,valid",TRUE)
+      CASE g_mrba_m.mrbastus
+         WHEN "N"
+            CALL cl_set_act_visible("open",FALSE)
+
+         WHEN "X"
+            CALL cl_set_act_visible("open,void,valid",FALSE)
+
+         WHEN "Y"
+            CALL cl_set_act_visible("void,valid",FALSE)
+
+      END CASE
+      #end add-point
+      
+      ON ACTION open
+         LET lc_state = "N"
+         #add-point:action控制
+
+         #end add-point
+         EXIT MENU
+      ON ACTION void
+         LET lc_state = "X"
+         #add-point:action控制
+
+         #end add-point
+         EXIT MENU
+      ON ACTION valid
+         LET lc_state = "Y"
+         #add-point:action控制
+
+         #end add-point
+         EXIT MENU
+      
+      
+      
+      #add-point:stus控制
+
+      #end add-point
+      
+   END MENU
+   
+   IF (lc_state <> "N" 
+      AND lc_state <> "X"
+      AND lc_state <> "Y"
+      ) OR 
+      cl_null(lc_state) THEN
+      RETURN
+   END IF
+   
+   #add-point:stus修改前
+   CALL cl_showmsg_init()
+   CALL s_transaction_begin()
+   OPEN adbm210_cl USING g_enterprise,g_mrba_m.mrbasite,g_mrba_m.mrba001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN adbm210_cl:" 
+      LET g_errparam.code   =  STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      CLOSE adbm210_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   IF lc_state = 'Y' THEN
+      CALL s_adbm210_conf_chk(g_mrba_m.mrbasite,g_mrba_m.mrba001) RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_showmsg()
+         RETURN
+      ELSE
+         IF NOT cl_ask_confirm('aim-00108') THEN
+            CALL s_transaction_end('N','0')
+            CALL cl_showmsg()
+            RETURN
+         ELSE
+            CALL s_adbm210_conf_upd(g_mrba_m.mrbasite,g_mrba_m.mrba001) RETURNING l_success
+            IF NOT l_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_showmsg()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+         END IF
+      END IF
+   END IF
+   IF lc_state = 'N' THEN
+      CALL s_adbm210_unconf_chk(g_mrba_m.mrbasite,g_mrba_m.mrba001) RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_showmsg()
+         RETURN
+      ELSE
+         IF NOT cl_ask_confirm('aim-00110') THEN
+            CALL s_transaction_end('N','0')   #160816-00068#2 add
+            CALL cl_showmsg()                 #160816-00068#2 add
+            RETURN
+         ELSE
+            CALL s_adbm210_unconf_upd(g_mrba_m.mrbasite,g_mrba_m.mrba001) RETURNING l_success
+            IF NOT l_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_showmsg()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+         END IF
+      END IF
+   END IF
+   IF lc_state = 'X' THEN
+      CALL s_adbm210_void_chk(g_mrba_m.mrbasite,g_mrba_m.mrba001) RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_showmsg()
+         RETURN
+      ELSE
+         IF NOT cl_ask_confirm('art-00039') THEN
+            CALL s_transaction_end('N','0')
+            CALL cl_showmsg()
+            RETURN
+         ELSE
+            CALL s_adbm210_void_upd(g_mrba_m.mrbasite,g_mrba_m.mrba001) RETURNING l_success
+            IF NOT l_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_showmsg()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+         END IF
+      END IF
+   END IF
+   #end add-point
+      
+   UPDATE mrba_t SET mrbastus = lc_state 
+    WHERE mrbaent = g_enterprise AND mrbasite = g_mrba_m.mrbasite
+      AND mrba001 = g_mrba_m.mrba001
+  
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+         
+      END CASE
+      LET g_mrba_m.mrbastus = lc_state
+      DISPLAY BY NAME g_mrba_m.mrbastus
+   END IF
+ 
+   #add-point:stus修改後
+
+   #end add-point
+ 
+   #add-point:statechange段結束前
+
+   #end add-point  
+ 
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adbm210.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="adbm210.set_pk_array" >}
+   #+ 此段落由子樣板a51產生
+#+ 給予pk_array內容
+PRIVATE FUNCTION adbm210_set_pk_array()
+   #add-point:set_pk_array段define
+   
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_mrba_m.mrbasite
+   LET g_pk_array[1].column = 'mrbasite'
+   LET g_pk_array[2].values = g_mrba_m.mrba001
+   LET g_pk_array[2].column = 'mrba001'
+   
+   #add-point:set_pk_array段之後
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adbm210.other_dialog" readonly="Y" >}
+ 
+ 
+{</section>}
+ 
+{<section id="adbm210.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 據點/客戶帶值
+# Memo...........:
+# Usage..........: CALL adbm210_mrba020_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/07/15 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adbm210_mrba020_ref()
+
+   CASE g_mrba_m.mrba019
+      WHEN '0' #內部
+         CALL s_desc_get_department_desc(g_mrba_m.mrba020)
+            RETURNING g_mrba_m.mrba020_desc
+      WHEN '1' #外部
+         CALL s_desc_get_trading_partner_abbr_desc(g_mrba_m.mrba020)
+            RETURNING g_mrba_m.mrba020_desc
+   END CASE
+   DISPLAY BY NAME g_mrba_m.mrba020_desc
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查車輛編號是否為唯一
+# Memo...........:
+# Usage..........: CALL adbm210_mrba001_chk()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/07/15 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adbm210_mrba001_chk()
+DEFINE l_cnt          LIKE type_t.num5
+
+   LET g_errno = ''
+   LET l_cnt = 0
+   SELECT COUNT(mrba001) INTO l_cnt
+     FROM mrba_t
+    WHERE mrbaent = g_enterprise
+      AND mrba001 = g_mrba_m.mrba001
+   
+   IF l_cnt >= 1 THEN
+      LET g_errno = 'adb-00224'
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取的聯絡對象識別碼
+# Memo...........:
+# Usage..........: CALL adbm210_get_pmaa027()
+#                  RETURNING r_pmaa027
+# Input parameter: 無
+# Return code....: r_pmaa027      聯絡對象識別碼
+# Date & Author..: 2014/07/15 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adbm210_get_pmaa027()
+DEFINE r_pmaa027         LIKE pmaa_t.pmaa027
+
+   LET r_pmaa027 = ''
+   CASE g_mrba_m.mrba019
+      WHEN '0'  #內部
+         SELECT ooag002 INTO r_pmaa027
+           FROM ooag_t
+          WHERE ooagent = g_enterprise
+            AND ooag001 = g_mrba_m.mrba061
+      WHEN '1'  #外部
+         SELECT pmaa027 INTO r_pmaa027
+           FROM pmaa_t
+          WHERE pmaaent = g_enterprise
+            AND pmaa001 = g_mrba_m.mrba020
+   END CASE
+   
+   RETURN r_pmaa027
+END FUNCTION
+
+################################################################################
+# Descriptions...: 修改，删除时重新检查状态
+# Date & Author..: #160818-00017#5 2016/08/22 By 08172
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adbm210_action_chk()
+   SELECT mrbastus  INTO g_mrba_m.mrbastus
+     FROM mrba_t
+    WHERE mrbaent = g_enterprise
+      AND mrbasite = g_mrba_m.mrbasite
+      AND mrba001 = g_mrba_m.mrba001
+   LET g_errno = NULL
+   IF (g_action_choice="modify" OR g_action_choice="modify_detail" OR g_action_choice="delete")  THEN
+     CASE g_mrba_m.mrbastus
+        WHEN 'W'
+           LET g_errno = 'sub-00180'
+        WHEN 'X'
+           LET g_errno = 'sub-00229'
+        WHEN 'Y'
+           LET g_errno = 'sub-00178'
+        WHEN 'S'
+           LET g_errno = 'sub-00230'
+     END CASE
+
+     IF NOT cl_null(g_errno) THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = g_errno
+        LET g_errparam.extend = g_mrba_m.mrba001
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        LET g_errno = NULL
+        CALL adbm210_show()
+        RETURN FALSE
+     END IF
+   END IF
+  
+   RETURN TRUE
+END FUNCTION
+
+ 
+{</section>}
+ 

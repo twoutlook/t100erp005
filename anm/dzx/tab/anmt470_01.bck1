@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt470_01" module="anm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02114" crtdt="2014-07-18 17:19:21" modid="04152" moddt="2015-07-24 11:35:00" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產生帳務資料">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbscomp,nmbscomp_desc(chr80),a(chr500),d(chr500),b(chr500),c(chr500),nmbsld,nmbsld_desc(chr80),nmbsdocno,nmbsdocdt,docno(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt470_01" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbscomp,a,d,b,c,nmbsld,nmbsdocno,nmbsdocdt,docno"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="nmbscomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="nmbscomp_desc" ref_field="nmbs_t.nmbscomp" map_field="nmbsent,nmbscomp" ref_sql="SELECT ooef003 FROM ooef_t WHERE ooefent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+      </column>
+      <column id="nmbscomp_desc"/>
+      <column id="a"/>
+      <column id="d">
+        <after/>
+      </column>
+      <column id="b"/>
+      <column id="c"/>
+      <column id="nmbsld">
+        <after>
+          <check chkid="v_glaald_1" id="isExist"/>
+          <reference field="nmbsld_desc" ref_field="nmbs_t.nmbsld" map_field="nmbsent,nmbsld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="nmbsld_desc"/>
+      <column id="nmbsdocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_nmbsdocno" state="c"/>
+      </column>
+      <column id="nmbsdocdt"/>
+      <column id="docno"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmbs_t" pk="nmbsld,nmbsdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmbscomp,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmbsld,&apos;&apos;,nmbsdocno,nmbsdocdt,&apos;&apos; FROM nmbs_t WHERE nmbsent= ? AND nmbsld=? AND nmbsdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="nmbsld,nmbsdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

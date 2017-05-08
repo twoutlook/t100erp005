@@ -1,0 +1,131 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzi800.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0046(2016-09-20 15:40:05), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000853
+#+ Filename...: azzi800
+#+ Description: 使用者資料設定作業
+#+ Creator....: 01856(2013-10-28 09:24:00)
+#+ Modifier...: 01856 -SD/PR-
+
+{</section>}
+
+{<section id="azzi800.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+{<point name="free_style.variable" mark="Y"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+{<point name="global.variable" />}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+
+{</section>}
+
+{<section id="azzi800.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+{<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+   #gzxa012 拿掉
+{<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE azzi800_cl CURSOR FROM g_forupd_sql 
+  #15/04/22 拿掉gzza013
+  #15/06/09 拿掉gzxa004
+  #15/06/13 拿掉gzxa013
+   LET g_sql = " SELECT DISTINCT gzxa001,gzxa002,gzxa003,gzxastus,gzxa010,gzxa007,t7.ooefl003,gzxa011,gzwel003,gzxa013,t9.gzbal003,",
+              " gzxa005,gzxa008,gzxa009,gzxa016,gzxa017,gzxaownid,gzxaowndp,gzxacrtid,gzxacrtdp,gzxacrtdt,gzxamodid,gzxamoddt,", 
+               " t1.ooag011 ,t2.ooag011 ,t3.ooefl003 ,t4.ooag011 ,t5.ooefl003 ,t6.ooag011",
+               " FROM gzxa_t",
+               " LEFT JOIN ooag_t t1 ON gzxaent = ooagent AND gzxa003 = ooag001  ",
+               " LEFT JOIN ooag_t t2 ON t2.ooagent='"||g_enterprise||"' AND  t2.ooag001 = gzxaownid  ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent='"||g_enterprise||"' AND t3.ooefl001 = gzxaowndp AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t4 ON t4.ooagent='"||g_enterprise||"' AND t4.ooag001 = gzxacrtid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent='"||g_enterprise||"' AND t5.ooefl001 = gzxacrtdp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t6 ON t6.ooagent='"||g_enterprise||"' AND t6.ooag001 = gzxamodid  ",
+               " LEFT JOIN ooefl_t t7 ON t7.ooeflent='"||g_enterprise||"' AND t7.ooefl001 = gzxa007 AND t7.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN gzwel_t t8 ON t8.gzwelent='"||g_enterprise||"' AND t8.gzwel001 = gzxa011 AND t8.gzwel002='"||g_dlang||"' ",
+               " LEFT JOIN gzbal_t t9 ON t9.gzbalent='"||g_enterprise||"' AND t9.gzbal001 = gzxa013 AND t9.gzbal002='"||g_dlang||"' ",
+               " WHERE gzxaent = ? AND gzxa001 = ? "
+
+             
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料
+   PREPARE azzi800_master_referesh FROM g_sql 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+{<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_azzi800 WITH FORM cl_ap_formpath("azz",g_code)
+   
+      #程式初始化
+      CALL azzi800_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #進入選單 Menu (='N')
+      CALL azzi800_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_azzi800
+   END IF
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+
+{</section>}
+
+{<section id="azzi800.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+

@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmr025_g01" module="afm" jobmode="N" type="g01" industry="std" crtid="08171" crtdt="2016-09-29 15:13:33" modid="08171" moddt="2016-10-11 09:32:23" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="fmagdocdt,fmagdocno,fmagent,fmagsite,fmagstus,l_fmagsite_desc(chr100|&apos;&apos;),l_fmagstus(chr30|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="fmagdocdt,fmagdocno,fmagent,fmagsite,fmagstus,l_fmagsite_desc(chr100|&apos;&apos;),l_fmagstus(chr30|&apos;&apos;)"/>
+    <sql id="g_from" query="fmag_t"/>
+    <sql id="g_where" query="" maintable="fmag_t"/>
+    <sql id="g_order" query="fmagdocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="fmagdocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="fmagdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fmagent,fmagdocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="fmagent,fmagdocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="fmagent,fmagdocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="fmagdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fmagent,fmagdocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

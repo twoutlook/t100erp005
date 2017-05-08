@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt520_03" module="apm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02294" crtdt="2014-04-29 16:46:19" modid="07024" moddt="2016-06-29 14:02:06" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="多庫儲批收貨">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmduseq1,pmdu005,pmdu006,pmdu006_desc(chr500),pmdu007,pmdu007_desc(chr500),pmdu008,pmdu009,pmdu009_desc(chr500),pmdu010,pmdu011,pmdu011_desc(chr500),pmdu012,pmdu202,pmdu017,pmdu016"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt520_03" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmduseq1,pmdu005,pmdu006,pmdu007,pmdu008,pmdu009,pmdu010,pmdu011,pmdu012,pmdu202,pmdu017,pmdu016" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmduseq1"/>
+      <column id="pmdu005"/>
+      <column id="pmdu006">
+        <after>
+          <check chkid="v_inaa001_9" id="isExist"/>
+          <reference field="pmdu006_desc" ref_field="pmdu_t.pmdu006" map_field="pmdu006" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaa=? "/>
+        </after>
+        <controlp form="q_inaa001_15" state="i"/>
+      </column>
+      <column id="pmdu006_desc"/>
+      <column id="pmdu007">
+        <after>
+          <check chkid="v_inab002_1" id="isExist"/>
+          <reference field="pmdu007_desc" ref_field="pmdu006,pmdu007" map_field="pmdu006,pmdu007" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_3" state="i"/>
+      </column>
+      <column id="pmdu007_desc"/>
+      <column id="pmdu008"/>
+      <column id="pmdu009">
+        <after>
+          <reference field="pmdu009_desc" ref_field="pmdu_t.pmdu009" map_field="pmdu009" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmdu009_desc"/>
+      <column id="pmdu010" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmdu011">
+        <after>
+          <reference field="pmdu011_desc" ref_field="pmdu_t.pmdu011" map_field="pmdu011" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmdu011_desc"/>
+      <column id="pmdu012" type="S" default="0"/>
+      <column id="pmdu202"/>
+      <column id="pmdu017"/>
+      <column id="pmdu016"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmdu_t" page="1" linked="" pk="pmdudocno,pmduseq,pmduseq1">
+      <sql id="forupd_sql_detail" query="SELECT pmduseq1,pmdu005,pmdu006,&apos;&apos;,pmdu007,&apos;&apos;,pmdu008,pmdu009,&apos;&apos;,pmdu010,pmdu011,&apos;&apos;,pmdu012,pmdu202,pmdu017,pmdu016 FROM pmdu_t WHERE pmduent=? AND pmdudocno=? AND pmduseq=? AND pmduseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmduseq1,pmdu005,pmdu006,&apos;&apos;,pmdu007,&apos;&apos;,pmdu008,pmdu009,&apos;&apos;,pmdu010,pmdu011,&apos;&apos;,pmdu012,pmdu202,pmdu017,pmdu016 FROM pmdu_t WHERE pmduent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

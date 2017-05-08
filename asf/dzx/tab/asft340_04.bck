@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asft340_04" module="asf" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01258" crtdt="2015-08-04 21:56:38" modid="01588" moddt="2015-09-10 16:30:33" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="拆件工單入庫明細快速產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rd(chr500),sfeb013,sfeb013_desc(chr80),sfeb014,sfeb014_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asft340_04" method="dialog">
+    <section id="input">
+      <input id="head" field="rd,sfeb013,sfeb014"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="rd"/>
+      <column id="sfeb013">
+        <after>
+          <reference field="sfeb013_desc" ref_field="sfeb_t.sfeb013" map_field="sfeb013" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfeb013_desc"/>
+      <column id="sfeb014">
+        <after>
+          <reference field="sfeb014_desc" ref_field="sfebsite,sfeb013,sfeb014" map_field="sfebsite,sfeb013,sfeb014" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="sfeb014_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="sfea_t" pk="sfeadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfea_t WHERE sfeaent= ? AND sfeadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="sfeadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

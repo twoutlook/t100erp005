@@ -1,0 +1,851 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="asft339_02" std_prog="asft339_02" erpver="1.0" module="ASF" ver="1" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.asft339_02_b1_fill" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 第一单身填充
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft339_02_b1_fill()
+   DEFINE g_cnt     LIKE type_t.num5
+   DEFINE l_sfjb002 LIKE sfjb_t.sfjb002
+   DEFINE l_sfjb003 LIKE sfjb_t.sfjb003
+   DEFINE l_sfjb004 LIKE sfjb_t.sfjb004
+   DEFINE l_sfjb005 LIKE sfjb_t.sfjb005
+   DEFINE l_sfjb007 LIKE sfjb_t.sfjb007
+   
+   CALL g_sfjb_d.clear()
+
+   LET g_sql = "SELECT  UNIQUE sfjbseq,sfjb001,sfjb002,sfjb015,sfjb003,sfjb004,sfjb005,sfjb006,sfjb007, ", 
+               "               sfjb008,sfjb009,sfjb010,sfjb011,sfjb012,sfjb013,sfjb014 FROM sfjb_t",              
+               " INNER JOIN sfja_t ON sfjadocno = sfjbdocno ",
+               " WHERE sfjbent=? AND sfjbdocno=? ",
+               " ORDER BY sfjb_t.sfjbseq"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+
+   PREPARE asft339_02_pb FROM g_sql
+   DECLARE asft339_02_cs1 CURSOR FOR asft339_02_pb
+
+   LET g_cnt = 1
+   
+   OPEN asft339_02_cs1 USING g_enterprise,g_sfjadocno
+                                            
+   FOREACH asft339_02_cs1 INTO g_sfjb_d[g_cnt].sfjbseq,g_sfjb_d[g_cnt].sfjb001,g_sfjb_d[g_cnt].sfjb002,g_sfjb_d[g_cnt].sfjb015, 
+       g_sfjb_d[g_cnt].sfjb003,g_sfjb_d[g_cnt].sfjb004,g_sfjb_d[g_cnt].sfjb005,g_sfjb_d[g_cnt].sfjb006, 
+       g_sfjb_d[g_cnt].sfjb007,g_sfjb_d[g_cnt].sfjb008,g_sfjb_d[g_cnt].sfjb009,g_sfjb_d[g_cnt].sfjb010, 
+       g_sfjb_d[g_cnt].sfjb011,g_sfjb_d[g_cnt].sfjb012,g_sfjb_d[g_cnt].sfjb013,g_sfjb_d[g_cnt].sfjb014
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+     
+      CALL s_asft339_default_sfjb001(g_sfjb_d[g_cnt].sfjb001,g_sfjb_d[g_cnt].sfjb002,g_sfjb_d[g_cnt].sfjb015)
+      RETURNING l_sfjb002,l_sfjb015,l_sfjb003,l_sfjb004,l_sfjb005,
+                g_sfjb_d[g_cnt].sfba013,g_sfjb_d[g_cnt].sfba016,g_sfjb_d[g_cnt].sfba025,g_sfjb_d[g_cnt].sfba017,l_sfjb007
+      CALL s_desc_get_item_desc(g_sfjb_d[g_cnt].sfjb003)
+      RETURNING g_sfjb_d[g_cnt].sfjb003_desc,g_sfjb_d[g_cnt].sfjb003_desc_1
+      CALL s_desc_get_unit_desc(g_sfjb_d[g_cnt].sfjb005)
+      RETURNING g_sfjb_d[g_cnt].sfjb005_desc  
+      CALL s_desc_get_unit_desc(g_sfjb_d[g_cnt].sfjb007)
+      RETURNING g_sfjb_d[g_cnt].sfjb007_desc
+
+      CALL s_desc_get_stock_desc(g_site,g_sfjb_d[g_cnt].sfjb011)
+      RETURNING g_sfjb_d[g_cnt].sfjb011_desc
+                        
+      CALL s_desc_get_locator_desc(g_site,g_sfjb_d[g_cnt].sfjb011,g_sfjb_d[g_cnt].sfjb012)
+      RETURNING g_sfjb_d[g_cnt].sfjb012_desc
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_sfjb_d[g_cnt].sfjb009
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='227' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_sfjb_d[g_cnt].sfjb009_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_sfjb_d[g_cnt].sfjb009_desc
+   
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( '', 9035, 1)
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   CALL g_sfhb_d.deleteElement(g_sfhb_d.getLength())
+   CLOSE asft339_02_cs1
+   FREE asft339_02_cs1
+END FUNCTION]]>
+  </point>
+  <point name="function.asft339_02_b2_fill" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 第二单身填充
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft339_02_b2_fill()
+   DEFINE g_cnt     LIKE type_t.num5
+
+   
+   CALL g_sfjb2_d.clear()
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_sfjadocno           LIKE sfja_t.sfjadocno]]>
+  </point>
+  <point name="input.a.page1.sfjb003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb_d[l_ac].sfjb003
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? ","") RETURNING g_rtn_fields
+            LET g_sfjb_d[l_ac].sfjb003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb_d[l_ac].sfjb003_desc
+
+]]>
+  </point>
+  <point name="input.a.page1.sfjb005" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb_d[l_ac].sfjb005
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sfjb_d[l_ac].sfjb005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb_d[l_ac].sfjb005_desc
+
+]]>
+  </point>
+  <point name="input.a.page1.sfjb006" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sfjb_d[l_ac].sfjb006) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.sfjb007" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb_d[l_ac].sfjb007
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sfjb_d[l_ac].sfjb007_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb_d[l_ac].sfjb007_desc
+
+]]>
+  </point>
+  <point name="input.a.page1.sfjb008" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sfjb_d[l_ac].sfjb008) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.sfjb009" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb_d[l_ac].sfjb009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='227' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sfjb_d[l_ac].sfjb009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb_d[l_ac].sfjb009_desc
+
+]]>
+  </point>
+  <point name="input.a.page1.sfjb011" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb_d[l_ac].sfjb011
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+            LET g_sfjb_d[l_ac].sfjb011_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb_d[l_ac].sfjb011_desc
+
+]]>
+  </point>
+  <point name="input.a.page1.sfjb012" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb_d[l_ac].sfjb011
+            LET g_ref_fields[2] = g_sfjb_d[l_ac].sfjb012
+            CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+            LET g_sfjb_d[l_ac].sfjb012_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb_d[l_ac].sfjb012_desc
+
+]]>
+  </point>
+  <point name="input.a.page1.sfjbdocno" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfjb_d[g_detail_idx].sfjbdocno IS NOT NULL AND g_sfjb_d[g_detail_idx].sfjbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfjb_d[g_detail_idx].sfjbdocno != g_sfjb_d_t.sfjbdocno OR g_sfjb_d[g_detail_idx].sfjbseq != g_sfjb_d_t.sfjbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfjb_t WHERE "||"sfjbent = '" ||g_enterprise|| "' AND "||"sfjbdocno = '"||g_sfjb_d[g_detail_idx].sfjbdocno ||"' AND "|| "sfjbseq = '"||g_sfjb_d[g_detail_idx].sfjbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.sfjbseq" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfjb_d[g_detail_idx].sfjbdocno IS NOT NULL AND g_sfjb_d[g_detail_idx].sfjbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfjb_d[g_detail_idx].sfjbdocno != g_sfjb_d_t.sfjbdocno OR g_sfjb_d[g_detail_idx].sfjbseq != g_sfjb_d_t.sfjbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfjb_t WHERE "||"sfjbent = '" ||g_enterprise|| "' AND "||"sfjbdocno = '"||g_sfjb_d[g_detail_idx].sfjbdocno ||"' AND "|| "sfjbseq = '"||g_sfjb_d[g_detail_idx].sfjbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            IF NOT cl_null(g_sfjb_d[l_ac].sfjbseq) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page2.sfjbdocno" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfjb2_d[g_detail_idx].sfjbdocno IS NOT NULL AND g_sfjb2_d[g_detail_idx].sfjbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfjb2_d[g_detail_idx].sfjbdocno != g_sfjb2_d_t.sfjbdocno OR g_sfjb2_d[g_detail_idx].sfjbseq != g_sfjb2_d_t.sfjbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfjc_t WHERE "||"sfjcent = '" ||g_enterprise|| "' AND "||"sfjbdocno = '"||g_sfjb2_d[g_detail_idx].sfjbdocno ||"' AND "|| "sfjbseq = '"||g_sfjb2_d[g_detail_idx].sfjbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.sfjbseq" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfjb2_d[g_detail_idx].sfjbdocno IS NOT NULL AND g_sfjb2_d[g_detail_idx].sfjbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfjb2_d[g_detail_idx].sfjbdocno != g_sfjb2_d_t.sfjbdocno OR g_sfjb2_d[g_detail_idx].sfjbseq != g_sfjb2_d_t.sfjbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfjc_t WHERE "||"sfjcent = '" ||g_enterprise|| "' AND "||"sfjbdocno = '"||g_sfjb2_d[g_detail_idx].sfjbdocno ||"' AND "|| "sfjbseq = '"||g_sfjb2_d[g_detail_idx].sfjbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.sfjc006" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sfjb2_d[l_ac].sfjc006) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page2.sfjc009" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb2_d[l_ac].sfjc009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='227' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sfjb2_d[l_ac].sfjc009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb2_d[l_ac].sfjc009_desc
+
+]]>
+  </point>
+  <point name="input.a.page2.sfjc011" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb2_d[l_ac].sfjc011
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+            LET g_sfjb2_d[l_ac].sfjc011_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb2_d[l_ac].sfjc011_desc
+
+]]>
+  </point>
+  <point name="input.a.page2.sfjc012" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb2_d[l_ac].sfjc011
+            LET g_ref_fields[2] = g_sfjb2_d[l_ac].sfjc012
+            CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+            LET g_sfjb2_d[l_ac].sfjc012_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb2_d[l_ac].sfjc012_desc
+
+]]>
+  </point>
+  <point name="input.a.page3.sfjbdocno" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfjb3_d[g_detail_idx].sfjbdocno IS NOT NULL AND g_sfjb3_d[g_detail_idx].sfjbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfjb3_d[g_detail_idx].sfjbdocno != g_sfjb3_d_t.sfjbdocno OR g_sfjb3_d[g_detail_idx].sfjbseq != g_sfjb3_d_t.sfjbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfjc_t WHERE "||"sfjcent = '" ||g_enterprise|| "' AND "||"sfjbdocno = '"||g_sfjb3_d[g_detail_idx].sfjbdocno ||"' AND "|| "sfjbseq = '"||g_sfjb3_d[g_detail_idx].sfjbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.sfjbseq" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfjb3_d[g_detail_idx].sfjbdocno IS NOT NULL AND g_sfjb3_d[g_detail_idx].sfjbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfjb3_d[g_detail_idx].sfjbdocno != g_sfjb3_d_t.sfjbdocno OR g_sfjb3_d[g_detail_idx].sfjbseq != g_sfjb3_d_t.sfjbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfjc_t WHERE "||"sfjcent = '" ||g_enterprise|| "' AND "||"sfjbdocno = '"||g_sfjb3_d[g_detail_idx].sfjbdocno ||"' AND "|| "sfjbseq = '"||g_sfjb3_d[g_detail_idx].sfjbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.sfjc006" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sfjb3_d[l_ac].sfjc006) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page3.sfjc009" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb3_d[l_ac].sfjc009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='227' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sfjb3_d[l_ac].sfjc009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb3_d[l_ac].sfjc009_desc
+
+]]>
+  </point>
+  <point name="input.a.page3.sfjc011" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb3_d[l_ac].sfjc011
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+            LET g_sfjb3_d[l_ac].sfjc011_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb3_d[l_ac].sfjc011_desc
+
+]]>
+  </point>
+  <point name="input.a.page3.sfjc012" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfjb3_d[l_ac].sfjc011
+            LET g_ref_fields[2] = g_sfjb3_d[l_ac].sfjc012
+            CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+            LET g_sfjb3_d[l_ac].sfjc012_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfjb3_d[l_ac].sfjc012_desc
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_sfhadocno     LIKE sfha_t.sfhadocno
+   DEFINE l_sfhastus      LIKE sfha_t.sfhastus]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_sfhjdocno]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_argv[1] = p_sfjadocno 
+   LET g_sfjadocno = p_sfjadocno
+   SELECT sfjastus INTO l_sfjastus
+     FROM sfja_t
+    WHERE sfjaent   = g_enterprise
+      AND sfjasite  = g_site
+      AND sfjadocno = p_sfjadocno
+      
+   IF l_sfjastus NOT MATCHES '[YN]' THEN
+      CALL cl_err('','asf-00291',1)
+      RETURN
+   END IF]]>
+  </point>
+  <section id="asft339_02.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000008
+#+ 
+#+ Filename...: asft339_02
+#+ Description: ...
+#+ Creator....: 00537(2014/07/04)
+#+ Modifier...: 00537(2014/07/07)
+#+ Buildtype..: 應用 c02b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="asft339_02.global" ver="2" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_sfjb_d        RECORD
+       sfjbdocno LIKE sfjb_t.sfjbdocno, 
+   sfjbseq LIKE sfjb_t.sfjbseq, 
+   sfjb001 LIKE sfjb_t.sfjb001, 
+   sfjb002 LIKE sfjb_t.sfjb002, 
+   sfjb015 LIKE sfjb_t.sfjb015, 
+   sfjb003 LIKE sfjb_t.sfjb003, 
+   sfjb003_desc LIKE type_t.chr500, 
+   sfjb004 LIKE sfjb_t.sfjb004, 
+   sfjb005 LIKE sfjb_t.sfjb005, 
+   sfjb005_desc LIKE type_t.chr500, 
+   sfjb006 LIKE sfjb_t.sfjb006, 
+   sfjb007 LIKE sfjb_t.sfjb007, 
+   sfjb007_desc LIKE type_t.chr500, 
+   sfjb008 LIKE sfjb_t.sfjb008, 
+   sfjb009 LIKE sfjb_t.sfjb009, 
+   sfjb009_desc LIKE type_t.chr500, 
+   sfjb010 LIKE sfjb_t.sfjb010, 
+   sfjb011 LIKE sfjb_t.sfjb011, 
+   sfjb011_desc LIKE type_t.chr500, 
+   sfjb012 LIKE sfjb_t.sfjb012, 
+   sfjb012_desc LIKE type_t.chr500, 
+   sfjb013 LIKE sfjb_t.sfjb013, 
+   sfjb014 LIKE sfjb_t.sfjb014
+       END RECORD
+PRIVATE TYPE type_g_sfjb2_d RECORD
+       sfjcseq1 LIKE sfjc_t.sfjcseq1, 
+   sfjc010 LIKE sfjc_t.sfjc010, 
+   sfjc006 LIKE sfjc_t.sfjc006, 
+   sfjc008 LIKE sfjc_t.sfjc008, 
+   sfjc009 LIKE sfjc_t.sfjc009, 
+   sfjc009_desc LIKE type_t.chr500, 
+   sfjc011 LIKE sfjc_t.sfjc011, 
+   sfjc011_desc LIKE type_t.chr500, 
+   sfjc012 LIKE sfjc_t.sfjc012, 
+   sfjc012_desc LIKE type_t.chr500, 
+   sfjc013 LIKE sfjc_t.sfjc013, 
+   sfjc014 LIKE sfjc_t.sfjc014
+       END RECORD
+ 
+ 
+DEFINE g_sfjb_d          DYNAMIC ARRAY OF type_g_sfjb_d
+DEFINE g_sfjb_d_t        type_g_sfjb_d
+DEFINE g_sfjb2_d   DYNAMIC ARRAY OF type_g_sfjb2_d
+DEFINE g_sfjb2_d_t type_g_sfjb2_d
+ 
+ 
+DEFINE g_sfjbdocno_t   LIKE sfjb_t.sfjbdocno    #Key值備份
+DEFINE g_sfjbseq_t      LIKE sfjb_t.sfjbseq    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE g_detail_idx          LIKE type_t.num5  
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point	
+]]>
+  </section>
+  <section id="asft339_02.input" ver="3" status="" src="m">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION asft339_02(--)
+   #add-point:input段變數傳入
+{<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+{<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asft339_02 WITH FORM cl_ap_formpath("asf","asft339_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+{<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+#第一个单身pattern不支持全部去掉可编辑，自己改
+         DISPLAY ARRAY g_sfjb_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+	  
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac1 = g_detail_idx
+               CALL cl_show_fld_cont()
+               CALL asft339_02_b2_fill()
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY   
+#      #輸入開始
+#      INPUT ARRAY g_sfjb_d FROM s_detail1.*
+#          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+#                  INSERT ROW = ,
+#                  DELETE ROW = ,
+#                  APPEND ROW = )
+#         
+#         #自訂ACTION
+#         #add-point:單身前置處理
+{<point name="input.action"/>}
+#         #end add-point
+#         
+#         #自訂ACTION(detail_input)
+#         
+#         
+#         BEFORE INPUT
+#            #add-point:單身輸入前處理
+{<point name="input.before_input"/>}
+#            #end add-point
+#          
+#          
+#         
+# 
+#         #自訂ACTION
+#         #add-point:單身其他段落處理(EX:on row change, etc...)
+{<point name="input.other"/>}
+#         #end add-point
+# 
+#         AFTER INPUT
+#            #add-point:單身輸入後處理
+{<point name="input.after_input"/>}
+#            #end add-point
+#            
+#      END INPUT
+#      
+      INPUT ARRAY g_sfjb2_d FROM s_detail2.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+{<point name="input.body2.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+{<point name="input.body2.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a01產生
+         BEFORE FIELD sfjcseq1
+            #add-point:BEFORE FIELD sfjcseq1
+{<point name="input.b.page2.sfjcseq1" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfjcseq1
+            
+            #add-point:AFTER FIELD sfjcseq1
+{<point name="input.a.page2.sfjcseq1" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfjcseq1
+            #add-point:ON CHANGE sfjcseq1
+{<point name="input.g.page2.sfjcseq1" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfjc010
+            #add-point:BEFORE FIELD sfjc010
+{<point name="input.b.page2.sfjc010" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfjc010
+            
+            #add-point:AFTER FIELD sfjc010
+{<point name="input.a.page2.sfjc010" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfjc010
+            #add-point:ON CHANGE sfjc010
+{<point name="input.g.page2.sfjc010" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfjc006
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_sfjb2_d[l_ac].sfjc006,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sfjc006
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD sfjc006
+{<point name="input.a.page2.sfjc006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfjc006
+            #add-point:BEFORE FIELD sfjc006
+{<point name="input.b.page2.sfjc006" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfjc006
+            #add-point:ON CHANGE sfjc006
+{<point name="input.g.page2.sfjc006" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfjc008
+            #add-point:BEFORE FIELD sfjc008
+{<point name="input.b.page2.sfjc008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfjc008
+            
+            #add-point:AFTER FIELD sfjc008
+{<point name="input.a.page2.sfjc008" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfjc008
+            #add-point:ON CHANGE sfjc008
+{<point name="input.g.page2.sfjc008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfjc009
+            
+            #add-point:AFTER FIELD sfjc009
+{<point name="input.a.page2.sfjc009" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfjc009
+            #add-point:BEFORE FIELD sfjc009
+{<point name="input.b.page2.sfjc009" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfjc009
+            #add-point:ON CHANGE sfjc009
+{<point name="input.g.page2.sfjc009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfjc011
+            
+            #add-point:AFTER FIELD sfjc011
+{<point name="input.a.page2.sfjc011" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfjc011
+            #add-point:BEFORE FIELD sfjc011
+{<point name="input.b.page2.sfjc011" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfjc011
+            #add-point:ON CHANGE sfjc011
+{<point name="input.g.page2.sfjc011" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfjc012
+            
+            #add-point:AFTER FIELD sfjc012
+{<point name="input.a.page2.sfjc012" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfjc012
+            #add-point:BEFORE FIELD sfjc012
+{<point name="input.b.page2.sfjc012" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfjc012
+            #add-point:ON CHANGE sfjc012
+{<point name="input.g.page2.sfjc012" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfjc013
+            #add-point:BEFORE FIELD sfjc013
+{<point name="input.b.page2.sfjc013" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfjc013
+            
+            #add-point:AFTER FIELD sfjc013
+{<point name="input.a.page2.sfjc013" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfjc013
+            #add-point:ON CHANGE sfjc013
+{<point name="input.g.page2.sfjc013" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfjc014
+            #add-point:BEFORE FIELD sfjc014
+{<point name="input.b.page2.sfjc014" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfjc014
+            
+            #add-point:AFTER FIELD sfjc014
+{<point name="input.a.page2.sfjc014" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfjc014
+            #add-point:ON CHANGE sfjc014
+{<point name="input.g.page2.sfjc014" />}
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page2.sfjcseq1
+         ON ACTION controlp INFIELD sfjcseq1
+            #add-point:ON ACTION controlp INFIELD sfjcseq1
+{<point name="input.c.page2.sfjcseq1" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page2.sfjc010
+         ON ACTION controlp INFIELD sfjc010
+            #add-point:ON ACTION controlp INFIELD sfjc010
+{<point name="input.c.page2.sfjc010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page2.sfjc006
+         ON ACTION controlp INFIELD sfjc006
+            #add-point:ON ACTION controlp INFIELD sfjc006
+{<point name="input.c.page2.sfjc006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page2.sfjc008
+         ON ACTION controlp INFIELD sfjc008
+            #add-point:ON ACTION controlp INFIELD sfjc008
+{<point name="input.c.page2.sfjc008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page2.sfjc009
+         ON ACTION controlp INFIELD sfjc009
+            #add-point:ON ACTION controlp INFIELD sfjc009
+{<point name="input.c.page2.sfjc009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page2.sfjc011
+         ON ACTION controlp INFIELD sfjc011
+            #add-point:ON ACTION controlp INFIELD sfjc011
+{<point name="input.c.page2.sfjc011" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page2.sfjc012
+         ON ACTION controlp INFIELD sfjc012
+            #add-point:ON ACTION controlp INFIELD sfjc012
+{<point name="input.c.page2.sfjc012" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page2.sfjc013
+         ON ACTION controlp INFIELD sfjc013
+            #add-point:ON ACTION controlp INFIELD sfjc013
+{<point name="input.c.page2.sfjc013" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page2.sfjc014
+         ON ACTION controlp INFIELD sfjc014
+            #add-point:ON ACTION controlp INFIELD sfjc014
+{<point name="input.c.page2.sfjc014" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+{<point name="input.body2.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+{<point name="input.body2.after_input"/>}
+            #end add-point
+            
+      END INPUT
+ 
+      
+      #add-point:自定義input
+{<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+{<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asft339_02 
+   
+   #add-point:input段after input 
+{<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asft339_02.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="asft339_02.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

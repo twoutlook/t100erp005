@@ -1,0 +1,148 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apci128" module="apc" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="03247" crtdt="2014-02-21 09:55:58" modid="06189" moddt="2015-06-10 15:07:14" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="POS角色資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pcaf001,pcafl003,pcaf002,pcafpos(chr500),pcafstamp(timestamp),pcafunit,pcafstus,pcafownid,pcafownid_desc(chr80),pcafowndp,pcafowndp_desc(chr80),pcafcrtid,pcafcrtid_desc(chr80),pcafcrtdp,pcafcrtdp_desc(chr80),pcafcrtdt,pcafmodid,pcafmodid_desc(chr80),pcafmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pcagstus,pcag002,pcag002_desc(chr500),pcag003,pcagunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pcahstus,pcah003,pcah003_desc(chr500),pcah004,pcahunit"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apci128" method="dialog">
+    <section id="input">
+      <input id="head" field="pcaf001,pcafl003,pcaf002,pcafpos,pcafstamp,pcafunit,pcafstus"/>
+      <input id="body" page="1" field="pcagstus,pcag002,pcag003,pcagunit" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="pcahstus,pcah003,pcah004,pcahunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pcaf001,pcafl003,pcaf002,pcafpos,pcafstamp,pcafunit,pcafstus,pcafownid,pcafowndp,pcafcrtid,pcafcrtdp,pcafcrtdt,pcafmodid,pcafmoddt"/>
+      <construct id="body" page="1" field="pcagstus,pcag002,pcag003,pcagunit"/>
+      <construct id="body" page="2" field="pcahstus,pcah003,pcah004,pcahunit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pcaf001"/>
+      <set id="head" type="no_entry" field="pcaf001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pcaf001">
+        <controlp form="q_pcaf001" state="c"/>
+      </column>
+      <column id="pcafl003"/>
+      <column id="pcaf002">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pcafpos" type="S" default="N"/>
+      <column id="pcafstamp"/>
+      <column id="pcafunit"/>
+      <column id="pcafstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcafownid">
+        <after>
+          <reference field="pcafownid_desc" ref_field="pcaf_t.pcafownid" map_field="pcafownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcafownid_desc"/>
+      <column id="pcafowndp">
+        <after>
+          <reference field="pcafowndp_desc" ref_field="pcaf_t.pcafowndp" map_field="pcafowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcafowndp_desc"/>
+      <column id="pcafcrtid">
+        <after>
+          <reference field="pcafcrtid_desc" ref_field="pcaf_t.pcafcrtid" map_field="pcafcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcafcrtid_desc"/>
+      <column id="pcafcrtdp">
+        <after>
+          <reference field="pcafcrtdp_desc" ref_field="pcaf_t.pcafcrtdp" map_field="pcafcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcafcrtdp_desc"/>
+      <column id="pcafcrtdt"/>
+      <column id="pcafmodid">
+        <after>
+          <reference field="pcafmodid_desc" ref_field="pcaf_t.pcafmodid" map_field="pcafmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcafmodid_desc"/>
+      <column id="pcafmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pcagstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcag002">
+        <after>
+          <check chkid="v_pcad001_1" id="isExist"/>
+          <reference field="pcag002_desc" ref_field="pcag_t.pcag002" map_field="pcagent,pcag002" ref_sql="SELECT pcadl003 FROM pcadl_t WHERE pcadlent=$varg_enterprise$var AND pcadl001=? AND pcadl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pcad001_2" state="i"/>
+        <controlp form="q_pcad001_2" state="c"/>
+      </column>
+      <column id="pcag002_desc"/>
+      <column id="pcag003" type="S" default="Y"/>
+      <column id="pcagunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pcahstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcah003">
+        <after>
+          <check chkid="v_pcah003" id="isExist"/>
+          <reference field="pcah003_desc" ref_field="pcah_t.pcah003" map_field="pcahent,pcah003" ref_sql="SELECT pcael003 FROM pcael_t WHERE pcaelent=$varg_enterprise$var AND pcael001=? AND pcael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pcae001" state="i"/>
+        <controlp form="q_pcae001" state="c"/>
+      </column>
+      <column id="pcah003_desc"/>
+      <column id="pcah004" def_scc="6026"/>
+      <column id="pcahunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pcaf_t" pk="pcaf001">
+      <sql id="forupd_sql" type="sql" query="SELECT pcaf001,&apos;&apos;,pcaf002,&apos;&apos;,pcafstamp,pcafunit,pcafstus,pcafownid,&apos;&apos;,pcafowndp,&apos;&apos;,pcafcrtid,&apos;&apos;,pcafcrtdp,&apos;&apos;,pcafcrtdt,pcafmodid,&apos;&apos;,pcafmoddt FROM pcaf_t WHERE pcafent= ? AND pcaf001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pcaf001,&apos;&apos;,pcaf002,&apos;&apos;,pcafstamp,pcafunit,pcafstus,pcafownid,&apos;&apos;,pcafowndp,&apos;&apos;,pcafcrtid,&apos;&apos;,pcafcrtdp,&apos;&apos;,pcafcrtdt,pcafmodid,&apos;&apos;,pcafmoddt FROM pcaf_t" order="pcaf001"/>
+      <sql id="append" type="lang" target="pcafl_t.pcafl003" table="pcafl_t" fk="pcaf001" pk="pcafl001,pcafl002" field="pcafl003"/>
+    </head>
+    <body id="pcag_t" page="1" linked="" pk="pcag002" fk="pcag001">
+      <sql id="forupd_sql_detail" query="SELECT pcagstus,pcag002,&apos;&apos;,pcag003,pcagunit FROM pcag_t WHERE pcagent=? AND pcag001=? AND pcag002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcagstus,pcag002,&apos;&apos;,pcag003,pcagunit FROM pcag_t WHERE pcagent=? AND pcag001=?"/>
+    </body>
+    <body id="pcah_t" page="2" linked="" detail="Y" master="pcag_t" default_site="N" pk="pcah003" fk="pcah001,pcah002">
+      <sql id="forupd_sql_detail" query="SELECT pcahstus,pcah003,&apos;&apos;,pcah004,pcahunit FROM pcah_t WHERE pcahent=? AND pcah001=? AND pcah002=? AND pcah003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcahstus,pcah003,&apos;&apos;,pcah004,pcahunit FROM pcah_t WHERE pcahent=? AND pcah001=? AND pcah002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

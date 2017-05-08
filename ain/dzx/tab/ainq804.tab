@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq804" module="ain" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01251" crtdt="2014-02-18 11:00:10" modid="02346" moddt="2016-12-19 14:33:58" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="庫存快照查詢">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inefsite,inefsite_desc(chr80),inea002,inef001,inef001_desc(chr80),inea003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inef002,inef002_desc1(chr500),inef002_desc2(chr500),inef003,inef003_desc(chr500),inef004,inef005,inef005_desc(chr500),inef006,inef007,inef008,inef009,inef009_desc(chr500),inef010,inef011,amount(num20_6),price(num20_6),amount1(num20_6),inefunit"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainq804" method="dialog">
+    <section id="input">
+      <input id="head" field="inefsite,inef001"/>
+      <input id="body" page="1" field="inef002,inef003,inef005,inef006,inef007,inef008,inef009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="inefsite,inef001"/>
+      <construct id="body" page="1" field="inef002,inef003,inef005,inef006,inef007,inef008,inef009,inef010,inef011"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="inefsite,inef001"/>
+      <set id="head" type="no_entry" field="inefsite,inef001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="inefsite">
+        <after>
+          <reference field="inefsite_desc" ref_field="inef_t.inefsite" map_field="inefent,inefsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="inefsite_desc"/>
+      <column id="inea002"/>
+      <column id="inef001">
+        <after>
+          <reference field="inef001_desc" ref_field="inef_t.inef001" map_field="inefent,inef001" ref_sql="SELECT inea001 FROM inea_t WHERE ineaent=$varg_enterprise$var AND ineadocno=? "/>
+        </after>
+        <controlp form="q_ineadocno" state="c"/>
+      </column>
+      <column id="inef001_desc"/>
+      <column id="inea003"/>
+    </init>
+    <init id="body" page="1">
+      <column id="inef002">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="inef002_desc1"/>
+      <column id="inef002_desc2"/>
+      <column id="inef003">
+        <after>
+          <reference field="inef003_desc" ref_field="inefl002,inefl003" map_field="inefl002,inefl003" ref_sql="SELECT inaml004 FROM inaml_t WHERE inamlent=$varg_enterprise$var AND inaml001=? AND inaml002=? AND inaml003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inef003_desc"/>
+      <column id="inef004"/>
+      <column id="inef005">
+        <after>
+          <reference field="inef005_desc" ref_field="inefstie,inef005" map_field="inefstie,inef005" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_13" state="c"/>
+      </column>
+      <column id="inef005_desc"/>
+      <column id="inef006">
+        <controlp form="q_inab002_7" state="c"/>
+      </column>
+      <column id="inef007"/>
+      <column id="inef008"/>
+      <column id="inef009">
+        <after>
+          <reference field="inef009_desc" ref_field="inef_t.inef009" map_field="inefent,inef009" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="inef009_desc"/>
+      <column id="inef010" type="S" default="0"/>
+      <column id="inef011" type="S" default="0"/>
+      <column id="amount" type="S" default="0"/>
+      <column id="price" type="S" default="0"/>
+      <column id="amount1" type="S" default="0"/>
+      <column id="inefunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="inef_t" pk="inefsite,inef001">
+      <sql id="forupd_sql" type="sql" query="SELECT inefsite,&apos;&apos;,&apos;&apos;,inef001,&apos;&apos;,&apos;&apos; FROM inef_t WHERE inefent= ? AND inefsite=? AND inef001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT inefsite,&apos;&apos;,&apos;&apos;,inef001,&apos;&apos;,&apos;&apos; FROM inef_t" order="inefsite,inef001"/>
+    </head>
+    <body id="inef_t" page="1" linked="" pk="inef002,inef003,inef004,inef005,inef006,inef007,inef008" fk="inefsite,inef001">
+      <sql id="forupd_sql_detail" query="SELECT inef002,&apos;&apos;,&apos;&apos;,inef003,&apos;&apos;,inef004,inef005,&apos;&apos;,inef006,inef007,inef008,inef009,&apos;&apos;,inef010,inef011,&apos;&apos;,&apos;&apos;,&apos;&apos;,inefunit FROM inef_t WHERE inefent=? AND inefsite=? AND inef001=? AND inef002=? AND inef003=? AND inef004=? AND inef005=? AND inef006=? AND inef007=? AND inef008=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inef002,&apos;&apos;,&apos;&apos;,inef003,&apos;&apos;,inef004,inef005,&apos;&apos;,inef006,inef007,inef008,inef009,&apos;&apos;,inef010,inef011,&apos;&apos;,&apos;&apos;,&apos;&apos;,inefunit FROM inef_t WHERE inefent= ? AND inefsite=? AND inef001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

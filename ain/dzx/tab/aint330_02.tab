@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint330_02" module="ain" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02097" crtdt="2016-08-22 10:30:07" modid="02097" moddt="2016-08-22 10:57:59" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="調撥單身整批產生">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="indddocno,inddseq,sel(chr500),indd002,indd002_desc(chr500),imaal004_desc(chr500),bmaa002(chr500),indd004,indd006,indd103,l_amt01_01(num20_6),indd104,indd105,l_amt01_02(num20_6),indd032,indd032_desc(chr500),indd033,indd033_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="cre_data"/>
+      <action id="cre_stock"/>
+      <action id="next_step"/>
+      <action id="query" type="standard"/>
+      <action id="pre_step"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint330_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,imaal004_desc,bmaa002,l_amt01_01" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="sel,imaal004_desc,bmaa002,l_amt01_01"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="indddocno"/>
+      <column id="inddseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sel"/>
+      <column id="indd002">
+        <after>
+          <check chkid="v_imaa001_5" id="isExist"/>
+          <reference field="indd002_desc" ref_field="indd_t.indd002" map_field="inddent,indd002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imay001" state="i"/>
+        <controlp form="q_imay001" state="c"/>
+      </column>
+      <column id="indd002_desc"/>
+      <column id="imaal004_desc"/>
+      <column id="bmaa002"/>
+      <column id="indd004">
+        <controlp form="q_ind004" state="c"/>
+      </column>
+      <column id="indd006">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="indd103" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="l_amt01_01"/>
+      <column id="indd104">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="indd105" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="l_amt01_02"/>
+      <column id="indd032">
+        <after>
+          <check chkid="v_inaa001" id="isExist"/>
+          <reference field="indd032_desc" ref_field="indd_t.indd032" map_field="inddent,indd032" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_5" state="i"/>
+        <controlp form="q_inaa001_5" state="c"/>
+      </column>
+      <column id="indd032_desc"/>
+      <column id="indd033">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="indd033_desc" ref_field="indd032,indd033" map_field="indd032,indd033" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_6" state="i"/>
+        <controlp form="q_indd033" state="c"/>
+      </column>
+      <column id="indd033_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="indd_t" page="1" linked="" pk="indddocno,inddseq">
+      <sql id="forupd_sql_detail" query="SELECT indddocno,inddseq,&apos;&apos;,indd002,&apos;&apos;,&apos;&apos;,&apos;&apos;,indd004,indd006,indd103,&apos;&apos;,indd104,indd105,&apos;&apos;,indd032,&apos;&apos;,indd033,&apos;&apos; FROM indd_t WHERE inddent=? AND indddocno=? AND inddseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT indddocno,inddseq,&apos;&apos;,indd002,&apos;&apos;,&apos;&apos;,&apos;&apos;,indd004,indd006,indd103,&apos;&apos;,indd104,indd105,&apos;&apos;,indd032,&apos;&apos;,indd033,&apos;&apos; FROM indd_t WHERE inddent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

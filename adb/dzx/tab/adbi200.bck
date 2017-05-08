@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbi200" module="adb" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="04226" crtdt="2014-02-19 11:02:47" modid="06814" moddt="2015-05-04 10:31:09" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="銷售層級維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="dbaastus,dbaa001,dbaal003,dbaa002,dbaa003,dbaa003_desc(chr500),dbaa004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="dbaa001,dbaa001_2_desc(chr500),dbaaownid,dbaaownid_desc(chr500),dbaaowndp,dbaaowndp_desc(chr500),dbaacrtid,dbaacrtid_desc(chr500),dbaacrtdp,dbaacrtdp_desc(chr500),dbaacrtdt,dbaamodid,dbaamodid_desc(chr500),dbaamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="adb" filename="adbi200" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="dbaastus,dbaa001,dbaal003,dbaa002,dbaa003,dbaa004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="dbaastus,dbaa001,dbaal003,dbaa002,dbaa003,dbaa004"/>
+      <construct id="body" page="2" field="dbaaownid,dbaaowndp,dbaacrtid,dbaacrtdp,dbaacrtdt,dbaamodid,dbaamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="dbaastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="dbaa001">
+        <controlp form="q_dbaa001" state="c"/>
+      </column>
+      <column id="dbaal003"/>
+      <column id="dbaa002" def_scc="6701"/>
+      <column id="dbaa003">
+        <after>
+          <check chkid="v_dbaa001" id="isExist"/>
+          <reference field="dbaa003_desc" ref_field="dbaa_t.dbaa003" map_field="dbaaent,dbaa003" ref_sql="SELECT dbaal003 FROM dbaal_t WHERE dbaalent=$varg_enterprise$var AND dbaal001=? AND dbaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbaa001" state="i"/>
+        <controlp form="q_dbaa003" state="c"/>
+      </column>
+      <column id="dbaa003_desc"/>
+      <column id="dbaa004" def_scc="6701"/>
+    </init>
+    <init id="body" page="2">
+      <column id="dbaa001_2_desc"/>
+      <column id="dbaaownid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbaaownid_desc"/>
+      <column id="dbaaowndp">
+        <after/>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbaaowndp_desc"/>
+      <column id="dbaacrtid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbaacrtid_desc"/>
+      <column id="dbaacrtdp">
+        <after/>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbaacrtdp_desc"/>
+      <column id="dbaacrtdt"/>
+      <column id="dbaamodid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbaamodid_desc"/>
+      <column id="dbaamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="dbaa_t" page="1,2" linked="" pk="dbaa001">
+      <sql id="forupd_sql_detail" query="SELECT dbaastus,dbaa001,&apos;&apos;,dbaa002,dbaa003,&apos;&apos;,dbaa004,&apos;&apos;,&apos;&apos;,dbaaownid,&apos;&apos;,dbaaowndp,&apos;&apos;,dbaacrtid,&apos;&apos;,dbaacrtdp,&apos;&apos;,dbaacrtdt,dbaamodid,&apos;&apos;,dbaamoddt FROM dbaa_t WHERE dbaaent=? AND dbaa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT dbaastus,dbaa001,&apos;&apos;,dbaa002,dbaa003,&apos;&apos;,dbaa004,&apos;&apos;,&apos;&apos;,dbaaownid,&apos;&apos;,dbaaowndp,&apos;&apos;,dbaacrtid,&apos;&apos;,dbaacrtdp,&apos;&apos;,dbaacrtdt,dbaamodid,&apos;&apos;,dbaamoddt FROM dbaa_t WHERE dbaaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="dbaal_t.dbaal003" table="dbaal_t" fk="dbaa001" pk="dbaal001,dbaal002" field="dbaal003"/>
+    </body>
+  </dataset>
+</assembly>
+

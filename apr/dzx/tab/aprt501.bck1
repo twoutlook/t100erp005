@@ -1,0 +1,172 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aprt501" module="apr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02296" crtdt="2014-03-21 16:29:57" modid="02749" moddt="2015-03-09 12:45:07" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="客戶組申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="prfasite,prfasite_desc(chr80),prfadocdt,prfadocno,prfa001,prfa002,prfa003,prfaacti,prfal002,prfal003,prfa004,prfa004_desc(chr80),prfa005,prfa005_desc(chr80),prfaunit,prfastus,prfaownid,prfaownid_desc(chr80),prfaowndp,prfaowndp_desc(chr80),prfacrtid,prfacrtid_desc(chr80),prfacrtdp,prfacrtdp_desc(chr80),prfacrtdt,prfamodid,prfamodid_desc(chr80),prfamoddt,prfacnfid,prfacnfid_desc(chr80),prfacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="prfbacti,prfb001,prfb002,prfb003,prfb003_desc(chr500),prfbsite,prfbunit"/>
+      <var id="bs_field" value="prfasite,prfasite_desc(chr80),prfadocdt,prfadocno,prfa001,prfa002,prfa003,prfa004,prfa004_desc(chr80),prfa005,prfa005_desc(chr80),prfaacti" pk="prfadocno" order=""/>
+      <bs_reference field="prfasite_desc" ref_field="prfasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="prfa004_desc" ref_field="prfa004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="prfa005_desc" ref_field="prfa005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="aprt501" method="dialog">
+    <section id="input">
+      <input id="head" field="prfasite,prfadocdt,prfadocno,prfa001,prfa002,prfa003,prfaacti,prfal002,prfal003,prfa004,prfa005,prfaunit,prfastus"/>
+      <input id="body" page="1" field="prfbacti,prfb001,prfb002,prfb003,prfbsite,prfbunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="prfasite,prfadocdt,prfadocno,prfa001,prfa002,prfa003,prfaacti,prfal002,prfal003,prfa004,prfa005,prfaunit,prfastus,prfaownid,prfaowndp,prfacrtid,prfacrtdp,prfacrtdt,prfamodid,prfamoddt,prfacnfid,prfacnfdt"/>
+      <construct id="body" page="1" field="prfbacti,prfb001,prfb002,prfb003,prfbsite,prfbunit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="prfadocno"/>
+      <set id="head" type="no_entry" field="prfadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="prfasite">
+        <after>
+          <reference field="prfasite_desc" ref_field="prfa_t.prfasite" map_field="prfasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="prfasite_desc"/>
+      <column id="prfadocdt"/>
+      <column id="prfadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_prfadocno" state="c"/>
+      </column>
+      <column id="prfa001" type="S" default="I" def_scc="32"/>
+      <column id="prfa002">
+        <controlp form="q_prfc001" state="i"/>
+        <controlp form="q_prfa002" state="c"/>
+      </column>
+      <column id="prfa003"/>
+      <column id="prfaacti" type="S" default="Y"/>
+      <column id="prfal002"/>
+      <column id="prfal003"/>
+      <column id="prfa004">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="prfa004_desc" ref_field="prfa_t.prfa004" map_field="prfa004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prfa004_desc"/>
+      <column id="prfa005">
+        <after>
+          <check chkid="v_ooeg001_3" id="isExist"/>
+          <reference field="prfa005_desc" ref_field="prfa_t.prfa005" map_field="prfa005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="prfa005_desc"/>
+      <column id="prfaunit">
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="prfastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="prfaownid">
+        <after>
+          <reference field="prfaownid_desc" ref_field="prfa_t.prfaownid" map_field="prfaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prfaownid_desc"/>
+      <column id="prfaowndp">
+        <after>
+          <reference field="prfaowndp_desc" ref_field="prfa_t.prfaowndp" map_field="prfaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="prfaowndp_desc"/>
+      <column id="prfacrtid">
+        <after>
+          <reference field="prfacrtid_desc" ref_field="prfa_t.prfacrtid" map_field="prfacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prfacrtid_desc"/>
+      <column id="prfacrtdp">
+        <after>
+          <reference field="prfacrtdp_desc" ref_field="prfa_t.prfacrtdp" map_field="prfacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="prfacrtdp_desc"/>
+      <column id="prfacrtdt"/>
+      <column id="prfamodid">
+        <after>
+          <reference field="prfamodid_desc" ref_field="prfa_t.prfamodid" map_field="prfamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prfamodid_desc"/>
+      <column id="prfamoddt"/>
+      <column id="prfacnfid">
+        <after>
+          <reference field="prfacnfid_desc" ref_field="prfa_t.prfacnfid" map_field="prfacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prfacnfid_desc"/>
+      <column id="prfacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="prfbacti" type="S" default="Y"/>
+      <column id="prfb001">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prfb002" def_scc="6035"/>
+      <column id="prfb003">
+        <after/>
+      </column>
+      <column id="prfb003_desc"/>
+      <column id="prfbsite"/>
+      <column id="prfbunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="prfa_t" pk="prfadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT prfasite,&apos;&apos;,prfadocdt,prfadocno,prfa001,prfa002,prfa003,prfaacti,&apos;&apos;,&apos;&apos;,prfa004,&apos;&apos;,prfa005,&apos;&apos;,prfaunit,prfastus,prfaownid,&apos;&apos;,prfaowndp,&apos;&apos;,prfacrtid,&apos;&apos;,prfacrtdp,&apos;&apos;,prfacrtdt,prfamodid,&apos;&apos;,prfamoddt,prfacnfid,&apos;&apos;,prfacnfdt FROM prfa_t WHERE prfaent= ? AND prfadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT prfasite,&apos;&apos;,prfadocdt,prfadocno,prfa001,prfa002,prfa003,prfaacti,&apos;&apos;,&apos;&apos;,prfa004,&apos;&apos;,prfa005,&apos;&apos;,prfaunit,prfastus,prfaownid,&apos;&apos;,prfaowndp,&apos;&apos;,prfacrtid,&apos;&apos;,prfacrtdp,&apos;&apos;,prfacrtdt,prfamodid,&apos;&apos;,prfamoddt,prfacnfid,&apos;&apos;,prfacnfdt FROM prfa_t" order="prfadocno"/>
+      <sql id="append" type="lang" target="prfal_t.prfal002,prfal_t.prfal003" table="prfal_t" fk="prfadocno" pk="prfaldocno,prfal001" field="prfal002,prfal003"/>
+    </head>
+    <head id="pmaa_t" pk="pmaa001">
+      <sql id="forupd_sql" type="sql" query="SELECT  FROM pmaa_t WHERE pmaaent= ? AND pmaa001=? FOR UPDATE"/>
+    </head>
+    <body id="prfb_t" page="1" linked="" pk="prfb001,prfb002,prfb003" fk="prfbdocno">
+      <sql id="forupd_sql_detail" query="SELECT prfbacti,prfb001,prfb002,prfb003,&apos;&apos;,prfbsite,prfbunit FROM prfb_t WHERE prfbent=? AND prfbdocno=? AND prfb001=? AND prfb002=? AND prfb003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT prfbacti,prfb001,prfb002,prfb003,&apos;&apos;,prfbsite,prfbunit FROM prfb_t WHERE prfbent=? AND prfbdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

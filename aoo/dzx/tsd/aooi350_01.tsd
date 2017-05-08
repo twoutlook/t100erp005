@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi350_01" std_prog="aooi350_01" erpver="1.0" ver="1" module="AOO" booking="Y" class="I" template="F002_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="oofb_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail1_aooi350_01" src="s" insert="N" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護聯絡地址的子作業，完成後將子作業嵌入營運據點維護作業、員工維護作業、
+　　　　　　　　廠商維護作業、客戶維護作業...等維護作業的畫面中，方便USER以比較直覺的方式
+                來維護各聯絡對象的聯絡地址。
+作業功能：新增/修改/刪除/複製/匯出Excel/查詢/說明/離開
+作業類型：子作業
+輸入模式：單檔多欄模式F002_00
+作業資料來源(Detail)：oofb_t(聯絡地址檔)
+]]>
+  </all>
+  <field cite_std="N" name="oofb_t.oofb001" ver="1" src="s" column="oofb001" table="oofb_t" attribute="C819" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[key值欄位，用於抓取資料，在畫面檔上為隱藏欄位。
+]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb008" ver="1" src="s" column="oofb008" table="oofb_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="9" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[地址類型：
+   ●欄位控管：
+     資料欄位:[T:聯絡地址檔].[C:地址類型]
+     預設值:無
+     資料選項來源: 
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=9的資料,
+　　     　　　　　[T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:1.不允許空白
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb009" ver="1" src="s" column="oofb009" table="oofb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[地址應用分類：
+   ●欄位控管：
+     資料欄位:[T:聯絡地址檔].[C:地址應用分類]
+     預設值:無
+     資料選項來源:ACC1
+     校驗:輸入值必須存在于[T:應用分類碼檔(ACC)].[C:應用分類]='1'且為有效資料，否則報錯，返回舊值。
+          不存在報錯(aoo-00081)[該應用分類碼不存在]，資料無效報錯(aoo-00082)[該应用分类码無效]
+     帶值:無
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔(ACC)].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     傳入參數arg1：1
+     回值類型：查詢時多重回值，新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb010" ver="1" src="s" column="oofb010" table="oofb_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[主要聯絡地址：
+   ●欄位控管：
+     資料欄位:[T:聯絡地址檔].[C:主要聯絡地址]/可Display可Input
+     允許空白:No
+     預設值:勾選
+     選項組合:勾選為Y，未勾選為N
+     其他: 單身裡同一種[C:地址類型]裡只能有一筆資料的[C:主要聯絡地址]=Y。
+           例：單身有五筆資料，地址類型=聯絡地址的有三筆，地址類型=出貨地址的有兩筆。
+               三筆聯絡地址的其中一筆可設為主要聯絡地址；
+               兩筆出貨地址其中一筆可設為主要聯絡地址]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb011" ver="1" src="s" column="oofb011" table="oofb_t" attribute="C103" type="varchar2(80)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb012" ver="1" src="s" column="oofb012" table="oofb_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="q_oocg001" c_zoom="q_oocg001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[
+國家/地區：
+   ●欄位控管：
+     資料欄位:[T:聯絡地址檔].[C:國家/地區]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:國家地區檔].[C:國家地區編號]且為有效資料
+            若輸入值不存在，報錯信息(aoo-00013)[輸入資料不存在 國家地區資料檔 中！],若輸入值無效，報錯信息(aoo-00035)[輸入的資料無效！]
+     帶值:顯示國家地區說明
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：(q_oocg001)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:國家地區檔].[C:國家地區編號],[T:國家地區多語言檔].[C:說明]
+       回值類型：多重回值
+     2.新增/修改時：(q_oocg001)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:國家地區檔].[C:國家地區編號],[T:國家地區多語言檔].[C:說明]
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb013" ver="1" src="s" column="oofb013" table="oofb_t" attribute="C151" type="varchar2(12)" req="N" i_zoom="q_oocn002" c_zoom="q_oocn002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[
+郵政編號：
+   ●欄位控管：
+     資料欄位:[T:聯絡地址檔].[C:郵政編號]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:郵政編號檔].[C:郵政編號]且為有效資料
+           若輸入值不存在，報錯信息(aoo-00151)[輸入資料不存在于 郵政編號檔 中！],若輸入值無效，報錯信息(aoo-00152)[輸入的郵政編號無效]
+     帶值:抓取[T:郵政編號檔]的[C:國家地區編號]、[C:州省編號]、[C:縣市編號]、
+                              [C:行政區域編號]、[C:其它地址]
+          填入[C:國家/地區]、[C:州/省/直轄市]、[C:縣/市]、[C:行政區域]、[C:地址]
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：(q_oocn002)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:郵政編號檔].[C:國家地區編號],[T:郵政編號檔].[C:郵政編號],
+       　　　　　[T:郵政編號檔].[C:州省編號],[T:郵政編號檔].[C:縣市編號],
+       　　　　　[T:郵政編號檔].[C:行政區域編號],[T:郵政編號檔].[C:其它地址]
+       回值類型：多重回值
+     2.新增時：(q_oocn002)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:郵政編號檔].[C:國家地區編號],[T:郵政編號檔].[C:郵政編號],
+       　　　　　[T:郵政編號檔].[C:州省編號],[T:郵政編號檔].[C:縣市編號],
+       　　　　　[T:郵政編號檔].[C:行政區域編號],[T:郵政編號檔].[C:其它地址]
+       過濾條件：若[C:國家/地區]欄位有值的話，
+       　　　　　則抓取[T:郵政編號檔].[C:國家地區編號]=本畫面[C:國家/地區]欄位值
+       回值類型：單一回值，一併帶回[C:國家地區編號]、[C:郵政編號]、[C:州省編號]、
+　       　　　　　　　　　　　　　[C:縣市編號]、[C:行政區域編號]、[C:地址]等欄位值
+]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb014" ver="1" src="s" column="oofb014" table="oofb_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_ooci002" c_zoom="q_ooci002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[州/省/直轄市：
+   ●欄位控管：
+     資料欄位:[T:聯絡地址檔].[C:州/省/直轄市]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:州省檔].[C:州省編號]且為有效資料
+            若輸入值不存在，報錯信息(aoo-00014)[輸入資料不存在 州省資料檔 中！],若輸入值無效，報錯信息(aoo-00143)[此州省編號為無效資料]
+     帶值:顯示州省說明
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：(q_ooci002)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:州省檔].[C:州省編號],[T:州省多語言檔].[C:說明]
+       回值類型：多重回值
+     2.新增/修改時：(q_ooci002)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:州省檔].[C:州省編號],[T:州省多語言檔].[C:說明]
+       過濾條件：若[C:國家/地區]欄位有值的話，
+　　　　       　則抓取[T:州省檔].[C:國家編號]=本畫面[C:國家/地區]欄位值
+       回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb015" ver="1" src="s" column="oofb015" table="oofb_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_oock003" c_zoom="q_oock003" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[
+縣/市：
+   ●欄位控管：
+     資料欄位:[T:聯絡地址檔].[C:縣/市]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:縣市檔].[C:縣市編號]且為有效資料
+            若輸入值不存在，報錯信息(aoo-00015)[輸入資料不存在 縣市資料檔 中！],若輸入值無效，報錯信息(aoo-00036)[此縣市別為無效資料]
+     帶值:顯示縣市說明
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：(q_oock003)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:縣市檔].[C:縣市編號],[T:縣市多語言檔].[C:說明]
+       回值類型：多重回值
+     2.新增/修改時：(q_oock003)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:縣市檔].[C:縣市編號],[T:縣市多語言檔].[C:說明]
+       過濾條件：若[C:國家/地區]與[C:州/省/直轄市]欄位有值的話，
+　　　　       　則抓取[T:縣市檔].[C:國家編號]=本畫面[C:國家/地區]、
+　　　　　       　　　[T:縣市檔].[C:州省編號]=本畫面[C:州/省/直轄市]的欄位值
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb016" ver="1" src="s" column="oofb016" table="oofb_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_oocm004" c_zoom="q_oocm004" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[行政區域：
+   ●欄位控管：
+     資料欄位:[T:聯絡地址檔].[C:行政區域]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:行政區域檔].[C:行政區域編號]且為有效資料,
+            若輸入值不存在，報錯信息(aoo-00022)[輸入資料不存在行政地區檔],若輸入值無效，報錯信息(aoo-00144)[輸入的行政地區編號無效]
+     帶值:顯示行政區域說明
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：(q_oocm004)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:行政區域檔].[C:行政區域編號],[T:行政區域多語言檔].[C:說明]
+       回值類型：多重回值
+     2.新增/修改時：(q_oocm004)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:行政區域檔].[C:行政區域編號],[T:行政區域多語言檔].[C:說明]
+       過濾條件：若[C:國家/地區]、[C:州/省/直轄市]、[C:縣/市]欄位有值的話，
+　　　　       　則抓取[T:行政區域檔].[C:國家編號]=本畫面[C:國家/地區]、
+　　　　　　　　       [T:行政區域檔].[C:州省編號]=本畫面[C:州/省/直轄市]、
+       　　　　　　　　[T:行政區域檔].[C:縣市編號]=本畫面[C:縣/市]的欄位值
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb017" ver="1" src="s" column="oofb017" table="oofb_t" attribute="C152" type="varchar2(4000)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb018" ver="1" src="s" column="oofb018" table="oofb_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb019" ver="1" src="s" column="oofb019" table="oofb_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[簡要代碼：
+   ●欄位控管：
+     資料欄位:[T:聯絡地址檔].[C:簡要代碼]/可Display可Input
+     預設值:無
+     校驗:若有輸入值不可重複
+     帶值:無
+     計算或處理:無
+     其他說明:後續交易單據中可能會有個地址代碼的欄位，開窗或檢查來源就是簡要
+              代碼的資料，故本欄位並非必輸欄位，可一旦有輸入值，則輸入值不可
+              重複]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb020" ver="1" src="s" column="oofb020" table="oofb_t" attribute="C003" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb021" ver="1" src="s" column="oofb021" table="oofb_t" attribute="C003" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofb022" ver="1" src="s" column="oofb022" table="oofb_t" attribute="C002" type="" req="N" i_zoom="q_dbad001" c_zoom="q_dbad001" chk_ref="v_dbad001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收貨站點：
+(1)oofb022，可INPUT/可DISPLAY
+(2)當地址類型oofb008=3.送貨地址時，此欄位不可空白
+(3)輸入值應存在站點基本資料dbad_t中
+(4)開窗選取站點基本資料(dbad_t),顯示欄位(站點編號、站點簡稱、片區編號、片區簡稱、預設路線編號、路線簡稱)
+(5)維護完此欄位資料後，應自動帶出站點簡稱
+]]>
+  </field>
+  <field cite_std="N" name="oofb_t.oofbstus" ver="1" src="s" column="oofbstus" table="oofb_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="oofb009_desc" src="s" depend_field="oofb_t.oofb009" correspon_key="&apos;1&apos;,oofb009" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="oofb012_desc" src="s" depend_field="oofb_t.oofb012" correspon_key="oofbent,oofb012" ref_table="oocgl_t" ref_fk="oocglent,oocgl001" ref_dlang="oocgl002" ref_rtn="oocgl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oofb014_desc" src="s" depend_field="oofb_t.oofb014" correspon_key="oofbent,oofb012,oofb014" ref_table="oocil_t" ref_fk="oocilent,oocil001,oocil002" ref_dlang="oocil003" ref_rtn="oocil004" status=""/>
+    <rfield cite_std="N" ver="1" name="oofb015_desc" src="s" depend_field="oofb_t.oofb015" correspon_key="oofbent,oofb012,oofb014,oofb015" ref_table="oockl_t" ref_fk="oocklent,oockl001,oockl002,oockl003" ref_dlang="oockl004" ref_rtn="oockl005" status=""/>
+    <rfield cite_std="N" ver="1" name="oofb016_desc" src="s" depend_field="oofb_t.oofb016" correspon_key="oofbent,oofb012,oofb014,oofb015,oofb016" ref_table="oocml_t" ref_fk="oocmlent,oocml001,oocml002,oocml003,oocml004" ref_dlang="oocml005" ref_rtn="oocml006" status=""/>
+    <rfield cite_std="N" ver="1" name="oofb022_desc" src="s" depend_field="oofb_t.oofb022" correspon_key="oofb022" ref_table="dbadl_t" ref_fk="dbadl001" ref_dlang="dbadl002" ref_rtn="dbadl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofb022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb_t.oofbstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="lbl_oofbstus" text="有效" lstr=""/>
+    <sfield name="lbl_oofb001" text="聯絡地址識別碼" lstr=""/>
+    <sfield name="lbl_oofb008" text="地址類型" lstr=""/>
+    <sfield name="lbl_oofb009" text="地址應用分類" lstr=""/>
+    <sfield name="lbl_oocql004x" text="地址應用分類碼說明" lstr=""/>
+    <sfield name="lbl_oofb010" text="主要聯絡地址" lstr=""/>
+    <sfield name="lbl_oofb019" text="簡要代碼" lstr=""/>
+    <sfield name="lbl_oofb011" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofb022" text="送貨站點" lstr=""/>
+    <sfield name="lbl_dbadl003" text="站點簡稱" lstr=""/>
+    <sfield name="lbl_oofb012" text="國家/地區" lstr=""/>
+    <sfield name="lbl_oocgl003" text="國家/地區說明" lstr=""/>
+    <sfield name="lbl_oofb013" text="郵政編號" lstr=""/>
+    <sfield name="lbl_oofb014" text="州/省/直轄市" lstr=""/>
+    <sfield name="lbl_oocil004" text="州/省/直轄市說明" lstr=""/>
+    <sfield name="lbl_oofb015" text="縣/市" lstr=""/>
+    <sfield name="lbl_oockl005" text="說明" lstr=""/>
+    <sfield name="lbl_oofb016" text="行政區域" lstr=""/>
+    <sfield name="lbl_oocml006" text="行政地區說明" lstr=""/>
+    <sfield name="lbl_oofb017" text="地址" lstr=""/>
+    <sfield name="lbl_oofb020" text="經度" lstr=""/>
+    <sfield name="lbl_oofb021" text="維度" lstr=""/>
+    <sfield name="lbl_oofb018" text="失效日期" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

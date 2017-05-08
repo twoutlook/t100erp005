@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmi530" module="afm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="03080" crtdt="2015-04-28 10:19:39" modid="03080" moddt="2015-04-29 16:00:20" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="投資費用類型設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmmc001,fmmcl003(chr500),fmmcstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="fmmc001,fmmcownid,fmmcownid_desc(chr500),fmmcowndp,fmmcowndp_desc(chr500),fmmccrtid,fmmccrtid_desc(chr500),fmmccrtdp,fmmccrtdp_desc(chr500),fmmccrtdt,fmmcmodid,fmmcmodid_desc(chr500),fmmcmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmi530" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fmmc001,fmmcl003,fmmcstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="fmmc001,fmmcl003,fmmcstus"/>
+      <construct id="body" page="2" field="fmmcownid,fmmcowndp,fmmccrtid,fmmccrtdp,fmmccrtdt,fmmcmodid,fmmcmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmmc001"/>
+      <column id="fmmcl003"/>
+      <column id="fmmcstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="fmmcownid">
+        <after>
+          <reference field="fmmcownid_desc" ref_field="fmmc_t.fmmcownid" map_field="fmmcownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmcownid_desc"/>
+      <column id="fmmcowndp">
+        <after>
+          <reference field="fmmcowndp_desc" ref_field="fmmc_t.fmmcowndp" map_field="fmmcowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmmcowndp_desc"/>
+      <column id="fmmccrtid">
+        <after>
+          <reference field="fmmccrtid_desc" ref_field="fmmc_t.fmmccrtid" map_field="fmmccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmccrtid_desc"/>
+      <column id="fmmccrtdp">
+        <after>
+          <reference field="fmmccrtdp_desc" ref_field="fmmc_t.fmmccrtdp" map_field="fmmccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmmccrtdp_desc"/>
+      <column id="fmmccrtdt"/>
+      <column id="fmmcmodid">
+        <after>
+          <reference field="fmmcmodid_desc" ref_field="fmmc_t.fmmcmodid" map_field="fmmcmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmcmodid_desc"/>
+      <column id="fmmcmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="fmmc_t" page="1,2" linked="" pk="fmmc001">
+      <sql id="forupd_sql_detail" query="SELECT fmmc001,&apos;&apos;,fmmcstus,&apos;&apos;,fmmcownid,&apos;&apos;,fmmcowndp,&apos;&apos;,fmmccrtid,&apos;&apos;,fmmccrtdp,&apos;&apos;,fmmccrtdt,fmmcmodid,&apos;&apos;,fmmcmoddt FROM fmmc_t WHERE fmmcent=? AND fmmc001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmmc001,&apos;&apos;,fmmcstus,&apos;&apos;,fmmcownid,&apos;&apos;,fmmcowndp,&apos;&apos;,fmmccrtid,&apos;&apos;,fmmccrtdp,&apos;&apos;,fmmccrtdt,fmmcmodid,&apos;&apos;,fmmcmoddt FROM fmmc_t WHERE fmmcent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="fmmcl003" table="fmmcl_t" fk="fmmc001" pk="fmmcl001,fmmcl002" field="fmmcl003"/>
+    </body>
+  </dataset>
+</assembly>
+

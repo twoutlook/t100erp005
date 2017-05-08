@@ -1,0 +1,1088 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="awsp600.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-05-03 17:17:59), PR版次:0001(2016-04-28 16:26:14)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000025
+#+ Filename...: awsp600
+#+ Description: 料件主檔批次作業
+#+ Creator....: 07556(2016-03-21 18:03:52)
+#+ Modifier...: 07556 -SD/PR- 07556
+ 
+{</section>}
+ 
+{<section id="awsp600.global" >}
+#應用 p01 樣板自動產生(Version:18)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       imaaent LIKE type_t.num5, 
+   imaa001 LIKE type_t.chr500, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="awsp600.main" >}
+MAIN
+   #add-point:main段define (客製用)
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aws","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call
+      
+      #end add-point
+      CALL awsp600_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_awsp600 WITH FORM cl_ap_formpath("aws",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL awsp600_init()
+ 
+      #進入選單 Menu (="N")
+      CALL awsp600_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_awsp600
+   END IF
+ 
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="awsp600.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION awsp600_init()
+ 
+   #add-point:init段define (客製用)
+   
+   #end add-point
+   #add-point:ui_dialog段define 
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="awsp600.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION awsp600_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用)
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON imaaent,imaa001
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaaent
+            #add-point:BEFORE FIELD imaaent name="construct.b.imaaent"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaaent
+            
+            #add-point:AFTER FIELD imaaent name="construct.a.imaaent"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imaaent
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaaent
+            #add-point:ON ACTION controlp INFIELD imaaent name="construct.c.imaaent"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            #INITIALIZE g_qryparam.* TO NULL
+            #LET g_qryparam.state = 'c' 
+            #LET g_qryparam.reqry = FALSE
+            #CALL q_wseg001()                           #呼叫開窗
+            #DISPLAY g_qryparam.return1 TO imaaent  #顯示到畫面上
+            #NEXT FIELD imaaent                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.imaa001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaa001
+            #add-point:ON ACTION controlp INFIELD imaa001 name="construct.c.imaa001"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa001  #顯示到畫面上
+            NEXT FIELD imaa001                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaa001
+            #add-point:BEFORE FIELD imaa001 name="construct.b.imaa001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaa001
+            
+            #add-point:AFTER FIELD imaa001 name="construct.a.imaa001"
+            
+            #END add-point
+            
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL awsp600_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL awsp600_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL awsp600_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = awsp600_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="awsp600.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION awsp600_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用)
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="awsp600.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION awsp600_process(ls_js)
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define 
+   DEFINE ls_wseh_sql   STRING
+   DEFINE ls_ins_sql    STRING
+   DEFINE ls_upd_sql    STRING
+   DEFINE ls_middb      STRING
+   DEFINE ls_s_time       LIKE type_t.chr20
+   DEFINE ls_e_time       LIKE type_t.chr20
+   DEFINE ls_temp_sql   STRING
+   DEFINE ls_data_sql   STRING
+   DEFINE ls_err_sql    STRING
+   DEFINE ls_key        STRING
+   DEFINE l_count       LIKE type_t.num10
+   DEFINE ls_imaaent    LIKE imaa_t.imaaent   
+   DEFINE ls_imaa001    LIKE imaa_t.imaa001   
+   DEFINE ls_imaa002    LIKE imaa_t.imaa002   
+   DEFINE ls_imaa003    LIKE imaa_t.imaa003   
+   DEFINE ls_imaa004    LIKE imaa_t.imaa004   
+   DEFINE ls_imaa005    LIKE imaa_t.imaa005   
+   DEFINE ls_imaa006    LIKE imaa_t.imaa006   
+   DEFINE ls_imaa009    LIKE imaa_t.imaa009   
+   DEFINE ls_imaa010    LIKE imaa_t.imaa010   
+   DEFINE ls_imaa011    LIKE imaa_t.imaa011   
+   DEFINE ls_imaa012    LIKE imaa_t.imaa012   
+   DEFINE ls_imaa013    LIKE imaa_t.imaa013   
+   DEFINE ls_imaa014    LIKE imaa_t.imaa014   
+   DEFINE ls_imaa016    LIKE imaa_t.imaa016   
+   DEFINE ls_imaa017    LIKE imaa_t.imaa017   
+   DEFINE ls_imaa018    LIKE imaa_t.imaa018   
+   DEFINE ls_imaa019    LIKE imaa_t.imaa019   
+   DEFINE ls_imaa020    LIKE imaa_t.imaa020   
+   DEFINE ls_imaa021    LIKE imaa_t.imaa021   
+   DEFINE ls_imaa022    LIKE imaa_t.imaa022   
+   DEFINE ls_imaa023    LIKE imaa_t.imaa023   
+   DEFINE ls_imaa024    LIKE imaa_t.imaa024   
+   DEFINE ls_imaa025    LIKE imaa_t.imaa025   
+   DEFINE ls_imaa026    LIKE imaa_t.imaa026   
+   DEFINE ls_imaa027    LIKE imaa_t.imaa027   
+   DEFINE ls_imaa028    LIKE imaa_t.imaa028   
+   DEFINE ls_imaa029    LIKE imaa_t.imaa029   
+   DEFINE ls_imaa030    LIKE imaa_t.imaa030   
+   DEFINE ls_imaa031    LIKE imaa_t.imaa031   
+   DEFINE ls_imaa032    LIKE imaa_t.imaa032   
+   DEFINE ls_imaa033    LIKE imaa_t.imaa033   
+   DEFINE ls_imaa034    LIKE imaa_t.imaa034   
+   DEFINE ls_imaa035    LIKE imaa_t.imaa035   
+   DEFINE ls_imaa036    LIKE imaa_t.imaa036   
+   DEFINE ls_imaa037    LIKE imaa_t.imaa037   
+   DEFINE ls_imaa038    LIKE imaa_t.imaa038   
+   DEFINE ls_imaa039    LIKE imaa_t.imaa039   
+   DEFINE ls_imaa040    LIKE imaa_t.imaa040   
+   DEFINE ls_imaa041    LIKE imaa_t.imaa041   
+   DEFINE ls_imaa042    LIKE imaa_t.imaa042   
+   DEFINE ls_imaa043    LIKE imaa_t.imaa043   
+   DEFINE ls_imaa044    LIKE imaa_t.imaa044   
+   DEFINE ls_imaa045    LIKE imaa_t.imaa045   
+   DEFINE ls_imaa100    LIKE imaa_t.imaa100   
+   DEFINE ls_imaa101    LIKE imaa_t.imaa101   
+   DEFINE ls_imaa102    LIKE imaa_t.imaa102   
+   DEFINE ls_imaa103    LIKE imaa_t.imaa103   
+   DEFINE ls_imaa104    LIKE imaa_t.imaa104   
+   DEFINE ls_imaa105    LIKE imaa_t.imaa105   
+   DEFINE ls_imaa106    LIKE imaa_t.imaa106   
+   DEFINE ls_imaa107    LIKE imaa_t.imaa107   
+   DEFINE ls_imaa108    LIKE imaa_t.imaa108   
+   DEFINE ls_imaa109    LIKE imaa_t.imaa109   
+   DEFINE ls_imaa110    LIKE imaa_t.imaa110   
+   DEFINE ls_imaa111    LIKE imaa_t.imaa111   
+   DEFINE ls_imaa112    LIKE imaa_t.imaa112   
+   DEFINE ls_imaa113    LIKE imaa_t.imaa113   
+   DEFINE ls_imaa114    LIKE imaa_t.imaa114   
+   DEFINE ls_imaa115    LIKE imaa_t.imaa115   
+   DEFINE ls_imaa116    LIKE imaa_t.imaa116   
+   DEFINE ls_imaa117    LIKE imaa_t.imaa117   
+   DEFINE ls_imaa118    LIKE imaa_t.imaa118   
+   DEFINE ls_imaa119    LIKE imaa_t.imaa119   
+   DEFINE ls_imaa120    LIKE imaa_t.imaa120   
+   DEFINE ls_imaa121    LIKE imaa_t.imaa121   
+   DEFINE ls_imaa122    LIKE imaa_t.imaa122   
+   DEFINE ls_imaa123    LIKE imaa_t.imaa123   
+   DEFINE ls_imaa124    LIKE imaa_t.imaa124   
+   DEFINE ls_imaa125    LIKE imaa_t.imaa125   
+   DEFINE ls_imaa126    LIKE imaa_t.imaa126   
+   DEFINE ls_imaa127    LIKE imaa_t.imaa127   
+   DEFINE ls_imaa128    LIKE imaa_t.imaa128   
+   DEFINE ls_imaa129    LIKE imaa_t.imaa129   
+   DEFINE ls_imaa130    LIKE imaa_t.imaa130   
+   DEFINE ls_imaa131    LIKE imaa_t.imaa131   
+   DEFINE ls_imaa132    LIKE imaa_t.imaa132   
+   DEFINE ls_imaa133    LIKE imaa_t.imaa133   
+   DEFINE ls_imaa134    LIKE imaa_t.imaa134   
+   DEFINE ls_imaa135    LIKE imaa_t.imaa135   
+   DEFINE ls_imaa136    LIKE imaa_t.imaa136   
+   DEFINE ls_imaa137    LIKE imaa_t.imaa137   
+   DEFINE ls_imaa138    LIKE imaa_t.imaa138   
+   DEFINE ls_imaa139    LIKE imaa_t.imaa139   
+   DEFINE ls_imaa140    LIKE imaa_t.imaa140   
+   DEFINE ls_imaa141    LIKE imaa_t.imaa141   
+   DEFINE ls_imaa142    LIKE imaa_t.imaa142   
+   DEFINE ls_imaa143    LIKE imaa_t.imaa143   
+   DEFINE ls_imaa144    LIKE imaa_t.imaa144   
+   DEFINE ls_imaa145    LIKE imaa_t.imaa145   
+   DEFINE ls_imaa146    LIKE imaa_t.imaa146   
+   DEFINE ls_imaastus   LIKE imaa_t.imaastus    
+   DEFINE ls_imaaownid  LIKE imaa_t.imaaownid     
+   DEFINE ls_imaaowndp  LIKE imaa_t.imaaowndp     
+   DEFINE ls_imaacrtid  LIKE imaa_t.imaacrtid     
+   DEFINE ls_imaacrtdp  LIKE imaa_t.imaacrtdp     
+   DEFINE ls_imaacrtdt  LIKE imaa_t.imaacrtdt     
+   DEFINE ls_imaamodid  LIKE imaa_t.imaamodid     
+   DEFINE ls_imaamoddt  LIKE imaa_t.imaamoddt     
+   DEFINE ls_imaacnfid  LIKE imaa_t.imaacnfid     
+   DEFINE ls_imaacnfdt  LIKE imaa_t.imaacnfdt     
+   DEFINE ls_imaaud001  LIKE imaa_t.imaaud001     
+   DEFINE ls_imaaud002  LIKE imaa_t.imaaud002     
+   DEFINE ls_imaaud003  LIKE imaa_t.imaaud003     
+   DEFINE ls_imaaud004  LIKE imaa_t.imaaud004     
+   DEFINE ls_imaaud005  LIKE imaa_t.imaaud005     
+   DEFINE ls_imaaud006  LIKE imaa_t.imaaud006     
+   DEFINE ls_imaaud007  LIKE imaa_t.imaaud007     
+   DEFINE ls_imaaud008  LIKE imaa_t.imaaud008     
+   DEFINE ls_imaaud009  LIKE imaa_t.imaaud009     
+   DEFINE ls_imaaud010  LIKE imaa_t.imaaud010     
+   DEFINE ls_imaaud011  LIKE imaa_t.imaaud011     
+   DEFINE ls_imaaud012  LIKE imaa_t.imaaud012     
+   DEFINE ls_imaaud013  LIKE imaa_t.imaaud013     
+   DEFINE ls_imaaud014  LIKE imaa_t.imaaud014     
+   DEFINE ls_imaaud015  LIKE imaa_t.imaaud015     
+   DEFINE ls_imaaud016  LIKE imaa_t.imaaud016     
+   DEFINE ls_imaaud017  LIKE imaa_t.imaaud017     
+   DEFINE ls_imaaud018  LIKE imaa_t.imaaud018     
+   DEFINE ls_imaaud019  LIKE imaa_t.imaaud019     
+   DEFINE ls_imaaud020  LIKE imaa_t.imaaud020     
+   DEFINE ls_imaaud021  LIKE imaa_t.imaaud021     
+   DEFINE ls_imaaud022  LIKE imaa_t.imaaud022     
+   DEFINE ls_imaaud023  LIKE imaa_t.imaaud023     
+   DEFINE ls_imaaud024  LIKE imaa_t.imaaud024     
+   DEFINE ls_imaaud025  LIKE imaa_t.imaaud025     
+   DEFINE ls_imaaud026  LIKE imaa_t.imaaud026     
+   DEFINE ls_imaaud027  LIKE imaa_t.imaaud027     
+   DEFINE ls_imaaud028  LIKE imaa_t.imaaud028     
+   DEFINE ls_imaaud029  LIKE imaa_t.imaaud029     
+   DEFINE ls_imaaud030  LIKE imaa_t.imaaud030     
+   DEFINE ls_imaa147    LIKE imaa_t.imaa147   
+   DEFINE ls_imaa148    LIKE imaa_t.imaa148   
+   DEFINE ls_imaa149    LIKE imaa_t.imaa149      
+   DEFINE ls_trantime   LIKE type_t.chr20
+   DEFINE ls_status     LIKE type_t.chr10
+   DEFINE ls_erpold_stus LIKE type_t.chr10
+   DEFINE ls_tran_status LIKE type_t.chr2
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理
+ 
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE awsp600_process_cs CURSOR FROM ls_sql
+#  FOREACH awsp600_process_cs INTO
+   #add-point:process段process
+   LET ls_middb = cl_eai_get_middb(g_dbs)
+   SELECT TO_CHAR(SYSDATE-1,'YYYYMMDDHH24MISS')||SUBSTR(TO_CHAR(sysdate,'SSSSS'),1,3) INTO ls_s_time FROM dual
+   SELECT TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')||SUBSTR(TO_CHAR(sysdate,'SSSSS'),1,3) INTO ls_e_time FROM dual
+   #DISPLAY 'g_master.wc:',lc_param.wc
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   
+   
+   #建立TEMP TABLE
+   DROP TABLE imaa_temp
+   LET ls_temp_sql = "CREATE GLOBAL TEMPORARY TABLE imaa_temp ",
+                     "AS SELECT * FROM ",ls_middb CLIPPED,".tra_imaa_t WHERE 1 = 0"
+   EXECUTE IMMEDIATE ls_temp_sql
+   
+   #把這次要轉的資料依KEY值取唯一先抓到TEMP TABLE
+   LET ls_sql = "INSERT INTO imaa_temp ",  
+               "SELECT tra.imaaent,tra.imaa001,tra.imaamodid,tra.status,tra.erpold_stus,tra.tran_status,tra.tran_time,tra.imaa004 ",
+               "FROM ",ls_middb CLIPPED,".tra_imaa_t tra, ", 
+               "(SELECT imaaent,imaa001,max(tran_time) tran_time ",
+               "FROM ",ls_middb CLIPPED,".tra_imaa_t a ",
+               "WHERE NOT EXISTS (",
+               	 "SELECT 'x' ",
+               	 " FROM ",ls_middb CLIPPED,".m_wseh_t ", 
+               	 "WHERE wseh001 = 'tra_imaa_t'", 
+               	 "   AND wseh002 = a.tran_time", 
+               	 "   AND wseh004 = 'awsp600'",
+               	 "   AND wseh003 = trim(a.imaaent)||'|'||trim(a.imaa001))",
+               " AND a.tran_time < '",ls_e_time CLIPPED,"'",
+               " AND a.tran_time > '",ls_s_time CLIPPED,"'",
+               " AND ",lc_param.wc,     
+               " GROUP BY imaaent,imaa001 ) d_tra",
+               " WHERE tra.imaaent = d_tra.imaaent",
+               " AND tra.imaa001 = d_tra.imaa001",
+               " AND tra.tran_time = d_tra.tran_time"
+             #DISPLAY 'ls_sql:',ls_sql  
+   EXECUTE IMMEDIATE ls_sql            
+   
+   #select count(*) into l_count1 from imaa_temp
+   #DISPLAY 'l_count1:',l_count1
+   
+   #組出判斷all_imaa_t是否有同樣待轉資料的語法
+   LET ls_sql = "SELECT count(1) ",  
+               "FROM ",ls_middb CLIPPED,".all_imaa_t a ",
+               "WHERE NOT EXISTS ( ",
+                      "SELECT 'x'", 
+                      "  FROM ",ls_middb CLIPPED,".m_wsee_t", 
+                      " WHERE wsee002 = a.tran_time", 
+                      "   AND wsee003 = trim(a.imaaent)||'|'||trim(a.imaa001))",
+               "  AND a.imaaent = ?",
+               "  AND a.imaa001 = ?"   
+      #DISPLAY 'ls_count_sql:',ls_sql          
+   PREPARE sql_chk_count FROM ls_sql
+
+   #把資料先抓出來
+   LET ls_data_sql ="SELECT ",
+   "imaa_t.imaa002,imaa_t.imaa003,tra.imaa004,imaa_t.imaa005,imaa_t.imaa006,",  #tra.imaa004；'A'=>產品,'M'=>物料
+   "imaa_t.imaa009,imaa_t.imaa010,imaa_t.imaa011,imaa_t.imaa012,imaa_t.imaa013,",
+   "imaa_t.imaa014,imaa_t.imaa016,imaa_t.imaa017,imaa_t.imaa018,imaa_t.imaa019,",
+   "imaa_t.imaa020,imaa_t.imaa021,imaa_t.imaa022,imaa_t.imaa023,imaa_t.imaa024,",
+   "imaa_t.imaa025,imaa_t.imaa026,imaa_t.imaa027,imaa_t.imaa028,imaa_t.imaa029,",
+   "imaa_t.imaa030,imaa_t.imaa031,imaa_t.imaa032,imaa_t.imaa033,imaa_t.imaa034,",
+   "imaa_t.imaa035,imaa_t.imaa036,imaa_t.imaa037,imaa_t.imaa038,imaa_t.imaa039,",
+   "imaa_t.imaa040,imaa_t.imaa041,imaa_t.imaa042,imaa_t.imaa043,imaa_t.imaa044,",
+   "imaa_t.imaa045,imaa_t.imaa100,imaa_t.imaa101,imaa_t.imaa102,imaa_t.imaa103,",
+   "imaa_t.imaa104,imaa_t.imaa105,imaa_t.imaa106,imaa_t.imaa107,imaa_t.imaa108,",
+   "imaa_t.imaa109,imaa_t.imaa110,imaa_t.imaa111,imaa_t.imaa112,imaa_t.imaa113,",
+   "imaa_t.imaa114,imaa_t.imaa115,imaa_t.imaa116,imaa_t.imaa117,imaa_t.imaa118,",
+   "imaa_t.imaa119,imaa_t.imaa120,imaa_t.imaa121,imaa_t.imaa122,imaa_t.imaa123,",
+   "imaa_t.imaa124,imaa_t.imaa125,imaa_t.imaa126,imaa_t.imaa127,imaa_t.imaa128,",
+   "imaa_t.imaa129,imaa_t.imaa130,imaa_t.imaa131,imaa_t.imaa132,imaa_t.imaa133,",
+   "imaa_t.imaa134,imaa_t.imaa135,imaa_t.imaa136,imaa_t.imaa137,imaa_t.imaa138,",
+   "imaa_t.imaa139,imaa_t.imaa140,imaa_t.imaa141,imaa_t.imaa142,imaa_t.imaa143,",
+   "imaa_t.imaa144,imaa_t.imaa145,imaa_t.imaa146,",
+   "imaa_t.imaastus,imaa_t.imaaownid,imaa_t.imaaowndp,imaa_t.imaacrtid,imaa_t.imaacrtdp,",
+   "imaa_t.imaacrtdt,imaa_t.imaamodid,imaa_t.imaamoddt,imaa_t.imaacnfid,imaa_t.imaacnfdt,",
+   "imaa_t.imaaud001,imaa_t.imaaud002,imaa_t.imaaud003,imaa_t.imaaud004,imaa_t.imaaud005,",
+   "imaa_t.imaaud006,imaa_t.imaaud007,imaa_t.imaaud008,imaa_t.imaaud009,imaa_t.imaaud010,",
+   "imaa_t.imaaud011,imaa_t.imaaud012,imaa_t.imaaud013,imaa_t.imaaud014,imaa_t.imaaud015,",
+   "imaa_t.imaaud016,imaa_t.imaaud017,imaa_t.imaaud018,imaa_t.imaaud019,imaa_t.imaaud020,",
+   "imaa_t.imaaud021,imaa_t.imaaud022,imaa_t.imaaud023,imaa_t.imaaud024,imaa_t.imaaud025,",
+   "imaa_t.imaaud026,imaa_t.imaaud027,imaa_t.imaaud028,imaa_t.imaaud029,imaa_t.imaaud030,",
+   "imaa_t.imaa147,imaa_t.imaa148,imaa_t.imaa149,",
+   "tra.status,tra.erpold_stus,tra.tran_status ",
+   "FROM imaa_temp tra LEFT OUTER JOIN imaa_t ON ",
+   " imaa_t.imaaent = tra.imaaent",
+   " AND imaa_t.imaa001 = tra.imaa001",
+   " WHERE tra.imaaent = ?",
+   " AND tra.imaa001 = ?",
+   " AND tra.tran_time = ?"
+   #DISPLAY 'ls_data_sql:',ls_data_sql
+   PREPARE sql_select_data FROM ls_data_sql
+   
+   #組出最後INSERT all_imaa_t資料的語法 
+   LET ls_ins_sql = "INSERT INTO ",ls_middb CLIPPED,".all_imaa_t(imaaent,imaa001,",
+   "imaa002,imaa003,imaa004,imaa005,imaa006,",
+   "imaa009,imaa010,imaa011,imaa012,imaa013,",
+   "imaa014,imaa016,imaa017,imaa018,imaa019,",
+   "imaa020,imaa021,imaa022,imaa023,imaa024,",
+   "imaa025,imaa026,imaa027,imaa028,imaa029,",
+   "imaa030,imaa031,imaa032,imaa033,imaa034,",
+   "imaa035,imaa036,imaa037,imaa038,imaa039,",
+   "imaa040,imaa041,imaa042,imaa043,imaa044,",
+   "imaa045,imaa100,imaa101,imaa102,imaa103,",
+   "imaa104,imaa105,imaa106,imaa107,imaa108,",
+   "imaa109,imaa110,imaa111,imaa112,imaa113,",
+   "imaa114,imaa115,imaa116,imaa117,imaa118,",
+   "imaa119,imaa120,imaa121,imaa122,imaa123,",
+   "imaa124,imaa125,imaa126,imaa127,imaa128,",
+   "imaa129,imaa130,imaa131,imaa132,imaa133,",
+   "imaa134,imaa135,imaa136,imaa137,imaa138,",
+   "imaa139,imaa140,imaa141,imaa142,imaa143,",
+   "imaa144,imaa145,imaa146,",
+   "imaastus,imaaownid,imaaowndp,imaacrtid,imaacrtdp,",
+   "imaacrtdt,imaamodid,imaamoddt,imaacnfid,imaacnfdt,",
+   "imaaud001,imaaud002,imaaud003,imaaud004,imaaud005,",
+   "imaaud006,imaaud007,imaaud008,imaaud009,imaaud010,",
+   "imaaud011,imaaud012,imaaud013,imaaud014,imaaud015,",
+   "imaaud016,imaaud017,imaaud018,imaaud019,imaaud020,",
+   "imaaud021,imaaud022,imaaud023,imaaud024,imaaud025,",
+   "imaaud026,imaaud027,imaaud028,imaaud029,imaaud030,",
+   "imaa147,imaa148,imaa149,",   
+   "status,erpold_stus,tran_status,tran_time) ",
+   "VALUES(?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,?,?,",
+   "?,?,?,",
+   "?,?,?,?)"
+   #DISPLAY 'ls_ins_sql:',ls_ins_sql
+   PREPARE sql_insert_data FROM ls_ins_sql
+   
+   #組出最後UPDATE all_imaa_t資料的語法         
+   LET ls_upd_sql = "UPDATE ",ls_middb CLIPPED,".all_imaa_t",  
+                    " SET imaa002 = ?,imaa003 = ?,imaa004 = ?,imaa005 = ?,imaa006 = ?,",
+                    " imaa009 = ?,imaa010 = ?,imaa011 = ?,imaa012 = ?,imaa013 = ?,",
+                    " imaa014 = ?,imaa016 = ?,imaa017 = ?,imaa018 = ?,imaa019 = ?,",
+                    " imaa020 = ?,imaa021 = ?,imaa022 = ?,imaa023 = ?,imaa024 = ?,",
+                    " imaa025 = ?,imaa026 = ?,imaa027 = ?,imaa028 = ?,imaa029 = ?,",
+                    " imaa030 = ?,imaa031 = ?,imaa032 = ?,imaa033 = ?,imaa034 = ?,",
+                    " imaa035 = ?,imaa036 = ?,imaa037 = ?,imaa038 = ?,imaa039 = ?,",
+                    " imaa040 = ?,imaa041 = ?,imaa042 = ?,imaa043 = ?,imaa044 = ?,",
+                    " imaa045 = ?,imaa100 = ?,imaa101 = ?,imaa102 = ?,imaa103 = ?,",
+                    " imaa104 = ?,imaa105 = ?,imaa106 = ?,imaa107 = ?,imaa108 = ?,",
+                    " imaa109 = ?,imaa110 = ?,imaa111 = ?,imaa112 = ?,imaa113 = ?,",
+                    " imaa114 = ?,imaa115 = ?,imaa116 = ?,imaa117 = ?,imaa118 = ?,",
+                    " imaa119 = ?,imaa120 = ?,imaa121 = ?,imaa122 = ?,imaa123 = ?,",
+                    " imaa124 = ?,imaa125 = ?,imaa126 = ?,imaa127 = ?,imaa128 = ?,",
+                    " imaa129 = ?,imaa130 = ?,imaa131 = ?,imaa132 = ?,imaa133 = ?,",
+                    " imaa134 = ?,imaa135 = ?,imaa136 = ?,imaa137 = ?,imaa138 = ?,",
+                    " imaa139 = ?,imaa140 = ?,imaa141 = ?,imaa142 = ?,imaa143 = ?,",
+                    " imaa144 = ?,imaa145 = ?,imaa146 = ?,",
+                    " imaastus = ?,imaamodid = ?,imaamoddt = ?,imaacnfid = ?,imaacnfdt = ?,",
+                    " imaaud001 = ?,imaaud002 = ?,imaaud003 = ?,imaaud004 = ?,imaaud005 = ?,",
+                    " imaaud006 = ?,imaaud007 = ?,imaaud008 = ?,imaaud009 = ?,imaaud010 = ?,",
+                    " imaaud011 = ?,imaaud012 = ?,imaaud013 = ?,imaaud014 = ?,imaaud015 = ?,",
+                    " imaaud016 = ?,imaaud017 = ?,imaaud018 = ?,imaaud019 = ?,imaaud020 = ?,",
+                    " imaaud021 = ?,imaaud022 = ?,imaaud023 = ?,imaaud024 = ?,imaaud025 = ?,",
+                    " imaaud026 = ?,imaaud027 = ?,imaaud028 = ?,imaaud029 = ?,imaaud030 = ?,",
+                    " imaa147 = ?,imaa148 = ?,imaa149 = ?,",  
+                    "      status = ?,",
+                    " erpold_stus = ?,",
+                    " tran_status = ? ",
+                    " WHERE imaaent = ?",
+                    " AND imaa001 = ?",
+                    " AND tran_time > ?",
+                    " AND tran_time < ?"    
+                    
+   #DISPLAY 'ls_upd_sql:',ls_upd_sql
+   PREPARE sql_update_data FROM ls_upd_sql   
+
+   #把TEMP TABLE資料抓出來   
+   LET ls_sql = "SELECT imaaent,imaa001,tran_time FROM imaa_temp"
+   PREPARE sql_select_temptb FROM ls_sql   
+   DECLARE sql_fetch_data CURSOR WITH HOLD FOR sql_select_temptb  
+   OPEN sql_fetch_data
+   FOREACH sql_fetch_data INTO ls_imaaent,ls_imaa001,ls_trantime
+   
+           #DISPLAY 'chk_count:',ls_imaaent,"|",ls_imaa001,"|",ls_trantime               
+           #判斷all_imaa_t是否有同樣待轉資料
+           EXECUTE sql_chk_count USING ls_imaaent,ls_imaa001 INTO l_count
+           
+           #先把資料抓出來
+           EXECUTE sql_select_data USING ls_imaaent,ls_imaa001,ls_trantime
+              INTO ls_imaa002,ls_imaa003,ls_imaa004,ls_imaa005,ls_imaa006,
+                   ls_imaa009,ls_imaa010,ls_imaa011,ls_imaa012,ls_imaa013,
+                   ls_imaa014,ls_imaa016,ls_imaa017,ls_imaa018,ls_imaa019,
+                   ls_imaa020,ls_imaa021,ls_imaa022,ls_imaa023,ls_imaa024,
+                   ls_imaa025,ls_imaa026,ls_imaa027,ls_imaa028,ls_imaa029,
+                   ls_imaa030,ls_imaa031,ls_imaa032,ls_imaa033,ls_imaa034,
+                   ls_imaa035,ls_imaa036,ls_imaa037,ls_imaa038,ls_imaa039,
+                   ls_imaa040,ls_imaa041,ls_imaa042,ls_imaa043,ls_imaa044,
+                   ls_imaa045,ls_imaa100,ls_imaa101,ls_imaa102,ls_imaa103,
+                   ls_imaa104,ls_imaa105,ls_imaa106,ls_imaa107,ls_imaa108,
+                   ls_imaa109,ls_imaa110,ls_imaa111,ls_imaa112,ls_imaa113,
+                   ls_imaa114,ls_imaa115,ls_imaa116,ls_imaa117,ls_imaa118,
+                   ls_imaa119,ls_imaa120,ls_imaa121,ls_imaa122,ls_imaa123,
+                   ls_imaa124,ls_imaa125,ls_imaa126,ls_imaa127,ls_imaa128,
+                   ls_imaa129,ls_imaa130,ls_imaa131,ls_imaa132,ls_imaa133,
+                   ls_imaa134,ls_imaa135,ls_imaa136,ls_imaa137,ls_imaa138,
+                   ls_imaa139,ls_imaa140,ls_imaa141,ls_imaa142,ls_imaa143,
+                   ls_imaa144,ls_imaa145,ls_imaa146,
+                   ls_imaastus,ls_imaaownid,ls_imaaowndp,ls_imaacrtid,ls_imaacrtdp,
+                   ls_imaacrtdt,ls_imaamodid,ls_imaamoddt,ls_imaacnfid,ls_imaacnfdt,
+                   ls_imaaud001,ls_imaaud002,ls_imaaud003,ls_imaaud004,ls_imaaud005,
+                   ls_imaaud006,ls_imaaud007,ls_imaaud008,ls_imaaud009,ls_imaaud010,
+                   ls_imaaud011,ls_imaaud012,ls_imaaud013,ls_imaaud014,ls_imaaud015,
+                   ls_imaaud016,ls_imaaud017,ls_imaaud018,ls_imaaud019,ls_imaaud020,
+                   ls_imaaud021,ls_imaaud022,ls_imaaud023,ls_imaaud024,ls_imaaud025,
+                   ls_imaaud026,ls_imaaud027,ls_imaaud028,ls_imaaud029,ls_imaaud030,
+                   ls_imaa147,ls_imaa148,ls_imaa149,
+                   ls_status,ls_erpold_stus,ls_tran_status       
+           
+           #沒同樣資料就INSERT
+           IF l_count = 0 THEN
+           
+              #執行INSERT動作
+              EXECUTE sql_insert_data USING ls_imaaent,ls_imaa001,
+                      ls_imaa002,ls_imaa003,ls_imaa004,ls_imaa005,ls_imaa006,
+                      ls_imaa009,ls_imaa010,ls_imaa011,ls_imaa012,ls_imaa013,
+                      ls_imaa014,ls_imaa016,ls_imaa017,ls_imaa018,ls_imaa019,
+                      ls_imaa020,ls_imaa021,ls_imaa022,ls_imaa023,ls_imaa024,
+                      ls_imaa025,ls_imaa026,ls_imaa027,ls_imaa028,ls_imaa029,
+                      ls_imaa030,ls_imaa031,ls_imaa032,ls_imaa033,ls_imaa034,
+                      ls_imaa035,ls_imaa036,ls_imaa037,ls_imaa038,ls_imaa039,
+                      ls_imaa040,ls_imaa041,ls_imaa042,ls_imaa043,ls_imaa044,
+                      ls_imaa045,ls_imaa100,ls_imaa101,ls_imaa102,ls_imaa103,
+                      ls_imaa104,ls_imaa105,ls_imaa106,ls_imaa107,ls_imaa108,
+                      ls_imaa109,ls_imaa110,ls_imaa111,ls_imaa112,ls_imaa113,
+                      ls_imaa114,ls_imaa115,ls_imaa116,ls_imaa117,ls_imaa118,
+                      ls_imaa119,ls_imaa120,ls_imaa121,ls_imaa122,ls_imaa123,
+                      ls_imaa124,ls_imaa125,ls_imaa126,ls_imaa127,ls_imaa128,
+                      ls_imaa129,ls_imaa130,ls_imaa131,ls_imaa132,ls_imaa133,
+                      ls_imaa134,ls_imaa135,ls_imaa136,ls_imaa137,ls_imaa138,
+                      ls_imaa139,ls_imaa140,ls_imaa141,ls_imaa142,ls_imaa143,
+                      ls_imaa144,ls_imaa145,ls_imaa146,
+                      ls_imaastus,ls_imaaownid,ls_imaaowndp,ls_imaacrtid,ls_imaacrtdp,
+                      ls_imaacrtdt,ls_imaamodid,ls_imaamoddt,ls_imaacnfid,ls_imaacnfdt,
+                      ls_imaaud001,ls_imaaud002,ls_imaaud003,ls_imaaud004,ls_imaaud005,
+                      ls_imaaud006,ls_imaaud007,ls_imaaud008,ls_imaaud009,ls_imaaud010,
+                      ls_imaaud011,ls_imaaud012,ls_imaaud013,ls_imaaud014,ls_imaaud015,
+                      ls_imaaud016,ls_imaaud017,ls_imaaud018,ls_imaaud019,ls_imaaud020,
+                      ls_imaaud021,ls_imaaud022,ls_imaaud023,ls_imaaud024,ls_imaaud025,
+                      ls_imaaud026,ls_imaaud027,ls_imaaud028,ls_imaaud029,ls_imaaud030,
+                      ls_imaa147,ls_imaa148,ls_imaa149,
+                      ls_status,ls_erpold_stus,ls_tran_status,ls_trantime
+           
+              DISPLAY 'insert:',ls_imaaent,"|",ls_imaa001,"|",ls_status,"|",ls_trantime              
+           ELSE
+              #有待轉資料就UPDATE
+                                  
+              #執行UPDATE動作
+              EXECUTE sql_update_data USING 
+                      ls_imaa002,ls_imaa003,ls_imaa004,ls_imaa005,ls_imaa006,
+                      ls_imaa009,ls_imaa010,ls_imaa011,ls_imaa012,ls_imaa013,
+                      ls_imaa014,ls_imaa016,ls_imaa017,ls_imaa018,ls_imaa019,
+                      ls_imaa020,ls_imaa021,ls_imaa022,ls_imaa023,ls_imaa024,
+                      ls_imaa025,ls_imaa026,ls_imaa027,ls_imaa028,ls_imaa029,
+                      ls_imaa030,ls_imaa031,ls_imaa032,ls_imaa033,ls_imaa034,
+                      ls_imaa035,ls_imaa036,ls_imaa037,ls_imaa038,ls_imaa039,
+                      ls_imaa040,ls_imaa041,ls_imaa042,ls_imaa043,ls_imaa044,
+                      ls_imaa045,ls_imaa100,ls_imaa101,ls_imaa102,ls_imaa103,
+                      ls_imaa104,ls_imaa105,ls_imaa106,ls_imaa107,ls_imaa108,
+                      ls_imaa109,ls_imaa110,ls_imaa111,ls_imaa112,ls_imaa113,
+                      ls_imaa114,ls_imaa115,ls_imaa116,ls_imaa117,ls_imaa118,
+                      ls_imaa119,ls_imaa120,ls_imaa121,ls_imaa122,ls_imaa123,
+                      ls_imaa124,ls_imaa125,ls_imaa126,ls_imaa127,ls_imaa128,
+                      ls_imaa129,ls_imaa130,ls_imaa131,ls_imaa132,ls_imaa133,
+                      ls_imaa134,ls_imaa135,ls_imaa136,ls_imaa137,ls_imaa138,
+                      ls_imaa139,ls_imaa140,ls_imaa141,ls_imaa142,ls_imaa143,
+                      ls_imaa144,ls_imaa145,ls_imaa146,
+                      ls_imaastus,ls_imaamodid,ls_imaamoddt,ls_imaacnfid,ls_imaacnfdt,
+                      ls_imaaud001,ls_imaaud002,ls_imaaud003,ls_imaaud004,ls_imaaud005,
+                      ls_imaaud006,ls_imaaud007,ls_imaaud008,ls_imaaud009,ls_imaaud010,
+                      ls_imaaud011,ls_imaaud012,ls_imaaud013,ls_imaaud014,ls_imaaud015,
+                      ls_imaaud016,ls_imaaud017,ls_imaaud018,ls_imaaud019,ls_imaaud020,
+                      ls_imaaud021,ls_imaaud022,ls_imaaud023,ls_imaaud024,ls_imaaud025,
+                      ls_imaaud026,ls_imaaud027,ls_imaaud028,ls_imaaud029,ls_imaaud030,
+                      ls_imaa147,ls_imaa148,ls_imaa149,
+                      ls_status,ls_erpold_stus,ls_tran_status,
+                      ls_imaaent,ls_imaa001,ls_s_time,ls_e_time
+              DISPLAY 'update:',ls_imaaent,"|",ls_imaa001,"|",ls_status,"|",ls_trantime                      
+           END IF
+           
+           IF SQLCA.SQLCODE THEN
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = SQLERRMESSAGE #SQLCA.SQLCODE 
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              
+              #先把key值欄位組出來
+              LET ls_key = ls_imaaent CLIPPED,'|' CLIPPED,'|',ls_imaa001        
+              #把錯誤寫入m_wsei_t
+              LET ls_err_sql = "INSERT INTO ",ls_middb CLIPPED,".m_wsei_t ",
+                               "(wsei001,wsei002,wsei003,wsei004,wsei005,wsei006,wsei007) ",
+                               "VALUES('tra_imaa_t','",ls_trantime CLIPPED,"','",ls_key CLIPPED,"',",
+                               "'awsp600','",ls_e_time,"','",SQLCA.SQLCODE,"','",SQLERRMESSAGE,"')"
+              EXECUTE IMMEDIATE ls_err_sql                 
+              #DISPLAY 'ls_err_sql:',ls_err_sql                
+              CALL cl_err()
+               
+           ELSE
+              #寫入all_imaa_t後依KEY值條件把所有待轉的記錄寫入m_wseh_t      
+               LET ls_wseh_sql = "INSERT INTO ",ls_middb CLIPPED,".m_wseh_t ",
+                                 "SELECT 'tra_imaa_t',a.tran_time,trim(a.imaaent)||'|'||trim(a.imaa001),'awsp600' ",
+                                 "FROM ",ls_middb CLIPPED,".tra_imaa_t a ",
+                                 "WHERE NOT EXISTS (",
+                                 "SELECT 'x' ",
+                                 " FROM ",ls_middb CLIPPED,".m_wseh_t ", 
+                                 "WHERE wseh001 = 'tra_imaa_t'", 
+                                 "   AND wseh002 = a.tran_time", 
+                                 "   AND wseh004 = 'awsp600'",
+                                 "   AND wseh003 = trim(a.imaaent)||'|'||trim(a.imaa001))", 
+                                 " AND a.imaaent = ",ls_imaaent CLIPPED,
+                                 " AND a.imaa001 = '",ls_imaa001 CLIPPED,"'",
+                                 " AND a.tran_time < '",ls_e_time CLIPPED,"'",
+                                 " AND a.tran_time > '",ls_s_time CLIPPED,"'"
+               #DISPLAY 'ls_wseh_sql:',ls_wseh_sql                  
+               EXECUTE IMMEDIATE ls_wseh_sql
+                  
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()         
+         
+               END IF 
+
+           END IF
+   
+   END FOREACH
+  
+   FREE sql_chk_count
+   FREE sql_select_data
+   FREE sql_select_temptb
+   FREE sql_fetch_data
+   FREE sql_insert_data
+   FREE sql_update_data
+   DROP TABLE imaa_temp 
+   CALL s_transaction_end('Y','0')
+   CALL cl_err_collect_show()
+
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL awsp600_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="awsp600.get_buffer" >}
+PRIVATE FUNCTION awsp600_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define
+   
+   #end add-point
+ 
+   
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="awsp600.msgcentre_notify" >}
+PRIVATE FUNCTION awsp600_msgcentre_notify()
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="awsp600.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+#end add-point
+ 
+{</section>}
+ 

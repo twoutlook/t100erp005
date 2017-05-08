@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmi900" module="apm" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02159" crtdt="2015-02-07 11:45:36" modid="08172" moddt="2016-05-19 13:49:08" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="碼頭資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmensite,pmensite_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmenstus,pmenunit,pmenunit_desc(chr500),pmen001,pmenl003,pmenl004,pmen002,pmen009,pmen003,pmen004,pmen004_desc(chr500),pmen005_desc(chr500),pmen006,pmen006_desc(chr500),pmen007,pmen007_desc(chr500),pmen008,pmen008_desc(chr500),pmen005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmen001,pmenownid,pmenownid_desc(chr500),pmenowndp,pmenowndp_desc(chr500),pmencrtid,pmencrtid_desc(chr500),pmencrtdp,pmencrtdp_desc(chr500),pmencrtdt,pmenmodid,pmenmodid_desc(chr500),pmenmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmi900" method="dialog">
+    <section id="input">
+      <input id="head" field="pmensite"/>
+      <input id="body" page="1" field="pmenstus,pmenunit,pmen001,pmenl003,pmenl004,pmen002,pmen009,pmen003,pmen004,pmen006,pmen007,pmen008,pmen005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmensite"/>
+      <construct id="body" page="1" field="pmenstus,pmenunit,pmen001,pmenl003,pmenl004,pmen002,pmen009,pmen003,pmen004,pmen006,pmen007,pmen008,pmen005"/>
+      <construct id="body" page="2" field="pmenownid,pmenowndp,pmencrtid,pmencrtdp,pmencrtdt,pmenmodid,pmenmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmensite"/>
+      <set id="head" type="no_entry" field="pmensite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmensite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="pmensite_desc" ref_field="pmen_t.pmensite" map_field="pmensite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="pmensite_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmenstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmenunit">
+        <after>
+          <reference field="pmenunit_desc" ref_field="pmen_t.pmenunit" map_field="pmenunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="pmenunit_desc"/>
+      <column id="pmen001">
+        <controlp form="q_pmen001" state="c"/>
+      </column>
+      <column id="pmenl003"/>
+      <column id="pmenl004"/>
+      <column id="pmen002" def_scc="6300"/>
+      <column id="pmen009"/>
+      <column id="pmen003" type="S" default="N"/>
+      <column id="pmen004">
+        <after>
+          <check chkid="v_inaa001" id="isExist"/>
+          <reference field="pmen004_desc" ref_field="pmen_t.pmen004" map_field="pmen004" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_23" state="i"/>
+        <controlp form="q_inaa001_23" state="c"/>
+      </column>
+      <column id="pmen004_desc"/>
+      <column id="pmen005_desc"/>
+      <column id="pmen006">
+        <after>
+          <reference field="pmen006_desc" ref_field="pmen007,pmen008,pmen006" map_field="pmen007,pmen008,pmen006" ref_sql="SELECT mhacl005 FROM mhacl_t WHERE mhaclent=$varg_enterprise$var AND mhacl001=? AND mhacl002=? AND mhacl003=? AND mhacl004=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhac003" state="c"/>
+      </column>
+      <column id="pmen006_desc"/>
+      <column id="pmen007">
+        <after>
+          <reference field="pmen007_desc" ref_field="pmen008,pmen007" map_field="pmen008,pmen007" ref_sql="SELECT mhabl004 FROM mhabl_t WHERE mhablent=$varg_enterprise$var AND mhabl001=? AND mhabl002=? AND mhabl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="pmen007_desc"/>
+      <column id="pmen008">
+        <after>
+          <reference field="pmen008_desc" ref_field="pmen_t.pmen008" map_field="pmenent,pmen008" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="pmen008_desc"/>
+      <column id="pmen005">
+        <after>
+          <reference field="pmen005_desc" ref_field="pmen008,pmen007,pmen006,pmen005" map_field="pmen008,pmen007,pmen006,pmen005" ref_sql="SELECT mhadl006 FROM mhadl_t WHERE mhadlent=$varg_enterprise$var AND mhadl001=? AND mhadl002=? AND mhadl003=? AND mhadl004=? AND mhadl005=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhad001" state="i"/>
+        <controlp form="q_mhad001" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="pmenownid">
+        <after>
+          <reference field="pmenownid_desc" ref_field="pmen_t.pmenownid" map_field="pmenownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmenownid_desc"/>
+      <column id="pmenowndp">
+        <after>
+          <reference field="pmenowndp_desc" ref_field="pmen_t.pmenowndp" map_field="pmenowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmenowndp_desc"/>
+      <column id="pmencrtid">
+        <after>
+          <reference field="pmencrtid_desc" ref_field="pmen_t.pmencrtid" map_field="pmencrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmencrtid_desc"/>
+      <column id="pmencrtdp">
+        <after>
+          <reference field="pmencrtdp_desc" ref_field="pmen_t.pmencrtdp" map_field="pmencrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmencrtdp_desc"/>
+      <column id="pmencrtdt"/>
+      <column id="pmenmodid">
+        <after>
+          <reference field="pmenmodid_desc" ref_field="pmen_t.pmenmodid" map_field="pmenmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmenmodid_desc"/>
+      <column id="pmenmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmen_t" pk="pmensite">
+      <sql id="forupd_sql" type="sql" query="SELECT pmensite,&apos;&apos; FROM pmen_t WHERE pmenent= ? AND pmensite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmensite,&apos;&apos; FROM pmen_t" order="pmensite"/>
+    </head>
+    <body id="pmen_t" page="1,2" linked="" pk="pmen001" fk="pmensite">
+      <sql id="forupd_sql_detail" query="SELECT pmenstus,pmenunit,&apos;&apos;,pmen001,&apos;&apos;,&apos;&apos;,pmen002,pmen009,pmen003,pmen004,&apos;&apos;,&apos;&apos;,pmen006,&apos;&apos;,pmen007,&apos;&apos;,pmen008,&apos;&apos;,pmen005,&apos;&apos;,pmenownid,&apos;&apos;,pmenowndp,&apos;&apos;,pmencrtid,&apos;&apos;,pmencrtdp,&apos;&apos;,pmencrtdt,pmenmodid,&apos;&apos;,pmenmoddt FROM pmen_t WHERE pmenent=? AND pmensite=? AND pmen001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmenstus,pmenunit,&apos;&apos;,pmen001,&apos;&apos;,&apos;&apos;,pmen002,pmen009,pmen003,pmen004,&apos;&apos;,&apos;&apos;,pmen006,&apos;&apos;,pmen007,&apos;&apos;,pmen008,&apos;&apos;,pmen005,&apos;&apos;,pmenownid,&apos;&apos;,pmenowndp,&apos;&apos;,pmencrtid,&apos;&apos;,pmencrtdp,&apos;&apos;,pmencrtdt,pmenmodid,&apos;&apos;,pmenmoddt FROM pmen_t WHERE pmenent= ? AND pmensite=?"/>
+      <sql id="detail_append" type="lang" target="pmenl_t.pmenl003,pmenl_t.pmenl004" table="pmenl_t" fk="pmensite,pmen001" pk="pmenlsite,pmenl001,pmenl002" field="pmenl003,pmenl004"/>
+    </body>
+  </dataset>
+</assembly>
+

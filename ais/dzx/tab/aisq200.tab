@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq200" module="ais" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02599" crtdt="2015-05-08 10:45:56" modid="02599" moddt="2015-05-15 14:09:39" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="發票認證查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),stbf012,stbf001,stbf002,stbf003,stbd002,stbd002_desc(chr500),stbf004,stbf005,stbf006,stbf007,isbe007,isbe008,stbfdocno,stbfseq"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),stbf012(b_stbf012),stbf001(b_stbf001),stbf002(b_stbf002),stbf003(b_stbf003),stbd002(b_stbd002),stbd002_desc(b_stbd002_desc),stbf004(b_stbf004),stbf005(b_stbf005),stbf006(b_stbf006),stbf007(b_stbf007),isbe007(b_isbe007),isbe008(b_isbe008),stbfdocno(b_stbfdocno),stbfseq(b_stbfseq)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq200" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stbf012,stbf001,stbf002,stbf003,stbd002,stbf004,stbf005,stbf006,stbf007,isbe007,isbe008,stbfdocno,stbfseq" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stbf012(b_stbf012),stbf001(b_stbf001),stbf002(b_stbf002),stbf003(b_stbf003),stbd002(b_stbd002),stbf004(b_stbf004),stbf005(b_stbf005),stbf006(b_stbf006),stbf007(b_stbf007),isbe007(b_isbe007),isbe008(b_isbe008),stbfdocno(b_stbfdocno),stbfseq(b_stbfseq)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="stbf012"/>
+      <column id="stbf001">
+        <controlp form="q_stbf001" state="c"/>
+      </column>
+      <column id="stbf002">
+        <controlp form="q_stbf002" state="c"/>
+      </column>
+      <column id="stbf003"/>
+      <column id="stbd002">
+        <after>
+          <reference field="stbd002_desc" ref_field="stbd002" map_field="stbdent,stbd002" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_10" state="i"/>
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="stbd002_desc"/>
+      <column id="stbf004">
+        <controlp form="q_oodb002_5" state="c"/>
+      </column>
+      <column id="stbf005"/>
+      <column id="stbf006" type="S" default="0"/>
+      <column id="stbf007" type="S" default="0"/>
+      <column id="isbe007"/>
+      <column id="isbe008"/>
+      <column id="stbfdocno"/>
+      <column id="stbfseq"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stbf_t" page="1" linked="" pk="stbfdocno,stbfseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stbf012,stbf001,stbf002,stbf003,&apos;&apos;,&apos;&apos;,stbf004,stbf005,stbf006,stbf007,&apos;&apos;,&apos;&apos;,stbfdocno,stbfseq FROM stbf_t WHERE stbfent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

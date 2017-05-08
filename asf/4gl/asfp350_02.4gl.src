@@ -1,0 +1,1955 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfp350_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2016-07-07 10:45:53), PR版次:0006(2017-02-03 10:15:46)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000041
+#+ Filename...: asfp350_02
+#+ Description: 分攤明細
+#+ Creator....: 02040(2016-07-07 10:41:35)
+#+ Modifier...: 02040 -SD/PR- 06694
+ 
+{</section>}
+ 
+{<section id="asfp350_02.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#160812-00005#1  160812 By 02040 調整收貨單產品特徵給值
+#160919-00030#1  161011 By 02040 工單分攤加入site條件
+#161109-00085#41 2016/11/17 By lienjunqi    整批調整系統星號寫法
+#170202-00006#1  2017/02/03 By 06694        工單未結案不能撈出
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+GLOBALS "../../asf/4gl/asfp350.inc"
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_sfeb_d        RECORD
+       l_sfebseq LIKE type_t.num10, 
+   l_sfebseq2 LIKE type_t.num10, 
+   sfeb004 LIKE sfeb_t.sfeb004, 
+   sfeb004_01_desc LIKE type_t.chr500, 
+   sfeb004_01_desc_1 LIKE type_t.chr500, 
+   sfeb005 LIKE sfeb_t.sfeb005, 
+   sfeb005_01_desc LIKE type_t.chr500, 
+   sfeb013 LIKE sfeb_t.sfeb013, 
+   sfeb013_01_desc LIKE type_t.chr500, 
+   sfeb014 LIKE sfeb_t.sfeb014, 
+   sfeb014_01_desc LIKE type_t.chr500, 
+   sfeb015 LIKE sfeb_t.sfeb015, 
+   sfeb016 LIKE sfeb_t.sfeb016, 
+   sfeb016_desc LIKE type_t.chr500, 
+   sfeb001 LIKE sfeb_t.sfeb001, 
+   sfeb023 LIKE sfeb_t.sfeb023, 
+   sfeb023_01_desc LIKE type_t.chr500, 
+   sfeb023_01_desc_1 LIKE type_t.chr500, 
+   sfeb008 LIKE sfeb_t.sfeb008, 
+   pmdt001 LIKE pmdt_t.pmdt001, 
+   pmdt002 LIKE pmdt_t.pmdt002, 
+   pmdt003 LIKE pmdt_t.pmdt003, 
+   pmdt004 LIKE pmdt_t.pmdt004, 
+   l_rate LIKE type_t.num20_6, 
+   sfeb009 LIKE sfeb_t.sfeb009, 
+   sfeb012 LIKE sfeb_t.sfeb012, 
+   sfebdocno LIKE sfeb_t.sfebdocno
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+ 
+#end add-point
+ 
+DEFINE g_sfeb_d          DYNAMIC ARRAY OF type_g_sfeb_d
+DEFINE g_sfeb_d_t        type_g_sfeb_d
+ 
+ 
+DEFINE g_sfebdocno_t   LIKE sfeb_t.sfebdocno    #Key值備份
+DEFINE g_sfebseq_t      LIKE sfeb_t.sfebseq    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="asfp350_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION asfp350_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asfp350_02 WITH FORM cl_ap_formpath("asf","asfp350_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_sfeb_d FROM s_detail2.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfeb009_01
+            #add-point:BEFORE FIELD sfeb009_01 name="input.b.page2.sfeb009_01"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfeb009_01
+            
+            #add-point:AFTER FIELD sfeb009_01 name="input.a.page2.sfeb009_01"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfeb009_01
+            #add-point:ON CHANGE sfeb009_01 name="input.g.page2.sfeb009_01"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfeb012_01
+            #add-point:BEFORE FIELD sfeb012_01 name="input.b.page2.sfeb012_01"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfeb012_01
+            
+            #add-point:AFTER FIELD sfeb012_01 name="input.a.page2.sfeb012_01"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfeb012_01
+            #add-point:ON CHANGE sfeb012_01 name="input.g.page2.sfeb012_01"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page2.sfeb009_01
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfeb009_01
+            #add-point:ON ACTION controlp INFIELD sfeb009_01 name="input.c.page2.sfeb009_01"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfeb012_01
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfeb012_01
+            #add-point:ON ACTION controlp INFIELD sfeb012_01 name="input.c.page2.sfeb012_01"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asfp350_02 
+   
+   #add-point:input段after input name="input.post_input"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfp350_02.other_dialog" readonly="Y" >}
+################################################################################
+# Descriptions...: 分攤明細頁籤輸入段
+# Memo...........:
+# Usage..........: CALL asfp350_02_input_01()
+#                  RETURNING 
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160622-00017#1 By 02040
+# Modify.........:
+################################################################################
+DIALOG asfp350_02_input_01()
+
+                      
+      INPUT ARRAY g_sfeb_d FROM s_detail2.*
+            ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_detail_cnt,WITHOUT DEFAULTS,
+                      INSERT ROW = TRUE,
+                      DELETE ROW = TRUE,
+                      APPEND ROW = TRUE)                    
+
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx    
+               LET g_sfeb_d_t.* = g_sfeb_d[l_ac].*                
+                       
+            AFTER ROW 
+              UPDATE p350_02_temp
+                 SET sfeb009 = g_sfeb_d[g_detail_idx].sfeb009,
+                     sfeb012 = g_sfeb_d[g_detail_idx].sfeb012
+               WHERE sfebseq = g_sfeb_d[g_detail_idx].l_sfebseq
+                 AND sfebseq2 = g_sfeb_d[g_detail_idx].l_sfebseq2
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "up p350_02_temp:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()                             
+            END IF  
+            
+            AFTER FIELD sfeb009_01
+              IF NOT cl_ap_chk_range(g_sfeb_d[g_detail_idx].sfeb009,"0.000","1","","","azz-00079",1) THEN
+                 NEXT FIELD sfeb009_01
+              END IF  
+
+              
+            AFTER FIELD sfeb012_01 
+              IF NOT cl_ap_chk_range(g_sfeb_d[g_detail_idx].sfeb012,"0.000","1","","","azz-00079",1) THEN
+                 NEXT FIELD sfeb012_01
+              END IF
+            
+              
+         END INPUT
+         
+         
+END DIALOG
+
+################################################################################
+# Descriptions...: 第三步驟顯示
+# Memo...........:
+# Usage..........: CALL asfp350_02_display_01()
+#                  RETURNING 
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160622-00017#1 By 02040
+# Modify.........:
+################################################################################
+DIALOG asfp350_02_display_01()
+
+   DISPLAY ARRAY g_sfeb_d TO s_detail2.* ATTRIBUTE(COUNT=g_detail_cnt)
+         
+      BEFORE DISPLAY
+
+
+      BEFORE ROW  
+         LET l_ac = DIALOG.getCurrentRow("s_detail2")   
+         LET g_detail_idx = l_ac
+         
+       
+   END DISPLAY 
+
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="asfp350_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 依回收料抓取分攤明細
+# Memo...........:
+# Usage..........: CALL asfp350_02_gen()
+#                  RETURNING 
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160708 By 02040
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asfp350_02_gen()
+DEFINE l_sfeb_01 RECORD       
+   sfebseq LIKE sfeb_t.sfebseq, 
+   sfeb004 LIKE sfeb_t.sfeb004, 
+   sfeb005 LIKE sfeb_t.sfeb005, 
+   sfeb013 LIKE sfeb_t.sfeb013, 
+   sfeb014 LIKE sfeb_t.sfeb014, 
+   sfeb015 LIKE sfeb_t.sfeb015, 
+   sfeb016 LIKE sfeb_t.sfeb016, 
+   sfeb007 LIKE sfeb_t.sfeb007, 
+   sfeb008 LIKE sfeb_t.sfeb008, 
+   sfeb010 LIKE sfeb_t.sfeb010, 
+   sfeb011 LIKE sfeb_t.sfeb011, 
+   sfebdocno LIKE sfeb_t.sfebdocno
+       END RECORD 
+
+  DEFINE l_sfeb_02 RECORD
+   sfebseq LIKE type_t.num10, 
+   sfebseq2 LIKE type_t.num10, 
+   sfeb004 LIKE sfeb_t.sfeb004, 
+   sfeb005 LIKE sfeb_t.sfeb005, 
+   sfeb013 LIKE sfeb_t.sfeb013, 
+   sfeb014 LIKE sfeb_t.sfeb014, 
+   sfeb015 LIKE sfeb_t.sfeb015, 
+   sfeb016 LIKE sfeb_t.sfeb016, 
+   sfeb001 LIKE sfeb_t.sfeb001, 
+   sfeb023 LIKE sfeb_t.sfeb023,
+   sfeb027 LIKE sfeb_t.sfeb027, 
+   pmdt001 LIKE pmdt_t.pmdt001, 
+   pmdt002 LIKE pmdt_t.pmdt002, 
+   pmdt003 LIKE pmdt_t.pmdt003, 
+   pmdt004 LIKE pmdt_t.pmdt004,
+   pmdt036 LIKE pmdt_t.pmdt036,   #160812-00005#1 pmdt007 mode pmdt036 
+   l_rate LIKE type_t.num20_6,
+   sfeb008 LIKE sfeb_t.sfeb008,   
+   sfeb009 LIKE sfeb_t.sfeb009, 
+   sfeb012 LIKE sfeb_t.sfeb012, 
+   sfebdocno LIKE sfeb_t.sfebdocno
+       END RECORD
+DEFINE l_sql   STRING
+DEFINE l_cnt LIKE type_t.num5
+DEFINE l_sum1 LIKE type_t.num20_6     #數量
+DEFINE l_sum2 LIKE type_t.num20_6     #參考數量
+DEFINE l_sum3 LIKE type_t.num20_6     #數量
+DEFINE l_sum4 LIKE type_t.num20_6     #參考數量
+DEFINE l_sum5 LIKE type_t.num20_6     #數量(分攤總數)
+DEFINE l_sum6 LIKE type_t.num20_6     #參考數量(分攤總數)
+DEFINE l_pmdt001  LIKE pmdt_t.pmdt001
+DEFINE l_pmdt002  LIKE pmdt_t.pmdt002
+DEFINE l_pmdt003  LIKE pmdt_t.pmdt003
+DEFINE l_pmdt004  LIKE pmdt_t.pmdt004
+DEFINE l_sfeb001  LIKE sfeb_t.sfeb001
+DEFINE l_sfeb023  LIKE sfeb_t.sfeb023
+DEFINE l_sfec005 LIKE sfec_t.sfec005
+DEFINE l_sfec006 LIKE sfec_t.sfec006
+DEFINE l_sfec008 LIKE sfec_t.sfec008
+DEFINE l_sfec009 LIKE sfec_t.sfec009
+DEFINE l_sfec010 LIKE sfec_t.sfec010
+DEFINE l_sfec011 LIKE sfec_t.sfec011
+DEFINE l_success LIKE type_t.num5
+DEFINE l_sfebseq2 LIKE type_t.num10
+DEFINE l_rate LIKE type_t.num20_6
+DEFINE l_rate2 LIKE type_t.num20_6
+DEFINE l_max_seq LIKE type_t.num10
+DEFINE l_sfeb009 LIKE sfeb_t.sfeb009
+DEFINE l_sfeb012 LIKE sfeb_t.sfeb012
+DEFINE l_i   LIKE type_t.num5
+DEFINE l_diff_sum  LIKE type_t.num20_6
+DEFINE l_diff_sum2 LIKE type_t.num20_6
+DEFINE l_sfba010   LIKE sfba_t.sfba010
+DEFINE l_sfba011   LIKE sfba_t.sfba011
+
+
+
+
+   WHENEVER ERROR CONTINUE
+   
+   IF cl_null(g_wc) THEN 
+      LET g_wc = ' 1=1'
+   END IF
+   
+   IF cl_null(g_input.l_sdt) THEN
+      LET g_input.l_sdt = g_today
+   END IF   
+   IF cl_null(g_input.l_edt) THEN
+      LET g_input.l_edt = g_today
+   END IF     
+   
+   LET l_sql = "SELECT sfebseq,sfeb004,sfeb005,sfeb013,sfeb014, ",
+               "       sfeb015,sfeb016,sfeb007,sfeb008,sfeb010, ",
+               "       sfeb011 ",
+               "  FROM p350_01_temp ",
+               " WHERE sfeb008 > 0 ",
+               " ORDER BY sfebseq,sfeb004 "
+               
+   PREPARE p350_02_prep FROM l_sql
+   DECLARE p350_02_curs CURSOR FOR p350_02_prep  
+
+   #抓一般工單入庫資料
+   IF g_input.sfma001 = '1' THEN   #入庫量比率
+      IF g_input.l_wo_type = '1' THEN
+         LET l_sql = " SELECT DISTINCT sfaadocno,sfaa010,'','','','' ",
+                     "   FROM sfea_t,sfec_t,sfaa_t,sfac_t ",
+                     "  WHERE sfeaent = sfecent AND sfeadocno = sfecdocno AND sfeastus = 'S' ",
+                     "    AND sfecent = sfaaent AND sfec001 = sfaadocno AND sfaa057 = '1' AND sfec004 <> '5' ",
+                     "    AND sfaaent = sfacent AND sfaadocno = sfacdocno AND sfac002 = '5' ",                     
+                     "    AND sfaasite = '",g_site,"'",        #160919-00030#1                      
+                     "    AND sfac001 = ? ",
+                     "    AND COALESCE(sfac006,' ') = COALESCE(?,' ')",
+                     "    AND sfea001 BETWEEN '",g_input.l_sdt,"' AND '",g_input.l_edt,"' ",
+                     "    AND sfeaent = ",g_enterprise," AND ",g_wc,
+                     "    AND sfaastus = 'F' ",                #170202-00006#1  ADD
+                     "  ORDER BY sfaadocno "
+         
+      ELSE
+          #委外工單
+          LET l_sql = "SELECT DISTINCT sfaadocno,sfaa010,pmdt001,pmdt002,pmdt003,pmdt004 ",
+                      "FROM ( ",
+                      "      SELECT DISTINCT pmdlent,pmdl008,pmdt001,pmdt002,pmdt003,pmdt004 ",
+                      "        FROM pmds_t,pmdt_t LEFT JOIN pmdl_t ON pmdtent = pmdlent AND pmdt001 = pmdldocno AND pmdl005 = '2' AND pmdl007 = '4' ",
+                      "       WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno AND pmds000 IN ('12','20') AND pmdsstus = 'S' AND pmds007 = '",g_input.pmds007,"'",
+                      "         AND pmds001 BETWEEN '",g_input.l_sdt,"' AND '",g_input.l_edt,"' ",
+                      "         AND pmdtent = ",g_enterprise," AND pmdtsite = '",g_site,"'",
+                      "         AND pmdt005 <> '13' ",
+                      "      ),sfac_t,sfaa_t ",
+                      " WHERE sfaaent = sfacent AND sfaadocno = sfacdocno AND sfaa057 = '2' ",
+                      "   AND pmdlent = sfacent AND pmdl008 = sfacdocno AND sfac002 = '5' ",
+                      "   AND sfaaent = ",g_enterprise,     #160902-00048#4
+                      "   AND sfaasite = '",g_site,"'",     #160919-00030#1 
+                      "   AND sfac001 = ? ",                      
+                      "   AND COALESCE(sfac006,' ') = COALESCE(?,' ')",
+                      "   AND ",g_wc,
+                      "   AND sfaastus = 'F' ",                #170202-00006#1  ADD
+                      "  ORDER BY sfaadocno "
+      END IF
+   ELSE
+      #依報工比率
+      LET l_sql = "SELECT DISTINCT sfaadocno,sfaa010,'','','','' ",
+                  "  FROM sfaa_t,sfac_t,sffb_t",
+                  " WHERE sfaaent = sfacent AND sfaadocno = sfacdocno ",
+                  "   AND sfaaent = ",g_enterprise," AND sfaasite = '",g_site,"'",   #160919-00030#1
+                  "   AND sfac002 = '5'  AND sfac001 = ? ", 
+                  "   AND COALESCE(sfac006,' ') = COALESCE(?,' ')",
+                  "   AND sffbent = sfaaent AND sffb005 = sfaadocno AND sfaa057 = '1' ",
+                  "   AND sffb007 = '",g_input.sfba003,"' ",
+                  "   AND sffb008 = '",g_input.sfba004,"' ",
+                  "   AND sffbdocdt BETWEEN '",g_input.l_sdt,"' AND '",g_input.l_edt,"' ",
+                  "   AND sffbstus = 'Y' AND sffb001 = '3' AND ",g_wc,
+                  "   AND sfaastus = 'F' ",                #170202-00006#1  ADD
+                  "  ORDER BY sfaadocno "
+             
+   END IF      
+   PREPARE p350_02_prep1 FROM l_sql
+   DECLARE p350_02_curs1 CURSOR FOR p350_02_prep1  
+
+
+   #一般工單入庫分攤
+   LET l_sql = "SELECT sfec005,sfec008,SUM(sfec009),sfec010,SUM(sfec011)",
+               "  FROM sfea_t,sfec_t  ",
+               " WHERE sfeaent = sfecent AND sfeadocno = sfecdocno ",
+               "   AND sfecent = ",g_enterprise," AND sfec001 = ? ",
+               "   AND sfea001 BETWEEN '",g_input.l_sdt,"' AND '",g_input.l_edt,"' ",
+               "   AND sfec004 <> '5' ",
+               "   AND sfeastus = 'S' ",
+               " GROUP BY sfec005,sfec008,sfec010 "
+   PREPARE p350_02_prep2 FROM l_sql
+   DECLARE p350_02_curs2 CURSOR FOR p350_02_prep2  
+
+   LET l_sql = "SELECT SUM(sfec009)",
+               "  FROM sfea_t,sfec_t  ",
+               " WHERE sfeaent = sfecent AND sfeadocno = sfecdocno ",
+               "   AND sfecent = ",g_enterprise," AND sfec001 = ? ",
+               "   AND sfea001 BETWEEN '",g_input.l_sdt,"' AND '",g_input.l_edt,"' ",
+               "   AND sfec005 = ? AND COALESCE(sfec006,' ') = COALESCE(?,' ') ",
+               "   AND sfeastus = 'S' ",
+               "   AND sfec004 = '5' "
+   PREPARE p350_02_prep2_1 FROM l_sql
+
+   #委外工單入庫分攤
+   LET l_sql = "SELECT pmdt006,pmdt019,SUM(pmdt020),pmdt021,SUM(pmdt022) ",
+               "  FROM pmds_t,pmdt_t ",
+               " WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno ",
+               "   AND pmds000 IN ('12','20') AND pmdsstus = 'S' ",
+               "   AND pmds001 BETWEEN '",g_input.l_sdt,"' AND '",g_input.l_edt,"' ", 
+               "   AND pmdtent =",g_enterprise,
+               "   AND pmdt001 = ? AND pmdt002 = ? AND pmdt003 = ? AND pmdt004 = ? ",                        
+               "   AND pmdt005 <> '13' ",
+               " GROUP BY pmdt006,pmdt019,pmdt021 "
+   PREPARE p350_02_prep3 FROM l_sql
+   DECLARE p350_02_curs3 CURSOR FOR p350_02_prep3   
+   
+   LET l_sql = "SELECT SUM(pmdt020) ",
+               "  FROM pmds_t,pmdt_t ",
+               " WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno ",
+               "   AND pmds000 IN ('12','20') AND pmdsstus = 'S' ",
+               "   AND pmds001 BETWEEN '",g_input.l_sdt,"' AND '",g_input.l_edt,"' ", 
+               "   AND pmdtent =",g_enterprise,
+               "   AND pmdt001 = ? AND pmdt002 = ? AND pmdt003 = ? AND pmdt004 = ? ",                        
+               "   AND pmdt005 = '13' "
+   PREPARE p350_02_prep3_1 FROM l_sql
+    
+   #一般工單報工分攤
+   LET l_sql = "SELECT sffb016,SUM(sffb017) ",
+                    "  FROM sffb_t",
+                    " WHERE sffbent = ",g_enterprise, 
+                    "   AND sffb007 = '",g_input.sfba003,"' ",
+                    "   AND sffb008 = '",g_input.sfba004,"' ",
+                    "   AND sffbdocdt BETWEEN '",g_input.l_sdt,"' AND '",g_input.l_edt,"' ",
+                    "   AND sffbstus = 'Y' AND sffb001 = '3' AND sffb005 =  ? ",
+                    " GROUP BY sffb016 " 
+   PREPARE p350_02_prep4 FROM l_sql
+   DECLARE p350_02_curs4 CURSOR FOR p350_02_prep4
+   
+   
+   
+   LET l_sql = "SELECT sfebseq2,rate,rate2 ",
+               "  FROM p350_02_temp ",
+               " WHERE sfebseq = ? ",
+               " ORDER BY sfebseq2 "
+   
+   PREPARE p350_02_rate_prep FROM l_sql
+   DECLARE p350_02_rate_curs CURSOR FOR p350_02_rate_prep 
+   
+   LET l_sql = "UPDATE p350_02_temp ",
+               "   SET sfeb009 = ? , ",
+               "       sfeb012 = ?  ",
+               " WHERE sfebseq = ? ",
+               "   AND sfebseq2  = ? "
+   PREPARE p350_02_upd_prep FROM l_sql
+   
+   LET l_sql = " SELECT sfeb009,sfeb012 ",
+               "   FROM p350_02_temp ",
+               "  WHERE sfebseq = ? AND sfebseq2 = ? "   
+   PREPARE p350_02_sfeb_prep FROM l_sql
+   
+   #抓取採購單資訊
+   LET l_sql = "SELECT DISTINCT pmdoseq,pmdoseq1,pmdoseq2,pmdo022 ",
+               "  FROM pmdo_t",
+               " WHERE pmdoent = ",g_enterprise,
+               "   AND pmdodocno = ? ",
+               "   AND pmdo001 = ? ",
+               "   AND COALESCE(pmdo002,' ') = COALESCE(?,' ')",
+               "   AND pmdo003 = '13' "
+   PREPARE p350_02_pmdo_prep FROM l_sql
+  
+   INITIALIZE l_sfeb_01 TO NULL
+   
+   DELETE FROM p350_02_temp;   
+       
+
+   FOREACH p350_02_curs INTO l_sfeb_01.*               
+     LET l_cnt = 1
+     LET l_sum5 = 0
+     LET l_sum6 = 0     
+
+     FOREACH p350_02_curs1 USING l_sfeb_01.sfeb004,l_sfeb_01.sfeb005 INTO l_sfeb001,l_sfeb023,l_pmdt001,l_pmdt002,l_pmdt003,l_pmdt004
+         LET l_sfeb_02.sfebseq = l_sfeb_01.sfebseq
+         LET l_sfeb_02.sfebseq2 = l_cnt
+         LET l_sfeb_02.sfeb001 = l_sfeb001
+         LET l_sfeb_02.sfeb023 = l_sfeb023
+         LET l_sfeb_02.sfeb004 = l_sfeb_01.sfeb004
+         LET l_sfeb_02.sfeb005 = l_sfeb_01.sfeb005
+         LET l_sfeb_02.sfeb013 = l_sfeb_01.sfeb013
+         LET l_sfeb_02.sfeb014 = l_sfeb_01.sfeb014
+         LET l_sfeb_02.sfeb015 = l_sfeb_01.sfeb015
+         LET l_sfeb_02.sfeb016 = l_sfeb_01.sfeb016
+         LET l_sfeb_02.pmdt001 = l_pmdt001
+         LET l_sum3 = 0
+         LET l_sum4 = 0
+         IF g_input.sfma001 = '1' THEN
+            IF g_input.l_wo_type = '1' THEN
+               #做單位數量換
+               FOREACH p350_02_curs2 USING l_sfeb001 INTO l_sfec005,l_sfec008,l_sfec009,l_sfec010,l_sfec011
+                 #LET l_sum1 = 0
+                 ##單位數量轉換
+                 #IF NOT cl_null(l_sfeb_01.sfeb007) AND NOT cl_null(l_sfec008) THEN
+                 #   CALL s_aooi250_convert_qty(l_sfeb_01.sfeb004,l_sfec008,l_sfeb_01.sfeb007,l_sfec009)
+                 #     RETURNING l_success,l_sum1 
+                 #   IF NOT l_success THEN
+                 #      EXIT FOREACH 
+                 #   END IF                  
+                 #END IF
+                 ##參考單位數量轉換                
+                 #LET l_sum2 = 0
+                 #IF NOT cl_null(l_sfeb_01.sfeb010) AND NOT cl_null(l_sfec010) THEN
+                 #   CALL s_aooi250_convert_qty(l_sfeb_01.sfeb004,l_sfec010,l_sfeb_01.sfeb010,l_sfec011)
+                 #     RETURNING l_success,l_sum2
+                 #   IF NOT l_success THEN
+                 #      EXIT FOREACH 
+                 #   END IF                  
+                 #END IF                       
+                 ##工單QPA分子/QPA分母   
+                 ##SELECT sfba010,sfba011 INTO l_sfba010,l_sfba011
+                 ##  FROM sfba_t
+                 ## WHERE sfbaent = g_enterprise AND sfbadocno = l_sfeb001 AND sfba005 = l_sfec005
+                 ##LET l_sum1 = l_sum1 * l_sfba010 / l_sfba011
+                 ##LET l_sum2 = l_sum2 * l_sfba010 / l_sfba011                  
+                 #LET l_sum3 = l_sum3 + l_sum1
+                 #LET l_sum4 = l_sum4 + l_sum2                                     
+                 LET l_sum3 = l_sum3 + l_sfec009
+                 LET l_sum4 = l_sum4 + l_sfec011                                     
+               END FOREACH
+               EXECUTE p350_02_prep2_1 USING l_sfeb001,l_sfeb_01.sfeb004,l_sfeb_01.sfeb005 INTO l_sfeb_02.sfeb008
+             ELSE
+               FOREACH p350_02_curs3 USING l_pmdt001,l_pmdt002,l_pmdt003,l_pmdt004 INTO l_sfec005,l_sfec008,l_sfec009,l_sfec010,l_sfec011
+                 #LET l_sum1 = 0
+                 ##單位數量轉換
+                 #IF NOT cl_null(l_sfeb_01.sfeb007) AND NOT cl_null(l_sfec008) THEN
+                 #   CALL s_aooi250_convert_qty(l_sfeb_01.sfeb004,l_sfec008,l_sfeb_01.sfeb007,l_sfec009)
+                 #     RETURNING l_success,l_sum1 
+                 #   IF NOT l_success THEN
+                 #      EXIT FOREACH 
+                 #   END IF                     
+                 #END IF
+                 ##參考單位數量轉換                
+                 #LET l_sum2 = 0
+                 #IF NOT cl_null(l_sfeb_01.sfeb010) AND NOT cl_null(l_sfec010) THEN
+                 #   CALL s_aooi250_convert_qty(l_sfeb_01.sfeb004,l_sfec010,l_sfeb_01.sfeb010,l_sfec011)
+                 #     RETURNING l_success,l_sum2
+                 #   IF NOT l_success THEN
+                 #      EXIT FOREACH 
+                 #   END IF                        
+                 #END IF
+                 # 
+                 #LET l_sum3 = l_sum3 + l_sum1
+                 #LET l_sum4 = l_sum4 + l_sum2           
+                 LET l_sum3 = l_sum3 + l_sfec009
+                 LET l_sum4 = l_sum4 + l_sfec011 
+               END FOREACH             
+               #項次、項序、分批序、單價（pmdt002、pmdt003、pmdt004、pmdt036）：依採購單號+回收料號+子件特性=13 的條件取出對應項次、項序、分批序
+               EXECUTE p350_02_pmdo_prep USING l_sfeb_02.pmdt001,l_sfeb_02.sfeb004,l_sfeb_02.sfeb005 INTO l_sfeb_02.pmdt002,l_sfeb_02.pmdt003,l_sfeb_02.pmdt004,l_sfeb_02.pmdt036   #160812-00005#1 pmdt007 mode pmdt036 
+               EXECUTE p350_02_prep3_1 USING l_pmdt001,l_sfeb_02.pmdt002,l_sfeb_02.pmdt003,l_sfeb_02.pmdt004 INTO l_sfeb_02.sfeb008
+
+             END IF
+             
+         ELSE
+             #做單位數量換
+             FOREACH p350_02_curs4 USING l_sfeb001 INTO l_sfec008,l_sfec009
+                #LET l_sum1 = 0
+                ##單位數量轉換
+                #IF NOT cl_null(l_sfeb_01.sfeb007) AND NOT cl_null(l_sfec008) THEN
+                #   CALL s_aooi250_convert_qty(l_sfeb_01.sfeb004,l_sfec008,l_sfeb_01.sfeb007,l_sfec009)
+                #     RETURNING l_success,l_sum1 
+                #   IF NOT l_success THEN
+                #      EXIT FOREACH 
+                #   END IF                      
+                #END IF
+                ##參考單位數量轉換(報工單沒有參考單位，直接用l_sfec008,l_sfec009)                
+                #LET l_sum2 = 0
+                #IF NOT cl_null(l_sfeb_01.sfeb010) AND NOT cl_null(l_sfec008) THEN
+                #   CALL s_aooi250_convert_qty(l_sfeb_01.sfeb004,l_sfec008,l_sfeb_01.sfeb010,l_sfec009)
+                #     RETURNING l_success,l_sum2              
+                #END IF                 
+                #LET l_sum3 = l_sum3 + l_sum1
+                #LET l_sum4 = l_sum4 + l_sum2                                     
+                 LET l_sum3 = l_sum3 + l_sfec009
+                 LET l_sum4 = l_sum4 + l_sfec009                
+             END FOREACH 
+             EXECUTE p350_02_prep2_1 USING l_sfeb001,l_sfeb_01.sfeb004,l_sfeb_01.sfeb005 INTO l_sfeb_02.sfeb008             
+         END IF             
+         IF cl_null(l_sfeb_02.sfeb008) THEN LET l_sfeb_02.sfeb008 = 0 END IF
+         LET l_sfeb_02.l_rate = l_sum3
+         LET l_sum5 = l_sum5 + l_sum3
+         LET l_sum6 = l_sum6 + l_sum4
+         INSERT INTO p350_02_temp(sfebseq,sfebseq2,sfeb004,sfeb005,sfeb013,
+                                    sfeb014,sfeb015,sfeb016,sfeb001,sfeb023,                                   
+                                    sfeb027,pmdt001,pmdt002,pmdt003,pmdt004,sfeb008,
+                                    rate,sfeb009,sfeb012,rate2,sfeb007,sfeb010,
+                                    pmdt036)    #160812-00005#1 pmdt007 mode pmdt036
+           VALUES (l_sfeb_02.sfebseq,l_sfeb_02.sfebseq2,l_sfeb_02.sfeb004,l_sfeb_02.sfeb005,l_sfeb_02.sfeb013,
+                   l_sfeb_02.sfeb014,l_sfeb_02.sfeb015,l_sfeb_02.sfeb016,l_sfeb_02.sfeb001,l_sfeb_02.sfeb023,
+                   l_sfeb_02.sfeb027,l_sfeb_02.pmdt001,l_sfeb_02.pmdt002,l_sfeb_02.pmdt003,l_sfeb_02.pmdt004,l_sfeb_02.sfeb008,
+                   l_sfeb_02.l_rate,l_sfeb_02.sfeb009,l_sfeb_02.sfeb012,l_sum4,l_sfeb_01.sfeb007,l_sfeb_01.sfeb010,
+                   l_sfeb_02.pmdt036)           #160812-00005#1 pmdt007 mode pmdt036     
+         IF SQLCA.SQLcode  THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "ins p350_02_temp:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()    
+            EXIT FOREACH           
+         END IF           
+         LET l_cnt = l_cnt + 1    
+     END FOREACH
+
+     LET l_max_seq = l_cnt - 1   #最後那一筆
+     #做分攤
+     LET l_sum1 = 0
+     LET l_sum2 = 0     
+     FOREACH p350_02_rate_curs USING l_sfeb_01.sfebseq INTO l_sfebseq2,l_rate,l_rate2
+       LET l_sfeb009 = 0
+       LET l_sfeb012 = 0
+       LET l_sfeb009 = l_sfeb_01.sfeb008 * l_rate/l_sum5
+       LET l_sfeb012 = l_sfeb_01.sfeb011 * l_rate2/l_sum6
+       #單位取位
+       IF NOT cl_null(l_sfeb_01.sfeb007) AND NOT cl_null(l_sfeb009) AND l_sfeb009 != 0 THEN
+          CALL s_aooi250_take_decimals(l_sfeb_01.sfeb007,l_sfeb009) RETURNING l_success,l_sfeb009
+       END IF
+       IF NOT cl_null(l_sfeb_01.sfeb010) AND NOT cl_null(l_sfeb012) AND l_sfeb012 != 0 THEN
+          CALL s_aooi250_take_decimals(l_sfeb_01.sfeb010,l_sfeb012) RETURNING l_success,l_sfeb012
+       END IF      
+       EXECUTE p350_02_upd_prep USING l_sfeb009,l_sfeb012,l_sfeb_01.sfebseq,l_sfebseq2 
+     END FOREACH
+     #差異數調整最後一筆
+     LET l_diff_sum = 0
+     LET l_diff_sum2 = 0
+     SELECT SUM(sfeb009),SUM(sfeb012)
+       INTO l_diff_sum,l_diff_sum2
+       FROM p350_02_temp
+      WHERE sfebseq = l_sfeb_01.sfebseq
+     IF cl_null(l_diff_sum) THEN LET l_diff_sum = 0 END IF    
+     IF cl_null(l_diff_sum2) THEN LET l_diff_sum2 = 0 END IF
+     
+     LET l_diff_sum = l_sfeb_01.sfeb008 - l_diff_sum
+     LET l_diff_sum2 = l_sfeb_01.sfeb011 - l_diff_sum2
+     IF l_diff_sum <> 0 OR l_diff_sum2 <> 0 THEN
+        LET l_sfeb009 = 0
+        LET l_sfeb012 = 0
+        EXECUTE p350_02_sfeb_prep USING l_sfeb_01.sfebseq,l_max_seq INTO l_sfeb009,l_sfeb012    
+        IF cl_null(l_sfeb009) THEN LET l_sfeb009 = 0 END IF    
+        IF cl_null(l_sfeb012) THEN LET l_sfeb012 = 0 END IF
+        LET l_sfeb009 = l_sfeb009 + l_diff_sum
+        LET l_sfeb012 = l_sfeb012 + l_diff_sum2
+        EXECUTE p350_02_upd_prep USING l_sfeb009,l_sfeb012,l_sfeb_01.sfebseq,l_max_seq         
+     END IF   
+   END FOREACH
+
+   FREE p350_02_prep2_1
+   FREE p350_02_prep3_1
+   FREE p350_02_pmdo_prep
+   FREE p350_02_sfeb_prep
+   FREE p350_02_upd_prep
+   
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt
+     FROM p350_02_temp
+   IF l_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ''
+      LET g_errparam.code   = 'asf-00230'  #無資料處理!
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      RETURN FALSE
+   ELSE 
+      RETURN TRUE   
+   END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 單身填充
+# Memo...........:
+# Usage..........: CALL asfp350_02_b_fill()
+#                  RETURNING 
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160709 By 02040
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asfp350_02_b_fill()
+   DEFINE l_sql       STRING
+   DEFINE l_ac_t      LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+
+   INITIALIZE g_sfeb_d TO NULL  
+
+    
+    LET l_sql = " SELECT sfebseq,sfebseq2,sfeb004, ",
+                " (SELECT imaal003 FROM imaal_t WHERE imaal001 = sfeb004 AND imaalent = ",g_enterprise," AND imaal002 = '",g_dlang,"') imaal003, ",
+                " (SELECT imaal004 FROM imaal_t WHERE imaal001 = sfeb004 AND imaalent = ",g_enterprise," AND imaal002 = '",g_dlang,"') imaal004, ", 
+                "  sfeb005, ",
+                " (SELECT inaml004 FROM inaml_t WHERE inamlent = ",g_enterprise," AND inaml001 = sfeb004 AND inaml002 = sfeb005 AND inaml003 = '",g_dlang,"') inaml004,",
+                "          sfeb013, ",
+                " (SELECT inaa002 FROM inaa_t WHERE inaaent= ",g_enterprise," AND inaasite= '",g_site,"' AND inaa001=sfeb013) inaa001, ",
+                " sfeb014, ",
+                " (SELECT inab003 FROM inab_t WHERE inabent=",g_enterprise," AND inab001=sfeb013 AND inab002=sfeb014 AND inabsite='",g_site," ') inab003, ",
+                "          sfeb015,sfeb016, ",
+                " '', ",
+                " sfeb001, ",
+                " sfeb023, ",
+                " (SELECT imaal003 FROM imaal_t WHERE imaal001 = sfeb023 AND imaalent = ",g_enterprise," AND imaal002 = '",g_dlang,"') imaal003_1, ",
+                " (SELECT imaal004 FROM imaal_t WHERE imaal001 = sfeb023 AND imaalent = ",g_enterprise," AND imaal002 = '",g_dlang,"') imaal004_1, ",                 
+                " sfeb008,pmdt001, ",
+                "          pmdt002,pmdt003,pmdt004,rate, ", 
+                "          sfeb009,sfeb012,sfebdocno ",
+                "  FROM p350_02_temp ",
+                " ORDER BY sfebseq,sfebseq2 "
+
+{   #LET l_sql = " SELECT l_sfebseq,l_sfebseq2,sfeb004,'','', ",   
+    #           "          sfeb005,'',sfeb013,'',sfeb014, ",
+    #           "          '',sfeb015,sfeb016,'',sfeb001, ",
+    #           "          sfeb023,'','',sfeb008,pmdt001, ",
+    #           "          pmdt002,pmdt003,pmdt004,l_rate, ", 
+    #           "          sfeb009,sfeb012,sfebdocno ",
+    #           "  FROM p350_02_temp ",
+    #           " ORDER BY l_sfebseq,l_sfebseq2 "
+}
+    PREPARE asfp350_sel_pr FROM l_sql
+    DECLARE asfp350_sel_cs CURSOR FOR asfp350_sel_pr
+    LET l_ac_t = l_ac    
+    LET l_ac = 1
+       
+    FOREACH asfp350_sel_cs INTO g_sfeb_d[l_ac].* 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp350_sel_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF    
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+    END FOREACH   
+
+    CALL g_sfeb_d.deleteElement(l_ac)
+    LET g_detail_cnt = l_ac - 1  
+    LET l_ac = l_ac_t
+
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生完工入庫單頭檔
+# Memo...........:
+# Usage..........: CALL asfp350_02_ins_sfea()
+#                  RETURNING 
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160709 By 02040
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asfp350_02_ins_sfea()
+#161109-00085#41-s
+#DEFINE l_sfea    RECORD LIKE sfea_t.*
+DEFINE l_sfea RECORD  #完工入庫單頭檔
+       sfeaent LIKE sfea_t.sfeaent, #企業編號
+       sfeasite LIKE sfea_t.sfeasite, #營運據點
+       sfeadocno LIKE sfea_t.sfeadocno, #單號
+       sfeadocdt LIKE sfea_t.sfeadocdt, #單據日期
+       sfea001 LIKE sfea_t.sfea001, #過帳日期
+       sfea002 LIKE sfea_t.sfea002, #申請人
+       sfea003 LIKE sfea_t.sfea003, #部門
+       sfea004 LIKE sfea_t.sfea004, #PBI編號
+       sfea005 LIKE sfea_t.sfea005, #倒扣領料單號
+       sfeaownid LIKE sfea_t.sfeaownid, #資料所有者
+       sfeaowndp LIKE sfea_t.sfeaowndp, #資料所屬部門
+       sfeacrtid LIKE sfea_t.sfeacrtid, #資料建立者
+       sfeacrtdp LIKE sfea_t.sfeacrtdp, #資料建立部門
+       sfeacrtdt LIKE sfea_t.sfeacrtdt, #資料創建日
+       sfeamodid LIKE sfea_t.sfeamodid, #資料修改者
+       sfeamoddt LIKE sfea_t.sfeamoddt, #最近修改日
+       sfeacnfid LIKE sfea_t.sfeacnfid, #資料確認者
+       sfeacnfdt LIKE sfea_t.sfeacnfdt, #資料確認日
+       sfeapstid LIKE sfea_t.sfeapstid, #資料過帳者
+       sfeapstdt LIKE sfea_t.sfeapstdt, #資料過帳日
+       sfeastus LIKE sfea_t.sfeastus, #狀態碼
+       sfea006 LIKE sfea_t.sfea006   #生產計畫
+END RECORD
+#161109-00085#41-e
+DEFINE l_success LIKE type_t.num5
+DEFINE r_success LIKE type_t.num5
+DEFINE l_sfaadocno LIKE sfaa_t.sfaadocno
+DEFINE l_sql  STRING
+DEFINE l_docno LIKE sfaa_t.sfaadocno
+
+   WHENEVER ERROR CONTINUE 
+
+   LET g_success = 'Y' 
+
+   
+   CALL s_transaction_begin()
+
+   INITIALIZE l_sfea.* TO NULL
+   
+   IF cl_null(g_input.sfeadocdt) THEN 
+      LET g_input.sfeadocdt = g_today
+   END IF
+
+   LET l_sql = "SELECT sfeb004 FROM p350_02_temp ",
+               " ORDER BY sfebseq,sfebseq2 "
+   PREPARE asfp350_sfeb004_pre FROM l_sql
+   DECLARE asfp350_sfeb004_cur SCROLL CURSOR FOR asfp350_sfeb004_pre
+   
+   OPEN asfp350_sfeb004_cur
+   FETCH FIRST asfp350_sfeb004_cur INTO l_sfaadocno
+   CLOSE asfp350_sfeb004_cur
+
+   CALL s_aooi210_get_doc(g_site,'',6,l_sfaadocno,'asft340','')
+     RETURNING l_success,l_docno
+   IF NOT l_success THEN
+      LET g_success = 'N'
+      RETURN  
+   END IF
+   IF cl_null(l_docno) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'agl-00122'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_success = 'N'
+      RETURN  
+   END IF
+   LET g_input.sfeadocno = l_docno 
+   
+   #取單號g_input.sfeadocno
+   CALL s_aooi200_gen_docno(g_site,g_input.sfeadocno,g_input.sfeadocdt,'asft340')
+     RETURNING l_success,l_sfea.sfeadocno
+   IF NOT l_success THEN
+      LET g_success = 'N'
+      CALL s_transaction_end('N','0') 
+      RETURN 
+   END IF 
+    
+   
+   LET l_sfea.sfeaent = g_enterprise
+   LET l_sfea.sfeasite = g_site
+   LET l_sfea.sfeadocdt = g_input.sfeadocdt
+   LET l_sfea.sfea001 = g_input.sfeadocdt
+   LET l_sfea.sfea002 = g_user
+   LET l_sfea.sfea003 = g_dept
+	LET l_sfea.sfeaownid = g_user
+	LET l_sfea.sfeaowndp = g_dept
+	LET l_sfea.sfeacrtid = g_user
+	LET l_sfea.sfeacrtdp = g_dept
+	LET l_sfea.sfeacrtdt = cl_get_current()
+	LET l_sfea.sfeamodid = ''
+	LET l_sfea.sfeamoddt = ''
+	LET l_sfea.sfeastus = 'N'
+
+   INSERT INTO sfea_t (sfeaent,sfeadocno,sfeasite,sfeadocdt,sfea001,sfea002,sfea003,sfeastus,
+       sfea004,sfea005,sfeaownid,sfeaowndp,sfeacrtid,sfeacrtdp,sfeacrtdt,sfeamodid,sfeamoddt,
+       sfeacnfid,sfeacnfdt,sfeapstid,sfeapstdt)
+   VALUES (g_enterprise,l_sfea.sfeadocno,l_sfea.sfeasite,l_sfea.sfeadocdt,l_sfea.sfea001,
+       l_sfea.sfea002,l_sfea.sfea003,l_sfea.sfeastus,l_sfea.sfea004,l_sfea.sfea005,
+       l_sfea.sfeaownid,l_sfea.sfeaowndp,l_sfea.sfeacrtid,l_sfea.sfeacrtdp,l_sfea.sfeacrtdt,
+       l_sfea.sfeamodid,l_sfea.sfeamoddt,l_sfea.sfeacnfid,l_sfea.sfeacnfdt,l_sfea.sfeapstid,
+       l_sfea.sfeapstdt)
+  
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = "ins sfea_t:",SQLERRMESSAGE
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      LET g_success = 'N'
+      RETURN 
+   END IF	
+
+   #完工入庫申請檔sfeb_t #完工入庫明細檔sfec_t
+   IF NOT asfp350_02_ins_sfeb(l_sfea.sfeadocno) THEN
+      LET g_success = 'N'
+      RETURN   
+   ELSE
+      CALL s_transaction_end('Y','0')
+      #寫入入庫單號
+      UPDATE p350_02_temp
+         SET sfebdocno = l_sfea.sfeadocno
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "upd sfeadocno:",SQLERRMESSAGE
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         LET g_success = 'N'
+         RETURN
+      END IF
+      INITIALIZE g_errparam TO NULL    
+      LET g_errparam.code = 'asf-00732'  #產生單號%1，請至[asft340工單完工入庫維護作業]查看！        
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = l_sfea.sfeadocno
+      CALL cl_err()       
+   END IF 
+    
+END FUNCTION
+################################################################################
+# Descriptions...: 產生完工入庫申請檔
+# Memo...........:
+# Usage..........: CALL asfp350_02_ins_sfeb(p_sfeadocno)
+#                  RETURNING r_success
+# Input parameter: p_sfeadocno   入庫單單號
+# Return code....: r_success  TRUE/FALSE
+# Date & Author..: 160709 By 02040
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp350_02_ins_sfeb(p_sfeadocno)
+  DEFINE p_sfeadocno  LIKE sfea_t.sfeadocno
+  DEFINE l_sql     STRING
+  #161109-00085#41-s
+  #DEFINE l_sfeb    RECORD LIKE sfeb_t.*
+  DEFINE l_sfeb RECORD  #完工入庫申請檔
+       sfebent LIKE sfeb_t.sfebent, #企業編號
+       sfebsite LIKE sfeb_t.sfebsite, #營運據點
+       sfebdocno LIKE sfeb_t.sfebdocno, #完工入庫單號
+       sfebseq LIKE sfeb_t.sfebseq, #項次
+       sfeb001 LIKE sfeb_t.sfeb001, #工單單號
+       sfeb002 LIKE sfeb_t.sfeb002, #FQC
+       sfeb003 LIKE sfeb_t.sfeb003, #入庫類型
+       sfeb004 LIKE sfeb_t.sfeb004, #料件編號
+       sfeb005 LIKE sfeb_t.sfeb005, #特徵
+       sfeb006 LIKE sfeb_t.sfeb006, #包裝容器
+       sfeb007 LIKE sfeb_t.sfeb007, #單位
+       sfeb008 LIKE sfeb_t.sfeb008, #申請數量
+       sfeb009 LIKE sfeb_t.sfeb009, #實際數量
+       sfeb010 LIKE sfeb_t.sfeb010, #參考單位
+       sfeb011 LIKE sfeb_t.sfeb011, #申請參考數量
+       sfeb012 LIKE sfeb_t.sfeb012, #實際參考數量
+       sfeb013 LIKE sfeb_t.sfeb013, #指定庫位
+       sfeb014 LIKE sfeb_t.sfeb014, #指定儲位
+       sfeb015 LIKE sfeb_t.sfeb015, #指定批號
+       sfeb016 LIKE sfeb_t.sfeb016, #庫存管理特徵
+       sfeb017 LIKE sfeb_t.sfeb017, #專案編號
+       sfeb018 LIKE sfeb_t.sfeb018, #WBS
+       sfeb019 LIKE sfeb_t.sfeb019, #活動編號
+       sfeb020 LIKE sfeb_t.sfeb020, #理由碼
+       sfeb021 LIKE sfeb_t.sfeb021, #庫存有效日期
+       sfeb022 LIKE sfeb_t.sfeb022, #庫存備註
+       sfeb023 LIKE sfeb_t.sfeb023, #生產料號
+       sfeb024 LIKE sfeb_t.sfeb024, #生產料號BOM特性
+       sfeb025 LIKE sfeb_t.sfeb025, #生產料號特徵
+       sfeb026 LIKE sfeb_t.sfeb026, #RUN CARD
+       sfeb027 LIKE sfeb_t.sfeb027, #檢驗合格量
+       sfeb028 LIKE sfeb_t.sfeb028  #製造日期
+  END RECORD
+  #161109-00085#41-e
+  #DEFINE l_sfec    RECORD LIKE sfec_t.*
+  DEFINE l_sfec RECORD  #完工入庫明細檔
+       sfecent LIKE sfec_t.sfecent, #企業編號
+       sfecsite LIKE sfec_t.sfecsite, #營運據點
+       sfecdocno LIKE sfec_t.sfecdocno, #單號
+       sfecseq LIKE sfec_t.sfecseq, #項次
+       sfecseq1 LIKE sfec_t.sfecseq1, #項次1
+       sfec001 LIKE sfec_t.sfec001, #工單單號
+       sfec002 LIKE sfec_t.sfec002, #FQC單號
+       sfec003 LIKE sfec_t.sfec003, #判定項次
+       sfec004 LIKE sfec_t.sfec004, #入庫類型
+       sfec005 LIKE sfec_t.sfec005, #料件編號
+       sfec006 LIKE sfec_t.sfec006, #特徵
+       sfec007 LIKE sfec_t.sfec007, #包裝容器
+       sfec008 LIKE sfec_t.sfec008, #單位
+       sfec009 LIKE sfec_t.sfec009, #數量
+       sfec010 LIKE sfec_t.sfec010, #參考單位
+       sfec011 LIKE sfec_t.sfec011, #參考數量
+       sfec012 LIKE sfec_t.sfec012, #庫位
+       sfec013 LIKE sfec_t.sfec013, #儲位
+       sfec014 LIKE sfec_t.sfec014, #批號
+       sfec015 LIKE sfec_t.sfec015, #庫存管理特徵
+       sfec016 LIKE sfec_t.sfec016, #有效日期
+       sfec017 LIKE sfec_t.sfec017, #庫存備註
+       sfec018 LIKE sfec_t.sfec018, #生產料號
+       sfec019 LIKE sfec_t.sfec019, #生產料號BOM特性
+       sfec020 LIKE sfec_t.sfec020, #生產料號產品特徵
+       sfec021 LIKE sfec_t.sfec021, #RUN CARD
+       sfec022 LIKE sfec_t.sfec022, #專案編號
+       sfec023 LIKE sfec_t.sfec023, #WBS
+       sfec024 LIKE sfec_t.sfec024, #活動編號
+       sfec028 LIKE sfec_t.sfec028  #製造日期
+   END RECORD
+  #161109-00085#41-s
+  #161109-00085#41-e
+  DEFINE l_success LIKE type_t.num5
+  DEFINE r_success LIKE type_t.num5
+
+  LET r_success = TRUE
+  
+  LET l_sql = "SELECT sfeb004,sfeb005,sfeb013,sfeb014,sfeb015, ",
+              "       sfeb016,sfeb001,sfeb009,sfeb023, ",
+              "       sfeb012,sfeb007,sfeb010",
+              "  FROM p350_02_temp ",
+              " WHERE sfeb009 > 0 ",
+              " ORDER BY sfebseq,sfebseq2 "
+   PREPARE p350_02_ins_prep FROM l_sql
+   DECLARE p350_02_ins_curs CURSOR FOR p350_02_ins_prep  
+   
+   INITIALIZE l_sfeb.* TO NULL
+   FOREACH p350_02_ins_curs INTO l_sfeb.sfeb004,l_sfeb.sfeb005,l_sfeb.sfeb013,l_sfeb.sfeb014,l_sfeb.sfeb015,
+                                 l_sfeb.sfeb016,l_sfeb.sfeb001,l_sfeb.sfeb009,l_sfeb.sfeb023,   
+                                 l_sfeb.sfeb012,l_sfeb.sfeb007,l_sfeb.sfeb010
+
+      LET l_sfeb.sfebent = g_enterprise
+      LET l_sfeb.sfebdocno = p_sfeadocno
+      LET l_sfeb.sfebsite = g_site
+      LET l_sfeb.sfeb008 = l_sfeb.sfeb009
+      LET l_sfeb.sfeb011 = l_sfeb.sfeb012
+      LET l_sfeb.sfeb002 = 'N'
+      LET l_sfeb.sfeb003 = '5'   #回收料
+      LET l_sfeb.sfeb027 = "0"
+      
+      SELECT MAX(sfebseq) + 1 INTO l_sfeb.sfebseq FROM sfeb_t
+       WHERE sfebent = g_enterprise
+         AND sfebdocno = p_sfeadocno
+      IF cl_null(l_sfeb.sfebseq) THEN
+         LET l_sfeb.sfebseq = 1
+      END IF
+      IF l_sfeb.sfeb005 IS NULL THEN
+         LET l_sfeb.sfeb005 = ' '
+      END IF
+      IF l_sfeb.sfeb016 IS NULL THEN
+         LET l_sfeb.sfeb016 = ' '
+      END IF
+
+      INSERT INTO sfeb_t (sfebent,sfebsite,sfebdocno,sfebseq,
+                          sfeb001,sfeb002,sfeb003,sfeb004,sfeb005,
+                          sfeb006,sfeb007,sfeb008,sfeb027,sfeb009,
+                          sfeb010,sfeb011,sfeb012,sfeb013,sfeb014,
+                          sfeb015,sfeb016,sfeb017,sfeb018,sfeb019,
+                          sfeb020,sfeb028,sfeb021,sfeb022,sfeb023)
+       VALUES(g_enterprise,l_sfeb.sfebsite,p_sfeadocno,l_sfeb.sfebseq,
+              l_sfeb.sfeb001,l_sfeb.sfeb002,l_sfeb.sfeb003,l_sfeb.sfeb004,l_sfeb.sfeb005,
+              l_sfeb.sfeb006,l_sfeb.sfeb007,l_sfeb.sfeb008,l_sfeb.sfeb027,l_sfeb.sfeb009,
+              l_sfeb.sfeb010,l_sfeb.sfeb011,l_sfeb.sfeb012,l_sfeb.sfeb013,l_sfeb.sfeb014,
+              l_sfeb.sfeb015,l_sfeb.sfeb016,l_sfeb.sfeb017,l_sfeb.sfeb018,l_sfeb.sfeb019,
+              l_sfeb.sfeb020,l_sfeb.sfeb028,l_sfeb.sfeb021,l_sfeb.sfeb022,l_sfeb.sfeb023)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "ins sfeb_t:",SQLERRMESSAGE
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         LET r_success = FALSE
+         RETURN r_success
+      END IF	
+      
+      #完工入庫明細檔
+      INITIALIZE l_sfec.* TO NULL
+      LET l_sfec.sfecent = l_sfeb.sfebent
+      LET l_sfec.sfecsite = l_sfeb.sfebsite
+      LET l_sfec.sfecdocno = l_sfeb.sfebdocno
+      LET l_sfec.sfecseq = l_sfeb.sfebseq
+      LET l_sfec.sfecseq1 = 1
+      LET l_sfec.sfec001 = l_sfeb.sfeb001
+      LET l_sfec.sfec004 = l_sfeb.sfeb003
+      LET l_sfec.sfec005 = l_sfeb.sfeb004
+      LET l_sfec.sfec006 = l_sfeb.sfeb005
+      LET l_sfec.sfec008 = l_sfeb.sfeb007
+      LET l_sfec.sfec009 = l_sfeb.sfeb009
+      LET l_sfec.sfec010 = l_sfeb.sfeb010
+      LET l_sfec.sfec011 = l_sfeb.sfeb012
+      LET l_sfec.sfec012 = l_sfeb.sfeb013
+      LET l_sfec.sfec013 = l_sfeb.sfeb014
+      LET l_sfec.sfec014 = l_sfeb.sfeb015
+      LET l_sfec.sfec015 = l_sfeb.sfeb016
+      LET l_sfec.sfec023 = l_sfeb.sfeb018
+      
+      INSERT INTO sfec_t(sfecent,sfecsite,sfecdocno,sfecseq,sfecseq1,
+                         sfec001,sfec004,sfec005,sfec006,sfec008,
+                         sfec009,sfec010,sfec011,sfec012,sfec013,
+                         sfec014,sfec015,sfec023)
+      VALUES(l_sfec.sfecent,l_sfec.sfecsite,l_sfec.sfecdocno,l_sfec.sfecseq,l_sfec.sfecseq1,
+             l_sfec.sfec001,l_sfec.sfec004,l_sfec.sfec005,l_sfec.sfec006,l_sfec.sfec008,
+             l_sfec.sfec009,l_sfec.sfec010,l_sfec.sfec011,l_sfec.sfec012,l_sfec.sfec013,
+             l_sfec.sfec014,l_sfec.sfec015,l_sfec.sfec023)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "ins sfec_t:",SQLERRMESSAGE
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         LET r_success = FALSE
+         RETURN r_success
+      END IF	             
+   END FOREACH
+   RETURN r_success
+END FUNCTION
+################################################################################
+# Descriptions...: 產生收貨/入庫單頭檔
+# Memo...........:
+# Usage..........: CALL asfp350_02_ins_pmds()
+#                  RETURNING 
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160709 By 02040
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asfp350_02_ins_pmds()
+#161109-00085#41-s
+#DEFINE l_pmds RECORD LIKE pmds_t.*
+DEFINE l_pmds RECORD  #收貨/入庫單頭檔
+       pmdsent LIKE pmds_t.pmdsent, #企業編號
+       pmdssite LIKE pmds_t.pmdssite, #營運據點
+       pmdsdocno LIKE pmds_t.pmdsdocno, #單據單號
+       pmdsdocdt LIKE pmds_t.pmdsdocdt, #單據日期
+       pmds000 LIKE pmds_t.pmds000, #單據性質
+       pmds001 LIKE pmds_t.pmds001, #扣帳日期
+       pmds002 LIKE pmds_t.pmds002, #申請人員
+       pmds003 LIKE pmds_t.pmds003, #申請部門
+       pmds006 LIKE pmds_t.pmds006, #來源單號
+       pmds007 LIKE pmds_t.pmds007, #採購供應商
+       pmds008 LIKE pmds_t.pmds008, #帳款供應商
+       pmds009 LIKE pmds_t.pmds009, #送貨供應商
+       pmds010 LIKE pmds_t.pmds010, #供應商送貨單號
+       pmds011 LIKE pmds_t.pmds011, #採購性質
+       pmds012 LIKE pmds_t.pmds012, #採購通路
+       pmds013 LIKE pmds_t.pmds013, #採購分類
+       pmds014 LIKE pmds_t.pmds014, #多角性質
+       pmds021 LIKE pmds_t.pmds021, #LC進口
+       pmds022 LIKE pmds_t.pmds022, #進口日期
+       pmds023 LIKE pmds_t.pmds023, #進口報單
+       pmds024 LIKE pmds_t.pmds024, #進口號碼
+       pmds028 LIKE pmds_t.pmds028, #一次性交易對象識別碼
+       pmds031 LIKE pmds_t.pmds031, #付款條件
+       pmds032 LIKE pmds_t.pmds032, #交易條件
+       pmds033 LIKE pmds_t.pmds033, #稅別
+       pmds034 LIKE pmds_t.pmds034, #稅率
+       pmds035 LIKE pmds_t.pmds035, #單價含稅否
+       pmds036 LIKE pmds_t.pmds036, #交易類型
+       pmds037 LIKE pmds_t.pmds037, #幣別
+       pmds038 LIKE pmds_t.pmds038, #匯率
+       pmds039 LIKE pmds_t.pmds039, #取價方式
+       pmds040 LIKE pmds_t.pmds040, #付款優惠條件
+       pmds041 LIKE pmds_t.pmds041, #多角序號
+       pmds042 LIKE pmds_t.pmds042, #整合單號
+       pmds043 LIKE pmds_t.pmds043, #採購總未稅金額
+       pmds044 LIKE pmds_t.pmds044, #採購總含稅金額
+       pmds045 LIKE pmds_t.pmds045, #備註
+       pmds046 LIKE pmds_t.pmds046, #採購總稅額
+       pmds047 LIKE pmds_t.pmds047, #多角貿易中斷點
+       pmds048 LIKE pmds_t.pmds048, #內外購
+       pmds049 LIKE pmds_t.pmds049, #匯率計算基準
+       pmds050 LIKE pmds_t.pmds050, #多角貿易已拋轉
+       pmds051 LIKE pmds_t.pmds051, #出貨單號
+       pmds052 LIKE pmds_t.pmds052, #供應商出貨日
+       pmds053 LIKE pmds_t.pmds053, #多角流程編號
+       pmds081 LIKE pmds_t.pmds081, #取回日期
+       pmds100 LIKE pmds_t.pmds100, #倉退方式
+       pmds101 LIKE pmds_t.pmds101, #折讓日期
+       pmds102 LIKE pmds_t.pmds102, #折讓原始發票
+       pmdsownid LIKE pmds_t.pmdsownid, #資料所屬者
+       pmdsowndp LIKE pmds_t.pmdsowndp, #資料所有部門
+       pmdscrtid LIKE pmds_t.pmdscrtid, #資料建立者
+       pmdscrtdp LIKE pmds_t.pmdscrtdp, #資料建立部門
+       pmdscrtdt LIKE pmds_t.pmdscrtdt, #資料創建日
+       pmdsmodid LIKE pmds_t.pmdsmodid, #資料修改者
+       pmdsmoddt LIKE pmds_t.pmdsmoddt, #最近修改日
+       pmdscnfid LIKE pmds_t.pmdscnfid, #資料確認者
+       pmdscnfdt LIKE pmds_t.pmdscnfdt, #資料確認日
+       pmdspstid LIKE pmds_t.pmdspstid, #資料過帳者
+       pmdspstdt LIKE pmds_t.pmdspstdt, #資料過帳日
+       pmdsstus LIKE pmds_t.pmdsstus, #狀態碼
+       pmds200 LIKE pmds_t.pmds200, #收貨預約單號
+       pmds054 LIKE pmds_t.pmds054, #資料來源
+       pmds055 LIKE pmds_t.pmds055, #來源單號
+       pmds201 LIKE pmds_t.pmds201, #來源單號
+       pmds202 LIKE pmds_t.pmds202, #來源類型
+       pmdsunit LIKE pmds_t.pmdsunit, #應用執行組織物件
+       pmds056 LIKE pmds_t.pmds056, #No use
+       pmds057 LIKE pmds_t.pmds057, #整合來源
+       pmds058 LIKE pmds_t.pmds058, #倒扣領料單號
+       pmds103 LIKE pmds_t.pmds103  #折讓證明單開立方式
+END RECORD
+#161109-00085#41-e
+DEFINE l_oodbl004  LIKE oodbl_t.oodbl004  #稅別名稱
+DEFINE l_oodb005   LIKE oodb_t.oodb005    #含稅否
+DEFINE l_oodb006   LIKE oodb_t.oodb006    #稅率
+DEFINE l_oodb011   LIKE oodb_t.oodb011    #取得稅別類型1:正常稅率2:依料件設定
+DEFINE l_success   LIKE type_t.num5 
+DEFINE l_ooef016   LIKE ooef_t.ooef016
+DEFINE l_scc40     LIKE type_t.chr2
+DEFINE l_sql       STRING
+DEFINE l_docno     LIKE pmdl_t.pmdldocno
+DEFINE l_pmdldocno LIKE pmdl_t.pmdldocno
+DEFINE l_prog      LIKE gzcb_t.gzcb002
+DEFINE l_ooba002     LIKE ooba_t.ooba002
+   
+   
+   WHENEVER ERROR CONTINUE 
+
+   LET g_success = 'Y' 
+
+   CALL s_transaction_begin()
+
+   INITIALIZE l_pmds.* TO NULL
+   
+   IF cl_null(g_input.sfeadocdt) THEN 
+      LET g_input.sfeadocdt = g_today
+   END IF
+   
+   LET l_sql = "SELECT pmdt001 FROM p350_02_temp ",
+               " ORDER BY sfebseq,sfebseq2 "
+   PREPARE asfp350_pmdt001_pre FROM l_sql
+   DECLARE asfp350_pmdt001_cur SCROLL CURSOR FOR asfp350_pmdt001_pre
+   
+   OPEN asfp350_pmdt001_cur
+   FETCH FIRST asfp350_pmdt001_cur INTO l_pmdldocno
+   CLOSE asfp350_pmdt001_cur
+   
+   CALL s_aooi200_get_slip(l_pmdldocno) RETURNING l_success,l_ooba002
+   IF cl_get_doc_para(g_enterprise,g_site,l_ooba002,'D-BAS-0074') = 'N' THEN
+      LET l_pmds.pmds000 = '8'
+      LET l_prog = 'apmt521'
+   ELSE
+      LET l_pmds.pmds000 = '20'
+      LET l_prog = 'apmt531'
+   END IF
+   CALL s_aooi210_get_doc(g_site,'',4,l_pmdldocno,l_prog,'')
+     RETURNING l_success,l_docno
+   IF NOT l_success THEN
+      LET g_success = 'N'
+      RETURN  
+   END IF
+   IF cl_null(l_docno) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'agl-00122'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_success = 'N'
+      RETURN  
+   END IF
+   LET g_input.sfeadocno = l_docno 
+
+   #取單號g_input.sfeadocno
+   CALL s_aooi200_gen_docno(g_site,g_input.sfeadocno,g_input.sfeadocdt,l_prog)
+     RETURNING l_success,l_pmds.pmdsdocno
+   
+   IF NOT l_success THEN
+      LET g_success = 'N'
+      CALL s_transaction_end('N','0') 
+      RETURN 
+   END IF 
+
+   LET l_pmds.pmdsent = g_enterprise
+   LET l_pmds.pmdssite = g_site
+   LET l_pmds.pmdsstus = 'N'
+   LET l_pmds.pmdsdocdt = g_input.sfeadocdt
+   LET l_pmds.pmds001 = g_input.sfeadocdt
+   LET l_pmds.pmds002 = g_user
+   LET l_pmds.pmds003 = g_dept
+   LET l_pmds.pmds006 = ''
+   LET l_pmds.pmds007 = g_input.pmds007
+  
+   SELECT pmdl004,pmdl021,pmdl022,pmdl005,pmdl006,
+          pmdl009,pmdl010,pmdl011,pmdl012,pmdl013,pmdl015,pmdl016,pmdl023,pmdl051,pmdl017
+     INTO l_pmds.pmds007,l_pmds.pmds008,l_pmds.pmds009,l_pmds.pmds011,l_pmds.pmds014,
+          l_pmds.pmds031,l_pmds.pmds032,l_pmds.pmds033,l_pmds.pmds034,l_pmds.pmds035,
+          l_pmds.pmds037,l_pmds.pmds038,l_pmds.pmds012,l_pmds.pmds053,l_pmds.pmds039 
+     FROM pmdl_t 
+    WHERE pmdlent = g_enterprise 
+      AND pmdldocno = l_pmdldocno     
+   
+	LET l_pmds.pmdsownid = g_user
+	LET l_pmds.pmdsowndp = g_dept
+	LET l_pmds.pmdscrtid = g_user
+	LET l_pmds.pmdscrtdp = g_dept
+	LET l_pmds.pmdscrtdt = cl_get_current()
+
+
+   INSERT INTO pmds_t (pmdsent,pmdssite,pmdsdocno,pmdsdocdt,pmds001,pmds002,pmds003,pmdsstus,
+       pmds006,pmds007,pmds008,pmds009,pmds010,pmds052,pmds000,pmds100,pmds011,pmds014,pmds081,
+       pmds045,pmds021,pmds022,pmds023,pmds024,pmds031,pmds032,pmds033,pmds034,pmds035,pmds036,
+       pmds037,pmds038,pmds039,pmds040,pmds012,pmds101,pmds102,pmds048,pmds047,pmds049,pmds053,
+       pmds041,pmds043,pmds044,pmds046,pmds054,pmds055,pmds050,pmds057,pmds042,pmds058,pmdsownid,
+       pmdsowndp,pmdscrtid,pmdscrtdp,pmdscrtdt,pmdsmodid,pmdsmoddt,pmdscnfid,pmdscnfdt,pmdspstid,
+       pmdspstdt)
+   VALUES (g_enterprise,l_pmds.pmdssite,l_pmds.pmdsdocno,l_pmds.pmdsdocdt,l_pmds.pmds001,
+       l_pmds.pmds002,l_pmds.pmds003,l_pmds.pmdsstus,l_pmds.pmds006,l_pmds.pmds007,
+       l_pmds.pmds008,l_pmds.pmds009,l_pmds.pmds010,l_pmds.pmds052,l_pmds.pmds000,
+       l_pmds.pmds100,l_pmds.pmds011,l_pmds.pmds014,l_pmds.pmds081,l_pmds.pmds045,
+       l_pmds.pmds021,l_pmds.pmds022,l_pmds.pmds023,l_pmds.pmds024,l_pmds.pmds031,
+       l_pmds.pmds032,l_pmds.pmds033,l_pmds.pmds034,l_pmds.pmds035,l_pmds.pmds036,
+       l_pmds.pmds037,l_pmds.pmds038,l_pmds.pmds039,l_pmds.pmds040,l_pmds.pmds012,
+       l_pmds.pmds101,l_pmds.pmds102,l_pmds.pmds048,l_pmds.pmds047,l_pmds.pmds049,
+       l_pmds.pmds053,l_pmds.pmds041,l_pmds.pmds043,l_pmds.pmds044,l_pmds.pmds046,
+       l_pmds.pmds054,l_pmds.pmds055,l_pmds.pmds050,l_pmds.pmds057,l_pmds.pmds042,
+       l_pmds.pmds058,l_pmds.pmdsownid,l_pmds.pmdsowndp,l_pmds.pmdscrtid,l_pmds.pmdscrtdp,
+       l_pmds.pmdscrtdt,l_pmds.pmdsmodid,l_pmds.pmdsmoddt,l_pmds.pmdscnfid,l_pmds.pmdscnfdt,
+       l_pmds.pmdspstid,l_pmds.pmdspstdt)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = "ins pmds_t:",SQLERRMESSAGE
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      LET g_success = 'N'
+      RETURN 
+   END IF	
+   #完工入庫申請檔sfeb_t #完工入庫明細檔sfec_t
+   IF NOT asfp350_02_ins_pmdt(l_pmds.pmdsdocno,l_pmds.pmds033,l_pmds.pmds034) THEN
+      LET g_success = 'N'
+      RETURN   
+   ELSE
+      CALL s_transaction_end('Y','0')
+      #寫入入庫單號
+      UPDATE p350_02_temp
+         SET sfebdocno = l_pmds.pmdsdocno
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "upd sfeadocno:",SQLERRMESSAGE
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         LET g_success = 'N'
+         RETURN
+      END IF 
+      INITIALIZE g_errparam TO NULL
+      IF l_prog = 'apmt521' THEN
+         LET g_errparam.code = 'asf-00734'  #產生單號%1，請至[apmt521委外採購收貨作業]查看！
+      ELSE
+         LET g_errparam.code = 'asf-00735'  #產生單號%1，請至[apmt531委外採購收貨入庫維護作業]查看！
+      END IF          
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = l_pmds.pmdsdocno
+      CALL cl_err()      
+   END IF
+END FUNCTION
+################################################################################
+# Descriptions...: 產生收貨/入庫單身明細檔
+# Memo...........:
+# Usage..........: CALL asfp350_02_ins_pmdt(p_pmdsdocno,p_pmds033,p_pmds034)
+#                  RETURNING 
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160709 By 02040
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp350_02_ins_pmdt(p_pmdsdocno,p_pmds033,p_pmds034)
+  DEFINE p_pmdsdocno  LIKE pmds_t.pmdsdocno
+  DEFINE p_pmds033 LIKE pmds_t.pmds033   #稅別
+  DEFINE p_pmds034 LIKE pmds_t.pmds034   #稅率  
+  DEFINE l_sql     STRING
+  #161109-00085#41-s
+  #DEFINE l_pmdt    RECORD LIKE pmdt_t.*
+  DEFINE l_pmdt RECORD  #收貨/入庫單身明細檔
+       pmdtent LIKE pmdt_t.pmdtent, #企業編號
+       pmdtsite LIKE pmdt_t.pmdtsite, #營運據點
+       pmdtdocno LIKE pmdt_t.pmdtdocno, #單據編號
+       pmdtseq LIKE pmdt_t.pmdtseq, #項次
+       pmdt001 LIKE pmdt_t.pmdt001, #採購單號
+       pmdt002 LIKE pmdt_t.pmdt002, #採購項次
+       pmdt003 LIKE pmdt_t.pmdt003, #採購項序
+       pmdt004 LIKE pmdt_t.pmdt004, #採購分批序
+       pmdt005 LIKE pmdt_t.pmdt005, #子件特性
+       pmdt006 LIKE pmdt_t.pmdt006, #料件編號
+       pmdt007 LIKE pmdt_t.pmdt007, #產品特徵
+       pmdt008 LIKE pmdt_t.pmdt008, #包裝容器
+       pmdt009 LIKE pmdt_t.pmdt009, #作業編號
+       pmdt010 LIKE pmdt_t.pmdt010, #作業序
+       pmdt011 LIKE pmdt_t.pmdt011, #沖銷順序
+       pmdt016 LIKE pmdt_t.pmdt016, #庫位
+       pmdt017 LIKE pmdt_t.pmdt017, #儲位
+       pmdt018 LIKE pmdt_t.pmdt018, #批號
+       pmdt019 LIKE pmdt_t.pmdt019, #收貨/入庫單位
+       pmdt020 LIKE pmdt_t.pmdt020, #收貨/入庫數量
+       pmdt021 LIKE pmdt_t.pmdt021, #參考單位
+       pmdt022 LIKE pmdt_t.pmdt022, #參考數量
+       pmdt023 LIKE pmdt_t.pmdt023, #計價單位
+       pmdt024 LIKE pmdt_t.pmdt024, #計價數量
+       pmdt025 LIKE pmdt_t.pmdt025, #緊急度
+       pmdt026 LIKE pmdt_t.pmdt026, #檢驗否
+       pmdt027 LIKE pmdt_t.pmdt027, #收貨單號
+       pmdt028 LIKE pmdt_t.pmdt028, #收貨項次
+       pmdt036 LIKE pmdt_t.pmdt036, #單價
+       pmdt037 LIKE pmdt_t.pmdt037, #稅率
+       pmdt038 LIKE pmdt_t.pmdt038, #未稅金額
+       pmdt039 LIKE pmdt_t.pmdt039, #含稅金額
+       pmdt040 LIKE pmdt_t.pmdt040, #價格核決
+       pmdt041 LIKE pmdt_t.pmdt041, #保稅否
+       pmdt042 LIKE pmdt_t.pmdt042, #取價來源
+       pmdt043 LIKE pmdt_t.pmdt043, #價格參考單號
+       pmdt044 LIKE pmdt_t.pmdt044, #取出單價
+       pmdt045 LIKE pmdt_t.pmdt045, #價差比
+       pmdt046 LIKE pmdt_t.pmdt046, #稅別
+       pmdt047 LIKE pmdt_t.pmdt047, #稅額
+       pmdt051 LIKE pmdt_t.pmdt051, #理由碼
+       pmdt052 LIKE pmdt_t.pmdt052, #狀態碼
+       pmdt053 LIKE pmdt_t.pmdt053, #允收數量
+       pmdt054 LIKE pmdt_t.pmdt054, #已入庫量
+       pmdt055 LIKE pmdt_t.pmdt055, #驗退量
+       pmdt056 LIKE pmdt_t.pmdt056, #主帳套已請款數量
+       pmdt057 LIKE pmdt_t.pmdt057, #帳套二已請款數量
+       pmdt058 LIKE pmdt_t.pmdt058, #帳套三已請款數量
+       pmdt059 LIKE pmdt_t.pmdt059, #備註
+       pmdt060 LIKE pmdt_t.pmdt060, #供應商批號
+       pmdt061 LIKE pmdt_t.pmdt061, #供應商送貨數量
+       pmdt062 LIKE pmdt_t.pmdt062, #多庫儲批收貨入庫
+       pmdt063 LIKE pmdt_t.pmdt063, #庫存管理特徵
+       pmdt064 LIKE pmdt_t.pmdt064, #出貨單號
+       pmdt065 LIKE pmdt_t.pmdt065, #出貨單項次
+       pmdt066 LIKE pmdt_t.pmdt066, #主帳套暫估數量
+       pmdt067 LIKE pmdt_t.pmdt067, #帳套二暫估數量
+       pmdt068 LIKE pmdt_t.pmdt068, #帳套三暫估數量
+       pmdt069 LIKE pmdt_t.pmdt069, #已開發票數量
+       pmdt081 LIKE pmdt_t.pmdt081, #QC單號
+       pmdt082 LIKE pmdt_t.pmdt082, #QC判定項次
+       pmdt083 LIKE pmdt_t.pmdt083, #判定結果
+       pmdt084 LIKE pmdt_t.pmdt084, #須自立AP否
+       pmdt085 LIKE pmdt_t.pmdt085, #多角流程編號
+       pmdt086 LIKE pmdt_t.pmdt086, #採購多角性質
+       pmdt087 LIKE pmdt_t.pmdt087, #採購單開立據點
+       pmdt088 LIKE pmdt_t.pmdt088, #存貨備註
+       pmdt089 LIKE pmdt_t.pmdt089, #有效日期
+       pmdt900 LIKE pmdt_t.pmdt900, #保留欄位str
+       pmdt999 LIKE pmdt_t.pmdt999, #保留欄位end
+       pmdt200 LIKE pmdt_t.pmdt200, #商品條碼
+       pmdt201 LIKE pmdt_t.pmdt201, #收貨包裝單位
+       pmdt202 LIKE pmdt_t.pmdt202, #收貨包裝數量
+       pmdt203 LIKE pmdt_t.pmdt203, #採購組織
+       pmdt204 LIKE pmdt_t.pmdt204, #採購中心
+       pmdt205 LIKE pmdt_t.pmdt205, #要貨組織
+       pmdt206 LIKE pmdt_t.pmdt206, #預約收貨單號
+       pmdt207 LIKE pmdt_t.pmdt207, #預約收貨項次
+       pmdt208 LIKE pmdt_t.pmdt208, #採購通路
+       pmdt209 LIKE pmdt_t.pmdt209, #通路性質
+       pmdt210 LIKE pmdt_t.pmdt210, #經營方式
+       pmdt211 LIKE pmdt_t.pmdt211, #結算方式
+       pmdt212 LIKE pmdt_t.pmdt212, #合約編號
+       pmdt213 LIKE pmdt_t.pmdt213, #協議編號
+       pmdtorga LIKE pmdt_t.pmdtorga, #帳務組織
+       pmdt070 LIKE pmdt_t.pmdt070, #參考單號
+       pmdt071 LIKE pmdt_t.pmdt071, #參考項次
+       pmdt214 LIKE pmdt_t.pmdt214, #採購方式
+       pmdt215 LIKE pmdt_t.pmdt215, #最終收貨組織
+       pmdt048 LIKE pmdt_t.pmdt048, #價格參考項次
+       pmdt216 LIKE pmdt_t.pmdt216, #退貨申請單號
+       pmdt217 LIKE pmdt_t.pmdt217, #退貨申請項次
+       pmdt090 LIKE pmdt_t.pmdt090, #借貨還價數量
+       pmdt091 LIKE pmdt_t.pmdt091, #借貨還價參考數量
+       pmdt092 LIKE pmdt_t.pmdt092, #還價未稅金額
+       pmdt093 LIKE pmdt_t.pmdt093, #還價含稅金額
+       pmdt218 LIKE pmdt_t.pmdt218, #採購價
+       pmdt219 LIKE pmdt_t.pmdt219, #製造日期
+       pmdt072 LIKE pmdt_t.pmdt072, #專案編號
+       pmdt073 LIKE pmdt_t.pmdt073, #WBS
+       pmdt074 LIKE pmdt_t.pmdt074, #活動編號
+       pmdt227 LIKE pmdt_t.pmdt227, #補貨規格說明
+       pmdt049 LIKE pmdt_t.pmdt049, #發票編號
+       pmdt050 LIKE pmdt_t.pmdt050, #發票號碼
+       pmdt075 LIKE pmdt_t.pmdt075, #預算細項
+       pmdt220 LIKE pmdt_t.pmdt220, #商品品類
+       pmdt221 LIKE pmdt_t.pmdt221  #來源單據商品品類
+  END RECORD
+  #161109-00085#41-e
+  #161109-00085#41-s
+  #DEFINE l_pmdu    RECORD LIKE pmdu_t.*
+  DEFINE l_pmdu RECORD  #收貨/驗退/入庫/倉退單多庫儲批收貨明細檔
+       pmduent LIKE pmdu_t.pmduent, #企業編號
+       pmdusite LIKE pmdu_t.pmdusite, #營運據點
+       pmdudocno LIKE pmdu_t.pmdudocno, #單據編號
+       pmduseq LIKE pmdu_t.pmduseq, #項次
+       pmduseq1 LIKE pmdu_t.pmduseq1, #項序
+       pmdu001 LIKE pmdu_t.pmdu001, #料件編號
+       pmdu002 LIKE pmdu_t.pmdu002, #產品特徵
+       pmdu003 LIKE pmdu_t.pmdu003, #作業編號
+       pmdu004 LIKE pmdu_t.pmdu004, #作業序
+       pmdu005 LIKE pmdu_t.pmdu005, #庫存管理特徵
+       pmdu006 LIKE pmdu_t.pmdu006, #庫位
+       pmdu007 LIKE pmdu_t.pmdu007, #儲位
+       pmdu008 LIKE pmdu_t.pmdu008, #批號
+       pmdu009 LIKE pmdu_t.pmdu009, #單位
+       pmdu010 LIKE pmdu_t.pmdu010, #數量
+       pmdu011 LIKE pmdu_t.pmdu011, #參考單位
+       pmdu012 LIKE pmdu_t.pmdu012, #參考數量
+       pmdu013 LIKE pmdu_t.pmdu013, #允收數量
+       pmdu014 LIKE pmdu_t.pmdu014, #已入庫量
+       pmdu015 LIKE pmdu_t.pmdu015, #已驗退量
+       pmdu016 LIKE pmdu_t.pmdu016, #存貨備註
+       pmdu017 LIKE pmdu_t.pmdu017, #有效日期
+       pmdu200 LIKE pmdu_t.pmdu200, #包裝單位
+       pmdu201 LIKE pmdu_t.pmdu201, #包裝數量
+       pmdu202 LIKE pmdu_t.pmdu202  #製造日期
+  END RECORD
+  #161109-00085#41-e
+  #161109-00085#41-s
+  #DEFINE l_pmdv    RECORD LIKE pmdv_t.*
+  DEFINE l_pmdv RECORD  #收貨/入庫需求分配明細檔
+       pmdvent LIKE pmdv_t.pmdvent, #企業編號
+       pmdvsite LIKE pmdv_t.pmdvsite, #營運據點
+       pmdvdocno LIKE pmdv_t.pmdvdocno, #單據編號
+       pmdvseq LIKE pmdv_t.pmdvseq, #項次
+       pmdvseq1 LIKE pmdv_t.pmdvseq1, #項序
+       pmdv001 LIKE pmdv_t.pmdv001, #收貨料件編號
+       pmdv002 LIKE pmdv_t.pmdv002, #收貨產品特徵
+       pmdv003 LIKE pmdv_t.pmdv003, #作業編號
+       pmdv004 LIKE pmdv_t.pmdv004, #作業序
+       pmdv005 LIKE pmdv_t.pmdv005, #子件特性
+       pmdv006 LIKE pmdv_t.pmdv006, #QPA
+       pmdv011 LIKE pmdv_t.pmdv011, #採購單號
+       pmdv012 LIKE pmdv_t.pmdv012, #採購項次
+       pmdv013 LIKE pmdv_t.pmdv013, #採購項序
+       pmdv014 LIKE pmdv_t.pmdv014, #需求單號
+       pmdv015 LIKE pmdv_t.pmdv015, #需求項次
+       pmdv016 LIKE pmdv_t.pmdv016, #需求項序
+       pmdv017 LIKE pmdv_t.pmdv017, #需求分批序
+       pmdv018 LIKE pmdv_t.pmdv018, #收貨/入庫單位
+       pmdv019 LIKE pmdv_t.pmdv019, #收貨/入庫分配數量
+       pmdv900 LIKE pmdv_t.pmdv900, #保留欄位str
+       pmdv999 LIKE pmdv_t.pmdv999, #保留欄位end
+       pmdv200 LIKE pmdv_t.pmdv200, #包裝單位
+       pmdv201 LIKE pmdv_t.pmdv201  #包裝數量
+  END RECORD
+  #161109-00085#41-e
+  DEFINE l_sfeb    type_g_sfeb_d 
+  DEFINE l_success LIKE type_t.num5
+  DEFINE r_success LIKE type_t.num5
+  DEFINE l_sfeb007  LIKE sfeb_t.sfeb007
+  DEFINE l_sfeb010  LIKE sfeb_t.sfeb010
+  DEFINE l_pmdt036  LIKE pmdt_t.pmdt036   #160812-00005#1 pmdt007 mode pmdt036
+  DEFINE l_pmds043 LIKE pmds_t.pmds043
+  DEFINE l_pmds046 LIKE pmds_t.pmds046
+  DEFINE l_pmds044 LIKE pmds_t.pmds044
+  DEFINE l_xrcd113 LIKE xrcd_t.xrcd113
+  DEFINE l_xrcd114 LIKE xrcd_t.xrcd114
+  DEFINE l_xrcd115 LIKE xrcd_t.xrcd115
+ 
+  LET r_success = TRUE
+
+  LET l_sql = "SELECT sfeb004,sfeb005,sfeb013,sfeb014,sfeb015, ",
+              "       sfeb016,sfeb001,sfeb023,pmdt001, ",
+              "       pmdt002,pmdt003,pmdt004,sfeb009,sfeb012, ",
+              "       sfeb007,sfeb010,pmdt036 ",  #160812-00005#1 pmdt007 mode pmdt036
+              "  FROM p350_02_temp ",
+              " WHERE sfeb009 > 0 ",
+              " ORDER BY sfebseq,sfebseq2 "              
+   PREPARE p350_02_ins_prep2 FROM l_sql
+   DECLARE p350_02_ins_curs2 CURSOR FOR p350_02_ins_prep2  
+   
+   INITIALIZE l_sfeb.* TO NULL
+   INITIALIZE l_pmdt.* TO NULL
+   FOREACH p350_02_ins_curs2 INTO l_sfeb.sfeb004,l_sfeb.sfeb005,l_sfeb.sfeb013,l_sfeb.sfeb014,l_sfeb.sfeb015,
+                                 l_sfeb.sfeb016,l_sfeb.sfeb001,l_sfeb.sfeb023,l_sfeb.pmdt001,
+                                 l_sfeb.pmdt002,l_sfeb.pmdt003,l_sfeb.pmdt004,l_sfeb.sfeb009,l_sfeb.sfeb012,
+                                 l_sfeb007,l_sfeb010,l_pmdt036  #160812-00005#1 pmdt007 mode pmdt036
+     #單身
+     LET l_pmdt.pmdtent = g_enterprise
+     LET l_pmdt.pmdtsite = g_site
+     LET l_pmdt.pmdtdocno = p_pmdsdocno
+     
+     SELECT MAX(pmdtseq) + 1 INTO l_pmdt.pmdtseq 
+       FROM pmdt_t
+      WHERE pmdtent = g_enterprise
+        AND pmdtdocno = p_pmdsdocno
+     IF cl_null(l_pmdt.pmdtseq) THEN
+        LET l_pmdt.pmdtseq = 1
+     END IF                                   
+     
+     LET l_pmdt.pmdt001 = l_sfeb.pmdt001
+     LET l_pmdt.pmdt002 = l_sfeb.pmdt002
+     LET l_pmdt.pmdt003 = l_sfeb.pmdt003
+     LET l_pmdt.pmdt004 = l_sfeb.pmdt004     
+     LET l_pmdt.pmdt005 = '13'                            
+     LET l_pmdt.pmdt006 = l_sfeb.sfeb004
+     LET l_pmdt.pmdt007 = l_sfeb.sfeb005
+     IF cl_null(l_pmdt.pmdt007) THEN
+        LET l_pmdt.pmdt007 = ' '
+     END IF
+     LET l_pmdt.pmdt009 = g_input.sfba003
+     LET l_pmdt.pmdt010 = g_input.sfba004
+     LET l_pmdt.pmdt011 = 1
+     LET l_pmdt.pmdt016 = l_sfeb.sfeb013
+     LET l_pmdt.pmdt017 = l_sfeb.sfeb014
+     LET l_pmdt.pmdt018 = l_sfeb.sfeb015
+     LET l_pmdt.pmdt063 = l_sfeb.sfeb016
+     LET l_pmdt.pmdt019 = l_sfeb007
+     LET l_pmdt.pmdt020 = l_sfeb.sfeb009
+     LET l_pmdt.pmdt021 = l_sfeb010
+     LET l_pmdt.pmdt022 = l_sfeb.sfeb012
+     LET l_pmdt.pmdt023 = l_pmdt.pmdt019
+     LET l_pmdt.pmdt024 = l_pmdt.pmdt020 
+     LET l_pmdt.pmdt025 = '1'
+     LET l_pmdt.pmdt026 = 'N'
+     LET l_pmdt.pmdt036 = l_pmdt036  #160812-00005#1 pmdt007 mode pmdt036
+    #LET l_pmdt.pmdt007 = l_pmdt007  #160812-00005#1 mark
+     LET l_pmdt.pmdt046 = p_pmds033
+     LET l_pmdt.pmdt037 = p_pmds034
+     LET l_pmdt.pmdt041 = 'N'
+     LET l_pmdt.pmdt062 = 'N'
+    #pmdt038 pmdt039 pmdt047
+    #未稅金額 含稅金額 稅額
+     CALL s_apmt520_get_amount(l_pmdt.pmdtdocno,l_pmdt.pmdtseq,l_pmdt.pmdt001,l_pmdt.pmdt024,l_pmdt.pmdt036,l_pmdt.pmdt046)
+       RETURNING l_pmdt.pmdt038,l_pmdt.pmdt047,l_pmdt.pmdt039    
+     
+     LET l_pmdt.pmdt053 = l_pmdt.pmdt020
+     LET l_pmdt.pmdt054 = 0
+     
+      INSERT INTO pmdt_t
+          (pmdtent,pmdtsite,pmdtdocno,pmdtseq,       
+           pmdt001, pmdt002,  pmdt003,pmdt004,pmdt005,        
+           pmdt006, pmdt007,  pmdt009,pmdt010,
+           pmdt011, pmdt016,  pmdt017,pmdt018,pmdt063,
+           pmdt019, pmdt020,  pmdt021,pmdt041,pmdt062,
+           pmdt022, pmdt023,  pmdt024,pmdt025,pmdt026,
+           pmdt027, pmdt028,  pmdt036,pmdt037,pmdt038,          
+           pmdt039, pmdt047,  pmdt053,pmdt054,pmdt046)
+       VALUES(l_pmdt.pmdtent,l_pmdt.pmdtsite,l_pmdt.pmdtdocno,l_pmdt.pmdtseq,       
+              l_pmdt.pmdt001, l_pmdt.pmdt002,  l_pmdt.pmdt003,l_pmdt.pmdt004,l_pmdt.pmdt005,        
+              l_pmdt.pmdt006, l_pmdt.pmdt007,  l_pmdt.pmdt009,l_pmdt.pmdt010,
+              l_pmdt.pmdt011, l_pmdt.pmdt016,  l_pmdt.pmdt017,l_pmdt.pmdt018,l_pmdt.pmdt063,
+              l_pmdt.pmdt019, l_pmdt.pmdt020,  l_pmdt.pmdt021,l_pmdt.pmdt041,l_pmdt.pmdt062, 
+              l_pmdt.pmdt022, l_pmdt.pmdt023,  l_pmdt.pmdt024,l_pmdt.pmdt025,l_pmdt.pmdt026,
+              l_pmdt.pmdt027, l_pmdt.pmdt028,  l_pmdt.pmdt036,l_pmdt.pmdt037,l_pmdt.pmdt038,
+              l_pmdt.pmdt039, l_pmdt.pmdt047,  l_pmdt.pmdt053,l_pmdt.pmdt054,l_pmdt.pmdt046)     
+       
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "ins pmdt_t:",SQLERRMESSAGE
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          CALL s_transaction_end('N','0')
+          LET r_success = FALSE
+          RETURN r_success
+       END IF	 
+       #多庫儲批
+       LET l_pmdu.pmduent = l_pmdt.pmdtent
+       LET l_pmdu.pmdusite = l_pmdt.pmdtsite
+       LET l_pmdu.pmdudocno = l_pmdt.pmdtdocno
+       LET l_pmdu.pmduseq = l_pmdt.pmdtseq
+       LET l_pmdu.pmduseq1 = 1
+       LET l_pmdu.pmdu001 = l_pmdt.pmdt006
+       LET l_pmdu.pmdu002 = l_pmdt.pmdt007
+       LET l_pmdu.pmdu003 = l_pmdt.pmdt009
+       LET l_pmdu.pmdu004 = l_pmdt.pmdt010
+       LET l_pmdu.pmdu005 = l_pmdt.pmdt063
+       LET l_pmdu.pmdu006 = l_pmdt.pmdt016
+       LET l_pmdu.pmdu007 = l_pmdt.pmdt017 
+       LET l_pmdu.pmdu008 = l_pmdt.pmdt018
+       LET l_pmdu.pmdu009 = l_pmdt.pmdt019
+       LET l_pmdu.pmdu010 = l_pmdt.pmdt020      
+       LET l_pmdu.pmdu011 = l_pmdt.pmdt021
+       LET l_pmdu.pmdu012 = l_pmdt.pmdt022
+       INSERT INTO pmdu_t (pmduent,pmdusite,pmdudocno,pmduseq,pmduseq1,
+                           pmdu001,pmdu002,pmdu003,pmdu004,pmdu005,
+                           pmdu006,pmdu007, pmdu008,pmdu009,pmdu010,      
+                           pmdu011,pmdu012)
+         VALUES (l_pmdu.pmduent,l_pmdu.pmdusite,l_pmdu.pmdudocno,l_pmdu.pmduseq,l_pmdu.pmduseq1,
+                 l_pmdu.pmdu001,l_pmdu.pmdu002,l_pmdu.pmdu003,l_pmdu.pmdu004,l_pmdu.pmdu005,
+                 l_pmdu.pmdu006,l_pmdu.pmdu007, l_pmdu.pmdu008,l_pmdu.pmdu009,l_pmdu.pmdu010,      
+                 l_pmdu.pmdu011,l_pmdu.pmdu012)
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "ins pmdu_t:",SQLERRMESSAGE
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          CALL s_transaction_end('N','0')
+          LET r_success = FALSE
+          RETURN r_success
+       END IF  
+       
+       #產生收貨/入庫需求分配明細檔pmdv
+
+        IF NOT s_apmt520_gen_pmdv(l_pmdt.pmdtdocno,l_pmdt.pmdtseq) THEN
+           CALL s_transaction_end('N','0')
+           LET r_success = FALSE
+           RETURN r_success
+        END IF       
+   END FOREACH
+   
+   #計算單頭金額
+   CALL s_tax_recount(p_pmdsdocno)
+     RETURNING l_pmds043,l_pmds046,l_pmds044,l_xrcd113,l_xrcd114,l_xrcd115
+      UPDATE pmds_t SET pmds043 = l_pmds043,
+                        pmds044 = l_pmds044,
+                        pmds046 = l_pmds046
+       WHERE pmdsent = g_enterprise 
+         AND pmdsdocno = p_pmdsdocno   
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = "upd pmds_t:",SQLERRMESSAGE
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      LET r_success = FALSE
+      RETURN r_success
+   END IF 
+   
+   RETURN r_success
+
+END FUNCTION
+################################################################################
+# Descriptions...: 產生單據前檢查
+# Memo...........:
+# Usage..........: CALL asfp350_02_execute_chk()
+#                  RETURNING 
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160709 By 02040
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asfp350_02_execute_chk()
+DEFINE r_success LIKE type_t.num5
+DEFINE l_sfeb008_01 LIKE sfeb_t.sfeb008
+DEFINE l_sfeb011_01 LIKE sfeb_t.sfeb011
+DEFINE l_sfeb008_02 LIKE sfeb_t.sfeb008
+DEFINE l_sfeb011_02 LIKE sfeb_t.sfeb008
+DEFINE l_sfebseq LIKE sfeb_t.sfebseq
+DEFINE l_sfeb004 LIKE sfeb_t.sfeb004
+DEFINE l_sql  STRING
+
+    WHENEVER ERROR CONTINUE 
+ 
+    LET r_success = TRUE
+  
+ 
+    IF g_detail_idx > 0 AND NOT cl_null(g_sfeb_d[g_detail_idx].sfeb004) THEN
+       UPDATE p350_02_temp
+          SET sfeb009 = g_sfeb_d[g_detail_idx].sfeb009,
+              sfeb012 = g_sfeb_d[g_detail_idx].sfeb012
+        WHERE sfebseq = g_sfeb_d[g_detail_idx].l_sfebseq
+          AND sfebseq2 = g_sfeb_d[g_detail_idx].l_sfebseq2             
+    END IF
+    
+    #檢查分攤總數是否有=回收數量
+    LET l_sfeb008_01 = 0
+    LET l_sfeb011_01 = 0
+    
+    LET l_sql = "SELECT sfebseq,sfeb004,sfeb008,sfeb011 ",
+                "  FROM p350_01_temp "
+           
+    PREPARE asfp350_chk_pr FROM l_sql
+    DECLARE asfp350_chk_cs CURSOR FOR asfp350_chk_pr    
+
+    FOREACH asfp350_chk_cs INTO l_sfebseq,l_sfeb004,l_sfeb008_01,l_sfeb011_01
+      LET l_sfeb008_02 = 0
+      LET l_sfeb011_02 = 0
+      SELECT SUM(sfeb009),SUM(sfeb012) 
+        INTO l_sfeb008_02,l_sfeb011_02
+        FROM p350_02_temp
+       WHERE sfebseq = l_sfebseq
+
+      IF cl_null(l_sfeb008_01) THEN LET l_sfeb008_01 = 0 END IF
+      IF cl_null(l_sfeb011_01) THEN LET l_sfeb011_01 = 0 END IF
+      IF cl_null(l_sfeb008_02) THEN LET l_sfeb008_02 = 0 END IF
+      IF cl_null(l_sfeb011_02) THEN LET l_sfeb011_02 = 0 END IF
+     
+      IF l_sfeb008_01 <> l_sfeb008_02 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'asf-00730'   #項次%1回收料號%2，回收數量%3和總分攤數總合%4不相等！
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = l_sfebseq
+         LET g_errparam.replace[2] = l_sfeb004
+         LET g_errparam.replace[3] = l_sfeb008_01
+         LET g_errparam.replace[4] = l_sfeb008_02
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF   
+      IF l_sfeb011_01 <> l_sfeb011_02 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'asf-00730'   #項次%1回收料號%2，回收數量%3和總分攤數總合%4不相等！
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = l_sfebseq
+         LET g_errparam.replace[2] = l_sfeb004
+         LET g_errparam.replace[3] = l_sfeb011_01
+         LET g_errparam.replace[4] = l_sfeb011_02
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+    END FOREACH
+    RETURN r_success            
+    
+END FUNCTION
+
+ 
+{</section>}
+ 

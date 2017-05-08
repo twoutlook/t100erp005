@@ -1,0 +1,911 @@
+<add_points prog="aisi040" std_prog="aisi040" erpver="1.0" module="AIS" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="construct.c.isad001" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_isad001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isad001  #顯示到畫面上
+
+            NEXT FIELD isad001                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.isadcrtdp" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isadcrtdp  #顯示到畫面上
+
+            NEXT FIELD isadcrtdp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.isadcrtid" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isadcrtid  #顯示到畫面上
+
+            NEXT FIELD isadcrtid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.isadmodid" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isadmodid  #顯示到畫面上
+
+            NEXT FIELD isadmodid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.isadowndp" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isadowndp  #顯示到畫面上
+
+            NEXT FIELD isadowndp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.isadownid" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isadownid  #顯示到畫面上
+
+            NEXT FIELD isadownid                     #返回原欄位
+
+]]>
+</point>
+  <point name="input.a.isad001" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_isad_m.isad001) AND NOT cl_null(g_isad_m.isad002) AND NOT cl_null(g_isad_m.isad003) AND NOT cl_null(g_isad_m.isad004) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_isad_m.isad001 != g_isad001_t  OR g_isad_m.isad002 != g_isad002_t  OR g_isad_m.isad003 != g_isad003_t  OR g_isad_m.isad004 != g_isad004_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_isad_m.isad001,"SELECT COUNT(*) FROM isad_t WHERE "||"isadent = '" ||g_enterprise|| "' AND "||"isad001 = '"||g_isad_m.isad001 ||"' AND "|| "isad002 = '"||g_isad_m.isad002 ||"' AND "|| "isad003 = '"||g_isad_m.isad003 ||"' AND "|| "isad004 = '"||g_isad_m.isad004 ||"'",'std-00004',0) THEN 
+                     LET g_isad_m.isad001 = ''
+                     NEXT FIELD isad001
+                  END IF
+               END IF
+            END IF
+            
+            IF NOT cl_null(g_isad_m.isad001) THEN 
+               IF NOT aisi040_isad001_chk() THEN 
+                  LET g_isad_m.isad001 = ''
+                  NEXT FIELD isad001
+               END IF
+            END IF 
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isad_m.isad001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='2' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isad_m.isad001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isad_m.isad001_desc
+]]>
+</point>
+  <point name="input.a.isad002" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_isad_m.isad001) AND NOT cl_null(g_isad_m.isad002) AND NOT cl_null(g_isad_m.isad003) AND NOT cl_null(g_isad_m.isad004) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_isad_m.isad001 != g_isad001_t  OR g_isad_m.isad002 != g_isad002_t  OR g_isad_m.isad003 != g_isad003_t  OR g_isad_m.isad004 != g_isad004_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_isad_m.isad002,"SELECT COUNT(*) FROM isad_t WHERE "||"isadent = '" ||g_enterprise|| "' AND "||"isad001 = '"||g_isad_m.isad001 ||"' AND "|| "isad002 = '"||g_isad_m.isad002 ||"' AND "|| "isad003 = '"||g_isad_m.isad003 ||"' AND "|| "isad004 = '"||g_isad_m.isad004 ||"'",'std-00004',0) THEN 
+                     LET g_isad_m.isad002 = ''
+                     NEXT FIELD isad002
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.isad003" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_isad_m.isad001) AND NOT cl_null(g_isad_m.isad002) AND NOT cl_null(g_isad_m.isad003) AND NOT cl_null(g_isad_m.isad004) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_isad_m.isad001 != g_isad001_t  OR g_isad_m.isad002 != g_isad002_t  OR g_isad_m.isad003 != g_isad003_t  OR g_isad_m.isad004 != g_isad004_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_isad_m.isad003,"SELECT COUNT(*) FROM isad_t WHERE "||"isadent = '" ||g_enterprise|| "' AND "||"isad001 = '"||g_isad_m.isad001 ||"' AND "|| "isad002 = '"||g_isad_m.isad002 ||"' AND "|| "isad003 = '"||g_isad_m.isad003 ||"' AND "|| "isad004 = '"||g_isad_m.isad004 ||"'",'std-00004',0) THEN 
+                     LET g_isad_m.isad003 = ''
+                     NEXT FIELD isad003
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.isad004" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_isad_m.isad001) AND NOT cl_null(g_isad_m.isad002) AND NOT cl_null(g_isad_m.isad003) AND NOT cl_null(g_isad_m.isad004) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_isad_m.isad001 != g_isad001_t  OR g_isad_m.isad002 != g_isad002_t  OR g_isad_m.isad003 != g_isad003_t  OR g_isad_m.isad004 != g_isad004_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_isad_m.isad004,"SELECT COUNT(*) FROM isad_t WHERE "||"isadent = '" ||g_enterprise|| "' AND "||"isad001 = '"||g_isad_m.isad001 ||"' AND "|| "isad002 = '"||g_isad_m.isad002 ||"' AND "|| "isad003 = '"||g_isad_m.isad003 ||"' AND "|| "isad004 = '"||g_isad_m.isad004 ||"'",'std-00004',0) THEN 
+                     LET g_isad_m.isad004 = ''
+                     NEXT FIELD isad004
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.page1.isad005" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_isad_m.isad001) AND NOT cl_null(g_isad_m.isad002) AND NOT cl_null(g_isad_m.isad003) AND NOT cl_null(g_isad_m.isad004) AND NOT cl_null(g_isad_d[l_ac].isad005) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_isad_m.isad001 != g_isad001_t OR g_isad_m.isad002 != g_isad002_t OR g_isad_m.isad003 != g_isad003_t OR g_isad_m.isad004 != g_isad004_t OR g_isad_d[l_ac].isad005 != g_isad_d_t.isad005))) THEN 
+                  IF NOT ap_chk_notDup(g_isad_d[l_ac].isad005,"SELECT COUNT(*) FROM isad_t WHERE "||"isadent = '" ||g_enterprise|| "' AND "||"isad001 = '"||g_isad_m.isad001 ||"' AND "|| "isad002 = '"||g_isad_m.isad002 ||"' AND "|| "isad003 = '"||g_isad_m.isad003 ||"' AND "|| "isad004 = '"||g_isad_m.isad004 ||"' AND "|| "isad005 = '"||g_isad_d[l_ac].isad005 ||"'",'std-00004',0) THEN 
+                     IF l_cmd = 'a' THEN 
+                        LET g_isad_d[l_ac].isad005 = ''
+                     ELSE
+                        LET g_isad_d[l_ac].isad005 = g_isad_d_t.isad005
+                     END IF 
+                     NEXT FIELD isad005
+                  END IF
+               END IF
+            END IF
+            
+            IF NOT cl_null(g_isad_d[l_ac].isad005) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (l_cmd = 'u' AND g_isad_d[l_ac].isad005 != g_isad_d_t.isad005)) THEN 
+                  IF NOT aisi040_icad005_chk() THEN 
+                     IF l_cmd = 'a' THEN 
+                        LET g_isad_d[l_ac].isad005 = ''
+                     ELSE
+                        LET g_isad_d[l_ac].isad005 = g_isad_d_t.isad005
+                     END IF 
+                     NEXT FIELD isad005
+                  END IF 
+               END IF 
+               IF length(g_isad_d[l_ac].isad005) > 2 THEN 
+                  CALL cl_err(g_isad_d[l_ac].isad005,'ais-00016',1)  
+                  IF l_cmd = 'a' THEN 
+                     LET g_isad_d[l_ac].isad005 = ''
+                  ELSE
+                     LET g_isad_d[l_ac].isad005 = g_isad_d_t.isad005
+                  END IF 
+                  NEXT FIELD isad005
+               END IF 
+            END IF ]]>
+</point>
+  <point name="input.a.page2.isad005_2" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_isad_m.isad001) AND NOT cl_null(g_isad_m.isad002) AND NOT cl_null(g_isad_m.isad003) AND NOT cl_null(g_isad_m.isad004) AND NOT cl_null(g_isad2_d[l_ac].isad005) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_isad_m.isad001 != g_isad001_t OR g_isad_m.isad002 != g_isad002_t OR g_isad_m.isad003 != g_isad003_t OR g_isad_m.isad004 != g_isad004_t OR g_isad2_d[l_ac].isad005 != g_isad2_d_t.isad005))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isad_t WHERE "||"isadent = '" ||g_enterprise|| "' AND "||"isad001 = '"||g_isad_m.isad001 ||"' AND "|| "isad002 = '"||g_isad_m.isad002 ||"' AND "|| "isad003 = '"||g_isad_m.isad003 ||"' AND "|| "isad004 = '"||g_isad_m.isad004 ||"' AND "|| "isad005 = '"||g_isad2_d[l_ac].isad005 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.c.isad001" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isad_m.isad001             #給予default值
+
+            #給予arg
+
+            CALL q_ooal002_11()                                #呼叫開窗
+
+            LET g_isad_m.isad001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isad_m.isad001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='2' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isad_m.isad001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isad_m.isad001_desc
+
+            DISPLAY g_isad_m.isad001 TO isad001              #顯示到畫面上
+
+            NEXT FIELD isad001                          #返回原欄位
+
+]]>
+</point>
+  <point name="ref_show.body2.reference" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isad2_d[l_ac].isadmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_isad2_d[l_ac].isadmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isad2_d[l_ac].isadmodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isad2_d[l_ac].isadownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_isad2_d[l_ac].isadownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isad2_d[l_ac].isadownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isad2_d[l_ac].isadowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isad2_d[l_ac].isadowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isad2_d[l_ac].isadowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isad2_d[l_ac].isadcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_isad2_d[l_ac].isadcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isad2_d[l_ac].isadcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isad2_d[l_ac].isadcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isad2_d[l_ac].isadcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isad2_d[l_ac].isadcrtdp_desc
+]]>
+</point>
+  <point name="ref_show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isad_m.isad001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='2' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isad_m.isad001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isad_m.isad001_desc
+]]>
+</point>
+  <point name="function.aisi040_set_combo_scc" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[#+ 年度/月份下拉框
+PUBLIC FUNCTION aisi040_set_combo_scc(p_field,p_scc)
+  DEFINE p_field        LIKE type_t.chr80
+  DEFINE p_scc          LIKE type_t.num5
+  DEFINE l_gzcb002      LIKE gzcb_t.gzcb002
+  DEFINE l_gzcbl004     LIKE gzcbl_t.gzcbl004
+  DEFINE comb_value     STRING
+  DEFINE comb_item      STRING
+  DEFINE l_str          STRING 
+
+    DECLARE gzcb_cs CURSOR FOR
+     SELECT gzcb002,gzcbl004 FROM gzcb_t LEFT OUTER join gzcbl_t ON gzcbl001 = gzcb001
+                                                                AND gzcbl002 = gzcb002
+                                                                AND gzcbl003 = g_dlang
+      WHERE gzcb001 = p_scc
+    FOREACH gzcb_cs INTO l_gzcb002,l_gzcbl004
+        LET l_str = l_gzcb002
+        LET l_str = l_str.substring(1,1)
+        IF l_str = '0' THEN 
+           LET l_str = l_gzcb002
+           LET l_gzcb002 = l_str.substring(2,2)
+        END IF 
+        LET comb_value = comb_value CLIPPED,',',l_gzcb002
+        LET comb_item  = comb_item  CLIPPED,',',l_gzcb002
+        
+    END FOREACH
+    CALL cl_set_combo_items(p_field,comb_value,comb_item)
+END FUNCTION]]>
+</point>
+  <point name="function.aisi040_isad001_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="2" cite_ver="" mark_hard="N">
+<![CDATA[#+ isad001欄位檢查
+PRIVATE FUNCTION aisi040_isad001_chk()
+DEFINE  l_n             LIKE type_t.num5 
+
+    #輸入值須存在於稅區維護 aooi072中
+    SELECT count(*) INTO l_n
+      FROM ooal_t
+     WHERE ooal001 = '2'
+       AND ooal002 = g_isad_m.isad001
+    
+    IF l_n = 0 THEN 
+       LET g_isad_m.isad001_desc = ''
+       DISPLAY g_isad_m.isad001_desc TO isad001_desc
+       CALL cl_err(g_isad_m.isad001,'ais-00001',1)
+       RETURN FALSE                       
+    END IF 
+    
+    #輸入值須在稅區維護aooi072中有效
+    SELECT count(*) INTO l_n
+      FROM ooal_t
+     WHERE ooal001 = '2'
+       AND ooal002 = g_isad_m.isad001
+       AND ooalstus = 'Y'
+       
+    IF l_n = 0 THEN 
+       LET g_isad_m.isad001_desc = ''
+       DISPLAY g_isad_m.isad001_desc TO isad001_desc
+       CALL cl_err(g_isad_m.isad001,'ais-00002',1)
+       RETURN FALSE     
+    END IF 
+    
+    RETURN TRUE 
+END FUNCTION]]>
+</point>
+  <point name="function.aisi040_icad005_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="3" cite_ver="" mark_hard="N">
+<![CDATA[#+ isad004欄位檢查
+PRIVATE FUNCTION aisi040_icad005_chk()
+   DEFINE  l_n             LIKE type_t.num5 
+
+   SELECT count(*) INTO l_n
+     FROM isad_t
+    WHERE isad005 = g_isad_d[l_ac].isad005
+      AND isad001 = g_isad_m.isad001
+      AND isadstus = 'Y'
+      
+   IF l_n > 0 THEN 
+      CALL cl_err(g_isad_d[l_ac].isad005,'ais-00004',1) 
+      RETURN FALSE
+   END IF 
+   
+   RETURN TRUE
+END FUNCTION]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   CALL aisi040_set_combo_scc('isad002','43')
+   CALL aisi040_set_combo_scc('isad003','39')
+   CALL aisi040_set_combo_scc('isad004','39')]]>
+</point>
+  <point name="input.body.b_update" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.g.isad003" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_isad_m.isad003) AND cl_null(g_isad_m.isad004) THEN 
+               IF g_isad_m.isad003 = '12' THEN 
+                  LET g_isad_m.isad004 = g_isad_m.isad003
+               ELSE
+                  LET g_isad_m.isad004 = g_isad_m.isad003 + 1
+               END IF 
+            END IF 
+            IF NOT cl_null(g_isad_m.isad003) AND NOT cl_null(g_isad_m.isad004) THEN 
+               IF g_isad_m.isad003 > g_isad_m.isad004 THEN 
+                  LET g_isad_m.isad003 = ''
+                  CALL cl_err(g_isad_m.isad003,'ais-00011',1)
+                  NEXT FIELD isad003
+               END IF 
+            END IF ]]>
+</point>
+  <point name="input.g.isad004" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_isad_m.isad004) THEN 
+               IF g_isad_m.isad004 < g_isad_m.isad003 THEN 
+                  LET g_isad_m.isad004 = ''
+                  CALL cl_err(g_isad_m.isad004,'ais-00003',1)
+                  NEXT FIELD isad004
+               END IF 
+            END IF ]]>
+</point>
+  <point name="input.g.page1.isadstus" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF g_isad_d[l_ac].isadstus = 'Y' AND g_isad_d[l_ac].isadstus != g_isad_d_t.isadstus THEN 
+               LET l_n = 0
+               SELECT count(*) INTO l_n
+                 FROM isad_t
+                WHERE isad005 = g_isad_d[l_ac].isad005
+                  AND isad001 = g_isad_m.isad001
+                  AND isadstus = g_isad_d[l_ac].isadstus 
+                  
+               IF l_n > 0 THEN 
+                  CALL cl_err(g_isad_d[l_ac].isad005,'ais-00004',1) 
+                  LET g_isad_d[l_ac].isadstus  = 'N'
+                  next field isadstus
+               END IF 
+            END IF ]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.body.before_row" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.page1.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.body2.before_row" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.body2.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify_detail" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_search.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_browser_fill" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_count" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.reference" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_headershow.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_browser_refresh.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.head.before_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.isad001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.isad001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.isad002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.isad002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.isad002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.isad003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.isad003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.isad003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.isad004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.isad004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.isad004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.body.before_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.isad005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.isad005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.isad005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.isad006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.isad006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.isad006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.isadstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.isadstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.isadstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.more_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.before_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.after_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="filter.add_cs" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="filter.b_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="query.befroe_query" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.before_fetch" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert.default" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert.after_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.b_key_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.m_key_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.a_key_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_entry" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_no_entry" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.isad001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.isad001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.isad002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.isad002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.isad003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.isad004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.isad002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.isad003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.isad004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_row" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.isad005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.isad005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.isad006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.isad006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.isad006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.isadstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.isadstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.isad005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.isad006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.isadstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body2.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.more_inputarray" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="show.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="show.before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="show.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ref_show.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ref_show.body.reference" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.b_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.after_reproduce" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.b_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.m_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.a_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.b_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.m_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.fill" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="bfill.foreach" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.after_fill" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="before_delete.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.b_single_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.m_single_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_single_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="lock_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="unlock_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.field_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.after_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.field_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.after_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.set_entry_b" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry_b.set_no_entry_b段" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.page_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

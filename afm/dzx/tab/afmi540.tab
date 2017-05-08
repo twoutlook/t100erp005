@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmi540" module="afm" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02097" crtdt="2015-04-28 09:39:04" modid="02097" moddt="2015-04-28 09:39:04" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="投資費用科目設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmmd001,fmmd001_desc(chr80),fmmdld,fmmdld_desc(chr80),glaacomp,glaacomp_desc(chr80),glaa004,glaa004_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmmd002,fmmd002_desc(chr500),fmmd003,fmmd003_desc(chr500),fmmdstus"/>
+      <var id="bs_field" value="fmmd001,fmmdld" pk="fmmdld,fmmd001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmi540" method="dialog">
+    <section id="input">
+      <input id="head" field="fmmd001,fmmdld,glaacomp,glaa004"/>
+      <input id="body" page="1" field="fmmd002,fmmd002_desc,fmmd003,fmmd003_desc,fmmdstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmmd001,fmmd001_desc,fmmdld,fmmdld_desc,glaacomp,glaacomp_desc,glaa004,glaa004_desc"/>
+      <construct id="body" page="1" field="fmmd002,fmmd002_desc,fmmd003,fmmd003_desc,fmmdstus"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmmdld,fmmd001"/>
+      <set id="head" type="no_entry" field="fmmdld,fmmd001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmmd001">
+        <after/>
+        <controlp form="q_fmma001" state="i"/>
+        <controlp form="q_fmma001" state="c"/>
+      </column>
+      <column id="fmmd001_desc"/>
+      <column id="fmmdld">
+        <after/>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="fmmdld_desc"/>
+      <column id="glaacomp">
+        <after/>
+        <controlp form="q_ooea001_2" state="i"/>
+        <controlp form="q_ooea001_2" state="c"/>
+      </column>
+      <column id="glaacomp_desc"/>
+      <column id="glaa004">
+        <after>
+          <check chkid="v_ooal002_7" id="isExist"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="glaa004_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmmd002">
+        <after/>
+        <controlp form="q_fmmc001" state="i"/>
+        <controlp form="q_fmmc001" state="c"/>
+      </column>
+      <column id="fmmd002_desc"/>
+      <column id="fmmd003">
+        <after/>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fmmd003_desc"/>
+      <column id="fmmdstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmmd_t" pk="fmmdld,fmmd001">
+      <sql id="forupd_sql" type="sql" query="SELECT fmmd001,&apos;&apos;,fmmdld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM fmmd_t WHERE fmmdent= ? AND fmmdld=? AND fmmd001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmmd001,&apos;&apos;,fmmdld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM fmmd_t" order="fmmdld,fmmd001"/>
+    </head>
+    <body id="fmmd_t" page="1" linked="" pk="fmmd002" fk="fmmdld,fmmd001">
+      <sql id="forupd_sql_detail" query="SELECT fmmd002,&apos;&apos;,fmmd003,&apos;&apos;,fmmdstus FROM fmmd_t WHERE fmmdent=? AND fmmdld=? AND fmmd001=? AND fmmd002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmmd002,&apos;&apos;,fmmd003,&apos;&apos;,fmmdstus FROM fmmd_t WHERE fmmdent= ? AND fmmdld=? AND fmmd001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct306" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="00537" crtdt="2014-08-19 21:34:30" modid="00537" moddt="2014-09-14 23:59:08" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="庫存入項成本次要素開帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcdjcomp,xcdjcomp_desc(chr80),xcdj004,xcdj005,xcdjld,xcdjld_desc(chr80),xcdj003,xcdj003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcdj001,xcdj006,xcdj007,xcdj008,xcdj014,xcdj009,xcdj010,xcdj011,xcdj012,xcdj016,xcdj017,xcdj018,xcdj020,xcdj002,xcdj101,xcdj102"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcdj001,xcdj006,xcdj007,xcdj008,xcdj014,xcdj009,xcdj010,xcdj011,xcdj012,xcdj016,xcdj017,xcdj018,xcdj020,xcdj002,xcdj101,xcdj102"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="xcdj001,xcdj006,xcdj007,xcdj008,xcdj014,xcdj009,xcdj010,xcdj011,xcdj012,xcdj016,xcdj017,xcdj018,xcdj020,xcdj002,xcdj101,xcdj102"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="import_format"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="import"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct306" method="dialog">
+    <section id="input">
+      <input id="head" field="xcdjcomp,xcdj004,xcdj005,xcdjld,xcdj003"/>
+      <input id="body" page="1" field="xcdj001,xcdj006,xcdj007,xcdj008,xcdj014,xcdj009,xcdj010,xcdj011,xcdj012,xcdj016,xcdj017,xcdj018,xcdj020,xcdj002,xcdj101,xcdj102" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcdjcomp,xcdj004,xcdj005,xcdjld,xcdj003"/>
+      <construct id="body" page="1" field="xcdj001,xcdj006,xcdj007,xcdj008,xcdj014,xcdj009,xcdj010,xcdj011,xcdj012,xcdj016,xcdj017,xcdj018,xcdj020,xcdj002,xcdj101,xcdj102"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcdjld,xcdj003,xcdj004,xcdj005"/>
+      <set id="head" type="no_entry" field="xcdjld,xcdj003,xcdj004,xcdj005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcdjcomp">
+        <after>
+          <reference field="xcdjcomp_desc" ref_field="xcdj_t.xcdjcomp" map_field="xcdjent,xcdjcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdjcomp_desc"/>
+      <column id="xcdj004"/>
+      <column id="xcdj005"/>
+      <column id="xcdjld">
+        <after>
+          <reference field="xcdjld_desc" ref_field="xcdj_t.xcdjld" map_field="xcdjent,xcdjld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdjld_desc"/>
+      <column id="xcdj003">
+        <after>
+          <reference field="xcdj003_desc" ref_field="xcdj_t.xcdj003" map_field="xcdjent,xcdj003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdj003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcdj001"/>
+      <column id="xcdj006"/>
+      <column id="xcdj007"/>
+      <column id="xcdj008"/>
+      <column id="xcdj014"/>
+      <column id="xcdj009"/>
+      <column id="xcdj010"/>
+      <column id="xcdj011"/>
+      <column id="xcdj012"/>
+      <column id="xcdj016"/>
+      <column id="xcdj017"/>
+      <column id="xcdj018"/>
+      <column id="xcdj020"/>
+      <column id="xcdj002"/>
+      <column id="xcdj101"/>
+      <column id="xcdj102"/>
+    </init>
+    <init id="body" page="2"/>
+    <init id="body" page="3"/>
+  </form>
+  <dataset>
+    <head id="xcdj_t" pk="xcdjld,xcdj003,xcdj004,xcdj005">
+      <sql id="forupd_sql" type="sql" query="SELECT xcdjcomp,&apos;&apos;,xcdj004,xcdj005,xcdjld,&apos;&apos;,xcdj003,&apos;&apos; FROM xcdj_t WHERE xcdjent= ? AND xcdjld=? AND xcdj003=? AND xcdj004=? AND xcdj005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcdjcomp,&apos;&apos;,xcdj004,xcdj005,xcdjld,&apos;&apos;,xcdj003,&apos;&apos; FROM xcdj_t" order="xcdjld,xcdj003,xcdj004,xcdj005"/>
+    </head>
+    <body id="xcdj_t" page="1,2,3" linked="" pk="xcdj001,xcdj002,xcdj006,xcdj007,xcdj008,xcdj009,xcdj010" fk="xcdjld,xcdj003,xcdj004,xcdj005">
+      <sql id="forupd_sql_detail" query="SELECT xcdj001,xcdj006,xcdj007,xcdj008,xcdj014,xcdj009,xcdj010,xcdj011,xcdj012,xcdj016,xcdj017,xcdj018,xcdj020,xcdj002,xcdj101,xcdj102,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdj_t WHERE xcdjent=? AND xcdjld=? AND xcdj003=? AND xcdj004=? AND xcdj005=? AND xcdj001=? AND xcdj002=? AND xcdj006=? AND xcdj007=? AND xcdj008=? AND xcdj009=? AND xcdj010=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcdj001,xcdj006,xcdj007,xcdj008,xcdj014,xcdj009,xcdj010,xcdj011,xcdj012,xcdj016,xcdj017,xcdj018,xcdj020,xcdj002,xcdj101,xcdj102,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdj_t WHERE xcdjent= ? AND xcdjld=? AND xcdj003=? AND xcdj004=? AND xcdj005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

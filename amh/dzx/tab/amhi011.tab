@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhi011" module="amh" jobmode="N" type="i02" industry="std" fix_arg="1" crtid="06814" crtdt="2016-03-22 16:38:49" modid="06814" moddt="2016-03-23 17:03:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="品類分布顏色設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mhaxstus,mhaxsite,mhax000,mhax001,mhax001_desc(chr500),lbl_mhax001(chr500),lbl_color(chr500),mhax002"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mhax000,mhax001,mhax001_desc_desc(chr500),lbl_mhax001_1(chr500),mhaxownid,mhaxownid_desc(chr500),mhaxowndp,mhaxowndp_desc(chr500),mhaxcrtid,mhaxcrtid_desc(chr500),mhaxcrtdp,mhaxcrtdp_desc(chr500),mhaxcrtdt,mhaxmodid,mhaxmodid_desc(chr500),mhaxmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhi011" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="mhaxstus,mhaxsite,mhax000,mhax001,lbl_mhax001,lbl_color,mhax002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="mhaxstus,mhaxsite,mhax000,mhax001,lbl_mhax001,lbl_color,mhax002"/>
+      <construct id="body" page="2" field="mhaxownid,mhaxowndp,mhaxcrtid,mhaxcrtdp,mhaxcrtdt,mhaxmodid,mhaxmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="mhaxstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="mhaxsite"/>
+      <column id="mhax000"/>
+      <column id="mhax001">
+        <after>
+          <check chkid="v_rtax001_1" id="isExist"/>
+          <reference field="mhax001_desc" ref_field="mhax_t.mhax001" map_field="mhax001" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_2" state="i"/>
+        <controlp form="q_rtax001_2" state="c"/>
+      </column>
+      <column id="mhax001_desc">
+        <after>
+          <reference field="mhax001_desc_desc" ref_field="mhax001_2" map_field="mhax001_2" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="lbl_mhax001"/>
+      <column id="lbl_color"/>
+      <column id="mhax002"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mhax001_desc_desc"/>
+      <column id="lbl_mhax001_1"/>
+      <column id="mhaxownid">
+        <after>
+          <reference field="mhaxownid_desc" ref_field="mhax_t.mhaxownid" map_field="mhaxownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhaxownid_desc"/>
+      <column id="mhaxowndp">
+        <after>
+          <reference field="mhaxowndp_desc" ref_field="mhax_t.mhaxowndp" map_field="mhaxowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhaxowndp_desc"/>
+      <column id="mhaxcrtid">
+        <after>
+          <reference field="mhaxcrtid_desc" ref_field="mhax_t.mhaxcrtid" map_field="mhaxcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhaxcrtid_desc"/>
+      <column id="mhaxcrtdp">
+        <after>
+          <reference field="mhaxcrtdp_desc" ref_field="mhax_t.mhaxcrtdp" map_field="mhaxcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhaxcrtdp_desc"/>
+      <column id="mhaxcrtdt"/>
+      <column id="mhaxmodid">
+        <after>
+          <reference field="mhaxmodid_desc" ref_field="mhax_t.mhaxmodid" map_field="mhaxmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhaxmodid_desc"/>
+      <column id="mhaxmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="mhax_t" page="1,2" linked="" pk="mhax000,mhax001">
+      <sql id="forupd_sql_detail" query="SELECT mhaxstus,mhaxsite,mhax000,mhax001,&apos;&apos;,&apos;&apos;,&apos;&apos;,mhax002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,mhaxownid,&apos;&apos;,mhaxowndp,&apos;&apos;,mhaxcrtid,&apos;&apos;,mhaxcrtdp,&apos;&apos;,mhaxcrtdt,mhaxmodid,&apos;&apos;,mhaxmoddt FROM mhax_t WHERE mhaxent=? AND mhax000=? AND mhax001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mhaxstus,mhaxsite,mhax000,mhax001,&apos;&apos;,&apos;&apos;,&apos;&apos;,mhax002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,mhaxownid,&apos;&apos;,mhaxowndp,&apos;&apos;,mhaxcrtid,&apos;&apos;,mhaxcrtdp,&apos;&apos;,mhaxcrtdt,mhaxmodid,&apos;&apos;,mhaxmoddt FROM mhax_t WHERE mhaxent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

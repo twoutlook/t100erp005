@@ -1,0 +1,6833 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aist200.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2015-06-24 15:12:13), PR版次:0008(2016-11-01 15:42:56)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000050
+#+ Filename...: aist200
+#+ Description: 發票認證維護作業
+#+ Creator....: 02599(2015-05-06 17:13:27)
+#+ Modifier...: 01727 -SD/PR- 08171
+ 
+{</section>}
+ 
+{<section id="aist200.global" >}
+#應用 t01 樣板自動產生(Version:79)
+#add-point:填寫註解說明 name="global.memo" 
+#151125-00001#3  2015/11/27 By Charles4m  增加詢問是否作廢。
+#151130-00015#2  2015/12/23 By taozf      判断 是否可以更改單據日期 設定開放單據日期修改
+#160318-00025#44 2016/04/19 By 07959      將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#160812-00017#4  2016/08/15 By 06814      在satatchange( )的FUNCTION中，有RETURN指令但沒有加上transaction_end( ) 造成transaction沒有結束就直接RETURN
+#160818-00017#19 2016/08/22 By 08742      删除修改未重新判断状态码
+#161006-00005#28 2016/10/26 By Reanna     1.帳務中心(isbdsite)where條件拿掉，開窗改用q_ooef001_46()
+#                                         3.門店(isbesite)增加ooef304='Y'條件
+#161017-00005#1  2016/10/28 By 08171      法人權限調整
+#161005-00003#2  2016/11/01 By 08171      新舊值調整
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point 
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_isbd_m        RECORD
+       isbdsite LIKE isbd_t.isbdsite, 
+   isbdsite_desc LIKE type_t.chr80, 
+   isbd001 LIKE isbd_t.isbd001, 
+   isbd001_desc LIKE type_t.chr80, 
+   isbdcomp LIKE isbd_t.isbdcomp, 
+   isbdcomp_desc LIKE type_t.chr80, 
+   isbddocno LIKE isbd_t.isbddocno, 
+   isbddocdt LIKE isbd_t.isbddocdt, 
+   isbdstus LIKE isbd_t.isbdstus, 
+   isbdownid LIKE isbd_t.isbdownid, 
+   isbdownid_desc LIKE type_t.chr80, 
+   isbdowndp LIKE isbd_t.isbdowndp, 
+   isbdowndp_desc LIKE type_t.chr80, 
+   isbdcrtid LIKE isbd_t.isbdcrtid, 
+   isbdcrtid_desc LIKE type_t.chr80, 
+   isbdcrtdp LIKE isbd_t.isbdcrtdp, 
+   isbdcrtdp_desc LIKE type_t.chr80, 
+   isbdcrtdt LIKE isbd_t.isbdcrtdt, 
+   isbdmodid LIKE isbd_t.isbdmodid, 
+   isbdmodid_desc LIKE type_t.chr80, 
+   isbdmoddt LIKE isbd_t.isbdmoddt, 
+   isbdcnfid LIKE isbd_t.isbdcnfid, 
+   isbdcnfid_desc LIKE type_t.chr80, 
+   isbdcnfdt LIKE isbd_t.isbdcnfdt
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_isbe_d        RECORD
+       isbeseq LIKE isbe_t.isbeseq, 
+   isbesite LIKE isbe_t.isbesite, 
+   isbesite_desc LIKE type_t.chr500, 
+   isbe001 LIKE isbe_t.isbe001, 
+   isbe002 LIKE isbe_t.isbe002, 
+   isbe003 LIKE isbe_t.isbe003, 
+   isbe004 LIKE isbe_t.isbe004, 
+   isbe005 LIKE isbe_t.isbe005, 
+   isbe006 LIKE isbe_t.isbe006, 
+   isbe007 LIKE isbe_t.isbe007, 
+   isbe008 LIKE isbe_t.isbe008
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_isbdcomp LIKE isbd_t.isbdcomp,
+      b_isbddocno LIKE isbd_t.isbddocno
+       END RECORD
+       
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_glaald             LIKE glaa_t.glaald
+DEFINE g_glaa003            LIKE glaa_t.glaa003
+DEFINE g_glaa024            LIKE glaa_t.glaa024
+DEFINE g_wc_isbdcomp        STRING    #161006-00005#28
+#end add-point
+       
+#模組變數(Module Variables)
+DEFINE g_isbd_m          type_g_isbd_m
+DEFINE g_isbd_m_t        type_g_isbd_m
+DEFINE g_isbd_m_o        type_g_isbd_m
+DEFINE g_isbd_m_mask_o   type_g_isbd_m #轉換遮罩前資料
+DEFINE g_isbd_m_mask_n   type_g_isbd_m #轉換遮罩後資料
+ 
+   DEFINE g_isbdcomp_t LIKE isbd_t.isbdcomp
+DEFINE g_isbddocno_t LIKE isbd_t.isbddocno
+ 
+ 
+DEFINE g_isbe_d          DYNAMIC ARRAY OF type_g_isbe_d
+DEFINE g_isbe_d_t        type_g_isbe_d
+DEFINE g_isbe_d_o        type_g_isbe_d
+DEFINE g_isbe_d_mask_o   DYNAMIC ARRAY OF type_g_isbe_d #轉換遮罩前資料
+DEFINE g_isbe_d_mask_n   DYNAMIC ARRAY OF type_g_isbe_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                         #Current Dialog
+                                                               
+DEFINE g_pagestart           LIKE type_t.num10                 
+DEFINE gwin_curr             ui.Window                         #Current Window
+DEFINE gfrm_curr             ui.Form                           #Current Form
+DEFINE g_page_action         STRING                            #page action
+DEFINE g_header_hidden       LIKE type_t.num5                  #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5                  #隱藏工作Panel
+DEFINE g_page                STRING                            #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10                  #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx_tmp      LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10                  #單身2目前所在筆數
+DEFINE g_detail_idx_list     DYNAMIC ARRAY OF LIKE type_t.num10 #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10                  #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10                  #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10                  #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                             #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10                  #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                            #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10                  #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5                   #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+DEFINE g_idx_group           om.SaxAttributes              #頁籤群組
+DEFINE g_master_commit       LIKE type_t.chr1              #確認單頭是否修改過
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aist200.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ais","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT isbdsite,'',isbd001,'',isbdcomp,'',isbddocno,isbddocdt,isbdstus,isbdownid, 
+       '',isbdowndp,'',isbdcrtid,'',isbdcrtdp,'',isbdcrtdt,isbdmodid,'',isbdmoddt,isbdcnfid,'',isbdcnfdt", 
+        
+                      " FROM isbd_t",
+                      " WHERE isbdent= ? AND isbdcomp=? AND isbddocno=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aist200_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.isbdsite,t0.isbd001,t0.isbdcomp,t0.isbddocno,t0.isbddocdt,t0.isbdstus, 
+       t0.isbdownid,t0.isbdowndp,t0.isbdcrtid,t0.isbdcrtdp,t0.isbdcrtdt,t0.isbdmodid,t0.isbdmoddt,t0.isbdcnfid, 
+       t0.isbdcnfdt,t1.ooefl003 ,t2.ooefl003 ,t3.ooag011 ,t4.ooefl003 ,t5.ooag011 ,t6.ooefl003 ,t7.ooag011 , 
+       t8.ooag011",
+               " FROM isbd_t t0",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.isbdsite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent="||g_enterprise||" AND t2.ooefl001=t0.isbdcomp AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent="||g_enterprise||" AND t3.ooag001=t0.isbdownid  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent="||g_enterprise||" AND t4.ooefl001=t0.isbdowndp AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t5 ON t5.ooagent="||g_enterprise||" AND t5.ooag001=t0.isbdcrtid  ",
+               " LEFT JOIN ooefl_t t6 ON t6.ooeflent="||g_enterprise||" AND t6.ooefl001=t0.isbdcrtdp AND t6.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t7 ON t7.ooagent="||g_enterprise||" AND t7.ooag001=t0.isbdmodid  ",
+               " LEFT JOIN ooag_t t8 ON t8.ooagent="||g_enterprise||" AND t8.ooag001=t0.isbdcnfid  ",
+ 
+               " WHERE t0.isbdent = " ||g_enterprise|| " AND t0.isbdcomp = ? AND t0.isbddocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE aist200_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aist200 WITH FORM cl_ap_formpath("ais",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aist200_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aist200_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aist200
+      
+   END IF 
+   
+   CLOSE aist200_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aist200.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aist200_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point    
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   
+   #各個page指標
+   LET g_detail_idx_list[1] = 1 
+ 
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+      CALL cl_set_combo_scc_part('isbdstus','13','N,Y,X')
+ 
+   
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #page群組
+   LET g_idx_group = om.SaxAttributes.create()
+   CALL g_idx_group.addAttribute("'1',","1")
+ 
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_fin_create_account_center_tmp() 
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL aist200_default_search()
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.ui_dialog" >}
+#+ 功能選單
+PRIVATE FUNCTION aist200_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   DEFINE  l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE  l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE  l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL aist200_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_isbd_m.* TO NULL
+         CALL g_isbe_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL aist200_init()
+      END IF
+   
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+    
+         DISPLAY ARRAY g_isbe_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL aist200_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[1] = l_ac
+               CALL g_idx_group.addAttribute("'1',",l_ac)
+               
+               #add-point:page1, before row動作 name="ui_dialog.page1.before_row"
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL aist200_idx_chk()
+               #add-point:page1自定義行為 name="ui_dialog.page1.before_display"
+               
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為 name="ui_dialog.page1.action"
+            
+            #end add-point
+               
+         END DISPLAY
+        
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+         
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL aist200_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL aist200_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL aist200_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL aist200_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #add-point:ui_dialog段more_action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #狀態碼切換
+         ON ACTION statechange
+            LET g_action_choice = "statechange"
+            CALL aist200_statechange()
+            #根據資料狀態切換action狀態
+            CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+            CALL aist200_set_act_visible()   
+            CALL aist200_set_act_no_visible()
+            IF NOT (g_isbd_m.isbdcomp IS NULL
+              OR g_isbd_m.isbddocno IS NULL
+ 
+              ) THEN
+               #組合條件
+               LET g_add_browse = " isbdent = " ||g_enterprise|| " AND",
+                                  " isbdcomp = '", g_isbd_m.isbdcomp, "' "
+                                  ," AND isbddocno = '", g_isbd_m.isbddocno, "' "
+ 
+               #填到對應位置
+               CALL aist200_browser_fill("")
+            END IF
+         
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "isbd_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "isbe_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL aist200_browser_fill("F")   #browser_fill()會將notice區塊清空
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "isbd_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "isbe_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aist200_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code = "-100" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL aist200_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+          
+         
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL aist200_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aist200_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL aist200_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aist200_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL aist200_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aist200_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL aist200_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aist200_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL aist200_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aist200_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_isbe_d)
+                  LET g_export_id[1]   = "s_detail1"
+ 
+                  #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+                  
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aist200_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL aist200_modify()
+               #add-point:ON ACTION modify_detail name="menu.modify_detail"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aist200_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aist200_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               &include "erp/ais/aist200_rep.4gl"
+               #add-point:ON ACTION output.after name="menu.after_output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               &include "erp/ais/aist200_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu.after_quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aist200_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION excel_load
+            LET g_action_choice="excel_load"
+            IF cl_auth_chk_act("excel_load") THEN
+               
+               #add-point:ON ACTION excel_load name="menu.excel_load"
+               LET g_etlparam[1].para_id = "g_lang"
+               LET g_etlparam[1].type = "string"
+               LET g_etlparam[1].value = g_lang
+
+               LET la_param.prog = 'awsp200'
+               LET la_param.param[1] = g_prog
+               LET la_param.param[2] = "excel_load"
+               LET la_param.param[3] = util.JSON.stringify(g_etlparam)
+
+               LET ls_js = util.JSON.stringify( la_param )
+               CALL cl_cmdrun_wait(ls_js)
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION excel_example
+            LET g_action_choice="excel_example"
+            IF cl_auth_chk_act("excel_example") THEN
+               
+               #add-point:ON ACTION excel_example name="menu.excel_example"
+               LET g_etlparam[1].para_id = "g_lang"
+               LET g_etlparam[1].type = "string"
+               LET g_etlparam[1].value = g_lang
+
+               LET la_param.prog = 'awsp200'
+               LET la_param.param[1] = g_prog
+               LET la_param.param[2] = "excel_example"
+               LET la_param.param[3] = util.JSON.stringify(g_etlparam)
+
+               LET ls_js = util.JSON.stringify( la_param )
+               CALL cl_cmdrun_wait(ls_js)
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION prog_isbd001
+            LET g_action_choice="prog_isbd001"
+            IF cl_auth_chk_act("prog_isbd001") THEN
+               
+               #add-point:ON ACTION prog_isbd001 name="menu.prog_isbd001"
+               CALL cl_user_contact("aooi130", "ooag_t", "ooag002", "ooag001",g_isbd_m.isbd001)
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aist200_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aist200_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aist200_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow(g_isbd_m.isbddocdt)
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:79) ---add start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:79) --- add end ---
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.browser_fill" >}
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION aist200_browser_fill(ps_page_action)
+   #add-point:browser_fill段define(客製用) name="browser_fill.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理 name="browser_fill.before_browser_fill"
+   
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前 name="browser_fill.before_foreach"
+   
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT DISTINCT isbdcomp,isbddocno ",
+                      " FROM isbd_t ",
+                      " ",
+                      " LEFT JOIN isbe_t ON isbeent = isbdent AND isbdcomp = isbecomp AND isbddocno = isbedocno ", "  ",
+                      #add-point:browser_fill段sql(isbe_t1) name="browser_fill.cnt.join.}"
+                      
+                      #end add-point
+ 
+ 
+                      " ", 
+                      " ", 
+ 
+ 
+                      " WHERE isbdent = " ||g_enterprise|| " AND isbeent = " ||g_enterprise|| " AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("isbd_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT DISTINCT isbdcomp,isbddocno ",
+                      " FROM isbd_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE isbdent = " ||g_enterprise|| " AND ",l_wc CLIPPED, cl_sql_add_filter("isbd_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc name="browser_fill.cnt_sqlwc"
+   
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(1) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前 name="browser_fill.before_count"
+   
+   #end add-point
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+      FREE header_cnt_pre
+   END IF
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code = 9035 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_isbd_m.* TO NULL
+      CALL g_isbe_d.clear()        
+ 
+      #add-point:browser_fill g_add_browse段額外處理 name="browser_fill.add_browse.other"
+      
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.isbdcomp,t0.isbddocno Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.isbdstus,t0.isbdcomp,t0.isbddocno ",
+                  " FROM isbd_t t0",
+                  "  ",
+                  "  LEFT JOIN isbe_t ON isbeent = isbdent AND isbdcomp = isbecomp AND isbddocno = isbedocno ", "  ", 
+                  #add-point:browser_fill段sql(isbe_t1) name="browser_fill.join.isbe_t1"
+                  
+                  #end add-point
+ 
+ 
+                  " ", 
+ 
+ 
+                  
+                  " WHERE t0.isbdent = " ||g_enterprise|| " AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("isbd_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.isbdstus,t0.isbdcomp,t0.isbddocno ",
+                  " FROM isbd_t t0",
+                  "  ",
+                  
+                  " WHERE t0.isbdent = " ||g_enterprise|| " AND ",l_wc, cl_sql_add_filter("isbd_t")
+   END IF
+   #add-point:browser_fill,sql wc name="browser_fill.fill_sqlwc"
+   
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY isbdcomp,isbddocno ",g_order
+ 
+   #add-point:browser_fill,before_prepare name="browser_fill.before_prepare"
+   
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"isbd_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      #add-point:browser_fill段open cursor name="browser_fill.open"
+      
+      #end add-point
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_isbdcomp,g_browser[g_cnt].b_isbddocno 
+ 
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "Foreach:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+      
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+      
+      
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/unconfirmed.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/confirmed.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/invalid.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_browse THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      FREE browse_pre
+   END IF
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_isbdcomp) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+ 
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   CALL cl_set_act_visible("modify", FALSE)
+   #end add-point   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.ui_headershow" >}
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION aist200_ui_headershow()
+   #add-point:ui_headershow段define(客製用) name="ui_headershow.define_customerization"
+   
+   #end add-point  
+   #add-point:ui_headershow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_headershow.define"
+   
+   #end add-point      
+   
+   #add-point:Function前置處理  name="ui_headershow.pre_function"
+   
+   #end add-point
+   
+   LET g_isbd_m.isbdcomp = g_browser[g_current_idx].b_isbdcomp   
+   LET g_isbd_m.isbddocno = g_browser[g_current_idx].b_isbddocno   
+ 
+   EXECUTE aist200_master_referesh USING g_isbd_m.isbdcomp,g_isbd_m.isbddocno INTO g_isbd_m.isbdsite, 
+       g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid, 
+       g_isbd_m.isbdowndp,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid, 
+       g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfdt,g_isbd_m.isbdsite_desc,g_isbd_m.isbdcomp_desc, 
+       g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid_desc,g_isbd_m.isbdcrtdp_desc, 
+       g_isbd_m.isbdmodid_desc,g_isbd_m.isbdcnfid_desc
+   
+   CALL aist200_isbd_t_mask()
+   CALL aist200_show()
+      
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.ui_detailshow" >}
+#+ 單身資料重新顯示
+PRIVATE FUNCTION aist200_ui_detailshow()
+   #add-point:ui_detailshow段define(客製用) name="ui_detailshow.define_customerization"
+   
+   #end add-point    
+   #add-point:ui_detailshow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_detailshow.define"
+   
+   #end add-point    
+ 
+   #add-point:Function前置處理 name="ui_detailshow.before"
+   
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after name="ui_detailshow.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION aist200_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point    
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_isbdcomp = g_isbd_m.isbdcomp 
+         AND g_browser[l_i].b_isbddocno = g_isbd_m.isbddocno 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after name="ui_browser_refresh.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aist200_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_isbd_m.* TO NULL
+   CALL g_isbe_d.clear()        
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前 name="cs.before_construct"
+   
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON isbdsite,isbd001,isbd001_desc,isbdcomp,isbddocno,isbddocdt,isbdstus, 
+          isbdownid,isbdowndp,isbdcrtid,isbdcrtdp,isbdcrtdt,isbdmodid,isbdmoddt,isbdcnfid,isbdcnfdt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.head.before_construct"
+            
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<isbdcrtdt>>----
+         AFTER FIELD isbdcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<isbdmoddt>>----
+         AFTER FIELD isbdmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<isbdcnfdt>>----
+         AFTER FIELD isbdcnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<isbdpstdt>>----
+ 
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+                  #Ctrlp:construct.c.isbdsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdsite
+            #add-point:ON ACTION controlp INFIELD isbdsite name="construct.c.isbdsite"
+            #帳務中心
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " ooef201 = 'Y'"
+            CALL q_ooef001()
+            DISPLAY g_qryparam.return1 TO isbdsite
+            NEXT FIELD isbdsite
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdsite
+            #add-point:BEFORE FIELD isbdsite name="construct.b.isbdsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdsite
+            
+            #add-point:AFTER FIELD isbdsite name="construct.a.isbdsite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isbd001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbd001
+            #add-point:ON ACTION controlp INFIELD isbd001 name="construct.c.isbd001"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001_8()
+            DISPLAY g_qryparam.return1 TO isbd001
+            NEXT FIELD isbd001
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbd001
+            #add-point:BEFORE FIELD isbd001 name="construct.b.isbd001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbd001
+            
+            #add-point:AFTER FIELD isbd001 name="construct.a.isbd001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbd001_desc
+            #add-point:BEFORE FIELD isbd001_desc name="construct.b.isbd001_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbd001_desc
+            
+            #add-point:AFTER FIELD isbd001_desc name="construct.a.isbd001_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isbd001_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbd001_desc
+            #add-point:ON ACTION controlp INFIELD isbd001_desc name="construct.c.isbd001_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.isbdcomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdcomp
+            #add-point:ON ACTION controlp INFIELD isbdcomp name="construct.c.isbdcomp"
+            #法人
+            #開窗c段
+            #161017-00005#1 --s add
+            CALL s_fin_account_center_sons_query('3',g_isbd_m.isbdsite,g_isbd_m.isbddocdt,'')
+            CALL s_fin_account_center_comp_str() RETURNING ls_wc
+            CALL s_fin_get_wc_str(ls_wc) RETURNING ls_wc
+            #161017-00005#1 --e add
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " ooef003 = 'Y' AND ooef001 IN ",ls_wc CLIPPED
+            CALL q_ooef001()
+            DISPLAY g_qryparam.return1 TO isbdcomp
+            NEXT FIELD isbdcomp
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdcomp
+            #add-point:BEFORE FIELD isbdcomp name="construct.b.isbdcomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdcomp
+            
+            #add-point:AFTER FIELD isbdcomp name="construct.a.isbdcomp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isbddocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbddocno
+            #add-point:ON ACTION controlp INFIELD isbddocno name="construct.c.isbddocno"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_isbddocno()
+            DISPLAY g_qryparam.return1 TO isbddocno
+            NEXT FIELD isbddocno
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbddocno
+            #add-point:BEFORE FIELD isbddocno name="construct.b.isbddocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbddocno
+            
+            #add-point:AFTER FIELD isbddocno name="construct.a.isbddocno"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbddocdt
+            #add-point:BEFORE FIELD isbddocdt name="construct.b.isbddocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbddocdt
+            
+            #add-point:AFTER FIELD isbddocdt name="construct.a.isbddocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isbddocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbddocdt
+            #add-point:ON ACTION controlp INFIELD isbddocdt name="construct.c.isbddocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdstus
+            #add-point:BEFORE FIELD isbdstus name="construct.b.isbdstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdstus
+            
+            #add-point:AFTER FIELD isbdstus name="construct.a.isbdstus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isbdstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdstus
+            #add-point:ON ACTION controlp INFIELD isbdstus name="construct.c.isbdstus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.isbdownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdownid
+            #add-point:ON ACTION controlp INFIELD isbdownid name="construct.c.isbdownid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()
+            DISPLAY g_qryparam.return1 TO isbdownid
+            NEXT FIELD isbdownid
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdownid
+            #add-point:BEFORE FIELD isbdownid name="construct.b.isbdownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdownid
+            
+            #add-point:AFTER FIELD isbdownid name="construct.a.isbdownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isbdowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdowndp
+            #add-point:ON ACTION controlp INFIELD isbdowndp name="construct.c.isbdowndp"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()
+            DISPLAY g_qryparam.return1 TO isbdowndp
+            NEXT FIELD isbdowndp
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdowndp
+            #add-point:BEFORE FIELD isbdowndp name="construct.b.isbdowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdowndp
+            
+            #add-point:AFTER FIELD isbdowndp name="construct.a.isbdowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isbdcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdcrtid
+            #add-point:ON ACTION controlp INFIELD isbdcrtid name="construct.c.isbdcrtid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()
+            DISPLAY g_qryparam.return1 TO isbdcrtid
+            NEXT FIELD isbdcrtid
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdcrtid
+            #add-point:BEFORE FIELD isbdcrtid name="construct.b.isbdcrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdcrtid
+            
+            #add-point:AFTER FIELD isbdcrtid name="construct.a.isbdcrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isbdcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdcrtdp
+            #add-point:ON ACTION controlp INFIELD isbdcrtdp name="construct.c.isbdcrtdp"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()
+            DISPLAY g_qryparam.return1 TO isbdcrtdp
+            NEXT FIELD isbdcrtdp
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdcrtdp
+            #add-point:BEFORE FIELD isbdcrtdp name="construct.b.isbdcrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdcrtdp
+            
+            #add-point:AFTER FIELD isbdcrtdp name="construct.a.isbdcrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdcrtdt
+            #add-point:BEFORE FIELD isbdcrtdt name="construct.b.isbdcrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.isbdmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdmodid
+            #add-point:ON ACTION controlp INFIELD isbdmodid name="construct.c.isbdmodid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()
+            DISPLAY g_qryparam.return1 TO isbdmodid
+            NEXT FIELD isbdmodid
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdmodid
+            #add-point:BEFORE FIELD isbdmodid name="construct.b.isbdmodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdmodid
+            
+            #add-point:AFTER FIELD isbdmodid name="construct.a.isbdmodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdmoddt
+            #add-point:BEFORE FIELD isbdmoddt name="construct.b.isbdmoddt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.isbdcnfid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdcnfid
+            #add-point:ON ACTION controlp INFIELD isbdcnfid name="construct.c.isbdcnfid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()
+            DISPLAY g_qryparam.return1 TO isbdcnfid
+            NEXT FIELD isbdcnfid
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdcnfid
+            #add-point:BEFORE FIELD isbdcnfid name="construct.b.isbdcnfid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdcnfid
+            
+            #add-point:AFTER FIELD isbdcnfid name="construct.a.isbdcnfid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdcnfdt
+            #add-point:BEFORE FIELD isbdcnfdt name="construct.b.isbdcnfdt"
+            
+            #END add-point
+ 
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON isbeseq,isbesite,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007, 
+          isbe008
+           FROM s_detail1[1].isbeseq,s_detail1[1].isbesite,s_detail1[1].isbe001,s_detail1[1].isbe002, 
+               s_detail1[1].isbe003,s_detail1[1].isbe004,s_detail1[1].isbe005,s_detail1[1].isbe006,s_detail1[1].isbe007, 
+               s_detail1[1].isbe008
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbeseq
+            #add-point:BEFORE FIELD isbeseq name="construct.b.page1.isbeseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbeseq
+            
+            #add-point:AFTER FIELD isbeseq name="construct.a.page1.isbeseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.isbeseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbeseq
+            #add-point:ON ACTION controlp INFIELD isbeseq name="construct.c.page1.isbeseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.isbesite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbesite
+            #add-point:ON ACTION controlp INFIELD isbesite name="construct.c.page1.isbesite"
+            #門店
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " ooef304 = 'Y'" #161006-00005#28
+            CALL q_ooef001()
+            DISPLAY g_qryparam.return1 TO isbesite
+            NEXT FIELD isbesite
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbesite
+            #add-point:BEFORE FIELD isbesite name="construct.b.page1.isbesite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbesite
+            
+            #add-point:AFTER FIELD isbesite name="construct.a.page1.isbesite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.isbe001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe001
+            #add-point:ON ACTION controlp INFIELD isbe001 name="construct.c.page1.isbe001"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_stbf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isbe001  #顯示到畫面上
+            NEXT FIELD isbe001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe001
+            #add-point:BEFORE FIELD isbe001 name="construct.b.page1.isbe001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe001
+            
+            #add-point:AFTER FIELD isbe001 name="construct.a.page1.isbe001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.isbe002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe002
+            #add-point:ON ACTION controlp INFIELD isbe002 name="construct.c.page1.isbe002"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_stbf002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isbe002  #顯示到畫面上
+            NEXT FIELD isbe002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe002
+            #add-point:BEFORE FIELD isbe002 name="construct.b.page1.isbe002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe002
+            
+            #add-point:AFTER FIELD isbe002 name="construct.a.page1.isbe002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe003
+            #add-point:BEFORE FIELD isbe003 name="construct.b.page1.isbe003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe003
+            
+            #add-point:AFTER FIELD isbe003 name="construct.a.page1.isbe003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.isbe003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe003
+            #add-point:ON ACTION controlp INFIELD isbe003 name="construct.c.page1.isbe003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe004
+            #add-point:BEFORE FIELD isbe004 name="construct.b.page1.isbe004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe004
+            
+            #add-point:AFTER FIELD isbe004 name="construct.a.page1.isbe004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.isbe004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe004
+            #add-point:ON ACTION controlp INFIELD isbe004 name="construct.c.page1.isbe004"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe005
+            #add-point:BEFORE FIELD isbe005 name="construct.b.page1.isbe005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe005
+            
+            #add-point:AFTER FIELD isbe005 name="construct.a.page1.isbe005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.isbe005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe005
+            #add-point:ON ACTION controlp INFIELD isbe005 name="construct.c.page1.isbe005"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe006
+            #add-point:BEFORE FIELD isbe006 name="construct.b.page1.isbe006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe006
+            
+            #add-point:AFTER FIELD isbe006 name="construct.a.page1.isbe006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.isbe006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe006
+            #add-point:ON ACTION controlp INFIELD isbe006 name="construct.c.page1.isbe006"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe007
+            #add-point:BEFORE FIELD isbe007 name="construct.b.page1.isbe007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe007
+            
+            #add-point:AFTER FIELD isbe007 name="construct.a.page1.isbe007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.isbe007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe007
+            #add-point:ON ACTION controlp INFIELD isbe007 name="construct.c.page1.isbe007"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe008
+            #add-point:BEFORE FIELD isbe008 name="construct.b.page1.isbe008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe008
+            
+            #add-point:AFTER FIELD isbe008 name="construct.a.page1.isbe008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.isbe008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe008
+            #add-point:ON ACTION controlp INFIELD isbe008 name="construct.c.page1.isbe008"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令) name="cs.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         LET g_isbe_d[1].isbeseq = ""
+         DISPLAY ARRAY g_isbe_d TO s_detail1.*
+            BEFORE DISPLAY
+               EXIT DISPLAY
+         END DISPLAY
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "isbd_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "isbe_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+ 
+   
+   #add-point:cs段結束前 name="cs.after_construct"
+   
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aist200_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_wc STRING
+   #add-point:query段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_isbe_d.clear()
+ 
+   
+   #add-point:query段other name="query.other"
+   
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL aist200_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL aist200_browser_fill("")
+      CALL aist200_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx_list[1] = 1
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+   CALL aist200_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "-100" 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL aist200_fetch("F") 
+      #顯示單身筆數
+      CALL aist200_idx_chk()
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aist200_fetch(p_flag)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point    
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   #清空第二階單身
+ 
+   
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_pagestart = g_current_idx
+   DISPLAY g_pagestart TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_pagestart TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_pagestart, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_isbd_m.isbdcomp = g_browser[g_current_idx].b_isbdcomp
+   LET g_isbd_m.isbddocno = g_browser[g_current_idx].b_isbddocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE aist200_master_referesh USING g_isbd_m.isbdcomp,g_isbd_m.isbddocno INTO g_isbd_m.isbdsite, 
+       g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid, 
+       g_isbd_m.isbdowndp,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid, 
+       g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfdt,g_isbd_m.isbdsite_desc,g_isbd_m.isbdcomp_desc, 
+       g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid_desc,g_isbd_m.isbdcrtdp_desc, 
+       g_isbd_m.isbdmodid_desc,g_isbd_m.isbdcnfid_desc
+   
+   #遮罩相關處理
+   LET g_isbd_m_mask_o.* =  g_isbd_m.*
+   CALL aist200_isbd_t_mask()
+   LET g_isbd_m_mask_n.* =  g_isbd_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL aist200_set_act_visible()   
+   CALL aist200_set_act_no_visible()
+   
+   #add-point:fetch段action控制 name="fetch.action_control"
+   
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前 name="fetch.after"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_isbd_m_t.* = g_isbd_m.*
+   LET g_isbd_m_o.* = g_isbd_m.*
+   
+   LET g_data_owner = g_isbd_m.isbdownid      
+   LET g_data_dept  = g_isbd_m.isbdowndp
+   
+   #重新顯示   
+   CALL aist200_show()
+ 
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION aist200_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point    
+   #add-point:insert段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_isbe_d.clear()   
+ 
+ 
+   INITIALIZE g_isbd_m.* TO NULL             #DEFAULT 設定
+   
+   LET g_isbdcomp_t = NULL
+   LET g_isbddocno_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_isbd_m.isbdownid = g_user
+      LET g_isbd_m.isbdowndp = g_dept
+      LET g_isbd_m.isbdcrtid = g_user
+      LET g_isbd_m.isbdcrtdp = g_dept 
+      LET g_isbd_m.isbdcrtdt = cl_get_current()
+      LET g_isbd_m.isbdmodid = g_user
+      LET g_isbd_m.isbdmoddt = cl_get_current()
+      LET g_isbd_m.isbdstus = 'N'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+  
+      #add-point:單頭預設值 name="insert.default"
+      #取得預設的帳務中心,因新增階段的時候,並不會知道site,所以以登入人員做為依據
+      CALL s_fin_get_account_center('',g_user,'3',g_today) RETURNING g_sub_success,g_isbd_m.isbdsite,g_errno
+      
+      LET g_isbd_m.isbd001 = g_user
+#      SELECT ooag004 INTO g_ooag004 FROM ooag_t
+#       WHERE ooagent = g_enterprise  
+#         AND ooag001 = g_user
+
+      SELECT ooef017 INTO g_isbd_m.isbdcomp
+        FROM ooef_t
+       WHERE ooefent = g_enterprise
+         AND ooef001 = g_isbd_m.isbdsite
+      
+#      SELECT ooef001,ooef016 INTO g_ooef001,g_ooef016
+#        FROM ooef_t
+#       WHERE ooefent = g_enterprise
+#         AND ooef001 = g_ooag004
+      
+      CALL aist200_get_glaa()
+      
+      LET g_isbd_m.isbddocdt = g_today
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_isbd_m_t.* = g_isbd_m.*
+      LET g_isbd_m_o.* = g_isbd_m.*
+      
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_isbd_m.isbdstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+    
+      CALL aist200_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_isbd_m.* TO NULL
+         INITIALIZE g_isbe_d TO NULL
+ 
+         #add-point:取消新增後 name="insert.cancel"
+         
+         #end add-point 
+         CALL aist200_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_isbe_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL aist200_set_act_visible()   
+   CALL aist200_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_isbdcomp_t = g_isbd_m.isbdcomp
+   LET g_isbddocno_t = g_isbd_m.isbddocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " isbdent = " ||g_enterprise|| " AND",
+                      " isbdcomp = '", g_isbd_m.isbdcomp, "' "
+                      ," AND isbddocno = '", g_isbd_m.isbddocno, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後 name="insert.after.add_browse"
+   
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL aist200_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE aist200_cl
+   
+   CALL aist200_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE aist200_master_referesh USING g_isbd_m.isbdcomp,g_isbd_m.isbddocno INTO g_isbd_m.isbdsite, 
+       g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid, 
+       g_isbd_m.isbdowndp,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid, 
+       g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfdt,g_isbd_m.isbdsite_desc,g_isbd_m.isbdcomp_desc, 
+       g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid_desc,g_isbd_m.isbdcrtdp_desc, 
+       g_isbd_m.isbdmodid_desc,g_isbd_m.isbdcnfid_desc
+   
+   
+   #遮罩相關處理
+   LET g_isbd_m_mask_o.* =  g_isbd_m.*
+   CALL aist200_isbd_t_mask()
+   LET g_isbd_m_mask_n.* =  g_isbd_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_isbd_m.isbdsite,g_isbd_m.isbdsite_desc,g_isbd_m.isbd001,g_isbd_m.isbd001_desc,g_isbd_m.isbdcomp, 
+       g_isbd_m.isbdcomp_desc,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid, 
+       g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtid_desc, 
+       g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdp_desc,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid,g_isbd_m.isbdmodid_desc, 
+       g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfid_desc,g_isbd_m.isbdcnfdt
+   
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+   
+   LET g_data_owner = g_isbd_m.isbdownid      
+   LET g_data_dept  = g_isbd_m.isbdowndp
+   
+   #功能已完成,通報訊息中心
+   CALL aist200_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION aist200_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point    
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+ 
+ 
+   #add-point:modify段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_isbd_m_t.* = g_isbd_m.*
+   LET g_isbd_m_o.* = g_isbd_m.*
+   
+   IF g_isbd_m.isbdcomp IS NULL
+   OR g_isbd_m.isbddocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_isbdcomp_t = g_isbd_m.isbdcomp
+   LET g_isbddocno_t = g_isbd_m.isbddocno
+ 
+   CALL s_transaction_begin()
+   
+   OPEN aist200_cl USING g_enterprise,g_isbd_m.isbdcomp,g_isbd_m.isbddocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aist200_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE aist200_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aist200_master_referesh USING g_isbd_m.isbdcomp,g_isbd_m.isbddocno INTO g_isbd_m.isbdsite, 
+       g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid, 
+       g_isbd_m.isbdowndp,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid, 
+       g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfdt,g_isbd_m.isbdsite_desc,g_isbd_m.isbdcomp_desc, 
+       g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid_desc,g_isbd_m.isbdcrtdp_desc, 
+       g_isbd_m.isbdmodid_desc,g_isbd_m.isbdcnfid_desc
+   
+   #檢查是否允許此動作
+   IF NOT aist200_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_isbd_m_mask_o.* =  g_isbd_m.*
+   CALL aist200_isbd_t_mask()
+   LET g_isbd_m_mask_n.* =  g_isbd_m.*
+   
+   
+   
+   #add-point:modify段show之前 name="modify.before_show"
+   
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+ 
+ 
+   
+   CALL aist200_show()
+   #add-point:modify段show之後 name="modify.after_show"
+   
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+ 
+ 
+    
+   WHILE TRUE
+      LET g_isbdcomp_t = g_isbd_m.isbdcomp
+      LET g_isbddocno_t = g_isbd_m.isbddocno
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_isbd_m.isbdmodid = g_user 
+LET g_isbd_m.isbdmoddt = cl_get_current()
+LET g_isbd_m.isbdmodid_desc = cl_get_username(g_isbd_m.isbdmodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      LET g_master_commit = "N"
+      CALL aist200_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF g_update OR NOT INT_FLAG THEN
+         #若有modid跟moddt則進行update
+         UPDATE isbd_t SET (isbdmodid,isbdmoddt) = (g_isbd_m.isbdmodid,g_isbd_m.isbdmoddt)
+          WHERE isbdent = g_enterprise AND isbdcomp = g_isbdcomp_t
+            AND isbddocno = g_isbddocno_t
+ 
+      END IF
+    
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         #若單頭無commit則還原
+         IF g_master_commit = "N" THEN
+            LET g_isbd_m.* = g_isbd_m_t.*
+            CALL aist200_show()
+         END IF
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_isbd_m.isbdcomp != g_isbd_m_t.isbdcomp
+      OR g_isbd_m.isbddocno != g_isbd_m_t.isbddocno
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前 name="modify.body.b_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         UPDATE isbe_t SET isbecomp = g_isbd_m.isbdcomp
+                                       ,isbedocno = g_isbd_m.isbddocno
+ 
+          WHERE isbeent = g_enterprise AND isbecomp = g_isbd_m_t.isbdcomp
+            AND isbedocno = g_isbd_m_t.isbddocno
+ 
+            
+         #add-point:單身fk修改中 name="modify.body.m_fk_update"
+         
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "isbe_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "isbe_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後 name="modify.body.a_fk_update"
+         
+         #end add-point
+         
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL aist200_set_act_visible()   
+   CALL aist200_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " isbdent = " ||g_enterprise|| " AND",
+                      " isbdcomp = '", g_isbd_m.isbdcomp, "' "
+                      ," AND isbddocno = '", g_isbd_m.isbddocno, "' "
+ 
+   #填到對應位置
+   CALL aist200_browser_fill("")
+ 
+   CLOSE aist200_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL aist200_msgcentre_notify('modify')
+ 
+END FUNCTION 
+ 
+{</section>}
+ 
+{<section id="aist200.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION aist200_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point  
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_ac_t                LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE  l_success             LIKE type_t.num5
+   DEFINE  l_date                LIKE type_t.dat
+   DEFINE  ls_wc                 STRING
+   #end add-point  
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   
+   #end add-point
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_isbd_m.isbdsite,g_isbd_m.isbdsite_desc,g_isbd_m.isbd001,g_isbd_m.isbd001_desc,g_isbd_m.isbdcomp, 
+       g_isbd_m.isbdcomp_desc,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid, 
+       g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtid_desc, 
+       g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdp_desc,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid,g_isbd_m.isbdmodid_desc, 
+       g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfid_desc,g_isbd_m.isbdcnfdt
+   
+   #切換畫面
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql name="input.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = "SELECT isbeseq,isbesite,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007, 
+       isbe008 FROM isbe_t WHERE isbeent=? AND isbecomp=? AND isbedocno=? AND isbeseq=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aist200_bcl CURSOR FROM g_forupd_sql
+   
+ 
+   
+ 
+ 
+   #add-point:input段define_sql name="input.other_sql"
+   
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL aist200_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL aist200_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_isbd_m.isbdsite,g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbd_m.isbddocdt, 
+       g_isbd_m.isbdstus
+   
+   LET lb_reproduce = FALSE
+   LET l_ac_t = 1
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前 name="input.before_input"
+   
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+{</section>}
+ 
+{<section id="aist200.input.head" >}
+      #單頭段
+      INPUT BY NAME g_isbd_m.isbdsite,g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbd_m.isbddocdt, 
+          g_isbd_m.isbdstus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN aist200_cl USING g_enterprise,g_isbd_m.isbdcomp,g_isbd_m.isbddocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN aist200_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE aist200_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL aist200_set_entry(p_cmd)
+            #add-point:資料輸入前 name="input.m.before_input"
+            
+            #end add-point
+            CALL aist200_set_no_entry(p_cmd)
+    
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdsite
+            
+            #add-point:AFTER FIELD isbdsite name="input.a.isbdsite"
+            IF NOT cl_null(g_isbd_m.isbdsite) THEN
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isbd_m.isbdsite != g_isbd_m_t.isbdsite OR g_isbd_m_t.isbdsite IS NULL )) THEN #161005-00003#2 mark
+               IF g_isbd_m.isbdsite != g_isbd_m_o.isbdsite OR cl_null(g_isbd_m_o.isbdsite) THEN #161005-00003#2 add
+                  CALL aist200_get_glaa()
+                  #取得帳務組織下所屬成員
+                  CALL s_fin_account_center_sons_query('3',g_isbd_m.isbdsite,g_isbd_m.isbddocdt,'1')
+                  CALL s_fin_account_center_with_ld_chk(g_isbd_m.isbdsite,g_glaald,g_user,'3','N','',g_isbd_m.isbddocdt) RETURNING l_success,g_errno
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_isbd_m.isbdsite
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isbd_m.isbdsite = g_isbd_m_t.isbdsite #161005-00003#2 mark
+                     LET g_isbd_m.isbdsite = g_isbd_m_o.isbdsite #161005-00003#2 add
+                     CALL s_desc_get_department_desc(g_isbd_m.isbdsite) RETURNING g_isbd_m.isbdsite_desc
+                     DISPLAY BY NAME g_isbd_m.isbdsite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_desc_get_department_desc(g_isbd_m.isbdsite) RETURNING g_isbd_m.isbdsite_desc #161005-00003#2 add
+                  DISPLAY BY NAME g_isbd_m.isbdsite_desc                                              #161005-00003#2 add
+               END IF
+            END IF
+            CALL s_desc_get_department_desc(g_isbd_m.isbdsite) RETURNING g_isbd_m.isbdsite_desc
+            DISPLAY BY NAME g_isbd_m.isbdsite_desc
+            #161017-00005#1
+            CALL s_fin_account_center_sons_query('3',g_isbd_m.isbdsite,g_isbd_m.isbddocdt,'1')
+            CALL s_fin_account_center_comp_str() RETURNING ls_wc
+            CALL s_fin_get_wc_str(ls_wc) RETURNING ls_wc
+            #161017-00005#1
+            LET g_isbd_m_o.* = g_isbd_m.* #161005-00003#2 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdsite
+            #add-point:BEFORE FIELD isbdsite name="input.b.isbdsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbdsite
+            #add-point:ON CHANGE isbdsite name="input.g.isbdsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbd001
+            
+            #add-point:AFTER FIELD isbd001 name="input.a.isbd001"
+            IF NOT cl_null(g_isbd_m.isbd001) THEN
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isbd_m.isbd001 != g_isbd_m_t.isbd001 OR g_isbd_m_t.isbd001 IS NULL )) THEN #161005-00003#2 mark
+               IF g_isbd_m.isbd001 != g_isbd_m_o.isbd001 OR cl_null(g_isbd_m_o.isbd001) THEN #161005-00003#2 add
+                  #資料存在性、有效性檢查
+                  CALL s_employee_chk(g_isbd_m.isbd001) RETURNING l_success
+                  IF NOT l_success THEN
+                    #LET g_isbd_m.isbd001 = g_isbd_m_t.isbd001 #161005-00003#2 mark
+                     LET g_isbd_m.isbd001 = g_isbd_m_o.isbd001 #161005-00003#2 add
+                     CALL s_desc_get_person_desc(g_isbd_m.isbd001) RETURNING g_isbd_m.isbd001_desc
+                     DISPLAY BY NAME g_isbd_m.isbd001_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_desc_get_person_desc(g_isbd_m.isbd001) RETURNING g_isbd_m.isbd001_desc #161005-00003#2 add
+                  DISPLAY BY NAME g_isbd_m.isbd001_desc                                         #161005-00003#2 add
+               END IF
+            END IF
+            IF cl_null(g_isbd_m.isbd001) AND cl_null(g_isbd_m.isbdcomp) THEN
+               LET g_isbd_m.isbd001 = g_user
+            END IF
+            CALL s_desc_get_person_desc(g_isbd_m.isbd001) RETURNING g_isbd_m.isbd001_desc
+            DISPLAY BY NAME g_isbd_m.isbd001_desc
+            LET g_isbd_m_o.* = g_isbd_m.*  #161005-00003#2 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbd001
+            #add-point:BEFORE FIELD isbd001 name="input.b.isbd001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbd001
+            #add-point:ON CHANGE isbd001 name="input.g.isbd001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdcomp
+            
+            #add-point:AFTER FIELD isbdcomp name="input.a.isbdcomp"
+            CALL aist200_get_glaa()
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_isbd_m.isbdcomp) AND NOT cl_null(g_isbd_m.isbddocno) THEN
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_isbd_m.isbdcomp != g_isbdcomp_t  OR g_isbd_m.isbddocno != g_isbddocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isbd_t WHERE "||"isbdent = '" ||g_enterprise|| "' AND "||"isbdcomp = '"||g_isbd_m.isbdcomp ||"' AND "|| "isbddocno = '"||g_isbd_m.isbddocno ||"'",'std-00004',0) THEN 
+                     CALL aist200_get_glaa()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+            IF NOT cl_null(g_isbd_m.isbdcomp) THEN
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isbd_m.isbdcomp != g_isbd_m_t.isbdcomp OR g_isbd_m_t.isbdcomp IS NULL )) THEN #161005-00003#2 mark
+               IF g_isbd_m.isbdcomp != g_isbd_m_o.isbdcomp OR cl_null(g_isbd_m_o.isbdcomp) THEN #161005-00003#2 add
+                  #取得帳務組織下所屬成員    
+                  CALL s_fin_account_center_sons_query('3',g_isbd_m.isbdsite,g_isbd_m.isbddocdt,'1')
+                  CALL s_fin_account_center_comp_str() RETURNING ls_wc
+                  CALL s_fin_get_wc_str(ls_wc) RETURNING ls_wc
+                  CALL s_fin_account_center_with_ld_chk(g_isbd_m.isbdsite,g_glaald,g_user,'3','Y','',g_isbd_m.isbddocdt) 
+                     RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isbd_m.isbdcomp = g_isbd_m_t.isbdcomp #161005-00003#2 mark
+                     LET g_isbd_m.isbdcomp = g_isbd_m_o.isbdcomp #161005-00003#2 add
+                     CALL s_desc_get_department_desc(g_isbd_m.isbdcomp) RETURNING g_isbd_m.isbdcomp_desc
+                     DISPLAY BY NAME g_isbd_m.isbdcomp_desc
+                     CALL aist200_get_glaa()
+                     NEXT FIELD CURRENT
+                  END IF
+                  #161017-00005#1 add ------
+                  #檢查輸入帳套是否存在帳務中心下帳套範圍內
+                  IF s_chr_get_index_of(ls_wc,g_isbd_m.isbdcomp,1) = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'aap-00127'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isbd_m.isbdcomp = g_isbd_m_t.isbdcomp #161005-00003#2 mark
+                     LET g_isbd_m.isbdcomp = g_isbd_m_o.isbdcomp #161005-00003#2 add
+                     CALL s_desc_get_department_desc(g_isbd_m.isbdcomp)RETURNING g_isbd_m.isbdcomp_desc
+                     DISPLAY BY NAME g_isbd_m.isbdcomp_desc
+                     CALL aist200_get_glaa() #161005-00003#2 add
+                     NEXT FIELD CURRENT
+                  END IF
+                  #161017-00005#1 add end---
+                  #161005-00003#2 add s--
+                  CALL s_desc_get_department_desc(g_isbd_m.isbdcomp) RETURNING g_isbd_m.isbdcomp_desc
+                  DISPLAY BY NAME g_isbd_m.isbdcomp_desc
+                  CALL aist200_get_glaa()
+                  #161005-00003#2 add e--
+               END IF
+            END IF
+            CALL aist200_get_glaa()
+            CALL s_desc_get_department_desc(g_isbd_m.isbdcomp) RETURNING g_isbd_m.isbdcomp_desc
+            DISPLAY BY NAME g_isbd_m.isbdcomp_desc
+            LET g_isbd_m_o.* = g_isbd_m.* #161005-00003#2 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdcomp
+            #add-point:BEFORE FIELD isbdcomp name="input.b.isbdcomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbdcomp
+            #add-point:ON CHANGE isbdcomp name="input.g.isbdcomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbddocno
+            #add-point:BEFORE FIELD isbddocno name="input.b.isbddocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbddocno
+            
+            #add-point:AFTER FIELD isbddocno name="input.a.isbddocno"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_isbd_m.isbdcomp) AND NOT cl_null(g_isbd_m.isbddocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_isbd_m.isbdcomp != g_isbdcomp_t  OR g_isbd_m.isbddocno != g_isbddocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isbd_t WHERE "||"isbdent = '" ||g_enterprise|| "' AND "||"isbdcomp = '"||g_isbd_m.isbdcomp ||"' AND "|| "isbddocno = '"||g_isbd_m.isbddocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_isbd_m.isbddocno) THEN 
+               #财务改为使用s_aooi200_fin中的FUNCTION
+               CALL s_aooi200_fin_chk_slip(g_glaald,g_glaa024,g_isbd_m.isbddocno,'aist200') RETURNING l_success
+               IF l_success = FALSE THEN 
+                  LET g_isbd_m.isbddocno = g_isbd_m_t.isbddocno
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbddocno
+            #add-point:ON CHANGE isbddocno name="input.g.isbddocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbddocdt
+            #add-point:BEFORE FIELD isbddocdt name="input.b.isbddocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbddocdt
+            
+            #add-point:AFTER FIELD isbddocdt name="input.a.isbddocdt"
+            IF NOT cl_null(g_isbd_m.isbddocdt) THEN 
+               LET l_date = ''
+               CALL cl_get_para(g_enterprise,g_isbd_m.isbdcomp,'S-FIN-4002') RETURNING l_date
+               IF g_isbd_m.isbddocdt < l_date THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'axr-00125'
+                  LET g_errparam.extend = g_isbd_m.isbddocdt
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isbd_m.isbddocdt = g_isbd_m_t.isbddocdt
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbddocdt
+            #add-point:ON CHANGE isbddocdt name="input.g.isbddocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbdstus
+            #add-point:BEFORE FIELD isbdstus name="input.b.isbdstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbdstus
+            
+            #add-point:AFTER FIELD isbdstus name="input.a.isbdstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbdstus
+            #add-point:ON CHANGE isbdstus name="input.g.isbdstus"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.isbdsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdsite
+            #add-point:ON ACTION controlp INFIELD isbdsite name="input.c.isbdsite"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isbd_m.isbdsite
+            #LET g_qryparam.where = " ooef201 = 'Y'" #161006-00005#26 mark
+            #CALL q_ooef001()                        #161006-00005#26 mark
+            CALL q_ooef001_46()                      #161006-00005#26
+            LET g_isbd_m.isbdsite = g_qryparam.return1
+            DISPLAY g_isbd_m.isbdsite TO isbdsite
+            NEXT FIELD isbdsite
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isbd001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbd001
+            #add-point:ON ACTION controlp INFIELD isbd001 name="input.c.isbd001"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isbd_m.isbd001
+            CALL q_ooag001_8()
+            LET g_isbd_m.isbd001 = g_qryparam.return1
+            DISPLAY g_isbd_m.isbd001 TO isbd001
+            NEXT FIELD isbd001
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isbdcomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdcomp
+            #add-point:ON ACTION controlp INFIELD isbdcomp name="input.c.isbdcomp"
+            #法人
+            #開窗i段
+            CALL s_fin_account_center_sons_query('3',g_isbd_m.isbdsite,g_isbd_m.isbddocdt,'')
+            CALL s_fin_account_center_comp_str() RETURNING ls_wc
+            CALL s_fin_get_wc_str(ls_wc) RETURNING ls_wc
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isbd_m.isbdcomp
+            LET g_qryparam.where = " ooef003 = 'Y' AND ooef001 IN ",ls_wc CLIPPED
+            CALL q_ooef001()
+            LET g_isbd_m.isbdcomp = g_qryparam.return1
+            DISPLAY g_isbd_m.isbdcomp TO isbdcomp
+            NEXT FIELD isbdcomp
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isbddocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbddocno
+            #add-point:ON ACTION controlp INFIELD isbddocno name="input.c.isbddocno"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isbd_m.isbddocno
+            LET g_qryparam.where = "ooba001 = '",g_glaa024,"' AND oobx003 = 'aist200'"
+            CALL q_ooba002_4()
+            LET g_isbd_m.isbddocno = g_qryparam.return1
+            DISPLAY g_isbd_m.isbddocno TO isbddocno
+            NEXT FIELD isbddocno
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isbddocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbddocdt
+            #add-point:ON ACTION controlp INFIELD isbddocdt name="input.c.isbddocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isbdstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbdstus
+            #add-point:ON ACTION controlp INFIELD isbdstus name="input.c.isbdstus"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_isbd_m.isbdcomp,g_isbd_m.isbddocno
+                        
+            #add-point:單頭INPUT後 name="input.head.after_input"
+            
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前 name="input.head.b_insert"
+               #单据编号
+               CALL s_aooi200_fin_gen_docno(g_glaald,g_glaa024,g_glaa003,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_prog)
+               RETURNING l_success,g_isbd_m.isbddocno            
+               IF l_success  = 0  THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apm-00003'
+                  LET g_errparam.extend = g_isbd_m.isbddocno
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD isbddocno
+               END IF 
+               DISPLAY BY NAME g_isbd_m.isbddocno
+               #end add-point
+               
+               INSERT INTO isbd_t (isbdent,isbdsite,isbd001,isbdcomp,isbddocno,isbddocdt,isbdstus,isbdownid, 
+                   isbdowndp,isbdcrtid,isbdcrtdp,isbdcrtdt,isbdmodid,isbdmoddt,isbdcnfid,isbdcnfdt)
+               VALUES (g_enterprise,g_isbd_m.isbdsite,g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno, 
+                   g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid,g_isbd_m.isbdowndp,g_isbd_m.isbdcrtid, 
+                   g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid,g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid, 
+                   g_isbd_m.isbdcnfdt) 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_isbd_m:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭新增中 name="input.head.m_insert"
+               
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後 name="input.head.a_insert"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL aist200_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL aist200_b_fill()
+                  CALL aist200_b_fill2('0')
+               END IF
+               
+               #add-point:單頭新增後 name="input.head.a_insert2"
+               
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前 name="input.head.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL aist200_isbd_t_mask_restore('restore_mask_o')
+               
+               UPDATE isbd_t SET (isbdsite,isbd001,isbdcomp,isbddocno,isbddocdt,isbdstus,isbdownid,isbdowndp, 
+                   isbdcrtid,isbdcrtdp,isbdcrtdt,isbdmodid,isbdmoddt,isbdcnfid,isbdcnfdt) = (g_isbd_m.isbdsite, 
+                   g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus, 
+                   g_isbd_m.isbdownid,g_isbd_m.isbdowndp,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdt, 
+                   g_isbd_m.isbdmodid,g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfdt)
+                WHERE isbdent = g_enterprise AND isbdcomp = g_isbdcomp_t
+                  AND isbddocno = g_isbddocno_t
+ 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "isbd_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               
+               
+               
+               
+               #將遮罩欄位進行遮蔽
+               CALL aist200_isbd_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_isbd_m_t)
+               LET g_log2 = util.JSON.stringify(g_isbd_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後 name="input.head.a_update"
+               
+               #end add-point
+            END IF
+            
+            LET g_master_commit = "Y"
+            LET g_isbdcomp_t = g_isbd_m.isbdcomp
+            LET g_isbddocno_t = g_isbd_m.isbddocno
+ 
+            
+      END INPUT
+   
+ 
+{</section>}
+ 
+{<section id="aist200.input.body" >}
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_isbe_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_isbe_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aist200_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_isbe_d.getLength()
+            #add-point:資料輸入前 name="input.d.before_input"
+            
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2 name="input.body.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_detail_idx_list[1] = l_ac
+            LET g_current_page = 1
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN aist200_cl USING g_enterprise,g_isbd_m.isbdcomp,g_isbd_m.isbddocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN aist200_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE aist200_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_isbe_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_isbe_d[l_ac].isbeseq IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_isbe_d_t.* = g_isbe_d[l_ac].*  #BACKUP
+               LET g_isbe_d_o.* = g_isbe_d[l_ac].*  #BACKUP
+               CALL aist200_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body.after_set_entry_b"
+               
+               #end add-point  
+               CALL aist200_set_no_entry_b(l_cmd)
+               IF NOT aist200_lock_b("isbe_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aist200_bcl INTO g_isbe_d[l_ac].isbeseq,g_isbe_d[l_ac].isbesite,g_isbe_d[l_ac].isbe001, 
+                      g_isbe_d[l_ac].isbe002,g_isbe_d[l_ac].isbe003,g_isbe_d[l_ac].isbe004,g_isbe_d[l_ac].isbe005, 
+                      g_isbe_d[l_ac].isbe006,g_isbe_d[l_ac].isbe007,g_isbe_d[l_ac].isbe008
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_isbe_d_t.isbeseq,":",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_isbe_d_mask_o[l_ac].* =  g_isbe_d[l_ac].*
+                  CALL aist200_isbe_t_mask()
+                  LET g_isbe_d_mask_n[l_ac].* =  g_isbe_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL aist200_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body.before_row"
+            CALL s_desc_get_department_desc(g_isbe_d[l_ac].isbesite) RETURNING g_isbe_d[l_ac].isbesite_desc
+            DISPLAY BY NAME g_isbe_d[l_ac].isbesite_desc
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+        
+         BEFORE INSERT  
+            
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_isbe_d[l_ac].* TO NULL 
+            INITIALIZE g_isbe_d_t.* TO NULL 
+            INITIALIZE g_isbe_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值
+                  LET g_isbe_d[l_ac].isbe005 = "0"
+      LET g_isbe_d[l_ac].isbe006 = "0"
+ 
+            #add-point:modify段before備份 name="input.body.insert.before_bak"
+            
+            #end add-point
+            LET g_isbe_d_t.* = g_isbe_d[l_ac].*     #新輸入資料
+            LET g_isbe_d_o.* = g_isbe_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL aist200_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL aist200_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_isbe_d[li_reproduce_target].* = g_isbe_d[li_reproduce].*
+ 
+               LET g_isbe_d[li_reproduce_target].isbeseq = NULL
+ 
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body.before_insert"
+            SELECT MAX(isbeseq) INTO g_isbe_d[l_ac].isbeseq FROM isbe_t
+             WHERE isbeent = g_enterprise AND isbecomp = g_isbd_m.isbdcomp
+               AND isbedocno = g_isbd_m.isbddocno
+            IF cl_null(g_isbe_d[l_ac].isbeseq) THEN 
+               LET g_isbe_d[l_ac].isbeseq = 1
+            ELSE
+               LET g_isbe_d[l_ac].isbeseq = g_isbe_d[l_ac].isbeseq +1               
+            END IF
+            LET g_isbe_d[l_ac].isbesite = g_isbd_m.isbdcomp
+            CALL s_desc_get_department_desc(g_isbe_d[l_ac].isbesite) RETURNING g_isbe_d[l_ac].isbesite_desc
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增 name="input.body.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM isbe_t 
+             WHERE isbeent = g_enterprise AND isbecomp = g_isbd_m.isbdcomp
+               AND isbedocno = g_isbd_m.isbddocno
+ 
+               AND isbeseq = g_isbe_d[l_ac].isbeseq
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_isbd_m.isbdcomp
+               LET gs_keys[2] = g_isbd_m.isbddocno
+               LET gs_keys[3] = g_isbe_d[g_detail_idx].isbeseq
+               CALL aist200_insert_b('isbe_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code = "std-00006" 
+               LET g_errparam.popup = TRUE 
+               INITIALIZE g_isbe_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "isbe_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aist200_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d) name="input.body.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code = -263 
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_isbd_m.isbdcomp
+               LET gs_keys[gs_keys.getLength()+1] = g_isbd_m.isbddocno
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_isbe_d_t.isbeseq
+ 
+            
+               #刪除同層單身
+               IF NOT aist200_delete_b('isbe_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE aist200_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT aist200_key_delete_b(gs_keys,'isbe_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE aist200_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE aist200_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後 name="input.body.a_delete"
+               
+               #end add-point
+               LET l_count = g_isbe_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body.after_delete"
+               
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_isbe_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbeseq
+            #add-point:BEFORE FIELD isbeseq name="input.b.page1.isbeseq"
+            IF cl_null(g_isbe_d[l_ac].isbeseq) THEN 
+               SELECT MAX(isbeseq) INTO g_isbe_d[l_ac].isbeseq
+                 FROM isbe_t
+                WHERE isbeent = g_enterprise AND isbecomp = g_isbd_m.isbdcomp
+                  AND isbedocno = g_isbd_m.isbddocno
+               IF cl_null(g_isbe_d[l_ac].isbeseq) THEN 
+                  LET g_isbe_d[l_ac].isbeseq = 1
+               ELSE
+                  LET g_isbe_d[l_ac].isbeseq = g_isbe_d[l_ac].isbeseq +1               
+               END IF
+            END IF
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbeseq
+            
+            #add-point:AFTER FIELD isbeseq name="input.a.page1.isbeseq"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_isbd_m.isbdcomp IS NOT NULL AND g_isbd_m.isbddocno IS NOT NULL AND g_isbe_d[g_detail_idx].isbeseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isbd_m.isbdcomp != g_isbdcomp_t OR g_isbd_m.isbddocno != g_isbddocno_t OR g_isbe_d[g_detail_idx].isbeseq != g_isbe_d_t.isbeseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isbe_t WHERE "||"isbeent = '" ||g_enterprise|| "' AND "||"isbecomp = '"||g_isbd_m.isbdcomp ||"' AND "|| "isbedocno = '"||g_isbd_m.isbddocno ||"' AND "|| "isbeseq = '"||g_isbe_d[g_detail_idx].isbeseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbeseq
+            #add-point:ON CHANGE isbeseq name="input.g.page1.isbeseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbesite
+            
+            #add-point:AFTER FIELD isbesite name="input.a.page1.isbesite"
+            CALL s_desc_get_department_desc(g_isbe_d[l_ac].isbesite) RETURNING g_isbe_d[l_ac].isbesite_desc
+            DISPLAY BY NAME g_isbe_d[l_ac].isbesite_desc
+            IF NOT cl_null(g_isbe_d[l_ac].isbesite) THEN
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isbe_d[l_ac].isbesite != g_isbe_d_t.isbesite OR g_isbe_d_t.isbesite IS NULL )) THEN #161005-00003#2 mark
+               IF g_isbe_d[l_ac].isbesite != g_isbe_d_o.isbesite OR cl_null(g_isbe_d_o.isbesite) THEN #161005-00003#2 add
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_isbe_d[l_ac].isbesite
+                  LET g_chkparam.arg2 = g_isbd_m.isbdcomp
+                  IF NOT cl_chk_exist("v_ooef001_12") THEN
+                     #檢查失敗時後續處理
+                    #LET g_isbe_d[l_ac].isbesite = g_isbe_d_t.isbesite #161005-00003#2 mark
+                     LET g_isbe_d[l_ac].isbesite = g_isbe_d_o.isbesite #161005-00003#2 add
+                     CALL s_desc_get_department_desc(g_isbe_d[l_ac].isbesite) RETURNING g_isbe_d[l_ac].isbesite_desc
+                     DISPLAY BY NAME g_isbe_d[l_ac].isbesite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #发票代码是否在该门店下
+                  IF NOT cl_null(g_isbe_d[l_ac].isbe001) THEN
+                     LET l_cnt = 0
+                     SELECT COUNT(*) INTO l_cnt FROM stbf_t
+                      WHERE stbfent=g_enterprise 
+                        AND stbfcomp=g_isbd_m.isbdcomp
+                        AND stbfsite=g_isbe_d[l_ac].isbesite
+                        AND stbf001=g_isbe_d[l_ac].isbe001
+                     IF l_cnt=0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend = g_isbe_d[l_ac].isbe001
+                        LET g_errparam.code   = 'ais-00203'
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        #161005-00003#2 add --s
+                        LET g_isbe_d[l_ac].isbesite = g_isbe_d_o.isbesite 
+                        CALL s_desc_get_department_desc(g_isbe_d[l_ac].isbesite) RETURNING g_isbe_d[l_ac].isbesite_desc
+                        DISPLAY BY NAME g_isbe_d[l_ac].isbesite_desc
+                        #161005-00003#2 add --e
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  #发票号码是否在该门店下
+                  IF NOT cl_null(g_isbe_d[l_ac].isbe002) THEN
+                     LET l_cnt = 0
+                     SELECT COUNT(*) INTO l_cnt FROM stbf_t
+                      WHERE stbfent=g_enterprise 
+                        AND stbfcomp=g_isbd_m.isbdcomp
+                        AND stbfsite=g_isbe_d[l_ac].isbesite
+                        AND stbf002=g_isbe_d[l_ac].isbe002
+                     IF l_cnt=0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend = g_isbe_d[l_ac].isbe002
+                        LET g_errparam.code   = 'ais-00204'
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        #161005-00003#2 add --s
+                        LET g_isbe_d[l_ac].isbesite = g_isbe_d_o.isbesite 
+                        CALL s_desc_get_department_desc(g_isbe_d[l_ac].isbesite) RETURNING g_isbe_d[l_ac].isbesite_desc
+                        DISPLAY BY NAME g_isbe_d[l_ac].isbesite_desc
+                        #161005-00003#2 add --e
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  #发票代码+发票号码是否在该门店下
+                  IF NOT cl_null(g_isbe_d[l_ac].isbe001) OR NOT cl_null(g_isbe_d[l_ac].isbe002) THEN
+                     LET l_cnt = 0
+                     SELECT COUNT(*) INTO l_cnt FROM stbf_t
+                      WHERE stbfent=g_enterprise 
+                        AND stbfcomp=g_isbd_m.isbdcomp
+                        AND stbfsite=g_isbe_d[l_ac].isbesite
+                        AND stbf001=g_isbe_d[l_ac].isbe001
+                        AND stbf002=g_isbe_d[l_ac].isbe002
+                     IF l_cnt=0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend = g_isbe_d[l_ac].isbe001||'-'||g_isbe_d[l_ac].isbe002
+                        LET g_errparam.code   = 'ais-00205'
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        #161005-00003#2 add --s
+                        LET g_isbe_d[l_ac].isbesite = g_isbe_d_o.isbesite 
+                        CALL s_desc_get_department_desc(g_isbe_d[l_ac].isbesite) RETURNING g_isbe_d[l_ac].isbesite_desc
+                        DISPLAY BY NAME g_isbe_d[l_ac].isbesite_desc
+                        #161005-00003#2 add --e
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  #161006-00005#28 add ------
+                  #檢查輸入的組織是否為門店
+                  SELECT COUNT(1) INTO l_cnt
+                    FROM ooef_t
+                   WHERE ooefent = g_enterprise
+                     AND ooef001 = g_isbe_d[l_ac].isbesite
+                     AND ooef304 = 'Y'
+                  IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+                  IF l_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'art-00062'
+                     LET g_errparam.extend = g_isbe_d[l_ac].isbesite
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     #161005-00003#2 add --s
+                     LET g_isbe_d[l_ac].isbesite = g_isbe_d_o.isbesite 
+                     CALL s_desc_get_department_desc(g_isbe_d[l_ac].isbesite) RETURNING g_isbe_d[l_ac].isbesite_desc
+                     DISPLAY BY NAME g_isbe_d[l_ac].isbesite_desc
+                     #161005-00003#2 add --e
+                     NEXT FIELD CURRENT
+                  END IF
+                  #161006-00005#28 add ------
+               END IF
+            END IF
+            LET g_isbe_d_o.* = g_isbe_d[l_ac].* #161005-00003#2 add 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbesite
+            #add-point:BEFORE FIELD isbesite name="input.b.page1.isbesite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbesite
+            #add-point:ON CHANGE isbesite name="input.g.page1.isbesite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe001
+            #add-point:BEFORE FIELD isbe001 name="input.b.page1.isbe001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe001
+            
+            #add-point:AFTER FIELD isbe001 name="input.a.page1.isbe001"
+            IF NOT cl_null(g_isbe_d[l_ac].isbe001) THEN
+               IF NOT cl_null(g_isbe_d[l_ac].isbesite) THEN
+                  LET l_cnt = 0
+                  SELECT COUNT(*) INTO l_cnt FROM stbf_t
+                   WHERE stbfent=g_enterprise 
+                     AND stbfcomp=g_isbd_m.isbdcomp
+                     AND stbfsite=g_isbe_d[l_ac].isbesite
+                     AND stbf001=g_isbe_d[l_ac].isbe001
+                  IF l_cnt=0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = g_isbe_d[l_ac].isbe001
+                     LET g_errparam.code   = 'ais-00203'
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT cl_null(g_isbe_d[l_ac].isbe002) THEN
+                     LET l_cnt = 0
+                     SELECT COUNT(*) INTO l_cnt FROM stbf_t
+                      WHERE stbfent=g_enterprise 
+                        AND stbfcomp=g_isbd_m.isbdcomp
+                        AND stbfsite=g_isbe_d[l_ac].isbesite
+                        AND stbf001=g_isbe_d[l_ac].isbe001
+                        AND stbf002=g_isbe_d[l_ac].isbe002
+                     IF l_cnt=0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend = g_isbe_d[l_ac].isbe001||'-'||g_isbe_d[l_ac].isbe002
+                        LET g_errparam.code   = 'ais-00205'
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+               IF NOT cl_null(g_isbe_d[l_ac].isbe002) THEN
+                  SELECT COUNT(*) INTO l_cnt 
+                    FROM isbe_t,isbd_t
+                   WHERE isbeent=isbdent AND isbecomp=isbdcomp AND isbedocno=isbddocno
+                     AND isbeent=g_enterprise AND isbdstus<>'X'
+                     AND isbe001=g_isbe_d[l_ac].isbe001
+                     AND isbe002=g_isbe_d[l_ac].isbe002
+                  IF l_cnt > 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = g_isbe_d[l_ac].isbe001||'+'||g_isbe_d[l_ac].isbe002
+                     LET g_errparam.code   = 'ais-00201'
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbe001
+            #add-point:ON CHANGE isbe001 name="input.g.page1.isbe001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe002
+            #add-point:BEFORE FIELD isbe002 name="input.b.page1.isbe002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe002
+            
+            #add-point:AFTER FIELD isbe002 name="input.a.page1.isbe002"
+            IF NOT cl_null(g_isbe_d[l_ac].isbe002) THEN
+               IF NOT cl_null(g_isbe_d[l_ac].isbesite) THEN
+                  LET l_cnt = 0
+                  SELECT COUNT(*) INTO l_cnt FROM stbf_t
+                   WHERE stbfent=g_enterprise 
+                     AND stbfcomp=g_isbd_m.isbdcomp
+                     AND stbfsite=g_isbe_d[l_ac].isbesite
+                     AND stbf002=g_isbe_d[l_ac].isbe002
+                  IF l_cnt=0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = g_isbe_d[l_ac].isbe002
+                     LET g_errparam.code   = 'ais-00204'
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT cl_null(g_isbe_d[l_ac].isbe001) THEN
+                     LET l_cnt = 0
+                     SELECT COUNT(*) INTO l_cnt FROM stbf_t
+                      WHERE stbfent=g_enterprise 
+                        AND stbfcomp=g_isbd_m.isbdcomp
+                        AND stbfsite=g_isbe_d[l_ac].isbesite
+                        AND stbf001=g_isbe_d[l_ac].isbe001
+                        AND stbf002=g_isbe_d[l_ac].isbe002
+                     IF l_cnt=0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend = g_isbe_d[l_ac].isbe001||'-'||g_isbe_d[l_ac].isbe002
+                        LET g_errparam.code   = 'ais-00205'
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+               IF NOT cl_null(g_isbe_d[l_ac].isbe001) THEN
+                  SELECT COUNT(*) INTO l_cnt 
+                    FROM isbe_t,isbd_t
+                   WHERE isbeent=isbdent AND isbecomp=isbdcomp AND isbedocno=isbddocno
+                     AND isbeent=g_enterprise AND isbdstus<>'X'
+                     AND isbe001=g_isbe_d[l_ac].isbe001
+                     AND isbe002=g_isbe_d[l_ac].isbe002
+                  IF l_cnt > 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = g_isbe_d[l_ac].isbe001||'+'||g_isbe_d[l_ac].isbe002
+                     LET g_errparam.code   = 'ais-00201'
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbe002
+            #add-point:ON CHANGE isbe002 name="input.g.page1.isbe002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe003
+            #add-point:BEFORE FIELD isbe003 name="input.b.page1.isbe003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe003
+            
+            #add-point:AFTER FIELD isbe003 name="input.a.page1.isbe003"
+            IF NOT cl_null(g_isbe_d[l_ac].isbe003) AND NOT cl_null(g_isbe_d[l_ac].isbe007) THEN
+               IF g_isbe_d[l_ac].isbe007 < g_isbe_d[l_ac].isbe003 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'ais-00207'
+                  LET g_errparam.extend = g_isbe_d[l_ac].isbe003
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isbe_d[l_ac].isbe003 = g_isbe_d_t.isbe003
+                  NEXT FIELD isbe003
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbe003
+            #add-point:ON CHANGE isbe003 name="input.g.page1.isbe003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe004
+            #add-point:BEFORE FIELD isbe004 name="input.b.page1.isbe004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe004
+            
+            #add-point:AFTER FIELD isbe004 name="input.a.page1.isbe004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbe004
+            #add-point:ON CHANGE isbe004 name="input.g.page1.isbe004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe005
+            #add-point:BEFORE FIELD isbe005 name="input.b.page1.isbe005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe005
+            
+            #add-point:AFTER FIELD isbe005 name="input.a.page1.isbe005"
+            IF NOT cl_null(g_isbe_d[l_ac].isbe005) AND NOT cl_null(g_isbe_d[l_ac].isbe006) THEN
+               IF g_isbe_d[l_ac].isbe006 > g_isbe_d[l_ac].isbe005 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'ais-00206'
+                  LET g_errparam.extend = g_isbe_d[l_ac].isbe005
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isbe_d[l_ac].isbe005 = g_isbe_d_t.isbe005
+                  NEXT FIELD isbe005
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbe005
+            #add-point:ON CHANGE isbe005 name="input.g.page1.isbe005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe006
+            #add-point:BEFORE FIELD isbe006 name="input.b.page1.isbe006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe006
+            
+            #add-point:AFTER FIELD isbe006 name="input.a.page1.isbe006"
+            IF NOT cl_null(g_isbe_d[l_ac].isbe005) AND NOT cl_null(g_isbe_d[l_ac].isbe006) THEN
+               IF g_isbe_d[l_ac].isbe006 > g_isbe_d[l_ac].isbe005 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'ais-00206'
+                  LET g_errparam.extend = g_isbe_d[l_ac].isbe006
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isbe_d[l_ac].isbe006 = g_isbe_d_t.isbe006
+                  NEXT FIELD isbe006
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbe006
+            #add-point:ON CHANGE isbe006 name="input.g.page1.isbe006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe007
+            #add-point:BEFORE FIELD isbe007 name="input.b.page1.isbe007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe007
+            
+            #add-point:AFTER FIELD isbe007 name="input.a.page1.isbe007"
+            IF NOT cl_null(g_isbe_d[l_ac].isbe003) AND NOT cl_null(g_isbe_d[l_ac].isbe007) THEN
+               IF g_isbe_d[l_ac].isbe007 < g_isbe_d[l_ac].isbe003 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'ais-00207'
+                  LET g_errparam.extend = g_isbe_d[l_ac].isbe007
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isbe_d[l_ac].isbe007 = g_isbe_d_t.isbe007
+                  NEXT FIELD isbe007
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbe007
+            #add-point:ON CHANGE isbe007 name="input.g.page1.isbe007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isbe008
+            #add-point:BEFORE FIELD isbe008 name="input.b.page1.isbe008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isbe008
+            
+            #add-point:AFTER FIELD isbe008 name="input.a.page1.isbe008"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isbe008
+            #add-point:ON CHANGE isbe008 name="input.g.page1.isbe008"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.isbeseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbeseq
+            #add-point:ON ACTION controlp INFIELD isbeseq name="input.c.page1.isbeseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isbesite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbesite
+            #add-point:ON ACTION controlp INFIELD isbesite name="input.c.page1.isbesite"
+            #門店
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isbe_d[l_ac].isbesite
+            LET g_qryparam.where = " ooef017 = '",g_isbd_m.isbdcomp,"'"
+            LET g_qryparam.where = g_qryparam.where," AND ooef304 = 'Y'" #161006-00005#28
+            CALL q_ooef001()
+            LET g_isbe_d[l_ac].isbesite = g_qryparam.return1
+            DISPLAY g_isbe_d[l_ac].isbesite TO isbesite
+            NEXT FIELD isbesite
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isbe001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe001
+            #add-point:ON ACTION controlp INFIELD isbe001 name="input.c.page1.isbe001"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isbe_d[l_ac].isbe001
+            LET g_qryparam.where = " stbfcomp = '",g_isbd_m.isbdcomp,"' "
+            IF NOT cl_null(g_isbe_d[l_ac].isbesite) THEN
+               LET g_qryparam.where = g_qryparam.where," AND stbfsite = '",g_isbe_d[l_ac].isbesite,"'"
+            END IF
+            CALL q_stbf001()
+            LET g_isbe_d[l_ac].isbe001 = g_qryparam.return1
+            DISPLAY g_isbe_d[l_ac].isbe001 TO isbe001
+            NEXT FIELD isbe001
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isbe002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe002
+            #add-point:ON ACTION controlp INFIELD isbe002 name="input.c.page1.isbe002"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isbe_d[l_ac].isbe002
+            LET g_qryparam.where = " stbfcomp = '",g_isbd_m.isbdcomp,"' "
+            IF NOT cl_null(g_isbe_d[l_ac].isbesite) THEN
+               LET g_qryparam.where = g_qryparam.where," AND stbfsite = '",g_isbe_d[l_ac].isbesite,"'"
+            END IF
+            CALL q_stbf002()
+            LET g_isbe_d[l_ac].isbe002 = g_qryparam.return1
+            DISPLAY g_isbe_d[l_ac].isbe002 TO isbe002
+            NEXT FIELD isbe002
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isbe003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe003
+            #add-point:ON ACTION controlp INFIELD isbe003 name="input.c.page1.isbe003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isbe004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe004
+            #add-point:ON ACTION controlp INFIELD isbe004 name="input.c.page1.isbe004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isbe005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe005
+            #add-point:ON ACTION controlp INFIELD isbe005 name="input.c.page1.isbe005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isbe006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe006
+            #add-point:ON ACTION controlp INFIELD isbe006 name="input.c.page1.isbe006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isbe007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe007
+            #add-point:ON ACTION controlp INFIELD isbe007 name="input.c.page1.isbe007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isbe008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isbe008
+            #add-point:ON ACTION controlp INFIELD isbe008 name="input.c.page1.isbe008"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_isbe_d[l_ac].* = g_isbe_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE aist200_bcl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_isbe_d[l_ac].isbeseq 
+               LET g_errparam.code = -263 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               LET g_isbe_d[l_ac].* = g_isbe_d_t.*
+            ELSE
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               #將遮罩欄位還原
+               CALL aist200_isbe_t_mask_restore('restore_mask_o')
+      
+               UPDATE isbe_t SET (isbecomp,isbedocno,isbeseq,isbesite,isbe001,isbe002,isbe003,isbe004, 
+                   isbe005,isbe006,isbe007,isbe008) = (g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbe_d[l_ac].isbeseq, 
+                   g_isbe_d[l_ac].isbesite,g_isbe_d[l_ac].isbe001,g_isbe_d[l_ac].isbe002,g_isbe_d[l_ac].isbe003, 
+                   g_isbe_d[l_ac].isbe004,g_isbe_d[l_ac].isbe005,g_isbe_d[l_ac].isbe006,g_isbe_d[l_ac].isbe007, 
+                   g_isbe_d[l_ac].isbe008)
+                WHERE isbeent = g_enterprise AND isbecomp = g_isbd_m.isbdcomp 
+                  AND isbedocno = g_isbd_m.isbddocno 
+ 
+                  AND isbeseq = g_isbe_d_t.isbeseq #項次   
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_isbe_d[l_ac].* = g_isbe_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "isbe_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     LET g_isbe_d[l_ac].* = g_isbe_d_t.*  
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "isbe_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()                   
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_isbd_m.isbdcomp
+               LET gs_keys_bak[1] = g_isbdcomp_t
+               LET gs_keys[2] = g_isbd_m.isbddocno
+               LET gs_keys_bak[2] = g_isbddocno_t
+               LET gs_keys[3] = g_isbe_d[g_detail_idx].isbeseq
+               LET gs_keys_bak[3] = g_isbe_d_t.isbeseq
+               CALL aist200_update_b('isbe_t',gs_keys,gs_keys_bak,"'1'")
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL aist200_isbe_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_isbe_d[g_detail_idx].isbeseq = g_isbe_d_t.isbeseq 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_isbd_m.isbdcomp
+                  LET gs_keys[gs_keys.getLength()+1] = g_isbd_m.isbddocno
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_isbe_d_t.isbeseq
+ 
+                  CALL aist200_key_update_b(gs_keys,'isbe_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_isbd_m),util.JSON.stringify(g_isbe_d_t)
+               LET g_log2 = util.JSON.stringify(g_isbd_m),util.JSON.stringify(g_isbe_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row name="input.body.after_row"
+            
+            #end add-point
+            CALL aist200_unlock_b("isbe_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2 name="input.body.after_row2"
+            
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input  name="input.body.after_input"
+            
+            #end add-point 
+    
+         ON ACTION controlo    
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_isbe_d[li_reproduce_target].* = g_isbe_d[li_reproduce].*
+ 
+               LET g_isbe_d[li_reproduce_target].isbeseq = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_isbe_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_isbe_d.getLength()+1
+            END IF
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+ 
+      
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aist200.input.other" >}
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog name="input.before_dialog"
+         
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_idx_group.getValue("'1',"))      
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field name="input.next_field"
+            
+            #end add-point  
+            NEXT FIELD isbdcomp
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD isbeseq
+ 
+               #add-point:input段modify_detail  name="input.modify_detail.other"
+               
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog name="input.after_dialog"
+         
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept  name="input.accept"
+         
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel name="input.cancel"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+ 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close name="input.close"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit name="input.exit"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+ 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION aist200_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point  
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="show.before"
+   IF g_isbd_m.isbdstus <>'N' THEN
+      CALL cl_set_act_visible('modify_detail,delete',FALSE)
+   ELSE
+      CALL cl_set_act_visible('modify_detail,delete',TRUE)  
+   END IF
+   CALL aist200_get_glaa()
+   CALL s_desc_get_department_desc(g_isbd_m.isbdsite) RETURNING g_isbd_m.isbdsite_desc
+   CALL s_desc_get_department_desc(g_isbd_m.isbdcomp) RETURNING g_isbd_m.isbdcomp_desc
+   CALL s_desc_get_person_desc(g_isbd_m.isbd001) RETURNING g_isbd_m.isbd001_desc
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL aist200_b_fill() #單身填充
+      CALL aist200_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL aist200_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_isbd_m_mask_o.* =  g_isbd_m.*
+   CALL aist200_isbd_t_mask()
+   LET g_isbd_m_mask_n.* =  g_isbd_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_isbd_m.isbdsite,g_isbd_m.isbdsite_desc,g_isbd_m.isbd001,g_isbd_m.isbd001_desc,g_isbd_m.isbdcomp, 
+       g_isbd_m.isbdcomp_desc,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid, 
+       g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtid_desc, 
+       g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdp_desc,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid,g_isbd_m.isbdmodid_desc, 
+       g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfid_desc,g_isbd_m.isbdcnfdt
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_isbd_m.isbdstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_isbe_d.getLength()
+      #add-point:show段單身reference name="show.body.reference"
+      
+      #end add-point
+   END FOR
+   
+ 
+   
+    
+   
+   #add-point:show段other name="show.other"
+   
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL aist200_detail_show()
+ 
+   #add-point:show段之後 name="show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.detail_show" >}
+#+ 第二階單身reference
+PRIVATE FUNCTION aist200_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point  
+   #add-point:detail_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="detail_show.before"
+   
+   #end add-point
+   
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION aist200_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point   
+   DEFINE l_newno     LIKE isbd_t.isbdcomp 
+   DEFINE l_oldno     LIKE isbd_t.isbdcomp 
+   DEFINE l_newno02     LIKE isbd_t.isbddocno 
+   DEFINE l_oldno02     LIKE isbd_t.isbddocno 
+ 
+   DEFINE l_master    RECORD LIKE isbd_t.* #此變數樣板目前無使用
+   DEFINE l_detail    RECORD LIKE isbe_t.* #此變數樣板目前無使用
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   
+   LET g_master_insert = FALSE
+   
+   IF g_isbd_m.isbdcomp IS NULL
+   OR g_isbd_m.isbddocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_isbdcomp_t = g_isbd_m.isbdcomp
+   LET g_isbddocno_t = g_isbd_m.isbddocno
+ 
+    
+   LET g_isbd_m.isbdcomp = ""
+   LET g_isbd_m.isbddocno = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_isbd_m.isbdownid = g_user
+      LET g_isbd_m.isbdowndp = g_dept
+      LET g_isbd_m.isbdcrtid = g_user
+      LET g_isbd_m.isbdcrtdp = g_dept 
+      LET g_isbd_m.isbdcrtdt = cl_get_current()
+      LET g_isbd_m.isbdmodid = g_user
+      LET g_isbd_m.isbdmoddt = cl_get_current()
+      LET g_isbd_m.isbdstus = 'N'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_isbd_m.isbdstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+      LET g_isbd_m.isbdcomp_desc = ''
+   DISPLAY BY NAME g_isbd_m.isbdcomp_desc
+ 
+   
+   CALL aist200_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_isbd_m.* TO NULL
+      INITIALIZE g_isbe_d TO NULL
+ 
+      #add-point:複製取消後 name="reproduce.cancel"
+      
+      #end add-point
+      CALL aist200_show()
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code = 9001 
+      LET g_errparam.popup = FALSE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL aist200_set_act_visible()   
+   CALL aist200_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_isbdcomp_t = g_isbd_m.isbdcomp
+   LET g_isbddocno_t = g_isbd_m.isbddocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " isbdent = " ||g_enterprise|| " AND",
+                      " isbdcomp = '", g_isbd_m.isbdcomp, "' "
+                      ," AND isbddocno = '", g_isbd_m.isbddocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL aist200_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+   
+   CALL aist200_idx_chk()
+   
+   LET g_data_owner = g_isbd_m.isbdownid      
+   LET g_data_dept  = g_isbd_m.isbdowndp
+   
+   #功能已完成,通報訊息中心
+   CALL aist200_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.detail_reproduce" >}
+#+ 單身自動複製
+PRIVATE FUNCTION aist200_detail_reproduce()
+   #add-point:delete段define(客製用) name="detail_reproduce.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE isbe_t.* #此變數樣板目前無使用
+ 
+ 
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_reproduce.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="detail_reproduce.pre_function"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE aist200_detail
+   
+   #add-point:單身複製前1 name="detail_reproduce.body.table1.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM isbe_t
+    WHERE isbeent = g_enterprise AND isbecomp = g_isbdcomp_t
+     AND isbedocno = g_isbddocno_t
+ 
+    INTO TEMP aist200_detail
+ 
+   #將key修正為調整後   
+   UPDATE aist200_detail 
+      #更新key欄位
+      SET isbecomp = g_isbd_m.isbdcomp
+          , isbedocno = g_isbd_m.isbddocno
+ 
+      #更新共用欄位
+      
+ 
+   #add-point:單身修改前 name="detail_reproduce.body.table1.b_update"
+   
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO isbe_t SELECT * FROM aist200_detail
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1 name="detail_reproduce.body.table1.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE aist200_detail
+   
+   #add-point:單身複製後1 name="detail_reproduce.body.table1.a_insert"
+   
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_isbdcomp_t = g_isbd_m.isbdcomp
+   LET g_isbddocno_t = g_isbd_m.isbddocno
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION aist200_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point     
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   IF g_isbd_m.isbdcomp IS NULL
+   OR g_isbd_m.isbddocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   
+   
+   CALL s_transaction_begin()
+ 
+   OPEN aist200_cl USING g_enterprise,g_isbd_m.isbdcomp,g_isbd_m.isbddocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aist200_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE aist200_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aist200_master_referesh USING g_isbd_m.isbdcomp,g_isbd_m.isbddocno INTO g_isbd_m.isbdsite, 
+       g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid, 
+       g_isbd_m.isbdowndp,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid, 
+       g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfdt,g_isbd_m.isbdsite_desc,g_isbd_m.isbdcomp_desc, 
+       g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid_desc,g_isbd_m.isbdcrtdp_desc, 
+       g_isbd_m.isbdmodid_desc,g_isbd_m.isbdcnfid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT aist200_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_isbd_m_mask_o.* =  g_isbd_m.*
+   CALL aist200_isbd_t_mask()
+   LET g_isbd_m_mask_n.* =  g_isbd_m.*
+   
+   CALL aist200_show()
+   
+   #add-point:delete段before ask name="delete.before_ask"
+   
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aist200_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+  
+  
+      #資料備份
+      LET g_isbdcomp_t = g_isbd_m.isbdcomp
+      LET g_isbddocno_t = g_isbd_m.isbddocno
+ 
+ 
+      DELETE FROM isbd_t
+       WHERE isbdent = g_enterprise AND isbdcomp = g_isbd_m.isbdcomp
+         AND isbddocno = g_isbd_m.isbddocno
+ 
+       
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+       
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_isbd_m.isbdcomp,":",SQLERRMESSAGE  
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      
+      #end add-point
+  
+      #add-point:單身刪除前 name="delete.body.b_delete"
+      
+      #end add-point
+      
+      DELETE FROM isbe_t
+       WHERE isbeent = g_enterprise AND isbecomp = g_isbd_m.isbdcomp
+         AND isbedocno = g_isbd_m.isbddocno
+ 
+ 
+      #add-point:單身刪除中 name="delete.body.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "isbe_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete"
+      IF NOT s_aooi200_fin_del_docno(g_glaald,g_isbd_m.isbddocno,g_isbd_m.isbddocdt) THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF 
+      #end add-point
+      
+            
+                                                               
+ 
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_isbd_m)   #(ver:78)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:78)
+         CLOSE aist200_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_isbe_d.clear() 
+ 
+     
+      CALL aist200_ui_browser_refresh()  
+      #CALL aist200_ui_headershow()  
+      #CALL aist200_ui_detailshow()
+ 
+      #add-point:多語言刪除 name="delete.lang.before_delete"
+      
+      #end add-point
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+ 
+   
+      #add-point:多語言刪除 name="delete.lang.delete"
+      
+      #end add-point
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL aist200_browser_fill("")
+         CALL aist200_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+      
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE aist200_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL aist200_msgcentre_notify('delete')
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aist200_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point     
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   #清空第一階單身
+   CALL g_isbe_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   
+   #end add-point
+   
+   #判斷是否填充
+   IF aist200_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+      #add-point:b_fill段long_sql_if name="b_fill.long_sql_if"
+      
+      #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT isbeseq,isbesite,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006, 
+             isbe007,isbe008 ,t1.ooefl003 FROM isbe_t",   
+                     " INNER JOIN isbd_t ON isbdent = " ||g_enterprise|| " AND isbdcomp = isbecomp ",
+                     " AND isbddocno = isbedocno ",
+ 
+                     #"",
+                     
+                     "",
+                     #下層單身所需的join條件
+ 
+                                    " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=isbesite AND t1.ooefl001='"||g_dlang||"' ",
+ 
+                     " WHERE isbeent=? AND isbecomp=? AND isbedocno=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body.fill_sql"
+         
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY isbe_t.isbeseq"
+         
+         #add-point:單身填充控制 name="b_fill.sql"
+         
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE aist200_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR aist200_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs USING g_enterprise,g_isbd_m.isbdcomp,g_isbd_m.isbddocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs USING g_enterprise,g_isbd_m.isbdcomp,g_isbd_m.isbddocno INTO g_isbe_d[l_ac].isbeseq, 
+          g_isbe_d[l_ac].isbesite,g_isbe_d[l_ac].isbe001,g_isbe_d[l_ac].isbe002,g_isbe_d[l_ac].isbe003, 
+          g_isbe_d[l_ac].isbe004,g_isbe_d[l_ac].isbe005,g_isbe_d[l_ac].isbe006,g_isbe_d[l_ac].isbe007, 
+          g_isbe_d[l_ac].isbe008,g_isbe_d[l_ac].isbesite_desc   #(ver:78)
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill.fill"
+         CALL s_desc_get_department_desc(g_isbe_d[l_ac].isbesite) RETURNING g_isbe_d[l_ac].isbesite_desc
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code = 9035 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+    
+ 
+   
+   #add-point:browser_fill段其他table處理 name="browser_fill.other_fill"
+   
+   #end add-point
+   
+   CALL g_isbe_d.deleteElement(g_isbe_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE aist200_pb
+ 
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_isbe_d.getLength()
+      LET g_isbe_d_mask_o[l_ac].* =  g_isbe_d[l_ac].*
+      CALL aist200_isbe_t_mask()
+      LET g_isbe_d_mask_n[l_ac].* =  g_isbe_d[l_ac].*
+   END FOR
+   
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION aist200_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete"
+      
+      #end add-point    
+      DELETE FROM isbe_t
+       WHERE isbeent = g_enterprise AND
+         isbecomp = ps_keys_bak[1] AND isbedocno = ps_keys_bak[2] AND isbeseq = ps_keys_bak[3]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ":",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_isbe_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:delete_b段other name="delete_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION aist200_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert"
+      
+      #end add-point 
+      INSERT INTO isbe_t
+                  (isbeent,
+                   isbecomp,isbedocno,
+                   isbeseq
+                   ,isbesite,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007,isbe008) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_isbe_d[g_detail_idx].isbesite,g_isbe_d[g_detail_idx].isbe001,g_isbe_d[g_detail_idx].isbe002, 
+                       g_isbe_d[g_detail_idx].isbe003,g_isbe_d[g_detail_idx].isbe004,g_isbe_d[g_detail_idx].isbe005, 
+                       g_isbe_d[g_detail_idx].isbe006,g_isbe_d[g_detail_idx].isbe007,g_isbe_d[g_detail_idx].isbe008) 
+ 
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert"
+      
+      #end add-point 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "isbe_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_isbe_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert"
+      
+      #end add-point 
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:insert_b段other name="insert_b.other"
+   
+   #end add-point     
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION aist200_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "isbe_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update"
+      
+      #end add-point 
+      
+      #將遮罩欄位還原
+      CALL aist200_isbe_t_mask_restore('restore_mask_o')
+               
+      UPDATE isbe_t 
+         SET (isbecomp,isbedocno,
+              isbeseq
+              ,isbesite,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007,isbe008) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_isbe_d[g_detail_idx].isbesite,g_isbe_d[g_detail_idx].isbe001,g_isbe_d[g_detail_idx].isbe002, 
+                  g_isbe_d[g_detail_idx].isbe003,g_isbe_d[g_detail_idx].isbe004,g_isbe_d[g_detail_idx].isbe005, 
+                  g_isbe_d[g_detail_idx].isbe006,g_isbe_d[g_detail_idx].isbe007,g_isbe_d[g_detail_idx].isbe008)  
+ 
+         WHERE isbeent = g_enterprise AND isbecomp = ps_keys_bak[1] AND isbedocno = ps_keys_bak[2] AND isbeseq = ps_keys_bak[3]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "isbe_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "isbe_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+ 
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL aist200_isbe_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後 name="update_b.after_update"
+      
+      #end add-point  
+   END IF
+   
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+   
+   
+ 
+   
+ 
+   
+   #add-point:update_b段other name="update_b.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.key_update_b" >}
+#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION aist200_key_update_b(ps_keys_bak,ps_table)
+   #add-point:update_b段define(客製用) name="key_update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_key       DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_update_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_update_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.key_delete_b" >}
+#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION aist200_key_delete_b(ps_keys_bak,ps_table)
+   #add-point:delete_b段define(客製用) name="key_delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_delete_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_delete_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION aist200_lock_b(ps_table,ps_page)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+    
+   #先刷新資料
+   #CALL aist200_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "isbe_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN aist200_bcl USING g_enterprise,
+                                       g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbe_d[g_detail_idx].isbeseq  
+                                               
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "aist200_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+ 
+   
+ 
+   
+   #add-point:lock_b段other name="lock_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION aist200_unlock_b(ps_table,ps_page)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE aist200_bcl
+   END IF
+   
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other name="unlock_b.other"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aist200_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization"
+   
+   #end add-point       
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point       
+   
+   #add-point:Function前置處理  name="set_entry.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_comp_entry("isbddocno",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("isbdcomp,isbddocno",TRUE)
+      CALL cl_set_comp_entry("isbddocdt",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      CALL cl_set_comp_entry("isbddocdt",TRUE)  #151130-00015#2 
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aist200_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   DEFINE l_dfin0033  LIKE type_t.chr1  #151130-00015#2
+   DEFINE l_success   LIKE type_t.chr1  #151130-00015#2
+   DEFINE l_slip      LIKE type_t.chr80  #151130-00015#2 
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("isbdcomp,isbddocno",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN  #docno,ld欄位確認是絕對關閉
+      CALL cl_set_comp_entry("isbddocno",FALSE)
+   END IF 
+ 
+#  IF p_cmd = 'u' THEN  #docdt欄位依照設定關閉(FALSE則為設定不同意修正) #(ver:78)
+      IF NOT cl_chk_update_docdt() THEN
+         CALL cl_set_comp_entry("isbddocdt",FALSE)
+      END IF
+#  END IF 
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   #151130-00015#2  -add -str
+   IF NOT cl_null(g_isbd_m.isbddocno) THEN  
+      #获取单别
+      CALL s_aooi200_fin_get_slip(g_isbd_m.isbddocno) RETURNING l_success,l_slip
+      #是否可以更改單據日期
+      CALL s_fin_get_doc_para(g_glaald,g_isbd_m.isbdcomp,l_slip,'D-FIN-0033') RETURNING l_dfin0033
+      IF l_dfin0033 = "Y"  THEN 
+         CALL cl_set_comp_entry("isbddocdt",TRUE)
+    
+      END IF          
+   END IF 
+   #151130-00015#2  -end -str
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION aist200_set_entry_b(p_cmd)
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_entry_b.pre_function"
+   
+   #end add-point
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段 name="set_entry_b.set_entry_b"
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("isbesite,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007,isbe008",TRUE)
+   END IF
+   #end add-point  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION aist200_set_no_entry_b(p_cmd)
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point    
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="set_no_entry_b.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段 name="set_no_entry_b.set_no_entry_b"
+   IF p_cmd = 'u' THEN
+      CALL cl_set_comp_entry("isbesite,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007,isbe008",FALSE)
+   END IF
+   #end add-point     
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION aist200_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION aist200_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   #應用 a63 樣板自動產生(Version:1)
+   IF g_isbd_m.isbdstus NOT MATCHES "[NDR]" THEN   # N未確認/D抽單/R已拒絕允許修改
+      CALL cl_set_act_visible("modify,delete,modify_detail", FALSE)
+   END IF
+   CALL cl_set_act_visible("modify", FALSE)
+
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.set_act_visible_b" >}
+#+ 單身權限開啟
+PRIVATE FUNCTION aist200_set_act_visible_b()
+   #add-point:set_act_visible_b段define(客製用) name="set_act_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段 name="set_act_visible_b.set_act_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.set_act_no_visible_b" >}
+#+ 單身權限關閉
+PRIVATE FUNCTION aist200_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define(客製用) name="set_act_no_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段 name="set_act_no_visible_b.set_act_no_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION aist200_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point  
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="default_search.before"
+   
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " isbdcomp = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " isbddocno = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "isbd_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "isbe_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION aist200_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   DEFINE l_success LIKE type_t.num5
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+ 
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_isbd_m.isbdcomp IS NULL
+      OR g_isbd_m.isbddocno IS NULL
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN aist200_cl USING g_enterprise,g_isbd_m.isbdcomp,g_isbd_m.isbddocno
+   IF STATUS THEN
+      CLOSE aist200_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aist200_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE aist200_master_referesh USING g_isbd_m.isbdcomp,g_isbd_m.isbddocno INTO g_isbd_m.isbdsite, 
+       g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid, 
+       g_isbd_m.isbdowndp,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid, 
+       g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfdt,g_isbd_m.isbdsite_desc,g_isbd_m.isbdcomp_desc, 
+       g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid_desc,g_isbd_m.isbdcrtdp_desc, 
+       g_isbd_m.isbdmodid_desc,g_isbd_m.isbdcnfid_desc
+   
+ 
+   #檢查是否允許此動作
+   IF NOT aist200_action_chk() THEN
+      CLOSE aist200_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_isbd_m.isbdsite,g_isbd_m.isbdsite_desc,g_isbd_m.isbd001,g_isbd_m.isbd001_desc,g_isbd_m.isbdcomp, 
+       g_isbd_m.isbdcomp_desc,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus,g_isbd_m.isbdownid, 
+       g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtid_desc, 
+       g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdp_desc,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid,g_isbd_m.isbdmodid_desc, 
+       g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfid_desc,g_isbd_m.isbdcnfdt
+ 
+   CASE g_isbd_m.isbdstus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+      WHEN "X"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_isbd_m.isbdstus
+            
+            WHEN "N"
+               HIDE OPTION "unconfirmed"
+            WHEN "Y"
+               HIDE OPTION "confirmed"
+            WHEN "X"
+               HIDE OPTION "invalid"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      IF g_isbd_m.isbdstus = 'X' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'anm-00044'
+         LET g_errparam.extend = g_isbd_m.isbddocno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')   #160812-00017#4 20160815 add by beckxie
+         RETURN
+      END IF
+      
+      CALL cl_set_act_visible("confirmed,unconfirmed,invalid",FALSE)
+      CASE g_isbd_m.isbdstus
+         WHEN "N"
+            CALL cl_set_act_visible("confirmed,invalid",TRUE)   
+         WHEN "Y"
+            CALL cl_set_act_visible("unconfirmed",TRUE)
+         WHEN "X"
+            CALL s_transaction_end('N','0')   #160812-00017#4 20160815 add by beckxie
+            RETURN
+      END CASE
+      #end add-point
+      
+      
+	  
+      ON ACTION unconfirmed
+         IF cl_auth_chk_act("unconfirmed") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.unconfirmed"
+            IF g_isbd_m.isbdstus <> 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = g_isbd_m.isbddocno
+               LET g_errparam.code   = 'agl-00053'
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')   #160812-00017#4 20160815 add by beckxie
+               RETURN
+            END IF
+            #更新發票是否已認證
+            UPDATE stbf_t SET stbf012 = 'N'
+             WHERE stbfent= g_enterprise
+               AND stbf001||'-'||stbf002 IN (SELECT isbe001||'-'||isbe002 FROM isbe_t 
+                                              WHERE isbeent = g_enterprise AND isbecomp = g_isbd_m.isbdcomp
+                                                AND isbedocno = g_isbd_m.isbddocno
+                                              )
+            IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = 'upd stbf_t'
+               LET g_errparam.code   = sqlca.sqlcode
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            UPDATE isbd_t SET isbdcnfid = '',isbdcnfdt = ''
+             WHERE isbdent=g_enterprise AND isbdcomp=g_isbd_m.isbdcomp 
+              AND isbddocno=g_isbd_m.isbddocno
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = 'upd isbd_t'
+               LET g_errparam.code   = sqlca.sqlcode
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION confirmed
+         IF cl_auth_chk_act("confirmed") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.confirmed"
+            IF g_isbd_m.isbdstus <> 'N' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = g_isbd_m.isbddocno
+               LET g_errparam.code   = 'agl-00052'
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')   #160812-00017#4 20160815 add by beckxie
+               RETURN
+            END IF
+            CALL aist200_confirm_upd() RETURNING l_success
+            IF l_success = FALSE THEN
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION invalid
+         IF cl_auth_chk_act("invalid") THEN
+            LET lc_state = "X"
+            #add-point:action控制 name="statechange.invalid"
+            IF g_isbd_m.isbdstus <> 'N' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = g_isbd_m.isbddocno
+               LET g_errparam.code   = 'agl-00052'
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')   #160812-00017#4 20160815 add by beckxie
+               RETURN
+            END IF
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+      
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      AND lc_state <> "X"
+      ) OR 
+      g_isbd_m.isbdstus = lc_state OR cl_null(lc_state) THEN
+      CLOSE aist200_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   #151125-00001#3 ---add (S)---
+   IF lc_state = "X" THEN
+      IF NOT cl_ask_confirm('aim-00109') THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+   END IF
+   #151125-00001#3 ---add (E)---
+   #end add-point
+   
+   LET g_isbd_m.isbdmodid = g_user
+   LET g_isbd_m.isbdmoddt = cl_get_current()
+   LET g_isbd_m.isbdstus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE isbd_t 
+      SET (isbdstus,isbdmodid,isbdmoddt) 
+        = (g_isbd_m.isbdstus,g_isbd_m.isbdmodid,g_isbd_m.isbdmoddt)     
+    WHERE isbdent = g_enterprise AND isbdcomp = g_isbd_m.isbdcomp
+      AND isbddocno = g_isbd_m.isbddocno
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE aist200_master_referesh USING g_isbd_m.isbdcomp,g_isbd_m.isbddocno INTO g_isbd_m.isbdsite, 
+          g_isbd_m.isbd001,g_isbd_m.isbdcomp,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus, 
+          g_isbd_m.isbdownid,g_isbd_m.isbdowndp,g_isbd_m.isbdcrtid,g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdt, 
+          g_isbd_m.isbdmodid,g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfdt,g_isbd_m.isbdsite_desc, 
+          g_isbd_m.isbdcomp_desc,g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid_desc, 
+          g_isbd_m.isbdcrtdp_desc,g_isbd_m.isbdmodid_desc,g_isbd_m.isbdcnfid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_isbd_m.isbdsite,g_isbd_m.isbdsite_desc,g_isbd_m.isbd001,g_isbd_m.isbd001_desc, 
+          g_isbd_m.isbdcomp,g_isbd_m.isbdcomp_desc,g_isbd_m.isbddocno,g_isbd_m.isbddocdt,g_isbd_m.isbdstus, 
+          g_isbd_m.isbdownid,g_isbd_m.isbdownid_desc,g_isbd_m.isbdowndp,g_isbd_m.isbdowndp_desc,g_isbd_m.isbdcrtid, 
+          g_isbd_m.isbdcrtid_desc,g_isbd_m.isbdcrtdp,g_isbd_m.isbdcrtdp_desc,g_isbd_m.isbdcrtdt,g_isbd_m.isbdmodid, 
+          g_isbd_m.isbdmodid_desc,g_isbd_m.isbdmoddt,g_isbd_m.isbdcnfid,g_isbd_m.isbdcnfid_desc,g_isbd_m.isbdcnfdt 
+ 
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   
+   #end add-point  
+ 
+   CLOSE aist200_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL aist200_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aist200.idx_chk" >}
+#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION aist200_idx_chk()
+   #add-point:idx_chk段define(客製用) name="idx_chk.define_customerization"
+   
+   #end add-point  
+   #add-point:idx_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="idx_chk.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="idx_chk.pre_function"
+   
+   #end add-point
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_isbe_d.getLength() THEN
+         LET g_detail_idx = g_isbe_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_isbe_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_isbe_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+ 
+   
+   #add-point:idx_chk段other name="idx_chk.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aist200_b_fill2(pi_idx)
+   #add-point:b_fill2段define(客製用) name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE pi_idx                 LIKE type_t.num10
+   DEFINE li_ac                  LIKE type_t.num10
+   DEFINE li_detail_idx_tmp      LIKE type_t.num10
+   DEFINE ls_chk                 LIKE type_t.chr1
+   #add-point:b_fill2段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill2.pre_function"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+   LET li_detail_idx_tmp = g_detail_idx
+   
+ 
+      
+ 
+      
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL aist200_detail_show()
+   
+   LET g_detail_idx = li_detail_idx_tmp
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.fill_chk" >}
+#+ 單身填充確認
+PRIVATE FUNCTION aist200_fill_chk(ps_idx)
+   #add-point:fill_chk段define(客製用) name="fill_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fill_chk.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="fill_chk.before_chk"
+   
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk name="fill_chk.other_chk"
+      
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk name="fill_chk.after_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.status_show" >}
+PRIVATE FUNCTION aist200_status_show()
+   #add-point:status_show段define(客製用) name="status_show.define_customerization"
+   
+   #end add-point
+   #add-point:status_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="status_show.define"
+   
+   #end add-point
+   
+   #add-point:status_show段status_show name="status_show.status_show"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.mask_functions" >}
+&include "erp/ais/aist200_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aist200.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="aist200.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION aist200_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_isbd_m.isbdcomp
+   LET g_pk_array[1].column = 'isbdcomp'
+   LET g_pk_array[2].values = g_isbd_m.isbddocno
+   LET g_pk_array[2].column = 'isbddocno'
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aist200.other_dialog" readonly="Y" >}
+   
+ 
+{</section>}
+ 
+{<section id="aist200.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION aist200_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL aist200_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_isbd_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aist200.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION aist200_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization"
+   
+   #end add-point
+   #add-point:action_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   #160818-00017#19 add-S
+   SELECT isbdstus  INTO g_isbd_m.isbdstus
+     FROM isbd_t
+    WHERE isbdent = g_enterprise
+      AND isbddocno = g_isbd_m.isbddocno
+      AND isbdcomp = g_isbd_m.isbdcomp
+
+   IF (g_action_choice="modify" OR g_action_choice="delete" OR g_action_choice="modify_detail")  THEN
+     LET g_errno = NULL
+     CASE g_isbd_m.isbdstus
+        WHEN 'W'
+           LET g_errno = 'sub-00180'
+        WHEN 'X'
+           LET g_errno = 'sub-00229'
+        WHEN 'Y'
+           LET g_errno = 'sub-00178'
+        WHEN 'S'
+           LET g_errno = 'sub-00230'
+     END CASE
+
+     IF NOT cl_null(g_errno) THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = g_errno
+        LET g_errparam.extend = g_isbd_m.isbddocno
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        LET g_errno = NULL
+        CALL aist200_set_act_visible()
+        CALL aist200_set_act_no_visible()
+        CALL aist200_show()
+        RETURN FALSE
+     END IF
+   END IF
+   #160818-00017#19 add-E
+   #end add-point
+      
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist200.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 抓取法人的帳套信息
+# Memo...........:
+# Usage..........: CALL aist200_get_glaa()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/05/07 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aist200_get_glaa()
+   LET g_glaald = ''
+   LET g_glaa003 = ''
+   LET g_glaa024 = ''
+   SELECT glaald,glaa003,glaa024 INTO g_glaald,g_glaa003,g_glaa024
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaacomp = g_isbd_m.isbdcomp
+      AND glaa014 = 'Y'
+END FUNCTION
+
+################################################################################
+# Descriptions...: 確認更新
+# Memo...........:
+# Usage..........: CALL aist200_confirm_upd()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success    更新結果
+# Date & Author..: 2015/05/07 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aist200_confirm_upd()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_isbesite     LIKE isbe_t.isbesite
+   DEFINE l_isbe001     LIKE isbe_t.isbe001
+   DEFINE l_isbe002     LIKE isbe_t.isbe002
+   DEFINE l_isbe005     LIKE isbe_t.isbe005
+   DEFINE l_isbe006     LIKE isbe_t.isbe006
+   DEFINE l_stbf006     LIKE stbf_t.stbf006
+   DEFINE l_stbf007     LIKE stbf_t.stbf007
+   DEFINE l_isbdcnfdt   LIKE isbd_t.isbdcnfdt
+   
+   WHENEVER ERROR CONTINUE
+   CALL cl_err_collect_init() 
+   LET r_success  = TRUE
+   LET l_sql = "SELECT isbesite,isbe001,isbe002,isbe005,isbe006 FROM isbe_t ",
+               " WHERE isbeent = ",g_enterprise,
+               "   AND isbecomp = '",g_isbd_m.isbdcomp,"'",
+               "   AND isbedocno = '",g_isbd_m.isbddocno,"'"
+   PREPARE aist200_conf_pr FROM l_sql
+   DECLARE aist200_conf_cr CURSOR FOR aist200_conf_pr
+   
+   FOREACH aist200_conf_cr INTO l_isbesite,l_isbe001,l_isbe002,l_isbe005,l_isbe006
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "FOREACH:aist200_conf_cr"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         LET r_success  = FALSE
+         EXIT FOREACH
+      END IF
+      
+      LET l_stbf006=''
+      LET l_stbf007=''
+      SELECT stbf006,stbf007 INTO l_stbf006,l_stbf007
+        FROM stbf_t
+       WHERE stbfent = g_enterprise
+         AND stbfcomp = g_isbd_m.isbdcomp AND stbfsite = l_isbesite       
+         AND stbf001=l_isbe001 AND stbf002=l_isbe002
+     IF SQLCA.sqlcode = 100 THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.extend = l_isbe001,'+',l_isbe002
+        LET g_errparam.code   = 'ais-00202'
+        LET g_errparam.popup  = TRUE 
+        CALL cl_err()
+        LET r_success = FALSE
+        CONTINUE FOREACH
+     END IF 
+     
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.extend = l_isbe001,'+',l_isbe002
+        LET g_errparam.code   = SQLCA.sqlcode
+        LET g_errparam.popup  = TRUE 
+        CALL cl_err()
+        LET r_success = FALSE
+        CONTINUE FOREACH
+     END IF
+     #未稅金額不等
+     IF l_stbf006 <> l_isbe005 THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.extend = l_isbe001,'+',l_isbe002,':',l_stbf006||'<>'||l_isbe005
+        LET g_errparam.code   = 'ais-00199'
+        LET g_errparam.popup  = TRUE 
+        CALL cl_err()
+     END IF
+     #稅額不等
+     IF l_stbf007 <> l_isbe006 THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.extend = l_isbe001,'+',l_isbe002,':',l_stbf007||'<>'||l_isbe006
+        LET g_errparam.code   = 'ais-00200'
+        LET g_errparam.popup  = TRUE 
+        CALL cl_err()
+     END IF
+     UPDATE stbf_t SET stbf012 = 'Y'
+      WHERE stbfent = g_enterprise 
+        AND stbfcomp = g_isbd_m.isbdcomp AND stbfsite = l_isbesite
+        AND stbf001=l_isbe001 AND stbf002=l_isbe002
+     IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.extend = "upd stbf_t :",l_isbe001,'+',l_isbe002
+        LET g_errparam.code   = SQLCA.sqlcode
+        LET g_errparam.popup  = TRUE 
+        CALL cl_err()
+        LET r_success = FALSE
+     END IF
+   END FOREACH
+   IF r_success = TRUE THEN
+      LET l_isbdcnfdt = cl_get_current()
+      UPDATE isbd_t SET isbdcnfid = g_user,isbdcnfdt = l_isbdcnfdt
+       WHERE isbdent=g_enterprise AND isbdcomp=g_isbd_m.isbdcomp 
+        AND isbddocno=g_isbd_m.isbddocno
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "upd isbd_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END IF
+   CALL cl_err_collect_show() 
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,787 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgi090_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2013-11-12 00:00:00), PR版次:0001(2014-03-12 17:12:37)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000156
+#+ Filename...: abgi090_01
+#+ Description: 預算權限維護
+#+ Creator....: 01258(2013-11-08 09:47:43)
+#+ Modifier...: 01258 -SD/PR- 02299
+ 
+{</section>}
+ 
+{<section id="abgi090_01.global" >}
+#應用 c02b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_bgak_d        RECORD
+       bgak001 LIKE bgak_t.bgak001, 
+   bgak002 LIKE bgak_t.bgak002, 
+   bgak003 LIKE bgak_t.bgak003, 
+   bgak004 LIKE bgak_t.bgak004, 
+   bgak006 LIKE bgak_t.bgak006, 
+   bgak006_desc LIKE type_t.chr500, 
+   bgakstus LIKE bgak_t.bgakstus
+       END RECORD
+PRIVATE TYPE type_g_bgak2_d RECORD
+       bgak001 LIKE bgak_t.bgak001, 
+   bgak002 LIKE bgak_t.bgak002, 
+   bgak003 LIKE bgak_t.bgak003, 
+   bgak004 LIKE bgak_t.bgak004, 
+   bgak006 LIKE bgak_t.bgak006, 
+   bgakownid LIKE bgak_t.bgakownid, 
+   bgakownid_desc LIKE type_t.chr500, 
+   bgakowndp LIKE bgak_t.bgakowndp, 
+   bgakowndp_desc LIKE type_t.chr500, 
+   bgakcrtid LIKE bgak_t.bgakcrtid, 
+   bgakcrtid_desc LIKE type_t.chr500, 
+   bgakcrtdp LIKE bgak_t.bgakcrtdp, 
+   bgakcrtdp_desc LIKE type_t.chr500, 
+   bgakcrtdt DATETIME YEAR TO SECOND, 
+   bgakmodid LIKE bgak_t.bgakmodid, 
+   bgakmodid_desc LIKE type_t.chr500, 
+   bgakmoddt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_bgaa002             LIKE bgaa_t.bgaa002
+DEFINE g_bgai002             LIKE bgai_t.bgai002
+DEFINE g_bgai003             LIKE bgai_t.bgai003
+DEFINE g_bgai004             LIKE bgai_t.bgai004
+DEFINE g_forupd_sql          STRING
+DEFINE g_sql                 STRING
+#end add-point
+ 
+DEFINE g_bgak_d          DYNAMIC ARRAY OF type_g_bgak_d
+DEFINE g_bgak_d_t        type_g_bgak_d
+DEFINE g_bgak2_d   DYNAMIC ARRAY OF type_g_bgak2_d
+DEFINE g_bgak2_d_t type_g_bgak2_d
+ 
+ 
+DEFINE g_bgak001_t   LIKE bgak_t.bgak001    #Key值備份
+DEFINE g_bgak002_t      LIKE bgak_t.bgak002    #Key值備份
+DEFINE g_bgak003_t      LIKE bgak_t.bgak003    #Key值備份
+DEFINE g_bgak004_t      LIKE bgak_t.bgak004    #Key值備份
+DEFINE g_bgak006_t      LIKE bgak_t.bgak006    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="abgi090_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION abgi090_01(--)
+   #add-point:input段變數傳入
+   p_bgai001,p_bgai002,p_bgai003,p_bgai004
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_bgai001       LIKE bgai_t.bgai001
+   DEFINE p_bgai002       LIKE bgai_t.bgai002
+   DEFINE p_bgai003       LIKE bgai_t.bgai003
+   DEFINE p_bgai004       LIKE bgai_t.bgai004
+   DEFINE l_lock_sw       LIKE type_t.chr1                #單身鎖住否
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_m             LIKE type_t.num5
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_abgi090_01 WITH FORM cl_ap_formpath("abg","abgi090_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   WHENEVER ERROR CALL cl_err_msg_log
+   LET g_forupd_sql = "SELECT bgak001,bgak002,bgak003,bgak004,bgak006,'',bgakstus FROM bgak_t WHERE bgakent= ? AND bgak001=? AND bgak002=? AND bgak003=? AND bgak004=? AND bgak006=? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE abgi090_01_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+   
+   SELECT UNIQUE bgaa002 INTO g_bgaa002 FROM bgaa_t WHERE bgaaent = g_enterprise AND bgaa001 = p_bgai001
+   LET g_bgai002 = p_bgai002
+   LET g_bgai003 = p_bgai003
+   LET g_bgai004 = p_bgai004
+   CALL abgi090_01_fill()
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_bgak_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+         BEFORE ROW
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+
+            CALL s_transaction_begin()
+            LET l_cmd = ''
+            #判定新增或修改
+            IF g_rec_b >= l_ac AND NOT cl_null(g_bgak_d[l_ac].bgak006) THEN
+               LET l_cmd='u'
+               LET g_bgak_d_t.* = g_bgak_d[l_ac].*
+               OPEN abgi090_01_cl USING g_enterprise,g_bgaa002,p_bgai002,p_bgai003,p_bgai004,g_bgak_d[l_ac].bgak006
+               IF STATUS THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  STATUS
+                  LET g_errparam.extend = "OPEN abgi090_01_cl:"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH abgi090_01_cl INTO g_bgak_d[l_ac].*
+                  IF SQLCA.sqlcode THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = SQLCA.sqlcode
+                      LET g_errparam.extend = g_bgak_d_t.bgak006
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+
+                      LET l_lock_sw = "Y"
+                  END IF
+                  SELECT gzzal003 INTO g_bgak_d[l_ac].bgak006_desc FROM gzzal_t 
+                   WHERE gzzal001 = g_bgak_d[l_ac].bgak006 AND gzzal002 = g_lang
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+
+         BEFORE INSERT
+
+            INITIALIZE g_bgak_d_t.* TO NULL
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_bgak_d[l_ac].* TO NULL
+
+            #公用欄位預設值
+            #此段落由子樣板a14產生    
+            LET g_bgak2_d[l_ac].bgakownid = g_user
+            LET g_bgak2_d[l_ac].bgakowndp = g_dept
+            LET g_bgak2_d[l_ac].bgakcrtid = g_user
+            LET g_bgak2_d[l_ac].bgakcrtdp = g_dept
+            LET g_bgak2_d[l_ac].bgakcrtdt = cl_get_current()
+
+            #一般欄位預設值
+            LET g_bgak_d[l_ac].bgak001 = g_bgaa002
+            LET g_bgak_d[l_ac].bgak002 = g_bgai002
+            LET g_bgak_d[l_ac].bgak003 = g_bgai003
+            LET g_bgak_d[l_ac].bgak004 = g_bgai004
+            LET g_bgak_d[l_ac].bgakstus = "Y"
+            LET g_bgak_d_t.* = g_bgak_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+
+            LET l_count = 1
+            SELECT COUNT(*) INTO l_count FROM bgak_t
+             WHERE bgakent = g_enterprise AND bgak001 = g_bgak_d[l_ac].bgak001
+               AND bgak002 = g_bgak_d[l_ac].bgak002
+               AND bgak003 = g_bgak_d[l_ac].bgak003
+               AND bgak004 = g_bgak_d[l_ac].bgak004
+               AND bgak006 = g_bgak_d[l_ac].bgak006
+               
+#資料未重複, 插入新增資料
+            IF l_count = 0 THEN
+
+               CALL s_transaction_begin()
+
+               INSERT INTO bgak_t
+                           (bgakent,
+                            bgak001,bgak002,bgak003,bgak004,bgak006,                            
+                            bgakstus,bgakownid,bgakowndp,bgakcrtid,bgakcrtdp,bgakcrtdt,bgakmodid,bgakmoddt)
+                     VALUES(g_enterprise,
+                            g_bgak_d[l_ac].bgak001,g_bgak_d[l_ac].bgak002,
+                            g_bgak_d[l_ac].bgak003,g_bgak_d[l_ac].bgak004,g_bgak_d[l_ac].bgak006,
+                            g_bgak_d[l_ac].bgakstus,g_bgak2_d[l_ac].bgakownid,g_bgak2_d[l_ac].bgakowndp,g_bgak2_d[l_ac].bgakcrtid,g_bgak2_d[l_ac].bgakcrtdp,g_bgak2_d[l_ac].bgakcrtdt,g_bgak2_d[l_ac].bgakmodid,g_bgak2_d[l_ac].bgakmoddt)
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_bgak_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "bgak_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y','0')
+               ERROR "INSERT O.K"
+               LET g_rec_b=g_rec_b+1
+               DISPLAY g_rec_b TO FORMONLY.cnt
+            END IF
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_bgak_d.deleteElement(l_ac)
+               NEXT FIELD bgak006
+            END IF
+            IF NOT cl_null(g_bgak_d_t.bgak006) THEN
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               DELETE FROM bgak_t
+                WHERE bgakent = g_enterprise AND bgak001 = g_bgak_d_t.bgak001
+                  AND bgak002 = g_bgak_d_t.bgak002 AND bgak003 = g_bgak_d_t.bgak003
+                  AND bgak004 = g_bgak_d_t.bgak004 AND bgak006 = g_bgak_d_t.bgak006
+             
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "bgak_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE
+               END IF
+             
+               LET g_rec_b = g_rec_b-1
+               DISPLAY g_rec_b TO FORMONLY.cnt
+               CALL s_transaction_end('Y','0')
+               CLOSE abgi090_01_cl
+               LET l_count = g_bgak_d.getLength()
+            END IF
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_bgak_d[l_ac].* = g_bgak_d_t.*
+               CLOSE abgi090_01_cl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_bgak_d[l_ac].bgak006
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_bgak_d[l_ac].* = g_bgak_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊
+               LET g_bgak2_d[l_ac].bgakmodid = g_user
+               LET g_bgak2_d[l_ac].bgakmoddt = cl_get_current()
+
+               UPDATE bgak_t SET (bgak006,bgakstus,bgakmodid,bgakmoddt) = (g_bgak_d[l_ac].bgak006,g_bgak_d[l_ac].bgakstus,g_bgak2_d[l_ac].bgakmodid,g_bgak2_d[l_ac].bgakmoddt)
+                WHERE bgakent = g_enterprise AND bgak001 = g_bgak_d_t.bgak001
+                 AND bgak002 = g_bgak_d_t.bgak002
+                 AND bgak003 = g_bgak_d_t.bgak003   
+                 AND bgak004 = g_bgak_d_t.bgak004
+                 AND bgak006 = g_bgak_d_t.bgak006
+   
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "bgak_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                  LET g_bgak_d[l_ac].* = g_bgak_d_t.*
+               END IF
+            END IF
+                           
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgak001
+            #add-point:BEFORE FIELD bgak001 name="input.b.page1.bgak001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgak001
+            
+            #add-point:AFTER FIELD bgak001 name="input.a.page1.bgak001"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bgak_d[g_detail_idx].bgak001) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak002) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak003) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak004) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak006) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_bgak_d[g_detail_idx].bgak001 != g_bgak_d_t.bgak001 OR g_bgak_d[g_detail_idx].bgak002 != g_bgak_d_t.bgak002 OR g_bgak_d[g_detail_idx].bgak003 != g_bgak_d_t.bgak003 OR g_bgak_d[g_detail_idx].bgak004 != g_bgak_d_t.bgak004 OR g_bgak_d[g_detail_idx].bgak006 != g_bgak_d_t.bgak006)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgak_t WHERE "||"bgakent = '" ||g_enterprise|| "' AND "||"bgak001 = '"||g_bgak_d[g_detail_idx].bgak001 ||"' AND "|| "bgak002 = '"||g_bgak_d[g_detail_idx].bgak002 ||"' AND "|| "bgak003 = '"||g_bgak_d[g_detail_idx].bgak003 ||"' AND "|| "bgak004 = '"||g_bgak_d[g_detail_idx].bgak004 ||"' AND "|| "bgak006 = '"||g_bgak_d[g_detail_idx].bgak006 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgak001
+            #add-point:ON CHANGE bgak001 name="input.g.page1.bgak001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgak002
+            #add-point:BEFORE FIELD bgak002 name="input.b.page1.bgak002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgak002
+            
+            #add-point:AFTER FIELD bgak002 name="input.a.page1.bgak002"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bgak_d[g_detail_idx].bgak001) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak002) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak003) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak004) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak006) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_bgak_d[g_detail_idx].bgak001 != g_bgak_d_t.bgak001 OR g_bgak_d[g_detail_idx].bgak002 != g_bgak_d_t.bgak002 OR g_bgak_d[g_detail_idx].bgak003 != g_bgak_d_t.bgak003 OR g_bgak_d[g_detail_idx].bgak004 != g_bgak_d_t.bgak004 OR g_bgak_d[g_detail_idx].bgak006 != g_bgak_d_t.bgak006)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgak_t WHERE "||"bgakent = '" ||g_enterprise|| "' AND "||"bgak001 = '"||g_bgak_d[g_detail_idx].bgak001 ||"' AND "|| "bgak002 = '"||g_bgak_d[g_detail_idx].bgak002 ||"' AND "|| "bgak003 = '"||g_bgak_d[g_detail_idx].bgak003 ||"' AND "|| "bgak004 = '"||g_bgak_d[g_detail_idx].bgak004 ||"' AND "|| "bgak006 = '"||g_bgak_d[g_detail_idx].bgak006 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgak002
+            #add-point:ON CHANGE bgak002 name="input.g.page1.bgak002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgak003
+            #add-point:BEFORE FIELD bgak003 name="input.b.page1.bgak003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgak003
+            
+            #add-point:AFTER FIELD bgak003 name="input.a.page1.bgak003"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bgak_d[g_detail_idx].bgak001) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak002) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak003) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak004) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak006) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_bgak_d[g_detail_idx].bgak001 != g_bgak_d_t.bgak001 OR g_bgak_d[g_detail_idx].bgak002 != g_bgak_d_t.bgak002 OR g_bgak_d[g_detail_idx].bgak003 != g_bgak_d_t.bgak003 OR g_bgak_d[g_detail_idx].bgak004 != g_bgak_d_t.bgak004 OR g_bgak_d[g_detail_idx].bgak006 != g_bgak_d_t.bgak006)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgak_t WHERE "||"bgakent = '" ||g_enterprise|| "' AND "||"bgak001 = '"||g_bgak_d[g_detail_idx].bgak001 ||"' AND "|| "bgak002 = '"||g_bgak_d[g_detail_idx].bgak002 ||"' AND "|| "bgak003 = '"||g_bgak_d[g_detail_idx].bgak003 ||"' AND "|| "bgak004 = '"||g_bgak_d[g_detail_idx].bgak004 ||"' AND "|| "bgak006 = '"||g_bgak_d[g_detail_idx].bgak006 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgak003
+            #add-point:ON CHANGE bgak003 name="input.g.page1.bgak003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgak004
+            #add-point:BEFORE FIELD bgak004 name="input.b.page1.bgak004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgak004
+            
+            #add-point:AFTER FIELD bgak004 name="input.a.page1.bgak004"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bgak_d[g_detail_idx].bgak001) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak002) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak003) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak004) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak006) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_bgak_d[g_detail_idx].bgak001 != g_bgak_d_t.bgak001 OR g_bgak_d[g_detail_idx].bgak002 != g_bgak_d_t.bgak002 OR g_bgak_d[g_detail_idx].bgak003 != g_bgak_d_t.bgak003 OR g_bgak_d[g_detail_idx].bgak004 != g_bgak_d_t.bgak004 OR g_bgak_d[g_detail_idx].bgak006 != g_bgak_d_t.bgak006)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgak_t WHERE "||"bgakent = '" ||g_enterprise|| "' AND "||"bgak001 = '"||g_bgak_d[g_detail_idx].bgak001 ||"' AND "|| "bgak002 = '"||g_bgak_d[g_detail_idx].bgak002 ||"' AND "|| "bgak003 = '"||g_bgak_d[g_detail_idx].bgak003 ||"' AND "|| "bgak004 = '"||g_bgak_d[g_detail_idx].bgak004 ||"' AND "|| "bgak006 = '"||g_bgak_d[g_detail_idx].bgak006 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgak004
+            #add-point:ON CHANGE bgak004 name="input.g.page1.bgak004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgak006
+            
+            #add-point:AFTER FIELD bgak006 name="input.a.page1.bgak006"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bgak_d[g_detail_idx].bgak001) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak002) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak003) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak004) AND NOT cl_null(g_bgak_d[g_detail_idx].bgak006) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_bgak_d[g_detail_idx].bgak001 != g_bgak_d_t.bgak001 OR g_bgak_d[g_detail_idx].bgak002 != g_bgak_d_t.bgak002 OR g_bgak_d[g_detail_idx].bgak003 != g_bgak_d_t.bgak003 OR g_bgak_d[g_detail_idx].bgak004 != g_bgak_d_t.bgak004 OR g_bgak_d[g_detail_idx].bgak006 != g_bgak_d_t.bgak006)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgak_t WHERE "||"bgakent = '" ||g_enterprise|| "' AND "||"bgak001 = '"||g_bgak_d[g_detail_idx].bgak001 ||"' AND "|| "bgak002 = '"||g_bgak_d[g_detail_idx].bgak002 ||"' AND "|| "bgak003 = '"||g_bgak_d[g_detail_idx].bgak003 ||"' AND "|| "bgak004 = '"||g_bgak_d[g_detail_idx].bgak004 ||"' AND "|| "bgak006 = '"||g_bgak_d[g_detail_idx].bgak006 ||"'",'std-00004',0) THEN 
+                     LET g_bgak_d[l_ac].bgak006 = g_bgak_d_t.bgak006
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+            IF NOT cl_null(g_bgak_d[l_ac].bgak006) THEN 
+               SELECT COUNT(*) INTO l_m FROM gzza_t WHERE gzza001 = g_bgak_d[l_ac].bgak006
+               IF l_m = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'abg-00043'
+                  LET g_errparam.extend = g_bgak_d[l_ac].bgak006
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  NEXT FIELD bgak006
+               ELSE
+                  SELECT gzzal003 INTO g_bgak_d[l_ac].bgak006_desc FROM gzzal_t 
+                   WHERE gzzal001 = g_bgak_d[l_ac].bgak006 AND gzzal002 = g_lang
+               END IF 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgak006
+            #add-point:BEFORE FIELD bgak006 name="input.b.page1.bgak006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgak006
+            #add-point:ON CHANGE bgak006 name="input.g.page1.bgak006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgakstus
+            #add-point:BEFORE FIELD bgakstus name="input.b.page1.bgakstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgakstus
+            
+            #add-point:AFTER FIELD bgakstus name="input.a.page1.bgakstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgakstus
+            #add-point:ON CHANGE bgakstus name="input.g.page1.bgakstus"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.bgak001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgak001
+            #add-point:ON ACTION controlp INFIELD bgak001 name="input.c.page1.bgak001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgak002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgak002
+            #add-point:ON ACTION controlp INFIELD bgak002 name="input.c.page1.bgak002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgak003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgak003
+            #add-point:ON ACTION controlp INFIELD bgak003 name="input.c.page1.bgak003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgak004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgak004
+            #add-point:ON ACTION controlp INFIELD bgak004 name="input.c.page1.bgak004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgak006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgak006
+            #add-point:ON ACTION controlp INFIELD bgak006 name="input.c.page1.bgak006"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bgak_d[l_ac].bgak006             #給予default值
+
+            #給予arg
+
+            CALL q_gzza001_2()                                #呼叫開窗
+
+            LET g_bgak_d[l_ac].bgak006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            SELECT gzzal003 INTO g_bgak_d[l_ac].bgak006_desc FROM gzzal_t 
+             WHERE gzzal001 = g_bgak_d[l_ac].bgak006 AND gzzal002 = g_lang
+            DISPLAY g_bgak_d[l_ac].bgak006 TO bgak006              #顯示到畫面上
+            DISPLAY g_bgak_d[l_ac].bgak006_desc TO bgak006_desc             #顯示到畫面上
+            NEXT FIELD bgak006                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgakstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgakstus
+            #add-point:ON ACTION controlp INFIELD bgakstus name="input.c.page1.bgakstus"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_abgi090_01 
+   
+   #add-point:input段after input 
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgi090_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="abgi090_01.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 单身显示
+# Memo...........:
+# Usage..........: CALL abgi090_01_fill()
+# Date & Author..: 13/11/11 By wuxj
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi090_01_fill()
+   CALL g_bgak_d.clear()
+   CALL g_bgak2_d.clear()
+
+   LET g_sql = "SELECT bgak001,bgak002,bgak003,bgak004,bgak006,'',bgakstus,'','','','','',bgakownid,'',bgakowndp,'',bgakcrtid,'',bgakcrtdp,'',bgakcrtdt,bgakmodid,'',bgakmoddt FROM bgak_t WHERE bgakent= ? "
+
+   LET g_sql=g_sql CLIPPED," AND bgak001=",g_bgaa002," AND bgak002='",g_bgai002,"' AND bgak003='",g_bgai003,"' AND bgak004='",g_bgai004,"'"
+
+   LET g_sql = g_sql, " ORDER BY bgak_t.bgak006"
+
+   PREPARE abgi090_01_pb FROM g_sql
+   DECLARE b_fill_cs CURSOR FOR abgi090_01_pb
+
+   LET l_ac = 1
+
+
+   OPEN b_fill_cs USING g_enterprise
+
+   FOREACH b_fill_cs INTO g_bgak_d[l_ac].*,g_bgak2_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      SELECT gzzal003 INTO g_bgak_d[l_ac].bgak006_desc FROM gzzal_t 
+       WHERE gzzal001 = g_bgak_d[l_ac].bgak006 AND gzzal002 = g_lang
+      LET g_bgak2_d[l_ac].bgak001 = g_bgak_d[l_ac].bgak001 
+      LET g_bgak2_d[l_ac].bgak002 = g_bgak_d[l_ac].bgak002
+      LET g_bgak2_d[l_ac].bgak003 = g_bgak_d[l_ac].bgak003
+      LET g_bgak2_d[l_ac].bgak004 = g_bgak_d[l_ac].bgak004
+      LET g_bgak2_d[l_ac].bgak006 = g_bgak_d[l_ac].bgak006
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+
+   CALL g_bgak_d.deleteElement(l_ac)
+   CALL g_bgak2_d.deleteElement(l_ac)
+
+   LET g_rec_b=l_ac-1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+
+   FREE abgi090_01_pb
+END FUNCTION
+
+ 
+{</section>}
+ 

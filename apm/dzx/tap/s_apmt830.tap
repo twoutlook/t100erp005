@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="s_apmt830" std_prog="s_apmt830" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.s_apmt830_conf_chk" order="1" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_apmt830_conf_chk(p_pmdadocno)
+#                  RETURNING r_success,r_errno
+# Input parameter: p_pmdadocno    單據編號
+# Return code....: r_success      檢核狀態
+#                : r_errno        錯誤訊息
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION s_apmt830_conf_chk(p_pmdadocno)
+DEFINE p_pmdadocno      LIKE pmda_t.pmdadocno
+DEFINE r_success        LIKE type_t.num5 
+DEFINE r_errno          LIKE type_t.chr10
+DEFINE l_cnt            LIKE type_t.num10
+DEFINE l_pmda           RECORD LIKE pmda_t.*
+
+   #遇错继续执行
+   WHENEVER ERROR CONTINUE
+
+   #初始化
+   LET r_success = TRUE
+   LET r_errno   = NULL
+   LET l_cnt     = 0
+
+   #检查传入单据编号是否为空
+   IF cl_null(p_pmdadocno) THEN
+      LET r_errno = "sub-00228"
+      LET r_success = FALSE
+      RETURN r_success,r_errno
+   END IF
+   
+   SELECT * INTO l_pmda.*
+     FROM pmda_t
+    WHERE pmdaent = g_enterprise AND pmdadocno = p_pmdadocno
+    
+   #检查传入状态码是否为空，若不为空是否为N.未确认
+   IF cl_null(l_pmda.pmdastus) OR l_pmda.pmdastus <> 'N' THEN
+      LET r_errno = "sub-00149"
+      LET r_success = FALSE
+      RETURN r_success,r_errno
+   END IF
+   
+   #检查必输栏位
+   CALL s_ammt350_reqf_chk(p_pmdadocno) RETURNING r_success,r_errno
+
+   #回传对应的值
+   RETURN r_success,r_errno
+END FUNCTION]]>
+  </point>
+  <point name="function.s_apmt830_conf_upd" order="2" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_apmt830_conf_upd(p_pmdadocno)
+#                  RETURNING r_success
+# Input parameter: RETURNING r_success
+# Input parameter: p_pmdadocno    單據編號
+# Return code....: r_success      檢核狀態
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION s_apmt830_conf_upd(p_pmdadocno)
+DEFINE p_pmdadocno      LIKE pmda_t.pmdadocno
+DEFINE r_success        LIKE type_t.num5
+DEFINE r_errno          LIKE type_t.chr10
+DEFINE l_time           DATETIME YEAR TO SECOND
+DEFINE l_pmda           RECORD LIKE pmda_t.*
+DEFINE l_sql            STRING
+
+   #遇错继续执行
+   WHENEVER ERROR CONTINUE
+
+   #初始化
+   LET r_success = TRUE
+   LET l_time = cl_get_current()
+
+   #檢查：是否在事物中
+   IF NOT s_transaction_chk('Y',1) THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #写入需求匯總檔
+   INSERT INTO pmcz_t (
+                        pmczent,       #企業編號
+                        pmczsite,      #需求組織
+                        pmcz001,       #需求單號
+                        pmcz002,       #項次
+                        pmcz003,       #商品主條碼
+                        pmcz004,       #商品編號
+                        pmcz005,       #產品特徵
+                        pmcz006,       #庫存單位
+                        pmcz007,       #需求單位
+                        pmcz008,       #需求數量
+                        pmcz009,       #包裝單位
+                        pmcz010,       #件裝數
+                        pmcz011,       #需求件數
+                        pmcz020,       #提出日期
+                        pmcz021,       #取貨組織
+                        pmcz022,       #收貨庫位
+                        pmcz023,       #來源類型
+                        pmcz024,       #來源單號
+                        pmcz025,       #來源項次
+                        pmcz026,       #來源項序
+                        pmcz027,       #需求日期
+                        pmcz028,       #收貨時段
+                        pmcz030,       #供應商編號
+                        pmcz031,       #經營方式
+                        pmcz032,       #採購類型
+                        pmcz040,       #採購中心
+                        pmcz041,       #採購員
+                        pmcz042,       #配送中心
+                        pmcz043,       #配送倉庫
+                        pmcz050,       #已分採購量
+                        pmcz051,       #已分配送量
+                        pmcz052,       #已分調撥量
+                        pmcz060        #結案碼
+                        
+                 SELECT pmdbent,
+                        pmdbsite,                 
+                        pmdbdocno,
+                        pmdbseq,
+                        pmdb004,
+                        pmdb005,
+                        imaa104,       #庫存單位
+                        pmdb007,       #需求單位  
+                        pmdb006,       #需求數量
+                        pmdb201,       #包裝單位
+                        pmdb202,       #件裝數
+                        pmdb212,       #需求件數
+                        pmdadocdt,     #提出日期
+                        pmdb037,       #取貨組織
+                        pmdb038,       #收貨庫位
+                        pmda200,       #來源類型
+                        pmdb001,       #來源單號
+                        pmdb002,       #來源項次
+                        pmdb003,       #來源項序  
+                        pmdb030,       #需求日期
+                        pmdb048,       #收貨時段
+                        pmdb015,       #供應商編號
+                        pmdb208,       #經營方式
+                        pmdb207,       #採購類型
+                        pmdb205,       #採購中心
+                        pmdb206,       #採購員
+                        pmdb203,       #配送中心
+                        pmdb204,       #配送倉庫
+                        pmdb049,       #已分採購量
+                        0,             #已分配送量
+                        0,             #已分調撥量
+                        'N'            #結案碼
+            FROM pmda_t,pmdb_t LEFT OUTER JOIN  imaa_t ON pmdb004 = imaa001 AND pmdbent = imaaent
+            WHERE pmdaent = pmdbent AND pmdaent = g_enterprise AND  pmdadocno = p_pmdadocno    
+    
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(p_pmdadocno,SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF    
+                                              
+   #更新状态码为Y
+   UPDATE pmda_t SET pmdastus = 'Y',
+                     pmdacnfid = g_user,
+                     pmdacnfdt = l_time
+    WHERE pmdaent = g_enterprise AND pmdadocno = p_pmdadocno
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(p_pmdadocno,SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+    
+   
+   #回传对应的值
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.s_apmt830_reqf_chk" order="3" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_apmt830_reqf_chk(p_pmdadocno)
+#                  RETURNING r_success,r_errno
+# Input parameter: 1.p_pmdadocno    LIKE pmda_t.pmdadocno    編號
+# Return code....: 1.r_success      处理状态TRUE/FALSE
+#                  2.r_errno        錯誤信息
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION s_apmt830_reqf_chk(p_pmdadocno)
+DEFINE p_pmdadocno  LIKE pmda_t.pmdadocno
+DEFINE r_success  LIKE type_t.num5
+DEFINE r_errno    LIKE type_t.chr1000
+DEFINE l_pmda      RECORD LIKE pmda_t.*
+DEFINE l_n        LIKE type_t.num5
+
+   LET r_success = TRUE
+   LET r_errno = NULL
+ 
+   SELECT * INTO  l_pmda.* FROM pmda_t 
+    WHERE pmdaent = g_enterprise AND pmdadocno = p_pmdadocno
+    
+ 
+   IF cl_null(p_pmdadocno) THEN
+      LET r_errno = "sub-00151"
+      LET r_success = FALSE
+      RETURN r_success,r_errno
+   END IF 
+
+   #检查：狀態碼 
+   IF (cl_null(l_pmda.pmdastus) OR l_pmda.pmdastus<>'N') THEN
+      LET r_errno = "apm-00014"
+      LET r_success = FALSE
+      RETURN r_success,r_errno
+   END IF 
+
+
+     #检查：其他必輸欄位
+   IF cl_null(l_pmda.pmdadocdt) THEN
+      LET r_errno = "amm-00092"
+      LET r_success = FALSE
+      RETURN r_success,r_errno
+   END IF
+   
+    #检查必要字段是否为空
+   IF cl_null(l_pmda.pmdasite) OR    #營運據點
+      cl_null(l_pmda.pmda001)  OR    #版本
+      cl_null(l_pmda.pmda002)  OR    #請購人員
+      cl_null(l_pmda.pmda003)  OR    #申請部門
+      cl_null(l_pmda.pmda201)  THEN  #採購類型
+        
+      LET r_errno = "sub-00157"      #此单据的必要字段有数据为空值的情况 -- 请重新确认数据是否均输入完成
+      LET r_success = FALSE
+      RETURN r_success,r_errno
+   END IF
+   
+   
+   RETURN r_success,r_errno
+END FUNCTION]]>
+  </point>
+  <point name="function.s_apmt830_void_chk" order="4" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_apmt830_void_chk(p_pmdadocno)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION s_apmt830_void_chk(p_pmdadocno)
+DEFINE p_pmdadocno      LIKE pmda_t.pmdadocno
+DEFINE r_success        LIKE type_t.num5 
+DEFINE r_errno          LIKE type_t.chr10
+DEFINE l_pmda           RECORD LIKE pmda_t.*
+
+   #遇错继续执行
+   WHENEVER ERROR CONTINUE
+
+   #初始化
+   LET r_success = TRUE
+   LET r_errno   = NULL
+
+   
+   #检查传入单据编号是否为空
+   IF cl_null(p_pmdadocno) THEN
+      LET r_errno = "sub-00228"
+      LET r_success = FALSE
+      RETURN r_success,r_errno
+   END IF
+   
+     
+   #重取资料
+   SELECT * INTO l_pmda.*
+     FROM pmda_t
+    WHERE pmdaent = g_enterprise AND pmdadocno = p_pmdadocno
+    
+   #检查传入状态码是否为空，若不为空是否为N.未确认
+   IF cl_null(l_pmda.pmdastus) OR l_pmda.pmdastus <> 'N' THEN
+      LET r_errno = "sub-00149"
+      LET r_success = FALSE
+      RETURN r_success,r_errno
+   END IF
+   
+   #回传对应的值
+   RETURN r_success,r_errno
+END FUNCTION]]>
+  </point>
+  <point name="function.s_apmt830_void_upd" order="5" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_apmt830_void_upd(p_pmdadocno)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION s_apmt830_void_upd(p_pmdadocno)
+DEFINE p_pmdadocno      LIKE pmda_t.pmdadocno
+DEFINE r_success        LIKE type_t.num5 
+
+   #遇错继续执行
+   WHENEVER ERROR CONTINUE
+
+   #初始化
+   LET r_success = TRUE
+
+   #檢查：是否在事物中
+   IF NOT s_transaction_chk('Y',1) THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #更新状态码为X
+   UPDATE pmda_t SET pmdastus = 'X'
+    WHERE pmdaent = g_enterprise AND pmdadocno = p_pmdadocno
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(p_pmdadocno,SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #回传对应的值
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+</add_points>

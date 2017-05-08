@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapq930_g01" module="aap" jobmode="N" type="g01" industry="std" crtid="05016" crtdt="2014-12-17 17:04:26" modid="08992" moddt="2016-11-09 17:15:30" sdver="4" tabver="10001" description="供應商應付帳齡分析報表">
+  <define arg="tm.wc(STRING|where condotion),tm.a1(STRING|temp_tble),tm.a2(chr100|xrad001),tm.a3(chr100|end_day)">
+    <var seq="1" value="l_sel2(chr100|&apos;&apos;),l_xreb100(xreb100|&apos;&apos;),l_xred1031(xred103|&apos;&apos;),l_xred1032(xred103|&apos;&apos;),l_xred1033(xred103|&apos;&apos;),l_xred103(xred103|&apos;&apos;),l_xred1131(xred113|&apos;&apos;),l_xred1132(xred113|&apos;&apos;),l_xred1133(xred113|&apos;&apos;),l_xred113(xred113|&apos;&apos;),l_xred113_401(xred133|&apos;&apos;),l_xred113_402(xred113|&apos;&apos;),l_xred113_403(xred103|&apos;&apos;),l_xred113_404(xred113|&apos;&apos;),l_xred113_405(xred103|&apos;&apos;),l_xred113_406(xred113|&apos;&apos;),l_xred113_407(xred113|&apos;&apos;),l_xred113_408(xred113|&apos;&apos;),l_xred113_409(xred113|&apos;&apos;),l_xred113_410(xred113|&apos;&apos;),l_xred113_411(xred113|&apos;&apos;),l_xred113_412(xred113|&apos;&apos;),l_xred113_413(xred113|&apos;&apos;),l_xred113_414(xred113|&apos;&apos;),l_xred113_415(xred113|&apos;&apos;),l_xred113_416(xred113|&apos;&apos;),l_xred113_417(xred113|&apos;&apos;),l_xred113_418(xred113|&apos;&apos;),l_xred113_419(xred113|&apos;&apos;),l_xred113_420(xred113|&apos;&apos;),l_xred113_421(xred113|&apos;&apos;),apcaent,apcadocno,apcald"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_sel2(chr100|&apos;&apos;),l_xreb100(xreb100|&apos;&apos;),l_xred1031(xred103|&apos;&apos;),l_xred1032(xred103|&apos;&apos;),l_xred1033(xred103|&apos;&apos;),l_xred103(xred103|&apos;&apos;),l_xred1131(xred113|&apos;&apos;),l_xred1132(xred113|&apos;&apos;),l_xred1133(xred113|&apos;&apos;),l_xred113(xred113|&apos;&apos;),l_xred113_401(xred133|&apos;&apos;),l_xred113_402(xred113|&apos;&apos;),l_xred113_403(xred103|&apos;&apos;),l_xred113_404(xred113|&apos;&apos;),l_xred113_405(xred103|&apos;&apos;),l_xred113_406(xred113|&apos;&apos;),l_xred113_407(xred113|&apos;&apos;),l_xred113_408(xred113|&apos;&apos;),l_xred113_409(xred113|&apos;&apos;),l_xred113_410(xred113|&apos;&apos;),l_xred113_411(xred113|&apos;&apos;),l_xred113_412(xred113|&apos;&apos;),l_xred113_413(xred113|&apos;&apos;),l_xred113_414(xred113|&apos;&apos;),l_xred113_415(xred113|&apos;&apos;),l_xred113_416(xred113|&apos;&apos;),l_xred113_417(xred113|&apos;&apos;),l_xred113_418(xred113|&apos;&apos;),l_xred113_419(xred113|&apos;&apos;),l_xred113_420(xred113|&apos;&apos;),l_xred113_421(xred113|&apos;&apos;),apcaent,apcadocno,apcald"/>
+    <sql id="g_from" query="apca_t"/>
+    <sql id="g_where" query="" maintable="apca_t"/>
+    <sql id="g_order" query="apcadocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="apcadocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="apcadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="apcaent,apcadocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="apcaent,apcadocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="apcaent,apcadocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="apcadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="apcaent,apcadocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

@@ -1,0 +1,4317 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axrp420" std_prog="axrp420" erpver="1.0" module="AXR" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="free_style.variable" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[{<Module define>}
+
+#單頭 type 宣告
+ TYPE type_g_xrda_m RECORD
+       xrdald LIKE xrda_t.xrdald,
+       xrdald_desc LIKE type_t.chr80,
+       glaacomp LIKE type_t.chr10,
+       glaacomp_desc LIKE type_t.chr80,
+       type LIKE type_t.chr80
+       END RECORD
+
+#模組變數(Module Variables)
+DEFINE g_xrda_m        type_g_xrda_m
+DEFINE g_xrda_m_t      type_g_xrda_m                #備份舊值
+DEFINE g_xrdald_t   LIKE xrda_t.xrdald    #Key值備份
+DEFINE g_xrdadocno_t   LIKE xrda_t.xrdadocno    #Key值備份
+
+ type type_g_glap_m        RECORD
+       glapdocno LIKE glap_t.glapdocno, 
+       glapdocdt LIKE glap_t.glapdocdt,
+       start_no  LIKE glap_t.glapdocno,
+       end_no    LIKE glap_t.glapdocno
+       END RECORD
+DEFINE g_glap_m        type_g_glap_m
+
+ TYPE type_g_xrda_d        RECORD
+       xrdald    LIKE xrda_t.xrdald, 
+       xrdasite  LIKE xrda_t.xrdasite,
+       xrdadocno LIKE xrda_t.xrdadocno, 
+       xrdadocdt LIKE xrda_t.xrdadocdt, 
+       xrda004   LIKE xrda_t.xrda004,
+       xrda005   LIKE xrda_t.xrda005
+       END RECORD
+DEFINE g_xrda_d   DYNAMIC ARRAY OF type_g_xrda_d
+DEFINE g_xrda_d_t type_g_xrda_d       
+DEFINE g_detail_idx1         LIKE type_t.num5             
+DEFINE g_wc2_table1          STRING
+DEFINE l_ac1                 LIKE type_t.num5
+DEFINE g_rec_b1              LIKE type_t.num5              #單身筆數
+
+ TYPE type_g_glaq_d        RECORD
+       docno   LIKE xrda_t.xrdadocno,
+       docdt   LIKE xrda_t.xrdadocdt,
+       glaq022 LIKE glaq_t.glaq022,
+       glaqseq LIKE glaq_t.glaqseq,
+       glaq001 LIKE glaq_t.glaq001,       
+       glaq002 LIKE glaq_t.glaq002,
+       lc_subject LIKE type_t.chr300,       
+       glaq003 LIKE glaq_t.glaq003, 
+       glaq004 LIKE glaq_t.glaq004,
+       glaq040 LIKE glaq_t.glaq040,
+       glaq041 LIKE glaq_t.glaq041,
+       glaq043 LIKE glaq_t.glaq043,
+       glaq044 LIKE glaq_t.glaq044,
+       edit1   LIKE type_t.chr80
+       END RECORD
+DEFINE g_glaq_d   DYNAMIC ARRAY OF type_g_glaq_d
+
+ TYPE type_g_glaq_d_t      RECORD
+       docno   LIKE xrda_t.xrdadocno,
+       docdt   LIKE xrda_t.xrdadocdt,
+       glaq022 LIKE glaq_t.glaq022,
+       glaqseq LIKE glaq_t.glaqseq,
+       glaq001 LIKE glaq_t.glaq001,       
+       glaq002 LIKE glaq_t.glaq002,
+       lc_subject LIKE type_t.chr300,       
+       glaq003 LIKE glaq_t.glaq003, 
+       glaq004 LIKE glaq_t.glaq004,
+       glaq040 LIKE glaq_t.glaq040,
+       glaq041 LIKE glaq_t.glaq041,
+       glaq043 LIKE glaq_t.glaq043,
+       glaq044 LIKE glaq_t.glaq044,
+       edit1   LIKE type_t.chr80
+       END RECORD
+DEFINE g_glaq_d_t   DYNAMIC ARRAY OF type_g_glaq_d_t
+     
+DEFINE g_detail_idx2         LIKE type_t.num5             
+DEFINE g_wc2_table2          STRING
+DEFINE l_ac2                 LIKE type_t.num5
+DEFINE g_rec_b2              LIKE type_t.num5              #單身筆數
+
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_sql                 STRING                        #組 sql 用
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗
+
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_ooef004      LIKE ooef_t.ooef004 
+DEFINE g_glaa013      LIKE glaa_t.glaa013
+DEFINE g_flag         LIKE type_t.chr1
+
+DEFINE l_ac3                 LIKE type_t.num5
+DEFINE g_rec_b3              LIKE type_t.num5              #單身筆數
+DEFINE g_detail_idx3         LIKE type_t.num5 
+DEFINE g_row_count           LIKE type_t.num5
+DEFINE g_curs_index          LIKE type_t.num5
+DEFINE g_docno   LIKE xrda_t.xrdadocno
+DEFINE g_docdt   LIKE xrda_t.xrdadocdt
+DEFINE g_glaq022 LIKE glaq_t.glaq022
+
+ TYPE type_g_glaq2_d        RECORD
+       docno  LIKE xrda_t.xrdadocno, 
+       seq     LIKE type_t.num5,       
+       glaq002 LIKE glaq_t.glaq002,
+       glaq002_desc LIKE type_t.chr80,       
+       glaq017 LIKE glaq_t.glaq017,
+       glaq017_desc LIKE type_t.chr80,       
+       glaq018 LIKE glaq_t.glaq018, 
+       glaq018_desc LIKE type_t.chr80,
+       glaq019 LIKE glaq_t.glaq019,
+       glaq019_desc LIKE type_t.chr80,
+       glaq020 LIKE glaq_t.glaq020,
+       glaq020_desc LIKE type_t.chr80,
+       glaq021 LIKE glaq_t.glaq022,
+       glaq021_desc LIKE type_t.chr80,
+       glaq022 LIKE glaq_t.glaq022,
+       glaq022_desc LIKE type_t.chr80,
+       glaq023 LIKE glaq_t.glaq023,
+       glaq023_desc LIKE type_t.chr80,
+       glaq024 LIKE glaq_t.glaq024,
+       glaq024_desc LIKE type_t.chr80,
+       glaq025 LIKE glaq_t.glaq025,
+       glaq025_desc LIKE type_t.chr80,
+       glaq026 LIKE glaq_t.glaq026,
+       glaq026_desc LIKE type_t.chr80,
+       glaq027 LIKE glaq_t.glaq027,
+       glaq028 LIKE glaq_t.glaq028,
+       glaq029 LIKE glaq_t.glaq029,
+       glaq029_desc LIKE type_t.chr80,
+       glaq030 LIKE glaq_t.glaq030,
+       glaq030_desc LIKE type_t.chr80,
+       glaq031 LIKE glaq_t.glaq031,
+       glaq031_desc LIKE type_t.chr80,
+       glaq032 LIKE glaq_t.glaq032,
+       glaq032_desc LIKE type_t.chr80,
+       glaq033 LIKE glaq_t.glaq033,
+       glaq033_desc LIKE type_t.chr80,
+       glaq034 LIKE glaq_t.glaq034,
+       glaq034_desc LIKE type_t.chr80,
+       glaq035 LIKE glaq_t.glaq035,
+       glaq035_desc LIKE type_t.chr80,
+       glaq036 LIKE glaq_t.glaq036,
+       glaq036_desc LIKE type_t.chr80,
+       glaq037 LIKE glaq_t.glaq037,
+       glaq037_desc LIKE type_t.chr80,
+       glaq038 LIKE glaq_t.glaq038,
+       glaq038_desc LIKE type_t.chr80,
+       source   LIKE type_t.chr100,
+       sw       LIKE type_t.chr1,
+       glaq001  LIKE glaq_t.glaq001
+       END RECORD
+DEFINE g_glaq2_d   DYNAMIC ARRAY OF type_g_glaq2_d
+DEFINE g_glaq2_d_t type_g_glaq2_d 
+DEFINE l_ac4                 LIKE type_t.num5
+DEFINE g_rec_b4              LIKE type_t.num5              #單身筆數
+DEFINE g_detail_idx4         LIKE type_t.num5 
+DEFINE g_glaa004    LIKE glaa_t.glaa004
+DEFINE g_change     LIKE type_t.chr1
+DEFINE g_update_axr LIKE type_t.chr1   #拋轉憑證后回寫axr
+
+TYPE type_g_glaq3_d        RECORD
+       docno    LIKE glaq_t.glaqdocno,
+       docdt    LIKE glap_t.glapdocdt,
+       sw       LIKE type_t.chr1,     
+       glaqent  LIKE glaq_t.glaqent,  
+       glaqcomp LIKE glaq_t.glaqcomp, 
+       glaqld   LIKE glaq_t.glaqld,   
+       glaq001  LIKE glaq_t.glaq001,  
+       glaq002  LIKE glaq_t.glaq002,  
+       glaq005  LIKE glaq_t.glaq005,  
+       glaq006  LIKE glaq_t.glaq006,  
+       glaq007  LIKE glaq_t.glaq007,  
+       glaq009  LIKE glaq_t.glaq009,  
+       glaq011  LIKE glaq_t.glaq011,  
+       glaq012  LIKE glaq_t.glaq012,  
+       glaq013  LIKE glaq_t.glaq013,  
+       glaq014  LIKE glaq_t.glaq014,  
+       glaq015  LIKE glaq_t.glaq015,  
+       glaq016  LIKE glaq_t.glaq016,  
+       glaq017  LIKE glaq_t.glaq017,  
+       glaq018  LIKE glaq_t.glaq018,  
+       glaq019  LIKE glaq_t.glaq019,  
+       glaq020  LIKE glaq_t.glaq020,  
+       glaq021  LIKE glaq_t.glaq021,  
+       glaq022  LIKE glaq_t.glaq022,  
+       glaq023  LIKE glaq_t.glaq023,  
+       glaq024  LIKE glaq_t.glaq024,  
+       glaq025  LIKE glaq_t.glaq025,  
+       glaq026  LIKE glaq_t.glaq026,  
+       glaq027  LIKE glaq_t.glaq027,  
+       glaq028  LIKE glaq_t.glaq028,  
+       glaq029  LIKE glaq_t.glaq029,  
+       glaq030  LIKE glaq_t.glaq030,  
+       glaq031  LIKE glaq_t.glaq031,  
+       glaq032  LIKE glaq_t.glaq032,  
+       glaq033  LIKE glaq_t.glaq033,  
+       glaq034  LIKE glaq_t.glaq034,  
+       glaq035  LIKE glaq_t.glaq035,  
+       glaq036  LIKE glaq_t.glaq036,  
+       glaq037  LIKE glaq_t.glaq037,  
+       glaq038  LIKE glaq_t.glaq038,   
+       d        LIKE glaq_t.glaq003,  
+       c        LIKE glaq_t.glaq004,  
+       qty      LIKE glaq_t.glaq008,  
+       sum      LIKE glaq_t.glaq010,
+       glaq039  LIKE glaq_t.glaq039,
+       glaq040  LIKE glaq_t.glaq040,
+       glaq041  LIKE glaq_t.glaq041,
+       glaq042  LIKE glaq_t.glaq042,
+       glaq043  LIKE glaq_t.glaq043,
+       glaq044  LIKE glaq_t.glaq044,
+       seq      LIKE glaq_t.glaqseq,
+       source   LIKE type_t.chr100,
+       glaqseq  LIKE glaq_t.glaqseq,
+       xrca039  LIKE xrca_t.xrca039
+       END RECORD
+DEFINE g_glaq3_d   DYNAMIC ARRAY OF type_g_glaq3_d
+
+TYPE type_g_glaq4_d        RECORD
+       docno    LIKE glaq_t.glaqdocno,
+       docdt    LIKE glap_t.glapdocdt,
+       sw       LIKE type_t.chr1,     
+       glaqent  LIKE glaq_t.glaqent,  
+       glaqcomp LIKE glaq_t.glaqcomp, 
+       glaqld   LIKE glaq_t.glaqld,   
+       glaq001  LIKE glaq_t.glaq001,  
+       glaq002  LIKE glaq_t.glaq002,  
+       glaq005  LIKE glaq_t.glaq005,  
+       glaq006  LIKE glaq_t.glaq006,  
+       glaq007  LIKE glaq_t.glaq007,  
+       glaq009  LIKE glaq_t.glaq009,  
+       glaq011  LIKE glaq_t.glaq011,  
+       glaq012  LIKE glaq_t.glaq012,  
+       glaq013  LIKE glaq_t.glaq013,  
+       glaq014  LIKE glaq_t.glaq014,  
+       glaq015  LIKE glaq_t.glaq015,  
+       glaq016  LIKE glaq_t.glaq016,  
+       glaq017  LIKE glaq_t.glaq017,  
+       glaq018  LIKE glaq_t.glaq018,  
+       glaq019  LIKE glaq_t.glaq019,  
+       glaq020  LIKE glaq_t.glaq020,  
+       glaq021  LIKE glaq_t.glaq021,  
+       glaq022  LIKE glaq_t.glaq022,  
+       glaq023  LIKE glaq_t.glaq023,  
+       glaq024  LIKE glaq_t.glaq024,  
+       glaq025  LIKE glaq_t.glaq025,  
+       glaq026  LIKE glaq_t.glaq026,  
+       glaq027  LIKE glaq_t.glaq027,  
+       glaq028  LIKE glaq_t.glaq028,  
+       glaq029  LIKE glaq_t.glaq029,  
+       glaq030  LIKE glaq_t.glaq030,  
+       glaq031  LIKE glaq_t.glaq031,  
+       glaq032  LIKE glaq_t.glaq032,  
+       glaq033  LIKE glaq_t.glaq033,  
+       glaq034  LIKE glaq_t.glaq034,  
+       glaq035  LIKE glaq_t.glaq035,  
+       glaq036  LIKE glaq_t.glaq036,  
+       glaq037  LIKE glaq_t.glaq037,  
+       glaq038  LIKE glaq_t.glaq038,   
+       d        LIKE glaq_t.glaq003,  
+       c        LIKE glaq_t.glaq004,  
+       qty      LIKE glaq_t.glaq008,  
+       sum      LIKE glaq_t.glaq010,
+       glaq039  LIKE glaq_t.glaq039,
+       glaq040  LIKE glaq_t.glaq040,
+       glaq041  LIKE glaq_t.glaq041,
+       glaq042  LIKE glaq_t.glaq042,
+       glaq043  LIKE glaq_t.glaq043,
+       glaq044  LIKE glaq_t.glaq044,
+       seq      LIKE glaq_t.glaqseq,
+       source   LIKE type_t.chr100,
+       glaqseq  LIKE glaq_t.glaqseq,
+       xrca039  LIKE xrca_t.xrca039
+       END RECORD
+DEFINE g_glaq4_d   DYNAMIC ARRAY OF type_g_glaq4_d
+
+#是否做自由科目核算项管理
+DEFINE g_glad017       LIKE glad_t.glad017
+DEFINE g_glad0171       LIKE glad_t.glad0171 
+DEFINE g_glad0172       LIKE glad_t.glad0172 
+DEFINE g_glad018       LIKE glad_t.glad018
+DEFINE g_glad0181       LIKE glad_t.glad0181
+DEFINE g_glad0182       LIKE glad_t.glad0182
+DEFINE g_glad019       LIKE glad_t.glad019
+DEFINE g_glad0191       LIKE glad_t.glad0191
+DEFINE g_glad0192       LIKE glad_t.glad0192
+DEFINE g_glad020       LIKE glad_t.glad020
+DEFINE g_glad0201       LIKE glad_t.glad0201
+DEFINE g_glad0202       LIKE glad_t.glad0202
+DEFINE g_glad021       LIKE glad_t.glad021
+DEFINE g_glad0211       LIKE glad_t.glad0211
+DEFINE g_glad0212       LIKE glad_t.glad0212
+DEFINE g_glad022       LIKE glad_t.glad022
+DEFINE g_glad0221       LIKE glad_t.glad0221
+DEFINE g_glad0222       LIKE glad_t.glad0222
+DEFINE g_glad023       LIKE glad_t.glad023
+DEFINE g_glad0231       LIKE glad_t.glad0231
+DEFINE g_glad0232       LIKE glad_t.glad0232
+DEFINE g_glad024       LIKE glad_t.glad024
+DEFINE g_glad0241       LIKE glad_t.glad0241
+DEFINE g_glad0242       LIKE glad_t.glad0242
+DEFINE g_glad025       LIKE glad_t.glad025
+DEFINE g_glad0251       LIKE glad_t.glad0251
+DEFINE g_glad0252       LIKE glad_t.glad0252
+DEFINE g_glad026       LIKE glad_t.glad026
+DEFINE g_glad0261       LIKE glad_t.glad0261
+DEFINE g_glad0262       LIKE glad_t.glad0262
+#开窗编号
+DEFINE g_glae009        LIKE glae_t.glae009
+DEFINE g_glae002        LIKE glae_t.glae002]]>
+  </point>
+  <point name="input.a.glaacomp" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrca_m.glaacomp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrca_m.glaacomp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrca_m.glaacomp_desc
+]]>
+  </point>
+  <point name="input.a.xrcadocno" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrca_m.xrcald) AND NOT cl_null(g_xrca_m.xrcadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrca_m.xrcald != g_xrcald_t  OR g_xrca_m.xrcadocno != g_xrcadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrca_t WHERE "||"xrcaent = '" ||g_enterprise|| "' AND "||"xrcald = '"||g_xrca_m.xrcald ||"' AND "|| "xrcadocno = '"||g_xrca_m.xrcadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.xrcald" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrca_m.xrcald) AND NOT cl_null(g_xrca_m.xrcadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrca_m.xrcald != g_xrcald_t  OR g_xrca_m.xrcadocno != g_xrcadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrca_t WHERE "||"xrcaent = '" ||g_enterprise|| "' AND "||"xrcald = '"||g_xrca_m.xrcald ||"' AND "|| "xrcadocno = '"||g_xrca_m.xrcadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrca_m.xrcald
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrca_m.xrcald_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrca_m.xrcald_desc
+]]>
+  </point>
+  <point name="main.define_sql" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_forupd_sql = "SELECT xrdald,'','','',xrda001,xrda004,xrdadocdt,xrdadocno,'' FROM xrda_t WHERE xrdaent= ? AND xrdald=? AND xrdadocno=? FOR UPDATE"]]>
+  </point>
+  <point name="show.head.reference" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrca_m.xrcald
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrca_m.xrcald_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrca_m.xrcald_desc
+]]>
+  </point>
+  <point name="function.axrp420_init" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp420_init()
+   CALL cl_set_combo_scc_part('xrda001','8307','41,43,50')
+   CALL cl_set_comp_visible("lbl_glapdocno,glapdocno,lbl_glapdocdt,glapdocdt,lbl_docno,start_no,lbl_line,end_no",FALSE)
+   CALL axrp420_default_search()
+ 
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_ui_dialog" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp420_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE l_cmd    STRING
+   DEFINE l_slip   LIKE ooba_t.ooba002
+   DEFINE l_date   LIKE glap_t.glapdocdt
+   
+   LET li_exit = FALSE
+   
+   WHILE li_exit = FALSE
+   
+      CALL axrp420_construct()
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0      
+         EXIT WHILE
+      END IF
+      LET g_change = 'N'
+      CALL axrp420_xrda_fill(g_wc)
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_xrda_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b1) #page1  
+    
+            BEFORE ROW
+               LET l_ac1 = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx1 = l_ac1
+               DISPLAY g_detail_idx1 TO h_index
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx1)
+               LET l_ac1 = DIALOG.getCurrentRow("s_detail1")
+               DISPLAY g_rec_b1 TO h_count
+               
+            ON ACTION axrt330
+               LET l_cmd = "axrt400 '",g_xrda_d[l_ac1].xrdald,"' '",g_xrda_d[l_ac1].xrdadocno,"'"
+               CALL cl_cmdrun(l_cmd)            
+
+           # ON ACTION page2
+           #    IF l_ac1 > 0 AND g_xrda_m.type = '1' THEN 
+           #       LET g_no_ask = TRUE
+           #       LET g_jump = l_ac1
+           #       CALL axrp420_fetch('/')
+           #    END IF 
+
+         END DISPLAY
+        
+         DISPLAY ARRAY g_glaq_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b2) #page2  
+    
+            BEFORE ROW
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx2 = l_ac2
+               DISPLAY g_detail_idx2 TO h_index
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+               DISPLAY g_rec_b2 TO h_count
+               CALL cl_navigator_setting( g_curs_index, g_row_count )
+               #IF l_ac1 > 0 AND g_xrda_m.type = '1' THEN 
+               IF l_ac1 > 0  THEN 
+                  LET g_no_ask = TRUE
+                  LET g_jump = l_ac1
+                  #CALL axrp420_fetch('/')
+                  CALL axrp420_fetch('F')
+               END IF 
+               
+            ON ACTION axrp330_s01
+               #CALL axrp330_s01(g_glaq_d[l_ac2].glaq001,g_glaq_d[l_ac2].glaq002)
+               CALL axrp420_glaq_fill() 
+               
+            ON ACTION axrp330_s02
+               IF l_ac2 > 0 THEN
+                  #IF NOT cl_null(g_glaq_d[l_ac2].docno) THEN 
+                  #   CALL axrp330_s02(g_glaq_d[l_ac2].docno)
+                  #END IF  
+                  CALL axrp330_s02(g_glaq_d[l_ac2].docno,g_glaq_d[l_ac2].glaq001,g_glaq_d[l_ac2].glaq002)                  
+               END IF               
+               
+            ON ACTION first
+               CALL axrp420_fetch('F')
+#               LET g_current_row = g_current_idx
+#               LET g_curr_diag = ui.DIALOG.getCurrent()
+#               CALL axrp420_idx_chk()
+               
+            ON ACTION previous
+               CALL axrp420_fetch('P')
+#               LET g_current_row = g_current_idx
+#               LET g_curr_diag = ui.DIALOG.getCurrent()
+#               CALL axrp420_idx_chk()
+                              
+            ON ACTION jump
+               CALL axrp420_fetch('/')
+#               LET g_current_row = g_current_idx
+#               LET g_curr_diag = ui.DIALOG.getCurrent()
+#               CALL axrp420_idx_chk()
+                              
+            ON ACTION next
+               CALL axrp420_fetch('N')
+#               LET g_current_row = g_current_idx
+#               LET g_curr_diag = ui.DIALOG.getCurrent()
+#               CALL axrp420_idx_chk()
+                              
+            ON ACTION last
+               CALL axrp420_fetch('L')
+
+         END DISPLAY
+
+         BEFORE DIALOG
+
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+            
+            #end add-point
+
+         ON ACTION query
+            #LET li_exit = FALSE
+            #EXIT DIALOG    
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL axrp420_ui_dialog()
+            END IF     
+
+         ON ACTION update
+ 
+            LET g_action_choice="update"
+            IF cl_auth_chk_act("update") THEN 
+               CALL axrp420_update_glaq001() 
+            END IF
+         
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+
+         ON ACTION close
+            LET li_exit = TRUE
+            EXIT DIALOG
+   
+         ON ACTION repro_paper 
+            LET g_action_choice="repro_paper"
+            IF cl_auth_chk_act("repro_paper") THEN
+                CALL axrp420_pro_paper()
+                CONTINUE DIALOG
+            END IF
+   
+         ON ACTION turn_summons   
+            LET g_action_choice="turn_summons"
+            IF cl_auth_chk_act("turn_summons") THEN
+                CALL axrp330_01(g_xrda_m.xrdald) RETURNING l_slip,l_date
+                IF cl_null(l_slip) AND cl_null(l_date) THEN 
+                   CONTINUE DIALOG
+                ELSE
+                   CALL axrp420_turn_summons(l_slip,l_date)
+                   CONTINUE DIALOG
+                END IF    
+            END IF
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+
+      END DIALOG
+   END WHILE
+   #DROP TABLE axrp420_gen_ar_tmp;
+   #DROP TABLE axrp420_gen_ar_tmp2;
+   DROP TABLE s_voucher_ar_tmp;
+   DROP TABLE s_voucher_ar_group;
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_xrda_fill" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp420_xrda_fill(p_wc)
+   DEFINE p_wc              STRING
+   DEFINE l_sql             STRING
+
+   CALL g_xrda_d.clear()
+   LET g_flag = 'Y'
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 "
+   END IF
+
+
+   LET g_glaa004 = ''
+   SELECT glaa004 INTO g_glaa004 FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaald = g_xrda_m.xrdald  
+    
+   LET l_sql= " SELECT xrdald,xrdasite,xrdadocno,xrdadocdt,xrda004,xrda005 FROM xrda_t ",
+              "  WHERE xrdaent = '",g_enterprise,"' AND xrdald = '",g_xrda_m.xrdald,"' ",
+              "    AND xrda014 IS NULL AND xrdastus = 'Y' AND ",g_wc,
+              "  ORDER BY xrdald,xrdadocdt "
+
+   PREPARE xrda_pre FROM l_sql
+   DECLARE xrda_cur CURSOR FOR xrda_pre
+
+   CALL g_xrda_d.clear()
+   LET g_cnt = 1
+   FOREACH xrda_cur INTO g_xrda_d[g_cnt].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      IF g_xrda_d[g_cnt].xrdadocdt < g_glaa013 THEN 
+         LET g_flag = 'N'
+      END IF
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err("Max_Row:"||g_max_rec USING "<<<<<","std-00002",0)
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   CALL g_xrda_d.deleteElement(g_cnt)
+   
+   #LET g_header_cnt = g_browser_cnt
+   LET g_rec_b1 = g_cnt - 1
+   #LET g_current_cnt = g_browser_cnt
+   LET g_cnt = 0
+
+   FREE xrda_pre
+   IF g_flag = 'N' AND g_xrda_m.type = '2' THEN
+      CALL cl_ask_pressanykey('axr-00061')
+   END IF
+   CALL axrp420_pro_paper()
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_construct" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp420_construct()
+   CLEAR FORM
+   INITIALIZE g_xrda_m.* TO NULL
+   CALL g_xrda_d.clear()
+   CALL g_glaq_d.clear()
+   INITIALIZE g_wc TO NULL
+   CALL cl_set_comp_visible("lbl_glapdocno,glapdocno,lbl_glapdocdt,glapdocdt,lbl_docno,start_no,lbl_line,end_no",FALSE)
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT BY NAME g_xrda_m.xrdald,g_xrda_m.glaacomp    
+        
+         BEFORE FIELD xrdald
+            CALL axrp420_xrdald_desc()
+         
+         AFTER FIELD xrdald
+            CALL axrp420_xrdald_desc()
+            IF NOT cl_null(g_xrda_m.xrdald) THEN 
+               IF NOT ap_chk_isExist(g_xrda_m.xrdald,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? ",'agl-00016',1) THEN 
+                  LET g_xrda_m.xrdald = ''
+                  NEXT FIELD CURRENT
+               END IF 
+               IF NOT ap_chk_isExist(g_xrda_m.xrdald,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? AND glaastus = 'Y' ",'agl-00051',1) THEN 
+                  LET g_xrda_m.xrdald = ''
+                  NEXT FIELD CURRENT
+               END IF 
+               IF NOT ap_chk_isExist(g_xrda_m.xrdald,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? AND (glaa014 = 'Y' OR glaa008 = 'Y') AND glaastus = 'Y' ",'axr-00021',1) THEN 
+                  LET g_xrda_m.xrdald = ''
+                  NEXT FIELD CURRENT
+               END IF 
+               IF NOT s_ld_chk_authorization(g_user,g_xrda_m.xrdald) THEN 
+                  CALL cl_err(g_xrda_m.xrdald,'axr-00022',1)
+                  LET g_xrda_m.xrdald = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            
+         ON ACTION controlp INFIELD xrdald
+          INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrda_m.xrdald      #給予default值
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            CALL  q_authorised_ld()                                  #呼叫開窗
+            LET g_xrda_m.xrdald = g_qryparam.return1       #將開窗取得的值回傳到變數
+            DISPLAY g_xrda_m.xrdald TO xrdald              #顯示到畫面上
+            CALL axrp420_xrdald_desc()
+            NEXT FIELD xrdald                              #返回原欄位  
+            
+         AFTER INPUT
+            SELECT glaa013 INTO g_glaa013  FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_xrda_m.xrdald 
+      END INPUT 
+
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON xrda001,xrda004,xrdadocdt,xrdadocno,xrdasite,xrda003
+
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+
+         ON ACTION controlp INFIELD xrdasite
+         INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_xrah002_4()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrdasite  #顯示到畫面上  
+            NEXT FIELD xrdasite                     #返回原欄位  
+            
+         ON ACTION controlp INFIELD xrda003
+         INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrda003  #顯示到畫面上  
+            NEXT FIELD xrda003                     #返回原欄位 
+
+         ON ACTION controlp INFIELD xrdadocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_xrdadocno()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrdadocno  #顯示到畫面上  
+            NEXT FIELD xrdadocno                     #返回原欄位  
+            
+         ON ACTION controlp INFIELD xrda004
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_7()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrda004  #顯示到畫面上
+            NEXT FIELD xrda004                     #返回原欄位  
+            
+            
+      END CONSTRUCT
+      
+      INPUT BY NAME g_xrda_m.type  
+ 
+         AFTER FIELD type
+           IF g_xrda_m.type NOT MATCHES "[123]" THEN 
+              NEXT FIELD type
+           END IF 
+         ON CHANGE type
+            IF g_xrda_m.type = '3' THEN
+               CALL cl_set_comp_entry("glapdocdt",TRUE)
+            ELSE
+               CALL cl_set_comp_entry("glapdocdt",FALSE)    
+            END IF   
+            
+         AFTER INPUT
+
+      END INPUT 
+      
+      BEFORE DIALOG
+         SELECT glaald INTO g_xrda_m.xrdald FROM ooef_t,ooag_t,glaa_t
+          WHERE ooef001 = ooag004 AND ooefent = ooagent
+            AND ooef017 = glaacomp AND ooefent = glaaent
+            AND ooagent = g_enterprise
+            AND ooag001 = g_user
+         CALL axrp420_xrdald_desc()          
+         LET g_xrda_m.type = 1
+         DISPLAY g_xrda_m.type TO type 
+         IF g_xrda_m.type = '3' THEN
+            CALL cl_set_comp_entry("glapdocdt",TRUE)
+         ELSE
+            CALL cl_set_comp_entry("glapdocdt",FALSE)    
+         END IF          
+            
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+
+
+      #查詢CONSTRUCT共用ACTION
+      &include "construct_action.4gl"
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+   #LET g_wc = g_wc CLIPPED,cl_get_extra_cond("", "")
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq_fill" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq_fill()
+   DEFINE l_sql             STRING
+   DEFINE l_glaa015         LIKE glaa_t.glaa015
+   DEFINE l_glaa016         LIKE glaa_t.glaa016
+   DEFINE l_glaa019         LIKE glaa_t.glaa019
+   DEFINE l_glaa020         LIKE glaa_t.glaa020
+   DEFINE l_str1            STRING
+   DEFINE l_str2            STRING
+   DEFINE l_str3            STRING
+   DEFINE l_str4            STRING
+   DEFINE l_msg1            STRING
+   DEFINE l_msg2            STRING
+   DEFINE l_msg3            STRING
+   DEFINE l_msg4            STRING
+
+   CALL g_glaq_d.clear()
+   
+   CALL cl_set_comp_visible('docno,docdt,glaq022',TRUE)
+   IF g_xrda_m.type = '1' THEN 
+      CALL cl_set_comp_visible('docno',TRUE)
+      CALL cl_set_comp_visible('docdt,glaq022',FALSE)       
+   END IF
+   IF g_xrda_m.type = '2' THEN 
+      CALL cl_set_comp_visible('docdt',TRUE)
+      CALL cl_set_comp_visible('docno,glaq022',FALSE)   
+   END IF
+   IF g_xrda_m.type = '3' THEN 
+      CALL cl_set_comp_visible('glaq022',TRUE)
+      CALL cl_set_comp_visible('docdt,docno',FALSE) 
+   END IF
+   
+   SELECT glaa015,glaa016,glaa019,glaa020
+     INTO l_glaa015,l_glaa016,l_glaa019,l_glaa020
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = g_xrda_m.xrdald
+      
+   LET l_str1 = cl_getmsg("axr-00090",g_lang)     #借方金額(
+   LET l_str2 = cl_getmsg("axr-00091",g_lang)     #貸方金額(
+   LET l_str3 = cl_getmsg("axr-00092",g_lang)     #)(本位幣二)
+   LET l_str4 = cl_getmsg("axr-00093",g_lang)     #)(本位幣三)
+   
+   LET l_msg1 = l_str1 CLIPPED,l_glaa016 CLIPPED,l_str3
+   LET l_msg2 = l_str2 CLIPPED,l_glaa016 CLIPPED,l_str3
+   LET l_msg3 = l_str1 CLIPPED,l_glaa020 CLIPPED,l_str4
+   LET l_msg4 = l_str2 CLIPPED,l_glaa020 CLIPPED,l_str4
+      
+   IF l_glaa015 = 'Y' THEN 
+      CALL cl_set_comp_visible('glaq040,glaq041',TRUE)
+      CALL cl_set_comp_att_text('glaq040',l_msg1)
+      CALL cl_set_comp_att_text('glaq041',l_msg2)
+   ELSE
+      CALL cl_set_comp_visible('glaq040,glaq041',FALSE)
+   END IF
+      
+   IF l_glaa019 = 'Y' THEN 
+      CALL cl_set_comp_visible('glaq043,glaq044',TRUE)
+      CALL cl_set_comp_att_text('glaq043',l_msg3)
+      CALL cl_set_comp_att_text('glaq044',l_msg4)
+   ELSE
+      CALL cl_set_comp_visible('glaq043,glaq044',FALSE)
+   END IF
+
+   IF g_xrda_m.type = '1' THEN 
+      #LET l_sql= " SELECT DISTINCT docno,docdt,'','',glaq001,glaq002,'',SUM(d),SUM(c),'' FROM axrp420_gen_ar_tmp ",
+      #           "  WHERE docno = '",g_docno,"'",
+      #           "  GROUP BY docno,docdt,glaq001,glaq002 ORDER BY docno,docdt,glaq001,glaq002 "
+      LET l_sql= " SELECT DISTINCT docno,docdt,'',glaqseq,glaq001,glaq002,'',d,c,glaq040,glaq041,glaq043,glaq044,'' FROM s_voucher_ar_group ",
+                 "  WHERE docno = '",g_docno,"'",
+                 "  ORDER BY glaqseq,glaq002 "
+   END IF
+   IF g_xrda_m.type = '2' THEN 
+      #LET l_sql= " SELECT DISTINCT '',docdt,'','',glaq001,glaq002,'',SUM(d),SUM(c),'' FROM axrp420_gen_ar_tmp ",
+      #           "  WHERE docdt = '",g_docdt,"'",
+      #           "  GROUP BY docdt,glaq001,glaq002 ORDER BY docdt,glaq001,glaq002 "
+      LET l_sql= " SELECT DISTINCT '',docdt,'',glaqseq,glaq001,glaq002,'',d,c,glaq040,glaq041,glaq043,glaq044,'' FROM s_voucher_ar_group ",
+                 "  WHERE docdt = '",g_docdt,"'",
+                 "  ORDER BY glaqseq,glaq002 "                 
+   END IF
+   IF g_xrda_m.type = '3' THEN 
+      #LET l_sql= " SELECT DISTINCT '','',glaq022,'',glaq001,glaq002,'',SUM(d),SUM(c),'' FROM axrp420_gen_ar_tmp ",
+      #           "  WHERE glaq022 = '",g_glaq022,"'",
+      #           "  GROUP BY glaq022,glaq001,glaq002 ORDER BY glaq022,glaq001,glaq002 "
+      LET l_sql= " SELECT DISTINCT '','',glaq022,glaqseq,glaq001,glaq002,'',d,c,glaq040,glaq041,glaq043,glaq044,'' FROM s_voucher_ar_group ",
+                 "  WHERE glaq022 = '",g_glaq022,"'",
+                 "  ORDER BY glaqseq,glaq002 "
+   END IF   
+
+   
+   PREPARE glaq_pre FROM l_sql
+   DECLARE glaq_cur CURSOR FOR glaq_pre
+
+   LET g_cnt = 1
+   FOREACH glaq_cur INTO g_glaq_d[g_cnt].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      LET g_glaq_d_t[g_cnt].glaq001 = g_glaq_d[g_cnt].glaq001
+      LET g_glaq_d[g_cnt].glaqseq = g_cnt
+      LET g_glaq_d[g_cnt].lc_subject =  g_glaq_d[g_cnt].glaq002,'\n',axrp420_glaq002_desc(g_glaq_d[g_cnt].glaq002)
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err("Max_Row:"||g_max_rec USING "<<<<<","std-00002",0)
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   CALL g_glaq_d.deleteElement(g_cnt)
+   
+   LET g_rec_b2 = g_cnt - 1
+   LET g_cnt = 0
+   
+   DISPLAY g_rec_b2 TO h_count 
+   FREE glaq_pre
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_show" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp420_show()
+   LET g_xrda_m_t.* = g_xrda_m.*      #保存單頭舊值
+   CALL cl_show_fld_cont()
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrda_m.xrdald
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrda_m.xrdald_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrda_m.xrdald_desc
+
+
+   DISPLAY BY NAME g_xrda_m.xrdald,g_xrda_m.xrdald_desc,g_xrda_m.glaacomp,g_xrda_m.glaacomp_desc,g_xrda_m.type
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_xrdald_desc" order="7" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: axrp420_xrdald_desc()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_xrdald_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrda_m.xrdald
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrda_m.xrdald_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xrda_m.xrdald_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrda_m.xrdald
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaacomp FROM glaa_t WHERE glaaent='"||g_enterprise||"' AND glaald=? ","") RETURNING g_rtn_fields
+   LET g_xrda_m.glaacomp = g_rtn_fields[1]
+   DISPLAY BY NAME g_xrda_m.glaacomp
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrda_m.glaacomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrda_m.glaacomp_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xrda_m.glaacomp_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrda_m.glaacomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooef004 FROM ooef_t WHERE ooefent='"||g_enterprise||"' AND ooef001=? ","") RETURNING g_rtn_fields
+   LET g_ooef004 = g_rtn_fields[1]
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_default_search" order="8" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp420_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   
+   #end add-point
+
+   #add-point:default_search段開始前
+   
+   #end add-point
+
+   #LET g_pagestart = 1
+   #IF cl_null(g_order) THEN
+   #   LET g_order = "ASC"
+   #END IF
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " xrdald = '", g_argv[1], "' AND "
+   END IF
+
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " xrdadocno = '", g_argv[02], "' AND "
+   END IF
+
+
+
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+   ELSE
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+
+   #add-point:default_search段結束前
+   
+   #end add-point
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_create_tmp" order="9" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_create_tmp()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_create_tmp()
+   DEFINE r_success       LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = FALSE
+   
+   #检查事务中
+   IF NOT s_transaction_chk('N',1) THEN
+      RETURN r_success
+   END IF 
+   
+   DROP TABLE axrp420_gen_ar_tmp;
+   CREATE TEMP TABLE axrp420_gen_ar_tmp(
+   docno    LIKE glaq_t.glaqdocno,
+   docdt    LIKE glap_t.glapdocdt, 
+   sw       LIKE type_t.chr1,   
+   glaqent  LIKE glaq_t.glaqent,
+   glaqcomp LIKE glaq_t.glaqcomp,
+   glaqld   LIKE glaq_t.glaqld,
+   glaq001  LIKE glaq_t.glaq001,
+   glaq002  LIKE glaq_t.glaq002,
+   glaq005  LIKE glaq_t.glaq005,
+   glaq006  LIKE glaq_t.glaq006,
+   glaq007  LIKE glaq_t.glaq007,
+   glaq009  LIKE glaq_t.glaq009,
+   glaq011  LIKE glaq_t.glaq011,
+   glaq012  LIKE glaq_t.glaq012,
+   glaq013  LIKE glaq_t.glaq013,
+   glaq014  LIKE glaq_t.glaq014,
+   glaq015  LIKE glaq_t.glaq015,
+   glaq016  LIKE glaq_t.glaq016,   
+   glaq017  LIKE glaq_t.glaq017,
+   glaq018  LIKE glaq_t.glaq018,
+   glaq019  LIKE glaq_t.glaq019,
+   glaq020  LIKE glaq_t.glaq020,
+   glaq021  LIKE glaq_t.glaq021,
+   glaq022  LIKE glaq_t.glaq022,
+   glaq023  LIKE glaq_t.glaq023,
+   glaq024  LIKE glaq_t.glaq024,
+   glaq025  LIKE glaq_t.glaq025,
+   glaq026  LIKE glaq_t.glaq026,
+   glaq027  LIKE glaq_t.glaq027,
+   glaq028  LIKE glaq_t.glaq028,
+   glaq029  LIKE glaq_t.glaq029,
+   glaq030  LIKE glaq_t.glaq030,
+   glaq031  LIKE glaq_t.glaq031,
+   glaq032  LIKE glaq_t.glaq032,
+   glaq033  LIKE glaq_t.glaq033,
+   glaq034  LIKE glaq_t.glaq034,
+   glaq035  LIKE glaq_t.glaq035,
+   glaq036  LIKE glaq_t.glaq036,
+   glaq037  LIKE glaq_t.glaq037,
+   glaq038  LIKE glaq_t.glaq038,
+   d        LIKE glaq_t.glaq003,
+   c        LIKE glaq_t.glaq004,
+   qty      LIKE glaq_t.glaq008,
+   sum      LIKE glaq_t.glaq010,
+   glaq039  LIKE glaq_t.glaq039,
+   glaq040  LIKE glaq_t.glaq040,
+   glaq041  LIKE glaq_t.glaq041,
+   glaq042  LIKE glaq_t.glaq042,
+   glaq043  LIKE glaq_t.glaq043,
+   glaq044  LIKE glaq_t.glaq044,
+   seq      LIKE glaq_t.glaqseq,
+   source   LIKE type_t.chr100,
+   glaqseq  LIKE glaq_t.glaqseq,
+   xrca039  LIKE xrca_t.xrca039  
+   );
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('create',SQLCA.sqlcode,1)
+      RETURN r_success
+   END IF
+   
+   
+   DROP TABLE axrp420_gen_ar_tmp2;
+   CREATE TEMP TABLE axrp420_gen_ar_tmp2(
+   docno    LIKE glaq_t.glaqdocno,
+   docdt    LIKE glap_t.glapdocdt, 
+   sw       LIKE type_t.chr1,   
+   glaqent  LIKE glaq_t.glaqent,
+   glaqcomp LIKE glaq_t.glaqcomp,
+   glaqld   LIKE glaq_t.glaqld,
+   glaq001  LIKE glaq_t.glaq001,
+   glaq002  LIKE glaq_t.glaq002,
+   glaq005  LIKE glaq_t.glaq005,
+   glaq006  LIKE glaq_t.glaq006,
+   glaq007  LIKE glaq_t.glaq007,
+   glaq009  LIKE glaq_t.glaq009,
+   glaq011  LIKE glaq_t.glaq011,
+   glaq012  LIKE glaq_t.glaq012,
+   glaq013  LIKE glaq_t.glaq013,
+   glaq014  LIKE glaq_t.glaq014,
+   glaq015  LIKE glaq_t.glaq015,
+   glaq016  LIKE glaq_t.glaq016,   
+   glaq017  LIKE glaq_t.glaq017,
+   glaq018  LIKE glaq_t.glaq018,
+   glaq019  LIKE glaq_t.glaq019,
+   glaq020  LIKE glaq_t.glaq020,
+   glaq021  LIKE glaq_t.glaq021,
+   glaq022  LIKE glaq_t.glaq022,
+   glaq023  LIKE glaq_t.glaq023,
+   glaq024  LIKE glaq_t.glaq024,
+   glaq025  LIKE glaq_t.glaq025,
+   glaq026  LIKE glaq_t.glaq026,
+   glaq027  LIKE glaq_t.glaq027,
+   glaq028  LIKE glaq_t.glaq028,
+   glaq029  LIKE glaq_t.glaq029,
+   glaq030  LIKE glaq_t.glaq030,
+   glaq031  LIKE glaq_t.glaq031,
+   glaq032  LIKE glaq_t.glaq032,
+   glaq033  LIKE glaq_t.glaq033,
+   glaq034  LIKE glaq_t.glaq034,
+   glaq035  LIKE glaq_t.glaq035,
+   glaq036  LIKE glaq_t.glaq036,
+   glaq037  LIKE glaq_t.glaq037,
+   glaq038  LIKE glaq_t.glaq038,
+   d        LIKE glaq_t.glaq003,
+   c        LIKE glaq_t.glaq004,
+   qty      LIKE glaq_t.glaq008,
+   sum      LIKE glaq_t.glaq010,
+   glaq039  LIKE glaq_t.glaq039,
+   glaq040  LIKE glaq_t.glaq040,
+   glaq041  LIKE glaq_t.glaq041,
+   glaq042  LIKE glaq_t.glaq042,
+   glaq043  LIKE glaq_t.glaq043,
+   glaq044  LIKE glaq_t.glaq044,
+   seq      LIKE glaq_t.glaqseq,
+   source   LIKE type_t.chr100,
+   glaqseq  LIKE glaq_t.glaqseq,
+   xrca039  LIKE xrca_t.xrca039  
+   );
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('create',SQLCA.sqlcode,1)
+      RETURN r_success
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_turn_summons" order="10" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_turn_summons(p_slip,p_date)
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_turn_summons(p_slip,p_date)
+DEFINE l_cnt   LIKE type_t.num5
+DEFINE l_sql   STRING
+DEFINE p_date  LIKE glap_t.glapdocdt
+DEFINE p_slip  LIKE ooba_t.ooba002
+
+   IF g_flag = 'N' AND g_xrda_m.type = '2' THEN
+      CALL cl_ask_pressanykey('axr-00061')
+      RETURN
+   END IF
+   
+   LET l_cnt = 0
+
+   LET l_sql = "SELECT COUNT(*) FROM s_voucher_ar_tmp ",
+               " WHERE glaq002 IS NULL "
+   PREPARE chk_glaq002 FROM l_sql
+   EXECUTE chk_glaq002 INTO l_cnt   
+   IF l_cnt > 0 THEN  
+      CALL cl_err('','axr-00068',1)
+      RETURN
+   END IF
+   
+   
+   CALL cl_set_comp_visible("start_no,lbl_line,end_no",TRUE)
+   
+   CALL axrp420_turn_gen(p_slip,p_date)   
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_pro_paper" order="11" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_pro_paper()
+DEFINE p_type LIKE type_t.chr2
+DEFINE p_ld LIKE glaa_t.glaald
+DEFINE p_date LIKE glap_t.glapdocdt
+DEFINE p_slip LIKE ooba_t.ooba002
+DEFINE p_sum_type LIKE type_t.chr1
+DEFINE p_wc LIKE type_t.chr1000
+DEFINE r_success LIKE type_t.num5
+DEFINE r_start_no LIKE glap_t.glapdocno
+DEFINE r_end_no LIKE glap_t.glapdocno
+DEFINE l_cmd STRING
+DEFINE l_ac   LIKE type_t.num5
+DEFINE l_n    LIKE type_t.num5
+ 
+    LET g_intrans= 'N'
+    CALL axrp420_create_tmp() RETURNING r_success
+
+    CALL s_transaction_begin()
+    #传入参数赋值
+    LET p_type = '2'
+    LET p_ld = g_xrda_m.xrdald
+    LET p_date = ''
+    LET p_slip = ' '
+    LET p_sum_type = g_xrda_m.type
+    LET p_wc = g_wc
+
+    
+    CALL s_voucher_gen_ar(p_type,p_ld,p_date,p_slip,p_sum_type,p_wc,'Y') RETURNING r_success
+
+    
+    #测试元件
+    #CALL axrp420_gen(p_type,p_ld,p_date,p_slip,p_sum_type,p_wc) RETURNING r_success,r_start_no,r_end_no
+
+    IF r_success THEN
+       CALL s_transaction_end('Y','Y')
+       CALL axrp420_def_cursor()
+       CALL axrp420_fetch('F')
+       #CALL axrp420_glaq_fill()
+    ELSE
+       CALL s_transaction_end('N','Y')    
+    END IF
+        
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_turn_gen" order="12" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_turn_gen(p_slip,p_date)
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_turn_gen(p_slip,p_date)
+DEFINE p_type LIKE type_t.chr2
+DEFINE p_ld LIKE glaa_t.glaald
+DEFINE p_date LIKE glap_t.glapdocdt
+DEFINE p_slip LIKE ooba_t.ooba002
+DEFINE p_sum_type LIKE type_t.chr1
+DEFINE p_wc LIKE type_t.chr1000
+DEFINE r_success LIKE type_t.num5
+DEFINE r_start_no LIKE glap_t.glapdocno
+DEFINE r_end_no LIKE glap_t.glapdocno
+DEFINE l_cmd STRING
+
+    CALL s_transaction_begin()
+
+    #5.插入凭证单头
+    CALL s_voucher_gen_ar_2_ins_glap(p_slip,p_date,g_xrda_m.xrdald)
+         RETURNING r_success,r_start_no,r_end_no
+    IF NOT r_success THEN
+       RETURN       
+    END IF  
+
+    IF r_success AND g_update_axr = 'Y' THEN
+       LET g_glap_m.start_no = r_start_no
+       LET g_glap_m.end_no = r_end_no
+       DISPLAY BY NAME g_glap_m.start_no,g_glap_m.end_no
+       CALL s_transaction_end('Y','Y')
+       CALL cl_ask_end1()
+       LET g_intrans= 'N'
+    ELSE
+       CALL s_transaction_end('N','Y')
+       ROLLBACK WORK
+       LET g_intrans= 'N'
+    END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq002_desc" order="13" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...:  科目欄位顯示
+# Memo...........:
+# Usage..........: CALL axrp420_glaq002_desc(p_glaq002)
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq002_desc(p_glaq002)
+DEFINE p_glaq002           LIKE glaq_t.glaq002
+DEFINE l_glaq002_desc      LIKE glacl_t.glacl004
+DEFINE r_glaq002           STRING
+DEFINE l_oogf002_desc      LIKE oofa_t.oofa011
+DEFINE l_glaq      RECORD 
+         glaq017   LIKE glaq_t.glaq017,
+         glaq018   LIKE glaq_t.glaq018,
+         glaq019   LIKE glaq_t.glaq019,
+         glaq020   LIKE glaq_t.glaq020,
+         glaq021   LIKE glaq_t.glaq021,
+         glaq022   LIKE glaq_t.glaq022,
+         glaq023   LIKE glaq_t.glaq023,
+         glaq024   LIKE glaq_t.glaq024,
+         glaq025   LIKE glaq_t.glaq025,
+         glaq026   LIKE glaq_t.glaq026,
+         glaq027   LIKE glaq_t.glaq027,
+         glaq028   LIKE glaq_t.glaq028        
+                   END RECORD
+   
+   SELECT glaq017,glaq018,glaq019,glaq020,
+          glaq021,glaq022,glaq023,glaq024,
+          glaq025,glaq026,glaq027,glaq028
+     INTO l_glaq.*     
+     #FROM axrp420_gen_ar_tmp
+     FROM s_voucher_ar_group
+    WHERE glaqent = g_enterprise
+      AND glaqld = g_xrda_m.xrdald
+      AND glaq002 = p_glaq002      
+   
+   #抓取科目名称
+   LET l_glaq002_desc = ''
+   SELECT glacl004 INTO l_glaq002_desc FROM glacl_t,glaa_t
+    WHERE glaaent = glaclent 
+      AND glaa004 = glacl001
+      AND glaclent = g_enterprise
+      AND glaald = g_xrda_m.xrdald
+      AND glacl002 = p_glaq002
+      AND glacl003 = g_dlang  
+
+
+   #组合名称以及核算项
+   LET r_glaq002 = ''
+   #部门
+   IF NOT cl_null(l_glaq.glaq018) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq018
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET r_glaq002 = g_rtn_fields[1]     
+   END IF 
+   #成本利润中心
+   IF NOT cl_null(l_glaq.glaq019) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq019
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   
+   #区域
+   IF NOT cl_null(l_glaq.glaq020) THEN 
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = '287'
+      LET g_ref_fields[2] = l_glaq.glaq020
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields  
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   #交易客商
+   IF NOT cl_null(l_glaq.glaq021) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq021
+      CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1] 
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1] 
+      END IF      
+   END IF 
+   #帐款客商
+   IF NOT cl_null(l_glaq.glaq022) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq022
+      CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   #客群
+   IF NOT cl_null(l_glaq.glaq023) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = '281'
+      LET g_ref_fields[2] = l_glaq.glaq023
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   
+   #产品分类
+   IF NOT cl_null(l_glaq.glaq024) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq024
+      CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   #人员
+   IF NOT cl_null(l_glaq.glaq025) THEN
+      LET  l_oogf002_desc = ''
+      SELECT oofa011 INTO l_oogf002_desc FROM oofa_t
+       WHERE oofaent = g_enterprise
+         AND oofa001 IN (SELECT ooag002 FROM ooag_t
+                          WHERE ooagent = g_enterprise
+                            AND ooag001 = l_glaq.glaq025)
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',l_oogf002_desc
+      ELSE
+         LET r_glaq002 = l_oogf002_desc
+      END IF      
+   END IF 
+   #预算编号
+   IF NOT cl_null(l_glaq.glaq026) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq026
+      CALL ap_ref_array2(g_ref_fields,"SELECT bgaal003 FROM bgaal_t WHERE bgaalent='"||g_enterprise||"' AND bgaal001=? AND bgaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   #专案编号
+   IF NOT cl_null(l_glaq.glaq027) THEN
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',l_glaq.glaq027
+      ELSE
+         LET r_glaq002 = l_glaq.glaq027
+      END IF      
+   END IF 
+   #WBS
+   IF NOT cl_null(l_glaq.glaq028) THEN
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',l_glaq.glaq028
+      ELSE
+         LET r_glaq002 = l_glaq.glaq028
+      END IF      
+   END IF 
+   #组合科目名称以及核算项
+   LET r_glaq002 = l_glaq002_desc,'\n',
+                   r_glaq002
+                   
+   RETURN r_glaq002     
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_def_cursor" order="14" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_def_cursor()
+DEFINE l_sql STRING 
+DEFINE l_sql2 STRING 
+
+   IF g_xrda_m.type = '1' THEN 
+      IF g_detail_idx1 = 0 THEN 
+         LET l_sql = " SELECT DISTINCT docno FROM s_voucher_ar_group  ORDER BY docno "
+         LET l_sql2 = " SELECT COUNT(DISTINCT docno) FROM s_voucher_ar_group ORDER BY docno "
+      ELSE
+         LET l_sql = " SELECT DISTINCT docno FROM s_voucher_ar_group WHERE docno = '",g_xrda_d[g_detail_idx1].xrdadocno,"' ORDER BY docno "
+         LET l_sql2 = " SELECT COUNT(DISTINCT docno) FROM s_voucher_ar_group  WHERE docno = '",g_xrda_d[g_detail_idx1].xrdadocno,"' ORDER BY docno "
+      END IF
+   END IF
+   IF g_xrda_m.type = '2' THEN 
+      IF g_detail_idx1 = 0 THEN 
+         LET l_sql = " SELECT DISTINCT docdt FROM s_voucher_ar_group ORDER BY docdt "
+         LET l_sql2 = " SELECT COUNT(DISTINCT docdt) FROM s_voucher_ar_group ORDER BY docdt "
+      ELSE
+         LET l_sql = " SELECT DISTINCT docdt FROM s_voucher_ar_group WHERE docdt = '",g_xrda_d[g_detail_idx1].xrdadocdt,"' ORDER BY docdt "
+         LET l_sql2 = " SELECT COUNT(DISTINCT docdt) FROM s_voucher_ar_group WHERE docdt = '",g_xrda_d[g_detail_idx1].xrdadocdt,"' ORDER BY docdt "
+      END IF
+   END IF
+   IF g_xrda_m.type = '3' THEN 
+      IF g_detail_idx1 = 0 THEN 
+         LET l_sql = " SELECT DISTINCT glaq022 FROM s_voucher_ar_group ORDER BY glaq022"
+         LET l_sql2 = " SELECT COUNT(DISTINCT glaq022) FROM s_voucher_ar_group ORDER BY glaq022 "
+      ELSE
+         LET l_sql = " SELECT DISTINCT glaq022 FROM s_voucher_ar_group WHERE glaq022 = '",g_xrda_d[g_detail_idx1].xrda004,"' ORDER BY glaq022"
+         LET l_sql2 = " SELECT COUNT(DISTINCT glaq022) FROM s_voucher_ar_group WHERE glaq022 = '",g_xrda_d[g_detail_idx1].xrda004,"' ORDER BY glaq022 "
+      END IF
+   END IF   
+   PREPARE axrp420_prepare FROM l_sql
+   DECLARE axrp420_cs
+       SCROLL CURSOR WITH HOLD FOR axrp420_prepare 
+
+   
+
+   PREPARE axrp420_precount FROM l_sql2
+   DECLARE axrp420_count CURSOR FOR axrp420_precount
+
+   OPEN axrp420_cs
+   OPEN axrp420_count
+   FETCH axrp420_count INTO g_row_count 
+   DISPLAY g_row_count TO FORMONLY.cnt   
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp330_s02" order="15" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 修改核算項
+# Memo...........:
+# Usage..........: CALL axrp330_s02(p_docno,p_glaq001,p_glaq002)
+# Date & Author..: 2014/02/13 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp330_s02(p_docno,p_glaq001,p_glaq002)
+   DEFINE p_docno       LIKE xrca_t.xrcadocno
+   DEFINE p_glaq001     LIKE glaq_t.glaq001
+   DEFINE p_glaq002     LIKE glaq_t.glaq002
+   DEFINE l_success     LIKE type_t.num5
+
+   CALL axrp420_glaq2_fill(p_docno,p_glaq001,p_glaq002)
+   #CALL cl_set_combo_scc('sw','8320')
+   OPEN WINDOW w_axrp330_s02 WITH FORM cl_ap_formpath("axr","axrp330_s02") 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+         DISPLAY ARRAY g_glaq2_d TO s_detail4.* ATTRIBUTES(COUNT=g_rec_b4)   
+    
+            BEFORE ROW
+               LET l_ac4 = DIALOG.getCurrentRow("s_detail4")
+               LET g_detail_idx4 = l_ac4
+               DISPLAY g_detail_idx4 TO idx
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx4)
+               LET l_ac4 = DIALOG.getCurrentRow("s_detail4")
+               DISPLAY g_rec_b4 TO cnt
+               CALL cl_set_comp_visible('grid1',FALSE)
+               CALL cl_set_act_visible("accept,cancel", FALSE)
+               
+            ON ACTION modify_detail
+               CALL axrp330_s02_modify()
+               CONTINUE DIALOG               
+               
+         END DISPLAY
+
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            EXIT DIALOG
+            
+         ON ACTION exit
+            LET INT_FLAG = FALSE
+            EXIT DIALOG
+      END DIALOG
+
+  #重新產生分錄
+
+  DELETE FROM s_voucher_ar_group
+  CALL s_voucher_gen_ar_2_ins_group_tmp(g_xrda_m.xrdald,g_xrda_m.type) RETURNING l_success
+  IF l_success THEN
+     CALL axrp420_def_cursor()
+     CALL axrp420_fetch('F')
+  END IF
+  
+  #畫面關閉
+  CLOSE WINDOW w_axrp330_s02
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq2_fill" order="16" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 單身填充
+# Memo...........:
+# Usage..........: CALL axrp420_glaq2_fill(p_docno,p_glaq001,p_glaq002)
+# Date & Author..: 2013/02/13 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq2_fill(p_docno,p_glaq001,p_glaq002)
+   DEFINE p_docno       LIKE xrca_t.xrcadocno
+   DEFINE l_sql  STRING
+   DEFINE p_glaq001    LIKE glaq_t.glaq001
+   DEFINE p_glaq002    LIKE glaq_t.glaq002
+   DEFINE l_n  LIKE type_t.num5
+
+   CALL g_glaq2_d.clear()
+
+
+   LET l_sql= " SELECT DISTINCT docno,seq,glaq002,'',glaq017,'',glaq018,'',glaq019,'',", 
+              "  glaq020,'',glaq021,'',glaq022,'',glaq023,'',glaq024,'',",
+              "  glaq025,'',glaq026,'',glaq027,glaq028,glaq029,'',glaq030,'',",
+              "  glaq031,'',glaq032,'',glaq033,'',glaq034,'',glaq035,'',",
+              "  glaq036,'',glaq037,'',glaq038,'',",
+              "  source,sw,'' ",
+              "  FROM s_voucher_ar_tmp "
+   IF NOT cl_null(p_glaq002) THEN 
+      LET l_sql= l_sql CLIPPED,"  WHERE glaq002 = '",p_glaq002,"'"
+   ELSE
+      LET l_sql= l_sql CLIPPED,"  WHERE glaq002 IS NULL"
+   END IF
+   
+   IF NOT cl_null(p_glaq001) THEN 
+      LET l_sql= l_sql CLIPPED,"  AND glaq001 = '",p_glaq001,"'"
+   ELSE
+      LET l_sql= l_sql CLIPPED,"  AND glaq001 IS NULL"
+   END IF
+   
+   LET l_sql = l_sql CLIPPED,"  ORDER BY docno,seq "
+   
+   PREPARE glaq2_pre FROM l_sql
+   DECLARE glaq2_cur CURSOR FOR glaq2_pre
+   
+
+   LET g_cnt = 1
+   FOREACH glaq2_cur INTO g_glaq2_d[g_cnt].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+     
+      LET g_glaq2_d[g_cnt].glaq001 = p_glaq001
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err("Max_Row:"||g_max_rec USING "<<<<<","std-00002",0)
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   CALL g_glaq2_d.deleteElement(g_cnt)
+   
+   LET g_rec_b4 = g_cnt - 1
+   LET g_cnt = 0
+   CALL axrp420_s02_show()
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_fetch" order="17" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_fetch(p_flag)
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_fetch(p_flag)
+DEFINE p_flag          LIKE type_t.chr1
+DEFINE ls_msg     STRING
+
+   IF g_detail_idx1 <> 0 THEN 
+      CALL axrp420_def_cursor()
+   END IF 
+
+   MESSAGE ""
+   IF g_xrda_m.type = '1' THEN
+      CASE p_flag
+         WHEN 'N' FETCH NEXT     axrp420_cs INTO g_docno
+         WHEN 'P' FETCH PREVIOUS axrp420_cs INTO g_docno
+         WHEN 'F' FETCH FIRST    axrp420_cs INTO g_docno
+         WHEN 'L' FETCH LAST     axrp420_cs INTO g_docno
+         WHEN '/'
+            IF (NOT g_no_ask) THEN
+               CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+               LET INT_FLAG = 0
+               PROMPT ls_msg CLIPPED,':' FOR g_jump
+                  #交談指令共用ACTION
+                  &include "common_action.4gl" 
+               END PROMPT
+    
+               CALL cl_set_act_visible("accept,cancel", FALSE)    
+               IF INT_FLAG THEN
+                   LET INT_FLAG = 0
+                   EXIT CASE  
+               END IF 
+            END IF
+            FETCH ABSOLUTE g_jump axrp420_cs INTO g_docno
+            LET g_no_ask = FALSE
+      END CASE
+   END IF
+
+   IF g_xrda_m.type = '2' THEN
+      CASE p_flag
+         WHEN 'N' FETCH NEXT     axrp420_cs INTO g_docdt
+         WHEN 'P' FETCH PREVIOUS axrp420_cs INTO g_docdt
+         WHEN 'F' FETCH FIRST    axrp420_cs INTO g_docdt
+         WHEN 'L' FETCH LAST     axrp420_cs INTO g_docdt
+         WHEN '/'
+            IF (NOT g_no_ask) THEN
+               CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+               LET INT_FLAG = 0
+               PROMPT ls_msg CLIPPED,':' FOR g_jump
+                  #交談指令共用ACTION
+                  &include "common_action.4gl" 
+               END PROMPT
+    
+               CALL cl_set_act_visible("accept,cancel", FALSE)    
+               IF INT_FLAG THEN
+                   LET INT_FLAG = 0
+                   EXIT CASE  
+               END IF 
+            END IF
+            FETCH ABSOLUTE g_jump axrp420_cs INTO g_docdt
+            LET g_no_ask = FALSE
+      END CASE
+   END IF
+   
+   IF g_xrda_m.type = '3' THEN
+      CASE p_flag
+         WHEN 'N' FETCH NEXT     axrp420_cs INTO g_glaq022
+         WHEN 'P' FETCH PREVIOUS axrp420_cs INTO g_glaq022
+         WHEN 'F' FETCH FIRST    axrp420_cs INTO g_glaq022
+         WHEN 'L' FETCH LAST     axrp420_cs INTO g_glaq022
+         WHEN '/'
+            IF (NOT g_no_ask) THEN
+               CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+               LET INT_FLAG = 0
+               PROMPT ls_msg CLIPPED,':' FOR g_jump
+                  #交談指令共用ACTION
+                  &include "common_action.4gl" 
+               END PROMPT
+    
+               CALL cl_set_act_visible("accept,cancel", FALSE)    
+               IF INT_FLAG THEN
+                   LET INT_FLAG = 0
+                   EXIT CASE  
+               END IF 
+            END IF
+            FETCH ABSOLUTE g_jump axrp420_cs INTO g_glaq022
+            LET g_no_ask = FALSE
+      END CASE      
+   END IF
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('',SQLCA.sqlcode,0)
+      INITIALIZE g_docno TO NULL
+      INITIALIZE g_docdt TO NULL
+      INITIALIZE g_glaq022 TO NULL
+      RETURN
+   ELSE
+      CASE p_flag
+         WHEN 'F' LET g_curs_index = 1
+         WHEN 'P' LET g_curs_index = g_curs_index - 1
+         WHEN 'N' LET g_curs_index = g_curs_index + 1
+         WHEN 'L' LET g_curs_index = g_row_count
+         WHEN '/' LET g_curs_index = g_jump
+      END CASE 
+      CALL cl_navigator_setting( g_curs_index, g_row_count )
+      DISPLAY g_curs_index TO FORMONLY.cn
+   END IF
+
+   CALL axrp420_glaq_fill()  
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp330_s02_modify" order="18" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 修改臨時表數據
+# Memo...........:
+# Usage..........: CALL axrp330_s02_modify()
+# Date & Author..: 2014/02/13 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp330_s02_modify()
+   DEFINE p_xrdadocno  LIKE xrda_t.xrdadocno
+   DEFINE l_seccess    LIKE type_t.num5
+   DEFINE l_errno      LIKE type_t.chr10
+
+    CALL cl_set_comp_visible('grid1',TRUE)
+    CALL cl_set_act_visible("accept,cancel", TRUE)
+    INPUT ARRAY g_glaq2_d FROM s_detail4.*
+        ATTRIBUTE(COUNT = g_rec_b4,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                INSERT ROW = FALSE, 
+                DELETE ROW = FALSE,
+                APPEND ROW = FALSE)       
+       
+       BEFORE INPUT 
+         LET g_rec_b4 = g_glaq2_d.getLength()
+         DISPLAY g_rec_b4 TO FORMONLY.cnt
+       
+       BEFORE ROW
+          LET l_ac4 = ARR_CURR()
+          LET g_detail_idx4 = l_ac4
+          DISPLAY l_ac4 TO FORMONLY.idx
+          LET g_glaq2_d_t.* = g_glaq2_d[l_ac4].*
+          SELECT glad017,glad0171,glad0172,glad018,glad0181,glad0182,
+                 glad019,glad0191,glad0192,glad020,glad0201,glad0202,
+                 glad021,glad0211,glad0212,glad022,glad0221,glad0222,
+                 glad023,glad0231,glad0232,glad024,glad0221,glad0242,
+                 glad025,glad0251,glad0252,glad026,glad0261,glad0262
+           INTO  g_glad017,g_glad0171,g_glad0172,g_glad018,g_glad0181,g_glad0182,
+                 g_glad019,g_glad0191,g_glad0192,g_glad020,g_glad0201,g_glad0202,
+                 g_glad021,g_glad0211,g_glad0212,g_glad022,g_glad0221,g_glad0222,
+                 g_glad023,g_glad0231,g_glad0232,g_glad024,g_glad0241,g_glad0242,
+                 g_glad025,g_glad0251,g_glad0252,g_glad026,g_glad0261,g_glad0262
+           FROM  glad_t
+           WHERE gladent = g_enterprise
+             AND gladld = g_xrda_m.xrdald
+             AND glad001 = g_glaq2_d[l_ac4].glaq002
+       
+       BEFORE FIELD glaq002
+          CALL axrp420_glaq002_desc1()
+       AFTER FIELD glaq002
+          CALL axrp420_glaq002_desc1()
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq002) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL    
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaa004
+               LET g_chkparam.arg2 = g_glaq2_d[l_ac4].glaq002     
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_glac002_1") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq002 = g_glaq2_d_t.glaq002
+                  NEXT FIELD CURRENT
+               END IF
+            END IF  
+         
+       BEFORE FIELD glaq002_desc
+          LET g_glaq2_d[l_ac4].glaq002_desc = g_glaq2_d[l_ac4].glaq002
+       AFTER FIELD glaq002_desc
+          LET g_glaq2_d[l_ac4].glaq002 = g_glaq2_d[l_ac4].glaq002_desc
+          CALL axrp420_glaq002_desc1()
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq002) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL    
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaa004
+               LET g_chkparam.arg2 = g_glaq2_d[l_ac4].glaq002     
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_glac002_1") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  SELECT glad017,glad0171,glad0172,glad018,glad0181,glad0182,
+                         glad019,glad0191,glad0192,glad020,glad0201,glad0202,
+                         glad021,glad0211,glad0212,glad022,glad0221,glad0222,
+                         glad023,glad0231,glad0232,glad024,glad0221,glad0242,
+                         glad025,glad0251,glad0252,glad026,glad0261,glad0262
+                   INTO  g_glad017,g_glad0171,g_glad0172,g_glad018,g_glad0181,g_glad0182,
+                         g_glad019,g_glad0191,g_glad0192,g_glad020,g_glad0201,g_glad0202,
+                         g_glad021,g_glad0211,g_glad0212,g_glad022,g_glad0221,g_glad0222,
+                         g_glad023,g_glad0231,g_glad0232,g_glad024,g_glad0241,g_glad0242,
+                         g_glad025,g_glad0251,g_glad0252,g_glad026,g_glad0261,g_glad0262
+                   FROM  glad_t
+                   WHERE gladent = g_enterprise
+                     AND gladld = g_xrda_m.xrdald
+                     AND glad001 = g_glaq2_d[l_ac4].glaq002
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq002 = g_glaq2_d_t.glaq002
+                  LET g_glaq2_d[l_ac4].glaq002_desc = g_glaq2_d_t.glaq002_desc
+                  CALL axrp420_glaq002_desc1()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF        
+         
+         ON ACTION controlp INFIELD glaq002
+      INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+      LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq002             #給予default值
+            LET g_qryparam.where = " glac001 = '",g_glaa004,"' AND glac003 <> '1' AND glac006 = '1'"
+            #給予arg
+            CALL aglt310_04()                                #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq002 TO glaq002              #顯示到畫面上
+            NEXT FIELD glaq002                          #返回原欄位
+
+         ON ACTION controlp INFIELD glaq002_desc
+      INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+      LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq002             #給予default值
+            LET g_qryparam.where = " glac001 = '",g_glaa004,"' AND glac003 <> '1' AND glac006 = '1'"
+            #給予arg
+            CALL aglt310_04()                                #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL axrp420_glaq002_desc1()           #顯示到畫面上
+            NEXT FIELD glaq002_desc                          #返回原欄位
+
+
+       BEFORE FIELD glaq017
+          CALL axrp420_glaq017_desc()
+       AFTER FIELD glaq017
+          CALL axrp420_glaq017_desc()
+          IF NOT cl_null(g_glaq2_d[l_ac4].glaq017) THEN 
+             #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+             INITIALIZE g_chkparam.* TO NULL
+             #設定g_chkparam.*的參數
+             LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq017   
+             #呼叫檢查存在並帶值的library
+             IF cl_chk_exist("v_ooef001") THEN
+                #檢查成功時後續處理
+                #LET  = g_chkparam.return1
+                #DISPLAY BY NAME 
+             ELSE
+                #檢查失敗時後續處理
+                LET g_glaq2_d[l_ac4].glaq017 = g_glaq2_d_t.glaq017
+                NEXT FIELD CURRENT
+             END IF
+          END IF  
+          
+       BEFORE FIELD glaq017_desc
+          LET g_glaq2_d[l_ac4].glaq017_desc = g_glaq2_d[l_ac4].glaq017
+       AFTER FIELD glaq017_desc
+          LET g_glaq2_d[l_ac4].glaq017 = g_glaq2_d[l_ac4].glaq017_desc
+          CALL axrp420_glaq017_desc()
+          IF NOT cl_null(g_glaq2_d[l_ac4].glaq017) THEN 
+             #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+             INITIALIZE g_chkparam.* TO NULL
+             #設定g_chkparam.*的參數
+             LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq017   
+             #呼叫檢查存在並帶值的library
+             IF cl_chk_exist("v_ooef001") THEN
+                #檢查成功時後續處理
+                #LET  = g_chkparam.return1
+                #DISPLAY BY NAME 
+             ELSE
+                #檢查失敗時後續處理
+                LET g_glaq2_d[l_ac4].glaq017 = g_glaq2_d_t.glaq017
+                LET g_glaq2_d[l_ac4].glaq017_desc = g_glaq2_d_t.glaq017_desc
+                CALL axrp420_glaq017_desc()
+                NEXT FIELD CURRENT
+             END IF
+          END IF 
+
+       BEFORE FIELD glaq018
+          CALL axrp420_glaq018_desc(g_glaq2_d[l_ac4].glaq018) RETURNING g_glaq2_d[l_ac4].glaq018_desc
+          DISPLAY BY NAME g_glaq2_d[l_ac4].glaq018_desc
+       AFTER FIELD glaq018
+          CALL axrp420_glaq018_desc(g_glaq2_d[l_ac4].glaq018) RETURNING g_glaq2_d[l_ac4].glaq018_desc
+          DISPLAY BY NAME g_glaq2_d[l_ac4].glaq018_desc
+          IF NOT cl_null(g_glaq2_d[l_ac4].glaq018) THEN 
+             #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+             INITIALIZE g_chkparam.* TO NULL          
+             #設定g_chkparam.*的參數
+             LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq018
+             LET g_chkparam.arg2 = g_today               
+             #呼叫檢查存在並帶值的library
+             IF cl_chk_exist("v_ooeg001") THEN
+                #檢查成功時後續處理
+                #LET  = g_chkparam.return1
+                #DISPLAY BY NAME 
+             ELSE
+                #檢查失敗時後續處理
+                LET g_glaq2_d[l_ac4].glaq018 = g_glaq2_d_t.glaq018
+                NEXT FIELD CURRENT
+             END IF          
+          END IF 
+          
+       BEFORE FIELD glaq018_desc
+          LET g_glaq2_d[l_ac4].glaq018_desc = g_glaq2_d[l_ac4].glaq018
+       AFTER FIELD glaq018_desc
+          LET g_glaq2_d[l_ac4].glaq018 = g_glaq2_d[l_ac4].glaq018_desc
+          CALL axrp420_glaq018_desc(g_glaq2_d[l_ac4].glaq018) RETURNING g_glaq2_d[l_ac4].glaq018_desc
+          #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq018_desc
+          DISPLAY g_glaq2_d[l_ac4].glaq018_desc TO s_detail4[l_ac4].glaq018_desc
+          IF NOT cl_null(g_glaq2_d[l_ac4].glaq018) THEN 
+             #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+             INITIALIZE g_chkparam.* TO NULL          
+             #設定g_chkparam.*的參數
+             LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq018
+             LET g_chkparam.arg2 = g_today               
+             #呼叫檢查存在並帶值的library
+             IF cl_chk_exist("v_ooeg001") THEN
+                #檢查成功時後續處理
+                #LET  = g_chkparam.return1
+                #DISPLAY BY NAME 
+             ELSE
+                #檢查失敗時後續處理
+                LET g_glaq2_d[l_ac4].glaq018 = g_glaq2_d_t.glaq018
+                LET g_glaq2_d[l_ac4].glaq018_desc = g_glaq2_d_t.glaq018_desc
+                CALL axrp420_glaq018_desc(g_glaq2_d[l_ac4].glaq018) RETURNING g_glaq2_d[l_ac4].glaq018_desc
+                #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq018_desc
+                DISPLAY g_glaq2_d[l_ac4].glaq018_desc TO s_detail4[l_ac4].glaq018_desc
+                NEXT FIELD CURRENT
+             END IF          
+          END IF 
+
+       BEFORE FIELD glaq019
+          CALL axrp420_glaq018_desc(g_glaq2_d[l_ac4].glaq019) RETURNING g_glaq2_d[l_ac4].glaq019_desc
+          DISPLAY BY NAME g_glaq2_d[l_ac4].glaq019_desc
+       AFTER FIELD glaq019
+            CALL axrp420_glaq018_desc(g_glaq2_d[l_ac4].glaq019) RETURNING g_glaq2_d[l_ac4].glaq019_desc
+            DISPLAY BY NAME g_glaq2_d[l_ac4].glaq019_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq019) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL              
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq019
+               LET g_chkparam.arg2 = g_today             
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooeg001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq019 = g_glaq2_d_t.glaq019
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+       BEFORE FIELD glaq019_desc
+          LET g_glaq2_d[l_ac4].glaq019_desc = g_glaq2_d[l_ac4].glaq019
+       AFTER FIELD glaq019_desc
+            LET g_glaq2_d[l_ac4].glaq019 = g_glaq2_d[l_ac4].glaq019_desc
+            CALL axrp420_glaq019_desc(g_glaq2_d[l_ac4].glaq019) RETURNING g_glaq2_d[l_ac4].glaq019_desc
+            #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq019_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq019_desc TO s_detail4[l_ac4].glaq019_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq019) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL              
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq019
+               LET g_chkparam.arg2 = g_today             
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooeg001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq019 = g_glaq2_d_t.glaq019
+                  LET g_glaq2_d[l_ac4].glaq019_desc = g_glaq2_d_t.glaq019_desc
+                  CALL axrp420_glaq019_desc(g_glaq2_d[l_ac4].glaq019) RETURNING g_glaq2_d[l_ac4].glaq019_desc
+                  #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq019_desc
+                  DISPLAY g_glaq2_d[l_ac4].glaq019_desc TO s_detail4[l_ac4].glaq019_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF      
+       
+
+       BEFORE FIELD glaq020
+          CALL axrp420_glaq020_desc('287',g_glaq2_d[l_ac4].glaq020) RETURNING g_glaq2_d[l_ac4].glaq020_desc
+          DISPLAY BY NAME g_glaq2_d[l_ac4].glaq020_desc
+       AFTER FIELD glaq020
+            CALL axrp420_glaq020_desc('287',g_glaq2_d[l_ac4].glaq020) RETURNING g_glaq2_d[l_ac4].glaq020_desc
+            DISPLAY BY NAME g_glaq2_d[l_ac4].glaq020_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq020) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL            
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq020            
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_oocq002_287") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq020 = g_glaq2_d_t.glaq020
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+       BEFORE FIELD glaq020_desc
+          LET g_glaq2_d[l_ac4].glaq020_desc = g_glaq2_d[l_ac4].glaq020
+       AFTER FIELD glaq020_desc
+            LET g_glaq2_d[l_ac4].glaq020 = g_glaq2_d[l_ac4].glaq020_desc
+            CALL axrp420_glaq020_desc('287',g_glaq2_d[l_ac4].glaq020) RETURNING g_glaq2_d[l_ac4].glaq020_desc
+            #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq020_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq020_desc TO s_detail4[l_ac4].glaq020_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq020) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL            
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq020            
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_oocq002_287") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq020 = g_glaq2_d_t.glaq020
+                  LET g_glaq2_d[l_ac4].glaq020_desc = g_glaq2_d_t.glaq020_desc
+                  CALL axrp420_glaq020_desc('287',g_glaq2_d[l_ac4].glaq020) RETURNING g_glaq2_d[l_ac4].glaq020_desc
+                  #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq020_desc
+                  DISPLAY g_glaq2_d[l_ac4].glaq020_desc TO s_detail4[l_ac4].glaq020_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+       BEFORE FIELD glaq021
+          CALL axrp420_glaq021_desc(g_glaq2_d[l_ac4].glaq021) RETURNING g_glaq2_d[l_ac4].glaq021_desc
+          DISPLAY BY NAME g_glaq2_d[l_ac4].glaq021_desc
+       AFTER FIELD glaq021
+            CALL axrp420_glaq021_desc(g_glaq2_d[l_ac4].glaq021) RETURNING g_glaq2_d[l_ac4].glaq021_desc
+            DISPLAY BY NAME g_glaq2_d[l_ac4].glaq021_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq021) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq021
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_pmaa001_2") THEN
+
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq021 = g_glaq2_d_t.glaq021
+                  NEXT FIELD CURRENT
+               END IF               
+            END IF   
+
+       BEFORE FIELD glaq021_desc
+          LET g_glaq2_d[l_ac4].glaq021_desc = g_glaq2_d[l_ac4].glaq021
+       AFTER FIELD glaq021_desc
+            LET g_glaq2_d[l_ac4].glaq021 = g_glaq2_d[l_ac4].glaq021_desc
+            CALL axrp420_glaq021_desc(g_glaq2_d[l_ac4].glaq021) RETURNING g_glaq2_d[l_ac4].glaq021_desc
+            #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq021_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq021_desc TO s_detail4[l_ac4].glaq021_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq021) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq021
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_pmaa001_2") THEN
+
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq021 = g_glaq2_d_t.glaq021
+                  LET g_glaq2_d[l_ac4].glaq021_desc = g_glaq2_d_t.glaq021_desc
+                  CALL axrp420_glaq021_desc(g_glaq2_d[l_ac4].glaq021) RETURNING g_glaq2_d[l_ac4].glaq021_desc
+                  #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq021_desc
+                  DISPLAY g_glaq2_d[l_ac4].glaq021_desc TO s_detail4[l_ac4].glaq021_desc
+                  NEXT FIELD CURRENT
+               END IF               
+            END IF 
+       
+       BEFORE FIELD glaq022
+          CALL axrp420_glaq021_desc(g_glaq2_d[l_ac4].glaq022) RETURNING g_glaq2_d[l_ac4].glaq022_desc
+          DISPLAY BY NAME g_glaq2_d[l_ac4].glaq022_desc
+       AFTER FIELD glaq022
+            CALL axrp420_glaq021_desc(g_glaq2_d[l_ac4].glaq022) RETURNING g_glaq2_d[l_ac4].glaq022_desc
+            DISPLAY BY NAME g_glaq2_d[l_ac4].glaq022_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq022) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL          
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq022          
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_pmaa001_2") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq022 = g_glaq2_d_t.glaq022
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+       BEFORE FIELD glaq022_desc
+          LET g_glaq2_d[l_ac4].glaq022_desc = g_glaq2_d[l_ac4].glaq022
+       AFTER FIELD glaq022_desc
+            LET g_glaq2_d[l_ac4].glaq022 = g_glaq2_d[l_ac4].glaq022_desc
+            CALL axrp420_glaq022_desc(g_glaq2_d[l_ac4].glaq022) RETURNING g_glaq2_d[l_ac4].glaq022_desc
+            #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq022_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq021_desc TO s_detail4[l_ac4].glaq021_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq022) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL          
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq022          
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_pmaa001_2") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq022 = g_glaq2_d_t.glaq022
+                  LET g_glaq2_d[l_ac4].glaq022_desc = g_glaq2_d_t.glaq022_desc
+                  CALL axrp420_glaq022_desc(g_glaq2_d[l_ac4].glaq022) RETURNING g_glaq2_d[l_ac4].glaq022_desc
+                  #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq022_desc
+                  DISPLAY g_glaq2_d[l_ac4].glaq021_desc TO s_detail4[l_ac4].glaq021_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+       BEFORE FIELD glaq023
+          CALL axrp420_glaq020_desc('281',g_glaq2_d[l_ac4].glaq023) RETURNING g_glaq2_d[l_ac4].glaq023_desc
+          DISPLAY BY NAME g_glaq2_d[l_ac4].glaq023_desc
+       AFTER FIELD glaq023
+            CALL axrp420_glaq020_desc('281',g_glaq2_d[l_ac4].glaq023) RETURNING g_glaq2_d[l_ac4].glaq023_desc
+            DISPLAY BY NAME g_glaq2_d[l_ac4].glaq023_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq023) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL        
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq023       
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_oocq002_281") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq023 = g_glaq2_d_t.glaq023
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+            
+       BEFORE FIELD glaq023_desc
+          LET g_glaq2_d[l_ac4].glaq023_desc = g_glaq2_d[l_ac4].glaq023
+       AFTER FIELD glaq023_desc
+            LET g_glaq2_d[l_ac4].glaq023 = g_glaq2_d[l_ac4].glaq023_desc
+            CALL axrp420_glaq020_desc('281',g_glaq2_d[l_ac4].glaq023) RETURNING g_glaq2_d[l_ac4].glaq023_desc
+            #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq023_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq023_desc TO s_detail4[l_ac4].glaq023_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq023) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL        
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq023       
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_oocq002_281") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq023 = g_glaq2_d_t.glaq023
+                  LET g_glaq2_d[l_ac4].glaq023_desc = g_glaq2_d_t.glaq023_desc
+                  CALL axrp420_glaq020_desc('281',g_glaq2_d[l_ac4].glaq023) RETURNING g_glaq2_d[l_ac4].glaq023_desc
+                  #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq023_desc
+                  DISPLAY g_glaq2_d[l_ac4].glaq023_desc TO s_detail4[l_ac4].glaq023_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF      
+            
+            
+       BEFORE FIELD glaq024
+          CALL axrp420_glaq024_desc()
+       AFTER FIELD glaq024
+            CALL axrp420_glaq024_desc()
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq024) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL    
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq024    
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_rtax001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq024 = g_glaq2_d_t.glaq024
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+       BEFORE FIELD glaq024_desc
+          LET g_glaq2_d[l_ac4].glaq024_desc = g_glaq2_d[l_ac4].glaq024
+       AFTER FIELD glaq024_desc
+            LET g_glaq2_d[l_ac4].glaq024 = g_glaq2_d[l_ac4].glaq024_desc
+            CALL axrp420_glaq024_desc()
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq024) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL    
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq024    
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_rtax001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq024 = g_glaq2_d_t.glaq024
+                  LET g_glaq2_d[l_ac4].glaq024_desc = g_glaq2_d_t.glaq024_desc
+                  CALL axrp420_glaq024_desc()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+            
+       BEFORE FIELD glaq025
+          CALL axrp420_glaq025_desc()
+       AFTER FIELD glaq025
+            CALL axrp420_glaq025_desc()
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq025) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq025
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooag001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq025 = g_glaq2_d_t.glaq025
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+       BEFORE FIELD glaq025_desc
+          LET g_glaq2_d[l_ac4].glaq025_desc = g_glaq2_d[l_ac4].glaq025
+       AFTER FIELD glaq025_desc
+            LET g_glaq2_d[l_ac4].glaq025 = g_glaq2_d[l_ac4].glaq025_desc
+            CALL axrp420_glaq025_desc()
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq025) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq025
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooag001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq025 = g_glaq2_d_t.glaq025
+                  LET g_glaq2_d[l_ac4].glaq025_desc = g_glaq2_d_t.glaq025_desc
+                  CALL axrp420_glaq025_desc()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+       BEFORE FIELD glaq026
+          CALL axrp420_glaq026_desc()
+       AFTER FIELD glaq026
+            CALL axrp420_glaq026_desc()
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq026) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL      
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq026        
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_bgaa001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq026 = g_glaq2_d_t.glaq026
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+       BEFORE FIELD glaq026_desc
+          LET g_glaq2_d[l_ac4].glaq026_desc = g_glaq2_d[l_ac4].glaq026
+       AFTER FIELD glaq026_desc
+            LET g_glaq2_d[l_ac4].glaq026 = g_glaq2_d[l_ac4].glaq026_desc
+            CALL axrp420_glaq026_desc()
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq026) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL      
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaq2_d[l_ac4].glaq026        
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_bgaa001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glaq2_d[l_ac4].glaq026 = g_glaq2_d_t.glaq026
+                  LET g_glaq2_d[l_ac4].glaq026_desc = g_glaq2_d_t.glaq026_desc
+                  CALL axrp420_glaq026_desc()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+       BEFORE FIELD glaq027
+       AFTER FIELD glaq027
+
+       BEFORE FIELD glaq028
+       AFTER FIELD glaq028
+       
+       BEFORE FIELD glaq029_desc
+          LET g_glaq2_d[l_ac4].glaq029_desc = g_glaq2_d[l_ac4].glaq029
+          #当来源类型为1时，开窗为agli041的开窗查询代码值，为2时，开q_glaf002,为3时不给开窗
+          LET g_glae002 = ''
+          LET g_glae009 = ''
+          SELECT glae002 INTO g_glae002 FROM glae_t
+           WHERE glaeent = g_enterprise
+             AND glae001 = g_glad0171
+           IF g_glae002 = '1' THEN
+              SELECT glae009 INTO g_glae009 FROM glae_t
+               WHERE glaeent = g_enterprise
+                 AND glae001 = g_glad0171
+           END IF 
+           IF g_glae002 = '2' THEN
+              LET g_glae009 = 'q_glaf002'
+           END IF 
+           
+           IF g_glae002 = '3' THEN
+              LET g_glae009 = ''
+           END IF 
+          
+       AFTER FIELD glaq029_desc
+            LET g_glaq2_d[l_ac4].glaq029 = g_glaq2_d[l_ac4].glaq029_desc
+            DISPLAY '' TO glaq029_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq029) THEN
+               CALL axrp420_free_account_chk(g_glad0171,g_glaq2_d[l_ac4].glaq029,g_glad0172) RETURNING l_errno
+               IF NOT cl_null(l_errno) THEN
+                  CALL cl_err(g_glaq2_d[l_ac4].glaq029,l_errno,1)
+                  LET g_glaq2_d[l_ac4].glaq029 = g_glaq2_d_t.glaq029
+                  LET g_glaq2_d[l_ac4].glaq029_desc = g_glaq2_d_t.glaq029_desc
+                  CALL axrp420_free_account_desc()
+                  DISPLAY g_glaq2_d[l_ac4].glaq029_desc TO s_detail4[l_ac4].glaq029_desc
+                  NEXT FIELD glaq029_desc
+               END IF
+            END IF
+            CALL axrp420_free_account_desc()
+            DISPLAY g_glaq2_d[l_ac4].glaq029_desc TO s_detail4[l_ac4].glaq029_desc
+            
+      BEFORE FIELD glaq030_desc
+          LET g_glaq2_d[l_ac4].glaq030_desc = g_glaq2_d[l_ac4].glaq030
+          #当来源类型为1时，开窗为agli041的开窗查询代码值，为2时，开q_glaf002,为3时不给开窗
+          LET g_glae002 = ''
+          LET g_glae009 = ''
+          SELECT glae002 INTO g_glae002 FROM glae_t
+           WHERE glaeent = g_enterprise
+             AND glae001 = g_glad0181
+           IF g_glae002 = '1' THEN
+              SELECT glae009 INTO g_glae009 FROM glae_t
+               WHERE glaeent = g_enterprise
+                 AND glae001 = g_glad0181
+           END IF 
+           IF g_glae002 = '2' THEN
+              LET g_glae009 = 'q_glaf002'
+           END IF 
+           
+           IF g_glae002 = '3' THEN
+              LET g_glae009 = ''
+           END IF 
+          
+       AFTER FIELD glaq030_desc
+            LET g_glaq2_d[l_ac4].glaq030 = g_glaq2_d[l_ac4].glaq030_desc
+            DISPLAY '' TO glaq030_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq030) THEN
+               CALL axrp420_free_account_chk(g_glad0181,g_glaq2_d[l_ac4].glaq030,g_glad0182) RETURNING l_errno
+               IF NOT cl_null(l_errno) THEN
+                  CALL cl_err(g_glaq2_d[l_ac4].glaq030,l_errno,1)
+                  LET g_glaq2_d[l_ac4].glaq030 = g_glaq2_d_t.glaq030
+                  LET g_glaq2_d[l_ac4].glaq030_desc = g_glaq2_d_t.glaq030_desc
+                  CALL axrp420_free_account_desc()
+                  DISPLAY g_glaq2_d[l_ac4].glaq030_desc TO s_detail4[l_ac4].glaq030_desc
+                  NEXT FIELD glaq030_desc
+               END IF
+            END IF
+            CALL axrp420_free_account_desc()
+            DISPLAY g_glaq2_d[l_ac4].glaq030_desc TO s_detail4[l_ac4].glaq030_desc
+            
+      BEFORE FIELD glaq031_desc
+          LET g_glaq2_d[l_ac4].glaq031_desc = g_glaq2_d[l_ac4].glaq031
+          #当来源类型为1时，开窗为agli041的开窗查询代码值，为2时，开q_glaf002,为3时不给开窗
+          LET g_glae002 = ''
+          LET g_glae009 = ''
+          SELECT glae002 INTO g_glae002 FROM glae_t
+           WHERE glaeent = g_enterprise
+             AND glae001 = g_glad0191
+           IF g_glae002 = '1' THEN
+              SELECT glae009 INTO g_glae009 FROM glae_t
+               WHERE glaeent = g_enterprise
+                 AND glae001 = g_glad0191
+           END IF 
+           IF g_glae002 = '2' THEN
+              LET g_glae009 = 'q_glaf002'
+           END IF 
+           
+           IF g_glae002 = '3' THEN
+              LET g_glae009 = ''
+           END IF 
+          
+       AFTER FIELD glaq031_desc
+            LET g_glaq2_d[l_ac4].glaq031 = g_glaq2_d[l_ac4].glaq031_desc
+            DISPLAY '' TO glaq031_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq031) THEN
+               CALL axrp420_free_account_chk(g_glad0191,g_glaq2_d[l_ac4].glaq031,g_glad0192) RETURNING l_errno
+               IF NOT cl_null(l_errno) THEN
+                  CALL cl_err(g_glaq2_d[l_ac4].glaq031,l_errno,1)
+                  LET g_glaq2_d[l_ac4].glaq031 = g_glaq2_d_t.glaq031
+                  LET g_glaq2_d[l_ac4].glaq031_desc = g_glaq2_d_t.glaq031_desc
+                  CALL axrp420_free_account_desc()
+                  DISPLAY g_glaq2_d[l_ac4].glaq031_desc TO s_detail4[l_ac4].glaq031_desc
+                  NEXT FIELD glaq031_desc
+               END IF
+            END IF
+            CALL axrp420_free_account_desc()
+            DISPLAY g_glaq2_d[l_ac4].glaq031_desc TO s_detail4[l_ac4].glaq031_desc
+            
+      BEFORE FIELD glaq032_desc
+          LET g_glaq2_d[l_ac4].glaq032_desc = g_glaq2_d[l_ac4].glaq032
+          #当来源类型为1时，开窗为agli041的开窗查询代码值，为2时，开q_glaf002,为3时不给开窗
+          LET g_glae002 = ''
+          LET g_glae009 = ''
+          SELECT glae002 INTO g_glae002 FROM glae_t
+           WHERE glaeent = g_enterprise
+             AND glae001 = g_glad0201
+           IF g_glae002 = '1' THEN
+              SELECT glae009 INTO g_glae009 FROM glae_t
+               WHERE glaeent = g_enterprise
+                 AND glae001 = g_glad0201
+           END IF 
+           IF g_glae002 = '2' THEN
+              LET g_glae009 = 'q_glaf002'
+           END IF 
+           
+           IF g_glae002 = '3' THEN
+              LET g_glae009 = ''
+           END IF 
+          
+       AFTER FIELD glaq032_desc
+            LET g_glaq2_d[l_ac4].glaq032 = g_glaq2_d[l_ac4].glaq032_desc
+            DISPLAY '' TO glaq032_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq032) THEN
+               CALL axrp420_free_account_chk(g_glad0201,g_glaq2_d[l_ac4].glaq032,g_glad0202) RETURNING l_errno
+               IF NOT cl_null(l_errno) THEN
+                  CALL cl_err(g_glaq2_d[l_ac4].glaq032,l_errno,1)
+                  LET g_glaq2_d[l_ac4].glaq032 = g_glaq2_d_t.glaq032
+                  LET g_glaq2_d[l_ac4].glaq032_desc = g_glaq2_d_t.glaq032_desc
+                  CALL axrp420_free_account_desc()
+                  DISPLAY g_glaq2_d[l_ac4].glaq032_desc TO s_detail4[l_ac4].glaq032_desc
+                  NEXT FIELD glaq032_desc
+               END IF
+            END IF
+            CALL axrp420_free_account_desc()
+            DISPLAY g_glaq2_d[l_ac4].glaq032_desc TO s_detail4[l_ac4].glaq032_desc      
+      
+      BEFORE FIELD glaq033_desc
+          LET g_glaq2_d[l_ac4].glaq033_desc = g_glaq2_d[l_ac4].glaq033
+          #当来源类型为1时，开窗为agli041的开窗查询代码值，为2时，开q_glaf002,为3时不给开窗
+          LET g_glae002 = ''
+          LET g_glae009 = ''
+          SELECT glae002 INTO g_glae002 FROM glae_t
+           WHERE glaeent = g_enterprise
+             AND glae001 = g_glad0211
+           IF g_glae002 = '1' THEN
+              SELECT glae009 INTO g_glae009 FROM glae_t
+               WHERE glaeent = g_enterprise
+                 AND glae001 = g_glad0211
+           END IF 
+           IF g_glae002 = '2' THEN
+              LET g_glae009 = 'q_glaf002'
+           END IF 
+           
+           IF g_glae002 = '3' THEN
+              LET g_glae009 = ''
+           END IF 
+          
+       AFTER FIELD glaq033_desc
+            LET g_glaq2_d[l_ac4].glaq033 = g_glaq2_d[l_ac4].glaq033_desc
+            DISPLAY '' TO glaq033_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq033) THEN
+               CALL axrp420_free_account_chk(g_glad0211,g_glaq2_d[l_ac4].glaq033,g_glad0212) RETURNING l_errno
+               IF NOT cl_null(l_errno) THEN
+                  CALL cl_err(g_glaq2_d[l_ac4].glaq033,l_errno,1)
+                  LET g_glaq2_d[l_ac4].glaq033 = g_glaq2_d_t.glaq033
+                  LET g_glaq2_d[l_ac4].glaq033_desc = g_glaq2_d_t.glaq033_desc
+                  CALL axrp420_free_account_desc()
+                  DISPLAY g_glaq2_d[l_ac4].glaq033_desc TO s_detail4[l_ac4].glaq033_desc
+                  NEXT FIELD glaq033_desc
+               END IF
+            END IF
+            CALL axrp420_free_account_desc()
+            DISPLAY g_glaq2_d[l_ac4].glaq033_desc TO s_detail4[l_ac4].glaq033_desc 
+      
+      BEFORE FIELD glaq034_desc
+          LET g_glaq2_d[l_ac4].glaq034_desc = g_glaq2_d[l_ac4].glaq034
+          #当来源类型为1时，开窗为agli041的开窗查询代码值，为2时，开q_glaf002,为3时不给开窗
+          LET g_glae002 = ''
+          LET g_glae009 = ''
+          SELECT glae002 INTO g_glae002 FROM glae_t
+           WHERE glaeent = g_enterprise
+             AND glae001 = g_glad0221
+           IF g_glae002 = '1' THEN
+              SELECT glae009 INTO g_glae009 FROM glae_t
+               WHERE glaeent = g_enterprise
+                 AND glae001 = g_glad0221
+           END IF 
+           IF g_glae002 = '2' THEN
+              LET g_glae009 = 'q_glaf002'
+           END IF 
+           
+           IF g_glae002 = '3' THEN
+              LET g_glae009 = ''
+           END IF 
+          
+       AFTER FIELD glaq034_desc
+            LET g_glaq2_d[l_ac4].glaq034 = g_glaq2_d[l_ac4].glaq034_desc
+            DISPLAY '' TO glaq034_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq034) THEN
+               CALL axrp420_free_account_chk(g_glad0221,g_glaq2_d[l_ac4].glaq034,g_glad0222) RETURNING l_errno
+               IF NOT cl_null(l_errno) THEN
+                  CALL cl_err(g_glaq2_d[l_ac4].glaq034,l_errno,1)
+                  LET g_glaq2_d[l_ac4].glaq034 = g_glaq2_d_t.glaq034
+                  LET g_glaq2_d[l_ac4].glaq034_desc = g_glaq2_d_t.glaq034_desc
+                  CALL axrp420_free_account_desc()
+                  DISPLAY g_glaq2_d[l_ac4].glaq034_desc TO s_detail4[l_ac4].glaq034_desc
+                  NEXT FIELD glaq034_desc
+               END IF
+            END IF
+            CALL axrp420_free_account_desc()
+            DISPLAY g_glaq2_d[l_ac4].glaq034_desc TO s_detail4[l_ac4].glaq034_desc 
+            
+      BEFORE FIELD glaq035_desc
+          LET g_glaq2_d[l_ac4].glaq035_desc = g_glaq2_d[l_ac4].glaq035
+          #当来源类型为1时，开窗为agli041的开窗查询代码值，为2时，开q_glaf002,为3时不给开窗
+          LET g_glae002 = ''
+          LET g_glae009 = ''
+          SELECT glae002 INTO g_glae002 FROM glae_t
+           WHERE glaeent = g_enterprise
+             AND glae001 = g_glad0231
+           IF g_glae002 = '1' THEN
+              SELECT glae009 INTO g_glae009 FROM glae_t
+               WHERE glaeent = g_enterprise
+                 AND glae001 = g_glad0231
+           END IF 
+           IF g_glae002 = '2' THEN
+              LET g_glae009 = 'q_glaf002'
+           END IF 
+           
+           IF g_glae002 = '3' THEN
+              LET g_glae009 = ''
+           END IF 
+          
+       AFTER FIELD glaq035_desc
+            LET g_glaq2_d[l_ac4].glaq035 = g_glaq2_d[l_ac4].glaq035_desc
+            DISPLAY '' TO glaq035_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq035) THEN
+               CALL axrp420_free_account_chk(g_glad0231,g_glaq2_d[l_ac4].glaq035,g_glad0232) RETURNING l_errno
+               IF NOT cl_null(l_errno) THEN
+                  CALL cl_err(g_glaq2_d[l_ac4].glaq035,l_errno,1)
+                  LET g_glaq2_d[l_ac4].glaq035 = g_glaq2_d_t.glaq035
+                  LET g_glaq2_d[l_ac4].glaq035_desc = g_glaq2_d_t.glaq035_desc
+                  CALL axrp420_free_account_desc()
+                  DISPLAY g_glaq2_d[l_ac4].glaq035_desc TO s_detail4[l_ac4].glaq035_desc
+                  NEXT FIELD glaq035_desc
+               END IF
+            END IF
+            CALL axrp420_free_account_desc()
+            DISPLAY g_glaq2_d[l_ac4].glaq035_desc TO s_detail4[l_ac4].glaq035_desc 
+            
+      BEFORE FIELD glaq036_desc
+          LET g_glaq2_d[l_ac4].glaq036_desc = g_glaq2_d[l_ac4].glaq036
+          #当来源类型为1时，开窗为agli041的开窗查询代码值，为2时，开q_glaf002,为3时不给开窗
+          LET g_glae002 = ''
+          LET g_glae009 = ''
+          SELECT glae002 INTO g_glae002 FROM glae_t
+           WHERE glaeent = g_enterprise
+             AND glae001 = g_glad0241
+           IF g_glae002 = '1' THEN
+              SELECT glae009 INTO g_glae009 FROM glae_t
+               WHERE glaeent = g_enterprise
+                 AND glae001 = g_glad0241
+           END IF 
+           IF g_glae002 = '2' THEN
+              LET g_glae009 = 'q_glaf002'
+           END IF 
+           
+           IF g_glae002 = '3' THEN
+              LET g_glae009 = ''
+           END IF 
+          
+       AFTER FIELD glaq036_desc
+            LET g_glaq2_d[l_ac4].glaq036 = g_glaq2_d[l_ac4].glaq036_desc
+            DISPLAY '' TO glaq036_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq036) THEN
+               CALL axrp420_free_account_chk(g_glad0241,g_glaq2_d[l_ac4].glaq036,g_glad0242) RETURNING l_errno
+               IF NOT cl_null(l_errno) THEN
+                  CALL cl_err(g_glaq2_d[l_ac4].glaq036,l_errno,1)
+                  LET g_glaq2_d[l_ac4].glaq036 = g_glaq2_d_t.glaq036
+                  LET g_glaq2_d[l_ac4].glaq036_desc = g_glaq2_d_t.glaq036_desc
+                  CALL axrp420_free_account_desc()
+                  DISPLAY g_glaq2_d[l_ac4].glaq036_desc TO s_detail4[l_ac4].glaq036_desc
+                  NEXT FIELD glaq036_desc
+               END IF
+            END IF
+            CALL axrp420_free_account_desc()
+            DISPLAY g_glaq2_d[l_ac4].glaq036_desc TO s_detail4[l_ac4].glaq036_desc 
+            
+      BEFORE FIELD glaq037_desc
+          LET g_glaq2_d[l_ac4].glaq037_desc = g_glaq2_d[l_ac4].glaq037
+          #当来源类型为1时，开窗为agli041的开窗查询代码值，为2时，开q_glaf002,为3时不给开窗
+          LET g_glae002 = ''
+          LET g_glae009 = ''
+          SELECT glae002 INTO g_glae002 FROM glae_t
+           WHERE glaeent = g_enterprise
+             AND glae001 = g_glad0251
+           IF g_glae002 = '1' THEN
+              SELECT glae009 INTO g_glae009 FROM glae_t
+               WHERE glaeent = g_enterprise
+                 AND glae001 = g_glad0251
+           END IF 
+           IF g_glae002 = '2' THEN
+              LET g_glae009 = 'q_glaf002'
+           END IF 
+           
+           IF g_glae002 = '3' THEN
+              LET g_glae009 = ''
+           END IF 
+          
+       AFTER FIELD glaq037_desc
+            LET g_glaq2_d[l_ac4].glaq037 = g_glaq2_d[l_ac4].glaq037_desc
+            DISPLAY '' TO glaq037_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq037) THEN
+               CALL axrp420_free_account_chk(g_glad0251,g_glaq2_d[l_ac4].glaq037,g_glad0252) RETURNING l_errno
+               IF NOT cl_null(l_errno) THEN
+                  CALL cl_err(g_glaq2_d[l_ac4].glaq037,l_errno,1)
+                  LET g_glaq2_d[l_ac4].glaq037 = g_glaq2_d_t.glaq037
+                  LET g_glaq2_d[l_ac4].glaq037_desc = g_glaq2_d_t.glaq037_desc
+                  CALL axrp420_free_account_desc()
+                  DISPLAY g_glaq2_d[l_ac4].glaq037_desc TO s_detail4[l_ac4].glaq037_desc
+                  NEXT FIELD glaq037_desc
+               END IF
+            END IF
+            CALL axrp420_free_account_desc()
+            DISPLAY g_glaq2_d[l_ac4].glaq037_desc TO s_detail4[l_ac4].glaq037_desc 
+            
+      BEFORE FIELD glaq038_desc
+          LET g_glaq2_d[l_ac4].glaq038_desc = g_glaq2_d[l_ac4].glaq038
+          #当来源类型为1时，开窗为agli041的开窗查询代码值，为2时，开q_glaf002,为3时不给开窗
+          LET g_glae002 = ''
+          LET g_glae009 = ''
+          SELECT glae002 INTO g_glae002 FROM glae_t
+           WHERE glaeent = g_enterprise
+             AND glae001 = g_glad0261
+           IF g_glae002 = '1' THEN
+              SELECT glae009 INTO g_glae009 FROM glae_t
+               WHERE glaeent = g_enterprise
+                 AND glae001 = g_glad0261
+           END IF 
+           IF g_glae002 = '2' THEN
+              LET g_glae009 = 'q_glaf002'
+           END IF 
+           
+           IF g_glae002 = '3' THEN
+              LET g_glae009 = ''
+           END IF 
+          
+       AFTER FIELD glaq038_desc
+            LET g_glaq2_d[l_ac4].glaq038 = g_glaq2_d[l_ac4].glaq038_desc
+            DISPLAY '' TO glaq038_desc
+            IF NOT cl_null(g_glaq2_d[l_ac4].glaq038) THEN
+               CALL axrp420_free_account_chk(g_glad0261,g_glaq2_d[l_ac4].glaq038,g_glad0262) RETURNING l_errno
+               IF NOT cl_null(l_errno) THEN
+                  CALL cl_err(g_glaq2_d[l_ac4].glaq038,l_errno,1)
+                  LET g_glaq2_d[l_ac4].glaq038 = g_glaq2_d_t.glaq038
+                  LET g_glaq2_d[l_ac4].glaq038_desc = g_glaq2_d_t.glaq038_desc
+                  CALL axrp420_free_account_desc()
+                  DISPLAY g_glaq2_d[l_ac4].glaq038_desc TO s_detail4[l_ac4].glaq038_desc
+                  NEXT FIELD glaq038_desc
+               END IF
+            END IF
+            CALL axrp420_free_account_desc()
+            DISPLAY g_glaq2_d[l_ac4].glaq038_desc TO s_detail4[l_ac4].glaq038_desc 
+      
+      #--------------------開窗------------------------------ 
+       
+       ON ACTION controlp INFIELD glaq017
+          INITIALIZE g_qryparam.* TO NULL
+          LET g_qryparam.state = 'i'
+          LET g_qryparam.reqry = FALSE
+          LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq017   #給予default值
+          #給予arg
+          CALL q_ooef001()                                     #呼叫開窗
+          LET g_glaq2_d[l_ac4].glaq017 = g_qryparam.return1    #將開窗取得的值回傳到變數
+          DISPLAY g_glaq2_d[l_ac4].glaq017 TO glaq017          #顯示到畫面上
+          NEXT FIELD glaq017                                   #返回原欄位
+          
+        ON ACTION controlp INFIELD glaq017_desc
+          INITIALIZE g_qryparam.* TO NULL
+          LET g_qryparam.state = 'i'
+          LET g_qryparam.reqry = FALSE
+          LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq017   #給予default值
+          #給予arg
+          CALL q_ooef001()                                     #呼叫開窗
+          LET g_glaq2_d[l_ac4].glaq017 = g_qryparam.return1    #將開窗取得的值回傳到變數
+          CALL axrp420_glaq017_desc()
+          NEXT FIELD glaq017_desc 
+
+         ON ACTION controlp INFIELD glaq018
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq018       #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = g_today
+            CALL q_ooeg001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq018 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq018 TO glaq018              #顯示到畫面上
+            NEXT FIELD glaq018                                       #返回原欄位
+            
+            
+         ON ACTION controlp INFIELD glaq018_desc
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq018       #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = g_today
+            CALL q_ooeg001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq018 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            CALL axrp420_glaq018_desc(g_glaq2_d[l_ac4].glaq018) RETURNING g_glaq2_d[l_ac4].glaq018_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq018_desc TO s_detail4[l_ac4].glaq018_desc
+            NEXT FIELD glaq018_desc                                  #返回原欄位
+
+         ON ACTION controlp INFIELD glaq019
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq019               #給予default值
+            LET g_qryparam.where = " (ooeg003 = '2' OR ooeg003 = '3')"
+            #給予arg
+            LET g_qryparam.arg1 = g_today
+            CALL q_ooeg001()                                        #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq019 = g_qryparam.return1       #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq019 TO glaq019             #顯示到畫面上
+            NEXT FIELD glaq019                                      #返回原欄位
+            
+         ON ACTION controlp INFIELD glaq019_desc
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq019               #給予default值
+            LET g_qryparam.where = " (ooeg003 = '2' OR ooeg003 = '3')"
+            #給予arg
+            LET g_qryparam.arg1 = g_today
+            CALL q_ooeg001()                                        #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq019 = g_qryparam.return1       #將開窗取得的值回傳到變數
+            CALL axrp420_glaq019_desc(g_glaq2_d[l_ac4].glaq019) RETURNING g_glaq2_d[l_ac4].glaq019_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq019_desc TO s_detail4[l_ac4].glaq019_desc
+            NEXT FIELD glaq019_desc                                 #返回原欄位
+
+         ON ACTION controlp INFIELD glaq020
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq020             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = '287'
+            CALL q_oocq002()                                       #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq020 = g_qryparam.return1      #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq020 TO glaq020            #顯示到畫面上
+            NEXT FIELD glaq020                                     #返回原欄位
+            
+         ON ACTION controlp INFIELD glaq020_desc
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq020             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = '287'
+            CALL q_oocq002()                                       #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq020 = g_qryparam.return1      #將開窗取得的值回傳到變數
+            CALL axrp420_glaq020_desc('287',g_glaq2_d[l_ac4].glaq020) RETURNING g_glaq2_d[l_ac4].glaq020_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq020_desc TO s_detail4[l_ac4].glaq020_desc
+            NEXT FIELD glaq020_desc                                #返回原欄位
+
+         ON ACTION controlp INFIELD glaq021
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq021             #給予default值
+            #給予arg
+            CALL q_pmaa001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq021 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq021 TO glaq021              #顯示到畫面上
+            NEXT FIELD glaq021                                       #返回原欄位
+            
+         ON ACTION controlp INFIELD glaq021_desc
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq021             #給予default值
+            #給予arg
+            CALL q_pmaa001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq021 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            CALL axrp420_glaq021_desc(g_glaq2_d[l_ac4].glaq021) RETURNING g_glaq2_d[l_ac4].glaq021_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq021_desc TO s_detail4[l_ac4].glaq021_desc
+            NEXT FIELD glaq021_desc                                  #返回原欄位
+ 
+         ON ACTION controlp INFIELD glaq022
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq022             #給予default值
+            #給予arg
+            CALL q_pmaa001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq022 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq022 TO glaq022              #顯示到畫面上
+            NEXT FIELD glaq022                                       #返回原欄位
+            
+         ON ACTION controlp INFIELD glaq022_desc
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq022             #給予default值
+            #給予arg
+            CALL q_pmaa001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq022 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            CALL axrp420_glaq022_desc(g_glaq2_d[l_ac4].glaq022) RETURNING g_glaq2_d[l_ac4].glaq022_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq022_desc TO s_detail4[l_ac4].glaq022_desc
+            NEXT FIELD glaq022_desc                                  #返回原欄位
+ 
+         ON ACTION controlp INFIELD glaq023
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq023             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = '281'
+            CALL q_oocq002()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq023 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq023 TO glaq023              #顯示到畫面上
+            NEXT FIELD glaq023                                       #返回原欄位
+            
+         ON ACTION controlp INFIELD glaq023_desc
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq023             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = '281'
+            CALL q_oocq002()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq023 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            CALL axrp420_glaq020_desc('281',g_glaq2_d[l_ac4].glaq023) RETURNING g_glaq2_d[l_ac4].glaq023_desc
+            DISPLAY g_glaq2_d[l_ac4].glaq023_desc TO s_detail4[l_ac4].glaq023_desc
+            NEXT FIELD glaq023_desc                                  #返回原欄位
+
+         ON ACTION controlp INFIELD glaq024
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq024             #給予default值
+            #給予arg
+            CALL q_rtax001_1()                                       #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq024 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq024 TO glaq024              #顯示到畫面上
+            NEXT FIELD glaq024                                       #返回原欄位
+            
+         ON ACTION controlp INFIELD glaq024_desc
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq024             #給予default值
+            #給予arg
+            CALL q_rtax001_1()                                       #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq024 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            CALL axrp420_glaq024_desc()
+            NEXT FIELD glaq024_desc                                  #返回原欄位
+
+         ON ACTION controlp INFIELD glaq025
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq025             #給予default值
+            #給予arg
+            CALL q_ooag001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq025 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq025 TO glaq025              #顯示到畫面上
+            NEXT FIELD glaq025                                       #返回原欄位
+            
+         ON ACTION controlp INFIELD glaq025_desc
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq025             #給予default值
+            #給予arg
+            CALL q_ooag001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq025 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            CALL axrp420_glaq025_desc()
+            NEXT FIELD glaq025_desc                                  #返回原欄位
+
+         ON ACTION controlp INFIELD glaq026
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq026       #給予default值
+            #給予arg
+            CALL q_bgaa001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq026 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq026 TO glaq026              #顯示到畫面上
+            NEXT FIELD glaq026                                       #返回原欄位
+            
+         ON ACTION controlp INFIELD glaq026_desc
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq026       #給予default值
+            #給予arg
+            CALL q_bgaa001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq026 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            CALL axrp420_glaq026_desc()
+            NEXT FIELD glaq026_desc                                  #返回原欄位
+
+         ON ACTION controlp INFIELD glaq027
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq027       #給予default值
+            #給予arg
+            CALL q_pjba001()                                         #呼叫開窗
+            LET g_glaq2_d[l_ac4].glaq027 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_glaq2_d[l_ac4].glaq027 TO glaq027              #顯示到畫面上
+            NEXT FIELD glaq027                                       #返回原欄位
+
+         ON ACTION controlp INFIELD glaq028
+ 
+         ON ACTION controlp INFIELD glaq029_desc
+            IF NOT cl_null(g_glae009) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = "i"
+               LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq029             #給予default值
+               
+               #給予arg
+               IF g_glae009 = 'q_glaf002' THEN    
+                  LET g_qryparam.where = "glaf001 = '",g_glad0171,"'" #自由核算項類型
+               END IF 
+               CALL q_total(g_glae009)                                #呼叫開窗
+    
+               LET g_glaq2_d[l_ac4].glaq029 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL axrp420_free_account_desc()
+               DISPLAY g_glaq2_d[l_ac4].glaq029_desc TO s_detail4[l_ac4].glaq029_desc    #說明
+               LET g_qryparam.where = ''
+               NEXT FIELD glaq029_desc                          #返回原欄位
+            END IF 
+            
+        ON ACTION controlp INFIELD glaq030_desc
+            IF NOT cl_null(g_glae009) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = "i"
+               LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq030             #給予default值
+               
+               #給予arg
+               IF g_glae009 = 'q_glaf002' THEN    
+                  LET g_qryparam.where = "glaf001 = '",g_glad0181,"'" #自由核算項類型
+               END IF 
+               CALL q_total(g_glae009)                                #呼叫開窗
+    
+               LET g_glaq2_d[l_ac4].glaq030 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL axrp420_free_account_desc()
+               DISPLAY g_glaq2_d[l_ac4].glaq030_desc TO s_detail4[l_ac4].glaq030_desc    #說明
+               LET g_qryparam.where = ''
+               NEXT FIELD glaq030_desc                          #返回原欄位
+            END IF    
+         
+         ON ACTION controlp INFIELD glaq031_desc
+            IF NOT cl_null(g_glae009) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = "i"
+               LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq031             #給予default值
+               
+               #給予arg
+               IF g_glae009 = 'q_glaf002' THEN    
+                  LET g_qryparam.where = "glaf001 = '",g_glad0191,"'" #自由核算項類型
+               END IF 
+               CALL q_total(g_glae009)                                #呼叫開窗
+    
+               LET g_glaq2_d[l_ac4].glaq031 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL axrp420_free_account_desc()
+               DISPLAY g_glaq2_d[l_ac4].glaq031_desc TO s_detail4[l_ac4].glaq031_desc    #說明
+               LET g_qryparam.where = ''
+               NEXT FIELD glaq031_desc                          #返回原欄位
+            END IF
+            
+         ON ACTION controlp INFIELD glaq032_desc
+            IF NOT cl_null(g_glae009) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = "i"
+               LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq032             #給予default值
+               
+               #給予arg
+               IF g_glae009 = 'q_glaf002' THEN    
+                  LET g_qryparam.where = "glaf001 = '",g_glad0201,"'" #自由核算項類型
+               END IF 
+               CALL q_total(g_glae009)                                #呼叫開窗
+    
+               LET g_glaq2_d[l_ac4].glaq032 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL axrp420_free_account_desc()
+               DISPLAY g_glaq2_d[l_ac4].glaq032_desc TO s_detail4[l_ac4].glaq032_desc    #說明
+               LET g_qryparam.where = ''
+               NEXT FIELD glaq032_desc                          #返回原欄位
+            END IF
+            
+         ON ACTION controlp INFIELD glaq033_desc
+            IF NOT cl_null(g_glae009) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = "i"
+               LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq033             #給予default值
+               
+               #給予arg
+               IF g_glae009 = 'q_glaf002' THEN    
+                  LET g_qryparam.where = "glaf001 = '",g_glad0211,"'" #自由核算項類型
+               END IF 
+               CALL q_total(g_glae009)                                #呼叫開窗
+    
+               LET g_glaq2_d[l_ac4].glaq033 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL axrp420_free_account_desc()
+               DISPLAY g_glaq2_d[l_ac4].glaq033_desc TO s_detail4[l_ac4].glaq033_desc    #說明
+               LET g_qryparam.where = ''
+               NEXT FIELD glaq033_desc                          #返回原欄位
+            END IF
+
+         ON ACTION controlp INFIELD glaq034_desc
+            IF NOT cl_null(g_glae009) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = "i"
+               LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq034             #給予default值
+               
+               #給予arg
+               IF g_glae009 = 'q_glaf002' THEN    
+                  LET g_qryparam.where = "glaf001 = '",g_glad0221,"'" #自由核算項類型
+               END IF 
+               CALL q_total(g_glae009)                                #呼叫開窗
+    
+               LET g_glaq2_d[l_ac4].glaq034 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL axrp420_free_account_desc()
+               DISPLAY g_glaq2_d[l_ac4].glaq034_desc TO s_detail4[l_ac4].glaq034_desc    #說明
+               LET g_qryparam.where = ''
+               NEXT FIELD glaq034_desc                          #返回原欄位
+            END IF
+            
+         ON ACTION controlp INFIELD glaq035_desc
+            IF NOT cl_null(g_glae009) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = "i"
+               LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq035             #給予default值
+               
+               #給予arg
+               IF g_glae009 = 'q_glaf002' THEN    
+                  LET g_qryparam.where = "glaf001 = '",g_glad0231,"'" #自由核算項類型
+               END IF 
+               CALL q_total(g_glae009)                                #呼叫開窗
+    
+               LET g_glaq2_d[l_ac4].glaq035 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL axrp420_free_account_desc()
+               DISPLAY g_glaq2_d[l_ac4].glaq035_desc TO s_detail4[l_ac4].glaq035_desc    #說明
+               LET g_qryparam.where = ''
+               NEXT FIELD glaq035_desc                          #返回原欄位
+            END IF
+            
+         ON ACTION controlp INFIELD glaq036_desc
+            IF NOT cl_null(g_glae009) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = "i"
+               LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq036             #給予default值
+               
+               #給予arg
+               IF g_glae009 = 'q_glaf002' THEN    
+                  LET g_qryparam.where = "glaf001 = '",g_glad0241,"'" #自由核算項類型
+               END IF 
+               CALL q_total(g_glae009)                                #呼叫開窗
+    
+               LET g_glaq2_d[l_ac4].glaq036 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL axrp420_free_account_desc()
+               DISPLAY g_glaq2_d[l_ac4].glaq036_desc TO s_detail4[l_ac4].glaq036_desc    #說明
+               LET g_qryparam.where = ''
+               NEXT FIELD glaq036_desc                          #返回原欄位
+            END IF
+            
+         ON ACTION controlp INFIELD glaq037_desc
+            IF NOT cl_null(g_glae009) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = "i"
+               LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq037             #給予default值
+               
+               #給予arg
+               IF g_glae009 = 'q_glaf002' THEN    
+                  LET g_qryparam.where = "glaf001 = '",g_glad0251,"'" #自由核算項類型
+               END IF 
+               CALL q_total(g_glae009)                                #呼叫開窗
+    
+               LET g_glaq2_d[l_ac4].glaq037 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL axrp420_free_account_desc()
+               DISPLAY g_glaq2_d[l_ac4].glaq037_desc TO s_detail4[l_ac4].glaq037_desc    #說明
+               LET g_qryparam.where = ''
+               NEXT FIELD glaq037_desc                          #返回原欄位
+            END IF
+            
+         ON ACTION controlp INFIELD glaq038_desc
+            IF NOT cl_null(g_glae009) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = "i"
+               LET g_qryparam.default1 = g_glaq2_d[l_ac4].glaq038             #給予default值
+               
+               #給予arg
+               IF g_glae009 = 'q_glaf002' THEN    
+                  LET g_qryparam.where = "glaf001 = '",g_glad0261,"'" #自由核算項類型
+               END IF 
+               CALL q_total(g_glae009)                                #呼叫開窗
+    
+               LET g_glaq2_d[l_ac4].glaq038 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL axrp420_free_account_desc()
+               DISPLAY g_glaq2_d[l_ac4].glaq038_desc TO s_detail4[l_ac4].glaq038_desc    #說明
+               LET g_qryparam.where = ''
+               NEXT FIELD glaq038_desc                          #返回原欄位
+            END IF
+            
+       ON ROW CHANGE
+          IF INT_FLAG THEN
+             CALL cl_err('',9001,0)
+             LET INT_FLAG = 0
+             LET g_glaq2_d[l_ac4].* = g_glaq2_d_t.*
+             EXIT INPUT 
+          END IF
+            
+          IF NOT cl_null(g_glaq2_d_t.glaq002) THEN   
+             UPDATE s_voucher_ar_tmp SET (docno,seq,glaq002,glaq017,glaq018,glaq019,glaq020,glaq021, 
+                 glaq022,glaq023,glaq024,glaq025,glaq026,glaq027,glaq028,
+                 glaq029,glaq030,glaq031,glaq032,glaq033,glaq034,glaq035,
+                 glaq036,glaq037,glaq038,glaq001) = (g_glaq2_d[l_ac4].docno,g_glaq2_d[l_ac4].seq,
+                 g_glaq2_d[l_ac4].glaq002,g_glaq2_d[l_ac4].glaq017,g_glaq2_d[l_ac4].glaq018,
+                 g_glaq2_d[l_ac4].glaq019,g_glaq2_d[l_ac4].glaq020,g_glaq2_d[l_ac4].glaq021,
+                 g_glaq2_d[l_ac4].glaq022,g_glaq2_d[l_ac4].glaq023,g_glaq2_d[l_ac4].glaq024,
+                 g_glaq2_d[l_ac4].glaq025,g_glaq2_d[l_ac4].glaq026,g_glaq2_d[l_ac4].glaq027,
+                 g_glaq2_d[l_ac4].glaq028,g_glaq2_d[l_ac4].glaq029,g_glaq2_d[l_ac4].glaq030,
+                 g_glaq2_d[l_ac4].glaq031,g_glaq2_d[l_ac4].glaq032,g_glaq2_d[l_ac4].glaq033,
+                 g_glaq2_d[l_ac4].glaq034,g_glaq2_d[l_ac4].glaq035,g_glaq2_d[l_ac4].glaq036,
+                 g_glaq2_d[l_ac4].glaq037,g_glaq2_d[l_ac4].glaq038,g_glaq2_d[l_ac4].glaq001)
+              WHERE docno = g_glaq2_d[l_ac4].docno 
+                AND glaq002 = g_glaq2_d_t.glaq002   
+                AND seq = g_glaq2_d[l_ac4].seq
+                AND sw = g_glaq2_d[l_ac4].sw
+                AND source = g_glaq2_d[l_ac4].source
+          ELSE
+             UPDATE s_voucher_ar_tmp SET (docno,seq,glaq002,glaq017,glaq018,glaq019,glaq020,glaq021, 
+                 glaq022,glaq023,glaq024,glaq025,glaq026,glaq027,glaq028,
+                 glaq029,glaq030,glaq031,glaq032,glaq033,glaq034,glaq035,
+                 glaq036,glaq037,glaq038,glaq001) = (g_glaq2_d[l_ac4].docno,g_glaq2_d[l_ac4].seq,
+                 g_glaq2_d[l_ac4].glaq002,g_glaq2_d[l_ac4].glaq017,g_glaq2_d[l_ac4].glaq018,
+                 g_glaq2_d[l_ac4].glaq019,g_glaq2_d[l_ac4].glaq020,g_glaq2_d[l_ac4].glaq021,
+                 g_glaq2_d[l_ac4].glaq022,g_glaq2_d[l_ac4].glaq023,g_glaq2_d[l_ac4].glaq024,
+                 g_glaq2_d[l_ac4].glaq025,g_glaq2_d[l_ac4].glaq026,g_glaq2_d[l_ac4].glaq027,
+                 g_glaq2_d[l_ac4].glaq028,g_glaq2_d[l_ac4].glaq029,g_glaq2_d[l_ac4].glaq030,
+                 g_glaq2_d[l_ac4].glaq031,g_glaq2_d[l_ac4].glaq032,g_glaq2_d[l_ac4].glaq033,
+                 g_glaq2_d[l_ac4].glaq034,g_glaq2_d[l_ac4].glaq035,g_glaq2_d[l_ac4].glaq036,
+                 g_glaq2_d[l_ac4].glaq037,g_glaq2_d[l_ac4].glaq038,g_glaq2_d[l_ac4].glaq001)
+              WHERE docno = g_glaq2_d[l_ac4].docno 
+                AND glaq002 IS NULL 
+                AND seq = g_glaq2_d[l_ac4].seq
+                AND sw = g_glaq2_d[l_ac4].sw
+                AND source = g_glaq2_d[l_ac4].source
+          END IF
+          IF SQLCA.sqlcode THEN
+             CALL cl_err("xrcb_t",SQLCA.sqlcode,1)
+             LET g_glaq2_d[l_ac4].* = g_glaq2_d_t.*                     
+          END IF 
+          
+          
+          CALL axrp420_update_axr()
+
+       ON ACTION accept
+          LET g_change = 'Y'
+          ACCEPT INPUT
+              
+       ON ACTION close       #在dialog 右上角 (X)
+          LET INT_FLAG = TRUE 
+          EXIT INPUT
+     
+       ON ACTION exit        #toolbar 離開
+          LET INT_FLAG = TRUE       
+          EXIT INPUT
+          
+    END INPUT           
+
+    CALL cl_set_act_visible("accept,cancel", FALSE)
+    CALL cl_set_comp_visible('grid1',FALSE)    
+    CALL axrp420_s02_show()
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq017_desc" order="19" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_glaq017_desc()
+# Date & Author..: 2014/02/13 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq017_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq017
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_glaq2_d[l_ac4].glaq017_desc = '', g_rtn_fields[1] , ''
+   LET g_glaq2_d[l_ac4].glaq017_desc = g_glaq2_d[l_ac4].glaq017 CLIPPED,g_glaq2_d[l_ac4].glaq017_desc
+   #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq017_desc
+   DISPLAY g_glaq2_d[l_ac4].glaq017_desc TO s_detail4[l_ac4].glaq017_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq018_desc" order="20" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_glaq018_desc(p_ooea001)
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Date & Author..: 2014/02/13 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq018_desc(p_ooea001)
+DEFINE p_ooea001  LIKE ooea_t.ooea001
+DEFINE r_ooefl003 LIKE ooefl_t.ooefl003
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_ooea001
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_ooefl003 = g_rtn_fields[1] 
+   LET r_ooefl003 = g_glaq2_d[l_ac4].glaq018 CLIPPED,r_ooefl003
+   RETURN r_ooefl003
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq020_desc" order="21" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_glaq020_desc(p_oocq001,p_oocq002)
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2013/02/13 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq020_desc(p_oocq001,p_oocq002)
+DEFINE p_oocq001  LIKE oocq_t.oocq001
+DEFINE p_oocq002  LIKE oocq_t.oocq002
+DEFINE r_oocql004 LIKE oocql_t.oocql004 
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_oocq001
+   LET g_ref_fields[2] = p_oocq002
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_oocql004 = '', g_rtn_fields[1] , ''
+   IF p_oocq001 = '287' THEN 
+      LET r_oocql004 = g_glaq2_d[l_ac4].glaq020 CLIPPED,r_oocql004
+   END IF
+   IF p_oocq001 = '281' THEN 
+      LET r_oocql004 = g_glaq2_d[l_ac4].glaq023 CLIPPED,r_oocql004
+   END IF
+   RETURN r_oocql004
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq021_desc" order="22" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_glaq021_desc(p_pmaa001)
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/02/13 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq021_desc(p_pmaa001)
+DEFINE p_pmaa001  LIKE pmaa_t.pmaa001
+DEFINE r_pmaal004 LIKE pmaal_t.pmaal004    
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_pmaa001
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_pmaal004 = '', g_rtn_fields[1] , '' 
+   LET r_pmaal004 = g_glaq2_d[l_ac4].glaq021 CLIPPED,r_pmaal004
+   RETURN r_pmaal004
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq024_desc" order="23" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_glaq024_desc()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/02/13 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq024_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq024
+   CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_glaq2_d[l_ac4].glaq024_desc = '', g_rtn_fields[1] , ''
+   LET g_glaq2_d[l_ac4].glaq024_desc = g_glaq2_d[l_ac4].glaq024 CLIPPED,g_glaq2_d[l_ac4].glaq024_desc
+   #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq024_desc
+   DISPLAY g_glaq2_d[l_ac4].glaq024_desc TO s_detail4[l_ac4].glaq024_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq002_desc1" order="24" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_glaq002_desc1()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq002_desc1()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaa004
+   LET g_ref_fields[2] = g_glaq2_d[l_ac4].glaq002
+   CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001= ? AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_glaq2_d[l_ac4].glaq002_desc = '', g_rtn_fields[1] , ''
+   LET g_glaq2_d[l_ac4].glaq002_desc = g_glaq2_d[l_ac4].glaq002 CLIPPED ,g_glaq2_d[l_ac4].glaq002_desc
+   #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq002_desc
+   DISPLAY g_glaq2_d[l_ac4].glaq002_desc TO s_detail4[l_ac4].glaq002_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq025_desc" order="25" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_glaq025_desc()
+# Date & Author..: 2014/02/13 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq025_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq025
+   CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+   LET g_glaq2_d[l_ac4].glaq025_desc = '', g_rtn_fields[1] , ''
+   LET g_glaq2_d[l_ac4].glaq025_desc = g_glaq2_d[l_ac4].glaq025 CLIPPED ,g_glaq2_d[l_ac4].glaq025_desc
+   #DISPLAY BY NAME g_glaq2_d[l_ac4].glaq025_desc
+   DISPLAY g_glaq2_d[l_ac4].glaq025_desc TO s_detail4[l_ac4].glaq025_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_set_comp_entry" order="26" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 動態設定元件開啟與關閉
+PRIVATE FUNCTION axrp420_set_comp_entry(ps_fields,pi_entry)
+   DEFINE ps_fields STRING,
+          pi_entry  LIKE type_t.num5           
+   DEFINE lst_fields base.StringTokenizer,
+          ls_field_name STRING
+   DEFINE lwin_curr     ui.Window
+   DEFINE lnode_win     om.DomNode,
+          llst_items    om.NodeList,
+          li_i          LIKE type_t.num5,        
+          lnode_item    om.DomNode,
+          ls_item_name  STRING
+ 
+   IF g_bgjob = 'Y' AND g_gui_type NOT MATCHES "[13]"  THEN  
+      RETURN
+   END IF
+ 
+   IF (ps_fields IS NULL) THEN
+      RETURN
+   END IF
+ 
+   LET ps_fields = ps_fields.toLowerCase()
+ 
+   LET lst_fields = base.StringTokenizer.create(ps_fields, ",")
+ 
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lnode_win = lwin_curr.getNode()
+ 
+   LET llst_items = lnode_win.selectByPath("//Form//*")
+ 
+   WHILE lst_fields.hasMoreTokens()
+     LET ls_field_name = lst_fields.nextToken()
+     LET ls_field_name = ls_field_name.trim()
+ 
+     IF (ls_field_name.getLength() > 0) THEN
+        FOR li_i = 1 TO llst_items.getLength()
+            LET lnode_item = llst_items.item(li_i)
+            LET ls_item_name = lnode_item.getAttribute("colName")
+ 
+            IF (ls_item_name IS NULL) THEN
+               LET ls_item_name = lnode_item.getAttribute("name")
+ 
+               IF (ls_item_name IS NULL) THEN
+                  CONTINUE FOR
+               END IF
+            END IF
+ 
+            LET ls_item_name = ls_item_name.trim()
+ 
+            IF (ls_item_name.equals(ls_field_name)) THEN
+               IF (pi_entry) THEN
+                  CALL lnode_item.setAttribute("noEntry", "0")
+                  CALL lnode_item.setAttribute("active", "1")
+               ELSE
+                  CALL lnode_item.setAttribute("noEntry", "1")
+                  CALL lnode_item.setAttribute("active", "0")
+               END IF
+ 
+               EXIT FOR
+            END IF
+        END FOR
+     END IF
+   END WHILE
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq026_desc" order="27" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_glaq026_desc()
+# Date & Author..: 2014/02/13 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_glaq026_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq026
+   CALL ap_ref_array2(g_ref_fields,"SELECT bgaal003 FROM bgaal_t WHERE bgaalent='"||g_enterprise||"' AND bgaal001=? AND bgaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_glaq2_d[l_ac4].glaq026_desc = '', g_rtn_fields[1] , ''
+   LET g_glaq2_d[l_ac4].glaq026_desc = g_glaq2_d[l_ac4].glaq026 CLIPPED ,g_glaq2_d[l_ac4].glaq026_desc
+   DISPLAY BY NAME g_glaq2_d[l_ac4].glaq026_desc
+   DISPLAY g_glaq2_d[l_ac4].glaq026_desc TO s_detail4[l_ac4].glaq026_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq019_desc" order="28" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_glaq019_desc(p_ooea001)
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Date & Author..: 2014/02/13 By xianghui
+# Modify.........:
+PRIVATE FUNCTION axrp420_glaq019_desc(p_ooea001)
+   DEFINE p_ooea001  LIKE ooea_t.ooea001
+   DEFINE r_ooefl003 LIKE ooefl_t.ooefl003
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_ooea001
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_ooefl003 = g_rtn_fields[1] 
+   LET r_ooefl003 = g_glaq2_d[l_ac4].glaq019 CLIPPED,r_ooefl003
+   RETURN r_ooefl003
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_s02_show" order="29" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp420_s02_show()
+   FOR l_ac4 = 1 TO g_glaq2_d.getLength()
+       CALL axrp420_glaq002_desc1()
+       CALL axrp420_glaq017_desc()
+       CALL axrp420_glaq018_desc(g_glaq2_d[l_ac4].glaq018) RETURNING g_glaq2_d[l_ac4].glaq018_desc
+       CALL axrp420_glaq019_desc(g_glaq2_d[l_ac4].glaq019) RETURNING g_glaq2_d[l_ac4].glaq019_desc
+       CALL axrp420_glaq020_desc('287',g_glaq2_d[l_ac4].glaq020) RETURNING g_glaq2_d[l_ac4].glaq020_desc
+       CALL axrp420_glaq021_desc(g_glaq2_d[l_ac4].glaq021) RETURNING g_glaq2_d[l_ac4].glaq021_desc
+       CALL axrp420_glaq022_desc(g_glaq2_d[l_ac4].glaq022) RETURNING g_glaq2_d[l_ac4].glaq022_desc
+       CALL axrp420_glaq020_desc('281',g_glaq2_d[l_ac4].glaq023) RETURNING g_glaq2_d[l_ac4].glaq023_desc
+       CALL axrp420_glaq024_desc()
+       CALL axrp420_glaq025_desc()
+       CALL axrp420_glaq026_desc()   
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_glaq022_desc" order="30" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrp420_glaq022_desc(p_pmaa001)
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/02/13 By xianghui
+# Modify.........:
+PRIVATE FUNCTION axrp420_glaq022_desc(p_pmaa001)
+   DEFINE p_pmaa001  LIKE pmaa_t.pmaa001
+   DEFINE r_pmaal004 LIKE pmaal_t.pmaal004    
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_pmaa001
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_pmaal004 = '', g_rtn_fields[1] , '' 
+   LET r_pmaal004 = g_glaq2_d[l_ac4].glaq022 CLIPPED,r_pmaal004
+   RETURN r_pmaal004
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_update_axr" order="31" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 修改核算項后回寫axrt330的相關欄位
+PRIVATE FUNCTION axrp420_update_axr()
+   
+   CALL s_transaction_begin()
+   LET g_update_axr = 'Y'
+
+   IF g_glaq2_d[l_ac4].source = 'xrcb' AND g_glaq2_d[l_ac4].sw = '1' THEN 
+      UPDATE xrcb_t SET xrcb029 = g_glaq2_d[l_ac4].glaq002,
+                        xrcblegl = g_glaq2_d[l_ac4].glaq017,
+                        xrcb010 = g_glaq2_d[l_ac4].glaq018,
+                        xrcb011 = g_glaq2_d[l_ac4].glaq019,
+                        xrcb024 = g_glaq2_d[l_ac4].glaq020,
+                        xrcb012 = g_glaq2_d[l_ac4].glaq024,
+                        xrcb017 = g_glaq2_d[l_ac4].glaq026,
+                        xrcb015 = g_glaq2_d[l_ac4].glaq027,
+                        xrcb016 = g_glaq2_d[l_ac4].glaq028
+        WHERE xrcbent = g_enterprise
+          AND xrcbld = g_xrda_m.xrdald
+          AND xrcbdocno = g_glaq2_d[l_ac4].docno
+          AND xrcbseq = g_glaq2_d[l_ac4].seq                   
+   END IF
+
+   IF g_glaq2_d[l_ac4].source = 'xrcb' AND g_glaq2_d[l_ac4].sw = '2' THEN 
+      UPDATE xrcb_t SET xrcb021 = g_glaq2_d[l_ac4].glaq002,
+                        xrcblegl = g_glaq2_d[l_ac4].glaq017,
+                        xrcb010 = g_glaq2_d[l_ac4].glaq018,
+                        xrcb011 = g_glaq2_d[l_ac4].glaq019,
+                        xrcb024 = g_glaq2_d[l_ac4].glaq020,
+                        xrcb012 = g_glaq2_d[l_ac4].glaq024,
+                        xrcb017 = g_glaq2_d[l_ac4].glaq026,
+                        xrcb015 = g_glaq2_d[l_ac4].glaq027,
+                        xrcb016 = g_glaq2_d[l_ac4].glaq028
+        WHERE xrcbent = g_enterprise
+          AND xrcbld = g_xrda_m.xrdald
+          AND xrcbdocno = g_glaq2_d[l_ac4].docno
+          AND xrcbseq = g_glaq2_d[l_ac4].seq                   
+   END IF
+   
+   IF g_glaq2_d[l_ac4].source = 'xrcd' THEN 
+      UPDATE xrcd_t SET xrcd009 = g_glaq2_d[l_ac4].glaq002
+       WHERE xrcbent = g_enterprise
+         AND xrcbld = g_xrda_m.xrdald
+         AND xrcbdocno = g_glaq2_d[l_ac4].docno
+         AND xrcbseq = g_glaq2_d[l_ac4].seq        
+      
+      UPDATE xrcb_t SET xrcblegl = g_glaq2_d[l_ac4].glaq017,
+                        xrcb010 = g_glaq2_d[l_ac4].glaq018,
+                        xrcb011 = g_glaq2_d[l_ac4].glaq019,
+                        xrcb024 = g_glaq2_d[l_ac4].glaq020,
+                        xrcb012 = g_glaq2_d[l_ac4].glaq024,
+                        xrcb017 = g_glaq2_d[l_ac4].glaq026,
+                        xrcb015 = g_glaq2_d[l_ac4].glaq027,
+                        xrcb016 = g_glaq2_d[l_ac4].glaq028
+        WHERE xrcbent = g_enterprise
+          AND xrcbld = g_xrda_m.xrdald
+          AND xrcbdocno = g_glaq2_d[l_ac4].docno
+          AND xrcbseq = g_glaq2_d[l_ac4].seq                   
+   END IF
+   
+   IF g_glaq2_d[l_ac4].source = 'xrce' AND g_glaq2_d[l_ac4].sw = '1' THEN       
+      UPDATE xrce_t SET xrce016 = g_glaq2_d[l_ac4].glaq002,
+                        xrcelegl = g_glaq2_d[l_ac4].glaq017,
+                        xrce018 = g_glaq2_d[l_ac4].glaq018,
+                        xrce019 = g_glaq2_d[l_ac4].glaq019,
+                        xrce035 = g_glaq2_d[l_ac4].glaq020,
+                        xrce020 = g_glaq2_d[l_ac4].glaq024,
+                        xrce037 = g_glaq2_d[l_ac4].glaq026,
+                        xrce022 = g_glaq2_d[l_ac4].glaq027,
+                        xrce023 = g_glaq2_d[l_ac4].glaq028
+        WHERE xrceent = g_enterprise
+          AND xrceld = g_xrda_m.xrdald
+          AND xrcedocno = g_glaq2_d[l_ac4].docno
+          AND xrceseq = g_glaq2_d[l_ac4].seq 
+          AND xrce015 = '1'          
+   END IF
+   
+   IF g_glaq2_d[l_ac4].source = 'xrce' AND g_glaq2_d[l_ac4].sw = '2' THEN       
+      UPDATE xrce_t SET xrce016 = g_glaq2_d[l_ac4].glaq002,
+                        xrcelegl = g_glaq2_d[l_ac4].glaq017,
+                        xrce018 = g_glaq2_d[l_ac4].glaq018,
+                        xrce019 = g_glaq2_d[l_ac4].glaq019,
+                        xrce035 = g_glaq2_d[l_ac4].glaq020,
+                        xrce020 = g_glaq2_d[l_ac4].glaq024,
+                        xrce037 = g_glaq2_d[l_ac4].glaq026,
+                        xrce022 = g_glaq2_d[l_ac4].glaq027,
+                        xrce023 = g_glaq2_d[l_ac4].glaq028
+        WHERE xrceent = g_enterprise
+          AND xrceld = g_xrda_m.xrdald
+          AND xrcedocno = g_glaq2_d[l_ac4].docno
+          AND xrceseq = g_glaq2_d[l_ac4].seq 
+          AND xrce015 = '2'          
+   END IF
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('upd',SQLCA.sqlcode,1)
+      LET g_update_axr = 'N' 
+      RETURN 
+   ELSE
+      CALL s_transaction_end('Y','Y')   
+      LET g_update_axr = 'Y'
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_make_sql" order="32" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 组检查资料存在有效的sql
+PRIVATE FUNCTION axrp420_make_sql(p_glae003,p_glae004,p_glaf002)
+   DEFINE p_glae003 LIKE glae_t.glae003    #来源档案
+   DEFINE p_glae004 LIKE glae_t.glae004    #来源编号栏位
+   DEFINE p_glaf002 LIKE glaf_t.glaf002    #核算项值
+   DEFINE l_dzeb002 LIKE dzeb_t.dzeb002
+   DEFINE l_dzeb006 LIKE dzeb_t.dzeb006
+   DEFINE l_sql     STRING
+   DEFINE r_sql     STRING
+
+   LET r_sql = " SELECT count(*) FROM ",p_glae003 ,
+               "  WHERE ", p_glae004," = '",p_glaf002,"'"
+               
+   LET l_sql = "SELECT dzeb002,dzeb006 FROM dzeb_t ",
+               " WHERE dzeb001 = '", p_glae003,"'"
+   PREPARE axrp420_make_sql_pre FROM l_sql
+   DECLARE axrp420_make_sql_cs CURSOR FOR axrp420_make_sql_pre
+   FOREACH axrp420_make_sql_cs INTO l_dzeb002,l_dzeb006
+      #判断是否有ent栏位
+      IF l_dzeb006 = 'N802' THEN
+         LET r_sql = r_sql CLIPPED," AND ",l_dzeb002 ," ='",g_enterprise,"' "
+      END IF
+      #判断是否有stus栏位
+      IF l_dzeb002 LIKE '%stus'  THEN
+         LET r_sql = r_sql CLIPPED," AND ",l_dzeb002 ," ='Y'"
+      END IF
+   END FOREACH
+   RETURN r_sql
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_make_sql_desc" order="33" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 核算项说明
+PRIVATE FUNCTION axrp420_make_sql_desc(p_glae001)
+   DEFINE p_glae001   LIKE glae_t.glae001   #核算项类型
+   #DEFINE p_field_value   LIKE glaf_t.glaf002   #核算项值
+   DEFINE r_sql       STRING
+   DEFINE l_glae003   LIKE glae_t.glae003   #来源档案
+   DEFINE l_glae004   LIKE glae_t.glae004   #来源编号栏位
+   DEFINE l_glae005   LIKE glae_t.glae005   #来源说明档案
+   DEFINE l_glae006   LIKE glae_t.glae006   #来源说明栏位  
+   DEFINE l_dzeb002   LIKE dzeb_t.dzeb002   #栏位代号
+   DEFINE l_dzeb006   LIKE dzeb_t.dzeb002   #栏位属性    
+   DEFINE l_sql     STRING
+   DEFINE li_sql1   STRING    #抓主档表的key
+   DEFINE li_sql2   STRING    #抓对应多语言表的key 
+   #抓取主表的key放入数组
+   DEFINE li_main    DYNAMIC ARRAY OF RECORD
+          dzeb002    LIKE dzeb_t.dzeb002       
+   END RECORD 
+   #抓取多语言表的key放入数组
+   DEFINE li_dlang    DYNAMIC ARRAY OF RECORD
+          dzeb002    LIKE dzeb_t.dzeb002       
+   END RECORD 
+   DEFINE l_where   STRING    #组出的对应的抓取说明的where条件    
+   DEFINE l_i,l_i2,l_i3       LIKE type_t.num5
+    
+    #初始化
+    CALL li_main.clear()
+    CALL li_dlang.clear()
+    
+   #抓取来源档案，来源说明档案，来源说明栏位
+   SELECT glae003,glae004,glae005,glae006 INTO l_glae003,l_glae004,l_glae005,l_glae006 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = p_glae001
+      
+   #抓取主档key
+   LET l_i = 1
+   LET li_sql1 = " SELECT dzeb002 FROM dzeb_t ",
+                 "  WHERE dzeb001 = '",l_glae003,"'",
+                 "    AND dzeb004 = 'Y'", 
+                 "  ORDER BY dzeb021 " 
+   PREPARE axrp420_pr FROM li_sql1
+   DECLARE axrp420_cs1 CURSOR FOR axrp420_pr
+   FOREACH axrp420_cs1 INTO li_main[l_i].dzeb002
+       LET l_i = l_i +1
+   END FOREACH
+   #真实数组长度
+   LET l_i = l_i -1  
+   
+   #抓取多语言档key
+   LET l_i2 = 1
+   LET li_sql2 = " SELECT dzeb002 FROM dzeb_t ",
+                 " WHERE dzeb001 = '",l_glae005,"'" ,
+                  "  AND dzeb004 = 'Y'",
+                 " ORDER BY dzeb021 "
+   PREPARE axrp420_pr2 FROM li_sql2
+   DECLARE axrp420_cs2 CURSOR FOR axrp420_pr2
+   FOREACH axrp420_cs2 INTO li_dlang[l_i2].dzeb002
+       LET l_i2 = l_i2 +1
+   END FOREACH
+   #真实数组长度
+   LET l_i2 = l_i2 -1  
+
+   
+   #组合where条件 
+   LET l_where = '1=1'
+   FOR  l_i3 = 1 TO  l_i 
+       LET l_where = l_where," AND ", li_main[l_i3].dzeb002, " = " ,li_dlang[l_i3].dzeb002
+   END FOR    
+   
+   #组出的基础sql   
+   LET r_sql = " SELECT ", l_glae006 ," FROM ",l_glae005 ,',',l_glae003,
+               " WHERE " , l_glae004," = ?",
+               "   AND " ,l_where
+   #组sql               
+   LET l_sql = "SELECT dzeb002,dzeb006 FROM dzeb_t ",
+               " WHERE dzeb001 = '",l_glae005,"'",
+               "   AND dzeb004 = 'Y'"
+   PREPARE axrp420_make_sql_pre1 FROM l_sql
+   DECLARE axrp420_make_sql_cs1 CURSOR FOR axrp420_make_sql_pre1
+   FOREACH axrp420_make_sql_cs1 INTO l_dzeb002,l_dzeb006
+      #判断是否有ent栏位
+      IF l_dzeb006 = 'N802' THEN
+         LET r_sql = r_sql CLIPPED," AND ",l_dzeb002 ," ='",g_enterprise,"' "
+      END IF 
+      
+      IF l_dzeb006 = 'C800' THEN
+         LET r_sql = r_sql CLIPPED," AND ",l_dzeb002 ," ='",g_dlang,"' "
+      END IF
+
+   END FOREACH
+   RETURN r_sql 
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_free_account_desc" order="34" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#核算项说明
+#如果栏位对应的核算项类型对应的资料来源为‘1’，则自组sql来抓取说明
+PRIVATE FUNCTION axrp420_free_account_desc()
+   DEFINE l_glae002     LIKE glae_t.glae002     #资料来源
+   DEFINE l_sql         STRING                  #组的抓取资料的sql
+   
+   #核算项一
+   LET l_glae002 = ''
+   LET l_sql = ''
+   SELECT glae002 INTO l_glae002 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = g_glad0171
+   IF l_glae002 = '2' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] =g_glad0171
+      LET g_ref_fields[2] =g_glaq2_d[l_ac4].glaq029
+      CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001=? AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq029_desc= g_rtn_fields[1]
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq029
+      CALL axrp420_make_sql_desc(g_glad0171) RETURNING l_sql
+      CALL ap_ref_array2(g_ref_fields,l_sql,"") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq029_desc= g_rtn_fields[1]
+   END IF 
+   LET g_glaq2_d[l_ac4].glaq029_desc = g_glaq2_d[l_ac4].glaq029 CLIPPED ,g_glaq2_d[l_ac4].glaq029_desc
+   #核算项二
+   LET l_glae002 = ''
+   LET l_sql = ''
+   SELECT glae002 INTO l_glae002 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = g_glad0181
+   IF l_glae002 = '2' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] =g_glad0181
+      LET g_ref_fields[2] =g_glaq2_d[l_ac4].glaq030     
+      CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001=? AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq030_desc= g_rtn_fields[1]
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq030
+      CALL axrp420_make_sql_desc(g_glad0181) RETURNING l_sql
+      CALL ap_ref_array2(g_ref_fields,l_sql,"") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq030_desc= g_rtn_fields[1]
+   END IF   
+   LET g_glaq2_d[l_ac4].glaq030_desc = g_glaq2_d[l_ac4].glaq030 CLIPPED ,g_glaq2_d[l_ac4].glaq030_desc   
+   #核算项三
+   LET l_glae002 = ''
+   LET l_sql = ''
+   SELECT glae002 INTO l_glae002 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = g_glad0191
+   IF l_glae002 = '2' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] =g_glad0191
+      LET g_ref_fields[2] =g_glaq2_d[l_ac4].glaq031
+      CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001=? AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq031_desc= g_rtn_fields[1]
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq031
+      CALL axrp420_make_sql_desc(g_glad0191) RETURNING l_sql
+      CALL ap_ref_array2(g_ref_fields,l_sql,"") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq031_desc= g_rtn_fields[1]   
+   END IF     
+   LET g_glaq2_d[l_ac4].glaq031_desc = g_glaq2_d[l_ac4].glaq031 CLIPPED ,g_glaq2_d[l_ac4].glaq031_desc   
+   #核算项四
+   LET l_glae002 = ''
+   LET l_sql = ''
+   SELECT glae002 INTO l_glae002 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = g_glad0201
+   IF l_glae002 = '2' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] =g_glad0201
+      LET g_ref_fields[2] =g_glaq2_d[l_ac4].glaq032
+      CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001=? AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq032_desc= g_rtn_fields[1]
+    ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq032
+      CALL axrp420_make_sql_desc(g_glad0201) RETURNING l_sql
+      CALL ap_ref_array2(g_ref_fields,l_sql,"") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq032_desc= g_rtn_fields[1]   
+   END IF   
+   LET g_glaq2_d[l_ac4].glaq032_desc = g_glaq2_d[l_ac4].glaq032 CLIPPED ,g_glaq2_d[l_ac4].glaq032_desc    
+   #核算项五
+   LET l_glae002 = ''
+   LET l_sql = ''
+   SELECT glae002 INTO l_glae002 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = g_glad0211
+   IF l_glae002 = '2' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] =g_glad0211
+      LET g_ref_fields[2] =g_glaq2_d[l_ac4].glaq033
+      CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001=? AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq033_desc= g_rtn_fields[1]  
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq033
+      CALL axrp420_make_sql_desc(g_glad0211) RETURNING l_sql
+      CALL ap_ref_array2(g_ref_fields,l_sql,"") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq033_desc= g_rtn_fields[1]   
+   END IF    
+   LET g_glaq2_d[l_ac4].glaq033_desc = g_glaq2_d[l_ac4].glaq033 CLIPPED ,g_glaq2_d[l_ac4].glaq033_desc     
+   #核算项六
+   LET l_glae002 = ''
+   LET l_sql = ''
+   SELECT glae002 INTO l_glae002 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = g_glad0221
+   IF l_glae002 = '2' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] =g_glad0221
+      LET g_ref_fields[2] =g_glaq2_d[l_ac4].glaq034
+      CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001=? AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq034_desc= g_rtn_fields[1]
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq034
+      CALL axrp420_make_sql_desc(g_glad0221) RETURNING l_sql
+      CALL ap_ref_array2(g_ref_fields,l_sql,"") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq034_desc= g_rtn_fields[1]   
+   END IF    
+   LET g_glaq2_d[l_ac4].glaq034_desc = g_glaq2_d[l_ac4].glaq034 CLIPPED ,g_glaq2_d[l_ac4].glaq034_desc     
+   #核算项七
+   LET l_glae002 = ''
+   LET l_sql = ''
+   SELECT glae002 INTO l_glae002 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = g_glad0231
+   IF l_glae002 = '2' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] =g_glad0231
+      LET g_ref_fields[2] =g_glaq2_d[l_ac4].glaq035
+      CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001=? AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq035_desc= g_rtn_fields[1]
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq035
+      CALL axrp420_make_sql_desc(g_glad0241) RETURNING l_sql
+      CALL ap_ref_array2(g_ref_fields,l_sql,"") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq035_desc= g_rtn_fields[1]   
+   END IF     
+   LET g_glaq2_d[l_ac4].glaq035_desc = g_glaq2_d[l_ac4].glaq035 CLIPPED ,g_glaq2_d[l_ac4].glaq035_desc     
+   #核算项八
+   LET l_glae002 = ''
+   LET l_sql = ''
+   SELECT glae002 INTO l_glae002 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = g_glad0241
+   IF l_glae002 = '2' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] =g_glad0241
+      LET g_ref_fields[2] =g_glaq2_d[l_ac4].glaq036
+      CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001=? AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq036_desc= g_rtn_fields[1]
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq036
+      CALL axrp420_make_sql_desc(g_glad0241) RETURNING l_sql
+      CALL ap_ref_array2(g_ref_fields,l_sql,"") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq036_desc= g_rtn_fields[1]   
+   END IF     
+   LET g_glaq2_d[l_ac4].glaq036_desc = g_glaq2_d[l_ac4].glaq036 CLIPPED ,g_glaq2_d[l_ac4].glaq036_desc     
+   #核算项九
+   LET l_glae002 = ''
+   LET l_sql = ''
+   SELECT glae002 INTO l_glae002 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = g_glad0251
+   IF l_glae002 = '2' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] =g_glad0251
+      LET g_ref_fields[2] =g_glaq2_d[l_ac4].glaq037
+      CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001=? AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq037_desc= g_rtn_fields[1]
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq037
+      CALL axrp420_make_sql_desc(g_glad0251) RETURNING l_sql
+      CALL ap_ref_array2(g_ref_fields,l_sql,"") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq037_desc= g_rtn_fields[1]   
+   END IF  
+   LET g_glaq2_d[l_ac4].glaq037_desc = g_glaq2_d[l_ac4].glaq037 CLIPPED ,g_glaq2_d[l_ac4].glaq037_desc     
+   #核算项十
+   LET l_glae002 = ''
+   LET l_sql = ''
+   SELECT glae002 INTO l_glae002 FROM glae_t
+    WHERE glaeent = g_enterprise
+      AND glae001 = g_glad0261
+   IF l_glae002 = '2' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] =g_glad0261
+      LET g_ref_fields[2] =g_glaq2_d[l_ac4].glaq038
+      CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001=? AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq038_desc= g_rtn_fields[1]
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_glaq2_d[l_ac4].glaq038
+      CALL axrp420_make_sql_desc(g_glad0261) RETURNING l_sql
+      CALL ap_ref_array2(g_ref_fields,l_sql,"") RETURNING g_rtn_fields
+      LET g_glaq2_d[l_ac4].glaq038_desc= g_rtn_fields[1]   
+   END IF  
+   LET g_glaq2_d[l_ac4].glaq038_desc = g_glaq2_d[l_ac4].glaq038 CLIPPED ,g_glaq2_d[l_ac4].glaq038_desc  
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_free_account_chk" order="35" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 自由核算項檢查
+PRIVATE FUNCTION axrp420_free_account_chk(p_glaf001,p_glaf002,p_ctrl)
+   DEFINE p_glaf001      LIKE glaf_t.glaf001
+   DEFINE p_glaf002      LIKE glaf_t.glaf002
+   DEFINE p_ctrl         LIKE type_t.chr5       #控制方式1.1.允许空白，2：必输不需检查或，3：必输需要检查
+   DEFINE r_errno        LIKE type_t.chr10      #错误编号
+   DEFINE l_glafstus     LIKE glaf_t.glafstus
+   DEFINE l_glae002      LIKE glae_t.glae002
+   DEFINE l_glae003      LIKE glae_t.glae003
+   DEFINE l_glae004      LIKE glae_t.glae004
+   DEFINE l_cnt          LIKE type_t.num5
+   DEFINE l_sql          STRING
+   
+      LET r_errno = ''
+      LET l_glae002 = ''
+      LET l_glae003 = ''
+      LET l_glae004 = ''
+      #.抓出該类型对应的资料来源，来源档案，来源编号栏位
+      SELECT glae002,glae003,glae004 INTO l_glae002,l_glae003,l_glae004 FROM glae_t
+       WHERE glaeent = g_enterprise
+         AND glae001 = p_glaf001
+      #来源类型为1.‘基本资料’，則檢核來源編號欄位是否存在,並依核算项类型对应的控制方式，檢核核算项值的合理性
+      IF l_glae002 = '1' THEN
+         SELECT count(*) INTO l_cnt FROM dzeb_t
+          WHERE dzeb001 = l_glae003
+            AND dzeb002 = l_glae004
+         IF l_cnt = 0  THEN
+            LET r_errno = 'agl-00073'
+            RETURN r_errno
+         END IF
+         #控制方式3：必输必检查
+         IF p_ctrl = '3'  THEN
+            #1.检查资料的有效存在
+             LET l_cnt = 0
+             CALL axrp420_make_sql(l_glae003,l_glae004,p_glaf002) RETURNING l_sql
+             PREPARE axrp330_03_chk  FROM l_sql
+             EXECUTE axrp330_03_chk INTO l_cnt             
+             IF  l_cnt = 0  THEN
+                 LET r_errno = 'agl-00099'
+                 RETURN r_errno
+             END IF
+             #IF  l_glafstus = 'N'  THEN
+             #    LET g_errno = 'agl-00063'
+             #    RETURN r_errno
+             #END IF
+         END IF
+      END IF
+      #来源类型为2.预设值，則輸入值應檢核是否存在自由核算項資料檔,並依核算项类型对应的控制方式，檢核核算项值的合理性
+      IF l_glae002 = '2' THEN
+         SELECT glafstus INTO l_glafstus FROM glaf_t
+             WHERE glafent = g_enterprise
+               AND glaf001 = p_glaf001
+               AND glaf002 = p_glaf002
+         IF SQLCA.SQLCODE = 100  THEN
+            LET r_errno = 'agl-00062'
+            RETURN r_errno
+          END IF
+          IF p_ctrl = '3'  THEN
+             IF l_glafstus = 'N'  THEN
+                LET g_errno = 'agl-00063'
+                RETURN r_errno
+             END IF
+          END IF
+      END IF
+      #若来源类型为3.'自行輸入'則user可任意輸入且不需檢核
+      RETURN r_errno
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp420_update_glaq001" order="36" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 更新摘要
+PRIVATE FUNCTION axrp420_update_glaq001()
+   DEFINE l_ac2     LIKE type_t.num5
+   DEFINE l_n       LIKE type_t.num5
+   
+   INPUT ARRAY g_glaq_d FROM s_detail2.*
+          ATTRIBUTE(COUNT = g_rec_b2,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)  
+      BEFORE INPUT
+
+         CALL axrp420_glaq_fill()
+
+      
+      
+      BEFORE ROW
+         LET l_ac2 = ARR_CURR()
+         LET g_detail_idx2 = l_ac2
+         
+         LET l_n = ARR_COUNT()
+         DISPLAY l_ac2 TO FORMONLY.idx
+         
+         CALL axrp420_set_comp_entry('docno,docdt,glaq022,glaqseq,lc_subject,glaq003,glaq004,glaq040,glaq041,glaq043,glaq044',FALSE)    
+         NEXT FIELD glaq001   
+       
+      BEFORE FIELD glaq001
+      
+      AFTER FIELD glaq001
+         
+       
+      ON CHANGE glaq001
+         
+         
+         
+      AFTER ROW 
+         IF NOT cl_null(g_glaq_d_t[l_ac2].glaq001) THEN 
+            UPDATE s_voucher_ar_tmp SET glaq001 = g_glaq_d[l_ac2].glaq001
+             WHERE docno = g_glaq_d[l_ac2].docno
+               AND glaq002 = g_glaq_d[l_ac2].glaq002
+               AND glaq001 = g_glaq_d_t[l_ac2].glaq001
+               
+            UPDATE s_voucher_ar_group SET glaq001 = g_glaq_d[l_ac2].glaq001
+             WHERE docno = g_glaq_d[l_ac2].docno
+               AND glaq002 = g_glaq_d[l_ac2].glaq002
+               AND glaq001 = g_glaq_d_t[l_ac2].glaq001
+         ELSE
+            UPDATE s_voucher_ar_tmp SET glaq001 = g_glaq_d[l_ac2].glaq001
+             WHERE docno = g_glaq_d[l_ac2].docno
+               AND glaq002 = g_glaq_d[l_ac2].glaq002
+               AND glaq001 IS NULL
+               
+            UPDATE s_voucher_ar_group SET glaq001 = g_glaq_d[l_ac2].glaq001
+             WHERE docno = g_glaq_d[l_ac2].docno
+               AND glaq002 = g_glaq_d[l_ac2].glaq002
+               AND glaq001 IS NULL
+         END IF
+            
+      ON ACTION accept
+         ACCEPT INPUT
+
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         RETURN 
+   END INPUT
+END FUNCTION]]>
+  </point>
+  <point name="default_search.after" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="default_search.before" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="default_search.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                             ]]>
+  </point>
+  <point name="main.exit" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   #DROP TABLE axrp420_gen_ar_tmp;
+   #DROP TABLE axrp420_gen_ar_tmp2;   
+   DROP TABLE s_voucher_ar_tmp;
+   DROP TABLE s_voucher_ar_group;      ]]>
+  </point>
+  <point name="main.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                             ]]>
+  </point>
+  <point name="main.servicecall" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                                                                          ]]>
+  </point>
+  <point name="ui_dialog.after_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <section id="axrp420.description" ver="67" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000066
+#+ 
+#+ Filename...: axrp420
+#+ Description: 收款核銷單批次產生傳票作業
+#+ Creator....: 02785(2014/03/10)
+#+ Modifier...: 02114(2014/03/10)
+#+ Buildtype..: 應用 i00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="axrp420.free_style_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style
+{<point name="free_style.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrp420.global" ver="2" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrp420.main" ver="1" status="" src="s">
+    <![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axr","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE axrp420_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axrp420 WITH FORM cl_ap_formpath("axr",g_code)
+   
+      #程式初始化
+      CALL axrp420_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #進入選單 Menu (='N')
+      CALL axrp420_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_axrp420
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+  </section>
+  <section id="axrp420.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+</add_points>

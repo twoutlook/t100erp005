@@ -1,0 +1,1905 @@
+#+ 程式版本......: T6 Version 1.00.00 Build-0001 at 14/02/27
+#
+#+ 程式代碼......: sadzi888_7
+#+ 設計人員......: Hiko
+# Prog. Version..: 'T6-12.01.21(00000)'     #
+#
+# Program name   : sadzi888_7.4gl
+# Description    : Patch時merge客製規格/程式
+# Modify         : 2014/09/19 by Hiko : 新建程式
+#                : 2014/12/19 by Hiko : 1.c1以topstd簽出視為標準簽出
+#                                       2.非M/S/F的規格不做merge,因為規格描述不出貨.
+#                : 2014/12/27 by Hiko : merge的時候,要將標準失效的資料更新到對應的客製樹內的使用標示='s'的資料;但不要將標準失效的資料'新增'到客製樹內,以免多垃圾.
+#                : 2015/01/13 by Hiko : 原本有特別加上'本版異動'的資料來當作更新條件,但因為有可能沒有變版也過單,所以會造成沒有更新到的情況,因此剔除此條件.
+#                : 2015/01/29 by Hiko : CALL sadzp168_5裡面若是編譯失敗則需要停止.
+#                : 2015/06/03 by Hiko : merge過程4fd編譯失敗要乎略
+#                : 2015/07/03 by Hiko : 1.Q類也要merge畫面和程式.
+#                                       2.se.tion沒有merge也要吐資訊.
+#                : 2015/07/21 by madey: 資源池dzam_t/dzag_t/dzfs_t要做進版和merge
+#                : 2015/09/15 by madey: 1.merge的時後CALL sadzp168_5裡面若是編譯失敗則繼續往下執行,但回傳結果要報錯
+#                                     : 2.merge出錯還原時CALL sadzp168_5裡面若是編譯失敗則需要停止,且回傳結果要報錯
+#                : 20160223 160223-00028 by madey :patch優化專案
+#                                        patch模式下merge只處理設計資料,重產與編譯交給adpz988處理機制
+#                : 20161018 161018-00038 by Hiko : 修正判斷是否解開section的判斷
+
+import os
+import xml
+
+SCHEMA ds
+
+GLOBALS "../../cfg/top_global.inc"
+&include "../4gl/sadzp200_type.inc"
+&include "../4gl/adzi888_global.inc"
+
+DEFINE g_date DATETIME YEAR TO SECOND,
+       gs_dept STRING, 
+       gs_erpid STRING,  #產品代號
+       gs_erpver STRING, #ERP大版版號
+       gs_customer STRING, 
+       g_env LIKE dzaa_t.dzaa009 #辨識目前所在的環境:s.產中環境,c.客製環境
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 新增merge資訊(dzap_t)
+# Input parameter : po_prev_cus_DZAF 客製DZAF_T資料(merge之前)
+#                 : p_patch_no
+# Return code     : BOOLEAN  TRUE:成功;FALSE:失敗
+#                 : STRING   錯誤訊息
+# Date & Author   : 2014/12/02 by Hiko
+##########################################################################
+PUBLIC FUNCTION sadzi888_07_ins_dzap_t(po_prev_cus_DZAF, p_patch_no)
+   DEFINE po_prev_cus_DZAF T_DZAF_T,
+          p_patch_no       LIKE dzap_t.dzap003
+   DEFINE l_prog     LIKE dzaf_t.dzaf001,
+          ls_trigger STRING,
+          ls_sql     STRING,
+          lb_result  BOOLEAN,
+          lb_result2 BOOLEAN,
+          ls_info    STRING,
+          ls_err_msg STRING,
+          lo_new_std_DZAF T_DZAF_T,
+          li_cnt     SMALLINT
+
+   TRY
+      LET l_prog = po_prev_cus_DZAF.dzaf001 CLIPPED
+
+      CALL sadzi888_07_init_var()
+
+      #此程式有三段相同的判斷, 改一個地方要記得同步修改其他程式段.
+      #報表元件(G,X)客製的話不可以做merge,所以直接跳掉.
+      IF po_prev_cus_DZAF.dzaf005="G" OR po_prev_cus_DZAF.dzaf005="X" THEN
+         LET ls_info = "[INFO]Report Component(G,X) can not be merged!"
+         DISPLAY ls_info
+         RETURN TRUE,ls_info
+      END IF 
+
+      #取得目前(patch之後)dzaf_t內最大的標準版次資料 
+      CALL sadzi888_07_get_curr_ver_info_by_flag(po_prev_cus_DZAF.*, "s") RETURNING ls_err_msg,lo_new_std_DZAF.*
+      IF NOT cl_null(ls_err_msg) THEN
+         GOTO _RTN_ERR
+      ELSE
+         #判斷標準和客製是否都不是free style或都是free style.
+         CALL sadzp169_02_chk_not_free_style(l_prog, lo_new_std_DZAF.dzaf010) RETURNING lb_result,ls_err_msg
+         CALL sadzp169_02_chk_not_free_style(l_prog, po_prev_cus_DZAF.dzaf010) RETURNING lb_result2,ls_err_msg
+         IF lb_result<>lb_result2 THEN
+            LET ls_info = "[INFO]One of the standard or customer program is free style, so that the customer program can not be merged!"
+            DISPLAY ls_info
+            RETURN TRUE,ls_info
+         END IF
+      END IF
+
+      #同一個patch no內的版次資料不會有不同, 所以這邊的判斷是為了避免重複patch又重新merge.
+      SELECT COUNT(*) INTO li_cnt FROM dzap_t WHERE dzap001=l_prog AND dzap003=p_patch_no
+      IF li_cnt>0 THEN
+         RETURN TRUE,NULL
+      END IF
+
+      #到了這邊就有可能相同程式代號, 但卻是不同patch no, 所以可以先刪除再新增, 這樣資料會比較乾淨.
+      SELECT COUNT(*) INTO li_cnt FROM dzap_t WHERE dzap001=l_prog
+      IF li_cnt>0 THEN
+         LET ls_trigger = "DELETE dzap_t : ",l_prog
+         DISPLAY ls_trigger
+         DELETE FROM dzap_t WHERE dzap001=l_prog
+      END IF
+
+      LET ls_trigger = "INSERT INTO dzap_t : ",l_prog
+      DISPLAY ls_trigger
+      LET ls_sql = "INSERT INTO dzap_t(dzap001,dzap002,dzap003,dzap004,dzap005,",
+                                      "dzap006,dzap007,dzap008,dzap009,dzap010,",
+                                      "dzapownid,dzapowndp,dzapcrtid,dzapcrtdp,dzapcrtdt)",
+                              " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+      PREPARE ins_dzap_prep FROM ls_sql
+      EXECUTE ins_dzap_prep USING po_prev_cus_DZAF.dzaf001,'',p_patch_no,po_prev_cus_DZAF.dzaf002,po_prev_cus_DZAF.dzaf003,
+                                  po_prev_cus_DZAF.dzaf004,lo_new_std_DZAF.dzaf002,lo_new_std_DZAF.dzaf003,lo_new_std_DZAF.dzaf004,'N',
+                                  g_user,g_dept,g_user,g_dept,g_date
+      FREE ins_dzap_prep
+  
+      DISPLAY "sadzi888_07_ins_dzap_t finish!"
+ 
+      RETURN TRUE,NULL
+
+      LABEL _RTN_ERR :
+         RETURN FALSE,ls_err_msg
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      RETURN FALSE,"ERROR : call sadzi888_07_ins_dzap_t error!"
+   END TRY
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 更新merge資訊(dzap_t)
+# Input parameter : po_prev_cus_DZAF 上個版次的客製DZAF_T資料
+#                 : po_curr_std_DZAF 目前的標準DZAF_T資料
+# Return code     : BOOLEAN TRUE:成功;FALSE:失敗
+#                 : STRING  錯誤訊息
+# Date & Author   : 2014/12/02 by Hiko
+##########################################################################
+PUBLIC FUNCTION sadzi888_07_upd_dzap_t(po_prev_cus_DZAF, po_curr_std_DZAF)
+   DEFINE po_prev_cus_DZAF T_DZAF_T,
+          po_curr_std_DZAF T_DZAF_T
+   DEFINE l_prog     LIKE dzaf_t.dzaf001,
+          ls_trigger STRING,
+          ls_sql     STRING,
+          ls_err_msg STRING,
+          lr_dzap    RECORD LIKE dzap_t.*,
+          lo_new_std_DZAF T_DZAF_T,
+          li_cnt     SMALLINT
+
+   TRY
+      LET l_prog = po_prev_cus_DZAF.dzaf001
+
+      #手動執行合併時, 要將目前的版次資訊直接覆蓋原本的客製和標準的merge版次資訊, 這樣才容易追查問題.
+      SELECT COUNT(*) INTO li_cnt FROM dzap_t WHERE dzap001=l_prog
+      IF li_cnt>0 THEN
+         #若原本所記錄的merge版次資料不同於現有的版次資料, 則要更新merge紀錄.
+         SELECT * INTO lr_dzap.* FROM dzap_t WHERE dzap001=l_prog
+         IF lr_dzap.dzap004=po_prev_cus_DZAF.dzaf002 AND  #客製建構版次
+            lr_dzap.dzap007=po_curr_std_DZAF.dzaf002 THEN #標準建構版次
+            LET ls_trigger = "UPDATE dzap_t.dzap010='Y': ",l_prog
+            DISPLAY ls_trigger
+            LET ls_sql = "UPDATE dzap_t SET dzap010='Y',",
+                                           "dzapmoddt=?,",
+                                           "dzapmodid=?",
+                         " WHERE dzap001=?"
+            PREPARE upd_dzap_prep1 FROM ls_sql
+            EXECUTE upd_dzap_prep1 USING g_date,g_user,l_prog
+            FREE upd_dzap_prep1
+         ELSE
+            LET ls_trigger = "UPDATE dzap_t new revision: ",l_prog
+            DISPLAY ls_trigger
+            LET ls_sql = "UPDATE dzap_t SET dzap004=?,", #客製建構版次
+                                           "dzap005=?,", #客製規格版次
+                                           "dzap006=?,", #客製程式版次
+                                           "dzap007=?,", #標準建構版次
+                                           "dzap008=?,", #標準規格版次
+                                           "dzap009=?,", #標準程式版次
+                                           "dzap010='Y',",
+                                           "dzapmoddt=?,",
+                                           "dzapmodid=?",
+                         " WHERE dzap001=?"
+            PREPARE upd_dzap_prep2 FROM ls_sql
+            EXECUTE upd_dzap_prep2 USING po_prev_cus_DZAF.dzaf002,po_prev_cus_DZAF.dzaf003,po_prev_cus_DZAF.dzaf004,
+                                         po_curr_std_DZAF.dzaf002,po_curr_std_DZAF.dzaf003,po_curr_std_DZAF.dzaf004,
+                                         g_date,g_user,l_prog
+            FREE upd_dzap_prep2
+         END IF
+      END IF
+  
+      DISPLAY "sadzi888_07_upd_dzap_t finish!"
+ 
+      RETURN TRUE,NULL
+
+      LABEL _RTN_ERR :
+         RETURN FALSE,ls_err_msg
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      LET ls_err_msg = "merge source:c(",po_prev_cus_DZAF.dzaf002,po_prev_cus_DZAF.dzaf003,po_prev_cus_DZAF.dzaf004,") vs ",
+                                    "s(",po_curr_std_DZAF.dzaf002,po_curr_std_DZAF.dzaf003,po_curr_std_DZAF.dzaf004,")"
+      RETURN FALSE,"ERROR : call sadzi888_07_upd_dzap_t error!",ls_err_msg
+   END TRY
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 執行規格/程式的merge
+# Input parameter : po_prev_cus_DZAF 客製DZAF_T資料(merge之前)
+# Return code     : BOOLEAN  TRUE:成功;FALSE:失敗
+#                 : STRING   錯誤訊息
+# Date & Author   : 2014/09/19 by Hiko
+##########################################################################
+PUBLIC FUNCTION sadzi888_07_auto_merge(po_prev_cus_DZAF)
+   DEFINE po_prev_cus_DZAF T_DZAF_T
+   DEFINE ls_prog    STRING,
+          ls_trigger STRING,
+          ls_sql     STRING,
+          li_cnt     SMALLINT,
+          l_dzap010  LIKE dzap_t.dzap010,
+          lb_result  BOOLEAN,
+          lb_result2 BOOLEAN,
+          ls_info    STRING,
+          ls_err_msg STRING,
+          lo_new_std_DZAF T_DZAF_T,
+          lo_new_cus_DZAF T_DZAF_T #客製DZAF_T資料:merge的版次
+
+   #簽出後就不能做merge, 否則會發生改到一半才merge, 然後有問題無法還原成簽出並修改後的狀態.
+   #也就是說, 手動merge和patch自動merge是相同流程, 一定要在簽入狀態才可以執行, 這樣也比較單純.
+
+   #執行流程:假設標準版次為5:3:4;客製版次為4:2:3
+   #1.長客製版次(規格:c2-->c3;程式c3-->c4)
+   #2-1.呼叫產生規格樹(包含4fd樹)的after download(c2-->c3)
+   #2-2.呼叫產生程式樹的after download(c3-->c4)
+   #3-1.呼叫4fd merge(s3 vs c3)
+   #3-2.呼叫規格merge(s3 vs c3)
+   #4.呼叫程式merge(s4 vs c4)
+   #5.程式重新產生與組合(c4)
+
+   TRY
+      LET ls_prog = po_prev_cus_DZAF.dzaf001 CLIPPED
+
+      CALL sadzi888_07_init_var()
+
+      #報表元件(G,X)客製的話不可以做merge,所以直接跳掉.
+      IF po_prev_cus_DZAF.dzaf005="G" OR po_prev_cus_DZAF.dzaf005="X" THEN
+         LET ls_info = "[INFO]Report Component(G,X) can not be merged!"
+         DISPLAY ls_info
+         RETURN TRUE,ls_info
+      END IF 
+
+      #取得目前(patch之後)dzaf_t內最大的標準版次資料 
+      CALL sadzi888_07_get_curr_ver_info_by_flag(po_prev_cus_DZAF.*, "s") RETURNING ls_err_msg,lo_new_std_DZAF.*
+      IF NOT cl_null(ls_err_msg) THEN
+         GOTO _RTN_ERR
+      ELSE
+         #判斷標準和客製是否都不是free style或都是free style.
+         CALL sadzp169_02_chk_not_free_style(ls_prog, lo_new_std_DZAF.dzaf010) RETURNING lb_result,ls_err_msg
+         CALL sadzp169_02_chk_not_free_style(ls_prog, po_prev_cus_DZAF.dzaf010) RETURNING lb_result2,ls_err_msg
+         IF lb_result<>lb_result2 THEN
+            LET ls_info = "[INFO]One of the standard or customer program is free style, so that the customer program can not be merged!"
+            DISPLAY ls_info
+            RETURN TRUE,ls_info
+         END IF
+      END IF
+
+      #已經做過merge的話就直接跳過,這只有在重複上Patch的時候才會發生,因為手動merge會被下載畫面就擋住了.
+      LET ls_sql = "SELECT COUNT(*),dzap010",
+                    " FROM dzap_t",
+                   " WHERE dzap001='",ls_prog,"'",
+                   " GROUP BY dzap010"
+      PREPARE dzap_prep3 FROM ls_sql
+      EXECUTE dzap_prep3 INTO li_cnt,l_dzap010
+      FREE dzap_prep3
+      IF li_cnt>0 AND l_dzap010='Y' THEN
+         LET ls_info = "[INFO]",ls_prog," has merged!"
+         DISPLAY ls_info
+         RETURN TRUE,ls_info
+      END IF
+
+      CALL sadzi888_07_create_design_data(po_prev_cus_DZAF.*, "ALL") RETURNING lb_result,ls_err_msg,lo_new_cus_DZAF.*
+      IF NOT lb_result THEN GOTO _RTN_ERR END IF
+
+      CALL sadzi888_07_merge_start(lo_new_cus_DZAF.*, lo_new_std_DZAF.*, '1') RETURNING lb_result,ls_err_msg
+      IF NOT lb_result THEN GOTO _RTN_ERR END IF
+
+      #將merge紀錄表的欄位[merge否]更新為'Y'.這邊就算失敗,也不影響merge結果,但還是要顯現有錯誤.
+      CALL sadzi888_07_upd_dzap_t(po_prev_cus_DZAF.*, lo_new_std_DZAF.*) RETURNING lb_result,ls_err_msg
+      IF NOT lb_result THEN GOTO _RTN_ERR END IF
+
+      DISPLAY "sadzi888_07_auto_merge finish!"
+
+      RETURN TRUE,NULL
+
+      LABEL _RTN_ERR :
+         RETURN FALSE,ls_err_msg
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      RETURN FALSE,"ERROR : call sadzi888_07_auto_merge error!"
+   END TRY
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 自定義欄位開通建立設計資料
+# Input parameter : po_old_dzaf 客製DZAF_T資料(merge之前)
+#                 : p_role   角色(規格:SD;程式:PR;全部:ALL)
+# Return code     : BOOLEAN  TRUE:成功;FALSE:失敗
+#                 : STRING   錯誤訊息
+#                 : T_DZAF_T dzaf_t物件
+# Date & Author   : 2014/09/19 by Hiko
+##########################################################################
+PUBLIC FUNCTION sadzi888_07_create_design_data_for_adzp169(po_old_dzaf, p_role)
+   DEFINE po_old_dzaf T_DZAF_T,
+          p_role      STRING
+   DEFINE ls_prog     STRING,
+          ls_trigger  STRING,
+          ls_sql      STRING,
+          lb_result   BOOLEAN,
+          ls_err_msg  STRING,
+          ls_err_msg2 STRING
+   DEFINE l_new_cus_dzaf002 LIKE dzaf_t.dzaf002,
+          l_new_cus_dzaf003 LIKE dzaf_t.dzaf003,
+          l_new_cus_dzaf004 LIKE dzaf_t.dzaf004,
+          l_new_cus_dzaf006 LIKE dzaf_t.dzaf006,
+          lo_new_cus_dzaf   T_DZAF_T  #客製DZAF_T資料:merge的版次
+
+   #執行流程:假設標準版次為5:3:4;客製版次為4:2:3
+   #1.長客製版次(規格:c2-->c3;程式c3-->c4)
+   #2-1.呼叫產生規格樹(包含4fd樹)的after download(c2-->c3)
+   #2-2.呼叫產生程式樹的after download(c3-->c4)
+
+   TRY
+      CALL sadzi888_07_init_var() #這是為了sadzp169_02呼叫所增加.
+
+      LET ls_prog = po_old_dzaf.dzaf001 CLIPPED
+
+      #1.長客製版次(規格:c2-->c3;程式c3-->c4)
+      LET ls_trigger = "sadzi888_07_create_design_data_for_adzp169 : INSERT INTO dzaf_t new revision : ",po_old_dzaf.dzaf001
+      DISPLAY ls_trigger
+
+      IF po_old_dzaf.dzaf010="s" THEN #標準轉客製(例如s534變成c111):這段是為了給自定義欄位開通共用,正常merge不會有這個情況.
+         LET l_new_cus_dzaf002 = 0
+         LET l_new_cus_dzaf003 = 0
+         LET l_new_cus_dzaf004 = 0
+         LET l_new_cus_dzaf006 = sadzi140_db_get_module_code_by_dgenv(po_old_dzaf.dzaf006, "c") #取得對應的客製模組
+      ELSE #客製長版次
+         LET l_new_cus_dzaf002 = po_old_dzaf.dzaf002 #建構版次字串轉數字
+         LET l_new_cus_dzaf003 = po_old_dzaf.dzaf003 #規格版次字串轉數字
+         LET l_new_cus_dzaf004 = po_old_dzaf.dzaf004 #程式版次字串轉數字
+         LET l_new_cus_dzaf006 = po_old_dzaf.dzaf006 #原本的模組
+      END IF
+
+      LET l_new_cus_dzaf002 = l_new_cus_dzaf002 + 1
+      CASE p_role
+         WHEN "SD"
+            LET l_new_cus_dzaf003 = l_new_cus_dzaf003 + 1
+         WHEN "PR"
+            LET l_new_cus_dzaf004 = l_new_cus_dzaf004 + 1
+         WHEN "ALL"
+            LET l_new_cus_dzaf003 = l_new_cus_dzaf003 + 1
+            LET l_new_cus_dzaf004 = l_new_cus_dzaf004 + 1
+      END CASE
+         
+      #建立客製DZAF_T資料:merge的版次
+      LET lo_new_cus_dzaf.dzaf001 = po_old_dzaf.dzaf001
+      LET lo_new_cus_dzaf.dzaf002 = l_new_cus_dzaf002
+      LET lo_new_cus_dzaf.dzaf003 = l_new_cus_dzaf003
+      LET lo_new_cus_dzaf.dzaf004 = l_new_cus_dzaf004
+      LET lo_new_cus_dzaf.dzaf005 = po_old_dzaf.dzaf005
+      LET lo_new_cus_dzaf.dzaf006 = l_new_cus_dzaf006 #這裡一定是客製模組
+      LET lo_new_cus_dzaf.dzaf007 = gs_erpid
+      LET lo_new_cus_dzaf.dzaf008 = gs_erpver
+      LET lo_new_cus_dzaf.dzaf009 = gs_customer
+      LET lo_new_cus_dzaf.dzaf010 = "c" #這裡一定是c
+
+      LET ls_sql = "INSERT INTO dzaf_t(dzaf001,dzaf002,dzaf003,dzaf004,dzaf005,",
+                                      "dzaf006,dzaf007,dzaf008,dzaf009,dzaf010)",
+                              " VALUES(?,?,?,?,?,?,?,?,?,?)"
+      PREPARE ins_dzaf_prep FROM ls_sql
+      EXECUTE ins_dzaf_prep USING lo_new_cus_dzaf.dzaf001,lo_new_cus_dzaf.dzaf002,lo_new_cus_dzaf.dzaf003,lo_new_cus_dzaf.dzaf004,lo_new_cus_dzaf.dzaf005,
+                                  lo_new_cus_dzaf.dzaf006,lo_new_cus_dzaf.dzaf007,lo_new_cus_dzaf.dzaf008,lo_new_cus_dzaf.dzaf009,lo_new_cus_dzaf.dzaf010 
+      FREE ins_dzaf_prep
+  
+      DISPLAY ls_trigger," finish!"
+      LET ls_sql = "" #初始化,以免DEBUG搞錯
+
+      #2-1.呼叫產生規格樹(包含4fd樹)的after download(c2-->c3)
+      #2-2.呼叫產生程式樹的after download(c3-->c4)
+      CASE p_role
+         WHEN "SD"
+            LET ls_trigger = "sadzi888_07_create_design_data_for_adzp169 : call sadzp060_2_after_check_out_for_download(SD)"
+            DISPLAY ls_trigger
+            CALL sadzp060_2_after_check_out_for_download(ls_prog, "SD", lo_new_cus_dzaf.*, po_old_dzaf.*) RETURNING ls_err_msg
+            IF NOT cl_null(ls_err_msg) THEN 
+               CALL sadzp063_1_del_unnecessary_spec_data(ls_prog, po_old_dzaf.dzaf003, po_old_dzaf.dzaf010) RETURNING lb_result,ls_err_msg2
+               IF NOT lb_result THEN 
+                  LET ls_err_msg = ls_err_msg,ls_err_msg2
+               END IF
+            END IF
+         WHEN "PR" #這裡先做了一次r.c3,但不影響整個merge流程.
+            LET ls_trigger = "sadzi888_07_create_design_data_for_adzp169 : call sadzp060_2_after_check_out_for_download(PR)"
+            DISPLAY ls_trigger
+            CALL sadzp060_2_after_check_out_for_download(ls_prog, "PR", lo_new_cus_dzaf.*, po_old_dzaf.*) RETURNING ls_err_msg
+            IF NOT cl_null(ls_err_msg) THEN 
+               CALL sadzp063_1_del_unnecessary_code_data(ls_prog, po_old_dzaf.dzaf004, po_old_dzaf.dzaf010) RETURNING lb_result,ls_err_msg2
+               IF NOT lb_result THEN 
+                  LET ls_err_msg = ls_err_msg,ls_err_msg2
+               END IF
+            END IF
+         WHEN "ALL"
+            LET ls_trigger = "sadzi888_07_create_design_data_for_adzp169 : call sadzp060_2_after_check_out_for_download(SD)"
+            DISPLAY ls_trigger
+            CALL sadzp060_2_after_check_out_for_download(ls_prog, "SD", lo_new_cus_dzaf.*, po_old_dzaf.*) RETURNING ls_err_msg
+            IF cl_null(ls_err_msg) THEN
+               LET ls_trigger = "sadzi888_07_create_design_data_for_adzp169 : call sadzp060_2_after_check_out_for_download(PR)"
+               DISPLAY ls_trigger
+               CALL sadzp060_2_after_check_out_for_download(ls_prog, "PR", lo_new_cus_dzaf.*, po_old_dzaf.*) RETURNING ls_err_msg
+               IF NOT cl_null(ls_err_msg) THEN 
+                  CALL sadzp063_1_del_unnecessary_code_data(ls_prog, po_old_dzaf.dzaf004, po_old_dzaf.dzaf010) RETURNING lb_result,ls_err_msg2
+                  IF NOT lb_result THEN 
+                     LET ls_err_msg = ls_err_msg,ls_err_msg2
+                  END IF
+               END IF
+            ELSE
+               CALL sadzp063_1_del_unnecessary_spec_data(ls_prog, po_old_dzaf.dzaf003, po_old_dzaf.dzaf010) RETURNING lb_result,ls_err_msg2
+               IF NOT lb_result THEN 
+                  LET ls_err_msg = ls_err_msg,ls_err_msg2
+               END IF
+            END IF
+      END CASE
+
+      IF NOT cl_null(ls_err_msg) THEN 
+         #長樹失敗,最後要將新的客製dzaf_t刪除.
+         DELETE FROM dzaf_t
+          WHERE dzaf001=lo_new_cus_dzaf.dzaf001
+            AND dzaf002=lo_new_cus_dzaf.dzaf002
+            AND dzaf005=lo_new_cus_dzaf.dzaf005
+            AND dzaf010=lo_new_cus_dzaf.dzaf010
+
+         RETURN FALSE,ls_err_msg,po_old_dzaf.*
+      END IF
+
+      RETURN TRUE,NULL,lo_new_cus_dzaf.*
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      RETURN FALSE,"ERROR : call sadzi888_07_create_design_data_for_adzp169 error!",po_old_dzaf.*
+   END TRY
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 建立設計資料(非自定義開通)
+# Input parameter : po_old_dzaf 客製DZAF_T資料(merge之前)
+#                 : p_role   角色(規格:SD;程式:PR;全部:ALL)
+# Return code     : BOOLEAN  TRUE:成功;FALSE:失敗
+#                 : STRING   錯誤訊息
+#                 : T_DZAF_T dzaf_t物件
+# Date & Author   : 2014/09/19 by Hiko
+##########################################################################
+PUBLIC FUNCTION sadzi888_07_create_design_data(po_old_dzaf, p_role)
+   DEFINE po_old_dzaf T_DZAF_T,
+          p_role      STRING
+   DEFINE ls_prog     STRING,
+          ls_trigger  STRING,
+          ls_sql      STRING,
+          lb_result   BOOLEAN,
+          ls_err_msg  STRING,
+          ls_err_msg2 STRING
+   DEFINE l_new_cus_dzaf002 LIKE dzaf_t.dzaf002,
+          l_new_cus_dzaf003 LIKE dzaf_t.dzaf003,
+          l_new_cus_dzaf004 LIKE dzaf_t.dzaf004,
+          l_new_cus_dzaf005 LIKE dzaf_t.dzaf005, #2014/12/19 by Hiko
+          l_new_cus_dzaf006 LIKE dzaf_t.dzaf006,
+          lo_new_cus_dzaf   T_DZAF_T  #客製DZAF_T資料:merge的版次
+
+   #執行流程:假設標準版次為5:3:4;客製版次為4:2:3
+   #1.長客製版次(規格:c2-->c3;程式c3-->c4)
+   #2-1.呼叫產生規格樹(包含4fd樹)的after download(c2-->c3)
+   #2-2.呼叫產生程式樹的after download(c3-->c4)
+
+   TRY
+      CALL sadzi888_07_init_var() #這是為了sadzp169_02呼叫所增加.
+
+      LET ls_prog = po_old_dzaf.dzaf001 CLIPPED
+      LET l_new_cus_dzaf005 = po_old_dzaf.dzaf005 #2014/12/19 by Hiko
+
+      #1.長客製版次(規格:c2-->c3;程式c3-->c4)
+      LET ls_trigger = "sadzi888_07_create_design_data : INSERT INTO dzaf_t new revision : ",po_old_dzaf.dzaf001
+      DISPLAY ls_trigger
+
+      LET l_new_cus_dzaf002 = po_old_dzaf.dzaf002 #建構版次字串轉數字
+      LET l_new_cus_dzaf003 = po_old_dzaf.dzaf003 #規格版次字串轉數字
+      LET l_new_cus_dzaf004 = po_old_dzaf.dzaf004 #程式版次字串轉數字
+      LET l_new_cus_dzaf006 = po_old_dzaf.dzaf006 #原本的模組
+
+      #Begin:2014/12/19 by Hiko:for c1
+      #這種情況是發生在標準轉客製後(c212 or c221)又取消簽出(c111),但這應該會執行客製還原標準:
+      #M:c111 S:c111 F:c110 B/W/G/X:c101 or c111
+      #End:2014/12/19 by Hiko
+      IF po_old_dzaf.dzaf002=1 THEN 
+         RETURN TRUE,NULL,po_old_dzaf.* #不需要長樹
+      END IF
+
+      LET l_new_cus_dzaf002 = l_new_cus_dzaf002 + 1
+      #Begin:2014/12/19 by Hiko:重寫此段
+      CASE p_role
+         WHEN "SD"
+            IF l_new_cus_dzaf005="M" OR l_new_cus_dzaf005="S" OR l_new_cus_dzaf005="F" THEN
+               IF l_new_cus_dzaf003>1 THEN #for c1
+                  LET l_new_cus_dzaf003 = l_new_cus_dzaf003 + 1
+               END IF
+            END IF
+         WHEN "PR"
+            IF l_new_cus_dzaf005<>"F" THEN 
+               IF l_new_cus_dzaf004>1 THEN #for c1
+                  LET l_new_cus_dzaf004 = l_new_cus_dzaf004 + 1
+               END IF
+            END IF
+         WHEN "ALL"
+            IF l_new_cus_dzaf005="M" OR l_new_cus_dzaf005="S" OR l_new_cus_dzaf005="F" THEN
+               IF l_new_cus_dzaf003>1 THEN #for c1
+                  LET l_new_cus_dzaf003 = l_new_cus_dzaf003 + 1
+               END IF
+            END IF
+
+            IF l_new_cus_dzaf005<>"F" THEN
+               IF (l_new_cus_dzaf004>1) THEN #for c1
+                  LET l_new_cus_dzaf004 = l_new_cus_dzaf004 + 1
+               END IF
+            END IF
+      END CASE
+      #End:2014/12/19 by Hiko
+         
+      #建立客製DZAF_T資料:merge的版次
+      LET lo_new_cus_dzaf.dzaf001 = po_old_dzaf.dzaf001
+      LET lo_new_cus_dzaf.dzaf002 = l_new_cus_dzaf002
+      LET lo_new_cus_dzaf.dzaf003 = l_new_cus_dzaf003
+      LET lo_new_cus_dzaf.dzaf004 = l_new_cus_dzaf004
+      LET lo_new_cus_dzaf.dzaf005 = po_old_dzaf.dzaf005
+      LET lo_new_cus_dzaf.dzaf006 = l_new_cus_dzaf006 #這裡一定是客製模組
+      LET lo_new_cus_dzaf.dzaf007 = gs_erpid
+      LET lo_new_cus_dzaf.dzaf008 = gs_erpver
+      LET lo_new_cus_dzaf.dzaf009 = gs_customer
+      LET lo_new_cus_dzaf.dzaf010 = "c" #這裡一定是c
+
+      LET ls_sql = "INSERT INTO dzaf_t(dzaf001,dzaf002,dzaf003,dzaf004,dzaf005,",
+                                      "dzaf006,dzaf007,dzaf008,dzaf009,dzaf010)",
+                              " VALUES(?,?,?,?,?,?,?,?,?,?)"
+      PREPARE ins_dzaf_prep2 FROM ls_sql
+      EXECUTE ins_dzaf_prep2 USING lo_new_cus_dzaf.dzaf001,lo_new_cus_dzaf.dzaf002,lo_new_cus_dzaf.dzaf003,lo_new_cus_dzaf.dzaf004,lo_new_cus_dzaf.dzaf005,
+                                   lo_new_cus_dzaf.dzaf006,lo_new_cus_dzaf.dzaf007,lo_new_cus_dzaf.dzaf008,lo_new_cus_dzaf.dzaf009,lo_new_cus_dzaf.dzaf010 
+      FREE ins_dzaf_prep2
+  
+      DISPLAY ls_trigger," finish!"
+      LET ls_sql = "" #初始化,以免DEBUG搞錯
+
+      #2-1.呼叫產生規格樹(包含4fd樹)的after download(c2-->c3)
+      #2-2.呼叫產生程式樹的after download(c3-->c4)
+      CASE p_role
+         WHEN "SD"
+            IF l_new_cus_dzaf005="M" OR l_new_cus_dzaf005="S" OR l_new_cus_dzaf005="F" THEN
+               IF l_new_cus_dzaf003>1 THEN #for c1
+                  LET ls_trigger = "sadzi888_07_create_design_data : call sadzp060_2_after_check_out_for_download(SD)"
+                  DISPLAY ls_trigger
+                  CALL sadzp060_2_after_check_out_for_download(ls_prog, "SD", lo_new_cus_dzaf.*, po_old_dzaf.*) RETURNING ls_err_msg
+                  IF NOT cl_null(ls_err_msg) THEN 
+                     CALL sadzp063_1_del_unnecessary_spec_data(ls_prog, po_old_dzaf.dzaf003, po_old_dzaf.dzaf010) RETURNING lb_result,ls_err_msg2
+                     IF NOT lb_result THEN 
+                        LET ls_err_msg = ls_err_msg,ls_err_msg2
+                     END IF
+                  END IF
+               END IF
+            END IF
+         WHEN "PR" #這裡先做了一次r.c3,但不影響整個merge流程.
+            IF l_new_cus_dzaf005<>"F" THEN 
+               IF l_new_cus_dzaf004>1 THEN #for c1
+                  LET ls_trigger = "sadzi888_07_create_design_data : call sadzp060_2_after_check_out_for_download(PR)"
+                  DISPLAY ls_trigger
+                  CALL sadzp060_2_after_check_out_for_download(ls_prog, "PR", lo_new_cus_dzaf.*, po_old_dzaf.*) RETURNING ls_err_msg
+                  IF NOT cl_null(ls_err_msg) THEN 
+                     CALL sadzp063_1_del_unnecessary_code_data(ls_prog, po_old_dzaf.dzaf004, po_old_dzaf.dzaf010) RETURNING lb_result,ls_err_msg2
+                     IF NOT lb_result THEN 
+                        LET ls_err_msg = ls_err_msg,ls_err_msg2
+                     END IF
+                  END IF
+               END IF
+            END IF
+         WHEN "ALL"
+            IF l_new_cus_dzaf005="M" OR l_new_cus_dzaf005="S" OR l_new_cus_dzaf005="F" THEN
+               IF l_new_cus_dzaf003>1 THEN #for c1
+                  LET ls_trigger = "sadzi888_07_create_design_data : call sadzp060_2_after_check_out_for_download(SD)"
+                  DISPLAY ls_trigger
+                  CALL sadzp060_2_after_check_out_for_download(ls_prog, "SD", lo_new_cus_dzaf.*, po_old_dzaf.*) RETURNING ls_err_msg
+                  IF NOT cl_null(ls_err_msg) THEN
+                     CALL sadzp063_1_del_unnecessary_spec_data(ls_prog, po_old_dzaf.dzaf003, po_old_dzaf.dzaf010) RETURNING lb_result,ls_err_msg2
+                     IF NOT lb_result THEN 
+                        LET ls_err_msg = ls_err_msg,ls_err_msg2
+                     END IF
+                  END IF
+               END IF
+            END IF
+
+            IF l_new_cus_dzaf005<>"F" THEN 
+               IF l_new_cus_dzaf004>1 THEN #for c1
+                  IF cl_null(ls_err_msg) THEN
+                     LET ls_trigger = "sadzi888_07_create_design_data : call sadzp060_2_after_check_out_for_download(PR)"
+                     DISPLAY ls_trigger
+                     CALL sadzp060_2_after_check_out_for_download(ls_prog, "PR", lo_new_cus_dzaf.*, po_old_dzaf.*) RETURNING ls_err_msg
+                     IF NOT cl_null(ls_err_msg) THEN 
+                        CALL sadzp063_1_del_unnecessary_code_data(ls_prog, po_old_dzaf.dzaf004, po_old_dzaf.dzaf010) RETURNING lb_result,ls_err_msg2
+                        IF NOT lb_result THEN 
+                           LET ls_err_msg = ls_err_msg,ls_err_msg2
+                        END IF
+                     END IF
+                  END IF
+               END IF
+            END IF
+      END CASE
+
+      IF NOT cl_null(ls_err_msg) THEN 
+         #長樹失敗,最後要將新的客製dzaf_t刪除.
+         DELETE FROM dzaf_t
+          WHERE dzaf001=lo_new_cus_dzaf.dzaf001
+            AND dzaf002=lo_new_cus_dzaf.dzaf002
+            AND dzaf005=lo_new_cus_dzaf.dzaf005
+            AND dzaf010=lo_new_cus_dzaf.dzaf010
+
+         RETURN FALSE,ls_err_msg,po_old_dzaf.*
+      END IF
+
+      RETURN TRUE,NULL,lo_new_cus_dzaf.*
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      RETURN FALSE,"ERROR : call sadzi888_07_create_design_data error!",po_old_dzaf.*
+   END TRY
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 執行規格/程式的merge
+# Input parameter : po_new_cus_DZAF 客製DZAF_T資料(長版次之後)
+#                 : po_new_std_DZAF 標準DZAF_T資料(Patch之後)
+#                 : p_trigger_from 觸發時機(1:patch時觸發;2:透過設計器自行觸發)
+#                 : po_prev_cus_DZAF 客製DZAF_T資料(長版次之前)
+# Return code     : BOOLEAN  TRUE:成功;FALSE:失敗
+#                 : STRING   錯誤訊息
+# Date & Author   : 2014/09/19 by Hiko
+##########################################################################
+PUBLIC FUNCTION sadzi888_07_merge_start(po_new_cus_DZAF, po_new_std_DZAF, p_trigger_from)
+   DEFINE po_new_cus_DZAF T_DZAF_T,
+          po_new_std_DZAF T_DZAF_T,
+          p_trigger_from   LIKE type_t.chr1
+   DEFINE ls_prog     STRING,
+          ls_trigger  STRING,
+          ls_sql      STRING,
+          ls_info     STRING,
+          ls_err_msg  STRING,
+          ls_err_msg2 STRING
+   DEFINE l_new_cus_dzaf002 LIKE dzaf_t.dzaf002,
+          l_new_cus_dzaf003 LIKE dzaf_t.dzaf003,
+          l_new_cus_dzaf004 LIKE dzaf_t.dzaf004,
+          l_new_cus_dzaf005 LIKE dzaf_t.dzaf005, #2014/12/19 by Hiko
+          lo_new_std_DZAF T_DZAF_T  #標準DZAF_T資料(標準來源的版次資料):patch之後
+   DEFINE ls_cmd     STRING,
+          lb_result  BOOLEAN,
+          lb_result2 BOOLEAN
+   DEFINE ls_4fd_err STRING, #20150915
+          ls_rc3_err STRING, #20150915
+          lb_4fd_err BOOLEAN,#20150915
+          lb_rc3_err BOOLEAN #20150915
+
+   #執行流程:假設標準版次為5:3:4;客製版次為4:2:3
+   #1.長客製版次(規格:c2-->c3;程式c3-->c4)
+   #2-1.呼叫產生規格樹(包含4fd樹)的after download(c2-->c3)
+   #2-2.呼叫產生程式樹的after download(c3-->c4)
+   #3-1.呼叫4fd merge(s3 vs c3)
+   #3-2.呼叫規格merge(s3 vs c3)
+   #3-3.呼叫規格(資源池)的merge(dzam_t/dzag_t/dzfs_t)
+   #4.呼叫程式merge(s4 vs c4)
+   #5.程式重新產生與組合(c4)
+
+   TRY
+      LET lo_new_std_DZAF.* = po_new_std_DZAF.*
+      LET ls_prog = po_new_cus_DZAF.dzaf001 CLIPPED
+      LET l_new_cus_dzaf005 = po_new_cus_DZAF.dzaf005
+
+      IF p_trigger_from='2' THEN
+         CALL sadzi888_07_init_var()
+         
+         #報表元件(G,X)客製的話不可以做merge,所以直接跳掉.
+         IF l_new_cus_dzaf005="G" OR l_new_cus_dzaf005="X" THEN
+            LET ls_info = "[INFO]Report Component(G,X) can not be merged!"
+            DISPLAY ls_info
+            RETURN TRUE,ls_info
+         END IF 
+         
+         #長版次和樹透過下載畫面的[簽出合併]功能來達成 : 同時簽出規格和程式
+         #1.長客製版次(規格:c2-->c3;程式c3-->c4)
+         #2-1.呼叫產生規格樹(包含4fd樹)的after download(c2-->c3)
+         #2-2.呼叫產生程式樹的after download(c3-->c4)
+         
+         #取得目前(patch之後)dzaf_t內最大的標準版次資料 
+         CALL sadzi888_07_get_curr_ver_info_by_flag(po_new_cus_DZAF.*, "s") RETURNING ls_err_msg,lo_new_std_DZAF.*
+         IF NOT cl_null(ls_err_msg) THEN
+            GOTO _RTN_ERR
+         ELSE
+            IF l_new_cus_dzaf005="M" OR l_new_cus_dzaf005="S" THEN #2014/12/19 by Hiko:非M/S的程式就直接merge
+               #判斷標準和客製是否都不是free style或都是free style.
+               CALL sadzp169_02_chk_not_free_style(ls_prog, lo_new_std_DZAF.dzaf010) RETURNING lb_result,ls_err_msg
+               CALL sadzp169_02_chk_not_free_style(ls_prog, po_new_cus_DZAF.dzaf010) RETURNING lb_result2,ls_err_msg
+               IF lb_result<>lb_result2 THEN
+                  LET ls_info = "[INFO]One of the standard or customer program is free style, so that the customer program can not be merged!"
+                  DISPLAY ls_info
+                  RETURN TRUE,ls_info
+               END IF
+            END IF
+         END IF
+      END IF
+
+      IF l_new_cus_dzaf005="M" OR l_new_cus_dzaf005="S" OR l_new_cus_dzaf005="F" OR l_new_cus_dzaf005="Q" THEN #2014/12/19 by Hiko
+         #3-1.呼叫4fd merge(s3 vs c3)
+         LET ls_trigger = "sadzi888_07_merge_start : call sadzp168_6(",ls_prog,",",lo_new_std_DZAF.dzaf003,",",po_new_cus_DZAF.dzaf003,")" 
+         DISPLAY ls_trigger
+         CALL sadzp168_6(ls_prog, lo_new_std_DZAF.dzaf003, po_new_cus_DZAF.dzaf003) RETURNING lb_result,ls_err_msg
+         IF NOT lb_result THEN GOTO _RTN_ERR END IF
+         #重新組合4fd
+         IF g_run_mode ="4" THEN #160223-00028
+            #do nothing :patch模式下,不重產4fd,也不編譯,交由後續patch機制執行
+         ELSE
+            LET ls_trigger = "sadzi888_07_merge_start : call sadzp168_5(",ls_prog,",",po_new_cus_DZAF.dzaf003,",",po_new_cus_DZAF.dzaf010,", FALSE)"
+            DISPLAY ls_trigger
+           #20150915 -Modify Begin-
+           #CALL sadzp168_5(ls_prog, po_new_cus_DZAF.dzaf003, po_new_cus_DZAF.dzaf010, FALSE) RETURNING lb_result,ls_err_msg #2015/01/29 by Hiko #2015/06/03 by Hiko:忽略4fd編譯失敗
+           #IF NOT lb_result THEN GOTO _RTN_ERR END IF
+            CALL sadzp168_5(ls_prog, po_new_cus_DZAF.dzaf003, po_new_cus_DZAF.dzaf010, TRUE) RETURNING lb_result,ls_err_msg 
+            IF NOT lb_result THEN 
+               LET lb_4fd_err=TRUE
+               LET ls_4fd_err=ls_err_msg
+            END IF
+         END IF
+        #20150915 -Modify End-
+
+         #3-2.呼叫規格merge(s3 vs c3)
+         LET ls_trigger = "sadzi888_07_merge_start : call sadzi888_07_merge_spec"
+         DISPLAY ls_trigger
+         CALL sadzi888_07_merge_spec(lo_new_std_DZAF.*, po_new_cus_DZAF.*) RETURNING ls_err_msg
+         IF NOT cl_null(ls_err_msg) THEN GOTO _RTN_ERR END IF
+
+         #20150721 -Begin-
+         #3-3.呼叫規格(資源池)的merge(dzam_t/dzag_t/dzfs_t)
+         LET ls_trigger = "sadzi888_07_merge_start : call sadzi888_07_merge_spec_pool"
+         DISPLAY ls_trigger
+         CALL sadzi888_07_merge_spec_pool(lo_new_std_DZAF.*, po_new_cus_DZAF.*) RETURNING ls_err_msg
+         IF NOT cl_null(ls_err_msg) THEN GOTO _RTN_ERR END IF
+         #20150721 -End-
+
+      END IF
+
+      IF l_new_cus_dzaf005<>"F" THEN #2014/12/19 by Hiko
+         #4.呼叫程式merge(s4 vs c4)
+         LET ls_trigger = "sadzi888_07_merge_start : call sadzi888_07_merge_addpoint"
+         DISPLAY ls_trigger
+         CALL sadzi888_07_merge_addpoint(lo_new_std_DZAF.*, po_new_cus_DZAF.*) RETURNING ls_err_msg
+         IF NOT cl_null(ls_err_msg) THEN GOTO _RTN_ERR END IF
+         
+         LET ls_trigger = "sadzi888_07_merge_start : call sadzi888_07_merge_section"
+         DISPLAY ls_trigger
+         CALL sadzi888_07_merge_section(lo_new_std_DZAF.*, po_new_cus_DZAF.*) RETURNING lb_result,ls_err_msg
+         IF NOT lb_result THEN GOTO _RTN_ERR END IF
+         
+         #5.程式重新產生與組合(c4)
+         IF g_run_mode ="4" THEN #160223-00028
+            #do nothing :patch模式下,不重產tab/4gl,也不編譯,交由後續patch機制執行
+         ELSE
+            CALL sadzp060_2_rc3(ls_prog, po_new_cus_DZAF.*, '1') RETURNING lb_result,ls_err_msg
+            IF NOT lb_result THEN 
+               #以merge來說,r.c3的出錯機率相對比較高,因此這邊有錯誤,也算是merge成功了.所以只需要印出錯誤訊息即可.
+               #20150915 -Modify Begin-
+               #DISPLAY ls_err_msg
+               #r.c3出錯時視為merge錯誤並回傳錯誤訊息
+               LET lb_rc3_err=TRUE
+               LET ls_rc3_err=ls_err_msg
+               #20150915 -Modify End-
+            END IF
+         END IF
+      END IF
+
+      DISPLAY "sadzi888_07_merge_start finish!"
+
+      #20150915 -Modify Begin-
+      #RETURN TRUE,NULL
+      IF lb_4fd_err OR lb_rc3_err THEN
+         #r.f出錯或r.c3出錯時視為merge錯誤並回傳錯誤訊息
+         LET ls_err_msg = ls_4fd_err.trim(),ASCII 10, ls_rc3_err.trim()
+         RETURN FALSE,ls_err_msg
+      ELSE
+         RETURN TRUE,NULL
+      END IF
+      #20150915 -Modify End-
+
+      LABEL _RTN_ERR :
+         #長樹失敗,最後要將新的客製dzaf_t刪除.
+         DELETE FROM dzaf_t
+          WHERE dzaf001=po_new_cus_DZAF.dzaf001
+            AND dzaf002=po_new_cus_DZAF.dzaf002
+            AND dzaf005=po_new_cus_DZAF.dzaf005
+            AND dzaf010=po_new_cus_DZAF.dzaf010
+
+         #將dzaf_t物件的版次都減1,然後再刪除相關設計資料.
+         LET po_new_cus_DZAF.dzaf002 = po_new_cus_DZAF.dzaf002-1 #建構版次減1
+         LET po_new_cus_DZAF.dzaf003 = po_new_cus_DZAF.dzaf003-1 #規格版次減1
+         LET po_new_cus_DZAF.dzaf004 = po_new_cus_DZAF.dzaf004-1 #程式版次減1
+
+         #刪除新版次的客製規格設計資料
+         CALL sadzp063_1_del_unnecessary_spec_data(ls_prog, po_new_cus_DZAF.dzaf003, po_new_cus_DZAF.dzaf010) RETURNING lb_result,ls_err_msg2
+         IF NOT lb_result THEN 
+            LET ls_err_msg = ls_err_msg," ,還原過程失敗:",ls_err_msg2
+            RETURN FALSE,ls_err_msg
+         END IF
+
+         IF l_new_cus_dzaf005<>"F" THEN #2014/12/19 by Hiko
+            #刪除新版次的客製程式設計資料
+            CALL sadzp063_1_del_unnecessary_code_data(ls_prog, po_new_cus_DZAF.dzaf004, po_new_cus_DZAF.dzaf010) RETURNING lb_result,ls_err_msg2
+            IF NOT lb_result THEN 
+               LET ls_err_msg = ls_err_msg," ,還原過程失敗:",ls_err_msg2
+               RETURN FALSE,ls_err_msg
+            END IF
+         END IF
+
+         IF l_new_cus_dzaf005="M" OR l_new_cus_dzaf005="S" OR l_new_cus_dzaf005="F" OR l_new_cus_dzaf005="Q" THEN #2014/12/19 by Hiko
+            #重新組合4fd
+            LET ls_trigger = "sadzi888_07_merge_start : call sadzp168_5(",ls_prog,",",po_new_cus_DZAF.dzaf003,",",po_new_cus_DZAF.dzaf010,", FALSE)"
+            DISPLAY ls_trigger
+           #CALL sadzp168_5(ls_prog, po_new_cus_DZAF.dzaf003, po_new_cus_DZAF.dzaf010, FALSE) RETURNING lb_result,ls_err_msg #2015/06/03 by Hiko:忽略4fd編譯失敗
+            CALL sadzp168_5(ls_prog, po_new_cus_DZAF.dzaf003, po_new_cus_DZAF.dzaf010, TRUE) RETURNING lb_result,ls_err_msg  #20150915
+            IF NOT lb_result THEN 
+               LET ls_err_msg = ls_err_msg," ,還原過程失敗:",ls_err_msg2
+               RETURN FALSE,ls_err_msg
+            END IF
+         END IF
+
+         IF l_new_cus_dzaf005<>"F" THEN #2014/12/19 by Hiko
+            IF lb_result THEN 
+               #程式重新產生與組合
+               CALL sadzp060_2_rc3(ls_prog, po_new_cus_DZAF.*, '0') RETURNING lb_result,ls_err_msg2 #要做編譯,但失敗不須處理.
+               LET ls_err_msg = ls_err_msg," ,還原過程失敗:",ls_err_msg2 #20150915:補
+            END IF
+         END IF
+
+         RETURN FALSE,ls_err_msg
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      RETURN FALSE,"ERROR : call sadzi888_07_merge_start error!"
+   END TRY
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PRIVATE
+# Descriptions    : 初始化變數.
+# Input parameter : none
+# Return code     : BOOLEAN(成功:TRUE,失敗:FALSE)
+# Date & Author   : 2014/09/19 by Hiko
+##########################################################################
+PRIVATE FUNCTION sadzi888_07_init_var()
+   LET g_date = cl_get_current()
+   LET gs_dept = g_dept CLIPPED
+   LET gs_erpid = FGL_GETENV("ERPID") CLIPPED
+   LET gs_erpver = FGL_GETENV("ERPVER") CLIPPED
+   LET gs_customer = FGL_GETENV("CUST") CLIPPED
+   LET g_env = FGL_GETENV("DGENV") CLIPPED
+   
+   DISPLAY "call sadzi888_07_init_var finish"
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PRIVATE
+# Descriptions    : 擷取錯誤訊息.
+# Input parameter : p_trigger 執行的顯現資訊
+#                   p_sql 執行的SQL
+# Return code     : void
+# Date & Author   : 2014/09/19 by Hiko
+##########################################################################
+PRIVATE FUNCTION sadzi888_07_err_catch(p_trigger, p_sql)
+   DEFINE p_trigger STRING,
+          p_sql STRING
+
+   DISPLAY "ERROR : ls_trigger=",p_trigger
+   DISPLAY "STATUS=",STATUS
+   DISPLAY "SQLCA.SQLCODE=",SQLCA.SQLCODE
+   DISPLAY "ls_sql=",p_sql,"<<"
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PUBLIC 
+# Descriptions    : 取得當下程式(包含規格和代碼)的版次相關資訊
+# Input parameter : po_dzaf 版次資訊物件
+#                 : p_cus_flag 客製標示
+# Return code     : STRING 錯誤訊息(NULL表示成功)
+#                 : T_DZAF_T 版次資訊物件
+# Date & Author   : 2014/09/19 by Hiko
+##########################################################################
+PUBLIC FUNCTION sadzi888_07_get_curr_ver_info_by_flag(po_DZAF, p_cus_flag)
+   DEFINE po_DZAF T_DZAF_T,
+          p_cus_flag STRING
+   DEFINE lo_DZAF_T T_DZAF_T,
+          lo_DZAF_T_new T_DZAF_T
+   DEFINE ls_err_msg STRING
+
+   LET lo_DZAF_T.* = po_DZAF.*
+   LET lo_DZAF_T.dzaf002 = NULL #這樣才有機會取得最大的指定客製標示的最大版次資訊
+   LET lo_DZAF_T.dzaf010 = p_cus_flag
+   CALL sadzp200_ver_get_curr_ver_info(lo_DZAF_T.*) RETURNING lo_DZAF_T_new.*
+   IF cl_null(lo_DZAF_T_new.dzaf002) OR lo_DZAF_T_new.dzaf002=0 THEN
+      LET ls_err_msg = "ERROR : ",lo_DZAF_T.dzaf001,":",p_cus_flag," revision info is NULL"
+      RETURN ls_err_msg,lo_DZAF_T_new.*
+   END IF
+
+   RETURN NULL,lo_DZAF_T_new.*
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PRIVATE 
+# Descriptions    : 客製規格比較與合併:spec
+# Input parameter : po_std_dzaf 標準dzaf_t資料
+#                 : po_cus_dzaf 客製dzaf_t資料
+# Return code     : STRING 錯誤訊息(NULL表示成功)
+# Date & Author   : 2014/09/29 by Hiko
+##########################################################################
+PUBLIC FUNCTION sadzi888_07_merge_spec(po_std_dzaf, po_cus_dzaf)
+   DEFINE po_std_dzaf T_DZAF_T,
+          po_cus_dzaf T_DZAF_T
+   DEFINE ls_prog    STRING,
+          ls_trigger STRING,
+          ls_sql     STRING,
+          ls_where   STRING,
+          li_i       SMALLINT
+   DEFINE dzaa_std_arr DYNAMIC ARRAY OF RECORD LIKE dzaa_t.*,
+          li_cnt SMALLINT
+   DEFINE ls_err_msg STRING
+
+   TRY
+      LET ls_prog = po_cus_dzaf.dzaf001 CLIPPED
+
+      LET ls_trigger = "sadzi888_07_merge_spec : prepare merge source data..."
+      DISPLAY ls_trigger
+      
+      LET ls_sql = "SELECT aa1.* FROM dzaa_t aa1",
+                   " WHERE aa1.dzaa001='",ls_prog,"'", #規格代號
+                   "   AND aa1.dzaa002=?", #標準規格版次
+                   "   AND aa1.dzaa009='",po_std_dzaf.dzaf010,"'", #客製識別碼:s
+                   "   AND (   aa1.dzaa003 IN (", #取得需要更新的spec
+                   "           SELECT aa2.dzaa003 FROM dzaa_t aa2",
+                   "            WHERE aa2.dzaa001=aa1.dzaa001",
+                   "              AND aa2.dzaa002=?",  #客製規格版次
+                   #"              AND aa2.dzaa004<>aa1.dzaa004",        #版次不同 #2015/01/13 by Hiko
+                   "              AND aa2.dzaa006='s'",                 #只需要更改使用標示為's'的spec
+                   "              AND aa2.dzaa009='",po_cus_dzaf.dzaf010,"')", #客製識別碼:c:故意不寫死,想確認資料正確性
+                   "        OR aa1.dzaa003 NOT IN (", #取得標準多於客製的spec
+                   "           SELECT aa3.dzaa003 FROM dzaa_t aa3",
+                   "            WHERE aa3.dzaa001=aa1.dzaa001",
+                   "              AND aa3.dzaa002=?",  #客製規格版次
+                   "              AND aa3.dzaa009='",po_cus_dzaf.dzaf010,"')", #客製識別碼:c
+                   "       )",
+                   " ORDER BY aa1.dzaa003"
+      
+      PREPARE dzaa_std_prep FROM ls_sql
+      DECLARE dzaa_std_curs CURSOR FOR dzaa_std_prep
+      OPEN dzaa_std_curs USING po_std_dzaf.dzaf003,po_cus_dzaf.dzaf003,po_cus_dzaf.dzaf003
+
+      LET li_i = 1
+      FOREACH dzaa_std_curs INTO dzaa_std_arr[li_i].*
+         #查看客製樹是否存在要更新的標準識別碼.
+         LET ls_trigger = "sadzi888_07_merge_spec : get merge target : ",dzaa_std_arr[li_i].dzaa003
+         DISPLAY ls_trigger
+         LET ls_where = "     dzaa001='",ls_prog,"'",
+                        " AND dzaa002=?",
+                        " AND dzaa003='",dzaa_std_arr[li_i].dzaa003,"'",
+                        " AND dzaa009='",po_cus_dzaf.dzaf010,"'" #c
+         LET ls_sql = "SELECT COUNT(*) FROM dzaa_t",
+                      " WHERE ",ls_where
+
+         PREPARE dzaa_cus_prep1 FROM ls_sql
+         EXECUTE dzaa_cus_prep1 INTO li_cnt USING po_cus_dzaf.dzaf003
+         FREE dzaa_cus_prep1
+
+         IF li_cnt>0 THEN 
+            LET ls_trigger = "sadzi888_07_merge_spec : UPDATE..."
+            DISPLAY ls_trigger
+            #修改一定是標準識別碼更新到客製樹內,所以皆以標準資料為主.
+            LET ls_sql = "UPDATE dzaa_t SET dzaa004=?,",                                  #識別碼版次
+                                           "dzaa005='",dzaa_std_arr[li_i].dzaa005,"',",   #識別碼類型
+                                           "dzaa006='",dzaa_std_arr[li_i].dzaa006,"',",   #使用標示:一定是s
+                                           "dzaa007='",dzaa_std_arr[li_i].dzaa007,"',",   #規格引用否
+                                           "dzaa008='",dzaa_std_arr[li_i].dzaa008,"',",   #產品版本
+                                           "dzaa010='",dzaa_std_arr[li_i].dzaa010,"',",   #客戶代號
+                                           "dzaastus='",dzaa_std_arr[li_i].dzaastus,"',", #生失效 
+                                           "dzaamoddt=?,",
+                                           "dzaamodid='",g_user,"'",
+                         " WHERE ",ls_where
+            PREPARE dzaa_cus_prep2 FROM ls_sql
+            EXECUTE dzaa_cus_prep2 USING dzaa_std_arr[li_i].dzaa004,g_date,po_cus_dzaf.dzaf003 #分別對應dzaa004,dzaamoddt,以及WHERE條件的dzaa002
+            FREE dzaa_cus_prep2
+         ELSE 
+            IF dzaa_std_arr[li_i].dzaastus<>"N" THEN #2014/12/27 by Hiko:merge的時候,找不到客製樹內容,則標準失效的資料不需要新增進來,以免多垃圾.
+               LET ls_trigger = "sadzi888_07_merge_spec : INSERT..."
+               DISPLAY ls_trigger
+               #新增一定是標準多餘客製的識別碼,所以皆以標準資料為主.
+               LET ls_sql = "INSERT INTO dzaa_t(dzaa001,dzaa002,dzaa003,dzaa004,dzaa005,",
+                                               "dzaa006,dzaa007,dzaa008,dzaa009,dzaa010,",
+                                               "dzaacrtdt,dzaacrtdp,dzaaowndp,dzaaownid,dzaastus,dzaacrtid)",
+                                    "VALUES( '",ls_prog,"',",
+                                            "  ?,", #dzaa002:客製版次
+                                            "'",dzaa_std_arr[li_i].dzaa003,"',",
+                                            "  ?,", #dzaa004
+                                            "'",dzaa_std_arr[li_i].dzaa005,"',",
+                                            "'",dzaa_std_arr[li_i].dzaa006,"',",
+                                            "'",dzaa_std_arr[li_i].dzaa007,"',",
+                                            "'",dzaa_std_arr[li_i].dzaa008,"',",
+                                            "'",po_cus_dzaf.dzaf010,"',", #c:客製標示
+                                            "'",dzaa_std_arr[li_i].dzaa010,"',",
+                                            "  ?,",           #dzaacrtdt
+                                            "'",gs_dept,"',", #dzaacrtdp
+                                            "'",gs_dept,"',", #dzaaowndp
+                                            "'",g_user,"',",  #dzaaownid
+                                            "'",dzaa_std_arr[li_i].dzaastus,"',",  #dzaastus
+                                            "'",g_user,"')"   #dzaaownid
+               PREPARE dzaa_cus_prep3 FROM ls_sql
+               EXECUTE dzaa_cus_prep3 USING po_cus_dzaf.dzaf003,dzaa_std_arr[li_i].dzaa004,g_date #分別對應dzaa002,dzaa004,dzaacrtdt
+               FREE dzaa_cus_prep3
+            END IF
+         END IF
+
+         LET li_i = li_i + 1
+      END FOREACH
+      
+      DISPLAY "sadzi888_07_merge_spec : finish!"
+
+      RETURN NULL
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      RETURN "ERROR : call sadzi888_07_merge_spec error!"
+   END TRY
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PRIVATE 
+# Descriptions    : 客製程式比較與合併:add point
+# Input parameter : po_std_dzaf 標準dzaf_t資料
+#                 : po_cus_dzaf 客製dzaf_t資料
+# Return code     : STRING 錯誤訊息(NULL表示成功)
+# Date & Author   : 2014/09/29 by Hiko
+##########################################################################
+PUBLIC FUNCTION sadzi888_07_merge_addpoint(po_std_dzaf, po_cus_dzaf)
+   DEFINE po_std_dzaf T_DZAF_T,
+          po_cus_dzaf T_DZAF_T
+   DEFINE ls_prog    STRING,
+          ls_trigger STRING,
+          ls_sql     STRING,
+          ls_where   STRING,
+          li_i       SMALLINT
+   DEFINE dzba_std_arr DYNAMIC ARRAY OF RECORD LIKE dzba_t.*,
+          li_cnt SMALLINT
+   DEFINE ls_err_msg STRING
+
+   TRY
+      LET ls_prog = po_cus_dzaf.dzaf001 CLIPPED
+
+      LET ls_trigger = "sadzi888_07_merge_addpoint : prepare merge source data..."
+      DISPLAY ls_trigger
+      
+      LET ls_sql = "SELECT ba1.* FROM dzba_t ba1",
+                   " WHERE ba1.dzba001='",ls_prog,"'", #程式代號
+                   "   AND ba1.dzba002=?", #標準程式版次
+                   "   AND ba1.dzba010='",po_std_dzaf.dzaf010,"'", #客製識別碼:s
+                   "   AND (   ba1.dzba003 IN (", #取得需要更新的add point
+                   "           SELECT ba2.dzba003 FROM dzba_t ba2",
+                   "            WHERE ba2.dzba001=ba1.dzba001",
+                   "              AND ba2.dzba002=?",  #客製程式版次
+                   #"              AND ba2.dzba004<>ba1.dzba004",        #版次不同 #2015/01/13 by Hiko
+                   "              AND ba2.dzba005='s'",                 #只需要更改使用標示為's'的add point
+                   "              AND ba2.dzba010='",po_cus_dzaf.dzaf010,"')", #客製識別碼:c
+                   "        OR ba1.dzba003 NOT IN (", #取得標準多於客製的add point
+                   "           SELECT ba3.dzba003 FROM dzba_t ba3",
+                   "            WHERE ba3.dzba001=ba1.dzba001",
+                   "              AND ba3.dzba002=?",  #客製程式版次
+                   "              AND ba3.dzba010='",po_cus_dzaf.dzaf010,"')", #客製識別碼:c
+                   "       )",
+                   " ORDER BY ba1.dzba003"
+      
+      PREPARE dzba_std_prep FROM ls_sql
+      DECLARE dzba_std_curs CURSOR FOR dzba_std_prep
+      OPEN dzba_std_curs USING po_std_dzaf.dzaf004,po_cus_dzaf.dzaf004,po_cus_dzaf.dzaf004
+
+      LET li_i = 1
+      FOREACH dzba_std_curs INTO dzba_std_arr[li_i].*
+         #查看客製樹是否存在要更新的標準識別碼.
+         LET ls_trigger = "sadzi888_07_merge_addpoint : get merge target : ",dzba_std_arr[li_i].dzba003
+         DISPLAY ls_trigger
+         LET ls_where = "     dzba001='",ls_prog,"'",
+                        " AND dzba002=?",
+                        " AND dzba003='",dzba_std_arr[li_i].dzba003,"'",
+                        " AND dzba010='",po_cus_dzaf.dzaf010,"'" #c
+         LET ls_sql = "SELECT COUNT(*) FROM dzba_t",
+                      " WHERE ",ls_where
+
+         PREPARE dzba_cus_prep1 FROM ls_sql
+         EXECUTE dzba_cus_prep1 INTO li_cnt USING po_cus_dzaf.dzaf004
+         FREE dzba_cus_prep1
+
+         IF li_cnt>0 THEN 
+            LET ls_trigger = "sadzi888_07_merge_addpoint : UPDATE..."
+            DISPLAY ls_trigger
+            #修改一定是標準識別碼更新到客製樹內,所以皆以標準資料為主.
+            LET ls_sql = "UPDATE dzba_t SET dzba004=?,",                                  #設計點版次
+                                           "dzba005='",dzba_std_arr[li_i].dzba005,"',",   #使用標示:一定是s
+                                           "dzba006=?,",                                  #函式順序
+                                           "dzba007='",dzba_std_arr[li_i].dzba007,"',",   #程式引用否
+                                           "dzba008='",dzba_std_arr[li_i].dzba008,"',",   #產品版本
+                                           "dzba009='",dzba_std_arr[li_i].dzba009,"',",   #下方的硬結構代碼整段註解
+                                           "dzba011='",dzba_std_arr[li_i].dzba011,"',",   #客戶代號
+                                           "dzbastus='",dzba_std_arr[li_i].dzbastus,"',", #生失效 
+                                           "dzbamoddt=?,",
+                                           "dzbamodid='",g_user,"'",
+                         " WHERE ",ls_where
+            PREPARE dzba_cus_prep2 FROM ls_sql
+            EXECUTE dzba_cus_prep2 USING dzba_std_arr[li_i].dzba004,dzba_std_arr[li_i].dzba006,g_date,po_cus_dzaf.dzaf004 #分別對應dzba004,dzba006,dzbamoddt,以及WHERE條件的dzba002
+            FREE dzba_cus_prep2
+         ELSE 
+            IF dzba_std_arr[li_i].dzbastus<>"N" THEN #2014/12/27 by Hiko:merge的時候,找不到客製樹內容,則標準失效的資料不需要新增進來,以免多垃圾.
+               LET ls_trigger = "sadzi888_07_merge_addpoint : INSERT..."
+               DISPLAY ls_trigger
+               #新增一定是標準多餘客製的識別碼,所以皆以標準資料為主.
+               LET ls_sql = "INSERT INTO dzba_t(dzba001,dzba002,dzba003,dzba004,dzba005,",
+                                               "dzba006,dzba007,dzba008,dzba009,dzba010,dzba011,",
+                                               "dzbacrtdt,dzbacrtdp,dzbaowndp,dzbaownid,dzbastus,dzbacrtid)",
+                                    "VALUES( '",ls_prog,"',",
+                                            "  ?,", #dzba002:客製版次
+                                            "'",dzba_std_arr[li_i].dzba003,"',",
+                                            "  ?,", #dzba004
+                                            "'",dzba_std_arr[li_i].dzba005,"',",
+                                            "  ?,", #dzba006
+                                            "'",dzba_std_arr[li_i].dzba007,"',",
+                                            "'",dzba_std_arr[li_i].dzba008,"',",
+                                            "'",dzba_std_arr[li_i].dzba009,"',",
+                                            "'",po_cus_dzaf.dzaf010,"',", #c:客製標示
+                                            "'",dzba_std_arr[li_i].dzba011,"',",
+                                            "  ?,",           #dzbacrtdt
+                                            "'",gs_dept,"',", #dzbacrtdp
+                                            "'",gs_dept,"',", #dzbaowndp
+                                            "'",g_user,"',",  #dzbaownid
+                                            "'",dzba_std_arr[li_i].dzbastus,"',",  #dzbastus
+                                            "'",g_user,"')"   #dzbaownid
+               PREPARE dzba_cus_prep3 FROM ls_sql
+               EXECUTE dzba_cus_prep3 USING po_cus_dzaf.dzaf004,dzba_std_arr[li_i].dzba004,dzba_std_arr[li_i].dzba006,g_date #分別對應dzba002,dzba004,dzba006,dzbacrtdt
+               FREE dzba_cus_prep3
+            END IF
+         END IF
+
+         LET li_i = li_i + 1
+      END FOREACH
+      
+      DISPLAY "sadzi888_07_merge_addpoint : finish!"
+
+      RETURN NULL
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      RETURN "ERROR : call sadzi888_07_merge_addpoint error!"
+   END TRY
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PRIVATE 
+# Descriptions    : 客製程式比較與合併:section
+# Input parameter : po_std_dzaf 標準dzaf_t資料
+#                 : po_cus_dzaf 客製dzaf_t資料
+# Return code     : STRING 錯誤訊息(NULL表示成功)
+#                 : BOOLEAN (TRUE:成功) #2015/07/03 by Hiko
+# Date & Author   : 2014/09/29 by Hiko
+##########################################################################
+PUBLIC FUNCTION sadzi888_07_merge_section(po_std_dzaf, po_cus_dzaf)
+   DEFINE po_std_dzaf T_DZAF_T,
+          po_cus_dzaf T_DZAF_T
+   DEFINE ls_prog    STRING,
+          li_code_ver LIKE dzaf_t.dzaf004,
+          ls_trigger STRING,
+          ls_sql     STRING,
+          ls_where   STRING,
+          li_i       SMALLINT
+   DEFINE dzbc_std_arr DYNAMIC ARRAY OF RECORD LIKE dzbc_t.*,
+          li_cnt SMALLINT,
+          l_free_style LIKE dzax_t.dzax003
+   DEFINE lb_result  BOOLEAN,
+          ls_err_msg STRING
+
+   TRY
+      LET ls_prog = po_cus_dzaf.dzaf001 CLIPPED
+      LET li_code_ver = po_cus_dzaf.dzaf004
+
+      LET ls_trigger = "sadzi888_07_merge_section : prepare merge source data..."
+      DISPLAY ls_trigger
+      
+      #Begin:161018-00038
+      ##若我們沒有改過section(s), 而客戶改過section(m or c), 則忽略section的merge.
+      #CALL sadzp169_02_chk_not_section(ls_prog, po_std_dzaf.dzaf004, po_std_dzaf.dzaf010) RETURNING lb_result,ls_err_msg
+      #IF lb_result THEN #標準程式沒有改過section
+      #   CALL sadzp169_02_chk_not_section(ls_prog, li_code_ver, po_cus_dzaf.dzaf010) RETURNING lb_result,ls_err_msg
+      #   IF NOT lb_result THEN #客製程式有改過section(m or c)
+      #      LET ls_err_msg = "The standard program has not modify the section, but the customer program does, so that the section can not be merged!"
+      #      DISPLAY ls_err_msg
+      #      RETURN TRUE,NULL
+      #   END IF
+      #END IF
+
+      #判斷標準程式是否已經解開section:若有解開就繼續merge.
+      SELECT COUNT(*) INTO li_cnt FROM dzbc_t
+       WHERE dzbc001=po_std_dzaf.dzaf001
+         AND dzbc002=po_std_dzaf.dzaf004
+         AND dzbc007=po_std_dzaf.dzaf010
+         AND dzbc005='m'
+      IF li_cnt=0 THEN #若標準沒有解開section, 但客製有解開, 則不可以進行section的merge.
+         display "標準沒有解開section..."
+         SELECT COUNT(*) INTO li_cnt FROM dzbc_t
+          WHERE dzbc001=po_cus_dzaf.dzaf001
+            AND dzbc002=po_cus_dzaf.dzaf004
+            AND dzbc007=po_cus_dzaf.dzaf010
+            AND dzbc005 IN ('m','c')
+         IF li_cnt>0 THEN
+            display "客製已經解開section, 不做section的merge..."
+            LET ls_err_msg = cl_getmsg("adz-00921", g_lang) #标准程序没有解开section, 但客制程序已经被解开, 所以不处理section的merge.
+            DISPLAY ls_err_msg
+            RETURN TRUE,NULL
+         END IF
+         display "客製也沒有解開section, 繼續做section的merge..."
+      ELSE
+         display "標準已經解開section, 繼續做section的merge..."
+      END IF
+      #End:161018-00038
+ 
+      #section的merge沒有考慮標準是s, 而客戶是m的情況, 因為正常情況下, 這是不合理的, 所以還是蓋掉就是了.
+      LET ls_sql = "SELECT bc1.* FROM dzbc_t bc1",
+                   " WHERE bc1.dzbc001='",ls_prog,"'", #程式代號
+                   "   AND bc1.dzbc002=?", #標準程式版次
+                   "   AND bc1.dzbc007='",po_std_dzaf.dzaf010,"'", #客製識別碼:s
+                   "   AND (   bc1.dzbc003 IN (", #取得需要更新的section
+                   "           SELECT bc2.dzbc003 FROM dzbc_t bc2",
+                   "            WHERE bc2.dzbc001=bc1.dzbc001",
+                   "              AND bc2.dzbc002=?",  #客製程式版次
+                   #"              AND bc2.dzbc004<>bc1.dzbc004",        #版次不同 #2015/01/13 by Hiko
+                   "              AND (bc2.dzbc005='s' OR bc2.dzbc005='m')",   #需要更改使用標示為's'或'm'的section
+                   "              AND bc2.dzbc007='",po_cus_dzaf.dzaf010,"')", #客製識別碼:c
+                   "        OR bc1.dzbc003 NOT IN (", #取得標準多於客製的section
+                   "           SELECT bc3.dzbc003 FROM dzbc_t bc3",
+                   "            WHERE bc3.dzbc001=bc1.dzbc001",
+                   "              AND bc3.dzbc002=?",  #客製程式版次
+                   "              AND bc3.dzbc007='",po_cus_dzaf.dzaf010,"')", #客製識別碼:c
+                   "       )",
+                   " ORDER BY bc1.dzbc003"
+      
+      PREPARE dzbc_std_prep FROM ls_sql
+      DECLARE dzbc_std_curs CURSOR FOR dzbc_std_prep
+      OPEN dzbc_std_curs USING po_std_dzaf.dzaf004,po_cus_dzaf.dzaf004,po_cus_dzaf.dzaf004
+
+      LET li_i = 1
+      FOREACH dzbc_std_curs INTO dzbc_std_arr[li_i].*
+         #查看客製樹是否存在要更新的標準識別碼.
+         LET ls_trigger = "sadzi888_07_merge_section : get merge target : ",dzbc_std_arr[li_i].dzbc003
+         DISPLAY ls_trigger
+         LET ls_where = "     dzbc001='",ls_prog,"'",
+                        " AND dzbc002=?",
+                        " AND dzbc003='",dzbc_std_arr[li_i].dzbc003,"'",
+                        " AND dzbc007='",po_cus_dzaf.dzaf010,"'" #c
+         LET ls_sql = "SELECT COUNT(*) FROM dzbc_t",
+                      " WHERE ",ls_where
+
+         PREPARE dzbc_cus_prep1 FROM ls_sql
+         EXECUTE dzbc_cus_prep1 INTO li_cnt USING po_cus_dzaf.dzaf004
+         FREE dzbc_cus_prep1
+
+         IF li_cnt>0 THEN 
+            LET ls_trigger = "sadzi888_07_merge_section : UPDATE..."
+            DISPLAY ls_trigger
+            #修改一定是標準識別碼更新到客製樹內,所以皆以標準資料為主.
+            LET ls_sql = "UPDATE dzbc_t SET dzbc004=?,",                                  #section版次
+                                           "dzbc005='",dzbc_std_arr[li_i].dzbc005,"',",   #使用標示:一定是s或m
+                                           "dzbc006='",dzbc_std_arr[li_i].dzbc006,"',",   #產品版本
+                                           "dzbc008='",dzbc_std_arr[li_i].dzbc008,"',",   #客戶代號
+                                           "dzbc009='Y',",                                #本版次異動:Y
+                                           "dzbc010='",dzbc_std_arr[li_i].dzbc010,"',",   #section序號
+                                           "dzbc011='",dzbc_std_arr[li_i].dzbc011,"',",   #ReadOnly
+                                           "dzbcstus='",dzbc_std_arr[li_i].dzbcstus,"',", #生失效 
+                                           "dzbcmoddt=?,",
+                                           "dzbcmodid='",g_user,"'",
+                         " WHERE ",ls_where
+            PREPARE dzbc_cus_prep2 FROM ls_sql
+            EXECUTE dzbc_cus_prep2 USING dzbc_std_arr[li_i].dzbc004,g_date,po_cus_dzaf.dzaf004 #分別對應dzbc004,dzbcmoddt,以及WHERE條件的dzbc002
+            FREE dzbc_cus_prep2
+         ELSE 
+            IF dzbc_std_arr[li_i].dzbcstus<>"N" THEN #2014/12/27 by Hiko:merge的時候,找不到客製樹內容,則標準失效的資料不需要新增進來,以免多垃圾.
+               LET ls_trigger = "sadzi888_07_merge_section : INSERT..."
+               DISPLAY ls_trigger
+               #新增一定是標準多餘客製的識別碼,所以皆以標準資料為主.
+               LET ls_sql = "INSERT INTO dzbc_t(dzbc001,dzbc002,dzbc003,dzbc004,dzbc005,",
+                                               "dzbc006,dzbc007,dzbc008,dzbc009,dzbc010,dzbc011,",
+                                               "dzbccrtdt,dzbccrtdp,dzbcowndp,dzbcownid,dzbcstus,dzbccrtid)",
+                                    "VALUES( '",ls_prog,"',",
+                                            "  ?,", #dzbc002:客製版次
+                                            "'",dzbc_std_arr[li_i].dzbc003,"',",
+                                            "  ?,", #dzbc004
+                                            "'",dzbc_std_arr[li_i].dzbc005,"',",
+                                            "'",dzbc_std_arr[li_i].dzbc006,"',",
+                                            "'",po_cus_dzaf.dzaf010,"',", #c:客製標示
+                                            "'",dzbc_std_arr[li_i].dzbc008,"',",
+                                            " 'Y',", #本版次異動:Y
+                                            "'",dzbc_std_arr[li_i].dzbc010,"',",
+                                            "'",dzbc_std_arr[li_i].dzbc011,"',",
+                                            "  ?,",           #dzbccrtdt
+                                            "'",gs_dept,"',", #dzbccrtdp
+                                            "'",gs_dept,"',", #dzbcowndp
+                                            "'",g_user,"',",  #dzbcownid
+                                            "'",dzbc_std_arr[li_i].dzbcstus,"',", #dzbcstus
+                                            "'",g_user,"')"   #dzbcownid
+               PREPARE dzbc_cus_prep3 FROM ls_sql
+               EXECUTE dzbc_cus_prep3 USING po_cus_dzaf.dzaf004,dzbc_std_arr[li_i].dzbc004,g_date #分別對應dzbc002,dzbc004,dzbccrtdt
+               FREE dzbc_cus_prep3
+            END IF
+         END IF
+
+         LET li_i = li_i + 1
+      END FOREACH
+      
+      DISPLAY "sadzi888_07_merge_section finish!"
+
+      RETURN TRUE,NULL
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      RETURN FALSE,"ERROR : call sadzi888_07_merge_section error!"
+   END TRY
+END FUNCTION
+
+##########################################################################
+# Access Modifier : PRIVATE 
+# Descriptions    : 客製規格比較與合併:spec pool: 針對資源池
+# Input parameter : po_std_dzaf 標準dzaf_t資料
+#                 : po_cus_dzaf 客製dzaf_t資料
+# Return code     : STRING 錯誤訊息(NULL表示成功)
+# Date & Author   : 20150721 by madey
+##########################################################################
+PRIVATE FUNCTION sadzi888_07_merge_spec_pool(po_std_dzaf, po_cus_dzaf)
+   DEFINE po_std_dzaf T_DZAF_T,
+          po_cus_dzaf T_DZAF_T
+   DEFINE ls_err_msg STRING
+
+   
+   #有幾個表格結構比較特殊,merge時要特別處理樹身(資源池)
+   #dzam_t
+   IF NOT sadzi888_07_merge_spec_pool_for_dzam_t(po_std_DZAF.*, po_cus_DZAF.*) THEN
+      RETURN FALSE,ls_err_msg
+   END IF
+
+   #dzag_t,dzfs_t
+   IF NOT sadzi888_07_merge_spec_pool_for_dzag_t(po_std_DZAF.*, po_cus_DZAF.*) THEN
+      RETURN FALSE,ls_err_msg
+   END IF
+
+   RETURN NULL
+      
+END FUNCTION
+
+
+##########################################################################
+# Access Modifier : PRIVATE 
+# Descriptions    : 客製規格比較與合併:spec pool: 針對資源池dzam_t
+# Input parameter : po_std_dzaf 標準dzaf_t資料
+#                 : po_cus_dzaf 客製dzaf_t資料
+# Return code     : STRING 錯誤訊息(NULL表示成功)
+# Date & Author   : 20150721 by madey
+##########################################################################
+PRIVATE FUNCTION sadzi888_07_merge_spec_pool_for_dzam_t(po_std_dzaf, po_cus_dzaf)
+   DEFINE po_std_dzaf T_DZAF_T,
+          po_cus_dzaf T_DZAF_T
+   DEFINE ls_prog    STRING,
+          ls_trigger STRING,
+          ls_sql     STRING,
+          ls_where   STRING,
+          li_i       SMALLINT
+   DEFINE dzam_std_arr DYNAMIC ARRAY OF RECORD LIKE dzam_t.*,
+          li_cnt SMALLINT
+   DEFINE ls_err_msg STRING
+   DEFINE ls_sel STRING,
+          ls_revision_wc STRING
+   DEFINE l_cus_dzaa004 LIKE dzaa_t.dzaa004,  #識別碼版次(目前)
+          l_cus_dzaa006 LIKE dzaa_t.dzaa006,  #使用標示(目前)
+          l_std_dzaa004 LIKE dzaa_t.dzaa004,  #識別碼版次(標準)
+          l_std_dzaa006 LIKE dzaa_t.dzaa006   #使用標示(標準)
+
+   #執行流程:
+   #1-1.資源池:dzam_t長版次
+   #1-2.樹頭  :dzaa_t更新識別碼版次
+   #1-3.資源池:將標準樹的dzam_t更新到客製樹dzam_t
+   #另外: dzag_t/dzfs_t作法比照dzam_t相同
+
+   TRY
+      LET ls_prog = po_cus_dzaf.dzaf001 CLIPPED
+
+      #dzaa_t:取得EXCLUDE識別碼版次及使用標示(目前)
+      LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzam_t : check dzaa_t new ver data (EXCLUDE)"
+      LET ls_where = " WHERE dzaa001='",ls_prog,"' AND dzaa002=",po_cus_dzaf.dzaf003,
+                     " AND dzaa003='EXCLUDE' AND dzaa009='",po_cus_dzaf.dzaf010,"'"
+      LET ls_sql = "SELECT dzaa004,dzaa006 FROM dzaa_t",ls_where
+      PREPARE dzaa_prep1 FROM ls_sql
+      EXECUTE dzaa_prep1 INTO l_cus_dzaa004,l_cus_dzaa006
+      IF SQLCA.SQLCODE=0 AND l_cus_dzaa006='c'  THEN  #只有在真的有客製過的情況下才做
+         #1-1 資源池:dzam_t長版次
+         #找看看有沒有新版,沒有的話用舊版copy一份新版
+         LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzam_t : check dzam_t data count:new ver=",po_cus_dzaf.dzaf003,",new use flag=",po_cus_dzaf.dzaf010
+         LET ls_sel = "SELECT count(*) FROM dzam_t"
+         LET ls_where = " WHERE dzam001='",ls_prog,"'"
+         LET ls_revision_wc = " AND dzam004=",po_cus_dzaf.dzaf003," AND dzam005='",po_cus_dzaf.dzaf010,"'"
+         LET ls_sql = ls_sel,ls_where,ls_revision_wc
+         PREPARE dzam_prep0 FROM ls_sql
+         EXECUTE dzam_prep0 INTO li_cnt
+         FREE dzam_prep0
+         IF li_cnt=0 THEN
+            #不存在就繼續找舊版的資料.
+            LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzam_t : check dzam_t data count:old ver=",l_cus_dzaa004,",old use flag=",l_cus_dzaa006
+            LET ls_revision_wc = " AND dzam004=",l_cus_dzaa004," AND dzam005='",l_cus_dzaa006,"'"
+            LET ls_sql = ls_sel,ls_where,ls_revision_wc
+            PREPARE dzam_prep1 FROM ls_sql
+            EXECUTE dzam_prep1 INTO li_cnt
+            FREE dzam_prep1
+            IF li_cnt>0 THEN
+               #找到舊版就複製為新版,狀態碼不變,patch標示不變,識別碼版次用新的
+               LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzam_t : insert dzam_t:old ver=",l_cus_dzaa004,",old use flag=",l_cus_dzaa006," to new ver=",po_cus_dzaf.dzaf003
+               LET ls_sql = "INSERT INTO dzam_t(dzam001,dzam002,dzam003,dzam004,dzam005,dzam006,",
+                                               "dzamcrtdt,dzamcrtdp,dzamowndp,dzamownid,dzamstus,dzamcrtid)",
+                                       " SELECT dzam001,dzam002,dzam003,",po_cus_dzaf.dzaf003,",'",po_cus_dzaf.dzaf010,"',dzam006,",
+                                               "?,'",g_dept,"','",g_dept,"','",g_user,"',dzamstus,'",g_user,"'",
+                                         " FROM dzam_t",ls_where,ls_revision_wc," AND dzamstus='Y'"
+               PREPARE dzam_prep2 FROM ls_sql
+               EXECUTE dzam_prep2 USING g_date
+               FREE dzam_prep2
+         
+               #1-2.樹頭  :dzaa_t更新識別碼版次
+               LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzam_t : update dzaa_t data"
+               LET ls_where = " WHERE dzaa001='",ls_prog,"' AND dzaa002=",po_cus_dzaf.dzaf003,
+                              "  AND dzaa003='EXCLUDE' AND dzaa009='",po_cus_dzaf.dzaf010,"'"
+               LET ls_sql = "UPDATE dzaa_t",
+                              " SET dzaa004=",po_cus_dzaf.dzaf003,",",
+                                   "dzaamoddt=?,", 
+                                   "dzaamodid='",g_user,"' ",ls_where
+               PREPARE dzaa_prep2 FROM ls_sql
+               EXECUTE dzaa_prep2 USING g_date
+               FREE dzaa_prep2
+            END IF
+         END IF
+
+         #1-3.資源池:將標準樹的dzam_t更新到客製樹dzam_t
+         LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzam_t : check dzaa_t new ver data (EXCLUDE)-std"
+         LET ls_where = " WHERE dzaa001='",ls_prog,"' AND dzaa002=",po_std_dzaf.dzaf003,
+                        " AND dzaa003='EXCLUDE' AND dzaa009='",po_std_dzaf.dzaf010,"'"
+         LET ls_sql = "SELECT dzaa004,dzaa006 FROM dzaa_t",ls_where
+         PREPARE dzaa_prep3 FROM ls_sql
+         EXECUTE dzaa_prep3 INTO l_std_dzaa004,l_std_dzaa006
+         IF SQLCA.SQLCODE=0  THEN  #標準(std)有資料的情況下,開始merge標準到客製
+            LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzam_t : prepare merge source data..."
+            DISPLAY ls_trigger
+            LET ls_sql = "SELECT am1.* FROM dzam_t am1",
+                         " WHERE am1.dzam001='",ls_prog,"'",               #規格代號
+                         "   AND am1.dzam004=",l_std_dzaa004,              #識別碼版次
+                         "   AND am1.dzam005='",l_std_dzaa006,"'",         #使用標示
+                         "   AND (   am1.dzam003 IN (", #取得需要更新的spec
+                         "           SELECT am2.dzam003 FROM dzam_t am2",
+                         "            WHERE am2.dzam001=am1.dzam001",
+                         "              AND am2.dzam004=",l_cus_dzaa004,      #識別碼版次(進版前)
+                         "              AND am2.dzam005='",l_cus_dzaa006,"'", #使用標示  (進版前)
+                         "              AND am2.dzam002='s')",                #只需要更改patch標示為's'的spec
+                         "        OR am1.dzam003 NOT IN (", #取得標準多於客製的spec
+                         "           SELECT am3.dzam003 FROM dzam_t am3",
+                         "            WHERE am3.dzam001=am1.dzam001",
+                         "              AND am3.dzam004=",l_cus_dzaa004,      #識別碼版次(進版前)
+                         "              AND am3.dzam005='",l_cus_dzaa006,"')",#使用標示(進版前)
+                         "       )",
+                         " ORDER BY am1.dzam003"
+           #DISPLAY ls_sql
+            PREPARE dzam_std_prep_a FROM ls_sql
+            DECLARE dzam_std_curs_a CURSOR FOR dzam_std_prep_a
+            OPEN dzam_std_curs_a 
+           
+            LET li_i = 1
+            FOREACH dzam_std_curs_a INTO dzam_std_arr[li_i].*
+               #查看客製樹(進版後)是否存在要更新的標準識別碼.
+               LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzam_t : get merge target : ",dzam_std_arr[li_i].dzam003
+               DISPLAY ls_trigger
+               LET ls_where = "     dzam001='",ls_prog,"'",
+                              " AND dzam004=",po_cus_dzaf.dzaf003,
+                              " AND dzam005='",po_cus_dzaf.dzaf010,"'",#c
+                              " AND dzam002='s'",               #只需要更改patch標示為's'的spec
+                              " AND dzam003='",dzam_std_arr[li_i].dzam003,"'"
+               LET ls_sql = "SELECT COUNT(*) FROM dzam_t",
+                            " WHERE ",ls_where
+               PREPARE dzam_cus_prep_b FROM ls_sql
+               EXECUTE dzam_cus_prep_b INTO li_cnt 
+               FREE dzam_cus_prep_b
+               IF li_cnt>0 THEN 
+                  LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzam_t : UPDATE..."
+                  DISPLAY ls_trigger
+                  LET ls_sql = "UPDATE dzam_t SET dzam006='",dzam_std_arr[li_i].dzam006,"',",   #客戶代號
+                                                 "dzamstus='",dzam_std_arr[li_i].dzamstus,"',", #生失效 
+                                                 "dzammoddt=?,",
+                                                 "dzammodid='",g_user,"'",
+                               " WHERE ",ls_where
+                  PREPARE dzam_cus_prep_c FROM ls_sql
+                  EXECUTE dzam_cus_prep_c USING g_date
+                  FREE dzam_cus_prep_c
+               ELSE 
+                  IF dzam_std_arr[li_i].dzamstus<>"N" THEN #merge的時候,標準失效的資料不需要新增進來,以免多垃圾.#這邊指的是客製沒有但標準有,要insert過來的資料->失效無意義
+                     LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzam_t : INSERT..."
+                     DISPLAY ls_trigger
+                     #新增一定是標準多餘客製的識別碼,所以皆以標準資料為主.
+                     LET ls_sql = "INSERT INTO dzam_t(dzam001,dzam002,dzam003,dzam004,dzam005,",
+                                                     "dzam006,",
+                                                     "dzamcrtdt,dzamcrtdp,dzamowndp,dzamownid,dzamstus,dzamcrtid)",
+                                          "VALUES( '",ls_prog,"',",
+                                                  "'",dzam_std_arr[li_i].dzam002,"',", #patch標示
+                                                  "'",dzam_std_arr[li_i].dzam003,"',",
+                                                  po_cus_dzaf.dzaf003,",",             #識別碼版次 
+                                                  "'",po_cus_dzaf.dzaf010,"',",        #使用標示
+                                                  "'",dzam_std_arr[li_i].dzam006,"',",
+                                                  "  ?,",                              #dzamcrtdt
+                                                  "'",gs_dept,"',",                    #dzamcrtdp
+                                                  "'",gs_dept,"',",                    #dzamowndp
+                                                  "'",g_user,"',",                     #dzamownid
+                                                  "'",dzam_std_arr[li_i].dzamstus,"',",  #dzamstus
+                                                  "'",g_user,"')"   #dzamownid
+                     PREPARE dzam_cus_prep_d FROM ls_sql
+                     EXECUTE dzam_cus_prep_d USING g_date
+                     FREE dzam_cus_prep_d
+                  END IF
+               END IF
+               LET li_i = li_i + 1
+            END FOREACH
+         END IF
+      END IF
+      FREE dzaa_prep1
+      FREE dzaa_prep3
+      
+      DISPLAY "sadzi888_07_merge_spec_pool_for_dzam_t : finish!"
+      RETURN NULL
+
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      RETURN "ERROR : call sadzi888_07_merge_spec_pool_for_dzam_t error!"
+   END TRY
+END FUNCTION
+
+
+##########################################################################
+# Access Modifier : PRIVATE 
+# Descriptions    : 客製規格比較與合併:spec pool: 針對資源池dzag_t,dzfs_t
+# Input parameter : po_std_dzaf 標準dzaf_t資料
+#                 : po_cus_dzaf 客製dzaf_t資料
+# Return code     : STRING 錯誤訊息(NULL表示成功)
+# Date & Author   : 20150721 by madey
+##########################################################################
+PRIVATE FUNCTION sadzi888_07_merge_spec_pool_for_dzag_t(po_std_dzaf, po_cus_dzaf)
+   DEFINE po_std_dzaf T_DZAF_T,
+          po_cus_dzaf T_DZAF_T
+   DEFINE ls_prog    STRING,
+          ls_trigger STRING,
+          ls_sql     STRING,
+          ls_where   STRING,
+          li_i       SMALLINT
+   DEFINE dzag_std_arr DYNAMIC ARRAY OF RECORD LIKE dzag_t.*,
+          dzfs_std_arr DYNAMIC ARRAY OF RECORD LIKE dzfs_t.*,
+          li_cnt SMALLINT
+   DEFINE ls_err_msg STRING
+   DEFINE ls_sel STRING,
+          ls_revision_wc STRING
+   DEFINE l_cus_dzaa004 LIKE dzaa_t.dzaa004,  #識別碼版次(目前)
+          l_cus_dzaa006 LIKE dzaa_t.dzaa006,  #使用標示(目前)
+          l_std_dzaa004 LIKE dzaa_t.dzaa004,  #識別碼版次(標準)
+          l_std_dzaa006 LIKE dzaa_t.dzaa006   #使用標示(標準)
+
+   #執行流程:
+   #處理dzag_t及dzfs_t
+   #可參考sadzi888_07_merge_spec_pool_for_dzam_t()
+
+   TRY
+      LET ls_prog = po_cus_dzaf.dzaf001 CLIPPED
+
+      #1-1 資源池:長版次
+      #dzaa_t:取得TABLE識別碼版次及使用標示(目前)
+      LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : check dzaa_t new ver data (TABLE)"
+      LET ls_where = " WHERE dzaa001='",ls_prog,"' AND dzaa002=",po_cus_dzaf.dzaf003,
+                     " AND dzaa003='TABLE' AND dzaa009='",po_cus_dzaf.dzaf010,"'"
+      LET ls_sql = "SELECT dzaa004,dzaa006 FROM dzaa_t",ls_where
+      PREPARE dzaa_prep4 FROM ls_sql
+      EXECUTE dzaa_prep4 INTO l_cus_dzaa004,l_cus_dzaa006
+      IF SQLCA.SQLCODE=0 AND l_cus_dzaa006='c'  THEN  #只有在真的有客製過的情況下才做
+         #1-1-1 資源池:dzag_t長版次
+         #找看看有沒有新版,沒有的話用舊版copy一份新版
+         LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : check dzag_t data count:new ver=",po_cus_dzaf.dzaf003,",new use flag=",po_cus_dzaf.dzaf010
+         LET ls_sel = "SELECT count(*) FROM dzag_t"
+         LET ls_where = " WHERE dzag001='",ls_prog,"'"
+         LET ls_revision_wc = " AND dzag003=",po_cus_dzaf.dzaf003," AND dzag006='",po_cus_dzaf.dzaf010,"'"
+         LET ls_sql = ls_sel,ls_where,ls_revision_wc
+         PREPARE dzag_prep0 FROM ls_sql
+         EXECUTE dzag_prep0 INTO li_cnt
+         FREE dzag_prep0
+         IF li_cnt=0 THEN
+            #不存在就繼續找舊版的資料.
+            LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : check dzag_t data count:old ver=",l_cus_dzaa004,",old use flag=",l_cus_dzaa006
+            LET ls_revision_wc = " AND dzag003=",l_cus_dzaa004," AND dzag006='",l_cus_dzaa006,"'"
+            LET ls_sql = ls_sel,ls_where,ls_revision_wc
+            PREPARE dzag_prep1 FROM ls_sql
+            EXECUTE dzag_prep1 INTO li_cnt
+            FREE dzag_prep1
+            IF li_cnt>0 THEN
+               #找到舊版就複製為新版,狀態碼不變,patch標示不變,識別碼版次用新的
+               LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : insert dzag_t:old ver=",l_cus_dzaa004,",old use flag=",l_cus_dzaa006," to new ver=",po_cus_dzaf.dzaf003
+               LET ls_sql = "INSERT INTO dzag_t(dzag001,dzag002,dzag003,dzag004,dzag005,dzag006,",
+                                               "dzag007,dzag008,dzag009,dzag010,dzag011,dzag012,",
+                                               "dzag013,dzag014,dzag015,",
+                                               "dzagcrtdt,dzagcrtdp,dzagowndp,dzagownid,dzagstus,dzagcrtid)",
+                                       " SELECT dzag001,dzag002,",po_cus_dzaf.dzaf003,",dzag004,dzag005,'",po_cus_dzaf.dzaf010,"',",
+                                               "dzag007,dzag008,dzag009,dzag010,dzag011,dzag012,",
+                                               "dzag013,dzag014,dzag015,",
+                                               "?,'",g_dept,"','",g_dept,"','",g_user,"',dzagstus,'",g_user,"'",
+                                         " FROM dzag_t",ls_where,ls_revision_wc," AND dzagstus='Y'"
+               PREPARE dzag_prep2 FROM ls_sql
+               EXECUTE dzag_prep2 USING g_date
+               FREE dzag_prep2
+         
+               #樹頭  :dzaa_t更新識別碼版次
+               LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : update dzaa_t data"
+               LET ls_where = " WHERE dzaa001='",ls_prog,"' AND dzaa002=",po_cus_dzaf.dzaf003,
+                              "  AND dzaa003='TABLE' AND dzaa009='",po_cus_dzaf.dzaf010,"'"
+               LET ls_sql = "UPDATE dzaa_t",
+                              " SET dzaa004=",po_cus_dzaf.dzaf003,",",
+                                   "dzaamoddt=?,", 
+                                   "dzaamodid='",g_user,"' ",ls_where
+               PREPARE dzaa_prep5 FROM ls_sql
+               EXECUTE dzaa_prep5 USING g_date
+               FREE dzaa_prep5
+            END IF
+         END IF
+
+         #1-1-2 資源池:dzfs_t長版次
+         #找看看有沒有新版,沒有的話用舊版copy一份新版
+         LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : check dzfs_t data count:new ver=",po_cus_dzaf.dzaf003,",new use flag=",po_cus_dzaf.dzaf010
+         LET ls_sel = "SELECT count(*) FROM dzfs_t"
+         LET ls_where = " WHERE dzfs002='",ls_prog,"'"
+         LET ls_revision_wc = " AND dzfs001=",po_cus_dzaf.dzaf003," AND dzfs005='",po_cus_dzaf.dzaf010,"'"
+         LET ls_sql = ls_sel,ls_where,ls_revision_wc
+         PREPARE dzfs_prep0 FROM ls_sql
+         EXECUTE dzfs_prep0 INTO li_cnt
+         FREE dzfs_prep0
+         IF li_cnt=0 THEN
+            #不存在就繼續找舊版的資料.
+            LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : check dzfs_t data count:old ver=",l_cus_dzaa004,",old use flag=",l_cus_dzaa006
+            LET ls_revision_wc = " AND dzfs001=",l_cus_dzaa004," AND dzfs005='",l_cus_dzaa006,"'"
+            LET ls_sql = ls_sel,ls_where,ls_revision_wc
+            PREPARE dzfs_prep1 FROM ls_sql
+            EXECUTE dzfs_prep1 INTO li_cnt
+            FREE dzfs_prep1
+            IF li_cnt>0 THEN
+               #找到舊版就複製為新版,狀態碼不變,patch標示不變,識別碼版次用新的
+               LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : insert dzfs_t:old ver=",l_cus_dzaa004,",old use flag=",l_cus_dzaa006," to new ver=",po_cus_dzaf.dzaf003
+               LET ls_sql = "INSERT INTO dzfs_t(dzfs001,dzfs002,dzfs003,dzfs004,dzfs005,dzfs006,",
+                                               "dzfs007,dzfs008,dzfs009,dzfs010,dzfs011,dzfs012,",
+                                               "dzfscrtdt,dzfscrtdp,dzfsowndp,dzfsownid,dzfsstus,dzfscrtid)",
+                                       " SELECT ",po_cus_dzaf.dzaf003,",dzfs002,dzfs003,dzfs004,'",po_cus_dzaf.dzaf010,"',dzfs006,",
+                                               "dzfs007,dzfs008,dzfs009,dzfs010,dzfs011,dzfs012,",
+                                               "?,'",g_dept,"','",g_dept,"','",g_user,"',dzfsstus,'",g_user,"'",
+                                         " FROM dzfs_t",ls_where,ls_revision_wc," AND dzfsstus='Y'"
+               PREPARE dzfs_prep2 FROM ls_sql
+               EXECUTE dzfs_prep2 USING g_date
+               FREE dzfs_prep2
+         
+               #樹頭  :dzaa_t更新識別碼版次
+               LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : update dzaa_t data"
+               LET ls_where = " WHERE dzaa001='",ls_prog,"' AND dzaa002=",po_cus_dzaf.dzaf003,
+                              "  AND dzaa003='TABLE' AND dzaa009='",po_cus_dzaf.dzaf010,"'"
+               LET ls_sql = "UPDATE dzaa_t",
+                              " SET dzaa004=",po_cus_dzaf.dzaf003,",",
+                                   "dzaamoddt=?,", 
+                                   "dzaamodid='",g_user,"' ",ls_where
+               PREPARE dzaa_prep7 FROM ls_sql
+               EXECUTE dzaa_prep7 USING g_date
+               FREE dzaa_prep7
+            END IF
+         END IF
+
+         #1-2.資源池:將標準樹更新到客製樹
+         LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : check dzaa_t new ver data (TABLE)-std"
+         LET ls_where = " WHERE dzaa001='",ls_prog,"' AND dzaa002=",po_std_dzaf.dzaf003,
+                        " AND dzaa003='TABLE' AND dzaa009='",po_std_dzaf.dzaf010,"'"
+         LET ls_sql = "SELECT dzaa004,dzaa006 FROM dzaa_t",ls_where
+         PREPARE dzaa_prep6 FROM ls_sql
+         EXECUTE dzaa_prep6 INTO l_std_dzaa004,l_std_dzaa006
+         IF SQLCA.SQLCODE=0  THEN  #標準(std)有資料的情況下,開始merge標準到客製
+ 
+            #1-2-1.資源池:將標準樹的dzag_t更新到客製樹dzag_t
+            LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : prepare merge source data(dzag_t)..."
+            DISPLAY ls_trigger
+            LET ls_sql = "SELECT ag1.* FROM dzag_t ag1",
+                         " WHERE ag1.dzag001='",ls_prog,"'",               #規格代號
+                         "   AND ag1.dzag003=",l_std_dzaa004,              #識別碼版次
+                         "   AND ag1.dzag006='",l_std_dzaa006,"'",         #使用標示
+                         "   AND (   ag1.dzag002 IN (", #取得需要更新的spec
+                         "           SELECT ag2.dzag002 FROM dzag_t ag2",
+                         "            WHERE ag2.dzag001=ag1.dzag001",
+                         "              AND ag2.dzag003=",l_cus_dzaa004,      #識別碼版次(進版前)
+                         "              AND ag2.dzag006='",l_cus_dzaa006,"'", #使用標示  (進版前)
+                         "              AND ag2.dzag012='s')",                #只需要更改patch標示為's'的spec
+                         "        OR ag1.dzag002 NOT IN (", #取得標準多於客製的spec
+                         "           SELECT ag3.dzag002 FROM dzag_t ag3",
+                         "            WHERE ag3.dzag001=ag1.dzag001",
+                         "              AND ag3.dzag003=",l_cus_dzaa004,      #識別碼版次(進版前)
+                         "              AND ag3.dzag006='",l_cus_dzaa006,"')",#使用標示(進版前)
+                         "       )",
+                         " ORDER BY ag1.dzag002"
+           #DISPLAY ls_sql
+            PREPARE dzag_std_prep_a FROM ls_sql
+            DECLARE dzag_std_curs_a CURSOR FOR dzag_std_prep_a
+            OPEN dzag_std_curs_a 
+           
+            LET li_i = 1
+            FOREACH dzag_std_curs_a INTO dzag_std_arr[li_i].*
+               #查看客製樹(進版後)是否存在要更新的標準識別碼.
+               LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : get merge target(dzag_t) : ",dzag_std_arr[li_i].dzag002
+               DISPLAY ls_trigger
+               LET ls_where = "     dzag001='",ls_prog,"'",
+                              " AND dzag003=",po_cus_dzaf.dzaf003,
+                              " AND dzag006='",po_cus_dzaf.dzaf010,"'",#c
+                              " AND dzag012='s'",               #只需要更改patch標示為's'的spec
+                              " AND dzag002='",dzag_std_arr[li_i].dzag002,"'"
+               LET ls_sql = "SELECT COUNT(*) FROM dzag_t",
+                            " WHERE ",ls_where
+               PREPARE dzag_cus_prep_b FROM ls_sql
+               EXECUTE dzag_cus_prep_b INTO li_cnt 
+               FREE dzag_cus_prep_b
+               IF li_cnt>0 THEN 
+                  LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : UPDATE(dzag_t)..."
+                  DISPLAY ls_trigger
+                  LET ls_sql = "UPDATE dzag_t SET dzag004='",dzag_std_arr[li_i].dzag004,"',",   #上層Table編號
+                                                 "dzag005='",dzag_std_arr[li_i].dzag005,"',",   #是否為主要Table 
+                                                 "dzag007='",dzag_std_arr[li_i].dzag007,"',",   #是否為單頭
+                                                 "dzag008='",dzag_std_arr[li_i].dzag008,"',",   #PK
+                                                 "dzag009='",dzag_std_arr[li_i].dzag009,"',",   #FK-Master
+                                                 "dzag010='",dzag_std_arr[li_i].dzag010,"',",   #FK-Detail
+                                                 "dzag011='",dzag_std_arr[li_i].dzag011,"',",   #客戶代號
+                                                 "dzag013='",dzag_std_arr[li_i].dzag013,"',",   #三層二顯之上階Table
+                                                 "dzag014='",dzag_std_arr[li_i].dzag014,"',",   #三層二顯之上階Key值設定
+                                                 "dzag015='",dzag_std_arr[li_i].dzag015,"',",   #三層二顯之本階對應Key值設定
+                                                 "dzagstus='",dzag_std_arr[li_i].dzagstus,"',", #生失效 
+                                                 "dzagmoddt=?,",
+                                                 "dzagmodid='",g_user,"'",
+                               " WHERE ",ls_where
+                  PREPARE dzag_cus_prep_c FROM ls_sql
+                  EXECUTE dzag_cus_prep_c USING g_date
+                  FREE dzag_cus_prep_c
+               ELSE 
+                  IF dzag_std_arr[li_i].dzagstus<>"N" THEN #merge的時候,標準失效的資料不需要新增進來,以免多垃圾.#這邊指的是客製沒有但標準有,要insert過來的資料->失效無意義
+                     LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : INSERT(dzag_t)..."
+                     DISPLAY ls_trigger
+                     #新增一定是標準多餘客製的識別碼,所以皆以標準資料為主.
+                     LET ls_sql = "INSERT INTO dzag_t(dzag001,dzag002,dzag003,dzag004,dzag005,",
+                                                     "dzag006,dzag007,dzag008,dzag009,dzag010,",
+                                                     "dzag011,dzag012,dzag013,dzag014,dzag015,",
+                                                     "dzagcrtdt,dzagcrtdp,dzagowndp,dzagownid,dzagstus,dzagcrtid)",
+                                          "VALUES( '",ls_prog,"',",
+                                                  "'",dzag_std_arr[li_i].dzag002,"',", #Table編號
+                                                  po_cus_dzaf.dzaf003,",",             #識別碼版次 
+                                                  "'",dzag_std_arr[li_i].dzag004,"',", #上層Table編號
+                                                  "'",dzag_std_arr[li_i].dzag005,"',", #是否為主要Table
+                                                  "'",po_cus_dzaf.dzaf010,"',",        #使用標示
+                                                  "'",dzag_std_arr[li_i].dzag007,"',", #是否為單頭
+                                                  "'",dzag_std_arr[li_i].dzag008,"',", #PK
+                                                  "'",dzag_std_arr[li_i].dzag009,"',", #FK-Master
+                                                  "'",dzag_std_arr[li_i].dzag010,"',", #FK-Detail
+                                                  "'",dzag_std_arr[li_i].dzag011,"',", #客戶代號
+                                                  "'",dzag_std_arr[li_i].dzag012,"',", #patch標示
+                                                  "'",dzag_std_arr[li_i].dzag013,"',", #三層二顯之上階Table
+                                                  "'",dzag_std_arr[li_i].dzag014,"',", #三層二顯之上階Key值設定
+                                                  "'",dzag_std_arr[li_i].dzag015,"',", #三層二顯之本階對應Key值設定
+                                                  "  ?,",                              #dzagcrtdt
+                                                  "'",gs_dept,"',",                    #dzagcrtdp
+                                                  "'",gs_dept,"',",                    #dzagowndp
+                                                  "'",g_user,"',",                     #dzagownid
+                                                  "'",dzag_std_arr[li_i].dzagstus,"',",#dzagstus
+                                                  "'",g_user,"')"                      #dzagownid
+                     PREPARE dzag_cus_prep_d FROM ls_sql
+                     EXECUTE dzag_cus_prep_d USING g_date
+                     FREE dzag_cus_prep_d
+                  END IF
+               END IF
+               LET li_i = li_i + 1
+            END FOREACH
+
+            #1-2-2.資源池:將標準樹的dzfs_t更新到客製樹dzfs_t
+            LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : prepare merge source data(dzfs_t)..."
+            DISPLAY ls_trigger
+            LET ls_sql = "SELECT fs1.* FROM dzfs_t fs1",
+                         " WHERE fs1.dzfs002='",ls_prog,"'",               #規格代號
+                         "   AND fs1.dzfs001=",l_std_dzaa004,              #識別碼版次
+                         "   AND fs1.dzfs005='",l_std_dzaa006,"'",         #使用標示
+                         "   AND (   fs1.dzfs003 IN (", #取得需要更新的spec
+                         "           SELECT fs2.dzfs003 FROM dzfs_t fs2",
+                         "            WHERE fs2.dzfs002=fs1.dzfs002",
+                         "              AND fs2.dzfs001=",l_cus_dzaa004,      #識別碼版次(進版前)
+                         "              AND fs2.dzfs005='",l_cus_dzaa006,"'", #使用標示  (進版前)
+                         "              AND fs2.dzfs012='s')",                #只需要更改patch標示為's'的spec
+                         "        OR fs1.dzfs003 NOT IN (", #取得標準多於客製的spec
+                         "           SELECT fs3.dzfs003 FROM dzfs_t fs3",
+                         "            WHERE fs3.dzfs002=fs1.dzfs002",
+                         "              AND fs3.dzfs001=",l_cus_dzaa004,      #識別碼版次(進版前)
+                         "              AND fs3.dzfs005='",l_cus_dzaa006,"')",#使用標示(進版前)
+                         "       )",
+                         " ORDER BY fs1.dzfs004"
+           #DISPLAY ls_sql
+            PREPARE dzfs_std_prep_a FROM ls_sql
+            DECLARE dzfs_std_curs_a CURSOR FOR dzfs_std_prep_a
+            OPEN dzfs_std_curs_a 
+            
+            LET li_i = 1
+            FOREACH dzfs_std_curs_a INTO dzfs_std_arr[li_i].*
+               #查看客製樹(進版後)是否存在要更新的標準識別碼.
+               LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : get merge target(dzfs_t) : ",dzfs_std_arr[li_i].dzfs003
+               DISPLAY ls_trigger
+               LET ls_where = "     dzfs002='",ls_prog,"'",
+                              " AND dzfs001=",po_cus_dzaf.dzaf003,
+                              " AND dzfs005='",po_cus_dzaf.dzaf010,"'",#c
+                              " AND dzfs012='s'",               #只需要更改patch標示為's'的spec
+                              " AND dzfs003='",dzfs_std_arr[li_i].dzfs003,"'"
+               LET ls_sql = "SELECT COUNT(*) FROM dzfs_t",
+                            " WHERE ",ls_where
+               PREPARE dzfs_cus_prep_b FROM ls_sql
+               EXECUTE dzfs_cus_prep_b INTO li_cnt 
+               FREE dzfs_cus_prep_b
+               IF li_cnt>0 THEN 
+                  LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : UPDATE(dzfs_t)..."
+                  DISPLAY ls_trigger
+                  LET ls_sql = "UPDATE dzfs_t SET dzfs004='",dzfs_std_arr[li_i].dzfs004,"',",   #Table編號
+                                                 "dzfs006='",dzfs_std_arr[li_i].dzfs006,"',",   #允許Append
+                                                 "dzfs007='",dzfs_std_arr[li_i].dzfs007,"',",   #允許Delete
+                                                 "dzfs008='",dzfs_std_arr[li_i].dzfs008,"',",   #允許Insert
+                                                 "dzfs009='",dzfs_std_arr[li_i].dzfs009,"',",   #是否連動
+                                                 "dzfs010='",dzfs_std_arr[li_i].dzfs010,"',",   #種類
+                                                 "dzfs011='",dzfs_std_arr[li_i].dzfs011,"',",   #客戶代號
+                                                 "dzfsstus='",dzfs_std_arr[li_i].dzfsstus,"',", #生失效 
+                                                 "dzfsmoddt=?,",
+                                                 "dzfsmodid='",g_user,"'",
+                               " WHERE ",ls_where
+                  PREPARE dzfs_cus_prep_c FROM ls_sql
+                  EXECUTE dzfs_cus_prep_c USING g_date
+                  FREE dzfs_cus_prep_c
+               ELSE 
+                  IF dzfs_std_arr[li_i].dzfsstus<>"N" THEN #merge的時候,標準失效的資料不需要新增進來,以免多垃圾.#這邊指的是客製沒有但標準有,要insert過來的資料->失效無意義
+                     LET ls_trigger = "sadzi888_07_merge_spec_pool_for_dzag_t : INSERT(dzfs_t)..."
+                     DISPLAY ls_trigger
+                     #新增一定是標準多餘客製的識別碼,所以皆以標準資料為主.
+                     LET ls_sql = "INSERT INTO dzfs_t(dzfs001,dzfs002,dzfs003,dzfs004,dzfs005,",
+                                                     "dzfs006,dzfs007,dzfs008,dzfs009,dzfs010,",
+                                                     "dzfs011,dzfs012,",
+                                                     "dzfscrtdt,dzfscrtdp,dzfsowndp,dzfsownid,dzfsstus,dzfscrtid)",
+                                          "VALUES( ",po_cus_dzaf.dzaf003,",",          #識別碼版次
+                                                  "'",ls_prog,"',",                    #程式代號
+                                                  "'",dzfs_std_arr[li_i].dzfs003,"',", #Screen Recoed
+                                                  "'",dzfs_std_arr[li_i].dzfs004,"',", #Table編號
+                                                  "'",po_cus_dzaf.dzaf010,"',",        #使用標示
+                                                  "'",dzfs_std_arr[li_i].dzfs006,"',", #允許Append
+                                                  "'",dzfs_std_arr[li_i].dzfs007,"',", #允許Delete
+                                                  "'",dzfs_std_arr[li_i].dzfs008,"',", #允許Insert
+                                                  "'",dzfs_std_arr[li_i].dzfs009,"',", #是否連動
+                                                  "'",dzfs_std_arr[li_i].dzfs010,"',", #種類
+                                                  "'",dzfs_std_arr[li_i].dzfs011,"',", #客戶代號
+                                                  "'",dzfs_std_arr[li_i].dzfs012,"',", #patch標示
+                                                  "  ?,",                              #dzfscrtdt
+                                                  "'",gs_dept,"',",                    #dzfscrtdp
+                                                  "'",gs_dept,"',",                    #dzfsowndp
+                                                  "'",g_user,"',",                     #dzfsownid
+                                                  "'",dzfs_std_arr[li_i].dzfsstus,"',",#dzfsstus
+                                                  "'",g_user,"')"                      #dzfsownid
+                     PREPARE dzfs_cus_prep_d FROM ls_sql
+                     EXECUTE dzfs_cus_prep_d USING g_date
+                     FREE dzfs_cus_prep_d
+                  END IF
+               END IF
+               LET li_i = li_i + 1
+            END FOREACH
+         END IF
+
+      END IF
+      FREE dzaa_prep4
+      FREE dzaa_prep6
+
+      
+      DISPLAY "sadzi888_07_merge_spec_pool_for_dzag_t : finish!"
+      RETURN NULL
+
+   CATCH
+      CALL sadzi888_07_err_catch(ls_trigger, ls_sql)
+      RETURN "ERROR : call sadzi888_07_merge_spec_pool_for_dzag_t error!"
+   END TRY
+END FUNCTION
+

@@ -1,0 +1,129 @@
+<add_points prog="aooi110_01" std_prog="aooi110_01" erpver="1.0" module="AOO" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.aooi110_01" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION aooi110_01(p_ooeb001)
+DEFINE p_ooeb001     LIKE ooeb_t.ooeb001
+DEFINE l_ooeb        RECORD LIKE ooeb_t.* 
+
+
+   LET g_ooeb001 = p_ooeb001
+   INITIALIZE l_ooeb.* TO NULL
+   SELECT * INTO l_ooeb.*
+     FROM ooeb_t
+    WHERE ooebent = g_enterprise
+      AND ooeb001 = g_ooeb001
+   OPEN WINDOW aooi110_01_w WITH FORM cl_ap_formpath("aoo","aooi110_01")
+        ATTRIBUTE (STYLE="functionwin")
+
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+
+      CONSTRUCT g_wcb ON ooef001 FROM ooef001
+         BEFORE CONSTRUCT
+             CALL cl_qbe_init()
+
+         ON ACTION controlp INFIELD ooef001
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE
+            IF cl_null(l_ooeb.ooeb008) THEN
+               LET g_qryparam.where = " ooef001 <> '",l_ooeb.ooeb005,"' AND ooef001 NOT IN(SELECT ooed004 FROM ooed_t WHERE ooedent = '",g_enterprise,"' AND ooed001 = '",l_ooeb.ooeb004,"' AND ooed002 <> '",l_ooeb.ooeb005,"'  AND (ooed007 >= to_date('",l_ooeb.ooeb007,"','YYYY/MM/DD') OR ooed007 IS NULL)) AND ooef001 IN(SELECT ooef001 FROM ooef_t,ooee_t WHERE ooefent = ooeeent AND ooefent = '",g_enterprise,"' AND ooef001 = ooee001 AND ooee002 = '1' AND ooee003 = '",l_ooeb.ooeb004,"' )"
+            ELSE
+               LET g_qryparam.where = " ooef001 <> '",l_ooeb.ooeb005,"' AND ooef001 NOT IN(SELECT ooed004 FROM ooed_t WHERE ooedent = '",g_enterprise,"' AND ooed001 = '",l_ooeb.ooeb004,"' AND ooed002 <> '",l_ooeb.ooeb005,"'  AND (ooed006 BETWEEN to_date('",l_ooeb.ooeb007,"','YYYY/MM/DD') AND to_date('",l_ooeb.ooeb008,"','YYYY/MM/DD') OR ooed007 BETWEEN to_date('",l_ooeb.ooeb007,"','YYYY/MM/DD') AND to_date('",l_ooeb.ooeb008,"','YYYY/MM/DD') OR (ooed006 <= to_date('",l_ooeb.ooeb007,"','YYYY/MM/DD') AND (ooed007 IS NULL OR ooed007 >= to_date('",l_ooeb.ooeb008,"','YYYY/MM/DD'))))) AND ooef001 IN(SELECT ooef001 FROM ooef_t,ooee_t WHERE ooefent = ooeeent AND ooefent = '",g_enterprise,"' AND ooef001 = ooee001 AND ooee002 = '1' AND ooee003 = '",l_ooeb.ooeb004,"' )"
+            END IF
+            CALL q_ooef001()
+            DISPLAY g_qryparam.return1 TO ooef001
+            LET g_qryparam.where = ""
+            NEXT FIELD ooef001
+
+         ON ACTION accept
+            LET INT_FLAG = FALSE
+            ACCEPT CONSTRUCT
+
+         ON ACTION cancel
+            LET INT_FLAG = TRUE
+            EXIT CONSTRUCT
+
+         ON ACTION about
+            CALL cl_about()
+
+         ON ACTION EXIT
+            LET INT_FLAG = TRUE
+            EXIT CONSTRUCT
+      END CONSTRUCT
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         CLOSE WINDOW aooi110_01_w
+         RETURN ''
+      ELSE
+         CLOSE WINDOW aooi110_01_w
+         IF cl_null(l_ooeb.ooeb008) THEN
+            LET g_wcb = g_wcb ," AND ooef001 <> '",l_ooeb.ooeb005,"' AND ooef001 NOT IN(SELECT ooed004 FROM ooed_t WHERE ooedent = '",g_enterprise,"' AND ooed001 = '",l_ooeb.ooeb004,"' AND ooed002 <> '",l_ooeb.ooeb005,"'  AND (ooed007 >= to_date('",l_ooeb.ooeb007,"','YYYY/MM/DD') OR ooed007 IS NULL)) AND ooef001 IN(SELECT ooef001 FROM ooef_t,ooee_t WHERE ooefent = ooeeent AND ooefent = '",g_enterprise,"' AND ooef001 = ooee001 AND ooee002 = '1' AND ooee003 = '",l_ooeb.ooeb004,"' )"
+         ELSE
+            LET g_wcb = g_wcb ," AND ooef001 <> '",l_ooeb.ooeb005,"' AND ooef001 NOT IN(SELECT ooed004 FROM ooed_t WHERE ooedent = '",g_enterprise,"' AND ooed001 = '",l_ooeb.ooeb004,"' AND ooed002 <> '",l_ooeb.ooeb005,"'  AND (ooed006 BETWEEN to_date('",l_ooeb.ooeb007,"','YYYY/MM/DD') AND to_date('",l_ooeb.ooeb008,"','YYYY/MM/DD') OR ooed007 BETWEEN to_date('",l_ooeb.ooeb007,"','YYYY/MM/DD') AND to_date('",l_ooeb.ooeb008,"','YYYY/MM/DD') OR (ooed006 <= to_date('",l_ooeb.ooeb007,"','YYYY/MM/DD') AND (ooed007 IS NULL OR ooed007 >= to_date('",l_ooeb.ooeb008,"','YYYY/MM/DD'))))) AND ooef001 IN(SELECT ooef001 FROM ooef_t,ooee_t WHERE ooefent = ooeeent AND ooefent = '",g_enterprise,"' AND ooef001 = ooee001 AND ooee002 = '1' AND ooee003 = '",l_ooeb.ooeb004,"' )"
+         END IF
+         RETURN g_wcb
+      END IF
+      LET INT_FLAG = FALSE
+END FUNCTION]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[DEFINE g_wcb                 STRING
+DEFINE g_ooeb001             LIKE ooeb_t.ooeb001]]>
+</point>
+  <point name="other.dialog" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[#单身资料准备
+ FUNCTION aooi110_01()
+   OPEN WINDOW aooi110_01_w WITH FORM cl_ap_formpath("aoo","aooi110_01")   
+        ATTRIBUTE (STYLE="functionwin")
+        
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+      CONSTRUCT g_wcb ON ooea001 FROM ooea001
+         BEFORE CONSTRUCT
+             CALL cl_qbe_init()
+
+         ON ACTION controlp INFIELD ooea001
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001() 
+            DISPLAY g_qryparam.return1 TO ooea001
+            NEXT FIELD ooea001
+            
+         ON ACTION accept
+            ACCEPT CONSTRUCT
+
+         ON ACTION cancel
+            LET INT_FLAG = 1
+            EXIT CONSTRUCT
+
+         ON ACTION about
+            CALL cl_about()
+
+         ON ACTION EXIT
+            LET INT_FLAG = 1
+            EXIT CONSTRUCT
+      END CONSTRUCT
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         CLOSE WINDOW aooi110_01_w
+         RETURN ''
+      ELSE 
+         CLOSE WINDOW aooi110_01_w
+         RETURN g_wcb
+      END IF
+END FUNCTION]]>
+</point>
+  <point name="main.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="free_style.function" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

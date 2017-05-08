@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt806_01" module="ast" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="06189" crtdt="2016-07-31 17:00:42" modid="06189" moddt="2016-07-31 21:11:47" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="招商租賃合約批量抓取合約">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),stjesite,stjesite_desc(chr500),stje001,stje002,stje007,stje007_desc(chr500),stje008,stje008_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="check_no_all"/>
+      <action id="query_data"/>
+      <action id="produce_data"/>
+      <action id="check_all"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt806_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,stjesite" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="stjesite">
+        <after>
+          <reference field="stjesite_desc" ref_field="stje_t.stjesite" map_field="stjeent,stjesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stjesite_desc"/>
+      <column id="stje001"/>
+      <column id="stje002"/>
+      <column id="stje007">
+        <after>
+          <reference field="stje007_desc" ref_field="stje_t.stje007" map_field="stjeent,stje007" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stje007_desc"/>
+      <column id="stje008">
+        <after>
+          <reference field="stje008_desc" ref_field="stje_t.stje008" map_field="stjeent,stje008" ref_sql="SELECT mhbel003 FROM mhbel_t WHERE mhbelent=$varg_enterprise$var AND mhbel001=? AND mhbel002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stje008_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stje_t" page="1" linked="" pk="stje001">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,stjesite,&apos;&apos;,stje001,stje002,stje007,&apos;&apos;,stje008,&apos;&apos; FROM stje_t WHERE stjeent=? AND stje001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stjesite,&apos;&apos;,stje001,stje002,stje007,&apos;&apos;,stje008,&apos;&apos; FROM stje_t WHERE stjeent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

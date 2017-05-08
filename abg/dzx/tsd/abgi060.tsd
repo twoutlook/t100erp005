@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="abgi060" std_prog="abgi060" erpver="1.0" ver="1" module="ABG" booking="Y" class="i" template="F003_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="bgae_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：abgi060 预算变量维护
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：假雙檔（子作業）F003_00
+作業資料來源(Master)：
+ 資料來源表：bgae_t(資料檔)
+             bgael_t(多語言資料檔)
+作業資料來源(Detail)：
+ 資料來源表：bgae_t(單身檔)
+
+1，abgi040 bgae007类别 默认类别=1预算项目，bagi060  bgae007=2变量 ，abgi080 bgae007=3指标]]>
+  </all>
+  <field cite_std="N" name="bgae001_2" ver="1" src="s" column="bgae001" table="bgae_t" attribute="C509" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_bgae001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgae001" ver="1" src="s" column="bgae001" table="bgae_t" attribute="C509" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_bgae001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料欄位: [T:预算变量档].[C:变量编号]/可Display可Input
+預設值:   無
+校驗:
+  1.允許空白: No
+  2，輸入值不得存在[T:预算项目档].[C:预算项目编号]，条件[T:预算项目档].[C:预算项目组别]=当前的 [T:预算变量档].[C:预算项目组别]
+]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgae006" ver="1" src="s" column="bgae006" table="bgae_t" attribute="C501" type="varchar2(5)" req="Y" i_zoom="q_bgae006" c_zoom="q_bgae006" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料欄位: [T:预算项目档].[C:预算项目组别]可Display可Input
+預設值:   無
+校驗:
+  1.允許空白: /No
+ 2..輸入值需檢查是否存在ooal_t,ooal001='11'的有效ooal002值,
+
+ 1.查詢時：
+參考函式：依標準查詢視窗 
+查詢欄位：ooal_t,ooal001='11'的有效ooal002值,
+回值類型：多重回值
+
+
+2.新增/修改時：
+參考函式：依標準查詢視窗 
+查詢欄位：ooal_t,ooal001='11'的有效ooal002值,
+回值類型：单一回值
+]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgae007" ver="1" src="s" column="bgae007" table="bgae_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgae009" ver="1" src="s" column="bgae009" table="bgae_t" attribute="C509" type="varchar2(10)" req="Y" i_zoom="q_bgae001" c_zoom="q_bgae001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料欄位: [T:预算变量档].[C:起始预算项目]可Display可Input
+預設值:   無
+校驗:
+  1.允許空白: No
+  2.輸入值須存在[T:预算项目档].[C:预算项目编号]，且类别=1预算项目，錯誤訊息「您录入的预算项目不存在，请核实」
+带值
+计量方式：=[T:预算项目档][C:计量方式]
+
+录入后带出预算项目多语言档的说明，
+]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgae010" ver="1" src="s" column="bgae010" table="bgae_t" attribute="C509" type="varchar2(10)" req="Y" i_zoom="q_bgae001" c_zoom="q_bgae001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料欄位: [T:预算变量档].[C:截止预算项目]可Display可Input
+預設值:   無
+校驗:
+  1.允許空白: No
+  2.輸入值須存在[T:预算项目档].[C:预算项目编号]，錯誤訊息「您录入的预算项目不存在，请核实」
+  3，当包括在始起与与截止预算项目中的各预算项目的计量方式(bgae005)不一致时，报错：不是统一的计量方式，不可构成一个预算变量
+录入后带出预算项目多语言档的说明，
+]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgae011" ver="1" src="s" column="bgae011" table="bgae_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[資料欄位: [T:预算变量档].[C:计量方式]
+允許空白: No
+預設值: ()
+資料選項來源: 
+  常數型態:  / 1(货币计量),2(实物计量),3(双重计量) 
+  SCC:9406
+]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgae012" ver="1" src="s" column="bgae012" table="bgae_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[資料欄位: [T:预算变量档].[C:金额来源]
+允許空白: No
+預設值: (自行輸入)
+資料選項來源: 
+  常數型態: 
+1，借方余额
+2，贷方余额
+3，借方发生额
+4，贷方发生额
+5，期初借方余额
+6，期初贷方余额
+SCC=9408 ]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgaecrtdp" ver="1" src="s" column="bgaecrtdp" table="bgae_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgaecrtdt" ver="1" src="s" column="bgaecrtdt" table="bgae_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgaecrtid" ver="1" src="s" column="bgaecrtid" table="bgae_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgaemoddt" ver="1" src="s" column="bgaemoddt" table="bgae_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgaemodid" ver="1" src="s" column="bgaemodid" table="bgae_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgaeowndp" ver="1" src="s" column="bgaeowndp" table="bgae_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgaeownid" ver="1" src="s" column="bgaeownid" table="bgae_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bgae_t.bgaestus" ver="1" src="s" column="bgaestus" table="bgae_t" attribute="C822" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="bgae009_desc" src="s" depend_field="bgae_t.bgae009" correspon_key="bgaeent,bgae001,bgae006" ref_table="bgael_t" ref_fk="bgaelent,bgael001,bgael006" ref_dlang="bgael002" ref_rtn="bgael003" status=""/>
+    <rfield cite_std="N" ver="1" name="bgae010_desc" src="s" depend_field="bgae_t.bgae010" correspon_key="bgaeent,bgae001,bgae006" ref_table="bgael_t" ref_fk="bgaelent,bgael001,bgael006" ref_dlang="bgael002" ref_rtn="bgael003" status=""/>
+    <rfield cite_std="N" ver="1" name="bgaecrtdp_desc" src="s" depend_field="bgae_t.bgaecrtdp" correspon_key="bgaecrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="bgaecrtid_desc" src="s" depend_field="bgae_t.bgaecrtid" correspon_key="&apos;2&apos;,bgaecrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="bgaemodid_desc" src="s" depend_field="bgae_t.bgaemodid" correspon_key="&apos;2&apos;,bgaemodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="bgaeowndp_desc" src="s" depend_field="bgae_t.bgaeowndp" correspon_key="bgaeowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="bgaeownid_desc" src="s" depend_field="bgae_t.bgaeownid" correspon_key="&apos;2&apos;,bgaeownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="bgael_t.bgael003" src="s" depend_field="bgae_t.bgae001" correspon_key="bgaeent,bgae001,bgae006" lang_table="bgael_t" lang_fk="bgaelent,bgael001,bgael006" lang_dlang="bgael002" lang_rtn="bgael003" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code/>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" comment="" lstr=""/>
+    <sfield name="lbl_bgae006" text="预算项目组别" comment="" lstr=""/>
+    <sfield name="bpage_1" text="基本資料" comment="" lstr=""/>
+    <sfield name="lbl_bgae001" text="變量編號" comment="" lstr=""/>
+    <sfield name="lbl_bgael003_1" text="變量名稱" comment="" lstr=""/>
+    <sfield name="lbl_bgae009" text="起始预算项目" comment="" lstr=""/>
+    <sfield name="lbl_bgael003" text="預算名稱" comment="" lstr=""/>
+    <sfield name="lbl_bgae010" text="截止预算项目" comment="" lstr=""/>
+    <sfield name="lbl_bgael003" text="預算名稱" comment="" lstr=""/>
+    <sfield name="lbl_bgae011" text="计量方式" comment="" lstr=""/>
+    <sfield name="lbl_bgae012" text="金额来源" comment="" lstr=""/>
+    <sfield name="lbl_bgaestus" text="狀態碼" comment="" lstr=""/>
+    <sfield name="lbl_bgae007" text="类别" comment="" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" comment="" lstr=""/>
+    <sfield name="lbl_bgae001" text="變量編號" comment="" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" comment="" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" comment="" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" comment="" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" comment="" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" comment="" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" comment="" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" comment="" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" comment="" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" comment="" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" comment="" lstr=""/>
+    <sfield name="modid_desc" text="員工名" comment="" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" comment="" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" comment="" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" comment="" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" comment="" lstr=""/>
+    <sfield name="lbl_dend" text="項)" comment="" lstr=""/>
+    <sfield name="cl_err_s01_Detail" text="詳細資訊" comment="" lstr=""/>
+    <sfield name="cl_err_s01_Sure" text="確定" comment="" lstr=""/>
+    <sfield name="cl_err_s01_Detail" text="詳細資訊" comment="" lstr=""/>
+    <sfield name="cl_err_s01_Sure" text="確定" comment="" lstr=""/>
+    <sfield name="cl_where_Condition" text="條件" comment="" lstr=""/>
+    <sfield name="cl_where_FieldName" text="欄位名稱" comment="" lstr=""/>
+    <sfield name="cl_where_Operator" text="操作行為" comment="" lstr=""/>
+    <sfield name="cl_where_BETWEEN" text="BETWEEN" comment="" lstr=""/>
+    <sfield name="cl_where_IN" text="IN" comment="" lstr=""/>
+    <sfield name="cl_where_LIKE" text="LIKE" comment="" lstr=""/>
+    <sfield name="cl_where_ISNULL" text="IS NULL" comment="" lstr=""/>
+    <sfield name="cl_where_ISNOTNULL" text="IS NOT NULL" comment="" lstr=""/>
+    <sfield name="cl_where_Values" text="值" comment="" lstr=""/>
+    <sfield name="cl_where_Logicope" text="邏輯運算" comment="" lstr=""/>
+    <sfield name="cl_where_AND" text="AND" comment="" lstr=""/>
+    <sfield name="cl_where_OR" text="OR" comment="" lstr=""/>
+    <sfield name="cl_where_MakeConditions" text="設定條件" comment="" lstr=""/>
+    <sfield name="cl_where_WhereConditions" text="WHERE條件" comment="" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" comment="" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="查詢方案名稱" comment="" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" comment="" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" comment="" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" comment="" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" comment="" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" comment="" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" comment="" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" comment="" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" comment="" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" comment="" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" comment="" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" comment="" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" comment="" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" comment="" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" comment="" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" comment="" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" comment="" lstr=""/>
+    <sfield name="lbl_dend" text="項)" comment="" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" comment="" lstr=""/>
+    <sfield name="lbl_loaa003" text="文件序號" comment="" lstr=""/>
+    <sfield name="lbl_loaa004" text="文件型態" comment="" lstr=""/>
+    <sfield name="lbl_loaa005" text="文件原始檔名" comment="" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" comment="" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" comment="" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" comment="" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" comment="" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" comment="" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件存放類型" comment="" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件內容" comment="" lstr=""/>
+    <sfield name="lbl_loaa008" text="文件關聯位置" comment="" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" comment="" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" comment="" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" comment="" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" comment="" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" comment="" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" comment="" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" comment="" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" comment="" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" comment="" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" comment="" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" comment="" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" comment="" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" comment="" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" comment="" lstr=""/>
+    <sfield name="lbl_check" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_bgae006" text="预算项目组别" comment="" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_check" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_bgae001" text="预算项目编码" comment="" lstr=""/>
+    <sfield name="lbl_bgael003" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_bgael006" text="预算项目组别" comment="" lstr=""/>
+    <sfield name="lbl_bgael001" text="预算项目编码" comment="" lstr=""/>
+    <sfield name="lbl_bgael002" text="語言別" comment="" lstr=""/>
+    <sfield name="lbl_bgael003" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_bgael004" text="助記碼" comment="" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" comment="" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" comment="" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" comment="" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" comment="" lstr=""/>
+    <sfield name="lbl_check" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" comment="" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" comment="" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

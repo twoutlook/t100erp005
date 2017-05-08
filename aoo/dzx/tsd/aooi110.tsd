@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi110" std_prog="aooi110" erpver="1.0" ver="3" module="AOO" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="Y" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="2" cite_std="N">
+    <tbl name="ooeb_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="ooec_t" main="N" head="N" pk="" fk_detail="" parent="ooeb_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="2" src="s" status="">
+    <![CDATA[程式說明及目的：企業組織結構的建立或變動時,應成立此組織計劃申請作業,並指定該申請版本之生失效日,申請確立後即產生新版本之組織結構樹
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：交易單據作業（非單別單號模式)
+輸入模式：單檔搭配左方樹狀瀏覽模式F001_ht
+資料來源：ooeb_t(組織計劃申請單頭檔)
+　　　　　ooec_t(組織計劃申請單身檔)
+          ooed_t(組織結構調整計劃結存檔)
+          ooeds_t(組織結構提速檔)
+關聯表格：ooef_t(營運據點檔)
+          ooefl_t(營運據點檔多語言檔)
+　　　　  
+
+組織樹狀結構操作模式：
+
+變更類型=新增時
+1.單頭輸入組織類型後,自動將該組織類型之下各最上層組織(可能有多個)當前版本組織樹顯示於樹狀瀏覽頁(僅展開至最上層組織即可）,當前版本可從提速檔抓取
+2.單頭輸入最上層組織,此組織若尚未存在同組織類型的組織樹裡,輸入後自動顯示於左邊樹狀根節點
+　　　　　　　　　　 此組織若已存在組織樹裡,則先展開該筆組織小樹
+3.系統自動開窗’組織資料準備’將QBE後的組織節點羅列於上述的最上層組織轄下,做可供拖拉成子樹的準備
+4.不可異動非單頭指定的最上層組織以外的樹狀結構
+
+變更類型=更改時
+1.單頭輸入組織類型+最上層組織+版本後自動顯示該組織樹於樹狀瀏覽頁
+2.檢核若輸入值為當前版本,則本申請單僅可修改失效日,其餘欄位及樹狀結構均不可異動
+      若輸入值為未來版本,則本申請單欄位均可修改,並依原版本號回寫結存檔
+3.歷史版本不可進行更改　　
+4.組織節點的刪除,可由樹狀拉至申請單單身,表示脫離該組織樹
+
+變更類型=無效時
+1.單頭輸入組織類型+最上層組織+版本後自動顯示該組織樹於樹狀瀏覽頁
+2.檢核只有未來版本可以申請為無效
+
+以上,在樹狀拖拉異動過的節點,由系統自動逐一塞入單身,做為本次異動申請的單身資料(display only)
+
+原樹結構子階對應父階為一對一, 現調整為可一對多, 也就是同一個組織單元可存在多個不同父階之下 
+因應上述調整,改變aooi110 UI操作行為, 如附件分鏡所示, 先將組織單元顯示於單身pool備供拖拉至左方成立樹(挑選組織單元的用途), 或由樹狀將節點拉回單身表脫離樹結構, 
+改變組織結構調整計劃結存檔(ooed_t)key值, 加入 '上級組織編號' 當key值之一, 因應多父階的結構
+調整原異動資訊單身檔用途(ooec_t),改成記錄每次申請單的最終組織樹結果,以利歷史申請單的查詢        
+]]>
+  </all>
+  <di_all cite_std="N" ver="2" src="s" status="">
+    <![CDATA[第一個單身
+1.單身依單頭選定的組織職能QBE篩選出組織基本資料檔的組織節點,顯示於本單身中以備拖拉組織樹
+2.左樹與右單身均要可以多行選擇後拖拉入組織樹或拖離組織樹
+3.針對幾個財務組織做以下判斷:
+ .账务中心组织（树中的节点是所有组织即可）    
+ .预算中心组织（树中的节点是只有预算组织打勾的才可以选）    
+ .资产中心组织（树中的节点是只有资产组织打勾的才可以选）    
+ .资金中心组织（树中的节点是只有资金组织打勾的才可以选）    
+ .资金计划组织（树中的节点是只有资金组织打勾的才可以选）    
+
+
+1.單身為noentry,資料是透過樹狀拖拉型成組織樹的過程中,有異動的部份由系統自動塞進單身,當作本次申請單的異動內容
+2.異動說明=新增,則上級組織編號=樹狀拖拉後的父結點組織編號
+  異動說明=刪除,則上級組織編號=空白
+
+]]>
+  </di_all>
+  <field cite_std="N" name="b_ooed001" ver="2" src="s" column="ooed001" table="ooed_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="100" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooed002" ver="1" src="s" column="ooed002" table="ooed_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="check" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooeb001" ver="1" src="s" column="ooeb001" table="ooeb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[1.由本作業輸入完畢存檔後, 系統自動流水號產生, 依序為'00001','00002','00003'...
+]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooeb002" ver="1" src="s" column="ooeb002" table="ooeb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[1.預設系統日期,可修改
+
+]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooeb003" ver="3" src="s" column="ooeb003" table="ooeb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="101" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooeb004" ver="3" src="s" column="ooeb004" table="ooeb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="100" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooeb005" ver="2" src="s" column="ooeb005" table="ooeb_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校验：传入参数arg1 = ooeb005
+輸入需存在組織基本資料檔,ref.組織簡稱,且需隸屬於已選定的組織職能才可當做該樹的最上層組織
+3.子階與父階關係為一對一,但財務的五個中心除外(帳務中心/預算中心/資金結算中心/資金計劃中心/資產中心)其同一子階可存在多個父階之下,為一對多觀念
+
+]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooeb006" ver="1" src="s" column="ooeb006" table="ooeb_t" attribute="" type="" req="Y" i_zoom="q_ooed003" c_zoom="q_ooed003" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[1.變更類型=新增時,本欄位自動依企業編號+組織類型+最上層組織自動預設最大現有版本+1,noentry
+2.變更類型=更改時,本欄位可輸入當前版本或未來版本(歷史版本不可進行更改）
+                  當輸入值為當前版本時,自動帶出當前版本的生失效日,且只可更改失效日(生效日及組織結構不可異動)
+                  當輸入值為未來版本時,自動帶出未來版本的生失效日,生失效日均可修改,亦可變動組織結構
+3.變更類型=無效時,本欄位只可輸入未來版本(僅可對未來版本進行無效的變更)
+]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooeb007" ver="1" src="s" column="ooeb007" table="ooeb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooeb008" ver="1" src="s" column="ooeb008" table="ooeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooebcrtdp" ver="1" src="s" column="ooebcrtdp" table="ooeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooebcrtdt" ver="1" src="s" column="ooebcrtdt" table="ooeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooebcrtid" ver="1" src="s" column="ooebcrtid" table="ooeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooebmoddt" ver="1" src="s" column="ooebmoddt" table="ooeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooebmodid" ver="1" src="s" column="ooebmodid" table="ooeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooebowndp" ver="1" src="s" column="ooebowndp" table="ooeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooebownid" ver="1" src="s" column="ooebownid" table="ooeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeb_t.ooebstus" ver="1" src="s" column="ooebstus" table="ooeb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooef001" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooef001_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooef017" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef017" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooef017_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_ooed004_desc" src="s" depend_field="b_ooed004" correspon_key="ooedent,ooed004" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooeb005_desc" src="s" depend_field="ooeb_t.ooeb005" correspon_key="ooeb005" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooebcrtdp_desc" src="s" depend_field="ooeb_t.ooebcrtdp" correspon_key="ooebcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooebcrtid_desc" src="s" depend_field="ooeb_t.ooebcrtid" correspon_key="ooebcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooebmodid_desc" src="s" depend_field="ooeb_t.ooebmodid" correspon_key="ooebmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooebowndp_desc" src="s" depend_field="ooeb_t.ooebowndp" correspon_key="ooebowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooebownid_desc" src="s" depend_field="ooeb_t.ooebownid" correspon_key="ooebownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="2" name="b_ooed001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooed002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="check" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooeb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooeb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="ooeb_t.ooeb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="ooeb_t.ooeb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="2" name="ooeb_t.ooeb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooeb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooeb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooeb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooebcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooebcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooebcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooebmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooebmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooebowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooebownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeb_t.ooebstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="ooef001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="ooef001_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="ooef017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="ooef017_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="aooi100" ver="2" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="del_aooi100" ver="2" src="s" type="di2,db2" gen_code="Y" status="">
+    <![CDATA[1.單身停在某一筆組織資料,按下 '刪除組織'action時, 
+   開窗詢問是否確定刪除, 'Y'則刪除該筆組織資料, 保存关闭窗口后自动刷新單身組織資料頁面
+2.本功能應搭配一支共用程式, check該組織是否已有相關的業務單據資料, 
+    IF yes.則不可進行修改或刪除該組織的動作, 至於該共用程式應檢核哪幾個重要檔案待確認]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="ins_aooi100" ver="2" src="s" type="di2,db2" gen_code="Y" status="">
+    <![CDATA[1.單身停在某一筆組織資料,按下 '新增組織'action時, 開啟aooi100組織基本資料維護作業, 
+並自動將該筆組織所有data帶入新增狀態下的aooi100, 清空組織編號及名稱等候進行組織單元的新增功能, 保存关闭窗口后自动刷新單身組織資料頁面]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="produce" ver="2" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1.使用者可透過申請作業的本action,於組織申請的生效日手動觸發重製一次標準提速檔
+　或將此功能列入企業每日的背景作業中,每日觸發重製最新的組織樹提速檔
+2.後續應用程式抓取企業組織樹時建議以提速檔為標準抓取值
+]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="upd_aooi100" ver="2" src="s" type="di2,db2" gen_code="Y" status="">
+    <![CDATA[1.單身停在某一筆組織資料,按下 '修改組織'action時, 開啟aooi100組織基本資料維護作業, 
+   並自動將該筆組織所有data帶入修改狀態下的aooi100, 等候進行組織單元的修改功能, 保存关闭窗口后自动刷新單身組織資料頁面
+2.本功能應搭配一支共用程式, check該組織是否已有相關的業務單據資料, 
+   IF yes.則不可進行修改或刪除該組織的動作, 至於該共用程式應檢核哪幾個重要檔案待確認
+]]>
+  </act>
+  <strings>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="lbl_ooed001" text="組織類型" lstr=""/>
+    <sfield name="lbl_ooed002" text="最上層組織" lstr=""/>
+    <sfield name="lbl_ooed003" text="版本" lstr=""/>
+    <sfield name="lbl_ooed004" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooed005" text="上級組織編號" lstr=""/>
+    <sfield name="page_1" text="申請資料" lstr=""/>
+    <sfield name="lbl_ooeb001" text="申請編號" lstr=""/>
+    <sfield name="lbl_ooeb002" text="申請日期" lstr=""/>
+    <sfield name="lbl_ooeb003" text="變更類型" lstr=""/>
+    <sfield name="lbl_ooeb004" text="組織類型" lstr=""/>
+    <sfield name="lbl_ooeb005" text="最上層組織" lstr=""/>
+    <sfield name="lbl_ooeb006" text="版本" lstr=""/>
+    <sfield name="lbl_ooeb007" text="生效日期" lstr=""/>
+    <sfield name="lbl_ooeb008" text="失效日期" lstr=""/>
+    <sfield name="lbl_ooebstus" text="狀態碼" lstr=""/>
+    <sfield name="page_info" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_ooebownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_ooebowndp" text="資料所屬部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_ooebcrtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_ooebcrtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_ooebcrtdt" text="資料創建日" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_ooebmodid" text="資料修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_ooebmoddt" text="最近修改日" lstr=""/>
+    <sfield name="bpage_2" text="組織單元挑選" lstr=""/>
+    <sfield name="lbl_check_1" text="選擇" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooef001_desc" text="組織名稱" lstr=""/>
+    <sfield name="lbl_ooef017" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_ooef017_desc" text="歸屬法人名稱" lstr=""/>
+    <sfield name="ins_aooi100" text="新增組織" lstr=""/>
+    <sfield name="upd_aooi100" text="修改組織" lstr=""/>
+    <sfield name="del_aooi100" text="刪除組織" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="aooi100" text="組織基本資料維護作業" lstr=""/>
+    <sact name="del_aooi100" text="刪除組織" lstr=""/>
+    <sact name="ins_aooi100" text="新增組織" lstr=""/>
+    <sact name="produce" text="產生當前組織架構檔" lstr=""/>
+    <sact name="upd_aooi100" text="修改組織" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

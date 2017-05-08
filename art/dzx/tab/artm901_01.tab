@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artm901_01" module="art" jobmode="N" type="c01c" industry="std" fix_arg="0" crtid="01752" crtdt="2015-07-01 16:07:12" modid="01752" moddt="2015-07-01 17:01:08" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產生每日預算結果">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtcbsite,rtcc001"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artm901_01" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field="rtcbsite,rtcc001"/>
+    </section>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="rtcbsite"/>
+      <column id="rtcc001" type="S" default="0">
+        <controlp form="q_rtcc001" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtcb_t" pk="rtcbsite,rtcb001,rtcb002,rtcb003,rtcb004">
+      <sql id="forupd_sql" type="sql" query="SELECT rtcbsite,&apos;&apos; FROM rtcb_t WHERE rtcbent= ? AND rtcbsite=? AND rtcb001=? AND rtcb002=? AND rtcb003=? AND rtcb004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="rtcbsite,rtcb001,rtcb002,rtcb003,rtcb004"/>
+    </head>
+  </dataset>
+</assembly>
+

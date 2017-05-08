@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr301_x01" module="aps" jobmode="N" type="x01" industry="std" crtid="05384" crtdt="2015-08-21 15:07:27" modid="05384" moddt="2015-08-21 17:35:48" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="psaadocno,psaadocdt,psaa001,ooag_t_ooag011(ooag011|ooag_t.ooag011),psaa002,ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),psaa003,l_psaastus_desc(gzcbl004|&apos;&apos;),psabseq,psab001,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),psab002,l_psab002_desc(chr1000|&apos;&apos;),psab003,psab004,psab005,psab006,l_psab005_psab006(psab005|&apos;&apos;),psab007,psab008,psab009"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="psaaent,psaasite,psaadocno,psaadocdt,psaa001,ooag_t_ooag011(ooag011|( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psaa_t.psaa001 AND ooag_t.ooagent = psaa_t.psaaent)),psaa002,ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = psaa_t.psaa002 AND ooefl_t.ooeflent = psaa_t.psaaent AND ooefl_t.ooefl002 = g_dlang)),psaa003,psaastus,l_psaastus_desc(gzcbl004|&apos;&apos;),psabseq,psab001,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),psab002,l_psab002_desc(chr1000|&apos;&apos;),psab003,psab004,psab005,psab006,l_psab005_psab006(psab005|&apos;&apos;),psab007,psab008,psab009,psabsite,x_t1_imaal003(imaal003|x.t1_imaal003),l_psaa001_ooag011(chr300|trim(psaa001)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psaa_t.psaa001 AND ooag_t.ooagent = psaa_t.psaaent))),l_psaa002_ooefl003(chr1000|trim(psaa002)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = psaa_t.psaa002 AND ooefl_t.ooeflent = psaa_t.psaaent AND ooefl_t.ooefl002 = g_dlang)))"/>
+    <sql id="g_from" query="psaa_t LEFT OUTER JOIN ( SELECT psab_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = psab_t.psab001 AND imaal_t.imaalent = psab_t.psabent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = psab_t.psab001 AND imaal_t.imaalent = psab_t.psabent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal004,( SELECT imaal003 FROM imaal_t t1 WHERE t1.imaalent = psab_t.psabent AND t1.imaal001 = psab_t.psab001 AND t1.imaal002 = g_dlang) t1_imaal003 FROM psab_t ) x  ON psaa_t.psaaent = x.psabent AND psaa_t.psaadocno = x.psabdocno"/>
+    <sql id="g_where" query="" maintable="psaa_t"/>
+  </selprep>
+</assembly>
+

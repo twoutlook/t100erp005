@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcp160" module="axc" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02291" crtdt="2014-04-02 10:34:56" modid="08108" moddt="2016-06-20 10:54:06" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="工單重工自動設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glaacomp(chr500),glaacomp_desc(chr80),sfaadocno(chr500),sfaa019(chr500),sfaadocdt(chr500),year(chr500),month(chr500),sw_1(chr500),sw_2(chr500),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcp160" method="dialog">
+    <section id="input">
+      <input id="head" field="glaacomp,sfaadocno,sfaa019,sfaadocdt,year,month,sw_1,sw_2"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glaacomp,sfaadocno,sfaa019,sfaadocdt,year,month,sw_1,sw_2"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glaacomp">
+        <after>
+          <reference field="glaacomp_desc" ref_field="glaacomp" map_field="glaaent,glaacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="glaacomp_desc"/>
+      <column id="sfaadocno">
+        <controlp form="q_sfaadocno_3" state="c"/>
+      </column>
+      <column id="sfaa019"/>
+      <column id="sfaadocdt"/>
+      <column id="year"/>
+      <column id="month"/>
+      <column id="sw_1" type="S" default="Y"/>
+      <column id="sw_2" type="S" default="Y"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

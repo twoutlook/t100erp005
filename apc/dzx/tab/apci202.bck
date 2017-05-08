@@ -1,0 +1,198 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apci202" module="apc" jobmode="N" type="t02" industry="std" fix_arg="0" crtid="02749" crtdt="2014-09-22 19:32:43" modid="03247" moddt="2016-07-04 00:01:04" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="前台人員維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pcabstus,pcab001,pcab002,pcab003,pcab015,pcab015_desc(chr500),pcab005,pcab005_desc(chr500),pcab004,pcab004_desc(chr500),pswd(chr500),pcab008,pcab006,pcab007,pcab007_desc(chr500),pcab011,pcab012,pcab009,pcab010,pcab013,pcab014,l_pcab_pos_flag(chr500),pcabstamp(timestamp),pcabunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pcab001,pcab001_2_desc(num10),pcabownid,pcabownid_desc(chr500),pcabowndp,pcabowndp_desc(chr500),pcabcrtid,pcabcrtid_desc(chr500),pcabcrtdp,pcabcrtdp_desc(chr500),pcabcrtdt,pcabmodid,pcabmodid_desc(chr500),pcabmoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="pcacstus,pcac002,pcac002_desc(chr500),pcac003,pcac003_desc(chr500),pcac004,pcac004_desc(chr500),l_pcac_pos_flag(chr500),pcacstamp(timestamp),pcacunit"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="reset_pwd"/>
+      <action id="change_pwd"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="reset_pwd"/>
+      <action id="change_pwd"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apci202" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pcabstus,pcab001,pcab002,pcab003,pcab015,pcab005,pcab004,pswd,pcab008,pcab006,pcab007,pcab011,pcab012,pcab009,pcab010,pcab013,pcab014,l_pcab_pos_flag,pcabstamp,pcabunit" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="pcacstus,pcac002,pcac003,pcac004,l_pcac_pos_flag,pcacstamp,pcacunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="pcabstus,pcab001,pcab002,pcab003,pcab015,pcab005,pcab004,pswd,pcab008,pcab006,pcab007,pcab011,pcab012,pcab009,pcab010,pcab013,pcab014,l_pcab_pos_flag,pcabstamp,pcabunit"/>
+      <construct id="body" page="2" field="pcabownid,pcabowndp,pcabcrtid,pcabcrtdp,pcabcrtdt,pcabmodid,pcabmoddt"/>
+      <construct id="body" page="3" field="pcacstus,pcac002,pcac003,pcac004,l_pcac_pos_flag,pcacstamp,pcacunit"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pcabstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcab001">
+        <controlp form="q_pcab001" state="c"/>
+      </column>
+      <column id="pcab002">
+        <after>
+          <check chkid="v_ooag001_3" id="chkandReturn"/>
+        </after>
+        <controlp form="q_ooag001_8" state="i"/>
+        <controlp form="q_ooag001_8" state="c"/>
+      </column>
+      <column id="pcab003"/>
+      <column id="pcab015">
+        <after>
+          <reference field="pcab015_desc" ref_field="pcab_t.pcab015" map_field="pcab015" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pcab015_desc"/>
+      <column id="pcab005">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="pcab005_desc" ref_field="pcab_t.pcab005" map_field="pcabent,pcab005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="pcab005_desc"/>
+      <column id="pcab004">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="pcab004_desc" ref_field="pcab_t.pcab004" map_field="pcabent,pcab004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="pcab004_desc"/>
+      <column id="pswd"/>
+      <column id="pcab008"/>
+      <column id="pcab006" type="S" default="1" def_scc="6031"/>
+      <column id="pcab007">
+        <after>
+          <check chkid="v_pcaf001" id="isExist"/>
+          <reference field="pcab007_desc" ref_field="pcab_t.pcab007" map_field="pcab007" ref_sql="SELECT pcafl003 FROM pcafl_t WHERE pcaflent=$varg_enterprise$var AND pcafl001=? AND pcafl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pcaf001" state="i"/>
+        <controlp form="q_pcaf001" state="c"/>
+      </column>
+      <column id="pcab007_desc"/>
+      <column id="pcab011" type="S" default="N"/>
+      <column id="pcab012" type="S" default="100">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pcab009" type="S" default="0"/>
+      <column id="pcab010"/>
+      <column id="pcab013"/>
+      <column id="pcab014"/>
+      <column id="l_pcab_pos_flag" type="S" default="N"/>
+      <column id="pcabstamp"/>
+      <column id="pcabunit">
+        <controlp form="q_ooef001_34" state="i"/>
+        <controlp form="q_ooef001_34" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="pcab001_2_desc"/>
+      <column id="pcabownid">
+        <after>
+          <reference field="pcabownid_desc" ref_field="pcab_t.pcabownid" map_field="pcabownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcabownid_desc"/>
+      <column id="pcabowndp">
+        <after>
+          <reference field="pcabowndp_desc" ref_field="pcab_t.pcabowndp" map_field="pcabowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcabowndp_desc"/>
+      <column id="pcabcrtid">
+        <after>
+          <reference field="pcabcrtid_desc" ref_field="pcab_t.pcabcrtid" map_field="pcabcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcabcrtid_desc"/>
+      <column id="pcabcrtdp">
+        <after>
+          <reference field="pcabcrtdp_desc" ref_field="pcab_t.pcabcrtdp" map_field="pcabcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcabcrtdp_desc"/>
+      <column id="pcabcrtdt"/>
+      <column id="pcabmodid">
+        <after>
+          <reference field="pcabmodid_desc" ref_field="pcab_t.pcabmodid" map_field="pcabmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcabmodid_desc"/>
+      <column id="pcabmoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="pcacstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcac002">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="pcac002_desc" ref_field="pcac_t.pcac002" map_field="pcacent,pcac002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="pcac002_desc"/>
+      <column id="pcac003">
+        <after>
+          <check chkid="v_pcaa001" id="isExist"/>
+          <reference field="pcac003_desc" ref_field="pcac002,pcac003" map_field="pcac002,pcac003" ref_sql="SELECT pcaal003 FROM pcaal_t WHERE pcaalent=$varg_enterprise$var AND pcaalsite=? AND pcaal001=? AND pcaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pcaa001_1" state="i"/>
+        <controlp form="q_pcaa001_1" state="c"/>
+      </column>
+      <column id="pcac003_desc"/>
+      <column id="pcac004">
+        <after>
+          <check chkid="v_mhbe001" id="isExist"/>
+          <reference field="pcac004_desc" ref_field="pcac_t.pcac004" map_field="pcac004" ref_sql="SELECT mhbel003 FROM mhbel_t WHERE mhbelent=$varg_enterprise$var AND mhbel001=? AND mhbel002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhbe001" state="i"/>
+        <controlp form="q_mhbe001" state="c"/>
+      </column>
+      <column id="pcac004_desc"/>
+      <column id="l_pcac_pos_flag" type="S" default="N"/>
+      <column id="pcacstamp"/>
+      <column id="pcacunit"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pcab_t" page="1,2" linked="" pk="pcab001">
+      <sql id="forupd_sql_detail" query="SELECT pcabstus,pcab001,pcab002,pcab003,pcab015,&apos;&apos;,pcab005,&apos;&apos;,pcab004,&apos;&apos;,&apos;&apos;,pcab008,pcab006,pcab007,&apos;&apos;,pcab011,pcab012,pcab009,pcab010,pcab013,pcab014,&apos;&apos;,pcabstamp,pcabunit,&apos;&apos;,&apos;&apos;,pcabownid,&apos;&apos;,pcabowndp,&apos;&apos;,pcabcrtid,&apos;&apos;,pcabcrtdp,&apos;&apos;,pcabcrtdt,pcabmodid,&apos;&apos;,pcabmoddt FROM pcab_t WHERE pcabent=? AND pcab001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcabstus,pcab001,pcab002,pcab003,pcab015,&apos;&apos;,pcab005,&apos;&apos;,pcab004,&apos;&apos;,&apos;&apos;,pcab008,pcab006,pcab007,&apos;&apos;,pcab011,pcab012,pcab009,pcab010,pcab013,pcab014,&apos;&apos;,pcabstamp,pcabunit,&apos;&apos;,&apos;&apos;,pcabownid,&apos;&apos;,pcabowndp,&apos;&apos;,pcabcrtid,&apos;&apos;,pcabcrtdp,&apos;&apos;,pcabcrtdt,pcabmodid,&apos;&apos;,pcabmoddt FROM pcab_t WHERE pcabent= ? AND 1=1 "/>
+    </body>
+    <body id="pcac_t" page="3" linked="" pk="pcac002,pcac003,pcac004" fk="pcac001" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT pcacstus,pcac002,&apos;&apos;,pcac003,&apos;&apos;,pcac004,&apos;&apos;,&apos;&apos;,pcacstamp,pcacunit FROM pcac_t WHERE pcacent=? AND pcac001=? AND pcac002=? AND pcac003=? AND pcac004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcacstus,pcac002,&apos;&apos;,pcac003,&apos;&apos;,pcac004,&apos;&apos;,&apos;&apos;,pcacstamp,pcacunit FROM pcac_t WHERE pcacent=? AND pcac001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

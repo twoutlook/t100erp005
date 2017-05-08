@@ -1,0 +1,2463 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="artq621.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2016-11-21 15:40:50), PR版次:0001(2016-11-21 15:57:57)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000000
+#+ Filename...: artq621
+#+ Description: 
+#+ Creator....: 08742(2016-11-01 13:41:02)
+#+ Modifier...: 00940 -SD/PR- 00940
+ 
+{</section>}
+ 
+{<section id="artq621.global" >}
+#應用 q01 樣板自動產生(Version:34)
+#add-point:填寫註解說明 name="global.memo"
+
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_rtjb_d RECORD
+       
+       l_sdate LIKE type_t.chr500, 
+   l_edate LIKE type_t.chr500, 
+   rtjb014 LIKE rtjb_t.rtjb014, 
+   rtjb021 LIKE rtjb_t.rtjb021, 
+   rtjbdocno LIKE rtjb_t.rtjbdocno, 
+   rtjbseq LIKE rtjb_t.rtjbseq
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE l_date      LIKE rtja_t.rtjadocdt
+DEFINE rtjasite    LIKE rtja_t.rtjasite
+DEFINE rtjadocdt   LIKE rtja_t.rtjadocdt
+DEFINE l_time                STRING
+DEFINE rtja009     LIKE rtja_t.rtja009
+   DEFINE l_success       LIKE type_t.chr1
+
+ TYPE type_g_rtjb_d2 RECORD
+       
+   rtaw001     LIKE rtaw_t.rtaw001,
+   rtaxl003    LIKE rtaxl_t.rtaxl003,   
+   rtjb014     LIKE rtjb_t.rtjb014, 
+   rtjb021     LIKE rtjb_t.rtjb021, 
+   rtjbdocno   LIKE rtjb_t.rtjbdocno, 
+   rtjbseq     LIKE rtjb_t.rtjbseq 
+       END RECORD
+       
+ TYPE type_g_rtjb_d3 RECORD
+          
+   rtja036     LIKE rtja_t.rtja036, 
+   rtjb014     LIKE rtjb_t.rtjb014, 
+   rtjb021     LIKE rtjb_t.rtjb021, 
+   rtjbdocno   LIKE rtjb_t.rtjbdocno, 
+   rtjbseq     LIKE rtjb_t.rtjbseq 
+       END RECORD  
+
+ TYPE type_g_rtjb_d4 RECORD
+          
+   rtja037       LIKE rtja_t.rtja037, 
+   rtja037_desc  LIKE type_t.chr500, 
+   rtjb014       LIKE rtjb_t.rtjb014, 
+   rtjb021       LIKE rtjb_t.rtjb021
+       END RECORD  
+       
+ TYPE type_g_rtjb_d5 RECORD
+          
+   rtja037       LIKE rtja_t.rtja037, 
+   rtja037_desc  LIKE type_t.chr500, 
+   rtjb014       LIKE rtjb_t.rtjb014, 
+   rtjb021       LIKE rtjb_t.rtjb021
+       END RECORD    
+
+ TYPE type_g_rtjb_d6 RECORD
+          
+   rtjc002       LIKE rtja_t.rtja037,
+   rtjc013       LIKE rtjb_t.rtjb014
+       END RECORD  
+       
+ TYPE type_g_rtjb_d7 RECORD
+   
+   rtja037       LIKE rtja_t.rtja037, 
+   rtja037_desc  LIKE type_t.chr500,    
+   rtjc002       LIKE rtja_t.rtja037,
+   rtjc013       LIKE rtjb_t.rtjb014 
+       END RECORD     
+
+
+DEFINE g_rtjb_d2          DYNAMIC ARRAY OF type_g_rtjb_d2
+DEFINE g_rtjb_d2_t        type_g_rtjb_d2
+       
+DEFINE g_rtjb_d3          DYNAMIC ARRAY OF type_g_rtjb_d3
+DEFINE g_rtjb_d3_t        type_g_rtjb_d3
+       
+DEFINE g_rtjb_d4          DYNAMIC ARRAY OF type_g_rtjb_d4
+DEFINE g_rtjb_d4_t        type_g_rtjb_d4
+
+DEFINE g_rtjb_d5          DYNAMIC ARRAY OF type_g_rtjb_d5
+DEFINE g_rtjb_d5_t        type_g_rtjb_d5
+
+DEFINE g_rtjb_d6          DYNAMIC ARRAY OF type_g_rtjb_d6
+DEFINE g_rtjb_d6_t        type_g_rtjb_d6
+
+DEFINE g_rtjb_d7          DYNAMIC ARRAY OF type_g_rtjb_d7
+DEFINE g_rtjb_d7_t        type_g_rtjb_d7
+
+DEFINE g_detail_cnt_2      LIKE type_t.num10
+DEFINE g_detail_cnt_3      LIKE type_t.num10
+DEFINE g_detail_cnt_4      LIKE type_t.num10
+DEFINE g_detail_cnt_5      LIKE type_t.num10
+DEFINE g_detail_cnt_6      LIKE type_t.num10
+DEFINE g_detail_cnt_7      LIKE type_t.num10
+DEFINE g_wc3               STRING
+DEFINE g_wc4               STRING
+
+
+DEFINE g_rtjb2_d_colour DYNAMIC ARRAY OF RECORD
+   rtaw001     STRING,
+   rtaxl003    STRING,   
+   rtjb014     STRING,
+   rtjb021     STRING, 
+   rtjbdocno   STRING,
+   rtjbseq     STRING     
+END RECORD
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_rtjb_d            DYNAMIC ARRAY OF type_g_rtjb_d
+DEFINE g_rtjb_d_t          type_g_rtjb_d
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="artq621.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE l_success      LIKE type_t.num5
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("art","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE artq621_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE artq621_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE artq621_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_artq621 WITH FORM cl_ap_formpath("art",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL artq621_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL artq621_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_artq621
+      
+   END IF 
+   
+   CLOSE artq621_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL s_aooi500_drop_temp() RETURNING l_success 
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="artq621.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION artq621_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_success      LIKE type_t.num5
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+     
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_aooi500_create_temp() RETURNING l_success 
+   LET rtjadocdt = g_today
+   CALL cl_set_combo_scc('l_time','6980')
+   CALL cl_set_combo_scc('b_rtjc002_6','6708')
+   CALL cl_set_combo_scc('b_rtjc002_7','6708')
+   CALL artq621_create_tmp() RETURNING l_success
+   #end add-point
+ 
+   CALL artq621_default_search()
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq621.default_search" >}
+PRIVATE FUNCTION artq621_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " rtjbdocno = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " rtjbseq = '", g_argv[02], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq621.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION artq621_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old   STRING
+   DEFINE ls_js     STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   
+   CALL artq621_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_rtjb_d.clear()
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL artq621_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+         
+         INPUT rtjadocdt , l_time  
+            FROM  rtjadocdt , l_time  
+                ATTRIBUTE(WITHOUT DEFAULTS)
+             
+               BEFORE INPUT 
+               IF cl_null(l_time) THEN 
+                  LET l_time = '24'
+               END IF
+                  DISPLAY BY NAME rtjadocdt
+                  CALL cl_get_para(g_enterprise,g_site,'S-CIR-0003') RETURNING l_date
+                  IF cl_null(rtjadocdt) THEN 
+                     LET  rtjadocdt = l_date
+                  END IF                 
+                 AFTER INPUT          
+         END INPUT 
+         
+         
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+         #CONSTRUCT BY NAME g_wc ON rtjasite,rtja009,imaa009,rtdx001
+         
+         CONSTRUCT g_wc ON imaa009 FROM imaa009
+           
+            ON ACTION controlp INFIELD imaa009         
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE 
+               CALL q_rtax001()                       
+               DISPLAY g_qryparam.return1 TO imaa009    
+               NEXT FIELD imaa009
+               
+         END CONSTRUCT
+         
+         CONSTRUCT g_wc2 ON rtjasite FROM rtjasite
+            ON ACTION controlp INFIELD rtjasite         
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtjasite',g_site,'c') 
+               CALL q_ooef001_24()                       
+               DISPLAY g_qryparam.return1 TO rtjasite    
+               NEXT FIELD rtjasite
+         END CONSTRUCT
+         
+         CONSTRUCT g_wc3 ON rtaw001 FROM rtja009
+           
+      BEFORE CONSTRUCT
+
+      ON ACTION controlp INFIELD rtja009
+        
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.where = " rtax004 ='",cl_get_para(g_enterprise,"","E-CIR-0001"),"'"
+         CALL q_rtax001()                           
+         DISPLAY g_qryparam.return1 TO rtja009       
+      
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc4 ON rtjb004 FROM rtdx001
+           
+            ON ACTION controlp INFIELD rtdx001         
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaa001()                       
+               DISPLAY g_qryparam.return1 TO rtdx001    
+               NEXT FIELD rtdx001
+        
+         END CONSTRUCT
+         
+         #end add-point
+     
+         DISPLAY ARRAY g_rtjb_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL artq621_detail_action_trans()
+ 
+               LET g_master_idx = l_ac
+               #為避免按上下筆時影響執行效能，所以做一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL artq621_b_fill2()
+               LET g_action_choice = lc_action_choice_old
+ 
+               #add-point:input段before row name="input.body.before_row"
+               
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+         #add-point:第一頁籤程式段mark結束用 name="ui_dialog.page1.mark.end"
+         
+         #end add-point
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_rtjb_d2 TO s_detail2.* ATTRIBUTES(COUNT=g_detail_cnt_2)
+            BEFORE DISPLAY
+               IF g_detail_cnt_2 = 0 THEN
+                  CALL artq621_b2_fill(ls_wc,l_date) 
+               END IF
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               DISPLAY l_ac TO FORMONLY.h_index
+               DISPLAY g_detail_cnt_2 TO FORMONLY.h_count
+               DISPLAY ' ' TO FORMONLY.p_start
+               DISPLAY ' ' TO FORMONLY.p_end
+                           
+               CALL DIALOG.setCellAttributes(g_rtjb2_d_colour)    #参数：屏幕变量,属性数组
+               CALL DIALOG.setArrayAttributes("s_detail2",g_rtjb2_d_colour)    #参数：屏幕变量,属性数组
+               
+         END DISPLAY
+         
+         DISPLAY ARRAY g_rtjb_d3 TO s_detail3.* ATTRIBUTES(COUNT=g_detail_cnt_3)
+            BEFORE DISPLAY
+               IF g_detail_cnt_3 = 0 THEN
+                  CALL artq621_b3_fill(ls_wc,l_date) 
+               END IF
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx
+               DISPLAY l_ac TO FORMONLY.h_index
+               DISPLAY g_detail_cnt_3 TO FORMONLY.h_count
+               DISPLAY ' ' TO FORMONLY.p_start
+               DISPLAY ' ' TO FORMONLY.p_end
+         END DISPLAY         
+
+         DISPLAY ARRAY g_rtjb_d4 TO s_detail4.* ATTRIBUTES(COUNT=g_detail_cnt_4)
+            BEFORE DISPLAY
+               IF g_detail_cnt_4 = 0 THEN
+                  CALL artq621_b4_fill(ls_wc,l_date) 
+               END IF
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail4")
+               LET l_ac = g_detail_idx
+               DISPLAY l_ac TO FORMONLY.h_index
+               DISPLAY g_detail_cnt_4 TO FORMONLY.h_count
+               DISPLAY ' ' TO FORMONLY.p_start
+               DISPLAY ' ' TO FORMONLY.p_end
+         END DISPLAY
+
+         DISPLAY ARRAY g_rtjb_d5 TO s_detail5.* ATTRIBUTES(COUNT=g_detail_cnt_5)
+            BEFORE DISPLAY
+               IF g_detail_cnt_5 = 0 THEN
+                  CALL artq621_b5_fill(ls_wc,l_date) 
+               END IF
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail5")
+               LET l_ac = g_detail_idx
+               DISPLAY l_ac TO FORMONLY.h_index
+               DISPLAY g_detail_cnt_5 TO FORMONLY.h_count
+               DISPLAY ' ' TO FORMONLY.p_start
+               DISPLAY ' ' TO FORMONLY.p_end
+         END DISPLAY
+         
+         DISPLAY ARRAY g_rtjb_d6 TO s_detail6.* ATTRIBUTES(COUNT=g_detail_cnt_6)
+            BEFORE DISPLAY
+               IF g_detail_cnt_6 = 0 THEN
+                  CALL artq621_b6_fill(ls_wc,l_date) 
+               END IF
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail6")
+               LET l_ac = g_detail_idx
+               DISPLAY l_ac TO FORMONLY.h_index
+               DISPLAY g_detail_cnt_6 TO FORMONLY.h_count
+               DISPLAY ' ' TO FORMONLY.p_start
+               DISPLAY ' ' TO FORMONLY.p_end
+         END DISPLAY
+
+         DISPLAY ARRAY g_rtjb_d7 TO s_detail7.* ATTRIBUTES(COUNT=g_detail_cnt_7)
+            BEFORE DISPLAY
+               IF g_detail_cnt_7 = 0 THEN
+                  CALL artq621_b7_fill(ls_wc,l_date) 
+               END IF
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail7")
+               LET l_ac = g_detail_idx
+               DISPLAY l_ac TO FORMONLY.h_index
+               DISPLAY g_detail_cnt_7 TO FORMONLY.h_count
+               DISPLAY ' ' TO FORMONLY.p_start
+               DISPLAY ' ' TO FORMONLY.p_end
+         END DISPLAY
+         #end add-point
+ 
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL artq621_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            IF cl_null(l_time) THEN 
+               LET l_time = '24'
+            END IF
+            DISPLAY g_site TO rtjasite
+            CALL cl_set_act_visible("selall,selnone,sel,unsel,insert", FALSE) 
+            CALL cl_set_act_visible("insert,query", FALSE)
+            CALL cl_set_comp_visible("sel", FALSE)            
+            DISPLAY g_site TO rtdxsite
+            #end add-point
+            NEXT FIELD rtjasite
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+            
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+         
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+ 
+ 
+            #add-point:ON ACTION accept name="ui_dialog.accept"
+            
+            #end add-point
+ 
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            CALL artq621_b_fill()
+ 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_rtjb_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL artq621_b_fill()
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL artq621_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL artq621_b_fill()
+ 
+         ON ACTION detail_next               #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL artq621_b_fill()
+ 
+         ON ACTION detail_last               #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL artq621_b_fill()
+ 
+         
+         #應用 qs16 樣板自動產生(Version:3)
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL artq621_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+ 
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq621.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION artq621_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_rtjb014  LIKE rtjb_t.rtjb014
+   DEFINE l_rtjb021  LIKE rtjb_t.rtjb021
+   DEFINE l_count LIKE type_t.num10
+   DEFINE l_price LIKE rtjb_t.rtjb021
+   DEFINE l_date  LIKE rtja_t.rtjadocdt
+   DEFINE l_sql   STRING
+   DEFINE l_ac1   STRING
+   DEFINE l_ac2   LIKE type_t.num10
+   DEFINE l_ac3   LIKE type_t.num10 
+   DEFINE l_ac4   LIKE type_t.num10 
+   DEFINE l_ac5   LIKE type_t.num10 
+   DEFINE l_ac6   STRING
+   DEFINE l_where1  STRING   
+   DEFINE l_ins_artq621_rtja STRING
+   DEFINE l_ins_artq621_rtjb STRING 
+   DEFINE l_ins_artq621_rtjc STRING
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   CALL cl_get_para(g_enterprise,g_site,'S-CIR-0003') RETURNING l_date
+   IF l_date != rtjadocdt THEN 
+      LET l_date = rtjadocdt 
+   END IF
+   IF cl_null(l_time) THEN 
+      RETURN
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET g_wc2 = g_wc2," AND ",s_aooi500_sql_where(g_prog,'rtjasite')
+   #end add-point
+ 
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:34) add cl_sql_auth_filter()
+ 
+   CALL g_rtjb_d.clear()
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   IF cl_null(g_wc3) THEN
+      LET g_wc3 = " 1=1"
+   END IF
+   IF cl_null(g_wc4) THEN
+      LET g_wc4 = " 1=1"
+   END IF
+   LET ls_wc = ls_wc," AND ",g_wc3, " AND ", g_wc4
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs04 樣板自動產生(Version:9)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET ls_sql_rank = "SELECT  UNIQUE '','',rtjb014,rtjb021,rtjbdocno,rtjbseq  ,DENSE_RANK() OVER( ORDER BY rtjb_t.rtjbdocno, 
+       rtjb_t.rtjbseq) AS RANK FROM rtjb_t",
+ 
+ 
+                     "",
+                     " WHERE rtjbent= ? AND 1=1 AND ", ls_wc
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("rtjb_t"),
+                     " ORDER BY rtjb_t.rtjbdocno,rtjb_t.rtjbseq"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+   IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+      LET l_where1 = " AND EXISTS (SELECT 1 FROM rtaw_t,rtax_t,imaa_t",
+                     " WHERE rtawent = rtaxent AND rtax001 = rtaw001 ",
+                     "   AND imaaent = rtawent AND rtaxent = ",g_enterprise,
+                     "   AND rtaw002 = imaa009 AND rtjb004=imaa001 AND rtax004 = '",cl_get_para(g_enterprise,"","E-CIR-0001"),"' AND ",g_wc3,")"
+   END IF
+   LET ls_sql_rank = ""
+#   LET ls_sql_rank = "SELECT  UNIQUE '','',rtjb014,rtjb021,rtjbdocno,rtjbseq,'','','','','','','','', 
+#       '','','','','','','','','','','','','','','','',''  ,DENSE_RANK() OVER( ORDER BY rtjb_t.rtjbdocno, rtjb_t.rtjbseq) AS RANK FROM rtjb_t",
+#                     " LEFT JOIN rtaw_t ON rtjbdocno = rtaw001 AND rtjbseq = rtaw002 LEFT JOIN rtaxl_t ON rtjbdocno = rtaxl001 AND rtjbseq = rtaxl002
+#                     LEFT JOIN rtja_t ON rtjbdocno = rtjadocno AND rtjbent = rtjaent",
+#                     " WHERE rtjbent= ? AND 1=1 AND ", ls_wc
+#   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("rtjb_t"),
+#                     " ORDER BY rtjb_t.rtjbdocno,rtjb_t.rtjbseq"
+                     
+   TRUNCATE table artq621_rtja
+   TRUNCATE table artq621_rtjb
+   TRUNCATE table artq621_rtjc
+   
+   LET l_ins_artq621_rtja = " INSERT INTO artq621_rtja ",
+                            " SELECT * FROM rtja_t WHERE rtjaent = '",g_enterprise,"' ",
+                            "                        AND rtjadocdt = to_date('",l_date,"','yy/mm/dd') AND ",g_wc2
+   PREPARE ins_rtja FROM l_ins_artq621_rtja
+   EXECUTE ins_rtja    
+   
+   LET l_ins_artq621_rtjb = " INSERT INTO artq621_rtjb ",
+                            " SELECT * FROM rtjb_t WHERE rtjbent = '",g_enterprise,"' ",
+                            "                        AND EXISTS ( SELECT 1 FROM artq621_rtja WHERE rtjadocno = rtjbdocno) "
+   PREPARE ins_rtjb FROM l_ins_artq621_rtjb
+   EXECUTE ins_rtjb    
+   
+   LET l_ins_artq621_rtjc = " INSERT INTO artq621_rtjc ",
+                            " SELECT * FROM rtjc_t WHERE rtjcent = '",g_enterprise,"' ",
+                            "                        AND EXISTS ( SELECT 1 FROM artq621_rtja WHERE rtjadocno = rtjcdocno) "
+   PREPARE ins_rtjc FROM l_ins_artq621_rtjc
+   EXECUTE ins_rtjc   
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql  #總筆數
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '','',rtjb014,rtjb021,rtjbdocno,rtjbseq",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+   LET g_sql =   "SELECT '','','','','','' ",
+                 " FROM dual "
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE artq621_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR artq621_pb
+ 
+   OPEN b_fill_curs USING g_enterprise
+ 
+   FOREACH b_fill_curs INTO g_rtjb_d[l_ac].l_sdate,g_rtjb_d[l_ac].l_edate,g_rtjb_d[l_ac].rtjb014,g_rtjb_d[l_ac].rtjb021, 
+       g_rtjb_d[l_ac].rtjbdocno,g_rtjb_d[l_ac].rtjbseq
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      
+      #end add-point
+ 
+      CALL artq621_detail_show("'1'")
+ 
+      CALL artq621_rtjb_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+   #應用 qs05 樣板自動產生(Version:4)
+   #+ b_fill段其他table資料取得(包含sql組成及資料填充)
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   
+   #end add-point
+ 
+   CALL g_rtjb_d.deleteElement(g_rtjb_d.getLength())
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   CALL g_rtjb_d.clear()
+   LET l_ac =  1
+   LET  l_ac3 = l_time
+   CASE l_time
+      WHEN '1'
+        LET l_ac2 = 24/l_ac3  
+      WHEN '2'
+        LET l_ac2 = 24/l_ac3 
+      WHEN '3'
+        LET l_ac2 = 24/l_ac3
+      WHEN '4'
+        LET l_ac2 = 24/l_ac3 
+      WHEN '6'
+        LET l_ac2 = 24/l_ac3
+      WHEN '12'
+        LET l_ac2 = 24/l_ac3        
+      WHEN '24'
+        LET l_ac2 = 24/l_ac3
+   END CASE   
+   FOR l_ac4 = 0 TO 23 STEP l_ac2
+       LET l_ac5 = l_ac4+l_ac2-1 
+       LET l_ac6 = l_ac5 USING "&&"
+       LET l_ac1 = l_ac4 USING "&&"
+       IF cl_null(g_wc4) THEN
+          LET g_wc4 = " 1=1"
+       END IF   
+       IF g_wc = ' 1=1' AND g_wc3 = ' 1=1' THEN
+           LET l_sql = " SELECT '','',SUM(rtjb014),SUM(rtjb021) ",
+                       "   FROM artq621_rtja,artq621_rtjb", 
+                       "  WHERE rtjaent=rtjbent", 
+                       "    AND rtjadocno=rtjbdocno AND ",g_wc2, " AND ", g_wc4,                   
+                       "    AND rtjaent = '",g_enterprise,"'",
+                       "    AND rtjadocdt= to_date('",l_date,"','yy/mm/dd')", 
+                       "    AND rtja035 BETWEEN '",l_ac1,":00:00' AND '",l_ac6,":59:59'"
+       ELSE
+           LET l_sql = " SELECT '','',SUM(rtjb014),SUM(rtjb021) ",
+                       "   FROM artq621_rtja,artq621_rtjb,imaa_t", 
+                       "  WHERE rtjaent=rtjbent", 
+                       "    AND imaa001 = rtjb004 AND ",g_wc,
+                       "    AND rtjadocno=rtjbdocno AND ",g_wc2, " AND ", g_wc4,                   
+                       "    AND rtjaent = '",g_enterprise,"'",
+                       "    AND rtjadocdt= to_date('",l_date,"','yy/mm/dd')", 
+                       "    AND rtja035 BETWEEN '",l_ac1,":00:00' AND '",l_ac6,":59:59'",
+                       "    AND EXISTS (SELECT 1 FROM rtaw_t ",
+                       "                 WHERE rtawent = ",g_enterprise,
+                       "                   AND rtaw002 = imaa009 ",
+                       "                   AND rtaw003 = '",cl_get_para(g_enterprise,"","E-CIR-0001"),"' AND ",g_wc3,")"
+           
+       END IF
+       PREPARE artq621_rtjb014_pre FROM l_sql
+       EXECUTE artq621_rtjb014_pre INTO g_rtjb_d[l_ac].l_sdate,g_rtjb_d[l_ac].l_edate,g_rtjb_d[l_ac].rtjb014,g_rtjb_d[l_ac].rtjb021 
+       LET g_rtjb_d[l_ac].l_sdate = "",l_ac1,":00:00"
+       LET g_rtjb_d[l_ac].l_edate = "",l_ac6,":59:59"
+       IF g_rtjb_d[l_ac].rtjb014 IS NULL THEN
+          LET g_rtjb_d[l_ac].rtjb014 = 0
+       END IF 
+       IF g_rtjb_d[l_ac].rtjb021 IS NULL THEN
+          LET g_rtjb_d[l_ac].rtjb021 = 0
+       END IF
+      LET l_ac = l_ac + 1   
+      IF l_ac4 = 0 AND l_ac2 = 0 THEN
+         EXIT FOR
+      END IF       
+   END FOR
+   
+   LET g_tot_cnt = g_rtjb_d.getLength()
+   
+   CALL artq621_b2_fill(ls_wc,l_date)
+   CALL artq621_b3_fill(ls_wc,l_date)
+   CALL artq621_b4_fill(ls_wc,l_date)
+   CALL artq621_b5_fill(ls_wc,l_date)
+   CALL artq621_b6_fill(ls_wc,l_date)
+   CALL artq621_b7_fill(ls_wc,l_date)
+   
+   LET l_count = 0
+   LET l_price = 0
+   LET l_sql = " SELECT COUNT(rtjadocno),COALESCE(SUM(rtjb014),0),COALESCE(SUM(rtjb021),0) ",
+               "   FROM artq621_rtja,artq621_rtjb,imaa_t ", 
+               "  WHERE rtjaent = ",g_enterprise,
+               "    AND rtjaent = rtjbent AND rtjadocno = rtjbdocno ",
+               "    AND rtjbent = imaaent AND rtjb004 = imaa001 ",
+               "    AND rtjadocdt = to_date('",l_date,"','yy/mm/dd')",
+               "    AND ",g_wc," AND ",g_wc2," AND ",g_wc4
+   IF NOT cl_null(g_wc3) OR g_wc3 <> '1=1' THEN
+      LET l_sql = l_sql,
+               "    AND EXISTS (SELECT 1 FROM rtaw_t ",
+               "                 WHERE rtawent = ",g_enterprise,
+               "                   AND rtaw002 = imaa009 ",
+               "                   AND rtaw003 = '",cl_get_para(g_enterprise,"","E-CIR-0001"),"' AND ",g_wc3,")"
+   END IF
+   PREPARE artq621_rtjadocno_pre FROM l_sql
+   EXECUTE artq621_rtjadocno_pre INTO l_count,l_rtjb014,l_rtjb021
+   
+   IF l_rtjb014 > 0 THEN 
+      LET l_price = l_rtjb021/l_rtjb014
+   ELSE
+      LET l_price = 0
+   END IF
+   IF l_count > 0 THEN 
+      LET l_count = l_rtjb014/l_count
+   ELSE
+      LET l_count = 0
+   END IF
+   DISPLAY BY NAME l_count,l_price
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_rtjb_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #應用 qs06 樣板自動產生(Version:3)
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE artq621_pb
+ 
+ 
+ 
+ 
+ 
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL artq621_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL artq621_detail_action_trans()
+ 
+   LET l_ac = 1
+   IF g_rtjb_d.getLength() > 0 THEN
+      CALL artq621_b_fill2()
+   END IF
+ 
+      CALL artq621_filter_show('rtjb014','b_rtjb014')
+   CALL artq621_filter_show('rtjb021','b_rtjb021')
+   CALL artq621_filter_show('rtjbdocno','b_rtjbdocno')
+   CALL artq621_filter_show('rtjbseq','b_rtjbseq')
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq621.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION artq621_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="b_fill2.before_function"
+   
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #應用 qs07 樣板自動產生(Version:7)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+ 
+   #add-point:陣列清空 name="b_fill2.array_clear"
+   
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:陣列長度調整 name="b_fill2.array_deleteElement"
+   
+   #end add-point
+ 
+ 
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx2 = 1
+   DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+ 
+ 
+ 
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq621.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION artq621_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+      
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq621.filter" >}
+#應用 qs13 樣板自動產生(Version:8)
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION artq621_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #應用 qs08 樣板自動產生(Version:5)
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON rtjb014,rtjb021,rtjbdocno,rtjbseq
+                          FROM s_detail1[1].b_rtjb014,s_detail1[1].b_rtjb021,s_detail1[1].b_rtjbdocno, 
+                              s_detail1[1].b_rtjbseq
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY artq621_filter_parser('rtjb014') TO s_detail1[1].b_rtjb014
+            DISPLAY artq621_filter_parser('rtjb021') TO s_detail1[1].b_rtjb021
+            DISPLAY artq621_filter_parser('rtjbdocno') TO s_detail1[1].b_rtjbdocno
+            DISPLAY artq621_filter_parser('rtjbseq') TO s_detail1[1].b_rtjbseq
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+ 
+         #單身一般欄位開窗相關處理
+                  #----<<b_l_sdate>>----
+         #----<<b_l_edate>>----
+         #----<<b_rtjb014>>----
+         #Ctrlp:construct.c.filter.page1.b_rtjb014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtjb014
+            #add-point:ON ACTION controlp INFIELD b_rtjb014 name="construct.c.filter.page1.b_rtjb014"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtjb021>>----
+         #Ctrlp:construct.c.filter.page1.b_rtjb021
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtjb021
+            #add-point:ON ACTION controlp INFIELD b_rtjb021 name="construct.c.filter.page1.b_rtjb021"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtjbdocno>>----
+         #Ctrlp:construct.c.filter.page1.b_rtjbdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtjbdocno
+            #add-point:ON ACTION controlp INFIELD b_rtjbdocno name="construct.c.filter.page1.b_rtjbdocno"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtjbseq>>----
+         #Ctrlp:construct.c.filter.page1.b_rtjbseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtjbseq
+            #add-point:ON ACTION controlp INFIELD b_rtjbseq name="construct.c.filter.page1.b_rtjbseq"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+ 
+ 
+   
+ 
+   #add-point:離開DIALOG後相關處理 name="filter.after_dialog"
+   
+   #end add-point
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL artq621_filter_show('rtjb014','b_rtjb014')
+   CALL artq621_filter_show('rtjb021','b_rtjb021')
+   CALL artq621_filter_show('rtjbdocno','b_rtjbdocno')
+   CALL artq621_filter_show('rtjbseq','b_rtjbseq')
+ 
+ 
+   CALL artq621_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq621.filter_parser" >}
+#應用 qs14 樣板自動產生(Version:6)
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION artq621_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   
+   #end add-point
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="artq621.filter_show" >}
+#應用 qs15 樣板自動產生(Version:6)
+#+ filter標題欄位顯示搜尋條件
+PRIVATE FUNCTION artq621_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = artq621_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="artq621.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION artq621_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq621.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION artq621_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="detail_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_rtjb_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_rtjb_d.getLength() AND g_rtjb_d.getLength() > 0
+            LET g_detail_idx = g_rtjb_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_rtjb_d.getLength() THEN
+               LET g_detail_idx = g_rtjb_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq621.mask_functions" >}
+ &include "erp/art/artq621_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="artq621.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq621_create_tmp()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_create1         STRING 
+DEFINE l_create2         STRING
+DEFINE l_create3         STRING 
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   IF NOT artq621_drop_tmp() THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   SELECT * FROM rtja_t WHERE 1=2 INTO TEMP artq621_rtja
+      
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create artq621_rtja'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   SELECT * FROM rtjb_t WHERE 1=2 INTO TEMP artq621_rtjb
+      
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create artq621_rtjb'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   SELECT * FROM rtjc_t WHERE 1=2 INTO TEMP artq621_rtjc
+      
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create artq621_rtjc'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq621_drop_tmp()
+DEFINE r_success          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   DROP TABLE artq621_rtja
+   
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop artq621_rtja'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   DROP TABLE artq621_rtjb
+   
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop artq621_rtjb'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   DROP TABLE artq621_rtjc
+   
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop artq621_rtjc'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq621_b2_fill(p_wc,l_date)
+DEFINE p_wc                STRING
+DEFINE l_date      LIKE rtja_t.rtjadocdt
+DEFINE ls_wc               STRING
+DEFINE l_sql               STRING
+DEFINE l_success           LIKE type_t.chr1
+DEFINE l_rtax003           LIKE rtax_t.rtax003
+DEFINE l_rtaxl003          LIKE rtax_t.rtax003
+DEFINE l_rtax003_t         LIKE rtax_t.rtax003
+DEFINE l_rtaxl003_t        LIKE rtax_t.rtax003
+DEFINE l_rtjb014_sum       LIKE type_t.num15_3
+DEFINE l_rtjb021_sum       LIKE type_t.num15_3
+   
+   LET ls_wc = g_wc," AND ",g_wc2," AND ",g_wc3," AND ",g_wc4
+   
+   LET l_rtjb014_sum = 0
+   LET l_rtjb021_sum = 0
+   LET l_rtax003_t=''
+   LET l_rtaxl003_t=''
+   CALL g_rtjb2_d_colour.clear()
+   
+   CALL g_rtjb_d2.clear()
+   
+   LET l_sql = " SELECT rtaw001,rtaxl003,SUM(rtjb014),SUM(rtjb021) ,'',''",
+               "   FROM artq621_rtja,artq621_rtjb,imaa_t,",
+               "        rtaw_t LEFT JOIN rtaxl_t ON (rtawent = rtaxlent AND rtaw002 = rtaxl001 AND rtaxl002 = 'zh_CN') ", 
+               "  WHERE  rtjbent = ? ", 
+               "    AND rtjaent= rtjbent  AND rtjadocno = rtjbdocno  ",
+               "    AND rtjadocdt= to_date ('",l_date ,"','yy/mm/dd')",
+               "    AND imaaent= rtjbent AND imaa001=rtjb004 ",
+               "    AND rtawent = rtjbent AND imaa009 = rtaw002  ",
+               "    AND rtaw003 = '",cl_get_para(g_enterprise,"","E-CIR-0001"),"' ",
+               "    AND ",ls_wc,
+               "  GROUP BY rtaw001,rtaxl003 ",
+               "  ORDER BY rtaw001,rtaxl003 "
+                     
+   DISPLAY "SQL2:",l_sql
+   
+   PREPARE artq621_bp2 FROM l_sql
+   DECLARE b_fill_curs2 CURSOR FOR artq621_bp2
+   
+   OPEN b_fill_curs2 USING g_enterprise
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+ 
+   FOREACH b_fill_curs2 INTO  g_rtjb_d2[l_ac].rtaw001,g_rtjb_d2[l_ac].rtaxl003,
+                              g_rtjb_d2[l_ac].rtjb014,g_rtjb_d2[l_ac].rtjb021,
+                              g_rtjb_d2[l_ac].rtjbdocno,g_rtjb_d2[l_ac].rtjbseq
+                              
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      ##品类行合计
+      SELECT rtax003,rtaxl003 INTO l_rtax003,l_rtaxl003
+        FROM rtax_t,rtaxl_t
+       WHERE rtaxent = g_enterprise 
+         AND rtax001 = g_rtjb_d2[l_ac].rtaw001
+         AND rtaxlent = rtaxent
+         AND rtaxl001 = rtax003
+         AND rtaxl002 = g_dlang
+      
+      IF l_ac=1 THEN
+         LET l_rtax003_t = l_rtax003
+         LET l_rtaxl003_t = l_rtaxl003
+      END IF
+      
+      IF l_rtax003_t=l_rtax003 THEN
+         LET l_rtjb014_sum = l_rtjb014_sum+g_rtjb_d2[l_ac].rtjb014
+         LET l_rtjb021_sum = l_rtjb021_sum+g_rtjb_d2[l_ac].rtjb021
+      ELSE
+         LET g_rtjb_d2[l_ac+1].* = g_rtjb_d2[l_ac].*
+         
+         IF l_ac>1 THEN              
+            LET g_rtjb_d2[l_ac].* = g_rtjb_d2[l_ac-1].*
+         END IF    
+
+         LET g_rtjb_d2[l_ac].rtaw001 = l_rtax003_t
+         LET g_rtjb_d2[l_ac].rtaxl003 = l_rtaxl003_t  CLIPPED,'合计'
+         LET g_rtjb_d2[l_ac].rtjb014 = l_rtjb014_sum
+         LET g_rtjb_d2[l_ac].rtjb021 = l_rtjb021_sum
+         LET g_rtjb_d2[l_ac].rtjbdocno=''
+         LET g_rtjb_d2[l_ac].rtjbseq = '' 
+         #设置合计行显示颜色
+         CALL artq621_set_colour_value('1')
+         LET l_rtjb014_sum = g_rtjb_d2[l_ac+1].rtjb014
+         LET l_rtjb021_sum = g_rtjb_d2[l_ac+1].rtjb021
+          
+         LET l_rtax003_t = l_rtax003
+         LET l_rtaxl003_t = l_rtaxl003
+         LET l_ac = l_ac + 1
+      END IF
+         
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_rtjb_d2.deleteElement(g_rtjb_d2.getLength())  
+   
+   
+   #对最后一个品类进行汇总补充
+   IF l_ac > 2 THEN 
+      LET g_rtjb_d2[l_ac].* = g_rtjb_d2[l_ac-1].*
+      LET g_rtjb_d2[l_ac].rtaw001 = l_rtax003_t
+      LET g_rtjb_d2[l_ac].rtaxl003 = l_rtaxl003_t  CLIPPED,'合计'
+      LET g_rtjb_d2[l_ac].rtjb014 = l_rtjb014_sum
+      LET g_rtjb_d2[l_ac].rtjb021 = l_rtjb021_sum
+      LET g_rtjb_d2[l_ac].rtjbdocno=''
+      LET g_rtjb_d2[l_ac].rtjbseq = ''  
+   END IF
+   #设置合计行显示颜色
+   CALL artq621_set_colour_value('1')
+    
+   LET g_detail_cnt_2 = g_rtjb_d2.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs2
+   FREE artq621_bp2
+   
+   DISPLAY ARRAY g_rtjb_d2 TO s_detail2.* ATTRIBUTES(COUNT=g_detail_cnt_2)
+      BEFORE DISPLAY
+         EXIT DISPLAY
+   END DISPLAY
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq621_b3_fill(p_wc,l_date)
+ DEFINE p_wc        STRING
+ DEFINE l_date      LIKE rtja_t.rtjadocdt
+ DEFINE l_sql       STRING
+ DEFINE ls_wc       STRING
+ DEFINE l_where1    STRING
+ DEFINE l_success   LIKE type_t.chr1
+ 
+   LET ls_wc = g_wc," AND ",g_wc2," AND ", g_wc4
+   IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+      LET l_where1 = "    AND EXISTS (SELECT 1 FROM rtaw_t ",
+                     "                 WHERE rtawent = ",g_enterprise,
+                     "                   AND rtaw002 = imaa009 ",
+                     "                   AND rtaw003 = '",cl_get_para(g_enterprise,"","E-CIR-0001"),"' AND ",g_wc3,")"
+   END IF    
+   CALL g_rtjb_d3.clear()
+ 
+   
+   LET l_sql = "SELECT rtja036,SUM(rtjb014),SUM(rtjb021),'','' ",
+                     "   FROM artq621_rtja,artq621_rtjb,imaa_t",
+                     "  WHERE rtjbent = ? ", 
+                     "    AND rtjaent=rtjbent AND rtjadocno=rtjbdocno ",
+                     "    AND rtjadocdt = to_date ('",l_date ,"','yy/mm/dd')",l_where1,
+                     "    AND imaa001 = rtjb004 ",
+                     "    AND ",ls_wc,
+                     "  GROUP BY rtja036 ",
+                     "  ORDER BY rtja036 "
+                     
+
+   DISPLAY "SQL3:",l_sql
+   
+   PREPARE artq621_bp3 FROM l_sql
+   DECLARE b_fill_curs3 CURSOR FOR artq621_bp3
+   
+   OPEN b_fill_curs3 USING g_enterprise
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1
+ 
+   FOREACH b_fill_curs3 INTO  g_rtjb_d3[l_ac].rtja036,g_rtjb_d3[l_ac].rtjb014,g_rtjb_d3[l_ac].rtjb021,
+                              g_rtjb_d3[l_ac].rtjbdocno,g_rtjb_d3[l_ac].rtjbseq
+                              
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_rtjb_d3.deleteElement(g_rtjb_d3.getLength()) 
+   
+   LET g_detail_cnt_3 = g_rtjb_d3.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs3
+   FREE artq621_bp3
+   
+   DISPLAY ARRAY g_rtjb_d3 TO s_detail3.* ATTRIBUTES(COUNT=g_detail_cnt_3)
+      BEFORE DISPLAY
+         EXIT DISPLAY
+   END DISPLAY
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq621_b4_fill(p_wc,l_date)
+DEFINE p_wc       STRING
+DEFINE l_date      LIKE rtja_t.rtjadocdt
+   DEFINE l_sql      STRING
+   DEFINE ls_wc      STRING
+   DEFINE l_where1      STRING
+   DEFINE l_success       LIKE type_t.chr1
+ 
+   LET ls_wc = g_wc," AND ",g_wc2," AND ", g_wc4
+   IF l_date != rtjadocdt THEN 
+      LET l_date = rtjadocdt 
+   END IF 
+   IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+      LET l_where1 = "    AND EXISTS (SELECT 1 FROM rtaw_t ",
+                     "                 WHERE rtawent = ",g_enterprise,
+                     "                   AND rtaw002 = imaa009 ",
+                     "                   AND rtaw003 = '",cl_get_para(g_enterprise,"","E-CIR-0001"),"' AND ",g_wc3,")"
+   END IF  
+   
+   CALL g_rtjb_d4.clear()
+ 
+   
+   LET l_sql = "SELECT rtja037,pcab003,SUM(rtjb014),SUM(rtjb021),'','' ",
+                     "   FROM artq621_rtja,artq621_rtjb,pcab_t ,imaa_t", 
+                     "  WHERE  rtjbent = ? ", 
+                     "   AND rtjaent=rtjbent AND rtjadocno=rtjbdocno ",
+                     "   AND rtjadocdt = to_date ('",l_date ,"','yy/mm/dd')",
+                     "   AND rtjaent=pcabent AND rtja037=pcab001 ",l_where1,
+                     "   AND imaa001 = rtjb004 ",
+                     "   AND ",ls_wc,
+                     " GROUP BY rtja037,pcab003 ",
+                     " ORDER BY rtja037 "
+
+   DISPLAY "SQL4:",l_sql
+   
+   PREPARE artq621_bp4 FROM l_sql
+   DECLARE b_fill_curs4 CURSOR FOR artq621_bp4
+   
+   OPEN b_fill_curs4 USING g_enterprise
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+ 
+   FOREACH b_fill_curs4 INTO  g_rtjb_d4[l_ac].rtja037,g_rtjb_d4[l_ac].rtja037_desc,
+                              g_rtjb_d4[l_ac].rtjb014,g_rtjb_d4[l_ac].rtjb021
+                              
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+         
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_rtjb_d4.deleteElement(g_rtjb_d4.getLength())   
+ 
+   LET g_detail_cnt_4 = g_rtjb_d4.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs4
+   FREE artq621_bp4
+   
+   DISPLAY ARRAY g_rtjb_d4 TO s_detail4.* ATTRIBUTES(COUNT=g_detail_cnt_4)
+      BEFORE DISPLAY
+         EXIT DISPLAY
+   END DISPLAY
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq621_b5_fill(p_wc,l_date)
+ DEFINE p_wc       STRING
+ DEFINE l_date      LIKE rtja_t.rtjadocdt
+   DEFINE l_sql      STRING
+   DEFINE ls_wc      STRING
+   DEFINE l_where1      STRING
+   DEFINE l_success       LIKE type_t.chr1
+ 
+   LET ls_wc = g_wc," AND ",g_wc2," AND ", g_wc4
+   
+   IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+      LET l_where1 = "    AND EXISTS (SELECT 1 FROM rtaw_t ",
+                     "                 WHERE rtawent = ",g_enterprise,
+                     "                   AND rtaw002 = imaa009 ",
+                     "                   AND rtaw003 = '",cl_get_para(g_enterprise,"","E-CIR-0001"),"' AND ",g_wc3,")"
+   END IF  
+   CALL g_rtjb_d5.clear()
+ 
+   
+   LET l_sql = "SELECT rtja037,pcab003,SUM(rtjb014),SUM(rtjb021),'','' ",
+                     "   FROM artq621_rtja,artq621_rtjb,pcab_t,imaa_t", 
+                     "  WHERE  rtjbent = ? ", 
+                     "   AND rtjaent=rtjbent AND rtjadocno=rtjbdocno ",
+                     "   AND rtjadocdt = to_date ('",l_date ,"','yy/mm/dd')",
+                     "   AND rtjaent=pcabent AND rtja037=pcab001 ",l_where1,
+                    #"   AND rtja000 = 'artt700' ",
+                     "   AND rtjb035 = '2' ",
+                     "   AND rtjb004 = imaa001",
+                     "   AND ",ls_wc, 
+                     " GROUP BY rtja037,pcab003 ",
+                     " ORDER BY rtja037 "
+
+   DISPLAY "SQL5:",l_sql
+   
+   PREPARE artq621_bp5 FROM l_sql
+   DECLARE b_fill_curs5 CURSOR FOR artq621_bp5
+   
+   OPEN b_fill_curs5 USING g_enterprise
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+ 
+   FOREACH b_fill_curs5 INTO  g_rtjb_d5[l_ac].rtja037,g_rtjb_d5[l_ac].rtja037_desc,
+                              g_rtjb_d5[l_ac].rtjb014,g_rtjb_d5[l_ac].rtjb021
+                              
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+         
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_rtjb_d5.deleteElement(g_rtjb_d5.getLength())   
+ 
+   LET g_detail_cnt_5 = g_rtjb_d5.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs5
+   FREE artq621_bp5
+   
+   DISPLAY ARRAY g_rtjb_d5 TO s_detail5.* ATTRIBUTES(COUNT=g_detail_cnt_5)
+      BEFORE DISPLAY
+         EXIT DISPLAY
+   END DISPLAY
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq621_b6_fill(p_wc,l_date)
+DEFINE p_wc       STRING
+DEFINE l_date      LIKE rtja_t.rtjadocdt
+   DEFINE l_sql      STRING
+   DEFINE ls_wc      STRING
+   DEFINE l_sum2    LIKE rtjc_t.rtjc013
+   DEFINE l_success       LIKE type_t.chr1
+   DEFINE l_where1      STRING
+ 
+   LET ls_wc = g_wc," AND ",g_wc2, " AND ", g_wc4
+   IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+      LET l_where1 = "    AND EXISTS (SELECT 1 FROM rtaw_t ",
+                     "                 WHERE rtawent = ",g_enterprise,
+                     "                   AND rtaw002 = imaa009 ",
+                     "                   AND rtaw003 = '",cl_get_para(g_enterprise,"","E-CIR-0001"),"' AND ",g_wc3,")"
+   END IF  
+   CALL g_rtjb_d6.clear()
+ 
+   
+   LET l_sql = "SELECT rtjc002,sum(rtjc013),'','' ",
+                     "   FROM artq621_rtja,artq621_rtjc,imaa_t,artq621_rtjb", 
+                     "  WHERE  rtjcent = ? ",
+                     "   AND rtjaent = rtjbent AND rtjadocno=rtjbdocno  ",
+                     "   AND rtjaent=rtjcent AND rtjadocno=rtjcdocno AND rtjbseq = rtjcseq ",
+                     "   AND rtjb004 = imaa001",
+                     "   AND rtjadocdt = to_date ('",l_date ,"','yy/mm/dd')",l_where1,
+                     "   AND ",ls_wc,
+                     " GROUP BY rtjc002 ",
+                     " ORDER BY rtjc002 "
+
+
+   DISPLAY "SQL6:",l_sql
+   
+   PREPARE artq621_bp6 FROM l_sql
+   DECLARE b_fill_curs6 CURSOR FOR artq621_bp6
+   
+   OPEN b_fill_curs6 USING g_enterprise
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+   LET l_sum2 = 0
+ 
+   FOREACH b_fill_curs6 INTO  g_rtjb_d6[l_ac].rtjc002,g_rtjb_d6[l_ac].rtjc013
+                              
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+  
+     IF not cl_null(g_rtjb_d6[l_ac].rtjc013) THEN
+        LET l_sum2 = l_sum2 + g_rtjb_d6[l_ac].rtjc013
+     END IF 
+          
+      LET l_ac = l_ac + 1
+  
+      
+      END FOREACH
+   IF l_sum2 IS NULL THEN
+      LET l_sum2 = 0
+   END IF
+   DISPLAY l_sum2 TO l_sum2
+   LET g_error_show = 0
+   
+   CALL g_rtjb_d6.deleteElement(g_rtjb_d6.getLength())   
+ 
+   LET g_detail_cnt_6 = g_rtjb_d6.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs6
+   FREE artq621_bp6
+   
+   DISPLAY ARRAY g_rtjb_d6 TO s_detail6.* ATTRIBUTES(COUNT=g_detail_cnt_6)
+      BEFORE DISPLAY
+         EXIT DISPLAY
+   END DISPLAY
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq621_b7_fill(p_wc,l_date)
+ DEFINE p_wc       STRING
+ DEFINE l_date      LIKE rtja_t.rtjadocdt
+   DEFINE l_sql      STRING
+   DEFINE ls_wc      STRING
+   DEFINE l_where1      STRING
+   DEFINE l_success       LIKE type_t.chr1
+ 
+   IF l_date != rtjadocdt THEN 
+      LET l_date = rtjadocdt 
+   END IF 
+   LET ls_wc = g_wc," AND ",g_wc2," AND ",g_wc4
+   IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+      LET l_where1 = "    AND EXISTS (SELECT 1 FROM rtaw_t ",
+                     "                 WHERE rtawent = ",g_enterprise,
+                     "                   AND rtaw002 = imaa009 ",
+                     "                   AND rtaw003 = '",cl_get_para(g_enterprise,"","E-CIR-0001"),"' AND ",g_wc3,")"
+   END IF  
+   CALL g_rtjb_d7.clear()
+ 
+   
+   LET l_sql = "SELECT rtja037,pcab003,rtjc002,sum(rtjc013),'','' ",
+                     "   FROM artq621_rtja,artq621_rtjc,pcab_t,imaa_t,artq621_rtjb ", 
+                     "  WHERE  rtjcent = ? ", 
+                     "   AND rtjaent = rtjbent AND rtjadocno=rtjbdocno  ",
+                     "   AND rtjaent=rtjcent AND rtjadocno=rtjcdocno AND rtjbseq = rtjcseq ",
+                     "   AND rtjadocdt = to_date ('",l_date ,"','yy/mm/dd') ",l_where1,
+                     "   AND rtjaent=pcabent AND rtja037=pcab001 ",
+                     "   AND rtjc002='10' ",
+                     "   AND rtjb004 = imaa001 ",
+                     "   AND ",ls_wc,
+                     " GROUP BY rtja037,pcab003,rtjc002 ",
+                     " ORDER BY rtja037 "
+   DISPLAY "SQL7:",l_sql
+   
+   PREPARE artq621_bp7 FROM l_sql
+   DECLARE b_fill_curs7 CURSOR FOR artq621_bp7
+   
+   OPEN b_fill_curs7 USING g_enterprise
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+ 
+   FOREACH b_fill_curs7 INTO  g_rtjb_d7[l_ac].rtja037,g_rtjb_d7[l_ac].rtja037_desc,
+                              g_rtjb_d7[l_ac].rtjc002,g_rtjb_d7[l_ac].rtjc013
+                              
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+         
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_rtjb_d7.deleteElement(g_rtjb_d7.getLength())   
+ 
+   LET g_detail_cnt_7 = g_rtjb_d7.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs7
+   FREE artq621_bp7
+   
+   DISPLAY ARRAY g_rtjb_d7 TO s_detail7.* ATTRIBUTES(COUNT=g_detail_cnt_7)
+      BEFORE DISPLAY
+         EXIT DISPLAY
+   END DISPLAY
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq621_set_colour_value(p_js)
+DEFINE p_js       STRING
+DEFINE l_colour   STRING
+   
+   
+   LET l_colour = 'light yellow reverse'
+ 
+   LET g_rtjb2_d_colour[l_ac].rtaw001 = l_colour      
+   LET g_rtjb2_d_colour[l_ac].rtaxl003 = l_colour
+   LET g_rtjb2_d_colour[l_ac].rtjb014 = l_colour
+   LET g_rtjb2_d_colour[l_ac].rtjb021 = l_colour
+   LET g_rtjb2_d_colour[l_ac].rtjbdocno = l_colour
+   LET g_rtjb2_d_colour[l_ac].rtjbseq = l_colour
+END FUNCTION
+
+ 
+{</section>}
+ 

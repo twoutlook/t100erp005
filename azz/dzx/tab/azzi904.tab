@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi904" module="azz" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="00845" crtdt="2014-03-17 09:45:46" modid="01856" moddt="2014-04-09 14:28:05" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="action說明快速維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzzq001,gzzq001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzzq002,gzzq003,gzzq004,gzzq005,gzzq006"/>
+      <var id="bs_field" value="gzzq001,gzzq001_desc(chr80)" pk="gzzq001" order=""/>
+      <bs_reference field="gzzq001_desc" ref_field="gzzq001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi904" method="dialog">
+    <section id="input">
+      <input id="head" field="gzzq001"/>
+      <input id="body" page="1" field="gzzq002,gzzq003,gzzq004,gzzq005,gzzq006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzzq001"/>
+      <construct id="body" page="1" field="gzzq002,gzzq003,gzzq004,gzzq005,gzzq006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzzq001"/>
+      <set id="head" type="no_entry" field="gzzq001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzzq001">
+        <after/>
+      </column>
+      <column id="gzzq001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzzq002"/>
+      <column id="gzzq003"/>
+      <column id="gzzq004"/>
+      <column id="gzzq005"/>
+      <column id="gzzq006"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzzq_t" pk="gzzq001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzzq001,&apos;&apos; FROM gzzq_t WHERE gzzq001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzzq001,&apos;&apos; FROM gzzq_t" order="gzzq001"/>
+    </head>
+    <body id="gzzq_t" page="1" linked="" pk="gzzq002,gzzq003" fk="gzzq001">
+      <sql id="forupd_sql_detail" query="SELECT gzzq002,gzzq003,gzzq004,gzzq005,gzzq006 FROM gzzq_t WHERE gzzq001=? AND gzzq002=? AND gzzq003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzzq002,gzzq003,gzzq004,gzzq005,gzzq006 FROM gzzq_t WHERE gzzq001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

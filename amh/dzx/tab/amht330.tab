@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amht330" module="amh" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-04-07 09:55:07" modid="07142" moddt="2016-06-21 16:17:18" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="績效等級考核維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mhahsite,mhahsite_desc(chr80),mhahdocdt,mhahdocno,mhah001,mhah002,mhah003,mhah004,mhahstus,mhahownid,mhahownid_desc(chr80),mhahowndp,mhahowndp_desc(chr80),mhahcrtid,mhahcrtid_desc(chr80),mhahcrtdp,mhahcrtdp_desc(chr80),mhahcrtdt,mhahmodid,mhahmodid_desc(chr80),mhahmoddt,mhahcnfid,mhahcnfid_desc(chr80),mhahcnfdt,mhahpstid,mhahpstid_desc(chr80),mhahpstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mhaiseq,mhai001,mhai001_desc(chr500),mhai003,mhai008,mhai002,mhai002_desc(chr500),mhai009,mhai009_desc(chr500),mhai007,mhai004,mhai005,mhai006"/>
+      <var id="bs_field" value="mhahsite,mhahsite_desc(chr80),mhahdocdt,mhahdocno,mhah001,mhah002,mhah003,mhah004" pk="mhahdocno" order=""/>
+      <bs_reference field="mhahsite_desc" ref_field="mhahsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amht330" method="dialog">
+    <section id="input">
+      <input id="head" field="mhahsite,mhahdocdt,mhahdocno,mhah001,mhah002,mhah003,mhah004,mhahstus"/>
+      <input id="body" page="1" field="mhaiseq,mhai001,mhai001_desc,mhai003,mhai008,mhai002,mhai002_desc,mhai009,mhai007,mhai004,mhai005,mhai006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mhahsite,mhahdocdt,mhahdocno,mhah001,mhah002,mhah003,mhah004,mhahstus,mhahownid,mhahowndp,mhahcrtid,mhahcrtdp,mhahcrtdt,mhahmodid,mhahmoddt,mhahcnfid,mhahcnfdt,mhahpstid,mhahpstdt"/>
+      <construct id="body" page="1" field="mhaiseq,mhai001,mhai003,mhai008,mhai002,mhai002_desc,mhai009,mhai007,mhai004,mhai005,mhai006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mhahdocno"/>
+      <set id="head" type="no_entry" field="mhahdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mhahsite">
+        <after>
+          <reference field="mhahsite_desc" ref_field="mhah_t.mhahsite" map_field="mhahent,mhahsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="mhahsite_desc"/>
+      <column id="mhahdocdt"/>
+      <column id="mhahdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_mhahdocno" state="c"/>
+      </column>
+      <column id="mhah001"/>
+      <column id="mhah002"/>
+      <column id="mhah003"/>
+      <column id="mhah004"/>
+      <column id="mhahstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="mhahownid">
+        <after>
+          <reference field="mhahownid_desc" ref_field="mhah_t.mhahownid" map_field="mhahownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhahownid_desc"/>
+      <column id="mhahowndp">
+        <after>
+          <reference field="mhahowndp_desc" ref_field="mhah_t.mhahowndp" map_field="mhahowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhahowndp_desc"/>
+      <column id="mhahcrtid">
+        <after>
+          <reference field="mhahcrtid_desc" ref_field="mhah_t.mhahcrtid" map_field="mhahcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhahcrtid_desc"/>
+      <column id="mhahcrtdp">
+        <after>
+          <reference field="mhahcrtdp_desc" ref_field="mhah_t.mhahcrtdp" map_field="mhahcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhahcrtdp_desc"/>
+      <column id="mhahcrtdt"/>
+      <column id="mhahmodid">
+        <after>
+          <reference field="mhahmodid_desc" ref_field="mhah_t.mhahmodid" map_field="mhahmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhahmodid_desc"/>
+      <column id="mhahmoddt"/>
+      <column id="mhahcnfid">
+        <after>
+          <reference field="mhahcnfid_desc" ref_field="mhah_t.mhahcnfid" map_field="mhahcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhahcnfid_desc"/>
+      <column id="mhahcnfdt"/>
+      <column id="mhahpstid">
+        <after>
+          <reference field="mhahpstid_desc" ref_field="mhah_t.mhahpstid" map_field="mhahpstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhahpstid_desc"/>
+      <column id="mhahpstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mhaiseq"/>
+      <column id="mhai001">
+        <after>
+          <check chkid="v_mhaf001" id="isExist"/>
+        </after>
+        <controlp form="q_mhaf001" state="i"/>
+        <controlp form="q_mhaf001" state="c"/>
+      </column>
+      <column id="mhai001_desc"/>
+      <column id="mhai003"/>
+      <column id="mhai008"/>
+      <column id="mhai002">
+        <after/>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="mhai002_desc"/>
+      <column id="mhai009">
+        <after>
+          <reference field="mhai009_desc" ref_field="mhai_t.mhai009" map_field="steqent,steq004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mhai009_desc"/>
+      <column id="mhai007"/>
+      <column id="mhai004"/>
+      <column id="mhai005"/>
+      <column id="mhai006"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mhah_t" pk="mhahdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT mhahsite,&apos;&apos;,mhahdocdt,mhahdocno,mhah001,mhah002,mhah003,mhah004,mhahstus,mhahownid,&apos;&apos;,mhahowndp,&apos;&apos;,mhahcrtid,&apos;&apos;,mhahcrtdp,&apos;&apos;,mhahcrtdt,mhahmodid,&apos;&apos;,mhahmoddt,mhahcnfid,&apos;&apos;,mhahcnfdt,mhahpstid,&apos;&apos;,mhahpstdt FROM mhah_t WHERE mhahent= ? AND mhahdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mhahsite,&apos;&apos;,mhahdocdt,mhahdocno,mhah001,mhah002,mhah003,mhah004,mhahstus,mhahownid,&apos;&apos;,mhahowndp,&apos;&apos;,mhahcrtid,&apos;&apos;,mhahcrtdp,&apos;&apos;,mhahcrtdt,mhahmodid,&apos;&apos;,mhahmoddt,mhahcnfid,&apos;&apos;,mhahcnfdt,mhahpstid,&apos;&apos;,mhahpstdt FROM mhah_t" order="mhahdocno"/>
+    </head>
+    <body id="mhai_t" page="1" linked="" pk="mhaiseq" fk="mhaidocno">
+      <sql id="forupd_sql_detail" query="SELECT mhaiseq,mhai001,&apos;&apos;,mhai003,mhai008,mhai002,&apos;&apos;,mhai009,&apos;&apos;,mhai007,mhai004,mhai005,mhai006 FROM mhai_t WHERE mhaient=? AND mhaidocno=? AND mhaiseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mhaiseq,mhai001,&apos;&apos;,mhai003,mhai008,mhai002,&apos;&apos;,mhai009,&apos;&apos;,mhai007,mhai004,mhai005,mhai006 FROM mhai_t WHERE mhaient=? AND mhaidocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

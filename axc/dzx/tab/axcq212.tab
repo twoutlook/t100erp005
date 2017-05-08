@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq212" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01258" crtdt="2014-09-08 14:45:29" modid="01258" moddt="2014-09-09 10:53:45" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="在製工時費用成本次要素分攤查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcdqcomp,xcdqcomp_desc(chr80),xcdq002,xcdq003,xcck001(chr500),xcck001_desc(chr80),xcdqld,xcdqld_desc(chr80),xcdq005,xcdq005_desc(chr80),xcdq001,xcdq001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcdq004,xcdq004_desc(chr500),xcdq006,sfaasite(chr500),sfaasite_desc(chr500),xcdq007,xcdq202,xcdq100,xcdq101"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq212" method="dialog">
+    <section id="input">
+      <input id="head" field="xcdqcomp,xcdq002,xcdq003,xcck001,xcdqld,xcdq005,xcdq001"/>
+      <input id="body" page="1" field="xcdq004,xcdq006,sfaasite,xcdq007,xcdq202,xcdq100,xcdq101" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcdqcomp,xcdq002,xcdq003,xcdqld,xcdq005,xcdq001"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcdqld,xcdq001,xcdq002,xcdq003,xcdq005"/>
+      <set id="head" type="no_entry" field="xcdqld,xcdq001,xcdq002,xcdq003,xcdq005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcdqcomp">
+        <after>
+          <reference field="xcdqcomp_desc" ref_field="xcdq_t.xcdqcomp" map_field="xcdqent,xcdqcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdqcomp_desc"/>
+      <column id="xcdq002"/>
+      <column id="xcdq003"/>
+      <column id="xcck001">
+        <after>
+          <reference field="xcck001_desc" ref_field="xcck001" map_field="xcck001" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcck001_desc"/>
+      <column id="xcdqld">
+        <after>
+          <reference field="xcdqld_desc" ref_field="xcdq_t.xcdqld" map_field="xcdqent,xcdqld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdqld_desc"/>
+      <column id="xcdq005">
+        <after>
+          <reference field="xcdq005_desc" ref_field="xcdq_t.xcdq005" map_field="xcdq005" ref_sql="SELECT xcaul003 FROM xcaul_t WHERE xcaulent=$varg_enterprise$var AND xcaul001=? AND xcaul002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdq005_desc"/>
+      <column id="xcdq001">
+        <after>
+          <reference field="xcdq001_desc" ref_field="xcdq_t.xcdq001" map_field="xcdqent,xcdq001" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdq001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcdq004">
+        <after>
+          <reference field="xcdq004_desc" ref_field="xcdq_t.xcdq004" map_field="xcdq004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdq004_desc"/>
+      <column id="xcdq006"/>
+      <column id="sfaasite">
+        <after>
+          <reference field="sfaasite_desc" ref_field="sfaasite" map_field="sfaasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfaasite_desc"/>
+      <column id="xcdq007"/>
+      <column id="xcdq202"/>
+      <column id="xcdq100"/>
+      <column id="xcdq101"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcdq_t" pk="xcdqld,xcdq001,xcdq002,xcdq003,xcdq005">
+      <sql id="forupd_sql" type="sql" query="SELECT xcdqcomp,&apos;&apos;,xcdq002,xcdq003,&apos;&apos;,&apos;&apos;,xcdqld,&apos;&apos;,xcdq005,&apos;&apos;,xcdq001,&apos;&apos; FROM xcdq_t WHERE xcdqent= ? AND xcdqld=? AND xcdq001=? AND xcdq002=? AND xcdq003=? AND xcdq005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcdqcomp,&apos;&apos;,xcdq002,xcdq003,&apos;&apos;,&apos;&apos;,xcdqld,&apos;&apos;,xcdq005,&apos;&apos;,xcdq001,&apos;&apos; FROM xcdq_t" order="xcdqld,xcdq001,xcdq002,xcdq003,xcdq005"/>
+    </head>
+    <body id="xcdq_t" page="1" linked="" pk="xcdq004,xcdq006,xcdq007" fk="xcdqld,xcdq001,xcdq002,xcdq003,xcdq005">
+      <sql id="forupd_sql_detail" query="SELECT xcdq004,&apos;&apos;,xcdq006,&apos;&apos;,&apos;&apos;,xcdq007,xcdq202,xcdq100,xcdq101 FROM xcdq_t WHERE xcdqent=? AND xcdqld=? AND xcdq001=? AND xcdq002=? AND xcdq003=? AND xcdq005=? AND xcdq004=? AND xcdq006=? AND xcdq007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcdq004,&apos;&apos;,xcdq006,&apos;&apos;,&apos;&apos;,xcdq007,xcdq202,xcdq100,xcdq101 FROM xcdq_t WHERE xcdqent= ? AND xcdqld=? AND xcdq001=? AND xcdq002=? AND xcdq003=? AND xcdq005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

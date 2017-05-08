@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimi106" module="aim" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="02299" crtdt="2013-07-24 08:59:32" modid="05423" moddt="2016-10-24 17:11:00" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="集團預設料件品管分群資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imcg111,oocql004,oocql005,imcg112,imcg112_desc(chr80),imcg113,imcg113_desc(chr80),imcg114,imcg115,imcg116,imcg117,imcg120,imcgstus,imcgownid,imcgownid_desc(chr80),imcgowndp,imcgowndp_desc(chr80),imcgcrtid,imcgcrtid_desc(chr80),imcgcrtdp,imcgcrtdp_desc(chr80),imcgcrtdt,imcgmodid,imcgmodid_desc(chr80),imcgmoddt,imcg118,imcg119"/>
+      <var id="bs_field" value="imcg111,imcg111_desc(chr80),imcg112,imcg112_desc(chr80),imcg113,imcg113_desc(chr80),imcg114,imcg115,imcg116,imcg117,imcg120,imcg118,imcg119" pk="imcg111" order=""/>
+      <bs_reference field="imcg111_desc" ref_field="imcg111" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;205&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+      <bs_reference field="imcg112_desc" ref_field="imcg112" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="imcg113_desc" ref_field="imcg113" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_aimi101"/>
+      <action id="open_aimi105"/>
+      <action id="about_file"/>
+      <action id="open_aimi102"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_aimi103"/>
+      <action id="open_aimi104"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimi106" method="dialog">
+    <section id="input">
+      <input id="head" field="imcg111,oocql004,oocql005,imcg112,imcg113,imcg114,imcg115,imcg116,imcg117,imcg120,imcgstus,imcg118,imcg119"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imcg111,oocql004,oocql005,imcg112,imcg113,imcg114,imcg115,imcg116,imcg117,imcg120,imcgstus,imcgownid,imcgowndp,imcgcrtid,imcgcrtdp,imcgcrtdt,imcgmodid,imcgmoddt,imcg118,imcg119"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imcg111"/>
+      <set id="head" type="no_entry" field="imcg111"/>
+    </init>
+    <init id="head">
+      <column id="imcg111">
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oocql004"/>
+      <column id="oocql005"/>
+      <column id="imcg112">
+        <after>
+          <reference field="imcg112_desc" ref_field="imcg_t.imcg112" map_field="imcg112" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imcg112_desc"/>
+      <column id="imcg113">
+        <after>
+          <reference field="imcg113_desc" ref_field="imcg_t.imcg113" map_field="imcgent,imcg113" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imcg113_desc"/>
+      <column id="imcg114"/>
+      <column id="imcg115" def_scc="5051"/>
+      <column id="imcg116" def_scc="5052"/>
+      <column id="imcg117" def_scc="5053"/>
+      <column id="imcg120" type="S" default="N"/>
+      <column id="imcgstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="imcgownid">
+        <after>
+          <reference field="imcgownid_desc" ref_field="imcg_t.imcgownid" map_field="imcgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imcgownid_desc"/>
+      <column id="imcgowndp">
+        <after>
+          <reference field="imcgowndp_desc" ref_field="imcg_t.imcgowndp" map_field="imcgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imcgowndp_desc"/>
+      <column id="imcgcrtid">
+        <after>
+          <reference field="imcgcrtid_desc" ref_field="imcg_t.imcgcrtid" map_field="imcgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imcgcrtid_desc"/>
+      <column id="imcgcrtdp">
+        <after>
+          <reference field="imcgcrtdp_desc" ref_field="imcg_t.imcgcrtdp" map_field="imcgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imcgcrtdp_desc"/>
+      <column id="imcgcrtdt"/>
+      <column id="imcgmodid">
+        <after>
+          <reference field="imcgmodid_desc" ref_field="imcg_t.imcgmodid" map_field="imcgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imcgmodid_desc"/>
+      <column id="imcgmoddt"/>
+      <column id="imcg118"/>
+      <column id="imcg119"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imcg_t" pk="imcg111">
+      <sql id="forupd_sql" type="sql" query="SELECT imcg111,&apos;&apos;,&apos;&apos;,imcg112,&apos;&apos;,imcg113,&apos;&apos;,imcg114,imcg115,imcg116,imcg117,imcg120,imcgstus,imcgownid,&apos;&apos;,imcgowndp,&apos;&apos;,imcgcrtid,&apos;&apos;,imcgcrtdp,&apos;&apos;,imcgcrtdt,imcgmodid,&apos;&apos;,imcgmoddt,imcg118,imcg119 FROM imcg_t WHERE imcgent= ? AND imcgsite= ? AND imcg111=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imcg111 FROM imcg_t" order="imcg111"/>
+      <sql id="append" type="lang" target="oocql_t.oocql004,oocql_t.oocql005" table="oocql_t" fk="&apos;205&apos;,imcg111" pk="oocql001,oocql002,oocql003" field="oocql004,oocql005"/>
+    </head>
+  </dataset>
+</assembly>
+

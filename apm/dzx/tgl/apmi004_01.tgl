@@ -1,0 +1,431 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmi004_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2015-10-01 10:07:52), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000161
+#+ Filename...: apmi004_01
+#+ Description: 一次性交易對象基本資料
+#+ Creator....: 02294(2013-09-10 16:07:06)
+#+ Modifier...: 03555 -SD/PR-
+
+{</section>}
+
+{<section id="apmi004_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_pmak_m        RECORD
+       pmak001 LIKE pmak_t.pmak001, 
+   pmak003 LIKE pmak_t.pmak003, 
+   pmak004 LIKE pmak_t.pmak004, 
+   pmak010 LIKE pmak_t.pmak010, 
+   pmak009 LIKE pmak_t.pmak009, 
+   pmak005 LIKE pmak_t.pmak005, 
+   pmak007 LIKE pmak_t.pmak007, 
+   pmak008 LIKE pmak_t.pmak008
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_pmak_m        type_g_pmak_m
+ 
+   DEFINE g_pmak001_t LIKE pmak_t.pmak001
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="apmi004_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION apmi004_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmi004_01 WITH FORM cl_ap_formpath("apm","apmi004_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_pmak_m.pmak001,g_pmak_m.pmak003,g_pmak_m.pmak004,g_pmak_m.pmak010,g_pmak_m.pmak009, 
+          g_pmak_m.pmak005,g_pmak_m.pmak007,g_pmak_m.pmak008 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmak001
+            #add-point:BEFORE FIELD pmak001 name="input.b.pmak001"
+            {<point name="input.b.pmak001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmak001
+            
+            #add-point:AFTER FIELD pmak001 name="input.a.pmak001"
+            {<point name="input.a.pmak001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmak001
+            #add-point:ON CHANGE pmak001 name="input.g.pmak001"
+            {<point name="input.g.pmak001" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmak003
+            #add-point:BEFORE FIELD pmak003 name="input.b.pmak003"
+            {<point name="input.b.pmak003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmak003
+            
+            #add-point:AFTER FIELD pmak003 name="input.a.pmak003"
+            {<point name="input.a.pmak003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmak003
+            #add-point:ON CHANGE pmak003 name="input.g.pmak003"
+            {<point name="input.g.pmak003" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmak004
+            #add-point:BEFORE FIELD pmak004 name="input.b.pmak004"
+            {<point name="input.b.pmak004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmak004
+            
+            #add-point:AFTER FIELD pmak004 name="input.a.pmak004"
+            {<point name="input.a.pmak004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmak004
+            #add-point:ON CHANGE pmak004 name="input.g.pmak004"
+            {<point name="input.g.pmak004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmak010
+            #add-point:BEFORE FIELD pmak010 name="input.b.pmak010"
+            {<point name="input.b.pmak010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmak010
+            
+            #add-point:AFTER FIELD pmak010 name="input.a.pmak010"
+            {<point name="input.a.pmak010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmak010
+            #add-point:ON CHANGE pmak010 name="input.g.pmak010"
+            {<point name="input.g.pmak010" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmak009
+            #add-point:BEFORE FIELD pmak009 name="input.b.pmak009"
+            {<point name="input.b.pmak009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmak009
+            
+            #add-point:AFTER FIELD pmak009 name="input.a.pmak009"
+            {<point name="input.a.pmak009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmak009
+            #add-point:ON CHANGE pmak009 name="input.g.pmak009"
+            {<point name="input.g.pmak009" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmak005
+            #add-point:BEFORE FIELD pmak005 name="input.b.pmak005"
+            {<point name="input.b.pmak005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmak005
+            
+            #add-point:AFTER FIELD pmak005 name="input.a.pmak005"
+            {<point name="input.a.pmak005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmak005
+            #add-point:ON CHANGE pmak005 name="input.g.pmak005"
+            {<point name="input.g.pmak005" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmak007
+            #add-point:BEFORE FIELD pmak007 name="input.b.pmak007"
+            {<point name="input.b.pmak007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmak007
+            
+            #add-point:AFTER FIELD pmak007 name="input.a.pmak007"
+            {<point name="input.a.pmak007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmak007
+            #add-point:ON CHANGE pmak007 name="input.g.pmak007"
+            {<point name="input.g.pmak007" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmak008
+            #add-point:BEFORE FIELD pmak008 name="input.b.pmak008"
+            {<point name="input.b.pmak008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmak008
+            
+            #add-point:AFTER FIELD pmak008 name="input.a.pmak008"
+            {<point name="input.a.pmak008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmak008
+            #add-point:ON CHANGE pmak008 name="input.g.pmak008"
+            {<point name="input.g.pmak008" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.pmak001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmak001
+            #add-point:ON ACTION controlp INFIELD pmak001 name="input.c.pmak001"
+            {<point name="input.c.pmak001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmak003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmak003
+            #add-point:ON ACTION controlp INFIELD pmak003 name="input.c.pmak003"
+            {<point name="input.c.pmak003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmak004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmak004
+            #add-point:ON ACTION controlp INFIELD pmak004 name="input.c.pmak004"
+            {<point name="input.c.pmak004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmak010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmak010
+            #add-point:ON ACTION controlp INFIELD pmak010 name="input.c.pmak010"
+            {<point name="input.c.pmak010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmak009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmak009
+            #add-point:ON ACTION controlp INFIELD pmak009 name="input.c.pmak009"
+            {<point name="input.c.pmak009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmak005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmak005
+            #add-point:ON ACTION controlp INFIELD pmak005 name="input.c.pmak005"
+            {<point name="input.c.pmak005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmak007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmak007
+            #add-point:ON ACTION controlp INFIELD pmak007 name="input.c.pmak007"
+            {<point name="input.c.pmak007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmak008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmak008
+            #add-point:ON ACTION controlp INFIELD pmak008 name="input.c.pmak008"
+            {<point name="input.c.pmak008" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmi004_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="apmi004_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="apmi004_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

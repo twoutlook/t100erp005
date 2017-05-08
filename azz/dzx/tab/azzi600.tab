@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi600" module="azz" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="00845" crtdt="2013-06-01 00:00:00" modid="00593" moddt="2014-10-20 10:52:38" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="系統分類碼維護作業(SCC)">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzca004,gzca001,gzcal003,gzcal004,gzca002,gzca003,gzcastus,gzcaownid,gzcaownid_desc(chr80),gzcaowndp,gzcaowndp_desc(chr80),gzcacrtid,gzcacrtid_desc(chr80),gzcacrtdp,gzcacrtdp_desc(chr80),gzcacrtdt,gzcamodid,gzcamodid_desc(chr80),gzcamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzcb002,gzcbl004,gzcbl005,gzcbl006,gzcb013,gzcb012,gzcb015,gzcb003,gzcb004,gzcb005,gzcb006,gzcb007,gzcb008,gzcb009,gzcb010,gzcb011,gzcb014"/>
+      <var id="bs_field" value="gzca001,gzca001_desc(chr80),gzca002" pk="gzca001" order=""/>
+      <bs_reference field="gzca001_desc" ref_field="gzca001" ref_sql="SELECT gzcal003 FROM gzcal_t WHERE gzcal001=? AND gzcal002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="syn_status"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="using_list"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi600" method="dialog">
+    <section id="input">
+      <input id="head" field="gzca004,gzca001,gzcal003,gzcal004,gzca002,gzca003,gzcastus,gzcaownid,gzcaowndp,gzcacrtid,gzcacrtdp,gzcacrtdt,gzcamodid,gzcamoddt"/>
+      <input id="body" page="1" field="gzcb002,gzcbl004,gzcbl005,gzcbl006,gzcb013,gzcb012,gzcb003,gzcb004,gzcb005,gzcb006,gzcb007,gzcb008,gzcb009,gzcb010,gzcb011,gzcb014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzca004,gzca001,gzcal003,gzcal004,gzca002,gzca003,gzcastus,gzcaownid,gzcaowndp,gzcacrtid,gzcacrtdp,gzcacrtdt,gzcamodid,gzcamoddt"/>
+      <construct id="body" page="1" field="gzcb002,gzcbl004,gzcbl005,gzcbl006,gzcb013,gzcb012,gzcb003,gzcb004,gzcb005,gzcb006,gzcb007,gzcb008,gzcb009,gzcb010,gzcb011,gzcb014"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzca001"/>
+      <set id="head" type="no_entry" field="gzca001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzca004" def_scc="4"/>
+      <column id="gzca001">
+        <after>
+          <check id="range" st="50000" st_type="1" errno="azz-00087" bt="1" bt_type="1" ow="1"/>
+        </after>
+        <controlp form="q_gzca001" state="c"/>
+      </column>
+      <column id="gzcal003"/>
+      <column id="gzcal004"/>
+      <column id="gzca002" type="S" default="Y"/>
+      <column id="gzca003"/>
+      <column id="gzcastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzcaownid">
+        <after>
+          <reference field="gzcaownid_desc" ref_field="gzca_t.gzcaownid" map_field="gzcaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzcaownid_desc"/>
+      <column id="gzcaowndp">
+        <after>
+          <reference field="gzcaowndp_desc" ref_field="gzca_t.gzcaowndp" map_field="gzcaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzcaowndp_desc"/>
+      <column id="gzcacrtid">
+        <after>
+          <reference field="gzcacrtid_desc" ref_field="gzca_t.gzcacrtid" map_field="gzcacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzcacrtid_desc"/>
+      <column id="gzcacrtdp">
+        <after>
+          <reference field="gzcacrtdp_desc" ref_field="gzca_t.gzcacrtdp" map_field="gzcacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzcacrtdp_desc"/>
+      <column id="gzcacrtdt"/>
+      <column id="gzcamodid">
+        <after>
+          <reference field="gzcamodid_desc" ref_field="gzca_t.gzcamodid" map_field="gzcamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzcamodid_desc"/>
+      <column id="gzcamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzcb002"/>
+      <column id="gzcbl004"/>
+      <column id="gzcbl005"/>
+      <column id="gzcbl006"/>
+      <column id="gzcb013" type="S" default="s"/>
+      <column id="gzcb012"/>
+      <column id="gzcb015" def_scc="200"/>
+      <column id="gzcb003"/>
+      <column id="gzcb004"/>
+      <column id="gzcb005"/>
+      <column id="gzcb006"/>
+      <column id="gzcb007"/>
+      <column id="gzcb008"/>
+      <column id="gzcb009"/>
+      <column id="gzcb010"/>
+      <column id="gzcb011"/>
+      <column id="gzcb014"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzca_t" pk="gzca001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzca004,gzca001,&apos;&apos;,&apos;&apos;,gzca002,gzca003,gzcastus,gzcaownid,&apos;&apos;,gzcaowndp,&apos;&apos;,gzcacrtid,&apos;&apos;,gzcacrtdp,&apos;&apos;,gzcacrtdt,gzcamodid,&apos;&apos;,gzcamoddt FROM gzca_t WHERE gzca001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzca004,gzca001,&apos;&apos;,&apos;&apos;,gzca002,gzca003,gzcastus,gzcaownid,&apos;&apos;,gzcaowndp,&apos;&apos;,gzcacrtid,&apos;&apos;,gzcacrtdp,&apos;&apos;,gzcacrtdt,gzcamodid,&apos;&apos;,gzcamoddt FROM gzca_t" order="gzca001"/>
+      <sql id="append" type="lang" target="gzcal_t.gzcal003,gzcal_t.gzcal004" table="gzcal_t" fk="gzca001" pk="gzcal001,gzcal002" field="gzcal003,gzcal004"/>
+    </head>
+    <body id="gzcb_t" page="1" linked="" pk="gzcb002" fk="gzcb001">
+      <sql id="forupd_sql_detail" query="SELECT gzcb002,&apos;&apos;,&apos;&apos;,&apos;&apos;,gzcb013,gzcb012,gzcb015,gzcb003,gzcb004,gzcb005,gzcb006,gzcb007,gzcb008,gzcb009,gzcb010,gzcb011,gzcb014 FROM gzcb_t WHERE gzcb001=? AND gzcb002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzcb002,&apos;&apos;,&apos;&apos;,&apos;&apos;,gzcb013,gzcb012,gzcb015,gzcb003,gzcb004,gzcb005,gzcb006,gzcb007,gzcb008,gzcb009,gzcb010,gzcb011,gzcb014 FROM gzcb_t WHERE gzcb001=?"/>
+      <sql id="detail_append" type="lang" target="gzcbl_t.gzcbl004,gzcbl_t.gzcbl005,gzcbl_t.gzcbl006" table="gzcbl_t" fk="gzca001,gzcb002" pk="gzcbl001,gzcbl002,gzcbl003" field="gzcbl004,gzcbl005,gzcbl006"/>
+    </body>
+  </dataset>
+</assembly>
+

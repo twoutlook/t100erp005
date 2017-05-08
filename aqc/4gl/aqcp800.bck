@@ -1,0 +1,1054 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="aqcp800.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000041
+#+ 
+#+ Filename...: aqcp800
+#+ Description: 月底品質分數統計批次作業
+#+ Creator....: 02295(2014-09-11 11:21:37)
+#+ Modifier...: 02295(2014-09-11 14:33:35) -SD/PR- 01996
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+ 
+{<section id="aqcp800.global" >}
+#160415-00016#1   2016/04/21  By xianghui 不良数应该抓取单身中不良数qcbd021
+#161124-00048#10  2016/12/13  By xujing     整批调整系统RECORD LIKE xxxx_t.* 星号写法
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       qcba010 LIKE qcba_t.qcba010, 
+   imaa009 LIKE imaa_t.imaa009, 
+   qcba013 LIKE qcba_t.qcba013, 
+   year LIKE type_t.num5, 
+   stage LIKE type_t.num5, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_glaa003       LIKE glaa_t.glaa003
+DEFINE g_stagecomplete LIKE type_t.num10
+#end add-point
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aqcp800.main" >}
+MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aqc","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   SELECT DISTINCT glaa003 INTO g_glaa003
+     FROM glaa_t,ooef_t
+    WHERE glaacomp = ooef017
+      AND glaaent = ooefent
+      AND ooefent = g_enterprise
+      AND ooef001 = g_site
+      AND glaa014 = 'Y'
+   LET g_bgjob = g_argv[1]  
+   IF cl_null(g_bgjob) THEN 
+      LET g_bgjob = 'N'
+   END IF
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      LET ls_js = g_argv[2]
+      LET g_master.year = YEAR(g_today)
+      LET g_master.stage = MONTH(g_today)
+      LET g_master.wc = ls_js
+      #end add-point
+      CALL aqcp800_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aqcp800 WITH FORM cl_ap_formpath("aqc",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL aqcp800_init()
+ 
+      #進入選單 Menu (="N")
+      CALL aqcp800_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aqcp800
+   END IF
+ 
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aqcp800.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION aqcp800_init()
+   #add-point:init段define
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   LET g_master.year =''
+   LET g_master.stage=''
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcp800.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aqcp800_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #+ 此段落由子樣板a57產生
+         INPUT BY NAME g_master.year,g_master.stage 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               
+               #end add-point
+         
+                     #此段落由子樣板a02產生
+         AFTER FIELD year
+            #此段落由子樣板a15產生
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_master.year,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD year
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD year
+ 
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD year
+            #add-point:BEFORE FIELD year
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE year
+            #add-point:ON CHANGE year
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD stage
+            #此段落由子樣板a15產生
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_master.stage,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD stage
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD stage
+ 
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD stage
+            #add-point:BEFORE FIELD stage
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE stage
+            #add-point:ON CHANGE stage
+            
+            #END add-point
+ 
+ 
+                     #Ctrlp:input.c.year
+         ON ACTION controlp INFIELD year
+            #add-point:ON ACTION controlp INFIELD year
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.stage
+         ON ACTION controlp INFIELD stage
+            #add-point:ON ACTION controlp INFIELD stage
+            
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            
+            #end add-point
+               
+         END INPUT
+ 
+ 
+         
+         #+ 此段落由子樣板a57產生
+         CONSTRUCT BY NAME g_master.wc ON qcba010,imaa009,qcba013
+         
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.qcba010
+         ON ACTION controlp INFIELD qcba010
+            #add-point:ON ACTION controlp INFIELD qcba010
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO qcba010  #顯示到畫面上
+            NEXT FIELD qcba010                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD qcba010
+            #add-point:BEFORE FIELD qcba010
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD qcba010
+            
+            #add-point:AFTER FIELD qcba010
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imaa009
+         ON ACTION controlp INFIELD imaa009
+            #add-point:ON ACTION controlp INFIELD imaa009
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtax001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+            NEXT FIELD imaa009                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imaa009
+            #add-point:BEFORE FIELD imaa009
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imaa009
+            
+            #add-point:AFTER FIELD imaa009
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.qcba013
+         ON ACTION controlp INFIELD qcba013
+            #add-point:ON ACTION controlp INFIELD qcba013
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imcg111()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO qcba013  #顯示到畫面上
+            NEXT FIELD qcba013                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD qcba013
+            #add-point:BEFORE FIELD qcba013
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD qcba013
+            
+            #add-point:AFTER FIELD qcba013
+            
+            #END add-point
+            
+ 
+ 
+            
+            #add-point:其他管控
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL cl_qbe_display_condition(FGL_GETENV("QUERYPLANID"), g_user)
+            CALL aqcp800_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            
+            #end add-point
+ 
+         ON ACTION qbe_select
+            LET ls_wc = ""
+            #需要用ITM類程式查詢方案在CONSTRUCT的功能，將值set到畫面上
+            CALL cl_qbe_list("c") RETURNING ls_wc
+            CALL aqcp800_get_buffer(l_dialog)
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            INITIALIZE g_master.* TO NULL
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         #LET g_jobid = cl_schedule_get_jobid(g_prog)
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL aqcp800_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+                 LET ls_js = aqcp800_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcp800.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION aqcp800_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcp800.process" >}
+#+ 資料處理
+PRIVATE FUNCTION aqcp800_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   DEFINE l_total     LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_bdate     LIKE type_t.dat
+   DEFINE l_edate     LIKE type_t.dat 
+#   DEFINE l_qcaq      RECORD LIKE qcaq_t.* #161124-00048#10 mark
+   #161124-00048#10 add(s)
+   DEFINE l_qcaq RECORD  #每月品質分數統計檔
+       qcaqent LIKE qcaq_t.qcaqent, #企业编号
+       qcaqsite LIKE qcaq_t.qcaqsite, #营运据点
+       qcaq000 LIKE qcaq_t.qcaq000, #QC类型
+       qcaq001 LIKE qcaq_t.qcaq001, #年度
+       qcaq002 LIKE qcaq_t.qcaq002, #期别
+       qcaq003 LIKE qcaq_t.qcaq003, #料件编号
+       qcaq004 LIKE qcaq_t.qcaq004, #产品特征
+       qcaq005 LIKE qcaq_t.qcaq005, #交易对象
+       qcaq006 LIKE qcaq_t.qcaq006, #部门
+       qcaq007 LIKE qcaq_t.qcaq007, #作业编号
+       qcaq008 LIKE qcaq_t.qcaq008, #送验量
+       qcaq009 LIKE qcaq_t.qcaq009, #抽验量
+       qcaq010 LIKE qcaq_t.qcaq010, #不良数量
+       qcaq011 LIKE qcaq_t.qcaq011, #不良率
+       qcaq012 LIKE qcaq_t.qcaq012, #收货批数
+       qcaq013 LIKE qcaq_t.qcaq013, #检验批数
+       qcaq014 LIKE qcaq_t.qcaq014, #合格批数
+       qcaq015 LIKE qcaq_t.qcaq015, #不合格批数
+       qcaq016 LIKE qcaq_t.qcaq016, #验退批数
+       qcaq017 LIKE qcaq_t.qcaq017, #特采批数
+       qcaq018 LIKE qcaq_t.qcaq018, #批合格率
+       qcaq019 LIKE qcaq_t.qcaq019, #批不合格率
+       qcaq020 LIKE qcaq_t.qcaq020, #批验退率
+       qcaq021 LIKE qcaq_t.qcaq021 #批特采率
+   END RECORD
+   #161124-00048#10 add(e)
+   DEFINE l_qcba000   LIKE qcba_t.qcba000,
+          l_qcba010   LIKE qcba_t.qcba010,
+          l_qcba012   LIKE qcba_t.qcba012,
+          l_qcba005   LIKE qcba_t.qcba005,
+          l_qcba006   LIKE qcba_t.qcba006,
+          l_qcba901   LIKE qcba_t.qcba901 
+   DEFINE l_qcaq008   LIKE qcaq_t.qcaq018,
+          l_qcaq009   LIKE qcaq_t.qcaq019,
+          l_qcaq010   LIKE qcaq_t.qcaq010,
+          l_qcaq011   LIKE qcaq_t.qcaq011,
+          l_qcaq012   LIKE qcaq_t.qcaq012,
+          l_qcaq013   LIKE qcaq_t.qcaq013,
+          l_qcaq014   LIKE qcaq_t.qcaq014,
+          l_qcaq015   LIKE qcaq_t.qcaq015,
+          l_qcaq016   LIKE qcaq_t.qcaq016,
+          l_qcaq017   LIKE qcaq_t.qcaq017,
+          l_qcaq018   LIKE qcaq_t.qcaq018,
+          l_qcaq019   LIKE qcaq_t.qcaq019,
+          l_qcaq020   LIKE qcaq_t.qcaq020,
+          l_qcaq021   LIKE qcaq_t.qcaq021
+   DEFINE l_where     STRING  
+   DEFINE l_where2    STRING    
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   ##抓取期別起迄日期
+   CALL s_fin_date_get_period_range(g_glaa003,g_master.year,g_master.stage) RETURNING l_bdate,l_edate
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE aqcp800_process_cs CURSOR FROM ls_sql
+#  FOREACH aqcp800_process_cs INTO
+   #add-point:process段process
+   
+   CALL s_transaction_begin()
+   LET g_success = TRUE
+   #刪除[T.每月品質分數統計檔(qcaq_t)]中該年度期別之符合條件資料
+   DELETE FROM qcaq_t WHERE qcaqent = g_enterprise AND qcaqsite = g_site AND qcaq001 = g_master.year AND qcaq002 = g_master.stage
+
+   LET g_sql = " SELECT COUNT(*) ",
+               "   FROM qcba_t,imaa_t",
+               "  WHERE qcbaent = imaaent AND qcba010 = imaa001 ",
+               "    AND qcbaent = '",g_enterprise,"' AND qcbasite ='",g_site,"'",
+               "    AND qcbastus = 'Y' AND ",g_master.wc,
+               "    AND qcbadocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'"
+   PREPARE aqcp800_process_count FROM g_sql 
+   EXECUTE aqcp800_process_count INTO l_total
+   IF l_total = 0 THEN 
+      LET g_success = FALSE
+   END IF
+   CALL cl_progress_bar_no_window(l_total)  #160415-00016#1
+
+   LET li_stus = 1
+   LET g_sql = " SELECT DISTINCT qcba000,qcba010,NVL(qcba012,' '),NVL(qcba005,' '),NVL(qcba006,' '),NVL(qcba901,' ') ",
+               "   FROM qcba_t,imaa_t",
+               "  WHERE qcbaent = imaaent AND qcba010 = imaa001 ",
+               "    AND qcbaent = '",g_enterprise,"' AND qcbasite ='",g_site,"'",
+               "    AND qcbastus = 'Y' AND ",g_master.wc,
+               "    AND qcbadocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'"
+   PREPARE aqcp800_process_pr FROM g_sql            
+   DECLARE aqcp800_process_cs CURSOR FOR aqcp800_process_pr
+   FOREACH aqcp800_process_cs INTO l_qcaq.qcaq000,l_qcaq.qcaq003,l_qcaq.qcaq004,
+                                   l_qcaq.qcaq005,l_qcaq.qcaq007,l_qcaq.qcaq006
+      
+      #LET li_count = li_stus/l_total  #160415-00016#1 mark
+      #DISPLAY li_count TO stagecomplete  #160415-00016#1 mark      
+      CALL cl_progress_no_window_ing(l_qcaq.qcaq003)
+      
+      
+      LET l_qcaq.qcaqent = g_enterprise            
+      LET l_qcaq.qcaq001 = g_master.year
+      LET l_qcaq.qcaq002 = g_master.stage
+      LET l_qcaq.qcaqsite = g_site
+
+      LET l_where = "   AND qcba000 = '",l_qcaq.qcaq000,"'",
+                    "   AND qcba010 = '",l_qcaq.qcaq003,"'"
+                    
+      LET l_where2= "   AND pmdt006 ='",l_qcaq.qcaq003,"'"
+                                         
+      IF l_qcaq.qcaq004 IS NOT NULl THEN 
+         LET l_where = l_where," AND (qcba012 IS NULL OR qcba012 = '",l_qcaq.qcaq004,"')"
+         LET l_where2= l_where2,"   AND (pmdt007 IS NULL OR pmdt007 ='",l_qcaq.qcaq004,"')" 
+      ELSE
+         LET l_where = l_where," AND qcba012 IS NULL " 
+         LET l_where2= l_where2," AND pmdt007 IS NULL "          
+      END IF
+      IF l_qcaq.qcaq005 IS NOT NULl THEN 
+         LET l_where = l_where," AND (qcba005 IS NULL OR qcba005 = '",l_qcaq.qcaq005,"')"
+         LET l_where2= l_where2,"   AND (pmds007 IS NULL OR pmds007 ='",l_qcaq.qcaq005,"')" 
+      ELSE
+         LET l_where = l_where," AND qcba005 IS NULL "
+         LET l_where2= l_where2," AND pmds007 IS NULL "          
+      END IF
+      IF l_qcaq.qcaq007 IS NOT NULl THEN 
+         LET l_where = l_where," AND (qcba006 IS NULL OR qcba006 = '",l_qcaq.qcaq007,"')"
+      ELSE
+         LET l_where = l_where," AND qcba006 IS NULL "      
+      END IF
+      IF l_qcaq.qcaq006 IS NOT NULl THEN 
+         LET l_where = l_where," AND (qcba901 IS NULL OR qcba901 = '",l_qcaq.qcaq006,"')"
+      ELSE
+         LET l_where = l_where," AND qcba901 IS NULL "      
+      END IF      
+      ##[C.送驗量](qcaq008) = [C.送驗量(qcba017)]加總
+      ##[C.不良數量](qcaq010) = [C.不良數(qcba027)]加總
+#      SELECT SUM(qcba017),SUM(qcba027) INTO l_qcaq.qcaq008,l_qcaq.qcaq010 
+#        FROM qcba_t
+#       WHERE qcbaent = g_enterprise
+#         AND qcbastus = 'Y'
+#         AND qcbadocdt BETWEEN l_bdate AND l_edate
+#         AND qcba000 = l_qcaq.qcaq000
+#         AND qcba010 = l_qcaq.qcaq003
+#         AND qcba012 = l_qcaq.qcaq004
+#         AND qcba005 = l_qcaq.qcaq005
+#         AND qcba006 = l_qcaq.qcaq007
+#         AND qcba901 = l_qcaq.qcaq006
+  
+      #LET ls_sql = " SELECT SUM(qcba017),SUM(qcba027) ",   #160415-00016#1 mark
+      LET ls_sql = " SELECT SUM(qcba017) ",   #160415-00016#1 
+                   "  FROM qcba_t",
+                   " WHERE qcbaent = '",g_enterprise,"'",
+                   "   AND qcbastus = 'Y' ",
+                   "   AND qcbadocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'",l_where       
+      PREPARE get_qcaq008_10 FROM ls_sql
+      #EXECUTE get_qcaq008_10 INTO l_qcaq.qcaq008,l_qcaq.qcaq010   #160415-00016#1 mark
+      EXECUTE get_qcaq008_10 INTO l_qcaq.qcaq008                   #160415-00016#1
+      IF cl_null(l_qcaq.qcaq008) THEN LET l_qcaq.qcaq008 = 0 END IF
+      #IF cl_null(l_qcaq.qcaq010) THEN LET l_qcaq.qcaq010 = 0 END IF  #160415-00016#1 mark    
+      ##[C.抽驗量](qcaq009) = 每張QC單取單身[C.抽驗量(qcbd009)]最大一筆數量加總
+      ##[C.不良數量](qcaq010) = 每張QC單取單身[C.不良數(qcbd021)]最大一筆數量加總
+#      SELECT SUM(MAX(qcbd009)) INTO l_qcaq.qcaq009 
+#        FROM qcba_t,qcbd_t
+#       WHERE qcbaent = qcbdent AND qcbadocno = qcbddocno
+#         AND qcbaent = g_enterprise
+#         AND qcbastus = 'Y'
+#         AND qcbadocdt BETWEEN l_bdate AND l_edate
+#         AND qcba000 = l_qcaq.qcaq000
+#         AND qcba010 = l_qcaq.qcaq003
+#         AND qcba012 = l_qcaq.qcaq004
+#         AND qcba005 = l_qcaq.qcaq005
+#         AND qcba006 = l_qcaq.qcaq007
+#         AND qcba901 = l_qcaq.qcaq006 
+#      GROUP BY qcbadocno         
+      LET ls_sql = " SELECT SUM(MAX(qcbd009)),SUM(MAX(qcbd021)) ",   #160415-00016#1 add qcbd021
+                   "  FROM qcba_t,qcbd_t",
+                   " WHERE qcbaent = qcbdent AND qcbadocno = qcbddocno",
+                   "   AND qcbaent = '",g_enterprise,"'",
+                   "   AND qcbastus = 'Y' ",
+                   "   AND qcbadocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'",l_where,
+                   " GROUP BY qcbadocno"                   
+      PREPARE get_qcaq009 FROM ls_sql
+      EXECUTE get_qcaq009 INTO l_qcaq.qcaq009,l_qcaq.qcaq010    #160415-00016#1 add qcaq010
+      IF cl_null(l_qcaq.qcaq009) THEN LET l_qcaq.qcaq009 = 0 END IF
+      IF cl_null(l_qcaq.qcaq010) THEN LET l_qcaq.qcaq010 = 0 END IF  #160415-00016#1      
+      ##[C.不良率] (qcaq011) = [C.不良數量]/[C.抽驗量]
+      LET l_qcaq.qcaq011 =  l_qcaq.qcaq010/l_qcaq.qcaq009
+      IF cl_null(l_qcaq.qcaq011) THEN LET l_qcaq.qcaq011 = 0 END IF 
+      ##[C.收貨批數](qcaq012) = 若"檢驗類型"='1',則為該料件編號+產品特徵+交易對象的已確認收貨單單身筆數,
+      ##                        其它檢驗類型則為0
+      IF l_qcaq.qcaq000 = '1' THEN
+         LET ls_sql = " SELECT COUNT(*) ", 
+                      "  FROM pmds_t,pmdt_t",
+                      " WHERE pmdsent=pmdtent AND pmdsdocno=pmdtdocno",
+                      "   AND pmdsent = '",g_enterprise,"'",
+                      "   AND pmdsstus = 'Y' ",
+                      "   AND pmdsdocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'",l_where2                     
+         PREPARE get_qcaq012 FROM ls_sql
+         EXECUTE get_qcaq012 INTO l_qcaq.qcaq012 
+      ELSE
+         LET l_qcaq.qcaq012 = 0
+      END IF
+      IF cl_null(l_qcaq.qcaq012) THEN LET l_qcaq.qcaq012 = 0 END IF 
+      ##[C.檢驗批數](qcaq013) = aqct300單頭之筆數
+#      SELECT COUNT(*) INTO l_qcaq.qcaq013
+#        FROM qcba_t
+#       WHERE qcbaent = g_enterprise
+#         AND qcbastus = 'Y'
+#         AND qcbadocdt BETWEEN l_bdate AND l_edate
+#         AND qcba000 = l_qcaq.qcaq000
+#         AND qcba010 = l_qcaq.qcaq003
+#         AND qcba012 = l_qcaq.qcaq004
+#         AND qcba005 = l_qcaq.qcaq005
+#         AND qcba006 = l_qcaq.qcaq007
+#         AND qcba901 = l_qcaq.qcaq006 
+      LET ls_sql = " SELECT COUNT(*) ", 
+                   "  FROM qcba_t",
+                   " WHERE qcbaent = '",g_enterprise,"'",
+                   "   AND qcbastus = 'Y' ",
+                   "   AND qcbadocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'",l_where       
+      PREPARE get_qcaq013 FROM ls_sql
+      EXECUTE get_qcaq013 INTO l_qcaq.qcaq013  
+      IF cl_null(l_qcaq.qcaq013) THEN LET l_qcaq.qcaq013 = 0 END IF       
+      ##[C.合格批數](qcaq014) = aqct300單頭[C:判定結果]='1'合格之筆數
+#      SELECT COUNT(*) INTO l_qcaq.qcaq014
+#        FROM qcba_t
+#       WHERE qcbaent = g_enterprise
+#         AND qcbastus = 'Y'
+#         AND qcbadocdt BETWEEN l_bdate AND l_edate
+#         AND qcba022 = '1'
+#         AND qcba000 = l_qcaq.qcaq000
+#         AND qcba010 = l_qcaq.qcaq003
+#         AND qcba012 = l_qcaq.qcaq004
+#         AND qcba005 = l_qcaq.qcaq005
+#         AND qcba006 = l_qcaq.qcaq007
+#         AND qcba901 = l_qcaq.qcaq006  
+      LET ls_sql = " SELECT COUNT(*) ", 
+                   "  FROM qcba_t",
+                   " WHERE qcbaent = '",g_enterprise,"'",
+                   "   AND qcbastus = 'Y' AND qcba022 = '1' ",
+                   "   AND qcbadocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'",l_where       
+      PREPARE get_qcaq014 FROM ls_sql
+      EXECUTE get_qcaq014 INTO l_qcaq.qcaq014
+      IF cl_null(l_qcaq.qcaq014) THEN LET l_qcaq.qcaq014 = 0 END IF       
+      ##[C.不合格批數](qcaq015) = aqct300單頭[C:判定結果]='2'或'3'或'4'合格之筆數
+#      SELECT COUNT(*) INTO l_qcaq.qcaq015
+#        FROM qcba_t
+#       WHERE qcbaent = g_enterprise
+#         AND qcbastus = 'Y'
+#         AND qcbadocdt BETWEEN l_bdate AND l_edate
+#         AND qcba022 <> '1'
+#         AND qcba000 = l_qcaq.qcaq000
+#         AND qcba010 = l_qcaq.qcaq003
+#         AND qcba012 = l_qcaq.qcaq004
+#         AND qcba005 = l_qcaq.qcaq005
+#         AND qcba006 = l_qcaq.qcaq007
+#         AND qcba901 = l_qcaq.qcaq006
+      LET ls_sql = " SELECT COUNT(*) ", 
+                   "  FROM qcba_t",
+                   " WHERE qcbaent = '",g_enterprise,"'",
+                   "   AND qcbastus = 'Y' AND qcba022 <> '1' ",
+                   "   AND qcbadocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'",l_where       
+      PREPARE get_qcaq015 FROM ls_sql
+      EXECUTE get_qcaq015 INTO l_qcaq.qcaq015
+      IF cl_null(l_qcaq.qcaq015) THEN LET l_qcaq.qcaq015 = 0 END IF       
+      ##[C.驗退批數](qcaq016) = aqct300單頭[C:判定結果]='2'之筆數
+#      SELECT COUNT(*) INTO l_qcaq.qcaq016
+#        FROM qcba_t
+#       WHERE qcbaent = g_enterprise
+#         AND qcbastus = 'Y'
+#         AND qcbadocdt BETWEEN l_bdate AND l_edate
+#         AND qcba022 = '2'
+#         AND qcba000 = l_qcaq.qcaq000
+#         AND qcba010 = l_qcaq.qcaq003
+#         AND qcba012 = l_qcaq.qcaq004
+#         AND qcba005 = l_qcaq.qcaq005
+#         AND qcba006 = l_qcaq.qcaq007
+#         AND qcba901 = l_qcaq.qcaq006  
+      LET ls_sql = " SELECT COUNT(*) ", 
+                   "  FROM qcba_t",
+                   " WHERE qcbaent = '",g_enterprise,"'",
+                   "   AND qcbastus = 'Y' AND qcba022 = '2' ",
+                   "   AND qcbadocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'",l_where       
+      PREPARE get_qcaq016 FROM ls_sql
+      EXECUTE get_qcaq016 INTO l_qcaq.qcaq016 
+      IF cl_null(l_qcaq.qcaq016) THEN LET l_qcaq.qcaq016 = 0 END IF       
+      ##[C.特採批數](qcaq017) = aqct300單頭[C:判定結果]='4'之筆數
+#      SELECT COUNT(*) INTO l_qcaq.qcaq017
+#        FROM qcba_t
+#       WHERE qcbaent = g_enterprise
+#         AND qcbastus = 'Y'
+#         AND qcbadocdt BETWEEN l_bdate AND l_edate
+#         AND qcba022 = '4'
+#         AND qcba000 = l_qcaq.qcaq000
+#         AND qcba010 = l_qcaq.qcaq003
+#         AND qcba012 = l_qcaq.qcaq004
+#         AND qcba005 = l_qcaq.qcaq005
+#         AND qcba006 = l_qcaq.qcaq007
+#         AND qcba901 = l_qcaq.qcaq006  
+      LET ls_sql = " SELECT COUNT(*) ", 
+                   "  FROM qcba_t",
+                   " WHERE qcbaent = '",g_enterprise,"'",
+                   "   AND qcbastus = 'Y' AND qcba022 = '4' ",
+                   "   AND qcbadocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'",l_where       
+      PREPARE get_qcaq017 FROM ls_sql
+      EXECUTE get_qcaq017 INTO l_qcaq.qcaq017
+      IF cl_null(l_qcaq.qcaq017) THEN LET l_qcaq.qcaq017 = 0 END IF       
+	   ##[C.批合格率](qcaq018) = [C:合格批數] / [C:檢驗批數]
+	   LET l_qcaq.qcaq018 = l_qcaq.qcaq014/l_qcaq.qcaq013
+	   IF cl_null(l_qcaq.qcaq018) THEN LET l_qcaq.qcaq018 = 0 END IF 
+	   ##[C.批不合格率](qcaq019) = [C:不合格批數] / [C:檢驗批數]
+	   LET l_qcaq.qcaq019 = l_qcaq.qcaq015/l_qcaq.qcaq013
+	   IF cl_null(l_qcaq.qcaq019) THEN LET l_qcaq.qcaq019 = 0 END IF 
+	   ##[C.批驗退率](qcaq020) = [C:驗退批數] / [C:檢驗批數]
+	   LET l_qcaq.qcaq020 = l_qcaq.qcaq016/l_qcaq.qcaq013
+	   IF cl_null(l_qcaq.qcaq020) THEN LET l_qcaq.qcaq020 = 0 END IF 
+	   ##[C.批特採率](qcaq021) = [C:特採批數] / [C:檢驗批數]
+      LET l_qcaq.qcaq021 = l_qcaq.qcaq017/l_qcaq.qcaq013	
+      IF cl_null(l_qcaq.qcaq021) THEN LET l_qcaq.qcaq021 = 0 END IF       
+      
+      IF cl_null(l_qcaq.qcaq004) THEN LET l_qcaq.qcaq004 = ' ' END IF
+      IF cl_null(l_qcaq.qcaq005) THEN LET l_qcaq.qcaq005 = ' ' END IF
+      IF cl_null(l_qcaq.qcaq007) THEN LET l_qcaq.qcaq007 = ' ' END IF
+#      INSERT INTO qcaq_t VALUES l_qcaq.* #161124-00048#10 mark
+      #161124-00048#10 add(s)
+      INSERT INTO qcaq_t (qcaqent,qcaqsite,qcaq000,qcaq001,qcaq002,qcaq003,qcaq004,
+                          qcaq005,qcaq006,qcaq007,qcaq008,qcaq009,qcaq010,qcaq011,qcaq012,
+                          qcaq013,qcaq014,qcaq015,qcaq016,qcaq017,qcaq018,qcaq019,qcaq020,qcaq021)
+                  VALUES (l_qcaq.qcaqent,l_qcaq.qcaqsite,l_qcaq.qcaq000,l_qcaq.qcaq001,l_qcaq.qcaq002,
+                          l_qcaq.qcaq003,l_qcaq.qcaq004,l_qcaq.qcaq005,l_qcaq.qcaq006,l_qcaq.qcaq007,
+                          l_qcaq.qcaq008,l_qcaq.qcaq009,l_qcaq.qcaq010,l_qcaq.qcaq011,l_qcaq.qcaq012,
+                          l_qcaq.qcaq013,l_qcaq.qcaq014,l_qcaq.qcaq015,l_qcaq.qcaq016,l_qcaq.qcaq017,
+                          l_qcaq.qcaq018,l_qcaq.qcaq019,l_qcaq.qcaq020,l_qcaq.qcaq021)
+      #161124-00048#10 add(e)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "INS qcaq_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         LET g_success = FALSE 
+         EXIT FOREACH  
+      END IF
+      
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt
+        FROM qcaq_t
+       WHERE qcaqent = g_enterprise
+         AND qcaqsite = g_site
+         AND qcaq000 = l_qcaq.qcaq000
+         AND qcaq001 = g_master.year
+         AND qcaq002 = 99
+         AND qcaq003 = l_qcaq.qcaq003
+         AND qcaq004 = l_qcaq.qcaq004
+         AND qcaq005 = l_qcaq.qcaq005
+         AND qcaq006 = l_qcaq.qcaq006
+         AND qcaq007 = l_qcaq.qcaq007
+      IF l_cnt = 0 THEN 
+         LET l_qcaq.qcaq002 = 99
+#         INSERT INTO qcaq_t VALUES l_qcaq.*  #161124-00048#10 mark
+         #161124-00048#10 add(s)
+         INSERT INTO qcaq_t (qcaqent,qcaqsite,qcaq000,qcaq001,qcaq002,qcaq003,qcaq004,
+                             qcaq005,qcaq006,qcaq007,qcaq008,qcaq009,qcaq010,qcaq011,qcaq012,
+                             qcaq013,qcaq014,qcaq015,qcaq016,qcaq017,qcaq018,qcaq019,qcaq020,qcaq021)
+                     VALUES (l_qcaq.qcaqent,l_qcaq.qcaqsite,l_qcaq.qcaq000,l_qcaq.qcaq001,l_qcaq.qcaq002,
+                             l_qcaq.qcaq003,l_qcaq.qcaq004,l_qcaq.qcaq005,l_qcaq.qcaq006,l_qcaq.qcaq007,
+                             l_qcaq.qcaq008,l_qcaq.qcaq009,l_qcaq.qcaq010,l_qcaq.qcaq011,l_qcaq.qcaq012,
+                             l_qcaq.qcaq013,l_qcaq.qcaq014,l_qcaq.qcaq015,l_qcaq.qcaq016,l_qcaq.qcaq017,
+                             l_qcaq.qcaq018,l_qcaq.qcaq019,l_qcaq.qcaq020,l_qcaq.qcaq021)
+         #161124-00048#10 add(e)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "INS qcaq_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            LET g_success = FALSE 
+            EXIT FOREACH            
+         END IF         
+      ELSE
+         SELECT SUM(qcaq008),SUM(qcaq009),SUM(qcaq010),SUM(qcaq012),SUM(qcaq013),
+                SUM(qcaq014),SUM(qcaq015),SUM(qcaq016),SUM(qcaq017)
+           INTO l_qcaq008,l_qcaq009,l_qcaq010,l_qcaq012,l_qcaq013,
+                l_qcaq014,l_qcaq015,l_qcaq016,l_qcaq017 
+           FROM qcaq_t
+          WHERE qcaqent = g_enterprise
+            AND qcaqsite = g_site
+            AND qcaq000 = l_qcaq.qcaq000
+            AND qcaq001 = g_master.year
+            AND qcaq002 <> 99
+            AND qcaq003 = l_qcaq.qcaq003
+            AND qcaq004 = l_qcaq.qcaq004
+            AND qcaq005 = l_qcaq.qcaq005
+            AND qcaq006 = l_qcaq.qcaq006
+            AND qcaq007 = l_qcaq.qcaq007
+         LET l_qcaq011 = l_qcaq010/l_qcaq008  
+         LET l_qcaq018 = l_qcaq014/l_qcaq013
+         LET l_qcaq019 = l_qcaq015/l_qcaq013
+         LET l_qcaq020 = l_qcaq016/l_qcaq013
+         LET l_qcaq021 = l_qcaq017/l_qcaq013
+         IF cl_null(l_qcaq011) THEN LET l_qcaq011 = 0 END IF
+         IF cl_null(l_qcaq018) THEN LET l_qcaq018 = 0 END IF 
+         IF cl_null(l_qcaq019) THEN LET l_qcaq019 = 0 END IF 
+         IF cl_null(l_qcaq020) THEN LET l_qcaq020 = 0 END IF 
+         IF cl_null(l_qcaq021) THEN LET l_qcaq021 = 0 END IF 
+         UPDATE qcaq_t
+            SET qcaq008 = l_qcaq008,
+                qcaq009 = l_qcaq009,
+                qcaq010 = l_qcaq010,
+                qcaq011 = l_qcaq011,
+                qcaq012 = l_qcaq012,
+                qcaq013 = l_qcaq013,
+                qcaq014 = l_qcaq014,
+                qcaq015 = l_qcaq015,
+                qcaq016 = l_qcaq016,
+                qcaq017 = l_qcaq017,
+                qcaq018 = l_qcaq018,
+                qcaq019 = l_qcaq019,
+                qcaq020 = l_qcaq020,
+                qcaq021 = l_qcaq021
+          WHERE qcaqent = g_enterprise
+            AND qcaqsite = g_site
+            AND qcaq000 = l_qcaq.qcaq000
+            AND qcaq001 = g_master.year
+            AND qcaq002 = 99
+            AND qcaq003 = l_qcaq.qcaq003
+            AND qcaq004 = l_qcaq.qcaq004
+            AND qcaq005 = l_qcaq.qcaq005
+            AND qcaq006 = l_qcaq.qcaq006
+            AND qcaq007 = l_qcaq.qcaq007 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "UPDATE qcaq_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            LET g_success = FALSE 
+            EXIT FOREACH            
+         END IF             
+      END IF
+#      INITIALIZE l_qcaq.* LIKE qcaq_t.*    #161124-00048#10 mark
+      INITIALIZE l_qcaq.* TO NULL #161124-00048#10 add
+   END FOREACH
+   #LET li_count = 100   #160415-00016#1 mark
+   #DISPLAY li_count TO stagecomplete    #160415-00016#1 mark
+   IF g_success = TRUE THEN 
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+      IF l_total = 0 THEN 
+         CALL cl_ask_confirm3("asf-00230","")
+      ELSE  
+         CALL cl_ask_confirm3("adz-00218","") 
+      END IF         
+   END IF
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      
+      #end add-point
+   END IF
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcp800.get_buffer" >}
+PRIVATE FUNCTION aqcp800_get_buffer(p_dialog)
+   DEFINE p_dialog   ui.DIALOG
+   
+   LET g_master.year = p_dialog.getFieldBuffer('year')
+   LET g_master.stage = p_dialog.getFieldBuffer('stage')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcp800.other_function" >}
+#add-point:自定義元件(Function)
+
+#end add-point
+ 
+{</section>}
+ 

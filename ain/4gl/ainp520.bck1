@@ -1,0 +1,995 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ainp520.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2015-07-17 11:50:07), PR版次:0009(2017-02-20 15:14:59)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000141
+#+ Filename...: ainp520
+#+ Description: 調撥差異調整批量產生作業
+#+ Creator....: 01726(2014-04-11 10:29:46)
+#+ Modifier...: 06814 -SD/PR- 01996
+ 
+{</section>}
+ 
+{<section id="ainp520.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#161104-00002#4    2016/11/07  By 06814    星號寫法調整
+#161123-00042#4    2016/11/23  By 06814    星號寫法調整應補上自定義欄位
+#160711-00040#15   2017/02/20 By xujing   T類作業的單別開窗的where條件(找CALL q_ooba002_開頭的)增加如下程式段
+#                                          CALL s_control_get_docno_sql(g_user,g_dept) RETURNING l_success,l_sql1
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+        indedocno        LIKE inde_t.indedocno,
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       indc005 LIKE type_t.chr10, 
+   indcdocno LIKE type_t.chr20, 
+   indedocno LIKE type_t.chr20, 
+   indedocno_desc LIKE type_t.chr80, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+#DEFINE g_doctype         LIKE rtai_t.rtai004   #150710-00014#1 20150717 mark by beckxie
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列 #150710-00014#1 20150717 add by beckxie
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列 #150710-00014#1 20150717 add by beckxie
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列 #150710-00014#1 20150717 add by beckxie
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ainp520.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ain","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL ainp520_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ainp520 WITH FORM cl_ap_formpath("ain",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL ainp520_init()
+ 
+      #進入選單 Menu (="N")
+      CALL ainp520_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_ainp520
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="ainp520.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION ainp520_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp520.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ainp520_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   DEFINE l_indedocno_desc LIKE oobal_t.oobal004
+   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_ooef004        LIKE ooef_t.ooef004
+   DEFINE  l_sql1                STRING     #160711-00040#15 add
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.indedocno 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               CALL s_arti200_get_def_doc_type(g_site,'aint520','1') RETURNING l_success,g_master.indedocno
+               DISPLAY g_master.indedocno TO indedocno
+               CALL s_aooi200_get_slip_desc(g_master.indedocno) RETURNING l_indedocno_desc
+               DISPLAY l_indedocno_desc TO indedocno_desc
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indedocno
+            
+            #add-point:AFTER FIELD indedocno name="input.a.indedocno"
+            LET l_indedocno_desc = ''
+            DISPLAY l_indedocno_desc TO indedocno_desc
+            IF NOT cl_null(g_master.indedocno) THEN
+               IF NOT s_aooi200_chk_slip(g_site,'',g_master.indedocno,'aint520') THEN
+                  NEXT FIELD CURRENT
+               END IF
+            END IF                                                                                                                                                                                                                                                                                                                                                                                                                   
+            CALL s_aooi200_get_slip_desc(g_master.indedocno) RETURNING l_indedocno_desc
+            DISPLAY l_indedocno_desc TO indedocno_desc
+#            LET g_doctype = g_master.indedocno
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indedocno
+            #add-point:BEFORE FIELD indedocno name="input.b.indedocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indedocno
+            #add-point:ON CHANGE indedocno name="input.g.indedocno"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.indedocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indedocno
+            #add-point:ON ACTION controlp INFIELD indedocno name="input.c.indedocno"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.indedocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            #160711-00040#15 add(s)
+            CALL s_control_get_docno_sql(g_user,g_dept)
+                RETURNING l_success,l_sql1
+            IF NOT cl_null(l_sql1) THEN
+               LET g_qryparam.where = l_sql1
+            END IF
+            #160711-00040#15 add(e)
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_master.indedocno = g_qryparam.return1              
+
+            DISPLAY g_master.indedocno TO indedocno              #
+
+            NEXT FIELD indedocno                          #返回原欄位
+
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON indc005,indcdocno
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.indc005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indc005
+            #add-point:ON ACTION controlp INFIELD indc005 name="construct.c.indc005"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_site #
+            LET g_qryparam.arg2 = "8" #
+            CALL q_ooed004_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO indc005  #顯示到畫面上
+            NEXT FIELD indc005                     #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indc005
+            #add-point:BEFORE FIELD indc005 name="construct.b.indc005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indc005
+            
+            #add-point:AFTER FIELD indc005 name="construct.a.indc005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.indcdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indcdocno
+            #add-point:ON ACTION controlp INFIELD indcdocno name="construct.c.indcdocno"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_indcdocno()
+               DISPLAY g_qryparam.return1 TO indcdocno
+               NEXT FIELD indcdocno
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indcdocno
+            #add-point:BEFORE FIELD indcdocno name="construct.b.indcdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indcdocno
+            
+            #add-point:AFTER FIELD indcdocno name="construct.a.indcdocno"
+ 
+            #END add-point
+            
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         CONSTRUCT BY NAME lc_param.wc ON indc005,indcdocno
+         
+            ON ACTION controlp INFIELD indc005
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site #
+               LET g_qryparam.arg2 = "8" #
+               CALL q_ooed004_7()
+               DISPLAY g_qryparam.return1 TO indc005
+               NEXT FIELD indc005
+               
+            ON ACTION controlp INFIELD indcdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_indcdocno()
+               DISPLAY g_qryparam.return1 TO indcdocno
+               NEXT FIELD indcdocno
+               
+         END CONSTRUCT
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         INPUT lc_param.indedocno FROM indedocno ATTRIBUTE(WITHOUT DEFAULTS)
+         
+            BEFORE INPUT
+               CALL s_arti200_get_def_doc_type(g_site,'aint520','1') RETURNING l_success,lc_param.indedocno
+               DISPLAY lc_param.indedocno TO indedocno
+               CALL s_aooi200_get_slip_desc(lc_param.indedocno) RETURNING l_indedocno_desc
+               DISPLAY l_indedocno_desc TO indedocno_desc
+            
+            ON ACTION controlp INFIELD indedocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = lc_param.indedocno
+               SELECT ooef004 INTO l_ooef004 FROM ooef_t WHERE ooef001 = g_site AND ooefent  = g_enterprise
+               LET g_qryparam.arg1 = l_ooef004
+               LET g_qryparam.arg2 = "aint520"
+               #160711-00040#15 add(s)
+               CALL s_control_get_docno_sql(g_user,g_dept)
+                   RETURNING l_success,l_sql1
+               IF NOT cl_null(l_sql1) THEN
+                  LET g_qryparam.where = l_sql1
+               END IF
+               #160711-00040#15 add(e)
+               CALL q_ooba002_1()
+               LET lc_param.indedocno = g_qryparam.return1
+               DISPLAY lc_param.indedocno TO indedocno
+               CALL s_aooi200_get_slip_desc(lc_param.indedocno) RETURNING l_indedocno_desc
+               DISPLAY l_indedocno_desc TO indedocno_desc
+               NEXT FIELD indedocno
+            
+            AFTER FIELD indedocno
+               LET l_indedocno_desc = ''
+               DISPLAY l_indedocno_desc TO indedocno_desc
+               IF NOT cl_null(lc_param.indedocno) THEN
+                  IF NOT s_aooi200_chk_slip(g_site,'',lc_param.indedocno,'aint520') THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL s_aooi200_get_slip_desc(lc_param.indedocno) RETURNING l_indedocno_desc
+               DISPLAY l_indedocno_desc TO indedocno_desc
+#               LET g_doctype = lc_param.indedocno
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL ainp520_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL ainp520_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      LET lc_param.indedocno=g_master.indedocno   #150710-00014#1 20150717 add by beckxie
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL ainp520_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = ainp520_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp520.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION ainp520_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp520.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION ainp520_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   #DEFINE l_indc      RECORD LIKE indc_t.*   #161104-00002#4 20161107 mark by beckxie
+   #161104-00002#4 20161107 add by beckxie---S
+   DEFINE l_indc RECORD                 #調撥單單頭檔
+       indcent LIKE indc_t.indcent,     #企業編號
+       indcsite LIKE indc_t.indcsite,   #營運據點
+       indcunit LIKE indc_t.indcunit,   #應用組織
+       indcdocno LIKE indc_t.indcdocno, #調撥單號
+       indcdocdt LIKE indc_t.indcdocdt, #調撥日期
+       indc000 LIKE indc_t.indc000,     #單據性質
+       indc001 LIKE indc_t.indc001,     #對應調撥單號
+       indc002 LIKE indc_t.indc002,     #來源類別
+       indc003 LIKE indc_t.indc003,     #來源單號
+       indc004 LIKE indc_t.indc004,     #調撥人員
+       indc005 LIKE indc_t.indc005,     #撥出營運據點
+       indc006 LIKE indc_t.indc006,     #撥入營運據點
+       indc007 LIKE indc_t.indc007,     #在途倉
+       indc008 LIKE indc_t.indc008,     #備註
+       indc021 LIKE indc_t.indc021,     #撥出確認人員
+       indc022 LIKE indc_t.indc022,     #撥出確認日期
+       indc023 LIKE indc_t.indc023,     #撥入確認人員
+       indc024 LIKE indc_t.indc024,     #撥入確認日期
+       indcstus LIKE indc_t.indcstus,   #狀態碼
+       indcownid LIKE indc_t.indcownid, #資料所有者
+       indcowndp LIKE indc_t.indcowndp, #資料所屬部門
+       indccrtid LIKE indc_t.indccrtid, #資料建立者
+       indccrtdp LIKE indc_t.indccrtdp, #資料建立部門
+       indccrtdt LIKE indc_t.indccrtdt, #資料創建日
+       indcmodid LIKE indc_t.indcmodid, #資料修改者
+       indcmoddt LIKE indc_t.indcmoddt, #最近修改日
+       indccnfid LIKE indc_t.indccnfid, #資料確認者
+       indccnfdt LIKE indc_t.indccnfdt, #資料確認日
+       indcpstid LIKE indc_t.indcpstid, #資料過帳者
+       indcpstdt LIKE indc_t.indcpstdt, #資料過帳日
+       indc101 LIKE indc_t.indc101,     #調撥部門
+       indc102 LIKE indc_t.indc102,     #檢驗方式
+       indc103 LIKE indc_t.indc103,     #包裝單製作
+       indc104 LIKE indc_t.indc104,     #Invoice製作
+       indc105 LIKE indc_t.indc105,     #送貨地址
+       indc106 LIKE indc_t.indc106,     #運輸方式
+       indc107 LIKE indc_t.indc107,     #起運地點
+       indc108 LIKE indc_t.indc108,     #到達地點
+       indc109 LIKE indc_t.indc109,     #在途非成本庫位
+       indc151 LIKE indc_t.indc151,     #調撥理由
+       indcud001 LIKE indc_t.indcud001, #自定義欄位(文字)001       #161123-00042#4 20161123 add by beckxie---S
+       indcud002 LIKE indc_t.indcud002, #自定義欄位(文字)002
+       indcud003 LIKE indc_t.indcud003, #自定義欄位(文字)003
+       indcud004 LIKE indc_t.indcud004, #自定義欄位(文字)004
+       indcud005 LIKE indc_t.indcud005, #自定義欄位(文字)005
+       indcud006 LIKE indc_t.indcud006, #自定義欄位(文字)006
+       indcud007 LIKE indc_t.indcud007, #自定義欄位(文字)007
+       indcud008 LIKE indc_t.indcud008, #自定義欄位(文字)008
+       indcud009 LIKE indc_t.indcud009, #自定義欄位(文字)009
+       indcud010 LIKE indc_t.indcud010, #自定義欄位(文字)010
+       indcud011 LIKE indc_t.indcud011, #自定義欄位(數字)011
+       indcud012 LIKE indc_t.indcud012, #自定義欄位(數字)012
+       indcud013 LIKE indc_t.indcud013, #自定義欄位(數字)013
+       indcud014 LIKE indc_t.indcud014, #自定義欄位(數字)014
+       indcud015 LIKE indc_t.indcud015, #自定義欄位(數字)015
+       indcud016 LIKE indc_t.indcud016, #自定義欄位(數字)016
+       indcud017 LIKE indc_t.indcud017, #自定義欄位(數字)017
+       indcud018 LIKE indc_t.indcud018, #自定義欄位(數字)018
+       indcud019 LIKE indc_t.indcud019, #自定義欄位(數字)019
+       indcud020 LIKE indc_t.indcud020, #自定義欄位(數字)020    
+       indcud021 LIKE indc_t.indcud021, #自定義欄位(日期時間)021
+       indcud022 LIKE indc_t.indcud022, #自定義欄位(日期時間)022
+       indcud023 LIKE indc_t.indcud023, #自定義欄位(日期時間)023
+       indcud024 LIKE indc_t.indcud024, #自定義欄位(日期時間)024
+       indcud025 LIKE indc_t.indcud025, #自定義欄位(日期時間)025
+       indcud026 LIKE indc_t.indcud026, #自定義欄位(日期時間)026
+       indcud027 LIKE indc_t.indcud027, #自定義欄位(日期時間)027
+       indcud028 LIKE indc_t.indcud028, #自定義欄位(日期時間)028
+       indcud029 LIKE indc_t.indcud029, #自定義欄位(日期時間)029
+       indcud030 LIKE indc_t.indcud030, #自定義欄位(日期時間)030    #161123-00042#4 20161123 add by beckxie---E
+       indc199   LIKE indc_t.indc199,   #調撥性質
+       indc009   LIKE indc_t.indc009,   #單一單位庫存單位變更
+       indc200   LIKE indc_t.indc200,   #撥出倉庫
+       indc201   LIKE indc_t.indc201,   #撥入倉庫
+       indc010   LIKE indc_t.indc010,   #調整單號
+       indc202   LIKE indc_t.indc202,   #操作類型
+       indc025   LIKE indc_t.indc025,   #前端單號
+       indc026   LIKE indc_t.indc026    #前端類型
+   END RECORD
+   #161104-00002#4 20161107 add by beckxie---E
+   DEFINE l_sql       STRING
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_flag      LIKE type_t.chr1
+   #160225-00040#7 160302 By pomelo add(S)
+   DEFINE l_progress  RECORD
+          total       LIKE type_t.num20,      #總筆數
+          average     LIKE type_t.num26_10,   #平均筆數(總筆數/10)
+          cnt         LIKE type_t.num20,      #筆數
+          i           LIKE type_t.num20       #次數
+                      END RECORD
+   DEFINE l_msg       STRING             
+   #160225-00040#7 160302 By pomelo add(E)
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   INITIALIZE l_progress.* TO NULL    #160225-00040#7 160302 By pomelo add
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      LET l_sql = "SELECT COUNT(*) ",
+                  "  FROM indc_t ",
+                  " WHERE indcent = '",g_enterprise,"' AND indcstus = 'P' ",
+                  "   AND indcsite = indc005 ",
+                  "   AND indc000 = '2' ",
+                  "   AND indcdocno NOT IN (SELECT inde001 FROM inde_t WHERE indeent = '",g_enterprise,"' AND inde001 IS NOT NULL) ",
+                  "   AND ",lc_param.wc CLIPPED,
+                  "   AND indcsite IN ( ",
+                  "                    SELECT ooed004 ",
+                  "                      FROM ooed_t ",
+                  "                     WHERE ooedent = '",g_enterprise,"' AND ooed001 = '8' ",
+                  "                       AND ooed006 <= '",g_today,"' AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+                  "                       AND ooed005 = '",g_site,"' ",
+                  "                    ) "
+      PREPARE ainp520_sel_count_indc_pre FROM l_sql
+      EXECUTE ainp520_sel_count_indc_pre INTO li_count
+      #CALL cl_progress_bar_no_window(li_count)   #160225-00040#7 160302 By pomelo mark
+      #160225-00040#7 160302 By pomelo add(S)
+      CALL cl_progress_bar_no_window(11)
+      LET l_progress.total = li_count
+      #160225-00040#7 160302 By pomelo add(E)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE ainp520_process_cs CURSOR FROM ls_sql
+#  FOREACH ainp520_process_cs INTO
+   #add-point:process段process name="process.process"
+   LET l_sql = "SELECT COUNT(*) ",
+               "  FROM indc_t ",
+               " WHERE indcent = '",g_enterprise,"' AND indcstus = 'P' ",
+               "   AND indcsite = indc005 ",
+               "   AND indc000 = '2' ",
+               "   AND indcdocno NOT IN (SELECT inde001 FROM inde_t WHERE indeent = '",g_enterprise,"' AND inde001 IS NOT NULL) ",
+               "   AND ",lc_param.wc CLIPPED,
+               "   AND indcsite IN ( ",
+               "                    SELECT ooed004 ",
+               "                      FROM ooed_t ",
+               "                     WHERE ooedent = '",g_enterprise,"' AND ooed001 = '8' ",
+               "                       AND ooed006 <= '",g_today,"' AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+               "                       AND ooed005 = '",g_site,"' ",
+               "                    ) "
+   PREPARE ainp520_sel_count_indc_pre2 FROM l_sql
+   EXECUTE ainp520_sel_count_indc_pre2 INTO l_cnt
+   IF l_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-00491'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   END IF
+   CALL s_transaction_begin()
+   CALL cl_showmsg_init()
+   LET l_flag = 'Y'
+   LET l_success = TRUE
+   #160225-00040#7 160302 By pomelo add(S)
+   LET l_progress.average = l_progress.total / 10    #平均筆數(總筆數/10)
+   LET l_progress.cnt = 0                            #筆數
+   LET l_progress.i   = 0                            #次數
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   #160225-00040#7 160302 By pomelo add(E)
+   #LET l_sql = "SELECT * ",   #161104-00002#4 20161108 mark by beckxie
+   #161104-00002#4 20161108 add by beckxie---S
+   LET l_sql = "SELECT indcent,indcsite,indcunit,indcdocno,indcdocdt, ",
+               "       indc000,indc001,indc002,indc003,indc004, ",
+               "       indc005,indc006,indc007,indc008,indc021, ",
+               "       indc022,indc023,indc024,indcstus,indcownid, ",
+               "       indcowndp,indccrtid,indccrtdp,indccrtdt,indcmodid, ",
+               "       indcmoddt,indccnfid,indccnfdt,indcpstid,indcpstdt, ",
+               "       indc101,indc102,indc103,indc104,indc105, ",
+               "       indc106,indc107,indc108,indc109,indc151, ",
+               #161123-00042#4 20161123 add by beckxie--S
+               "       indcud001,indcud002,indcud003,indcud004,indcud005, ",
+               "       indcud006,indcud007,indcud008,indcud009,indcud010, ",
+               "       indcud011,indcud012,indcud013,indcud014,indcud015, ",
+               "       indcud016,indcud017,indcud018,indcud019,indcud020, ",
+               "       indcud021,indcud022,indcud023,indcud024,indcud025, ",
+               "       indcud026,indcud027,indcud028,indcud029,indcud030, ",
+               #161123-00042#4 20161123 add by beckxie---E
+               "       indc199,indc009,indc200,indc201,indc010, ",
+               "       indc202,indc025,indc026 ",   
+   #161104-00002#4 20161108 add by beckxie---E
+               "  FROM indc_t ",
+               " WHERE indcent = '",g_enterprise,"' AND indcstus = 'P' ",
+               "   AND indcsite = indc005 ",
+               "   AND indc000 = '2' ",
+               "   AND indcdocno NOT IN (SELECT inde001 FROM inde_t WHERE indeent = '",g_enterprise,"' AND inde001 IS NOT NULL) ",
+               "   AND ",lc_param.wc CLIPPED,
+               "   AND indcsite IN ( ",
+               "                    SELECT ooed004 ",
+               "                      FROM ooed_t ",
+               "                     WHERE ooedent = '",g_enterprise,"' AND ooed001 = '8' ",
+               "                       AND ooed006 <= '",g_today,"' AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+               "                       AND ooed005 = '",g_site,"' ",
+               "                    ) ",
+               " ORDER BY indcdocno "
+   PREPARE ainp520_sel_indc_pre FROM l_sql
+   DECLARE ainp520_sel_indc_cs CURSOR FOR ainp520_sel_indc_pre
+   #FOREACH ainp520_sel_indc_cs INTO l_indc.*   #161104-00002#4 20161108 mark by beckxie
+   #161104-00002#4 20161108 add by beckxie---S
+   FOREACH ainp520_sel_indc_cs INTO  l_indc.indcent,l_indc.indcsite,l_indc.indcunit,l_indc.indcdocno,l_indc.indcdocdt,
+                                     l_indc.indc000,l_indc.indc001,l_indc.indc002,l_indc.indc003,l_indc.indc004,
+                                     l_indc.indc005,l_indc.indc006,l_indc.indc007,l_indc.indc008,l_indc.indc021,
+                                     l_indc.indc022,l_indc.indc023,l_indc.indc024,l_indc.indcstus,l_indc.indcownid,
+                                     l_indc.indcowndp,l_indc.indccrtid,l_indc.indccrtdp,l_indc.indccrtdt,l_indc.indcmodid,
+                                     l_indc.indcmoddt,l_indc.indccnfid,l_indc.indccnfdt,l_indc.indcpstid,l_indc.indcpstdt,
+                                     l_indc.indc101,l_indc.indc102,l_indc.indc103,l_indc.indc104,l_indc.indc105,
+                                     l_indc.indc106,l_indc.indc107,l_indc.indc108,l_indc.indc109,l_indc.indc151,
+                                     #161123-00042#4 20161123 add by beckxie---S
+                                     l_indc.indcud001,l_indc.indcud002,l_indc.indcud003,l_indc.indcud004,l_indc.indcud005,
+                                     l_indc.indcud006,l_indc.indcud007,l_indc.indcud008,l_indc.indcud009,l_indc.indcud010,
+                                     l_indc.indcud011,l_indc.indcud012,l_indc.indcud013,l_indc.indcud014,l_indc.indcud015,
+                                     l_indc.indcud016,l_indc.indcud017,l_indc.indcud018,l_indc.indcud019,l_indc.indcud020,
+                                     l_indc.indcud021,l_indc.indcud022,l_indc.indcud023,l_indc.indcud024,l_indc.indcud025,
+                                     l_indc.indcud026,l_indc.indcud027,l_indc.indcud028,l_indc.indcud029,l_indc.indcud030,
+                                     #161123-00042#4 20161123 add by beckxie---E
+                                     l_indc.indc199,l_indc.indc009,l_indc.indc200,l_indc.indc201,l_indc.indc010,
+                                     l_indc.indc202,l_indc.indc025,l_indc.indc026
+   #161104-00002#4 20161108 add by beckxie---E
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Sel indc_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         CALL s_transaction_end("N","0")
+         RETURN
+      END IF
+      
+      #160225-00040#7 160302 By pomelo add(S)
+      LET l_progress.cnt = l_progress.cnt + 1
+      IF (l_progress.cnt >= l_progress.average * l_progress.i) AND l_progress.i <= 9 THEN
+         LET l_progress.i = l_progress.i + 1
+         CALL cl_progress_no_window_ing(l_msg)
+      END IF
+      #160225-00040#7 160302 By pomelo add(E)
+      
+      #產生差異調整單
+#      CALL s_aint520_inde_pro(l_indc.indcdocno,g_doctype) RETURNING l_success            #150710-00014#1 20150717 mark by beckxie
+       CALL s_aint520_inde_pro(l_indc.indcdocno,lc_param.indedocno) RETURNING l_success   #150710-00014#1 20150717 add by beckxie
+      IF NOT l_success THEN
+         LET l_flag = 'N'
+      END IF
+   END FOREACH
+      
+   IF l_flag = 'Y' THEN
+      #160225-00040#7 160302 By pomelo add(S)
+      LET l_msg = cl_getmsg('std-00012',g_lang)
+      CALL cl_progress_no_window_ing(l_msg)
+      #160225-00040#7 160302 By pomelo add(E)
+      
+      CALL s_transaction_end("Y","0")
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'adz-00217'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   ELSE
+      CALL cl_showmsg()
+      CALL s_transaction_end("N","0")
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'adz-00218'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL ainp520_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp520.get_buffer" >}
+PRIVATE FUNCTION ainp520_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.indedocno = p_dialog.getFieldBuffer('indedocno')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp520.msgcentre_notify" >}
+PRIVATE FUNCTION ainp520_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp520.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+#end add-point
+ 
+{</section>}
+ 

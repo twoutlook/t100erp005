@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrm302" module="acr" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="02003" crtdt="2014-08-07 15:21:35" modid="06137" moddt="2015-03-09 10:03:28" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="潛在客戶競爭供應商資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="crafunit,crafunit_desc(chr80),craf002,craf001,craf001_desc(chr80),craf003,craf003_desc(chr80),craf004,craf005,craf005_desc(chr80),crafstus,craf006,craf007,craf008,crafownid,crafownid_desc(chr80),crafowndp,crafowndp_desc(chr80),crafcrtid,crafcrtid_desc(chr80),crafcrtdp,crafcrtdp_desc(chr80),crafcrtdt,crafmodid,crafmodid_desc(chr80),crafmoddt,crafcnfid,crafcnfid_desc(chr80),crafcnfdt"/>
+      <var id="bs_field" value="crafunit,crafunit_desc(chr80),craf001,craf001_desc(chr80),craf002,craf003,craf003_desc(chr80),craf004,craf005,craf005_desc(chr80),craf006,craf007,craf008" pk="craf001,craf003" order=""/>
+      <bs_reference field="crafunit_desc" ref_field="crafunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="craf001_desc" ref_field="craf001" ref_sql="SELECT craal004 FROM craal_t WHERE craalent=$varg_enterprise$var AND craal001=? AND craal002=$varg_dlang$var"/>
+      <bs_reference field="craf003_desc" ref_field="craf003" ref_sql="SELECT crabl004 FROM crabl_t WHERE crablent=$varg_enterprise$var AND crabl001=? AND crabl002=$varg_dlang$var"/>
+      <bs_reference field="craf005_desc" ref_field="craf005" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acrm302" method="dialog">
+    <section id="input">
+      <input id="head" field="crafunit,craf001,craf003,craf004,craf005,crafstus,craf006,craf007,craf008"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="crafunit,craf002,craf001,craf003,craf004,craf005,crafstus,craf006,craf007,craf008,crafownid,crafowndp,crafcrtid,crafcrtdp,crafcrtdt,crafmodid,crafmoddt,crafcnfid,crafcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="craf001,craf003"/>
+      <set id="head" type="no_entry" field="craf001,craf003"/>
+    </init>
+    <init id="head">
+      <column id="crafunit">
+        <after>
+          <reference field="crafunit_desc" ref_field="craf_t.crafunit" map_field="crafunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="crafunit_desc"/>
+      <column id="craf002"/>
+      <column id="craf001">
+        <after>
+          <reference field="craf001_desc" ref_field="craf_t.craf001" map_field="craf001" ref_sql="SELECT craal004 FROM craal_t WHERE craalent=$varg_enterprise$var AND craal001=? AND craal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_craa001" state="i"/>
+        <controlp form="q_craa001" state="c"/>
+      </column>
+      <column id="craf001_desc"/>
+      <column id="craf003">
+        <after>
+          <reference field="craf003_desc" ref_field="craf_t.craf003" map_field="craf003" ref_sql="SELECT crabl004 FROM crabl_t WHERE crablent=$varg_enterprise$var AND crabl001=? AND crabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_crab001" state="i"/>
+        <controlp form="q_crab001" state="c"/>
+      </column>
+      <column id="craf003_desc"/>
+      <column id="craf004"/>
+      <column id="craf005">
+        <after>
+          <reference field="craf005_desc" ref_field="craf_t.craf005" map_field="craf005" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="craf005_desc"/>
+      <column id="crafstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="craf006"/>
+      <column id="craf007"/>
+      <column id="craf008"/>
+      <column id="crafownid">
+        <after>
+          <reference field="crafownid_desc" ref_field="craf_t.crafownid" map_field="crafownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crafownid_desc"/>
+      <column id="crafowndp">
+        <after>
+          <reference field="crafowndp_desc" ref_field="craf_t.crafowndp" map_field="crafowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crafowndp_desc"/>
+      <column id="crafcrtid">
+        <after>
+          <reference field="crafcrtid_desc" ref_field="craf_t.crafcrtid" map_field="crafcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crafcrtid_desc"/>
+      <column id="crafcrtdp">
+        <after>
+          <reference field="crafcrtdp_desc" ref_field="craf_t.crafcrtdp" map_field="crafcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crafcrtdp_desc"/>
+      <column id="crafcrtdt"/>
+      <column id="crafmodid">
+        <after>
+          <reference field="crafmodid_desc" ref_field="craf_t.crafmodid" map_field="crafmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crafmodid_desc"/>
+      <column id="crafmoddt"/>
+      <column id="crafcnfid">
+        <after>
+          <reference field="crafcnfid_desc" ref_field="craf_t.crafcnfid" map_field="crafcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crafcnfid_desc"/>
+      <column id="crafcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="craf_t" pk="craf001,craf003">
+      <sql id="forupd_sql" type="sql" query="SELECT crafunit,&apos;&apos;,craf002,craf001,&apos;&apos;,craf003,&apos;&apos;,craf004,craf005,&apos;&apos;,crafstus,craf006,craf007,craf008,crafownid,&apos;&apos;,crafowndp,&apos;&apos;,crafcrtid,&apos;&apos;,crafcrtdp,&apos;&apos;,crafcrtdt,crafmodid,&apos;&apos;,crafmoddt,crafcnfid,&apos;&apos;,crafcnfdt FROM craf_t WHERE crafent= ? AND craf001=? AND craf003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT craf001,craf003 FROM craf_t" order="craf001,craf003"/>
+    </head>
+  </dataset>
+</assembly>
+

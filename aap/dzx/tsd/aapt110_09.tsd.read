@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aapt110_09" std_prog="aapt110_09" erpver="1.0" ver="1" module="AAP" type="S" booking="N" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="apbb_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[單據審核(確認)時，若發票含稅合計金額<>來源入庫金額時, 增加差異處理。
+   a.增加差異處理子作業:
+      選項:      。發票明細輸入 
+                 。差異分攤至單價(依金額比例)
+                 。差異分攤至單價(依數量比例)
+                 。差異金額轉其他加減項
+   b.繼續輸入: :則游標移到發票明細頁箋
+   c.依金額比例分攤：則差異數分攤依金額比例至單身
+      單頭為含稅者,調整含稅金額，並重新計算稅額、未稅、單價［由含稅額推算單價］。
+ 　　　含稅金額 ＝含稅額＋（差異數＊每筆佔比比率），小數取位
+ 　　　稅額、未稅金額 ＝call s_tax()重計
+ 　　　單價  ＝含稅／數量（小數取位）
+      單頭為不含稅者,調整未稅金額，並重新計算稅額、含稅、單價［由未稅額推算單價］。
+ 　　　未稅金額 ＝未稅額＋（差異數＊每筆佔比比率），小數取位
+ 　　　稅額、含稅金額 ＝call s_tax()重計
+ 　　　單價  ＝未稅／數量（小數取位）
+      最後再合計單身含稅金額，與發票金額比較，尾差則攤入最大筆的金額。
+ 　　　找出最大金額一筆，
+ 　　　ＩＦ　含稅　ＴＨＥＮ　
+  含稅金額　 ＝　含稅額＋尾差
+  稅額、未稅 ＝　call s_tax()重計
+　 　　　　　　單價 ＝　含稅／數量（小數取位）
+ 　　　ＥＬＳＥ
+  未稅金額　 ＝　未稅額＋尾差
+  稅額、含稅 ＝　call s_tax()重計
+　 　　　　　　單價 ＝　未稅／數量（小數取位）
+ 　　　ＥＮＤ IF
+   d.依數量比例分攤：則差異數分攤依數量比例至單身
+       金額修改方式同c說，.  
+ 尾差則攤入數量最大的一筆。
+   e.轉其他加減項： 發票>來源明細, 在來源明細產生一筆19.其他加項+,反之產生一筆 29.其他減項-
+  含稅金額　 ＝　發票含稅金額與入庫含稅金額差異
+  稅額 ＝　發票稅額與入庫稅額金額差異
+  未稅金額 ＝　發票未稅與入庫未稅金額差異
+  數量        ＝　１
+　 　　　　　　單價 ＝　(判別單頭為含稅或未稅)／數量（小數取位）]]>
+  </all>
+  <field cite_std="N" name="l_type" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="RadioGroup" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apbb_t.apbbdocno" ver="1" src="s" column="apbbdocno" table="apbb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_isamdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_diff" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_treat" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="RadioGroup" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="radiogroup_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="apbb_t.apbbdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="l_diff" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="l_treat" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="l_type" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="radiogroup_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="exporttoexcel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="發票金額差異處理" lstr=""/>
+    <sfield name="lbl_type_a" text="發票明細輸入" lstr=""/>
+    <sfield name="lbl_type_b" text="差異分攤至單價(依金額比例)" lstr=""/>
+    <sfield name="lbl_type_c" text="差異分攤至單價(依數量比例)" lstr=""/>
+    <sfield name="lbl_type_d" text="差異金額轉其他加減項" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="exporttoexcel" text="" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisr520_g01" module="ais" jobmode="N" type="g01" industry="std" crtid="05016" crtdt="2016-01-19 09:48:32" modid="05384" moddt="2016-10-20 15:12:56" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where conditon),tm.a1(chr100|invoice number),tm.a2(chr1|detail_show),tm.a3(chr1|補印否)">
+    <var seq="1" value="l_taxtype(chr30|&apos;&apos;),isat001,isatcomp,isatent,isat004,isat009,isat010,isat011,isat012,isat007,isat008,isat006,isat115,isat022,isat113,isat114,l_isac004(chr30|&apos;&apos;),l_isah006(isah006|&apos;&apos;),l_isah004(isah004|&apos;&apos;),l_isah101(isah010|&apos;&apos;),l_isah115(isah115|&apos;&apos;),l_ooefl006(ooefl006|&apos;&apos;),l_isao010(isao010|&apos;&apos;),l_yearmon(chr100|&apos;&apos;),l_monyear2(chr100|&apos;&apos;),l_sum(num20_6|&apos;&apos;),l_lqrcode(chr1000|&apos;&apos;),l_rqrcode(chr1000|&apos;&apos;),l_barcode(chr100|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_taxtype(chr30|&apos;&apos;),isat001,isatcomp,isatent,isat004,isat009,isat010,isat011,isat012,isat007,isat008,isat006,isat115,isat022,isat113,isat114,l_isac004(chr30|&apos;&apos;),l_isah006(isah006|&apos;&apos;),l_isah004(isah004|&apos;&apos;),l_isah101(isah010|&apos;&apos;),l_isah115(isah115|&apos;&apos;),l_ooefl006(ooefl006|&apos;&apos;),l_isao010(isao010|&apos;&apos;),l_yearmon(chr100|&apos;&apos;),l_monyear2(chr100|&apos;&apos;),l_sum(num20_6|&apos;&apos;),l_lqrcode(chr1000|&apos;&apos;),l_rqrcode(chr1000|&apos;&apos;),l_barcode(chr100|&apos;&apos;)"/>
+    <sql id="g_from" query="isat_t"/>
+    <sql id="g_where" query="" maintable="isat_t"/>
+    <sql id="g_order" query="isat004"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="isat004"/>
+    <section id="b_group" reptype="d01">
+      <rep type="isat004" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="isatent,isat004"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="isatent,isat004"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="isatent,isat004"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="isat004" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="isatent,isat004"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

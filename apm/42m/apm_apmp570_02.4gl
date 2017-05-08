@@ -1,0 +1,3219 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmp570_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0016(2016-06-28 16:33:34), PR版次:0016(2017-01-11 15:55:51)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000098
+#+ Filename...: apmp570_02
+#+ Description: 引導式入庫處理作業-入庫調整
+#+ Creator....: 01588(2014-07-04 15:49:27)
+#+ Modifier...: 02294 -SD/PR- 01996
+ 
+{</section>}
+ 
+{<section id="apmp570_02.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#160302-00027#1  2016/03/04  By dorislai 抓取IQC那一段的SQL請增加qcbc012<>'4'條件
+#160617-00005#6   2016/06/27  By lixiang    輸入收貨、入庫明細時， 料件批號須有批號且自動編碼而批號為空就自動編碼
+#160727-00019#12  2016/08/03 By 08734  临时表长度超过15码的减少到15码以下 apmp570_tmp_master ——> apmp570_tmp01,apmp570_02_temp_d1 ——> apmp570_tmp02,apmp570_02_temp_d2 ——> apmp570_tmp03,apmp570_02_temp_d3 ——> apmp570_tmp04,apmp570_02_temp_d5 ——> apmp570_tmp05
+#160729-00032#1   2016/08/05 By 02097  修正取得QC合格量问题
+#160806-00004#1   2016/08/10 By dorislai 修正apmp570，在產生apmt570時，多庫儲明細沒有料號、產品特徵等那些欄位
+#160816-00001#7  16/08/17 By 08742     抓取理由碼改CALL sub
+#160929-00038#1   2016/11/23  By lixiang   收货入库的计价数量栏位处理，先预设带出剩余的计价数量，不用单位换算重新计算
+#161124-00048#8   2016/12/19  By zhujing .*整批调整
+#161207-00033#26  2016/12/22  By lixh     一次性交易對象顯示說明，所有的客戶/供應商欄位都應該處理
+#161006-00018#23  2016/12/26  By lixh     增加参数D-MFG-0085(來源單據指定庫儲後，是否允許修改)
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmp570_02.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+TYPE type_g_pmds_d        RECORD
+   keyno                  LIKE type_t.num5,
+   pmds006                LIKE pmds_t.pmds006,
+   pmds007                LIKE pmds_t.pmds007,
+   pmds007_desc           LIKE pmaal_t.pmaal004,
+   pmds031                LIKE pmds_t.pmds031,
+   pmds031_desc           LIKE ooibl_t.ooibl004,
+   pmds032                LIKE pmds_t.pmds032,
+   pmds032_desc           LIKE oocql_t.oocql004,
+   pmds033                LIKE pmds_t.pmds033,
+   pmds033_desc           LIKE oodbl_t.oodbl004,
+   pmds034                LIKE pmds_t.pmds034,
+   pmds035                LIKE pmds_t.pmds035,
+   pmds037                LIKE pmds_t.pmds037,
+   pmds037_desc           LIKE ooail_t.ooail003,
+   pmds038                LIKE pmds_t.pmds038,
+   pmds039                LIKE pmds_t.pmds039,
+   pmds039_desc           LIKE pmaml_t.pmaml003
+                          END RECORD
+TYPE type_g_pmds2_d       RECORD
+   pmdtseq                LIKE pmdt_t.pmdtseq,
+   pmdt028                LIKE pmdt_t.pmdt028,
+   pmdt001                LIKE pmdt_t.pmdt001,
+   pmdt002                LIKE pmdt_t.pmdt002,
+   pmdt003                LIKE pmdt_t.pmdt003,
+   pmdt004                LIKE pmdt_t.pmdt004,
+   pmdt081                LIKE pmdt_t.pmdt081,
+   pmdt082                LIKE pmdt_t.pmdt082,
+   pmdt083                LIKE pmdt_t.pmdt083,
+   pmdt083_desc           LIKE qcaol_t.qcaol004,
+   pmdt005                LIKE pmdt_t.pmdt005,
+   pmdt006                LIKE pmdt_t.pmdt006,
+   pmdt006_desc           LIKE imaal_t.imaal003,
+   pmdt006_desc_desc      LIKE imaal_t.imaal004,
+   pmdt007                LIKE pmdt_t.pmdt007,
+   pmdt007_desc           LIKE type_t.chr500,
+   pmdt009                LIKE pmdt_t.pmdt009,
+   pmdt009_desc           LIKE oocql_t.oocql004,
+   pmdt010                LIKE pmdt_t.pmdt010,
+   pmdt019                LIKE pmdt_t.pmdt019,
+   pmdt019_desc           LIKE oocal_t.oocal003,
+   pmdt020                LIKE pmdt_t.pmdt020,
+   pmdt021                LIKE pmdt_t.pmdt021,
+   pmdt021_desc           LIKE oocal_t.oocal003,
+   pmdt022                LIKE pmdt_t.pmdt022,
+   pmdt023                LIKE pmdt_t.pmdt023,
+   pmdt023_desc           LIKE oocal_t.oocal003,
+   pmdt024                LIKE pmdt_t.pmdt024,
+   pmdt062                LIKE pmdt_t.pmdt062,
+   pmdt016                LIKE pmdt_t.pmdt016,
+   pmdt016_desc           LIKE inayl_t.inayl003,
+   pmdt017                LIKE pmdt_t.pmdt017,
+   pmdt017_desc           LIKE inab_t.inab003,
+   pmdt018                LIKE pmdt_t.pmdt018,
+   pmdt063                LIKE pmdt_t.pmdt063,
+   pmdt051                LIKE pmdt_t.pmdt051,
+   pmdt051_desc           LIKE oocql_t.oocql004,
+   pmdt059                LIKE pmdt_t.pmdt059
+                          END RECORD
+TYPE type_g_pmds3_d       RECORD
+   pmduseq                LIKE pmdu_t.pmduseq,
+   pmduseq1               LIKE pmdu_t.pmduseq1,
+   pmdu001                LIKE pmdu_t.pmdu001,
+   pmdu001_desc           LIKE imaal_t.imaal003,
+   pmdu001_desc_desc      LIKE imaal_t.imaal004,
+   pmdu002                LIKE pmdu_t.pmdu002,
+   pmdu002_desc           LIKE type_t.chr500,
+   pmdu003                LIKE pmdu_t.pmdu003,
+   pmdu003_desc           LIKE oocql_t.oocql004,
+   pmdu004                LIKE pmdu_t.pmdu004,
+   pmdu006                LIKE pmdu_t.pmdu006,
+   pmdu006_desc           LIKE inaa_t.inaa002,
+   pmdu007                LIKE pmdu_t.pmdu007,
+   pmdu007_desc           LIKE inab_t.inab003,
+   pmdu008                LIKE pmdu_t.pmdu008,
+   pmdu005                LIKE pmdu_t.pmdu005,
+   pmdu009                LIKE pmdu_t.pmdu009,
+   pmdu009_desc           LIKE oocal_t.oocal003,
+   pmdu010                LIKE pmdu_t.pmdu010,
+   pmdu011                LIKE pmdu_t.pmdu011,
+   pmdu011_desc           LIKE oocal_t.oocal003,
+   pmdu012                LIKE pmdu_t.pmdu012,
+   pmdu013                LIKE pmdu_t.pmdu013,
+   pmdu014                LIKE pmdu_t.pmdu014,
+   pmdu015                LIKE pmdu_t.pmdu015
+                          END RECORD
+TYPE type_g_pmds5_d       RECORD
+   pmdvseq                LIKE pmdv_t.pmdvseq,
+   pmdv005                LIKE pmdv_t.pmdv005,
+   pmdv001                LIKE pmdv_t.pmdv001,
+   pmdv001_desc           LIKE imaal_t.imaal003,
+   pmdv001_desc_desc      LIKE imaal_t.imaal004,
+   pmdv002                LIKE pmdv_t.pmdv002,
+   pmdv002_desc           LIKE type_t.chr500,
+   pmdv003                LIKE pmdv_t.pmdv003,
+   pmdv003_desc           LIKE oocql_t.oocql004,
+   pmdv004                LIKE pmdv_t.pmdv004,
+   pmdv014                LIKE pmdv_t.pmdv014,
+   pmdv015                LIKE pmdv_t.pmdv015,
+   pmdv016                LIKE pmdv_t.pmdv016,
+   pmdv018                LIKE pmdv_t.pmdv018,
+   pmdv018_desc           LIKE oocal_t.oocal003,
+   pmdv019                LIKE pmdv_t.pmdv019
+                          END RECORD
+
+DEFINE g_pmds_d           DYNAMIC ARRAY OF type_g_pmds_d
+DEFINE g_pmds_d_t         type_g_pmds_d
+DEFINE g_pmds2_d          DYNAMIC ARRAY OF type_g_pmds2_d
+DEFINE g_pmds2_d_t        type_g_pmds2_d
+DEFINE g_pmds2_d_o        type_g_pmds2_d
+DEFINE g_pmds3_d          DYNAMIC ARRAY OF type_g_pmds3_d
+DEFINE g_pmds3_d_t        type_g_pmds3_d
+DEFINE g_pmds5_d          DYNAMIC ARRAY OF type_g_pmds5_d
+DEFINE g_pmds5_d_t        type_g_pmds5_d
+
+DEFINE g_master_idx       LIKE type_t.num5
+DEFINE l_ac               LIKE type_t.num5
+DEFINE g_rec_b            LIKE type_t.num5
+DEFINE g_rec_b2           LIKE type_t.num5
+DEFINE g_rec_b3           LIKE type_t.num5
+DEFINE g_rec_b4           LIKE type_t.num5
+DEFINE g_rec_b5           LIKE type_t.num5
+DEFINE g_flag             LIKE type_t.num5
+DEFINE g_flag1            LIKE type_t.num5
+DEFINE g_master           RECORD 
+         pmdsdocno        LIKE pmds_t.pmdsdocno,
+         pmds002          LIKE pmds_t.pmds002,
+         pmds011          LIKE pmds_t.pmds011
+                          END RECORD
+DEFINE g_where_sql        STRING
+DEFINE g_acc              LIKE gzcb_t.gzcb004
+DEFINE g_cnt              LIKE type_t.num5
+DEFINE g_imaa004          LIKE imaa_t.imaa004
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmp570_02.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+ 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmp570_02.other_dialog" >}
+
+DIALOG apmp570_02_display()
+   DISPLAY ARRAY g_pmds_d TO s_detail1_apmp570_02.* ATTRIBUTE(COUNT=g_rec_b)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(l_ac)
+
+      BEFORE ROW
+        LET l_ac = DIALOG.getCurrentRow("s_detail1_apmp570_02")
+        LET g_master_idx = l_ac
+        CALL apmp570_02_fetch()
+   END DISPLAY
+END DIALOG
+
+DIALOG apmp570_02_input2()
+
+   INPUT ARRAY g_pmds2_d FROM s_detail2_apmp570_02.*
+       ATTRIBUTE(COUNT=g_rec_b2,MAXCOUNT=g_max_rec,WITHOUT DEFAULTS,
+               INSERT ROW=FALSE,DELETE ROW=FALSE,APPEND ROW=FALSE)
+      BEFORE INPUT
+         SELECT pmdsdocno,pmds002,pmds011
+           INTO g_master.pmdsdocno,g_master.pmds002,g_master.pmds011
+           FROM apmp570_tmp01  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_tmp_master ——> apmp570_tmp01
+           
+         #理由碼
+         LET g_acc = ''
+         CASE g_master.pmds011
+            WHEN '1'
+               #SELECT gzcb004 INTO g_acc FROM gzcb_t WHERE gzcb001 = '24' AND gzcb002 = 'apmt570' #160816-00001#7 mark
+               LET g_acc = s_fin_get_scc_value('24','apmt570','2')  #160816-00001#7  Add 
+            WHEN '2'
+               #SELECT gzcb004 INTO g_acc FROM gzcb_t WHERE gzcb001 = '24'  AND gzcb002 = 'apmt571'  160816-00001#7 mark
+               LET g_acc = s_fin_get_scc_value('24','apmt571','2')  #160816-00001#7  Add 
+            WHEN '10'
+               #SELECT gzcb004 INTO g_acc FROM gzcb_t   WHERE gzcb001 = '24'   AND gzcb002 = 'apmt573'  160816-00001#7 mark
+               LET g_acc = s_fin_get_scc_value('24','apmt573','2')  #160816-00001#7  Add 
+         END CASE
+       
+      BEFORE ROW
+         LET l_ac = ARR_CURR()
+         SELECT pmdtseq,pmdt028,pmdt001,pmdt002,pmdt003,pmdt004,pmdt081,pmdt082,pmdt083,pmdt005,
+                pmdt006,pmdt007,pmdt009,pmdt010,pmdt019,pmdt020,pmdt021,pmdt022,pmdt023,pmdt024,
+                pmdt062,pmdt016,pmdt017,pmdt018,pmdt051,pmdt059
+           INTO g_pmds2_d[l_ac].pmdtseq,g_pmds2_d[l_ac].pmdt028,g_pmds2_d[l_ac].pmdt001,
+                g_pmds2_d[l_ac].pmdt002,g_pmds2_d[l_ac].pmdt003,g_pmds2_d[l_ac].pmdt004,
+                g_pmds2_d[l_ac].pmdt081,g_pmds2_d[l_ac].pmdt082,g_pmds2_d[l_ac].pmdt083,
+                g_pmds2_d[l_ac].pmdt005,g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt007,
+                g_pmds2_d[l_ac].pmdt009,g_pmds2_d[l_ac].pmdt010,g_pmds2_d[l_ac].pmdt019,
+                g_pmds2_d[l_ac].pmdt020,g_pmds2_d[l_ac].pmdt021,g_pmds2_d[l_ac].pmdt022,
+                g_pmds2_d[l_ac].pmdt023,g_pmds2_d[l_ac].pmdt024,g_pmds2_d[l_ac].pmdt062,
+                g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017,g_pmds2_d[l_ac].pmdt018,
+                g_pmds2_d[l_ac].pmdt051,g_pmds2_d[l_ac].pmdt059
+           FROM apmp570_tmp03  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+          WHERE keyno = g_pmds_d[g_master_idx].keyno
+            AND pmdtseq = g_pmds2_d[l_ac].pmdtseq
+         CALL apmp570_02_detail_show()
+         LET g_pmds2_d_t.* = g_pmds2_d[l_ac].*
+         LET g_pmds2_d_o.* = g_pmds2_d[l_ac].*
+         CALL cl_set_act_visible("open_apmp570_04",FALSE)
+         IF l_ac > 0 THEN
+            IF g_pmds2_d[l_ac].pmdt062 = 'Y' THEN
+               CALL cl_set_act_visible("open_apmp570_04",TRUE)
+            END IF
+         END IF
+         LET g_imaa004 = ''
+         SELECT imaa004 INTO g_imaa004 FROM imaa_t
+          WHERE imaaent = g_enterprise
+            AND imaa001 = g_pmds2_d[l_ac].pmdt006
+         CALL apmp570_02_set_entry_b()
+         CALL apmp570_02_set_no_required_b()
+         CALL apmp570_02_set_required_b()
+         CALL apmp570_02_set_no_entry_b()
+          
+      AFTER FIELD pmdt081_d2_02
+         IF NOT cl_null(g_pmds2_d[l_ac].pmdt081) THEN
+            IF NOT apmp570_02_pmdt081_chk() THEN
+               LET g_pmds2_d[l_ac].pmdt081 = g_pmds2_d_t.pmdt081
+               NEXT FIELD CURRENT
+            END IF
+               
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt082) THEN
+               IF NOT apmp570_02_pmdt082_chk() THEN
+                  NEXT FIELD pmdt082_d2_02
+               END IF
+                  
+               #兩個欄位的檢查，避免QC判定項次沒修改，導致判斷錯誤，故只在此判斷QC判定單號有無修改
+               IF g_pmds2_d[l_ac].pmdt081 <> g_pmds2_d_t.pmdt081 OR g_pmds2_d_t.pmdt081 IS NULL THEN
+                  #帶出判定結果的資料
+                  CALL apmp570_02_qc_result() RETURNING g_flag
+                  IF NOT g_flag THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+         END IF
+         
+      AFTER FIELD pmdt082_d2_02
+         IF NOT cl_null(g_pmds2_d[l_ac].pmdt082) THEN
+            IF cl_null(g_pmds2_d[l_ac].pmdt081) THEN
+               NEXT FIELD pmdt081_d2_02
+            END IF
+            
+            IF NOT apmp570_02_pmdt082_chk() THEN
+               LET g_pmds2_d[l_ac].pmdt082 = g_pmds2_d_t.pmdt082
+               NEXT FIELD CURRENT
+            END IF
+               
+            #兩個欄位的檢查，避免QC判定單號沒修改，導致判斷錯誤，故只在此判斷QC判定項次有無修改
+            IF g_pmds2_d[l_ac].pmdt082 <> g_pmds2_d_t.pmdt082 OR g_pmds2_d_t.pmdt082 IS NULL THEN
+               #帶出判定結果的資料
+               CALL apmp570_02_qc_result() RETURNING g_flag
+               IF NOT g_flag THEN
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+         END IF
+         
+      AFTER FIELD pmdt020_d2_02
+         IF NOT cl_null(g_pmds2_d[l_ac].pmdt020) THEN
+            IF NOT cl_ap_chk_Range(g_pmds2_d[l_ac].pmdt020,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD CURRENT
+            END IF
+            
+            #數量的取位
+            CALL s_aooi250_take_decimals(g_pmds2_d[l_ac].pmdt019,g_pmds2_d[l_ac].pmdt020)
+                 RETURNING g_flag,g_pmds2_d[l_ac].pmdt020
+            
+            #入庫數量的檢查
+           #CALL s_apmt520_chk_pmdt020_6(' ',0,g_pmds_d[g_master_idx].pmds006,g_pmds2_d[l_ac].pmdt028,0,0,g_pmds2_d[l_ac].pmdt020)  #160729-00032#1 mark
+            CALL s_apmt520_chk_pmdt020_6(' ',0,g_pmds_d[g_master_idx].pmds006,g_pmds2_d[l_ac].pmdt028,'','',g_pmds2_d[l_ac].pmdt020)  #160729-00032#1
+                 RETURNING g_flag
+            IF NOT g_flag THEN
+               LET g_pmds2_d[l_ac].pmdt020 = g_pmds2_d_t.pmdt020
+               NEXT FIELD CURRENT
+            END IF
+            
+            #計算參考數量及計價數量
+            CALL apmp570_02_get_pmdt022_pmdt024() RETURNING g_flag
+            IF NOT g_flag THEN
+               LET g_pmds2_d[l_ac].pmdt020 = g_pmds2_d_t.pmdt020
+               NEXT FIELD CURRENT
+            END IF
+         END IF
+         
+      AFTER FIELD pmdt022_d2_02
+         IF NOT cl_null(g_pmds2_d[l_ac].pmdt022) THEN
+            IF NOT cl_ap_chk_Range(g_pmds2_d[l_ac].pmdt022,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD CURRENT
+            END IF
+            
+            #數量的取位
+            CALL s_aooi250_take_decimals(g_pmds2_d[l_ac].pmdt021,g_pmds2_d[l_ac].pmdt022)
+                 RETURNING g_flag,g_pmds2_d[l_ac].pmdt022
+         END IF
+         
+      AFTER FIELD pmdt024_d2_02
+         IF NOT cl_null(g_pmds2_d[l_ac].pmdt024) THEN
+            IF NOT cl_ap_chk_Range(g_pmds2_d[l_ac].pmdt024,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD CURRENT
+            END IF
+            
+            #數量的取位
+            CALL s_aooi250_take_decimals(g_pmds2_d[l_ac].pmdt023,g_pmds2_d[l_ac].pmdt024)
+                 RETURNING g_flag,g_pmds2_d[l_ac].pmdt024
+         END IF
+         
+      AFTER FIELD pmdt062_d2_02
+         CALL cl_set_act_visible("open_apmp570_04",FALSE)
+         IF g_pmds2_d[l_ac].pmdt062 = 'Y' THEN
+            IF g_pmds2_d_o.pmdt062 = 'N' THEN
+               DELETE FROM apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                WHERE keyno = g_pmds_d[g_master_idx].keyno
+                  AND pmduseq = g_pmds2_d[l_ac].pmdtseq
+            END IF
+            IF NOT apmp570_04(g_pmds_d[g_master_idx].keyno,g_pmds2_d[l_ac].pmdtseq,g_pmds2_d[l_ac].pmdt020,g_pmds2_d[l_ac].pmdt022) THEN
+               LET g_cnt = 0 
+               SELECT COUNT(*) INTO g_cnt FROM apmp570_tmp04   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                WHERE keyno = g_pmds_d[g_master_idx].keyno 
+                  AND pmduseq = g_pmds2_d[l_ac].pmdtseq
+               IF g_cnt = 0 THEN
+                  LET g_pmds2_d[l_ac].pmdt062 = 'N'
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL cl_set_act_visible("open_apmp570_04",TRUE)
+         END IF
+
+         IF g_pmds2_d[l_ac].pmdt062 = 'Y' THEN
+            LET g_pmds2_d[l_ac].pmdt016 = ''
+            LET g_pmds2_d[l_ac].pmdt016_desc = ''
+            LET g_pmds2_d[l_ac].pmdt017 = ''
+            LET g_pmds2_d[l_ac].pmdt017_desc = ''
+            LET g_pmds2_d[l_ac].pmdt018 = ''
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt006) THEN
+               #預設沖銷順序
+               #CALL apmp570_02_def_pmdt011()
+            END IF
+         END IF 
+         LET g_pmds2_d_o.pmdt062 = g_pmds2_d[l_ac].pmdt062
+         CALL apmp570_02_set_entry_b()
+         #161006-00018#23-S
+         CALL apmp570_02_set_no_required_b()
+         CALL apmp570_02_set_required_b()  
+         #161006-00018#23-E         
+         CALL apmp570_02_set_no_entry_b()
+      
+      AFTER FIELD pmdt016_d2_02
+         LET g_pmds2_d[l_ac].pmdt016_desc = ''
+         DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+         IF NOT cl_null(g_pmds2_d[l_ac].pmdt016) AND g_imaa004 <> 'E' THEN
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = g_site
+            LET g_chkparam.arg2 = g_pmds2_d[l_ac].pmdt016
+            
+            IF cl_chk_exist("v_inaa001_1") THEN
+            ELSE
+               #檢查失敗時後續處理
+               LET g_pmds2_d[l_ac].pmdt016 = g_pmds2_d_t.pmdt016
+               CALL s_desc_get_stock_desc(g_site,g_pmds2_d[l_ac].pmdt016) 
+                    RETURNING g_pmds2_d[l_ac].pmdt016_desc
+               DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+               NEXT FIELD CURRENT
+            END IF
+         END IF
+         CALL s_desc_get_stock_desc(g_site,g_pmds2_d[l_ac].pmdt016) 
+              RETURNING g_pmds2_d[l_ac].pmdt016_desc
+         DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+         CALL apmp570_02_set_entry_b()
+         #161006-00018#23-S
+         CALL apmp570_02_set_no_required_b()
+         CALL apmp570_02_set_required_b()  
+         #161006-00018#23-E             
+         CALL apmp570_02_set_no_entry_b()
+         
+      AFTER FIELD pmdt017_d2_02
+         LET g_pmds2_d[l_ac].pmdt017_desc = ''
+         DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+         IF NOT cl_null(g_pmds2_d[l_ac].pmdt017) AND g_imaa004 <> 'E' THEN
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = g_site
+            LET g_chkparam.arg2 = g_pmds2_d[l_ac].pmdt016
+            LET g_chkparam.arg3 = g_pmds2_d[l_ac].pmdt017
+      
+            IF cl_chk_exist("v_inab002_1") THEN
+            ELSE
+               LET g_pmds2_d[l_ac].pmdt017 = g_pmds2_d_t.pmdt017
+               CALL s_desc_get_locator_desc(g_site,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017) 
+                    RETURNING g_pmds2_d[l_ac].pmdt017_desc
+               DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+               NEXT FIELD CURRENT
+            END IF
+         END IF
+         CALL s_desc_get_locator_desc(g_site,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017)
+              RETURNING g_pmds2_d[l_ac].pmdt017_desc
+         DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+         
+      AFTER FIELD pmdt051_d2_02
+         LET g_pmds2_d[l_ac].pmdt051_desc = ''
+         DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+         IF NOT cl_null(g_pmds2_d[l_ac].pmdt051) THEN
+            CALL s_azzi650_chk_exist(g_acc,g_pmds2_d[l_ac].pmdt051) 
+                 RETURNING g_flag
+            IF NOT g_flag THEN
+               LET g_pmds2_d[l_ac].pmdt051 = g_pmds2_d_t.pmdt051
+               
+               CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                    RETURNING g_pmds2_d[l_ac].pmdt051_desc
+               DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+               
+               NEXT FIELD CURRENT
+            END IF
+ 
+            #檢核輸入的理由碼是否在單據別限制範圍內，若不在限制內則不允許使用此理由碼
+            CALL s_control_chk_doc('8',g_master.pmdsdocno,g_pmds2_d[l_ac].pmdt051,'','','','')
+                 RETURNING g_flag,g_flag1
+            IF NOT g_flag THEN
+               LET g_pmds2_d[l_ac].pmdt051 = g_pmds2_d_t.pmdt051
+               
+               CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                    RETURNING g_pmds2_d[l_ac].pmdt051_desc
+               DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+               
+               NEXT FIELD CURRENT
+            ELSE
+               IF NOT g_flag1 THEN
+                  LET g_pmds2_d[l_ac].pmdt051 = g_pmds2_d_t.pmdt051
+                  
+                  CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                       RETURNING g_pmds2_d[l_ac].pmdt051_desc
+                  DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+                  
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+         END IF
+         CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+              RETURNING g_pmds2_d[l_ac].pmdt051_desc
+         DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+
+      ON ROW CHANGE
+         UPDATE apmp570_tmp03 SET pmdtseq = g_pmds2_d[l_ac].pmdtseq,   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+                                       pmdt028 = g_pmds2_d[l_ac].pmdt028,
+                                       pmdt001 = g_pmds2_d[l_ac].pmdt001,
+                                       pmdt002 = g_pmds2_d[l_ac].pmdt002,
+                                       pmdt003 = g_pmds2_d[l_ac].pmdt003,
+                                       pmdt004 = g_pmds2_d[l_ac].pmdt004,
+                                       pmdt081 = g_pmds2_d[l_ac].pmdt081,
+                                       pmdt082 = g_pmds2_d[l_ac].pmdt082,
+                                       pmdt083 = g_pmds2_d[l_ac].pmdt083,
+                                       pmdt005 = g_pmds2_d[l_ac].pmdt005,
+                                       pmdt006 = g_pmds2_d[l_ac].pmdt006,
+                                       pmdt007 = g_pmds2_d[l_ac].pmdt007,
+                                       pmdt009 = g_pmds2_d[l_ac].pmdt009,
+                                       pmdt010 = g_pmds2_d[l_ac].pmdt010,
+                                       pmdt019 = g_pmds2_d[l_ac].pmdt019,
+                                       pmdt020 = g_pmds2_d[l_ac].pmdt020,
+                                       pmdt021 = g_pmds2_d[l_ac].pmdt021,
+                                       pmdt022 = g_pmds2_d[l_ac].pmdt022,
+                                       pmdt023 = g_pmds2_d[l_ac].pmdt023,
+                                       pmdt024 = g_pmds2_d[l_ac].pmdt024,
+                                       pmdt062 = g_pmds2_d[l_ac].pmdt062,
+                                       pmdt016 = g_pmds2_d[l_ac].pmdt016,
+                                       pmdt017 = g_pmds2_d[l_ac].pmdt017,
+                                       pmdt018 = g_pmds2_d[l_ac].pmdt018,
+                                       pmdt051 = g_pmds2_d[l_ac].pmdt051,
+                                       pmdt059 = g_pmds2_d[l_ac].pmdt059
+          WHERE keyno = g_pmds_d[g_master_idx].keyno
+            AND pmdtseq = g_pmds2_d[l_ac].pmdtseq
+         IF g_pmds2_d[l_ac].pmdt062 = 'N' THEN
+            DELETE FROM apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+             WHERE keyno = g_pmds_d[g_master_idx].keyno
+               AND pmduseq = g_pmds2_d[l_ac].pmdtseq
+               
+            INSERT INTO apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+               (keyno,pmduseq,pmduseq1,
+                pmdu001,pmdu002,pmdu003,pmdu004,pmdu005,
+                pmdu006,pmdu007,pmdu008,pmdu009,pmdu010,
+                pmdu011,pmdu012,pmdu013,pmdu014,pmdu015)
+               VALUES
+               (g_pmds_d[g_master_idx].keyno,g_pmds2_d[l_ac].pmdtseq,1,
+                g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt007,g_pmds2_d[l_ac].pmdt009,g_pmds2_d[l_ac].pmdt010,g_pmds2_d[l_ac].pmdt063,
+                g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017,g_pmds2_d[l_ac].pmdt018,g_pmds2_d[l_ac].pmdt019,g_pmds2_d[l_ac].pmdt020,
+                g_pmds2_d[l_ac].pmdt021,g_pmds2_d[l_ac].pmdt022,0,0,0)
+                
+         END IF
+      
+      AFTER INPUT
+        #CALL apmp570_02_refresh_pmdv()
+         CALL apmp570_02_fetch()
+
+      ON ACTION controlp
+         CASE
+            WHEN INFIELD(pmdt081_d2_02)
+                 INITIALIZE g_qryparam.* TO NULL
+                 LET g_qryparam.state = 'i'
+                 LET g_qryparam.reqry = FALSE
+                 LET g_qryparam.default1 = g_pmds2_d[l_ac].pmdt081
+                 LET g_qryparam.where = " qcba001 = '",g_pmds_d[g_master_idx].pmds006,"'",
+                                    " AND qcba002 = ",g_pmds2_d[l_ac].pmdt028
+                 CALL q_qcbadocno()
+                 LET g_pmds2_d[l_ac].pmdt081 = g_qryparam.return1
+                 DISPLAY g_pmds2_d[l_ac].pmdt081 TO pmdt081_d2_02
+                 NEXT FIELD CURRENT
+            WHEN INFIELD(pmdt016_d2_02)
+                 INITIALIZE g_qryparam.* TO NULL
+                 LET g_qryparam.state = 'i'
+                 LET g_qryparam.reqry = FALSE
+                 LET g_qryparam.default1 = g_pmds2_d[l_ac].pmdt016
+                 CALL q_inaa001_2()
+                 LET g_pmds2_d[l_ac].pmdt016 = g_qryparam.return1
+                 DISPLAY g_pmds2_d[l_ac].pmdt016 TO pmdt016_d2_02
+                 
+                 CALL s_desc_get_stock_desc(g_site,g_pmds2_d[l_ac].pmdt016) 
+                      RETURNING g_pmds2_d[l_ac].pmdt016_desc
+                 DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+                 
+                 NEXT FIELD CURRENT
+            WHEN INFIELD(pmdt017_d2_02)
+                 INITIALIZE g_qryparam.* TO NULL
+                 LET g_qryparam.state = 'i'
+                 LET g_qryparam.reqry = FALSE
+                 LET g_qryparam.default1 = g_pmds2_d[l_ac].pmdt017
+                 LET g_qryparam.arg1 = g_pmds2_d[l_ac].pmdt016
+                 CALL q_inab002_3()
+                 LET g_pmds2_d[l_ac].pmdt017 = g_qryparam.return1
+                 DISPLAY g_pmds2_d[l_ac].pmdt017 TO pmdt017_d2_02
+                 
+                 CALL s_desc_get_locator_desc(g_site,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017)
+                      RETURNING g_pmds2_d[l_ac].pmdt017_desc
+                 DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+                 
+                 NEXT FIELD CURRENT
+            WHEN INFIELD(pmdt051_d2_02)
+                 INITIALIZE g_qryparam.* TO NULL
+                 LET g_qryparam.state = 'i'
+                 LET g_qryparam.reqry = FALSE
+                 LET g_qryparam.default1 = g_pmds2_d[l_ac].pmdt051
+                 LET g_qryparam.where = " 1=1 "
+                 
+                 LET g_where_sql = ''
+                 CALL s_control_get_doc_sql("oocq002",g_master.pmdsdocno,'8')
+                      RETURNING g_flag,g_where_sql
+                 IF g_flag THEN
+                    IF cl_null(g_where_sql) THEN
+                       LET g_where_sql = " 1=1 "
+                    END IF
+                    LET g_qryparam.where = g_qryparam.where," AND ",g_where_sql
+                 END IF
+                     
+                 LET g_qryparam.arg1 = g_acc
+                 CALL q_oocq002()
+                 LET g_pmds2_d[l_ac].pmdt051 = g_qryparam.return1
+                 DISPLAY g_pmds2_d[l_ac].pmdt051 TO pmdt051_d2_02
+                 
+                 CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051) 
+                      RETURNING g_pmds2_d[l_ac].pmdt051_desc
+                 DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+                 
+                 NEXT FIELD CURRENT
+         END CASE
+       
+      ON ACTION open_apmp570_04
+         LET g_action_choice="open_apmp570_04"
+         IF cl_auth_chk_act("open_apmp570_04") THEN
+            IF l_ac > 0 THEN
+               #如果有維護多庫儲批
+               IF g_pmds2_d[l_ac].pmdt062 = 'Y' THEN
+                  CALL s_transaction_begin()
+                  IF NOT apmp570_04(g_pmds_d[g_master_idx].keyno,g_pmds2_d[l_ac].pmdtseq,g_pmds2_d[l_ac].pmdt020,g_pmds2_d[l_ac].pmdt022) THEN
+                     CALL s_transaction_end('N','0')
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF
+                  CALL apmp570_02_fetch()
+               END IF
+            END IF
+         END IF
+   END INPUT
+END DIALOG
+
+DIALOG apmp570_02_display3()
+   DISPLAY ARRAY g_pmds3_d TO s_detail3_apmp570_02.* ATTRIBUTE(COUNT=g_rec_b3)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(l_ac)
+
+      BEFORE ROW
+        LET l_ac = DIALOG.getCurrentRow("s_detail3_apmp570_02")
+
+   END DISPLAY
+END DIALOG
+
+DIALOG apmp570_02_display5()
+   DISPLAY ARRAY g_pmds5_d TO s_detail5_apmp570_02.* ATTRIBUTE(COUNT=g_rec_b5)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(l_ac)
+
+      BEFORE ROW
+        LET l_ac = DIALOG.getCurrentRow("s_detail5_apmp570_02")
+
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+DIALOG apmp570_02_display2()
+   DISPLAY ARRAY g_pmds2_d TO s_detail2_apmp570_02.* ATTRIBUTE(COUNT=g_rec_b2)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(l_ac)
+
+      BEFORE ROW
+        LET l_ac = DIALOG.getCurrentRow("s_detail2_apmp570_02")
+
+   END DISPLAY
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="apmp570_02.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION apmp570_02(--)
+   #add-point:input段變數傳入
+
+   #end add-point
+   )
+
+END FUNCTION
+
+PUBLIC FUNCTION apmp570_02_init()
+
+   CALL cl_set_combo_scc('pmdt005_d2_02','2055')
+   CALL cl_set_combo_scc('pmdv005_d5_02','2055')
+   
+   #判斷據點參數若不使用產品特徵時，則產品特徵需隱藏不可以維護(據點參數:S-BAS-0036)
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0036') = 'N' THEN
+      CALL cl_set_comp_visible("pmdt007_d2_02",FALSE)
+   END IF
+   
+   #判斷據點參數若不使用參考單位時，則參考單位、數量需隱藏不可以維護(據點參數:S-BAS-0028)
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0028') = 'N' THEN
+      CALL cl_set_comp_visible("pmdt021_d2_02,pmdt021_d2_02_desc,pmdt022_d2_02",FALSE)
+      CALL cl_set_comp_visible("pmdu011_d3_02,pmdu011_d3_02_desc,pmdu012_d3_02",FALSE)
+   END IF
+
+   #整體參數未使用採購計價單位
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0019') = "N" THEN
+      CALL cl_set_comp_visible("pmdt023_d2_02,pmdt023_d2_02_desc,pmdt024_d2_02",FALSE)
+   END IF
+END FUNCTION
+
+PUBLIC FUNCTION apmp570_02_create_temp_table()
+DEFINE r_success         LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   IF NOT apmp570_02_drop_temp_table() THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CREATE TEMP TABLE apmp570_tmp02(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d1 ——> apmp570_tmp02
+      keyno           SMALLINT,
+      pmdsdocno       VARCHAR(20),
+      pmds006         VARCHAR(20),
+      pmds007         VARCHAR(10),
+      pmds031         VARCHAR(10),
+      pmds032         VARCHAR(10),
+      pmds033         VARCHAR(10),
+      pmds034         DECIMAL(5,2),
+      pmds035         VARCHAR(1),
+      pmds037         VARCHAR(10),
+      pmds038         DECIMAL(20,10),
+      pmds039         VARCHAR(10),
+      result_str      VARCHAR(500),
+      pmds028         VARCHAR(20)
+     ) 
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create apmp570_tmp02'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d1 ——> apmp570_tmp02
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   CREATE TEMP TABLE apmp570_tmp03(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+      keyno           SMALLINT,
+      pmdtseq         INTEGER,
+      pmdt028         INTEGER,
+      pmdt001         VARCHAR(20),
+      pmdt002         INTEGER,
+      pmdt003         INTEGER,
+      pmdt004         INTEGER,
+      pmdt081         VARCHAR(20),
+      pmdt082         INTEGER,
+      pmdt083         VARCHAR(10),
+      pmdt005         VARCHAR(10),
+      pmdt006         VARCHAR(40),
+      pmdt007         VARCHAR(256),
+      pmdt009         VARCHAR(10),
+      pmdt010         VARCHAR(10),
+      pmdt019         VARCHAR(10),
+      pmdt020         DECIMAL(20,6),
+      pmdt021         VARCHAR(10),
+      pmdt022         DECIMAL(20,6),
+      pmdt023         VARCHAR(10),
+      pmdt024         DECIMAL(20,6),
+      pmdt062         VARCHAR(1),
+      pmdt016         VARCHAR(10),
+      pmdt017         VARCHAR(10),
+      pmdt018         VARCHAR(30),
+      pmdt063         VARCHAR(30),
+      pmdt051         VARCHAR(10),
+      pmdt059         VARCHAR(255)
+     )
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create apmp570_tmp03'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   CREATE TEMP TABLE apmp570_tmp04(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+      keyno           SMALLINT,
+      pmduseq         INTEGER,
+      pmduseq1        INTEGER,
+      pmdu001         VARCHAR(40),
+      pmdu002         VARCHAR(256),
+      pmdu003         VARCHAR(10),
+      pmdu004         VARCHAR(10),
+      pmdu005         VARCHAR(30),
+      pmdu006         VARCHAR(10),
+      pmdu007         VARCHAR(10),
+      pmdu008         VARCHAR(30),
+      pmdu009         VARCHAR(10),
+      pmdu010         DECIMAL(20,6),
+      pmdu011         VARCHAR(10),
+      pmdu012         DECIMAL(20,6),
+      pmdu013         DECIMAL(20,6),
+      pmdu014         DECIMAL(20,6),
+      pmdu015         DECIMAL(20,6)
+     )
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create apmp570_tmp04'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   CREATE TEMP TABLE apmp570_tmp05(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d5 ——> apmp570_tmp05
+      keyno           SMALLINT,
+      pmdvseq         INTEGER,
+      pmdvseq1        INTEGER,
+      pmdv001         VARCHAR(40),
+      pmdv002         VARCHAR(256),
+      pmdv003         VARCHAR(10),
+      pmdv004         VARCHAR(10),
+      pmdv005         VARCHAR(10),
+      pmdv006         DECIMAL(20,6),
+      pmdv011         VARCHAR(20),
+      pmdv012         INTEGER,
+      pmdv013         INTEGER,
+      pmdv014         VARCHAR(20),
+      pmdv015         INTEGER,
+      pmdv016         INTEGER,
+      pmdv018         VARCHAR(10),
+      pmdv019         DECIMAL(20,6)
+     )
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create apmp570_tmp05'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d5 ——> apmp570_tmp05
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION apmp570_02_drop_temp_table()
+   DEFINE r_success          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   DROP TABLE apmp570_tmp02  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d1 ——> apmp570_tmp02
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop apmp570_tmp02'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d1 ——> apmp570_tmp02
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   DROP TABLE apmp570_tmp03  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop apmp570_tmp03'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   DROP TABLE apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop apmp570_tmp04'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   DROP TABLE apmp570_tmp05  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d5 ——> apmp570_tmp05
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop apmp570_tmp05'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d5 ——> apmp570_tmp05
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...:　將apmp570_01_temp　的資料　整理成apmp570_02　可使用的資料
+# Memo...........:
+# Usage..........: CALL apmp570_02_gen_data()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/07/17 by stellar0130
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp570_02_gen_data()
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_sql            STRING
+DEFINE l_pmds           type_g_pmds_d
+DEFINE l_pmdt           type_g_pmds2_d
+DEFINE l_pmdtseq        LIKE pmdt_t.pmdtseq
+DEFINE l_keyno          LIKE type_t.num5
+DEFINE l_pmdu           type_g_pmds3_d
+#161124-00048#8 mod-S
+#DEFINE l_qcbc           RECORD LIKE qcbc_t.*   #2015/05/19 by stellar add
+DEFINE l_qcbc RECORD  #品質檢驗判定結果檔
+       qcbcent LIKE qcbc_t.qcbcent, #企业编号
+       qcbcsite LIKE qcbc_t.qcbcsite, #营运据点
+       qcbcdocno LIKE qcbc_t.qcbcdocno, #单号
+       qcbcseq LIKE qcbc_t.qcbcseq, #行序
+       qcbc001 LIKE qcbc_t.qcbc001, #类型
+       qcbc002 LIKE qcbc_t.qcbc002, #判定结果编号
+       qcbc003 LIKE qcbc_t.qcbc003, #料件编号
+       qcbc004 LIKE qcbc_t.qcbc004, #产品特征
+       qcbc005 LIKE qcbc_t.qcbc005, #库位
+       qcbc006 LIKE qcbc_t.qcbc006, #储位
+       qcbc007 LIKE qcbc_t.qcbc007, #批号
+       qcbc008 LIKE qcbc_t.qcbc008, #单位
+       qcbc009 LIKE qcbc_t.qcbc009, #判定数量
+       qcbc010 LIKE qcbc_t.qcbc010, #已入库数
+       qcbc011 LIKE qcbc_t.qcbc011, #库存备注
+       qcbc012 LIKE qcbc_t.qcbc012, #判定区分
+       qcbc013 LIKE qcbc_t.qcbc013  #处理方式
+END RECORD
+#161124-00048#8 mod-S
+DEFINE l_pmds000        LIKE pmds_t.pmds000    #2015/05/19 by stellar add
+DEFINE l_pmdt020        LIKE pmdt_t.pmdt020    #2015/05/19 by stellar add
+DEFINE l_pmdt026        LIKE pmdt_t.pmdt026    #2015/05/19 by stellar add
+DEFINE l_success1       LIKE type_t.num5       #2015/05/19 by stellar add
+#160617-00005#6---s--
+DEFINE l_imaf061    LIKE imaf_t.imaf061
+DEFINE l_imaf062    LIKE imaf_t.imaf062
+DEFINE l_imaf063    LIKE imaf_t.imaf063
+DEFINE l_oofg_return DYNAMIC ARRAY OF RECORD    
+          oofg019     LIKE oofg_t.oofg019,   #field
+          oofg020     LIKE oofg_t.oofg020    #value
+                  END RECORD
+#160617-00005#6---e--
+DEFINE l_pmds028      LIKE pmds_t.pmds028    #161207-00033#26 add pmds028  
+   LET l_success = TRUE
+   
+   #2015/05/19 by stellar add ----- (S)
+   SELECT pmdsdocno,pmds002,pmds011
+     INTO g_master.pmdsdocno,g_master.pmds002,g_master.pmds011
+     FROM apmp570_tmp01   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_tmp_master ——> apmp570_tmp01
+   CASE g_master.pmds011
+      WHEN '1'
+           LET l_pmds000 = '6'   #入庫單
+      WHEN '2'
+           LET l_pmds000 = '12'  #委外收貨入庫單
+      WHEN '10'
+           LET l_pmds000 = '13'  #重覆性生產入庫
+   END CASE
+   #2015/05/19 by stellar add ----- (E)
+
+   DELETE FROM apmp570_tmp02   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d1 ——> apmp570_tmp02
+   DELETE FROM apmp570_tmp03   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+   DELETE FROM apmp570_tmp04   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+   DELETE FROM apmp570_tmp05   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d5 ——> apmp570_tmp05
+   
+   LET l_sql = "SELECT DISTINCT pmdsdocno,pmds007 ",
+               "  FROM apmp570_01_temp ",
+               " ORDER BY pmdsdocno,pmds007 "
+
+   PREPARE apmp570_02_pre1 FROM l_sql
+   DECLARE apmp570_02_curs1 CURSOR FOR apmp570_02_pre1
+   
+   LET l_sql = "SELECT pmdtseq,pmdt006,pmdt007,pmdt009,pmdt010, ",
+               "       pmdt019,amt2,pmdt021,pmdt016,pmdt017,pmdt018,pmdt063,pmdt059 ",
+               "  FROM apmp570_01_temp ",
+               " WHERE pmdsdocno = ? ",
+               " ORDER BY pmdtseq "
+   PREPARE apmp570_02_pre2 FROM l_sql
+   DECLARE apmp570_02_curs2 CURSOR FOR apmp570_02_pre2
+   
+   LET l_sql = "SELECT pmduseq1, ",
+               "       pmdu001,pmdu002,pmdu003,pmdu004,pmdu005, ",
+               "       pmdu006,pmdu007,pmdu008,pmdu009,pmdu010, ",
+               "       pmdu011,pmdu012,pmdu013,pmdu014,pmdu015 ",
+               "  FROM pmdu_t ",
+               " WHERE pmduent = ? ",
+               "   AND pmdudocno = ? ",
+               "   AND pmduseq = ? ",
+               " ORDER BY pmduseq1 "
+   PREPARE apmp570_02_pre3 FROM l_sql
+   DECLARE apmp570_02_curs3 CURSOR FOR apmp570_02_pre3
+   
+   #2015/05/19 by stellar add ----- (S)
+   #抓取IQC結果
+   LET l_sql = " SELECT qcbcdocno,qcbcseq, ",
+               "        qcbc001,qcbc002,qcbc003,qcbc004,qcbc005, ",
+               "        qcbc006,qcbc007,qcbc008,qcbc009,qcbc010, ",
+               "        qcbc011,qcbc012,qcbc013 ",
+               "   FROM qcbc_t,qcba_t ",
+               "  WHERE qcbcent = qcbaent ",
+               "    AND qcbcsite= qcbasite ",
+               "    AND qcbcdocno = qcbadocno ",
+               "    AND qcbcent = ",g_enterprise,
+               "    AND qcbcsite='",g_site,"'",
+               "    AND qcba001 = ? ",
+               "    AND qcba002 = ? ",
+               "    AND qcbastus = 'Y' ",
+               "    AND qcbc012<>'4' ", #160302-00027#1-add
+               "  ORDER BY qcbcdocno,qcbcseq "
+   PREPARE apmp570_02_pre4 FROM l_sql
+   DECLARE apmp570_02_curs4 CURSOR FOR apmp570_02_pre4
+   #2015/05/19 by stellar add ----- (E)
+
+   LET l_keyno = 1
+   FOREACH apmp570_02_curs1 INTO l_pmds.pmds006,l_pmds.pmds007
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'FOREACH:apmp570_02_curs1'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #抓取該收貨單號的付款條件、交易條件、稅別、稅率、含稅否、幣別、匯率、取價方式
+      SELECT pmds031,pmds032,pmds033,pmds034,pmds035,pmds037,pmds038,pmds039,pmds028     #161207-00033#26 add pmds028
+        INTO l_pmds.pmds031,l_pmds.pmds032,l_pmds.pmds033,l_pmds.pmds034,
+             l_pmds.pmds035,l_pmds.pmds037,l_pmds.pmds038,l_pmds.pmds039,l_pmds028  #161207-00033#26 add pmds028 
+        FROM pmds_t
+       WHERE pmdsent = g_enterprise
+         AND pmdsdocno = l_pmds.pmds006
+      
+      #將資料新增到temp table
+      INSERT INTO apmp570_tmp02  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d1 ——> apmp570_tmp02
+         (keyno,
+          pmds006,pmds007,pmds031,pmds032,pmds033,pmds034,pmds035,
+          pmds037,pmds038,pmds039,pmds028)  #161207-00033#26 add pmds028
+         VALUES
+         (l_keyno,
+          l_pmds.pmds006,l_pmds.pmds007,l_pmds.pmds031,l_pmds.pmds032,
+          l_pmds.pmds033,l_pmds.pmds034,l_pmds.pmds035,l_pmds.pmds037,
+          l_pmds.pmds038,l_pmds.pmds039,l_pmds028)   #161207-00033#26 add pmds028               
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins apmp570_tmp03'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #入庫明細資料
+      LET l_pmdtseq = 1
+      
+      INITIALIZE l_pmdt.* TO NULL
+      FOREACH apmp570_02_curs2 USING l_pmds.pmds006 INTO 
+              l_pmdt.pmdt028,l_pmdt.pmdt006,l_pmdt.pmdt007,l_pmdt.pmdt009,l_pmdt.pmdt010,
+              l_pmdt.pmdt019,l_pmdt.pmdt020,l_pmdt.pmdt021,l_pmdt.pmdt016,l_pmdt.pmdt017,
+              l_pmdt.pmdt018,l_pmdt.pmdt063,l_pmdt.pmdt059
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'FOREACH:apmp570_02_curs2'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+   
+            LET l_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         LET l_pmdt.pmdtseq = l_pmdtseq
+         
+         #抓取收貨單單身的採購單號、採購項次、採購項序、分批序、子件特性、計價單位、多倉儲批
+         SELECT pmdt001,pmdt002,pmdt003,pmdt004,pmdt005,
+                pmdt023,pmdt062 
+           INTO l_pmdt.pmdt001,l_pmdt.pmdt002,l_pmdt.pmdt003,l_pmdt.pmdt004,l_pmdt.pmdt005,
+                l_pmdt.pmdt023,l_pmdt.pmdt062
+           FROM pmdt_t
+          WHERE pmdtent = g_enterprise
+            AND pmdtdocno = l_pmds.pmds006
+            AND pmdtseq = l_pmdt.pmdt028
+         
+         #2015/05/19 by stellar add ----- (S)
+         #該筆單身是否須QC
+         LET l_pmdt026 = NULL
+         SELECT pmdt026 INTO l_pmdt026 FROM pmdt_t
+          WHERE pmdtent = g_enterprise
+            AND pmdtdocno = l_pmds.pmds006
+            AND pmdtseq = l_pmdt.pmdt028
+         IF l_pmdt026 = 'Y' THEN
+            
+            #依QC單做入庫
+            FOREACH apmp570_02_curs4 USING l_pmds.pmds006,l_pmdt.pmdt028 INTO 
+                    l_qcbc.qcbcdocno,l_qcbc.qcbcseq,
+                    l_qcbc.qcbc001,l_qcbc.qcbc002,l_qcbc.qcbc003,l_qcbc.qcbc004,l_qcbc.qcbc005,
+                    l_qcbc.qcbc006,l_qcbc.qcbc007,l_qcbc.qcbc008,l_qcbc.qcbc009,l_qcbc.qcbc010,
+                    l_qcbc.qcbc011,l_qcbc.qcbc012,l_qcbc.qcbc013
+                    
+               LET l_pmdt.pmdtseq = l_pmdtseq
+               LET l_pmdt.pmdt081 = l_qcbc.qcbcdocno   #IQC單號
+               LET l_pmdt.pmdt082 = l_qcbc.qcbcseq     #判定項次
+               LET l_pmdt.pmdt083 = l_qcbc.qcbc002     #判定結果
+               
+               #IQC的庫儲批不為空時
+               IF NOT cl_null(l_qcbc.qcbc005) THEN
+                  LET l_pmdt.pmdt016 = l_qcbc.qcbc005   #庫位
+                  LET l_pmdt.pmdt017 = l_qcbc.qcbc006   #儲位
+                  LET l_pmdt.pmdt018 = l_qcbc.qcbc007   #批號
+               END IF
+               
+               #已轉入庫單的數量
+               LET l_pmdt020 = 0
+               SELECT SUM(pmdt020) INTO l_pmdt020 FROM pmdt_t,pmds_t
+                WHERE pmdsent = pmdtent 
+                  AND pmdsdocno = pmdtdocno
+                  AND pmdt081 = l_pmdt.pmdt081
+                  AND pmdt082 = l_pmdt.pmdt082
+                  AND pmdsstus <> 'X'
+                  AND pmdsent = g_enterprise
+                  AND pmds000 = l_pmds000
+               IF cl_null(l_pmdt020) THEN
+                  LET l_pmdt020 = 0
+               END IF
+                  
+               #QC單位與收貨單位不同時，須轉換成收貨單位的數量來計算
+               IF l_qcbc.qcbc008 <> l_pmdt.pmdt019 THEN
+                  CALL s_aooi250_convert_qty(l_pmdt.pmdt006,l_qcbc.qcbc008,l_pmdt.pmdt019,l_qcbc.qcbc009)
+                       RETURNING l_success1,l_qcbc.qcbc009
+               END IF
+               
+               LET l_pmdt.pmdt020 = l_qcbc.qcbc009 - l_pmdt020
+               
+               IF l_pmdt.pmdt020 = 0 THEN
+                  CONTINUE FOREACH
+               END IF
+               
+               IF cl_get_para(g_enterprise,g_site,'S-BAS-0019') = "Y" THEN
+                  IF NOT cl_null(l_pmdt.pmdt023) THEN
+                     CALL s_aooi250_convert_qty(l_pmdt.pmdt006,l_pmdt.pmdt019,l_pmdt.pmdt023,l_pmdt.pmdt020)
+                          RETURNING l_success1,l_pmdt.pmdt024
+                  ELSE
+                     LET l_pmdt.pmdt023 = l_pmdt.pmdt019
+                     LET l_pmdt.pmdt024 = l_pmdt.pmdt020
+                  END IF
+               ELSE
+                  LET l_pmdt.pmdt023 = l_pmdt.pmdt019
+                  LET l_pmdt.pmdt024 = l_pmdt.pmdt020
+               END IF
+               
+               IF cl_null(l_pmdt.pmdt023) OR cl_null(l_pmdt.pmdt024) THEN
+                  LET l_pmdt.pmdt023 = l_pmdt.pmdt019
+                  LET l_pmdt.pmdt024 = l_pmdt.pmdt020
+               END IF
+               
+               IF NOT cl_null(l_pmdt.pmdt021) THEN
+                  CALL s_aooi250_convert_qty(l_pmdt.pmdt006,l_pmdt.pmdt019,l_pmdt.pmdt021,l_pmdt.pmdt020)
+                       RETURNING l_success1,l_pmdt.pmdt022
+               ELSE
+                  LET l_pmdt.pmdt022 = ''
+               END IF
+               
+               #若QC維護的處理方式為2.不計價，則計價數量為0
+               IF l_qcbc.qcbc013 = '2' THEN
+                  LET l_pmdt.pmdt024 = 0
+               END IF
+               
+               LET l_pmdt.pmdt062 = 'N'  
+               
+               #160617-00005#6---s--
+               LET l_imaf061 = ''
+               LET l_imaf062 = ''
+               LET l_imaf063 = ''
+               SELECT imaf061,imaf062,imaf063 INTO l_imaf061,l_imaf062,l_imaf063  
+                 FROM imaf_t WHERE imafent = g_enterprise AND imafsite = g_site AND imaf001 = l_pmdt.pmdt006
+               
+               IF cl_null(l_pmdt.pmdt018) AND l_imaf061 = '1' AND l_imaf062 = 'Y' AND (NOT cl_null(l_imaf063)) THEN
+                  CALL s_aooi390_gen_1('6',l_imaf063) RETURNING l_success,l_pmdt.pmdt018,l_oofg_return
+                  IF NOT l_success THEN
+                     LET l_pmdt.pmdt018 = ' '
+                  ELSE
+                     CALL s_aooi390_get_auto_no('6',l_pmdt.pmdt018) RETURNING l_success,l_pmdt.pmdt018
+                     CALL s_aooi390_oofi_upd('6',l_pmdt.pmdt018) RETURNING l_success
+                  END IF
+               END IF
+               #160617-00005#6---e-- 
+             
+               #將資料新增到temp table
+               INSERT INTO apmp570_tmp03  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+                  (keyno,
+                   pmdtseq,pmdt028,pmdt001,pmdt002,pmdt003,pmdt004,pmdt081,pmdt082,pmdt083,pmdt005,
+                   pmdt006,pmdt007,pmdt009,pmdt010,pmdt019,pmdt020,pmdt021,pmdt022,pmdt023,pmdt024,
+                   pmdt062,pmdt016,pmdt017,pmdt018,pmdt063,pmdt051,pmdt059)
+                  VALUES
+                  (l_keyno,
+                   l_pmdt.pmdtseq,l_pmdt.pmdt028,l_pmdt.pmdt001,l_pmdt.pmdt002,l_pmdt.pmdt003,
+                   l_pmdt.pmdt004,l_pmdt.pmdt081,l_pmdt.pmdt082,l_pmdt.pmdt083,l_pmdt.pmdt005,
+                   l_pmdt.pmdt006,l_pmdt.pmdt007,l_pmdt.pmdt009,l_pmdt.pmdt010,l_pmdt.pmdt019,
+                   l_pmdt.pmdt020,l_pmdt.pmdt021,l_pmdt.pmdt022,l_pmdt.pmdt023,l_pmdt.pmdt024,
+                   l_pmdt.pmdt062,l_pmdt.pmdt016,l_pmdt.pmdt017,l_pmdt.pmdt018,l_pmdt.pmdt063,
+                   l_pmdt.pmdt051,l_pmdt.pmdt059)
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = 'ins apmp570_tmp03'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+             
+                  LET l_success = FALSE
+                  EXIT FOREACH
+               END IF
+               
+               #新增多庫儲批明資料
+               LET l_pmdu.pmduseq1 = 1
+               LET l_pmdu.pmdu010 = l_pmdt.pmdt020
+               LET l_pmdu.pmdu013 = l_pmdu.pmdu010
+               #160806-00004#1-add-(S)
+               LET l_pmdu.pmdu001 = l_pmdt.pmdt006 #料號 
+               LET l_pmdu.pmdu002 = l_pmdt.pmdt007 #產品特徵
+               LET l_pmdu.pmdu006 = l_pmdt.pmdt016 #庫位
+               LET l_pmdu.pmdu007 = l_pmdt.pmdt017 #儲位
+               LET l_pmdu.pmdu008 = l_pmdt.pmdt018 #批號
+               LET l_pmdu.pmdu005 = l_pmdt.pmdt063 #庫存管理特徵
+               LET l_pmdu.pmdu009 = l_pmdt.pmdt019 #單位
+               #160806-00004#1-add-(E)
+               
+               IF NOT cl_null(l_pmdu.pmdu011) THEN
+                  CALL s_aooi250_convert_qty(l_pmdu.pmdu001,l_pmdu.pmdu009,l_pmdu.pmdu011,l_pmdu.pmdu010)
+                    RETURNING l_success,l_pmdu.pmdu012
+               ELSE
+                  LET l_pmdu.pmdu012 = ''
+               END IF
+               LET l_pmdu.pmdu014 = 0
+               LET l_pmdu.pmdu015 = 0
+               
+               #160617-00005#6---s--
+               IF cl_null(l_pmdu.pmdu008) THEN
+                  SELECT pmdt018 INTO l_pmdu.pmdu008 FROM pmdt_t WHERE pmdtent = g_enterprise AND pmdtdocno = l_keyno AND pmdtseq = l_pmdt.pmdtseq
+               END IF
+               #160617-00005#6---e-- 
+                  
+               INSERT INTO apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                  (keyno,pmduseq,pmduseq1,
+                   pmdu001,pmdu002,pmdu003,pmdu004,pmdu005,
+                   pmdu006,pmdu007,pmdu008,pmdu009,pmdu010,
+                   pmdu011,pmdu012,pmdu013,pmdu014,pmdu015)
+                  VALUES
+                  (l_keyno,l_pmdt.pmdtseq,l_pmdu.pmduseq1,
+                   l_pmdu.pmdu001,l_pmdu.pmdu002,l_pmdu.pmdu003,l_pmdu.pmdu004,l_pmdu.pmdu005,
+                   l_pmdu.pmdu006,l_pmdu.pmdu007,l_pmdu.pmdu008,l_pmdu.pmdu009,l_pmdu.pmdu010,
+                   l_pmdu.pmdu011,l_pmdu.pmdu012,0,0,0)
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = 'ins apmp570_tmp04'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+            
+                  LET l_success = FALSE
+                  EXIT FOREACH
+               END IF
+           
+               LET l_pmdtseq = l_pmdtseq + 1
+               
+               #原始需求分配明細
+               CALL apmp570_02_gen_data_pmdv(l_pmds.*,l_pmdt.*,l_keyno)
+                    RETURNING l_success
+               IF NOT l_success THEN 
+                  EXIT FOREACH
+               END IF
+               
+               INITIALIZE l_qcbc.* TO NULL
+            END FOREACH
+         ELSE
+         #2015/05/19 by stellar add ----- (E)
+         
+            #參考數量
+            IF NOT cl_null(l_pmdt.pmdt021) THEN
+               CALL s_aooi250_convert_qty(l_pmdt.pmdt006,l_pmdt.pmdt019,l_pmdt.pmdt021,l_pmdt.pmdt020)
+                    RETURNING l_success,l_pmdt.pmdt022
+               IF NOT l_success THEN
+                  EXIT FOREACH
+               END IF
+            END IF
+            
+            #計價數量
+            IF NOT cl_null(l_pmdt.pmdt023) THEN
+               #160929-00038#1---s
+               CALL s_apmt520_get_pmdt024(l_pmds000,'',l_pmds.pmds006,l_pmdt.pmdt028,'','','','',l_pmdt.pmdt006,l_pmdt.pmdt019,l_pmdt.pmdt020,l_pmdt.pmdt023)
+                  RETURNING l_pmdt.pmdt024
+               IF cl_null(l_pmdt.pmdt024) OR l_pmdt.pmdt024 = 0 THEN
+               #160929-00038#1---e
+                  CALL s_aooi250_convert_qty(l_pmdt.pmdt006,l_pmdt.pmdt019,l_pmdt.pmdt023,l_pmdt.pmdt020)
+                       RETURNING l_success,l_pmdt.pmdt024
+                  IF NOT l_success THEN
+                     EXIT FOREACH
+                  END IF
+               END IF
+            END IF
+            
+            #160617-00005#6---s--
+            LET l_imaf061 = ''
+            LET l_imaf062 = ''
+            LET l_imaf063 = ''
+            SELECT imaf061,imaf062,imaf063 INTO l_imaf061,l_imaf062,l_imaf063  
+              FROM imaf_t WHERE imafent = g_enterprise AND imafsite = g_site AND imaf001 = l_pmdt.pmdt006
+            
+            IF cl_null(l_pmdt.pmdt018) AND l_imaf061 = '1' AND l_imaf062 = 'Y' AND (NOT cl_null(l_imaf063)) THEN
+               CALL s_aooi390_gen_1('6',l_imaf063) RETURNING l_success,l_pmdt.pmdt018,l_oofg_return
+               IF NOT l_success THEN
+                  LET l_pmdt.pmdt018 = ' '
+               ELSE
+                  CALL s_aooi390_get_auto_no('6',l_pmdt.pmdt018) RETURNING l_success,l_pmdt.pmdt018
+                  CALL s_aooi390_oofi_upd('6',l_pmdt.pmdt018) RETURNING l_success
+               END IF
+            END IF
+            #160617-00005#6---e-- 
+            
+            #將資料新增到temp table
+            INSERT INTO apmp570_tmp03  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+               (keyno,
+                pmdtseq,pmdt028,pmdt001,pmdt002,pmdt003,pmdt004,pmdt081,pmdt082,pmdt083,pmdt005,
+                pmdt006,pmdt007,pmdt009,pmdt010,pmdt019,pmdt020,pmdt021,pmdt022,pmdt023,pmdt024,
+                pmdt062,pmdt016,pmdt017,pmdt018,pmdt063,pmdt051,pmdt059)
+               VALUES
+               (l_keyno,
+                l_pmdt.pmdtseq,l_pmdt.pmdt028,l_pmdt.pmdt001,l_pmdt.pmdt002,l_pmdt.pmdt003,
+                l_pmdt.pmdt004,l_pmdt.pmdt081,l_pmdt.pmdt082,l_pmdt.pmdt083,l_pmdt.pmdt005,
+                l_pmdt.pmdt006,l_pmdt.pmdt007,l_pmdt.pmdt009,l_pmdt.pmdt010,l_pmdt.pmdt019,
+                l_pmdt.pmdt020,l_pmdt.pmdt021,l_pmdt.pmdt022,l_pmdt.pmdt023,l_pmdt.pmdt024,
+                l_pmdt.pmdt062,l_pmdt.pmdt016,l_pmdt.pmdt017,l_pmdt.pmdt018,l_pmdt.pmdt063,
+                l_pmdt.pmdt051,l_pmdt.pmdt059)
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'ins apmp570_tmp03'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+       
+               LET l_success = FALSE
+               EXIT FOREACH
+            END IF
+            
+            #抓取多庫儲批明資料
+            LET l_pmdt020 = l_pmdt.pmdt020
+            FOREACH apmp570_02_curs3 USING g_enterprise,l_pmds.pmds006,l_pmdt.pmdt028 INTO 
+               l_pmdu.pmduseq1,
+               l_pmdu.pmdu001,l_pmdu.pmdu002,l_pmdu.pmdu003,l_pmdu.pmdu004,l_pmdu.pmdu005,
+               l_pmdu.pmdu006,l_pmdu.pmdu007,l_pmdu.pmdu008,l_pmdu.pmdu009,l_pmdu.pmdu010,
+               l_pmdu.pmdu011,l_pmdu.pmdu012,l_pmdu.pmdu013,l_pmdu.pmdu014,l_pmdu.pmdu015
+               
+               IF l_pmdt020 <= l_pmdu.pmdu010 THEN
+                  LET l_pmdu.pmdu010 = l_pmdt020
+                  LET l_pmdt020 = 0
+               ELSE
+                  LET l_pmdt020 = l_pmdt020 - l_pmdu.pmdu010
+               END IF
+               
+               IF l_pmdu.pmdu010 = 0 THEN
+                  CONTINUE FOREACH
+               END IF
+               
+               LET l_pmdu.pmdu013 = l_pmdu.pmdu010
+               IF NOT cl_null(l_pmdu.pmdu011) THEN
+                  CALL s_aooi250_convert_qty(l_pmdu.pmdu001,l_pmdu.pmdu009,l_pmdu.pmdu011,l_pmdu.pmdu010)
+                    RETURNING l_success,l_pmdu.pmdu012
+               ELSE
+                  LET l_pmdu.pmdu012 = ''
+               END IF
+               LET l_pmdu.pmdu014 = 0
+               LET l_pmdu.pmdu015 = 0
+               
+               #160617-00005#6---s--
+               IF cl_null(l_pmdu.pmdu008) THEN
+                  LET l_pmdu.pmdu008 = l_pmdt.pmdt018
+               END IF
+               #160617-00005#6---e-- 
+               
+               INSERT INTO apmp570_tmp04   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                  (keyno,pmduseq,pmduseq1,
+                   pmdu001,pmdu002,pmdu003,pmdu004,pmdu005,
+                   pmdu006,pmdu007,pmdu008,pmdu009,pmdu010,
+                   pmdu011,pmdu012,pmdu013,pmdu014,pmdu015)
+                  VALUES
+                  (l_keyno,l_pmdt.pmdtseq,l_pmdu.pmduseq1,
+                   l_pmdu.pmdu001,l_pmdu.pmdu002,l_pmdu.pmdu003,l_pmdu.pmdu004,l_pmdu.pmdu005,
+                   l_pmdu.pmdu006,l_pmdu.pmdu007,l_pmdu.pmdu008,l_pmdu.pmdu009,l_pmdu.pmdu010,
+                   l_pmdu.pmdu011,l_pmdu.pmdu012,0,0,0)
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = 'ins apmp570_tmp04'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+         
+                  LET l_success = FALSE
+                  EXIT FOREACH
+               END IF
+               
+            END FOREACH
+           
+            LET l_pmdtseq = l_pmdtseq + 1
+            
+            #原始需求分配明細
+            CALL apmp570_02_gen_data_pmdv(l_pmds.*,l_pmdt.*,l_keyno)
+                 RETURNING l_success
+            IF NOT l_success THEN 
+               EXIT FOREACH
+            END IF
+         END IF   #2015/05/19 by stellar add
+         
+         INITIALIZE l_pmdt.* TO NULL
+      END FOREACH
+      
+      IF NOT l_success THEN
+         EXIT FOREACH
+      END IF
+      
+      LET l_keyno = l_keyno + 1
+   END FOREACH
+      
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生原始需求分配明細資料
+# Memo...........:
+# Usage..........: CALL apmp570_02_gen_data_pmdv(p_pmds,p_pmdt,p_keyno)
+#                  RETURNING r_success
+# Input parameter: p_pmds        
+#                : p_pmdt  
+#                : p_keyno         暫存檔的key值
+# Return code....: r_success       執行結果
+# Date & Author..: 2014/7/16 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp570_02_gen_data_pmdv(p_pmds,p_pmdt,p_keyno)
+DEFINE p_pmds            type_g_pmds_d
+DEFINE p_pmdt            type_g_pmds2_d
+DEFINE p_keyno           LIKE type_t.num5
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_sql             STRING
+DEFINE l_n               LIKE type_t.num5
+DEFINE l_pmdp            RECORD
+         pmdpdocno       LIKE pmdp_t.pmdpdocno,
+         pmdpseq         LIKE pmdp_t.pmdpseq,
+         pmdpseq1        LIKE pmdp_t.pmdpseq1,
+         pmdp003         LIKE pmdp_t.pmdp003,
+         pmdp004         LIKE pmdp_t.pmdp004,
+         pmdp005         LIKE pmdp_t.pmdp005,
+         pmdp006         LIKE pmdp_t.pmdp006,
+         pmdp024         LIKE pmdp_t.pmdp024
+                         END RECORD
+DEFINE l_pmdvseq1        LIKE pmdv_t.pmdvseq1
+DEFINE l_pmdv019         LIKE pmdv_t.pmdv019
+DEFINE l_pmdo008         LIKE pmdo_t.pmdo008
+#DEFINE l_pmdt001         LIKE pmdt_t.pmdt001
+#DEFINE l_pmdt002         LIKE pmdt_t.pmdt002
+#DEFINE l_pmdt003         LIKE pmdt_t.pmdt003
+#DEFINE l_pmdt004         LIKE pmdt_t.pmdt004
+DEFINE l_pmdp024         LIKE pmdp_t.pmdp024
+DEFINE l_pmdp026         LIKE pmdp_t.pmdp026
+#161124-00048#8 mod-S
+#DEFINE l_pmdv            RECORD LIKE pmdv_t.*
+DEFINE l_pmdv RECORD  #收貨/入庫需求分配明細檔
+       pmdvent LIKE pmdv_t.pmdvent, #企业编号
+       pmdvsite LIKE pmdv_t.pmdvsite, #营运据点
+       pmdvdocno LIKE pmdv_t.pmdvdocno, #单据编号
+       pmdvseq LIKE pmdv_t.pmdvseq, #项次
+       pmdvseq1 LIKE pmdv_t.pmdvseq1, #项序
+       pmdv001 LIKE pmdv_t.pmdv001, #收货料件编号
+       pmdv002 LIKE pmdv_t.pmdv002, #收货产品特征
+       pmdv003 LIKE pmdv_t.pmdv003, #作业编号
+       pmdv004 LIKE pmdv_t.pmdv004, #作业序
+       pmdv005 LIKE pmdv_t.pmdv005, #子件特性
+       pmdv006 LIKE pmdv_t.pmdv006, #QPA
+       pmdv011 LIKE pmdv_t.pmdv011, #采购单号
+       pmdv012 LIKE pmdv_t.pmdv012, #采购项次
+       pmdv013 LIKE pmdv_t.pmdv013, #采购项序
+       pmdv014 LIKE pmdv_t.pmdv014, #需求单号
+       pmdv015 LIKE pmdv_t.pmdv015, #需求项次
+       pmdv016 LIKE pmdv_t.pmdv016, #需求项序
+       pmdv017 LIKE pmdv_t.pmdv017, #需求分批序
+       pmdv018 LIKE pmdv_t.pmdv018, #收货/入库单位
+       pmdv019 LIKE pmdv_t.pmdv019, #收货/入库分配数量
+       pmdv900 LIKE pmdv_t.pmdv900, #保留字段str
+       pmdv999 LIKE pmdv_t.pmdv999, #保留字段end
+       pmdv200 LIKE pmdv_t.pmdv200, #包装单位
+       pmdv201 LIKE pmdv_t.pmdv201  #包装数量
+END RECORD
+#161124-00048#8 mod-E
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+#   #先根據收貨單號和項次，獲取相關的採購信息，再根據採購資料獲取對應的關聯單據明細資料
+#   SELECT pmdt001,pmdt002,pmdt003,pmdt004
+#     INTO l_pmdt001,l_pmdt002,l_pmdt003,l_pmdt004
+#     FROM pmdt_t
+#    WHERE pmdtent = g_enterprise
+#      AND pmdtdocno = p_pmds.pmds006
+#      AND pmdtseq = p_pmdt.pmdt028
+      
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n FROM pmdp_t
+    WHERE pmdpent = g_enterprise
+      AND pmdpdocno = p_pmdt.pmdt001
+      AND pmdpseq = p_pmdt.pmdt002
+   IF cl_null(l_n) OR l_n = 0 THEN
+      RETURN r_success
+   END IF
+
+   #當子件特性是'1:一般'、'2:CKD'、'3:SKD'、'8:委外代買'時才需要進行收貨量分配
+   IF p_pmdt.pmdt005 NOT MATCHES '[1238]' THEN
+      RETURN r_success
+   END IF
+
+   #依據對應pmdp_t的沖銷順序(pmdp021)作為分配的優先序，判斷該需求單是否還有可分配量
+   #若有,才可將收貨量分配給該需求單，可分配量計算公式如下:
+   #可分配量 = 折合採購量(pmdp024)*QPA(pmdo008) - 已入庫量
+   #已入庫量 = 指的是對應的pmdpdocno+pmdpseq+pmdpseq1已經存在入庫單的pmdv_t的分配數量總合
+   INITIALIZE l_pmdp.* TO NULL
+
+   LET l_sql = "SELECT pmdpdocno,pmdpseq,pmdpseq1,pmdp003,pmdp004, ",
+               "       pmdp005,pmdp006 ,pmdp024 ",
+               "  FROM pmdp_t ",
+               " WHERE pmdpent = ",g_enterprise,
+               "  AND pmdpdocno = '",p_pmdt.pmdt001,"' AND pmdpseq = '",p_pmdt.pmdt002,"' ",
+               "  AND (COALESCE(pmdp024,0) - COALESCE(pmdp026,0)) > 0 ", #折合採購量-已入庫量 > 0 
+               "ORDER BY pmdp021 "
+
+   PREPARE apmp570_02_pmdp_pre1 FROM l_sql
+   DECLARE apmp570_02_pmdp_curs1 CURSOR FOR apmp570_02_pmdp_pre1
+
+   LET l_pmdvseq1 = 1
+   FOREACH apmp570_02_pmdp_curs1 INTO l_pmdp.*
+      #已入庫量 = 指的是對應的 pmdpdocno + pmdpseq + pmdpseq1已經存在入庫單的pmdv_t的分配數量總合
+      LET l_pmdv019 = 0
+      SELECT SUM(COALESCE(pmdv019,0)) INTO l_pmdv019 
+        FROM pmdv_t,pmds_t
+       WHERE pmdsent = pmdvent
+         AND pmdsdocno = pmdvdocno
+         AND pmds000 = '6'           #入庫單
+         AND pmdsstus <> 'X'         #非作廢單據
+         AND pmdvent = g_enterprise  
+         AND pmdv011 = l_pmdp.pmdpdocno
+         AND pmdv012 = l_pmdp.pmdpseq 
+         AND pmdv013 = l_pmdp.pmdpseq1
+      IF cl_null(l_pmdv019) THEN
+         LET l_pmdv019 = 0 
+      END IF
+
+      #QPA
+      LET l_pmdo008 = 1
+      SELECT pmdo008 INTO l_pmdo008 FROM pmdo_t
+       WHERE pmdoent = g_enterprise
+         AND pmdodocno = p_pmdt.pmdt001
+         AND pmdoseq = p_pmdt.pmdt002
+         AND pmdoseq1= p_pmdt.pmdt003
+         AND pmdoseq2= p_pmdt.pmdt004
+      IF cl_null(l_pmdo008) THEN
+         LET l_pmdo008 = 1
+      END IF
+
+      #可分配量 = 折合採購量(pmdp024) * QPA(pmdo008) - 已入庫量
+      LET l_pmdp024 = l_pmdp.pmdp024 * l_pmdo008 - l_pmdv019
+
+      #判斷入庫單據當前項次的入庫數量與來源單據可沖銷的數量大小
+      #若入庫量大於可沖銷數量，則分配數量=可沖銷數量
+      #若入庫量小於等於可沖銷數量，則直接更新已入庫量 = 入庫數量
+      IF p_pmdt.pmdt020 > l_pmdp024 THEN   #入庫數量 > 可沖銷的數量
+         LET l_pmdp026 = l_pmdp024
+         LET p_pmdt.pmdt020 = p_pmdt.pmdt020 - l_pmdp024
+      ELSE
+         LET l_pmdp026 = p_pmdt.pmdt020
+         LET p_pmdt.pmdt020 = 0
+      END IF
+
+      #若該需求單有分配到入庫量則將分配到的數量新增一筆pmdv_t紀錄資料
+      IF l_pmdp026 > 0 THEN
+         LET l_pmdv.pmdvseq = p_pmdt.pmdtseq   #項次
+         LET l_pmdv.pmdvseq1= l_pmdvseq1       #項序
+         
+         LET l_pmdv.pmdv001 = p_pmdt.pmdt006   #入庫料號
+         LET l_pmdv.pmdv002 = p_pmdt.pmdt007   #入庫產品特徵
+         LET l_pmdv.pmdv003 = p_pmdt.pmdt009   #作業編號
+         LET l_pmdv.pmdv004 = p_pmdt.pmdt010   #製程序
+         LET l_pmdv.pmdv005 = p_pmdt.pmdt005   #子件特性
+         LET l_pmdv.pmdv006 = l_pmdo008        #QPA
+         LET l_pmdv.pmdv011 = p_pmdt.pmdt001   #採購單號
+         LET l_pmdv.pmdv012 = p_pmdt.pmdt002   #採購項次
+         LET l_pmdv.pmdv013 = p_pmdt.pmdt003   #採購項序
+         LET l_pmdv.pmdv014 = l_pmdp.pmdp003   #需求單號
+         LET l_pmdv.pmdv015 = l_pmdp.pmdp004   #需求項次
+         LET l_pmdv.pmdv016 = l_pmdp.pmdp005   #需求項序
+         LET l_pmdv.pmdv018 = p_pmdt.pmdt019   #入庫單位
+         LET l_pmdv.pmdv019 = l_pmdp026        #分配數量
+         
+         INSERT INTO apmp570_tmp05  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d5 ——> apmp570_tmp05
+            (keyno,
+             pmdvseq,pmdvseq1,pmdv001,pmdv002,pmdv003,pmdv004,pmdv005,pmdv006,
+             pmdv011,pmdv012,pmdv013,pmdv014,pmdv015,pmdv016,pmdv018,pmdv019)
+            VALUES
+            (p_keyno,
+             l_pmdv.pmdvseq,l_pmdv.pmdvseq1,l_pmdv.pmdv001,l_pmdv.pmdv002,l_pmdv.pmdv003,
+             l_pmdv.pmdv004,l_pmdv.pmdv005,l_pmdv.pmdv006,l_pmdv.pmdv011,l_pmdv.pmdv012,
+             l_pmdv.pmdv013,l_pmdv.pmdv014,l_pmdv.pmdv015,l_pmdv.pmdv016,l_pmdv.pmdv018,
+             l_pmdv.pmdv019)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'ins apmp570_tmp03'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         LET l_pmdvseq1 = l_pmdvseq1 + 1
+      END IF
+      
+      #若入庫數量=0，則表示此入庫數量已分配完
+      IF p_pmdt.pmdt020 = 0 THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION apmp570_02_b_fill()
+DEFINE l_sql            STRING
+DEFINE l_ac_t           LIKE type_t.num5
+DEFINE l_ooef019        LIKE ooef_t.ooef019
+DEFINE l_pmds028        LIKE pmds_t.pmds028   #161207-00033#21 
+   LET l_ac = 1
+   SELECT pmdsdocno,pmds002,pmds011
+     INTO g_master.pmdsdocno,g_master.pmds002,g_master.pmds011
+     FROM apmp570_tmp01   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_tmp_master ——> apmp570_tmp01
+
+   LET l_ooef019 = ''
+   SELECT ooef019 INTO l_ooef019 FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_site
+   
+   LET l_sql = "SELECT keyno,pmds006,pmds007,a.pmaal004,pmds031,b.ooibl004, ",
+               "       pmds032,c.oocql004,pmds033,d.oodbl004,pmds034,pmds035, ",
+               "       pmds037,e.ooail003,pmds038,pmds039,f.pmaml003,pmds028 ",  ##161207-00033#21 add pmds028
+               "  FROM apmp570_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d1 ——> apmp570_tmp02
+               "       LEFT OUTER JOIN pmaal_t a ON a.pmaalent = ",g_enterprise," AND a.pmaal001 = pmds007 AND a.pmaal002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN ooibl_t b ON b.ooiblent = ",g_enterprise," AND b.ooibl002 = pmds031 AND b.ooibl003 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN oocql_t c ON c.oocqlent = ",g_enterprise," AND c.oocql001 = '238' AND c.oocql002 = pmds032 AND c.oocql003 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN oodbl_t d ON d.oodblent = ",g_enterprise," AND d.oodbl001 = '",l_ooef019,"' AND d.oodbl002 = pmds033 AND d.oodbl003 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN ooail_t e ON e.ooailent = ",g_enterprise," AND e.ooail001 = pmds037 AND e.ooail002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN pmaml_t f ON f.pmamlent = ",g_enterprise," AND f.pmaml001 = pmds039 AND f.pmaml002 = '",g_dlang,"'",
+               " ORDER BY keyno "
+              
+   PREPARE apmp570_02_temp_d1_sel FROM l_sql
+   DECLARE apmp570_02_temp_d1_b_fill_curs CURSOR FOR apmp570_02_temp_d1_sel
+   
+   CALL g_pmds_d.clear()
+   IF cl_null(l_ac) OR l_ac = 0 THEN
+      LET l_ac = 1
+   END IF
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+
+   FOREACH apmp570_02_temp_d1_b_fill_curs INTO 
+      g_pmds_d[l_ac].keyno,g_pmds_d[l_ac].pmds006,g_pmds_d[l_ac].pmds007,g_pmds_d[l_ac].pmds007_desc,
+      g_pmds_d[l_ac].pmds031,g_pmds_d[l_ac].pmds031_desc,g_pmds_d[l_ac].pmds032,g_pmds_d[l_ac].pmds032_desc,
+      g_pmds_d[l_ac].pmds033,g_pmds_d[l_ac].pmds033_desc,g_pmds_d[l_ac].pmds034,g_pmds_d[l_ac].pmds035,
+      g_pmds_d[l_ac].pmds037,g_pmds_d[l_ac].pmds037_desc,g_pmds_d[l_ac].pmds038,g_pmds_d[l_ac].pmds039,
+      g_pmds_d[l_ac].pmds039_desc,l_pmds028   #161207-00033#21 add pmds028
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:apmp570_02_temp_d1_b_fill_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      #161207-00033#21-S
+      IF NOT cl_null(l_pmds028) THEN
+         CALL s_desc_get_oneturn_guest_desc(l_pmds028) RETURNING g_pmds_d[l_ac].pmds007_desc
+      END IF
+      #161207-00033#21-E      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b = l_ac - 1
+   CALL g_pmds_d.deleteElement(l_ac)
+   LET l_ac = l_ac_t
+   CLOSE apmp570_02_temp_d1_b_fill_curs
+   FREE apmp570_02_temp_d1_sel
+   
+   LET g_master_idx = l_ac
+  
+   CALL apmp570_02_fetch()
+END FUNCTION
+
+PUBLIC FUNCTION apmp570_02_fetch()
+DEFINE l_ac_t      LIKE type_t.num5   
+DEFINE l_sql       STRING
+DEFINE l_success   LIKE type_t.num5
+   
+   CALL g_pmds2_d.clear()
+   
+   LET l_sql = "SELECT pmdtseq,pmdt028,pmdt001,pmdt002,pmdt003,pmdt004,pmdt081,pmdt082,pmdt083,pmdt005, ",
+               "       pmdt006,a.imaal003,a.imaal004,pmdt007,pmdt009,b.oocql004,pmdt010,pmdt019,c.oocal003, ",
+               "       pmdt020,pmdt021,d.oocal003,pmdt022,pmdt023,e.oocal003,pmdt024,pmdt062,pmdt016,f.inayl003, ",
+               "       pmdt017,g.inab003,pmdt018,pmdt063,pmdt051,pmdt059 ",
+               "  FROM apmp570_tmp03 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+               "       LEFT OUTER JOIN imaal_t a ON a.imaalent = ",g_enterprise," AND a.imaal001 = pmdt006 AND a.imaal002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN oocql_t b ON b.oocqlent = ",g_enterprise," AND b.oocql001 = '221' AND b.oocql002 = pmdt009 AND b.oocql003 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN oocal_t c ON c.oocalent = ",g_enterprise," AND c.oocal001 = pmdt019 AND c.oocal002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN oocal_t d ON d.oocalent = ",g_enterprise," AND d.oocal001 = pmdt021 AND d.oocal002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN oocal_t e ON e.oocalent = ",g_enterprise," AND e.oocal001 = pmdt023 AND e.oocal002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN inayl_t f ON f.inaylent = ",g_enterprise," AND f.inayl001 = pmdt016 AND f.inayl002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN inab_t  g ON g.inabent  = ",g_enterprise," AND g.inabsite = '",g_site,"' AND g.inab001 = pmdt016 AND g.inab002 = pmdt017 ",
+               " WHERE keyno = ",g_pmds_d[g_master_idx].keyno,
+               " ORDER BY pmdtseq "
+              
+   PREPARE apmp570_02_temp_d2_sel FROM l_sql
+   DECLARE apmp570_02_temp_d2_b_fill_curs CURSOR FOR apmp570_02_temp_d2_sel
+   
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+
+   FOREACH apmp570_02_temp_d2_b_fill_curs INTO 
+      g_pmds2_d[l_ac].pmdtseq,g_pmds2_d[l_ac].pmdt028,g_pmds2_d[l_ac].pmdt001,
+      g_pmds2_d[l_ac].pmdt002,g_pmds2_d[l_ac].pmdt003,g_pmds2_d[l_ac].pmdt004,
+      g_pmds2_d[l_ac].pmdt081,g_pmds2_d[l_ac].pmdt082,g_pmds2_d[l_ac].pmdt083,
+      g_pmds2_d[l_ac].pmdt005,g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt006_desc,
+      g_pmds2_d[l_ac].pmdt006_desc_desc,g_pmds2_d[l_ac].pmdt007,g_pmds2_d[l_ac].pmdt009,
+      g_pmds2_d[l_ac].pmdt009_desc,g_pmds2_d[l_ac].pmdt010,g_pmds2_d[l_ac].pmdt019,
+      g_pmds2_d[l_ac].pmdt019_desc,g_pmds2_d[l_ac].pmdt020,g_pmds2_d[l_ac].pmdt021,
+      g_pmds2_d[l_ac].pmdt021_desc,g_pmds2_d[l_ac].pmdt022,g_pmds2_d[l_ac].pmdt023,
+      g_pmds2_d[l_ac].pmdt023_desc,g_pmds2_d[l_ac].pmdt024,g_pmds2_d[l_ac].pmdt062,
+      g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt016_desc,g_pmds2_d[l_ac].pmdt017,
+      g_pmds2_d[l_ac].pmdt017_desc,g_pmds2_d[l_ac].pmdt018,g_pmds2_d[l_ac].pmdt063,
+      g_pmds2_d[l_ac].pmdt051,g_pmds2_d[l_ac].pmdt059
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:apmp570_02_temp_d2_b_fill_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   
+      CALL apmp570_02_detail_show()
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   LET g_rec_b2 = l_ac - 1
+   CALL g_pmds2_d.deleteElement(l_ac)
+   LET l_ac = l_ac_t
+   CLOSE apmp570_02_temp_d2_b_fill_curs
+   FREE apmp570_02_temp_d2_sel
+   
+   CALL g_pmds3_d.clear()
+   
+   LET l_sql = "SELECT pmduseq,pmduseq1,pmdu001,a.imaal003,a.imaal004,pmdu002, ",
+               "       pmdu003,b.oocql004,pmdu004,pmdu006,c.inayl003, ",
+               "       pmdu007,d.inab003,pmdu008,pmdu005,pmdu009,e.oocal003,pmdu010, ",
+               "       pmdu011,f.oocal003,pmdu012,pmdu013,pmdu014,pmdu015 ",
+               "  FROM apmp570_tmp04 ",   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+               "       LEFT OUTER JOIN imaal_t a ON a.imaalent = ",g_enterprise," AND a.imaal001 = pmdu001 AND a.imaal002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN oocql_t b ON b.oocqlent = ",g_enterprise," AND b.oocql001 = '221' AND b.oocql002 = pmdu003 AND b.oocql003 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN inayl_t c ON c.inaylent = ",g_enterprise," AND c.inayl001 = pmdu006 AND c.inayl002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN inab_t  d ON d.inabent  = ",g_enterprise," AND d.inabsite = '",g_site,"' AND d.inab001 = pmdu006 AND d.inab002 = pmdu007 ",
+               "       LEFT OUTER JOIN oocal_t e ON e.oocalent = ",g_enterprise," AND e.oocal001 = pmdu009 AND e.oocal002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN oocal_t f ON f.oocalent = ",g_enterprise," AND f.oocal001 = pmdu011 AND f.oocal002 = '",g_dlang,"'",
+               " WHERE keyno = ",g_pmds_d[g_master_idx].keyno,
+               " ORDER BY pmduseq,pmduseq1 "
+              
+   PREPARE apmp570_02_temp_d3_sel FROM l_sql
+   DECLARE apmp570_02_temp_d3_b_fill_curs CURSOR FOR apmp570_02_temp_d3_sel
+   
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+
+   FOREACH apmp570_02_temp_d3_b_fill_curs INTO 
+      g_pmds3_d[l_ac].pmduseq,g_pmds3_d[l_ac].pmduseq1,g_pmds3_d[l_ac].pmdu001,
+      g_pmds3_d[l_ac].pmdu001_desc,g_pmds3_d[l_ac].pmdu001_desc_desc,g_pmds3_d[l_ac].pmdu002,
+      g_pmds3_d[l_ac].pmdu003,g_pmds3_d[l_ac].pmdu003_desc,g_pmds3_d[l_ac].pmdu004,
+      g_pmds3_d[l_ac].pmdu006,g_pmds3_d[l_ac].pmdu006_desc,g_pmds3_d[l_ac].pmdu007,
+      g_pmds3_d[l_ac].pmdu007_desc,g_pmds3_d[l_ac].pmdu008,g_pmds3_d[l_ac].pmdu005,
+      g_pmds3_d[l_ac].pmdu009,g_pmds3_d[l_ac].pmdu009_desc,g_pmds3_d[l_ac].pmdu010,
+      g_pmds3_d[l_ac].pmdu011,g_pmds3_d[l_ac].pmdu011_desc,g_pmds3_d[l_ac].pmdu012,
+      g_pmds3_d[l_ac].pmdu013,g_pmds3_d[l_ac].pmdu014,g_pmds3_d[l_ac].pmdu015
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:apmp570_02_temp_d3_b_fill_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      #產品特徵的說明
+      CALL s_feature_description(g_pmds3_d[l_ac].pmdu001,g_pmds3_d[l_ac].pmdu002)
+           RETURNING l_success,g_pmds3_d[l_ac].pmdu002_desc
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   LET g_rec_b3 = l_ac - 1
+   CALL g_pmds3_d.deleteElement(l_ac)
+   LET l_ac = l_ac_t
+   CLOSE apmp570_02_temp_d3_b_fill_curs
+   FREE apmp570_02_temp_d3_sel
+   
+   CALL g_pmds5_d.clear()
+   
+   LET l_sql = "SELECT pmdvseq,pmdv005,pmdv001,a.imaal003,a.imaal004,pmdv002, ",
+               "       pmdv003,b.oocql004,pmdv004,pmdv014,pmdv015,pmdv016, ",
+               "       pmdv018,c.oocal003,pmdv019 ",
+               "  FROM apmp570_tmp05 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d5 ——> apmp570_tmp05
+               "       LEFT OUTER JOIN imaal_t a ON a.imaalent = ",g_enterprise," AND a.imaal001 = pmdv001 AND a.imaal002 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN oocql_t b ON b.oocqlent = ",g_enterprise," AND b.oocql001 = '221' AND b.oocql002 = pmdv003 AND b.oocql003 = '",g_dlang,"'",
+               "       LEFT OUTER JOIN oocal_t c ON c.oocalent = ",g_enterprise," AND c.oocal001 = pmdv018 AND c.oocal002 = '",g_dlang,"'",
+               " WHERE keyno = ",g_pmds_d[g_master_idx].keyno,
+               " ORDER BY pmdvseq "
+              
+   PREPARE apmp570_02_temp_d5_sel FROM l_sql
+   DECLARE apmp570_02_temp_d5_b_fill_curs CURSOR FOR apmp570_02_temp_d5_sel
+   
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+
+   FOREACH apmp570_02_temp_d5_b_fill_curs INTO 
+      g_pmds5_d[l_ac].pmdvseq,g_pmds5_d[l_ac].pmdv005,g_pmds5_d[l_ac].pmdv001,
+      g_pmds5_d[l_ac].pmdv001_desc,g_pmds5_d[l_ac].pmdv001_desc_desc,g_pmds5_d[l_ac].pmdv002,
+      g_pmds5_d[l_ac].pmdv003,g_pmds5_d[l_ac].pmdv003_desc,g_pmds5_d[l_ac].pmdv004,
+      g_pmds5_d[l_ac].pmdv014,g_pmds5_d[l_ac].pmdv015,g_pmds5_d[l_ac].pmdv016,
+      g_pmds5_d[l_ac].pmdv018,g_pmds5_d[l_ac].pmdv018_desc,g_pmds5_d[l_ac].pmdv019
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:apmp570_02_temp_d5_b_fill_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      #產品特徵的說明
+      CALL s_feature_description(g_pmds5_d[l_ac].pmdv001,g_pmds5_d[l_ac].pmdv002)
+           RETURNING l_success,g_pmds5_d[l_ac].pmdv002_desc
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   LET g_rec_b5 = l_ac - 1
+   CALL g_pmds5_d.deleteElement(l_ac)
+   LET l_ac = l_ac_t
+   CLOSE apmp570_02_temp_d5_b_fill_curs
+   FREE apmp570_02_temp_d5_sel
+   
+END FUNCTION
+
+PUBLIC FUNCTION apmp570_02_delete_temp_table()
+   DELETE FROM apmp570_tmp02  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d1 ——> apmp570_tmp02
+   DELETE FROM apmp570_tmp03  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+   DELETE FROM apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+   DELETE FROM apmp570_tmp05  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d5 ——> apmp570_tmp05
+END FUNCTION
+
+################################################################################
+# Descriptions...: 入庫明細的reference顯示
+################################################################################
+PRIVATE FUNCTION apmp570_02_detail_show()
+DEFINE l_success         LIKE type_t.num5
+
+   #產品特徵的說明
+   CALL s_feature_description(g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt007)
+        RETURNING l_success,g_pmds2_d[l_ac].pmdt007_desc
+
+   #判定結果的說明
+   CALL s_desc_get_qc_desc(g_site,g_pmds2_d[l_ac].pmdt083)
+        RETURNING g_pmds2_d[l_ac].pmdt083_desc
+        
+   #理由碼的說明
+   CALL apmp570_02_pmdt051_desc()
+        
+   #預設庫儲
+   IF g_pmds2_d[l_ac].pmdt062 = 'N' THEN
+      IF cl_null(g_pmds2_d[l_ac].pmdt016) THEN
+         SELECT imaf091,imaf092 
+           INTO g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017
+           FROM imaf_t
+          WHERE imafent = g_enterprise
+            AND imafsite = g_site
+            AND imaf001 = g_pmds2_d[l_ac].pmdt006
+      END IF
+      IF g_pmds2_d[l_ac].pmdt017 IS NULL THEN
+         SELECT imaf092 INTO g_pmds2_d[l_ac].pmdt017
+           FROM imaf_t
+          WHERE imafent = g_enterprise
+            AND imafsite = g_site
+            AND imaf001 = g_pmds2_d[l_ac].pmdt006
+      END IF
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 帶出判定結果的資料
+# Memo...........:
+# Usage..........: CALL apmp570_02_qc_result()
+#                  
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2014/07/17 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp570_02_qc_result()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_qcbc008         LIKE qcbc_t.qcbc008
+DEFINE l_qcbc009         LIKE qcbc_t.qcbc009
+
+   LET r_success = TRUE
+
+   LET g_pmds2_d[l_ac].pmdt083 = ''
+   LET g_pmds2_d[l_ac].pmdt016 = ''
+   LET g_pmds2_d[l_ac].pmdt017 = ''
+   LET g_pmds2_d[l_ac].pmdt018 = ''
+   
+   SELECT qcbc002,qcbc005,qcbc006,qcbc007,qcbc008,qcbc009-qcbc010
+     INTO g_pmds2_d[l_ac].pmdt083,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017,g_pmds2_d[l_ac].pmdt018,
+          l_qcbc008,l_qcbc009
+     FROM qcbc_t
+    WHERE qcbcent = g_enterprise
+      AND qcbcsite= g_site
+      AND qcbcdocno = g_pmds2_d[l_ac].pmdt081
+      AND qcbcseq = g_pmds2_d[l_ac].pmdt082
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+      
+   #將數量轉換成入庫單位的數量
+   CALL s_aooi250_convert_qty(g_pmds2_d[l_ac].pmdt006,l_qcbc008,g_pmds2_d[l_ac].pmdt019,l_qcbc009)
+        RETURNING r_success,g_pmds2_d[l_ac].pmdt020
+   IF NOT r_success THEN 
+      RETURN r_success
+   END IF
+   
+   #計算參考數量及計價數量
+   CALL apmp570_02_get_pmdt022_pmdt024() RETURNING r_success
+      
+   CALL s_desc_get_qc_desc(g_site,g_pmds2_d[l_ac].pmdt083)
+        RETURNING g_pmds2_d[l_ac].pmdt083_desc
+   DISPLAY g_pmds2_d[l_ac].pmdt083_desc TO pmdt083_d2_02_desc
+   CALL s_desc_get_stock_desc(g_site,g_pmds2_d[l_ac].pmdt016)
+        RETURNING g_pmds2_d[l_ac].pmdt016_desc
+   DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+   CALL s_desc_get_locator_desc(g_site,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017)
+        RETURNING g_pmds2_d[l_ac].pmdt017_desc
+   DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+   
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: QC單號檢查
+# Memo...........:
+# Usage..........: CALL apmp570_02_pmdt081_chk()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2014/07/17 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp570_02_pmdt081_chk()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_n               LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = g_pmds2_d[l_ac].pmdt081
+   IF NOT cl_chk_exist("v_qcbadocno") THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n FROM qcba_t
+    WHERE qcbaent = g_enterprise
+      AND qcbasite = g_site
+      AND qcbadocno = g_pmds2_d[l_ac].pmdt081
+      AND qcba001 = g_pmds_d[g_master_idx].pmds006
+      AND qcba002 = g_pmds2_d[l_ac].pmdt028
+   IF cl_null(l_n) OR l_n = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'apm-00453'
+      LET g_errparam.extend = g_pmds2_d[l_ac].pmdt082
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp570_02_pmdt082_chk()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2014/07/17 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp570_02_pmdt082_chk()
+DEFINE r_success   LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   INITIALIZE g_chkparam.* TO NULL
+
+   LET g_chkparam.arg1 = g_pmds2_d[l_ac].pmdt081
+   LET g_chkparam.arg2 = g_pmds2_d[l_ac].pmdt082
+
+   #呼叫檢查存在並帶值的library
+   IF NOT cl_chk_exist("v_qcbcseq") THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+PRIVATE FUNCTION apmp570_02_set_required_b()
+DEFINE l_imae120         LIKE imae_t.imae120   
+DEFINE l_imaf055         LIKE imaf_t.imaf055
+DEFINE l_inaa007         LIKE inaa_t.inaa007  #161006-00018#23
+
+   #料件使用品檢判定等級功能
+   LET l_imae120 = NULL
+   SELECT imae120 INTO l_imae120 FROM imae_t
+    WHERE imaeent = g_enterprise
+      AND imaesite= g_site
+      AND imae001 = g_pmds2_d[l_ac].pmdt006
+   
+   IF cl_get_para(g_enterprise,g_site,'S-MFG-0001') = "Y" THEN  #是否使用品質判定功能
+      IF l_imae120 = 'Y' THEN
+         CALL cl_set_comp_required("pmdt081_d2_02,pmdt082_d2_02",TRUE)
+      END IF
+   END IF
+   
+   #非費用性料號，則庫位必輸
+   IF g_imaa004 <> 'E' THEN
+      CALL cl_set_comp_required("pmdt016_d2_02",TRUE)
+   END IF
+    
+   #料件庫存管理特徵=1.必須
+   LET l_imaf055 = NULL
+   SELECT imaf055 INTO l_imaf055 FROM imaf_t
+    WHERE imafent = g_enterprise
+      AND imafsite = g_site
+      AND imaf001 = g_pmds2_d[l_ac].pmdt006
+   IF l_imaf055 = '1' THEN
+      CALL cl_set_comp_required("pmdt063_d2_02",TRUE)
+   END IF
+   #161006-00018#23-S
+   SELECT inaa007 INTO l_inaa007 FROM inaa_t 
+    WHERE inaaent = g_enterprise
+      AND inaasite = g_site
+      AND inaa001 = g_pmds2_d[l_ac].pmdt016
+   IF l_inaa007 <> '5' THEN
+      CALL cl_set_comp_required("pmdt017_d2_02",TRUE)
+   END IF   
+   #161006-00018#23-E
+END FUNCTION
+
+PRIVATE FUNCTION apmp570_02_set_no_required_b()
+   
+   CALL cl_set_comp_required("pmdt081_d2_02,pmdt082_d2_02",FALSE)
+   CALL cl_set_comp_required("pmdt063_d2_02",FALSE)
+   CALL cl_set_comp_required("pmdt016_d2_02",FALSE)
+   CALL cl_set_comp_required("pmdt017_d2_02",FALSE) #161006-00018#23
+   
+END FUNCTION
+
+PRIVATE FUNCTION apmp570_02_set_entry_b()
+
+   CALL cl_set_comp_entry("pmdt022_d2_02,pmdt024_d2_02",TRUE)
+   CALL cl_set_comp_entry("pmdt016_d2_02,pmdt017_d2_02,pmdt018_d2_02",TRUE)
+   CALL cl_set_comp_entry("pmdt062_d2_02,pmdt063_d2_02",TRUE)
+   
+END FUNCTION
+
+PRIVATE FUNCTION apmp570_02_set_no_entry_b()
+DEFINE l_imaf015         LIKE imaf_t.imaf015
+DEFINE l_imaf144         LIKE imaf_t.imaf144
+DEFINE l_pmdt016         LIKE pmdt_t.pmdt016
+DEFINE l_pmdt017         LIKE pmdt_t.pmdt017
+DEFINE l_pmdt018         LIKE pmdt_t.pmdt018
+DEFINE l_inaa007         LIKE inaa_t.inaa007
+DEFINE l_imaf055         LIKE imaf_t.imaf055
+DEFINE l_pmdt063         LIKE pmdt_t.pmdt063
+DEFINE l_pmdt062         LIKE pmdt_t.pmdt062
+#161006-00018#23-S
+DEFINE l_flag            LIKE type_t.num5
+DEFINE l_ooac002         LIKE ooac_t.ooac002
+DEFINE l_ooac004         LIKE ooac_t.ooac004
+#161006-00018#23-E
+
+   LET l_imaf015 = ''
+   LET l_imaf144 = ''
+   LET l_imaf055 = ''
+   SELECT imaf015,imaf144,imaf055 INTO l_imaf015,l_imaf144,l_imaf055
+     FROM imaf_t
+    WHERE imafent = g_enterprise
+      AND imafsite= g_site
+      AND imaf001 = g_pmds2_d[l_ac].pmdt006
+      
+   #若該料件不使用參考單位，則參考數量不可輸入
+   IF cl_null(l_imaf015) THEN
+      CALL cl_set_comp_entry("pmdt022_d2_02",FALSE)
+   END IF
+   
+   #若該料件不使用計價單位，則計價數量不可輸入
+   IF cl_null(l_imaf144) THEN
+      CALL cl_set_comp_entry("pmdt024_d2_02",FALSE)
+   END IF
+   
+   #料件庫存管理特徵=2.不可
+   IF l_imaf055 = '2' THEN
+      CALL cl_set_comp_entry("pmdt063_d2_02",FALSE)
+   END IF
+   
+   #來源單據有維護庫儲批時，則不可修改
+   LET l_pmdt016 = ''
+   LET l_pmdt017 = ''
+   LET l_pmdt018 = ''
+   SELECT pmdt016,pmdt017,pmdt018,pmdt062,pmdt063 INTO l_pmdt016,l_pmdt017,l_pmdt018,l_pmdt062,l_pmdt063
+     FROM pmdt_t
+    WHERE pmdtent = g_enterprise
+      AND pmdtdocno = g_pmds_d[g_master_idx].pmds006
+      AND pmdtseq = g_pmds2_d[l_ac].pmdt028
+   #161006-00018#23-S     
+   CALL s_aooi200_get_slip(g_master.pmdsdocno) RETURNING l_flag,l_ooac002
+   CALL cl_get_doc_para(g_enterprise,g_site,l_ooac002,'D-MFG-0085') RETURNING l_ooac004     
+   #161006-00018#23-E   
+   IF NOT cl_null(l_pmdt016) THEN
+      IF l_ooac004 = 'N' THEN      #不可以修改 #161006-00018#23
+         CALL cl_set_comp_entry("pmdt016_d2_02",FALSE)
+      END IF  #161006-00018#23
+   END IF
+   IF NOT cl_null(l_pmdt016) AND (NOT cl_null(l_pmdt017) OR l_pmdt017 = ' ') THEN
+      IF l_ooac004 = 'N' THEN      #不可以修改 #161006-00018#23
+         CALL cl_set_comp_entry("pmdt017_d2_02",FALSE)
+      END IF  #161006-00018#23   
+   END IF
+   IF NOT cl_null(l_pmdt018) THEN
+      IF l_ooac004 = 'N' THEN      #不可以修改 #161006-00018#23
+         CALL cl_set_comp_entry("pmdt018_d2_02",FALSE)
+      END IF  #161006-00018#23    
+   END IF
+   #來源單號中有限定庫儲批，則多庫儲批否不可輸入
+   IF (NOT cl_null(l_pmdt016)) OR (NOT cl_null(l_pmdt017)) OR (NOT cl_null(l_pmdt018)) OR l_pmdt062 = 'Y' THEN
+      CALL cl_set_comp_entry("pmdt062_d2_02",FALSE)
+   END IF
+   IF (NOT cl_null(l_pmdt063)) THEN
+      CALL cl_set_comp_entry("pmdt063_d2_02",FALSE)
+   END IF
+   
+   IF g_pmds2_d[l_ac].pmdt062 = 'Y' THEN
+      LET g_pmds2_d[l_ac].pmdt016 = ''
+      LET g_pmds2_d[l_ac].pmdt016_desc = ''
+      LET g_pmds2_d[l_ac].pmdt017 = ''
+      LET g_pmds2_d[l_ac].pmdt017_desc = ''
+      LET g_pmds2_d[l_ac].pmdt018 = ''
+      LET g_pmds2_d[l_ac].pmdt063 = ''
+      CALL cl_set_comp_entry("pmdt016_d2_02,pmdt017_d2_02,pmdt018_d2_02,pmdt063_d2_02",FALSE)
+   END IF
+   
+   #庫位不使用儲位管理時，儲位不可維護
+   LET l_inaa007 = ''
+   SELECT inaa007 INTO l_inaa007
+     FROM inaa_t
+    WHERE inaaent = g_enterprise
+      AND inaasite= g_site
+      AND inaa001 = g_pmds2_d[l_ac].pmdt016
+   IF l_inaa007 = '5' THEN
+      LET g_pmds2_d[l_ac].pmdt017 = ''
+      LET g_pmds2_d[l_ac].pmdt017_desc = ''
+      CALL cl_set_comp_entry("pmdt017_d2_02",FALSE)
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 計算參考數量及計價數量
+# Memo...........:
+# Usage..........: CALL apmp570_02_get_pmdt022_pmdt024()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2014/09/23 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp570_02_get_pmdt022_pmdt024()
+DEFINE r_success         LIKE type_t.num5
+            
+    LET r_success = TRUE
+    
+    #參考數量
+    IF NOT cl_null(g_pmds2_d[l_ac].pmdt021) THEN
+       CALL s_aooi250_convert_qty(g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt019,g_pmds2_d[l_ac].pmdt021,g_pmds2_d[l_ac].pmdt020)
+            RETURNING g_flag,g_pmds2_d[l_ac].pmdt022
+       IF NOT g_flag THEN
+          LET r_success = FALSE
+       END IF
+    ELSE
+       LET g_pmds2_d[l_ac].pmdt022 = ''
+    END IF
+            
+    #計價數量
+    IF cl_get_para(g_enterprise,g_site,'S-BAS-0019') = "Y" THEN
+       CALL s_aooi250_convert_qty(g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt019,g_pmds2_d[l_ac].pmdt023,g_pmds2_d[l_ac].pmdt020)
+            RETURNING g_flag,g_pmds2_d[l_ac].pmdt024
+       IF NOT g_flag THEN
+          LET r_success = FALSE
+       END IF
+    ELSE
+       LET g_pmds2_d[l_ac].pmdt024 = g_pmds2_d[l_ac].pmdt020
+    END IF
+    
+    RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 理由碼的說明
+# Memo...........:
+# Usage..........: CALL apmp570_02_pmdt051_desc()
+#                  
+# Date & Author..: 2014/09/23 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp570_02_pmdt051_desc()
+DEFINE l_gzcb004         LIKE gzcb_t.gzcb004
+
+   #理由碼
+   LET l_gzcb004 = ''
+   CASE g_master.pmds011
+      WHEN '1'
+           #SELECT gzcb004 INTO l_gzcb004 FROM gzcb_t  WHERE gzcb001 = '24'  AND gzcb002 = 'apmt570'  #160816-00001#7 mark
+               LET l_gzcb004 = s_fin_get_scc_value('24','apmt570','2')  #160816-00001#7  Add 
+      WHEN '2'
+           #SELECT gzcb004 INTO l_gzcb004 FROM gzcb_t   WHERE gzcb001 = '24' AND gzcb002 = 'apmt571'  #160816-00001#7 mark
+               LET l_gzcb004 = s_fin_get_scc_value('24','apmt571','2')  #160816-00001#7  Add 
+      WHEN '10'
+           #SELECT gzcb004 INTO l_gzcb004 FROM gzcb_t  WHERE gzcb001 = '24'  AND gzcb002 = 'apmt573'  #160816-00001#7 mark
+               LET l_gzcb004 = s_fin_get_scc_value('24','apmt573','2')  #160816-00001#7  Add 
+   END CASE
+   
+   CALL s_desc_get_acc_desc(l_gzcb004,g_pmds2_d[l_ac].pmdt051)
+        RETURNING g_pmds2_d[l_ac].pmdt051_desc
+   
+   DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查必輸欄位是否都有輸入
+# Memo...........:
+# Usage..........: CALL apmp570_02_field_check()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2014/10/08 By stellar
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp570_02_field_check()
+DEFINE r_success        LIKE type_t.num5
+DEFINE l_pmds006        LIKE pmds_t.pmds006
+DEFINE l_pmds2_d        type_g_pmds2_d
+DEFINE l_imae120        LIKE imae_t.imae120
+DEFINE l_imaa004        LIKE imaa_t.imaa004
+
+   LET r_success = TRUE
+   
+   CALL cl_err_collect_init()
+   LET g_coll_title[1] = cl_getmsg("apm-00420",g_dlang)   #收貨單號(pmds006)
+   LET g_coll_title[2] = cl_getmsg("anm-00225",g_dlang)   #入庫項次(pmdtseq)
+
+   DECLARE apmp570_02_field_check_curs CURSOR FOR
+    SELECT pmds006,pmdtseq,pmdt028,pmdt001,pmdt002,
+           pmdt003,pmdt004,pmdt081,pmdt082,pmdt083,
+           pmdt005,pmdt006,pmdt007,pmdt009,pmdt010,
+           pmdt019,pmdt020,pmdt021,pmdt022,pmdt023,
+           pmdt024,pmdt062,pmdt016,pmdt017,pmdt018,
+           pmdt051,pmdt059
+      FROM apmp570_tmp02,apmp570_tmp03   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d1 ——> apmp570_tmp02,apmp570_02_temp_d2 ——> apmp570_tmp03
+     WHERE apmp570_tmp02.keyno = apmp570_tmp03.keyno   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d1 ——> apmp570_tmp02,apmp570_02_temp_d2 ——> apmp570_tmp03
+     ORDER BY pmds006,pmdtseq
+
+   FOREACH apmp570_02_field_check_curs INTO 
+      l_pmds006,l_pmds2_d.pmdtseq,l_pmds2_d.pmdt028,l_pmds2_d.pmdt001,l_pmds2_d.pmdt002,
+      l_pmds2_d.pmdt003,l_pmds2_d.pmdt004,l_pmds2_d.pmdt081,l_pmds2_d.pmdt082,l_pmds2_d.pmdt083,
+      l_pmds2_d.pmdt005,l_pmds2_d.pmdt006,l_pmds2_d.pmdt007,l_pmds2_d.pmdt009,l_pmds2_d.pmdt010,
+      l_pmds2_d.pmdt019,l_pmds2_d.pmdt020,l_pmds2_d.pmdt021,l_pmds2_d.pmdt022,l_pmds2_d.pmdt023,
+      l_pmds2_d.pmdt024,l_pmds2_d.pmdt062,l_pmds2_d.pmdt016,l_pmds2_d.pmdt017,l_pmds2_d.pmdt018,
+      l_pmds2_d.pmdt051,l_pmds2_d.pmdt059
+      
+      #料件使用品檢判定等級功能
+      LET l_imae120 = NULL
+      SELECT imae120 INTO l_imae120 FROM imae_t
+       WHERE imaeent = g_enterprise
+         AND imaesite= g_site
+         AND imae001 = l_pmds2_d.pmdt006
+         
+      LET l_imaa004 = ''
+      SELECT imaa004 INTO l_imaa004 FROM imaa_t
+       WHERE imaaent = g_enterprise
+         AND imaa001 = l_pmds2_d.pmdt006
+   
+      IF cl_get_para(g_enterprise,g_site,'S-MFG-0001') = "Y" THEN  #是否使用品質判定功能
+         IF l_imae120 = 'Y' AND 
+            (cl_null(l_pmds2_d.pmdt081) OR cl_null(l_pmds2_d.pmdt082)) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'apm-00632'
+            LET g_errparam.extend = l_pmds2_d.pmdt006
+            LET g_errparam.popup = TRUE
+            
+            LET g_errparam.coll_vals[1] = l_pmds006
+            LET g_errparam.coll_vals[2] = l_pmds2_d.pmdtseq
+            
+            CALL cl_err()
+            
+            LET r_success = FALSE
+         END IF
+      END IF
+      
+      #入庫數量
+      IF cl_null(l_pmds2_d.pmdt020) OR l_pmds2_d.pmdt020 <= 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00633'
+         LET g_errparam.extend = l_pmds2_d.pmdt020
+         LET g_errparam.popup = TRUE
+            
+         LET g_errparam.coll_vals[1] = l_pmds006
+         LET g_errparam.coll_vals[2] = l_pmds2_d.pmdtseq
+            
+         CALL cl_err()
+            
+         LET r_success = FALSE
+      END IF
+      
+      #庫位
+      IF l_pmds2_d.pmdt062 = 'N' AND cl_null(l_pmds2_d.pmdt016) AND l_imaa004 <> 'E' THEN
+         
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'sub-00126'
+         LET g_errparam.extend = l_pmds2_d.pmdt016
+         LET g_errparam.popup = TRUE
+            
+         LET g_errparam.coll_vals[1] = l_pmds006
+         LET g_errparam.coll_vals[2] = l_pmds2_d.pmdtseq
+            
+         CALL cl_err()
+            
+         LET r_success = FALSE
+      END IF
+   END FOREACH
+      
+   CALL cl_err_collect_show()
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 更新入庫明細資料
+# Memo...........: 按action時，鼠標停留的那一筆資料沒更新到
+# Usage..........: CALL apmp570_02_upd_data()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/10/09 By stellar
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp570_02_upd_data()
+
+   UPDATE apmp570_tmp03 SET pmdtseq = g_pmds2_d[l_ac].pmdtseq,  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+                                 pmdt028 = g_pmds2_d[l_ac].pmdt028,
+                                 pmdt001 = g_pmds2_d[l_ac].pmdt001,
+                                 pmdt002 = g_pmds2_d[l_ac].pmdt002,
+                                 pmdt003 = g_pmds2_d[l_ac].pmdt003,
+                                 pmdt004 = g_pmds2_d[l_ac].pmdt004,
+                                 pmdt081 = g_pmds2_d[l_ac].pmdt081,
+                                 pmdt082 = g_pmds2_d[l_ac].pmdt082,
+                                 pmdt083 = g_pmds2_d[l_ac].pmdt083,
+                                 pmdt005 = g_pmds2_d[l_ac].pmdt005,
+                                 pmdt006 = g_pmds2_d[l_ac].pmdt006,
+                                 pmdt007 = g_pmds2_d[l_ac].pmdt007,
+                                 pmdt009 = g_pmds2_d[l_ac].pmdt009,
+                                 pmdt010 = g_pmds2_d[l_ac].pmdt010,
+                                 pmdt019 = g_pmds2_d[l_ac].pmdt019,
+                                 pmdt020 = g_pmds2_d[l_ac].pmdt020,
+                                 pmdt021 = g_pmds2_d[l_ac].pmdt021,
+                                 pmdt022 = g_pmds2_d[l_ac].pmdt022,
+                                 pmdt023 = g_pmds2_d[l_ac].pmdt023,
+                                 pmdt024 = g_pmds2_d[l_ac].pmdt024,
+                                 pmdt062 = g_pmds2_d[l_ac].pmdt062,
+                                 pmdt016 = g_pmds2_d[l_ac].pmdt016,
+                                 pmdt017 = g_pmds2_d[l_ac].pmdt017,
+                                 pmdt018 = g_pmds2_d[l_ac].pmdt018,
+                                 pmdt063 = g_pmds2_d[l_ac].pmdt063,
+                                 pmdt051 = g_pmds2_d[l_ac].pmdt051,
+                                 pmdt059 = g_pmds2_d[l_ac].pmdt059
+    WHERE keyno = g_pmds_d[g_master_idx].keyno
+      AND pmdtseq = g_pmds2_d[l_ac].pmdtseq
+      
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp570_02_b()
+DEFINE l_ac1          LIKE type_t.num5   
+DEFINE l_pmds2_t      type_g_pmds2_d
+   
+   WHENEVER ERROR CONTINUE 
+   
+   DIALOG ATTRIBUTES(UNBUFFERED)   
+      INPUT ARRAY g_pmds2_d FROM s_detail2_apmp570_02.*
+          ATTRIBUTE(COUNT=g_rec_b2,MAXCOUNT=g_max_rec,WITHOUT DEFAULTS,
+                  INSERT ROW=FALSE,DELETE ROW=FALSE,APPEND ROW=FALSE)
+         BEFORE INPUT
+            SELECT pmdsdocno,pmds002,pmds011
+              INTO g_master.pmdsdocno,g_master.pmds002,g_master.pmds011
+              FROM apmp570_tmp01  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_tmp_master ——> apmp570_tmp01
+              
+            #理由碼
+            LET g_acc = ''
+            CASE g_master.pmds011
+               WHEN '1'
+                  #SELECT gzcb004 INTO g_acc FROM gzcb_t  WHERE gzcb001 = '24'    AND gzcb002 = 'apmt570'  #160816-00001#7 mark
+                  LET g_acc = s_fin_get_scc_value('24','apmt570','2')  #160816-00001#7  Add 
+               WHEN '2'
+                  #SELECT gzcb004 INTO g_acc FROM gzcb_t  WHERE gzcb001 = '24'    AND gzcb002 = 'apmt571'  #160816-00001#7 mark
+                  LET g_acc = s_fin_get_scc_value('24','apmt571','2')  #160816-00001#7  Add 
+               WHEN '10'
+                  #SELECT gzcb004 INTO g_acc FROM gzcb_t  WHERE gzcb001 = '24'    AND gzcb002 = 'apmt573'  #160816-00001#7 mark
+                  LET g_acc = s_fin_get_scc_value('24','apmt573','2')  #160816-00001#7  Add 
+            END CASE
+          
+         BEFORE ROW
+            LET l_ac = ARR_CURR()
+            SELECT pmdtseq,pmdt028,pmdt001,pmdt002,pmdt003,pmdt004,pmdt081,pmdt082,pmdt083,pmdt005,
+                   pmdt006,pmdt007,pmdt009,pmdt010,pmdt019,pmdt020,pmdt021,pmdt022,pmdt023,pmdt024,
+                   pmdt062,pmdt016,pmdt017,pmdt018,pmdt051,pmdt059
+              INTO g_pmds2_d[l_ac].pmdtseq,g_pmds2_d[l_ac].pmdt028,g_pmds2_d[l_ac].pmdt001,
+                   g_pmds2_d[l_ac].pmdt002,g_pmds2_d[l_ac].pmdt003,g_pmds2_d[l_ac].pmdt004,
+                   g_pmds2_d[l_ac].pmdt081,g_pmds2_d[l_ac].pmdt082,g_pmds2_d[l_ac].pmdt083,
+                   g_pmds2_d[l_ac].pmdt005,g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt007,
+                   g_pmds2_d[l_ac].pmdt009,g_pmds2_d[l_ac].pmdt010,g_pmds2_d[l_ac].pmdt019,
+                   g_pmds2_d[l_ac].pmdt020,g_pmds2_d[l_ac].pmdt021,g_pmds2_d[l_ac].pmdt022,
+                   g_pmds2_d[l_ac].pmdt023,g_pmds2_d[l_ac].pmdt024,g_pmds2_d[l_ac].pmdt062,
+                   g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017,g_pmds2_d[l_ac].pmdt018,
+                   g_pmds2_d[l_ac].pmdt051,g_pmds2_d[l_ac].pmdt059
+              FROM apmp570_tmp03  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+             WHERE keyno = g_pmds_d[g_master_idx].keyno
+               AND pmdtseq = g_pmds2_d[l_ac].pmdtseq
+            CALL apmp570_02_detail_show()
+            LET g_pmds2_d_t.* = g_pmds2_d[l_ac].*
+            LET g_pmds2_d_o.* = g_pmds2_d[l_ac].*
+            CALL cl_set_act_visible("open_apmp570_04",FALSE)
+            IF l_ac > 0 THEN
+               IF g_pmds2_d[l_ac].pmdt062 = 'Y' THEN
+                  CALL cl_set_act_visible("open_apmp570_04",TRUE)
+               END IF
+            END IF
+            LET g_imaa004 = ''
+            SELECT imaa004 INTO g_imaa004 FROM imaa_t
+             WHERE imaaent = g_enterprise
+               AND imaa001 = g_pmds2_d[l_ac].pmdt006
+            CALL apmp570_02_set_entry_b()
+            CALL apmp570_02_set_no_required_b()
+            CALL apmp570_02_set_required_b()
+            CALL apmp570_02_set_no_entry_b()
+             
+         AFTER FIELD pmdt081_d2_02
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt081) THEN
+               IF NOT apmp570_02_pmdt081_chk() THEN
+                  LET g_pmds2_d[l_ac].pmdt081 = g_pmds2_d_t.pmdt081
+                  NEXT FIELD CURRENT
+               END IF
+                  
+               IF NOT cl_null(g_pmds2_d[l_ac].pmdt082) THEN
+                  IF NOT apmp570_02_pmdt082_chk() THEN
+                     NEXT FIELD pmdt082_d2_02
+                  END IF
+                     
+                  #兩個欄位的檢查，避免QC判定項次沒修改，導致判斷錯誤，故只在此判斷QC判定單號有無修改
+                  IF g_pmds2_d[l_ac].pmdt081 <> g_pmds2_d_t.pmdt081 OR g_pmds2_d_t.pmdt081 IS NULL THEN
+                     #帶出判定結果的資料
+                     CALL apmp570_02_qc_result() RETURNING g_flag
+                     IF NOT g_flag THEN
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF
+            
+         AFTER FIELD pmdt082_d2_02
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt082) THEN
+               IF cl_null(g_pmds2_d[l_ac].pmdt081) THEN
+                  NEXT FIELD pmdt081_d2_02
+               END IF
+               
+               IF NOT apmp570_02_pmdt082_chk() THEN
+                  LET g_pmds2_d[l_ac].pmdt082 = g_pmds2_d_t.pmdt082
+                  NEXT FIELD CURRENT
+               END IF
+                  
+               #兩個欄位的檢查，避免QC判定單號沒修改，導致判斷錯誤，故只在此判斷QC判定項次有無修改
+               IF g_pmds2_d[l_ac].pmdt082 <> g_pmds2_d_t.pmdt082 OR g_pmds2_d_t.pmdt082 IS NULL THEN
+                  #帶出判定結果的資料
+                  CALL apmp570_02_qc_result() RETURNING g_flag
+                  IF NOT g_flag THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+         AFTER FIELD pmdt020_d2_02
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt020) THEN
+               IF NOT cl_ap_chk_Range(g_pmds2_d[l_ac].pmdt020,"0.000","1","","","azz-00079",1) THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #數量的取位
+               CALL s_aooi250_take_decimals(g_pmds2_d[l_ac].pmdt019,g_pmds2_d[l_ac].pmdt020)
+                    RETURNING g_flag,g_pmds2_d[l_ac].pmdt020
+               
+               #入庫數量的檢查
+              #CALL s_apmt520_chk_pmdt020_6(' ',0,g_pmds_d[g_master_idx].pmds006,g_pmds2_d[l_ac].pmdt028,0,0,g_pmds2_d[l_ac].pmdt020)    #160729-00032#1 mark
+               CALL s_apmt520_chk_pmdt020_6(' ',0,g_pmds_d[g_master_idx].pmds006,g_pmds2_d[l_ac].pmdt028,'','',g_pmds2_d[l_ac].pmdt020)  #160729-00032#1
+                    RETURNING g_flag
+               IF NOT g_flag THEN
+                  LET g_pmds2_d[l_ac].pmdt020 = g_pmds2_d_t.pmdt020
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #計算參考數量及計價數量
+               CALL apmp570_02_get_pmdt022_pmdt024() RETURNING g_flag
+               IF NOT g_flag THEN
+                  LET g_pmds2_d[l_ac].pmdt020 = g_pmds2_d_t.pmdt020
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            
+         AFTER FIELD pmdt022_d2_02
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt022) THEN
+               IF NOT cl_ap_chk_Range(g_pmds2_d[l_ac].pmdt022,"0.000","1","","","azz-00079",1) THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #數量的取位
+               CALL s_aooi250_take_decimals(g_pmds2_d[l_ac].pmdt021,g_pmds2_d[l_ac].pmdt022)
+                    RETURNING g_flag,g_pmds2_d[l_ac].pmdt022
+            END IF
+            
+         AFTER FIELD pmdt024_d2_02
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt024) THEN
+               IF NOT cl_ap_chk_Range(g_pmds2_d[l_ac].pmdt024,"0.000","1","","","azz-00079",1) THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #數量的取位
+               CALL s_aooi250_take_decimals(g_pmds2_d[l_ac].pmdt023,g_pmds2_d[l_ac].pmdt024)
+                    RETURNING g_flag,g_pmds2_d[l_ac].pmdt024
+            END IF
+            
+         AFTER FIELD pmdt062_d2_02
+            CALL cl_set_act_visible("open_apmp570_04",FALSE)
+            IF g_pmds2_d[l_ac].pmdt062 = 'Y' THEN
+               IF g_pmds2_d_o.pmdt062 = 'N' THEN
+                  DELETE FROM apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                   WHERE keyno = g_pmds_d[g_master_idx].keyno
+                     AND pmduseq = g_pmds2_d[l_ac].pmdtseq
+               END IF
+               IF NOT apmp570_04(g_pmds_d[g_master_idx].keyno,g_pmds2_d[l_ac].pmdtseq,g_pmds2_d[l_ac].pmdt020,g_pmds2_d[l_ac].pmdt022) THEN
+                  LET g_cnt = 0 
+                  SELECT COUNT(*) INTO g_cnt FROM apmp570_tmp04   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                   WHERE keyno = g_pmds_d[g_master_idx].keyno
+                     AND pmduseq = g_pmds2_d[l_ac].pmdtseq
+                  IF g_cnt = 0 THEN
+                     LET g_pmds2_d[l_ac].pmdt062 = 'N'
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL cl_set_act_visible("open_apmp570_04",TRUE)
+            END IF
+      
+            IF g_pmds2_d[l_ac].pmdt062 = 'Y' THEN
+               LET g_pmds2_d[l_ac].pmdt016 = ''
+               LET g_pmds2_d[l_ac].pmdt016_desc = ''
+               LET g_pmds2_d[l_ac].pmdt017 = ''
+               LET g_pmds2_d[l_ac].pmdt017_desc = ''
+               LET g_pmds2_d[l_ac].pmdt018 = ''
+               IF NOT cl_null(g_pmds2_d[l_ac].pmdt006) THEN
+                  #預設沖銷順序
+                  #CALL apmp570_02_def_pmdt011()
+               END IF
+            END IF 
+            LET g_pmds2_d_o.pmdt062 = g_pmds2_d[l_ac].pmdt062
+            CALL apmp570_02_set_entry_b()
+            #161006-00018#23-S
+            CALL apmp570_02_set_no_required_b()
+            CALL apmp570_02_set_required_b()  
+            #161006-00018#23-E                
+            CALL apmp570_02_set_no_entry_b()
+         
+         AFTER FIELD pmdt016_d2_02
+            LET g_pmds2_d[l_ac].pmdt016_desc = ''
+            DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt016) AND g_imaa004 <> 'E' THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_site
+               LET g_chkparam.arg2 = g_pmds2_d[l_ac].pmdt016
+               
+               IF cl_chk_exist("v_inaa001_1") THEN
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_pmds2_d[l_ac].pmdt016 = g_pmds2_d_t.pmdt016
+                  CALL s_desc_get_stock_desc(g_site,g_pmds2_d[l_ac].pmdt016) 
+                       RETURNING g_pmds2_d[l_ac].pmdt016_desc
+                  DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL s_desc_get_stock_desc(g_site,g_pmds2_d[l_ac].pmdt016) 
+                 RETURNING g_pmds2_d[l_ac].pmdt016_desc
+            DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+            CALL apmp570_02_set_entry_b()
+            #161006-00018#23-S
+            CALL apmp570_02_set_no_required_b()
+            CALL apmp570_02_set_required_b()  
+            #161006-00018#23-E                
+            CALL apmp570_02_set_no_entry_b()
+            
+         AFTER FIELD pmdt017_d2_02
+            LET g_pmds2_d[l_ac].pmdt017_desc = ''
+            DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt017) AND g_imaa004 <> 'E' THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_site
+               LET g_chkparam.arg2 = g_pmds2_d[l_ac].pmdt016
+               LET g_chkparam.arg3 = g_pmds2_d[l_ac].pmdt017
+         
+               IF cl_chk_exist("v_inab002_1") THEN
+               ELSE
+                  LET g_pmds2_d[l_ac].pmdt017 = g_pmds2_d_t.pmdt017
+                  CALL s_desc_get_locator_desc(g_site,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017) 
+                       RETURNING g_pmds2_d[l_ac].pmdt017_desc
+                  DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL s_desc_get_locator_desc(g_site,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017)
+                 RETURNING g_pmds2_d[l_ac].pmdt017_desc
+            DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+            
+         AFTER FIELD pmdt051_d2_02
+            LET g_pmds2_d[l_ac].pmdt051_desc = ''
+            DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt051) THEN
+               CALL s_azzi650_chk_exist(g_acc,g_pmds2_d[l_ac].pmdt051) 
+                    RETURNING g_flag
+               IF NOT g_flag THEN
+                  LET g_pmds2_d[l_ac].pmdt051 = g_pmds2_d_t.pmdt051
+                  
+                  CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                       RETURNING g_pmds2_d[l_ac].pmdt051_desc
+                  DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+                  
+                  NEXT FIELD CURRENT
+               END IF
+      
+               #檢核輸入的理由碼是否在單據別限制範圍內，若不在限制內則不允許使用此理由碼
+               CALL s_control_chk_doc('8',g_master.pmdsdocno,g_pmds2_d[l_ac].pmdt051,'','','','')
+                    RETURNING g_flag,g_flag1
+               IF NOT g_flag THEN
+                  LET g_pmds2_d[l_ac].pmdt051 = g_pmds2_d_t.pmdt051
+                  
+                  CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                       RETURNING g_pmds2_d[l_ac].pmdt051_desc
+                  DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+                  
+                  NEXT FIELD CURRENT
+               ELSE
+                  IF NOT g_flag1 THEN
+                     LET g_pmds2_d[l_ac].pmdt051 = g_pmds2_d_t.pmdt051
+                     
+                     CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                          RETURNING g_pmds2_d[l_ac].pmdt051_desc
+                     DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+                     
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                 RETURNING g_pmds2_d[l_ac].pmdt051_desc
+            DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+      
+         ON ROW CHANGE
+            UPDATE apmp570_tmp03 SET pmdtseq = g_pmds2_d[l_ac].pmdtseq,  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+                                          pmdt028 = g_pmds2_d[l_ac].pmdt028,
+                                          pmdt001 = g_pmds2_d[l_ac].pmdt001,
+                                          pmdt002 = g_pmds2_d[l_ac].pmdt002,
+                                          pmdt003 = g_pmds2_d[l_ac].pmdt003,
+                                          pmdt004 = g_pmds2_d[l_ac].pmdt004,
+                                          pmdt081 = g_pmds2_d[l_ac].pmdt081,
+                                          pmdt082 = g_pmds2_d[l_ac].pmdt082,
+                                          pmdt083 = g_pmds2_d[l_ac].pmdt083,
+                                          pmdt005 = g_pmds2_d[l_ac].pmdt005,
+                                          pmdt006 = g_pmds2_d[l_ac].pmdt006,
+                                          pmdt007 = g_pmds2_d[l_ac].pmdt007,
+                                          pmdt009 = g_pmds2_d[l_ac].pmdt009,
+                                          pmdt010 = g_pmds2_d[l_ac].pmdt010,
+                                          pmdt019 = g_pmds2_d[l_ac].pmdt019,
+                                          pmdt020 = g_pmds2_d[l_ac].pmdt020,
+                                          pmdt021 = g_pmds2_d[l_ac].pmdt021,
+                                          pmdt022 = g_pmds2_d[l_ac].pmdt022,
+                                          pmdt023 = g_pmds2_d[l_ac].pmdt023,
+                                          pmdt024 = g_pmds2_d[l_ac].pmdt024,
+                                          pmdt062 = g_pmds2_d[l_ac].pmdt062,
+                                          pmdt016 = g_pmds2_d[l_ac].pmdt016,
+                                          pmdt017 = g_pmds2_d[l_ac].pmdt017,
+                                          pmdt018 = g_pmds2_d[l_ac].pmdt018,
+                                          pmdt051 = g_pmds2_d[l_ac].pmdt051,
+                                          pmdt059 = g_pmds2_d[l_ac].pmdt059
+             WHERE keyno = g_pmds_d[g_master_idx].keyno
+               AND pmdtseq = g_pmds2_d[l_ac].pmdtseq
+            IF g_pmds2_d[l_ac].pmdt062 = 'N' THEN
+               DELETE FROM apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                WHERE keyno = g_pmds_d[g_master_idx].keyno
+                  AND pmduseq = g_pmds2_d[l_ac].pmdtseq
+                  
+               INSERT INTO apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                  (keyno,pmduseq,pmduseq1,
+                   pmdu001,pmdu002,pmdu003,pmdu004,pmdu005,
+                   pmdu006,pmdu007,pmdu008,pmdu009,pmdu010,
+                   pmdu011,pmdu012,pmdu013,pmdu014,pmdu015)
+                  VALUES
+                  (g_pmds_d[g_master_idx].keyno,g_pmds2_d[l_ac].pmdtseq,1,
+                   g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt007,g_pmds2_d[l_ac].pmdt009,g_pmds2_d[l_ac].pmdt010,g_pmds2_d[l_ac].pmdt063,
+                   g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017,g_pmds2_d[l_ac].pmdt018,g_pmds2_d[l_ac].pmdt019,g_pmds2_d[l_ac].pmdt020,
+                   g_pmds2_d[l_ac].pmdt021,g_pmds2_d[l_ac].pmdt022,0,0,0)
+                   
+            END IF
+         
+         AFTER INPUT
+           #CALL apmp570_02_refresh_pmdv()
+            CALL apmp570_02_fetch()
+      
+         ON ACTION controlp
+            CASE
+               WHEN INFIELD(pmdt081_d2_02)
+                    INITIALIZE g_qryparam.* TO NULL
+                    LET g_qryparam.state = 'i'
+                    LET g_qryparam.reqry = FALSE
+                    LET g_qryparam.default1 = g_pmds2_d[l_ac].pmdt081
+                    LET g_qryparam.where = " qcba001 = '",g_pmds_d[g_master_idx].pmds006,"'",
+                                       " AND qcba002 = ",g_pmds2_d[l_ac].pmdt028
+                    CALL q_qcbadocno()
+                    LET g_pmds2_d[l_ac].pmdt081 = g_qryparam.return1
+                    DISPLAY g_pmds2_d[l_ac].pmdt081 TO pmdt081_d2_02
+                    NEXT FIELD CURRENT
+               WHEN INFIELD(pmdt016_d2_02)
+                    INITIALIZE g_qryparam.* TO NULL
+                    LET g_qryparam.state = 'i'
+                    LET g_qryparam.reqry = FALSE
+                    LET g_qryparam.default1 = g_pmds2_d[l_ac].pmdt016
+                    CALL q_inaa001_2()
+                    LET g_pmds2_d[l_ac].pmdt016 = g_qryparam.return1
+                    DISPLAY g_pmds2_d[l_ac].pmdt016 TO pmdt016_d2_02
+                    
+                    CALL s_desc_get_stock_desc(g_site,g_pmds2_d[l_ac].pmdt016) 
+                         RETURNING g_pmds2_d[l_ac].pmdt016_desc
+                    DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+                    
+                    NEXT FIELD CURRENT
+               WHEN INFIELD(pmdt017_d2_02)
+                    INITIALIZE g_qryparam.* TO NULL
+                    LET g_qryparam.state = 'i'
+                    LET g_qryparam.reqry = FALSE
+                    LET g_qryparam.default1 = g_pmds2_d[l_ac].pmdt017
+                    LET g_qryparam.arg1 = g_pmds2_d[l_ac].pmdt016
+                    CALL q_inab002_3()
+                    LET g_pmds2_d[l_ac].pmdt017 = g_qryparam.return1
+                    DISPLAY g_pmds2_d[l_ac].pmdt017 TO pmdt017_d2_02
+                    
+                    CALL s_desc_get_locator_desc(g_site,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017)
+                         RETURNING g_pmds2_d[l_ac].pmdt017_desc
+                    DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+                    
+                    NEXT FIELD CURRENT
+               WHEN INFIELD(pmdt051_d2_02)
+                    INITIALIZE g_qryparam.* TO NULL
+                    LET g_qryparam.state = 'i'
+                    LET g_qryparam.reqry = FALSE
+                    LET g_qryparam.default1 = g_pmds2_d[l_ac].pmdt051
+                    LET g_qryparam.where = " 1=1 "
+                    
+                    LET g_where_sql = ''
+                    CALL s_control_get_doc_sql("oocq002",g_master.pmdsdocno,'8')
+                         RETURNING g_flag,g_where_sql
+                    IF g_flag THEN
+                       IF cl_null(g_where_sql) THEN
+                          LET g_where_sql = " 1=1 "
+                       END IF
+                       LET g_qryparam.where = g_qryparam.where," AND ",g_where_sql
+                    END IF
+                        
+                    LET g_qryparam.arg1 = g_acc
+                    CALL q_oocq002()
+                    LET g_pmds2_d[l_ac].pmdt051 = g_qryparam.return1
+                    DISPLAY g_pmds2_d[l_ac].pmdt051 TO pmdt051_d2_02
+                    
+                    CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051) 
+                         RETURNING g_pmds2_d[l_ac].pmdt051_desc
+                    DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+                    
+                    NEXT FIELD CURRENT
+            END CASE
+          
+         ON ACTION open_apmp570_04
+            LET g_action_choice="open_apmp570_04"
+            IF cl_auth_chk_act("open_apmp570_04") THEN
+               IF l_ac > 0 THEN
+                  #如果有維護多庫儲批
+                  IF g_pmds2_d[l_ac].pmdt062 = 'Y' THEN
+                     CALL s_transaction_begin()
+                     IF NOT apmp570_04(g_pmds_d[g_master_idx].keyno,g_pmds2_d[l_ac].pmdtseq,g_pmds2_d[l_ac].pmdt020,g_pmds2_d[l_ac].pmdt022) THEN
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+                     CALL apmp570_02_fetch()
+                  END IF
+               END IF
+            END IF
+      
+      
+         ON ACTION accept
+            #QC單號檢查
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt081) THEN
+               IF NOT apmp570_02_pmdt081_chk() THEN
+                  LET g_pmds2_d[l_ac].pmdt081 = g_pmds2_d_t.pmdt081
+                  NEXT FIELD CURRENT
+               END IF
+                  
+               IF NOT cl_null(g_pmds2_d[l_ac].pmdt082) THEN
+                  IF NOT apmp570_02_pmdt082_chk() THEN
+                     NEXT FIELD pmdt082_d2_02
+                  END IF
+                     
+                  #兩個欄位的檢查，避免QC判定項次沒修改，導致判斷錯誤，故只在此判斷QC判定單號有無修改
+                  IF g_pmds2_d[l_ac].pmdt081 <> g_pmds2_d_t.pmdt081 OR g_pmds2_d_t.pmdt081 IS NULL THEN
+                     #帶出判定結果的資料
+                     CALL apmp570_02_qc_result() RETURNING g_flag
+                     IF NOT g_flag THEN
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF  
+
+            #QC判定項次的檢查
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt082) THEN
+               IF cl_null(g_pmds2_d[l_ac].pmdt081) THEN
+                  NEXT FIELD pmdt081_d2_02
+               END IF
+               
+               IF NOT apmp570_02_pmdt082_chk() THEN
+                  LET g_pmds2_d[l_ac].pmdt082 = g_pmds2_d_t.pmdt082
+                  NEXT FIELD CURRENT
+               END IF
+                  
+               #兩個欄位的檢查，避免QC判定單號沒修改，導致判斷錯誤，故只在此判斷QC判定項次有無修改
+               IF g_pmds2_d[l_ac].pmdt082 <> g_pmds2_d_t.pmdt082 OR g_pmds2_d_t.pmdt082 IS NULL THEN
+                  #帶出判定結果的資料
+                  CALL apmp570_02_qc_result() RETURNING g_flag
+                  IF NOT g_flag THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+            #入庫數量的檢查
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt020) THEN
+               IF NOT cl_ap_chk_Range(g_pmds2_d[l_ac].pmdt020,"0.000","1","","","azz-00079",1) THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #數量的取位
+               CALL s_aooi250_take_decimals(g_pmds2_d[l_ac].pmdt019,g_pmds2_d[l_ac].pmdt020)
+                    RETURNING g_flag,g_pmds2_d[l_ac].pmdt020
+               
+               #入庫數量的檢查
+              #CALL s_apmt520_chk_pmdt020_6(' ',0,g_pmds_d[g_master_idx].pmds006,g_pmds2_d[l_ac].pmdt028,0,0,g_pmds2_d[l_ac].pmdt020)     #160729-00032#1 mark
+               CALL s_apmt520_chk_pmdt020_6(' ',0,g_pmds_d[g_master_idx].pmds006,g_pmds2_d[l_ac].pmdt028,'','',g_pmds2_d[l_ac].pmdt020)     #160729-00032#1
+                    RETURNING g_flag
+               IF NOT g_flag THEN
+                  LET g_pmds2_d[l_ac].pmdt020 = g_pmds2_d_t.pmdt020
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #計算參考數量及計價數量
+               CALL apmp570_02_get_pmdt022_pmdt024() RETURNING g_flag
+               IF NOT g_flag THEN
+                  LET g_pmds2_d[l_ac].pmdt020 = g_pmds2_d_t.pmdt020
+                  NEXT FIELD CURRENT
+               END IF
+            END IF  
+
+            #參考數量的檢查
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt022) THEN
+               IF NOT cl_ap_chk_Range(g_pmds2_d[l_ac].pmdt022,"0.000","1","","","azz-00079",1) THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #數量的取位
+               CALL s_aooi250_take_decimals(g_pmds2_d[l_ac].pmdt021,g_pmds2_d[l_ac].pmdt022)
+                    RETURNING g_flag,g_pmds2_d[l_ac].pmdt022
+            END IF
+            
+            #計價數量的檢查
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt024) THEN
+               IF NOT cl_ap_chk_Range(g_pmds2_d[l_ac].pmdt024,"0.000","1","","","azz-00079",1) THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #數量的取位
+               CALL s_aooi250_take_decimals(g_pmds2_d[l_ac].pmdt023,g_pmds2_d[l_ac].pmdt024)
+                    RETURNING g_flag,g_pmds2_d[l_ac].pmdt024
+            END IF    
+
+            ##多庫儲批入庫的檢查
+            #CALL cl_set_act_visible("open_apmp570_04",FALSE)
+            #IF g_pmds2_d[l_ac1].pmdt062 = 'Y' THEN
+            #   IF g_pmds2_d_o.pmdt062 = 'N' THEN
+            #      DELETE FROM apmp570_02_temp_d3
+            #       WHERE keyno = g_pmds_d[g_master_idx].keyno
+            #         AND pmduseq = g_pmds2_d[l_ac1].pmdtseq
+            #   END IF
+            #   IF NOT apmp570_04(g_pmds_d[g_master_idx].keyno,g_pmds2_d[l_ac1].pmdtseq,g_pmds2_d[l_ac1].pmdt020,g_pmds2_d[l_ac1].pmdt022) THEN
+            #      LET g_cnt = 0 
+            #      SELECT COUNT(*) INTO g_cnt FROM apmp570_02_temp_d3 
+            #       WHERE keyno = g_pmds_d[g_master_idx].keyno
+            #         AND pmduseq = g_pmds2_d[l_ac1].pmdtseq
+            #      IF g_cnt = 0 THEN
+            #         LET g_pmds2_d[l_ac1].pmdt062 = 'N'
+            #         NEXT FIELD CURRENT
+            #      END IF
+            #   END IF
+            #   CALL cl_set_act_visible("open_apmp570_04",TRUE)
+            #END IF
+            #
+            #IF g_pmds2_d[l_ac1].pmdt062 = 'Y' THEN
+            #   LET g_pmds2_d[l_ac1].pmdt016 = ''
+            #   LET g_pmds2_d[l_ac1].pmdt016_desc = ''
+            #   LET g_pmds2_d[l_ac1].pmdt017 = ''
+            #   LET g_pmds2_d[l_ac1].pmdt017_desc = ''
+            #   LET g_pmds2_d[l_ac1].pmdt018 = ''
+            #   IF NOT cl_null(g_pmds2_d[l_ac1].pmdt006) THEN
+            #      #預設沖銷順序
+            #      #CALL apmp570_02_def_pmdt011()
+            #   END IF
+            #END IF 
+            #LET g_pmds2_d_o.pmdt062 = g_pmds2_d[l_ac1].pmdt062
+            #CALL apmp570_02_set_entry_b()
+            #CALL apmp570_02_set_no_entry_b()
+            
+            #限定庫位的檢查
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt016) AND g_imaa004 <> 'E' THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_site
+               LET g_chkparam.arg2 = g_pmds2_d[l_ac].pmdt016
+               
+               IF cl_chk_exist("v_inaa001_1") THEN
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_pmds2_d[l_ac].pmdt016 = g_pmds2_d_t.pmdt016
+                  CALL s_desc_get_stock_desc(g_site,g_pmds2_d[l_ac].pmdt016) 
+                       RETURNING g_pmds2_d[l_ac].pmdt016_desc
+                  DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL s_desc_get_stock_desc(g_site,g_pmds2_d[l_ac].pmdt016) 
+                 RETURNING g_pmds2_d[l_ac].pmdt016_desc
+            DISPLAY g_pmds2_d[l_ac].pmdt016_desc TO pmdt016_d2_02_desc
+            CALL apmp570_02_set_entry_b()
+            #161006-00018#23-S
+            CALL apmp570_02_set_no_required_b()
+            CALL apmp570_02_set_required_b()  
+            #161006-00018#23-E                
+            CALL apmp570_02_set_no_entry_b()
+
+            #限定儲位的檢查
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt017) AND g_imaa004 <> 'E' THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_site
+               LET g_chkparam.arg2 = g_pmds2_d[l_ac].pmdt016
+               LET g_chkparam.arg3 = g_pmds2_d[l_ac].pmdt017
+         
+               IF cl_chk_exist("v_inab002_1") THEN
+               ELSE
+                  LET g_pmds2_d[l_ac].pmdt017 = g_pmds2_d_t.pmdt017
+                  CALL s_desc_get_locator_desc(g_site,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017) 
+                       RETURNING g_pmds2_d[l_ac].pmdt017_desc
+                  DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL s_desc_get_locator_desc(g_site,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017)
+                 RETURNING g_pmds2_d[l_ac].pmdt017_desc
+            DISPLAY g_pmds2_d[l_ac].pmdt017_desc TO pmdt017_d2_02_desc
+
+            #理由碼的檢查
+            IF NOT cl_null(g_pmds2_d[l_ac].pmdt051) THEN
+               CALL s_azzi650_chk_exist(g_acc,g_pmds2_d[l_ac].pmdt051) 
+                    RETURNING g_flag
+               IF NOT g_flag THEN
+                  LET g_pmds2_d[l_ac].pmdt051 = g_pmds2_d_t.pmdt051
+                  
+                  CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                       RETURNING g_pmds2_d[l_ac].pmdt051_desc
+                  DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+                  
+                  NEXT FIELD CURRENT
+               END IF
+      
+               #檢核輸入的理由碼是否在單據別限制範圍內，若不在限制內則不允許使用此理由碼
+               CALL s_control_chk_doc('8',g_master.pmdsdocno,g_pmds2_d[l_ac].pmdt051,'','','','')
+                    RETURNING g_flag,g_flag1
+               IF NOT g_flag THEN
+                  LET g_pmds2_d[l_ac].pmdt051 = g_pmds2_d_t.pmdt051
+                  
+                  CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                       RETURNING g_pmds2_d[l_ac].pmdt051_desc
+                  DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+                  
+                  NEXT FIELD CURRENT
+               ELSE
+                  IF NOT g_flag1 THEN
+                     LET g_pmds2_d[l_ac].pmdt051 = g_pmds2_d_t.pmdt051
+                     
+                     CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                          RETURNING g_pmds2_d[l_ac].pmdt051_desc
+                     DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+                     
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_acc_desc(g_acc,g_pmds2_d[l_ac].pmdt051)
+                 RETURNING g_pmds2_d[l_ac].pmdt051_desc
+            DISPLAY g_pmds2_d[l_ac].pmdt051_desc TO pmdt051_d2_02_desc
+            
+            #更新tmp資料
+            UPDATE apmp570_tmp03 SET pmdtseq = g_pmds2_d[l_ac].pmdtseq,  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d2 ——> apmp570_tmp03
+                                          pmdt028 = g_pmds2_d[l_ac].pmdt028,
+                                          pmdt001 = g_pmds2_d[l_ac].pmdt001,
+                                          pmdt002 = g_pmds2_d[l_ac].pmdt002,
+                                          pmdt003 = g_pmds2_d[l_ac].pmdt003,
+                                          pmdt004 = g_pmds2_d[l_ac].pmdt004,
+                                          pmdt081 = g_pmds2_d[l_ac].pmdt081,
+                                          pmdt082 = g_pmds2_d[l_ac].pmdt082,
+                                          pmdt083 = g_pmds2_d[l_ac].pmdt083,
+                                          pmdt005 = g_pmds2_d[l_ac].pmdt005,
+                                          pmdt006 = g_pmds2_d[l_ac].pmdt006,
+                                          pmdt007 = g_pmds2_d[l_ac].pmdt007,
+                                          pmdt009 = g_pmds2_d[l_ac].pmdt009,
+                                          pmdt010 = g_pmds2_d[l_ac].pmdt010,
+                                          pmdt019 = g_pmds2_d[l_ac].pmdt019,
+                                          pmdt020 = g_pmds2_d[l_ac].pmdt020,
+                                          pmdt021 = g_pmds2_d[l_ac].pmdt021,
+                                          pmdt022 = g_pmds2_d[l_ac].pmdt022,
+                                          pmdt023 = g_pmds2_d[l_ac].pmdt023,
+                                          pmdt024 = g_pmds2_d[l_ac].pmdt024,
+                                          pmdt062 = g_pmds2_d[l_ac].pmdt062,
+                                          pmdt016 = g_pmds2_d[l_ac].pmdt016,
+                                          pmdt017 = g_pmds2_d[l_ac].pmdt017,
+                                          pmdt018 = g_pmds2_d[l_ac].pmdt018,
+                                          pmdt051 = g_pmds2_d[l_ac].pmdt051,
+                                          pmdt059 = g_pmds2_d[l_ac].pmdt059
+             WHERE keyno = g_pmds_d[g_master_idx].keyno
+               AND pmdtseq = g_pmds2_d[l_ac].pmdtseq
+            IF g_pmds2_d[l_ac].pmdt062 = 'N' THEN
+               DELETE FROM apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                WHERE keyno = g_pmds_d[g_master_idx].keyno
+                  AND pmduseq = g_pmds2_d[l_ac].pmdtseq
+                  
+               INSERT INTO apmp570_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp570_02_temp_d3 ——> apmp570_tmp04
+                  (keyno,pmduseq,pmduseq1,
+                   pmdu001,pmdu002,pmdu003,pmdu004,pmdu005,
+                   pmdu006,pmdu007,pmdu008,pmdu009,pmdu010,
+                   pmdu011,pmdu012,pmdu013,pmdu014,pmdu015)
+                  VALUES
+                  (g_pmds_d[g_master_idx].keyno,g_pmds2_d[l_ac].pmdtseq,1,
+                   g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt007,g_pmds2_d[l_ac].pmdt009,g_pmds2_d[l_ac].pmdt010,g_pmds2_d[l_ac].pmdt063,
+                   g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017,g_pmds2_d[l_ac].pmdt018,g_pmds2_d[l_ac].pmdt019,g_pmds2_d[l_ac].pmdt020,
+                   g_pmds2_d[l_ac].pmdt021,g_pmds2_d[l_ac].pmdt022,0,0,0)
+                   
+            END IF            
+            CALL apmp570_02_fetch()
+            EXIT DIALOG             
+
+      
+         ON ACTION cancel 
+            LET g_pmds2_d[l_ac].*  = g_pmds2_d_t.*
+            EXIT DIALOG        
+      
+      END INPUT  
+   END DIALOG
+END FUNCTION
+
+ 
+{</section>}
+ 

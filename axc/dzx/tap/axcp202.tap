@@ -1,0 +1,1059 @@
+<add_points prog="axcp202" std_prog="axcp202" erpver="1.0" module="AXC" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.axcp202_xcbk001_chk" cite_std="N" status="d" ver="" src="s" new="Y" order="1">
+<![CDATA[# xcbk001參開欄位帶值
+PRIVATE FUNCTION axcp202_xcbk001_chk(p_xcbk001)
+   DEFINE p_xcbk001        LIKE xcbk_t.xcbk001
+   DEFINE r_xcbk001_desc   LIKE type_t.chr80
+   
+   LET r_xcbk001_desc = ''
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_xcbk001
+   CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_xcbk001_desc = '', g_rtn_fields[1] , ''
+   RETURN r_xcbk001_desc
+END FUNCTION]]>
+</point>
+  <point name="function.axcp202_p" cite_std="N" status="d" ver="" src="s" new="Y" order="2">
+<![CDATA[# 批處理邏輯
+PRIVATE FUNCTION axcp202_p()
+   DEFINE lc_param    type_parameter
+   DEFINE ls_js          STRING
+   DEFINE l_string       STRING 
+   DEFINE tok            base.stringtokenizer
+   DEFINE l_xcbj         RECORD  LIKE xcbj_t.*
+   DEFINE l_xcbk         RECORD  LIKE xcbk_t.*
+   DEFINE l_xcbi002      LIKE xcbi_t.xcbi002
+   DEFINE l_sum_xcbi104  LIKE xcbi_t.xcbi104
+   DEFINE l_sum_xcbi201  LIKE xcbi_t.xcbi201
+   DEFINE l_sum_xcbi202  LIKE xcbi_t.xcbi202
+   DEFINE l_sum_xcbi203  LIKE xcbi_t.xcbi203
+   DEFINE l_sum_xcbi204  LIKE xcbi_t.xcbi204
+   
+   CALL util.JSON.parse(ls_js,lc_param)
+   
+   CALL s_transaction_begin()
+   LET g_success = 'Y'
+   
+   #從wc中分別截取xcabsite，imaa001的查詢條件
+   IF NOT cl_null(lc_param.wc) OR lc_param.wc != " 1=1" THEN 
+      LET g_wc = lc_param.wc
+      LET g_wc = cl_replace_str(g_wc,"and","||")
+      LET tok = base.StringTokenizer.create(g_wc,"||")
+      WHILE tok.hasMoreTokens()
+         LET l_string = tok.nextToken()
+         LET l_string = l_string.trim()
+         IF l_string MATCHES '*xcbkcomp*' THEN
+            LET g_wc_xcbkcomp = l_string     
+         END IF
+         IF l_string MATCHES '*xcbkld*' THEN
+            LET g_wc_xcbkld = l_string
+         END IF
+      END WHILE
+   END IF   
+   
+   IF cl_null(g_wc_xcbkcomp) THEN 
+      LET g_wc_xcbkcomp = "1=1"
+   END IF
+   
+   IF cl_null(g_wc_xcbkld) THEN 
+      LET g_wc_xcbkld = "1=1"
+   END IF
+   
+   #根据"账套"、"成本计算类型"、"成本年度"、"成本期别"删除“工单人工制费分摊金额明细档(xcbk_t)”的资料
+   LET g_sql = "DELETE FROM xcbk_t ",
+               " WHERE xcbkent = '",g_enterprise,"'",
+               "   AND xcbk001 = '",lc_param.xcbk001,"'",
+               "   AND xcbk002 = '",lc_param.xcbk002,"'",
+               "   AND xcbk003 = '",lc_param.xcbk003,"'",
+               "   AND ",g_wc_xcbkld,
+               "   AND ",g_wc_xcbkcomp
+   
+   PREPARE cursor_pre_1 FROM g_sql 
+   EXECUTE cursor_pre_1 
+
+   LET g_sql = "SELECT * FROM xcbj_t ",
+               " WHERE xcbjent = '",g_enterprise,"'",
+               "   AND xcbj001 = '",lc_param.xcbk001,"'",
+               "   AND xcbj002 = '",lc_param.xcbk002,"'",
+               "   AND xcbj003 = '",lc_param.xcbk003,"'", 
+               "   AND ",g_wc_xcbkld,
+               "   AND ",g_wc_xcbkcomp
+   PREPARE xcbj_pre FROM g_sql
+   DECLARE xcbj_cur CURSOR FOR xcbj_pre  
+   
+   FOREACH xcbj_cur INTO l_xcbj.*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF 
+      
+      LET l_xcbk.xcbkent = g_enterprise
+      LET l_xcbk.xcbkld = l_xcbj.xcbjld
+      LET l_xcbk.xcbkcomp = l_xcbj.xcbjcomp
+      LET l_xcbk.xcbk001 = l_xcbj.xcbj001
+      LET l_xcbk.xcbk002 = l_xcbj.xcbj002
+      LET l_xcbk.xcbk003 = l_xcbj.xcbj003
+      LET l_xcbk.xcbk004 = l_xcbj.xcbj004
+      LET l_xcbk.xcbk005 = l_xcbj.xcbj005
+      LET l_xcbk.xcbk007 = l_xcbj.xcbj006
+      LET l_xcbk.xcbk101 = l_xcbj.xcbj105
+      LET l_xcbk.xcbk111 = l_xcbj.xcbj115
+      LET l_xcbk.xcbk121 = l_xcbj.xcbj125
+      
+      LET l_xcbk.xcbkownid = g_user
+      LET l_xcbk.xcbkowndp = g_dept
+      LET l_xcbk.xcbkcrtid = g_user
+      LET l_xcbk.xcbkcrtdp = g_dept 
+      LET l_xcbk.xcbkcrtdt = cl_get_current()
+      LET l_xcbk.xcbkmodid = ""
+      LET l_xcbk.xcbkmoddt = ""
+
+      
+      #實際工時
+      IF l_xcbj.xcbj006 = '1' THEN 
+         LET g_sql = "SELECT xcbi002,SUM(xcbi201) ",
+                     "  FROM xcbh_t,xcbi_t ",
+                     " WHERE xcbient = '",g_enterprise,"'",
+                     "   AND xcbient = xcbhent ",
+                     "   AND xcbidocno = xcbhdocno ",
+                     "   AND xcbhcomp = '",l_xcbj.xcbjcomp,"'",
+                     "   AND TO_CHAR(xcbh001,'YYYY') = ",lc_param.xcbk002,
+                     "   AND TO_CHAR(xcbh001,'MM') = ",lc_param.xcbk003,
+                     " GROUP BY xcbi002 "
+         PREPARE xcbi_pre_1 FROM g_sql
+         DECLARE xcbi_cur_1 CURSOR FOR xcbi_pre_1
+         FOREACH xcbi_cur_1 INTO l_xcbi002,l_sum_xcbi201
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF 
+            
+            LET l_xcbk.xcbk006 = l_xcbi002
+            LET l_xcbk.xcbk100 = l_sum_xcbi201
+            LET l_xcbk.xcbk202 = l_xcbk.xcbk100 * l_xcbk.xcbk101
+            LET l_xcbk.xcbk212 = l_xcbk.xcbk100 * l_xcbk.xcbk111
+            LET l_xcbk.xcbk222 = l_xcbk.xcbk100 * l_xcbk.xcbk121
+            
+            INSERT INTO xcbk_t VALUES(l_xcbk.*)
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("l_xcbk",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                        
+            END IF
+            
+         END FOREACH 
+         
+      END IF
+      
+      #標準工時
+      IF l_xcbj.xcbj006 = '2' THEN 
+         LET g_sql = "SELECT xcbi002,SUM(xcbi203) ",
+                     "  FROM xcbh_t,xcbi_t ",
+                     " WHERE xcbient = '",g_enterprise,"'",
+                     "   AND xcbient = xcbhent ",
+                     "   AND xcbidocno = xcbhdocno ",
+                     "   AND xcbhcomp = '",l_xcbj.xcbjcomp,"'",
+                     "   AND TO_CHAR(xcbh001,'YYYY') = ",lc_param.xcbk002,
+                     "   AND TO_CHAR(xcbh001,'MM') = ",lc_param.xcbk003,
+                     " GROUP BY xcbi002 "
+         PREPARE xcbi_pre_2 FROM g_sql
+         DECLARE xcbi_cur_2 CURSOR FOR xcbi_pre_2
+         FOREACH xcbi_cur_2 INTO l_xcbi002,l_sum_xcbi203
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF 
+            
+            LET l_xcbk.xcbk006 = l_xcbi002
+            LET l_xcbk.xcbk100 = l_sum_xcbi203
+            LET l_xcbk.xcbk202 = l_xcbk.xcbk100 * l_xcbk.xcbk101
+            LET l_xcbk.xcbk212 = l_xcbk.xcbk100 * l_xcbk.xcbk111
+            LET l_xcbk.xcbk222 = l_xcbk.xcbk100 * l_xcbk.xcbk121
+            
+            INSERT INTO xcbk_t VALUES(l_xcbk.*)
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("l_xcbk",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                        
+            END IF
+            
+         END FOREACH 
+      END IF
+      
+      #標準機時
+      IF l_xcbj.xcbj006 = '3' THEN 
+         LET g_sql = "SELECT xcbi002,SUM(xcbi204) ",
+                     "  FROM xcbh_t,xcbi_t ",
+                     " WHERE xcbient = '",g_enterprise,"'",
+                     "   AND xcbient = xcbhent ",
+                     "   AND xcbidocno = xcbhdocno ",
+                     "   AND xcbhcomp = '",l_xcbj.xcbjcomp,"'",
+                     "   AND TO_CHAR(xcbh001,'YYYY') = ",lc_param.xcbk002,
+                     "   AND TO_CHAR(xcbh001,'MM') = ",lc_param.xcbk003,
+                     " GROUP BY xcbi002 "
+         PREPARE xcbi_pre_3 FROM g_sql
+         DECLARE xcbi_cur_3 CURSOR FOR xcbi_pre_3
+         FOREACH xcbi_cur_3 INTO l_xcbi002,l_sum_xcbi204
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF 
+            
+            LET l_xcbk.xcbk006 = l_xcbi002
+            LET l_xcbk.xcbk100 = l_sum_xcbi204
+            LET l_xcbk.xcbk202 = l_xcbk.xcbk100 * l_xcbk.xcbk101
+            LET l_xcbk.xcbk212 = l_xcbk.xcbk100 * l_xcbk.xcbk111
+            LET l_xcbk.xcbk222 = l_xcbk.xcbk100 * l_xcbk.xcbk121
+            
+            INSERT INTO xcbk_t VALUES(l_xcbk.*)
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("l_xcbk",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                        
+            END IF
+            
+         END FOREACH 
+      END IF
+      
+      #產出數量*分攤權屬
+      IF l_xcbj.xcbj006 = '4' THEN 
+         LET g_sql = "SELECT xcbi002,SUM(xcbi104) ",
+                     "  FROM xcbh_t,xcbi_t ",
+                     " WHERE xcbient = '",g_enterprise,"'",
+                     "   AND xcbient = xcbhent ",
+                     "   AND xcbidocno = xcbhdocno ",
+                     "   AND xcbhcomp = '",l_xcbj.xcbjcomp,"'",
+                     "   AND TO_CHAR(xcbh001,'YYYY') = ",lc_param.xcbk002,
+                     "   AND TO_CHAR(xcbh001,'MM') = ",lc_param.xcbk003,
+                     " GROUP BY xcbi002 "
+         PREPARE xcbi_pre_4 FROM g_sql
+         DECLARE xcbi_cur_4 CURSOR FOR xcbi_pre_4
+         FOREACH xcbi_cur_4 INTO l_xcbi002,l_sum_xcbi202
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF 
+            
+            LET l_xcbk.xcbk006 = l_xcbi002
+            LET l_xcbk.xcbk100 = l_sum_xcbi104 * 1   #SUM(报工数量(xcbi104)*分摊权数(目前没有维护作业和档案，值给‘1’))
+            LET l_xcbk.xcbk202 = l_xcbk.xcbk100 * l_xcbk.xcbk101
+            LET l_xcbk.xcbk212 = l_xcbk.xcbk100 * l_xcbk.xcbk111
+            LET l_xcbk.xcbk222 = l_xcbk.xcbk100 * l_xcbk.xcbk121
+            
+            INSERT INTO xcbk_t VALUES(l_xcbk.*)
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("l_xcbk",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                        
+            END IF
+            
+         END FOREACH 
+      END IF
+      
+      #實際機時
+      IF l_xcbj.xcbj006 = '5' THEN 
+         LET g_sql = "SELECT xcbi002,SUM(xcbi202) ",
+                     "  FROM xcbh_t,xcbi_t ",
+                     " WHERE xcbient = '",g_enterprise,"'",
+                     "   AND xcbient = xcbhent ",
+                     "   AND xcbidocno = xcbhdocno ",
+                     "   AND xcbhcomp = '",l_xcbj.xcbjcomp,"'",
+                     "   AND TO_CHAR(xcbh001,'YYYY') = ",lc_param.xcbk002,
+                     "   AND TO_CHAR(xcbh001,'MM') = ",lc_param.xcbk003,
+                     " GROUP BY xcbi002 "
+         PREPARE xcbi_pre_5 FROM g_sql
+         DECLARE xcbi_cur_5 CURSOR FOR xcbi_pre_5
+         FOREACH xcbi_cur_5 INTO l_xcbi002,l_sum_xcbi202
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF 
+            
+            LET l_xcbk.xcbk006 = l_xcbi002
+            LET l_xcbk.xcbk100 = l_sum_xcbi202
+            LET l_xcbk.xcbk202 = l_xcbk.xcbk100 * l_xcbk.xcbk101
+            LET l_xcbk.xcbk212 = l_xcbk.xcbk100 * l_xcbk.xcbk111
+            LET l_xcbk.xcbk222 = l_xcbk.xcbk100 * l_xcbk.xcbk121
+            
+            INSERT INTO xcbk_t VALUES(l_xcbk.*)
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("l_xcbk",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                        
+            END IF
+            
+         END FOREACH 
+      END IF
+      
+   END FOREACH 
+  
+END FUNCTION]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.parameter" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[        xcbk001          LIKE xcbk_t.xcbk001,
+        xcbk001_desc     LIKE type_t.chr80,
+        xcbk002          LIKE xcbk_t.xcbk002,
+        xcbk003          LIKE xcbk_t.xcbk003,]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_wc             STRING
+DEFINE g_wc_xcbkcomp    STRING
+DEFINE g_wc_xcbkld      STRING]]>
+</point>
+  <point name="global.argv" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.background" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[   LET g_bgjob = "N" ]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_construct" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[         CONSTRUCT BY NAME lc_param.wc ON xcbkcomp,xcbkld
+            BEFORE CONSTRUCT    
+            
+            ON ACTION controlp INFIELD xcbkcomp
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE 
+               CALL q_ooef001_2()                        #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xcabsite    #顯示到畫面上
+               NEXT FIELD xcbkcomp                       #返回原欄位
+               
+            ON ACTION controlp INFIELD xcbkld
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE 
+               LET g_qryparam.arg1 = g_user
+               LET g_qryparam.arg2 = g_dept 
+               CALL q_authorised_ld()                    #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xcbkld      #顯示到畫面上
+               NEXT FIELD xcbkld                         #返回原欄位
+         END CONSTRUCT    ]]>
+</point>
+  <point name="ui_dialog.more_input" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[         INPUT BY NAME lc_param.xcbk001,lc_param.xcbk002,lc_param.xcbk003
+            
+            BEFORE INPUT
+               
+            AFTER FIELD xcbk001
+               CALL axcp202_xcbk001_desc(lc_param.xcbk001) RETURNING lc_param.xcbk001_desc
+               DISPLAY lc_param.xcbk001_desc TO xcbk001_desc
+               IF NOT cl_null(lc_param.xcbk001) THEN 
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = lc_param.xcbk001
+                  
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_xcat001") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET lc_param.xcbk001 = ''
+                     CALL axcp202_xcbk001_desc(lc_param.xcbk001) RETURNING lc_param.xcbk001_desc
+                     DISPLAY lc_param.xcbk001_desc TO xcbk001_desc
+                     NEXT FIELD CURRENT
+                  END IF
+        
+               END IF 
+               
+            
+            ON ACTION controlp INFIELD xcbk001
+               #add-point:ON ACTION controlp INFIELD xcck003
+               #此段落由子樣板a07產生            
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               
+               LET g_qryparam.default1 = lc_param.xcbk001             #給予default值
+               
+               #給予arg
+               
+               
+               CALL q_xcat001()                                #呼叫開窗
+               
+               LET lc_param.xcbk001 = g_qryparam.return1              
+               CALL axcp202_xcbk001_desc(lc_param.xcbk001) RETURNING lc_param.xcbk001_desc
+               DISPLAY lc_param.xcbk001_desc TO xcbk001_desc
+               DISPLAY lc_param.xcbk001 TO xcbk001              #
+               
+               NEXT FIELD xcbk001                          #返回原欄位
+         END INPUT]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.qbe_select" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.exit_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="transfer.argv.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.pre_process" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.count_progress" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.process" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.foreground_finish" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[      CALL axcp202_p(ls_js)
+      IF g_success = 'N' THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      ELSE
+         CALL s_transaction_end('Y','0')
+      END IF]]>
+</point>
+  <point name="process.background_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="function.axcp202_xcbk001_desc" cite_std="N" status="u" ver="" src="s" new="Y" order="1">
+<![CDATA[# xcbk001參開欄位帶值
+PRIVATE FUNCTION axcp202_xcbk001_desc(p_xcbk001)
+   DEFINE p_xcbk001        LIKE xcbk_t.xcbk001
+   DEFINE r_xcbk001_desc   LIKE type_t.chr80
+   
+   LET r_xcbk001_desc = ''
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_xcbk001
+   CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_xcbk001_desc = '', g_rtn_fields[1] , ''
+   RETURN r_xcbk001_desc
+END FUNCTION]]>
+</point>
+  <point name="function.axcp202_p" cite_std="N" status="u" ver="" src="s" new="Y" order="2">
+<![CDATA[# 批處理邏輯
+PRIVATE FUNCTION axcp202_p(ls_js)
+   DEFINE lc_param    type_parameter
+   DEFINE ls_js          STRING
+   DEFINE l_string       STRING 
+   DEFINE tok            base.stringtokenizer
+   DEFINE l_xcbj         RECORD  LIKE xcbj_t.*
+   DEFINE l_xcbk         RECORD  LIKE xcbk_t.*
+   DEFINE l_xcbi002      LIKE xcbi_t.xcbi002
+   DEFINE l_sum_xcbi104  LIKE xcbi_t.xcbi104
+   DEFINE l_sum_xcbi201  LIKE xcbi_t.xcbi201
+   DEFINE l_sum_xcbi202  LIKE xcbi_t.xcbi202
+   DEFINE l_sum_xcbi203  LIKE xcbi_t.xcbi203
+   DEFINE l_sum_xcbi204  LIKE xcbi_t.xcbi204
+   
+   CALL util.JSON.parse(ls_js,lc_param)
+   
+   CALL s_transaction_begin()
+   LET g_success = 'Y'
+   
+   #從wc中分別截取xcabsite，imaa001的查詢條件
+   IF NOT cl_null(lc_param.wc) OR lc_param.wc != " 1=1" THEN 
+      LET g_wc = lc_param.wc
+      LET g_wc = cl_replace_str(g_wc,"and","||")
+      LET tok = base.StringTokenizer.create(g_wc,"||")
+      WHILE tok.hasMoreTokens()
+         LET l_string = tok.nextToken()
+         LET l_string = l_string.trim()
+         IF l_string MATCHES '*xcbkcomp*' THEN
+            LET g_wc_xcbkcomp = l_string     
+         END IF
+         IF l_string MATCHES '*xcbkld*' THEN
+            LET g_wc_xcbkld = l_string
+         END IF
+      END WHILE
+   END IF   
+   
+   IF cl_null(g_wc_xcbkcomp) THEN 
+      LET g_wc_xcbkcomp = "1=1"
+   END IF
+   
+   IF cl_null(g_wc_xcbkld) THEN 
+      LET g_wc_xcbkld = "1=1"
+   END IF
+   
+   #根据"账套"、"成本计算类型"、"成本年度"、"成本期别"删除“工单人工制费分摊金额明细档(xcbk_t)”的资料
+   LET g_sql = "DELETE FROM xcbk_t ",
+               " WHERE xcbkent = '",g_enterprise,"'",
+               "   AND xcbk001 = '",lc_param.xcbk001,"'",
+               "   AND xcbk002 = '",lc_param.xcbk002,"'",
+               "   AND xcbk003 = '",lc_param.xcbk003,"'",
+               "   AND ",g_wc_xcbkld,
+               "   AND ",g_wc_xcbkcomp
+   
+   PREPARE cursor_pre_1 FROM g_sql 
+   EXECUTE cursor_pre_1 
+
+   LET g_sql = "SELECT * FROM xcbj_t ",
+               " WHERE xcbjent = '",g_enterprise,"'",
+               "   AND xcbj001 = '",lc_param.xcbk001,"'",
+               "   AND xcbj002 = '",lc_param.xcbk002,"'",
+               "   AND xcbj003 = '",lc_param.xcbk003,"'", 
+               "   AND ",g_wc_xcbkld,
+               "   AND ",g_wc_xcbkcomp
+   PREPARE xcbj_pre FROM g_sql
+   DECLARE xcbj_cur CURSOR FOR xcbj_pre  
+   
+   FOREACH xcbj_cur INTO l_xcbj.*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF 
+      
+      LET l_xcbk.xcbkent = g_enterprise
+      LET l_xcbk.xcbkld = l_xcbj.xcbjld
+      LET l_xcbk.xcbkcomp = l_xcbj.xcbjcomp
+      LET l_xcbk.xcbk001 = l_xcbj.xcbj001
+      LET l_xcbk.xcbk002 = l_xcbj.xcbj002
+      LET l_xcbk.xcbk003 = l_xcbj.xcbj003
+      LET l_xcbk.xcbk004 = l_xcbj.xcbj004
+      LET l_xcbk.xcbk005 = l_xcbj.xcbj005
+      LET l_xcbk.xcbk007 = l_xcbj.xcbj006
+      LET l_xcbk.xcbk101 = l_xcbj.xcbj105
+      LET l_xcbk.xcbk111 = l_xcbj.xcbj115
+      LET l_xcbk.xcbk121 = l_xcbj.xcbj125
+      
+      LET l_xcbk.xcbkownid = g_user
+      LET l_xcbk.xcbkowndp = g_dept
+      LET l_xcbk.xcbkcrtid = g_user
+      LET l_xcbk.xcbkcrtdp = g_dept 
+      LET l_xcbk.xcbkcrtdt = cl_get_current()
+      LET l_xcbk.xcbkmodid = ""
+      LET l_xcbk.xcbkmoddt = ""
+
+      
+      #實際工時
+      IF l_xcbj.xcbj006 = '1' THEN 
+         LET g_sql = "SELECT xcbi002,SUM(xcbi201) ",
+                     "  FROM xcbh_t,xcbi_t ",
+                     " WHERE xcbient = '",g_enterprise,"'",
+                     "   AND xcbient = xcbhent ",
+                     "   AND xcbidocno = xcbhdocno ",
+                     "   AND xcbhcomp = '",l_xcbj.xcbjcomp,"'",
+                     "   AND TO_CHAR(xcbh001,'YYYY') = ",lc_param.xcbk002,
+                     "   AND TO_CHAR(xcbh001,'MM') = ",lc_param.xcbk003,
+                     " GROUP BY xcbi002 "
+         PREPARE xcbi_pre_1 FROM g_sql
+         DECLARE xcbi_cur_1 CURSOR FOR xcbi_pre_1
+         FOREACH xcbi_cur_1 INTO l_xcbi002,l_sum_xcbi201
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF 
+            
+            LET l_xcbk.xcbk006 = l_xcbi002
+            LET l_xcbk.xcbk100 = l_sum_xcbi201
+            LET l_xcbk.xcbk202 = l_xcbk.xcbk100 * l_xcbk.xcbk101
+            LET l_xcbk.xcbk212 = l_xcbk.xcbk100 * l_xcbk.xcbk111
+            LET l_xcbk.xcbk222 = l_xcbk.xcbk100 * l_xcbk.xcbk121
+            
+            INSERT INTO xcbk_t VALUES(l_xcbk.*)
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("l_xcbk",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                        
+            END IF
+            
+         END FOREACH 
+         
+      END IF
+      
+      #標準工時
+      IF l_xcbj.xcbj006 = '2' THEN 
+         LET g_sql = "SELECT xcbi002,SUM(xcbi203) ",
+                     "  FROM xcbh_t,xcbi_t ",
+                     " WHERE xcbient = '",g_enterprise,"'",
+                     "   AND xcbient = xcbhent ",
+                     "   AND xcbidocno = xcbhdocno ",
+                     "   AND xcbhcomp = '",l_xcbj.xcbjcomp,"'",
+                     "   AND TO_CHAR(xcbh001,'YYYY') = ",lc_param.xcbk002,
+                     "   AND TO_CHAR(xcbh001,'MM') = ",lc_param.xcbk003,
+                     " GROUP BY xcbi002 "
+         PREPARE xcbi_pre_2 FROM g_sql
+         DECLARE xcbi_cur_2 CURSOR FOR xcbi_pre_2
+         FOREACH xcbi_cur_2 INTO l_xcbi002,l_sum_xcbi203
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF 
+            
+            LET l_xcbk.xcbk006 = l_xcbi002
+            LET l_xcbk.xcbk100 = l_sum_xcbi203
+            LET l_xcbk.xcbk202 = l_xcbk.xcbk100 * l_xcbk.xcbk101
+            LET l_xcbk.xcbk212 = l_xcbk.xcbk100 * l_xcbk.xcbk111
+            LET l_xcbk.xcbk222 = l_xcbk.xcbk100 * l_xcbk.xcbk121
+            
+            INSERT INTO xcbk_t VALUES(l_xcbk.*)
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("l_xcbk",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                        
+            END IF
+            
+         END FOREACH 
+      END IF
+      
+      #標準機時
+      IF l_xcbj.xcbj006 = '3' THEN 
+         LET g_sql = "SELECT xcbi002,SUM(xcbi204) ",
+                     "  FROM xcbh_t,xcbi_t ",
+                     " WHERE xcbient = '",g_enterprise,"'",
+                     "   AND xcbient = xcbhent ",
+                     "   AND xcbidocno = xcbhdocno ",
+                     "   AND xcbhcomp = '",l_xcbj.xcbjcomp,"'",
+                     "   AND TO_CHAR(xcbh001,'YYYY') = ",lc_param.xcbk002,
+                     "   AND TO_CHAR(xcbh001,'MM') = ",lc_param.xcbk003,
+                     " GROUP BY xcbi002 "
+         PREPARE xcbi_pre_3 FROM g_sql
+         DECLARE xcbi_cur_3 CURSOR FOR xcbi_pre_3
+         FOREACH xcbi_cur_3 INTO l_xcbi002,l_sum_xcbi204
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF 
+            
+            LET l_xcbk.xcbk006 = l_xcbi002
+            LET l_xcbk.xcbk100 = l_sum_xcbi204
+            LET l_xcbk.xcbk202 = l_xcbk.xcbk100 * l_xcbk.xcbk101
+            LET l_xcbk.xcbk212 = l_xcbk.xcbk100 * l_xcbk.xcbk111
+            LET l_xcbk.xcbk222 = l_xcbk.xcbk100 * l_xcbk.xcbk121
+            
+            INSERT INTO xcbk_t VALUES(l_xcbk.*)
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("l_xcbk",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                        
+            END IF
+            
+         END FOREACH 
+      END IF
+      
+      #產出數量*分攤權屬
+      IF l_xcbj.xcbj006 = '4' THEN 
+         LET g_sql = "SELECT xcbi002,SUM(xcbi104) ",
+                     "  FROM xcbh_t,xcbi_t ",
+                     " WHERE xcbient = '",g_enterprise,"'",
+                     "   AND xcbient = xcbhent ",
+                     "   AND xcbidocno = xcbhdocno ",
+                     "   AND xcbhcomp = '",l_xcbj.xcbjcomp,"'",
+                     "   AND TO_CHAR(xcbh001,'YYYY') = ",lc_param.xcbk002,
+                     "   AND TO_CHAR(xcbh001,'MM') = ",lc_param.xcbk003,
+                     " GROUP BY xcbi002 "
+         PREPARE xcbi_pre_4 FROM g_sql
+         DECLARE xcbi_cur_4 CURSOR FOR xcbi_pre_4
+         FOREACH xcbi_cur_4 INTO l_xcbi002,l_sum_xcbi202
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF 
+            
+            LET l_xcbk.xcbk006 = l_xcbi002
+            LET l_xcbk.xcbk100 = l_sum_xcbi104 * 1   #SUM(报工数量(xcbi104)*分摊权数(目前没有维护作业和档案，值给‘1’))
+            LET l_xcbk.xcbk202 = l_xcbk.xcbk100 * l_xcbk.xcbk101
+            LET l_xcbk.xcbk212 = l_xcbk.xcbk100 * l_xcbk.xcbk111
+            LET l_xcbk.xcbk222 = l_xcbk.xcbk100 * l_xcbk.xcbk121
+            
+            INSERT INTO xcbk_t VALUES(l_xcbk.*)
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("l_xcbk",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                        
+            END IF
+            
+         END FOREACH 
+      END IF
+      
+      #實際機時
+      IF l_xcbj.xcbj006 = '5' THEN 
+         LET g_sql = "SELECT xcbi002,SUM(xcbi202) ",
+                     "  FROM xcbh_t,xcbi_t ",
+                     " WHERE xcbient = '",g_enterprise,"'",
+                     "   AND xcbient = xcbhent ",
+                     "   AND xcbidocno = xcbhdocno ",
+                     "   AND xcbhcomp = '",l_xcbj.xcbjcomp,"'",
+                     "   AND TO_CHAR(xcbh001,'YYYY') = ",lc_param.xcbk002,
+                     "   AND TO_CHAR(xcbh001,'MM') = ",lc_param.xcbk003,
+                     " GROUP BY xcbi002 "
+         PREPARE xcbi_pre_5 FROM g_sql
+         DECLARE xcbi_cur_5 CURSOR FOR xcbi_pre_5
+         FOREACH xcbi_cur_5 INTO l_xcbi002,l_sum_xcbi202
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF 
+            
+            LET l_xcbk.xcbk006 = l_xcbi002
+            LET l_xcbk.xcbk100 = l_sum_xcbi202
+            LET l_xcbk.xcbk202 = l_xcbk.xcbk100 * l_xcbk.xcbk101
+            LET l_xcbk.xcbk212 = l_xcbk.xcbk100 * l_xcbk.xcbk111
+            LET l_xcbk.xcbk222 = l_xcbk.xcbk100 * l_xcbk.xcbk121
+            
+            INSERT INTO xcbk_t VALUES(l_xcbk.*)
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("l_xcbk",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                        
+            END IF
+            
+         END FOREACH 
+      END IF
+      
+   END FOREACH 
+  
+END FUNCTION]]>
+</point>
+  <section id="axcp202.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000000
+#+ 
+#+ Filename...: axcp202
+#+ Description: 期末投入工時統計和分攤作業
+#+ Creator....: 02114(2014/05/20)
+#+ Modifier...: 02114(2014/05/20)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="axcp202.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="axcp202.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION axcp202_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axcp202.main" ver="1" status="" src="s">
+<![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axc","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL axcp202_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axcp202 WITH FORM cl_ap_formpath("axc",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axcp202_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axcp202_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axcp202
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+</section>
+  <section id="axcp202.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="axcp202.process" ver="1" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION axcp202_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axcp202_process_cs CURSOR FROM ls_sql
+#  FOREACH axcp202_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="axcp202.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axcp202_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="axcp202.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION axcp202_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.*  TO NULL
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION CLOSE 
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = g_prog,TODAY USING "yyyymmdd",CURRENT HOUR TO SECOND 
+         LET g_jobid = cl_schedule_trim_colon(g_jobid)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axcp202_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = axcp202_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

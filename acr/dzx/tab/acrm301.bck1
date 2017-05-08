@@ -1,0 +1,148 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrm301" module="acr" jobmode="N" type="i10" industry="std" fix_arg="0" crtid="02748" crtdt="2014-04-18 10:58:20" modid="06137" moddt="2015-03-09 10:25:00" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="競爭供應商資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="crabunit,crabunit_desc(chr80),crab001,crabl004,crabl003,crab002,crabl005,crabstus,crab003,crab004,crab005,crab006,crab007,crab007_desc(chr80),crab008,crab009,crab009_desc(chr80),crab010,crab011,crab012,crabacti,crabownid,crabownid_desc(chr80),crabowndp,crabowndp_desc(chr80),crabcrtid,crabcrtid_desc(chr80),crabcrtdp,crabcrtdp_desc(chr80),crabcrtdt,crabmodid,crabmodid_desc(chr80),crabmoddt,crabcnfid,crabcnfid_desc(chr80),crabcnfdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acrm301" method="dialog">
+    <section id="input">
+      <input id="head" field="crabunit,crab001,crabl004,crabl003,crab002,crabl005,crabstus,crab003,crab004,crab005,crab006,crab007,crab008,crab009,crab010,crab011,crab012,crabacti"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="crabunit,crab001,crabl004,crabl003,crab002,crabl005,crabstus,crab003,crab004,crab005,crab006,crab007,crab008,crab009,crab010,crab011,crab012,crabacti,crabownid,crabowndp,crabcrtid,crabcrtdp,crabcrtdt,crabmodid,crabmoddt,crabcnfid,crabcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="crab001"/>
+      <set id="head" type="no_entry" field="crab001"/>
+    </init>
+    <init id="head">
+      <column id="crabunit">
+        <after>
+          <reference field="crabunit_desc" ref_field="crab_t.crabunit" map_field="crabent,crabunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="crabunit_desc"/>
+      <column id="crab001">
+        <after>
+          <mnemonic table="crabl_t" field="crabl001,crabl005" rtn_field="" wc="crabl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="crabl004"/>
+      <column id="crabl003"/>
+      <column id="crab002"/>
+      <column id="crabl005"/>
+      <column id="crabstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="crab003"/>
+      <column id="crab004"/>
+      <column id="crab005"/>
+      <column id="crab006">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crab007">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="crab007_desc" ref_field="crab_t.crab007" map_field="crabent,crab007" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="crab007_desc"/>
+      <column id="crab008">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crab009">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="crab009_desc" ref_field="crab_t.crab009" map_field="crabent,crab009" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="crab009_desc"/>
+      <column id="crab010">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crab011"/>
+      <column id="crab012"/>
+      <column id="crabacti"/>
+      <column id="crabownid">
+        <after>
+          <reference field="crabownid_desc" ref_field="crab_t.crabownid" map_field="crabownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crabownid_desc"/>
+      <column id="crabowndp">
+        <after>
+          <reference field="crabowndp_desc" ref_field="crab_t.crabowndp" map_field="crabowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crabowndp_desc"/>
+      <column id="crabcrtid">
+        <after>
+          <reference field="crabcrtid_desc" ref_field="crab_t.crabcrtid" map_field="crabcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crabcrtid_desc"/>
+      <column id="crabcrtdp">
+        <after>
+          <reference field="crabcrtdp_desc" ref_field="crab_t.crabcrtdp" map_field="crabcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crabcrtdp_desc"/>
+      <column id="crabcrtdt"/>
+      <column id="crabmodid">
+        <after>
+          <reference field="crabmodid_desc" ref_field="crab_t.crabmodid" map_field="crabmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crabmodid_desc"/>
+      <column id="crabmoddt"/>
+      <column id="crabcnfid">
+        <after>
+          <reference field="crabcnfid_desc" ref_field="crab_t.crabcnfid" map_field="crabcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crabcnfid_desc"/>
+      <column id="crabcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="crab_t" pk="crab001">
+      <sql id="forupd_sql" type="sql" query="SELECT crabunit,&apos;&apos;,crab001,&apos;&apos;,&apos;&apos;,crab002,&apos;&apos;,crabstus,crab003,crab004,crab005,crab006,crab007,&apos;&apos;,crab008,crab009,&apos;&apos;,crab010,crab011,crab012,crabacti,crabownid,&apos;&apos;,crabowndp,&apos;&apos;,crabcrtid,&apos;&apos;,crabcrtdp,&apos;&apos;,crabcrtdt,crabmodid,&apos;&apos;,crabmoddt,crabcnfid,&apos;&apos;,crabcnfdt FROM crab_t WHERE crabent= ? AND crab001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT crab001 FROM crab_t" order="crab001"/>
+      <sql id="append" type="lang" target="crabl_t.crabl004,crabl_t.crabl003,crabl_t.crabl005" table="crabl_t" fk="crab001" pk="crabl001,crabl002" field="crabl004,crabl003,crabl005"/>
+    </head>
+  </dataset>
+</assembly>
+

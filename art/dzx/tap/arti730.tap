@@ -1,0 +1,4268 @@
+<add_points prog="arti730" std_prog="arti730" erpver="1.0" module="ART" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.arti730_chk_symbol" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 檢查計算符號與英文字母輸入是否正確
+# Memo...........:
+# Usage..........: CALL arti730_chk_symbol(p_str,p_cnt)
+# Input parameter: p_str          欄位字串
+#                : p_cnt          檢查字母到第幾個
+# Return code....: 無
+# Date & Author..: 2014/4/14 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION arti730_chk_symbol(p_str,p_cnt)
+DEFINE p_str            STRING
+DEFINE p_cnt            LIKE type_t.num5
+DEFINE l_i              LIKE type_t.num5
+DEFINE l_chr            STRING
+DEFINE l_asc            LIKE type_t.num5
+DEFINE l_chk_brackets   LIKE type_t.num5
+DEFINE l_chk_order      LIKE type_t.num5
+DEFINE l_chk_str        STRING
+DEFINE l_len            LIKE type_t.num5
+DEFINE l_lenb           LIKE type_t.num5
+
+   LET g_errno = ''
+   LET l_chk_brackets = 0
+   #右括號 = 6，左括號 = 5，數字 = 4，字母 = 3，*/ = 2，+- = 1
+   LET　l_chk_order = 0
+   LET l_chk_str = ''
+   FOR l_i = 1 TO p_str.getLength()
+      LET l_chr = p_str.subString(l_i,l_i)
+      LET l_asc = ORD(p_str.subString(l_i,l_i))
+      
+      #運算符號檢查
+      CASE l_asc
+         #" "
+         WHEN 32
+         #"("
+         WHEN 40
+            #前一個不可以是字母(3)、數字(4)、)右括號(6)
+            #IF l_chk_order = 3 OR l_chk_order = 4 OR l_chk_order = 6 THEN
+            IF l_chk_order = 3 OR l_chk_order = 6 THEN
+               #輸入的公式，字母必須要有運算符號！;請重新輸入！
+               LET g_errno = 'art-00344'
+               RETURN
+            END IF
+            LET l_chk_brackets = l_chk_brackets + 1
+            LET l_chk_order = 5
+            
+         #")"
+         WHEN 41
+            #檢查括號順序
+            IF l_asc = 41 AND l_chk_brackets = 0 THEN
+               #輸入的括號順序有錯 或 輸入的括號不是半形字！;請重新輸入！
+               LET g_errno = 'art-00340'
+               RETURN
+            END IF
+            #前一個不可以是(左括號(5)、*/(2)、+-(1)
+            IF l_chk_order = 5 OR l_chk_order = 2 OR l_chk_order = 1 THEN
+               #輸入的公式，字母必須要有運算符號！;請重新輸入！
+               LET g_errno = 'art-00344'
+               RETURN
+            END IF
+            LET l_chk_brackets = l_chk_brackets - 1
+            LET l_chk_order = 6
+            
+         #"*"
+         WHEN 42
+            #前一個不可以是(左括號(5)、*/(2)、+-(1)、第一個值(0)
+            IF l_chk_order = 5 OR l_chk_order = 2 OR l_chk_order = 1 OR l_chk_order = 0 THEN
+               #輸入的公式，字母必須要有運算符號！;請重新輸入！
+               LET g_errno = 'art-00344'
+               RETURN
+            END IF
+            LET l_chk_order = 2
+            
+         #"+"
+         WHEN 43
+            #前一個不可以是*/(2)、+-(1)
+            IF l_chk_order = 2 OR l_chk_order = 1 THEN
+               #輸入的公式，字母必須要有運算符號！;請重新輸入！
+               LET g_errno = 'art-00344'
+               RETURN
+            END IF
+            LET l_chk_order = 1
+            
+         #"-"
+         WHEN 45
+            #前一個不可以是*/(2)、+-(1)
+            IF l_chk_order = 2 OR l_chk_order = 1 THEN
+               #輸入的公式，字母必須要有運算符號！;請重新輸入！
+               LET g_errno = 'art-00344'
+               RETURN
+            END IF
+            LET l_chk_order = 1
+            
+         #"/"
+         WHEN 47
+            #前一個不可以是(左括號(5)、*/(2)、+-(1)、第一個值(0)
+            IF l_chk_order = 5 OR l_chk_order = 2 OR l_chk_order = 1 OR l_chk_order = 0  THEN
+               #輸入的公式，字母必須要有運算符號！;請重新輸入！
+               LET g_errno = 'art-00344'
+               RETURN
+            END IF
+            LET l_chk_order = 2
+            
+         OTHERWISE
+            CASE
+               ##數字檢查
+               #WHEN l_asc >=48 AND l_asc <= 57
+               #   #前一個不可以是字母(3)、)右括號(6)
+               #   IF l_chk_order = 3 OR l_chk_order = 6 THEN
+               #      #輸入的公式，字母必須要有運算符號！;請重新輸入！
+               #      LET g_errno = 'art-00344'
+               #      RETURN
+               #   END IF
+               #   LET l_chk_order = 4
+                  
+               #字母檢查(小寫)
+               #"a" 97 ~ "z" 122
+               WHEN l_asc >= 97 AND l_asc <= 122
+                  IF l_asc <= 96 OR l_asc >= (97+p_cnt) THEN
+                     #輸入的英文字母必須由%1~%2！;請重新輸入！
+                     LET g_errno = 'art-00339'
+                     RETURN
+                  END IF
+                  #前一個不可以是)右括號(6)、數字(4)、字母(3)
+                  #IF l_chk_order = 3 OR l_chk_order = 4 OR l_chk_order = 6 THEN
+                  IF l_chk_order = 3 OR l_chk_order = 6 THEN
+                     #輸入的公式，字母必須要有運算符號！;請重新輸入！
+                     LET g_errno = 'art-00344'
+                     RETURN
+                  END IF
+                  LET l_chk_order = 3
+               OTHERWISE
+                  IF (l_asc < 40 AND l_asc > 48) OR l_asc = 44 OR l_asc = 46 THEN
+                     #輸入運算符應為'('　')'　'+'　'-'　'*'　'/'！;請重新輸入！
+                     LET g_errno = 'art-00338'
+                     RETURN
+                  ELSE
+                     #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2！;請重新輸入！
+                     LET g_errno = 'art-00345'
+                     RETURN
+                  END IF
+            END CASE
+      END CASE
+      LET l_chk_str = l_chk_str,l_chr
+   END FOR
+   
+   IF l_chk_brackets <> 0 THEN
+      #輸入的括號數量有錯 或 輸入的括號不是半形字！;請重新輸入！
+      LET g_errno = 'art-00341'
+      RETURN
+   END IF
+   
+   #字串最後一個字不可以是(左括號(5)、*/(2)、+-(1)
+   IF l_chk_order = '5' OR l_chk_order = '2' OR l_chk_order = '1' THEN
+      #輸入的公式，字母或數字之間必須要有運算符號！;請重新輸入！
+      LET g_errno = 'art-00344'
+      RETURN
+   END IF
+
+   LET g_sql = "SELECT LENGTH('",p_str,"'),LENGTHB('",p_str,"') FROM dual"
+   PREPARE arti730_chk FROM g_sql
+   DECLARE arti730_chk_crus CURSOR FOR arti730_chk
+   LET l_len = 0
+   LET l_lenb = 0
+   EXECUTE arti730_chk_crus INTO l_len,l_lenb
+   IF l_len <> l_lenb AND l_len <> 0 AND l_lenb <> 0 THEN
+      #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2！;請重新輸入！
+      LET g_errno = 'art-00345'
+      RETURN
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="construct.c.rtkg001" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtkg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtkg001  #顯示到畫面上
+            NEXT FIELD rtkg001                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.rtkgunit" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = '2'
+            CALL q_ooed004()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtkgunit  #顯示到畫面上
+            NEXT FIELD rtkgunit                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   LET g_errshow = 1]]>
+</point>
+  <point name="input.a.rtkg001" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_rtkg_m.rtkg001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_rtkg_m.rtkg001 != g_rtkg001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM rtkg_t WHERE "||"rtkgent = '" ||g_enterprise|| "' AND "||"rtkg001 = '"||g_rtkg_m.rtkg001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.rtkgunit" cite_std="N" status="u" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            LET g_rtkg_m.rtkgunit_desc = ' '
+            DISPLAY BY NAME g_rtkg_m.rtkgunit_desc
+            IF NOT cl_null(g_rtkg_m.rtkgunit) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkgunit != g_rtkg_m_o.rtkgunit OR g_rtkg_m_o.rtkgunit IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_rtkg_m.rtkgunit
+                  LET g_chkparam.arg2 = '2'
+                  LET g_chkparam.arg3 = g_site
+                  IF NOT cl_chk_exist("v_ooed004") THEN
+                     LET g_rtkg_m.rtkgunit = g_rtkg_m_o.rtkgunit
+                     CALL arti730_rtkgunit_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL arti730_rtkgunit_ref()
+            LET g_rtkg_m_o.rtkgunit = g_rtkg_m.rtkgunit
+]]>
+</point>
+  <point name="input.c.rtkgunit" cite_std="N" status="u" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtkg_m.rtkgunit             #給予default值
+            LET g_qryparam.default2 = "" #g_rtkg_m.ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = '2'
+            
+            CALL q_ooed004()                                #呼叫開窗
+
+            LET g_rtkg_m.rtkgunit = g_qryparam.return1              
+            #LET g_rtkg_m.ooefl003 = g_qryparam.return2 
+            DISPLAY g_rtkg_m.rtkgunit TO rtkgunit              #
+            #DISPLAY g_rtkg_m.ooefl003 TO ooefl003 #說明(簡稱)
+            CALL arti730_rtkgunit_ref()
+            NEXT FIELD rtkgunit                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.master_input.update_item" cite_std="N" status="u" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg001)  THEN
+               CALL n_rtkgl(g_rtkg_m.rtkg001)
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_rtkg_m.rtkg001
+               CALL ap_ref_array2(g_ref_fields," SELECT rtkgl003,rtkgl004 FROM rtkgl_t WHERE rtkglent = '"||g_enterprise||"' AND rtkgl001 = ? AND rtkgl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+               LET g_rtkg_m.rtkgl003 = g_rtn_fields[1]
+               LET g_rtkg_m.rtkgl004 = g_rtn_fields[2]
+               DISPLAY BY NAME g_rtkg_m.rtkgl003,g_rtkg_m.rtkgl004
+            END IF]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="u" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   CALL arti730_rtkgunit_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtkg_m.rtkg001
+   CALL ap_ref_array2(g_ref_fields," SELECT rtkgl003,rtkgl004 FROM rtkgl_t WHERE rtkglent = '"||g_enterprise||"' AND rtkgl001 = ? AND rtkgl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_rtkg_m.rtkgl003 = g_rtn_fields[1] 
+   LET g_rtkg_m.rtkgl004 = g_rtn_fields[2] 
+   DISPLAY g_rtkg_m.rtkgl003,g_rtkg_m.rtkgl004 TO rtkgl003,rtkgl004
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtkg_m.rtkgownid
+   CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+   LET g_rtkg_m.rtkgownid_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtkg_m.rtkgownid_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtkg_m.rtkgowndp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtkg_m.rtkgowndp_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtkg_m.rtkgowndp_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtkg_m.rtkgcrtid
+   CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+   LET g_rtkg_m.rtkgcrtid_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtkg_m.rtkgcrtid_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtkg_m.rtkgcrtdp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtkg_m.rtkgcrtdp_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtkg_m.rtkgcrtdp_desc
+   
+   CALL arti730_rtkgmodid_ref()]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[DEFINE g_rtkg_m_o            type_g_rtkg_m]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.default.insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.action_default" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.modify" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.reproduce" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.output" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.query" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.menu.related_document" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.menu.agendum" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.menu.followup" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.after_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.reproduce" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.related_document" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.agendum" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.followup" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.wc" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.cnt_sql" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_pre" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.reference" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.before_construct" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkgunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkgunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg011" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg011" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg011" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg021" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg021" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg021" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg022" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg022" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg022" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg023" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg023" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg023" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg020" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg020" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg020" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg031" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg031" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg031" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg032" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg032" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg032" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg033" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg033" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg033" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg041" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg041" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg041" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg042" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg042" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg042" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.rtkg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.rtkg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.rtkg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.more_construct" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.b_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.after_construct" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="filter.cs_ctrl" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="filter.add_cs" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="filter.b_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.action_control" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert.default" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[      LET g_rtkg_m.rtkgunit = g_site
+      LET g_rtkg_m.rtkg020 = '1'
+      CALL arti730_rtkgunit_ref()]]>
+</point>
+  <point name="insert.after_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_entry" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.before.input" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            LET g_rtkg_m_o.* = g_rtkg_m.*]]>
+</point>
+  <point name="input.b.rtkgunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.rtkgunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.rtkg001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.rtkgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.rtkgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.rtkgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg011" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg011" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg011) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkg011 != g_rtkg_m_o.rtkg011 OR g_rtkg_m_o.rtkg011 IS NULL )) THEN
+                  #可輸入的英文字母只有a~d，4個字母
+                  CALL arti730_chk_symbol(g_rtkg_m.rtkg011,4)
+                  IF NOT cl_null(g_errno) THEN
+                     CASE g_errno
+                        #輸入的英文字母必須由%1~%2！;請重新輸入！
+                        WHEN 'art-00339'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'d', 10)
+                        #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2　數字！;請重新輸入！
+                        WHEN 'art-00345'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'d', 10)
+                        OTHERWISE
+                           CALL cl_err('',g_errno,1)
+                     END CASE
+                     IF p_cmd = 'u' THEN
+                        LET g_rtkg_m.rtkg011 = g_rtkg_m_o.rtkg011
+                     END IF
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtkg_m_o.rtkg011 = g_rtkg_m.rtkg011]]>
+</point>
+  <point name="input.g.rtkg011" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg021" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg021" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg021) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkg021 != g_rtkg_m_o.rtkg021 OR g_rtkg_m_o.rtkg021 IS NULL )) THEN
+                  #可輸入的英文字母只有a~g，7個字母
+                  CALL arti730_chk_symbol(g_rtkg_m.rtkg021,7)
+                  IF NOT cl_null(g_errno) THEN
+                     CASE g_errno
+                        #輸入的英文字母必須由%1~%2！;請重新輸入！
+                        WHEN 'art-00339'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'g', 10)
+                        #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2　數字！;請重新輸入！
+                        WHEN 'art-00345'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'g', 10)
+                        OTHERWISE
+                           CALL cl_err('',g_errno,1)
+                     END CASE
+                     IF p_cmd = 'u' THEN
+                        LET g_rtkg_m.rtkg021 = g_rtkg_m_o.rtkg021
+                     END IF
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtkg_m_o.rtkg021 = g_rtkg_m.rtkg021]]>
+</point>
+  <point name="input.g.rtkg021" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg022" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg022" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg022) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkg022 != g_rtkg_m_o.rtkg022 OR g_rtkg_m_o.rtkg022 IS NULL )) THEN
+                  #可輸入的英文字母只有a~g，7個字母
+                  CALL arti730_chk_symbol(g_rtkg_m.rtkg022,7)
+                  IF NOT cl_null(g_errno) THEN
+                     CASE g_errno
+                        #輸入的英文字母必須由%1~%2！;請重新輸入！
+                        WHEN 'art-00339'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'g', 10)
+                        #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2　數字！;請重新輸入！
+                        WHEN 'art-00345'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'e', 10)
+                        OTHERWISE
+                           CALL cl_err('',g_errno,1)
+                     END CASE
+                     IF p_cmd = 'u' THEN
+                        LET g_rtkg_m.rtkg022 = g_rtkg_m_o.rtkg022
+                     END IF
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtkg_m_o.rtkg022 = g_rtkg_m.rtkg022]]>
+</point>
+  <point name="input.g.rtkg022" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg023" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg023" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg023) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkg023 != g_rtkg_m_o.rtkg023 OR g_rtkg_m_o.rtkg023 IS NULL )) THEN
+                  #可輸入的英文字母只有a~g，7個字母
+                  CALL arti730_chk_symbol(g_rtkg_m.rtkg023,7)
+                  IF NOT cl_null(g_errno) THEN
+                     CASE g_errno
+                        #輸入的英文字母必須由%1~%2！;請重新輸入！
+                        WHEN 'art-00339'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'g', 10)
+                        #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2　數字！;請重新輸入！
+                        WHEN 'art-00345'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'g', 10)
+                        OTHERWISE
+                           CALL cl_err('',g_errno,1)
+                     END CASE
+                     IF p_cmd = 'u' THEN
+                        LET g_rtkg_m.rtkg023 = g_rtkg_m_o.rtkg023
+                     END IF
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtkg_m_o.rtkg023 = g_rtkg_m.rtkg023]]>
+</point>
+  <point name="input.g.rtkg023" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg020" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg020" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.rtkg020" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg031" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg031" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg031) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkg031 != g_rtkg_m_o.rtkg031 OR g_rtkg_m_o.rtkg031 IS NULL )) THEN
+                  #可輸入的英文字母只有a~h，8個字母
+                  CALL arti730_chk_symbol(g_rtkg_m.rtkg031,8)
+                  IF NOT cl_null(g_errno) THEN
+                     CASE g_errno
+                        #輸入的英文字母必須由%1~%2！;請重新輸入！
+                        WHEN 'art-00339'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'h', 10)
+                        #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2　數字！;請重新輸入！
+                        WHEN 'art-00345'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'h', 10)
+                        OTHERWISE
+                           CALL cl_err('',g_errno,1)
+                     END CASE
+                     IF p_cmd = 'u' THEN
+                        LET g_rtkg_m.rtkg031 = g_rtkg_m_o.rtkg031
+                     END IF
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtkg_m_o.rtkg031 = g_rtkg_m.rtkg031]]>
+</point>
+  <point name="input.g.rtkg031" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg032" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg032" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg032) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkg032 != g_rtkg_m_o.rtkg032 OR g_rtkg_m_o.rtkg032 IS NULL )) THEN
+                  #可輸入的英文字母只有a~h，8個字母
+                  CALL arti730_chk_symbol(g_rtkg_m.rtkg032,8)
+                  IF NOT cl_null(g_errno) THEN
+                     CASE g_errno
+                        #輸入的英文字母必須由%1~%2！;請重新輸入！
+                        WHEN 'art-00339'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'h', 10)
+                        #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2　數字！;請重新輸入！
+                        WHEN 'art-00345'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'h', 10)
+                        OTHERWISE
+                           CALL cl_err('',g_errno,1)
+                     END CASE
+                     LET g_rtkg_m.rtkg032 = g_rtkg_m_o.rtkg032
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtkg_m_o.rtkg032 = g_rtkg_m.rtkg032]]>
+</point>
+  <point name="input.g.rtkg032" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg033" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg033" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg033) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkg033 != g_rtkg_m_o.rtkg033 OR g_rtkg_m_o.rtkg033 IS NULL )) THEN
+                  #可輸入的英文字母只有a~h，8個字母
+                  CALL arti730_chk_symbol(g_rtkg_m.rtkg033,8)
+                  IF NOT cl_null(g_errno) THEN
+                     CASE g_errno
+                        #輸入的英文字母必須由%1~%2！;請重新輸入！
+                        WHEN 'art-00339'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'h', 10)
+                        #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2　數字！;請重新輸入！
+                        WHEN 'art-00345'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'h', 10)
+                        OTHERWISE
+                           CALL cl_err('',g_errno,1)
+                     END CASE
+                     LET g_rtkg_m.rtkg033 = g_rtkg_m_o.rtkg033
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtkg_m_o.rtkg033 = g_rtkg_m.rtkg033]]>
+</point>
+  <point name="input.g.rtkg033" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg041" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg041" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg041) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkg041 != g_rtkg_m_o.rtkg041 OR g_rtkg_m_o.rtkg041 IS NULL )) THEN
+                  #可輸入的英文字母只有a~g，7個字母
+                  CALL arti730_chk_symbol(g_rtkg_m.rtkg041,7)
+                  IF NOT cl_null(g_errno) THEN
+                     CASE g_errno
+                        #輸入的英文字母必須由%1~%2！;請重新輸入！
+                        WHEN 'art-00339'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'g', 10)
+                        #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2　數字！;請重新輸入！
+                        WHEN 'art-00345'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'g', 10)
+                        OTHERWISE
+                           CALL cl_err('',g_errno,1)
+                     END CASE
+                     LET g_rtkg_m.rtkg041 = g_rtkg_m_o.rtkg041
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtkg_m_o.rtkg041 = g_rtkg_m.rtkg041]]>
+</point>
+  <point name="input.g.rtkg041" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg042" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg042" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg042) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkg042 != g_rtkg_m_o.rtkg042 OR g_rtkg_m_o.rtkg042 IS NULL )) THEN
+                  #可輸入的英文字母只有a~g，7個字母
+                  CALL arti730_chk_symbol(g_rtkg_m.rtkg042,7)
+                  IF NOT cl_null(g_errno) THEN
+                     CASE g_errno
+                        #輸入的英文字母必須由%1~%2！;請重新輸入！
+                        WHEN 'art-00339'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'g', 10)
+                        #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2　數字！;請重新輸入！
+                        WHEN 'art-00345'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'g', 10)
+                        OTHERWISE
+                           CALL cl_err('',g_errno,1)
+                     END CASE
+                     LET g_rtkg_m.rtkg042 = g_rtkg_m_o.rtkg042
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtkg_m_o.rtkg042 = g_rtkg_m.rtkg042]]>
+</point>
+  <point name="input.g.rtkg042" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.rtkg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.rtkg002" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            IF NOT cl_null(g_rtkg_m.rtkg002) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtkg_m.rtkg002 != g_rtkg_m_o.rtkg002 OR g_rtkg_m_o.rtkg002 IS NULL )) THEN
+                  #可輸入的英文字母只有a~d，4個字母
+                  CALL arti730_chk_symbol(g_rtkg_m.rtkg002,4)
+                  IF NOT cl_null(g_errno) THEN
+                     CASE g_errno
+                        #輸入的英文字母必須由%1~%2！;請重新輸入！
+                        WHEN 'art-00339'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'d', 10)
+                        #輸入公式裡必須打'('　')'　'+'　'-'　'*'　'/' 　%1~%2　數字！;請重新輸入！
+                        WHEN 'art-00345'
+                           CALL cl_err_msg(NULL,g_errno,'a'|| "|" ||'d', 10)
+                        OTHERWISE
+                           CALL cl_err('',g_errno,1)
+                     END CASE
+                     LET g_rtkg_m.rtkg002 = g_rtkg_m_o.rtkg002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtkg_m_o.rtkg002 = g_rtkg_m.rtkg002]]>
+</point>
+  <point name="input.g.rtkg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg011" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg021" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg022" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg023" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg020" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg031" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg032" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg033" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg041" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg042" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.rtkg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.b_input" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[   LET g_rtkg_m.rtkgunit = g_site]]>
+</point>
+  <point name="reproduce.head.b_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.m_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.a_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.after_reproduce" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="show.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="show.before" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="show.follow_pic" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="show.after" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.b_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.befroe.related_document_remove" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.m_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.a_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_browser_refresh.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.field_control" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[      CALL cl_set_comp_entry("rtkgunit",TRUE)]]>
+</point>
+  <point name="set_entry.after_control" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.field_control" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[      CALL cl_set_comp_entry("rtkgunit",FALSE)]]>
+</point>
+  <point name="set_no_entry.after_control" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.before" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.after" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.define" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[   DEFINE l_rtkgmoddt     DATETIME YEAR TO SECOND]]>
+</point>
+  <point name="statechange.before" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.before_menu" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.inactive" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.active" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.more_control" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.b_update" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[   LET l_rtkgmoddt = cl_get_current()
+   UPDATE rtkg_t
+      SET rtkgstus = lc_state,
+          rtkgmodid = g_user,
+          rtkgmoddt = l_rtkgmoddt
+    WHERE rtkgent = g_enterprise AND rtkg001 = g_rtkg_m.rtkg001]]>
+</point>
+  <point name="statechange.a_update" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[   LET g_rtkg_m.rtkgmodid = g_user
+   LET g_rtkg_m.rtkgmoddt = l_rtkgmoddt
+   DISPLAY BY NAME g_rtkg_m.rtkgmodid,g_rtkg_m.rtkgmoddt
+   CALL arti730_rtkgmodid_ref()]]>
+</point>
+  <point name="statechange.after" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="function.arti730_rtkgmodid_ref" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="" order="2">
+<![CDATA[
+################################################################################
+# Descriptions...: 最近修改者帶出说明
+# Memo...........:
+# Usage..........: CALL arti730_rtkgmodid_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/21 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION arti730_rtkgmodid_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtkg_m.rtkgmodid
+   CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+   LET g_rtkg_m.rtkgmodid_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtkg_m.rtkgmodid_desc
+END FUNCTION]]>
+</point>
+  <point name="function.arti730_rtkgunit_ref" cite_std="N" status="u" ver="" src="s" new="Y" cite_ver="" order="3">
+<![CDATA[
+################################################################################
+# Descriptions...: 應用組織帶出说明
+# Memo...........:
+# Usage..........: CALL arti730_rtkgunit_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/21 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION arti730_rtkgunit_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtkg_m.rtkgunit
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtkg_m.rtkgunit_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtkg_m.rtkgunit_desc
+END FUNCTION]]>
+</point>
+  <section id="arti730.browser_fill" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION arti730_browser_fill(p_wc,ps_page_action) 
+   DEFINE p_wc              STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_rtkg_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   CALL g_browser.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET l_searchcol = "rtkg001"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   
+   #add-point:browser_fill段wc控制
+   {<point name="browser_fill.wc"/>}
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(*) FROM rtkg_t ",
+               "  ",
+               "  LEFT JOIN rtkgl_t ON rtkg001 = rtkgl001 AND rtkgl002 = '",g_lang,"' ",
+               " WHERE rtkgent = '" ||g_enterprise|| "' AND ", 
+               p_wc CLIPPED
+                
+   #add-point:browser_fill段cnt_sql
+   {<point name="browser_fill.cnt_sql"/>}
+   #end add-point
+				
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt
+   FREE header_cnt_pre 
+   
+   #若超過最大顯示筆數
+   
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   LET g_wc = p_wc
+   #LET g_page_action = ps_page_action          # Keep Action
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+ 
+   CASE ps_page_action
+      
+      WHEN "F" 
+         LET g_pagestart = 1
+      
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+            LET g_pagestart = 1
+         END IF
+      
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+         
+      WHEN '/'
+         LET g_pagestart = g_jump
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = 1
+            CALL cl_err(g_jump,'azz-998',0)
+         END IF
+         
+      OTHERWISE
+         
+   END CASE
+   
+   LET l_sql_rank = "SELECT rtkgstus,rtkg001,RANK() OVER(ORDER BY rtkg001 ",
+ 
+                    g_order,
+                    ") AS RANK ",
+                    " FROM rtkg_t ",
+                    "  ",
+                    "  LEFT JOIN rtkgl_t ON rtkg001 = rtkgl001 AND rtkgl002 = '",g_lang,"' ",
+                    " WHERE rtkgent = '" ||g_enterprise|| "' AND ", g_wc
+ 
+   #add-point:browser_fill段before_pre
+   {<point name="browser_fill.before_pre"/>}
+   #end add-point					
+					
+   #定義翻頁CURSOR
+   LET g_sql= " SELECT rtkgstus,rtkg001 FROM (",l_sql_rank,") ",
+              "  WHERE RANK >= ", g_pagestart,
+              "    AND RANK <  ", (g_pagestart + g_max_browse) , 
+              "  ORDER BY ",l_searchcol," ",g_order
+ 
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_rtkg001
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point
+      
+      LET g_browser[g_cnt].b_statepic = cl_get_actipic(g_browser[g_cnt].b_statepic)
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err("Max_Row:"||g_max_rec USING "<<<<<","std-00002",0)
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser_cnt
+   LET g_rec_b = g_cnt - 1
+   LET g_current_cnt = g_browser_cnt
+   LET g_cnt = 0
+   
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="arti730.construct" ver="1" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION arti730_construct()
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_rtkg_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON rtkgunit,rtkg001,lbl_rtkgl003,rtkgl004,rtkgstus,rtkg011,rtkg021,rtkg022, 
+          rtkg023,rtkg020,rtkg031,rtkg032,rtkg033,rtkg041,rtkg042,rtkg002,rtkgownid,rtkgowndp,rtkgcrtid, 
+          rtkgcrtdp,rtkgcrtdt,rtkgmodid,rtkgmoddt
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         #此段落由子樣板a11產生
+         ##----<<rtkgownid>>----
+         #ON ACTION controlp INFIELD rtkgownid
+         #   CALL q_common('rtkg_t','rtkgownid',TRUE,FALSE,g_rtkg_m.rtkgownid) RETURNING ls_return
+         #   DISPLAY ls_return TO rtkgownid
+         #   NEXT FIELD rtkgownid  
+         #
+         ##----<<rtkgowndp>>----
+         #ON ACTION controlp INFIELD rtkgowndp
+         #   CALL q_common('rtkg_t','rtkgowndp',TRUE,FALSE,g_rtkg_m.rtkgowndp) RETURNING ls_return
+         #   DISPLAY ls_return TO rtkgowndp
+         #   NEXT FIELD rtkgowndp
+         #
+         ##----<<rtkgcrtid>>----
+         #ON ACTION controlp INFIELD rtkgcrtid
+         #   CALL q_common('rtkg_t','rtkgcrtid',TRUE,FALSE,g_rtkg_m.rtkgcrtid) RETURNING ls_return
+         #   DISPLAY ls_return TO rtkgcrtid
+         #   NEXT FIELD rtkgcrtid
+         #
+         ##----<<rtkgcrtdp>>----
+         #ON ACTION controlp INFIELD rtkgcrtdp
+         #   CALL q_common('rtkg_t','rtkgcrtdp',TRUE,FALSE,g_rtkg_m.rtkgcrtdp) RETURNING ls_return
+         #   DISPLAY ls_return TO rtkgcrtdp
+         #   NEXT FIELD rtkgcrtdp
+         #
+         ##----<<rtkgmodid>>----
+         #ON ACTION controlp INFIELD rtkgmodid
+         #   CALL q_common('rtkg_t','rtkgmodid',TRUE,FALSE,g_rtkg_m.rtkgmodid) RETURNING ls_return
+         #   DISPLAY ls_return TO rtkgmodid
+         #   NEXT FIELD rtkgmodid
+         #
+         ##----<<rtkgcnfid>>----
+         ##ON ACTION controlp INFIELD rtkgcnfid
+         ##   CALL q_common('rtkg_t','rtkgcnfid',TRUE,FALSE,g_rtkg_m.rtkgcnfid) RETURNING ls_return
+         ##   DISPLAY ls_return TO rtkgcnfid
+         ##   NEXT FIELD rtkgcnfid
+         #
+         ##----<<rtkgpstid>>----
+         ##ON ACTION controlp INFIELD rtkgpstid
+         ##   CALL q_common('rtkg_t','rtkgpstid',TRUE,FALSE,g_rtkg_m.rtkgpstid) RETURNING ls_return
+         ##   DISPLAY ls_return TO rtkgpstid
+         ##   NEXT FIELD rtkgpstid
+         
+         ##----<<rtkgcrtdt>>----
+         AFTER FIELD rtkgcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<rtkgmoddt>>----
+         AFTER FIELD rtkgmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<rtkgcnfdt>>----
+         #AFTER FIELD rtkgcnfdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<rtkgpstdt>>----
+         #AFTER FIELD rtkgpstdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+ 
+      
+         #一般欄位
+         #---------------------------<  Master  >---------------------------
+         #----<<rtkgunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkgunit
+            #add-point:BEFORE FIELD rtkgunit
+            {<point name="construct.b.rtkgunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkgunit
+            
+            #add-point:AFTER FIELD rtkgunit
+            {<point name="construct.a.rtkgunit" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkgunit
+         ON ACTION controlp INFIELD rtkgunit
+            #add-point:ON ACTION controlp INFIELD rtkgunit
+            {<point name="construct.c.rtkgunit" />}
+            #END add-point
+ 
+         #----<<rtkg001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg001
+            #add-point:BEFORE FIELD rtkg001
+            {<point name="construct.b.rtkg001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg001
+            
+            #add-point:AFTER FIELD rtkg001
+            {<point name="construct.a.rtkg001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg001
+         ON ACTION controlp INFIELD rtkg001
+            #add-point:ON ACTION controlp INFIELD rtkg001
+            {<point name="construct.c.rtkg001" />}
+            #END add-point
+ 
+         #----<<lbl_rtkgl003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD lbl_rtkgl003
+            #add-point:BEFORE FIELD lbl_rtkgl003
+            {<point name="construct.b.lbl_rtkgl003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD lbl_rtkgl003
+            
+            #add-point:AFTER FIELD lbl_rtkgl003
+            {<point name="construct.a.lbl_rtkgl003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.lbl_rtkgl003
+         ON ACTION controlp INFIELD lbl_rtkgl003
+            #add-point:ON ACTION controlp INFIELD lbl_rtkgl003
+            {<point name="construct.c.lbl_rtkgl003" />}
+            #END add-point
+ 
+         #----<<rtkgl004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkgl004
+            #add-point:BEFORE FIELD rtkgl004
+            {<point name="construct.b.rtkgl004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkgl004
+            
+            #add-point:AFTER FIELD rtkgl004
+            {<point name="construct.a.rtkgl004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkgl004
+         ON ACTION controlp INFIELD rtkgl004
+            #add-point:ON ACTION controlp INFIELD rtkgl004
+            {<point name="construct.c.rtkgl004" />}
+            #END add-point
+ 
+         #----<<rtkgstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkgstus
+            #add-point:BEFORE FIELD rtkgstus
+            {<point name="construct.b.rtkgstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkgstus
+            
+            #add-point:AFTER FIELD rtkgstus
+            {<point name="construct.a.rtkgstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkgstus
+         ON ACTION controlp INFIELD rtkgstus
+            #add-point:ON ACTION controlp INFIELD rtkgstus
+            {<point name="construct.c.rtkgstus" />}
+            #END add-point
+ 
+         #----<<rtkg011>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg011
+            #add-point:BEFORE FIELD rtkg011
+            {<point name="construct.b.rtkg011" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg011
+            
+            #add-point:AFTER FIELD rtkg011
+            {<point name="construct.a.rtkg011" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg011
+         ON ACTION controlp INFIELD rtkg011
+            #add-point:ON ACTION controlp INFIELD rtkg011
+            {<point name="construct.c.rtkg011" />}
+            #END add-point
+ 
+         #----<<rtkg021>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg021
+            #add-point:BEFORE FIELD rtkg021
+            {<point name="construct.b.rtkg021" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg021
+            
+            #add-point:AFTER FIELD rtkg021
+            {<point name="construct.a.rtkg021" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg021
+         ON ACTION controlp INFIELD rtkg021
+            #add-point:ON ACTION controlp INFIELD rtkg021
+            {<point name="construct.c.rtkg021" />}
+            #END add-point
+ 
+         #----<<rtkg022>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg022
+            #add-point:BEFORE FIELD rtkg022
+            {<point name="construct.b.rtkg022" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg022
+            
+            #add-point:AFTER FIELD rtkg022
+            {<point name="construct.a.rtkg022" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg022
+         ON ACTION controlp INFIELD rtkg022
+            #add-point:ON ACTION controlp INFIELD rtkg022
+            {<point name="construct.c.rtkg022" />}
+            #END add-point
+ 
+         #----<<rtkg023>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg023
+            #add-point:BEFORE FIELD rtkg023
+            {<point name="construct.b.rtkg023" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg023
+            
+            #add-point:AFTER FIELD rtkg023
+            {<point name="construct.a.rtkg023" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg023
+         ON ACTION controlp INFIELD rtkg023
+            #add-point:ON ACTION controlp INFIELD rtkg023
+            {<point name="construct.c.rtkg023" />}
+            #END add-point
+ 
+         #----<<rtkg020>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg020
+            #add-point:BEFORE FIELD rtkg020
+            {<point name="construct.b.rtkg020" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg020
+            
+            #add-point:AFTER FIELD rtkg020
+            {<point name="construct.a.rtkg020" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg020
+         ON ACTION controlp INFIELD rtkg020
+            #add-point:ON ACTION controlp INFIELD rtkg020
+            {<point name="construct.c.rtkg020" />}
+            #END add-point
+ 
+         #----<<rtkg031>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg031
+            #add-point:BEFORE FIELD rtkg031
+            {<point name="construct.b.rtkg031" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg031
+            
+            #add-point:AFTER FIELD rtkg031
+            {<point name="construct.a.rtkg031" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg031
+         ON ACTION controlp INFIELD rtkg031
+            #add-point:ON ACTION controlp INFIELD rtkg031
+            {<point name="construct.c.rtkg031" />}
+            #END add-point
+ 
+         #----<<rtkg032>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg032
+            #add-point:BEFORE FIELD rtkg032
+            {<point name="construct.b.rtkg032" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg032
+            
+            #add-point:AFTER FIELD rtkg032
+            {<point name="construct.a.rtkg032" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg032
+         ON ACTION controlp INFIELD rtkg032
+            #add-point:ON ACTION controlp INFIELD rtkg032
+            {<point name="construct.c.rtkg032" />}
+            #END add-point
+ 
+         #----<<rtkg033>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg033
+            #add-point:BEFORE FIELD rtkg033
+            {<point name="construct.b.rtkg033" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg033
+            
+            #add-point:AFTER FIELD rtkg033
+            {<point name="construct.a.rtkg033" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg033
+         ON ACTION controlp INFIELD rtkg033
+            #add-point:ON ACTION controlp INFIELD rtkg033
+            {<point name="construct.c.rtkg033" />}
+            #END add-point
+ 
+         #----<<rtkg041>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg041
+            #add-point:BEFORE FIELD rtkg041
+            {<point name="construct.b.rtkg041" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg041
+            
+            #add-point:AFTER FIELD rtkg041
+            {<point name="construct.a.rtkg041" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg041
+         ON ACTION controlp INFIELD rtkg041
+            #add-point:ON ACTION controlp INFIELD rtkg041
+            {<point name="construct.c.rtkg041" />}
+            #END add-point
+ 
+         #----<<rtkg042>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg042
+            #add-point:BEFORE FIELD rtkg042
+            {<point name="construct.b.rtkg042" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg042
+            
+            #add-point:AFTER FIELD rtkg042
+            {<point name="construct.a.rtkg042" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg042
+         ON ACTION controlp INFIELD rtkg042
+            #add-point:ON ACTION controlp INFIELD rtkg042
+            {<point name="construct.c.rtkg042" />}
+            #END add-point
+ 
+         #----<<rtkg002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg002
+            #add-point:BEFORE FIELD rtkg002
+            {<point name="construct.b.rtkg002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg002
+            
+            #add-point:AFTER FIELD rtkg002
+            {<point name="construct.a.rtkg002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.rtkg002
+         ON ACTION controlp INFIELD rtkg002
+            #add-point:ON ACTION controlp INFIELD rtkg002
+            {<point name="construct.c.rtkg002" />}
+            #END add-point
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+  
+   #LET g_wc = g_wc CLIPPED,cl_get_extra_cond("", "")
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.default_search" ver="1" status="" src="s">
+<![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION arti730_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " rtkg001 = '", g_argv[1], "' AND "
+   END IF
+   
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.delete" ver="1" status="" src="s">
+<![CDATA[#+ 資料刪除 
+PRIVATE FUNCTION arti730_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point  
+   
+   IF g_rtkg_m.rtkg001 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   CALL arti730_show()
+   
+   CALL s_transaction_begin()
+    
+   LET g_rtkg001_t = g_rtkg_m.rtkg001
+ 
+   
+   LET g_master_multi_table_t.rtkgl001 = g_rtkg_m.rtkg001
+LET g_master_multi_table_t.lbl_rtkgl003 = g_rtkg_m.lbl_rtkgl003
+LET g_master_multi_table_t.rtkgl004 = g_rtkg_m.rtkgl004
+ 
+ 
+   OPEN arti730_cl USING g_enterprise,
+                           g_rtkg_m.rtkg001
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN arti730_cl:", STATUS, 0)
+      CLOSE arti730_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   FETCH arti730_cl INTO g_rtkg_m.rtkgunit,g_rtkg_m.rtkg001,g_rtkg_m.lbl_rtkgl003,g_rtkg_m.rtkgl004, 
+       g_rtkg_m.rtkgstus,g_rtkg_m.rtkg011,g_rtkg_m.rtkg021,g_rtkg_m.rtkg022,g_rtkg_m.rtkg023,g_rtkg_m.rtkg020, 
+       g_rtkg_m.rtkg031,g_rtkg_m.rtkg032,g_rtkg_m.rtkg033,g_rtkg_m.rtkg041,g_rtkg_m.rtkg042,g_rtkg_m.rtkg002, 
+       g_rtkg_m.rtkgownid,g_rtkg_m.rtkgownid_desc,g_rtkg_m.rtkgowndp,g_rtkg_m.rtkgowndp_desc,g_rtkg_m.rtkgcrtid, 
+       g_rtkg_m.rtkgcrtid_desc,g_rtkg_m.rtkgcrtdp,g_rtkg_m.rtkgcrtdp_desc,g_rtkg_m.rtkgcrtdt,g_rtkg_m.rtkgmodid, 
+       g_rtkg_m.rtkgmodid_desc,g_rtkg_m.rtkgmoddt
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_rtkg_m.rtkg001,SQLCA.sqlcode,0)
+      RETURN
+   END IF
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point
+ 
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL g_pk_array.clear()
+      LET g_pk_array[1].values = g_rtkg_m.rtkg001
+      LET g_pk_array[1].column = 'rtkg001'
+ 
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+      DELETE FROM rtkg_t 
+       WHERE rtkgent = g_enterprise AND rtkg001 = g_rtkg_m.rtkg001 
+ 
+ 
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("rtkg_t",SQLCA.sqlcode,0)
+         CALL s_transaction_end('N','0')
+      END IF
+  
+      INITIALIZE l_var_keys_bak TO NULL 
+   INITIALIZE l_field_keys   TO NULL 
+   LET l_var_keys_bak[01] = g_master_multi_table_t.rtkgl001
+   LET l_field_keys[01] = 'rtkgl001'
+   LET l_var_keys_bak[02] = g_dlang
+   LET l_field_keys[02] = 'rtkgl002'
+   CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'rtkgl_t')
+ 
+      
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+      
+          
+      
+      CLEAR FORM
+      CALL arti730_ui_browser_refresh()
+      IF g_browser_cnt > 0 THEN
+         CALL arti730_fetch("P")
+      ELSE
+         CALL arti730_browser_fill(" 1=1 ","F")
+      END IF
+      
+   END IF
+ 
+   CLOSE arti730_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_rtkg_m.rtkg001,"D")
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000000
+#+ 
+#+ Filename...: arti730
+#+ Description: 自動補貨建議補貨量計算公式設定作業
+#+ Creator....: 04226(2014/04/12)
+#+ Modifier...: 04226(2014/04/14)
+#+ Buildtype..: 應用 i01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="arti730.fetch" ver="1" status="" src="s">
+<![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION arti730_fetch(p_fl)
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point  
+   
+   CASE p_fl
+      WHEN "F" LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         LET g_current_idx = g_header_cnt        
+      WHEN "/"
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+   
+   LET g_browser_cnt = g_browser.getLength()
+ 
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+   CALL ui.Interface.refresh()
+   
+   #單頭筆數顯示
+   #DISPLAY g_browser_idx TO FORMONLY.idx            #當下筆數
+   #DISPLAY g_browser_cnt TO FORMONLY.cnt            #總筆數
+   
+   
+   
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   # 設定browse索引
+ 
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   LET g_rtkg_m.rtkg001 = g_browser[g_current_idx].b_rtkg001
+ 
+                       
+   #重讀DB,因TEMP有不被更新特性
+    SELECT UNIQUE rtkgunit,rtkg001,rtkgstus,rtkg011,rtkg021,rtkg022,rtkg023,rtkg020,rtkg031,rtkg032, 
+        rtkg033,rtkg041,rtkg042,rtkg002,rtkgownid,rtkgowndp,rtkgcrtid,rtkgcrtdp,rtkgcrtdt,rtkgmodid, 
+        rtkgmoddt
+ INTO g_rtkg_m.rtkgunit,g_rtkg_m.rtkg001,g_rtkg_m.rtkgstus,g_rtkg_m.rtkg011,g_rtkg_m.rtkg021,g_rtkg_m.rtkg022, 
+     g_rtkg_m.rtkg023,g_rtkg_m.rtkg020,g_rtkg_m.rtkg031,g_rtkg_m.rtkg032,g_rtkg_m.rtkg033,g_rtkg_m.rtkg041, 
+     g_rtkg_m.rtkg042,g_rtkg_m.rtkg002,g_rtkg_m.rtkgownid,g_rtkg_m.rtkgowndp,g_rtkg_m.rtkgcrtid,g_rtkg_m.rtkgcrtdp, 
+     g_rtkg_m.rtkgcrtdt,g_rtkg_m.rtkgmodid,g_rtkg_m.rtkgmoddt
+ FROM rtkg_t
+ WHERE rtkgent = g_enterprise AND rtkg001 = g_rtkg_m.rtkg001
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("rtkg_t",SQLCA.sqlcode,0)
+      INITIALIZE g_rtkg_m.* TO NULL
+      RETURN
+   END IF
+   
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #重新顯示
+   CALL arti730_show()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.filter" ver="1" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION arti730_filter()
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+                         
+                            #add-point:filter段cs_ctrl
+                            {<point name="filter.cs_ctrl"/>}
+                            #end add-point
+                         
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.filter_parser" ver="1" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION arti730_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_rtkg_m RECORD
+       rtkgunit LIKE rtkg_t.rtkgunit, 
+   rtkg001 LIKE rtkg_t.rtkg001, 
+   lbl_rtkgl003 LIKE type_t.chr80, 
+   rtkgl004 LIKE type_t.chr80, 
+   rtkgstus LIKE rtkg_t.rtkgstus, 
+   rtkg011 LIKE rtkg_t.rtkg011, 
+   rtkg021 LIKE rtkg_t.rtkg021, 
+   rtkg022 LIKE rtkg_t.rtkg022, 
+   rtkg023 LIKE rtkg_t.rtkg023, 
+   rtkg020 LIKE rtkg_t.rtkg020, 
+   rtkg031 LIKE rtkg_t.rtkg031, 
+   rtkg032 LIKE rtkg_t.rtkg032, 
+   rtkg033 LIKE rtkg_t.rtkg033, 
+   rtkg041 LIKE rtkg_t.rtkg041, 
+   rtkg042 LIKE rtkg_t.rtkg042, 
+   rtkg002 LIKE rtkg_t.rtkg002, 
+   rtkgownid LIKE rtkg_t.rtkgownid, 
+   rtkgownid_desc LIKE type_t.chr80, 
+   rtkgowndp LIKE rtkg_t.rtkgowndp, 
+   rtkgowndp_desc LIKE type_t.chr80, 
+   rtkgcrtid LIKE rtkg_t.rtkgcrtid, 
+   rtkgcrtid_desc LIKE type_t.chr80, 
+   rtkgcrtdp LIKE rtkg_t.rtkgcrtdp, 
+   rtkgcrtdp_desc LIKE type_t.chr80, 
+   rtkgcrtdt DATETIME YEAR TO SECOND, 
+   rtkgmodid LIKE rtkg_t.rtkgmodid, 
+   rtkgmodid_desc LIKE type_t.chr80, 
+   rtkgmoddt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_rtkg_m        type_g_rtkg_m
+DEFINE g_rtkg_m_t      type_g_rtkg_m                #備份舊值
+   DEFINE g_rtkg001_t LIKE rtkg_t.rtkg001
+ 
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位  
+         b_statepic     LIKE type_t.chr50,
+            b_rtkg001 LIKE rtkg_t.rtkg001
+         #,rank           LIKE type_t.num10
+      END RECORD 
+          
+DEFINE g_master_multi_table_t    RECORD
+      rtkgl001 LIKE rtkgl_t.rtkgl001,
+      lbl_rtkgl003 LIKE rtkgl_t.rtkgl003,
+      rtkgl004 LIKE rtkgl_t.rtkgl004
+      END RECORD
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+  
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num5              #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_aw                  STRING             #確定當下點擊的單身
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num5   #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num5   #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num5   #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num5   #Browser 總筆數(所有資料)
+DEFINE g_tmp_page            LIKE type_t.num5   
+DEFINE g_row_index           LIKE type_t.num5
+DEFINE g_chk                 BOOLEAN
+DEFINE g_default             BOOLEAN            #是否有外部參數查詢
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="arti730.init" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION arti730_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+      CALL cl_set_combo_scc_part('rtkgstus','17','N,Y')
+ 
+      CALL cl_set_combo_scc('rtkg020','6051') 
+ 
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL arti730_default_search()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.input" ver="1" status="" src="s">
+<![CDATA[#+ 資料輸入
+PRIVATE FUNCTION arti730_input(p_cmd)
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #切換畫面
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL arti730_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL arti730_set_no_entry(p_cmd)
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DISPLAY BY NAME g_rtkg_m.rtkgunit,g_rtkg_m.rtkg001,g_rtkg_m.lbl_rtkgl003,g_rtkg_m.rtkgl004,g_rtkg_m.rtkgstus, 
+       g_rtkg_m.rtkg011,g_rtkg_m.rtkg021,g_rtkg_m.rtkg022,g_rtkg_m.rtkg023,g_rtkg_m.rtkg020,g_rtkg_m.rtkg031, 
+       g_rtkg_m.rtkg032,g_rtkg_m.rtkg033,g_rtkg_m.rtkg041,g_rtkg_m.rtkg042,g_rtkg_m.rtkg002
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_rtkg_m.rtkgunit,g_rtkg_m.rtkg001,g_rtkg_m.lbl_rtkgl003,g_rtkg_m.rtkgl004,g_rtkg_m.rtkgstus, 
+          g_rtkg_m.rtkg011,g_rtkg_m.rtkg021,g_rtkg_m.rtkg022,g_rtkg_m.rtkg023,g_rtkg_m.rtkg020,g_rtkg_m.rtkg031, 
+          g_rtkg_m.rtkg032,g_rtkg_m.rtkg033,g_rtkg_m.rtkg041,g_rtkg_m.rtkg042,g_rtkg_m.rtkg002 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+ 
+         ON ACTION update_item
+            #add-point:ON ACTION update_item
+            {<point name="input.master_input.update_item" />}
+            #END add-point
+ 
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            LET g_master_multi_table_t.rtkgl001 = g_rtkg_m.rtkg001
+LET g_master_multi_table_t.lbl_rtkgl003 = g_rtkg_m.lbl_rtkgl003
+LET g_master_multi_table_t.rtkgl004 = g_rtkg_m.rtkgl004
+ 
+            #add-point:input開始前
+            {<point name="input.before.input"/>}
+            #end add-point
+   
+         #---------------------------<  Master  >---------------------------
+         #----<<rtkgunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkgunit
+            #add-point:BEFORE FIELD rtkgunit
+            {<point name="input.b.rtkgunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkgunit
+            
+            #add-point:AFTER FIELD rtkgunit
+            {<point name="input.a.rtkgunit" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkgunit
+            #add-point:ON CHANGE rtkgunit
+            {<point name="input.g.rtkgunit" />}
+            #END add-point
+ 
+         #----<<rtkg001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg001
+            #add-point:BEFORE FIELD rtkg001
+            {<point name="input.b.rtkg001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg001
+            
+            #add-point:AFTER FIELD rtkg001
+            {<point name="input.a.rtkg001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg001
+            #add-point:ON CHANGE rtkg001
+            {<point name="input.g.rtkg001" />}
+            #END add-point
+ 
+         #----<<lbl_rtkgl003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD lbl_rtkgl003
+            #add-point:BEFORE FIELD lbl_rtkgl003
+            {<point name="input.b.lbl_rtkgl003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD lbl_rtkgl003
+            
+            #add-point:AFTER FIELD lbl_rtkgl003
+            {<point name="input.a.lbl_rtkgl003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE lbl_rtkgl003
+            #add-point:ON CHANGE lbl_rtkgl003
+            {<point name="input.g.lbl_rtkgl003" />}
+            #END add-point
+ 
+         #----<<rtkgl004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkgl004
+            #add-point:BEFORE FIELD rtkgl004
+            {<point name="input.b.rtkgl004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkgl004
+            
+            #add-point:AFTER FIELD rtkgl004
+            {<point name="input.a.rtkgl004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkgl004
+            #add-point:ON CHANGE rtkgl004
+            {<point name="input.g.rtkgl004" />}
+            #END add-point
+ 
+         #----<<rtkgstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkgstus
+            #add-point:BEFORE FIELD rtkgstus
+            {<point name="input.b.rtkgstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkgstus
+            
+            #add-point:AFTER FIELD rtkgstus
+            {<point name="input.a.rtkgstus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkgstus
+            #add-point:ON CHANGE rtkgstus
+            {<point name="input.g.rtkgstus" />}
+            #END add-point
+ 
+         #----<<rtkg011>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg011
+            #add-point:BEFORE FIELD rtkg011
+            {<point name="input.b.rtkg011" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg011
+            
+            #add-point:AFTER FIELD rtkg011
+            {<point name="input.a.rtkg011" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg011
+            #add-point:ON CHANGE rtkg011
+            {<point name="input.g.rtkg011" />}
+            #END add-point
+ 
+         #----<<rtkg021>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg021
+            #add-point:BEFORE FIELD rtkg021
+            {<point name="input.b.rtkg021" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg021
+            
+            #add-point:AFTER FIELD rtkg021
+            {<point name="input.a.rtkg021" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg021
+            #add-point:ON CHANGE rtkg021
+            {<point name="input.g.rtkg021" />}
+            #END add-point
+ 
+         #----<<rtkg022>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg022
+            #add-point:BEFORE FIELD rtkg022
+            {<point name="input.b.rtkg022" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg022
+            
+            #add-point:AFTER FIELD rtkg022
+            {<point name="input.a.rtkg022" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg022
+            #add-point:ON CHANGE rtkg022
+            {<point name="input.g.rtkg022" />}
+            #END add-point
+ 
+         #----<<rtkg023>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg023
+            #add-point:BEFORE FIELD rtkg023
+            {<point name="input.b.rtkg023" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg023
+            
+            #add-point:AFTER FIELD rtkg023
+            {<point name="input.a.rtkg023" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg023
+            #add-point:ON CHANGE rtkg023
+            {<point name="input.g.rtkg023" />}
+            #END add-point
+ 
+         #----<<rtkg020>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg020
+            #add-point:BEFORE FIELD rtkg020
+            {<point name="input.b.rtkg020" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg020
+            
+            #add-point:AFTER FIELD rtkg020
+            {<point name="input.a.rtkg020" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg020
+            #add-point:ON CHANGE rtkg020
+            {<point name="input.g.rtkg020" />}
+            #END add-point
+ 
+         #----<<rtkg031>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg031
+            #add-point:BEFORE FIELD rtkg031
+            {<point name="input.b.rtkg031" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg031
+            
+            #add-point:AFTER FIELD rtkg031
+            {<point name="input.a.rtkg031" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg031
+            #add-point:ON CHANGE rtkg031
+            {<point name="input.g.rtkg031" />}
+            #END add-point
+ 
+         #----<<rtkg032>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg032
+            #add-point:BEFORE FIELD rtkg032
+            {<point name="input.b.rtkg032" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg032
+            
+            #add-point:AFTER FIELD rtkg032
+            {<point name="input.a.rtkg032" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg032
+            #add-point:ON CHANGE rtkg032
+            {<point name="input.g.rtkg032" />}
+            #END add-point
+ 
+         #----<<rtkg033>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg033
+            #add-point:BEFORE FIELD rtkg033
+            {<point name="input.b.rtkg033" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg033
+            
+            #add-point:AFTER FIELD rtkg033
+            {<point name="input.a.rtkg033" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg033
+            #add-point:ON CHANGE rtkg033
+            {<point name="input.g.rtkg033" />}
+            #END add-point
+ 
+         #----<<rtkg041>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg041
+            #add-point:BEFORE FIELD rtkg041
+            {<point name="input.b.rtkg041" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg041
+            
+            #add-point:AFTER FIELD rtkg041
+            {<point name="input.a.rtkg041" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg041
+            #add-point:ON CHANGE rtkg041
+            {<point name="input.g.rtkg041" />}
+            #END add-point
+ 
+         #----<<rtkg042>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg042
+            #add-point:BEFORE FIELD rtkg042
+            {<point name="input.b.rtkg042" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg042
+            
+            #add-point:AFTER FIELD rtkg042
+            {<point name="input.a.rtkg042" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg042
+            #add-point:ON CHANGE rtkg042
+            {<point name="input.g.rtkg042" />}
+            #END add-point
+ 
+         #----<<rtkg002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD rtkg002
+            #add-point:BEFORE FIELD rtkg002
+            {<point name="input.b.rtkg002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD rtkg002
+            
+            #add-point:AFTER FIELD rtkg002
+            {<point name="input.a.rtkg002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE rtkg002
+            #add-point:ON CHANGE rtkg002
+            {<point name="input.g.rtkg002" />}
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<rtkgunit>>----
+         #Ctrlp:input.c.rtkgunit
+         ON ACTION controlp INFIELD rtkgunit
+            #add-point:ON ACTION controlp INFIELD rtkgunit
+            {<point name="input.c.rtkgunit" />}
+            #END add-point
+ 
+         #----<<rtkg001>>----
+         #Ctrlp:input.c.rtkg001
+         ON ACTION controlp INFIELD rtkg001
+            #add-point:ON ACTION controlp INFIELD rtkg001
+            {<point name="input.c.rtkg001" />}
+            #END add-point
+ 
+         #----<<lbl_rtkgl003>>----
+         #Ctrlp:input.c.lbl_rtkgl003
+         ON ACTION controlp INFIELD lbl_rtkgl003
+            #add-point:ON ACTION controlp INFIELD lbl_rtkgl003
+            {<point name="input.c.lbl_rtkgl003" />}
+            #END add-point
+ 
+         #----<<rtkgl004>>----
+         #Ctrlp:input.c.rtkgl004
+         ON ACTION controlp INFIELD rtkgl004
+            #add-point:ON ACTION controlp INFIELD rtkgl004
+            {<point name="input.c.rtkgl004" />}
+            #END add-point
+ 
+         #----<<rtkgstus>>----
+         #Ctrlp:input.c.rtkgstus
+         ON ACTION controlp INFIELD rtkgstus
+            #add-point:ON ACTION controlp INFIELD rtkgstus
+            {<point name="input.c.rtkgstus" />}
+            #END add-point
+ 
+         #----<<rtkg011>>----
+         #Ctrlp:input.c.rtkg011
+         ON ACTION controlp INFIELD rtkg011
+            #add-point:ON ACTION controlp INFIELD rtkg011
+            {<point name="input.c.rtkg011" />}
+            #END add-point
+ 
+         #----<<rtkg021>>----
+         #Ctrlp:input.c.rtkg021
+         ON ACTION controlp INFIELD rtkg021
+            #add-point:ON ACTION controlp INFIELD rtkg021
+            {<point name="input.c.rtkg021" />}
+            #END add-point
+ 
+         #----<<rtkg022>>----
+         #Ctrlp:input.c.rtkg022
+         ON ACTION controlp INFIELD rtkg022
+            #add-point:ON ACTION controlp INFIELD rtkg022
+            {<point name="input.c.rtkg022" />}
+            #END add-point
+ 
+         #----<<rtkg023>>----
+         #Ctrlp:input.c.rtkg023
+         ON ACTION controlp INFIELD rtkg023
+            #add-point:ON ACTION controlp INFIELD rtkg023
+            {<point name="input.c.rtkg023" />}
+            #END add-point
+ 
+         #----<<rtkg020>>----
+         #Ctrlp:input.c.rtkg020
+         ON ACTION controlp INFIELD rtkg020
+            #add-point:ON ACTION controlp INFIELD rtkg020
+            {<point name="input.c.rtkg020" />}
+            #END add-point
+ 
+         #----<<rtkg031>>----
+         #Ctrlp:input.c.rtkg031
+         ON ACTION controlp INFIELD rtkg031
+            #add-point:ON ACTION controlp INFIELD rtkg031
+            {<point name="input.c.rtkg031" />}
+            #END add-point
+ 
+         #----<<rtkg032>>----
+         #Ctrlp:input.c.rtkg032
+         ON ACTION controlp INFIELD rtkg032
+            #add-point:ON ACTION controlp INFIELD rtkg032
+            {<point name="input.c.rtkg032" />}
+            #END add-point
+ 
+         #----<<rtkg033>>----
+         #Ctrlp:input.c.rtkg033
+         ON ACTION controlp INFIELD rtkg033
+            #add-point:ON ACTION controlp INFIELD rtkg033
+            {<point name="input.c.rtkg033" />}
+            #END add-point
+ 
+         #----<<rtkg041>>----
+         #Ctrlp:input.c.rtkg041
+         ON ACTION controlp INFIELD rtkg041
+            #add-point:ON ACTION controlp INFIELD rtkg041
+            {<point name="input.c.rtkg041" />}
+            #END add-point
+ 
+         #----<<rtkg042>>----
+         #Ctrlp:input.c.rtkg042
+         ON ACTION controlp INFIELD rtkg042
+            #add-point:ON ACTION controlp INFIELD rtkg042
+            {<point name="input.c.rtkg042" />}
+            #END add-point
+ 
+         #----<<rtkg002>>----
+         #Ctrlp:input.c.rtkg002
+         ON ACTION controlp INFIELD rtkg002
+            #add-point:ON ACTION controlp INFIELD rtkg002
+            {<point name="input.c.rtkg002" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+                
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+ 
+            IF p_cmd <> "u" THEN
+               LET l_count = 1  
+ 
+               SELECT COUNT(*) INTO l_count FROM rtkg_t
+                WHERE rtkgent = g_enterprise AND rtkg001 = g_rtkg_m.rtkg001
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前
+                  {<point name="input.head.b_insert" mark="Y"/>}
+                  #end add-point
+               
+                  INSERT INTO rtkg_t (rtkgent,rtkgunit,rtkg001,rtkgstus,rtkg011,rtkg021,rtkg022,rtkg023, 
+                      rtkg020,rtkg031,rtkg032,rtkg033,rtkg041,rtkg042,rtkg002,rtkgownid,rtkgowndp,rtkgcrtid, 
+                      rtkgcrtdp,rtkgcrtdt,rtkgmodid,rtkgmoddt)
+                  VALUES (g_enterprise,g_rtkg_m.rtkgunit,g_rtkg_m.rtkg001,g_rtkg_m.rtkgstus,g_rtkg_m.rtkg011, 
+                      g_rtkg_m.rtkg021,g_rtkg_m.rtkg022,g_rtkg_m.rtkg023,g_rtkg_m.rtkg020,g_rtkg_m.rtkg031, 
+                      g_rtkg_m.rtkg032,g_rtkg_m.rtkg033,g_rtkg_m.rtkg041,g_rtkg_m.rtkg042,g_rtkg_m.rtkg002, 
+                      g_rtkg_m.rtkgownid,g_rtkg_m.rtkgowndp,g_rtkg_m.rtkgcrtid,g_rtkg_m.rtkgcrtdp,g_rtkg_m.rtkgcrtdt, 
+                      g_rtkg_m.rtkgmodid,g_rtkg_m.rtkgmoddt) 
+                  
+                  #add-point:單頭新增中
+                  {<point name="input.head.m_insert"/>}
+                  #end add-point
+                  
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err("rtkg_t",SQLCA.sqlcode,1)  
+                     CONTINUE DIALOG
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                           INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_rtkg_m.rtkg001 = g_master_multi_table_t.rtkgl001 AND
+         g_rtkg_m.lbl_rtkgl003 = g_master_multi_table_t.lbl_rtkgl003 AND 
+         g_rtkg_m.rtkgl004 = g_master_multi_table_t.rtkgl004  THEN
+         ELSE 
+            LET l_var_keys[01] = g_rtkg_m.rtkg001
+            LET l_field_keys[01] = 'rtkgl001'
+            LET l_var_keys_bak[01] = g_master_multi_table_t.rtkgl001
+            LET l_var_keys[02] = g_dlang
+            LET l_field_keys[02] = 'rtkgl002'
+            LET l_var_keys_bak[02] = g_dlang
+            LET l_vars[01] = g_rtkg_m.lbl_rtkgl003
+            LET l_fields[01] = 'rtkgl003'
+            LET l_vars[02] = g_rtkg_m.rtkgl004
+            LET l_fields[02] = 'rtkgl004'
+            LET l_vars[03] = g_enterprise 
+            LET l_fields[03] = 'rtkglent'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'rtkgl_t')
+         END IF 
+ 
+                  
+                  #add-point:單頭新增後
+                  {<point name="input.head.a_insert"/>}
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL cl_err( "g_rtkg_m.rtkg001", "std-00006", 0 )
+                  CALL s_transaction_end('N','0')
+               END IF 
+            ELSE
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               UPDATE rtkg_t SET (rtkgunit,rtkg001,rtkgstus,rtkg011,rtkg021,rtkg022,rtkg023,rtkg020, 
+                   rtkg031,rtkg032,rtkg033,rtkg041,rtkg042,rtkg002,rtkgownid,rtkgowndp,rtkgcrtid,rtkgcrtdp, 
+                   rtkgcrtdt,rtkgmodid,rtkgmoddt) = (g_rtkg_m.rtkgunit,g_rtkg_m.rtkg001,g_rtkg_m.rtkgstus, 
+                   g_rtkg_m.rtkg011,g_rtkg_m.rtkg021,g_rtkg_m.rtkg022,g_rtkg_m.rtkg023,g_rtkg_m.rtkg020, 
+                   g_rtkg_m.rtkg031,g_rtkg_m.rtkg032,g_rtkg_m.rtkg033,g_rtkg_m.rtkg041,g_rtkg_m.rtkg042, 
+                   g_rtkg_m.rtkg002,g_rtkg_m.rtkgownid,g_rtkg_m.rtkgowndp,g_rtkg_m.rtkgcrtid,g_rtkg_m.rtkgcrtdp, 
+                   g_rtkg_m.rtkgcrtdt,g_rtkg_m.rtkgmodid,g_rtkg_m.rtkgmoddt)
+                WHERE rtkgent = g_enterprise AND rtkg001 = g_rtkg001_t #
+ 
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("rtkg_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("rtkg_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                              INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_rtkg_m.rtkg001 = g_master_multi_table_t.rtkgl001 AND
+         g_rtkg_m.lbl_rtkgl003 = g_master_multi_table_t.lbl_rtkgl003 AND 
+         g_rtkg_m.rtkgl004 = g_master_multi_table_t.rtkgl004  THEN
+         ELSE 
+            LET l_var_keys[01] = g_rtkg_m.rtkg001
+            LET l_field_keys[01] = 'rtkgl001'
+            LET l_var_keys_bak[01] = g_master_multi_table_t.rtkgl001
+            LET l_var_keys[02] = g_dlang
+            LET l_field_keys[02] = 'rtkgl002'
+            LET l_var_keys_bak[02] = g_dlang
+            LET l_vars[01] = g_rtkg_m.lbl_rtkgl003
+            LET l_fields[01] = 'rtkgl003'
+            LET l_vars[02] = g_rtkg_m.rtkgl004
+            LET l_fields[02] = 'rtkgl004'
+            LET l_vars[03] = g_enterprise 
+            LET l_fields[03] = 'rtkglent'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'rtkgl_t')
+         END IF 
+ 
+                     #add-point:單頭修改後
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+               END CASE
+            END IF
+           #controlp
+      END INPUT
+          
+      #add-point:input段more input 
+      {<point name="input.more_input"/>}
+      #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input 
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.insert" ver="1" status="" src="s">
+<![CDATA[#+ 資料新增
+PRIVATE FUNCTION arti730_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   CLEAR FORM #清畫面欄位內容
+ 
+   INITIALIZE g_rtkg_m.* LIKE rtkg_t.*             #DEFAULT 設定
+   LET g_rtkg001_t = NULL
+ 
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      #六階樹狀給值
+ 
+      
+      #公用欄位給值
+      #此段落由子樣板a14產生    
+      LET g_rtkg_m.rtkgownid = g_user
+      LET g_rtkg_m.rtkgowndp = g_dept
+      LET g_rtkg_m.rtkgcrtid = g_user
+      LET g_rtkg_m.rtkgcrtdp = g_dept 
+      LET g_rtkg_m.rtkgcrtdt = cl_get_current()
+      LET g_rtkg_m.rtkgmodid = ""
+      LET g_rtkg_m.rtkgmoddt = ""
+      #LET g_rtkg_m.rtkgstus = ""
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+ 
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point   
+     
+      CALL arti730_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_rtkg_m.* = g_rtkg_m_t.*
+         CALL arti730_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   LET g_rtkg001_t = g_rtkg_m.rtkg001
+ 
+   
+   LET g_state = "Y"
+ 
+   LET g_wc = g_wc,  
+              " OR ( rtkgent = '" ||g_enterprise|| "' AND",
+              " rtkg001 = '", g_rtkg_m.rtkg001 CLIPPED, "' "
+ 
+              , ") "
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.main" ver="1" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("art","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = "SELECT rtkgunit,rtkg001,'','',rtkgstus,rtkg011,rtkg021,rtkg022,rtkg023,rtkg020, 
+       rtkg031,rtkg032,rtkg033,rtkg041,rtkg042,rtkg002,rtkgownid,'',rtkgowndp,'',rtkgcrtid,'',rtkgcrtdp, 
+       '',rtkgcrtdt,rtkgmodid,'',rtkgmoddt FROM rtkg_t WHERE rtkgent= ? AND rtkg001=? FOR UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE arti730_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_arti730 WITH FORM cl_ap_formpath("art",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL arti730_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL arti730_ui_dialog() 
+	  
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_arti730
+      
+   END IF 
+   
+   CLOSE arti730_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+</section>
+  <section id="arti730.modify" ver="1" status="" src="s">
+<![CDATA[#+ 資料修改
+PRIVATE FUNCTION arti730_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   IF g_rtkg_m.rtkg001 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF 
+   
+    SELECT UNIQUE rtkgunit,rtkg001,rtkgstus,rtkg011,rtkg021,rtkg022,rtkg023,rtkg020,rtkg031,rtkg032, 
+        rtkg033,rtkg041,rtkg042,rtkg002,rtkgownid,rtkgowndp,rtkgcrtid,rtkgcrtdp,rtkgcrtdt,rtkgmodid, 
+        rtkgmoddt
+ INTO g_rtkg_m.rtkgunit,g_rtkg_m.rtkg001,g_rtkg_m.rtkgstus,g_rtkg_m.rtkg011,g_rtkg_m.rtkg021,g_rtkg_m.rtkg022, 
+     g_rtkg_m.rtkg023,g_rtkg_m.rtkg020,g_rtkg_m.rtkg031,g_rtkg_m.rtkg032,g_rtkg_m.rtkg033,g_rtkg_m.rtkg041, 
+     g_rtkg_m.rtkg042,g_rtkg_m.rtkg002,g_rtkg_m.rtkgownid,g_rtkg_m.rtkgowndp,g_rtkg_m.rtkgcrtid,g_rtkg_m.rtkgcrtdp, 
+     g_rtkg_m.rtkgcrtdt,g_rtkg_m.rtkgmodid,g_rtkg_m.rtkgmoddt
+ FROM rtkg_t
+ WHERE rtkgent = g_enterprise AND rtkg001 = g_rtkg_m.rtkg001
+ 
+   ERROR ""
+  
+   LET g_rtkg001_t = g_rtkg_m.rtkg001
+ 
+   
+   CALL s_transaction_begin()
+   
+   OPEN arti730_cl USING g_enterprise,g_rtkg_m.rtkg001
+   IF STATUS THEN
+      CALL cl_err("OPEN arti730_cl:", STATUS, 1)
+      CLOSE arti730_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH arti730_cl INTO g_rtkg_m.rtkgunit,g_rtkg_m.rtkg001,g_rtkg_m.lbl_rtkgl003,g_rtkg_m.rtkgl004, 
+       g_rtkg_m.rtkgstus,g_rtkg_m.rtkg011,g_rtkg_m.rtkg021,g_rtkg_m.rtkg022,g_rtkg_m.rtkg023,g_rtkg_m.rtkg020, 
+       g_rtkg_m.rtkg031,g_rtkg_m.rtkg032,g_rtkg_m.rtkg033,g_rtkg_m.rtkg041,g_rtkg_m.rtkg042,g_rtkg_m.rtkg002, 
+       g_rtkg_m.rtkgownid,g_rtkg_m.rtkgownid_desc,g_rtkg_m.rtkgowndp,g_rtkg_m.rtkgowndp_desc,g_rtkg_m.rtkgcrtid, 
+       g_rtkg_m.rtkgcrtid_desc,g_rtkg_m.rtkgcrtdp,g_rtkg_m.rtkgcrtdp_desc,g_rtkg_m.rtkgcrtdt,g_rtkg_m.rtkgmodid, 
+       g_rtkg_m.rtkgmodid_desc,g_rtkg_m.rtkgmoddt
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("rtkg_t",SQLCA.sqlcode,0)
+      CLOSE arti730_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   
+ 
+   CALL arti730_show()
+   
+   WHILE TRUE
+      LET g_rtkg_m.rtkg001 = g_rtkg001_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      LET g_rtkg_m.rtkgmodid = g_user 
+LET g_rtkg_m.rtkgmoddt = cl_get_current()
+ 
+      
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+ 
+      CALL arti730_input("u")     #欄位更改
+ 
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_rtkg_m.* = g_rtkg_m_t.*
+         CALL arti730_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_rtkg_m.rtkg001,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE arti730_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_rtkg_m.rtkg001,"U")
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+]]>
+</section>
+  <section id="arti730.other_dialog" ver="1" status="" src="s">
+<![CDATA[ 
+]]>
+</section>
+  <section id="arti730.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="arti730.query" ver="1" status="" src="s">
+<![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION arti730_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+ 
+   CALL g_browser.clear() 
+ 
+   IF g_worksheet_hidden THEN  #browser panel折疊
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   IF g_header_hidden THEN    #單頭折疊
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_rtkg_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL arti730_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL arti730_browser_fill(g_wc,"F")
+      CALL arti730_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   LET g_error_show = 1
+   CALL arti730_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      CALL cl_err("","-100",1)
+   ELSE
+      CALL arti730_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.reproduce" ver="1" status="" src="s">
+<![CDATA[#+ 資料複製
+PRIVATE FUNCTION arti730_reproduce()
+   DEFINE l_newno     LIKE rtkg_t.rtkg001 
+   DEFINE l_oldno     LIKE rtkg_t.rtkg001 
+ 
+   DEFINE l_master    RECORD LIKE rtkg_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point   
+   
+   #切換畫面
+   
+   IF g_rtkg_m.rtkg001 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   LET g_rtkg001_t = g_rtkg_m.rtkg001
+ 
+   
+   LET g_rtkg_m.rtkg001 = ""
+ 
+    
+   CALL arti730_set_entry("a")
+   CALL arti730_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   #此段落由子樣板a14產生    
+      LET g_rtkg_m.rtkgownid = g_user
+      LET g_rtkg_m.rtkgowndp = g_dept
+      LET g_rtkg_m.rtkgcrtid = g_user
+      LET g_rtkg_m.rtkgcrtdp = g_dept 
+      LET g_rtkg_m.rtkgcrtdt = cl_get_current()
+      LET g_rtkg_m.rtkgmodid = ""
+      LET g_rtkg_m.rtkgmoddt = ""
+      #LET g_rtkg_m.rtkgstus = ""
+ 
+ 
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL arti730_input("r")
+ 
+   
+   
+   IF INT_FLAG  THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前
+   {<point name="reproduce.head.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #add-point:單頭複製中
+   {<point name="reproduce.head.m_insert"/>}
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("rtkg_t",SQLCA.sqlcode,1)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後
+   {<point name="reproduce.head.a_insert"/>}
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   LET g_state = "Y"
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              " rtkg001 = '", g_rtkg_m.rtkg001 CLIPPED, "' "
+ 
+              , ") "
+   
+   LET g_rtkg001_t = g_rtkg_m.rtkg001
+ 
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+                   
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.set_entry" ver="1" status="" src="s">
+<![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION arti730_set_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("rtkg001",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.set_no_entry" ver="1" status="" src="s">
+<![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION arti730_set_no_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = "u" THEN
+      CALL cl_set_comp_entry("rtkg001",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.show" ver="1" status="" src="s">
+<![CDATA[#+ 單頭資料重新顯示 
+PRIVATE FUNCTION arti730_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point  
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   LET g_rtkg_m_t.* = g_rtkg_m.*      #保存單頭舊值
+   
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+   
+   #帶出公用欄位reference值
+   #此段落由子樣板a12產生
+      #LET g_rtkg_m.rtkgownid_desc = cl_get_username(g_rtkg_m.rtkgownid)
+      #LET g_rtkg_m.rtkgowndp_desc = cl_get_deptname(g_rtkg_m.rtkgowndp)
+      #LET g_rtkg_m.rtkgcrtid_desc = cl_get_username(g_rtkg_m.rtkgcrtid)
+      #LET g_rtkg_m.rtkgcrtdp_desc = cl_get_deptname(g_rtkg_m.rtkgcrtdp)
+      #LET g_rtkg_m.rtkgmodid_desc = cl_get_username(g_rtkg_m.rtkgmodid)
+      ##LET g_rtkg_m.rtkgcnfid_desc = cl_get_deptname(g_rtkg_m.rtkgcnfid)
+      ##LET g_rtkg_m.rtkgpstid_desc = cl_get_deptname(g_rtkg_m.rtkgpstid)
+      
+ 
+ 
+    
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_rtkg_m.rtkg001
+   LET g_pk_array[1].column = 'rtkg001'
+ 
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_rtkg_m.rtkgunit,g_rtkg_m.rtkg001,g_rtkg_m.lbl_rtkgl003,g_rtkg_m.rtkgl004,g_rtkg_m.rtkgstus, 
+       g_rtkg_m.rtkg011,g_rtkg_m.rtkg021,g_rtkg_m.rtkg022,g_rtkg_m.rtkg023,g_rtkg_m.rtkg020,g_rtkg_m.rtkg031, 
+       g_rtkg_m.rtkg032,g_rtkg_m.rtkg033,g_rtkg_m.rtkg041,g_rtkg_m.rtkg042,g_rtkg_m.rtkg002,g_rtkg_m.rtkgownid, 
+       g_rtkg_m.rtkgownid_desc,g_rtkg_m.rtkgowndp,g_rtkg_m.rtkgowndp_desc,g_rtkg_m.rtkgcrtid,g_rtkg_m.rtkgcrtid_desc, 
+       g_rtkg_m.rtkgcrtdp,g_rtkg_m.rtkgcrtdp_desc,g_rtkg_m.rtkgcrtdt,g_rtkg_m.rtkgmodid,g_rtkg_m.rtkgmodid_desc, 
+       g_rtkg_m.rtkgmoddt
+   
+   #顯示狀態(stus)圖片
+         #此段落由子樣板a21產生
+      CASE g_rtkg_m.rtkgstus
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.state_change" ver="1" status="" src="s">
+<![CDATA[   #+ 此段落由子樣板a09產生
+#+ 確認碼變更
+PRIVATE FUNCTION arti730_statechange()
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define
+   {<point name="statechange.define"/>}
+   #end add-point  
+   
+   #add-point:statechange段開始前
+   {<point name="statechange.before"/>}
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_rtkg_m.rtkg001 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_rtkg_m.rtkgstus
+            WHEN "N"
+               HIDE OPTION "inactive"
+            WHEN "Y"
+               HIDE OPTION "active"
+            
+         END CASE
+     
+      #add-point:menu前
+      {<point name="statechange.before_menu"/>}
+      #end add-point
+      
+      ON ACTION inactive
+         LET lc_state = "N"
+         #add-point:action控制
+         {<point name="statechange.inactive"/>}
+         #end add-point
+         EXIT MENU
+      ON ACTION active
+         LET lc_state = "Y"
+         #add-point:action控制
+         {<point name="statechange.active"/>}
+         #end add-point
+         EXIT MENU
+      
+      
+      
+      #add-point:stus控制
+      {<point name="statechange.more_control"/>}
+      #end add-point
+      
+   END MENU
+   
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      ) OR 
+      cl_null(lc_state) THEN
+      RETURN
+   END IF
+   
+   #add-point:stus修改前
+   {<point name="statechange.b_update"/>}
+   #end add-point
+      
+   UPDATE rtkg_t SET rtkgstus = lc_state 
+    WHERE rtkgent = g_enterprise AND rtkg001 = g_rtkg_m.rtkg001
+ 
+  
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("",SQLCA.sqlcode,0)
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+      LET g_rtkg_m.rtkgstus = lc_state
+      DISPLAY BY NAME g_rtkg_m.rtkgstus
+   END IF
+ 
+   #add-point:stus修改後
+   {<point name="statechange.a_update"/>}
+   #end add-point
+ 
+   #add-point:statechange段結束前
+   {<point name="statechange.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="arti730.ui_browser_refresh" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION arti730_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point     
+ 
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_rtkg001 = g_rtkg_m.rtkg001 THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+   
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+  
+END FUNCTION
+]]>
+</section>
+  <section id="arti730.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION arti730_ui_dialog() 
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_wc     STRING
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   
+   
+   #action default動作
+   #+ 此段落由子樣板a42產生
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL arti730_insert()
+            #add-point:ON ACTION insert
+            {<point name="menu.default.insert" />}
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂
+      {<point name="ui_dialog.action_default"/>}
+      #end add-point
+      OTHERWISE
+         
+   END CASE
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+      
+      CALL arti730_browser_fill(g_wc,"")
+      
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_rtkg001 = g_rtkg001_t
+ 
+               THEN
+               LET g_current_row = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+    
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+                  
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+               
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL arti730_fetch("")   
+               END IF               
+         
+            ON ACTION statechange
+               CALL arti730_statechange()
+               LET g_action_choice="statechange"
+               
+            ON ACTION first
+               CALL arti730_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               CALL arti730_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION jump
+               CALL arti730_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION previous
+               CALL arti730_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION last 
+               CALL arti730_fetch("L")  
+               #CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               #CALL fgl_set_arr_curr(g_current_idx)
+               LET g_current_row = g_current_idx
+            
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+            
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL arti730_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL arti730_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     CALL cl_err("","-100",1)
+                     CLEAR FORM
+                  ELSE
+                     CALL arti730_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+            
+ 
+         ON ACTION delete
+ 
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN 
+               CALL arti730_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu2.delete" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION insert
+ 
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL arti730_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu2.insert" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         ON ACTION modify
+ 
+            LET g_aw = ''
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL arti730_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu2.modify" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               {<point name="menu2.output" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL arti730_query()
+               #add-point:ON ACTION query
+               {<point name="menu2.query" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION reproduce
+ 
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN 
+               CALL arti730_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu2.reproduce" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+            
+            
+            #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL g_pk_array.clear()
+            LET g_pk_array[1].values = g_rtkg_m.rtkg001
+            LET g_pk_array[1].column = 'rtkg001'
+ 
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.menu.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+		    CALL g_pk_array.clear()
+            LET g_pk_array[1].values = g_rtkg_m.rtkg001
+            LET g_pk_array[1].column = 'rtkg001'
+ 
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.menu.agendum"/>}
+            #END add-point
+			CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL g_pk_array.clear()
+            LET g_pk_array[1].values = g_rtkg_m.rtkg001
+            LET g_pk_array[1].column = 'rtkg001'
+ 
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.menu.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL arti730_fetch("")      
+                  
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array
+            {<point name="ui_dialog.more_displayarray"/>}
+            #end add-point
+ 
+         
+            BEFORE DIALOG
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL arti730_fetch("")   
+               END IF               
+               
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog
+               {<point name="ui_dialog.after_dialog"/>}
+               #end add-point
+            
+            ON ACTION statechange
+               CALL arti730_statechange()
+               LET g_action_choice="statechange"
+               EXIT DIALOG
+         
+ 
+            ON ACTION first
+               CALL arti730_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               CALL arti730_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION jump
+               CALL arti730_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION previous
+               CALL arti730_fetch("P")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION last 
+               CALL arti730_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT DIALOG
+         
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT DIALOG
+               
+         
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            #快速搜尋
+               
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL arti730_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL arti730_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     CALL cl_err("","-100",1)
+                     CLEAR FORM
+                  ELSE
+                     CALL arti730_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+ 
+         ON ACTION delete
+ 
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN 
+               CALL arti730_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION insert
+ 
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL arti730_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION modify
+ 
+            LET g_aw = ''
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL arti730_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL arti730_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION reproduce
+ 
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN 
+               CALL arti730_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+            
+            
+ 
+            #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL g_pk_array.clear()
+            LET g_pk_array[1].values = g_rtkg_m.rtkg001
+            LET g_pk_array[1].column = 'rtkg001'
+ 
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+		    CALL g_pk_array.clear()
+            LET g_pk_array[1].values = g_rtkg_m.rtkg001
+            LET g_pk_array[1].column = 'rtkg001'
+ 
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+			CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL g_pk_array.clear()
+            LET g_pk_array[1].values = g_rtkg_m.rtkg001
+            LET g_pk_array[1].column = 'rtkg001'
+ 
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

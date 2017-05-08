@@ -1,0 +1,3181 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="axcq900.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000001
+#+ 
+#+ Filename...: axcq900
+#+ Description: 庫存成本查詢作業
+#+ Creator....: 03297(2014/08/26)
+#+ Modifier...: 03297(2014/08/26) -SD/PR- 01996
+#+ Buildtype..: 應用 q02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+ 
+{<section id="axcq900.global" >}
+#161108-00013#1   2016/11/08 By 07024  與筆數相關的全域變數，型態改為num10，如：g_browser_cnt...
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+#160318-00005#47  20160328   by pengxin  修正azzi920重复定义之错误讯息
+#160921-00010#1   2017/01/20 By xujing      切换据点自动预设画面栏位
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xccc_m RECORD
+   xccccomp LIKE xccc_t.xccccomp,
+   xccccomp_desc LIKE ooefl_t.ooefl003,
+   xcccld   LIKE xccc_t.xcccld,
+   xcccld_desc   LIKE glaal_t.glaal002,
+   xccc003  LIKE xccc_t.xccc003,
+   xccc003_desc  LIKE xcatl_t.xcatl003,
+   xccc004  LIKE xccc_t.xccc004,
+   xccc005  LIKE xccc_t.xccc005,   
+   xccc006  LIKE xccc_t.xccc006,
+   xccc006_desc  LIKE imaal_t.imaal003,
+   xccc006_desc_1  LIKE imaal_t.imaal004,
+   xccc007  LIKE xccc_t.xccc007,
+   imag014  LIKE imag_t.imag014,
+   imag014_desc  LIKE oocal_t.oocal003, 
+   xccc002  LIKE xccc_t.xccc002,
+   xccc002_desc    LIKE xcbfl_t.xcbfl003,
+   xccc008  LIKE xccc_t.xccc008
+     END RECORD
+PRIVATE TYPE type_g_xccc_d RECORD
+       #statepic       LIKE type_t.chr1,
+       
+       item LIKE type_t.chr80, 
+   xccc001 LIKE xccc_t.xccc001, 
+   xccc102a LIKE xccc_t.xccc102a, 
+   xccc202a LIKE xccc_t.xccc202a, 
+   xccc280a LIKE xccc_t.xccc280a, 
+   xccc902a LIKE xccc_t.xccc902a, 
+   xcccld LIKE xccc_t.xcccld, 
+   xccc002 LIKE xccc_t.xccc002, 
+   xccc003 LIKE xccc_t.xccc003, 
+   xccc004 LIKE xccc_t.xccc004, 
+   xccc005 LIKE xccc_t.xccc005, 
+   xccc006 LIKE xccc_t.xccc006, 
+   xccc007 LIKE xccc_t.xccc007, 
+   xccc008 LIKE xccc_t.xccc008
+       END RECORD
+PRIVATE TYPE type_g_xccc2_d RECORD
+       item2 LIKE type_t.chr80, 
+   xccc001 LIKE xccc_t.xccc001, 
+   xccc102b LIKE xccc_t.xccc102b, 
+   xccc202b LIKE xccc_t.xccc202b, 
+   xccc208b LIKE xccc_t.xccc204b, 
+   xccc210b LIKE xccc_t.xccc302b, 
+   xccc280b LIKE xccc_t.xccc304b, 
+   xccc902b LIKE xccc_t.xccc902b, 
+   xcccld LIKE xccc_t.xcccld, 
+   xccc002 LIKE xccc_t.xccc002, 
+   xccc003 LIKE xccc_t.xccc003, 
+   xccc004 LIKE xccc_t.xccc004, 
+   xccc005 LIKE xccc_t.xccc005, 
+   xccc006 LIKE xccc_t.xccc006, 
+   xccc007 LIKE xccc_t.xccc007, 
+   xccc008 LIKE xccc_t.xccc008
+       END RECORD
+ 
+PRIVATE TYPE type_g_xccc3_d RECORD
+       item3 LIKE type_t.chr80, 
+   xccc001 LIKE xccc_t.xccc001, 
+   xccc102c LIKE xccc_t.xccc102c, 
+   xccc202c LIKE xccc_t.xccc202c, 
+   xccc208c LIKE xccc_t.xccc204c, 
+   xccc210c LIKE xccc_t.xccc302c, 
+   xccc280c LIKE xccc_t.xccc304c, 
+   xccc902c LIKE xccc_t.xccc902c, 
+   xcccld LIKE xccc_t.xcccld, 
+   xccc002 LIKE xccc_t.xccc002, 
+   xccc003 LIKE xccc_t.xccc003, 
+   xccc004 LIKE xccc_t.xccc004, 
+   xccc005 LIKE xccc_t.xccc005, 
+   xccc006 LIKE xccc_t.xccc006, 
+   xccc007 LIKE xccc_t.xccc007, 
+   xccc008 LIKE xccc_t.xccc008
+       END RECORD
+ 
+PRIVATE TYPE type_g_xccc4_d RECORD
+       item LIKE type_t.chr80,   
+   xccc302 LIKE xccc_t.xccc302, 
+   xccc310 LIKE xccc_t.xccc310, 
+   xccc208 LIKE xccc_t.xccc208, 
+   xccc314 LIKE xccc_t.xccc314, 
+   xccc304 LIKE xccc_t.xccc304, 
+   xccc401 LIKE xccc_t.xccc401, 
+   xccc308 LIKE xccc_t.xccc308, 
+   xccc312 LIKE xccc_t.xccc312, 
+   xccc903 LIKE xccc_t.xccc903 
+  
+       END RECORD 
+PRIVATE TYPE type_g_xccc5_d RECORD
+       item LIKE type_t.chr80, 
+   xccc202 LIKE xccc_t.xccc202, 
+   xccc212 LIKE xccc_t.xccc212, 
+   xccc214 LIKE xccc_t.xccc214, 
+   xccc216 LIKE xccc_t.xccc216, 
+   xccc218 LIKE xccc_t.xccc218
+  
+       END RECORD 
+       
+PRIVATE TYPE type_g_xccc6_d RECORD
+       item LIKE type_t.chr80,     
+   xccc302 LIKE xccc_t.xccc302, 
+   xccc310 LIKE xccc_t.xccc310, 
+   xccc208 LIKE xccc_t.xccc208, 
+   xccc314 LIKE xccc_t.xccc314, 
+   xccc304 LIKE xccc_t.xccc304, 
+   xccc401 LIKE xccc_t.xccc401, 
+   xccc308 LIKE xccc_t.xccc308, 
+   xccc312 LIKE xccc_t.xccc312, 
+   xccc903 LIKE xccc_t.xccc903 
+  
+       END RECORD 
+PRIVATE TYPE type_g_xccc7_d RECORD
+       item LIKE type_t.chr80, 
+   xccc202 LIKE xccc_t.xccc202, 
+   xccc212 LIKE xccc_t.xccc212, 
+   xccc214 LIKE xccc_t.xccc214, 
+   xccc216 LIKE xccc_t.xccc216, 
+   xccc218 LIKE xccc_t.xccc218
+  
+       END RECORD 
+       
+PRIVATE TYPE type_g_xccc8_d RECORD
+       item LIKE type_t.chr80, 
+   xccc302 LIKE xccc_t.xccc302, 
+   xccc310 LIKE xccc_t.xccc310, 
+   xccc208 LIKE xccc_t.xccc208, 
+   xccc314 LIKE xccc_t.xccc314, 
+   xccc304 LIKE xccc_t.xccc304, 
+   xccc401 LIKE xccc_t.xccc401, 
+   xccc308 LIKE xccc_t.xccc308, 
+   xccc312 LIKE xccc_t.xccc312, 
+   xccc903 LIKE xccc_t.xccc903 
+  
+       END RECORD 
+PRIVATE TYPE type_g_xccc9_d RECORD
+       item LIKE type_t.chr80, 
+   xccc202 LIKE xccc_t.xccc202,  
+   xccc212 LIKE xccc_t.xccc212, 
+   xccc214 LIKE xccc_t.xccc214, 
+   xccc216 LIKE xccc_t.xccc216, 
+   xccc218 LIKE xccc_t.xccc218
+  
+       END RECORD 
+ 
+#模組變數(Module Variables)
+ 
+DEFINE g_master                     type_g_xccc_m
+DEFINE g_master_t                   type_g_xccc_m
+DEFINE g_xccc_d          DYNAMIC ARRAY OF type_g_xccc_d
+DEFINE g_xccc_d_t        type_g_xccc_d
+DEFINE g_xccc2_d   DYNAMIC ARRAY OF type_g_xccc2_d
+DEFINE g_xccc2_d_t type_g_xccc2_d
+ 
+DEFINE g_xccc3_d   DYNAMIC ARRAY OF type_g_xccc3_d
+DEFINE g_xccc3_d_t type_g_xccc3_d
+ 
+ DEFINE g_xccc4_d          DYNAMIC ARRAY OF type_g_xccc4_d
+DEFINE g_xccc4_d_t        type_g_xccc4_d
+DEFINE g_xccc5_d   DYNAMIC ARRAY OF type_g_xccc5_d
+DEFINE g_xccc5_d_t type_g_xccc5_d
+ 
+DEFINE g_xccc6_d   DYNAMIC ARRAY OF type_g_xccc6_d
+DEFINE g_xccc6_d_t type_g_xccc6_d
+ 
+DEFINE g_xccc7_d   DYNAMIC ARRAY OF type_g_xccc7_d
+DEFINE g_xccc7_d_t type_g_xccc7_d
+ 
+DEFINE g_xccc8_d   DYNAMIC ARRAY OF type_g_xccc8_d
+DEFINE g_xccc8_d_t type_g_xccc8_d
+ 
+DEFINE g_xccc9_d   DYNAMIC ARRAY OF type_g_xccc9_d
+DEFINE g_xccc9_d_t type_g_xccc9_d
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_detail_cnt2        LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_detail_idx2        LIKE type_t.num5
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+ 
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+#161108-00013#1-s-mod
+#DEFINE g_browser_cnt         LIKE type_t.num5              #Browser總筆數  
+#DEFINE g_current_row         LIKE type_t.num5              #Browser所在筆數
+#DEFINE g_current_idx         LIKE type_t.num5              #Browser所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10              #Browser總筆數  
+DEFINE g_current_row         LIKE type_t.num10              #Browser所在筆數
+DEFINE g_current_idx         LIKE type_t.num10              #Browser所在筆數
+#161108-00013#1-e-mod
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5
+DEFINE g_glaa015             LIKE glaa_t.glaa015           #启用第二货币
+DEFINE g_glaa019             LIKE glaa_t.glaa019           #启用第三货币
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位 
+         xcccent   LIKE xccc_t.xcccent,
+         xcccld    LIKE xccc_t.xcccld,        
+         xccc002   LIKE xccc_t.xccc002,
+         xccc003   LIKE xccc_t.xccc003,
+         xccc004   LIKE xccc_t.xccc004,
+         xccc005   LIKE xccc_t.xccc005,
+         xccc006   LIKE xccc_t.xccc006, 
+         xccc007   LIKE xccc_t.xccc007,   #150605-00010#1
+         xccc008   LIKE xccc_t.xccc008    #150605-00010#1
+      END RECORD
+DEFINE g_para_data           LIKE type_t.chr80     #采用成本域否  #fengmy150113
+DEFINE g_para_data1          LIKE type_t.chr80     #采用特性否    #fengmy150113
+#end add-point
+ 
+#add-point:傳入參數說明
+#wangxina 15/03/26 add   start
+DEFINE g_sql_tmp             STRING
+TYPE type_g_xccc_e RECORD
+       v          STRING
+       END RECORD
+DEFINE g_param     type_g_xccc_e
+#wangxina 15/03/26 add   end
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axcq900.main" >}
+#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axc","")
+ 
+   #add-point:作業初始化
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE axcq900_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+ 
+   #end add-point
+   PREPARE axcq900_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE axcq900_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axcq900 WITH FORM cl_ap_formpath("axc",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL axcq900_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL axcq900_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      #CALL axcq900_ins_xckk()  #mark zhangllc 151110 xckk表已废151110-00005#1
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_axcq900
+      
+   END IF 
+   
+   CLOSE axcq900_cl
+   
+   
+ 
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="axcq900.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION axcq900_init()
+   #add-point:init段define
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   
+   
+   
+   #add-point:畫面資料初始化
+   #fengmy 150113----begin
+   #根據參數顯示隱藏成本域 和 料件特性
+   CALL cl_get_para(g_enterprise,g_site,'S-FIN-6001') RETURNING g_para_data   #采用成本域否            
+   IF g_para_data = 'Y' THEN
+      CALL cl_set_comp_visible('xccc002,xccc002_desc',TRUE)                    
+   ELSE
+      CALL cl_set_comp_visible('xccc002,xccc002_desc',FALSE)                
+   END IF 
+   CALL cl_get_para(g_enterprise,g_site,'S-FIN-6013') RETURNING g_para_data1   #采用特性否            
+   IF g_para_data1 = 'Y' THEN
+      CALL cl_set_comp_visible('xccc007',TRUE)                    
+   ELSE
+      CALL cl_set_comp_visible('xccc007',FALSE)                
+   END IF   
+   #fengmy 150113----end
+   
+   #end add-point
+ 
+   CALL axcq900_default_search()  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.default_search" >}
+PRIVATE FUNCTION axcq900_default_search()
+ 
+   #預設查詢條件
+   LET g_wc = cl_qbe_get_default_qryplan()
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION axcq900_ui_dialog()
+   DEFINE ls_wc    STRING
+   DEFINE li_idx   LIKE type_t.num5
+   #add-point:ui_dialog段define
+   DEFINE la_param  RECORD
+                    prog   STRING,
+                    param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   #add-point:ui_dialog段before dialog 
+   CALL s_axc_set_site_default() RETURNING g_master.xccccomp,g_master.xcccld,g_master.xccc004,g_master.xccc005,g_master.xccc003
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xccccomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xccccomp_desc = '', g_rtn_fields[1] , ''
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xcccld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xcccld_desc = '', g_rtn_fields[1] , ''
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xccc003
+   CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xccc003_desc = '', g_rtn_fields[1] , ''
+   #end add-point
+ 
+   IF NOT cl_null(g_wc) AND g_wc != " 1=1" THEN
+      CALL axcq900_b_fill()
+   ELSE
+      CALL axcq900_query()
+   END IF
+   
+   WHILE TRUE
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_xccc_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_xccc_d.getLength() TO FORMONLY.cnt
+               CALL axcq900_fetch('')
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               DISPLAY g_master_idx TO FORMONLY.idx
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         DISPLAY ARRAY g_xccc2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 2
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_xccc2_d.getLength() TO FORMONLY.cnt
+               CALL axcq900_fetch('')
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               DISPLAY g_master_idx TO FORMONLY.idx
+               #end add-point  
+ 
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_xccc3_d TO s_detail3.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 3
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_xccc3_d.getLength() TO FORMONLY.cnt
+               CALL axcq900_fetch('')
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               DISPLAY g_master_idx TO FORMONLY.idx
+               #end add-point  
+ 
+            #自訂ACTION(detail_show,page_3)
+            
+               
+         END DISPLAY
+ 
+ 
+         
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         DISPLAY ARRAY g_xccc4_d TO s_detail4.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail4")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_xccc4_d.getLength() TO FORMONLY.cnt
+               CALL axcq900_fetch('')
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               DISPLAY g_master_idx TO FORMONLY.idx
+               #end add-point  
+         END DISPLAY
+         DISPLAY ARRAY g_xccc5_d TO s_detail5.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 5
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail5")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_xccc5_d.getLength() TO FORMONLY.cnt
+               CALL axcq900_fetch('')
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               DISPLAY g_master_idx TO FORMONLY.idx
+               #end add-point 
+          END DISPLAY               
+        DISPLAY ARRAY g_xccc6_d TO s_detail6.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 3
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail6")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_xccc6_d.getLength() TO FORMONLY.cnt
+               CALL axcq900_fetch('')
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               DISPLAY g_master_idx TO FORMONLY.idx
+               #end add-point  
+           END DISPLAY    
+        DISPLAY ARRAY g_xccc7_d TO s_detail7.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 6
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail7")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_xccc7_d.getLength() TO FORMONLY.cnt
+               CALL axcq900_fetch('')
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               DISPLAY g_master_idx TO FORMONLY.idx
+               #end add-point 
+          END DISPLAY               
+         DISPLAY ARRAY g_xccc8_d TO s_detail8.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 2
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail8")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_xccc8_d.getLength() TO FORMONLY.cnt
+               CALL axcq900_fetch('')
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               DISPLAY g_master_idx TO FORMONLY.idx
+               #end add-point 
+               END DISPLAY
+         DISPLAY ARRAY g_xccc9_d TO s_detail9.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 7
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail9")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_xccc9_d.getLength() TO FORMONLY.cnt
+               CALL axcq900_fetch('')
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               DISPLAY g_master_idx TO FORMONLY.idx
+               #end add-point                 
+ END DISPLAY
+            #自訂ACTION(detail_show,page_3)
+         #end add-point
+         
+         BEFORE DIALOG      
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before dialog
+
+            
+            DISPLAY BY NAME g_master.xccccomp,g_master.xcccld,g_master.xccc004,g_master.xccc005,g_master.xccc003,
+                            g_master.xccccomp_desc,g_master.xcccld_desc,g_master.xccc003_desc
+            #end add-point
+ 
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL axcq900_insert()
+               #add-point:ON ACTION insert
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+             IF g_xccc_d.getLength()>0 THEN
+                 CALL axcq900_create_temp_table()  
+                 CALL axcq900_ins_temp()               
+                 LET g_param.v = "axcq900_tmp"
+                 CALL axcq500_x01('1=1',g_param.v)
+              END IF 
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL axcq900_query()
+               #add-point:ON ACTION query
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL axcq900_filter()
+            #add-point:ON ACTION filter
+
+            #END add-point
+            EXIT DIALOG
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               CALL axcq900_b_fill()
+            END IF
+ 
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+      #  ON ACTION qbeclear   # 條件清除
+      #     CLEAR FORM
+ 
+         ON ACTION datarefresh   # 重新整理
+            LET g_error_show = 1
+            CALL axcq900_b_fill()
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+
+            #END add-point
+            CALL cl_user_overview()
+ 
+         
+         
+ 
+         #add-point:ui_dialog段自定義action
+         ON ACTION first
+            CALL axcq900_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            
+         ON ACTION previous
+            CALL axcq900_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            
+         ON ACTION jump
+            CALL axcq900_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            
+         ON ACTION next
+            CALL axcq900_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            
+         ON ACTION last
+            CALL axcq900_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            
+         ON ACTION call_axcq501 
+            LET la_param.prog     = "axcq501"
+            LET la_param.param[1] = g_master.xccccomp
+            LET la_param.param[2] = g_master.xcccld
+            LET la_param.param[3] = g_master.xccc003
+            LET la_param.param[4] = g_master.xccc004
+            LET la_param.param[5] = g_master.xccc005
+            LET la_param.param[6] = g_master.xccc006
+            LET la_param.param[7] = g_master.xccc007
+            LET la_param.param[8] = g_master.xccc002
+            LET ls_js = util.JSON.stringify( la_param )
+            CALL cl_cmdrun(ls_js)
+        
+        
+         
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_xccc_d)
+                  LET g_export_id[1]   = "s_detail1"
+ 
+                  #add-point:ON ACTION exporttoexcel
+                  LET g_export_node[2] = base.typeInfo.create(g_xccc2_d)
+                  LET g_export_id[2]   = "s_detail2"
+                  LET g_export_node[3] = base.typeInfo.create(g_xccc3_d)
+                  LET g_export_id[3]   = "s_detail3"
+                  LET g_export_node[4] = base.typeInfo.create(g_xccc4_d)
+                  LET g_export_id[4]   = "s_detail4"
+                  LET g_export_node[5] = base.typeInfo.create(g_xccc5_d)
+                  LET g_export_id[5]   = "s_detail5"
+                  LET g_export_node[6] = base.typeInfo.create(g_xccc6_d)
+                  LET g_export_id[6]   = "s_detail6"
+                  LET g_export_node[7] = base.typeInfo.create(g_xccc7_d)
+                  LET g_export_id[7]   = "s_detail7"
+                  LET g_export_node[8] = base.typeInfo.create(g_xccc8_d)
+                  LET g_export_id[8]   = "s_detail8"
+                  LET g_export_node[9] = base.typeInfo.create(g_xccc9_d)
+                  LET g_export_id[9]   = "s_detail9"
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF         
+         #end add-point
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION axcq900_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+ 
+   #end add-point 
+   
+   LET INT_FLAG = 0
+ 
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+   #wc備份
+   #LET ls_wc = g_wc
+   LET ls_wc = NULL
+   LET g_master_idx = l_ac
+ 
+   DISPLAY ' ' TO FORMONLY.idx
+   DISPLAY ' ' TO FORMONLY.cnt
+   DISPLAY ' ' TO FORMONLY.h_index
+   DISPLAY ' ' TO FORMONLY.h_count
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT BY NAME g_wc ON xccccomp,xcccld,xccc003,xccc004,xccc005,xccc006,xccc007,xccc002,xccc008
+ 
+         BEFORE CONSTRUCT
+           #160921-00010#1 add(s)
+           CALL s_axc_set_site_default() RETURNING g_master.xccccomp,g_master.xcccld,g_master.xccc004,g_master.xccc005,g_master.xccc003
+           INITIALIZE g_ref_fields TO NULL
+           LET g_ref_fields[1] = g_master.xccccomp
+           CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+           LET g_master.xccccomp_desc = '', g_rtn_fields[1] , ''
+           
+           INITIALIZE g_ref_fields TO NULL
+           LET g_ref_fields[1] = g_master.xcccld
+           CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+           LET g_master.xcccld_desc = '', g_rtn_fields[1] , ''
+           
+           INITIALIZE g_ref_fields TO NULL
+           LET g_ref_fields[1] = g_master.xccc003
+           CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+           LET g_master.xccc003_desc = '', g_rtn_fields[1] , ''
+           #160921-00010#1 add(e)
+           DISPLAY BY NAME g_master.xccccomp,g_master.xcccld,g_master.xccc004,g_master.xccc005,g_master.xccc003,
+                            g_master.xccccomp_desc,g_master.xcccld_desc,g_master.xccc003_desc
+           
+         ON ACTION controlp INFIELD xccccomp
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001_2()                      #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xccccomp  #顯示到畫面上
+ 
+            NEXT FIELD xccccomp                     #返回原欄位         
+         
+         AFTER FIELD xccccomp
+            CALL GET_FLDBUF(xccccomp) RETURNING g_master.xccccomp
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_master.xccccomp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_master.xccccomp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_master.xccccomp_desc
+            
+         AFTER FIELD xcccld
+            CALL GET_FLDBUF(xcccld) RETURNING g_master.xcccld
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_master.xcccld
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_master.xcccld_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_master.xcccld_desc
+            
+         AFTER FIELD xccc003
+            CALL GET_FLDBUF(xccc003) RETURNING g_master.xccc003
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_master.xccc003
+            CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_master.xccc003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_master.xccc003_desc
+            
+         AFTER FIELD xccc006
+            CALL GET_FLDBUF(xccc006) RETURNING g_master.xccc006
+            CALL s_desc_get_item_desc(g_master.xccc006)
+                       RETURNING g_master.xccc006_desc,g_master.xccc006_desc_1
+            DISPLAY BY NAME g_master.xccc006_desc,g_master.xccc006_desc_1
+            
+            
+         AFTER FIELD xccc002
+            CALL GET_FLDBUF(xccc002) RETURNING g_master.xccc002
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_master.xccc002
+            CALL ap_ref_array2(g_ref_fields,"SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent='"||g_enterprise||"'  AND xcbfl001=? AND xcbfl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_master.xccc002_desc = '', g_rtn_fields[1] , '' 
+            DISPLAY BY NAME g_master.xccc002_desc
+         
+         ON ACTION controlp INFIELD xcccld
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept 
+            CALL q_authorised_ld()                #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcccld  #顯示到畫面上
+            NEXT FIELD xcccld                     #返回原欄位        
+         
+         
+         
+         ON ACTION controlp INFIELD xccc003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_xcat001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xccc003  #顯示到畫面上
+            NEXT FIELD xccc003                     #返回原欄位         
+         
+         
+         
+         ON ACTION controlp INFIELD xccc008
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = 'F'
+            CALL q_inaj010()                  #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xccc008  #顯示到畫面上
+            NEXT FIELD xccc008                    #返回原欄位           
+         
+         
+         
+         ON ACTION controlp INFIELD xccc006
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xccc006  #顯示到畫面上
+ 
+            NEXT FIELD xccc006                     #返回原欄位         
+         
+          ON ACTION controlp INFIELD xccc007
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_xccd008()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xccc007  #顯示到畫面上
+ 
+            NEXT FIELD xccc007                     #返回原欄位  
+         
+         ON ACTION controlp INFIELD xccc002
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_xcbf001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xccc002  #顯示到畫面上
+ 
+            NEXT FIELD b_xccc002                     #返回原欄位         
+         
+         
+         
+         
+        
+         
+      END CONSTRUCT
+ 
+ 
+      #單身根據table分拆construct
+      #fengmy150217 modi------begin  
+ 
+      CONSTRUCT g_wc_table ON b_xccc001,b_xccc102a,b_xccc202a,b_xccc902a,
+                              b_xcc302,b_xccc310,b_xccc208,b_xccc314,b_xccc304,b_xccc308,b_xccc312,
+                              b_xccc202a_2,b_xccc212a_2,b_xccc214a_2,b_xccc216a_2,b_xccc218a_2
+           FROM s_detail1[1].b_xccc001,s_detail1[1].b_xccc102a,s_detail1[1].b_xccc202a,s_detail1[1].b_xccc902a,
+                s_detail4[1].b_xcc302,s_detail4[1].b_xccc310,s_detail4[1].b_xccc208,s_detail4[1].b_xccc314,
+                s_detail4[1].b_xccc304,s_detail4[1].b_xccc308,s_detail4[1].b_xccc312,
+                s_detail5[1].b_xccc202a_2,s_detail5[1].b_xccc212a_2,s_detail5[1].b_xccc214a_2,
+                s_detail5[1].b_xccc216a_2,s_detail5[1].b_xccc218a_2
+                   
+       #fengmy150217 modi------end                       
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            DISPLAY BY NAME g_master.xccccomp,g_master.xcccld,g_master.xccc004,g_master.xccc005,g_master.xccc003,
+                            g_master.xccccomp_desc,g_master.xcccld_desc,g_master.xccc003_desc
+            #fengmy 150113----begin
+            #根據參數顯示隱藏成本域 和 料件特性
+            IF cl_null(g_master.xccccomp) THEN
+               CALL cl_get_para(g_enterprise,g_site,'S-FIN-6001') RETURNING g_para_data   #采用成本域否
+               CALL cl_get_para(g_enterprise,g_site,'S-FIN-6013') RETURNING g_para_data1   #采用特性否       
+            ELSE
+               CALL cl_get_para(g_enterprise,g_master.xccccomp,'S-FIN-6001') RETURNING g_para_data   #采用成本域否
+               CALL cl_get_para(g_enterprise,g_master.xccccomp,'S-FIN-6013') RETURNING g_para_data1   #采用特性否       
+            END IF      
+            IF g_para_data = 'Y' THEN
+               CALL cl_set_comp_visible('xccc002,xccc002_desc',TRUE)                    
+            ELSE
+               CALL cl_set_comp_visible('xccc002,xccc002_desc',FALSE)                
+            END IF
+            IF g_para_data1 = 'Y' THEN
+               CALL cl_set_comp_visible('xccc007',TRUE)                    
+            ELSE
+               CALL cl_set_comp_visible('xccc007',FALSE)                
+            END IF   
+            #fengmy 150113----end
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #----<<b_item>>----
+         #----<<b_xccc001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc001
+            #add-point:BEFORE FIELD b_xccc001
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc001
+            
+            #add-point:AFTER FIELD b_xccc001
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_xccc001
+         ON ACTION controlp INFIELD b_xccc001
+            #add-point:ON ACTION controlp INFIELD b_xccc001
+
+            #END add-point
+ 
+         #----<<b_xccc102a>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc102a
+            #add-point:BEFORE FIELD b_xccc102a
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc102a
+            
+            #add-point:AFTER FIELD b_xccc102a
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_xccc102a
+         ON ACTION controlp INFIELD b_xccc102a
+            #add-point:ON ACTION controlp INFIELD b_xccc102a
+
+            #END add-point
+ 
+         #----<<b_xccc202a>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc202a
+            #add-point:BEFORE FIELD b_xccc202a
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc202a
+            
+            #add-point:AFTER FIELD b_xccc202a
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_xccc202a
+         ON ACTION controlp INFIELD b_xccc202a
+            #add-point:ON ACTION controlp INFIELD b_xccc202a
+
+ 
+
+ 
+
+       
+
+ 
+ 
+         #----<<b_xccc302a>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc302a
+            #add-point:BEFORE FIELD b_xccc302a
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc302a
+            
+            #add-point:AFTER FIELD b_xccc302a
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_xccc302a
+         ON ACTION controlp INFIELD b_xccc302a
+            #add-point:ON ACTION controlp INFIELD b_xccc302a
+
+            #END add-point
+ 
+         #----<<b_xccc304a>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc304a
+            #add-point:BEFORE FIELD b_xccc304a
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc304a
+            
+            #add-point:AFTER FIELD b_xccc304a
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_xccc304a
+         ON ACTION controlp INFIELD b_xccc304a
+            #add-point:ON ACTION controlp INFIELD b_xccc304a
+
+            #END add-point
+ 
+         #----<<b_xccc902a>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc902a
+            #add-point:BEFORE FIELD b_xccc902a
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc902a
+            
+            #add-point:AFTER FIELD b_xccc902a
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_xccc902a
+         ON ACTION controlp INFIELD b_xccc902a
+            #add-point:ON ACTION controlp INFIELD b_xccc902a
+
+            #END add-point
+ 
+         #----<<b_xcccld_1>>----
+         #----<<b_xccc002_1>>----
+         #----<<b_xccc003_1>>----
+         #----<<b_xccc004_1>>----
+         #----<<b_xccc005_1>>----
+         #----<<b_xccc006_1>>----
+         #----<<b_item2>>----
+         #----<<b_xccc001_2>>----
+         #----<<b_xccc102b>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc102b
+            #add-point:BEFORE FIELD b_xccc102b
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc102b
+            
+            #add-point:AFTER FIELD b_xccc102b
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.b_xccc102b
+         ON ACTION controlp INFIELD b_xccc102b
+            #add-point:ON ACTION controlp INFIELD b_xccc102b
+
+            #END add-point
+ 
+         #----<<b_xccc202b>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc202b
+            #add-point:BEFORE FIELD b_xccc202b
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc202b
+            
+            #add-point:AFTER FIELD b_xccc202b
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.b_xccc202b
+         ON ACTION controlp INFIELD b_xccc202b
+            #add-point:ON ACTION controlp INFIELD b_xccc202b
+
+            #END add-point
+ 
+
+ 
+
+ 
+
+ 
+ 
+         #----<<b_xccc302b>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc302b
+            #add-point:BEFORE FIELD b_xccc302b
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc302b
+            
+            #add-point:AFTER FIELD b_xccc302b
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.b_xccc302b
+         ON ACTION controlp INFIELD b_xccc302b
+            #add-point:ON ACTION controlp INFIELD b_xccc302b
+
+            #END add-point
+ 
+         #----<<b_xccc304b>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc304b
+            #add-point:BEFORE FIELD b_xccc304b
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc304b
+            
+            #add-point:AFTER FIELD b_xccc304b
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.b_xccc304b
+         ON ACTION controlp INFIELD b_xccc304b
+            #add-point:ON ACTION controlp INFIELD b_xccc304b
+
+            #END add-point
+ 
+         #----<<b_xccc902b>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc902b
+            #add-point:BEFORE FIELD b_xccc902b
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc902b
+            
+            #add-point:AFTER FIELD b_xccc902b
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.b_xccc902b
+         ON ACTION controlp INFIELD b_xccc902b
+            #add-point:ON ACTION controlp INFIELD b_xccc902b
+
+            #END add-point
+ 
+         #----<<b_xcccld_2>>----
+         #----<<b_xccc002_2>>----
+         #----<<b_xccc003_2>>----
+         #----<<b_xccc004_2>>----
+         #----<<b_xccc005_2>>----
+         #----<<b_xccc006_2>>----
+         #----<<b_item3>>----
+         #----<<b_xccc102c>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc102c
+            #add-point:BEFORE FIELD b_xccc102c
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc102c
+            
+            #add-point:AFTER FIELD b_xccc102c
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.b_xccc102c
+         ON ACTION controlp INFIELD b_xccc102c
+            #add-point:ON ACTION controlp INFIELD b_xccc102c
+
+            #END add-point
+ 
+         #----<<b_xccc202c>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc202c
+            #add-point:BEFORE FIELD b_xccc202c
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc202c
+            
+            #add-point:AFTER FIELD b_xccc202c
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.b_xccc202c
+         ON ACTION controlp INFIELD b_xccc202c
+            #add-point:ON ACTION controlp INFIELD b_xccc202c
+
+            #END add-point
+ 
+
+ 
+
+ 
+
+ 
+         #----<<b_xccc302c>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc302c
+            #add-point:BEFORE FIELD b_xccc302c
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc302c
+            
+            #add-point:AFTER FIELD b_xccc302c
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.b_xccc302c
+         ON ACTION controlp INFIELD b_xccc302c
+            #add-point:ON ACTION controlp INFIELD b_xccc302c
+
+            #END add-point
+ 
+         #----<<b_xccc304c>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc304c
+            #add-point:BEFORE FIELD b_xccc304c
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc304c
+            
+            #add-point:AFTER FIELD b_xccc304c
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.b_xccc304c
+         ON ACTION controlp INFIELD b_xccc304c
+            #add-point:ON ACTION controlp INFIELD b_xccc304c
+
+            #END add-point
+ 
+         #----<<b_xccc902c>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_xccc902c
+            #add-point:BEFORE FIELD b_xccc902c
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_xccc902c
+            
+            #add-point:AFTER FIELD b_xccc902c
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.b_xccc902c
+         ON ACTION controlp INFIELD b_xccc902c
+            #add-point:ON ACTION controlp INFIELD b_xccc902c
+
+            #END add-point
+ 
+         #----<<b_xcccld_3>>----
+         #----<<b_xccc002_3>>----
+         #----<<b_xccc003_3>>----
+         #----<<b_xccc004_3>>----
+         #----<<b_xccc005_3>>----
+         #----<<b_xccc006_3>>----
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+  
+      #add-point:query段more_construct
+
+      #end add-point 
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+ 
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION qbeclear   # 條件清除
+         CLEAR FORM
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+   ELSE
+      LET g_master_idx = 1
+   END IF
+           
+   LET g_wc2 = g_wc_table
+ 
+        
+   #add-point:cs段after_construct
+   IF g_wc IS NULL THEN RETURN END IF
+   #fengmy150217----begin
+   LET g_wc2 = cl_replace_str(g_wc2,"b_xccc201=","(xccc201+xccc203+xccc205+xccc211+xccc213+xccc215+xccc217)=")
+   LET g_wc2 = cl_replace_str(g_wc2,"b_xccc303=","(xccc303+xccc305)=")
+   LET g_wc2 = cl_replace_str(g_wc2,"b_","")
+   LET g_wc2 = cl_replace_str(g_wc2,"_2","")
+   #fengmy150217----end
+   CALL axcq900_browser_fill()
+   CALL axcq900_fetch("F")
+   #end add-point
+        
+   LET g_error_show = 1
+#   CALL axcq900_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION axcq900_b_fill()
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   DEFINE l_msg           STRING
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+
+ 
+
+#为了提高效率，不采用常用的foreach填充，一次性填充全部的单身
+LET g_sql = "SELECT  UNIQUE '',xccc001 xccc001_1,xccc101,(xccc201+xccc203+xccc205+xccc211+xccc213+xccc215+xccc217),'',xccc901,xcccld xcccld_1,xccc002 xccc002_1,xccc003 xccc003_1,xccc004 xccc004_1,xccc005 xccc005_1,xccc006 xccc006_1,xccc007 xccc007_1,xccc008 xccc008_1,",               #第一行
+            "               '',xccc001 xccc001_2,xccc102a,(xccc202a+xccc212a+xccc214a+xccc216a+xccc218a),xccc280a,xccc902a,xcccld xcccld_2,xccc002 xccc002_2,xccc003 xccc003_2,xccc004 xccc004_2,xccc005 xccc005_2,xccc006 xccc006_2,xccc007 xccc007_2,xccc008 xccc008_2,",    #第二行
+            "               '',xccc001 xccc001_3,xccc102b,(xccc202b+xccc212b+xccc214b+xccc216b+xccc218b),xccc280b,xccc902b,xcccld xcccld_3,xccc002 xccc002_3,xccc003 xccc003_3,xccc004 xccc004_3,xccc005 xccc005_3,xccc006 xccc006_3,xccc007 xccc007_3,xccc008 xccc008_3,",    #第三行
+            "               '',xccc001 xccc001_4,xccc102c,(xccc202c+xccc212c+xccc214c+xccc216c+xccc218c),xccc280c,xccc902c,xcccld xcccld_4,xccc002 xccc002_4,xccc003 xccc003_4,xccc004 xccc004_4,xccc005 xccc005_4,xccc006 xccc006_4,xccc007 xccc007_4,xccc008 xccc008_4,",    #第四行
+            "               '',xccc001 xccc001_5,xccc102d,(xccc202d+xccc212d+xccc214d+xccc216d+xccc218d),xccc280d,xccc902d,xcccld xcccld_5,xccc002 xccc002_5,xccc003 xccc003_5,xccc004 xccc004_5,xccc005 xccc005_5,xccc006 xccc006_5,xccc007 xccc007_5,xccc008 xccc008_5,",    #第五行
+            "               '',xccc001 xccc001_6,xccc102e,(xccc202e+xccc212e+xccc214e+xccc216e+xccc218e),xccc280e,xccc902e,xcccld xcccld_6,xccc002 xccc002_6,xccc003 xccc003_6,xccc004 xccc004_6,xccc005 xccc005_6,xccc006 xccc006_6,xccc007 xccc007_6,xccc008 xccc008_6,",    #第六行
+            "               '',xccc001 xccc001_7,xccc102f,(xccc202f+xccc212f+xccc214f+xccc216f+xccc218f),xccc280f,xccc902f,xcccld xcccld_7,xccc002 xccc002_7,xccc003 xccc003_7,xccc004 xccc004_7,xccc005 xccc005_7,xccc006 xccc006_7,xccc007 xccc007_7,xccc008 xccc008_7,",    #第七行
+            "               '',xccc001 xccc001_8,xccc102g,(xccc202g+xccc212g+xccc214g+xccc216g+xccc218g),xccc280g,xccc902g,xcccld xcccld_8,xccc002 xccc002_8,xccc003 xccc003_8,xccc004 xccc004_8,xccc005 xccc005_8,xccc006 xccc006_8,xccc007 xccc007_8,xccc008 xccc008_8,",    #第八行
+            "               '',xccc001 xccc001_9,xccc102h,(xccc202h+xccc212h+xccc214h+xccc216h+xccc218h),xccc280h,xccc902h,xcccld xcccld_9,xccc002 xccc002_9,xccc003 xccc003_9,xccc004 xccc004_9,xccc005 xccc005_9,xccc006 xccc006_9,xccc007 xccc007_9,xccc008 xccc008_9,",    #第九行 
+            "               '',xccc001 xccc001_10,xccc102,(xccc202+xccc212+xccc214+xccc216+xccc218),xccc280,xccc902,xcccld xcccld_10,xccc002 xccc002_10,xccc003 xccc003_10,xccc004 xccc004_10,xccc005 xccc005_10,xccc006 xccc006_10,xccc007 xccc007_10,xccc008 xccc008_10,",    #第十行  
+            "               '',xccc001 xccc001_11,CASE xccc101 WHEN 0 THEN 0 ELSE xccc102/xccc101 END,CASE (xccc201+xccc203+xccc205+xccc211+xccc213+xccc215+xccc217) WHEN 0 THEN 0 ELSE (xccc202+xccc212+xccc214+xccc216+xccc218)/(xccc201+xccc203+xccc205+xccc211+xccc213+xccc215+xccc217) END,'',CASE xccc901 WHEN 0 THEN 0 ELSE (xccc902/xccc901) END,xcccld xcccld_11,xccc002 xccc002_11,xccc003 xccc003_11,xccc004 xccc004_11,xccc005 xccc005_11,xccc006 xccc006_11,xccc007 xccc007_11,xccc008 xccc008_11,",    #第十一行  
+            
+
+
+            "               '',xccc301,xccc309,xccc211,xccc313,(xccc303+xccc305),'',xccc307,xccc311,'',",    #第十二行  
+            "               '',xccc302,xccc310,xccc212,xccc314,(xccc304+xccc306),(xccc401-xccc402),xccc308,xccc312,xccc903,",    #第十三行  
+            
+            "               '',xccc201,xccc203,xccc205,xccc211,xccc213,xccc215,xccc217,",               #第一行
+            "               '',xccc202a,xccc212a,xccc214a,xccc216a,xccc218a,",    #第二行
+            "               '',xccc202b,xccc212b,xccc214b,xccc216b,xccc218b,",    #第三行
+            "               '',xccc202c,xccc212c,xccc214c,xccc216c,xccc218c,",    #第四行
+            "               '',xccc202d,xccc212d,xccc214d,xccc216d,xccc218d,",    #第五行
+            "               '',xccc202e,xccc212e,xccc214e,xccc216e,xccc218e,",    #第六行
+            "               '',xccc202f,xccc212f,xccc214f,xccc216f,xccc218f,",    #第七行
+            "               '',xccc202g,xccc212g,xccc214g,xccc216g,xccc218g,",    #第八行
+            "               '',xccc202h,xccc212h,xccc214h,xccc216h,xccc218h,",    #第九行 
+            "               '',xccc202,xccc212,xccc214,xccc216,xccc218,",    #第十行 
+            "               '',CASE xccc201 WHEN 0 THEN 0 ELSE (xccc202/xccc201) END,CASE xccc203 WHEN 0 THEN 0 ELSE 0 END,CASE xccc205 WHEN 0 THEN 0 ELSE 0 END,CASE xccc211 WHEN 0 THEN 0 ELSE (xccc212/xccc211) END,CASE xccc213 WHEN 0 THEN 0 ELSE (xccc214/xccc213) END,CASE xccc215 WHEN 0 THEN 0 ELSE (xccc216/xccc215) END,CASE xccc217 WHEN 0 THEN 0 ELSE (xccc218/xccc217) END",    #第十一行   
+            "  FROM xccc_t",
+            " WHERE xcccent= ? AND xcccld = ? ",
+            "   AND xccc001 = ? AND xccc002 = ? AND xccc003 = ? AND xccc004 = ? AND xccc005 = ? AND xccc006 = ? AND xccc007 = ? AND xccc008 = ?  "    
+LET g_sql = g_sql, cl_sql_add_filter("xccc_t")
+LET g_sql = g_sql," ORDER BY xccc001 " 
+#end add-point
+
+
+   LET g_sql_tmp=g_sql   #wangxina 150330 add
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE axcq900_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR axcq900_pb
+   
+   
+ 
+   CALL g_xccc_d.clear()
+   CALL g_xccc2_d.clear()   
+ 
+   CALL g_xccc3_d.clear()
+   CALL g_xccc4_d.clear()
+   CALL g_xccc5_d.clear()
+   CALL g_xccc6_d.clear()
+   CALL g_xccc7_d.clear()
+   CALL g_xccc8_d.clear()
+   CALL g_xccc9_d.clear()
+   
+   OPEN b_fill_curs USING g_enterprise,g_master.xcccld,'1',g_master.xccc002,g_master.xccc003,g_master.xccc004,g_master.xccc005,g_master.xccc006,g_master.xccc007,g_master.xccc008
+   
+   FETCH b_fill_curs INTO g_xccc_d[1].item,g_xccc_d[1].xccc001,g_xccc_d[1].xccc102a,g_xccc_d[1].xccc202a,
+                          g_xccc_d[1].xccc280a,g_xccc_d[1].xccc902a,g_xccc_d[1].xcccld,g_xccc_d[1].xccc002,
+                          g_xccc_d[1].xccc003,g_xccc_d[1].xccc004,g_xccc_d[1].xccc005,g_xccc_d[1].xccc006,g_xccc_d[1].xccc007,g_xccc_d[1].xccc008,
+                          g_xccc_d[2].item,g_xccc_d[2].xccc001,g_xccc_d[2].xccc102a,g_xccc_d[2].xccc202a,
+                          g_xccc_d[2].xccc280a,g_xccc_d[2].xccc902a,g_xccc_d[2].xcccld,g_xccc_d[2].xccc002,
+                          g_xccc_d[2].xccc003,g_xccc_d[2].xccc004,g_xccc_d[2].xccc005,g_xccc_d[2].xccc006,g_xccc_d[2].xccc007,g_xccc_d[2].xccc008,
+                          g_xccc_d[3].item,g_xccc_d[3].xccc001,g_xccc_d[3].xccc102a,g_xccc_d[3].xccc202a,
+                          g_xccc_d[3].xccc280a,g_xccc_d[3].xccc902a,g_xccc_d[3].xcccld,g_xccc_d[3].xccc002,
+                          g_xccc_d[3].xccc003,g_xccc_d[3].xccc004,g_xccc_d[3].xccc005,g_xccc_d[3].xccc006,g_xccc_d[3].xccc007,g_xccc_d[3].xccc008,
+                          g_xccc_d[4].item,g_xccc_d[4].xccc001,g_xccc_d[4].xccc102a,g_xccc_d[4].xccc202a,
+                          g_xccc_d[4].xccc280a,g_xccc_d[4].xccc902a,g_xccc_d[4].xcccld,g_xccc_d[4].xccc002,
+                          g_xccc_d[4].xccc003,g_xccc_d[4].xccc004,g_xccc_d[4].xccc005,g_xccc_d[4].xccc006,g_xccc_d[4].xccc007,g_xccc_d[4].xccc008,
+                          g_xccc_d[5].item,g_xccc_d[5].xccc001,g_xccc_d[5].xccc102a,g_xccc_d[5].xccc202a,
+                          g_xccc_d[5].xccc280a,g_xccc_d[5].xccc902a,g_xccc_d[5].xcccld,g_xccc_d[5].xccc002,
+                          g_xccc_d[5].xccc003,g_xccc_d[5].xccc004,g_xccc_d[5].xccc005,g_xccc_d[5].xccc006,g_xccc_d[5].xccc007,g_xccc_d[5].xccc008,
+                          g_xccc_d[6].item,g_xccc_d[6].xccc001,g_xccc_d[6].xccc102a,g_xccc_d[6].xccc202a,
+                          g_xccc_d[6].xccc280a,g_xccc_d[6].xccc902a,g_xccc_d[6].xcccld,g_xccc_d[6].xccc002,
+                          g_xccc_d[6].xccc003,g_xccc_d[6].xccc004,g_xccc_d[6].xccc005,g_xccc_d[6].xccc006,g_xccc_d[6].xccc007,g_xccc_d[6].xccc008,
+                          g_xccc_d[7].item,g_xccc_d[7].xccc001,g_xccc_d[7].xccc102a,g_xccc_d[7].xccc202a,
+                          g_xccc_d[7].xccc280a,g_xccc_d[7].xccc902a,g_xccc_d[7].xcccld,g_xccc_d[7].xccc002,
+                          g_xccc_d[7].xccc003,g_xccc_d[7].xccc004,g_xccc_d[7].xccc005,g_xccc_d[7].xccc006,g_xccc_d[7].xccc007,g_xccc_d[7].xccc008,
+                          g_xccc_d[8].item,g_xccc_d[8].xccc001,g_xccc_d[8].xccc102a,g_xccc_d[8].xccc202a,
+                          g_xccc_d[8].xccc280a,g_xccc_d[8].xccc902a,g_xccc_d[8].xcccld,g_xccc_d[8].xccc002,
+                          g_xccc_d[8].xccc003,g_xccc_d[8].xccc004,g_xccc_d[8].xccc005,g_xccc_d[8].xccc006,g_xccc_d[8].xccc007,g_xccc_d[8].xccc008,
+                          g_xccc_d[9].item,g_xccc_d[9].xccc001,g_xccc_d[9].xccc102a,g_xccc_d[9].xccc202a,
+                          g_xccc_d[9].xccc280a,g_xccc_d[9].xccc902a,g_xccc_d[9].xcccld,g_xccc_d[9].xccc002,
+                          g_xccc_d[9].xccc003,g_xccc_d[9].xccc004,g_xccc_d[9].xccc005,g_xccc_d[9].xccc006,g_xccc_d[9].xccc007,g_xccc_d[9].xccc008,
+                          g_xccc_d[10].item,g_xccc_d[10].xccc001,g_xccc_d[10].xccc102a,g_xccc_d[10].xccc202a,
+                          g_xccc_d[10].xccc280a,g_xccc_d[10].xccc902a,g_xccc_d[10].xcccld,g_xccc_d[10].xccc002,
+                          g_xccc_d[10].xccc003,g_xccc_d[10].xccc004,g_xccc_d[10].xccc005,g_xccc_d[10].xccc006,g_xccc_d[10].xccc007,g_xccc_d[10].xccc008,
+                          g_xccc_d[11].item,g_xccc_d[11].xccc001,g_xccc_d[11].xccc102a,g_xccc_d[11].xccc202a,
+                          g_xccc_d[11].xccc280a,g_xccc_d[11].xccc902a,g_xccc_d[11].xcccld,g_xccc_d[11].xccc002,
+                          g_xccc_d[11].xccc003,g_xccc_d[11].xccc004,g_xccc_d[11].xccc005,g_xccc_d[11].xccc006,g_xccc_d[11].xccc007,g_xccc_d[11].xccc008,
+                          g_xccc4_d[1].item,g_xccc4_d[1].xccc302,g_xccc4_d[1].xccc310,g_xccc4_d[1].xccc208,g_xccc4_d[1].xccc314,g_xccc4_d[1].xccc304,
+                          g_xccc4_d[1].xccc401,g_xccc4_d[1].xccc308,g_xccc4_d[1].xccc312,g_xccc4_d[1].xccc903,
+                          g_xccc4_d[2].item,g_xccc4_d[2].xccc302,g_xccc4_d[2].xccc310,g_xccc4_d[2].xccc208,g_xccc4_d[2].xccc314,g_xccc4_d[2].xccc304,
+                          g_xccc4_d[2].xccc401,g_xccc4_d[2].xccc308,g_xccc4_d[2].xccc312,g_xccc4_d[2].xccc903,
+                          g_xccc5_d[1].item,g_xccc5_d[1].xccc202,g_xccc5_d[1].xccc212,g_xccc5_d[1].xccc214,g_xccc5_d[1].xccc216,g_xccc5_d[1].xccc218,
+                          g_xccc5_d[2].item,g_xccc5_d[2].xccc202,g_xccc5_d[2].xccc212,g_xccc5_d[2].xccc214,g_xccc5_d[2].xccc216,g_xccc5_d[2].xccc218,
+                          g_xccc5_d[3].item,g_xccc5_d[3].xccc202,g_xccc5_d[3].xccc212,g_xccc5_d[3].xccc214,g_xccc5_d[3].xccc216,g_xccc5_d[3].xccc218,
+                          g_xccc5_d[4].item,g_xccc5_d[4].xccc202,g_xccc5_d[4].xccc212,g_xccc5_d[4].xccc214,g_xccc5_d[4].xccc216,g_xccc5_d[4].xccc218,
+                          g_xccc5_d[5].item,g_xccc5_d[5].xccc202,g_xccc5_d[5].xccc212,g_xccc5_d[5].xccc214,g_xccc5_d[5].xccc216,g_xccc5_d[5].xccc218,
+                          g_xccc5_d[6].item,g_xccc5_d[6].xccc202,g_xccc5_d[6].xccc212,g_xccc5_d[6].xccc214,g_xccc5_d[6].xccc216,g_xccc5_d[6].xccc218,
+                          g_xccc5_d[7].item,g_xccc5_d[7].xccc202,g_xccc5_d[7].xccc212,g_xccc5_d[7].xccc214,g_xccc5_d[7].xccc216,g_xccc5_d[7].xccc218,
+                          g_xccc5_d[8].item,g_xccc5_d[8].xccc202,g_xccc5_d[8].xccc212,g_xccc5_d[8].xccc214,g_xccc5_d[8].xccc216,g_xccc5_d[8].xccc218,
+                          g_xccc5_d[9].item,g_xccc5_d[9].xccc202,g_xccc5_d[9].xccc212,g_xccc5_d[9].xccc214,g_xccc5_d[9].xccc216,g_xccc5_d[9].xccc218,
+                          g_xccc5_d[10].item,g_xccc5_d[10].xccc202,g_xccc5_d[10].xccc212,g_xccc5_d[10].xccc214,g_xccc5_d[10].xccc216,g_xccc5_d[10].xccc218,
+                          g_xccc5_d[11].item,g_xccc5_d[11].xccc202,g_xccc5_d[11].xccc212,g_xccc5_d[11].xccc214,g_xccc5_d[11].xccc216,g_xccc5_d[11].xccc218 
+  IF SQLCA.sqlcode AND SQLCA.sqlcode != 100 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "FETCH INTO b_fill" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CLOSE b_fill_curs
+      FREE b_fill_curs  
+      RETURN
+   END IF
+
+
+   IF g_glaa015 ='Y' THEN
+      OPEN b_fill_curs USING g_enterprise,g_master.xcccld,'2',g_master.xccc002,g_master.xccc003,g_master.xccc004,g_master.xccc005,g_master.xccc006,g_master.xccc007,g_master.xccc008
+   
+      FETCH b_fill_curs INTO g_xccc2_d[1].item2,g_xccc2_d[1].xccc001,g_xccc2_d[1].xccc102b,g_xccc2_d[1].xccc202b,g_xccc2_d[1].xccc208b,
+                          g_xccc2_d[1].xccc210b,g_xccc2_d[1].xccc280b,g_xccc2_d[1].xccc902b,g_xccc2_d[1].xcccld,g_xccc2_d[1].xccc002,
+                          g_xccc2_d[1].xccc003,g_xccc2_d[1].xccc004,g_xccc2_d[1].xccc005,g_xccc2_d[1].xccc006,g_xccc2_d[1].xccc007,g_xccc2_d[1].xccc008,
+                          g_xccc2_d[2].item2,g_xccc2_d[2].xccc001,g_xccc2_d[2].xccc102b,g_xccc2_d[2].xccc202b,g_xccc2_d[2].xccc208b,
+                          g_xccc2_d[2].xccc210b,g_xccc2_d[2].xccc280b,g_xccc2_d[2].xccc902b,g_xccc2_d[2].xcccld,g_xccc2_d[2].xccc002,
+                          g_xccc2_d[2].xccc003,g_xccc2_d[2].xccc004,g_xccc2_d[2].xccc005,g_xccc2_d[2].xccc006,g_xccc2_d[2].xccc007,g_xccc2_d[2].xccc008,
+                          g_xccc2_d[3].item2,g_xccc2_d[3].xccc001,g_xccc2_d[3].xccc102b,g_xccc2_d[3].xccc202b,g_xccc2_d[3].xccc208b,
+                          g_xccc2_d[3].xccc210b,g_xccc2_d[3].xccc280b,g_xccc2_d[3].xccc902b,g_xccc2_d[3].xcccld,g_xccc2_d[3].xccc002,
+                          g_xccc2_d[3].xccc003,g_xccc2_d[3].xccc004,g_xccc2_d[3].xccc005,g_xccc2_d[3].xccc006,g_xccc2_d[3].xccc007,g_xccc2_d[3].xccc008,
+                          g_xccc2_d[4].item2,g_xccc2_d[4].xccc001,g_xccc2_d[4].xccc102b,g_xccc2_d[4].xccc202b,g_xccc2_d[4].xccc208b,
+                          g_xccc2_d[4].xccc210b,g_xccc2_d[4].xccc280b,g_xccc2_d[4].xccc902b,g_xccc2_d[4].xcccld,g_xccc2_d[4].xccc002,
+                          g_xccc2_d[4].xccc003,g_xccc2_d[4].xccc004,g_xccc2_d[4].xccc005,g_xccc2_d[4].xccc006,g_xccc2_d[4].xccc007,g_xccc2_d[4].xccc008,
+                          g_xccc2_d[5].item2,g_xccc2_d[5].xccc001,g_xccc2_d[5].xccc102b,g_xccc2_d[5].xccc202b,g_xccc2_d[5].xccc208b,
+                          g_xccc2_d[5].xccc210b,g_xccc2_d[5].xccc280b,g_xccc2_d[5].xccc902b,g_xccc2_d[5].xcccld,g_xccc2_d[5].xccc002,
+                          g_xccc2_d[5].xccc003,g_xccc2_d[5].xccc004,g_xccc2_d[5].xccc005,g_xccc2_d[5].xccc006,g_xccc2_d[5].xccc007,g_xccc2_d[5].xccc008,
+                          g_xccc2_d[6].item2,g_xccc2_d[6].xccc001,g_xccc2_d[6].xccc102b,g_xccc2_d[6].xccc202b,g_xccc2_d[6].xccc208b,
+                          g_xccc2_d[6].xccc210b,g_xccc2_d[6].xccc280b,g_xccc2_d[6].xccc902b,g_xccc2_d[6].xcccld,g_xccc2_d[6].xccc002,
+                          g_xccc2_d[6].xccc003,g_xccc2_d[6].xccc004,g_xccc2_d[6].xccc005,g_xccc2_d[6].xccc006,g_xccc2_d[6].xccc007,g_xccc2_d[6].xccc008,
+                          g_xccc2_d[7].item2,g_xccc2_d[7].xccc001,g_xccc2_d[7].xccc102b,g_xccc2_d[7].xccc202b,g_xccc2_d[7].xccc208b,
+                          g_xccc2_d[7].xccc210b,g_xccc2_d[7].xccc280b,g_xccc2_d[7].xccc902b,g_xccc2_d[7].xcccld,g_xccc2_d[7].xccc002,
+                          g_xccc2_d[7].xccc003,g_xccc2_d[7].xccc004,g_xccc2_d[7].xccc005,g_xccc2_d[7].xccc006,g_xccc2_d[7].xccc007,g_xccc2_d[7].xccc008,
+                          g_xccc2_d[8].item2,g_xccc2_d[8].xccc001,g_xccc2_d[8].xccc102b,g_xccc2_d[8].xccc202b,g_xccc2_d[8].xccc208b,
+                          g_xccc2_d[8].xccc210b,g_xccc2_d[8].xccc280b,g_xccc2_d[8].xccc902b,g_xccc2_d[8].xcccld,g_xccc2_d[8].xccc002,
+                          g_xccc2_d[8].xccc003,g_xccc2_d[8].xccc004,g_xccc2_d[8].xccc005,g_xccc2_d[8].xccc006,g_xccc2_d[8].xccc007,g_xccc2_d[8].xccc008,
+                          g_xccc2_d[9].item2,g_xccc2_d[9].xccc001,g_xccc2_d[9].xccc102b,g_xccc2_d[9].xccc202b,g_xccc2_d[9].xccc208b,
+                          g_xccc2_d[9].xccc210b,g_xccc2_d[9].xccc280b,g_xccc2_d[9].xccc902b,g_xccc2_d[9].xcccld,g_xccc2_d[9].xccc002,
+                          g_xccc2_d[9].xccc003,g_xccc2_d[9].xccc004,g_xccc2_d[9].xccc005,g_xccc2_d[9].xccc006,g_xccc2_d[9].xccc007,g_xccc2_d[9].xccc008,
+                          g_xccc2_d[10].item2,g_xccc2_d[10].xccc001,g_xccc2_d[10].xccc102b,g_xccc2_d[10].xccc202b,g_xccc2_d[10].xccc208b,
+                          g_xccc2_d[10].xccc210b,g_xccc2_d[10].xccc280b,g_xccc2_d[10].xccc902b,g_xccc2_d[10].xcccld,g_xccc2_d[10].xccc002,
+                          g_xccc2_d[10].xccc003,g_xccc2_d[10].xccc004,g_xccc2_d[10].xccc005,g_xccc2_d[10].xccc006,g_xccc2_d[10].xccc007,g_xccc2_d[10].xccc008,
+                          g_xccc2_d[11].item2,g_xccc2_d[11].xccc001,g_xccc2_d[11].xccc102b,g_xccc2_d[11].xccc202b,g_xccc2_d[11].xccc208b,
+                          g_xccc2_d[11].xccc210b,g_xccc2_d[11].xccc280b,g_xccc2_d[11].xccc902b,g_xccc2_d[11].xcccld,g_xccc2_d[11].xccc002,
+                          g_xccc2_d[11].xccc003,g_xccc2_d[11].xccc004,g_xccc2_d[11].xccc005,g_xccc2_d[11].xccc006,g_xccc2_d[11].xccc007,g_xccc2_d[11].xccc008,
+                          g_xccc6_d[1].item,g_xccc6_d[1].xccc302,g_xccc6_d[1].xccc310,g_xccc6_d[1].xccc208,g_xccc6_d[1].xccc314,g_xccc6_d[1].xccc304,
+                          g_xccc6_d[1].xccc401,g_xccc6_d[1].xccc308,g_xccc6_d[1].xccc312,g_xccc6_d[1].xccc903,
+                          g_xccc6_d[2].item,g_xccc6_d[2].xccc302,g_xccc6_d[2].xccc310,g_xccc6_d[2].xccc208,g_xccc6_d[2].xccc314,g_xccc6_d[2].xccc304,
+                          g_xccc6_d[2].xccc401,g_xccc6_d[2].xccc308,g_xccc6_d[2].xccc312,g_xccc6_d[2].xccc903,
+                          g_xccc7_d[1].item,g_xccc7_d[1].xccc202,g_xccc7_d[1].xccc212,g_xccc7_d[1].xccc214,g_xccc7_d[1].xccc216,g_xccc7_d[1].xccc218,
+                          g_xccc7_d[2].item,g_xccc7_d[2].xccc202,g_xccc7_d[2].xccc212,g_xccc7_d[2].xccc214,g_xccc7_d[2].xccc216,g_xccc7_d[2].xccc218,
+                          g_xccc7_d[3].item,g_xccc7_d[3].xccc202,g_xccc7_d[3].xccc212,g_xccc7_d[3].xccc214,g_xccc7_d[3].xccc216,g_xccc7_d[3].xccc218,
+                          g_xccc7_d[4].item,g_xccc7_d[4].xccc202,g_xccc7_d[4].xccc212,g_xccc7_d[4].xccc214,g_xccc7_d[4].xccc216,g_xccc7_d[4].xccc218,
+                          g_xccc7_d[5].item,g_xccc7_d[5].xccc202,g_xccc7_d[5].xccc212,g_xccc7_d[5].xccc214,g_xccc7_d[5].xccc216,g_xccc7_d[5].xccc218,
+                          g_xccc7_d[6].item,g_xccc7_d[6].xccc202,g_xccc7_d[6].xccc212,g_xccc7_d[6].xccc214,g_xccc7_d[6].xccc216,g_xccc7_d[6].xccc218,
+                          g_xccc7_d[7].item,g_xccc7_d[7].xccc202,g_xccc7_d[7].xccc212,g_xccc7_d[7].xccc214,g_xccc7_d[7].xccc216,g_xccc7_d[7].xccc218,
+                          g_xccc7_d[8].item,g_xccc7_d[8].xccc202,g_xccc7_d[8].xccc212,g_xccc7_d[8].xccc214,g_xccc7_d[8].xccc216,g_xccc7_d[8].xccc218,
+                          g_xccc7_d[9].item,g_xccc7_d[9].xccc202,g_xccc7_d[9].xccc212,g_xccc7_d[9].xccc214,g_xccc7_d[9].xccc216,g_xccc7_d[9].xccc218,
+                          g_xccc7_d[10].item,g_xccc7_d[10].xccc202,g_xccc7_d[10].xccc212,g_xccc7_d[10].xccc214,g_xccc7_d[10].xccc216,g_xccc7_d[10].xccc218,
+                          g_xccc7_d[11].item,g_xccc7_d[11].xccc202,g_xccc7_d[11].xccc212,g_xccc7_d[11].xccc214,g_xccc7_d[11].xccc216,g_xccc7_d[11].xccc218 
+      IF SQLCA.sqlcode AND SQLCA.sqlcode != 100 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FETCH INTO b_fill" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CLOSE b_fill_curs
+         FREE b_fill_curs      
+         RETURN
+      END IF
+   END IF
+   
+   IF g_glaa019 ='Y' THEN
+      OPEN b_fill_curs USING g_enterprise,g_master.xcccld,'3',g_master.xccc002,g_master.xccc003,g_master.xccc004,g_master.xccc005,g_master.xccc006,g_master.xccc007,g_master.xccc008
+   
+      FETCH b_fill_curs INTO g_xccc3_d[1].item3,g_xccc3_d[1].xccc001,g_xccc3_d[1].xccc102c,g_xccc3_d[1].xccc202c,g_xccc3_d[1].xccc208c,
+                          g_xccc3_d[1].xccc210c,g_xccc3_d[1].xccc280c,g_xccc3_d[1].xccc902c,g_xccc3_d[1].xcccld,g_xccc3_d[1].xccc002,
+                          g_xccc3_d[1].xccc003,g_xccc3_d[1].xccc004,g_xccc3_d[1].xccc005,g_xccc3_d[1].xccc006,g_xccc3_d[1].xccc007,g_xccc3_d[1].xccc008,
+                          g_xccc3_d[2].item3,g_xccc3_d[2].xccc001,g_xccc3_d[2].xccc102c,g_xccc3_d[2].xccc202c,g_xccc3_d[2].xccc208c,
+                          g_xccc3_d[2].xccc210c,g_xccc3_d[2].xccc280c,g_xccc3_d[2].xccc902c,g_xccc3_d[2].xcccld,g_xccc3_d[2].xccc002,
+                          g_xccc3_d[2].xccc003,g_xccc3_d[2].xccc004,g_xccc3_d[2].xccc005,g_xccc3_d[2].xccc006,g_xccc3_d[2].xccc007,g_xccc3_d[2].xccc008,
+                          g_xccc3_d[3].item3,g_xccc3_d[3].xccc001,g_xccc3_d[3].xccc102c,g_xccc3_d[3].xccc202c,g_xccc3_d[3].xccc208c,
+                          g_xccc3_d[3].xccc210c,g_xccc3_d[3].xccc280c,g_xccc3_d[3].xccc902c,g_xccc3_d[3].xcccld,g_xccc3_d[3].xccc002,
+                          g_xccc3_d[3].xccc003,g_xccc3_d[3].xccc004,g_xccc3_d[3].xccc005,g_xccc3_d[3].xccc006,g_xccc3_d[3].xccc007,g_xccc3_d[3].xccc008,
+                          g_xccc3_d[4].item3,g_xccc3_d[4].xccc001,g_xccc3_d[4].xccc102c,g_xccc3_d[4].xccc202c,g_xccc3_d[4].xccc208c,
+                          g_xccc3_d[4].xccc210c,g_xccc3_d[4].xccc280c,g_xccc3_d[4].xccc902c,g_xccc3_d[4].xcccld,g_xccc3_d[4].xccc002,
+                          g_xccc3_d[4].xccc003,g_xccc3_d[4].xccc004,g_xccc3_d[4].xccc005,g_xccc3_d[4].xccc006,g_xccc3_d[4].xccc007,g_xccc3_d[4].xccc008,
+                          g_xccc3_d[5].item3,g_xccc3_d[5].xccc001,g_xccc3_d[5].xccc102c,g_xccc3_d[5].xccc202c,g_xccc3_d[5].xccc208c,
+                          g_xccc3_d[5].xccc210c,g_xccc3_d[5].xccc280c,g_xccc3_d[5].xccc902c,g_xccc3_d[5].xcccld,g_xccc3_d[5].xccc002,
+                          g_xccc3_d[5].xccc003,g_xccc3_d[5].xccc004,g_xccc3_d[5].xccc005,g_xccc3_d[5].xccc006,g_xccc3_d[5].xccc007,g_xccc3_d[5].xccc008,
+                          g_xccc3_d[6].item3,g_xccc3_d[6].xccc001,g_xccc3_d[6].xccc102c,g_xccc3_d[6].xccc202c,g_xccc3_d[6].xccc208c,
+                          g_xccc3_d[6].xccc210c,g_xccc3_d[6].xccc280c,g_xccc3_d[6].xccc902c,g_xccc3_d[6].xcccld,g_xccc3_d[6].xccc002,
+                          g_xccc3_d[6].xccc003,g_xccc3_d[6].xccc004,g_xccc3_d[6].xccc005,g_xccc3_d[6].xccc006,g_xccc3_d[6].xccc007,g_xccc3_d[6].xccc008,
+                          g_xccc3_d[7].item3,g_xccc3_d[7].xccc001,g_xccc3_d[7].xccc102c,g_xccc3_d[7].xccc202c,g_xccc3_d[7].xccc208c,
+                          g_xccc3_d[7].xccc210c,g_xccc3_d[7].xccc280c,g_xccc3_d[7].xccc902c,g_xccc3_d[7].xcccld,g_xccc3_d[7].xccc002,
+                          g_xccc3_d[7].xccc003,g_xccc3_d[7].xccc004,g_xccc3_d[7].xccc005,g_xccc3_d[7].xccc006,g_xccc3_d[7].xccc007,g_xccc3_d[7].xccc008,
+                          g_xccc3_d[8].item3,g_xccc3_d[8].xccc001,g_xccc3_d[8].xccc102c,g_xccc3_d[8].xccc202c,g_xccc3_d[8].xccc208c,
+                          g_xccc3_d[8].xccc210c,g_xccc3_d[8].xccc280c,g_xccc3_d[8].xccc902c,g_xccc3_d[8].xcccld,g_xccc3_d[8].xccc002,
+                          g_xccc3_d[8].xccc003,g_xccc3_d[8].xccc004,g_xccc3_d[8].xccc005,g_xccc3_d[8].xccc006,g_xccc3_d[8].xccc007,g_xccc3_d[8].xccc008,
+                          g_xccc3_d[9].item3,g_xccc3_d[9].xccc001,g_xccc3_d[9].xccc102c,g_xccc3_d[9].xccc202c,g_xccc3_d[9].xccc208c,
+                          g_xccc3_d[9].xccc210c,g_xccc3_d[9].xccc280c,g_xccc3_d[9].xccc902c,g_xccc3_d[9].xcccld,g_xccc3_d[9].xccc002,
+                          g_xccc3_d[9].xccc003,g_xccc3_d[9].xccc004,g_xccc3_d[9].xccc005,g_xccc3_d[9].xccc006,g_xccc3_d[9].xccc007,g_xccc3_d[9].xccc008,
+                          g_xccc3_d[10].item3,g_xccc3_d[10].xccc001,g_xccc3_d[10].xccc102c,g_xccc3_d[10].xccc202c,g_xccc3_d[10].xccc208c,
+                          g_xccc3_d[10].xccc210c,g_xccc3_d[10].xccc280c,g_xccc3_d[10].xccc902c,g_xccc3_d[10].xcccld,g_xccc3_d[10].xccc002,
+                          g_xccc3_d[10].xccc003,g_xccc3_d[10].xccc004,g_xccc3_d[10].xccc005,g_xccc3_d[10].xccc006,g_xccc3_d[10].xccc007,g_xccc3_d[10].xccc008,
+                          g_xccc3_d[11].item3,g_xccc3_d[11].xccc001,g_xccc3_d[11].xccc102c,g_xccc3_d[11].xccc202c,g_xccc3_d[11].xccc208c,
+                          g_xccc3_d[11].xccc210c,g_xccc3_d[11].xccc280c,g_xccc3_d[11].xccc902c,g_xccc3_d[11].xcccld,g_xccc3_d[11].xccc002,
+                          g_xccc3_d[11].xccc003,g_xccc3_d[11].xccc004,g_xccc3_d[11].xccc005,g_xccc3_d[11].xccc006,g_xccc3_d[11].xccc007,g_xccc3_d[11].xccc008,
+                          g_xccc8_d[1].item,g_xccc8_d[1].xccc302,g_xccc8_d[1].xccc310,g_xccc8_d[1].xccc208,g_xccc8_d[1].xccc314,g_xccc8_d[1].xccc304,
+                          g_xccc8_d[1].xccc401,g_xccc8_d[1].xccc308,g_xccc8_d[1].xccc312,g_xccc8_d[1].xccc903,
+                          g_xccc8_d[2].item,g_xccc8_d[2].xccc302,g_xccc8_d[2].xccc310,g_xccc8_d[2].xccc208,g_xccc8_d[2].xccc314,g_xccc8_d[2].xccc304,
+                          g_xccc8_d[2].xccc401,g_xccc8_d[2].xccc308,g_xccc8_d[2].xccc312,g_xccc8_d[2].xccc903,
+                          g_xccc9_d[1].item,g_xccc9_d[1].xccc202,g_xccc9_d[1].xccc212,g_xccc9_d[1].xccc214,g_xccc9_d[1].xccc216,g_xccc9_d[1].xccc218,
+                          g_xccc9_d[2].item,g_xccc9_d[2].xccc202,g_xccc9_d[2].xccc212,g_xccc9_d[2].xccc214,g_xccc9_d[2].xccc216,g_xccc9_d[2].xccc218,
+                          g_xccc9_d[3].item,g_xccc9_d[3].xccc202,g_xccc9_d[3].xccc212,g_xccc9_d[3].xccc214,g_xccc9_d[3].xccc216,g_xccc9_d[3].xccc218,
+                          g_xccc9_d[4].item,g_xccc9_d[4].xccc202,g_xccc9_d[4].xccc212,g_xccc9_d[4].xccc214,g_xccc9_d[4].xccc216,g_xccc9_d[4].xccc218,
+                          g_xccc9_d[5].item,g_xccc9_d[5].xccc202,g_xccc9_d[5].xccc212,g_xccc9_d[5].xccc214,g_xccc9_d[5].xccc216,g_xccc9_d[5].xccc218,
+                          g_xccc9_d[6].item,g_xccc9_d[6].xccc202,g_xccc9_d[6].xccc212,g_xccc9_d[6].xccc214,g_xccc9_d[6].xccc216,g_xccc9_d[6].xccc218,
+                          g_xccc9_d[7].item,g_xccc9_d[7].xccc202,g_xccc9_d[7].xccc212,g_xccc9_d[7].xccc214,g_xccc9_d[7].xccc216,g_xccc9_d[7].xccc218,
+                          g_xccc9_d[8].item,g_xccc9_d[8].xccc202,g_xccc9_d[8].xccc212,g_xccc9_d[8].xccc214,g_xccc9_d[8].xccc216,g_xccc9_d[8].xccc218,
+                          g_xccc9_d[9].item,g_xccc9_d[9].xccc202,g_xccc9_d[9].xccc212,g_xccc9_d[9].xccc214,g_xccc9_d[9].xccc216,g_xccc9_d[9].xccc218,
+                          g_xccc9_d[10].item,g_xccc9_d[10].xccc202,g_xccc9_d[10].xccc212,g_xccc9_d[10].xccc214,g_xccc9_d[10].xccc216,g_xccc9_d[10].xccc218,
+                          g_xccc9_d[11].item,g_xccc9_d[11].xccc202,g_xccc9_d[11].xccc212,g_xccc9_d[11].xccc214,g_xccc9_d[11].xccc216,g_xccc9_d[11].xccc218 
+                          
+      IF SQLCA.sqlcode AND SQLCA.sqlcode != 100 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FETCH INTO b_fill" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CLOSE b_fill_curs
+         FREE b_fill_curs      
+         RETURN
+      END IF
+   END IF
+   CLOSE b_fill_curs
+   FREE b_fill_curs
+#填充第一列的项目内容
+
+
+#    LET l_msg = cl_getmsg('axc-00366',g_lang)   #数量   #160318-00005#47  mark
+    LET l_msg = cl_getmsg('asf-00086',g_lang)   #数量   #160318-00005#47  add
+    LET g_xccc_d[1].item = l_msg
+    LET l_msg = cl_getmsg('axc-00367',g_lang)   #成本-材料
+    LET g_xccc_d[2].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00368',g_lang)   #成本-人工
+    LET g_xccc_d[3].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00369',g_lang)   #成本-委外
+    LET g_xccc_d[4].item = l_msg
+    LET l_msg = cl_getmsg('axc-00370',g_lang)   #成本-制费一
+    LET g_xccc_d[5].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00371',g_lang)   #成本-制费二
+    LET g_xccc_d[6].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00372',g_lang)   #成本-制费三
+    LET g_xccc_d[7].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00373',g_lang)   #成本-制费四
+    LET g_xccc_d[8].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00374',g_lang)   #成本-制费五
+    LET g_xccc_d[9].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00375',g_lang)   #成本-合计
+    LET g_xccc_d[10].item = l_msg  
+    LET l_msg = cl_getmsg('axc-00376',g_lang)   #平均
+    LET g_xccc_d[11].item = l_msg  
+    
+#    LET l_msg = cl_getmsg('axc-00366',g_lang)   #数量  #160318-00005#47  mark
+    LET l_msg = cl_getmsg('asf-00086',g_lang)   #数量   #160318-00005#47  add
+    LET g_xccc4_d[1].item = l_msg
+    LET l_msg = cl_getmsg('axc-00378',g_lang)   #成本
+    LET g_xccc4_d[2].item = l_msg
+    
+#    LET l_msg = cl_getmsg('axc-00366',g_lang)   #数量   #160318-00005#47  mark
+    LET l_msg = cl_getmsg('asf-00086',g_lang)   #数量   #160318-00005#47  add
+    LET g_xccc5_d[1].item = l_msg
+    LET l_msg = cl_getmsg('axc-00367',g_lang)   #成本-材料
+    LET g_xccc5_d[2].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00368',g_lang)   #成本-人工
+    LET g_xccc5_d[3].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00369',g_lang)   #成本-委外
+    LET g_xccc5_d[4].item = l_msg
+    LET l_msg = cl_getmsg('axc-00370',g_lang)   #成本-制费一
+    LET g_xccc5_d[5].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00371',g_lang)   #成本-制费二
+    LET g_xccc5_d[6].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00372',g_lang)   #成本-制费三
+    LET g_xccc5_d[7].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00373',g_lang)   #成本-制费四
+    LET g_xccc5_d[8].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00374',g_lang)   #成本-制费五
+    LET g_xccc5_d[9].item = l_msg   
+    LET l_msg = cl_getmsg('axc-00375',g_lang)   #成本-合计
+    LET g_xccc5_d[10].item = l_msg  
+    LET l_msg = cl_getmsg('axc-00376',g_lang)   #平均
+    LET g_xccc5_d[11].item = l_msg  
+    
+    
+   IF g_glaa015 ='Y' THEN
+#      LET l_msg = cl_getmsg('axc-00366',g_lang)   #数量   #160318-00005#47  mark
+      LET l_msg = cl_getmsg('asf-00086',g_lang)   #数量   #160318-00005#47  add
+      LET g_xccc2_d[1].item2 = l_msg
+      LET l_msg = cl_getmsg('axc-00367',g_lang)   #成本-材料
+      LET g_xccc2_d[2].item2 = l_msg   
+      LET l_msg = cl_getmsg('axc-00368',g_lang)   #成本-人工
+      LET g_xccc2_d[3].item2 = l_msg   
+      LET l_msg = cl_getmsg('axc-00369',g_lang)   #成本-委外
+      LET g_xccc2_d[4].item2 = l_msg
+      LET l_msg = cl_getmsg('axc-00370',g_lang)   #成本-制费一
+      LET g_xccc2_d[5].item2 = l_msg   
+      LET l_msg = cl_getmsg('axc-00371',g_lang)   #成本-制费二
+      LET g_xccc2_d[6].item2 = l_msg   
+      LET l_msg = cl_getmsg('axc-00372',g_lang)   #成本-制费三
+      LET g_xccc2_d[7].item2 = l_msg   
+      LET l_msg = cl_getmsg('axc-00373',g_lang)   #成本-制费四
+      LET g_xccc2_d[8].item2 = l_msg   
+      LET l_msg = cl_getmsg('axc-00374',g_lang)   #成本-制费五
+      LET g_xccc2_d[9].item2 = l_msg   
+      LET l_msg = cl_getmsg('axc-00375',g_lang)   #成本-合计
+      LET g_xccc2_d[10].item2 = l_msg  
+      LET l_msg = cl_getmsg('axc-00376',g_lang)   #平均
+      LET g_xccc2_d[11].item2 = l_msg  
+      
+#      LET l_msg = cl_getmsg('axc-00366',g_lang)   #数量   #160318-00005#47  mark
+      LET l_msg = cl_getmsg('asf-00086',g_lang)   #数量   #160318-00005#47  add
+      LET g_xccc6_d[1].item = l_msg
+      LET l_msg = cl_getmsg('axc-00378',g_lang)   #成本
+      LET g_xccc6_d[2].item = l_msg
+      
+#      LET l_msg = cl_getmsg('axc-00366',g_lang)   #数量    #160318-00005#47  mark
+      LET l_msg = cl_getmsg('asf-00086',g_lang)   #数量   #160318-00005#47  add
+      LET g_xccc7_d[1].item = l_msg
+      LET l_msg = cl_getmsg('axc-00367',g_lang)   #成本-材料
+      LET g_xccc7_d[2].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00368',g_lang)   #成本-人工
+      LET g_xccc7_d[3].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00369',g_lang)   #成本-委外
+      LET g_xccc7_d[4].item = l_msg
+      LET l_msg = cl_getmsg('axc-00370',g_lang)   #成本-制费一
+      LET g_xccc7_d[5].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00371',g_lang)   #成本-制费二
+      LET g_xccc7_d[6].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00372',g_lang)   #成本-制费三
+      LET g_xccc7_d[7].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00373',g_lang)   #成本-制费四
+      LET g_xccc7_d[8].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00374',g_lang)   #成本-制费五
+      LET g_xccc7_d[9].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00375',g_lang)   #成本-合计
+      LET g_xccc7_d[10].item = l_msg  
+      LET l_msg = cl_getmsg('axc-00376',g_lang)   #平均
+      LET g_xccc7_d[11].item = l_msg  
+    
+   
+   END IF
+   
+   IF g_glaa019 ='Y' THEN
+#      LET l_msg = cl_getmsg('axc-00366',g_lang)   #数量    #160318-00005#47  mark
+      LET l_msg = cl_getmsg('asf-00086',g_lang)   #数量   #160318-00005#47  add
+      LET g_xccc3_d[1].item3 = l_msg
+      LET l_msg = cl_getmsg('axc-00367',g_lang)   #成本-材料
+      LET g_xccc3_d[2].item3 = l_msg   
+      LET l_msg = cl_getmsg('axc-00368',g_lang)   #成本-人工
+      LET g_xccc3_d[3].item3 = l_msg   
+      LET l_msg = cl_getmsg('axc-00369',g_lang)   #成本-委外
+      LET g_xccc3_d[4].item3 = l_msg
+      LET l_msg = cl_getmsg('axc-00370',g_lang)   #成本-制费一
+      LET g_xccc3_d[5].item3 = l_msg   
+      LET l_msg = cl_getmsg('axc-00371',g_lang)   #成本-制费二
+      LET g_xccc3_d[6].item3 = l_msg   
+      LET l_msg = cl_getmsg('axc-00372',g_lang)   #成本-制费三
+      LET g_xccc3_d[7].item3 = l_msg   
+      LET l_msg = cl_getmsg('axc-00373',g_lang)   #成本-制费四
+      LET g_xccc3_d[8].item3 = l_msg   
+      LET l_msg = cl_getmsg('axc-00374',g_lang)   #成本-制费五
+      LET g_xccc3_d[9].item3 = l_msg   
+      LET l_msg = cl_getmsg('axc-00375',g_lang)   #成本-合计
+      LET g_xccc3_d[10].item3 = l_msg  
+      LET l_msg = cl_getmsg('axc-00376',g_lang)   #平均
+      LET g_xccc3_d[11].item3 = l_msg  
+      
+#      LET l_msg = cl_getmsg('axc-00366',g_lang)   #数量    #160318-00005#47  mark
+      LET l_msg = cl_getmsg('asf-00086',g_lang)   #数量   #160318-00005#47  add
+      LET g_xccc8_d[1].item = l_msg
+      LET l_msg = cl_getmsg('axc-00378',g_lang)   #成本
+      LET g_xccc8_d[2].item = l_msg
+      
+#      LET l_msg = cl_getmsg('axc-00366',g_lang)   #数量    #160318-00005#47  mark
+      LET l_msg = cl_getmsg('asf-00086',g_lang)   #数量   #160318-00005#47  add
+      LET g_xccc9_d[1].item = l_msg
+      LET l_msg = cl_getmsg('axc-00367',g_lang)   #成本-材料
+      LET g_xccc9_d[2].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00368',g_lang)   #成本-人工
+      LET g_xccc9_d[3].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00369',g_lang)   #成本-委外
+      LET g_xccc9_d[4].item = l_msg
+      LET l_msg = cl_getmsg('axc-00370',g_lang)   #成本-制费一
+      LET g_xccc9_d[5].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00371',g_lang)   #成本-制费二
+      LET g_xccc9_d[6].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00372',g_lang)   #成本-制费三
+      LET g_xccc9_d[7].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00373',g_lang)   #成本-制费四
+      LET g_xccc9_d[8].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00374',g_lang)   #成本-制费五
+      LET g_xccc9_d[9].item = l_msg   
+      LET l_msg = cl_getmsg('axc-00375',g_lang)   #成本-合计
+      LET g_xccc9_d[10].item = l_msg  
+      LET l_msg = cl_getmsg('axc-00376',g_lang)   #平均
+      LET g_xccc9_d[11].item = l_msg  
+      
+        
+   END IF
+   
+#   LET g_detail_cnt = 10 
+#   DISPLAY g_detail_cnt TO FORMONLY.cnt 
+   #end add-point      
+ 
+ 
+
+   
+
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION axcq900_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   DEFINE l_cnt      LIKE type_t.num5
+   
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+   LET g_sql = " SELECT DISTINCT xccccomp,xcccld,xccc003,xccc004,xccc005,xccc006,xccc007,xccc002,xccc008 ",
+               "   FROM xccc_t ",
+               "  WHERE xcccent= ? AND xcccld = ? ",
+               "    AND xccc002 = ? AND xccc003 = ? AND xccc004 = ? AND xccc005 = ? AND xccc006 = ? ",
+               "    AND xccc007 = ? AND xccc008 = ? "  #150605-00010#1
+  
+   PREPARE axcq900_fetch_pre FROM g_sql
+            
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+   
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser_cnt              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_browser_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser_cnt THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+   
+   
+   LET g_detail_cnt = g_browser_cnt                  
+   
+   #單身總筆數顯示
+   #LET g_detail_idx = 1
+   IF g_detail_cnt > 0 THEN
+      #LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx    
+   END IF
+ 
+   DISPLAY g_current_idx TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_browser_cnt )
+   
+   #代表沒有資料
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+#单身总行数是固定的
+   DISPLAY '1' TO FORMONLY.idx
+#   DISPLAY '10' TO FORMONLY.cnt   
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE axcq900_fetch_pre USING g_browser[g_current_idx].xcccent,g_browser[g_current_idx].xcccld,g_browser[g_current_idx].xccc002,
+                                   g_browser[g_current_idx].xccc003,g_browser[g_current_idx].xccc004,g_browser[g_current_idx].xccc005,g_browser[g_current_idx].xccc006,
+                                   g_browser[g_current_idx].xccc007,g_browser[g_current_idx].xccc008   #150605-00010#1                                   
+      INTO g_master.xccccomp,g_master.xcccld,g_master.xccc003,g_master.xccc004,g_master.xccc005,g_master.xccc006,g_master.xccc007,g_master.xccc002,g_master.xccc008
+      
+   FREE axcq900_fetch_pre
+            
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "xccc_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      INITIALIZE g_master.* TO NULL
+      RETURN
+   END IF
+ 
+   #重新顯示   
+   CALL axcq900_show()   
+ 
+  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION axcq900_detail_show(ps_page)
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   
+   #end add-point
+   
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference
+      
+      #end add-point
+   END IF
+   
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+ 
+      #add-point:show段單身reference
+      
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'3'",1) > 0 THEN
+      #帶出公用欄位reference值page3
+      
+ 
+      #add-point:show段單身reference
+      
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION axcq900_filter()
+   #add-point:filter段define
+
+   #end add-point    
+   
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+ 
+      CONSTRUCT g_wc_filter ON xccc001,xccc102a,xccc202a,xccc302a,xccc304a,xccc902a,xccc102b, 
+          xccc202b,xccc302b,xccc304b,xccc902b,xccc102c,xccc202c,xccc302c,xccc304c, 
+          xccc902c
+                          FROM s_detail1[1].b_xccc001,s_detail1[1].b_xccc102a,s_detail1[1].b_xccc202a, 
+                              s_detail1[1].b_xccc302a,s_detail1[1].b_xccc304a, 
+                              s_detail1[1].b_xccc902a,s_detail2[1].b_xccc102b,s_detail2[1].b_xccc202b, 
+                              s_detail2[1].b_xccc302b,s_detail2[1].b_xccc304b, 
+                              s_detail2[1].b_xccc902b,s_detail3[1].b_xccc102c,s_detail3[1].b_xccc202c, 
+                              s_detail3[1].b_xccc302c,s_detail3[1].b_xccc304c, 
+                              s_detail3[1].b_xccc902c
+ 
+         
+         BEFORE CONSTRUCT
+#saki       CALL cl_qbe_init()
+            DISPLAY axcq900_filter_parser('xccc001') TO s_detail1[1].b_xccc001
+            DISPLAY axcq900_filter_parser('xccc102a') TO s_detail1[1].b_xccc102a
+            DISPLAY axcq900_filter_parser('xccc202a') TO s_detail1[1].b_xccc202a
+            DISPLAY axcq900_filter_parser('xccc302a') TO s_detail1[1].b_xccc302a
+            DISPLAY axcq900_filter_parser('xccc304a') TO s_detail1[1].b_xccc304a
+            DISPLAY axcq900_filter_parser('xccc902a') TO s_detail1[1].b_xccc902a
+            DISPLAY axcq900_filter_parser('xccc102b') TO s_detail2[1].b_xccc102b
+            DISPLAY axcq900_filter_parser('xccc202b') TO s_detail2[1].b_xccc202b
+            DISPLAY axcq900_filter_parser('xccc302b') TO s_detail2[1].b_xccc302b
+            DISPLAY axcq900_filter_parser('xccc304b') TO s_detail2[1].b_xccc304b
+            DISPLAY axcq900_filter_parser('xccc902b') TO s_detail2[1].b_xccc902b
+            DISPLAY axcq900_filter_parser('xccc102c') TO s_detail3[1].b_xccc102c
+            DISPLAY axcq900_filter_parser('xccc202c') TO s_detail3[1].b_xccc202c
+            DISPLAY axcq900_filter_parser('xccc302c') TO s_detail3[1].b_xccc302c
+            DISPLAY axcq900_filter_parser('xccc304c') TO s_detail3[1].b_xccc304c
+            DISPLAY axcq900_filter_parser('xccc902c') TO s_detail3[1].b_xccc902c
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL axcq900_filter_show('xccc001','b_xccc001')
+   CALL axcq900_filter_show('xccc102a','b_xccc102a')
+   CALL axcq900_filter_show('xccc202a','b_xccc202a')
+   CALL axcq900_filter_show('xccc302a','b_xccc302a')
+   CALL axcq900_filter_show('xccc304a','b_xccc304a')
+   CALL axcq900_filter_show('xccc902a','b_xccc902a')
+   CALL axcq900_filter_show('xccc102b','b_xccc102b')
+   CALL axcq900_filter_show('xccc202b','b_xccc202b')
+   CALL axcq900_filter_show('xccc302b','b_xccc302b')
+   CALL axcq900_filter_show('xccc304b','b_xccc304b')
+   CALL axcq900_filter_show('xccc902b','b_xccc902b')
+   CALL axcq900_filter_show('xccc102c','b_xccc102c')
+   CALL axcq900_filter_show('xccc202c','b_xccc202c')
+   CALL axcq900_filter_show('xccc302c','b_xccc302c')
+   CALL axcq900_filter_show('xccc304c','b_xccc304c')
+   CALL axcq900_filter_show('xccc902c','b_xccc902c')
+ 
+    
+   CALL axcq900_b_fill()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION axcq900_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION axcq900_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = axcq900_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.insert" >}
+#+ insert
+PRIVATE FUNCTION axcq900_insert()
+   #add-point:insert段define
+   
+   #end add-point
+ 
+   #add-point:insert段control
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.modify" >}
+#+ modify
+PRIVATE FUNCTION axcq900_modify()
+   #add-point:modify段define
+   
+   #end add-point
+ 
+   #add-point:modify段control
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.reproduce" >}
+#+ reproduce
+PRIVATE FUNCTION axcq900_reproduce()
+   #add-point:reproduce段define
+   
+   #end add-point
+ 
+   #add-point:reproduce段control
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.delete" >}
+#+ delete
+PRIVATE FUNCTION axcq900_delete()
+   #add-point:delete段define
+   
+   #end add-point
+ 
+   #add-point:delete段control
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq900.other_function" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcq900_show()
+   #根据账套是否启用第二，第三币种，动态显示隐藏第二，第三单身
+   SELECT glaa015,glaa019 INTO g_glaa015,g_glaa019
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = g_master.xcccld
+      
+   CALL cl_set_comp_visible('page_3,page_4,page_6,page_7',TRUE)
+   IF g_glaa015 = 'N' THEN
+      CALL cl_set_comp_visible('page_3,page_6',FALSE)
+   END IF
+   IF g_glaa019 = 'N' THEN
+      CALL cl_set_comp_visible('page_4,page_7',FALSE)
+   END IF
+   
+   #fengmy 150113----begin
+   #根據參數顯示隱藏成本域 和 料件特性
+   IF cl_null(g_master.xccccomp) THEN
+      CALL cl_get_para(g_enterprise,g_site,'S-FIN-6001') RETURNING g_para_data   #采用成本域否
+      CALL cl_get_para(g_enterprise,g_site,'S-FIN-6013') RETURNING g_para_data1   #采用特性否       
+   ELSE
+      CALL cl_get_para(g_enterprise,g_master.xccccomp,'S-FIN-6001') RETURNING g_para_data   #采用成本域否
+      CALL cl_get_para(g_enterprise,g_master.xccccomp,'S-FIN-6013') RETURNING g_para_data1   #采用特性否       
+   END IF      
+   IF g_para_data = 'Y' THEN
+      CALL cl_set_comp_visible('xccc002,xccc002_desc',TRUE)                    
+   ELSE
+      CALL cl_set_comp_visible('xccc002,xccc002_desc',FALSE)                
+   END IF
+   IF g_para_data1 = 'Y' THEN
+      CALL cl_set_comp_visible('xccc007',TRUE)                    
+   ELSE
+      CALL cl_set_comp_visible('xccc007',FALSE)                
+   END IF   
+   #fengmy 150113----end
+   
+   CALL axcq900_b_fill()
+   
+   DISPLAY BY NAME g_master.xccccomp,g_master.xcccld,g_master.xccc003,g_master.xccc004,g_master.xccc005,g_master.xccc006,g_master.xccc007,g_master.xccc002,g_master.xccc008
+   
+
+      
+#根据料号抓品名规格，成本单位
+   CALL s_desc_get_item_desc(g_master.xccc006)
+         RETURNING g_master.xccc006_desc,g_master.xccc006_desc_1
+
+   SELECT imag014 INTO g_master.imag014
+     FROM imag_t
+    WHERE imagent  = g_enterprise
+      AND imagsite = g_master.xccccomp
+      AND imag001  = g_master.xccc006
+   
+   CALL s_desc_get_unit_desc(g_master.imag014)
+         RETURNING g_master.imag014_desc 
+         
+
+
+#带出显示名称
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xccccomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xccccomp_desc = '', g_rtn_fields[1] , ''
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xcccld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xcccld_desc = '', g_rtn_fields[1] , ''
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xccc003
+   CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xccc003_desc = '', g_rtn_fields[1] , ''
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xccccomp
+   LET g_ref_fields[2] = g_master.xccc002
+   CALL ap_ref_array2(g_ref_fields,"SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent='"||g_enterprise||"' AND xcbflcomp = ? AND xcbfl001=? AND xcbfl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xccc002_desc = '', g_rtn_fields[1] , ''   
+   
+#带出栏位都显示一下
+   DISPLAY BY NAME g_master.xccc006_desc,g_master.xccc006_desc_1,g_master.imag014,g_master.xccc002_desc,
+                   g_master.imag014_desc,g_master.xccccomp_desc,g_master.xcccld_desc,g_master.xccc003_desc
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcq900_browser_fill()
+   DEFINE l_cnt      LIKE type_t.num10  #20150804 liuym type_t.num5换为type_t.num10
+   
+   CLEAR FORM
+   CALL g_xccc_d.clear()
+   CALL g_xccc2_d.clear()
+   CALL g_xccc3_d.clear()  
+   CALL g_xccc4_d.clear()
+   CALL g_xccc5_d.clear()
+   CALL g_xccc6_d.clear()
+   CALL g_xccc7_d.clear()
+   CALL g_xccc8_d.clear()
+   CALL g_xccc9_d.clear()
+   LET g_wc_filter = " 1=1"
+   
+#虽然没有browser，也要建一个类似的g_browser数组来定位在第几笔
+   CALL g_browser.clear()
+   
+   LET g_sql = " SELECT DISTINCT xcccent,xcccld,xccc002,xccc003,xccc004,xccc005,xccc006 ",
+            "                    ,xccc007,xccc008 ",       #150605-00010#1   fengmy150605
+            "   FROM xccc_t ",
+            "  WHERE xcccent = '",g_enterprise,"' AND ",g_wc,  #," AND ",g_wc2  fengmy140826 temp
+            "     AND ",g_wc2,   #fengmy150217
+            "   ORDER BY xccc006,xcccld,xccc002,xccc003,xccc004,xccc005,xccc007,xccc008 "
+   PREPARE axcq900_browser_pre FROM g_sql
+   DECLARE axcq900_browser_cs CURSOR FOR axcq900_browser_pre
+   
+   LET l_cnt = 1
+   FOREACH axcq900_browser_cs INTO g_browser[l_cnt].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = 'foreach:' 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      LET l_cnt = l_cnt + 1
+      IF l_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   FREE axcq900_browser_cs
+   CALL g_browser.deleteElement(l_cnt)
+   
+#抓总笔数
+   LET g_browser_cnt = l_cnt - 1   #總筆數   
+   
+   IF g_browser_cnt > g_max_rec THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code   = 9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_rec
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcq900_ins_xckk()
+#   DEFINE l_cnt                    LIKE type_t.num5
+#   DEFINE l_sum_xccc101            LIKE xccc_t.xccc101
+#   DEFINE l_sum_xccc102            LIKE xccc_t.xccc102
+#   DEFINE l_sum_xccc102a           LIKE xccc_t.xccc102a
+#   DEFINE l_sum_xccc102b           LIKE xccc_t.xccc102b
+#   DEFINE l_sum_xccc102c           LIKE xccc_t.xccc102c
+#   DEFINE l_sum_xccc102d           LIKE xccc_t.xccc102d
+#   DEFINE l_sum_xccc102e           LIKE xccc_t.xccc102e
+#   DEFINE l_sum_xccc102f           LIKE xccc_t.xccc102f
+#   DEFINE l_sum_xccc102g           LIKE xccc_t.xccc102g
+#   DEFINE l_sum_xccc102h           LIKE xccc_t.xccc102h
+#
+#   RETURN
+#   IF g_xccc_d.getLength() = 0 AND g_xccc_d.getLength() = 0 THEN RETURN END IF
+##先判断单头条件是否存在与axci601的设置资料里，不存在则退出
+##再判断是否已有重复单头资料的xckk/xckl，提示是否删除，若不删除，则退出
+#
+#   IF NOT s_axcq004_upd_xckk_chk_del('2',                                     #type         传入更新类型 1：axcq004更新总报表 2：子查询作业更新分项报表
+#                                     g_enterprise,                            #xckkent      传入企业编号
+#                                     g_master.xccccomp,                       #xckkcomp     传入法人
+#                                     g_master.xcccld,                         #xckkld       传入账套
+#                                     g_master.xccc004,                        #xckk003      传入年度
+#                                     g_master.xccc005,                        #xckk004      传入期别
+#                                     g_prog,                                  #xckk005      传入程序代号
+#                                     g_master.xccc003,                        #xckk006      传入成本计算类型
+#                                     '')                                      #xckk007      传入本位币顺序
+#   THEN
+#      RETURN
+#   END IF
+#
+##本位币一
+#   LET l_sum_xccc101  = 0    
+#   LET l_sum_xccc102  = 0    
+#   LET l_sum_xccc102a = 0    
+#   LET l_sum_xccc102b = 0    
+#   LET l_sum_xccc102c = 0    
+#   LET l_sum_xccc102d = 0    
+#   LET l_sum_xccc102e = 0    
+#   LET l_sum_xccc102f = 0    
+#   LET l_sum_xccc102g = 0    
+#   LET l_sum_xccc102h = 0
+#          
+#   SELECT SUM(xccc101), 
+#          SUM(xccc102), 
+#          SUM(xccc102a),
+#          SUM(xccc102b),
+#          SUM(xccc102c),
+#          SUM(xccc102d),
+#          SUM(xccc102e),
+#          SUM(xccc102f),
+#          SUM(xccc102g),
+#          SUM(xccc102h)
+#     INTO
+#          l_sum_xccc101,      
+#          l_sum_xccc102,      
+#          l_sum_xccc102a,     
+#          l_sum_xccc102b,     
+#          l_sum_xccc102c,     
+#          l_sum_xccc102d,     
+#          l_sum_xccc102e,     
+#          l_sum_xccc102f,     
+#          l_sum_xccc102g,     
+#          l_sum_xccc102h          
+#     FROM xccc_t
+#    WHERE xcccent = g_enterprise
+#      AND xcccomp = g_master.xccccomp
+#      AND xcccld  = g_master.xcccld
+#      AND xccc001 = '1'
+#      AND xccc003 = g_master.xccc003
+#      AND xccc004 = g_master.xccc004
+#      AND xccc005 = g_master.xccc005
+#   
+#   IF SQLCA.sqlcode THEN
+#      INITIALIZE g_errparam TO NULL 
+#      LET g_errparam.extend = "sel_xccc_ins_xckk" 
+#      LET g_errparam.code   = SQLCA.sqlcode 
+#      LET g_errparam.popup  = TRUE 
+#      CALL cl_err() 
+#      RETURN
+#   END IF   
+#
+##库存期初
+#   IF NOT s_axcq004_upd_xckk('2',                                     #type         传入更新类型 1：axcq004更新总报表 2：子查询作业更新分项报表
+#                             g_enterprise,                            #xckkent      传入企业编号
+#                             g_master.xccccomp,                       #xckkcomp     传入法人
+#                             g_master.xcccld,                         #xckkld       传入账套
+#                             '101',                                   #xckk001      传入类型代码
+#                             g_master.xccc004,                        #xckk003      传入年度
+#                             g_master.xccc005,                        #xckk004      传入期别
+#                             g_prog,                                  #xckk005      传入程序代号
+#                             g_master.xccc003,                        #xckk006      传入成本计算类型
+#                             '1',                                     #xckk007      传入本位币顺序
+#                             l_sum_xccc101,                           #xckk103      传入总表/分项报表数量
+#                             l_sum_xccc102,                           #xckk104      传入总表/分项报表金额
+#                             l_sum_xccc102a,                          #xckk104a     传入总表/分项报表金额-材料
+#                             l_sum_xccc102b,                          #xckk104b     传入总表/分项报表金额-人工
+#                             l_sum_xccc102c,                          #xckk104c     传入总表/分项报表金额-加工
+#                             l_sum_xccc102d,                          #xckk104d     传入总表/分项报表金额-制费一
+#                             l_sum_xccc102e,                          #xckk104e     传入总表/分项报表金额-制费二
+#                             l_sum_xccc102f,                          #xckk104f     传入总表/分项报表金额-制费三
+#                             l_sum_xccc102g,                          #xckk104g     传入总表/分项报表金额-制费四
+#                             l_sum_xccc102h,                          #xckk104h     传入总表/分项报表金额-制费五
+#                             '',                                      #xckl007      传入成本勾稽明细表-单据编号
+#                             '',                                      #xckl008      传入成本勾稽明细表-项次
+#                             '',                                      #xckl009      传入成本勾稽明细表-序号
+#                             g_master.xccc006,                        #xckl010      传入成本勾稽明细表-料件
+#                             g_master.xccc007,                        #xckl011      传入成本勾稽明细表-特性
+#                             g_master.xccc008,                        #xckl012      传入成本勾稽明细表-批号
+#                             g_xccc_d[1].xccc102a,                    #xckl014      传入成本勾稽明细表-数量
+#                             g_xccc_d[10].xccc102a)                   #xckl015      传入成本勾稽明细表-金额
+#     THEN
+#      RETURN
+#   END IF
+#   
+##本位币二
+#   LET l_sum_xccc101  = 0    
+#   LET l_sum_xccc102  = 0    
+#   LET l_sum_xccc102a = 0    
+#   LET l_sum_xccc102b = 0    
+#   LET l_sum_xccc102c = 0    
+#   LET l_sum_xccc102d = 0    
+#   LET l_sum_xccc102e = 0    
+#   LET l_sum_xccc102f = 0    
+#   LET l_sum_xccc102g = 0    
+#   LET l_sum_xccc102h = 0
+#          
+#   SELECT SUM(xccc101), 
+#          SUM(xccc102), 
+#          SUM(xccc102a),
+#          SUM(xccc102b),
+#          SUM(xccc102c),
+#          SUM(xccc102d),
+#          SUM(xccc102e),
+#          SUM(xccc102f),
+#          SUM(xccc102g),
+#          SUM(xccc102h)
+#     INTO
+#          l_sum_xccc101,      
+#          l_sum_xccc102,      
+#          l_sum_xccc102a,     
+#          l_sum_xccc102b,     
+#          l_sum_xccc102c,     
+#          l_sum_xccc102d,     
+#          l_sum_xccc102e,     
+#          l_sum_xccc102f,     
+#          l_sum_xccc102g,     
+#          l_sum_xccc102h          
+#     FROM xccc_t
+#    WHERE xcccent = g_enterprise
+#      AND xcccomp = g_master.xccccomp
+#      AND xcccld  = g_master.xcccld
+#      AND xccc001 = '2'
+#      AND xccc003 = g_master.xccc003
+#      AND xccc004 = g_master.xccc004
+#      AND xccc005 = g_master.xccc005
+#   
+#   IF SQLCA.sqlcode THEN
+#      INITIALIZE g_errparam TO NULL 
+#      LET g_errparam.extend = "sel_xccc_ins_xckk" 
+#      LET g_errparam.code   = SQLCA.sqlcode 
+#      LET g_errparam.popup  = TRUE 
+#      CALL cl_err() 
+#      RETURN
+#   END IF   
+#
+##库存期初
+#   IF NOT s_axcq004_upd_xckk('2',                                     #type         传入更新类型 1：axcq004更新总报表 2：子查询作业更新分项报表
+#                             g_enterprise,                            #xckkent      传入企业编号
+#                             g_master.xccccomp,                       #xckkcomp     传入法人
+#                             g_master.xcccld,                         #xckkld       传入账套
+#                             '101',                                   #xckk001      传入类型代码
+#                             g_master.xccc004,                        #xckk003      传入年度
+#                             g_master.xccc005,                        #xckk004      传入期别
+#                             g_prog,                                  #xckk005      传入程序代号
+#                             g_master.xccc003,                        #xckk006      传入成本计算类型
+#                             '2',                                     #xckk007      传入本位币顺序
+#                             l_sum_xccc101,                           #xckk103      传入总表/分项报表数量
+#                             l_sum_xccc102,                           #xckk104      传入总表/分项报表金额
+#                             l_sum_xccc102a,                          #xckk104a     传入总表/分项报表金额-材料
+#                             l_sum_xccc102b,                          #xckk104b     传入总表/分项报表金额-人工
+#                             l_sum_xccc102c,                          #xckk104c     传入总表/分项报表金额-加工
+#                             l_sum_xccc102d,                          #xckk104d     传入总表/分项报表金额-制费一
+#                             l_sum_xccc102e,                          #xckk104e     传入总表/分项报表金额-制费二
+#                             l_sum_xccc102f,                          #xckk104f     传入总表/分项报表金额-制费三
+#                             l_sum_xccc102g,                          #xckk104g     传入总表/分项报表金额-制费四
+#                             l_sum_xccc102h,                          #xckk104h     传入总表/分项报表金额-制费五
+#                             '',                                      #xckl007      传入成本勾稽明细表-单据编号
+#                             '',                                      #xckl008      传入成本勾稽明细表-项次
+#                             '',                                      #xckl009      传入成本勾稽明细表-序号
+#                             g_master.xccc006,                        #xckl010      传入成本勾稽明细表-料件
+#                             g_master.xccc007,                        #xckl011      传入成本勾稽明细表-特性
+#                             g_master.xccc008,                        #xckl012      传入成本勾稽明细表-批号
+#                             g_xccc2_d[1].xccc102b,                    #xckl014     传入成本勾稽明细表-数量
+#                             g_xccc2_d[10].xccc102b)                   #xckl015     传入成本勾稽明细表-金额
+#     THEN
+#      RETURN
+#   END IF  
+#
+##本位币三
+#   LET l_sum_xccc101  = 0    
+#   LET l_sum_xccc102  = 0    
+#   LET l_sum_xccc102a = 0    
+#   LET l_sum_xccc102b = 0    
+#   LET l_sum_xccc102c = 0    
+#   LET l_sum_xccc102d = 0    
+#   LET l_sum_xccc102e = 0    
+#   LET l_sum_xccc102f = 0    
+#   LET l_sum_xccc102g = 0    
+#   LET l_sum_xccc102h = 0
+#          
+#   SELECT SUM(xccc101), 
+#          SUM(xccc102), 
+#          SUM(xccc102a),
+#          SUM(xccc102b),
+#          SUM(xccc102c),
+#          SUM(xccc102d),
+#          SUM(xccc102e),
+#          SUM(xccc102f),
+#          SUM(xccc102g),
+#          SUM(xccc102h)
+#     INTO
+#          l_sum_xccc101,      
+#          l_sum_xccc102,      
+#          l_sum_xccc102a,     
+#          l_sum_xccc102b,     
+#          l_sum_xccc102c,     
+#          l_sum_xccc102d,     
+#          l_sum_xccc102e,     
+#          l_sum_xccc102f,     
+#          l_sum_xccc102g,     
+#          l_sum_xccc102h          
+#     FROM xccc_t
+#    WHERE xcccent = g_enterprise
+#      AND xcccomp = g_master.xccccomp
+#      AND xcccld  = g_master.xcccld
+#      AND xccc001 = '3'
+#      AND xccc003 = g_master.xccc003
+#      AND xccc004 = g_master.xccc004
+#      AND xccc005 = g_master.xccc005
+#   
+#   IF SQLCA.sqlcode THEN
+#      INITIALIZE g_errparam TO NULL 
+#      LET g_errparam.extend = "sel_xccc_ins_xckk" 
+#      LET g_errparam.code   = SQLCA.sqlcode 
+#      LET g_errparam.popup  = TRUE 
+#      CALL cl_err() 
+#      RETURN
+#   END IF   
+#
+##库存期初
+#   IF NOT s_axcq004_upd_xckk('2',                                     #type         传入更新类型 1：axcq004更新总报表 2：子查询作业更新分项报表
+#                             g_enterprise,                            #xckkent      传入企业编号
+#                             g_master.xccccomp,                       #xckkcomp     传入法人
+#                             g_master.xcccld,                         #xckkld       传入账套
+#                             '101',                                   #xckk001      传入类型代码
+#                             g_master.xccc004,                        #xckk003      传入年度
+#                             g_master.xccc005,                        #xckk004      传入期别
+#                             g_prog,                                  #xckk005      传入程序代号
+#                             g_master.xccc003,                        #xckk006      传入成本计算类型
+#                             '3',                                     #xckk007      传入本位币顺序
+#                             l_sum_xccc101,                           #xckk103      传入总表/分项报表数量
+#                             l_sum_xccc102,                           #xckk104      传入总表/分项报表金额
+#                             l_sum_xccc102a,                          #xckk104a     传入总表/分项报表金额-材料
+#                             l_sum_xccc102b,                          #xckk104b     传入总表/分项报表金额-人工
+#                             l_sum_xccc102c,                          #xckk104c     传入总表/分项报表金额-加工
+#                             l_sum_xccc102d,                          #xckk104d     传入总表/分项报表金额-制费一
+#                             l_sum_xccc102e,                          #xckk104e     传入总表/分项报表金额-制费二
+#                             l_sum_xccc102f,                          #xckk104f     传入总表/分项报表金额-制费三
+#                             l_sum_xccc102g,                          #xckk104g     传入总表/分项报表金额-制费四
+#                             l_sum_xccc102h,                          #xckk104h     传入总表/分项报表金额-制费五
+#                             '',                                      #xckl007      传入成本勾稽明细表-单据编号
+#                             '',                                      #xckl008      传入成本勾稽明细表-项次
+#                             '',                                      #xckl009      传入成本勾稽明细表-序号
+#                             g_master.xccc006,                        #xckl010      传入成本勾稽明细表-料件
+#                             g_master.xccc007,                        #xckl011      传入成本勾稽明细表-特性
+#                             g_master.xccc008,                        #xckl012      传入成本勾稽明细表-批号
+#                             g_xccc3_d[1].xccc102c,                   #xckl014      传入成本勾稽明细表-数量
+#                             g_xccc3_d[10].xccc102c)                
+#
+##xckl015      传入成本勾稽明细表-金额
+#     THEN
+#      RETURN
+#   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 创建临时表
+# Memo...........:
+# Date & Author..: 150330 By wangxina
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcq900_create_temp_table()
+DROP TABLE axcq900_tmp;
+   CREATE TEMP TABLE axcq900_tmp(
+   xccccomp       LIKE xccc_t.xccccomp,
+   xccc004        LIKE xccc_t.xccc004,
+   xccc005        LIKE xccc_t.xccc005,
+   xccc007        LIKE xccc_t.xccc007,
+   xccc002        LIKE xccc_t.xccc002,
+   xcccld         LIKE xccc_t.xcccld,
+   xccc006        LIKE xccc_t.xccc006, 
+   imag014        LIKE type_t.chr100,
+   xccc008        LIKE xccc_t.xccc008, 
+   xccc003        LIKE xccc_t.xccc003, 
+   l_key          LIKE type_t.chr100,
+   xccccomp_desc  LIKE type_t.chr100,
+   xccc002_desc   LIKE type_t.chr100,
+   xcccld_desc    LIKE type_t.chr100,
+   xccc006_desc   LIKE type_t.chr100, 
+   xccc006_desc2  LIKE type_t.chr100, 
+   imag014_desc   LIKE type_t.chr100,
+   xccc003_desc   LIKE type_t.chr100,
+   b_item         LIKE type_t.chr100,
+   b_xccc001      LIKE type_t.chr100,
+   b_xccc102a     LIKE xccc_t.xccc102a,
+   b_xccc202a     LIKE xccc_t.xccc202a,
+   b_xccc280a     LIKE xccc_t.xccc280a,
+   b_xccc902a     LIKE xccc_t.xccc902a,
+   b_xcccld_1     LIKE type_t.chr100,
+   b_xccc002_1    LIKE type_t.chr100,
+   b_xccc003_1    LIKE type_t.chr100,
+   b_xccc004_1    LIKE type_t.chr100,
+   b_xccc005_1    LIKE type_t.chr100, 
+   b_xccc006_1    LIKE type_t.chr100,
+   b_xccc007_1    LIKE type_t.chr100,
+   b_xccc008_1    LIKE type_t.chr100
+);
+END FUNCTION
+
+################################################################################
+# Descriptions...: 临时表获取数据
+# Memo...........:
+# Date & Author..: 150330 By wangxina
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcq900_ins_temp()
+DEFINE sr           RECORD
+ xccccomp       LIKE xccc_t.xccccomp,
+   xccc004        LIKE xccc_t.xccc004,
+   xccc005        LIKE xccc_t.xccc005,
+   xccc007        LIKE xccc_t.xccc007,
+   xccc002        LIKE xccc_t.xccc002,
+   xcccld         LIKE xccc_t.xcccld,
+   xccc006        LIKE xccc_t.xccc006, 
+   imag014        LIKE type_t.chr100,
+   xccc008        LIKE xccc_t.xccc008, 
+   xccc003        LIKE xccc_t.xccc003, 
+   l_key          LIKE type_t.chr100,
+   xccccomp_desc  LIKE type_t.chr100,
+   xccc002_desc   LIKE type_t.chr100,
+   xcccld_desc    LIKE type_t.chr100,
+   xccc006_desc   LIKE type_t.chr100, 
+   xccc006_desc2  LIKE type_t.chr100, 
+   imag014_desc   LIKE type_t.chr100,
+   xccc003_desc   LIKE type_t.chr100,
+   b_item         LIKE type_t.chr100,
+   b_xccc001     LIKE type_t.chr100,
+   b_xcccld_1     LIKE type_t.chr100,
+   b_xccc002_1    LIKE type_t.chr100,
+   b_xccc003_1    LIKE type_t.chr100,
+   b_xccc004_1    LIKE type_t.chr100,
+   b_xccc005_1    LIKE type_t.chr100, 
+   b_xccc006_1    LIKE type_t.chr100,
+   b_xccc007_1    LIKE type_t.chr100,
+   b_xccc008_1    LIKE type_t.chr100
+       END RECORD
+DEFINE l_i          LIKE type_t.num5
+DEFINE l_cnt         LIKE type_t.num5
+DEFINE l_success  LIKE type_t.num5
+DEFINE l_xccc005  LIKE type_t.chr100
+DEFINE l_xccc004  LIKE type_t.chr100
+DEFINE l_msg           STRING
+DEFINE g_pro    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位 
+   b_xccc102a     LIKE xccc_t.xccc102a,
+   b_xccc202a     LIKE xccc_t.xccc202a,
+   b_xccc280a     LIKE xccc_t.xccc280a,
+   b_xccc902a     LIKE xccc_t.xccc902a
+      END RECORD
+
+ LET l_success = TRUE
+
+FOR l_i = 1 TO g_browser.getLength()
+   
+   LET sr.xccc004  = g_browser[l_i].xccc004
+   LET sr.xccc002  = g_browser[l_i].xccc002
+   LET sr.xcccld   = g_browser[l_i].xcccld
+   LET sr.xccc005  = g_browser[l_i].xccc005
+   LET sr.xccc003  = g_browser[l_i].xccc003
+   LET sr.xccc006  = g_browser[l_i].xccc006
+   
+   SELECT xccccomp,xccc007,xccc008 INTO sr.xccccomp,sr.xccc007,sr.xccc008 FROM xccc_t
+       WHERE xcccent = g_enterprise AND xcccld = sr.xcccld AND xccc002 = sr.xccc002
+         AND xccc003 = sr.xccc003 AND xccc004 = sr.xccc004 AND xccc005 = sr.xccc005 AND xccc006 = sr.xccc006 
+         
+   EXECUTE axcq900_master_referesh USING sr.xccccomp,sr.xcccld,sr.xccc002,sr.xccc003,sr.xccc004,sr.xccc005 
+      INTO sr.xccccomp,sr.xccc004,sr.xccc002,sr.xcccld,sr.xccc005,sr.xccc003,sr.xccccomp_desc,
+           sr.xccc002_desc,sr.xcccld_desc,sr.xccc003_desc
+         
+     LET l_xccc005=sr.xccc005
+     LET l_xccc004=sr.xccc004
+
+    INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = sr.xccccomp
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET sr.xccccomp_desc = '', g_rtn_fields[1] , ''
+   
+    INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = sr.xcccld
+      CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET sr.xcccld_desc = '', g_rtn_fields[1] , ''
+   
+    INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = sr.xccc003
+      CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET sr.xccc003_desc = '', g_rtn_fields[1] , ''
+   
+   INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = sr.xccccomp
+      LET g_ref_fields[2] = sr.xccc002
+      CALL ap_ref_array2(g_ref_fields,"SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent='"||g_enterprise||"' AND xcbflcomp = ? AND xcbfl001=? AND xcbfl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET sr.xccc002_desc = '', g_rtn_fields[1] , ''  
+   
+
+#根据料号抓品名规格，成本单位
+   CALL s_desc_get_item_desc(sr.xccc006) RETURNING sr.xccc006_desc,sr.xccc006_desc2
+
+   SELECT imag014 INTO sr.imag014 FROM imag_t WHERE imagent = g_enterprise AND imagsite = sr.xccccomp AND imag001                        = sr.xccc006
+   
+   CALL s_desc_get_unit_desc(sr.imag014) RETURNING sr.imag014_desc 
+         
+
+     
+     LET sr.l_key = sr.xccccomp,"-",sr.xcccld,"-" CLIPPED,l_xccc004,"-" CLIPPED,l_xccc005,"-",sr.xccc003,"-", sr.xccc006 CLIPPED
+
+      PREPARE axcq900_xccc_tmp FROM g_sql_tmp
+      DECLARE axcq900_ins_tmp_cs CURSOR FOR axcq900_xccc_tmp
+      OPEN axcq900_ins_tmp_cs USING g_enterprise,sr.xcccld,'1',sr.xccc002,sr.xccc003,sr.xccc004,sr.xccc005,sr.xccc006,sr.xccc007,sr.xccc008
+
+      FOREACH axcq900_ins_tmp_cs INTO sr.b_item,sr.b_xccc001,g_pro[1].b_xccc102a,g_pro[1].b_xccc202a,g_pro[1].b_xccc280a,g_pro[1].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1,
+                                      sr.b_item,sr.b_xccc001,g_pro[2].b_xccc102a,g_pro[2].b_xccc202a,g_pro[2].b_xccc280a,g_pro[2].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1,
+                                      sr.b_item,sr.b_xccc001,g_pro[3].b_xccc102a,g_pro[3].b_xccc202a,g_pro[3].b_xccc280a,g_pro[3].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1,
+                                      sr.b_item,sr.b_xccc001,g_pro[4].b_xccc102a,g_pro[4].b_xccc202a,g_pro[4].b_xccc280a,g_pro[4].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1,
+                                      sr.b_item,sr.b_xccc001,g_pro[5].b_xccc102a,g_pro[5].b_xccc202a,g_pro[5].b_xccc280a,g_pro[5].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1,
+                                      sr.b_item,sr.b_xccc001,g_pro[6].b_xccc102a,g_pro[6].b_xccc202a,g_pro[6].b_xccc280a,g_pro[6].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1,
+                                      sr.b_item,sr.b_xccc001,g_pro[7].b_xccc102a,g_pro[7].b_xccc202a,g_pro[7].b_xccc280a,g_pro[7].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1,
+                                      sr.b_item,sr.b_xccc001,g_pro[8].b_xccc102a,g_pro[8].b_xccc202a,g_pro[8].b_xccc280a,g_pro[8].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1,
+                                      sr.b_item,sr.b_xccc001,g_pro[9].b_xccc102a,g_pro[9].b_xccc202a,g_pro[9].b_xccc280a,g_pro[9].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1,
+                                      sr.b_item,sr.b_xccc001,g_pro[10].b_xccc102a,g_pro[10].b_xccc202a,g_pro[10].b_xccc280a,g_pro[10].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1,
+                                      sr.b_item,sr.b_xccc001,g_pro[11].b_xccc102a,g_pro[11].b_xccc202a,g_pro[11].b_xccc280a,g_pro[11].b_xccc902a, sr.b_xcccld_1,sr.b_xccc002_1,
+                                      sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1
+                                      
+#    LET l_msg = cl_getmsg('axc-00366',g_lang)   #数量   #160318-00005#47  mark
+    LET l_msg = cl_getmsg('asf-00086',g_lang)   #数量   #160318-00005#47  add
+    LET sr.b_item = l_msg
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[1].b_xccc102a,g_pro[1].b_xccc202a,
+                        g_pro[1].b_xccc280a,g_pro[1].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+   
+    LET l_msg = cl_getmsg('axc-00367',g_lang)   #成本-材料
+    LET sr.b_item = l_msg   
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[2].b_xccc102a,g_pro[2].b_xccc202a,
+                        g_pro[2].b_xccc280a,g_pro[2].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+   
+    LET l_msg = cl_getmsg('axc-00368',g_lang)   #成本-人工
+    LET sr.b_item = l_msg 
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[3].b_xccc102a,g_pro[3].b_xccc202a,
+                        g_pro[3].b_xccc280a,g_pro[3].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+       
+    LET l_msg = cl_getmsg('axc-00369',g_lang)   #成本-委外
+    LET sr.b_item = l_msg
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[4].b_xccc102a,g_pro[4].b_xccc202a,
+                        g_pro[4].b_xccc280a,g_pro[4].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+   
+    LET l_msg = cl_getmsg('axc-00370',g_lang)   #成本-制费一
+    LET sr.b_item = l_msg   
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[5].b_xccc102a,g_pro[5].b_xccc202a,
+                        g_pro[5].b_xccc280a,g_pro[5].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+   
+    LET l_msg = cl_getmsg('axc-00371',g_lang)   #成本-制费二
+    LET sr.b_item = l_msg   
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[6].b_xccc102a,g_pro[6].b_xccc202a,
+                        g_pro[6].b_xccc280a,g_pro[6].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+   
+    LET l_msg = cl_getmsg('axc-00372',g_lang)   #成本-制费三
+    LET sr.b_item = l_msg   
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[7].b_xccc102a,g_pro[7].b_xccc202a,
+                        g_pro[7].b_xccc280a,g_pro[7].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+   
+    LET l_msg = cl_getmsg('axc-00373',g_lang)   #成本-制费四
+    LET sr.b_item = l_msg   
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[8].b_xccc102a,g_pro[8].b_xccc202a,
+                        g_pro[8].b_xccc280a,g_pro[8].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+   
+    LET l_msg = cl_getmsg('axc-00374',g_lang)   #成本-制费五
+    LET sr.b_item = l_msg   
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[9].b_xccc102a,g_pro[9].b_xccc202a,
+                        g_pro[9].b_xccc280a,g_pro[9].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+ 
+    LET l_msg = cl_getmsg('axc-00375',g_lang)   #成本-合计
+    LET sr.b_item = l_msg  
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[10].b_xccc102a,g_pro[10].b_xccc202a,
+                        g_pro[10].b_xccc280a,g_pro[10].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+   
+    LET l_msg = cl_getmsg('axc-00376',g_lang)   #平均
+    LET sr.b_item = l_msg  
+    INSERT INTO axcq900_tmp (xccccomp,xccc004,xccc005,xccc007,xccc002,xcccld,xccc006,imag014,xccc008,xccc003,l_key,xccccomp_desc,xccc002_desc,xcccld_desc,xccc006_desc,xccc006_desc2,
+                             imag014_desc,xccc003_desc,b_item,b_xccc001,b_xccc102a,b_xccc202a,b_xccc280a,b_xccc902a,b_xcccld_1,b_xccc002_1,b_xccc003_1,b_xccc004_1,
+                             b_xccc005_1,b_xccc006_1,b_xccc007_1,b_xccc008_1 )
+                VALUES (sr.xccccomp,sr.xccc004,sr.xccc005,sr.xccc007,sr.xccc002,sr.xcccld,sr.xccc006,sr.imag014,sr.xccc008,sr.xccc003,sr.l_key,sr.xccccomp_desc,sr.xccc002_desc,
+                        sr.xcccld_desc,sr.xccc006_desc,sr.xccc006_desc2,sr.imag014_desc,sr.xccc003_desc,sr.b_item,sr.b_xccc001,g_pro[11].b_xccc102a,g_pro[11].b_xccc202a,
+                        g_pro[11].b_xccc280a,g_pro[11].b_xccc902a,sr.b_xcccld_1,sr.b_xccc002_1,sr.b_xccc003_1,sr.b_xccc004_1,sr.b_xccc005_1,sr.b_xccc006_1,sr.b_xccc007_1,sr.b_xccc008_1)
+   
+       IF SQLCA.sqlcode  THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'insert tmp'
+          LET g_errparam.code = SQLCA.SQLCODE
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+           LET l_success = FALSE
+       END IF
+       
+       END FOREACH
+       
+       CALL cl_err_collect_show()
+       IF l_success = FALSE THEN
+          DELETE FROM axcq900_tmp
+       END IF
+       FREE axcq900_ins_tmp_cs
+   END FOR 
+END FUNCTION
+
+ 
+{</section>}
+ 

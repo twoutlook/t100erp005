@@ -1,0 +1,693 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="abmi002" std_prog="abmi002" erpver="1.0" module="ABM" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="function.abmi002_bmze003_ref" order="1" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION abmi002_bmze003_ref(p_bmze003)
+DEFINE  p_bmze003       STRING
+DEFINE  l_bmze003_str1  LIKE bmze_t.bmze003
+DEFINE  bst             base.StringTokenizer
+DEFINE  l_index         LIKE type_t.num5
+DEFINE  l_index2        LIKE type_t.num5
+DEFINE  l_bmze003_desc  STRING
+DEFINE  l_bmzf003       LIKE bmzf_t.bmzf003
+DEFINE  l_bmzf002       LIKE bmzf_t.bmzf002
+
+      LET l_index = 1
+      LET l_bmze003_desc = ''
+      LET l_index2 = p_bmze003.getIndexOf('$',1)
+      LET bst= base.StringTokenizer.create(p_bmze003,'$')
+      IF l_index2 = 1 THEN
+         WHILE bst.hasMoreTokens()
+            IF l_index = 2 THEN
+               LET l_bmze003_str1 = bst.nextToken()
+               LET l_bmze003_desc = l_bmze003_desc,l_bmze003_str1
+               LET l_index = 1
+            ELSE 
+               LET l_bmzf002 = bst.nextToken()
+               SELECT bmzf003 INTO l_bmzf003 FROM bmzf_t WHERE bmzfent = g_enterprise AND bmzf001 = g_bmze_m.bmze001 AND bmzf002 = l_bmzf002
+               LET l_bmze003_desc = l_bmze003_desc,l_bmzf003
+               LET l_index = l_index + 1
+            END IF
+         END WHILE     
+      ELSE
+         WHILE bst.hasMoreTokens()
+            IF l_index = 2 THEN
+               LET l_bmzf002 = bst.nextToken()
+               SELECT bmzf003 INTO l_bmzf003 FROM bmzf_t WHERE bmzfent = g_enterprise AND bmzf001 = g_bmze_m.bmze001 AND bmzf002 = l_bmzf002
+               LET l_bmze003_desc = l_bmze003_desc,l_bmzf003
+               LET l_index = 1
+            ELSE 
+               LET l_bmze003_str1 = bst.nextToken()
+               LET l_bmze003_desc = l_bmze003_desc,l_bmze003_str1
+               LET l_index = l_index + 1
+            END IF
+         END WHILE
+      END IF
+      RETURN l_bmze003_desc
+      
+END FUNCTION]]>
+  </point>
+  <point name="function.abmi002_bmze003_chk" order="2" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION abmi002_bmze003_chk(p_bmze003)
+DEFINE  p_bmze003       STRING
+DEFINE  bst             base.StringTokenizer
+DEFINE  l_index         LIKE type_t.num5
+DEFINE  l_index2        LIKE type_t.num5
+DEFINE  l_bmzf002       LIKE bmzf_t.bmzf002
+DEFINE  l_cnt           LIKE type_t.num5
+DEFINE  r_success       LIKE type_t.num5
+DEFINE  l_bmze003_str1  LIKE bmze_t.bmze003
+
+      LET r_success = TRUE
+      LET l_index = 1
+      LET l_cnt = 0
+      LET l_index2 = p_bmze003.getIndexOf('$',1)
+      LET bst= base.StringTokenizer.create(p_bmze003,'$')
+      IF l_index2 = 1 THEN
+         WHILE bst.hasMoreTokens()
+            IF l_index = 2 THEN
+               LET l_bmze003_str1 = bst.nextToken()
+               LET l_index = 1
+            ELSE 
+               LET l_bmzf002 = bst.nextToken()
+               SELECT COUNT(*) INTO l_cnt FROM bmzf_t WHERE bmzfent = g_enterprise AND bmzf001 = g_bmze_m.bmze001 AND bmzf002 = l_bmzf002
+               IF l_cnt = 0 THEN
+                  LET r_success = FALSE
+                  RETURN r_success
+               END IF
+               LET l_index = l_index + 1
+            END IF
+         END WHILE     
+      ELSE
+         WHILE bst.hasMoreTokens()
+            IF l_index = 2 THEN
+               LET l_bmzf002 = bst.nextToken()
+               SELECT COUNT(*) INTO l_cnt FROM bmzf_t WHERE bmzfent = g_enterprise AND bmzf001 = g_bmze_m.bmze001 AND bmzf002 = l_bmzf002
+               IF l_cnt = 0 THEN
+                  LET r_success = FALSE
+                  RETURN r_success
+               END IF
+               LET l_index = 1
+            ELSE 
+               LET l_bmze003_str1 = bst.nextToken()
+               LET l_index = l_index + 1
+            END IF
+         END WHILE
+      END IF
+      RETURN r_success
+      
+END FUNCTION]]>
+  </point>
+  <point name="function.abmi002_bmzf006_ref" order="3" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION abmi002_bmzf006_ref(p_bmzf005,p_bmzf006)
+DEFINE p_bmzf005      LIKE bmzf_t.bmzf005
+DEFINE p_bmzf006      LIKE bmzf_t.bmzf006
+DEFINE r_bmzf006_desc LIKE dzeb_t.dzeb003
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = p_bmzf005
+      LET g_ref_fields[2] = p_bmzf006
+      CALL ap_ref_array2(g_ref_fields,"SELECT dzeb003 FROM dzeb_t WHERE dzeb001=? AND dzeb002=? ","") RETURNING g_rtn_fields
+      LET r_bmzf006_desc = '', g_rtn_fields[1] , ''
+      RETURN r_bmzf006_desc
+      
+END FUNCTION]]>
+  </point>
+  <point name="function.abmi002_bmzf006_chk" order="4" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION abmi002_bmzf006_chk(p_bmzf005,p_bmzf006)
+DEFINE p_bmzf005      LIKE bmzf_t.bmzf005
+DEFINE p_bmzf006      LIKE bmzf_t.bmzf006
+DEFINE l_dzeb007      LIKE dzeb_t.dzeb007
+DEFINE l_n            LIKE type_t.num5
+DEFINE r_success      LIKE type_t.num5
+
+       LET r_success = TRUE
+       LET l_n = 0
+      
+       SELECT COUNT(*) INTO l_n FROM dzeb_t WHERE dzeb001 = p_bmzf005 AND dzeb002 = p_bmzf006
+       IF l_n = 0 THEN
+          CALL cl_err(g_bmzf_d[l_ac].bmzf006,'abm-00003',0 )
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       LET l_dzeb007 = ''
+       SELECT dzeb007 INTO l_dzeb007 FROM dzeb_t WHERE dzeb001 = p_bmzf005 AND dzeb002 = p_bmzf006
+       IF l_dzeb007 != 'number' THEN
+          CALL cl_err(p_bmzf006,'abm-00002',0)
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       RETURN r_success
+       
+END FUNCTION]]>
+  </point>
+  <point name="function.abmi002_gzcb002_fill" order="5" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION abmi002_gzcb002_fill()
+   DEFINE li_cnt LIKE type_t.num5
+   
+   LET li_cnt = li_cnt + 1
+   DECLARE abmi002_scc_cur CURSOR FOR 
+     SELECT gzcb002,gzcbl004 FROM gzcb_t,gzcbl_t  
+       WHERE gzcb001 = "1107" 
+         AND gzcbl001 = gzcb001 AND gzcbl002 = gzcb002
+         AND gzcbl003 = ?
+
+   FOREACH abmi002_scc_cur USING g_lang INTO g_scc1107[li_cnt].*
+      IF SQLCA.SQLCODE THEN EXIT FOREACH END IF
+      LET li_cnt = li_cnt + 1
+   END FOREACH
+   CALL g_scc1107.deleteElement(li_cnt)
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.abmi002_bmzf007_ref" order="6" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION abmi002_bmzf007_ref(p_bmzf007)
+DEFINE p_bmzf007      LIKE bmzf_t.bmzf007
+DEFINE r_bmzf007_desc LIKE oocql_t.oocql004
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = p_bmzf007
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET r_bmzf007_desc = '', g_rtn_fields[1] , ''
+      RETURN r_bmzf007_desc
+      
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.bmze001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_bmze001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmze001  #顯示到畫面上
+
+            NEXT FIELD bmze001                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.bmzecrtdp" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmzecrtdp  #顯示到畫面上
+
+            NEXT FIELD bmzecrtdp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.bmzecrtid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmzecrtid  #顯示到畫面上
+
+            NEXT FIELD bmzecrtid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.bmzemodid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmzemodid  #顯示到畫面上
+
+            NEXT FIELD bmzemodid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.bmzeowndp" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmzeowndp  #顯示到畫面上
+
+            NEXT FIELD bmzeowndp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.bmzeownid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmzeownid  #顯示到畫面上
+
+            NEXT FIELD bmzeownid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1.bmzf007" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "273"
+            CALL q_oocq002()                           #呼叫開窗
+            LET g_qryparam.arg1 = " "
+            DISPLAY g_qryparam.return1 TO bmzf007  #顯示到畫面上
+
+            NEXT FIELD bmzf007   ]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_scc1107 DYNAMIC ARRAY OF RECORD
+         gzcb002 LIKE gzcb_t.gzcb002,
+         gzcbl004 LIKE gzcbl_t.gzcbl004
+           END RECORD
+DEFINE g_flag    LIKE type_t.num5]]>
+  </point>
+  <point name="init.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL abmi002_gzcb002_fill()]]>
+  </point>
+  <point name="input.a.bmze001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bmze_m.bmze001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bmze_m.bmze001 != g_bmze001_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmze_t WHERE "||"bmzeent = '" ||g_enterprise|| "' AND "||"bmze001 = '"||g_bmze_m.bmze001 ||"'",'std-00004',0) THEN 
+                     LET g_bmze_m.bmze001 = g_bmze_m_t.bmze001
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.bmze002" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF  NOT cl_null(g_bmze_m.bmze002) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bmze_m.bmze002 != g_bmze_m_t.bmze002 ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmze_t WHERE "||"bmzeent = '" ||g_enterprise|| "' AND "||"bmze002 = '"||g_bmze_m.bmze002 ||"'",'std-00004',0) THEN 
+                     LET g_bmze_m.bmze002 = g_bmze_m_t.bmze002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.bmze003" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_bmze_m.bmze003_desc = ' '
+            DISPLAY BY NAME g_bmze_m.bmze003_desc
+            IF NOT cl_null(g_bmze_m.bmze003) THEN 
+               #IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bmze_m.bmze003 != g_bmze_m_t.bmze003 ))) THEN 
+                  IF NOT abmi002_bmze003_chk(g_bmze_m.bmze003) THEN
+                     CALL cl_err(g_bmze_m.bmze003,'abm-00001',0)
+                     LET g_bmze_m.bmze003 = g_bmze_m_t.bmze003
+                     CALL abmi002_bmze003_ref(g_bmze_m.bmze003) RETURNING g_bmze_m.bmze003_desc
+                     DISPLAY BY NAME g_bmze_m.bmze003_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               #END IF
+            END IF  
+            CALL abmi002_bmze003_ref(g_bmze_m.bmze003) RETURNING g_bmze_m.bmze003_desc
+            DISPLAY BY NAME g_bmze_m.bmze003_desc
+            
+            LET l_bmze003_t = g_bmze_m.bmze003]]>
+  </point>
+  <point name="input.a.bmzecrtdp" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmze_m.bmzecrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmze_m.bmzecrtdp_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_bmze_m.bmzecrtdp_desc
+]]>
+  </point>
+  <point name="input.a.bmzecrtid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmze_m.bmzecrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bmze_m.bmzecrtid_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_bmze_m.bmzecrtid_desc
+]]>
+  </point>
+  <point name="input.a.bmzemodid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmze_m.bmzemodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bmze_m.bmzemodid_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_bmze_m.bmzemodid_desc
+]]>
+  </point>
+  <point name="input.a.bmzeowndp" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmze_m.bmzeowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmze_m.bmzeowndp_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_bmze_m.bmzeowndp_desc
+]]>
+  </point>
+  <point name="input.a.bmzeownid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmze_m.bmzeownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bmze_m.bmzeownid_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_bmze_m.bmzeownid_desc
+]]>
+  </point>
+  <point name="input.a.page1.bmzf002" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_bmzf_d[l_ac].bmzf002) THEN 
+            END IF 
+
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bmze_m.bmze001) AND NOT cl_null(g_bmzf_d[l_ac].bmzf002) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bmze_m.bmze001 != g_bmze001_t OR g_bmzf_d[l_ac].bmzf002 != g_bmzf_d_t.bmzf002))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmzf_t WHERE "||"bmzfent = '" ||g_enterprise|| "' AND "||"bmzf001 = '"||g_bmze_m.bmze001 ||"' AND "|| "bmzf002 = '"||g_bmzf_d[l_ac].bmzf002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.bmzf004" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL abmi002_set_entry_b(l_cmd)
+            CALL abmi002_set_no_entry_b(l_cmd)]]>
+  </point>
+  <point name="input.a.page1.bmzf005" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.page1.bmzf006" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_bmzf_d[l_ac].bmzf006_desc = ' '
+            DISPLAY BY NAME g_bmzf_d[l_ac].bmzf006_desc
+            IF NOT cl_null(g_bmzf_d[l_ac].bmzf006) THEN
+               IF NOT cl_null(g_bmzf_d[l_ac].bmzf005) THEN
+                  IF NOT abmi002_bmzf006_chk(g_bmzf_d[l_ac].bmzf005,g_bmzf_d[l_ac].bmzf006) THEN
+                     LET g_bmzf_d[l_ac].bmzf006 = g_bmzf_d_t.bmzf006
+                     CALL abmi002_bmzf006_ref(g_bmzf_d[l_ac].bmzf005,g_bmzf_d[l_ac].bmzf006) RETURNING g_bmzf_d[l_ac].bmzf006_desc
+                     DISPLAY BY NAME g_bmzf_d[l_ac].bmzf006_desc
+                     NEXT FIELD bmzf006
+                  END IF
+               END IF
+            END IF
+            CALL abmi002_bmzf006_ref(g_bmzf_d[l_ac].bmzf005,g_bmzf_d[l_ac].bmzf006) RETURNING g_bmzf_d[l_ac].bmzf006_desc
+            DISPLAY BY NAME g_bmzf_d[l_ac].bmzf006_desc
+]]>
+  </point>
+  <point name="input.a.page1.bmzf007" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_bmzf_d[l_ac].bmzf007_desc = ' '
+            DISPLAY BY NAME g_bmzf_d[l_ac].bmzf007_desc
+            IF NOT cl_null(g_bmzf_d[l_ac].bmzf007) THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_bmzf_d[l_ac].bmzf007 != g_bmzf_d_t.bmzf007 OR cl_null(g_bmzf_d_t.bmzf007))) THEN                  
+                  CALL s_azzi650_chk_exist('273',g_bmzf_d[l_ac].bmzf007) RETURNING l_success
+                  IF l_success THEN
+                     LET g_bmzf_d[l_ac].bmzf007 = g_bmzf_d_t.bmzf007
+                     CALL abmi002_bmzf007_ref(g_bmzf_d[l_ac].bmzf007) RETURNING g_bmzf_d[l_ac].bmzf007_desc
+                     DISPLAY BY NAME g_bmzf_d[l_ac].bmzf007_desc
+                     NEXT FIELD bmzf007
+                  END IF
+               END IF
+            END IF
+            CALL abmi002_bmzf007_ref(g_bmzf_d[l_ac].bmzf007) RETURNING g_bmzf_d[l_ac].bmzf007_desc
+            DISPLAY BY NAME g_bmzf_d[l_ac].bmzf007_desc]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      #新增的時候直接點退出
+      IF p_cmd = 'a' THEN
+         LET g_flag = FALSE
+      END IF
+      #修改時(也包括新增時候，進入公式欄位，此時狀態已是修改狀態)
+      IF p_cmd = "u" THEN 
+         #有舊值，直接退出，不保存，不檢查
+         IF NOT cl_null(g_bmze_m_t.bmze003) THEN
+            LET g_flag = FALSE
+         ELSE    
+            #沒有舊值，即新增時候，進入公式欄位
+            LET INT_FLAG = FALSE
+            #當前沒有值，需要控卡
+            IF cl_null(g_bmze_m.bmze003) THEN
+               LET g_flag = TRUE
+               CALL cl_err('','aoo-00052',0)
+               CALL abmi002_input("u")            
+            ELSE
+               #IF NOT cl_null(l_bmze003_t) THEN
+               #   LET g_flag = FALSE
+               #ELSE
+               #   LET g_flag = TRUE
+               #   CALL abmi002_input("u")
+               #END IF
+            END IF
+         END IF
+      END IF
+   ELSE
+      IF cl_null(g_bmze_m.bmze003) THEN
+         LET g_flag = TRUE
+         CALL cl_err('','aoo-00052',0)
+         CALL abmi002_input("u")
+      ELSE
+         LET g_flag = FALSE
+      END IF
+   END IF]]>
+  </point>
+  <point name="input.b.page1.bmzf005" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.before_dialog" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         CALL abmi002_gzcb002_fill()
+         
+         IF g_flag THEN
+            #CALL cl_err('','aoo-00052',0)
+            LET g_flag = FALSE
+            NEXT FIELD bmze003
+         END IF]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_errshow = 1]]>
+  </point>
+  <point name="input.body.b_update" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.body.before_insert" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            SELECT MAX(bmzf002)+1 INTO g_bmzf_d[l_ac].bmzf002 FROM bmzf_t WHERE bmzfent = g_enterprise AND bmzf001 = g_bmze_m.bmze001
+            IF cl_null(g_bmzf_d[l_ac].bmzf002) OR g_bmzf_d[l_ac].bmzf002 = 0 THEN
+               LET g_bmzf_d[l_ac].bmzf002 = 1
+            END IF]]>
+  </point>
+  <point name="input.body.before_row" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL abmi002_set_entry_b(l_cmd)
+            CALL abmi002_set_no_entry_b(l_cmd)
+            ]]>
+  </point>
+  <point name="input.c.page1.bmzf006" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bmzf_d[l_ac].bmzf006             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_bmzf_d[l_ac].bmzf005  #table代號
+            LET g_qryparam.where = " dzeb007 = 'number' "
+
+            CALL q_dzeb002_2()                                #呼叫開窗
+            LET g_qryparam.where = " "
+
+            LET g_bmzf_d[l_ac].bmzf006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_bmzf_d[l_ac].bmzf006 TO bmzf006              #顯示到畫面上
+            CALL abmi002_bmzf006_ref(g_bmzf_d[l_ac].bmzf005,g_bmzf_d[l_ac].bmzf006) RETURNING g_bmzf_d[l_ac].bmzf006_desc
+            DISPLAY BY NAME g_bmzf_d[l_ac].bmzf006_desc
+ 
+            NEXT FIELD bmzf006                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.bmzf007" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bmzf_d[l_ac].bmzf007             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = '273'
+
+            CALL q_oocq002()                                #呼叫開窗
+            LET g_qryparam.arg1 = " "
+
+            LET g_bmzf_d[l_ac].bmzf007 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_bmzf_d[l_ac].bmzf007 TO bmzf007 
+            
+            CALL abmi002_bmzf007_ref(g_bmzf_d[l_ac].bmzf007) RETURNING g_bmzf_d[l_ac].bmzf007_desc
+            DISPLAY BY NAME g_bmzf_d[l_ac].bmzf007_desc]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE  l_dzeb007       LIKE dzeb_t.dzeb007
+   DEFINE  l_bmze003_t     LIKE bmze_t.bmze003
+   DEFINE  l_success       LIKE type_t.num5]]>
+  </point>
+  <point name="input.g.page1.bmzf004" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.g.page1.bmzf005" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_bmzf_d[l_ac].bmzf005) THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bmzf_d[l_ac].bmzf005 != g_bmzf_d_t.bmzf005))) THEN
+                  LET g_bmzf_d[l_ac].bmzf006 = ''
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.head.m_update" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               UPDATE bmze_t SET (bmze001,bmze002,bmzestus,bmzeownid,bmzeowndp,bmzecrtid,bmzecrtdt,bmzecrtdp,bmzemodid,bmzemoddt,bmze003) = (g_bmze_m.bmze001,g_bmze_m.bmze002,g_bmze_m.bmzestus,g_bmze_m.bmzeownid,g_bmze_m.bmzeowndp,g_bmze_m.bmzecrtid,g_bmze_m.bmzecrtdt,g_bmze_m.bmzecrtdp,g_bmze_m.bmzemodid,g_bmze_m.bmzemoddt,g_bmze_m.bmze003)
+                WHERE bmzeent = g_enterprise AND bmze001 = g_bmze_m.bmze001]]>
+  </point>
+  <point name="input.more_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      DISPLAY ARRAY g_scc1107 TO s_detail2.*
+         BEFORE DISPLAY
+      END DISPLAY]]>
+  </point>
+  <point name="insert.default" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      LET g_bmze_m.bmzestus = "Y"
+      
+      INITIALIZE g_bmze_m_t.* TO NULL
+      LET g_bmze_m_t.* = g_bmze_m.*
+      ]]>
+  </point>
+  <point name="menu.open_yzgs" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               IF g_bmze_m.bmze001 IS NULL THEN
+                  CALL cl_err("","std-00003",0)
+               ELSE
+                  CALL abmi002_01(g_bmze_m.bmze001)
+               END IF]]>
+  </point>
+  <point name="reproduce.a.bmze001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmze_t WHERE "||"bmzeent = '" ||g_enterprise|| "' AND "||"bmze001 = '"||l_newno ||"'",'std-00004',0) THEN 
+            LET l_newno = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.head.b_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_bmze_m.bmzestus = "Y"
+   CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+   LET g_bmze_m.bmze002 = ""]]>
+  </point>
+  <point name="set_entry.after_control" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="set_entry_b.set_entry_b" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_comp_entry('bmzf005,bmzf006,bmzf007,bmzf008',TRUE)]]>
+  </point>
+  <point name="set_no_entry.after_control" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="set_no_entry_b.set_no_entry_b" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[    IF NOT cl_null(g_bmzf_d[l_ac].bmzf004) THEN
+       IF g_bmzf_d[l_ac].bmzf004 MATCHES '[1]' THEN
+          CALL cl_set_comp_entry('bmzf005,bmzf006,bmzf007',FALSE)
+          LET g_bmzf_d[l_ac].bmzf005 = ''
+          LET g_bmzf_d[l_ac].bmzf006 = ''
+          LET g_bmzf_d[l_ac].bmzf006_desc = ''
+          LET g_bmzf_d[l_ac].bmzf007 = ''
+          LET g_bmzf_d[l_ac].bmzf007_desc = ''
+       END IF
+       IF g_bmzf_d[l_ac].bmzf004 MATCHES '[23]' THEN
+          CALL cl_set_comp_entry('bmzf007,bmzf008',FALSE)
+          LET g_bmzf_d[l_ac].bmzf007 = ''
+          LET g_bmzf_d[l_ac].bmzf007_desc = ''
+          LET g_bmzf_d[l_ac].bmzf008 = ''
+       END IF
+       IF g_bmzf_d[l_ac].bmzf004 MATCHES '[45]' THEN
+          CALL cl_set_comp_entry('bmzf005,bmzf006,bmzf008',FALSE)
+          LET g_bmzf_d[l_ac].bmzf005 = ''
+          LET g_bmzf_d[l_ac].bmzf006 = ''
+          LET g_bmzf_d[l_ac].bmzf006_desc = ''
+          LET g_bmzf_d[l_ac].bmzf008 = ''
+       END IF
+    END IF]]>
+  </point>
+  <point name="show.body.reference" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmzf_d[l_ac].bmzf005
+            LET g_ref_fields[2] = g_bmzf_d[l_ac].bmzf006
+            CALL ap_ref_array2(g_ref_fields,"SELECT dzeb003 FROM dzeb_t WHERE dzeb001=? AND dzeb002=? ","") RETURNING g_rtn_fields
+            LET g_bmzf_d[l_ac].bmzf006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bmzf_d[l_ac].bmzf006_desc
+            
+            CALL abmi002_bmzf007_ref(g_bmzf_d[l_ac].bmzf007) RETURNING g_bmzf_d[l_ac].bmzf007_desc
+            DISPLAY BY NAME g_bmzf_d[l_ac].bmzf007_desc
+]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL abmi002_bmze003_ref(g_bmze_m.bmze003) RETURNING g_bmze_m.bmze003_desc
+            DISPLAY BY NAME g_bmze_m.bmze003_desc
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmze_m.bmzeownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bmze_m.bmzeownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmze_m.bmzeownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmze_m.bmzeowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmze_m.bmzeowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmze_m.bmzeowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmze_m.bmzecrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bmze_m.bmzecrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmze_m.bmzecrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmze_m.bmzecrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmze_m.bmzecrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmze_m.bmzecrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmze_m.bmzemodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bmze_m.bmzemodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmze_m.bmzemodid_desc
+]]>
+  </point>
+  <point name="statechange.b_update" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_bmzemoddt = cl_get_current()
+   
+   UPDATE bmze_t SET bmzestus = lc_state,bmzemodid = g_user,bmzemoddt = l_bmzemoddt 
+    WHERE bmzeent = g_enterprise AND bmze001 = g_bmze_m.bmze001]]>
+  </point>
+  <point name="statechange.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_bmzemoddt DATETIME YEAR TO SECOND]]>
+  </point>
+  <point name="ui_dialog.body1.action" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ON DRAG_START(l_dnd)
+               LET l_source="RIGHT"
+               LET l_ac1 = ARR_CURR()
+               LET l_bmzf002 = g_bmzf_d[l_ac1].bmzf002
+               #LET g_bmze_m.bmze003 = g_bmze_m.bmze003,l_bmzf002
+
+            ON DRAG_FINISHED(l_dnd)
+               INITIALIZE l_source TO NULL
+               LET g_bmze_m.bmze003 = g_bmze_m.bmze003,'$',l_bmzf002,'$'
+               UPDATE bmze_t SET bmze003 = g_bmze_m.bmze003
+                 WHERE bmzeent = g_enterprise AND bmze001 = g_bmze001_t
+               DISPLAY BY NAME g_bmze_m.bmze003
+
+            ON DRAG_ENTER(l_dnd)
+                IF l_source IS NULL THEN
+                   CALL l_dnd.setOperation(NULL)
+                END IF
+
+            #ON DROP(l_dnd)
+            #    LET g_bmze_m.bmze003 = g_bmze_m.bmze003,'$',l_bmzf002,'$'
+            #    UPDATE bmze_t SET bmze003 = g_bmze_m.bmze003
+            #     WHERE bmzeent = g_enterprise AND bmze001 = g_bmze001_t
+            #    DISPLAY BY NAME g_bmze_m.bmze003]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_dnd       ui.DragDrop
+   DEFINE l_source    STRING
+   DEFINE l_ac1       LIKE type_t.num5
+   DEFINE l_bmzf002   LIKE bmzf_t.bmzf002]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         DISPLAY ARRAY g_scc1107 TO s_detail2.*
+            BEFORE DISPLAY
+         END DISPLAY]]>
+  </point>
+</add_points>

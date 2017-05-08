@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi723" module="aoo" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="07556" crtdt="2016-06-08 17:20:33" modid="07556" moddt="2016-07-25 11:46:47" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="BPM主要帳號設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ooapstus,ooap001,ooap001_desc(chr500),ooap002"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="ooap001,ooapownid,ooapownid_desc(chr500),ooapowndp,ooapowndp_desc(chr500),ooapcrtid,ooapcrtid_desc(chr500),ooapcrtdp,ooapcrtdp_desc(chr500),ooapcrtdt,ooapmodid,ooapmodid_desc(chr500),ooapmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="bpm_account_regen"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi723" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="ooapstus,ooap001,ooap002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="ooapstus,ooap001,ooap002"/>
+      <construct id="body" page="2" field="ooapownid,ooapowndp,ooapcrtid,ooapcrtdp,ooapcrtdt,ooapmodid,ooapmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="ooapstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="ooap001">
+        <after>
+          <reference field="ooap001_desc" ref_field="ooap_t.ooap001" map_field="ooap001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooap001_desc"/>
+      <column id="ooap002">
+        <controlp form="q_gzxa001_2" state="i"/>
+        <controlp form="q_gzxa001_2" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="ooapownid">
+        <after>
+          <reference field="ooapownid_desc" ref_field="ooap_t.ooapownid" map_field="ooapownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooapownid_desc"/>
+      <column id="ooapowndp">
+        <after>
+          <reference field="ooapowndp_desc" ref_field="ooap_t.ooapowndp" map_field="ooapowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooapowndp_desc"/>
+      <column id="ooapcrtid">
+        <after>
+          <reference field="ooapcrtid_desc" ref_field="ooap_t.ooapcrtid" map_field="ooapcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooapcrtid_desc"/>
+      <column id="ooapcrtdp">
+        <after>
+          <reference field="ooapcrtdp_desc" ref_field="ooap_t.ooapcrtdp" map_field="ooapcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooapcrtdp_desc"/>
+      <column id="ooapcrtdt"/>
+      <column id="ooapmodid">
+        <after>
+          <reference field="ooapmodid_desc" ref_field="ooap_t.ooapmodid" map_field="ooapmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooapmodid_desc"/>
+      <column id="ooapmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="ooap_t" page="1,2" linked="" pk="ooap001">
+      <sql id="forupd_sql_detail" query="SELECT ooapstus,ooap001,&apos;&apos;,ooap002,&apos;&apos;,ooapownid,&apos;&apos;,ooapowndp,&apos;&apos;,ooapcrtid,&apos;&apos;,ooapcrtdp,&apos;&apos;,ooapcrtdt,ooapmodid,&apos;&apos;,ooapmoddt FROM ooap_t WHERE ooapent=? AND ooap001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ooapstus,ooap001,&apos;&apos;,ooap002,&apos;&apos;,ooapownid,&apos;&apos;,ooapowndp,&apos;&apos;,ooapcrtid,&apos;&apos;,ooapcrtdp,&apos;&apos;,ooapcrtdt,ooapmodid,&apos;&apos;,ooapmoddt FROM ooap_t WHERE ooapent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

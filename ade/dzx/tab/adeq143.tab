@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq143" module="ade" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02159" crtdt="2016-11-11 17:32:20" modid="02159" moddt="2016-11-17 16:36:46" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員卡管理品類消費統計查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="decasite,deca008,deca016,l_date_s,l_date_e"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),decasite,decasite_desc(chr500),deca002,deca008,deca016,deca016_desc(chr500),deca027,l_deca027_o(num20_6),deca037,deca031,l_member_cnt(num20_6),l_rate(num26_10)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),decasite(b_decasite),decasite_desc(b_decasite_desc),deca002(b_deca002),deca008(b_deca008),deca016(b_deca016),deca016_desc(b_deca016_desc),deca027(b_deca027),l_deca027_o(l_deca027_o),deca037(b_deca037),deca031(b_deca031),l_member_cnt(l_member_cnt),l_rate(l_rate)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq143" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="decasite(b_decasite),deca002(b_deca002),deca008(b_deca008),deca016(b_deca016)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="decasite">
+        <after>
+          <reference field="decasite_desc" ref_field="decasite" map_field="decasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="decasite_desc"/>
+      <column id="deca002"/>
+      <column id="deca008"/>
+      <column id="deca016">
+        <after>
+          <reference field="deca016_desc" ref_field="deca016" map_field="deca016d" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_3" state="c"/>
+      </column>
+      <column id="deca016_desc"/>
+      <column id="deca027" type="S" default="0"/>
+      <column id="l_deca027_o"/>
+      <column id="deca037" type="S" default="0"/>
+      <column id="deca031" type="S" default="0"/>
+      <column id="l_member_cnt"/>
+      <column id="l_rate"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="deca_t" page="1" linked="" pk="decasite,deca002,deca005,deca009,deca017,deca018,deca019,deca020,deca035">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,decasite,&apos;&apos;,deca002,deca008,deca016,&apos;&apos;,deca027,&apos;&apos;,deca037,deca031,&apos;&apos;,&apos;&apos; FROM deca_t WHERE decaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

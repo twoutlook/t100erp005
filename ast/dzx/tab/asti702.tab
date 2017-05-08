@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asti702" module="ast" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02296" crtdt="2014-07-30 15:51:27" modid="03247" moddt="2014-11-12 15:15:55" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="內部結算單對象配置作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="stdd001,stdd001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stdd002,stdd003,stdd004,stdd004_desc(chr500),stdd005,stdd005_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="asti702" method="dialog">
+    <section id="input">
+      <input id="head" field="stdd001"/>
+      <input id="body" page="1" field="stdd002,stdd003,stdd004,stdd005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="stdd001"/>
+      <construct id="body" page="1" field="stdd002,stdd003,stdd004,stdd005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="stdd001"/>
+      <set id="head" type="no_entry" field="stdd001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="stdd001">
+        <after>
+          <check chkid="v_ooef001_2" id="isExist"/>
+          <reference field="stdd001_desc" ref_field="stdd_t.stdd001" map_field="stdd001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="CALL q_ooef001_3" state="i"/>
+        <controlp form="CALL q_ooef001_3" state="c"/>
+      </column>
+      <column id="stdd001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="stdd002">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="stdd003" type="S" default="1" def_scc="6085"/>
+      <column id="stdd004">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="stdd004_desc" ref_field="stdd_t.stdd004" map_field="stdd004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="stdd004_desc"/>
+      <column id="stdd005">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="stdd005_desc" ref_field="stdd_t.stdd005" map_field="stdd005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="stdd005_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="stdd_t" pk="stdd001">
+      <sql id="forupd_sql" type="sql" query="SELECT stdd001,&apos;&apos; FROM stdd_t WHERE stddent= ? AND stdd001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT stdd001,&apos;&apos; FROM stdd_t" order="stdd001"/>
+    </head>
+    <body id="stdd_t" page="1" linked="" pk="stdd002" fk="stdd001">
+      <sql id="forupd_sql_detail" query="SELECT stdd002,stdd003,stdd004,&apos;&apos;,stdd005,&apos;&apos; FROM stdd_t WHERE stddent=? AND stdd001=? AND stdd002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stdd002,stdd003,stdd004,&apos;&apos;,stdd005,&apos;&apos; FROM stdd_t WHERE stddent= ? AND stdd001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

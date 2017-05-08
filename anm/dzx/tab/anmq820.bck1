@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmq820" module="anm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="04152" crtdt="2014-08-06 10:36:54" modid="08108" moddt="2016-05-17 10:36:00" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="銀行資金各期進出查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="nmbxcomp,nmbx001,strmon,nmaa001,nmas003,nmaa002,nmaa003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),nmaa001,nmaa002,nmaa002_desc(chr500),nmaa003,nmaa003_desc(chr500),nmas002,nmas003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbx002,l_ori_begin(num20_6),nmbx103,nmbx104,l_ori_end(num20_6),l_loc_begin(num20_6),nmbx113,nmbx114,nmde105,l_loc_end(num20_6)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="l_nmbx0022(chr500),l_loc_begin2(chr500),nmbx123,nmbx124,l_loc_end2(chr500),l_loc_begin3(chr500),nmbx133,nmbx134,l_loc_end3(chr500),l_nmbxcomp(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),nmaa001(b_nmaa001),nmaa002(b_nmaa002),nmaa002_desc(b_nmaa002_desc),nmaa003(b_nmaa003),nmaa003_desc(b_nmaa003_desc),nmas002(b_nmas002),nmas003(b_nmas003)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbx002(b_nmbx002),l_ori_begin(l_ori_begin),nmbx103(b_nmbx103),nmbx104(b_nmbx104),l_ori_end(l_ori_end),l_loc_begin(l_loc_begin),nmbx113(b_nmbx113),nmbx114(b_nmbx114),nmde105(b_nmde105),l_loc_end(l_loc_end)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="l_nmbx0022(l_nmbx0022),l_loc_begin2(l_loc_begin2),nmbx123(b_nmbx123),nmbx124(b_nmbx124),l_loc_end2(l_loc_end2),l_loc_begin3(l_loc_begin3),nmbx133(b_nmbx133),nmbx134(b_nmbx134),l_loc_end3(l_loc_end3),l_nmbxcomp(l_nmbxcomp)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmq820" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmaa001,nmaa002,nmaa003,nmas002,nmas003" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="nmbx103,nmbx104,nmbx113,nmbx114,nmde105" insert="N" append="N" delete="N"/>
+      <input id="body" page="3" field="nmbx123,nmbx124,nmbx133,nmbx134" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="nmaa001(b_nmaa001),nmaa002(b_nmaa002),nmaa003(b_nmaa003),nmas002(b_nmas002),nmas003(b_nmas003)"/>
+      <construct id="body" page="2" field="nmbx002(b_nmbx002),nmbx103(b_nmbx103),nmbx104(b_nmbx104),nmbx113(b_nmbx113),nmbx114(b_nmbx114),nmde105(b_nmde105)"/>
+      <construct id="body" page="3" field="nmbx123(b_nmbx123),nmbx124(b_nmbx124),nmbx133(b_nmbx133),nmbx134(b_nmbx134)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="nmaa001"/>
+      <column id="nmaa002">
+        <after>
+          <reference field="nmaa002_desc" ref_field="nmaa002" map_field="nmaaent,nmaa002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmaa002_desc"/>
+      <column id="nmaa003">
+        <after>
+          <reference field="nmaa003_desc" ref_field="nmaa003" map_field="nmaaent,nmaa003" ref_sql="SELECT nmagl003 FROM nmagl_t WHERE nmaglent=$varg_enterprise$var AND nmagl001=? AND nmagl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmaa003_desc"/>
+      <column id="nmas002"/>
+      <column id="nmas003">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmbx002"/>
+      <column id="l_ori_begin"/>
+      <column id="nmbx103"/>
+      <column id="nmbx104"/>
+      <column id="l_ori_end"/>
+      <column id="l_loc_begin"/>
+      <column id="nmbx113"/>
+      <column id="nmbx114"/>
+      <column id="nmde105" type="S" default="0"/>
+      <column id="l_loc_end"/>
+    </init>
+    <init id="body" page="3">
+      <column id="l_nmbx0022"/>
+      <column id="l_loc_begin2"/>
+      <column id="nmbx123"/>
+      <column id="nmbx124"/>
+      <column id="l_loc_end2"/>
+      <column id="l_loc_begin3"/>
+      <column id="nmbx133"/>
+      <column id="nmbx134"/>
+      <column id="l_loc_end3"/>
+      <column id="l_nmbxcomp"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmaa_t" page="1" linked="" pk="nmaa001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,nmaa001,nmaa002,&apos;&apos;,nmaa003,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmaa_t WHERE nmaaent= ? AND 1=1 "/>
+    </body>
+    <body id="nmbx_t" page="2,3" linked="" pk="nmbxcomp,nmbx001,nmbx002,nmbx003" fk="" detail="Y">
+      <sql id="b_fill_sql" query="SELECT nmbx002,&apos;&apos;,nmbx103,nmbx104,&apos;&apos;,&apos;&apos;,nmbx113,nmbx114,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmbx123,nmbx124,&apos;&apos;,&apos;&apos;,nmbx133,nmbx134,&apos;&apos;,&apos;&apos; FROM nmbx_t WHERE nmbxent=? AND nmbx003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmp490" std_prog="apmp490" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.apmp490_ui_dialog_step1" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_ui_dialog_step1()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/18 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp490_ui_dialog_step1()
+   CALL gfrm_curr.setElementImage("main_img_step01","32/step01on.png")
+   CALL gfrm_curr.setElementImage("main_img_step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("main_img_step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("main_img_step04","32/step04.png") 
+   
+   CALL cl_set_comp_visible("main_vbox01",TRUE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE) 
+   
+   CALL cl_set_comp_visible("save",TRUE)
+   CALL cl_set_comp_visible("back_step",FALSE)
+   CALL cl_set_comp_visible("all_delete",FALSE)
+   CALL cl_set_comp_visible("next_step",TRUE)
+   CALL cl_set_comp_visible("run_other",FALSE) 
+   
+   LET g_action_choice = NULL 
+   
+   CALL cl_set_comp_att_text("next_step","進行分配")
+
+   LET g_apmp490_01_ooef004 = ''
+   SELECT ooef004 INTO g_apmp490_01_ooef004
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_site
+
+   WHILE TRUE
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG apm_apmp490_01.apmp490_01_input01
+         SUBDIALOG apm_apmp490_01.apmp490_01_construct
+         #這裡應該問sa，想要先display，然後離開dialog後，再進input array 
+         #或是直接使用input array 
+
+         SUBDIALOG apm_apmp490_01.apmp490_01_display
+         #SUBDIALOG apm_apmp490_01.apmp490_01_input02 
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION Search              #搜尋  
+            IF cl_null(g_apmp490_01_wc) THEN
+               LET g_apmp490_01_wc = ' 1=1'
+            END IF
+            CALL apmp490_01_b_fill(g_apmp490_01_wc)
+
+         ON ACTION sel_all             #全選 
+            CALL apmp490_01_sel_all()
+
+         ON ACTION nosel_all           #全不選 
+            CALL apmp490_01_nosel_all() 
+            
+         ON ACTION apmp490_01_modify_detail
+            CALL apmp490_01_sel(g_d_idx_p49001)
+
+         ON ACTION save                #寫入底稿  
+            CALL apmp490_01_save()
+            
+         ON ACTION next_step           #進行分配   
+            #這裡應該要計算底稿的temp table筆數是否有大於0  ming
+            LET g_action_choice = "next_step"
+            EXIT DIALOG
+
+         ON ACTION main_img_step01
+            EXIT DIALOG
+
+         ON ACTION main_img_step02 
+            #應該做跟進行分配一樣的檢查    ming 
+            LET g_action_choice = "main_img_step02"
+            EXIT DIALOG
+
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+      #EXIT WHILE 
+   END WHILE 
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 2
+      WHEN "menu"
+         RETURN 0
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.apmp490_ui_dialog_step2" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_ui_dialog_step2()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/18 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp490_ui_dialog_step2()
+   CALL gfrm_curr.setElementImage("main_img_step01","32/step01.png")
+   CALL gfrm_curr.setElementImage("main_img_step02","32/step02on.png")
+   CALL gfrm_curr.setElementImage("main_img_step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("main_img_step04","32/step04.png") 
+   
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",TRUE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE) 
+   
+   CALL cl_set_comp_visible("save",FALSE)
+   CALL cl_set_comp_visible("back_step",TRUE)
+   CALL cl_set_comp_visible("all_delete",TRUE)
+   CALL cl_set_comp_visible("next_step",TRUE)
+   CALL cl_set_comp_visible("run_other",FALSE) 
+   
+   LET g_action_choice = NULL
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG apm_apmp490_02.apmp490_02_input01 
+         SUBDIALOG apm_apmp490_02.apmp490_02_display01
+         SUBDIALOG apm_apmp490_02.apmp490_02_display02
+         SUBDIALOG apm_apmp490_02.apmp490_02_display03
+         SUBDIALOG apm_apmp490_02.apmp490_02_display04
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION show_data        #產生分配資料   
+            CALL apmp490_02_b_fill_01('1=1') 
+            EXIT DIALOG
+            
+         ON ACTION apmp490_02_modify_detail
+            CALL apmp490_02_b()
+
+         ON ACTION back_step        #選擇請購資料 
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION all_delete       #全部刪除 
+            EXIT DIALOG
+
+         ON ACTION next_step        #採購調整 
+            LET g_action_choice = "next_step"
+            EXIT DIALOG 
+            
+         ON ACTION main_img_step01
+            EXIT DIALOG
+
+         ON ACTION main_img_step02
+            EXIT DIALOG
+
+         ON ACTION main_img_step03
+            EXIT DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = TRUE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+    
+   CASE g_action_choice
+      WHEN "back_step"
+         RETURN 1
+      WHEN "next_step"
+         RETURN 3
+      WHEN "menu"
+         RETURN 0
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.apmp490_ui_dialog_step3" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_ui_dialog_step3()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/18 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp490_ui_dialog_step3()
+   CALL gfrm_curr.setElementImage("main_img_step01","32/step01.png")
+   CALL gfrm_curr.setElementImage("main_img_step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("main_img_step03","32/step03on.png")
+   CALL gfrm_curr.setElementImage("main_img_step04","32/step04.png") 
+   
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",TRUE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE) 
+   
+   CALL cl_set_comp_visible("save",FALSE)
+   CALL cl_set_comp_visible("back_step",TRUE)
+   CALL cl_set_comp_visible("all_delete",FALSE)
+   CALL cl_set_comp_visible("next_step",TRUE)
+   CALL cl_set_comp_visible("run_other",FALSE) 
+   
+   LET g_action_choice = NULL
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG apm_apmp490_03.apmp490_03_input01
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION back_step
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION next_step
+            LET g_action_choice = "next_step"
+            EXIT DIALOG
+
+
+         ON ACTION main_img_step02
+            EXIT DIALOG
+
+         ON ACTION main_img_step03
+            EXIT DIALOG
+
+         ON ACTION main_img_step04 
+            EXIT DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+
+   CASE g_action_choice
+      WHEN "back_step"
+         RETURN 2
+      WHEN "next_step"
+         RETURN 4
+      WHEN "menu"
+         RETURN 0
+      OTHERWISE
+         RETURN 0
+   END CASE 
+END FUNCTION]]>
+  </point>
+  <point name="function.apmp490_ui_dialog_step4" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_ui_dialog_step4()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/18 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp490_ui_dialog_step4()
+   RETURN 0
+END FUNCTION]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[IMPORT FGL apm_apmp490_01
+IMPORT FGL apm_apmp490_02
+IMPORT FGL apm_apmp490_03]]>
+  </point>
+  <point name="global.parameter" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE li_step     LIKE type_t.num5
+DEFINE gwin_curr   ui.Window
+DEFINE gfrm_curr   ui.Form]]>
+  </point>
+  <point name="init.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_msg     STRING]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="main.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL apmp490_01_drop_temp_table()]]>
+  </point>
+  <point name="process.exit_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[END FUNCTION ]]>
+  </point>
+  <section id="apmp490.global" ver="2" status="" src="m">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+
+GLOBALS "../4gl/apmp490_01.inc"
+GLOBALS "../4gl/apmp490_02.inc"
+
+GLOBALS
+
+   DEFINE g_apmp490_03_input RECORD
+                                sscb01    LIKE type_t.chr10
+                             END RECORD
+END GLOBALS
+ 
+#add-point:自定背景執行須傳遞的參數(Module Variable)
+{<point name="global.parameter"/>}
+#end add-point
+
+
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmp490.init" ver="1" status="" src="m">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION apmp490_init()
+   #add-point:init段define
+{<point name="init.define"/>}
+   #end add-point
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp490_01"), "main_grid02", "Group", "master") 
+   CALL cl_set_combo_scc("pmdb033","2036")
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp490_02"), "main_grid03", "Group", "master")
+   LET l_msg = cl_getmsg("apm-00469",g_lang),",",         #1.依料件主檔設定   
+               cl_getmsg("apm-00470",g_lang),",",         #2.主要供應商，無限量  
+               cl_getmsg("apm-00471",g_lang),",",         #3.依廠商分配  
+               cl_getmsg("apm-00472",g_lang),",",         #4.主要供應商分配優先，餘量分配  
+               cl_getmsg("apm-00473",g_lang)              #5.指定單一供應商  
+   CALL cl_set_combo_items("scb01","1,2,3,4,5",l_msg)
+
+   LET l_msg = cl_getmsg("apm-00474",g_lang),",",         #1.依料件進行匯總  
+               cl_getmsg("apm-00475",g_lang)              #2.依料件+需求日期進行匯總  
+   CALL cl_set_combo_items("scb02","1,2",l_msg)
+
+   LET l_msg = cl_getmsg("apm-00476",g_lang),",",         #一個月  
+               cl_getmsg("apm-00477",g_lang),",",         #二個月  
+               cl_getmsg("apm-00478",g_lang),",",         #三個月  
+               cl_getmsg("apm-00479",g_lang),",",         #六個月  
+               cl_getmsg("apm-00480",g_lang)              #一年  
+   CALL cl_set_combo_items("scb03","1,2,3,4,5",l_msg) 
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp490_03"), "main_grid04", "Group", "master")
+   #CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp490_04"), "main_grid05", "Group", "master")
+
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #設定畫面上的預設值  
+   LET g_apmp490_01_input.cb01 = 'N'
+
+   LET g_apmp490_02_input.scb01 = 1
+   LET g_apmp490_02_input.scb02 = 1
+   LET g_apmp490_02_input.scb03 = 3
+
+   #add-point:畫面資料初始化
+{<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp490.main" ver="2" status="" src="m">
+    <![CDATA[MAIN
+
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+{<point name="main.background"/>}
+
+ 
+{<point name="main.servicecall" />}
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmp490 WITH FORM cl_ap_formpath("apm",g_code)
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+ 
+   #程式初始化
+   CALL apmp490_init()
+ 
+   #進入選單 Menu (="N")
+   #CALL apmp490_ui_dialog()  
+   
+   CALL apmp490_01_create_temp_table()
+   
+   LET li_step = 1
+
+   WHILE TRUE
+      CASE li_step
+         WHEN 1
+            CALL apmp490_ui_dialog_step1() RETURNING li_step
+         WHEN 2
+            CALL apmp490_ui_dialog_step2() RETURNING li_step
+         WHEN 3
+            CALL apmp490_ui_dialog_step3() RETURNING li_step
+         WHEN 4
+            CALL apmp490_ui_dialog_step4() RETURNING li_step
+         WHEN 0
+            EXIT WHILE
+         OTHERWISE
+            EXIT WHILE
+      END CASE
+   END WHILE
+ 
+   #add-point:畫面關閉前
+{<point name="main.before_close" />}
+   #end add-point
+   #畫面關閉
+   CLOSE WINDOW w_apmp490
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="apmp490.process" ver="1" status="" src="m">
+    <![CDATA[#+ 資料處理
+
+{<point name="process.define"/>}
+
+{<point name="process.pre_process"/>}
+
+{<point name="process.count_progress"/>}
+
+
+{<point name="process.process"/>}
+
+
+{<point name="process.foreground_finish"/>}
+
+{<point name="process.background_finish"/>}
+
+]]>
+  </section>
+  <section id="apmp490.transfer_argv" ver="1" status="" src="m">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apmp490_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+
+{<point name="transfer.argv.define"/>}
+
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp490.ui_dialog" ver="2" status="" src="m">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apmp490_ui_dialog()
+
+{<point name="ui_dialog.define"/>}
+
+{<point name="ui_dialog.more_displayarray"/>}
+
+{<point name="ui_dialog.more_construct"/>}
+
+{<point name="ui_dialog.more_input"/>}
+
+{<point name="ui_dialog.qbe_select"/>}
+
+
+
+{<point name="ui_dialog.more_action"/>}
+
+{<point name="process.exit_dialog"/>}
+]]>
+  </section>
+  <section id="apmp490.description" ver="13" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000012
+#+ 
+#+ Filename...: apmp490
+#+ Description: 引導式請購轉採購作業
+#+ Creator....: 03079(2014/04/15)
+#+ Modifier...: 03079(2014/04/18)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="apmp490.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+</add_points>

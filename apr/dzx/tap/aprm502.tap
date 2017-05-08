@@ -1,0 +1,5971 @@
+<add_points prog="aprm502" std_prog="aprm502" erpver="1.0" module="APR" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.aprm502_pmaa_t" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="1" mark_hard="N">
+<![CDATA[#此段落由子樣板a06產生
+PRIVATE FUNCTION aprm502_pmaa_t(ps_type)
+ 
+
+   DEFINE li_cnt    LIKE type_t.num10
+   DEFINE ps_type   STRING  
+   DEFINE ls_sql    STRING 
+   RETURN   
+
+#   IF ps_type = "s" THEN 
+#            LET ls_sql = 'SELECT  FROM pmaa_t WHERE pmaaent= ? AND pmaa001=? ' 
+#      DECLARE pmaa_t_cl CURSOR FROM ls_sql 
+#      OPEN pmaa_t_cl USING g_enterprise,g_prfg_m.prfg001
+#      FETCH pmaa_t_cl INTO g_prfg_m. 
+#
+#      IF SQLCA.sqlcode THEN
+#                  LET g_prfg_m.  = NULL 
+#
+#      END IF 
+#      RETURN 
+#   END IF 
+#
+#      SELECT COUNT(*) INTO li_cnt FROM pmaa_t WHERE pmaaent = g_enterprise AND pmaa001 = g_prfg001_t
+#   
+#   IF li_cnt = 0 AND ps_type = "u" THEN 
+#            INSERT INTO pmaa_t 
+#      (pmaaent,pmaa001, )
+#      VALUES (g_enterprise,g_prfg_m.prfg001,g_prfg_m. )
+#   END IF 
+#
+#   IF li_cnt > 0 AND ps_type = "u" THEN 
+#            UPDATE pmaa_t SET 
+#      (pmaa001, ) = 
+#      (g_prfg_m.prfg001,g_prfg_m. ) 
+#      WHERE pmaaent = g_enterprise AND pmaa001 = g_prfg001_t
+#
+#   END IF 
+#
+#   IF li_cnt > 0 AND ps_type = "d" THEN 
+#            DELETE FROM pmaa_t
+#      WHERE pmaaent = g_enterprise AND pmaa001 = g_prfg001_t
+#   END IF 
+#
+#   IF SQLCA.sqlcode THEN
+#      CALL cl_err("",SQLCA.sqlcode,0)
+#   END IF 
+
+
+
+END FUNCTION]]>
+</point>
+  <point name="function.aprm502_prfh004_ref" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="2" mark_hard="N">
+<![CDATA[
+#display prfh004
+PRIVATE FUNCTION aprm502_prfh004_ref()
+   DEFINE l_oocq001   LIKE oocq_t.oocq001
+
+   IF cl_null(g_prfh_d[l_ac].prfh003) THEN
+      RETURN
+   END IF
+   CASE g_prfh_d[l_ac].prfh003
+      WHEN '6'
+         LET l_oocq001 = '2000'
+      WHEN '7'
+         LET l_oocq001 = '2001'
+      WHEN '8'
+         LET l_oocq001 = '2002'
+      WHEN '9'
+         LET l_oocq001 = '2003'
+      WHEN 'A'
+         LET l_oocq001 = '2004'
+      WHEN 'B'
+         LET l_oocq001 = '2005'
+      WHEN 'C'
+         LET l_oocq001 = '2006'
+      WHEN 'D'
+         LET l_oocq001 = '2007'
+      WHEN 'E'
+         LET l_oocq001 = '2008'
+      WHEN 'F'
+         LET l_oocq001 = '2009'
+      WHEN 'G'
+         LET l_oocq001 = '2010'
+      WHEN 'H'
+         LET l_oocq001 = '2011'
+      WHEN 'I'
+         LET l_oocq001 = '2012'
+      WHEN 'J'
+         LET l_oocq001 = '2013'
+      WHEN 'K'
+         LET l_oocq001 = '2014'
+      WHEN 'L'
+         LET l_oocq001 = '2015'
+   END CASE
+   CASE g_prfh_d[l_ac].prfh003
+      WHEN '4'
+         SELECT imaal003 INTO g_prfh_d[l_ac].prfh004_desc
+           FROM imaal_t
+          WHERE imaalent = g_enterprise AND imaal001 = g_prfh_d[l_ac].prfh004 AND imaal002 = g_dlang
+      WHEN '5'
+         SELECT rtaxl003 INTO g_prfh_d[l_ac].prfh004_desc
+           FROM rtaxl_t
+          WHERE rtaxlent = g_enterprise AND rtaxl001 = g_prfh_d[l_ac].prfh004 AND rtaxl002 = g_dlang
+      OTHERWISE
+         SELECT oocql004 INTO g_prfh_d[l_ac].prfh004_desc
+           FROM oocql_t
+          WHERE oocqlent = g_enterprise AND oocql001 = l_oocq001 AND oocql002 = g_prfh_d[l_ac].prfh004 AND oocql003 = g_dlang
+   END CASE
+END FUNCTION]]>
+</point>
+  <point name="function.aprm502_create_prfh002" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="3" mark_hard="N">
+<![CDATA[
+#create prfh002
+PRIVATE FUNCTION aprm502_create_prfh002()
+   SELECT max(prfh002)+1 INTO g_prfh_d[l_ac].prfh002
+     FROM prfh_t
+    WHERE prfhent = g_enterprise AND prfh001=g_prfg_m.prfg001
+   IF cl_null(g_prfh_d[l_ac].prfh002) THEN
+      LET g_prfh_d[l_ac].prfh002=1
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.aprm502_fill" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="4" mark_hard="N">
+<![CDATA[
+#fill pmaa
+PRIVATE FUNCTION aprm502_fill()
+   DEFINE l_sql      STRING
+   DEFINE l_sql2     STRING
+   DEFINE l_sql3     STRING
+   DEFINE l_sql4     STRING
+   DEFINE l_prfh002  LIKE prfh_t.prfh002
+   DEFINE l_prfh003  LIKE prfh_t.prfh003
+   DEFINE l_prfh004  LIKE prfh_t.prfh004                    
+                        
+   
+   CALL g_imaa_d.clear()
+   LET l_sql = " SELECT distinct imaa001,imaal003,imaal004,imaa009 ",
+               "   FROM imaa_t LEFT JOIN imaal_t ON imaa001=imaal001 AND imaaent=imaalent AND imaal002='",g_dlang,"' ",
+               "  WHERE imaaent=",g_enterprise," AND imaastus='Y' "
+   let l_sql2 = " SELECT DISTINCT prfh002 FROM prfh_t WHERE prfhent=",g_enterprise," AND prfh001='",g_prfg_m.prfg001,"' AND prfhstus='Y'" 
+
+ 
+   PREPARE l_sql2_prfh002_pre FROM l_sql2
+   DECLARE l_sql2_prfh002_cs CURSOR FOR  l_sql2_prfh002_pre
+   let l_sql3 = " SELECT DISTINCT prfh003 FROM prfh_t WHERE prfhent=",g_enterprise," AND prfh001='",g_prfg_m.prfg001,"' ", 
+                "    AND prfh002=? AND prfhstus='Y' "
+   PREPARE l_sql3_prfh003_pre FROM l_sql3
+   DECLARE l_sql3_prfh003_cs CURSOR FOR  l_sql3_prfh003_pre 
+   let l_sql4 = " SELECT DISTINCT prfh004 FROM prfh_t WHERE prfhent=",g_enterprise," AND prfh001='",g_prfg_m.prfg001,"' " ,
+                "    AND prfh002=? AND prfh003=? AND prfhstus='Y' " 
+   PREPARE l_sql4_prfh004_pre FROM l_sql4
+   DECLARE l_sql4_prfh004_cs CURSOR FOR  l_sql4_prfh004_pre
+   LET l_sql4="1<>1"
+   LET l_sql3="1=1"
+   LET l_sql2="1<>1"
+   FOREACH  l_sql2_prfh002_cs INTO l_prfh002
+      FOREACH l_sql3_prfh003_cs USING l_prfh002 INTO l_prfh003
+         FOREACH l_sql4_prfh004_cs USING l_prfh002,l_prfh003 INTO l_prfh004
+            CASE l_prfh003
+               WHEN '4'
+                  LET l_sql4 = l_sql4," OR imaa001='",l_prfh004,"' " 
+               WHEN '5'
+                  LET l_sql4 = l_sql4," OR imaa009='",l_prfh004,"' "
+               WHEN '6'
+                  LET l_sql4 = l_sql4," OR imaa122='",l_prfh004,"' "
+               WHEN '7'
+                  LET l_sql4 = l_sql4," OR imaa131='",l_prfh004,"' "
+               WHEN '8'
+                  LET l_sql4 = l_sql4," OR imaa126='",l_prfh004,"' "
+               WHEN '9'
+                  LET l_sql4 = l_sql4," OR imaa127='",l_prfh004,"' "
+               WHEN 'A'
+                  LET l_sql4 = l_sql4," OR imaa128='",l_prfh004,"' "
+               WHEN 'B'
+                  LET l_sql4 = l_sql4," OR imaa129='",l_prfh004,"' "
+               WHEN 'C'
+                  LET l_sql4 = l_sql4," OR imaa132='",l_prfh004,"' "
+               WHEN 'D'
+                  LET l_sql4 = l_sql4," OR imaa133='",l_prfh004,"' "
+               WHEN 'E'
+                  LET l_sql4 = l_sql4," OR imaa134='",l_prfh004,"' "
+               WHEN 'F'
+                  LET l_sql4 = l_sql4," OR imaa135='",l_prfh004,"' "
+               WHEN 'G'
+                  LET l_sql4 = l_sql4," OR imaa136='",l_prfh004,"' "
+               WHEN 'H'
+                  LET l_sql4 = l_sql4," OR imaa137='",l_prfh004,"' "
+               WHEN 'I'
+                  LET l_sql4 = l_sql4," OR imaa138='",l_prfh004,"' "
+               WHEN 'J'
+                  LET l_sql4 = l_sql4," OR imaa139='",l_prfh004,"' "
+               WHEN 'K'
+                  LET l_sql4 = l_sql4," OR imaa140='",l_prfh004,"' "
+               WHEN 'L'
+                  LET l_sql4 = l_sql4," OR imaa141='",l_prfh004,"' "
+         
+            END CASE
+            LET l_prfh004=null
+         END FOREACH
+         LET l_sql3 = l_sql3," AND (",l_sql4,") "
+         LET l_sql4="1<>1"
+         LET l_prfh003=null
+      END FOREACH
+      LET l_sql2 = l_sql2," OR (",l_sql3,") "
+      LET l_sql3="1=1"
+      LET l_prfh003=null 
+   END FOREACH
+      
+   LET l_sql = l_sql," AND ( ",l_sql2," )" 
+   LET l_sql = l_sql," ORDER BY imaa001 "    
+   PREPARE l_sql_pre FROM l_sql
+   DECLARE l_sql_cs CURSOR FOR l_sql_pre
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   FOREACH l_sql_cs INTO g_imaa_d[l_ac].imaa001,g_imaa_d[l_ac].imaal003,g_imaa_d[l_ac].imaal004,g_imaa_d[l_ac].imaa009
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec AND g_error_show = 1 THEN
+            CALL cl_err( '', 9035, 1)
+            EXIT FOREACH
+         END IF
+         
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_imaa_d.deleteElement(g_imaa_d.getLength())
+ 
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE l_sql_cs
+END FUNCTION]]>
+</point>
+  <point name="function.aprm502_prfh004_ctp" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="5" mark_hard="N">
+<![CDATA[
+#controlp
+PRIVATE FUNCTION aprm502_prfh004_ctp()
+   CASE g_prfh_d[l_ac].prfh003
+      WHEN '4'
+         LET g_qryparam.arg1 = g_prfg_m.prfgunit
+      WHEN '6'
+         LET g_qryparam.arg1 = '2000'
+      WHEN '7'
+         LET g_qryparam.arg1 = '2001'
+      WHEN '8'
+         LET g_qryparam.arg1 = '2002'
+      WHEN '9'
+         LET g_qryparam.arg1 = '2003'
+      WHEN 'A'
+         LET g_qryparam.arg1 = '2004'
+      WHEN 'B'
+         LET g_qryparam.arg1 = '2005'
+      WHEN 'C'
+         LET g_qryparam.arg1 = '2006'
+      WHEN 'D'
+         LET g_qryparam.arg1 = '2007'
+      WHEN 'E'
+         LET g_qryparam.arg1 = '2008'
+      WHEN 'F'
+         LET g_qryparam.arg1 = '2009'
+      WHEN 'G'
+         LET g_qryparam.arg1 = '2010'
+      WHEN 'H'
+         LET g_qryparam.arg1 = '2011'
+      WHEN 'I'
+         LET g_qryparam.arg1 = '2012'
+      WHEN 'J'
+         LET g_qryparam.arg1 = '2013'
+      WHEN 'K'
+         LET g_qryparam.arg1 = '2014'
+      WHEN 'L'
+         LET g_qryparam.arg1 = '2015'
+   END CASE
+   CASE g_prfh_d[l_ac].prfh003
+      WHEN '4'
+         CALL q_rtdx001_1()
+      WHEN '5'
+         CALL q_rtax001()
+      OTHERWISE
+         CALL q_oocq002()
+   END CASE
+END FUNCTION]]>
+</point>
+  <point name="function.aprm502_set_combo" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="6" mark_hard="N">
+<![CDATA[
+#display combo
+PRIVATE FUNCTION aprm502_set_combo()
+   DEFINE l_values   STRING
+   DEFINE l_items    STRING
+   DEFINE l_gzcb002  LIKE gzcb_t.gzcb002
+   DEFINE l_gzcbl004 LIKE gzcbl_t.gzcbl004
+   LET l_values = NULL
+   LET l_items = NULL
+   LET l_gzcb002 = NULL
+   LET l_gzcbl004 = NULL
+   
+   DECLARE aprm502_gzcb_cs1 CURSOR FOR
+    SELECT gzcb002,gzcbl004 FROM gzcb_t,gzcbl_t
+     WHERE gzcb001 = gzcbl001 AND gzcb002 = gzcbl002
+       AND gzcb001 = '6517'   AND gzcbl003 = g_dlang
+       AND gzcb002 IN ('4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L')
+     ORDER BY gzcb001
+   FOREACH aprm502_gzcb_cs1 INTO l_gzcb002,l_gzcbl004
+      LET l_values = l_values CLIPPED ,",",l_gzcb002
+      LET l_items  = l_items CLIPPED ,",",l_gzcb002 CLIPPED,':',l_gzcbl004
+   END FOREACH
+   CALL cl_set_combo_items("prfh003",l_values,l_items)
+END FUNCTION]]>
+</point>
+  <point name="browser_fill.other_fill" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[
+           ]]>
+</point>
+  <point name="construct.c.page1.prfh004" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_prfh004()                          #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prfh004  #顯示到畫面上
+
+            NEXT FIELD prfh004  ]]>
+</point>
+  <point name="construct.c.prfg001" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_prfg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prfg001  #顯示到畫面上
+
+            NEXT FIELD prfg001                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.prfgcrtdp" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prfgcrtdp  #顯示到畫面上
+
+            NEXT FIELD prfgcrtdp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.prfgcrtid" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prfgcrtid  #顯示到畫面上
+
+            NEXT FIELD prfgcrtid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.prfgmodid" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prfgmodid  #顯示到畫面上
+
+            NEXT FIELD prfgmodid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.prfgowndp" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prfgowndp  #顯示到畫面上
+
+            NEXT FIELD prfgowndp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.prfgownid" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prfgownid  #顯示到畫面上
+
+            NEXT FIELD prfgownid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.prfgunit" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prfgunit  #顯示到畫面上
+               #DISPLAY g_qryparam.return2 TO ooefl003 #說明(簡稱) 
+
+            NEXT FIELD prfgunit                     #返回原欄位
+
+]]>
+</point>
+  <point name="fetch.action_control" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   IF g_prfg_m.prfgstus='N' THEN
+      CALL cl_set_act_visible("delete",false)
+   ELSE 
+      CALL cl_set_act_visible("delete",TRUE)   
+   END IF ]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[DEFINE g_imaa_d       DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位 
+         imaa001      LIKE imaa_t.imaa001,
+         imaal003     LIKE imaal_t.imaal003,
+         imaal004     LIKE imaal_t.imaal004,
+         imaa009      LIKE imaa_t.imaa009          
+      END RECORD]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   CALL aprm502_set_combo()]]>
+</point>
+  <point name="input.a.page1.prfh002" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[
+            IF NOT cl_null(g_prfh_d[l_ac].prfh002) THEN 
+            END IF 
+
+            #此段落由子樣板a05產生
+            IF  g_prfg_m.prfg001 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh002 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh003 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prfg_m.prfg001 != g_prfg001_t OR g_prfh_d[g_detail_idx].prfh002 != g_prfh_d_t.prfh002 OR g_prfh_d[g_detail_idx].prfh003 != g_prfh_d_t.prfh003 OR g_prfh_d[g_detail_idx].prfh004 != g_prfh_d_t.prfh004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prfh_t WHERE "||"prfhent = '" ||g_enterprise|| "' AND "||"prfh001 = '"||g_prfg_m.prfg001 ||"' AND "|| "prfh002 = '"||g_prfh_d[g_detail_idx].prfh002 ||"' AND "|| "prfh003 = '"||g_prfh_d[g_detail_idx].prfh003 ||"' AND "|| "prfh004 = '"||g_prfh_d[g_detail_idx].prfh004 ||"'",'std-00004',0) THEN 
+                     LET g_prfh_d[l_ac].prfh002 = g_prfh_d_t.prfh002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.prfh003" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_prfg_m.prfg001 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh002 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh003 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prfg_m.prfg001 != g_prfg001_t OR g_prfh_d[g_detail_idx].prfh002 != g_prfh_d_t.prfh002 OR g_prfh_d[g_detail_idx].prfh003 != g_prfh_d_t.prfh003 OR g_prfh_d[g_detail_idx].prfh004 != g_prfh_d_t.prfh004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prfh_t WHERE "||"prfhent = '" ||g_enterprise|| "' AND "||"prfh001 = '"||g_prfg_m.prfg001 ||"' AND "|| "prfh002 = '"||g_prfh_d[g_detail_idx].prfh002 ||"' AND "|| "prfh003 = '"||g_prfh_d[g_detail_idx].prfh003 ||"' AND "|| "prfh004 = '"||g_prfh_d[g_detail_idx].prfh004 ||"'",'std-00004',0) THEN 
+                     LET g_prfh_d[l_ac].prfh003 = g_prfh_d_t.prfh003
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.prfh004" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            
+]]>
+</point>
+  <point name="input.a.page2.pmaa001" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_prfg_m.prfg001 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh002 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh003 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh004 IS NOT NULL AND g_prfh2_d[g_detail_idx2].pmaa001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prfg_m.prfg001 != g_prfg001_t OR g_prfh_d[g_detail_idx].prfh002 != g_prfh_d[g_detail_idx].prfh002 OR g_prfh_d[g_detail_idx].prfh003 != g_prfh_d[g_detail_idx].prfh003 OR g_prfh_d[g_detail_idx].prfh004 != g_prfh_d[g_detail_idx].prfh004 OR g_prfh2_d[g_detail_idx2].pmaa001 != g_prfh2_d_t.pmaa001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmaa_t WHERE "||"pmaaent = '" ||g_enterprise|| "' AND "||"pmaa001 = '"||g_prfg_m.prfg001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page2.prfh002_2" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_prfg_m.prfg001 IS NOT NULL AND g_prfh2_d[g_detail_idx].prfh002 IS NOT NULL AND g_prfh2_d[g_detail_idx].prfh003 IS NOT NULL AND g_prfh2_d[g_detail_idx].prfh004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prfg_m.prfg001 != g_prfg001_t OR g_prfh2_d[g_detail_idx].prfh002 != g_prfh2_d_t.prfh002 OR g_prfh2_d[g_detail_idx].prfh003 != g_prfh2_d_t.prfh003 OR g_prfh2_d[g_detail_idx].prfh004 != g_prfh2_d_t.prfh004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prfh_t WHERE "||"prfhent = '" ||g_enterprise|| "' AND "||"prfh001 = '"||g_prfg_m.prfg001 ||"' AND "|| "prfh002 = '"||g_prfh2_d[g_detail_idx].prfh002 ||"' AND "|| "prfh003 = '"||g_prfh2_d[g_detail_idx].prfh003 ||"' AND "|| "prfh004 = '"||g_prfh2_d[g_detail_idx].prfh004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page2.prfh003_2" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_prfg_m.prfg001 IS NOT NULL AND g_prfh2_d[g_detail_idx].prfh002 IS NOT NULL AND g_prfh2_d[g_detail_idx].prfh003 IS NOT NULL AND g_prfh2_d[g_detail_idx].prfh004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prfg_m.prfg001 != g_prfg001_t OR g_prfh2_d[g_detail_idx].prfh002 != g_prfh2_d_t.prfh002 OR g_prfh2_d[g_detail_idx].prfh003 != g_prfh2_d_t.prfh003 OR g_prfh2_d[g_detail_idx].prfh004 != g_prfh2_d_t.prfh004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prfh_t WHERE "||"prfhent = '" ||g_enterprise|| "' AND "||"prfh001 = '"||g_prfg_m.prfg001 ||"' AND "|| "prfh002 = '"||g_prfh2_d[g_detail_idx].prfh002 ||"' AND "|| "prfh003 = '"||g_prfh2_d[g_detail_idx].prfh003 ||"' AND "|| "prfh004 = '"||g_prfh2_d[g_detail_idx].prfh004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page2.prfh004_2" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_prfg_m.prfg001 IS NOT NULL AND g_prfh2_d[g_detail_idx].prfh002 IS NOT NULL AND g_prfh2_d[g_detail_idx].prfh003 IS NOT NULL AND g_prfh2_d[g_detail_idx].prfh004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prfg_m.prfg001 != g_prfg001_t OR g_prfh2_d[g_detail_idx].prfh002 != g_prfh2_d_t.prfh002 OR g_prfh2_d[g_detail_idx].prfh003 != g_prfh2_d_t.prfh003 OR g_prfh2_d[g_detail_idx].prfh004 != g_prfh2_d_t.prfh004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prfh_t WHERE "||"prfhent = '" ||g_enterprise|| "' AND "||"prfh001 = '"||g_prfg_m.prfg001 ||"' AND "|| "prfh002 = '"||g_prfh2_d[g_detail_idx].prfh002 ||"' AND "|| "prfh003 = '"||g_prfh2_d[g_detail_idx].prfh003 ||"' AND "|| "prfh004 = '"||g_prfh2_d[g_detail_idx].prfh004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.prfg001" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_prfg_m.prfg001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_prfg_m.prfg001 != g_prfg001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prfg_t WHERE "||"prfgent = '" ||g_enterprise|| "' AND "||"prfg001 = '"||g_prfg_m.prfg001 ||"'",'std-00004',0) THEN 
+                     LET g_prfg_m.prfg001 = g_prfg_m_t.prfg001
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #此段落由子樣板a25產生
+            #有輸入資料才做查詢
+
+]]>
+</point>
+  <point name="input.a.prfg002" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[
+            IF NOT cl_null(g_prfg_m.prfg002) THEN 
+            END IF 
+]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   LET g_errshow=1]]>
+</point>
+  <point name="input.body.before_insert" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            CALL g_imaa_d.clear()
+            CALL aprm502_fill()]]>
+</point>
+  <point name="input.body.before_row" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            IF l_cmd='u' THEN
+               CALL aprm502_fill()
+            END IF   ]]>
+</point>
+  <point name="input.c.page1.prfh004" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prfh_d[l_ac].prfh004             #給予default值
+                  
+            CALL aprm502_prfh004_ctp() 
+            LET g_prfh_d[l_ac].prfh004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prfh_d[l_ac].prfh004 TO s_detail1[l_ac].prfh004              #顯示到畫面上
+            CALL aprm502_prfh004_ref()
+            NEXT FIELD prfh004]]>
+</point>
+  <point name="input.c.prfgunit" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prfg_m.prfgunit             #給予default值
+            LET g_qryparam.default2 = "" #g_prfg_m.ooefl003 #說明(簡稱)
+
+            #給予arg
+
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_prfg_m.prfgunit = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_prfg_m.ooefl003 = g_qryparam.return2 #說明(簡稱)
+
+            DISPLAY g_prfg_m.prfgunit TO prfgunit              #顯示到畫面上
+            #DISPLAY g_prfg_m.ooefl003 TO ooefl003 #說明(簡稱)
+
+            NEXT FIELD prfgunit                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.g.page1.prfh002" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="input.g.page1.prfh003" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            IF  g_prfg_m.prfg001 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh002 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh003 IS NOT NULL AND g_prfh_d[g_detail_idx].prfh004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prfg_m.prfg001 != g_prfg001_t OR g_prfh_d[g_detail_idx].prfh002 != g_prfh_d_t.prfh002 OR g_prfh_d[g_detail_idx].prfh003 != g_prfh_d_t.prfh003 OR g_prfh_d[g_detail_idx].prfh004 != g_prfh_d_t.prfh004)) THEN 
+                  LET g_prfh_d[l_ac].prfh004_desc = NULL
+                  LET g_prfh_d[l_ac].prfh004 = null
+                  DISPLAY g_prfh_d[l_ac].prfh004_desc TO s_detail1[l_ac].prfh004_desc  
+                  DISPLAY g_prfh_d[l_ac].prfh004 TO s_detail1[l_ac].prfh004                  
+               END IF
+            END IF]]>
+</point>
+  <point name="input.master_input.update_item" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_prfg_m.prfg001) THEN
+               CALL n_prfal(g_prfg_m.prfg001)
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_prfg_m.prfg001
+               CALL ap_ref_array2(g_ref_fields," SELECT prfgl003,prfgl004 FROM prfgl_t WHERE prfgl001 = ? AND prfgl002 = '"||g_lang||"'","") RETURNING g_rtn_fields
+               LET g_prfg_m.prfgl003 = g_rtn_fields[1]
+               LET g_prfg_m.prfgl004 = g_rtn_fields[2]
+               DISPLAY BY NAME g_prfg_m.prfgl003
+               DISPLAY BY NAME g_prfg_m.prfgl004
+            END IF]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[      DISPLAY ARRAY g_imaa_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+               
+      END DISPLAY]]>
+</point>
+  <point name="insert.default" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[      CALL g_imaa_d.clear()
+      LET g_prfg_m.prfgstus = "Y"
+      LET g_prfg_m.prfgunit = g_site
+      LET g_prfg_m.prfg002 = 1
+      LET g_prfg_m_t.* = g_prfg_m.*]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="reproduce.head.b_input" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   LET g_prfg_m.prfgstus = 'Y'
+   LET g_prfg_m.prfg002 = 1]]>
+</point>
+  <point name="show.after" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   IF l_ac<>0 THEN 
+      CALL aprm502_fill()
+   END IF]]>
+</point>
+  <point name="show.body.reference" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[      CALL aprm502_prfh004_ref()]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a25產生
+            #有輸入資料才做查
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_prfg_m.prfg001
+   CALL ap_ref_array2(g_ref_fields," SELECT prfgl003,prfgl004 FROM prfgl_t WHERE prfglent = '"||g_enterprise||"' AND prfgl001 = ? AND prfgl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_prfg_m.prfgl003 = g_rtn_fields[1] 
+   LET g_prfg_m.prfgl004 = g_rtn_fields[2] 
+   DISPLAY g_prfg_m.prfgl003,g_prfg_m.prfgl004 TO prfgl003,prfgl004
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prfg_m.prfgownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_prfg_m.prfgownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prfg_m.prfgownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prfg_m.prfgowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prfg_m.prfgowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prfg_m.prfgowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prfg_m.prfgcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_prfg_m.prfgcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prfg_m.prfgcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prfg_m.prfgcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prfg_m.prfgcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prfg_m.prfgcrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prfg_m.prfgmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_prfg_m.prfgmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prfg_m.prfgmodid_desc
+]]>
+</point>
+  <point name="statechange.a_update" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   IF g_prfg_m.prfgstus='N' THEN
+      CALL cl_set_act_visible("delete",false)
+   ELSE 
+      CALL cl_set_act_visible("delete",TRUE)   
+   END IF]]>
+</point>
+  <point name="statechange.before" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   RETURN]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[         DISPLAY ARRAY g_imaa_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 1
+               
+         END DISPLAY ]]>
+</point>
+  <point name="ui_dialog.page1.before_row" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.page1.before_display" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.page1.action" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog2" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.related_document" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.agendum" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.followup" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_search.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_foreach" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_count" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_prepare" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.open" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.reference" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[g_cnt].b_prfg001
+      CALL ap_ref_array2(g_ref_fields,"SELECT prfgl004 FROM prfgl_t WHERE prfglent='"||g_enterprise||"' AND prfgl001=? AND prfgl002='"||g_lang||"'", 
+          "") RETURNING g_rtn_fields
+      LET g_browser[g_cnt].b_prfgl004 = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_browser[g_cnt].b_prfgl004]]>
+</point>
+  <point name="browser_fill.after" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_headershow.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.before" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.after" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_browser_refresh.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.before_construct" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.head.before_construct" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.prfg001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.prfg001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.prfg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.prfg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.prfg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.prfgunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.prfgunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.prfgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.prfgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.prfgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.prfgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.prfgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.prfgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.prfgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.prfgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.prfgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.body.before_construct" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.prfhstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.prfhstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.prfhstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.prfh002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.prfh002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.prfh002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.prfh003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.prfh003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.prfh003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.prfh004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.prfh004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.prfhunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.prfhunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.prfhunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.add_cs" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.b_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.after_construct" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="filter.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="filter.cs_ctrl" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="filter.add_cs" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="filter.b_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="filter_parser.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.other" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.after" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert.after_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.before_show" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.body.b_fk_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.body.m_fk_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.body.a_fk_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.define_sql" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_define_sql" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.other_sql" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_entry" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.m.before_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.prfg001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.prfg001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.prfg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.prfg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.prfgunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.prfgunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.prfgunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.prfgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.prfgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.prfgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.prfgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.prfgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.prfgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.prfgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.prfgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.prfgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.prfg001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.prfg002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.prfgl003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.prfgl004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.prfgstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.d.before_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_set_entry_b" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.insert.after_set_entry_b" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_a_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_insert2" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.prfhstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.prfhstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.prfhstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.prfh002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.prfh003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.prfh004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.prfh004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.prfhunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.prfhunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.prfhunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.prfhstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.prfh002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.prfh003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.prfhunit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_row" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="show.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="show.before" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="show.follow_pic" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="show.other" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.before" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.after" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.after_reproduce" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.b_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.m_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.a_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.before_ask" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.b_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.befroe.related_document_remove" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.m_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.a_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.b_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.m_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.body.fill_sql" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.fill" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.b_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.m_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.a_delete" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.other" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.before_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.m_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.after_insert" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.other" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.before_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.m_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.after_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.other" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="lock_b.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="lock_b.other" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="unlock_b.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="unlock_b.other" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.field_control" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.after_control" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.field_control" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.after_control" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.set_entry_b" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry_b.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry_b.set_no_entry_b" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.before" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.after" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.before_menu" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.inactive" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.active" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.more_control" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.b_update" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.after" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="idx_chk.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="idx_chk.other" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.after_fill" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="fill_chk.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="fill_chk.other_chk" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <section id="aprm502.b_fill" ver="1" status="" src="s">
+<![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION aprm502_b_fill()
+   DEFINE p_wc2      STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point     
+ 
+   CALL g_prfh_d.clear()    #g_prfh_d 單頭及單身 
+   CALL g_prfh2_d.clear()
+ 
+ 
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   #判斷是否填充
+   IF aprm502_fill_chk(1) THEN
+   
+      LET g_sql = "SELECT  UNIQUE prfhstus,prfh002,prfh003,prfh004,'',prfhunit FROM prfh_t",   
+                  " INNER JOIN prfg_t ON prfg001 = prfh001 ",
+ 
+                  #"",
+                  " LEFT JOIN pmaa_t ON prfhent = pmaaent AND prfh001 = pmaa001                                                                                      AND prfh002 =  AND prfh003 =  AND prfh004 =  ",
+                  "",
+                  " WHERE prfhent=? AND prfh001=?"
+      #add-point:b_fill段sql_before
+      {<point name="b_fill.body.fill_sql"/>}
+      #end add-point
+      IF NOT cl_null(g_wc2_table1) THEN
+         LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+      END IF
+      
+      #子單身的WC
+         IF NOT cl_null(g_wc2_table2) THEN 
+      LET g_sql = g_sql CLIPPED," AND ", g_wc2_table2 CLIPPED
+   END IF 
+ 
+      
+      LET g_sql = g_sql, " ORDER BY prfh_t.prfh002,prfh_t.prfh003,prfh_t.prfh004"
+      
+      #add-point:單身填充控制
+      {<point name="b_fill.sql"/>}
+      #end add-point
+      
+      PREPARE aprm502_pb FROM g_sql
+      DECLARE b_fill_cs CURSOR FOR aprm502_pb
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs USING g_enterprise,g_prfg_m.prfg001
+ 
+                                               
+      FOREACH b_fill_cs INTO g_prfh_d[l_ac].prfhstus,g_prfh_d[l_ac].prfh002,g_prfh_d[l_ac].prfh003,g_prfh_d[l_ac].prfh004, 
+          g_prfh_d[l_ac].prfh004_desc,g_prfh_d[l_ac].prfhunit
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充
+         {<point name="b_fill.fill"/>}
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec AND g_error_show = 1 THEN
+            CALL cl_err( '', 9035, 1)
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+   
+ 
+   
+   #add-point:browser_fill段其他table處理
+   {<point name="browser_fill.other_fill"/>}
+   #end add-point
+   
+   CALL g_prfh_d.deleteElement(g_prfh_d.getLength())
+   CALL g_prfh2_d.deleteElement(g_prfh2_d.getLength())
+ 
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE aprm502_pb
+ 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.b_fill2" ver="1" status="" src="s">
+<![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION aprm502_b_fill2(pi_idx)
+   DEFINE pi_idx          LIKE type_t.num5
+   DEFINE li_ac           LIKE type_t.num5
+   DEFINE ls_chk          LIKE type_t.chr1
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF aprm502_fill_chk(2) THEN
+      IF pi_idx = 2 OR pi_idx = 0 THEN
+               CALL g_prfh2_d.clear()
+ 
+         LET g_sql = "SELECT  UNIQUE pmaa001,'','','' FROM pmaa_t",    
+                     "",
+                     " WHERE"
+         
+         IF NOT cl_null(g_wc2_table2) THEN
+            LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+         END IF
+         
+         LET g_sql = g_sql, " ORDER BY  pmaa_t.pmaa001" 
+                            
+         #add-point:單身填充前
+         {<point name="b_fill2.before_fill2" />}
+         #end add-point
+         
+         PREPARE aprm502_pb2 FROM g_sql
+         DECLARE b_fill_curs2 CURSOR FOR aprm502_pb2
+         
+         OPEN b_fill_curs2 USING g_enterprise,
+                                        g_prfg_m.prfg001,g_prfh_d[g_detail_idx].prfh002,g_prfh_d[g_detail_idx].prfh003, 
+                                            g_prfh_d[g_detail_idx].prfh004
+         LET l_ac = 1
+         FOREACH b_fill_curs2 INTO g_prfh2_d[l_ac].pmaa001,g_prfh2_d[l_ac].pmaal004,g_prfh2_d[l_ac].pmaal003, 
+             g_prfh2_d[l_ac].pmaal005
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+               EXIT FOREACH
+            END IF
+            
+            #add-point:b_fill段資料填充
+            {<point name="b_fill2.fill2"/>}
+            #end add-point
+           
+            LET l_ac = l_ac + 1
+            IF l_ac > g_max_rec THEN
+               CALL cl_err( '', 9035, 0 )
+               EXIT FOREACH
+            END IF
+            
+         END FOREACH
+               CALL g_prfh2_d.deleteElement(g_prfh2_d.getLength())
+ 
+      END IF
+   END IF
+ 
+ 
+      
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL aprm502_detail_show()
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.browser_fill" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION aprm502_browser_fill(ps_page_action)
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   DEFINE l_searchcol       STRING
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point    
+ 
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_prfg_m.* TO NULL
+   CALL g_prfh_d.clear()        
+   CALL g_prfh2_d.clear() 
+ 
+ 
+   CALL g_browser.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = '0' THEN
+      LET l_searchcol = "prfg001"
+ 
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+   
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+   IF cl_null(l_wc) THEN  #p_wc 查詢條件
+      RETURN
+   END IF
+   
+   #add-point:browser_fill,foreach前
+   {<point name="browser_fill.before_foreach"/>}
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE prfg001 ",
+ 
+                        " FROM prfg_t ",
+                              " ",
+                              " LEFT JOIN prfh_t ON prfhent = prfgent AND prfg001 = prfh001 ",
+ 
+                              " LEFT JOIN pmaa_t ON pmaaent = prfgent AND prfh001 = pmaa001", 
+ 
+ 
+                              " LEFT JOIN prfgl_t ON prfg001 = prfgl001 AND prfgl002 = '",g_lang,"' ", 
+                              " ", 
+                       " WHERE prfgent = '" ||g_enterprise|| "' AND prfhent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2
+ 
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE prfg001 ",
+ 
+                        " FROM prfg_t ", 
+                              " ",
+                              " LEFT JOIN prfgl_t ON prfg001 = prfgl001 AND prfgl002 = '",g_lang,"' ",
+                        "WHERE prfgent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED
+ 
+   END IF
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前
+   {<point name="browser_fill.before_count"/>}
+   #end add-point
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+   
+   #LET g_page_action = ps_page_action          # Keep Action
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P" OR
+      ps_page_action = "N" OR
+      ps_page_action = "L" THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   CASE ps_page_action
+      WHEN "F" 
+         LET g_pagestart = 1
+          
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - 1
+         IF g_pagestart < 1 THEN
+            LET g_pagestart = 1
+         END IF
+          
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + 1
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod 1) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - 1
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod 1) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - 1
+         END WHILE
+         
+      WHEN '/'
+         LET g_pagestart = g_jump
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = 1
+         END IF
+         
+   END CASE
+  
+   #單身有輸入查詢條件且非null
+   IF g_wc2 <> " 1=1" AND NOT cl_null(g_wc2) THEN 
+      #依照prfg001 Browser欄位定義(取代原本bs_sql功能)
+      LET l_sql_rank = "SELECT DISTINCT prfgstus,prfg001,DENSE_RANK() OVER(ORDER BY prfg001 ",g_order, 
+          ") AS RANK ",
+                        " FROM prfg_t ",
+                              " ",
+                              " LEFT JOIN prfh_t ON prfhent = prfgent AND prfg001 = prfh001 ",
+ 
+                              " LEFT JOIN pmaa_t ON pmaaent = prfgent AND prfh001 = pmaa001",
+ 
+ 
+                              " LEFT JOIN prfgl_t ON prfg001 = prfgl001 AND prfgl002 = '",g_lang,"' ",
+                              " ",
+                       " ",
+                       " WHERE prfgent = '" ||g_enterprise|| "' AND ",g_wc," AND ",g_wc2
+   ELSE
+      #單身無輸入資料
+      LET l_sql_rank = "SELECT DISTINCT prfgstus,prfg001,DENSE_RANK() OVER(ORDER BY prfg001 ",g_order, 
+          ") AS RANK ",
+                       " FROM prfg_t ",
+                            "  ",
+                            "  LEFT JOIN prfgl_t ON prfg001 = prfgl001 AND prfgl002 = '",g_lang,"' ",
+                       " WHERE prfgent = '" ||g_enterprise|| "' AND ", g_wc
+   END IF
+   
+   #定義翻頁CURSOR
+   LET g_sql= "SELECT prfgstus,prfg001 FROM (",l_sql_rank,") WHERE ",
+              " RANK >= ",1," AND RANK<",1+g_max_browse,
+              " ORDER BY ",l_searchcol," ",g_order
+               
+   #add-point:browser_fill,before_prepare
+   {<point name="browser_fill.before_prepare"/>}
+   #end add-point
+               
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+   
+   #add-point:browser_fill,open
+   {<point name="browser_fill.open"/>}
+   #end add-point
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_prfg001
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+  
+      
+  
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point
+  
+            #此段落由子樣板a24產生
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/inactive.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/active.png"
+ 
+ 
+         
+      END CASE
+ 
+ 
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err('',9035,0)
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser.getLength()
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   FREE browse_pre
+   
+   #add-point:browser_fill段結束前
+   {<point name="browser_fill.after"/>}
+   #end add-point
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.browser_search" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料搜尋
+PRIVATE FUNCTION aprm502_browser_search(p_type)
+   DEFINE p_type LIKE type_t.chr10
+   #add-point:browser_search段define
+   {<point name="browser_search.define"/>}
+   #end add-point    
+   
+   #若無輸入關鍵字則查找出所有資料
+   IF NOT cl_null(g_searchstr) AND g_searchcol='0' THEN
+      CALL cl_err("searchcol","std-00005",0)
+      RETURN FALSE 
+   END IF 
+   
+   IF NOT cl_null(g_searchstr) THEN
+      LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+      LET g_wc = g_wc.toLowerCase()
+   ELSE
+      LET g_wc = " 1=1 "
+   END IF         
+   
+   #若為排序搜尋則添加以下條件
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET g_wc = g_wc, " ORDER BY prfg001"
+   ELSE
+      LET g_wc = g_wc, " ORDER BY ", g_searchcol
+   END IF 
+ 
+   CALL aprm502_browser_fill("F")
+   CALL ui.Interface.refresh()
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.construct" ver="1" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION aprm502_construct()
+   DEFINE lc_qbe_sn   LIKE type_t.num10
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point    
+ 
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_prfg_m.* TO NULL
+   CALL g_prfh_d.clear()        
+   CALL g_prfh2_d.clear() 
+ 
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前
+   {<point name="cs.before_construct"/>}
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON prfg001,prfg002,prfgunit,prfgl003,prfgl004,prfgstus,prfgownid,prfgowndp, 
+          prfgcrtid,prfgcrtdp,prfgcrtdt,prfgmodid,prfgmoddt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #此段落由子樣板a11產生
+         ##----<<prfgownid>>----
+         #ON ACTION controlp INFIELD prfgownid
+         #   CALL q_common('prfg_t','prfgownid',TRUE,FALSE,g_prfg_m.prfgownid) RETURNING ls_return
+         #   DISPLAY ls_return TO prfgownid
+         #   NEXT FIELD prfgownid  
+         #
+         ##----<<prfgowndp>>----
+         #ON ACTION controlp INFIELD prfgowndp
+         #   CALL q_common('prfg_t','prfgowndp',TRUE,FALSE,g_prfg_m.prfgowndp) RETURNING ls_return
+         #   DISPLAY ls_return TO prfgowndp
+         #   NEXT FIELD prfgowndp
+         #
+         ##----<<prfgcrtid>>----
+         #ON ACTION controlp INFIELD prfgcrtid
+         #   CALL q_common('prfg_t','prfgcrtid',TRUE,FALSE,g_prfg_m.prfgcrtid) RETURNING ls_return
+         #   DISPLAY ls_return TO prfgcrtid
+         #   NEXT FIELD prfgcrtid
+         #
+         ##----<<prfgcrtdp>>----
+         #ON ACTION controlp INFIELD prfgcrtdp
+         #   CALL q_common('prfg_t','prfgcrtdp',TRUE,FALSE,g_prfg_m.prfgcrtdp) RETURNING ls_return
+         #   DISPLAY ls_return TO prfgcrtdp
+         #   NEXT FIELD prfgcrtdp
+         #
+         ##----<<prfgmodid>>----
+         #ON ACTION controlp INFIELD prfgmodid
+         #   CALL q_common('prfg_t','prfgmodid',TRUE,FALSE,g_prfg_m.prfgmodid) RETURNING ls_return
+         #   DISPLAY ls_return TO prfgmodid
+         #   NEXT FIELD prfgmodid
+         #
+         ##----<<prfccnfid>>----
+         ##ON ACTION controlp INFIELD prfccnfid
+         ##   CALL q_common('prfg_t','prfccnfid',TRUE,FALSE,g_prfg_m.prfccnfid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prfccnfid
+         ##   NEXT FIELD prfccnfid
+         #
+         ##----<<prfcpstid>>----
+         ##ON ACTION controlp INFIELD prfcpstid
+         ##   CALL q_common('prfg_t','prfcpstid',TRUE,FALSE,g_prfg_m.prfcpstid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prfcpstid
+         ##   NEXT FIELD prfcpstid
+         
+         ##----<<prfgcrtdt>>----
+         AFTER FIELD prfgcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<prfgmoddt>>----
+         AFTER FIELD prfgmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<prfccnfdt>>----
+         #AFTER FIELD prfccnfdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<prfcpstdt>>----
+         #AFTER FIELD prfcpstdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+         #---------------------------<  Master  >---------------------------
+         #----<<prfg001>>----
+         #Ctrlp:construct.c.prfg001
+         ON ACTION controlp INFIELD prfg001
+            #add-point:ON ACTION controlp INFIELD prfg001
+            {<point name="construct.c.prfg001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfg001
+            #add-point:BEFORE FIELD prfg001
+            {<point name="construct.b.prfg001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfg001
+            
+            #add-point:AFTER FIELD prfg001
+            {<point name="construct.a.prfg001" />}
+            #END add-point
+            
+ 
+         #----<<prfg002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfg002
+            #add-point:BEFORE FIELD prfg002
+            {<point name="construct.b.prfg002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfg002
+            
+            #add-point:AFTER FIELD prfg002
+            {<point name="construct.a.prfg002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prfg002
+         ON ACTION controlp INFIELD prfg002
+            #add-point:ON ACTION controlp INFIELD prfg002
+            {<point name="construct.c.prfg002" />}
+            #END add-point
+ 
+         #----<<prfgunit>>----
+         #Ctrlp:construct.c.prfgunit
+         ON ACTION controlp INFIELD prfgunit
+            #add-point:ON ACTION controlp INFIELD prfgunit
+            {<point name="construct.c.prfgunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgunit
+            #add-point:BEFORE FIELD prfgunit
+            {<point name="construct.b.prfgunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgunit
+            
+            #add-point:AFTER FIELD prfgunit
+            {<point name="construct.a.prfgunit" />}
+            #END add-point
+            
+ 
+         #----<<prfgl003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgl003
+            #add-point:BEFORE FIELD prfgl003
+            {<point name="construct.b.prfgl003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgl003
+            
+            #add-point:AFTER FIELD prfgl003
+            {<point name="construct.a.prfgl003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prfgl003
+         ON ACTION controlp INFIELD prfgl003
+            #add-point:ON ACTION controlp INFIELD prfgl003
+            {<point name="construct.c.prfgl003" />}
+            #END add-point
+ 
+         #----<<prfgl004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgl004
+            #add-point:BEFORE FIELD prfgl004
+            {<point name="construct.b.prfgl004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgl004
+            
+            #add-point:AFTER FIELD prfgl004
+            {<point name="construct.a.prfgl004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prfgl004
+         ON ACTION controlp INFIELD prfgl004
+            #add-point:ON ACTION controlp INFIELD prfgl004
+            {<point name="construct.c.prfgl004" />}
+            #END add-point
+ 
+         #----<<prfgstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgstus
+            #add-point:BEFORE FIELD prfgstus
+            {<point name="construct.b.prfgstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgstus
+            
+            #add-point:AFTER FIELD prfgstus
+            {<point name="construct.a.prfgstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prfgstus
+         ON ACTION controlp INFIELD prfgstus
+            #add-point:ON ACTION controlp INFIELD prfgstus
+            {<point name="construct.c.prfgstus" />}
+            #END add-point
+ 
+         #----<<prfgownid>>----
+         #Ctrlp:construct.c.prfgownid
+         ON ACTION controlp INFIELD prfgownid
+            #add-point:ON ACTION controlp INFIELD prfgownid
+            {<point name="construct.c.prfgownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgownid
+            #add-point:BEFORE FIELD prfgownid
+            {<point name="construct.b.prfgownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgownid
+            
+            #add-point:AFTER FIELD prfgownid
+            {<point name="construct.a.prfgownid" />}
+            #END add-point
+            
+ 
+         #----<<prfgowndp>>----
+         #Ctrlp:construct.c.prfgowndp
+         ON ACTION controlp INFIELD prfgowndp
+            #add-point:ON ACTION controlp INFIELD prfgowndp
+            {<point name="construct.c.prfgowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgowndp
+            #add-point:BEFORE FIELD prfgowndp
+            {<point name="construct.b.prfgowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgowndp
+            
+            #add-point:AFTER FIELD prfgowndp
+            {<point name="construct.a.prfgowndp" />}
+            #END add-point
+            
+ 
+         #----<<prfgcrtid>>----
+         #Ctrlp:construct.c.prfgcrtid
+         ON ACTION controlp INFIELD prfgcrtid
+            #add-point:ON ACTION controlp INFIELD prfgcrtid
+            {<point name="construct.c.prfgcrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgcrtid
+            #add-point:BEFORE FIELD prfgcrtid
+            {<point name="construct.b.prfgcrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgcrtid
+            
+            #add-point:AFTER FIELD prfgcrtid
+            {<point name="construct.a.prfgcrtid" />}
+            #END add-point
+            
+ 
+         #----<<prfgcrtdp>>----
+         #Ctrlp:construct.c.prfgcrtdp
+         ON ACTION controlp INFIELD prfgcrtdp
+            #add-point:ON ACTION controlp INFIELD prfgcrtdp
+            {<point name="construct.c.prfgcrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgcrtdp
+            #add-point:BEFORE FIELD prfgcrtdp
+            {<point name="construct.b.prfgcrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgcrtdp
+            
+            #add-point:AFTER FIELD prfgcrtdp
+            {<point name="construct.a.prfgcrtdp" />}
+            #END add-point
+            
+ 
+         #----<<prfgcrtdt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgcrtdt
+            #add-point:BEFORE FIELD prfgcrtdt
+            {<point name="construct.b.prfgcrtdt" />}
+            #END add-point
+ 
+         #----<<prfgmodid>>----
+         #Ctrlp:construct.c.prfgmodid
+         ON ACTION controlp INFIELD prfgmodid
+            #add-point:ON ACTION controlp INFIELD prfgmodid
+            {<point name="construct.c.prfgmodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgmodid
+            #add-point:BEFORE FIELD prfgmodid
+            {<point name="construct.b.prfgmodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgmodid
+            
+            #add-point:AFTER FIELD prfgmodid
+            {<point name="construct.a.prfgmodid" />}
+            #END add-point
+            
+ 
+         #----<<prfgmoddt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgmoddt
+            #add-point:BEFORE FIELD prfgmoddt
+            {<point name="construct.b.prfgmoddt" />}
+            #END add-point
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON prfhstus,prfh002,prfh003,prfh004,prfhunit
+           FROM s_detail1[1].prfhstus,s_detail1[1].prfh002,s_detail1[1].prfh003,s_detail1[1].prfh004, 
+               s_detail1[1].prfhunit
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            {<point name="cs.body.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       #此段落由子樣板a11產生
+         ##----<<prfdownid>>----
+         ##ON ACTION controlp INFIELD prfdownid
+         ##   CALL q_common('prfg_t','prfdownid',TRUE,FALSE,g_prfh2_d[1].prfdownid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prfdownid
+         ##   NEXT FIELD prfdownid  
+         #
+         ##----<<prfdowndp>>----
+         ##ON ACTION controlp INFIELD prfdowndp
+         ##   CALL q_common('prfg_t','prfdowndp',TRUE,FALSE,g_prfh2_d[1].prfdowndp) RETURNING ls_return
+         ##   DISPLAY ls_return TO prfdowndp
+         ##   NEXT FIELD prfdowndp
+         #
+         ##----<<prfdcrtid>>----
+         ##ON ACTION controlp INFIELD prfdcrtid
+         ##   CALL q_common('prfg_t','prfdcrtid',TRUE,FALSE,g_prfh2_d[1].prfdcrtid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prfdcrtid
+         ##   NEXT FIELD prfdcrtid
+         #
+         ##----<<prfdcrtdp>>----
+         ##ON ACTION controlp INFIELD prfdcrtdp
+         ##   CALL q_common('prfg_t','prfdcrtdp',TRUE,FALSE,g_prfh2_d[1].prfdcrtdp) RETURNING ls_return
+         ##   DISPLAY ls_return TO prfdcrtdp
+         ##   NEXT FIELD prfdcrtdp
+         #
+         ##----<<prfdmodid>>----
+         ##ON ACTION controlp INFIELD prfdmodid
+         ##   CALL q_common('prfg_t','prfdmodid',TRUE,FALSE,g_prfh2_d[1].prfdmodid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prfdmodid
+         ##   NEXT FIELD prfdmodid
+         #
+         ##----<<prfdcnfid>>----
+         ##ON ACTION controlp INFIELD prfdcnfid
+         ##   CALL q_common('prfg_t','prfdcnfid',TRUE,FALSE,g_prfh2_d[1].prfdcnfid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prfdcnfid
+         ##   NEXT FIELD prfdcnfid
+         #
+         ##----<<prfdpstid>>----
+         ##ON ACTION controlp INFIELD prfdpstid
+         ##   CALL q_common('prfg_t','prfdpstid',TRUE,FALSE,g_prfh2_d[1].prfdpstid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prfdpstid
+         ##   NEXT FIELD prfdpstid
+         
+         ##----<<prfdcrtdt>>----
+         #AFTER FIELD prfdcrtdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<prfdmoddt>>----
+         #AFTER FIELD prfdmoddt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<prfdcnfdt>>----
+         #AFTER FIELD prfdcnfdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<prfdpstdt>>----
+         #AFTER FIELD prfdpstdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+ 
+         
+       #單身一般欄位開窗相關處理
+       #---------------------<  Detail: page1  >---------------------
+         #----<<prfhstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfhstus
+            #add-point:BEFORE FIELD prfhstus
+            {<point name="construct.b.page1.prfhstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfhstus
+            
+            #add-point:AFTER FIELD prfhstus
+            {<point name="construct.a.page1.prfhstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prfhstus
+         ON ACTION controlp INFIELD prfhstus
+            #add-point:ON ACTION controlp INFIELD prfhstus
+            {<point name="construct.c.page1.prfhstus" />}
+            #END add-point
+ 
+         #----<<prfh002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfh002
+            #add-point:BEFORE FIELD prfh002
+            {<point name="construct.b.page1.prfh002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfh002
+            
+            #add-point:AFTER FIELD prfh002
+            {<point name="construct.a.page1.prfh002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prfh002
+         ON ACTION controlp INFIELD prfh002
+            #add-point:ON ACTION controlp INFIELD prfh002
+            {<point name="construct.c.page1.prfh002" />}
+            #END add-point
+ 
+         #----<<prfh003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfh003
+            #add-point:BEFORE FIELD prfh003
+            {<point name="construct.b.page1.prfh003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfh003
+            
+            #add-point:AFTER FIELD prfh003
+            {<point name="construct.a.page1.prfh003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prfh003
+         ON ACTION controlp INFIELD prfh003
+            #add-point:ON ACTION controlp INFIELD prfh003
+            {<point name="construct.c.page1.prfh003" />}
+            #END add-point
+ 
+         #----<<prfh004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfh004
+            #add-point:BEFORE FIELD prfh004
+            {<point name="construct.b.page1.prfh004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfh004
+            
+            #add-point:AFTER FIELD prfh004
+            {<point name="construct.a.page1.prfh004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prfh004
+         ON ACTION controlp INFIELD prfh004
+            #add-point:ON ACTION controlp INFIELD prfh004
+            {<point name="construct.c.page1.prfh004" />}
+            #END add-point
+ 
+         #----<<prfhunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfhunit
+            #add-point:BEFORE FIELD prfhunit
+            {<point name="construct.b.page1.prfhunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfhunit
+            
+            #add-point:AFTER FIELD prfhunit
+            {<point name="construct.a.page1.prfhunit" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prfhunit
+         ON ACTION controlp INFIELD prfhunit
+            #add-point:ON ACTION controlp INFIELD prfhunit
+            {<point name="construct.c.page1.prfhunit" />}
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+      CONSTRUCT g_wc2_table2 ON NULL
+           FROM NULL
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            {<point name="cs.body2.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+       #---------------------<  Detail: page2  >---------------------
+   
+       
+      END CONSTRUCT
+ 
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令)
+      {<point name="cs.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+   IF g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+   END IF
+ 
+ 
+   
+   #add-point:cs段結束前
+   {<point name="cs.after_construct"/>}
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.default_search" ver="1" status="" src="s">
+<![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION aprm502_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " prfg001 = '", g_argv[1], "' AND "
+   END IF
+   
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.delete" ver="1" status="" src="s">
+<![CDATA[#+ 資料刪除
+PRIVATE FUNCTION aprm502_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point     
+   
+   IF g_prfg_m.prfg001 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+    SELECT UNIQUE prfg001,prfg002,prfgunit,prfgstus,prfgownid,prfgowndp,prfgcrtid,prfgcrtdp,prfgcrtdt, 
+        prfgmodid,prfgmoddt
+ INTO g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit,g_prfg_m.prfgstus,g_prfg_m.prfgownid,g_prfg_m.prfgowndp, 
+     g_prfg_m.prfgcrtid,g_prfg_m.prfgcrtdp,g_prfg_m.prfgcrtdt,g_prfg_m.prfgmodid,g_prfg_m.prfgmoddt
+ FROM prfg_t
+ WHERE prfgent = g_enterprise AND prfg001 = g_prfg_m.prfg001
+   
+   LET g_master_multi_table_t.prfgl001 = g_prfg_m.prfg001
+LET g_master_multi_table_t.prfgl003 = g_prfg_m.prfgl003
+LET g_master_multi_table_t.prfgl004 = g_prfg_m.prfgl004
+ 
+ 
+   CALL aprm502_show()
+   
+   CALL s_transaction_begin()
+ 
+   OPEN aprm502_cl USING g_enterprise,g_prfg_m.prfg001
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN aprm502_cl:", STATUS, 1)
+      CLOSE aprm502_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   FETCH aprm502_cl INTO g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit,g_prfg_m.prfgl003,g_prfg_m.prfgl004, 
+       g_prfg_m.prfgstus,g_prfg_m.prfgownid,g_prfg_m.prfgownid_desc,g_prfg_m.prfgowndp,g_prfg_m.prfgowndp_desc, 
+       g_prfg_m.prfgcrtid,g_prfg_m.prfgcrtid_desc,g_prfg_m.prfgcrtdp,g_prfg_m.prfgcrtdp_desc,g_prfg_m.prfgcrtdt, 
+       g_prfg_m.prfgmodid,g_prfg_m.prfgmodid_desc,g_prfg_m.prfgmoddt              #鎖住將被更改或取消的資料 
+
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_prfg_m.prfg001,SQLCA.sqlcode,0)          #資料被他人LOCK
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:delete段before ask
+   {<point name="delete.before_ask"/>}
+   #end add-point 
+ 
+   #IF NOT cl_ask_delete() THEN             #確認一下
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point   
+      
+      INITIALIZE g_doc.* TO NULL         
+      LET g_doc.column1 = "prfg001"       
+      LET g_doc.value1 = g_prfg_m.prfg001     
+      CALL cl_doc_remove()   
+  
+      #資料備份
+      LET g_prfg001_t = g_prfg_m.prfg001
+ 
+ 
+      DELETE FROM prfg_t
+       WHERE prfgent = g_enterprise AND prfg001 = g_prfg_m.prfg001
+ 
+       
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err(g_prfg_m.prfg001,SQLCA.sqlcode,0) 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+  
+      #add-point:單身刪除前
+      {<point name="delete.body.b_delete" mark="Y"/>}
+      #end add-point
+      
+      DELETE FROM prfh_t
+       WHERE prfhent = g_enterprise AND prfh001 = g_prfg_m.prfg001
+ 
+ 
+      #add-point:單身刪除中
+      {<point name="delete.body.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("prfh_t",SQLCA.sqlcode,0) 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後
+      {<point name="delete.body.a_delete"/>}
+      #end add-point
+      
+            
+                                                               
+ 
+ 
+      #add-point:單身刪除前
+      {<point name="delete.body.b_delete2" mark="Y"/>}
+      #end add-point
+      DELETE FROM pmaa_t
+       WHERE pmaaent = g_enterprise AND
+              = g_prfg_m.prfg001
+      #add-point:單身刪除中
+      {<point name="delete.body.m_delete2"/>}
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("pmaa_t",SQLCA.sqlcode,0) 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後
+      {<point name="delete.body.a_delete2"/>}
+      #end add-point
+ 
+ 
+                                                               
+      CLEAR FORM
+      CALL g_prfh_d.clear() 
+      CALL g_prfh2_d.clear()       
+ 
+ 
+     
+      CALL aprm502_ui_browser_refresh()  
+      CALL aprm502_ui_headershow()  
+      CALL aprm502_ui_detailshow()
+       
+      IF g_browser_cnt > 0 THEN 
+         CALL aprm502_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+      ELSE
+         LET g_wc = " 1=1"
+         CALL aprm502_browser_fill("F")
+      END IF
+      
+      #單頭多語言刪除
+      INITIALIZE l_var_keys_bak TO NULL 
+   INITIALIZE l_field_keys   TO NULL 
+   LET l_var_keys_bak[01] = g_master_multi_table_t.prfgl001
+   LET l_field_keys[01] = 'prfgl001'
+   LET l_var_keys_bak[02] = g_dlang
+   LET l_field_keys[02] = 'prfgl002'
+   CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'prfgl_t')
+ 
+      
+      #單身多語言刪除
+      
+ 
+      
+ 
+ 
+   
+   END IF
+ 
+   CALL s_transaction_end('Y','0')
+   
+   CLOSE aprm502_cl
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_prfg_m.prfg001,'D')
+    
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.delete_b" ver="1" status="" src="s">
+<![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION aprm502_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.b_delete" mark="Y"/>}
+      #end add-point    
+      DELETE FROM prfh_t
+       WHERE prfhent = g_enterprise AND
+         prfh001 = ps_keys_bak[1] AND prfh002 = ps_keys_bak[2] AND prfh003 = ps_keys_bak[3] AND prfh004 = ps_keys_bak[4]
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+      END IF
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.a_delete"/>}
+      #end add-point   
+   END IF
+   
+ 
+   
+   LET ls_group = "'1',"
+   #判斷是否是同一群組的table2
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.b_delete2" mark="Y"/>}
+      #end add-point    
+      DELETE FROM pmaa_t
+       WHERE 
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete2"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("pmaa_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.a_delete2"/>}
+      #end add-point    
+   END IF
+ 
+ 
+   
+   #add-point:delete_b段other
+   {<point name="delete_b.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000000
+#+ 
+#+ Filename...: aprm502
+#+ Description: 客戶組主檔維護作業
+#+ Creator....: 02296(2014/03/25)
+#+ Modifier...: 02296(2014/03/25)
+#+ Buildtype..: 應用 t01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="aprm502.detail_reproduce" ver="1" status="" src="s">
+<![CDATA[#+ 單身自動複製
+PRIVATE FUNCTION aprm502_detail_reproduce()
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE prfh_t.*
+ 
+   DEFINE l_detail2    RECORD LIKE pmaa_t.*
+ 
+ 
+   #add-point:delete段define
+   {<point name="detail_reproduce.define"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE aprm502_detail
+   
+   #add-point:單身複製前1
+   {<point name="detail_reproduce.body.table1.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = "CREATE GLOBAL TEMPORARY TABLE aprm502_detail AS ",
+                "SELECT * FROM prfh_t "
+   PREPARE repro_tbl FROM ls_sql
+   EXECUTE repro_tbl
+   FREE repro_tbl
+                
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO aprm502_detail SELECT * FROM prfh_t 
+                                         WHERE prfhent = g_enterprise AND prfh001 = g_prfg001_t
+ 
+   
+   #將key修正為調整後   
+   UPDATE aprm502_detail 
+      #更新key欄位
+      SET prfh001 = g_prfg_m.prfg001
+ 
+      #更新共用欄位
+      #此段落由子樣板a13產生
+      # , prfdownid = g_user
+      # , prfdowndp = g_dept
+      # , prfdcrtid = g_user
+      # , prfdcrtdp = g_dept 
+      # , prfdcrtdt = ld_date
+      # , prfdmodid = "" 
+      # , prfdmoddt = "" 
+      #, prfhstus = "Y"
+ 
+ 
+                                       
+  
+   #將資料塞回原table   
+   INSERT INTO prfh_t SELECT * FROM aprm502_detail
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("reproduce",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1
+   {<point name="detail_reproduce.body.table1.m_insert"/>}
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE aprm502_detail
+   
+   #add-point:單身複製後1
+   {<point name="detail_reproduce.body.table1.a_insert"/>}
+   #end add-point
+ 
+ 
+   
+   #add-point:單身複製前
+   {<point name="detail_reproduce.body.table2.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = 
+      "CREATE GLOBAL TEMPORARY TABLE aprm502_detail AS ",
+      "SELECT * FROM pmaa_t "
+   PREPARE repro_tbl2 FROM ls_sql
+   EXECUTE repro_tbl2
+   FREE repro_tbl2
+      
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO aprm502_detail SELECT * FROM pmaa_t
+                                         WHERE pmaaent = g_enterprise AND  = g_prfg001_t
+ 
+ 
+   #將key修正為調整後   
+   UPDATE aprm502_detail SET  = g_prfg_m.prfg001
+ 
+  
+   #將資料塞回原table   
+   INSERT INTO pmaa_t SELECT * FROM aprm502_detail
+   
+   #add-point:單身複製中
+   {<point name="detail_reproduce.body.table2.m_insert"/>}
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE aprm502_detail
+   
+   #add-point:單身複製後
+   {<point name="detail_reproduce.body.table2.a_insert"/>}
+   #end add-point
+ 
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_prfg001_t = g_prfg_m.prfg001
+ 
+   
+   DROP TABLE aprm502_detail
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.detail_show" ver="1" status="" src="s">
+<![CDATA[#+ 單身reference detail_show
+PRIVATE FUNCTION aprm502_detail_show()
+   #add-point:detail_show段define
+   {<point name="detail_show.define"/>}
+   #end add-point  
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.fetch" ver="1" status="" src="s">
+<![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aprm502_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point    
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+   
+   CASE p_flag
+      WHEN 'F' LET g_current_idx = 1
+      WHEN 'L' LET g_current_idx = g_header_cnt        
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         
+         LET g_no_ask = FALSE  
+   END CASE 
+   
+   CALL aprm502_browser_fill(p_flag)
+   
+   
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   #LET g_detail_idx = 1
+   IF g_detail_cnt > 0 THEN
+      #LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_pagestart = g_current_idx
+   DISPLAY g_pagestart TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_pagestart TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_pagestart, g_browser_cnt )
+   
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_prfg_m.prfg001 = g_browser[g_current_idx].b_prfg001
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+    SELECT UNIQUE prfg001,prfg002,prfgunit,prfgstus,prfgownid,prfgowndp,prfgcrtid,prfgcrtdp,prfgcrtdt, 
+        prfgmodid,prfgmoddt
+ INTO g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit,g_prfg_m.prfgstus,g_prfg_m.prfgownid,g_prfg_m.prfgowndp, 
+     g_prfg_m.prfgcrtid,g_prfg_m.prfgcrtdp,g_prfg_m.prfgcrtdt,g_prfg_m.prfgmodid,g_prfg_m.prfgmoddt
+ FROM prfg_t
+ WHERE prfgent = g_enterprise AND prfg001 = g_prfg_m.prfg001
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("prfg_t",SQLCA.sqlcode,1)
+      INITIALIZE g_prfg_m.* TO NULL
+      RETURN
+   END IF
+   
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前
+   {<point name="fetch.after" />}
+   #end add-point
+   
+   #LET g_data_owner =       
+   #LET g_data_group =   
+   
+   #重新顯示   
+   CALL aprm502_show()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.fill_chk" ver="1" status="" src="s">
+<![CDATA[#+ 單身填充確認
+PRIVATE FUNCTION aprm502_fill_chk(ps_idx)
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define
+   {<point name="fill_chk.define"/>}
+   #end add-point
+   
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table2) OR g_wc2_table2.trim() = '1=1') THEN
+      #add-point:fill_chk段define
+      {<point name="fill_chk.other_chk"/>}
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #第一單身
+   IF ps_idx = 1 AND
+      ((NOT cl_null(g_wc2_table1) AND g_wc2_table1.trim() <> '1=1')  OR 
+      (NOT cl_null(g_wc2_table2) AND g_wc2_table2.trim() <> '1=1')) THEN
+      RETURN TRUE
+   END IF
+   
+   #根據wc判定是否需要填充
+ 
+   IF ps_idx = 2 AND
+      ((NOT cl_null(g_wc2_table1) AND g_wc2_table1.trim() <> '1=1') OR 
+      (NOT cl_null(g_wc2_table2) AND g_wc2_table2.trim() <> '1=1')) THEN
+      RETURN TRUE
+   END IF
+ 
+ 
+   RETURN FALSE
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.filter" ver="1" status="" src="s">
+<![CDATA[PRIVATE FUNCTION aprm502_filter()
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+      
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+      
+ 
+ 
+   
+ 
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.filter_parser" ver="1" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION aprm502_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.filter_show" ver="1" status="" src="s">
+<![CDATA[#+ 顯示過濾條件
+ 
+ 
+ 
+ 
+]]>
+</section>
+  <section id="aprm502.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+    
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_prfg_m        RECORD
+       prfg001 LIKE prfg_t.prfg001, 
+   prfg002 LIKE prfg_t.prfg002, 
+   prfgunit LIKE prfg_t.prfgunit, 
+   prfgl003 LIKE prfgl_t.prfgl003, 
+   prfgl004 LIKE prfgl_t.prfgl004, 
+   prfgstus LIKE prfg_t.prfgstus, 
+   prfgownid LIKE prfg_t.prfgownid, 
+   prfgownid_desc LIKE type_t.chr80, 
+   prfgowndp LIKE prfg_t.prfgowndp, 
+   prfgowndp_desc LIKE type_t.chr80, 
+   prfgcrtid LIKE prfg_t.prfgcrtid, 
+   prfgcrtid_desc LIKE type_t.chr80, 
+   prfgcrtdp LIKE prfg_t.prfgcrtdp, 
+   prfgcrtdp_desc LIKE type_t.chr80, 
+   prfgcrtdt DATETIME YEAR TO SECOND, 
+   prfgmodid LIKE prfg_t.prfgmodid, 
+   prfgmodid_desc LIKE type_t.chr80, 
+   prfgmoddt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_prfh_d        RECORD
+       prfhstus LIKE prfh_t.prfhstus, 
+   prfh002 LIKE prfh_t.prfh002, 
+   prfh003 LIKE prfh_t.prfh003, 
+   prfh004 LIKE prfh_t.prfh004, 
+   prfh004_desc LIKE type_t.chr500, 
+   prfhunit LIKE prfh_t.prfhunit
+       END RECORD
+PRIVATE TYPE type_g_prfh2_d RECORD
+       pmaa001 LIKE type_t.chr10, 
+   pmaal004 LIKE type_t.chr500, 
+   pmaal003 LIKE type_t.chr500, 
+   pmaal005 LIKE type_t.chr10
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_prfg_m          type_g_prfg_m
+DEFINE g_prfg_m_t        type_g_prfg_m
+ 
+   DEFINE g_prfg001_t LIKE prfg_t.prfg001
+ 
+ 
+DEFINE g_prfh_d          DYNAMIC ARRAY OF type_g_prfh_d
+DEFINE g_prfh_d_t        type_g_prfh_d
+DEFINE g_prfh2_d   DYNAMIC ARRAY OF type_g_prfh2_d
+DEFINE g_prfh2_d_t type_g_prfh2_d
+ 
+ 
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位 
+         b_statepic     LIKE type_t.chr50,
+            b_prfg001 LIKE prfg_t.prfg001
+      END RECORD 
+      
+DEFINE g_browser_f  RECORD    #資料瀏覽之欄位 
+         b_statepic     LIKE type_t.chr50,
+            b_prfg001 LIKE prfg_t.prfg001
+      END RECORD 
+      
+DEFINE g_master_multi_table_t    RECORD
+      prfgl001 LIKE prfgl_t.prfgl001,
+      prfgl003 LIKE prfgl_t.prfgl003,
+      prfgl004 LIKE prfgl_t.prfgl004
+      END RECORD
+#無單身append欄位定義
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+ 
+DEFINE g_wc2_table2   STRING
+ 
+ 
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num5           
+DEFINE l_ac                  LIKE type_t.num5    
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+    
+DEFINE g_pagestart           LIKE type_t.num5           
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_state               STRING       
+ 
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num5              #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num5              #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num5              #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num5              #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num5              #Browser目前所在筆數(暫存用)
+ 
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num5              #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="aprm502.idx_chk" ver="1" status="" src="s">
+<![CDATA[#+ 單身筆數變更
+PRIVATE FUNCTION aprm502_idx_chk()
+   #add-point:idx_chk段define
+   {<point name="idx_chk.define"/>}
+   #end add-point  
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_prfh_d.getLength() THEN
+         LET g_detail_idx = g_prfh_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_prfh_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_prfh_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx2 = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx2 > g_prfh2_d.getLength() THEN
+         LET g_detail_idx2 = g_prfh2_d.getLength()
+      END IF
+      IF g_detail_idx2 = 0 AND g_prfh2_d.getLength() <> 0 THEN
+         LET g_detail_idx2 = 1
+      END IF
+      DISPLAY g_detail_idx2 TO FORMONLY.idx
+      DISPLAY g_prfh2_d.getLength() TO FORMONLY.cnt
+   END IF
+ 
+ 
+   
+   #add-point:idx_chk段other
+   {<point name="idx_chk.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.init" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aprm502_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point    
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show  = 1
+      CALL cl_set_combo_scc_part('prfgstus','17','N,Y')
+ 
+      CALL cl_set_combo_scc('prfh003','6035') 
+ 
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init"/>}
+   #end add-point
+   
+   CALL aprm502_default_search()
+    
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.input" ver="1" status="" src="s">
+<![CDATA[#+ 資料輸入
+PRIVATE FUNCTION aprm502_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num5
+   DEFINE  l_i                   LIKE type_t.num5
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num5
+   DEFINE  li_reproduce_target   LIKE type_t.num5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point  
+ 
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #切換畫面
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql
+   {<point name="input.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT prfhstus,prfh002,prfh003,prfh004,'',prfhunit FROM prfh_t WHERE prfhent=?  
+       AND prfh001=? AND prfh002=? AND prfh003=? AND prfh004=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE aprm502_bcl CURSOR FROM g_forupd_sql
+   
+ 
+   
+   #add-point:input段define_sql
+   {<point name="input.define_sql2" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT '','','','' FROM pmaa_t WHERE pmaaent=? AND pmaa001=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql2"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE aprm502_bcl2 CURSOR FROM g_forupd_sql
+ 
+ 
+ 
+   #add-point:input段define_sql
+   {<point name="input.other_sql"/>}
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL aprm502_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL aprm502_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit,g_prfg_m.prfgl003,g_prfg_m.prfgl004, 
+       g_prfg_m.prfgstus
+   
+   LET lb_reproduce = FALSE
+   
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+]]>
+</section>
+  <section id="aprm502.input.body" ver="1" status="" src="s">
+<![CDATA[   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_prfh_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_prfh_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aprm502_b_fill()
+            LET g_rec_b = g_prfh_d.getLength()
+            #add-point:資料輸入前
+            {<point name="input.d.before_input"/>}
+            #end add-point
+         
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+                           CALL aprm502_b_fill2('2')
+ 
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN aprm502_cl USING g_enterprise,g_prfg_m.prfg001
+ 
+            IF STATUS THEN
+               CALL cl_err("OPEN aprm502_cl:", STATUS, 1)
+               CLOSE aprm502_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_prfh_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_prfh_d[l_ac].prfh002 IS NOT NULL
+               AND g_prfh_d[l_ac].prfh003 IS NOT NULL
+ 
+               AND g_prfh_d[l_ac].prfh004 IS NOT NULL
+ 
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_prfh_d_t.* = g_prfh_d[l_ac].*  #BACKUP
+               CALL aprm502_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b
+               {<point name="input.body.after_set_entry_b"/>}
+               #end add-point  
+               CALL aprm502_set_no_entry_b(l_cmd)
+               IF NOT aprm502_lock_b("prfh_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aprm502_bcl INTO g_prfh_d[l_ac].prfhstus,g_prfh_d[l_ac].prfh002,g_prfh_d[l_ac].prfh003, 
+                      g_prfh_d[l_ac].prfh004,g_prfh_d[l_ac].prfh004_desc,g_prfh_d[l_ac].prfhunit
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_prfh_d_t.prfh002,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  LET g_bfill = "N"
+                  CALL aprm502_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_prfh_d[l_ac].* TO NULL 
+                  LET g_prfh_d[l_ac].prfhstus = "Y"
+ 
+ 
+            LET g_prfh_d_t.* = g_prfh_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL aprm502_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b
+            {<point name="input.body.insert.after_set_entry_b"/>}
+            #end add-point
+            CALL aprm502_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_prfh_d[li_reproduce_target].* = g_prfh_d[li_reproduce].*
+ 
+               LET g_prfh_d[li_reproduce_target].prfh002 = NULL
+               LET g_prfh_d[li_reproduce_target].prfh003 = NULL
+ 
+               LET g_prfh_d[li_reproduce_target].prfh004 = NULL
+ 
+ 
+            END IF
+            #公用欄位給值(單身)
+            #此段落由子樣板a14產生    
+      #LET g_prfh2_d[l_ac].prfdownid = g_user
+      #LET g_prfh2_d[l_ac].prfdowndp = g_dept
+      #LET g_prfh2_d[l_ac].prfdcrtid = g_user
+      #LET g_prfh2_d[l_ac].prfdcrtdp = g_dept 
+      #LET g_prfh2_d[l_ac].prfdcrtdt = cl_get_current()
+      #LET g_prfh2_d[l_ac].prfdmodid = ""
+      #LET g_prfh2_d[l_ac].prfdmoddt = ""
+      #LET g_prfh_d[l_ac].prfhstus = ""
+ 
+ 
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增
+            {<point name="input.body.b_a_insert"/>}
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM prfh_t 
+             WHERE prfhent = g_enterprise AND prfh001 = g_prfg_m.prfg001
+ 
+               AND prfh002 = g_prfh_d[l_ac].prfh002
+               AND prfh003 = g_prfh_d[l_ac].prfh003
+ 
+               AND prfh004 = g_prfh_d[l_ac].prfh004
+ 
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prfg_m.prfg001
+               LET gs_keys[2] = g_prfh_d[g_detail_idx].prfh002
+               LET gs_keys[3] = g_prfh_d[g_detail_idx].prfh003
+               LET gs_keys[4] = g_prfh_d[g_detail_idx].prfh004
+               CALL aprm502_insert_b('prfh_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_prfh_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("prfh_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aprm502_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_prfh_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_prfh_d.deleteElement(l_ac)
+               NEXT FIELD prfh002
+            END IF
+         
+            IF g_prfh_d[l_ac].prfh002 IS NOT NULL
+               AND g_prfh_d_t.prfh003 IS NOT NULL
+ 
+               AND g_prfh_d_t.prfh004 IS NOT NULL
+ 
+ 
+               THEN 
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point 
+               
+               DELETE FROM prfh_t
+                WHERE prfhent = g_enterprise AND prfh001 = g_prfg_m.prfg001 AND
+ 
+                      prfh002 = g_prfh_d_t.prfh002
+                  AND prfh003 = g_prfh_d_t.prfh003
+ 
+                  AND prfh004 = g_prfh_d_t.prfh004
+ 
+ 
+                  
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point 
+               
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("prfh_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE aprm502_bcl
+               LET l_count = g_prfh_d.getLength()
+            END IF 
+            
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prfg_m.prfg001
+               LET gs_keys[2] = g_prfh_d[g_detail_idx].prfh002
+               LET gs_keys[3] = g_prfh_d[g_detail_idx].prfh003
+               LET gs_keys[4] = g_prfh_d[g_detail_idx].prfh004
+ 
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+                           CALL aprm502_delete_b('prfh_t',gs_keys,"'1'")
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<prfhstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfhstus
+            #add-point:BEFORE FIELD prfhstus
+            {<point name="input.b.page1.prfhstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfhstus
+            
+            #add-point:AFTER FIELD prfhstus
+            {<point name="input.a.page1.prfhstus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfhstus
+            #add-point:ON CHANGE prfhstus
+            {<point name="input.g.page1.prfhstus" />}
+            #END add-point
+ 
+         #----<<prfh002>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prfh002
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prfh_d[l_ac].prfh002,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD prfh002
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prfh002
+            {<point name="input.a.page1.prfh002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfh002
+            #add-point:BEFORE FIELD prfh002
+            {<point name="input.b.page1.prfh002" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfh002
+            #add-point:ON CHANGE prfh002
+            {<point name="input.g.page1.prfh002" />}
+            #END add-point
+ 
+         #----<<prfh003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfh003
+            #add-point:BEFORE FIELD prfh003
+            {<point name="input.b.page1.prfh003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfh003
+            
+            #add-point:AFTER FIELD prfh003
+            {<point name="input.a.page1.prfh003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfh003
+            #add-point:ON CHANGE prfh003
+            {<point name="input.g.page1.prfh003" />}
+            #END add-point
+ 
+         #----<<prfh004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfh004
+            #add-point:BEFORE FIELD prfh004
+            {<point name="input.b.page1.prfh004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfh004
+            
+            #add-point:AFTER FIELD prfh004
+            {<point name="input.a.page1.prfh004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfh004
+            #add-point:ON CHANGE prfh004
+            {<point name="input.g.page1.prfh004" />}
+            #END add-point
+ 
+         #----<<prfhunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfhunit
+            #add-point:BEFORE FIELD prfhunit
+            {<point name="input.b.page1.prfhunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfhunit
+            
+            #add-point:AFTER FIELD prfhunit
+            {<point name="input.a.page1.prfhunit" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfhunit
+            #add-point:ON CHANGE prfhunit
+            {<point name="input.g.page1.prfhunit" />}
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<prfhstus>>----
+         #Ctrlp:input.c.page1.prfhstus
+         ON ACTION controlp INFIELD prfhstus
+            #add-point:ON ACTION controlp INFIELD prfhstus
+            {<point name="input.c.page1.prfhstus" />}
+            #END add-point
+ 
+         #----<<prfh002>>----
+         #Ctrlp:input.c.page1.prfh002
+         ON ACTION controlp INFIELD prfh002
+            #add-point:ON ACTION controlp INFIELD prfh002
+            {<point name="input.c.page1.prfh002" />}
+            #END add-point
+ 
+         #----<<prfh003>>----
+         #Ctrlp:input.c.page1.prfh003
+         ON ACTION controlp INFIELD prfh003
+            #add-point:ON ACTION controlp INFIELD prfh003
+            {<point name="input.c.page1.prfh003" />}
+            #END add-point
+ 
+         #----<<prfh004>>----
+         #Ctrlp:input.c.page1.prfh004
+         ON ACTION controlp INFIELD prfh004
+            #add-point:ON ACTION controlp INFIELD prfh004
+            {<point name="input.c.page1.prfh004" />}
+            #END add-point
+ 
+         #----<<prfhunit>>----
+         #Ctrlp:input.c.page1.prfhunit
+         ON ACTION controlp INFIELD prfhunit
+            #add-point:ON ACTION controlp INFIELD prfhunit
+            {<point name="input.c.page1.prfhunit" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_prfh_d[l_ac].* = g_prfh_d_t.*
+               CLOSE aprm502_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_prfh_d[l_ac].prfh002,-263,1)
+               LET g_prfh_d[l_ac].* = g_prfh_d_t.*
+            ELSE
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               #LET g_prfh2_d[l_ac].prfdmodid = g_user 
+#LET g_prfh2_d[l_ac].prfdmoddt = cl_get_current()
+ 
+      
+               UPDATE prfh_t SET (prfh001,prfhstus,prfh002,prfh003,prfh004,prfhunit) = (g_prfg_m.prfg001, 
+                   g_prfh_d[l_ac].prfhstus,g_prfh_d[l_ac].prfh002,g_prfh_d[l_ac].prfh003,g_prfh_d[l_ac].prfh004, 
+                   g_prfh_d[l_ac].prfhunit)
+                WHERE prfhent = g_enterprise AND prfh001 = g_prfg_m.prfg001 
+ 
+                  AND prfh002 = g_prfh_d_t.prfh002 #項次   
+                  AND prfh003 = g_prfh_d_t.prfh003  
+ 
+                  AND prfh004 = g_prfh_d_t.prfh004  
+ 
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("prfh_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                     LET g_prfh_d[l_ac].* = g_prfh_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("prfh_t",SQLCA.sqlcode,1)
+                     LET g_prfh_d[l_ac].* = g_prfh_d_t.*                     
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prfg_m.prfg001
+               LET gs_keys_bak[1] = g_prfg001_t
+               LET gs_keys[2] = g_prfh_d[g_detail_idx].prfh002
+               LET gs_keys_bak[2] = g_prfh_d_t.prfh002
+               LET gs_keys[3] = g_prfh_d[g_detail_idx].prfh003
+               LET gs_keys_bak[3] = g_prfh_d_t.prfh003
+               LET gs_keys[4] = g_prfh_d[g_detail_idx].prfh004
+               LET gs_keys_bak[4] = g_prfh_d_t.prfh004
+               CALL aprm502_update_b('prfh_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row
+            {<point name="input.body.after_row"/>}
+            #end add-point
+            CALL aprm502_unlock_b("prfh_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+              
+         AFTER INPUT
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point 
+ 
+         ON ACTION controlo    
+            CALL FGL_SET_ARR_CURR(g_prfh_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_prfh_d.getLength()+1
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+ 
+      
+ 
+      
+ 
+      
+      DISPLAY ARRAY g_prfh2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+         BEFORE ROW 
+            CALL aprm502_idx_chk()
+            LET l_ac = DIALOG.getCurrentRow("s_detail2")
+            LET g_detail_idx2 = l_ac
+            
+            #add-point:page2, before row動作
+            {<point name="input.body2.before_row"/>}
+            #end add-point
+            
+         BEFORE DISPLAY
+            CALL FGL_SET_ARR_CURR(g_detail_idx)
+            LET l_ac = DIALOG.getCurrentRow("s_detail2")
+            CALL aprm502_idx_chk()
+            LET g_current_page = 2
+      
+         #自訂ACTION(detail_show,page_2)
+         
+      
+         #add-point:page2自定義行為
+         {<point name="input.body2.action"/>}
+         #end add-point
+      
+      END DISPLAY
+ 
+ 
+      
+]]>
+</section>
+  <section id="aprm502.input.head" ver="1" status="" src="s">
+<![CDATA[      #單頭段
+      INPUT BY NAME g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit,g_prfg_m.prfgl003,g_prfg_m.prfgl004, 
+          g_prfg_m.prfgstus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+ 
+         ON ACTION update_item
+            #add-point:ON ACTION update_item
+            {<point name="input.master_input.update_item" />}
+            #END add-point
+ 
+     
+         BEFORE INPUT
+            LET g_master_multi_table_t.prfgl001 = g_prfg_m.prfg001
+LET g_master_multi_table_t.prfgl003 = g_prfg_m.prfgl003
+LET g_master_multi_table_t.prfgl004 = g_prfg_m.prfgl004
+ 
+            IF l_cmd_t = 'r' THEN
+               LET g_master_multi_table_t.prfgl001 = ''
+LET g_master_multi_table_t.prfgl003 = ''
+LET g_master_multi_table_t.prfgl004 = ''
+ 
+            END IF
+            #add-point:資料輸入前
+            {<point name="input.m.before_input"/>}
+            #end add-point
+ 
+         #---------------------------<  Master  >---------------------------
+         #----<<prfg001>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prfg001
+            
+            #add-point:AFTER FIELD prfg001
+            {<point name="input.a.prfg001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfg001
+            #add-point:BEFORE FIELD prfg001
+            {<point name="input.b.prfg001" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfg001
+            #add-point:ON CHANGE prfg001
+            {<point name="input.g.prfg001" />}
+            #END add-point
+ 
+         #----<<prfg002>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prfg002
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prfg_m.prfg002,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD prfg002
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prfg002
+            {<point name="input.a.prfg002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfg002
+            #add-point:BEFORE FIELD prfg002
+            {<point name="input.b.prfg002" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfg002
+            #add-point:ON CHANGE prfg002
+            {<point name="input.g.prfg002" />}
+            #END add-point
+ 
+         #----<<prfgunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgunit
+            #add-point:BEFORE FIELD prfgunit
+            {<point name="input.b.prfgunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgunit
+            
+            #add-point:AFTER FIELD prfgunit
+            {<point name="input.a.prfgunit" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfgunit
+            #add-point:ON CHANGE prfgunit
+            {<point name="input.g.prfgunit" />}
+            #END add-point
+ 
+         #----<<prfgl003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgl003
+            #add-point:BEFORE FIELD prfgl003
+            {<point name="input.b.prfgl003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgl003
+            
+            #add-point:AFTER FIELD prfgl003
+            {<point name="input.a.prfgl003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfgl003
+            #add-point:ON CHANGE prfgl003
+            {<point name="input.g.prfgl003" />}
+            #END add-point
+ 
+         #----<<prfgl004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgl004
+            #add-point:BEFORE FIELD prfgl004
+            {<point name="input.b.prfgl004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgl004
+            
+            #add-point:AFTER FIELD prfgl004
+            {<point name="input.a.prfgl004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfgl004
+            #add-point:ON CHANGE prfgl004
+            {<point name="input.g.prfgl004" />}
+            #END add-point
+ 
+         #----<<prfgstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prfgstus
+            #add-point:BEFORE FIELD prfgstus
+            {<point name="input.b.prfgstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prfgstus
+            
+            #add-point:AFTER FIELD prfgstus
+            {<point name="input.a.prfgstus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prfgstus
+            #add-point:ON CHANGE prfgstus
+            {<point name="input.g.prfgstus" />}
+            #END add-point
+ 
+         #----<<prfgownid>>----
+         #----<<prfgowndp>>----
+         #----<<prfgcrtid>>----
+         #----<<prfgcrtdp>>----
+         #----<<prfgcrtdt>>----
+         #----<<prfgmodid>>----
+         #----<<prfgmoddt>>----
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<prfg001>>----
+         #Ctrlp:input.c.prfg001
+         ON ACTION controlp INFIELD prfg001
+            #add-point:ON ACTION controlp INFIELD prfg001
+            {<point name="input.c.prfg001" />}
+            #END add-point
+ 
+         #----<<prfg002>>----
+         #Ctrlp:input.c.prfg002
+         ON ACTION controlp INFIELD prfg002
+            #add-point:ON ACTION controlp INFIELD prfg002
+            {<point name="input.c.prfg002" />}
+            #END add-point
+ 
+         #----<<prfgunit>>----
+         #Ctrlp:input.c.prfgunit
+         ON ACTION controlp INFIELD prfgunit
+            #add-point:ON ACTION controlp INFIELD prfgunit
+            {<point name="input.c.prfgunit" />}
+            #END add-point
+ 
+         #----<<prfgl003>>----
+         #Ctrlp:input.c.prfgl003
+         ON ACTION controlp INFIELD prfgl003
+            #add-point:ON ACTION controlp INFIELD prfgl003
+            {<point name="input.c.prfgl003" />}
+            #END add-point
+ 
+         #----<<prfgl004>>----
+         #Ctrlp:input.c.prfgl004
+         ON ACTION controlp INFIELD prfgl004
+            #add-point:ON ACTION controlp INFIELD prfgl004
+            {<point name="input.c.prfgl004" />}
+            #END add-point
+ 
+         #----<<prfgstus>>----
+         #Ctrlp:input.c.prfgstus
+         ON ACTION controlp INFIELD prfgstus
+            #add-point:ON ACTION controlp INFIELD prfgstus
+            {<point name="input.c.prfgstus" />}
+            #END add-point
+ 
+         #----<<prfgownid>>----
+         #----<<prfgowndp>>----
+         #----<<prfgcrtid>>----
+         #----<<prfgcrtdp>>----
+         #----<<prfgcrtdt>>----
+         #----<<prfgmodid>>----
+         #----<<prfgmoddt>>----
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            CALL cl_showmsg()      #錯誤訊息統整顯示
+            DISPLAY BY NAME g_prfg_m.prfg001             
+ 
+                            
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前
+               {<point name="input.head.b_insert" mark="Y"/>}
+               #end add-point
+               
+               INSERT INTO prfg_t (prfgent,prfg001,prfg002,prfgunit,prfgstus,prfgownid,prfgowndp,prfgcrtid, 
+                   prfgcrtdp,prfgcrtdt,prfgmodid,prfgmoddt)
+               VALUES (g_enterprise,g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit,g_prfg_m.prfgstus, 
+                   g_prfg_m.prfgownid,g_prfg_m.prfgowndp,g_prfg_m.prfgcrtid,g_prfg_m.prfgcrtdp,g_prfg_m.prfgcrtdt, 
+                   g_prfg_m.prfgmodid,g_prfg_m.prfgmoddt) 
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("g_prfg_m",SQLCA.sqlcode,1)  
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               
+               #add-point:單頭新增中
+               {<point name="input.head.m_insert"/>}
+               #end add-point
+               
+               
+                        INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_prfg_m.prfg001 = g_master_multi_table_t.prfgl001 AND
+         g_prfg_m.prfgl003 = g_master_multi_table_t.prfgl003 AND 
+         g_prfg_m.prfgl004 = g_master_multi_table_t.prfgl004  THEN
+         ELSE 
+            LET l_var_keys[01] = g_prfg_m.prfg001
+            LET l_field_keys[01] = 'prfgl001'
+            LET l_var_keys_bak[01] = g_master_multi_table_t.prfgl001
+            LET l_var_keys[02] = g_dlang
+            LET l_field_keys[02] = 'prfgl002'
+            LET l_var_keys_bak[02] = g_dlang
+            LET l_vars[01] = g_prfg_m.prfgl003
+            LET l_fields[01] = 'prfgl003'
+            LET l_vars[02] = g_prfg_m.prfgl004
+            LET l_fields[02] = 'prfgl004'
+            LET l_vars[03] = g_enterprise 
+            LET l_fields[03] = 'prfglent'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'prfgl_t')
+         END IF 
+ 
+               
+               #add-point:單頭新增後
+               {<point name="input.head.a_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL aprm502_detail_reproduce()
+               END IF
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               
+               UPDATE prfg_t SET (prfg001,prfg002,prfgunit,prfgstus,prfgownid,prfgowndp,prfgcrtid,prfgcrtdp, 
+                   prfgcrtdt,prfgmodid,prfgmoddt) = (g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit, 
+                   g_prfg_m.prfgstus,g_prfg_m.prfgownid,g_prfg_m.prfgowndp,g_prfg_m.prfgcrtid,g_prfg_m.prfgcrtdp, 
+                   g_prfg_m.prfgcrtdt,g_prfg_m.prfgmodid,g_prfg_m.prfgmoddt)
+                WHERE prfgent = g_enterprise AND prfg001 = g_prfg001_t
+ 
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("prfg_t",SQLCA.sqlcode,1)  
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               
+               
+                        INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_prfg_m.prfg001 = g_master_multi_table_t.prfgl001 AND
+         g_prfg_m.prfgl003 = g_master_multi_table_t.prfgl003 AND 
+         g_prfg_m.prfgl004 = g_master_multi_table_t.prfgl004  THEN
+         ELSE 
+            LET l_var_keys[01] = g_prfg_m.prfg001
+            LET l_field_keys[01] = 'prfgl001'
+            LET l_var_keys_bak[01] = g_master_multi_table_t.prfgl001
+            LET l_var_keys[02] = g_dlang
+            LET l_field_keys[02] = 'prfgl002'
+            LET l_var_keys_bak[02] = g_dlang
+            LET l_vars[01] = g_prfg_m.prfgl003
+            LET l_fields[01] = 'prfgl003'
+            LET l_vars[02] = g_prfg_m.prfgl004
+            LET l_fields[02] = 'prfgl004'
+            LET l_vars[03] = g_enterprise 
+            LET l_fields[03] = 'prfglent'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'prfgl_t')
+         END IF 
+ 
+               CALL s_transaction_end('Y','0')
+               
+               #add-point:單頭修改後
+               {<point name="input.head.a_update"/>}
+               #end add-point
+            END IF
+            
+            LET g_prfg001_t = g_prfg_m.prfg001
+ 
+            #controlp
+            
+      END INPUT
+   
+]]>
+</section>
+  <section id="aprm502.input.other" ver="1" status="" src="s">
+<![CDATA[      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG 
+         #add-point:input段before dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point    
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            NEXT FIELD prfg001
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD prfhstus
+               WHEN "s_detail2"
+                  NEXT FIELD pmaa001
+ 
+ 
+            END CASE
+         END IF
+    
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+    
+   #add-point:input段after input 
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.insert" ver="1" status="" src="s">
+<![CDATA[#+ 資料新增
+PRIVATE FUNCTION aprm502_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_prfh_d.clear()   
+   CALL g_prfh2_d.clear()  
+ 
+ 
+ 
+   INITIALIZE g_prfg_m.* LIKE prfg_t.*             #DEFAULT 設定
+   
+   LET g_prfg001_t = NULL
+ 
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #此段落由子樣板a14產生    
+      LET g_prfg_m.prfgownid = g_user
+      LET g_prfg_m.prfgowndp = g_dept
+      LET g_prfg_m.prfgcrtid = g_user
+      LET g_prfg_m.prfgcrtdp = g_dept 
+      LET g_prfg_m.prfgcrtdt = cl_get_current()
+      LET g_prfg_m.prfgmodid = ""
+      LET g_prfg_m.prfgmoddt = ""
+      #LET g_prfg_m.prfgstus = ""
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+  
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point 
+     
+      CALL aprm502_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_prfg_m.* = g_prfg_m_t.*
+         CALL aprm502_show()
+         CALL cl_err('',9001,0)
+         CALL s_transaction_end('N','0')
+         EXIT WHILE
+      END IF
+      
+      CALL g_prfh_d.clear()
+      CALL g_prfh2_d.clear()
+ 
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   LET g_state = "Y"
+   
+   LET g_prfg001_t = g_prfg_m.prfg001
+ 
+   
+   LET g_wc = g_wc,  
+              " OR ( prfgent = '" ||g_enterprise|| "' AND",
+              " prfg001 = '", g_prfg_m.prfg001 CLIPPED, "' "
+ 
+              , ") "
+   
+   CLOSE aprm502_cl
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.insert_b" ver="1" status="" src="s">
+<![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION aprm502_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point     
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前
+      {<point name="insert_b.before_insert" mark="Y"/>}
+      #end add-point 
+      INSERT INTO prfh_t
+                  (prfhent,
+                   prfh001,
+                   prfh002,prfh003,prfh004
+                   ,prfhstus,prfhunit) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+                   ,g_prfh_d[g_detail_idx].prfhstus,g_prfh_d[g_detail_idx].prfhunit)
+      #add-point:insert_b段資料新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point 
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("prfh_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:insert_b段資料新增後
+      {<point name="insert_b.after_insert"/>}
+      #end add-point 
+   END IF
+   
+ 
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前
+      {<point name="insert_b.before_insert2" mark="Y"/>}
+      #end add-point 
+      INSERT INTO pmaa_t
+                  (pmaaent,
+                   ,
+                   pmaa001
+                   ) 
+            VALUES(g_enterprise,
+                   ps_keys[1]
+                   )
+      #add-point:insert_b段資料新增中
+      {<point name="insert_b.m_insert2"/>}
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("pmaa_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:insert_b段資料新增後
+      {<point name="insert_b.after_insert2"/>}
+      #end add-point
+   END IF
+ 
+ 
+   
+   #add-point:insert_b段other
+   {<point name="insert_b.other"/>}
+   #end add-point     
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.lock_b" ver="1" status="" src="s">
+<![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION aprm502_lock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL aprm502_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "prfh_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN aprm502_bcl USING g_enterprise,
+                                       g_prfg_m.prfg001,g_prfh_d[g_detail_idx].prfh002,g_prfh_d[g_detail_idx].prfh003, 
+                                           g_prfh_d[g_detail_idx].prfh004
+                                       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("aprm502_bcl",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   #鎖定整組table
+   #LET ls_group = "'2',"
+   #僅鎖定自身table
+   LET ls_group = "pmaa_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN aprm502_bcl2 USING g_enterprise,
+                                             g_prfg_m.prfg001,g_prfh_d[g_detail_idx].prfh002,g_prfh_d[g_detail_idx].prfh003, 
+                                                 g_prfh_d[g_detail_idx].prfh004,
+                                             g_prfh2_d[g_detail_idx2].pmaa001
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("aprm502_bcl2",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+   #add-point:lock_b段other
+   {<point name="lock_b.other"/>}
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.main" ver="1" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apr","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = "SELECT prfg001,prfg002,prfgunit,'','',prfgstus,prfgownid,'',prfgowndp,'',prfgcrtid, 
+       '',prfgcrtdp,'',prfgcrtdt,prfgmodid,'',prfgmoddt FROM prfg_t WHERE prfgent= ? AND prfg001=? FOR  
+       UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE aprm502_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aprm502 WITH FORM cl_ap_formpath("apr",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aprm502_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aprm502_ui_dialog() 
+	  
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aprm502
+      
+   END IF 
+   
+   CLOSE aprm502_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+</section>
+  <section id="aprm502.modify" ver="1" status="" src="s">
+<![CDATA[#+ 資料修改
+PRIVATE FUNCTION aprm502_modify()
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point    
+   
+   IF g_prfg_m.prfg001 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+    SELECT UNIQUE prfg001,prfg002,prfgunit,prfgstus,prfgownid,prfgowndp,prfgcrtid,prfgcrtdp,prfgcrtdt, 
+        prfgmodid,prfgmoddt
+ INTO g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit,g_prfg_m.prfgstus,g_prfg_m.prfgownid,g_prfg_m.prfgowndp, 
+     g_prfg_m.prfgcrtid,g_prfg_m.prfgcrtdp,g_prfg_m.prfgcrtdt,g_prfg_m.prfgmodid,g_prfg_m.prfgmoddt
+ FROM prfg_t
+ WHERE prfgent = g_enterprise AND prfg001 = g_prfg_m.prfg001
+ 
+   ERROR ""
+  
+   LET g_prfg001_t = g_prfg_m.prfg001
+ 
+   CALL s_transaction_begin()
+   
+   OPEN aprm502_cl USING g_enterprise,g_prfg_m.prfg001
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN aprm502_cl:", STATUS, 1)
+      CLOSE aprm502_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH aprm502_cl INTO g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit,g_prfg_m.prfgl003,g_prfg_m.prfgl004, 
+       g_prfg_m.prfgstus,g_prfg_m.prfgownid,g_prfg_m.prfgownid_desc,g_prfg_m.prfgowndp,g_prfg_m.prfgowndp_desc, 
+       g_prfg_m.prfgcrtid,g_prfg_m.prfgcrtid_desc,g_prfg_m.prfgcrtdp,g_prfg_m.prfgcrtdp_desc,g_prfg_m.prfgcrtdt, 
+       g_prfg_m.prfgmodid,g_prfg_m.prfgmodid_desc,g_prfg_m.prfgmoddt
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_prfg_m.prfg001,SQLCA.sqlcode,0)
+      CLOSE aprm502_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   
+   
+   #add-point:modify段show之前
+   {<point name="modify.before_show"/>}
+   #end add-point  
+   
+   CALL aprm502_show()
+   WHILE TRUE
+      LET g_prfg001_t = g_prfg_m.prfg001
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_prfg_m.prfgmodid = g_user 
+LET g_prfg_m.prfgmoddt = cl_get_current()
+ 
+      
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+      
+      CALL aprm502_input("u")     #欄位更改
+ 
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_prfg_m.* = g_prfg_m_t.*
+         CALL aprm502_show()
+         CALL cl_err('',9001,0)
+         EXIT WHILE
+      END IF
+      
+      #若單頭key欄位有變更
+      IF g_prfg_m.prfg001 != g_prfg001_t 
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前
+         {<point name="modify.body.b_fk_update" mark="Y"/>}
+         #end add-point
+         
+         #更新單身key值
+         UPDATE prfh_t SET prfh001 = g_prfg_m.prfg001
+ 
+          WHERE prfhent = g_enterprise AND prfh001 = g_prfg001_t
+ 
+            
+         #add-point:單身fk修改中
+         {<point name="modify.body.m_fk_update"/>}
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               CALL cl_err("prfh_t","std-00009",1)
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               CALL cl_err("prfh_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後
+         {<point name="modify.body.a_fk_update"/>}
+         #end add-point
+         
+ 
+         
+         #更新單身key值
+         #add-point:單身fk修改前
+         {<point name="modify.body.b_fk_update2" mark="Y"/>}
+         #end add-point
+         UPDATE pmaa_t
+            SET  = g_prfg_m.prfg001
+ 
+          WHERE pmaaent = g_enterprise AND
+                 = g_prfg001_t
+ 
+         #add-point:單身fk修改中
+         {<point name="modify.body.m_fk_update2"/>}
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               CALL cl_err("pmaa_t","std-00009",1)
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               CALL cl_err("pmaa_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後
+         {<point name="modify.body.a_fk_update2"/>}
+         #end add-point
+ 
+ 
+         
+         #UPDATE 多語言table key值
+         
+         
+ 
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_prfg_m.prfg001,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE aprm502_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_prfg_m.prfg001,'U')
+ 
+END FUNCTION   
+]]>
+</section>
+  <section id="aprm502.other_dialog" ver="1" status="" src="s">
+<![CDATA[ 
+]]>
+</section>
+  <section id="aprm502.other_function" ver="1" status="" src="s">
+<![CDATA[   
+{<point name="other.function"/>}
+]]>
+</section>
+  <section id="aprm502.query" ver="1" status="" src="s">
+<![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aprm502_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point   
+ 
+   #切換畫面
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_prfh_d.clear()
+   CALL g_prfh2_d.clear()
+ 
+ 
+   
+   #add-point:query段other
+   {<point name="query.other"/>}
+   #end add-point   
+   
+   DISPLAY ' ' TO FORMONLY.idx
+   DISPLAY ' ' TO FORMONLY.cnt
+   DISPLAY ' ' TO FORMONLY.b_index
+   DISPLAY ' ' TO FORMONLY.b_count
+   DISPLAY ' ' TO FORMONLY.h_index
+   DISPLAY ' ' TO FORMONLY.h_count
+   
+   CALL aprm502_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL aprm502_browser_fill("")
+      CALL aprm502_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+   CALL aprm502_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      CALL cl_err("","-100",1)
+   ELSE
+      CALL aprm502_fetch("F") 
+   END IF
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.reproduce" ver="1" status="" src="s">
+<![CDATA[#+ 資料複製
+PRIVATE FUNCTION aprm502_reproduce()
+   DEFINE l_newno     LIKE prfg_t.prfg001 
+   DEFINE l_oldno     LIKE prfg_t.prfg001 
+ 
+   DEFINE l_master    RECORD LIKE prfg_t.*
+   DEFINE l_detail    RECORD LIKE prfh_t.*
+ 
+   DEFINE l_detail2    RECORD LIKE pmaa_t.*
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point   
+ 
+   #切換畫面
+   
+   IF g_prfg_m.prfg001 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+    
+   LET g_prfg001_t = g_prfg_m.prfg001
+ 
+    
+   LET g_prfg_m.prfg001 = ""
+ 
+    
+   CALL aprm502_set_entry('a')
+   CALL aprm502_set_no_entry('a')
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #此段落由子樣板a14產生    
+      LET g_prfg_m.prfgownid = g_user
+      LET g_prfg_m.prfgowndp = g_dept
+      LET g_prfg_m.prfgcrtid = g_user
+      LET g_prfg_m.prfgcrtdp = g_dept 
+      LET g_prfg_m.prfgcrtdt = cl_get_current()
+      LET g_prfg_m.prfgmodid = ""
+      LET g_prfg_m.prfgmoddt = ""
+      #LET g_prfg_m.prfgstus = ""
+ 
+ 
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL aprm502_input("r")
+   
+   
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+ 
+   LET g_state = "Y"
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              " prfg001 = '", g_prfg_m.prfg001 CLIPPED, "' "
+ 
+              , ") "
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.set_entry" ver="1" status="" src="s">
+<![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aprm502_set_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point       
+ 
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("prfg001",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.set_entry_b" ver="1" status="" src="s">
+<![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION aprm502_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point     
+   #add-point:set_entry_b段
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point  
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.set_no_entry" ver="1" status="" src="s">
+<![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aprm502_set_no_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = 'u' THEN
+      CALL cl_set_comp_entry("prfg001",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.set_no_entry_b" ver="1" status="" src="s">
+<![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION aprm502_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point    
+   #add-point:set_no_entry_b段
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point     
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.show" ver="1" status="" src="s">
+<![CDATA[#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION aprm502_show()
+   DEFINE l_ac_t    LIKE type_t.num5
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point  
+ 
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   LET g_prfg_m_t.* = g_prfg_m.*      #保存單頭舊值
+   
+   IF g_bfill = "Y" THEN
+      CALL aprm502_b_fill() #單身填充
+      CALL aprm502_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #此段落由子樣板a12產生
+      #LET g_prfg_m.prfgownid_desc = cl_get_username(g_prfg_m.prfgownid)
+      #LET g_prfg_m.prfgowndp_desc = cl_get_deptname(g_prfg_m.prfgowndp)
+      #LET g_prfg_m.prfgcrtid_desc = cl_get_username(g_prfg_m.prfgcrtid)
+      #LET g_prfg_m.prfgcrtdp_desc = cl_get_deptname(g_prfg_m.prfgcrtdp)
+      #LET g_prfg_m.prfgmodid_desc = cl_get_username(g_prfg_m.prfgmodid)
+      ##LET g_prfg_m.prfccnfid_desc = cl_get_deptname(g_prfg_m.prfccnfid)
+      ##LET g_prfg_m.prfcpstid_desc = cl_get_deptname(g_prfg_m.prfcpstid)
+      
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit,g_prfg_m.prfgl003,g_prfg_m.prfgl004, 
+       g_prfg_m.prfgstus,g_prfg_m.prfgownid,g_prfg_m.prfgownid_desc,g_prfg_m.prfgowndp,g_prfg_m.prfgowndp_desc, 
+       g_prfg_m.prfgcrtid,g_prfg_m.prfgcrtid_desc,g_prfg_m.prfgcrtdp,g_prfg_m.prfgcrtdp_desc,g_prfg_m.prfgcrtdt, 
+       g_prfg_m.prfgmodid,g_prfg_m.prfgmodid_desc,g_prfg_m.prfgmoddt
+   
+   #顯示狀態(stus)圖片
+         #此段落由子樣板a21產生
+      CASE g_prfg_m.prfgstus
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+ 
+ 
+         
+      END CASE
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_prfh_d.getLength()
+      #帶出公用欄位reference值
+      
+      #add-point:show段單身reference
+      {<point name="show.body.reference"/>}
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_prfh2_d.getLength()
+      #帶出公用欄位reference值
+      #此段落由子樣板a12產生
+      ##LET g_prfh2_d[l_ac].prfdownid_desc = cl_get_username(g_prfh2_d[l_ac].prfdownid)
+      ##LET g_prfh2_d[l_ac].prfdowndp_desc = cl_get_deptname(g_prfh2_d[l_ac].prfdowndp)
+      ##LET g_prfh2_d[l_ac].prfdcrtid_desc = cl_get_username(g_prfh2_d[l_ac].prfdcrtid)
+      ##LET g_prfh2_d[l_ac].prfdcrtdp_desc = cl_get_deptname(g_prfh2_d[l_ac].prfdcrtdp)
+      ##LET g_prfh2_d[l_ac].prfdmodid_desc = cl_get_username(g_prfh2_d[l_ac].prfdmodid)
+      ##LET g_prfh2_d[l_ac].prfdcnfid_desc = cl_get_deptname(g_prfh2_d[l_ac].prfdcnfid)
+      ##LET g_prfh2_d[l_ac].prfdpstid_desc = cl_get_deptname(g_prfh2_d[l_ac].prfdpstid)
+      
+ 
+ 
+      #add-point:show段單身reference
+      {<point name="show.body2.reference"/>}
+      #end add-point
+   END FOR
+ 
+ 
+   
+    
+   
+   #add-point:show段other
+   {<point name="show.other"/>}
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL aprm502_detail_show()
+   
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.signature" ver="1" status="" src="s">
+<![CDATA[   
+]]>
+</section>
+  <section id="aprm502.state_change" ver="1" status="" src="s">
+<![CDATA[   #+ 此段落由子樣板a09產生
+#+ 確認碼變更
+PRIVATE FUNCTION aprm502_statechange()
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define
+   {<point name="statechange.define"/>}
+   #end add-point  
+   
+   #add-point:statechange段開始前
+   {<point name="statechange.before"/>}
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_prfg_m.prfg001 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         CASE g_prfg_m.prfgstus
+            WHEN "N"
+               HIDE OPTION "inactive"
+            WHEN "Y"
+               HIDE OPTION "active"
+ 
+ 
+            
+         END CASE
+     
+      #add-point:menu前
+      {<point name="statechange.before_menu"/>}
+      #end add-point
+      
+      ON ACTION inactive
+         LET lc_state = "N"
+         #add-point:action控制
+         {<point name="statechange.inactive"/>}
+         #end add-point
+         EXIT MENU
+      ON ACTION active
+         LET lc_state = "Y"
+         #add-point:action控制
+         {<point name="statechange.active"/>}
+         #end add-point
+         EXIT MENU
+ 
+ 
+      
+      
+      
+      #add-point:stus控制
+      {<point name="statechange.more_control"/>}
+      #end add-point
+      
+   END MENU
+   
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+ 
+ 
+      ) OR 
+      cl_null(lc_state) THEN
+      RETURN
+   END IF
+   
+   #add-point:stus修改前
+   {<point name="statechange.b_update"/>}
+   #end add-point
+      
+   UPDATE prfg_t SET prfgstus = lc_state 
+    WHERE prfgent = g_enterprise AND prfg001 = g_prfg_m.prfg001
+ 
+  
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("",SQLCA.sqlcode,0)
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+ 
+ 
+         
+      END CASE
+      LET g_prfg_m.prfgstus = lc_state
+      DISPLAY BY NAME g_prfg_m.prfgstus
+   END IF
+ 
+   #add-point:stus修改後
+   {<point name="statechange.a_update"/>}
+   #end add-point
+ 
+   #add-point:statechange段結束前
+   {<point name="statechange.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="aprm502.ui_browser_refresh" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION aprm502_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point    
+   
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_prfg001 = g_prfg_m.prfg001 
+ 
+         THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+      END IF
+   END FOR
+ 
+   LET g_browser_cnt = g_browser_cnt - 1
+   IF g_current_row > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_row = g_browser_cnt
+   END IF
+ 
+   #DISPLAY g_browser_cnt TO FORMONLY.b_count    #總筆數的顯示
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.ui_detailshow" ver="1" status="" src="s">
+<![CDATA[#+ 單身資料重新顯示
+PRIVATE FUNCTION aprm502_ui_detailshow()
+   #add-point:ui_detailshow段define
+   {<point name="ui_detailshow.define"/>}
+   #end add-point    
+   
+   #add-point:ui_detailshow段before
+   {<point name="ui_detailshow.before"/>}
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+ 
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after
+   {<point name="ui_detailshow.after"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 功能選單
+PRIVATE FUNCTION aprm502_ui_dialog()
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_wc     STRING
+   DEFINE lb_first  BOOLEAN
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   
+   #action default動作
+   #+ 此段落由子樣板a42產生
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL aprm502_insert()
+            #add-point:ON ACTION insert
+            {<point name="menu.default.insert" />}
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂
+      {<point name="ui_dialog.action_default"/>}
+      #end add-point
+      OTHERWISE
+         
+   END CASE
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE 
+   
+      CALL aprm502_browser_fill("")
+            
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_prfg001 = g_prfg001_t
+ 
+               THEN
+               LET g_current_row = li_idx
+               LET g_current_idx = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+         #左側瀏覽頁簽
+ 
+ 
+               
+      
+         
+        
+         DISPLAY ARRAY g_prfh_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               CALL aprm502_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+                              CALL aprm502_b_fill2('2')
+ 
+               #add-point:page1, before row動作
+               {<point name="ui_dialog.page1.before_row"/>}
+               #end add-point
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               CALL aprm502_idx_chk()
+               #add-point:page1自定義行為
+               {<point name="ui_dialog.page1.before_display"/>}
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為
+            {<point name="ui_dialog.page1.action"/>}
+            #end add-point
+               
+         END DISPLAY
+        
+         DISPLAY ARRAY g_prfh2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               CALL aprm502_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx2 = l_ac
+               
+               #add-point:page2, before row動作
+               {<point name="ui_dialog.body2.before_row"/>}
+               #end add-point
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               CALL aprm502_idx_chk()
+               #add-point:page2自定義行為
+               {<point name="ui_dialog.body2.before_display"/>}
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_2)
+            
+         
+            #add-point:page2自定義行為
+            {<point name="ui_dialog.body2.action"/>}
+            #end add-point
+         
+         END DISPLAY
+ 
+ 
+         
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+      
+         BEFORE DIALOG
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_page = "first"
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_row = g_current_idx #目前指標
+            IF g_current_idx = 0 THEN
+               LET g_current_idx = 1
+            END IF
+            LET g_current_sw = TRUE
+            
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL aprm502_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL aprm502_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL aprm502_idx_chk()
+            
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+            
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD prfh002
+            END IF
+        
+         ON ACTION statechange
+            CALL aprm502_statechange()
+            LET g_action_choice = "statechange"
+            EXIT DIALOG
+      
+         
+          
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               CALL aprm502_browser_fill("F")   #browser_fill()會將notice區塊清空
+               CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            END IF
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+               CALL aprm502_browser_fill("F")
+               IF g_browser_cnt = 0 THEN
+                  CALL cl_err("","-100",1)
+                  CLEAR FORM
+               ELSE
+                  CALL aprm502_fetch("F")
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            CALL cl_notice()
+          
+         #ACTION表單列
+         
+         ON ACTION first
+            CALL aprm502_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aprm502_idx_chk()
+            
+         ON ACTION previous
+            CALL aprm502_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aprm502_idx_chk()
+            
+         ON ACTION jump
+            CALL aprm502_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aprm502_idx_chk()
+            
+         ON ACTION next
+            CALL aprm502_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aprm502_idx_chk()
+            
+         ON ACTION last
+            CALL aprm502_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aprm502_idx_chk()
+            
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION mainhidden       #主頁摺疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            
+       
+         ON ACTION controls      #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+ 
+         ON ACTION delete
+ 
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN 
+               CALL aprm502_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION insert
+ 
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL aprm502_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION modify
+ 
+            LET g_aw = ''
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL aprm502_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION modify_detail
+ 
+            LET g_aw = g_curr_diag.getCurrentItem()
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL aprm502_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL aprm502_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION reproduce
+ 
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN 
+               CALL aprm502_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+         
+         ON ACTION related_document
+            CALL cl_doc()
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+            
+      END DIALOG
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.ui_headershow" ver="1" status="" src="s">
+<![CDATA[#+ 單頭資料重新顯示
+PRIVATE FUNCTION aprm502_ui_headershow()
+   #add-point:ui_headershow段define
+   {<point name="ui_headershow.define"/>}
+   #end add-point    
+   
+   LET g_prfg_m.prfg001 = g_browser[g_current_idx].b_prfg001   
+ 
+    SELECT UNIQUE prfg001,prfg002,prfgunit,prfgstus,prfgownid,prfgowndp,prfgcrtid,prfgcrtdp,prfgcrtdt, 
+        prfgmodid,prfgmoddt
+ INTO g_prfg_m.prfg001,g_prfg_m.prfg002,g_prfg_m.prfgunit,g_prfg_m.prfgstus,g_prfg_m.prfgownid,g_prfg_m.prfgowndp, 
+     g_prfg_m.prfgcrtid,g_prfg_m.prfgcrtdp,g_prfg_m.prfgcrtdt,g_prfg_m.prfgmodid,g_prfg_m.prfgmoddt
+ FROM prfg_t
+ WHERE prfgent = g_enterprise AND prfg001 = g_prfg_m.prfg001
+   CALL aprm502_show()
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.unlock_b" ver="1" status="" src="s">
+<![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION aprm502_unlock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE aprm502_bcl
+   END IF
+   
+ 
+   
+   LET ls_group = "'2',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE aprm502_bcl2
+   END IF
+ 
+ 
+ 
+   #add-point:unlock_b段other
+   {<point name="unlock_b.other"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aprm502.update_b" ver="1" status="" src="s">
+<![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION aprm502_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "prfh_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.before_update" mark="Y"/>}
+      #end add-point     
+      UPDATE prfh_t 
+         SET (prfh001,
+              prfh002,prfh003,prfh004
+              ,prfhstus,prfhunit) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+              ,g_prfh_d[g_detail_idx].prfhstus,g_prfh_d[g_detail_idx].prfhunit) 
+         WHERE prfhent = g_enterprise AND prfh001 = ps_keys_bak[1] AND prfh002 = ps_keys_bak[2] AND prfh003 = ps_keys_bak[3] AND prfh004 = ps_keys_bak[4]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL cl_err("prfh_t","std-00009",1)
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            CALL cl_err("prfh_t",SQLCA.sqlcode,1)  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.after_update"/>}
+      #end add-point  
+   END IF
+   
+ 
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "pmaa_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.before_update2" mark="Y"/>}
+      #end add-point     
+      UPDATE pmaa_t 
+         SET (,
+              pmaa001
+              ) 
+              = 
+             (ps_keys[1]
+              ) 
+         WHERE pmaaent = g_enterprise AND pmaa001 = ps_keys_bak[1]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update2"/>}
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL cl_err("pmaa_t","std-00009",1)
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            CALL cl_err("pmaa_t",SQLCA.sqlcode,1)  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.after_update2"/>}
+      #end add-point  
+   END IF
+ 
+ 
+   
+   LET ls_group = "'1',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "pmaa_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.key.before_update2" mark="Y"/>}
+      #end add-point     
+      UPDATE pmaa_t 
+         SET () 
+              = 
+             () 
+         WHERE pmaaent = g_enterprise AND 
+      #add-point:update_b段修改中
+      {<point name="update_b.key.m_update2"/>}
+      #end add-point
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL cl_err("pmaa_t","std-00009",1)
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            CALL cl_err("pmaa_t",SQLCA.sqlcode,1)  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.key.after_update2"/>}
+      #end add-point  
+   END IF
+ 
+ 
+   
+   #add-point:update_b段other
+   {<point name="update_b.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+</section>
+</add_points>

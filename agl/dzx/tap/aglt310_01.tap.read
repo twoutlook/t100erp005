@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aglt310_01" std_prog="aglt310_01" erpver="1.0" module="AGL" ver="2" env="s" zone="t10dev" booking="N" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.aglt310_01_glapld_desc" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#账别说明
+PRIVATE FUNCTION aglt310_01_glapld_desc(p_glapld)
+   DEFINE p_glapld    LIKE glap_t.glapld
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_glapld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   RETURN g_rtn_fields[1]
+            
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_01_glapld_chk" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#检查账套资料
+PRIVATE FUNCTION aglt310_01_glapld_chk(p_glapld)
+   DEFINE p_glapld    LIKE glap_t.glapld
+   DEFINE l_glaastus      LIKE glaa_t.glaastus
+
+  LET g_errno = ''
+
+  SELECT glaastus INTO l_glaastus FROM glaa_t
+   WHERE glaaent = g_enterprise
+     AND glaald = p_glapld
+
+  CASE
+     WHEN SQLCA.SQLCODE = 100   LET g_errno = 'aoo-00017'
+     WHEN l_glaastus = 'N'      LET g_errno = 'agl-00051'
+  END CASE
+END FUNCTION]]>
+  </point>
+  <point name="input.a.glapdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glap_m.glapdocno) AND NOT cl_null(g_glap_m.glapld) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_glap_m.glapdocno != g_glapdocno_t  OR g_glap_m.glapld != g_glapld_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glap_t WHERE "||"glapent = '" ||g_enterprise|| "' AND "||"glapdocno = '"||g_glap_m.glapdocno ||"' AND "|| "glapld = '"||g_glap_m.glapld ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.glapld" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            DISPLAY '' TO glapld_desc
+            IF NOT cl_null(g_glap_m.glapld) THEN
+               CALL aglt310_01_glapld_chk(g_glap_m.glapld)
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glap_m.glapld,g_errno,1)
+                  LET g_glap_m.glapld = p_glapld
+                  CALL aglt310_01_glapld_desc(g_glap_m.glapld) RETURNING g_glap_m.glapld_desc
+                  DISPLAY BY NAME g_glap_m.glapld_desc 
+                  NEXT FIELD glapld
+               END IF
+               #检查使用者是否有权限使用当前账别
+               CALL s_ld_chk_authorization(g_user,g_glap_m.glapld) RETURNING l_pass
+               IF l_pass = FALSE THEN
+                  CALL cl_err(g_glap_m.glapld,'agl-00164',1)
+                  LET g_glap_m.glapld = p_glapld
+                  CALL aglt310_01_glapld_desc(g_glap_m.glapld) RETURNING g_glap_m.glapld_desc
+                  DISPLAY BY NAME g_glap_m.glapld_desc 
+                  NEXT FIELD glapld
+               END IF 
+            END IF 
+            CALL aglt310_01_glapld_desc(g_glap_m.glapld) RETURNING g_glap_m.glapld_desc
+            DISPLAY BY NAME g_glap_m.glapld_desc
+]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_glap_m.glapld = p_glapld
+            CALL aglt310_01_glapld_desc(g_glap_m.glapld) RETURNING g_glap_m.glapld_desc
+            DISPLAY BY NAME g_glap_m.glapld_desc]]>
+  </point>
+  <point name="input.c.glapdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glap_m.glapdocno             #給予default值
+
+            #給予arg
+
+            CALL q_ooba002()                                #呼叫開窗
+
+            LET g_glap_m.glapdocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glap_m.glapdocno TO glapdocno              #顯示到畫面上
+
+            NEXT FIELD glapdocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.glapld" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.default1 = g_glap_m.glapld
+            #CALL q_glaald()                           #呼叫開窗
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            CALL q_authorised_ld()
+            LET g_glap_m.glapld = g_qryparam.return1
+            CALL aglt310_01_glapld_desc(g_glap_m.glapld) RETURNING g_glap_m.glapld_desc
+            DISPLAY BY NAME g_glap_m.glapld_desc
+            DISPLAY g_qryparam.return1 TO glapld  #顯示到畫面上            
+            NEXT FIELD glapld                     #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_glapld        LIKE glap_t.glapld
+   DEFINE l_pass          LIKE type_t.chr5]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_glapld]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      RETURN p_glapld
+   END IF 
+   RETURN g_glap_m.glapld]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glap_m.glapld
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glap_m.glapld_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_glap_m.glapld_desc
+]]>
+  </point>
+  <section id="aglt310_01.description" ver="12" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000096
+#+ 
+#+ Filename...: aglt310_01
+#+ Description: ...
+#+ Creator....: 02298(2013/08/14)
+#+ Modifier...: 02599(2014/06/30)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="aglt310_01.global" ver="3" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glap_m        RECORD
+       glapld LIKE glap_t.glapld, 
+   glapld_desc LIKE type_t.chr80
+       END RECORD
+DEFINE g_glap_m        type_g_glap_m
+ 
+   DEFINE g_glapld_t LIKE glap_t.glapld
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aglt310_01.input" ver="4" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aglt310_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglt310_01 WITH FORM cl_ap_formpath("agl","aglt310_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glap_m.glapld ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD glapld
+            
+            #add-point:AFTER FIELD glapld
+            {<point name="input.a.glapld" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glapld
+            #add-point:BEFORE FIELD glapld
+            {<point name="input.b.glapld" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glapld
+            #add-point:ON CHANGE glapld
+            {<point name="input.g.glapld" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glapld
+         ON ACTION controlp INFIELD glapld
+            #add-point:ON ACTION controlp INFIELD glapld
+            {<point name="input.c.glapld" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglt310_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aglt310_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aglt310_01.other_function" ver="2" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,1393 @@
+#+ Version..: T6-ERP-1.00.00 Build-000079
+#+ 
+#+ Filename...: aooi012
+#+ Buildtype..: 應用 i02 樣板自動產生
+#+ Memo.......:
+
+
+{<point name="global.memo" />}
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_oocg_d RECORD
+       oocgstus LIKE oocg_t.oocgstus, 
+   oocg001 LIKE oocg_t.oocg001, 
+   oocgl003 LIKE oocgl_t.oocgl003, 
+   oocgl004 LIKE oocgl_t.oocgl004, 
+   oocg002 LIKE oocg_t.oocg002, 
+   oocg002_desc LIKE type_t.chr80, 
+   oocg003 LIKE oocg_t.oocg003, 
+   oocg004 LIKE oocg_t.oocg004, 
+   oocg005 LIKE oocg_t.oocg005, 
+   oocgmodu LIKE oocg_t.oocgmodu, 
+   modu_desc LIKE type_t.chr80, 
+   oocgdate DATETIME YEAR TO SECOND, 
+   oocgoriu LIKE oocg_t.oocgoriu, 
+   oriu_desc LIKE type_t.chr80, 
+   oocgorid LIKE oocg_t.oocgorid, 
+   orid_desc LIKE type_t.chr80, 
+   oocguser LIKE oocg_t.oocguser, 
+   user_desc LIKE type_t.chr80, 
+   oocgdept LIKE oocg_t.oocgdept, 
+   dept_desc LIKE type_t.chr80, 
+   oocgbuid DATETIME YEAR TO SECOND
+       END RECORD
+
+ 
+DEFINE g_detail_multi_table_t    RECORD
+      oocgl001 LIKE oocgl_t.oocgl001,
+      oocgl002 LIKE oocgl_t.oocgl002,
+      oocgl003 LIKE oocgl_t.oocgl003,
+      oocgl004 LIKE oocgl_t.oocgl004
+      END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_oocg_d          DYNAMIC ARRAY OF type_g_oocg_d
+DEFINE g_oocg_d_t        type_g_oocg_d
+
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                  #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5        #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog               #Current Dialog
+DEFINE g_temp_idx           LIKE type_t.num5        #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5        #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5        #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+{</Module define>}
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aoo","N")
+   
+   #add-point:作業初始化
+   {<point name="main.init"/>}
+   #end add-point
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aooi012 WITH FORM cl_ap_formpath("aoo",g_prog)
+ 
+      CALL aooi012_init()   
+         
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      CALL aooi012_default_search()
+   
+      #進入選單 Menu (="N")
+      CALL aooi012_ui_dialog() 
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aooi012
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")     
+   
+END MAIN
+ 
+ 
+#+ 畫面資料初始化
+PRIVATE FUNCTION aooi012_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+ 
+ 
+#+ 功能選單 
+PRIVATE FUNCTION aooi012_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET g_action_choice = " "          
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   WHILE TRUE
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_oocg_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               IF g_oocg_d[l_ac].oocgstus = "Y" THEN
+                  CALL cl_set_act_visible("void", TRUE)
+                  CALL cl_set_act_visible("valid", FALSE)
+               ELSE
+                  CALL cl_set_act_visible("valid", TRUE)
+                  CALL cl_set_act_visible("void", FALSE)
+               END IF
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+         END DISPLAY
+      
+
+      
+         #add-point:ui_dialog段define
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            NEXT FIELD CURRENT
+      
+         
+
+
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_chk_act_auth() THEN 
+               CALL aooi012_modify()
+            #add-point:ON ACTION modify
+            {<point name="menu.modify" />}
+            #END add-point
+
+                EXIT DIALOG
+            END IF
+
+
+
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_chk_act_auth() THEN 
+               CALL aooi012_query()
+            #add-point:ON ACTION query
+            {<point name="menu.query" />}
+            #END add-point
+
+                EXIT DIALOG
+            END IF
+
+      
+         # 全選修改狀態
+         ON ACTION valid
+            CALL aooi012_statechange("Y")
+            #資料重讀
+            CALL aooi012_b_fill(g_wc2)
+            EXIT DIALOG
+            
+         ON ACTION void
+            CALL aooi012_statechange("N")
+            #資料重讀
+            CALL aooi012_b_fill(g_wc2)
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            EXIT WHILE
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT WHILE
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+	  
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+ 
+#+ QBE資料查詢
+PRIVATE FUNCTION aooi012_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_oocg_d.clear()
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON oocgstus,oocg001,oocgl003,oocgl004,oocg002,oocg003,oocg004,oocg005,oocgmodu,oocgdate,oocgoriu,oocgorid,oocguser,oocgdept,oocgbuid                        
+         FROM s_detail1[1].oocgstus,s_detail1[1].oocg001,s_detail1[1].oocgl003,s_detail1[1].oocgl004,s_detail1[1].oocg002,s_detail1[1].oocg003,s_detail1[1].oocg004,s_detail1[1].oocg005,s_detail1[1].oocgmodu,s_detail1[1].oocgdate,s_detail1[1].oocgoriu,s_detail1[1].oocgorid,s_detail1[1].oocguser,s_detail1[1].oocgdept,s_detail1[1].oocgbuid 
+      
+         #----<<oocgmodu>>----
+         ON ACTION controlp INFIELD oocgmodu
+            CALL q_common("oocg_t","oocgmodu",TRUE,FALSE,g_oocg_d[l_ac].oocgmodu) RETURNING ls_return
+            DISPLAY ls_return TO oocgmodu
+            NEXT FIELD oocgmodu
+      
+         #----<<oocgoriu>>----
+         ON ACTION controlp INFIELD oocgoriu
+            CALL q_common("oocg_t","oocgoriu",TRUE,FALSE,g_oocg_d[l_ac].oocgoriu) RETURNING ls_return
+            DISPLAY ls_return TO oocgoriu
+            NEXT FIELD oocgoriu
+      
+         #----<<oocguser>>----
+         ON ACTION controlp INFIELD oocguser
+            CALL q_common("oocg_t","oocguser",TRUE,FALSE,g_oocg_d[l_ac].oocguser) RETURNING ls_return
+            DISPLAY ls_return TO oocguser
+            NEXT FIELD oocguser
+      
+         #----<<oocgorid>>----
+         ON ACTION controlp INFIELD oocgorid
+            CALL q_common("oocg_t","oocgorid",TRUE,FALSE,g_oocg_d[l_ac].oocgorid) RETURNING ls_return
+            DISPLAY ls_return TO oocgorid
+            NEXT FIELD oocgorid
+      
+         #----<<oocgdept>>----
+         ON ACTION controlp INFIELD oocgdept
+            CALL q_common("oocg_t","oocgdept",TRUE,FALSE,g_oocg_d[l_ac].oocgdept) RETURNING ls_return
+            DISPLAY ls_return TO oocgdept
+            NEXT FIELD oocgdept
+ 
+         #----<<oocgbuid>>----
+         AFTER FIELD oocgbuid
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<oocgdate>>----
+         AFTER FIELD oocgdate
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+      
+         #---------------------<  Detail: page1  >---------------------
+         #----<<oocgstus>>----
+         #Ctrlp:query.c.oocgstus
+         ON ACTION controlp INFIELD oocgstus
+            #add-point:ON ACTION controlp INFIELD oocgstus
+            {<point name="query.c.page1.oocgstus" />}
+            #END add-point
+
+         #----<<oocg001>>----
+         #Ctrlp:construct.c.page1.oocg001
+         ON ACTION controlp INFIELD oocg001
+            #add-point:ON ACTION controlp INFIELD oocg001
+            {<point name="construct.c.page1.oocg001" />}
+            #END add-point
+
+         #----<<oocgl003>>----
+         #Ctrlp:query.c.oocgl003
+         ON ACTION controlp INFIELD oocgl003
+            #add-point:ON ACTION controlp INFIELD oocgl003
+            {<point name="query.c.page1.oocgl003" />}
+            #END add-point
+
+         #----<<oocgl004>>----
+         #Ctrlp:query.c.oocgl004
+         ON ACTION controlp INFIELD oocgl004
+            #add-point:ON ACTION controlp INFIELD oocgl004
+            {<point name="query.c.page1.oocgl004" />}
+            #END add-point
+
+         #----<<oocg002>>----
+         #Ctrlp:construct.c.page1.oocg002
+         ON ACTION controlp INFIELD oocg002
+            #add-point:ON ACTION controlp INFIELD oocg002
+            {<point name="construct.c.page1.oocg002" />}
+            #END add-point
+
+         #----<<oocg002_desc>>----
+         #----<<oocg003>>----
+         #Ctrlp:query.c.oocg003
+         ON ACTION controlp INFIELD oocg003
+            #add-point:ON ACTION controlp INFIELD oocg003
+            {<point name="query.c.page1.oocg003" />}
+            #END add-point
+
+         #----<<oocg004>>----
+         #Ctrlp:query.c.oocg004
+         ON ACTION controlp INFIELD oocg004
+            #add-point:ON ACTION controlp INFIELD oocg004
+            {<point name="query.c.page1.oocg004" />}
+            #END add-point
+
+         #----<<oocg005>>----
+         #Ctrlp:query.c.oocg005
+         ON ACTION controlp INFIELD oocg005
+            #add-point:ON ACTION controlp INFIELD oocg005
+            {<point name="query.c.page1.oocg005" />}
+            #END add-point
+
+         #----<<oocgmodu>>----
+         #----<<modu_desc>>----
+         #----<<oocgdate>>----
+         #----<<oocgoriu>>----
+         #----<<oriu_desc>>----
+         #----<<oocgorid>>----
+         #----<<orid_desc>>----
+         #----<<oocguser>>----
+         #----<<user_desc>>----
+         #----<<oocgdept>>----
+         #----<<dept_desc>>----
+         #----<<oocgbuid>>----
+  
+      
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+      
+         ON ACTION qbe_select
+            CALL cl_qbe_select()
+      
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+	  
+	  ON ACTION accept
+	     EXIT DIALOG
+		 
+	  ON ACTION cancel
+	     LET INT_FLAG = 1
+		 EXIT DIALOG
+	  
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   LET g_wc2 = g_wc2 CLIPPED, cl_get_extra_cond("g_oocg_d[l_ac].oocguser", "")
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      #LET g_wc2 = ls_wc
+	  LET g_wc2 = " 1=1"
+   END IF
+  
+   CALL aooi012_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+ 
+ 
+#+ 資料修改
+PRIVATE FUNCTION aooi012_modify()
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5     #未取消的ARRAY CNT      
+   DEFINE l_n             LIKE type_t.num5     #檢查重複用             
+   DEFINE l_lock_sw       LIKE type_t.chr1     #單身鎖住否            
+   DEFINE p_cmd           LIKE type_t.chr1     #處理狀態              
+   DEFINE l_allow_insert  LIKE type_t.chr1     #可新增否
+   DEFINE l_allow_delete  LIKE type_t.chr1     
+   DEFINE l_insert        LIKE type_t.num5     #輸入時判斷是否在inser狀態
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point 
+   
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET l_allow_insert = cl_detail_input_auth("insert")
+   LET l_allow_delete = cl_detail_input_auth("delete")
+ 
+   LET g_forupd_sql = "SELECT oocgstus,oocg001,'','',oocg002,'',oocg003,oocg004,oocg005,oocgmodu,'',oocgdate,oocgoriu,'',oocgorid,'',oocguser,'',oocgdept,'',oocgbuid FROM oocg_t WHERE oocgent=? AND oocg001=? FOR UPDATE"
+   LET g_forupd_sql = cl_forupd_sql(g_forupd_sql)
+   DECLARE aooi012_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+ 
+   INPUT ARRAY g_oocg_d FROM s_detail1.*
+         ATTRIBUTE (WITHOUT DEFAULTS, UNBUFFERED, FIELD ORDER FORM,
+                    COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,
+                    INSERT ROW = l_allow_insert, DELETE ROW = l_allow_delete,
+                    APPEND ROW = l_allow_insert)
+      #自訂ACTION
+         ON ACTION update_item 
+
+
+ 
+      BEFORE INPUT
+         IF g_detail_cnt != 0 THEN
+            CALL fgl_set_arr_curr(l_ac)
+         END IF
+ 
+      BEFORE ROW
+         LET p_cmd="" 
+         LET l_ac = ARR_CURR()
+         LET l_lock_sw = "N"            #DEFAULT
+         LET l_n  = ARR_COUNT()
+ 
+         IF g_detail_cnt>=l_ac THEN
+            BEGIN WORK
+            LET p_cmd="u"
+ 
+            LET g_before_input_done = FALSE                                      
+            CALL aooi012_set_entry_b(p_cmd)                                           
+            CALL aooi012_set_no_entry_b(p_cmd)                                        
+            LET g_before_input_done = TRUE                                       
+            
+            LET g_oocg_d_t.* = g_oocg_d[l_ac].*  #BACKUP
+ 
+            OPEN aooi012_bcl USING g_enterprise,g_oocg_d_t.oocg001
+
+            IF STATUS THEN
+               CALL cl_err("OPEN aooi012_bcl:", STATUS, 1)
+               LET l_lock_sw = "Y"
+            ELSE 
+               FETCH aooi012_bcl INTO g_oocg_d[l_ac].oocgstus,g_oocg_d[l_ac].oocg001,g_oocg_d[l_ac].oocgl003,g_oocg_d[l_ac].oocgl004,g_oocg_d[l_ac].oocg002,g_oocg_d[l_ac].oocg002_desc,g_oocg_d[l_ac].oocg003,g_oocg_d[l_ac].oocg004,g_oocg_d[l_ac].oocg005,g_oocg_d[l_ac].oocgmodu,g_oocg_d[l_ac].modu_desc,g_oocg_d[l_ac].oocgdate,g_oocg_d[l_ac].oocgoriu,g_oocg_d[l_ac].oriu_desc,g_oocg_d[l_ac].oocgorid,g_oocg_d[l_ac].orid_desc,g_oocg_d[l_ac].oocguser,g_oocg_d[l_ac].user_desc,g_oocg_d[l_ac].oocgdept,g_oocg_d[l_ac].dept_desc,g_oocg_d[l_ac].oocgbuid 
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err(g_oocg_d_t.oocg001,SQLCA.sqlcode,1)
+                  LET l_lock_sw = "Y"
+               END IF
+            END IF
+            
+            CALL aooi012_detail_show()      
+            CALL cl_show_fld_cont() 
+ 
+            LET g_detail_multi_table_t.oocgl001 = g_oocg_d[l_ac].oocg001
+LET g_detail_multi_table_t.oocgl002 = g_dlang
+LET g_detail_multi_table_t.oocgl003 = g_oocg_d[l_ac].oocgl003
+LET g_detail_multi_table_t.oocgl004 = g_oocg_d[l_ac].oocgl004
+
+ 
+            #add-point:modify段before_row
+            {<point name="modify.before_row"/>}
+            #end add-point  
+         END IF
+  
+      BEFORE INSERT
+         LET l_insert = TRUE
+         LET l_n = ARR_COUNT()
+         LET p_cmd="a"   
+                                                        
+         LET g_before_input_done = FALSE                                        
+         CALL aooi012_set_entry_b(p_cmd)                                             
+         CALL aooi012_set_no_entry_b(p_cmd)                                          
+         LET g_before_input_done = TRUE                                         
+ 
+         INITIALIZE g_oocg_d[l_ac].* TO NULL      
+ 
+         LET g_oocg_d_t.* = g_oocg_d[l_ac].*         #新輸入資料
+         CALL cl_show_fld_cont()  
+         LET g_oocg_d[l_ac].oocgstus = "Y"
+         LET g_oocg_d[l_ac].oocgbuid = cl_get_current()
+         LET g_oocg_d[l_ac].oocgdate = cl_get_current()
+         LET g_oocg_d[l_ac].oocgmodu = g_user
+         LET g_oocg_d[l_ac].oocguser = g_user
+         LET g_oocg_d[l_ac].oocgoriu = g_user
+         LET g_oocg_d[l_ac].oocgorid = g_dept
+         LET g_oocg_d[l_ac].oocgdept = g_dept
+         
+        
+                  
+         CALL aooi012_detail_show()  
+         #add-point:modify段before insert
+         {<point name="modify.before_insert"/>}
+         #end add-point  
+         NEXT FIELD oocg001
+ 
+      AFTER INSERT
+         LET l_insert = FALSE
+         IF INT_FLAG THEN
+            CALL cl_err("",9001,0)
+            LET INT_FLAG = 0
+            CLOSE aooi012_bcl
+            CANCEL INSERT
+         END IF
+      
+         BEGIN WORK                    
+ 
+         #add-point:單身新增前
+         {<point name="modify.b_insert"/>}
+         #end add-point
+ 
+         INSERT INTO oocg_t
+                (oocgent,oocgstus,oocg001,oocg002,oocg003,oocg004,oocg005,oocgmodu,oocgdate,oocgoriu,oocgorid,oocguser,oocgdept,oocgbuid)
+         VALUES (g_enterprise,g_oocg_d[l_ac].oocgstus,g_oocg_d[l_ac].oocg001,g_oocg_d[l_ac].oocg002,g_oocg_d[l_ac].oocg003,g_oocg_d[l_ac].oocg004,g_oocg_d[l_ac].oocg005,g_oocg_d[l_ac].oocgmodu,g_oocg_d[l_ac].oocgdate,g_oocg_d[l_ac].oocgoriu,g_oocg_d[l_ac].oocgorid,g_oocg_d[l_ac].oocguser,g_oocg_d[l_ac].oocgdept,g_oocg_d[l_ac].oocgbuid)
+                
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("oocg_t",SQLCA.sqlcode,1)  
+            ROLLBACK WORK              
+            CANCEL INSERT
+         ELSE
+            #add-point:after_insert
+            {<point name="modify.after_insert"/>}
+            #end add-point
+            #資料多語言用-增/改
+                     INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF g_oocg_d[l_ac].oocg001 = g_detail_multi_table_t.oocgl001 AND
+         g_oocg_d[l_ac].oocgl003 = g_detail_multi_table_t.oocgl002 AND
+         g_oocg_d[l_ac].oocgl004 = g_detail_multi_table_t.oocgl003 THEN
+         ELSE 
+            LET l_var_keys[01] = g_oocg_d[l_ac].oocg001
+            LET l_field_keys[01] = 'oocgl001'
+            LET l_var_keys[02] = g_dlang
+            LET l_field_keys[02] = 'oocgl002'
+            LET l_vars[01] = g_oocg_d[l_ac].oocgl003
+            LET l_fields[01] = 'oocgl003'
+            LET l_vars[02] = g_oocg_d[l_ac].oocgl004
+            LET l_fields[02] = 'oocgl004'
+            LET l_vars[03] = g_enterprise 
+            LET l_fields[03] = 'oocglent'
+            LET l_var_keys_bak[01] = g_detail_multi_table_t.oocgl001
+            LET l_var_keys_bak[02] = g_detail_multi_table_t.oocgl002
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'oocgl_t')
+         END IF 
+
+            ERROR "INSERT O.K"
+            LET g_detail_cnt=g_detail_cnt+1
+            DISPLAY g_detail_cnt TO FORMONLY.cnt
+            CALL aooi012_detail_show()      
+         END IF
+         
+         #add-point:單身新增後
+         {<point name="modify.a_insert"/>}
+         #end add-point
+ 
+      BEFORE DELETE                            #是否取消單身
+         IF g_oocg_d_t.oocg001 IS NOT NULL THEN
+ 
+            #add-point:單身刪除前
+            {<point name="modify.b_delete"/>}
+            #end add-point
+ 
+            IF NOT cl_ask_delete() THEN
+               ROLLBACK WORK
+               CANCEL DELETE
+            END IF
+ 
+            IF l_lock_sw = "Y" THEN 
+               CALL cl_err("", -263, 1) 
+               ROLLBACK WORK
+               CANCEL DELETE 
+            END IF 
+            
+            DELETE FROM oocg_t
+             WHERE oocgent = g_enterprise AND oocg001 = g_oocg_d_t.oocg001
+
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("oocg_t",SQLCA.sqlcode,1) 
+               ROLLBACK WORK
+               CANCEL DELETE
+               EXIT INPUT
+            ELSE
+               ERROR "DELETE O.K."
+               LET g_detail_cnt=g_detail_cnt-1
+               DISPLAY g_detail_cnt TO FORMONLY.cnt
+            END IF
+            
+            #add-point:單身刪除後
+            {<point name="modify.a_delete"/>}
+            #end add-point
+            
+         END IF
+      
+      AFTER DELETE 
+         #add-point:單身刪除後2
+         {<point name="modify.after_delete"/>}
+         #end add-point
+ 
+      ON ROW CHANGE
+         IF INT_FLAG THEN                 #新增程式段
+            CALL cl_err("",9001,0)
+            LET INT_FLAG = 0
+            LET g_oocg_d[l_ac].* = g_oocg_d_t.*
+            CLOSE aooi012_bcl
+            ROLLBACK WORK
+            EXIT INPUT
+         END IF
+ 
+         IF l_lock_sw = "Y" THEN
+            CALL cl_err(g_oocg_d[l_ac].oocg001,-263,0)
+            LET g_oocg_d[l_ac].* = g_oocg_d_t.*
+         ELSE
+            LET g_oocg_d[l_ac].oocgmodu = g_user                  #修改者
+            LET g_oocg_d[l_ac].oocgdate = cl_get_current()        #修改日期
+            
+            #add-point:單身修改前
+            {<point name="modify.b_update"/>}
+            #end add-point
+      
+            UPDATE oocg_t
+               SET (oocgent,oocgstus,oocg001,oocg002,oocg003,oocg004,oocg005,oocgmodu,oocgdate,oocgoriu,oocgorid,oocguser,oocgdept,oocgbuid) = 
+                   (g_enterprise,g_oocg_d[l_ac].oocgstus,g_oocg_d[l_ac].oocg001,g_oocg_d[l_ac].oocg002,g_oocg_d[l_ac].oocg003,g_oocg_d[l_ac].oocg004,g_oocg_d[l_ac].oocg005,g_oocg_d[l_ac].oocgmodu,g_oocg_d[l_ac].oocgdate,g_oocg_d[l_ac].oocgoriu,g_oocg_d[l_ac].oocgorid,g_oocg_d[l_ac].oocguser,g_oocg_d[l_ac].oocgdept,g_oocg_d[l_ac].oocgbuid)
+             WHERE oocgent = g_enterprise AND oocg001 = g_oocg_d_t.oocg001 
+
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("oocg_t",SQLCA.sqlcode,1)
+               ROLLBACK WORK
+               LET g_oocg_d[l_ac].* = g_oocg_d_t.*
+            ELSE
+               ERROR "UPDATE O.K"
+               #add-point:on_row_change
+               {<point name="modify.on_row_change"/>}
+               #end add-point
+               #資料多語言用-增/改
+                        INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF g_oocg_d[l_ac].oocg001 = g_detail_multi_table_t.oocgl001 AND
+         g_oocg_d[l_ac].oocgl003 = g_detail_multi_table_t.oocgl002 AND
+         g_oocg_d[l_ac].oocgl004 = g_detail_multi_table_t.oocgl003 THEN
+         ELSE 
+            LET l_var_keys[01] = g_oocg_d[l_ac].oocg001
+            LET l_field_keys[01] = 'oocgl001'
+            LET l_var_keys[02] = g_dlang
+            LET l_field_keys[02] = 'oocgl002'
+            LET l_vars[01] = g_oocg_d[l_ac].oocgl003
+            LET l_fields[01] = 'oocgl003'
+            LET l_vars[02] = g_oocg_d[l_ac].oocgl004
+            LET l_fields[02] = 'oocgl004'
+            LET l_vars[03] = g_enterprise 
+            LET l_fields[03] = 'oocglent'
+            LET l_var_keys_bak[01] = g_detail_multi_table_t.oocgl001
+            LET l_var_keys_bak[02] = g_detail_multi_table_t.oocgl002
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'oocgl_t')
+         END IF 
+
+               CALL aooi012_detail_show()      
+            END IF
+            
+            #add-point:單身修改後
+            {<point name="modify.a_update"/>}
+            #end add-point
+         END IF
+ 
+      AFTER ROW
+         LET l_ac = ARR_CURR()
+         LET l_ac_t = l_ac
+ 
+         IF INT_FLAG THEN
+            CALL cl_err("",9001,0)
+            LET INT_FLAG = 0
+            IF p_cmd="u" THEN
+               LET g_oocg_d[l_ac].* = g_oocg_d_t.*
+            END IF
+            CLOSE aooi012_bcl      
+            ROLLBACK WORK
+            EXIT INPUT
+         END IF
+         CLOSE aooi012_bcl
+         COMMIT WORK
+        
+      #---------------------<  Detail: page1  >---------------------
+         #----<<oocgstus>>----
+         BEFORE FIELD oocgstus
+            #add-point:BEFORE FIELD oocgstus
+            {<point name="input.b.page1.oocgstus" />}
+            #END add-point
+
+         AFTER FIELD oocgstus
+            #add-point:AFTER FIELD oocgstus
+            {<point name="input.a.page1.oocgstus" />}
+            #END add-point
+
+         ON CHANGE oocgstus
+            #add-point:ON CHANGE oocgstus
+            {<point name="input.g.page1.oocgstus" />}
+            #END add-point
+
+         #----<<oocg001>>----
+         BEFORE FIELD oocg001
+            #add-point:BEFORE FIELD oocg001
+            {<point name="input.b.page1.oocg001" />}
+            #END add-point
+
+         AFTER FIELD oocg001
+            #add-point:AFTER FIELD oocg001
+            {<point name="input.a.page1.oocg001" />}
+            #END add-point
+
+         ON CHANGE oocg001
+            #add-point:ON CHANGE oocg001
+            {<point name="input.g.page1.oocg001" />}
+            #END add-point
+
+         #----<<oocgl003>>----
+         BEFORE FIELD oocgl003
+            #add-point:BEFORE FIELD oocgl003
+            {<point name="input.b.page1.oocgl003" />}
+            #END add-point
+
+         AFTER FIELD oocgl003
+            #add-point:AFTER FIELD oocgl003
+            {<point name="input.a.page1.oocgl003" />}
+            #END add-point
+
+         ON CHANGE oocgl003
+            #add-point:ON CHANGE oocgl003
+            {<point name="input.g.page1.oocgl003" />}
+            #END add-point
+
+         #----<<oocgl004>>----
+         BEFORE FIELD oocgl004
+            #add-point:BEFORE FIELD oocgl004
+            {<point name="input.b.page1.oocgl004" />}
+            #END add-point
+
+         AFTER FIELD oocgl004
+            #add-point:AFTER FIELD oocgl004
+            {<point name="input.a.page1.oocgl004" />}
+            #END add-point
+
+         ON CHANGE oocgl004
+            #add-point:ON CHANGE oocgl004
+            {<point name="input.g.page1.oocgl004" />}
+            #END add-point
+
+         #----<<oocg002>>----
+         AFTER FIELD oocg002
+            #add-point:AFTER FIELD oocg002
+            {<point name="input.a.page1.oocg002" />}
+            #END add-point
+
+         BEFORE FIELD oocg002
+            #add-point:BEFORE FIELD oocg002
+            {<point name="input.b.page1.oocg002" />}
+            #END add-point
+
+         ON CHANGE oocg002
+            #add-point:ON CHANGE oocg002
+            {<point name="input.g.page1.oocg002" />}
+            #END add-point
+
+         #----<<oocg002_desc>>----
+         #----<<oocg003>>----
+         BEFORE FIELD oocg003
+            #add-point:BEFORE FIELD oocg003
+            {<point name="input.b.page1.oocg003" />}
+            #END add-point
+
+         AFTER FIELD oocg003
+            #add-point:AFTER FIELD oocg003
+            {<point name="input.a.page1.oocg003" />}
+            #END add-point
+
+         ON CHANGE oocg003
+            #add-point:ON CHANGE oocg003
+            {<point name="input.g.page1.oocg003" />}
+            #END add-point
+
+         #----<<oocg004>>----
+         BEFORE FIELD oocg004
+            #add-point:BEFORE FIELD oocg004
+            {<point name="input.b.page1.oocg004" />}
+            #END add-point
+
+         AFTER FIELD oocg004
+            #add-point:AFTER FIELD oocg004
+            {<point name="input.a.page1.oocg004" />}
+            #END add-point
+
+         ON CHANGE oocg004
+            #add-point:ON CHANGE oocg004
+            {<point name="input.g.page1.oocg004" />}
+            #END add-point
+
+         #----<<oocg005>>----
+         BEFORE FIELD oocg005
+            #add-point:BEFORE FIELD oocg005
+            {<point name="input.b.page1.oocg005" />}
+            #END add-point
+
+         AFTER FIELD oocg005
+            #add-point:AFTER FIELD oocg005
+            {<point name="input.a.page1.oocg005" />}
+            #END add-point
+
+         ON CHANGE oocg005
+            #add-point:ON CHANGE oocg005
+            {<point name="input.g.page1.oocg005" />}
+            #END add-point
+
+         #----<<oocgmodu>>----
+         BEFORE FIELD oocgmodu
+            #add-point:BEFORE FIELD oocgmodu
+            {<point name="input.b.page1.oocgmodu" />}
+            #END add-point
+
+         AFTER FIELD oocgmodu
+            #add-point:AFTER FIELD oocgmodu
+            {<point name="input.a.page1.oocgmodu" />}
+            #END add-point
+
+         ON CHANGE oocgmodu
+            #add-point:ON CHANGE oocgmodu
+            {<point name="input.g.page1.oocgmodu" />}
+            #END add-point
+
+         #----<<modu_desc>>----
+         #----<<oocgdate>>----
+         BEFORE FIELD oocgdate
+            #add-point:BEFORE FIELD oocgdate
+            {<point name="input.b.page1.oocgdate" />}
+            #END add-point
+
+         AFTER FIELD oocgdate
+            #add-point:AFTER FIELD oocgdate
+            {<point name="input.a.page1.oocgdate" />}
+            #END add-point
+
+         ON CHANGE oocgdate
+            #add-point:ON CHANGE oocgdate
+            {<point name="input.g.page1.oocgdate" />}
+            #END add-point
+
+         #----<<oocgoriu>>----
+         BEFORE FIELD oocgoriu
+            #add-point:BEFORE FIELD oocgoriu
+            {<point name="input.b.page1.oocgoriu" />}
+            #END add-point
+
+         AFTER FIELD oocgoriu
+            #add-point:AFTER FIELD oocgoriu
+            {<point name="input.a.page1.oocgoriu" />}
+            #END add-point
+
+         ON CHANGE oocgoriu
+            #add-point:ON CHANGE oocgoriu
+            {<point name="input.g.page1.oocgoriu" />}
+            #END add-point
+
+         #----<<oriu_desc>>----
+         #----<<oocgorid>>----
+         BEFORE FIELD oocgorid
+            #add-point:BEFORE FIELD oocgorid
+            {<point name="input.b.page1.oocgorid" />}
+            #END add-point
+
+         AFTER FIELD oocgorid
+            #add-point:AFTER FIELD oocgorid
+            {<point name="input.a.page1.oocgorid" />}
+            #END add-point
+
+         ON CHANGE oocgorid
+            #add-point:ON CHANGE oocgorid
+            {<point name="input.g.page1.oocgorid" />}
+            #END add-point
+
+         #----<<orid_desc>>----
+         #----<<oocguser>>----
+         BEFORE FIELD oocguser
+            #add-point:BEFORE FIELD oocguser
+            {<point name="input.b.page1.oocguser" />}
+            #END add-point
+
+         AFTER FIELD oocguser
+            #add-point:AFTER FIELD oocguser
+            {<point name="input.a.page1.oocguser" />}
+            #END add-point
+
+         ON CHANGE oocguser
+            #add-point:ON CHANGE oocguser
+            {<point name="input.g.page1.oocguser" />}
+            #END add-point
+
+         #----<<user_desc>>----
+         #----<<oocgdept>>----
+         BEFORE FIELD oocgdept
+            #add-point:BEFORE FIELD oocgdept
+            {<point name="input.b.page1.oocgdept" />}
+            #END add-point
+
+         AFTER FIELD oocgdept
+            #add-point:AFTER FIELD oocgdept
+            {<point name="input.a.page1.oocgdept" />}
+            #END add-point
+
+         ON CHANGE oocgdept
+            #add-point:ON CHANGE oocgdept
+            {<point name="input.g.page1.oocgdept" />}
+            #END add-point
+
+         #----<<dept_desc>>----
+         #----<<oocgbuid>>----
+         BEFORE FIELD oocgbuid
+            #add-point:BEFORE FIELD oocgbuid
+            {<point name="input.b.page1.oocgbuid" />}
+            #END add-point
+
+         AFTER FIELD oocgbuid
+            #add-point:AFTER FIELD oocgbuid
+            {<point name="input.a.page1.oocgbuid" />}
+            #END add-point
+
+         ON CHANGE oocgbuid
+            #add-point:ON CHANGE oocgbuid
+            {<point name="input.g.page1.oocgbuid" />}
+            #END add-point
+
+
+      #---------------------<  Detail: page1  >---------------------
+         #----<<oocgstus>>----
+         #Ctrlp:input.c.oocgstus
+         ON ACTION controlp INFIELD oocgstus
+            #add-point:ON ACTION controlp INFIELD oocgstus
+            {<point name="input.c.page1.oocgstus" />}
+            #END add-point
+
+         #----<<oocg001>>----
+         #Ctrlp:input.c.oocg001
+         ON ACTION controlp INFIELD oocg001
+            #add-point:ON ACTION controlp INFIELD oocg001
+            {<point name="input.c.page1.oocg001" />}
+            #END add-point
+
+         #----<<oocgl003>>----
+         #Ctrlp:input.c.oocgl003
+         ON ACTION controlp INFIELD oocgl003
+            #add-point:ON ACTION controlp INFIELD oocgl003
+            {<point name="input.c.page1.oocgl003" />}
+            #END add-point
+
+         #----<<oocgl004>>----
+         #Ctrlp:input.c.oocgl004
+         ON ACTION controlp INFIELD oocgl004
+            #add-point:ON ACTION controlp INFIELD oocgl004
+            {<point name="input.c.page1.oocgl004" />}
+            #END add-point
+
+         #----<<oocg002>>----
+         #Ctrlp:input.c.page1.oocg002
+         ON ACTION controlp INFIELD oocg002
+            #add-point:ON ACTION controlp INFIELD oocg002
+            {<point name="input.c.page1.oocg002" />}
+            #END add-point
+
+         #----<<oocg002_desc>>----
+         #----<<oocg003>>----
+         #Ctrlp:input.c.oocg003
+         ON ACTION controlp INFIELD oocg003
+            #add-point:ON ACTION controlp INFIELD oocg003
+            {<point name="input.c.page1.oocg003" />}
+            #END add-point
+
+         #----<<oocg004>>----
+         #Ctrlp:input.c.oocg004
+         ON ACTION controlp INFIELD oocg004
+            #add-point:ON ACTION controlp INFIELD oocg004
+            {<point name="input.c.page1.oocg004" />}
+            #END add-point
+
+         #----<<oocg005>>----
+         #Ctrlp:input.c.oocg005
+         ON ACTION controlp INFIELD oocg005
+            #add-point:ON ACTION controlp INFIELD oocg005
+            {<point name="input.c.page1.oocg005" />}
+            #END add-point
+
+         #----<<oocgmodu>>----
+         #Ctrlp:input.c.oocgmodu
+         ON ACTION controlp INFIELD oocgmodu
+            #add-point:ON ACTION controlp INFIELD oocgmodu
+            {<point name="input.c.page1.oocgmodu" />}
+            #END add-point
+
+         #----<<modu_desc>>----
+         #----<<oocgdate>>----
+         #Ctrlp:input.c.oocgdate
+         ON ACTION controlp INFIELD oocgdate
+            #add-point:ON ACTION controlp INFIELD oocgdate
+            {<point name="input.c.page1.oocgdate" />}
+            #END add-point
+
+         #----<<oocgoriu>>----
+         #Ctrlp:input.c.oocgoriu
+         ON ACTION controlp INFIELD oocgoriu
+            #add-point:ON ACTION controlp INFIELD oocgoriu
+            {<point name="input.c.page1.oocgoriu" />}
+            #END add-point
+
+         #----<<oriu_desc>>----
+         #----<<oocgorid>>----
+         #Ctrlp:input.c.oocgorid
+         ON ACTION controlp INFIELD oocgorid
+            #add-point:ON ACTION controlp INFIELD oocgorid
+            {<point name="input.c.page1.oocgorid" />}
+            #END add-point
+
+         #----<<orid_desc>>----
+         #----<<oocguser>>----
+         #Ctrlp:input.c.oocguser
+         ON ACTION controlp INFIELD oocguser
+            #add-point:ON ACTION controlp INFIELD oocguser
+            {<point name="input.c.page1.oocguser" />}
+            #END add-point
+
+         #----<<user_desc>>----
+         #----<<oocgdept>>----
+         #Ctrlp:input.c.oocgdept
+         ON ACTION controlp INFIELD oocgdept
+            #add-point:ON ACTION controlp INFIELD oocgdept
+            {<point name="input.c.page1.oocgdept" />}
+            #END add-point
+
+         #----<<dept_desc>>----
+         #----<<oocgbuid>>----
+         #Ctrlp:input.c.oocgbuid
+         ON ACTION controlp INFIELD oocgbuid
+            #add-point:ON ACTION controlp INFIELD oocgbuid
+            {<point name="input.c.page1.oocgbuid" />}
+            #END add-point
+
+
+      
+      
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE INPUT
+   END INPUT
+ 
+   CLOSE aooi012_bcl
+   COMMIT WORK
+   
+END FUNCTION
+ 
+ 
+#+ 單身陣列填充
+PRIVATE FUNCTION aooi012_b_fill(p_wc2)              #BODY FILL UP
+   {<Local define>}
+   DEFINE p_wc2           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT oocgstus,oocg001,'','',oocg002,'',oocg003,oocg004,oocg005,oocgmodu,'',oocgdate,oocgoriu,'',oocgorid,'',oocguser,'',oocgdept,'',oocgbuid FROM oocg_t WHERE oocgent= ? AND 1=1  AND ", p_wc2 CLIPPED,           #單身
+               " ORDER BY oocg001" 
+  
+   PREPARE aooi012_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aooi012_pb
+   
+      OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_oocg_d.clear()
+
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+   FOREACH b_fill_curs INTO g_oocg_d[l_ac].oocgstus,g_oocg_d[l_ac].oocg001,g_oocg_d[l_ac].oocgl003,g_oocg_d[l_ac].oocgl004,g_oocg_d[l_ac].oocg002,g_oocg_d[l_ac].oocg002_desc,g_oocg_d[l_ac].oocg003,g_oocg_d[l_ac].oocg004,g_oocg_d[l_ac].oocg005,g_oocg_d[l_ac].oocgmodu,g_oocg_d[l_ac].modu_desc,g_oocg_d[l_ac].oocgdate,g_oocg_d[l_ac].oocgoriu,g_oocg_d[l_ac].oriu_desc,g_oocg_d[l_ac].oocgorid,g_oocg_d[l_ac].orid_desc,g_oocg_d[l_ac].oocguser,g_oocg_d[l_ac].user_desc,g_oocg_d[l_ac].oocgdept,g_oocg_d[l_ac].dept_desc,g_oocg_d[l_ac].oocgbuid
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+
+      CALL aooi012_detail_show()      
+      
+      #add-point:單身資料抓取
+      {<point name="bfill.foreach"/>}
+      #end add-point
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( "", 9035, 0 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+ 
+   CALL g_oocg_d.deleteElement(l_ac) 
+   ERROR "" 
+
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+END FUNCTION
+ 
+#+ 顯示相關資料
+PRIVATE FUNCTION aooi012_detail_show()      
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+   
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   #帶出預設欄位之值
+   LET g_oocg_d[l_ac].modu_desc = cl_get_username(g_oocg_d[l_ac].oocgmodu)
+   LET g_oocg_d[l_ac].oriu_desc = cl_get_username(g_oocg_d[l_ac].oocgoriu)
+   LET g_oocg_d[l_ac].user_desc = cl_get_username(g_oocg_d[l_ac].oocguser)
+   LET g_oocg_d[l_ac].dept_desc = cl_get_deptname(g_oocg_d[l_ac].oocgdept)
+   LET g_oocg_d[l_ac].orid_desc = cl_get_deptname(g_oocg_d[l_ac].oocgorid)
+ 
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.reference"/>}
+   #end add-point
+   
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+ 
+ 
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION aooi012_set_entry_b(p_cmd)                                                  
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1         
+   {</Local define>}
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point
+                                                                          
+   IF p_cmd = "a" AND ( NOT g_before_input_done ) THEN 
+      CALL cl_set_comp_entry("",TRUE)
+   END IF                                                                       
+                                                                                
+END FUNCTION                                                                    
+                                                                                
+ 
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION aooi012_set_no_entry_b(p_cmd)                                               
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1           
+   {</Local define>}
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point   
+                                                                                
+   IF p_cmd = "u" AND ( NOT g_before_input_done ) AND g_chkey = "N" THEN
+      CALL cl_set_comp_entry("",FALSE)
+   END IF                                                                       
+                                                                                
+END FUNCTION  
+ 
+#+ 外部參數搜尋, 施工中
+PRIVATE FUNCTION aooi012_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " oocg001 = '", g_argv[1], "' AND "
+   END IF
+   
+
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+      CALL aooi012_b_fill(g_wc2)
+   ELSE
+      LET g_wc2 = " 1=1"
+      CALL aooi012_b_fill(g_wc2)
+   END IF
+ 
+END FUNCTION
+ 
+#確認碼變更
+PRIVATE FUNCTION aooi012_statechange(pc_state)
+   {<Local define>}
+   DEFINE pc_state  LIKE type_t.chr5
+   DEFINE lc_state  LIKE type_t.chr5
+   DEFINE ls_sql    STRING
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE li_cnt    LIKE type_t.num5
+   DEFINE li_state  LIKE type_t.num5
+   {</Local define>}
+   #add-point:statechange段define
+   {<point name="statechange.define"/>}
+   #end add-point 
+   
+   #add-point:statechange段開始前
+   {<point name="statechange.before"/>}
+   #end add-point  
+   
+   ERROR ""
+   
+   LET li_idx = l_ac
+   
+   LET li_state = 1
+   LET li_cnt = 0
+   
+   #add-point:stus修改前
+   {<point name="statechange.b_update"/>}
+   #end add-point   
+   
+   FOR l_ac = 1 TO g_oocg_d.getLength()
+   
+      IF NOT g_curr_diag.isRowSelected("s_detail1", l_ac) OR
+         g_oocg_d[l_ac].oocgstus = pc_state THEN
+         CONTINUE FOR
+      END IF
+      
+      IF g_oocg_d[l_ac].oocg001 IS NULL
+
+      THEN
+         CALL cl_err("","std-00003",0)
+         RETURN
+      END IF
+      
+      BEGIN WORK
+      
+      LET lc_state = pc_state
+      
+      LET ls_sql = " SELECT oocgstus FROM oocg_t ",
+                   " WHERE oocgent = '" ||g_enterprise|| "' AND oocg001 = '",g_oocg_d[l_ac].oocg001,"'",
+
+                   " FOR UPDATE NOWAIT"
+                   
+      PREPARE upd_state FROM ls_sql
+      DECLARE upd_state_cur CURSOR FOR upd_state
+      
+      OPEN upd_state_cur
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+         CLOSE upd_state_cur
+         ROLLBACK WORK
+         LET li_cnt = li_cnt + 1
+         LET li_state = 2
+         CONTINUE FOR
+      END IF
+      
+      UPDATE oocg_t SET oocgstus = lc_state 
+       WHERE oocgent = g_enterprise AND oocg001 = g_oocg_d[l_ac].oocg001
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+         CLOSE upd_state_cur
+         ROLLBACK WORK
+         LET li_cnt = li_cnt + 1
+         LET li_state = 2
+         CONTINUE FOR
+      END IF
+      
+      COMMIT WORK
+      
+      CLOSE upd_state_cur
+ 
+   END FOR
+   
+   #add-point:stus修改後
+   {<point name="statechange.a_update"/>}
+   #end add-point
+   
+   CASE li_state
+      WHEN 1
+      WHEN 2
+         CALL cl_err(li_cnt,"std-00009",1)
+   END CASE
+   
+   LET l_ac = li_idx
+   
+   #add-point:statechange段結束前
+   {<point name="statechange.after"/>}
+   #end add-point 
+ 
+END FUNCTION
+ 
+#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+ 
+

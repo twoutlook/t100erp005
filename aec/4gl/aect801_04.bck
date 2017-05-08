@@ -1,0 +1,580 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aect801_04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2014-08-19 21:05:22), PR版次:0002(2016-12-06 17:17:58)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000092
+#+ Filename...: aect801_04
+#+ Description: 製程轉BOM申請新增、變更維護
+#+ Creator....: 01258(2014-08-18 09:42:54)
+#+ Modifier...: 01258 -SD/PR- 08734
+ 
+{</section>}
+ 
+{<section id="aect801_04.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#161124-00048#2   2016/12/06  By 08734    星号整批调整
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aect801_04.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aect801_04.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+ type type_g_bmbc_m        RECORD
+       bmbc003 LIKE bmbc_t.bmbc003, 
+   bmbc004 LIKE bmbc_t.bmbc004, 
+   bmbc007 LIKE bmbc_t.bmbc007, 
+   bmbc008 LIKE bmbc_t.bmbc008, 
+   bmbc009 LIKE bmbc_t.bmbc009, 
+   bmbcsite LIKE bmbc_t.bmbcsite, 
+   bmbc001 LIKE bmbc_t.bmbc001, 
+   bmbc002 LIKE bmbc_t.bmbc002, 
+   bmbc005 DATETIME YEAR TO SECOND
+       END RECORD
+DEFINE g_bmbc_m        type_g_bmbc_m
+ 
+   DEFINE g_bmbc003_t LIKE bmbc_t.bmbc003
+DEFINE g_bmbc004_t LIKE bmbc_t.bmbc004
+DEFINE g_bmbc007_t LIKE bmbc_t.bmbc007
+DEFINE g_bmbc008_t LIKE bmbc_t.bmbc008
+DEFINE g_bmbc009_t LIKE bmbc_t.bmbc009
+DEFINE g_bmbcsite_t LIKE bmbc_t.bmbcsite
+DEFINE g_bmbc001_t LIKE bmbc_t.bmbc001
+DEFINE g_bmbc002_t LIKE bmbc_t.bmbc002
+DEFINE g_bmbc005_t LIKE bmbc_t.bmbc005
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+
+DEFINE g_eccadocno     LIKE ecca_t.eccadocno
+DEFINE g_ecca001       LIKE ecca_t.ecca001
+DEFINE g_ecca002       LIKE ecca_t.ecca002
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aect801_04.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="aect801_04.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 檢查主件料號+特征是否已經存在BOM資料中
+# Memo...........:
+# Usage..........: CALL aect801_04_chk_bmaa()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/7/30 BY wuxja
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aect801_04_chk_bmaa()
+DEFINE l_n           LIKE type_t.num5
+
+   LET g_errno = ""
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n
+     FROM bmaa_t
+    WHERE bmaaent = g_enterprise
+      AND bmaasite = 'ALL'
+      AND bmaa001 = g_bmbc_m.bmbc001
+      AND bmaa002 = g_bmbc_m.bmbc002
+   IF l_n > 0 THEN
+      LET g_errno = 'aec-00014'
+   END IF
+END FUNCTION
+################################################################################
+# Descriptions...: 批量新增BOM資料
+# Memo...........:
+# Usage..........: CALL aect801_04_ins()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/7/30 BY wuxja
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aect801_04_ins()
+DEFINE r_success         LIKE type_t.num5
+#DEFINE l_bmaa            RECORD LIKE bmaa_t.*  #161124-00048#2   2016/12/06  By 08734 mark
+#161124-00048#2   2016/12/06  By 08734 add(S)
+DEFINE l_bmaa RECORD  #產品結構單頭檔
+       bmaaent LIKE bmaa_t.bmaaent, #企业编号
+       bmaasite LIKE bmaa_t.bmaasite, #营运据点
+       bmaastus LIKE bmaa_t.bmaastus, #状态码
+       bmaa001 LIKE bmaa_t.bmaa001, #主件料号
+       bmaa002 LIKE bmaa_t.bmaa002, #特性
+       bmaa003 LIKE bmaa_t.bmaa003, #批次数量
+       bmaa004 LIKE bmaa_t.bmaa004, #生产单位
+       bmaaownid LIKE bmaa_t.bmaaownid, #资料所有者
+       bmaaowndp LIKE bmaa_t.bmaaowndp, #资料所有部门
+       bmaacrtid LIKE bmaa_t.bmaacrtid, #资料录入者
+       bmaacrtdp LIKE bmaa_t.bmaacrtdp, #资料录入部门
+       bmaacrtdt LIKE bmaa_t.bmaacrtdt, #资料创建日
+       bmaamodid LIKE bmaa_t.bmaamodid, #资料更改者
+       bmaamoddt LIKE bmaa_t.bmaamoddt, #最近更改日
+       bmaacnfid LIKE bmaa_t.bmaacnfid, #资料审核者
+       bmaacnfdt LIKE bmaa_t.bmaacnfdt #数据审核日
+END RECORD
+#161124-00048#2   2016/12/06  By 08734 add(E)
+#DEFINE l_bmba            RECORD LIKE bmba_t.* #161124-00048#2   2016/12/06  By 08734 mark
+#161124-00048#2   2016/12/06  By 08734 add(S)
+DEFINE l_bmba RECORD  #產品結構研發資料單身檔
+       bmbaent LIKE bmba_t.bmbaent, #企业编号
+       bmbasite LIKE bmba_t.bmbasite, #营运据点
+       bmba001 LIKE bmba_t.bmba001, #主件料号
+       bmba002 LIKE bmba_t.bmba002, #特性
+       bmba003 LIKE bmba_t.bmba003, #元件料号
+       bmba004 LIKE bmba_t.bmba004, #部位编号
+       bmba005 LIKE bmba_t.bmba005, #生效日期时间
+       bmba006 LIKE bmba_t.bmba006, #失效日期时间
+       bmba007 LIKE bmba_t.bmba007, #作业编号
+       bmba008 LIKE bmba_t.bmba008, #作业序
+       bmba009 LIKE bmba_t.bmba009, #项次
+       bmba010 LIKE bmba_t.bmba010, #发料单位
+       bmba011 LIKE bmba_t.bmba011, #组成用量
+       bmba012 LIKE bmba_t.bmba012, #主件底数
+       bmba013 LIKE bmba_t.bmba013, #必要
+       bmba014 LIKE bmba_t.bmba014, #特征管理
+       bmba015 LIKE bmba_t.bmba015, #指定发料库位
+       bmba016 LIKE bmba_t.bmba016, #指定发料储位
+       bmba017 LIKE bmba_t.bmba017, #FAS选择群组
+       bmba018 LIKE bmba_t.bmba018, #插件位置
+       bmba019 LIKE bmba_t.bmba019, #参照研发中心
+       bmba020 LIKE bmba_t.bmba020, #可选件
+       bmba021 LIKE bmba_t.bmba021, #工单展开选项
+       bmba022 LIKE bmba_t.bmba022, #代买料
+       bmba023 LIKE bmba_t.bmba023, #元件投料时距
+       bmba024 LIKE bmba_t.bmba024, #主要替代料
+       bmba025 LIKE bmba_t.bmba025, #附属零件
+       bmba026 LIKE bmba_t.bmba026, #ECN单号
+       bmba027 LIKE bmba_t.bmba027, #用量是否使用公式
+       bmba028 LIKE bmba_t.bmba028, #用量公式
+       bmba029 LIKE bmba_t.bmba029, #损耗率型态
+       bmba030 LIKE bmba_t.bmba030, #倒扣料
+       bmba031 LIKE bmba_t.bmba031, #客供料
+       bmba032 LIKE bmba_t.bmba032, #指定库存管理特征
+       bmbaud001 LIKE bmba_t.bmbaud001, #自定义字段(文本)001
+       bmbaud002 LIKE bmba_t.bmbaud002, #自定义字段(文本)002
+       bmbaud003 LIKE bmba_t.bmbaud003, #自定义字段(文本)003
+       bmbaud004 LIKE bmba_t.bmbaud004, #自定义字段(文本)004
+       bmbaud005 LIKE bmba_t.bmbaud005, #自定义字段(文本)005
+       bmbaud006 LIKE bmba_t.bmbaud006, #自定义字段(文本)006
+       bmbaud007 LIKE bmba_t.bmbaud007, #自定义字段(文本)007
+       bmbaud008 LIKE bmba_t.bmbaud008, #自定义字段(文本)008
+       bmbaud009 LIKE bmba_t.bmbaud009, #自定义字段(文本)009
+       bmbaud010 LIKE bmba_t.bmbaud010, #自定义字段(文本)010
+       bmbaud011 LIKE bmba_t.bmbaud011, #自定义字段(数字)011
+       bmbaud012 LIKE bmba_t.bmbaud012, #自定义字段(数字)012
+       bmbaud013 LIKE bmba_t.bmbaud013, #自定义字段(数字)013
+       bmbaud014 LIKE bmba_t.bmbaud014, #自定义字段(数字)014
+       bmbaud015 LIKE bmba_t.bmbaud015, #自定义字段(数字)015
+       bmbaud016 LIKE bmba_t.bmbaud016, #自定义字段(数字)016
+       bmbaud017 LIKE bmba_t.bmbaud017, #自定义字段(数字)017
+       bmbaud018 LIKE bmba_t.bmbaud018, #自定义字段(数字)018
+       bmbaud019 LIKE bmba_t.bmbaud019, #自定义字段(数字)019
+       bmbaud020 LIKE bmba_t.bmbaud020, #自定义字段(数字)020
+       bmbaud021 LIKE bmba_t.bmbaud021, #自定义字段(日期时间)021
+       bmbaud022 LIKE bmba_t.bmbaud022, #自定义字段(日期时间)022
+       bmbaud023 LIKE bmba_t.bmbaud023, #自定义字段(日期时间)023
+       bmbaud024 LIKE bmba_t.bmbaud024, #自定义字段(日期时间)024
+       bmbaud025 LIKE bmba_t.bmbaud025, #自定义字段(日期时间)025
+       bmbaud026 LIKE bmba_t.bmbaud026, #自定义字段(日期时间)026
+       bmbaud027 LIKE bmba_t.bmbaud027, #自定义字段(日期时间)027
+       bmbaud028 LIKE bmba_t.bmbaud028, #自定义字段(日期时间)028
+       bmbaud029 LIKE bmba_t.bmbaud029, #自定义字段(日期时间)029
+       bmbaud030 LIKE bmba_t.bmbaud030, #自定义字段(日期时间)030
+       bmba033 LIKE bmba_t.bmba033, #损耗率是否使用公式
+       bmba034 LIKE bmba_t.bmba034, #损耗率公式
+       bmba035 LIKE bmba_t.bmba035 #保税否
+END RECORD
+#161124-00048#2   2016/12/06  By 08734 add(E)
+#DEFINE l_bmbb            RECORD LIKE bmbb_t.*  #161124-00048#2   2016/12/06  By 08734 mark
+#161124-00048#2   2016/12/06  By 08734 add(S)
+DEFINE l_bmbb RECORD  #產品結構損耗率檔
+       bmbbent LIKE bmbb_t.bmbbent, #企业编号
+       bmbbsite LIKE bmbb_t.bmbbsite, #营运据点
+       bmbb001 LIKE bmbb_t.bmbb001, #主件料号
+       bmbb002 LIKE bmbb_t.bmbb002, #特性
+       bmbb003 LIKE bmbb_t.bmbb003, #元件料号
+       bmbb004 LIKE bmbb_t.bmbb004, #部位编号
+       bmbb005 LIKE bmbb_t.bmbb005, #生效日期时间
+       bmbb007 LIKE bmbb_t.bmbb007, #作业编号
+       bmbb008 LIKE bmbb_t.bmbb008, #工艺段号
+       bmbb009 LIKE bmbb_t.bmbb009, #起始生产数量
+       bmbb010 LIKE bmbb_t.bmbb010, #截止生产数量
+       bmbb011 LIKE bmbb_t.bmbb011, #变动损耗率
+       bmbb012 LIKE bmbb_t.bmbb012 #固定损耗量
+END RECORD
+#161124-00048#2   2016/12/06  By 08734 add(E)
+DEFINE l_imae016         LIKE imae_t.imae016
+DEFINE l_imae021         LIKE imae_t.imae021
+#DEFINE l_eccb            RECORD LIKE eccb_t.*  #161124-00048#2     2016/12/06 By 08734 mark
+#161124-00048#2     2016/12/06 By 08734 add(S)
+DEFINE l_eccb RECORD  #料件製程變更單身檔
+       eccbent LIKE eccb_t.eccbent, #企业编号
+       eccbsite LIKE eccb_t.eccbsite, #营运据点
+       eccbdocno LIKE eccb_t.eccbdocno, #申请单号
+       eccb001 LIKE eccb_t.eccb001, #工艺料号
+       eccb002 LIKE eccb_t.eccb002, #工艺编号
+       eccb003 LIKE eccb_t.eccb003, #项次
+       eccb004 LIKE eccb_t.eccb004, #本站作业
+       eccb005 LIKE eccb_t.eccb005, #作业序
+       eccb006 LIKE eccb_t.eccb006, #群组性质
+       eccb007 LIKE eccb_t.eccb007, #群组
+       eccb008 LIKE eccb_t.eccb008, #上站作业
+       eccb009 LIKE eccb_t.eccb009, #上站作业序
+       eccb010 LIKE eccb_t.eccb010, #下站作业
+       eccb011 LIKE eccb_t.eccb011, #下站作业序
+       eccb012 LIKE eccb_t.eccb012, #工作站
+       eccb013 LIKE eccb_t.eccb013, #允许委外
+       eccb014 LIKE eccb_t.eccb014, #主要加工厂
+       eccb015 LIKE eccb_t.eccb015, #Move in
+       eccb016 LIKE eccb_t.eccb016, #Check in
+       eccb017 LIKE eccb_t.eccb017, #报工站
+       eccb018 LIKE eccb_t.eccb018, #PQC
+       eccb019 LIKE eccb_t.eccb019, #Check out
+       eccb020 LIKE eccb_t.eccb020, #Move out
+       eccb021 LIKE eccb_t.eccb021, #转出单位
+       eccb022 LIKE eccb_t.eccb022, #转出单位转换率分子
+       eccb023 LIKE eccb_t.eccb023, #转出单位转换率分母
+       eccb024 LIKE eccb_t.eccb024, #固定工时
+       eccb025 LIKE eccb_t.eccb025, #标准工时
+       eccb026 LIKE eccb_t.eccb026, #固定机时
+       eccb027 LIKE eccb_t.eccb027, #标准机时
+       eccb028 LIKE eccb_t.eccb028, #完成度
+       eccb029 LIKE eccb_t.eccb029, #标准单价
+       eccb030 LIKE eccb_t.eccb030, #转入单位
+       eccb031 LIKE eccb_t.eccb031, #转入单位转换分子
+       eccb032 LIKE eccb_t.eccb032, #转入单位转换分母
+       eccb033 LIKE eccb_t.eccb033, #回收站
+       eccb034 LIKE eccb_t.eccb034, #后置时间
+       eccb035 LIKE eccb_t.eccb035, #X轴
+       eccb036 LIKE eccb_t.eccb036, #Y轴
+       eccb900 LIKE eccb_t.eccb900, #变更序
+       eccb901 LIKE eccb_t.eccb901, #变更类型
+       eccb902 LIKE eccb_t.eccb902, #变更日期
+       eccb905 LIKE eccb_t.eccb905, #变更理由
+       eccb906 LIKE eccb_t.eccb906 #变更备注
+END RECORD
+#161124-00048#2     2016/12/06 By 08734 add(E)
+DEFINE l_date            LIKE bmba_t.bmba005
+DEFINE l_sql             STRING
+
+   LET r_success = FALSE
+   IF cl_null(g_bmbc_m.bmbc002) THEN LET g_bmbc_m.bmbc002 = ' ' END IF
+   SELECT imae016,imae021 INTO l_imae016,l_imae021
+     FROM imae_t
+    WHERE imaeent = g_enterprise
+      AND imaesite = g_site
+      AND imae001 = g_bmbc_m.bmbc001
+   LET l_date = g_bmbc_m.bmbc005
+   INITIALIZE l_bmaa.* TO NULL
+   LET l_bmaa.bmaasite = 'ALL'
+   LET l_bmaa.bmaaent = g_enterprise
+   LET l_bmaa.bmaastus = 'N'
+   LET l_bmaa.bmaa001 = g_bmbc_m.bmbc001
+   LET l_bmaa.bmaa002 = g_bmbc_m.bmbc002
+   LET l_bmaa.bmaa003 = NULL
+   LET l_bmaa.bmaa004 = l_imae016
+   LET l_bmaa.bmaaownid = g_user
+   LET l_bmaa.bmaaowndp = g_dept
+   LET l_bmaa.bmaacrtid = g_user
+   LET l_bmaa.bmaacrtdp = g_dept
+   LET l_bmaa.bmaacrtdt = cl_get_current()
+   LET l_bmaa.bmaamodid = g_user
+   LET l_bmaa.bmaamoddt = cl_get_current()
+   LET l_bmaa.bmaacnfid = ""
+   LET l_bmaa.bmaacnfdt = ""   
+   #INSERT INTO bmaa_t VALUES(l_bmaa.*)  #161124-00048#2     2016/12/06 By 08734 mark
+   INSERT INTO bmaa_t(bmaaent,bmaasite,bmaastus,bmaa001,bmaa002,bmaa003,bmaa004,bmaaownid,bmaaowndp,bmaacrtid,bmaacrtdp,bmaacrtdt,bmaamodid,bmaamoddt,bmaacnfid,bmaacnfdt)  #161124-00048#2     2016/12/06 By 08734 add
+      VALUES(l_bmaa.bmaaent,l_bmaa.bmaasite,l_bmaa.bmaastus,l_bmaa.bmaa001,l_bmaa.bmaa002,l_bmaa.bmaa003,l_bmaa.bmaa004,l_bmaa.bmaaownid,l_bmaa.bmaaowndp,l_bmaa.bmaacrtid,l_bmaa.bmaacrtdp,l_bmaa.bmaacrtdt,l_bmaa.bmaamodid,l_bmaa.bmaamoddt,l_bmaa.bmaacnfid,l_bmaa.bmaacnfdt)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_bmbc_m.bmbc001
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      RETURN r_success
+   END IF
+
+   #LET l_sql = " SELECT * FROM eccb_t ",  #161124-00048#2     2016/12/06 By 08734 mark
+   LET l_sql = " SELECT eccbent,eccbsite,eccbdocno,eccb001,eccb002,eccb003,eccb004,eccb005,eccb006,eccb007,eccb008,eccb009,eccb010,eccb011,eccb012,eccb013,eccb014,eccb015,eccb016,eccb017,eccb018,eccb019,eccb020,eccb021,eccb022,eccb023,eccb024,eccb025,eccb026,eccb027,eccb028,eccb029,eccb030,eccb031,eccb032,eccb033,eccb034,eccb035,eccb036,eccb900,eccb901,eccb902,eccb905,eccb906 FROM eccb_t ", #161124-00048#2     2016/12/06 By 08734 add
+               "  WHERE eccbent = '",g_enterprise,"' ",
+               "    AND eccbsite = '",g_site,"' ",
+               "    AND eccbdocno = '",g_eccadocno,"' "
+   PREPARE aect801_04_sel_eccb_p FROM l_sql
+   DECLARE aect801_04_sel_eccb_c CURSOR FOR aect801_04_sel_eccb_p
+   FOREACH aect801_04_sel_eccb_c INTO l_eccb.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = g_bmbc_m.bmbc001
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         RETURN r_success
+      END IF
+      
+      LET l_sql = " INSERT INTO bmba_t(bmbaent,bmbasite,bmba001,bmba002,bmba003,bmba004,bmba005,bmba006,bmba007,bmba008,bmba009,bmba010, ",
+                  "                    bmba011,bmba012,bmba013,bmba014,bmba015,bmba016,bmba017,bmba018,bmba019,bmba020,bmba021,bmba022, ",
+                  "                    bmba023,bmba024,bmba025,bmba026,bmba027,bmba028,bmba029,bmba030) ",
+                  " SELECT '",g_enterprise,"','ALL','",g_bmbc_m.bmbc001,"','",g_bmbc_m.bmbc002,"',eccc005,eccc006,'",l_date,"',",
+                  "        '','",l_eccb.eccb004,"','",l_eccb.eccb005,"',eccc004*10,eccc009,eccc007,eccc008,'1','N','','','','N','1','N','",l_imae021,"','N','','','N','','N','',eccc010,'N' ",
+                  "   FROM eccc_t ",
+                  "  WHERE ecccent = '",g_enterprise,"' ",
+                  "    AND ecccsite = '",g_site,"' ",
+                  "    AND ecccdocno = '",g_eccadocno,"' ",
+                  "    AND eccc003 = '",l_eccb.eccb003,"'"
+      PREPARE aect801_04_ins_bmba_pre FROM l_sql
+      EXECUTE aect801_04_ins_bmba_pre
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = g_bmbc_m.bmbc001
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         RETURN r_success
+      END IF
+      LET l_sql = " INSERT INTO bmbb_t(bmbbent,bmbbsite,bmbb001,bmbb002,bmbb003,bmbb004,bmbb005,bmbb007,bmbb008, ",
+                  "                    bmbb009,bmbb010,bmbb011,bmbb012) ",
+                  " SELECT '",g_enterprise,"','ALL','",g_bmbc_m.bmbc001,"','",g_bmbc_m.bmbc002,"',eccc005,eccc006,'",l_date,"',",
+                  "        '",l_eccb.eccb004,"','",l_eccb.eccb005,"',eccd005,eccd006,eccd007,eccd008 ",
+                  "  FROM eccc_t,eccd_t ",
+                  " WHERE ecccent = eccdent ",
+                  "   AND ecccsite = eccdsite",
+                  "   AND ecccdocno = eccddocno ",
+                  "   AND eccc003 = eccd003 ",
+                  "   AND eccc004 = eccd004 ",
+                  "   AND eccdent = '",g_enterprise,"' ",
+                  "   AND eccdsite = '",g_site,"' ",
+                  "   AND eccddocno = '",g_eccadocno,"' ",
+                  "   AND eccd003 = '",l_eccb.eccb003,"'"
+      PREPARE aect801_04_ins_bmbb_pre FROM l_sql
+      EXECUTE aect801_04_ins_bmbb_pre
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = g_bmbc_m.bmbc001
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         RETURN r_success
+      END IF
+   END FOREACH
+   
+   LET r_success = TRUE
+   RETURN r_success   
+END FUNCTION
+
+PUBLIC FUNCTION aect801_04(--)
+   #add-point:main段變數傳入
+   p_eccadocno
+   #end add-point
+   )
+   #add-point:main段define
+   DEFINE p_eccadocno          LIKE ecca_t.eccadocno
+   DEFINE la_param             RECORD
+          prog                 STRING,
+          param                DYNAMIC ARRAY OF STRING
+                               END RECORD
+   DEFINE ls_js                STRING
+   #end add-point
+
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   #add-point:作業初始化
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aect801_04 WITH FORM cl_ap_formpath("aec","aect801_04")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   SELECT ecca001,ecca002 INTO g_ecca001,g_ecca002 FROM ecca_t
+    WHERE eccaent = g_enterprise AND eccasite = g_site
+      AND eccadocno = p_eccadocno
+      
+   CLEAR FORM
+   INITIALIZE g_bmbc_m.* TO NULL
+   LET g_eccadocno = p_eccadocno
+   LET g_bmbc_m.bmbc001 = g_ecca001
+   LET g_bmbc_m.bmbc005 = cl_get_current()
+   WHILE TRUE
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #單頭段
+      INPUT BY NAME g_bmbc_m.bmbc003,g_bmbc_m.bmbc004,g_bmbc_m.bmbc007,g_bmbc_m.bmbc008,g_bmbc_m.bmbc009,
+          g_bmbc_m.bmbcsite,g_bmbc_m.bmbc001,g_bmbc_m.bmbc002,g_bmbc_m.bmbc005
+         ATTRIBUTE(WITHOUT DEFAULTS)
+      
+      BEFORE INPUT
+            #add-point:單頭輸入前處理
+            LET g_bmbc_m.bmbc001 = g_ecca001
+            LET g_bmbc_m.bmbc005 = cl_get_current()      
+      
+      AFTER FIELD bmbc001
+            
+            #add-point:AFTER FIELD bmbc001
+            #此段落由子樣板a05產生
+        #   IF NOT cl_null(g_bmbc_m.bmbc001) AND g_bmbc_m.bmbc002 IS NOT NULL THEN
+        #      CALL aect801_04_chk_bmaa()
+        #      IF NOT cl_null(g_errno) THEN
+        #         INITIALIZE g_errparam TO NULL
+        #         LET g_errparam.code = g_errno
+        #         LET g_errparam.extend = g_bmbc_m.bmbc001
+        #         LET g_errparam.popup = TRUE
+        #         CALL cl_err()
+        #
+        #         LET g_bmbc_m.bmbc001 = g_bmbc001_t
+        #         NEXT FIELD bmbc001
+        #      END IF
+        #   END IF
+        #   IF NOT cl_null(g_bmbc_m.bmbc001) THEN
+        #      CALL aect801_04_chk_ecca001()
+        #      IF NOT cl_null(g_errno) THEN
+        #         INITIALIZE g_errparam TO NULL
+        #         LET g_errparam.code = g_errno
+        #         LET g_errparam.extend = g_bmbc_m.bmbc001
+        #         LET g_errparam.popup = TRUE
+        #         CALL cl_err()
+        #
+        #         LET g_bmbc_m.bmbc001 = g_bmbc001_t
+        #         NEXT FIELD bmbc001
+        #      END IF
+        #   END IF
+        
+        AFTER FIELD bmbc002
+            
+            #add-point:AFTER FIELD bmbc002
+            #此段落由子樣板a05產生
+            IF cl_null(g_bmbc_m.bmbc002) THEN
+               LET g_bmbc_m.bmbc002 = ' '
+            END IF
+            IF NOT cl_null(g_bmbc_m.bmbc001) AND g_bmbc_m.bmbc002 IS NOT NULL THEN
+               CALL aect801_04_chk_bmaa()
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_bmbc_m.bmbc002
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_bmbc_m.bmbc002 = g_bmbc002_t
+                  NEXT FIELD bmbc002
+               END IF
+            END IF
+            
+         ON ACTION controlp INFIELD bmbc001
+            #add-point:ON ACTION controlp INFIELD bmbc001
+#此段落由子樣板a07產生            
+            #開窗i段
+		   	INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bmbc_m.bmbc001             #給予default值
+
+            #給予arg
+
+            CALL q_ecca001_1()                                #呼叫開窗
+
+            LET g_bmbc_m.bmbc001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_bmbc_m.bmbc001 TO bmbc001              #顯示到畫面上
+
+            NEXT FIELD bmbc001                          #返回原欄位
+            
+      END INPUT
+    
+      #add-point:自定義input
+
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   IF NOT INT_FLAG THEN
+      IF cl_null(g_bmbc_m.bmbc002) THEN
+         LET g_bmbc_m.bmbc002 = ' '
+      END IF
+      IF NOT cl_null(g_bmbc_m.bmbc001) AND g_bmbc_m.bmbc002 IS NOT NULL THEN
+         CALL aect801_04_chk_bmaa()
+         IF NOT cl_null(g_errno) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = g_errno
+            LET g_errparam.extend = g_bmbc_m.bmbc001
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            CONTINUE WHILE
+         END IF
+      END IF
+      
+      CALL s_transaction_begin()
+      IF NOT aect801_04_ins() THEN
+         CALL s_transaction_end('N','0')
+      ELSE
+         CALL s_transaction_end('Y','0')
+         LET la_param.prog = "abmm200"
+         LET la_param.param[1] = g_bmbc_m.bmbc001
+         LET la_param.param[2] = g_bmbc_m.bmbc002
+         LET ls_js = util.JSON.stringify(la_param)
+         CALL cl_cmdrun(ls_js)
+      END IF
+   END IF
+   
+   EXIT WHILE
+   END WHILE
+   #畫面關閉
+   CLOSE WINDOW w_aect801_04
+
+   #add-point:離開前
+
+   #end add-point
+
+END FUNCTION
+
+ 
+{</section>}
+ 

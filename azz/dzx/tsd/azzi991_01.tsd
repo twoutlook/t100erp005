@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="azzi991_01" std_prog="azzi991_01" erpver="1.0" ver="1" module="AZZ" booking="Y" class="I" template="F002_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="gzsz_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：將設定的單據別參數產生到單據別參數檔中。
+作業功能：確定/取消/離開
+作業類型：子作業
+輸入模式：單檔多欄模式F002_00
+作業資料來源：gzsz_t(參數表格設定主檔)
+              gzszl_t(參數表格設定主檔多語言檔)
+其他說明：
+1.抓取不存在ooac_t裡的參數資料
+  SELECT * FROM gzsz_t WHERE gzsz002 NOT IN (SELECT ooac003 FROM ooac_t) ORDER BY gzsz002
+2.檢查前一步驟抓到的參數編號,若gzsy_t裡沒有設定單據性質,將無法判別要寫入哪一個單別裡,
+  請在備註裡顯示"沒有設定單據性質！"
+3.讓User勾選要拋轉那一些參數編號(備註有值的參數不可勾選)
+4.有勾選的參數,再搭配設定的單據性質(gzsy004),寫入對應的單據別參數檔(ooac_t)中
+  (1)SELECT ooba001,ooba002,gzsy002 FROM ooba_t JOIN gzsy_t ON ooba004=gzsy004
+     WHERE gzsy001='ooac_t' AND gzsy002 IN (前1步驟抓到的gzsz002中有勾選的)
+  (2)預設值
+     ooac001=ooba001
+     ooac002=ooba002
+     ooac003=gzsy002
+  (3)已經寫入ooac_t的參數+單據性質,將gzsy005更新為'Y'
+5.抓取參數編號存在ooac_t,但gzsy005='N'的資料  =>表示後來多增加的單據性質,所以沒拋轉到
+  (1)SELECT * FROM gzsy_t
+      WHERE gzsy002 IN (SELECT ooac003 FROM ooac_t)
+        AND gzsy001='ooac_t' AND gzsy005='N'
+  (2)SELECT ooba001,ooba002,gzsy002 FROM ooba_t JOIN gzsy_t ON ooba004=gzsy004
+      WHERE gzsy001='ooac_t' AND gzsy005='N'
+        AND gzsy002 IN (前1步驟抓到的gzsz002)
+  (3)預設值
+     ooac001=ooba001
+     ooac002=ooba002
+     ooac003=gzsy002
+  (4)已經寫入ooac_t的參數+單據性質,將gzsy005更新為'Y']]>
+  </all>
+  <field cite_std="N" name="choice" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.預設為'Y',可修改
+2.若備註有值則預設為'N',不可修改
+]]>
+  </field>
+  <field cite_std="N" name="gzsz_t.gzsz001" ver="1" src="s" column="gzsz001" table="gzsz_t" attribute="C803" type="varchar2(15)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzsz_t.gzsz002" ver="1" src="s" column="gzsz002" table="gzsz_t" attribute="C012" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzsz_t.gzsz003" ver="1" src="s" column="gzsz003" table="gzsz_t" attribute="C101" type="varchar2(80)" req="N" i_zoom="" c_zoom="" chk_ref="" items="89" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzsz_t.gzsz008" ver="1" src="s" column="gzsz008" table="gzsz_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzsz_t.gzsz009" ver="1" src="s" column="gzsz009" table="gzsz_t" attribute="C104" type="varchar2(500)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzsz_t.gzsz011" ver="1" src="s" column="gzsz011" table="gzsz_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="90" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="memo" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="90" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="gzszl_t.gzszl004" src="s" depend_field="gzsz_t.gzsz002" correspon_key="gzsz001,gzsz002" lang_table="gzszl_t" lang_fk="gzszl001,gzszl002" lang_dlang="gzszl003" lang_rtn="gzszl004" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code/>
+  <strings>
+    <sfield name="lbl_choice" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_gzsz001" text="表格編號" comment="" lstr=""/>
+    <sfield name="lbl_gzsz011" text="領域(應用類型)" comment="" lstr=""/>
+    <sfield name="lbl_gzsz002" text="參數編號" comment="" lstr=""/>
+    <sfield name="lbl_gzszl004" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_gzsz003" text="輸入限制資料型態" comment="" lstr=""/>
+    <sfield name="lbl_gzsz009" text="值域範圍" comment="" lstr=""/>
+    <sfield name="lbl_gzsz008" text="預設值" comment="" lstr=""/>
+    <sfield name="lbl_memo" text="備註" comment="" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" comment="" lstr=""/>
+    <sfield name="lbl_dend" text="項)" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

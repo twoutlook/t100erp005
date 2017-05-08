@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="agcm300_03" std_prog="agcm300_03" erpver="1.0" ver="2" module="AGC" type="S" booking="N" class="M" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="gcas_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供提貨券商品設定資料
+作業功能：新增/修改/刪除/說明/離開
+作業類型：基本資料維護作業
+輸入模式：單檔（子作業）F002_00
+作業資料來源(Master)：
+ 資料來源表：gcas_t(券種基本資料檔-發行面額設定)
+          
+提货商品限定
+1.只有券种类别 = 3.提货券才可以设定提货商品
+2.审核时判断如果是 券种类别 = 3.提货券 提货商品单身至少要有一笔资料
+3.券种类别从3.提货券改成其他的 需先弹窗提示“已存在提货商品设定，若修改则会删除对应的资料” 在AFTER INPUT后做删除]]>
+  </all>
+  <field cite_std="N" name="gcas_t.gcas001" ver="1" src="s" column="gcas001" table="gcas_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設為傳入參數：券種編號p_gcas001]]>
+  </field>
+  <field cite_std="N" name="gcas_t.gcas002" ver="1" src="s" column="gcas002" table="gcas_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入值須存在[T:應用分類碼檔oocq_t].[C:應用分類碼oocq002]且[C:應用分類oocq001]=2071 且為有效資料 且 必須存在于券種的面額設定中
+計算或處理:需於欄位右方顯示對應說明oocql004
+帶值：帶出券單位金額oocq009顯示到[C:券單位金額gcas008]中
+開窗時傳入参数2071
+
+当提货商品类型<>'3'时：券種編碼+券面額編號+提貨商品編號+提貨數量 不可重複
+当提货商品类型='3'时：券種編碼+券面額編號+提貨數量 不可重複]]>
+  </field>
+  <field cite_std="N" name="gcas_t.gcas003" ver="1" src="s" column="gcas003" table="gcas_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="q_rtdx001_1" c_zoom="q_gcas003" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:輸入值須存在[T:門店商品清單檔rtdx_t]WHERE[C:門店編號rtdxsite]=[T:券種基本資料檔gcaf_t].[C:申請組織gcafunit]且為有效的商品編號.
+開窗處理：
+        1.過濾條件：[T:門店商品清單檔rtdx_t]WHERE[C:門店編號rtdxsite]=[T:券種基本資料檔gcaf_t].[C:申請組織gcafunit]
+
+当提货商品类型<>'3'时：券種編碼+券面額編號+提貨商品編號+提貨數量 不可重複
+当提货商品类型='3'时：券種編碼+券面額編號+提貨數量 不可重複]]>
+  </field>
+  <field cite_std="N" name="gcas_t.gcas005" ver="1" src="s" column="gcas005" table="gcas_t" attribute="N101" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[当提货商品类型<>'3'时：券種編碼+券面額編號+提貨商品編號+提貨數量 不可重複
+当提货商品类型='3'时：券種編碼+券面額編號+提貨數量 不可重複]]>
+  </field>
+  <field cite_std="N" name="gcas_t.gcas006" ver="1" src="s" column="gcas006" table="gcas_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6531" default="1" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[当提货商品类型<>'3'时：券種編碼+券面額編號+提貨商品編號+提貨數量 不可重複
+当提货商品类型='3'时：券種編碼+券面額編號+提貨數量 不可重複]]>
+  </field>
+  <field cite_std="N" name="gcas_t.gcas007" ver="1" src="s" column="gcas007" table="gcas_t" attribute="N202" type="number(20,6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[資料欄位:[T:券種基本資料檔-發行面額設定gcas_t].[C:換貨加價gcas007]
+預設值  : 當[C:提貨商品類型gcas006]='2'.提貨換貨商品,Default 0.
+校驗:當[C:提貨商品類型gcas006]='2'.提貨換貨商品才允許輸入,不可為空]]>
+  </field>
+  <field cite_std="N" name="gcas_t.gcas008" ver="1" src="s" column="gcas008" table="gcas_t" attribute="N201" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gcas_t.gcas009" ver="1" src="s" column="gcas009" table="gcas_t" attribute="N301" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[允許空白: Yes.當[C:提貨商品類型]='3'.換貨不限定才允許輸入.
+預設值  : 當[C:提貨商品類型]='3',Default 0.
+校驗:當[C:提貨商品類型]<>'3'.此欄位必須為空白或Null]]>
+  </field>
+  <field cite_std="N" name="gcas_t.gcasseq" ver="1" src="s" column="gcasseq" table="gcas_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[自動+1]]>
+  </field>
+  <field cite_std="N" name="gcas_t.gcasstus" ver="1" src="s" column="gcasstus" table="gcas_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="gcas002_desc" src="s" depend_field="gcas_t.gcas002" correspon_key="gcasent,&apos;2071&apos;,gcas002" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="gcas003_desc" src="s" depend_field="gcas_t.gcas003" correspon_key="gcasent,gcas003" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="gcas_t.gcas001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcas_t.gcas002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcas_t.gcas003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcas_t.gcas005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcas_t.gcas006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcas_t.gcas007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcas_t.gcas008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcas_t.gcas009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcas_t.gcasseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcas_t.gcasstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="bpage_4" text="提貨商品" lstr=""/>
+    <sfield name="lbl_gcas001" text="券種編碼" lstr=""/>
+    <sfield name="lbl_gcasseq" text="項次" lstr=""/>
+    <sfield name="lbl_gcas002" text="券面額編號" lstr=""/>
+    <sfield name="lbl_oocql004" text="券面額說明" lstr=""/>
+    <sfield name="lbl_gcas008" text="券單位金額" lstr=""/>
+    <sfield name="lbl_gcas006" text="提貨商品類型" lstr=""/>
+    <sfield name="lbl_gcas003" text="提貨商品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_gcas005" text="提貨數量" lstr=""/>
+    <sfield name="lbl_gcas009" text="換貨允許價差%" lstr=""/>
+    <sfield name="lbl_gcas007" text="換貨加價" lstr=""/>
+    <sfield name="lbl_gcasstus" text="有效" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

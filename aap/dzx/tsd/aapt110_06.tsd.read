@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aapt110_06" std_prog="aapt110_06" erpver="1.0" ver="1" module="AAP" type="S" booking="N" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="pmds_t" main="N" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="d"/>
+    <tbl name="stbe_t" main="N" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+    <tbl name="xrcb_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[一:接收參數
+      帳套別
+      帳務中心
+      核銷客戶
+      收付款客戶　:空白者,預設=核銷客戶
+      來源組織　:可空白,表不限制
+      來源類型　:可空白,表不限制
+      表單性質:０不限制　＋表立帳方單　－表立帳待抵單
+
+二:資料來源
+      多帳期明細(xrcc_t)
+      應收憑單單身(xrcb_t)
+ 　　   link條件：　帳套　AND 帳款單號xrccdocno=xrcbdocno AND　單身項次xrccseq=xrcbseq
+      應收帳款單單頭(xrca_t)
+        link條件：　帳套　AND 單號xrccdocno=xrcadocno　AND　帳款客戶.xrca004=核銷客戶
+   　    AND　已確認單　AND　單據日期<= 沖銷單日期.xrdadocdt
+
+      SCC系統應用檔案(gzcb_t) ='8302'
+       WHERE xrca001=SCC-gzcb002 and SCC-gzcb003='1' AND SCC-gzcb001='8302' 
+         GROUP 單身交易單號+多帳期期別  : xrcb002,xrcc001
+      
+三:字段屬性
+      表單性質:依單別取對應"SCC_8302應收立帳類帳款單性質"設定之gzcb004
+           單別管理參數未定案前不作業.
+      開窗挑選,回傳勾選後之KEY值資料.
+      選取時,加總金額勾選之金額,合計數下方表達.
+      傳回符合勾選之資料.
+      子作業　04、05　合併成一支子作業來寫,　差異只在於 grou方式不同(xrccseq).
+四:寫入　沖帳明細檔(xrce_t)
+      因為己依期別(xrcc001)GROUP資料,寫回沖帳檔時,須拆解回"項次(xrccseq)"明細.
+　    1.依所選資料,依"帳款單號(xrccdocno)+交易單據(xrcb002)+期別(xrcc001)" 取得對應的明細資料.
+         SELECT xrcc.., xrcbseq,未沖金額(xrcc108-xrcc109),xrcb, xrca
+           FROM xrcc_t , xrca_t, xrcb_t
+          WHERE xrccdocno=立帳單號 AND xrcc001=期別 AND xrcb002=交易單據 #符合挑選之條件
+            AND xrccdocno=xrcadocno AND xrccdocno=xrcbdocno  #關聯性串接
+            ORDER BY xrcddocno,xrcd001,xrcdseq #排列並依先進先出沖銷
+
+　    2.取得之資料,寫入沖銷檔,　但必須檢核(沖銷總金額 <= 該交易單據＋期別之可沖銷金額)]]>
+  </all>
+  <field cite_std="N" name="check" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbe001" ver="1" src="s" column="stbe001" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbe002" ver="1" src="s" column="stbe002" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbe003" ver="1" src="s" column="stbe003" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbe008" ver="1" src="s" column="stbe008" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_aooi001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[其他本位幣:
+   視該帳有無啟用其他本位幣,有啟用才顯示。
+   欄位抬頭依啟用之幣別顯示,取glaa???/glaa???；Ｅx. 名稱顯示：(USD)未沖金額、(CNY)未沖金額]]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbe009" ver="1" src="s" column="stbe009" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oodb002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbe016" ver="1" src="s" column="stbe016" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbe026" ver="1" src="s" column="stbe026" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[核銷客戶:
+   可開窗:
+ 　查詢核銷客戶所指定的"夥伴關係檔案()"
+　            select pmac003,pmac002，客商名稱，pmac004 from pmac_t  
+               where pmac001 = 核銷客戶 
+  　　               and status='Y']]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbe027" ver="1" src="s" column="stbe027" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[帳款單性質:下拉選項:scc = 8302 ]]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbedocno" ver="1" src="s" column="stbedocno" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal003" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmds_t.pmds001" ver="1" src="s" column="pmds001" table="pmds_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmds_t.pmds037" ver="1" src="s" column="pmds037" table="pmds_t" attribute="" type="" req="N" i_zoom="q_ooaj002_1" c_zoom="q_ooaj002_1" chk_ref="v_ooaj002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[其他本位幣:
+   視該帳有無啟用其他本位幣,有啟用才顯示。
+   欄位抬頭依啟用之幣別顯示,取glaa???/glaa???；Ｅx. 名稱顯示：(USD)未沖金額、(CNY)未沖金額]]>
+  </field>
+  <field cite_std="N" name="pmds_t.pmdsdocno" ver="1" src="s" column="pmdsdocno" table="pmds_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_pmdsdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt001" ver="1" src="s" column="pmdt001" table="pmdt_t" attribute="" type="" req="N" i_zoom="q_pmdldocno" c_zoom="q_pmdldocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt006" ver="1" src="s" column="pmdt006" table="pmdt_t" attribute="" type="" req="N" i_zoom="q_imaf001" c_zoom="q_imaf001" chk_ref="v_imaf001_14" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt019" ver="1" src="s" column="pmdt019" table="pmdt_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[其他本位幣:
+   視該帳有無啟用其他本位幣,有啟用才顯示。
+   欄位抬頭依啟用之幣別顯示,取glaa???/glaa???；Ｅx. 名稱顯示：(USD)未沖金額、(CNY)未沖金額]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt020" ver="1" src="s" column="pmdt020" table="pmdt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="&gt;=0.000" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[核銷客戶:
+   可開窗:
+ 　查詢核銷客戶所指定的"夥伴關係檔案()"
+　            select pmac003,pmac002，客商名稱，pmac004 from pmac_t  
+               where pmac001 = 核銷客戶 
+  　　               and status='Y']]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt036" ver="1" src="s" column="pmdt036" table="pmdt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="&gt;=0.000" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[帳款單性質:下拉選項:scc = 8302 ]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt038" ver="1" src="s" column="pmdt038" table="pmdt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt039" ver="1" src="s" column="pmdt039" table="pmdt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt046" ver="1" src="s" column="pmdt046" table="pmdt_t" attribute="" type="" req="N" i_zoom="q_oodb002_2" c_zoom="q_oodb002_2" chk_ref="v_oodb002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt047" ver="1" src="s" column="pmdt047" table="pmdt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdtseq" ver="1" src="s" column="pmdtseq" table="pmdt_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbe_t.pmdsdocno" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbe_t.pmdt036" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="check" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="imaal003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmds_t.pmds001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmds_t.pmds037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmds_t.pmdsdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt039" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt046" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt047" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdtseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stbe_t.pmdsdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stbe_t.pmdt036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbe001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbe002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbe003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbe008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbe009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbe016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbe026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbe027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbedocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="pg_first" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="pg_last" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="pg_next" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="pg_prev" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_stbedocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_stbe001" text="來源類別" lstr=""/>
+    <sfield name="lbl_stbe002" text="來源單據" lstr=""/>
+    <sfield name="lbl_stbe003" text="來源項次" lstr=""/>
+    <sfield name="lbl_stbe008" text="幣別" lstr=""/>
+    <sfield name="lbl_stbe009" text="稅別" lstr=""/>
+    <sfield name="lbl_stbe026" text="數量" lstr=""/>
+    <sfield name="lbl_stbe027" text="單價" lstr=""/>
+    <sfield name="lbl_stbe016" text="本次結算金額" lstr=""/>
+    <sact name="pg_first" text="" lstr=""/>
+    <sact name="pg_last" text="" lstr=""/>
+    <sact name="pg_next" text="" lstr=""/>
+    <sact name="pg_prev" text="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="imaal003" status="d"/>
+  </exclude>
+</spec>

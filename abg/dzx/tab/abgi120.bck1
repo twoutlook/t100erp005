@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi120" module="abg" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02299" crtdt="2014-03-06 11:04:41" modid="06821" moddt="2015-07-13 17:43:18" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="預算週期對應表維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgam001,bgam001_desc(chr80),bgam002,bgam002_desc(chr80),bgam008"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgam003,l_bgac003(chr500),l_bgac004(chr500),l_bgac005(chr500),bgam004,bgam005,bgam006,bgam007,bgamstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bgam003,bgamownid,bgamownid_desc(chr500),bgamowndp,bgamowndp_desc(chr500),bgamcrtid,bgamcrtid_desc(chr500),bgamcrtdp,bgamcrtdp_desc(chr500),bgamcrtdt,bgammodid,bgammodid_desc(chr500),bgammoddt"/>
+      <var id="bs_field" value="bgam001,bgam001_desc(chr80),bgam002,bgam002_desc(chr80)" pk="bgam001,bgam002" order=""/>
+      <bs_reference field="bgam001_desc" ref_field="bgam001" ref_sql="SELECT bgacl003 FROM bgacl_t WHERE bgaclent=$varg_enterprise$var AND bgacl001=? AND bgacl002=$varg_dlang$var"/>
+      <bs_reference field="bgam002_desc" ref_field="bgam002" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;13&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="lbl_vaild"/>
+      <action id="act_reload"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi120" method="dialog">
+    <section id="input">
+      <input id="head" field="bgam001,bgam002,bgam008"/>
+      <input id="body" page="1" field="bgam003,l_bgac003,l_bgac004,l_bgac005,bgam004,bgam005,bgam006,bgam007,bgamstus" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bgam001,bgam002,bgam008"/>
+      <construct id="body" page="1" field="bgam003,l_bgac003,l_bgac004,l_bgac005,bgam004,bgam005,bgam006,bgam007,bgamstus"/>
+      <construct id="body" page="2" field="bgamownid,bgamowndp,bgamcrtid,bgamcrtdp,bgamcrtdt,bgammodid,bgammoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bgam001,bgam002"/>
+      <set id="head" type="no_entry" field="bgam001,bgam002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bgam001">
+        <after>
+          <check chkid="v_bgac001" id="isExist"/>
+          <reference field="bgam001_desc" ref_field="bgam_t.bgam001" map_field="bgament,bgam001" ref_sql="SELECT bgacl003 FROM bgacl_t WHERE bgaclent=$varg_enterprise$var AND bgacl001=? AND bgacl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgac001" state="i"/>
+        <controlp form="q_bgac001" state="c"/>
+      </column>
+      <column id="bgam001_desc"/>
+      <column id="bgam002">
+        <after>
+          <check chkid="v_ooal002" id="isExist"/>
+          <reference field="bgam002_desc" ref_field="bgam002" map_field="bgam002" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;13&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_0" state="i"/>
+        <controlp form="q_ooal002_0" state="c"/>
+      </column>
+      <column id="bgam002_desc"/>
+      <column id="bgam008">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="bgam003"/>
+      <column id="l_bgac003"/>
+      <column id="l_bgac004"/>
+      <column id="l_bgac005"/>
+      <column id="bgam004"/>
+      <column id="bgam005"/>
+      <column id="bgam006"/>
+      <column id="bgam007"/>
+      <column id="bgamstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bgamownid">
+        <after>
+          <reference field="bgamownid_desc" ref_field="bgam_t.bgamownid" map_field="bgamownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgamownid_desc"/>
+      <column id="bgamowndp">
+        <after>
+          <reference field="bgamowndp_desc" ref_field="bgam_t.bgamowndp" map_field="bgamowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgamowndp_desc"/>
+      <column id="bgamcrtid">
+        <after>
+          <reference field="bgamcrtid_desc" ref_field="bgam_t.bgamcrtid" map_field="bgamcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgamcrtid_desc"/>
+      <column id="bgamcrtdp">
+        <after>
+          <reference field="bgamcrtdp_desc" ref_field="bgam_t.bgamcrtdp" map_field="bgamcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgamcrtdp_desc"/>
+      <column id="bgamcrtdt"/>
+      <column id="bgammodid">
+        <after>
+          <reference field="bgammodid_desc" ref_field="bgam_t.bgammodid" map_field="bgammodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgammodid_desc"/>
+      <column id="bgammoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgam_t" pk="bgam001,bgam002">
+      <sql id="forupd_sql" type="sql" query="SELECT bgam001,&apos;&apos;,bgam002,&apos;&apos;,bgam008 FROM bgam_t WHERE bgament= ? AND bgam001=? AND bgam002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bgam001,&apos;&apos;,bgam002,&apos;&apos;,bgam008 FROM bgam_t" order="bgam001,bgam002"/>
+    </head>
+    <body id="bgam_t" page="1,2" linked="" pk="bgam003" fk="bgam001,bgam002">
+      <sql id="forupd_sql_detail" query="SELECT bgam003,&apos;&apos;,&apos;&apos;,&apos;&apos;,bgam004,bgam005,bgam006,bgam007,bgamstus,&apos;&apos;,bgamownid,&apos;&apos;,bgamowndp,&apos;&apos;,bgamcrtid,&apos;&apos;,bgamcrtdp,&apos;&apos;,bgamcrtdt,bgammodid,&apos;&apos;,bgammoddt FROM bgam_t WHERE bgament=? AND bgam001=? AND bgam002=? AND bgam003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgam003,&apos;&apos;,&apos;&apos;,&apos;&apos;,bgam004,bgam005,bgam006,bgam007,bgamstus,&apos;&apos;,bgamownid,&apos;&apos;,bgamowndp,&apos;&apos;,bgamcrtid,&apos;&apos;,bgamcrtdp,&apos;&apos;,bgamcrtdt,bgammodid,&apos;&apos;,bgammoddt FROM bgam_t WHERE bgament= ? AND bgam001=? AND bgam002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

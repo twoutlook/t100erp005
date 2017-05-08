@@ -1,0 +1,85 @@
+{<section id="${app_id}.global" >}
+#應用 m00 樣板自動產生(Version:11)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+
+IMPORT os
+IMPORT xml
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+
+SCHEMA ds
+
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_ws.inc"     #TIPTOP Service Gateway 使用的全域變數檔
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+{</section>}
+
+{<section id="${app_id}.main" >}
+#+ 作業開始
+MAIN
+   DEFINE l_request_str  STRING
+   DEFINE l_output_str   STRING
+   #add-point:main段define name="main.define"
+   {<point name="main.define"/>}
+   #end add-point
+   #add-point:main段define name="main.define_customerization"
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point
+
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   #add-point:初始化前定義 name="main.before_ap_init"
+   {<point name="main.before_ap_init"/>}
+   #end add-point
+   ##依模組進行系統初始化設定(系統設定)
+   #CALL cl_ap_init("${general_module}","${jobmode}")
+
+   #wss進行初始化設定(web services)
+   CALL cl_wss_init()
+ 
+   #呼叫服務前置處理程序
+   CALL awsp900_01_preprocess()    
+
+   #呼叫服務函式，中介程式主要處理段
+   IF g_status.code = "0" THEN
+      CALL ${general_prefix}_process()
+   END IF
+        
+   #呼叫服務後置處理程序
+   CALL awsp900_01_postprocess()    
+
+   #離開作業
+   #CALL cl_ap_exitprogram("0")  
+   CALL cl_wss_exit()
+
+END MAIN
+{</section>}
+
+{<section id="${app_id}.process" >}
+#+ 實際處理服務程式邏輯的FUNCTION內容
+PRIVATE FUNCTION ${general_prefix}_process()
+   #add-point: 服務邏輯主要處理段的ADP name="${general_prefix}.process"
+   {<point name="${general_prefix}.process"/>}
+   #end add-point
+END FUNCTION
+{</section>}
+
+{<section id="${app_id}.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+{<point name="other.function"/>}
+#end add-point
+{</section>}
+

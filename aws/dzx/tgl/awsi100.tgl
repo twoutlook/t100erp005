@@ -1,0 +1,530 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="awsi100.description" >}
+#應用 a00 樣板自動產生(Version:2)
+#+ Version..: T100-ERP-1.01.00(SD版次:1,PR版次:1) Build-000097
+#+ 
+#+ Filename...: awsi100
+#+ Description: 整合產品設定維護作業
+#+ Creator....: 07847(2016-04-06 10:18:12)
+#+ Modifier...: 07847(2016-04-06 10:18:12) -SD/PR-
+{</section>}
+
+{<section id="awsi100.global" >}
+{<point name="global.memo" />}
+
+{<point name="global.import" />}
+
+{<point name="global.inc" mark="Y"/>}
+
+{<point name="global.variable"/>}
+
+{<point name="global.variable_customerization" edit="c"/>}
+
+{<point name="global.argv"/>}
+
+{</section>}
+
+{<section id="awsi100.main" >}
+MAIN
+{<point name="main.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="main.define"/>}
+
+{<point name="main.init" />}
+
+{<point name="main.define_sql" />}
+
+{<point name="main.after_define_sql"/>}
+
+{<point name="main.after_refresh_sql"/>}
+
+{<point name="main.servicecall" />}
+
+{<point name="main.before_close" />}
+
+{<point name="main.exit" />}
+END MAIN
+{</section>}
+
+{<section id="awsi100.other_function" >}
+#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+
+{<section id="awsi100.init" >}
+PRIVATE FUNCTION awsi100_init()
+{<point name="init.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="init.define"/>}
+
+{<point name="init.pre_function"/>}
+
+{<point name="init.init" />}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.ui_dialog" >}
+PRIVATE FUNCTION awsi100_ui_dialog() 
+{<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   MENU ""     
+      ON ACTION modify
+         LET g_action_choice="modify"
+         IF cl_auth_chk_act("modify") THEN
+            CALL awsi100_modify()
+         END IF
+		 
+      ON ACTION step01
+         CALL awsi100_parameter_switch("step01")
+		 
+      ON ACTION step02
+         CALL awsi100_parameter_switch("step02")
+		 
+      ON ACTION step03
+         CALL awsi100_parameter_switch("step03")
+		 
+      ON ACTION step04
+         CALL awsi100_parameter_switch("step04")
+		 
+      ON ACTION step05
+         CALL awsi100_parameter_switch("step05")
+         
+      ON ACTION step06
+         CALL awsi100_parameter_switch("step06")
+      
+      #161102-00047#15-S
+      ON ACTION step07
+         CALL awsi100_parameter_switch("step07")
+         
+      ON ACTION bpm_test
+		   IF cl_aws_prod_para(g_enterprise, "bpm-0001") != "Y" THEN
+		      INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "aws-00081"
+            LET g_errparam.extend = NULL
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         ELSE 
+		      CALL awsi100_test_bpm()
+		   END IF
+		   
+		ON ACTION bpm_test_hmpage
+		   CALL awsi100_test_bpm_hmpage()
+	   #161102-00047#15-E
+		   
+      ON ACTION exit
+         LET g_action_choice = "exit"
+         EXIT MENU
+      ON ACTION close
+         LET g_action_choice = "exit"
+         EXIT MENU      	 
+   END MENU
+{<point name="ui_dialog.define"/>}
+  
+{<point name="ui_dialog.pre_function"/>}
+
+{<point name="menu.default.insert" />}
+
+{<point name="ui_dialog.action_default"/>}
+
+{<point name="ui_dialog.before_dialog"/>}
+
+{<point name="ui_dialog.before_menu"/>}
+
+{<point name="menu2.modify" mark="Y"/>}
+
+{<point name="menu2.delete" mark="Y"/>}
+
+{<point name="menu2.insert" mark="Y"/>}
+
+{<point name="menu2.output" mark="Y"/>}
+
+{<point name="menu2.reproduce" mark="Y"/>}
+
+{<point name="menu2.query" mark="Y"/>}
+
+{<point name="ui_dialog.menu.related_document"/>}
+
+{<point name="ui_dialog.menu.agendum"/>}
+
+{<point name="ui_dialog.menu.followup"/>}
+
+{<point name="ui_dialog.more_displayarray"/>}
+
+{<point name="ui_dialog.b_dialog"/>}
+
+{<point name="ui_dialog.after_dialog"/>}
+
+{<point name="menu.modify" mark="Y"/>}
+
+{<point name="menu.delete" mark="Y"/>}
+
+{<point name="menu.insert" mark="Y"/>}
+
+{<point name="menu.output" mark="Y"/>}
+
+{<point name="menu.reproduce" mark="Y"/>}
+
+{<point name="menu.query" mark="Y"/>}
+
+{<point name="ui_dialog.dialog.related_document"/>}
+
+{<point name="ui_dialog.dialog.agendum"/>}
+
+{<point name="ui_dialog.dialog.followup"/>}
+
+{<point name="ui_dialog.exit_dialog"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.browser_fill" >}
+PRIVATE FUNCTION awsi100_browser_fill(p_wc,ps_page_action) 
+{<point name="browser_fill.define_customerization" edit="c" mark="Y"/>}
+   DEFINE p_wc              STRING
+   DEFINE ps_page_action    STRING
+{<point name="browser_fill.define"/>}
+
+{<point name="browser_fill.pre_function"/>}
+
+{<point name="browser_fill.wc"/>}
+   
+{<point name="browser_fill.cnt_sql"/>}
+   
+{<point name="browser_fill.fill_wc"/>}
+  
+{<point name="browser_fill.before_pre"/>}
+
+{<point name="browser_fill.reference"/>}
+
+{<point name="browser_fill.after"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.construct" >}
+PRIVATE FUNCTION awsi100_construct()
+{<point name="cs.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="cs.define"/>}
+
+{<point name="cs.pre_function"/>}
+
+{<point name="cs.before_construct"/>}
+
+{<point name="construct.b.wset001" />}
+
+{<point name="construct.a.wset001" />}
+
+{<point name="construct.c.wset001" />}
+
+{<point name="construct.c.wsetownid" />}
+
+{<point name="construct.b.wsetownid" />}
+
+{<point name="construct.a.wsetownid" />}
+
+{<point name="construct.c.wsetowndp" />}
+
+{<point name="construct.b.wsetowndp" />}
+
+{<point name="construct.a.wsetowndp" />}
+
+{<point name="construct.c.wsetcrtid" />}
+
+{<point name="construct.b.wsetcrtid" />}
+
+{<point name="construct.a.wsetcrtid" />}
+
+{<point name="construct.c.wsetcrtdp" />}
+
+{<point name="construct.b.wsetcrtdp" />}
+
+{<point name="construct.a.wsetcrtdp" />}
+
+{<point name="construct.b.wsetcrtdt" />}
+
+{<point name="construct.c.wsetmodid" />}
+
+{<point name="construct.b.wsetmodid" />}
+
+{<point name="construct.a.wsetmodid" />}
+
+{<point name="construct.b.wsetmoddt" />}
+
+{<point name="cs.more_construct"/>}
+
+{<point name="cs.b_dialog"/>}
+
+{<point name="cs.after_construct"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.query" >}
+PRIVATE FUNCTION awsi100_query()
+{<point name="query.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="query.define"/>}
+
+{<point name="query.pre_function"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.fetch" >}
+PRIVATE FUNCTION awsi100_fetch(p_fl)
+{<point name="fetch.define_customerization" edit="c" mark="Y"/>}
+   DEFINE p_fl      LIKE type_t.chr1
+{<point name="fetch.define"/>}
+
+{<point name="fetch.pre_function"/>}
+
+{<point name="fetch.action_control"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.insert" >}
+PRIVATE FUNCTION awsi100_insert()
+{<point name="insert.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="insert.define"/>}
+
+{<point name="insert.pre_function"/>}
+
+{<point name="insert.before"/>}
+
+{<point name="insert.default"/>}
+
+{<point name="insert.after_insert"/>}
+
+{<point name="insert.after"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.modify" >}
+PRIVATE FUNCTION awsi100_modify()
+{<point name="modify.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="modify.define"/>}
+
+{<point name="modify.pre_function"/>}
+
+{<point name="modify.before_input"/>}
+      
+{<point name="modify.after_input"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.input" >}
+PRIVATE FUNCTION awsi100_input(p_cmd)
+{<point name="input.define_customerization" edit="c" mark="Y"/>}
+   DEFINE p_cmd     LIKE type_t.chr1
+{<point name="input.define"/>}
+
+{<point name="input.pre_function"/>}
+
+{<point name="input.after_set_entry"/>}
+
+{<point name="input.before_input"/>}
+
+{<point name="input.before.input"/>}
+
+{<point name="input.b.wset001" />}
+
+{<point name="input.a.wset001" />}
+
+{<point name="input.g.wset001" />}
+
+{<point name="input.c.wset001" />}
+
+{<point name="input.head.b_insert" mark="Y"/>}
+
+{<point name="input.head.m_insert"/>}
+
+{<point name="input.head.a_insert"/>}
+
+{<point name="input.head.b_update" mark="Y"/>}
+
+{<point name="input.head.m_update"/>}
+
+{<point name="input.head.a_update"/>}
+
+{<point name="input.more_input"/>}
+ 
+{<point name="input.before_dialog"/>}
+
+{<point name="input.after_input"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.reproduce" >}
+PRIVATE FUNCTION awsi100_reproduce()
+{<point name="reproduce.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="reproduce.define"/>}
+
+{<point name="reproduce.pre_function"/>}
+
+{<point name="reproduce.head.b_input"/>}
+
+{<point name="reproduce.head.b_insert" mark="Y"/>}
+
+{<point name="reproduce.head.m_insert"/>}
+
+{<point name="reproduce.head.a_insert"/>}
+
+{<point name="reproduce.after_reproduce" />}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.show" >}
+PRIVATE FUNCTION awsi100_show()
+{<point name="show.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="show.define"/>}
+
+{<point name="show.before"/>}
+
+{<point name="show.follow_pic"/>}
+
+{<point name="show.head.reference"/>}
+
+{<point name="show.after"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.delete" >}
+PRIVATE FUNCTION awsi100_delete()
+{<point name="delete.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="delete.define"/>}
+
+{<point name="delete.pre_function"/>}
+
+{<point name="delete.head.b_delete" mark="Y"/>}
+
+{<point name="delete.befroe.related_document_remove"/>}
+
+{<point name="delete.head.m_delete"/>}
+
+{<point name="delete.head.a_delete"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.ui_browser_refresh" >}
+PRIVATE FUNCTION awsi100_ui_browser_refresh()
+{<point name="ui_browser_refresh.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="ui_browser_refresh.define"/>}
+
+{<point name="ui_browser_refresh.pre_function"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.set_entry" >}
+PRIVATE FUNCTION awsi100_set_entry(p_cmd)
+{<point name="set_entry.define_customerization" edit="c" mark="Y"/>}
+   DEFINE p_cmd     LIKE type_t.chr1
+{<point name="set_entry.define"/>}
+
+{<point name="set_entry.pre_function"/>}
+
+{<point name="set_entry.field_control"/>}
+
+{<point name="set_entry.after_control"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.set_no_entry" >}
+PRIVATE FUNCTION awsi100_set_no_entry(p_cmd)
+{<point name="set_no_entry.define_customerization" edit="c" mark="Y"/>}
+   DEFINE p_cmd     LIKE type_t.chr1
+{<point name="set_no_entry.define"/>}
+
+{<point name="set_no_entry.pre_function"/>}
+
+{<point name="set_no_entry.field_control"/>}
+
+{<point name="set_no_entry.after_control"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.set_act_visible" >}
+PRIVATE FUNCTION awsi100_set_act_visible()
+{<point name="set_act_visible.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="set_act_visible.define"/>}
+
+{<point name="set_act_visible.set_act_visible"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.set_act_no_visible" >}
+PRIVATE FUNCTION awsi100_set_act_no_visible()
+{<point name="set_act_no_visible.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="set_act_no_visible.define"/>}
+
+{<point name="set_act_no_visible.set_act_no_visible"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.default_search" >}
+PRIVATE FUNCTION awsi100_default_search()
+{<point name="default_search.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="default_search.define"/>}
+
+{<point name="default_search.pre_function"/>}
+
+{<point name="default_search.before"/>}
+
+{<point name="default_search.after_sql"/>}
+
+{<point name="default_search.after"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.mask_functions" >}
+
+{</section>}
+
+{<section id="awsi100.state_change" >}
+
+{</section>}
+
+{<section id="awsi100.signature" >}
+
+{</section>}
+
+{<section id="awsi100.set_pk_array" >}
+PRIVATE FUNCTION awsi100_set_pk_array()
+{<point name="set_pk_array.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="set_pk_array.define"/>}
+
+{<point name="set_pk_array.before"/>}
+
+{<point name="set_pk_array.after"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.msgcentre_notify" >}
+PRIVATE FUNCTION awsi100_msgcentre_notify(lc_state)
+{<point name="msgcentre_notify.define_customerization" edit="c" mark="Y"/>}
+   DEFINE lc_state LIKE type_t.chr80
+{<point name="msgcentre_notify.define"/>}
+
+{<point name="msgcentre_notify.pre_function"/>}
+
+{<point name="msgcentre_notify.process"/>}
+END FUNCTION
+{</section>}
+
+{<section id="awsi100.action_chk" >}
+PRIVATE FUNCTION awsi100_action_chk()
+{<point name="action_chk.define_customerization" edit="c" mark="Y"/>}
+
+{<point name="action_chk.define"/>}
+
+{<point name="action_chk.action_chk"/>}
+END FUNCTION
+{</section>}
+

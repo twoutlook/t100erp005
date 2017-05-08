@@ -1,0 +1,83 @@
+---------------------------------------------------------------------------------- 
+-- File created from /u1/topprd/erp/adz/42f/sadzp340_dlg.4fd by Genero Studio
+-- WARNING! All changes made in this file will be lost!
+----------------------------------------------------------------------------------
+
+SCHEMA formonly
+
+ACTION DEFAULTS
+  ACTION cancel(text=%"Cancel", comment=%"Return to previous window", contextMenu=no)
+  ACTION create_dir(image="dircrea", comment=%"Create a new directory from current", accelerator = control-n, contextMenu=no)
+  ACTION delete_dir(image="dirdele", comment=%"Delete current directory", accelerator = suppr, contextMenu=no)
+  ACTION delete_file(image="filedele", comment=%"Delete current file", accelerator = control-suppr, contextMenu=no)
+END -- ACTION DEFAULTS
+
+LAYOUT (version="1.05")
+Grid grid1
+{
+ <G gpn                                                                     >
+ [currpath                                                    :cre:del:de1: ]
+ <                                                                          >
+ <TREE dlist           ><T list                                           >
+ [name                 ][ei|entry                 |esize  |emodt   |etype ]
+ [name                 ][ei|entry                 |esize  |emodt   |etype ]
+ [name                 ][ei|entry                 |esize  |emodt   |etype ]
+ [name                 ][ei|entry                 |esize  |emodt   |etype ]
+ [name                 ][ei|entry                 |esize  |emodt   |etype ]
+ [name                 ][ei|entry                 |esize  |emodt   |etype ]
+ [name                 ][ei|entry                 |esize  |emodt   |etype ]
+ [name                 ][ei|entry                 |esize  |emodt   |etype ]
+                        [ei|entry                 |esize  |emodt   |etype ]
+                        [ei|entry                 |esize  |emodt   |etype ]
+                        [ei|entry                 |esize  |emodt   |etype ]
+                        [ei|entry                 |esize  |emodt   |etype ]
+                        [ei|entry                 |esize  |emodt   |etype ]
+                        [ei|entry                 |esize  |emodt   |etype ]
+                        [ei|entry                 |esize  |emodt   |etype ]
+
+
+
+ <                     ><                                                 >
+
+ <G gfn                                                                   >
+ [filename                                                                ]
+ <                                                                        >
+ [showhidden                             :              :btn_open:btn_canc ]
+
+}
+END -- grid1
+END -- fgltfileos
+
+ATTRIBUTES
+Group gpn:gpn, text=%"Path", gridChildrenInParent;
+TextEdit currpath=formonly.currpath, tabIndex=1, stretch=x, scrollBars=none, wantNoReturns;
+Button cre:create_dir, tabIndex=2;
+Button del:delete_dir, tabIndex=3;
+Button de1:delete_file, tabIndex=4;
+Tree dlist:dlist, parentIdColumn=parent, idColumn=abspath, expandedColumn=expanded, isNodeColumn=children, imageExpanded="open", imageCollapsed="folder", imageLeaf="folder", width = 23 characters;
+Edit name=formonly.name, tabIndex=5;
+Phantom formonly.parent;
+Phantom formonly.abspath;
+Phantom formonly.children;
+Phantom formonly.expanded;
+Table list:list, doubleClick=select, width = 51 characters;
+IMAGE ei=formonly.eimage, width = 2 characters;
+Edit entry=formonly.entry, tabIndex=11, title=%"Entry";
+Edit esize=formonly.esize, tabIndex=12, title=%"Size", justify=right;
+Edit emodt=formonly.emodt, tabIndex=13, title=%"Modified";
+Edit etype=formonly.etype, tabIndex=14, title=%"Type";
+Group gfn:gfn, text=%"Filename", gridChildrenInParent;
+Edit filename=formonly.filename, tabIndex=15, scroll;
+CheckBox showhidden=formonly.showhidden, tabIndex=16, text=%"Show hidden files", not null, required;
+Button btn_open:btn_opensave, tabIndex=17;
+Button btn_canc:btn_cancel, tabIndex=18;
+END -- ATTRIBUTES
+
+INSTRUCTIONS
+SCREEN RECORD sr2(formonly.eimage,formonly.entry,formonly.esize,formonly.emodt,formonly.etype)
+SCREEN RECORD sr1(formonly.name,formonly.parent,formonly.abspath,formonly.children,formonly.expanded)
+SCREEN RECORD record1(formonly.currpath)
+SCREEN RECORD record2(formonly.filename)
+SCREEN RECORD record3(formonly.showhidden)
+END -- INSTRUCTIONS
+

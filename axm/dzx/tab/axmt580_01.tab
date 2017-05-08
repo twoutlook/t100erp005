@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmt580_01" module="axm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="04543" crtdt="2014-04-15 19:45:56" modid="04543" moddt="2014-08-20 16:58:04" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="多庫儲批簽收">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmdmdocno,xmdmseq,xmdmseq1,xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,xmdm005_desc(chr500),xmdm006,xmdm006_desc(chr500),xmdm007,xmdm008,xmdm008_desc(chr500),xmdm009,xmdm031,xmdm010,xmdm010_desc(chr500),xmdm011,xmdm032"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmt580_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xmdmdocno,xmdmseq,xmdmseq1,xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,xmdm006,xmdm007,xmdm008,xmdm009,xmdm031,xmdm010,xmdm011,xmdm032" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xmdmdocno"/>
+      <column id="xmdmseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdmseq1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdm001">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="xmdm002"/>
+      <column id="xmdm003"/>
+      <column id="xmdm004"/>
+      <column id="xmdm005">
+        <after>
+          <reference field="xmdm005_desc" ref_field="xmdmsite,xmdm005" map_field="xmdmsite,xmdm005" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+      </column>
+      <column id="xmdm005_desc"/>
+      <column id="xmdm006">
+        <after>
+          <reference field="xmdm006_desc" ref_field="xmdmsite,xmdm005,xmdm006" map_field="xmdmsite,xmdm005,xmdm006" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="xmdm006_desc"/>
+      <column id="xmdm007"/>
+      <column id="xmdm008">
+        <after>
+          <reference field="xmdm008_desc" ref_field="xmdm_t.xmdm008" map_field="xmdm008" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdm008_desc"/>
+      <column id="xmdm009" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdm031" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdm010">
+        <after>
+          <reference field="xmdm010_desc" ref_field="xmdm_t.xmdm010" map_field="xmdm010" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdm010_desc"/>
+      <column id="xmdm011" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdm032" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="xmdm_t" page="1" linked="" pk="xmdmdocno,xmdmseq,xmdmseq1">
+      <sql id="forupd_sql_detail" query="SELECT xmdmdocno,xmdmseq,xmdmseq1,xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,&apos;&apos;,xmdm006,&apos;&apos;,xmdm007,xmdm008,&apos;&apos;,xmdm009,xmdm031,xmdm010,&apos;&apos;,xmdm011,xmdm032 FROM xmdm_t WHERE xmdment=? AND xmdmdocno=? AND xmdmseq=? AND xmdmseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmdmdocno,xmdmseq,xmdmseq1,xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,&apos;&apos;,xmdm006,&apos;&apos;,xmdm007,xmdm008,&apos;&apos;,xmdm009,xmdm031,xmdm010,&apos;&apos;,xmdm011,xmdm032 FROM xmdm_t WHERE xmdment= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

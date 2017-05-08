@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq810" module="ain" jobmode="N" type="i10" industry="std" fix_arg="0" crtid="01251" crtdt="2014-03-26 18:09:21" modid="01251" moddt="2015-08-24 12:00:25" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="盤點結果預覽作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inegsite,inegsite_desc(chr80),ineg002,ineg002_desc(chr80),inea002,inegdocno,inea003"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainq810" method="dialog">
+    <section id="input">
+      <input id="head" field="ineg002"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="inegsite,ineg002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="inegsite,inegdocno"/>
+      <set id="head" type="no_entry" field="inegsite,inegdocno"/>
+    </init>
+    <init id="head">
+      <column id="inegsite">
+        <after>
+          <reference field="inegsite_desc" ref_field="ineg_t.inegsite" map_field="inegent,inegsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="inegsite_desc"/>
+      <column id="ineg002">
+        <after>
+          <reference field="ineg002_desc" ref_field="ineg_t.ineg002" map_field="inegent,ineg002" ref_sql="SELECT inea001 FROM inea_t WHERE ineaent=$varg_enterprise$var AND ineadocno=? "/>
+        </after>
+        <controlp form="q_ineadocno_01" state="c"/>
+      </column>
+      <column id="ineg002_desc"/>
+      <column id="inea002"/>
+      <column id="inegdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_inegdocno" state="c"/>
+      </column>
+      <column id="inea003" type="S" default="1"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ineg_t" pk="inegsite,inegdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT inegsite,&apos;&apos;,ineg002,&apos;&apos;,&apos;&apos;,inegdocno,&apos;&apos; FROM ineg_t WHERE inegent= ? AND inegsite=? AND inegdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT inegsite,inegdocno FROM ineg_t" order="inegsite,inegdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

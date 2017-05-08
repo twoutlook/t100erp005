@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsi003" module="aps" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="04543" crtdt="2014-03-31 20:32:50" modid="04543" moddt="2014-06-30 09:21:06" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="APS供需限制條件設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psda001,psdal003,psdal004,psdastus,psdaownid,psdaownid_desc(chr80),psdaowndp,psdaowndp_desc(chr80),psdacrtid,psdacrtid_desc(chr80),psdacrtdp,psdacrtdp_desc(chr80),psdacrtdt,psdamodid,psdamodid_desc(chr80),psdamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="psdbseq,psdb002,psdb003,psdb004,psdb004_desc(chr500),psdb005,psdb006,psdb007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="psdcseq,psdc002,psdc003,psdc004,psdc004_desc(chr500),psdc005,psdc006,psdc007"/>
+      <var id="bs_field" value="psda001,psda001_desc(chr80)" pk="psda001" order=""/>
+      <bs_reference field="psda001_desc" ref_field="psda001" ref_sql="SELECT psdal003 FROM psdal_t WHERE psdalent=$varg_enterprise$var AND psdal001=? AND psdal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aps" filename="apsi003" method="dialog">
+    <section id="input">
+      <input id="head" field="psda001,psdal003,psdal004,psdastus"/>
+      <input id="body" page="1" field="psdbseq,psdb002,psdb003,psdb004,psdb005,psdb006,psdb007" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="psdcseq,psdc002,psdc003,psdc004,psdc005,psdc006,psdc007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psda001,psdal003,psdal004,psdastus,psdaownid,psdaowndp,psdacrtid,psdacrtdp,psdacrtdt,psdamodid,psdamoddt"/>
+      <construct id="body" page="1" field="psdbseq,psdb002,psdb003,psdb004,psdb005,psdb006,psdb007"/>
+      <construct id="body" page="2" field="psdcseq,psdc002,psdc003,psdc004,psdc005,psdc006,psdc007"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="psda001"/>
+      <set id="head" type="no_entry" field="psda001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psda001">
+        <controlp form="q_psda001" state="c"/>
+      </column>
+      <column id="psdal003"/>
+      <column id="psdal004"/>
+      <column id="psdastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="psdaownid">
+        <after>
+          <reference field="psdaownid_desc" ref_field="psda_t.psdaownid" map_field="psdaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psdaownid_desc"/>
+      <column id="psdaowndp">
+        <after>
+          <reference field="psdaowndp_desc" ref_field="psda_t.psdaowndp" map_field="psdaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="psdaowndp_desc"/>
+      <column id="psdacrtid">
+        <after>
+          <reference field="psdacrtid_desc" ref_field="psda_t.psdacrtid" map_field="psdacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psdacrtid_desc"/>
+      <column id="psdacrtdp">
+        <after>
+          <reference field="psdacrtdp_desc" ref_field="psda_t.psdacrtdp" map_field="psdacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="psdacrtdp_desc"/>
+      <column id="psdacrtdt"/>
+      <column id="psdamodid">
+        <after>
+          <reference field="psdamodid_desc" ref_field="psda_t.psdamodid" map_field="psdamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psdamodid_desc"/>
+      <column id="psdamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="psdbseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psdb002" def_scc="5428"/>
+      <column id="psdb003" def_scc="5429"/>
+      <column id="psdb004">
+        <after>
+          <check chkid="v_dzeb002" id="isExist"/>
+          <reference field="psdb004_desc" ref_field="psdb_t.psdb004" map_field="psdb004" ref_sql="SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_dzeb002_7" state="i"/>
+        <controlp form="q_dzeb002_7" state="c"/>
+      </column>
+      <column id="psdb004_desc"/>
+      <column id="psdb005">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psdb006">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psdb007"/>
+    </init>
+    <init id="body" page="2">
+      <column id="psdcseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psdc002" def_scc="5430"/>
+      <column id="psdc003" def_scc="5431"/>
+      <column id="psdc004">
+        <after>
+          <check chkid="v_dzeb002" id="isExist"/>
+          <reference field="psdc004_desc" ref_field="psdc_t.psdc004" map_field="psdc004" ref_sql="SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_dzeb002_7" state="i"/>
+        <controlp form="q_dzeb002_7" state="c"/>
+      </column>
+      <column id="psdc004_desc"/>
+      <column id="psdc005">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psdc006">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psdc007"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="psda_t" pk="psda001">
+      <sql id="forupd_sql" type="sql" query="SELECT psda001,&apos;&apos;,&apos;&apos;,psdastus,psdaownid,&apos;&apos;,psdaowndp,&apos;&apos;,psdacrtid,&apos;&apos;,psdacrtdp,&apos;&apos;,psdacrtdt,psdamodid,&apos;&apos;,psdamoddt FROM psda_t WHERE psdaent= ? AND psdasite= ? AND psda001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT psda001,&apos;&apos;,&apos;&apos;,psdastus,psdaownid,&apos;&apos;,psdaowndp,&apos;&apos;,psdacrtid,&apos;&apos;,psdacrtdp,&apos;&apos;,psdacrtdt,psdamodid,&apos;&apos;,psdamoddt FROM psda_t" order="psda001"/>
+      <sql id="append" type="lang" target="psdal_t.psdal003,psdal_t.psdal004" table="psdal_t" fk="psda001" pk="psdal001,psdal002" field="psdal003,psdal004"/>
+    </head>
+    <body id="psdb_t" page="1" linked="" pk="psdbseq" fk="psdb001">
+      <sql id="forupd_sql_detail" query="SELECT psdbseq,psdb002,psdb003,psdb004,&apos;&apos;,psdb005,psdb006,psdb007 FROM psdb_t WHERE psdbent=? AND psdbsite=? AND psdb001=? AND psdbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT psdbseq,psdb002,psdb003,psdb004,&apos;&apos;,psdb005,psdb006,psdb007 FROM psdb_t WHERE psdbent=? AND psdbsite=? AND psdb001=?"/>
+    </body>
+    <body id="psdc_t" page="2" linked="" pk="psdcseq" fk="psdc001">
+      <sql id="forupd_sql_detail" query="SELECT psdcseq,psdc002,psdc003,psdc004,&apos;&apos;,psdc005,psdc006,psdc007 FROM psdc_t WHERE psdcent=? AND psdcsite=? AND psdc001=? AND psdcseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT psdcseq,psdc002,psdc003,psdc004,&apos;&apos;,psdc005,psdc006,psdc007 FROM psdc_t WHERE psdcent=? AND psdcsite=? AND psdc001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

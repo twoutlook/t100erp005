@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti037" module="art" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="06189" crtdt="2015-03-11 17:52:18" modid="06189" moddt="2015-03-11 21:56:51" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="供應商生命週期維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtdb001,rtdb003,rtdb003_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtdb001,rtdb003,rtdbownid,rtdbownid_desc(chr500),rtdbowndp,rtdbowndp_desc(chr500),rtdbcrtid,rtdbcrtid_desc(chr500),rtdbcrtdp,rtdbcrtdp_desc(chr500),rtdbcrtdt,rtdbmodid,rtdbmodid_desc(chr500),rtdbmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti037" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtdb001,rtdb003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="rtdb001,rtdb003"/>
+      <construct id="body" page="2" field="rtdbownid,rtdbowndp,rtdbcrtid,rtdbcrtdp,rtdbcrtdt,rtdbmodid,rtdbmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtdb001"/>
+      <column id="rtdb003">
+        <after>
+          <reference field="rtdb003_desc" ref_field="rtdb_t.rtdb003" map_field="rtdb003" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzcb002_01" state="i"/>
+        <controlp form="q_gzcb002_01" state="c"/>
+      </column>
+      <column id="rtdb003_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtdbownid">
+        <after>
+          <reference field="rtdbownid_desc" ref_field="rtdb_t.rtdbownid" map_field="rtdbownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdbownid_desc"/>
+      <column id="rtdbowndp">
+        <after>
+          <reference field="rtdbowndp_desc" ref_field="rtdb_t.rtdbowndp" map_field="rtdbowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdbowndp_desc"/>
+      <column id="rtdbcrtid">
+        <after>
+          <reference field="rtdbcrtid_desc" ref_field="rtdb_t.rtdbcrtid" map_field="rtdbcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdbcrtid_desc"/>
+      <column id="rtdbcrtdp">
+        <after>
+          <reference field="rtdbcrtdp_desc" ref_field="rtdb_t.rtdbcrtdp" map_field="rtdbcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdbcrtdp_desc"/>
+      <column id="rtdbcrtdt"/>
+      <column id="rtdbmodid">
+        <after>
+          <reference field="rtdbmodid_desc" ref_field="rtdb_t.rtdbmodid" map_field="rtdbmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdbmodid_desc"/>
+      <column id="rtdbmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtdb_t" page="1,2" linked="" pk="rtdb001,rtdb003">
+      <sql id="forupd_sql_detail" query="SELECT rtdb001,rtdb003,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtdbownid,&apos;&apos;,rtdbowndp,&apos;&apos;,rtdbcrtid,&apos;&apos;,rtdbcrtdp,&apos;&apos;,rtdbcrtdt,rtdbmodid,&apos;&apos;,rtdbmoddt FROM rtdb_t WHERE rtdbent=? AND rtdb001=? AND rtdb003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtdb001,rtdb003,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtdbownid,&apos;&apos;,rtdbowndp,&apos;&apos;,rtdbcrtid,&apos;&apos;,rtdbcrtdp,&apos;&apos;,rtdbcrtdt,rtdbmodid,&apos;&apos;,rtdbmoddt FROM rtdb_t WHERE rtdbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

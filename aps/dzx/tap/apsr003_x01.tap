@@ -1,0 +1,402 @@
+<add_points prog="apsr003_x01" std_prog="apsr003_x01" erpver="1.0" module="APS" ver="1" env="s" zone="t10dev" booking="Y" type="X" identity="s">
+  <other>
+    <code_template value="" status="" />
+    <free_style value="" status="" />
+  </other>
+  <point name="component.get_var" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[p_arg1,p_arg2,p_arg3]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="component.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="component.arg.prep" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="create_tmp.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="create_tmp.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ins_prep.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="sel_prep.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="sel_prep.before" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[   ]]>
+</point>
+  <point name="sel_prep.g_select" cite_std="N" status="u" ver="" src="s" new="Y" mark_hard="Y">
+<![CDATA[   LET g_select =
+      " select a.psoq004,a.pmaal003,a.psoq036,a.psoq005,a.imaal003,a.imaal004,a.psoq044,b.psoq006,c.psoq006,",
+      "        b.psoq007,c.psoq007 ,b.psoq024,c.psoq024,b.psoq024 - b.psoq007,c.psoq024-c.psoq007,d.xmda015,",
+      "        e.xmdc015*b.psoq006 ,e.xmdc015*b.psoq006*d.xmda016,",            
+      "        f.xmdc015*c.psoq006 ,f.xmdc015*c.psoq006*d.xmda016"
+     ]]>
+</point>
+  <point name="sel_prep.g_from" cite_std="N" status="u" ver="" src="s" new="Y" mark_hard="Y">
+<![CDATA[   LET g_from =
+    "  from (select psoqent,psoqsite,psoq001,psoq002,psoq004,pmaal003,imaal003,imaal004,psoq044,psoq009,psoq036,psoq005,psoq007                             ",
+    "           from dsdemo.psoq_t left join dsdemo.pmaal_t on pmaal001=psoq009 and pmaalent =psoqent and pmaal002 ='zh_TW'                   ",
+    "                              left join dsdemo.imaal_t on imaal001=psoq005 and imaalent =psoqent and imaal002 ='zh_TW') a                ",
+    "      left join dsdemo.psoq_t b on b.psoqent=a.psoqent and b.psoqsite = a.psoqsite and b.psoq001=a.psoq001 and b.psoq002=a.psoq002 and b.psoq004=a.psoq004 "   
+   IF NOT cl_null(tm.p01) THEN
+      LET g_from = g_from , " and b.psoq001= '",tm.p01, "' "
+   END IF
+   LET g_from = g_from ," left join dsdemo.xmdc_t e on e.xmdcent=b.psoqent and e.xmdcdocno= substr(b.psoq004,1,20) and e.xmdcseq = substr(b.psoq004,22,1)  ",
+                        " left join dsdemo.psoq_t c on c.psoqent=a.psoqent and c.psoqsite = a.psoqsite and c.psoq001=a.psoq001 and c.psoq002=a.psoq002 and c.psoq004=a.psoq004  " 
+   IF NOT cl_null(tm.p02) THEN
+      LET g_from = g_from , " and c.psoq001= '",tm.p02, "' "
+   END IF                     
+   LET g_from = g_from ,       
+        "  left join dsdemo.xmdc_t f on f.xmdcent=c.psoqent and f.xmdcdocno= substr(c.psoq004,1,20) and f.xmdcseq = substr(c.psoq004,22,1)          ",
+        "  left join dsdemo.xmda_t d on d.xmdaent=a.psoqent and d.xmdadocno= substr(a.psoq004,1,20) "]]>
+</point>
+  <point name="sel_prep.g_where" cite_std="N" status="u" ver="" src="s" new="Y" mark_hard="Y">
+<![CDATA[    LET g_where = " WHERE " ,tm.wc CLIPPED ," AND  (b.psoq001 is not null or c.psoq001 is not null ) "]]>
+</point>
+  <point name="sel_prep.g_order" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="sel_prep.sql.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="sel_prep.sql.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ins_data.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ins_data.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ins_data.foreach" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ins_data.before.save" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ins_data.after.save" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ins_data.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="rep_data.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="rep_data.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="rep_data.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="apsr003_x01.create_tmptable" ver="1" status="" src="s">
+<![CDATA[PRIVATE FUNCTION apsr003_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #建立TEMP TABLE 透過此lib(組字串+create temp table+組ins的問號)
+   IF NOT cl_xg_create_tmptable() THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+</section>
+  <section id="apsr003_x01.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000002
+#+ 
+#+ Filename...: apsr003_x01
+#+ Description: APS訂單版本比較表
+#+ Creator....: 05231(2014/07/09)
+#+ Modifier...: 05231(2014/07/09)
+#+ Buildtype..: 應用 x01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="apsr003_x01.global" ver="1" status="" src="s">
+<![CDATA[ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       p01 LIKE type_t.chr1000,         #APS版本1 
+       p02 LIKE type_t.chr1000          #APS版本2
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="apsr003_x01.ins_data" ver="1" status="" src="s">
+<![CDATA[PRIVATE FUNCTION apsr003_x01_ins_data()
+DEFINE sr RECORD 
+   a_psoq004 LIKE type_t.chr1000, 
+   a_pmaal003 LIKE type_t.chr1000, 
+   a_psoq036 LIKE type_t.chr1000, 
+   a_psoq005 LIKE type_t.chr1000, 
+   a_imaal003 LIKE type_t.chr1000, 
+   a_imaal004 LIKE type_t.chr30, 
+   a_psoq044 LIKE type_t.chr1000, 
+   b_psoq006 LIKE type_t.num20_6, 
+   c_psoq006 LIKE type_t.num20_6, 
+   b_psoq007 LIKE type_t.chr300, 
+   c_psoq007 LIKE type_t.chr300, 
+   b_psoq024 LIKE type_t.chr300, 
+   c_psoq024 LIKE type_t.chr300, 
+   v1_delay LIKE type_t.num20, 
+   v2_delay LIKE type_t.num20, 
+   l_xmda015 LIKE type_t.chr300, 
+   v1_sum LIKE type_t.num20_6, 
+   v1_sum_o LIKE type_t.num20_6, 
+   v2_sum LIKE type_t.num20_6, 
+   v2_sum_o LIKE type_t.num20_6
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH apsr003_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          CALL cl_err('foreach:',STATUS,1)
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.a_psoq004,sr.a_pmaal003,sr.a_psoq036,sr.a_psoq005,sr.a_imaal003,sr.a_imaal004,sr.a_psoq044,sr.b_psoq006,sr.c_psoq006,sr.b_psoq007,sr.c_psoq007,sr.b_psoq024,sr.c_psoq024,sr.v1_delay,sr.v2_delay,sr.l_xmda015,sr.v1_sum,sr.v1_sum_o,sr.v2_sum,sr.v2_sum_o
+ 
+       IF SQLCA.sqlcode THEN
+          CALL cl_err("apsr003_x01_execute",SQLCA.sqlcode,0)
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="apsr003_x01.ins_prep" ver="1" status="" src="s">
+<![CDATA[PRIVATE FUNCTION apsr003_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            CALL cl_err(l_prep_str,status,1)
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF         
+ 
+         WHEN 2
+         PREPARE insert_prep1 FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            CALL cl_err(l_prep_str,status,1)
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF         
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+]]>
+</section>
+  <section id="apsr003_x01.main" ver="1" status="" src="s">
+<![CDATA[PUBLIC FUNCTION apsr003_x01(--)
+   #add-point:component段變數傳入
+   {<point name="component.get_var"/>}
+   #end add-point
+   )
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr1000         #tm.p01  APS版本1 
+DEFINE  p_arg3 LIKE type_t.chr1000         #tm.p02  APS版本2
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.p01 = p_arg2
+   LET tm.p02 = p_arg3
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "apsr003_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL apsr003_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL apsr003_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL apsr003_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL apsr003_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL apsr003_x01_rep_data()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="apsr003_x01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="apsr003_x01.rep_data" ver="1" status="" src="s">
+<![CDATA[PRIVATE FUNCTION apsr003_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+</section>
+  <section id="apsr003_x01.sel_prep" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apsr003_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT '','','','','','','',NULL,NULL,'','','','',NULL,NULL,'',NULL,NULL,NULL,NULL" 
+
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM  psoq_t "
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("psoq_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE apsr003_x01_prepare FROM g_sql
+   IF STATUS THEN
+      CALL cl_err('prepare:',STATUS,1)
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE apsr003_x01_curs CURSOR FOR apsr003_x01_prepare
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

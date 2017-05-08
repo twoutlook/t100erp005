@@ -1,0 +1,271 @@
+{<section id="${component_name}.global" readonly="Y" >}
+
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+
+SCHEMA ds
+
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+
+#報表 type 宣告
+DEFINE tm RECORD
+${tm_fields_define_str}
+       END RECORD
+
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+
+
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+{</section>}
+
+{<section id="${component_name}.main" readonly="Y" >}
+PUBLIC FUNCTION ${component_name}(${arg_name})
+${componet_define_str}
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+
+   ${componet_init_str}
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "${component_name}"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+
+   #create 暫存檔
+   CALL ${component_name}_create_tmptable()
+
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL ${component_name}_sel_prep()
+
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL ${component_name}_ins_prep()  
+
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL ${component_name}_ins_data() 
+
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL ${component_name}_rep_data()
+
+END FUNCTION
+{</section>}
+
+{<section id="${component_name}.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION ${component_name}_create_tmptable()
+
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "${g_temp_query}" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+{</section>}
+
+{<section id="${component_name}.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION ${component_name}_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         #xgprep - Start -
+         WHEN ${key}
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(${g_temp_ins_prep${key1}}"
+         PREPARE insert_prep${key1} FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep${key1}段
+         {<point name="insert_prep${key1}"/>}
+         #end add-point                  
+         #xgprep - End -
+      END CASE
+   END FOR
+END FUNCTION
+{</section>}
+
+{<section id="${component_name}.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ${component_name}_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   ${g_select_query}
+
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+   ${g_from_query}
+
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+   ${g_where_query} ,tm.wc CLIPPED
+
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("${maintable}")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE ${component_name}_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE ${component_name}_curs CURSOR FOR ${component_name}_prepare
+
+END FUNCTION
+{</section>}
+
+{<section id="${component_name}.ins_data" readonly="Y" >}
+PRIVATE FUNCTION ${component_name}_ins_data()
+DEFINE sr RECORD ${master_fields_define} END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+
+    LET g_rep_success = 'Y'
+
+    FOREACH ${component_name}_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+
+       #EXECUTE
+       EXECUTE insert_prep USING ${set_sr_rep_str}
+
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "${component_name}_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+
+END FUNCTION
+{</section>}
+
+{<section id="${component_name}.rep_data" readonly="Y" >}
+PRIVATE FUNCTION ${component_name}_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+{</section>}
+
+{<section id="${component_name}.other_function" >}
+{<point name="other.function"/>}
+{</section>}

@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli162" module="agl" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="07900" crtdt="2016-07-04 16:30:26" modid="07900" moddt="2016-07-04 18:28:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="綜合損益科目期末結轉設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glchld,glchld_desc(chr80),glaacomp,glaacomp_desc(chr80),glch001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glchstus,glch002,glch002_desc(chr500),glch003,glch003_desc(chr500),glch004,glch004_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glch002,glchownid,glchownid_desc(chr500),glchowndp,glchowndp_desc(chr500),glchcrtid,glchcrtid_desc(chr500),glchcrtdp,glchcrtdp_desc(chr500),glchcrtdt,glchmodid,glchmodid_desc(chr500),glchmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli162" method="dialog">
+    <section id="input">
+      <input id="head" field="glchld,glch001"/>
+      <input id="body" page="1" field="glchstus,glch002,glch003,glch004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glchld,glaacomp,glch001"/>
+      <construct id="body" page="1" field="glchstus,glch002,glch003,glch004"/>
+      <construct id="body" page="2" field="glchownid,glchowndp,glchcrtid,glchcrtdp,glchcrtdt,glchmodid,glchmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glchld,glch001"/>
+      <set id="head" type="no_entry" field="glchld,glch001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glchld">
+        <after>
+          <reference field="glchld_desc" ref_field="glch_t.glchld" map_field="glchent,glchld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glchld_desc"/>
+      <column id="glaacomp">
+        <after>
+          <reference field="glaacomp_desc" ref_field="glaa_t.glaacomp" map_field="glaaent,glaacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_2" state="i"/>
+        <controlp form="q_ooea001_2" state="c"/>
+      </column>
+      <column id="glaacomp_desc"/>
+      <column id="glch001"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glchstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glch002">
+        <after>
+          <reference field="glch002_desc" ref_field="glch_t.glch002" map_field="glchent,glch002" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=? AND glacl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glch002_desc"/>
+      <column id="glch003">
+        <after>
+          <reference field="glch003_desc" ref_field="glch_t.glch003" map_field="glchent,glch003" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=? AND glacl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glch003_desc"/>
+      <column id="glch004">
+        <after>
+          <reference field="glch004_desc" ref_field="glch_t.glch004" map_field="glchent,glch004" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND =? AND glacl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glch004_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glchownid">
+        <after>
+          <reference field="glchownid_desc" ref_field="glch_t.glchownid" map_field="glchownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glchownid_desc"/>
+      <column id="glchowndp">
+        <after>
+          <reference field="glchowndp_desc" ref_field="glch_t.glchowndp" map_field="glchowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glchowndp_desc"/>
+      <column id="glchcrtid">
+        <after>
+          <reference field="glchcrtid_desc" ref_field="glch_t.glchcrtid" map_field="glchcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glchcrtid_desc"/>
+      <column id="glchcrtdp">
+        <after>
+          <reference field="glchcrtdp_desc" ref_field="glch_t.glchcrtdp" map_field="glchcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glchcrtdp_desc"/>
+      <column id="glchcrtdt"/>
+      <column id="glchmodid">
+        <after>
+          <reference field="glchmodid_desc" ref_field="glch_t.glchmodid" map_field="glchmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glchmodid_desc"/>
+      <column id="glchmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glch_t" pk="glchld,glch001">
+      <sql id="forupd_sql" type="sql" query="SELECT glchld,&apos;&apos;,&apos;&apos;,&apos;&apos;,glch001 FROM glch_t WHERE glchent= ? AND glchld=? AND glch001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glchld,&apos;&apos;,&apos;&apos;,&apos;&apos;,glch001 FROM glch_t" order="glchld,glch001"/>
+    </head>
+    <body id="glch_t" page="1,2" linked="" pk="glch002" fk="glchld,glch001">
+      <sql id="forupd_sql_detail" query="SELECT glchstus,glch002,&apos;&apos;,glch003,&apos;&apos;,glch004,&apos;&apos;,&apos;&apos;,glchownid,&apos;&apos;,glchowndp,&apos;&apos;,glchcrtid,&apos;&apos;,glchcrtdp,&apos;&apos;,glchcrtdt,glchmodid,&apos;&apos;,glchmoddt FROM glch_t WHERE glchent=? AND glchld=? AND glch001=? AND glch002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glchstus,glch002,&apos;&apos;,glch003,&apos;&apos;,glch004,&apos;&apos;,&apos;&apos;,glchownid,&apos;&apos;,glchowndp,&apos;&apos;,glchcrtid,&apos;&apos;,glchcrtdp,&apos;&apos;,glchcrtdt,glchmodid,&apos;&apos;,glchmoddt FROM glch_t WHERE glchent= ? AND glchld=? AND glch001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

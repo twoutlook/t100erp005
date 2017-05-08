@@ -1,0 +1,2240 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="anmp410.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0017(2015-09-21 15:37:46), PR版次:0017(2016-10-24 04:00:05)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000150
+#+ Filename...: anmp410
+#+ Description: 應付請款單轉付款作業
+#+ Creator....: 03538(2014-08-04 15:54:23)
+#+ Modifier...: 03080 -SD/PR- 08729
+ 
+{</section>}
+ 
+{<section id="anmp410.global" >}
+#應用 p02 樣板自動產生(Version:19)
+#add-point:填寫註解說明
+#150610-00023#3  2015/06/11 By apo      aapt420單頭狀態必須要為已確認,才可以到anmp410轉付款
+#150610-00023#7  2015/06/12 By apo      1.補上掃把功能;2.避免重複產生,產生前及時檢核是否為已轉
+#150616-00026#13 2015/06/26 By apo      未帶入原付款單指定的付款帳戶
+#150707-00001#7  2015/07/30 By apo      加入代付組織為拆分條件
+#150729-00002#4  2015/08/03 By Jessy    bug修正(幣別控卡/單別開窗有誤/筆數統計錯誤)
+#150904-00006#6  2015/09/08 By albireo  增加單頭他行本行判斷邏輯
+#150915          2015/09/15 By Reanna   請款單號開窗內容與下面清單不符
+#150918-00001#1  2015/09/21 By albireo  匯率取用改為原單匯率,匯總時匯率加入匯總條件
+#151013-00019#10 2015/11/11 By Reanna   匯總合併default給N
+#151113          2015/11/13 By Reanna   產生需依請款單號排序
+#151127-00002#3  2015/12/08 By sakura   寄領方式(nmck034)先取aapi050的票據寄領方式(apaa004)設定，
+#                                       若取不到設定，現金及匯款類型default'2.自領'，其他就default'1.寄領'
+#160107          2016/01/07 By 03538    取銀行名稱 key值缺漏
+#150813-00015#31 2016/01/15 By 02599    增加单据日期栏位检核
+#160122-00001#3  2016/2/19  by 07673    添加交易账户编号用户权限控管
+#160122-00001#3  2016/3/16  by 07900    添加交易账户编号用户权限控管,增加部门权限
+#160308-00006#1  2016/03/24 By Reanna   款別:現金>>隱藏(因為aapt420會直接寫銀存收支檔)
+#160202-00021#3  2016/03/25 By lujh     1.nmbc_t 增加受款人全名 nmbc016 datatype 為全名 C102 
+#                                       2.anmp410/anmp460 轉 anm 時帶apde041 到 nmck015 票據全名(匯入戶名)
+#                                       3.應付匯款及票據異動作業寫 nmbc 時nmbc016 = nmck015
+#160321-00016#38 2016/03/30 By Jessy    將重複內容的錯誤訊息置換為公用錯誤訊息
+#160318-00025#26 2016/04/28 BY 07900    校验代码重复错误讯息的修改
+#160816-00012#2  2016/08/29 By 01727    ANM增加资金中心，帐套，法人三个栏位权限
+#160905-00007#7   2016/09/05 By 01727     调整系统中无ENT的SQL条件增加ent
+#161021-00050#1  2016/10/24 By 08729    處理組織開窗
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+GLOBALS "../../cfg/top_finance.inc"    #財務模組使用
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔
+#
+##end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD
+   sel           LIKE type_t.chr1,
+   apdeorga      LIKE apde_t.apdeorga,   #150707-00001#7    
+   apdeorga_desc LIKE type_t.chr80,      #150707-00001#7  
+   apdadocno     LIKE apda_t.apdadocno,
+   apdadocdt     LIKE apda_t.apdadocdt,
+   apda005       LIKE apda_t.apda005,
+   apde032       LIKE apde_t.apde032,
+   apde109       LIKE apde_t.apde109,
+   apde119       LIKE apde_t.apde119,
+   nmck011       LIKE nmck_t.nmck011,
+   nmck004       LIKE nmck_t.nmck004,
+   nmck100       LIKE nmck_t.nmck100,
+   nmck002       LIKE nmck_t.nmck002,
+   apdaent       LIKE apda_t.apdaent,
+   apda006       LIKE apda_t.apda006,
+   apde011       LIKE apde_t.apde011,   
+   apde012       LIKE apde_t.apde012,
+   apde016       LIKE apde_t.apde016,
+   apde039       LIKE apde_t.apde039,  
+   apde040       LIKE apde_t.apde040,   
+   apde041       LIKE apde_t.apde041,
+   apde121       LIKE apde_t.apde121,
+   apde129       LIKE apde_t.apde129,
+   apde131       LIKE apde_t.apde131,
+   apde139       LIKE apde_t.apde139,
+  #apdeorga      LIKE apde_t.apdeorga,   #150707-00001#7 mark
+   apdeseq       LIKE apde_t.apdeseq,
+   apde101       LIKE apde_t.apde101     ##150918-00001#1  add
+END RECORD
+
+DEFINE g_sql_bank       STRING           #160122-00001#3 By 07900 add
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+ TYPE type_master_1 RECORD
+  #apdasite      LIKE apda_t.apdasite, 
+  #apdasite_desc LIKE type_t.chr80, 
+   nmcksite       LIKE nmck_t.nmcksite,   #150518-00043-2
+   nmcksite_desc  LIKE type_t.chr80,      #150518-00043-2
+   apdald        LIKE apda_t.apdald,
+   apdacomp      LIKE apda_t.apdacomp, 
+   apdacomp_desc LIKE type_t.chr80,
+   apde006       LIKE apde_t.apde006, 
+   apce100        LIKE apce_t.apce100,    #150518-00043-2
+   l_chk1         LIKE type_t.chr1,       #150518-00043-2
+   wc            STRING
+       END RECORD
+ TYPE type_master_2 RECORD
+   nmckdocno      LIKE nmck_t.nmckdocno, 
+   nmckdocdt      LIKE nmck_t.nmckdocdt,
+  #nmcksite       LIKE nmck_t.nmcksite,   #150518-00043-2
+  #nmcksite_desc  LIKE type_t.chr80,      #150518-00043-2
+   nmck003        LIKE nmck_t.nmck003,
+   nmck003_desc   LIKE type_t.chr80,
+   nmck004        LIKE nmck_t.nmck004,
+   nmck004_desc   LIKE type_t.chr80,
+   nmas003        LIKE nmas_t.nmas003,
+   nmck002        LIKE nmck_t.nmck002,
+   nmck002_desc   LIKE type_t.chr80,
+   summary        LIKE type_t.chr1
+       END RECORD
+DEFINE g_master1    type_master_1       
+DEFINE g_master2    type_master_2
+DEFINE g_success1   LIKE type_t.num5
+DEFINE g_gen_prog   STRING
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="anmp410.main" >}
+#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   
+   #end add-point   
+   #add-point:main段define
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("anm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_anmp410 WITH FORM cl_ap_formpath("anm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL anmp410_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL anmp410_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_anmp410
+   END IF 
+   
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="anmp410.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION anmp410_init()
+   #add-point:init段define
+   
+   #end add-point   
+   #add-point:init段define
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+  #CALL cl_set_combo_scc_part('apde006','8310','10,20,30')  #160308-00006#1 mark
+   CALL cl_set_combo_scc_part('apde006','8310','20,30')     #160308-00006#1
+   CALL anmp410_create_tmp()
+   #160122-00001#3 By 07900--add--str--
+   LET g_sql_bank=NULL
+   CALL s_anmi120_get_bank_account_sql(g_user,g_dept) RETURNING g_sub_success,g_sql_bank
+   #160122-00001#3 By 07900--add--end
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp410.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION anmp410_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define
+   DEFINE  l_glaa024             LIKE glaa_t.glaa024
+   DEFINE  l_nmag002             LIKE nmag_t.nmag002
+   DEFINE  l_success             LIKE type_t.num5     #150813-00015#31 add
+ ##160816-00012#2 Add  ---(S)---
+ # DEFINE  l_count               LIKE type_t.num5
+ # DEFINE  l_wc                  STRING
+ # DEFINE  l_sql                 STRING
+ ##160816-00012#2 Add  ---(E)---
+   #end add-point 
+   #add-point:ui_dialog段define
+   
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   #請款單條件預設值
+  #LET g_master1.apde006 = '10'  #160308-00006#1 mark
+   LET g_master1.apde006 = '20'  #160308-00006#1
+   #依款別為"10:現金"之情形先給予預設值
+   LET g_gen_prog = 'anmt460'  #參照anmt460取單別
+   LET l_nmag002 = '5'         #預設付款帳戶開窗參數為5:零用金
+#------改為呼叫元件處理---str----#      
+#   IF cl_null(g_master1.apdasite) THEN
+#      #取得預設的帳務中心,以登入人員做為依據
+##      CALL s_fin_get_account_center('',g_user,'2',g_today) RETURNING g_sub_success,g_master1.apdasite,g_errno
+#      CALL s_desc_get_department_desc(g_master1.apdasite) RETURNING g_master1.apdasite_desc
+#      #g_glaald,先做帳務中心及g_glaald的勾稽
+#      IF NOT cl_null(g_glaald) THEN
+#         #帳務中心與帳別勾稽
+##         CALL s_fin_account_center_with_ld_chk(g_master1.apdasite,g_glaald,g_user,'3','Y','',g_today) RETURNING g_sub_success,g_errno
+#      END IF
+#      #該帳務中心與帳別無法勾稽到,以登入人員g_user取得預設帳別/法人
+#      IF NOT g_sub_success OR cl_null(g_glaald) THEN
+#         CALL s_fin_ld_carry('',g_user) RETURNING g_sub_success,g_master1.apdald,g_master1.apdacomp,g_errno
+#         LET g_master1.apdacomp_desc = s_desc_get_department_desc(g_master1.apdacomp)
+#         DISPLAY BY NAME g_master1.apdacomp_desc
+##         CALL s_fin_account_center_with_ld_chk(g_master1.apdasite,g_master1.apdald,g_user,'3','Y','',g_today) RETURNING g_sub_success,g_errno
+#      ELSE
+##         LET g_master1.apdald = g_glaald
+##      END IF
+#   
+#      #若取不出資料,則不預設帳別
+#      IF NOT g_sub_success THEN
+#         LET g_master1.apdald   = ''
+#         LET g_master1.apdacomp = ''
+#         LET g_master1.apdacomp_desc = ''
+##      END IF
+#
+#      DISPLAY BY NAME g_master1.apdasite,g_master1.apdasite_desc    
+#   END IF 
+#------改為呼叫元件處理---end----#      
+   
+  #150518-00043-2
+  #CALL s_aap_get_default_apcasite('','','') RETURNING g_sub_success,g_errno,g_master1.apdasite,g_master1.apdald,g_master1.apdacomp 
+  #LET g_master1.apdasite_desc = s_desc_get_department_desc(g_master1.apdasite)
+  #LET g_master1.apdacomp_desc = s_desc_get_department_desc(g_master1.apdacomp)
+  #DISPLAY BY NAME g_master1.apdasite_desc,g_master1.apdacomp_desc
+   
+   CALL s_fin_account_center_with_ld_chk(g_site,'',g_user,'7','N','',g_today) RETURNING g_sub_success,g_errno
+   IF g_sub_success THEN
+      LET g_master1.nmcksite = g_site
+      LET g_master1.nmcksite_desc = s_desc_get_department_desc(g_master1.nmcksite)
+      CALL s_fin_orga_get_comp_ld(g_site) RETURNING g_sub_success,g_errno,g_master1.apdacomp,g_master1.apdald
+      LET g_master1.apdacomp_desc = s_desc_get_department_desc(g_master1.apdacomp)
+      DISPLAY BY NAME g_master1.nmcksite_desc,g_master1.apdacomp_desc
+   END IF
+   #150518-00043-2
+   #付款條件預設值
+   LET g_master2.nmckdocdt = g_today
+   IF cl_null(g_master2.nmck003) THEN
+      LET g_master2.nmck003 = g_user
+      LET g_master2.nmck003_desc = s_desc_get_person_desc(g_master2.nmck003)                  
+   END IF
+   IF cl_null(g_master2.summary) THEN
+     #LET g_master2.summary = 'Y' #151013-00019#10 mark
+      LET g_master2.summary = 'N' #151013-00019#10
+   END IF
+   DISPLAY BY NAME g_master2.nmck003,g_master2.summary   
+   ##150518-00043-2--
+   LET g_master1.l_chk1 = 'Y'
+   DISPLAY BY NAME g_master1.l_chk1
+   ##150518-00043-2--
+   
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL anmp410_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+        #INPUT BY NAME g_master1.apdasite,g_master1.apdacomp,g_master1.apde006                                    #150518-00043-2--mark
+         INPUT BY NAME g_master1.nmcksite,g_master1.apdacomp,g_master1.apde006,g_master1.apce100,g_master1.l_chk1 #150518-00043-2--
+            ATTRIBUTE(WITHOUT DEFAULTS)            
+            #150518-00043-2--mark               
+            #AFTER FIELD apdasite
+            #
+            #   LET g_master1.apdasite_desc = ' '
+            #   LET g_master1.apdacomp_desc = ' '
+            #   DISPLAY BY NAME g_master1.apdasite_desc,g_master1.apdacomp_desc
+            #   IF NOT cl_null(g_master1.apdasite) THEN
+            #      #依選取帳務中心,重新帶出法人及帳套
+            #      CALL s_fin_orga_get_comp_ld(g_master1.apdasite)
+            #       RETURNING g_sub_success,g_errno,g_master1.apdacomp,g_master1.apdald               
+            #      CALL s_fin_account_center_with_ld_chk(g_master1.apdasite,g_master1.apdald,g_user,'3','Y','',g_today) RETURNING g_sub_success,g_errno
+            #      IF NOT g_sub_success THEN
+            #         INITIALIZE g_errparam TO NULL
+            #         LET g_errparam.code = g_errno
+            #         LET g_errparam.extend = ''
+            #         LET g_errparam.popup = TRUE
+            #         CALL cl_err()
+            #         NEXT FIELD CURRENT
+            #      END IF
+            #   END IF           
+            #   LET g_master1.apdasite_desc = s_desc_get_department_desc(g_master1.apdasite)
+            #   LET g_master1.apdacomp_desc = s_desc_get_department_desc(g_master1.apdacomp)
+            #   DISPLAY BY NAME g_master1.apdasite_desc,g_master1.apdacomp_desc
+            #150518-00043-2--mark               
+            #150518-00043-2
+             AFTER FIELD nmcksite
+                LET g_master1.nmcksite_desc = ' '
+                LET g_master1.apdacomp_desc = ' '
+                DISPLAY BY NAME g_master1.nmcksite_desc,g_master1.apdacomp_desc
+                IF NOT cl_null(g_master1.nmcksite) THEN
+                   #依選取帳務中心,重新帶出法人及帳套
+                   CALL s_fin_orga_get_comp_ld(g_master1.nmcksite)
+                      RETURNING g_sub_success,g_errno,g_master1.apdacomp,g_master1.apdald
+                  ##160816-00012#2 Add  ---(S)---
+                  ##检查用户是否有资金中心对应法人的权限
+                  #CALL s_axrt300_get_site(g_user,'','3') RETURNING l_wc
+                  #LET l_count = 0
+                  #LET l_sql = "SELECT COUNT(*) FROM ooef_t WHERE ooefent = '",g_enterprise,"' ",
+                  #            "   AND ooef001 = '",g_master1.apdacomp,"'",
+                  #            "   AND ooef003 = 'Y'",
+                  #            "   AND ",l_wc CLIPPED
+                  #PREPARE anmp410_count_prep FROM l_sql
+                  #EXECUTE anmp410_count_prep INTO l_count
+                  #IF cl_null(l_count) THEN LET l_count = 0 END IF
+                  #IF l_count = 0 THEN
+                  #   INITIALIZE g_errparam TO NULL
+                  #   LET g_errparam.code = "anm-00409"
+                  #   LET g_errparam.extend = ''
+                  #   LET g_errparam.popup = TRUE
+                  #   CALL cl_err()
+                  #   NEXT FIELD CURRENT
+                  #END IF
+                  ##160816-00012#2 Add  ---(E)---
+                   #CALL s_fin_account_center_with_ld_chk(g_master1.nmcksite,g_master1.apdald,g_user,'7','Y','',g_today) RETURNING g_sub_success,g_errno #161021-00050#1 mark
+                   CALL s_fin_account_center_with_ld_chk(g_master1.nmcksite,g_master1.apdald,g_user,'6','Y','',g_today) RETURNING g_sub_success,g_errno  #161021-00050#1 add
+                   IF NOT g_sub_success THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = g_errno
+                      LET g_errparam.extend = ''
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+                      #161021-00050#1-add(s)
+                      LET g_master1.nmcksite = g_site
+                      LET g_master1.nmcksite_desc = s_desc_get_department_desc(g_master1.nmcksite)
+                      LET g_master1.apdacomp = ''
+                      LET g_master1.apdacomp_desc = ''
+                      #161021-00050#1-add(e)
+                      NEXT FIELD CURRENT
+                   END IF
+                END IF           
+                LET g_master1.nmcksite_desc = s_desc_get_department_desc(g_master1.nmcksite)
+                LET g_master1.apdacomp_desc = s_desc_get_department_desc(g_master1.apdacomp)
+                DISPLAY BY NAME g_master1.nmcksite_desc,g_master1.apdacomp_desc
+            AFTER FIELD apce100
+               #150729-00002#4-----s 幣別欄位檢核
+               IF NOT cl_null(g_master1.apce100) THEN 
+                  INITIALIZE g_chkparam.* TO NULL                  
+                  LET g_chkparam.arg1 = g_master1.apce100  
+                  #160318-00025#26  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="aoo-00011:sub-01302|aooi140|",cl_get_progname("aooi140",g_lang,"2"),"|:EXEPROGaooi140"
+                  #160318-00025#26  by 07900 --add-end 
+                  IF cl_chk_exist("v_ooai001") THEN 
+                  ELSE
+                     LET g_master1.apce100 = ''
+                     NEXT FIELD CURRENT
+                  END IF               
+               END IF  
+               #150729-00002#4-----e
+               IF NOT cl_null(g_master1.apce100) THEN
+                  CALL g_detail_d.clear()
+               END IF
+               
+            ON CHANGE l_chk1
+               IF NOT cl_null(g_master1.l_chk1) THEN
+                  CALL g_detail_d.clear()
+               END IF
+            #150518-00043-2    
+            AFTER FIELD apdacomp
+               
+               LET g_master1.apdacomp_desc = ' '
+               DISPLAY BY NAME g_master1.apdacomp_desc
+               IF NOT cl_null(g_master1.apdacomp) THEN
+                  LET g_master1.apdald =s_fin_get_major_ld(g_master1.apdacomp)
+#                  CALL s_fin_account_center_with_ld_chk(g_master1.apdasite,g_master1.apdald,g_user,'3','Y','',g_today) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_fin_comp_chk(g_master1.apdacomp) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     #160321-00016#38 --s add
+                     LET g_errparam.replace[1] = 'aooi100'
+                     LET g_errparam.replace[2] = cl_get_progname('aooi100',g_lang,"2")
+                     LET g_errparam.exeprog = 'aooi100'
+                     #160321-00016#38 --e add
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  #取得glaa024,後面於指定單別時使用
+                  LET l_glaa024 = ''
+                  SELECT glaa024 INTO l_glaa024 FROM glaa_t
+                   WHERE glaaent = g_enterprise
+                     AND glaald = g_master1.apdald                  
+               END IF           
+               LET g_master1.apdacomp_desc = s_desc_get_department_desc(g_master1.apdacomp)
+               DISPLAY BY NAME g_master1.apdacomp_desc
+               
+            AFTER FIELD apde006
+            
+               #10:現金/20:銀行電匯款檢核單別比照anmt460應付匯款辦理,30:票據比照anmt440應付票據辦理
+               IF g_master1.apde006 = '10' OR g_master1.apde006 = '20' THEN
+                  LET g_gen_prog = 'anmt460'
+               ELSE
+                  LET g_gen_prog = 'anmt440'   
+               END IF  
+               IF g_master1.apde006 = '10' THEN  #現金
+                  LET l_nmag002 = '5'   #零用金
+               END IF
+               IF g_master1.apde006 = '20' THEN  #銀行電匯款
+                  LET l_nmag002 = '1'   #不限制
+               END IF
+               IF g_master1.apde006 = '30' THEN  #票據
+                  LET l_nmag002 = '4'   #票據往來
+               END IF               
+               
+            ON CHANGE apde006
+            
+               #10:現金/20:銀行電匯款檢核單別比照anmt460應付匯款辦理,30:票據比照anmt440應付票據辦理
+               IF g_master1.apde006 = '10' OR g_master1.apde006 = '20' THEN
+                  LET g_gen_prog = 'anmt460'
+               ELSE
+                  LET g_gen_prog = 'anmt440'   
+               END IF                
+               IF g_master1.apde006 = '10' THEN  #現金
+                  LET l_nmag002 = '5'   #零用金
+               END IF
+               IF g_master1.apde006 = '20' THEN  #銀行電匯款
+                  LET l_nmag002 = '1'   #不限制
+               END IF
+               IF g_master1.apde006 = '30' THEN  #票據
+                  LET l_nmag002 = '4'   #票據往來
+               END IF                
+               CALL g_detail_d.clear() #150518-00043-2
+               
+           #150518-00043-2--mark       
+           #ON ACTION controlp INFIELD apdasite
+           #
+           #   INITIALIZE g_qryparam.* TO NULL
+           #   LET g_qryparam.state = 'i'
+           #   LET g_qryparam.reqry = FALSE
+           #   LET g_qryparam.default1 = g_master1.apdasite       #給予default值
+           #   LET g_qryparam.where = " ooef201 = 'Y' "
+           #   CALL q_ooef001()                                #呼叫開窗
+           #   LET g_master1.apdasite = g_qryparam.return1        #將開窗取得的值回傳到變數
+           #   CALL s_desc_get_department_desc(g_master1.apdasite) RETURNING g_master1.apdasite_desc
+           #   DISPLAY BY NAME g_master1.apdasite,g_master1.apdasite_desc
+           #   LET g_qryparam.where = ''
+           #   NEXT FIELD apdasite    
+           #150518-00043-2--mark   
+           #150518-00043-2
+            ON ACTION controlp INFIELD nmcksite
+            
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master1.nmcksite       #給予default值
+               #161021-00050#1 mark(s)
+               #LET g_qryparam.where = " ooef206 = 'Y' " 
+               #CALL q_ooef001()                                 #呼叫開窗
+               #161021-00050#1 mark(e)
+               CALL q_ooef001_33()       #161021-00050#1-add
+               LET g_master1.nmcksite = g_qryparam.return1        #將開窗取得的值回傳到變數
+               CALL s_desc_get_department_desc(g_master1.nmcksite) RETURNING g_master1.nmcksite_desc
+               DISPLAY BY NAME g_master1.nmcksite,g_master1.nmcksite_desc
+               NEXT FIELD nmcksite 
+           
+           #150518-00043-2
+            ON ACTION controlp INFIELD apdacomp
+
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master1.apdacomp 
+               LET g_qryparam.where = "ooef001 = ooef017 "
+               CALL q_ooef001()                                       #呼叫開窗
+               LET g_master1.apdacomp = g_qryparam.return1          #將開窗取得的值回傳到變數
+               DISPLAY BY NAME g_master1.apdacomp
+               LET g_master1.apdacomp_desc = s_desc_get_department_desc(g_master1.apdacomp)
+               DISPLAY BY NAME g_master1.apdacomp_desc
+               NEXT FIELD apdacomp 
+            
+            ##150518-00043-2--
+            ON ACTION controlp INFIELD apce100
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+			      LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master1.apce100
+               LET g_qryparam.arg1 =g_master1.apdacomp
+               CALL q_ooaj002_1()                           
+               LET g_master1.apce100 = g_qryparam.return1       
+               DISPLAY BY NAME g_master1.apce100
+               NEXT FIELD apce100     
+            ##150518-00043-2--
+         END INPUT
+         
+         
+         CONSTRUCT BY NAME g_master1.wc ON apdadocno,apdadocdt,apda005,apde032,apdasite      #150518-00043-2-- add apdasite
+
+            ON ACTION controlp INFIELD apdadocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = #150915 mark ------
+                                      # " EXISTS(SELECT DISTINCT ooac002 FROM ooac_t ",
+                                      # " LEFT OUTER JOIN glaa_t ON ooac001 = glaa024 AND ooacent = glaaent AND glaacomp ='",g_master1.apdacomp,"'",
+                                      # " LEFT OUTER JOIN gzcb_t ON gzcb001 = '8507' AND gzcb002 = ooac004 ",
+                                      # " LEFT OUTER JOIN oobx_t ON ooacent = oobxent AND ooac002 = oobx001 ",
+                                      ##"WHERE ooefent = '",g_enterprise,"' AND ooef001 ='",g_master1.apdacomp,"'",     
+                                      # "WHERE ooacent = '",g_enterprise,"' ",
+                                      # "  AND ooac003 = 'D-FIN-3006' AND ooac004 = '45' ",
+                                      # "  AND SUBSTR(apdadocno,5,3)=ooac002) ",
+                                      #150915 mark end---
+                                     #"  AND apdastus <>'X' ",   #150610-00023#3 mark
+                                     #"  AND apdastus = 'Y' ",   #150610-00023#3  #150915 mark
+                                      "  apdastus = 'Y' ",       #150915
+                                      "  AND apdald = '",g_master1.apdald,"'",      #150518-00043-2--
+                                      #150915 add ------
+                                      "  AND apdacomp = '",g_master1.apdacomp,"'",
+                                      "  AND apda005 <> 'EMPL'",
+                                      #150915 add end---
+                                     #"  AND NOT EXISTS ( SELECT 1 FROM apde_t WHERE apdaent =apdeent AND apdadocno = apdedocno AND apdald = apdeld AND apde009='Y') "  #150518-00043-2--  
+                                      "  AND apdadocno IN (SELECT apdedocno FROM apde_t ",
+                                      "                     WHERE apdaent =apdeent AND apdadocno = apdedocno AND apdald = apdeld",
+                                      "                       AND apde009='N' AND apde100 = '",g_master1.apce100,"'",
+                                      "                       AND apde002 = '10'", #150915
+                                      "                       AND apde006 = '",g_master1.apde006,"')"  #150518-00043-2--  
+               #150518-00043-2--  
+               IF g_master1.l_chk1 = 'Y' THEN
+                  LET g_qryparam.where = g_qryparam.where ," AND apda014 IS NOT NULL"
+               END IF
+               #150518-00043-2--  
+               CALL q_apdadocno()                                #呼叫開窗  
+               DISPLAY g_qryparam.return1 TO apdadocno #顯示到畫面上
+               NEXT FIELD apdadocno 
+               
+            ON ACTION controlp INFIELD apda005
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = " (pmaa002 ='1' OR pmaa002 ='3') AND (pmaa004 = '1' OR pmaa004 = '3')"
+               CALL q_pmaa001()                                  #呼叫開窗
+               DISPLAY g_qryparam.return1 TO apda005   #顯示到畫面上
+               NEXT FIELD apda005 
+             #150518-00043-2--
+             ON ACTION controlp INFIELD apdasite
+            
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               #161021-00050#1-mark(s)
+               #LET g_qryparam.where = " ooef201 = 'Y' "
+               #CALL q_ooef001()                                #呼叫開窗
+               #161021-00050#1-mark(e)
+               CALL q_ooef001_46()       #161021-00050#1-add
+               DISPLAY g_qryparam.return1 TO apdasite   #顯示到畫面上
+               NEXT FIELD apdasite    
+             #150518-00043-2--             
+         END CONSTRUCT
+         INPUT BY NAME g_master2.nmckdocno,g_master2.nmckdocdt,#g_master2.nmcksite, #150518-00043-2 mark nmcksite
+                       g_master2.nmck003,
+                       g_master2.nmck004,g_master2.nmck002,g_master2.summary
+            ATTRIBUTE(WITHOUT DEFAULTS)                                   
+               
+            AFTER FIELD nmckdocno
+               
+
+               IF NOT cl_null(g_master2.nmckdocno) THEN 
+                  #CALL s_aooi200_chk_slip(g_master1.apdacomp,l_glaa024,g_master2.nmckdocno,g_gen_prog) RETURNING g_sub_success     #liuym mark 2014/12/26
+                  CALL s_aooi200_fin_chk_slip(g_master1.apdald,l_glaa024,g_master2.nmckdocno,g_gen_prog) RETURNING g_sub_success    #liuym add 2014/12/26
+
+                  IF NOT g_sub_success THEN 
+                     NEXT FIELD nmckdocno
+                  END IF
+               END IF
+               
+            #150813-00015#31--add--str--
+            AFTER FIELD nmckdocdt
+               IF NOT cl_null(g_master2.nmckdocdt) THEN
+                  #單據日期不可小於等於關帳日期
+                  CALL s_fin_date_close_chk('',g_master1.nmcksite,'ANM',g_master2.nmckdocdt) RETURNING l_success
+                  IF l_success = FALSE THEN
+                     NEXT FIELD nmckdocdt
+                  END IF
+               END IF
+            #150813-00015#31--add--end
+            
+            #150518-00043-2--mark
+            #AFTER FIELD nmcksite
+            #   IF NOT cl_null(g_master2.nmcksite) THEN 
+            #      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+            #      INITIALIZE g_chkparam.* TO NULL
+            #      
+            #      #設定g_chkparam.*的參數
+            #      LET g_chkparam.arg1 = g_master2.nmcksite
+            #         
+            #      #呼叫檢查存在並帶值的library
+            #      IF cl_chk_exist("v_ooef001") THEN
+            #
+            #      ELSE
+            #         #檢查失敗時後續處理
+            #         NEXT FIELD CURRENT
+            #      END IF
+#           #       CALL s_fin_account_center_with_ld_chk(g_master2.nmcksite,g_master1.apdald,g_user,'6','Y','',g_today) RETURNING g_sub_success,g_errno
+            #      IF NOT g_sub_success THEN
+            #         INITIALIZE g_errparam TO NULL
+            #         LET g_errno = 'anm-00236'
+            #         LET g_errparam.code = g_errno
+            #         LET g_errparam.extend = ''
+            #         LET g_errparam.popup = TRUE
+            #         CALL cl_err()
+            #         NEXT FIELD CURRENT
+            #      END IF                     
+            #   END IF 
+            #   LET g_master2.nmcksite_desc = s_desc_get_department_desc(g_master2.nmcksite) 
+            #   DISPLAY BY NAME g_master2.nmcksite,g_master2.nmcksite_desc				
+            #150518-00043-2 mark   
+
+            AFTER FIELD nmck003
+               
+               IF NOT cl_null(g_master2.nmck003) THEN 
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_master2.nmck003
+                  #160318-00025#26  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"
+                  #160318-00025#26  by 07900 --add-end    
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_ooag001") THEN
+                  ELSE
+                     #檢查失敗時後續處理
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+   
+            AFTER FIELD nmck004
+               
+               LET g_master2.nmck004_desc = ''
+               DISPLAY BY NAME g_master2.nmck004,g_master2.nmck004_desc 
+               IF NOT cl_null(g_master2.nmck004) THEN 
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_master2.nmck004
+                  LET g_chkparam.arg2 = g_master1.apdacomp
+                  LET g_chkparam.arg3 = l_nmag002
+   
+                  #160318-00025#26  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="ade-00010:sub-01302|anmi120|",cl_get_progname("anmi120",g_lang,"2"),"|:EXEPROGanmi120"
+                  #160318-00025#26  by 07900 --add-end   
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_nmas002_4") THEN
+                     #檢查成功時後續處理
+                     #160122-00001#3 -add -str
+                     IF NOT s_anmi120_nmll002_chk(g_master2.nmck004,g_user) THEN
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = g_master2.nmck004
+                        LET g_errparam.code   = 'anm-00574' 
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        LET g_master2.nmck004 = '' 
+                        NEXT FIELD CURRENT
+                     END IF
+                     #160122-00001#3 -add -end   
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_master2.nmck004 = ''                     
+                     NEXT FIELD CURRENT
+                  END IF
+
+               END IF 
+               LET g_master2.nmas003 = s_anm_get_nmas003(g_master2.nmck004)
+               LET g_master2.nmck004_desc = s_desc_get_nmas002_desc(g_master2.nmck004)
+               DISPLAY BY NAME g_master2.nmck004,g_master2.nmck004_desc,g_master2.nmas003 
+
+            AFTER FIELD nmck002
+               LET g_master2.nmck002_desc = ''   
+               DISPLAY BY NAME g_master2.nmck002,g_master2.nmck002_desc 
+               IF NOT cl_null(g_master2.nmck002) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_master2.nmck002
+                  LET g_chkparam.arg2 = g_master1.apde006
+                  LET g_chkparam.err_str[2] ="amm-00245:anm-00217"
+                  IF NOT cl_chk_exist("v_ooia001_1") THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               LET g_master2.nmck002_desc = s_desc_get_ooial_desc(g_master2.nmck002)  
+               DISPLAY BY NAME g_master2.nmck002,g_master2.nmck002_desc               
+                       
+            ON ACTION controlp INFIELD nmckdocno 
+               LET l_glaa024 = ''
+               SELECT glaa024 INTO l_glaa024 FROM glaa_t
+               WHERE glaaent = g_enterprise
+               AND glaald = g_master1.apdald
+
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master2.nmckdocno             #給予default值
+               #150729-00002#4-----s
+               LET g_qryparam.where = " ooba001 = '",l_glaa024,"' AND oobx004 = '",g_gen_prog,"'" 
+               CALL q_ooba002_4()                                  #呼叫開窗
+               #150729-00002#4-----e
+               LET g_master2.nmckdocno = g_qryparam.return1              
+               DISPLAY g_master2.nmckdocno TO nmckdocno       
+               NEXT FIELD nmckdocno                          #返回原欄位 
+           #150518-00043-2--mark    
+           #ON ACTION controlp INFIELD nmcksite
+           #
+           #   INITIALIZE g_qryparam.* TO NULL
+           #   LET g_qryparam.state = 'i'
+           #   LET g_qryparam.reqry = FALSE
+           #   LET g_qryparam.default1 = g_master2.nmcksite       #給予default值
+           #   LET g_qryparam.where = " ooef206 = 'Y' "
+           #   CALL q_ooef001()                                 #呼叫開窗
+           #   LET g_master2.nmcksite = g_qryparam.return1        #將開窗取得的值回傳到變數
+           #   CALL s_desc_get_department_desc(g_master2.nmcksite) RETURNING g_master2.nmcksite_desc
+           #   DISPLAY BY NAME g_master2.nmcksite,g_master2.nmcksite_desc
+           #   NEXT FIELD nmcksite 
+           #150518-00043-2--mark
+            ON ACTION controlp INFIELD nmck003
+   
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+   
+               LET g_qryparam.default1 = g_master2.nmck003         #給予default值
+               
+               CALL q_ooag001()                                    #呼叫開窗
+               
+               LET g_master2.nmck003 = g_qryparam.return1                 
+               DISPLAY g_master2.nmck003 TO nmck003               
+   
+               NEXT FIELD nmck003                          #返回原欄位
+
+            ON ACTION controlp INFIELD nmck004
+     
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+   
+               LET g_qryparam.default1 = g_master2.nmck004             #給予default值
+                #160122-00001#3 mark
+#               LET g_qryparam.where = " nmaa002 IN (SELECT ooef001 FROM ooef_t WHERE ooefent = '",g_enterprise,"'",
+#                                      "              AND ooef017 = '",g_master1.apdacomp,"')",
+#                                      " AND EXISTS(SELECT 1 FROM nmag_t WHERE nmag001 = nmaa003 ",
+#                                      " AND nmag002 IN ('1','",l_nmag002,"')) "   ,
+#                                      " AND nmas003 = '",g_master1.apce100,"'"##150518-00043-2-- 
+               #160122-00001#3 mark
+               #160122-00001#3 -add -str
+               LET g_qryparam.where = " nmaa002 IN (SELECT ooef001 FROM ooef_t WHERE ooefent = '",g_enterprise,"'",
+                                      "              AND ooef017 = '",g_master1.apdacomp,"')",
+                                      " AND EXISTS(SELECT 1 FROM nmag_t WHERE nmag001 = nmaa003 ",
+                                      " AND nmagent = ",g_enterprise,   #160905-00007#7 Add
+                                      " AND nmag002 IN ('1','",l_nmag002,"')) "   ,
+                                      " AND nmas003 = '",g_master1.apce100,"'",##150518-00043-2-- 
+                                      " AND nmasent = ",g_enterprise,   #160905-00007#7 Add
+                                      " AND nmas002 IN (",g_sql_bank,")" #160122-00001#3 By 07900 --mod
+               #160122-00001#3 -add -end                       
+               CALL q_nmas_01()                                #呼叫開窗
+   
+               LET g_master2.nmck004 = g_qryparam.return1              
+               LET g_master2.nmck004_desc = s_desc_get_nmas002_desc(g_master2.nmck004)
+               LET g_master2.nmas003 = s_anm_get_nmas003(g_master2.nmck004)
+               DISPLAY BY NAME g_master2.nmck004,g_master2.nmck004_desc,g_master2.nmas003              
+               LET g_qryparam.where = " "  #160122-00001#3 -add
+               NEXT FIELD nmck004                          #返回原欄位
+               
+            ON ACTION controlp INFIELD nmck002
+   
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+   
+               LET g_qryparam.default1 = g_master2.nmck002      #給予default值
+               LET g_qryparam.where = " ooia002 = '",g_master1.apde006,"'",
+                                      " AND ooiaent = '",g_enterprise,"'"  
+   
+               CALL q_ooia001()                                 #呼叫開窗
+   
+               LET g_master2.nmck002 = g_qryparam.return1       #將開窗取得的值回傳到變數
+               LET g_master2.nmck002_desc = s_desc_get_ooial_desc(g_master2.nmck002)
+   
+               DISPLAY BY NAME g_master2.nmck002,g_master2.nmck002_desc           #顯示到畫面上
+   
+               NEXT FIELD nmck002                          #返回原欄位
+                             
+               
+         END INPUT
+         
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                       INSERT ROW = FALSE,
+                       DELETE ROW = FALSE,
+                       APPEND ROW = FALSE)         
+                       
+            BEFORE ROW
+               LET l_ac = ARR_CURR()    
+               DISPLAY l_ac TO FORMONLY.h_index  #150729-00002#4
+               CALL anmp410_set_entry_sel(g_detail_d[l_ac].apde032)               
+               
+            AFTER FIELD b_nmck011
+               IF cl_null(g_detail_d[l_ac].nmck011) THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+            AFTER FIELD b_nmck004               
+               IF NOT cl_null(g_detail_d[l_ac].nmck004) THEN 
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_detail_d[l_ac].nmck004
+                  LET g_chkparam.arg2 = g_master1.apdacomp
+                  LET g_chkparam.arg3 = l_nmag002
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_nmas002_4") THEN
+                     #檢查成功時後續處理
+                  ELSE
+                     #檢查失敗時後續處理
+                     NEXT FIELD CURRENT
+                  END IF
+
+               ELSE
+                  NEXT FIELD CURRENT
+               END IF 
+               
+            AFTER FIELD b_nmck002
+               IF NOT cl_null(g_detail_d[l_ac].nmck002) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_detail_d[l_ac].nmck002
+                  LET g_chkparam.arg2 = g_master1.apde006
+                  LET g_chkparam.err_str[2] ="amm-00245:anm-00217"
+                  IF NOT cl_chk_exist("v_ooia001_1") THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               ELSE
+                  NEXT FIELD CURRENT
+               END IF
+
+               
+            ON ACTION controlp INFIELD b_nmck004
+
+     
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+   
+               LET g_qryparam.default1 = g_detail_d[l_ac].nmck004      #給予default值
+              #160122-00001#3 mark
+#               LET g_qryparam.where = " nmaa002 IN (SELECT ooef001 FROM ooef_t WHERE ooefent = '",g_enterprise,"'",
+#                                      "              AND ooef017 = '",g_master1.apdacomp,"')",
+#                                     #" AND EXISTS(SELECT 1 FROM nmag_t WHERE nmag001 = nmaa003 AND nmag002='",l_nmag002,"')"      ,
+#                                      " AND EXISTS(SELECT 1 FROM nmag_t WHERE nmag001 = nmaa003 AND nmag002 IN (1,",l_nmag002,")) "      ,   #增加不限制存取的類型
+#                                      " AND nmas003 = '",g_master1.apce100,"'"##150518-00043-2--  
+               #160122-00001#3 mark
+               #160122-00001#3 -add -str
+               LET g_qryparam.where = " nmaa002 IN (SELECT ooef001 FROM ooef_t WHERE ooefent = '",g_enterprise,"'",
+                                      "              AND ooef017 = '",g_master1.apdacomp,"')",
+                                     #" AND EXISTS(SELECT 1 FROM nmag_t WHERE nmag001 = nmaa003 AND nmag002='",l_nmag002,"')"      ,
+                                      " AND EXISTS(SELECT 1 FROM nmag_t WHERE nmag001 = nmaa003 AND nmag002 IN (1,",l_nmag002,") AND nmagent = ",g_enterprise,") "      ,   #增加不限制存取的類型   #160905-00007#7 Add
+                                      " AND nmas003 = '",g_master1.apce100,"'",##150518-00043-2--                
+                                      " AND nmas002 IN (",g_sql_bank,")" #160122-00001#3 By 07900 --mod
+               #160122-00001#3 -add -end                       
+               CALL q_nmas_01()                                        #呼叫開窗
+   
+               LET g_detail_d[l_ac].nmck004 = g_qryparam.return1              
+               DISPLAY BY NAME g_detail_d[l_ac].nmck004        
+               LET g_qryparam.where = " "  #160122-00001#3 -add
+               NEXT FIELD CURRENT                          #返回原欄位     
+         
+            ON ACTION controlp INFIELD b_nmck002
+   
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+   
+               LET g_qryparam.default1 = g_detail_d[l_ac].nmck002      #給予default值
+               LET g_qryparam.where = " ooia002 = '",g_master1.apde006,"'",
+                                      " AND ooiaent = '",g_enterprise,"'"   
+   
+               CALL q_ooia001()                                   #呼叫開窗
+   
+               LET g_detail_d[l_ac].nmck002 = g_qryparam.return1  #將開窗取得的值回傳到變數
+   
+               DISPLAY BY NAME g_detail_d[l_ac].nmck002           #顯示到畫面上
+   
+               NEXT FIELD CURRENT                          #返回原欄位
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            NEXT FIELD nmcksite
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall
+            #付款單到期日為空,則不可以選擇
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF cl_null(g_detail_d[li_idx].apde032) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL anmp410_filter()
+            #add-point:ON ACTION filter
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前
+            
+            #end add-point
+            CALL anmp410_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段
+            CALL anmp410_qbe_clear()   #150610-00023#7
+            LET l_nmag002 = '5'        #150610-00023#7  #預設付款帳戶開窗參數為5:零用金
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh
+            
+            #end add-point
+            CALL anmp410_b_fill()
+ 
+         #add-point:ui_dialog段action
+         ON ACTION batch_execute
+            CALL anmp410_process()
+            IF g_success ='N' THEN
+               CONTINUE DIALOG
+            END IF
+               
+            IF g_bgjob = "N" THEN            
+               CALL cl_ask_confirm3("std-00012","")
+            END IF
+            NEXT FIELD apdasite
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp410.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION anmp410_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   
+   #end add-point 
+   #add-point:query段define
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct
+   IF #cl_null(g_master1.apdasite) OR     #150518-00043-2 mark
+      cl_null(g_master1.apdacomp) OR 
+      cl_null(g_master1.apde006) OR
+      cl_null(g_master2.nmckdocno) OR 
+      cl_null(g_master2.nmckdocdt) OR 
+      cl_null(g_master1.nmcksite) OR
+      cl_null(g_master2.nmck003) OR 
+     #cl_null(g_master2.nmck004) OR       #150518-00043-2 mark
+     #cl_null(g_master2.nmas003) OR       #150518-00043-2 mark
+     #cl_null(g_master2.nmck002) OR       #150518-00043-2 mark
+      cl_null(g_master2.summary) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'acr-00015'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN 
+   END IF      
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL anmp410_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp410.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION anmp410_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   
+   #end add-point
+   #add-point:b_fill段define
+   
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   IF cl_null(g_master1.wc) THEN
+      LET g_master1.wc =" 1=1 "
+   END IF
+  ##160816-00012#2 Add  ---(S)---
+  ##检查用户是否有资金中心对应法人的权限
+  #CALL s_axrt300_get_site(g_user,'','1') RETURNING ls_wc
+  #LET ls_wc = cl_replace_str(ls_wc,"ooef001","apdeorga")
+  ##160816-00012#2 Add  ---(E)---
+   ##150518-00043-2--
+  #LET g_sql =" SELECT 'N',apdadocno,apdadocdt,apda005,apde032,apde109,apde119,'','',apde100,'', ",            #150616-00026#13 mark
+  #LET g_sql =" SELECT 'N',apdadocno,apdadocdt,apda005,apde032,apde109,apde119,'',apde008,apde100,apde021, ",  #150707-00001#7 mark  #150616-00026#13
+   LET g_sql =" SELECT 'N',apdeorga,'',apdadocno,apdadocdt,apda005,apde032,apde109,apde119,'',apde008,apde100,apde021, ",  #150707-00001#7
+              "        apdaent,apda006,apde011,apde012,apde016,apde039,apde040,apde041,",
+             #"        apde121,apde129,apde131,apde139,apdeorga,apdeseq ",   #150707-00001#7 mark
+              "        apde121,apde129,apde131,apde139,apdeseq, ",            #150707-00001#7 
+              "        apde101 ",   #150918-00001#1  add
+              "   FROM apda_t,apde_t ",
+              "  WHERE apdaent = apdeent ",
+              "    AND apdacomp = apdecomp ",
+              "    AND apdadocno = apdedocno ", 
+              "    AND apde009 = 'N' ",
+              "    AND apde002 = '10' ",         
+             #"    AND apdasite = '",g_master1.apdasite,"' ",     #150518-00043-2 mark
+              "    AND apdacomp = '",g_master1.apdacomp,"' ",
+              "    AND apde006 = '",g_master1.apde006,"' ",  
+              "    AND apde100 ='",g_master1.apce100,"'",       
+             #"    AND apdastus <> 'X' ",   #150610-00023#3 mark
+              "    AND apdastus = 'Y' ",    #150610-00023#3
+              "    AND apdeld = '",g_master1.apdald,"' ",  
+              "    AND apda005 <> 'EMPL'",  #150825-00004#1  員工借支改走anmp460 
+              "    AND apdaent = ? ",
+              "    AND ",g_master1.wc CLIPPED
+             #"    AND ",ls_wc CLIPPED      #160816-00012#2 Add
+
+
+   IF NOT cl_null(g_master2.nmas003) THEN
+      LET g_sql = g_sql,"    AND apde100 = '",g_master2.nmas003,"' "
+   END IF
+   IF g_master1.l_chk1 = 'Y' THEN
+      LET g_sql = g_sql," AND apda014 IS NOT NULL "   #150707-00001#7 add "AND"
+   END IF
+   ##150518-00043-2--
+   LET g_sql = g_sql," ORDER BY apdadocno" #151113
+   #end add-point
+ 
+   PREPARE anmp410_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR anmp410_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+      g_detail_d[l_ac].*
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      LET g_detail_d[l_ac].nmck011 = g_detail_d[l_ac].apde032 
+      IF NOT cl_null(g_master2.nmck004) THEN   #150616-00026#13
+         LET g_detail_d[l_ac].nmck004 = g_master2.nmck004 
+      END IF   #150616-00026#13
+      IF NOT cl_null(g_master2.nmck002) THEN   #150616-00026#13
+         LET g_detail_d[l_ac].nmck002 = g_master2.nmck002 
+      END IF   #150616-00026#13
+      LET g_detail_d[l_ac].apdeorga_desc = s_desc_get_department_desc(g_detail_d[l_ac].apdeorga)   #150707-00001#7
+      #end add-point
+      
+      CALL anmp410_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE anmp410_sel
+   
+   LET l_ac = 1
+   CALL anmp410_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   DISPLAY l_ac TO FORMONLY.h_index  #150729-00002#4
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp410.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION anmp410_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define
+   
+   #end add-point
+   #add-point:fetch段define
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp410.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION anmp410_detail_show()
+   #add-point:show段define
+   
+   #end add-point
+   #add-point:show段define
+   
+   #end add-point
+   
+   #add-point:detail_show段
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp410.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION anmp410_filter()
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL anmp410_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp410.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION anmp410_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp410.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION anmp410_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = anmp410_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp410.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION anmp410_create_tmp()
+   DROP TABLE anmp410_tmp
+   CREATE TEMP TABLE anmp410_tmp(
+    nmckdocno     LIKE nmck_t.nmckdocno,
+    sel           LIKE type_t.chr1,
+    apdeorga      LIKE apde_t.apdeorga,   #150707-00001#7 
+    apdeorga_desc LIKE type_t.chr80,      #150707-00001#7 
+    apdadocno     LIKE apda_t.apdadocno,
+    apdadocdt     LIKE apda_t.apdadocdt,
+    apda005       LIKE apda_t.apda005,
+    apde032       LIKE apde_t.apde032,
+    apde109       LIKE apde_t.apde109,
+    apde119       LIKE apde_t.apde119,
+    nmck011       LIKE nmck_t.nmck011,
+    nmck004       LIKE nmck_t.nmck004,
+    nmck100       LIKE nmck_t.nmck100,
+    nmck002       LIKE nmck_t.nmck002,
+    apdaent       LIKE apda_t.apdaent,
+    apda006       LIKE apda_t.apda006,
+    apde011       LIKE apde_t.apde011,   
+    apde012       LIKE apde_t.apde012,
+    apde016       LIKE apde_t.apde016,
+    apde039       LIKE apde_t.apde039,  
+    apde040       LIKE apde_t.apde040,   
+    apde041       LIKE apde_t.apde041,
+    apde121       LIKE apde_t.apde121,
+    apde129       LIKE apde_t.apde129,
+    apde131       LIKE apde_t.apde131,
+    apde139       LIKE apde_t.apde139,
+    apdeseq       LIKE apde_t.apdeseq,
+    apde101       LIKE apde_t.apde101    ##150918-00001#1 add
+   );
+END FUNCTION
+
+PRIVATE FUNCTION anmp410_process()
+   DEFINE l_i         LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+  
+   LET g_success = 'N'
+   
+   DELETE FROM anmp410_tmp
+   FOR l_i = 1 TO g_detail_cnt
+      IF g_detail_d[l_i].sel = 'N' THEN
+         CONTINUE FOR 
+      ELSE
+         IF cl_null(g_detail_d[l_i].nmck011) OR cl_null(g_detail_d[l_i].nmck004) OR cl_null(g_detail_d[l_i].nmck002) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'acr-00015'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()         
+            RETURN
+         END IF
+         #150610-00023#7--(s)
+         #檢核是否還有未轉付款,沒有則不進行
+         LET l_cnt =0
+         SELECT COUNT(apdeseq) INTO l_cnt
+           FROM apde_t
+          WHERE apdeent = g_enterprise
+            AND apdedocno = g_detail_d[l_i].apdadocno
+            AND apde009 = 'N'
+            AND apde002 = '10'
+            AND apde006 = g_master1.apde006
+         IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+         IF l_cnt = 0 THEN
+            CONTINUE FOR
+         END IF
+         #150610-00023#7--(e)         
+         INSERT INTO anmp410_tmp VALUES('',g_detail_d[l_i].*) 
+      END IF
+   END FOR
+   LET l_cnt = 0   #150610-00023#7
+   SELECT COUNT(*) INTO l_cnt FROM anmp410_tmp
+   IF l_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-00491'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()       
+      LET g_success = 'N'
+      RETURN
+   END IF   
+   
+
+   LET g_success = 'Y'
+   CALL s_transaction_begin()
+   
+   CALL anmp410_ins_nmck()   #寫入單頭nmck_t
+ 
+   IF g_success = 'Y' THEN
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 寫入應付匯款單頭nmck_t
+# Memo...........:
+# Usage..........: CALL anmp410_ins_nmck ()
+#
+# Date & Author..: 14/08/11 By apo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp410_ins_nmck()
+   DEFINE l_nmck      RECORD LIKE nmck_t.*
+   DEFINE l_tmp       type_g_detail_d
+   DEFINE l_nmck101   LIKE nmck_t.nmck101
+   DEFINE l_nmck121   LIKE nmck_t.nmck121
+   DEFINE l_nmck131   LIKE nmck_t.nmck131
+   DEFINE l_glaa001   LIKE glaa_t.glaa001
+   DEFINE l_glaa015   LIKE glaa_t.glaa015
+   DEFINE l_glaa016   LIKE glaa_t.glaa016
+   DEFINE l_glaa019   LIKE glaa_t.glaa019
+   DEFINE l_glaa020   LIKE glaa_t.glaa020
+   DEFINE l_nmaa004   LIKE nmaa_t.nmaa004
+   DEFINE l_glaa003   LIKE glaa_t.glaa003 #会计周期参照表号      #liuym add 2014/12/26
+   DEFINE l_glaa024   LIKE glaa_t.glaa024 #单据别参照表号        #liuym add 2014/12/26
+   #150904-00006#6-----s
+   DEFINE l_nmab003   LIKE nmab_t.nmab003
+   DEFINE l_pmaf005   LIKE pmaf_t.pmaf005
+   DEFINE l_nmaa0042  LIKE nmaa_t.nmaa004
+   #150904-00006#6-----e
+   DEFINE l_apaa004   LIKE apaa_t.apaa004   #151127-00002#3 add   
+   #151125-00006#3--s
+   DEFINE  l_slip_success   LIKE type_t.num5
+   DEFINE  l_conf_success   LIKE type_t.num5
+   DEFINE  l_dfin0031       LIKE type_t.chr1
+   DEFINE  l_dfin0032       LIKE type_t.chr1
+   DEFINE  l_gl_slip        LIKE ooba_t.ooba002 
+   DEFINE  l_slip           LIKE ooba_t.ooba002
+   #151125-00006#3--e
+
+   INITIALIZE l_tmp.* TO NULL
+   INITIALIZE l_nmck.* TO NULL
+   #取匯率
+   #150918-00001#1 mark-----s
+#  #CALL s_fin_get_curr_rate(g_master1.apdacomp,g_master1.apdald,g_master2.nmckdocdt,g_master2.nmas003,'S-FIN-4004')  #150616-00026#13 mark
+#   CALL s_fin_get_curr_rate(g_master1.apdacomp,g_master1.apdald,g_master2.nmckdocdt,g_master1.apce100,'S-FIN-4004')  #150616-00026#13
+#        RETURNING l_nmck101,l_nmck121,l_nmck131   
+   #150918-00001#1 mark-----e
+        
+   #取使用幣別/本位幣2幣別/本位幣3幣別        
+   CALL s_ld_sel_glaa(g_master1.apdald,'glaa001|glaa015|glaa016|glaa019|glaa020')
+        RETURNING  g_sub_success,l_glaa001,l_glaa015,l_glaa016,l_glaa019,l_glaa020      
+        
+   #2014/12/26 liuym add-----str----- 
+   #获取单据别参照表号、会计周期参照表号 
+   SELECT glaa003,glaa024 INTO l_glaa003,l_glaa024 FROM glaa_t WHERE glaald=g_master1.apdald AND glaaent=g_enterprise
+   #2014/12/26 liuym add-----end----- 
+   
+   #準備撈取寫入應付匯款單頭檔nmck_t之資料   
+   IF g_master2.summary = 'N' THEN
+      #不彙總產生 
+     #LET g_sql = " SELECT '',apdadocno,apdadocdt,apda005,apde032,apde109, ",   #150824 mark
+      LET g_sql = " SELECT '',apdeorga,'',apdadocno,apdadocdt, ",               #150824
+                  "        apda005,apde032,apde109,apde119,nmck011,",
+                  "        nmck004,nmck100,nmck002,apdaent,apda006,",
+                  "        apde011,apde012,apde016,apde039,apde040,",
+                  "        apde041,apde121,apde129,apde131,apde139,",
+                  "        apdeseq, ",
+                  "        apde101 ",    ##150918-00001#1  add
+                  "   FROM anmp410_tmp ",  #151113 add ,
+                  "  ORDER BY apdadocno"   #151113
+   ELSE
+      #150918-00001#1 modify-----s
+#      #彙總產生
+#     #LET g_sql = " SELECT '','','',apda005,'',SUM(apde109),SUM(apde119), ",             #150707-00001#7 mark
+#      LET g_sql = " SELECT '',apdeorga,'','','',",
+#                  "        apda005,'',SUM(apde109),SUM(apde119),nmck011,",               #150707-00001#7 
+#                 #"        nmck011,nmck004,nmck100,nmck002,apdaent,apda006,apde011,'','',apde039,apde040, ",      #150824 mark
+#                  "        nmck004,nmck100,nmck002,apdaent,apda006,",
+#                  "        apde011,apde012,'',apde039,apde040, ", #150824 add apde012
+#                  "        apde041,'','','','',",
+#                  "        ''",                  
+#                  "   FROM anmp410_tmp ",
+#                 #"  GROUP BY apda005,apde011,nmck011,apda006,nmck100,apdaent, ",          #150824 mark
+#                  "  GROUP BY apda005,apde011,apde012,nmck011,apda006,nmck100,apdaent, ",  #150824 add apde012
+#                  "           apde039,apde040,apde041,nmck004,nmck002,apdeorga "           #150707-00001#7 add apdeorga
+#                  
+      ###############
+      #彙總產生   匯總條件加入本幣一二三的匯率
+      LET g_sql = " SELECT '',apdeorga,'','','',",
+                  "        apda005,'',SUM(apde109),SUM(apde119),nmck011,",  
+                  "        nmck004,nmck100,nmck002,apdaent,apda006,",
+                  "        apde011,apde012,'',apde039,apde040, ",
+                  "        apde041,apde121,'',apde131,'',",
+                  "        '',",                  
+                  "        apde101 ",
+                  "   FROM anmp410_tmp ",
+                  "  GROUP BY apda005,apde011,apde012,nmck011,apda006,nmck100,apdaent, ",  
+                  "           apde039,apde040,apde041,nmck004,nmck002,apdeorga, ",             
+                  "           apde101,apde121,apde131 "
+      ###############
+      #150918-00001#1 modify-----e   
+   END IF
+   PREPARE anmp410_sel_tmp_p FROM g_sql
+   DECLARE anmp410_sel_tmp_c CURSOR WITH HOLD FOR anmp410_sel_tmp_p   
+   
+   #準備撈取寫入應付匯款單身檔nmcl_t之資料   
+   LET g_sql = " SELECT apdaent,nmckdocno,apdeorga,apdadocno,apdeseq,apde016, ",
+               "        apde109,apde119,apde121,apde129,apde131,apde139 ",
+               "   FROM anmp410_tmp ",
+               "  WHERE nmckdocno = ? ", #151113 add ,
+               "  ORDER BY apdadocno"    #151113
+   PREPARE anmp410_sel_tmp_p2 FROM g_sql
+   DECLARE anmp410_sel_tmp_c2 CURSOR WITH HOLD FOR anmp410_sel_tmp_p2
+   
+   
+   FOREACH anmp410_sel_tmp_c INTO l_tmp.*
+      #150918-00001#1 -----s
+      #用apde匯率
+      LET l_nmck101 = l_tmp.apde101 
+      LET l_nmck121 = l_tmp.apde121
+      LET l_nmck131 = l_tmp.apde131
+      #150918-00001#1 -----e
+      INITIALIZE l_nmck.* TO NULL
+      
+      LET l_nmck.nmckent  = l_tmp.apdaent
+      LET l_nmck.nmckcomp = g_master1.apdacomp     
+      #财务改为使用s_aooi200_fin中的FUNCTION---2014/12/26 liuym mark-----str-----
+      #CALL s_aooi200_gen_docno(g_master1.apdacomp,g_master2.nmckdocno,l_tmp.nmck011,g_gen_prog)
+      #                     RETURNING g_sub_success,l_nmck.nmckdocno
+      #2014/12/26 liuym mark-----end-----
+      
+      #2014/12/26 liuym add-----str-----
+      #财务改为使用s_aooi200_fin中的FUNCTION---
+    
+     #CALL s_aooi200_fin_gen_docno(g_master1.apdald,l_glaa024,l_glaa003,g_master2.nmckdocno,l_tmp.nmck011,g_gen_prog) #150824 mark
+      CALL s_aooi200_fin_gen_docno(g_master1.apdald,l_glaa024,l_glaa003,g_master2.nmckdocno,g_master2.nmckdocdt,g_gen_prog) #150824
+           RETURNING g_sub_success,l_nmck.nmckdocno
+      #2014/12/26 liuym add-----end-----                        
+      IF NOT g_sub_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00003'
+         LET g_errparam.extend = l_nmck.nmckdocno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET g_success = 'N'
+      END IF
+      LET l_nmck.nmckdocdt= g_master2.nmckdocdt
+      LET l_nmck.nmcksite = g_master1.nmcksite           #150518-00043-2-- modify
+      LET l_nmck.nmck001 = 'AP'        #應付請款單  
+      LET l_nmck.nmck002 = l_tmp.nmck002
+      LET l_nmck.nmck003 = g_master2.nmck003
+      LET l_nmck.nmck004 = l_tmp.nmck004
+      LET l_nmck.nmck005 = l_tmp.apda005
+      LET l_nmck.nmck006 = l_tmp.apda006
+      LET l_nmck.nmck007 = '0'     #0:批次產生   #1:人工產生
+     
+      LET l_nmaa004=''
+      SELECT nmaa004 INTO l_nmaa004
+        FROM nmaa_t
+       WHERE nmaaent=g_enterprise
+         AND nmaa001=l_nmck.nmck004
+         
+      SELECT nmab003,nmab009 INTO l_nmck.nmck018,l_nmck.nmck017
+        FROM nmab_t
+       WHERE nmabent=g_enterprise
+         AND nmab001=l_nmaa004
+
+      #依據款別(10:現金/20:銀行電匯款/30:票據)給予欄位值
+      CASE g_master1.apde006
+         WHEN '10'
+            LET l_nmck.nmck008 = ''   
+            LET l_nmck.nmck026 = '10' #應付匯款單開立
+            #LET l_nmck.nmck034 = ''   #151127-00002#3 mark
+         WHEN '20'
+           #LET l_nmck.nmck008 = '1'  #受款人支付手續費  #150825 mark
+            LET l_nmck.nmck008 = '2'  #受款人支付手續費  #150825
+            LET l_nmck.nmck026 = '10' #應付匯款單開立
+            #LET l_nmck.nmck034 = ''   #151127-00002#3 mark
+         WHEN '30'
+            LET l_nmck.nmck008 = ''
+            LET l_nmck.nmck026 = '0'  #票據開立
+            #LET l_nmck.nmck034 = '1'  #郵寄   #151127-00002#3 mark
+            #LET l_nmck.nmck015 = s_desc_get_trading_partner_full_desc(l_nmck.nmck005)   #150707-00001#7   #160202-00021#3 marl lujh
+      END CASE
+
+      #151127-00002#3(S)
+      SELECT apaa004 INTO l_apaa004
+        FROM apaa_t
+       WHERE apaaent = g_enterprise
+         AND apaasite = g_master1.nmcksite
+         AND apaa001 = l_tmp.apda005
+         AND apaa002 = '1'
+         AND apaastus = 'Y'
+      IF NOT cl_null(l_apaa004) THEN
+         LET l_nmck.nmck034 = l_apaa004
+      ELSE
+         CASE g_master1.apde006
+            WHEN '10'
+               LET l_nmck.nmck034 = '2' #自領
+            WHEN '20'
+               LET l_nmck.nmck034 = '2' #自領
+            OTHERWISE
+               LET l_nmck.nmck034 = '1' #寄領
+         END CASE
+      END IF
+      #151127-00002#3(E)
+      
+      LET l_nmck.nmck009 = l_tmp.apde011
+      LET l_nmck.nmck010 = l_tmp.apde012
+      LET l_nmck.nmck011 = l_tmp.nmck011
+      
+      LET l_nmck.nmck013 = l_tmp.apde039
+      LET l_nmck.nmck014 = l_tmp.apde040
+
+      #IF cl_null(l_nmck.nmck015) THEN   #150707-00001#7     #160202-00021#3 mark lujh
+        #LET l_nmck.nmck015 = l_tmp.apde041 #150824 mark
+         #150824 add ------
+         #160202-00021#3--add--str--lujh
+         ##帳戶名稱
+         #SELECT pmaf004 INTO l_nmck.nmck015
+         #  FROM pmaf_t
+         # WHERE pmafent = g_enterprise
+         #   AND pmaf001 = l_nmck.nmck005
+         #   AND pmaf002 = l_nmck.nmck013   #160107 
+         #   AND pmaf003 = l_nmck.nmck014   #160107     
+         #160202-00021#3--add--end--lujh     
+         LET l_nmck.nmck015 = l_tmp.apde041         #160202-00021#3 add lujh         
+         #E-mail
+         SELECT oofc012 INTO l_nmck.nmck016
+           FROM pmaa_t
+           LEFT JOIN oofc_t ON pmaaent = oofcent AND pmaa027 = oofc002 AND oofc010 ='Y' AND oofc008 = '4'
+          WHERE pmaaent = g_enterprise
+            AND pmaa001 = l_nmck.nmck005
+         #150824 add end---
+      #END IF   #150707-00001#7
+    
+      
+      LET l_nmck.nmck023 = g_master1.apde006
+
+      LET l_nmck.nmck027 = 'Y'
+      LET l_nmck.nmck028 = 0
+      LET l_nmck.nmck029 = 0
+      LET l_nmck.nmck031 = 0
+ 
+      LET l_nmck.nmck043 = 'N'
+      LET l_nmck.nmck100 = l_tmp.nmck100 #幣別                      
+      LET l_nmck.nmck103 = l_tmp.apde109 
+      LET l_nmck.nmck101 = l_nmck101     #匯率
+      LET l_nmck.nmck113 = l_nmck.nmck103 * l_nmck.nmck101
+      LET l_nmck.nmck113 = s_curr_round(g_master1.apdacomp,l_glaa001,l_nmck.nmck113,2)
+      LET l_nmck.nmck114 = l_nmck.nmck113
+      LET l_nmck.nmck121 = l_nmck121     #本位幣2匯率
+      IF l_glaa015 = 'Y' THEN            #本位幣2為啟用
+         LET l_nmck.nmck123 = l_nmck.nmck103 * l_nmck.nmck121
+         LET l_nmck.nmck123 = s_curr_round(g_master1.apdacomp,l_glaa016,l_nmck.nmck123,2)
+      ELSE
+         LET l_nmck.nmck123 = 0
+      END IF
+      LET l_nmck.nmck124 = l_nmck.nmck123
+      LET l_nmck.nmck131 = l_nmck131     #本位幣3匯率
+      IF l_glaa019 = 'Y' THEN            #本位幣3為啟用
+         LET l_nmck.nmck133 = l_nmck.nmck103 * l_nmck.nmck131
+         LET l_nmck.nmck133 = s_curr_round(g_master1.apdacomp,l_glaa020,l_nmck.nmck133,2)
+      ELSE
+         LET l_nmck.nmck133 = 0
+      END IF
+      LET l_nmck.nmck134 = l_nmck.nmck133 
+      LET l_nmck.nmckownid = g_user
+      LET l_nmck.nmckowndp = g_dept
+      LET l_nmck.nmckcrtid = g_user
+      LET l_nmck.nmckcrtdp = g_dept
+      LET l_nmck.nmckcrtdt = cl_get_current()
+      LET l_nmck.nmckstus = 'N'
+      
+      #150824 add nmck016
+      
+      #150904-00006#6-----s
+      #交易帳戶的對應開戶銀行與swift code
+      LET l_nmaa0042 = NULL
+      LET l_nmab003 = NULL
+      SELECT nmab003  
+        INTO l_nmab003
+        FROM nmab_t , nmaa_t , nmas_t  
+       WHERE nmaa004  = nmab001
+         AND nmas002  =l_nmck.nmck004
+         AND nmaa001 = nmas001 
+         AND nmaaent = nmasent
+         AND nmabent = nmaaent
+         AND nmabent = g_enterprise
+         
+      SELECT nmaa004
+        INTO l_nmaa0042
+        FROM nmaa_t , nmas_t  
+       WHERE nmas002  =l_nmck.nmck004
+         AND nmaa001 = nmas001 
+         AND nmaaent = nmasent
+         AND nmaaent = g_enterprise
+         
+      IF NOT cl_null(l_nmaa0042) AND NOT cl_null(l_nmck.nmck013) AND l_nmaa0042[1,3] = l_nmck.nmck013[1,3] THEN #前三碼相同時為本行 (國內)
+         LET l_nmck.nmck037 ='1' 
+      ELSE 
+         # 判斷海外銀行用 swift code
+         LET l_pmaf005 = NULL
+         SELECT pmaf005
+           INTO l_pmaf005          
+           FROM pmaf_t 
+          WHERE pmaf001 = l_nmck.nmck005 
+            AND pmaf003 = l_nmck.nmck014 
+            AND pmafent = g_enterprise
+           
+         IF l_pmaf005  IS NOT NULL AND l_nmab003 IS NOT NULL  THEN 
+            IF l_nmab003[1,4] = l_pmaf005 [1,4] THEN
+               LET l_nmck.nmck037 ='1' 
+            ELSE 
+               LET l_nmck.nmck037 ='2' 
+            END IF 
+         ELSE 
+            LET l_nmck.nmck037 ='2' 
+         END IF 
+      END IF
+      #150904-00006#6-----e
+      INSERT INTO nmck_t
+                 (nmckent,
+		            nmckcomp,nmckdocno,nmckdocdt,nmcksite,nmck001,nmck002,
+                  nmck003,nmck004,nmck005,nmck006,nmck007,nmck008,
+                  nmck009,nmck010,nmck011,nmck013,nmck014,nmck015,nmck016,
+                  nmck017,nmck018,nmck023,nmck026,nmck027,nmck028,
+                  nmck029,nmck031,nmck034,nmck100,nmck101,nmck103,
+                  nmck113,nmck114,nmck121,nmck123,nmck124,nmck131,
+                  nmck133,nmck134,nmck043,
+                  nmckownid,nmckowndp,nmckcrtid,nmckcrtdp,nmckcrtdt,nmckstus,
+                  nmck037)
+
+           VALUES(l_nmck.nmckent,
+		            l_nmck.nmckcomp,l_nmck.nmckdocno,l_nmck.nmckdocdt,l_nmck.nmcksite,l_nmck.nmck001,l_nmck.nmck002,
+                  l_nmck.nmck003,l_nmck.nmck004,l_nmck.nmck005,l_nmck.nmck006,l_nmck.nmck007,l_nmck.nmck008,
+                  l_nmck.nmck009,l_nmck.nmck010,l_nmck.nmck011,l_nmck.nmck013,l_nmck.nmck014,l_nmck.nmck015,l_nmck.nmck016,
+                  l_nmck.nmck017,l_nmck.nmck018,l_nmck.nmck023,l_nmck.nmck026,l_nmck.nmck027,l_nmck.nmck028,
+                  l_nmck.nmck029,l_nmck.nmck031,l_nmck.nmck034,l_nmck.nmck100,l_nmck.nmck101,l_nmck.nmck103,
+                  l_nmck.nmck113,l_nmck.nmck114,l_nmck.nmck121,l_nmck.nmck123,l_nmck.nmck124,l_nmck.nmck131,
+                  l_nmck.nmck133,l_nmck.nmck134,l_nmck.nmck043,
+                  l_nmck.nmckownid,l_nmck.nmckowndp,l_nmck.nmckcrtid,l_nmck.nmckcrtdp,l_nmck.nmckcrtdt,l_nmck.nmckstus,
+                  l_nmck.nmck037)      
+                  
+      IF SQLCA.SQLcode OR SQLCA.SQLERRD[3]=0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins nmck_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET g_success = 'N'
+      END IF   
+      
+      #由於"彙總"與"不彙總"產生為不同GROUP BY情形,且彙總產生情形GROUP BY欄位較多;
+      #為避免撈取單身FOREACH時SQL須因應多種情形USING不同數量之變數,
+      #因此將單號回寫回對應符合GROUP條件之單身TEMPTABLE,後續再以單號撈取單身資料
+      LET g_sql = " UPDATE anmp410_tmp SET nmckdocno = '",l_nmck.nmckdocno,"' "      
+      IF g_master2.summary = 'N' THEN 
+         LET g_sql =g_sql," WHERE apdadocno = '",l_tmp.apdadocno,"'",
+                          "   AND apdeseq = '",l_tmp.apdeseq,"'"
+          
+      ELSE
+         LET g_sql =g_sql," WHERE apda005 = '",l_tmp.apda005,"'",
+                          "   AND nmck004 = '",l_tmp.nmck004,"'",
+                          "   AND nmck011 = '",l_tmp.nmck011,"'",
+                          "   AND apdeorga = '",l_tmp.apdeorga,"'"   #150707-00001#7
+
+         IF cl_null(l_tmp.apda006) THEN
+            LET g_sql = g_sql," AND apda006 IS NULL "
+         ELSE
+            LET g_sql = g_sql," AND apda006 = '",l_tmp.apda006,"'"
+         END IF 
+         IF cl_null(l_tmp.apde011) THEN
+            LET g_sql = g_sql," AND apde011 IS NULL "
+         ELSE
+            LET g_sql = g_sql," AND apde011 = '",l_tmp.apde011,"'"
+         END IF    
+         IF cl_null(l_tmp.apde039) THEN
+            LET g_sql = g_sql," AND apde039 IS NULL "
+         ELSE
+            LET g_sql = g_sql," AND apde039 = '",l_tmp.apde039,"'"
+         END IF    
+         IF cl_null(l_tmp.apde040) THEN
+            LET g_sql = g_sql," AND apde040 IS NULL "
+         ELSE
+            LET g_sql = g_sql," AND apde040 = '",l_tmp.apde040,"'"
+         END IF    
+         IF cl_null(l_tmp.apde041) THEN
+            LET g_sql = g_sql," AND apde041 IS NULL "
+         ELSE
+            LET g_sql = g_sql," AND apde041 = '",l_tmp.apde041,"'"
+         END IF          
+
+         #150918-00001#1-----s
+         IF cl_null(l_tmp.apde101) THEN
+            LET g_sql = g_sql," AND apde101 IS NULL "
+         ELSE
+            LET g_sql = g_sql," AND apde101 = ",l_tmp.apde101," "
+         END IF           
+         
+         IF cl_null(l_tmp.apde121) THEN
+            LET g_sql = g_sql," AND apde121 IS NULL "
+         ELSE
+            LET g_sql = g_sql," AND apde121 = ",l_tmp.apde121," "
+         END IF  
+         
+         IF cl_null(l_tmp.apde131) THEN
+            LET g_sql = g_sql," AND apde131 IS NULL "
+         ELSE
+            LET g_sql = g_sql," AND apde131 = ",l_tmp.apde131," "
+         END IF  
+         #150918-00001#1-----e
+      END IF      
+      
+      #將單號回寫到temptable(指派單頭)
+      PREPARE anmp410_upd_tmp FROM g_sql
+      EXECUTE anmp410_upd_tmp       
+
+      CALL anmp410_ins_nmcl(l_nmck.nmckdocno,l_nmck.nmck004)   #寫入本筆單號之單身nmcl_t
+      
+      IF g_success = 'N' THEN
+         EXIT FOREACH
+      END IF 
+      
+      #151125-00006#3  执行立即审核功能
+      CALL cl_err_collect_init()
+      LET l_conf_success = NULL
+      CALL s_aooi200_fin_get_slip(l_nmck.nmckdocno) RETURNING l_slip_success,l_slip
+      CALL s_fin_get_doc_para(g_master1.apdald,l_nmck.nmckcomp,l_slip,'D-FIN-0031') RETURNING l_dfin0031
+      
+      IF NOT cl_null(l_dfin0031) AND l_dfin0031 MATCHES '[Yy]' THEN 
+         CALL anmp410_immediately_conf(l_nmck.nmckdocno,l_nmck.nmckcomp)
+        ELSE 
+                 
+      END IF       
+    #151125-00006#3      
+      
+   END FOREACH
+   CALL cl_err_collect_show()
+END FUNCTION
+################################################################################
+# Descriptions...: 寫入應付匯款單身擋nmcl_t
+# Memo...........:
+# Usage..........: CALL anmp410_ins_nmcl (p_nmckdocno,p_nmck004)
+# Input parameter: p_nmckno  應付匯款單頭單號
+#                  p_nmck004 交易帳戶
+# Date & Author..: 14/08/11 By apo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp410_ins_nmcl(p_nmckdocno,p_nmck004)
+   DEFINE l_tmp       type_g_detail_d
+   DEFINE l_nmcl      RECORD LIKE nmcl_t.*
+   DEFINE p_nmckdocno LIKE nmck_t.nmckdocno
+   DEFINE p_nmck004   LIKE nmck_t.nmck004   
+
+   
+   INITIALIZE l_tmp.* TO NULL   
+   INITIALIZE l_nmcl.* TO NULL 
+  
+   FOREACH anmp410_sel_tmp_c2 USING p_nmckdocno INTO 
+       l_nmcl.nmclent,l_nmcl.nmcldocno,l_nmcl.nmclorga,l_nmcl.nmcl001,l_nmcl.nmcl002,l_nmcl.nmcl003,
+       l_nmcl.nmcl103,l_nmcl.nmcl113,l_nmcl.nmcl121,l_nmcl.nmcl123,l_nmcl.nmcl131,l_nmcl.nmcl133
+       LET l_nmcl.nmclcomp = g_master1.apdacomp    
+       
+       #計算項次
+       IF cl_null(l_nmcl.nmclseq) THEN
+          LET l_nmcl.nmclseq = '1' 
+       ELSE
+          LET l_nmcl.nmclseq = l_nmcl.nmclseq + 1
+       END IF
+
+       INSERT INTO nmcl_t
+                  (nmclent,
+                   nmclcomp,nmcldocno,nmclseq,nmclorga,nmcl001,nmcl002,
+                   nmcl003,nmcl103,nmcl113,nmcl121,nmcl123,nmcl131,nmcl133)
+            VALUES(l_nmcl.nmclent,
+                   l_nmcl.nmclcomp,l_nmcl.nmcldocno,l_nmcl.nmclseq,l_nmcl.nmclorga,l_nmcl.nmcl001,l_nmcl.nmcl002,
+                   l_nmcl.nmcl003,l_nmcl.nmcl103,l_nmcl.nmcl113,
+                   l_nmcl.nmcl121,l_nmcl.nmcl123,l_nmcl.nmcl131,l_nmcl.nmcl133)
+       IF SQLCA.SQLcode OR SQLCA.SQLERRD[3]=0 THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = "ins nmcl_t"
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+          LET g_success = 'N'
+       END IF
+       
+
+       #更新來源請款單身狀態+付款帳號    
+          
+       UPDATE apde_t SET apde009 = 'Y',apde008 = p_nmck004,apde003=p_nmckdocno
+        WHERE apdeent = l_nmcl.nmclent
+          AND apdeld =g_master1.apdald
+          AND apdedocno = l_nmcl.nmcl001
+          AND apdeseq = l_nmcl.nmcl002
+          
+       IF SQLCA.SQLcode OR SQLCA.SQLERRD[3]=0 THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = "upd apde_t"
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+          LET g_success = 'N'
+       END IF          
+       
+       IF g_success = 'N' THEN
+          EXIT FOREACH
+       END IF         
+         
+   END FOREACH  
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依據付款單到期日決定開放選擇否(apde032為空不可選擇)
+# Memo...........:
+# Usage..........: CALL anmp410_set_entry_sel (p_apde032)
+#
+# Input parameter: p_apde032      付款單到期日
+# 
+# Date & Author..: 14/08/18 By apo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp410_set_entry_sel(p_apde032)
+DEFINE p_apde032 LIKE apde_t.apde032
+
+   CALL cl_set_comp_entry("b_sel",FALSE)
+   IF NOT cl_null(p_apde032) THEN
+      CALL cl_set_comp_entry("b_sel",TRUE)
+   ELSE
+      LET g_detail_d[l_ac].sel = 'N'
+      CALL cl_set_comp_entry("b_sel",FALSE)
+   END IF
+END FUNCTION
+################################################################################
+# Descriptions...: 清空&給預設 #1150610-00023#7
+# Memo...........:
+# Usage..........: CALL anmp410_qbe_clear()
+# Date & Author..: 2015/06/12 By apo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp410_qbe_clear()
+   CLEAR FORM
+   INITIALIZE g_master1.* TO NULL
+   INITIALIZE g_master2.* TO NULL
+   CALL g_detail_d.clear()
+   #請款單條件預設值
+  #LET g_master1.apde006 = '10'  #160308-00006#1 mark
+   LET g_master1.apde006 = '20'  #160308-00006#1
+   #依款別為"10:現金"之情形先給予預設值
+   LET g_gen_prog = 'anmt460'  #參照anmt460取單別
+   CALL s_fin_account_center_with_ld_chk(g_site,'',g_user,'7','N','',g_today) RETURNING g_sub_success,g_errno
+   IF g_sub_success THEN
+      LET g_master1.nmcksite = g_site
+      LET g_master1.nmcksite_desc = s_desc_get_department_desc(g_master1.nmcksite)
+      CALL s_fin_orga_get_comp_ld(g_site) RETURNING g_sub_success,g_errno,g_master1.apdacomp,g_master1.apdald
+      LET g_master1.apdacomp_desc = s_desc_get_department_desc(g_master1.apdacomp)
+      DISPLAY BY NAME g_master1.nmcksite_desc,g_master1.apdacomp_desc
+   END IF
+   LET g_master2.nmckdocdt = g_today
+   IF cl_null(g_master2.nmck003) THEN
+      LET g_master2.nmck003 = g_user
+      LET g_master2.nmck003_desc = s_desc_get_person_desc(g_master2.nmck003)                  
+   END IF
+   IF cl_null(g_master2.summary) THEN
+     #LET g_master2.summary = 'Y' #151013-00019#10 mark
+      LET g_master2.summary = 'N' #151013-00019#10
+   END IF
+   DISPLAY BY NAME g_master2.nmck003,g_master2.summary   
+   LET g_master1.l_chk1 = 'Y'
+   DISPLAY BY NAME g_master1.l_chk1      
+END FUNCTION
+
+################################################################################
+# Descriptions...: 立即审核
+# Memo...........:
+# Usage..........: CALL anmp410_immediately_conf(p_nmckdocno,p_nmckcomp)
+#                  RETURNING 回传参数
+# Input parameter: p_nmckdocno   单号
+#                : p_nmckcomp    法人
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/12/11 By 07166
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp410_immediately_conf(p_nmckdocno,p_nmckcomp)
+#151125-00006#3--s
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_doc_success     LIKE type_t.num5
+   DEFINE l_slip            LIKE ooba_t.ooba002
+   DEFINE l_dfin0031        LIKE type_t.chr1
+   DEFINE l_count           LIKE type_t.num5
+   DEFINE l_nmckmoddt       LIKE nmck_t.nmckmoddt
+   DEFINE l_nmckcnfdt       LIKE nmck_t.nmckcnfdt
+   DEFINE p_nmckdocno       LIKE nmck_t.nmckdocno
+   DEFINE p_nmckcomp        LIKE nmck_t.nmckcomp
+   IF cl_null(g_master1.apdald)   THEN RETURN END IF   #無資料直接返回不做處理
+   IF cl_null(p_nmckcomp)  THEN RETURN END IF   #無資料直接返回不做處理
+   IF cl_null(p_nmckdocno) THEN RETURN END IF   #無資料直接返回不做處理
+    
+   LET l_count = 0
+   SELECT COUNT(*) INTO l_count FROM nmcl_t WHERE nmclent = g_enterprise
+      AND nmcldocno = p_nmckdocno
+      
+   IF cl_null(l_count) THEN LET l_count = 0 END IF
+   IF l_count = 0 THEN
+      #CALL cl_err_collect_show()
+      RETURN 
+   END IF                   #单身無資料直接返回不做處理
+   
+
+   LET l_doc_success = TRUE
+        
+   IF NOT s_anmt460_conf_chk(p_nmckcomp,p_nmckdocno) THEN
+      LET l_doc_success = FALSE
+   END IF
+   
+   IF NOT s_anmt460_conf_upd(p_nmckcomp,p_nmckdocno) THEN
+      LET l_doc_success = FALSE
+   END IF 
+   
+   #異動狀態碼欄位/修改人/修改日期
+   LET l_nmckmoddt = cl_get_current()
+   LET l_nmckcnfdt = cl_get_current()
+   UPDATE nmck_t SET nmckstus = 'Y',
+                     nmckmodid= g_user,
+                     nmckmoddt= l_nmckmoddt,
+                     nmckcnfid= g_user,
+                     nmckcnfdt= l_nmckcnfdt
+    WHERE nmckent = g_enterprise AND nmckcomp = p_nmckcomp
+      AND nmckdocno = p_nmckdocno
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      LET l_doc_success = FALSE
+   END IF
+   IF l_doc_success = TRUE THEN
+      CALL s_transaction_end('Y',1)
+   ELSE
+      CALL s_transaction_end('N',1)
+   END IF
+      #CALL cl_err_collect_show()
+#151125-00006#3--e
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

@@ -1,0 +1,216 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzp110.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000020
+#+ 
+#+ Filename...: azzp110
+#+ Description: 補入多語言資料批次作業
+#+ Creator....: 01856(2014/06/05)
+#+ Modifier...: (1899/12/31)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+
+{</section>}
+
+{<section id="azzp110.global" >}
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="azzp110.main" >}
+MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   DEFINE ls_target   STRING
+   DEFINE ls_temp     STRING
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+   LET g_bgjob = "Y"
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+{<point name="main.background"/>}
+   #end add-point
+    #DISPLAY "azzp110: ",g_argv[1] 
+  
+{<point name="main.servicecall" />}
+
+{<point name="main.before_close" />}
+
+{<point name="main.exit" />}
+   #CALL cl_ap_exitprogram("0")
+END MAIN
+{</section>}
+
+{<section id="azzp110.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION azzp110_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="azzp110.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION azzp110_ui_dialog()
+
+{<point name="ui_dialog.define"/>}
+
+{<point name="ui_dialog.before_dialog"/>}
+
+{<point name="ui_dialog.more_construct"/>}
+
+{<point name="ui_dialog.more_input"/>}
+
+{<point name="ui_dialog.more_displayarray"/>}
+
+{<point name="ui_dialog.qbe_select"/>}
+
+{<point name="ui_dialog.more_action"/>}
+
+{<point name="process.exit_dialog"/>}
+END FUNCTION
+{</section>}
+
+{<section id="azzp110.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION azzp110_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+
+{</section>}
+
+{<section id="azzp110.process" >}
+#+ 資料處理
+PRIVATE FUNCTION azzp110_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE azzp110_process_cs CURSOR FROM ls_sql
+#  FOREACH azzp110_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+
+{</section>}
+
+{<section id="azzp110.get_buffer" >}
+
+
+{</section>}
+
+{<section id="azzp110.other_function" >}
+#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+

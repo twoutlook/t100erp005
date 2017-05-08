@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ammt423_01" std_prog="ammt423_01" erpver="1.0" ver="2" module="AMM" type="S" booking="Y" class="I" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="mmbn_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供卡續期批次產生至會員卡續期維護作業,不參考卡種設定規則,給予範圍固定的效期
+作業功能：說明/離開
+作業類型：QBE批次資料產生作業
+輸入模式：單檔（子作業）F002_00
+
+1.點選確認後,依QBE Input 範圍自動產生至[T:會員卡續期異動單身檔mmbn_t].回到卡續期單身畫面.
+2.程式檢查  產生的資料中，若其中有一筆會員卡新有效期<=原有效期,則此次批量新增失敗
+                  匯總報錯 ： 會員卡號 mmbn001 原有效期大於等於 新有效期，不可變更
+3.程式檢查  產生的資料中，若其中有一筆會員卡號 已存在於其他未確認的單據中，則此次批量新增失敗
+                  匯總報錯： 會員卡號mmbn001已存在其他未確認的單據中，請先確認其他單據在執行批量新增
+4.可重複批次產生.當同一張單據存在一筆以上的續期資料時,需開窗詢問是否先刪除資料後產生(Y/N)?(瀏覽狀態時會提示，單身編輯狀態時默認為'N')
+       Y-先刪除舊資料再重新新增
+       N-略過當前筆資料，繼續下一筆資料新增]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[
+]]>
+  </mi_all>
+  <field cite_std="N" name="lbl_mman001" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mman005" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mman007" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mman008" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman001_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman001" ver="1" src="s" column="mman001" table="mman_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="q_mman001_1" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[續期卡種編號:
+     1.校驗: 輸入值須存在[T:會員卡種基本資料檔mman_t][C:卡種編號mman001] 中 [C:狀態碼mmanstus] = 'Y',[C:卡效期延長mman023]='Y'
+                錯誤訊息： 1.輸入的卡種編號不存在
+                                  2.輸入的卡種編號已無效
+                                  3.輸入的卡種編號不可延長有效期
+     2.帶值:.畫面[卡種名稱mman001_desc]依 卡種編號mman001 取[T:會員卡種資料檔多語言檔mmanl_t][C:說明mmanl003]顯示，
+                畫面下方 [卡號總碼長mman005][卡號固定代碼mman007][卡號流水碼長度mman008] 
+                依 卡種編號mman001 取[T:會員卡種基本資料檔mman_t][C:卡號總碼長mman005][C:卡號固定代碼mman007][C:卡號流水碼長度mman008] 顯示]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman005" ver="1" src="s" column="mman005" table="mman_t" attribute="N001" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[卡號總碼長
+                依 卡種編號mman001 取[T:會員卡種基本資料檔mman_t][C:卡號總碼長mman005] 顯示]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman007" ver="1" src="s" column="mman007" table="mman_t" attribute="C602" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[卡號固定代碼
+                依 卡種編號mman001 取[T:會員卡種基本資料檔mman_t][C:卡號固定代碼mman007] 顯示]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman008" ver="1" src="s" column="mman008" table="mman_t" attribute="N001" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[卡號流水碼長度
+                依 卡種編號mman001 取[T:會員卡種基本資料檔mman_t][C:卡號流水碼長度mman008] 顯示]]>
+  </field>
+  <field cite_std="N" name="mmbn_t.mmbn001" ver="1" src="s" column="mmbn001" table="mmbn_t" attribute="C602" type="varchar2(30)" req="N" i_zoom="" c_zoom="q_mmbn001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[續期會員卡號
+     開窗 
+           查詢時 參數arg1：傳入 續期卡種編號 mman001]]>
+  </field>
+  <field cite_std="N" name="mmbn_t.mmbn004" ver="1" src="s" column="mmbn004" table="mmbn_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbn_t.mmbn006" ver="1" src="s" column="mmbn006" table="mmbn_t" attribute="C813" type="varchar2(10)" req="Y" i_zoom="q_ooea001_4" c_zoom="q_ooea001_4" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[需求營運據點：
+     1.預設值:[T:會員卡續期異動單頭檔mmbm_t].[C:申請營運據點mmbm004]
+     2.校驗: 輸入值須存在[T:組織基本資料檔ooea_t][C:組織編號ooea001] WHERE [C:需求營運據點mmbn006]需存在[T:組織結構提速檔](暫時未完成)
+                且為[T:會員卡續期異動單頭檔mmbm_t].[C:申請營運據點mmbm004]包含以下[C.狀態碼 ooeastus] = 'Y'資料.
+                錯誤訊息 1.輸入的組織編號不存在，請重新輸入
+                               2.輸入的組織編號不為單頭申請營運據點所包含，請重新輸入
+                               3.輸入的組織編號無效，請重新輸入
+     3帶值：輸入完需求營運據點後抓取對應[T:組織基本資料檔多語言檔ooeal_t][C:ooeal003說明(簡稱)]顯示於[C營運據點名稱mmbn006_desc].
+     
+   ●開窗處理：
+       (由於組織結構提速檔暫時未完成，先用 q_ooea001_4 組織(營運中心)編號查詢)]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="mmbn006_desc" src="s" depend_field="mmbn_t.mmbn006" correspon_key="mmbn006" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="lbl_mman001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mman005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mman007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mman008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="mman001_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbn_t.mmbn001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbn_t.mmbn004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbn_t.mmbn006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="master" text="條件選項" lstr=""/>
+    <sfield name="lbl_mmbn006" text="需求組織" lstr=""/>
+    <sfield name="lbl_mman001" text="續期卡種編號" lstr=""/>
+    <sfield name="lbl_mmbn004" text="新有效期" lstr=""/>
+    <sfield name="master_gen1" text="QBE" lstr=""/>
+    <sfield name="lbl_mmbn001" text="續期會員卡號" lstr=""/>
+    <sfield name="lbl_mman005" text="卡號總碼長" lstr=""/>
+    <sfield name="lbl_mman007" text="卡號固定代碼" lstr=""/>
+    <sfield name="lbl_mman008" text="卡號流水碼長度" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

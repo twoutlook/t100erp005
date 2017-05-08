@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aist410_01" std_prog="aist410_01" erpver="1.0" module="AIS" ver="2" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.aist410_01_get_count" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 獲取符合條件筆數
+PRIVATE FUNCTION aist410_01_get_count()
+   SELECT COUNT(*) INTO g_idx
+     FROM isaj_t
+    WHERE isajent = g_enterprise
+      AND isaj003 = g_isaj_m.isaj003
+      AND isaj009 >= g_isaj_m.start_date
+      AND isaj009 <= g_isaj_m.end_date
+      AND isaj104 >= g_isaj_m.start_amt
+      AND isaj104 <= g_isaj_m.end_amt
+      AND isaj018 = g_isaj_m.isaj018
+      AND isaj019 IS NULL
+      AND isaj020 IS NULL
+      
+   DISPLAY g_idx TO FORMONLY.idx
+END FUNCTION]]>
+  </point>
+  <point name="function.aist410_01_ref_show" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 參考欄位帶值
+PRIVATE FUNCTION aist410_01_ref_show()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_isaj_m.isaj003
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl004 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_isaj_m.isaj003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_isaj_m.isaj003_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.aist410_01_update" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 修改申報格式
+PRIVATE FUNCTION aist410_01_update()
+   DEFINE l_success    LIKE type_t.num5
+   
+   CALL s_transaction_begin()
+   LET l_success = 'Y'
+   
+   UPDATE isaj_t SET isaj018 = g_isaj_m.isaj018_1,
+                     isaj017 = g_isaj_m.isaj017
+    WHERE isajent = g_enterprise
+      AND isaj003 = g_isaj_m.isaj003
+      AND isaj009 >= g_isaj_m.start_date
+      AND isaj009 <= g_isaj_m.end_date
+      AND isaj104 >= g_isaj_m.start_amt
+      AND isaj104 <= g_isaj_m.end_amt
+      AND isaj018 = g_isaj_m.isaj018
+      AND isaj019 IS NULL
+      AND isaj020 IS NULL
+      
+   IF SQLCA.SQLcode  THEN
+      CALL cl_err("g_xrcb",SQLCA.sqlcode,1)  
+      LET l_success = 'N'                        
+   END IF
+   
+   IF l_success = 'N' THEN
+      CALL s_transaction_end('N','1') 
+   ELSE
+      CALL s_transaction_end('Y','1')
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_ooef019             LIKE ooef_t.ooef019
+DEFINE g_idx                 LIKE type_t.num5]]>
+  </point>
+  <point name="input.a.end_amt" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isaj_m.end_amt) THEN 
+            END IF 
+
+            CALL aist410_01_get_count()]]>
+  </point>
+  <point name="input.a.end_date" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aist410_01_get_count()]]>
+  </point>
+  <point name="input.a.isaj001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+
+]]>
+  </point>
+  <point name="input.a.isaj003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aist410_01_ref_show()
+            IF NOT cl_null(g_isaj_m.isaj003) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_isaj_m.isaj003
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_isaa001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  SELECT ooef019 INTO g_ooef019
+                    FROM ooef_t
+                   WHERE ooefent = g_enterprise
+                     AND ooef001 = g_isaj_m.isaj003
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_isaj_m.isaj003 = ''
+                  CALL aist410_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            CALL aist410_01_get_count()
+
+]]>
+  </point>
+  <point name="input.a.isaj005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+]]>
+  </point>
+  <point name="input.a.isaj006" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+
+]]>
+  </point>
+  <point name="input.a.isaj007" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+]]>
+  </point>
+  <point name="input.a.isaj018" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isaj_m.isaj018) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_ooef019
+               LET g_chkparam.arg2 = g_isaj_m.isaj018
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_isap002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+            CALL aist410_01_get_count()]]>
+  </point>
+  <point name="input.a.isaj018_1" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isaj_m.isaj018_1) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_ooef019
+               LET g_chkparam.arg2 = g_isaj_m.isaj018_1
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_isap002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.isajcomp" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+
+]]>
+  </point>
+  <point name="input.a.isajsite" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isaj_m.isajsite) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_ooef001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isaj_m.isajsite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl004 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isaj_m.isajsite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isaj_m.isajsite_desc
+
+
+]]>
+  </point>
+  <point name="input.a.start_amt" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isaj_m.start_amt) THEN 
+            END IF 
+
+            CALL aist410_01_get_count()]]>
+  </point>
+  <point name="input.a.start_date" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aist410_01_get_count()]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG = TRUE 
+   ELSE
+      CALL aist410_01_update()
+   END IF]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_isaj_m.start_date = g_today
+            LET g_isaj_m.end_date = g_today
+            LET g_isaj_m.start_amt = 0
+            LET g_isaj_m.end_amt = 0
+            LET g_isaj_m.isaj017 = 'Y']]>
+  </point>
+  <point name="input.c.isaj003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isaj_m.isaj003             #給予default值
+            LET g_qryparam.default2 = "" #g_isaj_m.isaa001 #申報單位代碼
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_isaa001()                                #呼叫開窗
+
+            LET g_isaj_m.isaj003 = g_qryparam.return1              
+            #LET g_isaj_m.isaa001 = g_qryparam.return2 
+            CALL aist410_01_ref_show()
+            DISPLAY g_isaj_m.isaj003 TO isaj003              #
+            #DISPLAY g_isaj_m.isaa001 TO isaa001 #申報單位代碼
+            NEXT FIELD isaj003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.isaj018" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isaj_m.isaj018             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef019
+
+            
+            CALL q_isap002()                                #呼叫開窗
+
+            LET g_isaj_m.isaj018 = g_qryparam.return1              
+
+            DISPLAY g_isaj_m.isaj018 TO isaj018              #
+
+            NEXT FIELD isaj018                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.isaj018_1" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isaj_m.isaj018_1             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef019
+
+            
+            CALL q_isap002()                                #呼叫開窗
+
+            LET g_isaj_m.isaj018_1 = g_qryparam.return1              
+
+            DISPLAY g_isaj_m.isaj018_1 TO isaj018_1              #
+
+            NEXT FIELD isaj018_1                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.isajsite" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isaj_m.isajsite             #給予default值
+            LET g_qryparam.default2 = "" #g_isaj_m.ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_isaj_m.isajsite = g_qryparam.return1              
+            #LET g_isaj_m.ooefl003 = g_qryparam.return2 
+            DISPLAY g_isaj_m.isajsite TO isajsite              #
+            #DISPLAY g_isaj_m.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD isajsite                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_errshow = 1]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isaj_m.isajsite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl004 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isaj_m.isajsite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isaj_m.isajsite_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isaj_m.isaj003
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl004 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isaj_m.isaj003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isaj_m.isaj003_desc
+]]>
+  </point>
+  <section id="aist410_01.description" ver="45" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000052
+#+ 
+#+ Filename...: aist410_01
+#+ Description: ...
+#+ Creator....: 02114(2014/04/29)
+#+ Modifier...: 02114(2014/05/23)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="aist410_01.global" ver="5" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_isaj_m        RECORD
+       isaj003 LIKE isaj_t.isaj003, 
+   isaj003_desc LIKE type_t.chr80, 
+   start_date LIKE type_t.dat, 
+   end_date LIKE type_t.chr80, 
+   start_amt LIKE type_t.chr80, 
+   end_amt LIKE type_t.chr80, 
+   isaj018 LIKE isaj_t.isaj018, 
+   isaj018_1 LIKE type_t.chr10, 
+   isaj017 LIKE type_t.chr1
+       END RECORD
+DEFINE g_isaj_m        type_g_isaj_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aist410_01.input" ver="10" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aist410_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aist410_01 WITH FORM cl_ap_formpath("ais","aist410_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_isaj_m.isaj003,g_isaj_m.start_date,g_isaj_m.end_date,g_isaj_m.start_amt,g_isaj_m.end_amt, 
+          g_isaj_m.isaj018,g_isaj_m.isaj018_1,g_isaj_m.isaj017 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD isaj003
+            
+            #add-point:AFTER FIELD isaj003
+            {<point name="input.a.isaj003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD isaj003
+            #add-point:BEFORE FIELD isaj003
+            {<point name="input.b.isaj003" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE isaj003
+            #add-point:ON CHANGE isaj003
+            {<point name="input.g.isaj003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD start_date
+            #add-point:BEFORE FIELD start_date
+            {<point name="input.b.start_date" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD start_date
+            
+            #add-point:AFTER FIELD start_date
+            {<point name="input.a.start_date" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE start_date
+            #add-point:ON CHANGE start_date
+            {<point name="input.g.start_date" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD end_date
+            #add-point:BEFORE FIELD end_date
+            {<point name="input.b.end_date" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD end_date
+            
+            #add-point:AFTER FIELD end_date
+            {<point name="input.a.end_date" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE end_date
+            #add-point:ON CHANGE end_date
+            {<point name="input.g.end_date" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD start_amt
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_isaj_m.start_amt,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD start_amt
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD start_amt
+            {<point name="input.a.start_amt" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD start_amt
+            #add-point:BEFORE FIELD start_amt
+            {<point name="input.b.start_amt" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE start_amt
+            #add-point:ON CHANGE start_amt
+            {<point name="input.g.start_amt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD end_amt
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_isaj_m.end_amt,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD end_amt
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD end_amt
+            {<point name="input.a.end_amt" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD end_amt
+            #add-point:BEFORE FIELD end_amt
+            {<point name="input.b.end_amt" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE end_amt
+            #add-point:ON CHANGE end_amt
+            {<point name="input.g.end_amt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD isaj018
+            
+            #add-point:AFTER FIELD isaj018
+            {<point name="input.a.isaj018" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD isaj018
+            #add-point:BEFORE FIELD isaj018
+            {<point name="input.b.isaj018" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE isaj018
+            #add-point:ON CHANGE isaj018
+            {<point name="input.g.isaj018" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD isaj018_1
+            
+            #add-point:AFTER FIELD isaj018_1
+            {<point name="input.a.isaj018_1" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD isaj018_1
+            #add-point:BEFORE FIELD isaj018_1
+            {<point name="input.b.isaj018_1" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE isaj018_1
+            #add-point:ON CHANGE isaj018_1
+            {<point name="input.g.isaj018_1" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD isaj017
+            #add-point:BEFORE FIELD isaj017
+            {<point name="input.b.isaj017" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD isaj017
+            
+            #add-point:AFTER FIELD isaj017
+            {<point name="input.a.isaj017" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE isaj017
+            #add-point:ON CHANGE isaj017
+            {<point name="input.g.isaj017" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.isaj003
+         ON ACTION controlp INFIELD isaj003
+            #add-point:ON ACTION controlp INFIELD isaj003
+            {<point name="input.c.isaj003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.start_date
+         ON ACTION controlp INFIELD start_date
+            #add-point:ON ACTION controlp INFIELD start_date
+            {<point name="input.c.start_date" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.end_date
+         ON ACTION controlp INFIELD end_date
+            #add-point:ON ACTION controlp INFIELD end_date
+            {<point name="input.c.end_date" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.start_amt
+         ON ACTION controlp INFIELD start_amt
+            #add-point:ON ACTION controlp INFIELD start_amt
+            {<point name="input.c.start_amt" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.end_amt
+         ON ACTION controlp INFIELD end_amt
+            #add-point:ON ACTION controlp INFIELD end_amt
+            {<point name="input.c.end_amt" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.isaj018
+         ON ACTION controlp INFIELD isaj018
+            #add-point:ON ACTION controlp INFIELD isaj018
+            {<point name="input.c.isaj018" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.isaj018_1
+         ON ACTION controlp INFIELD isaj018_1
+            #add-point:ON ACTION controlp INFIELD isaj018_1
+            {<point name="input.c.isaj018_1" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.isaj017
+         ON ACTION controlp INFIELD isaj017
+            #add-point:ON ACTION controlp INFIELD isaj017
+            {<point name="input.c.isaj017" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aist410_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aist410_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aist410_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

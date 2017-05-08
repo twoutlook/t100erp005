@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammq301" module="amm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02296" crtdt="2014-04-14 09:04:14" modid="07142" moddt="2016-07-22 08:42:48" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員資料快速查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr500),mmaf008,mmaf009,mmaf001,mmaf015,mmaf013,mmaf014,mmaf003,mmaf004,mmaf012,mmaf021,mmaf021_desc(chr500),mmafunit,mmafunit_desc(chr500),mmaf019,mmaf019_desc(chr500),mmafcrtdt,mmaf024,mmaf025,mmaf026,mmaf027,mmaf028,mmaf011"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query_insert"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="query_c"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammq301" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,mmaf008,mmaf009,mmaf001,mmaf015,mmaf013,mmaf014,mmaf003,mmaf004,mmaf012,mmaf021,mmafunit,mmaf019,mmafcrtdt,mmaf024,mmaf025,mmaf026,mmaf027,mmaf028,mmaf011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="mmaf003,mmaf012,mmaf021,mmafunit,mmaf019,mmafcrtdt,mmaf024,mmaf025,mmaf026,mmaf027,mmaf028,mmaf011"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel" type="S" default="N"/>
+      <column id="mmaf008"/>
+      <column id="mmaf009"/>
+      <column id="mmaf001">
+        <controlp form="q_mmaf001" state="c"/>
+      </column>
+      <column id="mmaf015"/>
+      <column id="mmaf013"/>
+      <column id="mmaf014"/>
+      <column id="mmaf003" def_scc="6501"/>
+      <column id="mmaf004">
+        <controlp form="q_mmaf004" state="c"/>
+      </column>
+      <column id="mmaf012"/>
+      <column id="mmaf021">
+        <after>
+          <reference field="mmaf021_desc" ref_field="mmaf021" map_field="mmaf021" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2112&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmaf021_desc"/>
+      <column id="mmafunit">
+        <after>
+          <reference field="mmafunit_desc" ref_field="mmaf_t.mmafunit" map_field="mmafunt" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmafunit_desc"/>
+      <column id="mmaf019">
+        <after>
+          <reference field="mmaf019_desc" ref_field="mmaf_t.mmaf019" map_field="mmaf019" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmaf019_desc"/>
+      <column id="mmafcrtdt"/>
+      <column id="mmaf024"/>
+      <column id="mmaf025"/>
+      <column id="mmaf026"/>
+      <column id="mmaf027"/>
+      <column id="mmaf028"/>
+      <column id="mmaf011"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="mmaf_t" page="1" linked="" pk="mmaf001">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,mmaf008,mmaf009,mmaf001,mmaf015,mmaf013,mmaf014,mmaf003,mmaf004,mmaf012,mmaf021,&apos;&apos;,mmafunit,&apos;&apos;,mmaf019,&apos;&apos;,mmafcrtdt,mmaf024,mmaf025,mmaf026,mmaf027,mmaf028,mmaf011 FROM mmaf_t WHERE mmafent=? AND mmaf001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,mmaf008,mmaf009,mmaf001,mmaf015,mmaf013,mmaf014,mmaf003,mmaf004,mmaf012,mmaf021,&apos;&apos;,mmafunit,&apos;&apos;,mmaf019,&apos;&apos;,mmafcrtdt,mmaf024,mmaf025,mmaf026,mmaf027,mmaf028,mmaf011 FROM mmaf_t WHERE mmafent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aist340" module="ais" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="03538" crtdt="2014-12-10 10:38:33" modid="08732" moddt="2016-09-29 15:18:34" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="發票繳款單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isba001,isba001_desc(chr80),isba002,isba002_desc(chr80),isbacomp,isbacomp_desc(chr80),isbadocno,isbadocno_desc(chr80),isbadocdt,isba003,isba003_desc(chr80),isba004,isbastus,isbaownid,isbaownid_desc(chr80),isbaowndp,isbaowndp_desc(chr80),isbacrtid,isbacrtid_desc(chr80),isbacrtdp,isbacrtdp_desc(chr80),isbacrtdt,isbamodid,isbamodid_desc(chr80),isbamoddt,isbacnfid,isbacnfid_desc(chr80),isbacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isbbseq,isbb002,isbb003,isbb004,isbb001,isbb001_desc(chr500),isbb100,isbb101,isbb103,isbb104,isbb114,isbb121,isbb123,isbb124,isbb131,isbb133,isbb134"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="isbcseq,isbc004,isbc007,isbc008,isafdocdt(dat),isbc001,isbc002,isat007(dat),isaf100(chr10),isaf101(num26_10),isat105(num20_6),isat115(num20_6),isbc003,isbc103,isbc104,isbc005,isbc006"/>
+      <var id="bs_field" value="isbacomp,isbadocno" pk="isbacomp,isbadocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_isba001" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_isba_m.isba001"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aist340" method="dialog">
+    <section id="input">
+      <input id="head" field="isba001,isba002,isbadocno,isbadocdt,isba003,isba004,isbastus"/>
+      <input id="body" page="1" field="isbb002,isbb003,isbb001,isbb100,isbb101,isbb103,isbb114,isbb121,isbb123,isbb124,isbb131,isbb133,isbb134" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="isbc004,isbc008,isbc001,isbc002,isbc103" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isba001,isba002,isbacomp,isbadocno,isbadocdt,isba003,isba004,isbastus,isbaownid,isbaowndp,isbacrtid,isbacrtdp,isbacrtdt,isbamodid,isbamoddt,isbacnfid,isbacnfdt"/>
+      <construct id="body" page="1" field="isbb002,isbb003,isbb004,isbb001,isbb100,isbb101,isbb103,isbb104,isbb114,isbb121,isbb123,isbb124,isbb131,isbb133,isbb134"/>
+      <construct id="body" page="2" field="isbc004,isbc007,isbc008,isbc001,isbc002,isbc003,isbc103,isbc104,isbc005,isbc006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="isbacomp,isbadocno"/>
+      <set id="head" type="no_entry" field="isbacomp,isbadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isba001">
+        <after>
+          <reference field="isba001_desc" ref_field="isba_t.isba001" map_field="isba001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="isba001_desc"/>
+      <column id="isba002">
+        <after>
+          <reference field="isba002_desc" ref_field="isba_t.isba002" map_field="isbaent,isba002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="isba002_desc"/>
+      <column id="isbacomp">
+        <after>
+          <reference field="isbacomp_desc" ref_field="isba_t.isbacomp" map_field="isbaent,isbacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="isbacomp_desc"/>
+      <column id="isbadocno">
+        <after/>
+      </column>
+      <column id="isbadocno_desc"/>
+      <column id="isbadocdt"/>
+      <column id="isba003">
+        <after>
+          <reference field="isba003_desc" ref_field="isba_t.isba003" map_field="isbaent,isba003" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="isba003_desc"/>
+      <column id="isba004"/>
+      <column id="isbastus" scc="13">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="isbaownid">
+        <after>
+          <reference field="isbaownid_desc" ref_field="isba_t.isbaownid" map_field="isbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isbaownid_desc"/>
+      <column id="isbaowndp">
+        <after>
+          <reference field="isbaowndp_desc" ref_field="isba_t.isbaowndp" map_field="isbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isbaowndp_desc"/>
+      <column id="isbacrtid">
+        <after>
+          <reference field="isbacrtid_desc" ref_field="isba_t.isbacrtid" map_field="isbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isbacrtid_desc"/>
+      <column id="isbacrtdp">
+        <after>
+          <reference field="isbacrtdp_desc" ref_field="isba_t.isbacrtdp" map_field="isbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isbacrtdp_desc"/>
+      <column id="isbacrtdt"/>
+      <column id="isbamodid">
+        <after>
+          <reference field="isbamodid_desc" ref_field="isba_t.isbamodid" map_field="isbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isbamodid_desc"/>
+      <column id="isbamoddt"/>
+      <column id="isbacnfid">
+        <after>
+          <reference field="isbacnfid_desc" ref_field="isba_t.isbacnfid" map_field="isbacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isbacnfid_desc"/>
+      <column id="isbacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="isbbseq"/>
+      <column id="isbb002"/>
+      <column id="isbb003"/>
+      <column id="isbb004"/>
+      <column id="isbb001">
+        <after/>
+      </column>
+      <column id="isbb001_desc"/>
+      <column id="isbb100"/>
+      <column id="isbb101">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isbb103">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isbb104"/>
+      <column id="isbb114" type="S" default="0"/>
+      <column id="isbb121" type="S" default="0"/>
+      <column id="isbb123" type="S" default="0"/>
+      <column id="isbb124" type="S" default="0"/>
+      <column id="isbb131" type="S" default="0"/>
+      <column id="isbb133" type="S" default="0"/>
+      <column id="isbb134" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="isbcseq"/>
+      <column id="isbc004"/>
+      <column id="isbc007"/>
+      <column id="isbc008"/>
+      <column id="isafdocdt"/>
+      <column id="isbc001"/>
+      <column id="isbc002"/>
+      <column id="isat007"/>
+      <column id="isaf100"/>
+      <column id="isaf101"/>
+      <column id="isat105" type="S" default="0"/>
+      <column id="isat115" type="S" default="0"/>
+      <column id="isbc003"/>
+      <column id="isbc103"/>
+      <column id="isbc104"/>
+      <column id="isbc005"/>
+      <column id="isbc006"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="isba_t" pk="isbacomp,isbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT isba001,&apos;&apos;,isba002,&apos;&apos;,isbacomp,&apos;&apos;,isbadocno,&apos;&apos;,isbadocdt,isba003,&apos;&apos;,isba004,isbastus,isbaownid,&apos;&apos;,isbaowndp,&apos;&apos;,isbacrtid,&apos;&apos;,isbacrtdp,&apos;&apos;,isbacrtdt,isbamodid,&apos;&apos;,isbamoddt,isbacnfid,&apos;&apos;,isbacnfdt FROM isba_t WHERE isbaent= ? AND isbacomp=? AND isbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT isba001,&apos;&apos;,isba002,&apos;&apos;,isbacomp,&apos;&apos;,isbadocno,&apos;&apos;,isbadocdt,isba003,&apos;&apos;,isba004,isbastus,isbaownid,&apos;&apos;,isbaowndp,&apos;&apos;,isbacrtid,&apos;&apos;,isbacrtdp,&apos;&apos;,isbacrtdt,isbamodid,&apos;&apos;,isbamoddt,isbacnfid,&apos;&apos;,isbacnfdt FROM isba_t" order="isbacomp,isbadocno"/>
+    </head>
+    <body id="isbb_t" page="1" linked="" pk="isbbseq" fk="isbbcomp,isbbdocno">
+      <sql id="forupd_sql_detail" query="SELECT isbbseq,isbb002,isbb003,isbb004,isbb001,&apos;&apos;,isbb100,isbb101,isbb103,isbb104,isbb114,isbb121,isbb123,isbb124,isbb131,isbb133,isbb134 FROM isbb_t WHERE isbbent=? AND isbbcomp=? AND isbbdocno=? AND isbbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isbbseq,isbb002,isbb003,isbb004,isbb001,&apos;&apos;,isbb100,isbb101,isbb103,isbb104,isbb114,isbb121,isbb123,isbb124,isbb131,isbb133,isbb134 FROM isbb_t WHERE isbbent=? AND isbbcomp=? AND isbbdocno=?"/>
+    </body>
+    <body id="isbc_t" page="2" linked="" pk="isbcseq" fk="isbccomp,isbcdocno">
+      <sql id="forupd_sql_detail" query="SELECT isbcseq,isbc004,isbc007,isbc008,&apos;&apos;,isbc001,isbc002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,isbc003,isbc103,isbc104,isbc005,isbc006 FROM isbc_t WHERE isbcent=? AND isbccomp=? AND isbcdocno=? AND isbcseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isbcseq,isbc004,isbc007,isbc008,&apos;&apos;,isbc001,isbc002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,isbc003,isbc103,isbc104,isbc005,isbc006 FROM isbc_t WHERE isbcent=? AND isbccomp=? AND isbcdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,536 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="azzi850_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2016-04-12 14:19:27), PR版次:0005(2016-04-12 14:29:58)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000114
+#+ Filename...: azzi850_01
+#+ Description: QBE 批量增加
+#+ Creator....: 01856(2013-11-28 14:59:15)
+#+ Modifier...: 01856 -SD/PR- 01856
+ 
+{</section>}
+ 
+{<section id="azzi850_01.global" >}
+#應用 c01c 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#151119-00001 #4 jrg542  QBE批量增加許可權限(將此目錄下所有作業並包含子目錄內的作業批次增加給該角色) 
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE gs_where              STRING 
+DEFINE g_wc2                 STRING 
+DEFINE g_gzwe_d              DYNAMIC ARRAY OF RECORD 
+      gzwe002      LIKE gzwe_t.gzwe002 
+      END RECORD 
+DEFINE gc_arr                DYNAMIC ARRAY OF RECORD
+          pid      LIKE gzwe_t.gzwe001, #上階目錄編號
+          id       LIKE gzwe_t.gzwe002, #目錄編號
+          times    LIKE type_t.num5     #拜訪次數
+       END RECORD
+DEFINE gd_all_arr DYNAMIC ARRAY OF RECORD
+          chk      LIKE type_t.chr1,     #是否走訪過
+          pid      LIKE gzwe_t.gzwe001,  #上階目錄編號
+          id       LIKE gzwe_t.gzwe002   #目錄編號
+       END RECORD       
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point  
+ 
+{</section>}
+ 
+{<section id="azzi850_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION azzi850_01(--)
+   #add-point:construct段變數傳入 name="construct.get_var"
+   
+   #end add-point
+   )
+   #add-point:construct段define name="construct.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="construct.define"
+   
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_azzi850_01 WITH FORM cl_ap_formpath("azz","azzi850_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="construct.pre_construct"
+   CALL azzi850_01_init()
+     
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON gzzz001,gzzz005 
+      
+            #add-point:自定義action name="construct.action"
+            
+            #end add-point
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理 name="construct.before_construct"
+        ON ACTION controlp INFIELD gzzz001
+
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_gzzz001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gzzz001   
+            NEXT FIELD gzzz001
+
+
+
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理 name="construct.after_construct"
+            
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct name="construct.more_construct"
+                  #輸入開始
+      CONSTRUCT BY NAME g_wc2 ON gzwe001
+      
+            #add-point:自定義action
+            
+            #end add-point
+	  
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+         ON ACTION controlp INFIELD gzwe001
+
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_gzwe001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gzwe001
+
+            NEXT FIELD gzwe001
+        
+         AFTER CONSTRUCT
+       
+      END CONSTRUCT
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="construct.before_close"
+   IF NOT INT_FLAG THEN 
+      IF g_wc2 = " 1=1" THEN 
+         
+      ELSE 
+         #開始解析
+         CALL azzi850_01_analysis_data()
+         #LET gs_where = gs_where.subString(1,gs_where.getLength()-12)
+         LET gs_where = gs_where,"''"  
+         #LET gs_where = "(",gs_where.subString(1,gs_where.getLength()-1),")"
+         LET g_wc = g_wc ," AND gzzz001 IN ( SELECT gzzz001 FROM gzzz_t a ",  
+                          "        WHERE EXISTS (SELECT gzzz001", 
+                          "                       FROM gzzz_t ",
+                          "                        WHERE a.gzzz001 =",gs_where,"))"                                       
+         IF g_t100debug = "9" THEN
+            DISPLAY "g_wc ",g_wc 
+         END IF
+        
+      END IF
+   END IF  
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_azzi850_01 
+   
+   #add-point:construct段after construct name="construct.post_construct"
+   
+   RETURN g_wc
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzi850_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="azzi850_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 開始解析
+# Memo...........:
+# Usage..........: CALL azzi850_01_analysis_data()
+#                  RETURNING 
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi850_01_analysis_data()
+   DEFINE ls_sql       STRING 
+   DEFINE lc_gzwe001   LIKE gzwe_t.gzwe001 
+   DEFINE lc_gzwe002   LIKE gzwe_t.gzwe002 
+   DEFINE li_cnt       LIKE type_t.num5 
+   DEFINE lc_gzwe001_2 LIKE gzwe_t.gzwe001 
+   DEFINE lc_gzwe002_2 LIKE gzwe_t.gzwe002  
+
+   #抓取 最上層節點定義
+   LET ls_sql = "SELECT gzwe001,gzwe002 FROM gzwe_t ",
+                " WHERE gzweent = ",g_enterprise," AND ",g_wc2 ,
+                  " AND gzwe001 <> gzwe002 ",
+                " ORDER BY gzwe003 "
+   PREPARE azzi850_01_analysis_pre FROM ls_sql
+   DECLARE azzi850_01_analysis_cur CURSOR FOR azzi850_01_analysis_pre
+
+   #父節點不給輸出, 直接進行子階搜尋
+   FOREACH azzi850_01_analysis_cur INTO lc_gzwe001,lc_gzwe002
+      CALL gc_arr.clear()
+      CALL gd_all_arr.clear()
+
+      #根結點直接寫入
+      IF lc_gzwe001 <> lc_gzwe002 THEN 
+         LET gc_arr[1].pid = lc_gzwe001 # 上階目錄編號
+         LET gc_arr[1].id = lc_gzwe002  # 目錄編號
+         LET gc_arr[1].times = 0
+         LET gd_all_arr[1].pid = lc_gzwe001
+         LET gd_all_arr[1].id = lc_gzwe002
+         LET gd_all_arr[1].chk = "N"
+      END IF 
+
+     
+      #預先準備等一下用到的CURSOR
+         #將所有需要拜訪的節點先行列出 (根結點不進入清單)
+         LET ls_sql = "SELECT gzwe001,gzwe002 FROM gzwe_t ",
+                      " WHERE gzweent = ? AND gzwe001= ? ",
+                        " AND gzwe001 <> gzwe002 ",
+                      " ORDER BY gzwe003 "
+         PREPARE azzi850_01_get_all_pre FROM ls_sql
+         DECLARE azzi850_01_get_all_cur CURSOR FOR azzi850_01_get_all_pre
+
+         #尋找節點所需要的CURSOR
+         LET ls_sql = "SELECT gzwe001,gzwe002,gzwe004 FROM gzwe_t ",
+                      " WHERE gzweent = ? AND  gzwe001 = ? ORDER BY gzwe003 "
+         PREPARE azzi850_01_find_node_pre FROM ls_sql
+         DECLARE azzi850_01_find_node_cs CURSOR FOR azzi850_01_find_node_pre
+
+      #取得必須走訪的樹的資訊
+      CALL azzi850_01_get_all(lc_gzwe002)
+      CALL cl_progress_bar(gd_all_arr.getLength())
+
+      #依據清單,進入節點訪視
+      FOR li_cnt = 1 TO gd_all_arr.getLength()
+          CALL cl_progress_ing("data processing... "|| gd_all_arr[li_cnt].id) 
+          CALL gc_arr.clear()
+          #開始走訪節點
+          CALL azzi850_01_find_node(gd_all_arr[li_cnt].id) #lc_gzwe002 
+          LET gd_all_arr[li_cnt].chk = "Y"
+      END FOR 
+   END FOREACH
+   CLOSE azzi850_01_analysis_cur
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得必須走訪的樹的資訊
+# Memo...........:
+# Usage..........: azzi850_01_get_all(pc_gzwe002)
+#                  RETURNING 回传参数
+# Input parameter: pc_gzwe002 目錄編號
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi850_01_get_all(pc_gzwe002)
+   DEFINE ps_temp    STRING 
+   DEFINE ls_sql     STRING 
+   DEFINE lc_gzwe001 LIKE gzwe_t.gzwe001
+   DEFINE lc_gzwe002 LIKE gzwe_t.gzwe001 
+   DEFINE pc_gzwe002 LIKE gzwe_t.gzwe002  
+   DEFINE li_cnt     LIKE type_t.num5
+
+   #列出的都是準備進入訪問的目錄
+   FOREACH azzi850_01_get_all_cur USING g_enterprise,pc_gzwe002 INTO lc_gzwe001,lc_gzwe002
+      LET gd_all_arr[gd_all_arr.getLength()+1].pid = lc_gzwe001 
+      LET gd_all_arr[gd_all_arr.getLength()].id = lc_gzwe002
+      LET gd_all_arr[gd_all_arr.getLength()].chk = "N"
+   END FOREACH
+   CLOSE azzi850_01_get_all_cur
+END FUNCTION
+
+################################################################################
+# Descriptions...: 開使找節點
+# Memo...........:
+# Usage..........: CALL azzi850_01_find_node(pc_gzwe002)
+#                  RETURNING 回传参数
+# Input parameter: pc_gzwe002 目錄編號
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi850_01_find_node(pc_gzwe002)
+   DEFINE pc_gzwe002   LIKE gzwe_t.gzwe002  
+   DEFINE lc_gzwe001   LIKE gzwe_t.gzwe001 
+   DEFINE lc_gzwe002   LIKE gzwe_t.gzwe002  
+   DEFINE lc_gzwe002_2 LIKE gzwe_t.gzwe002 
+   DEFINE li_cnt       LIKE type_t.num5  
+   DEFINE li_count     LIKE type_t.num5 
+   DEFINE li_chk       LIKE type_t.num5 
+   DEFINE ls_sql       STRING 
+   DEFINE l_count      LIKE type_t.num10
+
+   OPEN azzi850_01_find_node_cs USING g_enterprise,pc_gzwe002
+   FOREACH azzi850_01_find_node_cs INTO lc_gzwe001 ,lc_gzwe002
+      #判斷是否有拜訪過
+      FOR li_cnt = 1 TO gc_arr.getLength()
+         IF lc_gzwe002 = gc_arr[li_cnt].id AND lc_gzwe001 = gc_arr[li_cnt].pid THEN
+            #有拜訪過就不繼續拜訪
+            LET gc_arr[li_cnt].times = gc_arr[li_cnt].times + 1 
+            CALL azzi850_01_get_last(pc_gzwe002) RETURNING lc_gzwe002_2
+            #FOREACH 最後一筆就不繼續 
+            IF lc_gzwe002_2 = lc_gzwe002 THEN #lc_gzwe002跟最後一筆比
+               EXIT FOR
+            END IF
+            CONTINUE FOREACH
+         END IF 
+      END FOR 
+
+      #根結點就不理 
+      IF lc_gzwe001 = lc_gzwe002 THEN 
+         CONTINUE FOREACH 
+      END IF 
+      #把拜訪過的放進陣列，做為判斷下次是否繼續拜訪
+      LET gc_arr[gc_arr.getLength()+1].pid = lc_gzwe001
+      LET gc_arr[gc_arr.getLength()].id = lc_gzwe002
+      LET gc_arr[gc_arr.getLength()].times = 0 #拜訪次數
+      LET gc_arr[gc_arr.getLength()].times = gc_arr[gc_arr.getLength()].times + 1 
+      IF g_t100debug = "9" THEN
+         DISPLAY "lc_gzwe001:",lc_gzwe001 , " lc_gzwe002:",lc_gzwe002
+      END IF
+      CALL azzi850_01_count_child(lc_gzwe002) RETURNING li_chk  
+
+      IF li_chk THEN 
+         #表示有節點 開始遞迴
+         CALL azzi850_01_find_node(lc_gzwe002) 
+      ELSE 
+         CALL azzi850_01_data_compose(lc_gzwe002)
+      END IF
+
+      #取得最後一筆         
+      CALL azzi850_01_get_last(pc_gzwe002)RETURNING lc_gzwe002_2
+
+      #FOREACH 最後一筆就不繼續 
+      IF lc_gzwe002_2 = lc_gzwe002 THEN #lc_gzwe002跟最後一筆比
+         RETURN  
+      END IF
+   END FOREACH
+
+   #沒有值就不繼續
+   IF cl_null(lc_gzwe001) THEN 
+      --mod by 160315 begin 151119-00001 #4
+      LET l_count = 0
+      SELECT COUNT(*) INTO l_count FROM gzzz_t WHERE  gzzz001 = pc_gzwe002
+      IF cl_null(l_count) THEN LET l_count = 0 END IF 
+      IF l_count > 0 THEN 
+         CALL azzi850_01_data_compose(pc_gzwe002)
+      END IF 
+      --mod by 160315 end
+      RETURN 
+   END IF 
+   #開始遞迴
+   CALL azzi850_01_find_node(lc_gzwe001)    
+END FUNCTION
+
+################################################################################
+# Descriptions...: 判斷是否有結點
+# Memo...........:
+# Usage..........: CALL azzi850_01_count_child(pc_gzwe002)
+#                  RETURNING 回传参数
+# Input parameter: pc_gzwe002 目錄編號
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi850_01_count_child(pc_gzwe002)
+   DEFINE pc_gzwe002 LIKE gzwe_t.gzwe002  
+   DEFINE li_cnt     LIKE type_t.num5  
+   DEFINE li_chk     LIKE type_t.num5
+
+   SELECT COUNT(*) INTO li_cnt FROM gzwe_t 
+    WHERE gzweent = g_enterprise 
+      AND gzwe001 = pc_gzwe002 
+
+   IF li_cnt = 0 THEN 
+      LET li_chk = FALSE 
+   ELSE 
+      LET li_chk = TRUE    
+   END IF  
+
+   RETURN li_chk 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢核走訪整個樹
+# Memo...........:
+# Usage..........: CALL azzi850_01_chk_run_over()
+#                  RETURNING 回传参数
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi850_01_chk_run_over()
+   DEFINE li_chk LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE li_cnt2 LIKE type_t.num5
+
+   #確認全部走訪整個樹
+   FOR li_cnt = 1 TO gd_all_arr.getLength()
+       FOR li_cnt2 = 1 TO gc_arr.getLength()
+           IF gd_all_arr[li_cnt].id = gc_arr[li_cnt2].id THEN 
+              LET gd_all_arr[li_cnt].chk = "Y"
+              EXIT FOR 
+           END IF    
+       END FOR 
+   END FOR  
+   LET li_chk = TRUE 
+   #TRUE 全部走訪完 
+   #FALSE 沒有走完要繼續走訪 
+   FOR li_cnt = 1 TO gd_all_arr.getLength()
+       IF gd_all_arr[li_cnt].chk = "N" THEN 
+          LET li_chk =  FALSE 
+          EXIT FOR 
+       END IF  
+   END FOR 
+   
+   RETURN li_chk 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得最後一筆
+# Memo...........:
+# Usage..........: CALL azzi850_01_get_last(pc_gzwe002)
+#                  RETURNING 回传参数
+# Input parameter: pc_gzwe002 目錄編號
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi850_01_get_last(pc_gzwe002)
+   DEFINE pc_gzwe002    LIKE gzwe_t.gzwe002
+   DEFINE lc_gzwe002    LIKE gzwe_t.gzwe002
+
+   DECLARE azzi850_01_get_last_cs  SCROLL CURSOR FOR 
+    SELECT gzwe002 FROM gzwe_t
+     WHERE gzweent = g_enterprise 
+       AND gzwe001 = pc_gzwe002
+     ORDER BY gzwe003
+
+   OPEN azzi850_01_get_last_cs
+   FETCH LAST azzi850_01_get_last_cs INTO lc_gzwe002
+
+   CLOSE azzi850_01_get_last_cs 
+   RETURN lc_gzwe002 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 組成字串
+# Memo...........:
+# Usage..........: CALL azzi850_01_data_compose(pc_gzwe002)
+#                  RETURNING 回传参数
+# Input parameter: pc_gzwe002 目錄編號
+# Return code....: 
+# Date & Author..: 2014/12/15 By jrg542
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi850_01_data_compose(pc_gzwe002)
+   DEFINE pc_gzwe002 LIKE gzwe_t.gzwe002
+   LET gs_where = gs_where ,"'",pc_gzwe002,"'", " OR a.gzzz001="
+END FUNCTION
+
+################################################################################
+# Descriptions...: 變數初始
+# Memo...........:
+# Usage..........: CALL azzi850_01_init()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi850_01_init()
+   CALL cl_set_combo_module("gzzz005",1)
+   LET gs_where = NULL 
+   #查t100debug
+   LET g_t100debug = FGL_GETENV("T100DEBUG")
+END FUNCTION
+
+ 
+{</section>}
+ 

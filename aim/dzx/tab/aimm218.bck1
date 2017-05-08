@@ -1,0 +1,311 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimm218" module="aim" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01534" crtdt="2014-11-26 15:20:25" modid="01534" moddt="2014-11-28 14:25:09" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件進銷存資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imafsite,imafsite_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imafstus,imaf001,imaf001_desc(chr500),imaf001_desc_desc(chr500),imaf051,imaf051_desc(chr500),imaf052,imaf052_desc(chr500),imaf053,imaf053_desc(chr500),imaf091,imaf091_desc(chr500),imaf092,imaf092_desc(chr500),imaf101,imaf102,imaf111,imaf111_desc(chr500),imaf112,imaf112_desc(chr500),imaf113,imaf113_desc(chr500),imaf114,imaf115,imaf124,imaf141,imaf141_desc(chr500),imaf142,imaf142_desc(chr500),imaf143,imaf143_desc(chr500),imaf144,imaf144_desc(chr500),imaf145,imaf146,imaf148,imaf149,imaf171,imaf172,imaf173,imaf174,imaf175"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="imaf001,imaf001_2_desc(chr500),imaf001_2_desc_desc(chr500),imafownid,imafownid_desc(chr500),imafowndp,imafowndp_desc(chr500),imafcrtid,imafcrtid_desc(chr500),imafcrtdp,imafcrtdp_desc(chr500),imafcrtdt,imafmodid,imafmodid_desc(chr500),imafmoddt,imafcnfid,imafcnfid_desc(chr500),imafcnfdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="aimm201_01"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimm218" method="dialog">
+    <section id="input">
+      <input id="head" field="imafsite"/>
+      <input id="body" page="1" field="imafstus,imaf001,imaf051,imaf052,imaf053,imaf091,imaf092,imaf101,imaf102,imaf111,imaf112,imaf113,imaf114,imaf115,imaf124,imaf141,imaf142,imaf143,imaf144,imaf145,imaf146,imaf148,imaf149,imaf171,imaf172,imaf173,imaf174,imaf175" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imafsite"/>
+      <construct id="body" page="1" field="imafstus,imaf001,imaf051,imaf052,imaf053,imaf091,imaf092,imaf101,imaf102,imaf111,imaf112,imaf113,imaf114,imaf115,imaf124,imaf141,imaf142,imaf143,imaf144,imaf145,imaf146,imaf148,imaf149,imaf171,imaf172,imaf173,imaf174,imaf175"/>
+      <construct id="body" page="2" field="imafownid,imafowndp,imafcrtid,imafcrtdp,imafcrtdt,imafmodid,imafmoddt,imafcnfid,imafcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imafsite"/>
+      <set id="head" type="no_entry" field="imafsite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imafsite">
+        <after>
+          <reference field="imafsite_desc" ref_field="imaf_t.imafsite" map_field="imafsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imafsite_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="imafstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="imaf001">
+        <after>
+          <reference field="imaf001_desc" ref_field="imaf_t.imaf001" map_field="imafent,imaf001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaf001_desc">
+        <after>
+          <reference field="imaf001_desc_desc" ref_field="imaf_t.imaf001" map_field="imaf001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imaf001_desc_desc"/>
+      <column id="imaf051">
+        <after>
+          <check chkid="v_imcc051" id="isExist"/>
+          <reference field="imaf051_desc" ref_field="imaf051" map_field="imaf051" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;201&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imcc051" state="i"/>
+        <controlp form="q_imck001" state="c"/>
+      </column>
+      <column id="imaf051_desc"/>
+      <column id="imaf052">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="imaf052_desc" ref_field="imaf_t.imaf052" map_field="imaf052" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="imaf052_desc"/>
+      <column id="imaf053">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imaf053_desc" ref_field="imaf_t.imaf053" map_field="imaf053" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imaf053_desc"/>
+      <column id="imaf091">
+        <after>
+          <check chkid="v_inay001" id="isExist"/>
+          <reference field="imaf091_desc" ref_field="imaf_t.imaf091" map_field="imaf091" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inay001" state="i"/>
+        <controlp form="q_inay001" state="c"/>
+      </column>
+      <column id="imaf091_desc"/>
+      <column id="imaf092">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="imaf092_desc" ref_field="imafsite,imaf091,imaf092" map_field="imafsite,imaf091,imaf092" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_8" state="i"/>
+        <controlp form="q_inab002_8" state="c"/>
+      </column>
+      <column id="imaf092_desc"/>
+      <column id="imaf101" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf102" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf111">
+        <after>
+          <check chkid="v_imcd111_1" id="isExist"/>
+          <reference field="imaf111_desc" ref_field="imaf111" map_field="imaf111" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;202&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imcd111" state="i"/>
+        <controlp form="q_imcd111" state="c"/>
+      </column>
+      <column id="imaf111_desc"/>
+      <column id="imaf112">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imaf112_desc" ref_field="imaf_t.imaf112" map_field="imafent,imaf112" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imaf112_desc"/>
+      <column id="imaf113">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imaf113_desc" ref_field="imaf_t.imaf113" map_field="imafent,imaf113" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imaf113_desc"/>
+      <column id="imaf114" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf115" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf124">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf141">
+        <after>
+          <reference field="imaf141_desc" ref_field="imaf141" map_field="imaf141" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;203&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imce141" state="i"/>
+        <controlp form="q_imce141" state="c"/>
+      </column>
+      <column id="imaf141_desc"/>
+      <column id="imaf142">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="imaf142_desc" ref_field="imaf_t.imaf142" map_field="imaf142" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="imaf142_desc"/>
+      <column id="imaf143">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imaf143_desc" ref_field="imaf_t.imaf143" map_field="imafent,imaf143" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imaf143_desc"/>
+      <column id="imaf144">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imaf144_desc" ref_field="imaf_t.imaf144" map_field="imafent,imaf001" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imaf144_desc"/>
+      <column id="imaf145" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf146" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf148" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf149" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf171">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf172">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf173">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf174">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaf175">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="imaf001_2_desc">
+        <after>
+          <reference field="imaf001_2_desc_desc" ref_field="imaf001_2" map_field="imaf001_2" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imaf001_2_desc_desc"/>
+      <column id="imafownid">
+        <after>
+          <reference field="imafownid_desc" ref_field="imaf_t.imafownid" map_field="imafownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imafownid_desc"/>
+      <column id="imafowndp">
+        <after>
+          <reference field="imafowndp_desc" ref_field="imaf_t.imafowndp" map_field="imafowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imafowndp_desc"/>
+      <column id="imafcrtid">
+        <after>
+          <reference field="imafcrtid_desc" ref_field="imaf_t.imafcrtid" map_field="imafcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imafcrtid_desc"/>
+      <column id="imafcrtdp">
+        <after>
+          <reference field="imafcrtdp_desc" ref_field="imaf_t.imafcrtdp" map_field="imafcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imafcrtdp_desc"/>
+      <column id="imafcrtdt"/>
+      <column id="imafmodid">
+        <after>
+          <reference field="imafmodid_desc" ref_field="imaf_t.imafmodid" map_field="imafmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imafmodid_desc"/>
+      <column id="imafmoddt"/>
+      <column id="imafcnfid">
+        <after>
+          <reference field="imafcnfid_desc" ref_field="imaf_t.imafcnfid" map_field="imafcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imafcnfid_desc"/>
+      <column id="imafcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imaf_t" pk="imafsite">
+      <sql id="forupd_sql" type="sql" query="SELECT imafsite,&apos;&apos; FROM imaf_t WHERE imafent= ? AND imafsite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imafsite,&apos;&apos; FROM imaf_t" order="imafsite"/>
+    </head>
+    <body id="imaf_t" page="1,2" linked="" pk="imaf001" fk="imafsite">
+      <sql id="forupd_sql_detail" query="SELECT imafstus,imaf001,&apos;&apos;,&apos;&apos;,imaf051,&apos;&apos;,imaf052,&apos;&apos;,imaf053,&apos;&apos;,imaf091,&apos;&apos;,imaf092,&apos;&apos;,imaf101,imaf102,imaf111,&apos;&apos;,imaf112,&apos;&apos;,imaf113,&apos;&apos;,imaf114,imaf115,imaf124,imaf141,&apos;&apos;,imaf142,&apos;&apos;,imaf143,&apos;&apos;,imaf144,&apos;&apos;,imaf145,imaf146,imaf148,imaf149,imaf171,imaf172,imaf173,imaf174,imaf175,&apos;&apos;,&apos;&apos;,&apos;&apos;,imafownid,&apos;&apos;,imafowndp,&apos;&apos;,imafcrtid,&apos;&apos;,imafcrtdp,&apos;&apos;,imafcrtdt,imafmodid,&apos;&apos;,imafmoddt,imafcnfid,&apos;&apos;,imafcnfdt FROM imaf_t WHERE imafent=? AND imafsite=? AND imaf001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imafstus,imaf001,&apos;&apos;,&apos;&apos;,imaf051,&apos;&apos;,imaf052,&apos;&apos;,imaf053,&apos;&apos;,imaf091,&apos;&apos;,imaf092,&apos;&apos;,imaf101,imaf102,imaf111,&apos;&apos;,imaf112,&apos;&apos;,imaf113,&apos;&apos;,imaf114,imaf115,imaf124,imaf141,&apos;&apos;,imaf142,&apos;&apos;,imaf143,&apos;&apos;,imaf144,&apos;&apos;,imaf145,imaf146,imaf148,imaf149,imaf171,imaf172,imaf173,imaf174,imaf175,&apos;&apos;,&apos;&apos;,&apos;&apos;,imafownid,&apos;&apos;,imafowndp,&apos;&apos;,imafcrtid,&apos;&apos;,imafcrtdp,&apos;&apos;,imafcrtdt,imafmodid,&apos;&apos;,imafmoddt,imafcnfid,&apos;&apos;,imafcnfdt FROM imaf_t WHERE imafent= ? AND imafsite=?"/>
+    </body>
+  </dataset>
+</assembly>
+

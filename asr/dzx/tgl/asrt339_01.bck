@@ -1,0 +1,218 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="asrt339_01.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000019
+#+ 
+#+ Filename...: asrt339_01
+#+ Description: ...
+#+ Creator....: 00537(2014/07/09)
+#+ Modifier...: 00537(2014/07/09)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+
+{</section>}
+
+{<section id="asrt339_01.global" >}
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_inba_m        RECORD
+       inbadocno LIKE inba_t.inbadocno, 
+   inbadocno_desc LIKE type_t.chr80, 
+   sfdadocno LIKE type_t.chr20, 
+   sfdadocno_desc LIKE type_t.chr80
+       END RECORD
+DEFINE g_inba_m        type_g_inba_m
+ 
+   DEFINE g_inbadocno_t LIKE inba_t.inbadocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="asrt339_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION asrt339_01(--)
+   #add-point:input段變數傳入
+{<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+{<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asrt339_01 WITH FORM cl_ap_formpath("asr","asrt339_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+{<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_inba_m.inbadocno,g_inba_m.sfdadocno ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+{<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+{<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD inbadocno
+            
+            #add-point:AFTER FIELD inbadocno
+{<point name="input.a.inbadocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD inbadocno
+            #add-point:BEFORE FIELD inbadocno
+{<point name="input.b.inbadocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE inbadocno
+            #add-point:ON CHANGE inbadocno
+{<point name="input.g.inbadocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfdadocno
+            
+            #add-point:AFTER FIELD sfdadocno
+{<point name="input.a.sfdadocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfdadocno
+            #add-point:BEFORE FIELD sfdadocno
+{<point name="input.b.sfdadocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfdadocno
+            #add-point:ON CHANGE sfdadocno
+{<point name="input.g.sfdadocno" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.inbadocno
+         ON ACTION controlp INFIELD inbadocno
+            #add-point:ON ACTION controlp INFIELD inbadocno
+{<point name="input.c.inbadocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sfdadocno
+         ON ACTION controlp INFIELD sfdadocno
+            #add-point:ON ACTION controlp INFIELD sfdadocno
+{<point name="input.c.sfdadocno" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+{<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+{<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+#这里居然没有addpoint
+         CALL asrt339_01_gen_inba_sfda()
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+{<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asrt339_01 
+   
+   #add-point:input段after input 
+{<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="asrt339_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="asrt339_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

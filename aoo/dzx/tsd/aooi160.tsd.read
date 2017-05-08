@@ -1,0 +1,718 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi160" std_prog="aooi160" erpver="1.0" ver="2" module="AOO" type="M" booking="N" class="i" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="ooam_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="ooan_t" main="N" head="N" pk="" fk_detail="" parent="ooam_t" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護匯率資料。
+標準作業功能取消：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：[有效/無效]
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+            資料來源表：ooam_t(匯率單頭檔)
+作業資料來源(Detail)：
+            資料來源表：ooan_t(匯率單身檔)
+單頭串查：
+    單頭欄位：匯率參照表號  串查程式：aooi071(參照表維護作業)
+
+資料處理邏輯寫在單身編輯處
+
+TOPMENU:
+整单操作：自动汇入汇率
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.將匯率資訊頁籤的資料顯示在此頁籤
+2.該頁籤只display only，不可輸入
+3.交易貨幣批量只顯示為1
+4.匯率顯示=匯率/交易貨幣批量
+]]>
+  </db_all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.單身新增修改時，產生日期=9999/12/31的最新匯率值
+  呼叫s_aooi160_gen_ref_exrate
+2.單身新增修改時，若單頭的自動預設交叉匯率有勾選(ooam007='Y')，自動新增一筆反向資料
+  2.1呼叫s_aooi160_cross_rate
+  2.2呼叫s_aooi160_gen_ref_exrate，產生日期=9999/12/31的最新匯率值
+]]>
+  </di_all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[修改時，單頭資料均不可更改]]>
+  </mi_all>
+  <field cite_std="N" name="b_ooam001" ver="1" src="s" column="ooam001" table="ooam_t" attribute="C812" type="varchar2(5)" req="Y" i_zoom="q_ooal002_3" c_zoom="q_ooal002_3" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooam003" ver="1" src="s" column="ooam003" table="ooam_t" attribute="C008" type="varchar2(10)" req="Y" i_zoom="q_ooaj002" c_zoom="q_ooaj002" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooam004" ver="1" src="s" column="ooam004" table="ooam_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooam005" ver="1" src="s" column="ooam005" table="ooam_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lc_ooam003" ver="1" src="s" column="" table="" attribute="" type="varchar2(10)" req="N" i_zoom="q_ooaj002" c_zoom="q_ooaj002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lc_ooan005" ver="1" src="s" column="" table="" attribute="" type="number(20,10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[銀行買入匯率：
+   1.顯示：ooan005/ooan012]]>
+  </field>
+  <field cite_std="N" name="lc_ooan006" ver="1" src="s" column="" table="" attribute="" type="number(20,10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[銀行賣出匯率：
+   1.顯示：ooan006/ooan012
+
+]]>
+  </field>
+  <field cite_std="N" name="lc_ooan007" ver="1" src="s" column="" table="" attribute="" type="number(20,10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[銀行中價匯率：
+   1.顯示：ooan007/ooan012
+]]>
+  </field>
+  <field cite_std="N" name="lc_ooan008" ver="1" src="s" column="" table="" attribute="" type="number(20,10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[海關買入匯率：
+   1.顯示：ooan008/ooan012
+]]>
+  </field>
+  <field cite_std="N" name="lc_ooan009" ver="1" src="s" column="" table="" attribute="" type="number(20,10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[海關賣出匯率：
+   1.顯示：ooan009/ooan012]]>
+  </field>
+  <field cite_std="N" name="lc_ooan010" ver="1" src="s" column="" table="" attribute="" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lc_ooan011" ver="1" src="s" column="" table="" attribute="" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[SCC：45]]>
+  </field>
+  <field cite_std="N" name="lc_ooan012" ver="1" src="s" column="ooan012" table="ooan_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[交易貨幣批量：
+   1.顯示：1]]>
+  </field>
+  <field cite_std="N" name="lc_ooan013" ver="1" src="s" column="" table="" attribute="" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[SCC：23]]>
+  </field>
+  <field cite_std="N" name="ooam003" ver="1" src="s" column="ooam003" table="ooam_t" attribute="C008" type="varchar2(10)" req="Y" i_zoom="q_ooaj002" c_zoom="q_ooaj002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[基礎幣別：
+   1.display only
+   2.帶入單頭 基礎幣別(ooam003)的值
+]]>
+  </field>
+  <field cite_std="N" name="ooam003_1_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam003_2_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooam001" ver="1" src="s" column="ooam001" table="ooam_t" attribute="C812" type="varchar2(5)" req="Y" i_zoom="q_ooal002_3" c_zoom="q_ooal002_3" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[匯率參照表號：
+   1.不允許空白
+   2.本欄位+ooam003+ooam004為Key,輸入值不可重複
+   3.輸入值須存在[T:參照表檔].[C:參照表號]、ooal001='1'且有效資料；
+     若資料不存在則詢問「輸入的參照表號不存在參照表檔,請問是否要新增此參照表號?」，
+     若選擇是則呼叫應用元件s_aooi070_ins()做參照表號的新增；否則停留在本欄位
+  ]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooam003" ver="1" src="s" column="ooam003" table="ooam_t" attribute="C008" type="varchar2(10)" req="Y" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[基礎幣別：
+   1.不允許空白
+   2.ooam001+本欄位+ooam004為Key,輸入值不可重複
+   3.輸入值須存在[T:幣別檔].[C:幣別編號]
+     (不用檢查是否有效，因aooi140應用層面上無狀態碼)
+]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooam004" ver="1" src="s" column="ooam004" table="ooam_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[日期：
+   1.預設值: g_today
+   2.不允許空白
+   3.ooam001+ooam003+本欄位為Key,輸入值不可重複
+]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooam005" ver="1" src="s" column="ooam005" table="ooam_t" attribute="N202" type="number(20,6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="&gt;,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[交易貨幣批量：
+   1.預設值:1
+   2.不允許空白
+   3.輸入值不可小於等於0
+]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooam007" ver="1" src="s" column="ooam007" table="ooam_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[自動預設交叉匯率：
+   1.預設值:依匯率參照表號+基礎幣別抓取最近一筆日期的ooam007來預設此欄位
+]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooamcrtdp" ver="1" src="s" column="ooamcrtdp" table="ooam_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooamcrtdt" ver="1" src="s" column="ooamcrtdt" table="ooam_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooamcrtid" ver="1" src="s" column="ooamcrtid" table="ooam_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooammoddt" ver="1" src="s" column="ooammoddt" table="ooam_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooammodid" ver="1" src="s" column="ooammodid" table="ooam_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooamowndp" ver="1" src="s" column="ooamowndp" table="ooam_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooamownid" ver="1" src="s" column="ooamownid" table="ooam_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooamstus" ver="1" src="s" column="ooamstus" table="ooam_t" attribute="C822" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[狀態碼：
+   1.預設值：Y
+   2.不可空白
+]]>
+  </field>
+  <field cite_std="N" name="ooan_t.ooan002" ver="1" src="s" column="ooan002" table="ooan_t" attribute="C008" type="varchar2(10)" req="Y" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[交易幣別：
+   1.不允許空白
+   2.本欄位值為key值,不可重複
+   3.輸入值須存在[T:幣別檔].[C:幣別編號]
+     (不用檢查是否有效，因aooi140應用層面上無狀態碼)
+   4.開窗處理：
+     a.查詢時或新增/修改時：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:幣別檔(ooai_t)].[C:幣別編號],[T:幣別多語言檔].[C:說明]
+       回值類型：多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="ooan_t.ooan005" ver="1" src="s" column="ooan005" table="ooan_t" attribute="N203" type="number(20,10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[銀行買入匯率：
+   1.不允許空白
+   2.輸入值不允許小於0
+
+]]>
+  </field>
+  <field cite_std="N" name="ooan_t.ooan006" ver="1" src="s" column="ooan006" table="ooan_t" attribute="N203" type="number(20,10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[銀行賣出匯率：
+   1.不允許空白
+   2.輸入值不允許小於0
+
+]]>
+  </field>
+  <field cite_std="N" name="ooan_t.ooan007" ver="1" src="s" column="ooan007" table="ooan_t" attribute="N203" type="number(20,10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[銀行中價匯率：
+   1.不允許空白
+   2.輸入值不允許小於0
+   3.预设值：（银行买入+银行卖出）/2
+
+]]>
+  </field>
+  <field cite_std="N" name="ooan_t.ooan008" ver="1" src="s" column="ooan008" table="ooan_t" attribute="N203" type="number(20,10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[海關買入匯率：
+   1.不允許空白
+   2.輸入值不允許小於0
+
+]]>
+  </field>
+  <field cite_std="N" name="ooan_t.ooan009" ver="1" src="s" column="ooan009" table="ooan_t" attribute="N203" type="number(20,10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[海關賣出匯率：
+   1.不允許空白
+   2.輸入值不允許小於0
+]]>
+  </field>
+  <field cite_std="N" name="ooan_t.ooan010" ver="1" src="s" column="ooan010" table="ooan_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[更新時間：
+   1.不可輸入
+   2.該筆資料異動時，將這個時候的日期時間給到ooan010(本欄位)
+   3.說明：顯示此筆資料最後修改的日期時間
+]]>
+  </field>
+  <field cite_std="N" name="ooan_t.ooan011" ver="1" src="s" column="ooan011" table="ooan_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="45" default="1" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[更新時間：
+   1.不可輸入
+   2.單身新增時，預設值='1.人工輸入'
+]]>
+  </field>
+  <field cite_std="N" name="ooan_t.ooan012" ver="1" src="s" column="ooan012" table="ooan_t" attribute="N202" type="number(20,6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[交易貨幣批量：
+   1.預設值：單頭的ooam005
+   2.不可以空白
+   3.不可以小於等於0
+
+]]>
+  </field>
+  <field cite_std="N" name="ooan_t.ooan013" ver="1" src="s" column="ooan013" table="ooan_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[匯率輸入方式：
+   1.預設值：1.正向
+   2.SCC23
+   3.不可空白
+]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_ooam001" depend_field="ooam_t.ooam001" src="s" status="">
+      <program order="1" type="1" name="aooi071"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_ooam001_desc" src="s" depend_field="b_ooam001" correspon_key="ooament,&apos;1&apos;,ooam001" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="ooam001_desc" src="s" depend_field="ooam_t.ooam001" correspon_key="ooament,&apos;1&apos;,ooam001" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="ooam003_desc" src="s" depend_field="ooam_t.ooam003" correspon_key="ooament,ooam003" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooamcrtdp_desc" src="s" depend_field="ooam_t.ooamcrtdp" correspon_key="ooamcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooamcrtid_desc" src="s" depend_field="ooam_t.ooamcrtid" correspon_key="&apos;2&apos;,ooamcrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooammodid_desc" src="s" depend_field="ooam_t.ooammodid" correspon_key="&apos;2&apos;,ooammodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooamowndp_desc" src="s" depend_field="ooam_t.ooamowndp" correspon_key="ooamowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooamownid_desc" src="s" depend_field="ooam_t.ooamownid" correspon_key="&apos;2&apos;,ooamownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooan002_2_desc" src="s" depend_field="ooan002_2" correspon_key="ooanent,ooan002" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooan002_desc" src="s" depend_field="ooan_t.ooan002" correspon_key="ooanent,ooan002" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_ooam001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooam003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooam004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooam005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_ooam003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_ooan005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_ooan006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_ooan007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_ooan008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_ooan009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_ooan010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_ooan011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_ooan012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_ooan013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam003_1_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam003_2_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooam001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooam003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooam004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooam005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooam007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooamcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooamcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooamcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooammoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooammodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooamowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooamownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooamstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan_t.ooan002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan_t.ooan005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan_t.ooan006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan_t.ooan007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan_t.ooan008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan_t.ooan009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan_t.ooan010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan_t.ooan011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan_t.ooan012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan_t.ooan013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="auto_input_rate" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[自動匯入匯率：
+   校驗:無
+   處理:開啟畫面:有，自動匯入匯率子作業畫面(aooi160_01)
+]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_ooam001" text="匯率參照表號" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" lstr=""/>
+    <sfield name="lbl_ooam003" text="基礎幣別" lstr=""/>
+    <sfield name="lbl_ooam005" text="交易貨幣批量" lstr=""/>
+    <sfield name="lbl_ooam004" text="日期" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_ooam007" text="自動預設交叉匯率" lstr=""/>
+    <sfield name="lbl_ooamstus" text="狀態碼" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_page2" text="匯率資訊" lstr=""/>
+    <sfield name="lbl_ooan002" text="交易幣別" lstr=""/>
+    <sfield name="lbl_ooan012" text="交易貨幣批量" lstr=""/>
+    <sfield name="lbl_ooan013" text="匯率輸入方式" lstr=""/>
+    <sfield name="lbl_ooan005" text="銀行買入匯率" lstr=""/>
+    <sfield name="lbl_ooan006" text="銀行賣出匯率" lstr=""/>
+    <sfield name="lbl_ooan007" text="銀行中價匯率" lstr=""/>
+    <sfield name="lbl_ooan008" text="海關買入匯率" lstr=""/>
+    <sfield name="lbl_ooan009" text="海關賣出匯率" lstr=""/>
+    <sfield name="lbl_ooan010" text="更新時間" lstr=""/>
+    <sfield name="lbl_ooan011" text="更新方式" lstr=""/>
+    <sfield name="lbl_page3" text="匯率資訊(貨幣批量=1)" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_download" text="下載標準匯入模板" lstr=""/>
+    <sfield name="lbl_type" text="匯入選項" lstr=""/>
+    <sfield name="lbl_group1" text="匯率種類" lstr=""/>
+    <sfield name="lbl_current" text="即期" lstr=""/>
+    <sfield name="lbl_cash" text="现金" lstr=""/>
+    <sfield name="lbl_group2" text="匯入檔名" lstr=""/>
+    <sfield name="lbl_excel" text="Excel檔名" lstr=""/>
+    <sfield name="lbl_browser" text="瀏覽" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooal002" text="參照表編號" lstr=""/>
+    <sfield name="lbl_ooall005" text="助記碼" lstr=""/>
+    <sfield name="lbl_ooai001" text="幣別編號" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣版說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣版名稱(4rp)" lstr=""/>
+    <sfield name="lbl_rep_fmt" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+    <sact name="auto_input_rate" text="自動匯入匯率" lstr=""/>
+  </strings>
+  <sa_spec>
+    <sa_field name="ooam001">
+      <![CDATA[匯率參照表號：
+   1.不允許空白
+   2.本欄位+ooam003+ooam004為Key,輸入值不可重複
+   3.輸入值須存在[T:參照表檔].[C:參照表號]、ooal001='1'且有效資料；
+     若資料不存在則詢問「輸入的參照表號不存在參照表檔,請問是否要新增此參照表號?」，
+     若選擇是則呼叫應用元件s_aooi070_ins()做參照表號的新增；否則停留在本欄位
+   4.查詢時或新增/修改時開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:參照表檔].[C:參照表號],[T:參照表多語言檔].[C:說明]
+     過濾條件：ooal001='1'
+     新增/修改時過濾條件：有效資料
+     回值類型：查詢時多重回值、新增/修改單一回值
+]]>
+    </sa_field>
+    <sa_field name="ooam003">
+      <![CDATA[基礎幣別：
+   1.不允許空白
+   2.ooam001+本欄位+ooam004為Key,輸入值不可重複
+   ##3.輸入本欄位前，若幣別參照表號(ooam006)為null，先跳回ooam006
+   ##4.輸入值須存在[T:使用幣別設定檔].[C:使用幣別]、ooaj001=畫面上的ooam006
+       且為有效資料
+   3.輸入值須存在[T:幣別檔].[C:幣別編號]
+     (不用檢查是否有效，因aooi140應用層面上無狀態碼)
+   5.查詢時或新增修改時開窗處理：
+     參考函式：依標準查詢視窗
+     ##查詢欄位：[T:使用幣別設定檔].[C:使用幣別],[T:幣別多語言檔].[C:說明]
+     ##新增修改時過濾條件：1.ooaj001=畫面上的ooam006
+                           2.有效資料
+     查詢欄位：[T:幣別檔].[C:幣別編號],[T:幣別多語言檔].[C:說明]
+     回值類型：查詢時多重回值、新增修改時單一回值
+]]>
+    </sa_field>
+    <sa_field name="ooam004">
+      <![CDATA[日期：
+   1.預設值: g_today
+   2.不允許空白
+   3.ooam001+ooam003+本欄位為Key,輸入值不可重複
+]]>
+    </sa_field>
+    <sa_field name="ooam005">
+      <![CDATA[交易貨幣批量：
+   1.預設值:1
+   2.不允許空白
+   3.輸入值不可小於等於0
+]]>
+    </sa_field>
+    <sa_field name="ooam007">
+      <![CDATA[自動預設交叉匯率：
+   ##1.預設值：N
+   1.預設值：依匯率參照表號+基礎幣別抓取最近一筆日期的ooam007來預設此欄位
+   2.不可空白
+]]>
+    </sa_field>
+    <sa_field name="ooan002">
+      <![CDATA[交易幣別：
+   1.不允許空白
+   2.本欄位值為key值,不可重複
+   ##3.輸入值須存在[T:使用幣別設定檔].[C:使用幣別]、ooaj001=畫面上的ooam006
+       且為有效資料
+   3.輸入值須存在[T:幣別檔].[C:幣別編號]
+     (不用檢查是否有效，因aooi140應用層面上無狀態碼)
+   4.開窗處理：
+     ##a.查詢時：
+     a.查詢時或新增/修改時：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:幣別檔(ooai_t)].[C:幣別編號],[T:幣別多語言檔].[C:說明]
+       回值類型：多重回值
+     ##b.新增/修改時：
+         參考函式：依標準查詢視窗
+         查詢欄位：[T:使用幣別設定檔].[C:使用幣別],[T:幣別多語言檔].[C:說明]
+         過濾條件：1.ooaj001=畫面上的ooam006
+                   2.有效資料
+         回值類型：單一回值
+]]>
+    </sa_field>
+    <sa_field name="ooan005">
+      <![CDATA[銀行買入匯率：
+   1.不允許空白
+   2.輸入值不允許小於0
+]]>
+    </sa_field>
+    <sa_field name="ooan006">
+      <![CDATA[銀行賣出匯率：
+   1.不允許空白
+   2.輸入值不允許小於0
+]]>
+    </sa_field>
+    <sa_field name="ooan007">
+      <![CDATA[銀行中價匯率：
+   1.不允許空白
+   2.輸入值不允許小於0
+   3.預設：([C:銀行買入匯率]+[C:銀行賣出匯率])/2
+]]>
+    </sa_field>
+    <sa_field name="ooan008">
+      <![CDATA[海關買入匯率：
+   1.不允許空白
+   2.輸入值不允許小於0
+]]>
+    </sa_field>
+    <sa_field name="ooan009">
+      <![CDATA[海關賣出匯率：
+   1.不允許空白
+   2.輸入值不允許小於0
+]]>
+    </sa_field>
+    <sa_field name="ooan010">
+      <![CDATA[更新時間：
+   1.不可輸入
+   2.該筆資料異動時，將這個時候的日期時間給到ooan010(本欄位)
+   3.說明：顯示此筆資料最後修改的日期時間
+]]>
+    </sa_field>
+    <sa_field name="ooan011">
+      <![CDATA[更新時間：
+   1.不可輸入
+   2.單身新增時，預設值='1.人工輸入'
+]]>
+    </sa_field>
+    <sa_field name="ooan012">
+      <![CDATA[交易貨幣批量：
+   ##1.display only
+   ##2.帶入單頭 交易貨幣批量(ooam005)的值
+   1.預設值：單頭的ooam005
+   2.不可以空白
+   3.不可以小於等於0
+]]>
+    </sa_field>
+    <sa_field name="ooan013">
+      <![CDATA[匯率輸入方式：
+   ##1.display only
+   1.預設值：1.正向
+   2.SCC23
+   ##3.用單頭幣別參照表號(ooam006)與單身交易幣別(ooan002)到[T:使用幣別設定檔(ooaj_t)]
+       抓取匯率輸入方式帶到本欄位顯示
+   3.不可空白
+]]>
+    </sa_field>
+    <sa_field name="s_ooan2">
+      <![CDATA[1.將匯率資訊頁籤的資料顯示在此頁籤
+2.該頁籤只display only，不可輸入
+3.交易貨幣批量只顯示為1
+4.匯率顯示=匯率/交易貨幣批量
+]]>
+    </sa_field>
+    <sa_field name="stus">
+      <![CDATA[下拉選項來自 SCC17(基本資料狀態碼)
+]]>
+    </sa_field>
+    <sa_field name="主視窗">
+      <![CDATA[程式說明及目的：維護匯率資料。
+標準作業功能取消：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：[有效/無效]
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+            資料來源表：ooam_t(匯率單頭檔)
+作業資料來源(Detail)：
+            資料來源表：ooan_t(匯率單身檔)
+單頭串查：
+    單頭欄位：匯率參照表號  串查程式：aooi070(參照表維護作業)
+]]>
+    </sa_field>
+    <sa_field name="單身_基礎幣別">
+      <![CDATA[基礎幣別：
+   1.display only
+   2.帶入單頭 基礎幣別(ooam003)的值
+]]>
+    </sa_field>
+    <sa_field name="資料處理">
+      <![CDATA[1.單身新增修改時，產生日期=9999/12/31的最新匯率值
+  呼叫s_aooi160_gen_ref_exrate
+2.單身新增修改時，若單頭的自動預設交叉匯率有勾選(ooam007='Y')，自動新增一筆反向資料
+  2.1呼叫s_aooi160_cross_rate
+  2.2呼叫s_aooi160_gen_ref_exrate，產生日期=9999/12/31的最新匯率值
+##3.單身更新資料庫時，該五個匯率須先除以貨幣批量；重新顯示畫面時，匯率要先乘上貨幣批量再顯示
+    ex.貨幣批量=100，輸入銀行買入匯率=607，那資料庫的銀行買入匯率=6.07；但重新顯示時，銀行買入匯率=607
+]]>
+    </sa_field>
+    <sa_act name="自動匯入匯率">
+      <![CDATA[自動匯入匯率：
+   校驗:無
+   處理:開啟畫面:有，自動匯入匯率子作業畫面(aooi160_01)
+]]>
+    </sa_act>
+  </sa_spec>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="s_detail2" status=""/>
+  </exclude>
+</spec>

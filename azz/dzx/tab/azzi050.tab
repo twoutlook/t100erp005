@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi050" module="azz" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="00845" crtdt="2013-06-01 00:00:00" modid="01856" moddt="2013-10-29 17:03:05" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="行業別編號設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzoistus,gzoi001,gzoi002"/>
+      <var id="body" page="2" record="s_detail1_info" page_id="1_info" value="gzoi001_s_detail1_info(chr500),gzoimodid,gzoimodid_desc(chr500),gzoimoddt,gzoiownid,gzoiownid_desc(chr500),gzoiowndp,gzoiowndp_desc(chr500),gzoicrtid,gzoicrtid_desc(chr500),gzoicrtdp,gzoicrtdp_desc(chr500),gzoicrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi050" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzoistus,gzoi001,gzoi002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzoistus,gzoi001,gzoi002"/>
+      <construct id="body" page="2" field="gzoimodid,gzoimoddt,gzoiownid,gzoiowndp,gzoicrtid,gzoicrtdp,gzoicrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzoistus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzoi001"/>
+      <column id="gzoi002"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzoi001_s_detail1_info"/>
+      <column id="gzoimodid">
+        <after>
+          <reference field="gzoimodid_desc" ref_field="gzoi_t.gzoimodid" map_field="gzoimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzoimodid_desc"/>
+      <column id="gzoimoddt"/>
+      <column id="gzoiownid">
+        <after>
+          <reference field="gzoiownid_desc" ref_field="gzoi_t.gzoiownid" map_field="gzoiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzoiownid_desc"/>
+      <column id="gzoiowndp">
+        <after>
+          <reference field="gzoiowndp_desc" ref_field="gzoi_t.gzoiowndp" map_field="gzoiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzoiowndp_desc"/>
+      <column id="gzoicrtid">
+        <after>
+          <reference field="gzoicrtid_desc" ref_field="gzoi_t.gzoicrtid" map_field="gzoicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzoicrtid_desc"/>
+      <column id="gzoicrtdp">
+        <after>
+          <reference field="gzoicrtdp_desc" ref_field="gzoi_t.gzoicrtdp" map_field="gzoicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzoicrtdp_desc"/>
+      <column id="gzoicrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzoi_t" page="1,2" linked="" pk="gzoi001">
+      <sql id="forupd_sql_detail" query="SELECT gzoistus,gzoi001,gzoi002,&apos;&apos;,gzoimodid,&apos;&apos;,gzoimoddt,gzoiownid,&apos;&apos;,gzoiowndp,&apos;&apos;,gzoicrtid,&apos;&apos;,gzoicrtdp,&apos;&apos;,gzoicrtdt FROM gzoi_t WHERE gzoi001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzoistus,gzoi001,gzoi002,&apos;&apos;,gzoimodid,&apos;&apos;,gzoimoddt,gzoiownid,&apos;&apos;,gzoiowndp,&apos;&apos;,gzoicrtid,&apos;&apos;,gzoicrtdp,&apos;&apos;,gzoicrtdt FROM gzoi_t WHERE 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

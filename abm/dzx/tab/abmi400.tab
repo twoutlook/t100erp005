@@ -1,0 +1,244 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmi400" module="abm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02295" crtdt="2014-06-06 16:24:09" modid="02295" moddt="2014-07-22 16:22:32" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="4" tabver="10001" description="料件承認模板維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bmhe001,bmhel003,bmhestus,bmheownid,bmheownid_desc(chr80),bmheowndp,bmheowndp_desc(chr80),bmhecrtid,bmhecrtid_desc(chr80),bmhecrtdp,bmhecrtdp_desc(chr80),bmhecrtdt,bmhemodid,bmhemodid_desc(chr80),bmhemoddt,bmhe002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmhaseq,bmha002,bmha002_desc(chr500),bmhaseq1,bmha003,bmha004,bmha004_desc(chr500),bmha005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bmhb002,bmhb002_desc(chr500),bmhb003,bmhb003_desc(chr500),bmhb004,bmhb005,bmhb005_desc(chr500),bmhb006,bmhb006_desc(chr500)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="bmhcseq,bmhc017,bmhc002,bmhc002_desc(chr500),bmhc003,bmhc005,bmhc004,bmhc006,bmhc009,bmhc010,bmhc011,bmhc012,bmhc013,bmhc014,bmhc014_desc(chr500),bmhc015,bmhc016"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="bmhd003,bmhd003_desc(chr500)"/>
+      <var id="bs_field" value="bmhe001,bmhe001_desc(chr80)" pk="bmhe001" order=""/>
+      <bs_reference field="bmhe001_desc" ref_field="bmhe001" ref_sql="SELECT bmhel003 FROM bmhel_t WHERE bmhelent=$varg_enterprise$var AND bmhel001=? AND bmhel002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmi400" method="dialog">
+    <section id="input">
+      <input id="head" field="bmhe001,bmhel003,bmhestus,bmhe002"/>
+      <input id="body" page="1" field="bmhaseq,bmha002,bmhaseq1,bmha003,bmha004,bmha005" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="bmhb002,bmhb003,bmhb004,bmhb005,bmhb006" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="bmhcseq,bmhc017,bmhc002,bmhc003,bmhc005,bmhc004,bmhc006,bmhc009,bmhc010,bmhc011,bmhc012,bmhc013,bmhc014,bmhc015,bmhc016" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="4" field="bmhd003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bmhe001,bmhel003,bmhestus,bmheownid,bmheowndp,bmhecrtid,bmhecrtdp,bmhecrtdt,bmhemodid,bmhemoddt,bmhe002"/>
+      <construct id="body" page="1" field="bmhaseq,bmha002,bmhaseq1,bmha003,bmha004,bmha005"/>
+      <construct id="body" page="2" field="bmhb002,bmhb003,bmhb004,bmhb005,bmhb006"/>
+      <construct id="body" page="3" field="bmhcseq,bmhc017,bmhc002,bmhc003,bmhc005,bmhc004,bmhc006,bmhc009,bmhc010,bmhc011,bmhc012,bmhc013,bmhc014,bmhc015,bmhc016"/>
+      <construct id="body" page="4" field="bmhd003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bmhe001"/>
+      <set id="head" type="no_entry" field="bmhe001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bmhe001">
+        <controlp form="q_bmhe001" state="c"/>
+      </column>
+      <column id="bmhel003"/>
+      <column id="bmhestus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="bmheownid">
+        <after>
+          <reference field="bmheownid_desc" ref_field="bmhe_t.bmheownid" map_field="bmheownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmheownid_desc"/>
+      <column id="bmheowndp">
+        <after>
+          <reference field="bmheowndp_desc" ref_field="bmhe_t.bmheowndp" map_field="bmheowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bmheowndp_desc"/>
+      <column id="bmhecrtid">
+        <after>
+          <reference field="bmhecrtid_desc" ref_field="bmhe_t.bmhecrtid" map_field="bmhecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmhecrtid_desc"/>
+      <column id="bmhecrtdp">
+        <after>
+          <reference field="bmhecrtdp_desc" ref_field="bmhe_t.bmhecrtdp" map_field="bmhecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bmhecrtdp_desc"/>
+      <column id="bmhecrtdt"/>
+      <column id="bmhemodid">
+        <after>
+          <reference field="bmhemodid_desc" ref_field="bmhe_t.bmhemodid" map_field="bmhemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmhemodid_desc"/>
+      <column id="bmhemoddt"/>
+      <column id="bmhe002" type="S" default="1" def_scc="37"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bmhaseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmha002">
+        <after>
+          <reference field="bmha002_desc" ref_field="bmha002" map_field="bmha002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1115&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmha002_desc"/>
+      <column id="bmhaseq1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmha003">
+        <controlp form="q_bmha003" state="i"/>
+        <controlp form="q_bmha003" state="c"/>
+      </column>
+      <column id="bmha004">
+        <after>
+          <check chkid="v_ooef001_14" id="isExist"/>
+          <reference field="bmha004_desc" ref_field="bmha_t.bmha004" map_field="bmha004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_9" state="i"/>
+        <controlp form="q_ooef001_9" state="c"/>
+      </column>
+      <column id="bmha004_desc"/>
+      <column id="bmha005" type="S" default="N"/>
+    </init>
+    <init id="body" page="2">
+      <column id="bmhb002">
+        <after>
+          <reference field="bmhb002_desc" ref_field="bmhb002" map_field="bmhb002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;270&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmhb002_desc"/>
+      <column id="bmhb003">
+        <after>
+          <reference field="bmhb003_desc" ref_field="bmhb002" map_field="bmhb002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;271&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmhb003_desc"/>
+      <column id="bmhb004">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmhb005">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="bmhb005_desc" ref_field="bmhb_t.bmhb005" map_field="bmhb005" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="bmhb005_desc"/>
+      <column id="bmhb006">
+        <after>
+          <reference field="bmhb006_desc" ref_field="bmhb006" map_field="bmhb006" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;272&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmhb006_desc"/>
+    </init>
+    <init id="body" page="3">
+      <column id="bmhcseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmhc017" type="S" default="0" def_scc="5056"/>
+      <column id="bmhc002">
+        <after>
+          <reference field="bmhc002_desc" ref_field="bmhc002" map_field="bmhc002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1050&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmhc002_desc"/>
+      <column id="bmhc003"/>
+      <column id="bmhc005" type="S" default="1" def_scc="5058"/>
+      <column id="bmhc004" type="S" default="1" def_scc="5057"/>
+      <column id="bmhc006"/>
+      <column id="bmhc009"/>
+      <column id="bmhc010"/>
+      <column id="bmhc011"/>
+      <column id="bmhc012"/>
+      <column id="bmhc013"/>
+      <column id="bmhc014">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="bmhc014_desc" ref_field="bmhc_t.bmhc014" map_field="bmhc014" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="bmhc014_desc"/>
+      <column id="bmhc015"/>
+      <column id="bmhc016"/>
+    </init>
+    <init id="body" page="4">
+      <column id="bmhd003">
+        <after>
+          <check chkid="v_rtax001" id="isExist"/>
+          <reference field="bmhd003_desc" ref_field="bmhd_t.bmhd003" map_field="bmhd003" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_1" state="i"/>
+        <controlp form="q_rtax001_1" state="c"/>
+      </column>
+      <column id="bmhd003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bmhe_t" pk="bmhe001">
+      <sql id="forupd_sql" type="sql" query="SELECT bmhe001,&apos;&apos;,bmhestus,bmheownid,&apos;&apos;,bmheowndp,&apos;&apos;,bmhecrtid,&apos;&apos;,bmhecrtdp,&apos;&apos;,bmhecrtdt,bmhemodid,&apos;&apos;,bmhemoddt,bmhe002 FROM bmhe_t WHERE bmheent= ? AND bmhe001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bmhe001,&apos;&apos;,bmhestus,bmheownid,&apos;&apos;,bmheowndp,&apos;&apos;,bmhecrtid,&apos;&apos;,bmhecrtdp,&apos;&apos;,bmhecrtdt,bmhemodid,&apos;&apos;,bmhemoddt,bmhe002 FROM bmhe_t" order="bmhe001"/>
+      <sql id="append" type="lang" target="bmhel_t.bmhel003" table="bmhel_t" fk="bmhe001" pk="bmhel001,bmhel002" field="bmhel003"/>
+    </head>
+    <body id="bmha_t" page="1" linked="" pk="bmhaseq,bmhaseq1" fk="bmha001">
+      <sql id="forupd_sql_detail" query="SELECT bmhaseq,bmha002,&apos;&apos;,bmhaseq1,bmha003,bmha004,&apos;&apos;,bmha005 FROM bmha_t WHERE bmhaent=? AND bmha001=? AND bmhaseq=? AND bmhaseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmhaseq,bmha002,&apos;&apos;,bmhaseq1,bmha003,bmha004,&apos;&apos;,bmha005 FROM bmha_t WHERE bmhaent=? AND bmha001=?"/>
+    </body>
+    <body id="bmhb_t" page="2" linked="" pk="bmhb002,bmhb003" fk="bmhb001">
+      <sql id="forupd_sql_detail" query="SELECT bmhb002,&apos;&apos;,bmhb003,&apos;&apos;,bmhb004,bmhb005,&apos;&apos;,bmhb006,&apos;&apos; FROM bmhb_t WHERE bmhbent=? AND bmhb001=? AND bmhb002=? AND bmhb003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmhb002,&apos;&apos;,bmhb003,&apos;&apos;,bmhb004,bmhb005,&apos;&apos;,bmhb006,&apos;&apos; FROM bmhb_t WHERE bmhbent=? AND bmhb001=?"/>
+    </body>
+    <body id="bmhc_t" page="3" linked="" pk="bmhcseq,bmhc017" fk="bmhc001">
+      <sql id="forupd_sql_detail" query="SELECT bmhcseq,bmhc017,bmhc002,&apos;&apos;,bmhc003,bmhc005,bmhc004,bmhc006,bmhc009,bmhc010,bmhc011,bmhc012,bmhc013,bmhc014,&apos;&apos;,bmhc015,bmhc016 FROM bmhc_t WHERE bmhcent=? AND bmhc001=? AND bmhcseq=? AND bmhc017=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmhcseq,bmhc017,bmhc002,&apos;&apos;,bmhc003,bmhc005,bmhc004,bmhc006,bmhc009,bmhc010,bmhc011,bmhc012,bmhc013,bmhc014,&apos;&apos;,bmhc015,bmhc016 FROM bmhc_t WHERE bmhcent=? AND bmhc001=?"/>
+    </body>
+    <body id="bmhd_t" page="4" linked="" pk="bmhd003" fk="bmhd001">
+      <sql id="forupd_sql_detail" query="SELECT bmhd003,&apos;&apos; FROM bmhd_t WHERE bmhdent=? AND bmhd001=? AND bmhd003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmhd003,&apos;&apos; FROM bmhd_t WHERE bmhdent=? AND bmhd001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

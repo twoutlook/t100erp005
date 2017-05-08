@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmt860_03" std_prog="apmt860_03" erpver="1.0" ver="2" module="APM" type="S" booking="N" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="pmdu_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：當收貨/入庫單要指定多個庫、儲、批時
+標準作業功能取消：
+狀態功能：無
+作業類型：雙檔標準版型
+輸入模式：標準版型
+
+1.執行此程式需傳入2個參數，若傳入參數為ULL時則不可以執行
+  1-1.p_pmdsdocno(收貨/入庫單號):
+  1-2.p_pmdtseq(收貨/入庫項次):
+
+2.此子作業的單頭只做Display用不可維護，進入子程式值接進到單身做維護
+
+3.若收貨/入庫項次已經有對應的多庫出批收貨明細(pmdu_t)資料時，則自動將多庫出批收貨貨明細(pmdu_t)資料
+  顯示在單身
+
+4.收貨包裝數量及收貨數量計算方法同標準算法
+
+5.需檢核單身所有收貨數量加總是否與該收貨項次的收貨數量一致，若不一致則show訊息不允許離開
+
+6.採購收貨入庫單/無採購收貨入庫單/採購驗退單/倉退單 檢驗否與允收數量 不需顯示]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.新增確認直接新增到pmdu_t資料中
+2.新增確認時需檢核庫存管理特徵、庫位、儲位、批號至少需一個欄位需要有一個欄位有值
+3.當檢驗否='Y'，且允收數量=0時，應跳出提示訊息「此商品應檢驗，未輸入允收數量將來無法入庫」]]>
+  </di_all>
+  <field cite_std="N" name="pmdt0261" ver="1" src="s" column="pmdt026" table="pmdt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[●當由下列程式名稱登入，此欄位隱藏
+apmt862 採購收貨入庫單
+apmt863 無採購收貨入庫單
+apmt870 採購驗退單
+apmt890 採購倉退單
+]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt019" ver="1" src="s" column="pmdt019" table="pmdt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt020" ver="1" src="s" column="pmdt020" table="pmdt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt201" ver="1" src="s" column="pmdt201" table="pmdt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt_t.pmdt202" ver="1" src="s" column="pmdt202" table="pmdt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu001_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu001_desc_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu002_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu007_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu001" ver="1" src="s" column="pmdu001" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu002" ver="1" src="s" column="pmdu002" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu005" ver="1" src="s" column="pmdu005" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[當為採購倉退單
+　q_inag004_19
+　arg1 = pmdusite　營運據點
+　arg2 = pmdu001　商品編號
+　arg3 = pmdu002　產品特徵
+　arg4 = pmdu005　庫存管理特徵
+　arg5 = pmdu006　庫位
+　arg6 = pmdu007　儲位
+　arg7 = pmdu008　批號]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu006" ver="1" src="s" column="pmdu006" table="pmdu_t" attribute="" type="" req="N" i_zoom="q_inaa001_15" c_zoom="" chk_ref="v_inaa001_9" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[校驗：1.輸入收貨庫位時，需檢核收貨庫位是否存在g_site對應的庫位基本資料中且為有效的， 若不存在則show錯誤訊息，並將欄位停留在收貨庫位上供修改
+　　　2.輸入的庫位不可以為待報廢庫
+　　　3.當有採購單來源單據，才抓取採購單資訊預設庫位欄位值
+　　　4.當採購倉退時，必須營運據點+商品編號+產品特徵+庫存管理特徵+庫位 必須存在[庫存明細檔]中
+
+計算或處理：1.若對應的採購資料有設置限定的庫位時，此欄位預設採購設的限定庫位且不可以維護
+　　　　　　2.若該庫位設置不做儲位管理時，則儲位欄位不可以維護
+
+開窗：
+當為採購倉退單
+　q_inag004_19
+　arg1 = pmdusite　營運據點
+　arg2 = pmdu001　商品編號
+　arg3 = pmdu002　產品特徵
+　arg4 = pmdu005　庫存管理特徵
+　arg5 = pmdu006　庫位
+　arg6 = pmdu007　儲位
+　arg7 = pmdu008　批號
+Else
+　q_inaa001_15
+
+校驗：
+當為採購倉退單時，多校驗s_apmt860_chk_inag
+
+新增時預設值
+(1)當採購單有預設庫位，預設採購單的庫位
+(2)取庫存要貨組織範圍(apmi830)
+]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu007" ver="1" src="s" column="pmdu007" table="pmdu_t" attribute="" type="" req="Y" i_zoom="q_inab002_3" c_zoom="" chk_ref="v_inab002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[校驗：輸入收貨儲位時，需檢核收貨庫位與收貨儲位是否存在g_site對應的儲位基本資料中且為有效的，若不存在則show錯誤訊息，並將欄位停留在收貨儲位上供修改
+計算或處理：1.若對應的採購資料有設置限定的儲位時，此欄位預設採購設的限定儲位且不可以維護
+　　　　　　2.若前面輸入的庫位設置不做儲位管理時，則此欄位不可以維護
+開窗：
+當為採購倉退單
+　q_inag004_19
+　arg1 = pmdusite　營運據點
+　arg2 = pmdu001　商品編號
+　arg3 = pmdu002　產品特徵
+　arg4 = pmdu005　庫存管理特徵
+　arg5 = pmdu006　庫位
+　arg6 = pmdu007　儲位
+　arg7 = pmdu008　批號
+Else
+　q_inab002_3
+
+校驗：
+當為採購倉退單時，多校驗s_apmt860_chk_inag]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu008" ver="1" src="s" column="pmdu008" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[計算或處理：1.[T:料件據點進銷存檔].[C:批號控管]=1或2時才可輸入(imafsite = 'ALL')
+　　　　　　2.判斷[T:料件據點進銷存檔].[C:批號自動編碼]是否有勾選，若勾選自動編碼時需乎命名規則產生的應用元件產生批號(imafsite = 'ALL')
+　　　　　　3.若對應的採購資料有設置限定的批號時，此欄位預設採購設的限定批號且不可以維護
+　　　　　　4.若輸入的料件+批號不存在[T:料件批號資料檔]時，則呼叫應用元件新增料件批號基本資料
+當為採購倉退單
+　q_inag004_19
+　arg1 = pmdusite　營運據點
+　arg2 = pmdu001　商品編號
+　arg3 = pmdu002　產品特徵
+　arg4 = pmdu005　庫存管理特徵
+　arg5 = pmdu006　庫位
+　arg6 = pmdu007　儲位
+　arg7 = pmdu008　批號]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu009" ver="1" src="s" column="pmdu009" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[直接預設pmdt019(收貨單位)]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu010" ver="1" src="s" column="pmdu010" table="pmdu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[輸入的數量不可大於該項次的收貨數量-已經維護的單身數量之和]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu013" ver="1" src="s" column="pmdu013" table="pmdu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[校驗：1.當檢驗否pmdt026='Y'時，才可維護允收數量
+　　　2.輸入的數量不可以大於收貨量
+
+●當由下列程式名稱登入，此欄位隱藏
+apmt862 採購收貨入庫單
+apmt863 無採購收貨入庫單
+apmt870 採購驗退單
+apmt880 採購入庫單
+apmt890 採購倉退單
+]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu015" ver="1" src="s" column="pmdu015" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu016" ver="1" src="s" column="pmdu016" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu017" ver="2" src="s" column="pmdu017" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="u">
+    <![CDATA[[150507-00001#4 新增]]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu200" ver="1" src="s" column="pmdu200" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[直接預設pmdt201(收貨包裝單位)]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu201" ver="1" src="s" column="pmdu201" table="pmdu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu202" ver="2" src="s" column="pmdu202" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="u">
+    <![CDATA[[150507-00001#4 新增]
+預設值：等於單據日期
+帶值：[150507-00001#4 新增]更改製造日期後呼叫批號元件帶出有效日期預設值
+             CALL s_lot_out_effdate(pmdtsite,pmdt006,pmdt007,pmdu202,pmdu008)
+當以下這些程式，商品有做臨期管理時必填
+apmt862 採購收貨入庫單
+apmt863 無採購收貨入庫單
+apmt880 採購入庫單]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdudocno" ver="1" src="s" column="pmdudocno" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmduseq" ver="1" src="s" column="pmduseq" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmduseq1" ver="1" src="s" column="pmduseq1" table="pmdu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdusite" ver="1" src="s" column="pmdusite" table="pmdu_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="2" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdu_t.pmdu107" ver="2" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="pmdt019_desc" src="s" depend_field="pmdt019" correspon_key="pmdt019" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdt201_desc" src="s" depend_field="pmdt_t.pmdt201" correspon_key="pmdt201" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdu006_desc" src="s" depend_field="pmdu_t.pmdu006" correspon_key="pmdu006" ref_table="inayl_t" ref_fk="inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdu009_desc" src="s" depend_field="pmdu_t.pmdu009" correspon_key="pmdu009" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdu200_desc" src="s" depend_field="pmdu_t.pmdu200" correspon_key="pmdu200" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="2" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdt0261" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt_t.pmdt202" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu001_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu001_desc_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu002_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu007_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmdu_t.pmdu017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="2" name="pmdu_t.pmdu107" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu200" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdu201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmdu_t.pmdu202" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdudocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmduseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmduseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdu_t.pmdusite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="apmt860_03_group_5" text="收貨資訊" lstr=""/>
+    <sfield name="lbl_pmdusite" text="營運據點" lstr=""/>
+    <sfield name="lbl_pmdudocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_pmduseq_1" text="收貨項次" lstr=""/>
+    <sfield name="lbl_pmdu001" text="商品編號" lstr=""/>
+    <sfield name="lbl_pmdu001_desc" text="商品品名" lstr=""/>
+    <sfield name="lbl_pmdu001_desc_1" text="商品規格" lstr=""/>
+    <sfield name="lbl_pmdu002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_pmdt201" text="包裝單位" lstr=""/>
+    <sfield name="lbl_pmdt202" text="收貨包裝數量/包裝單位" lstr=""/>
+    <sfield name="lbl_dummy01" text="/" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_pmdt019" text="出貨單位" lstr=""/>
+    <sfield name="lbl_pmdt020" text="出貨數量/收貨單位" lstr=""/>
+    <sfield name="lbl_dummy02" text="/" lstr=""/>
+    <sfield name="lbl_pmduseq1" text="項序" lstr=""/>
+    <sfield name="lbl_pmdu006" text="庫位" lstr=""/>
+    <sfield name="lbl_pmdu006_desc" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_pmdu007" text="儲位" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_pmdu008" text="批號" lstr=""/>
+    <sfield name="lbl_pmdu005" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_pmdu200" text="收貨包裝單位" lstr=""/>
+    <sfield name="lbl_pmdu200_desc" text="收貨包裝單位名稱" lstr=""/>
+    <sfield name="lbl_sum" text="合計" lstr=""/>
+    <sfield name="lbl_pmdu201" text="收貨包裝數量" lstr=""/>
+    <sfield name="lbl_pmdu009" text="收貨單位" lstr=""/>
+    <sfield name="lbl_pmdu009_desc" text="收貨單位名稱" lstr=""/>
+    <sfield name="lbl_pmdu010" text="收貨數量" lstr=""/>
+    <sfield name="lbl_pmdt026" text="檢驗" lstr=""/>
+    <sfield name="lbl_pmdu013" text="允收數量" lstr=""/>
+    <sfield name="lbl_pmdu015" text="已驗退量" lstr=""/>
+    <sfield name="lbl_pmdu202" text="製造日期" lstr=""/>
+    <sfield name="lbl_pmdu017" text="有效日期" lstr=""/>
+    <sfield name="lbl_pmdu016" text="存貨備註" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

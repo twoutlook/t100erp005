@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi920" module="azz" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="00845" crtdt="2013-06-01 00:00:00" modid="01101" moddt="2015-03-12 09:28:51" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="錯誤訊息維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzzestus,gzze001,gzze002,gzze003,gzze004,gzze005,gzze005_desc(chr500),gzze006,gzze007,gzze008,gzze009"/>
+      <var id="body" page="2" record="s_detail1_info" page_id="1_info" value="gzze001_s_detail1_info(chr500),gzze002_s_detail1_info(chr500),gzzemodid,gzzemodid_desc(chr500),gzzemoddt,gzzeownid,gzzeownid_desc(chr500),gzzeowndp,gzzeowndp_desc(chr500),gzzecrtid,gzzecrtid_desc(chr500),gzzecrtdp,gzzecrtdp_desc(chr500),gzzecrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="trans_zh_cn_lang"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi920" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzzestus,gzze001,gzze002,gzze003,gzze004,gzze005,gzze006,gzze007,gzze008,gzze009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzzestus,gzze001,gzze002,gzze003,gzze004,gzze005,gzze006,gzze007,gzze008,gzze009"/>
+      <construct id="body" page="2" field="gzzemodid,gzzemoddt,gzzeownid,gzzeowndp,gzzecrtid,gzzecrtdp,gzzecrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzzestus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzze001"/>
+      <column id="gzze002"/>
+      <column id="gzze003"/>
+      <column id="gzze004"/>
+      <column id="gzze005">
+        <after>
+          <check chkid="v_gzzz001" id="isExist"/>
+          <reference field="gzze005_desc" ref_field="gzze_t.gzze005" map_field="gzze005" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001_1" state="i"/>
+        <controlp form="q_gzzz001_1" state="c"/>
+      </column>
+      <column id="gzze005_desc"/>
+      <column id="gzze006"/>
+      <column id="gzze007" type="S" default="1" def_scc="106"/>
+      <column id="gzze008" type="S" default="N"/>
+      <column id="gzze009"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzze001_s_detail1_info"/>
+      <column id="gzze002_s_detail1_info"/>
+      <column id="gzzemodid">
+        <after>
+          <reference field="gzzemodid_desc" ref_field="gzze_t.gzzemodid" map_field="gzzemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzzemodid_desc"/>
+      <column id="gzzemoddt"/>
+      <column id="gzzeownid">
+        <after>
+          <reference field="gzzeownid_desc" ref_field="gzze_t.gzzeownid" map_field="gzzeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzzeownid_desc"/>
+      <column id="gzzeowndp">
+        <after/>
+      </column>
+      <column id="gzzeowndp_desc"/>
+      <column id="gzzecrtid">
+        <after>
+          <reference field="gzzecrtid_desc" ref_field="gzze_t.gzzecrtid" map_field="gzzecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzzecrtid_desc"/>
+      <column id="gzzecrtdp">
+        <after>
+          <reference field="gzzecrtdp_desc" ref_field="gzze_t.gzzecrtdp" map_field="gzzecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzzecrtdp_desc"/>
+      <column id="gzzecrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzze_t" page="1,2" linked="" pk="gzze001,gzze002">
+      <sql id="forupd_sql_detail" query="SELECT gzzestus,gzze001,gzze002,gzze003,gzze004,gzze005,&apos;&apos;,gzze006,gzze007,gzze008,gzze009,&apos;&apos;,&apos;&apos;,gzzemodid,&apos;&apos;,gzzemoddt,gzzeownid,&apos;&apos;,gzzeowndp,&apos;&apos;,gzzecrtid,&apos;&apos;,gzzecrtdp,&apos;&apos;,gzzecrtdt FROM gzze_t WHERE gzze001=? AND gzze002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzzestus,gzze001,gzze002,gzze003,gzze004,gzze005,&apos;&apos;,gzze006,gzze007,gzze008,gzze009,&apos;&apos;,&apos;&apos;,gzzemodid,&apos;&apos;,gzzemoddt,gzzeownid,&apos;&apos;,gzzeowndp,&apos;&apos;,gzzecrtid,&apos;&apos;,gzzecrtdp,&apos;&apos;,gzzecrtdt FROM gzze_t WHERE 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ FOURJS_START_COPYRIGHT(D,2011)
+ Property of Four Js*
+ (c) Copyright Four Js 2011, 2014. All Rights Reserved.
+ * Trademark of Four Js Development Tools Europe Ltd
+   in the United States and elsewhere
+ 
+ This file can be modified by licensees according to the
+ product manual.
+ FOURJS_END_COPYRIGHT
+ -->
+<html
+	xmlns='http://www.w3.org/1999/xhtml'
+	xmlns:gwc='http://www.4js.com/GWC'
+>
+	<head>
+		<meta
+			content='text/html; charset=utf-8'
+			http-equiv='Content-Type'
+		/>
+	</head>
+
+	<body>
+
+<gwc:snippet-root>
+	<div
+		gwc:condition='hidden != 1'
+
+		class='gButtonContainerTable'
+	>
+		<div
+			gwc:define='
+				isCommandLink style["buttonType"] == "commandLink";
+				isLink style["buttonType"] == "link";
+				widthPolicy switch(sizePolicy, ["initial", "fixed", "dynamic"], ["CanGrowInitial", "Fixed", null]);
+				heightHint height &gt; 1 ? height : null;
+				heightPolicy switch(true, [sizePolicy == "initial" &amp;&amp; heightHint, sizePolicy == "initial" &amp;&amp; !heightHint, sizePolicy == "fixed"], ["CanGrowInitial", "AllInitial", "AllInitial"], null);
+			'
+                        style='{class == "forget_pw" ? "text-align:right;" : null}'
+			class='gFieldContainer'
+		>
+			<div
+				gwc:condition='!isLink &amp;&amp; !isCommandLink'
+				gwc:omit-tag='traditionalWindow'
+
+				data-g-layout-policy=' {sizePolicy != "dynamic" ? "\"widthHint\": " + width + ", " : null} {widthPolicy ? "\"widthPolicy\": \"" + widthPolicy + "\", " : null} "horizontalStretching": 1,  {heightHint ? "\"heightHint\": " + heightHint + ", " : null}  {heightPolicy ? "\"heightPolicy\": \"" + heightPolicy + "\", " : null} {image ? "\"deferSizing\": true" : null}'
+			>
+				<button
+					class='gWid g{type} gSStar gButtonCommon button-style {prefix("gc", class)} {text &amp;&amp; image ? "gButtonImageText" : null}'
+					disabled='{isActive ? null : ""}'
+					style='{traditionalWindow ? "width: " + traditionalContainerWidth + ";" : null}{traditionalWindow ? "height: " + traditionalContainerHeight + ";" : null}'
+					tabindex='{isModifiable &amp;&amp; tabIndex ? tabIndex : null}'
+					title='{comment || null}'
+
+					data-g-focus='{hasFocus || null}'
+					data-g-id='{type},{idid},{name || ""}'
+					data-g-qa-name='{type},{name || ""}'
+					data-g-qa-idRef='{auiid(id)}'
+					data-g-subtabindex='{isModifiable &amp;&amp; subtabindex ? subtabindex : null}'
+				>
+					<div
+						gwc:define='
+							scaleIcon style["scaleIcon"];
+							iconSize scaleIcon ? (contains(scaleIcon,"px") ? scaleIcon : null) : null;
+						  scaleIconYes scaleIcon=="yes";
+						'
+						gwc:condition='image'
+						gwc:omit-tag='!iconSize &amp;&amp; !scaleIconYes'
+
+						class='gFixedIconContainer'
+						style='{iconSize ? "height:" + iconSize + ";" + "width:" + iconSize + ";" : null}'
+					>
+						<div
+							gwc:omit-tag='!iconSize &amp;&amp; !scaleIconYes'
+						>
+							<img
+								gwc:define='
+									fallbackSrc imageURI("html5_dots.png");
+									src image ? imageURI(image) : fallbackSrc;
+								'
+
+								draggable='false'
+								class='gImageLoading'
+								onerror='this.gLoadedState = 2'
+								onload='this.gLoadedState = 1'
+								src='{src}'
+								style='{iconSize ? "max-height:" + iconSize + ";" + "max-width:" + iconSize + ";" : null}'
+
+								data-g-squarescale='{scaleIconYes || null}'
+								data-g-id='Image,{fallbackSrc}'
+							/>
+						</div>
+					</div>
+
+					<span
+						gwc:define='
+							text text != undefined ? filterAmpersand(text) : (image ? "" : "&#xA0;...&#xA0;");
+						'
+						gwc:condition='text'
+
+						class='{text &amp;&amp; image ? "gButtonImageSeparator" : null}'
+					>{text}</span>
+				</button>
+			</div>
+
+			<a
+				gwc:condition='isLink'
+
+				class='gWid g{type} gSStar gS{type} gButtonLink {prefix("gc", class)} button-link-style'
+				disabled='{isActive ? null : ""}'
+				tabindex='{isModifiable &amp;&amp; tabIndex ? tabIndex : null}'
+				title='{comment || null}'
+
+				data-g-focus='{hasFocus || null}'
+				data-g-id='{type},{idid},{name || ""}'
+				data-g-qa-idRef='{auiid(id)}'
+				data-g-layout-policy=' {sizePolicy != "dynamic" ? "\"widthHint\": " + width + ", " : null} {widthPolicy ? "\"widthPolicy\": \"" + widthPolicy + "\", " : null} "horizontalStretching": 1,  {heightHint ? "\"heightHint\": " + heightHint + ", " : null}  {heightPolicy ? "\"heightPolicy\": \"" + heightPolicy + "\", " : null} {image ? "\"deferSizing\": true" : null}'
+				data-g-subtabindex='{isModifiable &amp;&amp; subtabindex ? subtabindex : null}'
+			>
+				<div
+					gwc:define='
+						scaleIcon style["scaleIcon"];
+						iconSize scaleIcon ? (contains(scaleIcon,"px") ? scaleIcon : null) : null;
+						scaleIconYes scaleIcon=="yes";
+					'
+					gwc:condition='image'
+					gwc:omit-tag='!iconSize &amp;&amp; !scaleIconYes'
+
+					class='gFixedIconContainer'
+					style='{iconSize ? "height:" + iconSize + ";" + "width:" + iconSize + ";" : null}'
+				>
+					<div
+						gwc:omit-tag='!iconSize &amp;&amp; !scaleIconYes'
+					>
+						<img
+							gwc:define='
+								fallbackSrc imageURI("html5_dots.png");
+								src image ? imageURI(image) : fallbackSrc;
+							'
+
+							draggable='false'
+							class='gImageLoading'
+							onerror='this.gLoadedState = 2'
+							onload='this.gLoadedState = 1'
+							src='{src}'
+							style='{iconSize ? "max-height:" + iconSize + ";" + "max-width:" + iconSize + ";" : null}'
+
+							data-g-squarescale='{scaleIconYes || null}'
+							data-g-id='Image,{fallbackSrc}'
+						/>
+					</div>
+				</div>
+
+				<span
+					gwc:define='
+						text text != undefined ? filterAmpersand(text) : (image ? "" : "&#xA0;...&#xA0;");
+					'
+					gwc:condition='text'
+
+					class='{text &amp;&amp; image ? "gButtonImageSeparator" : null}'
+				>{text}</span>
+			</a>
+
+			<div
+				gwc:condition='isCommandLink'
+
+				data-g-layout-policy=' {sizePolicy != "dynamic" ? "\"widthHint\": " + width + ", " : null} {widthPolicy ? "\"widthPolicy\": \"" + widthPolicy + "\", " : null} "horizontalStretching": 1,  {heightHint ? "\"heightHint\": " + heightHint + ", " : null}  {heightPolicy ? "\"heightPolicy\": \"" + heightPolicy + "\", " : null} "deferSizing": true'
+			>
+				<button
+
+					class='gWid g{type} gSStar gS{type} gButtonCommon button-style gButtonCommandLink {prefix("gc", class)}'
+					disabled='{isActive ? null : ""}'
+					data-g-id='{type},{idid},{name || ""}'
+					data-g-qa-name='{type},{name || ""}'
+					data-g-qa-idRef='{auiid(id)}'
+				>
+					<div
+						gwc:define='
+							scaleIcon style["scaleIcon"];
+							iconSize scaleIcon ? (contains(scaleIcon,"px") ? scaleIcon : null) : null;
+							scaleIconYes scaleIcon=="yes";
+						'
+						gwc:omit-tag='!iconSize &amp;&amp; !scaleIconYes'
+
+						class='gFixedIconContainer'
+						style='{iconSize ? "height:" + iconSize + ";" + "width:" + iconSize + ";" : null}'
+					>
+						<div
+							gwc:omit-tag='!iconSize &amp;&amp; !scaleIconYes'
+						>
+							<img
+								gwc:define='
+									fallbackSrc imageURI("arrows/html5_right.png");
+									src image ? imageURI(image) : fallbackSrc;
+								'
+
+								draggable='false'
+								class='gImageLoading'
+								onerror='this.gLoadedState = 2'
+								onload='this.gLoadedState = 1'
+								src='{src}'
+								style='{iconSize ? "max-height:" + iconSize + ";" + "max-width:" + iconSize + ";" : null}'
+
+								data-g-squarescale='{scaleIconYes || null}'
+								data-g-id='Image,{fallbackSrc}'
+							/>
+						</div>
+					</div>
+
+					<h3>{text != undefined ? filterAmpersand(text) : "&#xA0;"}</h3>
+					<p>{comment != undefined ? filterAmpersand(comment) : "&#xA0;"}</p>
+				</button>
+			</div>
+		</div>
+	</div>
+</gwc:snippet-root>
+
+	</body>
+</html>

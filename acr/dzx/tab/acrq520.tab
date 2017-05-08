@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrq520" module="acr" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02296" crtdt="2014-08-01 09:35:34" modid="02296" moddt="2014-08-01 17:00:01" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員交互動態查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="mmaf001,mmaf008,mmaf014,mmag002,mmag004,startdate,enddate,startmoney,endmoney"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),mmaf001,mmaf008,mmag002,mmag002_desc(chr500),mmag004,mmag004_desc(chr500),mmaf015,age(chr500),mmaf014,decc016(num20_6),decc010(num20_6),decc006(num20_6),decc014(num20_6),mmaq013(dat)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),mmaf001(b_mmaf001),mmaf008(b_mmaf008),mmag002(b_mmag002),mmag002_desc(b_mmag002_desc),mmag004(b_mmag004),mmag004_desc(b_mmag004_desc),mmaf015(b_mmaf015),age(age),mmaf014(b_mmaf014),decc016(decc016),decc010(decc010),decc006(decc006),decc014(decc014),mmaq013(mmaq013)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acrq520" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="mmaf001(b_mmaf001)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="mmaf001">
+        <controlp form="q_mmaf001" state="c"/>
+      </column>
+      <column id="mmaf008"/>
+      <column id="mmag002">
+        <after>
+          <reference field="mmag002_desc" ref_field="mmag002" map_field="mmag002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2049&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmag002_desc"/>
+      <column id="mmag004">
+        <after>
+          <reference field="mmag004_desc" ref_field="mmag004" map_field="mmag004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2016&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmag004_desc"/>
+      <column id="mmaf015"/>
+      <column id="age"/>
+      <column id="mmaf014"/>
+      <column id="decc016"/>
+      <column id="decc010"/>
+      <column id="decc006"/>
+      <column id="decc014"/>
+      <column id="mmaq013"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="mmaf_t" page="1" linked="" pk="mmaf001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,mmaf001,mmaf008,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,mmaf015,&apos;&apos;,mmaf014,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mmaf_t WHERE mmafent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

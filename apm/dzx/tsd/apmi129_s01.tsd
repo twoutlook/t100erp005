@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmi129_s01" std_prog="apmi129_s01" erpver="1.0" ver="1" module="APM" booking="Y" class="" template="F001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <table ver="1" cite_std="N">
+    <tbl name="imaa_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <field cite_std="N" name="chk1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[已存在之料號略過不重新產生：
+    當值為'Y'時,若這個料號已經存在pmaw_t,略過不做處理;
+    當值為'N'時,若這個料號已經存在pmaw_t,依據這次抓到的資料更新pmaw017~pmaw022,
+    且該料件編號+產品特徵(pmaw011+pmaw012)有被同pmaw001+pmaw002+pmaw013的其他筆
+    參考(pmaw015+pmaw016)，則參考的那筆資料須依加金額或加百分比重新計算標準定價
+    、一般採購價]]>
+  </field>
+  <field cite_std="N" name="chk2" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[未取到成本則不產生資料：
+  1.資料欄位:Formonly/Input
+  2.不允許空白
+  3.預設值:'Y'
+  4.當值為'Y'時,若這個料號依據標準定價取得來源抓不到單價,則不在pmaw_t產生這個料號的資料;
+    當值為'N'時,若這個料號依據標準定價取得來源抓不到單價,則單價=0
+]]>
+  </field>
+  <field cite_std="N" name="e_imaa001" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_imaa001" c_zoom="q_imaa001" chk_ref="v_imaa001_4" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa003" ver="1" src="s" column="imaa003" table="imaa_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_imca001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[料號主分群：
+  1.資料欄位:imaa003/QBE
+  2.輸入要整批產生的料號主分群,與料號起迄範圍、料號採購分群等條件組成SQL後過濾取得所有
+    要寫入pmaw011的料件編號(只抓已確認的料號)
+  3.開窗代號:參照aimm200料件主分群的開窗]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf141" ver="1" src="s" column="imaf141" table="imaf_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_imce141" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[料號採購分群：
+  1.資料欄位:imaf141/QBE
+  2.輸入要整批產生的料號採購分群,與料號起迄範圍、料號主分群等條件組成SQL後過濾取得所有
+    要寫入pmaw011的料件編號(只抓已確認的料號)
+  3.開窗代號:參照aimm214採購分群的開窗
+]]>
+  </field>
+  <field cite_std="N" name="pmaw019_1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[標準定價取得來源：
+  1.資料選項來源:SCC2071
+                 1.產品標準成本檔
+                 2.最新據點採購價
+                 3.最新集團採購價
+  2.產品標準成本檔:?(待後補)
+  3.最新集團採購價:imai021(依執行的site去抓取imai_t)
+  4.最新集團採購價:imai021(依最近的imai025去抓去imai021,for 所有site)
+]]>
+  </field>
+  <field cite_std="N" name="pmaw019_r" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[入：
+  1.資料欄位:Formonly/Input
+  2.這兩個欄位不卡必輸
+  3.輸入值須介於0~9
+  4.捨與入兩個值都有輸入的話,不可相同,例如捨3入3,這樣會無法決定到底要捨還是入
+  5.a.舉例依照來源取得的單價為145,取位為100,捨4入5，則得到的標準定價會是100
+      ->取位為100,所以抓10位數來判斷要捨還是要入,抓到的10位數是4,這邊設定小於等於4是要捨去的,
+        也就是把10位數之後的數值都捨掉,所以會變成100;若原始單價為152,就會進位變成200
+    b.舉例依照來源取得的單價為188,取位為10,捨9入 (空白)，則得到的標準定價會是180
+      ->取位為10,所以抓個位數來判斷要捨還是要入,抓到的個位數是8,這邊設定小於等於9是要捨去的,
+        也就是把個位數的數值捨掉,所以會變成180
+    c.舉例依照來源取得的單價為35.3,取位為1,捨 (空白)入0，則得到的標準定價會是35.3
+      ->取位為1,所以抓小數第一位來判斷要捨還是要入,抓到的小數第一位是3,這邊設定大於等於0就要進位,
+        所以會變成36.0
+    d.若捨與入都是空白,表示不做任何處理,值會等於原始值
+    e.若捨有輸入值,自動推算入=捨+1;若推算出入=10時,則清空
+    f.若入有輸入值,自動推算捨=入-1;若推算出捨=-1時,則清空
+  6.舍幾入幾的顯示訊息在左下角]]>
+  </field>
+  <field cite_std="N" name="pmaw019_s" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[捨：
+  1.資料欄位:Formonly/Input
+  2.這兩個欄位不卡必輸
+  3.輸入值須介於0~9
+  4.捨與入兩個值都有輸入的話,不可相同,例如捨3入3,這樣會無法決定到底要捨還是入
+  5.a.舉例依照來源取得的單價為145,取位為100,捨4入5，則得到的標準定價會是100
+      ->取位為100,所以抓10位數來判斷要捨還是要入,抓到的10位數是4,這邊設定小於等於4是要捨去的,
+        也就是把10位數之後的數值都捨掉,所以會變成100;若原始單價為152,就會進位變成200
+    b.舉例依照來源取得的單價為188,取位為10,捨9入 (空白)，則得到的標準定價會是180
+      ->取位為10,所以抓個位數來判斷要捨還是要入,抓到的個位數是8,這邊設定小於等於9是要捨去的,
+        也就是把個位數的數值捨掉,所以會變成180
+    c.舉例依照來源取得的單價為35.3,取位為1,捨 (空白)入0，則得到的標準定價會是35.3
+      ->取位為1,所以抓小數第一位來判斷要捨還是要入,抓到的小數第一位是3,這邊設定大於等於0就要進位,
+        所以會變成36.0
+    d.若捨與入都是空白,表示不做任何處理,值會等於原始值
+    e.若捨有輸入值,自動推算入=捨+1;若推算出入=10時,則清空
+    f.若入有輸入值,自動推算捨=入-1;若推算出捨=-1時,則清空
+  6.舍幾入幾的顯示訊息在左下角]]>
+  </field>
+  <field cite_std="N" name="pmaw019_w" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[取位：
+  1.資料欄位:Formonly/Input
+  2.不允許空白
+  3.SCC：2078
+  4.若輸入100,表示取位完後的定價會是100,200,300....這種100的倍數]]>
+  </field>
+  <field cite_std="N" name="pmaw020_mon" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[一般採購價加金額：
+  1.資料欄位:Formonly/Input
+  2.一般採購價加金額與一般採購價加乘百分比只能擇一輸入
+  3.輸入值需>=0
+  4.若輸入10,則一般採購價=標準定價+10,再依據取位與捨、入的設定來得到
+  5.舉例前面取得的標準定價為30.47,加金額為5,取位0.1.捨5入6
+    ->30.47+5=35.47,取為0.1表示要抓小數第二位來判斷,會抓到7,這邊設定大於等於6要進位,
+      所以會變成35.5
+]]>
+  </field>
+  <field cite_std="N" name="pmaw020_r" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[入：
+  1.資料欄位:Formonly/Input
+  2.這兩個欄位不卡必輸
+  3.輸入值須介於0~9
+  4.捨與入兩個值都有輸入的話,不可相同,例如捨3入3,這樣會無法決定到底要捨還是入
+  5.a.舉例依照來源取得的單價為145,取位為100,捨4入5，則得到的標準定價會是100
+      ->取位為100,所以抓10位數來判斷要捨還是要入,抓到的10位數是4,這邊設定小於等於4是要捨去的,
+        也就是把10位數之後的數值都捨掉,所以會變成100;若原始單價為152,就會進位變成200
+    b.舉例依照來源取得的單價為188,取位為10,捨9入 (空白)，則得到的標準定價會是180
+      ->取位為10,所以抓個位數來判斷要捨還是要入,抓到的個位數是8,這邊設定小於等於9是要捨去的,
+        也就是把個位數的數值捨掉,所以會變成180
+    c.舉例依照來源取得的單價為35.3,取位為1,捨 (空白)入0，則得到的標準定價會是35.3
+      ->取位為1,所以抓小數第一位來判斷要捨還是要入,抓到的小數第一位是3,這邊設定大於等於0就要進位,
+        所以會變成36.0
+    d.若捨與入都是空白,表示不做任何處理,值會等於原始值
+    e.若捨有輸入值,自動推算入=捨+1;若推算出入=10時,則清空
+    f.若入有輸入值,自動推算捨=入-1;若推算出捨=-1時,則清空
+  6.舍幾入幾的顯示訊息在左下角]]>
+  </field>
+  <field cite_std="N" name="pmaw020_rate" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[一般採購價加乘百分比：
+  1.資料欄位:Formonly/Input
+  2.一般採購價加金額與一般採購價加乘百分比只能擇一輸入
+  3.輸入值需>=0
+  4.若輸入10,則一般採購價=標準定價*(1+10%),再依據取位與捨、入的設定來得到
+  5.舉例前面取得的標準定價為145,加乘百分比為5%,取位0.1.捨5入6
+    ->145*(1+5%)=152.25,取為0.1表示要抓小數第二位來判斷,會抓到5,這邊設定小於等於5要捨去,
+      所以會變成152.20]]>
+  </field>
+  <field cite_std="N" name="pmaw020_s" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[捨：
+  1.資料欄位:Formonly/Input
+  2.這兩個欄位不卡必輸
+  3.輸入值須介於0~9
+  4.捨與入兩個值都有輸入的話,不可相同,例如捨3入3,這樣會無法決定到底要捨還是入
+  5.a.舉例依照來源取得的單價為145,取位為100,捨4入5，則得到的標準定價會是100
+      ->取位為100,所以抓10位數來判斷要捨還是要入,抓到的10位數是4,這邊設定小於等於4是要捨去的,
+        也就是把10位數之後的數值都捨掉,所以會變成100;若原始單價為152,就會進位變成200
+    b.舉例依照來源取得的單價為188,取位為10,捨9入 (空白)，則得到的標準定價會是180
+      ->取位為10,所以抓個位數來判斷要捨還是要入,抓到的個位數是8,這邊設定小於等於9是要捨去的,
+        也就是把個位數的數值捨掉,所以會變成180
+    c.舉例依照來源取得的單價為35.3,取位為1,捨 (空白)入0，則得到的標準定價會是35.3
+      ->取位為1,所以抓小數第一位來判斷要捨還是要入,抓到的小數第一位是3,這邊設定大於等於0就要進位,
+        所以會變成36.0
+    d.若捨與入都是空白,表示不做任何處理,值會等於原始值
+    e.若捨有輸入值,自動推算入=捨+1;若推算出入=10時,則清空
+    f.若入有輸入值,自動推算捨=入-1;若推算出捨=-1時,則清空
+  6.舍幾入幾的顯示訊息在左下角]]>
+  </field>
+  <field cite_std="N" name="pmaw020_w" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[取位：
+  1.資料欄位:Formonly/Input
+  3.SCC：2078
+  4.若輸入100,表示取位完後的定價會是100,200,300....這種100的倍數]]>
+  </field>
+  <field cite_std="N" name="pmaw_t.pmaw001" ver="1" src="s" column="pmaw001" table="pmaw_t" attribute="C812" type="varchar2(5)" req="Y" i_zoom="q_ooal002_0" c_zoom="" chk_ref="v_ooal002_14" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購價格參照表：
+  1.若為新增時輸入,則顯示主畫面的pmaw001且不可修改
+  2.校验：傳入參數 arg1：pmaw001
+  3.開窗代號:q_ooal002_0
+    arg1:14
+  4.自動產生後將這個值寫入apmi129單頭的採購價格參照表號(pmaw001)
+]]>
+  </field>
+  <field cite_std="N" name="pmaw_t.pmaw002" ver="1" src="s" column="pmaw002" table="pmaw_t" attribute="C008" type="varchar2(10)" req="Y" i_zoom="q_ooaj002_1" c_zoom="" chk_ref="v_ooaj002" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[基礎幣別：
+  1.校驗:傳入參數 arg1='ALL' arg2 = pmaw002
+  2.若為新增時輸入,則顯示主畫面的pmaw002且不可修改
+  3.開窗代號:參照表幣別開窗,傳入參數'ALL'
+  4.自動產生後將這個值寫入apmi129單頭的基礎幣別(pmaw002)]]>
+  </field>
+  <field cite_std="N" name="pmaw_t.pmaw021" ver="1" src="s" column="pmaw021" table="pmaw_t" attribute="N301" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,100" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[警示容差率：
+  1.資料欄位:pmaw021/可Display可Input
+  2.自動產生後將這個值寫入apmi129單身的警示容差率(pmaw021)
+]]>
+  </field>
+  <field cite_std="N" name="pmaw_t.pmaw022" ver="1" src="s" column="pmaw022" table="pmaw_t" attribute="N301" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,100" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[拒絕容差率：
+  1.資料欄位:pmaw022/可Display可Input
+  2.自動產生後將這個值寫入apmi129單身的拒絕容差率(pmaw022)]]>
+  </field>
+  <field cite_std="" name="s_imaa001" ver="1" src="s" column="" table="" attribute="" type="varchar2(40)" req="N" i_zoom="" c_zoom="q_imaf001_8" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產生料號範圍：
+  1.資料欄位:s_imaa001~e_imaa001/QBE
+  2.輸入要整批產生的料號起迄範圍,與料號主分群、料號採購分群等條件組成SQL後過濾取得所有
+    要寫入pmaw011的料件編號(只抓已確認的料號)
+  3.開窗代號:標準料號開窗
+]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_imaa003" depend_field="imaa_t.imaa003" src="s" status="">
+      <program order="1" type="1" name="aimi100"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="" ver="1" name="pmaw001_desc" src="s" depend_field="pmaw_t.pmaw001" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="" ver="1" name="pmaw002_desc" src="s" depend_field="pmaw_t.pmaw002" correspon_key="pmawent,pmaw002" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="pmaw019_r" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaw019_s" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaw020_r" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaw020_s" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaw_t.pmaw021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaw_t.pmaw022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="accept" ver="1" src="s" type="all" status="">
+    <![CDATA[當執行"確認"時,
+(1)先抓取符合產生料號範圍、料號主分群、料號採購分群的料號資料
+(2)用這些料號到標準定價取得來源表抓取單價資料,再以據取位、捨、入的設定處理單價,
+   若"未取到成本則不產生資料"有勾選,則沒有單價的料號就略過
+(3)一般採購價=依(2)步驟抓到的標準定價,
+              a.加金額:標準定價+一般採購價加金額的值
+              b.加百分比:標準定價*(1+一般採購價加乘百分比的值/100)
+              再依據取位、捨、入的設定處理
+(4)若"已存在之料號略過不重新產生"有勾選,則碰到已經存在pmaw_t的料號就略過;
+   若沒有勾選,則依這次抓到的資料更新pmaw017~pmaw022
+(5)pmaw001=畫面上輸入的pmaw001
+   pmaw002=畫面上輸入的pmaw002
+   pmaw011=(1)步驟抓到的料號
+   pmaw012=' '
+   pmaw013=參考料號的計價單位(imaf144,where imafsite='ALL')
+   pmaw014='N'
+   pmaw015=(1)步驟抓到的料號
+   pmaw016=' '
+   pmaw017=''
+   pmaw018=''
+   pmaw019=(2)步驟抓到的單價
+   pmaw020=(3)步驟抓到的單價
+   pmaw021=畫面上輸入的pmaw021
+   pmaw022=畫面上輸入的pmaw022
+(5)若產生成功,則顯示"產生完成"訊息;
+   若產生失敗,則顯示"產生失敗"訊息]]>
+  </act>
+  <act cite_std="N" id="cancel" ver="1" src="s" type="all" status="">
+    <![CDATA[當執行"放棄"後,不做任何更新,直接離開]]>
+  </act>
+  <strings>
+    <sfield name="lbl_qbe" text="QBE" comment="" lstr=""/>
+    <sfield name="lbl_imaa001" text="產生料號範圍" comment="" lstr=""/>
+    <sfield name="lbl_str" text="~" comment="" lstr=""/>
+    <sfield name="lbl_imaa003" text="料號主分群" comment="" lstr=""/>
+    <sfield name="lbl_imaf141" text="料號採購分群" comment="" lstr=""/>
+    <sfield name="lbl_input" text="INPUT" comment="" lstr=""/>
+    <sfield name="lbl_pmaw001" text="採購價格參照表號" comment="" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_pmaw002" text="基礎幣別" comment="" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_chk1" text="已存在之料號略過不重新產生" comment="" lstr=""/>
+    <sfield name="lbl_pmaw019" text="標準定價取得來源" comment="" lstr=""/>
+    <sfield name="lbl_pmaw019_w" text="進位方法：取位" comment="" lstr=""/>
+    <sfield name="lbl_pmaw019_s" text="捨" comment="" lstr=""/>
+    <sfield name="lbl_pmaw019_r" text="入" comment="" lstr=""/>
+    <sfield name="lbl_chk2" text="未取到成本則不產生資料" comment="" lstr=""/>
+    <sfield name="lbl_pmaw020_mon" text="一般採購價加金額" comment="" lstr=""/>
+    <sfield name="lbl_pmaw020_rate" text="一般採購價加乘百分比" comment="" lstr=""/>
+    <sfield name="lbl_str2" text="%" comment="" lstr=""/>
+    <sfield name="lbl_pmaw020_w" text="進位方法：取位" comment="" lstr=""/>
+    <sfield name="lbl_pmaw020_s" text="捨" comment="" lstr=""/>
+    <sfield name="lbl_pmaw020_r" text="入" comment="" lstr=""/>
+    <sfield name="lbl_pmaw021" text="警告容差率" comment="" lstr=""/>
+    <sfield name="lbl_str3" text="%" comment="" lstr=""/>
+    <sfield name="lbl_pmaw022" text="拒絕容差率" comment="" lstr=""/>
+    <sfield name="lbl_str4" text="%" comment="" lstr=""/>
+    <sfield name="accept" text="確定" comment="" lstr=""/>
+    <sfield name="cancel" text="取消" comment="" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" comment="" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" comment="" lstr=""/>
+    <sact name="accept" text="確定" comment="" lstr=""/>
+    <sact name="cancel" text="取消" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

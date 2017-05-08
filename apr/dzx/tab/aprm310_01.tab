@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aprm310_01" module="apr" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="01251" crtdt="2015-07-31 15:24:44" modid="01251" moddt="2015-07-31 15:32:34" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="專櫃促銷釋出終止">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr500),prei001,preiseq,prei003,prei003_desc(chr500),prei004,prei004_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="selnone"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="selall"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="aprm310_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,prei001,preiseq,prei003,prei004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="sel,prei001,preiseq,prei003,prei004"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel" type="S" default="Y"/>
+      <column id="prei001"/>
+      <column id="preiseq"/>
+      <column id="prei003">
+        <after>
+          <reference field="prei003_desc" ref_field="prei_t.prei003" map_field="prei003" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="prei003_desc"/>
+      <column id="prei004">
+        <after>
+          <reference field="prei004_desc" ref_field="preisite,prei004" map_field="preisite,prei004" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhaelsite=? AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="prei004_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="prei_t" page="1" linked="" pk="preiseq,prei001">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,prei001,preiseq,prei003,&apos;&apos;,prei004,&apos;&apos; FROM prei_t WHERE preient=? AND preiseq=? AND prei001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,prei001,preiseq,prei003,&apos;&apos;,prei004,&apos;&apos; FROM prei_t WHERE preient= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

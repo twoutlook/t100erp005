@@ -1,0 +1,893 @@
+{<section id="aapt400_11.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2015-12-04 17:10:07), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000104
+#+ Filename...: aapt400_11
+#+ Description: 單身其他資訊維護
+#+ Creator....: 03080(2014-04-07 17:36:28)
+#+ Modifier...: 01727 -SD/PR-
+{</section>}
+
+
+
+{<section id="aapt400_11.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_apce_m        RECORD
+       apceseq LIKE apce_t.apceseq, 
+   apce009 LIKE type_t.chr1, 
+   apce002 LIKE apce_t.apce002, 
+   apce015 LIKE apce_t.apce015, 
+   apcedocno LIKE apce_t.apcedocno, 
+   apceld LIKE apce_t.apceld, 
+   apce008 LIKE apce_t.apce008, 
+   apce003 LIKE apce_t.apce003, 
+   apce004 LIKE apce_t.apce004, 
+   apce024 LIKE apce_t.apce024, 
+   apce025 LIKE apce_t.apce025, 
+   apce017 LIKE apce_t.apce017, 
+   apce017_desc LIKE type_t.chr80, 
+   apce018 LIKE apce_t.apce018, 
+   apce018_desc LIKE type_t.chr80, 
+   apce019 LIKE apce_t.apce019, 
+   apce019_desc LIKE type_t.chr80, 
+   apce020 LIKE apce_t.apce020, 
+   apce020_desc LIKE type_t.chr80, 
+   apce011 LIKE apce_t.apce011, 
+   apce011_desc LIKE type_t.chr80, 
+   apce012 LIKE apce_t.apce012, 
+   apce012_desc LIKE type_t.chr80, 
+   apce026 LIKE apce_t.apce026, 
+   apce026_desc LIKE type_t.chr80, 
+   apce016 LIKE apce_t.apce016, 
+   apce016_desc LIKE type_t.chr80, 
+   apce021 LIKE apce_t.apce021, 
+   apce021_desc LIKE type_t.chr80, 
+   apce022 LIKE apce_t.apce022, 
+   apce022_desc LIKE type_t.chr80, 
+   apce023 LIKE apce_t.apce023, 
+   apce023_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_apce_m        type_g_apce_m
+ 
+   DEFINE g_apceseq_t LIKE apce_t.apceseq
+DEFINE g_apcedocno_t LIKE apce_t.apcedocno
+DEFINE g_apceld_t LIKE apce_t.apceld
+
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="aapt400_11.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt400_11(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt400_11 WITH FORM cl_ap_formpath("aap","aapt400_11")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_apce_m.apceseq,g_apce_m.apce009,g_apce_m.apce002,g_apce_m.apce015,g_apce_m.apcedocno,g_apce_m.apceld,g_apce_m.apce008,g_apce_m.apce003,g_apce_m.apce004,g_apce_m.apce024,g_apce_m.apce025,g_apce_m.apce017,g_apce_m.apce018,g_apce_m.apce019,g_apce_m.apce020,g_apce_m.apce011,g_apce_m.apce012,g_apce_m.apce026,g_apce_m.apce016,g_apce_m.apce021,g_apce_m.apce022,g_apce_m.apce023 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apceseq
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_apce_m.apceseq,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD apceseq
+            END IF 
+
+
+
+            #add-point:AFTER FIELD apceseq name="input.a.apceseq"
+            {<point name="input.a.apceseq" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apceseq
+            #add-point:BEFORE FIELD apceseq name="input.b.apceseq"
+            {<point name="input.b.apceseq" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apceseq
+            #add-point:ON CHANGE apceseq name="input.g.apceseq"
+            {<point name="input.g.apceseq" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce009
+            #add-point:BEFORE FIELD apce009 name="input.b.apce009"
+            {<point name="input.b.apce009" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce009
+            
+            #add-point:AFTER FIELD apce009 name="input.a.apce009"
+            {<point name="input.a.apce009" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce009
+            #add-point:ON CHANGE apce009 name="input.g.apce009"
+            {<point name="input.g.apce009" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce002
+            #add-point:BEFORE FIELD apce002 name="input.b.apce002"
+            {<point name="input.b.apce002" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce002
+            
+            #add-point:AFTER FIELD apce002 name="input.a.apce002"
+            {<point name="input.a.apce002" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce002
+            #add-point:ON CHANGE apce002 name="input.g.apce002"
+            {<point name="input.g.apce002" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce015
+            #add-point:BEFORE FIELD apce015 name="input.b.apce015"
+            {<point name="input.b.apce015" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce015
+            
+            #add-point:AFTER FIELD apce015 name="input.a.apce015"
+            {<point name="input.a.apce015" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce015
+            #add-point:ON CHANGE apce015 name="input.g.apce015"
+            {<point name="input.g.apce015" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcedocno
+            #add-point:BEFORE FIELD apcedocno name="input.b.apcedocno"
+            {<point name="input.b.apcedocno" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcedocno
+            
+            #add-point:AFTER FIELD apcedocno name="input.a.apcedocno"
+            {<point name="input.a.apcedocno" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcedocno
+            #add-point:ON CHANGE apcedocno name="input.g.apcedocno"
+            {<point name="input.g.apcedocno" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apceld
+            #add-point:BEFORE FIELD apceld name="input.b.apceld"
+            {<point name="input.b.apceld" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apceld
+            
+            #add-point:AFTER FIELD apceld name="input.a.apceld"
+            {<point name="input.a.apceld" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apceld
+            #add-point:ON CHANGE apceld name="input.g.apceld"
+            {<point name="input.g.apceld" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce008
+            #add-point:BEFORE FIELD apce008 name="input.b.apce008"
+            {<point name="input.b.apce008" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce008
+            
+            #add-point:AFTER FIELD apce008 name="input.a.apce008"
+            {<point name="input.a.apce008" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce008
+            #add-point:ON CHANGE apce008 name="input.g.apce008"
+            {<point name="input.g.apce008" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce003
+            #add-point:BEFORE FIELD apce003 name="input.b.apce003"
+            {<point name="input.b.apce003" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce003
+            
+            #add-point:AFTER FIELD apce003 name="input.a.apce003"
+            {<point name="input.a.apce003" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce003
+            #add-point:ON CHANGE apce003 name="input.g.apce003"
+            {<point name="input.g.apce003" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce004
+            #add-point:BEFORE FIELD apce004 name="input.b.apce004"
+            {<point name="input.b.apce004" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce004
+            
+            #add-point:AFTER FIELD apce004 name="input.a.apce004"
+            {<point name="input.a.apce004" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce004
+            #add-point:ON CHANGE apce004 name="input.g.apce004"
+            {<point name="input.g.apce004" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce024
+            #add-point:BEFORE FIELD apce024 name="input.b.apce024"
+            {<point name="input.b.apce024" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce024
+            
+            #add-point:AFTER FIELD apce024 name="input.a.apce024"
+            {<point name="input.a.apce024" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce024
+            #add-point:ON CHANGE apce024 name="input.g.apce024"
+            {<point name="input.g.apce024" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce025
+            #add-point:BEFORE FIELD apce025 name="input.b.apce025"
+            {<point name="input.b.apce025" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce025
+            
+            #add-point:AFTER FIELD apce025 name="input.a.apce025"
+            {<point name="input.a.apce025" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce025
+            #add-point:ON CHANGE apce025 name="input.g.apce025"
+            {<point name="input.g.apce025" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce017
+            
+            #add-point:AFTER FIELD apce017 name="input.a.apce017"
+            {<point name="input.a.apce017" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce017
+            #add-point:BEFORE FIELD apce017 name="input.b.apce017"
+            {<point name="input.b.apce017" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce017
+            #add-point:ON CHANGE apce017 name="input.g.apce017"
+            {<point name="input.g.apce017" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce018
+            
+            #add-point:AFTER FIELD apce018 name="input.a.apce018"
+            {<point name="input.a.apce018" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce018
+            #add-point:BEFORE FIELD apce018 name="input.b.apce018"
+            {<point name="input.b.apce018" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce018
+            #add-point:ON CHANGE apce018 name="input.g.apce018"
+            {<point name="input.g.apce018" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce019
+            
+            #add-point:AFTER FIELD apce019 name="input.a.apce019"
+            {<point name="input.a.apce019" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce019
+            #add-point:BEFORE FIELD apce019 name="input.b.apce019"
+            {<point name="input.b.apce019" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce019
+            #add-point:ON CHANGE apce019 name="input.g.apce019"
+            {<point name="input.g.apce019" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce020
+            
+            #add-point:AFTER FIELD apce020 name="input.a.apce020"
+            {<point name="input.a.apce020" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce020
+            #add-point:BEFORE FIELD apce020 name="input.b.apce020"
+            {<point name="input.b.apce020" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce020
+            #add-point:ON CHANGE apce020 name="input.g.apce020"
+            {<point name="input.g.apce020" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce011
+            
+            #add-point:AFTER FIELD apce011 name="input.a.apce011"
+            {<point name="input.a.apce011" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce011
+            #add-point:BEFORE FIELD apce011 name="input.b.apce011"
+            {<point name="input.b.apce011" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce011
+            #add-point:ON CHANGE apce011 name="input.g.apce011"
+            {<point name="input.g.apce011" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce012
+            
+            #add-point:AFTER FIELD apce012 name="input.a.apce012"
+            {<point name="input.a.apce012" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce012
+            #add-point:BEFORE FIELD apce012 name="input.b.apce012"
+            {<point name="input.b.apce012" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce012
+            #add-point:ON CHANGE apce012 name="input.g.apce012"
+            {<point name="input.g.apce012" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce026
+            
+            #add-point:AFTER FIELD apce026 name="input.a.apce026"
+            {<point name="input.a.apce026" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce026
+            #add-point:BEFORE FIELD apce026 name="input.b.apce026"
+            {<point name="input.b.apce026" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce026
+            #add-point:ON CHANGE apce026 name="input.g.apce026"
+            {<point name="input.g.apce026" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce016
+            
+            #add-point:AFTER FIELD apce016 name="input.a.apce016"
+            {<point name="input.a.apce016" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce016
+            #add-point:BEFORE FIELD apce016 name="input.b.apce016"
+            {<point name="input.b.apce016" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce016
+            #add-point:ON CHANGE apce016 name="input.g.apce016"
+            {<point name="input.g.apce016" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce021
+            
+            #add-point:AFTER FIELD apce021 name="input.a.apce021"
+            {<point name="input.a.apce021" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce021
+            #add-point:BEFORE FIELD apce021 name="input.b.apce021"
+            {<point name="input.b.apce021" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce021
+            #add-point:ON CHANGE apce021 name="input.g.apce021"
+            {<point name="input.g.apce021" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce022
+            
+            #add-point:AFTER FIELD apce022 name="input.a.apce022"
+            {<point name="input.a.apce022" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce022
+            #add-point:BEFORE FIELD apce022 name="input.b.apce022"
+            {<point name="input.b.apce022" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce022
+            #add-point:ON CHANGE apce022 name="input.g.apce022"
+            {<point name="input.g.apce022" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apce023
+            
+            #add-point:AFTER FIELD apce023 name="input.a.apce023"
+            {<point name="input.a.apce023" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apce023
+            #add-point:BEFORE FIELD apce023 name="input.b.apce023"
+            {<point name="input.b.apce023" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apce023
+            #add-point:ON CHANGE apce023 name="input.g.apce023"
+            {<point name="input.g.apce023" />}
+            #END add-point 
+
+
+ #欄位檢查
+                  #Ctrlp:input.c.apceseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apceseq
+            #add-point:ON ACTION controlp INFIELD apceseq name="input.c.apceseq"
+            {<point name="input.c.apceseq" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce009
+            #add-point:ON ACTION controlp INFIELD apce009 name="input.c.apce009"
+            {<point name="input.c.apce009" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce002
+            #add-point:ON ACTION controlp INFIELD apce002 name="input.c.apce002"
+            {<point name="input.c.apce002" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce015
+            #add-point:ON ACTION controlp INFIELD apce015 name="input.c.apce015"
+            {<point name="input.c.apce015" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apcedocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcedocno
+            #add-point:ON ACTION controlp INFIELD apcedocno name="input.c.apcedocno"
+            {<point name="input.c.apcedocno" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apceld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apceld
+            #add-point:ON ACTION controlp INFIELD apceld name="input.c.apceld"
+            {<point name="input.c.apceld" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce008
+            #add-point:ON ACTION controlp INFIELD apce008 name="input.c.apce008"
+            {<point name="input.c.apce008" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce003
+            #add-point:ON ACTION controlp INFIELD apce003 name="input.c.apce003"
+            {<point name="input.c.apce003" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce004
+            #add-point:ON ACTION controlp INFIELD apce004 name="input.c.apce004"
+            {<point name="input.c.apce004" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce024
+            #add-point:ON ACTION controlp INFIELD apce024 name="input.c.apce024"
+            {<point name="input.c.apce024" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce025
+            #add-point:ON ACTION controlp INFIELD apce025 name="input.c.apce025"
+            {<point name="input.c.apce025" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce017
+            #add-point:ON ACTION controlp INFIELD apce017 name="input.c.apce017"
+            {<point name="input.c.apce017" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce018
+            #add-point:ON ACTION controlp INFIELD apce018 name="input.c.apce018"
+            {<point name="input.c.apce018" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce019
+            #add-point:ON ACTION controlp INFIELD apce019 name="input.c.apce019"
+            {<point name="input.c.apce019" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce020
+            #add-point:ON ACTION controlp INFIELD apce020 name="input.c.apce020"
+            {<point name="input.c.apce020" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce011
+            #add-point:ON ACTION controlp INFIELD apce011 name="input.c.apce011"
+            {<point name="input.c.apce011" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce012
+            #add-point:ON ACTION controlp INFIELD apce012 name="input.c.apce012"
+            {<point name="input.c.apce012" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce026
+            #add-point:ON ACTION controlp INFIELD apce026 name="input.c.apce026"
+            {<point name="input.c.apce026" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce016
+            #add-point:ON ACTION controlp INFIELD apce016 name="input.c.apce016"
+            {<point name="input.c.apce016" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce021
+            #add-point:ON ACTION controlp INFIELD apce021 name="input.c.apce021"
+            {<point name="input.c.apce021" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce022
+            #add-point:ON ACTION controlp INFIELD apce022 name="input.c.apce022"
+            {<point name="input.c.apce022" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.apce023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apce023
+            #add-point:ON ACTION controlp INFIELD apce023 name="input.c.apce023"
+            {<point name="input.c.apce023" />}
+            #END add-point
+
+
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt400_11 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="aapt400_11.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="aapt400_11.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

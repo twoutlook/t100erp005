@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="anmi121" std_prog="anmi121" erpver="1.0" ver="2" module="ANM" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="Y" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 各交易帳戶對應不同帳套有不同的對應會科，在主畫面維護好相關帳戶資料後
+　　　　　　　　到本畫面依樹狀呈現帳戶狀況，點選要維護的交易帳戶編碼後，帶到下面視窗　　
+　　　　　　　　維護會科
+
+作業功能：新增/修改/刪除/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：單檔搭配上方樹狀瀏覽模式F001_vt
+作業資料來源(Master)：
+ 資料來源表： glab_t(會計科目應用帳套設定檔）　
+            glab001 = '40'
+            glab002  ='40' 
+            glab003 = nmas002　交易帳戶編碼
+　　　  glabld = 帳套  
+
+樹狀瀏覽設定：
+ (1)快速查詢下拉選項：nmas001(Key1)
+ (2)樹狀設定：
+     父節點：來源r.t nmas_t 
+     子節點：來源r.t glab_t 
+ (3)樹狀顯示欄位：顯示的格式：
+     nmaa001帳戶編號
+          nmas002交易帳戶編號  nmas003幣別
+                glabld帳別  glab005 缺省科目 科目名稱 
+　　
+備註說明: 本程式可獨立執行, 也可以被 anmi120 call , 
+          被 call 時傳參數 企業帳戶代碼到本程式, 拉出樹狀資料 
+
+交易帳戶編碼對應多個帳套設定會科
+依帳戶開戶組織(nmaa003) 取得歸屬法人, 
+特别说明
+依法人取得帳套基本資料 
+     select glaald  帳套, 
+        glaa004 科目參照表,
+        glaa014 主帳套否 
+        from glaa_t 
+       where  glaacomp = 開戶組織歸屬法人
+         and (glaa014  ='Y'    #--主帳套
+           or glaa008 = 'Y' )  #--平行記帳否
+
+ (帳別權限控管目前暫不處理)
+
+ LET glabld  (帳套) = glaald
+ LET glab001 (設定類型) = 40 
+ LET glab002 (分類碼)= 40 
+ LET glab003 (分類碼值) = 交易帳戶編號 nmas002
+ LET glab004 (科目參照表號)  = glaa004  
+ LET glab005 (會計科目一) = 維護值 
+
+ -------------------------------------------
+ 
+
+
+]]>
+  </all>
+  <field cite_std="N" name="glab_t.glab003" ver="1" src="s" column="glab003" table="glab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：交易帳戶代碼
+   ●欄位控管：
+     資料欄位:[帳套應用會計科目設定檔].[分類碼值]可Display可Input
+     允許空白：NO
+     預設值:根據樹上光標點的位置
+                如果是在根節點上面：預設值為空
+                如果是在其他節點上：預設點的資料的交易帳別代號
+     校驗：錄入值需要存在於nmas_t(企業銀行帳戶明細檔)中，且對應的nmaa001（帳戶編號）需要為有效]]>
+  </field>
+  <field cite_std="N" name="glab_t.glab005" ver="1" src="s" column="glab005" table="glab_t" attribute="" type="" req="Y" i_zoom="q_glac" c_zoom="q_glac" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：帳別
+   ●欄位控管：
+     資料欄位:[帳套應用會計科目設定檔].[帳別]可Display可INPUT
+     允許空白：NO
+     帶值:無
+     開窗傳入值：傳入帳別對應的會計科目參照表號
+                         帳別為空返回帳別欄位輸入值
+     校驗:如果不存在報錯提示：不存在
+            如果無效報錯提示：無效
+
+   ]]>
+  </field>
+  <field cite_std="N" name="glab_t.glabld" ver="1" src="s" column="glabld" table="glab_t" attribute="" type="" req="Y" i_zoom="q_glaa" c_zoom="q_glaa" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：帳別
+   ●欄位控管：
+     資料欄位:[帳套應用會計科目設定檔].[帳別]可Display可INPUT
+     允許空白：NO
+     帶值:無
+     開窗傳入值：傳入當前法人
+     校驗:需要為當前法人下的有效帳別
+             如果不存在報錯提示：不存在
+             如果不是當前法人的帳別報錯提示：帳別對應的法人不對
+             如果是當前法人的帳別但是為無效帳別：無效]]>
+  </field>
+  <field cite_std="N" name="nmas_t.nmas003" ver="1" src="s" column="nmas003" table="nmas_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：幣別
+   ●欄位控管：
+     資料欄位:[企業銀行帳戶明細檔].[交易幣別]可Display
+     帶值:根據交易帳戶代碼自動帶出幣別
+     其他：本欄為不可以錄入，只是顯示]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="glab005_desc" src="s" depend_field="glab_t.glab005" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="glab_t.glab003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glab_t.glab005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glab_t.glabld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmas_t.nmas003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="exporttoexcel" ver="2" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_glab003" text="交易帳戶編號" lstr=""/>
+    <sfield name="lbl_glabld" text="帳別" lstr=""/>
+    <sfield name="lbl_glab005" text="缺省會科" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="lbl_nmaa001" text="帳戶編碼" lstr=""/>
+    <sfield name="lbl_nmas002" text="交易帳戶編碼" lstr=""/>
+    <sfield name="lbl_nmas003" text="幣別" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_glacl004" text="會計科目名稱" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_page_1" text="資產類" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_glac002" text="會計科目編號" lstr=""/>
+    <sfield name="lbl_glac003" text="統制/明細別" lstr=""/>
+    <sfield name="lbl_glac009" text="內部管理科目" lstr=""/>
+    <sfield name="lbl_page_2" text="負債類" lstr=""/>
+    <sfield name="lbl_page_3" text="公用類" lstr=""/>
+    <sfield name="lbl_page_4" text="股東權益類" lstr=""/>
+    <sfield name="lbl_page_5" text="成本類" lstr=""/>
+    <sfield name="lbl_page_6" text="損益類" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

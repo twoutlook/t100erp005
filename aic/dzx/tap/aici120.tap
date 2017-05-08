@@ -1,0 +1,5089 @@
+<add_points prog="aici120" std_prog="aici120" erpver="1.0" module="AIC" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.aici120_icag001_desc" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION aici120_icag001_desc()
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_icag_m.icag001
+    CALL ap_ref_array2(g_ref_fields,"SELECT icaal003 FROM icaal_t WHERE icaalent='"||g_enterprise||"' AND icaal001=? AND icaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_icag_m.icag001_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_icag_m.icag001_desc
+END FUNCTION]]>
+</point>
+  <point name="function.aici120_icag003_ref" cite_std="N" status="u" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION aici120_icag003_ref()
+   IF g_icag_m.icag001 <> 'ALL' THEN 
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_icag_m.icag001
+      LET g_ref_fields[2] = g_icag_d[l_ac].icag003
+      CALL ap_ref_array2(g_ref_fields,"SELECT icab003 FROM icab_t WHERE icab001=? AND icab002=? ","") RETURNING g_rtn_fields
+      LET g_icag_d[l_ac].icag004 = g_rtn_fields[1]
+      CALL aici120_icag004_desc() 
+      DISPLAY BY NAME g_icag_d[l_ac].icag004 
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.aici120_icag004_desc" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION aici120_icag004_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_icag_d[l_ac].icag004
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_icag_d[l_ac].icag004_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_icag_d[l_ac].icag004_desc
+END FUNCTION]]>
+</point>
+  <point name="function.aici120_icag008_desc" cite_std="N" status="" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION aici120_icag008_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_icag_d[l_ac].icag008
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooail003 FROM ooail_t WHERE ooailent='"||g_enterprise||"' AND ooail001=? AND ooail002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_icag_d[l_ac].icag008_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_icag_d[l_ac].icag008_desc
+END FUNCTION]]>
+</point>
+  <point name="function.aici120_icag_b" cite_std="N" status="u" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION aici120_icag_b()
+DEFINE l_cnt       LIKE type_t.num5
+DEFINE l_sql       STRING
+DEFINE l_icag    RECORD
+       icagent LIKE icag_t.icagent,
+       icagsite LIKE icag_t.icagsite,
+       icag001 LIKE icag_t.icag001,
+       icag002 LIKE icag_t.icag002,
+       icag003 LIKE icag_t.icag003, 
+       icag004 LIKE icag_t.icag004,  
+       icag005 LIKE icag_t.icag005,
+       icag006 LIKE icag_t.icag006,
+       icag007 LIKE icag_t.icag007,   
+       icag008 LIKE icag_t.icag008, 
+       icagownid LIKE icag_t.icagownid, 
+       icagowndp LIKE icag_t.icagowndp, 
+       icagcrtid LIKE icag_t.icagcrtid, 
+       icagcrtdp LIKE icag_t.icagcrtdp, 
+       icagcrtdt DATETIME YEAR TO SECOND, 
+       icagmodid LIKE icag_t.icagmodid, 
+       icagmoddt DATETIME YEAR TO SECOND
+       END RECORD
+
+   LET l_cnt = 0 
+   SELECT COUNT(*) INTO l_cnt 
+     FROM icag_t
+    WHERE icagent = g_enterprise
+      AND icag001 = g_icag_m.icag001
+      AND icag002 = g_icag_m.icag002
+   IF g_icag_m.icag001 <> 'ALL' THEN    
+      IF l_cnt > 0 THEN
+         SELECT DISTINCT icag006 INTO l_icag.icag006
+           FROM icag_t
+          WHERE icagent = g_enterprise
+            AND icag001 = g_icag_m.icag001
+            AND icag002 = g_icag_m.icag002
+         IF cl_null(l_icag.icag006)  THEN LET l_icag.icag006 = '1' END IF 
+         
+         LET l_sql = " SELECT DISTINCT icab002,icab003 FROM icab_t ",
+                     "  WHERE icabent = '",g_enterprise,"'",
+                     "    AND icab001 = '",g_icag_m.icag001,"'",
+                     "    AND icab002 NOT IN (SELECT icag003 FROM icag_t WHERE icagent ='",g_enterprise,"'",
+                     "                         AND icag001 ='",g_icag_m.icag001,"' AND icag002 = '",g_icag_m.icag002,"')"
+      ELSE
+         LET l_icag.icag006 = '1'
+         LET l_sql = " SELECT DISTINCT icab002,icab003 FROM icab_t ",
+                     "  WHERE icabent = '",g_enterprise,"'",
+                     "    AND icab001 = '",g_icag_m.icag001,"'"      
+      END IF
+      LET l_icag.icagent = g_enterprise
+      LET l_icag.icagsite = g_site
+      LET l_icag.icag001 = g_icag_m.icag001
+      LET l_icag.icag002 = g_icag_m.icag002  
+      LET l_icag.icag005 = '1'
+      LET l_icag.icag007 = ''   
+      LET l_icag.icag008 = '' 
+      LET l_icag.icagownid = g_user
+      LET l_icag.icagowndp = g_dept
+      LET l_icag.icagcrtid = g_user 
+      LET l_icag.icagcrtdp = g_dept 
+      LET l_icag.icagcrtdt = cl_get_current() 
+      LET l_icag.icagmodid = ''
+      LET l_icag.icagmoddt = ''   
+      PREPARE icag_pre FROM l_sql
+      DECLARE icag_cur CURSOR FOR icag_pre
+      FOREACH icag_cur INTO l_icag.icag003,l_icag.icag004
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+          
+         INSERT INTO icag_t VALUES(l_icag.*)
+      END FOREACH
+   ELSE
+      IF l_cnt > 0 THEN
+         CALL aici120_b_fill("1=1")
+      END IF
+   END IF
+   
+END FUNCTION]]>
+</point>
+  <point name="construct.c.icag001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_icaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icag001  #顯示到畫面上
+            NEXT FIELD icag001                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page1.icag003" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_icab002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icag003  #顯示到畫面上
+            NEXT FIELD icag003                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page1.icag004" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001_12()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icag004  #顯示到畫面上
+            NEXT FIELD icag004                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page1.icag008" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooaj002_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icag008  #顯示到畫面上
+            NEXT FIELD icag008                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page2.icagcrtdp" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icagcrtdp  #顯示到畫面上
+            NEXT FIELD icagcrtdp                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page2.icagcrtid" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icagcrtid  #顯示到畫面上
+            NEXT FIELD icagcrtid                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page2.icagmodid" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icagmodid  #顯示到畫面上
+            NEXT FIELD icagmodid                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page2.icagowndp" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icagowndp  #顯示到畫面上
+            NEXT FIELD icagowndp                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page2.icagownid" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icagownid  #顯示到畫面上
+            NEXT FIELD icagownid                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE g_flag   LIKE type_t.chr1
+DEFINE g_icag_d_o        type_g_icag_d]]>
+</point>
+  <point name="input.a.icag001" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            CALL aici120_icag001_desc()
+            IF NOT cl_null(g_icag_m.icag001) AND g_icag_m.icag001 <> 'ALL' THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_icag_m.icag001
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_icaa001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icag_m.icag001 = g_icag_m_t.icag001
+                  NEXT FIELD CURRENT
+               END IF
+            ELSE
+               LET g_icag_m.icag001 = 'ALL'
+            END IF 
+
+            #此段落由子樣板a05產生
+            IF NOT cl_null(g_icag_m.icag001) AND NOT cl_null(g_icag_m.icag002) THEN
+               IF NOT aici120_ex_b() AND p_cmd = 'a' THEN 
+                  LET g_flag = 'Y'
+                  EXIT DIALOG 
+               END IF            
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_icag_m.icag001 != g_icag001_t  OR g_icag_m.icag002 != g_icag002_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM icag_t WHERE "||"icagent = '" ||g_enterprise|| "' AND "||"icag001 = '"||g_icag_m.icag001 ||"' AND "|| "icag002 = '"||g_icag_m.icag002 ||"'",'std-00004',0) THEN 
+                     LET g_icag_m.icag001 = g_icag_m_t.icag001
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.icag002" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_icag_m.icag001) AND NOT cl_null(g_icag_m.icag002) THEN
+               IF NOT aici120_ex_b() AND p_cmd = 'a' THEN 
+                  LET g_flag = 'Y'
+                  EXIT DIALOG 
+               END IF              
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_icag_m.icag001 != g_icag001_t  OR g_icag_m.icag002 != g_icag002_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM icag_t WHERE "||"icagent = '" ||g_enterprise|| "' AND "||"icag001 = '"||g_icag_m.icag001 ||"' AND "|| "icag002 = '"||g_icag_m.icag002 ||"'",'std-00004',0) THEN 
+                     LET g_icag_m.icag002 = g_icag_m_t.icag002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.page1.icag003" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            CALL aici120_icag003_ref()
+            IF NOT cl_null(g_icag_d[l_ac].icag003) AND g_icag_m.icag001 <> 'ALL' THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_icag_m.icag001
+               LET g_chkparam.arg2 = g_icag_d[l_ac].icag003   
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_icab002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME
+                  IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_icag_d[l_ac].icag003 <> g_icag_d_o.icag003 OR cl_null(g_icag_d_o.icag003))) THEN 
+                     CALL aici120_icag008_chk()
+                  END IF                  
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icag_d[l_ac].icag003 = g_icag_d_t.icag003
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+
+
+            #此段落由子樣板a05產生
+            IF  g_icag_m.icag001 IS NOT NULL AND g_icag_m.icag002 IS NOT NULL AND g_icag_d[g_detail_idx].icag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_icag_m.icag001 != g_icag001_t OR g_icag_m.icag002 != g_icag002_t OR g_icag_d[g_detail_idx].icag003 != g_icag_d_t.icag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM icag_t WHERE "||"icagent = '" ||g_enterprise|| "' AND "||"icag001 = '"||g_icag_m.icag001 ||"' AND "|| "icag002 = '"||g_icag_m.icag002 ||"' AND "|| "icag003 = '"||g_icag_d[g_detail_idx].icag003 ||"'",'std-00004',0) THEN 
+                     LET g_icag_d[l_ac].icag003 = g_icag_d_t.icag003
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_icag_d_o.icag003 = g_icag_d[l_ac].icag003 
+]]>
+</point>
+  <point name="input.a.page1.icag004" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            CALL aici120_icag004_desc()
+            IF NOT cl_null(g_icag_d[l_ac].icag004) AND g_icag_d[l_ac].icag004 <> 'ALL'THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_icag_d[l_ac].icag004
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001_13") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_icag_d[l_ac].icag004 <> g_icag_d_o.icag004 OR cl_null(g_icag_d_o.icag004))) THEN 
+                     CALL aici120_icag008_chk()
+                  END IF
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icag_d[l_ac].icag004 = g_icag_d_t.icag004
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            IF  g_icag_m.icag001 IS NOT NULL AND g_icag_m.icag002 IS NOT NULL AND g_icag_d[g_detail_idx].icag004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_icag_m.icag001 != g_icag001_t OR g_icag_m.icag002 != g_icag002_t OR g_icag_d[g_detail_idx].icag004 != g_icag_d_t.icag004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM icag_t WHERE "||"icagent = '" ||g_enterprise|| "' AND "||"icag001 = '"||g_icag_m.icag001 ||"' AND "|| "icag002 = '"||g_icag_m.icag002 ||"' AND "|| "icag004 = '"||g_icag_d[g_detail_idx].icag004 ||"'",'std-00004',0) THEN 
+                     LET g_icag_d[l_ac].icag004 = g_icag_d_t.icag004
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF 
+            LET g_icag_d_o.icag004 = g_icag_d[l_ac].icag004            ]]>
+</point>
+  <point name="input.a.page1.icag007" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_icag_d[l_ac].icag007) THEN 
+            END IF 
+
+]]>
+</point>
+  <point name="input.a.page1.icag008" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            CALL aici120_icag008_desc()
+            IF NOT cl_null(g_icag_d[l_ac].icag008) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_icag_d[l_ac].icag004
+               LET g_chkparam.arg2 = g_icag_d[l_ac].icag008
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooaj002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icag_d[l_ac].icag008 = g_icag_d_t.icag008
+                  NEXT FIELD CURRENT
+               END IF
+            END IF ]]>
+</point>
+  <point name="input.a.page2.icag003_2" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_icag_m.icag001 IS NOT NULL AND g_icag_m.icag002 IS NOT NULL AND g_icag2_d[g_detail_idx].icag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_icag_m.icag001 != g_icag001_t OR g_icag_m.icag002 != g_icag002_t OR g_icag2_d[g_detail_idx].icag003 != g_icag2_d_t.icag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM icag_t WHERE "||"icagent = '" ||g_enterprise|| "' AND "||"icag001 = '"||g_icag_m.icag001 ||"' AND "|| "icag002 = '"||g_icag_m.icag002 ||"' AND "|| "icag003 = '"||g_icag2_d[g_detail_idx].icag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   IF g_flag = 'Y' THEN 
+      LET g_flag = 'N'
+      CALL aici120_icag_b()
+      CALL aici120_modify()
+   END IF      ]]>
+</point>
+  <point name="input.b.icag001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            CALL aici120_icag001_desc()]]>
+</point>
+  <point name="input.b.page1.icag003" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            CALL aici120_icag003_ref()]]>
+</point>
+  <point name="input.b.page1.icag004" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            CALL aici120_icag004_desc()]]>
+</point>
+  <point name="input.b.page1.icag008" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            CALL aici120_icag008_desc()]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   LET g_errshow = 1]]>
+</point>
+  <point name="input.body.before_insert" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF g_icag_m.icag001 = 'ALL' THEN 
+               IF cl_null(g_icag_d[l_ac].icag003) THEN 
+                  SELECT MAX(icag003) INTO g_icag_d[l_ac].icag003
+                    FROM icag_t
+                   WHERE icagent = g_enterprise
+                     AND icag001 = g_icag_m.icag001
+                     AND icag002 = g_icag_m.icag002
+                  IF cl_null(g_icag_d[l_ac].icag003) THEN
+                     LET g_icag_d[l_ac].icag003 = 0
+                  ELSE
+                     LET g_icag_d[l_ac].icag003 = g_icag_d[l_ac].icag003 + 1
+                  END IF 
+               END IF
+            END IF
+            LET g_icag_d_o.* = g_icag_d[l_ac].*]]>
+</point>
+  <point name="input.c.icag001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icag_m.icag001             #給予default值
+
+            #給予arg
+            
+            CALL q_icaa001()                                #呼叫開窗
+
+            LET g_icag_m.icag001 = g_qryparam.return1              
+
+            DISPLAY g_icag_m.icag001 TO icag001              #
+
+            NEXT FIELD icag001                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.page1.icag003" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icag_d[l_ac].icag003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_icag_m.icag001
+            
+            CALL q_icab002()                                #呼叫開窗
+
+            LET g_icag_d[l_ac].icag003 = g_qryparam.return1              
+
+            DISPLAY g_icag_d[l_ac].icag003 TO icag003              #
+
+            NEXT FIELD icag003                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.page1.icag004" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icag_d[l_ac].icag004             #給予default值
+
+            #給予arg
+            
+            CALL q_ooef001_12()                                #呼叫開窗
+
+            LET g_icag_d[l_ac].icag004 = g_qryparam.return1              
+
+            DISPLAY g_icag_d[l_ac].icag004 TO icag004              #
+
+            NEXT FIELD icag004                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.page1.icag008" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icag_d[l_ac].icag008             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_icag_d[l_ac].icag004
+
+            
+            CALL q_ooaj002_3()                                #呼叫開窗
+
+            LET g_icag_d[l_ac].icag008 = g_qryparam.return1              
+
+            DISPLAY g_icag_d[l_ac].icag008 TO icag008              #
+
+            NEXT FIELD icag008                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.g.page1.icag005" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            CALL aici120_set_entry_b(l_cmd)
+            CALL aici120_set_no_entry_b(l_cmd)
+            CALL aici120_icag008_desc()
+            DISPLAY BY NAME g_icag_d[l_ac].icag007,g_icag_d[l_ac].icag008]]>
+</point>
+  <point name="insert.before" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   LET g_flag = 'N']]>
+</point>
+  <point name="insert.default" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      LET g_icag_m.icagsite = g_site
+      LET g_icag_m_t.* = g_icag_m.*]]>
+</point>
+  <point name="ref_show.body.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[
+      CALL aici120_icag004_desc()
+
+      CALL aici120_icag008_desc()
+]]>
+</point>
+  <point name="ref_show.body2.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icag2_d[l_ac].icagownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_icag2_d[l_ac].icagownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icag2_d[l_ac].icagownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icag2_d[l_ac].icagowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_icag2_d[l_ac].icagowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icag2_d[l_ac].icagowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icag2_d[l_ac].icagcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_icag2_d[l_ac].icagcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icag2_d[l_ac].icagcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icag2_d[l_ac].icagcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_icag2_d[l_ac].icagcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icag2_d[l_ac].icagcrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icag2_d[l_ac].icagmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_icag2_d[l_ac].icagmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icag2_d[l_ac].icagmodid_desc
+]]>
+</point>
+  <point name="ref_show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[
+   CALL aici120_icag001_desc()
+]]>
+</point>
+  <point name="set_entry_b.set_entry_b" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   CALL cl_set_comp_entry("icag003,icag004,icag007,icag008",TRUE)]]>
+</point>
+  <point name="set_no_entry_b.set_no_entry_b段" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   IF g_icag_m.icag001 = 'ALL' THEN 
+      CALL cl_set_comp_entry("icag003",FALSE)
+   ELSE
+      CALL cl_set_comp_entry("icag004",FALSE)   
+   END IF
+   IF g_icag_d[l_ac].icag005 <> '1' THEN 
+      CALL cl_set_comp_entry("icag007,icag008",FALSE)
+      LET g_icag_d[l_ac].icag007 = ''
+      LET g_icag_d[l_ac].icag008 = ''  
+   END IF ]]>
+</point>
+  <point name="show.before" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   IF g_icag_m.icag001 = 'ALL' THEN 
+      CALL cl_set_act_visible("reproduce",FALSE)
+   ELSE
+      CALL cl_set_act_visible("reproduce",TRUE)   
+   END IF]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_refresh_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.body.before_row" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.page1.action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.body2.before_row" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.body2.action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog2" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.action.filter" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify_detail" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.related_document" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.agendum" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.followup" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_search.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_browser_fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_count" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_sql_rank" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_pre" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.reference" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_headershow.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.more" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_browser_refresh.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.head.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.head.before_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.icag001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.icag001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.icag002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.icag002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.icag002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.icag006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.icag006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.icag006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.icagsite" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.icagsite" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.icagsite" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.body.before_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.icag003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.icag003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.icag004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.icag004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.icag005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.icag005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.icag005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.icag008" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.icag008" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.icag007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.icag007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.icag007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.icagownid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page2.icagownid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.icagowndp" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page2.icagowndp" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.icagcrtid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page2.icagcrtid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.icagcrtdp" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page2.icagcrtdp" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.icagcrtdt" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.icagmodid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page2.icagmodid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.icagmoddt" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.more_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.after_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.cs_ctrl" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.add_cs" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.b_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter_parser.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="query.befroe_query" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.before_fetch" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="insert.after_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="insert.after_insert2" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.b_key_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.m_key_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.a_key_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_entry" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_no_entry" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.icag001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.icag002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.icag002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.icag006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.icag006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.icag006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.icagsite" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.icagsite" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.icagsite" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.icag002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.icag006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.icagsite" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_row.set_entry_b" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_row" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[            LET g_icag_d_o.* = g_icag_d[l_ac].* ]]>
+</point>
+  <point name="input.body.before_insert.set_entry_b" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.icag003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.icag004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.icag005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.icag005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.icag008" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.icag007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.icag007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.icag005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.icag007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body2.action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.more_inputarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="show.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="show.follow_pic" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="show.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ref_show.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.b_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.after_reproduce" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.b_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.m_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.a_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.befroe.related_document_remove" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.b_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.m_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql_after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.fill_before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="bfill.foreach" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.more" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.after_fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="before_delete.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.b_single_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.m_single_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_single_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="update_b.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="lock_b.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="unlock_b.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.field_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.after_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.field_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.after_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry_b.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="default_search.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="default_search.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fill_chk.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fill_chk.other" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.page_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_pk_array.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_pk_array.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_pk_array.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="function.aici120_icag008_chk" cite_std="N" status="u" ver="" src="s" new="Y" order="6">
+<![CDATA[
+PRIVATE FUNCTION aici120_icag008_chk()
+   IF NOT cl_null(g_icag_d[l_ac].icag008) THEN 
+      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+      INITIALIZE g_chkparam.* TO NULL
+      
+      #設定g_chkparam.*的參數
+      LET g_chkparam.arg1 = g_icag_d[l_ac].icag004
+      LET g_chkparam.arg2 = g_icag_d[l_ac].icag008
+         
+      #呼叫檢查存在並帶值的library
+      IF cl_chk_exist("v_ooaj002") THEN
+         #檢查成功時後續處理
+         #LET  = g_chkparam.return1
+         #DISPLAY BY NAME 
+      ELSE
+         #檢查失敗時後續處理
+         LET g_icag_d[l_ac].icag008 = ''
+         CALL aici120_icag008_desc()
+      END IF
+   END IF 
+END FUNCTION]]>
+</point>
+  <point name="function.aici120_ex_b" cite_std="N" status="u" ver="" src="s" new="Y" order="7">
+<![CDATA[
+PRIVATE FUNCTION aici120_ex_b()
+DEFINE l_cnt     LIKE type_t.num5
+DEFINE r_success LIKE type_t.num5
+   
+   LET r_success = TRUE
+   LET l_cnt = 0 
+   SELECT COUNT(*) INTO l_cnt 
+     FROM icag_t
+    WHERE icagent = g_enterprise
+      AND icag001 = g_icag_m.icag001
+      AND icag002 = g_icag_m.icag002    
+   IF l_cnt > 0 THEN
+      LET r_success = FALSE
+   END IF  
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <section id="aici120.b_fill" ver="2" status="" src="s">
+<![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION aici120_b_fill(p_wc2)
+   DEFINE p_wc2      STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point     
+ 
+   #先清空單身變數內容
+   CALL g_icag_d.clear()
+   CALL g_icag2_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+      LET g_sql = "SELECT  UNIQUE icag003,icag004,'',icag005,icag008,'',icag007,icag003,icagownid,'', 
+          icagowndp,'',icagcrtid,'',icagcrtdp,'',icagcrtdt,icagmodid,'',icagmoddt FROM icag_t",   
+                  "",
+                  
+                  " WHERE icagent= ? AND icag001=? AND icag002=?"  
+                  
+   IF NOT cl_null(g_wc2_table1) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2_table1 CLIPPED
+   END IF
+   
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+   
+   #子單身的WC
+   
+   
+   #判斷是否填充
+   IF aici120_fill_chk(1) THEN
+      LET g_sql = g_sql, " ORDER BY icag_t.icag003"
+      
+      #add-point:b_fill段fill_before
+      {<point name="b_fill.fill_before"/>}
+      #end add-point
+      
+      PREPARE aici120_pb FROM g_sql
+      DECLARE b_fill_cs CURSOR FOR aici120_pb
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs USING g_enterprise,g_icag_m.icag001
+                                               ,g_icag_m.icag002
+ 
+                                               
+      FOREACH b_fill_cs INTO g_icag_d[l_ac].icag003,g_icag_d[l_ac].icag004,g_icag_d[l_ac].icag004_desc, 
+          g_icag_d[l_ac].icag005,g_icag_d[l_ac].icag008,g_icag_d[l_ac].icag008_desc,g_icag_d[l_ac].icag007, 
+          g_icag2_d[l_ac].icag003,g_icag2_d[l_ac].icagownid,g_icag2_d[l_ac].icagownid_desc,g_icag2_d[l_ac].icagowndp, 
+          g_icag2_d[l_ac].icagowndp_desc,g_icag2_d[l_ac].icagcrtid,g_icag2_d[l_ac].icagcrtid_desc,g_icag2_d[l_ac].icagcrtdp, 
+          g_icag2_d[l_ac].icagcrtdp_desc,g_icag2_d[l_ac].icagcrtdt,g_icag2_d[l_ac].icagmodid,g_icag2_d[l_ac].icagmodid_desc, 
+          g_icag2_d[l_ac].icagmoddt
+                             ,g_icag_d[l_ac].icag003,g_icag_d[l_ac].icag004,g_icag_d[l_ac].icag004_desc, 
+                                 g_icag_d[l_ac].icag005,g_icag_d[l_ac].icag008,g_icag_d[l_ac].icag008_desc, 
+                                 g_icag_d[l_ac].icag007,g_icag2_d[l_ac].icag003,g_icag2_d[l_ac].icagownid, 
+                                 g_icag2_d[l_ac].icagownid_desc,g_icag2_d[l_ac].icagowndp,g_icag2_d[l_ac].icagowndp_desc, 
+                                 g_icag2_d[l_ac].icagcrtid,g_icag2_d[l_ac].icagcrtid_desc,g_icag2_d[l_ac].icagcrtdp, 
+                                 g_icag2_d[l_ac].icagcrtdp_desc,g_icag2_d[l_ac].icagcrtdt,g_icag2_d[l_ac].icagmodid, 
+                                 g_icag2_d[l_ac].icagmodid_desc,g_icag2_d[l_ac].icagmoddt
+ 
+                             
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+                           
+         #add-point:b_fill段資料填充
+         {<point name="b_fill.fill"/>}
+         #end add-point
+      
+         #帶出公用欄位reference值
+         
+         
+         #此段落由子樣板a12產生
+      #LET g_icag2_d[l_ac].icagownid_desc = cl_get_username(g_icag2_d[l_ac].icagownid)
+      #LET g_icag2_d[l_ac].icagowndp_desc = cl_get_deptname(g_icag2_d[l_ac].icagowndp)
+      #LET g_icag2_d[l_ac].icagcrtid_desc = cl_get_username(g_icag2_d[l_ac].icagcrtid)
+      #LET g_icag2_d[l_ac].icagcrtdp_desc = cl_get_deptname(g_icag2_d[l_ac].icagcrtdp)
+      #LET g_icag2_d[l_ac].icagmodid_desc = cl_get_username(g_icag2_d[l_ac].icagmodid)
+      ##LET .icagcnfid_desc = cl_get_deptname(.icagcnfid)
+      ##LET .icagpstid_desc = cl_get_deptname(.icagpstid)
+      
+ 
+ 
+ 
+        
+         #add-point:單身資料抓取
+         {<point name="bfill.foreach"/>}
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      
+            CALL g_icag_d.deleteElement(g_icag_d.getLength())
+      CALL g_icag2_d.deleteElement(g_icag2_d.getLength())
+ 
+   END IF
+   
+   #add-point:b_fill段more
+   {<point name="b_fill.more"/>}
+   #end add-point
+   
+   LET g_rec_b=l_ac-1
+   DISPLAY g_rec_b TO FORMONLY.cnt  
+   LET l_ac = g_cnt
+   LET g_cnt = 0 
+ 
+   FREE aici120_pb   
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.b_fill2" ver="1" status="" src="s">
+<![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION aici120_b_fill2(pi_idx)
+   DEFINE pi_idx          LIKE type_t.num5
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+      
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.before_delete" ver="1" status="" src="s">
+<![CDATA[#+ 單身db資料刪除
+PRIVATE FUNCTION aici120_before_delete()
+   #add-point:before_delete段define
+   {<point name="before_delete.define"/>}
+   #end add-point 
+   
+   #add-point:單筆刪除前
+   {<point name="delete.body.b_single_delete" mark="Y"/>}
+   #end add-point
+   
+   DELETE FROM icag_t
+    WHERE icagent = g_enterprise AND icag001 = g_icag_m.icag001 AND
+                              icag002 = g_icag_m.icag002 AND
+ 
+          icag003 = g_icag_d_t.icag003
+ 
+      
+   #add-point:單筆刪除中
+   {<point name="delete.body.m_single_delete"/>}
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("icag_t",SQLCA.sqlcode,1)
+      RETURN FALSE 
+   END IF
+   
+   #add-point:單筆刪除後
+   {<point name="delete.body.a_single_delete"/>}
+   #end add-point
+ 
+   LET g_rec_b = g_rec_b-1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+ 
+   RETURN TRUE
+    
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.browser_fill" ver="2" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION aici120_browser_fill(ps_page_action)
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   DEFINE l_searchcol       STRING
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point    
+   
+   #add-point:browser_fill段動作開始前
+   {<point name="browser_fill.before_browser_fill"/>}
+   #end add-point    
+   
+   CALL g_browser.clear()
+ 
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = '0' THEN
+      LET l_searchcol = "icag001"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+   
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+   IF cl_null(l_wc) THEN  #p_wc 查詢條件
+      RETURN
+   END IF
+   
+   IF g_wc2 <> " 1=1" OR NOT cl_null(g_wc2) THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE icag001 ",
+                      ", icag002 ",
+ 
+                      " FROM icag_t ",
+                      " ",
+                      " ",
+ 
+                      " WHERE icagent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("icag_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE icag001 ",
+                      ", icag002 ",
+ 
+                      " FROM icag_t ",
+                      " ",
+                      " ",
+                      " WHERE icagent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED, cl_sql_add_filter("icag_t")
+   END IF 
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+ 
+   #add-point:browser_fill,count前
+   {<point name="browser_fill.before_count"/>}
+   #end add-point
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse AND g_error_show = 1THEN
+      CALL cl_err(g_browser_cnt,'9035',1)
+   END IF
+   LET g_error_show = 0
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #LET g_page_action = ps_page_action          # Keep Action
+   IF ps_page_action = "first" OR              
+      ps_page_action = "prev"  OR
+      ps_page_action = "next"  OR
+      ps_page_action = "last"  THEN
+      LET g_page_action = ps_page_action        #g_page_action 這個會影響 browser 下面四個button 的判斷 
+   END IF
+   
+   CASE ps_page_action
+      WHEN "F" 
+         LET g_pagestart = 1
+          
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+             LET g_pagestart = 1
+         END IF
+          
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+         
+   END CASE
+   
+   #單身有輸入查詢條件且非null
+   IF g_wc2 <> " 1=1" AND NOT cl_null(g_wc2) THEN 
+ 
+      #依照icag001,'',icag002 Browser欄位定義(取代原本bs_sql功能)
+      LET l_sub_sql  = "SELECT DISTINCT icag001,'',icag002 ",
+                       " FROM icag_t ",
+ 
+                       " ",
+                       " WHERE icagent = '" ||g_enterprise|| "' AND ", g_wc," AND ",g_wc2, cl_sql_add_filter("icag_t")
+ 
+   ELSE
+      #單身無輸入資料
+      LET l_sub_sql  = "SELECT DISTINCT icag001,'',icag002 ",
+                       " FROM icag_t ",
+                       " WHERE icagent = '" ||g_enterprise|| "' AND ", g_wc, cl_sql_add_filter("icag_t")
+                 
+   END IF
+   
+   #add-point:browser_fill,sql_rank前
+   {<point name="browser_fill.before_sql_rank"/>}
+   #end add-point
+   
+   LET l_sql_rank = "SELECT icag001,'',icag002,DENSE_RANK() OVER(ORDER BY icag001 ",g_order,") AS RANK ", 
+
+                    " FROM (",l_sub_sql,") "
+                       
+   #定義翻頁CURSOR
+   LET g_sql= " SELECT icag001,'',icag002 FROM (",l_sql_rank,") WHERE RANK>=",g_pagestart,
+              " AND RANK < ", g_pagestart + g_max_browse,
+              " ORDER BY ",l_searchcol, " ", g_order
+                
+   #add-point:browser_fill,pre前
+   {<point name="browser_fill.before_pre"/>}
+   #end add-point
+                
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_icag001,g_browser[g_cnt].b_icag001_desc,g_browser[g_cnt].b_icag002  
+          
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[g_cnt].b_icag001
+      CALL ap_ref_array2(g_ref_fields,"SELECT icaal003 FROM icaal_t WHERE icaalent='"||g_enterprise||"' AND icaal001=? AND icaal002='"||g_lang||"'", 
+          "") RETURNING g_rtn_fields
+      LET g_browser[g_cnt].b_icag001_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_browser[g_cnt].b_icag001_desc
+ 
+      
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point    
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   IF g_browser.getLength() = 0 AND g_wc THEN
+      INITIALIZE g_icag_m.* TO NULL
+      CALL g_icag_d.clear()
+      CALL g_icag2_d.clear()
+ 
+      CLEAR FORM
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   CALL aici120_fetch('')
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.browser_search" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料搜尋
+PRIVATE FUNCTION aici120_browser_search(p_type)
+   DEFINE p_type LIKE type_t.chr10
+   #add-point:browser_search段define
+   {<point name="browser_search.define"/>}
+   #end add-point    
+   
+   #若無輸入關鍵字則查找出所有資料
+   IF NOT cl_null(g_searchstr) AND g_searchcol='0' THEN
+      CALL cl_err("searchcol","std-00005",0)
+      RETURN FALSE 
+   END IF 
+   
+   IF NOT cl_null(g_searchstr) THEN
+      LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+      LET g_wc = g_wc.toLowerCase()
+   ELSE
+      LET g_wc = " 1=1"
+   END IF         
+   
+   #若為排序搜尋則添加以下條件
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET g_wc = g_wc, " ORDER BY icag001"
+   ELSE
+      LET g_wc = g_wc, " ORDER BY ", g_searchcol
+   END IF 
+ 
+   CALL aici120_browser_fill("F")
+   CALL ui.Interface.refresh()
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.construct" ver="3" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION aici120_construct()
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point    
+ 
+   #清除畫面上相關資料
+   CLEAR FORM                 
+   INITIALIZE g_icag_m.* TO NULL
+   CALL g_icag_d.clear()
+   CALL g_icag2_d.clear()
+ 
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   LET g_action_choice = ""
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段construct外
+   {<point name="cs.head.before"/>}
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON icag001,icag002,icag006,icagsite
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+        #---------------------------<  Master  >---------------------------
+         #----<<icag001>>----
+         #Ctrlp:construct.c.icag001
+         ON ACTION controlp INFIELD icag001
+            #add-point:ON ACTION controlp INFIELD icag001
+            {<point name="construct.c.icag001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag001
+            #add-point:BEFORE FIELD icag001
+            {<point name="construct.b.icag001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag001
+            
+            #add-point:AFTER FIELD icag001
+            {<point name="construct.a.icag001" />}
+            #END add-point
+            
+ 
+         #----<<icag001_desc>>----
+         #----<<icag002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag002
+            #add-point:BEFORE FIELD icag002
+            {<point name="construct.b.icag002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag002
+            
+            #add-point:AFTER FIELD icag002
+            {<point name="construct.a.icag002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.icag002
+         ON ACTION controlp INFIELD icag002
+            #add-point:ON ACTION controlp INFIELD icag002
+            {<point name="construct.c.icag002" />}
+            #END add-point
+ 
+         #----<<icag006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag006
+            #add-point:BEFORE FIELD icag006
+            {<point name="construct.b.icag006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag006
+            
+            #add-point:AFTER FIELD icag006
+            {<point name="construct.a.icag006" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.icag006
+         ON ACTION controlp INFIELD icag006
+            #add-point:ON ACTION controlp INFIELD icag006
+            {<point name="construct.c.icag006" />}
+            #END add-point
+ 
+         #----<<icagsite>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icagsite
+            #add-point:BEFORE FIELD icagsite
+            {<point name="construct.b.icagsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icagsite
+            
+            #add-point:AFTER FIELD icagsite
+            {<point name="construct.a.icagsite" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.icagsite
+         ON ACTION controlp INFIELD icagsite
+            #add-point:ON ACTION controlp INFIELD icagsite
+            {<point name="construct.c.icagsite" />}
+            #END add-point
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      CONSTRUCT g_wc2_table1 ON icag003,icag004,icag005,icag008,icag007,icagownid,icagowndp,icagcrtid, 
+          icagcrtdp,icagcrtdt,icagmodid,icagmoddt
+           FROM s_detail1[1].icag003,s_detail1[1].icag004,s_detail1[1].icag005,s_detail1[1].icag008, 
+               s_detail1[1].icag007,s_detail2[1].icagownid,s_detail2[1].icagowndp,s_detail2[1].icagcrtid, 
+               s_detail2[1].icagcrtdp,s_detail2[1].icagcrtdt,s_detail2[1].icagmodid,s_detail2[1].icagmoddt 
+
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.body.before_construct"/>}
+            #end add-point 
+            
+         #單身公用欄位開窗相關處理
+         #此段落由子樣板a11產生
+         ##----<<icagownid>>----
+         #ON ACTION controlp INFIELD icagownid
+         #   CALL q_common('icag_t','icagownid',TRUE,FALSE,g_icag2_d[1].icagownid) RETURNING ls_return
+         #   DISPLAY ls_return TO icagownid
+         #   NEXT FIELD icagownid  
+         #
+         ##----<<icagowndp>>----
+         #ON ACTION controlp INFIELD icagowndp
+         #   CALL q_common('icag_t','icagowndp',TRUE,FALSE,g_icag2_d[1].icagowndp) RETURNING ls_return
+         #   DISPLAY ls_return TO icagowndp
+         #   NEXT FIELD icagowndp
+         #
+         ##----<<icagcrtid>>----
+         #ON ACTION controlp INFIELD icagcrtid
+         #   CALL q_common('icag_t','icagcrtid',TRUE,FALSE,g_icag2_d[1].icagcrtid) RETURNING ls_return
+         #   DISPLAY ls_return TO icagcrtid
+         #   NEXT FIELD icagcrtid
+         #
+         ##----<<icagcrtdp>>----
+         #ON ACTION controlp INFIELD icagcrtdp
+         #   CALL q_common('icag_t','icagcrtdp',TRUE,FALSE,g_icag2_d[1].icagcrtdp) RETURNING ls_return
+         #   DISPLAY ls_return TO icagcrtdp
+         #   NEXT FIELD icagcrtdp
+         #
+         ##----<<icagmodid>>----
+         #ON ACTION controlp INFIELD icagmodid
+         #   CALL q_common('icag_t','icagmodid',TRUE,FALSE,g_icag2_d[1].icagmodid) RETURNING ls_return
+         #   DISPLAY ls_return TO icagmodid
+         #   NEXT FIELD icagmodid
+         #
+         ##----<<icagcnfid>>----
+         ##ON ACTION controlp INFIELD icagcnfid
+         ##   CALL q_common('icag_t','icagcnfid',TRUE,FALSE,.icagcnfid) RETURNING ls_return
+         ##   DISPLAY ls_return TO icagcnfid
+         ##   NEXT FIELD icagcnfid
+         #
+         ##----<<icagpstid>>----
+         ##ON ACTION controlp INFIELD icagpstid
+         ##   CALL q_common('icag_t','icagpstid',TRUE,FALSE,.icagpstid) RETURNING ls_return
+         ##   DISPLAY ls_return TO icagpstid
+         ##   NEXT FIELD icagpstid
+         
+         ##----<<icagcrtdt>>----
+         AFTER FIELD icagcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<icagmoddt>>----
+         AFTER FIELD icagmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<icagcnfdt>>----
+         #AFTER FIELD icagcnfdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<icagpstdt>>----
+         #AFTER FIELD icagpstdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+ 
+           
+         #單身一般欄位開窗相關處理
+         #---------------------<  Detail: page1  >---------------------
+         #----<<icag003>>----
+         #Ctrlp:construct.c.page1.icag003
+         ON ACTION controlp INFIELD icag003
+            #add-point:ON ACTION controlp INFIELD icag003
+            {<point name="construct.c.page1.icag003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag003
+            #add-point:BEFORE FIELD icag003
+            {<point name="construct.b.page1.icag003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag003
+            
+            #add-point:AFTER FIELD icag003
+            {<point name="construct.a.page1.icag003" />}
+            #END add-point
+            
+ 
+         #----<<icag004>>----
+         #Ctrlp:construct.c.page1.icag004
+         ON ACTION controlp INFIELD icag004
+            #add-point:ON ACTION controlp INFIELD icag004
+            {<point name="construct.c.page1.icag004" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag004
+            #add-point:BEFORE FIELD icag004
+            {<point name="construct.b.page1.icag004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag004
+            
+            #add-point:AFTER FIELD icag004
+            {<point name="construct.a.page1.icag004" />}
+            #END add-point
+            
+ 
+         #----<<icag004_desc>>----
+         #----<<icag005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag005
+            #add-point:BEFORE FIELD icag005
+            {<point name="construct.b.page1.icag005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag005
+            
+            #add-point:AFTER FIELD icag005
+            {<point name="construct.a.page1.icag005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.icag005
+         ON ACTION controlp INFIELD icag005
+            #add-point:ON ACTION controlp INFIELD icag005
+            {<point name="construct.c.page1.icag005" />}
+            #END add-point
+ 
+         #----<<icag008>>----
+         #Ctrlp:construct.c.page1.icag008
+         ON ACTION controlp INFIELD icag008
+            #add-point:ON ACTION controlp INFIELD icag008
+            {<point name="construct.c.page1.icag008" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag008
+            #add-point:BEFORE FIELD icag008
+            {<point name="construct.b.page1.icag008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag008
+            
+            #add-point:AFTER FIELD icag008
+            {<point name="construct.a.page1.icag008" />}
+            #END add-point
+            
+ 
+         #----<<icag008_desc>>----
+         #----<<icag007>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag007
+            #add-point:BEFORE FIELD icag007
+            {<point name="construct.b.page1.icag007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag007
+            
+            #add-point:AFTER FIELD icag007
+            {<point name="construct.a.page1.icag007" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.icag007
+         ON ACTION controlp INFIELD icag007
+            #add-point:ON ACTION controlp INFIELD icag007
+            {<point name="construct.c.page1.icag007" />}
+            #END add-point
+ 
+#---------------------<  Detail: page2  >---------------------
+         #----<<icagownid>>----
+         #Ctrlp:construct.c.page2.icagownid
+         ON ACTION controlp INFIELD icagownid
+            #add-point:ON ACTION controlp INFIELD icagownid
+            {<point name="construct.c.page2.icagownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icagownid
+            #add-point:BEFORE FIELD icagownid
+            {<point name="construct.b.page2.icagownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icagownid
+            
+            #add-point:AFTER FIELD icagownid
+            {<point name="construct.a.page2.icagownid" />}
+            #END add-point
+            
+ 
+         #----<<icagownid_desc>>----
+         #----<<icagowndp>>----
+         #Ctrlp:construct.c.page2.icagowndp
+         ON ACTION controlp INFIELD icagowndp
+            #add-point:ON ACTION controlp INFIELD icagowndp
+            {<point name="construct.c.page2.icagowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icagowndp
+            #add-point:BEFORE FIELD icagowndp
+            {<point name="construct.b.page2.icagowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icagowndp
+            
+            #add-point:AFTER FIELD icagowndp
+            {<point name="construct.a.page2.icagowndp" />}
+            #END add-point
+            
+ 
+         #----<<icagowndp_desc>>----
+         #----<<icagcrtid>>----
+         #Ctrlp:construct.c.page2.icagcrtid
+         ON ACTION controlp INFIELD icagcrtid
+            #add-point:ON ACTION controlp INFIELD icagcrtid
+            {<point name="construct.c.page2.icagcrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icagcrtid
+            #add-point:BEFORE FIELD icagcrtid
+            {<point name="construct.b.page2.icagcrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icagcrtid
+            
+            #add-point:AFTER FIELD icagcrtid
+            {<point name="construct.a.page2.icagcrtid" />}
+            #END add-point
+            
+ 
+         #----<<icagcrtid_desc>>----
+         #----<<icagcrtdp>>----
+         #Ctrlp:construct.c.page2.icagcrtdp
+         ON ACTION controlp INFIELD icagcrtdp
+            #add-point:ON ACTION controlp INFIELD icagcrtdp
+            {<point name="construct.c.page2.icagcrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icagcrtdp
+            #add-point:BEFORE FIELD icagcrtdp
+            {<point name="construct.b.page2.icagcrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icagcrtdp
+            
+            #add-point:AFTER FIELD icagcrtdp
+            {<point name="construct.a.page2.icagcrtdp" />}
+            #END add-point
+            
+ 
+         #----<<icagcrtdp_desc>>----
+         #----<<icagcrtdt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icagcrtdt
+            #add-point:BEFORE FIELD icagcrtdt
+            {<point name="construct.b.page2.icagcrtdt" />}
+            #END add-point
+ 
+         #----<<icagmodid>>----
+         #Ctrlp:construct.c.page2.icagmodid
+         ON ACTION controlp INFIELD icagmodid
+            #add-point:ON ACTION controlp INFIELD icagmodid
+            {<point name="construct.c.page2.icagmodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icagmodid
+            #add-point:BEFORE FIELD icagmodid
+            {<point name="construct.b.page2.icagmodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icagmodid
+            
+            #add-point:AFTER FIELD icagmodid
+            {<point name="construct.a.page2.icagmodid" />}
+            #END add-point
+            
+ 
+         #----<<icagmodid_desc>>----
+         #----<<icagmoddt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icagmoddt
+            #add-point:BEFORE FIELD icagmoddt
+            {<point name="construct.b.page2.icagmoddt" />}
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+  
+ 
+  
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:ui_dialog段b_dialog
+         {<point name="cs.before_dialog"/>}
+         #end add-point
+      
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+ 
+   
+   LET g_current_row = 1
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+   
+   LET g_wc_filter = ""
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.default_search" ver="1" status="" src="s">
+<![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION aici120_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " icag001 = '", g_argv[1], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " icag002 = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.delete" ver="2" status="" src="s">
+<![CDATA[#+ 資料刪除
+PRIVATE FUNCTION aici120_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point     
+   
+   IF g_icag_m.icag001 IS NULL
+   OR g_icag_m.icag002 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   EXECUTE aici120_master_referesh USING g_icag_m.icag001,g_icag_m.icag002 INTO g_icag_m.icag001,g_icag_m.icag002, 
+       g_icag_m.icag006,g_icag_m.icagsite
+   
+   CALL aici120_show()
+   
+   CALL s_transaction_begin()
+   
+   
+ 
+   OPEN aici120_cl USING g_enterprise,g_icag_m.icag001
+                                                       ,g_icag_m.icag002
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN aici120_cl:", STATUS, 1)
+      CLOSE aici120_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH aici120_cl INTO g_icag_m.icag001,g_icag_m.icag001_desc,g_icag_m.icag002,g_icag_m.icag006,g_icag_m.icagsite 
+
+   
+   #若資料已被他人LOCK
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_icag_m.icag001,SQLCA.sqlcode,0)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #IF NOT cl_ask_delete() THEN             #確認一下
+   IF cl_ask_del_master() THEN              #確認一下
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL aici120_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+  
+ 
+      #add-point:單身刪除前
+      {<point name="delete.body.b_delete" mark="Y"/>}
+      #end add-point
+      
+      DELETE FROM icag_t WHERE icagent = g_enterprise AND icag001 = g_icag_m.icag001
+                                                               AND icag002 = g_icag_m.icag002
+ 
+                                                               
+      #add-point:單身刪除中
+      {<point name="delete.body.m_delete"/>}
+      #end add-point
+      
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("icag_t",SQLCA.sqlcode,0)
+         CALL s_transaction_end('N','0')
+      END IF
+ 
+      
+  
+      #add-point:單身刪除後 
+      {<point name="delete.body.a_delete"/>}
+      #end add-point
+      
+ 
+      
+      CLEAR FORM
+      CALL g_icag_d.clear() 
+      CALL g_icag2_d.clear()       
+ 
+     
+      CALL aici120_ui_browser_refresh()  
+      CALL aici120_ui_headershow()  
+      CALL aici120_ui_detailshow()
+       
+      IF g_browser_cnt > 0 THEN 
+         CALL aici120_fetch('P')
+      ELSE
+         LET g_wc = " 1=1"
+         LET g_wc2 = " 1=1"
+         CALL aici120_browser_fill("F")
+      END IF
+       
+   END IF
+ 
+   CLOSE aici120_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_icag_m.icag001,'D')
+    
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.delete_b" ver="1" status="" src="s">
+<![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION aici120_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+ 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.description" ver="30" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000029
+#+ 
+#+ Filename...: aici120
+#+ Description: 多角貿易計價方式維護作業
+#+ Creator....: 02295(2014/04/16)
+#+ Modifier...: 02295(2014/04/18)
+#+ Buildtype..: 應用 i07 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="aici120.detail_reproduce" ver="1" status="" src="s">
+<![CDATA[#+ 單身自動複製
+PRIVATE FUNCTION aici120_detail_reproduce()
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE icag_t.*
+ 
+ 
+   #add-point:delete段define
+   {<point name="detail_reproduce.define"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE aici120_detail
+   
+   #add-point:單身複製前1
+   {<point name="detail_reproduce.body.table1.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = "CREATE GLOBAL TEMPORARY TABLE aici120_detail AS ",
+                "SELECT * FROM icag_t "
+   PREPARE repro_tbl FROM ls_sql
+   EXECUTE repro_tbl
+   FREE repro_tbl
+                
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO aici120_detail SELECT * FROM icag_t 
+                                         WHERE icagent = g_enterprise AND icag001 = g_icag001_t
+                                         AND icag002 = g_icag002_t
+ 
+   
+   #將key修正為調整後   
+   UPDATE aici120_detail 
+      #更新key欄位
+      SET icag001 = g_icag_m.icag001
+          , icag002 = g_icag_m.icag002
+ 
+      #更新共用欄位
+      #此段落由子樣板a13產生
+       , icagownid = g_user
+       , icagowndp = g_dept
+       , icagcrtid = g_user
+       , icagcrtdp = g_dept 
+       , icagcrtdt = ld_date
+       , icagmodid = "" 
+       , icagmoddt = "" 
+      ##, icagstus = "Y"
+ 
+ 
+                                       
+  
+   #將資料塞回原table   
+   INSERT INTO icag_t SELECT * FROM aici120_detail
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("reproduce",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1
+   {<point name="detail_reproduce.body.table1.m_insert"/>}
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE aici120_detail
+   
+   #add-point:單身複製後1
+   {<point name="detail_reproduce.body.table1.a_insert"/>}
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_icag001_t = g_icag_m.icag001
+   LET g_icag002_t = g_icag_m.icag002
+ 
+   
+   DROP TABLE aici120_detail
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.fetch" ver="2" status="" src="s">
+<![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aici120_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point    
+   
+   #add-point:fetch段動作開始前
+   {<point name="fetch.before_fetch"/>}
+   #end add-point    
+ 
+   CASE p_flag
+      WHEN 'F' LET g_current_idx = 1
+      WHEN 'L' LET g_current_idx = g_header_cnt        
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,': ' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF
+            
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+            LET g_current_idx = g_jump
+         END IF
+ 
+         LET g_no_ask = FALSE  
+   END CASE    
+   
+   #若無資料則離開
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+   
+   
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx) #設定browse 索引
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身筆數顯示
+   DISPLAY g_detail_cnt TO FORMONLY.cnt                      #設定page 總筆數 
+   #LET g_detail_idx = 1
+   IF g_detail_cnt > 0 THEN
+      #LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index   #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_icag_m.icag001 = g_browser[g_current_idx].b_icag001
+   LET g_icag_m.icag002 = g_browser[g_current_idx].b_icag002
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE aici120_master_referesh USING g_icag_m.icag001,g_icag_m.icag002 INTO g_icag_m.icag001,g_icag_m.icag002, 
+       g_icag_m.icag006,g_icag_m.icagsite
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("icag_t",SQLCA.sqlcode,1)
+      INITIALIZE g_icag_m.* TO NULL
+      RETURN
+   END IF
+   
+   #LET g_data_owner =       
+   #LET g_data_group =   
+   
+   #重新顯示   
+   CALL aici120_show()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.fill_chk" ver="1" status="" src="s">
+<![CDATA[#+ 單身填充確認
+PRIVATE FUNCTION aici120_fill_chk(ps_idx)
+   DEFINE ps_idx        LIKE type_t.chr10
+   DEFINE lst_token     base.StringTokenizer
+   DEFINE ls_token      STRING
+   #add-point:fill_chk段define
+   {<point name="fill_chk.define"/>}
+   #end add-point
+   
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1') THEN
+      RETURN TRUE
+   END IF
+   
+   #第一單身
+   IF ps_idx = 1 AND
+      ((NOT cl_null(g_wc2_table1) AND g_wc2_table1.trim() <> '1=1')) THEN
+      RETURN TRUE
+   END IF
+   
+   #根據wc判定是否需要填充
+ 
+ 
+   
+   #add-point:fill_chk段other
+   {<point name="fill_chk.other"/>}
+   #end add-point
+   
+   RETURN FALSE
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.filter" ver="2" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a50產生
+#+ filter過濾功能
+PRIVATE FUNCTION aici120_filter()
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point   
+ 
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON icag001,icag002
+                          FROM s_browse[1].b_icag001,s_browse[1].b_icag002
+ 
+         BEFORE CONSTRUCT
+               DISPLAY aici120_filter_parser('icag001') TO s_browse[1].b_icag001
+            DISPLAY aici120_filter_parser('icag002') TO s_browse[1].b_icag002
+      
+         #add-point:filter段cs_ctrl
+         {<point name="filter.cs_ctrl"/>}
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL aici120_filter_show('icag001')
+   CALL aici120_filter_show('icag002')
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.filter_parser" ver="2" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION aici120_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.filter_show" ver="1" status="" src="s">
+<![CDATA[#+ 顯示過濾條件
+PRIVATE FUNCTION aici120_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aici120_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.global" ver="2" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_icag_m        RECORD
+       icag001 LIKE icag_t.icag001, 
+   icag001_desc LIKE type_t.chr80, 
+   icag002 LIKE icag_t.icag002, 
+   icag006 LIKE icag_t.icag006, 
+   icagsite LIKE icag_t.icagsite
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_icag_d        RECORD
+       icag003 LIKE icag_t.icag003, 
+   icag004 LIKE icag_t.icag004, 
+   icag004_desc LIKE type_t.chr500, 
+   icag005 LIKE icag_t.icag005, 
+   icag008 LIKE icag_t.icag008, 
+   icag008_desc LIKE type_t.chr500, 
+   icag007 LIKE icag_t.icag007
+       END RECORD
+PRIVATE TYPE type_g_icag2_d RECORD
+       icag003 LIKE icag_t.icag003, 
+   icagownid LIKE icag_t.icagownid, 
+   icagownid_desc LIKE type_t.chr500, 
+   icagowndp LIKE icag_t.icagowndp, 
+   icagowndp_desc LIKE type_t.chr500, 
+   icagcrtid LIKE icag_t.icagcrtid, 
+   icagcrtid_desc LIKE type_t.chr500, 
+   icagcrtdp LIKE icag_t.icagcrtdp, 
+   icagcrtdp_desc LIKE type_t.chr500, 
+   icagcrtdt DATETIME YEAR TO SECOND, 
+   icagmodid LIKE icag_t.icagmodid, 
+   icagmodid_desc LIKE type_t.chr500, 
+   icagmoddt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+#無單頭append欄位定義
+#無單身append欄位定義
+ 
+#模組變數(Module Variables)
+DEFINE g_icag_m          type_g_icag_m
+DEFINE g_icag_m_t        type_g_icag_m
+ 
+   DEFINE g_icag001_t LIKE icag_t.icag001
+DEFINE g_icag002_t LIKE icag_t.icag002
+ 
+ 
+DEFINE g_icag_d          DYNAMIC ARRAY OF type_g_icag_d
+DEFINE g_icag_d_t        type_g_icag_d
+DEFINE g_icag2_d   DYNAMIC ARRAY OF type_g_icag2_d
+DEFINE g_icag2_d_t type_g_icag2_d
+ 
+ 
+DEFINE g_browser      DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位  
+       b_statepic     LIKE type_t.chr50,
+          b_icag001 LIKE icag_t.icag001,
+   b_icag001_desc LIKE type_t.chr80,
+      b_icag002 LIKE icag_t.icag002
+       #,rank           LIKE type_t.num10
+      END RECORD 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+ 
+ 
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num5           
+DEFINE l_ac                  LIKE type_t.num5    
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+ 
+DEFINE g_pagestart           LIKE type_t.num5           
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+ 
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num5              #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num5              #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num5              #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num5              #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num5              #Browser目前所在筆數(暫存用)
+ 
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序欄位
+DEFINE g_state               STRING                        
+DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page                    
+DEFINE g_current_row         LIKE type_t.num5              #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="aici120.init" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aici120_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point    
+  
+   LET g_bfill = "Y"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   
+      CALL cl_set_combo_scc('icag006','2504') 
+   CALL cl_set_combo_scc('icag005','2505') 
+ 
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init"/>}
+   #end add-point
+   
+   CALL aici120_default_search()
+    
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.input" ver="2" status="" src="s">
+<![CDATA[#+ 資料輸入
+PRIVATE FUNCTION aici120_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_ac_t                LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                   LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num5
+   DEFINE  l_i                   LIKE type_t.num5
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num5
+   DEFINE  li_reproduce_target   LIKE type_t.num5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point    
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF  
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql
+   {<point name="input.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT icag003,icag004,'',icag005,icag008,'',icag007,'',icagownid,'',icagowndp, 
+       '',icagcrtid,'',icagcrtdp,'',icagcrtdt,icagmodid,'',icagmoddt FROM icag_t WHERE icagent=? AND  
+       icag001=? AND icag002=? AND icag003=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE aici120_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+ 
+ 
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL aici120_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL aici120_set_no_entry(p_cmd)
+   #add-point:set_no_entry後
+   {<point name="input.after_set_no_entry"/>}
+   #end add-point
+ 
+   DISPLAY BY NAME g_icag_m.icag001,g_icag_m.icag002,g_icag_m.icag006,g_icag_m.icagsite
+   
+   LET lb_reproduce = FALSE
+   
+   #add-point:進入修改段前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+]]>
+</section>
+  <section id="aici120.input.body" ver="5" status="" src="s">
+<![CDATA[      #Page1 預設值產生於此處
+      INPUT ARRAY g_icag_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂單身ACTION
+         
+ 
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_icag_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aici120_b_fill(g_wc2) 
+            IF g_rec_b != 0 THEN
+               CALL fgl_set_arr_curr(l_ac)
+            END IF
+            #add-point:資料輸入前
+            {<point name="input.body.before_input"/>}
+            #end add-point
+         
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            
+         
+            CALL s_transaction_begin()
+            
+            #判定新增或修改
+            IF l_cmd = 'u' THEN
+               OPEN aici120_cl USING g_enterprise,
+                                               g_icag_m.icag001
+                                               ,g_icag_m.icag002
+ 
+                                               
+               IF STATUS THEN
+                  CALL cl_err("OPEN aici120_cl:", STATUS, 1)
+                  CLOSE aici120_cl
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+            END IF
+            
+            LET l_cmd = ''
+            
+            IF g_rec_b >= l_ac 
+               AND g_icag_d[l_ac].icag003 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_icag_d_t.* = g_icag_d[l_ac].*  #BACKUP
+               CALL aici120_set_entry_b(l_cmd)
+               #add-point:set_entry_b後
+               {<point name="input.body.before_row.set_entry_b"/>}
+               #end add-point
+               CALL aici120_set_no_entry_b(l_cmd)
+               OPEN aici120_bcl USING g_enterprise,g_icag_m.icag001,
+                                                g_icag_m.icag002,
+ 
+                                                g_icag_d_t.icag003
+ 
+               IF STATUS THEN
+                  CALL cl_err("OPEN aici120_bcl:", STATUS, 1)
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aici120_bcl INTO g_icag_d[l_ac].icag003,g_icag_d[l_ac].icag004,g_icag_d[l_ac].icag004_desc, 
+                      g_icag_d[l_ac].icag005,g_icag_d[l_ac].icag008,g_icag_d[l_ac].icag008_desc,g_icag_d[l_ac].icag007, 
+                      g_icag2_d[l_ac].icag003,g_icag2_d[l_ac].icagownid,g_icag2_d[l_ac].icagownid_desc, 
+                      g_icag2_d[l_ac].icagowndp,g_icag2_d[l_ac].icagowndp_desc,g_icag2_d[l_ac].icagcrtid, 
+                      g_icag2_d[l_ac].icagcrtid_desc,g_icag2_d[l_ac].icagcrtdp,g_icag2_d[l_ac].icagcrtdp_desc, 
+                      g_icag2_d[l_ac].icagcrtdt,g_icag2_d[l_ac].icagmodid,g_icag2_d[l_ac].icagmodid_desc, 
+                      g_icag2_d[l_ac].icagmoddt
+                  IF SQLCA.sqlcode THEN
+                      CALL cl_err(g_icag_d_t.icag003,SQLCA.sqlcode,1)
+                      LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL aici120_ref_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            
+        
+         BEFORE INSERT
+            
+            INITIALIZE g_icag_d_t.* TO NULL
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_icag_d[l_ac].* TO NULL
+            
+            #公用欄位預設值
+            #此段落由子樣板a14產生    
+      LET g_icag2_d[l_ac].icagownid = g_user
+      LET g_icag2_d[l_ac].icagowndp = g_dept
+      LET g_icag2_d[l_ac].icagcrtid = g_user
+      LET g_icag2_d[l_ac].icagcrtdp = g_dept 
+      LET g_icag2_d[l_ac].icagcrtdt = cl_get_current()
+      LET g_icag2_d[l_ac].icagmodid = ""
+      LET g_icag2_d[l_ac].icagmoddt = ""
+      ##LET .icagstus = ""
+ 
+  
+            
+            #一般欄位預設值
+                  LET g_icag_d[l_ac].icag005 = "1"
+ 
+ 
+            
+            
+            LET g_icag_d_t.* = g_icag_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL aici120_set_entry_b(l_cmd)
+            #add-point:set_entry_b後
+            {<point name="input.body.before_insert.set_entry_b"/>}
+            #end add-point
+            CALL aici120_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_icag_d[li_reproduce_target].* = g_icag_d[li_reproduce].*
+               LET g_icag2_d[li_reproduce_target].* = g_icag2_d[li_reproduce].*
+ 
+               LET g_icag_d[g_icag_d.getLength()].icag003 = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+ 
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM icag_t 
+             WHERE icagent = g_enterprise AND icag001 = g_icag_m.icag001
+               AND icag002 = g_icag_m.icag002
+ 
+               AND icag003 = g_icag_d[l_ac].icag003
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               CALL s_transaction_begin()
+               #add-point:單身新增前
+               {<point name="input.body.b_insert" mark="Y"/>}
+               #end add-point
+               INSERT INTO icag_t
+                           (icagent,
+                            icag001,icag002,icag006,icagsite,
+                            icag003
+                            ,icag004,icag005,icag008,icag007,icagownid,icagowndp,icagcrtid,icagcrtdp,icagcrtdt,icagmodid,icagmoddt) 
+                     VALUES(g_enterprise,
+                            g_icag_m.icag001,g_icag_m.icag002,g_icag_m.icag006,g_icag_m.icagsite,
+                            g_icag_d[l_ac].icag003
+                            ,g_icag_d[l_ac].icag004,g_icag_d[l_ac].icag005,g_icag_d[l_ac].icag008,g_icag_d[l_ac].icag007, 
+                                g_icag2_d[l_ac].icagownid,g_icag2_d[l_ac].icagowndp,g_icag2_d[l_ac].icagcrtid, 
+                                g_icag2_d[l_ac].icagcrtdp,g_icag2_d[l_ac].icagcrtdt,g_icag2_d[l_ac].icagmodid, 
+                                g_icag2_d[l_ac].icagmoddt)
+               #add-point:單身新增中
+               {<point name="input.body.m_insert"/>}
+               #end add-point
+               LET p_cmd = 'u'
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_icag_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("icag_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR "INSERT O.K"
+               LET g_rec_b=g_rec_b+1
+               DISPLAY g_rec_b TO FORMONLY.cnt
+            END IF
+            
+            #add-point:單身新增後
+            {<point name="input.body.after_insert"/>}
+            #end add-point
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_icag_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_icag_d.deleteElement(l_ac)
+               NEXT FIELD icag003
+            END IF
+            IF g_icag_d_t.icag003 IS NOT NULL
+ 
+               THEN
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete"/>}
+               #end add-point
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               IF aici120_before_delete() THEN 
+                  CALL s_transaction_end('Y','0')
+               ELSE 
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               END IF 
+               CLOSE aici120_bcl
+               LET l_count = g_icag_d.getLength()
+            END IF 
+            
+            #add-point:單身刪除後
+            {<point name="input.body.a_delete"/>}
+            #end add-point
+              
+         AFTER DELETE 
+            #add-point:單身AFTER DELETE 
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<icag003>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD icag003
+            
+            #add-point:AFTER FIELD icag003
+            {<point name="input.a.page1.icag003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag003
+            #add-point:BEFORE FIELD icag003
+            {<point name="input.b.page1.icag003" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE icag003
+            #add-point:ON CHANGE icag003
+            {<point name="input.g.page1.icag003" />}
+            #END add-point
+ 
+         #----<<icag004>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD icag004
+            
+            #add-point:AFTER FIELD icag004
+            {<point name="input.a.page1.icag004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag004
+            #add-point:BEFORE FIELD icag004
+            {<point name="input.b.page1.icag004" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE icag004
+            #add-point:ON CHANGE icag004
+            {<point name="input.g.page1.icag004" />}
+            #END add-point
+ 
+         #----<<icag004_desc>>----
+         #----<<icag005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag005
+            #add-point:BEFORE FIELD icag005
+            {<point name="input.b.page1.icag005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag005
+            
+            #add-point:AFTER FIELD icag005
+            {<point name="input.a.page1.icag005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE icag005
+            #add-point:ON CHANGE icag005
+            {<point name="input.g.page1.icag005" />}
+            #END add-point
+ 
+         #----<<icag008>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD icag008
+            
+            #add-point:AFTER FIELD icag008
+            {<point name="input.a.page1.icag008" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag008
+            #add-point:BEFORE FIELD icag008
+            {<point name="input.b.page1.icag008" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE icag008
+            #add-point:ON CHANGE icag008
+            {<point name="input.g.page1.icag008" />}
+            #END add-point
+ 
+         #----<<icag008_desc>>----
+         #----<<icag007>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD icag007
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_icag_d[l_ac].icag007,"0.000","0","100.000","1","azz-00087",1) THEN 
+
+               NEXT FIELD icag007
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD icag007
+            {<point name="input.a.page1.icag007" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag007
+            #add-point:BEFORE FIELD icag007
+            {<point name="input.b.page1.icag007" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE icag007
+            #add-point:ON CHANGE icag007
+            {<point name="input.g.page1.icag007" />}
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<icag003>>----
+         #Ctrlp:input.c.page1.icag003
+         ON ACTION controlp INFIELD icag003
+            #add-point:ON ACTION controlp INFIELD icag003
+            {<point name="input.c.page1.icag003" />}
+            #END add-point
+ 
+         #----<<icag004>>----
+         #Ctrlp:input.c.page1.icag004
+         ON ACTION controlp INFIELD icag004
+            #add-point:ON ACTION controlp INFIELD icag004
+            {<point name="input.c.page1.icag004" />}
+            #END add-point
+ 
+         #----<<icag004_desc>>----
+         #----<<icag005>>----
+         #Ctrlp:input.c.page1.icag005
+         ON ACTION controlp INFIELD icag005
+            #add-point:ON ACTION controlp INFIELD icag005
+            {<point name="input.c.page1.icag005" />}
+            #END add-point
+ 
+         #----<<icag008>>----
+         #Ctrlp:input.c.page1.icag008
+         ON ACTION controlp INFIELD icag008
+            #add-point:ON ACTION controlp INFIELD icag008
+            {<point name="input.c.page1.icag008" />}
+            #END add-point
+ 
+         #----<<icag008_desc>>----
+         #----<<icag007>>----
+         #Ctrlp:input.c.page1.icag007
+         ON ACTION controlp INFIELD icag007
+            #add-point:ON ACTION controlp INFIELD icag007
+            {<point name="input.c.page1.icag007" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_icag_d[l_ac].* = g_icag_d_t.*
+               CLOSE aici120_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_icag_d[l_ac].icag003,-263,1)
+               LET g_icag_d[l_ac].* = g_icag_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊
+               LET g_icag2_d[l_ac].icagmodid = g_user 
+LET g_icag2_d[l_ac].icagmoddt = cl_get_current()
+ 
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+         
+               UPDATE icag_t SET (icag001,icag002,icag003,icag004,icag005,icag008,icag007,icagownid, 
+                   icagowndp,icagcrtid,icagcrtdp,icagcrtdt,icagmodid,icagmoddt) = (g_icag_m.icag001, 
+                   g_icag_m.icag002,g_icag_d[l_ac].icag003,g_icag_d[l_ac].icag004,g_icag_d[l_ac].icag005, 
+                   g_icag_d[l_ac].icag008,g_icag_d[l_ac].icag007,g_icag2_d[l_ac].icagownid,g_icag2_d[l_ac].icagowndp, 
+                   g_icag2_d[l_ac].icagcrtid,g_icag2_d[l_ac].icagcrtdp,g_icag2_d[l_ac].icagcrtdt,g_icag2_d[l_ac].icagmodid, 
+                   g_icag2_d[l_ac].icagmoddt)
+                WHERE icagent = g_enterprise AND icag001 = g_icag_m.icag001 
+                 AND icag002 = g_icag_m.icag002 
+ 
+                 AND icag003 = g_icag_d_t.icag003 #項次   
+ 
+                 
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+               
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("icag_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  #WHEN SQLCA.sqlcode #其他錯誤
+                  #   CALL cl_err("icag_t",SQLCA.sqlcode,1)  
+                  #   CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_icag_m.icag001
+               LET gs_keys_bak[1] = g_icag001_t
+               LET gs_keys[2] = g_icag_m.icag002
+               LET gs_keys_bak[2] = g_icag002_t
+               LET gs_keys[3] = g_icag_d[g_detail_idx].icag003
+               LET gs_keys_bak[3] = g_icag_d_t.icag003
+               CALL aici120_update_b('icag_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+            END IF
+ 
+         AFTER INPUT
+            #若單身還沒有輸入資料, 強制切換至單身
+            IF cl_null(g_icag_d[1].icag003) THEN
+               CALL g_icag_d.deleteElement(1)
+               NEXT FIELD icag003
+            END IF
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point    
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_icag_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_icag_d.getLength()+1
+            
+      END INPUT
+ 
+ 
+      
+      DISPLAY ARRAY g_icag2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+      
+         BEFORE ROW
+            CALL aici120_b_fill(g_wc2) 
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+            LET l_ac = g_detail_idx
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            CALL aici120_ui_detailshow()
+        
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(g_detail_idx)      
+         
+         #add-point:page2自定義行為
+         {<point name="input.body2.action"/>}
+         #end add-point
+         
+      END DISPLAY
+ 
+      
+ 
+      
+      #add-point:input段more_input
+      {<point name="input.more_inputarray"/>}
+      #end add-point    
+      
+      BEFORE DIALOG
+         #add-point:input段before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            NEXT FIELD icag001
+        ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD icag003
+               WHEN "s_detail2"
+                  NEXT FIELD icag003_2
+ 
+            END CASE
+         END IF
+   
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+   
+   #add-point:input段after_input
+   {<point name="input.after_input"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.input.head" ver="1" status="" src="s">
+<![CDATA[   
+      #單頭段
+      INPUT BY NAME g_icag_m.icag001,g_icag_m.icag002,g_icag_m.icag006,g_icag_m.icagsite 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂單頭ACTION
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #add-point:單頭input前
+            {<point name="input.head.b_input"/>}
+            #end add-point
+          
+         #---------------------------<  Master  >---------------------------
+         #----<<icag001>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD icag001
+            
+            #add-point:AFTER FIELD icag001
+            {<point name="input.a.icag001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag001
+            #add-point:BEFORE FIELD icag001
+            {<point name="input.b.icag001" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE icag001
+            #add-point:ON CHANGE icag001
+            {<point name="input.g.icag001" />}
+            #END add-point
+ 
+         #----<<icag001_desc>>----
+         #----<<icag002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag002
+            #add-point:BEFORE FIELD icag002
+            {<point name="input.b.icag002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag002
+            
+            #add-point:AFTER FIELD icag002
+            {<point name="input.a.icag002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE icag002
+            #add-point:ON CHANGE icag002
+            {<point name="input.g.icag002" />}
+            #END add-point
+ 
+         #----<<icag006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icag006
+            #add-point:BEFORE FIELD icag006
+            {<point name="input.b.icag006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icag006
+            
+            #add-point:AFTER FIELD icag006
+            {<point name="input.a.icag006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE icag006
+            #add-point:ON CHANGE icag006
+            {<point name="input.g.icag006" />}
+            #END add-point
+ 
+         #----<<icagsite>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD icagsite
+            #add-point:BEFORE FIELD icagsite
+            {<point name="input.b.icagsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD icagsite
+            
+            #add-point:AFTER FIELD icagsite
+            {<point name="input.a.icagsite" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE icagsite
+            #add-point:ON CHANGE icagsite
+            {<point name="input.g.icagsite" />}
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<icag001>>----
+         #Ctrlp:input.c.icag001
+         ON ACTION controlp INFIELD icag001
+            #add-point:ON ACTION controlp INFIELD icag001
+            {<point name="input.c.icag001" />}
+            #END add-point
+ 
+         #----<<icag001_desc>>----
+         #----<<icag002>>----
+         #Ctrlp:input.c.icag002
+         ON ACTION controlp INFIELD icag002
+            #add-point:ON ACTION controlp INFIELD icag002
+            {<point name="input.c.icag002" />}
+            #END add-point
+ 
+         #----<<icag006>>----
+         #Ctrlp:input.c.icag006
+         ON ACTION controlp INFIELD icag006
+            #add-point:ON ACTION controlp INFIELD icag006
+            {<point name="input.c.icag006" />}
+            #END add-point
+ 
+         #----<<icagsite>>----
+         #Ctrlp:input.c.icagsite
+         ON ACTION controlp INFIELD icagsite
+            #add-point:ON ACTION controlp INFIELD icagsite
+            {<point name="input.c.icagsite" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            IF s_transaction_chk("N",0) THEN
+                CALL s_transaction_begin()
+            END IF
+ 
+            #多語言處理
+            
+                
+            CALL cl_showmsg()
+            DISPLAY BY NAME g_icag_m.icag001             
+                            ,g_icag_m.icag002   
+ 
+ 
+            IF p_cmd = 'u' THEN
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+            
+               UPDATE icag_t SET (icag001,icag002,icag006,icagsite) = (g_icag_m.icag001,g_icag_m.icag002, 
+                   g_icag_m.icag006,g_icag_m.icagsite)
+                WHERE icagent = g_enterprise AND icag001 = g_icag001_t
+                  AND icag002 = g_icag002_t
+ 
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("icag_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("icag_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     #資料多語言用-增/改
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_icag_m.icag001
+               LET gs_keys_bak[1] = g_icag001_t
+               LET gs_keys[2] = g_icag_m.icag002
+               LET gs_keys_bak[2] = g_icag002_t
+               LET gs_keys[3] = g_icag_d[g_detail_idx].icag003
+               LET gs_keys_bak[3] = g_icag_d_t.icag003
+               CALL aici120_update_b('icag_t',gs_keys,gs_keys_bak,"'1'")
+                     
+                     LET g_icag001_t = g_icag_m.icag001
+                     LET g_icag002_t = g_icag_m.icag002
+ 
+                     #add-point:單頭修改後
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+               END CASE
+            
+            ELSE    
+               #add-point:單頭新增
+               {<point name="input.head.a_insert"/>}
+               #end add-point
+                                 
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL aici120_detail_reproduce()
+               END IF
+            END IF
+           #controlp
+                     
+           LET g_icag001_t = g_icag_m.icag001
+           LET g_icag002_t = g_icag_m.icag002
+ 
+           
+           #若單身還沒有輸入資料, 強制切換至單身
+           IF cl_null(g_icag_d[1].icag003) THEN
+              CALL g_icag_d.deleteElement(1)
+              NEXT FIELD icag003
+           END IF
+ 
+      END INPUT
+]]>
+</section>
+  <section id="aici120.insert" ver="2" status="" src="s">
+<![CDATA[#+ 資料新增
+PRIVATE FUNCTION aici120_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   #add-point:insert段before
+   {<point name="insert.before"/>}
+   #end add-point    
+   
+   #清除相關資料
+   CLEAR FORM                    
+   CALL g_icag_d.clear()
+   CALL g_icag2_d.clear()
+ 
+ 
+   INITIALIZE g_icag_m.* LIKE icag_t.*             #DEFAULT 設定
+   LET g_icag001_t = NULL
+   LET g_icag002_t = NULL
+ 
+   CALL s_transaction_begin()
+   WHILE TRUE
+     
+      #單頭預設值
+            LET g_icag_m.icag006 = "1"
+ 
+     
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point 
+ 
+      CALL aici120_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_icag_m.* = g_icag_m_t.*
+         CALL aici120_show()
+         CALL cl_err('',9001,0)
+         EXIT WHILE
+      END IF
+      
+      CALL g_icag_d.clear()
+      CALL g_icag2_d.clear()
+ 
+      
+      #add-point:單頭輸入後2
+      {<point name="insert.after_insert2"/>}
+      #end add-point
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+      
+   END WHILE
+   
+   LET g_state = "Y"
+   
+   LET g_icag001_t = g_icag_m.icag001
+   LET g_icag002_t = g_icag_m.icag002
+ 
+   
+   LET g_wc = g_wc,  
+              " OR ( icagent = '" ||g_enterprise|| "' AND ",
+              " icag001 = '", g_icag_m.icag001 CLIPPED, "' "
+              ," AND icag002 = '", g_icag_m.icag002 CLIPPED, "' "
+ 
+              , ") "
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.insert_b" ver="1" status="" src="s">
+<![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION aici120_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point     
+   
+ 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.lock_b" ver="1" status="" src="s">
+<![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION aici120_lock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL aici120_b_fill()
+   
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.main" ver="3" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aic","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = "SELECT icag001,'',icag002,icag006,icagsite FROM icag_t WHERE icagent= ? AND icag001=?  
+       AND icag002=? FOR UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE aici120_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE icag001,icag002,icag006,icagsite",
+               " FROM icag_t",
+               " WHERE icagent = '" ||g_enterprise|| "' AND icag001 = ? AND icag002 = ?"
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE aici120_master_referesh FROM g_sql
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aici120 WITH FORM cl_ap_formpath("aic",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aici120_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aici120_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aici120
+      
+   END IF 
+   
+   CLOSE aici120_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+</section>
+  <section id="aici120.modify" ver="2" status="" src="s">
+<![CDATA[#+ 資料修改
+PRIVATE FUNCTION aici120_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point    
+   
+   IF g_icag_m.icag001 IS NULL
+   OR g_icag_m.icag002 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   EXECUTE aici120_master_referesh USING g_icag_m.icag001,g_icag_m.icag002 INTO g_icag_m.icag001,g_icag_m.icag002, 
+       g_icag_m.icag006,g_icag_m.icagsite
+ 
+   ERROR ""
+  
+   LET g_icag001_t = g_icag_m.icag001
+   LET g_icag002_t = g_icag_m.icag002
+ 
+   CALL s_transaction_begin()
+   
+   OPEN aici120_cl USING g_enterprise,g_icag_m.icag001
+                                                       ,g_icag_m.icag002
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN aici120_cl:", STATUS, 1)
+      CLOSE aici120_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH aici120_cl INTO g_icag_m.icag001,g_icag_m.icag001_desc,g_icag_m.icag002,g_icag_m.icag006,g_icag_m.icagsite 
+
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_icag_m.icag001,SQLCA.sqlcode,0)
+      CLOSE aici120_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   CALL s_transaction_end('Y','0')
+ 
+   CALL aici120_show()
+   WHILE TRUE
+      LET g_icag001_t = g_icag_m.icag001
+      LET g_icag002_t = g_icag_m.icag002
+ 
+ 
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+      
+      CALL aici120_input("u")     #欄位更改
+      
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_icag_m.* = g_icag_m_t.*
+         CALL aici120_show()
+         CALL cl_err('',9001,0)
+         EXIT WHILE
+      END IF
+      
+      #若單頭key欄位有變更
+      IF g_icag_m.icag001 != g_icag001_t 
+      OR g_icag_m.icag002 != g_icag002_t 
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單頭(偽)修改前
+         {<point name="modify.b_key_update" mark="Y"/>}
+         #end add-point
+         
+         #更新單頭key值
+         UPDATE icag_t SET icag001 = g_icag_m.icag001
+                                       , icag002 = g_icag_m.icag002
+ 
+          WHERE icagent = g_enterprise AND icag001 = g_icag001_t
+            AND icag002 = g_icag002_t
+ 
+         #add-point:單頭(偽)修改中
+         {<point name="modify.m_key_update"/>}
+         #end add-point
+         
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               CALL cl_err("icag_t","std-00009",1)
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               CALL cl_err("icag_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+ 
+ 
+         
+         #add-point:單頭(偽)修改後
+         {<point name="modify.a_key_update"/>}
+         #end add-point
+         
+      END IF
+      
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_icag_m.icag001,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE aici120_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_icag_m.icag001,'U')
+ 
+   CALL aici120_b_fill("1=1")
+   
+END FUNCTION   
+]]>
+</section>
+  <section id="aici120.modify_detail_chk" ver="1" status="" src="s">
+<![CDATA[#+ 單身輸入判定
+PRIVATE FUNCTION aici120_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "icag003"
+      WHEN "s_detail2"
+         LET ls_return = "icag003_2"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="aici120.query" ver="1" status="" src="s">
+<![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aici120_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point   
+ 
+   #add-point:query開始前
+   {<point name="query.befroe_query"/>}
+   #end add-point 
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF     
+   
+   LET ls_wc = g_wc
+ 
+   LET INT_FLAG = 0    
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_icag_d.clear()
+   CALL g_icag2_d.clear()
+ 
+   DISPLAY ' ' TO FORMONLY.idx
+   DISPLAY ' ' TO FORMONLY.cnt
+   DISPLAY ' ' TO FORMONLY.b_index
+   DISPLAY ' ' TO FORMONLY.b_count
+   DISPLAY ' ' TO FORMONLY.h_index
+   DISPLAY ' ' TO FORMONLY.h_count
+   
+   CALL aici120_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL aici120_browser_fill(g_wc)
+      CALL aici120_fetch("")
+      RETURN
+   END IF
+   
+   LET l_ac = 1
+   LET g_detail_cnt = 0
+   LET g_current_idx = 0
+   LET g_current_row = 0
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   
+   LET g_error_show = 1
+   CALL aici120_browser_fill("F")
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      CALL cl_err("","-100",1)
+   ELSE
+      CALL aici120_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.ref_show" ver="1" status="" src="s">
+<![CDATA[#+ 帶出reference資料
+PRIVATE FUNCTION aici120_ref_show()
+   DEFINE l_ac_t LIKE type_t.num10 #l_ac暫存用
+   #add-point:ref_show段define
+   {<point name="ref_show.define"/>}
+   #end add-point
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:ref_show段m_reference
+   {<point name="ref_show.head.reference"/>}
+   #end add-point
+ 
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_icag_d.getLength()
+      #add-point:ref_show段d_reference
+      {<point name="ref_show.body.reference"/>}
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_icag2_d.getLength()
+      #add-point:ref_show段d2_reference
+      {<point name="ref_show.body2.reference"/>}
+      #end add-point
+   END FOR
+ 
+   
+   LET l_ac = l_ac_t
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.reproduce" ver="1" status="" src="s">
+<![CDATA[#+ 資料複製
+PRIVATE FUNCTION aici120_reproduce()
+   DEFINE l_newno     LIKE icag_t.icag001 
+   DEFINE l_oldno     LIKE icag_t.icag001 
+   DEFINE l_newno02     LIKE icag_t.icag002 
+   DEFINE l_oldno02     LIKE icag_t.icag002 
+ 
+   DEFINE l_master    RECORD LIKE icag_t.*
+   DEFINE l_detail    RECORD LIKE icag_t.*
+ 
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF     
+ 
+   IF g_icag_m.icag001 IS NULL
+      OR g_icag_m.icag002 IS NULL
+ 
+      THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   LET g_icag001_t = g_icag_m.icag001
+   LET g_icag002_t = g_icag_m.icag002
+ 
+   
+   LET g_icag_m.icag001 = ""
+   LET g_icag_m.icag002 = ""
+ 
+    
+   CALL aici120_set_entry('a')
+   CALL aici120_set_no_entry('a')
+   
+   CALL cl_set_head_visible("","YES")
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL aici120_input("r")
+   
+      LET g_icag_m.icag001_desc = ''
+   DISPLAY BY NAME g_icag_m.icag001_desc
+ 
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   LET g_state = "Y"
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              " icag001 = '", l_newno CLIPPED, "' "
+              ," AND icag002 = '", l_newno02 CLIPPED, "' "
+ 
+              , ") "
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.set_entry" ver="1" status="" src="s">
+<![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aici120_set_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point       
+ 
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("icag001,icag002",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.set_entry_b" ver="1" status="" src="s">
+<![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION aici120_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point     
+   
+   #add-point:set_entry_b段
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.set_no_entry" ver="2" status="" src="s">
+<![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aici120_set_no_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("icag001,icag002",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.set_no_entry_b" ver="1" status="" src="s">
+<![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION aici120_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point    
+   
+   #add-point:set_no_entry_b段
+   {<point name="set_no_entry_b.set_no_entry_b段"/>}
+   #end add-point 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.set_pk_array" ver="1" status="" src="s">
+<![CDATA[   #+ 此段落由子樣板a51產生
+#+ 給予pk_array內容
+PRIVATE FUNCTION aici120_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_icag_m.icag001
+   LET g_pk_array[1].column = 'icag001'
+   LET g_pk_array[2].values = g_icag_m.icag002
+   LET g_pk_array[2].column = 'icag002'
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="aici120.show" ver="2" status="" src="s">
+<![CDATA[#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION aici120_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   IF g_bfill = "Y" THEN
+      CALL aici120_b_fill(g_wc2) #單身填充
+      CALL aici120_b_fill2('0') #單身填充
+   END IF
+   
+   
+ 
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL aici120_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+ 
+   LET g_icag_m_t.* = g_icag_m.*      #保存單頭舊值
+   
+   DISPLAY BY NAME g_icag_m.icag001,g_icag_m.icag001_desc,g_icag_m.icag002,g_icag_m.icag006,g_icag_m.icagsite 
+
+   CALL aici120_b_fill(g_wc2_table1)                 #單身
+   CALL aici120_b_fill2('0') #單身填充
+ 
+   CALL aici120_ref_show()
+ 
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()  
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point   
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.state_change" ver="1" status="" src="s">
+<![CDATA[    
+]]>
+</section>
+  <section id="aici120.ui_browser_refresh" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION aici120_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point    
+   
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_icag001 = g_icag_m.icag001 
+         AND g_browser[l_i].b_icag002 = g_icag_m.icag002 
+ 
+         THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+      END IF
+   END FOR
+ 
+   LET g_browser_cnt = g_browser_cnt - 1
+   IF g_current_row > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_row = g_browser_cnt
+   END IF
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count    #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數的顯示
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.ui_detailshow" ver="1" status="" src="s">
+<![CDATA[#+ 單身資料重新顯示
+PRIVATE FUNCTION aici120_ui_detailshow()
+   #add-point:ui_detailshow段define
+   {<point name="ui_detailshow.define"/>}
+   #end add-point    
+   
+   #add-point:ui_detailshow段before
+   {<point name="ui_detailshow.before"/>}
+   #end add-point  
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+ 
+      #add-point:ui_detailshow段more
+      {<point name="ui_detailshow.more"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:ui_detailshow段after
+   {<point name="ui_detailshow.after"/>}
+   #end add-point 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.ui_dialog" ver="6" status="" src="s">
+<![CDATA[#+ 功能選單
+PRIVATE FUNCTION aici120_ui_dialog()
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_wc     STRING
+   DEFINE lb_first  BOOLEAN
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point  
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL gfrm_curr.setElementImage("logo","logo/applogo.png")  
+   
+   LET lb_first = TRUE
+ 
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0 
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      CALL aici120_browser_fill("")
+ 
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+      
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_icag001 = g_icag001_t
+               AND g_browser[li_idx].b_icag002 = g_icag002_t
+ 
+               THEN
+               LET g_current_row = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+      
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+         #左側瀏覽頁簽
+         DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTES(COUNT=g_header_cnt)
+         
+            BEFORE ROW
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+               
+               IF g_current_idx > g_browser.getLength() THEN
+                  LET g_current_idx = g_browser.getLength()
+               END IF 
+               
+               CALL aici120_fetch('') # reload data
+               LET g_detail_idx = 1
+               CALL aici120_ui_detailshow() #Setting the current row 
+         
+         END DISPLAY
+        
+         DISPLAY ARRAY g_icag_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+         
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL aici120_ui_detailshow()
+               
+               #add-point:page1自定義行為
+               {<point name="ui_dialog.body.before_row"/>}
+               #end add-point
+            
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               
+               #控制stus哪個按鈕可以按
+               
+               
+            
+ 
+            #add-point:page1自定義行為
+            {<point name="ui_dialog.page1.action"/>}
+            #end add-point
+               
+         END DISPLAY
+        
+         DISPLAY ARRAY g_icag2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+         
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL aici120_ui_detailshow()
+               
+               #add-point:page1自定義行為
+               {<point name="ui_dialog.body2.before_row"/>}
+               #end add-point
+            
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx)      
+            
+            
+         
+            #add-point:page2自定義行為
+            {<point name="ui_dialog.body2.action"/>}
+            #end add-point
+         
+         END DISPLAY
+ 
+         
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+         SUBDIALOG lib_cl_dlg.cl_dlg_relateapps 
+         
+         BEFORE DIALOG
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL g_curr_diag.setSelectionMode("s_detail1",1)         
+            LET g_page = "first"
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+            IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               LET g_current_idx = g_current_row
+            END IF
+            LET g_current_row = g_current_idx #目前指標
+            LET g_current_sw = TRUE
+            
+            IF g_current_idx > g_browser.getLength() THEN
+               LET g_current_idx = g_browser.getLength()
+            END IF 
+            
+            IF g_current_idx = 0 AND g_browser.getLength() > 0 THEN
+               LET g_current_idx = 1 
+            END IF
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL aici120_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL aici120_ui_detailshow() #Setting the current row 
+            
+            #add-point:ui_dialog段before dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD icag003
+            END IF
+  
+         #+ 此段落由子樣板a49產生
+            ON ACTION filter
+               #add-point:filter action
+               {<point name="ui_dialog.action.filter"/>}
+               #end add-point
+               CALL aici120_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+         
+         ON ACTION first
+            CALL aici120_fetch('F')
+            LET g_current_row = g_current_idx         
+          
+         ON ACTION previous
+            CALL aici120_fetch('P')
+            LET g_current_row = g_current_idx
+          
+         ON ACTION jump
+            CALL aici120_fetch('/')
+            LET g_current_row = g_current_idx
+        
+         ON ACTION next
+            CALL aici120_fetch('N')
+            LET g_current_row = g_current_idx
+         
+         ON ACTION last
+            CALL aici120_fetch('L')
+            LET g_current_row = g_current_idx
+          
+         ON ACTION close
+            LET INT_FLAG=FALSE        
+            LET g_action_choice = "exit"
+            EXIT DIALOG     
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION mainhidden       #主頁摺疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            
+         ON ACTION worksheethidden   #瀏覽頁折疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+                CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+       
+         ON ACTION controls      #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+            
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               CALL aici120_browser_fill("F")   #browser_fill()會將notice區塊清空
+               CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            END IF
+         
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+               CALL aici120_browser_fill("F")
+               IF g_browser_cnt = 0 THEN
+                  CALL cl_err("","-100",1)
+                  CLEAR FORM
+               ELSE
+                  CALL aici120_fetch("F")
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            CALL cl_notice()
+               
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aici120_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL aici120_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aici120_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aici120_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aici120_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         
+         
+         
+         #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL aici120_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aici120_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aici120_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+            
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+   
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.ui_headershow" ver="2" status="" src="s">
+<![CDATA[#+ 單頭資料重新顯示
+PRIVATE FUNCTION aici120_ui_headershow()
+   #add-point:ui_headershow段define
+   {<point name="ui_headershow.define"/>}
+   #end add-point    
+   
+   LET g_icag_m.icag001 = g_browser[g_current_idx].b_icag001   
+   LET g_icag_m.icag002 = g_browser[g_current_idx].b_icag002   
+ 
+   EXECUTE aici120_master_referesh USING g_icag_m.icag001,g_icag_m.icag002 INTO g_icag_m.icag001,g_icag_m.icag002, 
+       g_icag_m.icag006,g_icag_m.icagsite
+   CALL aici120_show()
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.unlock_b" ver="1" status="" src="s">
+<![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION aici120_unlock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aici120.update_b" ver="1" status="" src="s">
+<![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION aici120_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+ 
+   
+ 
+   
+END FUNCTION
+]]>
+</section>
+</add_points>

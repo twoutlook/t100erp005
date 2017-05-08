@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq412" module="ade" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-01-27 15:13:46" modid="06189" moddt="2015-03-13 12:56:18" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店收銀差錯查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="deafdocdt,deafsite,deaf002,deaf003,sel1,deaf004,deafdocno,sel2,deaf001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="deafdocno,deagstus,deafdocdt,deafsite,deafsite_desc(chr500),deaf001,deaf002,deaf002_desc(chr500),deaf003,deaf003_desc(chr500),deaf004,deaf004_desc(chr500),deaf005,deaf005_desc(chr500),deaf006,deaf007,deaf008,deaf009,deaf010,deaf011,sel(chr1)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="deafdocno(b_deafdocno),deagstus(b_deagstus),deafdocdt(b_deafdocdt),deafsite(b_deafsite),deafsite_desc(b_deafsite_desc),deaf001(b_deaf001),deaf002(b_deaf002),deaf002_desc(b_deaf002_desc),deaf003(b_deaf003),deaf003_desc(b_deaf003_desc),deaf004(b_deaf004),deaf004_desc(b_deaf004_desc),deaf005(b_deaf005),deaf005_desc(b_deaf005_desc),deaf006(b_deaf006),deaf007(b_deaf007),deaf008(b_deaf008),deaf009(b_deaf009),deaf010(b_deaf010),deaf011(b_deaf011),sel(sel)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq412" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="deaf001,deaf002,deaf003,deaf004,deaf005,deaf006,deaf007,deaf008,deaf009,deaf010,deaf011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="deagstus(b_deagstus),deafdocdt(b_deafdocdt),deafsite(b_deafsite),deaf001(b_deaf001),deaf002(b_deaf002),deaf003(b_deaf003),deaf004(b_deaf004),deaf005(b_deaf005),deaf006(b_deaf006),deaf007(b_deaf007),deaf008(b_deaf008),deaf009(b_deaf009),deaf010(b_deaf010),deaf011(b_deaf011)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="deafdocno"/>
+      <column id="deagstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="deafdocdt"/>
+      <column id="deafsite">
+        <after>
+          <reference field="deafsite_desc" ref_field="deafsite" map_field="deafent,deafsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="deafsite_desc"/>
+      <column id="deaf001"/>
+      <column id="deaf002">
+        <after>
+          <reference field="deaf002_desc" ref_field="deafsite,deaf002" map_field="deafsite,deaf002" ref_sql="SELECT oogd002 FROM oogd_t WHERE oogdent=$varg_enterprise$var AND oogdsite=? AND oogd001=? "/>
+        </after>
+      </column>
+      <column id="deaf002_desc"/>
+      <column id="deaf003">
+        <after>
+          <reference field="deaf003_desc" ref_field="deafsite,deaf003" map_field="deafsite,deaf003" ref_sql="SELECT pcaal003 FROM pcaal_t WHERE pcaalent=$varg_enterprise$var AND pcaalsite=? AND pcaal001=? AND pcaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="deaf003_desc"/>
+      <column id="deaf004">
+        <after>
+          <reference field="deaf004_desc" ref_field="deaf004" map_field="deafent,deaf004" ref_sql="SELECT pcab003 FROM pcab_t WHERE pcabent=$varg_enterprise$var AND pcab001=? "/>
+        </after>
+      </column>
+      <column id="deaf004_desc"/>
+      <column id="deaf005">
+        <after>
+          <reference field="deaf005_desc" ref_field="deaf005" map_field="deafent,deaf005" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001" state="c"/>
+      </column>
+      <column id="deaf005_desc"/>
+      <column id="deaf006" type="S" default="0"/>
+      <column id="deaf007" type="S" default="0"/>
+      <column id="deaf008" type="S" default="0"/>
+      <column id="deaf009" def_scc="6736"/>
+      <column id="deaf010"/>
+      <column id="deaf011"/>
+      <column id="sel"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="deaf_t" page="1" linked="" pk="deafdocno,deaf005">
+      <sql id="b_fill_sql" query="SELECT deafdocno,&apos;&apos;,deafdocdt,deafsite,&apos;&apos;,deaf001,deaf002,&apos;&apos;,deaf003,&apos;&apos;,deaf004,&apos;&apos;,deaf005,&apos;&apos;,deaf006,deaf007,deaf008,deaf009,deaf010,deaf011,&apos;&apos; FROM deaf_t WHERE deafent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

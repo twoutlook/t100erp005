@@ -1,0 +1,921 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axmt500_03" std_prog="axmt500_03" erpver="1.0" module="AXM" ver="2" env="s" zone="t10dev" booking="N" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.axmt500_03_xmdf005_ref" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt500_03_xmdf005_ref(p_xmdf005)
+DEFINE p_xmdf005    LIKE xmdf_t.xmdf005
+DEFINE r_oocql004   LIKE oocql_t.oocql004
+
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = p_xmdf005
+       CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='274' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET r_oocql004 = '', g_rtn_fields[1] , ''
+       RETURN r_oocql004
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt500_03_b_fill" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt500_03_b_fill()
+DEFINE l_sql       STRING
+DEFINE l_ac1       LIKE type_t.num5
+   
+       LET l_sql = "SELECT xmdfsite, xmdfdocno,xmdfseq,xmdfseq2,xmdf002,xmdf003,xmdf004,xmdf005,'',xmdf006 FROM xmdf_t WHERE xmdfent = '",g_enterprise,"' AND xmdfdocno = '",g_xmdfdocno,"' AND xmdfseq = '",g_xmdfseq,"' "
+       PREPARE axmt500_03_pb FROM l_sql
+       DECLARE b_fill_curs CURSOR FOR axmt500_03_pb
+    
+       CALL g_xmdf_d.clear()
+       LET l_ac1 = 1
+       FOREACH b_fill_curs INTO g_xmdf_d[l_ac1].*
+          IF SQLCA.sqlcode THEN
+             CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+             EXIT FOREACH
+          END IF
+          
+          CALL axmt500_03_xmdf005_ref(g_xmdf_d[l_ac1].xmdf005) RETURNING g_xmdf_d[l_ac1].xmdf005_desc
+              
+          LET l_ac1 = l_ac1 + 1
+          IF l_ac1 > g_max_rec THEN
+             #CALL cl_err( "", 9035, 0 )
+             EXIT FOREACH
+          END IF
+    
+       END FOREACH
+       CALL g_xmdf_d.deleteElement(g_xmdf_d.getLength())
+       LET g_rec_b = l_ac1 - 1
+       DISPLAY g_rec_b TO FORMONLY.cnt
+       CLOSE b_fill_curs
+       FREE axmt500_03_pb
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.page1.xmdf005" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdf005  #顯示到畫面上
+
+            NEXT FIELD xmdf005                     #返回原欄位
+
+]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_xmdfdocno     LIKE xmdf_t.xmdfdocno
+DEFINE g_xmdfseq       LIKE xmdf_t.xmdfseq  ]]>
+  </point>
+  <point name="input.a.page1.xmdf001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    IF g_xmdf_d[l_ac].xmdfdocno IS NOT NULL AND g_xmdf_d[l_ac].xmdfseq IS NOT NULL AND g_xmdf_d[l_ac].xmdf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdf_d[l_ac].xmdfdocno != g_xmdf_d_t.xmdfdocno OR g_xmdf_d[l_ac].xmdfseq != g_xmdf_d_t.xmdfseq OR g_xmdf_d[l_ac].xmdf001 != g_xmdf_d_t.xmdf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdf_t WHERE "||"xmdfent = '" ||g_enterprise|| "' AND "||"xmdfdocno = '"||g_xmdf_d[l_ac].xmdfdocno ||"' AND "|| "xmdfseq = '"||g_xmdf_d[l_ac].xmdfseq ||"' AND "|| "xmdf001 = '"||g_xmdf_d[l_ac].xmdf001 ||"'",'std-00004',0) THEN 
+                     LET g_xmdf_d[l_ac].xmdf001 = g_xmdf_d_t.xmdf001
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.page1.xmdf002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmdf_d[l_ac].xmdf002) THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdf_d[l_ac].xmdf002 != g_xmdf_d_t.xmdf002 OR cl_null(g_xmdf_d_t.xmdf002))) THEN
+                  LET l_xmdf002 = 0
+                  #已維護的分批數量
+                  SELECT SUM(xmdf002) INTO l_xmdf002 FROM xmdf_t WHERE xmdfent = g_enterprise AND xmdfdocno = g_xmdfdocno AND xmdfseq = g_xmdfseq
+                  
+                  #分批數量總合+本分批數量不可以大於採購數量
+                  IF l_xmdf002 + g_xmdf_d[l_ac].xmdf002 > p_xmdc007 THEN
+                     CALL cl_err('','apm-00275',1)
+                     LET g_xmdf_d[l_ac].xmdf002 = g_xmdf_d_t.xmdf002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF 
+]]>
+  </point>
+  <point name="input.a.page1.xmdf003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.a.page1.xmdf004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.a.page1.xmdf005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    CALL axmt500_03_xmdf005_ref(g_xmdf_d[l_ac].xmdf005) RETURNING g_xmdf_d[l_ac].xmdf005_desc
+            DISPLAY BY NAME g_xmdf_d[l_ac].xmdf005_desc   
+            IF NOT cl_null(g_xmdf_d[l_ac].xmdf005) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xmdf_d[l_ac].xmdf005
+               
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_oocq002_274") THEN
+                  LET g_xmdf_d[l_ac].xmdf005 = g_xmdf_d_t.xmdf005
+                  CALL axmt500_03_xmdf005_ref(g_xmdf_d[l_ac].xmdf005) RETURNING g_xmdf_d[l_ac].xmdf005_desc
+                  DISPLAY BY NAME g_xmdf_d[l_ac].xmdf005_desc                  
+                  NEXT FIELD CURRENT
+               END IF
+            END IF ]]>
+  </point>
+  <point name="input.a.page1.xmdf006" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.a.page1.xmdfdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    #此段落由子樣板a05產生
+            IF  g_xmdf_d[g_detail_idx].xmdfdocno IS NOT NULL AND g_xmdf_d[g_detail_idx].xmdfseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdf_d[g_detail_idx].xmdfdocno != g_xmdf_d_t.xmdfdocno OR g_xmdf_d[g_detail_idx].xmdfseq != g_xmdf_d_t.xmdfseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdf_t WHERE "||"xmdfent = '" ||g_enterprise|| "' AND "||"xmdfdocno = '"||g_xmdf_d[g_detail_idx].xmdfdocno ||"' AND "|| "xmdfseq = '"||g_xmdf_d[g_detail_idx].xmdfseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdfseq" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    #此段落由子樣板a05產生
+            IF  g_xmdf_d[g_detail_idx].xmdfdocno IS NOT NULL AND g_xmdf_d[g_detail_idx].xmdfseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdf_d[g_detail_idx].xmdfdocno != g_xmdf_d_t.xmdfdocno OR g_xmdf_d[g_detail_idx].xmdfseq != g_xmdf_d_t.xmdfseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdf_t WHERE "||"xmdfent = '" ||g_enterprise|| "' AND "||"xmdfdocno = '"||g_xmdf_d[g_detail_idx].xmdfdocno ||"' AND "|| "xmdfseq = '"||g_xmdf_d[g_detail_idx].xmdfseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdfseq2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdf_d[g_detail_idx].xmdfdocno IS NOT NULL AND g_xmdf_d[g_detail_idx].xmdfseq IS NOT NULL AND g_xmdf_d[g_detail_idx].xmdfseq2 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdf_d[g_detail_idx].xmdfdocno != g_xmdf_d_t.xmdfdocno OR g_xmdf_d[g_detail_idx].xmdfseq != g_xmdf_d_t.xmdfseq OR g_xmdf_d[g_detail_idx].xmdfseq2 != g_xmdf_d_t.xmdfseq2)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdf_t WHERE "||"xmdfent = '" ||g_enterprise|| "' AND "||"xmdfdocno = '"||g_xmdf_d[g_detail_idx].xmdfdocno ||"' AND "|| "xmdfseq = '"||g_xmdf_d[g_detail_idx].xmdfseq ||"' AND "|| "xmdfseq2 = '"||g_xmdf_d[g_detail_idx].xmdfseq2 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdfsite" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.action" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                  ]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.b.page1.xmdf001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.b.page1.xmdf002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.b.page1.xmdf003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.b.page1.xmdf004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.b.page1.xmdf005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.b.page1.xmdf006" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.b.page1.xmdfdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.b.page1.xmdfseq" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.b.page1.xmdfsite" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET INT_FLAG = FALSE
+]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    CALL axmt500_03_b_fill()
+            LET g_rec_b = g_xmdf_d.getLength()
+            
+          BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+   
+            LET g_rec_b = g_xmdf_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND NOT cl_null(g_xmdf_d[l_ac].xmdfdocno)
+               AND NOT cl_null(g_xmdf_d[l_ac].xmdfseq) 
+               AND NOT cl_null(g_xmdf_d[l_ac].xmdfseq2) 
+            THEN
+               LET l_cmd='u'
+			   LET g_xmdf_d_t.* = g_xmdf_d[l_ac].*  #BACKUP
+			   
+			   OPEN axmt500_03_bcl USING g_enterprise,g_xmdf_d[l_ac].xmdfdocno,g_xmdf_d[l_ac].xmdfseq,g_xmdf_d[l_ac].xmdfseq2
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("axmt500_03_bcl",SQLCA.sqlcode,1)
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH axmt500_03_bcl INTO g_xmdf_d[l_ac].xmdfsite,g_xmdf_d[l_ac].xmdfdocno,g_xmdf_d[l_ac].xmdfseq,g_xmdf_d[l_ac].xmdfseq2,g_xmdf_d[l_ac].xmdf002,g_xmdf_d[l_ac].xmdf003,g_xmdf_d[l_ac].xmdf004,g_xmdf_d[l_ac].xmdf005,g_xmdf_d[l_ac].xmdf005_desc,g_xmdf_d[l_ac].xmdf006
+                  
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_xmdf_d[l_ac].xmdfdocno,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+				  CALL axmt500_03_xmdf005_ref(g_xmdf_d[l_ac].xmdf005) RETURNING g_xmdf_d[l_ac].xmdf005_desc
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+        
+         BEFORE INSERT
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_xmdf_d[l_ac].* TO NULL          
+            
+            LET g_xmdf_d[l_ac].xmdfsite = g_site
+            LET g_xmdf_d[l_ac].xmdfdocno = g_xmdfdocno
+            LET g_xmdf_d[l_ac].xmdfseq = g_xmdfseq
+            CALL axmt500_03_xmdf005_ref(g_xmdf_d[l_ac].xmdf005) RETURNING g_xmdf_d[l_ac].xmdf005_desc
+            DISPLAY BY NAME g_xmdf_d[l_ac].xmdf005_desc  
+            
+            LET g_xmdf_d[l_ac].xmdf006 = 'N'
+            
+            SELECT MAX(xmdfseq2)+1 INTO g_xmdf_d[l_ac].xmdfseq2 FROM xmdf_t WHERE xmdfent = g_enterprise AND xmdfdocno = g_xmdfdocno AND xmdfseq = g_xmdfseq
+            IF cl_null(g_xmdf_d[l_ac].xmdfseq2) OR g_xmdf_d[l_ac].xmdfseq2 = 0 THEN
+               LET g_xmdf_d[l_ac].xmdfseq2 = 1
+            END IF
+            
+            LET g_xmdf_d_t.* = g_xmdf_d[l_ac].*     #新輸入資料
+
+            CALL cl_show_fld_cont()
+            
+            
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM xmdf_t 
+             WHERE xmdfent = g_enterprise AND xmdfdocno = g_xmdf_d[l_ac].xmdfdocno
+               AND xmdfseq = g_xmdf_d[l_ac].xmdfseq
+               AND xmdfseq2 = g_xmdf_d[l_ac].xmdfseq2
+      
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INSERT INTO xmdf_t (xmdfent,xmdfsite,xmdfdocno,xmdfseq,xmdfseq2,xmdf002,xmdf003,xmdf004,xmdf005,xmdf006)
+                  VALUES (g_enterprise,g_site,g_xmdf_d[l_ac].xmdfdocno,g_xmdf_d[l_ac].xmdfseq,g_xmdf_d[l_ac].xmdfseq2,g_xmdf_d[l_ac].xmdf002,g_xmdf_d[l_ac].xmdf003,g_xmdf_d[l_ac].xmdf004,g_xmdf_d[l_ac].xmdf005,g_xmdf_d[l_ac].xmdf006)
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_xmdf_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("xmdf_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_xmdf_d[l_ac].xmdfdocno)
+               AND NOT cl_null(g_xmdf_d[l_ac].xmdfseq) 
+               AND NOT cl_null(g_xmdf_d[l_ac].xmdfseq2) THEN 
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+
+               DELETE FROM xmdf_t
+                WHERE xmdfent = g_enterprise AND xmdfdocno = g_xmdf_d_t.xmdfdocno
+                  AND xmdfseq = g_xmdf_d_t.xmdfseq
+                  AND xmdfseq2 = g_xmdf_d_t.xmdfseq2
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("xmdf_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE axmt500_03_bcl
+               LET l_count = g_xmdf_d.getLength()
+            END IF 
+            
+        ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_xmdf_d[l_ac].* = g_xmdf_d_t.*
+               CLOSE axmt500_03_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_xmdf_d[l_ac].xmdf002,-263,1)
+               LET g_xmdf_d[l_ac].* = g_xmdf_d_t.*
+            ELSE
+               UPDATE xmdf_t SET (xmdfseq2,xmdf002,xmdf003,xmdf004,xmdf005,xmdf006) = (g_xmdf_d[l_ac].xmdfseq2,g_xmdf_d[l_ac].xmdf002,g_xmdf_d[l_ac].xmdf003,g_xmdf_d[l_ac].xmdf004,g_xmdf_d[l_ac].xmdf005,g_xmdf_d[l_ac].xmdf006)
+                WHERE xmdfent = g_enterprise 
+                  AND xmdfdocno = g_xmdf_d_t.xmdfdocno
+                  AND xmdfseq = g_xmdf_d_t.xmdfseq
+                  AND xmdfseq2 = g_xmdf_d_t.xmdfseq2
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("xmdf_t",SQLCA.sqlcode,1)
+                  LET g_xmdf_d[l_ac].* = g_xmdf_d_t.*
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE axmt500_03_bcl
+            CALL s_transaction_end('Y','0')]]>
+  </point>
+  <point name="input.c.page1.xmdf001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.c.page1.xmdf002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.c.page1.xmdf003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.c.page1.xmdf004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.c.page1.xmdf005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdf_d[l_ac].xmdf005             #給予default值
+            
+
+            #給予arg
+            LET g_qryparam.arg1 = "274" #
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_xmdf_d[l_ac].xmdf005 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdf_d[l_ac].xmdf005 TO xmdf005              #顯示到畫面上
+            CALL axmt500_03_xmdf005_ref(g_xmdf_d[l_ac].xmdf005) RETURNING g_xmdf_d[l_ac].xmdf005_desc
+            DISPLAY BY NAME g_xmdf_d[l_ac].xmdf005_desc
+
+            NEXT FIELD xmdf005                          #返回原欄位]]>
+  </point>
+  <point name="input.c.page1.xmdf006" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.c.page1.xmdfdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.c.page1.xmdfseq" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.c.page1.xmdfsite" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_xmdfdocno     LIKE xmdf_t.xmdfdocno
+   DEFINE p_xmdfseq       LIKE xmdf_t.xmdfseq
+   DEFINE p_xmdc007       LIKE xmdc_t.xmdc007
+   DEFINE r_xmdf003       LIKE xmdf_t.xmdf003
+   DEFINE r_xmdf004       LIKE xmdf_t.xmdf004
+   DEFINE r_xmdf005       LIKE xmdf_t.xmdf005
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_n             LIKE type_t.num5                #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_xmdf002       LIKE xmdf_t.xmdf002
+   DEFINE l_xmdf003       LIKE xmdf_t.xmdf003]]>
+  </point>
+  <point name="input.g.page1.xmdf001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.g.page1.xmdf002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.g.page1.xmdf003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.g.page1.xmdf004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.g.page1.xmdf005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.g.page1.xmdf006" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.g.page1.xmdfdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.g.page1.xmdfseq" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.g.page1.xmdfsite" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                        ]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[          p_xmdfdocno,p_xmdfseq,p_xmdc007]]>
+  </point>
+  <point name="input.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   #離開時回傳交貨日期最早的那一分批序的約定交貨日期、預計簽收日期
+   LET l_xmdf003 = ''
+   LET r_xmdf003 = ''
+   LET r_xmdf004 = ''
+
+
+   SELECT MIN(xmdf003) INTO l_xmdf003 FROM xmdf_t WHERE xmdfent = g_enterprise AND xmdfdocno = g_xmdfdocno AND xmdfseq = g_xmdfseq
+   IF NOT cl_null(l_xmdf003) THEN
+      SELECT xmdf003,xmdf004 INTO r_xmdf003,r_xmdf004 FROM xmdf_t
+         WHERE xmdfent = g_enterprise AND xmdfdocno = g_xmdfdocno AND xmdfseq = g_xmdfseq AND xmdf003 = l_xmdf003 AND rownum = 1
+   END IF
+   RETURN r_xmdf003,r_xmdf004         ]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   WHENEVER ERROR CONTINUE
+   
+   LET g_xmdfdocno = p_xmdfdocno
+   LET g_xmdfseq = p_xmdfseq
+   
+   CALL axmt500_03_b_fill()
+   
+   LET l_forupd_sql = "SELECT xmdfsite, xmdfdocno,xmdfseq,xmdfseq2,xmdf002,xmdf003,xmdf004,xmdf005,'',xmdf006 FROM xmdf_t WHERE xmdfent = ? AND xmdfdocno = ? AND xmdfseq = ? AND xmdfseq2 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)
+   DECLARE axmt500_03_bcl CURSOR FROM l_forupd_sql
+]]>
+  </point>
+  <point name="show.body.reference" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdf_d[l_ac].xmdf005
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xmdf_d[l_ac].xmdf005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdf_d[l_ac].xmdf005_desc
+]]>
+  </point>
+  <section id="axmt500_03.description" ver="54" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000073
+#+ 
+#+ Filename...: axmt500_03
+#+ Description: ...
+#+ Creator....: 02040(2014/02/27)
+#+ Modifier...: 02040(2014/07/02)
+#+ Buildtype..: 應用 c02b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="axmt500_03.global" ver="10" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmdf_d        RECORD
+       xmdfsite LIKE xmdf_t.xmdfsite, 
+   xmdfdocno LIKE xmdf_t.xmdfdocno, 
+   xmdfseq LIKE xmdf_t.xmdfseq, 
+   xmdfseq2 LIKE xmdf_t.xmdfseq2, 
+   xmdf002 LIKE xmdf_t.xmdf002, 
+   xmdf003 LIKE xmdf_t.xmdf003, 
+   xmdf004 LIKE xmdf_t.xmdf004, 
+   xmdf005 LIKE xmdf_t.xmdf005, 
+   xmdf005_desc LIKE type_t.chr500, 
+   xmdf006 LIKE xmdf_t.xmdf006
+       END RECORD
+ 
+ 
+DEFINE g_xmdf_d          DYNAMIC ARRAY OF type_g_xmdf_d
+DEFINE g_xmdf_d_t        type_g_xmdf_d
+ 
+ 
+DEFINE g_xmdfdocno_t   LIKE xmdf_t.xmdfdocno    #Key值備份
+DEFINE g_xmdfseq_t      LIKE xmdf_t.xmdfseq    #Key值備份
+DEFINE g_xmdfseq2_t      LIKE xmdf_t.xmdfseq2    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE g_detail_idx          LIKE type_t.num5  
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point	
+]]>
+  </section>
+  <section id="axmt500_03.input" ver="7" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION axmt500_03(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axmt500_03 WITH FORM cl_ap_formpath("axm","axmt500_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xmdf_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a01產生
+         BEFORE FIELD xmdfsite
+            #add-point:BEFORE FIELD xmdfsite
+            {<point name="input.b.page1.xmdfsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdfsite
+            
+            #add-point:AFTER FIELD xmdfsite
+            {<point name="input.a.page1.xmdfsite" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdfsite
+            #add-point:ON CHANGE xmdfsite
+            {<point name="input.g.page1.xmdfsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdfdocno
+            #add-point:BEFORE FIELD xmdfdocno
+            {<point name="input.b.page1.xmdfdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdfdocno
+            
+            #add-point:AFTER FIELD xmdfdocno
+            {<point name="input.a.page1.xmdfdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdfdocno
+            #add-point:ON CHANGE xmdfdocno
+            {<point name="input.g.page1.xmdfdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdfseq
+            #add-point:BEFORE FIELD xmdfseq
+            {<point name="input.b.page1.xmdfseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdfseq
+            
+            #add-point:AFTER FIELD xmdfseq
+            {<point name="input.a.page1.xmdfseq" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdfseq
+            #add-point:ON CHANGE xmdfseq
+            {<point name="input.g.page1.xmdfseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdfseq2
+            #add-point:BEFORE FIELD xmdfseq2
+            {<point name="input.b.page1.xmdfseq2" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdfseq2
+            
+            #add-point:AFTER FIELD xmdfseq2
+            {<point name="input.a.page1.xmdfseq2" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdfseq2
+            #add-point:ON CHANGE xmdfseq2
+            {<point name="input.g.page1.xmdfseq2" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdf002
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_xmdf_d[l_ac].xmdf002,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmdf002
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmdf002
+            {<point name="input.a.page1.xmdf002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdf002
+            #add-point:BEFORE FIELD xmdf002
+            {<point name="input.b.page1.xmdf002" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdf002
+            #add-point:ON CHANGE xmdf002
+            {<point name="input.g.page1.xmdf002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdf003
+            #add-point:BEFORE FIELD xmdf003
+            {<point name="input.b.page1.xmdf003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdf003
+            
+            #add-point:AFTER FIELD xmdf003
+            {<point name="input.a.page1.xmdf003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdf003
+            #add-point:ON CHANGE xmdf003
+            {<point name="input.g.page1.xmdf003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdf004
+            #add-point:BEFORE FIELD xmdf004
+            {<point name="input.b.page1.xmdf004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdf004
+            
+            #add-point:AFTER FIELD xmdf004
+            {<point name="input.a.page1.xmdf004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdf004
+            #add-point:ON CHANGE xmdf004
+            {<point name="input.g.page1.xmdf004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdf005
+            
+            #add-point:AFTER FIELD xmdf005
+            {<point name="input.a.page1.xmdf005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdf005
+            #add-point:BEFORE FIELD xmdf005
+            {<point name="input.b.page1.xmdf005" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdf005
+            #add-point:ON CHANGE xmdf005
+            {<point name="input.g.page1.xmdf005" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdf006
+            #add-point:BEFORE FIELD xmdf006
+            {<point name="input.b.page1.xmdf006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdf006
+            
+            #add-point:AFTER FIELD xmdf006
+            {<point name="input.a.page1.xmdf006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdf006
+            #add-point:ON CHANGE xmdf006
+            {<point name="input.g.page1.xmdf006" />}
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page1.xmdfsite
+         ON ACTION controlp INFIELD xmdfsite
+            #add-point:ON ACTION controlp INFIELD xmdfsite
+            {<point name="input.c.page1.xmdfsite" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdfdocno
+         ON ACTION controlp INFIELD xmdfdocno
+            #add-point:ON ACTION controlp INFIELD xmdfdocno
+            {<point name="input.c.page1.xmdfdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdfseq
+         ON ACTION controlp INFIELD xmdfseq
+            #add-point:ON ACTION controlp INFIELD xmdfseq
+            {<point name="input.c.page1.xmdfseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdfseq2
+         ON ACTION controlp INFIELD xmdfseq2
+            #add-point:ON ACTION controlp INFIELD xmdfseq2
+            {<point name="input.c.page1.xmdfseq2" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdf002
+         ON ACTION controlp INFIELD xmdf002
+            #add-point:ON ACTION controlp INFIELD xmdf002
+            {<point name="input.c.page1.xmdf002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdf003
+         ON ACTION controlp INFIELD xmdf003
+            #add-point:ON ACTION controlp INFIELD xmdf003
+            {<point name="input.c.page1.xmdf003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdf004
+         ON ACTION controlp INFIELD xmdf004
+            #add-point:ON ACTION controlp INFIELD xmdf004
+            {<point name="input.c.page1.xmdf004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdf005
+         ON ACTION controlp INFIELD xmdf005
+            #add-point:ON ACTION controlp INFIELD xmdf005
+            {<point name="input.c.page1.xmdf005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdf006
+         ON ACTION controlp INFIELD xmdf006
+            #add-point:ON ACTION controlp INFIELD xmdf006
+            {<point name="input.c.page1.xmdf006" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axmt500_03 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axmt500_03.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="axmt500_03.other_function" ver="2" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afar001_g01" module="afa" jobmode="N" type="g01" industry="std" crtid="02003" crtdt="2015-01-27 15:45:11" modid="01531" moddt="2016-04-28 09:48:29" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.site(chr20|資產中心),tm.ld(chr20|帳套),tm.year(num5|年度),tm.peri(num5|期別),tm.a(chr1|分攤前後),tm.b(chr1|開賬/折舊),tm.c(chr1|多本位幣),tm.d(chr1|主要類型分頁),tm.e(chr1|幣別分頁),tm.f(chr1|部門分頁),tm.g(chr1|人員分頁)">
+    <var seq="1" value="faah_t_faah006(faah006|faah_t.faah006),faah006_desc(chr200|NULL),faam009,faam009_desc(chr200|NULL),faah_t_faah025(faah025|faah_t.faah025),faah025_desc(chr200|NULL),faah_t_faah028(faah028|faah_t.faah028),faah028_desc(chr200|NULL),faah_t_faah003(faah003|faah_t.faah003),faah_t_faah004(faah004|faah_t.faah004),faah_t_faah001(faah001|faah_t.faah001),faah_t_faah018(faah018|faah_t.faah018),faah_t_faah014(faah014|faah_t.faah014),faah_t_faah012(faah012|faah_t.faah012),faajld,faaj004,faam003,faam003_desc(chr200|NULL),faam007,faam007_desc(chr200|NULL),faam010,faam010_desc(chr200|NULL),faam011,faam014,faam015_016(num20_6|NULL),faam015,faam016,sumfaam013(num20_6|NULL),faam013,faam01_015(num20_6|NULL),faam014_015_018(num20_6|NULL),faam018,groupby(chr200|NULL),faament"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="faah_t_faah006(faah006|faah_t.faah006),faah006_desc(chr200|NULL),faam009,faam009_desc(chr200|NULL),faah_t_faah025(faah025|faah_t.faah025),faah025_desc(chr200|NULL),faah_t_faah028(faah028|faah_t.faah028),faah028_desc(chr200|NULL),faah_t_faah003(faah003|faah_t.faah003),faah_t_faah004(faah004|faah_t.faah004),faah_t_faah001(faah001|faah_t.faah001),faah_t_faah018(faah018|faah_t.faah018),faah_t_faah014(faah014|faah_t.faah014),faah_t_faah012(faah012|faah_t.faah012),faajld,faaj004,faam003,faam003_desc(chr200|NULL),faam007,faam007_desc(chr200|NULL),faam010,faam010_desc(chr200|NULL),faam011,faam014,faam015_016(num20_6|NULL),faam015,faam016,sumfaam013(num20_6|NULL),faam013,faam01_015(num20_6|NULL),faam014_015_018(num20_6|NULL),faam018,groupby(chr200|NULL),faament"/>
+    <sql id="g_from" query="faam_t,faaj_t,faah_t"/>
+    <sql id="g_where" query="" maintable="faam_t"/>
+    <sql id="g_order" query="groupby"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="groupby"/>
+    <section id="b_group" reptype="d01">
+      <rep type="groupby" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="faament,groupby"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="faament,groupby"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="faament,groupby"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="groupby" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="faament,groupby"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi110_01" module="anm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01258" crtdt="2013-08-16 10:41:29" modid="02599" moddt="2016-08-10 15:04:59" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="例假日產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmac001,nmac001_desc(chr80),bdate(dat),edate(dat),mon(chr10),tue(chr10),wed(chr10),thu(chr10),fri(chr10),sat(chr10),sun(chr10),nmac003,nmac003_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="prog_nmac001" prog="aooi074" parameter="nmac001"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi110_01" method="dialog">
+    <section id="input">
+      <input id="head" field="nmac001,bdate,edate,mon,tue,wed,thu,fri,sat,sun,nmac003"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="nmac001">
+        <after>
+          <reference field="nmac001_desc" ref_field="nmac001" map_field="nmac001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;4&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="nmac001_desc"/>
+      <column id="bdate"/>
+      <column id="edate"/>
+      <column id="mon"/>
+      <column id="tue"/>
+      <column id="wed"/>
+      <column id="thu"/>
+      <column id="fri"/>
+      <column id="sat"/>
+      <column id="sun"/>
+      <column id="nmac003">
+        <after>
+          <reference field="nmac003_desc" ref_field="nmac003" map_field="nmac003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;6&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="nmac003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmac_t" pk="nmac001,nmac002,nmac005">
+      <sql id="forupd_sql" type="sql" query="SELECT nmac001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmac003,&apos;&apos; FROM nmac_t WHERE nmacent= ? AND nmac001=? AND nmac002=? AND nmac005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="nmac001,nmac002,nmac005"/>
+    </head>
+  </dataset>
+</assembly>
+

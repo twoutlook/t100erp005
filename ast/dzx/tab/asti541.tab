@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asti541" module="ast" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="06254" crtdt="2015-12-04 15:35:15" modid="06254" moddt="2015-12-04 16:25:09" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="聯營結算單產生方式配置維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stdm001,stdm001_desc(chr500),stdmsite,stdmsite_desc(chr500),stdmunit,stdm002,stdm003,stdm003_desc(chr500),stdm004,stdm005,stdm006"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="asti541" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stdm001,stdmsite,stdmunit,stdm002,stdm003,stdm004,stdm005,stdm006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stdm001,stdmsite,stdmunit,stdm002,stdm003,stdm004,stdm005,stdm006"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="stdm001">
+        <after>
+          <check chkid="v_mhae001" id="isExist"/>
+          <reference field="stdm001_desc" ref_field="stdm_t.stdm001" map_field="stdm001" ref_sql="SELECT mhael024 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stdm001_desc"/>
+      <column id="stdmsite">
+        <after>
+          <reference field="stdmsite_desc" ref_field="stdm_t.stdmsite" map_field="stdmsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stdmsite_desc"/>
+      <column id="stdmunit"/>
+      <column id="stdm002">
+        <controlp form="q_stfa001" state="i"/>
+        <controlp form="q_stfa001" state="c"/>
+      </column>
+      <column id="stdm003">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+          <reference field="stdm003_desc" ref_field="stdm_t.stdm003" map_field="stdm003" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_5" state="i"/>
+        <controlp form="q_pmaa001_5" state="c"/>
+      </column>
+      <column id="stdm003_desc"/>
+      <column id="stdm004" type="S" default="N"/>
+      <column id="stdm005" type="S" default="N"/>
+      <column id="stdm006" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stdm_t" page="1" linked="" pk="stdm001">
+      <sql id="forupd_sql_detail" query="SELECT stdm001,&apos;&apos;,stdmsite,&apos;&apos;,stdmunit,stdm002,stdm003,&apos;&apos;,stdm004,stdm005,stdm006 FROM stdm_t WHERE stdment=? AND stdm001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stdm001,&apos;&apos;,stdmsite,&apos;&apos;,stdmunit,stdm002,stdm003,&apos;&apos;,stdm004,stdm005,stdm006 FROM stdm_t WHERE stdment= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq831" module="agl" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="00810" crtdt="2015-02-16 12:32:01" modid="00810" moddt="2015-07-30 16:50:30" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="現金流量項目明細查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),glbc003,glbcdocno,glapstus,glap007,glapdocdt,glbcseq,glaq001,glbc004,glbc004_desc(chr500),glbc008,glbc009,glaq002,glaq002_desc(chr500),glbcld,glbc001,glbc001_desc(chr500),glbc002,glbcseq1"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),glbc003(b_glbc003),glbcdocno(b_glbcdocno),glapstus(b_glapstus),glap007(b_glap007),glapdocdt(b_glapdocdt),glbcseq(b_glbcseq),glaq001(b_glaq001),glbc004(b_glbc004),glbc004_desc(b_glbc004_desc),glbc008(b_glbc008),glbc009(b_glbc009),glaq002(b_glaq002),glaq002_desc(b_glaq002_desc),glbcld(b_glbcld),glbc001(b_glbc001),glbc001_desc(b_glbc001_desc),glbc002(b_glbc002),glbcseq1(b_glbcseq1)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq831" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glbc003,glbcdocno,glapstus,glap007,glapdocdt,glbcseq,glaq001,glbc004,glbc004_desc,glbc008,glbc009,glaq002,glaq002_desc,glbcld,glbc001,glbc002,glbcseq1" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glbc003(b_glbc003),glbcdocno(b_glbcdocno),glapstus(b_glapstus),glap007(b_glap007),glapdocdt(b_glapdocdt),glbcseq(b_glbcseq),glaq001(b_glaq001),glbc004(b_glbc004),glbc008(b_glbc008),glbc009(b_glbc009),glaq002(b_glaq002),glbcld(b_glbcld),glbc001(b_glbc001),glbc002(b_glbc002),glbcseq1(b_glbcseq1)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="glbc003"/>
+      <column id="glbcdocno"/>
+      <column id="glapstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="glap007" def_scc="8007"/>
+      <column id="glapdocdt"/>
+      <column id="glbcseq"/>
+      <column id="glaq001">
+        <controlp form="q_oocq002_2" state="i"/>
+        <controlp form="q_oocq002_2" state="c"/>
+      </column>
+      <column id="glbc004">
+        <after/>
+      </column>
+      <column id="glbc004_desc"/>
+      <column id="glbc008"/>
+      <column id="glbc009"/>
+      <column id="glaq002">
+        <after/>
+        <controlp form="q_glac002" state="i"/>
+        <controlp form="q_glac002" state="c"/>
+      </column>
+      <column id="glaq002_desc"/>
+      <column id="glbcld"/>
+      <column id="glbc001">
+        <after>
+          <reference field="glbc001_desc" ref_field="glbc001" map_field="glbcent,glbcld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glbc001_desc"/>
+      <column id="glbc002"/>
+      <column id="glbcseq1"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glbc_t" page="1" linked="" pk="glbcld,glbcdocno,glbcseq,glbcseq1,glbc001,glbc002,glbc010">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,glbc003,glbcdocno,&apos;&apos;,&apos;&apos;,&apos;&apos;,glbcseq,&apos;&apos;,glbc004,&apos;&apos;,glbc008,glbc009,&apos;&apos;,&apos;&apos;,glbcld,glbc001,&apos;&apos;,glbc002,glbcseq1 FROM glbc_t WHERE glbcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

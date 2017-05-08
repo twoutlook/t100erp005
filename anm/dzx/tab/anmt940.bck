@@ -1,0 +1,322 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt940" module="anm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="03538" crtdt="2014-08-12 17:04:40" modid="03538" moddt="2014-09-05 14:14:24" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="內部資金調度作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbm001,nmbm001_desc(chr80),nmbmdocno,nmbmdocdt,nmbmstus,nmbmownid,nmbmownid_desc(chr80),nmbmowndp,nmbmowndp_desc(chr80),nmbmcrtid,nmbmcrtid_desc(chr80),nmbmcrtdp,nmbmcrtdp_desc(chr80),nmbmcrtdt,nmbmmodid,nmbmmodid_desc(chr80),nmbmmoddt,nmbmcnfid,nmbmcnfid_desc(chr80),nmbmcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmboseq,nmboseq2,nmbo002,nmbnl003(chr500),nmbo001,nmbo003,nmbo004,nmaal003(chr500),nmbo006,nmbo005,nmbo012,nmbo025,pmaal004(chr500),nmbo008,nmbo007,nmbo009,nmbo010,nmajl003(chr500),nmbo011,nmail004(chr500),nmbo013,nmbo021,glaald,glaacomp"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmboseq,nmboseq2_b2(chr10),nmbo002_b2(chr10),nmbnl003_b2(chr500),nmbo001_b2(chr10),nmbo006_b2(chr10),nmbo008_b2(num20_6),nmbo014,nmbo015,nmbo007_b2(num26_10),nmbo016,nmbo017,nmajl003_b2(chr500),nmbo018,nmail004_b2(chr500),glaald,glaacomp"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="nmbgseq,nmbgseq2,nmbg001,nmbg003,nmbg004,nmaal003_b3(chr500),nmbg006,nmbg005,nmbg012,nmbg025,pmaal004_b3(chr500),nmbg008,nmbg007,nmbg009,nmbg010,nmajl003_b3(chr500),nmbg011,nmail004_b3(chr500),nmbg013,nmbg021,glaald,glaacomp"/>
+      <var id="bs_field" value="nmbmdocno" pk="nmbmdocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt940" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbm001,nmbmdocno,nmbmdocdt,nmbmstus"/>
+      <input id="body" page="1" field="nmboseq,nmbo002,nmbo001,nmbo003,nmbo004,nmbo005,nmbo012,nmbo025,nmbo008,nmbo007,nmbo009,nmbo010,nmbo011" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="nmbo014,nmbo015,nmbo016,nmbo017,nmbo018" insert="N" append="N" delete="N"/>
+      <input id="body" page="3" field="nmbgseq,nmbg001,nmbg003,nmbg004,nmbg005,nmbg012,nmbg025,nmbg007,nmbg009,nmbg010,nmbg011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmbm001,nmbmdocno,nmbmdocdt,nmbmstus,nmbmownid,nmbmowndp,nmbmcrtid,nmbmcrtdp,nmbmcrtdt,nmbmmodid,nmbmmoddt,nmbmcnfid,nmbmcnfdt"/>
+      <construct id="body" page="1" field="nmboseq,nmbo002,nmbo001,nmbo003,nmbo004,nmbo005,nmbo012,nmbo025,nmbo008,nmbo007,nmbo009,nmbo010,nmbo011,nmbo021"/>
+      <construct id="body" page="3" field="nmbgseq,nmbg001,nmbg003,nmbg004,nmbg005,nmbg012,nmbg025,nmbg007,nmbg009,nmbg010,nmbg021"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmbmdocno"/>
+      <set id="head" type="no_entry" field="nmbmdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmbm001">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="nmbm001_desc" ref_field="nmbm_t.nmbm001" map_field="nmbment,nmbm001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xrah002_6" state="i"/>
+        <controlp form="q_xrah002_6" state="c"/>
+      </column>
+      <column id="nmbm001_desc"/>
+      <column id="nmbmdocno">
+        <controlp form="q_oobx001_1" state="i"/>
+        <controlp form="q_oobx001_1" state="c"/>
+      </column>
+      <column id="nmbmdocdt"/>
+      <column id="nmbmstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="nmbmownid">
+        <after>
+          <reference field="nmbmownid_desc" ref_field="nmbm_t.nmbmownid" map_field="nmbmownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbmownid_desc"/>
+      <column id="nmbmowndp">
+        <after>
+          <reference field="nmbmowndp_desc" ref_field="nmbm_t.nmbmowndp" map_field="nmbmowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbmowndp_desc"/>
+      <column id="nmbmcrtid">
+        <after>
+          <reference field="nmbmcrtid_desc" ref_field="nmbm_t.nmbmcrtid" map_field="nmbmcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbmcrtid_desc"/>
+      <column id="nmbmcrtdp">
+        <after>
+          <reference field="nmbmcrtdp_desc" ref_field="nmbm_t.nmbmcrtdp" map_field="nmbmcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbmcrtdp_desc"/>
+      <column id="nmbmcrtdt"/>
+      <column id="nmbmmodid">
+        <after>
+          <reference field="nmbmmodid_desc" ref_field="nmbm_t.nmbmmodid" map_field="nmbmmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbmmodid_desc"/>
+      <column id="nmbmmoddt"/>
+      <column id="nmbmcnfid">
+        <after>
+          <reference field="nmbmcnfid_desc" ref_field="nmbm_t.nmbmcnfid" map_field="nmbmcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbmcnfid_desc"/>
+      <column id="nmbmcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmboseq"/>
+      <column id="nmboseq2"/>
+      <column id="nmbo002">
+        <after>
+          <check chkid="v_nmbn001" id="isExist"/>
+        </after>
+        <controlp form="q_nmbn001" state="i"/>
+        <controlp form="q_nmbn001" state="c"/>
+      </column>
+      <column id="nmbnl003"/>
+      <column id="nmbo001">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmbo003">
+        <after>
+          <check chkid="v_nmab001" id="isExist"/>
+        </after>
+        <controlp form="q_nmab001" state="i"/>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="nmbo004">
+        <after>
+          <check chkid="v_nmas002_1" id="isExist"/>
+        </after>
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmaal003"/>
+      <column id="nmbo006"/>
+      <column id="nmbo005">
+        <after>
+          <check chkid="v_nmas002_1" id="isExist"/>
+        </after>
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmbo012"/>
+      <column id="nmbo025">
+        <after>
+          <check chkid="v_pmaa001_2" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001_5" state="i"/>
+        <controlp form="q_pmaa001_5" state="c"/>
+      </column>
+      <column id="pmaal004"/>
+      <column id="nmbo008">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbo007"/>
+      <column id="nmbo009">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbo010">
+        <after>
+          <check chkid="v_nmaj001" id="isExist"/>
+        </after>
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="nmajl003"/>
+      <column id="nmbo011">
+        <after>
+          <check chkid="v_nmad002" id="isExist"/>
+        </after>
+        <controlp form="q_nmad003" state="i"/>
+        <controlp form="q_nmad003" state="c"/>
+      </column>
+      <column id="nmail004"/>
+      <column id="nmbo013"/>
+      <column id="nmbo021"/>
+    </init>
+    <init id="body" page="2">
+      <column id="nmboseq2_b2"/>
+      <column id="nmbo002_b2"/>
+      <column id="nmbnl003_b2"/>
+      <column id="nmbo001_b2"/>
+      <column id="nmbo006_b2"/>
+      <column id="nmbo008_b2">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbo014">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbo015">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbo007_b2"/>
+      <column id="nmbo016">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbo017">
+        <after>
+          <check chkid="v_nmaj001" id="isExist"/>
+        </after>
+        <controlp form="q_nmaj001" state="i"/>
+      </column>
+      <column id="nmajl003_b2"/>
+      <column id="nmbo018">
+        <after>
+          <check chkid="v_nmad002" id="isExist"/>
+        </after>
+        <controlp form="q_nmad003" state="i"/>
+      </column>
+      <column id="nmail004_b2"/>
+    </init>
+    <init id="body" page="3">
+      <column id="nmbgseq"/>
+      <column id="nmbgseq2"/>
+      <column id="nmbg001">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmbg003">
+        <after>
+          <check chkid="v_nmab001" id="isExist"/>
+        </after>
+        <controlp form="q_nmab001" state="i"/>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="nmbg004">
+        <after>
+          <check chkid="v_nmas002_1" id="isExist"/>
+        </after>
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmaal003_b3"/>
+      <column id="nmbg006"/>
+      <column id="nmbg005">
+        <after>
+          <check chkid="v_nmas002_1" id="isExist"/>
+        </after>
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmbg012"/>
+      <column id="nmbg025">
+        <after>
+          <check chkid="v_pmaa001_2" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001_5" state="i"/>
+        <controlp form="q_pmaa001_5" state="c"/>
+      </column>
+      <column id="pmaal004_b3"/>
+      <column id="nmbg008">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbg007"/>
+      <column id="nmbg009">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbg010">
+        <after>
+          <check chkid="v_nmaj001" id="isExist"/>
+        </after>
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="nmajl003_b3"/>
+      <column id="nmbg011">
+        <after>
+          <check chkid="v_nmad002" id="isExist"/>
+        </after>
+        <controlp form="q_nmad003" state="i"/>
+        <controlp form="q_nmad003" state="c"/>
+      </column>
+      <column id="nmail004_b3"/>
+      <column id="nmbg013"/>
+      <column id="nmbg021"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmbm_t" pk="nmbmdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmbm001,&apos;&apos;,nmbmdocno,nmbmdocdt,nmbmstus,nmbmownid,&apos;&apos;,nmbmowndp,&apos;&apos;,nmbmcrtid,&apos;&apos;,nmbmcrtdp,&apos;&apos;,nmbmcrtdt,nmbmmodid,&apos;&apos;,nmbmmoddt,nmbmcnfid,&apos;&apos;,nmbmcnfdt FROM nmbm_t WHERE nmbment= ? AND nmbmdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmbm001,&apos;&apos;,nmbmdocno,nmbmdocdt,nmbmstus,nmbmownid,&apos;&apos;,nmbmowndp,&apos;&apos;,nmbmcrtid,&apos;&apos;,nmbmcrtdp,&apos;&apos;,nmbmcrtdt,nmbmmodid,&apos;&apos;,nmbmmoddt,nmbmcnfid,&apos;&apos;,nmbmcnfdt FROM nmbm_t" order="nmbmdocno"/>
+    </head>
+    <body id="nmbo_t" page="1,2" linked="" pk="nmboseq2" fk="nmbodocno">
+      <sql id="forupd_sql_detail" query="SELECT nmboseq,nmboseq2,nmbo002,&apos;&apos;,nmbo001,nmbo003,nmbo004,&apos;&apos;,nmbo006,nmbo005,nmbo012,nmbo025,&apos;&apos;,nmbo008,nmbo007,nmbo009,nmbo010,&apos;&apos;,nmbo011,&apos;&apos;,nmbo013,nmbo021,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmbo014,nmbo015,&apos;&apos;,nmbo016,nmbo017,&apos;&apos;,nmbo018,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmbo_t WHERE nmboent=? AND nmbodocno=? AND nmboseq2=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmboseq,nmboseq2,nmbo002,&apos;&apos;,nmbo001,nmbo003,nmbo004,&apos;&apos;,nmbo006,nmbo005,nmbo012,nmbo025,&apos;&apos;,nmbo008,nmbo007,nmbo009,nmbo010,&apos;&apos;,nmbo011,&apos;&apos;,nmbo013,nmbo021,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmbo014,nmbo015,&apos;&apos;,nmbo016,nmbo017,&apos;&apos;,nmbo018,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmbo_t WHERE nmboent=? AND nmbodocno=?"/>
+    </body>
+    <body id="nmbg_t" page="3" linked="" pk="nmbgseq2" fk="nmbgdocno">
+      <sql id="forupd_sql_detail" query="SELECT nmbgseq,nmbgseq2,nmbg001,nmbg003,nmbg004,&apos;&apos;,nmbg006,nmbg005,nmbg012,nmbg025,&apos;&apos;,nmbg008,nmbg007,nmbg009,nmbg010,&apos;&apos;,nmbg011,&apos;&apos;,nmbg013,nmbg021,&apos;&apos;,&apos;&apos; FROM nmbg_t WHERE nmbgent=? AND nmbgdocno=? AND nmbgseq2=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmbgseq,nmbgseq2,nmbg001,nmbg003,nmbg004,&apos;&apos;,nmbg006,nmbg005,nmbg012,nmbg025,&apos;&apos;,nmbg008,nmbg007,nmbg009,nmbg010,&apos;&apos;,nmbg011,&apos;&apos;,nmbg013,nmbg021,&apos;&apos;,&apos;&apos; FROM nmbg_t WHERE nmbgent=? AND nmbgdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

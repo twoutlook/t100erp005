@@ -1,0 +1,118 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmq500" module="apm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="04441" crtdt="2014-07-29 00:00:00" modid="04441" moddt="2016-04-28 13:49:44" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="採購追蹤查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="pmdldocno,pmdldocdt,pmdl004,pmdl002,pmdl003,pmdo001,imaa009,pmdlstus,pmdn045"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr500),pmdlstus,pmdldocno,pmdldocdt,pmdl004,pmdl004_desc(chr500),pmdl002,prog_b_pmdl002(string),pmdl002_desc(chr500),pmdl003,pmdl003_desc(chr500),pmdn045,pmdoseq,pmdoseq1,pmdoseq2,pmdo003,pmdo001,pmdo001_desc(chr500),pmdo001_desc_desc(chr500),pmdo002,pmdo002_desc(chr500),pmdo006,pmdo004,pmdo004_desc(chr500),pmdo013,pmdo015,pmdo019,pmdo017,pmdo016,num01(num20_6),pmdn050"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(b_sel),pmdlstus(b_pmdlstus),pmdldocno(b_pmdldocno),pmdldocdt(b_pmdldocdt),pmdl004(b_pmdl004),pmdl004_desc(b_pmdl004_desc),pmdl002(b_pmdl002),prog_b_pmdl002(prog_b_pmdl002),pmdl002_desc(b_pmdl002_desc),pmdl003(b_pmdl003),pmdl003_desc(b_pmdl003_desc),pmdn045(b_pmdn045),pmdoseq(b_pmdoseq),pmdoseq1(b_pmdoseq1),pmdoseq2(b_pmdoseq2),pmdo003(b_pmdo003),pmdo001(b_pmdo001),pmdo001_desc(b_pmdo001_desc),pmdo001_desc_desc(b_pmdo001_desc_desc),pmdo002(b_pmdo002),pmdo002_desc(b_pmdo002_desc),pmdo006(b_pmdo006),pmdo004(b_pmdo004),pmdo004_desc(b_pmdo004_desc),pmdo013(b_pmdo013),pmdo015(b_pmdo015),pmdo019(b_pmdo019),pmdo017(b_pmdo017),pmdo016(b_pmdo016),num01(num01),pmdn050(b_pmdn050)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <cluster id="prog_b_pmdl002" qry_field="pmdl002" prog="aooi130" parameter="pmdl002"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_aooi130" prog="aooi130" parameter="pmdl002"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmq500" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="pmdlstus(b_pmdlstus),pmdldocno(b_pmdldocno),pmdldocdt(b_pmdldocdt),pmdl004(b_pmdl004),pmdl002(b_pmdl002),pmdl003(b_pmdl003),pmdn045(b_pmdn045),pmdoseq(b_pmdoseq),pmdoseq1(b_pmdoseq1),pmdoseq2(b_pmdoseq2),pmdo003(b_pmdo003),pmdo001(b_pmdo001),pmdo002(b_pmdo002),pmdo006(b_pmdo006),pmdo004(b_pmdo004),pmdo013(b_pmdo013),pmdo015(b_pmdo015),pmdo019(b_pmdo019),pmdo017(b_pmdo017),pmdo016(b_pmdo016),pmdn050(b_pmdn050)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pmdlstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="H" pic="hold"/>
+        <stus id="C" pic="closed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="UH" pic="unhold"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="pmdldocno">
+        <controlp form="q_pmdldocno" state="c"/>
+      </column>
+      <column id="pmdldocdt"/>
+      <column id="pmdl004">
+        <after>
+          <reference field="pmdl004_desc" ref_field="pmdl004" map_field="pmbl004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="pmdl004_desc"/>
+      <column id="pmdl002">
+        <after>
+          <reference field="pmdl002_desc" ref_field="pmdl002" map_field="pmdl002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prog_b_pmdl002"/>
+      <column id="pmdl002_desc"/>
+      <column id="pmdl003">
+        <after>
+          <reference field="pmdl003_desc" ref_field="pmdl003" map_field="pmdl003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="pmdl003_desc"/>
+      <column id="pmdn045" def_scc="2035"/>
+      <column id="pmdoseq"/>
+      <column id="pmdoseq1"/>
+      <column id="pmdoseq2"/>
+      <column id="pmdo003" type="S" default="1" def_scc="2055"/>
+      <column id="pmdo001">
+        <after>
+          <reference field="pmdo001_desc" ref_field="pmdo001" map_field="pmdo001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="pmdo001_desc">
+        <after>
+          <reference field="pmdo001_desc_desc" ref_field="pmdo001" map_field="pmdo001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmdo001_desc_desc"/>
+      <column id="pmdo002">
+        <after/>
+      </column>
+      <column id="pmdo002_desc"/>
+      <column id="pmdo006" type="S" default="0"/>
+      <column id="pmdo004">
+        <after>
+          <reference field="pmdo004_desc" ref_field="pmdo004" map_field="pmdo004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmdo004_desc"/>
+      <column id="pmdo013"/>
+      <column id="pmdo015" type="S" default="0"/>
+      <column id="pmdo019" type="S" default="0"/>
+      <column id="pmdo017" type="S" default="0"/>
+      <column id="pmdo016" type="S" default="0"/>
+      <column id="num01"/>
+      <column id="pmdn050"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmdl_t" page="1" linked="" pk="pmdldocno" fk="" detail="Y">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pmdlstus,pmdldocno,pmdldocdt,pmdl004,&apos;&apos;,pmdl002,&apos;&apos;,pmdl003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM pmdl_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

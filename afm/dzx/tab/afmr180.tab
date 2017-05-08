@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmr180" module="afm" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="08729" crtdt="2016-09-28 13:51:03" modid="08729" moddt="2016-09-28 13:51:03" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="融資計提利息單列印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmcysite,fmcysite_desc(chr80),fmcycomp,fmcycomp_desc(chr80),fmcydocno,fmcydocdt,fmcystus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="afm" filename="afmr180" method="dialog">
+    <section id="input">
+      <input id="head" field="fmcysite,fmcycomp,fmcystus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmcydocno,fmcydocdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmcysite">
+        <after>
+          <reference field="fmcysite_desc" ref_field="fmcy_t.fmcysite" map_field="fmcyent,fmcysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_33" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmcysite_desc"/>
+      <column id="fmcycomp">
+        <after>
+          <reference field="fmcycomp_desc" ref_field="fmcy_t.fmcycomp" map_field="fmcyent,fmcycomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_fmcycomp" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmcycomp_desc"/>
+      <column id="fmcydocno"/>
+      <column id="fmcydocdt"/>
+      <column id="fmcystus" scc="13">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="C" pic="closed"/>
+      </column>
+    </init>
+  </form>
+</assembly>
+

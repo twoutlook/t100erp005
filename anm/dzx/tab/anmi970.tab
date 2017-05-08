@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi970" module="anm" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02114" crtdt="2015-10-15 15:21:02" modid="02114" moddt="2015-10-15 15:21:02" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資金模擬匯率維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmeh001,nmeh001_desc(chr80),nmeh006"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmeh002,nmeh003,nmeh003_desc(chr500),nmeh007,nmeh004,nmeh005,nmehstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmeh002,nmeh003,nmehownid,nmehownid_desc(chr500),nmehowndp,nmehowndp_desc(chr500),nmehcrtid,nmehcrtid_desc(chr500),nmehcrtdp,nmehcrtdp_desc(chr500),nmehcrtdt,nmehmodid,nmehmodid_desc(chr500),nmehmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi970" method="dialog">
+    <section id="input">
+      <input id="head" field="nmeh001,nmeh006"/>
+      <input id="body" page="1" field="nmeh002,nmeh003,nmeh007,nmeh004,nmeh005,nmehstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmeh001,nmeh006"/>
+      <construct id="body" page="1" field="nmeh002,nmeh003,nmeh007,nmeh004,nmeh005,nmehstus"/>
+      <construct id="body" page="2" field="nmehownid,nmehowndp,nmehcrtid,nmehcrtdp,nmehcrtdt,nmehmodid,nmehmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmeh001"/>
+      <set id="head" type="no_entry" field="nmeh001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmeh001">
+        <after>
+          <reference field="nmeh001_desc" ref_field="nmeh_t.nmeh001" map_field="nmeh001" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmeh001_desc"/>
+      <column id="nmeh006" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="nmeh002"/>
+      <column id="nmeh003">
+        <after>
+          <reference field="nmeh003_desc" ref_field="nmeh003" map_field="nmeh003" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmeh003_desc"/>
+      <column id="nmeh007" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmeh004" type="S" default="1"/>
+      <column id="nmeh005" type="S" default="1"/>
+      <column id="nmehstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmehownid">
+        <after>
+          <reference field="nmehownid_desc" ref_field="nmeh_t.nmehownid" map_field="nmehownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmehownid_desc"/>
+      <column id="nmehowndp">
+        <after>
+          <reference field="nmehowndp_desc" ref_field="nmeh_t.nmehowndp" map_field="nmehowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmehowndp_desc"/>
+      <column id="nmehcrtid">
+        <after>
+          <reference field="nmehcrtid_desc" ref_field="nmeh_t.nmehcrtid" map_field="nmehcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmehcrtid_desc"/>
+      <column id="nmehcrtdp">
+        <after>
+          <reference field="nmehcrtdp_desc" ref_field="nmeh_t.nmehcrtdp" map_field="nmehcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmehcrtdp_desc"/>
+      <column id="nmehcrtdt"/>
+      <column id="nmehmodid">
+        <after>
+          <reference field="nmehmodid_desc" ref_field="nmeh_t.nmehmodid" map_field="nmehmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmehmodid_desc"/>
+      <column id="nmehmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmeh_t" pk="nmeh001">
+      <sql id="forupd_sql" type="sql" query="SELECT nmeh001,&apos;&apos;,nmeh006 FROM nmeh_t WHERE nmehent= ? AND nmeh001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmeh001,&apos;&apos;,nmeh006 FROM nmeh_t" order="nmeh001"/>
+    </head>
+    <body id="nmeh_t" page="1,2" linked="" pk="nmeh002,nmeh003" fk="nmeh001">
+      <sql id="forupd_sql_detail" query="SELECT nmeh002,nmeh003,&apos;&apos;,nmeh007,nmeh004,nmeh005,nmehstus,&apos;&apos;,&apos;&apos;,nmehownid,&apos;&apos;,nmehowndp,&apos;&apos;,nmehcrtid,&apos;&apos;,nmehcrtdp,&apos;&apos;,nmehcrtdt,nmehmodid,&apos;&apos;,nmehmoddt FROM nmeh_t WHERE nmehent=? AND nmeh001=? AND nmeh002=? AND nmeh003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmeh002,nmeh003,&apos;&apos;,nmeh007,nmeh004,nmeh005,nmehstus,&apos;&apos;,&apos;&apos;,nmehownid,&apos;&apos;,nmehowndp,&apos;&apos;,nmehcrtid,&apos;&apos;,nmehcrtdp,&apos;&apos;,nmehcrtdt,nmehmodid,&apos;&apos;,nmehmoddt FROM nmeh_t WHERE nmehent= ? AND nmeh001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

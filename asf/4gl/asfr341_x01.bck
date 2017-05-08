@@ -1,0 +1,653 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfr341_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:2(2016-04-11 17:43:03), PR版次:0002(2016-04-13 20:17:15)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000056
+#+ Filename...: asfr341_x01
+#+ Description: 完工入庫明細
+#+ Creator....: 00768(2014-11-06 14:12:23)
+#+ Modifier...: 07024 -SD/PR- 04441
+ 
+{</section>}
+ 
+{<section id="asfr341_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:7)
+#add-point:填寫註解說明
+
+#end add-point
+#add-point:填寫註解說明
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfr341_x01.main" readonly="Y" >}
+PUBLIC FUNCTION asfr341_x01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "asfr341_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL asfr341_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL asfr341_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL asfr341_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL asfr341_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL asfr341_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr341_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION asfr341_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "sfecdocno.sfec_t.sfecdocno,l_sfeadocdt.sfea_t.sfeadocdt,l_sfea001.sfea_t.sfea001,l_sfea002.sfea_t.sfea002,l_sfea002_desc.ooag_t.ooag011,l_sfea003.sfea_t.sfea003,l_sfea003_desc.ooefl_t.ooefl003,l_sfea004.sfea_t.sfea004,l_sfea005.sfea_t.sfea005,sfecseq.sfec_t.sfecseq,sfecseq1.sfec_t.sfecseq1,sfec001.sfec_t.sfec001,sfec021.sfec_t.sfec021,sfec004.sfec_t.sfec004,l_sfec004_desc.gzcbl_t.gzcbl004,sfec005.sfec_t.sfec005,l_sfec005_imaal003.imaal_t.imaal003,l_sfec005_imaal004.imaal_t.imaal004,sfec006.sfec_t.sfec006,l_sfec006_desc.type_t.chr100,l_imaa009.imaa_t.imaa009,l_imaa009_desc.rtaxl_t.rtaxl003,l_imae011.imae_t.imae011,l_imae011_desc.oocql_t.oocql004,sfec002.sfec_t.sfec002,sfec003.sfec_t.sfec003,l_qcbc002.qcbc_t.qcbc002,l_qcbc002_desc.qcaol_t.qcaol004,sfec009.sfec_t.sfec009,sfec008.sfec_t.sfec008,sfec012.sfec_t.sfec012,l_sfec012.inayl_t.inayl003,sfec013.sfec_t.sfec013,l_sfec013.inab_t.inab003,sfec014.sfec_t.sfec014,sfec015.sfec_t.sfec015,sfec017.sfec_t.sfec017,l_ooff013.ooff_t.ooff013,sfec010.sfec_t.sfec010,sfec011.sfec_t.sfec011,sfec016.sfec_t.sfec016,sfec022.sfec_t.sfec022,l_sfec022_desc.type_t.chr50,sfec023.sfec_t.sfec023,l_sfec023_desc.type_t.chr50,sfec024.sfec_t.sfec024,l_sfec024_desc.type_t.chr50,l_imaa127.type_t.chr10,l_imaa127_desc.type_t.chr50" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr341_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION asfr341_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)" 
+ 
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr341_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION asfr341_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+DEFINE l_qcaol001         LIKE qcaol_t.qcaol001  #160411-00027#1 by whitney add
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   #160411-00027#1 by whitney add start
+   CALL cl_get_para(g_enterprise,g_site,'S-MFG-0046') RETURNING l_qcaol001
+#   LET g_select = " SELECT sfecdocno,sfeadocdt,sfea001,sfea002,t1.ooag011,sfea003,t2.ooefl003,sfea004,sfea005,sfecseq, ",
+#                  "        sfecseq1,sfec001,sfec021,sfec004,t3.gzcbl004,sfec005,t4.imaal003,t4.imaal004,sfec006,NULL, ",
+#                  "        t5.imaa009,t5.rtaxl003,t6.imae011,t6.oocql004,sfec002,sfec003,t11.qcbc002,t11.qcaol004,sfec009,sfec008, ",
+#                  "        sfec012,t7.inayl003,sfec013,t8.inab003,sfec014,sfec015,sfec017,NULL,sfec010,sfec011, ",
+#                  "        sfec016,sfec022, ",
+#                  "        CASE WHEN t12.pjabl003 IS NULL THEN t13.pjbal003 ELSE t12.pjabl003 END, ",
+#                  "        sfec023,t9.pjbbl004,sfec024,t10.pjbml004,t5.imaa127,t5.oocql004 "
+   LET g_select = " SELECT sfecdocno,sfeadocdt,sfea001,sfea002, ",
+                  "        (SELECT ooag011 FROM ooag_t WHERE ooagent=sfeaent AND ooag001=sfea002) ooag011, ",
+                  "        sfea003, ",
+                  "        (SELECT ooefl003 FROM ooefl_t WHERE ooeflent=sfeaent AND ooefl001=sfea003 AND ooefl002='"||g_dlang||"') ooefl003, ",
+                  "        sfea004,sfea005,sfecseq, ",
+                  "        sfecseq1,sfec001,sfec021,sfec004, ",
+                  "        (SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001='4019' AND gzcbl002=sfec004 AND gzcbl003='"||g_dlang||"') gzcbl004, ",
+                  "        sfec005,t4.imaal003,t4.imaal004,sfec006,",
+                  "        (SELECT inaml004 FROM inaml_t WHERE inamlent=sfecent AND inaml001=sfec005 AND inaml002=sfec006 AND inaml003='"||g_dlang||"') inaml004,",
+                  "        t5.imaa009,t5.rtaxl003,t6.imae011,t6.oocql004,sfec002,sfec003,t11.qcbc002,t11.qcaol004,sfec009,sfec008, ",
+                  "        sfec012, ",
+                  "        (SELECT inayl003 FROM inayl_t WHERE inaylent=sfecent AND inayl001=sfec012 AND inayl002='"||g_dlang||"') inayl003, ",
+                  "        sfec013,  ",
+                  "        (SELECT inab003 FROM inab_t WHERE inabent=sfecent AND inabsite=sfecsite AND inab001=sfec012 AND inab002=sfec013) inab003, ",
+                  "        sfec014,sfec015,sfec017,NULL,sfec010,sfec011, ",
+                  "        sfec016,sfec022, ",
+                  "        CASE WHEN t12.pjabl003 IS NULL THEN t13.pjbal003 ELSE t12.pjabl003 END, ",
+                  "        sfec023, ",
+                  "        (SELECT pjbbl004 FROM pjbbl_t WHERE pjbblent=sfecent AND pjbbl001=sfec022 AND pjbbl002=sfec023 AND pjbbl003='"||g_dlang||"') pjbbl004, ",
+                  "        sfec024, ",
+                  "        (SELECT pjbml004 FROM pjbml_t WHERE pjbmlent=sfecent AND pjbml001=sfec022 AND pjbml002=sfec024 AND pjbml003='"||g_dlang||"') pjbml004, ",
+                  "        t5.imaa127,t5.oocql004 "
+   #160411-00027#1 by whitney add end
+
+#   #end add-point
+#   LET g_select = " SELECT sfecdocno,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,sfecseq,sfecseq1,sfec001, 
+#       sfec021,sfec004,NULL,sfec005,NULL,NULL,sfec006,NULL,NULL,NULL,NULL,NULL,sfec002,sfec003,NULL, 
+#       NULL,sfec009,sfec008,sfec012,NULL,sfec013,NULL,sfec014,sfec015,sfec017,NULL,sfec010,sfec011,sfec016, 
+#       sfec022,NULL,sfec023,NULL,sfec024,NULL,NULL,NULL"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   #160411-00027#1 by whitney add start
+#   LET g_from = " FROM sfea_t ",
+#                " LEFT JOIN ooag_t t1 ON t1.ooagent=sfeaent AND t1.ooag001=sfea002 ",
+#                " LEFT JOIN ooefl_t t2 ON t2.ooeflent=sfeaent AND t2.ooefl001=sfea003 AND t2.ooefl002='"||g_dlang||"' ",
+#                "     ,sfec_t ",
+#                " LEFT JOIN gzcbl_t t3 ON t3.gzcbl001='4019' AND t3.gzcbl002=sfec004 AND t3.gzcbl003='"||g_dlang||"' ",
+#                " LEFT JOIN imaal_t t4 ON t4.imaalent=sfecent AND t4.imaal001=sfec005 AND t4.imaal002='"||g_dlang||"' ",
+#                " LEFT JOIN (SELECT imaaent,imaa001,imaa009,rtaxl003,imaa127,oocql004 FROM imaa_t ",
+#                " LEFT JOIN rtaxl_t ON rtaxlent=imaaent AND rtaxl001=imaa009 AND rtaxl002='"||g_dlang||"' ",
+#                " LEFT JOIN oocql_t ON oocqlent=imaaent AND oocql001='2003' AND oocql002=imaa127 AND oocql003='"||g_dlang||"') t5 ",
+#                "   ON t5.imaaent=sfecent AND t5.imaa001=sfec005 ",
+#                " LEFT JOIN (SELECT imaeent,imaesite,imae001,imae011,oocql004 FROM imae_t ",
+#                " LEFT JOIN oocql_t ON oocqlent=imaeent AND oocql001='204' AND oocql002=imae011 AND oocql003='"||g_dlang||"') t6 ",
+#                "   ON t6.imaeent=sfecent AND t6.imaesite=sfecsite AND t6.imae001=sfec005 ",
+#                " LEFT JOIN inayl_t t7 ON t7.inaylent=sfecent AND t7.inayl001=sfec012 AND t7.inayl002='"||g_dlang||"' ",
+#                " LEFT JOIN inab_t t8 ON t8.inabent=sfecent AND t8.inabsite=sfecsite AND t8.inab001=sfec012 AND t8.inab002=sfec013 ",
+#                " LEFT JOIN pjbbl_t t9 ON t9.pjbblent=sfecent AND t9.pjbbl001=sfec022 AND t9.pjbbl002=sfec023 AND t9.pjbbl003='"||g_dlang||"' ",
+#                " LEFT JOIN pjbml_t t10 ON t10.pjbmlent=sfecent AND t10.pjbml001=sfec022 AND t10.pjbml002=sfec024 AND t10.pjbml003='"||g_dlang||"' ",
+#                " LEFT JOIN (SELECT qcbcent,qcbcsite,qcbcdocno,qcbcseq,qcbc002,qcaol004 FROM qcbc_t  ",
+#                " LEFT JOIN qcaol_t ON qcaolent=qcbcent AND qcaol001='"||l_qcaol001||"' AND qcaol002=qcbc002 AND qcaol003='"||g_dlang||"') t11 ",
+#                "   ON t11.qcbcent=sfecent AND t11.qcbcsite=sfecsite AND t11.qcbcdocno=sfec002 AND t11.qcbcseq=sfec003 ",
+#                " LEFT JOIN pjabl_t t12 ON t12.pjablent=sfecent AND t12.pjabl001=sfec022 AND t12.pjabl002='"||g_dlang||"' ",
+#                " LEFT JOIN pjbal_t t13 ON t13.pjbalent=sfecent AND t13.pjbal001=sfec022 AND t13.pjbal002='"||g_dlang||"' "
+   LET g_from = " FROM sfea_t,sfec_t ",
+                " LEFT JOIN imaal_t t4 ON t4.imaalent=sfecent AND t4.imaal001=sfec005 AND t4.imaal002='"||g_dlang||"' ",
+                " LEFT JOIN (SELECT imaaent,imaa001,imaa009,rtaxl003,imaa127,oocql004 FROM imaa_t ",
+                " LEFT JOIN rtaxl_t ON rtaxlent=imaaent AND rtaxl001=imaa009 AND rtaxl002='"||g_dlang||"' ",
+                " LEFT JOIN oocql_t ON oocqlent=imaaent AND oocql001='2003' AND oocql002=imaa127 AND oocql003='"||g_dlang||"') t5 ",
+                "   ON t5.imaaent=sfecent AND t5.imaa001=sfec005 ",
+                " LEFT JOIN (SELECT imaeent,imaesite,imae001,imae011,oocql004 FROM imae_t ",
+                " LEFT JOIN oocql_t ON oocqlent=imaeent AND oocql001='204' AND oocql002=imae011 AND oocql003='"||g_dlang||"') t6 ",
+                "   ON t6.imaeent=sfecent AND t6.imaesite=sfecsite AND t6.imae001=sfec005 ",
+                " LEFT JOIN (SELECT qcbcent,qcbcsite,qcbcdocno,qcbcseq,qcbc002,qcaol004 FROM qcbc_t  ",
+                " LEFT JOIN qcaol_t ON qcaolent=qcbcent AND qcaol001='"||l_qcaol001||"' AND qcaol002=qcbc002 AND qcaol003='"||g_dlang||"') t11 ",
+                "   ON t11.qcbcent=sfecent AND t11.qcbcsite=sfecsite AND t11.qcbcdocno=sfec002 AND t11.qcbcseq=sfec003 ",
+                " LEFT JOIN pjabl_t t12 ON t12.pjablent=sfecent AND t12.pjabl001=sfec022 AND t12.pjabl002='"||g_dlang||"' ",
+                " LEFT JOIN pjbal_t t13 ON t13.pjbalent=sfecent AND t13.pjbal001=sfec022 AND t13.pjbal002='"||g_dlang||"' "
+   #160411-00027#1 by whitney add end
+
+#   #end add-point
+#    LET g_from = " FROM sfec_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   #160411-00027#1 by whitney add start
+    LET g_where = " WHERE sfeaent = ",g_enterprise,
+                  "   AND sfeastus = 'S' ",
+                  "   AND sfecent = sfeaent ",
+                  "   AND sfecdocno = sfeadocno ",
+                  "   AND ",tm.wc CLIPPED
+   #160411-00027#1 by whitney add end
+
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+ 
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("sfec_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE asfr341_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE asfr341_x01_curs CURSOR FOR asfr341_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr341_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION asfr341_x01_ins_data()
+DEFINE sr RECORD 
+   sfecdocno LIKE sfec_t.sfecdocno, 
+   l_sfeadocdt LIKE sfea_t.sfeadocdt, 
+   l_sfea001 LIKE sfea_t.sfea001, 
+   l_sfea002 LIKE sfea_t.sfea002, 
+   l_sfea002_desc LIKE ooag_t.ooag011, 
+   l_sfea003 LIKE sfea_t.sfea003, 
+   l_sfea003_desc LIKE ooefl_t.ooefl003, 
+   l_sfea004 LIKE sfea_t.sfea004, 
+   l_sfea005 LIKE sfea_t.sfea005, 
+   sfecseq LIKE sfec_t.sfecseq, 
+   sfecseq1 LIKE sfec_t.sfecseq1, 
+   sfec001 LIKE sfec_t.sfec001, 
+   sfec021 LIKE sfec_t.sfec021, 
+   sfec004 LIKE sfec_t.sfec004, 
+   l_sfec004_desc LIKE gzcbl_t.gzcbl004, 
+   sfec005 LIKE sfec_t.sfec005, 
+   l_sfec005_imaal003 LIKE imaal_t.imaal003, 
+   l_sfec005_imaal004 LIKE imaal_t.imaal004, 
+   sfec006 LIKE sfec_t.sfec006, 
+   l_sfec006_desc LIKE type_t.chr100, 
+   l_imaa009 LIKE imaa_t.imaa009, 
+   l_imaa009_desc LIKE rtaxl_t.rtaxl003, 
+   l_imae011 LIKE imae_t.imae011, 
+   l_imae011_desc LIKE oocql_t.oocql004, 
+   sfec002 LIKE sfec_t.sfec002, 
+   sfec003 LIKE sfec_t.sfec003, 
+   l_qcbc002 LIKE qcbc_t.qcbc002, 
+   l_qcbc002_desc LIKE qcaol_t.qcaol004, 
+   sfec009 LIKE sfec_t.sfec009, 
+   sfec008 LIKE sfec_t.sfec008, 
+   sfec012 LIKE sfec_t.sfec012, 
+   l_sfec012 LIKE inayl_t.inayl003, 
+   sfec013 LIKE sfec_t.sfec013, 
+   l_sfec013 LIKE inab_t.inab003, 
+   sfec014 LIKE sfec_t.sfec014, 
+   sfec015 LIKE sfec_t.sfec015, 
+   sfec017 LIKE sfec_t.sfec017, 
+   l_ooff013 LIKE ooff_t.ooff013, 
+   sfec010 LIKE sfec_t.sfec010, 
+   sfec011 LIKE sfec_t.sfec011, 
+   sfec016 LIKE sfec_t.sfec016, 
+   sfec022 LIKE sfec_t.sfec022, 
+   l_sfec022_desc LIKE type_t.chr50, 
+   sfec023 LIKE sfec_t.sfec023, 
+   l_sfec023_desc LIKE type_t.chr50, 
+   sfec024 LIKE sfec_t.sfec024, 
+   l_sfec024_desc LIKE type_t.chr50, 
+   l_imaa127 LIKE type_t.chr10, 
+   l_imaa127_desc LIKE type_t.chr50
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_success  LIKE type_t.num5
+DEFINE l_imaa127  LIKE imaa_t.imaa127  #系列 20150810 by dorislai add
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH asfr341_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+ 
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+#160411-00027#1 by whitney mark start
+#       #入庫单单头sfea_t
+#       SELECT sfeadocdt,sfea001,sfea002,ooag011,
+#              sfea003,ooefl003,sfea004,sfea005#,sfeastus
+#         INTO sr.l_sfeadocdt,sr.l_sfea001,sr.l_sfea002,sr.l_sfea002_desc,
+#              sr.l_sfea003,sr.l_sfea003_desc,sr.l_sfea004,sr.l_sfea005#,sr.l_sfeastus
+#         FROM sfea_t LEFT JOIN ooag_t  ON ooagent = g_enterprise AND ooag001 = sfea002
+#                     LEFT JOIN ooefl_t ON ooeflent= g_enterprise AND ooefl001= sfea003 AND ooefl002= g_dlang
+#        WHERE sfeaent   = g_enterprise
+#          AND sfeadocno = sr.sfecdocno
+#
+#       #申请人名称
+#       #LET sr.l_sfea002_desc = s_desc_get_person_desc(sr.l_sfea002)
+#       IF NOT cl_null(sr.l_sfea002_desc) THEN
+#          LET sr.l_sfea002_desc = sr.l_sfea002 CLIPPED,'.',sr.l_sfea002_desc
+#       ELSE
+#          LET sr.l_sfea002_desc = sr.l_sfea002
+#       END IF
+#       
+#       #部门名称
+#       #LET sr.l_sfea003_desc = s_desc_get_department_desc(sr.l_sfea003)
+#       IF NOT cl_null(sr.l_sfea003_desc) THEN
+#          LET sr.l_sfea003_desc = sr.l_sfea003 CLIPPED,'.',sr.l_sfea003_desc
+#       ELSE
+#          LET sr.l_sfea003_desc = sr.l_sfea003
+#       END IF
+#       
+#       ##状态
+#       #LET sr.l_sfeastus_desc = s_desc_gzcbl004_desc('13',sr.l_sfeastus)
+#       #IF NOT cl_null(sr.l_sfeastus_desc) THEN
+#       #   LET sr.l_sfeastus_desc= sr.l_sfeastus CLIPPED,'.',sr.l_sfeastus_desc
+#       #ELSE
+#       #   LET sr.l_sfeastus_desc= sr.l_sfeastus
+#       #END IF
+#
+#       #入库类型
+#       #----dorislai-20150810-modify----(S)
+##       LET sr.l_sfec004_desc = s_desc_gzcbl004_desc('4019',sr.sfec004)
+##       IF NOT cl_null(sr.l_sfec004_desc) THEN
+##          LET sr.l_sfec004_desc = sr.sfec004 CLIPPED,'.',sr.l_sfec004_desc
+##       ELSE
+##          LET sr.l_sfec004_desc = sr.sfec004
+##       END IF
+#       LET sr.l_sfec004_ref = s_desc_gzcbl004_desc('4019',sr.sfec004)
+#       IF NOT cl_null(sr.l_sfec004_ref) THEN
+#          LET sr.l_sfec004_desc = sr.sfec004 CLIPPED,'.',sr.l_sfec004_ref
+#       ELSE
+#          LET sr.l_sfec004_desc = sr.sfec004
+#       END IF
+#       #----dorislai-20150810-modify----(E)
+#       #发退料料号品名、规格
+#       CALL s_desc_get_item_desc(sr.sfec005) RETURNING sr.l_sfec005_imaal003,sr.l_sfec005_imaal004
+#       
+#       #产品特征说明
+#       CALL s_feature_description(sr.sfec005,sr.sfec006) RETURNING l_success,sr.l_sfec006_desc
+#       #----dorislai-20150810-add----(S)
+#       LET sr.l_sfec006desc = ''
+#       IF NOT cl_null(sr.l_sfec006_desc) THEN
+#          LET sr.l_sfec006desc = sr.sfec006,'.',sr.l_sfec006_desc
+#       END IF
+#       #----dorislai-20150810-add----(E)
+#       #產品分類
+#       SELECT imaa009,rtaxl003 INTO sr.l_imaa009,sr.l_imaa009_desc
+#         FROM imaa_t LEFT JOIN rtaxl_t ON rtaxlent = g_enterprise AND rtaxl001 = imaa009 AND rtaxl002= g_dlang
+#        WHERE imaaent = g_enterprise
+#          AND imaa001 = sr.sfec005
+#       #CALL s_desc_get_rtaxl003_desc(sr.l_imaa009) RETURNING sr.l_imaa009_desc
+#       IF NOT cl_null(sr.l_imaa009_desc) THEN
+#          LET sr.l_imaa009_desc = sr.l_imaa009 CLIPPED,'.',sr.l_imaa009_desc
+#       ELSE
+#          LET sr.l_imaa009_desc = sr.l_imaa009
+#       END IF
+#       
+#       #生管分群
+#       SELECT imae011 INTO sr.l_imae011 FROM imae_t
+#        WHERE imaeent = g_enterprise
+#          AND imaesite= g_site
+#          AND imae001 = sr.sfec005
+#       IF NOT cl_null(sr.l_imae011) THEN
+#          CALL s_desc_get_acc_desc('204',sr.l_imae011) RETURNING sr.l_imae011_desc
+#          IF NOT cl_null(sr.l_imae011_desc) THEN
+#             LET sr.l_imae011_desc = sr.l_imae011 CLIPPED,'.',sr.l_imae011_desc
+#          ELSE
+#             LET sr.l_imae011_desc = sr.l_imae011
+#          END IF
+#       END IF
+#       
+#       #判定結果 (l_qcbc002為sfec003)
+#       SELECT qcbc002 INTO sr.l_qcbc002 FROM qcbc_t
+#        WHERE qcbcent=g_enterprise AND qcbcsite=g_site
+#          AND qcbcdocno=sr.sfec002 AND qcbcseq=sr.sfec003
+#       #----dorislai-20150810-modify----(S)
+##       IF NOT cl_null(sr.l_qcbc002) THEN
+##          CALL s_desc_get_qc_desc(g_site,sr.l_qcbc002) RETURNING sr.l_qcbc002_desc
+##          IF NOT cl_null(sr.l_qcbc002_desc) THEN
+##             LET sr.l_qcbc002_desc = sr.l_qcbc002 CLIPPED,'.',sr.l_qcbc002_desc
+##          ELSE
+##             LET sr.l_qcbc002_desc = sr.l_qcbc002
+##          END IF
+##       END IF
+#       IF NOT cl_null(sr.l_qcbc002) THEN
+#          CALL s_desc_get_qc_desc(g_site,sr.l_qcbc002) RETURNING sr.l_sfec003_ref
+#          IF NOT cl_null(sr.l_sfec003_ref) THEN
+#             LET sr.l_qcbc002_desc = sr.l_qcbc002 CLIPPED,'.',sr.l_sfec003_ref
+#          ELSE
+#             LET sr.l_qcbc002_desc = sr.l_qcbc002
+#          END IF
+#       END IF
+#       #----dorislai-20150810-modify----(E)
+#       #dorislai-20150810-modify----(S)   把說明欄位也抓出來
+##       #库位名称
+##       CALL s_desc_get_stock_desc(g_site,sr.sfec012) RETURNING sr.l_sfec012
+##       IF NOT cl_null(sr.l_sfec012) THEN
+##          LET sr.l_sfec012 = sr.sfec012 CLIPPED,'.',sr.l_sfec012
+##       ELSE
+##          LET sr.l_sfec012 = sr.sfec012
+##       END IF
+##       
+##       #储位名称
+##       CALL s_desc_get_locator_desc(g_site,sr.sfec012,sr.sfec013) RETURNING sr.l_sfec013
+##       IF NOT cl_null(sr.l_sfec013) THEN
+##          LET sr.l_sfec013 = sr.sfec013 CLIPPED,'.',sr.l_sfec013
+##       ELSE
+##          LET sr.l_sfec013 = sr.sfec013
+##       END IF
+#       #库位名称
+#       CALL s_desc_get_stock_desc(g_site,sr.sfec012) RETURNING sr.l_sfec012_ref
+#       IF NOT cl_null(sr.l_sfec012_ref) THEN
+#          LET sr.l_sfec012 = sr.sfec012 CLIPPED,'.',sr.l_sfec012_ref
+#       ELSE
+#          LET sr.l_sfec012 = sr.sfec012
+#       END IF
+#       
+#       #储位名称
+#       CALL s_desc_get_locator_desc(g_site,sr.sfec012,sr.sfec013) RETURNING sr.l_sfec013_ref
+#       IF NOT cl_null(sr.l_sfec013_ref) THEN
+#          LET sr.l_sfec013 = sr.sfec013 CLIPPED,'.',sr.l_sfec013_ref
+#       ELSE
+#          LET sr.l_sfec013 = sr.sfec013
+#       END IF
+#       #dorislai-20150810-modify----(E)
+       #備註
+       CALL s_aooi360_sel('6',sr.sfecdocno,'','','','','','','','','','4')
+            RETURNING l_success,sr.l_ooff013
+#       
+#       
+#       #dorislai-20150810-add----(S)
+#       #工單全名 l_sfec001desc
+#       LET sr.l_sfec001_desc = ''
+#       LET sr.l_sfec001desc = ''
+#       CALL s_aooi200_get_slip_desc(sr.sfec001) RETURNING sr.l_sfec001_desc
+#       IF NOT cl_null(sr.l_sfec001_desc) THEN
+#          LET sr.l_sfec001desc = sr.sfec001,'.',sr.l_sfec001_desc
+#       END IF
+#       #FQC單號全名 l_sfec002desc
+#       LET sr.l_sfec002_desc = ''
+#       LET sr.l_sfec002desc = ''
+#       CALL s_aooi200_get_slip_desc(sr.sfec002) RETURNING sr.l_sfec002_desc
+#       IF NOT cl_null(sr.l_sfec002_desc) THEN
+#          LET sr.l_sfec002desc = sr.sfec002,'.',sr.l_sfec002_desc
+#       END IF
+#       #專案編號全名 l_sfec022desc	
+#       LET sr.l_sfec022_desc = ''
+#       LET sr.l_sfec022desc = ''
+#       CALL s_desc_get_project_desc(sr.sfec022) RETURNING sr.l_sfec022_desc
+#       IF NOT cl_null(sr.l_sfec022_desc) THEN
+#          LET sr.l_sfec022desc = sr.sfec022,'.',sr.l_sfec022_desc
+#       END IF
+#       #WBS全名 l_sfec023desc	
+#       LET sr.l_sfec023_desc = ''
+#       LET sr.l_sfec023desc = ''
+#       CALL s_desc_get_wbs_desc(sr.sfec022,sr.sfec023) RETURNING sr.l_sfec023_desc
+#       IF NOT cl_null(sr.l_sfec023_desc) THEN
+#          LET sr.l_sfec023desc = sr.sfec023,'.',sr.l_sfec023_desc
+#       END IF
+#       
+#       #活動編號全名 l_sfec024desc	
+#       LET sr.l_sfec024_desc = ''
+#       LET sr.l_sfec024desc = ''
+#       CALL s_desc_get_activity_desc(sr.sfec022,sr.sfec024) RETURNING sr.l_sfec024_desc
+#       IF NOT cl_null(sr.l_sfec024_desc) THEN
+#          LET sr.l_sfec024desc = sr.sfec024,'.',sr.l_sfec024_desc
+#       END IF
+#       #系列全名 l_imaa127desc	
+#       LET sr.l_imaa127_desc = ''
+#       LET sr.l_imaa127desc = ''
+#          #用料號抓取系列
+#       SELECT imaa127 INTO l_imaa127 FROM imaa_t
+#        WHERE imaa001 = sr.sfec005
+#          AND imaaent = g_enterprise
+#         #抓取系列說明
+#       CALL s_desc_get_acc_desc('2003',l_imaa127)  RETURNING sr.l_imaa127_desc 
+#       IF NOT cl_null(sr.l_imaa127_desc) THEN
+#          LET sr.l_imaa127desc = l_imaa127,'.',sr.l_imaa127_desc
+#       END IF
+#       IF NOT cl_null(sr.l_imaa127_desc) THEN
+#          LET sr.l_imaa127desc = l_imaa127,'.',sr.l_imaa127_desc
+#       END IF
+#       #dorislai-20150810-add----(E)
+#160411-00027#1 by whitney mark end
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.sfecdocno,sr.l_sfeadocdt,sr.l_sfea001,sr.l_sfea002,sr.l_sfea002_desc,sr.l_sfea003,sr.l_sfea003_desc,sr.l_sfea004,sr.l_sfea005,sr.sfecseq,sr.sfecseq1,sr.sfec001,sr.sfec021,sr.sfec004,sr.l_sfec004_desc,sr.sfec005,sr.l_sfec005_imaal003,sr.l_sfec005_imaal004,sr.sfec006,sr.l_sfec006_desc,sr.l_imaa009,sr.l_imaa009_desc,sr.l_imae011,sr.l_imae011_desc,sr.sfec002,sr.sfec003,sr.l_qcbc002,sr.l_qcbc002_desc,sr.sfec009,sr.sfec008,sr.sfec012,sr.l_sfec012,sr.sfec013,sr.l_sfec013,sr.sfec014,sr.sfec015,sr.sfec017,sr.l_ooff013,sr.sfec010,sr.sfec011,sr.sfec016,sr.sfec022,sr.l_sfec022_desc,sr.sfec023,sr.l_sfec023_desc,sr.sfec024,sr.l_sfec024_desc,sr.l_imaa127,sr.l_imaa127_desc
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "asfr341_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr341_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION asfr341_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr341_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

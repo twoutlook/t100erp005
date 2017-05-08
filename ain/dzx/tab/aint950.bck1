@@ -1,0 +1,300 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint950" module="ain" jobmode="N" type="t01" industry="std" fix_arg="1" crtid="02749" crtdt="2015-04-27 02:45:03" modid="06814" moddt="2016-04-28 17:32:22" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="商品組合維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inqa000,inqasite,inqasite_desc(chr80),inqadocdt,inqa001,inqadocno,inqa002,inqa002_desc(chr80),inqa003,inqa003_desc(chr80),inqa004,inqa004_desc(chr80),inqaunit,inqa005,inqa006,inqa007,inqastus,inqaownid,inqaownid_desc(chr80),inqaowndp,inqaowndp_desc(chr80),inqacrtid,inqacrtid_desc(chr80),inqacrtdp,inqacrtdp_desc(chr80),inqacrtdt,inqamodid,inqamodid_desc(chr80),inqamoddt,inqacnfid,inqacnfid_desc(chr80),inqacnfdt,inqapstid,inqapstid_desc(chr80),inqapstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inqbseq,inqb001,inqb002,inqb002_desc(chr500),inqb002_desc_desc(chr500),inqb003,inqb003_desc(chr500),inqb004,inqb004_desc(chr500),inqb005,inqb006,inqb006_desc(chr500),inqb007,inqb007_desc(chr500),inqb008,inqb009,inqb010,inqbsite,inqbunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="inqcseq1,inqc001,inqc002,inqc002_desc(chr500),inqc002_desc_desc(chr500),inqc003,inqc003_desc(chr500),inqc004,inqc004_desc(chr500),inqc005,inqc006,inqc006_desc(chr500),inqc007,inqc007_desc(chr500),inqc008,inqc009,inqc010,inqcsite,inqcunit"/>
+      <var id="bs_field" value="inqasite,inqasite_desc(chr80),inqadocno,inqa002,inqa002_desc(chr80),inqa003,inqa003_desc(chr80),inqa005,inqa006" pk="inqadocno" order=""/>
+      <bs_reference field="inqasite_desc" ref_field="inqasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="inqa002_desc" ref_field="inqa002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="inqa003_desc" ref_field="inqa003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_inqa002" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_inqa_m.inqa002"/>
+      <action id="prog_inqa005" prog="aint912" parameter="inqa005"/>
+      <action id="prog_inqa006" prog="aint911" parameter="inqa006"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint950" method="dialog">
+    <section id="input">
+      <input id="head" field="inqa000,inqasite,inqadocdt,inqa001,inqadocno,inqa002,inqa003,inqa004,inqaunit,inqa005,inqa006,inqa007,inqastus"/>
+      <input id="body" page="1" field="inqbseq,inqb001,inqb002,inqb003,inqb003_desc,inqb004,inqb005,inqb006,inqb007,inqb008,inqb009,inqb010,inqbsite,inqbunit" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="inqcseq1,inqc001,inqc002,inqc003,inqc003_desc,inqc004,inqc005,inqc006,inqc007,inqc008,inqc009,inqc010,inqcsite,inqcunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="inqa000,inqasite,inqadocdt,inqa001,inqadocno,inqa002,inqa003,inqa004,inqa004_desc,inqaunit,inqa005,inqa006,inqa007,inqastus,inqaownid,inqaowndp,inqacrtid,inqacrtdp,inqacrtdt,inqamodid,inqamoddt,inqacnfid,inqacnfdt,inqapstid,inqapstdt"/>
+      <construct id="body" page="1" field="inqbseq,inqb001,inqb002,inqb003,inqb003_desc,inqb004,inqb005,inqb006,inqb007,inqb008,inqb009,inqb010,inqbsite,inqbunit"/>
+      <construct id="body" page="2" field="inqcseq1,inqc001,inqc002,inqc003,inqc003_desc,inqc004,inqc005,inqc006,inqc007,inqc008,inqc009,inqc010,inqcsite,inqcunit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="inqadocno"/>
+      <set id="head" type="no_entry" field="inqadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="inqa000"/>
+      <column id="inqasite">
+        <after>
+          <reference field="inqasite_desc" ref_field="inqa_t.inqasite" map_field="inqasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="inqasite_desc"/>
+      <column id="inqadocdt"/>
+      <column id="inqa001"/>
+      <column id="inqadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_inqadocno" state="c"/>
+      </column>
+      <column id="inqa002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="inqa002_desc" ref_field="inqa_t.inqa002" map_field="inqa002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inqa002_desc"/>
+      <column id="inqa003">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="inqa003_desc" ref_field="inqa_t.inqa003" map_field="inqa003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="inqa003_desc"/>
+      <column id="inqa004">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="inqa004_desc"/>
+      <column id="inqaunit"/>
+      <column id="inqa005">
+        <controlp form="q_inbadocno" state="c"/>
+      </column>
+      <column id="inqa006">
+        <controlp form="q_inbadocno" state="c"/>
+      </column>
+      <column id="inqa007"/>
+      <column id="inqastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="Z" pic="unposted"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="inqaownid">
+        <after>
+          <reference field="inqaownid_desc" ref_field="inqa_t.inqaownid" map_field="inqaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inqaownid_desc"/>
+      <column id="inqaowndp">
+        <after>
+          <reference field="inqaowndp_desc" ref_field="inqa_t.inqaowndp" map_field="inqaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inqaowndp_desc"/>
+      <column id="inqacrtid">
+        <after>
+          <reference field="inqacrtid_desc" ref_field="inqa_t.inqacrtid" map_field="inqacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inqacrtid_desc"/>
+      <column id="inqacrtdp">
+        <after>
+          <reference field="inqacrtdp_desc" ref_field="inqa_t.inqacrtdp" map_field="inqacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inqacrtdp_desc"/>
+      <column id="inqacrtdt"/>
+      <column id="inqamodid">
+        <after>
+          <reference field="inqamodid_desc" ref_field="inqa_t.inqamodid" map_field="inqamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inqamodid_desc"/>
+      <column id="inqamoddt"/>
+      <column id="inqacnfid">
+        <after>
+          <reference field="inqacnfid_desc" ref_field="inqa_t.inqacnfid" map_field="inqacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inqacnfid_desc"/>
+      <column id="inqacnfdt"/>
+      <column id="inqapstid">
+        <after>
+          <reference field="inqapstid_desc" ref_field="inqa_t.inqapstid" map_field="inqapstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inqapstid_desc"/>
+      <column id="inqapstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="inqbseq"/>
+      <column id="inqb001">
+        <after>
+          <check chkid="v_imay003" id="isExist"/>
+        </after>
+        <controlp form="q_imay001_1" state="i"/>
+        <controlp form="q_imay001_1" state="c"/>
+      </column>
+      <column id="inqb002">
+        <after>
+          <check chkid="v_imaf001_15" id="isExist"/>
+          <reference field="inqb002_desc" ref_field="inqb_t.inqb002" map_field="inqb002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_18" state="i"/>
+        <controlp form="q_imaf001_18" state="c"/>
+      </column>
+      <column id="inqb002_desc">
+        <after>
+          <reference field="inqb002_desc_desc" ref_field="inqb_t.inqb002" map_field="inqb002" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inqb002_desc_desc"/>
+      <column id="inqb003">
+        <after/>
+      </column>
+      <column id="inqb003_desc"/>
+      <column id="inqb004">
+        <after>
+          <reference field="inqb004_desc" ref_field="inqb_t.inqb004" map_field="inqb004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="inqb004_desc"/>
+      <column id="inqb005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="inqb006">
+        <after>
+          <check chkid="v_inaa001" id="isExist"/>
+          <reference field="inqb006_desc" ref_field="inqb_t.inqb006" map_field="inqb006" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag004_18" state="i"/>
+        <controlp form="q_inaa001_1" state="c"/>
+      </column>
+      <column id="inqb006_desc"/>
+      <column id="inqb007">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="inqb007_desc" ref_field="inqasite,inqb006,inqb007" map_field="inqasite,inqb006,inqb007" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_3" state="i"/>
+        <controlp form="q_inab002_3" state="c"/>
+      </column>
+      <column id="inqb007_desc"/>
+      <column id="inqb008"/>
+      <column id="inqb009"/>
+      <column id="inqb010"/>
+      <column id="inqbsite"/>
+      <column id="inqbunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="inqcseq1" type="S" default="0"/>
+      <column id="inqc001">
+        <after>
+          <check chkid="v_imay003" id="isExist"/>
+        </after>
+        <controlp form="q_imay001_1" state="i"/>
+        <controlp form="q_imay001_1" state="c"/>
+      </column>
+      <column id="inqc002">
+        <after>
+          <check chkid="v_imaf001_15" id="isExist"/>
+          <reference field="inqc002_desc" ref_field="inqc_t.inqc002" map_field="inqc002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_18" state="i"/>
+        <controlp form="q_imaf001_18" state="c"/>
+      </column>
+      <column id="inqc002_desc">
+        <after>
+          <reference field="inqc002_desc_desc" ref_field="inqc_t.inqc002" map_field="inqc002" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inqc002_desc_desc"/>
+      <column id="inqc003">
+        <after/>
+      </column>
+      <column id="inqc003_desc"/>
+      <column id="inqc004">
+        <after>
+          <reference field="inqc004_desc" ref_field="inqc_t.inqc004" map_field="inqc004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="inqc004_desc"/>
+      <column id="inqc005">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="inqc006">
+        <after>
+          <check chkid="v_inaa001_16" id="isExist"/>
+          <reference field="inqc006_desc" ref_field="inqc_t.inqc006" map_field="inqc006" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag001_18" state="i"/>
+        <controlp form="q_inaa001_4" state="c"/>
+      </column>
+      <column id="inqc006_desc"/>
+      <column id="inqc007">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="inqc007_desc" ref_field="inqasite,inqc006,inqc007" map_field="inqasite,inqc006,inqc007" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_3" state="i"/>
+        <controlp form="q_inab002_3" state="c"/>
+      </column>
+      <column id="inqc007_desc"/>
+      <column id="inqc008"/>
+      <column id="inqc009"/>
+      <column id="inqc010"/>
+      <column id="inqcsite"/>
+      <column id="inqcunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="inqa_t" pk="inqadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT inqa000,inqasite,&apos;&apos;,inqadocdt,inqa001,inqadocno,inqa002,&apos;&apos;,inqa003,&apos;&apos;,inqa004,&apos;&apos;,inqaunit,inqa005,inqa006,inqa007,inqastus,inqaownid,&apos;&apos;,inqaowndp,&apos;&apos;,inqacrtid,&apos;&apos;,inqacrtdp,&apos;&apos;,inqacrtdt,inqamodid,&apos;&apos;,inqamoddt,inqacnfid,&apos;&apos;,inqacnfdt,inqapstid,&apos;&apos;,inqapstdt FROM inqa_t WHERE inqaent= ? AND inqadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT inqa000,inqasite,&apos;&apos;,inqadocdt,inqa001,inqadocno,inqa002,&apos;&apos;,inqa003,&apos;&apos;,inqa004,&apos;&apos;,inqaunit,inqa005,inqa006,inqa007,inqastus,inqaownid,&apos;&apos;,inqaowndp,&apos;&apos;,inqacrtid,&apos;&apos;,inqacrtdp,&apos;&apos;,inqacrtdt,inqamodid,&apos;&apos;,inqamoddt,inqacnfid,&apos;&apos;,inqacnfdt,inqapstid,&apos;&apos;,inqapstdt FROM inqa_t" order="inqadocno"/>
+    </head>
+    <body id="inqb_t" page="1" linked="" pk="inqbseq" fk="inqbdocno">
+      <sql id="forupd_sql_detail" query="SELECT inqbseq,inqb001,inqb002,&apos;&apos;,&apos;&apos;,inqb003,&apos;&apos;,inqb004,&apos;&apos;,inqb005,inqb006,&apos;&apos;,inqb007,&apos;&apos;,inqb008,inqb009,inqb010,inqbsite,inqbunit FROM inqb_t WHERE inqbent=? AND inqbdocno=? AND inqbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inqbseq,inqb001,inqb002,&apos;&apos;,&apos;&apos;,inqb003,&apos;&apos;,inqb004,&apos;&apos;,inqb005,inqb006,&apos;&apos;,inqb007,&apos;&apos;,inqb008,inqb009,inqb010,inqbsite,inqbunit FROM inqb_t WHERE inqbent=? AND inqbdocno=?"/>
+    </body>
+    <body id="inqc_t" page="2" linked="" detail="Y" master="inqb_t" default_site="N" pk="inqcseq1" fk="inqcdocno,inqcseq">
+      <sql id="forupd_sql_detail" query="SELECT inqcseq1,inqc001,inqc002,&apos;&apos;,&apos;&apos;,inqc003,&apos;&apos;,inqc004,&apos;&apos;,inqc005,inqc006,&apos;&apos;,inqc007,&apos;&apos;,inqc008,inqc009,inqc010,inqcsite,inqcunit FROM inqc_t WHERE inqcent=? AND inqcdocno=? AND inqcseq=? AND inqcseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inqcseq1,inqc001,inqc002,&apos;&apos;,&apos;&apos;,inqc003,&apos;&apos;,inqc004,&apos;&apos;,inqc005,inqc006,&apos;&apos;,inqc007,&apos;&apos;,inqc008,inqc009,inqc010,inqcsite,inqcunit FROM inqc_t WHERE inqcent=? AND inqcdocno=? AND inqcseq=?"/>
+    </body>
+  </dataset>
+</assembly>
+

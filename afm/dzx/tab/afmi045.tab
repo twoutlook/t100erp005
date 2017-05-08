@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmi045" module="afm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02291" crtdt="2015-10-28 16:42:25" modid="02291" moddt="2015-11-04 15:08:11" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="基準利率維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmbj001,fmbj001_desc(chr500),fmbj002,fmbj003,fmbj004,fmbj004_desc(chr500),fmbj005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="fmbj001,fmbj001_2_desc(chr500),fmbj002,fmbj003,fmbj004,fmbj004_2_desc(chr500),fmbjownid,fmbjownid_desc(chr500),fmbjowndp,fmbjowndp_desc(chr500),fmbjcrtid,fmbjcrtid_desc(chr500),fmbjcrtdp,fmbjcrtdp_desc(chr500),fmbjcrtdt,fmbjmodid,fmbjmodid_desc(chr500),fmbjmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmi045" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fmbj001,fmbj002,fmbj003,fmbj004,fmbj005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="fmbj001,fmbj002,fmbj003,fmbj004,fmbj005"/>
+      <construct id="body" page="2" field="fmbjownid,fmbjowndp,fmbjcrtid,fmbjcrtdp,fmbjcrtdt,fmbjmodid,fmbjmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmbj001">
+        <after>
+          <check chkid="v_oocg001" id="isExist"/>
+          <reference field="fmbj001_desc" ref_field="fmbj_t.fmbj001" map_field="fmbj001" ref_sql="SELECT oocgl003 FROM oocgl_t WHERE oocglent=$varg_enterprise$var AND oocgl001=? AND oocgl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocg001" state="i"/>
+        <controlp form="q_oocg001" state="c"/>
+      </column>
+      <column id="fmbj001_desc"/>
+      <column id="fmbj002"/>
+      <column id="fmbj003" type="S" default="8546" def_scc="8546"/>
+      <column id="fmbj004" type="S" default="8546">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+          <reference field="fmbj004_desc" ref_field="fmbj_t.fmbj004" map_field="fmbj004" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="fmbj004_desc"/>
+      <column id="fmbj005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="fmbj001_2_desc"/>
+      <column id="fmbj004_2_desc"/>
+      <column id="fmbjownid">
+        <after>
+          <reference field="fmbjownid_desc" ref_field="fmbj_t.fmbjownid" map_field="fmbjownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmbjownid_desc"/>
+      <column id="fmbjowndp">
+        <after>
+          <reference field="fmbjowndp_desc" ref_field="fmbj_t.fmbjowndp" map_field="fmbjowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmbjowndp_desc"/>
+      <column id="fmbjcrtid">
+        <after>
+          <reference field="fmbjcrtid_desc" ref_field="fmbj_t.fmbjcrtid" map_field="fmbjcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmbjcrtid_desc"/>
+      <column id="fmbjcrtdp">
+        <after>
+          <reference field="fmbjcrtdp_desc" ref_field="fmbj_t.fmbjcrtdp" map_field="fmbjcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmbjcrtdp_desc"/>
+      <column id="fmbjcrtdt"/>
+      <column id="fmbjmodid">
+        <after>
+          <reference field="fmbjmodid_desc" ref_field="fmbj_t.fmbjmodid" map_field="fmbjmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmbjmodid_desc"/>
+      <column id="fmbjmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="fmbj_t" page="1,2" linked="" pk="fmbj001,fmbj002,fmbj003,fmbj004">
+      <sql id="forupd_sql_detail" query="SELECT fmbj001,&apos;&apos;,fmbj002,fmbj003,fmbj004,&apos;&apos;,fmbj005,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmbjownid,&apos;&apos;,fmbjowndp,&apos;&apos;,fmbjcrtid,&apos;&apos;,fmbjcrtdp,&apos;&apos;,fmbjcrtdt,fmbjmodid,&apos;&apos;,fmbjmoddt FROM fmbj_t WHERE fmbjent=? AND fmbj001=? AND fmbj002=? AND fmbj003=? AND fmbj004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmbj001,&apos;&apos;,fmbj002,fmbj003,fmbj004,&apos;&apos;,fmbj005,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmbjownid,&apos;&apos;,fmbjowndp,&apos;&apos;,fmbjcrtid,&apos;&apos;,fmbjcrtdp,&apos;&apos;,fmbjcrtdt,fmbjmodid,&apos;&apos;,fmbjmoddt FROM fmbj_t WHERE fmbjent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

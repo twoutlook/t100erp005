@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axct311" std_prog="axct311" erpver="1.0" ver="3" module="AXC" type="M" booking="Y" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="xccp_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="3" src="s" status="u">
+    <![CDATA[程式說明及目的： 用于本期在制成本调整作业
+標準作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：假雙檔(子程式)無搭配任何方案F003_00
+作業資料來源(Master)：
+ 資料來源表：xccp_t
+
+資料處理
+此處描述非各別欄位控卡的邏輯段
+
+调整年度期别>=关账日期的数据不允许修改删除
+
+另,本作业支持假双档单身多栏及单档两种录入UI:
+1.两种UI录入的数据均支持另一种UI查询与修改
+2.进入程序时,默认UI为多栏式 
+   2.1若未录入任何数据,点击单笔录入,则跳转到单档录入.单档录入完成关闭后,数据以多栏的方式回写到多栏模式
+   2.2若已录入部分数据,点击单笔录入,则跳转到单档录入,且将数据默认至单档式,单档录入完成关闭后,数据以多栏的方式回写到多栏模式
+
+
+150104 +產生次要素 FUN
+]]>
+  </all>
+  <field cite_std="N" name="sfaa010" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp001_2" ver="1" src="s" column="xccp001" table="xccp_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp007_2" ver="1" src="s" column="xccp007" table="xccp_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp001" ver="1" src="s" column="xccp001" table="xccp_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp003" ver="1" src="s" column="xccp003" table="xccp_t" attribute="" type="" req="Y" i_zoom="q_xcat001" c_zoom="q_xcat001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：成本类型
+   ●欄位控管：
+此為key值欄位,不可空白
+选项值来源于成本类型档的说明栏位
+查询时需显示编码+说明栏位
+]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp004" ver="1" src="s" column="xccp004" table="xccp_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：年度
+   ●欄位控管：
+不允许空白
+默认值为成本参数档的当前成本计算年度
+开账年度栏位录入后,需验证其年度是否早于制造管理系统参数档中的成本关账日期的年度,否则,需提示信息"单据日期不允许小于或等于关帐日期"
+]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp005" ver="1" src="s" column="xccp005" table="xccp_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：期别
+   ●欄位控管：
+不允许空白
+默认值为成本参数档的当前成本计算期别
+开账年度栏位录入后,需验证其期别是否早于制造管理系统参数档中的成本关账日期的月份,否则,需提示信息"单据日期不允许小于或等于关帐日期"
+]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp006" ver="3" src="s" column="xccp006" table="xccp_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_ooba002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[欄位名稱：调整單號
+   ●欄位控管：暫無]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp007" ver="1" src="s" column="xccp007" table="xccp_t" attribute="" type="" req="Y" i_zoom="q_sfaadocno" c_zoom="q_sfaadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：工單編號
+   ●欄位控管：
+1、此為key值欄位,不可空白
+2、開窗q_sfaadocno，輸入值須存在[T:工單單頭檔].[C:工單編號]且為有效資料
+]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp008" ver="3" src="s" column="xccp008" table="xccp_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[欄位名稱：成本类型
+   ●欄位控管：
+必选项
+选项值有 1. 實際成本 2.產品成本 
+默认值为1. 實際成本 
+SCC-8919 
+]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp009" ver="1" src="s" column="xccp009" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp101" ver="1" src="s" column="xccp101" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp102" ver="1" src="s" column="xccp102" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp102a" ver="1" src="s" column="xccp102a" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp102b" ver="1" src="s" column="xccp102b" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp102c" ver="1" src="s" column="xccp102c" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp102d" ver="1" src="s" column="xccp102d" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp102e" ver="1" src="s" column="xccp102e" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp102f" ver="1" src="s" column="xccp102f" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp102g" ver="1" src="s" column="xccp102g" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccp102h" ver="1" src="s" column="xccp102h" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpcnfdt" ver="1" src="s" column="xccpcnfdt" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpcnfid" ver="1" src="s" column="xccpcnfid" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpcomp" ver="1" src="s" column="xccpcomp" table="xccp_t" attribute="" type="" req="N" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：法人组织
+   ●欄位控管：
+1.当选择了帐别编号时,法人组织栏位显示帐套归属的法人.(取账别资料维护档的归属法人栏位)
+2.当用户未选择帐别编号,开窗选择法人组织时:
+值选项来源于"组织档":1.有效值 2.组织类型=法人组织
+]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpcrtdp" ver="1" src="s" column="xccpcrtdp" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpcrtdt" ver="1" src="s" column="xccpcrtdt" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpcrtid" ver="1" src="s" column="xccpcrtid" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpld" ver="1" src="s" column="xccpld" table="xccp_t" attribute="" type="" req="Y" i_zoom="q_authorised_ld" c_zoom="q_authorised_ld" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：帳別编号
+   ●欄位控管：
+       校驗:1.不允許空白
+          2.key值不可重複
+          3.輸入值須存在[T:帳別基本資料檔].[C:帳別編號]且為有效資料
+          4.输入了法人组织后,账别编号需为法人组织的下属账套
+      ]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpmoddt" ver="1" src="s" column="xccpmoddt" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpmodid" ver="1" src="s" column="xccpmodid" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpowndp" ver="1" src="s" column="xccpowndp" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpownid" ver="1" src="s" column="xccpownid" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccppstdt" ver="1" src="s" column="xccppstdt" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccppstid" ver="1" src="s" column="xccppstid" table="xccp_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccp_t.xccpdocno" ver="3" src="s" column="xccpdocno" table="xccp_t" attribute="" type="" req="N" i_zoom="q_ooba002_1" c_zoom="q_xccpdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="d">
+    <![CDATA[欄位名稱：调整單號
+   ●欄位控管：暫無]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xccp003_desc" src="s" depend_field="xccp_t.xccp003" correspon_key="xccpent,xccp003" ref_table="xcatl_t" ref_fk="xcatlent,xcatl001" ref_dlang="xcatl002" ref_rtn="xcatl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xccpcnfid_desc" src="s" depend_field="xccp_t.xccpcnfid" correspon_key="xccpcnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xccpcomp_desc" src="s" depend_field="xccp_t.xccpcomp" correspon_key="xccpent,xccpcomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xccpcrtdp_desc" src="s" depend_field="xccp_t.xccpcrtdp" correspon_key="xccpcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xccpcrtid_desc" src="s" depend_field="xccp_t.xccpcrtid" correspon_key="xccpcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xccpld_desc" src="s" depend_field="xccp_t.xccpld" correspon_key="xccpent,xccpld" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+    <rfield cite_std="N" ver="1" name="xccpmodid_desc" src="s" depend_field="xccp_t.xccpmodid" correspon_key="xccpmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xccpowndp_desc" src="s" depend_field="xccp_t.xccpowndp" correspon_key="xccpowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xccpownid_desc" src="s" depend_field="xccp_t.xccpownid" correspon_key="xccpownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xccppstid_desc" src="s" depend_field="xccp_t.xccppstid" correspon_key="xccppstid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="sfaa010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp001_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp007_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="xccp_t.xccp006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="xccp_t.xccp008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp101" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp102" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp102a" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp102b" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp102c" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp102d" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp102e" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp102f" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp102g" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccp102h" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpcnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpcnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpcomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="xccp_t.xccpdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccpownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccppstdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccp_t.xccppstid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="action_1" ver="3" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="axct321" ver="3" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_xccpcomp" text="法人組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_xccp004" text="調整年度期別" lstr=""/>
+    <sfield name="lbl_xccpld" text="帳套" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_xccp003" text="成本計算類型" lstr=""/>
+    <sfield name="lbl_xcatl003" text="成本類型說明" lstr=""/>
+    <sfield name="lbl_xccp006" text="調整單號" lstr=""/>
+    <sfield name="lbl_xccp008" text="調整類型" lstr=""/>
+    <sfield name="bpage_1" text="調整明細" lstr=""/>
+    <sfield name="lbl_xccp001" text="本位幣順序" lstr=""/>
+    <sfield name="lbl_xccp007" text="工單編號" lstr=""/>
+    <sfield name="lbl_sfaa010" text="主件料號" lstr=""/>
+    <sfield name="lbl_xccp009" text="調整說明" lstr=""/>
+    <sfield name="lbl_xccp101" text="調整數量" lstr=""/>
+    <sfield name="lbl_xccp102a" text="調整-材料" lstr=""/>
+    <sfield name="lbl_xccp102b" text="調整-人工" lstr=""/>
+    <sfield name="lbl_xccp102c" text="調整-委外加工" lstr=""/>
+    <sfield name="lbl_xccp102d" text="調整-制費一" lstr=""/>
+    <sfield name="lbl_xccp102e" text="調整-制費二" lstr=""/>
+    <sfield name="lbl_xccp102f" text="調整-制費三" lstr=""/>
+    <sfield name="lbl_xccp102g" text="調整-制費四" lstr=""/>
+    <sfield name="lbl_xccp102h" text="調整-制費五" lstr=""/>
+    <sfield name="lbl_xccp102" text="調整成本" lstr=""/>
+    <sfield name="bpage_2" text="功能幣二" lstr=""/>
+    <sfield name="bpage_3" text="功能幣三" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="cnfid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_pstid" text="資料過帳者" lstr=""/>
+    <sfield name="pstid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_pstdt" text="資料過帳日" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="axct321" text="產生次要素" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="s_detail3" status=""/>
+    <widget name="s_detail4" status=""/>
+  </exclude>
+</spec>

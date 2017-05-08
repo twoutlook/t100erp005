@@ -1,0 +1,377 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapt300_05.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0014(2014-02-10 10:14:38), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000227
+#+ Filename...: aapt300_05
+#+ Description: 應付帳款差異處理
+#+ Creator....: 01727(2014-01-28 10:34:31)
+#+ Modifier...: 01727 -SD/PR-
+
+{</section>}
+
+{<section id="aapt300_05.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_apca_m        RECORD
+       apcadocno LIKE apca_t.apcadocno, 
+   apcald LIKE apca_t.apcald, 
+   ra1 LIKE type_t.chr500, 
+   apca030 LIKE apca_t.apca030, 
+   apca030_desc LIKE type_t.chr80, 
+   apca031 LIKE apca_t.apca031, 
+   isam010 LIKE isam_t.isam010, 
+   isam023 LIKE isam_t.isam023, 
+   isam024 LIKE isam_t.isam024, 
+   isam026 LIKE isam_t.isam026, 
+   isam027 LIKE isam_t.isam027, 
+   apca103 LIKE type_t.chr500, 
+   apca104 LIKE type_t.chr500, 
+   apca113 LIKE type_t.chr500, 
+   apca114 LIKE type_t.chr500
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_apca_m        type_g_apca_m
+ 
+   DEFINE g_apcadocno_t LIKE apca_t.apcadocno
+DEFINE g_apcald_t LIKE apca_t.apcald
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="aapt300_05.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt300_05(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt300_05 WITH FORM cl_ap_formpath("aap","aapt300_05")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_apca_m.apcadocno,g_apca_m.apcald,g_apca_m.ra1,g_apca_m.apca030,g_apca_m.apca031, 
+          g_apca_m.isam010 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcadocno
+            #add-point:BEFORE FIELD apcadocno name="input.b.apcadocno"
+            {<point name="input.b.apcadocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcadocno
+            
+            #add-point:AFTER FIELD apcadocno name="input.a.apcadocno"
+            {<point name="input.a.apcadocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcadocno
+            #add-point:ON CHANGE apcadocno name="input.g.apcadocno"
+            {<point name="input.g.apcadocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcald
+            #add-point:BEFORE FIELD apcald name="input.b.apcald"
+            {<point name="input.b.apcald" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcald
+            
+            #add-point:AFTER FIELD apcald name="input.a.apcald"
+            {<point name="input.a.apcald" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcald
+            #add-point:ON CHANGE apcald name="input.g.apcald"
+            {<point name="input.g.apcald" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ra1
+            #add-point:BEFORE FIELD ra1 name="input.b.ra1"
+            {<point name="input.b.ra1" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ra1
+            
+            #add-point:AFTER FIELD ra1 name="input.a.ra1"
+            {<point name="input.a.ra1" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ra1
+            #add-point:ON CHANGE ra1 name="input.g.ra1"
+            {<point name="input.g.ra1" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apca030
+            
+            #add-point:AFTER FIELD apca030 name="input.a.apca030"
+            {<point name="input.a.apca030" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apca030
+            #add-point:BEFORE FIELD apca030 name="input.b.apca030"
+            {<point name="input.b.apca030" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apca030
+            #add-point:ON CHANGE apca030 name="input.g.apca030"
+            {<point name="input.g.apca030" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apca031
+            #add-point:BEFORE FIELD apca031 name="input.b.apca031"
+            {<point name="input.b.apca031" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apca031
+            
+            #add-point:AFTER FIELD apca031 name="input.a.apca031"
+            {<point name="input.a.apca031" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apca031
+            #add-point:ON CHANGE apca031 name="input.g.apca031"
+            {<point name="input.g.apca031" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isam010
+            #add-point:BEFORE FIELD isam010 name="input.b.isam010"
+            {<point name="input.b.isam010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isam010
+            
+            #add-point:AFTER FIELD isam010 name="input.a.isam010"
+            {<point name="input.a.isam010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isam010
+            #add-point:ON CHANGE isam010 name="input.g.isam010"
+            {<point name="input.g.isam010" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.apcadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcadocno
+            #add-point:ON ACTION controlp INFIELD apcadocno name="input.c.apcadocno"
+            {<point name="input.c.apcadocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apcald
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcald
+            #add-point:ON ACTION controlp INFIELD apcald name="input.c.apcald"
+            {<point name="input.c.apcald" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ra1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ra1
+            #add-point:ON ACTION controlp INFIELD ra1 name="input.c.ra1"
+            {<point name="input.c.ra1" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apca030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apca030
+            #add-point:ON ACTION controlp INFIELD apca030 name="input.c.apca030"
+            {<point name="input.c.apca030" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apca031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apca031
+            #add-point:ON ACTION controlp INFIELD apca031 name="input.c.apca031"
+            {<point name="input.c.apca031" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isam010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isam010
+            #add-point:ON ACTION controlp INFIELD isam010 name="input.c.isam010"
+            {<point name="input.c.isam010" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt300_05 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aapt300_05.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="aapt300_05.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

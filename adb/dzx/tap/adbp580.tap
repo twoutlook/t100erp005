@@ -1,0 +1,1027 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="adbp580" std_prog="adbp580" erpver="1.0" module="ADB" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="b_fill.clear" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_cnt           LIKE type_t.num5]]>
+  </point>
+  <point name="b_fill.foreach_into" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[          g_detail_d[l_ac].sel,
+          g_detail_d[l_ac].xmdksite,     g_detail_d[l_ac].xmdksite_desc, g_detail_d[l_ac].xmdkdocdt,
+          g_detail_d[l_ac].xmdk001,      g_detail_d[l_ac].xmdkdocno,     g_detail_d[l_ac].xmdk005,
+          g_detail_d[l_ac].xmdk006,      g_detail_d[l_ac].xmdk007,       g_detail_d[l_ac].xmdk007_desc,
+          g_detail_d[l_ac].xmdk009,      g_detail_d[l_ac].xmdk007_desc,  g_detail_d[l_ac].xmdk021,
+          g_detail_d[l_ac].xmdk021_desc, g_detail_d[l_ac].xmdk008,       g_detail_d[l_ac].xmdk008_desc,
+          g_detail_d[l_ac].xmdk003,      g_detail_d[l_ac].xmdk003_desc,  g_detail_d[l_ac].xmdk004,
+          g_detail_d[l_ac].xmdk004_desc]]>
+  </point>
+  <point name="b_fill.foreach_iside" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      #當單身資料均已轉簽收,即不顯示於畫面上
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM xmdl_t
+       WHERE NVL(xmdl018,0) - NVL(xmdl035,0) - NVL(xmdl036,0) <> 0
+         AND xmdldocno = g_detail_d[l_ac].xmdkdocno
+         AND xmdlent = g_enterprise
+      IF l_cnt = 0 THEN
+         CONTINUE FOREACH
+      END IF
+     
+     #出貨單已有轉簽收且未確認的單據
+      LET l_cnt = 0 
+      SELECT COUNT(*) INTO l_cnt  FROM xmdl_t,xmdk_t
+       WHERE xmdkent = xmdlent AND xmdkdocno = xmdldocno
+         AND xmdkent = g_enterprise
+         AND xmdk000 = '4'
+         AND xmdl001 = g_detail_d[l_ac].xmdkdocno
+         AND xmdkstus = 'N'     
+      IF l_cnt > 0 THEN
+         CONTINUE FOREACH
+      END IF
+
+     #出貨單已有轉簽收且未確認的單據
+      LET l_cnt = 0 
+      SELECT COUNT(*) INTO l_cnt  FROM xmdk_t
+       WHERE xmdkent = g_enterprise
+         AND xmdk000 = '4'
+         AND xmdk005 = g_detail_d[l_ac].xmdkdocno
+         AND xmdkstus = 'N'     
+      IF l_cnt > 0 THEN
+         CONTINUE FOREACH
+      END IF]]>
+  </point>
+  <point name="b_fill.other_table" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_detail_d.deleteElement(l_ac)]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF cl_null(g_wc) THEN 
+      LET g_wc = " 1=1"
+   END IF
+   
+   IF cl_null(g_wc2) OR g_wc2 = " 1=1" THEN
+      LET g_sql = "SELECT 'N',xmdksite,'',xmdkdocdt,xmdk001,xmdkdocno,xmdk005,xmdk006,xmdk007,'', ",
+                  "       xmdk009, '',xmdk021,'',xmdk008,'',xmdk003,'',xmdk004,'' ",
+                  "  FROM xmdk_t ",
+                  " WHERE xmdkent = ? AND xmdk002 = '3' AND xmdkstus = 'S' AND ",g_wc CLIPPED
+                  #" WHERE xmdkent = ? AND ",g_wc CLIPPED
+   ELSE
+      LET g_sql = "SELECT 'N',xmdksite,'',xmdkdocdt,xmdk001,xmdkdocno,xmdk005,xmdk006,xmdk007,'', ",
+                  "       xmdk009, '',xmdk021,'',xmdk008,'',xmdk003,'',xmdk004,'' ",
+                  "  FROM xmdk_t,xmdl_t ",
+                  " WHERE xmdkent = ? AND xmdkent = xmdlent AND xmdkdocno = xmdldocno ",
+                  "   AND xmdk002 = '3' AND xmdkstus = 'S'",
+                  "   AND ",g_wc CLIPPED,
+                  "   AND ",g_wc2 CLIPPED
+   END IF]]>
+  </point>
+  <point name="detail_show.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_oofa001     LIKE oofa_t.oofa001]]>
+  </point>
+  <point name="detail_show.detail_show" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_detail_d[l_ac].xmdksite
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].xmdksite_desc = '', g_rtn_fields[1] , ''
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_detail_d[l_ac].xmdk007
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].xmdk007_desc = '', g_rtn_fields[1] , ''
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_detail_d[l_ac].xmdk008
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].xmdk008_desc = '', g_rtn_fields[1] , ''
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_detail_d[l_ac].xmdk009
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].xmdk009_desc = '', g_rtn_fields[1] , ''
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_detail_d[l_ac].xmdk003
+   CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].xmdk003_desc = '', g_rtn_fields[1] , ''
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_detail_d[l_ac].xmdk004
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].xmdk004_desc = '', g_rtn_fields[1] , ''
+   
+   LET l_oofa001 = ''
+   SELECT oofa001 INTO l_oofa001 
+    FROM oofa_t 
+    WHERE oofaent = g_enterprise
+      AND oofa002 = '3' 
+      AND oofa003 = g_detail_d[l_ac].xmdk009
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = l_oofa001
+   LET g_ref_fields[2] = g_detail_d[l_ac].xmdk021
+   CALL ap_ref_array2(g_ref_fields,"SELECT oofb011 FROM oofb_t WHERE oofbent='"||g_enterprise||"' AND oofb002 = ? AND oofb019=? ","") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].xmdk021_desc = '', g_rtn_fields[1] , '']]>
+  </point>
+  <point name="fetch.after_fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_detail2_d.clear()
+   IF g_detail_idx = 0 THEN
+      LET g_detail_idx = 1
+   END IF
+   
+   LET g_sql = "SELECT xmdlseq,xmdl001,xmdl002,xmdl003,xmdl004,xmdl005,",
+               "       xmdl006,xmdl007,xmdl008,     '',     '',",
+               "       xmdl009,xmdl033,xmdl204,     '',     '',     '',",
+               "       xmdl017,xmdl035,xmdl036,xmdl084,     '',xmdl019,",
+               "            '',xmdl020,xmdl082,xmdl013,xmdl014,     '',",
+               "       xmdl015,     '',xmdl016,xmdl050,     '',xmdl051 ",
+               "  FROM xmdl_t ",
+               " WHERE xmdlent = ",g_enterprise CLIPPED,"  AND xmdldocno = '",g_detail_d[g_detail_idx].xmdkdocno CLIPPED,"'"
+   IF NOT cl_null(g_wc2) AND g_wc2 != " 1=1" THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2 CLIPPED
+   END IF
+   
+   LET g_sql = g_sql CLIPPED," ORDER BY xmdlseq"
+   
+   PREPARE adbp580_b_fill2 FROM g_sql
+   DECLARE adbp580_b_fill2_curs CURSOR FOR adbp580_b_fill2
+   
+   LET l_ac = 1
+   FOREACH adbp580_b_fill2_curs INTO
+            g_detail2_d[l_ac].xmdlseq,  g_detail2_d[l_ac].xmdl001,   g_detail2_d[l_ac].xmdl002,
+            g_detail2_d[l_ac].xmdl003,  g_detail2_d[l_ac].xmdl004,   g_detail2_d[l_ac].xmdl005,
+            g_detail2_d[l_ac].xmdl006,  g_detail2_d[l_ac].xmdl007,   g_detail2_d[l_ac].xmdl008,          
+            g_detail2_d[l_ac].xmdl008_desc,g_detail2_d[l_ac].xmdl008_desc_desc,g_detail2_d[l_ac].xmdl009,
+            g_detail2_d[l_ac].xmdl033,  g_detail2_d[l_ac].xmdl204,   g_detail2_d[l_ac].xmdl204_desc,
+            g_detail2_d[l_ac].xmdl205, g_detail2_d[l_ac].xmdl206,    g_detail2_d[l_ac].xmdl017,
+            g_detail2_d[l_ac].xmdl035,  g_detail2_d[l_ac].xmdl036,   g_detail2_d[l_ac].xmdl084,
+            g_detail2_d[l_ac].xmdl084_desc,g_detail2_d[l_ac].xmdl019,g_detail2_d[l_ac].xmdl019_desc,
+            g_detail2_d[l_ac].xmdl020,  g_detail2_d[l_ac].xmdl082,   g_detail2_d[l_ac].xmdl013,          
+            g_detail2_d[l_ac].xmdl014,  g_detail2_d[l_ac].xmdl014_desc, g_detail2_d[l_ac].xmdl015,
+            g_detail2_d[l_ac].xmdl015_desc,g_detail2_d[l_ac].xmdl016,g_detail2_d[l_ac].xmdl050,          
+            g_detail2_d[l_ac].xmdl050_desc,g_detail2_d[l_ac].xmdl051  
+      
+      
+      #品名
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_detail2_d[l_ac].xmdl008
+      CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_detail2_d[l_ac].xmdl008_desc = '', g_rtn_fields[1] , ''
+      
+      #規格
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_detail2_d[l_ac].xmdl008
+      CALL ap_ref_array2(g_ref_fields,"SELECT imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_detail2_d[l_ac].xmdl008_desc_desc = '', g_rtn_fields[1] , ''
+
+      #出貨包裝單位
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_detail2_d[l_ac].xmdl204
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_detail2_d[l_ac].xmdl204_desc = '', g_rtn_fields[1] , ''
+
+      #驗退理由碼
+      LET l_gzcb004 = ''
+      SELECT gzcb004 INTO l_gzcb004 FROM gzcb_t
+       WHERE gzcb001 = '24'
+         AND gzcb002 = 'axmt590'
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_gzcb004
+      LET g_ref_fields[2] = g_detail2_d[l_ac].xmdl084
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_detail2_d[l_ac].xmdl084_desc = '', g_rtn_fields[1] , ''
+      
+      #參考單位
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_detail2_d[l_ac].xmdl019
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_detail2_d[l_ac].xmdl019_desc = '', g_rtn_fields[1] , ''
+       
+      #倉庫       
+      IF g_detail_idx <= 0 THEn
+         LET g_detail_idx = 1
+      END IF
+      LET l_xmdlsite = ''
+      
+      SELECT xmdlsite INTO l_xmdlsite FROM xmdl_t
+       WHERE xmdlent = g_enterprise
+         AND xmdldocno = g_detail_d[g_detail_idx].xmdkdocno
+         AND xmdlseq = g_detail2_d[l_ac].xmdlseq
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_xmdlsite
+      LET g_ref_fields[2] = g_detail2_d[l_ac].xmdl014
+      CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaasite=? AND inaa001=? ","") RETURNING g_rtn_fields
+      LET g_detail2_d[l_ac].xmdl014_desc = '', g_rtn_fields[1] , ''
+      
+      #儲位      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_xmdlsite
+      LET g_ref_fields[2] = g_detail2_d[l_ac].xmdl014
+      LET g_ref_fields[3] = g_detail2_d[l_ac].xmdl015
+      CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inabsite=? AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+      LET g_detail2_d[l_ac].xmdl015_desc = '', g_rtn_fields[1] , ''
+      
+      #理由碼
+      LET l_gzcb004 = ''
+      SELECT gzcb004 INTO l_gzcb004 FROM gzcb_t
+       WHERE gzcb001 = '24'
+         AND gzcb002 = 'axmt540'
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_gzcb004
+      LET g_ref_fields[2] = g_detail2_d[l_ac].xmdl050
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_detail2_d[l_ac].xmdl050_desc = '', g_rtn_fields[1] , ''
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   CALL g_detail2_d.deleteElement(l_ac)
+   LET g_detail2_cnt = l_ac - 1 
+   DISPLAY g_detail2_cnt TO FORMONLY.cnt]]>
+  </point>
+  <point name="fetch.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_gzcb004       LIKE gzcb_t.gzcb004
+   DEFINE l_xmdlsite      LIKE xmdl_t.xmdlsite
+   DEFINE l_cmd           STRING]]>
+  </point>
+  <point name="global.argv" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[TYPE type_g_detail2_d RECORD
+            xmdlseq           LIKE xmdl_t.xmdlseq,
+            xmdl001           LIKE xmdl_t.xmdl001,
+            xmdl002           LIKE xmdl_t.xmdl002,
+            xmdl003           LIKE xmdl_t.xmdl003,
+            xmdl004           LIKE xmdl_t.xmdl004,
+            xmdl005           LIKE xmdl_t.xmdl005,
+            xmdl006           LIKE xmdl_t.xmdl006,
+            xmdl007           LIKE xmdl_t.xmdl007,
+            xmdl008           LIKE xmdl_t.xmdl008,
+            xmdl008_desc      LIKE imaal_t.imaal003,
+            xmdl008_desc_desc LIKE imaal_t.imaal004,
+            xmdl009           LIKE xmdl_t.xmdl009,
+            xmdl033           LIKE xmdl_t.xmdl033,
+            xmdl204           LIKE xmdl_t.xmdl204,
+            xmdl204_desc      LIKE oocal_t.oocal003,
+            xmdl205           LIKE xmdl_t.xmdl205,
+            xmdl206           LIKE xmdl_t.xmdl206,
+            xmdl017           LIKE xmdl_t.xmdl017,
+            xmdl035           LIKE xmdl_t.xmdl035,
+            xmdl036           LIKE xmdl_t.xmdl036,
+            xmdl084           LIKE xmdl_t.xmdl084,
+            xmdl084_desc      LIKE oocql_t.oocql004,
+            xmdl019           LIKE xmdl_t.xmdl019,
+            xmdl019_desc      LIKE oocal_t.oocal003,
+            xmdl020           LIKE xmdl_t.xmdl020,
+            xmdl082           LIKE xmdl_t.xmdl082,
+            xmdl013           LIKE xmdl_t.xmdl013,
+            xmdl014           LIKE xmdl_t.xmdl014,
+            xmdl014_desc      LIKE inaa_t.inaa002,
+            xmdl015           LIKE xmdl_t.xmdl015,
+            xmdl015_desc      LIKE inab_t.inab003,
+            xmdl016           LIKE xmdl_t.xmdl016,
+            xmdl050           LIKE xmdl_t.xmdl050,
+            xmdl050_desc      LIKE oocql_t.oocql004,
+            xmdl051           LIKE xmdl_t.xmdl051 
+                     END RECORD
+                     
+DEFINE g_detail2_cnt         LIKE type_t.num5      
+DEFINE g_detail2_d           DYNAMIC ARRAY OF type_g_detail2_d
+DEFINE g_detail_idx          LIKE type_t.num5
+DEFINE g_detail_idx2         LIKE type_t.num5]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            sel               LIKE type_t.chr1,
+            xmdksite          LIKE xmdk_t.xmdksite,
+            xmdksite_desc     LIKE ooefl_t.ooefl003,
+            xmdkdocdt         LIKE xmdk_t.xmdkdocdt,
+            xmdk001           LIKE xmdk_t.xmdk001,
+            xmdkdocno         LIKE xmdk_t.xmdkdocno,
+            xmdk005           LIKE xmdk_t.xmdk005,
+            xmdk006           LIKE xmdk_t.xmdk006,
+            xmdk007           LIKE xmdk_t.xmdk007,
+            xmdk007_desc      LIKE pmaal_t.pmaal003,
+            xmdk009           LIKE xmdk_t.xmdk009,
+            xmdk009_desc      LIKE pmaal_t.pmaal003,
+            xmdk021           LIKE xmdk_t.xmdk021,
+            xmdk021_desc      LIKE type_t.chr500,
+            xmdk008           LIKE xmdk_t.xmdk008,
+            xmdk008_desc      LIKE pmaal_t.pmaal003,
+            xmdk003           LIKE xmdk_t.xmdk003,
+            xmdk003_desc      LIKE oofa_t.oofa011,
+            xmdk004           LIKE xmdk_t.xmdk004,
+            xmdk004_desc      LIKE ooefl_t.ooefl003
+                     END RECORD]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.before_dialog2" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL DIALOG.setSelectionMode("s_detail2", 1)
+            CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+            CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_flag          LIKE type_t.chr1
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_cmd           STRING
+   DEFINE l_str           STRING
+   DEFINE la_param    RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                      END RECORD
+   DEFINE ls_js       STRING]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ON ACTION select_item
+            IF g_detail_d[l_ac].sel = "Y" THEN
+               LET g_detail_d[l_ac].sel = "N"
+            ELSE
+               LET g_detail_d[l_ac].sel = "Y"
+            END IF
+
+         ON ACTION batch_execute
+
+            LET l_flag = 'N'
+            LET l_cmd = ''
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF g_detail_d[li_idx].sel = "Y" THEN
+                  IF cl_null(l_cmd) THEN
+                     LET l_cmd = g_detail_d[li_idx].xmdkdocno
+                  ELSE
+                     LET l_cmd = l_cmd CLIPPED,",",g_detail_d[li_idx].xmdkdocno
+                  END IF
+                  LET l_flag = 'Y' 
+               END IF 
+            END FOR
+
+            IF l_flag = 'N' THEN
+               CALL cl_err('','adb-00078',1)
+               CONTINUE DIALOG
+            ELSE
+               CALL s_transaction_begin()
+               CALL s_adbp580(l_cmd) RETURNING l_success,l_str
+               IF l_success THEN
+                  CALL s_transaction_end('Y','1')
+                  
+                  LET la_param.prog = 'adbt580'
+                  LET la_param.param[1] = ''
+                  LET la_param.param[2] = l_str
+                  LET ls_js = util.JSON.stringify(la_param )
+                  CALL cl_cmdrun_wait(ls_js)
+               ELSE
+                  CALL s_transaction_end('N','1')
+               END IF 
+            END IF
+            CALL adbp580_b_fill()   ]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         CONSTRUCT BY NAME g_wc ON xmdksite,xmdkdocdt,xmdk001,xmdkdocno,xmdk005,xmdk006,
+                                   xmdk007,xmdk009,xmdk021,xmdk008,xmdk003,xmdk004
+            BEFORE CONSTRUCT 
+               CALL cl_set_act_visible("filter",FALSE)
+               
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(xmdkdocno)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_xmdkdocno()
+                     DISPLAY g_qryparam.return1 TO xmdkdocno  #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(xmdk005)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_xmdgdocno()
+                     DISPLAY g_qryparam.return1 TO xmdk005    #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(xmdk006)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_xmdadocno()
+                     DISPLAY g_qryparam.return1 TO xmdk006    #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(xmdk007)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmaa001_6()
+                     DISPLAY g_qryparam.return1 TO xmdk007    #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(xmdk009)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmac002()
+                     DISPLAY g_qryparam.return1 TO xmdk009    #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(xmdk021)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_oofb019_1()
+                     DISPLAY g_qryparam.return1 TO xmdk021    #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(xmdk008)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmac002()
+                     DISPLAY g_qryparam.return1 TO xmdk008    #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(xmdk003)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_ooag001()
+                     DISPLAY g_qryparam.return1 TO xmdk003    #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(xmdk004)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_ooeg001()
+                     DISPLAY g_qryparam.return1 TO xmdk004    #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+               END CASE
+         END CONSTRUCT
+
+         CONSTRUCT BY NAME g_wc2 ON xmdl008
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(xmdl008)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_imaa001()               
+                     DISPLAY g_qryparam.return1 TO xmdl008    #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+               END CASE
+         END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 1
+               CALL cl_set_act_visible("filter",FALSE)
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_detail_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL adbp580_fetch()
+         END DISPLAY
+         
+         DISPLAY ARRAY g_detail2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+
+            BEFORE DISPLAY
+               LET g_current_page = 2
+               CALL cl_set_act_visible("filter",FALSE)
+               
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               DISPLAY g_detail2_d.getLength() TO FORMONLY.cnt
+         END DISPLAY]]>
+  </point>
+  <section id="adbp580.b_fill" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION adbp580_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   PREPARE adbp580_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR adbp580_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   {<point name="b_fill.clear"/>}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   {<point name="b_fill.foreach_into"/>}
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.foreach_iside"/>}
+      #end add-point
+      
+      CALL adbp580_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.other_table"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE adbp580_sel
+   
+   LET l_ac = 1
+   CALL adbp580_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.after_b_fill"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adbp580.description" ver="35" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000060
+#+ 
+#+ Filename...: adbp580
+#+ Description: 分銷出貨單轉簽收單批次處理作業
+#+ Creator....: 01752(2014/05/16)
+#+ Modifier...: 01752(2014/05/23)
+#+ Buildtype..: 應用 p02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="adbp580.detail_show" ver="1" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION adbp580_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段
+   {<point name="detail_show.detail_show"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adbp580.fetch" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION adbp580_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbp580.filter" ver="1" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION adbp580_filter()
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+ 
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   {<point name="filter.detail_cnt"/>}
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL adbp580_b_fill()
+   CALL adbp580_fetch()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbp580.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION adbp580_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adbp580.filter_show" ver="1" status="" src="s">
+    <![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION adbp580_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = adbp580_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adbp580.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="adbp580.init" ver="1" status="" src="s">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION adbp580_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbp580.main" ver="1" status="" src="s">
+    <![CDATA[#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("adb","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adbp580 WITH FORM cl_ap_formpath("adb",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL adbp580_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL adbp580_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_adbp580
+   END IF 
+   
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="adbp580.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="adbp580.query" ver="1" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION adbp580_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" />}
+   #end add-point 
+   
+   #add-point:cs段after_construct
+   {<point name="query.after_construct" />}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL adbp580_b_fill()
+   LET l_ac = g_master_idx
+   CALL adbp580_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbp580.ui_dialog" ver="1" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION adbp580_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+ 
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+            END FOR
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL adbp580_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            CALL adbp580_query()
+ 
+         # 條件清除
+         ON ACTION qbeclear
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL adbp580_b_fill()
+            CALL adbp580_fetch()
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

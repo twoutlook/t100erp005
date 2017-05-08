@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmt520_02" std_prog="apmt520_02" erpver="1.0" ver="2" module="APM" type="S" booking="N" class="T" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="pmdp_t" main="N" head="N" pk="pmdpent,pmdpdocno,pmdpseq" fk_detail="pmdt001,pmdt002" parent="pmdt_t" fk_master="pmdtdocno,pmdtseq" src="s" status="">
+      <sr name="s_detail1" src="s" insert="N" delete="N" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pmdt_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：對訂單來源需求單調整沖銷順序
+資料處理：
+1.執行此程式需傳入2個參數，若傳入參數為ULL時則不可以執行
+  1-1.p_pmdsdocno(收貨單號):
+  1-2.p_pmdtseq(收貨項次):
+
+2.若傳入的收貨項次對應的子件特性不等於'1:一般'、'2:CKD'、'3:SKD'時不可以執行此子程式，
+  show訊息告知此項次不需維護需求分配並離開此子程式
+3.若傳入的收貨項次對應的採購項次沒有關聯單據明細資料時，不可以執行此子程式show訊息告知此項次
+  不需維護需求分配並離開此子程式
+
+4.此子作業的單頭只顯示收貨單身自資料不可以維護，而單身直接顯示採購項次的所有關連單據明細資料，
+  且進入子程式時直接進到單身做維護沖銷順序欄位
+
+5.確定維護好沖銷順序時，將維護完成的新沖銷順序更新回採購項次對應的關連單據明細資料
+
+6.確定維護好沖銷順序時需乎叫原始需求分配function產生原始需求分配明細資料
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.此單身不可以做新增刪除動作
+2.此單身只可以維護沖銷順序欄位]]>
+  </di_all>
+  <field cite_std="N" name="pmdt002" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt006" ver="1" src="s" column="" table="" attribute="" type="varchar2(40)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal003" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal004" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt007" ver="1" src="s" column="" table="" attribute="" type="varchar2(256)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt009" ver="1" src="s" column="" table="" attribute="" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt010" ver="1" src="s" column="" table="" attribute="" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt019" ver="1" src="s" column="" table="" attribute="" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt020" ver="1" src="s" column="" table="" attribute="" type="number(20, 6)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdpdocno" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdpseq" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdpseq1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp003" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp004" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp005" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp006" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp007" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp008" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp009" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp010" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp021" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[計算或處理:1.當有修改沖銷順序時，開窗詢問要做沖銷順序互換，還是要做沖銷順序重排，
+                  1-1.若選擇沖銷順序互換代表是將兩個沖銷順序對換，例如某一需求項次的沖銷順序為5，
+                      若將沖銷順序改成2時則此需求項次的沖銷順序變成2，把而原本充銷順序為2的就變成成5
+                  1-2.若是選擇沖銷順序重排代表是將修改後的沖銷順序依序往下重排，例如某一需求項次
+                      的沖銷順序為5，若將沖銷順序改成2時則此需求項次的沖銷順序變成2而原本沖銷順序為2的
+                      變成3，所以依序的原本為3的則變成4，原本為4的變成5]]>
+  </field>
+  <field cite_std="N" name="pmdp023" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp023_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdp022" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdtdocno" ver="1" src="s" column="" table="" attribute="" type="varchar2(20)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdtseq" ver="1" src="s" column="" table="" attribute="" type="number(10,0)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdt001" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_pmds002" depend_field="pmds_t.pmds002" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="pmdt019_desc" src="s" depend_field="pmdt_t.pmdt019" correspon_key="pmdt019" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="pmdt002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdpdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdpseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdpseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp023_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdp022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdtdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdtseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdt001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="lbl_master" text="收貨資訊" lstr=""/>
+    <sfield name="lbl_pmdtdocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_pmdtseq" text="收貨項次" lstr=""/>
+    <sfield name="lbl_pmdndocno" text="採購單號" lstr=""/>
+    <sfield name="lbl_pmdnseq" text="採購項次" lstr=""/>
+    <sfield name="lbl_pmdt006" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_pmdt007" text="產品特徵" lstr=""/>
+    <sfield name="lbl_pmdt009" text="作業編號" lstr=""/>
+    <sfield name="lbl_pmdt010" text="製程序" lstr=""/>
+    <sfield name="lbl_pmdt019" text="單位" lstr=""/>
+    <sfield name="lbl_pmdt020" text="數量" lstr=""/>
+    <sfield name="lbl_pmdpdocno" text="採購單號" lstr=""/>
+    <sfield name="lbl_pmdpseq" text="採購項次" lstr=""/>
+    <sfield name="lbl_pmdpseq1" text="採購項序" lstr=""/>
+    <sfield name="lbl_pmdp003" text="需求單號" lstr=""/>
+    <sfield name="lbl_pmdp004" text="需求項次" lstr=""/>
+    <sfield name="lbl_pmdp005" text="需求項序" lstr=""/>
+    <sfield name="lbl_pmdp006" text="需求分批序" lstr=""/>
+    <sfield name="lbl_pmdp007" text="需求料號" lstr=""/>
+    <sfield name="lbl_pmdp008" text="需求產品特徵" lstr=""/>
+    <sfield name="lbl_pmdp009" text="需求作業編號" lstr=""/>
+    <sfield name="lbl_pmdp010" text="需求製程序" lstr=""/>
+    <sfield name="lbl_pmdp021" text="需求沖銷順序" lstr=""/>
+    <sfield name="lbl_pmdp023" text="需求單位" lstr=""/>
+    <sfield name="lbl_pmdp023_desc" text="單位名稱" lstr=""/>
+    <sfield name="lbl_pmdp022" text="需求數量" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+  </strings>
+  <sa_spec>
+    <sa_field name="GotoSceneRole1">
+      <![CDATA[產品特徵：
+   ●欄位控管：
+     資料欄位:Formonly /Display only
+     
+]]>
+    </sa_field>
+    <sa_field name="GotoSceneRole2">
+      <![CDATA[需求項序：
+   ●欄位控管：
+     資料欄位:Formonly /Display only
+     
+]]>
+    </sa_field>
+    <sa_field name="GotoSceneRole3">
+      <![CDATA[製程序：
+   ●欄位控管：
+     資料欄位:Formonly /Display only
+     
+]]>
+    </sa_field>
+    <sa_field name="GotoSceneRole4">
+      <![CDATA[沖銷順序：
+   ●欄位控管：
+     資料欄位:Formonly /可Display 可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值不可以小於等於0
+     帶值:無
+     計算或處理:1.當有修改沖銷順序時，開窗詢問要做沖銷順序互換，還是要做沖銷順序重排，
+                  1-1.若選擇沖銷順序互換代表是將兩個沖銷順序對換，例如某一需求項次的沖銷順序為5，
+                      若將充銷順序改成2時則此需求項次的沖銷順序變成2，把而原本充銷順序為2的就變成成5
+                  1-2.若是選擇沖銷順序重排代表是將修改後的衝銷順序依序往下重排，例如某一需求項次
+                      的沖銷順序為5，若將充銷順序改成2時則此需求項次的沖銷順序變成2而原本充銷順序為2的
+                      變成3，所以依序的原本為3的則變成4，原本為4的變成5
+     
+]]>
+    </sa_field>
+    <sa_field name="GotoSceneRole5">
+      <![CDATA[需求項次：
+   ●欄位控管：
+     資料欄位:Formonly /Display only
+     
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:庫位資料檔].[C:庫位編號],[T:庫位資料檔].[C:庫位名稱]
+       查詢條件：g_site
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依標準查詢視窗
+           查詢欄位：[T:庫位資料檔].[C:庫位編號],[T:庫位資料檔].[C:庫位名稱]
+           查詢條件：g_site
+           回值類型：單一回值
+]]>
+    </sa_field>
+    <sa_field name="GotoSceneRole6">
+      <![CDATA[需求料號：
+   ●欄位控管：
+     資料欄位:Formonly /Display only
+     
+]]>
+    </sa_field>
+    <sa_field name="GotoSceneRole7">
+      <![CDATA[需求單位：
+   ●欄位控管：
+     資料欄位:Formonly /Display only
+     
+]]>
+    </sa_field>
+    <sa_field name="GotoSceneRole8">
+      <![CDATA[需求數量：
+   ●欄位控管：
+     資料欄位:Formonly /Display only
+     
+]]>
+    </sa_field>
+    <sa_field name="GotoSceneRole9">
+      <![CDATA[需求項序：
+   ●欄位控管：
+     資料欄位:Formonly /Display only
+     
+]]>
+    </sa_field>
+    <sa_field name="TableRole1">
+      <![CDATA[1.此單身不可以做新增刪除動作
+2.此單身只可以維護沖銷順序欄位
+
+]]>
+    </sa_field>
+    <sa_field name="xmdh012">
+      <![CDATA[需求單號：
+   ●欄位控管：
+     資料欄位:Formonly /Display only
+     
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:庫位資料檔].[C:庫位編號],[T:庫位資料檔].[C:庫位名稱]
+       查詢條件：g_site
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依標準查詢視窗
+           查詢欄位：[T:庫位資料檔].[C:庫位編號],[T:庫位資料檔].[C:庫位名稱]
+           查詢條件：g_site
+           回值類型：單一回值
+]]>
+    </sa_field>
+    <sa_field name="xmdh013">
+      <![CDATA[需求項序：
+   ●欄位控管：
+     資料欄位:Formonly /Display only
+     
+]]>
+    </sa_field>
+    <sa_all name="ALL">
+      <![CDATA[程式說明及目的：對訂單來源需求單調整沖銷順序
+標準作業功能取消：
+狀態功能：無
+作業類型：批處處理作業
+輸入模式：非標準版型
+
+補充說明：
+
+
+============================================================================================
+1.執行此程式需傳入2個參數，若傳入參數為ULL時則不可以執行
+  1-1.p_pmdsdocno(收貨單號):
+  1-2.p_pmdtseq(收貨項次):
+
+2.若傳入的收貨項次對應的子件特性不等於'1:一般'、'2:CKD'、'3:SKD'時不可以執行此子程式，
+  show訊息告知此項次不需維護需求分配並離開此子程式
+3.若傳入的收貨項次對應的採購項次沒有關聯單據明細資料時，不可以執行此子程式show訊息告知此項次
+  不需維護需求分配並離開此子程式
+
+4.此子作業的單頭只顯示收貨單身自資料不可以維護，而單身直接顯示採購項次的所有關連單據明細資料，
+  且進入子程式時直接進到單身做維護沖銷順序欄位
+
+5.確定維護好沖銷順序時，將維護完成的新沖銷順序更新回採購項次對應的關連單據明細資料
+
+6.確定維護好沖銷順序時需乎叫原始需求分配function產生原始需求分配明細資料
+
+]]>
+    </sa_all>
+  </sa_spec>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="s_detail1" status=""/>
+  </exclude>
+</spec>

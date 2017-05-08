@@ -1,0 +1,1532 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmr170_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:5(2016-11-10 19:16:08), PR版次:0005(2016-12-01 16:29:46)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000069
+#+ Filename...: axmr170_x01
+#+ Description: ...
+#+ Creator....: 03079(2014-11-19 10:56:52)
+#+ Modifier...: 08993 -SD/PR- 08993
+ 
+{</section>}
+ 
+{<section id="axmr170_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+#160324-00047#3  2015/11/18 By Shiun        增加消化比例及"只顯示超過/低於消化警示比例的資料"
+#160727-00019#25  2016/08/5 By 08742        系统中定义的临时表名称超过15码在执行时会出错,将系统中定义的临时表长度超过15码的改掉
+#                                           Mod   axmr170_xmig_tmp--> axmr170_tmp01
+#                                           Mod   axmr170_xmig004_t--> axmr170_tmp02
+#161109-00085#11 2016/11/10 By 08993        整批調整系統星號寫法
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       wc2 STRING,                  #銷售組織qbe 
+       a1 LIKE type_t.chr10,         #預測編號 
+       a2 LIKE type_t.dat,         #起始日期 
+       a3 LIKE type_t.dat,         #截止日期 
+       a4 LIKE type_t.chr1,         #時距 
+       a5 LIKE type_t.chr1,         #預測數量 
+       a6 LIKE type_t.chr1,         #實際數量 
+       a7 LIKE type_t.chr1,         #預測比較方式 
+       a8 LIKE type_t.num5,         #第幾期 
+       a9 LIKE type_t.chr1          #消化警示
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_browser DYNAMIC ARRAY OF RECORD
+                    b_show        LIKE type_t.chr100,     #外顯欄位 
+                    b_pid         LIKE type_t.chr100,     #父節點id 
+                    b_id          LIKE type_t.chr100,     #本身節點id 
+                    b_exp         LIKE type_t.chr100,     #是否展開 
+                    b_hasC        LIKE type_t.num5,       #是否有子節點 
+                    b_isExp       LIKE type_t.num5,       #是否已展開 
+                    b_expcode     LIKE type_t.num5,       #展開值 
+                    b_ooed001     LIKE ooed_t.ooed001,    #組織類型  
+                    b_ooed002     LIKE ooed_t.ooed002,    #最上層組織 
+                    b_ooed003     LIKE ooed_t.ooed003,    #版本 
+                    b_ooed004     LIKE ooed_t.ooed004,    #組織編號 
+                    b_ooed005     LIKE ooed_t.ooed005     #上級組織編號 
+                 END RECORD
+DEFINE g_cnt     LIKE type_t.num10
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmr170_x01.main" readonly="Y" >}
+PUBLIC FUNCTION axmr170_x01(p_arg1,p_arg2,p_arg3,p_arg4,p_arg5,p_arg6,p_arg7,p_arg8,p_arg9,p_arg10,p_arg11)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 STRING                  #tm.wc2  銷售組織qbe 
+DEFINE  p_arg3 LIKE type_t.chr10         #tm.a1  預測編號 
+DEFINE  p_arg4 LIKE type_t.dat         #tm.a2  起始日期 
+DEFINE  p_arg5 LIKE type_t.dat         #tm.a3  截止日期 
+DEFINE  p_arg6 LIKE type_t.chr1         #tm.a4  時距 
+DEFINE  p_arg7 LIKE type_t.chr1         #tm.a5  預測數量 
+DEFINE  p_arg8 LIKE type_t.chr1         #tm.a6  實際數量 
+DEFINE  p_arg9 LIKE type_t.chr1         #tm.a7  預測比較方式 
+DEFINE  p_arg10 LIKE type_t.num5         #tm.a8  第幾期 
+DEFINE  p_arg11 LIKE type_t.chr1         #tm.a9  消化警示
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.wc2 = p_arg2
+   LET tm.a1 = p_arg3
+   LET tm.a2 = p_arg4
+   LET tm.a3 = p_arg5
+   LET tm.a4 = p_arg6
+   LET tm.a5 = p_arg7
+   LET tm.a6 = p_arg8
+   LET tm.a7 = p_arg9
+   LET tm.a8 = p_arg10
+   LET tm.a9 = p_arg11
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axmr170_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axmr170_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axmr170_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axmr170_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axmr170_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axmr170_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr170_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION axmr170_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "xmig006.xmig_t.xmig006,imaal003.imaal_t.imaal003,imaal004.imaal_t.imaal004,l_xmig007_desc.type_t.chr1000,l_xmig004_desc.type_t.chr1000,l_xmig005_desc.type_t.chr1000,l_xmig009_desc.type_t.chr1000,l_xmig008_desc.type_t.chr1000,imaf_t_imaf112.imaf_t.imaf112,l_time_interval.type_t.dat,xmig013.xmig_t.xmig013,xmdd_t_xmdd006.xmdd_t.xmdd006,l_diff_qty.xmig_t.xmig013,l_xmig013_xmdd006.xmig_t.xmig013,l_show.type_t.chr1" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   DROP TABLE axmr170_tmp01;          #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01
+   CREATE TEMP TABLE axmr170_tmp01(   #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01
+      xmig006        LIKE xmig_t.xmig006,       #預測料號  
+      xmig007        LIKE xmig_t.xmig007,       #產品特徵 
+      xmig004        LIKE xmig_t.xmig004,       #銷售組織 
+      xmig005        LIKE xmig_t.xmig005,       #業務員 
+      xmig009        LIKE xmig_t.xmig009,       #通路 
+      xmig008        LIKE xmig_t.xmig008,       #客戶 
+      imaf112        LIKE imaf_t.imaf112,       #單位 
+      xmig013        LIKE xmig_t.xmig013,       #預測數量 
+      xmdd006        LIKE xmdd_t.xmdd006,       #實際數量 
+      xmig011        LIKE xmig_t.xmig011,       #起始日期 
+      time_interval  LIKE xmig_t.xmig011        #時距日 
+   )  
+   
+   CREATE TEMP TABLE axmr170_tmp02(          #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02
+      xmig004        LIKE xmig_t.xmig004     #銷售組織 
+   )
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr170_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION axmr170_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr170_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axmr170_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   DEFINE l_xmig002_min           LIKE xmig_t.xmig002
+   DEFINE l_xmig002               LIKE xmig_t.xmig002
+   DEFINE l_xmig003_max           LIKE xmig_t.xmig003
+   
+   #161109-00085#11-mod-s
+   #DEFINE l_xmig                  RECORD LIKE xmig_t.*   #161109-00085#11   mark
+   DEFINE l_xmig                 RECORD  #營運據點銷售預測分配資料
+       xmigent LIKE xmig_t.xmigent, #企業編號
+       xmigsite LIKE xmig_t.xmigsite, #營運據點
+       xmig001 LIKE xmig_t.xmig001, #預測編號
+       xmig002 LIKE xmig_t.xmig002, #預測起始日
+       xmig003 LIKE xmig_t.xmig003, #版本
+       xmig004 LIKE xmig_t.xmig004, #預測組織
+       xmig005 LIKE xmig_t.xmig005, #業務員
+       xmig006 LIKE xmig_t.xmig006, #預測料號
+       xmig007 LIKE xmig_t.xmig007, #產品特徵
+       xmig008 LIKE xmig_t.xmig008, #客戶
+       xmig009 LIKE xmig_t.xmig009, #通路
+       xmig010 LIKE xmig_t.xmig010, #期別
+       xmig011 LIKE xmig_t.xmig011, #起始日期
+       xmig012 LIKE xmig_t.xmig012, #截止日期
+       xmig013 LIKE xmig_t.xmig013, #業務預測數量
+       xmig014 LIKE xmig_t.xmig014, #單價
+       xmig015 LIKE xmig_t.xmig015, #金額
+       xmig016 LIKE xmig_t.xmig016, #生管確認數量
+       xmig017 LIKE xmig_t.xmig017, #預測類型
+       xmig018 LIKE xmig_t.xmig018 #單位
+          END RECORD
+   #161109-00085#11-mod-e
+   DEFINE l_cnt                   LIKE type_t.num5
+   DEFINE l_imaf112               LIKE imaf_t.imaf112      #銷售單位  
+   DEFINE l_qty                   LIKE xmig_t.xmig013      #預測數量 
+   DEFINE l_success               LIKE type_t.num5
+   DEFINE l_time_interval_day     LIKE xmig_t.xmig011
+   DEFINE l_time_interval_day_end LIKE xmig_t.xmig011
+
+   DEFINE l_xmdd001               LIKE xmdd_t.xmdd001      #料件編號  
+   DEFINE l_xmdd002               LIKE xmdd_t.xmdd002      #產品特徵  
+   DEFINE l_xmdd004               LIKE xmdd_t.xmdd004      #單位 
+   DEFINE l_xmdd006               LIKE xmdd_t.xmdd006      #分批訂購數量  
+   DEFINE l_xmdd011               LIKE xmdd_t.xmdd011      #約定交貨日期  
+   DEFINE l_xmda002               LIKE xmda_t.xmda002      #業務人員  
+   DEFINE l_xmda003               LIKE xmda_t.xmda003      #業務部門  
+   DEFINE l_xmda004               LIKE xmda_t.xmda004      #客戶編號  
+   DEFINE l_xmda023               LIKE xmda_t.xmda023      #銷售通路  
+
+   DEFINE l_xmia011               LIKE xmia_t.xmia011      #預測方式-組織  
+   DEFINE l_xmia012               LIKE xmia_t.xmia012      #預測方式-業務員  
+   DEFINE l_xmia013               LIKE xmia_t.xmia013      #預測方式-客戶  
+   DEFINE l_xmia014               LIKE xmia_t.xmia014      #預測方式-通路  
+   DEFINE l_xmia015               LIKE xmia_t.xmia015      #預測方式-產品特徵   
+   DEFINE l_imaf125               LIKE imaf_t.imaf125      #預測料號   
+   
+   DEFINE l_xmdl008               LIKE xmdl_t.xmdl008
+   DEFINE l_xmdl009               LIKE xmdl_t.xmdl009
+   DEFINE l_xmdl017               LIKE xmdl_t.xmdl017
+   DEFINE l_xmdl018               LIKE xmdl_t.xmdl018
+   DEFINE l_xmdk001               LIKE xmdk_t.xmdk001
+   DEFINE l_xmdk003               LIKE xmdk_t.xmdk003
+   DEFINE l_xmdk004               LIKE xmdk_t.xmdk004
+   DEFINE l_xmdk007               LIKE xmdk_t.xmdk007
+   DEFINE l_xmdk030               LIKE xmdk_t.xmdk030 
+   DEFINE l_wc                    STRING 
+   
+   DEFINE l_n                     LIKE type_t.num10
+   DEFINE l_n2                    LIKE type_t.num10
+   DEFINE l_xmig004               LIKE xmig_t.xmig004
+   DEFINE l_pid                   LIKE type_t.chr50   #用於tree的第一層 
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   DELETE FROM  axmr170_tmp01;  #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01 
+   DELETE FROM axmr170_tmp02;       #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02
+   
+   IF cl_null(tm.wc2) THEN 
+      LET tm.wc2 = " 1=1 " 
+   END IF 
+   
+   #取得axmi170的資料 
+   LET l_xmia011 = ''          #銷售組織  
+   LET l_xmia013 = ''          #客戶  
+   LET l_xmia014 = ''          #通路 
+   LET l_xmia012 = ''          #業務人員 
+   LET l_xmia015 = ''          #產品特徵  
+   SELECT xmia011,xmia012,xmia013,xmia014,xmia015
+     INTO l_xmia011,l_xmia012,l_xmia013,l_xmia014,l_xmia015
+     FROM xmia_t
+    WHERE xmiaent = g_enterprise
+      AND xmia001 = tm.a1
+
+   #**********************************************************
+   #週月月月 
+   #11/3          11/10        12/10        1/10  
+   # ︱-----------︱-----------︱-----------︱
+   #100           101          102          103 
+   #              11/10        11/17       12/17        1/17  
+   #              ︱-----------︱-----------︱-----------︱
+   #              111          112          113         114 
+   #                           11/17        11/24       12/24        1/24  
+   #                           ︱-----------︱-----------︱-----------︱
+   #                           122          123         124          125  
+   #如果區間抓11/01~12/31 
+   #抓11/3(100)、11/10(111)、11/17(122)、11/24(123)、12/24(124)  
+   #********************************************************** 
+   
+   #tm.a7:預測比較方式 
+   IF tm.a7 = '1' THEN       #最新預測資料  
+      #找出符合畫面上輸入的日期區間的最小預測資料日期    
+      LET l_xmig002_min = ''
+      LET g_sql = " SELECT MIN(xmig002) ",
+                  "   FROM xmig_t ",
+                  "  WHERE xmigent  = '",g_enterprise,"' ",
+                  "    AND xmigsite = '",g_site,"' ",
+                  "    AND xmig001  = '",tm.a1,"' ",
+                  "    AND (xmig002 >= '",tm.a2,"' AND xmig002 < '",tm.a3,"') ",
+                  "    AND ",tm.wc, 
+                  "    AND ",tm.wc2 
+      PREPARE axmr170_get_min_xmig002_prep1 FROM g_sql
+      EXECUTE axmr170_get_min_xmig002_prep1 INTO l_xmig002_min
+
+
+      #從最小預測資料開始取得各個預測資料日期 
+      LET g_sql = "SELECT DISTINCT xmig002 ",
+                  "  FROM xmig_t ",
+                  " WHERE xmigent  = '",g_enterprise,"' ",
+                  "   AND xmigsite = '", g_site,"' ",
+                  "   AND xmig001  = '",tm.a1,"' ",
+                  "   AND (xmig002 >= '",l_xmig002_min,"' AND xmig002 <= '",tm.a3,"' ) ",
+                  "   AND ",tm.wc, 
+                  "   AND ",tm.wc2 
+      PREPARE axmr170_xmig002_prep1 FROM g_sql
+      DECLARE axmr170_xmig002_curs1 CURSOR FOR axmr170_xmig002_prep1
+      FOREACH axmr170_xmig002_curs1 INTO l_xmig002
+         #檢查這個日期的最大版本號是幾號  
+         LET l_xmig003_max = ''
+         SELECT MAX(xmig003) INTO l_xmig003_max
+           FROM xmig_t
+          WHERE xmigent = g_enterprise
+            AND xmigsite = g_site 
+            AND xmig001 = tm.a1
+            AND xmig002 = l_xmig002
+         #161109-00085#11-mod-s
+#         LET g_sql = "SELECT * FROM xmig_t ",    #161109-00085#11   mark
+         LET g_sql = "SELECT xmigent,xmigsite,xmig001,xmig002,xmig003,xmig004,xmig005,xmig006,xmig007,xmig008,
+                             xmig009,xmig010,xmig011,xmig012,xmig013,xmig014,xmig015,xmig016,xmig017,xmig018
+                       FROM xmig_t ",
+                     " WHERE xmigent = '",g_enterprise,"' ",
+                     "   AND xmigsite = '",g_site,"' ",
+                     "   AND xmig001 = '",tm.a1,"' ",
+                     "   AND xmig002 = '",l_xmig002,"' ",
+                     "   AND xmig003 = '",l_xmig003_max,"' ",
+                     "   AND xmig011 <= '",tm.a3,"' ",
+                     " ORDER BY xmig011 "
+         #161109-00085#11-mod-s
+         PREPARE axmr170_xmig_prep1 FROM g_sql
+         DECLARE axmr170_xmig_curs1 CURSOR FOR axmr170_xmig_prep1
+         INITIALIZE l_xmig.* TO NULL
+         #161109-00085#11-s mod
+#         FOREACH axmr170_xmig_curs1 INTO l_xmig.*   #161109-00085#11-s mark
+         FOREACH axmr170_xmig_curs1 INTO l_xmig.xmigent,l_xmig.xmigsite,l_xmig.xmig001,l_xmig.xmig002,l_xmig.xmig003,
+                                         l_xmig.xmig004,l_xmig.xmig005,l_xmig.xmig006,l_xmig.xmig007,l_xmig.xmig008,
+                                         l_xmig.xmig009,l_xmig.xmig010,l_xmig.xmig011,l_xmig.xmig012,l_xmig.xmig013,
+                                         l_xmig.xmig014,l_xmig.xmig015,l_xmig.xmig016,l_xmig.xmig017,l_xmig.xmig018
+         #161109-00085#11-e mod
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt
+              FROM xmig_t
+             WHERE xmigent = g_enterprise
+               AND xmigsite = g_site
+               AND xmig001 = tm.a1
+               AND xmig002 > l_xmig.xmig002
+               AND xmig004 = l_xmig.xmig004
+               AND xmig005 = l_xmig.xmig005
+               AND xmig006 = l_xmig.xmig006
+               AND xmig007 = l_xmig.xmig007
+               AND xmig008 = l_xmig.xmig008
+               AND xmig009 = l_xmig.xmig009
+               AND xmig011 <= l_xmig.xmig011 
+               AND xmig011 <=tm.a3
+            IF l_cnt > 0 THEN
+               INITIALIZE l_xmig.* TO NULL
+               CONTINUE FOREACH
+            END IF
+
+            #單位要使用銷售單位 
+            LET l_imaf112 = ''
+            SELECT imaf112 INTO l_imaf112
+              FROM imaf_t
+             WHERE imafent = g_enterprise
+               AND imafsite = g_site
+               AND imaf001  = l_xmig.xmig006
+
+            #決定預測數量的來源 
+            LET l_qty = ''
+            CASE tm.a5        #預測數量  
+               WHEN '1'       #業務預測數量  
+                  LET l_qty = l_xmig.xmig013
+               WHEN '2'       #生管確認數量  
+                  LET l_qty = l_xmig.xmig016
+            END CASE
+            #modify--160324-00047#3 By shiun--(S)            
+            IF cl_null(l_imaf112) THEN LET l_imaf112 = l_xmig.xmig018 END IF
+            #數量也應該轉換成銷售單位的數量  
+            IF NOT cl_null(l_xmig.xmig018) THEN
+               IF cl_null(l_qty) THEN LET l_qty = 0 END IF
+               CALL s_aooi250_convert_qty(l_xmig.xmig006,l_xmig.xmig018,l_imaf112,l_qty)
+                    RETURNING l_success,l_qty 
+            END IF  
+            #modify--160324-00047#3 By shiun--(E)
+            #如果是axmi170沒有被勾選的預測方式，其欄位應該替代為一個空白 
+            IF l_xmia011 = 'N' THEN     #銷售組織  
+               LET l_xmig.xmig004 = ' '
+            END IF
+            IF l_xmia012 = 'N' THEN     #業務人員 
+               LET l_xmig.xmig005 = ' '
+            END IF
+            IF l_xmia013 = 'N' THEN     #客戶 
+               LET l_xmig.xmig008 = ' '
+            END IF
+            IF l_xmia014 = 'N' THEN     #通路 
+               LET l_xmig.xmig009 = ' '
+            END IF
+            IF l_xmia015 = 'N' THEN     #產品特徵 
+               LET l_xmig.xmig007 = ' '
+            END IF
+
+            INSERT INTO axmr170_tmp01(xmig006,xmig007,xmig004,xmig005,xmig009,      #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01 
+                                         xmig008,imaf112,xmig013,xmdd006,xmig011,time_interval)
+            VALUES(l_xmig.xmig006,l_xmig.xmig007,l_xmig.xmig004,l_xmig.xmig005,
+                   l_xmig.xmig009,l_xmig.xmig008,l_imaf112,l_qty,'0',l_xmig.xmig011,'') 
+            
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt
+              FROM axmr170_tmp02        #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02
+             WHERE xmig004 = l_xmig.xmig004
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               #161109-00085#11-s mod
+#               INSERT INTO axmr170_tmp02 VALUES(l_xmig.xmig004)      #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02   #161109-00085#11-s mark
+               INSERT INTO axmr170_tmp02(xmig004) 
+                                  VALUES(l_xmig.xmig004)
+               #161109-00085#11-e mod
+            END IF
+                   
+            INITIALIZE l_xmig.* TO NULL
+         END FOREACH
+      END FOREACH
+   ELSE                      #比較預測第___期 
+      LET g_sql = " SELECT MIN(xmig002) ",
+                  "   FROM xmig_t ",
+                  "  WHERE xmigent  = '",g_enterprise,"' ",
+                  "    AND xmigsite = '",g_site,"' ",
+                  "    AND xmig001  = '",tm.a1,"' ",       #預測編號  
+                  "    AND (xmig002 >= '",tm.a2,"' AND xmig002 < '",tm.a3,"') ",
+                  "    AND xmig010  = '",tm.a8,"' ",       #畫面上指定的期別  
+                  "    AND ",tm.wc, 
+                  "    AND ",tm.wc2 
+      PREPARE axmr170_get_min_xmig002_prep2 FROM g_sql
+      EXECUTE axmr170_get_min_xmig002_prep2 INTO l_xmig002_min
+
+      LET g_sql = "SELECT DISTINCT xmig002 ",
+                  "  FROM xmig_t ",
+                  " WHERE xmigent  = '",g_enterprise,"' ",
+                  "   AND xmigsite = '",g_site,"' ",
+                  "   AND xmig001  = '",tm.a1,"' ",
+                  "   AND xmig002  >= '",l_xmig002_min,"' ",
+                  "   AND xmig002  <= '",tm.a3,"' ",
+                  "   AND ",tm.wc, 
+                  "   AND ",tm.wc2 
+      PREPARE axmr170_xmig002_prep2 FROM g_sql
+      DECLARE axmr170_xmig002_curs2 CURSOR FOR axmr170_xmig002_prep2 
+      FOREACH axmr170_xmig002_curs2 INTO l_xmig002
+         #檢查這個日期的最大版本號是幾號  
+         LET l_xmig003_max = ''
+         SELECT MAX(xmig003) INTO l_xmig003_max
+           FROM xmig_t
+          WHERE xmigent = g_enterprise
+            AND xmigsite = g_site
+            AND xmig001 = tm.a1
+            AND xmig002 = l_xmig002
+          #161109-00085#11-mod-s
+#         LET g_sql = "SELECT * FROM xmig_t ",    #161109-00085#11   mark
+         LET g_sql = "SELECT xmigent,xmigsite,xmig001,xmig002,xmig003,xmig004,xmig005,xmig006,xmig007,xmig008,
+                             xmig009,xmig010,xmig011,xmig012,xmig013,xmig014,xmig015,xmig016,xmig017,xmig018
+                       FROM xmig_t ",
+                     " WHERE xmigent = '",g_enterprise,"' ",
+                     "   AND xmigsite = '",g_site,"' ",
+                     "   AND xmig001 = '",tm.a1,"' ",
+                     "   AND xmig002 = '",l_xmig002,"' ",
+                     "   AND xmig003 = '",l_xmig003_max,"' ",
+                     "   AND xmig011 <= '",tm.a3,"' ",
+                     " ORDER BY xmig011 "
+         #161109-00085#11-mod-s
+         PREPARE axmr170_xmig_prep2 FROM g_sql
+         DECLARE axmr170_xmig_curs2 CURSOR FOR axmr170_xmig_prep2
+         INITIALIZE l_xmig.* TO NULL
+         #161109-00085#11-s mod
+#         FOREACH axmr170_xmig_curs2 INTO l_xmig.*   #161109-00085#11-s mark
+         FOREACH axmr170_xmig_curs2 INTO l_xmig.xmigent,l_xmig.xmigsite,l_xmig.xmig001,l_xmig.xmig002,l_xmig.xmig003,
+                                         l_xmig.xmig004,l_xmig.xmig005,l_xmig.xmig006,l_xmig.xmig007,l_xmig.xmig008,
+                                         l_xmig.xmig009,l_xmig.xmig010,l_xmig.xmig011,l_xmig.xmig012,l_xmig.xmig013,
+                                         l_xmig.xmig014,l_xmig.xmig015,l_xmig.xmig016,l_xmig.xmig017,l_xmig.xmig018
+         #161109-00085#11-e mod
+            #單位要使用銷售單位 
+            LET l_imaf112 = ''
+            SELECT imaf112 INTO l_imaf112
+              FROM imaf_t
+             WHERE imafent = g_enterprise
+               AND imafsite = g_site 
+               AND imaf001  = l_xmig.xmig006
+
+            #決定預測數量的來源 
+            LET l_qty = ''
+            CASE tm.a5        #預測數量  
+               WHEN '1'       #業務預測數量  
+                  LET l_qty = l_xmig.xmig013
+               WHEN '2'       #生管確認數量  
+                  LET l_qty = l_xmig.xmig016
+            END CASE
+
+            
+            #modify--160324-00047#3 By shiun--(S)
+            IF cl_null(l_imaf112) THEN LET l_imaf112 = l_xmig.xmig018 END IF
+            #數量也應該轉換成銷售單位的數量  
+            IF NOT cl_null(l_xmig.xmig018) THEN
+               IF cl_null(l_qty) THEN LET l_qty = 0 END IF
+               CALL s_aooi250_convert_qty(l_xmig.xmig006,l_xmig.xmig018,l_imaf112,l_qty)
+                    RETURNING l_success,l_qty 
+            END IF  
+            #modify--160324-00047#3 By shiun--(E)
+                 
+            #如果是axmi170沒有被勾選的預測方式，其欄位應該替代為一個空白 
+            IF l_xmia011 = 'N' THEN     #銷售組織  
+               LET l_xmig.xmig004 = ' '
+            END IF
+            IF l_xmia012 = 'N' THEN     #業務人員 
+               LET l_xmig.xmig005 = ' '
+            END IF
+            IF l_xmia013 = 'N' THEN     #客戶 
+               LET l_xmig.xmig008 = ' '
+            END IF
+            IF l_xmia014 = 'N' THEN     #通路 
+               LET l_xmig.xmig009 = ' '
+            END IF
+            IF l_xmia015 = 'N' THEN     #產品特徵 
+               LET l_xmig.xmig007 = ' '
+            END IF
+
+            INSERT INTO axmr170_tmp01(xmig006,xmig007,xmig004,xmig005,xmig009,       #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01 
+                                         xmig008,imaf112,xmig013,xmdd006,xmig011,time_interval)
+            VALUES(l_xmig.xmig006,l_xmig.xmig007,l_xmig.xmig004,l_xmig.xmig005,
+                   l_xmig.xmig009,l_xmig.xmig008,l_imaf112,l_qty,'0',l_xmig.xmig011,'') 
+                   
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt
+              FROM axmr170_tmp02      #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02
+             WHERE xmig004 = l_xmig.xmig004
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               #161109-00085#11-s mod
+#               INSERT INTO axmr170_tmp02 VALUES(l_xmig.xmig004)      #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02   #161109-00085#11-s mark
+               INSERT INTO axmr170_tmp02(xmig004) 
+                                  VALUES(l_xmig.xmig004)
+               #161109-00085#11-e mod
+            END IF
+            
+            INITIALIZE l_xmig.* TO NULL
+
+         END FOREACH
+      END FOREACH
+   END IF
+   
+   IF tm.a6 = '1' THEN
+      #找訂單的資料  
+      
+      LET l_wc = tm.wc
+      #LET l_wc = cl_replace_str(l_wc,'xmig004','xmda003')
+      LET l_wc = cl_replace_str(l_wc,'xmig005','xmda002')
+      LET l_wc = cl_replace_str(l_wc,'xmig009','xmda023')
+      LET l_wc = cl_replace_str(l_wc,'xmig008','xmda004')
+      LET l_wc = cl_replace_str(l_wc,'xmig006','xmdd001')
+      
+      #151113-00022#7 20151202 s983961--mod(S)
+      #LET g_sql = "SELECT xmdd001,xmdd002,xmda003,xmda002,xmda023,xmda004,xmdd004,SUM(xmdd006),xmdd011 ",
+      #            "  FROM xmda_t,xmdd_t ",
+      #            " WHERE xmdaent  = '",g_enterprise,"' ",
+      #            "   AND xmdasite = '",g_site,"' ",
+      #            "   AND xmdastus IN ('Y','C') ",
+      #            "   AND xmdadocno = xmdddocno ",
+      #            "   AND (xmdd011 >= '",tm.a2,"' AND xmdd011 <= '",tm.a3,"' ) ",
+      #            "   AND ",l_wc,
+      #            " GROUP BY xmdd001,xmdd002,xmda003,xmda002,xmda023,xmda004,xmdd004,xmdd011 "
+      LET g_sql = "SELECT CASE WHEN imaf125 IS NOT NULL THEN imaf125 ELSE xmdd001 END, ",
+                  "       xmdd002,xmda003,xmda002,xmda023,xmda004,xmdd004,SUM(xmdd006),xmdd011 ",
+                  "  FROM xmda_t,xmdd_t ",
+                  "  LEFT OUTER JOIN imaf_t ON imafent = ",g_enterprise," AND imafsite = '",g_site,"' AND imaf001 = xmdd001 ",
+                  " WHERE xmdaent  = ",g_enterprise," ",
+                  "   AND xmdasite = '",g_site,"' ",
+                  "   AND xmdastus IN ('Y','C') ",
+                  "   AND xmdadocno = xmdddocno ",
+                  "   AND (xmdd011 >= '",tm.a2,"' AND xmdd011 <= '",tm.a3,"' ) ",
+                  "   AND ",l_wc,
+                  " GROUP BY xmdd001,xmdd002,xmda003,xmda002,xmda023,xmda004,xmdd004,xmdd011,imaf125 "
+      #151113-00022#7 20151202 s983961--mod(E)            
+      PREPARE axmr170_xmdd_prep FROM g_sql
+      DECLARE axmr170_xmdd_curs CURSOR FOR axmr170_xmdd_prep
+      FOREACH axmr170_xmdd_curs INTO l_xmdd001,l_xmdd002,l_xmda003,l_xmda002,
+                                     l_xmda023,l_xmda004,l_xmdd004,l_xmdd006,l_xmdd011
+         #151113-00022#7 20151202 s983961--MARK(S)
+         ##找出預測料號 
+         #LET l_imaf125 = ''
+         #SELECT imaf125 INTO l_imaf125
+         #  FROM imaf_t
+         # WHERE imafent  = g_enterprise
+         #   AND imafsite = g_site
+         #   AND imaf001  = l_xmdd001
+         # 
+         #IF NOT cl_null(l_imaf125) THEN
+         #   LET l_xmdd001 = l_imaf125
+         #END IF
+         #151113-00022#7 20151202 s983961--MARK(E)
+      
+         #找出銷售單位 
+         LET l_imaf112 = '' 
+         SELECT imaf112 INTO l_imaf112
+           FROM imaf_t
+          WHERE imafent  = g_enterprise
+            AND imafsite = g_site
+            AND imaf001  = l_xmdd001
+
+         IF cl_null(l_imaf112) THEN LET l_imaf112 = l_xmdd004 END IF
+         #數量也應該轉換成銷售單位的數量  
+         IF NOT cl_null(l_xmdd004) THEN 
+            IF cl_null(l_xmdd006) THEN LET l_xmdd006 = 0 END IF   #add--160324-00047#3 By shiun
+            CALL s_aooi250_convert_qty(l_xmdd001,l_xmdd004,l_imaf112,l_xmdd006)
+                 RETURNING l_success,l_xmdd006
+         END IF
+
+         IF l_xmia011 = 'N' THEN      #銷售組織  
+            LET l_xmda003 = ' '
+         END IF
+         IF l_xmia012 = 'N' THEN      #業務人員 
+            LET l_xmda002 = ' '
+         END IF
+         IF l_xmia013 = 'N' THEN      #客戶 
+            LET l_xmda004 = ' '
+         END IF
+         IF l_xmia014 = 'N' THEN      #通路 
+            LET l_xmda023 = ' '
+         END IF
+         IF l_xmia015 = 'N' THEN      #產品特徵 
+            LET l_xmdd002 = ' '
+         END IF
+         LET g_sql = "SELECT COUNT(*) FROM axmr170_tmp01 ",        #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01 
+                     " WHERE xmig006 = '",l_xmdd001,"' ",
+                     "   AND xmig011 = '",l_xmdd011,"' ",
+                     "   AND xmig004 = '",l_xmda003,"' ",
+                     "   AND xmig005 = '",l_xmda002,"' ",
+                     "   AND xmig008 = '",l_xmda004,"' ",
+                     "   AND xmig009 = '",l_xmda023,"' ",
+                     "   AND xmig007 = '",l_xmda002,"' "
+         PREPARE axmr170_xmig_count1 FROM g_sql
+         EXECUTE axmr170_xmig_count1 INTO l_cnt
+
+         IF cl_null(l_cnt) THEN
+            LET l_cnt = 0
+         END IF 
+         IF l_cnt = 0 THEN
+            INSERT INTO axmr170_tmp01(xmig006,xmig007,xmig004,xmig005,xmig009,         #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01 
+                                         xmig008,imaf112,xmig013,xmdd006,xmig011,time_interval)
+                 VALUES(l_xmdd001,l_xmdd002,l_xmda003,l_xmda002,l_xmda023,l_xmda004,
+                        l_imaf112,'0',l_xmdd006,l_xmdd011,'')
+         ELSE
+            LET g_sql = "UPDATE axmr170_tmp01 SET xmdd006 = xmdd006 + ",l_xmdd006,      #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01 
+                        " WHERE xmig006 = '",l_xmdd001,"' ",
+                        "   AND xmig011 = '",l_xmdd011,"' ",
+                        "   AND xmig004 = '",l_xmda003,"' ",
+                        "   AND xmig005 = '",l_xmda002,"' ",
+                        "   AND xmig008 = '",l_xmda004,"' ",
+                        "   AND xmig009 = '",l_xmda023,"' ",
+                        "   AND xmig007 = '",l_xmda002,"' "
+            PREPARE axmr170_xmig_tmp_upd1 FROM g_sql
+            EXECUTE axmr170_xmig_tmp_upd1
+         END IF
+
+      END FOREACH
+   ELSE
+      #找出貨單的資料 
+
+      LET l_wc = tm.wc
+      #LET l_wc = cl_replace_str(l_wc,'xmig004','xmdk004')
+      LET l_wc = cl_replace_str(l_wc,'xmig005','xmdk003')
+      LET l_wc = cl_replace_str(l_wc,'xmig009','xmdk030')
+      LET l_wc = cl_replace_str(l_wc,'xmig008','xmdk007')
+      LET l_wc = cl_replace_str(l_wc,'xmig006','xmdl008')
+      
+      #151113-00022#7 20151202 s983961--MOD(S) 
+      #LET g_sql = "SELECT xmdl008,xmdl009,xmdk004,xmdk003,xmdk030,xmdk007,xmdl017,SUM(xmdl018),xmdk001 ",
+      #            "  FROM xmdk_t,xmdl_t ",
+      #            " WHERE xmdkent  = '",g_enterprise,"' ",
+      #            "   AND xmdksite = '",g_site,"' ",
+      #            "   AND xmdk000 IN ('1','2') ",         #找出貨單或無訂單出貨單的資料  
+      #            "   AND xmdkstus  = 'S' ",              #找已過帳的資料  
+      #            "   AND xmdkent   = xmdlent ",
+      #            "   AND xmdksite  = xmdlsite ",
+      #            "   AND xmdkdocno = xmdldocno ",
+      #            "   AND (xmdk001 >= '",tm.a2,"' AND xmdk001 <= '",tm.a3,"' ) ",
+      #            "   AND ",l_wc,
+      #            " GROUP BY xmdl008,xmdl009,xmdk004,xmdk003,xmdk030,xmdk007,xmdl017,xmdk001 "
+      LET g_sql = "SELECT CASE WHEN imaf125 IS NOT NULL THEN imaf125 ELSE xmdl008 END,",
+                  "       xmdl009,xmdk004,xmdk003,xmdk030,xmdk007,xmdl017,SUM(xmdl018),xmdk001 ",
+                  "  FROM xmdk_t,xmdl_t ",
+                  "  LEFT OUTER JOIN imaf_t ON imafent = ",g_enterprise," AND imafsite = '",g_site,"' AND imaf001 = xmdl008 ",
+                  " WHERE xmdkent  = '",g_enterprise,"' ",
+                  "   AND xmdksite = '",g_site,"' ",
+                  "   AND xmdk000 IN ('1','2') ",         #找出貨單或無訂單出貨單的資料  
+                  "   AND xmdkstus  = 'S' ",              #找已過帳的資料  
+                  "   AND xmdkent   = xmdlent ",
+                  "   AND xmdksite  = xmdlsite ",
+                  "   AND xmdkdocno = xmdldocno ",
+                  "   AND (xmdk001 >= '",tm.a2,"' AND xmdk001 <= '",tm.a3,"' ) ",
+                  "   AND ",l_wc,
+                  " GROUP BY xmdl008,xmdl009,xmdk004,xmdk003,xmdk030,xmdk007,xmdl017,xmdk001,imaf125 "
+      #151113-00022#7 20151202 s983961--MOD(E) 
+      PREPARE axmr170_xmdl_prep FROM g_sql
+      DECLARE axmr170_xmdl_curs CURSOR FOR axmr170_xmdl_prep 
+      FOREACH axmr170_xmdl_curs INTO l_xmdl008,l_xmdl009,l_xmdk004,l_xmdk003,
+                                     l_xmdk030,l_xmdk007,l_xmdl017,l_xmdl018,
+                                     l_xmdk001
+                               
+         #151113-00022#7 20151202 s983961--MARK(S)                            
+         ##找出預測料號 
+         #LET l_imaf125 = ''
+         #SELECT imaf125 INTO l_imaf125
+         #  FROM imaf_t
+         # WHERE imafent  = g_enterprise
+         #   AND imafsite = g_site
+         #   AND imaf001  = l_xmdl008
+         #IF NOT cl_null(l_imaf125) THEN
+         #   LET l_xmdl008 = l_imaf125
+         #END IF
+         #151113-00022#7 20151202 s983961--MARK(E)
+         
+         #找出銷售單位 
+         LET l_imaf112 = ''
+         SELECT imaf112 INTO l_imaf112
+           FROM imaf_t
+          WHERE imafent  = g_enterprise
+            AND imafsite = g_site
+            AND imaf001  = l_xmdl008
+         IF cl_null(l_imaf112) THEN LET l_imaf112 = l_xmdl017 END IF
+         IF NOT cl_null(l_xmdl017) THEN
+            IF cl_null(l_xmdd006) THEN LET l_xmdd006 = 0 END IF   #add--160324-00047#3 By shiun
+            #數量要轉換成銷售單位的數量 
+            CALL s_aooi250_convert_qty(l_xmdl008,l_xmdl017,l_imaf112,l_xmdl018)
+                 RETURNING l_success,l_xmdl018
+         END IF
+
+         IF l_xmia011 = 'N' THEN      #銷售組織  
+            LET l_xmdk004 = ' '
+         END IF
+         IF l_xmia012 = 'N' THEN      #業務人員 
+            LET l_xmdk003 = ' '
+         END IF
+         IF l_xmia013 = 'N' THEN      #客戶 
+            LET l_xmdk007 = ' '
+         END IF
+         IF l_xmia014 = 'N' THEN      #通路 
+            LET l_xmdk030 = ' '
+         END IF
+         IF l_xmia015 = 'N' THEN      #產品特徵 
+            LET l_xmdl009 = ' '
+         END IF
+
+         LET g_sql = "SELECT COUNT(*) FROM axmr170_tmp01 ",      #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01
+                     " WHERE xmig006 = '",l_xmdl008,"' ",
+                     "   AND xmig011 = '",l_xmdk001,"' ",
+                     "   AND xmig004 = '",l_xmdk004,"' ",
+                     "   AND xmig005 = '",l_xmdk003,"' ",
+                     "   AND xmig008 = '",l_xmdk007,"' ",
+                     "   AND xmig009 = '",l_xmdk030,"' ",
+                     "   AND xmig007 = '",l_xmdl009,"' "
+
+         PREPARE axmr170_xmig_count2 FROM g_sql
+         EXECUTE axmr170_xmig_count2 INTO l_cnt
+
+         IF cl_null(l_cnt) THEN
+            LET l_cnt = 0
+         END IF
+
+         IF l_cnt = 0 THEN
+            INSERT INTO axmr170_tmp01(xmig006,xmig007,xmig004,xmig005,xmig009,       #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01
+                                         xmig008,imaf112,xmig013,xmdd006,xmig011,time_interval)
+                 VALUES(l_xmdl008,l_xmdl009,l_xmdk004,l_xmdk003,l_xmdk030,l_xmdk007,
+                        l_imaf112,'0',l_xmdl018,l_xmdk001,'')
+         ELSE
+            LET g_sql = "UPDATE axmr170_tmp01 SET xmdd006 = xmdd006 + ",l_xmdl018,     #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01
+                        " WHERE xmig006 = '",l_xmdl008,"' ",
+                        "   AND xmig011 = '",l_xmdk001,"' ",
+                        "   AND xmig004 = '",l_xmdk004,"' ",
+                        "   AND xmig005 = '",l_xmdk003,"' ",
+                        "   AND xmig008 = '",l_xmdk007,"' ",
+                        "   AND xmig009 = '",l_xmdk030,"' ",
+                        "   AND xmig007 = '",l_xmdl009,"' "
+
+            PREPARE axmr170_xmig_tmp_upd2 FROM g_sql
+            EXECUTE axmr170_xmig_tmp_upd2
+         END IF
+
+      END FOREACH
+
+   END IF 
+   
+
+   LET l_time_interval_day = tm.a2   #時距日   
+   CASE tm.a4      #時距  
+      WHEN '0'     #天  
+         #往後延後一天 
+         CALL s_date_get_date(l_time_interval_day,0,1) RETURNING l_time_interval_day_end
+      WHEN '1'     #週  
+         #往後延7天 
+         CALL s_date_get_date(l_time_interval_day,0,7) RETURNING l_time_interval_day_end
+      WHEN '2'     #旬  
+         #找到本月的第一天
+         CALL s_date_get_first_date(l_time_interval_day) RETURNING l_time_interval_day 
+         #區間加10天 
+         CALL s_date_get_date(l_time_interval_day,0,10) RETURNING l_time_interval_day_end
+      WHEN '3'     #月  
+         #找出本月第一天 
+         CALL s_date_get_first_date(tm.a2) RETURNING l_time_interval_day
+         #找出本月的最後一天 
+         CALL s_date_get_last_date(l_time_interval_day) RETURNING l_time_interval_day_end
+         CALL s_date_get_date(l_time_interval_day_end,0,1) RETURNING l_time_interval_day_end
+   END CASE
+   WHILE TRUE
+      IF l_time_interval_day > tm.a3 THEN
+         EXIT WHILE
+      END IF
+
+      UPDATE axmr170_tmp01 SET time_interval = l_time_interval_day        #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01
+       WHERE time_interval IS NULL
+         AND xmig011 >= l_time_interval_day
+         AND xmig011 < l_time_interval_day_end
+
+      CASE tm.a4      #時距  
+         WHEN '0'     #天  
+            CALL s_date_get_date(l_time_interval_day,0,1) RETURNING l_time_interval_day
+            CALL s_date_get_date(l_time_interval_day,0,1) RETURNING l_time_interval_day_end
+         WHEN '1'     #週  
+            CALL s_date_get_date(l_time_interval_day,0,7) RETURNING l_time_interval_day
+            CALL s_date_get_date(l_time_interval_day,0,7) RETURNING l_time_interval_day_end
+         WHEN '2'     #旬  
+            #一旬為10天 
+            CALL s_date_get_date(l_time_interval_day,0,10) RETURNING l_time_interval_day
+            #但如果是月底的話，就應該+1變成下個月的月初 
+            IF s_date_chk_lastday(l_time_interval_day) THEN
+               CALL s_date_get_date(l_time_interval_day,0,1) RETURNING l_time_interval_day
+            END IF
+
+            CALL s_date_get_date(l_time_interval_day,0,10) RETURNING l_time_interval_day_end
+            #如果是月底的話，就把日期加1，變成下個月的月初 
+            IF s_date_chk_lastday(l_time_interval_day_end) THEN
+               CALL s_date_get_date(l_time_interval_day_end,0,1) RETURNING l_time_interval_day_end
+            END IF
+         WHEN '3'     #月  
+            CALL s_date_get_date(l_time_interval_day,1,0) RETURNING l_time_interval_day
+            #找出本月的最後一天 
+            CALL s_date_get_last_date(l_time_interval_day) RETURNING l_time_interval_day_end
+            CALL s_date_get_date(l_time_interval_day_end,0,1) RETURNING l_time_interval_day_end
+      END CASE
+
+   END WHILE
+
+  
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT xmig006,imaal003,imaal004,xmig007,'',xmig004,'',xmig005,'',xmig009,'',xmig008, 
+       '',imaf_t.imaf112,'',xmig013,xmdd_t.xmdd006,'',0,NULL"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   
+   #end add-point
+    LET g_from = " FROM xmig_t,imaal_t,imaf_t,xmdd_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xmig_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   #如果這個預測編號有勾選銷售組織的話，就只能找出此預測編號的銷售組織與下階組織的資料  
+   IF l_xmia011 = 'Y' THEN
+      CALL g_browser.clear()
+      LET g_cnt = 1
+      LET l_n   = 1
+
+      LET g_sql = "SELECT xmig004 ",
+                  "  FROM axmr170_tmp02 "       #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02
+      PREPARE axmr170_x01_xmig004_prep FROM g_sql
+      DECLARE axmr170_x01_xmig004_curs CURSOR FOR axmr170_x01_xmig004_prep
+
+      #取得此銷售組織的最上層資料  
+      LET g_sql = "SELECT UNIQUE ooed002,ooed003,ooed005 ",
+                  "  FROM ooed_t ",
+                  " WHERE ooedent = '",g_enterprise,"' ",
+                  "   AND ooed001 = '2' ",
+                  "   AND ooed004 = ? ",
+                  "   AND ooed006 <= '",g_today,"' ",
+                  "   AND (ooed007 IS NULL OR ooed007 >= '",g_today,"') ",
+                  " ORDER BY ooed002 "
+      PREPARE axmr170_x01_master_type_0 FROM g_sql
+      DECLARE axmr170_x01_master_type_curs_0 CURSOR FOR axmr170_x01_master_type_0
+
+
+      #取得目前的下階組織 
+      LET g_sql = "SELECT UNIQUE ooed004,ooed003 ",
+                  "  FROM ooed_t ",
+                  " WHERE ooedent = '",g_enterprise,"' ", 
+                  "   AND ooed001 = '2' ",
+                  "   AND ooed006 <= '",g_today,"' ",
+                  "   AND (ooed007 IS NULL OR ooed007 >= '",g_today,"') ",
+                  "   AND ooed002 = ? ",
+                  "   AND ooed003 = ? ",
+                  "   AND ooed005 = ? ",
+                  "   AND ooed004 <> ooed005 ",
+                  " ORDER BY ooed004 "
+      PREPARE axmr170_x01_master_type_1 FROM g_sql
+      DECLARE axmr170_x01_master_type_curs_1 CURSOR FOR axmr170_x01_master_type_1
+
+      LET l_xmig004 = ''
+      LET l_n = 1
+      FOREACH axmr170_x01_xmig004_curs INTO l_xmig004
+         #先找出最上層的母節點  
+         FOREACH axmr170_x01_master_type_curs_0 USING l_xmig004
+                                                 INTO g_browser[l_n].b_ooed002,
+                                                      g_browser[l_n].b_ooed003,
+                                                      g_browser[l_n].b_ooed005
+
+            #此處(LV-1) 
+            LET g_browser[l_n].b_ooed002 = g_browser[l_n].b_ooed002
+            LET g_browser[l_n].b_ooed004 = l_xmig004
+            LET g_browser[l_n].b_pid     = '0' CLIPPED
+            LET g_browser[l_n].b_id      = l_n USING "<<<"
+            LET g_browser[l_n].b_exp     = TRUE
+            LET g_browser[l_n].b_hasC    = TRUE 
+            LET g_browser[l_n].b_isExp   = TRUE
+
+            #記錄第一層節點編號 
+            LET l_pid = g_browser[l_n].b_id CLIPPED
+            LET l_n   = l_n + 1
+            LET g_cnt = l_n
+
+            #找出下一層的資料 
+            FOREACH axmr170_x01_master_type_curs_1 USING g_browser[l_n-1].b_ooed002,
+                                                         g_browser[l_n-1].b_ooed003,
+                                                         g_browser[l_n-1].b_ooed004
+                                                    INTO g_browser[g_cnt].b_ooed004,
+                                                         g_browser[g_cnt].b_ooed003
+               LET g_browser[g_cnt].b_ooed002 = g_browser[l_n-1].b_ooed002
+               LET g_browser[g_cnt].b_ooed004 = g_browser[g_cnt].b_ooed004
+               LET g_browser[g_cnt].b_ooed005 = g_browser[l_n-1].b_ooed004
+               LET g_browser[g_cnt].b_pid     = l_pid
+               LET g_browser[g_cnt].b_id      = l_pid,".",g_cnt USING "<<<"
+               LET g_browser[g_cnt].b_exp     = TRUE
+               LET g_browser[g_cnt].b_hasC    = axmr170_x01_chk_hasC(g_cnt)
+               IF g_browser[g_cnt].b_hasC = 1 THEN
+                  CALL axmr170_x01_browser_expand(g_cnt)
+                  LET g_cnt = g_browser.getLength()      #因為上面會再取下階，所以這裡要重取資料筆數  
+               END IF 
+               LET g_cnt = g_cnt + 1
+            END FOREACH
+
+            LET l_n = g_browser.getLength()
+
+         END FOREACH
+         IF l_n > 1 THEN LET l_n = l_n - 1 END IF
+         CALL g_browser.deleteElement(l_n+1)
+
+         LET l_xmig004 = ''
+      END FOREACH
+
+      FOR l_n2 = 1 TO g_browser.getLength()
+         IF g_browser[l_n2].b_isExp IS NULL THEN
+            CALL axmr170_x01_browser_expand(l_n2)
+         END IF
+      END FOR
+
+      DELETE FROM axmr170_tmp02;       #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02
+      
+      FOR l_n = 1 TO g_browser.getLength()
+         #161109-00085#11-s mod
+#         INSERT INTO axmr170_tmp02 VALUES(g_browser[l_n].b_ooed004)      #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02   #161109-00085#11-s mark
+         INSERT INTO axmr170_tmp02(xmig004) 
+                            VALUES(g_browser[l_n].b_ooed004)
+         #161109-00085#11-e mod
+      END FOR
+
+   END IF
+   
+   #151113-00022#7 20151202 s983961--mod(s)
+   #LET g_sql = "SELECT xmig006,'','',xmig007,'',xmig004,'',xmig005,'',xmig009,'', ",
+   #            "       xmig008,'',imaf112,time_interval,xmig013,xmdd006,'' ",
+   #            "  FROM axmr170_xmig_tmp ",
+   #            " WHERE ",tm.wc
+   #modify--160324-00047#3 By shiun--(S)   修改case欄位使用別名及sum()xmig013,xmdd006,xmig013 - xmdd006該三個欄位
+   LET g_sql = "SELECT xmig006,imaal003,imaal004,xmig007,'',xmig004, ",
+               "       CASE WHEN ooefl003 IS NULL THEN xmig004 ELSE ooefl003 END AS ooefl003, ",
+               "       xmig005, ",
+               "       CASE WHEN ooag011 IS NULL THEN xmig005 ELSE ooag011 END AS ooag011, ",
+               "       xmig009, ",
+              #160621-00003#6 160629 by lori mark and add---(S) 
+              #"       CASE WHEN oocql004 IS NULL THEN xmig009 ELSE oocql004 END AS oocql004, ",
+               "       CASE WHEN oojdl003 IS NULL THEN xmig009 ELSE oojdl003 END AS oocql004, ",
+              #160621-00003#6 160629 by lori mark and add---(E) 
+               "       xmig008, ",
+               "       CASE WHEN pmaal004 IS NULL THEN xmig008 ELSE pmaal004 END AS pmaal004, ",
+               "       imaf112,time_interval,SUM(xmig013),SUM(xmdd006),SUM(xmig013 - xmdd006),   ",
+               "       NULL,'N' ",   #add--160324-00047#3 By shiun
+#               "       CASE WHEN COALESCE(xmig013,0) = 0 THEN NULL ELSE xmdd006/xmig013 END,'N' ",   #add--160324-00047#3 By shiun
+               "  FROM axmr170_tmp01 ",       #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01
+               "  LEFT OUTER JOIN imaal_t ON imaal001 = xmig006 AND imaalent = ",g_enterprise," AND imaal002 =  '",g_dlang,"' ", #s983961--add imaal_t
+               "  LEFT OUTER JOIN ooefl_t  ON ooeflent = ",g_enterprise," AND ooefl001 = xmig004 AND ooefl002 ='",g_dlang,"'  ", #s983961--add ooefl_t
+               "  LEFT OUTER JOIN ooag_t  ON ooagent = ",g_enterprise," AND ooag001 = xmig005 ",                                 #s983961--add ooag_t
+              #160621-00003#6 160629 by lori mark and add---(S)
+              #"  LEFT OUTER JOIN oocql_t ON oocqlent = ",g_enterprise," AND oocql001 = '275' AND oocql002 = xmig009 AND oocql003 = '",g_dlang,"' ", #s983961--add oocql_t 
+               "  LEFT OUTER JOIN oojdl_t ON oojdlent = ",g_enterprise," AND oojdl001 = xmig009 AND oojdl002 = '",g_dlang,"' ", 
+              #160621-00003#6 160629 by lori mark and add---(E) 
+               "  LEFT OUTER JOIN pmaal_t ON pmaalent = ",g_enterprise," AND pmaal001 = xmig008 AND pmaal002 = '",g_dlang,"' ",  #s983961--add pmaal_t
+               " WHERE ",tm.wc,
+               " GROUP BY xmig006,imaal003,imaal004,xmig007,ooefl003,xmig004,ooag011,xmig005,oocql004,xmig009,pmaal004,xmig008,imaf112,time_interval "
+   #modify--160324-00047#3 By shiun--(E)
+   #151113-00022#7 20151202 s983961--mod(e)            
+   #end add-point
+   PREPARE axmr170_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axmr170_x01_curs CURSOR FOR axmr170_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr170_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axmr170_x01_ins_data()
+DEFINE sr RECORD 
+   xmig006 LIKE xmig_t.xmig006, 
+   imaal003 LIKE imaal_t.imaal003, 
+   imaal004 LIKE imaal_t.imaal004, 
+   xmig007 LIKE xmig_t.xmig007, 
+   l_xmig007_desc LIKE type_t.chr1000, 
+   xmig004 LIKE xmig_t.xmig004, 
+   l_xmig004_desc LIKE type_t.chr1000, 
+   xmig005 LIKE xmig_t.xmig005, 
+   l_xmig005_desc LIKE type_t.chr1000, 
+   xmig009 LIKE xmig_t.xmig009, 
+   l_xmig009_desc LIKE type_t.chr1000, 
+   xmig008 LIKE xmig_t.xmig008, 
+   l_xmig008_desc LIKE type_t.chr1000, 
+   imaf_t_imaf112 LIKE imaf_t.imaf112, 
+   l_time_interval LIKE type_t.dat, 
+   xmig013 LIKE xmig_t.xmig013, 
+   xmdd_t_xmdd006 LIKE xmdd_t.xmdd006, 
+   l_diff_qty LIKE xmig_t.xmig013, 
+   l_xmig013_xmdd006 LIKE xmig_t.xmig013, 
+   l_show LIKE type_t.chr1
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+   DEFINE l_success         LIKE type_t.num5 
+                            
+   DEFINE l_xmia011         LIKE xmia_t.xmia011
+   DEFINE l_cnt             LIKE type_t.num5
+   #add--160324-00047#3 By shiun--(S)
+   DEFINE l_xmig013_xmdd006 LIKE xmig_t.xmig013
+   DEFINE l_xmia017         LIKE xmia_t.xmia017
+   DEFINE l_count           LIKE type_t.num5
+   DEFINE l_sql             STRING
+   DEFINE l_xmig006         LIKE xmig_t.xmig006
+   #add--160324-00047#3 By shiun--(E)
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    #取得axmi170的資料 
+    LET l_xmia011 = ''          #銷售組織  
+    SELECT xmia011
+      INTO l_xmia011
+      FROM xmia_t
+     WHERE xmiaent = g_enterprise
+       AND xmia001 = tm.a1
+    #add--160324-00047#3 By shiun--(S)
+    IF tm.a9 = 'Y' THEN   
+       LET l_xmia017 = 0
+       SELECT xmia017 INTO l_xmia017
+         FROM xmia_t
+        WHERE xmiaent = g_enterprise
+          AND xmia001 = tm.a1
+            
+       IF cl_null(l_xmia017) THEN LET l_xmia017 = 0 END IF
+       LET l_xmia017 = l_xmia017 / 100
+    END IF
+    #add--160324-00047#3 By shiun--(E)
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axmr170_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+      IF l_xmia011 = 'Y' THEN
+         LET l_cnt = 0
+         SELECT COUNT(*) INTO l_cnt
+           FROM axmr170_tmp02       #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02
+          WHERE xmig004 = sr.xmig004
+         IF cl_null(l_cnt) THEN
+            LET l_cnt = 0
+         END IF
+         IF l_cnt = 0 THEN
+            CONTINUE FOREACH
+         END IF
+      END IF
+      #add--160324-00047#3 By shiun--(S)
+      IF NOT (sr.xmig013 = 0 OR cl_null(sr.xmig013)) THEN
+         LET sr.l_xmig013_xmdd006 = sr.xmdd_t_xmdd006 / sr.xmig013
+      END IF
+      IF tm.a9 = 'Y' THEN
+         LET l_xmig013_xmdd006 = 0
+         IF NOT cl_null(sr.l_xmig013_xmdd006) THEN
+            LET l_xmig013_xmdd006 = 1 - sr.l_xmig013_xmdd006
+            IF l_xmig013_xmdd006 < 0 THEN
+               LET l_xmig013_xmdd006 = l_xmig013_xmdd006 * (-1)
+            END IF
+            IF l_xmig013_xmdd006 > l_xmia017 THEN
+               LET sr.l_show = 'Y'
+            END IF
+         END IF
+      END IF
+      #add--160324-00047#3 By shiun--(E)
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+      #151113-00022#7 20151202 s983961--mark(s)
+      ##取得品名 規格 
+      #CALL s_desc_get_item_desc(sr.xmig006)
+      #     RETURNING sr.imaal003,sr.imaal004
+      #
+      ##計算差異數量 
+      #LET sr.l_diff_qty = sr.xmig013 - sr.xmdd_t_xmdd006 
+      #151113-00022#7 20151202 s983961--mark(e)
+      
+      #取得產品特徵說明 
+      CALL s_feature_description(sr.xmig006,sr.xmig007) RETURNING l_success,sr.l_xmig007_desc
+      IF cl_null(sr.l_xmig007_desc) THEN
+         LET sr.l_xmig007_desc = sr.xmig007
+      END IF
+     
+      #151113-00022#7 20151202 s983961--mark(s)
+      ##取得銷售組織說明 
+      #CALL axmr170_x01_xmig004_ref(sr.xmig004) RETURNING sr.l_xmig004_desc
+      #IF cl_null(sr.l_xmig004_desc) THEN
+      #   LET sr.l_xmig004_desc = sr.xmig004
+      #END IF
+
+      ##取得業務員說明 
+      #CALL axmr170_x01_xmig005_ref(sr.xmig005) RETURNING sr.l_xmig005_desc
+      #IF cl_null(sr.l_xmig005_desc) THEN
+      #   LET sr.l_xmig005_desc = sr.xmig005
+      #END IF
+
+      ##取得通路說明 
+      #CALL axmr170_x01_xmig009_ref(sr.xmig009) RETURNING sr.l_xmig009_desc
+      #IF cl_null(sr.l_xmig009_desc) THEN
+      #   LET sr.l_xmig009_desc = sr.xmig009
+      #END IF
+
+      ##取得客戶說明 
+      #CALL axmr170_x01_xmig008_ref(sr.xmig008) RETURNING sr.l_xmig008_desc
+      #IF cl_null(sr.l_xmig008_desc) THEN
+      #   LET sr.l_xmig008_desc = sr.xmig008
+      #END IF
+      #151113-00022#7 20151202 s983961--mark(e)
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.xmig006,sr.imaal003,sr.imaal004,sr.l_xmig007_desc,sr.l_xmig004_desc,sr.l_xmig005_desc,sr.l_xmig009_desc,sr.l_xmig008_desc,sr.imaf_t_imaf112,sr.l_time_interval,sr.xmig013,sr.xmdd_t_xmdd006,sr.l_diff_qty,sr.l_xmig013_xmdd006,sr.l_show
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axmr170_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    #add--160324-00047#3 By shiun--(S)
+    IF tm.a9 = 'Y' THEN
+       LET l_sql = " SELECT COUNT(*) ",
+                   "   FROM ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED,
+                   "  WHERE xmig006 = ? ",
+                   "    AND l_show = 'Y' "
+       PREPARE axmr170_count FROM l_sql
+       
+       LET l_sql = "DELETE FROM ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED,
+                   "  WHERE xmig006 = ? "
+       PREPARE axmr170_delete FROM l_sql
+       
+       LET l_sql = " SELECT DISTINCT xmig006 ",
+                   "   FROM ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED
+       DECLARE axmr170_modify CURSOR FROM l_sql
+       FOREACH axmr170_modify INTO l_xmig006
+       
+          IF STATUS THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.extend = 'axmr170_modify_foreach:'
+             LET g_errparam.code   = STATUS
+             LET g_errparam.popup  = TRUE
+             CALL cl_err()
+             LET g_rep_success = 'N'
+             EXIT FOREACH
+          END IF
+          
+          LET l_count = 0
+          EXECUTE axmr170_count USING l_xmig006 INTO l_count
+          IF l_count = 0 THEN
+            EXECUTE axmr170_delete USING l_xmig006
+          END IF
+       END FOREACH
+    END IF
+    #add--160324-00047#3 By shiun--(E)
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr170_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axmr170_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+   DROP TABLE axmr170_tmp01;        #160727-00019#25 Mod  axmr170_xmig_tmp--> axmr170_tmp01
+   DROP TABLE axmr170_tmp02;        #160727-00019#25 Mod  axmr170_xmig004_t--> axmr170_tmp02
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr170_x01.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION axmr170_x01_xmig004_ref(p_ooefl001)
+   DEFINE p_ooefl001     LIKE ooefl_t.ooefl001
+   DEFINE r_ooefl003     LIKE ooefl_t.ooefl003
+
+   LET r_ooefl003 = ''
+   SELECT ooefl003 INTO r_ooefl003
+     FROM ooefl_t
+    WHERE ooeflent = g_enterprise
+      AND ooefl001 = p_ooefl001
+      AND ooefl002 = g_dlang
+
+   RETURN r_ooefl003
+END FUNCTION
+
+PRIVATE FUNCTION axmr170_x01_xmig005_ref(p_ooag001)
+   DEFINE p_ooag001     LIKE ooag_t.ooag001
+   DEFINE r_ooag011     LIKE ooag_t.ooag011
+
+   LET r_ooag011 = ''
+   SELECT ooag011 INTO r_ooag011
+     FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = p_ooag001
+
+   RETURN r_ooag011
+END FUNCTION
+
+PRIVATE FUNCTION axmr170_x01_xmig009_ref(p_oocql002)
+   DEFINE p_oocql002     LIKE oocql_t.oocql002
+   DEFINE r_oocql004     LIKE oocql_t.oocql004
+
+   LET r_oocql004 = ''
+   
+   #160621-00003#6 160629 by lori mark and add---(S)
+   #SELECT oocql004 INTO r_oocql004
+   #  FROM oocql_t
+   # WHERE oocqlent = g_enterprise
+   #   AND oocql001 = '275'
+   #   AND oocql002 = p_oocql002
+   #   AND oocql003 = g_dlang
+   SELECT oojdl003 INTO r_oocql004
+     FROM oojdl_t
+    WHERE oojdlent = g_enterprise
+      AND oojdl001 = p_oocql002
+      AND oojdl002 = g_dlang   
+   #160621-00003#6 160629 by lori mark and add---(E)
+   
+   RETURN r_oocql004
+END FUNCTION
+
+PRIVATE FUNCTION axmr170_x01_xmig008_ref(p_pmaal001)
+   DEFINE p_pmaal001     LIKE pmaal_t.pmaal001
+   DEFINE r_pmaal004     LIKE pmaal_t.pmaal004
+
+   LET r_pmaal004 = ''
+   SELECT pmaal004 INTO r_pmaal004
+     FROM pmaal_t
+    WHERE pmaalent = g_enterprise
+      AND pmaal001 = p_pmaal001
+      AND pmaal002 = g_dlang
+
+   RETURN r_pmaal004
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查是否有下階節點
+# Memo...........:
+# Usage..........: CALL axmr170_x01_chk_hasC(pi_id)
+#                  RETURNING true/false
+# Input parameter: pi_id
+# Return code....: true/false
+# Date & Author..: 2015/02/24 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmr170_x01_chk_hasC(pi_id)
+   DEFINE pi_id     INTEGER
+   DEFINE li_cnt    INTEGER
+   DEFINE l_sql     STRING
+
+   LET l_sql = "SELECT COUNT(*) FROM ooed_t ",
+               " WHERE ooedent = '",g_enterprise,"' ",
+               "   AND ooed004 <> ooed005 ",
+               "   AND ooed001 = '2' ",
+               "   AND ooed006 <= '",g_today,"' ",
+               "   AND (ooed007 IS NULL OR ooed007 >= '",g_today,"' ) ",
+               "   AND ooed005 = ? ",
+               "   AND ooed002 = ? ",
+               "   AND ooed003 = ? "
+   PREPARE axmr170_x01_master_chk1 FROM l_sql
+   EXECUTE axmr170_x01_master_chk1 USING g_browser[pi_id].b_ooed004,
+                                         g_browser[pi_id].b_ooed002,
+                                         g_browser[pi_id].b_ooed003
+                                    INTO li_cnt
+   FREE axmr170_x01_master_chk1
+   IF li_cnt > 0 THEN
+      RETURN TRUE
+   ELSE
+      RETURN FALSE
+   END IF 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 展開下階節點資料
+# Memo...........:
+# Usage..........: CALL axmr170_x01_browser_expand(pi_id)
+# Input parameter: pi_id
+# Date & Author..: 2015/02/24 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmr170_x01_browser_expand(pi_id)
+   DEFINE pi_id       LIKE type_t.num10
+   DEFINE l_id        LIKE type_t.num10
+   DEFINE l_cnt       LIKE type_t.num10
+   DEFINE l_keyvalue  LIKE type_t.chr50
+   DEFINE l_typevalue LIKE type_t.chr50
+   DEFINE l_type      LIKE type_t.chr50
+   DEFINE l_sql       STRING
+   DEFINE ls_source   LIKE type_t.chr500
+   DEFINE ls_exp_code LIKE type_t.chr500
+   DEFINE l_return    LIKE type_t.num5
+
+   #若已經展開，就不用再找下階資料了  
+   IF g_browser[pi_id].b_isExp = 1 THEN
+      RETURN
+   END IF
+
+   LET g_browser[pi_id].b_isExp = 1    #設定為已展開 
+   LET l_return = FALSE
+
+   LET l_keyvalue = g_browser[pi_id].b_ooed004
+
+   LET l_sql = "SELECT UNIQUE ooed004,ooed003 ",
+               "  FROM ooed_t ",
+               " WHERE ooedent = '",g_enterprise,"' ",
+               "   AND ooed005 = '",l_keyvalue,"' ",
+               "   AND ooed004 <> ooed005 ",
+               "   AND ooed001 = '2' ",
+               "   AND ooed006 <= '",g_today,"' ", 
+               "   AND ooed002 = '",g_browser[pi_id].b_ooed002,"' ",
+               "   AND ooed003 = '",g_browser[pi_id].b_ooed003,"' ",
+               "   AND (ooed007 IS NULL OR ooed007 >= '",g_today,"' ) ",
+               " ORDER BY ooed004 "
+   PREPARE axmr170_x01_tree_expand1 FROM l_sql
+   DECLARE axmr170_x01_tree_ex_cur1 CURSOR FOR axmr170_x01_tree_expand1
+
+   LET l_id = pi_id + 1
+   CALL g_browser.insertElement(l_id)
+   LET l_cnt = 1
+   FOREACH axmr170_x01_tree_ex_cur1 INTO g_browser[l_id].b_ooed004,
+                                         g_browser[l_id].b_ooed003
+      IF cl_null(g_browser[l_id].b_ooed004) THEN
+         EXIT FOREACH
+      END IF
+
+      #pid = 父節點id 
+      LET g_browser[l_id].b_pid     = g_browser[pi_id].b_id
+      #id = 本身節點id(採流水號遞增) 
+      LET g_browser[l_id].b_id      = g_browser[pi_id].b_id,".",l_cnt
+      LET g_browser[l_id].b_exp     = TRUE
+      LET g_browser[l_id].b_ooed005 = g_browser[pi_id].b_ooed004
+      LET g_browser[l_id].b_ooed002 = g_browser[pi_id].b_ooed002
+
+      #hasC = 確認該節點是否有下階 
+      LET g_browser[l_id].b_hasC    = axmr170_x01_chk_hasC(l_id)
+      LET l_id = l_id + 1
+      CALL g_browser.insertElement(l_id)
+      LET l_cnt = l_cnt + 1 
+      LET l_return = TRUE
+
+   END FOREACH
+
+   LET l_cnt = l_cnt - 1
+
+   #刪除空的資料 
+   CALL g_browser.deleteElement(l_id)
+END FUNCTION
+
+ 
+{</section>}
+ 

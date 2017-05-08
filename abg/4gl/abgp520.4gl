@@ -1,0 +1,1754 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgp520.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2016-12-02 15:44:15), PR版次:0003(2016-12-26 11:30:21)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000000
+#+ Filename...: abgp520
+#+ Description: 內部採購轉銷售
+#+ Creator....: 02599(2016-11-20 21:51:46)
+#+ Modifier...: 02599 -SD/PR- 02599
+ 
+{</section>}
+ 
+{<section id="abgp520.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#161215-00014#2  2016/12/16 By 02599    预算编号需是使用预测的（bgaa006=1.使用）
+#161225-00004#1  2016/12/25 By 02599    BUG修正
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+     sel LIKE type_t.chr1,
+     bgeg007 LIKE bgeg_t.bgeg007,
+     bgeg007_2_desc LIKE type_t.chr500,
+     bgcj007 LIKE bgcj_t.bgcj007,
+     bgcj007_desc LIKE type_t.chr500,
+     bgeg009 LIKE bgeg_t.bgeg009,
+     bgeg009_desc LIKE type_t.chr500,
+     bgeg049 LIKE bgeg_t.bgeg049,
+     bgeg016 LIKE bgeg_t.bgeg016,
+     bgeg016_desc LIKE type_t.chr500,
+     bgeg100 LIKE bgeg_t.bgeg100,
+     bgeg040 LIKE bgeg_t.bgeg040
+             END RECORD
+DEFINE g_input             RECORD
+       bgeg002 LIKE bgeg_t.bgeg002,
+       bgeg002_desc LIKE bgaal_t.bgaal003,
+       bgeg003 LIKE bgeg_t.bgeg003,
+       bgeg007 LIKE bgeg_t.bgeg007,
+       bgeg007_desc LIKE ooefl_t.ooefl003,
+       kind LIKE type_t.chr1,
+       lower LIKE type_t.chr1
+              END RECORD
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身目前所在筆數
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abgp520.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("abg","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_abgp520 WITH FORM cl_ap_formpath("abg",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL abgp520_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL abgp520_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_abgp520
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="abgp520.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION abgp520_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp520.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION abgp520_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE l_site_str            STRING
+   DEFINE l_cnt                 LIKE type_t.num10
+   DEFINE l_bgaa006             LIKE bgaa_t.bgaa006 #161215-00014#2 add
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+  
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL abgp520_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         
+                      
+          INPUT BY NAME g_input.bgeg002,g_input.bgeg003,g_input.bgeg007,g_input.kind,g_input.lower
+             ATTRIBUTE(WITHOUT DEFAULTS)
+             BEFORE INPUT
+                IF cl_null(g_input.kind) THEN
+                   LET g_input.kind = '1'
+                   LET g_input.lower = 'Y'
+                   CALL cl_set_comp_entry('lower',TRUE)
+                END IF
+                DISPLAY g_input.bgeg002,g_input.bgeg002_desc,g_input.bgeg003,g_input.bgeg007,g_input.bgeg007_desc,
+                        g_input.kind,g_input.lower
+                     TO bgeg002,bgeg002_desc,bgeg003,bgeg007,bgeg007_desc,kind,lower
+             AFTER FIELD bgeg002
+                IF NOT cl_null(g_input.bgeg002) THEN
+                   #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                   INITIALIZE g_chkparam.* TO NULL
+                   #設定g_chkparam.*的參數
+                   LET g_chkparam.arg1 = g_input.bgeg002
+                   LET g_errshow = TRUE
+                   LET g_chkparam.err_str[1] = "abg-00008:sub-01302|abgi010|",cl_get_progname("abgi010",g_lang,"2"),"|:EXEPROGabgi010"
+             
+                   #呼叫檢查存在並帶值的library
+                   IF NOT cl_chk_exist("v_bgaa001") THEN
+                      #檢查失敗時後續處理
+                      LET g_input.bgeg002 = ''
+                      LET g_input.bgeg002_desc = ''
+                      DISPLAY BY NAME g_input.bgeg002_desc
+                      NEXT FIELD CURRENT
+                   END IF
+                   #161215-00014#2--add--str--
+                   #预算编号需是使用预测的（bgaa006=1.使用）
+                   SELECT bgaa006 INTO l_bgaa006 FROM bgaa_t WHERE bgaaent=g_enterprise AND bgaa001=g_input.bgeg002
+                   IF l_bgaa006 <> '1' THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = 'abg-00292'
+                      LET g_errparam.extend = g_input.bgeg002
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+                      LET g_input.bgeg002 = ''
+                      LET g_input.bgeg002_desc = ''
+                      DISPLAY BY NAME g_input.bgeg002_desc
+                      NEXT FIELD CURRENT
+                   END IF
+                   #161215-00014#2--add--end
+                   IF NOT cl_null(g_input.bgeg003) THEN
+                      LET l_cnt = 0
+                      SELECT COUNT(1) INTO l_cnt FROM bgeg_t
+                       WHERE bgegent=g_enterprise AND bgegstus = 'FC'
+                         AND bgeg002=g_input.bgeg002 AND bgeg003=g_input.bgeg003
+                      IF l_cnt = 0 THEN
+                         INITIALIZE g_errparam TO NULL
+                         LET g_errparam.code = 'abg-00201'
+                         LET g_errparam.extend = g_input.bgeg002," + ",g_input.bgeg003
+                         LET g_errparam.popup = TRUE
+                         CALL cl_err()
+                         LET g_input.bgeg002 = ''
+                         LET g_input.bgeg002_desc = ''
+                         DISPLAY BY NAME g_input.bgeg002_desc
+                         NEXT FIELD CURRENT
+                      END IF
+#161225-00004#1--mark--str--                      
+#                      #判断是否有抛转或还原的资料
+#                      CALL abgp520_kind_chk()
+#                      IF NOT cl_null(g_errno) THEN
+#                         INITIALIZE g_errparam TO NULL
+#                         LET g_errparam.code = g_errno
+#                         LET g_errparam.extend = g_input.bgeg002," + ",g_input.bgeg003," + ",g_input.bgeg007
+#                         LET g_errparam.popup = TRUE
+#                         CALL cl_err()
+#                         NEXT FIELD CURRENT
+#                      END IF
+#161225-00004#1--mark--end
+                   END IF
+                END IF
+                CALL s_desc_get_budget_desc(g_input.bgeg002) RETURNING g_input.bgeg002_desc
+                DISPLAY BY NAME g_input.bgeg002_desc
+         
+             AFTER FIELD bgeg003
+                IF NOT cl_null(g_input.bgeg003) THEN
+                   IF NOT cl_null(g_input.bgeg002) THEN
+                      LET l_cnt = 0
+                      SELECT COUNT(1) INTO l_cnt FROM bgeg_t
+                       WHERE bgegent=g_enterprise AND bgegstus = 'FC' 
+                         AND bgeg002=g_input.bgeg002 AND bgeg003=g_input.bgeg003
+                      IF l_cnt = 0 THEN
+                         INITIALIZE g_errparam TO NULL
+                         LET g_errparam.code = 'abg-00201'
+                         LET g_errparam.extend = g_input.bgeg002," + ",g_input.bgeg003
+                         LET g_errparam.popup = TRUE
+                         CALL cl_err()
+                         NEXT FIELD CURRENT
+                      END IF
+#161225-00004#1--mark--str--
+#                      #判断是否有抛转或还原的资料
+#                      CALL abgp520_kind_chk()
+#                      IF NOT cl_null(g_errno) THEN
+#                         INITIALIZE g_errparam TO NULL
+#                         LET g_errparam.code = g_errno
+#                         LET g_errparam.extend = g_input.bgeg002," + ",g_input.bgeg003," + ",g_input.bgeg007
+#                         LET g_errparam.popup = TRUE
+#                         CALL cl_err()
+#                         NEXT FIELD CURRENT
+#                      END IF
+#161225-00004#1--mark--end
+                   END IF
+                END IF
+            
+             AFTER FIELD bgeg007
+                IF NOT cl_null(g_input.bgeg007) THEN
+                   #設定g_chkparam.*的參數
+                   LET g_chkparam.arg1 = g_input.bgeg007
+                   LET g_errshow = TRUE 
+                   LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+                    
+                   IF NOT cl_chk_exist("v_ooef001") THEN
+                      #檢查失敗時後續處理
+                      LET g_input.bgeg007 = ''
+                      LET g_input.bgeg007_desc = ''
+                      DISPLAY BY NAME g_input.bgeg007_desc
+                      NEXT FIELD CURRENT
+                   END IF
+                   
+                   #檢查預算組織是否在abgi090中可操作的組織中
+                   CALL s_abg2_bgai004_chk(g_input.bgeg002,'',g_input.bgeg007,'03')
+                   IF NOT cl_null(g_errno) THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = g_errno
+                      LET g_errparam.extend =g_input.bgeg007
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+                      LET g_input.bgeg007 = ''
+                      LET g_input.bgeg007_desc = ''
+                      DISPLAY BY NAME g_input.bgeg007_desc
+                      NEXT FIELD CURRENT
+                   END IF
+#161225-00004#1--mark--str--                   
+#                   #判断是否有抛转或还原的资料
+#                   CALL abgp520_kind_chk()
+#                   IF NOT cl_null(g_errno) THEN
+#                      INITIALIZE g_errparam TO NULL
+#                      LET g_errparam.code = g_errno
+#                      LET g_errparam.extend = g_input.bgeg002," + ",g_input.bgeg003," + ",g_input.bgeg007
+#                      LET g_errparam.popup = TRUE
+#                      CALL cl_err()
+#                      NEXT FIELD CURRENT
+#                   END IF
+#161225-00004#1--mark--end
+                END IF
+                CALL s_desc_get_department_desc(g_input.bgeg007) RETURNING g_input.bgeg007_desc
+                DISPLAY BY NAME g_input.bgeg007_desc
+            
+             ON CHANGE kind
+                #当还原时，默认将下层节点的资料也一起还原
+                IF g_input.kind = '2' THEN
+                   LET g_input.lower = 'Y'
+                   CALL cl_set_comp_entry('lower',FALSE)
+                ELSE
+                   CALL cl_set_comp_entry('lower',TRUE)
+                END IF
+#161225-00004#1--mark--str--                
+#                #判断是否有抛转或还原的资料
+#                CALL abgp520_kind_chk()
+#                IF NOT cl_null(g_errno) THEN
+#                   INITIALIZE g_errparam TO NULL
+#                   LET g_errparam.code = g_errno
+#                   LET g_errparam.extend = g_input.bgeg002," + ",g_input.bgeg003," + ",g_input.bgeg007
+#                   LET g_errparam.popup = TRUE
+#                   CALL cl_err()
+#                   NEXT FIELD CURRENT
+#                END IF
+#161225-00004#1--mark--end
+         
+             ON ACTION controlp INFIELD bgeg002
+                #開窗i段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+                LET g_qryparam.reqry = FALSE
+                LET g_qryparam.default1 = g_input.bgeg002             #給予default值
+                #給予arg
+                LET g_qryparam.arg1 = "" # 
+                LET g_qryparam.where = " bgaa001 IN (SELECT DISTINCT bgeg002 FROM bgeg_t ",
+                                       "              WHERE bgegent=",g_enterprise," AND bgegstus='FC'",
+                                       "                AND bgeg051='N' AND bgeg016 IS NOT NULL ",
+                                       "             )"
+                                      ," AND bgaa006='1' " #161215-00014#2 add
+                CALL q_bgaa001()                                #呼叫開窗 
+                LET g_input.bgeg002 = g_qryparam.return1              
+                DISPLAY g_input.bgeg002 TO bgeg002              #
+                NEXT FIELD bgeg002                          #返回原欄位
+          
+             ON ACTION controlp INFIELD bgeg007
+                #開窗i段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+                LET g_qryparam.reqry = FALSE
+                 
+                LET g_qryparam.default1 = g_input.bgeg007             #給予default值
+                LET g_qryparam.default2 = "" 
+                #給予arg
+                LET g_qryparam.arg1 = "" #
+                #檢查預算組織是否在abgi090中可操作的組織中
+                CALL s_abg2_get_budget_site(g_input.bgeg002,'',g_user,'03') RETURNING l_site_str
+                CALL s_fin_get_wc_str(l_site_str) RETURNING l_site_str
+                LET g_qryparam.where = " ooef001 IN ",l_site_str,
+                                       " AND ooef001 IN (SELECT DISTINCT bgeg007 FROM bgeg_t ",
+                                       "                  WHERE bgegent=",g_enterprise," AND bgegstus='FC'",
+                                       "                    AND bgeg051='N' AND bgeg016 IS NOT NULL ",
+                                       "             )"
+                
+                CALL q_ooef001()                                #呼叫開窗
+                 
+                LET g_input.bgeg007 = g_qryparam.return1   
+                DISPLAY g_input.bgeg007 TO bgeg007
+                NEXT FIELD bgeg007    
+            
+         END INPUT
+   
+         DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) 
+         
+            BEFORE ROW
+               #顯示單身筆數
+               CALL abgp520_idx_chk()
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               
+         END DISPLAY
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            CALL cl_set_comp_visible('sel',FALSE)
+            NEXT FIELD bgeg002
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL abgp520_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            #161225-00004#1--add--str-- 
+            #判断是否有抛转或还原的资料
+            CALL abgp520_kind_chk()
+            IF NOT cl_null(g_errno) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = g_errno
+               LET g_errparam.extend = g_input.bgeg002," + ",g_input.bgeg003," + ",g_input.bgeg007
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL g_detail_d.clear()
+               CONTINUE DIALOG
+            END IF
+            #161225-00004#1--add--end
+            #end add-point
+            CALL abgp520_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL abgp520_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         ON ACTION batch_execute
+            IF g_detail_d.getLength() > 0 THEN
+               IF g_input.kind = '1' THEN
+                  CALL abgp520_post()
+               ELSE
+                  CALL abgp520_unpost()
+               END IF
+               CALL abgp520_b_fill()
+            END IF
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp520.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION abgp520_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+ 
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+ 
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL abgp520_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp520.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION abgp520_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   DEFINE l_sql           STRING
+   DEFINE l_bgeg007       LIKE bgeg_t.bgeg007
+   DEFINE l_bgeg009       LIKE bgeg_t.bgeg009
+   DEFINE l_bgeg016       LIKE bgeg_t.bgeg016
+   DEFINE l_bgeg100       LIKE bgeg_t.bgeg100
+   DEFINE l_bgeg007_desc  LIKE type_t.chr500
+   DEFINE l_bgasl003      LIKE bgasl_t.bgasl003
+   DEFINE l_bgasl004      LIKE bgasl_t.bgasl004
+   DEFINE l_bgeg009_desc  LIKE type_t.chr500
+   DEFINE l_bgeg016_desc  LIKE type_t.chr500
+   DEFINE l_bgcj007       LIKE bgcj_t.bgcj007
+   DEFINE l_bgcj007_desc  LIKE type_t.chr500
+   DEFINE l_bgaa011       LIKE bgaa_t.bgaa011
+   DEFINE l_bgaa010       LIKE bgaa_t.bgaa010
+   DEFINE l_str           STRING
+   DEFINE l_bgeg049       LIKE bgeg_t.bgeg049
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_bgeg040       LIKE bgeg_t.bgeg040
+   DEFINE l_site_str      STRING
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   #抓取预算编号对应的最上层组织和版本
+   LET l_bgaa011 = ''
+   LET l_bgaa010 = ''
+   SELECT bgaa011,bgaa010 INTO l_bgaa011,l_bgaa010 
+     FROM bgaa_t 
+    WHERE bgaaent=g_enterprise AND bgaa001=g_input.bgeg002
+   
+   #当包含下层节点时
+   IF g_input.lower = 'Y' AND NOT cl_null(l_bgaa010) THEN
+      LET l_str="(SELECT ooed004 ",
+                "  FROM (",
+                "        SELECT ooed004,CASE WHEN ooed004 = ooed005 THEN ' ' ELSE ooed005 END ooed005 ",
+                "          FROM ooed_t ",
+                "         WHERE ooedent = ",g_enterprise,
+                "           AND ooed001 = '4' AND ooed002 = '",l_bgaa011,"' ",
+                "           AND ooed003 = '",l_bgaa010,"'",
+                "       )",
+                " START WITH  ooed005 = '",g_input.bgeg007,"'",
+                " CONNECT BY PRIOR ooed004 = ooed005 )"
+   END IF
+   
+   LET g_sql="SELECT bgeg007,bgeg009,bgeg016,bgeg100,bgeg049,",
+             "       t1.ooefl003,t2.bgasl003,t2.bgasl004,t3.bgapl005,",
+             "       SUM(bgeg040)",
+             "  FROM bgeg_t",
+             "  LEFT JOIN ooefl_t t1 ON ooeflent=",g_enterprise," AND ooefl001=bgeg007 AND ooefl002='",g_dlang,"' ",
+             "  LEFT JOIN bgasl_t t2 ON bgaslent=",g_enterprise," AND bgasl001=bgeg009 AND bgasl002='",g_dlang,"' ",
+             "  LEFT JOIN bgapl_t t3 ON bgaplent=",g_enterprise," AND bgapl001=bgeg016 AND bgapl002='",g_dlang,"' ",
+             " WHERE bgegent=?",
+             "   AND bgeg001='20'",
+             "   AND bgeg002='",g_input.bgeg002,"'",
+             "   AND bgeg003='",g_input.bgeg003,"'",
+             "   AND bgeg006='1' ",
+             "   AND bgegstus='FC' ",
+             "   AND bgeg016 IS NOT NULL ",
+             "   AND bgeg016 IN (SELECT bgap001 FROM bgap_t WHERE bgapent=",g_enterprise," AND bgap004='Y' AND bgapstus='Y' )"
+   IF g_input.lower = 'Y' AND NOT cl_null(l_bgaa010) THEN
+      LET g_sql=g_sql," AND (bgeg007 ='",g_input.bgeg007,"' OR bgeg007 IN ",l_str," ) "
+      
+      #抓取满足abgi09权限的下层组织
+      CALL s_abg2_get_budget_site(g_input.bgeg002,'',g_user,'03') RETURNING l_site_str
+      CALL s_fin_get_wc_str(l_site_str) RETURNING l_site_str
+      LET g_sql=g_sql," AND bgeg007 IN ",l_site_str," "
+   ELSE
+      LET g_sql=g_sql," AND bgeg007 ='",g_input.bgeg007,"'"
+   END IF
+   #抛转
+   IF g_input.kind = '1' THEN
+      LET g_sql=g_sql," AND bgeg051 ='N' "
+   ELSE
+   #还原
+      LET g_sql=g_sql," AND bgeg051 ='Y' "
+   END IF
+      
+   LET g_sql=g_sql,
+             " GROUP BY bgeg007,bgeg009,bgeg016,bgeg100,bgeg049,t1.ooefl003,t2.bgasl003,t2.bgasl004,t3.bgapl005",
+             " ORDER BY bgeg007,bgeg009,bgeg016,bgeg100,bgeg049,t1.ooefl003,t2.bgasl003,t2.bgasl004,t3.bgapl005 "
+   
+   #end add-point
+ 
+   PREPARE abgp520_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR abgp520_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+      l_bgeg007,l_bgeg009,l_bgeg016,l_bgeg100,l_bgeg049,
+      l_bgeg007_desc,l_bgasl003,l_bgasl004,l_bgeg016_desc,
+      l_bgeg040
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      #通过采购预算中的供应商编号抓取到abgi150中对应对象；
+      #再通过对应对象串到aooi100抓取对应组织为销售预算组织（对应对象=据点对应客户/供应商编号）
+      LET l_bgcj007 = ''
+      SELECT ooef001 INTO l_bgcj007
+        FROM ooef_t
+       WHERE ooefent=g_enterprise 
+         AND ooef024=(SELECT bgar002 FROM bgar_t WHERE bgarent=g_enterprise AND bgar001=l_bgeg016)
+      IF cl_null(l_bgcj007) THEN
+         CONTINUE FOREACH
+      ELSE
+#         #檢查預算組織是否在abgi090中可操作的組織中
+#         CALL s_abg2_bgai004_chk(g_input.bgeg002,'',l_bgcj007,'01')
+#         IF NOT cl_null(g_errno) THEN
+#            CONTINUE FOREACH
+#         END IF
+      END IF
+      #1.檢核本層節點是否已存在本層匯總資料
+      LET l_cnt = 0
+      SELECT COUNT(1) INTO l_cnt FROM bgcj_t
+       WHERE bgcjent=g_enterprise AND bgcj001='30' AND bgcj002=g_input.bgeg002
+         AND bgcj003=g_input.bgeg003 AND bgcj005='2' AND bgcj006='2'
+         AND bgcj007=l_bgcj007 AND bgcj009=l_bgeg009 AND bgcjstus<>'X'
+      IF l_cnt > 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      IF NOT cl_null(l_bgaa010) THEN
+         #2.檢核上層節點是否已存在本層匯總資料
+         LET l_cnt = 0
+         SELECT COUNT(1) INTO l_cnt FROM bgcj_t
+          WHERE bgcjent=g_enterprise AND bgcj001='30' AND bgcj002=g_input.bgeg002
+            AND bgcj003=g_input.bgeg003 AND bgcj005='2' AND bgcj006='2'
+            AND bgcj009=l_bgeg009 AND bgcjstus<>'X'
+            AND bgcj007=(SELECT ooed005 FROM ooed_t
+                          WHERE ooedent=g_enterprise AND ooed001='4' 
+                            AND ooed002=l_bgaa011 AND ooed003=l_bgaa010
+                            AND ooed004=l_bgcj007
+                         )
+         IF l_cnt > 0 THEN
+            CONTINUE FOREACH
+         END IF
+      END IF
+      
+      #采购组织
+      LET l_bgeg007_desc=l_bgeg007,"  ",l_bgeg007_desc
+      #销售组织
+      CALL s_desc_get_department_desc(l_bgcj007) RETURNING l_bgcj007_desc
+      LET l_bgcj007_desc=l_bgcj007,"  ",l_bgcj007_desc
+      #料号
+      LET l_bgeg009_desc = l_bgasl003," ",l_bgasl004
+      #供应商
+      LET l_bgeg016_desc = l_bgeg016," ",l_bgeg016_desc
+      
+     
+      LET g_detail_d[l_ac].bgeg007=l_bgeg007
+      LET g_detail_d[l_ac].bgeg007_2_desc=l_bgeg007_desc
+      LET g_detail_d[l_ac].bgcj007=l_bgcj007
+      LET g_detail_d[l_ac].bgcj007_desc=l_bgcj007_desc
+      LET g_detail_d[l_ac].bgeg009=l_bgeg009
+      LET g_detail_d[l_ac].bgeg009_desc=l_bgeg009_desc
+      LET g_detail_d[l_ac].bgeg016=l_bgeg016
+      LET g_detail_d[l_ac].bgeg016_desc=l_bgeg016_desc
+      LET g_detail_d[l_ac].bgeg100=l_bgeg100
+      LET g_detail_d[l_ac].bgeg049=l_bgeg049
+      LET g_detail_d[l_ac].bgeg040=l_bgeg040
+      #end add-point
+      
+      CALL abgp520_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+ 
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE abgp520_sel
+   
+   LET l_ac = 1
+   CALL abgp520_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+ 
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp520.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION abgp520_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp520.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION abgp520_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp520.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION abgp520_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL abgp520_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp520.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION abgp520_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp520.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION abgp520_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = abgp520_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp520.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 显示单身笔数
+# Memo...........:
+# Usage..........: CALL abgp520_idx_chk()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/11/21 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgp520_idx_chk()
+   #判定目前選擇的頁面
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      #確保當下指標的位置未超過上限
+      IF g_detail_idx > g_detail_d.getLength() THEN
+         LET g_detail_idx = g_detail_d.getLength()
+      END IF
+      #確保資料位置不小於1
+      IF g_detail_idx = 0 AND g_detail_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      #將筆數資料顯示到畫面上
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_detail_d.getLength() TO FORMONLY.cnt
+      #將位置顯示到正確筆數上
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抛转产生销售预算
+# Memo...........:
+# Usage..........: CALL abgp520_post()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/11/21 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgp520_post()
+DEFINE l_bgcj RECORD  #銷售預算主檔
+       bgcjent LIKE bgcj_t.bgcjent, #企業編號
+       bgcj001 LIKE bgcj_t.bgcj001, #來源作業
+       bgcj002 LIKE bgcj_t.bgcj002, #預算編號
+       bgcj003 LIKE bgcj_t.bgcj003, #版本
+       bgcj004 LIKE bgcj_t.bgcj004, #管理組織
+       bgcj005 LIKE bgcj_t.bgcj005, #銷售來源
+       bgcj006 LIKE bgcj_t.bgcj006, #資料類型
+       bgcj007 LIKE bgcj_t.bgcj007, #預算組織
+       bgcj008 LIKE bgcj_t.bgcj008, #預算期別
+       bgcj009 LIKE bgcj_t.bgcj009, #預算料件
+       bgcj010 LIKE bgcj_t.bgcj010, #組合KEY
+       bgcjseq LIKE bgcj_t.bgcjseq, #項次
+       bgcj011 LIKE bgcj_t.bgcj011, #預算樣表
+       bgcj012 LIKE bgcj_t.bgcj012, #人員
+       bgcj013 LIKE bgcj_t.bgcj013, #部門
+       bgcj014 LIKE bgcj_t.bgcj014, #成本利潤中心
+       bgcj015 LIKE bgcj_t.bgcj015, #區域
+       bgcj016 LIKE bgcj_t.bgcj016, #收付款客商
+       bgcj017 LIKE bgcj_t.bgcj017, #帳款客商
+       bgcj018 LIKE bgcj_t.bgcj018, #客群
+       bgcj019 LIKE bgcj_t.bgcj019, #產品類別
+       bgcj020 LIKE bgcj_t.bgcj020, #專案編號
+       bgcj021 LIKE bgcj_t.bgcj021, #WBS
+       bgcj022 LIKE bgcj_t.bgcj022, #經營方式
+       bgcj023 LIKE bgcj_t.bgcj023, #通路
+       bgcj024 LIKE bgcj_t.bgcj024, #品牌
+       bgcj025 LIKE bgcj_t.bgcj025, #自由核算項一
+       bgcj026 LIKE bgcj_t.bgcj026, #自由核算項二
+       bgcj027 LIKE bgcj_t.bgcj027, #自由核算項三
+       bgcj028 LIKE bgcj_t.bgcj028, #自由核算項四
+       bgcj029 LIKE bgcj_t.bgcj029, #自由核算項五
+       bgcj030 LIKE bgcj_t.bgcj030, #自由核算項六
+       bgcj031 LIKE bgcj_t.bgcj031, #自由核算項七
+       bgcj032 LIKE bgcj_t.bgcj032, #自由核算項八
+       bgcj033 LIKE bgcj_t.bgcj033, #自由核算項九
+       bgcj034 LIKE bgcj_t.bgcj034, #自由核算項十
+       bgcj035 LIKE bgcj_t.bgcj035, #稅別
+       bgcj036 LIKE bgcj_t.bgcj036, #含稅否
+       bgcj037 LIKE bgcj_t.bgcj037, #銷售單位
+       bgcj038 LIKE bgcj_t.bgcj038, #交易數量
+       bgcj039 LIKE bgcj_t.bgcj039, #單價
+       bgcj040 LIKE bgcj_t.bgcj040, #原幣銷售金額
+       bgcj041 LIKE bgcj_t.bgcj041, #本層調整數量
+       bgcj042 LIKE bgcj_t.bgcj042, #本層調整單價
+       bgcj043 LIKE bgcj_t.bgcj043, #上層調整數量
+       bgcj044 LIKE bgcj_t.bgcj044, #上層調整單價
+       bgcj045 LIKE bgcj_t.bgcj045, #核准數量
+       bgcj046 LIKE bgcj_t.bgcj046, #核准單價
+       bgcj047 LIKE bgcj_t.bgcj047, #上層組織
+       bgcj048 LIKE bgcj_t.bgcj048, #憑證單號
+       bgcj049 LIKE bgcj_t.bgcj049, #預算細項
+       bgcj050 LIKE bgcj_t.bgcj050, #編製起點
+       bgcj051 LIKE bgcj_t.bgcj051, #生產預算拋轉否
+       bgcj052 LIKE bgcj_t.bgcj052, #內部採購組織
+       bgcj053 LIKE bgcj_t.bgcj053, #內部採購預算細項
+       bgcj100 LIKE bgcj_t.bgcj100, #交易幣別
+       bgcj101 LIKE bgcj_t.bgcj101, #匯率
+       bgcj102 LIKE bgcj_t.bgcj102, #核准原幣銷售金額
+       bgcj103 LIKE bgcj_t.bgcj103, #核准原幣未稅金額
+       bgcj104 LIKE bgcj_t.bgcj104, #核准原幣稅額
+       bgcj105 LIKE bgcj_t.bgcj105, #核准原幣含稅金額
+       bgcjownid LIKE bgcj_t.bgcjownid, #資料所有者
+       bgcjowndp LIKE bgcj_t.bgcjowndp, #資料所屬部門
+       bgcjcrtid LIKE bgcj_t.bgcjcrtid, #資料建立者
+       bgcjcrtdp LIKE bgcj_t.bgcjcrtdp, #資料建立部門
+       bgcjcrtdt LIKE bgcj_t.bgcjcrtdt, #資料創建日
+       bgcjmodid LIKE bgcj_t.bgcjmodid, #資料修改者
+       bgcjmoddt LIKE bgcj_t.bgcjmoddt, #最近修改日
+       bgcjcnfid LIKE bgcj_t.bgcjcnfid, #資料確認者
+       bgcjcnfdt LIKE bgcj_t.bgcjcnfdt, #資料確認日
+       bgcjstus LIKE bgcj_t.bgcjstus, #狀態碼
+       bgcjud001 LIKE bgcj_t.bgcjud001, #自定義欄位(文字)001
+       bgcjud002 LIKE bgcj_t.bgcjud002, #自定義欄位(文字)002
+       bgcjud003 LIKE bgcj_t.bgcjud003, #自定義欄位(文字)003
+       bgcjud004 LIKE bgcj_t.bgcjud004, #自定義欄位(文字)004
+       bgcjud005 LIKE bgcj_t.bgcjud005, #自定義欄位(文字)005
+       bgcjud006 LIKE bgcj_t.bgcjud006, #自定義欄位(文字)006
+       bgcjud007 LIKE bgcj_t.bgcjud007, #自定義欄位(文字)007
+       bgcjud008 LIKE bgcj_t.bgcjud008, #自定義欄位(文字)008
+       bgcjud009 LIKE bgcj_t.bgcjud009, #自定義欄位(文字)009
+       bgcjud010 LIKE bgcj_t.bgcjud010, #自定義欄位(文字)010
+       bgcjud011 LIKE bgcj_t.bgcjud011, #自定義欄位(數字)011
+       bgcjud012 LIKE bgcj_t.bgcjud012, #自定義欄位(數字)012
+       bgcjud013 LIKE bgcj_t.bgcjud013, #自定義欄位(數字)013
+       bgcjud014 LIKE bgcj_t.bgcjud014, #自定義欄位(數字)014
+       bgcjud015 LIKE bgcj_t.bgcjud015, #自定義欄位(數字)015
+       bgcjud016 LIKE bgcj_t.bgcjud016, #自定義欄位(數字)016
+       bgcjud017 LIKE bgcj_t.bgcjud017, #自定義欄位(數字)017
+       bgcjud018 LIKE bgcj_t.bgcjud018, #自定義欄位(數字)018
+       bgcjud019 LIKE bgcj_t.bgcjud019, #自定義欄位(數字)019
+       bgcjud020 LIKE bgcj_t.bgcjud020, #自定義欄位(數字)020
+       bgcjud021 LIKE bgcj_t.bgcjud021, #自定義欄位(日期時間)021
+       bgcjud022 LIKE bgcj_t.bgcjud022, #自定義欄位(日期時間)022
+       bgcjud023 LIKE bgcj_t.bgcjud023, #自定義欄位(日期時間)023
+       bgcjud024 LIKE bgcj_t.bgcjud024, #自定義欄位(日期時間)024
+       bgcjud025 LIKE bgcj_t.bgcjud025, #自定義欄位(日期時間)025
+       bgcjud026 LIKE bgcj_t.bgcjud026, #自定義欄位(日期時間)026
+       bgcjud027 LIKE bgcj_t.bgcjud027, #自定義欄位(日期時間)027
+       bgcjud028 LIKE bgcj_t.bgcjud028, #自定義欄位(日期時間)028
+       bgcjud029 LIKE bgcj_t.bgcjud029, #自定義欄位(日期時間)029
+       bgcjud030 LIKE bgcj_t.bgcjud030  #自定義欄位(日期時間)030
+END RECORD
+DEFINE l_sql             STRING
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_count           LIKE type_t.num10
+DEFINE l_bgaa011         LIKE bgaa_t.bgaa011
+DEFINE l_bgaa010         LIKE bgaa_t.bgaa010
+DEFINE l_bgaa002         LIKE bgaa_t.bgaa002
+DEFINE l_bgar002         LIKE bgar_t.bgar002
+DEFINE l_ooef019         LIKE ooef_t.ooef019
+DEFINE l_ooef019_1       LIKE ooef_t.ooef019
+DEFINE l_max_period      LIKE bgac_t.bgac004
+DEFINE l_i               LIKE type_t.num5
+DEFINE l_bgcj103         LIKE bgcj_t.bgcj103
+DEFINE l_bgcj104         LIKE bgcj_t.bgcj104
+DEFINE l_bgcj105         LIKE bgcj_t.bgcj105
+#161225-00004#1--add--str--
+DEFINE l_bgal          RECORD
+       bgal005     LIKE bgal_t.bgal005,
+       bgal006     LIKE bgal_t.bgal006,
+       bgal007     LIKE bgal_t.bgal007,
+       bgal008     LIKE bgal_t.bgal008,
+       bgal009     LIKE bgal_t.bgal009,
+       bgal010     LIKE bgal_t.bgal010,
+       bgal011     LIKE bgal_t.bgal011,
+       bgal012     LIKE bgal_t.bgal012,
+       bgal013     LIKE bgal_t.bgal013,
+       bgal014     LIKE bgal_t.bgal014,
+       bgal025     LIKE bgal_t.bgal025,
+       bgal026     LIKE bgal_t.bgal026,
+       bgal027     LIKE bgal_t.bgal027
+                       END RECORD
+#161225-00004#1--add--end
+   
+   LET l_success = TRUE
+   CALL cl_err_collect_init()
+   CALL s_transaction_begin()
+ 
+   LET l_bgcj.bgcjent = g_enterprise
+   LET l_bgcj.bgcj001 = '20'
+   LET l_bgcj.bgcj002 = g_input.bgeg002
+   LET l_bgcj.bgcj003 = g_input.bgeg003
+   #161225-00004#1--mark--str--
+#   SELECT DISTINCT bgeg004,bgeg011 
+#     INTO l_bgcj.bgcj004,l_bgcj.bgcj011
+#     FROM bgeg_t
+#    WHERE bgegent=g_enterprise AND bgeg002=g_input.bgeg002 
+#      AND bgeg003=g_input.bgeg003 AND bgeg007=g_input.bgeg007   
+   #161225-00004#1--mark--end
+   LET l_bgcj.bgcj005 = '2'
+   LET l_bgcj.bgcj006 = '1'
+   LET l_bgcj.bgcjstus = 'Y'
+   LET l_bgcj.bgcjownid = g_user
+   LET l_bgcj.bgcjowndp = g_dept
+   LET l_bgcj.bgcjcrtid = g_user
+   LET l_bgcj.bgcjcrtdp = g_dept 
+   LET l_bgcj.bgcjcrtdt = cl_get_current()
+   LET l_bgcj.bgcjmodid = g_user
+   LET l_bgcj.bgcjmoddt = cl_get_current()
+   LET l_bgcj.bgcjcnfid = g_user
+   LET l_bgcj.bgcjcnfdt = cl_get_current()   
+   LET l_bgcj.bgcj041 = 0
+   LET l_bgcj.bgcj042 = 0
+   LET l_bgcj.bgcj043 = 0
+   LET l_bgcj.bgcj044 = 0
+   LET l_bgcj.bgcj048 = 'N'
+   LET l_bgcj.bgcj050 = '2'
+   LET l_bgcj.bgcj051 = 'N'
+   
+   #抓取预算编号对应的最上层组织和版本
+   LET l_bgaa011 = ''
+   LET l_bgaa010 = ''
+   SELECT bgaa011,bgaa010,bgaa002 INTO l_bgaa011,l_bgaa010,l_bgaa002 
+     FROM bgaa_t 
+    WHERE bgaaent=g_enterprise AND bgaa001=g_input.bgeg002
+    
+   #最大週期數
+   SELECT MAX(bgac004) INTO l_max_period FROM bgac_t 
+    WHERE bgacent=g_enterprise AND bgac001=l_bgaa002
+    
+   LET l_sql="SELECT DISTINCT bgeg020,bgeg021,bgeg035,bgeg036,bgeg037,bgeg100,bgeg101",
+             "  FROM bgeg_t ",
+             " WHERE bgegent=",g_enterprise,
+             "   AND bgeg001='20' ",
+             "   AND bgeg002='",g_input.bgeg002,"'",
+             "   AND bgeg003='",g_input.bgeg003,"'",
+#             "   AND bgeg004='",l_bgcj.bgcj004,"'", #161225-00004#1 Mark
+             "   AND bgeg006='1' ",
+             "   AND bgegstus='FC' ",
+             "   AND bgeg051='N' ",
+             "   AND bgeg007=? AND bgeg009=? AND bgeg016=? AND bgeg100=? ",
+             " ORDER BY bgeg020,bgeg021,bgeg035,bgeg036,bgeg037,bgeg100,bgeg101 "
+   PREPARE abgp510_sel_pr FROM l_sql
+   DECLARE abgp510_sel_cs CURSOR FOR abgp510_sel_pr
+   
+   LET l_sql="SELECT SUM(bgeg045),SUM(bgeg102)",
+             "  FROM bgeg_t ",
+             " WHERE bgegent=",g_enterprise,
+             "   AND bgeg001='20' ",
+             "   AND bgeg002='",g_input.bgeg002,"'",
+             "   AND bgeg003='",g_input.bgeg003,"'",
+#             "   AND bgeg004='",l_bgcj.bgcj004,"'", #161225-00004#1 Mark
+             "   AND bgeg006='1' ",
+             "   AND bgegstus='FC' ",
+             "   AND bgeg051='N' ",
+             "   AND bgeg007=? AND bgeg008=? AND bgeg009=? AND bgeg016=? ",
+             "   AND bgeg020=? AND bgeg021=? AND bgeg035=? AND bgeg036=? ",
+             "   AND bgeg037=? AND bgeg100=? AND bgeg101=?"
+   PREPARE abgp510_amt_pr FROM l_sql
+   
+   LET l_count = 0
+   
+   FOR l_ac = 1 TO g_detail_d.getLength()
+      IF cl_null(g_detail_d[l_ac].bgcj007) THEN
+         CONTINUE FOR
+      END IF
+      LET l_bgcj.bgcj007=g_detail_d[l_ac].bgcj007
+      LET l_bgcj.bgcj009=g_detail_d[l_ac].bgeg009
+      #销售组织+料号抓取预算细项
+      SELECT bgea004 INTO l_bgcj.bgcj049
+        FROM bgea_t
+       WHERE bgeaent=g_enterprise AND bgea003=l_bgcj.bgcj009
+         AND bgea001=l_bgcj.bgcj002 AND bgea002=l_bgcj.bgcj007
+      #当预算细项没有值时，提示报错不可录入
+      IF cl_null(l_bgcj.bgcj049) THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = l_bgcj.bgcj007,'+',l_bgcj.bgcj009
+         LET g_errparam.code   = 'abg-00204' 
+         LET g_errparam.popup  = TRUE                  
+         CALL cl_err()
+         LET l_success = FALSE
+         CONTINUE FOR
+      END IF
+      #161225-00004#1--add--str--
+      #管理组织、样表
+      CALL s_abg2_get_bgai002(l_bgcj.bgcj002,l_bgcj.bgcj007,'01') 
+         RETURNING l_bgcj.bgcj004,l_bgcj.bgcj011
+      #161225-00004#1--add--end
+      #采购供应商对应实体交易对象
+      SELECT bgar002 INTO l_bgar002 FROM bgar_t 
+       WHERE bgarent=g_enterprise AND bgar001=g_detail_d[l_ac].bgeg016
+       
+      #人员、部门
+      SELECT pmab081,pmab109 INTO l_bgcj.bgcj012,l_bgcj.bgcj013
+        FROM pmab_t
+       WHERE pmabent=g_enterprise AND pmabsite=l_bgcj.bgcj007 AND pmab001=l_bgar002
+      #成本利润中心
+      SELECT ooeg004 INTO l_bgcj.bgcj014 FROM ooeg_t 
+       WHERE ooegent=g_enterprise AND ooeg001=l_bgcj.bgcj013
+      #区域、客群、经营方式
+      SELECT pmaa241,pmaa090,pmaa092 
+        INTO l_bgcj.bgcj015,l_bgcj.bgcj018,l_bgcj.bgcj022
+        FROM pmaa_t
+       WHERE pmaaent=g_enterprise AND pmaa001=l_bgar002
+      #收付款客商、账款客商
+      #161225-00004#1--mark--str--
+#      SELECT bgap001 INTO l_bgcj.bgcj016 FROM bgap_t
+#       WHERE bgapent=g_enterprise AND bgap002 IN ('2','3')
+#         AND bgap001 IN (SELECT bgar001 FROM bgar_t WHERE bgarent=g_enterprise AND bgar002=l_bgar002)
+      #161225-00004#1--mark--end
+      #161225-00004#1--add--str--
+      SELECT bgar001 INTO l_bgcj.bgcj016 
+        FROM bgar_t 
+       WHERE bgarent=g_enterprise 
+         AND bgar002=(SELECT ooef024 FROM ooef_t 
+                       WHERE ooefent=g_enterprise AND ooef001=g_detail_d[l_ac].bgeg007)
+      #161225-00004#1--add--end
+      LET l_bgcj.bgcj017=l_bgcj.bgcj016
+      #产品类别、品牌(PS:这两个栏位还没有加，先写着)
+      SELECT bgas009,bgas010 INTO l_bgcj.bgcj019,l_bgcj.bgcj024
+        FROM bgas_t
+       WHERE bgasent=g_enterprise AND bgas001=l_bgcj.bgcj019
+      #通路
+      SELECT bgaq010 INTO l_bgcj.bgcj023 FROM bgaq_t
+       WHERE bgaqent=g_enterprise AND bgaq001=l_bgcj.bgcj016 
+         AND bgaq002 IN ('2','3') AND bgaqsite=l_bgcj.bgcj007
+      #上层组织
+      IF cl_null(l_bgaa010) THEN
+         LET l_bgcj.bgcj047 = l_bgaa011
+      ELSE
+         SELECT ooed005 INTO l_bgcj.bgcj047 FROM ooed_t
+          WHERE ooedent=g_enterprise AND ooed001='4' AND ooed002=l_bgaa011
+            AND ooed003=l_bgaa010 AND ooed004=l_bgcj.bgcj007
+      END IF
+      #内部采购组织
+      LET l_bgcj.bgcj052=g_detail_d[l_ac].bgeg007
+      #内部采购预算细项
+      LET l_bgcj.bgcj053=g_detail_d[l_ac].bgeg049
+      
+      #161225-00004#1--add--str--
+      INITIALIZE l_bgal.* TO NULL   
+      SELECT bgal005,bgal006,bgal007,bgal008,bgal009,bgal010,
+             bgal011,bgal012,bgal013,bgal014,bgal025,bgal026,bgal027
+        INTO l_bgal.bgal005,l_bgal.bgal006,l_bgal.bgal007,l_bgal.bgal008,
+             l_bgal.bgal009,l_bgal.bgal010,l_bgal.bgal011,l_bgal.bgal012,
+             l_bgal.bgal013,l_bgal.bgal014,l_bgal.bgal025,l_bgal.bgal026,
+             l_bgal.bgal027
+        FROM bgal_t
+       WHERE bgalent = g_enterprise
+         AND bgal001 = l_bgcj.bgcj002
+         AND bgal002 = l_bgcj.bgcj007
+         AND bgal003 = l_bgcj.bgcj049 
+      #161225-00004#1--add--end
+      
+      LET l_bgcj.bgcjseq=0
+      FOREACH abgp510_sel_cs USING g_detail_d[l_ac].bgeg007,g_detail_d[l_ac].bgeg009,g_detail_d[l_ac].bgeg016,
+                                   g_detail_d[l_ac].bgeg100
+                              INTO l_bgcj.bgcj020,l_bgcj.bgcj021,l_bgcj.bgcj035,l_bgcj.bgcj036,
+                                   l_bgcj.bgcj037,l_bgcj.bgcj100,l_bgcj.bgcj101
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            LET l_success = FALSE
+            EXIT FOREACH
+         END IF
+         #项次
+         LET l_bgcj.bgcjseq = l_bgcj.bgcjseq + 1
+         
+         #161225-00004#1--add--str--
+         #依据abgi110设置
+         #人员
+         IF l_bgal.bgal012 = 'N' THEN 
+            LET l_bgcj.bgcj012 = ' '
+         END IF
+         
+         #部门
+         IF l_bgal.bgal005 = 'N' THEN 
+            LET l_bgcj.bgcj013 = ' '
+         END IF
+         
+         #成本利润中心
+         IF l_bgal.bgal006 = 'N' THEN 
+            LET l_bgcj.bgcj014 = ' '
+         END IF
+         
+         #区域
+         IF l_bgal.bgal007 = 'N' THEN 
+            LET l_bgcj.bgcj015 = ' '
+         END IF
+         
+         #收付款客商
+         IF l_bgal.bgal008 = 'N' THEN 
+            LET l_bgcj.bgcj016 = ' '
+         END IF
+         
+         #账款客商
+         IF l_bgal.bgal009 = 'N' THEN 
+            LET l_bgcj.bgcj017 = ' '
+         END IF
+         
+         #客群
+         IF l_bgal.bgal010 = 'N' THEN 
+            LET l_bgcj.bgcj018 = ' '
+         END IF
+         
+         #产品类别
+         IF l_bgal.bgal011 = 'N' THEN 
+            LET l_bgcj.bgcj019 = ' '
+         END IF
+         
+         #经营方式
+         IF l_bgal.bgal025 = 'N' THEN 
+            LET l_bgcj.bgcj022 = ' '
+         END IF
+         
+         #通路
+         IF l_bgal.bgal026 = 'N' THEN 
+            LET l_bgcj.bgcj023 = ' '
+         END IF
+         
+         #品牌
+         IF l_bgal.bgal027 = 'N' THEN 
+            LET l_bgcj.bgcj024 = ' '
+         END IF
+      
+         IF cl_null(l_bgcj.bgcj012) THEN LET l_bgcj.bgcj012 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj013) THEN LET l_bgcj.bgcj013 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj014) THEN LET l_bgcj.bgcj014 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj015) THEN LET l_bgcj.bgcj015 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj016) THEN LET l_bgcj.bgcj016 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj017) THEN LET l_bgcj.bgcj017 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj018) THEN LET l_bgcj.bgcj018 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj019) THEN LET l_bgcj.bgcj019 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj020) THEN LET l_bgcj.bgcj020 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj021) THEN LET l_bgcj.bgcj021 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj022) THEN LET l_bgcj.bgcj022 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj023) THEN LET l_bgcj.bgcj023 = ' ' END IF
+         IF cl_null(l_bgcj.bgcj024) THEN LET l_bgcj.bgcj024 = ' ' END IF
+         #161225-00004#1--add--end
+         
+         #组合key bgcj010
+         #依據预算编号，预算组织，判斷該预算细项是否做部門管理， 利潤成本中心管理，區域管理，
+         #收付款客商管理，账款客商管理，客群管理，產品類別，經營方式，渠道，品牌，人員，專案，wbs管理
+         LET l_bgcj.bgcj010 = "bgcj013=",l_bgcj.bgcj013,"/",
+                              "bgcj014=",l_bgcj.bgcj014,"/",
+                              "bgcj015=",l_bgcj.bgcj015,"/",
+                              "bgcj016=",l_bgcj.bgcj016,"/",
+                              "bgcj017=",l_bgcj.bgcj017,"/",
+                              "bgcj018=",l_bgcj.bgcj018,"/",
+                              "bgcj019=",l_bgcj.bgcj019,"/",
+                              "bgcj022=",l_bgcj.bgcj022,"/",
+                              "bgcj023=",l_bgcj.bgcj023,"/",
+                              "bgcj024=",l_bgcj.bgcj024,"/",
+                              "bgcj012=",l_bgcj.bgcj012,"/",
+                              "bgcj020=",l_bgcj.bgcj020,"/",
+                              "bgcj021=",l_bgcj.bgcj021,""
+         #稅别
+         #采购组织税区
+         LET l_ooef019=''
+         SELECT ooef019 INTO l_ooef019 FROM ooef_t WHERE ooefent=g_enterprise AND ooef001=g_detail_d[l_ac].bgeg007
+         #销售组织税区
+         LET l_ooef019_1=''
+         SELECT ooef019 INTO l_ooef019_1 FROM ooef_t WHERE ooefent=g_enterprise AND ooef001=l_bgcj.bgcj007
+         #IF 採購組織稅區(aooi100) = 銷售組織稅區(aooi100) THEN 銷售預算稅別= 採購稅別 
+         #ELSE 以銷售單的角度，取預算交易對象客戶資料頁籤的稅別(abgi150) where 往來據點=銷售單預算組織 END IF
+         IF l_ooef019 <> l_ooef019_1 THEN 
+            LET l_bgcj.bgcj035 = ''
+            SELECT bgaq005 INTO l_bgcj.bgcj035 FROM bgaq_t
+             WHERE bgaqent=g_enterprise AND bgaq001=l_bgcj.bgcj016 
+               AND bgaq002 IN ('2','3') AND bgaqsite=l_bgcj.bgcj007
+            #抓取含税否
+            SELECT oodb005 INTO l_bgcj.bgcj036 FROM oodb_t
+             WHERE oodbent=g_enterprise AND oodb002=l_bgcj.bgcj035
+               AND oodb001=l_ooef019_1
+         END IF       
+         FOR l_i = 1 TO l_max_period
+            LET l_bgcj.bgcj008 = l_i
+            EXECUTE abgp510_amt_pr USING g_detail_d[l_ac].bgeg007,l_bgcj.bgcj008,g_detail_d[l_ac].bgeg009,g_detail_d[l_ac].bgeg016,
+                                         l_bgcj.bgcj020,l_bgcj.bgcj021,l_bgcj.bgcj035,l_bgcj.bgcj036,
+                                         l_bgcj.bgcj037,l_bgcj.bgcj100,l_bgcj.bgcj101
+                                   INTO l_bgcj.bgcj038,l_bgcj.bgcj040
+            #单价
+            LET l_bgcj.bgcj039 = l_bgcj.bgcj040 / l_bgcj.bgcj038
+            CALL s_curr_round(l_bgcj.bgcj007,l_bgcj.bgcj100,l_bgcj.bgcj039,1) 
+                              RETURNING l_bgcj.bgcj039
+            LET l_bgcj.bgcj045 = l_bgcj.bgcj038
+            LET l_bgcj.bgcj046 = l_bgcj.bgcj039
+            LET l_bgcj.bgcj102 = l_bgcj.bgcj040
+            #以稅別計算出來含税金额、未税金额、税额
+            CALL s_tax_count(l_bgcj.bgcj007,l_bgcj.bgcj035,l_bgcj.bgcj102,l_bgcj.bgcj045,l_bgcj.bgcj100,l_bgcj.bgcj101)
+            RETURNING l_bgcj.bgcj103,l_bgcj.bgcj104,l_bgcj.bgcj105,l_bgcj103,l_bgcj104,l_bgcj105
+            
+            INSERT INTO bgcj_t
+                  (bgcjent,bgcj001,bgcj002,bgcj003,bgcj004,bgcj005,bgcj006,
+                   bgcj007,bgcj008,bgcj009,bgcj010,bgcjseq,bgcj011,
+                   bgcj012,bgcj013,bgcj014,bgcj015,bgcj016,bgcj017,
+                   bgcj018,bgcj019,bgcj020,bgcj021,bgcj022,bgcj023,bgcj024,
+                   bgcj035,bgcj036,bgcj037,bgcj038,bgcj039,bgcj040,
+                   bgcj041,bgcj042,bgcj043,bgcj044,bgcj045,bgcj046,
+                   bgcj047,bgcj048,bgcj049,bgcj050,bgcj051,
+                   bgcj100,bgcj101,bgcj102,bgcj103,bgcj104,bgcj105,
+                   bgcjstus,bgcjownid,bgcjowndp,bgcjcrtid,bgcjcrtdp,bgcjcrtdt,
+                   bgcjmodid,bgcjmoddt,bgcjcnfid,bgcjcnfdt) 
+            VALUES(l_bgcj.bgcjent,l_bgcj.bgcj001,l_bgcj.bgcj002,l_bgcj.bgcj003,l_bgcj.bgcj004,l_bgcj.bgcj005,l_bgcj.bgcj006,
+                   l_bgcj.bgcj007,l_bgcj.bgcj008,l_bgcj.bgcj009,l_bgcj.bgcj010,l_bgcj.bgcjseq,l_bgcj.bgcj011,
+                   l_bgcj.bgcj012,l_bgcj.bgcj013,l_bgcj.bgcj014,l_bgcj.bgcj015,l_bgcj.bgcj016,l_bgcj.bgcj017,
+                   l_bgcj.bgcj018,l_bgcj.bgcj019,l_bgcj.bgcj020,l_bgcj.bgcj021,l_bgcj.bgcj022,l_bgcj.bgcj023,l_bgcj.bgcj024,
+                   l_bgcj.bgcj035,l_bgcj.bgcj036,l_bgcj.bgcj037,l_bgcj.bgcj038,l_bgcj.bgcj039,l_bgcj.bgcj040,
+                   l_bgcj.bgcj041,l_bgcj.bgcj042,l_bgcj.bgcj043,l_bgcj.bgcj044,l_bgcj.bgcj045,l_bgcj.bgcj046,
+                   l_bgcj.bgcj047,l_bgcj.bgcj048,l_bgcj.bgcj049,l_bgcj.bgcj050,l_bgcj.bgcj051,
+                   l_bgcj.bgcj100,l_bgcj.bgcj101,l_bgcj.bgcj102,l_bgcj.bgcj103,l_bgcj.bgcj104,l_bgcj.bgcj105,
+                   l_bgcj.bgcjstus,l_bgcj.bgcjownid,l_bgcj.bgcjowndp,l_bgcj.bgcjcrtid,l_bgcj.bgcjcrtdp,l_bgcj.bgcjcrtdt,
+                   l_bgcj.bgcjmodid,l_bgcj.bgcjmoddt,l_bgcj.bgcjcnfid,l_bgcj.bgcjcnfdt) 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "bgcj_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE                  
+               CALL cl_err()
+               LET l_success = FALSE
+            END IF
+            
+            LET l_count = l_count + 1
+         END FOR
+      END FOREACH
+      #更新abgt510 采购预算资料
+      IF l_success = TRUE THEN
+         UPDATE bgeg_t
+            SET bgeg051 = 'Y'
+          WHERE bgegent=g_enterprise 
+            AND bgeg001='20'
+            AND bgeg002=g_input.bgeg002
+            AND bgeg003=g_input.bgeg003
+            AND bgeg006='1'
+            AND bgeg007=g_detail_d[l_ac].bgeg007
+            AND bgeg009=g_detail_d[l_ac].bgeg009
+            AND bgeg100=g_detail_d[l_ac].bgeg100
+            AND bgeg016=g_detail_d[l_ac].bgeg016
+            AND bgeg051='N'
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               LET l_success = FALSE
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "update bgeg_t" 
+               LET g_errparam.code   = "std-00009" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               
+            WHEN SQLCA.sqlcode #其他錯誤
+               LET l_success = FALSE
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "update bgeg_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+         END CASE
+      END IF
+   END FOR
+   #无符合条件的资料产生
+   IF l_success = TRUE AND l_count = 0THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = 'agl-00167'
+      LET g_errparam.popup  = TRUE                  
+      CALL cl_err()
+      LET l_success = FALSE
+   END IF
+   CALL cl_err_collect_show()
+   IF l_success = TRUE THEN
+      CALL s_transaction_end('Y','1') #161225-00004#1 mod 0-->1
+   ELSE
+      CALL s_transaction_end('N','1') #161225-00004#1 mod 0-->1
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 还原，删除内部销售预算，更新采购预算，抛转销售预算否=N
+# Memo...........:
+# Usage..........: CALL abgp520_unpost()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/11/21 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgp520_unpost()
+   DEFINE l_success         LIKE type_t.num5
+   
+   LET l_success = TRUE
+   CALL cl_err_collect_init()
+   CALL s_transaction_begin()
+   
+   FOR l_ac = 1 TO g_detail_d.getLength()
+      IF cl_null(g_detail_d[l_ac].bgcj007) THEN
+         CONTINUE FOR
+      END IF
+      #1.删除销售预算
+      DELETE FROM bgcj_t
+       WHERE bgcjent=g_enterprise 
+         AND bgcj001='20'
+         AND bgcj002=g_input.bgeg002
+         AND bgcj003=g_input.bgeg003
+         AND bgcj005='2' 
+         AND bgcj006='1'
+         AND bgcj007=g_detail_d[l_ac].bgcj007
+         AND bgcj009=g_detail_d[l_ac].bgeg009
+         AND bgcj100=g_detail_d[l_ac].bgeg100
+      IF SQLCA.SQLcode  THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "bgcj_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE                  
+         CALL cl_err()
+         LET l_success = FALSE
+      END IF
+      #2.更新采购预算
+      UPDATE bgeg_t
+         SET bgeg051 = 'N'
+       WHERE bgegent=g_enterprise 
+         AND bgeg001='20'
+         AND bgeg002=g_input.bgeg002
+         AND bgeg003=g_input.bgeg003
+         AND bgeg006='1'
+         AND bgeg007=g_detail_d[l_ac].bgeg007
+         AND bgeg009=g_detail_d[l_ac].bgeg009
+         AND bgeg100=g_detail_d[l_ac].bgeg100
+         AND bgeg016=g_detail_d[l_ac].bgeg016
+         AND bgeg051='Y'
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            LET l_success = FALSE
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "update bgeg_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            
+         WHEN SQLCA.sqlcode #其他錯誤
+            LET l_success = FALSE
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "update bgeg_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+      END CASE
+   END FOR
+   CALL cl_err_collect_show()
+   IF l_success = TRUE THEN
+      CALL s_transaction_end('Y','1') #161225-00004#1 mod 0-->1
+   ELSE
+      CALL s_transaction_end('N','1') #161225-00004#1 mod 0-->1
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 判断是否有抛转或还原的资料
+# Memo...........:
+# Usage..........: CALL abgp520_kind_chk()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/12/02 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgp520_kind_chk()
+   DEFINE l_sql            STRING
+   DEFINE l_site_str       STRING
+   DEFINE l_cnt            LIKE type_t.num5
+   
+   LET g_errno = ''
+#   IF cl_null(g_input.bgeg002) AND cl_null(g_input.bgeg003) AND cl_null(g_input.bgeg007) THEN #161225-00004#1 mark
+   IF cl_null(g_input.bgeg002) OR cl_null(g_input.bgeg003) OR cl_null(g_input.bgeg007) THEN #161225-00004#1 add
+      RETURN
+   END IF
+     
+   #当还原时，默认将下层节点的资料也一起还原
+   IF g_input.kind = '2' THEN
+      #还原
+      #预算组织下展组织
+      CALL s_abg2_get_site(g_input.bgeg002,g_input.bgeg007,'03') RETURNING l_site_str
+      LET l_sql="SELECT COUNT(1) FROM bgeg_t",
+                " WHERE bgegent=",g_enterprise," AND bgeg001='20' AND bgegstus = 'FC'", 
+                "   AND bgeg002='",g_input.bgeg002,"' AND bgeg003='",g_input.bgeg003,"'",
+                "   AND (bgeg007='",g_input.bgeg007,"' OR bgeg007 IN ",l_site_str,")",
+                "   AND bgeg016 IS NOT NULL",
+                "   AND bgeg051='Y'"
+      PREPARE abgp520_cnt_pr FROM l_sql
+      EXECUTE abgp520_cnt_pr INTO l_cnt
+      IF l_cnt = 0 THEN
+         LET g_errno = 'abg-00253'
+      END IF
+   ELSE
+      #抛转
+      IF g_input.lower = 'Y' THEN
+         #预算组织下展组织
+         CALL s_abg2_get_site(g_input.bgeg002,g_input.bgeg007,'03') RETURNING l_site_str
+      ELSE
+         LET l_site_str = "('')"
+      END IF
+      LET l_sql="SELECT COUNT(1) FROM bgeg_t",
+                " WHERE bgegent=",g_enterprise," AND bgeg001='20' AND bgegstus = 'FC'", 
+                "   AND bgeg002='",g_input.bgeg002,"' AND bgeg003='",g_input.bgeg003,"'",
+                "   AND (bgeg007='",g_input.bgeg007,"' OR bgeg007 IN ",l_site_str,")",
+                "   AND bgeg016 IS NOT NULL",
+                "   AND bgeg051='N'"
+      PREPARE abgp520_cnt_pr1 FROM l_sql
+      EXECUTE abgp520_cnt_pr1 INTO l_cnt
+      IF l_cnt = 0 THEN
+         LET g_errno = 'abg-00252'
+      END IF
+   END IF
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

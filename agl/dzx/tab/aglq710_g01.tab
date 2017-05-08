@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq710_g01" module="agl" jobmode="N" type="g01" industry="std" crtid="01251" crtdt="2015-01-22 13:49:41" modid="02114" moddt="2016-05-06 15:56:19" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.sdate(dat|起始日期),tm.bdate(dat|截止日期),tm.ctype(chr1|多本位幣),tm.curro(chr1|顯示原幣),tm.currp(chr1|按幣別分頁),tm.showv(chr1|顯示年初數),tm.ld(glaald|帳套),tm.syear(glap002|起始年度),tm.speri(glap004|起始期別),tm.eyear(glap002|截止年度),tm.eperi(glap004|截止期別)">
+    <var seq="1" value="glar001,glar001_desc(chr200|NULL),glar009,oyeard(num20_6|NULL),oyearc(num20_6|NULL),yeard(num20_6|NULL),yearc(num20_6|NULL),yeard2(num20_6|NULL),yearc2(num20_6|NULL),yeard3(num20_6|NULL),yearc3(num20_6|NULL),oqcd(num20_6|NULL),oqcc(num20_6|NULL),qcd(num20_6|NULL),qcc(num20_6|NULL),qcd2(num20_6|NULL),qcc2(num20_6|NULL),qcd3(num20_6|NULL),qcc3(num20_6|NULL),oqjd(num20_6|NULL),oqjc(num20_6|NULL),qjd(num20_6|NULL),qjc(num20_6|NULL),qjd2(num20_6|NULL),qjc2(num20_6|NULL),qjd3(num20_6|NULL),qjc3(num20_6|NULL),oqmd(num20_6|NULL),oqmc(num20_6|NULL),qmd(num20_6|NULL),qmc(num20_6|NULL),qmd2(num20_6|NULL),qmc2(num20_6|NULL),qmd3(num20_6|NULL),qmc3(num20_6|NULL),osumd(num20_6|NULL),osumc(num20_6|NULL),sumd(num20_6|NULL),sumc(num20_6|NULL),sumd2(num20_6|NULL),sumc2(num20_6|NULL),sumd3(num20_6|NULL),sumc3(num20_6|NULL),glarent,l_groupby(chr10|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="glar001,glar001_desc(chr200|NULL),glar009,oyeard(num20_6|NULL),oyearc(num20_6|NULL),yeard(num20_6|NULL),yearc(num20_6|NULL),yeard2(num20_6|NULL),yearc2(num20_6|NULL),yeard3(num20_6|NULL),yearc3(num20_6|NULL),oqcd(num20_6|NULL),oqcc(num20_6|NULL),qcd(num20_6|NULL),qcc(num20_6|NULL),qcd2(num20_6|NULL),qcc2(num20_6|NULL),qcd3(num20_6|NULL),qcc3(num20_6|NULL),oqjd(num20_6|NULL),oqjc(num20_6|NULL),qjd(num20_6|NULL),qjc(num20_6|NULL),qjd2(num20_6|NULL),qjc2(num20_6|NULL),qjd3(num20_6|NULL),qjc3(num20_6|NULL),oqmd(num20_6|NULL),oqmc(num20_6|NULL),qmd(num20_6|NULL),qmc(num20_6|NULL),qmd2(num20_6|NULL),qmc2(num20_6|NULL),qmd3(num20_6|NULL),qmc3(num20_6|NULL),osumd(num20_6|NULL),osumc(num20_6|NULL),sumd(num20_6|NULL),sumc(num20_6|NULL),sumd2(num20_6|NULL),sumc2(num20_6|NULL),sumd3(num20_6|NULL),sumc3(num20_6|NULL),glarent,l_groupby(chr10|NULL)"/>
+    <sql id="g_from" query="glar_t"/>
+    <sql id="g_where" query="" maintable="glar_t"/>
+    <sql id="g_order" query="glar001,glar009"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="l_groupby"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_groupby" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="glarent,l_groupby"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="glarent,l_groupby"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="glarent,l_groupby"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_groupby" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="glarent,l_groupby"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

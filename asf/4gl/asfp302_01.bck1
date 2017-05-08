@@ -1,0 +1,1520 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfp302_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2014-06-30 18:18:37), PR版次:0008(2016-12-20 12:03:52)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000131
+#+ Filename...: asfp302_01
+#+ Description: RUNCARD拆分
+#+ Creator....: 00768(2014-05-09 15:15:59)
+#+ Modifier...: 00768 -SD/PR- 00768
+ 
+{</section>}
+ 
+{<section id="asfp302_01.global" >}
+#應用 c03b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#160825-00059#1  2016/08/29 By wuxja     asfp302拆分runcard问题修正,应同时新增sfcc、sfcd表！
+#161109-00085#38 2016/11/17 By lienjunqi 整批調整系統星號寫法
+#161118-00021#1  2016/11/22 By fionchen  調整RUNCARD拆分後sfcb_t裡sfcb027標準產出量錯誤問題
+#161109-00085#61 2016/11/29 By 08171     整批調整系統星號寫法
+#161126-00005#1  2016/12/19 By 00768     上下站标准转出量sfcb027更新
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_sfca_m        RECORD
+       sfcbdocno LIKE type_t.chr20, 
+   sfaa010 LIKE type_t.chr500, 
+   wip_qty LIKE type_t.num20_6, 
+   sfcb001 LIKE type_t.num10, 
+   imaal003 LIKE type_t.chr500, 
+   split_qty LIKE type_t.num20_6, 
+   sfcb003 LIKE type_t.chr10, 
+   sfcb003_desc LIKE type_t.chr80, 
+   sfcb004 LIKE type_t.chr10, 
+   imaal004 LIKE type_t.chr500, 
+   split_lot LIKE type_t.num5
+       END RECORD
+DEFINE g_sfca_m        type_g_sfca_m
+ 
+   
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_sfcb_d        RECORD
+       ln LIKE type_t.num5, 
+   qty LIKE type_t.num20_6, 
+   qtys LIKE type_t.num20_6
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_split_lot_t         LIKE type_t.num5  #拆分批量-旧值
+#end add-point
+ 
+DEFINE g_sfcb_d          DYNAMIC ARRAY OF type_g_sfcb_d
+DEFINE g_sfcb_d_t        type_g_sfcb_d
+ 
+ 
+DEFINE g_sfcb002_t   LIKE sfcb_t.sfcb002    #Key值備份
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE l_ac                  LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+     
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp302_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION asfp302_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_sfcbdocno,p_sfcb001,p_sfcb003,p_sfcb004,p_wip_qty,p_split_qty
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_sfcbdocno   LIKE sfcb_t.sfcbdocno  #工单
+   DEFINE p_sfcb001     LIKE sfcb_t.sfcb001    #RunCard
+   DEFINE p_sfcb003     LIKE sfcb_t.sfcb003    #作业
+   DEFINE p_sfcb004     LIKE sfcb_t.sfcb004    #作业序
+   DEFINE p_wip_qty     LIKE sfcb_t.sfcb028    #WIP数量
+   DEFINE p_split_qty   LIKE sfcb_t.sfcb028    #拆分数量
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_qtys        LIKE sfcb_t.sfcb028    #累计拆分数量
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asfp302_01 WITH FORM cl_ap_formpath("asf","asfp302_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   LET r_success = TRUE
+   
+   LET l_allow_insert = FALSE
+   LET l_allow_delete = FALSE
+   
+   LET g_sfca_m.sfcbdocno = p_sfcbdocno
+   LET g_sfca_m.sfcb001   = p_sfcb001
+   LET g_sfca_m.sfcb003   = p_sfcb003
+   LET g_sfca_m.sfcb004   = p_sfcb004
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_sfca_m.sfcb003
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_sfca_m.sfcb003_desc = '', g_rtn_fields[1] , ''
+   
+   SELECT sfaa010 INTO g_sfca_m.sfaa010
+     FROM sfaa_t
+    WHERE sfaaent   = g_enterprise
+      AND sfaadocno = g_sfca_m.sfcbdocno
+      
+   CALL s_desc_get_item_desc(g_sfca_m.sfaa010)
+    RETURNING g_sfca_m.imaal003,g_sfca_m.imaal004
+   
+   LET g_sfca_m.wip_qty   = p_wip_qty
+   LET g_sfca_m.split_qty = p_split_qty
+   LET g_sfca_m.split_lot = 1
+   LET g_split_lot_t = g_sfca_m.split_lot
+   
+   CALL asfp302_01_b_fill()
+   
+   #DISPLAY BY NAME sfcbdocno,sfcb001,sfcb003,sfcb003_desc,sfcb004,sfaa010,imaal003,imaal004,wip_qty,split_qty,split_lot
+   DISPLAY BY NAME g_sfca_m.sfcbdocno,g_sfca_m.sfcb001,g_sfca_m.sfcb003,g_sfca_m.sfcb003_desc,g_sfca_m.sfcb004,
+                   g_sfca_m.sfaa010,g_sfca_m.imaal003, g_sfca_m.imaal004,g_sfca_m.wip_qty,g_sfca_m.split_qty,g_sfca_m.split_lot 
+WHILE TRUE                   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT BY NAME g_sfca_m.sfcbdocno,g_sfca_m.sfaa010,g_sfca_m.wip_qty,g_sfca_m.sfcb001,g_sfca_m.imaal003, 
+          g_sfca_m.split_qty,g_sfca_m.sfcb003,g_sfca_m.sfcb004,g_sfca_m.imaal004,g_sfca_m.split_lot  
+          ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.head.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.head.before_input"
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfcbdocno
+            #add-point:BEFORE FIELD sfcbdocno name="input.b.sfcbdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfcbdocno
+            
+            #add-point:AFTER FIELD sfcbdocno name="input.a.sfcbdocno"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfcbdocno
+            #add-point:ON CHANGE sfcbdocno name="input.g.sfcbdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfaa010
+            #add-point:BEFORE FIELD sfaa010 name="input.b.sfaa010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfaa010
+            
+            #add-point:AFTER FIELD sfaa010 name="input.a.sfaa010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfaa010
+            #add-point:ON CHANGE sfaa010 name="input.g.sfaa010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD wip_qty
+            #add-point:BEFORE FIELD wip_qty name="input.b.wip_qty"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD wip_qty
+            
+            #add-point:AFTER FIELD wip_qty name="input.a.wip_qty"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE wip_qty
+            #add-point:ON CHANGE wip_qty name="input.g.wip_qty"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfcb001
+            #add-point:BEFORE FIELD sfcb001 name="input.b.sfcb001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfcb001
+            
+            #add-point:AFTER FIELD sfcb001 name="input.a.sfcb001"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfcb001
+            #add-point:ON CHANGE sfcb001 name="input.g.sfcb001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaal003
+            #add-point:BEFORE FIELD imaal003 name="input.b.imaal003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaal003
+            
+            #add-point:AFTER FIELD imaal003 name="input.a.imaal003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imaal003
+            #add-point:ON CHANGE imaal003 name="input.g.imaal003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD split_qty
+            #add-point:BEFORE FIELD split_qty name="input.b.split_qty"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD split_qty
+            
+            #add-point:AFTER FIELD split_qty name="input.a.split_qty"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE split_qty
+            #add-point:ON CHANGE split_qty name="input.g.split_qty"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfcb003
+            
+            #add-point:AFTER FIELD sfcb003 name="input.a.sfcb003"
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfcb003
+            #add-point:BEFORE FIELD sfcb003 name="input.b.sfcb003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfcb003
+            #add-point:ON CHANGE sfcb003 name="input.g.sfcb003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfcb004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sfca_m.sfcb004,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sfcb004
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfcb004 name="input.a.sfcb004"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfcb004
+            #add-point:BEFORE FIELD sfcb004 name="input.b.sfcb004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfcb004
+            #add-point:ON CHANGE sfcb004 name="input.g.sfcb004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaal004
+            #add-point:BEFORE FIELD imaal004 name="input.b.imaal004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaal004
+            
+            #add-point:AFTER FIELD imaal004 name="input.a.imaal004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imaal004
+            #add-point:ON CHANGE imaal004 name="input.g.imaal004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD split_lot
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sfca_m.split_lot,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD split_lot
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD split_lot name="input.a.split_lot"
+            IF g_sfca_m.split_lot <= 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'axc-00025'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD CURRENT
+            END IF
+            
+            #数值有发生变化，自动产生单身或刷新单身
+            IF NOT cl_null(g_sfca_m.split_lot) AND (cl_null(g_split_lot_t) OR g_split_lot_t != g_sfca_m.split_lot) THEN
+               CALL asfp302_01_b_fill()
+            END IF
+            
+            LET g_split_lot_t = g_sfca_m.split_lot
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD split_lot
+            #add-point:BEFORE FIELD split_lot name="input.b.split_lot"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE split_lot
+            #add-point:ON CHANGE split_lot name="input.g.split_lot"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.sfcbdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfcbdocno
+            #add-point:ON ACTION controlp INFIELD sfcbdocno name="input.c.sfcbdocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfaa010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfaa010
+            #add-point:ON ACTION controlp INFIELD sfaa010 name="input.c.sfaa010"
+ 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.wip_qty
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD wip_qty
+            #add-point:ON ACTION controlp INFIELD wip_qty name="input.c.wip_qty"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfcb001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfcb001
+            #add-point:ON ACTION controlp INFIELD sfcb001 name="input.c.sfcb001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imaal003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaal003
+            #add-point:ON ACTION controlp INFIELD imaal003 name="input.c.imaal003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.split_qty
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD split_qty
+            #add-point:ON ACTION controlp INFIELD split_qty name="input.c.split_qty"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfcb003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfcb003
+            #add-point:ON ACTION controlp INFIELD sfcb003 name="input.c.sfcb003"
+ 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfcb004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfcb004
+            #add-point:ON ACTION controlp INFIELD sfcb004 name="input.c.sfcb004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imaal004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaal004
+            #add-point:ON ACTION controlp INFIELD imaal004 name="input.c.imaal004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.split_lot
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD split_lot
+            #add-point:ON ACTION controlp INFIELD split_lot name="input.c.split_lot"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.head.after_input"
+            
+            #end add-point
+            
+      END INPUT
+   
+      INPUT ARRAY g_sfcb_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.body.action"
+         BEFORE ROW
+            LET l_ac = ARR_CURR()
+            LET g_rec_b = g_sfcb_d.getLength()
+            LET g_sfcb_d_t.* = g_sfcb_d[l_ac].*
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.body.before_input"
+            LET g_rec_b = g_sfcb_d.getLength()
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ln
+            #add-point:BEFORE FIELD ln name="input.b.page1.ln"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ln
+            
+            #add-point:AFTER FIELD ln name="input.a.page1.ln"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ln
+            #add-point:ON CHANGE ln name="input.g.page1.ln"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qty
+            #add-point:BEFORE FIELD qty name="input.b.page1.qty"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qty
+            
+            #add-point:AFTER FIELD qty name="input.a.page1.qty"
+            IF NOT cl_null(g_sfcb_d[l_ac].qty) AND g_sfcb_d[l_ac].qty < 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'agl-00041'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD CURRENT
+            END IF
+            CALL asfp302_01_refresh_qtys() RETURNING l_qtys  #刷新累计拆分数量,同时返回最后的累计拆分数量
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qty
+            #add-point:ON CHANGE qty name="input.g.page1.qty"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qtys
+            #add-point:BEFORE FIELD qtys name="input.b.page1.qtys"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qtys
+            
+            #add-point:AFTER FIELD qtys name="input.a.page1.qtys"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qtys
+            #add-point:ON CHANGE qtys name="input.g.page1.qtys"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.ln
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ln
+            #add-point:ON ACTION controlp INFIELD ln name="input.c.page1.ln"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.qty
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qty
+            #add-point:ON ACTION controlp INFIELD qty name="input.c.page1.qty"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.qtys
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qtys
+            #add-point:ON ACTION controlp INFIELD qtys name="input.c.page1.qtys"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.body.after_input"
+            #单身拆分数量合计 = 单头拆分数量
+            CALL asfp302_01_refresh_qtys() RETURNING l_qtys  #刷新累计拆分数量,同时返回最后的累计拆分数量
+            IF l_qtys != g_sfca_m.split_qty THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00276'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD qty
+            END IF
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      CLOSE WINDOW w_asfp302_01 
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   CALL asfp302_01_split()  #拆分
+      RETURNING r_success
+   IF NOT r_success THEN
+      #CLOSE WINDOW w_asfp302_01 
+      #RETURN r_success
+      CONTINUE WHILE
+   END IF
+   
+   EXIT WHILE
+END WHILE
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asfp302_01 
+   
+   #add-point:input段after input name="input.post_input"
+   RETURN r_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfp302_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="asfp302_01.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION asfp302_01_b_fill()
+DEFINE l_qty    LIKE sfcb_t.sfcb028  #剩余拆分量
+DEFINE l_qtys   LIKE sfcb_t.sfcb028  #累计拆分数量
+
+   CALL g_sfcb_d.clear()
+   #INITIALIZE g_sfca_m.* TO NULL
+   
+   LET l_ac   = 0
+   LET l_qtys = 0
+   WHILE TRUE
+      LET l_ac = l_ac + 1
+      #项次
+      LET g_sfcb_d[l_ac].ln = l_ac
+      
+      #拆分数量
+      IF l_ac = g_sfca_m.split_lot THEN
+         #=剩余未拆分的数量=拆分数量-上一行的累计拆分数
+         IF l_ac = 1 THEN
+            LET g_sfcb_d[l_ac].qty = g_sfca_m.split_qty
+         ELSE
+            LET g_sfcb_d[l_ac].qty = g_sfca_m.split_qty - g_sfcb_d[l_ac-1].qtys
+         END IF
+      ELSE
+         #=拆分数量/拆分批量
+         LET g_sfcb_d[l_ac].qty = g_sfca_m.split_qty / g_sfca_m.split_lot
+      END IF
+  
+      #累计拆分数量
+      LET l_qtys = l_qtys + g_sfcb_d[l_ac].qty
+      LET g_sfcb_d[l_ac].qtys = l_qtys
+      
+      IF l_ac = g_sfca_m.split_lot THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+
+   LET g_rec_b = g_sfca_m.split_lot
+END FUNCTION
+#刷新累计拆分数量,同时返回最后的累计拆分数量
+PRIVATE FUNCTION asfp302_01_refresh_qtys()
+DEFINE r_qtys LIKE sfcb_t.sfcb028
+DEFINE l_i    LIKE type_t.num5
+DEFINE l_qtys LIKE sfcb_t.sfcb028
+
+   LET l_qtys = 0
+   FOR l_i = 1 TO g_rec_b
+       LET l_qtys = l_qtys + g_sfcb_d[l_i].qty
+       LET g_sfcb_d[l_i].qtys = l_qtys
+   END FOR
+   
+   LET r_qtys = g_sfcb_d[g_rec_b].qtys
+   RETURN r_qtys
+END FUNCTION
+#执行拆分
+PRIVATE FUNCTION asfp302_01_split()
+DEFINE r_success  LIKE type_t.num5
+#161109-00085#38-s
+#DEFINE l_sfce     RECORD LIKE sfce_t.*
+#DEFINE l_sfca     RECORD LIKE sfca_t.*
+#DEFINE l_sfcf     RECORD LIKE sfcf_t.*
+#DEFINE l_sfcb     RECORD LIKE sfcb_t.*
+DEFINE l_sfce RECORD  #RunCard拆分記錄單頭檔
+       sfceent LIKE sfce_t.sfceent, #企業編號
+       sfcesite LIKE sfce_t.sfcesite, #營運據點
+       sfcedocno LIKE sfce_t.sfcedocno, #工單單號
+       sfcedocdt LIKE sfce_t.sfcedocdt, #拆分日期
+       sfce001 LIKE sfce_t.sfce001, #拆分版本
+       sfce002 LIKE sfce_t.sfce002, #作業編號
+       sfce003 LIKE sfce_t.sfce003, #作業序
+       sfce004 LIKE sfce_t.sfce004, #原RunCard編號
+       #sfce005 LIKE sfce_t.sfce005  #拆分轉出數量 #161109-00085#61 mark
+       #161109-00085#61 --s add
+       sfce005 LIKE sfce_t.sfce005,  #拆分轉出數量
+       sfceud001 LIKE sfce_t.sfceud001, #自定義欄位(文字)001
+       sfceud002 LIKE sfce_t.sfceud002, #自定義欄位(文字)002
+       sfceud003 LIKE sfce_t.sfceud003, #自定義欄位(文字)003
+       sfceud004 LIKE sfce_t.sfceud004, #自定義欄位(文字)004
+       sfceud005 LIKE sfce_t.sfceud005, #自定義欄位(文字)005
+       sfceud006 LIKE sfce_t.sfceud006, #自定義欄位(文字)006
+       sfceud007 LIKE sfce_t.sfceud007, #自定義欄位(文字)007
+       sfceud008 LIKE sfce_t.sfceud008, #自定義欄位(文字)008
+       sfceud009 LIKE sfce_t.sfceud009, #自定義欄位(文字)009
+       sfceud010 LIKE sfce_t.sfceud010, #自定義欄位(文字)010
+       sfceud011 LIKE sfce_t.sfceud011, #自定義欄位(數字)011
+       sfceud012 LIKE sfce_t.sfceud012, #自定義欄位(數字)012
+       sfceud013 LIKE sfce_t.sfceud013, #自定義欄位(數字)013
+       sfceud014 LIKE sfce_t.sfceud014, #自定義欄位(數字)014
+       sfceud015 LIKE sfce_t.sfceud015, #自定義欄位(數字)015
+       sfceud016 LIKE sfce_t.sfceud016, #自定義欄位(數字)016
+       sfceud017 LIKE sfce_t.sfceud017, #自定義欄位(數字)017
+       sfceud018 LIKE sfce_t.sfceud018, #自定義欄位(數字)018
+       sfceud019 LIKE sfce_t.sfceud019, #自定義欄位(數字)019
+       sfceud020 LIKE sfce_t.sfceud020, #自定義欄位(數字)020
+       sfceud021 LIKE sfce_t.sfceud021, #自定義欄位(日期時間)021
+       sfceud022 LIKE sfce_t.sfceud022, #自定義欄位(日期時間)022
+       sfceud023 LIKE sfce_t.sfceud023, #自定義欄位(日期時間)023
+       sfceud024 LIKE sfce_t.sfceud024, #自定義欄位(日期時間)024
+       sfceud025 LIKE sfce_t.sfceud025, #自定義欄位(日期時間)025
+       sfceud026 LIKE sfce_t.sfceud026, #自定義欄位(日期時間)026
+       sfceud027 LIKE sfce_t.sfceud027, #自定義欄位(日期時間)027
+       sfceud028 LIKE sfce_t.sfceud028, #自定義欄位(日期時間)028
+       sfceud029 LIKE sfce_t.sfceud029, #自定義欄位(日期時間)029
+       sfceud030 LIKE sfce_t.sfceud030  #自定義欄位(日期時間)030
+       #161109-00085#61 --e add
+END RECORD
+
+DEFINE l_sfca RECORD  #工單製程單頭檔
+       sfcaent LIKE sfca_t.sfcaent, #企業編號
+       sfcasite LIKE sfca_t.sfcasite, #營運據點
+       sfcadocno LIKE sfca_t.sfcadocno, #單號
+       sfca001 LIKE sfca_t.sfca001, #RUN CARD編號
+       sfca002 LIKE sfca_t.sfca002, #變更版本
+       sfca003 LIKE sfca_t.sfca003, #生產數量
+       sfca004 LIKE sfca_t.sfca004, #完工數量
+      #sfca005 LIKE sfca_t.sfca005  #RUN CARD類型 #161109-00085#61 mark
+       #161109-00085#61 --s add
+       sfca005 LIKE sfca_t.sfca005,  #RUN CARD類型
+       sfcaud001 LIKE sfca_t.sfcaud001, #自定義欄位(文字)001
+       sfcaud002 LIKE sfca_t.sfcaud002, #自定義欄位(文字)002
+       sfcaud003 LIKE sfca_t.sfcaud003, #自定義欄位(文字)003
+       sfcaud004 LIKE sfca_t.sfcaud004, #自定義欄位(文字)004
+       sfcaud005 LIKE sfca_t.sfcaud005, #自定義欄位(文字)005
+       sfcaud006 LIKE sfca_t.sfcaud006, #自定義欄位(文字)006
+       sfcaud007 LIKE sfca_t.sfcaud007, #自定義欄位(文字)007
+       sfcaud008 LIKE sfca_t.sfcaud008, #自定義欄位(文字)008
+       sfcaud009 LIKE sfca_t.sfcaud009, #自定義欄位(文字)009
+       sfcaud010 LIKE sfca_t.sfcaud010, #自定義欄位(文字)010
+       sfcaud011 LIKE sfca_t.sfcaud011, #自定義欄位(數字)011
+       sfcaud012 LIKE sfca_t.sfcaud012, #自定義欄位(數字)012
+       sfcaud013 LIKE sfca_t.sfcaud013, #自定義欄位(數字)013
+       sfcaud014 LIKE sfca_t.sfcaud014, #自定義欄位(數字)014
+       sfcaud015 LIKE sfca_t.sfcaud015, #自定義欄位(數字)015
+       sfcaud016 LIKE sfca_t.sfcaud016, #自定義欄位(數字)016
+       sfcaud017 LIKE sfca_t.sfcaud017, #自定義欄位(數字)017
+       sfcaud018 LIKE sfca_t.sfcaud018, #自定義欄位(數字)018
+       sfcaud019 LIKE sfca_t.sfcaud019, #自定義欄位(數字)019
+       sfcaud020 LIKE sfca_t.sfcaud020, #自定義欄位(數字)020
+       sfcaud021 LIKE sfca_t.sfcaud021, #自定義欄位(日期時間)021
+       sfcaud022 LIKE sfca_t.sfcaud022, #自定義欄位(日期時間)022
+       sfcaud023 LIKE sfca_t.sfcaud023, #自定義欄位(日期時間)023
+       sfcaud024 LIKE sfca_t.sfcaud024, #自定義欄位(日期時間)024
+       sfcaud025 LIKE sfca_t.sfcaud025, #自定義欄位(日期時間)025
+       sfcaud026 LIKE sfca_t.sfcaud026, #自定義欄位(日期時間)026
+       sfcaud027 LIKE sfca_t.sfcaud027, #自定義欄位(日期時間)027
+       sfcaud028 LIKE sfca_t.sfcaud028, #自定義欄位(日期時間)028
+       sfcaud029 LIKE sfca_t.sfcaud029, #自定義欄位(日期時間)029
+       sfcaud030 LIKE sfca_t.sfcaud030  #自定義欄位(日期時間)030
+       #161109-00085#61 --e add
+END RECORD
+
+DEFINE l_sfcf RECORD  #RunCard拆分記錄單身檔
+       sfcfent LIKE sfcf_t.sfcfent, #企業編號
+       sfcfsite LIKE sfcf_t.sfcfsite, #營運據點
+       sfcfdocno LIKE sfcf_t.sfcfdocno, #工單單號
+       sfcfseq LIKE sfcf_t.sfcfseq, #項次
+       sfcf001 LIKE sfcf_t.sfcf001, #拆分版本
+       sfcf002 LIKE sfcf_t.sfcf002, #作業編號
+       sfcf003 LIKE sfcf_t.sfcf003, #作業序
+       sfcf004 LIKE sfcf_t.sfcf004, #新RunCard編號
+      #sfcf005 LIKE sfcf_t.sfcf005  #拆分轉入數量 #161109-00085#61 mark
+       #161109-00085#61 --s add
+       sfcf005 LIKE sfcf_t.sfcf005,  #拆分轉入數量
+       sfcfud001 LIKE sfcf_t.sfcfud001, #自定義欄位(文字)001
+       sfcfud002 LIKE sfcf_t.sfcfud002, #自定義欄位(文字)002
+       sfcfud003 LIKE sfcf_t.sfcfud003, #自定義欄位(文字)003
+       sfcfud004 LIKE sfcf_t.sfcfud004, #自定義欄位(文字)004
+       sfcfud005 LIKE sfcf_t.sfcfud005, #自定義欄位(文字)005
+       sfcfud006 LIKE sfcf_t.sfcfud006, #自定義欄位(文字)006
+       sfcfud007 LIKE sfcf_t.sfcfud007, #自定義欄位(文字)007
+       sfcfud008 LIKE sfcf_t.sfcfud008, #自定義欄位(文字)008
+       sfcfud009 LIKE sfcf_t.sfcfud009, #自定義欄位(文字)009
+       sfcfud010 LIKE sfcf_t.sfcfud010, #自定義欄位(文字)010
+       sfcfud011 LIKE sfcf_t.sfcfud011, #自定義欄位(數字)011
+       sfcfud012 LIKE sfcf_t.sfcfud012, #自定義欄位(數字)012
+       sfcfud013 LIKE sfcf_t.sfcfud013, #自定義欄位(數字)013
+       sfcfud014 LIKE sfcf_t.sfcfud014, #自定義欄位(數字)014
+       sfcfud015 LIKE sfcf_t.sfcfud015, #自定義欄位(數字)015
+       sfcfud016 LIKE sfcf_t.sfcfud016, #自定義欄位(數字)016
+       sfcfud017 LIKE sfcf_t.sfcfud017, #自定義欄位(數字)017
+       sfcfud018 LIKE sfcf_t.sfcfud018, #自定義欄位(數字)018
+       sfcfud019 LIKE sfcf_t.sfcfud019, #自定義欄位(數字)019
+       sfcfud020 LIKE sfcf_t.sfcfud020, #自定義欄位(數字)020
+       sfcfud021 LIKE sfcf_t.sfcfud021, #自定義欄位(日期時間)021
+       sfcfud022 LIKE sfcf_t.sfcfud022, #自定義欄位(日期時間)022
+       sfcfud023 LIKE sfcf_t.sfcfud023, #自定義欄位(日期時間)023
+       sfcfud024 LIKE sfcf_t.sfcfud024, #自定義欄位(日期時間)024
+       sfcfud025 LIKE sfcf_t.sfcfud025, #自定義欄位(日期時間)025
+       sfcfud026 LIKE sfcf_t.sfcfud026, #自定義欄位(日期時間)026
+       sfcfud027 LIKE sfcf_t.sfcfud027, #自定義欄位(日期時間)027
+       sfcfud028 LIKE sfcf_t.sfcfud028, #自定義欄位(日期時間)028
+       sfcfud029 LIKE sfcf_t.sfcfud029, #自定義欄位(日期時間)029
+       sfcfud030 LIKE sfcf_t.sfcfud030  #自定義欄位(日期時間)030
+       #161109-00085#61 --e add
+END RECORD
+
+#161109-00085#38-e
+DEFINE l_cnt      LIKE type_t.num5
+DEFINE l_sfcb053  LIKE sfcb_t.sfcb053
+DEFINE l_sfcb054  LIKE sfcb_t.sfcb054
+DEFINE l_sfca003  LIKE sfca_t.sfca003
+DEFINE l_sql      STRING
+DEFINE l_success  LIKE type_t.num5       #成功与否TRUE/FALSE #161126-00005#1 add
+
+   LET r_success = TRUE
+   
+   IF NOT cl_ask_confirm('asf-00265') THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #--更新被拆分RunCard对应制程项次的拆分转出数量：拆分转出数量=asfp302_1单头拆分数量
+   UPDATE sfcb_t SET sfcb038 = sfcb038 + g_sfca_m.split_qty,   #分割转出数
+                     sfcb050 = sfcb050 - g_sfca_m.split_qty    #在製數
+    WHERE sfcbent  = g_enterprise
+      AND sfcbdocno= g_sfca_m.sfcbdocno  #工单
+      AND sfcb001  = g_sfca_m.sfcb001    #RUN CARD
+      AND sfcb003  = g_sfca_m.sfcb003    #作业
+      AND sfcb004  = g_sfca_m.sfcb004    #作业序
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'upd sfcb_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   #161126-00005#1 add--s
+   #上下站标准转出量处理
+   CALL asfp302_01_deal_sfcb027('so',g_sfca_m.sfcbdocno,g_sfca_m.sfcb001,g_sfca_m.sfcb003,g_sfca_m.sfcb004,g_sfca_m.split_qty)
+      RETURNING l_success
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   #161126-00005#1 add--e
+
+   #制程拆分传出数量需折算成成品的数量，先取出换算关系
+   SELECT sfcb053,sfcb054 INTO l_sfcb053,l_sfcb054
+     FROM sfcb_t
+    WHERE sfcbent  = g_enterprise
+      AND sfcbdocno= g_sfca_m.sfcbdocno  #工单
+      AND sfcb001  = g_sfca_m.sfcb001    #RUN CARD
+      AND sfcb003  = g_sfca_m.sfcb003    #作业
+      AND sfcb004  = g_sfca_m.sfcb004    #作业序
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'sel sfcb'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #--记录RunCard合并记录文件sfce_t\sfcf_t
+   INITIALIZE l_sfce.* TO NULL
+   LET l_sfce.sfceent   = g_enterprise       #企業代碼
+   LET l_sfce.sfcesite  = g_site             #營運據點
+   LET l_sfce.sfcedocno = g_sfca_m.sfcbdocno #工單單號
+   LET l_sfce.sfcedocdt = cl_get_today()     #拆分日期
+   #拆分版本
+   SELECT MAX(sfce001) INTO l_sfce.sfce001 FROM sfce_t
+    WHERE sfceent   = l_sfce.sfceent
+      AND sfcedocno = l_sfce.sfcedocno
+   IF cl_null(l_sfce.sfce001) THEN
+      LET l_sfce.sfce001 = 0
+   END IF
+   LET l_sfce.sfce001   = l_sfce.sfce001 + 1 #拆分版本
+   LET l_sfce.sfce002   = g_sfca_m.sfcb003   #作業編號
+   LET l_sfce.sfce003   = g_sfca_m.sfcb004   #作業序
+   LET l_sfce.sfce004   = g_sfca_m.sfcb001   #原RunCard編號
+   LET l_sfce.sfce005   = g_sfca_m.split_qty #拆分轉出數量
+   #161109-00085#38-s
+   #INSERT INTO sfce_t VALUES(l_sfce.*)
+   #161109-00085#61 --s mark
+   #INSERT INTO sfce_t (sfceent,sfcesite,sfcedocno,sfcedocdt,sfce001,sfce002,sfce003,sfce004,sfce005)
+   #             VALUES(l_sfce.sfceent,l_sfce.sfcesite,l_sfce.sfcedocno,l_sfce.sfcedocdt,l_sfce.sfce001,
+   #                    l_sfce.sfce002,l_sfce.sfce003,l_sfce.sfce004,l_sfce.sfce005)
+   #161109-00085#61 --e mark
+   #161109-00085#38-e
+   #161109-00085#61 --s add
+   INSERT INTO sfce_t(sfceent,sfcesite,sfcedocno,sfcedocdt,sfce001,
+                      sfce002,sfce003,sfce004,sfce005,sfceud001,
+                      sfceud002,sfceud003,sfceud004,sfceud005,sfceud006,
+                      sfceud007,sfceud008,sfceud009,sfceud010,sfceud011,
+                      sfceud012,sfceud013,sfceud014,sfceud015,sfceud016,
+                      sfceud017,sfceud018,sfceud019,sfceud020,sfceud021,
+                      sfceud022,sfceud023,sfceud024,sfceud025,sfceud026,
+                      sfceud027,sfceud028,sfceud029,sfceud030)
+   VALUES(l_sfce.sfceent,l_sfce.sfcesite,l_sfce.sfcedocno,l_sfce.sfcedocdt,l_sfce.sfce001,
+          l_sfce.sfce002,l_sfce.sfce003,l_sfce.sfce004,l_sfce.sfce005,l_sfce.sfceud001,
+          l_sfce.sfceud002,l_sfce.sfceud003,l_sfce.sfceud004,l_sfce.sfceud005,l_sfce.sfceud006,
+          l_sfce.sfceud007,l_sfce.sfceud008,l_sfce.sfceud009,l_sfce.sfceud010,l_sfce.sfceud011,
+          l_sfce.sfceud012,l_sfce.sfceud013,l_sfce.sfceud014,l_sfce.sfceud015,l_sfce.sfceud016,
+          l_sfce.sfceud017,l_sfce.sfceud018,l_sfce.sfceud019,l_sfce.sfceud020,l_sfce.sfceud021,
+          l_sfce.sfceud022,l_sfce.sfceud023,l_sfce.sfceud024,l_sfce.sfceud025,l_sfce.sfceud026,
+          l_sfce.sfceud027,l_sfce.sfceud028,l_sfce.sfceud029,l_sfce.sfceud030)
+   #161109-00085#61 --e add
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'ins sfce_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   LET l_cnt = 0
+   FOR l_ac = 1 TO g_rec_b
+       IF g_sfcb_d[l_ac].qty = 0 THEN
+          CONTINUE FOR
+       END IF
+       
+       #--按照asfp302_01的单身数据生成拆分后新的RunCard
+       #  RunCard=已有最大RunCard+1
+       #  拆分转入数量= 单身拆分数量
+       #新runcard单头
+       INITIALIZE l_sfca.* TO NULL
+       LET l_sfca.sfcaent   = g_enterprise
+       LET l_sfca.sfcasite  = g_site
+       LET l_sfca.sfcadocno = g_sfca_m.sfcbdocno  #單號
+       SELECT MAX(sfca001)+1 INTO l_sfca.sfca001    #RUN CARD編號
+         FROM sfca_t
+        WHERE sfcaent   = l_sfca.sfcaent
+          AND sfcadocno = l_sfca.sfcadocno
+       LET l_sfca.sfca002   = 0           #變更版本
+       LET l_sfca003 = g_sfcb_d[l_ac].qty * l_sfcb054 / l_sfcb053
+       LET l_sfca.sfca003   = l_sfca003   #生產數量
+       LET l_sfca.sfca004   = 0           #完工數量
+       LET l_sfca.sfca005   = '1'         #RUN CARD類型:1:一般
+       #161109-00085#38-s
+       #INSERT INTO sfca_t VALUES(l_sfca.*)     
+       #161109-00085#61 --s mark       
+       #INSERT INTO sfca_t(sfcaent,sfcasite,sfcadocno,sfca001,sfca002,sfca003,sfca004,sfca005)
+       #            VALUES(l_sfca.sfcaent,l_sfca.sfcasite,l_sfca.sfcadocno,l_sfca.sfca001,l_sfca.sfca002,
+       #                   l_sfca.sfca003,l_sfca.sfca004,l_sfca.sfca005)
+       #161109-00085#61 --e mark
+       #161109-00085#38-e
+       #161109-00085#61 --s add
+       INSERT INTO sfca_t(sfcaent,sfcasite,sfcadocno,sfca001,sfca002,
+                          sfca003,sfca004,sfca005,sfcaud001,sfcaud002,
+                          sfcaud003,sfcaud004,sfcaud005,sfcaud006,sfcaud007,
+                          sfcaud008,sfcaud009,sfcaud010,sfcaud011,sfcaud012,
+                          sfcaud013,sfcaud014,sfcaud015,sfcaud016,sfcaud017,
+                          sfcaud018,sfcaud019,sfcaud020,sfcaud021,sfcaud022,
+                          sfcaud023,sfcaud024,sfcaud025,sfcaud026,sfcaud027,
+                          sfcaud028,sfcaud029,sfcaud030)
+       VALUES(l_sfca.sfcaent,l_sfca.sfcasite,l_sfca.sfcadocno,l_sfca.sfca001,l_sfca.sfca002,
+              l_sfca.sfca003,l_sfca.sfca004,l_sfca.sfca005,l_sfca.sfcaud001,l_sfca.sfcaud002,
+              l_sfca.sfcaud003,l_sfca.sfcaud004,l_sfca.sfcaud005,l_sfca.sfcaud006,l_sfca.sfcaud007,
+              l_sfca.sfcaud008,l_sfca.sfcaud009,l_sfca.sfcaud010,l_sfca.sfcaud011,l_sfca.sfcaud012,
+              l_sfca.sfcaud013,l_sfca.sfcaud014,l_sfca.sfcaud015,l_sfca.sfcaud016,l_sfca.sfcaud017,
+              l_sfca.sfcaud018,l_sfca.sfcaud019,l_sfca.sfcaud020,l_sfca.sfcaud021,l_sfca.sfcaud022,
+              l_sfca.sfcaud023,l_sfca.sfcaud024,l_sfca.sfcaud025,l_sfca.sfcaud026,l_sfca.sfcaud027,
+              l_sfca.sfcaud028,l_sfca.sfcaud029,l_sfca.sfcaud030)
+       #161109-00085#61 --e add
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = 'ins sfca_t'
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+  
+       #新runcard单身
+       LET l_sql = "INSERT INTO sfcb_t(sfcbent,sfcbsite,sfcbdocno,sfcb001,sfcb002, ",
+                   "                   sfcb003,sfcb004,sfcb005,sfcb006,sfcb007, ",
+                   "                   sfcb008,sfcb009,sfcb010,sfcb011,sfcb012, ",
+                   "                   sfcb013,sfcb014,sfcb015,sfcb016,sfcb017, ",
+                   "                   sfcb018,sfcb019,sfcb020,sfcb021,sfcb022, ",
+                   "                   sfcb023,sfcb024,sfcb025,sfcb026,sfcb027, ",
+                   "                   sfcb028,sfcb029,sfcb030,sfcb031,sfcb032, ",
+                   "                   sfcb033,sfcb034,sfcb035,sfcb036,sfcb037, ",
+                   "                   sfcb038,sfcb039,sfcb040,sfcb041,sfcb042, ",
+                   "                   sfcb043,sfcb044,sfcb045,sfcb046,sfcb047, ",
+                   "                   sfcb048,sfcb049,sfcb050,sfcb051,sfcb052, ",
+                   "                   sfcb053,sfcb054,sfcb055) ",
+                   " SELECT sfcbent,sfcbsite,sfcbdocno,",l_sfca.sfca001,",sfcb002, ",
+                   "        sfcb003,sfcb004,sfcb005,sfcb006,sfcb007, ",
+                   "        sfcb008,sfcb009,sfcb010,sfcb011,sfcb012, ",
+                   "        sfcb013,sfcb014,sfcb015,sfcb016,sfcb017, ",
+                   "        sfcb018,sfcb019,sfcb020,sfcb021,sfcb022, ",
+                   "        sfcb023,sfcb024,sfcb025,sfcb026,sfcb027, ",
+                   "        0,0,0,0,0, ",
+                   "        0,0,0,0,0, ",
+                   "        0,0,0,0,0, ",
+                   "        0,sfcb044,sfcb045,0,0, ",
+                   "        0,0,0,0,sfcb052, ",
+                   "        sfcb053,sfcb054,sfcb055 ",
+                   "   FROM sfcb_t ",
+                   "  WHERE sfcbent  = ",g_enterprise,
+                   "    AND sfcbdocno='",g_sfca_m.sfcbdocno,"' ",   #工单
+                   "    AND sfcb001  = ",g_sfca_m.sfcb001     #RUN CARD
+       PREPARE asfp302_01_split_p FROM l_sql
+       EXECUTE asfp302_01_split_p
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = 'ins sfcb_t'
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+      
+       UPDATE sfcb_t SET sfcb031 = g_sfcb_d[l_ac].qty,   #分割转入数
+                         #sfcb027 = g_sfcb_d[l_ac].qty,   #標準產出量     #161118-00021#1 add #161126-00005#1 mark
+                         sfcb050 = g_sfcb_d[l_ac].qty    #在製數
+        WHERE sfcbent  = g_enterprise
+          AND sfcbdocno= g_sfca_m.sfcbdocno  #工单
+          AND sfcb001  = l_sfca.sfca001      #RUN CARD
+          AND sfcb003  = g_sfca_m.sfcb003    #作业
+          AND sfcb004  = g_sfca_m.sfcb004    #作业序
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = 'upd sfcb_t'
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       
+       #160825-00059#1 add  --begin--
+       LET l_sql = " INSERT INTO sfcc_t(sfccent,sfccsite,sfccdocno,sfcc001,sfcc002,sfcc003,sfcc004)",
+                   " SELECT sfccent,sfccsite,sfccdocno,",l_sfca.sfca001,",sfcc002,sfcc003,sfcc004 FROM sfcc_t",
+                   "  WHERE sfccent  = ",g_enterprise,
+                   "    AND sfccdocno='",g_sfca_m.sfcbdocno,"'",
+                   "    AND sfcc001  = ",g_sfca_m.sfcb001      #RUN CARD
+      PREPARE asfp302_01_split_p1 FROM l_sql
+      EXECUTE asfp302_01_split_p1
+      IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = 'ins sfcc_t'
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+
+       #161126-00005#1 add--s 注意要先产生sfcc资料
+       #上下站标准转出量处理
+       CALL asfp302_01_deal_sfcb027('sn',g_sfca_m.sfcbdocno,l_sfca.sfca001,g_sfca_m.sfcb003,g_sfca_m.sfcb004,l_sfca.sfca003)
+          RETURNING l_success
+       IF NOT l_success THEN
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       #161126-00005#1 add--e
+       
+       LET l_sql = " INSERT INTO sfcd_t(sfcdent,sfcdsite,sfcddocno,sfcd001,sfcd002,sfcd003,sfcd004,sfcd005,sfcd006,sfcd007,sfcd008,sfcd009)",
+                   " SELECT sfcdent,sfcdsite,sfcddocno,",l_sfca.sfca001,",sfcd002,sfcd003,sfcd004,sfcd005,sfcd006,sfcd007,sfcd008,sfcd009 FROM sfcd_t",
+                   "  WHERE sfcdent  = ",g_enterprise,
+                   "    AND sfcddocno='",g_sfca_m.sfcbdocno,"'",
+                   "    AND sfcd001  = ",g_sfca_m.sfcb001     #RUN CARD
+      PREPARE asfp302_01_split_p2 FROM l_sql
+      EXECUTE asfp302_01_split_p2
+      IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = 'ins sfcd_t'
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       #160825-00059#1 add  --end--
+      
+       #--记录RunCard合并记录文件sfcf_t
+       INITIALIZE l_sfcf.* TO NULL
+       LET l_sfcf.sfcfent   = l_sfce.sfceent   #企業代碼
+       LET l_sfcf.sfcfsite  = l_sfce.sfcesite  #營運據點
+       LET l_sfcf.sfcfdocno = l_sfce.sfcedocno #工單單號
+       LET l_cnt = l_cnt + 1
+       LET l_sfcf.sfcfseq   = l_cnt            #項次 
+       LET l_sfcf.sfcf001   = l_sfce.sfce001   #拆分版本
+       LET l_sfcf.sfcf002   = l_sfce.sfce002   #作業編號
+       LET l_sfcf.sfcf003   = l_sfce.sfce003   #作業序
+       LET l_sfcf.sfcf004   = l_sfca.sfca001   #新RunCard編號
+       LET l_sfcf.sfcf005   = g_sfcb_d[l_ac].qty #拆分轉入數量
+       #161109-00085#38-s
+       #INSERT INTO sfcf_t VALUES(l_sfcf.*)
+       #161109-00085#61 --s mark
+       #INSERT INTO sfcf_t(sfcfent,sfcfsite,sfcfdocno,sfcfseq,sfcf001,sfcf002,sfcf003,sfcf004,sfcf005)
+       #            VALUES(l_sfcf.sfcfent,l_sfcf.sfcfsite,l_sfcf.sfcfdocno,l_sfcf.sfcfseq,l_sfcf.sfcf001,
+       #                   l_sfcf.sfcf002,l_sfcf.sfcf003,l_sfcf.sfcf004,l_sfcf.sfcf005)
+       #161109-00085#61 --e mark
+       #161109-00085#61 --s add
+       INSERT INTO sfcf_t(sfcfent,sfcfsite,sfcfdocno,sfcfseq,sfcf001,
+                          sfcf002,sfcf003,sfcf004,sfcf005,sfcfud001,
+                          sfcfud002,sfcfud003,sfcfud004,sfcfud005,sfcfud006,
+                          sfcfud007,sfcfud008,sfcfud009,sfcfud010,sfcfud011,
+                          sfcfud012,sfcfud013,sfcfud014,sfcfud015,sfcfud016,
+                          sfcfud017,sfcfud018,sfcfud019,sfcfud020,sfcfud021,
+                          sfcfud022,sfcfud023,sfcfud024,sfcfud025,sfcfud026,
+                          sfcfud027,sfcfud028,sfcfud029,sfcfud030)
+       VALUES(l_sfcf.sfcfent,l_sfcf.sfcfsite,l_sfcf.sfcfdocno,l_sfcf.sfcfseq,l_sfcf.sfcf001,
+              l_sfcf.sfcf002,l_sfcf.sfcf003,l_sfcf.sfcf004,l_sfcf.sfcf005,l_sfcf.sfcfud001,
+              l_sfcf.sfcfud002,l_sfcf.sfcfud003,l_sfcf.sfcfud004,l_sfcf.sfcfud005,l_sfcf.sfcfud006,
+              l_sfcf.sfcfud007,l_sfcf.sfcfud008,l_sfcf.sfcfud009,l_sfcf.sfcfud010,l_sfcf.sfcfud011,
+              l_sfcf.sfcfud012,l_sfcf.sfcfud013,l_sfcf.sfcfud014,l_sfcf.sfcfud015,l_sfcf.sfcfud016,
+              l_sfcf.sfcfud017,l_sfcf.sfcfud018,l_sfcf.sfcfud019,l_sfcf.sfcfud020,l_sfcf.sfcfud021,
+              l_sfcf.sfcfud022,l_sfcf.sfcfud023,l_sfcf.sfcfud024,l_sfcf.sfcfud025,l_sfcf.sfcfud026,
+              l_sfcf.sfcfud027,l_sfcf.sfcfud028,l_sfcf.sfcfud029,l_sfcf.sfcfud030)
+       #161109-00085#61 --e add
+       #161109-00085#38-e
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = 'ins sfcf_t'
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+   END FOR
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 当站制程的前后站标准转出量处理
+# Memo...........:
+# Usage..........: CALL asfp302_01_deal_sfcb027(p_type,p_sfcadocno,p_sfca001,p_sfcb003,p_sfcb004,p_qty)
+#                     RETURNING r_success
+# Input parameter: p_type         异动类型
+#                                 2个字符，第一个字符s代表拆分，c代表合并
+#                                         第二个字符o代表被拆分或合并的单子，n代表新产生的runcard单
+#                : p_sfcadocno    工单号
+#                : p_sfca001      RUNCARD
+#                : p_sfcb003      本站作业
+#                : p_sfcb004      作业序
+#                : p_qty          数量
+#                                 注意对被拆分或合并的单子 和 新产生的runcard单 的数量的区别传入
+#                                 当p_type='so'时，为单头被拆分的数量
+#                                 当p_type='sn'时，为单身拆分异动的数量，即新runcard单头上的生产数量
+#                                 当p_type='co'时，为被合并的异动的数量
+#                                 当p_type='cn'时，为合并后的数量，即新runcard单头上的生产数量
+# Return code....: r_success      成功与否TRUE/FALSE
+# Date & Author..: 2016/12/19 By 00768  161126-00005#1 add
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asfp302_01_deal_sfcb027(p_type,p_sfcadocno,p_sfca001,p_sfcb003,p_sfcb004,p_qty)
+DEFINE p_type         LIKE type_t.chr2       #异动类型
+DEFINE p_sfcadocno    LIKE sfca_t.sfcadocno  #工单号
+DEFINE p_sfca001      LIKE sfca_t.sfca001    #RUNCARD
+DEFINE p_sfcb003      LIKE sfcb_t.sfcb003    #本站作业
+DEFINE p_sfcb004      LIKE sfcb_t.sfcb004    #作业序
+DEFINE p_qty          LIKE sfca_t.sfca003    #数量
+                                             #当p_type='so'时，为单头被拆分的数量
+                                             #当p_type='sn'时，为单身拆分异动的数量，即新runcard单头上的生产数量
+                                             #当p_type='co'时，为被合并的异动的数量
+                                             #当p_type='cn'时，为合并后的数量，即新runcard单头上的生产数量
+DEFINE r_success      LIKE type_t.num5       #成功与否TRUE/FALSE
+DEFINE l_success      LIKE type_t.num5       #成功与否TRUE/FALSE
+DEFINE l_sfcb006      LIKE sfcb_t.sfcb006    #群组
+DEFINE l_sfcb009      LIKE sfcb_t.sfcb009    #下站作业
+DEFINE l_sfcb010      LIKE sfcb_t.sfcb010    #作业序
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_type) OR cl_null(p_sfcadocno) OR cl_null(p_sfca001)
+   OR cl_null(p_sfcb003) OR cl_null(p_sfcb004) OR cl_null(p_qty) THEN
+      #传入参数为空或传入值不正确!请联系MIS人员检查!
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-00280'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #先产生的runcard单当站前的runcard应该都是0,所以先都更新成0，后站的再重新更新成新的
+   IF p_type[2,2] = 'n' THEN
+      UPDATE sfcb_t SET sfcb027 = 0    #標準產出量
+       WHERE sfcbent  = g_enterprise
+         AND sfcbdocno= p_sfcadocno  #工单
+         AND sfcb001  = p_sfca001    #RUN CARD
+   END IF
+   
+   #更新当站的标准产出量
+   CASE
+      WHEN p_type[2,2] = 'n'  #新产生的runcard单
+           UPDATE sfcb_t SET sfcb027 = p_qty*sfcb021/sfcb022    #標準產出量
+            WHERE sfcbent  = g_enterprise
+              AND sfcbdocno= p_sfcadocno  #工单
+              AND sfcb001  = p_sfca001    #RUN CARD
+              AND sfcb003  = p_sfcb003    #作业
+              AND sfcb004  = p_sfcb004    #作业序
+      WHEN p_type[2,2] = 'o'  #被拆分/合并的runcard单
+           UPDATE sfcb_t SET sfcb027 = sfcb027 - p_qty   #标准产出数
+            WHERE sfcbent  = g_enterprise
+              AND sfcbdocno= p_sfcadocno  #工单
+              AND sfcb001  = p_sfca001    #RUN CARD
+              AND sfcb003  = p_sfcb003    #作业
+              AND sfcb004  = p_sfcb004    #作业序
+   END CASE
+   
+   #递归更新下站的标准产出量
+   SELECT sfcb006,sfcb009,sfcb010 INTO l_sfcb006,l_sfcb009,l_sfcb010  #当站群组编号,下站作业,作业序
+     FROM sfcb_t
+    WHERE sfcbent   = g_enterprise
+      AND sfcbdocno = p_sfcadocno   #单号
+      AND sfcb001   = p_sfca001     #RUN CARD
+      AND sfcb003   = p_sfcb003     #本站作业  
+      AND sfcb004   = p_sfcb004     #本站作业序
+
+   #新产生的runcard单 =p_qty*sfcb021/sfcb022  ——p_qty即sfca003
+   #被拆分/合并的runcard单=sfcb027-p_qty      ——p_qty即被拆分/合并的数量
+   CALL asfp302_01_updsfcb027_next_station(p_type,p_sfcadocno,p_sfca001,p_sfcb003,p_sfcb004,l_sfcb006,l_sfcb009,l_sfcb010,p_qty)
+      RETURNING l_success
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 当站制程的前后站标准转出量处理
+# Memo...........:
+# Usage..........: CALL asfp302_01_updsfcb027_next_station(p_type,p_sfcadocno,p_sfca001,p_sfcb003,p_sfcb004,p_sfcb006,p_sfcb009,p_sfcb010,p_qty)
+#                     RETURNING r_success
+# Input parameter: p_type         异动类型
+#                                 2个字符，第一个字符s代表拆分，c代表合并
+#                                         第二个字符o代表被拆分或合并的单子，n代表新产生的runcard单
+#                : p_sfcadocno    工单号
+#                : p_sfca001      RUNCARD
+#                : p_sfcb003      本站作业
+#                : p_sfcb004      作业序
+#                : p_sfcb006      群组
+#                : p_sfcb009      下站作业
+#                : p_sfcb010      作业序
+#                : p_qty          数量
+#                                 注意对被拆分或合并的单子 和 新产生的runcard单 的数量的区别传入
+#                                 当p_type='so'时，为单头被拆分的数量
+#                                 当p_type='sn'时，为单身拆分异动的数量，即新runcard单头上的生产数量
+#                                 当p_type='co'时，为被合并的异动的数量
+#                                 当p_type='cn'时，为合并后的数量，即新runcard单头上的生产数量
+# Return code....: r_success      成功与否TRUE/FALSE
+# Date & Author..: 2016/12/19 By 00768  161126-00005#1 add
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp302_01_updsfcb027_next_station(p_type,p_sfcadocno,p_sfca001,p_sfcb003,p_sfcb004,p_sfcb006,p_sfcb009,p_sfcb010,p_qty)
+DEFINE p_type         LIKE type_t.chr2       #异动类型
+DEFINE p_sfcadocno    LIKE sfca_t.sfcadocno  #工单号
+DEFINE p_sfca001      LIKE sfca_t.sfca001    #RUNCARD
+DEFINE p_sfcb003      LIKE sfcb_t.sfcb003    #本站作业
+DEFINE p_sfcb004      LIKE sfcb_t.sfcb004    #作业序
+DEFINE p_sfcb006      LIKE sfcb_t.sfcb006    #群组
+DEFINE p_sfcb009      LIKE sfcb_t.sfcb009    #下站作业
+DEFINE p_sfcb010      LIKE sfcb_t.sfcb010    #作业序
+DEFINE p_qty          LIKE sfca_t.sfca003    #数量
+                                             #当p_type='so'时，为单头被拆分的数量
+                                             #当p_type='sn'时，为单身拆分异动的数量，即新runcard单头上的生产数量
+                                             #当p_type='co'时，为被合并的异动的数量
+                                             #当p_type='cn'时，为合并后的数量，即新runcard单头上的生产数量
+DEFINE r_success      LIKE type_t.num5       #成功与否TRUE/FALSE
+DEFINE l_success      LIKE type_t.num5       #成功与否TRUE/FALSE
+DEFINE l_sql         STRING
+DEFINE l_i,l_row     LIKE type_t.num5
+DEFINE l_sfcb        DYNAMIC ARRAY OF RECORD
+       sfcb003 LIKE sfcb_t.sfcb003, #本站作業
+       sfcb004 LIKE sfcb_t.sfcb004, #作業序
+       sfcb006 LIKE sfcb_t.sfcb006, #群組
+       sfcb009 LIKE sfcb_t.sfcb009, #下站作業
+       sfcb010 LIKE sfcb_t.sfcb010  #下站作業序
+END RECORD
+
+   LET r_success = TRUE
+   
+   #找出下一站站点(类同s_asft310中的写法)
+   IF NOT cl_null(p_sfcb006) THEN   #群组
+      #从sfcb中获取下站，不能从sfcc以防群组中某一工艺线路也存在自己的流程，群组里面不会有MULT的情况，若有代表制程资料有误
+      #                    本站作业 作业序  群组     下站作业 下站作业序
+      LET l_sql = " SELECT sfcb003,sfcb004,sfcb006,sfcb009,sfcb010
+                      FROM sfcb_t ",
+                  "  WHERE sfcbent   = ",g_enterprise,
+                  "    AND sfcbdocno = '",p_sfcadocno,"' ",  #单号
+                  "    AND sfcb001   = '",p_sfca001,"' ",    #RUN CARD
+                  "    AND sfcb003   = '",p_sfcb009,"' ",    #本站作业  = 前一站转入的该站的：下站作业
+                  "    AND sfcb004   = '",p_sfcb010,"' "     #本站作业序 = 前一站转入的该站的：下站作业序
+   ELSE
+      #从sfcc中获取下站
+      #是要找到当前站所有的下站,接受传入参数的是当前站，抓出来的是下站         
+      LET l_sql = " SELECT sfcb003,sfcb004,sfcb006,sfcb009,sfcb010 
+                      FROM sfcb_t,sfcc_t ",
+                  "  WHERE sfcbent = sfccent AND sfcbdocno = sfccdocno ",
+                  "    AND sfcb001 = sfcc001 ",
+                  "    AND sfcb002 = sfcc002 ",
+                  "    AND sfccent   = ",g_enterprise,
+                  "    AND sfccdocno = '",p_sfcadocno,"' ",  #单号
+                  "    AND sfcc001   = '",p_sfca001,"' ",   #RUN CARD
+                  "    AND sfcc003   = '",p_sfcb003,"' ",   #上站作业编号=前一站转入的该站的：本站作业
+                  "    AND sfcc004   = '",p_sfcb004,"' "    #上站作业序  =前一站转入的该站的：本站作业序
+   END IF
+   PREPARE asfp302_01_updsfcb027_p FROM l_sql
+   DECLARE asfp302_01_updsfcb027_c CURSOR FOR asfp302_01_updsfcb027_p
+   LET l_row = 1
+   FOREACH asfp302_01_updsfcb027_c INTO l_sfcb[l_row].sfcb003,l_sfcb[l_row].sfcb004,l_sfcb[l_row].sfcb006,
+                                        l_sfcb[l_row].sfcb009,l_sfcb[l_row].sfcb010
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+
+      LET l_row = l_row + 1
+   END FOREACH
+   LET l_row = l_row - 1
+   
+   IF l_row > 0 THEN
+      FOR l_i = 1 TO l_row
+         #更新该站的标准产出量
+         CASE
+            WHEN p_type[2,2] = 'n'  #新产生的runcard单
+                 UPDATE sfcb_t SET sfcb027 = p_qty*sfcb021/sfcb022    #標準產出量
+                  WHERE sfcbent  = g_enterprise
+                    AND sfcbdocno= p_sfcadocno  #工单
+                    AND sfcb001  = p_sfca001    #RUN CARD
+                    AND sfcb003  = l_sfcb[l_i].sfcb003    #作业
+                    AND sfcb004  = l_sfcb[l_i].sfcb004    #作业序
+            WHEN p_type[2,2] = 'o'  #被拆分/合并的runcard单
+                 UPDATE sfcb_t SET sfcb027 = sfcb027 - p_qty   #标准产出数
+                  WHERE sfcbent  = g_enterprise
+                    AND sfcbdocno= p_sfcadocno  #工单
+                    AND sfcb001  = p_sfca001    #RUN CARD
+                    AND sfcb003  = l_sfcb[l_i].sfcb003    #作业
+                    AND sfcb004  = l_sfcb[l_i].sfcb004    #作业序
+         END CASE
+   
+         #递归更新下站的标准产出量
+         #新产生的runcard单 =p_qty*sfcb021/sfcb022  ——p_qty即sfca003
+         #被拆分/合并的runcard单=sfcb027-p_qty      ——p_qty即被拆分/合并的数量
+         #                                      异动类型 单号        run card  本站作业            作业序               群组                 下站作业             作业序              数量
+         CALL asfp302_01_updsfcb027_next_station(p_type,p_sfcadocno,p_sfca001,l_sfcb[l_i].sfcb003,l_sfcb[l_i].sfcb004,l_sfcb[l_i].sfcb006,l_sfcb[l_i].sfcb009,l_sfcb[l_i].sfcb010,p_qty)
+            RETURNING l_success
+         IF NOT l_success THEN
+            LET r_success = FALSE
+            EXIT FOR
+         END IF
+         
+      END FOR
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

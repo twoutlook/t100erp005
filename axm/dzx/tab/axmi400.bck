@@ -1,0 +1,304 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmi400" module="axm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="05293" crtdt="2014-06-11 10:41:38" modid="07024" moddt="2016-03-18 17:22:39" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="銷售估價BOM維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xmesdocno,xmesl003,xmesl004,xmes001,xmesstus,xmesownid,xmesownid_desc(chr80),xmesowndp,xmesowndp_desc(chr80),xmescrtid,xmescrtid_desc(chr80),xmescrtdp,xmescrtdp_desc(chr80),xmescrtdt,xmesmodid,xmesmodid_desc(chr80),xmesmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmet002,xmet003,xmet003_desc(chr500),xmet004,xmet004_desc(chr500),xmet005,xmet005_desc(chr500),xmet005_desc_desc(chr500),xmet006,xmet006_desc(chr500),xmet007,xmet008,xmet008_desc(chr500),xmet009,xmet010,xmet011,xmet012,xmet012_desc(chr500),xmet013,xmet013_desc(chr500),xmet014"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xmeu002,xmeu002_desc(chr500),xmeu003,xmeu003_desc(chr500),xmeu003_desc_desc(chr500),xmeu004,xmeu005,xmeu005_desc(chr500),xmeu006,xmeu007,xmeu007_desc(chr500),xmeu008,xmeu009,xmeu010,xmeu011"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="xmezseq,xmez002,xmez002_desc(chr500),xmez002_desc_desc(chr500),xmez003,xmez003_desc(chr500),xmez004,xmez005,xmez006,xmez006_desc(chr500),xmez007"/>
+      <var id="bs_field" value="xmesdocno,xmesdocno_desc(chr80),xmes001" pk="xmesdocno,xmes001" order=""/>
+      <bs_reference field="xmesdocno_desc" ref_field="xmesdocno" ref_sql="SELECT xmesl003 FROM xmesl_t WHERE xmeslent=$varg_enterprise$var AND xmesldocno=? AND xmesl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+      <action id="axmi400_detail_upd"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmi400" method="dialog">
+    <section id="input">
+      <input id="head" field="xmesdocno,xmesl003,xmesl004,xmes001,xmesstus"/>
+      <input id="body" page="1" field="xmet002,xmet003,xmet004,xmet005,xmet006,xmet007,xmet008,xmet009,xmet010,xmet011,xmet012,xmet013,xmet014" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xmeu002,xmeu003,xmeu004,xmeu005,xmeu006,xmeu007,xmeu008,xmeu009,xmeu010,xmeu011" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="xmezseq,xmez002,xmez003,xmez004,xmez005,xmez006,xmez007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xmesdocno,xmesl003,xmesl004,xmes001,xmesstus,xmesownid,xmesowndp,xmescrtid,xmescrtdp,xmescrtdt,xmesmodid,xmesmoddt"/>
+      <construct id="body" page="1" field="xmet002,xmet003,xmet004,xmet005,xmet006,xmet007,xmet008,xmet009,xmet010,xmet011,xmet012,xmet013,xmet014"/>
+      <construct id="body" page="2" field="xmeu002,xmeu003,xmeu004,xmeu005,xmeu006,xmeu007,xmeu008,xmeu009,xmeu010,xmeu011"/>
+      <construct id="body" page="3" field="xmezseq,xmez002,xmez003,xmez004,xmez005,xmez006,xmez007"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xmesdocno,xmes001"/>
+      <set id="head" type="no_entry" field="xmesdocno,xmes001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xmesdocno">
+        <controlp form="q_xmesdocno" state="c"/>
+      </column>
+      <column id="xmesl003"/>
+      <column id="xmesl004"/>
+      <column id="xmes001" type="S" default="0">
+        <after>
+          <check chkid="v_xmes001" id="isExist"/>
+        </after>
+      </column>
+      <column id="xmesstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xmesownid">
+        <after>
+          <reference field="xmesownid_desc" ref_field="xmes_t.xmesownid" map_field="xmesownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmesownid_desc"/>
+      <column id="xmesowndp">
+        <after>
+          <reference field="xmesowndp_desc" ref_field="xmes_t.xmesowndp" map_field="xmesowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xmesowndp_desc"/>
+      <column id="xmescrtid">
+        <after>
+          <reference field="xmescrtid_desc" ref_field="xmes_t.xmescrtid" map_field="xmescrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmescrtid_desc"/>
+      <column id="xmescrtdp">
+        <after>
+          <reference field="xmescrtdp_desc" ref_field="xmes_t.xmescrtdp" map_field="xmescrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xmescrtdp_desc"/>
+      <column id="xmescrtdt"/>
+      <column id="xmesmodid">
+        <after>
+          <reference field="xmesmodid_desc" ref_field="xmes_t.xmesmodid" map_field="xmesmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmesmodid_desc"/>
+      <column id="xmesmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xmet002">
+        <after>
+          <check id="range" bt="1000.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmet003">
+        <after>
+          <reference field="xmet003_desc" ref_field="xmet003" map_field="xmet003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;215&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_5" state="i"/>
+        <controlp form="q_oocq002_5" state="c"/>
+      </column>
+      <column id="xmet003_desc"/>
+      <column id="xmet004">
+        <after>
+          <reference field="xmet004_desc" ref_field="xmet004" map_field="xmet004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_5" state="i"/>
+        <controlp form="q_oocq002_5" state="c"/>
+      </column>
+      <column id="xmet004_desc"/>
+      <column id="xmet005">
+        <after>
+          <check chkid="v_imaf001_14" id="isExist"/>
+          <reference field="xmet005_desc" ref_field="xmet_t.xmet005" map_field="xmetent,xmet005" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_15" state="i"/>
+        <controlp form="q_imaf001_15" state="c"/>
+      </column>
+      <column id="xmet005_desc">
+        <after>
+          <reference field="xmet005_desc_desc" ref_field="xmet_t.xmet005" map_field="xmetent,xmet005" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmet005_desc_desc"/>
+      <column id="xmet006">
+        <after/>
+      </column>
+      <column id="xmet006_desc"/>
+      <column id="xmet007"/>
+      <column id="xmet008">
+        <after>
+          <check chkid="v_imao002" id="isExist"/>
+          <reference field="xmet008_desc" ref_field="xmet_t.xmet008" map_field="xmetent,xmet008" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imao002" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="xmet008_desc"/>
+      <column id="xmet009" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmet010" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmet011" type="S" default="N"/>
+      <column id="xmet012">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="xmet012_desc" ref_field="xmet_t.xmet012" map_field="xmetent,xmet012" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="xmet012_desc"/>
+      <column id="xmet013">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+          <reference field="xmet013_desc" ref_field="xmet_t.xmet013" map_field="xmetent,xmet013" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_3" state="i"/>
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="xmet013_desc"/>
+      <column id="xmet014"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xmeu002">
+        <after>
+          <reference field="xmeu002_desc" ref_field="xmeu002" map_field="xmeu002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;215&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_5" state="i"/>
+        <controlp form="q_oocq002_5" state="c"/>
+      </column>
+      <column id="xmeu002_desc"/>
+      <column id="xmeu003">
+        <after>
+          <check chkid="v_imaf001_14" id="isExist"/>
+          <reference field="xmeu003_desc" ref_field="xmeu_t.xmeu003" map_field="xmeuent,xmeu003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_15" state="i"/>
+        <controlp form="q_imaf001_15" state="c"/>
+      </column>
+      <column id="xmeu003_desc">
+        <after>
+          <reference field="xmeu003_desc_desc" ref_field="xmeu_t.xmeu003" map_field="xmeuent,xmeu003" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmeu003_desc_desc"/>
+      <column id="xmeu004"/>
+      <column id="xmeu005">
+        <after>
+          <reference field="xmeu005_desc" ref_field="xmeu005" map_field="xmeu005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_5" state="i"/>
+        <controlp form="q_oocq002_5" state="c"/>
+      </column>
+      <column id="xmeu005_desc"/>
+      <column id="xmeu006"/>
+      <column id="xmeu007">
+        <after>
+          <check chkid="v_ecaa001_1" id="isExist"/>
+          <reference field="xmeu007_desc" ref_field="xmeusite,xmeu007" map_field="xmeusite,xmeu007" ref_sql="SELECT ecaa002 FROM ecaa_t WHERE ecaaent=$varg_enterprise$var AND ecaasite=? AND ecaa001=? "/>
+        </after>
+        <controlp form="q_ecaa001_1" state="i"/>
+        <controlp form="q_ecaa001_1" state="c"/>
+      </column>
+      <column id="xmeu007_desc"/>
+      <column id="xmeu008" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmeu009" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmeu010" type="S" default="1" def_scc="3018"/>
+      <column id="xmeu011"/>
+    </init>
+    <init id="body" page="3">
+      <column id="xmezseq"/>
+      <column id="xmez002">
+        <after>
+          <check chkid="v_imaf001_16" id="isExist"/>
+          <reference field="xmez002_desc" ref_field="xmez_t.xmez002" map_field="xmez002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_17" state="i"/>
+        <controlp form="q_imaf001_17" state="c"/>
+      </column>
+      <column id="xmez002_desc">
+        <after>
+          <reference field="xmez002_desc_desc" ref_field="xmez_t.xmez002" map_field="xmez002" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmez002_desc_desc"/>
+      <column id="xmez003">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="xmez003_desc" ref_field="xmez_t.xmez003" map_field="xmez003" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="xmez003_desc"/>
+      <column id="xmez004">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmez005">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmez006">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+          <reference field="xmez006_desc" ref_field="xmez_t.xmez006" map_field="xmez006" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="i"/>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="xmez006_desc"/>
+      <column id="xmez007"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xmes_t" pk="xmesdocno,xmes001">
+      <sql id="forupd_sql" type="sql" query="SELECT xmesdocno,&apos;&apos;,&apos;&apos;,xmes001,xmesstus,xmesownid,&apos;&apos;,xmesowndp,&apos;&apos;,xmescrtid,&apos;&apos;,xmescrtdp,&apos;&apos;,xmescrtdt,xmesmodid,&apos;&apos;,xmesmoddt FROM xmes_t WHERE xmesent= ? AND xmessite= ? AND xmesdocno=? AND xmes001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xmesdocno,&apos;&apos;,&apos;&apos;,xmes001,xmesstus,xmesownid,&apos;&apos;,xmesowndp,&apos;&apos;,xmescrtid,&apos;&apos;,xmescrtdp,&apos;&apos;,xmescrtdt,xmesmodid,&apos;&apos;,xmesmoddt FROM xmes_t" order="xmesdocno,xmes001"/>
+      <sql id="append" type="lang" target="xmesl_t.xmesl003,xmesl_t.xmesl004" table="xmesl_t" fk="xmesdocno" pk="xmesldocno,xmesl002" field="xmesl003,xmesl004"/>
+    </head>
+    <body id="xmet_t" page="1" linked="" pk="xmet002" fk="xmetdocno,xmet001">
+      <sql id="forupd_sql_detail" query="SELECT xmet002,xmet003,&apos;&apos;,xmet004,&apos;&apos;,xmet005,&apos;&apos;,&apos;&apos;,xmet006,&apos;&apos;,xmet007,xmet008,&apos;&apos;,xmet009,xmet010,xmet011,xmet012,&apos;&apos;,xmet013,&apos;&apos;,xmet014 FROM xmet_t WHERE xmetent=? AND xmetsite=? AND xmetdocno=? AND xmet001=? AND xmet002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmet002,xmet003,&apos;&apos;,xmet004,&apos;&apos;,xmet005,&apos;&apos;,&apos;&apos;,xmet006,&apos;&apos;,xmet007,xmet008,&apos;&apos;,xmet009,xmet010,xmet011,xmet012,&apos;&apos;,xmet013,&apos;&apos;,xmet014 FROM xmet_t WHERE xmetent=? AND xmetsite=? AND xmetdocno=? AND xmet001=?"/>
+    </body>
+    <body id="xmeu_t" page="2" linked="" pk="xmeu002,xmeu003,xmeu004,xmeu005,xmeu006" fk="xmeudocno,xmeu001">
+      <sql id="forupd_sql_detail" query="SELECT xmeu002,&apos;&apos;,xmeu003,&apos;&apos;,&apos;&apos;,xmeu004,xmeu005,&apos;&apos;,xmeu006,xmeu007,&apos;&apos;,xmeu008,xmeu009,xmeu010,xmeu011 FROM xmeu_t WHERE xmeuent=? AND xmeusite=? AND xmeudocno=? AND xmeu001=? AND xmeu002=? AND xmeu003=? AND xmeu004=? AND xmeu005=? AND xmeu006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmeu002,&apos;&apos;,xmeu003,&apos;&apos;,&apos;&apos;,xmeu004,xmeu005,&apos;&apos;,xmeu006,xmeu007,&apos;&apos;,xmeu008,xmeu009,xmeu010,xmeu011 FROM xmeu_t WHERE xmeuent=? AND xmeusite=? AND xmeudocno=? AND xmeu001=?"/>
+    </body>
+    <body id="xmez_t" page="3" linked="" pk="xmezseq" fk="xmezdocno,xmez001">
+      <sql id="forupd_sql_detail" query="SELECT xmezseq,xmez002,&apos;&apos;,&apos;&apos;,xmez003,&apos;&apos;,xmez004,xmez005,xmez006,&apos;&apos;,xmez007 FROM xmez_t WHERE xmezent=? AND xmezsite=? AND xmezdocno=? AND xmez001=? AND xmezseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmezseq,xmez002,&apos;&apos;,&apos;&apos;,xmez003,&apos;&apos;,xmez004,xmez005,xmez006,&apos;&apos;,xmez007 FROM xmez_t WHERE xmezent=? AND xmezsite=? AND xmezdocno=? AND xmez001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

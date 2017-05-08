@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmi210" module="axm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="05384" crtdt="2014-09-19 11:36:55" modid="04441" moddt="2015-10-25 16:48:01" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="客戶嘜頭維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xmao001,xmao001_desc(chr80),xmao002,xmaol004,xmaostus,xmaoownid,xmaoownid_desc(chr80),xmaoowndp,xmaoowndp_desc(chr80),xmaocrtid,xmaocrtid_desc(chr80),xmaocrtdp,xmaocrtdp_desc(chr80),xmaocrtdt,xmaomodid,xmaomodid_desc(chr80),xmaomoddt,xmao003,xmao004"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmap003,xmap004,xmap005,xmap006"/>
+      <var id="bs_field" value="xmao001,xmao001_desc(chr80),xmao002,xmao002_desc(chr80)" pk="xmao001,xmao002" order=""/>
+      <bs_reference field="xmao001_desc" ref_field="xmao001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="upload"/>
+      <action id="triangle"/>
+      <action id="diamond"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="upload"/>
+      <action id="triangle"/>
+      <action id="diamond"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmi210" method="dialog">
+    <section id="input">
+      <input id="head" field="xmao001,xmao002,xmaol004,xmaostus,xmao003,xmao004"/>
+      <input id="body" page="1" field="xmap003,xmap004,xmap005,xmap006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xmao001,xmao002,xmaol004,xmaostus,xmaoownid,xmaoowndp,xmaocrtid,xmaocrtdp,xmaocrtdt,xmaomodid,xmaomoddt,xmao003,xmao004"/>
+      <construct id="body" page="1" field="xmap003,xmap004,xmap005,xmap006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xmao001,xmao002"/>
+      <set id="head" type="no_entry" field="xmao001,xmao002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xmao001">
+        <after>
+          <check chkid="v_pmaa001_7" id="isExist"/>
+          <reference field="xmao001_desc" ref_field="xmao_t.xmao001" map_field="xmaoent,xmao001" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_7" state="i"/>
+        <controlp form="q_pmaa001_7" state="c"/>
+      </column>
+      <column id="xmao001_desc"/>
+      <column id="xmao002">
+        <controlp form="q_xmao002" state="c"/>
+      </column>
+      <column id="xmaol004"/>
+      <column id="xmaostus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xmaoownid">
+        <after>
+          <reference field="xmaoownid_desc" ref_field="xmao_t.xmaoownid" map_field="xmaoownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmaoownid_desc"/>
+      <column id="xmaoowndp">
+        <after>
+          <reference field="xmaoowndp_desc" ref_field="xmao_t.xmaoowndp" map_field="xmaoowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xmaoowndp_desc"/>
+      <column id="xmaocrtid">
+        <after>
+          <reference field="xmaocrtid_desc" ref_field="xmao_t.xmaocrtid" map_field="xmaocrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmaocrtid_desc"/>
+      <column id="xmaocrtdp">
+        <after>
+          <reference field="xmaocrtdp_desc" ref_field="xmao_t.xmaocrtdp" map_field="xmaocrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xmaocrtdp_desc"/>
+      <column id="xmaocrtdt"/>
+      <column id="xmaomodid">
+        <after>
+          <reference field="xmaomodid_desc" ref_field="xmao_t.xmaomodid" map_field="xmaomodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmaomodid_desc"/>
+      <column id="xmaomoddt"/>
+      <column id="xmao003" type="S" default="1" def_scc="2099"/>
+      <column id="xmao004"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xmap003" def_scc="2102"/>
+      <column id="xmap004"/>
+      <column id="xmap005" type="S" default="1" def_scc="2100"/>
+      <column id="xmap006"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xmao_t" pk="xmao001,xmao002">
+      <sql id="forupd_sql" type="sql" query="SELECT xmao001,&apos;&apos;,xmao002,&apos;&apos;,xmaostus,xmaoownid,&apos;&apos;,xmaoowndp,&apos;&apos;,xmaocrtid,&apos;&apos;,xmaocrtdp,&apos;&apos;,xmaocrtdt,xmaomodid,&apos;&apos;,xmaomoddt,xmao003,xmao004 FROM xmao_t WHERE xmaoent= ? AND xmao001=? AND xmao002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xmao001,&apos;&apos;,xmao002,&apos;&apos;,xmaostus,xmaoownid,&apos;&apos;,xmaoowndp,&apos;&apos;,xmaocrtid,&apos;&apos;,xmaocrtdp,&apos;&apos;,xmaocrtdt,xmaomodid,&apos;&apos;,xmaomoddt,xmao003,xmao004 FROM xmao_t" order="xmao001,xmao002"/>
+      <sql id="append" type="lang" target="xmaol_t.xmaol004" table="xmaol_t" fk="xmao001,xmao002" pk="xmaol001,xmaol002,xmaol003" field="xmaol004"/>
+    </head>
+    <body id="xmap_t" page="1" linked="" pk="xmap003,xmap004" fk="xmap001,xmap002">
+      <sql id="forupd_sql_detail" query="SELECT xmap003,xmap004,xmap005,xmap006 FROM xmap_t WHERE xmapent=? AND xmap001=? AND xmap002=? AND xmap003=? AND xmap004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmap003,xmap004,xmap005,xmap006 FROM xmap_t WHERE xmapent=? AND xmap001=? AND xmap002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

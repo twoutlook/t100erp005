@@ -1,0 +1,735 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="adep610.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-01-29 17:13:23), PR版次:0004(2016-03-18 00:16:47)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000065
+#+ Filename...: adep610
+#+ Description: 配銷銷售日結批次處理主作業
+#+ Creator....: 02749(2014-12-30 17:27:32)
+#+ Modifier...: 06137 -SD/PR- 06137
+ 
+{</section>}
+ 
+{<section id="adep610.global" >}
+#應用 p01 樣板自動產生(Version:18)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+        type          LIKE type_t.chr10,
+        xmdk001       LIKE xmdk_t.xmdk001,
+        extend_flag   LIKE type_t.chr1,
+        recalculated  LIKE type_t.chr1,
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       xmdksite LIKE type_t.chr10, 
+   xmdk001 LIKE type_t.dat, 
+   l_extend_flag LIKE type_t.chr500, 
+   l_recalculated LIKE type_t.chr500, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_org   STRING
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明
+#argv[1] type_t.chr10 #處理類型：1.單品 2.門店組織
+#end add-point
+ 
+{</section>}
+ 
+{<section id="adep610.main" >}
+MAIN
+   #add-point:main段define (客製用)
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   DEFINE l_success LIKE type_t.num5      #150308-00001#2  By sakura 150309
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ade","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   LET g_argv[1] = cl_replace_str(g_argv[1], '\"', '') 
+   LET g_argv[2] = cl_replace_str(g_argv[2], '\"', '') 
+   LET g_argv[3] = cl_replace_str(g_argv[3], '\"', '') 
+   LET g_argv[4] = cl_replace_str(g_argv[4], '\"', '') 
+   LET g_argv[5] = cl_replace_str(g_argv[5], '\"', '') 
+   
+   DISPLAY 'g_argv[1] ',g_argv[1]
+   DISPLAY 'g_argv[2] ',g_argv[2]
+   DISPLAY 'g_argv[3] ',g_argv[3]
+   DISPLAY 'g_argv[4] ',g_argv[4]
+   DISPLAY 'g_argv[5] ',g_argv[5]
+   
+   LET lc_param.type        = g_argv[1]
+   LET lc_param.xmdk001     = g_argv[2]
+   LET lc_param.extend_flag = g_argv[3]
+   LET lc_param.recalculated= g_argv[4]
+   LET lc_param.wc          = g_argv[5]
+   
+   LET ls_js = util.JSON.stringify(lc_param)
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由06開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[06]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call
+      
+      #end add-point
+      CALL adep610_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adep610 WITH FORM cl_ap_formpath("ade",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL adep610_init()
+ 
+      #進入選單 Menu (="N")
+      CALL adep610_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      CALL s_adep610_drop_org_tmp()
+      CALL s_adep610_drop_sour_tmp()   
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_adep610
+   END IF
+ 
+   #add-point:作業離開前
+   CALL s_aooi500_drop_temp() RETURNING l_success      #150308-00001#2  By sakura 150309
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="adep610.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION adep610_init()
+ 
+   #add-point:init段define (客製用)
+   
+   #end add-point
+   #add-point:ui_dialog段define 
+   DEFINE l_success LIKE type_t.num5      #150308-00001#2  By sakura 150309
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+　 CALL s_adep610_create_org_tmp()
+   CALL s_adep610_create_sour_tmp()
+   CALL s_aooi500_create_temp() RETURNING l_success    #150308-00001#2  By sakura 150309   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adep610.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION adep610_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用)
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+ 
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   LET g_master.xmdk001 = g_today - 1
+   LET g_master.l_extend_flag = 'N'
+   LET g_master.l_recalculated = 'N'
+   DISPLAY BY NAME g_master.xmdk001,g_master.l_extend_flag,g_master.l_recalculated 
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.xmdk001,g_master.l_extend_flag,g_master.l_recalculated 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               
+               #end add-point
+         
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdk001
+            #add-point:BEFORE FIELD xmdk001 name="input.b.xmdk001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdk001
+            
+            #add-point:AFTER FIELD xmdk001 name="input.a.xmdk001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdk001
+            #add-point:ON CHANGE xmdk001 name="input.g.xmdk001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_extend_flag
+            #add-point:BEFORE FIELD l_extend_flag name="input.b.l_extend_flag"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_extend_flag
+            
+            #add-point:AFTER FIELD l_extend_flag name="input.a.l_extend_flag"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_extend_flag
+            #add-point:ON CHANGE l_extend_flag name="input.g.l_extend_flag"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_recalculated
+            #add-point:BEFORE FIELD l_recalculated name="input.b.l_recalculated"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_recalculated
+            
+            #add-point:AFTER FIELD l_recalculated name="input.a.l_recalculated"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_recalculated
+            #add-point:ON CHANGE l_recalculated name="input.g.l_recalculated"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.xmdk001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdk001
+            #add-point:ON ACTION controlp INFIELD xmdk001 name="input.c.xmdk001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_extend_flag
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_extend_flag
+            #add-point:ON ACTION controlp INFIELD l_extend_flag name="input.c.l_extend_flag"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_recalculated
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_recalculated
+            #add-point:ON ACTION controlp INFIELD l_recalculated name="input.c.l_recalculated"
+            
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON xmdksite
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+ 
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.xmdksite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdksite
+            #add-point:ON ACTION controlp INFIELD xmdksite name="construct.c.xmdksite"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'xmdksite',g_site,'c') #150308-00001#2  By sakura add 'c'
+            CALL q_ooef001_24()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdksite  #顯示到畫面上
+            NEXT FIELD xmdksite                     #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdksite
+            #add-point:BEFORE FIELD xmdksite name="construct.b.xmdksite"
+ 
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdksite
+            
+            #add-point:AFTER FIELD xmdksite name="construct.a.xmdksite"
+            IF NOT cl_null(g_master.wc) THEN
+               LET g_org = GET_FLDBUF(xmdksite)
+               DISPLAY "g_org: ",g_org
+            END IF
+            #END add-point
+            
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL adep610_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL adep610_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog
+      LET lc_param.type         = g_argv[1]   
+      LET lc_param.xmdk001      = g_master.xmdk001   
+      LET lc_param.extend_flag  = g_master.l_extend_flag 
+      LET lc_param.recalculated = g_master.l_recalculated
+      LET lc_param.wc           = g_master.wc
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL adep610_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = adep610_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adep610.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION adep610_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用)
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+   LET la_cmdrun.param[1] = la_param.type          
+   LET la_cmdrun.param[2] = la_param.xmdk001            
+   LET la_cmdrun.param[3] = la_param.extend_flag 
+   LET la_cmdrun.param[4] = la_param.recalculated  
+   LET la_cmdrun.param[5] = la_param.wc  
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adep610.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION adep610_process(ls_js)
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define 
+   DEFINE l_loop        LIKE type_t.num5   #160225-00040#5 Add By Ken 160314
+   DEFINE l_msg         STRING             #160225-00040#5 Add By Ken 160314 
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理
+   LET lc_param.type         = g_argv[1]   
+   LET lc_param.xmdk001      = g_master.xmdk001   
+   LET lc_param.extend_flag  = g_master.l_extend_flag 
+   LET lc_param.recalculated = g_master.l_recalculated
+   LET lc_param.wc           = g_master.wc
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      #160225-00040#5 Add By Ken 160314(S)
+      LET l_loop = 3
+      CALL cl_progress_bar_no_window(l_loop)  
+      #160225-00040#5 Add By Ken 160314(E)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE adep610_process_cs CURSOR FROM ls_sql
+#  FOREACH adep610_process_cs INTO
+   #add-point:process段process
+   CALL cl_err_collect_init()
+   #160225-00040#5 Add By Ken 160314(S)  資料準備 
+   LET l_msg = cl_getmsg('ade-00114',g_lang)   
+   CALL cl_progress_no_window_ing(l_msg)   
+   #160225-00040#5 Add By Ken 160314(E)    
+   
+   CALL s_transaction_begin()
+   CALL s_adep610_del_tmp()
+   CALL s_adep610_extand_org(g_master.l_extend_flag,g_org)
+   
+   #DISPLAY "patameter type: ",lc_param.type
+   #160225-00040#5 Add By Ken 160314(S)   產生資料
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)   
+   #160225-00040#5 Add By Ken 160314(e)    
+   
+   IF NOT s_adep610_process(lc_param.type,lc_param.xmdk001,lc_param.recalculated) THEN
+      CALL s_transaction_end('N',0)      
+   ELSE
+      CALL s_transaction_end('Y',0)
+   END IF 
+   
+   #160225-00040#5 Add By Ken 160314(S)
+   LET l_msg = cl_getmsg('std-00012',g_lang)
+   CALL cl_progress_no_window_ing(l_msg) 
+   #160225-00040#5 Add By Ken 160314(E)    
+   CALL cl_err_collect_show()    
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+  
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL adep610_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adep610.get_buffer" >}
+PRIVATE FUNCTION adep610_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define
+   
+   #end add-point
+ 
+   
+   LET g_master.xmdk001 = p_dialog.getFieldBuffer('xmdk001')
+   LET g_master.l_extend_flag = p_dialog.getFieldBuffer('l_extend_flag')
+   LET g_master.l_recalculated = p_dialog.getFieldBuffer('l_recalculated')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adep610.msgcentre_notify" >}
+PRIVATE FUNCTION adep610_msgcentre_notify()
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adep610.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+#end add-point
+ 
+{</section>}
+ 

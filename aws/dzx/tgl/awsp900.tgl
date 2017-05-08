@@ -1,0 +1,158 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="awsp900.description" >}
+#161031-00058  2016/11/01 By Hank Wu  1.新增目錄新增判斷 2.修改檔案產生路徑及名稱
+#161118-00009  2016/11/18 By Hank Wu  1.還原目錄以及檔案產生路徑寫法
+{</section>}
+
+{<section id="awsp900.global" >}
+IMPORT os
+IMPORT util
+IMPORT com
+IMPORT xml
+    
+SCHEMA ds
+
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_ws.inc"
+
+DEFINE   g_serv              com.WebService
+
+{</section>}
+
+{<section id="awsp900.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+ 
+   #依模組進行系統初始化設定(系統設定)
+   #CALL cl_ap_init("aws","")
+ 
+   #add-point:作業初始化
+{<point name="main.init"/>}
+   #end add-point
+   LET l_action = -1
+   LET l_port = NULL
+   display "ARGS:", NUM_ARGS()
+   
+   CASE   #根据传入的参数数量决定相应的动作
+      WHEN NUM_ARGS()= 0
+         IF fgl_getenv("FGLAPPSERVER") IS NOT NULL THEN
+            LET l_action = 2
+         END IF
+ 
+      WHEN NUM_ARGS()= 1
+         
+         LET l_argv01 = ARG_VAL(1)
+         IF NOT cl_null(l_argv01) AND l_argv01.subString(1,1) == "{" THEN
+            LET l_master = util.JSONObject.parse(ARG_VAL(1)) #parse json
+            LET l_detail = l_master.get("param")
+            LET l_argv01 = l_detail.get(1)			  
+         ELSE			  
+            LET l_argv01 = ARG_VAL(1)
+         END IF
+                    
+         #----------------------------------------------------------------#
+         # 透過 Application Server(gasd) 模式啟動 4GL Web Services 程式   #
+         #----------------------------------------------------------------#
+         #CASE ARG_VAL(1) CLIPPED
+         #CASE g_argv[1] CLIPPED
+         CASE l_argv01 CLIPPED                         
+            #-----------------------------------------------------------#
+            # 指定參數產生 WSDL 檔案                                    #
+            #-----------------------------------------------------------#
+            WHEN "-W"              
+               LET l_action = 1
+               #LET l_url = ARG_VAL(2)
+               #LET l_url = g_argv[2]
+               LET l_url = l_detail.get(2)
+            #-----------------------------------------------------------#
+            # 透過 standalone(r.r) 模式啟動 4GL Web Services 程式      #
+            #-----------------------------------------------------------#                        
+            WHEN "-S"                      
+               LET l_action = 2
+               #LET l_port = ARG_VAL(2)
+               #LET l_port = g_argv[2]
+               LET l_port = l_detail.get(2)
+               display "port:", l_port                                               
+            OTHERWISE
+               IF fgl_getenv("FGLAPPSERVER") IS NOT NULL THEN
+                  LET l_action = 2
+               END IF
+         END CASE   
+              
+      WHEN NUM_ARGS()=7                    
+         
+         #----------------------------------------------------------------#
+         # 透過 Application Server(gasd) 模式啟動 4GL Web Services 程式   #
+         #----------------------------------------------------------------#  			                
+         #CASE g_argv[1] CLIPPED
+         CASE ARG_VAL(6) CLIPPED
+            #-----------------------------------------------------------#
+            # 指定參數產生 WSDL 檔案                                    #
+            #-----------------------------------------------------------#
+            WHEN "-W"
+               LET l_action = 1                        
+               #LET l_url = g_argv[2]
+               LET l_url = ARG_VAL(7)
+            #-----------------------------------------------------------#
+            # 透過 standalone(r.r) 模式啟動 4GL Web Services 程式      #
+            #-----------------------------------------------------------#
+            WHEN "-S"
+               LET l_action = 2                        
+               #LET l_port = g_argv[2]
+               LET l_port = ARG_VAL(7)
+               display "port:", l_port
+         END CASE
+   END CASE
+    
+   display "action:",l_action
+    
+   #--------------------------------------------------------------------------#
+   # 若沒有指定正確的參數                                                     #
+   #--------------------------------------------------------------------------#
+   IF l_action = -1 THEN
+      CALL awsp900_help()    
+   ELSE 
+      #--------------------------------------------------------------------------#
+      # 建立 Web Services 服務                                                   #
+      #--------------------------------------------------------------------------#
+      
+      CALL awsp900_createService()
+      
+      display "start"       
+      CASE l_action
+         WHEN 1
+            CALL cl_log_service_start("W" ,"")
+            CALL awsp900_generateWSDL(l_url)
+                 
+         WHEN 2
+            CALL cl_log_service_start("G" ,l_port)
+            CALL awsp900_startServer(l_port)
+                 
+      END CASE    
+   END IF
+   #add-point:SQL_define
+{<point name="main.define_sql" />}
+   #end add-point
+   
+{<point name="main.servicecall" />}
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+
+{</section>}
+
+{<section id="awsp900.other_function" >}
+{<point name="other.function"/>}
+{</section>}
+

@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr640" module="aps" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05231" crtdt="2014-07-18 10:43:32" modid="07024" moddt="2016-05-31 10:31:57" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="APS請採購變更建議表">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pspc050,imae012,imaf142,pspc044,imaa009,imaf141,psca001(chr500),psca001_desc(chr80),stus(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aps" filename="apsr640" method="dialog">
+    <section id="input">
+      <input id="head" field="psca001,stus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pspc050,imae012,imaf142,pspc044,imaa009,imaf141"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pspc050">
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="imae012">
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="imaf142">
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="pspc044"/>
+      <column id="imaa009">
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imaf141">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="psca001">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+          <reference field="psca001_desc" ref_field="pscasite,psca001" map_field="pscasite,psca001" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscalsite=? AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+      </column>
+      <column id="psca001_desc"/>
+      <column id="stus"/>
+    </init>
+  </form>
+</assembly>
+

@@ -1,0 +1,2219 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abmq400.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:2(2014-08-27 12:52:49), PR版次:0002(2016-09-18 13:59:17)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000050
+#+ Filename...: abmq400
+#+ Description: 料件承認異動查詢作業
+#+ Creator....: 01534(2014-08-26 10:58:42)
+#+ Modifier...: 01534 -SD/PR- 02294
+ 
+{</section>}
+ 
+{<section id="abmq400.global" >}
+#應用 q01 樣板自動產生(Version:34)
+#add-point:填寫註解說明 name="global.memo"
+#160913-00055#1    2016/09/18  By lixiang  交易对象栏位开窗调整为q_pmaa001_25
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_bmif_d RECORD
+       
+       sel LIKE type_t.chr1, 
+   bmif001 LIKE bmif_t.bmif001, 
+   bmif001_desc LIKE type_t.chr500, 
+   bmif001_desc_desc LIKE type_t.chr500, 
+   bmif002 LIKE bmif_t.bmif002, 
+   bmif002_desc LIKE type_t.chr500, 
+   bmif003 LIKE bmif_t.bmif003, 
+   bmif005 LIKE bmif_t.bmif005, 
+   bmif005_desc LIKE type_t.chr500, 
+   bmif004 LIKE bmif_t.bmif004, 
+   bmif004_desc LIKE type_t.chr500, 
+   bmif004_desc_desc LIKE type_t.chr500, 
+   bmif006 LIKE bmif_t.bmif006, 
+   bmif007 LIKE bmif_t.bmif007, 
+   bmif007_desc LIKE type_t.chr500, 
+   bmif008 LIKE bmif_t.bmif008, 
+   bmif008_desc LIKE type_t.chr500, 
+   bmif008_desc_desc LIKE type_t.chr500
+       END RECORD
+PRIVATE TYPE type_g_bmif2_d RECORD
+       bmig001 LIKE bmig_t.bmig001, 
+   bmig001_desc LIKE type_t.chr500, 
+   bmig001_desc_desc LIKE type_t.chr500, 
+   bmig002 LIKE bmig_t.bmig002, 
+   bmig002_desc LIKE type_t.chr500, 
+   bmig003 LIKE bmig_t.bmig003, 
+   bmig005 LIKE bmig_t.bmig005, 
+   bmig005_desc LIKE type_t.chr500, 
+   bmig004 LIKE bmig_t.bmig004, 
+   bmig004_desc LIKE type_t.chr500, 
+   bmig004_desc_desc LIKE type_t.chr500, 
+   bmig006 LIKE bmig_t.bmig006, 
+   bmig007 LIKE bmig_t.bmig007, 
+   bmig007_desc LIKE type_t.chr500, 
+   bmig008 LIKE bmig_t.bmig008, 
+   bmig008_desc LIKE type_t.chr500, 
+   bmig008_desc_desc LIKE type_t.chr500, 
+   bmig009 LIKE bmig_t.bmig009, 
+   bmig009_desc LIKE type_t.chr500, 
+   bmig011 LIKE bmig_t.bmig011, 
+   bmig012 LIKE bmig_t.bmig012, 
+   bmig016 LIKE bmig_t.bmig016, 
+   bmig017 LIKE bmig_t.bmig017, 
+   bmig013 LIKE bmig_t.bmig013, 
+   bmig014 LIKE bmig_t.bmig014, 
+   bmig015 LIKE bmig_t.bmig015, 
+   bmif019 LIKE bmif_t.bmif019, 
+   bmif019_desc LIKE type_t.chr500, 
+   bmif020 LIKE bmif_t.bmif020, 
+   bmif020_desc LIKE type_t.chr500, 
+   bmig010 LIKE bmig_t.bmig010, 
+   bmig018 LIKE bmig_t.bmig018, 
+   bmig018_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+#單頭 type 宣告
+ type type_g_bmif_m        RECORD
+       bmif001  LIKE bmif_t.bmif001,
+       bmif002  LIKE bmif_t.bmif002,
+       bmif003  LIKE bmif_t.bmif003,
+       bmif005  LIKE bmif_t.bmif005,
+       bmif004  LIKE bmif_t.bmif004,
+       bmif006  LIKE bmif_t.bmif006,
+       bmif007  LIKE bmif_t.bmif007,
+       bmif008  LIKE bmif_t.bmif008
+                                  END RECORD
+DEFINE g_bmif_m          type_g_bmif_m      
+DEFINE l_ac2             LIKE type_t.num5
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_bmif_d            DYNAMIC ARRAY OF type_g_bmif_d
+DEFINE g_bmif_d_t          type_g_bmif_d
+DEFINE g_bmif2_d     DYNAMIC ARRAY OF type_g_bmif2_d
+DEFINE g_bmif2_d_t   type_g_bmif2_d
+ 
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abmq400.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("abm","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE abmq400_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE abmq400_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE abmq400_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_abmq400 WITH FORM cl_ap_formpath("abm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL abmq400_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL abmq400_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_abmq400
+      
+   END IF 
+   
+   CLOSE abmq400_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="abmq400.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION abmq400_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+      CALL cl_set_combo_scc('b_bmif006','2014') 
+  
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc_part('b_bmif006','2014','1,2')
+   CALL cl_set_combo_scc_part('b_bmig006','2014','1,2')
+   CALL cl_set_combo_scc_part('bmif006','2014','1,2')
+   LET g_bmif_m.bmif001 = 'Y' 
+   LET g_bmif_m.bmif002 = 'N' 
+   LET g_bmif_m.bmif003 = 'N' 
+   LET g_bmif_m.bmif005 = 'N' 
+   LET g_bmif_m.bmif004 = 'N' 
+   LET g_bmif_m.bmif006 = 'N' 
+   LET g_bmif_m.bmif007 = 'N' 
+   LET g_bmif_m.bmif008 = 'N' 
+   DISPLAY g_bmif_m.bmif001 TO l_bmif001
+   DISPLAY g_bmif_m.bmif002 TO l_bmif002
+   DISPLAY g_bmif_m.bmif003 TO l_bmif003
+   DISPLAY g_bmif_m.bmif004 TO l_bmif004
+   DISPLAY g_bmif_m.bmif005 TO l_bmif005
+   DISPLAY g_bmif_m.bmif006 TO l_bmif006
+   DISPLAY g_bmif_m.bmif007 TO l_bmif007
+   DISPLAY g_bmif_m.bmif008 TO l_bmif008
+   #end add-point
+ 
+   CALL abmq400_default_search()
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmq400.default_search" >}
+PRIVATE FUNCTION abmq400_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " bmif001 = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " bmif002 = '", g_argv[02], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET g_wc = g_wc, " bmif003 = '", g_argv[03], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[04]) THEN
+      LET g_wc = g_wc, " bmif004 = '", g_argv[04], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[05]) THEN
+      LET g_wc = g_wc, " bmif005 = '", g_argv[05], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[06]) THEN
+      LET g_wc = g_wc, " bmif006 = '", g_argv[06], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[07]) THEN
+      LET g_wc = g_wc, " bmif007 = '", g_argv[07], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[08]) THEN
+      LET g_wc = g_wc, " bmif008 = '", g_argv[08], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmq400.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION abmq400_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old   STRING
+   DEFINE ls_js     STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   
+   CALL abmq400_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_bmif_d.clear()
+         CALL g_bmif2_d.clear()
+ 
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL abmq400_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+         INPUT g_bmif_m.bmif001,g_bmif_m.bmif002,g_bmif_m.bmif003,g_bmif_m.bmif005,g_bmif_m.bmif004,
+               g_bmif_m.bmif006,g_bmif_m.bmif007,g_bmif_m.bmif008
+          FROM l_bmif001,l_bmif002,l_bmif003,l_bmif005,l_bmif004,l_bmif006,l_bmif007,l_bmif008     
+            # ATTRIBUTE(WITHOUT DEFAULTS)
+              
+              BEFORE INPUT
+                 LET g_bmif_m.bmif001 = 'Y'
+                 DISPLAY g_bmif_m.bmif001 TO l_bmif001
+                 IF cl_null(g_bmif_m.bmif002) THEN
+                    LET g_bmif_m.bmif002 = 'N'
+                 END IF
+                 IF cl_null(g_bmif_m.bmif003) THEN
+                    LET g_bmif_m.bmif003 = 'N'
+                 END IF  
+                 IF cl_null(g_bmif_m.bmif004) THEN
+                    LET g_bmif_m.bmif004 = 'N'
+                 END IF   
+                 IF cl_null(g_bmif_m.bmif005) THEN
+                    LET g_bmif_m.bmif005 = 'N'
+                 END IF 
+                 IF cl_null(g_bmif_m.bmif006) THEN
+                    LET g_bmif_m.bmif006 = 'N'
+                 END IF 
+                 IF cl_null(g_bmif_m.bmif007) THEN
+                    LET g_bmif_m.bmif007 = 'N'
+                 END IF    
+                 IF cl_null(g_bmif_m.bmif008) THEN
+                    LET g_bmif_m.bmif008 = 'N'
+                 END IF                 
+         END INPUT    
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+         CONSTRUCT BY NAME g_wc ON bmif001,bmif002,bmif003,bmif005,bmif004,bmif006,bmif007,bmif008
+                      
+            BEFORE CONSTRUCT
+            
+            ON ACTION controlp INFIELD bmif001
+               #add-point:ON ACTION controlp INFIELD bmif001
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaa001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO bmif001  #顯示到畫面上
+               NEXT FIELD bmif001                     #返回原欄位
+               
+            ON ACTION controlp INFIELD bmif004
+               #add-point:ON ACTION controlp INFIELD bmif004
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaa001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO bmif004  #顯示到畫面上
+               NEXT FIELD bmif004                     #返回原欄位
+            
+            ON ACTION controlp INFIELD bmif002
+               #add-point:ON ACTION controlp INFIELD bmif002
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = "221"
+               CALL q_oocq002()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO bmif002  #顯示到畫面上
+               NEXT FIELD bmif002                     #返回原欄位
+               
+            ON ACTION controlp INFIELD bmif008
+               #add-point:ON ACTION controlp INFIELD bmif008
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmao004_1()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO bmif008  #顯示到畫面上
+               NEXT FIELD bmif008      
+            
+            ON ACTION controlp INFIELD bmif005
+               #add-point:ON ACTION controlp INFIELD bmif008
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_bmif005()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO bmif005        #顯示到畫面上
+               NEXT FIELD bmif005     
+               
+            ON ACTION controlp INFIELD bmif007
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               #CALL q_pmaa001()          #呼叫開窗   #160913-00055#1 
+               CALL q_pmaa001_25()        #160913-00055#1 
+               DISPLAY g_qryparam.return1 TO bmif007  #顯示到畫面上
+               NEXT FIELD bmif007                     #返回原欄位               
+                  
+         END CONSTRUCT     
+         #end add-point
+     
+         DISPLAY ARRAY g_bmif_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL abmq400_detail_action_trans()
+ 
+               LET g_master_idx = l_ac
+               #為避免按上下筆時影響執行效能，所以做一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL abmq400_b_fill2()
+               LET g_action_choice = lc_action_choice_old
+ 
+               #add-point:input段before row name="input.body.before_row"
+ 
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+         #add-point:第一頁籤程式段mark結束用 name="ui_dialog.page1.mark.end"
+         
+         #end add-point
+ 
+         DISPLAY ARRAY g_bmif2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 2
+ 
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body2.before_row"
+               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+               DISPLAY g_bmif2_d.getLength() TO FORMONLY.h_count
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_2)
+            
+ 
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL abmq400_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            LET g_bmif_m.bmif001 = 'Y'
+            DISPLAY g_bmif_m.bmif001 TO l_bmif001
+            IF cl_null(g_bmif_m.bmif002) THEN
+               LET g_bmif_m.bmif002 = 'N'
+            END IF
+            IF cl_null(g_bmif_m.bmif003) THEN
+               LET g_bmif_m.bmif003 = 'N'
+            END IF  
+            IF cl_null(g_bmif_m.bmif004) THEN
+               LET g_bmif_m.bmif004 = 'N'
+            END IF   
+            IF cl_null(g_bmif_m.bmif005) THEN
+               LET g_bmif_m.bmif005 = 'N'
+            END IF 
+            IF cl_null(g_bmif_m.bmif006) THEN
+               LET g_bmif_m.bmif006 = 'N'
+            END IF 
+            IF cl_null(g_bmif_m.bmif007) THEN
+               LET g_bmif_m.bmif007 = 'N'
+            END IF    
+            IF cl_null(g_bmif_m.bmif008) THEN
+               LET g_bmif_m.bmif008 = 'N'
+            END IF   
+            #end add-point
+            NEXT FIELD bmif001
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+            
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+         
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+ 
+ 
+            #add-point:ON ACTION accept name="ui_dialog.accept"
+            
+            #end add-point
+ 
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            CALL abmq400_b_fill()
+ 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_bmif_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_bmif2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL abmq400_b_fill()
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL abmq400_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL abmq400_b_fill()
+ 
+         ON ACTION detail_next               #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL abmq400_b_fill()
+ 
+         ON ACTION detail_last               #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL abmq400_b_fill()
+ 
+         #應用 qs19 樣板自動產生(Version:3)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_bmif_d.getLength()
+               LET g_bmif_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_bmif_d.getLength()
+               LET g_bmif_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_bmif_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_bmif_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_bmif_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_bmif_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+ 
+ 
+ 
+ 
+ 
+         #應用 qs16 樣板自動產生(Version:3)
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL abmq400_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+ 
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmq400.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION abmq400_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_from          STRING
+   DEFINE l_order         STRING
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   CALL abmq400_comp_visible()
+   #end add-point
+ 
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:34) add cl_sql_auth_filter()
+ 
+   CALL g_bmif_d.clear()
+   CALL g_bmif2_d.clear()
+ 
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs04 樣板自動產生(Version:9)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET ls_sql_rank = "SELECT  UNIQUE '',bmif001,'','',bmif002,'',bmif003,bmif005,'',bmif004,'','',bmif006, 
+       bmif007,'',bmif008,'','','','','','','','','','','','','','','','','','','','','','','','','', 
+       '','','',bmif019,'',bmif020,'','','',''  ,DENSE_RANK() OVER( ORDER BY bmif_t.bmif001,bmif_t.bmif002, 
+       bmif_t.bmif003,bmif_t.bmif004,bmif_t.bmif005,bmif_t.bmif006,bmif_t.bmif007,bmif_t.bmif008) AS RANK FROM bmif_t", 
+ 
+ 
+ 
+                     " LEFT JOIN bmig_t ON bmif001 = bmig001 AND bmif002 = bmig002 AND bmif003 = bmig003 AND bmif004 = bmig004 AND bmif005 = bmig005 AND bmif006 = bmig006 AND bmif007 = bmig007 AND bmif008 = bmig009 AND",
+                     " WHERE bmifent= ? AND 1=1 AND ", ls_wc
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("bmif_t"),
+                     " ORDER BY bmif_t.bmif001,bmif_t.bmif002,bmif_t.bmif003,bmif_t.bmif004,bmif_t.bmif005,bmif_t.bmif006,bmif_t.bmif007,bmif_t.bmif008"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+   
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql  #總筆數
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '',bmif001,'','',bmif002,'',bmif003,bmif005,'',bmif004,'','',bmif006,bmif007, 
+       '',bmif008,'','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+       bmif019,'',bmif020,'','','',''",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+   LET g_sql = "SELECT UNIQUE '',bmif001,a.imaal003,a.imaal004"           
+   LET l_from = " FROM bmif_t",
+                " LEFT OUTER JOIN imaal_t a ON a.imaalent=bmifent AND a.imaal001=bmif001 AND a.imaal002='",g_dlang,"'"   
+   LET l_order = " ORDER BY bmif001"             
+   IF g_bmif_m.bmif002 = 'Y' THEN 
+      LET g_sql = g_sql,",bmif002,oocql004"
+      LET l_from = l_from," LEFT OUTER JOIN oocql_t ON oocqlent=bmifent AND oocql001='221' AND oocql002=bmif002 AND oocql003='",g_dlang,"'"
+      LET l_order = l_order,",bmif002"
+   ELSE
+      LET g_sql = g_sql,",'',''"
+   END IF
+   IF g_bmif_m.bmif003 = 'Y' THEN 
+      LET g_sql = g_sql,",bmif003"
+      LET l_order = l_order,",bmif003"
+   ELSE
+      LET g_sql = g_sql,",''"
+   END IF 
+   IF g_bmif_m.bmif005 = 'Y' THEN 
+      LET g_sql = g_sql,",bmif005,''"
+      LET l_order = l_order,",bmif005"
+   ELSE
+      LET g_sql = g_sql,",'',''"
+   END IF    
+   IF g_bmif_m.bmif004 = 'Y' THEN 
+      LET g_sql = g_sql,",bmif004,b.imaal003,b.imaal004"
+      LET l_from = l_from," LEFT OUTER JOIN imaal_t b ON b.imaalent=bmifent AND b.imaal001=bmif004 AND b.imaal002='",g_dlang,"'"
+      LET l_order = l_order,",bmif004"
+   ELSE
+      LET g_sql = g_sql,",'','',''"
+   END IF   
+   IF g_bmif_m.bmif006 = 'Y' THEN 
+      LET g_sql = g_sql,",bmif006"
+      LET l_order = l_order,",bmif006"
+   ELSE
+      LET g_sql = g_sql,",''"
+   END IF    
+   IF g_bmif_m.bmif007 = 'Y' THEN 
+      LET g_sql = g_sql,",bmif007,pmaal003"
+      LET l_from = l_from," LEFT OUTER JOIN pmaal_t ON pmaalent=bmifent AND pmaal001=bmif007 AND pmaal002='",g_dlang,"'"
+      LET l_order = l_order,",bmif007"
+   ELSE
+      LET g_sql = g_sql,",'',''"
+   END IF   
+   IF g_bmif_m.bmif008 = 'Y' THEN 
+      LET g_sql = g_sql,",bmif008,c.imaal003,c.imaal004"
+      LET l_from = l_from," LEFT OUTER JOIN imaal_t c ON c.imaalent=bmifent AND c.imaal001=bmif008 AND c.imaal002='",g_dlang,"'"
+      LET l_order = l_order,",bmif008"
+   ELSE
+      LET g_sql = g_sql,",'','',''"
+   END IF                    
+   LET g_sql = g_sql,l_from," WHERE bmifent= ? AND 1=1 AND ",ls_wc,
+                cl_sql_add_filter("bmif_t"),l_order
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE abmq400_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR abmq400_pb
+ 
+   OPEN b_fill_curs USING g_enterprise
+ 
+   FOREACH b_fill_curs INTO g_bmif_d[l_ac].sel,g_bmif_d[l_ac].bmif001,g_bmif_d[l_ac].bmif001_desc,g_bmif_d[l_ac].bmif001_desc_desc, 
+       g_bmif_d[l_ac].bmif002,g_bmif_d[l_ac].bmif002_desc,g_bmif_d[l_ac].bmif003,g_bmif_d[l_ac].bmif005, 
+       g_bmif_d[l_ac].bmif005_desc,g_bmif_d[l_ac].bmif004,g_bmif_d[l_ac].bmif004_desc,g_bmif_d[l_ac].bmif004_desc_desc, 
+       g_bmif_d[l_ac].bmif006,g_bmif_d[l_ac].bmif007,g_bmif_d[l_ac].bmif007_desc,g_bmif_d[l_ac].bmif008, 
+       g_bmif_d[l_ac].bmif008_desc,g_bmif_d[l_ac].bmif008_desc_desc,g_bmif2_d[l_ac].bmig001,g_bmif2_d[l_ac].bmig001_desc, 
+       g_bmif2_d[l_ac].bmig001_desc_desc,g_bmif2_d[l_ac].bmig002,g_bmif2_d[l_ac].bmig002_desc,g_bmif2_d[l_ac].bmig003, 
+       g_bmif2_d[l_ac].bmig005,g_bmif2_d[l_ac].bmig005_desc,g_bmif2_d[l_ac].bmig004,g_bmif2_d[l_ac].bmig004_desc, 
+       g_bmif2_d[l_ac].bmig004_desc_desc,g_bmif2_d[l_ac].bmig006,g_bmif2_d[l_ac].bmig007,g_bmif2_d[l_ac].bmig007_desc, 
+       g_bmif2_d[l_ac].bmig008,g_bmif2_d[l_ac].bmig008_desc,g_bmif2_d[l_ac].bmig008_desc_desc,g_bmif2_d[l_ac].bmig009, 
+       g_bmif2_d[l_ac].bmig009_desc,g_bmif2_d[l_ac].bmig011,g_bmif2_d[l_ac].bmig012,g_bmif2_d[l_ac].bmig016, 
+       g_bmif2_d[l_ac].bmig017,g_bmif2_d[l_ac].bmig013,g_bmif2_d[l_ac].bmig014,g_bmif2_d[l_ac].bmig015, 
+       g_bmif2_d[l_ac].bmif019,g_bmif2_d[l_ac].bmif019_desc,g_bmif2_d[l_ac].bmif020,g_bmif2_d[l_ac].bmif020_desc, 
+       g_bmif2_d[l_ac].bmig010,g_bmif2_d[l_ac].bmig018,g_bmif2_d[l_ac].bmig018_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      
+      #end add-point
+ 
+      CALL abmq400_detail_show("'1'")
+ 
+      CALL abmq400_bmif_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+   #應用 qs05 樣板自動產生(Version:4)
+   #+ b_fill段其他table資料取得(包含sql組成及資料填充)
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   
+   #end add-point
+ 
+   CALL g_bmif_d.deleteElement(g_bmif_d.getLength())
+   CALL g_bmif2_d.deleteElement(g_bmif2_d.getLength())
+ 
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   CALL FGL_SET_ARR_CURR(1)    
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_bmif_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #應用 qs06 樣板自動產生(Version:3)
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE abmq400_pb
+ 
+ 
+ 
+ 
+ 
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL abmq400_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL abmq400_detail_action_trans()
+ 
+   LET l_ac = 1
+   IF g_bmif_d.getLength() > 0 THEN
+      CALL abmq400_b_fill2()
+   END IF
+ 
+      CALL abmq400_filter_show('bmif001','b_bmif001')
+   CALL abmq400_filter_show('bmif002','b_bmif002')
+   CALL abmq400_filter_show('bmif003','b_bmif003')
+   CALL abmq400_filter_show('bmif005','b_bmif005')
+   CALL abmq400_filter_show('bmif004','b_bmif004')
+   CALL abmq400_filter_show('bmif006','b_bmif006')
+   CALL abmq400_filter_show('bmif007','b_bmif007')
+   CALL abmq400_filter_show('bmif008','b_bmif008')
+   CALL abmq400_filter_show('bmig001','b_bmig001')
+   CALL abmq400_filter_show('bmig002','b_bmig002')
+   CALL abmq400_filter_show('bmig003','b_bmig003')
+   CALL abmq400_filter_show('bmig005','b_bmig005')
+   CALL abmq400_filter_show('bmig004','b_bmig004')
+   CALL abmq400_filter_show('bmig006','b_bmig006')
+   CALL abmq400_filter_show('bmig007','b_bmig007')
+   CALL abmq400_filter_show('bmig008','b_bmig008')
+   CALL abmq400_filter_show('bmig009','b_bmig009')
+   CALL abmq400_filter_show('bmig011','b_bmig011')
+   CALL abmq400_filter_show('bmig012','b_bmig012')
+   CALL abmq400_filter_show('bmig016','b_bmig016')
+   CALL abmq400_filter_show('bmig017','b_bmig017')
+   CALL abmq400_filter_show('bmig013','b_bmig013')
+   CALL abmq400_filter_show('bmig014','b_bmig014')
+   CALL abmq400_filter_show('bmig015','b_bmig015')
+   CALL abmq400_filter_show('bmif019','b_bmif019')
+   CALL abmq400_filter_show('bmif020','b_bmif020')
+   CALL abmq400_filter_show('bmig010','b_bmig010')
+   CALL abmq400_filter_show('bmig018','b_bmig018')
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmq400.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION abmq400_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   DEFINE l_sql           STRING
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="b_fill2.before_function"
+   
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #應用 qs07 樣板自動產生(Version:7)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+ 
+   #add-point:陣列清空 name="b_fill2.array_clear"
+   CALL g_bmif2_d.clear() 
+   IF l_ac = 0  OR cl_null(g_bmif_d[l_ac].bmif001) THEN
+      RETURN
+   END IF
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:陣列長度調整 name="b_fill2.array_deleteElement"
+   
+   #end add-point
+ 
+ 
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx2 = 1
+   DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+ 
+ 
+ 
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   LET l_sql = " SELECT DISTINCT bmig001,a.imaal003,a.imaal004,bmig002,a.oocql004,bmig003,bmig005,'',bmig004,b.imaal003,b.imaal004,",
+               "        bmig006,bmig007,pmaal003,bmig008,c.imaal003,c.imaal004,bmig009,b.oocql004,",
+               "        bmig011,bmig012,bmig016,bmig017,bmig013,bmig014,bmig015,bmif019,a.ooag011,bmif020,ooefl003,bmig010,bmig018,b.ooag011 ",
+               "   FROM bmig_t ",
+               "        LEFT OUTER JOIN imaal_t a ON a.imaalent=bmigent AND a.imaal001=bmig001 AND a.imaal002='",g_dlang,"'",
+               "        LEFT OUTER JOIN oocql_t a ON a.oocqlent=bmigent AND a.oocql001='221' AND a.oocql002=bmig002 AND a.oocql003='",g_dlang,"'",
+               "        LEFT OUTER JOIN imaal_t b ON b.imaalent=bmigent AND b.imaal001=bmig004 AND b.imaal002='",g_dlang,"'",
+               "        LEFT OUTER JOIN pmaal_t ON pmaalent=bmigent AND pmaal001=bmig007 AND pmaal002='",g_dlang,"'",
+               "        LEFT OUTER JOIN imaal_t c ON c.imaalent=bmigent AND c.imaal001=bmig008 AND c.imaal002='",g_dlang,"'",
+               "        LEFT OUTER JOIN oocql_t b ON b.oocqlent=bmigent AND b.oocql001='1116' AND b.oocql002=bmig009 AND b.oocql003='",g_dlang,"'",
+               "        LEFT OUTER JOIN ooag_t b ON b.ooagent=bmigent AND b.ooag001=bmig018 ",
+               "        ,bmif_t",
+               "        LEFT OUTER JOIN ooag_t a ON a.ooagent=bmifent AND a.ooag001=bmif019 ",
+               "        LEFT OUTER JOIN ooefl_t ON ooeflent=bmifent AND ooefl001=bmif020 AND ooefl002='",g_dlang,"'",               
+               "  WHERE bmifent = bmifent AND bmif001 = bmig001 AND bmif002 = bmig002 AND bmif003 = bmig003 AND bmif004 = bmig004 ",
+               "    AND bmif005 = bmig005  AND bmif006 = bmig006  AND bmif007 = bmig007 AND bmif008 = bmig008 ",
+               "    AND bmifent = ? ",
+               "    AND bmif001 = '",g_bmif_d[l_ac].bmif001,"'"
+   IF g_bmif_d[l_ac].bmif002 IS NOT NULL THEN
+      LET l_sql = l_sql CLIPPED," AND bmig002 = '",g_bmif_d[l_ac].bmif002,"'"
+   END IF
+   IF g_bmif_d[l_ac].bmif003 IS NOT NULL THEN
+      LET l_sql = l_sql CLIPPED," AND bmig003 = '",g_bmif_d[l_ac].bmif003,"'"
+   END IF   
+   IF g_bmif_d[l_ac].bmif004 IS NOT NULL THEN
+      LET l_sql = l_sql CLIPPED," AND bmig004 = '",g_bmif_d[l_ac].bmif004,"'"
+   END IF
+   IF g_bmif_d[l_ac].bmif005 IS NOT NULL THEN
+      LET l_sql = l_sql CLIPPED," AND bmig005 = '",g_bmif_d[l_ac].bmif005,"'"
+   END IF   
+   IF g_bmif_d[l_ac].bmif006 IS NOT NULL THEN
+      LET l_sql = l_sql CLIPPED," AND bmig006 = '",g_bmif_d[l_ac].bmif006,"'"
+   END IF
+   IF g_bmif_d[l_ac].bmif007 IS NOT NULL THEN
+      LET l_sql = l_sql CLIPPED," AND bmig007 = '",g_bmif_d[l_ac].bmif007,"'"
+   END IF   
+   IF g_bmif_d[l_ac].bmif008 IS NOT NULL THEN
+      LET l_sql = l_sql CLIPPED," AND bmig008 = '",g_bmif_d[l_ac].bmif008,"'"
+   END IF   
+   
+   PREPARE abmq400_pb_01 FROM l_sql
+   DECLARE b_fill_curs_01 CURSOR FOR abmq400_pb_01  
+   
+   OPEN b_fill_curs_01 USING g_enterprise 
+   LET l_ac2 = 1   
+   FOREACH b_fill_curs_01 INTO g_bmif2_d[l_ac2].bmig001,g_bmif2_d[l_ac2].bmig001_desc,g_bmif2_d[l_ac2].bmig001_desc_desc,g_bmif2_d[l_ac2].bmig002,
+                               g_bmif2_d[l_ac2].bmig002_desc,g_bmif2_d[l_ac2].bmig003,g_bmif2_d[l_ac2].bmig005,g_bmif2_d[l_ac2].bmig005_desc,
+                               g_bmif2_d[l_ac2].bmig004,g_bmif2_d[l_ac2].bmig004_desc,
+                               g_bmif2_d[l_ac2].bmig004_desc_desc,g_bmif2_d[l_ac2].bmig006,g_bmif2_d[l_ac2].bmig007,g_bmif2_d[l_ac2].bmig007_desc,
+                               g_bmif2_d[l_ac2].bmig008,g_bmif2_d[l_ac2].bmig008_desc,g_bmif2_d[l_ac2].bmig008_desc_desc,g_bmif2_d[l_ac2].bmig009,
+                               g_bmif2_d[l_ac2].bmig009_desc,g_bmif2_d[l_ac2].bmig011,g_bmif2_d[l_ac2].bmig012,g_bmif2_d[l_ac2].bmig016,g_bmif2_d[l_ac2].bmig017,
+                               g_bmif2_d[l_ac2].bmig013,g_bmif2_d[l_ac2].bmig014,g_bmif2_d[l_ac2].bmig015,g_bmif2_d[l_ac2].bmif019,g_bmif2_d[l_ac2].bmif019_desc,
+                               g_bmif2_d[l_ac2].bmif020,g_bmif2_d[l_ac2].bmif020_desc,g_bmif2_d[l_ac2].bmig010,g_bmif2_d[l_ac2].bmig018,g_bmif2_d[l_ac2].bmig018_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+      CALL abmq400_detail_show("'2'")
+ 
+      LET l_ac2 = l_ac2 + 1
+      IF l_ac2 > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF                               
+    END FOREACH
+    CALL g_bmif2_d.deleteElement(g_bmif2_d.getLength())
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmq400.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION abmq400_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+      IF g_bmif_m.bmif005 = 'Y' THEN
+         CALL s_feature_description(g_bmif_d[l_ac].bmif001,g_bmif_d[l_ac].bmif005) RETURNING g_success,g_bmif_d[l_ac].bmif005_desc
+      END IF
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+ 
+      #add-point:show段單身reference name="detail_show.body2.reference"
+      IF g_bmif_m.bmif005 = 'N' THEN
+         CALL s_feature_description(g_bmif_d[l_ac].bmif001,g_bmif2_d[l_ac2].bmig005) RETURNING g_success,g_bmif2_d[l_ac2].bmig005_desc
+      END IF
+
+#   INITIALIZE g_ref_fields TO NULL 
+#   LET g_ref_fields[1] = g_bmif_d[l_ac].bmif001
+#   LET g_ref_fields[2] = g_bmif_d[l_ac].bmif002
+#   LET g_ref_fields[3] = g_bmif_d[l_ac].bmif003
+#   LET g_ref_fields[4] = g_bmif_d[l_ac].bmif004
+#   LET g_ref_fields[5] = g_bmif_d[l_ac].bmif005
+#   LET g_ref_fields[6] = g_bmif_d[l_ac].bmif006
+#   LET g_ref_fields[7] = g_bmif_d[l_ac].bmif007
+#   LET g_ref_fields[8] = g_bmif_d[l_ac].bmif008
+#   LET ls_sql = " SELECT bmig001,bmig002,bmig003,bmig005,bmig004,bmig006,bmig007,bmig008,bmig009,bmig011,bmig012,bmig016,bmig017,bmig013,bmig014,bmig015,bmig010,bmig018 FROM bmig_t WHERE bmigent = '"||g_enterprise||"' AND "
+#   LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+#   CALL ap_ref_array2(g_ref_fields,ls_sel_sql,"") RETURNING g_rtn_fields 
+#   LET g_bmif2_d[l_ac].bmig001 = g_rtn_fields[1] 
+#   LET g_bmif2_d[l_ac].bmig002 = g_rtn_fields[2] 
+#   LET g_bmif2_d[l_ac].bmig003 = g_rtn_fields[3] 
+#   LET g_bmif2_d[l_ac].bmig005 = g_rtn_fields[4] 
+#   LET g_bmif2_d[l_ac].bmig004 = g_rtn_fields[5] 
+#   LET g_bmif2_d[l_ac].bmig006 = g_rtn_fields[6] 
+#   LET g_bmif2_d[l_ac].bmig007 = g_rtn_fields[7] 
+#   LET g_bmif2_d[l_ac].bmig008 = g_rtn_fields[8] 
+#   LET g_bmif2_d[l_ac].bmig009 = g_rtn_fields[9] 
+#   LET g_bmif2_d[l_ac].bmig011 = g_rtn_fields[10] 
+#   LET g_bmif2_d[l_ac].bmig012 = g_rtn_fields[11] 
+#   LET g_bmif2_d[l_ac].bmig016 = g_rtn_fields[12] 
+#   LET g_bmif2_d[l_ac].bmig017 = g_rtn_fields[13] 
+#   LET g_bmif2_d[l_ac].bmig013 = g_rtn_fields[14] 
+#   LET g_bmif2_d[l_ac].bmig014 = g_rtn_fields[15] 
+#   LET g_bmif2_d[l_ac].bmig015 = g_rtn_fields[16] 
+#   LET g_bmif2_d[l_ac].bmig010 = g_rtn_fields[17] 
+#   LET g_bmif2_d[l_ac].bmig018 = g_rtn_fields[18] 
+#   DISPLAY BY NAME g_bmif2_d[l_ac].bmig001,g_bmif2_d[l_ac].bmig002,g_bmif2_d[l_ac].bmig003,g_bmif2_d[l_ac].bmig005,g_bmif2_d[l_ac].bmig004,g_bmif2_d[l_ac].bmig006,g_bmif2_d[l_ac].bmig007,g_bmif2_d[l_ac].bmig008,g_bmif2_d[l_ac].bmig009,g_bmif2_d[l_ac].bmig011,g_bmif2_d[l_ac].bmig012,g_bmif2_d[l_ac].bmig016,g_bmif2_d[l_ac].bmig017,g_bmif2_d[l_ac].bmig013,g_bmif2_d[l_ac].bmig014,g_bmif2_d[l_ac].bmig015,g_bmif2_d[l_ac].bmig010,g_bmif2_d[l_ac].bmig018
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmq400.filter" >}
+#應用 qs13 樣板自動產生(Version:8)
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION abmq400_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #應用 qs08 樣板自動產生(Version:5)
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON bmif001,bmif002,bmif003,bmif005,bmif004,bmif006,bmif007,bmif008,bmig001, 
+          bmig002,bmig003,bmig005,bmig004,bmig006,bmig007,bmig008,bmig009,bmig011,bmig012,bmig016,bmig017, 
+          bmig013,bmig014,bmig015,bmif019,bmif020,bmig010,bmig018
+                          FROM s_detail1[1].b_bmif001,s_detail1[1].b_bmif002,s_detail1[1].b_bmif003, 
+                              s_detail1[1].b_bmif005,s_detail1[1].b_bmif004,s_detail1[1].b_bmif006,s_detail1[1].b_bmif007, 
+                              s_detail1[1].b_bmif008,s_detail2[1].b_bmig001,s_detail2[1].b_bmig002,s_detail2[1].b_bmig003, 
+                              s_detail2[1].b_bmig005,s_detail2[1].b_bmig004,s_detail2[1].b_bmig006,s_detail2[1].b_bmig007, 
+                              s_detail2[1].b_bmig008,s_detail2[1].b_bmig009,s_detail2[1].b_bmig011,s_detail2[1].b_bmig012, 
+                              s_detail2[1].b_bmig016,s_detail2[1].b_bmig017,s_detail2[1].b_bmig013,s_detail2[1].b_bmig014, 
+                              s_detail2[1].b_bmig015,s_detail2[1].b_bmif019,s_detail2[1].b_bmif020,s_detail2[1].b_bmig010, 
+                              s_detail2[1].b_bmig018
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY abmq400_filter_parser('bmif001') TO s_detail1[1].b_bmif001
+            DISPLAY abmq400_filter_parser('bmif002') TO s_detail1[1].b_bmif002
+            DISPLAY abmq400_filter_parser('bmif003') TO s_detail1[1].b_bmif003
+            DISPLAY abmq400_filter_parser('bmif005') TO s_detail1[1].b_bmif005
+            DISPLAY abmq400_filter_parser('bmif004') TO s_detail1[1].b_bmif004
+            DISPLAY abmq400_filter_parser('bmif006') TO s_detail1[1].b_bmif006
+            DISPLAY abmq400_filter_parser('bmif007') TO s_detail1[1].b_bmif007
+            DISPLAY abmq400_filter_parser('bmif008') TO s_detail1[1].b_bmif008
+            DISPLAY abmq400_filter_parser('bmig001') TO s_detail2[1].b_bmig001
+            DISPLAY abmq400_filter_parser('bmig002') TO s_detail2[1].b_bmig002
+            DISPLAY abmq400_filter_parser('bmig003') TO s_detail2[1].b_bmig003
+            DISPLAY abmq400_filter_parser('bmig005') TO s_detail2[1].b_bmig005
+            DISPLAY abmq400_filter_parser('bmig004') TO s_detail2[1].b_bmig004
+            DISPLAY abmq400_filter_parser('bmig006') TO s_detail2[1].b_bmig006
+            DISPLAY abmq400_filter_parser('bmig007') TO s_detail2[1].b_bmig007
+            DISPLAY abmq400_filter_parser('bmig008') TO s_detail2[1].b_bmig008
+            DISPLAY abmq400_filter_parser('bmig009') TO s_detail2[1].b_bmig009
+            DISPLAY abmq400_filter_parser('bmig011') TO s_detail2[1].b_bmig011
+            DISPLAY abmq400_filter_parser('bmig012') TO s_detail2[1].b_bmig012
+            DISPLAY abmq400_filter_parser('bmig016') TO s_detail2[1].b_bmig016
+            DISPLAY abmq400_filter_parser('bmig017') TO s_detail2[1].b_bmig017
+            DISPLAY abmq400_filter_parser('bmig013') TO s_detail2[1].b_bmig013
+            DISPLAY abmq400_filter_parser('bmig014') TO s_detail2[1].b_bmig014
+            DISPLAY abmq400_filter_parser('bmig015') TO s_detail2[1].b_bmig015
+            DISPLAY abmq400_filter_parser('bmif019') TO s_detail2[1].b_bmif019
+            DISPLAY abmq400_filter_parser('bmif020') TO s_detail2[1].b_bmif020
+            DISPLAY abmq400_filter_parser('bmig010') TO s_detail2[1].b_bmig010
+            DISPLAY abmq400_filter_parser('bmig018') TO s_detail2[1].b_bmig018
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+ 
+         #單身一般欄位開窗相關處理
+                  #----<<sel>>----
+         #----<<b_bmif001>>----
+         #Ctrlp:construct.c.page1.b_bmif001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmif001
+            #add-point:ON ACTION controlp INFIELD b_bmif001 name="construct.c.filter.page1.b_bmif001"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_bmif001  #顯示到畫面上
+            NEXT FIELD b_bmif001                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #----<<b_bmif001_desc>>----
+         #----<<b_bmif001_desc_desc>>----
+         #----<<b_bmif002>>----
+         #Ctrlp:construct.c.page1.b_bmif002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmif002
+            #add-point:ON ACTION controlp INFIELD b_bmif002 name="construct.c.filter.page1.b_bmif002"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_bmif002  #顯示到畫面上
+            NEXT FIELD b_bmif002                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #----<<b_bmif002_desc>>----
+         #----<<b_bmif003>>----
+         #Ctrlp:construct.c.filter.page1.b_bmif003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmif003
+            #add-point:ON ACTION controlp INFIELD b_bmif003 name="construct.c.filter.page1.b_bmif003"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmif005>>----
+         #Ctrlp:construct.c.filter.page1.b_bmif005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmif005
+            #add-point:ON ACTION controlp INFIELD b_bmif005 name="construct.c.filter.page1.b_bmif005"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmif005_desc>>----
+         #----<<b_bmif004>>----
+         #Ctrlp:construct.c.page1.b_bmif004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmif004
+            #add-point:ON ACTION controlp INFIELD b_bmif004 name="construct.c.filter.page1.b_bmif004"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_bmif004  #顯示到畫面上
+            NEXT FIELD b_bmif004                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #----<<b_bmif004_desc>>----
+         #----<<b_bmif004_desc_desc>>----
+         #----<<b_bmif006>>----
+         #Ctrlp:construct.c.filter.page1.b_bmif006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmif006
+            #add-point:ON ACTION controlp INFIELD b_bmif006 name="construct.c.filter.page1.b_bmif006"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmif007>>----
+         #Ctrlp:construct.c.page1.b_bmif007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmif007
+            #add-point:ON ACTION controlp INFIELD b_bmif007 name="construct.c.filter.page1.b_bmif007"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            #CALL q_pmaa001_3()    #呼叫開窗 #160913-00055#1 
+            CALL q_pmaa001_25()        #160913-00055#1 
+            DISPLAY g_qryparam.return1 TO b_bmif007  #顯示到畫面上
+            NEXT FIELD b_bmif007                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #----<<b_bmif007_desc>>----
+         #----<<b_bmif008>>----
+         #Ctrlp:construct.c.page1.b_bmif008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmif008
+            #add-point:ON ACTION controlp INFIELD b_bmif008 name="construct.c.filter.page1.b_bmif008"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmao004_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_bmif008  #顯示到畫面上
+            NEXT FIELD b_bmif008                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #----<<b_bmif008_desc>>----
+         #----<<b_bmif008_desc_desc>>----
+         #----<<b_bmig001>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig001
+            #add-point:ON ACTION controlp INFIELD b_bmig001 name="construct.c.filter.page2.b_bmig001"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig001_desc>>----
+         #----<<b_bmig001_desc_desc>>----
+         #----<<b_bmig002>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig002
+            #add-point:ON ACTION controlp INFIELD b_bmig002 name="construct.c.filter.page2.b_bmig002"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig002_desc>>----
+         #----<<b_bmig003>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig003
+            #add-point:ON ACTION controlp INFIELD b_bmig003 name="construct.c.filter.page2.b_bmig003"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig005>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig005
+            #add-point:ON ACTION controlp INFIELD b_bmig005 name="construct.c.filter.page2.b_bmig005"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig005_desc>>----
+         #----<<b_bmig004>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig004
+            #add-point:ON ACTION controlp INFIELD b_bmig004 name="construct.c.filter.page2.b_bmig004"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig004_desc>>----
+         #----<<b_bmig004_desc_desc>>----
+         #----<<b_bmig006>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig006
+            #add-point:ON ACTION controlp INFIELD b_bmig006 name="construct.c.filter.page2.b_bmig006"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig007>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig007
+            #add-point:ON ACTION controlp INFIELD b_bmig007 name="construct.c.filter.page2.b_bmig007"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig007_desc>>----
+         #----<<b_bmig008>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig008
+            #add-point:ON ACTION controlp INFIELD b_bmig008 name="construct.c.filter.page2.b_bmig008"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig008_desc>>----
+         #----<<b_bmig008_desc_desc>>----
+         #----<<b_bmig009>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig009
+            #add-point:ON ACTION controlp INFIELD b_bmig009 name="construct.c.filter.page2.b_bmig009"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig009_desc>>----
+         #----<<b_bmig011>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig011
+            #add-point:ON ACTION controlp INFIELD b_bmig011 name="construct.c.filter.page2.b_bmig011"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig012>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig012
+            #add-point:ON ACTION controlp INFIELD b_bmig012 name="construct.c.filter.page2.b_bmig012"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig016>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig016
+            #add-point:ON ACTION controlp INFIELD b_bmig016 name="construct.c.filter.page2.b_bmig016"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig017>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig017
+            #add-point:ON ACTION controlp INFIELD b_bmig017 name="construct.c.filter.page2.b_bmig017"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig013>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig013
+            #add-point:ON ACTION controlp INFIELD b_bmig013 name="construct.c.filter.page2.b_bmig013"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig014>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig014
+            #add-point:ON ACTION controlp INFIELD b_bmig014 name="construct.c.filter.page2.b_bmig014"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig015>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig015
+            #add-point:ON ACTION controlp INFIELD b_bmig015 name="construct.c.filter.page2.b_bmig015"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmif019>>----
+         #Ctrlp:construct.c.page2.b_bmif019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmif019
+            #add-point:ON ACTION controlp INFIELD b_bmif019 name="construct.c.filter.page2.b_bmif019"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_bmif019  #顯示到畫面上
+            NEXT FIELD b_bmif019                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #----<<b_bmif019_desc>>----
+         #----<<b_bmif020>>----
+         #Ctrlp:construct.c.page2.b_bmif020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmif020
+            #add-point:ON ACTION controlp INFIELD b_bmif020 name="construct.c.filter.page2.b_bmif020"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_bmif020  #顯示到畫面上
+            NEXT FIELD b_bmif020                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #----<<b_bmif020_desc>>----
+         #----<<b_bmig010>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig010
+            #add-point:ON ACTION controlp INFIELD b_bmig010 name="construct.c.filter.page2.b_bmig010"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig018>>----
+         #Ctrlp:construct.c.filter.page2.b_bmig018
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_bmig018
+            #add-point:ON ACTION controlp INFIELD b_bmig018 name="construct.c.filter.page2.b_bmig018"
+            
+            #END add-point
+ 
+ 
+         #----<<b_bmig018_desc>>----
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+ 
+ 
+   
+ 
+   #add-point:離開DIALOG後相關處理 name="filter.after_dialog"
+   
+   #end add-point
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL abmq400_filter_show('bmif001','b_bmif001')
+   CALL abmq400_filter_show('bmif002','b_bmif002')
+   CALL abmq400_filter_show('bmif003','b_bmif003')
+   CALL abmq400_filter_show('bmif005','b_bmif005')
+   CALL abmq400_filter_show('bmif004','b_bmif004')
+   CALL abmq400_filter_show('bmif006','b_bmif006')
+   CALL abmq400_filter_show('bmif007','b_bmif007')
+   CALL abmq400_filter_show('bmif008','b_bmif008')
+   CALL abmq400_filter_show('bmig001','b_bmig001')
+   CALL abmq400_filter_show('bmig002','b_bmig002')
+   CALL abmq400_filter_show('bmig003','b_bmig003')
+   CALL abmq400_filter_show('bmig005','b_bmig005')
+   CALL abmq400_filter_show('bmig004','b_bmig004')
+   CALL abmq400_filter_show('bmig006','b_bmig006')
+   CALL abmq400_filter_show('bmig007','b_bmig007')
+   CALL abmq400_filter_show('bmig008','b_bmig008')
+   CALL abmq400_filter_show('bmig009','b_bmig009')
+   CALL abmq400_filter_show('bmig011','b_bmig011')
+   CALL abmq400_filter_show('bmig012','b_bmig012')
+   CALL abmq400_filter_show('bmig016','b_bmig016')
+   CALL abmq400_filter_show('bmig017','b_bmig017')
+   CALL abmq400_filter_show('bmig013','b_bmig013')
+   CALL abmq400_filter_show('bmig014','b_bmig014')
+   CALL abmq400_filter_show('bmig015','b_bmig015')
+   CALL abmq400_filter_show('bmif019','b_bmif019')
+   CALL abmq400_filter_show('bmif020','b_bmif020')
+   CALL abmq400_filter_show('bmig010','b_bmig010')
+   CALL abmq400_filter_show('bmig018','b_bmig018')
+ 
+ 
+   CALL abmq400_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmq400.filter_parser" >}
+#應用 qs14 樣板自動產生(Version:6)
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION abmq400_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   
+   #end add-point
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="abmq400.filter_show" >}
+#應用 qs15 樣板自動產生(Version:6)
+#+ filter標題欄位顯示搜尋條件
+PRIVATE FUNCTION abmq400_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = abmq400_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="abmq400.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION abmq400_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmq400.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION abmq400_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="detail_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_bmif_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_bmif_d.getLength() AND g_bmif_d.getLength() > 0
+            LET g_detail_idx = g_bmif_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_bmif_d.getLength() THEN
+               LET g_detail_idx = g_bmif_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmq400.mask_functions" >}
+ &include "erp/abm/abmq400_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="abmq400.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 根據單頭資料內容動態顯示資料清單、承認異動記錄
+# Memo...........:
+# Usage..........: CALL abmq400_comp_visible()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abmq400_comp_visible()
+   #资料清单页签栏位隐藏
+   CALL cl_set_comp_visible("b_bmif002,b_bmif002_desc,b_bmif003,b_bmif005,b_bmif005_desc,b_bmif004,b_bmif004_desc,b_bmif004_desc_desc,b_bmif006,b_bmif007,b_bmif007_desc,b_bmif008,b_bmif008_desc,b_bmif008_desc_desc",FALSE)
+   #承認異動記錄隱藏   
+   CALL cl_set_comp_visible("b_bmig002,b_bmig002_desc,b_bmig003,b_bmig005,b_bmig005_desc,b_bmig004,b_bmig004_desc,b_bmig004_desc_desc,b_bmig006,b_bmig007,b_bmig007_desc,b_bmig008,b_bmig008_desc,b_bmig008_desc_desc",TRUE)
+   IF g_bmif_m.bmif002 = 'Y' THEN
+      CALL cl_set_comp_visible("b_bmif002,b_bmif002_desc",TRUE)
+      CALL cl_set_comp_visible("b_bmig002,b_bmig002_desc",FALSE)
+   END IF
+   IF g_bmif_m.bmif003 = 'Y' THEN
+      CALL cl_set_comp_visible("b_bmif003",TRUE)
+      CALL cl_set_comp_visible("b_bmig003",FALSE)
+   END IF  
+   IF g_bmif_m.bmif004 = 'Y' THEN
+      CALL cl_set_comp_visible("b_bmif004,b_bmif004_desc,b_bmif004_desc_desc",TRUE)
+      CALL cl_set_comp_visible("b_bmig004,b_bmig004_desc,b_bmig004_desc_desc",FALSE)
+   END IF     
+   IF g_bmif_m.bmif005 = 'Y' THEN
+      CALL cl_set_comp_visible("b_bmif005,b_bmif005_desc",TRUE)
+      CALL cl_set_comp_visible("b_bmig005,b_bmig005_desc",FALSE)
+   END IF     
+   IF g_bmif_m.bmif006 = 'Y' THEN
+      CALL cl_set_comp_visible("b_bmif006",TRUE)
+      CALL cl_set_comp_visible("b_bmig006",FALSE)
+   END IF       
+   IF g_bmif_m.bmif007 = 'Y' THEN
+      CALL cl_set_comp_visible("b_bmif007,b_bmif007_desc",TRUE)
+      CALL cl_set_comp_visible("b_bmig007,b_bmig007_desc",FALSE)
+   END IF  
+   IF g_bmif_m.bmif008 = 'Y' THEN
+      CALL cl_set_comp_visible("b_bmif008,b_bmif008_desc,b_bmif008_desc_desc",TRUE)
+      CALL cl_set_comp_visible("b_bmig008,b_bmig008_desc,b_bmig008_desc_desc",FALSE)
+   END IF    
+END FUNCTION
+
+ 
+{</section>}
+ 

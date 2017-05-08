@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="anmi110_01" std_prog="anmi110_01" erpver="1.0" module="ANM" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="function.anmi110_01_nmac001_chk" order="" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#检查资料的存在及有效性
+PRIVATE FUNCTION anmi110_01_nmac001_chk(p_nmac001)
+   DEFINE p_nmac001     LIKE nmac_t.nmac001
+   DEFINE r_errno       LIKE type_t.chr20
+   DEFINE l_ooalstus    LIKE ooal_t.ooalstus
+   DEFINE l_ooal002     LIKE ooal_t.ooal002
+
+
+   LET r_errno = ''
+
+   SELECT ooal002,ooalstus INTO l_ooal002,l_ooalstus
+     FROM ooal_t
+    WHERE ooalent = g_enterprise
+      AND ooal001 = 4
+      AND ooal002 = p_nmac001
+
+    CASE
+       WHEN sqlca.sqlcode = 100   LET r_errno = 'aoo-00125'
+       WHEN l_ooalstus ='N'       LET r_errno = 'aoo-00124'
+     END CASE
+     RETURN r_errno
+END FUNCTION]]>
+  </point>
+  <point name="function.anmi110_01_nmac001_desc" order="" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 參照表編號說明
+PRIVATE FUNCTION anmi110_01_nmac001_desc(p_nmac001)
+   DEFINE p_nmac001     LIKE nmac_t.nmac001
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] =p_nmac001
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='4' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   RETURN  g_rtn_fields[1]
+   
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[ DEFINE l_sql    STRING 
+ DEFINE l_week   STRING 
+ DEFINE l_year   LIKE type_t.num5]]>
+  </point>
+  <point name="input.a.bdate" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_nmac_m.bdate) THEN
+               IF NOT cl_null(g_nmac_m.edate) THEN 
+                  IF g_nmac_m.bdate> g_nmac_m.edate THEN
+                     CALL cl_err(g_nmac_m.edate,'sub-00095',1)
+                     NEXT FIELD bdate
+                  END IF
+               ELSE
+                  LET l_year = YEAR(g_nmac_m.bdate)+1
+                  LET l_month= MONTH(g_nmac_m.bdate)
+                  LET l_day  = DAY(g_nmac_m.bdate)
+                  LET g_nmac_m.edate = MDY(l_month,l_day-1,l_year)
+                  #如果是一月一号的话
+                  IF l_month = 1 AND l_day =1 THEN 
+                     LET g_nmac_m.edate = MDY(12,31,l_year-1)                                   
+                  END IF 
+                  #如果是其他月份的一号
+                  IF l_month<>1 AND l_day = 1 THEN
+                     #31天的月份
+                     IF l_month=5 OR l_month=7 OR l_month=8 OR l_month=10 OR l_month=12 THEN
+                        LET g_nmac_m.edate = MDY(l_month-1,30,l_year) 
+                     END IF
+                     #30天的及2月
+                     IF l_month=2 OR l_month=4 OR l_month=6 OR l_month=9 OR l_month=11 THEN
+                        LET g_nmac_m.edate = MDY(l_month-1,31,l_year) 
+                     END IF 
+                     #若果是3月1号，则要判断是否为闰年，闰年2月29天，否则28天                     
+                     IF l_month= 3 THEN 
+                        CALL s_date_chk_leap_year(l_year) RETURNING l_result
+                        IF l_result = 1 THEN 
+                           LET g_nmac_m.edate = MDY(l_month-1,29,l_year)
+                        ELSE
+                           LET g_nmac_m.edate = MDY(l_month-1,28,l_year)
+                        END IF 
+                     END IF 
+                  END IF                      
+               END IF                
+            END IF
+]]>
+  </point>
+  <point name="input.a.edate" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_nmac_m.bdate) AND NOT cl_null(g_nmac_m.edate) THEN
+              IF g_nmac_m.bdate> g_nmac_m.edate THEN
+                  CALL cl_err(g_nmac_m.edate,'sub-00095',1)
+                  NEXT FIELD edate
+              END IF
+           END IF
+]]>
+  </point>
+  <point name="input.a.fri" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.a.mon" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.nmac001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[             IF NOT cl_null(g_nmac_m.nmac001) THEN
+                #检查行事历参照表是否在参照表维护作业-行事历中是否存在切有效
+                CALL anmi110_01_nmac001_chk(g_nmac_m.nmac001)  RETURNING g_errno
+                IF NOT cl_null(g_errno) THEN
+                   CALL cl_err(g_nmac_m.nmac001,g_errno,1) 
+                   LET g_nmac_m.nmac001 = ''
+                   LET g_nmac_m.nmac001_desc = ''
+                   DISPLAY BY NAME g_nmac_m.nmac001_desc 
+                   NEXT FIELD CURRENT
+                END IF
+            END IF
+
+            CALL anmi110_01_nmac001_desc(g_nmac_m.nmac001) RETURNING g_nmac_m.nmac001_desc
+            DISPLAY BY NAME g_nmac_m.nmac001_desc
+]]>
+  </point>
+  <point name="input.a.nmac002" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_nmac_m.nmac002) AND NOT cl_null(g_nmac_m.edate) THEN
+              IF g_nmac_m.nmac002> g_nmac_m.edate THEN
+                  CALL cl_err(g_nmac_m.nmac002,'sub-00095',1)
+                  NEXT FIELD nmac002
+              END IF
+           END IF
+
+
+
+]]>
+  </point>
+  <point name="input.a.nmac005" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_nmac_m.nmac005) THEN
+               IF g_nmac_m.nmac005 >9999 OR g_nmac_m.nmac005 <1000 THEN
+                  CALL cl_err(g_nmac_m.nmac005,'aoo-00113',1)
+                  LET g_nmac_m.nmac005 = ''
+                  NEXT FIELD nmac005
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.sat" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.sun" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.thu" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.a.tue" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.wed" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.action" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[          #LET g_nmac_m.nmac001 = p_nmac001
+           LET g_nmac_m.mon = 'N'
+           LET g_nmac_m.tue = 'N'
+           LET g_nmac_m.wed = 'N'
+           LET g_nmac_m.thu = 'N'
+           LET g_nmac_m.fri = 'N'
+           LET g_nmac_m.sat = 'Y'
+           LET g_nmac_m.sun = 'Y'
+           
+           DISPLAY BY NAME g_nmac_m.bdate,g_nmac_m.edate,g_nmac_m.mon,g_nmac_m.tue,
+                                          g_nmac_m.wed,g_nmac_m.thu,g_nmac_m.fri,g_nmac_m.sat,
+                                          g_nmac_m.sun
+
+]]>
+  </point>
+  <point name="input.c.fri" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.c.mon" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.c.nmac001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmac_m.nmac001             #給予default值
+
+            #給予arg
+            LET g_qryparam.where = 'ooal001 = 4'
+            CALL q_ooal002()                                #呼叫開窗
+
+            LET g_nmac_m.nmac001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL anmi110_01_nmac001_desc(g_nmac_m.nmac001) RETURNING g_nmac_m.nmac001_desc
+            DISPLAY BY NAME g_nmac_m.nmac001_desc
+            DISPLAY g_nmac_m.nmac001 TO nmac001              #顯示到畫面上
+            LET g_qryparam.where = ''
+            NEXT FIELD nmac001                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.thu" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.c.tue" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.c.wed" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_year          LIKE type_t.num5
+   DEFINE l_month         LIKE type_t.num5
+   DEFINE l_day           LIKE type_t.num5
+   DEFINE l_result        LIKE type_t.num5
+   DEFINE l_nmac005       LIKE nmac_t.nmac005
+   DEFINE l_nmacent       LIKE nmac_t.nmacent
+   DEFINE l_nmac001       LIKE nmac_t.nmac001
+   DEFINE l_nmac002       LIKE nmac_t.nmac002
+   DEFINE l_nmac003       LIKE nmac_t.nmac003
+   DEFINE l_nmacstus      LIKE nmac_t.nmacstus
+   DEFINE l_nmaccrtdt     LIKE nmac_t.nmaccrtdt ]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET r_success = TRUE
+   LET l_week= ''
+    #点了取消
+   IF INT_FLAG THEN 
+      LET INT_FLAG = FALSE
+      RETURN ''      
+   END IF      
+    
+   #如果星期全部不勾选则返回false
+   IF g_nmac_m.mon = 'N' AND g_nmac_m.tue = 'N'  AND g_nmac_m.wed = 'N' AND g_nmac_m.thu = 'N'
+      AND g_nmac_m.fri = 'N' AND g_nmac_m.sat = 'N' AND g_nmac_m.sun = 'N' THEN
+      LET r_success = FALSE
+      CALL cl_err('ALL N','anm-00014',1) #星期未勾选，不执行例假日产生
+      RETURN r_success     
+   END IF 
+   #周一至周日勾选
+    IF g_nmac_m.mon='Y' THEN
+       IF NOt cl_null(l_week) THEN 
+           LET l_week = l_week,',','1'          
+       ELSE
+          LET l_week ='1'
+       END IF 
+    ELSE
+      LET l_week = l_week
+    END IF 
+    
+    IF g_nmac_m.tue='Y' THEN
+      IF NOt cl_null(l_week) THEN 
+         LET l_week = l_week,',','2'         
+       ELSE
+          LET l_week = '2'
+       END IF 
+    ELSE
+      LET l_week = l_week
+    END IF 
+    
+    IF g_nmac_m.wed='Y' THEN
+      IF NOt cl_null(l_week) THEN 
+         LET l_week = l_week,',','3'         
+       ELSE
+          LET l_week ='3'
+       END IF 
+    ELSE
+      LET l_week = l_week
+    END IF 
+    
+    IF g_nmac_m.thu='Y' THEN
+       IF NOt cl_null(l_week) THEN 
+          LET l_week = l_week,',','4'    
+       ELSE
+          LET l_week = '4'
+       END IF 
+    ELSE
+      LET l_week = l_week
+    END IF 
+    
+    IF g_nmac_m.fri='Y' THEN
+      IF NOt cl_null(l_week) THEN 
+         LET l_week = l_week,',','5'    
+       ELSE
+          LET l_week = '5'
+       END IF 
+    ELSE
+      LET l_week = l_week
+    END IF 
+    
+    IF g_nmac_m.sat='Y' THEN
+       IF NOt cl_null(l_week) THEN 
+          LET l_week = l_week,',','6'    
+       ELSE
+          LET l_week ='6'
+       END IF 
+    ELSE
+      LET l_week = l_week
+    END IF 
+    
+    IF g_nmac_m.sun='Y' THEN
+      IF NOt cl_null(l_week) THEN  
+         LET l_week = l_week,',','0'
+       ELSE
+          LET l_week ='0'
+       END IF 
+    ELSE
+      LET l_week = l_week
+    END IF 
+    
+    LET l_week = cl_replace_str(l_week,",","','")
+   #insert 操作
+   LET l_sql = " SELECT '",g_enterprise,"','",g_nmac_m.nmac001,"',ooga001,'1',substr((to_char(ooga001,'YYYY-MM-DD')),1,4),'Y'",
+               "   FROM ooga_t ",
+               " WHERE ooga001 between '",g_nmac_m.bdate,"' AND '",g_nmac_m.edate,"' " ,
+               "   AND ooga002 IN ('",l_week,"') ",
+               "   AND oogaent = '",g_enterprise,"'"
+    PREPARE anmi110_01_ins_nmac  FROM l_sql  
+    DECLARE anmi110_01_ins_cs CURSOR FOR  anmi110_01_ins_nmac 
+    FOREACH anmi110_01_ins_cs INTO l_nmacent,l_nmac001,l_nmac002,l_nmac003,l_nmac005,l_nmacstus
+       IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+    
+       LET l_count = 0
+       SELECT count(*) INTO l_count FROM nmac_t 
+       WHERE nmacent = g_enterprise
+         AND nmac001 = l_nmac001
+         AND nmac002 = l_nmac002
+       IF l_count > 0  THEN
+          CALL cl_err(l_nmac002,'std-00004',1)
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       
+       LET l_nmaccrtdt =  cl_get_current()  #建立日期    
+       INSERT INTO nmac_t(nmacent,nmac001,nmac002,nmac003,nmac005,nmacstus,nmacownid,nmacowndp,nmaccrtid,nmaccrtdp,nmaccrtdt)
+        VALUES (l_nmacent,l_nmac001,l_nmac002,l_nmac003,l_nmac005,l_nmacstus,g_user,g_dept,g_user,g_dept,l_nmaccrtdt)
+       IF SQLCA.sqlcode THEN
+          CALL cl_err('Insert nmac_t error!',SQLCA.sqlcode,1)
+          LET r_success = FALSE
+          RETURN r_success
+      END IF 
+    
+    END FOREACH
+    RETURN r_success]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac_m.nmac001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='4' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmac_m.nmac001_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmac_m.nmac001_desc
+]]>
+  </point>
+</add_points>

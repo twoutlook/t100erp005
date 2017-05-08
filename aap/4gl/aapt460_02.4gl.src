@@ -1,0 +1,1035 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapt460_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-08-18 17:05:38), PR版次:0004(2016-11-14 18:09:29)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000061
+#+ Filename...: aapt460_02
+#+ Description: 差異處理
+#+ Creator....: 02097(2015-11-23 14:37:09)
+#+ Modifier...: 03080 -SD/PR- 08729
+ 
+{</section>}
+ 
+{<section id="aapt460_02.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#161006-00005#5  2016/10/12 By 08732     組織類型與職能開窗調整
+#161104-00024#4  2016/11/09 By 08729     處理DEFINE有星號
+#161108-00017#4  2016/11/10 By Reanna    程式中INSERT INTO 有星號作整批調整
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_apfh_d        RECORD
+       apfhdocno LIKE apfh_t.apfhdocno, 
+   apfhseq LIKE apfh_t.apfhseq, 
+   apfh001 LIKE apfh_t.apfh001, 
+   apfh001_desc LIKE type_t.chr500, 
+   apfhld LIKE apfh_t.apfhld, 
+   apfh100 LIKE apfh_t.apfh100, 
+   curr LIKE type_t.chr500, 
+   apfh103 LIKE apfh_t.apfh103, 
+   apfh101 LIKE apfh_t.apfh101, 
+   apfh104 LIKE apfh_t.apfh104
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_input        RECORD
+       chk_esc        LIKE type_t.chr1,
+       flag1          LIKE type_t.chr2,
+       flag2          LIKE type_t.chr2
+       END RECORD
+DEFINE g_apfgcomp     LIKE apfg_t.apfgcomp
+DEFINE g_apfgld       LIKE apfg_t.apfgld
+DEFINE g_apfgdocdt    LIKE apfg_t.apfgdocdt
+DEFINE g_apfg002      LIKE apfg_t.apfg002
+DEFINE g_glaa001      LIKE glaa_t.glaa001
+DEFINE g_glaa025      LIKE glaa_t.glaa025
+#end add-point
+ 
+DEFINE g_apfh_d          DYNAMIC ARRAY OF type_g_apfh_d
+DEFINE g_apfh_d_t        type_g_apfh_d
+ 
+ 
+DEFINE g_apfhdocno_t   LIKE apfh_t.apfhdocno    #Key值備份
+DEFINE g_apfhseq_t      LIKE apfh_t.apfhseq    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="aapt460_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt460_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_apfgdocno,p_flag,p_amt
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_apfgdocno     LIKE apfg_t.apfgdocno
+   DEFINE p_flag          LIKE type_t.chr1
+   DEFINE p_amt           LIKE apfh_t.apfh103
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_sum           LIKE apfh_t.apfh104
+   DEFINE l_apfh001       LIKE apfh_t.apfh001
+   DEFINE l_apfhld        LIKE apfh_t.apfhld
+   DEFINE l_max_seq       LIKE apfh_t.apfhseq
+   DEFINE l_rate1         LIKE apfh_t.apfh201
+   DEFINE l_rate2         LIKE apfh_t.apfh201
+   DEFINE ls_js           STRING
+   DEFINE lc_param        RECORD
+            type          LIKE type_t.chr1,
+            apca004       LIKE apca_t.apca004
+                      END RECORD
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt460_02 WITH FORM cl_ap_formpath("aap","aapt460_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   CALL cl_set_combo_scc_part('flag1','8306','12,91')
+   CALL cl_set_combo_scc_part('flag2','8306','11,13,14,15,92')
+   LET g_input.chk_esc='N'
+   IF p_flag='1' THEN
+      CALL cl_set_comp_entry('flag1',TRUE)
+      CALL cl_set_comp_entry('flag2',FALSE)
+      LET g_input.flag1='12'
+   ELSE
+      CALL cl_set_comp_entry('flag1',FALSE)
+      CALL cl_set_comp_entry('flag2',TRUE)
+      LET g_input.flag2='11'
+   END IF
+   DISPLAY BY NAME g_input.chk_esc,g_input.flag1,g_input.flag2
+   #單頭法人、帳別
+   SELECT apfgcomp,apfgld,apfgdocdt,apfg002 
+     INTO g_apfgcomp,g_apfgld,g_apfgdocdt,g_apfg002
+     FROM apfg_t
+    WHERE apfgent = g_enterprise AND apfgdocno = p_apfgdocno
+   #帳別對用幣別
+   SELECT glaa001,glaa025 INTO g_glaa001,g_glaa025 FROM glaa_t
+    WHERE glaaent=g_enterprise AND glaald = g_apfgld
+   
+   CALL g_apfh_d.clear()
+   LET l_ac=0
+   LET l_max_seq=0 #記錄最大項次
+   SELECT MAX(apfhseq) + 1 INTO l_max_seq
+     FROM apfh_t
+    WHERE apfhent = g_enterprise 
+      AND apfhdocno = p_apfgdocno
+   IF cl_null(l_max_seq) THEN LET l_max_seq = 1 END IF
+
+   #預設第一筆帶單頭法人組織,單頭法人帳套,幣別,差異處理金額,匯率,本幣處理金額
+   LET l_ac=1
+   LET g_apfh_d[l_ac].apfh001 = g_apfgcomp
+   LET g_apfh_d[l_ac].apfhld  = g_apfgld
+   #幣別
+   SELECT glaa001 INTO g_apfh_d[l_ac].apfh100
+     FROM glaa_t
+    WHERE glaaent=g_enterprise AND glaald=g_apfh_d[l_ac].apfhld
+   LET g_apfh_d[l_ac].curr=g_glaa001
+   #匯率
+   LET lc_param.type    = '1'
+   LET lc_param.apca004 = g_apfg002
+   LET ls_js = util.JSON.stringify(lc_param)
+   CALL s_fin_get_curr_rate(g_apfh_d[l_ac].apfh001,g_apfh_d[l_ac].apfhld,g_apfgdocdt,g_apfh_d[l_ac].apfh100,ls_js)
+   RETURNING g_apfh_d[l_ac].apfh101,l_rate1,l_rate2
+   #金額
+   LET g_apfh_d[l_ac].apfh104=p_amt
+   LET g_apfh_d[l_ac].apfh103=g_apfh_d[l_ac].apfh104/g_apfh_d[l_ac].apfh101
+   CALL s_curr_round_ld('1',g_apfh_d[l_ac].apfhld,g_apfh_d[l_ac].apfh100,g_apfh_d[l_ac].apfh103,2) 
+       RETURNING g_sub_success,g_errno,g_apfh_d[l_ac].apfh103
+   #單號
+   LET g_apfh_d[l_ac].apfhdocno = p_apfgdocno
+   #項次
+   IF cl_null(g_apfh_d[l_ac].apfhseq) THEN
+      LET g_apfh_d[l_ac].apfhseq=l_max_seq
+      LET l_max_seq=l_max_seq+1
+   END IF
+   LET g_apfh_d[l_ac].apfh001_desc=g_apfh_d[l_ac].apfh001
+   CALL aapt460_02_apfh001_desc()
+   DISPLAY BY NAME g_apfh_d[l_ac].apfhseq,g_apfh_d[l_ac].apfh001,g_apfh_d[l_ac].apfh001_desc,g_apfh_d[l_ac].apfhld,
+                   g_apfh_d[l_ac].apfh100,g_apfh_d[l_ac].curr,g_apfh_d[l_ac].apfh101,g_apfh_d[l_ac].apfh103,
+                   g_apfh_d[l_ac].apfh104
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_apfh_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            IF g_rec_b != 0 THEN
+               CALL fgl_set_arr_curr(l_ac)
+            END IF
+            
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+
+            DISPLAY l_ac TO FORMONLY.idx
+         
+         BEFORE INSERT
+            
+         BEFORE DELETE
+            IF g_apfh_d[l_ac].apfhseq=l_max_seq -1 THEN
+               LET l_max_seq=l_max_seq-1
+            END IF
+            CALL g_apfh_d.deleteElement(l_ac) 
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apfhdocno
+            #add-point:BEFORE FIELD apfhdocno name="input.b.page1.apfhdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apfhdocno
+            
+            #add-point:AFTER FIELD apfhdocno name="input.a.page1.apfhdocno"
+            #此段落由子樣板a05產生
+            #確認資料無重複
+            IF  g_apfh_d[g_detail_idx].apfhdocno IS NOT NULL AND g_apfh_d[g_detail_idx].apfhseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apfh_d[g_detail_idx].apfhdocno != g_apfh_d_t.apfhdocno OR g_apfh_d[g_detail_idx].apfhseq != g_apfh_d_t.apfhseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apfh_t WHERE "||"apfhent = '" ||g_enterprise|| "' AND "||"apfhdocno = '"||g_apfh_d[g_detail_idx].apfhdocno ||"' AND "|| "apfhseq = '"||g_apfh_d[g_detail_idx].apfhseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apfhdocno
+            #add-point:ON CHANGE apfhdocno name="input.g.page1.apfhdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apfhseq
+            #add-point:BEFORE FIELD apfhseq name="input.b.page1.apfhseq"
+            IF cl_null(g_apfh_d[l_ac].apfhseq) THEN
+               LET g_apfh_d[l_ac].apfhseq=l_max_seq
+               LET l_max_seq=l_max_seq+1
+               #單頭帳套幣別
+               LET g_apfh_d[l_ac].curr=g_glaa001
+               #單號
+               LET g_apfh_d[l_ac].apfhdocno = p_apfgdocno
+               DISPLAY BY NAME g_apfh_d[l_ac].apfhseq,g_apfh_d[l_ac].curr,g_apfh_d[l_ac].apfhdocno
+            END IF
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apfhseq
+            
+            #add-point:AFTER FIELD apfhseq name="input.a.page1.apfhseq"
+            #此段落由子樣板a05產生
+            #確認資料無重複
+            IF  g_apfh_d[g_detail_idx].apfhdocno IS NOT NULL AND g_apfh_d[g_detail_idx].apfhseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apfh_d[g_detail_idx].apfhdocno != g_apfh_d_t.apfhdocno OR g_apfh_d[g_detail_idx].apfhseq != g_apfh_d_t.apfhseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apfh_t WHERE "||"apfhent = '" ||g_enterprise|| "' AND "||"apfhdocno = '"||g_apfh_d[g_detail_idx].apfhdocno ||"' AND "|| "apfhseq = '"||g_apfh_d[g_detail_idx].apfhseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apfhseq
+            #add-point:ON CHANGE apfhseq name="input.g.page1.apfhseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apfh001
+            #add-point:BEFORE FIELD apfh001 name="input.b.page1.apfh001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apfh001
+            
+            #add-point:AFTER FIELD apfh001 name="input.a.page1.apfh001"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apfh001
+            #add-point:ON CHANGE apfh001 name="input.g.page1.apfh001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apfh001_desc
+            #add-point:BEFORE FIELD apfh001_desc name="input.b.page1.apfh001_desc"
+            LET g_apfh_d[l_ac].apfh001_desc=g_apfh_d[l_ac].apfh001
+            IF cl_null(g_apfh_d[l_ac].apfhseq) THEN
+               LET g_apfh_d[l_ac].apfhseq=l_max_seq
+               LET l_max_seq=l_max_seq+1
+               #單頭帳套幣別
+               LET g_apfh_d[l_ac].curr = g_glaa001
+               #單號
+               LET g_apfh_d[l_ac].apfhdocno = p_apfgdocno
+               DISPLAY BY NAME g_apfh_d[l_ac].apfhseq,g_apfh_d[l_ac].curr,g_apfh_d[l_ac].apfhdocno
+            END IF
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apfh001_desc
+            
+            #add-point:AFTER FIELD apfh001_desc name="input.a.page1.apfh001_desc"
+            IF NOT cl_null(g_apfh_d[l_ac].apfh001_desc) THEN
+               SELECT COUNT(*) INTO l_cnt 
+                 FROM apfh_t
+                WHERE apfhent = g_enterprise 
+                  AND apfhdocno = p_apfgdocno AND apfh001=g_apfh_d[l_ac].apfh001_desc
+               IF l_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_apfh_d[l_ac].apfh001_desc
+                  LET g_errparam.code   = 'axr-00202'
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  LET g_apfh_d[l_ac].apfh001_desc = g_apfh_d_t.apfh001_desc
+                  NEXT FIELD CURRENT
+               END IF
+               LET l_cnt = g_apfh_d.getLength()
+               FOR l_i=1 TO l_cnt
+                   IF l_ac <> l_i AND g_apfh_d[l_ac].apfh001_desc=g_apfh_d[l_i].apfh001 THEN
+                      INITIALIZE g_errparam TO NULL 
+                      LET g_errparam.extend = g_apfh_d[l_ac].apfh001_desc
+                      LET g_errparam.code   = 'axr-00203'
+                      LET g_errparam.popup  = TRUE 
+                      CALL cl_err()
+                      LET g_apfh_d[l_ac].apfh001_desc = g_apfh_d_t.apfh001_desc
+                      NEXT FIELD CURRENT
+                      EXIT FOR
+                   END IF
+               END FOR
+               LET l_i=1
+               IF g_apfh_d.getLength() > l_cnt THEN 
+                  CALL g_apfh_d.deleteElement(g_apfh_d.getLength()) 
+               END IF
+              ##帳套
+              SELECT glaald INTO g_apfh_d[l_ac].apfhld
+                FROM glaa_t
+               WHERE glaaent = g_enterprise
+                 AND glaacomp= g_apfh_d[l_ac].apfh001_desc
+              #SELECT DISTINCT apfh002 INTO g_apfh_d[l_ac].apfhld
+              #  FROM apfh_t
+              # WHERE apfhent = g_enterprise AND apfhdocno = p_apfhdocno 
+              #   AND apfh001 = g_apfh_d[l_ac].apfh001_desc
+               #匯率
+               SELECT glaa001 INTO g_apfh_d[l_ac].apfh100
+                 FROM glaa_t
+                WHERE glaaent = g_enterprise AND glaald=g_apfh_d[l_ac].apfhld
+               
+               LET lc_param.type    = '1'
+               LET lc_param.apca004 = g_apfg002
+               LET ls_js = util.JSON.stringify(lc_param)
+               CALL s_fin_get_curr_rate(g_apfh_d[l_ac].apfh001,g_apfh_d[l_ac].apfhld,g_apfgdocdt,g_apfh_d[l_ac].apfh100,ls_js)
+               RETURNING g_apfh_d[l_ac].apfh101,l_rate1,l_rate2
+               IF NOT cl_null(g_apfh_d[l_ac].apfh103) THEN
+                  LET g_apfh_d[l_ac].apfh104=g_apfh_d[l_ac].apfh103 * g_apfh_d[l_ac].apfh101
+                  CALL s_curr_round_ld('1',g_apfh_d[l_ac].apfhld,g_apfh_d[l_ac].curr,g_apfh_d[l_ac].apfh104,2) 
+                      RETURNING g_sub_success,g_errno,g_apfh_d[l_ac].apfh104
+               ELSE
+                  LET l_sum=0
+                  LET l_cnt=g_apfh_d.getLength()
+                  FOR l_i=1 TO l_cnt
+                     IF l_ac <> l_i THEN
+                        IF cl_null(g_apfh_d[l_i].apfh104) THEN LET g_apfh_d[l_i].apfh104=0 END IF
+                        LET l_sum=l_sum + g_apfh_d[l_i].apfh104
+                     END IF
+                  END FOR
+                  LET l_i= 1
+                  IF g_apfh_d.getLength() > l_cnt THEN 
+                     CALL g_apfh_d.deleteElement(g_apfh_d.getLength()) 
+                  END IF
+                  #可分配金額=總差異金額 - 已分配金額
+                  LET g_apfh_d[l_ac].apfh104=p_amt - l_sum
+                  LET g_apfh_d[l_ac].apfh103=g_apfh_d[l_ac].apfh104 / g_apfh_d[l_ac].apfh101
+                  CALL s_curr_round_ld('1',g_apfh_d[l_ac].apfhld,g_apfh_d[l_ac].apfh100,g_apfh_d[l_ac].apfh103,2) 
+                      RETURNING g_sub_success,g_errno,g_apfh_d[l_ac].apfh103
+               END IF
+               DISPLAY BY NAME g_apfh_d[l_ac].apfhld,g_apfh_d[l_ac].apfh100,g_apfh_d[l_ac].apfh101,
+                               g_apfh_d[l_ac].apfh103,g_apfh_d[l_ac].apfh104
+            END IF
+            LET g_apfh_d[l_ac].apfh001=g_apfh_d[l_ac].apfh001_desc
+            CALL aapt460_02_apfh001_desc()
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apfh001_desc
+            #add-point:ON CHANGE apfh001_desc name="input.g.page1.apfh001_desc"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apfhld
+            #add-point:BEFORE FIELD apfhld name="input.b.page1.apfhld"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apfhld
+            
+            #add-point:AFTER FIELD apfhld name="input.a.page1.apfhld"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apfhld
+            #add-point:ON CHANGE apfhld name="input.g.page1.apfhld"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apfh100
+            #add-point:BEFORE FIELD apfh100 name="input.b.page1.apfh100"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apfh100
+            
+            #add-point:AFTER FIELD apfh100 name="input.a.page1.apfh100"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apfh100
+            #add-point:ON CHANGE apfh100 name="input.g.page1.apfh100"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD curr
+            #add-point:BEFORE FIELD curr name="input.b.page1.curr"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD curr
+            
+            #add-point:AFTER FIELD curr name="input.a.page1.curr"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE curr
+            #add-point:ON CHANGE curr name="input.g.page1.curr"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apfh103
+            #add-point:BEFORE FIELD apfh103 name="input.b.page1.apfh103"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apfh103
+            
+            #add-point:AFTER FIELD apfh103 name="input.a.page1.apfh103"
+            IF NOT cl_null(g_apfh_d[l_ac].apfh103) THEN
+               LET g_apfh_d[l_ac].apfh104=g_apfh_d[l_ac].apfh103*g_apfh_d[l_ac].apfh101
+               CALL s_curr_round_ld('1',g_apfh_d[l_ac].apfhld,g_apfh_d[l_ac].curr,g_apfh_d[l_ac].apfh104,2) 
+                      RETURNING g_sub_success,g_errno,g_apfh_d[l_ac].apfh104
+               DISPLAY BY NAME g_apfh_d[l_ac].apfh104
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apfh103
+            #add-point:ON CHANGE apfh103 name="input.g.page1.apfh103"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apfh101
+            #add-point:BEFORE FIELD apfh101 name="input.b.page1.apfh101"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apfh101
+            
+            #add-point:AFTER FIELD apfh101 name="input.a.page1.apfh101"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apfh101
+            #add-point:ON CHANGE apfh101 name="input.g.page1.apfh101"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apfh104
+            #add-point:BEFORE FIELD apfh104 name="input.b.page1.apfh104"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apfh104
+            
+            #add-point:AFTER FIELD apfh104 name="input.a.page1.apfh104"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apfh104
+            #add-point:ON CHANGE apfh104 name="input.g.page1.apfh104"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.apfhdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apfhdocno
+            #add-point:ON ACTION controlp INFIELD apfhdocno name="input.c.page1.apfhdocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.apfhseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apfhseq
+            #add-point:ON ACTION controlp INFIELD apfhseq name="input.c.page1.apfhseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.apfh001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apfh001
+            #add-point:ON ACTION controlp INFIELD apfh001 name="input.c.page1.apfh001"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_apfh_d[l_ac].apfh001             #給予default值
+            LET g_qryparam.default2 = "" #g_apfh_d[l_ac].ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            #CALL q_ooef001()     #161006-00005#5   mark
+            CALL q_ooef001_33()   #161006-00005#5   add                              #呼叫開窗
+
+            LET g_apfh_d[l_ac].apfh001 = g_qryparam.return1              
+            #LET g_apfh_d[l_ac].ooefl003 = g_qryparam.return2 
+            DISPLAY g_apfh_d[l_ac].apfh001 TO apfh001              #
+            #DISPLAY g_apfh_d[l_ac].ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD apfh001                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.apfh001_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apfh001_desc
+            #add-point:ON ACTION controlp INFIELD apfh001_desc name="input.c.page1.apfh001_desc"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_apfh_d[l_ac].apfh001             #給予default值
+            LET g_qryparam.default2 = "" #g_apfh_d[l_ac].ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.where = " ooef003='Y' AND ooef017 IN (SELECT DISTINCT apfh001 FROM apfh_t ",
+                                    " WHERE apfhent=",g_enterprise," AND apfhdocno='",p_apfgdocno,"' ",
+                                    " )"
+            
+            #CALL q_ooef001()     #161006-00005#5   mark
+            CALL q_ooef001_33()   #161006-00005#5   add                            #呼叫開窗
+
+            LET g_apfh_d[l_ac].apfh001_desc = g_qryparam.return1              
+            LET g_apfh_d[l_ac].apfh001 = g_apfh_d[l_ac].apfh001_desc
+            CALL aapt460_02_apfh001_desc()
+            DISPLAY g_apfh_d[l_ac].apfh001_desc TO apfh001_desc              #
+            NEXT FIELD apfh001_desc                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.apfhld
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apfhld
+            #add-point:ON ACTION controlp INFIELD apfhld name="input.c.page1.apfhld"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.apfh100
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apfh100
+            #add-point:ON ACTION controlp INFIELD apfh100 name="input.c.page1.apfh100"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_apfh_d[l_ac].apfh100             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_aooi001_1()                                #呼叫開窗
+
+            LET g_apfh_d[l_ac].apfh100 = g_qryparam.return1              
+
+            DISPLAY g_apfh_d[l_ac].apfh100 TO apfh100              #
+
+            NEXT FIELD apfh100                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.curr
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD curr
+            #add-point:ON ACTION controlp INFIELD curr name="input.c.page1.curr"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_apfh_d[l_ac].curr             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_aooi001_1()                                #呼叫開窗
+
+            LET g_apfh_d[l_ac].curr = g_qryparam.return1              
+
+            DISPLAY g_apfh_d[l_ac].curr TO curr              #
+
+            NEXT FIELD curr                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.apfh103
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apfh103
+            #add-point:ON ACTION controlp INFIELD apfh103 name="input.c.page1.apfh103"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.apfh101
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apfh101
+            #add-point:ON ACTION controlp INFIELD apfh101 name="input.c.page1.apfh101"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.apfh104
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apfh104
+            #add-point:ON ACTION controlp INFIELD apfh104 name="input.c.page1.apfh104"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         AFTER ROW
+#            IF cl_null(g_apfh_d[l_ac].apfh001_desc) THEN
+#               NEXT FIELD apfh001_desc
+#            END IF
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            LET l_sum = 0
+            LET l_cnt=g_apfh_d.getLength()
+            FOR l_i=1 TO l_cnt
+               IF cl_null(g_apfh_d[l_i].apfh104) THEN LET g_apfh_d[l_i].apfh104=0 END IF
+               LET l_sum = l_sum + g_apfh_d[l_i].apfh104
+            END FOR
+            LET l_i=1
+            IF g_apfh_d.getLength() > l_cnt THEN 
+               CALL g_apfh_d.deleteElement(g_apfh_d.getLength()) 
+            END IF
+            IF l_sum <> p_amt THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_apfh_d[l_ac].apfh001_desc
+               LET g_errparam.code   = 'axr-00204'
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               NEXT FIELD apfh103
+            END IF
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      INPUT BY NAME g_input.chk_esc,g_input.flag1,g_input.flag2 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         ON CHANGE chk_esc
+            IF g_input.chk_esc='Y' THEN
+               LET INT_FLAG = TRUE
+               EXIT DIALOG
+            END IF
+         
+      END INPUT
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   IF INT_FLAG THEN
+      LET INT_FLAG=FALSE
+      CLOSE WINDOW w_aapt460_02 
+      RETURN FALSE
+   END IF
+   CALL aapt460_02_ins_apfh(p_flag) RETURNING l_success
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt460_02 
+   
+   #add-point:input段after input name="input.post_input"
+   RETURN l_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapt460_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aapt460_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 抓取法人說明
+# Memo...........:
+# Usage..........: CALL aapt460_02_apfh001_desc()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt460_02_apfh001_desc()
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_apfh_d[l_ac].apfh001
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_apfh_d[l_ac].apfh001_desc = g_apfh_d[l_ac].apfh001,'', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_apfh_d[l_ac].apfh001_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 將單身差異分配寫入apfh_t表中
+# Memo...........:
+# Usage..........: CALL aapt460_02_ins_apfh(p_flag)
+#                  RETURNING r_success
+# Input parameter: p_flag         差異類型1：收款>帳款；2：收款<帳款
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: r_success      執行結果（TURE/FALSE）
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt460_02_ins_apfh(p_flag)
+   DEFINE p_flag           LIKE type_t.chr1
+   DEFINE r_success        LIKE type_t.num5
+   DEFINE l_i              LIKE type_t.num5
+   DEFINE l_cnt            LIKE type_t.num5
+   #DEFINE l_apfh           RECORD LIKE apfh_t.* #161104-00024#4 mark
+   #161104-00024#4-add(s)
+   DEFINE l_apfh  RECORD  #集團付款核銷單付款明細檔
+          apfhent   LIKE apfh_t.apfhent, #企業編號
+          apfhld    LIKE apfh_t.apfhld, #帳套
+          apfhdocno LIKE apfh_t.apfhdocno, #單號
+          apfhseq   LIKE apfh_t.apfhseq, #項次
+          apfh001   LIKE apfh_t.apfh001, #來源組織
+          apfh002   LIKE apfh_t.apfh002, #已付款單號
+          apfh003   LIKE apfh_t.apfh003, #付款帳戶
+          apfh004   LIKE apfh_t.apfh004, #款別
+          apfh005   LIKE apfh_t.apfh005, #銀行存提碼
+          apfh006   LIKE apfh_t.apfh006, #類型
+          apfh007   LIKE apfh_t.apfh007, #借貸別
+          apfh008   LIKE apfh_t.apfh008, #票據號碼
+          apfh100   LIKE apfh_t.apfh100, #付款幣別
+          apfh101   LIKE apfh_t.apfh101, #匯率
+          apfh103   LIKE apfh_t.apfh103, #付款原幣金額
+          apfh104   LIKE apfh_t.apfh104, #付款本幣金額
+          apfh201   LIKE apfh_t.apfh201, #對應代付方當日匯率
+          apfh204   LIKE apfh_t.apfh204, #對應代付方本幣金額
+          apfhud001 LIKE apfh_t.apfhud001, #自定義欄位(文字)001
+          apfhud002 LIKE apfh_t.apfhud002, #自定義欄位(文字)002
+          apfhud003 LIKE apfh_t.apfhud003, #自定義欄位(文字)003
+          apfhud004 LIKE apfh_t.apfhud004, #自定義欄位(文字)004
+          apfhud005 LIKE apfh_t.apfhud005, #自定義欄位(文字)005
+          apfhud006 LIKE apfh_t.apfhud006, #自定義欄位(文字)006
+          apfhud007 LIKE apfh_t.apfhud007, #自定義欄位(文字)007
+          apfhud008 LIKE apfh_t.apfhud008, #自定義欄位(文字)008
+          apfhud009 LIKE apfh_t.apfhud009, #自定義欄位(文字)009
+          apfhud010 LIKE apfh_t.apfhud010, #自定義欄位(文字)010
+          apfhud011 LIKE apfh_t.apfhud011, #自定義欄位(數字)011
+          apfhud012 LIKE apfh_t.apfhud012, #自定義欄位(數字)012
+          apfhud013 LIKE apfh_t.apfhud013, #自定義欄位(數字)013
+          apfhud014 LIKE apfh_t.apfhud014, #自定義欄位(數字)014
+          apfhud015 LIKE apfh_t.apfhud015, #自定義欄位(數字)015
+          apfhud016 LIKE apfh_t.apfhud016, #自定義欄位(數字)016
+          apfhud017 LIKE apfh_t.apfhud017, #自定義欄位(數字)017
+          apfhud018 LIKE apfh_t.apfhud018, #自定義欄位(數字)018
+          apfhud019 LIKE apfh_t.apfhud019, #自定義欄位(數字)019
+          apfhud020 LIKE apfh_t.apfhud020, #自定義欄位(數字)020
+          apfhud021 LIKE apfh_t.apfhud021, #自定義欄位(日期時間)021
+          apfhud022 LIKE apfh_t.apfhud022, #自定義欄位(日期時間)022
+          apfhud023 LIKE apfh_t.apfhud023, #自定義欄位(日期時間)023
+          apfhud024 LIKE apfh_t.apfhud024, #自定義欄位(日期時間)024
+          apfhud025 LIKE apfh_t.apfhud025, #自定義欄位(日期時間)025
+          apfhud026 LIKE apfh_t.apfhud026, #自定義欄位(日期時間)026
+          apfhud027 LIKE apfh_t.apfhud027, #自定義欄位(日期時間)027
+          apfhud028 LIKE apfh_t.apfhud028, #自定義欄位(日期時間)028
+          apfhud029 LIKE apfh_t.apfhud029, #自定義欄位(日期時間)029
+          apfhud030 LIKE apfh_t.apfhud030  #自定義欄位(日期時間)030
+              END RECORD
+   #161104-00024#4-add(e)
+   DEFINE l_apfh006        LIKE apfh_t.apfh006
+   DEFINE l_apfh007        LIKE apfh_t.apfh007
+   DEFINE l_n              LIKE type_t.num5
+   DEFINE l_seq            LIKE apfh_t.apfhseq
+   
+   LET r_success = TRUE
+   #類型
+   IF p_flag='1' THEN
+      LET l_apfh006=g_input.flag1
+   ELSE
+      LET l_apfh006=g_input.flag2
+   END IF
+   CALL s_transaction_begin()
+   #借貸別
+   LET l_apfh007 = s_fin_get_scc_value('8506',l_apfh006,'1')
+   LET l_cnt=g_apfh_d.getLength()
+   FOR l_i=1 TO l_cnt
+      IF cl_null(g_apfh_d[l_i].apfhseq) OR cl_null(g_apfh_d[l_i].apfhdocno) OR cl_null(g_apfh_d[l_i].apfhld) THEN
+         CONTINUE FOR
+      END IF
+      INITIALIZE l_apfh.* TO NULL
+      LET l_apfh.apfhent=g_enterprise
+      LET l_apfh.apfhdocno=g_apfh_d[l_i].apfhdocno
+      LET l_apfh.apfhld=g_apfh_d[l_i].apfhld
+      #項次
+      SELECT COUNT(*) INTO l_n FROM apfh_t
+      WHERE apfhent=g_enterprise AND apfhdocno=g_apfh_d[l_i].apfhdocno AND apfhseq=g_apfh_d[l_i].apfhseq
+      IF l_n >0 THEN
+         SELECT MAX(apfhseq)+1 INTO l_seq FROM apfh_t
+          WHERE apfhent=g_enterprise AND apfhdocno=g_apfh_d[l_i].apfhdocno
+         IF cl_null(l_seq) THEN LET l_seq=1 END IF
+         LET l_apfh.apfhseq=l_seq
+      ELSE
+         LET l_apfh.apfhseq=g_apfh_d[l_i].apfhseq
+      END IF
+      LET l_apfh.apfh001=g_apfh_d[l_i].apfh001
+      LET l_apfh.apfh006=l_apfh006
+      LET l_apfh.apfh007=l_apfh007
+      LET l_apfh.apfh100=g_apfh_d[l_i].apfh100
+      LET l_apfh.apfh101=g_apfh_d[l_i].apfh101
+      LET l_apfh.apfh103=g_apfh_d[l_i].apfh103
+      LET l_apfh.apfh104=g_apfh_d[l_i].apfh104
+      LET l_apfh.apfh201=l_apfh.apfh101
+      LET l_apfh.apfh204=l_apfh.apfh104
+      #INSERT INTO apfh_t VALUES(l_apfh.*) #161108-00017#4 mark
+      #161108-00017#4 add ------
+      INSERT INTO apfh_t (apfhent,apfhld,apfhdocno,apfhseq,
+                          apfh001,apfh002,apfh003,apfh004,apfh005,
+                          apfh006,apfh007,apfh008,apfh100,apfh101,
+                          apfh103,apfh104,apfh201,apfh204,
+                          apfhud001,apfhud002,apfhud003,apfhud004,apfhud005,
+                          apfhud006,apfhud007,apfhud008,apfhud009,apfhud010,
+                          apfhud011,apfhud012,apfhud013,apfhud014,apfhud015,
+                          apfhud016,apfhud017,apfhud018,apfhud019,apfhud020,
+                          apfhud021,apfhud022,apfhud023,apfhud024,apfhud025,
+                          apfhud026,apfhud027,apfhud028,apfhud029,apfhud030
+                         )
+      VALUES (l_apfh.apfhent,l_apfh.apfhld,l_apfh.apfhdocno,l_apfh.apfhseq,
+              l_apfh.apfh001,l_apfh.apfh002,l_apfh.apfh003,l_apfh.apfh004,l_apfh.apfh005,
+              l_apfh.apfh006,l_apfh.apfh007,l_apfh.apfh008,l_apfh.apfh100,l_apfh.apfh101,
+              l_apfh.apfh103,l_apfh.apfh104,l_apfh.apfh201,l_apfh.apfh204,
+              l_apfh.apfhud001,l_apfh.apfhud002,l_apfh.apfhud003,l_apfh.apfhud004,l_apfh.apfhud005,
+              l_apfh.apfhud006,l_apfh.apfhud007,l_apfh.apfhud008,l_apfh.apfhud009,l_apfh.apfhud010,
+              l_apfh.apfhud011,l_apfh.apfhud012,l_apfh.apfhud013,l_apfh.apfhud014,l_apfh.apfhud015,
+              l_apfh.apfhud016,l_apfh.apfhud017,l_apfh.apfhud018,l_apfh.apfhud019,l_apfh.apfhud020,
+              l_apfh.apfhud021,l_apfh.apfhud022,l_apfh.apfhud023,l_apfh.apfhud024,l_apfh.apfhud025,
+              l_apfh.apfhud026,l_apfh.apfhud027,l_apfh.apfhud028,l_apfh.apfhud029,l_apfh.apfhud030
+             )
+      #161108-00017#4 add end---
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ''
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         LET r_success=FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   IF r_success THEN
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

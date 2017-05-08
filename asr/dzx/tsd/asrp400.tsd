@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="asrp400" std_prog="asrp400" erpver="1.0" ver="2" module="ASR" type="M" booking="Y" class="p" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="1" cite_std="N">
+    <tbl name="sfaa_t" main="N" head="N" pk="sfaaent,sfaadocno" fk_detail="" parent="" fk_master="" src="s" status=""/>
+    <tbl name="sfba_t" main="N" head="N" pk="sfbaent,sfbadocno,sfbaseq,sfbaseq1" fk_detail="" parent="" fk_master="" src="s" status=""/>
+    <tbl name="sfcb_t" main="N" head="N" pk="sfcbent,sfcbdocno,sfcb001,sfcb002" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[操作方式說明:
+1.輸入採購單別、採購日期、計畫編號、選擇是否合併開單條件
+2.輸入QBE條件，找出重覆性生產製程檔(srac_t)符合的資料顯示在單身
+3.進入單身可勾選要轉委外的資料，本次委外數量、委外廠商、取價方式、幣別、稅別、單價可修改
+4.按下確定後將資料轉成委外採購單(使用重覆性生產轉委外採購元件)，並顯示轉成的委外採購清單，顯示採購單號、廠商，並詢問是否維護採購單，若選擇是，自動開啟委外採購單畫面，並帶出本次轉出的資料
+5.產生完採購單後，單身資料自動依原查詢條件重查
+6.如果單身按放棄回到單頭的查詢輸入
+7.單身需支持二次查詢
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[]]>
+  </db_all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[
+]]>
+  </mi_all>
+  <field cite_std="N" name="carry_qty" ver="1" src="s" column="sfaa051" table="sfaa_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[本次委外數量：可修改，不可空白，不可小於0
+預設計畫量-計畫日已委外量，如果小於0則給0,但是不卡控与"计算日已转委外量"之间的谁多谁少的问题
+
+]]>
+  </field>
+  <field cite_std="N" name="combine" ver="2" src="s" column="chr1" table="type_t" attribute="T001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[依廠商合併採購單，預設Y
+]]>
+  </field>
+  <field cite_std="N" name="docdate" ver="2" src="s" column="pmdldocdt" table="pmdl_t" attribute="D001" type="date()" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="doctype" ver="2" src="s" column="ooba002" table="ooba_t" attribute="C202" type="varchar2(5)" req="Y" i_zoom="" c_zoom="q_ooba002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[採購單別:可開窗
+]]>
+  </field>
+  <field cite_std="N" name="pmdl004" ver="1" src="s" column="pmdl004" table="pmdl_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="q_pmaa001_3" c_zoom="q_pmaa001_3" chk_ref="v_pmaa001_1" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[委外廠商：可輸入，不可空白
+預設重覆性生產製程資料內的委外廠商
+受採購控制組控制可選擇的廠商
+輸入需存在廠商資料內，可開窗
+]]>
+  </field>
+  <field cite_std="N" name="pmdl011" ver="1" src="s" column="pmdl011" table="pmdl_t" attribute="C010" type="varchar2(10)" req="N" i_zoom="q_oodb002_2" c_zoom="q_oodb002_2" chk_ref="v_oodb002" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[稅務規則：
+●欄位控管：
+  資料欄位: pmdl011 可Display可Input
+  預設值: 判斷供應商是否有設置採購控制組供應商預設條件(apmi110)，取pmal004
+          如果沒有，取供應商的pmab034 
+  校驗:
+     1.不允許空白
+     2.輸入的值應存在[T:稅別檔].[C:稅別編號]中，且狀態碼需為 Y.有效 ，
+       而且[T:稅別檔].[C:稅區]是屬於g_site所設置的稅區
+ 
+  帶值:1.抓取[T:稅別多語言檔].[C:說明]顯示在pmdl011
+
+
+●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:稅務規則檔].[C:稅務規則編號],[T:稅務規則多語言檔].[C:說明],[T:稅務規則檔].[C:稅率],
+               [T:稅務規則檔].[C:單價含稅否]
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="pmdl015" ver="1" src="s" column="pmdl015" table="pmdl_t" attribute="C008" type="varchar2(10)" req="N" i_zoom="q_ooaj002_1" c_zoom="q_ooaj002_1" chk_ref="v_ooaj002" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[幣別：
+●欄位控管：
+  資料欄位: pmdl015/可Display可Input
+  預設值:判斷供應商是否有設置採購控制組供應商預設條件(apmi110)，取pmal003
+            如果沒有，取供應商的pmab033
+  校驗:
+     1.不允許空白
+     2.輸入的值應存在[T:幣別檔].[C:幣別編號]中，且狀態碼需為 Y.有效 
+ 
+  帶值:1.呼叫取匯率應用元件抓取出匯率後顯示在{C:匯率]欄位
+  計算或處理:無
+●開窗處理：
+     參考函式：q_ooal001_1]
+     開窗條件：新增時，[C:狀態碼]='Y'
+     回值類型：新增/修改時(單一回值)，查詢時(多重回值)
+]]>
+  </field>
+  <field cite_std="N" name="pmdl017" ver="1" src="s" column="pmdl017" table="pmdl_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_pmam001" c_zoom="q_pmam001" chk_ref="v_pmam001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[取價方式：
+  ●欄位控制：
+     資料欄位: pmdl017/可Display可Input
+     允許空白: No
+     預設值:判斷供應商是否有設置採購控制組供應商預設條件(apmi110)，取pmal021
+            如果沒有，取供應商的pmab054
+     校驗:1.輸入值須存在[T:採購取價方式檔].[C:取價方式編號] 且為有效資料
+     帶值:1.顯示時將[T:採購取價方式多語言檔].[C:說明]帶回pmdl017
+     計算或處理:無
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:採購取價方式檔].[C:取價方式編號],[T:採購取價方式多語言檔].[C:說明]
+       過濾條件：
+       回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+]]>
+  </field>
+  <field cite_std="N" name="price" ver="1" src="s" column="pmdn015" table="pmdn_t" attribute="N201" type="number(20,6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="&gt;=0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單價：由取價應用元件回傳值取得
+控制方式與採購單一致
+]]>
+  </field>
+  <field cite_std="N" name="qty1" ver="1" src="s" column="sfaa012" table="sfaa_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[計畫量：sracb010*srac028/srac029,Display only]]>
+  </field>
+  <field cite_std="N" name="qty2" ver="1" src="s" column="sfaa050" table="sfaa_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[計畫日已委外量：Display only
+找到委外採購單上此項目該日期的已委外量(用到庫日期找)]]>
+  </field>
+  <field cite_std="N" name="sel" ver="1" src="s" column="chr1" table="type_t" attribute="T001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[選擇：Y/N，預設N
+要有全選、取消全選的功能
+執行抛转時，將有勾選的做抛转
+]]>
+  </field>
+  <field cite_std="N" name="sraa001" ver="2" src="s" column="sraa001" table="sraa_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="q_srza001" c_zoom="q_srza001" chk_ref="v_srza001" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[計畫編號：不可空白，可開窗，需存在asri001，
+如果作業人員所屬的控制組在asri001只有對到一個，自動帶出
+輸入的計畫編號需受控制組控制
+]]>
+  </field>
+  <field cite_std="N" name="srab000" ver="1" src="s" column="srab000" table="srab_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srab004" ver="2" src="s" column="srab004" table="srab_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="q_bmaa001_1" c_zoom="q_bmaa001_1" chk_ref="v_imaf001_1" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[srab004，可開窗]]>
+  </field>
+  <field cite_std="N" name="srab0041" ver="2" src="s" column="srab004" table="srab_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="q_bmaa001_1" c_zoom="q_bmaa001_1" chk_ref="v_imaf001_1" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[生產料號:srab004,Display only]]>
+  </field>
+  <field cite_std="N" name="srab005" ver="2" src="s" column="srab005" table="srab_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="q_bmaa002" c_zoom="q_bmaa002" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[srab005]]>
+  </field>
+  <field cite_std="N" name="srab0051" ver="2" src="s" column="srab005" table="srab_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="q_bmaa002" c_zoom="q_bmaa002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[BOM特性:srab005，Display only
+]]>
+  </field>
+  <field cite_std="N" name="srab006" ver="2" src="s" column="srab006" table="srab_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[srab006
+]]>
+  </field>
+  <field cite_std="N" name="srab0061" ver="2" src="s" column="srab006" table="srab_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品特徵:srab006,Display only
+]]>
+  </field>
+  <field cite_std="N" name="srab009" ver="2" src="s" column="srab009" table="srab_t" attribute="D001" type="date()" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[srab009]]>
+  </field>
+  <field cite_std="N" name="srab0091" ver="2" src="s" column="srab009" table="srab_t" attribute="D001" type="date()" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[計畫日期:srab009,Display only
+]]>
+  </field>
+  <field cite_std="N" name="srac008" ver="1" src="s" column="srac008" table="srac_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[作業編號:srac008,Display only]]>
+  </field>
+  <field cite_std="N" name="srac009" ver="1" src="s" column="srac009" table="srac_t" attribute="C404" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[製程序:srac009,Display only
+]]>
+  </field>
+  <field cite_std="N" name="srac027" ver="1" src="s" column="srac027" table="srac_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單位:srac027
+display only]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="pmdl011_desc" src="s" depend_field="pmdl011" correspon_key="pmdl011" ref_table="oodbl_t" ref_fk="oodbl002" ref_dlang="oodbl003" ref_rtn="oodbl004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdl015_desc" src="s" depend_field="pmdl015" correspon_key="pmdl015" ref_table="ooail_t" ref_fk="ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdl017_desc" src="s" depend_field="pmdl017" correspon_key="pmdl017" ref_table="pmaml_t" ref_fk="pmaml001" ref_dlang="pmaml002" ref_rtn="pmaml003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdl04_desc" src="s" depend_field="pmdl04" correspon_key="pmdl004" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="2" name="srab0041_desc1" src="s" depend_field="srab0041" correspon_key="srab0041" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="2" name="srab0041_desc2" src="s" depend_field="srab0041" correspon_key="srab0041" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="srac008_desc" src="s" depend_field="srac008" correspon_key="&apos;221&apos;,srac008" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="carry_qty" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="combine" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="docdate" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="doctype" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdl004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdl011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdl015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdl017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="price" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="qty1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="qty2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="sraa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srab000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="srab004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="srab0041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="srab005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="srab0051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="srab006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="srab0061" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="srab009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="srab0091" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="carry_po" ver="2" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="input1" text="輸入條件" lstr=""/>
+    <sfield name="lbl_ooba002" text="採購單別" lstr=""/>
+    <sfield name="lbl_pmdldocdt" text="採購日期" lstr=""/>
+    <sfield name="lbl_sraa001" text="生產計畫" lstr=""/>
+    <sfield name="lbl_combine" text="依廠商合併採購單" lstr=""/>
+    <sfield name="asrp400.group" text="查詢條件" lstr=""/>
+    <sfield name="lbl_srab004" text="料件編號" lstr=""/>
+    <sfield name="lbl_srab005" text="BOM特性" lstr=""/>
+    <sfield name="lbl_carry_po" text="拋轉委外採購單" lstr=""/>
+    <sfield name="lbl_srab006" text="產品特徵" lstr=""/>
+    <sfield name="lbl_srab009" text="計畫日期" lstr=""/>
+    <sfield name="lbl_detail" text="明細資料" lstr=""/>
+    <sfield name="asrp400.page1" text="制程資訊" lstr=""/>
+    <sfield name="lbl_sel" text="選擇" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_srac008" text="本站作業編號" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_srac009" text="作業序" lstr=""/>
+    <sfield name="lbl_srac027" text="轉出單位" lstr=""/>
+    <sfield name="lbl_srab010" text="數量" lstr=""/>
+    <sfield name="lbl_qty2" text="計畫日已委外量" lstr=""/>
+    <sfield name="lbl_carry_qty" text="本次委外數量" lstr=""/>
+    <sfield name="lbl_pmdl004" text="委外廠商" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_pmdl017" text="取價方式" lstr=""/>
+    <sfield name="lbl_pmaml003" text="說明" lstr=""/>
+    <sfield name="lbl_pmdl015" text="幣別" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_pmdl011" text="稅別" lstr=""/>
+    <sfield name="lbl_oodbl004" text="說明" lstr=""/>
+    <sfield name="lbl_pmdn015" text="單價" lstr=""/>
+    <sfield name="lbl_srab000" text="版本" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzpd001" text="排程執行序號" lstr=""/>
+    <sfield name="lbl_gzpd002" text="排程編號" lstr=""/>
+    <sfield name="lbl_gzpd003" text="序號" lstr=""/>
+    <sfield name="lbl_gzpd004" text="執行作業" lstr=""/>
+    <sfield name="lbl_gzpd005" text="傳入參數" lstr=""/>
+    <sfield name="lbl_gzpc006" text="執行結束時間" lstr=""/>
+    <sfield name="lbl_gzpd007" text="作業執行狀態" lstr=""/>
+    <sfield name="lbl_gzpd008" text="作業執行時間" lstr=""/>
+    <sfield name="lbl_gzpd009" text="執行使用者編號" lstr=""/>
+    <sfield name="lbl_gzpd010" text="作業完成時間" lstr=""/>
+    <sfield name="btn_schedule_reexec" text="重新執行" lstr=""/>
+    <sfield name="btn_view" text="重新查看" lstr=""/>
+    <sfield name="btn_schedule_adv" text="進階查詢" lstr=""/>
+    <sfield name="lbl_gzpa003" text="執行類型" lstr=""/>
+    <sfield name="lbl_gzpa002" text="排程說明" lstr=""/>
+    <sfield name="lbl_asign" text="指定時間執行" lstr=""/>
+    <sfield name="lbl_gzpa007" text="預定執行時間" lstr=""/>
+    <sfield name="lbl_exec" text="執行時間設定" lstr=""/>
+    <sfield name="lbl_wk1" text="第一週" lstr=""/>
+    <sfield name="lbl_wk2" text="第二週" lstr=""/>
+    <sfield name="lbl_wk3" text="第三週" lstr=""/>
+    <sfield name="lbl_wk4" text="第四週" lstr=""/>
+    <sfield name="lbl_wk5" text="第五週" lstr=""/>
+    <sfield name="lbl_wd0" text="週日" lstr=""/>
+    <sfield name="lbl_wd1" text="週一" lstr=""/>
+    <sfield name="lbl_wd2" text="週二" lstr=""/>
+    <sfield name="lbl_wd3" text="週三" lstr=""/>
+    <sfield name="lbl_wd4" text="週四" lstr=""/>
+    <sfield name="lbl_wd5" text="週五" lstr=""/>
+    <sfield name="lbl_wd6" text="週六" lstr=""/>
+    <sfield name="lbl_dayend" text="月底" lstr=""/>
+    <sfield name="lbl_sc1" text="時段一" lstr=""/>
+    <sfield name="lbl_to" text="至" lstr=""/>
+    <sfield name="lbl_per" text="每" lstr=""/>
+    <sfield name="lbl_times" text="執行一次" lstr=""/>
+    <sfield name="lbl_sc2" text="時段二" lstr=""/>
+    <sfield name="lbl_sc3" text="時段三" lstr=""/>
+    <sfield name="lbl_spec" text="特殊指定" lstr=""/>
+    <sfield name="lbl_gzpa029" text="執行日遇到假日" lstr=""/>
+    <sfield name="lbl_gzpa031" text="前一程序未完成時不執行新程序" lstr=""/>
+    <sfield name="lbl_end_call" text="執行結束通知人員" lstr=""/>
+    <sfield name="lbl_gzpe003" text="執行狀況" lstr=""/>
+    <sfield name="lbl_gzpe004" text="收件人員工編號" lstr=""/>
+    <sfield name="lbl_gzpe004_desc" text="員工姓名" lstr=""/>
+    <sfield name="lbl_addr" text="收件人信件位址" lstr=""/>
+    <sfield name="lbl_gzpe005" text="信件主旨" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_oobxl003" text="說明" lstr=""/>
+    <sfield name="lbl_oobxl004" text="助記碼" lstr=""/>
+    <sfield name="lbl_srza001" text="生產計畫編號" lstr=""/>
+    <sfield name="lbl_srza002" text="說明" lstr=""/>
+    <sfield name="lbl_bmaa001" text="主件料號" lstr=""/>
+    <sfield name="lbl_bmaa002" text="特性" lstr=""/>
+    <sfield name="lbl_imaa009" text="產品分類" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_imaa010" text="生命週期狀態" lstr=""/>
+    <sfield name="lbl_pmaa001" text="交易對象編號" lstr=""/>
+    <sfield name="lbl_pmaal003" text="交易對象全名" lstr=""/>
+    <sfield name="lbl_pmam001" text="取價方式編號" lstr=""/>
+    <sfield name="lbl_ooaj002" text="使用幣別" lstr=""/>
+    <sfield name="lbl_oodb004" text="課稅原则" lstr=""/>
+    <sfield name="lbl_oodb002" text="稅別代碼" lstr=""/>
+    <sfield name="lbl_oodb006" text="稅率" lstr=""/>
+    <sfield name="lbl_oodb005" text="含稅否" lstr=""/>
+    <sfield name="lbl_oodb011" text="稅別應用" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="lbl_ooca001" text="單位編號" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣版說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣版名稱(4rp)" lstr=""/>
+    <sfield name="lbl_rep_fmt" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+    <sact name="carry_po" text="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

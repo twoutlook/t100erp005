@@ -1,0 +1,3002 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axcq528.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:14(2015-11-23 00:26:29), PR版次:0014(2017-05-02 14:31:26)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000042
+#+ Filename...: axcq528
+#+ Description: 委外採購加工費查詢
+#+ Creator....: 00537(2015-10-01 23:19:41)
+#+ Modifier...: 00537 -SD/PR- 04441
+ 
+{</section>}
+ 
+{<section id="axcq528.global" >}
+#應用 q01 樣板自動產生(Version:34)
+#add-point:填寫註解說明 name="global.memo"
+#160223-00012#1   2016/03/04  By  dorislai 增加傳票號碼
+#160520-00002#3   2016/05/20  By  02599    程式优化,修正画面底部显示的笔数
+#160617-00002#1   2016/06/23  By  zhujing  增加串查
+#160802-00020#4   2016/08/04  By  dorislai 增加帳套權限管控
+#160802-00020#10  2016/08/11  By  dorislai 增加法人權限管控
+#160823-00040#3   2016/08/25  By  xianghui 金額改取apcb113 
+#161019-00017#5   2016/10/21  By  lixiang  调整组织栏位的开窗
+#170118-00007#1   2017/01/22  By  02295    資料為委外倉退單：
+#                                          1.數量、金額顯示負數，這樣加總起來的金額才會是正確的
+#                                          2.若倉退方式為4.純金額折讓，則數量顯示0
+#170209-00026#2   2017/02/09  By  02040    單頭單身未串ent，導致資料有誤 
+#170220-00006#1   2017/02/20  By  02040    依單頭的本幣位的設定顯示金額2.調整帳套權限控卡
+#170310-00068#20  2017/04/06  By  09263    1.單身查詢無法下條件2.無二次查詢功能3.SQL串接單身條件有問題
+#170501-00001#1   2017/05/02  By  Whitney  修正151222-00002
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pmdt_d RECORD
+       
+       sel LIKE type_t.chr1, 
+   pmdtsite LIKE pmdt_t.pmdtsite, 
+   pmdtsite_desc LIKE type_t.chr500, 
+   pmds008 LIKE pmds_t.pmds008, 
+   pmds008_desc LIKE type_t.chr500, 
+   pmdsdocdt LIKE pmds_t.pmdsdocdt, 
+   pmdtdocno LIKE pmdt_t.pmdtdocno, 
+   pmdtseq LIKE pmdt_t.pmdtseq, 
+   pmdt001 LIKE pmdt_t.pmdt001, 
+   pmdt051 LIKE pmdt_t.pmdt051, 
+   pmdt051_desc LIKE type_t.chr500, 
+   pmdt006 LIKE pmdt_t.pmdt006, 
+   pmdt006_desc LIKE type_t.chr500, 
+   pmdt006_desc_1 LIKE type_t.chr500, 
+   pmdt023 LIKE pmdt_t.pmdt023, 
+   pmdt023_desc LIKE type_t.chr500, 
+   pmdt024 LIKE pmdt_t.pmdt024, 
+   pmds037 LIKE pmds_t.pmds037, 
+   pmds037_desc LIKE type_t.chr500, 
+   pmds038 LIKE pmds_t.pmds038, 
+   pmdt036 LIKE pmdt_t.pmdt036, 
+   pmdt038 LIKE pmdt_t.pmdt038, 
+   apca038 LIKE type_t.chr20
+       END RECORD
+PRIVATE TYPE type_g_pmdt2_d RECORD
+       pmdtsite LIKE pmdt_t.pmdtsite, 
+   pmdtsite_1_desc LIKE type_t.chr500, 
+   pmds008 LIKE pmds_t.pmds008, 
+   pmds008_1_desc LIKE type_t.chr500, 
+   pmdt051 LIKE pmdt_t.pmdt051, 
+   pmdt051_1_desc LIKE type_t.chr500, 
+   pmdt006 LIKE pmdt_t.pmdt006, 
+   pmdt006_1_desc LIKE type_t.chr500, 
+   pmdt006_1_desc_1 LIKE type_t.chr500, 
+   pmdt023 LIKE pmdt_t.pmdt023, 
+   pmdt023_1_desc LIKE type_t.chr500, 
+   pmdt024 LIKE pmdt_t.pmdt024, 
+   pmdt038 LIKE pmdt_t.pmdt038
+       END RECORD
+ 
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_xcck_m  RECORD 
+                 xcckcomp         LIKE xcck_t.xcckcomp,
+                 xcckcomp_desc    LIKE ooefl_t.ooefl003,
+                 xcckld           LIKE xcck_t.xcckld,
+                 xcckld_desc      LIKE glaal_t.glaal002,
+                 xcck004_1        LIKE xcck_t.xcck004,
+                 xcck005_1        LIKE xcck_t.xcck005,
+                 xcck004_2        LIKE xcck_t.xcck004,
+                 xcck005_2        LIKE xcck_t.xcck005,
+                 xcck001          LIKE xcck_t.xcck001,
+                 xcck001_desc     LIKE ooail_t.ooail003,
+                 xcck003          LIKE xcck_t.xcck003,
+                 xcck003_desc     LIKE xcatl_t.xcatl003
+                 END RECORD
+DEFINE g_tot_cnt2             LIKE type_t.num10
+DEFINE g_wc2_table1           STRING
+DEFINE g_wc_cs_ld            STRING                #160802-00020#4-add
+DEFINE g_wc_cs_comp          STRING                #160802-00020#10-add
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_pmdt_d            DYNAMIC ARRAY OF type_g_pmdt_d
+DEFINE g_pmdt_d_t          type_g_pmdt_d
+DEFINE g_pmdt2_d     DYNAMIC ARRAY OF type_g_pmdt2_d
+DEFINE g_pmdt2_d_t   type_g_pmdt2_d
+ 
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axcq528.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axc","")
+ 
+   #add-point:作業初始化 name="main.init"
+   #160802-00020#4-add-(S)
+   CALL s_fin_create_account_center_tmp()                      #展組織下階成員所需之暫存檔 
+   CALL s_fin_azzi800_sons_query(g_today)
+   CALL s_fin_account_center_ld_str() RETURNING g_wc_cs_ld
+   CALL s_fin_get_wc_str(g_wc_cs_ld)  RETURNING g_wc_cs_ld
+   #160802-00020#4-add-(E)
+   CALL s_axc_get_authcomp() RETURNING g_wc_cs_comp            #抓取使用者有拜訪權限據點的對應法人  #160802-00020#10-add
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE axcq528_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE axcq528_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE axcq528_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axcq528 WITH FORM cl_ap_formpath("axc",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL axcq528_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL axcq528_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_axcq528
+      
+   END IF 
+   
+   CLOSE axcq528_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="axcq528.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION axcq528_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+     
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc('xcck001','8914')
+#   CALL axcq528_default()  #160520-00002#3 mark 
+
+   #end add-point
+ 
+   CALL axcq528_default_search()
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq528.default_search" >}
+PRIVATE FUNCTION axcq528_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   #160617-00002#1 add-S
+   IF NOT cl_null(g_argv[03]) THEN
+      LET g_xcck_m.xcckcomp = g_argv[03]
+   END IF
+ 
+   IF NOT cl_null(g_argv[04]) THEN
+      LET g_xcck_m.xcckld = g_argv[04]
+   END IF
+   
+   IF NOT cl_null(g_argv[05]) THEN
+      LET g_xcck_m.xcck004_1 = g_argv[05]
+      LET g_xcck_m.xcck004_2 = g_argv[05]
+   END IF
+   
+   IF NOT cl_null(g_argv[06]) THEN
+      LET g_xcck_m.xcck005_1 = g_argv[06]
+      LET g_xcck_m.xcck005_2 = g_argv[06]
+   END IF
+ 
+   IF NOT cl_null(g_argv[07]) THEN
+      LET g_xcck_m.xcck003 = g_argv[07]
+   END IF
+   
+   IF NOT cl_null(g_argv[08]) THEN
+      LET g_wc = g_wc, " pmdt001 = '", g_argv[08], "' AND "
+   END IF
+   #160617-00002#1 add-E
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " pmdtdocno = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " pmdtseq = '", g_argv[02], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq528.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axcq528_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old   STRING
+   DEFINE ls_js     STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   DEFINE l_glaa001   LIKE glaa_t.glaa001
+   DEFINE l_glaa016   LIKE glaa_t.glaa016
+   DEFINE l_glaa020   LIKE glaa_t.glaa020
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   #170310-00068#20   By 09263 --mark(s)  
+#   INITIALIZE g_xcck_m.* TO NULL      
+   #160617-00002#1 add-S 
+#   IF NOT cl_null(g_argv[03]) THEN
+#      LET g_xcck_m.xcckcomp = g_argv[03]
+#   END IF
+# 
+#   IF NOT cl_null(g_argv[04]) THEN
+#      LET g_xcck_m.xcckld = g_argv[04]
+#   END IF
+#   
+#   IF NOT cl_null(g_argv[05]) THEN
+#      LET g_xcck_m.xcck004_1 = g_argv[05]
+#      LET g_xcck_m.xcck004_2 = g_argv[05]
+#   END IF
+#   
+#   IF NOT cl_null(g_argv[06]) THEN
+#      LET g_xcck_m.xcck005_1 = g_argv[06]
+#      LET g_xcck_m.xcck005_2 = g_argv[06]
+#   END IF
+# 
+#   IF NOT cl_null(g_argv[07]) THEN
+#      LET g_xcck_m.xcck003 = g_argv[07]
+#   END IF
+   #160617-00002#1 add-E
+   #170310-00068#20   By 09263 --mark(e) 
+   #end add-point
+ 
+   
+   CALL axcq528_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_pmdt_d.clear()
+         CALL g_pmdt2_d.clear()
+ 
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL axcq528_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+         #170310-00068#20   By 09263 --mark(s)  
+         #單頭
+#            INPUT BY NAME g_xcck_m.xcckcomp,g_xcck_m.xcckld,g_xcck_m.xcck004_1,g_xcck_m.xcck005_1,g_xcck_m.xcck004_2,g_xcck_m.xcck005_2,g_xcck_m.xcck001, 
+#                g_xcck_m.xcck003,g_xcck_m.xcckld
+#               ATTRIBUTE(WITHOUT DEFAULTS)
+#               
+#               #自訂ACTION(master_input)
+#               
+#            
+#               BEFORE INPUT
+#                  #add-point:資料輸入前
+#                  #end add-point
+#            
+#                        #應用 a02 樣板自動產生(Version:1)
+#            AFTER FIELD xcckcomp
+#               
+#               #add-point:AFTER FIELD xcckcomp
+#               IF NOT cl_null(g_xcck_m.xcckcomp) THEN 
+#   #應用 a19 樣板自動產生(Version:2)
+#                  #校驗代值
+#                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+#                  INITIALIZE g_chkparam.* TO NULL
+#                  #設定g_chkparam.*的參數
+#                  LET g_chkparam.arg1 = g_xcck_m.xcckcomp
+#   
+#                     
+#                  #呼叫檢查存在並帶值的library
+#                  IF cl_chk_exist("v_ooef001_15") THEN
+#                     #檢查成功時後續處理
+#                     #LET  = g_chkparam.return1
+#                     #DISPLAY BY NAME 
+#                  ELSE
+#                     #檢查失敗時後續處理
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               
+#   
+#               END IF 
+#               LET g_xcck_m.xcckcomp_desc = s_desc_get_department_desc(g_xcck_m.xcckcomp)
+#               DISPLAY BY NAME g_xcck_m.xcckcomp_desc
+#   
+#   
+#               #END add-point
+#               
+#    
+#            #應用 a01 樣板自動產生(Version:1)
+#            BEFORE FIELD xcckcomp
+#               #add-point:BEFORE FIELD xcckcomp
+#               
+#               #END add-point
+#    
+#            #應用 a04 樣板自動產生(Version:2)
+#            ON CHANGE xcckcomp
+#               #add-point:ON CHANGE xcckcomp
+#               
+#               #END add-point 
+#    
+#    
+#            #應用 a02 樣板自動產生(Version:1)
+#            AFTER FIELD xcckld
+#               
+#               #add-point:AFTER FIELD xcckld
+#               IF NOT cl_null(g_xcck_m.xcckld) THEN 
+#   #應用 a19 樣板自動產生(Version:2)
+#                  #校驗代值
+#                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+#                  INITIALIZE g_chkparam.* TO NULL
+#                  #設定g_chkparam.*的參數
+#                  LET g_chkparam.arg1 = g_xcck_m.xcckld
+#   
+#                     
+#                  #呼叫檢查存在並帶值的library
+#                  IF cl_chk_exist("v_glaald") THEN
+#                     #檢查成功時後續處理
+#                     #LET  = g_chkparam.return1
+#                     #DISPLAY BY NAME 
+#                  ELSE
+#                     #檢查失敗時後續處理
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               
+#   
+#               END IF 
+#               LET g_xcck_m.xcckld_desc = s_desc_get_ld_desc(g_xcck_m.xcckld)
+#               DISPLAY BY NAME g_xcck_m.xcckld_desc
+#   
+#   
+#               #END add-point
+#               
+#    
+#            #應用 a01 樣板自動產生(Version:1)
+#            BEFORE FIELD xcckld
+#               #add-point:BEFORE FIELD xcckld
+#               
+#               #END add-point
+#    
+#            #應用 a04 樣板自動產生(Version:2)
+#            ON CHANGE xcckld
+#               #add-point:ON CHANGE xcckld
+#               
+#               #END add-point 
+#     
+#            #應用 a02 樣板自動產生(Version:1)
+#            AFTER FIELD xcck001
+#               
+#               #add-point:AFTER FIELD xcck001
+#               IF NOT cl_null(g_xcck_m.xcck001) THEN
+#                  LET l_glaa001 = NULL
+#                  LET l_glaa016 = NULL
+#                  LET l_glaa020 = NULL
+#                  SELECT glaa001,glaa016,glaa020 INTO l_glaa001,l_glaa016,l_glaa020
+#                    FROM glaa_t
+#                   WHERE glaaent = g_enterprise
+#                     AND glaald  = g_xcck_m.xcckld
+#                     
+#                  CASE g_xcck_m.xcck001
+#                     WHEN '1'
+#                      LET g_xcck_m.xcck001_desc = s_desc_get_currency_desc(l_glaa001)
+#                     WHEN '2'
+#                      LET g_xcck_m.xcck001_desc = s_desc_get_currency_desc(l_glaa016)
+#                     WHEN '3'
+#                      LET g_xcck_m.xcck001_desc = s_desc_get_currency_desc(l_glaa020)
+#                  END CASE
+#               END IF
+#               DISPLAY BY NAME g_xcck_m.xcck001_desc
+#   
+#   
+#               #END add-point
+#               
+#    
+#            #應用 a01 樣板自動產生(Version:1)
+#            BEFORE FIELD xcck001
+#               #add-point:BEFORE FIELD xcck001
+#               
+#               #END add-point
+#    
+#            #應用 a04 樣板自動產生(Version:2)
+#            ON CHANGE xcck001
+#               #add-point:ON CHANGE xcck001
+#               
+#               #END add-point 
+#    
+#            #應用 a02 樣板自動產生(Version:1)
+#            AFTER FIELD xcck003
+#               
+#               #add-point:AFTER FIELD xcck003
+#               IF NOT cl_null(g_xcck_m.xcck003) THEN 
+#   #應用 a19 樣板自動產生(Version:2)
+#                  #校驗代值
+#                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+#                  INITIALIZE g_chkparam.* TO NULL
+#                  #設定g_chkparam.*的參數
+#                  LET g_chkparam.arg1 = g_xcck_m.xcck003
+#                  #呼叫檢查存在並帶值的library
+#                  IF cl_chk_exist("v_xcat001") THEN
+#                     #檢查成功時後續處理
+#                     #LET  = g_chkparam.return1
+#                     #DISPLAY BY NAME 
+#                  ELSE
+#                     #檢查失敗時後續處理
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF 
+#               INITIALIZE g_ref_fields TO NULL
+#               LET g_ref_fields[1] = g_xcck_m.xcck003
+#               CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#               LET g_xcck_m.xcck003_desc = '', g_rtn_fields[1] , ''
+#               DISPLAY BY NAME g_xcck_m.xcck003_desc
+#   
+#               #END add-point
+#               
+#    
+#            #應用 a01 樣板自動產生(Version:1)
+#            BEFORE FIELD xcck003
+#               #add-point:BEFORE FIELD xcck003
+#               
+#               #END add-point
+#    
+#            #應用 a04 樣板自動產生(Version:2)
+#            ON CHANGE xcck003
+#               #add-point:ON CHANGE xcck003
+#               
+#               #END add-point      
+#         
+#            AFTER FIELD xcck004_1 
+#               IF NOT cl_null(g_xcck_m.xcck004_1) AND NOT cl_null(g_xcck_m.xcck004_2) THEN
+#                   IF g_xcck_m.xcck004_1 > g_xcck_m.xcck004_2 THEN
+#                      INITIALIZE g_errparam TO NULL
+#                      LET g_errparam.code = 'acr-00064'
+#                      LET g_errparam.extend = ''
+#                      LET g_errparam.popup = TRUE
+#                      CALL cl_err()
+#                      NEXT FIELD xcck004_1
+#                   END IF
+#                END IF
+#            AFTER FIELD xcck005_1
+#               IF NOT cl_null(g_xcck_m.xcck005_1) AND NOT cl_null(g_xcck_m.xcck005_2) THEN
+#                  IF g_xcck_m.xcck004_1*12+g_xcck_m.xcck005_1 > g_xcck_m.xcck004_2*12+g_xcck_m.xcck005_2 THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = 'acr-00067'
+#                     LET g_errparam.extend = ''
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#                     NEXT FIELD xcck005_1
+#                  END IF
+#               END IF
+#            AFTER FIELD xcck004_2
+#               IF NOT cl_null(g_xcck_m.xcck004_1) AND NOT cl_null(g_xcck_m.xcck004_2) THEN
+#                   IF g_xcck_m.xcck004_1 > g_xcck_m.xcck004_2 THEN
+#                      INITIALIZE g_errparam TO NULL
+#                      LET g_errparam.code = 'acr-00064'
+#                      LET g_errparam.extend = ''
+#                      LET g_errparam.popup = TRUE
+#                      CALL cl_err()
+#                      NEXT FIELD xcck004_2
+#                   END IF
+#                END IF
+#            AFTER FIELD xcck005_2   
+#               IF NOT cl_null(g_xcck_m.xcck005_1) AND NOT cl_null(g_xcck_m.xcck005_2) THEN
+#                  IF g_xcck_m.xcck004_1*12+g_xcck_m.xcck005_1 > g_xcck_m.xcck004_2*12+g_xcck_m.xcck005_2 THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = 'acr-00067'
+#                     LET g_errparam.extend = ''
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#                     NEXT FIELD xcck005_2
+#                  END IF
+#               END IF   
+#   
+#            ON ACTION controlp INFIELD xcckcomp
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.default1 = g_xcck_m.xcckld             #給予default值
+#               #160802-00020#10-add-(S)
+#               #增加法人過濾條件
+#               IF NOT cl_null(g_wc_cs_comp) THEN
+#                  LET g_qryparam.where = " ooef001 IN ",g_wc_cs_comp
+#               END IF
+#               #160802-00020#10-add-(E)
+#               CALL q_ooef001_2()                                #呼叫開窗
+#   
+#               LET g_xcck_m.xcckcomp = g_qryparam.return1              
+#   
+#               DISPLAY g_xcck_m.xcckcomp TO xcckcomp           #
+#   
+#               NEXT FIELD xcckcomp                          #返回原欄位
+#               
+#            ON ACTION controlp INFIELD xcckld
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#   
+#               LET g_qryparam.default1 = g_xcck_m.xcckld             #給予default值
+#               
+#               #給予arg
+#               LET g_qryparam.arg1 = g_user
+#               LET g_qryparam.arg2 = g_dept
+#               #160802-00020#4-add-(S)
+#               IF NOT cl_null(g_wc_cs_ld) THEN
+#                  LET g_qryparam.where = " glaald IN ",g_wc_cs_ld
+#               END IF
+#               #160802-00020#4-add-(E)               
+#               CALL q_authorised_ld()                                #呼叫開窗
+#   
+#               LET g_xcck_m.xcckld = g_qryparam.return1              
+#   
+#               DISPLAY g_xcck_m.xcckld TO xcckld              #
+#   
+#               NEXT FIELD xcckld                          #返回原欄位
+#                           
+#            ON ACTION controlp INFIELD xcck003
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#   
+#               LET g_qryparam.default1 = g_xcck_m.xcck003             #給予default值
+#              
+#               CALL q_xcat001()                                #呼叫開窗
+#   
+#               LET g_xcck_m.xcck003 = g_qryparam.return1              
+#   
+#               DISPLAY g_xcck_m.xcck003 TO xcck003              #
+#   
+#               NEXT FIELD xcck003                         #返回原欄位
+#                          
+#         END INPUT
+         #170310-00068#20   By 09263 --mark(e)  
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+         #170310-00068#20   By 09263 --mark(s)  
+#         CONSTRUCT g_wc2 ON pmdtsite,pmds008,pmdsdocdt,pmdtdocno,pmdtseq,pmdt051,pmdt006,pmdt023,pmdt024,pmds037,pmds038,pmdt036,pmdt038
+#
+#              FROM s_detail1[1].pmdtsite,s_detail1[1].pmds008,s_detail1[1].pmdsdocdt,s_detail1[1].pmdtdocno,
+#                    s_detail1[1].pmdtseq,s_detail1[1].pmdt051,s_detail1[1].pmdt006,s_detail1[1].pmdt023,
+#                    s_detail1[1].pmdt024,s_detail1[1].pmds037,s_detail1[1].pmds038,s_detail1[1].pmdt036,s_detail1[1].pmdt038
+#              
+#              
+#            ON ACTION controlp INFIELD b_pmdtsite
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'c'
+#               LET g_qryparam.reqry = FALSE
+#               #CALL q_ooef001()                           #呼叫開窗  #161019-00017#5
+#               CALL q_ooef001_1()   #161019-00017#5
+#               DISPLAY g_qryparam.return1 TO b_pmdtsite   #顯示到畫面上
+#               NEXT FIELD b_pmdtsite                      #返回原欄位
+#   
+#            ON ACTION controlp INFIELD b_pmds008
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'c'
+#               LET g_qryparam.reqry = FALSE
+#               CALL q_pmaa001_3()                           #呼叫開窗
+#               DISPLAY g_qryparam.return1 TO b_pmds008      #顯示到畫面上
+#               NEXT FIELD b_pmds008                         #返回原欄位
+#   
+#            ON ACTION controlp INFIELD b_pmdtdocno
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'c'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.arg1 = "('12','14')"
+#               CALL q_pmdsdocno()                             #呼叫開窗
+#               DISPLAY g_qryparam.return1 TO b_pmdtdocno      #顯示到畫面上
+#               NEXT FIELD b_pmdtdocno                         #返回原欄位
+#   
+#            ON ACTION controlp INFIELD b_pmdt051
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'c'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.arg1 ="('312','313')" 
+#               CALL q_oocq002_in()                            #呼叫開窗
+#               DISPLAY g_qryparam.return1 TO b_pmdtdocno      #顯示到畫面上
+#               NEXT FIELD b_pmdtdocno                         #返回原欄位
+#   
+#            ON ACTION controlp INFIELD b_pmdt006
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'c'
+#               LET g_qryparam.reqry = FALSE
+#               CALL q_imaf001_15()                             #呼叫開窗
+#               DISPLAY g_qryparam.return1 TO b_pmdt006      #顯示到畫面上
+#               NEXT FIELD b_pmdt006                         #返回原欄位
+#   
+#            ON ACTION controlp INFIELD b_pmdt023
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'c'
+#               LET g_qryparam.reqry = FALSE
+#               CALL q_ooca001_1()                           #呼叫開窗
+#               DISPLAY g_qryparam.return1 TO b_pmdt023      #顯示到畫面上
+#               NEXT FIELD b_pmdt023                         #返回原欄位
+#    
+#            ON ACTION controlp INFIELD b_pmds037
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'c'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.arg1 = g_site
+#               CALL q_ooaj002_1()                           #呼叫開窗
+#               DISPLAY g_qryparam.return1 TO b_pmds037      #顯示到畫面上
+#               NEXT FIELD b_pmds037                         #返回原欄位
+#               
+#         END CONSTRUCT
+          #170310-00068#20   By 09263 --mark(e)  
+         #end add-point
+     
+         DISPLAY ARRAY g_pmdt_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL axcq528_detail_action_trans()
+ 
+               LET g_master_idx = l_ac
+               #為避免按上下筆時影響執行效能，所以做一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL axcq528_b_fill2()
+               LET g_action_choice = lc_action_choice_old
+ 
+               #add-point:input段before row name="input.body.before_row"
+               
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+         #add-point:第一頁籤程式段mark結束用 name="ui_dialog.page1.mark.end"
+         
+         #end add-point
+ 
+         DISPLAY ARRAY g_pmdt2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 2
+ 
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body2.before_row"
+               
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_2)
+            
+ 
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL axcq528_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+#            CALL axcq528_default()   #170310-00068#20 By 09263 --mark
+            #170310-00068#20 by 09263 add(s)
+            LET g_wc = " 1=1"
+            LET g_wc2 = " 1=1"   
+            CALL cl_set_act_visible("selall,selnone,sel,unsel,insert", FALSE)            
+            #170310-00068#20 by 09263 add(e)
+            {
+            #end add-point
+            NEXT FIELD xcckcomp
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+            }
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+         
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+ 
+ 
+            #add-point:ON ACTION accept name="ui_dialog.accept"
+            
+            #end add-point
+ 
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            CALL axcq528_b_fill()
+ 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_pmdt_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_pmdt2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL axcq528_b_fill()
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL axcq528_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL axcq528_b_fill()
+ 
+         ON ACTION detail_next               #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL axcq528_b_fill()
+ 
+         ON ACTION detail_last               #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL axcq528_b_fill()
+ 
+         #應用 qs19 樣板自動產生(Version:3)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_pmdt_d.getLength()
+               LET g_pmdt_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_pmdt_d.getLength()
+               LET g_pmdt_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_pmdt_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pmdt_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_pmdt_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pmdt_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+ 
+ 
+ 
+ 
+ 
+         #應用 qs16 樣板自動產生(Version:3)
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL axcq528_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+ 
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query name="menu.query"
+#               CONTINUE DIALOG   #170310-00068#20 by 09263 mark
+               CALL axcq528_construct()   #170310-00068#20 by 09263 add
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後 name="ui_dialog.qbeclear"
+ 
+            #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq528.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION axcq528_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_sql           STRING
+   DEFINE l_curr          LIKE pmds_t.pmds037
+   DEFINE l_date          LIKE pmds_t.pmdsdocdt
+   DEFINE l_bdate         LIKE pmds_t.pmdsdocdt
+   DEFINE l_edate         LIKE pmds_t.pmdsdocdt
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_glaa003       LIKE glaa_t.glaa003
+   
+   #170310-00068#20 ---add (s)---
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET g_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter 
+   
+   #170310-00068#20 ---add (e)---
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   IF g_xcck_m.xcckld IS NULL THEN RETURN END IF
+   LET g_wc = ' 1=1'    #这只程序没有用到g_wc，但是也不能用默认的1=2
+   #end add-point
+ 
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:34) add cl_sql_auth_filter()
+ 
+   CALL g_pmdt_d.clear()
+   CALL g_pmdt2_d.clear()
+ 
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs04 樣板自動產生(Version:9)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET ls_sql_rank = "SELECT  UNIQUE '',pmdtsite,'','','','',pmdtdocno,pmdtseq,pmdt001,pmdt051,'',pmdt006, 
+       '','',pmdt023,'',pmdt024,'','','',pmdt036,pmdt038,'','','','','','','','','','','','','',''  , 
+       DENSE_RANK() OVER( ORDER BY pmdt_t.pmdtdocno,pmdt_t.pmdtseq) AS RANK FROM pmdt_t",
+ 
+ 
+                     "",
+                     " WHERE pmdtent= ? AND 1=1 AND ", ls_wc
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("pmdt_t"),
+                     " ORDER BY pmdt_t.pmdtdocno,pmdt_t.pmdtseq"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+#wujie 标准sql不满足需求，自己写,另外这个addpoint最后会写RETURN，往后的可以不用看了
+#按起始截止年期抓起始截止日期
+#step1  按账套取会计周期参考表号
+   CALL s_ld_sel_glaa(g_xcck_m.xcckld,'glaa003') RETURNING l_success,l_glaa003
+#step2  用会计周期参考表号+年期找起始截止日期
+#       起始日期
+   CALL s_fin_date_get_period_range(l_glaa003,g_xcck_m.xcck004_1,g_xcck_m.xcck005_1) RETURNING l_bdate,l_date
+   #160520-00002#3--add--str--
+   #判断是否抓取起始日期
+   IF cl_null(l_bdate) THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = g_xcck_m.xcck004_1||"+"||g_xcck_m.xcck005_1
+      LET g_errparam.code   = "axc-00336" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+    
+      RETURN
+   END IF
+   #160520-00002#3--add--end
+#       截止日期
+   CALL s_fin_date_get_period_range(l_glaa003,g_xcck_m.xcck004_2,g_xcck_m.xcck005_2) RETURNING l_date,l_edate
+   #160520-00002#3--add--str--
+   #判断是否抓取起始日期
+   IF cl_null(l_edate) THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = g_xcck_m.xcck004_2||"+"||g_xcck_m.xcck005_2
+      LET g_errparam.code   = "axc-00337" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+    
+      RETURN
+   END IF
+   #160520-00002#3--add--end
+  #170220-00006#1-s-mark 
+  ##按单头账套+本位币顺序抓币种
+  #CASE g_xcck_m.xcck001
+  #  WHEN '1'   #glaa001
+  #    CALL s_ld_sel_glaa(g_xcck_m.xcckld,'glaa001') RETURNING l_success,l_curr
+  #  WHEN '2'   #glaa016
+  #    CALL s_ld_sel_glaa(g_xcck_m.xcckld,'glaa016') RETURNING l_success,l_curr
+  #  WHEN '3'   #glaa020
+  #    CALL s_ld_sel_glaa(g_xcck_m.xcckld,'glaa020') RETURNING l_success,l_curr
+  #END CASE
+  #170220-00006#1-e-mark
+   DROP table x
+  #LET l_sql = "SELECT  UNIQUE 'N' sel,pmdtsite,T1.ooefl001 ooefl001,pmds008,T2.pmaal003 pmaal003,pmdsdocdt,pmdtdocno,pmdtseq,pmdt001,",#151222-00002#1-add-'pmdt001'  #170501-00001#1 mark
+   LET l_sql = "SELECT  UNIQUE 'N' sel,pmdtsite,T1.ooefl001 ooefl001,pmds008,T2.pmaal003 pmaal003,pmdsdocdt,pmdtdocno,pmdtseq,pmdv014,",  #170501-00001#1
+               "               pmdt051,decode(pmds000,'12',T3.oocql004,'14',T7.oocql004,'20',T3.oocql004,T3.oocql004) oocql004,pmdt006,T4.imaal003 imaal003,T4.imaal004 imaal004,",
+               "               pmdt023,T5.oocal003 oocal003,pmdt024,pmds037,T6.ooail003 ooail003,pmds038,pmdt036,pmdt038, pmdt064 apca038,pmds000,pmds100", #160520-00002#3 add apca038   #170118-00007#1 add 
+               "  FROM pmdt_t",
+               " LEFT OUTER JOIN ooefl_t T1 ON ooeflent = pmdtent AND ooefl001 = pmdtsite AND ooefl002 = '",g_dlang,"' ",
+               " LEFT OUTER JOIN oocql_t T3 ON oocqlent = pmdtent AND oocql001 = '312' AND oocql002 = pmdt051 AND oocql003 = '",g_dlang,"' ", 
+               " LEFT OUTER JOIN oocql_t T7 ON T7.oocqlent = pmdtent AND T7.oocql001 = '313' AND T7.oocql002 = pmdt051 AND T7.oocql003 = '",g_dlang,"' ",                 
+               " LEFT OUTER JOIN imaal_t T4 ON imaalent = pmdtent AND imaal001 = pmdt006 AND imaal002 = '",g_dlang,"' ",
+               " LEFT OUTER JOIN oocal_t T5 ON oocalent = pmdtent AND oocal001 = pmdt023 AND oocal002 = '",g_dlang,"' ",                     
+               ",pmds_t ", 
+               " LEFT OUTER JOIN pmaal_t T2 ON pmaalent = pmdsent AND pmaal001 = pmds008 AND pmaal002 = '",g_dlang,"' ",
+               " LEFT OUTER JOIN ooail_t T6 ON ooailent = pmdsent AND ooail001 = pmds037 AND ooail002 = '",g_dlang,"' ",
+               ",pmdv_t ",  #170501-00001#1
+               " WHERE pmdsent = pmdtent ",
+               "   AND pmdsdocno = pmdtdocno ",
+               "   AND pmdsent = '",g_enterprise,"'",
+               "   AND pmdsstus = 'S' ",
+               "   AND pmds011 = '2' ",   #只抓委外的
+               "   AND pmds000 IN ('12','14','20')",
+               "   AND pmdsdocdt BETWEEN '",l_bdate,"' AND '",l_edate,"'",
+              #"   AND pmds037 ='",l_curr,"'",        #170220-00006#1 mark
+               "   AND pmdtsite = pmdssite ",
+               "   AND pmdvent=pmdtent AND pmdvsite=pmdtsite AND pmdvdocno=pmdtdocno AND pmdvseq=pmdtseq ",  #170501-00001#1
+               "   AND EXISTS (SELECT 1 FROM ooef_t WHERE ooefent = '",g_enterprise,"' AND ooef017 = '",g_xcck_m.xcckcomp,"' AND ooef001 = pmdssite)",
+               "   AND ", ls_wc
+
+   LET g_sql = "SELECT COUNT(1) FROM (",l_sql,")"
+   PREPARE b_fill_cnt_pre1 FROM g_sql  #總筆數
+   EXECUTE b_fill_cnt_pre1 INTO g_tot_cnt
+   FREE b_fill_cnt_pre1
+ 
+   LET g_sql = l_sql,"  INTO TEMP x "   #为汇总页签准备，不然再从数据表里抓一次，效能差 
+   PREPARE axcq528_ins_x FROM g_sql
+   EXECUTE axcq528_ins_x
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "INSERT TEMP x" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+    
+      RETURN
+   END IF
+
+#抓apcb金额
+#根据成本计算类型决定抓未税/含税金额
+#晓峰说先抓apcb118，以后再补，所以这段先mark
+#   LET l_xcaz010 = NULL
+#   SELECT xcaz010 INTO l_xcaz010 FROM xcaz_t WHERE xcazent = g_enterprise AND xcazld = g_xcck_m.xcckld AND xcaz001 = g_xcck_m.xcck003
+#150912-00001#1---mark---s
+#   LET l_sql = " SELECT apcb002,apcb003,SUM(apcb118) apcb118 FROM apca_t,apcb_t ",
+#               "  WHERE apcaent = '",g_enterprise,"'",
+#               "    AND apcald = '",g_xcck_m.xcckld,"'",
+#               "    AND apcastus = 'Y'",
+#               "    AND apcadocno = apcbdocno",
+#               "    AND apcb001 IN ('11','21')",
+#               "    AND apcb023 = 'N'",
+#               "  GROUP BY apcb002,apcb003 ",
+#               "  ORDER BY apcb002,apcb003 "
+#
+#   LET g_sql = " MERGE INTO x T1 ",
+#               " USING (",l_sql,") T2 ",
+#               "    ON (T1.pmdtdocno = T2.apcb002 AND T1.pmdtseq = T2.apcb003)",
+#               " WHEN MATCHED THEN UPDATE SET T1.pmdt038 = T2.apcb118 "
+#
+#   PREPARE axcq528_merge_x FROM g_sql
+#   EXECUTE axcq528_merge_x
+#
+#   IF SQLCA.sqlcode THEN
+#      INITIALIZE g_errparam TO NULL 
+#      LET g_errparam.extend = "MERGE TEMP x" 
+#      LET g_errparam.code   = SQLCA.sqlcode 
+#      LET g_errparam.popup  = TRUE 
+#      CALL cl_err()
+#    
+#      RETURN
+#   END IF
+#150912-00001#1---mark---e   
+   #160520-00002#3--add--str--
+   #抛转传票apca038
+   UPDATE x SET apca038=NULL
+   LET l_sql = " SELECT DISTINCT apcb002,apcb003,apca038 ",
+               "   FROM apca_t,apcb_t ", 
+               "  WHERE apcaent = apcbent AND apcald = apcbld ",
+               "    AND apcadocno = apcbdocno ",
+               "    AND (apcastus <> 'X' OR apcastus <> 'N')",
+               "    AND apcbent = ",g_enterprise
+               
+  #170220-00006#1-s-add
+   IF NOT cl_null(g_wc_cs_ld) THEN
+      LET l_sql = l_sql , " AND apcald IN ",g_wc_cs_ld
+   END IF
+   #---增加法人過濾條件
+   IF NOT cl_null(g_wc_cs_comp) THEN
+      LET l_sql = l_sql," AND apcacomp IN ",g_wc_cs_comp
+   END IF  
+  #170220-00006#1-e-add
+   
+   LET g_sql=" MERGE INTO x t01 ",
+             " USING (",l_sql,
+             "        AND apcb023 = 'Y'",
+             "       ) t02",
+             "    ON (t02.apcb002=t01.pmdtdocno AND t02.apcb003=t01.pmdtseq)",
+             " WHEN MATCHED THEN UPDATE SET t01.apca038 = t02.apca038 "
+   PREPARE axcq528_merge_x_1 FROM g_sql
+   EXECUTE axcq528_merge_x_1
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "MERGE TEMP x" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+    
+      RETURN
+   END IF
+   
+   LET g_sql=" MERGE INTO x t01 ",
+             " USING (",l_sql,
+             "       ) t02",
+             "    ON (t02.apcb002=t01.pmdtdocno AND t02.apcb003=t01.pmdtseq)",
+             " WHEN MATCHED THEN UPDATE SET t01.apca038 = t02.apca038 ",
+             " WHERE TRIM(t01.apca038) IS NULL"
+   PREPARE axcq528_merge_x_2 FROM g_sql
+   EXECUTE axcq528_merge_x_2
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "MERGE TEMP x" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+    
+      RETURN
+   END IF
+   #160520-00002#3--add--end
+   #150912-00001#1---add---s
+   #160802-00020#4-mod-(S)  帳套權限管控
+#   LET l_sql = " SELECT apcb002,apcb003,SUM(apcb118) apcb118 FROM apca_t,apcb_t ",
+#               "  WHERE apcaent = '",g_enterprise,"'",
+#               "    AND apcald = '",g_xcck_m.xcckld,"'",
+#               "    AND apcastus = 'Y'",
+#               "    AND apcadocno = apcbdocno",
+#               "    AND apcb001 IN ('11','21')",
+#               "    AND apcb023 = 'N'",
+#               "  GROUP BY apcb002,apcb003 ",
+#               "  ORDER BY apcb002,apcb003 "
+   #LET l_sql = " SELECT apcb002,apcb003,SUM(apcb118) apcb118 FROM apca_t,apcb_t ",   #160823-00040#3
+   LET l_sql = " SELECT apcb002,apcb003,SUM(apcb113) apcb118 FROM apca_t,apcb_t ",   #160823-00040#3
+               "  WHERE apcaent = '",g_enterprise,"'",
+               "    AND apcald = '",g_xcck_m.xcckld,"'",
+               "    AND apcastus = 'Y'",
+               "    AND apcaent = apcbent ",                    #170209-00026#2 add
+               "    AND apcald = apcbld ",                      #170220-00006#1 add
+               "    AND apcadocno = apcbdocno",
+               "    AND apcb001 IN ('11','21')",
+               "    AND apcb023 = 'N'"
+   IF NOT cl_null(g_wc_cs_ld) THEN
+      LET g_sql = g_sql , " AND xccdld IN ",g_wc_cs_ld
+   END IF
+  #170220-00006#1-s-mark 
+  ##160802-00020#10-add-(S)
+  ##---增加法人過濾條件
+  #IF NOT cl_null(g_wc_cs_comp) THEN
+  #   LET g_sql = g_sql," AND xccdcomp IN ",g_wc_cs_comp
+  #END IF
+  ##160802-00020#10-add-(E)
+  #170220-00006#1-e-mark 
+  #170220-00006#1-s-add
+   CASE g_xcck_m.xcck001
+     WHEN '2'
+       LET l_sql = cl_replace_str(l_sql,'apcb113','apcb123')  #本位幣二未稅金額
+     WHEN '3'
+       LET l_sql = cl_replace_str(l_sql,'apcb113','apcb133')  #本位幣三未稅金額
+   END CASE
+
+   IF NOT cl_null(g_wc_cs_ld) THEN
+      LET l_sql = l_sql , " AND apcald IN ",g_wc_cs_ld
+   END IF
+   #---增加法人過濾條件
+   IF NOT cl_null(g_wc_cs_comp) THEN
+      LET l_sql = l_sql," AND apcacomp IN ",g_wc_cs_comp
+   END IF  
+  #170220-00006#1-e-add
+   LET l_sql = l_sql CLIPPED,"  GROUP BY apcb002,apcb003 ",
+                             "  ORDER BY apcb002,apcb003 "
+   #160802-00020#4-add-(E)
+   LET g_sql = " MERGE INTO x T1 ",
+               " USING (",l_sql,") T2 ",
+               "    ON (T1.pmdtdocno = T2.apcb002 AND T1.pmdtseq = T2.apcb003)",
+               " WHEN MATCHED THEN UPDATE SET T1.pmdt038 = T2.apcb118 "
+
+   PREPARE axcq528_merge_x FROM g_sql
+   EXECUTE axcq528_merge_x
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "MERGE TEMP x" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+    
+      RETURN
+   END IF
+  #150912-00001#1---add---e
+   
+  #170118-00007#1---add---s
+  #若該筆資料為委外倉退單：
+  #1.數量、金額顯示負數
+  #LET l_sql = " UPDATE x ",                         #170220-00006#1 mark
+   LET g_sql = " UPDATE x ",                         #170220-00006#1 add
+               "    SET pmdt024 = -1*pmdt024,",
+               "        pmdt038 = -1*pmdt038 ",
+               "  WHERE pmds000 = '14'"
+   PREPARE axcq528_update_x1 FROM g_sql  
+   EXECUTE axcq528_update_x1
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "UPDATE TEMP x" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+    
+      RETURN
+   END IF
+  #2.若倉退方式為4.純金額折讓，則數量顯示0
+  #LET l_sql = " UPDATE x ",                      #170220-00006#1  mark
+   LET g_sql = " UPDATE x ",                      #170220-00006#1  add
+               "    SET pmdt024 = 0 ",
+               "  WHERE pmds000 = '14' ",
+               "    AND pmds100 = '4' "
+   PREPARE axcq528_update_x2 FROM g_sql
+   EXECUTE axcq528_update_x2
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "UPDATE TEMP x" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+    
+      RETURN
+   END IF   
+   #170118-00007#1---add---e
+   
+  #LET g_sql = "SELECT  UNIQUE 'N',pmdtsite,ooefl001,pmds008,pmaal003,pmdsdocdt,pmdtdocno,pmdtseq,pmdt001,", #151222-00002#1-add-'pmdt001'  #170501-00001#1 mark
+   LET g_sql = "SELECT  UNIQUE 'N',pmdtsite,ooefl001,pmds008,pmaal003,pmdsdocdt,pmdtdocno,pmdtseq,pmdv014,",  #170501-00001#1
+               "               pmdt051,oocql004,pmdt006,imaal003,imaal004,",
+               "               pmdt023,oocal003,pmdt024,pmds037,ooail003,pmds038,pmdt036,pmdt038",
+               "              ,apca038",  #160520-00002#3 add
+               "  FROM x",
+               " ORDER BY pmdtsite,pmds008,pmdsdocdt,pmdtdocno,pmdtseq"
+               
+   PREPARE axcq528_pb1 FROM g_sql
+   DECLARE b_fill_curs1 CURSOR FOR axcq528_pb1
+   
+   FOREACH b_fill_curs1 INTO g_pmdt_d[l_ac].sel,g_pmdt_d[l_ac].pmdtsite,g_pmdt_d[l_ac].pmdtsite_desc, 
+       g_pmdt_d[l_ac].pmds008,g_pmdt_d[l_ac].pmds008_desc,g_pmdt_d[l_ac].pmdsdocdt,g_pmdt_d[l_ac].pmdtdocno, 
+       g_pmdt_d[l_ac].pmdtseq,g_pmdt_d[l_ac].pmdt001,#151222-00002#1-add-'pmdt001'
+       g_pmdt_d[l_ac].pmdt051,g_pmdt_d[l_ac].pmdt051_desc,g_pmdt_d[l_ac].pmdt006, 
+       g_pmdt_d[l_ac].pmdt006_desc,g_pmdt_d[l_ac].pmdt006_desc_1,g_pmdt_d[l_ac].pmdt023,g_pmdt_d[l_ac].pmdt023_desc, 
+       g_pmdt_d[l_ac].pmdt024,g_pmdt_d[l_ac].pmds037,g_pmdt_d[l_ac].pmds037_desc,g_pmdt_d[l_ac].pmds038, 
+       g_pmdt_d[l_ac].pmdt036,g_pmdt_d[l_ac].pmdt038
+      ,g_pmdt_d[l_ac].apca038  #160520-00002#3 add
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      #160223-00012#1-add----(S)
+#160520-00002#3--mark--str--
+#      SELECT apca038 INTO g_pmdt_d[l_ac].apca038
+#        FROM apca_t,apcb_t 
+#        WHERE apcaent = apcbent 
+#          AND apcald = apcbld 
+#          AND apcadocno = apcbdocno 
+#         AND (apcastus <> 'X' OR apcastus <> 'N') 
+#         AND apcbent = g_enterprise
+#         AND apcb002 = g_pmdt_d[l_ac].pmdtdocno
+#         AND apcb003 = g_pmdt_d[l_ac].pmdtseq
+#         AND apcb023 = 'Y'
+#      IF cl_null(g_pmdt_d[l_ac].apca038) OR g_pmdt_d[l_ac].apca038 = 0 THEN
+#         SELECT apca038 INTO g_pmdt_d[l_ac].apca038
+#           FROM apca_t,apcb_t 
+#           WHERE apcaent = apcbent 
+#             AND apcald = apcbld 
+#             AND apcadocno = apcbdocno 
+#             AND (apcastus <> 'X' OR apcastus <> 'N') 
+#             AND apcbent = g_enterprise
+#             AND apcb002 = g_pmdt_d[l_ac].pmdtdocno
+#             AND apcb003 = g_pmdt_d[l_ac].pmdtseq
+#      END IF
+#160520-00002#3--mark--end
+      #160223-00012#1-add----(E)
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+
+   CALL g_pmdt_d.deleteElement(g_pmdt_d.getLength())
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_pmdt_d.getLength()
+   LET l_ac = 1
+   LET g_cnt = 0
+   DISPLAY g_tot_cnt TO FORMONLY.h_count #160520-00002#3 add
+   DISPLAY l_ac TO FORMONLY.h_index      #160520-00002#3 add
+
+#填充汇总页签
+   LET l_sql = "SELECT pmdtsite,ooefl001,pmds008,pmaal003,pmdt051,oocql004,pmdt006,imaal003,imaal004,",
+               "       pmdt023,oocal003,SUM(pmdt024),SUM(pmdt038)", 
+               "  FROM x",
+               " GROUP BY pmdtsite,ooefl001,pmds008,pmaal003,pmdt051,oocql004,pmdt006,imaal003,imaal004,",
+               "       pmdt023,oocal003",
+               " ORDER BY pmdtsite,pmds008"
+
+   LET g_sql = "SELECT COUNT(1) FROM (",l_sql,")"
+   PREPARE b_fill_cnt_pre2 FROM g_sql  #總筆數
+   EXECUTE b_fill_cnt_pre2 INTO g_tot_cnt2
+   FREE b_fill_cnt_pre2
+   
+   PREPARE axcq528_pb2 FROM l_sql
+   DECLARE b_fill_curs2 CURSOR FOR axcq528_pb2
+
+   FOREACH b_fill_curs2 INTO g_pmdt2_d[l_ac].pmdtsite,g_pmdt2_d[l_ac].pmdtsite_1_desc, 
+       g_pmdt2_d[l_ac].pmds008,g_pmdt2_d[l_ac].pmds008_1_desc,g_pmdt2_d[l_ac].pmdt051,g_pmdt2_d[l_ac].pmdt051_1_desc, 
+       g_pmdt2_d[l_ac].pmdt006,g_pmdt2_d[l_ac].pmdt006_1_desc,g_pmdt2_d[l_ac].pmdt006_1_desc_1,g_pmdt2_d[l_ac].pmdt023, 
+       g_pmdt2_d[l_ac].pmdt023_1_desc,g_pmdt2_d[l_ac].pmdt024,g_pmdt2_d[l_ac].pmdt038
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+
+   CALL g_pmdt2_d.deleteElement(g_pmdt2_d.getLength())
+ 
+   LET g_error_show = 0
+   
+   #170310-00068#20 by 09263 --add(s)
+   CALL axcq528_filter_show('pmdtsite','b_pmdtsite')
+   CALL axcq528_filter_show('pmds008','b_pmds008')
+   CALL axcq528_filter_show('pmdsdocdt','b_pmdsdocdt')
+   CALL axcq528_filter_show('pmdtdocno','b_pmdtdocno')
+   CALL axcq528_filter_show('pmdtseq','b_pmdtseq')
+   CALL axcq528_filter_show('pmdt001','b_pmdt001')
+   CALL axcq528_filter_show('pmdt051','b_pmdt051')
+   CALL axcq528_filter_show('pmdt006','b_pmdt006')
+   CALL axcq528_filter_show('pmdt023','b_pmdt023')
+   CALL axcq528_filter_show('pmdt024','b_pmdt024')
+   CALL axcq528_filter_show('pmds037','b_pmds037')
+   CALL axcq528_filter_show('pmds038','b_pmds038')
+   CALL axcq528_filter_show('pmdt036','b_pmdt036')
+   CALL axcq528_filter_show('pmdt038','b_pmdt038')
+   #170310-00068#20 by 09263 --add(e)
+   RETURN
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql  #總筆數
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '',pmdtsite,'','','','',pmdtdocno,pmdtseq,pmdt001,pmdt051,'',pmdt006,'','',pmdt023, 
+       '',pmdt024,'','','',pmdt036,pmdt038,'','','','','','','','','','','','','',''",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+   
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE axcq528_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR axcq528_pb
+ 
+   OPEN b_fill_curs USING g_enterprise
+ 
+   FOREACH b_fill_curs INTO g_pmdt_d[l_ac].sel,g_pmdt_d[l_ac].pmdtsite,g_pmdt_d[l_ac].pmdtsite_desc, 
+       g_pmdt_d[l_ac].pmds008,g_pmdt_d[l_ac].pmds008_desc,g_pmdt_d[l_ac].pmdsdocdt,g_pmdt_d[l_ac].pmdtdocno, 
+       g_pmdt_d[l_ac].pmdtseq,g_pmdt_d[l_ac].pmdt001,g_pmdt_d[l_ac].pmdt051,g_pmdt_d[l_ac].pmdt051_desc, 
+       g_pmdt_d[l_ac].pmdt006,g_pmdt_d[l_ac].pmdt006_desc,g_pmdt_d[l_ac].pmdt006_desc_1,g_pmdt_d[l_ac].pmdt023, 
+       g_pmdt_d[l_ac].pmdt023_desc,g_pmdt_d[l_ac].pmdt024,g_pmdt_d[l_ac].pmds037,g_pmdt_d[l_ac].pmds037_desc, 
+       g_pmdt_d[l_ac].pmds038,g_pmdt_d[l_ac].pmdt036,g_pmdt_d[l_ac].pmdt038,g_pmdt_d[l_ac].apca038,g_pmdt2_d[l_ac].pmdtsite, 
+       g_pmdt2_d[l_ac].pmdtsite_1_desc,g_pmdt2_d[l_ac].pmds008,g_pmdt2_d[l_ac].pmds008_1_desc,g_pmdt2_d[l_ac].pmdt051, 
+       g_pmdt2_d[l_ac].pmdt051_1_desc,g_pmdt2_d[l_ac].pmdt006,g_pmdt2_d[l_ac].pmdt006_1_desc,g_pmdt2_d[l_ac].pmdt006_1_desc_1, 
+       g_pmdt2_d[l_ac].pmdt023,g_pmdt2_d[l_ac].pmdt023_1_desc,g_pmdt2_d[l_ac].pmdt024,g_pmdt2_d[l_ac].pmdt038 
+ 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      
+      #end add-point
+ 
+      CALL axcq528_detail_show("'1'")
+ 
+      CALL axcq528_pmdt_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+   #應用 qs05 樣板自動產生(Version:4)
+   #+ b_fill段其他table資料取得(包含sql組成及資料填充)
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   
+   #end add-point
+ 
+   CALL g_pmdt_d.deleteElement(g_pmdt_d.getLength())
+   CALL g_pmdt2_d.deleteElement(g_pmdt2_d.getLength())
+ 
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_pmdt_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #應用 qs06 樣板自動產生(Version:3)
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE axcq528_pb
+ 
+ 
+ 
+ 
+ 
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL axcq528_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL axcq528_detail_action_trans()
+ 
+   LET l_ac = 1
+   IF g_pmdt_d.getLength() > 0 THEN
+      CALL axcq528_b_fill2()
+   END IF
+ 
+      CALL axcq528_filter_show('pmdtsite','b_pmdtsite')
+   CALL axcq528_filter_show('pmds008','b_pmds008')
+   CALL axcq528_filter_show('pmdsdocdt','b_pmdsdocdt')
+   CALL axcq528_filter_show('pmdtdocno','b_pmdtdocno')
+   CALL axcq528_filter_show('pmdtseq','b_pmdtseq')
+   CALL axcq528_filter_show('pmdt001','b_pmdt001')
+   CALL axcq528_filter_show('pmdt051','b_pmdt051')
+   CALL axcq528_filter_show('pmdt006','b_pmdt006')
+   CALL axcq528_filter_show('pmdt023','b_pmdt023')
+   CALL axcq528_filter_show('pmdt024','b_pmdt024')
+   CALL axcq528_filter_show('pmds037','b_pmds037')
+   CALL axcq528_filter_show('pmds038','b_pmds038')
+   CALL axcq528_filter_show('pmdt036','b_pmdt036')
+   CALL axcq528_filter_show('pmdt038','b_pmdt038')
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq528.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION axcq528_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="b_fill2.before_function"
+   
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #應用 qs07 樣板自動產生(Version:7)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+ 
+   #add-point:陣列清空 name="b_fill2.array_clear"
+   
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:陣列長度調整 name="b_fill2.array_deleteElement"
+   
+   #end add-point
+ 
+ 
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx2 = 1
+   DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+ 
+ 
+ 
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq528.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION axcq528_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   RETURN
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+
+
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+ 
+      #add-point:show段單身reference name="detail_show.body2.reference"
+
+
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq528.filter" >}
+#應用 qs13 樣板自動產生(Version:8)
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION axcq528_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+ 
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #應用 qs08 樣板自動產生(Version:5)
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON pmdtsite,pmds008,pmdsdocdt,pmdtdocno,pmdtseq,pmdt001,pmdt051,pmdt006, 
+          pmdt023,pmdt024,pmds037,pmds038,pmdt036,pmdt038
+                          FROM s_detail1[1].b_pmdtsite,s_detail1[1].b_pmds008,s_detail1[1].b_pmdsdocdt, 
+                              s_detail1[1].b_pmdtdocno,s_detail1[1].b_pmdtseq,s_detail1[1].b_pmdt001, 
+                              s_detail1[1].b_pmdt051,s_detail1[1].b_pmdt006,s_detail1[1].b_pmdt023,s_detail1[1].b_pmdt024, 
+                              s_detail1[1].b_pmds037,s_detail1[1].b_pmds038,s_detail1[1].b_pmdt036,s_detail1[1].b_pmdt038 
+ 
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY axcq528_filter_parser('pmdtsite') TO s_detail1[1].b_pmdtsite
+            DISPLAY axcq528_filter_parser('pmds008') TO s_detail1[1].b_pmds008
+            DISPLAY axcq528_filter_parser('pmdsdocdt') TO s_detail1[1].b_pmdsdocdt
+            DISPLAY axcq528_filter_parser('pmdtdocno') TO s_detail1[1].b_pmdtdocno
+            DISPLAY axcq528_filter_parser('pmdtseq') TO s_detail1[1].b_pmdtseq
+            DISPLAY axcq528_filter_parser('pmdt001') TO s_detail1[1].b_pmdt001
+            DISPLAY axcq528_filter_parser('pmdt051') TO s_detail1[1].b_pmdt051
+            DISPLAY axcq528_filter_parser('pmdt006') TO s_detail1[1].b_pmdt006
+            DISPLAY axcq528_filter_parser('pmdt023') TO s_detail1[1].b_pmdt023
+            DISPLAY axcq528_filter_parser('pmdt024') TO s_detail1[1].b_pmdt024
+            DISPLAY axcq528_filter_parser('pmds037') TO s_detail1[1].b_pmds037
+            DISPLAY axcq528_filter_parser('pmds038') TO s_detail1[1].b_pmds038
+            DISPLAY axcq528_filter_parser('pmdt036') TO s_detail1[1].b_pmdt036
+            DISPLAY axcq528_filter_parser('pmdt038') TO s_detail1[1].b_pmdt038
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+ 
+         #單身一般欄位開窗相關處理
+                  #----<<sel>>----
+         #----<<b_pmdtsite>>----
+         #Ctrlp:construct.c.filter.page1.b_pmdtsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdtsite
+            #add-point:ON ACTION controlp INFIELD b_pmdtsite name="construct.c.filter.page1.b_pmdtsite"
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               #CALL q_ooef001()                           #呼叫開窗 #161019-00017#5
+               CALL q_ooef001_1()   #161019-00017#5
+               DISPLAY g_qryparam.return1 TO b_pmdtsite   #顯示到畫面上
+               NEXT FIELD b_pmdtsite                      #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_pmdtsite_desc>>----
+         #----<<b_pmds008>>----
+         #Ctrlp:construct.c.page1.b_pmds008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmds008
+            #add-point:ON ACTION controlp INFIELD b_pmds008 name="construct.c.filter.page1.b_pmds008"
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmaa001_3()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmds008      #顯示到畫面上
+               NEXT FIELD b_pmds008                         #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_pmds008_desc>>----
+         #----<<b_pmdsdocdt>>----
+         #Ctrlp:construct.c.filter.page1.b_pmdsdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdsdocdt
+            #add-point:ON ACTION controlp INFIELD b_pmdsdocdt name="construct.c.filter.page1.b_pmdsdocdt"
+            
+            #END add-point
+ 
+ 
+         #----<<b_pmdtdocno>>----
+         #Ctrlp:construct.c.page1.b_pmdtdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdtdocno
+            #add-point:ON ACTION controlp INFIELD b_pmdtdocno name="construct.c.filter.page1.b_pmdtdocno"
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = "('12','14')"
+               CALL q_pmdsdocno()                             #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmdtdocno      #顯示到畫面上
+               NEXT FIELD b_pmdtdocno                         #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_pmdtseq>>----
+         #Ctrlp:construct.c.page1.b_pmdtseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdtseq
+            #add-point:ON ACTION controlp INFIELD b_pmdtseq name="construct.c.filter.page1.b_pmdtseq"
+ 
+            #END add-point
+ 
+ 
+         #----<<b_pmdt001>>----
+         #Ctrlp:construct.c.page1.b_pmdt001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdt001
+            #add-point:ON ACTION controlp INFIELD b_pmdt001 name="construct.c.filter.page1.b_pmdt001"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmdldocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdt001  #顯示到畫面上
+            NEXT FIELD b_pmdt001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #----<<b_pmdt051>>----
+         #Ctrlp:construct.c.page1.b_pmdt051
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdt051
+            #add-point:ON ACTION controlp INFIELD b_pmdt051 name="construct.c.filter.page1.b_pmdt051"
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 ="('312','313')" 
+               CALL q_oocq002_in()                            #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmdtdocno      #顯示到畫面上
+               NEXT FIELD b_pmdtdocno                         #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_pmdt051_desc>>----
+         #----<<b_pmdt006>>----
+         #Ctrlp:construct.c.page1.b_pmdt006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdt006
+            #add-point:ON ACTION controlp INFIELD b_pmdt006 name="construct.c.filter.page1.b_pmdt006"
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaf001_15()                             #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmdt006      #顯示到畫面上
+               NEXT FIELD b_pmdt006                         #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_pmdt006_desc>>----
+         #----<<b_pmdt006_desc_1>>----
+         #----<<b_pmdt023>>----
+         #Ctrlp:construct.c.page1.b_pmdt023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdt023
+            #add-point:ON ACTION controlp INFIELD b_pmdt023 name="construct.c.filter.page1.b_pmdt023"
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooca001_1()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmdt023      #顯示到畫面上
+               NEXT FIELD b_pmdt023                         #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_pmdt023_desc>>----
+         #----<<b_pmdt024>>----
+         #Ctrlp:construct.c.filter.page1.b_pmdt024
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdt024
+            #add-point:ON ACTION controlp INFIELD b_pmdt024 name="construct.c.filter.page1.b_pmdt024"
+            
+            #END add-point
+ 
+ 
+         #----<<b_pmds037>>----
+         #Ctrlp:construct.c.page1.b_pmds037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmds037
+            #add-point:ON ACTION controlp INFIELD b_pmds037 name="construct.c.filter.page1.b_pmds037"
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_ooaj002_1()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmds037      #顯示到畫面上
+               NEXT FIELD b_pmds037                         #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_pmds037_desc>>----
+         #----<<b_pmds038>>----
+         #Ctrlp:construct.c.filter.page1.b_pmds038
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmds038
+            #add-point:ON ACTION controlp INFIELD b_pmds038 name="construct.c.filter.page1.b_pmds038"
+            
+            #END add-point
+ 
+ 
+         #----<<b_pmdt036>>----
+         #Ctrlp:construct.c.filter.page1.b_pmdt036
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdt036
+            #add-point:ON ACTION controlp INFIELD b_pmdt036 name="construct.c.filter.page1.b_pmdt036"
+            
+            #END add-point
+ 
+ 
+         #----<<b_pmdt038>>----
+         #Ctrlp:construct.c.filter.page1.b_pmdt038
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdt038
+            #add-point:ON ACTION controlp INFIELD b_pmdt038 name="construct.c.filter.page1.b_pmdt038"
+            
+            #END add-point
+ 
+ 
+         #----<<apca038>>----
+         #----<<b_pmdtsite_1>>----
+         #----<<b_pmdtsite_1_desc>>----
+         #----<<b_pmds008_1>>----
+         #----<<b_pmds008_1_desc>>----
+         #----<<b_pmdt051_1>>----
+         #----<<b_pmdt051_1_desc>>----
+         #----<<b_pmdt006_1>>----
+         #----<<b_pmdt006_1_desc>>----
+         #----<<b_pmdt006_1_desc_1>>----
+         #----<<b_pmdt023_1>>----
+         #----<<b_pmdt023_1_desc>>----
+         #----<<b_pmdt024_1>>----
+         #----<<b_pmdt038_1>>----
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+ 
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+ 
+ 
+   
+ 
+   #add-point:離開DIALOG後相關處理 name="filter.after_dialog"
+   #170310-00068#20  By 09263 --add(s) 
+   CALL axcq528_b_fill() 
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = -100
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+   END IF
+   #170310-00068#20  By 09263 --add(e) 
+   #end add-point
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL axcq528_filter_show('pmdtsite','b_pmdtsite')
+   CALL axcq528_filter_show('pmds008','b_pmds008')
+   CALL axcq528_filter_show('pmdsdocdt','b_pmdsdocdt')
+   CALL axcq528_filter_show('pmdtdocno','b_pmdtdocno')
+   CALL axcq528_filter_show('pmdtseq','b_pmdtseq')
+   CALL axcq528_filter_show('pmdt001','b_pmdt001')
+   CALL axcq528_filter_show('pmdt051','b_pmdt051')
+   CALL axcq528_filter_show('pmdt006','b_pmdt006')
+   CALL axcq528_filter_show('pmdt023','b_pmdt023')
+   CALL axcq528_filter_show('pmdt024','b_pmdt024')
+   CALL axcq528_filter_show('pmds037','b_pmds037')
+   CALL axcq528_filter_show('pmds038','b_pmds038')
+   CALL axcq528_filter_show('pmdt036','b_pmdt036')
+   CALL axcq528_filter_show('pmdt038','b_pmdt038')
+ 
+ 
+   CALL axcq528_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq528.filter_parser" >}
+#應用 qs14 樣板自動產生(Version:6)
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION axcq528_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   
+   #end add-point
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="axcq528.filter_show" >}
+#應用 qs15 樣板自動產生(Version:6)
+#+ filter標題欄位顯示搜尋條件
+PRIVATE FUNCTION axcq528_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = axcq528_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="axcq528.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION axcq528_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   LET g_detail_idx = g_detail_idx + 1  #160520-00002#3 add
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq528.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION axcq528_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="detail_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_pmdt_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_pmdt_d.getLength() AND g_pmdt_d.getLength() > 0
+            LET g_detail_idx = g_pmdt_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_pmdt_d.getLength() THEN
+               LET g_detail_idx = g_pmdt_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq528.mask_functions" >}
+ &include "erp/axc/axcq528_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="axcq528.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcq528_default()
+DEFINE  l_glaa001        LIKE glaa_t.glaa001
+
+   #预设当前site的法人，主账套，年度期别，成本计算类型
+   #IF cl_null(g_xcck_m.xcckcomp) AND cl_null(g_xcck_m.xcckld) AND cl_null(g_xcck_m.xcck004_1) AND cl_null(g_xcck_m.xcck005_1)   #150912-00001#1 mark
+   #          AND cl_null(g_xcck_m.xcck004_2) AND cl_null(g_xcck_m.xcck005_2) AND cl_null(g_xcck_m.xcck003) THEN                 #150912-00001#1 mark
+      CALL s_axc_set_site_default() RETURNING g_xcck_m.xcckcomp,g_xcck_m.xcckld,g_xcck_m.xcck004_2,g_xcck_m.xcck005_2,g_xcck_m.xcck003
+      DISPLAY BY NAME g_xcck_m.xcckcomp,g_xcck_m.xcckld,g_xcck_m.xcck003
+      LET g_xcck_m.xcck004_1=g_xcck_m.xcck004_2
+      LET g_xcck_m.xcck005_1=g_xcck_m.xcck005_2
+   #END IF    #150912-00001#1 mark
+  
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xcck_m.xcckcomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xcck_m.xcckcomp_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xcck_m.xcckcomp_desc 
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xcck_m.xcckld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xcck_m.xcckld_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xcck_m.xcckld_desc 
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xcck_m.xcck003
+   CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xcck_m.xcck003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xcck_m.xcck003_desc
+      
+   LET g_xcck_m.xcck001 = '1'
+   DISPLAY BY NAME g_xcck_m.xcck001
+   
+   SELECT glaa001 INTO l_glaa001
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = g_xcck_m.xcckld
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = l_glaa001
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooail003 FROM ooail_t WHERE ooailent='"||g_enterprise||"' AND ooail001=? AND ooail002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xcck_m.xcck001_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xcck_m.xcck001_desc 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 
+# Memo...........:
+# Usage..........: CALL axcq528_construct()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 170407 By 09263 ##170310-00068#20
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcq528_construct()
+DEFINE l_cnt         LIKE type_t.num5
+DEFINE li_exit       LIKE type_t.num5
+DEFINE l_glaa001   LIKE glaa_t.glaa001
+DEFINE l_glaa016   LIKE glaa_t.glaa016
+DEFINE l_glaa020   LIKE glaa_t.glaa020   
+
+   LET g_wc       = ''
+   LET g_wc_filter =''   #170310-00068#16 By 09263   --add
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_pmdt_d.clear()
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+          #單頭
+          INPUT BY NAME g_xcck_m.xcckcomp,g_xcck_m.xcckld,g_xcck_m.xcck004_1,
+                        g_xcck_m.xcck005_1,g_xcck_m.xcck004_2,g_xcck_m.xcck005_2,g_xcck_m.xcck001, 
+                        g_xcck_m.xcck003,g_xcck_m.xcckld
+               ATTRIBUTE(WITHOUT DEFAULTS)
+
+            
+               BEFORE INPUT
+               INITIALIZE g_xcck_m.* TO NULL   
+               CALL axcq528_default()
+               #add-point:資料輸入前
+               IF NOT cl_null(g_argv[03]) THEN
+                  LET g_xcck_m.xcckcomp = g_argv[03]
+               END IF
+              
+               IF NOT cl_null(g_argv[04]) THEN
+                  LET g_xcck_m.xcckld = g_argv[04]
+               END IF
+               
+               IF NOT cl_null(g_argv[05]) THEN
+                  LET g_xcck_m.xcck004_1 = g_argv[05]
+                  LET g_xcck_m.xcck004_2 = g_argv[05]
+               END IF
+               
+               IF NOT cl_null(g_argv[06]) THEN
+                  LET g_xcck_m.xcck005_1 = g_argv[06]
+                  LET g_xcck_m.xcck005_2 = g_argv[06]
+               END IF
+              
+               IF NOT cl_null(g_argv[07]) THEN
+                  LET g_xcck_m.xcck003 = g_argv[07]
+               END IF                  
+                #end add-point
+            
+            #應用 a02 樣板自動產生(Version:1)
+            AFTER FIELD xcckcomp
+               
+               #add-point:AFTER FIELD xcckcomp
+               IF NOT cl_null(g_xcck_m.xcckcomp) THEN 
+   #應用 a19 樣板自動產生(Version:2)
+                  #校驗代值
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_xcck_m.xcckcomp
+   
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_ooef001_15") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  ELSE
+                     #檢查失敗時後續處理
+                     NEXT FIELD CURRENT
+                  END IF
+               
+   
+               END IF 
+               LET g_xcck_m.xcckcomp_desc = s_desc_get_department_desc(g_xcck_m.xcckcomp)
+               DISPLAY BY NAME g_xcck_m.xcckcomp_desc
+   
+   
+               #END add-point
+               
+    
+            #應用 a01 樣板自動產生(Version:1)
+            BEFORE FIELD xcckcomp
+               #add-point:BEFORE FIELD xcckcomp
+               
+               #END add-point
+    
+            #應用 a04 樣板自動產生(Version:2)
+            ON CHANGE xcckcomp
+               #add-point:ON CHANGE xcckcomp
+               
+               #END add-point 
+    
+    
+            #應用 a02 樣板自動產生(Version:1)
+            AFTER FIELD xcckld
+               
+               #add-point:AFTER FIELD xcckld
+               IF NOT cl_null(g_xcck_m.xcckld) THEN 
+   #應用 a19 樣板自動產生(Version:2)
+                  #校驗代值
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_xcck_m.xcckld
+   
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_glaald") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  ELSE
+                     #檢查失敗時後續處理
+                     NEXT FIELD CURRENT
+                  END IF
+               
+   
+               END IF 
+               LET g_xcck_m.xcckld_desc = s_desc_get_ld_desc(g_xcck_m.xcckld)
+               DISPLAY BY NAME g_xcck_m.xcckld_desc
+   
+   
+               #END add-point
+               
+    
+            #應用 a01 樣板自動產生(Version:1)
+            BEFORE FIELD xcckld
+               #add-point:BEFORE FIELD xcckld
+               
+               #END add-point
+    
+            #應用 a04 樣板自動產生(Version:2)
+            ON CHANGE xcckld
+               #add-point:ON CHANGE xcckld
+               
+               #END add-point 
+     
+            #應用 a02 樣板自動產生(Version:1)
+            AFTER FIELD xcck001
+               
+               #add-point:AFTER FIELD xcck001
+               IF NOT cl_null(g_xcck_m.xcck001) THEN
+                  LET l_glaa001 = NULL
+                  LET l_glaa016 = NULL
+                  LET l_glaa020 = NULL
+                  SELECT glaa001,glaa016,glaa020 INTO l_glaa001,l_glaa016,l_glaa020
+                    FROM glaa_t
+                   WHERE glaaent = g_enterprise
+                     AND glaald  = g_xcck_m.xcckld
+                     
+                  CASE g_xcck_m.xcck001
+                     WHEN '1'
+                      LET g_xcck_m.xcck001_desc = s_desc_get_currency_desc(l_glaa001)
+                     WHEN '2'
+                      LET g_xcck_m.xcck001_desc = s_desc_get_currency_desc(l_glaa016)
+                     WHEN '3'
+                      LET g_xcck_m.xcck001_desc = s_desc_get_currency_desc(l_glaa020)
+                  END CASE
+               END IF
+               DISPLAY BY NAME g_xcck_m.xcck001_desc
+   
+   
+               #END add-point
+               
+    
+            #應用 a01 樣板自動產生(Version:1)
+            BEFORE FIELD xcck001
+               #add-point:BEFORE FIELD xcck001
+               
+               #END add-point
+    
+            #應用 a04 樣板自動產生(Version:2)
+            ON CHANGE xcck001
+               #add-point:ON CHANGE xcck001
+               
+               #END add-point 
+    
+            #應用 a02 樣板自動產生(Version:1)
+            AFTER FIELD xcck003
+               
+               #add-point:AFTER FIELD xcck003
+               IF NOT cl_null(g_xcck_m.xcck003) THEN 
+   #應用 a19 樣板自動產生(Version:2)
+                  #校驗代值
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_xcck_m.xcck003
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_xcat001") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  ELSE
+                     #檢查失敗時後續處理
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF 
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_xcck_m.xcck003
+               CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+               LET g_xcck_m.xcck003_desc = '', g_rtn_fields[1] , ''
+               DISPLAY BY NAME g_xcck_m.xcck003_desc
+   
+               #END add-point
+               
+    
+            #應用 a01 樣板自動產生(Version:1)
+            BEFORE FIELD xcck003
+               #add-point:BEFORE FIELD xcck003
+               
+               #END add-point
+    
+            #應用 a04 樣板自動產生(Version:2)
+            ON CHANGE xcck003
+               #add-point:ON CHANGE xcck003
+               
+               #END add-point      
+         
+            AFTER FIELD xcck004_1 
+               IF NOT cl_null(g_xcck_m.xcck004_1) AND NOT cl_null(g_xcck_m.xcck004_2) THEN
+                   IF g_xcck_m.xcck004_1 > g_xcck_m.xcck004_2 THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = 'acr-00064'
+                      LET g_errparam.extend = ''
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+                      NEXT FIELD xcck004_1
+                   END IF
+                END IF
+            AFTER FIELD xcck005_1
+               IF NOT cl_null(g_xcck_m.xcck005_1) AND NOT cl_null(g_xcck_m.xcck005_2) THEN
+                  IF g_xcck_m.xcck004_1*12+g_xcck_m.xcck005_1 > g_xcck_m.xcck004_2*12+g_xcck_m.xcck005_2 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'acr-00067'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD xcck005_1
+                  END IF
+               END IF
+            AFTER FIELD xcck004_2
+               IF NOT cl_null(g_xcck_m.xcck004_1) AND NOT cl_null(g_xcck_m.xcck004_2) THEN
+                   IF g_xcck_m.xcck004_1 > g_xcck_m.xcck004_2 THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = 'acr-00064'
+                      LET g_errparam.extend = ''
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+                      NEXT FIELD xcck004_2
+                   END IF
+                END IF
+            AFTER FIELD xcck005_2   
+               IF NOT cl_null(g_xcck_m.xcck005_1) AND NOT cl_null(g_xcck_m.xcck005_2) THEN
+                  IF g_xcck_m.xcck004_1*12+g_xcck_m.xcck005_1 > g_xcck_m.xcck004_2*12+g_xcck_m.xcck005_2 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'acr-00067'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD xcck005_2
+                  END IF
+               END IF   
+   
+            ON ACTION controlp INFIELD xcckcomp
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_xcck_m.xcckld             #給予default值
+               #160802-00020#10-add-(S)
+               #增加法人過濾條件
+               IF NOT cl_null(g_wc_cs_comp) THEN
+                  LET g_qryparam.where = " ooef001 IN ",g_wc_cs_comp
+               END IF
+               #160802-00020#10-add-(E)
+               CALL q_ooef001_2()                                #呼叫開窗
+   
+               LET g_xcck_m.xcckcomp = g_qryparam.return1              
+   
+               DISPLAY g_xcck_m.xcckcomp TO xcckcomp           #
+   
+               NEXT FIELD xcckcomp                          #返回原欄位
+               
+            ON ACTION controlp INFIELD xcckld
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+   
+               LET g_qryparam.default1 = g_xcck_m.xcckld             #給予default值
+               
+               #給予arg
+               LET g_qryparam.arg1 = g_user
+               LET g_qryparam.arg2 = g_dept
+               #160802-00020#4-add-(S)
+               IF NOT cl_null(g_wc_cs_ld) THEN
+                  LET g_qryparam.where = " glaald IN ",g_wc_cs_ld
+               END IF
+               #160802-00020#4-add-(E)               
+               CALL q_authorised_ld()                                #呼叫開窗
+   
+               LET g_xcck_m.xcckld = g_qryparam.return1              
+   
+               DISPLAY g_xcck_m.xcckld TO xcckld              #
+   
+               NEXT FIELD xcckld                          #返回原欄位
+                           
+            ON ACTION controlp INFIELD xcck003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+   
+               LET g_qryparam.default1 = g_xcck_m.xcck003             #給予default值
+              
+               CALL q_xcat001()                                #呼叫開窗
+   
+               LET g_xcck_m.xcck003 = g_qryparam.return1              
+   
+               DISPLAY g_xcck_m.xcck003 TO xcck003              #
+   
+               NEXT FIELD xcck003                         #返回原欄位                 
+        END INPUT
+       
+
+         CONSTRUCT g_wc2 ON pmdtsite,pmds008,pmdsdocdt,pmdtdocno,pmdtseq,pmdt051,pmdt006,
+                            pmdt023,pmdt024,pmds037,pmds038,pmdt036,pmdt038
+              FROM s_detail1[1].b_pmdtsite,s_detail1[1].b_pmds008,
+                   s_detail1[1].b_pmdsdocdt,s_detail1[1].b_pmdtdocno,
+                   s_detail1[1].b_pmdtseq,s_detail1[1].b_pmdt051,
+                   s_detail1[1].b_pmdt006,s_detail1[1].b_pmdt023,
+                   s_detail1[1].b_pmdt024,s_detail1[1].b_pmds037,
+                   s_detail1[1].b_pmds038,s_detail1[1].b_pmdt036,
+                   s_detail1[1].b_pmdt038
+              
+            ON ACTION controlp INFIELD b_pmdtsite
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               #CALL q_ooef001()                           #呼叫開窗  #161019-00017#5
+               CALL q_ooef001_1()   #161019-00017#5
+               DISPLAY g_qryparam.return1 TO b_pmdtsite   #顯示到畫面上
+               NEXT FIELD b_pmdtsite                      #返回原欄位
+   
+            ON ACTION controlp INFIELD b_pmds008
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmaa001_3()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmds008      #顯示到畫面上
+               NEXT FIELD b_pmds008                         #返回原欄位
+   
+            ON ACTION controlp INFIELD b_pmdtdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = "('12','14')"
+               CALL q_pmdsdocno()                             #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmdtdocno      #顯示到畫面上
+               NEXT FIELD b_pmdtdocno                         #返回原欄位
+   
+            ON ACTION controlp INFIELD b_pmdt051
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 ="('312','313')" 
+               CALL q_oocq002_in()                            #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmdtdocno      #顯示到畫面上
+               NEXT FIELD b_pmdtdocno                         #返回原欄位
+   
+            ON ACTION controlp INFIELD b_pmdt006
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaf001_15()                             #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmdt006      #顯示到畫面上
+               NEXT FIELD b_pmdt006                         #返回原欄位
+   
+            ON ACTION controlp INFIELD b_pmdt023
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooca001_1()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmdt023      #顯示到畫面上
+               NEXT FIELD b_pmdt023                         #返回原欄位
+    
+            ON ACTION controlp INFIELD b_pmds037
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_ooaj002_1()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_pmds037      #顯示到畫面上
+               NEXT FIELD b_pmds037                         #返回原欄位
+ 
+         END CONSTRUCT
+          
+          BEFORE DIALOG
+            LET g_pmdt_d[1].sel = ""
+            DISPLAY ARRAY g_pmdt_d TO s_detail1.* 
+              BEFORE DISPLAY
+                 EXIT DISPLAY
+            END DISPLAY
+            NEXT FIELD xcckcomp
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept            
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+           
+ 
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            
+            EXIT DIALOG 
+   END DIALOG
+            CALL axcq528_b_fill() 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+END FUNCTION
+
+ 
+{</section>}
+ 

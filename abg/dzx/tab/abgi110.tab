@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi110" module="abg" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06821" crtdt="2015-08-06 15:34:58" modid="03080" moddt="2016-04-11 19:31:47" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="預算細項組織維度設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgal001,bgal001_desc(chr80),bgal002,bgal002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgal003,bgal003_desc(chr500),bgal004,bgal005,bgal006,bgal007,bgal008,bgal009,bgal010,bgal011,bgal012,bgal013,bgal014,bgal025,bgal026,bgal027,bgal015,bgal016,bgal017,bgal018,bgal019,bgal020,bgal021,bgal022,bgal023,bgal024,bgalstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bgal003,bgalownid,bgalownid_desc(chr500),bgalowndp,bgalowndp_desc(chr500),bgalcrtid,bgalcrtid_desc(chr500),bgalcrtdp,bgalcrtdp_desc(chr500),bgalcrtdt,bgalmodid,bgalmodid_desc(chr500),bgalmoddt"/>
+      <var id="bs_field" value="bgal001,bgal002" pk="bgal001,bgal002" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="lbl_vaild"/>
+      <action id="query" type="standard"/>
+      <action id="open_abgi110_01"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi110" method="dialog">
+    <section id="input">
+      <input id="head" field="bgal001,bgal002"/>
+      <input id="body" page="1" field="bgal003,bgal003_desc,bgal004,bgal005,bgal006,bgal007,bgal008,bgal009,bgal010,bgal011,bgal012,bgal013,bgal014,bgal025,bgal026,bgal027,bgal015,bgal016,bgal017,bgal018,bgal019,bgal020,bgal021,bgal022,bgal023,bgal024,bgalstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bgal001,bgal002"/>
+      <construct id="body" page="1" field="bgal003,bgal004,bgal005,bgal006,bgal007,bgal008,bgal009,bgal010,bgal011,bgal012,bgal013,bgal014,bgal025,bgal026,bgal027,bgal015,bgal016,bgal017,bgal018,bgal019,bgal020,bgal021,bgal022,bgal023,bgal024,bgalstus"/>
+      <construct id="body" page="2" field="bgalownid,bgalowndp,bgalcrtid,bgalcrtdp,bgalcrtdt,bgalmodid,bgalmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bgal001,bgal002"/>
+      <set id="head" type="no_entry" field="bgal001,bgal002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bgal001">
+        <after/>
+      </column>
+      <column id="bgal001_desc"/>
+      <column id="bgal002">
+        <after/>
+      </column>
+      <column id="bgal002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgal003">
+        <after/>
+      </column>
+      <column id="bgal003_desc"/>
+      <column id="bgal004" type="S" default="N"/>
+      <column id="bgal005" type="S" default="N"/>
+      <column id="bgal006" type="S" default="N"/>
+      <column id="bgal007" type="S" default="N"/>
+      <column id="bgal008" type="S" default="N"/>
+      <column id="bgal009" type="S" default="N"/>
+      <column id="bgal010" type="S" default="N"/>
+      <column id="bgal011" type="S" default="N"/>
+      <column id="bgal012" type="S" default="N"/>
+      <column id="bgal013" type="S" default="N"/>
+      <column id="bgal014" type="S" default="N"/>
+      <column id="bgal025" type="S" default="N"/>
+      <column id="bgal026" type="S" default="N"/>
+      <column id="bgal027" type="S" default="N"/>
+      <column id="bgal015" type="S" default="N"/>
+      <column id="bgal016" type="S" default="N"/>
+      <column id="bgal017" type="S" default="N"/>
+      <column id="bgal018" type="S" default="N"/>
+      <column id="bgal019" type="S" default="N"/>
+      <column id="bgal020" type="S" default="N"/>
+      <column id="bgal021" type="S" default="N"/>
+      <column id="bgal022" type="S" default="N"/>
+      <column id="bgal023" type="S" default="N"/>
+      <column id="bgal024" type="S" default="N"/>
+      <column id="bgalstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bgalownid">
+        <after>
+          <reference field="bgalownid_desc" ref_field="bgal_t.bgalownid" map_field="bgalownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgalownid_desc"/>
+      <column id="bgalowndp">
+        <after>
+          <reference field="bgalowndp_desc" ref_field="bgal_t.bgalowndp" map_field="bgalowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgalowndp_desc"/>
+      <column id="bgalcrtid">
+        <after>
+          <reference field="bgalcrtid_desc" ref_field="bgal_t.bgalcrtid" map_field="bgalcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgalcrtid_desc"/>
+      <column id="bgalcrtdp">
+        <after>
+          <reference field="bgalcrtdp_desc" ref_field="bgal_t.bgalcrtdp" map_field="bgalcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgalcrtdp_desc"/>
+      <column id="bgalcrtdt"/>
+      <column id="bgalmodid">
+        <after>
+          <reference field="bgalmodid_desc" ref_field="bgal_t.bgalmodid" map_field="bgalmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgalmodid_desc"/>
+      <column id="bgalmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgal_t" pk="bgal001,bgal002">
+      <sql id="forupd_sql" type="sql" query="SELECT bgal001,&apos;&apos;,bgal002,&apos;&apos; FROM bgal_t WHERE bgalent= ? AND bgal001=? AND bgal002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bgal001,&apos;&apos;,bgal002,&apos;&apos; FROM bgal_t" order="bgal001,bgal002"/>
+    </head>
+    <body id="bgal_t" page="1,2" linked="" pk="bgal003" fk="bgal001,bgal002">
+      <sql id="forupd_sql_detail" query="SELECT bgal003,&apos;&apos;,bgal004,bgal005,bgal006,bgal007,bgal008,bgal009,bgal010,bgal011,bgal012,bgal013,bgal014,bgal025,bgal026,bgal027,bgal015,bgal016,bgal017,bgal018,bgal019,bgal020,bgal021,bgal022,bgal023,bgal024,bgalstus,&apos;&apos;,bgalownid,&apos;&apos;,bgalowndp,&apos;&apos;,bgalcrtid,&apos;&apos;,bgalcrtdp,&apos;&apos;,bgalcrtdt,bgalmodid,&apos;&apos;,bgalmoddt FROM bgal_t WHERE bgalent=? AND bgal001=? AND bgal002=? AND bgal003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgal003,&apos;&apos;,bgal004,bgal005,bgal006,bgal007,bgal008,bgal009,bgal010,bgal011,bgal012,bgal013,bgal014,bgal025,bgal026,bgal027,bgal015,bgal016,bgal017,bgal018,bgal019,bgal020,bgal021,bgal022,bgal023,bgal024,bgalstus,&apos;&apos;,bgalownid,&apos;&apos;,bgalowndp,&apos;&apos;,bgalcrtid,&apos;&apos;,bgalcrtdp,&apos;&apos;,bgalcrtdt,bgalmodid,&apos;&apos;,bgalmoddt FROM bgal_t WHERE bgalent= ? AND bgal001=? AND bgal002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

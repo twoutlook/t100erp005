@@ -1,0 +1,4368 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="aprt114_01.description" >}
+#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000029
+#+ 
+#+ Filename...: aprt114_01
+#+ Description: 
+#+ Creator....: 01251(2015-07-07 17:54:35)
+#+ Modifier...: 01251(2015-07-08 02:45:23) -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="aprt114_01.global" >}
+#應用 i02 樣板自動產生(Version:14)
+# Modify......: NO.160318-00005#39   2016/03/30   By 07900    重复错误讯息修改
+# Modify......: NO.160905-00007#12   2016/09/06   by 08742    调整系统中无ENT的SQL条件增加ent
+# Modify......: NO.161111-00028#2    2016/11/14   BY 02481    标准程式定义采用宣告模式,弃用.*写法
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_prbg_d RECORD
+       sel LIKE type_t.chr500, 
+   prbgdocno LIKE prbg_t.prbgdocno, 
+   prbgseq LIKE prbg_t.prbgseq, 
+   prbgseq1 LIKE prbg_t.prbgseq1, 
+   prbg003 LIKE prbg_t.prbg003, 
+   prbj004 LIKE type_t.chr10, 
+   prbg002 LIKE prbg_t.prbg002, 
+   prbg002_desc LIKE type_t.chr500, 
+   prbg002_desc_desc LIKE type_t.chr10, 
+   rtaxl003 LIKE type_t.chr500, 
+   rtdx034 LIKE type_t.chr500, 
+   prbg007 LIKE prbg_t.prbg007, 
+   prbg014 LIKE prbg_t.prbg014, 
+   prbg015 LIKE prbg_t.prbg015, 
+   prbg0091 LIKE type_t.num20_6, 
+   prbg009 LIKE prbg_t.prbg009, 
+   prbg010 LIKE prbg_t.prbg010, 
+   prbg011 LIKE prbg_t.prbg011, 
+   prbg012 LIKE prbg_t.prbg012, 
+   prbg016 LIKE prbg_t.prbg016, 
+   prbg017 LIKE prbg_t.prbg017
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_prbg_d          DYNAMIC ARRAY OF type_g_prbg_d #單身變數
+DEFINE g_prbg_d_t        type_g_prbg_d                  #單身備份
+DEFINE g_prbg_d_o        type_g_prbg_d                  #單身備份
+DEFINE g_prbg_d_mask_o   DYNAMIC ARRAY OF type_g_prbg_d #單身變數
+DEFINE g_prbg_d_mask_n   DYNAMIC ARRAY OF type_g_prbg_d #單身變數
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_flagprog          LIKE type_t.chr20
+DEFINE g_prbfsite          LIKE prbf_t.prbfsite
+DEFINE g_prbgsite          LIKE prbg_t.prbgsite
+DEFINE g_prbgsite_desc     LIKE type_t.chr80
+DEFINE g_prbg001           LIKE prbg_t.prbg001
+DEFINE g_bdate             LIKE prbg_t.prbg014
+DEFINE g_edate             LIKE prbg_t.prbg014
+DEFINE g_wc                STRING
+DEFINE g_docno             LIKE prbf_t.prbfdocno
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aprt114_01.main" >}
+#應用 a27 樣板自動產生(Version:4)
+#+ 作業開始(子程式類型)
+PUBLIC FUNCTION aprt114_01(--)
+   #add-point:main段變數傳入
+   p_prog,p_docno
+   #end add-point
+   )
+   #add-point:main段define
+   DEFINE p_prog       LIKE type_t.chr20
+   DEFINE p_docno      LIKE prbf_t.prbfdocno
+   
+   #end add-point   
+   #add-point:main段define(客製用)
+
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:作業初始化
+   LET g_flagprog=p_prog
+   LET g_docno=p_docno
+   IF g_flagprog='aprt114' OR g_flagprog='aprt115' OR g_flagprog='aprt116' OR g_flagprog='aprt117' THEN
+      SELECT prbfsite INTO g_prbfsite
+        FROM prbf_t
+       WHERE prbfent=g_enterprise
+         AND prbfdocno=g_docno
+   END IF
+   IF g_flagprog='aprt122' OR g_flagprog='aprt123' THEN
+      SELECT prbisite INTO g_prbfsite
+        FROM prbi_t
+       WHERE prbient=g_enterprise
+         AND prbidocno=g_docno
+   END IF   
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+ 
+   
+   #add-point:main段define_sql
+
+   #end add-point 
+   LET g_forupd_sql = "SELECT prbgdocno,prbgseq,prbgseq1,prbg003,prbg002,prbg007,prbg014,prbg015,prbg009, 
+       prbg010,prbg011,prbg012,prbg016,prbg017 FROM prbg_t WHERE prbgent=? AND prbgdocno=? AND prbgseq=?  
+       AND prbgseq1=? FOR UPDATE"
+   #add-point:main段define_sql
+
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aprt114_01_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aprt114_01 WITH FORM cl_ap_formpath("apr","aprt114_01")
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+ 
+   #程式初始化
+   CALL aprt114_01_init()   
+ 
+   #進入選單 Menu (="N")
+   CALL aprt114_01_ui_dialog() 
+ 
+   #畫面關閉
+   CLOSE WINDOW w_aprt114_01
+ 
+   
+   
+ 
+   #add-point:離開前
+
+   #end add-point
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aprt114_01.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aprt114_01_init()
+   #add-point:init段define
+   DEFINE l_msg      STRING 
+   #end add-point   
+   #add-point:init段define(客製用)
+   
+   #end add-point
+   
+   
+      CALL cl_set_combo_scc('prbgseq1','6032') 
+ 
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化
+   CALL cl_set_combo_scc('iprbg001','6030') 
+   CALL cl_set_comp_visible("prbj004,prbg007,prbg014,prbg015,prbg0091,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017",TRUE)
+   IF g_flagprog='aprt114' THEN 
+      CALL cl_set_comp_visible("bdate,edate,lbl_bdate,lbl_edate",FALSE)   
+      CALL cl_set_comp_visible("prbj004,prbg014,prbg015,prbg0091,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017",FALSE) 
+   END IF      
+   IF g_flagprog='aprt115' THEN   
+      CALL cl_set_comp_visible("bdate,edate,lbl_bdate,lbl_edate",FALSE)
+      CALL cl_set_comp_visible("prbj004,prbg007,prbg014,prbg015,prbg016,prbg017",FALSE) 
+   END IF 
+   IF g_flagprog='aprt116' THEN   
+      CALL cl_set_comp_visible("prbj004,prbg0091,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017",FALSE) 
+   END IF   
+   IF g_flagprog='aprt117' THEN   
+      CALL cl_set_comp_visible("prbj004,prbg007,prbg014,prbg015",FALSE) 
+   END IF 
+   IF g_flagprog='aprt122' THEN 
+      CALL cl_set_comp_visible("iprbg001,lbl_iprbg001",FALSE)
+      CALL cl_set_comp_visible("prbg0091,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017",FALSE) 
+      LET l_msg = cl_getmsg('apr-00421',g_dlang)
+      CALL cl_set_comp_att_text("lbl_iprbgsite",l_msg)      
+   END IF   
+   IF g_flagprog='aprt123' THEN 
+      CALL cl_set_comp_visible("iprbg001,lbl_iprbg001",FALSE)
+      CALL cl_set_comp_visible("prbg007,prbg014,prbg015",FALSE) 
+      LET l_msg = cl_getmsg('apr-00421',g_dlang)
+      CALL cl_set_comp_att_text("lbl_iprbgsite",l_msg)       
+   END IF     
+   #end add-point
+   
+   CALL aprt114_01_default_search()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION aprt114_01_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+
+   #end add-point 
+   #add-point:ui_dialog段define(客製用)
+
+   #end add-point
+   
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog 
+   CALL aprt114_01_query()
+   #end add-point
+   
+   WHILE TRUE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_prbg_d.clear()
+ 
+         LET g_wc2 = ' 1=2'
+         LET g_action_choice = ""
+         CALL aprt114_01_init()
+      END IF
+   
+#      CALL aprt114_01_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_prbg_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display 
+
+               #end add-point
+               #讓各頁籤能夠同步指到特定資料
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2
+
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:2)
+   CALL aprt114_01_set_pk_array()
+   #add-point:ON ACTION agendum
+
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+               #add-point:display array-before row
+
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+      
+         #add-point:ui_dialog段自定義display array
+
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before
+
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aprt114_01_modify()
+               #add-point:ON ACTION modify
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL aprt114_01_modify()
+               #add-point:ON ACTION modify_detail
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aprt114_01_delete()
+               #add-point:ON ACTION delete
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aprt114_01_insert()
+               #add-point:ON ACTION insert
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               
+               #add-point:ON ACTION reproduce
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aprt114_01_query()
+               #add-point:ON ACTION query
+
+               #END add-point
+               #應用 a59 樣板自動產生(Version:2)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+      
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_prbg_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel
+
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+            
+         ON ACTION close    
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+            
+         
+         
+         #應用 a46 樣板自動產生(Version:2)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aprt114_01_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aprt114_01_set_pk_array()
+            #add-point:ON ACTION agendum
+
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aprt114_01_set_pk_array()
+            #add-point:ON ACTION followup
+
+            #END add-point
+            CALL cl_user_overview_follow('')
+            
+#         #選擇全部
+#         ON ACTION selall
+#            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+#            FOR li_idx = 1 TO g_prbg_d.getLength()
+#               LET g_prbg_d[li_idx].sel = "Y"
+#            END FOR
+# 
+# 
+#         #取消全部
+#         ON ACTION selnone
+#            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+#            FOR li_idx = 1 TO g_prbg_d.getLength()
+#               LET g_prbg_d[li_idx].sel = "N"
+#            END FOR
+# 
+# 
+#         #勾選所選資料
+#         ON ACTION sel
+#            FOR li_idx = 1 TO g_prbg_d.getLength()
+#               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+#                  LET g_prbg_d[li_idx].sel = "Y"
+#               END IF
+#            END FOR
+# 
+# 
+#         #取消所選資料
+#         ON ACTION unsel
+#            FOR li_idx = 1 TO g_prbg_d.getLength()
+#               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+#                  LET g_prbg_d[li_idx].sel = "N"
+#               END IF
+#            END FOR 
+ 
+         ON ACTION selok
+            CALL aprt114_01_pinsert()
+            LET g_action_choice="exit"
+            EXIT DIALOG
+    
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前
+ 
+         #end add-point
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aprt114_01_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   
+   
+   
+   CALL aprt114_01_query2()
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF 
+   CALL aprt114_01_b_fill2(g_wc)
+   RETURN
+
+   #end add-point 
+   #add-point:query段define(客製用)
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_prbg_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON sel,prbgdocno,prbgseq,prbgseq1,prbg003,prbj004,prbg002,rtaxl003,rtdx034,prbg007, 
+          prbg014,prbg015,prbg0091,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017 
+ 
+         FROM s_detail1[1].sel,s_detail1[1].prbgdocno,s_detail1[1].prbgseq,s_detail1[1].prbgseq1,s_detail1[1].prbg003, 
+             s_detail1[1].prbj004,s_detail1[1].prbg002,s_detail1[1].rtaxl003,s_detail1[1].rtdx034,s_detail1[1].prbg007, 
+             s_detail1[1].prbg014,s_detail1[1].prbg015,s_detail1[1].prbg0091,s_detail1[1].prbg009,s_detail1[1].prbg010, 
+             s_detail1[1].prbg011,s_detail1[1].prbg012,s_detail1[1].prbg016,s_detail1[1].prbg017 
+      
+         
+      
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sel
+            #add-point:BEFORE FIELD sel
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sel
+            
+            #add-point:AFTER FIELD sel
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.sel
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sel
+            #add-point:ON ACTION controlp INFIELD sel
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbgdocno
+            #add-point:BEFORE FIELD prbgdocno
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbgdocno
+            
+            #add-point:AFTER FIELD prbgdocno
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbgdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbgdocno
+            #add-point:ON ACTION controlp INFIELD prbgdocno
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbgseq
+            #add-point:BEFORE FIELD prbgseq
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbgseq
+            
+            #add-point:AFTER FIELD prbgseq
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbgseq
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbgseq
+            #add-point:ON ACTION controlp INFIELD prbgseq
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbgseq1
+            #add-point:BEFORE FIELD prbgseq1
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbgseq1
+            
+            #add-point:AFTER FIELD prbgseq1
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbgseq1
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbgseq1
+            #add-point:ON ACTION controlp INFIELD prbgseq1
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1.prbg003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg003
+            #add-point:ON ACTION controlp INFIELD prbg003
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtdx001_7()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prbg003  #顯示到畫面上
+            NEXT FIELD prbg003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg003
+            #add-point:BEFORE FIELD prbg003
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg003
+            
+            #add-point:AFTER FIELD prbg003
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbj004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbj004
+            #add-point:ON ACTION controlp INFIELD prbj004
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_prbj001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prbj004  #顯示到畫面上
+            NEXT FIELD prbj004                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbj004
+            #add-point:BEFORE FIELD prbj004
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbj004
+            
+            #add-point:AFTER FIELD prbj004
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbg002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg002
+            #add-point:ON ACTION controlp INFIELD prbg002
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtdx001_7()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prbg002  #顯示到畫面上
+            NEXT FIELD prbg002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg002
+            #add-point:BEFORE FIELD prbg002
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg002
+            
+            #add-point:AFTER FIELD prbg002
+            
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaxl003
+            #add-point:BEFORE FIELD rtaxl003
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaxl003
+            
+            #add-point:AFTER FIELD rtaxl003
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaxl003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaxl003
+            #add-point:ON ACTION controlp INFIELD rtaxl003
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtdx034
+            #add-point:BEFORE FIELD rtdx034
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtdx034
+            
+            #add-point:AFTER FIELD rtdx034
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtdx034
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtdx034
+            #add-point:ON ACTION controlp INFIELD rtdx034
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg007
+            #add-point:BEFORE FIELD prbg007
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg007
+            
+            #add-point:AFTER FIELD prbg007
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbg007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg007
+            #add-point:ON ACTION controlp INFIELD prbg007
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg014
+            #add-point:BEFORE FIELD prbg014
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg014
+            
+            #add-point:AFTER FIELD prbg014
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbg014
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg014
+            #add-point:ON ACTION controlp INFIELD prbg014
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg015
+            #add-point:BEFORE FIELD prbg015
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg015
+            
+            #add-point:AFTER FIELD prbg015
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbg015
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg015
+            #add-point:ON ACTION controlp INFIELD prbg015
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg0091
+            #add-point:BEFORE FIELD prbg0091
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg0091
+            
+            #add-point:AFTER FIELD prbg0091
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbg0091
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg0091
+            #add-point:ON ACTION controlp INFIELD prbg0091
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg009
+            #add-point:BEFORE FIELD prbg009
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg009
+            
+            #add-point:AFTER FIELD prbg009
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbg009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg009
+            #add-point:ON ACTION controlp INFIELD prbg009
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg010
+            #add-point:BEFORE FIELD prbg010
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg010
+            
+            #add-point:AFTER FIELD prbg010
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbg010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg010
+            #add-point:ON ACTION controlp INFIELD prbg010
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg011
+            #add-point:BEFORE FIELD prbg011
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg011
+            
+            #add-point:AFTER FIELD prbg011
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbg011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg011
+            #add-point:ON ACTION controlp INFIELD prbg011
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg012
+            #add-point:BEFORE FIELD prbg012
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg012
+            
+            #add-point:AFTER FIELD prbg012
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbg012
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg012
+            #add-point:ON ACTION controlp INFIELD prbg012
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg016
+            #add-point:BEFORE FIELD prbg016
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg016
+            
+            #add-point:AFTER FIELD prbg016
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbg016
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg016
+            #add-point:ON ACTION controlp INFIELD prbg016
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg017
+            #add-point:BEFORE FIELD prbg017
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg017
+            
+            #add-point:AFTER FIELD prbg017
+            
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.prbg017
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg017
+            #add-point:ON ACTION controlp INFIELD prbg017
+            
+            #END add-point
+ 
+  
+         
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog
+         
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct
+   
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+    
+   CALL aprt114_01_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION aprt114_01_insert()
+   #add-point:delete段define
+   
+   #end add-point                
+   #add-point:insert段define(客製用)
+   
+   #end add-point
+   
+   #add-point:單身新增前
+   
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL aprt114_01_modify()
+            
+   #add-point:單身新增後
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION aprt114_01_modify()
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num10               #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num10
+   DEFINE  l_i                    LIKE type_t.num10
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num10
+   DEFINE  li_reproduce_target    LIKE type_t.num10
+   DEFINE  lb_reproduce           BOOLEAN
+   #add-point:modify段define
+
+   #end add-point 
+   #add-point:modify段define(客製用)
+
+   #end add-point
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前
+   LET l_allow_insert = FALSE
+   LET l_allow_delete = FALSE
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+ 
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+ 
+   #add-point:modify段修改前
+
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_prbg_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_prbg_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+#            CALL aprt114_01_b_fill(g_wc2)
+            LET g_detail_cnt = g_prbg_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row
+
+            #end add-point  
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_prbg_d.getLength() TO FORMONLY.cnt
+            LET l_cmd='u'
+            LET g_prbg_d_t.* = g_prbg_d[l_ac].*  
+         
+#            CALL s_transaction_begin()
+#            LET g_detail_cnt = g_prbg_d.getLength()
+#            
+#            IF g_detail_cnt >= l_ac 
+#               AND g_prbg_d[l_ac].prbgdocno IS NOT NULL
+#               AND g_prbg_d[l_ac].prbgseq IS NOT NULL
+#               AND g_prbg_d[l_ac].prbgseq1 IS NOT NULL
+# 
+#            THEN
+#               LET l_cmd='u'
+#               LET g_prbg_d_t.* = g_prbg_d[l_ac].*  #BACKUP
+#               LET g_prbg_d_o.* = g_prbg_d[l_ac].*  #BACKUP
+#               IF NOT aprt114_01_lock_b("prbg_t") THEN
+#                  LET l_lock_sw='Y'
+#               ELSE
+#                  FETCH aprt114_01_bcl INTO g_prbg_d[l_ac].prbgdocno,g_prbg_d[l_ac].prbgseq,g_prbg_d[l_ac].prbgseq1, 
+#                      g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg002,g_prbg_d[l_ac].prbg007,g_prbg_d[l_ac].prbg014, 
+#                      g_prbg_d[l_ac].prbg015,g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011, 
+#                      g_prbg_d[l_ac].prbg012,g_prbg_d[l_ac].prbg016,g_prbg_d[l_ac].prbg017
+#                  IF SQLCA.sqlcode THEN
+#                     INITIALIZE g_errparam TO NULL 
+#                     LET g_errparam.extend = g_prbg_d_t.prbgdocno 
+#                     LET g_errparam.code   = SQLCA.sqlcode 
+#                     LET g_errparam.popup  = TRUE 
+#                     CALL cl_err()
+#                     LET l_lock_sw = "Y"
+#                  END IF
+#                  
+#                  #遮罩相關處理
+#                  LET g_prbg_d_mask_o[l_ac].* =  g_prbg_d[l_ac].*
+#                  CALL aprt114_01_prbg_t_mask()
+#                  LET g_prbg_d_mask_n[l_ac].* =  g_prbg_d[l_ac].*
+#                  
+#                  CALL aprt114_01_detail_show()
+#                  CALL cl_show_fld_cont()
+#               END IF
+#            ELSE
+#               LET l_cmd='a'
+#            END IF
+            #add-point:modify段before row
+
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            CALL s_transaction_begin()
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_prbg_d_t.* TO NULL
+            INITIALIZE g_prbg_d_o.* TO NULL
+            INITIALIZE g_prbg_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值(單身1)
+                  LET g_prbg_d[l_ac].prbg007 = "0"
+      LET g_prbg_d[l_ac].prbg0091 = "0"
+      LET g_prbg_d[l_ac].prbg009 = "0"
+      LET g_prbg_d[l_ac].prbg010 = "0"
+      LET g_prbg_d[l_ac].prbg011 = "0"
+      LET g_prbg_d[l_ac].prbg012 = "0"
+ 
+            #add-point:modify段before備份
+
+            #end add-point
+            LET g_prbg_d_t.* = g_prbg_d[l_ac].*     #新輸入資料
+            LET g_prbg_d_o.* = g_prbg_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL aprt114_01_set_entry_b("a")
+            CALL aprt114_01_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_prbg_d[li_reproduce_target].* = g_prbg_d[li_reproduce].*
+ 
+               LET g_prbg_d[g_prbg_d.getLength()].prbgdocno = NULL
+               LET g_prbg_d[g_prbg_d.getLength()].prbgseq = NULL
+               LET g_prbg_d[g_prbg_d.getLength()].prbgseq1 = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+
+            #end add-point  
+  
+         AFTER INSERT
+#            IF INT_FLAG THEN
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = '' 
+#               LET g_errparam.code   = 9001 
+#               LET g_errparam.popup  = FALSE 
+#               CALL cl_err()
+#               LET INT_FLAG = 0
+#               CANCEL INSERT
+#            END IF
+#               
+#            LET l_count = 1  
+#            SELECT COUNT(*) INTO l_count FROM prbg_t 
+#             WHERE prbgent = g_enterprise AND prbgdocno = g_prbg_d[l_ac].prbgdocno
+#                                       AND prbgseq = g_prbg_d[l_ac].prbgseq
+#                                       AND prbgseq1 = g_prbg_d[l_ac].prbgseq1
+# 
+#                
+#            #資料未重複, 插入新增資料
+#            IF l_count = 0 THEN 
+#               #add-point:單身新增前
+
+#               #end add-point
+#            
+#                              INITIALIZE gs_keys TO NULL 
+#               LET gs_keys[1] = g_prbg_d[g_detail_idx].prbgdocno
+#               LET gs_keys[2] = g_prbg_d[g_detail_idx].prbgseq
+#               LET gs_keys[3] = g_prbg_d[g_detail_idx].prbgseq1
+#               CALL aprt114_01_insert_b('prbg_t',gs_keys,"'1'")
+#                           
+#               #add-point:單身新增後
+
+#               #end add-point
+#            ELSE    
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = 'INSERT' 
+#               LET g_errparam.code   = "std-00006" 
+#               LET g_errparam.popup  = TRUE 
+#               CALL cl_err()
+#               INITIALIZE g_prbg_d[l_ac].* TO NULL
+#               CANCEL INSERT
+#            END IF
+# 
+#            IF SQLCA.SQLcode  THEN
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = "prbg_t" 
+#               LET g_errparam.code   = SQLCA.sqlcode 
+#               LET g_errparam.popup  = TRUE 
+#               CALL cl_err()
+#               CANCEL INSERT
+#            ELSE
+#               #先刷新資料
+#               #CALL aprt114_01_b_fill(g_wc2)
+#               #資料多語言用-增/改
+#               
+#               #add-point:input段-after_insert
+
+#               #end add-point
+#               ##ERROR 'INSERT O.K'
+#               LET g_detail_cnt = g_detail_cnt + 1
+#               
+#               LET g_wc2 = g_wc2, " OR (prbgdocno = '", g_prbg_d[l_ac].prbgdocno, "' "
+#                                  ," AND prbgseq = '", g_prbg_d[l_ac].prbgseq, "' "
+#                                  ," AND prbgseq1 = '", g_prbg_d[l_ac].prbgseq1, "' "
+# 
+#                                  ,")"
+#            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+#            IF l_cmd = 'a' THEN
+#               LET l_cmd='d'
+#            ELSE
+#               #add-point:單身刪除ask前
+
+#               #end add-point   
+#               
+#               IF NOT cl_ask_del_detail() THEN
+#                  CANCEL DELETE
+#               END IF
+#               IF l_lock_sw = "Y" THEN
+#                  INITIALIZE g_errparam TO NULL 
+#                  LET g_errparam.extend = "" 
+#                  LET g_errparam.code   = -263 
+#                  LET g_errparam.popup  = TRUE 
+#                  CALL cl_err()
+#                  CANCEL DELETE
+#               END IF
+#               
+#               #add-point:單身刪除前
+
+#               #end add-point   
+#               
+#               DELETE FROM prbg_t
+#                WHERE prbgent = g_enterprise AND 
+#                      prbgdocno = g_prbg_d_t.prbgdocno
+#                      AND prbgseq = g_prbg_d_t.prbgseq
+#                      AND prbgseq1 = g_prbg_d_t.prbgseq1
+# 
+#                      
+#               #add-point:單身刪除中
+
+#               #end add-point  
+#                      
+#               IF SQLCA.sqlcode THEN
+#                  INITIALIZE g_errparam TO NULL 
+#                  LET g_errparam.extend = "prbg_t" 
+#                  LET g_errparam.code   = SQLCA.sqlcode 
+#                  LET g_errparam.popup  = TRUE 
+#                  CALL cl_err()
+#                  CANCEL DELETE   
+#               ELSE
+#                  LET g_detail_cnt = g_detail_cnt-1
+#                  
+#                  #add-point:單身刪除後
+
+#                  #end add-point
+#                  #修改歷程記錄(刪除)
+#                  CALL aprt114_01_set_pk_array()
+#                  IF NOT cl_log_modified_record('','') THEN 
+#                  ELSE
+#                  END IF
+#               END IF 
+#               CLOSE aprt114_01_bcl
+#               #add-point:單身關閉bcl
+
+#               #end add-point
+#               LET l_count = g_prbg_d.getLength()
+#                              INITIALIZE gs_keys TO NULL 
+#               LET gs_keys[1] = g_prbg_d_t.prbgdocno
+#               LET gs_keys[2] = g_prbg_d_t.prbgseq
+#               LET gs_keys[3] = g_prbg_d_t.prbgseq1
+# 
+#               #應用 a47 樣板自動產生(Version:2)
+#      #刪除相關文件
+#      CALL aprt114_01_set_pk_array()
+#      #add-point:相關文件刪除前
+
+#      #end add-point   
+#      CALL cl_doc_remove()  
+# 
+# 
+# 
+#            END IF 
+              
+         AFTER DELETE 
+#            IF l_cmd <> 'd' THEN
+#               #add-point:單身刪除後2
+
+#               #end add-point
+#                              CALL aprt114_01_delete_b('prbg_t',gs_keys,"'1'")
+#            END IF
+#            #如果是最後一筆
+#            IF l_ac = (g_prbg_d.getLength() + 1) THEN
+#               CALL FGL_SET_ARR_CURR(l_ac-1)
+#            END IF
+#            #add-point:單身刪除後3
+
+#            #end add-point
+ 
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sel
+            #add-point:BEFORE FIELD sel
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sel
+            
+            #add-point:AFTER FIELD sel
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sel
+            #add-point:ON CHANGE sel
+
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbgdocno
+            #add-point:BEFORE FIELD prbgdocno
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbgdocno
+            
+            #add-point:AFTER FIELD prbgdocno
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+
+
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbgdocno
+            #add-point:ON CHANGE prbgdocno
+
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbgseq
+            #add-point:BEFORE FIELD prbgseq
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbgseq
+            
+            #add-point:AFTER FIELD prbgseq
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+
+
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbgseq
+            #add-point:ON CHANGE prbgseq
+
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbgseq1
+            #add-point:BEFORE FIELD prbgseq1
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbgseq1
+            
+            #add-point:AFTER FIELD prbgseq1
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+
+
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbgseq1
+            #add-point:ON CHANGE prbgseq1
+
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg003
+            
+            #add-point:AFTER FIELD prbg003
+ 
+
+
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg003
+            #add-point:BEFORE FIELD prbg003
+
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg003
+            #add-point:ON CHANGE prbg003
+
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbj004
+            
+            #add-point:AFTER FIELD prbj004
+
+
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbj004
+            #add-point:BEFORE FIELD prbj004
+
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbj004
+            #add-point:ON CHANGE prbj004
+
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg002
+            
+            #add-point:AFTER FIELD prbg002
+
+
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg002
+            #add-point:BEFORE FIELD prbg002
+
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg002
+            #add-point:ON CHANGE prbg002
+
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtdx034
+            #add-point:BEFORE FIELD rtdx034
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtdx034
+            
+            #add-point:AFTER FIELD rtdx034
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtdx034
+            #add-point:ON CHANGE rtdx034
+
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg007
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_prbg_d[l_ac].prbg007,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD prbg007
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD prbg007
+
+
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg007
+            #add-point:BEFORE FIELD prbg007
+
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg007
+            #add-point:ON CHANGE prbg007
+
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg014
+            #add-point:BEFORE FIELD prbg014
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg014
+            
+            #add-point:AFTER FIELD prbg014
+            IF NOT cl_null(g_prbg_d[l_ac].prbg014) THEN
+               IF g_prbg_d[l_ac].prbg014 < g_today THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apr-00063'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_prbg_d[l_ac].prbg014 = g_prbg_d_t.prbg014
+                  DISPLAY BY NAME g_prbg_d[l_ac].prbg014
+                  NEXT FIELD CURRENT
+               END IF
+               
+               IF NOT cl_null(g_prbg_d[l_ac].prbg015) THEN
+                  IF g_prbg_d[l_ac].prbg014 > g_prbg_d[l_ac].prbg015 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'amm-00081'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_prbg_d[l_ac].prbg014 = g_prbg_d_t.prbg014
+                     DISPLAY BY NAME g_prbg_d[l_ac].prbg014
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg014
+            #add-point:ON CHANGE prbg014
+
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg015
+            #add-point:BEFORE FIELD prbg015
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg015
+            
+            #add-point:AFTER FIELD prbg015
+            IF NOT cl_null(g_prbg_d[l_ac].prbg015) THEN
+               IF g_prbg_d[l_ac].prbg015 < g_today THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apr-00064'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_prbg_d[l_ac].prbg015 = g_prbg_d_t.prbg015
+                  DISPLAY BY NAME g_prbg_d[l_ac].prbg015
+                  NEXT FIELD CURRENT
+               END IF
+               
+               IF NOT cl_null(g_prbg_d[l_ac].prbg014) THEN
+                  IF g_prbg_d[l_ac].prbg014 > g_prbg_d[l_ac].prbg015 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'amm-00081'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_prbg_d[l_ac].prbg015 = g_prbg_d_t.prbg015
+                     DISPLAY BY NAME g_prbg_d[l_ac].prbg015
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg015
+            #add-point:ON CHANGE prbg015
+
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg0091
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_prbg_d[l_ac].prbg0091,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD prbg0091
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD prbg0091
+            IF NOT cl_null(g_prbg_d[l_ac].prbg0091) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg0091
+            #add-point:BEFORE FIELD prbg0091
+
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg0091
+            #add-point:ON CHANGE prbg0091
+
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg009
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_prbg_d[l_ac].prbg009,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD prbg009
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD prbg009
+            IF NOT cl_null(g_prbg_d[l_ac].prbg009) THEN            
+               IF g_prbg_d[l_ac].prbg009<>g_prbg_d_t.prbg009 THEN
+                  LET g_prbg_d[l_ac].prbg010=g_prbg_d[l_ac].prbg009
+                  LET g_prbg_d[l_ac].prbg011=g_prbg_d[l_ac].prbg009
+                  LET g_prbg_d[l_ac].prbg012=g_prbg_d[l_ac].prbg009                                
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg009
+            #add-point:BEFORE FIELD prbg009
+
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg009
+            #add-point:ON CHANGE prbg009
+
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg010
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_prbg_d[l_ac].prbg010,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD prbg010
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD prbg010
+            IF NOT cl_null(g_prbg_d[l_ac].prbg010) THEN 
+
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg010
+            #add-point:BEFORE FIELD prbg010
+
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg010
+            #add-point:ON CHANGE prbg010
+
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg011
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_prbg_d[l_ac].prbg011,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD prbg011
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD prbg011
+            IF NOT cl_null(g_prbg_d[l_ac].prbg011) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg011
+            #add-point:BEFORE FIELD prbg011
+
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg011
+            #add-point:ON CHANGE prbg011
+
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg012
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_prbg_d[l_ac].prbg012,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD prbg012
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD prbg012
+            IF NOT cl_null(g_prbg_d[l_ac].prbg012) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg012
+            #add-point:BEFORE FIELD prbg012
+
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg012
+            #add-point:ON CHANGE prbg012
+
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg016
+            #add-point:BEFORE FIELD prbg016
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg016
+            
+            #add-point:AFTER FIELD prbg016
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg016
+            #add-point:ON CHANGE prbg016
+
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbg017
+            #add-point:BEFORE FIELD prbg017
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbg017
+            
+            #add-point:AFTER FIELD prbg017
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbg017
+            #add-point:ON CHANGE prbg017
+
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.sel
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sel
+            #add-point:ON ACTION controlp INFIELD sel
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbgdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbgdocno
+            #add-point:ON ACTION controlp INFIELD prbgdocno
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbgseq
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbgseq
+            #add-point:ON ACTION controlp INFIELD prbgseq
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbgseq1
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbgseq1
+            #add-point:ON ACTION controlp INFIELD prbgseq1
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg003
+            #add-point:ON ACTION controlp INFIELD prbg003
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbj004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbj004
+            #add-point:ON ACTION controlp INFIELD prbj004
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg002
+            #add-point:ON ACTION controlp INFIELD prbg002
+
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtdx034
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtdx034
+            #add-point:ON ACTION controlp INFIELD rtdx034
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg007
+            #add-point:ON ACTION controlp INFIELD prbg007
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg014
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg014
+            #add-point:ON ACTION controlp INFIELD prbg014
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg015
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg015
+            #add-point:ON ACTION controlp INFIELD prbg015
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg0091
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg0091
+            #add-point:ON ACTION controlp INFIELD prbg0091
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg009
+            #add-point:ON ACTION controlp INFIELD prbg009
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg010
+            #add-point:ON ACTION controlp INFIELD prbg010
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg011
+            #add-point:ON ACTION controlp INFIELD prbg011
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg012
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg012
+            #add-point:ON ACTION controlp INFIELD prbg012
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg016
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg016
+            #add-point:ON ACTION controlp INFIELD prbg016
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbg017
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbg017
+            #add-point:ON ACTION controlp INFIELD prbg017
+
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_prbg_d[l_ac].* = g_prbg_d_t.*
+               #add-point:單身取消時
+ 
+               #end add-point
+               EXIT DIALOG 
+            END IF
+#              
+#            IF l_lock_sw = 'Y' THEN
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = g_prbg_d[l_ac].prbgdocno 
+#               LET g_errparam.code   = -263 
+#               LET g_errparam.popup  = TRUE 
+#               CALL cl_err()
+#               LET g_prbg_d[l_ac].* = g_prbg_d_t.*
+#            ELSE
+#               #寫入修改者/修改日期資訊(單身)
+#               
+#            
+#               #add-point:單身修改前
+#
+#               #end add-point
+#               
+#               #將遮罩欄位還原
+#               CALL aprt114_01_prbg_t_mask_restore('restore_mask_o')
+# 
+#               UPDATE prbg_t SET (prbgdocno,prbgseq,prbgseq1,prbg003,prbg002,prbg007,prbg014,prbg015, 
+#                   prbg009,prbg010,prbg011,prbg012,prbg016,prbg017) = (g_prbg_d[l_ac].prbgdocno,g_prbg_d[l_ac].prbgseq, 
+#                   g_prbg_d[l_ac].prbgseq1,g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg002,g_prbg_d[l_ac].prbg007, 
+#                   g_prbg_d[l_ac].prbg014,g_prbg_d[l_ac].prbg015,g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010, 
+#                   g_prbg_d[l_ac].prbg011,g_prbg_d[l_ac].prbg012,g_prbg_d[l_ac].prbg016,g_prbg_d[l_ac].prbg017) 
+#
+#                WHERE prbgent = g_enterprise AND
+#                  prbgdocno = g_prbg_d_t.prbgdocno #項次   
+#                  AND prbgseq = g_prbg_d_t.prbgseq  
+#                  AND prbgseq1 = g_prbg_d_t.prbgseq1  
+# 
+#                  
+#               #add-point:單身修改中
+#
+#               #end add-point
+#                  
+#               CASE
+#                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+#                     INITIALIZE g_errparam TO NULL 
+#                     LET g_errparam.extend = "prbg_t" 
+#                     LET g_errparam.code   = "std-00009" 
+#                     LET g_errparam.popup  = TRUE 
+#                     CALL cl_err()
+#                    WHEN SQLCA.sqlcode #其他錯誤
+#                     INITIALIZE g_errparam TO NULL 
+#                     LET g_errparam.extend = "prbg_t" 
+#                     LET g_errparam.code   = SQLCA.sqlcode 
+#                     LET g_errparam.popup  = TRUE 
+#                     CALL cl_err()
+#                  OTHERWISE
+#                                    INITIALIZE gs_keys TO NULL 
+#               LET gs_keys[1] = g_prbg_d[g_detail_idx].prbgdocno
+#               LET gs_keys_bak[1] = g_prbg_d_t.prbgdocno
+#               LET gs_keys[2] = g_prbg_d[g_detail_idx].prbgseq
+#               LET gs_keys_bak[2] = g_prbg_d_t.prbgseq
+#               LET gs_keys[3] = g_prbg_d[g_detail_idx].prbgseq1
+#               LET gs_keys_bak[3] = g_prbg_d_t.prbgseq1
+#               CALL aprt114_01_update_b('prbg_t',gs_keys,gs_keys_bak,"'1'")
+#                     #資料多語言用-增/改
+#                     
+#                     #修改歷程記錄(修改)
+#                     LET g_log1 = util.JSON.stringify(g_prbg_d_t)
+#                     LET g_log2 = util.JSON.stringify(g_prbg_d[l_ac])
+#                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+#                     END IF
+#               END CASE
+#               
+#               #將遮罩欄位進行遮蔽
+#               CALL aprt114_01_prbg_t_mask_restore('restore_mask_n')
+#               
+#               #add-point:單身修改後
+#
+#               #end add-point
+# 
+#            END IF
+            
+         AFTER ROW
+            CALL aprt114_01_unlock_b("prbg_t")
+            #其他table進行unlock
+            
+             #add-point:單身after row
+
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後
+
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_prbg_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_prbg_d.getLength()+1
+            
+      END INPUT
+      
+ 
+      
+ 
+      
+      #add-point:before_more_input
+
+      #end add-point
+      
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()      
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         #LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog
+
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD sel
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+    
+   #新增後取消
+   IF l_cmd = 'a' THEN
+      #當取消或無輸入資料按確定時刪除對應資料
+      IF INT_FLAG OR cl_null(g_prbg_d[g_detail_idx].prbgdocno) THEN
+         CALL g_prbg_d.deleteElement(g_detail_idx)
+ 
+      END IF
+   END IF
+   
+   #修改後取消
+   IF l_cmd = 'u' AND INT_FLAG THEN
+      LET g_prbg_d[g_detail_idx].* = g_prbg_d_t.*
+   END IF
+   
+   #add-point:modify段修改後
+
+   #end add-point
+ 
+   CLOSE aprt114_01_bcl
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION aprt114_01_delete()
+   DEFINE li_idx          LIKE type_t.num10
+   DEFINE li_ac_t         LIKE type_t.num10
+   DEFINE li_detail_tmp   LIKE type_t.num10
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   
+   #end add-point 
+   #add-point:delete段define(客製用)
+   
+   #end add-point
+   
+   #add-point:單身刪除前
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_ac_t = l_ac
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_prbg_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT aprt114_01_lock_b("prbg_t") THEN
+            #已被他人鎖定
+            RETURN
+         END IF
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前
+   
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_prbg_d.getLength()
+      IF g_prbg_d[li_idx].prbgdocno IS NOT NULL
+         AND g_prbg_d[li_idx].prbgseq IS NOT NULL
+         AND g_prbg_d[li_idx].prbgseq1 IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前
+         
+         #end add-point   
+         
+         DELETE FROM prbg_t
+          WHERE prbgent = g_enterprise AND 
+                prbgdocno = g_prbg_d[li_idx].prbgdocno
+                AND prbgseq = g_prbg_d[li_idx].prbgseq
+                AND prbgseq1 = g_prbg_d[li_idx].prbgseq1
+ 
+         #add-point:單身刪除中
+         
+         #end add-point  
+                
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "prbg_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            LET l_ac = li_idx
+            
+ 
+            
+ 
+            #add-point:單身同步刪除前(同層table)
+            
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prbg_d_t.prbgdocno
+               LET gs_keys[2] = g_prbg_d_t.prbgseq
+               LET gs_keys[3] = g_prbg_d_t.prbgseq1
+ 
+            #add-point:單身同步刪除中(同層table)
+            
+            #end add-point
+                           CALL aprt114_01_delete_b('prbg_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table)
+            
+            #end add-point
+         END IF 
+      END IF 
+    
+   END FOR
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後
+   
+   #end add-point  
+   
+   LET l_ac = li_ac_t
+   
+   #刷新資料
+   CALL aprt114_01_b_fill(g_wc2)
+            
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aprt114_01_b_fill(p_wc2)              #BODY FILL UP
+   DEFINE p_wc2    STRING
+   #add-point:b_fill段define
+
+
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   CALL aprt114_01_b_fill2(g_wc)
+   RETURN
+   #end add-point
+   #add-point:b_fill段define(客製用)
+   
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前
+   
+   #end add-point
+ 
+   LET g_sql = "SELECT  UNIQUE t0.prbgdocno,t0.prbgseq,t0.prbgseq1,t0.prbg003,t0.prbg002,t0.prbg007, 
+       t0.prbg014,t0.prbg015,t0.prbg009,t0.prbg010,t0.prbg011,t0.prbg012,t0.prbg016,t0.prbg017  FROM prbg_t t0", 
+ 
+               "",
+               
+               " WHERE t0.prbgent= ?  AND  1=1 AND (", p_wc2, ") " 
+   #add-point:b_fill段sql wc
+   
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("prbg_t"),
+                      " ORDER BY t0.prbgdocno,t0.prbgseq,t0.prbgseq1"
+   
+   #add-point:b_fill段sql之後
+   
+   #end add-point
+   
+   #LET g_sql = cl_sql_add_tabid(g_sql,"prbg_t")            #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE aprt114_01_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aprt114_01_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_prbg_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_prbg_d[l_ac].prbgdocno,g_prbg_d[l_ac].prbgseq,g_prbg_d[l_ac].prbgseq1, 
+       g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg002,g_prbg_d[l_ac].prbg007,g_prbg_d[l_ac].prbg014,g_prbg_d[l_ac].prbg015, 
+       g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011,g_prbg_d[l_ac].prbg012,g_prbg_d[l_ac].prbg016, 
+       g_prbg_d[l_ac].prbg017
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      
+      #end add-point
+      
+      CALL aprt114_01_detail_show()      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_prbg_d.deleteElement(g_prbg_d.getLength())   
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_prbg_d.getLength()
+ 
+      #add-point:b_fill段key值相關欄位
+      
+      #end add-point
+   END FOR
+   
+   IF g_cnt > g_prbg_d.getLength() THEN
+      LET l_ac = g_prbg_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_prbg_d.getLength()
+      LET g_prbg_d_mask_o[l_ac].* =  g_prbg_d[l_ac].*
+      CALL aprt114_01_prbg_t_mask()
+      LET g_prbg_d_mask_n[l_ac].* =  g_prbg_d[l_ac].*
+   END FOR
+   
+ 
+   
+   LET l_ac = g_cnt
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_prbg_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE aprt114_01_pb
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aprt114_01_detail_show()
+   #add-point:show段define
+   
+   #end add-point
+   #add-point:detail_show段define(客製用)
+   
+   #end add-point
+   
+   #add-point:detail_show段之前
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   
+   #end add-point
+   
+ 
+   #add-point:detail_show段之後
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION aprt114_01_set_entry_b(p_cmd)                                                  
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define
+   
+   #end add-point     
+   #add-point:set_entry_b段define(客製用)
+   
+   #end add-point
+   
+   #add-point:set_entry_b段control
+   
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                    
+ 
+{</section>}
+ 
+{<section id="aprt114_01.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION aprt114_01_set_no_entry_b(p_cmd)                                               
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define
+   
+   #end add-point
+   #add-point:set_no_entry_b段define(客製用)
+   
+   #end add-point   
+ 
+   #add-point:set_no_entry_b段control
+   
+   #end add-point       
+                                                                                
+END FUNCTION  
+ 
+{</section>}
+ 
+{<section id="aprt114_01.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION aprt114_01_default_search()
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   
+   #end add-point  
+   #add-point:default_search段define(客製用)
+   
+   #end add-point
+   
+   #add-point:default_search段開始前
+   
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " prbgdocno = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " prbgseq = '", g_argv[02], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " prbgseq1 = '", g_argv[03], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+      #預設查詢條件
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=1"
+      END IF
+   END IF
+ 
+   #add-point:default_search段結束前
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION aprt114_01_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define
+   
+   #end add-point     
+   #add-point:delete_b段define(客製用)
+   
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "prbg_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      IF ps_table <> 'prbg_t' THEN
+         #add-point:delete_b段刪除前
+         
+         #end add-point     
+         
+         DELETE FROM prbg_t
+          WHERE prbgent = g_enterprise AND
+            prbgdocno = ps_keys_bak[1] AND prbgseq = ps_keys_bak[2] AND prbgseq1 = ps_keys_bak[3]
+         
+         #add-point:delete_b段刪除中
+         
+         #end add-point  
+            
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         END IF
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_prbg_d.deleteElement(li_idx) 
+      END IF 
+ 
+      
+      #add-point:delete_b段刪除後
+      
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION aprt114_01_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+   
+   #end add-point     
+   #add-point:insert_b段define(客製用)
+   
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "prbg_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前
+      
+      #end add-point    
+      INSERT INTO prbg_t
+                  (prbgent,
+                   prbgdocno,prbgseq,prbgseq1
+                   ,prbg003,prbg002,prbg007,prbg014,prbg015,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg002,g_prbg_d[l_ac].prbg007,g_prbg_d[l_ac].prbg014, 
+                       g_prbg_d[l_ac].prbg015,g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011, 
+                       g_prbg_d[l_ac].prbg012,g_prbg_d[l_ac].prbg016,g_prbg_d[l_ac].prbg017)
+      #add-point:insert_b段新增中
+      
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "prbg_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後
+      
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION aprt114_01_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+
+   #end add-point     
+   #add-point:update_b段define(客製用)
+
+   #end add-point
+   
+   #比對新舊值, 判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #若key無變動, 不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #若key有變動, 則連動其他table的資料   
+   #判斷是否是同一群組的table
+   LET ls_group = "prbg_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "prbg_t" THEN
+      #add-point:update_b段修改前
+
+      #end add-point     
+      UPDATE prbg_t 
+         SET (prbgdocno,prbgseq,prbgseq1
+              ,prbg003,prbg002,prbg007,prbg014,prbg015,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg002,g_prbg_d[l_ac].prbg007,g_prbg_d[l_ac].prbg014, 
+                  g_prbg_d[l_ac].prbg015,g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011, 
+                  g_prbg_d[l_ac].prbg012,g_prbg_d[l_ac].prbg016,g_prbg_d[l_ac].prbg017) 
+         #WHERE prbgdocno = ps_keys_bak[1] AND prbgseq = ps_keys_bak[2] AND prbgseq1 = ps_keys_bak[3] #160905-00007#12 mark
+         WHERE prbgdocno = ps_keys_bak[1] AND prbgseq = ps_keys_bak[2] AND prbgseq1 = ps_keys_bak[3]  AND prbgent = g_enterprise  #160905-00007#12 add
+      #add-point:update_b段修改中
+
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "prbg_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "prbg_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION aprt114_01_lock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   
+   #end add-point   
+   #add-point:lock_b段define(客製用)
+   
+   #end add-point
+   
+   #先刷新資料
+   #CALL aprt114_01_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "prbg_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN aprt114_01_bcl USING g_enterprise,
+                                       g_prbg_d[g_detail_idx].prbgdocno,g_prbg_d[g_detail_idx].prbgseq, 
+                                           g_prbg_d[g_detail_idx].prbgseq1
+                                       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "aprt114_01_bcl" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION aprt114_01_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   
+   #end add-point  
+   #add-point:unlock_b段define(客製用)
+   
+   #end add-point
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE aprt114_01_bcl
+   #END IF
+   
+ 
+   
+   #add-point:unlock_b段結束前
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.modify_detail_chk" >}
+#+ 單身輸入判定(因應modify_detail)
+PRIVATE FUNCTION aprt114_01_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   
+   #end add-point
+   #add-point:modify_detail_chk段define(客製用)
+   
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   
+   #end add-point
+   
+   #根據sr名稱確定該page第一個欄位的名稱
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "sel"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt114_01.mask_functions" >}
+&include "erp/apr/aprt114_01_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aprt114_01.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:5)
+#+ 給予pk_array內容
+PRIVATE FUNCTION aprt114_01_set_pk_array()
+   #add-point:set_pk_array段define
+   
+   #end add-point
+   #add-point:set_pk_array段define
+   
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_prbg_d[l_ac].prbgdocno
+   LET g_pk_array[1].column = 'prbgdocno'
+   LET g_pk_array[2].values = g_prbg_d[l_ac].prbgseq
+   LET g_pk_array[2].column = 'prbgseq'
+   LET g_pk_array[3].values = g_prbg_d[l_ac].prbgseq1
+   LET g_pk_array[3].column = 'prbgseq1'
+   
+   #add-point:set_pk_array段之後
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aprt114_01.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="aprt114_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aprt114_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aprt114_01_query2()
+# Input parameter:
+# Return code....: 
+# Date & Author..: 20150707 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt114_01_query2()
+DEFINE l_n             LIKE type_t.num5
+DEFINE l_success       LIKE type_t.num5
+DEFINE l_errno         STRING
+DEFINE l_count         LIKE type_t.num5
+DEFINE l_rtaastus      LIKE rtaa_t.rtaastus
+DEFINE l_ooez006       LIKE ooez_t.ooez006
+DEFINE l_ooez007       LIKE ooez_t.ooez007
+
+
+
+      LET g_bdate=g_today
+      IF g_flagprog='aprt122' OR g_flagprog='aprt123' THEN
+         LET g_edate='2099/12/31'
+      END IF
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+         INPUT g_prbg001,g_prbgsite,g_bdate,g_edate FROM iprbg001,iprbgsite,bdate,edate
+            ATTRIBUTE(WITHOUT DEFAULTS)
+                     
+            BEFORE INPUT
+               IF cl_null(g_prbg001) THEN
+                  LET g_prbg001='2'
+                  DISPLAY g_prbg001 TO iprbg001
+               END IF
+
+            AFTER FIELD iprbg001
+            
+            
+            AFTER FIELD iprbgsite
+               IF NOT cl_null(g_prbgsite) THEN
+                  IF g_flagprog='aprt114' OR g_flagprog='aprt115' OR g_flagprog='aprt116' OR g_flagprog='aprt117' THEN
+                      INITIALIZE g_chkparam.* TO NULL
+                      
+                      IF g_prbg001 = '1' THEN
+                         LET l_n = 0
+                         SELECT COUNT(*) INTO l_n FROM rtaa_t
+                          WHERE rtaaent = g_enterprise
+                            AND rtaa001 = g_prbgsite
+                         IF l_n < 1 THEN
+                            INITIALIZE g_errparam TO NULL
+                            LET g_errparam.code = 'apr-00006'
+                            LET g_errparam.extend = ''
+                            LET g_errparam.popup = TRUE
+                            CALL cl_err()
+                            NEXT FIELD prbgsite
+                         END IF
+                      
+                         CALL s_aooi500_shop_group_chk(g_prog,'prbgsite',g_prbgsite,g_prbfsite) 
+                            RETURNING l_success,l_errno
+                         IF NOT l_success THEN
+                            INITIALIZE g_errparam TO NULL
+                            LET g_errparam.extend = g_prbgsite
+                            LET g_errparam.code   = l_errno
+                            LET g_errparam.popup  = TRUE
+                            CALL cl_err()
+                            NEXT FIELD CURRENT
+                         END IF
+                         
+                         SELECT rtaastus INTO l_rtaastus FROM rtaa_t
+                          WHERE rtaaent = g_enterprise
+                            AND rtaa001 = g_prbgsite
+                            
+                         LET l_count=0
+                         SELECT COUNT(*) INTO l_count
+                           FROM rtak_t
+                          WHERE rtakent=g_enterprise
+                            AND rtak001= g_prbgsite
+                            AND rtak002='4'
+                            AND rtak003='Y'                     
+                         IF cl_null(l_count) OR l_count=0 THEN
+                            INITIALIZE g_errparam TO NULL
+                            LET g_errparam.code = 'apr-00029'
+                            LET g_errparam.extend = ''
+                            LET g_errparam.popup = TRUE
+                            CALL cl_err()
+                            NEXT FIELD prbgsite
+                         END IF
+                         IF l_rtaastus <> 'Y' THEN
+                            INITIALIZE g_errparam TO NULL
+                            LET g_errparam.code = 'sub-01302'   #art-00049  #160318-00005#39 by 07900 --mod
+                            LET g_errparam.extend = ''
+                             #160318-00005#39  By 07900 --add-str
+                           LET g_errparam.replace[1] = 'arti201'
+                           LET g_errparam.replace[2] = cl_get_progname("arti201",g_lang,"2")
+                           LET g_errparam.exeprog = 'arti201'
+                           #160318-00005#39  By 07900 --add-end
+                            LET g_errparam.popup = TRUE
+                            CALL cl_err()
+                            NEXT FIELD prbgsite
+                         END IF
+                      END IF
+                      
+                      IF g_prbg001 = '2' THEN
+                         CALL s_aooi500_chk(g_prog,'prbgsite',g_prbgsite,g_prbfsite) RETURNING l_success,l_errno
+                         IF NOT l_success THEN
+                            INITIALIZE g_errparam TO NULL
+                            LET g_errparam.extend = g_prbgsite
+                            LET g_errparam.code   = l_errno
+                            LET g_errparam.popup  = TRUE
+                            CALL cl_err()
+                         
+                            NEXT FIELD CURRENT
+                         END IF
+                      END IF  
+                  END IF 
+                  IF g_flagprog='aprt122' OR g_flagprog='aprt123' THEN 
+                     SELECT prbisite INTO g_prbfsite
+                       FROM prbi_t
+                      WHERE prbient=g_enterprise
+                        AND prbidocno=g_docno                
+                     CALL s_aooi500_chk(g_prog,'prbjsite',g_prbgsite,g_prbfsite) RETURNING l_success,l_errno
+                     IF NOT l_success THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend = g_prbgsite
+                        LET g_errparam.code   = l_errno
+                        LET g_errparam.popup  = TRUE
+                        CALL cl_err()
+                     
+                        NEXT FIELD CURRENT
+                     END IF                     
+                  END IF
+               END IF           
+               
+               IF g_prbg001 = '2' THEN
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_prbgsite
+                  CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_prbgsite_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY g_prbgsite_desc TO iprbgsite_desc
+               END IF
+               IF g_prbg001 = '1' THEN
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_prbgsite
+                  CALL ap_ref_array2(g_ref_fields,"SELECT rtaal003 FROM rtaal_t WHERE rtaalent='"||g_enterprise||"' AND rtaal001=? AND rtaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_prbgsite_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY g_prbgsite_desc TO iprbgsite_desc
+               END IF 
+               IF g_flagprog='aprt122' OR g_flagprog='aprt123' THEN 
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_prbgsite
+                  CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_prbgsite_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY g_prbgsite_desc TO iprbgsite_desc
+               END IF
+               
+            AFTER FIELD bdate
+               IF NOT cl_null(g_bdate) THEN
+                  IF g_bdate < g_today THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'apr-00063'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  IF NOT cl_null(g_edate) THEN
+                     IF g_bdate > g_edate THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'amm-00081'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF            
+            
+            AFTER FIELD edate
+               IF NOT cl_null(g_edate) THEN
+                  IF g_edate < g_today THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'apr-00064'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  IF NOT cl_null(g_bdate) THEN
+                     IF g_bdate > g_edate THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'amm-00081'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF 
+
+
+
+            ON ACTION controlp INFIELD iprbgsite
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+		      	LET g_qryparam.reqry = FALSE
+            
+               LET g_qryparam.default1 = g_prbgsite             #給予default值
+               
+               IF g_flagprog='aprt122' OR g_flagprog='aprt123' THEN 
+                  LET g_qryparam.where = s_aooi500_q_where(g_prog,'prbjsite',g_prbfsite,'i')   
+                  CALL q_ooef001_24()
+                  LET g_prbgsite = g_qryparam.return1
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_prbgsite
+                  CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_prbgsite_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY g_prbgsite_desc TO iprbgsite_desc                  
+               END IF
+               
+               IF g_flagprog='aprt114' OR g_flagprog='aprt115' OR g_flagprog='aprt116' OR g_flagprog='aprt117' THEN               
+                  IF g_prbg001 = '1' THEN
+                     SELECT ooez006,ooez007 INTO l_ooez006,l_ooez007
+                       FROM ooez_t
+                      WHERE ooezent = g_enterprise
+                        AND ooez001 = g_prog
+                        AND ooez002 = '1'
+                     IF SQLCA.SQLCODE = 100 THEN
+                        #給予arg
+                        LET g_qryparam.arg1 = "4"     #
+                        LET g_qryparam.arg2 = g_prbfsite
+                        LET g_qryparam.arg3 = "9"
+                        CALL q_rtaa001_6()
+                     ELSE
+                        IF l_ooez007 = 'Y' THEN
+                           #給予arg
+                           LET g_qryparam.arg1 = "4"     #
+                           LET g_qryparam.arg2 = g_prbfsite
+                           LET g_qryparam.arg3 = l_ooez006
+                           CALL q_rtaa001_6()
+                        ELSE
+                           LET g_qryparam.arg1 = "4"
+                           CALL q_rtaa001_4()
+                        END IF
+                     END IF              
+                     
+                     LET g_prbgsite = g_qryparam.return1              #將開窗取得的值回傳到變數
+                     INITIALIZE g_ref_fields TO NULL
+                     LET g_ref_fields[1] = g_prbgsite
+                     CALL ap_ref_array2(g_ref_fields,"SELECT rtaal003 FROM rtaal_t WHERE rtaalent='"||g_enterprise||"' AND rtaal001=? AND rtaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                     LET g_prbgsite_desc = '', g_rtn_fields[1] , ''
+                     DISPLAY g_prbgsite_desc TO iprbgsite
+                  END IF
+                  IF g_prbg001 = '2' THEN
+                     LET g_qryparam.where = s_aooi500_q_where(g_prog,'prbgsite',g_prbfsite,'i')   
+                     CALL q_ooef001_24()
+                     LET g_prbgsite = g_qryparam.return1              #將開窗取得的值回傳到變數
+                     CALL s_desc_get_department_desc(g_prbgsite)
+                        RETURNING g_prbgsite_desc
+                  END IF
+               END IF
+            
+               DISPLAY g_prbgsite TO iprbgsite              #顯示到畫面上
+               DISPLAY g_prbgsite_desc TO iprbgsite_desc    #顯示到畫面上
+            
+               NEXT FIELD iprbgsite                          #返回原欄位 
+            
+            AFTER INPUT
+
+         END INPUT
+
+         CONSTRUCT g_wc ON imaa009,imaa001 FROM cimaa009,cimaa001
+                        
+            BEFORE CONSTRUCT
+
+            ON ACTION controlp INFIELD cimaa009
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_rtax001_2()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO cimaa009  #顯示到畫面上
+               NEXT FIELD cimaa009                    #返回原欄位    
+
+
+            ON ACTION controlp INFIELD cimaa001
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_rtdx001_7()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO cimaa001  #顯示到畫面上
+               NEXT FIELD cimaa001                    #返回原欄位 
+
+         END CONSTRUCT
+         
+         BEFORE DIALOG
+            IF cl_null(g_prbg001) THEN
+               LET g_prbg001='2'
+               DISPLAY g_prbg001 TO iprbg001
+            END IF 
+            IF cl_null(g_bdate) THEN
+               LET g_bdate=g_today
+            END IF             
+            IF cl_null(g_edate) THEN
+               LET g_edate=g_today+1
+            END IF
+            DISPLAY g_bdate TO bdate
+            DISPLAY g_edate TO edate
+            
+        ON ACTION accept
+           ACCEPT DIALOG  
+           
+        ON ACTION cancel
+           LET INT_FLAG = 1
+           CANCEL DIALOG
+         
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+         
+      END DIALOG         
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aprt114_01_b_fill2(p_wc)
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20150707 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt114_01_b_fill2(p_wc)
+DEFINE p_wc         STRING
+DEFINE l_prbf001    LIKE prbf_t.prbf001
+DEFINE l_sql        STRING
+DEFINE l_prbfdocdt  LIKE prbf_t.prbfdocdt
+DEFINE l_prbf004    LIKE prbf_t.prbf004
+DEFINE l_prbf005    LIKE prbf_t.prbf005
+DEFINE l_prbfsite   LIKE prbf_t.prbfsite
+DEFINE l_prbf011    LIKE prbf_t.prbf011
+DEFINE l_rtax004    LIKE rtax_t.rtax004
+DEFINE l_prbidocdt  LIKE prbi_t.prbidocdt
+DEFINE l_prbi001    LIKE prbi_t.prbi001
+DEFINE l_prbi002    LIKE prbi_t.prbi002
+DEFINE l_prbi005    LIKE prbi_t.prbi005
+
+
+
+   IF cl_null(p_wc) THEN
+      LET p_wc = " 1=1"
+   END IF
+
+   IF g_flagprog='aprt114' OR g_flagprog='aprt115' OR g_flagprog='aprt116' OR g_flagprog='aprt117' THEN
+      SELECT prbf001,prbf004,prbfsite,prbfdocdt,prbf005,prbf011 INTO 
+             l_prbf001,l_prbf004,l_prbfsite,l_prbfdocdt,l_prbf005,l_prbf011
+        FROM prbf_t
+       WHERE prbfent=g_enterprise
+         AND prbfdocno=g_docno
+
+
+      LET l_sql = "SELECT UNIQUE rtdx001,''", 
+                  "  FROM rtdx_t,imaa_t",    
+                  " WHERE rtdxent= ?  ",
+                  "   AND rtdxstus='Y'",
+                  "   AND rtdxent=imaaent",
+                  "   AND rtdx001=imaa001",               
+                  "   AND (", p_wc, ") " 
+                  
+      IF g_prbg001='2' THEN
+         LET l_sql=l_sql CLIPPED," AND rtdxsite='",g_prbgsite,"'"
+      END IF
+      IF g_prbg001='1' THEN
+         LET l_sql=l_sql CLIPPED," AND  rtdxsite IN (SELECT rtab002 FROM rtab_t WHERE rtabent ='",g_enterprise,"' AND rtab001 ='",g_prbgsite,"')"
+      END IF   
+     
+      IF NOT cl_null(l_prbf005) THEN  #品类不为空，按照管理品类抓商品
+         LET l_rtax004=cl_get_para(g_enterprise,g_site,'E-CIR-0001')
+         LET l_sql=l_sql CLIPPED," AND EXISTS (",
+                                 "             SELECT 1 FROM rtaw_t,rtax_t",
+                                 "              WHERE rtawent = imaaent",
+                                 "                AND rtawent = rtaxent",
+                                 "                AND rtaw001 = rtax001",
+                                 "                AND rtax004='",l_rtax004,"'",
+                                 "                AND rtaw001='",l_prbf005,"'",
+                                 "                AND rtaw002 = imaa009)"
+      END IF
+      
+      IF g_prbg001 = '2' THEN         
+         IF l_prbf001='1' OR l_prbf001='3' OR              #aprt114和116抓采购协议的商品
+                  ((l_prbf001='2' OR l_prbf001='6') AND NOT cl_null(l_prbf004))THEN  #aprt115和117如果供应商不为空也抓采购协议的商品
+            LET l_sql=l_sql CLIPPED," AND EXISTS (",
+                                    "             SELECT 1 FROM stas_t,star_t",
+                                    "              WHERE stasent=starent ",
+                                    "                AND stas001=star001 ",
+                                    "                AND stassite=starsite",
+                                    "                AND stasent ='",g_enterprise,"'",
+                                    "                AND '",l_prbfdocdt,"' BETWEEN stas018 AND stas019",
+                                    "                AND star003 ='",l_prbf004,"'",
+                                    "                AND stas003 =imaa001",
+                                    "                AND stassite ='",g_prbgsite,"')"
+         END IF
+      END IF                              
+      IF g_prbg001 = '1' THEN 
+         IF l_prbf001='1' OR l_prbf001='3' OR              #aprt114和116抓采购协议的商品
+                  ((l_prbf001='2' OR l_prbf001='6') AND NOT cl_null(l_prbf004))THEN  #aprt115和117如果供应商不为空也抓采购协议的商品
+            LET l_sql=l_sql CLIPPED," AND EXISTS (",
+                                    "             SELECT 1 FROM stas_t,star_t",
+                                    "              WHERE stasent=starent ",
+                                    "                AND stas001=star001 ",
+                                    "                AND stassite=starsite",
+                                    "                AND stasent ='",g_enterprise,"'",
+                                    "                AND '",l_prbfdocdt,"' BETWEEN stas018 AND stas019",
+                                    "                AND star003 ='",l_prbf004,"'",
+                                    "                AND stas003 =imaa001",
+                                    "                AND starsite IN (SELECT rtab002 FROM rtab_t WHERE rtabent ='",g_enterprise,"' AND rtab001 = '",g_prbgsite,"'))"
+         END IF
+      END IF
+      
+   END IF
+
+   IF g_flagprog='aprt122' OR g_flagprog='aprt123' THEN
+      SELECT prbidocdt,prbi001,prbi002,prbi005 INTO l_prbidocdt,l_prbi001,l_prbi002,l_prbi005
+        FROM prbi_t
+       WHERE prbient=g_enterprise
+         AND prbidocno=g_docno
+      LET l_sql = " SELECT DISTINCT prbh003,prbh001 ",
+                           "   FROM prbh_t,rtdx_t,imaa_t,imay_t,imaf_t ",
+                           "  WHERE prbhent = rtdxent ",
+                           "    AND prbhent = imaaent ",
+                           "    AND prbhent = imayent ",
+                           "    AND prbhent = imafent ",
+                           "    AND prbh003 = rtdx001 ",
+                           "    AND prbh003 = imaa001 ",
+                           "    AND prbh003 = imay001 ",
+                           "    AND prbh004 = imay003 ",
+                           "    AND prbh003 = imaf001 ",
+                           "    AND prbhsite = rtdxsite ",
+                           "    AND prbhsite = imafsite ",
+                           "    AND prbhsite = '",g_prbgsite,"'",
+                           "    AND prbhent = ?", 
+                           "    AND prbhstus = 'Y'",
+                           "    AND rtdxstus = 'Y' ",
+                           "    AND imaastus = 'Y' ",
+                           "    AND imaystus = 'Y' ",
+                           "    AND (", p_wc, ") " 
+                           
+      IF NOT cl_null(l_prbi001) THEN
+         LET l_sql=l_sql CLIPPED," AND EXISTS (",
+                                 "             SELECT 1 FROM stas_t,star_t",
+                                 "              WHERE stasent=starent ",
+                                 "                AND stas001=star001 ",
+                                 "                AND stassite=starsite",
+                                 "                AND stasent ='",g_enterprise,"'",
+                                 "                AND '",l_prbidocdt,"' BETWEEN stas018 AND stas019",
+                                 "                AND star003 ='",l_prbi001,"'",
+                                 "                AND stas003 =imaa001",
+                                 "                AND stassite ='",g_prbgsite,"')"
+      END IF
+       
+ 
+      IF NOT cl_null(l_prbi002) THEN 
+         LET l_rtax004=cl_get_para(g_enterprise,g_site,'E-CIR-0001')
+         LET l_sql=l_sql CLIPPED," AND EXISTS (",
+                                 "             SELECT 1 FROM rtaw_t,rtax_t",
+                                 "              WHERE rtawent = imaaent",
+                                 "                AND rtawent = rtaxent",
+                                 "                AND rtaw001 = rtax001",
+                                 "                AND rtax004='",l_rtax004,"'",
+                                 "                AND rtaw001='",l_prbi002,"'",
+                                 "                AND rtaw002 = imaa009)"      
+      END IF      
+   
+   END IF
+
+   
+   PREPARE aprt114_01_pb2 FROM l_sql
+   DECLARE b_fill_curs2 CURSOR FOR aprt114_01_pb2
+   
+   OPEN b_fill_curs2 USING g_enterprise
+ 
+   CALL g_prbg_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs2 INTO g_prbg_d[l_ac].prbg002,g_prbg_d[l_ac].prbj004
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      IF g_flagprog='aprt114' OR g_flagprog='aprt115' OR g_flagprog='aprt116' OR g_flagprog='aprt117' THEN
+	   	IF NOT aprt114_01_prbg002_chk(g_prbg_d[l_ac].prbg002) THEN
+	   	   CONTINUE FOREACH
+	   	END IF  
+        
+        LET g_prbg_d[l_ac].sel='N'      
+	   	
+       SELECT imaal003,imaa009 
+         INTO g_prbg_d[l_ac].prbg002_desc,g_prbg_d[l_ac].prbg002_desc_desc
+         FROM imaa_t LEFT OUTER JOIN imaal_t ON imaaent = imaalent AND imaa001 = imaal001 AND imaal002 = g_dlang
+        WHERE imaaent = g_enterprise 
+          AND imaa001 = g_prbg_d[l_ac].prbg002
+          
+       SELECT rtaxl003 INTO g_prbg_d[l_ac].rtaxl003
+         FROM rtaxl_t
+        WHERE rtaxlent = g_enterprise
+          AND rtaxl001 = g_prbg_d[l_ac].prbg002_desc_desc
+          AND rtaxl002 = g_dlang
+          
+        IF g_prbgsite='2' THEN
+           #抓取最新進價         
+           SELECT rtdx034 INTO g_prbg_d[l_ac].rtdx034
+             FROM rtdx_t
+            WHERE rtdxent = g_enterprise
+              AND rtdxsite = g_prbgsite
+              AND rtdx001 = g_prbg_d[l_ac].prbg002
+        END IF
+           
+        IF g_prbg001 = '2' THEN
+           IF l_prbf001 <> '3' AND l_prbf001 <> '6' THEN
+              SELECT rtdx002,rtdx034,rtdx016,rtdx016,rtdx017,rtdx018,rtdx019
+                INTO g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg007,g_prbg_d[l_ac].prbg0091,g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011,g_prbg_d[l_ac].prbg012        
+                FROM rtdx_t
+               WHERE rtdxent = g_enterprise 
+                 AND rtdxsite = g_prbgsite
+                 AND rtdx001 = g_prbg_d[l_ac].prbg002
+              
+              IF l_prbf001 = '1' OR l_prbf001='3' THEN
+                 SELECT stas010 INTO g_prbg_d[l_ac].prbg007 
+                   FROM stas_t,star_t
+                  WHERE stasent=starent 
+                    AND stassite=starsite 
+                    AND stas001=star001
+                    AND star003=l_prbf004
+                    AND stas003=g_prbg_d[l_ac].prbg002 
+                    AND l_prbfdocdt between stas018 and stas019
+              END IF
+           ELSE
+       
+              SELECT rtdx002,rtdx032,rtdx021,rtdx021,rtdx022,rtdx038,rtdx039,rtdx040
+                INTO g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg007,g_prbg_d[l_ac].prbg0091,g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011,g_prbg_d[l_ac].prbg012
+                FROM rtdx_t
+               WHERE rtdxent = g_enterprise 
+                 AND rtdxsite = g_prbgsite
+                 AND rtdx001 = g_prbg_d[l_ac].prbg002    
+       
+              IF l_prbf001 = '1' OR l_prbf001='3' THEN
+                 SELECT stas011 INTO g_prbg_d[l_ac].prbg007
+                   FROM stas_t,star_t
+                  WHERE stasent=starent 
+                    AND stassite=starsite 
+                    AND stas001=star001
+                    AND star003=l_prbf004
+                    AND stas003=g_prbg_d[l_ac].prbg002
+                    AND g_prbf_m.prbfdocdt between stas018 and stas019
+              END IF
+       
+           END IF
+       
+        END IF    
+        IF g_prbg001 = '1' THEN
+           IF l_prbf001 <> '3'  AND l_prbf001 <> '6' THEN    
+              SELECT rtdx002,rtdx034,rtdx016,rtdx016,rtdx017,rtdx018,rtdx019
+                INTO g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg007,g_prbg_d[l_ac].prbg0091,g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011,g_prbg_d[l_ac].prbg012
+                FROM rtdx_t
+                WHERE rtdxent = g_enterprise 
+                  AND rtdxsite = l_prbfsite
+                  AND rtdx001 = g_prbg_d[l_ac].prbg002
+           ELSE
+              SELECT rtdx002,rtdx032,rtdx021,rtdx021,rtdx038,rtdx039,rtdx040
+                INTO g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg007,g_prbg_d[l_ac].prbg0091,g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011,g_prbg_d[l_ac].prbg012
+                FROM rtdx_t
+                WHERE rtdxent = g_enterprise 
+                  AND rtdxsite = l_prbfsite
+                  AND rtdx001 = g_prbg_d[l_ac].prbg002
+           END IF
+        END IF	
+        
+        IF g_flagprog='aprt116' THEN
+           LET g_prbg_d[l_ac].prbg014=g_bdate
+           LET g_prbg_d[l_ac].prbg015=g_edate
+        END IF
+        IF g_flagprog='aprt117' THEN
+           LET g_prbg_d[l_ac].prbg016=g_bdate
+           LET g_prbg_d[l_ac].prbg017=g_edate
+        END IF      
+      END IF
+
+      IF g_flagprog='aprt122' OR g_flagprog='aprt123' THEN
+	      IF cl_null(l_prbi002) THEN
+	         #判斷商品是否歸屬arti204設定的部門可用品類
+            IF NOT s_arti204_control_check(g_prog,l_prbi005,g_prbg_d[l_ac].prbg002,'') THEN
+               CONTINUE FOREACH
+            END IF
+	      END IF  
+	   	IF NOT aprt114_01_prbg002_chk(g_prbg_d[l_ac].prbg002) THEN
+	   	   CONTINUE FOREACH
+	   	END IF	    
+	   	
+         LET g_prbg_d[l_ac].sel='N'      
+	   	
+        SELECT imaal003,imaa009 
+          INTO g_prbg_d[l_ac].prbg002_desc,g_prbg_d[l_ac].prbg002_desc_desc
+          FROM imaa_t LEFT OUTER JOIN imaal_t ON imaaent = imaalent AND imaa001 = imaal001 AND imaal002 = g_dlang
+         WHERE imaaent = g_enterprise 
+           AND imaa001 = g_prbg_d[l_ac].prbg002
+           
+        SELECT rtaxl003 INTO g_prbg_d[l_ac].rtaxl003
+          FROM rtaxl_t
+         WHERE rtaxlent = g_enterprise
+           AND rtaxl001 = g_prbg_d[l_ac].prbg002_desc_desc
+           AND rtaxl002 = g_dlang
+                  
+         SELECT rtdx034 INTO g_prbg_d[l_ac].rtdx034
+           FROM rtdx_t
+          WHERE rtdxent = g_enterprise
+            AND rtdxsite = g_prbgsite
+            AND rtdx001 = g_prbg_d[l_ac].prbg002
+            
+        IF g_flagprog='aprt122' THEN
+           SELECT prbh004,prbh010                  
+             INTO g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg007 
+             FROM prbh_t
+            WHERE prbhent = g_enterprise
+              AND prbhsite = g_prbgsite
+              AND prbh003 = g_prbg_d[l_ac].prbg002 
+              AND prbh001=  g_prbg_d[l_ac].prbj004             
+           LET g_prbg_d[l_ac].prbg014=g_bdate
+           LET g_prbg_d[l_ac].prbg015=g_edate
+        END IF    
+        
+        IF g_flagprog='aprt123' THEN
+           SELECT prbh004,prbh012,prbh012,prbh013,prbh014,prbh015                     
+             INTO g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg0091,g_prbg_d[l_ac].prbg009,
+                  g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011,g_prbg_d[l_ac].prbg012
+             FROM prbh_t
+            WHERE prbhent = g_enterprise
+              AND prbhsite = g_prbgsite
+              AND prbh003 = g_prbg_d[l_ac].prbg002 
+              AND prbh001=  g_prbg_d[l_ac].prbj004               
+           LET g_prbg_d[l_ac].prbg016=g_bdate
+           LET g_prbg_d[l_ac].prbg017=g_edate
+           
+           #PLU對照表中抓不到價格信息，則抓門店清單資料，且價格=門店清單價格*計價單位換算率imay013    
+           IF cl_null(g_prbg_d[l_ac].prbg0091) THEN          
+              SELECT rtdx034*imay013
+                INTO g_prbg_d[l_ac].prbg0091
+                FROM rtdx_t,imay_t
+               WHERE rtdxent = imayent 
+                 AND rtdx001 = imay001
+                 AND rtdxsite = g_prbgsite
+                 AND rtdxent = g_enterprise
+                 AND rtdx001 = g_prbg_d[l_ac].prbg002
+                 AND imay003 = g_prbg_d[l_ac].prbg003
+           END IF           
+        END IF          
+
+      END IF
+      
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_prbg_d.deleteElement(g_prbg_d.getLength())   
+ 
+     
+   LET l_ac = g_cnt
+ 
+
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_prbg_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs2
+   FREE aprt114_01_pb2
+
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aprt114_01_prbg002_chk(p_prbg002)
+# Input parameter: p_prbg002   商品编号
+# Return code....: 
+# Date & Author..: 20150707 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt114_01_prbg002_chk(p_prbg002)
+DEFINE l_n          LIKE type_t.num5
+DEFINE p_prbg002    LIKE prbg_t.prbg002
+DEFINE l_cnt        LIKE type_t.num5
+DEFINE l_prbf011    LIKE prbf_t.prbf011
+DEFINE l_prbf005    LIKE prbf_t.prbf005
+
+
+   IF g_flagprog='aprt114' OR g_flagprog='aprt115' OR g_flagprog='aprt116' OR g_flagprog='aprt117' THEN
+      SELECT prbf005,prbf011 INTO 
+             l_prbf005,l_prbf011
+        FROM prbf_t
+       WHERE prbfent=g_enterprise
+         AND prbfdocno=g_docno
+
+	   IF cl_null(l_prbf005) THEN
+	      #判斷商品是否歸屬arti204設定的部門可用品類
+         IF NOT s_arti204_control_check(g_prog,l_prbf011,p_prbg002,'') THEN
+            RETURN FALSE
+         END IF
+	   END IF
+         
+      #重复检查
+      IF g_prbg001 = '2' THEN
+         LET l_cnt = 0
+         SELECT COUNT(*) INTO l_cnt FROM prbg_t
+          #WHERE g_prbgsite IN (SELECT DISTINCT (CASE prbg001 WHEN '2' THEN prbgsite ELSE rtab002 END ) #160905-00007#12 mark
+          WHERE prbglent = g_enterprise AND g_prbgsite IN (SELECT DISTINCT (CASE prbg001 WHEN '2' THEN prbgsite ELSE rtab002 END ) #160905-00007#12 add
+                               FROM prbg_t LEFT OUTER JOIN rtab_t ON prbgent = rtabent AND prbgsite = rtab001
+                              WHERE prbgent = g_enterprise AND prbgdocno = g_docno AND prbg002 = p_prbg002)
+         IF l_cnt > 0 THEN
+            RETURN FALSE
+         END IF
+      END IF
+      IF g_prbg001 = '1' THEN
+         LET l_cnt = 0
+         SELECT COUNT(*) INTO l_cnt FROM rtab_t
+          WHERE rtabent = g_enterprise
+            AND rtab001 = g_prbgsite
+            AND rtab002 IN (SELECT DISTINCT (CASE prbg001 WHEN '2' THEN prbgsite ELSE rtab002 END ) 
+                             FROM prbg_t LEFT OUTER JOIN rtab_t ON prbgent = rtabent AND prbgsite = rtab001
+                            WHERE prbgent = g_enterprise AND prbgdocno = g_docno AND prbg002 = p_prbg002)
+         IF l_cnt > 0 THEN
+       
+            RETURN FALSE
+         END IF
+      END IF
+   END IF
+   
+   IF g_flagprog='aprt122' OR g_flagprog='aprt123' THEN
+
+
+   END IF
+      
+   RETURN TRUE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aprt114_01_pinsert()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20140708 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt114_01_pinsert()
+DEFINE l_count     LIKE type_t.num5
+DEFINE l_i         LIKE type_t.num5
+#161111-00028#2---modify---begin------------
+#DEFINE l_prbg      RECORD LIKE prbg_t.*
+#DEFINE l_prbg_t    RECORD LIKE prbg_t.*
+#DEFINE l_prbf      RECORD LIKE prbf_t.*
+#DEFINE l_prbj      RECORD LIKE prbj_t.*
+#DEFINE l_prbj_t    RECORD LIKE prbj_t.*
+#DEFINE l_prbi      RECORD LIKE prbi_t.*
+DEFINE l_prbg RECORD  #標準調價單明細資料表
+       prbgent LIKE prbg_t.prbgent, #企業編號
+       prbgunit LIKE prbg_t.prbgunit, #應用組織
+       prbgsite LIKE prbg_t.prbgsite, #營運據點
+       prbgdocno LIKE prbg_t.prbgdocno, #單據編號
+       prbgseq LIKE prbg_t.prbgseq, #項次
+       prbgseq1 LIKE prbg_t.prbgseq1, #序號
+       prbg001 LIKE prbg_t.prbg001, #組織類型
+       prbg002 LIKE prbg_t.prbg002, #商品編號
+       prbg003 LIKE prbg_t.prbg003, #商品主條碼
+       prbg004 LIKE prbg_t.prbg004, #商品特征
+       prbg005 LIKE prbg_t.prbg005, #採購計價單位
+       prbg006 LIKE prbg_t.prbg006, #進項稅別
+       prbg007 LIKE prbg_t.prbg007, #進價
+       prbg008 LIKE prbg_t.prbg008, #銷項稅別
+       prbg009 LIKE prbg_t.prbg009, #售價
+       prbg010 LIKE prbg_t.prbg010, #會員價1
+       prbg011 LIKE prbg_t.prbg011, #會員價2
+       prbg012 LIKE prbg_t.prbg012, #會員價3
+       prbg013 LIKE prbg_t.prbg013, #毛利率
+       prbg014 LIKE prbg_t.prbg014, #進價開始日期
+       prbg015 LIKE prbg_t.prbg015, #進價截止日期
+       prbg016 LIKE prbg_t.prbg016, #售價開始日期
+       prbg017 LIKE prbg_t.prbg017, #售價截止日期
+       prbg018 LIKE prbg_t.prbg018, #銷售計價單位
+       prbg019 LIKE prbg_t.prbg019, #會員價開始日期
+       prbg020 LIKE prbg_t.prbg020, #會員價截止日期
+       prbg021 LIKE prbg_t.prbg021, #最新進價
+       prbg022 LIKE prbg_t.prbg022, #最近入庫進價
+       prbg023 LIKE prbg_t.prbg023, #執行售價
+       prbg024 LIKE prbg_t.prbg024, #件裝數
+       prbg025 LIKE prbg_t.prbg025, #執行積分單價
+       prbg026 LIKE prbg_t.prbg026 #積分單價
+       END RECORD
+DEFINE l_prbg_t RECORD  #標準調價單明細資料表
+       prbgent LIKE prbg_t.prbgent, #企業編號
+       prbgunit LIKE prbg_t.prbgunit, #應用組織
+       prbgsite LIKE prbg_t.prbgsite, #營運據點
+       prbgdocno LIKE prbg_t.prbgdocno, #單據編號
+       prbgseq LIKE prbg_t.prbgseq, #項次
+       prbgseq1 LIKE prbg_t.prbgseq1, #序號
+       prbg001 LIKE prbg_t.prbg001, #組織類型
+       prbg002 LIKE prbg_t.prbg002, #商品編號
+       prbg003 LIKE prbg_t.prbg003, #商品主條碼
+       prbg004 LIKE prbg_t.prbg004, #商品特征
+       prbg005 LIKE prbg_t.prbg005, #採購計價單位
+       prbg006 LIKE prbg_t.prbg006, #進項稅別
+       prbg007 LIKE prbg_t.prbg007, #進價
+       prbg008 LIKE prbg_t.prbg008, #銷項稅別
+       prbg009 LIKE prbg_t.prbg009, #售價
+       prbg010 LIKE prbg_t.prbg010, #會員價1
+       prbg011 LIKE prbg_t.prbg011, #會員價2
+       prbg012 LIKE prbg_t.prbg012, #會員價3
+       prbg013 LIKE prbg_t.prbg013, #毛利率
+       prbg014 LIKE prbg_t.prbg014, #進價開始日期
+       prbg015 LIKE prbg_t.prbg015, #進價截止日期
+       prbg016 LIKE prbg_t.prbg016, #售價開始日期
+       prbg017 LIKE prbg_t.prbg017, #售價截止日期
+       prbg018 LIKE prbg_t.prbg018, #銷售計價單位
+       prbg019 LIKE prbg_t.prbg019, #會員價開始日期
+       prbg020 LIKE prbg_t.prbg020, #會員價截止日期
+       prbg021 LIKE prbg_t.prbg021, #最新進價
+       prbg022 LIKE prbg_t.prbg022, #最近入庫進價
+       prbg023 LIKE prbg_t.prbg023, #執行售價
+       prbg024 LIKE prbg_t.prbg024, #件裝數
+       prbg025 LIKE prbg_t.prbg025, #執行積分單價
+       prbg026 LIKE prbg_t.prbg026 #積分單價
+       END RECORD
+DEFINE l_prbf RECORD  #標準調價單資料表
+       prbfent LIKE prbf_t.prbfent, #企業編號
+       prbfunit LIKE prbf_t.prbfunit, #應用組織
+       prbfsite LIKE prbf_t.prbfsite, #營運據點
+       prbfdocno LIKE prbf_t.prbfdocno, #單據編號
+       prbfdocdt LIKE prbf_t.prbfdocdt, #單據日期
+       prbf001 LIKE prbf_t.prbf001, #單據類型
+       prbf002 LIKE prbf_t.prbf002, #資料來源
+       prbf003 LIKE prbf_t.prbf003, #來源單號
+       prbf004 LIKE prbf_t.prbf004, #供應商編號
+       prbf005 LIKE prbf_t.prbf005, #管理品類
+       prbf006 LIKE prbf_t.prbf006, #開始日期
+       prbf007 LIKE prbf_t.prbf007, #結束日期
+       prbf008 LIKE prbf_t.prbf008, #no use
+       prbf009 LIKE prbf_t.prbf009, #no use
+       prbf010 LIKE prbf_t.prbf010, #人員
+       prbf011 LIKE prbf_t.prbf011, #部門
+       prbf012 LIKE prbf_t.prbf012, #備註
+       prbfownid LIKE prbf_t.prbfownid, #資料所有者
+       prbfowndp LIKE prbf_t.prbfowndp, #資料所屬部門
+       prbfcrtid LIKE prbf_t.prbfcrtid, #資料建立者
+       prbfcrtdp LIKE prbf_t.prbfcrtdp, #資料建立部門
+       prbfcrtdt LIKE prbf_t.prbfcrtdt, #資料創建日
+       prbfmodid LIKE prbf_t.prbfmodid, #資料修改者
+       prbfmoddt LIKE prbf_t.prbfmoddt, #最近修改日
+       prbfcnfid LIKE prbf_t.prbfcnfid, #資料確認者
+       prbfcnfdt LIKE prbf_t.prbfcnfdt, #資料確認日
+       prbfstus LIKE prbf_t.prbfstus, #狀態碼
+       prbf013 LIKE prbf_t.prbf013 #活動類型
+       END RECORD
+DEFINE l_prbi RECORD  #生鮮調價單資料表
+       prbient LIKE prbi_t.prbient, #企業編號
+       prbiunit LIKE prbi_t.prbiunit, #應用組織
+       prbisite LIKE prbi_t.prbisite, #營運據點
+       prbidocno LIKE prbi_t.prbidocno, #單據編號
+       prbidocdt LIKE prbi_t.prbidocdt, #單據日期
+       prbi001 LIKE prbi_t.prbi001, #供應商編號
+       prbi002 LIKE prbi_t.prbi002, #管理品類
+       prbi003 LIKE prbi_t.prbi003, #執行日期
+       prbi004 LIKE prbi_t.prbi004, #人員
+       prbi005 LIKE prbi_t.prbi005, #部門
+       prbi006 LIKE prbi_t.prbi006, #備註
+       prbistus LIKE prbi_t.prbistus, #狀態碼
+       prbiownid LIKE prbi_t.prbiownid, #資料所有者
+       prbiowndp LIKE prbi_t.prbiowndp, #資料所有部門
+       prbicrtid LIKE prbi_t.prbicrtid, #資料建立者
+       prbicrtdp LIKE prbi_t.prbicrtdp, #資料建立部門
+       prbicrtdt LIKE prbi_t.prbicrtdt, #資料創建日
+       prbimodid LIKE prbi_t.prbimodid, #資料修改者
+       prbimoddt LIKE prbi_t.prbimoddt, #最近修改日
+       prbicnfid LIKE prbi_t.prbicnfid, #資料確認者
+       prbicnfdt LIKE prbi_t.prbicnfdt, #資料確認日
+       prbi000 LIKE prbi_t.prbi000 #單據類型
+       END RECORD
+DEFINE l_prbj RECORD  #生鮮調價單明細資料表
+       prbjent LIKE prbj_t.prbjent, #企業編號
+       prbjunit LIKE prbj_t.prbjunit, #應用組織
+       prbjsite LIKE prbj_t.prbjsite, #營運據點
+       prbjdocno LIKE prbj_t.prbjdocno, #單據編號
+       prbjseq LIKE prbj_t.prbjseq, #項次
+       prbjseq1 LIKE prbj_t.prbjseq1, #序號
+       prbj001 LIKE prbj_t.prbj001, #商品編號
+       prbj002 LIKE prbj_t.prbj002, #商品條碼
+       prbj003 LIKE prbj_t.prbj003, #商品特征
+       prbj004 LIKE prbj_t.prbj004, #PLU碼
+       prbj005 LIKE prbj_t.prbj005, #包裝單位
+       prbj006 LIKE prbj_t.prbj006, #整包件數
+       prbj007 LIKE prbj_t.prbj007, #價格因子
+       prbj008 LIKE prbj_t.prbj008, #進項稅別
+       prbj009 LIKE prbj_t.prbj009, #進價
+       prbj010 LIKE prbj_t.prbj010, #銷項稅別
+       prbj011 LIKE prbj_t.prbj011, #售價
+       prbj012 LIKE prbj_t.prbj012, #會員價1
+       prbj013 LIKE prbj_t.prbj013, #會員價2
+       prbj014 LIKE prbj_t.prbj014, #會員價3
+       prbj015 LIKE prbj_t.prbj015, #毛利率
+       prbj016 LIKE prbj_t.prbj016, #進價開始日期
+       prbj017 LIKE prbj_t.prbj017, #進價截止日期
+       prbj018 LIKE prbj_t.prbj018, #售價開始日期
+       prbj019 LIKE prbj_t.prbj019 #售價截止日期
+       END RECORD
+DEFINE l_prbj_t RECORD  #生鮮調價單明細資料表
+       prbjent LIKE prbj_t.prbjent, #企業編號
+       prbjunit LIKE prbj_t.prbjunit, #應用組織
+       prbjsite LIKE prbj_t.prbjsite, #營運據點
+       prbjdocno LIKE prbj_t.prbjdocno, #單據編號
+       prbjseq LIKE prbj_t.prbjseq, #項次
+       prbjseq1 LIKE prbj_t.prbjseq1, #序號
+       prbj001 LIKE prbj_t.prbj001, #商品編號
+       prbj002 LIKE prbj_t.prbj002, #商品條碼
+       prbj003 LIKE prbj_t.prbj003, #商品特征
+       prbj004 LIKE prbj_t.prbj004, #PLU碼
+       prbj005 LIKE prbj_t.prbj005, #包裝單位
+       prbj006 LIKE prbj_t.prbj006, #整包件數
+       prbj007 LIKE prbj_t.prbj007, #價格因子
+       prbj008 LIKE prbj_t.prbj008, #進項稅別
+       prbj009 LIKE prbj_t.prbj009, #進價
+       prbj010 LIKE prbj_t.prbj010, #銷項稅別
+       prbj011 LIKE prbj_t.prbj011, #售價
+       prbj012 LIKE prbj_t.prbj012, #會員價1
+       prbj013 LIKE prbj_t.prbj013, #會員價2
+       prbj014 LIKE prbj_t.prbj014, #會員價3
+       prbj015 LIKE prbj_t.prbj015, #毛利率
+       prbj016 LIKE prbj_t.prbj016, #進價開始日期
+       prbj017 LIKE prbj_t.prbj017, #進價截止日期
+       prbj018 LIKE prbj_t.prbj018, #售價開始日期
+       prbj019 LIKE prbj_t.prbj019 #售價截止日期
+       END RECORD
+#161111-00028#2---modify---end--------------
+
+
+    IF g_prbg_d.getLength()=0 THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "" 
+       LET g_errparam.code   = "adb-00078" 
+       LET g_errparam.popup  = TRUE 
+       CALL cl_err()    
+       RETURN
+    END IF
+    
+    LET l_count=0
+    FOR l_i = 1 TO g_prbg_d.getLength()
+       IF g_prbg_d[l_i].sel = "Y" THEN
+          LET l_count=l_count+1
+       END IF
+    END FOR
+    IF l_count=0 THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "" 
+       LET g_errparam.code   = "adb-00078" 
+       LET g_errparam.popup  = TRUE 
+       CALL cl_err()    
+       RETURN
+    END IF    
+  
+    IF g_flagprog='aprt114' OR g_flagprog='aprt115' OR g_flagprog='aprt116' OR g_flagprog='aprt117' THEN
+      #SELECT * INTO l_prbf.*  #161111-00028#2--mark
+      #161111-00028#2--add----begin-----
+      SELECT prbfent,prbfunit,prbfsite,prbfdocno,prbfdocdt,prbf001,prbf002,prbf003,prbf004,prbf005,prbf006,prbf007,prbf008,
+             prbf009,prbf010,prbf011,prbf012,prbfownid,prbfowndp,prbfcrtid,prbfcrtdp,prbfcrtdt,prbfmodid,prbfmoddt,prbfcnfid,
+             prbfcnfdt,prbfstus,prbf013 INTO l_prbf.*
+      #161111-00028#2--add----end-------
+         FROM prbf_t
+        WHERE prbfent=g_enterprise
+          AND prbfdocno=g_docno
+    END IF
+       
+    IF g_flagprog='aprt122' OR g_flagprog='aprt123' THEN   
+      # SELECT * INTO l_prbi.*   #161111-00028#2--mark
+       #161111-00028#2--add----begin-----
+       SELECT prbient,prbiunit,prbisite,prbidocno,prbidocdt,prbi001,prbi002,prbi003,prbi004,prbi005,prbi006,prbistus,prbiownid,prbiowndp,
+              prbicrtid,prbicrtdp,prbicrtdt,prbimodid,prbimoddt,prbicnfid,prbicnfdt,prbi000 INTO l_prbi.*
+        #161111-00028#2--add----end-----
+         FROM prbi_t
+        WHERE prbient=g_enterprise
+          AND prbidocno=g_docno
+    END IF
+
+    #插入单身数据
+    FOR l_i = 1 TO g_prbg_d.getLength()
+        IF cl_null(g_prbg_d[l_i].prbg002) THEN
+           EXIT FOR
+        END IF
+        IF g_flagprog='aprt114' OR g_flagprog='aprt115' OR g_flagprog='aprt116' OR g_flagprog='aprt117' THEN
+           INITIALIZE l_prbg.* TO NULL
+           LET l_prbg.prbgent=g_enterprise
+           LET l_prbg.prbgunit=l_prbf.prbfunit
+           LET l_prbg.prbgsite=g_prbgsite
+           LET l_prbg.prbgdocno=l_prbf.prbfdocno
+           SELECT MAX(prbgseq)+1 INTO l_prbg.prbgseq
+             FROM prbg_t
+            WHERE prbgent=g_enterprise
+              AND prbgdocno=l_prbg.prbgdocno
+           IF cl_null(l_prbg.prbgseq) THEN
+              LET l_prbg.prbgseq=1
+           END IF
+           LET l_prbg.prbgseq1=0  #调整前
+           LET l_prbg.prbg001=g_prbg001
+           LET l_prbg.prbg002=g_prbg_d[l_i].prbg002
+           LET l_prbg.prbg003=g_prbg_d[l_i].prbg003
+           LET l_prbg.prbg004=' '
+           
+           IF l_prbg.prbg001 = '2' THEN
+              IF l_prbf.prbf001 <> '3' AND l_prbf.prbf001 <> '6' THEN
+                 SELECT imaf144,rtdx035,
+                        rtdx034,imaf113,rtdx014,
+                        rtdx016,rtdx017,rtdx018,rtdx019
+                   INTO l_prbg.prbg005,l_prbg.prbg006,
+                        l_prbg.prbg007,l_prbg.prbg018,l_prbg.prbg008,
+                        l_prbg.prbg009,l_prbg.prbg010,l_prbg.prbg011,g_prbg_d[l_ac].prbg012        
+                   FROM rtdx_t,imaf_t 
+                  WHERE rtdxent = imafent 
+                    AND rtdxsite = imafsite 
+                    AND rtdx001 = imaf001
+                    AND rtdxent = g_enterprise 
+                    AND rtdxsite =  l_prbg.prbgsite
+                    AND rtdx001 = l_prbg.prbg002
+                 
+                 IF l_prbf.prbf001 = '1' OR l_prbf.prbf001='3' THEN
+                    SELECT stas010 INTO l_prbg.prbg007 FROM stas_t,star_t
+                     WHERE stasent=starent AND stassite=starsite AND stas001=star001
+                       AND star003=l_prbf.prbf004
+                       AND stas003=l_prbg.prbg002
+                       AND l_prbf.prbfdocdt between stas018 and stas019
+                 END IF
+              ELSE
+           
+                 SELECT imaf144,rtdx035,
+                        rtdx032,rtdx041,rtdx042,imaf113,
+                        rtdx014,rtdx021,rtdx022,
+                        rtdx023,rtdx038,rtdx039,rtdx040
+                   INTO l_prbg.prbg005,l_prbg.prbg006,
+                        l_prbg.prbg007,l_prbg.prbg014,l_prbg.prbg015,l_prbg.prbg018,
+                        l_prbg.prbg008,l_prbg.prbg009,l_prbg.prbg016,
+                        l_prbg.prbg017,l_prbg.prbg010,l_prbg.prbg011,l_prbg.prbg012
+                   FROM rtdx_t,imaf_t
+                  WHERE rtdxent = imafent 
+                    AND rtdxsite = imafsite 
+                    AND rtdx001 = imaf001
+                    AND rtdxent = g_enterprise 
+                    AND rtdxsite = l_prbg.prbgsite
+                    AND rtdx001 = l_prbg.prbg002  
+           
+                 IF l_prbf.prbf001 = '1' OR l_prbf.prbf001='3' THEN
+                    SELECT stas011,stas026,stas027 INTO l_prbg.prbg007,l_prbg.prbg014,l_prbg.prbg015 
+                      FROM stas_t,star_t
+                     WHERE stasent=starent 
+                       AND stassite=starsite 
+                       AND stas001=star001
+                       AND star003=l_prbf.prbf004
+                       AND stas003=l_prbg.prbg002
+                       AND l_prbf.prbfdocdt between stas018 and stas019
+                 END IF
+           
+              END IF
+           
+           END IF    
+           IF l_prbg.prbg001 = '1' THEN     
+              IF l_prbf.prbf001 <> '3' AND l_prbf.prbf001 <> '6'  THEN   
+                 SELECT imaf144,rtdx035,
+                        rtdx034,imaf113,rtdx014,
+                        rtdx016,rtdx017,rtdx018,rtdx019
+                   INTO l_prbg.prbg005,l_prbg.prbg006,
+                        l_prbg.prbg007,l_prbg.prbg018,l_prbg.prbg008,
+                        l_prbg.prbg009,l_prbg.prbg010,l_prbg.prbg011,l_prbg.prbg012
+                   FROM rtdx_t,imaf_t
+                   WHERE rtdxent = imafent 
+                     AND rtdxsite = imafsite 
+                     AND rtdx001 = imaf001
+                     AND rtdxent = g_enterprise 
+                     AND rtdxsite = l_prbf.prbfsite
+                     AND rtdx001 = l_prbg.prbg002
+              ELSE
+           
+                 SELECT imaf144,rtdx035,
+                        rtdx032,rtdx041,rtdx042,imaf113,
+                        rtdx014,rtdx021,rtdx022,
+                        rtdx023,rtdx038,rtdx039,rtdx040
+                   INTO l_prbg.prbg005,l_prbg.prbg006,
+                        l_prbg.prbg007,l_prbg.prbg014,l_prbg.prbg015,l_prbg.prbg018,
+                        l_prbg.prbg008,l_prbg.prbg009,l_prbg.prbg016,
+                        l_prbg.prbg017,l_prbg.prbg010,l_prbg.prbg011,l_prbg.prbg012
+                   FROM rtdx_t,imaf_t
+                   WHERE rtdxent = imafent 
+                     AND rtdxsite = imafsite 
+                     AND rtdx001 = imaf001
+                     AND rtdxent = g_enterprise 
+                     AND rtdxsite = l_prbf.prbfsite
+                     AND rtdx001 = l_prbg.prbg002
+              END IF
+           END IF
+                
+           LET l_prbg.prbg013 = (l_prbg.prbg009 - l_prbg.prbg007)/l_prbg.prbg009 * 100
+           
+          # INSERT INTO prbg_t VALUES(l_prbg.*)     #调整前资料  ##161111-00028#2--mark
+          #161111-00028#2---add---begin------------
+           INSERT INTO prbg_t (prbgent,prbgunit,prbgsite,prbgdocno,prbgseq,prbgseq1,prbg001,prbg002,prbg003,prbg004,
+                               prbg005,prbg006,prbg007,prbg008,prbg009,prbg010,prbg011,prbg012,prbg013,prbg014,prbg015,
+                               prbg016,prbg017,prbg018,prbg019,prbg020,prbg021,prbg022,prbg023,prbg024,prbg025,prbg026)
+           VALUES (l_prbg.prbgent,l_prbg.prbgunit,l_prbg.prbgsite,l_prbg.prbgdocno,l_prbg.prbgseq,l_prbg.prbgseq1,
+                   l_prbg.prbg001,l_prbg.prbg002,l_prbg.prbg003,l_prbg.prbg004,l_prbg.prbg005,l_prbg.prbg006,l_prbg.prbg007,
+                   l_prbg.prbg008,l_prbg.prbg009,l_prbg.prbg010,l_prbg.prbg011,l_prbg.prbg012,l_prbg.prbg013,l_prbg.prbg014,
+                   l_prbg.prbg015,l_prbg.prbg016,l_prbg.prbg017,l_prbg.prbg018,l_prbg.prbg019,l_prbg.prbg020,l_prbg.prbg021,
+                   l_prbg.prbg022,l_prbg.prbg023,l_prbg.prbg024,l_prbg.prbg025,l_prbg.prbg026)
+           #161111-00028#2 ---add----end-----------
+           IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "ins prbg_t" 
+             LET g_errparam.code   = SQLCA.sqlcode 
+             LET g_errparam.popup  = TRUE 
+             CALL cl_err()
+             EXIT FOR
+           END IF  
+           
+           LET l_prbg_t.*=l_prbg.*
+           INITIALIZE l_prbg.* TO NULL
+           LET l_prbg.prbgent=l_prbg_t.prbgent
+           LET l_prbg.prbgunit=l_prbg_t.prbgunit
+           LET l_prbg.prbgsite=l_prbg_t.prbgsite
+           LET l_prbg.prbgdocno=l_prbg_t.prbgdocno
+           LET l_prbg.prbgseq=l_prbg_t.prbgseq
+           LET l_prbg.prbgseq1='1'  #调整后
+           LET l_prbg.prbg001=l_prbg_t.prbg001
+           LET l_prbg.prbg002=l_prbg_t.prbg002
+           LET l_prbg.prbg003=l_prbg_t.prbg003
+           LET l_prbg.prbg004=l_prbg_t.prbg004  
+           IF g_flagprog='aprt114' THEN        
+              LET l_prbg.prbg005=l_prbg_t.prbg005
+              LET l_prbg.prbg006=l_prbg_t.prbg006
+              LET l_prbg.prbg007=g_prbg_d[l_i].prbg007 
+           END IF     
+           IF g_flagprog='aprt115' THEN        
+              LET l_prbg.prbg018=l_prbg_t.prbg018
+              LET l_prbg.prbg008=l_prbg_t.prbg008
+              LET l_prbg.prbg009=g_prbg_d[l_i].prbg009
+              LET l_prbg.prbg010=g_prbg_d[l_i].prbg010
+              LET l_prbg.prbg011=g_prbg_d[l_i].prbg011
+              LET l_prbg.prbg012=g_prbg_d[l_i].prbg012
+           END IF 
+           IF g_flagprog='aprt116' THEN        
+              LET l_prbg.prbg005=l_prbg_t.prbg005
+              LET l_prbg.prbg006=l_prbg_t.prbg006
+              LET l_prbg.prbg007=g_prbg_d[l_i].prbg007 
+              LET l_prbg.prbg014=g_prbg_d[l_i].prbg014
+              LET l_prbg.prbg015=g_prbg_d[l_i].prbg015
+           END IF        
+           IF g_flagprog='aprt117' THEN        
+              LET l_prbg.prbg018=l_prbg_t.prbg018
+              LET l_prbg.prbg008=l_prbg_t.prbg008
+              LET l_prbg.prbg009=g_prbg_d[l_i].prbg009
+              LET l_prbg.prbg010=g_prbg_d[l_i].prbg010
+              LET l_prbg.prbg011=g_prbg_d[l_i].prbg011
+              LET l_prbg.prbg012=g_prbg_d[l_i].prbg012
+              LET l_prbg.prbg016=g_prbg_d[l_i].prbg016
+              LET l_prbg.prbg017=g_prbg_d[l_i].prbg017           
+           END IF     
+           
+          #INSERT INTO prbg_t VALUES(l_prbg.*)     #调整前资料  ##161111-00028#2--mark
+          #161111-00028#2---add---begin------------
+           INSERT INTO prbg_t (prbgent,prbgunit,prbgsite,prbgdocno,prbgseq,prbgseq1,prbg001,prbg002,prbg003,prbg004,
+                               prbg005,prbg006,prbg007,prbg008,prbg009,prbg010,prbg011,prbg012,prbg013,prbg014,prbg015,
+                               prbg016,prbg017,prbg018,prbg019,prbg020,prbg021,prbg022,prbg023,prbg024,prbg025,prbg026)
+           VALUES (l_prbg.prbgent,l_prbg.prbgunit,l_prbg.prbgsite,l_prbg.prbgdocno,l_prbg.prbgseq,l_prbg.prbgseq1,
+                   l_prbg.prbg001,l_prbg.prbg002,l_prbg.prbg003,l_prbg.prbg004,l_prbg.prbg005,l_prbg.prbg006,l_prbg.prbg007,
+                   l_prbg.prbg008,l_prbg.prbg009,l_prbg.prbg010,l_prbg.prbg011,l_prbg.prbg012,l_prbg.prbg013,l_prbg.prbg014,
+                   l_prbg.prbg015,l_prbg.prbg016,l_prbg.prbg017,l_prbg.prbg018,l_prbg.prbg019,l_prbg.prbg020,l_prbg.prbg021,
+                   l_prbg.prbg022,l_prbg.prbg023,l_prbg.prbg024,l_prbg.prbg025,l_prbg.prbg026)
+           #161111-00028#2 ---add----end-----------
+           IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "ins prbg_t" 
+             LET g_errparam.code   = SQLCA.sqlcode 
+             LET g_errparam.popup  = TRUE 
+             CALL cl_err()
+             EXIT FOR
+           END IF   
+        END IF  
+        
+        IF g_flagprog='aprt122' OR g_flagprog='aprt123' THEN   
+           INITIALIZE l_prbj.* TO NULL
+           LET l_prbj.prbjent=g_enterprise
+           LET l_prbj.prbjunit=l_prbi.prbiunit
+           LET l_prbj.prbjsite=g_prbgsite
+           LET l_prbj.prbjdocno=l_prbi.prbidocno
+           SELECT MAX(prbjseq)+1 INTO l_prbj.prbjseq
+             FROM prbj_t
+            WHERE prbjent=g_enterprise
+              AND prbjdocno=l_prbj.prbjdocno
+           IF cl_null(l_prbj.prbjseq) THEN
+              LET l_prbj.prbjseq=1
+           END IF
+           LET l_prbj.prbjseq1=0  #调整前
+           LET l_prbj.prbj001=g_prbg_d[l_i].prbg002
+           LET l_prbj.prbj002=g_prbg_d[l_i].prbg003
+           LET l_prbj.prbj003=' '
+           LET l_prbj.prbj004=g_prbg_d[l_i].prbj004
+              
+            SELECT prbh006,prbh007,prbh008,prbh009,
+                   prbh010,prbh011,prbh012,prbh013,prbh014,prbh015,
+                   prbh016,prbh017,prbh018,prbh019                      
+              INTO l_prbj.prbj005,l_prbj.prbj006,l_prbj.prbj007,l_prbj.prbj008,
+                   l_prbj.prbj009,l_prbj.prbj010,l_prbj.prbj011,
+                   l_prbj.prbj012,l_prbj.prbj013,l_prbj.prbj014,
+                   l_prbj.prbj016,l_prbj.prbj017,l_prbj.prbj018,l_prbj.prbj019 
+              FROM prbh_t
+             WHERE prbhent = g_enterprise
+               AND prbhsite = l_prbj.prbjsite
+               AND prbh003 = l_prbj.prbj001
+               AND prbh001=  l_prbj.prbj004               
+               
+           #PLU對照表中抓不到價格信息，則抓門店清單資料，且價格=門店清單價格*計價單位換算率imay013    
+           IF NOT cl_null(l_prbj.prbj002) AND NOT cl_null(l_prbj.prbj004) 
+              AND cl_null(l_prbj.prbj009) AND cl_null(l_prbj.prbj010) THEN
+           
+              SELECT rtdx035,rtdx034*imay013,rtdx014,rtdx016*imay013,rtdx017*imay013,rtdx018*imay013,rtdx019*imay013
+                INTO l_prbj.prbj008,l_prbj.prbj009,
+                     l_prbj.prbj010,l_prbj.prbj011,
+                     l_prbj.prbj012,l_prbj.prbj013,l_prbj.prbj014
+                FROM rtdx_t,imay_t
+               WHERE rtdxent = imayent 
+                 AND rtdx001 = imay001
+                 AND rtdxsite = l_prbj.prbjsite
+                 AND rtdxent = g_enterprise
+                 AND rtdx001 = l_prbj.prbj001
+                 AND imay003 = l_prbj.prbj002
+           END IF
+           LET l_prbj.prbj015 = (l_prbj.prbj011 - l_prbj.prbj009)/l_prbj.prbj011* 100
+           
+          #INSERT INTO prbj_t VALUES(l_prbj.*)     #调整前资料  ##161111-00028#2--mark
+          #161111-00028#2---add---begin------------
+           INSERT INTO prbj_t (prbjent,prbjunit,prbjsite,prbjdocno,prbjseq,prbjseq1,prbj001,prbj002,prbj003,prbj004,prbj005,
+                               prbj006,prbj007,prbj008,prbj009,prbj010,prbj011,prbj012,prbj013,prbj014,prbj015,prbj016,prbj017,
+                               prbj018,prbj019)
+           VALUES (l_prbj.prbjent,l_prbj.prbjunit,l_prbj.prbjsite,l_prbj.prbjdocno,l_prbj.prbjseq,l_prbj.prbjseq1,l_prbj.prbj001,
+                   l_prbj.prbj002,l_prbj.prbj003,l_prbj.prbj004,l_prbj.prbj005,l_prbj.prbj006,l_prbj.prbj007,l_prbj.prbj008,
+                   l_prbj.prbj009,l_prbj.prbj010,l_prbj.prbj011,l_prbj.prbj012,l_prbj.prbj013,l_prbj.prbj014,l_prbj.prbj015,
+                   l_prbj.prbj016,l_prbj.prbj017,l_prbj.prbj018,l_prbj.prbj019)
+           #161111-00028#2 ---add----end----------- 
+           IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "ins prbj_t" 
+             LET g_errparam.code   = SQLCA.sqlcode 
+             LET g_errparam.popup  = TRUE 
+             CALL cl_err()
+             EXIT FOR
+           END IF            
+           
+           LET l_prbj_t.*=l_prbj.*
+           INITIALIZE l_prbj.* TO NULL
+           LET l_prbj.prbjent=l_prbj_t.prbjent
+           LET l_prbj.prbjunit=l_prbj_t.prbjunit
+           LET l_prbj.prbjsite=l_prbj_t.prbjsite
+           LET l_prbj.prbjdocno=l_prbj_t.prbjdocno
+           LET l_prbj.prbjseq=l_prbj_t.prbjseq
+           LET l_prbj.prbjseq1='1'  #调整后
+           LET l_prbj.prbj001=l_prbj_t.prbj001
+           LET l_prbj.prbj002=l_prbj_t.prbj002
+           LET l_prbj.prbj003=l_prbj_t.prbj003
+           LET l_prbj.prbj004=l_prbj_t.prbj004 
+           LET l_prbj.prbj005=l_prbj_t.prbj005
+           LET l_prbj.prbj006=l_prbj_t.prbj006            
+           LET l_prbj.prbj007=l_prbj_t.prbj007
+           
+           IF g_flagprog='aprt122' THEN
+              LET l_prbj.prbj008=l_prbj_t.prbj008
+              LET l_prbj.prbj009=g_prbg_d[l_i].prbg007
+              LET l_prbj.prbj016=g_prbg_d[l_i].prbg014
+              LET l_prbj.prbj017=g_prbg_d[l_i].prbg015
+           END IF                 
+           IF g_flagprog='aprt123' THEN
+              LET l_prbj.prbj010=l_prbj_t.prbj010
+              LET l_prbj.prbj011=g_prbg_d[l_i].prbg009
+              LET l_prbj.prbj012=g_prbg_d[l_i].prbg010
+              LET l_prbj.prbj013=g_prbg_d[l_i].prbg011
+              LET l_prbj.prbj014=g_prbg_d[l_i].prbg012
+              LET l_prbj.prbj018=g_prbg_d[l_i].prbg016
+              LET l_prbj.prbj019=g_prbg_d[l_i].prbg017
+           END IF
+           
+           #INSERT INTO prbj_t VALUES(l_prbj.*)     #调整前资料  ##161111-00028#2--mark
+          #161111-00028#2---add---begin------------
+           INSERT INTO prbj_t (prbjent,prbjunit,prbjsite,prbjdocno,prbjseq,prbjseq1,prbj001,prbj002,prbj003,prbj004,prbj005,
+                               prbj006,prbj007,prbj008,prbj009,prbj010,prbj011,prbj012,prbj013,prbj014,prbj015,prbj016,prbj017,
+                               prbj018,prbj019)
+           VALUES (l_prbj.prbjent,l_prbj.prbjunit,l_prbj.prbjsite,l_prbj.prbjdocno,l_prbj.prbjseq,l_prbj.prbjseq1,l_prbj.prbj001,
+                   l_prbj.prbj002,l_prbj.prbj003,l_prbj.prbj004,l_prbj.prbj005,l_prbj.prbj006,l_prbj.prbj007,l_prbj.prbj008,
+                   l_prbj.prbj009,l_prbj.prbj010,l_prbj.prbj011,l_prbj.prbj012,l_prbj.prbj013,l_prbj.prbj014,l_prbj.prbj015,
+                   l_prbj.prbj016,l_prbj.prbj017,l_prbj.prbj018,l_prbj.prbj019)
+           #161111-00028#2 ---add----end----------- 
+           IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "ins prbj_t" 
+             LET g_errparam.code   = SQLCA.sqlcode 
+             LET g_errparam.popup  = TRUE 
+             CALL cl_err()
+             EXIT FOR
+           END IF  
+           
+        END IF    
+       
+    END FOR
+
+
+
+END FUNCTION
+
+ 
+{</section>}
+ 

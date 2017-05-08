@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asti700" module="ast" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02003" crtdt="2014-07-21 16:19:25" modid="02003" moddt="2014-07-22 15:43:42" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="內部結算交易類型配置作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stda001,stda002,stda003,stda004,stda005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="stda001,stda002,stdaownid,stdaownid_desc(chr500),stdaowndp,stdaowndp_desc(chr500),stdacrtid,stdacrtid_desc(chr500),stdacrtdp,stdacrtdp_desc(chr500),stdacrtdt,stdamodid,stdamodid_desc(chr500),stdamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="asti700" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stda001,stda002,stda003,stda004,stda005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stda001,stda002,stda003,stda004,stda005"/>
+      <construct id="body" page="2" field="stdaownid,stdaowndp,stdacrtid,stdacrtdp,stdacrtdt,stdamodid,stdamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="stda001" def_scc="6082"/>
+      <column id="stda002" def_scc="6083"/>
+      <column id="stda003"/>
+      <column id="stda004" def_scc="6083"/>
+      <column id="stda005" def_scc="6083"/>
+    </init>
+    <init id="body" page="2">
+      <column id="stdaownid">
+        <after>
+          <reference field="stdaownid_desc" ref_field="stda_t.stdaownid" map_field="stdaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stdaownid_desc"/>
+      <column id="stdaowndp">
+        <after>
+          <reference field="stdaowndp_desc" ref_field="stda_t.stdaowndp" map_field="stdaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stdaowndp_desc"/>
+      <column id="stdacrtid">
+        <after>
+          <reference field="stdacrtid_desc" ref_field="stda_t.stdacrtid" map_field="stdacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stdacrtid_desc"/>
+      <column id="stdacrtdp">
+        <after>
+          <reference field="stdacrtdp_desc" ref_field="stda_t.stdacrtdp" map_field="stdacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stdacrtdp_desc"/>
+      <column id="stdacrtdt"/>
+      <column id="stdamodid">
+        <after>
+          <reference field="stdamodid_desc" ref_field="stda_t.stdamodid" map_field="stdamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stdamodid_desc"/>
+      <column id="stdamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stda_t" page="1,2" linked="" pk="stda001,stda002">
+      <sql id="forupd_sql_detail" query="SELECT stda001,stda002,stda003,stda004,stda005,&apos;&apos;,&apos;&apos;,stdaownid,&apos;&apos;,stdaowndp,&apos;&apos;,stdacrtid,&apos;&apos;,stdacrtdp,&apos;&apos;,stdacrtdt,stdamodid,&apos;&apos;,stdamoddt FROM stda_t WHERE stdaent=? AND stda001=? AND stda002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stda001,stda002,stda003,stda004,stda005,&apos;&apos;,&apos;&apos;,stdaownid,&apos;&apos;,stdaowndp,&apos;&apos;,stdacrtid,&apos;&apos;,stdacrtdp,&apos;&apos;,stdacrtdt,stdamodid,&apos;&apos;,stdamoddt FROM stda_t WHERE stdaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

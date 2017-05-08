@@ -1,0 +1,1058 @@
+<add_points prog="apmp520" std_prog="apmp520" erpver="1.0" module="APM" ver="3" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="P" status="" />
+    <free_style value="Y" status="" />
+  </other>
+  <point name="function.apmp520_delete_temp" cite_std="N" status="d" ver="3" src="s" new="Y" order="7" mark_hard="N">
+<![CDATA[#將 所有temp table 的資料刪除
+PRIVATE FUNCTION apmp520_delete_temp()
+   CALL apmp520_01_delete_temp_table()
+   CALL apmp520_02_delete_temp_table()
+   CALL apmp520_03_delete_temp_table()
+END FUNCTION]]>
+</point>
+  <point name="function.apmp520_init" cite_std="N" status="u" ver="3" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION apmp520_init()
+   #add-point:init段define
+
+   #end add-point
+
+   LET g_error_show = 1
+   LET g_errshow = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   
+   #畫面嵌入 
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp520_01"), "main_grid01", "Group", "master")
+   CALL apmp520_01_init()        #apmp520_01的畫面預設   
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp520_02"), "main_grid02", "VBox", "master")
+   CALL apmp520_02_init()        #apmp520_02的畫面預設   
+    
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp520_03"), "main_grid03", "VBox", "master")
+   CALL apmp520_03_init()        #apmp520_03的畫面預設   
+
+
+   #先將嵌入的畫面都隱藏  
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+
+   #add-point:畫面資料初始化
+   CALL cl_set_combo_scc_part('pmdl005','2052','1,2') 
+   
+  #DECLARE i110_gzcb_cs CURSOR FOR
+  # SELECT gzcb002,gzcbl004 FROM gzcb_t,gzcbl_t
+  #  WHERE gzcb001 = gzcbl001 AND gzcb002 = gzcbl002
+  #    AND gzcb001 = '2052'   AND gzcbl003 = g_dlang
+  #    AND gzcb002 IN ('1','2')
+  #  ORDER BY gzcb001
+  #FOREACH i110_gzcb_cs INTO l_gzcb002,l_gzcbl004
+  #   LET l_values = l_values CLIPPED ,",",l_gzcb002
+  #   LET l_items  = l_items CLIPPED ,",",l_gzcb002 CLIPPED,':',l_gzcbl004
+  #END FOREACH
+  #CALL cl_set_combo_items("pmdl005",l_values,l_items)
+  
+   LET g_pmdo012_t = ''
+   LET g_apmp520_01_input_type = '1'    #輸入模式
+   #end add-point
+
+END FUNCTION]]>
+</point>
+  <point name="function.apmp520_process" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION apmp520_process(ls_js)
+   DEFINE ls_js       STRING
+   #DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+
+   #end add-point
+
+   #CALL util.JSON.parse(ls_js,lc_param)
+
+   #add-point:process段前處理
+
+   #end add-point
+
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+
+      #end add-point
+   END IF
+
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apmp520_process_cs CURSOR FROM ls_sql
+#  FOREACH apmp520_process_cs INTO
+   #add-point:process段process
+
+   #end add-point
+#  END FOREACH
+
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+
+      #end add-point
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.apmp520_transfer_argv" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION apmp520_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   #DEFINE la_param    type_parameter
+
+   #CALL util.JSON.parse(ls_js,la_param)
+
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+
+   #end add-point
+
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION]]>
+</point>
+  <point name="function.apmp520_ui_dialog_step1" cite_std="N" status="u" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION apmp520_ui_dialog_step1()
+   DEFINE l_ooef004    LIKE ooef_t.ooef004
+   DEFINE l_pmds   RECORD
+             pmdl005         LIKE pmdl_t.pmdl005,
+             pmdsdocno       LIKE pmds_t.pmdsdocno,
+             pmdsdocno_desc  LIKE oobal_t.oobal004,
+             pmds002         LIKE pmds_t.pmds002,
+             pmds002_desc    LIKE oofa_t.oofa011
+                   END RECORD
+   DEFINE l_cnt              LIKE type_t.num5
+   
+                   
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01on.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",TRUE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("save",TRUE)              #收貨資料寫入 (使用於第一步)  
+   CALL cl_set_comp_visible("back_step",FALSE)        #回上一步     (第一步,第三步不使用)
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步       (第三步不使用) 
+   CALL cl_set_comp_visible("continue",FALSE)         #處理其他資料 (使用於第三步) 
+
+   CALL cl_set_comp_visible("delete_data,return_step01",FALSE) 
+     
+   CALL cl_set_comp_visible("condition_vbox",TRUE)
+   CALL cl_set_comp_visible("main_grid_7,main_grid_9",FALSE)
+   
+   LET l_ooef004 = ''
+   SELECT ooef004 INTO l_ooef004 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_site
+   
+   WHILE TRUE
+      LET g_pmdsdocno = ''
+      LET g_pmds002 = ''
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         INPUT BY NAME l_pmds.pmdl005,l_pmds.pmdsdocno,l_pmds.pmds002
+         
+             BEFORE INPUT
+                
+             AFTER FIELD pmdl005 
+                IF g_pmdl005_t != l_pmds.pmdl005 THEN
+                   LET l_pmds.pmdsdocno = ''
+                   LET l_pmds.pmdsdocno_desc = ''
+                   DISPLAY BY NAME l_pmds.pmdsdocno,l_pmds.pmdsdocno_desc
+                END IF
+                LET g_pmdl005_t = l_pmds.pmdl005 
+                
+             AFTER FIELD pmdsdocno
+                LET l_pmds.pmdsdocno_desc = ''
+                DISPLAY BY NAME l_pmds.pmdsdocno_desc
+               
+                IF NOT cl_null(l_pmds.pmdsdocno) THEN   
+                   IF l_pmds.pmdl005 = '1' THEN                
+                      IF NOT s_aooi200_chk_slip(g_site,'',l_pmds.pmdsdocno,'apmt520') THEN
+                         LET l_pmds.pmdsdocno = ''
+                         LET l_pmds.pmdsdocno_desc = ''
+                         DISPLAY BY NAME l_pmds.pmdsdocno_desc
+                         NEXT FIELD CURRENT
+                      END IF
+                   ELSE
+                      IF NOT s_aooi200_chk_slip(g_site,'',l_pmds.pmdsdocno,'apmt521') THEN
+                         LET l_pmds.pmdsdocno = ''
+                         LET l_pmds.pmdsdocno_desc = ''
+                         DISPLAY BY NAME l_pmds.pmdsdocno_desc
+                         NEXT FIELD CURRENT
+                      END IF
+                   END IF
+                END IF
+                CALL s_aooi200_get_slip_desc(l_pmds.pmdsdocno) RETURNING l_pmds.pmdsdocno_desc
+                DISPLAY BY NAME l_pmds.pmdsdocno_desc
+             
+             AFTER FIELD pmds002
+                LET l_pmds.pmds002_desc = ''
+                DISPLAY BY NAME l_pmds.pmds002_desc
+                IF NOT cl_null(l_pmds.pmds002) THEN
+                   INITIALIZE g_chkparam.* TO NULL
+                   LET g_chkparam.arg1 = l_pmds.pmds002
+                   IF NOT cl_chk_exist("v_ooag001") THEN
+                      LET l_pmds.pmds002 = ''
+                      LET l_pmds.pmds002_desc = ''
+                      DISPLAY BY NAME l_pmds.pmds002_desc
+                      NEXT FIELD CURRENT
+                   END IF
+                END IF
+                CALL s_desc_get_person_desc(l_pmds.pmds002) RETURNING l_pmds.pmds002_desc
+                DISPLAY BY NAME l_pmds.pmds002_desc
+                
+  
+             ON ACTION controlp
+                CASE
+                   WHEN INFIELD(pmdsdocno)
+                      INITIALIZE g_qryparam.* TO NULL
+                      LET g_qryparam.state = 'i'
+                      LET g_qryparam.reqry = FALSE
+                      LET g_qryparam.arg1 = l_ooef004 
+                      IF l_pmds.pmdl005 = '1' THEN
+                         LET g_qryparam.arg2 = 'apmt520'
+                      ELSE
+                         LET g_qryparam.arg2 = 'apmt521'
+                      END IF
+                      LET g_qryparam.default1 = l_pmds.pmdsdocno
+                      CALL q_ooba002_1()                              #呼叫開窗                     
+                      LET l_pmds.pmdsdocno = g_qryparam.return1       #將開窗取得的值回傳到變數
+                      DISPLAY l_pmds.pmdsdocno TO pmdsdocno           #顯示到畫面上
+                      CALL s_aooi200_get_slip_desc(l_pmds.pmdsdocno) RETURNING l_pmds.pmdsdocno_desc
+                      DISPLAY BY NAME l_pmds.pmdsdocno_desc                     
+                      NEXT FIELD pmdsdocno    
+                   WHEN INFIELD(pmds002)
+                      INITIALIZE g_qryparam.* TO NULL
+                      LET g_qryparam.state = 'i'
+                      LET g_qryparam.reqry = FALSE
+                      LET g_qryparam.default1 = l_pmds.pmds002
+                      CALL q_ooag001()                              #呼叫開窗                     
+                      LET l_pmds.pmds002 = g_qryparam.return1       #將開窗取得的值回傳到變數
+                      DISPLAY l_pmds.pmds002 TO pmds002             #顯示到畫面上
+                      CALL s_desc_get_person_desc(l_pmds.pmds002) RETURNING l_pmds.pmds002_desc
+                      DISPLAY BY NAME l_pmds.pmds002_desc                  
+                      NEXT FIELD pmds002    
+                END CASE
+         END INPUT 
+         
+         
+         CONSTRUCT BY NAME g_wc ON pmdn028,pmdl004,pmdo012,pmdo001,imaf141 
+
+            BEFORE CONSTRUCT 
+            
+            
+            AFTER FIELD pmdn028
+               LET g_pmdn028_t = GET_FLDBUF(pmdn028)
+
+            AFTER FIELD pmdl004
+               LET g_pmdl004_t = GET_FLDBUF(pmdl004)
+               
+            AFTER FIELD pmdo012
+               LET g_pmdo012_t = GET_FLDBUF(pmdo012)
+               
+            AFTER FIELD pmdo001
+               LET g_pmdo001_t = GET_FLDBUF(pmdo001)
+               
+            AFTER FIELD imaf141
+               LET g_imaf141_t = GET_FLDBUF(imaf141)
+               
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(pmdn028)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_inaa001_6()
+                     DISPLAY g_qryparam.return1 TO pmdn028  #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(pmdl004)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmaa001_3()
+                     DISPLAY g_qryparam.return1 TO pmdl004  #顯示到畫面上
+                     NEXT FIELD CURRENT
+                  WHEN INFIELD(pmdo001)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_imaa001()
+                     DISPLAY g_qryparam.return1 TO pmdo001  #顯示到畫面上
+                     NEXT FIELD CURRENT
+                  WHEN INFIELD(imaf141)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_imce141()
+                     DISPLAY g_qryparam.return1 TO imaf141  #顯示到畫面上
+                     NEXT FIELD CURRENT
+               END CASE
+               
+            ON ACTION search_data
+               CALL cl_set_comp_visible("view_data,selall_pmdl004,selall_pmdodocno,unselall",TRUE) 
+               CALL cl_set_comp_visible("delete_data,return_step01",FALSE) 
+               CALL cl_set_act_visible("save,next_step",TRUE)
+               
+               IF l_pmds.pmdl005 = '1' THEN
+                  LET g_wc = g_wc CLIPPED," AND pmdl005 IN ('1','3') "
+               ELSE
+                  LET g_wc = g_wc CLIPPED," AND pmdl005 IN ('2','5') "
+               END IF
+               CALL apmp520_01_b_fill(g_wc,g_wc2)               
+               
+         END CONSTRUCT
+         
+         CONSTRUCT BY NAME g_wc2 ON inac003
+               
+            AFTER FIELD inac003
+               LET g_inac003_t = GET_FLDBUF(inac003)
+               
+            
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(inac003)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     LET g_qryparam.arg1 = '220'
+                     CALL q_oocq002_1()
+                     DISPLAY g_qryparam.return1 TO inac003  #顯示到畫面上
+                     NEXT FIELD CURRENT
+               END CASE
+               
+            ON ACTION search_data
+               CALL cl_set_comp_visible("view_data,selall_pmdl004,selall_pmdodocno,unselall",TRUE) 
+               CALL cl_set_comp_visible("delete_data,return_step01",FALSE) 
+               CALL cl_set_act_visible("save,next_step",TRUE)
+               
+               IF l_pmds.pmdl005 = '1' THEN
+                  LET g_wc = g_wc CLIPPED," AND pmdl005 IN ('1','3') "
+               ELSE
+                  LET g_wc = g_wc CLIPPED," AND pmdl005 IN ('2','5') "
+               END IF
+               CALL apmp520_01_b_fill(g_wc,g_wc2)     
+               
+         END CONSTRUCT
+         
+         SUBDIALOG apm_apmp520_01.apmp520_01_input
+         SUBDIALOG apm_apmp520_01.apmp520_01_input2
+         SUBDIALOG apm_apmp520_01.apmp520_01_input3
+         
+         BEFORE DIALOG
+            #不明原因導致 l_pmds.*的資料被清空,在此將資料還原　讓資料一直維持相同的狀態
+            LET l_pmds.pmdsdocno = g_pmdsdocno_t
+            CALL s_aooi200_get_slip_desc(l_pmds.pmdsdocno) RETURNING l_pmds.pmdsdocno_desc
+            DISPLAY BY NAME l_pmds.pmdsdocno_desc
+            
+            IF NOT cl_null(g_pmds002_t) THEN
+               LET l_pmds.pmds002  = g_pmds002_t
+            ELSE
+               LET l_pmds.pmds002 = g_user
+            END IF
+            CALL s_desc_get_person_desc(l_pmds.pmds002) RETURNING l_pmds.pmds002_desc
+            DISPLAY BY NAME l_pmds.pmds002_desc    
+
+            LET l_pmds.pmdl005 = g_pmdl005_t
+            IF cl_null(l_pmds.pmdl005) THEN
+               LET l_pmds.pmdl005 = '1'
+            END IF
+            DISPLAY g_pmdn028_t  TO pmdn028
+            DISPLAY g_inac003_t  TO inac003            
+            DISPLAY g_pmdl004_t  TO pmdl004
+            DISPLAY g_pmdo012_t  TO pmdo012
+            DISPLAY g_pmdo001_t  TO pmdo001
+            DISPLAY g_imaf141_t  TO imaf141
+            
+         ON ACTION save
+            CALL apmp520_01_save_data()      
+            IF l_pmds.pmdl005 = '1' THEN
+               LET g_wc = g_wc CLIPPED," AND pmdl005 IN ('1','3') "
+            ELSE
+               LET g_wc = g_wc CLIPPED," AND pmdl005 IN ('2','5') "
+            END IF
+            CALL apmp520_01_b_fill(g_wc,g_wc2)  
+            
+         ON ACTION continue
+         
+         ON ACTION back_step
+            
+         ON ACTION next_step
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM apmp520_01_temp
+            IF l_cnt > 0 THEN
+               LET g_action_choice = "next_step"
+               EXIT DIALOG
+            ELSE
+               #收貨底稿中不存在任何資料,請先選擇要處理的資料寫入底稿!
+               CALL cl_err('','apm-00540',1)
+            END IF
+            
+         ON ACTION view_data
+            CALL cl_set_comp_visible("view_data,selall_pmdl004,selall_pmdodocno,unselall",FALSE) 
+            CALL cl_set_comp_visible("delete_data,return_step01",TRUE) 
+            CALL cl_set_act_visible("save,next_step",FALSE)
+            CALL apmp520_01_b_fill2()
+            LET g_apmp520_01_input_type = '2'
+            CALL apmp520_01_set_entry_b()
+            CALL apmp520_01_set_no_entry_b()            
+            NEXT FIELD CURRENT           #當array為空時,如果沒有寫會出現異常的bug
+         
+         ON ACTION return_step01
+            CALL cl_set_comp_visible("view_data,selall_pmdl004,selall_pmdodocno,unselall",TRUE) 
+            CALL cl_set_comp_visible("delete_data,return_step01",FALSE) 
+            CALL cl_set_act_visible("save,next_step",TRUE)
+            
+            IF l_pmds.pmdl005 = '1' THEN
+               LET g_wc = g_wc CLIPPED," AND pmdl005 IN ('1','3') "
+            ELSE
+               LET g_wc = g_wc CLIPPED," AND pmdl005 IN ('2','5') "
+            END IF
+            CALL apmp520_01_b_fill(g_wc,g_wc2) 
+            LET g_apmp520_01_input_type = '1' 
+            CALL apmp520_01_set_entry_b()
+            CALL apmp520_01_set_no_entry_b()              
+            NEXT FIELD CURRENT           #當array為空時,如果沒有寫會出現異常的bug 
+            
+         ON ACTION step01
+               
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      LET g_pmdsdocno_t = l_pmds.pmdsdocno
+      LET g_pmds002_t   = l_pmds.pmds002
+      LET g_pmdl005_t = l_pmds.pmdl005
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         LET g_action_choice = ''
+         LET g_pmdsdocno = l_pmds.pmdsdocno
+         LET g_pmds002   = l_pmds.pmds002
+         LET g_pmdl005   = l_pmds.pmdl005
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+   
+END FUNCTION]]>
+</point>
+  <point name="function.apmp520_ui_dialog_step2" cite_std="N" status="u" ver="2" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION apmp520_ui_dialog_step2()
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02on.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",TRUE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   
+   #作業編號、製程序
+   IF g_pmdl005 = '1' THEN
+      CALL cl_set_comp_visible("pmdt009_d2_02,pmdt010_d2_02",FALSE)
+      CALL cl_set_comp_visible("pmdu003_d3_02,pmdu004_d3_02",FALSE)
+      CALL cl_set_comp_visible("pmdv003_d5_02,pmdv004_d5_02",FALSE)
+   ELSE
+      CALL cl_set_comp_visible("pmdt009_d2_02,pmdt010_d2_02",TRUE)
+      CALL cl_set_comp_visible("pmdu003_d3_02,pmdu004_d3_02",TRUE)
+      CALL cl_set_comp_visible("pmdv003_d5_02,pmdv004_d5_02",TRUE)
+   END IF
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("save",FALSE)             #收貨資料寫入 (使用於第一步)  
+   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步     (第一步,第三步不使用)
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步       (第三步不使用) 
+   CALL cl_set_comp_visible("continue",FALSE)         #處理其他資料 (使用於第三步) 
+   
+   CALL cl_set_comp_visible("condition_vbox",FALSE)
+   CALL cl_set_comp_visible("main_grid_7,main_grid_9",TRUE)
+   
+   CALL apmp520_02_gen_data(g_pmdsdocno)
+   CALL apmp520_02_b_fill()
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         SUBDIALOG apm_apmp520_02.apmp520_02_display 
+         SUBDIALOG apm_apmp520_02.apmp520_02_input2
+         SUBDIALOG apm_apmp520_02.apmp520_02_display3
+         SUBDIALOG apm_apmp520_02.apmp520_02_display5
+         BEFORE DIALOG
+
+         ON ACTION save
+         
+         ON ACTION continue
+         
+         ON ACTION back_step
+            IF cl_ask_confirm('apm-00541') THEN
+               LET g_action_choice = "back_step"
+               EXIT DIALOG
+            END IF
+            
+         ON ACTION next_step
+            IF cl_ask_confirm('apm-00542') THEN
+               LET g_action_choice = "next_step"
+               ACCEPT DIALOG
+            END IF 
+            
+         ON ACTION step01
+            
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 3
+      WHEN "back_step"
+         RETURN 1
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION]]>
+</point>
+  <point name="function.apmp520_ui_dialog_step3" cite_std="N" status="u" ver="3" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION apmp520_ui_dialog_step3()
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")  
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03on.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",TRUE)
+
+   #作業編號、製程序
+   IF g_pmdl005 = '1' THEN
+      CALL cl_set_comp_visible("pmdt009_d2_03,pmdt010_d2_03",FALSE)
+      CALL cl_set_comp_visible("pmdu003_d3_03,pmdu004_d3_03",FALSE)
+      CALL cl_set_comp_visible("pmdv003_d5_03,pmdv004_d5_03",FALSE)
+   ELSE                                                   
+      CALL cl_set_comp_visible("pmdt009_d2_03,pmdt010_d2_03",TRUE)
+      CALL cl_set_comp_visible("pmdu003_d3_03,pmdu004_d3_03",TRUE)
+      CALL cl_set_comp_visible("pmdv003_d5_03,pmdv004_d5_03",TRUE)
+   END IF
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("save",FALSE)             #收貨資料寫入 (使用於第一步)  
+   CALL cl_set_comp_visible("back_step",FALSE)        #回上一步     (第一步,第三步不使用)
+   CALL cl_set_comp_visible("next_step",FALSE)        #下一步       (第三步不使用) 
+   CALL cl_set_comp_visible("continue",TRUE)          #處理其他資料 (使用於第三步) 
+   
+   CALL cl_set_comp_visible("condition_vbox",FALSE)
+   CALL cl_set_comp_visible("main_grid_7,main_grid_9",TRUE)
+   LET g_errshow = 0
+   CALL apmp520_03_gen_data(g_pmdsdocno,g_pmds002,g_pmdl005)
+   LET g_errshow = 1
+   CALL apmp520_03_b_fill()
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         SUBDIALOG apm_apmp520_03.apmp520_03_display 
+         SUBDIALOG apm_apmp520_03.apmp520_03_display2
+         SUBDIALOG apm_apmp520_03.apmp520_03_display3
+         SUBDIALOG apm_apmp520_03.apmp520_03_display5
+
+         BEFORE DIALOG
+
+         ON ACTION save
+         
+         ON ACTION continue
+        #   IF cl_ask_confirm('apm-00542') THEN
+               LET g_action_choice = "continue"
+               EXIT DIALOG
+        #   END IF 
+            
+         ON ACTION step01
+            
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   CASE g_action_choice
+      WHEN "continue"
+         RETURN 1
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION]]>
+</point>
+  <point name="function.apmp520_delete_temp" cite_std="N" status="u" ver="3" src="s" new="Y" order="7" mark_hard="N">
+<![CDATA[#將 所有temp table 的資料刪除
+PRIVATE FUNCTION apmp520_delete_temp()
+   CALL apmp520_01_delete_temp_table()
+   CALL apmp520_02_delete_temp_table()
+   CALL apmp520_03_delete_temp_table()
+END FUNCTION]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="3" src="s" new="N" mark_hard="N">
+<![CDATA[IMPORT util
+IMPORT FGL apm_apmp520_01
+IMPORT FGL apm_apmp520_02
+IMPORT FGL apm_apmp520_03  ]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[DEFINE li_step              LIKE type_t.num5
+DEFINE gwin_curr            ui.Window
+DEFINE gfrm_curr            ui.Form
+DEFINE g_forupd_sql         STRING
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_wc                 STRING
+DEFINE g_wc2                STRING
+DEFINE g_pmdsdocno          LIKE pmds_t.pmdsdocno
+DEFINE g_pmds002            LIKE pmds_t.pmds002
+DEFINE g_pmdl005            LIKE pmdl_t.pmdl005
+DEFINE g_pmdsdocno_t        LIKE pmds_t.pmdsdocno
+DEFINE g_pmds002_t          LIKE pmds_t.pmds002
+DEFINE g_pmdl005_t          LIKE pmdl_t.pmdl005
+DEFINE g_pmdn028_t          LIKE pmdn_t.pmdn028
+DEFINE g_inac003_t          LIKE inac_t.inac003
+DEFINE g_pmdl004_t          LIKE pmdl_t.pmdl004
+DEFINE g_pmdo012_t          LIKE pmdo_t.pmdo012
+DEFINE g_pmdo001_t          LIKE pmdo_t.pmdo001
+DEFINE g_imaf141_t          LIKE imaf_t.imaf141 ]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE l_success     LIKE type_t.num5]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="apmp520.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000004
+#+ 
+#+ Filename...: apmp520
+#+ Description: 引導式收貨處理作業
+#+ Creator....: 01752(2014/06/11)
+#+ Modifier...: 01752(2014/06/11)
+#+ Buildtype..: 應用 i00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="apmp520.global" ver="2" status="" src="m">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../4gl/apmp520_01.inc"
+
+
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="apmp520.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION apmp520_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="apmp520.main" ver="2" status="" src="m">
+<![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:作業初始化
+{<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+{<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE apmp520_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+{<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmp520 WITH FORM cl_ap_formpath("apm",g_code)
+   
+      #程式初始化
+      CALL apmp520_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+      
+     ##建立各程式的temp table 
+      CALL apmp520_01_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         EXIT PROGRAM
+      END IF
+      CALL apmp520_02_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         EXIT PROGRAM
+      END IF
+      CALL apmp520_03_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         EXIT PROGRAM
+      END IF
+      LET li_step = 1
+      IF l_success THEN
+         WHILE TRUE
+            CASE li_step
+               WHEN 1
+                  CALL apmp520_ui_dialog_step1() RETURNING li_step
+               WHEN 2
+                  CALL apmp520_ui_dialog_step2() RETURNING li_step
+               WHEN 3
+                  CALL apmp520_ui_dialog_step3() RETURNING li_step
+                  CALL apmp520_delete_temp()
+               WHEN 0
+                  EXIT WHILE
+               OTHERWISE
+                  EXIT WHILE
+            END CASE
+         END WHILE
+      END IF
+      
+      CALL apmp520_01_drop_temp_table() RETURNING l_success
+      CALL apmp520_02_drop_temp_table() RETURNING l_success
+      CALL apmp520_03_drop_temp_table() RETURNING l_success
+   
+      #畫面關閉
+      CLOSE WINDOW w_apmp520
+   END IF
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+</section>
+  <section id="apmp520.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="apmp520.process" ver="1" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION apmp520_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apmp520_process_cs CURSOR FROM ls_sql
+#  FOREACH apmp520_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="apmp520.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apmp520_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="apmp520.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apmp520_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.*  TO NULL
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION CLOSE 
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = g_prog,TODAY USING "yyyymmdd",CURRENT HOUR TO SECOND 
+         LET g_jobid = cl_schedule_trim_colon(g_jobid)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL apmp520_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = apmp520_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

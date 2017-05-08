@@ -1,0 +1,259 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrt460" module="axr" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02599" crtdt="2014-09-19 23:05:34" modid="02599" moddt="2015-11-05 17:13:11" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="集團收款核銷單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrfasite,xrfasite_desc(chr80),xrfa001,xrfa001_desc(chr80),xrfald,xrfald_desc(chr80),xrfacomp,xrfadocno,xrfadocdt,xrfa002,xrfa002_desc(chr80),xrfastus,xrfaownid,xrfaownid_desc(chr80),xrfaowndp,xrfaowndp_desc(chr80),xrfacrtid,xrfacrtid_desc(chr80),xrfacrtdp,xrfacrtdp_desc(chr80),xrfacrtdt,xrfamodid,xrfamodid_desc(chr80),xrfamoddt,xrfacnfid,xrfacnfid_desc(chr80),xrfacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xrfbseq,xrfb001,xrfb001_desc(chr500),xrfbld,xrfb007,xrfb006,xrfb004,xrfb002,xrfb003,xrfb100,xrfb101,xrfb103,xrfb104,xrfb005,xrfb005_desc(chr500),xrfb201(num26_10),xrfb204"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xrfcseq,xrfc001,xrfc001_desc(chr500),xrfc002,xrfc006,xrfc013,xrfc003,xrfc004,xrfc005,xrfc011,xrfc100,xrfc101,xrfc103,xrfc104,xrfc201,xrfc204"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="xrfcseq,xrfc012,xrfc012_desc(chr500),xrfc007,xrfc007_desc(chr500),xrfc008,xrfc009,xrfc009_desc(chr500),xrfc010,xrfc010_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="axrt460_01"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrt460" method="dialog">
+    <section id="input">
+      <input id="head" field="xrfasite,xrfa001,xrfald,xrfacomp,xrfadocno,xrfadocdt,xrfa002,xrfastus"/>
+      <input id="body" page="1" field="xrfbseq,xrfb001,xrfb001_desc,xrfbld,xrfb007,xrfb006,xrfb004,xrfb002,xrfb003,xrfb100,xrfb101,xrfb103,xrfb104,xrfb005,xrfb005_desc,xrfb201,xrfb204" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xrfcseq,xrfc001,xrfc001_desc,xrfc002,xrfc006,xrfc013,xrfc003,xrfc004,xrfc005,xrfc011,xrfc100,xrfc101,xrfc103,xrfc104,xrfc201,xrfc204" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="xrfc012,xrfc012_desc,xrfc007,xrfc007_desc,xrfc008,xrfc009,xrfc009_desc,xrfc010,xrfc010_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xrfasite,xrfa001,xrfald,xrfacomp,xrfadocno,xrfadocdt,xrfa002,xrfastus,xrfaownid,xrfaowndp,xrfacrtid,xrfacrtdp,xrfacrtdt,xrfamodid,xrfamoddt,xrfacnfid,xrfacnfdt"/>
+      <construct id="body" page="1" field="xrfbseq,xrfb001,xrfb001_desc,xrfbld,xrfb007,xrfb006,xrfb004,xrfb002,xrfb003,xrfb100,xrfb101,xrfb103,xrfb104,xrfb005,xrfb005_desc,xrfb201,xrfb204"/>
+      <construct id="body" page="2" field="xrfcseq,xrfc001,xrfc001_desc,xrfc002,xrfc006,xrfc013,xrfc003,xrfc004,xrfc005,xrfc011,xrfc100,xrfc101,xrfc103,xrfc104,xrfc201,xrfc204"/>
+      <construct id="body" page="3" field="xrfc012,xrfc012_desc,xrfc007,xrfc007_desc,xrfc008,xrfc009,xrfc009_desc,xrfc010,xrfc010_desc"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xrfadocno"/>
+      <set id="head" type="no_entry" field="xrfadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xrfasite">
+        <after>
+          <reference field="xrfasite_desc" ref_field="xrfa_t.xrfasite" map_field="xrfaent,xrfasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrfasite_desc"/>
+      <column id="xrfa001">
+        <after>
+          <reference field="xrfa001_desc" ref_field="xrfa_t.xrfa001" map_field="xrfaent,xrfa001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrfa001_desc"/>
+      <column id="xrfald">
+        <after>
+          <reference field="xrfald_desc" ref_field="xrfa_t.xrfald" map_field="xrfaent,xrfald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xrfald_desc"/>
+      <column id="xrfacomp">
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrfadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_xrfadocno" state="c"/>
+      </column>
+      <column id="xrfadocdt"/>
+      <column id="xrfa002">
+        <after>
+          <reference field="xrfa002_desc" ref_field="xrfa_t.xrfa002" map_field="xrfaent,xrfa002" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="xrfa002_desc"/>
+      <column id="xrfastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="xrfaownid">
+        <after>
+          <reference field="xrfaownid_desc" ref_field="xrfa_t.xrfaownid" map_field="xrfaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrfaownid_desc"/>
+      <column id="xrfaowndp">
+        <after>
+          <reference field="xrfaowndp_desc" ref_field="xrfa_t.xrfaowndp" map_field="xrfaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xrfaowndp_desc"/>
+      <column id="xrfacrtid">
+        <after>
+          <reference field="xrfacrtid_desc" ref_field="xrfa_t.xrfacrtid" map_field="xrfacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrfacrtid_desc"/>
+      <column id="xrfacrtdp">
+        <after>
+          <reference field="xrfacrtdp_desc" ref_field="xrfa_t.xrfacrtdp" map_field="xrfacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xrfacrtdp_desc"/>
+      <column id="xrfacrtdt"/>
+      <column id="xrfamodid">
+        <after>
+          <reference field="xrfamodid_desc" ref_field="xrfa_t.xrfamodid" map_field="xrfamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrfamodid_desc"/>
+      <column id="xrfamoddt"/>
+      <column id="xrfacnfid">
+        <after>
+          <reference field="xrfacnfid_desc" ref_field="xrfa_t.xrfacnfid" map_field="xrfacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrfacnfid_desc"/>
+      <column id="xrfacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xrfbseq"/>
+      <column id="xrfb001">
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrfb001_desc">
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrfbld"/>
+      <column id="xrfb007"/>
+      <column id="xrfb006"/>
+      <column id="xrfb004">
+        <controlp form="q_ooie001" state="i"/>
+        <controlp form="q_ooie001" state="c"/>
+      </column>
+      <column id="xrfb002">
+        <controlp form="q_nmbadocno_2" state="i"/>
+        <controlp form="q_nmbadocno" state="c"/>
+      </column>
+      <column id="xrfb003"/>
+      <column id="xrfb100">
+        <controlp form="q_aooi001_1" state="i"/>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="xrfb101"/>
+      <column id="xrfb103"/>
+      <column id="xrfb104"/>
+      <column id="xrfb005">
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="xrfb005_desc">
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="xrfb201"/>
+      <column id="xrfb204"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xrfcseq"/>
+      <column id="xrfc001">
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrfc001_desc">
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrfc002">
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xrfc006"/>
+      <column id="xrfc013"/>
+      <column id="xrfc003">
+        <controlp form="q_xrcadocno_7" state="i"/>
+        <controlp form="q_xrcadocno" state="c"/>
+      </column>
+      <column id="xrfc004"/>
+      <column id="xrfc005"/>
+      <column id="xrfc011"/>
+      <column id="xrfc100">
+        <controlp form="q_ooai001_1" state="i"/>
+        <controlp form="q_ooai001_1" state="c"/>
+      </column>
+      <column id="xrfc101"/>
+      <column id="xrfc103" type="S" default="0"/>
+      <column id="xrfc104" type="S" default="0"/>
+      <column id="xrfc201"/>
+      <column id="xrfc204"/>
+    </init>
+    <init id="body" page="3">
+      <column id="xrfc012">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xrfc012_desc"/>
+      <column id="xrfc007">
+        <after/>
+        <controlp form="q_ooib001_1" state="i"/>
+        <controlp form="q_ooib001_1" state="c"/>
+      </column>
+      <column id="xrfc007_desc"/>
+      <column id="xrfc008">
+        <controlp form="q_oodb002_5" state="i"/>
+        <controlp form="q_oodb002" state="c"/>
+      </column>
+      <column id="xrfc009">
+        <after/>
+        <controlp form="q_nmas002_6" state="i"/>
+        <controlp form="q_nmas002_6" state="c"/>
+      </column>
+      <column id="xrfc009_desc"/>
+      <column id="xrfc010">
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="xrfc010_desc">
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="xrfa_t" pk="xrfadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xrfasite,&apos;&apos;,xrfa001,&apos;&apos;,xrfald,&apos;&apos;,xrfacomp,xrfadocno,xrfadocdt,xrfa002,&apos;&apos;,xrfastus,xrfaownid,&apos;&apos;,xrfaowndp,&apos;&apos;,xrfacrtid,&apos;&apos;,xrfacrtdp,&apos;&apos;,xrfacrtdt,xrfamodid,&apos;&apos;,xrfamoddt,xrfacnfid,&apos;&apos;,xrfacnfdt FROM xrfa_t WHERE xrfaent= ? AND xrfadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xrfasite,&apos;&apos;,xrfa001,&apos;&apos;,xrfald,&apos;&apos;,xrfacomp,xrfadocno,xrfadocdt,xrfa002,&apos;&apos;,xrfastus,xrfaownid,&apos;&apos;,xrfaowndp,&apos;&apos;,xrfacrtid,&apos;&apos;,xrfacrtdp,&apos;&apos;,xrfacrtdt,xrfamodid,&apos;&apos;,xrfamoddt,xrfacnfid,&apos;&apos;,xrfacnfdt FROM xrfa_t" order="xrfadocno"/>
+    </head>
+    <body id="xrfb_t" page="1" linked="" pk="xrfbseq" fk="xrfbdocno">
+      <sql id="forupd_sql_detail" query="SELECT xrfbseq,xrfb001,&apos;&apos;,xrfbld,xrfb007,xrfb006,xrfb004,xrfb002,xrfb003,xrfb100,xrfb101,xrfb103,xrfb104,xrfb005,&apos;&apos;,&apos;&apos;,xrfb204 FROM xrfb_t WHERE xrfbent=? AND xrfbdocno=? AND xrfbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xrfbseq,xrfb001,&apos;&apos;,xrfbld,xrfb007,xrfb006,xrfb004,xrfb002,xrfb003,xrfb100,xrfb101,xrfb103,xrfb104,xrfb005,&apos;&apos;,&apos;&apos;,xrfb204 FROM xrfb_t WHERE xrfbent=? AND xrfbdocno=?"/>
+    </body>
+    <body id="xrfc_t" page="2,3" linked="" pk="xrfcseq" fk="xrfcdocno">
+      <sql id="forupd_sql_detail" query="SELECT xrfcseq,xrfc001,&apos;&apos;,xrfc002,xrfc006,xrfc013,xrfc003,xrfc004,xrfc005,xrfc011,xrfc100,xrfc101,xrfc103,xrfc104,xrfc201,xrfc204,&apos;&apos;,xrfc012,&apos;&apos;,xrfc007,&apos;&apos;,xrfc008,xrfc009,&apos;&apos;,xrfc010,&apos;&apos; FROM xrfc_t WHERE xrfcent=? AND xrfcdocno=? AND xrfcseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xrfcseq,xrfc001,&apos;&apos;,xrfc002,xrfc006,xrfc013,xrfc003,xrfc004,xrfc005,xrfc011,xrfc100,xrfc101,xrfc103,xrfc104,xrfc201,xrfc204,&apos;&apos;,xrfc012,&apos;&apos;,xrfc007,&apos;&apos;,xrfc008,xrfc009,&apos;&apos;,xrfc010,&apos;&apos; FROM xrfc_t WHERE xrfcent=? AND xrfcdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

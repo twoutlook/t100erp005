@@ -1,0 +1,909 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="adet402" std_prog="adet402" erpver="1.0" ver="6" module="ADE" type="M" booking="N" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="5" cite_std="N">
+    <tbl name="deaf_t" main="N" head="N" pk="deafent,deafdocno,deaf005" fk_detail="deafent,deafdocno" parent="deag_t" fk_master="deagent,deagdocno" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail5" src="s" insert="Y" delete="N" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="deag_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="deah_t" main="N" head="N" pk="" fk_detail="" parent="deag_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="deai_t" main="N" head="N" pk="" fk_detail="" parent="deag_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail4" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="rtjf_t" main="N" head="N" pk="" fk_detail="" parent="deag_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail6" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="5" src="s" status="">
+    <![CDATA[程式說明及目的： 供門店收銀員於換班繳款時記錄收銀款別資訊
+狀態功能：確認/取消確認/作廢
+作業類型：交易單據維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：deag_t(資料檔)
+            
+作業資料來源(Detail)：
+ 資料來源表：deah_t(單身檔-收銀資料)
+                     deai_t(單身檔-發票資料)
+                     deaj_t(單身檔-讀帳資料)
+
+資料處理：
+1.應判斷不可同時存在同一收銀日期+班別+收銀機號 的有效繳款單資料。
+2.新增時，如營運組織要修改，輸入的組織應等於當前登入組織及其往下展開至最底層的各營運組織
+3.新增完單頭後，第一單身(收銀資料)資料自動產生：
+  (3.1)產生資料來源：依款別據點資料(ooie_t)中，據點=單頭的營運組織的款別資料
+  (3.2)如款別對應的款別分類(ooia002)='10'現金類型，應再從agci001中根據款別+幣別抓取款別面額資料，將該款別所有面額各產生一筆至單身中
+  (3.3)產生欄位如下：
+       [C:項次]: 依流水號自動產生
+       [C:款別編號]=ooie001，款別分類為卡或者券的時候如果對應不到卡/券編號，則不帶出
+       [C:款別分類]=款別編號的所屬款別分類 ooia002
+       [C:卡種/券種編號]: 款別分類為‘40’時，根據款別編號到[券種基本資料作業agcm300]中抓取款別對應券種，篩選已確認的資料
+                                    款別分類為‘60’時，根據款別編號到[卡種基本資料作業ammm320]中抓取款別對應卡種，篩選已確認的資料
+       [C:券面額編號]: IF 款別對應的款別分類<>'40'時，空白
+                               ELSE 依券種編號至[T:券發行面額檔](gcar_t)中抓取[C:券面額編號](gcar002)
+       [C:支票號碼]:空白
+       [C:幣別]: ooie002
+       [C:單位金額]: CASE 款別分類
+                       '10'現金類: 抓取款別面額資料
+                       '40'有價券(禮券)類:依[C:券面額編號]抓取[C:券單位金額](oocq009)
+                        OTHERWISE: 空白
+       [C:數量]: IF 款別分類='30'票據類: 數量=1  
+                    ELSE  NULL
+       [C:匯率]: 依幣別抓取當日匯率
+       [C:金額]: 0
+       [C:找零金額] = 0  (於單身直接新增時也應給該值)
+       [C:溢收金額] = 0  (於單身直接新增時也應給該值)
+       [C:抵現積分] = 0  (於單身直接新增時也應給該值)  
+4.當收銀資料單身有資料，IF款別分類='40' or '60'，進該筆資料時游標直接停在[C:卡種/券種]編號
+  ELSE  進單身游標時直接停在數量欄位
+5.單身資料每筆維護完後，依金額*匯率加總，顯示於單頭"總繳款金額"中
+6.自動將單身的資料依 款別+幣別 GROUP ，顯示各款別+幣別的金額於單頭"款別幣別總繳金額"頁籤中
+7.發票資料中，第一單身(開立發票)抓取deai_t中， deai001 = 'Y'(開立) 的資料
+                       第二單身(作廢發票)抓取deai_t中， deai001 = 'X'(作廢) 的資料
+
+發票資料單身頁簽：
+   開立發票維護Table:
+   維護類別deai001 = 'Y'(開立) 的發票資訊
+
+   作廢發票維護Table:
+   (1)維護類別deai001 = 'X'(作廢) 的發票資訊
+   (2)寫入時，作廢發票號碼同時寫入發票號碼起(deai002)及發票號碼迄(deai003)，未稅金額及應稅金額=0
+#150608新增賖銷明細頁籤
+資料來源：rtjf_t
+只顯示賖銷明細資料(不可修改)]]>
+  </all>
+  <field cite_std="N" name="b_deag001" ver="1" src="s" column="deag001" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deag002" ver="1" src="s" column="deag002" table="deag_t" attribute="" type="" req="N" i_zoom="q_oogd001_01" c_zoom="q_oogd001_01" chk_ref="v_oogd001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deag003" ver="1" src="s" column="deag003" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deag004" ver="1" src="s" column="deag004" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deagdocdt" ver="1" src="s" column="deagdocdt" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default=":TODAY" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deagdocno" ver="1" src="s" column="deagdocno" table="deag_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_deagdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deagsite" ver="1" src="s" column="deagsite" table="deag_t" attribute="" type="" req="N" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="" items="" default=":SITE" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf001" ver="6" src="s" column="deaf001" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf002" ver="5" src="s" column="deaf002" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf003" ver="5" src="s" column="deaf003" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf004" ver="5" src="s" column="deaf004" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf005" ver="5" src="s" column="deaf005" table="deaf_t" attribute="" type="" req="Y" i_zoom="q_ooia001_5" c_zoom="q_ooia001_5" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[款別：
+     校驗：1.輸入的值必須存在於[T:款別主檔](ooie_t)中, 且為有效的資料
+                 2.款別性質ooia002 要與 款別分類deaf012 相符
+
+     開窗：q_ooia001_5
+                 新增時加入where  條件 資料需存在[T:款別主檔](ooie_t)的資料中 且 款別分類(deaf012)=款別性質(ooia002)]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf006" ver="6" src="s" column="deaf006" table="deaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[#20150703調整 
+因退貨可能會有負數需輸入
+所以把原本需>=0  條件清空
+]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf007" ver="5" src="s" column="deaf007" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf008" ver="5" src="s" column="deaf008" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf009" ver="5" src="s" column="deaf009" table="deaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6736" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[差错處理方式:
+   ●欄位控管：
+     資料欄位:[T:收银差错处理档][C:差错处理方式]/可Display 可Input
+     允許空白: No
+     預設值: (無)
+ 
+    資料選項來源（SCC）:
+     1.收银员賠款,
+     2.營業外收入,
+     3.轉支出管理,
+     5.支票(收回退票),
+     6.轉其它業務收入
+     7.免賠
+
+     校驗:1.輸入值須存在[T:系統分類值檔].[C:系統分類值]且[C:系統分類碼]
+     帶值:(無)
+     計算或處理:(無)
+
+选择的限制条件：
+一、“差错金额”>0时候可选择：
+   2、营业外收入
+   5、支票（收回退票）
+   6、转其它业务收入
+二、“差错金额”<0时候可选择：
+   1、收银员赔款
+   3、转支出管理
+   7、免賠
+三、“差错金额”=0时候不可选择
+
+后续处理：
+1、根据已经审核的收银员缴款单中“收银差错处理”页签对应的表为依据，财务可以通过
+]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf010" ver="5" src="s" column="deaf010" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf011" ver="5" src="s" column="deaf011" table="deaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf012" ver="6" src="s" column="deaf012" table="deaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="8310" default="10" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf013" ver="5" src="s" column="deaf013" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf014" ver="5" src="s" column="deaf014" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf015" ver="5" src="s" column="deaf015" table="deaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[串币金额:
+   預設值：0
+   欄位控管：1.维护完单身后判断串币金额字段合计是否为0，不为0则不予進行確認
+                       2.每行记录需判断 实收金额-系统金额-串币金额=差错金额
+]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf016" ver="5" src="s" column="deaf016" table="deaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="8310" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[串幣款別分類：
+    欄位控制：串幣金額不為零時才能輸入]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf017" ver="5" src="s" column="deaf017" table="deaf_t" attribute="" type="" req="Y" i_zoom="q_ooia001_5" c_zoom="q_ooia001_5" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[串幣款別：
+      欄位控制：1.串幣金額不為零時才能輸入
+                          2.輸入前需先選擇串幣款別分類
+      校驗：1.輸入的值必須存在於[T:款別主檔](ooie_t)中, 且為有效的資料
+                  2.款別性質ooia002 要與 款別分類deaf012 相符
+
+      開窗：q_ooia001_5
+                 新增時加入where  條件 資料需存在[T:款別主檔](ooie_t)的資料中 且 款別分類(deaf012)=款別性質(ooia002)]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf018" ver="5" src="s" column="deaf018" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf019" ver="6" src="s" column="deaf019" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deaf020" ver="6" src="s" column="deaf020" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deafdocdt" ver="3" src="s" column="deafdocdt" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deafsite" ver="6" src="s" column="deafsite" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaf_t.deafstatu" ver="5" src="s" column="deafstatu" table="deaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deag001" ver="4" src="s" column="deag001" table="deag_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[暂时隐藏]]>
+  </field>
+  <field cite_std="N" name="deag_t.deag002" ver="5" src="s" column="deag002" table="deag_t" attribute="" type="" req="Y" i_zoom="q_oogd001_1" c_zoom="q_oogd001_1" chk_ref="v_oogd001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[班別：
+   ●欄位控管：
+     校驗:1.應存在[T:班別檔]中且為有效的班別
+     欄位控制:依參數"E-CIR-0030.需輸入班別" 來控制畫面顯示隱藏                      
+                  
+   ●開窗處理:
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:班別檔].[C:班別編號]/[C:班別說明]/[C:上班時間]/[C:下班時間]
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="deag_t.deag003" ver="5" src="s" column="deag003" table="deag_t" attribute="" type="" req="Y" i_zoom="q_pcaa001_2" c_zoom="q_pcaa001_2" chk_ref="v_pcaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收銀機號：
+   ●欄位控管：
+     校驗:1.應存在[T:收銀機基本資料檔]中且為有效的資料
+              2.如收銀員有輸入值時,則需再判斷  #150427-00016#2 By benson add
+                 所輸入的收銀機號在[T:收銀人員使用組織及收銀機權限檔]中，應有deagsite=pcac002 且 pcac003 ="一格空白" 或 pcac003 = deag003
+                 如不存在deagsite = pcac002 的資料，錯誤訊息"該收銀員無此營運組織的使用權限"
+                 如不存在deagsite = pcac002 AND (deag003 = NULL OR pcac003 = deag003)的資料，錯誤訊息"該收銀員無此收銀機的使用權限"
+     欄位控制:依參數"E-CIR-0030.需輸入班別" 來控制畫面顯示隱藏                      
+                  
+   ●開窗處理:
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:收銀機基本資料檔].[C:收銀機編號]/[C:銀機說明]
+     新增或修改時過濾條件：pcaasite = deagsite AND 有效資料
+                                                 當收銀員有輸入值時,開窗條件加入apci202的資料控卡
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="deag_t.deag004" ver="5" src="s" column="deag004" table="deag_t" attribute="" type="" req="Y" i_zoom="q_pcab001_1" c_zoom="q_pcab001_1" chk_ref="v_pcab001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收銀員：
+   ●欄位控管：
+     校驗:1.應存在[T:收銀人員基本資料檔]中且為有效的資料
+          2.所輸入的收銀員在[T:收銀人員使用組織及收銀機權限檔]中，應有deagsite=pcac002 且 pcac003 ='一格空白' 或 pcac003 = deag003
+            如不存在deagsite = pcac002 的資料，錯誤訊息"該收銀員無此營運組織的使用權限"
+            如不存在deagsite = pcac002 AND (deag003 = NULL OR pcac003 = deag003)的資料，錯誤訊息"該收銀員無此收銀機的使用權限"
+                  
+   ●開窗處理:
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:收銀人員基本資料檔].[C:收銀員編號]/[C:姓名]
+     新增或修改時過濾條件：pcac002 = deagsite AND (deag003 = NULL OR pcac003 =deag003) AND 有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="deag_t.deag005" ver="6" src="s" column="deag005" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deag006" ver="6" src="s" column="deag006" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagcnfdt" ver="1" src="s" column="deagcnfdt" table="deag_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagcnfid" ver="1" src="s" column="deagcnfid" table="deag_t" attribute="" type="" req="" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagcrtdp" ver="1" src="s" column="deagcrtdp" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagcrtdt" ver="1" src="s" column="deagcrtdt" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagcrtid" ver="1" src="s" column="deagcrtid" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagdocdt" ver="5" src="s" column="deagdocdt" table="deag_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[收銀日期：
+     預設值:系統日期]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagdocno" ver="5" src="s" column="deagdocno" table="deag_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_deagdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單據編號：
+   ●欄位控管：
+     預設值:新增時，CALL 預設單別應用元件帶出作業預設單別
+     依單據別編碼原則產生單據編號
+   
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:門店收銀繳款單單頭檔].[C:單據編號]/[C:單據日期]/[C:營運組織]/[C:櫃號]/[C:班別]
+       回值類型：單一回值
+
+     2.新增時:
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:單別檔].[C:單別],[T:單別檔]].[C:單別說明]
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagmoddt" ver="1" src="s" column="deagmoddt" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagmodid" ver="1" src="s" column="deagmodid" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagowndp" ver="1" src="s" column="deagowndp" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagownid" ver="1" src="s" column="deagownid" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagsite" ver="5" src="s" column="deagsite" table="deag_t" attribute="" type="" req="Y" i_zoom="q_ooed004_3" c_zoom="q_ooed004_3" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運組織：
+   ●欄位控管：
+     預設值：根據aooi500設置動態控制
+     校驗：根據aooi500設置動態控制
+     開窗：根據aooi500設置動態控制]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagstus" ver="1" src="s" column="deagstus" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[●確認功能:
+  確認前檢核及更新，於 s_adet402應用元件的確認段
+●取消確認功能:
+  取消確認前檢核及更新，於  s_adet402應用元件的取消確認段   
+●作廢功能:
+  作廢前檢核及更新，於  s_adet402應用元件的作廢處理段
+
+狀態下拉選項:
+下拉選項來自 SCC13(單據狀態碼)]]>
+  </field>
+  <field cite_std="N" name="deag_t.deagunit" ver="3" src="s" column="deagunit" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deah001" ver="1" src="s" column="deah001" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deah005" ver="1" src="s" column="deah005" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deah008" ver="1" src="s" column="deah008" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah000" ver="1" src="s" column="deah000" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="v_gzca001" items="" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[款別分類:
+   ●欄位控管：
+     資料欄位: deah001 /可Display 可Input
+     允許空白: No
+     預設值: 1
+     資料選項來源: SCC8310
+     校驗:1.不允許空白
+          2.輸入值須存在[T:系統分類值檔].[C:系統分類值]且[C:系統分類碼]= 8310
+     帶值:自動帶出該款別分類的預設款別編號]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah001" ver="1" src="s" column="deah001" table="deah_t" attribute="" type="" req="N" i_zoom="q_ooia001_03" c_zoom="q_ooia001_03" chk_ref="v_ooie001_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[款別編號：
+   ●欄位控管：
+     資料欄位:deah002/可Display 可Input
+     預設值:於輸入款別類型時，自動帶出該款別類型下有勾選預設款別的款別編號
+     校驗:1.不允許空白
+          2.輸入的值必須存在於[T:款別據點設定檔](ooie_t)中, 且為有效的資料
+
+     帶值:1.帶出款別說明
+          2.依款別帶出幣別/幣別說明
+          3.當款別對應的款別分類(ooia002) = '30'票據類型 時，帶出幣別(據點本幣)/幣別說明/數量=1
+          4.當款別對應的款別分類(ooia002) = '40'有價券(禮券)類型 時,不帶值
+          5.當款別對應的款別分類(ooia002) = '50'銀行卡/信用卡 時，帶出幣別(據點本幣)/幣別說明
+          6.當款別對應的款別分類(ooia002) = '60'儲值類型 時，帶出卡種編號/卡種說明/幣別(據點本幣)/幣別說明
+
+     計算及處理:1.當款別對應的款別分類='10'現金時，卡種/券種、券面額編號、支票號碼為空且NoEntry
+               *2.當款別對應的款別分類='10'現金時，單身應有款別對應的所有面額資訊，面額寫入單身的[C:單位金額]中；
+                  例:當輸入的款別=現金(台幣)時，且款別設定檔中有設定現金(台幣)的面額有 1000/500/100/50/10/5/1 7 種面額時，則單身現金(台幣)的部份應存在7筆
+                3.當款別對應的款別分類='30'票據類型時，卡種/券種、券面額編號為空且NoEntry，支票號碼必輸不可空白，數量=1且Noentry，金額欄位可輸入且必輸，輸入完後將值帶到單位金額中
+                4.當款別對應的款別分類='40'有價券(禮券)時，[C:卡種/券種]、[C:券面額編號]開放可輸入，數量可輸入且必填，金額由單位金額*數量算出
+                5.當款別對應的款別分類='50'銀行卡/信用卡時，[C:卡種/券種]=空，卡說明為空，券面額編號/支票號碼為空白且Noentry，數量可輸入且必填，金額開放由USER輸入
+                6.當款別對應的款別分類='60'儲值類型，[C:卡種/券種]可輸入，券面額編號/支票號碼為空白且Noentry，數量可輸入且必填，金額開放由USER輸入
+                7.當款別對應的款別分類<> 10/30/40/50/60 時，卡種/券種、券面額編號、支票號碼、單位金額為空且不可輸入，數量及金額開放可輸入
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗
+       IF 款別分類='40'券 或 '60'卡時
+         查詢欄位：[T:款別主檔].[C:款別編號],[T:款別主檔多語言檔].[C:說明],[T:卡種(券種)檔].[C:卡種(券種)編號],[T:卡種(券種)多語言檔].[C:卡種(券種)說明],[T:款別主檔].[C:款別分類],[T:款別主檔].[C:本幣否]
+         ELSE
+         查詢欄位：[T:款別主檔].[C:款別編號],[T:款別主檔多語言檔].[C:說明],[T:款別主檔].[C:款別分類],[T:款別主檔].[C:本幣否]
+         END IF
+       過濾條件：新增時應過濾[C:款別分類]=所輸入的款別分類(deah001) AND 狀態='Y'
+       回值類型：查詢時(多重回值)，新增/修改時(單一回值)]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah002" ver="1" src="s" column="deah002" table="deah_t" attribute="" type="" req="N" i_zoom="q_mman001_5" c_zoom="q_mman001_5" chk_ref="v_mman001_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[卡種/券種：
+   ●欄位控管：
+     資料欄位:deah003/可DISPLAY INPUT
+
+  ●開窗處理：
+       參考函式：依標準查詢視窗
+       查詢欄位：1.當款別對應的款別分類='40'(有價券/禮券類型)時:
+                    [T:券種基本資料檔].[C:券種編號],[T:券種基本資料檔多語言檔].[C:說明],[T:券種基本資料檔].[C:券種類別](Combo),[C:券面額編號]+說明
+                 2.當款別對應的款別分類='60'(銀行卡/信用卡)時:
+                    [T:卡種基本資料檔].[C:卡種編號],[T:卡種基本資料檔多語言檔].[C:說明] 
+       過濾條件：(1)新增時應過濾狀態='Y'
+                 (2)當款別對應的款別分類='40'(有價券/禮券類型)時: 過濾券種檔中對應款別編號=所輸入的款別編號
+                 (3) 2.當款別對應的款別分類='60'(銀行卡/信用卡)時:  過濾卡種種檔中對應款別編號=所輸入的款別編號
+       回值類型：查詢時(多重回值)]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah003" ver="1" src="s" column="deah003" table="deah_t" attribute="" type="" req="N" i_zoom="q_gcar002" c_zoom="q_oocq002" chk_ref="v_oocq002_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[面額編號：
+   ●欄位控管：
+     資料欄位:deah004 /可Display 可Input
+     校驗:1.當款別對應的款別分類為'40'(有價券/禮券類型)時，則不允許空白，否則為空白，且NoEntry
+          2.輸入的值須存在券面額資料(oocq_t where oocq001 = '2071')，且為有效的資料
+     帶值:1.帶出券面額說明
+          2.依券面額帶出幣別(oocq004)+說明，及單位金額(oocq009)
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=2071
+       回值類型：查詢時(多重回值)，新增/修改時(單一回值)]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah004" ver="1" src="s" column="deah004" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah005" ver="1" src="s" column="deah005" table="deah_t" attribute="" type="" req="N" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[幣別：
+   ●欄位控管：
+     資料欄位:deah005 /Display Only
+     預設值:於輸入款別時帶出款別對應的幣別(款別據點設定檔中)
+     帶值:帶出幣別說明
+          依幣別帶出每日準率於[C:匯率]欄位中
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah006" ver="1" src="s" column="deah006" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[匯率：
+   ●欄位控管： 
+     資料欄位:deah007 /Display Only
+     預設值:由幣別抓取每日匯率s_aooi160_get_exrate()
+     欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah007" ver="1" src="s" column="deah007" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[數量：
+   ●欄位控管： 
+     資料欄位:deah008 /可Input 可Display
+     校驗:輸入值必須>0]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah008" ver="1" src="s" column="deah008" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[金額：
+   ●欄位控管： 
+     資料欄位:deah009
+     計算及處理:1.當款別對應的款別分類='10/40'時，此欄位值=單位金額*數量，且Noentry
+                2.當款別對應的款別分類<>'10/40'時，此欄位直開放由USER輸入，且不可<=0
+                3.當款別對應的款別分類='30'票據 時，此欄位值由USER輸入，且帶回單位金額]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah009" ver="1" src="s" column="deah009" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_deah009" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[支票編號：
+   ●欄位控管：
+     資料欄位:deah010
+     校驗:當款別分類='30'票據類型時，不可空白
+
+   ●開窗處理：(新曾時不提供開窗功能)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:門店收銀繳款單身檔-收銀資料].[C:支票號碼]
+       回值類型：查詢時(多重回值)]]>
+  </field>
+  <field cite_std="N" name="deah_t.deah013" ver="1" src="s" column="deah013" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deah_t.deahseq" ver="1" src="s" column="deahseq" table="deah_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次：
+   ●欄位控管：
+     資料欄位:deahseq /可Display 可Input
+     預設值:新增時依序編流水號
+     校驗:不允許空白]]>
+  </field>
+  <field cite_std="N" name="deai001_02" ver="1" src="s" column="deai001" table="deai_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deai002_02" ver="1" src="s" column="deai002" table="deai_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_deai002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[作廢發票號碼:
+   ●欄位控管：
+     資料欄位:deai002 /可INPUT Display
+
+   ●開窗處理：(新曾時不提供開窗功能)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:門店收銀繳款單身檔-發票資料].[C:發票號碼起]
+       過濾條件：[C:類別]='X'
+       回值類型：查詢時(多重回值)]]>
+  </field>
+  <field cite_std="N" name="deai_t.deai001" ver="1" src="s" column="deai001" table="deai_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deai_t.deai002" ver="1" src="s" column="deai002" table="deai_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_deai002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開立發票號起:
+   ●欄位控管：
+     資料欄位:deai002 /可INPUT Display
+     校驗:1.不可空白
+          2.不可大於開立發票號碼迄
+
+   ●開窗處理：(新曾時不提供開窗功能)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:門店收銀繳款單身檔-發票資料].[C:發票號碼起]
+       過濾條件：[C:類別]='Y'
+       回值類型：查詢時(多重回值)]]>
+  </field>
+  <field cite_std="N" name="deai_t.deai003" ver="1" src="s" column="deai003" table="deai_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_deai003" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開立發票號迄:
+   ●欄位控管：
+     資料欄位:deai003 /可INPUT Display
+     校驗:1.不可空白
+          2.不可小於開立發票號碼起
+
+   ●開窗處理：(新曾時不提供開窗功能)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:門店收銀繳款單身檔-發票資料].[C:發票號碼迄]
+       回值類型：查詢時(多重回值)]]>
+  </field>
+  <field cite_std="N" name="deai_t.deai004" ver="1" src="s" column="deai004" table="deai_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[未稅金額:
+   ●欄位控管：
+     資料欄位:deai004 /可INPUT Display
+     校驗:1.不可空白
+          2.不可<=0
+          3.不可大於應稅金額]]>
+  </field>
+  <field cite_std="N" name="deai_t.deai005" ver="1" src="s" column="deai005" table="deai_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[應稅金額:
+   ●欄位控管：
+     資料欄位:deai005 /可INPUT Display
+     校驗:1.不可空白
+          2.不可<=0
+          3.不可小於應稅金額]]>
+  </field>
+  <field cite_std="N" name="deaj_t.deaj001" ver="1" src="s" column="deaj001" table="deaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaj_t.deaj002" ver="1" src="s" column="deaj002" table="deaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaj_t.deaj003" ver="1" src="s" column="deaj003" table="deaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaj_t.deaj004" ver="1" src="s" column="deaj004" table="deaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaj_t.deaj005" ver="1" src="s" column="deaj005" table="deaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaj_t.deaj006" ver="1" src="s" column="deaj006" table="deaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaj_t.deaj007" ver="1" src="s" column="deaj007" table="deaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaj_t.deaj008" ver="1" src="s" column="deaj008" table="deaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deaj_t.deaj009" ver="1" src="s" column="deaj009" table="deaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtjf001" ver="5" src="s" column="rtjf001" table="rtjf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="8310" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtjf002" ver="5" src="s" column="rtjf002" table="rtjf_t" attribute="" type="" req="N" i_zoom="q_ooie001_1" c_zoom="q_ooie001_1" chk_ref="v_ooie001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtjf003" ver="5" src="s" column="rtjf003" table="rtjf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="0.000" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtjf025" ver="6" src="s" column="rtjf025" table="rtjf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtjf034" ver="5" src="s" column="rtjf034" table="rtjf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtjf035" ver="5" src="s" column="rtjf035" table="rtjf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtjfdocno" ver="5" src="s" column="rtjfdocno" table="rtjf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtjfseq" ver="5" src="s" column="rtjfseq" table="rtjf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="total" ver="5" src="s" column="deah008" table="deah_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[匯總單身所有金額]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="6" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_" ver="6" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="6" name="prog_adet403" depend_field="deag_t.deag005" src="s" status="">
+      <program order="1" type="1" name="adet403"/>
+    </pfield>
+    <pfield cite_std="N" ver="6" name="prog_anmt310" depend_field="deag_t.deag006" src="s" status="">
+      <program order="1" type="1" name="anmt310"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_deagsite_desc" src="s" depend_field="b_deagsite" correspon_key="deagent,deagsite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="3" name="deaf005_desc" src="s" depend_field="deaf005" correspon_key="deaf005" ref_table="ooial_t" ref_fk="ooial001" ref_dlang="ooial002" ref_rtn="ooial003" status=""/>
+    <rfield cite_std="N" ver="5" name="deaf017_desc" src="s" depend_field="deaf_t.deaf017" correspon_key="deaf017" ref_table="ooial_t" ref_fk="ooial001" ref_dlang="ooial002" ref_rtn="ooial003" status=""/>
+    <rfield cite_std="N" ver="1" name="deag002_desc" src="s" depend_field="deag_t.deag002" correspon_key="deagent,deagsite,deag002" ref_table="oogd_t" ref_fk="oogdent,oogdsite,oogd001" ref_dlang="" ref_rtn="oogd002" status=""/>
+    <rfield cite_std="N" ver="1" name="deag003_desc" src="s" depend_field="deag_t.deag003" correspon_key="deagent,deagsite,deag003" ref_table="pcaal_t" ref_fk="pcaalent,pcaalsite,pcaal001" ref_dlang="pcaal002" ref_rtn="pcaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="deag004_desc" src="s" depend_field="deag_t.deag004" correspon_key="deagent,deag004" ref_table="pcab_t" ref_fk="pcabent,pcab001" ref_dlang="" ref_rtn="pcab003" status=""/>
+    <rfield cite_std="N" ver="1" name="deagcnfid_desc" src="s" depend_field="deag_t.deagcnfid" correspon_key="deagcnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="deagcrtdp_desc" src="s" depend_field="deag_t.deagcrtdp" correspon_key="deagcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="deagcrtid_desc" src="s" depend_field="deag_t.deagcrtid" correspon_key="deagcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="deagmodid_desc" src="s" depend_field="deag_t.deagmodid" correspon_key="deagmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="deagowndp_desc" src="s" depend_field="deag_t.deagowndp" correspon_key="deagowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="deagownid_desc" src="s" depend_field="deag_t.deagownid" correspon_key="deagownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="deagsite_desc" src="s" depend_field="deag_t.deagsite" correspon_key="deagent,deagsite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="deah001_desc" src="s" depend_field="deah_t.deah001" correspon_key="deahent,deah001" ref_table="ooial_t" ref_fk="ooialent,ooial001" ref_dlang="ooial002" ref_rtn="ooial003" status=""/>
+    <rfield cite_std="N" ver="1" name="deah001_desc2" src="s" depend_field="deah001" correspon_key="deahent,deah001" ref_table="ooial_t" ref_fk="ooialent,ooial001" ref_dlang="ooial002" ref_rtn="ooial003" status=""/>
+    <rfield cite_std="N" ver="1" name="deah002_desc" src="s" depend_field="deah_t.deah002" correspon_key="deahent,deah002" ref_table="gcafl_t" ref_fk="gcaflent,gcafl001" ref_dlang="gcafl002" ref_rtn="gcafl003" status=""/>
+    <rfield cite_std="N" ver="1" name="deah003_desc" src="s" depend_field="deah_t.deah003" correspon_key="deahent,&apos;2071&apos;,deah003" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="deah005_desc" src="s" depend_field="deah_t.deah005" correspon_key="deahent,deah005" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="deah005_desc2" src="s" depend_field="deah005" correspon_key="deahent,deah005" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="5" name="rtjf002_desc" src="s" depend_field="rtjf002" correspon_key="rtjf002" ref_table="ooial_t" ref_fk="ooial001" ref_dlang="ooial002" ref_rtn="ooial003" status=""/>
+    <rfield cite_std="N" ver="5" name="rtjf034_desc" src="s" depend_field="rtjf034" correspon_key="rtjf034" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_deag001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deag002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deag003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deag004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deagdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deagdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deagsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="deaf_t.deaf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="deaf_t.deaf006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="deaf_t.deaf012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deaf018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="deaf_t.deaf019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="6" name="deaf_t.deaf020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="deaf_t.deafdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="deaf_t.deafsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="deaf_t.deafstatu" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="deag_t.deag001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deag_t.deag002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deag_t.deag003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deag_t.deag004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="deag_t.deag005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="6" name="deag_t.deag006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="deag_t.deagcnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deag_t.deagcnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deag_t.deagcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deag_t.deagcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deag_t.deagcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deag_t.deagdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deag_t.deagdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deag_t.deagmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deag_t.deagmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deag_t.deagowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deag_t.deagownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="deag_t.deagsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deag_t.deagstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="deag_t.deagunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deah013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deah_t.deahseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deai001_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deai002_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deai_t.deai001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deai_t.deai002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deai_t.deai003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deai_t.deai004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deai_t.deai005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deaj_t.deaj001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deaj_t.deaj002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deaj_t.deaj003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deaj_t.deaj004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deaj_t.deaj005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deaj_t.deaj006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deaj_t.deaj007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deaj_t.deaj008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deaj_t.deaj009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="6" name="lbl_" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="5" name="rtjf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="rtjf002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="rtjf003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="rtjf025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="rtjf034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="rtjf035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="rtjfdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="rtjfseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="total" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="action_3" ver="6" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="adet402_01" ver="5" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="adet402_02" ver="6" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[產生anmt310(銀存收支維護作業)時
+先用收銀員去apci202(前台人員維護作業)找收銀員對應的員工編號寫入
+如無對應的員工編號時再用收銀員編號寫入]]>
+  </act>
+  <act cite_std="N" id="adet402_s01" ver="6" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="touch_page1" ver="3" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_deagsite" text="營運組織" lstr=""/>
+    <sfield name="lbl_deagdocdt" text="收銀日期" lstr=""/>
+    <sfield name="lbl_confirm" text="確認" lstr=""/>
+    <sfield name="lbl_cancel1" text="取消" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_deagdocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_deag001" text="櫃號" lstr=""/>
+    <sfield name="lbl_deag002" text="班別" lstr=""/>
+    <sfield name="lbl_deag003" text="收銀機號" lstr=""/>
+    <sfield name="lbl_deag004" text="收銀員" lstr=""/>
+    <sfield name="lbl_oogd002" text="班別說明" lstr=""/>
+    <sfield name="lbl_pcaal003" text="說明" lstr=""/>
+    <sfield name="lbl_pcab003" text="收銀人員姓名" lstr=""/>
+    <sfield name="lbl_total" text="總繳款金額" lstr=""/>
+    <sfield name="lbl_deag005" text="銀行存繳單號" lstr=""/>
+    <sfield name="lbl_deag006" text="短款追回單號" lstr=""/>
+    <sfield name="lbl_deagunit" text="制定組織" lstr=""/>
+    <sfield name="page_2" text="款別幣別總繳金額" lstr=""/>
+    <sfield name="lbl_deah001" text="款別" lstr=""/>
+    <sfield name="lbl_deah001_desc1" text="款別說明" lstr=""/>
+    <sfield name="lbl_deah005" text="幣別" lstr=""/>
+    <sfield name="lbl_deah005_desc1" text="幣別說明" lstr=""/>
+    <sfield name="lbl_deah008" text="金額" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="adet402.page_2" text="收銀差錯處理" lstr=""/>
+    <sfield name="adet402.group_5" text="收銀差異處理" lstr=""/>
+    <sfield name="lbl_deafsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_deafstatu" text="單據狀態" lstr=""/>
+    <sfield name="lbl_deafdocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_deaf001" text="專櫃編號" lstr=""/>
+    <sfield name="lbl_deaf002" text="班別" lstr=""/>
+    <sfield name="lbl_deaf003" text="收銀機編號" lstr=""/>
+    <sfield name="lbl_deaf004" text="收銀員編號" lstr=""/>
+    <sfield name="lbl_deaf012" text="款別分類" lstr=""/>
+    <sfield name="lbl_deaf005" text="款別" lstr=""/>
+    <sfield name="lbl_deaf005_desc" text="款別說明" lstr=""/>
+    <sfield name="lbl_deaf013" text="幣別" lstr=""/>
+    <sfield name="lbl_deaf014" text="匯率" lstr=""/>
+    <sfield name="lbl_deaf006" text="實收金額" lstr=""/>
+    <sfield name="lbl_deaf019" text="應繳金額" lstr=""/>
+    <sfield name="lbl_deaf007" text="系統金額" lstr=""/>
+    <sfield name="lbl_deaf020" text="其他金額" lstr=""/>
+    <sfield name="lbl_deaf015" text="串幣金額" lstr=""/>
+    <sfield name="lbl_deaf008" text="差錯金額" lstr=""/>
+    <sfield name="lbl_deaf009" text="差錯處理方式" lstr=""/>
+    <sfield name="lbl_deaf016" text="串幣款別分類" lstr=""/>
+    <sfield name="lbl_deaf017" text="串幣款別" lstr=""/>
+    <sfield name="lbl_deaf017_desc" text="串幣款別說明" lstr=""/>
+    <sfield name="lbl_deaf018" text="對應單號" lstr=""/>
+    <sfield name="lbl_deaf010" text="備註" lstr=""/>
+    <sfield name="lbl_deaf011" text="財務處理否" lstr=""/>
+    <sfield name="adet402.page_4" text="賒銷明細" lstr=""/>
+    <sfield name="adet402.group_6" text="賒銷明細" lstr=""/>
+    <sfield name="lbl_rtjf001" text="款別類型" lstr=""/>
+    <sfield name="lbl_rtjf002" text="款別編號" lstr=""/>
+    <sfield name="lbl_rtjf002_desc" text="款別說明" lstr=""/>
+    <sfield name="lbl_rtjf003" text="賒銷金額" lstr=""/>
+    <sfield name="lbl_rtjf035" text="來源類型" lstr=""/>
+    <sfield name="lbl_rtjf034" text="交易對象" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_rtjfdocno" text="來源單號" lstr=""/>
+    <sfield name="lbl_rtjfseq" text="項次" lstr=""/>
+    <sfield name="lbl_rtjf025" text="收款日期" lstr=""/>
+    <sfield name="page_3.adet402" text="發票資料" lstr=""/>
+    <sfield name="adet402.group5" text="開立發票資訊(非自有POS)" lstr=""/>
+    <sfield name="lbl_deai001" text="類型" lstr=""/>
+    <sfield name="lbl_deai002" text="開立發票號碼起" lstr=""/>
+    <sfield name="lbl_deai003" text="開立發票號碼迄" lstr=""/>
+    <sfield name="lbl_deai004" text="未稅金額" lstr=""/>
+    <sfield name="lbl_deai005" text="含稅金額" lstr=""/>
+    <sfield name="adet402.group6" text="作廢發票資訊" lstr=""/>
+    <sfield name="lbl_deai001_02" text="類型" lstr=""/>
+    <sfield name="lbl_deai002_02" text="作廢發票號碼" lstr=""/>
+    <sfield name="page_4" text="讀帳資料" lstr=""/>
+    <sfield name="adet402.group8" text="讀帳資料維護" lstr=""/>
+    <sfield name="lbl_deaj001" text="營業現金(上班結餘) +" lstr=""/>
+    <sfield name="lbl_deaj002" text="營業外收入(雜收)   +" lstr=""/>
+    <sfield name="lbl_deaj003" text="營業外支出(雜支)   -" lstr=""/>
+    <sfield name="lbl_deaj004" text="收銀機銷貨金額     +" lstr=""/>
+    <sfield name="lbl_deaj005" text="手開發票銷貨金額   +" lstr=""/>
+    <sfield name="lbl_deaj006" text="應結餘金額         =" lstr=""/>
+    <sfield name="lbl_deaj007" text="點收總金額         -" lstr=""/>
+    <sfield name="lbl_deaj008" text="繳大鈔             -" lstr=""/>
+    <sfield name="lbl_deaj009" text="差異金額           =" lstr=""/>
+    <sfield name="bpage_1" text="收銀資料" lstr=""/>
+    <sfield name="lbl_deahseq" text="項次" lstr=""/>
+    <sfield name="lbl_deah000" text="款別性質" lstr=""/>
+    <sfield name="lbl_deah001_desc" text="款別說明" lstr=""/>
+    <sfield name="lbl_deah002" text="卡種/券種" lstr=""/>
+    <sfield name="lbl_deah002_desc" text="卡種/券種說明" lstr=""/>
+    <sfield name="lbl_deah003" text="券面額編號" lstr=""/>
+    <sfield name="lbl_deah003_desc" text="券面額說明" lstr=""/>
+    <sfield name="lbl_deah009" text="支票號碼" lstr=""/>
+    <sfield name="lbl_deah005_desc" text="幣別說明" lstr=""/>
+    <sfield name="lbl_deah004" text="單位金額" lstr=""/>
+    <sfield name="lbl_deah007" text="數量" lstr=""/>
+    <sfield name="lbl_deah006" text="匯率" lstr=""/>
+    <sfield name="lbl_deah013" text="本幣金額" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="adet402_01" text="收銀資料產生" lstr=""/>
+    <sact name="adet402_02" text="產生短款追回單" lstr=""/>
+    <sact name="adet402_s01" text="批次產生收銀繳款單" lstr=""/>
+    <sact name="touch_page1" text="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="6" cite_std="N" src="s">
+    <widget name="s_detail3" status="u"/>
+    <widget name="s_detail4" status="u"/>
+    <widget name="s_detail6" status="u"/>
+  </exclude>
+</spec>

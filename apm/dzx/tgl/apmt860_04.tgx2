@@ -1,0 +1,1463 @@
+{<section id="apmt860_04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2015-01-26 11:33:01), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000073
+#+ Filename...: apmt860_04
+#+ Description: 進項發票資訊維護
+#+ Creator....: 04226(2015-01-26 11:31:01)
+#+ Modifier...: 04226 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="apmt860_04.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_pmdw_m        RECORD
+       pmdwdocno LIKE pmdw_t.pmdwdocno, 
+   pmdwseq LIKE pmdw_t.pmdwseq, 
+   pmdw008 LIKE pmdw_t.pmdw008, 
+   pmdw008_desc LIKE type_t.chr80, 
+   pmdw037 LIKE pmdw_t.pmdw037, 
+   pmdw011 LIKE pmdw_t.pmdw011, 
+   pmdw010 LIKE pmdw_t.pmdw010, 
+   pmdw200 LIKE pmdw_t.pmdw200, 
+   pmdw030 LIKE pmdw_t.pmdw030, 
+   pmdw009 LIKE pmdw_t.pmdw009, 
+   pmdw012 LIKE pmdw_t.pmdw012, 
+   pmdw012_desc LIKE type_t.chr80, 
+   pmdw0121 LIKE pmdw_t.pmdw0121, 
+   pmdw013 LIKE pmdw_t.pmdw013, 
+   pmdw014 LIKE pmdw_t.pmdw014, 
+   pmdw014_desc LIKE type_t.chr80, 
+   pmdw015 LIKE pmdw_t.pmdw015, 
+   pmdw023 LIKE pmdw_t.pmdw023, 
+   pmdw024 LIKE pmdw_t.pmdw024, 
+   pmdw025 LIKE pmdw_t.pmdw025, 
+   pmdw026 LIKE pmdw_t.pmdw026, 
+   pmdw027 LIKE pmdw_t.pmdw027, 
+   pmdw028 LIKE pmdw_t.pmdw028, 
+   pmdwcomp LIKE pmdw_t.pmdwcomp, 
+   pmdw019 LIKE pmdw_t.pmdw019, 
+   pmdw034 LIKE pmdw_t.pmdw034, 
+   pmdwstus LIKE pmdw_t.pmdwstus, 
+   pmdw020 LIKE pmdw_t.pmdw020, 
+   pmdw038 LIKE pmdw_t.pmdw038, 
+   pmdw001 LIKE pmdw_t.pmdw001, 
+   pmdw021 LIKE pmdw_t.pmdw021, 
+   pmdw039 LIKE pmdw_t.pmdw039, 
+   pmdw002 LIKE pmdw_t.pmdw002, 
+   pmdw022 LIKE pmdw_t.pmdw022, 
+   pmdw004 LIKE pmdw_t.pmdw004, 
+   pmdw029 LIKE pmdw_t.pmdw029, 
+   pmdw016 LIKE pmdw_t.pmdw016, 
+   pmdw031 LIKE pmdw_t.pmdw031, 
+   pmdw017 LIKE pmdw_t.pmdw017, 
+   pmdw032 LIKE pmdw_t.pmdw032, 
+   pmdw018 LIKE pmdw_t.pmdw018, 
+   pmdw033 LIKE pmdw_t.pmdw033
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_pmdw_m        type_g_pmdw_m
+ 
+   DEFINE g_pmdwdocno_t LIKE pmdw_t.pmdwdocno
+DEFINE g_pmdwseq_t LIKE pmdw_t.pmdwseq
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="apmt860_04.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION apmt860_04(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmt860_04 WITH FORM cl_ap_formpath("apm","apmt860_04")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_pmdw_m.pmdwdocno,g_pmdw_m.pmdwseq,g_pmdw_m.pmdw008,g_pmdw_m.pmdw037,g_pmdw_m.pmdw011, 
+          g_pmdw_m.pmdw010,g_pmdw_m.pmdw200,g_pmdw_m.pmdw030,g_pmdw_m.pmdw009,g_pmdw_m.pmdw012,g_pmdw_m.pmdw0121, 
+          g_pmdw_m.pmdw013,g_pmdw_m.pmdw014,g_pmdw_m.pmdw015,g_pmdw_m.pmdw023,g_pmdw_m.pmdw024,g_pmdw_m.pmdw025, 
+          g_pmdw_m.pmdw026,g_pmdw_m.pmdw027,g_pmdw_m.pmdw028,g_pmdw_m.pmdwcomp,g_pmdw_m.pmdw019,g_pmdw_m.pmdw034, 
+          g_pmdw_m.pmdwstus,g_pmdw_m.pmdw020,g_pmdw_m.pmdw038,g_pmdw_m.pmdw001,g_pmdw_m.pmdw021,g_pmdw_m.pmdw039, 
+          g_pmdw_m.pmdw002,g_pmdw_m.pmdw022,g_pmdw_m.pmdw004,g_pmdw_m.pmdw029,g_pmdw_m.pmdw016,g_pmdw_m.pmdw031, 
+          g_pmdw_m.pmdw017,g_pmdw_m.pmdw032,g_pmdw_m.pmdw018,g_pmdw_m.pmdw033 ATTRIBUTE(WITHOUT DEFAULTS) 
+
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdwdocno
+            #add-point:BEFORE FIELD pmdwdocno name="input.b.pmdwdocno"
+            {<point name="input.b.pmdwdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdwdocno
+            
+            #add-point:AFTER FIELD pmdwdocno name="input.a.pmdwdocno"
+            {<point name="input.a.pmdwdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdwdocno
+            #add-point:ON CHANGE pmdwdocno name="input.g.pmdwdocno"
+            {<point name="input.g.pmdwdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdwseq
+            #add-point:BEFORE FIELD pmdwseq name="input.b.pmdwseq"
+            {<point name="input.b.pmdwseq" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdwseq
+            
+            #add-point:AFTER FIELD pmdwseq name="input.a.pmdwseq"
+            {<point name="input.a.pmdwseq" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdwseq
+            #add-point:ON CHANGE pmdwseq name="input.g.pmdwseq"
+            {<point name="input.g.pmdwseq" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw008
+            
+            #add-point:AFTER FIELD pmdw008 name="input.a.pmdw008"
+            {<point name="input.a.pmdw008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw008
+            #add-point:BEFORE FIELD pmdw008 name="input.b.pmdw008"
+            {<point name="input.b.pmdw008" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw008
+            #add-point:ON CHANGE pmdw008 name="input.g.pmdw008"
+            {<point name="input.g.pmdw008" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw037
+            #add-point:BEFORE FIELD pmdw037 name="input.b.pmdw037"
+            {<point name="input.b.pmdw037" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw037
+            
+            #add-point:AFTER FIELD pmdw037 name="input.a.pmdw037"
+            {<point name="input.a.pmdw037" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw037
+            #add-point:ON CHANGE pmdw037 name="input.g.pmdw037"
+            {<point name="input.g.pmdw037" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw011
+            #add-point:BEFORE FIELD pmdw011 name="input.b.pmdw011"
+            {<point name="input.b.pmdw011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw011
+            
+            #add-point:AFTER FIELD pmdw011 name="input.a.pmdw011"
+            {<point name="input.a.pmdw011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw011
+            #add-point:ON CHANGE pmdw011 name="input.g.pmdw011"
+            {<point name="input.g.pmdw011" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw010
+            #add-point:BEFORE FIELD pmdw010 name="input.b.pmdw010"
+            {<point name="input.b.pmdw010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw010
+            
+            #add-point:AFTER FIELD pmdw010 name="input.a.pmdw010"
+            {<point name="input.a.pmdw010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw010
+            #add-point:ON CHANGE pmdw010 name="input.g.pmdw010"
+            {<point name="input.g.pmdw010" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw200
+            #add-point:BEFORE FIELD pmdw200 name="input.b.pmdw200"
+            {<point name="input.b.pmdw200" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw200
+            
+            #add-point:AFTER FIELD pmdw200 name="input.a.pmdw200"
+            {<point name="input.a.pmdw200" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw200
+            #add-point:ON CHANGE pmdw200 name="input.g.pmdw200"
+            {<point name="input.g.pmdw200" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw030
+            #add-point:BEFORE FIELD pmdw030 name="input.b.pmdw030"
+            {<point name="input.b.pmdw030" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw030
+            
+            #add-point:AFTER FIELD pmdw030 name="input.a.pmdw030"
+            {<point name="input.a.pmdw030" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw030
+            #add-point:ON CHANGE pmdw030 name="input.g.pmdw030"
+            {<point name="input.g.pmdw030" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw009
+            #add-point:BEFORE FIELD pmdw009 name="input.b.pmdw009"
+            {<point name="input.b.pmdw009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw009
+            
+            #add-point:AFTER FIELD pmdw009 name="input.a.pmdw009"
+            {<point name="input.a.pmdw009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw009
+            #add-point:ON CHANGE pmdw009 name="input.g.pmdw009"
+            {<point name="input.g.pmdw009" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw012
+            
+            #add-point:AFTER FIELD pmdw012 name="input.a.pmdw012"
+            {<point name="input.a.pmdw012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw012
+            #add-point:BEFORE FIELD pmdw012 name="input.b.pmdw012"
+            {<point name="input.b.pmdw012" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw012
+            #add-point:ON CHANGE pmdw012 name="input.g.pmdw012"
+            {<point name="input.g.pmdw012" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw0121
+            #add-point:BEFORE FIELD pmdw0121 name="input.b.pmdw0121"
+            {<point name="input.b.pmdw0121" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw0121
+            
+            #add-point:AFTER FIELD pmdw0121 name="input.a.pmdw0121"
+            {<point name="input.a.pmdw0121" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw0121
+            #add-point:ON CHANGE pmdw0121 name="input.g.pmdw0121"
+            {<point name="input.g.pmdw0121" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw013
+            #add-point:BEFORE FIELD pmdw013 name="input.b.pmdw013"
+            {<point name="input.b.pmdw013" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw013
+            
+            #add-point:AFTER FIELD pmdw013 name="input.a.pmdw013"
+            {<point name="input.a.pmdw013" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw013
+            #add-point:ON CHANGE pmdw013 name="input.g.pmdw013"
+            {<point name="input.g.pmdw013" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw014
+            
+            #add-point:AFTER FIELD pmdw014 name="input.a.pmdw014"
+            {<point name="input.a.pmdw014" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw014
+            #add-point:BEFORE FIELD pmdw014 name="input.b.pmdw014"
+            {<point name="input.b.pmdw014" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw014
+            #add-point:ON CHANGE pmdw014 name="input.g.pmdw014"
+            {<point name="input.g.pmdw014" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw015
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdw_m.pmdw015,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD pmdw015
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdw015 name="input.a.pmdw015"
+            {<point name="input.a.pmdw015" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw015
+            #add-point:BEFORE FIELD pmdw015 name="input.b.pmdw015"
+            {<point name="input.b.pmdw015" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw015
+            #add-point:ON CHANGE pmdw015 name="input.g.pmdw015"
+            {<point name="input.g.pmdw015" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw023
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdw_m.pmdw023,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD pmdw023
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdw023 name="input.a.pmdw023"
+            {<point name="input.a.pmdw023" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw023
+            #add-point:BEFORE FIELD pmdw023 name="input.b.pmdw023"
+            {<point name="input.b.pmdw023" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw023
+            #add-point:ON CHANGE pmdw023 name="input.g.pmdw023"
+            {<point name="input.g.pmdw023" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw024
+            #add-point:BEFORE FIELD pmdw024 name="input.b.pmdw024"
+            {<point name="input.b.pmdw024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw024
+            
+            #add-point:AFTER FIELD pmdw024 name="input.a.pmdw024"
+            {<point name="input.a.pmdw024" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw024
+            #add-point:ON CHANGE pmdw024 name="input.g.pmdw024"
+            {<point name="input.g.pmdw024" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw025
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdw_m.pmdw025,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD pmdw025
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdw025 name="input.a.pmdw025"
+            {<point name="input.a.pmdw025" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw025
+            #add-point:BEFORE FIELD pmdw025 name="input.b.pmdw025"
+            {<point name="input.b.pmdw025" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw025
+            #add-point:ON CHANGE pmdw025 name="input.g.pmdw025"
+            {<point name="input.g.pmdw025" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw026
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdw_m.pmdw026,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD pmdw026
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdw026 name="input.a.pmdw026"
+            {<point name="input.a.pmdw026" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw026
+            #add-point:BEFORE FIELD pmdw026 name="input.b.pmdw026"
+            {<point name="input.b.pmdw026" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw026
+            #add-point:ON CHANGE pmdw026 name="input.g.pmdw026"
+            {<point name="input.g.pmdw026" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw027
+            #add-point:BEFORE FIELD pmdw027 name="input.b.pmdw027"
+            {<point name="input.b.pmdw027" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw027
+            
+            #add-point:AFTER FIELD pmdw027 name="input.a.pmdw027"
+            {<point name="input.a.pmdw027" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw027
+            #add-point:ON CHANGE pmdw027 name="input.g.pmdw027"
+            {<point name="input.g.pmdw027" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw028
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdw_m.pmdw028,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD pmdw028
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdw028 name="input.a.pmdw028"
+            {<point name="input.a.pmdw028" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw028
+            #add-point:BEFORE FIELD pmdw028 name="input.b.pmdw028"
+            {<point name="input.b.pmdw028" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw028
+            #add-point:ON CHANGE pmdw028 name="input.g.pmdw028"
+            {<point name="input.g.pmdw028" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdwcomp
+            #add-point:BEFORE FIELD pmdwcomp name="input.b.pmdwcomp"
+            {<point name="input.b.pmdwcomp" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdwcomp
+            
+            #add-point:AFTER FIELD pmdwcomp name="input.a.pmdwcomp"
+            {<point name="input.a.pmdwcomp" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdwcomp
+            #add-point:ON CHANGE pmdwcomp name="input.g.pmdwcomp"
+            {<point name="input.g.pmdwcomp" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw019
+            #add-point:BEFORE FIELD pmdw019 name="input.b.pmdw019"
+            {<point name="input.b.pmdw019" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw019
+            
+            #add-point:AFTER FIELD pmdw019 name="input.a.pmdw019"
+            {<point name="input.a.pmdw019" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw019
+            #add-point:ON CHANGE pmdw019 name="input.g.pmdw019"
+            {<point name="input.g.pmdw019" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw034
+            #add-point:BEFORE FIELD pmdw034 name="input.b.pmdw034"
+            {<point name="input.b.pmdw034" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw034
+            
+            #add-point:AFTER FIELD pmdw034 name="input.a.pmdw034"
+            {<point name="input.a.pmdw034" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw034
+            #add-point:ON CHANGE pmdw034 name="input.g.pmdw034"
+            {<point name="input.g.pmdw034" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdwstus
+            #add-point:BEFORE FIELD pmdwstus name="input.b.pmdwstus"
+            {<point name="input.b.pmdwstus" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdwstus
+            
+            #add-point:AFTER FIELD pmdwstus name="input.a.pmdwstus"
+            {<point name="input.a.pmdwstus" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdwstus
+            #add-point:ON CHANGE pmdwstus name="input.g.pmdwstus"
+            {<point name="input.g.pmdwstus" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw020
+            #add-point:BEFORE FIELD pmdw020 name="input.b.pmdw020"
+            {<point name="input.b.pmdw020" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw020
+            
+            #add-point:AFTER FIELD pmdw020 name="input.a.pmdw020"
+            {<point name="input.a.pmdw020" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw020
+            #add-point:ON CHANGE pmdw020 name="input.g.pmdw020"
+            {<point name="input.g.pmdw020" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw038
+            #add-point:BEFORE FIELD pmdw038 name="input.b.pmdw038"
+            {<point name="input.b.pmdw038" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw038
+            
+            #add-point:AFTER FIELD pmdw038 name="input.a.pmdw038"
+            {<point name="input.a.pmdw038" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw038
+            #add-point:ON CHANGE pmdw038 name="input.g.pmdw038"
+            {<point name="input.g.pmdw038" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw001
+            #add-point:BEFORE FIELD pmdw001 name="input.b.pmdw001"
+            {<point name="input.b.pmdw001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw001
+            
+            #add-point:AFTER FIELD pmdw001 name="input.a.pmdw001"
+            {<point name="input.a.pmdw001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw001
+            #add-point:ON CHANGE pmdw001 name="input.g.pmdw001"
+            {<point name="input.g.pmdw001" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw021
+            #add-point:BEFORE FIELD pmdw021 name="input.b.pmdw021"
+            {<point name="input.b.pmdw021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw021
+            
+            #add-point:AFTER FIELD pmdw021 name="input.a.pmdw021"
+            {<point name="input.a.pmdw021" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw021
+            #add-point:ON CHANGE pmdw021 name="input.g.pmdw021"
+            {<point name="input.g.pmdw021" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw039
+            #add-point:BEFORE FIELD pmdw039 name="input.b.pmdw039"
+            {<point name="input.b.pmdw039" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw039
+            
+            #add-point:AFTER FIELD pmdw039 name="input.a.pmdw039"
+            {<point name="input.a.pmdw039" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw039
+            #add-point:ON CHANGE pmdw039 name="input.g.pmdw039"
+            {<point name="input.g.pmdw039" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw002
+            #add-point:BEFORE FIELD pmdw002 name="input.b.pmdw002"
+            {<point name="input.b.pmdw002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw002
+            
+            #add-point:AFTER FIELD pmdw002 name="input.a.pmdw002"
+            {<point name="input.a.pmdw002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw002
+            #add-point:ON CHANGE pmdw002 name="input.g.pmdw002"
+            {<point name="input.g.pmdw002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw022
+            #add-point:BEFORE FIELD pmdw022 name="input.b.pmdw022"
+            {<point name="input.b.pmdw022" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw022
+            
+            #add-point:AFTER FIELD pmdw022 name="input.a.pmdw022"
+            {<point name="input.a.pmdw022" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw022
+            #add-point:ON CHANGE pmdw022 name="input.g.pmdw022"
+            {<point name="input.g.pmdw022" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw004
+            #add-point:BEFORE FIELD pmdw004 name="input.b.pmdw004"
+            {<point name="input.b.pmdw004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw004
+            
+            #add-point:AFTER FIELD pmdw004 name="input.a.pmdw004"
+            {<point name="input.a.pmdw004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw004
+            #add-point:ON CHANGE pmdw004 name="input.g.pmdw004"
+            {<point name="input.g.pmdw004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw029
+            #add-point:BEFORE FIELD pmdw029 name="input.b.pmdw029"
+            {<point name="input.b.pmdw029" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw029
+            
+            #add-point:AFTER FIELD pmdw029 name="input.a.pmdw029"
+            {<point name="input.a.pmdw029" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw029
+            #add-point:ON CHANGE pmdw029 name="input.g.pmdw029"
+            {<point name="input.g.pmdw029" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw016
+            #add-point:BEFORE FIELD pmdw016 name="input.b.pmdw016"
+            {<point name="input.b.pmdw016" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw016
+            
+            #add-point:AFTER FIELD pmdw016 name="input.a.pmdw016"
+            {<point name="input.a.pmdw016" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw016
+            #add-point:ON CHANGE pmdw016 name="input.g.pmdw016"
+            {<point name="input.g.pmdw016" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw031
+            #add-point:BEFORE FIELD pmdw031 name="input.b.pmdw031"
+            {<point name="input.b.pmdw031" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw031
+            
+            #add-point:AFTER FIELD pmdw031 name="input.a.pmdw031"
+            {<point name="input.a.pmdw031" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw031
+            #add-point:ON CHANGE pmdw031 name="input.g.pmdw031"
+            {<point name="input.g.pmdw031" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw017
+            #add-point:BEFORE FIELD pmdw017 name="input.b.pmdw017"
+            {<point name="input.b.pmdw017" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw017
+            
+            #add-point:AFTER FIELD pmdw017 name="input.a.pmdw017"
+            {<point name="input.a.pmdw017" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw017
+            #add-point:ON CHANGE pmdw017 name="input.g.pmdw017"
+            {<point name="input.g.pmdw017" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw032
+            #add-point:BEFORE FIELD pmdw032 name="input.b.pmdw032"
+            {<point name="input.b.pmdw032" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw032
+            
+            #add-point:AFTER FIELD pmdw032 name="input.a.pmdw032"
+            {<point name="input.a.pmdw032" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw032
+            #add-point:ON CHANGE pmdw032 name="input.g.pmdw032"
+            {<point name="input.g.pmdw032" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw018
+            #add-point:BEFORE FIELD pmdw018 name="input.b.pmdw018"
+            {<point name="input.b.pmdw018" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw018
+            
+            #add-point:AFTER FIELD pmdw018 name="input.a.pmdw018"
+            {<point name="input.a.pmdw018" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw018
+            #add-point:ON CHANGE pmdw018 name="input.g.pmdw018"
+            {<point name="input.g.pmdw018" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw033
+            #add-point:BEFORE FIELD pmdw033 name="input.b.pmdw033"
+            {<point name="input.b.pmdw033" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw033
+            
+            #add-point:AFTER FIELD pmdw033 name="input.a.pmdw033"
+            {<point name="input.a.pmdw033" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw033
+            #add-point:ON CHANGE pmdw033 name="input.g.pmdw033"
+            {<point name="input.g.pmdw033" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.pmdwdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdwdocno
+            #add-point:ON ACTION controlp INFIELD pmdwdocno name="input.c.pmdwdocno"
+            {<point name="input.c.pmdwdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdwseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdwseq
+            #add-point:ON ACTION controlp INFIELD pmdwseq name="input.c.pmdwseq"
+            {<point name="input.c.pmdwseq" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw008
+            #add-point:ON ACTION controlp INFIELD pmdw008 name="input.c.pmdw008"
+            {<point name="input.c.pmdw008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw037
+            #add-point:ON ACTION controlp INFIELD pmdw037 name="input.c.pmdw037"
+            {<point name="input.c.pmdw037" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw011
+            #add-point:ON ACTION controlp INFIELD pmdw011 name="input.c.pmdw011"
+            {<point name="input.c.pmdw011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw010
+            #add-point:ON ACTION controlp INFIELD pmdw010 name="input.c.pmdw010"
+            {<point name="input.c.pmdw010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw200
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw200
+            #add-point:ON ACTION controlp INFIELD pmdw200 name="input.c.pmdw200"
+            {<point name="input.c.pmdw200" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw030
+            #add-point:ON ACTION controlp INFIELD pmdw030 name="input.c.pmdw030"
+            {<point name="input.c.pmdw030" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw009
+            #add-point:ON ACTION controlp INFIELD pmdw009 name="input.c.pmdw009"
+            {<point name="input.c.pmdw009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw012
+            #add-point:ON ACTION controlp INFIELD pmdw012 name="input.c.pmdw012"
+            {<point name="input.c.pmdw012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw0121
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw0121
+            #add-point:ON ACTION controlp INFIELD pmdw0121 name="input.c.pmdw0121"
+            {<point name="input.c.pmdw0121" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw013
+            #add-point:ON ACTION controlp INFIELD pmdw013 name="input.c.pmdw013"
+            {<point name="input.c.pmdw013" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw014
+            #add-point:ON ACTION controlp INFIELD pmdw014 name="input.c.pmdw014"
+            {<point name="input.c.pmdw014" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw015
+            #add-point:ON ACTION controlp INFIELD pmdw015 name="input.c.pmdw015"
+            {<point name="input.c.pmdw015" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw023
+            #add-point:ON ACTION controlp INFIELD pmdw023 name="input.c.pmdw023"
+            {<point name="input.c.pmdw023" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw024
+            #add-point:ON ACTION controlp INFIELD pmdw024 name="input.c.pmdw024"
+            {<point name="input.c.pmdw024" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw025
+            #add-point:ON ACTION controlp INFIELD pmdw025 name="input.c.pmdw025"
+            {<point name="input.c.pmdw025" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw026
+            #add-point:ON ACTION controlp INFIELD pmdw026 name="input.c.pmdw026"
+            {<point name="input.c.pmdw026" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw027
+            #add-point:ON ACTION controlp INFIELD pmdw027 name="input.c.pmdw027"
+            {<point name="input.c.pmdw027" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw028
+            #add-point:ON ACTION controlp INFIELD pmdw028 name="input.c.pmdw028"
+            {<point name="input.c.pmdw028" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdwcomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdwcomp
+            #add-point:ON ACTION controlp INFIELD pmdwcomp name="input.c.pmdwcomp"
+            {<point name="input.c.pmdwcomp" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw019
+            #add-point:ON ACTION controlp INFIELD pmdw019 name="input.c.pmdw019"
+            {<point name="input.c.pmdw019" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw034
+            #add-point:ON ACTION controlp INFIELD pmdw034 name="input.c.pmdw034"
+            {<point name="input.c.pmdw034" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdwstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdwstus
+            #add-point:ON ACTION controlp INFIELD pmdwstus name="input.c.pmdwstus"
+            {<point name="input.c.pmdwstus" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw020
+            #add-point:ON ACTION controlp INFIELD pmdw020 name="input.c.pmdw020"
+            {<point name="input.c.pmdw020" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw038
+            #add-point:ON ACTION controlp INFIELD pmdw038 name="input.c.pmdw038"
+            {<point name="input.c.pmdw038" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw001
+            #add-point:ON ACTION controlp INFIELD pmdw001 name="input.c.pmdw001"
+            {<point name="input.c.pmdw001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw021
+            #add-point:ON ACTION controlp INFIELD pmdw021 name="input.c.pmdw021"
+            {<point name="input.c.pmdw021" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw039
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw039
+            #add-point:ON ACTION controlp INFIELD pmdw039 name="input.c.pmdw039"
+            {<point name="input.c.pmdw039" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw002
+            #add-point:ON ACTION controlp INFIELD pmdw002 name="input.c.pmdw002"
+            {<point name="input.c.pmdw002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw022
+            #add-point:ON ACTION controlp INFIELD pmdw022 name="input.c.pmdw022"
+            {<point name="input.c.pmdw022" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw004
+            #add-point:ON ACTION controlp INFIELD pmdw004 name="input.c.pmdw004"
+            {<point name="input.c.pmdw004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw029
+            #add-point:ON ACTION controlp INFIELD pmdw029 name="input.c.pmdw029"
+            {<point name="input.c.pmdw029" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw016
+            #add-point:ON ACTION controlp INFIELD pmdw016 name="input.c.pmdw016"
+            {<point name="input.c.pmdw016" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw031
+            #add-point:ON ACTION controlp INFIELD pmdw031 name="input.c.pmdw031"
+            {<point name="input.c.pmdw031" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw017
+            #add-point:ON ACTION controlp INFIELD pmdw017 name="input.c.pmdw017"
+            {<point name="input.c.pmdw017" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw032
+            #add-point:ON ACTION controlp INFIELD pmdw032 name="input.c.pmdw032"
+            {<point name="input.c.pmdw032" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw018
+            #add-point:ON ACTION controlp INFIELD pmdw018 name="input.c.pmdw018"
+            {<point name="input.c.pmdw018" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw033
+            #add-point:ON ACTION controlp INFIELD pmdw033 name="input.c.pmdw033"
+            {<point name="input.c.pmdw033" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmt860_04 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="apmt860_04.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="apmt860_04.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

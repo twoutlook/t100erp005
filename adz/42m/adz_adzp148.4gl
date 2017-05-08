@@ -1,0 +1,2520 @@
+#
+#+ 程式代碼......: adzp148
+#+ 設計人員......: Hiko
+# Prog. Version..: 'T6-12.01.21(00000)'     #
+#
+# Program name   : adzp148.4gl
+# Description    : 依據欄位屬性整批調整欄位型態
+# Memo           : 
+# Modify         : 2015/08/04                by Hiko   : 新建程式
+# Modify         : 2016/03/23                by Ernest : 加入異動程序
+# Modify         : 2017/02/20 170222-00006   by Ernest : 1.解除密碼限制
+#                                                        2.新增顯示欄位長度
+#                                                        3.新增提示訊息 : adz-00958(請注意 ! 本程式僅提供整批更改欄位型態的功能, 更動後將無法還原, 更動後的表格請記得簽出以利過單執行.)
+
+import os
+import security
+IMPORT util
+
+SCHEMA ds
+
+-- Ernest add begin
+PRIVATE TYPE T_COLUMN_INFO RECORD
+               check_box   VARCHAR(1),  
+               dzea003     LIKE dzea_t.dzea003,   #模組代號
+               dzeb001     LIKE dzea_t.dzea001,   #表格編號
+               dzeal003    LIKE dzeal_t.dzeal003, #表格名稱
+               dzeb002     LIKE dzeb_t.dzeb002,   #欄位編號
+               dzebl003    LIKE dzebl_t.dzebl003, #欄位名稱
+               dzeb006     LIKE dzeb_t.dzeb006,   #欄位型態
+               type_length VARCHAR(100)          #型態長度
+             END RECORD 
+             
+PRIVATE TYPE T_GZTD_INFO RECORD
+               gztd001  LIKE gztd_t.gztd001, #欄位屬性編號
+               gztd003  LIKE gztd_t.gztd003, #資料型態
+               gztd008  LIKE gztd_t.gztd008  #長度
+             END RECORD 
+
+PUBLIC TYPE T_DB_CONNECTION RECORD
+              db_source        VARCHAR(100),
+              db_username      VARCHAR(100),
+              db_password      VARCHAR(100),
+              db_schema        VARCHAR(100),
+              db_sid           VARCHAR(100),
+              db_sql_filename  VARCHAR(1024),
+              db_version       VARCHAR(100)
+            END RECORD
+
+PUBLIC TYPE T_TABLE_IN_DB_TYPE RECORD
+              tidt_db          VARCHAR(20),
+              tidt_object_type VARCHAR(20)
+            END RECORD             
+
+PUBLIC TYPE T_ALTER_INFO RECORD
+              ai_TABLE_NAME    VARCHAR(50),
+              ai_COLUMN_NAME   VARCHAR(50),
+              ai_ORIGINAL_TYPE VARCHAR(10),
+              ai_ALTER_TYPE    VARCHAR(10),
+              ai_ORIG_DB_TYPE  VARCHAR(10),
+              ai_ALTER_DB_TYPE VARCHAR(10),
+              ai_TEMP_TABLE    VARCHAR(50) 
+            END RECORD
+
+PUBLIC TYPE T_PUT_GET_FILE_PARA RECORD
+              SERVER_FILE_PATH  VARCHAR(1024),
+              SERVER_FILE_NAME  VARCHAR(1024),
+              CLIENT_FILE_PATH  VARCHAR(1024),
+              CLIENT_FILE_NAME  VARCHAR(1024)
+            END RECORD                         
+
+PUBLIC TYPE T_FILE_DIALOG RECORD
+              PATH       VARCHAR(1024),
+              TYPE_DESC  VARCHAR(1024),
+              TYPE_LIST  VARCHAR(50),
+              CAPTION    VARCHAR(1024)
+            END RECORD             
+
+PUBLIC TYPE T_DZHM_T RECORD
+              DZHM001	  LIKE DZHM_T.DZHM001,	
+              DZHM002	  LIKE DZHM_T.DZHM002,	
+              DZHM003	  LIKE DZHM_T.DZHM003,	
+              DZHM004	  LIKE DZHM_T.DZHM004,	
+              DZHM005	  LIKE DZHM_T.DZHM005,	
+              DZHMCRTID	LIKE DZHM_T.DZHMCRTID,
+              DZHMCRTDT	LIKE DZHM_T.DZHMCRTDT,
+              DZHMMODID	LIKE DZHM_T.DZHMMODID,
+              DZHMMODDT	LIKE DZHM_T.DZHMMODDT
+            END RECORD 
+            
+CONSTANT cs_error_tag   STRING = "[ERROR]"
+CONSTANT cs_warning_tag STRING = "[WARNING]"
+CONSTANT cs_message_tag STRING = "[MESSAGE]"
+CONSTANT cs_success_tag STRING = "[SUCCESS]" 
+CONSTANT cs_begin_tag   STRING = "[BEGIN]"
+CONSTANT cs_end_tag     STRING = "[END]"
+
+CONSTANT cs_show_type_all    STRING = "rg_show_all"
+CONSTANT cs_show_type_table  STRING = "rg_show_table"
+CONSTANT cs_show_type_column STRING = "rg_show_column"
+
+CONSTANT cs_user_tiptop STRING = "tiptop"
+CONSTANT cs_user_topstd STRING = "topstd"
+
+CONSTANT cs_null_value STRING = "!@#$%"
+CONSTANT cs_divide STRING = "|"
+CONSTANT cs_dgenv_customize VARCHAR = "c"  
+
+CONSTANT cs_response_yes STRING = "yes"    
+CONSTANT cs_response_no  STRING = "no" 
+
+CONSTANT cs_log_reserve_days STRING = "30"
+CONSTANT cs_db_log_name  STRING = "adzp148_log"
+
+CONSTANT cs_master_db   STRING = "ds"
+CONSTANT cs_master_user STRING = "ds"
+CONSTANT cs_default_language STRING = "zh_TW"
+
+#Logs
+CONSTANT cs_logs_level_information STRING = "Information"
+CONSTANT cs_logs_level_warning     STRING = "Warning"
+CONSTANT cs_logs_level_error       STRING = "Error"
+
+CONSTANT cs_logs_type_alter_data_type STRING = "AlterDataType"
+
+DEFINE ms_all_log   STRING,
+       ms_line_log  STRING,            
+       ms_show_type STRING,
+       ms_dgenv     STRING
+-- Ernest add end
+
+GLOBALS "../../cfg/top_global.inc"
+
+MAIN
+   DEFINE ls_4fd_path STRING,
+          lw_window   ui.Window,
+          lf_form     ui.Form,
+          ls_cfg_path STRING,
+          ls_4st_path STRING,
+          ls_img_path STRING
+
+   OPTIONS FIELD ORDER FORM, INPUT WRAP
+
+   CALL cl_tool_init()
+   CALL adzp148_check_arguments()
+
+   OPEN WINDOW w_adzp148 WITH FORM cl_ap_formpath("adz", g_code)
+
+   CLOSE WINDOW screen
+
+   CALL cl_ui_wintitle(1) #工具抬頭名稱
+
+   CALL cl_load_4ad_interface(NULL)
+
+   LET lw_window = ui.Window.getCurrent()
+   LET lf_form = lw_window.getForm()
+   LET ls_img_path = os.Path.join(os.Path.join(FGL_GETENV("RES"), "img"), "ui")
+   CALL lw_window.setImage(os.Path.join(os.Path.join(ls_img_path, "logo"), "dsc_logo.ico"))
+
+   LET ls_cfg_path = os.Path.join(FGL_GETENV("ERP"), "cfg")
+   LET ls_4st_path = os.Path.join(os.Path.join(os.Path.join(ls_cfg_path, "4st"), g_lang), "designer.4st")
+   CALL ui.Interface.loadStyles(ls_4st_path)
+
+   CALL adzp148_init()
+
+   CALL adzp148_ui_dialog()
+
+   CLOSE WINDOW w_adzp148
+END MAIN
+
+PRIVATE FUNCTION adzp148_init()
+
+  --CALL cl_set_combo_scc("cbo_from_genero_type", "247") -- Ernest marked 
+  --CALL cl_set_combo_scc("cbo_to_genero_type", "247") -- Ernest marked
+
+  LET ms_dgenv = FGL_GETENV("DGENV")
+
+  #170222-00006 begin
+  INITIALIZE g_errparam TO NULL
+  LET g_errparam.type  = 0
+  LET g_errparam.code  = "adz-00958"
+  LET g_errparam.popup = TRUE
+  CALL cl_err()
+  #170222-00006 end
+
+END FUNCTION
+
+PRIVATE FUNCTION adzp148_check_arguments()
+DEFINE 
+  ls_arg_key   STRING
+
+  --LET ls_arg_key = NVL(ARG_VAL(2),cs_null_value)
+  
+  #LET ls_arg_key = ARG_VAL(2)
+
+  #IF NOT sadzp007_util_chk_eff_date(ls_arg_key CLIPPED) THEN
+    {
+    #DISPLAY cs_error_tag,"執行驗證碼檢核失敗, 無法執行!!"
+    LET g_errparam.code = "adz-00836"
+    LET g_errparam.popup = TRUE
+    CALL cl_err()
+    }
+  #  EXIT PROGRAM -1
+  #END IF
+
+  {  
+  IF (g_account <> cs_user_tiptop) OR (g_account <> cs_user_topstd)  THEN
+    #DISPLAY cs_error_tag,g_account," 非認可執行帳號, 無法執行!!"
+    LET g_errparam.replace[1] = g_account
+    LET g_errparam.code = "adz-00837"
+    LET g_errparam.popup = TRUE
+    CALL cl_err()
+    EXIT PROGRAM -1
+  END IF
+  }
+  
+END FUNCTION
+
+PRIVATE FUNCTION adzp148_ui_dialog()
+   #底下為畫面變數.
+   DEFINE ls_memo STRING
+   DEFINE l_from_prop        LIKE gztd_t.gztd001,
+          l_from_genero_type LIKE gztd_t.gztd009,
+          l_from_db_type     LIKE gztd_t.gztd003,
+          l_from_len         LIKE gztd_t.gztd008,
+          l_to_prop          LIKE gztd_t.gztd001,
+          l_to_genero_type   LIKE gztd_t.gztd009,
+          l_to_db_type       LIKE gztd_t.gztd003,
+          l_to_len           LIKE gztd_t.gztd008,
+          ls_old_to_len      LIKE gztd_t.gztd008, -- Ernest add
+          ls_new_to_len      LIKE gztd_t.gztd008, -- Ernest add 
+          lo_curr_window     ui.Window, -- Ernest add
+          lo_curr_form       ui.Form -- Ernest add   
+   #底下為清單的變數.
+   DEFINE li_tbl_cnt       SMALLINT,
+          li_col_cnt       SMALLINT,
+          ls_sql           STRING,
+          ls_sql_cond      STRING,
+          li_idx           SMALLINT,
+          li_loop          INTEGER, -- Ernest add
+          ls_filter        STRING, -- Ernest add
+          la_dzeb          DYNAMIC ARRAY OF T_COLUMN_INFO, -- Ernest modify
+          lo_log_file      T_PUT_GET_FILE_PARA, -- Ernest add 
+          lo_file_dialog   T_FILE_DIALOG, -- Ernest add
+          ls_quest_result  STRING, -- Ernest add
+          ls_separator     STRING, -- Ernest add
+          ls_log_full_name STRING,  -- Ernest add
+          ls_log_number    STRING
+          
+   #底下為檢查型態與長度是否合法的變數.
+   DEFINE ls_from_len     STRING,
+          ls_to_len       STRING,
+          li_comma_idx    SMALLINT,
+          li_from_int     SMALLINT,
+          li_from_decimal SMALLINT,
+          li_to_int       SMALLINT,
+          li_to_decimal   SMALLINT,
+          lb_continue     BOOLEAN,
+          ls_err_code     STRING
+   #底下為真正要去異動的變數.
+   DEFINE lo_from_gztd T_GZTD_INFO, -- Ernest modify
+          lo_to_gztd   T_GZTD_INFO, -- Ernest modify
+          lb_result    BOOLEAN,
+          ls_err_msg   STRING,
+          ls_all_none  VARCHAR(1)  -- Ernest modify
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         INPUT l_from_prop,l_to_prop,l_to_genero_type,l_to_len,ls_all_none,ls_filter,ms_show_type FROM edt_from_prop,edt_to_prop,cbo_to_genero_type,edt_to_len,chk_all_none,ed_filter,rg_show_type
+
+            BEFORE FIELD edt_to_len
+              CALL la_dzeb.clear() 
+              LET ls_all_none = "N"
+              
+            BEFORE FIELD ed_filter
+              CALL la_dzeb.clear() 
+              LET ls_all_none = "N"
+              
+            AFTER FIELD edt_to_len
+              LET ls_new_to_len = l_to_len
+            
+            ON ACTION controlp INFIELD edt_from_prop
+               LET g_qryparam.state = "i"
+               CALL q_gztd001_1()
+               LET l_from_prop = g_qryparam.return1 CLIPPED
+               LET l_from_genero_type = g_qryparam.return3 CLIPPED
+               LET l_from_db_type = g_qryparam.return4 CLIPPED
+               LET l_from_len = g_qryparam.return5 CLIPPED
+               DISPLAY l_from_prop TO edt_from_prop
+               DISPLAY g_qryparam.return2 TO lbl_from_prop_desc
+               DISPLAY l_from_genero_type TO cbo_from_genero_type
+               DISPLAY l_from_db_type TO edt_from_db_type
+               DISPLAY l_from_len TO edt_from_len
+
+               CALL la_dzeb.clear()
+
+            AFTER FIELD edt_from_prop
+               IF l_from_prop IS NOT NULL THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = l_from_prop
+                  IF cl_chk_exist_and_ref_val("v_gztd001") THEN
+                     LET l_from_genero_type = g_chkparam.return2
+                     LET l_from_db_type = g_chkparam.return3
+                     LET l_from_len = g_chkparam.return4
+                     DISPLAY g_chkparam.return1 TO lbl_from_prop_desc
+                     DISPLAY l_from_genero_type TO cbo_from_genero_type
+                     DISPLAY l_from_db_type TO edt_from_db_type
+                     DISPLAY l_from_len TO edt_from_len
+                  ELSE
+                     LET l_from_genero_type = ""
+                     LET l_from_db_type = ""
+                     LET l_from_len = ""
+                     CALL la_dzeb.clear()
+
+                     DISPLAY "" TO lbl_from_prop_desc
+                     DISPLAY "" TO cbo_from_genero_type
+                     DISPLAY "" TO edt_from_db_type
+                     DISPLAY "" TO edt_from_len
+                     
+                     DISPLAY "" TO lbl_table_cnt
+                     DISPLAY "" TO lbl_column_cnt
+
+                     NEXT FIELD CURRENT
+                  END IF
+               ELSE
+                 LET l_from_genero_type = ""
+                 LET l_from_db_type = ""
+                 LET l_from_len = ""
+                 CALL la_dzeb.clear()
+                 DISPLAY "" TO lbl_from_prop_desc
+                 DISPLAY "" TO cbo_from_genero_type
+                 DISPLAY "" TO edt_from_db_type
+                 DISPLAY "" TO edt_from_len
+                 
+                 DISPLAY "" TO lbl_table_cnt
+                 DISPLAY "" TO lbl_column_cnt
+               END IF
+               
+            ON ACTION btn_show
+               -- Ernest add begin
+               LET ls_new_to_len = DIALOG.getFieldBuffer("formonly.edt_to_len") 
+               IF NVL(ls_old_to_len,"0") <> NVL(ls_new_to_len,"0") THEN
+                 LET ls_quest_result = adzp148_msg_alert_box("Length modify", "adz-00844", "", 0)
+                 IF ls_quest_result = cs_response_no THEN
+                   LET l_to_len = ls_old_to_len
+                   CONTINUE DIALOG
+                 ELSE   
+                   LET ls_old_to_len = ls_new_to_len
+                 END IF
+               END IF 
+               
+               LABEL _btn_show:
+               
+               LET ls_all_none = "N"
+               
+               -- Ernest add end
+               
+               IF ls_filter.trim() IS NOT NULL THEN
+                 LET ls_sql_cond = " AND dzeb002 like '%",ls_filter,"%' " 
+               ELSE
+                 LET ls_sql_cond = "" 
+               END IF
+               
+               #取得符合屬性的Table數量.
+               LET ls_sql = "SELECT COUNT(DISTINCT dzea001) cnts     ",
+                            "  FROM dzea_t                           ", 
+                            " INNER JOIN dzeb_t ON dzeb001 = dzea001 ",
+                            " WHERE dzeb006 = '",l_from_prop,"'      ",
+                            ls_sql_cond
+               
+               PREPARE lpre_dzea_count FROM ls_sql
+               DECLARE lcur_dzea_count CURSOR FOR lpre_dzea_count
+               OPEN lcur_dzea_count
+               FETCH lcur_dzea_count INTO li_tbl_cnt
+               CLOSE lcur_dzea_count
+               FREE lcur_dzea_count
+               FREE lpre_dzea_count
+               
+               DISPLAY li_tbl_cnt TO lbl_table_cnt
+               
+               #取得符合屬性的欄位數量.
+               LET ls_sql = "SELECT COUNT(*) cnts                    ",
+                            "  FROM dzeb_t                           ",
+                            " INNER JOIN dzea_t ON dzea001 = dzeb001 ",
+                            " WHERE dzeb006 = '",l_from_prop,"'      ",
+                            ls_sql_cond
+
+               PREPARE lpre_dzeb_count FROM ls_sql
+               DECLARE lcur_dzeb_count CURSOR FOR lpre_dzeb_count
+               OPEN lcur_dzeb_count
+               FETCH lcur_dzeb_count INTO li_col_cnt
+               CLOSE lcur_dzeb_count
+               FREE lcur_dzeb_count
+               FREE lpre_dzeb_count
+               
+               DISPLAY li_col_cnt TO lbl_column_cnt
+               
+               CALL la_dzeb.clear()
+
+               CASE
+                 WHEN ms_show_type = cs_show_type_all 
+                   LET ls_sql = "SELECT 'N' check_box,dzea003,dzeb001,dzeal003,dzeb002,dzebl003,   ",
+                                "       dzeb006,                                                   ",#170222-00006
+                                "       (gztd003||case                                             ",#170222-00006
+                                "                   WHEN trim(gztd008) is null then ''             ",#170222-00006
+                                "                   else '('||gztd008||')'                         ",#170222-00006
+                                "                 end) type_length                                 ",#170222-00006
+                                "  FROM dzeb_t                                                     ",
+                                "  LEFT JOIN dzebl_t ON dzebl001=dzeb002 AND dzebl002='",g_lang,"' ",
+                                " INNER JOIN dzea_t ON dzea001=dzeb001                             ",
+                                "  LEFT JOIN dzeal_t ON dzeal001=dzea001 AND dzeal002='",g_lang,"' ",
+                                "  LEFT JOIN gztd_t ON gztd001=dzeb006                             ", #170222-00006
+                                " WHERE dzeb006='",l_from_prop CLIPPED,"'                          ",
+                                ls_sql_cond,
+                                " ORDER BY dzeb001,dzeb002"
+                 WHEN ms_show_type = cs_show_type_table
+                   LET ls_sql = "SELECT distinct 'N' check_box,dzea003,dzeb001,dzeal003,'' dzeb002,'' dzebl003, ",
+                                "       '' dzeb006, '' type_length                                 ",#170222-00006
+                                "  FROM dzeb_t                                                     ",
+                                "  LEFT JOIN dzebl_t ON dzebl001=dzeb002 AND dzebl002='",g_lang,"' ",
+                                " INNER JOIN dzea_t ON dzea001=dzeb001                             ",
+                                "  LEFT JOIN dzeal_t ON dzeal001=dzea001 AND dzeal002='",g_lang,"' ",
+                                " WHERE dzeb006='",l_from_prop CLIPPED,"'                          ",
+                                ls_sql_cond,
+                                " ORDER BY dzeb001,dzeb002"
+                 WHEN ms_show_type = cs_show_type_column
+                   LET ls_sql = "SELECT distinct 'N' check_box,dzea003,'' dzeb001,'' dzeal003,dzeb002,dzebl003, ",
+                                "       dzeb006,                                                   ",#170222-00006
+                                "       (gztd003||case                                             ",#170222-00006
+                                "                   WHEN trim(gztd008) is null then ''             ",#170222-00006
+                                "                   else '('||gztd008||')'                         ",#170222-00006
+                                "                 end) type_length                                 ",#170222-00006
+                                "  FROM dzeb_t                                                     ",
+                                "  LEFT JOIN dzebl_t ON dzebl001=dzeb002 AND dzebl002='",g_lang,"' ",
+                                " INNER JOIN dzea_t ON dzea001=dzeb001                             ",
+                                "  LEFT JOIN dzeal_t ON dzeal001=dzea001 AND dzeal002='",g_lang,"' ",
+                                "  LEFT JOIN gztd_t ON gztd001=dzeb006                             ", #170222-00006
+                                " WHERE dzeb006='",l_from_prop CLIPPED,"'                          ",
+                                ls_sql_cond,
+                                " ORDER BY dzeb001,dzeb002"
+               END CASE 
+               
+               PREPARE dzeb_prep FROM ls_sql
+               DECLARE dzeb_curs CURSOR FOR dzeb_prep
+               LET li_idx = 1
+               FOREACH dzeb_curs INTO la_dzeb[li_idx].*
+                  LET li_idx = li_idx + 1
+               END FOREACH
+               FREE dzeb_prep
+               FREE dzeb_curs
+               
+               CALL la_dzeb.deleteElement(li_idx)
+             
+            ON ACTION controlp INFIELD edt_to_prop
+               LET g_qryparam.state = "i"
+               CALL q_gztd001_1()
+               LET l_to_prop = g_qryparam.return1 CLIPPED
+               LET l_to_genero_type = g_qryparam.return3 CLIPPED
+               LET l_to_db_type = g_qryparam.return4 CLIPPED
+               LET l_to_len = g_qryparam.return5 CLIPPED
+               LET ls_old_to_len = l_to_len -- Ernest Add
+               DISPLAY l_to_prop TO edt_to_prop
+               DISPLAY g_qryparam.return2 TO lbl_to_prop_desc
+               DISPLAY l_to_genero_type TO cbo_to_genero_type
+               DISPLAY l_to_db_type TO edt_to_db_type
+               DISPLAY l_to_len TO edt_to_len
+               NEXT FIELD edt_to_prop 
+      
+            AFTER FIELD edt_to_prop
+               IF l_to_prop IS NOT NULL THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = l_to_prop
+                  IF cl_chk_exist_and_ref_val("v_gztd001") THEN
+                     LET l_to_genero_type = g_chkparam.return2
+                     LET l_to_db_type = g_chkparam.return3
+                     LET l_to_len = g_chkparam.return4
+                     LET ls_old_to_len = l_to_len -- Ernest Add
+                     DISPLAY g_chkparam.return1 TO lbl_to_prop_desc
+                     DISPLAY l_to_genero_type TO cbo_to_genero_type
+                     DISPLAY l_to_db_type TO edt_to_db_type
+                     DISPLAY l_to_len TO edt_to_len
+                  ELSE
+                     LET l_to_genero_type = ""
+                     LET l_to_db_type = ""
+                     LET l_to_len = ""
+                     DISPLAY "" TO lbl_to_prop_desc
+                     DISPLAY "" TO cbo_to_genero_type
+                     DISPLAY "" TO edt_to_db_type
+                     DISPLAY "" TO edt_to_len
+                     CALL la_dzeb.clear()
+      
+                     NEXT FIELD CURRENT
+                  END IF
+               ELSE    
+                 LET l_to_genero_type = ""
+                 LET l_to_db_type = ""
+                 LET l_to_len = ""
+                 CALL la_dzeb.clear()
+                 DISPLAY "" TO lbl_to_prop_desc
+                 DISPLAY "" TO cbo_to_genero_type
+                 DISPLAY "" TO edt_to_db_type
+                 DISPLAY "" TO edt_to_len
+               END IF
+               
+               
+            ON CHANGE cbo_to_genero_type
+               LET l_to_len = ""
+               CASE
+                  WHEN l_to_genero_type="BYTE"
+                     LET l_to_db_type = "blob"
+                  WHEN l_to_genero_type="TEXT"
+                     LET l_to_db_type = "clob"
+                  WHEN l_to_genero_type="CHARACTER"
+                     LET l_to_db_type = "varchar2"
+                     LET l_to_len = "10"
+                  WHEN l_to_genero_type="DATETIME" OR l_to_genero_type="DATE"
+                     LET l_to_db_type = "date"
+                  WHEN l_to_genero_type="INTEGER" OR l_to_genero_type="DECIMAL"
+                     LET l_to_db_type = "number"
+                     LET l_to_len = "10,0"
+                  WHEN l_to_genero_type="SMALLINT"
+                     LET l_to_db_type = "number"
+                     LET l_to_len = "5,0"
+               END CASE
+
+            ON CHANGE chk_all_none
+              CASE 
+                WHEN ls_all_none = "Y"
+                  FOR li_loop = 1 TO la_dzeb.getLength()
+                    LET la_dzeb[li_loop].check_box = "Y"
+                  END FOR  
+                WHEN ls_all_none = "N" 
+                  FOR li_loop = 1 TO la_dzeb.getLength()
+                    LET la_dzeb[li_loop].check_box = "N"
+                  END FOR  
+              END CASE 
+
+              DISPLAY l_to_db_type TO edt_to_db_type
+              DISPLAY l_to_len TO edt_to_len
+            
+            ON CHANGE rg_show_type
+              LET ls_all_none = "N"
+              LET lo_curr_window = ui.Window.getCurrent()
+              LET lo_curr_form   = lo_curr_window.getForm()
+              CASE 
+                WHEN ms_show_type = cs_show_type_all
+                  CALL DIALOG.setActionActive("btn_run",TRUE)
+                  CALL lo_curr_form.setElementHidden("formonly.chk_all_none",FALSE) 
+                  CALL lo_curr_form.setFieldHidden("ed_check",FALSE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzea001",FALSE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzeal003",FALSE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzeb002",FALSE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzebl003",FALSE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzeb006",FALSE) #170222-00006 
+                  CALL lo_curr_form.setFieldHidden("type_length",FALSE) #170222-00006
+                WHEN ms_show_type = cs_show_type_table
+                  CALL dialog.setActionActive("btn_run",FALSE) 
+                  CALL lo_curr_form.setElementHidden("formonly.chk_all_none",TRUE) 
+                  CALL lo_curr_form.setFieldHidden("ed_check",TRUE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzea001",FALSE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzeal003",FALSE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzeb002",TRUE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzebl003",TRUE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzeb006",TRUE) #170222-00006
+                  CALL lo_curr_form.setFieldHidden("type_length",TRUE) #170222-00006
+                WHEN ms_show_type = cs_show_type_column
+                  CALL dialog.setActionActive("btn_run",FALSE) 
+                  CALL lo_curr_form.setElementHidden("formonly.chk_all_none",TRUE) 
+                  CALL lo_curr_form.setFieldHidden("ed_check",TRUE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzea001",TRUE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzeal003",TRUE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzeb002",FALSE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzebl003",FALSE) 
+                  CALL lo_curr_form.setFieldHidden("lbl_dzeb006",FALSE) #170222-00006
+                  CALL lo_curr_form.setFieldHidden("type_length",FALSE) #170222-00006
+              END CASE 
+              GOTO _btn_show
+            
+         END INPUT
+      
+         #DISPLAY ARRAY la_dzeb TO s_detail.*
+         #END DISPLAY
+
+         INPUT ARRAY la_dzeb FROM s_detail.* ATTRIBUTE(WITHOUT DEFAULTS)
+         END INPUT         
+      
+         ON ACTION btn_run
+            LET lb_continue = TRUE
+            IF (cl_null(l_from_prop) OR cl_null(l_from_db_type)) OR
+               (cl_null(l_to_prop) OR cl_null(l_to_db_type)) OR 
+               la_dzeb.getLength()=0 THEN
+               LET lb_continue = FALSE
+               INITIALIZE g_errparam TO NULL
+               LET ls_err_code = "adz-00677" #畫面資料不齊全, 無法進行轉換.
+            ELSE
+               CASE
+                  WHEN (l_to_genero_type="BYTE" OR l_to_genero_type="TEXT") OR
+                       (l_from_genero_type="BYTE" OR l_from_genero_type="TEXT")
+                     LET lb_continue = FALSE
+                     INITIALIZE g_errparam TO NULL
+                     LET ls_err_code = "adz-00665" #blob,clob不可以和其他型態互轉
+                  WHEN l_to_genero_type="DATETIME" OR l_to_genero_type="DATE"
+                     IF NOT (l_from_genero_type="DATETIME" OR l_from_genero_type="DATE") THEN
+                        LET lb_continue = FALSE
+                        INITIALIZE g_errparam TO NULL
+                        LET ls_err_code = "adz-00666" #日期型態不可以和其他型態互轉
+                     END IF
+                  WHEN l_to_genero_type="CHARACTER" OR l_to_genero_type="INTEGER" OR l_to_genero_type="DECIMAL" OR l_to_genero_type="SMALLINT"
+                     IF NOT (l_from_genero_type="CHARACTER" OR l_from_genero_type="INTEGER" OR l_from_genero_type="DECIMAL" OR l_from_genero_type="SMALLINT") THEN
+                        LET lb_continue = FALSE
+                        INITIALIZE g_errparam TO NULL
+                        LET ls_err_code = "adz-00667" #%1型態不可以轉換為%2型態
+                        LET g_errparam.replace[1] = l_from_genero_type
+                        LET g_errparam.replace[2] = l_to_genero_type
+                     ELSE    
+                        LET ls_to_len = l_to_len
+                        LET ls_from_len = l_from_len
+                        IF l_to_genero_type="CHARACTER" THEN
+                           LET li_to_int = l_to_len
+                           LET li_to_decimal = 0
+                        ELSE
+                           LET li_comma_idx = ls_to_len.getIndexOf(",", 1)
+                           LET li_to_int = ls_to_len.subString(1, li_comma_idx-1)
+                           LET li_to_decimal = ls_to_len.subString(li_comma_idx+1, ls_to_len.getLength())
+                        END IF
+               
+                        IF l_from_genero_type="CHARACTER" THEN
+                           LET li_from_int = l_from_len
+                           LET li_from_decimal = 0
+                        ELSE
+                           LET li_comma_idx = ls_from_len.getIndexOf(",", 1)
+                           LET li_from_int = ls_from_len.subString(1, li_comma_idx-1)
+                           LET li_from_decimal = ls_from_len.subString(li_comma_idx+1, ls_from_len.getLength())
+                        END IF
+               
+                        #db_type只有兩種:varchar2和number, 所以會比較好處理.
+                        IF l_to_db_type=l_from_db_type THEN
+                           IF (li_to_int-li_to_decimal)<(li_from_int-li_from_decimal) THEN
+                              LET lb_continue = FALSE
+                              INITIALIZE g_errparam TO NULL
+                              LET ls_err_code = "adz-00668" #目標型態長度小於來源型態長度
+                           ELSE
+                              IF (li_to_decimal<li_from_decimal) THEN
+                                 LET lb_continue = FALSE
+                                 INITIALIZE g_errparam TO NULL
+                                 LET ls_err_code = "adz-00669" #目標型態小數長度小於來源型態小數長度
+                              END IF
+                           END IF
+                        ELSE
+                           IF (l_from_genero_type<>"CHARACTER") AND (l_to_genero_type="CHARACTER") THEN
+                              #數字轉字串的時候, 字串的長度還要加上小數點(+1)才可以當作比較基礎.
+                              IF li_from_decimal>0 THEN
+                                 LET li_from_int = li_from_int+1 
+                              END IF
+               
+                              IF li_to_int<(li_from_int) THEN
+                                 LET lb_continue = FALSE
+                                 INITIALIZE g_errparam TO NULL
+                                 LET ls_err_code = "adz-00668" #目標型態長度小於來源型態長度
+                              END IF
+                           ELSE
+                              IF li_to_int<li_from_int THEN #varchar2和number轉換的時候, 只需要判斷目標長度是否小於來源長度即可.
+                                 LET lb_continue = FALSE
+                                 INITIALIZE g_errparam TO NULL
+                                 LET ls_err_code = "adz-00668" #目標型態長度小於來源型態長度
+                              END IF
+                           END IF
+                        END IF
+                     END IF
+               END CASE
+            END IF
+      
+            IF FGL_GETENV("T100DEBUG")="9" THEN
+               DISPLAY "li_to_int = ",li_to_int
+               DISPLAY "li_to_decimal = ",li_to_decimal
+               DISPLAY "li_from_int = ",li_from_int
+               DISPLAY "li_fromdecimal = ",li_from_decimal
+            END IF
+      
+            IF lb_continue THEN
+               #底下1,2步驟需要包在同一個Transaction.
+               #1.先異動gztd_t的資料.
+               #2.再更新r.t的資料.
+               #3.最後再alter table.
+               LET lo_from_gztd.gztd001 = l_from_prop
+               LET lo_from_gztd.gztd003 = l_from_db_type
+               LET lo_from_gztd.gztd008 = l_from_len
+               
+               LET lo_to_gztd.gztd001 = l_to_prop
+               LET lo_to_gztd.gztd003 = l_to_db_type
+               LET lo_to_gztd.gztd008 = l_to_len
+
+               -- Ernest Add begin
+               #可能造成資料毀損是否已經備份?
+               LET ls_quest_result = adzp148_msg_alert_box("Backup data ?", "adz-00838", "", 0)
+               IF ls_quest_result = cs_response_yes THEN  
+                 #執行過程中請勿執行相關程式避免鎖定,是否確認執行 ?
+                 LET ls_quest_result = adzp148_msg_alert_box("Alter data type", "adz-00839", "", 0)
+                 IF ls_quest_result = cs_response_yes THEN  
+                   #開始異動
+                   LET ms_all_log = ""
+                   LET ls_separator = os.Path.separator()
+                   CALL adzp148_execute_alter(lo_from_gztd.*, lo_to_gztd.*,la_dzeb) RETURNING lb_result,lo_log_file.*
+                   LET ls_log_full_name = lo_log_file.SERVER_FILE_PATH,ls_separator,lo_log_file.SERVER_FILE_NAME
+                   CALL adzp148_log_write_log(cs_logs_level_information,cs_logs_type_alter_data_type,ls_log_full_name) RETURNING lb_result,ls_log_number
+                   LET ms_line_log = cs_message_tag,"Log number : ",ls_log_number
+                   CALL adzp148_set_log_message(ms_line_log)
+                   CALL la_dzeb.clear()
+                   LET ls_all_none = "N"
+                   LET ls_err_msg = ms_all_log.toUpperCase() #170222-00006
+                   IF ls_err_msg.getIndexOf(cs_error_tag,1) > 1 THEN #170222-00006
+                     CALL adzp148_msg_show_error("ERROR", "adz-00097", "", 0) #170222-00006
+                   ELSE #170222-00006
+                     CALL adzp148_msg_show_info("Finished", "adz-00840", "", 0)
+                   END IF #170222-00006
+                   DISPLAY ms_all_log TO txt_log
+                 END IF  
+               END IF                 
+               -- Ernest Add end
+               
+            ELSE
+               LET g_errparam.code = ls_err_code
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET lb_continue = TRUE #還原初始值.
+            END IF      
+
+         ON ACTION btn_log_export
+           CALL adzp148_dlg_set_dialog_parameter("","",'*.log',"Save log to ...") RETURNING lo_file_dialog.*
+           CALL adzp148_dlg_save_dir_dialog(lo_file_dialog.*) RETURNING lo_log_file.CLIENT_FILE_PATH
+           LET lo_log_file.CLIENT_FILE_NAME = lo_log_file.SERVER_FILE_NAME
+           CALL adzp148_dlg_set_putfile_parameter(lo_log_file.SERVER_FILE_PATH,lo_log_file.SERVER_FILE_NAME,lo_log_file.CLIENT_FILE_PATH,lo_log_file.CLIENT_FILE_NAME) RETURNING lo_log_file.*
+           IF NVL(lo_log_file.CLIENT_FILE_PATH,cs_null_value) <> cs_null_value THEN
+             CALL adzp148_log_save_to_client(lo_log_file.*)
+           END IF   
+      
+         ON ACTION CLOSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         BEFORE DIALOG
+            LET g_action_choice = ""
+            LET ms_show_type = cs_show_type_all
+
+            LET ls_memo = cl_getmsg('adz-00671', g_lang)
+            LET ls_memo = ls_memo,"\n", cl_getmsg('adz-00672', g_lang)
+            LET ls_memo = ls_memo,"\n", cl_getmsg('adz-00673', g_lang)
+            LET ls_memo = ls_memo,"\n", cl_getmsg('adz-00674', g_lang)
+            LET ls_memo = ls_memo,"\n", cl_getmsg('adz-00675', g_lang)
+            DISPLAY ls_memo TO txt_memo
+
+            DISPLAY "0" TO lbl_table_cnt
+            DISPLAY "0" TO lbl_column_cnt
+      
+      END DIALOG
+
+      IF g_action_choice="exit" THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+
+END FUNCTION
+
+-- Ernest add begin
+
+FUNCTION adzp148_set_log_message(p_log)
+DEFINE
+  p_log      STRING
+
+  DISPLAY p_log
+  
+  LET ms_all_log = ms_all_log,"\n",
+                   p_log
+                   
+END FUNCTION
+ 
+PRIVATE FUNCTION adzp148_execute_alter(p_from_gztd, p_to_gztd, p_dzeb)
+DEFINE
+  p_from_gztd T_GZTD_INFO, 
+  p_to_gztd   T_GZTD_INFO,
+  p_dzeb      DYNAMIC ARRAY OF T_COLUMN_INFO
+DEFINE  
+  lo_from_gztd   T_GZTD_INFO, 
+  lo_to_gztd     T_GZTD_INFO,
+  lo_dzeb        DYNAMIC ARRAY OF T_COLUMN_INFO,
+  lo_ALTER_INFO  T_ALTER_INFO,
+  li_loop        INTEGER,
+  li_rec_checked INTEGER,
+  lb_result      BOOLEAN,
+  ls_message     STRING,
+  ls_all_message STRING,
+  ls_log_file    STRING,
+  ls_separator   STRING,
+  lb_success     BOOLEAN
+DEFINE
+  lb_return  BOOLEAN,
+  lo_return  T_PUT_GET_FILE_PARA
+  
+  LET lo_from_gztd.* = p_from_gztd.*
+  LET lo_to_gztd.*   = p_to_gztd.*
+  LET lo_dzeb        = p_dzeb
+
+  LET li_rec_checked = 0
+  LET lb_success = TRUE
+  LET ls_separator = os.Path.separator()
+
+  #設定 Progress 要執行的次數  
+  IF (lo_to_gztd.gztd001 = lo_from_gztd.gztd001 ) AND (lo_to_gztd.gztd008 <> lo_from_gztd.gztd008) THEN
+    LET li_rec_checked = li_rec_checked + 1
+  END IF
+  FOR li_loop = 1 TO lo_dzeb.getLength()
+    IF lo_dzeb[li_loop].check_box = "Y" THEN
+      LET li_rec_checked = li_rec_checked + 1
+    END IF 
+  END FOR   
+
+  IF li_rec_checked > 0 THEN 
+    CALL cl_progress_bar(li_rec_checked)
+  END IF
+
+  #如果長度有異動要先更動 gztd_t
+  IF (lo_to_gztd.gztd001 = lo_from_gztd.gztd001 ) AND (lo_to_gztd.gztd008 <> lo_from_gztd.gztd008) THEN 
+    LET ms_line_log = cs_message_tag,"Update datatype ",lo_from_gztd.gztd001," length from '",lo_from_gztd.gztd008,"' to '",lo_to_gztd.gztd008,"'." 
+    CALL adzp148_set_log_message(ms_line_log)
+    CALL cl_progress_ing(ms_line_log)
+    
+    TRY
+    
+      BEGIN WORK
+      
+      UPDATE GZTD_T
+         SET GZTD008 = lo_to_gztd.gztd008
+       WHERE GZTD001 = lo_from_gztd.gztd001
+       
+      COMMIT WORK
+      
+      LET ms_line_log = cs_error_tag,"Update datatype ",lo_from_gztd.gztd001," succeed !!" 
+      CALL adzp148_set_log_message(ms_line_log)
+      
+    CATCH
+      ROLLBACK WORK
+      LET lb_success = FALSE 
+      LET ms_line_log = cs_error_tag,"Update datatype ",lo_from_gztd.gztd001," failed !!" 
+      CALL adzp148_set_log_message(ms_line_log)
+    END TRY    
+    
+  END IF
+
+  IF lb_success THEN  
+    FOR li_loop = 1 TO lo_dzeb.getLength()
+      IF lo_dzeb[li_loop].check_box = "Y" THEN 
+        LET lo_ALTER_INFO.ai_TABLE_NAME    = lo_dzeb[li_loop].dzeb001
+        LET lo_ALTER_INFO.ai_COLUMN_NAME   = lo_dzeb[li_loop].dzeb002 
+        LET lo_ALTER_INFO.ai_ORIGINAL_TYPE = lo_from_gztd.gztd001
+        LET lo_ALTER_INFO.ai_ALTER_TYPE    = lo_to_gztd.gztd001
+        LET lo_ALTER_INFO.ai_ORIG_DB_TYPE  = lo_from_gztd.gztd003
+        LET lo_ALTER_INFO.ai_ALTER_DB_TYPE = lo_to_gztd.gztd003
+        CALL adzp148_set_log_message(cs_begin_tag)
+        LET ms_line_log = cs_message_tag,"Convert table '",lo_ALTER_INFO.ai_TABLE_NAME,"' column '",lo_ALTER_INFO.ai_COLUMN_NAME,"' data type from '",lo_from_gztd.gztd001,"' to '",lo_to_gztd.gztd001,"'." 
+        CALL adzp148_set_log_message(ms_line_log)
+        CALL cl_progress_ing(ms_line_log)
+        CALL adzp148_util_alter_data_type_start(lo_ALTER_INFO.*) RETURNING lb_result,ls_message
+        LET ms_line_log = IIF(lb_result,cs_success_tag,cs_error_tag),"Convert table '",lo_ALTER_INFO.ai_TABLE_NAME,"' column '",lo_ALTER_INFO.ai_COLUMN_NAME,"' data type from '",lo_from_gztd.gztd001,"' to '",lo_to_gztd.gztd001,"."
+        CALL adzp148_set_log_message(ms_line_log)
+        CALL adzp148_set_log_message(cs_end_tag)
+        LET ls_all_message = ls_all_message,"\n",ls_message
+      END IF  
+    END FOR
+  ELSE
+    LET ms_line_log = cs_message_tag,"Skip update data type procedure !!" 
+    CALL adzp148_set_log_message(ms_line_log)
+  END IF
+    
+  CALL adzp148_db_gen_log_file(ms_all_log) RETURNING lo_return.SERVER_FILE_PATH,lo_return.SERVER_FILE_NAME
+  LET ls_log_file = lo_return.SERVER_FILE_PATH,ls_separator,lo_return.SERVER_FILE_NAME
+  
+  LET ms_line_log = cs_message_tag,"Please refer to log file : ",ls_log_file
+  CALL adzp148_set_log_message(ms_line_log)
+  
+  RETURN lb_return,lo_return.*
+          
+END FUNCTION
+
+-- DB functions 
+FUNCTION adzp148_db_sqlplus(p_db_connstr)
+DEFINE
+  p_db_connstr T_DB_CONNECTION
+DEFINE
+  lo_db_connstr  T_DB_CONNECTION,
+  ls_sqlplus_str STRING,
+  ls_message     STRING,
+  ls_log_file    STRING,
+  ls_file_list   STRING,
+  ls_return      STRING
+
+  LET lo_db_connstr.* = p_db_connstr.*
+
+  LET ls_sqlplus_str = "sqlplus ",lo_DB_CONNSTR.db_username,"/",lo_DB_CONNSTR.db_password,"@",lo_DB_CONNSTR.db_source," @",lo_DB_CONNSTR.db_sql_filename
+
+  CALL adzp148_db_run_and_catch_log(ls_sqlplus_str) RETURNING ls_message
+  
+  LET ls_file_list = ls_file_list,"SQL File : ",lo_DB_CONNSTR.db_sql_filename,"\n"
+  LET ls_file_list = ls_file_list,"Log File : ",ls_log_file,"\n"
+  LET ls_file_list = ls_file_list,ls_message
+  
+  LET ls_return = ls_file_list
+  
+  RETURN ls_return
+
+END FUNCTION
+
+FUNCTION adzp148_db_run_and_catch_log(p_command)
+DEFINE 
+  p_command   STRING  #要執行的指令
+DEFINE  
+  ls_command  STRING, #要執行的指令
+  ls_return   STRING,
+  ls_cmd_line STRING,
+  ls_message  STRING,
+  li_log_line INTEGER,
+  lch_read    base.Channel   
+
+  LET ls_command = p_command   
+  
+  LET ls_message  = ""
+  LET li_log_line = 0
+
+  LET lch_read  = base.Channel.create()
+  CALL lch_read.setDelimiter("")
+
+  #LET ls_command = ls_command||" 2>&1"
+  
+  CALL lch_read.openPipe(ls_command, "r")
+  WHILE TRUE
+    LET ls_cmd_line = lch_read.readLine()
+    IF lch_read.isEof() THEN 
+      EXIT WHILE 
+    END IF
+
+    CASE
+      WHEN ls_cmd_line.getIndexOf(cs_error_tag,1) > 0
+        LET ms_line_log = ls_cmd_line
+        CALL adzp148_set_log_message(ms_line_log)
+      WHEN ls_cmd_line.getIndexOf(cs_warning_tag,1) > 0
+        LET ms_line_log = ls_cmd_line
+        CALL adzp148_set_log_message(ms_line_log)
+      WHEN ls_cmd_line.getIndexOf(cs_message_tag,1) > 0
+        LET ms_line_log = ls_cmd_line
+        CALL adzp148_set_log_message(ms_line_log)
+      WHEN ls_cmd_line.getIndexOf(cs_success_tag,1) > 0
+        LET ms_line_log = ls_cmd_line
+        CALL adzp148_set_log_message(ms_line_log)
+    END CASE 
+    
+    LET li_log_line = li_log_line + 1 
+    LET ls_message = ls_message, 
+                     "[",(li_log_line USING "&&&&"),"] ",ls_cmd_line, "\n"
+    LET ls_cmd_line = ls_cmd_line.toUpperCase()
+
+  END WHILE
+  CALL lch_read.close()
+
+  LET ls_return = ls_message
+  
+  RETURN ls_return
+  
+END FUNCTION
+
+FUNCTION adzp148_db_gen_log_file(p_log)
+DEFINE
+  p_log STRING
+DEFINE
+  ls_log           STRING, 
+  ls_GUID          STRING,
+  ls_temp_dir      STRING,
+  lchannel_write   base.Channel,
+  ls_log_filename  STRING,
+  ls_separator     STRING  
+DEFINE
+  ls_rtn_path  STRING,
+  ls_rtn_name  STRING
+  
+  LET ls_log = p_log
+
+  LET ls_separator = os.Path.separator()
+  
+  LET ls_temp_dir = FGL_GETENV("TEMPDIR")
+  
+  CALL security.RandomGenerator.CreateUUIDString() RETURNING ls_GUID
+  
+  LET ls_rtn_path = ls_temp_dir
+  LET ls_rtn_name = "adzp148_db_",ls_GUID,".log"
+  
+  LET ls_log_filename = ls_rtn_path,ls_separator,ls_rtn_name
+  
+  LET lchannel_write = base.Channel.create()
+  CALL lchannel_write.setDelimiter("")
+
+  LET ls_log = ls_log
+  
+  #開檔寫入
+  TRY
+    CALL lchannel_write.openFile(ls_log_filename, "w" )
+    CALL lchannel_write.write(ls_log)
+    #關檔
+    CALL lchannel_write.close()
+  CATCH
+    DISPLAY cs_error_tag,"Generate log Error : ",ls_log_filename
+  END TRY  
+
+  RETURN ls_rtn_path,ls_rtn_name
+
+END FUNCTION
+
+FUNCTION adzp148_db_get_table_in_db_type(p_table_name)
+DEFINE 
+  p_table_name STRING
+DEFINE
+  ls_table_name       STRING,
+  ls_sql              STRING,
+  li_rec_cnt          INTEGER,         
+  lo_table_in_db_type DYNAMIC ARRAY OF T_TABLE_IN_DB_TYPE
+DEFINE  
+  lo_return DYNAMIC ARRAY OF T_TABLE_IN_DB_TYPE
+
+  LET ls_table_name = p_table_name
+  
+  LET li_rec_cnt = 1
+  
+  LET ls_sql = "SELECT EU.DZEU002, EU.DZEU003          ",
+               "  FROM DZEU_T EU                       ",
+               " WHERE EU.DZEU001 = '",ls_table_name,"'",
+               "   AND EU.DZEU004 = 'Y'                ",
+               " ORDER BY EU.DZEU005 DESC              "
+                              
+  PREPARE lpre_get_table_or_synonym FROM ls_sql
+  DECLARE lcur_get_table_or_synonym CURSOR FOR lpre_get_table_or_synonym
+
+  OPEN lcur_get_table_or_synonym
+  FOREACH lcur_get_table_or_synonym INTO lo_table_in_db_type[li_rec_cnt].*
+    IF SQLCA.sqlcode THEN
+      EXIT FOREACH
+    END IF
+
+    LET li_rec_cnt = li_rec_cnt + 1
+
+  END FOREACH
+  CLOSE lcur_get_table_or_synonym
+  CALL lo_table_in_db_type.deleteElement(li_rec_cnt)
+  
+  FREE lpre_get_table_or_synonym
+  FREE lcur_get_table_or_synonym  
+
+  LET lo_return.* = lo_table_in_db_type.*
+  
+  RETURN lo_return
+  
+END FUNCTION
+
+FUNCTION adzp148_db_get_db_connect_string(p_db_name)
+DEFINE
+  p_db_name STRING
+DEFINE
+  ls_db_name      STRING,
+  ls_db_sid       STRING,
+  ls_privacy_word STRING,
+  lb_success      BOOLEAN,
+  lo_db_connstr   T_DB_CONNECTION,
+  ls_sql          STRING
+DEFINE
+  lo_return T_DB_CONNECTION  
+  
+  LET ls_db_name = p_db_name
+
+  LET ls_db_sid = FGL_GETENV("ORACLE_SID")
+  
+  LET ls_sql = "SELECT '",ls_db_sid,"'  DB_SOURCE,       ",
+               "       DA.GZDA003       DB_USERNAME,     ",
+               "       DA.GZDA004       DB_PASSWORD,     ",
+               "       DA.GZDA001       DB_SCHEMA,       ",
+               "       '",ls_db_sid,"'  DB_SID,          ",
+               "       ''               DB_SQL_FILENAME, ",
+               "       ''               DB_VERSION       ",
+               "  FROM GZDA_T DA                         ",
+               " WHERE 1=1                               ",
+               "   AND DA.GZDA001  = '",ls_db_name,"'    ",
+               "   AND DA.GZDA005  = 'Y'                 ", 
+               "   AND DA.GZDASTUS = 'Y'                 "
+
+  PREPARE lpre_get_db_connect_string FROM ls_sql
+  DECLARE lcur_get_db_connect_string CURSOR FOR lpre_get_db_connect_string
+
+  INITIALIZE lo_db_connstr TO NULL
+  
+  OPEN lcur_get_db_connect_string
+  FETCH lcur_get_db_connect_string INTO lo_db_connstr.*
+  CLOSE lcur_get_db_connect_string
+
+  IF (NVL(lo_db_connstr.db_username,cs_null_value) = cs_master_db) THEN
+    CALL adzp148_db_get_privacy_word() RETURNING lb_success,ls_privacy_word
+    IF lb_success THEN 
+      LET lo_db_connstr.db_password = cl_hashkey_base65_anti(ls_privacy_word)
+    ELSE 
+      LET lo_db_connstr.db_password = cl_hashkey_base65_anti(lo_db_connstr.db_password)
+    END IF 
+  ELSE 
+    IF lo_db_connstr.db_username IS NOT NULL THEN 
+      LET lo_db_connstr.db_password = cl_hashkey_base65_anti(lo_db_connstr.db_password)
+    END IF  
+  END IF 
+  
+  FREE lpre_get_db_connect_string
+  FREE lcur_get_db_connect_string  
+
+  LET lo_return.* = lo_db_connstr.*
+  
+  RETURN lo_return.*
+  
+END FUNCTION
+
+FUNCTION adzp148_db_get_privacy_word()
+DEFINE
+  ls_file_name    STRING,
+  lo_channel      base.Channel,
+  ls_privacy_word STRING,
+  lb_file_exist   BOOLEAN
+DEFINE
+  ls_result STRING,
+  lb_result BOOLEAN
+  
+  LET ls_file_name = os.Path.join(os.Path.join(FGL_GETENV("FBIN"),"4gl"),"gendbs.inc")
+
+  IF os.Path.exists(ls_file_name) THEN
+    LET lb_file_exist = TRUE
+    LET lo_channel = base.Channel.create()
+    CALL lo_channel.openFile(ls_file_name.trim(),"r")
+    WHILE lo_channel.read(ls_privacy_word)
+    END WHILE
+    CALL lo_channel.close()
+  ELSE
+    LET lb_file_exist = FALSE
+    DISPLAY cs_error_tag," Get privacy file error !!"
+  END IF
+
+  LET lb_result = lb_file_exist
+  LET ls_result = ls_privacy_word
+
+  RETURN lb_result,ls_result
+  
+END FUNCTION      
+
+#檢核表格是否被鎖定
+FUNCTION adzp148_db_check_table_lock(p_table_name)
+DEFINE
+  p_table_name  STRING
+DEFINE  
+  ls_sql        STRING,
+  li_rec_count  INTEGER,
+  ls_table_name STRING,
+  ls_enterprise STRING,
+  lv_user_name  VARCHAR(500)
+DEFINE
+  lb_return     BOOLEAN,
+  ls_user_name  STRING  
+
+  LET ls_table_name = p_table_name.toUpperCase()
+
+  LET ls_enterprise = g_enterprise
+  
+  #取得資料筆數
+  LET ls_sql = "SELECT COUNT(1),L.OS_USER_NAME||'-'||AG.OOAG011 USERNAME     ",                  
+               "  FROM GV$LOCKED_OBJECT L                                    ",
+               " INNER JOIN DBA_OBJECTS O ON O.OBJECT_ID = L.OBJECT_ID       ",
+               " INNER JOIN V$SESSION V ON V.SID = L.SESSION_ID              ",
+               " INNER JOIN V$PROCESS P ON P.ADDR= V.PADDR                   ",
+               "  LEFT OUTER JOIN (                                          ",   
+               "                    SELECT XA.GZXA001,AG.OOAG011             ",   
+               "                      FROM DSDEMO.OOAG_T AG,                 ",   
+               "                           DSDEMO.GZXA_T XA                  ",   
+               "                     WHERE XA.GZXAENT = AG.OOAGENT           ",   
+               "                        AND AG.OOAG001 = XA.GZXA003          ",    
+               "                        AND XA.GZXAENT = '",ls_enterprise,"' ",
+               "                      GROUP BY XA.GZXA001,AG.OOAG011         ",    
+               "                      ORDER BY XA.GZXA001                    ",    
+               "                  ) AG                                       ",
+               "                  ON AG.GZXA001 = L.OS_USER_NAME             ",
+               " WHERE 1=1                                                   ",
+               "   AND O.OBJECT_NAME = '",ls_table_name.toUpperCase(),"'     ",
+               "   AND V.LOCKWAIT IS NULL                                    ",
+               " GROUP BY L.OS_USER_NAME||'-'||AG.OOAG011                    ",
+               " ORDER BY 2                                                  "
+ 
+  PREPARE lpre_check_table_lock FROM ls_sql
+  DECLARE lcur_check_table_lock CURSOR FOR lpre_check_table_lock
+  OPEN lcur_check_table_lock
+  FETCH lcur_check_table_lock INTO li_rec_count,lv_user_name
+  CLOSE lcur_check_table_lock
+  FREE lcur_check_table_lock
+  FREE lpre_check_table_lock
+
+  LET ls_user_name = lv_user_name
+  
+  IF li_rec_count = 0 THEN
+    LET lb_return = FALSE
+  ELSE
+    LET lb_return = TRUE
+  END IF
+  
+  RETURN lb_return,ls_user_name
+  
+END FUNCTION
+
+FUNCTION adzp148_db_get_temp_table_name(p_alter_info)
+DEFINE
+  p_ALTER_INFO  T_ALTER_INFO
+DEFINE
+  lo_ALTER_INFO  T_ALTER_INFO,
+  li_random      INTEGER,
+  ls_random      STRING
+DEFINE
+  lo_return  T_ALTER_INFO  
+
+  LET lo_ALTER_INFO.* = p_ALTER_INFO.*
+  
+  CALL util.Math.srand()
+  CALL util.Math.rand(32767) RETURNING li_random
+
+  LET ls_random = li_random
+  LET ls_random = ls_random.trim()
+  
+  LET lo_ALTER_INFO.ai_TEMP_TABLE = lo_ALTER_INFO.ai_TABLE_NAME,"_",ls_random
+
+  LET lo_return.* = lo_ALTER_INFO.*
+
+  RETURN lo_return.*
+  
+END FUNCTION 
+
+FUNCTION adzp148_db_get_create_temp_table_procedure(p_alter_info)
+DEFINE
+  p_ALTER_INFO  T_ALTER_INFO
+DEFINE
+  lo_ALTER_INFO  T_ALTER_INFO,
+  ls_procedure   STRING
+DEFINE
+  ls_return  STRING  
+
+  LET lo_ALTER_INFO.* = p_ALTER_INFO.*
+
+  DISPLAY cs_message_tag,"Create a temp table : ",lo_ALTER_INFO.ai_TEMP_TABLE
+
+  LET ls_procedure = "-- Create temp table PL/SQL procedure                                                                                                     ","\n", 
+                     "SET SERVEROUTPUT ON                                                                                                                       ","\n", 
+                     "                                                                                                                                          ","\n", 
+                     "DECLARE                                                                                                                                   ","\n", 
+                     "  -------------------------------------------------------------------------------                                                         ","\n", 
+                     "  p_table_name      varchar2(30) := '",lo_ALTER_INFO.ai_TABLE_NAME,"';                                                                    ","\n", 
+                     "  p_column_name     varchar2(30) := '",lo_ALTER_INFO.ai_COLUMN_NAME,"';                                                                   ","\n", 
+                     "  p_temp_table_name varchar2(30) := '",lo_ALTER_INFO.ai_TEMP_TABLE,"';                                                                    ","\n", 
+                     "  -------------------------------------------------------------------------------                                                         ","\n", 
+                     "  cs_error_tag       varchar2(15) := '",cs_error_tag,"';                                                                                  ","\n", 
+                     "  cs_success_tag     varchar2(15) := '",cs_success_tag,"';                                                                                ","\n", 
+                     "  cs_warning_tag     varchar2(15) := '",cs_warning_tag,"';                                                                                ","\n", 
+                     "  cs_message_tag     varchar2(15) := '",cs_message_tag,"';                                                                                ","\n", 
+                     "  -------------------------------------------------------------------------------                                                         ","\n", 
+                     "  ls_ExecScript      varchar2(1024);                                                                                                      ","\n", 
+                     "  -------------------------------------------------------------------------------                                                         ","\n", 
+                     "begin                                                                                                                                     ","\n", 
+                     "                                                                                                                                          ","\n", 
+                     "  ls_ExecScript := 'create table '||p_temp_table_name ||' as select ROWID ROW_ID,'||p_column_name||' from '||p_table_name||' where 1=1';  ","\n", 
+                     "                                                                                                                                          ","\n", 
+                     "  BEGIN                                                                                                                                   ","\n", 
+                     "    EXECUTE IMMEDIATE ls_ExecScript;                                                                                                      ","\n", 
+                     "    DBMS_OUTPUT.put_line(cs_success_tag||' Create temp table '||p_temp_table_name);                                                       ","\n", 
+                     "  EXCEPTION                                                                                                                               ","\n", 
+                     "    WHEN OTHERS THEN                                                                                                                      ","\n", 
+                     "      DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' '||ls_ExecScript);                                                               ","\n", 
+                     "  END;                                                                                                                                    ","\n", 
+                     "                                                                                                                                          ","\n", 
+                     "  ls_ExecScript := 'create index '||p_temp_table_name||'i on '||p_temp_table_name||' (row_id)';                                           ","\n", 
+                     "                                                                                                                                          ","\n", 
+                     "  BEGIN                                                                                                                                   ","\n", 
+                     "    EXECUTE IMMEDIATE ls_ExecScript;                                                                                                      ","\n", 
+                     "    DBMS_OUTPUT.put_line(cs_success_tag||' Create temp table index '||p_temp_table_name||'i');                                            ","\n", 
+                     "  EXCEPTION                                                                                                                               ","\n", 
+                     "    WHEN OTHERS THEN                                                                                                                      ","\n", 
+                     "      DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' '||ls_ExecScript);                                                               ","\n", 
+                     "  END;                                                                                                                                    ","\n", 
+                     "                                                                                                                                          ","\n", 
+                     "EXCEPTION                                                                                                                                 ","\n", 
+                     "  WHEN OTHERS THEN                                                                                                                        ","\n", 
+                     "    DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM);                                                                                     ","\n", 
+                     "END;                                                                                                                                      ","\n", 
+                     "/                                                                                                                                         " 
+
+  LET ls_return = ls_procedure
+
+  RETURN ls_return  
+  
+END FUNCTION 
+
+FUNCTION adzp148_db_get_drop_temp_table_procedure(p_alter_info)
+DEFINE
+  p_ALTER_INFO  T_ALTER_INFO
+DEFINE
+  lo_ALTER_INFO  T_ALTER_INFO,
+  ls_procedure   STRING
+DEFINE
+  ls_return  STRING  
+
+  LET lo_ALTER_INFO.* = p_ALTER_INFO.*
+
+  DISPLAY cs_message_tag,"Drop temp table : ",lo_ALTER_INFO.ai_TEMP_TABLE
+
+  LET ls_procedure = "-- Drop temp table PL/SQL procedure                                               ","\n",
+                     "SET SERVEROUTPUT ON                                                               ","\n",
+                     "                                                                                  ","\n",
+                     "DECLARE                                                                           ","\n",
+                     "  ------------------------------------------------------------------------------- ","\n",
+                     "  p_temp_table_name varchar2(30) := '",lo_ALTER_INFO.ai_TEMP_TABLE,"';            ","\n",
+                     "  ------------------------------------------------------------------------------- ","\n",
+                     "  cs_error_tag       varchar2(15) := '",cs_error_tag,"';                          ","\n",
+                     "  cs_success_tag     varchar2(15) := '",cs_success_tag,"';                        ","\n",
+                     "  cs_warning_tag     varchar2(15) := '",cs_warning_tag,"';                        ","\n",
+                     "  cs_message_tag     varchar2(15) := '",cs_message_tag,"';                        ","\n",
+                     "  ------------------------------------------------------------------------------- ","\n",
+                     "  ls_ExecScript      varchar2(1024);                                              ","\n",
+                     "  ------------------------------------------------------------------------------- ","\n",
+                     "begin                                                                             ","\n",
+                     "                                                                                  ","\n",
+                     "  ls_ExecScript := 'drop table '||p_temp_table_name;                              ","\n",
+                     "                                                                                  ","\n",
+                     "  BEGIN                                                                           ","\n",
+                     "    EXECUTE IMMEDIATE ls_ExecScript;                                              ","\n",
+                     "    DBMS_OUTPUT.put_line(cs_success_tag||' Drop temp table '||p_temp_table_name); ","\n",
+                     "  EXCEPTION                                                                       ","\n",
+                     "    WHEN OTHERS THEN                                                              ","\n",
+                     "      DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' '||ls_ExecScript);       ","\n",
+                     "  END;                                                                            ","\n",
+                     "                                                                                  ","\n",
+                     "EXCEPTION                                                                         ","\n",
+                     "  WHEN OTHERS THEN                                                                ","\n",
+                     "    DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM);                             ","\n",
+                     "END;                                                                              ","\n",
+                     "/                                                                                 "
+
+  LET ls_return = ls_procedure
+
+  RETURN ls_return  
+  
+END FUNCTION 
+  
+FUNCTION adzp148_db_get_alter_data_type_procedure(p_alter_info)
+DEFINE
+  p_ALTER_INFO  T_ALTER_INFO
+DEFINE
+  lo_ALTER_INFO  T_ALTER_INFO,
+  ls_procedure   STRING,
+  ls_mark_begin  STRING,
+  ls_mark_end    STRING
+DEFINE
+  ls_return  STRING  
+
+  LET lo_ALTER_INFO.* = p_ALTER_INFO.*
+
+  IF lo_ALTER_INFO.ai_ORIG_DB_TYPE <> lo_ALTER_INFO.ai_ALTER_DB_TYPE THEN 
+    LET ls_mark_begin = ""
+    LET ls_mark_end   = ""
+  ELSE
+    LET ls_mark_begin = "/*"
+    LET ls_mark_end   = "*/"
+  END IF   
+
+  LET ls_procedure = "-- Alter column data type PL/SQL procedure                                                                                                                                ","\n",
+                     "SET SERVEROUTPUT ON                                                                                                                                                       ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "DECLARE                                                                                                                                                                   ","\n",
+                     "  -------------------------------------------------------------------------------                                                                                         ","\n",
+                     "  p_table_name      varchar2(30) := '",lo_ALTER_INFO.ai_TABLE_NAME,"';                                                                                                    ","\n",
+                     "  p_column_name     varchar2(30) := '",lo_ALTER_INFO.ai_COLUMN_NAME,"';                                                                                                   ","\n",
+                     "  p_alter_type      varchar2(30) := '",lo_ALTER_INFO.ai_ALTER_TYPE,"';                                                                                                    ","\n",
+                     "  p_orig_db_type    varchar2(30) := '",lo_ALTER_INFO.ai_ORIG_DB_TYPE,"';                                                                                                  ","\n",
+                     "  p_alter_db_type   varchar2(30) := '",lo_ALTER_INFO.ai_ALTER_DB_TYPE,"';                                                                                                 ","\n",
+                     "  p_temp_table_name varchar2(30) := '",lo_ALTER_INFO.ai_TEMP_TABLE,"';                                                                                                    ","\n",
+                     "  -------------------------------------------------------------------------------                                                                                         ","\n",
+                     "  cursor c_type(p_type varchar2) IS                                                                                                                                       ","\n",
+                     "    SELECT TD.GZTD001, TD.GZTD003, TD.GZTD008                                                                                                                             ","\n",
+                     "      FROM DS.GZTD_T TD                                                                                                                                                   ","\n",
+                     "     WHERE TD.GZTD001 = p_type;                                                                                                                                           ","\n",
+                     "  r_type c_type%ROWTYPE;                                                                                                                                                  ","\n",
+                     "  -------------------------------------------------------------------------------                                                                                         ","\n",
+                     ls_mark_begin,
+                     "  cursor c_temp_table IS                                                                                                                                                  ","\n",
+                     "    SELECT TP.ROW_ID ROW_ID,TP.",lo_ALTER_INFO.ai_COLUMN_NAME," COLUMN_NAME                                                                                               ","\n",
+                     "      FROM ",lo_ALTER_INFO.ai_TEMP_TABLE," TP;                                                                                                                            ","\n",
+                     "  r_temp_table c_temp_table%ROWTYPE;                                                                                                                                      ","\n",
+                     ls_mark_end,
+                     "  -------------------------------------------------------------------------------                                                                                         ","\n",
+                     "  cs_error_tag       varchar2(15) := '",cs_error_tag,"';                                                                                                                  ","\n",
+                     "  cs_success_tag     varchar2(15) := '",cs_success_tag,"';                                                                                                                ","\n",
+                     "  cs_warning_tag     varchar2(15) := '",cs_warning_tag,"';                                                                                                                ","\n",
+                     "  cs_message_tag     varchar2(15) := '",cs_message_tag,"';                                                                                                                ","\n",
+                     "  -------------------------------------------------------------------------------                                                                                         ","\n",
+                     "  ls_temp_table_name varchar2(30);                                                                                                                                        ","\n",
+                     "  ls_ExecScript      varchar2(1024);                                                                                                                                      ","\n",
+                     "  ls_default         varchar2(4000);                                                                                                                                      ","\n",
+                     "  ls_constraint_name varchar2(1024);                                                                                                                                      ","\n",
+                     "  ls_primary_key     varchar2(100);                                                                                                                                       ","\n",
+                     "  lb_error           boolean;                                                                                                                                             ","\n",
+                     "  lb_diff_db_type    boolean;                                                                                                                                             ","\n",
+                     "  ls_object_type     varchar2(20);                                                                                                                                        ","\n",
+                     "  ls_step            varchar2(5);                                                                                                                                         ","\n",
+                     "  ls_random          varchar2(20);                                                                                                                                        ","\n",
+                     "  li_cons_count      number;                                                                                                                                              ","\n",
+                     "  ln_seq_total       number;                                                                                                                                              ","\n",
+                     "  ln_seq             number;                                                                                                                                              ","\n",
+                     "begin                                                                                                                                                                     ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "  lb_error := FALSE;                                                                                                                                                      ","\n",
+                     "  ls_default := NULL;                                                                                                                                                     ","\n",
+                     "  ls_object_type := NULL;                                                                                                                                                 ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "  select uos.OBJECT_TYPE                                                                                                                                                  ","\n",
+                     "    into ls_object_type                                                                                                                                                   ","\n",
+                     "    from user_objects uos                                                                                                                                                 ","\n",
+                     "   where uos.OBJECT_NAME = upper(p_table_name);                                                                                                                           ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "  if ls_object_type <> 'TABLE' then                                                                                                                                       ","\n",
+                     "    lb_error := TRUE;                                                                                                                                                     ","\n",
+                     "    DBMS_OUTPUT.put_line(cs_warning_tag||' Object '||p_table_name||' is not a table, skip modify data type.');                                                            ","\n",
+                     "  end if;                                                                                                                                                                 ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "  if p_alter_db_type <> p_orig_db_type then                                                                                                                               ","\n",
+                     "    lb_diff_db_type := TRUE;                                                                                                                                              ","\n",
+                     "  else                                                                                                                                                                    ","\n",
+                     "    lb_diff_db_type := FALSE;                                                                                                                                             ","\n",
+                     "  end if;                                                                                                                                                                 ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "  -- 先取得預設值                                                                                                                                                           ","\n",
+                     "  BEGIN                                                                                                                                                                   ","\n",
+                     "    SELECT DS.GET_COL_DEFAULT(p_table_name,p_column_name)　                                                                                                               ","\n",
+                     "      INTO ls_default                                                                                                                                                     ","\n",
+                     "      from dual;                                                                                                                                                          ","\n",
+                     "  EXCEPTION                                                                                                                                                               ","\n",
+                     "    WHEN OTHERS THEN                                                                                                                                                      ","\n",
+                     "      DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM);                                                                                                                   ","\n",
+                     "  END;                                                                                                                                                                    ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "  ls_temp_table_name := p_temp_table_name;                                                                                                                                ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "  if not lb_error then                                                                                                                                                    ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "    -- 取得新型態                                                                                                                                                           ","\n",
+                     "    ls_step := '2';                                                                                                                                                       ","\n",
+                     "    if p_alter_type is not null then                                                                                                                                      ","\n",
+                     "      open c_type(p_alter_type);                                                                                                                                          ","\n",
+                     "      fetch c_type into r_type;                                                                                                                                           ","\n",
+                     "      close c_type;                                                                                                                                                       ","\n",
+                     "    else                                                                                                                                                                  ","\n",
+                     "      lb_error := TRUE;                                                                                                                                                   ","\n",
+                     "      DBMS_OUTPUT.put_line(cs_error_tag||' Get type data error !!');                                                                                                      ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "    if not lb_error and lb_diff_db_type then                                                                                                                              ","\n",
+                     "      -- 取得constraint_name                                                                                                                                                ","\n",
+                     "      ls_step := '3';                                                                                                                                                     ","\n",
+                     "      ls_constraint_name := '';                                                                                                                                           ","\n",
+                     "      li_cons_count := 0;                                                                                                                                                 ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      -- 取得該欄位是否為 Key 欄位                                                                                                                                            ","\n",
+                     "      begin                                                                                                                                                               ","\n",
+                     "        select count(1)                                                                                                                                                   ","\n",
+                     "          into li_cons_count                                                                                                                                              ","\n",
+                     "          from user_CONS_COLUMNS ucc                                                                                                                                      ","\n",
+                     "         where ucc.table_name  = upper(p_table_name)                                                                                                                      ","\n",
+                     "           and ucc.column_name = upper(p_column_name);                                                                                                                    ","\n",
+                     "      exception                                                                                                                                                           ","\n",
+                     "        when others then                                                                                                                                                  ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_warning_tag||' '||SQLERRM||' : Constraint column not found.');                                                                          ","\n",
+                     "      end;                                                                                                                                                                ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      -- 該欄位是 Key 欄位才執行 Drop constraint                                                                                                                              ","\n",
+                     "      if li_cons_count >= 1 then                                                                                                                                          ","\n",
+                     "        begin                                                                                                                                                             ","\n",
+                     "          select ucs.constraint_name                                                                                                                                      ","\n",
+                     "            into ls_constraint_name                                                                                                                                       ","\n",
+                     "            from user_constraints ucs                                                                                                                                     ","\n",
+                     "           where ucs.table_name = upper(p_table_name);                                                                                                                    ","\n",
+                     "        exception                                                                                                                                                         ","\n",
+                     "          WHEN OTHERS THEN                                                                                                                                                ","\n",
+                     "            DBMS_OUTPUT.put_line(cs_warning_tag||' '||SQLERRM||' : Can not find constraint name.');                                                                       ","\n",
+                     "        end;                                                                                                                                                              ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        begin                                                                                                                                                             ","\n",
+                     "          select ed.dzed004                                                                                                                                               ","\n",
+                     "            into ls_primary_key                                                                                                                                           ","\n",
+                     "            from dzed_t ed                                                                                                                                                ","\n",
+                     "           where ed.dzed001 = lower(p_table_name)                                                                                                                         ","\n",
+                     "             and ed.dzed003 = 'P';                                                                                                                                        ","\n",
+                     "        exception                                                                                                                                                         ","\n",
+                     "          WHEN OTHERS THEN                                                                                                                                                ","\n",
+                     "            DBMS_OUTPUT.put_line(cs_warning_tag||' '||SQLERRM||' : Can not find primary key in dzed_t.');                                                                 ","\n",
+                     "        end;                                                                                                                                                              ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        if ls_constraint_name is not null then                                                                                                                            ","\n",
+                     "          ls_step := '4';                                                                                                                                                 ","\n",
+                     "          ls_ExecScript := 'alter table '||p_table_name||' drop primary key drop index';                                                                                  ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "          BEGIN                                                                                                                                                           ","\n",
+                     "            EXECUTE IMMEDIATE ls_ExecScript;                                                                                                                              ","\n",
+                     "            commit;                                                                                                                                                       ","\n",
+                     "            DBMS_OUTPUT.put_line(cs_success_tag||' '||ls_ExecScript);                                                                                                     ","\n",
+                     "          EXCEPTION                                                                                                                                                       ","\n",
+                     "            WHEN OTHERS THEN rollback;                                                                                                                                    ","\n",
+                     "            DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' '||ls_ExecScript);                                                                                         ","\n",
+                     "            lb_error := TRUE;                                                                                                                                             ","\n",
+                     "          END;                                                                                                                                                            ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        end if;                                                                                                                                                           ","\n",
+                     "      end if;                                                                                                                                                             ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     ls_mark_begin,
+                     "    if not lb_error and lb_diff_db_type then                                                                                                                              ","\n",
+                     "      -- 將要更改型態的欄位設為NULL                                                                                                                                           ","\n",
+                     "      ls_step := '5';                                                                                                                                                     ","\n",
+                     "      ln_seq := 0;                                                                                                                                                        ","\n",
+                     "      ln_seq_total := 0;                                                                                                                                                  ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      OPEN c_temp_table;                                                                                                                                                  ","\n",                      
+                     "      LOOP                                                                                                                                                                ","\n",
+                     "        fetch c_temp_table into r_temp_table;                                                                                                                             ","\n",
+                     "        if c_temp_table%notfound then                                                                                                                                     ","\n",
+                     "           exit;                                                                                                                                                          ","\n",
+                     "        end IF;                                                                                                                                                           ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        ls_ExecScript := 'update '||p_table_name||' t1 set '||p_column_name||' = NULL where t1.rowid = '''||r_temp_table.row_id||'''';                                    ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        BEGIN                                                                                                                                                             ","\n",
+                     "          EXECUTE IMMEDIATE ls_ExecScript;                                                                                                                                ","\n",
+                     "        EXCEPTION                                                                                                                                                         ","\n",
+                     "          WHEN OTHERS THEN rollback;                                                                                                                                      ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' '||ls_ExecScript);                                                                                           ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_message_tag||' Please update data to null by your self.');                                                                              ","\n",
+                     "        END;                                                                                                                                                              ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        ln_seq := ln_seq + 1;                                                                                                                                             ","\n",
+                     "        ln_seq_total := ln_seq_total + 1;                                                                                                                                 ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        if ln_seq >= 1000 then                                                                                                                                            ","\n",
+                     "          commit;                                                                                                                                                         ","\n",
+                     "          ln_seq := 0;                                                                                                                                                    ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_message_tag||' Update to null records : '||ln_seq_total);                                                                               ","\n",
+                     "        end if;                                                                                                                                                           ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      END LOOP;                                                                                                                                                           ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      commit;                                                                                                                                                             ","\n",
+                     "      DBMS_OUTPUT.put_line(cs_message_tag||' Update to null records : '||ln_seq_total);                                                                                   ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      CLOSE c_temp_table;                                                                                                                                                 ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     ls_mark_end,
+                     "                                                                                                                                                                          ","\n",
+                     "    if not lb_error and lb_diff_db_type then                                                                                                                              ","\n",
+                     "      if ls_default is not null then                                                                                                                                      ","\n",
+                     "        -- 先將預設值設為 NULL                                                                                                                                               ","\n",
+                     "        ls_step := '6';                                                                                                                                                   ","\n",
+                     "        if r_type.gztd008 is not null then                                                                                                                                ","\n",
+                     "          ls_ExecScript := 'alter table '||p_table_name||' modify '||p_column_name||' default null';                                                                      ","\n",
+                     "        end if;                                                                                                                                                           ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        BEGIN                                                                                                                                                             ","\n",
+                     "          EXECUTE IMMEDIATE ls_ExecScript;                                                                                                                                ","\n",
+                     "          commit;                                                                                                                                                         ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_success_tag||' '||ls_ExecScript);                                                                                                       ","\n",
+                     "        EXCEPTION                                                                                                                                                         ","\n",
+                     "          WHEN OTHERS THEN rollback;                                                                                                                                      ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' '||ls_ExecScript);                                                                                           ","\n",
+                     "          lb_error := TRUE;                                                                                                                                               ","\n",
+                     "        END;                                                                                                                                                              ","\n",
+                     "      end if;                                                                                                                                                             ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "    if not lb_error then                                                                                                                                                  ","\n",
+                     "      -- 異動欄位型態                                                                                                                                                        ","\n",
+                     "      ls_step := '7';                                                                                                                                                     ","\n",
+                     "      if r_type.gztd008 is not null then                                                                                                                                  ","\n",
+                     "        ls_ExecScript := 'alter table '||p_table_name||' modify '||p_column_name||' '||r_type.gztd003||'('||r_type.gztd008||')';                                          ","\n",
+                     "      else                                                                                                                                                                ","\n",
+                     "        ls_ExecScript := 'alter table '||p_table_name||' modify '||p_column_name||' '||r_type.gztd003;                                                                    ","\n",
+                     "      end if;                                                                                                                                                             ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      BEGIN                                                                                                                                                               ","\n",
+                     "        EXECUTE IMMEDIATE ls_ExecScript;                                                                                                                                  ","\n",
+                     "        commit;                                                                                                                                                           ","\n",
+                     "        DBMS_OUTPUT.put_line(cs_success_tag||' '||ls_ExecScript);                                                                                                         ","\n",
+                     "      EXCEPTION                                                                                                                                                           ","\n",
+                     "        WHEN OTHERS THEN rollback;                                                                                                                                        ","\n",
+                     "        DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' '||ls_ExecScript);                                                                                             ","\n",
+                     "        lb_error := TRUE;                                                                                                                                                 ","\n",
+                     "      END;                                                                                                                                                                ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     ls_mark_begin,
+                     "    if not lb_error and lb_diff_db_type then                                                                                                                              ","\n",              
+                     "      ls_step := '8';                                                                                                                                                     ","\n",
+                     "      ln_seq := 0;                                                                                                                                                        ","\n",
+                     "      ln_seq_total := 0;                                                                                                                                                  ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      OPEN c_temp_table;                                                                                                                                                  ","\n",                      
+                     "      LOOP                                                                                                                                                                ","\n",
+                     "        fetch c_temp_table into r_temp_table;                                                                                                                             ","\n",
+                     "        if c_temp_table%notfound then                                                                                                                                     ","\n",
+                     "           exit;                                                                                                                                                          ","\n",
+                     "        end IF;                                                                                                                                                           ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        -- 將資料試著倒回                                                                                                                                                    ","\n",
+                     "        ls_ExecScript := 'update '||p_table_name||' t1 set '||p_column_name||' = (select '||p_column_name||' from '||ls_temp_table_name||' t2 where t1.rowid = t2.row_id ) where t1.rowid = '''||r_temp_table.row_id||''' '; ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        BEGIN                                                                                                                                                             ","\n",
+                     "          EXECUTE IMMEDIATE ls_ExecScript;                                                                                                                                ","\n",
+                     "        EXCEPTION                                                                                                                                                         ","\n",
+                     "          WHEN OTHERS THEN rollback;                                                                                                                                      ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' '||ls_ExecScript);                                                                                           ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_message_tag||' Please update data by your self.');                                                                                      ","\n",
+                     "          --lb_error := TRUE;                                                                                                                                             ","\n",
+                     "        END;                                                                                                                                                              ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        ln_seq := ln_seq + 1;                                                                                                                                             ","\n",
+                     "        ln_seq_total := ln_seq_total + 1;                                                                                                                                 ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        if ln_seq >= 1000 then                                                                                                                                            ","\n",
+                     "          commit;                                                                                                                                                         ","\n",
+                     "          ln_seq := 0;                                                                                                                                                    ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_message_tag||' Recovery records : '||ln_seq_total);                                                                                     ","\n",
+                     "        end if;                                                                                                                                                           ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      END LOOP;                                                                                                                                                           ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      commit;                                                                                                                                                             ","\n",
+                     "      DBMS_OUTPUT.put_line(cs_message_tag||' Recovery records : '||ln_seq_total);                                                                                         ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      CLOSE c_temp_table;                                                                                                                                                 ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     ls_mark_end,
+                     "                                                                                                                                                                          ","\n",
+                     "    if not lb_error and lb_diff_db_type then                                                                                                                              ","\n",
+                     "      -- 重新建立 Constraint                                                                                                                                                ","\n",
+                     "      ls_step := '9';                                                                                                                                                     ","\n",
+                     "      if ls_constraint_name is not null then                                                                                                                              ","\n",
+                     "        --ls_ExecScript := 'alter table '||p_table_name||' ENABLE constraint '||ls_constraint_name;                                                                       ","\n",
+                     "        ls_ExecScript := 'alter table '||p_table_name||' add constraint '||ls_constraint_name||' primary key ('||ls_primary_key||')';                                     ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        BEGIN                                                                                                                                                             ","\n",
+                     "          EXECUTE IMMEDIATE ls_ExecScript;                                                                                                                                ","\n",
+                     "          commit;                                                                                                                                                         ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_success_tag||' '||ls_ExecScript);                                                                                                       ","\n",
+                     "        EXCEPTION                                                                                                                                                         ","\n",
+                     "          WHEN OTHERS THEN rollback;                                                                                                                                      ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' '||ls_ExecScript);                                                                                           ","\n",
+                     "          lb_error := TRUE;                                                                                                                                               ","\n",
+                     "        END;                                                                                                                                                              ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      end if;                                                                                                                                                             ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "    if not lb_error and lb_diff_db_type then                                                                                                                              ","\n",
+                     "      if ls_default is not null then                                                                                                                                      ","\n",
+                     "        -- 接著設回預設值                                                                                                                                                    ","\n",
+                     "        ls_step := '10';                                                                                                                                                  ","\n",
+                     "        if r_type.gztd008 is not null then                                                                                                                                ","\n",
+                     "          ls_ExecScript := 'alter table '||p_table_name||' modify '||p_column_name||' default '||ls_default;                                                              ","\n",
+                     "        end if;                                                                                                                                                           ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        BEGIN                                                                                                                                                             ","\n",
+                     "          EXECUTE IMMEDIATE ls_ExecScript;                                                                                                                                ","\n",
+                     "          commit;                                                                                                                                                         ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_success_tag||' '||ls_ExecScript);                                                                                                       ","\n",
+                     "        EXCEPTION                                                                                                                                                         ","\n",
+                     "          WHEN OTHERS THEN rollback;                                                                                                                                      ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' '||ls_ExecScript);                                                                                           ","\n",
+                     "          lb_error := TRUE;                                                                                                                                               ","\n",
+                     "        END;                                                                                                                                                              ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "      end if;                                                                                                                                                             ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "    if not lb_error then                                                                                                                                                  ","\n",
+                     "      BEGIN                                                                                                                                                               ","\n",
+                     "        -- 將 DZEB_T 的型態類別設為新的                                                                                                                                       ","\n",
+                     "        ls_step := '11';                                                                                                                                                  ","\n",
+                     "        update dzeb_t eb                                                                                                                                                  ","\n",
+                     "           set (eb.dzeb006,eb.dzeb007,eb.dzeb008) = (SELECT r_type.GZTD001,r_type.GZTD003,r_type.GZTD008 FROM DUAL),                                                      ","\n",
+                     "               eb.dzeb029 = decode(eb.dzeb029,'",cs_dgenv_customize,"',eb.dzeb029,'",ms_dgenv,"')                                                                         ","\n",
+                     "         where eb.dzeb001 = lower(p_table_name)                                                                                                                           ","\n",
+                     "           and eb.dzeb002 = lower(p_column_name);                                                                                                                         ","\n",
+                     "        commit;                                                                                                                                                           ","\n",
+                     "        DBMS_OUTPUT.put_line(cs_success_tag||' Update dzeb_t type success.');                                                                                             ","\n",
+                     "      exception                                                                                                                                                           ","\n",
+                     "        WHEN OTHERS THEN                                                                                                                                                  ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_error_tag||' Update dzeb_t type fail.');                                                                                                ","\n",
+                     "          lb_error := TRUE;                                                                                                                                               ","\n",
+                     "      end;                                                                                                                                                                ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "    if not lb_error then                                                                                                                                                  ","\n",
+                     "      BEGIN                                                                                                                                                               ","\n",
+                     "        -- 將 DZEP_T 的顯示格式                                                                                                                                           ","\n",
+                     "        ls_step := '12';                                                                                                                                                  ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        update (                                                                                                                                                          ","\n",
+                     "                select dzep021, gztd007                                                                                                                                   ","\n",
+                     "                  from dzep_t                                                                                                                                             ","\n",
+                     "                 inner join dzeb_t                                                                                                                                        ","\n",
+                     "                    ON dzeb001 = dzep001                                                                                                                                  ","\n",
+                     "                   AND dzeb002 = dzep002                                                                                                                                  ","\n",
+                     "                 inner join gztd_t                                                                                                                                        ","\n",
+                     "                    ON gztd001 = dzeb006                                                                                                                                  ","\n",
+                     "                 where dzep021 <> gztd007                                                                                                                                 ","\n",
+                     "               )                                                                                                                                                          ","\n",
+                     "           set dzep021 = gztd007;                                                                                                                                         ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "        commit;                                                                                                                                                           ","\n",
+                     "        DBMS_OUTPUT.put_line(cs_success_tag||' Update dzep_t display type success.');                                                                                     ","\n",
+                     "      exception                                                                                                                                                           ","\n",
+                     "        WHEN OTHERS THEN                                                                                                                                                  ","\n",
+                     "          DBMS_OUTPUT.put_line(cs_error_tag||' Update dzep_t display type fail.');                                                                                        ","\n",
+                     "          lb_error := TRUE;                                                                                                                                               ","\n",
+                     "      end;                                                                                                                                                                ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "    if not lb_error then                                                                                                                                                  ","\n",
+                     "      delete from dzev_t ev where ev.dzev002 = upper(p_table_name);                                                                                                       ","\n",
+                     "      delete from dzew_t ew where ew.dzew001 = lower(p_table_name);                                                                                                       ","\n",
+                     "      delete from dzeo_t eo where eo.dzeo001 = upper(p_table_name);                                                                                                       ","\n",
+                     "      commit;                                                                                                                                                             ","\n",
+                     "    end if;                                                                                                                                                               ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "  end if;                                                                                                                                                                 ","\n",
+                     "                                                                                                                                                                          ","\n",
+                     "EXCEPTION                                                                                                                                                                 ","\n",
+                     "  WHEN OTHERS THEN                                                                                                                                                        ","\n",
+                     "    DBMS_OUTPUT.put_line(cs_error_tag||' '||SQLERRM||' ON STEP '||ls_step);                                                                                               ","\n",
+                     "END;                                                                                                                                                                      ","\n",
+                     "/                                                                                                                                                                         "
+
+  LET ls_return = ls_procedure
+
+  RETURN ls_return
+  
+END FUNCTION 
+
+FUNCTION adzp148_db_gen_sql_script_file(p_sql,p_sql_type)
+DEFINE
+  p_sql      STRING,
+  p_sql_type STRING 
+DEFINE
+  ls_sql             STRING,
+  ls_sql_type        STRING, 
+  ls_exit_sign       STRING,
+  ls_random_name     STRING,
+  ls_tempdir         STRING,
+  lchannel_write     base.Channel,
+  ls_sript_filename  STRING,
+  ls_separator       STRING, 
+  ls_return          STRING
+  
+  LET ls_sql      = p_sql
+  LET ls_sql_type = p_sql_type
+  LET ls_exit_sign = "exit;"
+
+  LET ls_separator = os.Path.separator()
+
+  LET ls_tempdir = FGL_GETENV("TEMPDIR")
+
+  CALL security.RandomGenerator.CreateUUIDString() RETURNING ls_random_name 
+  LET ls_sript_filename = ls_tempdir,ls_separator,"adzp148_db_",ls_sql_type,"_",ls_random_name,".sql"
+  
+  
+  LET lchannel_write = base.Channel.create()
+  CALL lchannel_write.setDelimiter("")
+
+  LET ls_sql = ls_sql,"\n",
+               ls_exit_sign
+  
+  #開檔寫入
+  TRY
+    CALL lchannel_write.openFile(ls_sript_filename, "w" )
+    CALL lchannel_write.write(ls_sql)
+    #關檔
+    CALL lchannel_write.close()
+  CATCH
+    DISPLAY "Generate Script Error !!"
+  END TRY  
+
+  LET ls_return = ls_sript_filename
+
+  RETURN ls_return
+
+END FUNCTION
+
+FUNCTION adzp148_db_get_table_record_count(p_schema_name,p_table_name)
+DEFINE
+  p_schema_name  STRING,
+  p_table_name   STRING
+DEFINE
+  ls_schema_name STRING,
+  ls_table_name  STRING,
+  ls_sql         STRING,
+  li_rec_count   INTEGER
+DEFINE  
+  lb_return  BOOLEAN,
+  ls_return  STRING
+
+  LET ls_schema_name = NVL(p_schema_name.toUpperCase(),cs_master_user.toUpperCase())
+  LET ls_table_name  = p_table_name.toUpperCase()
+
+  LET lb_return = TRUE
+  
+  #取得資料筆數
+  LET ls_sql = "SELECT COUNT(1)                             ",
+               "  FROM ",ls_schema_name,".",ls_table_name," ",  
+               " WHERE 1=1                                  "
+
+  PREPARE lpre_get_table_record_count FROM ls_sql
+  DECLARE lcur_get_table_record_count CURSOR FOR lpre_get_table_record_count
+
+  TRY 
+    OPEN lcur_get_table_record_count
+    FETCH lcur_get_table_record_count INTO li_rec_count
+    CLOSE lcur_get_table_record_count
+  CATCH
+    LET lb_return = FALSE
+    LET li_rec_count = 0 
+  END TRY  
+
+  FREE lcur_get_table_record_count
+  FREE lpre_get_table_record_count
+
+  LET ls_return = li_rec_count
+  
+  RETURN lb_return,ls_return
+  
+END FUNCTION
+
+-- Dialog functions
+FUNCTION adzp148_dlg_set_dialog_parameter(p_param1,p_param2,p_param3,p_param4)
+DEFINE
+  p_param1,p_param2,p_param3,p_param4 STRING
+DEFINE
+  lo_open_dialog T_FILE_DIALOG
+DEFINE
+  lo_return T_FILE_DIALOG
+
+  LET lo_open_dialog.PATH       = p_param1
+  LET lo_open_dialog.TYPE_DESC  = p_param2
+  LET lo_open_dialog.TYPE_LIST  = p_param3
+  LET lo_open_dialog.CAPTION    = p_param4
+  
+  LET lo_return.* = lo_open_dialog.*
+
+  RETURN lo_return.*
+  
+END FUNCTION 
+
+FUNCTION adzp148_dlg_save_dir_dialog(p_save_dialog)
+DEFINE
+  p_save_dialog T_FILE_DIALOG
+DEFINE
+  ls_rtn_name STRING   
+DEFINE
+  ls_return STRING   
+
+  CALL ui.interface.frontCall("standard","opendir",[p_save_dialog.PATH,p_save_dialog.CAPTION],[ls_rtn_name])
+
+  LET ls_return = ls_rtn_name
+
+  RETURN ls_return
+  
+END FUNCTION  
+
+FUNCTION adzp148_dlg_set_putfile_parameter(p_param1,p_param2,p_param3,p_param4)
+DEFINE 
+  p_param1,p_param2,p_param3,p_param4 STRING 
+DEFINE
+  lo_parameter T_PUT_GET_FILE_PARA
+DEFINE
+  lo_return  T_PUT_GET_FILE_PARA
+
+  #Source
+  LET lo_parameter.SERVER_FILE_PATH = p_param1   
+  LET lo_parameter.SERVER_FILE_NAME = p_param2
+  #Destination  
+  LET lo_parameter.CLIENT_FILE_PATH = p_param3   
+  LET lo_parameter.CLIENT_FILE_NAME = p_param4   
+
+  LET lo_return.* = lo_parameter.*
+
+  RETURN lo_return.*  
+
+END FUNCTION 
+
+-- Log functions
+FUNCTION adzp148_log_save_to_client(mo_parameter)
+DEFINE
+  mo_parameter T_PUT_GET_FILE_PARA
+DEFINE
+  lo_parameter    T_PUT_GET_FILE_PARA,
+  ls_source       STRING,
+  ls_destination  STRING,
+  ls_os_separator STRING  
+
+  LET lo_parameter.* = mo_parameter.*
+
+  #取得作業系統的分隔符號
+  CALL os.Path.separator() RETURNING ls_os_separator 
+
+  LET ls_source      = lo_parameter.SERVER_FILE_PATH,ls_os_separator,lo_parameter.SERVER_FILE_NAME
+  LET ls_destination = lo_parameter.CLIENT_FILE_PATH,ls_os_separator,lo_parameter.CLIENT_FILE_NAME
+
+  DISPLAY "Source File : ",ls_source
+  DISPLAY "Destination File : ",ls_destination 
+
+  TRY 
+    CALL FGL_PUTFILE(ls_source,ls_destination)
+  CATCH
+    DISPLAY cs_error_tag,"The file ",lo_parameter.SERVER_FILE_NAME," can not put to client side."
+  END TRY  
+  
+END FUNCTION 
+
+FUNCTION adzp148_log_write_log(p_level,p_type,p_log_file)
+DEFINE
+  p_level    STRING,
+  p_type     STRING,
+  p_log_file STRING
+DEFINE
+  ls_level      STRING,
+  ls_type       STRING,
+  ls_log_file   STRING,
+  lb_result     BOOLEAN,
+  ls_contents   STRING,
+  ls_log_number STRING,
+  lo_dzhm_t     T_DZHM_T,
+  lo_dzhm005    LIKE DZHM_T.DZHM005 
+DEFINE
+  lb_return   BOOLEAN,
+  ls_return   STRING
+  
+  LET ls_level    = p_level
+  LET ls_type     = p_type
+  LET ls_log_file = p_log_file
+
+  CALL adzp148_log_get_log_file_contents(ls_log_file) RETURNING ls_contents
+
+  LOCATE lo_dzhm005 IN FILE
+  LET lo_dzhm005 = ls_contents
+  
+  LET lo_dzhm_t.DZHM002 = cs_logs_level_information
+  LET lo_dzhm_t.DZHM003 = cs_logs_type_alter_data_type
+  LET lo_dzhm_t.DZHM005 = lo_dzhm005
+
+  BEGIN WORK 
+  
+  CALL adzp148_log_set_log_data(lo_dzhm_t.*) RETURNING lb_result,ls_log_number     
+
+  IF NOT lb_result THEN 
+    ROLLBACK WORK
+  ELSE
+    COMMIT WORK
+  END IF
+
+  FREE lo_dzhm005
+  
+  LET lb_return = lb_result
+  LET ls_return = ls_log_number
+  
+  RETURN lb_return,ls_return
+  
+END FUNCTION
+
+FUNCTION adzp148_log_set_log_data(p_T_DZHM_T)
+DEFINE
+  p_T_DZHM_T  T_DZHM_T
+DEFINE
+  lo_T_DZHM_T    T_DZHM_T,
+  li_seqence_val INTEGER,  
+  lb_result      BOOLEAN
+DEFINE
+  lb_return     BOOLEAN,
+  ls_log_number STRING
+
+  LET lo_T_DZHM_T.* = p_T_DZHM_T.*
+
+  LET lb_return = TRUE
+
+  CALL adzp148_log_sequence_get_next_value(cs_db_log_name) RETURNING li_seqence_val
+  LET lo_T_DZHM_T.DZHM001 = li_seqence_val
+  LET ls_log_number = li_seqence_val
+  
+  CALL adzp148_log_delete_expired_log_data(cs_log_reserve_days) RETURNING lb_result
+  IF NOT lb_result THEN LET lb_return = FALSE END IF
+  
+  CALL adzp148_log_insert_dzhm_data(lo_T_DZHM_T.*) RETURNING lb_result
+  IF NOT lb_result THEN LET lb_return = FALSE END IF
+
+  RETURN lb_return,ls_log_number.trim()
+  
+END FUNCTION
+
+FUNCTION adzp148_log_get_log_file_contents(p_FileName)
+DEFINE
+  p_FileName  STRING
+DEFINE
+  ls_FileName  STRING
+DEFINE  
+  lo_channel_read  base.Channel,
+  ls_TextLine      STRING,
+  li_RecCnt        INTEGER,
+  lb_success       BOOLEAN
+DEFINE
+  ls_RETURN  STRING
+
+  LET ls_FileName = p_FileName
+  
+  LET lb_success = TRUE
+  LET ls_TextLine = ""
+
+  LET lo_channel_read = base.Channel.create()
+  TRY 
+    CALL lo_channel_read.openFile(ls_FileName,"r")
+  CATCH
+    LET lb_success = FALSE
+    DISPLAY cs_error_tag,"Open file ",ls_FileName," failed !!"
+  END TRY  
+
+  IF lb_success THEN
+    LET li_RecCnt = 1 
+    WHILE TRUE
+      IF lo_channel_read.isEof() THEN 
+        EXIT WHILE
+      END IF
+
+      LET ls_TextLine = ls_TextLine,lo_channel_read.readLine(),"\n"
+      
+      LET li_RecCnt = li_RecCnt + 1 
+        
+    END WHILE
+  END IF
+  
+  LET ls_RETURN = ls_TextLine
+  
+  CALL lo_channel_read.close()
+  
+  RETURN ls_RETURN
+  
+END FUNCTION
+
+FUNCTION adzp148_log_insert_dzhm_data(p_dzhm_t)
+DEFINE
+  p_dzhm_t  T_DZHM_T
+DEFINE
+  lo_dzhm_t    T_DZHM_T,
+  ls_user      VARCHAR(100),
+  ldt_datetime DATETIME YEAR TO SECOND
+DEFINE
+  lb_return  BOOLEAN  
+
+  LET lo_dzhm_t.* = p_dzhm_t.*
+
+  LET lb_return = TRUE
+
+  &ifndef DEBUG
+  LET ls_user = g_user
+  LET ldt_datetime = cl_get_current()
+  &else
+  LET ls_user = FGL_GETENV("USERNUMBER")
+  LET ldt_datetime = CURRENT YEAR TO SECOND
+  &endif
+
+  LET lo_dzhm_t.DZHM004   = ldt_datetime
+  LET lo_dzhm_t.DZHMCRTID = ls_user
+  LET lo_dzhm_t.DZHMCRTDT = ldt_datetime
+  LET lo_dzhm_t.DZHMMODID = ls_user
+  LET lo_dzhm_t.DZHMMODDT = ldt_datetime
+
+  TRY 
+    INSERT INTO DZHM_T (
+                         DZHM001,  DZHM002,  DZHM003,  DZHM004,  DZHM005,	  
+                         DZHMCRTID,DZHMCRTDT,DZHMMODID,DZHMMODDT   
+                       ) 
+                VALUES (
+                         lo_dzhm_t.DZHM001,  lo_dzhm_t.DZHM002,  lo_dzhm_t.DZHM003,  lo_dzhm_t.DZHM004,  lo_dzhm_t.DZHM005,	  
+                         lo_dzhm_t.DZHMCRTID,lo_dzhm_t.DZHMCRTDT,lo_dzhm_t.DZHMMODID,lo_dzhm_t.DZHMMODDT                          
+                       )
+  CATCH 
+    LET lb_return = FALSE
+  END TRY  
+
+  RETURN lb_return
+  
+END FUNCTION
+
+FUNCTION adzp148_log_delete_expired_log_data(p_reserve_days)
+DEFINE
+  p_reserve_days STRING
+DEFINE
+  ls_reserve_days STRING,
+  ls_exec_sql     STRING
+DEFINE
+  lb_return  BOOLEAN  
+
+  LET ls_reserve_days = p_reserve_days
+  
+  LET lb_return = TRUE
+  
+  #刪除過期的 Log 資料
+  LET ls_exec_sql = "DELETE FROM DZHM_T                                            ",
+                    " WHERE DZHMCRTDT <= TRUNC(SYSTIMESTAMP) - ",ls_reserve_days," ",
+                    "   AND DZHM002 = '",cs_logs_level_information,"'              ",
+                    "   AND DZHM003 = '",cs_logs_type_alter_data_type,"'           "
+                    
+  TRY
+    PREPARE lpre_exec_sql FROM ls_exec_sql
+    EXECUTE lpre_exec_sql
+  CATCH
+    LET lb_return = FALSE
+    DISPLAY cs_error_tag,"Execute SQL ",ls_exec_sql," not success." 
+  END TRY
+
+  RETURN lb_return  
+
+END FUNCTION
+
+FUNCTION adzp148_log_sequence_get_next_value(p_seq_name)
+DEFINE
+  p_seq_name  STRING 
+DEFINE
+  ls_seq_name STRING,
+  ls_sql      STRING,
+  li_sequence INTEGER
+DEFINE
+  li_return  INTEGER  
+
+  LET ls_seq_name = p_seq_name
+
+  LET ls_sql = "SELECT NVL(MAX(HM.DZHM001),0) SEQ_VALUE ",
+               "  FROM DZHM_T HM                        "
+  
+  PREPARE lpre_sequence_get_next_value FROM ls_sql
+  DECLARE lcur_sequence_get_next_value CURSOR FOR lpre_sequence_get_next_value
+
+  OPEN lcur_sequence_get_next_value
+  FETCH lcur_sequence_get_next_value INTO li_sequence
+  CLOSE lcur_sequence_get_next_value
+  
+  FREE lpre_sequence_get_next_value
+  FREE lcur_sequence_get_next_value  
+  
+  LET li_return = li_sequence + 1 
+
+  RETURN li_return
+  
+END FUNCTION
+
+-- Utility functions
+FUNCTION adzp148_util_alter_data_type_start(p_alter_info)
+DEFINE
+  p_ALTER_INFO T_ALTER_INFO
+DEFINE
+  lo_ALTER_INFO        T_ALTER_INFO,
+  lo_table_in_db_type  DYNAMIC ARRAY OF T_TABLE_IN_DB_TYPE,
+  li_loop              INTEGER,
+  lo_db_connstr        T_DB_CONNECTION,
+  ls_procedure         STRING,
+  ls_file_name         STRING,
+  ls_message           STRING,
+  ls_all_message       STRING,
+  ls_error             STRING,
+  ls_rec_counts        STRING,
+  ls_locker            STRING,
+  lb_deleted           BOOLEAN,
+  lb_existed           BOOLEAN,
+  lb_result            BOOLEAN,
+  lb_lock              BOOLEAN
+DEFINE 
+  lb_return BOOLEAN,
+  ls_return STRING  
+  
+  LET lo_ALTER_INFO.* = p_ALTER_INFO.*
+
+  LET ls_message = ""
+  LET ls_all_message = ""  
+  
+  LET lb_return  = TRUE
+  LET ls_return  = ""  
+
+  CALL adzp148_db_get_table_in_db_type(lo_ALTER_INFO.ai_TABLE_NAME) RETURNING lo_table_in_db_type
+
+  #dsdemo,dsdata,ds
+  FOR li_loop = 1 TO lo_table_in_db_type.getLength()
+    LET lb_result  = TRUE
+
+    #取得資料庫連接資訊
+    CALL adzp148_db_get_db_connect_string(lo_table_in_db_type[li_loop].tidt_db) RETURNING lo_db_connstr.*
+
+    #Table類的才異動
+    IF lo_table_in_db_type[li_loop].tidt_object_type = "T" THEN
+      #檢核是否有 Lock
+      CALL adzp148_db_check_table_lock(lo_ALTER_INFO.ai_TABLE_NAME) RETURNING lb_lock,ls_locker
+
+      IF NOT lb_lock THEN 
+        CALL adzp148_db_get_table_record_count(lo_table_in_db_type[li_loop].tidt_db,lo_ALTER_INFO.ai_TABLE_NAME) RETURNING lb_existed,ls_rec_counts
+        LET ms_line_log = cs_message_tag,"There are ",ls_rec_counts," records in ",lo_table_in_db_type[li_loop].tidt_db,".",lo_ALTER_INFO.ai_TABLE_NAME," need to be processed(backup and recover)."
+        CALL adzp148_set_log_message(ms_line_log)
+
+        IF lb_existed THEN 
+          CALL adzp148_db_get_temp_table_name(lo_ALTER_INFO.*) RETURNING lo_ALTER_INFO.*
+
+          #來源和目的的資料型態不同, 才需要建立暫存表格
+          IF lo_ALTER_INFO.ai_ORIG_DB_TYPE <> lo_ALTER_INFO.ai_ALTER_DB_TYPE THEN 
+            IF lb_result THEN 
+              #先建立暫存表格
+              CALL adzp148_db_get_create_temp_table_procedure(lo_ALTER_INFO.*) RETURNING ls_procedure
+              CALL adzp148_db_gen_sql_script_file(ls_procedure,"create_temp_table") RETURNING ls_file_name
+              LET lo_db_connstr.db_sql_filename = ls_file_name
+              IF (lo_db_connstr.db_username IS NOT NULL) AND (lo_db_connstr.db_password IS NOT NULL) THEN
+                CALL adzp148_db_sqlplus(lo_db_connstr.*) RETURNING ls_message
+                CALL os.Path.delete(ls_file_name) RETURNING lb_deleted
+                LET ls_error = ls_message.toUpperCase()
+                IF ls_error.getIndexOf("ERROR",1) > 0 THEN
+                  LET lb_result = FALSE 
+                  LET ms_line_log = cs_error_tag,"Create temp table for schema ",lo_db_connstr.db_username," failed."
+                  CALL adzp148_set_log_message(ms_line_log)
+                ELSE   
+                  LET ms_line_log = cs_success_tag,"Create temp table for schema ",lo_db_connstr.db_username," success."
+                  CALL adzp148_set_log_message(ms_line_log)
+                END IF 
+              END IF
+            END IF  
+          END IF
+          
+          IF lb_result THEN 
+            #再執行欄位異動
+            CALL adzp148_db_get_alter_data_type_procedure(lo_ALTER_INFO.*) RETURNING ls_procedure
+            CALL adzp148_db_gen_sql_script_file(ls_procedure,"procedure") RETURNING ls_file_name
+            LET lo_db_connstr.db_sql_filename = ls_file_name
+            IF (lo_db_connstr.db_username IS NOT NULL) AND (lo_db_connstr.db_password IS NOT NULL) THEN
+              CALL adzp148_db_sqlplus(lo_db_connstr.*) RETURNING ls_message
+              CALL os.Path.delete(ls_file_name) RETURNING lb_deleted
+              LET ls_error = ls_message.toUpperCase()
+              IF ls_error.getIndexOf("ERROR",1) > 0 THEN
+                LET lb_result = FALSE 
+                LET ms_line_log = cs_error_tag,"Convert datatype for schema ",lo_db_connstr.db_username," has error."
+                CALL adzp148_set_log_message(ms_line_log)
+              ELSE   
+                LET ms_line_log = cs_success_tag,"Convert datatype for schema ",lo_db_connstr.db_username," success."
+                CALL adzp148_set_log_message(ms_line_log)
+              END IF 
+            END IF
+          END IF       
+
+          #來源和目的的資料型態不同, 才需要刪除暫存表格
+          IF lo_ALTER_INFO.ai_ORIG_DB_TYPE <> lo_ALTER_INFO.ai_ALTER_DB_TYPE THEN 
+            IF lb_result THEN 
+              #前面都成功了, 再刪除暫存表格
+              CALL adzp148_db_get_drop_temp_table_procedure(lo_ALTER_INFO.*) RETURNING ls_procedure
+              CALL adzp148_db_gen_sql_script_file(ls_procedure,"drop_temp_table") RETURNING ls_file_name
+              LET lo_db_connstr.db_sql_filename = ls_file_name
+              IF (lo_db_connstr.db_username IS NOT NULL) AND (lo_db_connstr.db_password IS NOT NULL) THEN
+                CALL adzp148_db_sqlplus(lo_db_connstr.*) RETURNING ls_message
+                CALL os.Path.delete(ls_file_name) RETURNING lb_deleted
+                LET ls_error = ls_message.toUpperCase()
+                IF ls_error.getIndexOf("ERROR",1) > 0 THEN
+                  LET lb_result = FALSE 
+                  LET ms_line_log = cs_error_tag,"Drop temp table for schema ",lo_db_connstr.db_username," failed."
+                  CALL adzp148_set_log_message(ms_line_log)
+                ELSE   
+                  LET ms_line_log = cs_success_tag,"Drop temp table for schema ",lo_db_connstr.db_username," success."
+                  CALL adzp148_set_log_message(ms_line_log)
+                END IF 
+              END IF
+            END IF
+          END IF  
+          
+        ELSE 
+          LET ms_line_log = cs_warning_tag,"The table ",lo_table_in_db_type[li_loop].tidt_db,".",lo_ALTER_INFO.ai_TABLE_NAME," not exist."  
+          CALL adzp148_set_log_message(ms_line_log)
+        END IF
+      ELSE  
+        LET lb_result = FALSE 
+        LET ms_line_log = cs_error_tag,"The table ",lo_table_in_db_type[li_loop].tidt_db,".",lo_ALTER_INFO.ai_TABLE_NAME," locked by ",ls_locker,", could not altering."  
+        CALL adzp148_set_log_message(ms_line_log)
+      END IF  
+    END IF    
+
+    LET ls_all_message = ls_all_message,"\n",
+                         "Process :","Alter column data type.","\n", 
+                         "User : ",lo_db_connstr.db_username,"\n",
+                         ls_message
+    
+  END FOR
+
+  LET lb_return = lb_result
+  LET ls_return = ls_message
+
+  RETURN lb_return, ls_return
+  
+END FUNCTION 
+
+-- Message functions
+FUNCTION adzp148_msg_show_info(ps_title, ps_msg_code, ps_replace_arg, pi_idle_sec)
+DEFINE
+  ps_title        STRING, 
+  ps_msg_code     STRING,
+  ps_replace_arg  STRING, 
+  pi_idle_sec     INTEGER
+DEFINE
+  ls_info_message STRING
+
+  LET ps_title = NVL(ps_title,ps_msg_code)
+
+  LET ls_info_message = adzp148_msg_get_message(ps_msg_code,NVL(g_lang,cs_default_language))
+  CALL adzp148_msg_replace_message(ls_info_message,ps_replace_arg) RETURNING ls_info_message
+  
+  MENU ps_title ATTRIBUTE (STYLE="dialog", COMMENT=ls_info_message.trim() CLIPPED, IMAGE="information")
+    ON ACTION ok
+      EXIT MENU
+  END MENU
+  
+END FUNCTION
+
+#170222-00006 begin
+FUNCTION adzp148_msg_show_error(ps_title, ps_msg_code, ps_replace_arg, pi_idle_sec)
+DEFINE
+  ps_title        STRING, 
+  ps_msg_code     STRING,
+  ps_replace_arg  STRING, 
+  pi_idle_sec     INTEGER
+DEFINE
+  ls_info_message STRING
+
+  LET ps_title = NVL(ps_title,ps_msg_code)
+
+  LET ls_info_message = adzp148_msg_get_message(ps_msg_code,NVL(g_lang,cs_default_language))
+  CALL adzp148_msg_replace_message(ls_info_message,ps_replace_arg) RETURNING ls_info_message
+  
+  MENU ps_title ATTRIBUTE (STYLE="dialog", COMMENT=ls_info_message.trim() CLIPPED, IMAGE="stop")
+    ON ACTION ok
+      EXIT MENU
+  END MENU
+  
+END FUNCTION
+#170222-00006 end
+
+FUNCTION adzp148_msg_question_box(ps_title, ps_msg_code, ps_replace_arg, pi_idle_sec)
+DEFINE
+  ps_title        STRING, 
+  ps_msg_code     STRING,
+  ps_replace_arg  STRING, 
+  pi_idle_sec     INTEGER
+DEFINE
+  ls_info_message STRING,
+  ls_question     STRING,
+  lb_result       BOOLEAN  
+DEFINE
+  ls_return  STRING  
+
+  LET ps_title = NVL(ps_title,ps_msg_code)
+  
+  LET ls_info_message = adzp148_msg_get_message(ps_msg_code,NVL(g_lang,cs_default_language))
+  CALL adzp148_msg_replace_message(ls_info_message,ps_replace_arg) RETURNING ls_info_message
+  
+  MENU ps_title ATTRIBUTE (STYLE="dialog", COMMENT=ls_info_message.trim(), IMAGE="question")
+    ON ACTION yes
+      LET lb_result = TRUE
+      EXIT MENU
+    ON ACTION no
+      LET lb_result = FALSE
+      EXIT MENU
+  END MENU
+   
+  LET ls_question = IIF(lb_result,cs_response_yes,cs_response_no)
+  
+  LET ls_return = ls_question
+
+  RETURN ls_return
+  
+END FUNCTION
+
+FUNCTION adzp148_msg_alert_box(ps_title, ps_msg_code, ps_replace_arg, pi_idle_sec)
+DEFINE
+  ps_title        STRING, 
+  ps_msg_code     STRING,
+  ps_replace_arg  STRING, 
+  pi_idle_sec     INTEGER
+DEFINE
+  ls_info_message STRING,
+  ls_question     STRING,
+  lb_result       BOOLEAN   
+DEFINE
+  ls_return  STRING  
+
+  LET ps_title = NVL(ps_title,ps_msg_code)
+
+  LET ls_info_message = adzp148_msg_get_message(ps_msg_code,NVL(g_lang,cs_default_language))
+  CALL adzp148_msg_replace_message(ls_info_message,ps_replace_arg) RETURNING ls_info_message
+  
+  MENU ps_title ATTRIBUTE (STYLE="dialog", COMMENT=ls_info_message.trim(), IMAGE="exclamation")
+    ON ACTION yes
+      LET lb_result = TRUE
+      EXIT MENU
+    ON ACTION no
+      LET lb_result = FALSE
+      EXIT MENU
+  END MENU
+   
+  LET ls_question = IIF(lb_result,cs_response_yes,cs_response_no)
+  
+  LET ls_return = ls_question
+
+  RETURN ls_return
+  
+END FUNCTION
+
+FUNCTION adzp148_msg_get_message(p_code,p_lang)
+DEFINE 
+  p_code VARCHAR(30),
+  p_lang VARCHAR(30)
+DEFINE
+  lc_msg VARCHAR(1024)
+DEFINE 
+  ls_return STRING  
+ 
+  LET lc_msg = ''
+
+  SELECT gzze003 
+    INTO lc_msg 
+    FROM gzze_t 
+   WHERE gzze001 = p_code 
+     AND gzze002 = p_lang
+
+  LET ls_return = lc_msg
+  
+  RETURN ls_return
+  
+END FUNCTION
+
+FUNCTION adzp148_msg_replace_message(ps_err_msg, ps_replace_arg)
+DEFINE   
+  ps_err_msg         STRING,
+  ps_replace_arg     STRING
+DEFINE   
+  lst_replace_arg    base.StringTokenizer,
+  ls_arg             STRING,
+  li_index           INTEGER,
+  li_replace_index   INTEGER
+DEFINE
+  ls_return STRING  
+ 
+  LET ps_err_msg = ps_err_msg.trim()
+  LET lst_replace_arg = base.StringTokenizer.create(ps_replace_arg, cs_divide)
+  WHILE lst_replace_arg.hasMoreTokens()
+    LET ls_arg = lst_replace_arg.nextToken()
+    LET li_replace_index = ps_err_msg.getIndexOf("%" || li_index+1, 1)
+    IF (li_replace_index > 0) THEN
+      LET ps_err_msg = adzp148_msg_replace_string_by_index(ps_err_msg, li_replace_index, li_replace_index+1, ls_arg)
+    END IF
+    LET li_index = li_index + 1   
+  END WHILE
+
+  LET ls_return = ps_err_msg
+  
+  RETURN ls_return
+  
+END FUNCTION
+
+FUNCTION adzp148_msg_replace_string_by_index(ps_source, pi_from, pi_end, ps_new)
+DEFINE 
+  ps_source STRING, 
+  pi_from   INTEGER,
+  pi_end    INTEGER,  
+  ps_new    STRING
+DEFINE 
+  li_source_length INTEGER, 
+  lo_str_buf       base.StringBuffer
+DEFINE
+  ls_return STRING
+  
+  LET ps_source = ps_source.trimRight()
+  LET li_source_length = ps_source.getLength()
+ 
+  IF (pi_from < 1) THEN
+    LET pi_from = 1
+  ELSE
+    IF (pi_from > li_source_length) THEN
+      LET pi_from = li_source_length
+    END IF
+  END IF
+ 
+  IF (pi_end < pi_from) THEN
+    LET pi_end = pi_from
+  ELSE
+    IF (pi_end > li_source_length) THEN
+      LET pi_end = li_source_length
+    END IF
+  END IF
+
+  LET lo_str_buf = base.StringBuffer.create()
+  CALL lo_str_buf.append(ps_source)
+  LET pi_end = pi_end - pi_from + 1
+  CALL lo_str_buf.replaceAt(pi_from, pi_end, ps_new)
+
+  LET ls_return = lo_str_buf.toString()
+  
+  RETURN ls_return
+  
+END FUNCTION
+-- Ernest add end

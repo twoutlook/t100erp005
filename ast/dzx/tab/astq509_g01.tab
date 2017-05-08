@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq509_g01" module="ast" jobmode="N" type="g01" industry="std" crtid="06529" crtdt="2015-08-27 18:21:40" modid="06529" moddt="2015-08-27 21:47:47" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.a1(STRING|遮掩金额)">
+    <var seq="1" value="debaent,debasite,l_debasite(chr30|&apos;&apos;),deba002,rtaw001,l_rtaw001(chr30|&apos;&apos;),deba017,l_deba017(chr100|&apos;&apos;),l_deba024(chr30|&apos;&apos;),l_deba032(chr30|&apos;&apos;),l_deba045(chr30|&apos;&apos;),l_deba047(chr30|&apos;&apos;),l_sell(chr30|NULL),l_guide(chr30|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="debaent(debaent|debaent),debasite(debasite|debasite),l_debasite(chr30|&apos;&apos;),deba002(deba002|deba002),rtaw001(rtaw001|rtaw001),l_rtaw001(chr30|&apos;&apos;),deba017(deba017|deba017),l_deba017(chr100|&apos;&apos;),l_deba024(chr30|&apos;&apos;),l_deba032(chr30|&apos;&apos;),l_deba045(chr30|&apos;&apos;),l_deba047(chr30|&apos;&apos;),l_sell(chr30|NULL),l_guide(chr30|NULL)"/>
+    <sql id="g_from" query="deba_t,rtaw_t"/>
+    <sql id="g_where" query="" maintable="deba_t"/>
+    <sql id="g_order" query="debasite,deba002,rtaw001"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="debasite,deba002,rtaw001"/>
+    <section id="b_group" reptype="d01">
+      <rep type="debasite" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="debaent,debasite"/>
+      <rep type="deba002"/>
+      <rep type="rtaw001"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="debaent,debasite,deba002,rtaw001"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="debaent,debasite,deba002,rtaw001"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="debasite" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="debaent,debasite"/>
+      <rep type="deba002"/>
+      <rep type="rtaw001"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

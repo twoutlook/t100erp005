@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq903" module="agl" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="05016" crtdt="2016-01-08 15:57:58" modid="06821" moddt="2016-06-01 14:56:15" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="合併報表聯屬公司持股比例查詢">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glfjld,glfjld_desc(chr80),glfj001,glfj001_desc(chr80),glfj003,glfj003_desc(chr80),glfj002,glfj002_desc(chr80),glfj004,glfj004_desc(chr80),glfj010"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glfj005,glfj006,glfj007,glfj008,glfj009"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq903" method="dialog">
+    <section id="input">
+      <input id="head" field="glfjld,glfj001,glfj003,glfj002,glfj004,glfj010"/>
+      <input id="body" page="1" field="glfj005,glfj006,glfj007,glfj008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glfjld,glfj001,glfj003,glfj003_desc,glfj002,glfj002_desc,glfj004,glfj004_desc,glfj010"/>
+      <construct id="body" page="1" field="glfj005,glfj006,glfj007,glfj008,glfj009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glfjld,glfj001,glfj002,glfj003,glfj004,glfj010"/>
+      <set id="head" type="no_entry" field="glfjld,glfj001,glfj002,glfj003,glfj004,glfj010"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glfjld">
+        <after/>
+      </column>
+      <column id="glfjld_desc"/>
+      <column id="glfj001">
+        <after/>
+      </column>
+      <column id="glfj001_desc"/>
+      <column id="glfj003">
+        <after/>
+      </column>
+      <column id="glfj003_desc"/>
+      <column id="glfj002">
+        <after/>
+      </column>
+      <column id="glfj002_desc"/>
+      <column id="glfj004">
+        <after/>
+      </column>
+      <column id="glfj004_desc"/>
+      <column id="glfj010"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glfj005" type="S" default="0"/>
+      <column id="glfj006"/>
+      <column id="glfj007" type="S" default="0"/>
+      <column id="glfj008" type="S" default="0"/>
+      <column id="glfj009"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glfj_t" pk="glfjld,glfj001,glfj002,glfj003,glfj004,glfj010">
+      <sql id="forupd_sql" type="sql" query="SELECT glfjld,&apos;&apos;,glfj001,&apos;&apos;,glfj003,&apos;&apos;,glfj002,&apos;&apos;,glfj004,&apos;&apos;,glfj010 FROM glfj_t WHERE glfjent= ? AND glfjld=? AND glfj001=? AND glfj002=? AND glfj003=? AND glfj004=? AND glfj010=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glfjld,&apos;&apos;,glfj001,&apos;&apos;,glfj003,&apos;&apos;,glfj002,&apos;&apos;,glfj004,&apos;&apos;,glfj010 FROM glfj_t" order="glfjld,glfj001,glfj002,glfj003,glfj004,glfj010"/>
+    </head>
+    <body id="glfj_t" page="1" linked="" pk="glfj009" fk="glfjld,glfj001,glfj002,glfj003,glfj004,glfj010">
+      <sql id="forupd_sql_detail" query="SELECT glfj005,glfj006,glfj007,glfj008,glfj009 FROM glfj_t WHERE glfjent=? AND glfjld=? AND glfj001=? AND glfj002=? AND glfj003=? AND glfj004=? AND glfj010=? AND glfj009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glfj005,glfj006,glfj007,glfj008,glfj009 FROM glfj_t WHERE glfjent= ? AND glfjld=? AND glfj001=? AND glfj002=? AND glfj003=? AND glfj004=? AND glfj010=?"/>
+    </body>
+  </dataset>
+</assembly>
+

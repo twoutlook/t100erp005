@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi199" module="aoo" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02295" crtdt="2014-02-19 15:16:41" modid="00593" moddt="2015-09-24 15:23:38" sdver="0011" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="單據別設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oobxstus,oobx001,oobxl003,oobx002,oobx002_desc(chr500),oobx003,oobx003_desc(chr500),chk(chr500),oobx004,oobx004_desc(chr500),oobx005,oobx006,oobx007,oobx008,oobx009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="oobx001,oobxownid,oobxownid_desc(chr500),oobxowndp,oobxowndp_desc(chr500),oobxcrtid,oobxcrtid_desc(chr500),oobxcrtdp,oobxcrtdp_desc(chr500),oobxcrtdt,oobxmodid,oobxmodid_desc(chr500),oobxmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="aooi199_01"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi199" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="oobxstus,oobx001,oobxl003,oobx002,oobx003,chk,oobx004,oobx005,oobx006,oobx007,oobx008,oobx009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="oobxstus,oobx001,oobxl003,oobx002,oobx003,chk,oobx004,oobx005,oobx006,oobx007,oobx008,oobx009"/>
+      <construct id="body" page="2" field="oobxownid,oobxowndp,oobxcrtid,oobxcrtdp,oobxcrtdt,oobxmodid,oobxmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="oobxstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oobx001">
+        <controlp form="q_oobx001" state="c"/>
+      </column>
+      <column id="oobxl003"/>
+      <column id="oobx002">
+        <after>
+          <check chkid="v_gzzj001" id="isExist"/>
+          <reference field="oobx002_desc" ref_field="oobx_t.oobx002" map_field="oobx002" ref_sql="SELECT gzzol003 FROM gzzol_t WHERE gzzol001=? AND gzzol002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzj001" state="i"/>
+        <controlp form="q_gzzj001" state="c"/>
+      </column>
+      <column id="oobx002_desc"/>
+      <column id="oobx003" def_scc="24">
+        <after>
+          <reference field="oobx003_desc" ref_field="oobx003" map_field="oobx003" ref_sql="SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001=&apos;24&apos; AND gzcbl002=? AND gzcbl003=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzcb002_24" state="i"/>
+        <controlp form="q_gzcb002_24" state="c"/>
+      </column>
+      <column id="oobx003_desc"/>
+      <column id="chk" type="S" default="N"/>
+      <column id="oobx004">
+        <after>
+          <check chkid="v_gzzz001,v_gzzz001_3" id="isExist"/>
+          <reference field="oobx004_desc" ref_field="oobx_t.oobx004" map_field="oobx004" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001" state="i"/>
+        <controlp form="q_gzzz001" state="c"/>
+      </column>
+      <column id="oobx004_desc"/>
+      <column id="oobx005" type="S" default="Y"/>
+      <column id="oobx006" type="S" default="1" def_scc="14"/>
+      <column id="oobx007"/>
+      <column id="oobx008"/>
+      <column id="oobx009" type="S" default="N"/>
+    </init>
+    <init id="body" page="2">
+      <column id="oobxownid">
+        <after>
+          <reference field="oobxownid_desc" ref_field="oobx_t.oobxownid" map_field="oobxownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oobxownid_desc"/>
+      <column id="oobxowndp">
+        <after>
+          <reference field="oobxowndp_desc" ref_field="oobx_t.oobxowndp" map_field="oobxowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oobxowndp_desc"/>
+      <column id="oobxcrtid">
+        <after>
+          <reference field="oobxcrtid_desc" ref_field="oobx_t.oobxcrtid" map_field="oobxcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oobxcrtid_desc"/>
+      <column id="oobxcrtdp">
+        <after>
+          <reference field="oobxcrtdp_desc" ref_field="oobx_t.oobxcrtdp" map_field="oobxcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oobxcrtdp_desc"/>
+      <column id="oobxcrtdt"/>
+      <column id="oobxmodid">
+        <after>
+          <reference field="oobxmodid_desc" ref_field="oobx_t.oobxmodid" map_field="oobxmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oobxmodid_desc"/>
+      <column id="oobxmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="oobx_t" page="1,2" linked="" pk="oobx001">
+      <sql id="forupd_sql_detail" query="SELECT oobxstus,oobx001,&apos;&apos;,oobx002,&apos;&apos;,oobx003,&apos;&apos;,&apos;&apos;,oobx004,&apos;&apos;,oobx005,oobx006,oobx007,oobx008,oobx009,&apos;&apos;,oobxownid,&apos;&apos;,oobxowndp,&apos;&apos;,oobxcrtid,&apos;&apos;,oobxcrtdp,&apos;&apos;,oobxcrtdt,oobxmodid,&apos;&apos;,oobxmoddt FROM oobx_t WHERE oobxent=? AND oobx001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oobxstus,oobx001,&apos;&apos;,oobx002,&apos;&apos;,oobx003,&apos;&apos;,&apos;&apos;,oobx004,&apos;&apos;,oobx005,oobx006,oobx007,oobx008,oobx009,&apos;&apos;,oobxownid,&apos;&apos;,oobxowndp,&apos;&apos;,oobxcrtid,&apos;&apos;,oobxcrtdp,&apos;&apos;,oobxcrtdt,oobxmodid,&apos;&apos;,oobxmoddt FROM oobx_t WHERE oobxent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="oobxl_t.oobxl003" table="oobxl_t" fk="oobx001" pk="oobxl001,oobxl002" field="oobxl003"/>
+    </body>
+  </dataset>
+</assembly>
+

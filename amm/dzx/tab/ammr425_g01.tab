@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammr425_g01" module="amm" jobmode="N" type="g01" industry="std" crtid="01251" crtdt="2015-07-02 21:02:08" modid="01251" moddt="2015-07-03 02:22:03" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="rtia006,mmedent,rtiaent,l_mman066_desc(chr30|NULL),l_mmaq003_desc(chr100|NULL),l_mmaq002_desc(chr100|NULL),l_mmaq002(chr10|NULL),mmed007,mmed006,mmed005,mmed002,mmed001,l_rtiasite_desc(chr100|NULL),l_rtiapstid_desc(chr100|NULL),l_rtiastus_desc(chr100|NULL),rtiapstid,rtiastus,rtiasite,rtiadocno"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="rtia006(rtia006|rtia006),mmedent(mmedent|mmedent),rtiaent(rtiaent|rtiaent),l_mman066_desc(chr30|NULL),l_mmaq003_desc(chr100|NULL),l_mmaq002_desc(chr100|NULL),l_mmaq002(chr10|NULL),mmed007(mmed007|mmed007),mmed006(mmed006|mmed006),mmed005(mmed005|mmed005),mmed002(mmed002|mmed002),mmed001(mmed001|mmed001),l_rtiasite_desc(chr100|NULL),l_rtiapstid_desc(chr100|NULL),l_rtiastus_desc(chr100|NULL),rtiapstid(rtiapstid|rtiapstid),rtiastus(rtiastus|rtiastus),rtiasite(rtiasite|rtiasite),rtiadocno(rtiadocno|rtiadocno)"/>
+    <sql id="g_from" query="rtia_t,mmed_t"/>
+    <sql id="g_where" query="" maintable="rtia_t"/>
+    <sql id="g_order" query="rtiadocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="rtiadocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="rtiadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="rtiaent,rtiadocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="rtiaent,rtiadocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="rtiaent,rtiadocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="rtiadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="rtiaent,rtiadocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

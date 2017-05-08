@@ -1,0 +1,876 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aimm200_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2014-06-30 10:36:29), PR版次:0004(2016-12-07 14:04:07)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000164
+#+ Filename...: aimm200_02
+#+ Description: 產品特徵開窗
+#+ Creator....: 02587(2014-01-06 09:35:51)
+#+ Modifier...: 01534 -SD/PR- 08734
+ 
+{</section>}
+ 
+{<section id="aimm200_02.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#160712-00010#1 2016/07/22 By lixh  s_aimi092_chk_eigenvalue() 增加料号/类型传参
+#161124-00048#2 2016/12/07 By 08734  星号整批调整
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_imak_d        RECORD
+       imak001 LIKE imak_t.imak001, 
+   imak002 LIKE imak_t.imak002, 
+   imak002_desc LIKE type_t.chr500, 
+   imak003 LIKE imak_t.imak003, 
+   imak003_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_imaa005             LIKE imaa_t.imaa005
+#end add-point
+ 
+DEFINE g_imak_d          DYNAMIC ARRAY OF type_g_imak_d
+DEFINE g_imak_d_t        type_g_imak_d
+ 
+ 
+DEFINE g_imak001_t   LIKE imak_t.imak001    #Key值備份
+DEFINE g_imak002_t      LIKE imak_t.imak002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="aimm200_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aimm200_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_imak001
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE lwin_curr        ui.Window
+   DEFINE lfrm_curr        ui.Form
+   DEFINE ls_path          STRING
+   DEFINE p_imak001       LIKE imak_t.imak001
+   #DEFINE l_imak          RECORD LIKE imak_t.*  #161124-00048#2   2016/12/07 By 08734 mark
+   #161124-00048#2   2016/12/07 By 08734 add(S)
+   DEFINE l_imak RECORD  #料件特徵檔
+       imakent LIKE imak_t.imakent, #企业编号
+       imak001 LIKE imak_t.imak001, #料件编号
+       imak002 LIKE imak_t.imak002, #特征类型
+       imak003 LIKE imak_t.imak003 #特征值
+END RECORD
+#161124-00048#2   2016/12/07 By 08734 add(E)
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_lock_sw       LIKE type_t.chr1 
+   DEFINE l_oocq002       LIKE oocq_t.oocq002
+   DEFINE l_oocqstus      LIKE oocq_t.oocqstus
+   DEFINE l_errno         LIKE gzze_t.gzze001
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_imeb005       LIKE imeb_t.imeb005
+   DEFINE l_flag          LIKE type_t.chr1
+   DEFINE l_flag1         LIKE type_t.chr1
+   DEFINE l_i             LIKE type_t.num5 
+   DEFINE l_n             LIKE type_t.num5   
+   DEFINE l_sql           STRING   
+   DEFINE l_imak003       LIKE imak_t.imak003
+   DEFINE l_imea002       LIKE imea_t.imea002
+   DEFINE r_item_feature  STRING
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aimm200_02 WITH FORM cl_ap_formpath("aim","aimm200_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lfrm_curr = lwin_curr.getForm()
+   LET ls_path = os.Path.join(os.Path.join(FGL_GETENV("ERP"),"cfg"),"4tb")
+   LET ls_path = os.Path.join(ls_path,"toolbar_lib.4tb")
+   CALL lfrm_curr.loadToolBar(ls_path)
+   
+   WHENEVER ERROR CALL cl_err_msg_log
+   SELECT imaa005 INTO g_imaa005 FROM imaa_t 
+    WHERE imaaent = g_enterprise
+      AND imaa001 = p_imak001
+   SELECT imea002 INTO l_imea002 FROM imea_t
+    WHERE imeaent = g_enterprise
+      AND imea001 = g_imaa005
+   IF l_imea002 = 'N' THEN
+      LET l_sql = "SELECT imak003 FROM imak_t ",
+                  " WHERE imakent = '",g_enterprise,"' ",
+                  "    AND imak001 = '",p_imak001,"' ",
+                  "  ORDER BY imak001,imak002" 
+      PREPARE aimm200_02_imak003 FROM l_sql 
+      DECLARE aimm200_02_ins_imak003 CURSOR FOR aimm200_02_imak003 
+      LET l_ac = 1
+      FOREACH aimm200_02_ins_imak003 INTO g_imak_d[l_ac].imak003           
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF      
+         IF cl_null(r_item_feature) THEN 
+            LET r_item_feature  = g_imak_d[l_ac].imak003                   
+         ELSE 
+            LET r_item_feature  = r_item_feature,"-",g_imak_d[l_ac].imak003
+         END IF
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            EXIT FOREACH
+         END IF          
+      END FOREACH
+      IF cl_null(r_item_feature) THEN
+         LET r_item_feature = ' '
+      END IF   
+      CLOSE WINDOW w_aimm200_02 
+      RETURN r_item_feature
+   END IF
+   CALL g_imak_d.clear()
+   LET l_ac = 1 
+   LET l_sql = "SELECT imeb004 FROM imeb_t ",
+               " WHERE imebent = '",g_enterprise,"'",
+               "   AND imeb001 = '",g_imaa005,"'",
+               " ORDER BY imeb002 "
+   PREPARE aimm200_02_imak002 FROM l_sql
+   DECLARE aimm200_02_ins_imak002 CURSOR FOR aimm200_02_imak002  
+   FOREACH aimm200_02_ins_imak002 INTO g_imak_d[l_ac].imak002        
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      CALL aimm200_02_def_imak003(p_imak001)  
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_imak_d[l_ac].imak002
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND oocql001 = '273' AND oocql002 = ? AND oocql003 = '"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_imak_d[l_ac].imak002_desc = g_rtn_fields[1]
+      DISPLAY BY NAME g_imak_d[l_ac].imak002_desc
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_imak_d[l_ac].imak003
+      CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||g_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_imak_d[l_ac].imak003_desc = g_rtn_fields[1]
+      DISPLAY g_imak_d[l_ac].imak003_desc TO s_detail1[l_ac].imak003_desc      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF      
+   END FOREACH 
+   LET g_rec_b = l_ac - 1      
+ 
+
+   #先檢查單身是否有資料可以勾選
+   LET l_flag = 'N'
+   FOR l_i=1 TO g_rec_b
+      SELECT imeb005 INTO l_imeb005 FROM imeb_t WHERE imebent = g_enterprise
+         AND imeb001=g_imaa005 AND imeb004=g_imak_d[l_i].imak002
+      IF l_imeb005 != '4' THEN
+         LET l_flag = 'Y'      
+      END IF
+      SELECT imak003 INTO l_imak003 FROM imak_t WHERE imakent = g_enterprise
+         AND imak001 = p_imak001 
+         AND imak002 = g_imak_d[l_i].imak002
+      IF cl_null(l_imak003) THEN 
+         LET l_flag = 'Y'      
+      END IF         
+   END FOR
+ 
+   IF l_flag = 'N' THEN
+      DISPLAY ARRAY g_imak_d TO s_detail1.*
+         ON ACTION accept
+            LET INT_FLAG = TRUE
+            EXIT DISPLAY
+        
+         ON ACTION cancel
+            LET INT_FLAG = TRUE 
+            EXIT DISPLAY
+            
+         ON ACTION exit
+           LET INT_FLAG = TRUE
+           EXIT DISPLAY
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DISPLAY
+      END DISPLAY
+      FOR l_n = 1 TO g_rec_b
+          IF cl_null(r_item_feature) THEN 
+             LET r_item_feature  = g_imak_d[l_n].imak003                   
+          ELSE 
+             LET r_item_feature  = r_item_feature,"-",g_imak_d[l_n].imak003
+          END IF
+      END FOR       
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         CLOSE WINDOW w_aimm200_02
+         RETURN r_item_feature
+      END IF 
+   END IF
+   LET l_forupd_sql = " SELECT imak001,imak002,'',imak003,'' ",
+                      "   FROM imak_t ",
+                      "  WHERE imakent = '",g_enterprise,"' ",
+                      "    AND imak001 = ? AND imak002 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)  
+   PREPARE aimm200_02_b FROM l_forupd_sql
+   DECLARE aimm200_02_cs CURSOR FOR aimm200_02_b 
+   LET INT_FLAG = FALSE
+   WHILE TRUE
+      LET l_flag = 'Y'
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_imak_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            
+            IF g_rec_b >= l_ac THEN  
+               LET l_cmd='u'
+               LET g_imak_d_t.* = g_imak_d[l_ac].*  #BACKUP
+               OPEN aimm200_02_cs USING p_imak001,g_imak_d[l_ac].imak002
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "aimm200_02_cs"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aimm200_02_cs INTO g_imak_d[l_ac].*
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_imak_d[l_ac].imak002
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND oocql001 = '273' AND oocql002 = ? AND oocql003 = '"||g_lang||"'","") RETURNING g_rtn_fields
+                  LET g_imak_d[l_ac].imak002_desc = g_rtn_fields[1]
+                  DISPLAY g_imak_d[l_ac].imak002_desc TO s_detail1[l_ac].imak002_desc           
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+            #料件特征赋值方式为‘4’时,特徵類型對應到imak_t的imak003有值時不可输入,
+            IF NOT cl_null(g_imak_d[l_ac].imak002) THEN
+               SELECT imeb005 INTO l_imeb005 FROM imeb_t WHERE imebent = g_enterprise
+                  AND imeb001=g_imaa005 AND imeb004=g_imak_d[l_ac].imak002
+               IF l_imeb005 = '4' THEN
+                  FOR l_i = l_ac + 1 TO g_rec_b
+                      SELECT imeb005 INTO l_imeb005 FROM imeb_t WHERE imebent = g_enterprise
+                         AND imeb001=g_imaa005 AND imeb004=g_imak_d[l_i].imak002
+                      IF l_imeb005 != '4' THEN
+                        LET l_ac = l_i
+                        LET l_flag = 'N'
+                        EXIT DIALOG
+                     END IF
+                  END FOR
+                  FOR l_i = g_rec_b - 1 TO 1 STEP -1
+                      SELECT imeb005 INTO l_imeb005 FROM imeb_t WHERE imebent = g_enterprise
+                         AND imeb001=g_imaa005 AND imeb004=g_imak_d[l_i].imak002
+                      IF l_imeb005 != '4' THEN
+                        LET l_ac = l_i
+                        LET l_flag = 'N'
+                        EXIT DIALOG
+                     END IF
+                  END FOR
+               END IF
+               SELECT imak003 INTO l_imak003 FROM imak_t WHERE imakent = g_enterprise
+                  AND imak001 = p_imak001 AND imak002 = g_imak_d[l_ac].imak002
+               IF NOT cl_null(l_imak003) THEN
+                  FOR l_i = l_ac + 1 TO g_rec_b
+                     SELECT imak003 INTO l_imak003 FROM imak_t WHERE imakent = g_enterprise
+                        AND imak001 = p_imak001 AND imak002 = g_imak_d[l_i].imak002
+                     IF cl_null(l_imak003) THEN
+                        LET l_ac = l_i
+                        LET l_flag = 'N'
+                        EXIT DIALOG
+                     END IF
+                  END FOR
+                  FOR l_i = g_rec_b - 1 TO 1 STEP -1
+                     SELECT imak003 INTO l_imak003 FROM imak_t WHERE imakent = g_enterprise
+                        AND imak001 = p_imak001 AND imak002 = g_imak_d[l_i].imak002
+                     IF cl_null(l_imak003) THEN
+                        LET l_ac = l_i
+                        LET l_flag = 'N'
+                        EXIT DIALOG
+                     END IF
+                  END FOR
+               END IF   
+            END IF                   
+
+        BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(p_imak001) AND NOT cl_null(g_imak_d[l_ac].imak002)THEN
+
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               DELETE FROM imak_t
+                WHERE imakent = g_enterprise 
+                  AND imak001 = p_imak001 
+                  AND imak002 = g_imak_d[l_ac].imak002
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "imak_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CALL s_transaction_end('N',0)
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  
+                  CALL s_transaction_end('Y',0)
+               END IF 
+               CLOSE aimm200_02_cs
+               LET l_count = g_imak_d.getLength()
+            END IF 
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_imak_d[l_ac].* = g_imak_d_t.*
+               CLOSE aimm200_02_cs
+               CALL s_transaction_end('N',0)
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = l_imak.imak001
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_imak_d[l_ac].* = g_imak_d_t.*
+            ELSE
+               UPDATE imak_t SET imak003= g_imak_d[l_ac].imak003
+                WHERE imakent = g_enterprise
+                  AND imak001 = p_imak001 
+                  AND imak002 = g_imak_d_t.imak002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "imak_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  LET g_imak_d[l_ac].* = g_imak_d_t.*
+                  CALL s_transaction_end('N',0)
+               ELSE
+                  CALL s_transaction_end('Y',0)               
+               END IF
+
+            END IF
+            
+         AFTER ROW
+            CLOSE aimm200_02_cs
+            #end add-point
+          
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imak001
+            #add-point:BEFORE FIELD imak001 name="input.b.page1.imak001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imak001
+            
+            #add-point:AFTER FIELD imak001 name="input.a.page1.imak001"
+            #此段落由子樣板a05產生
+            IF  g_imak_d[g_detail_idx].imak001 IS NOT NULL AND g_imak_d[g_detail_idx].imak002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_imak_d[g_detail_idx].imak001 != g_imak_d_t.imak001 OR g_imak_d[g_detail_idx].imak002 != g_imak_d_t.imak002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM imak_t WHERE "||"imakent = '" ||g_enterprise|| "' AND "||"imak001 = '"||g_imak_d[g_detail_idx].imak001 ||"' AND "|| "imak002 = '"||g_imak_d[g_detail_idx].imak002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imak001
+            #add-point:ON CHANGE imak001 name="input.g.page1.imak001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imak002
+            
+            #add-point:AFTER FIELD imak002 name="input.a.page1.imak002"
+            #此段落由子樣板a05產生
+            IF  g_imak_d[g_detail_idx].imak001 IS NOT NULL AND g_imak_d[g_detail_idx].imak002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_imak_d[g_detail_idx].imak001 != g_imak_d_t.imak001 OR g_imak_d[g_detail_idx].imak002 != g_imak_d_t.imak002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM imak_t WHERE "||"imakent = '" ||g_enterprise|| "' AND "||"imak001 = '"||g_imak_d[g_detail_idx].imak001 ||"' AND "|| "imak002 = '"||g_imak_d[g_detail_idx].imak002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imak002
+            #add-point:BEFORE FIELD imak002 name="input.b.page1.imak002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imak002
+            #add-point:ON CHANGE imak002 name="input.g.page1.imak002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imak003
+            
+            #add-point:AFTER FIELD imak003 name="input.a.page1.imak003"
+            CALL aimm200_02_imak003_desc() 
+            IF NOT cl_null(g_imak_d[l_ac].imak002) AND NOT cl_null(g_imak_d[l_ac].imak003) THEN
+               CALL s_aimi092_chk_eigenvalue(g_imaa005,g_imak_d[l_ac].imak002,g_imak_d[l_ac].imak003,g_imak_d[g_detail_idx].imak001,'1') RETURNING l_success,l_errno,g_imak_d[l_ac].imak003  #160712-00010#1  
+               IF NOT cl_null(l_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = l_errno
+                  LET g_errparam.extend = g_imak_d[l_ac].imak003
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_imak_d[l_ac].imak003 = g_imak_d_t.imak003
+                  CALL aimm200_02_imak003_desc()
+                  NEXT FIELD imak003
+               END IF
+            END IF               
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imak003
+            #add-point:BEFORE FIELD imak003 name="input.b.page1.imak003"
+            CALL aimm200_02_imeb_dis()
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imak003
+            #add-point:ON CHANGE imak003 name="input.g.page1.imak003"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.imak001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imak001
+            #add-point:ON ACTION controlp INFIELD imak001 name="input.c.page1.imak001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.imak002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imak002
+            #add-point:ON ACTION controlp INFIELD imak002 name="input.c.page1.imak002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.imak003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imak003
+            #add-point:ON ACTION controlp INFIELD imak003 name="input.c.page1.imak003"
+#此段落由子樣板a07產生            
+            #開窗i段
+            IF NOT cl_null(g_imaa005) AND NOT cl_null(g_imak_d[l_ac].imak002) THEN
+               SELECT imeb005 INTO l_imeb005
+                 FROM imeb_t
+                WHERE imebent = g_enterprise
+                  AND imeb001 = g_imaa005
+                  AND imeb004 = g_imak_d[l_ac].imak002 
+                IF l_imeb005 = '2' THEN                  
+                   #開窗i段
+                   INITIALIZE g_qryparam.* TO NULL
+                   LET g_qryparam.state = 'i'
+                   LET g_qryparam.reqry = FALSE
+        
+                   LET g_qryparam.default1 = g_imak_d[l_ac].imak003             #給予default值
+        
+                   #給予arg
+                   LET g_qryparam.where = "imeastus = 'Y' "
+                   LET g_qryparam.arg1 = g_imaa005 #特徵群組代碼
+                   LET g_qryparam.arg2 = g_imak_d[l_ac].imak002
+                   CALL q_imec003()                                #呼叫開窗                          #呼叫開窗
+
+                   LET g_imak_d[l_ac].imak003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+                   
+                   DISPLAY g_imak_d[l_ac].imak003 TO imak003              #顯示到畫面上
+                   
+                   NEXT FIELD imak003                          #返回原欄位
+                END IF
+             END  IF              
+
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            LET r_item_feature =' '
+            IF INT_FLAG THEN 
+               LET INT_FLAG = 0
+               EXIT DIALOG
+            ELSE
+               FOR l_n = 1 TO g_rec_b
+                   IF cl_null(g_imak_d[l_n].imak003) THEN 
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = "aim-00202"
+                      LET g_errparam.extend = "imak003"
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+
+                      LET r_item_feature = ' ' 
+                      NEXT FIELD imak003
+                   ELSE
+                      IF cl_null(r_item_feature) THEN 
+                         LET r_item_feature  = g_imak_d[l_n].imak003                   
+                      ELSE 
+                         LET r_item_feature  = r_item_feature,"-",g_imak_d[l_n].imak003
+                      END IF
+                   END IF
+                END FOR                   
+            END IF            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+      IF INT_FLAG THEN 
+         LET INT_FLAG = 0
+         CLOSE aimm200_02_cs
+         EXIT WHILE
+      END IF
+      IF l_flag = 'N' THEN
+         CONTINUE WHILE 
+      END IF 
+      CLOSE aimm200_02_cs
+      EXIT WHILE 
+   END WHILE
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aimm200_02 
+   
+   #add-point:input段after input name="input.post_input"
+    CLOSE aimm200_02_cs
+    RETURN r_item_feature    
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimm200_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aimm200_02.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 根據賦值方式顯示imeb資料
+# Memo...........:
+# Usage..........: CALL aimm200_02_imeb_dis()
+# Date & Author..: 2014/01/06 By chenjing
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aimm200_02_imeb_dis()
+DEFINE l_imeb005_1          LIKE imeb_t.imeb005
+DEFINE l_imeb007_1          LIKE imeb_t.imeb007
+DEFINE l_imeb008_1          LIKE imeb_t.imeb008
+DEFINE l_imeb010_1          LIKE imeb_t.imeb010
+DEFINE l_imeb011_1          LIKE imeb_t.imeb011
+DEFINE l_gzze003            LIKE gzze_t.gzze003
+DEFINE l_gzze003_1          LIKE gzze_t.gzze003
+DEFINE l_gzze003_2          LIKE gzze_t.gzze003
+DEFINE l_msg                STRING
+DEFINE l_imeb005            STRING
+DEFINE l_imeb007            STRING
+DEFINE l_imeb008            STRING
+DEFINE l_imeb010            STRING
+DEFINE l_imeb011            STRING
+
+   LET l_imeb005 = ''
+   LET l_imeb007 = ''
+   LET l_imeb008 = ''
+   LET l_imeb010 = ''
+   LET l_imeb011 = ''
+   SELECT imeb005,imeb007,imeb008,imeb010,imeb011 INTO l_imeb005_1,l_imeb007_1,l_imeb008_1,l_imeb010_1,l_imeb011_1
+     FROM imeb_t
+    WHERE imebent = g_enterprise
+      AND imeb001 = g_imaa005
+      AND imeb004 = g_imak_d[l_ac].imak002
+   LET l_imeb005 = l_imeb005_1
+   LET l_imeb007 = l_imeb007_1
+   LET l_imeb008 = l_imeb008_1
+   LET l_imeb010 = l_imeb010_1
+   LET l_imeb011 = l_imeb011_1
+   IF l_imeb005 = '1' THEN
+      LET l_msg =''
+      LET l_gzze003 = ''
+      LET l_gzze003_1 = ''
+      SELECT gzze003 INTO l_gzze003
+        FROM gzze_t
+       WHERE gzze001 = 'aim-00197'
+         AND gzze002 = g_dlang
+      SELECT gzze003 INTO l_gzze003_1
+        FROM gzze_t
+       WHERE gzze001 = 'aim-00198'
+         AND gzze002 = g_dlang
+      LET l_msg = l_gzze003,l_imeb007,',',l_gzze003_1,l_imeb008
+      ERROR l_msg
+   END IF
+   IF l_imeb005 = '3' THEN
+      LET l_msg =''
+      LET l_gzze003_2 = ''
+      SELECT gzze003 INTO l_gzze003_2
+        FROM gzze_t
+       WHERE gzze001 = 'aim-00199'
+         AND gzze002 = g_dlang
+      LET l_msg = l_gzze003_2,l_imeb010,'~',l_imeb011
+      ERROR l_msg
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION aimm200_02_b_fill(p_imak001)
+   DEFINE p_imak001       LIKE imak_t.imak001
+   DEFINE l_sql           STRING
+   DEFINE l_ac1           LIKE type_t.num5  
+
+   LET l_sql = " SELECT imak001,imak002,'',imak003,'' ",
+                      "   FROM imak_t ",
+                      "  WHERE imakent = '",g_enterprise,"' ",
+                      "    AND imak001 = '",p_imak001,"' ",
+                      "  ORDER BY imak001 " 
+   PREPARE aimm200_02_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR aimm200_02_pb 
+   
+   CALL g_imak_d.clear()
+   LET l_ac1 = 1
+   FOREACH b_fill_curs INTO g_imak_d[l_ac1].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_imak_d[l_ac1].imak002
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND oocql001 = '273' AND oocql002 = ? AND oocql003 = '"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_imak_d[l_ac1].imak002_desc = g_rtn_fields[1]
+      DISPLAY BY NAME g_imak_d[l_ac1].imak002_desc
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_imak_d[l_ac1].imak003
+      CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||g_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_imak_d[l_ac1].imak003_desc = g_rtn_fields[1]
+      DISPLAY g_imak_d[l_ac1].imak003_desc TO s_detail1[l_ac1].imak003_desc
+      
+      LET l_ac1 = l_ac1 + 1
+      IF l_ac1 > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH 
+   CALL g_imak_d.deleteElement(g_imak_d.getLength())   
+   LET g_rec_b = l_ac1 - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   CLOSE b_fill_curs
+   FREE aimm200_02_pb
+END FUNCTION
+
+PRIVATE FUNCTION aimm200_02_def_imak003(p_imak001)
+DEFINE l_imeb005   LIKE imeb_t.imeb005
+DEFINE l_imeb009   LIKE imeb_t.imeb009
+DEFINE p_imak001   LIKE imak_t.imak001
+
+   SELECT imak003 INTO g_imak_d[l_ac].imak003 FROM imak_t 
+    WHERE imakent = g_enterprise
+      AND imak001 = p_imak001
+      AND imak002 = g_imak_d[l_ac].imak002
+   IF cl_null(g_imak_d[l_ac].imak003) THEN
+      SELECT imeb005,imeb009 INTO l_imeb005,l_imeb009 FROM imeb_t WHERE imebent = g_enterprise
+         AND imeb001 = g_imaa005 AND imeb004 = g_imak_d[l_ac].imak002 
+      LET g_imak_d[l_ac].imak003 = l_imeb009
+      #UPDATE imak_t SET imak003 = g_imak_d[l_ac].imak003
+      # WHERE imakent = g_enterprise
+      #   AND imak001 = p_imak001
+      #   AND imak002 = g_imak_d[l_ac].imak002
+   END IF       
+END FUNCTION
+
+PRIVATE FUNCTION aimm200_02_imak003_desc()
+   LET g_imak_d[l_ac].imak003_desc = ""
+   DISPLAY g_imak_d[l_ac].imak003_desc TO s_detail1[l_ac].imak003_desc
+   IF NOT cl_null(g_imak_d[l_ac].imak003) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_imak_d[l_ac].imak003
+      CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||g_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_imak_d[l_ac].imak003_desc = g_rtn_fields[1]
+      DISPLAY g_imak_d[l_ac].imak003_desc TO s_detail1[l_ac].imak003_desc
+   END IF
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aici120" module="aic" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02295" crtdt="2014-04-16 14:05:05" modid="02040" moddt="2016-09-23 17:08:05" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="多角貿易計價方式維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="icag001,icag001_desc(chr80),icag002,icag006,icagsite"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="icag003,icag004,icag004_desc(chr500),icag005,icag008,icag008_desc(chr500),icag007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="icag003,icagownid,icagownid_desc(chr500),icagowndp,icagowndp_desc(chr500),icagcrtid,icagcrtid_desc(chr500),icagcrtdp,icagcrtdp_desc(chr500),icagcrtdt,icagmodid,icagmodid_desc(chr500),icagmoddt"/>
+      <var id="bs_field" value="icag001,icag001_desc(chr80),icag002" pk="icag001,icag002" order=""/>
+      <bs_reference field="icag001_desc" ref_field="icag001" ref_sql="SELECT icaal003 FROM icaal_t WHERE icaalent=$varg_enterprise$var AND icaal001=? AND icaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aic" filename="aici120" method="dialog">
+    <section id="input">
+      <input id="head" field="icag001,icag002,icag006,icagsite"/>
+      <input id="body" page="1" field="icag005,icag008,icag007" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="icag001,icag002,icag006,icagsite"/>
+      <construct id="body" page="1" field="icag003,icag004,icag005,icag008,icag007"/>
+      <construct id="body" page="2" field="icagownid,icagowndp,icagcrtid,icagcrtdp,icagcrtdt,icagmodid,icagmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="icag001,icag002"/>
+      <set id="head" type="no_entry" field="icag001,icag002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="icag001">
+        <after>
+          <check chkid="v_icaa001" id="isExist"/>
+          <reference field="icag001_desc" ref_field="icag_t.icag001" map_field="icag001" ref_sql="SELECT icaal003 FROM icaal_t WHERE icaalent=$varg_enterprise$var AND icaal001=? AND icaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_icaa001" state="i"/>
+        <controlp form="q_icaa001" state="c"/>
+      </column>
+      <column id="icag001_desc"/>
+      <column id="icag002"/>
+      <column id="icag006" type="S" default="1" def_scc="2504"/>
+      <column id="icagsite"/>
+    </init>
+    <init id="body" page="1">
+      <column id="icag003">
+        <after>
+          <check chkid="v_icab002" id="isExist"/>
+        </after>
+        <controlp form="q_icab002" state="i"/>
+        <controlp form="q_icab002" state="c"/>
+      </column>
+      <column id="icag004">
+        <after>
+          <check chkid="v_ooef001_13" id="isExist"/>
+          <reference field="icag004_desc" ref_field="icag_t.icag004" map_field="icag004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_12" state="i"/>
+        <controlp form="q_ooef001_12" state="c"/>
+      </column>
+      <column id="icag004_desc"/>
+      <column id="icag005" type="S" default="1" def_scc="2505"/>
+      <column id="icag008">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="icag008_desc" ref_field="icag_t.icag008" map_field="icag008" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_3" state="i"/>
+        <controlp form="q_ooaj002_3" state="c"/>
+      </column>
+      <column id="icag008_desc"/>
+      <column id="icag007">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="icagownid">
+        <after>
+          <reference field="icagownid_desc" ref_field="icag_t.icagownid" map_field="icagownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="icagownid_desc"/>
+      <column id="icagowndp">
+        <after>
+          <reference field="icagowndp_desc" ref_field="icag_t.icagowndp" map_field="icagowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="icagowndp_desc"/>
+      <column id="icagcrtid">
+        <after>
+          <reference field="icagcrtid_desc" ref_field="icag_t.icagcrtid" map_field="icagcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="icagcrtid_desc"/>
+      <column id="icagcrtdp">
+        <after>
+          <reference field="icagcrtdp_desc" ref_field="icag_t.icagcrtdp" map_field="icagcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="icagcrtdp_desc"/>
+      <column id="icagcrtdt"/>
+      <column id="icagmodid">
+        <after>
+          <reference field="icagmodid_desc" ref_field="icag_t.icagmodid" map_field="icagmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="icagmodid_desc"/>
+      <column id="icagmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="icag_t" pk="icag001,icag002">
+      <sql id="forupd_sql" type="sql" query="SELECT icag001,&apos;&apos;,icag002,icag006,icagsite FROM icag_t WHERE icagent= ? AND icag001=? AND icag002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT icag001,&apos;&apos;,icag002,icag006,icagsite FROM icag_t" order="icag001,icag002"/>
+    </head>
+    <body id="icag_t" page="1,2" linked="" pk="icag003" fk="icag001,icag002">
+      <sql id="forupd_sql_detail" query="SELECT icag003,icag004,&apos;&apos;,icag005,icag008,&apos;&apos;,icag007,&apos;&apos;,icagownid,&apos;&apos;,icagowndp,&apos;&apos;,icagcrtid,&apos;&apos;,icagcrtdp,&apos;&apos;,icagcrtdt,icagmodid,&apos;&apos;,icagmoddt FROM icag_t WHERE icagent=? AND icag001=? AND icag002=? AND icag003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT icag003,icag004,&apos;&apos;,icag005,icag008,&apos;&apos;,icag007,&apos;&apos;,icagownid,&apos;&apos;,icagowndp,&apos;&apos;,icagcrtid,&apos;&apos;,icagcrtdp,&apos;&apos;,icagcrtdt,icagmodid,&apos;&apos;,icagmoddt FROM icag_t WHERE icagent= ? AND icag001=? AND icag002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

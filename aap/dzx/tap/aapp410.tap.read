@@ -1,0 +1,984 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aapp410" std_prog="aapp410" erpver="1.0" module="AAP" ver="2" env="s" zone="t10dev" booking="N" type="M" identity="s">
+  <other>
+    <code_template value="W" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.aapp410_b_fill2" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 付款信息單身填充
+# Memo...........:
+# Usage..........: CALL aapp410_b_fill2(p_ac)
+# Input parameter: 
+# Date & Author..: 14/06/06 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapp410_b_fill2(p_ac)
+DEFINE p_ac   LIKE type_t.num10
+   DEFINE l_index    LIKE type_t.num10
+
+   IF cl_null(p_ac) OR p_ac <= 0 THEN RETURN END IF
+
+   LET g_sql = " SELECT nmck023,nmck011,nmck012,nmck100,nmck103,nmck025,",
+               "        nmck004,'',nmckstus,nmck005,'',nmck014,nmck015,'' ",
+               "   FROM nmck_t,nmcl_t ", 
+               "  WHERE nmckent = ",g_enterprise," ",
+               "    AND nmckent = nmclent ",
+               "    AND nmckcomp = nmclcomp ",
+               "    AND nmckdocno = nmcldocno ",        
+               "    AND nmcl001 = '",g_detail_d[p_ac].b_apcedocno,"' ",
+               "    AND nmcl002 = '",g_detail_d[p_ac].b_apceseq,"' ",
+               "    AND nmck023 IN ('20','30') "   #匯款及票據
+   PREPARE aapp410_sel2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR aapp410_sel2
+   
+   CALL g_detail2_d.clear()
+ 
+   LET l_index = 1   
+   FOREACH b_fill_curs2 INTO g_detail2_d[l_index].* 
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      #抓銀行名稱
+      SELECT nmaal003 INTO g_detail2_d[l_index].b_nmck004_desc 
+        FROM nmas_t
+        LEFT OUTER JOIN nmaal_t ON nmasent = nmaalent AND nmas001 = nmaal001 AND nmaal002 = g_dlang
+        LEFT JOIN nmaa_t  ON nmasent = nmaaent  AND nmas001 = nmaa001
+       WHERE nmaaent = g_enterprise
+         AND nmas002 = g_detail2_d[l_index].b_nmck004
+
+      #抓付款對象
+      LET g_detail2_d[l_index].b_nmck005_desc = s_desc_get_trading_partner_abbr_desc(g_detail2_d[l_index].b_nmck005)
+
+      #付款資訊
+      IF cl_null(g_detail2_d[l_index].b_nmck014)THEN
+         LET g_detail2_d[l_index].b_nmck015_desc = g_detail2_d[l_index].b_nmck015
+      ELSE
+         LET g_detail2_d[l_index].b_nmck015_desc = g_detail2_d[l_index].b_nmck015 CLIPPED,
+                                                 "/",g_detail2_d[l_index].b_nmck014 CLIPPED
+      END IF
+
+      LET l_index = l_index + 1
+      IF l_index > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   CALL g_detail2_d.deleteElement(g_detail2_d.getLength())
+   
+   CLOSE b_fill_curs2
+   FREE aapp410_sel2
+END FUNCTION]]>
+  </point>
+  <point name="function.aapp410_apdacomp_carry" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 法人帶出主帳套及法人說明主帳套說明
+# Memo...........:
+# Usage..........: CALL aapp410_apdacomp_carry()
+# Date & Author..: 14/06/06 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapp410_apdacomp_carry()
+   LET tm.apdacomp_desc = s_desc_get_department_desc(tm.apdacomp)
+   SELECT glaald INTO tm.apdald FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaacomp = tm.apdacomp
+      AND glaa014 = 'Y'
+   LET tm.apdald_desc = s_desc_get_ld_desc(tm.apdald)
+   IF cl_null(tm.apdald_desc)THEN
+      LET tm.apdald_desc = tm.apdald
+   ELSE
+      LET tm.apdald_desc = tm.apdald,' (',tm.apdald_desc,') '
+   END IF
+   DISPLAY BY NAME tm.apdacomp_desc,tm.apdacomp,tm.apdald_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.aapp410_payornot_chk" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 請款單身勾選時或執行批次時的確認
+# Memo...........:
+# Usage..........: CALL aapp410_payornot_chk(p_ac)
+#                  RETURNING r_success,r_errno
+# Input parameter: 
+# Date & Author..: 14/06/06 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapp410_payornot_chk(p_ac)
+   DEFINE p_ac       LIKE type_t.num10
+   DEFINE r_errno    LIKE gzze_t.gzze001
+   DEFINE r_success  LIKE type_t.num5
+   DEFINE l_count    LIKE type_t.num10   #匯款資料檢查不符合
+   DEFINE l_count2   LIKE type_t.num10   #票據資料檢查有問題
+
+   LET r_success = TRUE
+   LET r_errno   = ''
+   IF cl_null(p_ac) OR p_ac <= 0 THEN RETURN r_success,r_errno END IF
+
+   #檢查1 此apce單身所屬的付款資料為匯款者，必須已壓上匯款日期
+   LET l_count = 0 
+   SELECT COUNT(*) INTO l_count FROM nmck_t,nmcl_t
+    WHERE nmckent = nmclent
+      AND nmckdocno = nmcldocno
+      AND nmckcomp  = nmclcomp
+      AND nmckent = g_enterprise
+      AND nmcldocno = g_detail_d[p_ac].b_apcedocno
+      AND nmcl002   = g_detail_d[p_ac].b_apceseq
+      AND nmck023   = '20'    #匯款
+      AND nmck012 IS NULL 
+   IF cl_null(l_count)THEN LET l_count = 0 END IF
+
+   #檢查2 此apce單身所屬付款資料為票據者，必需票據狀態為開立1
+   LET l_count2 = 0 
+   SELECT COUNT(*) INTO l_count2 FROM nmck_t,nmcl_t
+    WHERE nmckent = nmclent
+      AND nmckdocno = nmcldocno
+      AND nmckcomp  = nmclcomp
+      AND nmckent = g_enterprise
+      AND nmcldocno = g_detail_d[p_ac].b_apcedocno
+      AND nmcl002   = g_detail_d[p_ac].b_apceseq
+      AND nmck023   = '30'    #票據
+      AND nmck026  <> '1'
+   IF cl_null(l_count2)THEN LET l_count2 = 0 END IF 
+
+   CASE
+      WHEN l_count > 0 AND l_count2 > 0 
+         LET r_success = FALSE
+         LET r_errno   = 'aap-00085'
+      WHEN l_count > 0 
+         LET r_success = FALSE
+         LET r_errno   = 'aap-00086'
+      WHEN l_count2 > 0 
+         LET r_success = FALSE
+         LET r_errno   = 'aap-00087'
+   END CASE
+
+   RETURN r_success,r_errno
+END FUNCTION]]>
+  </point>
+  <point name="function.aapp410_do_process_chk" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢查選取的資料
+# Memo...........:
+# Usage..........: CALL aapp410_do_process_chk()
+# Input parameter: 
+# Date & Author..: 14/06/06 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapp410_do_process_chk()
+DEFINE l_i    LIKE type_t.num10
+   
+   FOR l_i = 1 TO g_detail_d.getLength()
+      IF g_detail_d[l_i].sel = 'Y' THEN
+         CALL aapp410_payornot_chk(l_i) RETURNING g_success1,g_errno
+         IF NOT cl_null(g_errno)THEN
+            LET g_aapp410msg = g_detail_d[l_i].b_apcedocno CLIPPED," / ",g_detail_d[l_i].b_apceseq USING "<<<<<<<<<<"
+            CALL cl_errmsg('apdadocno,apdaseq',g_aapp410msg,'',g_errno,1)
+            LET g_detail_d[l_i].sel = 'N'
+            CONTINUE FOR
+         END IF
+      END IF 
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="function.aapp410_do_process" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 執行請款單身批次結案
+# Memo...........:
+# Usage..........: CALL aapp410_do_process()
+# Date & Author..: 14/06/06 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapp410_do_process()
+DEFINE l_count   LIKE type_t.num10
+   DEFINE l_i       LIKE type_t.num10
+
+   LET l_count = 0 
+   
+   FOR l_i = 1 TO g_detail_d.getLength()
+      IF g_detail_d[l_i].sel = 'Y' THEN
+         LET l_count = 1
+         EXIT FOR
+      END IF
+   END FOR
+   IF l_count = 0 THEN RETURN END IF 
+
+   FOR l_i = 1 TO g_detail_d.getLength()
+      IF g_detail_d[l_i].sel = 'Y' THEN
+         CALL s_transaction_begin()
+         UPDATE apce_t SET apce033 = g_user,
+                           apce034 = TODAY
+          WHERE apceent = g_enterprise
+            AND apceld  = tm.apdald
+            AND apcedocno = g_detail_d[l_i].b_apcedocno
+            AND apceseq   = g_detail_d[l_i].b_apceseq
+         IF SQLCA.SQLCODE THEN
+            LET g_aapp410msg = g_detail_d[l_i].b_apcedocno CLIPPED," / ",g_detail_d[l_i].b_apceseq USING "<<<<<<<<<<"
+            CALL cl_errmsg('apdadocno,apdaseq',g_aapp410msg,'upd_apce',SQLCA.SQLCODE,1)
+            CALL s_transaction_end('N','0')
+         ELSE
+            CALL s_transaction_end('Y','0')
+         END IF
+      END IF
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.after_b_fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   CALL aapp410_b_fill2(1) ]]>
+  </point>
+  <point name="b_fill.foreach_into" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      g_detail_d[l_ac].* ]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET ls_wc = tm.wc CLIPPED
+   IF cl_null(ls_wc)THEN LET ls_wc = " 1=1" END IF   
+   LET g_sql  = "SELECT 'N',apcedocno,apceseq,apce006,apce100,apce109,apce032,apce038,apce009 ",
+                "  FROM apce_t,apda_t ",
+                " WHERE apceent = ? ",
+                "   AND apdaent = apceent ",
+                "   AND apdadocno = apcedocno ",
+                "   AND apdald    = apceld ",
+                "   AND ",ls_wc CLIPPED]]>
+  </point>
+  <point name="global.parameter" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[     ]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[sel             LIKE type_t.chr1,
+     b_apcedocno     LIKE apce_t.apcedocno,
+     b_apceseq       LIKE apce_t.apceseq,
+     b_apce006       LIKE apce_t.apce006,
+     b_apce100       LIKE apce_t.apce100,
+     b_apce109       LIKE apce_t.apce109,
+     b_apce032       LIKE apce_t.apce032,
+     b_apce038       LIKE apce_t.apce038,
+     b_apce009       LIKE apce_t.apce009
+                     END RECORD
+
+TYPE type_g_detail2_d RECORD
+     b_paytype       LIKE type_t.chr10,
+     b_nmck011       LIKE nmck_t.nmck011,
+     b_nmck012       LIKE nmck_t.nmck012,
+     b_nmck100       LIKE nmck_t.nmck100,
+     b_nmck103       LIKE nmck_t.nmck103,
+     b_billdocno     LIKE type_t.chr100,
+     b_nmck004       LIKE nmck_t.nmck004,
+     b_nmck004_desc  LIKE type_t.chr100,
+     b_nmckstus      LIKE nmck_t.nmckstus,
+     b_nmck005       LIKE nmck_t.nmck005,
+     b_nmck005_desc  LIKE type_t.chr100,
+     b_nmck014       LIKE nmck_t.nmck014,
+     b_nmck015       LIKE nmck_t.nmck015,
+     b_nmck015_desc  LIKE type_t.chr100
+                      END RECORD
+DEFINE g_detail2_d  DYNAMIC ARRAY OF type_g_detail2_d
+
+DEFINE tm           RECORD
+                apdasite      LIKE apda_t.apdasite,
+                apdasite_o    LIKE apda_t.apdasite,
+                apdasite_desc LIKE type_t.chr100,
+                apdacomp      LIKE apda_t.apdacomp,
+                apdacomp_o    LIKE apda_t.apdacomp,
+                apdacomp_desc LIKE type_t.chr100,
+                apdald        LIKE apda_t.apdald,
+                apdald_desc   LIKE type_t.chr100,
+                wc            STRING
+                    END RECORD
+DEFINE g_success1   LIKE type_t.num10
+DEFINE g_aapp410msg STRING]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('b_nmckstus','13')
+   CALL cl_set_combo_scc('b_apce006','8310')
+   CALL cl_set_combo_scc('b_paytype','8310')]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   INITIALIZE tm.* TO NULL
+   #帳務中心
+   #取得預設的帳務中心,因新增階段的時候,並不會知道site,所以以登入人員做為依據
+   CALL s_fin_get_account_center('',g_user,'2') RETURNING g_success1,tm.apdasite,g_errno
+   CALL s_desc_get_department_desc(tm.apdasite) RETURNING tm.apdasite_desc
+   #有g_ld,先做帳務中心及g_ld的勾稽,登入人員帳務人員時,基本上會有該g_ld的帳務中心權限
+  #IF NOT cl_null(g_glaald) THEN
+  #   #帳務中心與帳別勾稽
+  #   CALL s_fin_account_center_with_ld_chk(tm.apcasite,g_glaald,g_user,2,'N','') RETURNING g_success1,g_errno
+  #END IF
+   #該帳務中心與帳別無法勾稽到,以登入人員g_user取得預設帳別/法人
+  #IF NOT g_success1 OR cl_null(g_glaald) THEN
+      CALL s_fin_ld_carry('',g_user) RETURNING g_success1,tm.apdald,tm.apdacomp,g_errno
+      CALL s_fin_account_center_with_ld_chk(tm.apdasite,tm.apdald,g_user,2,'N','') RETURNING g_success1,g_errno
+  #END IF
+   LET tm.apdald_desc = s_desc_get_ld_desc(tm.apdald)
+   LET tm.apdacomp_desc = s_desc_get_department_desc(tm.apdacomp)
+   IF cl_null(tm.apdald_desc)THEN
+      LET tm.apdald_desc = tm.apdald
+   ELSE
+      LET tm.apdald_desc = tm.apdald,' (',tm.apdald_desc,') '
+   END IF
+
+   DISPLAY BY NAME tm.apdasite,tm.apdasite_desc,tm.apdacomp,tm.apdacomp_desc,
+                   tm.apdald,tm.apdald_desc]]>
+  </point>
+  <point name="ui_dialog.before_dialog2" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            NEXT FIELD apdasite   ]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ON ACTION batch_execute
+            CALL cl_showmsg_init()
+            CALL aapp410_do_process_chk()
+            CALL aapp410_do_process()
+            CALL cl_showmsg()
+            CALL aapp410_b_fill()
+            CALL aapp410_b_fill2(1)]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         CONSTRUCT tm.wc ON apda003,apdadocdt,apdadocno,apda005,apda009 
+                      FROM apda003,apdadocdt,apdadocno,apda005,apda009 
+
+         END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+            BEFORE ROW 
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               CALL aapp410_b_fill2(l_ac) 
+            ON ACTION choice_one
+               FOR li_idx = 1 TO g_detail_d.getLength()
+                  IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                     IF g_detail_d[li_idx].sel = 'N' THEN
+                        CALL aapp410_payornot_chk(li_idx) RETURNING g_success1,g_errno
+                        IF NOT cl_null(g_errno)THEN
+                           CALL cl_err('',g_errno,1)
+                           CONTINUE FOR
+                        END IF
+                        LET g_detail_d[li_idx].sel = "Y"
+                     ELSE
+                        LET g_detail_d[li_idx].sel = "N"
+                     END IF
+                  END IF
+               END FOR
+         END DISPLAY 
+
+         DISPLAY ARRAY g_detail2_d TO s_detail2.* ATTRIBUTE(COUNT=g_detail_cnt)
+         END DISPLAY ]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         INPUT BY NAME tm.apdasite,tm.apdacomp
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            AFTER FIELD apdasite
+               IF NOT cl_null(tm.apdasite)THEN
+                  IF cl_null(tm.apdasite_o) OR (tm.apdasite_o <> tm.apdasite)THEN
+                     CALL s_fin_account_center_chk(tm.apdasite,'','2')RETURNING g_success1,g_errno
+                     IF NOT cl_null(g_errno)THEN
+                        CALL cl_err('',g_errno,1)
+                        LET tm.apdasite = tm.apdasite_o
+                        LET tm.apdasite_desc = s_desc_get_department_desc(tm.apdasite)
+                        DISPLAY BY NAME tm.apdasite_desc,tm.apdasite
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+               LET tm.apdasite_o = tm.apdasite
+
+            AFTER FIELD apdacomp
+               LET tm.apdacomp_desc = NULL
+               LET tm.apdald_desc = NULL
+               DISPLAY BY NAME tm.apdacomp_desc,tm.apdald_desc
+               IF NOT cl_null(tm.apdacomp)THEN
+                  IF cl_null(tm.apdacomp_o) OR (tm.apdacomp_o <> tm.apdacomp)THEN
+                     #補法人檢查
+                     LET g_errno  = NULL   #albireo-s
+                     IF NOT cl_null(g_errno)THEN
+                        CALL cl_err('',g_errno,1)
+                        LET tm.apdacomp = tm.apdacomp_o
+                        CALL aapp410_apdacomp_carry()
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+               CALL aapp410_apdacomp_carry()
+               LET tm.apdacomp_o = tm.apdacomp
+
+            ON ACTION controlp INFIELD apdasite
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = tm.apdasite       #給予default值
+               CALL q_xrah002_2()                                #呼叫開窗
+               LET tm.apdasite = g_qryparam.return1        #將開窗取得的值回傳到變數
+               CALL s_desc_get_department_desc(tm.apdasite) RETURNING tm.apdasite_desc
+               DISPLAY BY NAME tm.apdasite,tm.apdasite_desc
+               NEXT FIELD apdasite
+
+            ON ACTION controlp INFIELD apdacomp
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = tm.apdacomp
+               CALL q_ooef001_11()                                       #呼叫開窗
+               LET tm.apdacomp = g_qryparam.return1          #將開窗取得的值回傳到變數
+               CALL aapp410_apdacomp_carry()
+               NEXT FIELD apdacomp
+
+         END INPUT]]>
+  </point>
+  <point name="ui_dialog.onaction_sel" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL cl_showmsg_init()
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  CALL aapp410_payornot_chk(li_idx) RETURNING g_success1,g_errno
+                  IF NOT cl_null(g_errno)THEN
+                     LET g_aapp410msg = g_detail_d[li_idx].b_apcedocno CLIPPED," / ",g_detail_d[li_idx].b_apceseq USING "<<<<<<<<<<"
+                     CALL cl_errmsg('apdadocno,apdaseq',g_aapp410msg,'',g_errno,1)
+                     LET g_detail_d[li_idx].sel = 'N'
+                     CONTINUE FOR
+                  END IF
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            CALL cl_showmsg()]]>
+  </point>
+  <point name="ui_dialog.onaction_selall" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            CALL cl_showmsg_init()
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               CALL aapp410_payornot_chk(li_idx) RETURNING g_success1,g_errno
+               IF NOT cl_null(g_errno)THEN
+                  LET g_aapp410msg = g_detail_d[li_idx].b_apcedocno CLIPPED," / ",g_detail_d[li_idx].b_apceseq USING "<<<<<<<<<<"
+                  CALL cl_errmsg('apdadocno,apdaseq',g_aapp410msg,'',g_errno,1)
+                  LET g_detail_d[li_idx].sel = 'N'
+                  CONTINUE FOR
+               END IF
+               LET g_detail_d[li_idx].sel = "Y"
+            END FOR
+            CALL cl_showmsg()]]>
+  </point>
+  <section id="aapp410.b_fill" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION aapp410_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   PREPARE aapp410_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aapp410_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   {<point name="b_fill.clear"/>}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   {<point name="b_fill.foreach_into"/>}
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.foreach_iside"/>}
+      #end add-point
+      
+      CALL aapp410_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.other_table"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aapp410_sel
+   
+   LET l_ac = 1
+   CALL aapp410_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.after_b_fill"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapp410.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000011
+#+ 
+#+ Filename...: aapp410
+#+ Description: 已付請款單批次結案作業
+#+ Creator....: 03080(2014/06/04)
+#+ Modifier...: 03080(2014/07/02)
+#+ Buildtype..: 應用 p02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="aapp410.detail_show" ver="1" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION aapp410_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段
+   {<point name="detail_show.detail_show"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapp410.fetch" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION aapp410_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapp410.filter" ver="1" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION aapp410_filter()
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+ 
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   {<point name="filter.detail_cnt"/>}
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL aapp410_b_fill()
+   CALL aapp410_fetch()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapp410.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION aapp410_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapp410.filter_show" ver="1" status="" src="s">
+    <![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aapp410_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aapp410_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapp410.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aapp410.init" ver="1" status="" src="s">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION aapp410_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapp410.main" ver="1" status="" src="s">
+    <![CDATA[#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aap","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aapp410 WITH FORM cl_ap_formpath("aap",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aapp410_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aapp410_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aapp410
+   END IF 
+   
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="aapp410.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aapp410.query" ver="1" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION aapp410_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" />}
+   #end add-point 
+   
+   #add-point:cs段after_construct
+   {<point name="query.after_construct" />}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aapp410_b_fill()
+   LET l_ac = g_master_idx
+   CALL aapp410_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapp410.ui_dialog" ver="1" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION aapp410_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+ 
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+            END FOR
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aapp410_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            CALL aapp410_query()
+ 
+         # 條件清除
+         ON ACTION qbeclear
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL aapp410_b_fill()
+            CALL aapp410_fetch()
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

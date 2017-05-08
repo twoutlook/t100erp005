@@ -1,0 +1,1113 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="anmt840.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2016-10-14 17:27:00), PR版次:0003(2016-10-14 18:18:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000035
+#+ Filename...: anmt840
+#+ Description: 對帳單維護作業(網銀下載外部導入)
+#+ Creator....: 00810(2014-09-12 16:02:03)
+#+ Modifier...: 02114 -SD/PR- 02114
+ 
+{</section>}
+ 
+{<section id="anmt840.global" >}
+#應用 i00 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160122-00001#24 2016/01/27 By yangtt   添加交易帳戶編號用戶權限空管   
+#160122-00001#24 2016/03/16 By 07900    添加交易帳戶編號用戶權限空管,增加部门权限
+#161013-00001#1  2016/10/14 By 02114    1、整单操作下，1）取消【整批导入】按钮；2）【产生Excel范本】和【导入Excel数据】合并成一个按钮，点击后，串至azzp660，同时传入作业编号anmt840。
+#                                       2、anmt840开账资料azzp660 设定资料更新.
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+#單身宣告
+ TYPE type_g_nmdg_d        RECORD
+   nmaa005 LIKE nmaa_t.nmaa005,
+   nmaa005_desc LIKE type_t.chr80,
+   nmdg001 LIKE nmdg_t.nmdg001,
+   nmas003 LIKE nmas_t.nmas003,
+   nmdg003 LIKE nmdg_t.nmdg003,
+   nmdg004 LIKE nmdg_t.nmdg004,
+   nmdg005 LIKE nmdg_t.nmdg005,
+   nmdg006 LIKE nmdg_t.nmdg006,
+   nmdg007 LIKE nmdg_t.nmdg007,
+   nmdg008 LIKE nmdg_t.nmdg008,
+   nmdg009 LIKE nmdg_t.nmdg009,
+   nmdg010 LIKE nmdg_t.nmdg010,
+   nmdg011 LIKE nmdg_t.nmdg011,
+   nmdg012 LIKE nmdg_t.nmdg012,
+   nmdg013 LIKE nmdg_t.nmdg013,
+   nmdg014 LIKE nmdg_t.nmdg014,
+   nmdg015 LIKE nmdg_t.nmdg015,
+   nmdg016 LIKE nmdg_t.nmdg016,
+   nmdg002 LIKE nmdg_t.nmdg002
+       END RECORD
+       
+DEFINE g_nmdg_d          DYNAMIC ARRAY OF type_g_nmdg_d #單身變數
+DEFINE g_nmdg_d_t        type_g_nmdg_d                  #單身備份
+DEFINE g_nmdg_d_o        type_g_nmdg_d                  #單身備份
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_sql_bank           STRING                       #160122-00001#24 By 07900--add
+DEFINE g_wc                 STRING
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10 
+DEFINE g_current_idx        LIKE type_t.num10
+DEFINE l_ac                 LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num5              #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+DEFINE g_worksheet_hidden   LIKE type_t.num5 
+DEFINE g_searchcol          STRING                        #查詢欄位代碼
+DEFINE g_searchstr          STRING                        #查詢欄位字串
+DEFINE g_searchtype         LIKE type_t.chr200
+DEFINE g_current_row        LIKE type_t.num5              #Browser所在筆數
+DEFINE g_current_sw         BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_tree      DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位  
+       #外顯欄位
+       b_show          LIKE type_t.chr100,
+       #父節點id
+       b_pid           LIKE type_t.chr100,
+       #本身節點id
+       b_id            LIKE type_t.chr100,
+       #是否展開
+       b_exp           LIKE type_t.chr100,
+       #是否有子節點
+       b_hasC          LIKE type_t.num5,
+       #是否已展開
+       b_isExp         LIKE type_t.num5,
+       #展開值
+       b_expcode       LIKE type_t.num5,
+       #tree自定義欄位
+       b_nmaa002       LIKE nmaa_t.nmaa002,
+       b_nmas002       LIKE nmas_t.nmas002,
+       b_nmas003       LIKE nmas_t.nmas003
+       END RECORD 
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="anmt840.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   
+   #end add-point    
+   #add-point:main段define(客製用)
+   
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("anm","")
+ 
+   #add-point:作業初始化
+   
+   #end add-point
+ 
+   #add-point:SQL_define
+   LET g_forupd_sql = " SELECT nmdg001,nmdg003,nmdg004,nmdg005,nmdg006,nmdg007,nmdg008,nmdg009,nmdg010,",
+                      "       nmdg011,nmdg012,nmdg013,nmdg014,nmdg015,nmdg016,nmdg002 FROM nmdg_t ",
+                      "  WHERE nmdgent=? AND nmdg001=? AND nmdg002=? FOR UPDARE" 
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE anmt840_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_anmt840 WITH FORM cl_ap_formpath("anm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL anmt840_init()
+ 
+      #進入選單 Menu (='N')
+      CALL anmt840_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_anmt840
+   END IF
+ 
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="anmt840.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt840_init()
+   
+   LET g_error_show = 1
+   CALL cl_set_combo_scc('nmdg008',9946)
+   
+   CALL cl_set_comp_visible('master',FALSE)
+   #160122-00001#24 By 07900 --add--str
+   LET g_sql_bank=NULL
+   CALL s_anmi120_get_bank_account_sql(g_user,g_dept) RETURNING g_sub_success,g_sql_bank  
+   #160122-00001#24 By 07900 --add--end
+   CALL s_fin_create_account_center_tmp() 
+   
+   CALL anmt840_default_search()
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt840_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   DEFINE l_success LIKE type_t.num5
+   DEFINE l_comp    LIKE ooef_t.ooef001
+   #end add-point 
+ 
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog 
+
+   #end add-point
+   
+   WHILE TRUE
+   
+      #CALL anmt840_tree_fill()
+      #CALL anmt840_b_fill()
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+         INPUT g_searchcol,g_searchstr FROM formonly.cbo_searchcol,formonly.searchstr
+            BEFORE INPUT
+         END INPUT
+      
+         DISPLAY ARRAY g_tree TO s_browse.*
+             BEFORE ROW
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+
+               IF g_current_idx > g_tree.getLength() THEN
+                  LET g_current_idx = g_tree.getLength()
+               END IF
+               IF g_current_idx > 0 THEN
+                  CALL anmt840_b_fill()
+               END IF 
+
+         END DISPLAY
+               
+         DISPLAY ARRAY g_nmdg_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display 
+
+               #end add-point
+               #讓各頁籤能夠同步指到特定資料
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2
+
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #+ 此段落由子樣板a48產生
+ 
+               #add-point:display array-before row
+
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         #add-point:ui_dialog段自定義display array
+
+         #end add-point
+    
+         BEFORE DIALOG
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+            IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               LET g_current_idx = g_current_row
+            END IF
+            LET g_current_row = g_current_idx #目前指標
+            IF g_current_idx = 0 THEN
+               LET g_current_idx = 1
+            END IF
+            LET g_current_sw = TRUE
+
+            IF g_current_idx > g_tree.getLength() THEN
+               LET g_current_idx = g_tree.getLength()
+            END IF
+            IF g_current_idx > 0 THEN
+               CALL anmt840_b_fill()
+            END IF 
+ 
+         #一般搜尋
+         ON ACTION searchdata
+            #取得搜尋關鍵字
+            INITIALIZE g_wc TO NULL
+            INITIALIZE g_wc2 TO NULL
+
+            LET g_searchstr = GET_FLDBUF(searchstr)
+            IF NOT anmt840_browser_search("normal") THEN
+               CONTINUE DIALOG
+            END IF
+            IF g_tree.getLength() = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -100
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            END IF
+            LET g_action_choice = "searchdata"
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL anmt840_query()
+            END IF
+ 
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_tree)
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_nmdg_d)
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+            
+         ON ACTION open_anmp100
+            LET g_action_choice="open_anmp100"
+            IF cl_auth_chk_act("open_anmp100") THEN
+               LET la_param.prog = "anmp100"
+               LET la_param.param[1] = ' '
+               LET la_param.param[2] = ' '
+               LET ls_js = util.JSON.stringify(la_param)
+               CALL cl_cmdrun(ls_js)
+            END IF
+            
+         ON ACTION open_anmt840_01
+            LET g_action_choice="open_anmt840_01"
+            IF cl_auth_chk_act("open_anmt840_01") THEN
+               CALL anmt840_01() RETURNING l_success
+               IF l_success = TRUE THEN
+                  CALL s_transaction_end('Y','1')
+                  ERROR "INSERT O.K"
+               ELSE
+                  CALL s_transaction_end('N','1')
+               END IF
+               CALL anmt840_tree_fill()  
+               IF g_current_idx > 0 THEN
+                  CALL anmt840_b_fill()
+               END IF
+            END IF
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+            
+         ON ACTION mainhidden       #主頁摺疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementImage("mainhidden","small/arr-r.png")
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementImage("mainhidden","small/arr-l.png")
+               LET g_main_hidden = 1
+            END IF
+
+         ON ACTION worksheethidden   #瀏覽頁折疊
+            IF g_worksheet_hidden THEN
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               CALL gfrm_curr.setElementImage("worksheethidden","small/arr-l.png")
+               LET g_worksheet_hidden = 0
+               NEXT FIELD b_nmab010
+            ELSE
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               CALL gfrm_curr.setElementImage("worksheethidden","small/arr-r.png")
+               LET g_worksheet_hidden = 1
+            END IF
+           
+         #161013-00001#1--add--str--lujh
+         ON ACTION excel
+            LET g_action_choice="excel"
+            IF cl_auth_chk_act("excel") THEN
+               LET la_param.prog = 'azzp660 '
+
+               LET ls_js = util.JSON.stringify( la_param )
+               CALL cl_cmdrun_wait(ls_js)
+               
+            END IF
+         #161013-00001#1--add--end--lujh
+
+         ON ACTION excel_example
+            LET g_action_choice="excel_example"
+            IF cl_auth_chk_act("excel_example") THEN
+
+               LET g_etlparam[1].para_id = "g_lang"
+               LET g_etlparam[1].type = "string"
+               LET g_etlparam[1].value = g_lang
+
+               LET la_param.prog = 'awsp200'
+               LET la_param.param[1] = g_prog
+               LET la_param.param[2] = "excel_example"
+               LET la_param.param[3] = util.JSON.stringify(g_etlparam)
+
+               LET ls_js = util.JSON.stringify( la_param )
+               CALL cl_cmdrun_wait(ls_js)
+               
+            END IF
+
+         ON ACTION excel_load
+            LET g_action_choice="excel_load"
+            IF cl_auth_chk_act("excel_load") THEN
+
+               LET g_etlparam[1].para_id = "g_lang"
+               LET g_etlparam[1].type = "string"
+               LET g_etlparam[1].value = g_lang
+
+               LET g_etlparam[2].para_id = "nmdgsite"
+               LET g_etlparam[2].type = "string"
+               LET g_etlparam[2].value = g_site
+
+               SELECT ooef017 INTO l_comp FROM ooef_t WHERE ooefent = g_enterprise
+                  AND ooef001 = g_site
+
+               LET g_etlparam[3].para_id = "nmdgcomp"
+               LET g_etlparam[3].type = "string"
+               LET g_etlparam[3].value = l_comp
+
+               LET la_param.prog = 'awsp200'
+               LET la_param.param[1] = g_prog
+               LET la_param.param[2] = "excel_load"
+               LET la_param.param[3] = util.JSON.stringify(g_etlparam)
+
+               LET ls_js = util.JSON.stringify( la_param )
+               CALL cl_cmdrun_wait(ls_js)
+
+            END IF
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前
+
+         #end add-point
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt840_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_nmdg_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON nmaa005,nmdg001,nmas003,nmdg003,nmdg004,nmdg005,nmdg006,nmdg007,nmdg008,nmdg009,nmdg010,nmdg011,
+                         nmdg012,nmdg013,nmdg014,nmdg015,nmdg016,nmdg002      
+ 
+         FROM s_detail1[1].nmaa005,s_detail1[1].nmdg001,s_detail1[1].nmas003,s_detail1[1].nmdg003,s_detail1[1].nmdg004,s_detail1[1].nmdg005,s_detail1[1].nmdg006,
+              s_detail1[1].nmdg007,s_detail1[1].nmdg008,s_detail1[1].nmdg009,s_detail1[1].nmdg010,s_detail1[1].nmdg011,
+              s_detail1[1].nmdg012,s_detail1[1].nmdg013,s_detail1[1].nmdg014,s_detail1[1].nmdg015,s_detail1[1].nmdg016,
+              s_detail1[1].nmdg002
+              
+         ON ACTION controlp INFIELD nmdg001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   #160122-00001#24--add---str
+            LET g_qryparam.where = " nmdg001 IN (",g_sql_bank,")"   #160122-00001#24 By 07900 --mod
+            #160122-00001#24--add---end
+            CALL q_nmdg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmdg001  #顯示到畫面上
+            LET g_qryparam.where = " "             #160122-00001#24
+            NEXT FIELD nmdg001
+         
+         ON ACTION controlp INFIELD nmas003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_ooai001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmas003  #顯示到畫面上
+            NEXT FIELD nmas003  
+            
+      END CONSTRUCT
+      
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog
+
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct
+   LET g_current_idx = 1
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+   
+   CALL anmt840_tree_fill()  
+   IF g_current_idx > 0 THEN
+      CALL anmt840_b_fill()
+   END IF    
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   
+   LET INT_FLAG = FALSE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt840_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+
+   #end add-point  
+   
+   #add-point:default_search段開始前
+
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " nmdg001 = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " nmdg002 = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql
+
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+      #預設查詢條件
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=2"
+      END IF
+   END IF
+ 
+   #add-point:default_search段結束前
+
+   #end add-point  
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt840_browser_search(p_type)
+   DEFINE p_type LIKE type_t.chr10
+   
+   #若無輸入關鍵字則查找出所有資料
+   IF NOT cl_null(g_searchstr) AND g_searchcol='0' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00005"
+      LET g_errparam.extend = "searchcol"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF
+
+   IF NOT cl_null(g_searchstr) THEN
+      LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+      LET g_wc = g_wc.toLowerCase()
+   ELSE
+      LET g_wc = " 1=1 "
+   END IF
+
+   #若為排序搜尋則添加以下條件
+
+   CALL anmt840_tree_fill()
+   CALL ui.Interface.refresh()
+   RETURN TRUE
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt840_tree_fill()
+DEFINE l_n              LIKE type_t.num5
+DEFINE l_i              LIKE type_t.num5
+DEFINE l_pid            LIKE type_t.chr50   #用於樹的第一層
+DEFINE ls_msg           STRING
+DEFINE l_n2             LIKE type_t.num5
+DEFINE l_nmaa001        LIKE nmaa_t.nmaa001
+DEFINE l_nmab010_desc   LIKE nmanl_t.nmanl003
+DEFINE l_nmaa001_desc   LIKE nmaal_t.nmaal003
+DEFINE l_desc           LIKE ooefl_t.ooefl003
+DEFINE l_max_level      LIKE type_t.num5
+DEFINE l_level          LIKE type_t.num5
+DEFINE l_ooed002        LIKE ooed_t.ooed002
+DEFINE l_nmaa002        LIKE nmaa_t.nmaa002
+
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF 
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF 
+   
+   CALL g_tree.clear()
+   LET g_cnt = 1
+   LET l_n = 1
+   
+#   LET g_sql = " SELECT UNIQUE t0.nmab010 FROM nmab_t t0,nmaa_t t1,nmas_t t2,nmdg_t t3 ",
+#               "  WHERE t3.nmdgent=t2.nmasent AND t3.nmdg001=t2.nmas002 AND t3.nmdg018=t2.nmas001 ",
+#               "    AND t2.nmasent=t1.nmaaent AND t2.nmas001=t1.nmaa001 ",
+#               "    AND t1.nmaaent=t0.nmabent AND t1.nmaa004=t0.nmab001 ",
+#               "    AND t0.nmabent='"||g_enterprise||"' AND (", g_wc, ") AND (", g_wc2, ") ",
+#               "  ORDER BY t0.nmab010"
+#        
+#   PREPARE tree_pre1 FROM g_sql
+#   DECLARE tree_cur1 CURSOR FOR tree_pre1
+#   FOREACH tree_cur1 INTO g_tree[g_cnt].b_nmab010
+#      IF SQLCA.sqlcode THEN
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.code = SQLCA.sqlcode
+#         LET g_errparam.extend = 'foreach:'
+#         LET g_errparam.popup = TRUE
+#         CALL cl_err()
+#
+#         EXIT FOREACH
+#      END IF
+#      LET g_tree[g_cnt].b_pid = '0' CLIPPED
+#      LET g_tree[g_cnt].b_id = g_cnt USING "<<<"
+#      INITIALIZE g_ref_fields TO NULL
+#      LET g_ref_fields[1] = g_tree[g_cnt].b_nmab010
+#      CALL ap_ref_array2(g_ref_fields,"SELECT nmanl003 FROM nmanl_t WHERE nmanlent='"||g_enterprise||"' AND nmanl001=? AND nmanl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#      LET l_nmab010_desc = g_rtn_fields[1]
+#      LET g_tree[g_cnt].b_show =  l_nmab010_desc,' (',g_tree[g_cnt].b_nmab010,')'
+#      LET g_tree[g_cnt].b_exp = TRUE
+#      LET g_tree[g_cnt].b_hasC = TRUE
+#      LET g_tree[g_cnt].b_isExp = TRUE
+#      LET l_pid = g_tree[g_cnt].b_id CLIPPED
+#      LET l_n = g_cnt
+#      LET g_cnt = g_cnt + 1   
+#      LET g_sql = " SELECT UNIQUE t0.nmaa005,t1.nmas003,t0.nmaa001 FROM nmaa_t t0,nmas_t t1,nmab_t t2,nmdg_t t3",
+#                  "  WHERE t1.nmasent=t0.nmaaent AND t1.nmas001=t0.nmaa001 AND t1.nmasent = '" ||g_enterprise|| "' ",
+#                  "    AND t0.nmaaent=t2.nmabent AND t0.nmaa004=t2.nmab001 AND t2.nmab010='",g_tree[l_n].b_nmab010,"' ",
+#                  "    AND t3.nmdg001=t1.nmas002 AND t3.nmdg018=t1.nmas001 AND (", g_wc, ") AND (", g_wc2, ") ",
+#                  "  ORDER BY t0.nmaa005"          
+#      PREPARE tree_pre2 FROM g_sql
+#      DECLARE tree_cur2 CURSOR FOR tree_pre2
+#      FOREACH tree_cur2 INTO g_tree[g_cnt].b_nmaa005,g_tree[g_cnt].b_nmas003,l_nmaa001
+#         LET g_tree[g_cnt].b_nmab010 = g_tree[l_n].b_nmab010
+#         LET g_tree[g_cnt].b_pid = l_pid
+#         LET g_tree[g_cnt].b_id = l_pid,".",g_cnt USING "<<<"
+#         INITIALIZE g_ref_fields TO NULL
+#         LET g_ref_fields[1] = l_nmaa001
+#         CALL ap_ref_array2(g_ref_fields,"SELECT nmaal003 FROM nmaal_t WHERE nmaalent='"||g_enterprise||"' AND nmaal001=? AND nmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#         LET l_nmaa001_desc = g_rtn_fields[1]
+#         LET ls_msg = g_tree[g_cnt].b_nmaa005
+#         LET l_i=ls_msg.getLength() 
+#         LET ls_msg=ls_msg.substring(l_i-3,l_i)
+#         LET g_tree[g_cnt].b_show =  l_nmaa001_desc,' (',ls_msg,')','(',g_tree[g_cnt].b_nmas003,')'
+#         LET g_tree[g_cnt].b_exp = TRUE
+#         LET g_tree[g_cnt].b_hasC = FALSE
+#         LET g_cnt = g_cnt +1
+#      END FOREACH
+#      LET l_n = g_tree.getLength() 
+#   END FOREACH
+#   CALL g_tree.deleteElement(l_n)
+#   FREE tree_pre1
+#   FREE tree_pre2
+
+
+   #取得资产組織下所屬成員
+   CALL s_fin_account_center_sons_query('7',g_site,g_today,'1')
+   
+   #抓取组织最大层级数
+   LET g_sql = "SELECT MAX(tree_level) FROM s_fin_tmp1 WHERE ooed002=?"
+   PREPARE anmt840_max_level_pr FROM g_sql
+   
+   SELECT COUNT(*) INTO l_n2 FROM s_fin_tmp1 WHERE ooed002 <> '-' AND ooed002 IS NOT NULL  
+   #抓取最上层组织，即树节点，确定每一棵树
+   LET g_sql = "SELECT DISTINCT ooed002 ",
+               "  FROM s_fin_tmp1,nmaa_t,nmas_t,nmdg_t",
+               " WHERE ooef001 = nmaa002 ",
+               "   AND nmaaent = nmasent AND nmaa001 = nmas001 ",
+               "   AND nmasent = nmdgent AND nmas001 = nmdg018 AND nmas002 = nmdg001 ",
+               "   AND nmaaent = ",g_enterprise," AND ",g_wc2
+               #160122-00001#24--add---str
+               ,"  AND nmdg001 IN(",g_sql_bank,")"   #160122-00001#24 By 07900 --mod  
+               #160122-00001#24--add---end
+   IF l_n2 > 0 THEN
+      LET g_sql = g_sql," AND ooed002 <> '-' "
+   END IF
+   LET g_sql = g_sql," ORDER BY ooed002"
+   PREPARE anmt840_tree_pr FROM g_sql
+   DECLARE anmt840_tree_cs CURSOR FOR anmt840_tree_pr
+   
+   #父节点：開戶人（組織）
+   LET g_sql = "SELECT DISTINCT ooef001 ",
+               "  FROM s_fin_tmp1,nmaa_t,nmas_t,nmdg_t",
+               " WHERE ooef001 = nmaa002 ",
+               "   AND nmaaent = nmasent AND nmaa001 = nmas001 ",
+               "   AND nmasent = nmdgent AND nmas001 = nmdg018 AND nmas002 = nmdg001 ",
+               "   AND nmaaent = ",g_enterprise," AND ",g_wc2,
+               "   AND tree_level = ? ",
+               "   AND ooed002 = ? ",
+               #160122-00001#24--add---str
+               "   AND nmdg001 IN(",g_sql_bank,")",  #160122-00001#24 By 07900 --mod 
+               #160122-00001#24--add---end
+               " ORDER BY ooef001"
+   PREPARE anmt840_tree_pr1 FROM g_sql
+   DECLARE anmt840_tree_cs1 CURSOR FOR anmt840_tree_pr1
+   
+   #子节点：交易帳戶編碼
+   LET g_sql = "SELECT DISTINCT nmas002,nmas003 ",
+               "  FROM nmaa_t,nmas_t,nmdg_t",
+               " WHERE nmaaent = nmasent AND nmaa001 = nmas001 ",
+               "   AND nmasent = nmdgent AND nmas001 = nmdg018 AND nmas002 = nmdg001 ",
+               "   AND nmaaent =",g_enterprise," AND ",g_wc2,
+               "   AND nmaa002=?",
+               #160122-00001#24--add---str
+               "   AND nmdg001 IN(",g_sql_bank,")",   #160122-00001#24 By 07900 --mod 
+               #160122-00001#24--add---end
+               " ORDER BY nmas002,nmas003"
+   PREPARE anmt840_tree_pr2 FROM g_sql
+   DECLARE anmt840_tree_cs2 CURSOR FOR anmt840_tree_pr2
+   LET l_i = 1
+   LET l_ooed002 = ''
+   #抓取最上层组织，即树节点，确定每一棵树
+   FOREACH anmt840_tree_cs INTO l_ooed002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach: anmt840_tree_cs'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+      
+         EXIT FOREACH
+      END IF
+      #此棵树的最大层级
+      EXECUTE anmt840_max_level_pr USING l_ooed002 INTO l_max_level
+      LET l_pid = l_ooed002
+      FOR l_level = 0 TO l_max_level
+         FOREACH anmt840_tree_cs1 USING l_level,l_ooed002 INTO g_tree[l_i].b_nmaa002
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'foreach: anmt840_tree_cs1'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            
+               EXIT FOREACH
+            END IF
+            #组织名称
+            CALL s_desc_get_department_desc(g_tree[l_i].b_nmaa002) RETURNING l_desc
+            LET g_tree[l_i].b_show =  g_tree[l_i].b_nmaa002,' (',l_desc,')'
+            LET g_tree[l_i].b_pid = l_pid
+            LET g_tree[l_i].b_id = l_pid,'.',l_level USING '<<<<'
+            LET g_tree[l_i].b_exp = TRUE
+            LET g_tree[l_i].b_hasC = TRUE
+            LET g_tree[l_i].b_isExp = TRUE
+            
+            LET l_pid = g_tree[l_i].b_id CLIPPED
+            LET l_nmaa002 = g_tree[l_i].b_nmaa002
+            LET l_i = l_i + 1 
+            
+            #抓取交易账户资料
+            FOREACH anmt840_tree_cs2 USING l_nmaa002 INTO g_tree[l_i].b_nmas002,g_tree[l_i].b_nmas003
+               LET g_tree[l_i].b_nmaa002 = l_nmaa002
+               LET g_tree[l_i].b_pid = l_pid
+               LET g_tree[l_i].b_id = l_pid,".",g_tree[l_i].b_nmas002
+               LET g_tree[l_i].b_show =  g_tree[l_i].b_nmas002,'(',g_tree[l_i].b_nmas003,')'
+               LET g_tree[l_i].b_exp = TRUE
+               LET g_tree[l_i].b_hasC = FALSE
+               LET l_i = l_i +1
+            END FOREACH
+         END FOREACH
+      END FOR
+   END FOREACH
+   LET l_i = l_i - 1
+   CALL g_tree.deleteElement(g_tree.getLength())
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt840_b_fill()
+   #add-point:b_fill段define
+   IF g_current_idx=0 THEN
+      RETURN
+   END IF
+   IF g_tree.getLength() = 0 THEN
+      RETURN
+   END IF
+   #end add-point
+   
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+
+   #end add-point
+ 
+#   IF cl_null(g_tree[g_current_idx].b_nmaa005) AND cl_null(g_tree[g_current_idx].b_nmas003) THEN
+#      IF cl_null(g_tree[g_current_idx].b_nmab010) THEN
+#         LET g_sql = " SELECT UNIQUE t1.nmaa005,t0.nmdg001,t2.nmas003,t0.nmdg003,t0.nmdg004,t0.nmdg005,t0.nmdg006,t0.nmdg007,t0.nmdg008,t0.nmdg009,",
+#                     "        t0.nmdg010,t0.nmdg011,t0.nmdg012,t0.nmdg013,t0.nmdg014,t0.nmdg015,t0.nmdg016,t0.nmdg002,", 
+#                     "        t3.nmaal003 FROM nmdg_t t0,nmas_t t2,nmaa_t t1",
+#                     "   LEFT JOIN nmaal_t t3 ON t3.nmaalent='"||g_enterprise||"' AND t3.nmaal001=t1.nmaa001 AND t3.nmaal002='"||g_dlang||"' ",
+#                     "  WHERE t0.nmdgent=t2.nmasent AND t0.nmdg001=t2.nmas002 AND t0.nmdg018=t2.nmas001 AND t2.nmasent=t1.nmaaent AND t2.nmas001=t1.nmaa001 AND t0.nmdgent= ? AND (", g_wc2, ") AND (", g_wc, ") " 
+#      ELSE               
+#         LET g_sql = " SELECT UNIQUE t1.nmaa005,t0.nmdg001,t2.nmas003,t0.nmdg003,t0.nmdg004,t0.nmdg005,t0.nmdg006,t0.nmdg007,t0.nmdg008,t0.nmdg009,",
+#                     "        t0.nmdg010,t0.nmdg011,t0.nmdg012,t0.nmdg013,t0.nmdg014,t0.nmdg015,t0.nmdg016,t0.nmdg002,", 
+#                     "        t3.nmaal003 FROM nmdg_t t0,nmas_t t2,nmab_t t4,nmaa_t t1",
+#                     "   LEFT JOIN nmaal_t t3 ON t3.nmaalent='"||g_enterprise||"' AND t3.nmaal001=t1.nmaa001 AND t3.nmaal002='"||g_dlang||"' ",
+#                     "  WHERE t0.nmdgent=t2.nmasent AND t0.nmdg001=t2.nmas002 AND t0.nmdg018=t2.nmas001 AND t2.nmasent=t1.nmaaent AND t2.nmas001=t1.nmaa001 ",
+#                     "    AND t1.nmaaent=t4.nmabent AND t1.nmaa004=t4.nmab001 AND t4.nmab010='",g_tree[g_current_idx].b_nmab010,"' AND t0.nmdgent= ? AND (", g_wc2, ") AND (", g_wc, ") " 
+#      END IF           
+#   ELSE
+#      LET g_sql = " SELECT UNIQUE t1.nmaa005,t0.nmdg001,t2.nmas003,t0.nmdg003,t0.nmdg004,t0.nmdg005,t0.nmdg006,t0.nmdg007,t0.nmdg008,t0.nmdg009,",
+#                  "        t0.nmdg010,t0.nmdg011,t0.nmdg012,t0.nmdg013,t0.nmdg014,t0.nmdg015,t0.nmdg016,t0.nmdg002,", 
+#                  "        t3.nmaal003 FROM nmdg_t t0,nmas_t t2,nmab_t t4,nmaa_t t1",
+#                  "   LEFT JOIN nmaal_t t3 ON t3.nmaalent='"||g_enterprise||"' AND t3.nmaal001=t1.nmaa001 AND t3.nmaal002='"||g_dlang||"' ",
+#                  "  WHERE t0.nmdgent=t2.nmasent AND t0.nmdg001=t2.nmas002 AND t0.nmdg018=t2.nmas001 AND t2.nmas003='",g_tree[g_current_idx].b_nmas003,"' ",
+#                  "    AND t2.nmasent=t1.nmaaent AND t2.nmas001=t1.nmaa001 AND t1.nmaa005='",g_tree[g_current_idx].b_nmaa005,"' ",
+#                  "    AND t1.nmaaent=t4.nmabent AND t1.nmaa004=t4.nmab001 AND t4.nmab010='",g_tree[g_current_idx].b_nmab010,"'  AND t0.nmdgent= ? AND (", g_wc2, ") AND (", g_wc, ") " 
+#   END IF        
+   #add-point:b_fill段sql wc
+ 
+   LET g_sql = " SELECT UNIQUE t1.nmaa005,t0.nmdg001,t2.nmas003,t0.nmdg003,t0.nmdg004,t0.nmdg005,t0.nmdg006,t0.nmdg007,t0.nmdg008,t0.nmdg009,",
+                  "        t0.nmdg010,t0.nmdg011,t0.nmdg012,t0.nmdg013,t0.nmdg014,t0.nmdg015,t0.nmdg016,t0.nmdg002,", 
+                  "        t3.nmaal003 FROM nmdg_t t0,nmas_t t2,nmaa_t t1",
+                  "   LEFT JOIN nmaal_t t3 ON t3.nmaalent='"||g_enterprise||"' AND t3.nmaal001=t1.nmaa001 AND t3.nmaal002='"||g_dlang||"' ",
+                  "  WHERE t0.nmdgent=t2.nmasent AND t0.nmdg001=t2.nmas002 AND t0.nmdg018=t2.nmas001 ",
+                  "    AND t2.nmasent=t1.nmaaent AND t2.nmas001=t1.nmaa001 ",
+                  "    AND t0.nmdgent= ? AND (", g_wc2, ") AND (", g_wc, ") " 
+                  #160122-00001#24--add---str
+                  ," AND t0.nmdg001 IN(",g_sql_bank,")"   #160122-00001#24 By 07900 --mod  
+                  #160122-00001#24--add---end
+                  
+   IF NOT cl_null(g_tree[g_current_idx].b_nmaa002) THEN
+      LET g_sql = g_sql," AND t1.nmaa002='",g_tree[g_current_idx].b_nmaa002,"'"
+   END IF
+   IF NOT cl_null(g_tree[g_current_idx].b_nmas002) THEN
+      LET g_sql = g_sql," AND t2.nmas002='",g_tree[g_current_idx].b_nmas002,"'"
+   END IF
+   IF NOT cl_null(g_tree[g_current_idx].b_nmas003) THEN
+      LET g_sql = g_sql," AND t2.nmas003='",g_tree[g_current_idx].b_nmas003,"'"
+   END IF
+   
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("nmdg_t"),
+                      " ORDER BY t1.nmaa005,t0.nmdg001,t2.nmas003,t0.nmdg003,t0.nmdg004"
+   
+   #add-point:b_fill段sql之後
+
+   #end add-point
+   
+   #LET g_sql = cl_sql_add_tabid(g_sql,"nmau_t")            #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE anmt840_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR anmt840_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_nmdg_d.clear()
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_nmdg_d[l_ac].nmaa005,g_nmdg_d[l_ac].nmdg001,g_nmdg_d[l_ac].nmas003,
+                            g_nmdg_d[l_ac].nmdg003,g_nmdg_d[l_ac].nmdg004,g_nmdg_d[l_ac].nmdg005,
+                            g_nmdg_d[l_ac].nmdg006,g_nmdg_d[l_ac].nmdg007,g_nmdg_d[l_ac].nmdg008,
+                            g_nmdg_d[l_ac].nmdg009,g_nmdg_d[l_ac].nmdg010,g_nmdg_d[l_ac].nmdg011,
+                            g_nmdg_d[l_ac].nmdg012,g_nmdg_d[l_ac].nmdg013,g_nmdg_d[l_ac].nmdg014,
+                            g_nmdg_d[l_ac].nmdg015,g_nmdg_d[l_ac].nmdg016,g_nmdg_d[l_ac].nmdg002,
+                            g_nmdg_d[l_ac].nmaa005_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+
+      #end add-point   
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_nmdg_d.deleteElement(g_nmdg_d.getLength())   
+   
+   IF g_cnt > g_nmdg_d.getLength() THEN
+      LET l_ac = g_nmdg_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #add-point:b_fill段資料填充(其他單身)
+
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_nmdg_d.getLength()
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE anmt840_pb
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

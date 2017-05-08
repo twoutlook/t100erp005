@@ -1,0 +1,196 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="awsp910.description" >}
+#應用 a00 樣板自動產生(Version:2)
+#+ Version..: T100-ERP-1.01.00(SD版次:1,PR版次:1) Build-000000
+#+ 
+#+ Filename...: awsp910
+#+ Description: 
+#+ Creator....: 00544(2016-03-18 17:14:20)
+#+ Modifier...: 00000() -SD/PR-
+
+{</section>}
+
+{<section id="awsp910.global" >}
+#應用 p01 樣板自動產生(Version:14)
+#add-point:填寫註解說明
+{<point name="global.memo" />}
+#end add-point 
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+
+{<point name="global.parameter"/>}
+
+
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" />}
+
+{<point name="global.variable_customerization" edit="c"/>}
+
+{<point name="global.argv"/>}
+
+
+{</section>}
+
+{<section id="awsp910.main" >}
+MAIN
+   #add-point:main段define (客製用)
+{<point name="main.define_customerization" edit="c"/>}
+   #end add-point 
+   
+   #add-point:main段define 
+{<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+{<point name="main.before_ap_init"/>}
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   #CALL cl_ap_init("aws","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+{<point name="main.background"/>}
+   #end add-point
+   
+{<point name="main.servicecall" />}
+    
+   
+     
+{<point name="main.before_close" />}
+     
+   
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+
+{</section>}
+
+{<section id="awsp910.init" >}
+#+ 初始化作業
+
+{<point name="init.define_customerization" edit="c"/>}
+  
+{<point name="init.define"/>}
+   
+{<point name="init.init" />}
+  
+
+{</section>}
+
+{<section id="awsp910.ui_dialog" >}
+#+ 選單功能實際執行處
+
+{<point name="ui_dialog.define_customerization" edit="c"/>}
+  
+{<point name="ui_dialog.define"/>}
+   
+{<point name="ui_dialog.before_dialog"/>}
+
+ 
+   
+{<point name="ui_dialog.before_dialog2"/>}
+     
+{<point name="ui_dialog.more_construct"/>}
+     
+{<point name="ui_dialog.more_input"/>}
+  
+{<point name="ui_dialog.more_displayarray"/>}
+
+ 
+ 
+        
+{<point name="ui_dialog.before_dialog3"/>}
+           
+{<point name="ui_dialog.before_qbeclear" mark="Y"/>}
+         
+{<point name="ui_dialog.qbeclear"/>}
+           
+        
+{<point name="ui_dialog.more_action"/>}
+        
+{<point name="process.exit_dialog"/>}
+     
+{<point name="process.after_schedule"/>}
+
+
+{</section>}
+
+{<section id="awsp910.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+
+{<point name="transfer_agrv.define_customerization" edit="c"/>}
+ 
+{<point name="transfer_agrv.define"/>}
+
+{<point name="transfer.argv.define"/>}
+
+{</section>}
+
+{<section id="awsp910.process" >}
+ 
+   
+{<point name="process.define_customerization" edit="c"/>}
+  
+{<point name="process.define"/>}
+  
+ 
+{<point name="process.pre_process"/>}
+
+{<point name="process.count_progress"/>}
+
+{<point name="process.process"/>}
+
+ 
+  
+{<point name="process.foreground_finish"/>}
+    
+{<point name="process.background_finish"/>}
+
+
+{</section>}
+
+{<section id="awsp910.get_buffer" >}
+{<point name="get_buffer.define_customerization" edit="c"/>}
+   
+{<point name="get_buffer.define"/>}
+  
+{<point name="get_buffer.others"/>}
+
+
+{</section>}
+
+{<section id="awsp910.msgcentre_notify" >}
+ 
+  
+{<point name="msgcentre_notify.define_customerization" edit="c"/>}
+
+  
+{<point name="msgcentre_notify.define"/>}
+
+{<point name="msg_centre.process"/>}
+ 
+{</section>}
+
+{<section id="awsp910.other_function" >}
+#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+

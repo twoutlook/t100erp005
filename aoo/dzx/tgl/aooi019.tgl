@@ -1,0 +1,3347 @@
+#+ 程式版本......: T6 Version 1.00.00 Build-0048 at 13/01/18
+#
+#+ 程式代碼......: aooi019
+#+ 設計人員......: wuxja
+#樣板功能名稱: code_i05 樹狀結構-單檔模式
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+ 
+#單頭 type 宣告
+PRIVATE type type_g_ooda_m        RECORD
+   ooda001 LIKE ooda_t.ooda001, 
+   ooda002 LIKE ooda_t.ooda002, 
+   ooda003 LIKE ooda_t.ooda003, 
+   ooda004 LIKE ooda_t.ooda004, 
+   ooda001_desc LIKE type_t.chr500, 
+   oodb004 LIKE oodb_t.oodb004, 
+   oodb005 LIKE oodb_t.oodb005, 
+   ooda004_desc LIKE type_t.chr500, 
+   oodastus LIKE ooda_t.oodastus, 
+   ooda005 LIKE ooda_t.ooda005, 
+   ooda006 LIKE ooda_t.ooda006, 
+   ooda007 LIKE ooda_t.ooda007, 
+   ooda008 LIKE ooda_t.ooda008, 
+   ooda013 LIKE ooda_t.ooda013, 
+   ooda014 LIKE ooda_t.ooda014, 
+   ooda009 LIKE ooda_t.ooda009, 
+   ooda015 LIKE ooda_t.ooda015, 
+   ooda016 LIKE ooda_t.ooda016, 
+   ooda017 LIKE ooda_t.ooda017, 
+   ooda018 LIKE ooda_t.ooda018, 
+   ooda019 LIKE ooda_t.ooda019, 
+   ooda020 LIKE ooda_t.ooda020, 
+   ooda021 LIKE ooda_t.ooda021, 
+   ooda026 LIKE ooda_t.ooda026, 
+   ooda010 LIKE ooda_t.ooda010, 
+   ooda011 LIKE ooda_t.ooda011, 
+   ooda012 LIKE ooda_t.ooda012, 
+   ooda025 LIKE ooda_t.ooda025, 
+   ooda024 LIKE ooda_t.ooda024, 
+   ooda022 LIKE ooda_t.ooda022, 
+   ooda023 LIKE ooda_t.ooda023, 
+   ooda027 LIKE ooda_t.ooda027, 
+   ooda028 LIKE ooda_t.ooda028, 
+   ooda029 LIKE ooda_t.ooda029, 
+   oodamodu LIKE ooda_t.oodamodu, 
+   modu_desc LIKE type_t.chr500, 
+   oodadate DATETIME YEAR TO SECOND, 
+   oodaoriu LIKE ooda_t.oodaoriu, 
+   oriu_desc LIKE type_t.chr500, 
+   oodaorid LIKE ooda_t.oodaorid, 
+   orid_desc LIKE type_t.chr500, 
+   oodauser LIKE ooda_t.oodauser, 
+   user_desc LIKE type_t.chr500, 
+   oodadept LIKE ooda_t.oodadept, 
+   dept_desc LIKE type_t.chr500, 
+   oodabuid DATETIME YEAR TO SECOND
+   END RECORD
+ 
+    
+#模組變數(Module Variables)
+DEFINE g_ooda_m          type_g_ooda_m
+DEFINE g_ooda_m_t        type_g_ooda_m
+DEFINE g_ooda002_t        LIKE ooda_t.ooda002
+DEFINE g_ooda001_t        LIKE ooda_t.ooda001
+#此程式無root欄位:DEFINE g__t      LIKE ooda_t.
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位  
+       #外顯欄位
+       b_show          LIKE type_t.chr100,
+       #父節點id
+       b_pid           LIKE type_t.chr100,
+       #本身節點id
+       b_id            LIKE type_t.chr100,
+       #是否展開
+       b_exp           LIKE type_t.chr100,
+       #是否有子節點
+       b_hasC          LIKE type_t.num5,
+       #tree自定義欄位
+          b_ooda001 LIKE ooda_t.ooda001,
+      b_ooda002 LIKE ooda_t.ooda002,
+      b_ooda003 LIKE ooda_t.ooda003,
+      b_ooda004 LIKE ooda_t.ooda004,
+      b_ooda005 LIKE ooda_t.ooda005,
+      b_ooda006 LIKE ooda_t.ooda006,
+      b_ooda007 LIKE ooda_t.ooda007,
+      b_ooda008 LIKE ooda_t.ooda008,
+      b_ooda009 LIKE ooda_t.ooda009,
+      b_ooda010 LIKE ooda_t.ooda010,
+      b_ooda011 LIKE ooda_t.ooda011,
+      b_ooda012 LIKE ooda_t.ooda012,
+      b_ooda013 LIKE ooda_t.ooda013,
+      b_ooda014 LIKE ooda_t.ooda014,
+      b_ooda015 LIKE ooda_t.ooda015,
+      b_ooda016 LIKE ooda_t.ooda016,
+      b_ooda017 LIKE ooda_t.ooda017,
+      b_ooda018 LIKE ooda_t.ooda018,
+      b_ooda019 LIKE ooda_t.ooda019,
+      b_ooda020 LIKE ooda_t.ooda020,
+      b_ooda021 LIKE ooda_t.ooda021,
+      b_ooda022 LIKE ooda_t.ooda022,
+      b_ooda023 LIKE ooda_t.ooda023,
+      b_ooda024 LIKE ooda_t.ooda024,
+      b_ooda025 LIKE ooda_t.ooda025,
+      b_ooda026 LIKE ooda_t.ooda026,
+      b_ooda027 LIKE ooda_t.ooda027,
+      b_ooda028 LIKE ooda_t.ooda028,
+      b_ooda029 LIKE ooda_t.ooda029
+       END RECORD
+       
+DEFINE g_browser_root    DYNAMIC ARRAY OF INTEGER    #root資料所在
+       
+#多table用變數
+DEFINE g_master_multi_table_t    RECORD
+      ooda001 LIKE ooda_t.ooda001,
+      ooda002 LIKE ooda_t.ooda002,
+      oodb004 LIKE oodb_t.oodb004,
+      oodb005 LIKE oodb_t.oodb005
+      END RECORD
+ 
+DEFINE g_wc                  STRING
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_before_input_done   LIKE type_t.num5 
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10      
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num5           
+DEFINE l_ac                  LIKE type_t.num5    
+DEFINE g_curr_diag           ui.Dialog                #Current Dialog
+                                                      
+DEFINE g_pagestart           LIKE type_t.num5         
+DEFINE gwin_curr             ui.Window                #Current Window
+DEFINE gfrm_curr             ui.Form                  #Current Form
+DEFINE g_page_action         STRING                   #page action
+DEFINE g_header_hidden       LIKE type_t.num5         #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5         #隱藏工作Panel
+DEFINE g_browser_cnt         LIKE type_t.num5         #total count
+DEFINE g_page                STRING                   #第幾頁
+ 
+DEFINE g_detail_cnt          LIKE type_t.num5
+DEFINE g_detail_idx          LIKE type_t.num5
+ 
+DEFINE g_current_row         LIKE type_t.num5         #Browser所在筆數
+DEFINE g_current_sw          LIKE type_t.num5         #Browser所在筆數用開關
+ 
+DEFINE g_searchcol           LIKE type_t.chr200
+DEFINE g_searchstr           LIKE type_t.chr200
+DEFINE g_searchtype          LIKE type_t.chr200
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+{</Module define>}
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point
+    
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aoo","") 
+   
+   #add-point:作業初始化
+   {<point name="main.init"/>}
+   #end add-point
+ 
+   #LOCK CURSOR (identifier)
+   LET g_forupd_sql = "SELECT ooda001,ooda002,ooda003,ooda004,'','','','',oodastus,ooda005,ooda006,ooda007,ooda008,ooda013,ooda014,ooda009,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda026,ooda010,ooda011,ooda012,ooda025,ooda024,ooda022,ooda023,ooda027,ooda028,ooda029,oodamodu,'',oodadate,oodaoriu,'',oodaorid,'',oodauser,'',oodadept,'',oodabuid FROM ooda_t WHERE oodaent= ? AND ooda001=? AND ooda002=? FOR UPDATE"
+   LET g_forupd_sql = cl_forupd_sql(g_forupd_sql)
+   DECLARE aooi019_cl CURSOR FROM g_forupd_sql   #cursor lock 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aooi019 WITH FORM cl_ap_formpath("aoo",g_prog)
+         
+      #程式初始化
+      CALL aooi019_init()
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #進入選單 Menu (='N')
+      CALL aooi019_ui_dialog() 
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aooi019
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aooi019_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point 
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init"/>}
+   #end add-point
+   
+   CALL aooi019_default_search()
+    
+END FUNCTION
+ 
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aooi019_ui_dialog() 
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   {<Local define>}
+   DEFINE li_exit      LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_wc        LIKE type_t.chr200
+   {</Local define>}
+   
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm() 
+   
+   WHILE li_exit = FALSE
+      CALL aooi019_browser_fill(g_wc,g_searchtype,g_searchcol)
+ 
+      IF g_worksheet_hidden THEN
+      
+         LET g_current_sw = FALSE
+         
+         #回歸舊筆數位置 (回到當時異動的筆數)
+         LET g_current_idx = g_current_row
+         LET g_current_sw = TRUE
+         CALL cl_show_fld_cont() 
+         #此程式無root欄位:IF g_current_idx > 0 THEN
+         CALL aooi019_fetch('')            #當每次點任一筆資料都會需要用到
+         #此程式無root欄位:END IF
+ 
+         MENU
+         
+            #add-point:ui_dialog段其他頁簽的 display array(in menu)
+            {<point name="ui_dialog.more_displayarray_in_menu"/>}
+            #end add-point
+            
+            ON ACTION statechange
+               CALL aooi019_statechange()
+               EXIT MENU
+            
+            #ACTION表單列
+            ON ACTION first
+               LET g_current_idx = 1
+               CALL aooi019_fetch('')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               LET g_current_idx = g_current_idx + 1
+               CALL aooi019_fetch('')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION jump
+               CALL aooi019_fetch('/')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION previous
+               LET g_current_idx = g_current_idx - 1
+               CALL aooi019_fetch('')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION last 
+               LET g_current_idx = g_browser_cnt
+               CALL aooi019_fetch('') 
+               LET g_current_row = g_current_idx               
+            
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT MENU
+         
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementImage("mainhidden","small/arr-r.png")
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementImage("mainhidden","small/arr-l.png")
+                  LET g_main_hidden = 1
+               END IF
+         
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_worksheet_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  CALL gfrm_curr.setElementImage("worksheethidden","small/arr-l.png")
+                  LET g_worksheet_hidden = 0
+                  EXIT MENU
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  CALL gfrm_curr.setElementImage("worksheethidden","small/arr-r.png")
+                  LET g_worksheet_hidden = 1
+                  EXIT MENU
+               END IF
+         
+            ON ACTION controls      #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden
+               END IF
+                
+            
+
+
+      ON ACTION query
+         LET g_action_choice="query"
+         IF cl_chk_act_auth() THEN 
+            CALL aooi019_query()
+            #add-point:ON ACTION query
+            {<point name="menu.query" />}
+            #END add-point
+
+            EXIT MENU
+         END IF
+
+
+
+      ON ACTION modify
+         LET g_action_choice="modify"
+         IF cl_chk_act_auth() THEN 
+            CALL aooi019_modify()
+            #add-point:ON ACTION modify
+            {<point name="menu.modify" />}
+            #END add-point
+
+            EXIT MENU
+         END IF
+
+
+
+      ON ACTION insert
+         LET g_action_choice="insert"
+         IF cl_chk_act_auth() THEN 
+            CALL aooi019_insert()
+            #add-point:ON ACTION insert
+            {<point name="menu.insert" />}
+            #END add-point
+
+            EXIT MENU
+         END IF
+
+
+
+      ON ACTION delete
+         LET g_action_choice="delete"
+         IF cl_chk_act_auth() THEN 
+            CALL aooi019_delete()
+            #add-point:ON ACTION delete
+            {<point name="menu.delete" />}
+            #END add-point
+
+            EXIT MENU
+         END IF
+
+
+
+      ON ACTION reproduce
+         LET g_action_choice="reproduce"
+         IF cl_chk_act_auth() THEN 
+            CALL aooi019_reproduce()
+            #add-point:ON ACTION reproduce
+            {<point name="menu.reproduce" />}
+            #END add-point
+
+            EXIT MENU
+         END IF
+
+            
+            &include "main_menu.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED, FIELD ORDER FORM)
+         
+            INPUT g_searchstr,g_searchcol,g_searchtype FROM formonly.searchstr,formonly.cbo_searchcol,formonly.rdo_searchtype
+               BEFORE INPUT
+            END INPUT
+            
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                     CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                     LET g_current_idx = g_current_row
+                  END IF
+                  LET g_current_row = g_current_idx #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont() 
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                   
+                  CALL aooi019_fetch('')  #當每次點任一筆資料都會需要用到
+            
+            END DISPLAY
+            
+            #add-point:ui_dialog段其他頁簽的 display array
+            {<point name="ui_dialog.more_displayarray"/>}
+            #end add-point
+            
+            BEFORE DIALOG
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_current_sw = FALSE
+               
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                  IF g_current_row > g_browser.getLength() THEN
+                     LEt g_current_row = g_browser.getLength()
+                  END IF 
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+               CALL cl_show_fld_cont() 
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               #此程式無root欄位:IF g_current_idx > 0 THEN
+               CALL aooi019_fetch('')            #當每次點任一筆資料都會需要用到
+               #此程式無root欄位:END IF
+            
+            ON ACTION statechange
+               CALL aooi019_statechange()
+               EXIT DIALOG
+            
+            #一般搜尋
+            ON ACTION searchdata
+               LET g_searchstr = GET_FLDBUF(searchstr)
+               LET g_searchcol = GET_FLDBUF(cbo_searchcol)
+               #若無輸入關鍵字則查找出所有資料
+               IF g_searchcol='0' AND NOT cl_null(g_searchstr) THEN
+                  CALL cl_err("searchcol:","std-00001",0)
+                  CONTINUE DIALOG
+               END IF 
+               IF NOT cl_null(g_searchstr) THEN
+                  LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+                  LET g_wc = g_wc.toLowerCase()
+               ELSE
+                  LET g_wc = " 1=1 "
+               END IF         
+               CALL aooi019_browser_fill(g_wc,g_searchtype,g_searchcol)
+            
+               LET g_current_idx = 1
+               IF g_browser_cnt = 0 THEN
+                  CALL cl_err('','-100',1)
+               ELSE
+                  CALL aooi019_fetch('')
+               END IF
+            
+            #進階搜尋
+            ON ACTION advancesearch
+            
+            #ACTION表單列
+            ON ACTION first
+               LET g_current_idx = 1
+               CALL aooi019_fetch('')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               LET g_current_idx = g_current_idx + 1
+               CALL aooi019_fetch('')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION jump
+               CALL aooi019_fetch('/')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION previous
+               LET g_current_idx = g_current_idx - 1
+               CALL aooi019_fetch('')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION last 
+               LET g_current_idx = g_browser_cnt
+               CALL aooi019_fetch('')  
+               LET g_current_row = g_current_idx
+            
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+            
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT DIALOG
+            
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementImage("mainhidden","small/arr-r.png")
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementImage("mainhidden","small/arr-l.png")
+                  LET g_main_hidden = 1
+               END IF
+            
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_worksheet_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  CALL gfrm_curr.setElementImage("worksheethidden","small/arr-l.png")
+                  LET g_worksheet_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  CALL gfrm_curr.setElementImage("worksheethidden","small/arr-r.png")
+                  LET g_worksheet_hidden = 1
+               END IF
+            
+            ON ACTION controls      #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden
+               END IF
+               
+            
+
+
+      ON ACTION query
+         LET g_action_choice="query"
+         IF cl_chk_act_auth() THEN 
+            CALL aooi019_query()
+            #add-point:ON ACTION query
+            {<point name="menu.query" />}
+            #END add-point
+
+            EXIT DIALOG
+         END IF
+
+
+
+      ON ACTION modify
+         LET g_action_choice="modify"
+         IF cl_chk_act_auth() THEN 
+            CALL aooi019_modify()
+            #add-point:ON ACTION modify
+            {<point name="menu.modify" />}
+            #END add-point
+
+            EXIT DIALOG
+         END IF
+
+
+
+      ON ACTION insert
+         LET g_action_choice="insert"
+         IF cl_chk_act_auth() THEN 
+            CALL aooi019_insert()
+            #add-point:ON ACTION insert
+            {<point name="menu.insert" />}
+            #END add-point
+
+            EXIT DIALOG
+         END IF
+
+
+
+      ON ACTION delete
+         LET g_action_choice="delete"
+         IF cl_chk_act_auth() THEN 
+            CALL aooi019_delete()
+            #add-point:ON ACTION delete
+            {<point name="menu.delete" />}
+            #END add-point
+
+            EXIT DIALOG
+         END IF
+
+
+
+      ON ACTION reproduce
+         LET g_action_choice="reproduce"
+         IF cl_chk_act_auth() THEN 
+            CALL aooi019_reproduce()
+            #add-point:ON ACTION reproduce
+            {<point name="menu.reproduce" />}
+            #END add-point
+
+            EXIT DIALOG
+         END IF
+
+            
+            &include "main_menu.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+   END WHILE
+ 
+END FUNCTION 
+ 
+#+ 瀏覽頁簽where條件組成
+PRIVATE FUNCTION aooi019_browser_fill(p_wc,p_type,p_col)
+   {<Local define>}
+   DEFINE p_wc       STRING 
+   DEFINE p_type     LIKE type_t.chr10
+   DEFINE p_col      LIKE type_t.chr50
+   {</Local define>}
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point
+ 
+   CALL g_browser.clear()
+   CLEAR FORM
+   
+   IF p_col='0' OR cl_null(p_col) THEN
+     LET p_col = 'ooda002'
+   END IF
+   
+   #Create temp table
+   CREATE TEMP TABLE aooi019_tmp
+   (
+         ooda001 VARCHAR(500),
+   ooda002 VARCHAR(500),
+   ooda003 VARCHAR(500),
+   ooda004 VARCHAR(500),
+   ooda005 VARCHAR(500),
+   ooda006 VARCHAR(500),
+   ooda007 VARCHAR(500),
+   ooda008 VARCHAR(500),
+   ooda009 VARCHAR(500),
+   ooda010 VARCHAR(500),
+   ooda011 VARCHAR(500),
+   ooda012 VARCHAR(500),
+   ooda013 VARCHAR(500),
+   ooda014 VARCHAR(500),
+   ooda015 VARCHAR(500),
+   ooda016 VARCHAR(500),
+   ooda017 VARCHAR(500),
+   ooda018 VARCHAR(500),
+   ooda019 VARCHAR(500),
+   ooda020 VARCHAR(500),
+   ooda021 VARCHAR(500),
+   ooda022 VARCHAR(500),
+   ooda023 VARCHAR(500),
+   ooda024 VARCHAR(500),
+   ooda025 VARCHAR(500),
+   ooda026 VARCHAR(500),
+   ooda027 VARCHAR(500),
+   ooda028 VARCHAR(500),
+   ooda029 VARCHAR(500),
+      #僅含browser的欄位
+      type   CHAR(500)
+   );
+ 
+   #取得符合p_wc的所有資料
+   LET g_sql = "SELECT ooda001,ooda002,ooda003,ooda004,ooda005,ooda006,ooda007,ooda008,ooda009,ooda010,ooda011,ooda012,ooda013,ooda014,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda022,ooda023,ooda024,ooda025,ooda026,ooda027,ooda028,ooda029 ",
+                " FROM ooda_t  ",
+               " WHERE oodaent = '" ||g_enterprise|| "' AND ",p_wc
+              
+   PREPARE master_ext FROM g_sql
+   DECLARE master_extcur CURSOR FOR master_ext
+   
+   #根據搜尋模式呼叫不同function
+   CASE p_type
+      WHEN "1"  #上推
+         CALL aooi019_browser_up(p_wc,p_type,p_col)        
+      WHEN "2"  #下展
+         CALL aooi019_browser_down(p_wc,p_type,p_col)  
+      WHEN "3"  #全部=上推+下展
+         CALL aooi019_browser_up(p_wc,p_type,p_col)
+         CALL aooi019_browser_down(p_wc,p_type,p_col)
+   END CASE
+   
+   CALL aooi019_browser_create(p_type)
+   
+   DROP TABLE aooi019_tmp
+ 
+END FUNCTION
+ 
+ 
+#+ Tree上推
+PRIVATE FUNCTION aooi019_browser_up(p_wc,p_type,p_col)
+   {<Local define>}
+   DEFINE p_wc         LIKE type_t.chr200
+   DEFINE p_type       LIKE type_t.chr10
+   DEFINE p_col        LIKE type_t.chr50
+   DEFINE li_key       LIKE type_t.chr200
+   #此程式無root欄位:DEFINE li_type      LIKE type_t.chr200
+   DEFINE li_cnt       LIKE type_t.num10
+   DEFINE l_bstmp      RECORD    #body欄位   
+             ooda001 VARCHAR(500),
+   ooda002 VARCHAR(500),
+   ooda003 VARCHAR(500),
+   ooda004 VARCHAR(500),
+   ooda005 VARCHAR(500),
+   ooda006 VARCHAR(500),
+   ooda007 VARCHAR(500),
+   ooda008 VARCHAR(500),
+   ooda009 VARCHAR(500),
+   ooda010 VARCHAR(500),
+   ooda011 VARCHAR(500),
+   ooda012 VARCHAR(500),
+   ooda013 VARCHAR(500),
+   ooda014 VARCHAR(500),
+   ooda015 VARCHAR(500),
+   ooda016 VARCHAR(500),
+   ooda017 VARCHAR(500),
+   ooda018 VARCHAR(500),
+   ooda019 VARCHAR(500),
+   ooda020 VARCHAR(500),
+   ooda021 VARCHAR(500),
+   ooda022 VARCHAR(500),
+   ooda023 VARCHAR(500),
+   ooda024 VARCHAR(500),
+   ooda025 VARCHAR(500),
+   ooda026 VARCHAR(500),
+   ooda027 VARCHAR(500),
+   ooda028 VARCHAR(500),
+   ooda029 VARCHAR(500)
+          #僅含單身table的欄位
+   END RECORD 
+   DEFINE l_child_list DYNAMIC ARRAY OF RECORD    #body欄位   
+             ooda001 VARCHAR(500),
+   ooda002 VARCHAR(500),
+   ooda003 VARCHAR(500),
+   ooda004 VARCHAR(500),
+   ooda005 VARCHAR(500),
+   ooda006 VARCHAR(500),
+   ooda007 VARCHAR(500),
+   ooda008 VARCHAR(500),
+   ooda009 VARCHAR(500),
+   ooda010 VARCHAR(500),
+   ooda011 VARCHAR(500),
+   ooda012 VARCHAR(500),
+   ooda013 VARCHAR(500),
+   ooda014 VARCHAR(500),
+   ooda015 VARCHAR(500),
+   ooda016 VARCHAR(500),
+   ooda017 VARCHAR(500),
+   ooda018 VARCHAR(500),
+   ooda019 VARCHAR(500),
+   ooda020 VARCHAR(500),
+   ooda021 VARCHAR(500),
+   ooda022 VARCHAR(500),
+   ooda023 VARCHAR(500),
+   ooda024 VARCHAR(500),
+   ooda025 VARCHAR(500),
+   ooda026 VARCHAR(500),
+   ooda027 VARCHAR(500),
+   ooda028 VARCHAR(500),
+   ooda029 VARCHAR(500)
+          #僅含單身table的欄位
+   END RECORD 
+   {</Local define>} 
+   #add-point:browser_up段define
+   {<point name="browser_up.define"/>}
+   #end add-point
+ 
+   FOREACH master_extcur INTO l_bstmp.*
+      INSERT INTO aooi019_tmp VALUES(l_bstmp.*,'up')
+      LET l_child_list[l_child_list.getLength()+1].* = l_bstmp.*
+   END FOREACH  
+   
+   #若pid欄位存在才進行後續處理
+   
+   #擷取該節點的父節點到temp table中
+   LET g_sql = " SELECT ooda001,ooda002,ooda003,ooda004,ooda005,ooda006,ooda007,ooda008,ooda009,ooda010,ooda011,ooda012,ooda013,ooda014,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda022,ooda023,ooda024,ooda025,ooda026,ooda027,ooda028,ooda029 ",
+               " FROM ooda_t  ",
+               " WHERE oodaent = '" ||g_enterprise|| "' AND ooda002 = ? "
+              #此程式無root欄位:," AND  = ? "
+   PREPARE master_getparent_up FROM g_sql
+   DECLARE master_getparent_upcur CURSOR FOR master_getparent_up
+   
+   #擷取該節點的父節點到temp table中
+   LET li_key = l_bstmp.ooda001 CLIPPED
+   #此程式無root欄位:LET li_type = l_bstmp. CLIPPED
+   
+   #擷取該節點的所有父節點
+   WHILE l_child_list.getLength() > 0
+   
+      OPEN master_getparent_upcur USING l_child_list[1].ooda001
+                                  #此程式無root欄位:,l_child_list[1].
+   
+      FETCH master_getparent_upcur INTO l_bstmp.*
+      
+      IF aooi019_tmp_tbl_chk(l_child_list[1].ooda002,'down'
+                                      #此程式無root欄位:,l_bstmp.
+                                    ) THEN
+         INSERT INTO aooi019_tmp VALUES(l_child_list[1].*,'down')
+         LET l_child_list[l_child_list.getLength()+1].* = l_bstmp.*
+      END IF
+ 
+      CALL l_child_list.deleteElement(1)
+      
+   END WHILE
+   
+END FUNCTION
+ 
+ 
+#+ Tree下展
+PRIVATE FUNCTION aooi019_browser_down(p_wc,p_type,p_col)
+   {<Local define>}
+   DEFINE p_wc         LIKE type_t.chr200
+   DEFINE p_type       LIKE type_t.chr10
+   DEFINE p_col        LIKE type_t.chr50
+   #此程式無root欄位:DEFINE li_type      LIKE type_t.chr200
+   DEFINE l_bstmp      RECORD    #body欄位   
+             ooda001 VARCHAR(500),
+   ooda002 VARCHAR(500),
+   ooda003 VARCHAR(500),
+   ooda004 VARCHAR(500),
+   ooda005 VARCHAR(500),
+   ooda006 VARCHAR(500),
+   ooda007 VARCHAR(500),
+   ooda008 VARCHAR(500),
+   ooda009 VARCHAR(500),
+   ooda010 VARCHAR(500),
+   ooda011 VARCHAR(500),
+   ooda012 VARCHAR(500),
+   ooda013 VARCHAR(500),
+   ooda014 VARCHAR(500),
+   ooda015 VARCHAR(500),
+   ooda016 VARCHAR(500),
+   ooda017 VARCHAR(500),
+   ooda018 VARCHAR(500),
+   ooda019 VARCHAR(500),
+   ooda020 VARCHAR(500),
+   ooda021 VARCHAR(500),
+   ooda022 VARCHAR(500),
+   ooda023 VARCHAR(500),
+   ooda024 VARCHAR(500),
+   ooda025 VARCHAR(500),
+   ooda026 VARCHAR(500),
+   ooda027 VARCHAR(500),
+   ooda028 VARCHAR(500),
+   ooda029 VARCHAR(500)
+          #僅含單身table的欄位
+   END RECORD 
+   DEFINE l_child_list DYNAMIC ARRAY OF RECORD    #body欄位   
+             ooda001 VARCHAR(500),
+   ooda002 VARCHAR(500),
+   ooda003 VARCHAR(500),
+   ooda004 VARCHAR(500),
+   ooda005 VARCHAR(500),
+   ooda006 VARCHAR(500),
+   ooda007 VARCHAR(500),
+   ooda008 VARCHAR(500),
+   ooda009 VARCHAR(500),
+   ooda010 VARCHAR(500),
+   ooda011 VARCHAR(500),
+   ooda012 VARCHAR(500),
+   ooda013 VARCHAR(500),
+   ooda014 VARCHAR(500),
+   ooda015 VARCHAR(500),
+   ooda016 VARCHAR(500),
+   ooda017 VARCHAR(500),
+   ooda018 VARCHAR(500),
+   ooda019 VARCHAR(500),
+   ooda020 VARCHAR(500),
+   ooda021 VARCHAR(500),
+   ooda022 VARCHAR(500),
+   ooda023 VARCHAR(500),
+   ooda024 VARCHAR(500),
+   ooda025 VARCHAR(500),
+   ooda026 VARCHAR(500),
+   ooda027 VARCHAR(500),
+   ooda028 VARCHAR(500),
+   ooda029 VARCHAR(500)
+          #僅含單身table的欄位
+   END RECORD 
+   {</Local define>} 
+   #add-point:browser_down段define
+   {<point name="browser_down.define"/>}
+   #end add-point
+   
+   #擷取符合條件的所有節點資料
+   FOREACH master_extcur INTO l_bstmp.*
+      INSERT INTO aooi019_tmp VALUES(l_bstmp.*,'down')
+      LET l_child_list[l_child_list.getLength()+1].* = l_bstmp.*
+   END FOREACH  
+   
+   #若pid欄位存在才進行後續處理
+   
+   #擷取該節點的第一層子節點到temp table中
+   LET g_sql = "SELECT ooda001,ooda002,ooda003,ooda004,ooda005,ooda006,ooda007,ooda008,ooda009,ooda010,ooda011,ooda012,ooda013,ooda014,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda022,ooda023,ooda024,ooda025,ooda026,ooda027,ooda028,ooda029 ",
+               " FROM ooda_t  ",
+               " WHERE oodaent = '" ||g_enterprise|| "' AND ooda001 = ? ",
+               " AND ooda002 <> ooda001 "
+              #此程式無root欄位:," AND  = ? "
+               
+   PREPARE master_getchild FROM g_sql
+   DECLARE master_getchildcur CURSOR FOR master_getchild
+   
+   #擷取該節點的所有子節點
+   WHILE l_child_list.getLength() > 0
+   
+      OPEN master_getchildcur USING l_child_list[1].ooda002
+                                  #此程式無root欄位:,l_child_list[1].
+   
+      FOREACH master_getchildcur INTO l_bstmp.*
+         LET l_child_list[l_child_list.getLength()+1].* = l_bstmp.*
+      END FOREACH
+   
+      IF aooi019_tmp_tbl_chk(l_child_list[1].ooda002,'down'
+                                      #此程式無root欄位:,l_bstmp.
+                                    ) THEN
+         INSERT INTO aooi019_tmp VALUES(l_child_list[1].*,'down')
+      END IF
+      CALL l_child_list.deleteElement(1)
+      
+   END WHILE
+   
+ 
+END FUNCTION
+ 
+#+ TEMP TABLE CHK
+PRIVATE FUNCTION aooi019_tmp_tbl_chk(p_id,p_search)
+   {<Local define>}
+   DEFINE p_id       STRING
+   DEFINE p_search   STRING
+   DEFINE p_type     STRING
+   DEFINE l_id       LIKE type_t.chr500
+   DEFINE l_search   LIKE type_t.chr500
+   DEFINE l_type     LIKE type_t.chr500
+   DEFINE l_cnt      LIKE type_t.num10
+   {</Local define>}
+   #add-point:tmp_tbl_chk段define
+   {<point name="tmp_tbl_chk.define"/>}
+   #end add-point
+   
+   LET l_id = p_id
+   LET l_search = p_search
+  #此程式無root欄位:LET l_type = p_type
+ 
+   SELECT COUNT(*) INTO l_cnt FROM aooi019_tmp 
+    WHERE ooda002 = l_id AND type = l_search
+  #此程式無root欄位: AND  = l_type
+   IF l_cnt = 0 OR SQLCA.sqlcode THEN
+      RETURN TRUE
+   ELSE
+      RETURN FALSE
+   END IF
+ 
+END FUNCTION
+ 
+#+ Tree子節點展開
+PRIVATE FUNCTION aooi019_browser_expand(p_id)
+   {<Local define>}
+   DEFINE p_id          LIKE type_t.num10
+   DEFINE l_id          LIKE type_t.num10
+   DEFINE l_cnt         LIKE type_t.num10
+   DEFINE l_keyvalue    LIKE type_t.chr50
+   DEFINE l_typevalue   LIKE type_t.chr50
+   DEFINE l_type        LIKE type_t.chr50
+   DEFINE l_sql         LIKE type_t.chr500
+   DEFINE l_return      LIKE type_t.num5
+   {</Local define>}
+   #add-point:browser_expand段define
+   {<point name="browser_expand.define"/>}
+   #end add-point
+   
+   LET l_return = FALSE
+ 
+   LET l_keyvalue = g_browser[p_id].b_ooda002
+   #此程式無root欄位:LET l_typevalue = g_browser[p_id].b_
+   LET l_sql = " SELECT UNIQUE '','','','FALSE','',ooda001,ooda002,ooda003,ooda004,ooda005,ooda006,ooda007,ooda008,ooda009,ooda010,ooda011,ooda012,ooda013,ooda014,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda022,ooda023,ooda024,ooda025,ooda026,ooda027,ooda028,ooda029 ",
+               " FROM   aooi019_tmp ", 
+               " WHERE  ooda001 = '", l_keyvalue,
+               "' AND   ooda002 <> ooda001",
+              #此程式無root欄位:" AND   = '", l_typevalue,"'", 
+               " ORDER BY ooda002"
+   
+   PREPARE tree_expand FROM l_sql
+   DECLARE tree_ex_cur CURSOR FOR tree_expand
+  
+   LET l_id = p_id + 1
+   CALL g_browser.insertElement(l_id)
+   LET l_cnt = 1
+   FOREACH tree_ex_cur INTO g_browser[l_id].*
+      #pid=父節點id
+      LET g_browser[l_id].b_pid  = g_browser[p_id].b_id
+      #id=本身節點id(採流水號遞增)
+      LET g_browser[l_id].b_id   = g_browser[p_id].b_id||"."||l_cnt
+      #hasC=確認該節點是否有子孫
+      LET g_browser[l_id].b_ooda002 = g_browser[l_id].b_ooda002 CLIPPED
+      LET l_id = l_id + 1
+      CALL g_browser.insertElement(l_id)
+      LET l_cnt = l_cnt + 1
+      
+      LET l_return = TRUE
+   END FOREACH
+   
+   #刪除空資料
+   CALL g_browser.deleteElement(l_id)
+ 
+   RETURN l_return
+ 
+END FUNCTION
+ 
+PRIVATE FUNCTION aooi019_browser_create(p_type)
+   {<Local define>}
+   DEFINE p_type   LIKE type_t.chr50
+   DEFINE l_pid    LIKE type_t.chr50
+   {</Local define>}
+   #add-point:browser_create
+   {<point name="browser_create.define"/>}
+   #end add-point
+   
+   #先找出所有的帳別資料
+   #此程式無root欄位:LET g_sql = " SELECT UNIQUE  FROM aooi019_tmp ORDER BY "
+   #此程式無root欄位:PREPARE master_type FROM g_sql
+   #此程式無root欄位:DECLARE master_typecur CURSOR FOR master_type
+   
+   #此程式無root欄位:INITIALIZE g_browser_root TO NULL
+   
+   LET l_ac = 1
+   #此程式無root欄位:FOREACH master_typecur INTO g_browser[l_ac].b_
+      #確定root節點所在
+      #此程式無root欄位:LET g_browser_root[g_browser_root.getLength()+1] = l_ac
+      #此處為帳別部分(LV-1)
+      #此程式無root欄位:LET g_browser[l_ac].b_ooda002  = g_browser[l_ac].b_ CLIPPED
+      #此程式無root欄位:LET g_browser[l_ac].b_ = g_browser[l_ac].b_ CLIPPED
+      #此程式無root欄位:LET g_browser[l_ac].b_pid = '0' CLIPPED
+      #此程式無root欄位:LET g_browser[l_ac].b_id = l_ac USING "<<<"
+      #此程式無root欄位:LET g_browser[l_ac].b_exp = FALSE
+      #此程式無root欄位:LET g_browser[l_ac].b_hasC = TRUE
+      #此程式無root欄位:LET l_pid = g_browser[l_ac].b_id CLIPPED
+      #此程式無root欄位:LET l_ac = l_ac + 1
+      #抓出LV2的所有資料
+      LET g_sql = " SELECT UNIQUE ooda001,ooda002,ooda003,ooda004,ooda005,ooda006,ooda007,ooda008,ooda009,ooda010,ooda011,ooda012,ooda013,ooda014,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda022,ooda023,ooda024,ooda025,ooda026,ooda027,ooda028,ooda029 FROM aooi019_tmp a ",
+                  " WHERE ",
+                  #此程式無root欄位:"a. = ? ",
+                  #此程式無root欄位:" AND ",
+                  " (( SELECT COUNT(*) FROM aooi019_tmp b WHERE a.ooda001 = b.ooda002 ", 
+                  #此程式無root欄位:" AND a. = b.",
+                  ") = 0 OR ", 
+                  " a.ooda002 = a.ooda001 )", 
+                  " ORDER BY a.ooda002"
+      PREPARE master_getLV2 FROM g_sql
+      DECLARE master_getLV2cur CURSOR FOR master_getLV2
+      
+      #以下為一般資料頂點(LV-2)
+      #此程式無root欄位:OPEN master_getLV2cur USING g_browser[l_ac-1].b_
+      
+      LET g_cnt = l_ac
+      
+      FOREACH master_getLV2cur INTO g_browser[g_cnt].b_ooda001,g_browser[g_cnt].b_ooda002,g_browser[g_cnt].b_ooda003,g_browser[g_cnt].b_ooda004,g_browser[g_cnt].b_ooda005,g_browser[g_cnt].b_ooda006,g_browser[g_cnt].b_ooda007,g_browser[g_cnt].b_ooda008,g_browser[g_cnt].b_ooda009,g_browser[g_cnt].b_ooda010,g_browser[g_cnt].b_ooda011,g_browser[g_cnt].b_ooda012,g_browser[g_cnt].b_ooda013,g_browser[g_cnt].b_ooda014,g_browser[g_cnt].b_ooda015,g_browser[g_cnt].b_ooda016,g_browser[g_cnt].b_ooda017,g_browser[g_cnt].b_ooda018,g_browser[g_cnt].b_ooda019,g_browser[g_cnt].b_ooda020,g_browser[g_cnt].b_ooda021,g_browser[g_cnt].b_ooda022,g_browser[g_cnt].b_ooda023,g_browser[g_cnt].b_ooda024,g_browser[g_cnt].b_ooda025,g_browser[g_cnt].b_ooda026,g_browser[g_cnt].b_ooda027,g_browser[g_cnt].b_ooda028,g_browser[g_cnt].b_ooda029
+         #去除多餘空白
+         LET g_browser[g_cnt].b_ooda002 = g_browser[g_cnt].b_ooda002 CLIPPED
+         LET g_browser[g_cnt].b_pid = l_pid
+         LET g_browser[g_cnt].b_id = l_pid,".",g_cnt USING "<<<"
+         #進行展開
+         CALL aooi019_browser_expand(g_cnt) RETURNING g_browser[g_cnt].b_hasC
+         #LET g_browser[g_cnt].b_exp = g_browser[g_cnt].b_hasC
+         LET g_browser[g_cnt].b_exp = FALSE
+         #循環展開
+         WHILE TRUE
+            LET g_cnt = g_cnt + 1  
+            #若已無資料則跳出
+            IF cl_null(g_browser[g_cnt].b_ooda002) THEN
+               LET g_cnt = g_cnt - 1 #空白的內容筆數減回去
+               EXIT WHILE
+            END IF
+            #有資料則進行展開
+            CALL aooi019_browser_expand(g_cnt) RETURNING g_browser[g_cnt].b_hasC        
+            LET g_browser[g_cnt].b_exp = FALSE         
+         END WHILE
+         LET g_cnt = g_cnt + 1   
+      END FOREACH
+      LET l_ac = g_browser.getLength()
+      
+   #此程式無root欄位:END FOREACH
+   CALL g_browser.deleteElement(l_ac)
+   
+   #組合描述欄位
+   FOR l_ac = 1 TO g_browser.getLength()
+      
+      #add-point:browser_create段desc處理
+      {<point name="browser_create.desc.show"/>}
+      #end add-point
+   END FOR
+   CALL g_browser.deleteElement(l_ac)
+   
+   LET g_browser_cnt = g_browser.getLength() - g_browser_root.getLength()
+   
+END FUNCTION
+ 
+#+ QBE資料查詢
+PRIVATE FUNCTION aooi019_construct()
+   {<Local define>}
+   DEFINE lc_qbe_sn   LIKE type_t.num10
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   {</Local define>}
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point
+   
+   #清除畫面
+   CLEAR FORM                 
+   INITIALIZE g_ooda_m.* TO NULL
+    
+   INITIALIZE g_wc TO NULL
+    
+   LET g_qryparam.state = 'c'
+    
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED)
+      CONSTRUCT BY NAME g_wc ON ooda001,ooda002,ooda003,ooda004,oodastus,ooda005,ooda006,ooda007,ooda008,ooda013,ooda014,ooda009,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda026,ooda010,ooda011,ooda012,ooda025,ooda024,ooda022,ooda023,ooda027,ooda028,ooda029,oodamodu,oodadate,oodaoriu,oodaorid,oodauser,oodadept,oodabuid 
+      
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+            
+         #----<<oodamodu>>----
+         ON ACTION controlp INFIELD oodamodu
+            CALL q_common('ooda_t','oodamodu',TRUE,FALSE,g_ooda_m.oodamodu) RETURNING ls_return
+            DISPLAY ls_return TO oodamodu
+            NEXT FIELD oodamodu
+      
+         #----<<oodaoriu>>----
+         ON ACTION controlp INFIELD oodaoriu
+            CALL q_common('ooda_t','oodaoriu',TRUE,FALSE,g_ooda_m.oodaoriu) RETURNING ls_return
+            DISPLAY ls_return TO oodaoriu
+            NEXT FIELD oodaoriu
+      
+         #----<<oodauser>>----
+         ON ACTION controlp INFIELD oodauser
+            CALL q_common('ooda_t','oodauser',TRUE,FALSE,g_ooda_m.oodauser) RETURNING ls_return
+            DISPLAY ls_return TO oodauser
+            NEXT FIELD oodauser
+      
+         #----<<oodaorid>>----
+         ON ACTION controlp INFIELD oodaorid
+            CALL q_common('ooda_t','oodaorid',TRUE,FALSE,g_ooda_m.oodaorid) RETURNING ls_return
+            DISPLAY ls_return TO oodaorid
+            NEXT FIELD oodaorid
+      
+         #----<<oodadept>>----
+         ON ACTION controlp INFIELD oodadept
+            CALL q_common('ooda_t','oodadept',TRUE,FALSE,g_ooda_m.oodadept) RETURNING ls_return
+            DISPLAY ls_return TO oodadept
+            NEXT FIELD oodadept
+         
+         #----<<oodabuid>>----
+         AFTER FIELD oodabuid
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<oodadate>>----
+         AFTER FIELD oodadate
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #---------------------------<  Master  >---------------------------
+         #----<<ooda001>>----
+         #Ctrlp:construct.c.ooda001
+         ON ACTION controlp INFIELD ooda001
+            #add-point:CONTROLP ooda001
+            {<point name="construct.c.ooda001" />}
+            #END add-point
+
+         #----<<ooda002>>----
+         #Ctrlp:construct.c.ooda002
+         ON ACTION controlp INFIELD ooda002
+            #add-point:CONTROLP ooda002
+            {<point name="construct.c.ooda002" />}
+            #END add-point
+
+         #----<<ooda003>>----
+         #Ctrlp:construct.c.ooda003
+         ON ACTION controlp INFIELD ooda003
+            #add-point:CONTROLP ooda003
+            {<point name="construct.c.ooda003" />}
+            #END add-point
+
+         #----<<ooda004>>----
+         #Ctrlp:construct.c.ooda004
+         ON ACTION controlp INFIELD ooda004
+            #add-point:CONTROLP ooda004
+            {<point name="construct.c.ooda004" />}
+            #END add-point
+
+         #----<<oodastus>>----
+         #Ctrlp:construct.c.oodastus
+         ON ACTION controlp INFIELD oodastus
+            #add-point:CONTROLP oodastus
+            {<point name="construct.c.oodastus" />}
+            #END add-point
+
+         #----<<ooda005>>----
+         #Ctrlp:construct.c.ooda005
+         ON ACTION controlp INFIELD ooda005
+            #add-point:CONTROLP ooda005
+            {<point name="construct.c.ooda005" />}
+            #END add-point
+
+         #----<<ooda006>>----
+         #Ctrlp:construct.c.ooda006
+         ON ACTION controlp INFIELD ooda006
+            #add-point:CONTROLP ooda006
+            {<point name="construct.c.ooda006" />}
+            #END add-point
+
+         #----<<ooda007>>----
+         #Ctrlp:construct.c.ooda007
+         ON ACTION controlp INFIELD ooda007
+            #add-point:CONTROLP ooda007
+            {<point name="construct.c.ooda007" />}
+            #END add-point
+
+         #----<<ooda008>>----
+         #Ctrlp:construct.c.ooda008
+         ON ACTION controlp INFIELD ooda008
+            #add-point:CONTROLP ooda008
+            {<point name="construct.c.ooda008" />}
+            #END add-point
+
+         #----<<ooda013>>----
+         #Ctrlp:construct.c.ooda013
+         ON ACTION controlp INFIELD ooda013
+            #add-point:CONTROLP ooda013
+            {<point name="construct.c.ooda013" />}
+            #END add-point
+
+         #----<<ooda014>>----
+         #Ctrlp:construct.c.ooda014
+         ON ACTION controlp INFIELD ooda014
+            #add-point:CONTROLP ooda014
+            {<point name="construct.c.ooda014" />}
+            #END add-point
+
+         #----<<ooda009>>----
+         #Ctrlp:construct.c.ooda009
+         ON ACTION controlp INFIELD ooda009
+            #add-point:CONTROLP ooda009
+            {<point name="construct.c.ooda009" />}
+            #END add-point
+
+         #----<<ooda015>>----
+         #Ctrlp:construct.c.ooda015
+         ON ACTION controlp INFIELD ooda015
+            #add-point:CONTROLP ooda015
+            {<point name="construct.c.ooda015" />}
+            #END add-point
+
+         #----<<ooda016>>----
+         #Ctrlp:construct.c.ooda016
+         ON ACTION controlp INFIELD ooda016
+            #add-point:CONTROLP ooda016
+            {<point name="construct.c.ooda016" />}
+            #END add-point
+
+         #----<<ooda017>>----
+         #Ctrlp:construct.c.ooda017
+         ON ACTION controlp INFIELD ooda017
+            #add-point:CONTROLP ooda017
+            {<point name="construct.c.ooda017" />}
+            #END add-point
+
+         #----<<ooda018>>----
+         #Ctrlp:construct.c.ooda018
+         ON ACTION controlp INFIELD ooda018
+            #add-point:CONTROLP ooda018
+            {<point name="construct.c.ooda018" />}
+            #END add-point
+
+         #----<<ooda019>>----
+         #Ctrlp:construct.c.ooda019
+         ON ACTION controlp INFIELD ooda019
+            #add-point:CONTROLP ooda019
+            {<point name="construct.c.ooda019" />}
+            #END add-point
+
+         #----<<ooda020>>----
+         #Ctrlp:construct.c.ooda020
+         ON ACTION controlp INFIELD ooda020
+            #add-point:CONTROLP ooda020
+            {<point name="construct.c.ooda020" />}
+            #END add-point
+
+         #----<<ooda021>>----
+         #Ctrlp:construct.c.ooda021
+         ON ACTION controlp INFIELD ooda021
+            #add-point:CONTROLP ooda021
+            {<point name="construct.c.ooda021" />}
+            #END add-point
+
+         #----<<ooda026>>----
+         #Ctrlp:construct.c.ooda026
+         ON ACTION controlp INFIELD ooda026
+            #add-point:CONTROLP ooda026
+            {<point name="construct.c.ooda026" />}
+            #END add-point
+
+         #----<<ooda010>>----
+         #Ctrlp:construct.c.ooda010
+         ON ACTION controlp INFIELD ooda010
+            #add-point:CONTROLP ooda010
+            {<point name="construct.c.ooda010" />}
+            #END add-point
+
+         #----<<ooda011>>----
+         #Ctrlp:construct.c.ooda011
+         ON ACTION controlp INFIELD ooda011
+            #add-point:CONTROLP ooda011
+            {<point name="construct.c.ooda011" />}
+            #END add-point
+
+         #----<<ooda012>>----
+         #Ctrlp:construct.c.ooda012
+         ON ACTION controlp INFIELD ooda012
+            #add-point:CONTROLP ooda012
+            {<point name="construct.c.ooda012" />}
+            #END add-point
+
+         #----<<ooda025>>----
+         #Ctrlp:construct.c.ooda025
+         ON ACTION controlp INFIELD ooda025
+            #add-point:CONTROLP ooda025
+            {<point name="construct.c.ooda025" />}
+            #END add-point
+
+         #----<<ooda024>>----
+         #Ctrlp:construct.c.ooda024
+         ON ACTION controlp INFIELD ooda024
+            #add-point:CONTROLP ooda024
+            {<point name="construct.c.ooda024" />}
+            #END add-point
+
+         #----<<ooda022>>----
+         #Ctrlp:construct.c.ooda022
+         ON ACTION controlp INFIELD ooda022
+            #add-point:CONTROLP ooda022
+            {<point name="construct.c.ooda022" />}
+            #END add-point
+
+         #----<<ooda023>>----
+         #Ctrlp:construct.c.ooda023
+         ON ACTION controlp INFIELD ooda023
+            #add-point:CONTROLP ooda023
+            {<point name="construct.c.ooda023" />}
+            #END add-point
+
+         #----<<ooda027>>----
+         #Ctrlp:construct.c.ooda027
+         ON ACTION controlp INFIELD ooda027
+            #add-point:CONTROLP ooda027
+            {<point name="construct.c.ooda027" />}
+            #END add-point
+
+         #----<<ooda028>>----
+         #Ctrlp:construct.c.ooda028
+         ON ACTION controlp INFIELD ooda028
+            #add-point:CONTROLP ooda028
+            {<point name="construct.c.ooda028" />}
+            #END add-point
+
+         #----<<ooda029>>----
+         #Ctrlp:construct.c.ooda029
+         ON ACTION controlp INFIELD ooda029
+            #add-point:CONTROLP ooda029
+            {<point name="construct.c.ooda029" />}
+            #END add-point
+
+         #----<<oodamodu>>----
+         #----<<oodadate>>----
+         #----<<oodaoriu>>----
+         #----<<oodaorid>>----
+         #----<<oodauser>>----
+         #----<<oodadept>>----
+         #----<<oodabuid>>----
+
+       
+      END CONSTRUCT
+  
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point    
+         
+      ON ACTION qbe_select     #條件查詢
+         CALL cl_qbe_list() RETURNING lc_qbe_sn
+         CALL cl_qbe_display_condition(lc_qbe_sn)
+      
+      ON ACTION qbe_save       #條件儲存
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+         
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG
+  
+   END DIALOG
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+ 
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aooi019_query()
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+ 
+   CLEAR FORM
+   CALL g_browser.clear()       # 清除 g_browser
+ 
+   DISPLAY ' ' TO FORMONLY.b_count
+ 
+   CALL aooi019_construct()
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      INITIALIZE g_ooda_m.* TO NULL
+      LET g_wc = " 1=1"
+      RETURN
+   END IF
+   
+   LET g_browser_cnt = 0
+   LET g_current_idx = 1
+   LET g_current_row = 1
+ 
+   LET g_searchtype = "3"
+   LET g_searchcol = ""
+   CALL aooi019_browser_fill(g_wc,g_searchtype,g_searchcol)
+   IF g_browser_cnt = 0 THEN
+      CALL cl_err('','-100',1)
+   END IF
+ 
+END FUNCTION
+ 
+ 
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aooi019_fetch(p_flag)
+   {<Local define>}
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   DEFINE ls_chk     STRING
+   DEFINE li_idx     LIKE type_t.num5
+   {</Local define>}
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   #此程式無root欄位:LET ls_chk = g_browser[g_current_idx].b_id 
+   #此程式無root欄位:IF ls_chk.getIndexOf('.',1) = 0 THEN
+   #此程式無root欄位:   CLEAR FORM
+   #此程式無root欄位:   CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   #此程式無root欄位:   DISPLAY '' TO FORMONLY.b_index
+   #此程式無root欄位:   RETURN
+   #此程式無root欄位:END IF
+   
+   #瀏覽頁筆數顯示
+   LET li_idx = 1
+   FOR li_idx = 1 TO g_browser_root.getLength()
+      IF g_browser_root[li_idx] > g_current_idx THEN
+       EXIT FOR
+      END IF
+   END FOR
+   LET li_idx = g_current_idx - li_idx + 1
+   DISPLAY li_idx TO FORMONLY.b_index   #當下筆數
+      
+   IF p_flag = '/' THEN
+      IF (NOT g_no_ask) THEN    
+         CALL cl_set_act_visible("accept,cancel", TRUE)    
+         CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+         LET INT_FLAG = 0
+ 
+         PROMPT ls_msg CLIPPED,': ' FOR g_jump
+            #交談指令共用ACTION
+            &include "common_action.4gl" 
+         END PROMPT
+ 
+         CALL cl_set_act_visible("accept,cancel", FALSE)    
+         IF INT_FLAG THEN
+            LET INT_FLAG = 0
+         ELSE
+            IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+               LET g_current_idx = g_jump
+            END IF
+            LET g_no_ask = FALSE  
+         END IF           
+      END IF
+   END IF    
+   
+   #若無資料則離開
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx) #設定browse 索引
+   
+               
+   LET g_ooda_m.ooda002 = g_browser[g_current_idx].b_ooda002
+   LET g_ooda_m.ooda001 = g_browser[g_current_idx].b_ooda001
+   #此程式無root欄位:LET g_ooda_m. = g_browser[g_current_idx].b_
+    
+    
+   #重讀DB,因TEMP有不被更新特性
+    SELECT UNIQUE ooda001,ooda002,ooda003,ooda004,oodastus,ooda005,ooda006,ooda007,ooda008,ooda013,ooda014,ooda009,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda026,ooda010,ooda011,ooda012,ooda025,ooda024,ooda022,ooda023,ooda027,ooda028,ooda029,oodamodu,oodadate,oodaoriu,oodaorid,oodauser,oodadept,oodabuid
+ INTO g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oodaorid,g_ooda_m.oodauser,g_ooda_m.oodadept,g_ooda_m.oodabuid
+ FROM ooda_t
+ WHERE oodaent = g_enterprise AND ooda001 = g_ooda_m.ooda001 AND ooda002 = g_ooda_m.ooda002 
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      IF g_ooda_m.oodastus = "Y" THEN
+         CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+      ELSE
+         CALL cl_set_act_visible("statechange,reproduce", TRUE)
+         CALL cl_set_act_visible("modify,delete", FALSE)
+      END IF
+   END IF
+ 
+   
+   IF SQLCA.sqlcode THEN
+       CALL cl_err3("sel","ooda_t","","",SQLCA.sqlcode,"","",1)
+       INITIALIZE g_ooda_m.* TO NULL
+       RETURN
+   END IF
+   
+   LET g_data_owner = g_ooda_m.oodauser      
+   LET g_data_group = g_ooda_m.oodadept   
+   
+   #重新顯示
+   CALL aooi019_show()
+   
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count 
+ 
+END FUNCTION
+ 
+ 
+#+ 資料新增
+PRIVATE FUNCTION aooi019_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point
+   
+   #隱藏瀏覽頁籤
+   CALL gfrm_curr.setElementHidden("worksheet",1)
+   CALL gfrm_curr.setElementImage("worksheethidden","small/arr-r.png")
+   LET g_worksheet_hidden = 1
+   
+   LET g_ooda001_t = g_ooda_m.ooda001
+      #key2
+   LET g_ooda002_t = g_ooda_m.ooda002
+
+
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   INITIALIZE g_ooda_m.* LIKE ooda_t.*
+   LET g_ooda002_t = NULL
+   
+   WHILE TRUE
+      LET g_ooda_m.ooda001 = g_ooda001_t
+      #key2
+      LET g_ooda_m.ooda002 = g_ooda002_t
+
+
+   
+      LET g_ooda_m.oodauser = g_user
+      LET g_ooda_m.oodadept = g_dept
+      LET g_ooda_m.oodabuid = cl_get_current()
+      LET g_ooda_m.oodaoriu = g_user 
+      LET g_ooda_m.oodaorid = g_dept 
+      LET g_ooda_m.oodamodu = g_user
+      LET g_ooda_m.oodadate = cl_get_current()
+      LET g_ooda_m.oodastus = 'Y'
+      CALL gfrm_curr.setElementImage("statechange", "authstatus/valid.png")
+  
+      
+      
+      #單頭預設值
+            LET g_ooda_m.ooda014 = "Y"
+      LET g_ooda_m.ooda015 = "1"
+      LET g_ooda_m.ooda016 = "A"
+      LET g_ooda_m.ooda026 = "N"
+
+     
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point 
+ 
+      CALL aooi019_input("a")
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_ooda_m.* = g_ooda_m_t.*
+         CALL aooi019_show()
+         CALL cl_err('',9001,0)
+         EXIT WHILE
+      END IF
+      
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #顯示瀏覽頁籤
+   CALL gfrm_curr.setElementHidden("worksheet",0)
+   CALL gfrm_curr.setElementImage("worksheethidden","small/arr-l.png")
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION
+ 
+ 
+#+ 資料修改
+PRIVATE FUNCTION aooi019_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   #隱藏瀏覽頁籤
+   CALL gfrm_curr.setElementHidden("worksheet",1)
+   CALL gfrm_curr.setElementImage("worksheethidden","small/arr-r.png")
+   LET g_worksheet_hidden = 1
+   
+   IF g_ooda_m.ooda001 IS NULL
+
+   THEN
+      CALL cl_err("","std-00003",0)
+      #顯示瀏覽頁籤
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","small/arr-l.png")
+      LET g_worksheet_hidden = 0
+      RETURN
+   END IF 
+   
+    SELECT UNIQUE ooda001,ooda002,ooda003,ooda004,oodastus,ooda005,ooda006,ooda007,ooda008,ooda013,ooda014,ooda009,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda026,ooda010,ooda011,ooda012,ooda025,ooda024,ooda022,ooda023,ooda027,ooda028,ooda029,oodamodu,oodadate,oodaoriu,oodaorid,oodauser,oodadept,oodabuid
+ INTO g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oodaorid,g_ooda_m.oodauser,g_ooda_m.oodadept,g_ooda_m.oodabuid
+ FROM ooda_t
+ WHERE oodaent = g_enterprise AND ooda001 = g_ooda_m.ooda001 AND ooda002 = g_ooda_m.ooda002
+ 
+   ERROR ""
+  
+   LET g_ooda001_t = g_ooda_m.ooda001
+      #key2
+   LET g_ooda002_t = g_ooda_m.ooda002
+
+
+   
+   BEGIN WORK
+   
+   OPEN aooi019_cl USING g_enterprise,g_ooda_m.ooda001,g_ooda_m.ooda002
+   IF STATUS THEN
+      CALL cl_err("OPEN aooi019_cl:", STATUS, 1)
+      CLOSE aooi019_cl
+      ROLLBACK WORK
+      #顯示瀏覽頁籤
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","small/arr-l.png")
+      LET g_worksheet_hidden = 0
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH aooi019_cl INTO g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.ooda001_desc,g_ooda_m.oodb004,g_ooda_m.oodb005,g_ooda_m.ooda004_desc,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.modu_desc,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oriu_desc,g_ooda_m.oodaorid,g_ooda_m.orid_desc,g_ooda_m.oodauser,g_ooda_m.user_desc,g_ooda_m.oodadept,g_ooda_m.dept_desc,g_ooda_m.oodabuid
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_ooda_m.ooda002,SQLCA.sqlcode,0)
+      CLOSE aooi019_cl
+      ROLLBACK WORK
+      #顯示瀏覽頁籤
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","small/arr-l.png")
+      LET g_worksheet_hidden = 0
+      RETURN
+   END IF
+ 
+   CALL aooi019_show()
+   WHILE TRUE
+      LET g_ooda_m.ooda001 = g_ooda001_t
+      #key2
+      LET g_ooda_m.ooda002 = g_ooda002_t
+
+
+      LET g_ooda_m.oodamodu = g_user
+      LET g_ooda_m.oodadate = cl_get_current()
+ 
+      CALL aooi019_input("u")     #欄位更改
+ 
+      IF INT_FLAG THEN
+          LET INT_FLAG = 0
+          LET g_ooda_m.* = g_ooda_m_t.*
+          CALL aooi019_show()
+          CALL cl_err('',9001,0)
+          EXIT WHILE
+      END IF
+ 
+      EXIT WHILE
+  
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_used_modified_record(g_ooda_m.ooda002,g_site) THEN 
+      ROLLBACK WORK
+   END IF
+ 
+   CLOSE aooi019_cl
+   COMMIT WORK
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_ooda_m.ooda002,'U')
+   
+   #顯示瀏覽頁籤
+   CALL gfrm_curr.setElementHidden("worksheet",0)
+   CALL gfrm_curr.setElementImage("worksheethidden","small/arr-l.png")
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+ 
+#+ 避免資料錯誤
+PRIVATE FUNCTION aooi019_check(p_id,p_pid)    
+   {<Local define>}                                    
+   DEFINE p_id       STRING
+   DEFINE p_pid      STRING
+   DEFINE p_type     STRING
+   DEFINE l_pid      LIKE type_t.chr100
+   DEFINE l_id       LIKE type_t.chr100
+   DEFINE l_type     LIKE type_t.chr100
+   DEFINE l_return   LIKE type_t.num5
+   {</Local define>}
+   #add-point:check段define
+   {<point name="check.define"/>}
+   #end add-point
+   
+   LET l_return = FALSE
+   LET l_pid = p_pid
+   LET l_type = p_type
+   
+   #比對所有祖先節點
+   WHILE TRUE
+      
+      SELECT ooda001,ooda002 INTO l_pid,l_id FROM ooda_t
+         WHERE ooda002 = l_pid
+        #此程式無root欄位: AND  = l_type
+ 
+      IF SQLCA.sqlcode OR l_pid = l_id THEN
+         EXIT WHILE
+      END IF
+      
+      IF l_pid = p_id THEN
+         LET l_return = TRUE
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+   
+   RETURN l_return
+   
+END FUNCTION
+ 
+ 
+#+ 資料輸入
+PRIVATE FUNCTION aooi019_input(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = 'i'
+ 
+   DISPLAY BY NAME g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.oodb004,g_ooda_m.oodb005,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oodaorid,g_ooda_m.oodauser,g_ooda_m.oodadept,g_ooda_m.oodabuid
+   
+   DIALOG ATTRIBUTE(UNBUFFERED, FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.oodb004,g_ooda_m.oodb005,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oodaorid,g_ooda_m.oodauser,g_ooda_m.oodadept,g_ooda_m.oodabuid 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂單頭ACTION
+            ON ACTION update_item 
+
+
+         
+         BEFORE INPUT
+            LET g_before_input_done = FALSE
+            CALL aooi019_set_entry(p_cmd)
+            CALL aooi019_set_no_entry(p_cmd)
+            LET g_before_input_done = TRUE
+            
+            #其他table資料備份(確定是否更改用)
+            LET g_master_multi_table_t.ooda001 = g_ooda_m.ooda001
+LET g_master_multi_table_t.ooda002 = g_ooda_m.ooda002
+LET g_master_multi_table_t.oodb004 = g_ooda_m.oodb004
+LET g_master_multi_table_t.oodb005 = g_ooda_m.oodb005
+
+            
+            #add-point:input段define
+            {<point name="input.action"/>}
+            #end add-point
+          
+            #---------------------------<  Master  >---------------------------
+         #----<<ooda001>>----
+         AFTER FIELD ooda001
+            #add-point:AFTER FIELD ooda001
+            {<point name="input.a.ooda001" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda001
+         ON ACTION controlp INFIELD ooda001
+            #add-point:CONTROLP ooda001
+            {<point name="input.c.ooda001" />}
+            #END add-point
+
+         BEFORE FIELD ooda001
+            #add-point:BEFORE FIELD ooda001
+            {<point name="input.b.ooda001" />}
+            #END add-point
+
+         ON CHANGE ooda001
+            #add-point:ON CHANGE ooda001
+            {<point name="input.g.ooda001" />}
+            #END add-point
+
+         #----<<ooda002>>----
+         BEFORE FIELD ooda002
+            #add-point:BEFORE FIELD ooda002
+            {<point name="input.b.ooda002" />}
+            #END add-point
+
+         AFTER FIELD ooda002
+            #add-point:AFTER FIELD ooda002
+            {<point name="input.a.ooda002" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda002
+         ON ACTION controlp INFIELD ooda002
+            #add-point:CONTROLP ooda002
+            {<point name="input.c.ooda002" />}
+            #END add-point
+
+         ON CHANGE ooda002
+            #add-point:ON CHANGE ooda002
+            {<point name="input.g.ooda002" />}
+            #END add-point
+
+         #----<<ooda003>>----
+         BEFORE FIELD ooda003
+            #add-point:BEFORE FIELD ooda003
+            {<point name="input.b.ooda003" />}
+            #END add-point
+
+         AFTER FIELD ooda003
+            #add-point:AFTER FIELD ooda003
+            {<point name="input.a.ooda003" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda003
+         ON ACTION controlp INFIELD ooda003
+            #add-point:CONTROLP ooda003
+            {<point name="input.c.ooda003" />}
+            #END add-point
+
+         ON CHANGE ooda003
+            #add-point:ON CHANGE ooda003
+            {<point name="input.g.ooda003" />}
+            #END add-point
+
+         #----<<ooda004>>----
+         AFTER FIELD ooda004
+            #add-point:AFTER FIELD ooda004
+            {<point name="input.a.ooda004" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda004
+         ON ACTION controlp INFIELD ooda004
+            #add-point:CONTROLP ooda004
+            {<point name="input.c.ooda004" />}
+            #END add-point
+
+         BEFORE FIELD ooda004
+            #add-point:BEFORE FIELD ooda004
+            {<point name="input.b.ooda004" />}
+            #END add-point
+
+         ON CHANGE ooda004
+            #add-point:ON CHANGE ooda004
+            {<point name="input.g.ooda004" />}
+            #END add-point
+
+         #----<<oodastus>>----
+         BEFORE FIELD oodastus
+            #add-point:BEFORE FIELD oodastus
+            {<point name="input.b.oodastus" />}
+            #END add-point
+
+         AFTER FIELD oodastus
+            #add-point:AFTER FIELD oodastus
+            {<point name="input.a.oodastus" />}
+            #END add-point
+
+         #Ctrlp:input.c.oodastus
+         ON ACTION controlp INFIELD oodastus
+            #add-point:CONTROLP oodastus
+            {<point name="input.c.oodastus" />}
+            #END add-point
+
+         ON CHANGE oodastus
+            #add-point:ON CHANGE oodastus
+            {<point name="input.g.oodastus" />}
+            #END add-point
+
+         #----<<ooda005>>----
+         BEFORE FIELD ooda005
+            #add-point:BEFORE FIELD ooda005
+            {<point name="input.b.ooda005" />}
+            #END add-point
+
+         AFTER FIELD ooda005
+            #add-point:AFTER FIELD ooda005
+            {<point name="input.a.ooda005" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda005
+         ON ACTION controlp INFIELD ooda005
+            #add-point:CONTROLP ooda005
+            {<point name="input.c.ooda005" />}
+            #END add-point
+
+         ON CHANGE ooda005
+            #add-point:ON CHANGE ooda005
+            {<point name="input.g.ooda005" />}
+            #END add-point
+
+         #----<<ooda006>>----
+         BEFORE FIELD ooda006
+            #add-point:BEFORE FIELD ooda006
+            {<point name="input.b.ooda006" />}
+            #END add-point
+
+         AFTER FIELD ooda006
+            #add-point:AFTER FIELD ooda006
+            {<point name="input.a.ooda006" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda006
+         ON ACTION controlp INFIELD ooda006
+            #add-point:CONTROLP ooda006
+            {<point name="input.c.ooda006" />}
+            #END add-point
+
+         ON CHANGE ooda006
+            #add-point:ON CHANGE ooda006
+            {<point name="input.g.ooda006" />}
+            #END add-point
+
+         #----<<ooda007>>----
+         BEFORE FIELD ooda007
+            #add-point:BEFORE FIELD ooda007
+            {<point name="input.b.ooda007" />}
+            #END add-point
+
+         AFTER FIELD ooda007
+            #add-point:AFTER FIELD ooda007
+            {<point name="input.a.ooda007" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda007
+         ON ACTION controlp INFIELD ooda007
+            #add-point:CONTROLP ooda007
+            {<point name="input.c.ooda007" />}
+            #END add-point
+
+         ON CHANGE ooda007
+            #add-point:ON CHANGE ooda007
+            {<point name="input.g.ooda007" />}
+            #END add-point
+
+         #----<<ooda008>>----
+         BEFORE FIELD ooda008
+            #add-point:BEFORE FIELD ooda008
+            {<point name="input.b.ooda008" />}
+            #END add-point
+
+         AFTER FIELD ooda008
+            #add-point:AFTER FIELD ooda008
+            {<point name="input.a.ooda008" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda008
+         ON ACTION controlp INFIELD ooda008
+            #add-point:CONTROLP ooda008
+            {<point name="input.c.ooda008" />}
+            #END add-point
+
+         ON CHANGE ooda008
+            #add-point:ON CHANGE ooda008
+            {<point name="input.g.ooda008" />}
+            #END add-point
+
+         #----<<ooda013>>----
+         BEFORE FIELD ooda013
+            #add-point:BEFORE FIELD ooda013
+            {<point name="input.b.ooda013" />}
+            #END add-point
+
+         AFTER FIELD ooda013
+            #add-point:AFTER FIELD ooda013
+            {<point name="input.a.ooda013" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda013
+         ON ACTION controlp INFIELD ooda013
+            #add-point:CONTROLP ooda013
+            {<point name="input.c.ooda013" />}
+            #END add-point
+
+         ON CHANGE ooda013
+            #add-point:ON CHANGE ooda013
+            {<point name="input.g.ooda013" />}
+            #END add-point
+
+         #----<<ooda014>>----
+         BEFORE FIELD ooda014
+            #add-point:BEFORE FIELD ooda014
+            {<point name="input.b.ooda014" />}
+            #END add-point
+
+         AFTER FIELD ooda014
+            #add-point:AFTER FIELD ooda014
+            {<point name="input.a.ooda014" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda014
+         ON ACTION controlp INFIELD ooda014
+            #add-point:CONTROLP ooda014
+            {<point name="input.c.ooda014" />}
+            #END add-point
+
+         ON CHANGE ooda014
+            #add-point:ON CHANGE ooda014
+            {<point name="input.g.ooda014" />}
+            #END add-point
+
+         #----<<ooda009>>----
+         BEFORE FIELD ooda009
+            #add-point:BEFORE FIELD ooda009
+            {<point name="input.b.ooda009" />}
+            #END add-point
+
+         AFTER FIELD ooda009
+            #add-point:AFTER FIELD ooda009
+            {<point name="input.a.ooda009" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda009
+         ON ACTION controlp INFIELD ooda009
+            #add-point:CONTROLP ooda009
+            {<point name="input.c.ooda009" />}
+            #END add-point
+
+         ON CHANGE ooda009
+            #add-point:ON CHANGE ooda009
+            {<point name="input.g.ooda009" />}
+            #END add-point
+
+         #----<<ooda015>>----
+         BEFORE FIELD ooda015
+            #add-point:BEFORE FIELD ooda015
+            {<point name="input.b.ooda015" />}
+            #END add-point
+
+         AFTER FIELD ooda015
+            #add-point:AFTER FIELD ooda015
+            {<point name="input.a.ooda015" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda015
+         ON ACTION controlp INFIELD ooda015
+            #add-point:CONTROLP ooda015
+            {<point name="input.c.ooda015" />}
+            #END add-point
+
+         ON CHANGE ooda015
+            #add-point:ON CHANGE ooda015
+            {<point name="input.g.ooda015" />}
+            #END add-point
+
+         #----<<ooda016>>----
+         BEFORE FIELD ooda016
+            #add-point:BEFORE FIELD ooda016
+            {<point name="input.b.ooda016" />}
+            #END add-point
+
+         AFTER FIELD ooda016
+            #add-point:AFTER FIELD ooda016
+            {<point name="input.a.ooda016" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda016
+         ON ACTION controlp INFIELD ooda016
+            #add-point:CONTROLP ooda016
+            {<point name="input.c.ooda016" />}
+            #END add-point
+
+         ON CHANGE ooda016
+            #add-point:ON CHANGE ooda016
+            {<point name="input.g.ooda016" />}
+            #END add-point
+
+         #----<<ooda017>>----
+         BEFORE FIELD ooda017
+            #add-point:BEFORE FIELD ooda017
+            {<point name="input.b.ooda017" />}
+            #END add-point
+
+         AFTER FIELD ooda017
+            #add-point:AFTER FIELD ooda017
+            {<point name="input.a.ooda017" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda017
+         ON ACTION controlp INFIELD ooda017
+            #add-point:CONTROLP ooda017
+            {<point name="input.c.ooda017" />}
+            #END add-point
+
+         ON CHANGE ooda017
+            #add-point:ON CHANGE ooda017
+            {<point name="input.g.ooda017" />}
+            #END add-point
+
+         #----<<ooda018>>----
+         BEFORE FIELD ooda018
+            #add-point:BEFORE FIELD ooda018
+            {<point name="input.b.ooda018" />}
+            #END add-point
+
+         AFTER FIELD ooda018
+            #add-point:AFTER FIELD ooda018
+            {<point name="input.a.ooda018" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda018
+         ON ACTION controlp INFIELD ooda018
+            #add-point:CONTROLP ooda018
+            {<point name="input.c.ooda018" />}
+            #END add-point
+
+         ON CHANGE ooda018
+            #add-point:ON CHANGE ooda018
+            {<point name="input.g.ooda018" />}
+            #END add-point
+
+         #----<<ooda019>>----
+         BEFORE FIELD ooda019
+            #add-point:BEFORE FIELD ooda019
+            {<point name="input.b.ooda019" />}
+            #END add-point
+
+         AFTER FIELD ooda019
+            #add-point:AFTER FIELD ooda019
+            {<point name="input.a.ooda019" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda019
+         ON ACTION controlp INFIELD ooda019
+            #add-point:CONTROLP ooda019
+            {<point name="input.c.ooda019" />}
+            #END add-point
+
+         ON CHANGE ooda019
+            #add-point:ON CHANGE ooda019
+            {<point name="input.g.ooda019" />}
+            #END add-point
+
+         #----<<ooda020>>----
+         BEFORE FIELD ooda020
+            #add-point:BEFORE FIELD ooda020
+            {<point name="input.b.ooda020" />}
+            #END add-point
+
+         AFTER FIELD ooda020
+            #add-point:AFTER FIELD ooda020
+            {<point name="input.a.ooda020" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda020
+         ON ACTION controlp INFIELD ooda020
+            #add-point:CONTROLP ooda020
+            {<point name="input.c.ooda020" />}
+            #END add-point
+
+         ON CHANGE ooda020
+            #add-point:ON CHANGE ooda020
+            {<point name="input.g.ooda020" />}
+            #END add-point
+
+         #----<<ooda021>>----
+         BEFORE FIELD ooda021
+            #add-point:BEFORE FIELD ooda021
+            {<point name="input.b.ooda021" />}
+            #END add-point
+
+         AFTER FIELD ooda021
+            #add-point:AFTER FIELD ooda021
+            {<point name="input.a.ooda021" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda021
+         ON ACTION controlp INFIELD ooda021
+            #add-point:CONTROLP ooda021
+            {<point name="input.c.ooda021" />}
+            #END add-point
+
+         ON CHANGE ooda021
+            #add-point:ON CHANGE ooda021
+            {<point name="input.g.ooda021" />}
+            #END add-point
+
+         #----<<ooda026>>----
+         BEFORE FIELD ooda026
+            #add-point:BEFORE FIELD ooda026
+            {<point name="input.b.ooda026" />}
+            #END add-point
+
+         AFTER FIELD ooda026
+            #add-point:AFTER FIELD ooda026
+            {<point name="input.a.ooda026" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda026
+         ON ACTION controlp INFIELD ooda026
+            #add-point:CONTROLP ooda026
+            {<point name="input.c.ooda026" />}
+            #END add-point
+
+         ON CHANGE ooda026
+            #add-point:ON CHANGE ooda026
+            {<point name="input.g.ooda026" />}
+            #END add-point
+
+         #----<<ooda010>>----
+         BEFORE FIELD ooda010
+            #add-point:BEFORE FIELD ooda010
+            {<point name="input.b.ooda010" />}
+            #END add-point
+
+         AFTER FIELD ooda010
+            #add-point:AFTER FIELD ooda010
+            {<point name="input.a.ooda010" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda010
+         ON ACTION controlp INFIELD ooda010
+            #add-point:CONTROLP ooda010
+            {<point name="input.c.ooda010" />}
+            #END add-point
+
+         ON CHANGE ooda010
+            #add-point:ON CHANGE ooda010
+            {<point name="input.g.ooda010" />}
+            #END add-point
+
+         #----<<ooda011>>----
+         BEFORE FIELD ooda011
+            #add-point:BEFORE FIELD ooda011
+            {<point name="input.b.ooda011" />}
+            #END add-point
+
+         AFTER FIELD ooda011
+            #add-point:AFTER FIELD ooda011
+            {<point name="input.a.ooda011" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda011
+         ON ACTION controlp INFIELD ooda011
+            #add-point:CONTROLP ooda011
+            {<point name="input.c.ooda011" />}
+            #END add-point
+
+         ON CHANGE ooda011
+            #add-point:ON CHANGE ooda011
+            {<point name="input.g.ooda011" />}
+            #END add-point
+
+         #----<<ooda012>>----
+         BEFORE FIELD ooda012
+            #add-point:BEFORE FIELD ooda012
+            {<point name="input.b.ooda012" />}
+            #END add-point
+
+         AFTER FIELD ooda012
+            #add-point:AFTER FIELD ooda012
+            {<point name="input.a.ooda012" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda012
+         ON ACTION controlp INFIELD ooda012
+            #add-point:CONTROLP ooda012
+            {<point name="input.c.ooda012" />}
+            #END add-point
+
+         ON CHANGE ooda012
+            #add-point:ON CHANGE ooda012
+            {<point name="input.g.ooda012" />}
+            #END add-point
+
+         #----<<ooda025>>----
+         BEFORE FIELD ooda025
+            #add-point:BEFORE FIELD ooda025
+            {<point name="input.b.ooda025" />}
+            #END add-point
+
+         AFTER FIELD ooda025
+            #add-point:AFTER FIELD ooda025
+            {<point name="input.a.ooda025" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda025
+         ON ACTION controlp INFIELD ooda025
+            #add-point:CONTROLP ooda025
+            {<point name="input.c.ooda025" />}
+            #END add-point
+
+         ON CHANGE ooda025
+            #add-point:ON CHANGE ooda025
+            {<point name="input.g.ooda025" />}
+            #END add-point
+
+         #----<<ooda024>>----
+         BEFORE FIELD ooda024
+            #add-point:BEFORE FIELD ooda024
+            {<point name="input.b.ooda024" />}
+            #END add-point
+
+         AFTER FIELD ooda024
+            #add-point:AFTER FIELD ooda024
+            {<point name="input.a.ooda024" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda024
+         ON ACTION controlp INFIELD ooda024
+            #add-point:CONTROLP ooda024
+            {<point name="input.c.ooda024" />}
+            #END add-point
+
+         ON CHANGE ooda024
+            #add-point:ON CHANGE ooda024
+            {<point name="input.g.ooda024" />}
+            #END add-point
+
+         #----<<ooda022>>----
+         BEFORE FIELD ooda022
+            #add-point:BEFORE FIELD ooda022
+            {<point name="input.b.ooda022" />}
+            #END add-point
+
+         AFTER FIELD ooda022
+            #add-point:AFTER FIELD ooda022
+            {<point name="input.a.ooda022" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda022
+         ON ACTION controlp INFIELD ooda022
+            #add-point:CONTROLP ooda022
+            {<point name="input.c.ooda022" />}
+            #END add-point
+
+         ON CHANGE ooda022
+            #add-point:ON CHANGE ooda022
+            {<point name="input.g.ooda022" />}
+            #END add-point
+
+         #----<<ooda023>>----
+         BEFORE FIELD ooda023
+            #add-point:BEFORE FIELD ooda023
+            {<point name="input.b.ooda023" />}
+            #END add-point
+
+         AFTER FIELD ooda023
+            #add-point:AFTER FIELD ooda023
+            {<point name="input.a.ooda023" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda023
+         ON ACTION controlp INFIELD ooda023
+            #add-point:CONTROLP ooda023
+            {<point name="input.c.ooda023" />}
+            #END add-point
+
+         ON CHANGE ooda023
+            #add-point:ON CHANGE ooda023
+            {<point name="input.g.ooda023" />}
+            #END add-point
+
+         #----<<ooda027>>----
+         BEFORE FIELD ooda027
+            #add-point:BEFORE FIELD ooda027
+            {<point name="input.b.ooda027" />}
+            #END add-point
+
+         AFTER FIELD ooda027
+            #add-point:AFTER FIELD ooda027
+            {<point name="input.a.ooda027" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda027
+         ON ACTION controlp INFIELD ooda027
+            #add-point:CONTROLP ooda027
+            {<point name="input.c.ooda027" />}
+            #END add-point
+
+         ON CHANGE ooda027
+            #add-point:ON CHANGE ooda027
+            {<point name="input.g.ooda027" />}
+            #END add-point
+
+         #----<<ooda028>>----
+         BEFORE FIELD ooda028
+            #add-point:BEFORE FIELD ooda028
+            {<point name="input.b.ooda028" />}
+            #END add-point
+
+         AFTER FIELD ooda028
+            #add-point:AFTER FIELD ooda028
+            {<point name="input.a.ooda028" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda028
+         ON ACTION controlp INFIELD ooda028
+            #add-point:CONTROLP ooda028
+            {<point name="input.c.ooda028" />}
+            #END add-point
+
+         ON CHANGE ooda028
+            #add-point:ON CHANGE ooda028
+            {<point name="input.g.ooda028" />}
+            #END add-point
+
+         #----<<ooda029>>----
+         BEFORE FIELD ooda029
+            #add-point:BEFORE FIELD ooda029
+            {<point name="input.b.ooda029" />}
+            #END add-point
+
+         AFTER FIELD ooda029
+            #add-point:AFTER FIELD ooda029
+            {<point name="input.a.ooda029" />}
+            #END add-point
+
+         #Ctrlp:input.c.ooda029
+         ON ACTION controlp INFIELD ooda029
+            #add-point:CONTROLP ooda029
+            {<point name="input.c.ooda029" />}
+            #END add-point
+
+         ON CHANGE ooda029
+            #add-point:ON CHANGE ooda029
+            {<point name="input.g.ooda029" />}
+            #END add-point
+
+         #----<<oodamodu>>----
+         BEFORE FIELD oodamodu
+            #add-point:BEFORE FIELD oodamodu
+            {<point name="input.b.oodamodu" />}
+            #END add-point
+
+         AFTER FIELD oodamodu
+            #add-point:AFTER FIELD oodamodu
+            {<point name="input.a.oodamodu" />}
+            #END add-point
+
+         #Ctrlp:input.c.oodamodu
+         ON ACTION controlp INFIELD oodamodu
+            #add-point:CONTROLP oodamodu
+            {<point name="input.c.oodamodu" />}
+            #END add-point
+
+         ON CHANGE oodamodu
+            #add-point:ON CHANGE oodamodu
+            {<point name="input.g.oodamodu" />}
+            #END add-point
+
+         #----<<oodadate>>----
+         BEFORE FIELD oodadate
+            #add-point:BEFORE FIELD oodadate
+            {<point name="input.b.oodadate" />}
+            #END add-point
+
+         AFTER FIELD oodadate
+            #add-point:AFTER FIELD oodadate
+            {<point name="input.a.oodadate" />}
+            #END add-point
+
+         #Ctrlp:input.c.oodadate
+         ON ACTION controlp INFIELD oodadate
+            #add-point:CONTROLP oodadate
+            {<point name="input.c.oodadate" />}
+            #END add-point
+
+         ON CHANGE oodadate
+            #add-point:ON CHANGE oodadate
+            {<point name="input.g.oodadate" />}
+            #END add-point
+
+         #----<<oodaoriu>>----
+         BEFORE FIELD oodaoriu
+            #add-point:BEFORE FIELD oodaoriu
+            {<point name="input.b.oodaoriu" />}
+            #END add-point
+
+         AFTER FIELD oodaoriu
+            #add-point:AFTER FIELD oodaoriu
+            {<point name="input.a.oodaoriu" />}
+            #END add-point
+
+         #Ctrlp:input.c.oodaoriu
+         ON ACTION controlp INFIELD oodaoriu
+            #add-point:CONTROLP oodaoriu
+            {<point name="input.c.oodaoriu" />}
+            #END add-point
+
+         ON CHANGE oodaoriu
+            #add-point:ON CHANGE oodaoriu
+            {<point name="input.g.oodaoriu" />}
+            #END add-point
+
+         #----<<oodaorid>>----
+         BEFORE FIELD oodaorid
+            #add-point:BEFORE FIELD oodaorid
+            {<point name="input.b.oodaorid" />}
+            #END add-point
+
+         AFTER FIELD oodaorid
+            #add-point:AFTER FIELD oodaorid
+            {<point name="input.a.oodaorid" />}
+            #END add-point
+
+         #Ctrlp:input.c.oodaorid
+         ON ACTION controlp INFIELD oodaorid
+            #add-point:CONTROLP oodaorid
+            {<point name="input.c.oodaorid" />}
+            #END add-point
+
+         ON CHANGE oodaorid
+            #add-point:ON CHANGE oodaorid
+            {<point name="input.g.oodaorid" />}
+            #END add-point
+
+         #----<<oodauser>>----
+         BEFORE FIELD oodauser
+            #add-point:BEFORE FIELD oodauser
+            {<point name="input.b.oodauser" />}
+            #END add-point
+
+         AFTER FIELD oodauser
+            #add-point:AFTER FIELD oodauser
+            {<point name="input.a.oodauser" />}
+            #END add-point
+
+         #Ctrlp:input.c.oodauser
+         ON ACTION controlp INFIELD oodauser
+            #add-point:CONTROLP oodauser
+            {<point name="input.c.oodauser" />}
+            #END add-point
+
+         ON CHANGE oodauser
+            #add-point:ON CHANGE oodauser
+            {<point name="input.g.oodauser" />}
+            #END add-point
+
+         #----<<oodadept>>----
+         BEFORE FIELD oodadept
+            #add-point:BEFORE FIELD oodadept
+            {<point name="input.b.oodadept" />}
+            #END add-point
+
+         AFTER FIELD oodadept
+            #add-point:AFTER FIELD oodadept
+            {<point name="input.a.oodadept" />}
+            #END add-point
+
+         #Ctrlp:input.c.oodadept
+         ON ACTION controlp INFIELD oodadept
+            #add-point:CONTROLP oodadept
+            {<point name="input.c.oodadept" />}
+            #END add-point
+
+         ON CHANGE oodadept
+            #add-point:ON CHANGE oodadept
+            {<point name="input.g.oodadept" />}
+            #END add-point
+
+         #----<<oodabuid>>----
+         BEFORE FIELD oodabuid
+            #add-point:BEFORE FIELD oodabuid
+            {<point name="input.b.oodabuid" />}
+            #END add-point
+
+         AFTER FIELD oodabuid
+            #add-point:AFTER FIELD oodabuid
+            {<point name="input.a.oodabuid" />}
+            #END add-point
+
+         #Ctrlp:input.c.oodabuid
+         ON ACTION controlp INFIELD oodabuid
+            #add-point:CONTROLP oodabuid
+            {<point name="input.c.oodabuid" />}
+            #END add-point
+
+         ON CHANGE oodabuid
+            #add-point:ON CHANGE oodabuid
+            {<point name="input.g.oodabuid" />}
+            #END add-point
+
+ #欄位檢查
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+           IF aooi019_check(g_ooda_m.ooda002,g_ooda_m.ooda001
+              #此程式無root欄位:,g_ooda_m.
+              ) THEN
+              CALL cl_err('','tree-001',1)
+              NEXT FIELD CURRENT
+           END IF
+                
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+            DISPLAY BY NAME g_ooda_m.ooda002             
+ 
+            IF p_cmd <> 'u' THEN
+               BEGIN WORK
+               LET l_count = 1  
+ 
+               SELECT COUNT(*) INTO l_count FROM ooda_t
+                WHERE oodaent = g_enterprise AND ooda001 = g_ooda001_t #
+      #key2
+                                          AND ooda002 = g_ooda002_t
+
+
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前
+                  {<point name="input.head.b_insert"/>}
+                  #end add-point
+               
+                  INSERT INTO ooda_t (oodaent,ooda001,ooda002,ooda003,ooda004,oodastus,ooda005,ooda006,ooda007,ooda008,ooda013,ooda014,ooda009,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda026,ooda010,ooda011,ooda012,ooda025,ooda024,ooda022,ooda023,ooda027,ooda028,ooda029,oodamodu,oodadate,oodaoriu,oodaorid,oodauser,oodadept,oodabuid)
+                  VALUES (g_enterprise,g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oodaorid,g_ooda_m.oodauser,g_ooda_m.oodadept,g_ooda_m.oodabuid) # DISK WRITE
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err3("ins","g_ooda_m",g_ooda_m.ooda002,"",SQLCA.sqlcode,"","",1)  
+                     CONTINUE DIALOG
+                  END IF
+                  
+                  #資料多語言用-增/改
+                           INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_ooda_m.ooda001 = g_master_multi_table_t.ooda001 AND
+         g_ooda_m.ooda002 = g_master_multi_table_t.ooda002 AND
+         g_ooda_m.oodb004 = g_master_multi_table_t.oodb004 AND 
+         g_ooda_m.oodb005 = g_master_multi_table_t.oodb005 THEN
+         ELSE 
+            LET l_var_keys[01] = g_ooda_m.ooda001
+            LET l_field_keys[01] = 'oodb001'
+            LET l_var_keys_bak[01] = g_master_multi_table_t.ooda001
+            LET l_var_keys[02] = g_ooda_m.ooda002
+            LET l_field_keys[02] = 'oodb002'
+            LET l_var_keys_bak[02] = g_master_multi_table_t.ooda002
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'oodb003'
+            LET l_var_keys_bak[03] = g_dlang
+            LET l_vars[01] = g_ooda_m.oodb004
+            LET l_fields[01] = 'oodb004'
+            LET l_vars[02] = g_ooda_m.oodb005
+            LET l_fields[02] = 'oodb005'
+            LET l_vars[03] = g_enterprise 
+            LET l_fields[03] = 'oodbent'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'oodb_t')
+         END IF 
+
+                  COMMIT WORK
+                  
+                  #add-point:單頭新增後
+                  {<point name="input.head.a_insert"/>}
+                  #end add-point
+                  
+               ELSE
+                  CALL cl_err( g_ooda_m.ooda002, 'std-00006', 0 )
+                  ROLLBACK WORK
+               END IF 
+            ELSE
+               #add-point:單頭修改前
+               {<point name="input.head.b_update"/>}
+               #end add-point
+               UPDATE ooda_t SET (ooda001,ooda002,ooda003,ooda004,oodastus,ooda005,ooda006,ooda007,ooda008,ooda013,ooda014,ooda009,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda026,ooda010,ooda011,ooda012,ooda025,ooda024,ooda022,ooda023,ooda027,ooda028,ooda029,oodamodu,oodadate,oodaoriu,oodaorid,oodauser,oodadept,oodabuid) = (g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oodaorid,g_ooda_m.oodauser,g_ooda_m.oodadept,g_ooda_m.oodabuid)
+                WHERE oodaent = g_enterprise AND ooda001 = g_ooda001_t #
+      #key2
+                                          AND ooda002 = g_ooda002_t
+
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err3("ins","g_ooda_m",g_ooda_m.ooda002,"",SQLCA.sqlcode,"","",1)  
+                  ROLLBACK WORK
+               ELSE
+                  #資料多語言用-增/改
+                           INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_ooda_m.ooda001 = g_master_multi_table_t.ooda001 AND
+         g_ooda_m.ooda002 = g_master_multi_table_t.ooda002 AND
+         g_ooda_m.oodb004 = g_master_multi_table_t.oodb004 AND 
+         g_ooda_m.oodb005 = g_master_multi_table_t.oodb005 THEN
+         ELSE 
+            LET l_var_keys[01] = g_ooda_m.ooda001
+            LET l_field_keys[01] = 'oodb001'
+            LET l_var_keys_bak[01] = g_master_multi_table_t.ooda001
+            LET l_var_keys[02] = g_ooda_m.ooda002
+            LET l_field_keys[02] = 'oodb002'
+            LET l_var_keys_bak[02] = g_master_multi_table_t.ooda002
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'oodb003'
+            LET l_var_keys_bak[03] = g_dlang
+            LET l_vars[01] = g_ooda_m.oodb004
+            LET l_fields[01] = 'oodb004'
+            LET l_vars[02] = g_ooda_m.oodb005
+            LET l_fields[02] = 'oodb005'
+            LET l_vars[03] = g_enterprise 
+            LET l_fields[03] = 'oodbent'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'oodb_t')
+         END IF 
+
+                  COMMIT WORK
+                  
+                  #add-point:單頭修改後
+                  {<point name="input.head.a_update"/>}
+                  #end add-point
+               END IF
+            END IF
+           #controlp
+      END INPUT
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET g_action_choice="exit"
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET g_action_choice="exit"
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+           
+   END DIALOG
+   
+   #add-point:input段after input 
+   {<point name="input.after_input"/>}
+   #end add-point    
+    
+END FUNCTION
+ 
+ 
+#+ 資料複製
+PRIVATE FUNCTION aooi019_reproduce()
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point   
+   DEFINE l_newno           LIKE ooda_t.ooda001 
+   DEFINE l_oldno           LIKE ooda_t.ooda001 
+      #key2
+   DEFINE l_newno02     LIKE ooda_t.ooda002 
+   DEFINE l_oldno02     LIKE ooda_t.ooda002 
+
+
+   DEFINE l_master    RECORD LIKE ooda_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+ 
+   IF g_ooda_m.ooda001 IS NULL
+
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+    
+   LET g_before_input_done = FALSE
+   CALL aooi019_set_entry('a')
+   LET g_before_input_done = TRUE
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   INPUT l_newno       # FROM 
+      #key2
+        ,l_newno02
+
+
+   FROM ooda001
+      #key2
+        ,ooda002
+
+
+        
+      BEFORE INPUT
+ 
+      AFTER FIELD ooda001
+         IF l_newno IS NULL THEN
+            NEXT FIELD CURRENT
+         END IF
+         #add-point:AFTER FIELD ooda001
+         {<point name="reproduce.a.ooda001" />}
+         #end add-point
+         
+      #key2
+      AFTER FIELD ooda002
+         IF l_newno IS NULL THEN
+            NEXT FIELD CURRENT
+         END IF
+         #add-point:AFTER FIELD ooda002
+         {<point name="reproduce.a.ooda002" />}
+         #end add-point
+
+
+            
+      AFTER INPUT
+         #確定該key值是否有重複定義
+         IF g_ooda_m.ooda001 IS NULL  
+      #key2
+         OR g_ooda_m.ooda002 IS NULL
+
+
+         THEN
+            NEXT FIELD ooda001                                  
+         END IF
+         LET l_cnt = 0
+         SELECT COUNT(*) INTO l_cnt FROM ooda_t 
+          WHERE oodaent = g_enterprise AND ooda001 = l_newno
+      #key2
+            AND ooda002 = l_newno02
+
+
+         IF l_cnt > 0 THEN
+            CALL cl_err('該資料已存在','test',1)
+            NEXT FIELD ooda001 
+         END IF
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE INPUT
+         
+   END INPUT
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   BEGIN WORK
+ 
+   SELECT * INTO l_master.* FROM ooda_t 
+    WHERE oodaent = g_enterprise AND ooda001 = g_ooda001_t #
+      #key2
+      AND ooda002 = g_ooda002_t
+
+
+            
+   LET l_master.ooda001 = l_newno
+      #key2
+   LET l_master.ooda002 = l_newno02
+
+
+   LET l_master.oodauser = g_user
+   LET l_master.oodadept = g_dept
+   LET l_master.oodabuid = cl_get_current()
+   LET l_master.oodaoriu = g_user 
+   LET l_master.oodaorid = g_dept 
+   LET l_master.oodamodu = g_user
+   LET l_master.oodadate = cl_get_current()
+   LET l_master.oodastus = 'Y'
+   
+   #add-point:單頭複製前
+   {<point name="reproduce.head.b_insert"/>}
+   #end add-point
+   
+   INSERT INTO ooda_t VALUES (l_master.*) #複製單頭        
+   IF SQLCA.sqlcode THEN
+      ROLLBACK WORK
+      CALL cl_err("ooda_t",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   COMMIT WORK
+   
+   #add-point:單頭複製後
+   {<point name="reproduce.head.a_insert"/>}
+   #end add-point
+   
+   LET g_ooda_m.ooda001 = l_oldno
+      #key2
+   LET g_ooda_m.ooda002 = l_oldno{key}
+
+
+   
+   SELECT ooda001,ooda002,ooda003,ooda004,oodastus,ooda005,ooda006,ooda007,ooda008,ooda013,ooda014,ooda009,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda026,ooda010,ooda011,ooda012,ooda025,ooda024,ooda022,ooda023,ooda027,ooda028,ooda029,oodamodu,oodadate,oodaoriu,oodaorid,oodauser,oodadept,oodabuid INTO g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oodaorid,g_ooda_m.oodauser,g_ooda_m.oodadept,g_ooda_m.oodabuid FROM ooda_t 
+    WHERE ooda001 = g_ooda001_t #
+      #key2
+                                 AND ooda002 = g_ooda002_t
+
+
+      
+   CALL aooi019_show()
+ 
+END FUNCTION
+ 
+ 
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION aooi019_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   LET g_ooda_m_t.* = g_ooda_m.*      #保存單頭舊值
+ 
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()       
+   
+   #帶出預設欄位之值
+   LET g_ooda_m.modu_desc = cl_get_username(g_ooda_m.oodamodu)
+   LET g_ooda_m.oriu_desc = cl_get_username(g_ooda_m.oodaoriu)
+   LET g_ooda_m.user_desc = cl_get_username(g_ooda_m.oodauser)
+   LET g_ooda_m.dept_desc = cl_get_deptname(g_ooda_m.oodadept)
+   LET g_ooda_m.orid_desc = cl_get_deptname(g_ooda_m.oodaorid)
+   
+   #讀入ref值(單頭)
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_ooda_m.ooda001
+   LET g_ref_fields[2] = g_ooda_m.ooda002
+   CALL ap_ref_array2(g_ref_fields," SELECT oodb004,oodb005 FROM oodb_t WHERE oodb001 = ? AND oodb002 = ? AND oodb003 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooda_m.oodb004 = g_rtn_fields[1] 
+   LET g_ooda_m.oodb005 = g_rtn_fields[2] 
+   DISPLAY BY NAME g_ooda_m.oodb004,g_ooda_m.oodb005
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooda_m.ooda001
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocr004 FROM oocr_t WHERE oocrent='"||g_enterprise||"' AND oocr001='650' AND oocr002=? AND oocr003='"||g_lang||"'","") RETURNING g_rtn_fields
+            LET g_ooda_m.ooda001_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_ooda_m.ooda001_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooda_m.ooda001
+            LET g_ref_fields[2] = g_ooda_m.ooda004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oodb004 FROM oodb_t WHERE oodbent='"||g_enterprise||"' AND oodb001=? AND oodb002=? AND oodb003='"||g_lang||"'","") RETURNING g_rtn_fields
+            LET g_ooda_m.ooda004_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_ooda_m.ooda004_desc
+ 
+ 
+   #add-point:reference段之後
+   {<point name="show.head.reference"/>}
+   #end add-point
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.ooda001_desc,g_ooda_m.oodb004,g_ooda_m.oodb005,g_ooda_m.ooda004_desc,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.modu_desc,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oriu_desc,g_ooda_m.oodaorid,g_ooda_m.orid_desc,g_ooda_m.oodauser,g_ooda_m.user_desc,g_ooda_m.oodadept,g_ooda_m.dept_desc,g_ooda_m.oodabuid
+ 
+   #根據stus狀態show出對應圖片
+   CASE g_ooda_m.oodastus
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "authstatus/valid.png")
+      WHEN "N" 
+         CALL gfrm_curr.setElementImage("statechange", "authstatus/void.png")
+   END CASE
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+   
+END FUNCTION
+ 
+ 
+#+ 資料刪除
+PRIVATE FUNCTION aooi019_delete()
+   {<Local define>}
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point
+   
+   IF g_ooda_m.ooda001 IS NULL
+
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+    SELECT UNIQUE ooda001,ooda002,ooda003,ooda004,oodastus,ooda005,ooda006,ooda007,ooda008,ooda013,ooda014,ooda009,ooda015,ooda016,ooda017,ooda018,ooda019,ooda020,ooda021,ooda026,ooda010,ooda011,ooda012,ooda025,ooda024,ooda022,ooda023,ooda027,ooda028,ooda029,oodamodu,oodadate,oodaoriu,oodaorid,oodauser,oodadept,oodabuid
+ INTO g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oodaorid,g_ooda_m.oodauser,g_ooda_m.oodadept,g_ooda_m.oodabuid
+ FROM ooda_t
+ WHERE oodaent = g_enterprise AND ooda001 = g_ooda_m.ooda001 AND ooda002 = g_ooda_m.ooda002
+   BEGIN WORK
+   
+   LET g_master_multi_table_t.ooda001 = g_ooda_m.ooda001
+LET g_master_multi_table_t.ooda002 = g_ooda_m.ooda002
+LET g_master_multi_table_t.oodb004 = g_ooda_m.oodb004
+LET g_master_multi_table_t.oodb005 = g_ooda_m.oodb005
+
+ 
+   OPEN aooi019_cl USING g_enterprise,g_ooda_m.ooda001,g_ooda_m.ooda002
+   IF STATUS THEN
+      CALL cl_err("OPEN aooi019_cl:", STATUS, 1)
+      CLOSE aooi019_cl
+      ROLLBACK WORK
+      RETURN
+   END IF
+ 
+   FETCH aooi019_cl INTO g_ooda_m.ooda001,g_ooda_m.ooda002,g_ooda_m.ooda003,g_ooda_m.ooda004,g_ooda_m.ooda001_desc,g_ooda_m.oodb004,g_ooda_m.oodb005,g_ooda_m.ooda004_desc,g_ooda_m.oodastus,g_ooda_m.ooda005,g_ooda_m.ooda006,g_ooda_m.ooda007,g_ooda_m.ooda008,g_ooda_m.ooda013,g_ooda_m.ooda014,g_ooda_m.ooda009,g_ooda_m.ooda015,g_ooda_m.ooda016,g_ooda_m.ooda017,g_ooda_m.ooda018,g_ooda_m.ooda019,g_ooda_m.ooda020,g_ooda_m.ooda021,g_ooda_m.ooda026,g_ooda_m.ooda010,g_ooda_m.ooda011,g_ooda_m.ooda012,g_ooda_m.ooda025,g_ooda_m.ooda024,g_ooda_m.ooda022,g_ooda_m.ooda023,g_ooda_m.ooda027,g_ooda_m.ooda028,g_ooda_m.ooda029,g_ooda_m.oodamodu,g_ooda_m.modu_desc,g_ooda_m.oodadate,g_ooda_m.oodaoriu,g_ooda_m.oriu_desc,g_ooda_m.oodaorid,g_ooda_m.orid_desc,g_ooda_m.oodauser,g_ooda_m.user_desc,g_ooda_m.oodadept,g_ooda_m.dept_desc,g_ooda_m.oodabuid              # 鎖住將被更改或取消的資料
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_ooda_m.ooda002,SQLCA.sqlcode,0)          #資料被他人LOCK
+      ROLLBACK WORK
+      RETURN
+   END IF
+ 
+   CALL aooi019_show()
+ 
+   IF cl_ask_delete() THEN                   #確認一下
+      INITIALIZE g_doc.* TO NULL         
+      LET g_doc.column1 = "ooda002"       
+      LET g_doc.value1 = g_ooda_m.ooda002     
+      CALL cl_del_doc()     
+ 
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete"/>}
+      #end add-point
+      
+      DELETE FROM ooda_t 
+       WHERE oodaent = g_enterprise AND ooda001 = g_ooda_m.ooda001 
+      #key2
+         AND ooda002 = g_ooda_m.ooda002 
+
+
+      CLEAR FORM
+  
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("ooda_t",SQLCA.sqlcode,0)
+         ROLLBACK WORK
+      END IF
+  
+      INITIALIZE l_var_keys_bak TO NULL 
+   INITIALIZE l_field_keys   TO NULL 
+   LET l_field_keys[01] = 'oodb001'
+   LET l_var_keys_bak[01] = g_master_multi_table_t.ooda001
+   LET l_field_keys[02] = 'oodb002'
+   LET l_var_keys_bak[02] = g_master_multi_table_t.ooda002
+   LET l_field_keys[03] = 'oodb003'
+   LET l_var_keys_bak[03] = g_dlang
+   CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'oodb_t')
+
+      
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+   END IF
+ 
+   CLOSE aooi019_cl
+   COMMIT WORK
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_ooda_m.ooda002,'D')
+    
+END FUNCTION
+ 
+ 
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aooi019_set_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1 
+   {</Local define>}   
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point
+ 
+   IF p_cmd = 'a' AND ( NOT g_before_input_done ) THEN
+      CALL cl_set_comp_entry("ooda001,ooda002",TRUE)
+   END IF
+   
+END FUNCTION
+ 
+ 
+#+ 外部參數搜尋, 施工中
+PRIVATE FUNCTION aooi019_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   IF g_searchtype = 0 OR cl_null(g_searchtype) THEN
+      LET g_searchtype = 3
+   END IF 
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " ooda001 = '", g_argv[1], "' AND "
+   END IF
+   
+      #key2
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " ooda002 = ", g_argv[02], " AND "
+   END IF
+
+
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc = ls_wc
+      CALL aooi019_browser_fill(g_wc,g_searchtype,"first")
+   ELSE
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+      CALL aooi019_browser_fill(g_wc,g_searchtype,"")
+   END IF
+ 
+ 
+   #add-point:default_search段結束前前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+ 
+ 
+ 
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aooi019_set_no_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1  
+   {</Local define>}   
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' AND ( NOT g_before_input_done ) THEN
+      CALL cl_set_comp_entry("ooda001,ooda002",FALSE)
+   END IF
+   
+END FUNCTION
+ 
+ 
+#+ 確認碼變更
+PRIVATE FUNCTION aooi019_statechange()
+   {<Local define>} 
+   DEFINE lc_state LIKE type_t.chr5
+   {</Local define>} 
+   #add-point:statechange段define
+   {<point name="statechange.define"/>}
+   #end add-point
+   
+   #add-point:statechange段before
+   {<point name="statechange.before"/>}
+   #end add-point
+   ERROR ""
+    
+   IF g_ooda_m.ooda001 IS NULL
+
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         CASE g_ooda_m.oodastus
+            WHEN "Y"
+               HIDE OPTION "valid"
+            WHEN "N"
+               HIDE OPTION "void"
+         END CASE
+         
+      ON ACTION valid
+         LET lc_state = "Y"
+         EXIT MENU
+         
+      ON ACTION void
+         LET lc_state = "N"
+         EXIT MENU
+         
+   END MENU
+   
+   IF (lc_state <> "Y" AND lc_state <> "N") OR cl_null(lc_state) THEN
+      RETURN
+   END IF 
+   
+   #add-point:stus修改前
+   {<point name="statechange.b_update"/>}
+   #end add-point
+      
+   UPDATE ooda_t SET oodastus = lc_state 
+    WHERE oodaent = g_enterprise AND ooda001 = g_ooda_m.ooda001 #
+      #key2
+                              AND ooda002 = g_ooda_m.ooda002
+
+
+  
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('',SQLCA.sqlcode,0)
+   ELSE
+      CASE lc_state
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "authstatus/valid.png")
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "authstatus/void.png")
+      END CASE
+   END IF
+ 
+   #add-point:stus修改後
+   {<point name="statechange.a_update"/>}
+   #end add-point
+   
+   #add-point:statechange段結束前
+   {<point name="statechange.after"/>}
+   #end add-point 
+   
+END FUNCTION
+ 
+ 
+#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+

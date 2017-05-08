@@ -1,0 +1,52 @@
+{<section id="${general_prefix}.get_hyper_data" >}
+#+ 此段落由子樣板qs01產生
+#+ 取得單身串查網址(包含程式代號及參數)
+PRIVATE FUNCTION ${general_prefix}_get_hyper_data(ps_field_name)
+   DEFINE ps_field_name    STRING
+   DEFINE ps_url           STRING
+   DEFINE ls_js            STRING
+   DEFINE la_param         RECORD
+                           prog     STRING,
+                           param    DYNAMIC ARRAY OF STRING
+                           END RECORD
+   DEFINE ps_type          LIKE type_t.chr10
+   #add-point:get_hyper_data段define
+   {<point name="get_hyper_data.define"/>}
+   #end add-point
+
+
+   LET ps_url = NULL
+
+   # 設定要做串查的程式代碼，參數預設為空白
+   CASE
+      WHEN ps_field_name = "${detail_hyper_field1}"
+         LET la_param.prog = "${detail_hyper_prog1}"
+         LET la_param.param[1] = ""
+      #hyperlink - Start -
+      WHEN ps_field_name = "${detail_hyper_field${hyper_field_count_all}}"
+         LET la_param.prog = "${detail_hyper_prog${hyper_field_count_all}}"
+         LET la_param.param[1] = ""
+      #hyperlink -  End  -
+   END CASE
+
+   # 若有兩個以上參數，請依序放置於 la_param.param[1]、la_param.param[2]、...
+   #add-point:傳入參數調整
+   {<point name="get_hyper_data.set_parameter"/>}
+   #end add-point
+
+   #將陣列資料組合成一個string字串
+   LET ls_js = util.JSON.stringify(la_param)
+
+   #依環境設定要走GDC或GWC模式 (""表示會依據目前的環境判斷，若有自行定義，會依據所定義的模式去執行)
+   LET ps_type = ""
+   #add-point:定義執行模式
+   {<point name="get_hyper_data.set_env"/>}
+   #end add-point
+
+   #呼叫lib，取得完整的url資訊
+   CALL cl_ap_url(ps_type,ls_js) RETURNING ps_url
+
+   RETURN ps_url
+END FUNCTION
+{</section>}
+

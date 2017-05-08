@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimi150" module="aim" jobmode="N" type="i05" industry="std" fix_arg="0" crtid="02482" crtdt="2013-10-10 09:28:35" modid="02295" moddt="2015-10-13 14:53:19" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產品策略維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooed004,ooed004_desc(chr80),ooed001,ooed002,ooed003,ooed005"/>
+      <var id="bs_field" value="ooed001,ooed002,ooed003,ooed004,ooed004_desc(chr80),ooed005" pk="ooed001,ooed002,ooed003,ooed004,ooed005" order=""/>
+      <bs_reference field="ooed004_desc" ref_field="ooed004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="prcategory"/>
+      <action id="event"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimi150" method="dialog">
+    <section id="input">
+      <input id="head" field="ooed004,ooed001,ooed002,ooed003,ooed005"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ooed004,ooed001,ooed002,ooed003,ooed005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ooed001,ooed002,ooed003,ooed004,ooed005"/>
+      <set id="head" type="no_entry" field="ooed001,ooed002,ooed003,ooed004,ooed005"/>
+    </init>
+    <init id="head">
+      <column id="ooed004">
+        <after>
+          <reference field="ooed004_desc" ref_field="ooed_t.ooed004" map_field="ooed004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ooed004_desc"/>
+      <column id="ooed001"/>
+      <column id="ooed002"/>
+      <column id="ooed003"/>
+      <column id="ooed005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooed_t" lid="ooed004" pid="ooed005" type="ooed001" desc="" speed="ooeds_t" stype="ooeds001" slid="ooeds002" spid="ooeds003" pk="ooed001,ooed002,ooed003,ooed004,ooed005">
+      <sql id="forupd_sql" type="sql" query="SELECT ooed004,&apos;&apos;,ooed001,ooed002,ooed003,ooed005 FROM ooed_t WHERE ooedent= ? AND ooed001=? AND ooed002=? AND ooed003=? AND ooed004=? AND ooed005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ooed004,&apos;&apos;,ooed001,ooed002,ooed003,ooed005 FROM ooed_t" order="ooed001,ooed002,ooed003,ooed004,ooed005"/>
+    </head>
+  </dataset>
+</assembly>
+

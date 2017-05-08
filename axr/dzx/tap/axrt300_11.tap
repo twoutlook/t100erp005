@@ -1,0 +1,994 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axrt300_11" std_prog="axrt300_11" erpver="1.0" module="AXR" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="free_style.variable" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[{<Module define>}
+
+#單頭 type 宣告
+PRIVATE TYPE type_g_xrcb_m RECORD
+       xrcbdocno LIKE xrcb_t.xrcbdocno,
+   xrcbld LIKE xrcb_t.xrcbld,
+   xrcbseq LIKE xrcb_t.xrcbseq,
+   xrcb010 LIKE xrcb_t.xrcb010,
+   xrcb010_desc LIKE type_t.chr80,
+   xrcb011 LIKE xrcb_t.xrcb011,
+   xrcb011_desc LIKE type_t.chr80,
+   xrcb012 LIKE xrcb_t.xrcb012,
+   xrcb012_desc LIKE type_t.chr80,
+   xrcb014 LIKE xrcb_t.xrcb014,
+   xrcb015 LIKE xrcb_t.xrcb015,
+   xrcb016 LIKE xrcb_t.xrcb016,
+   xrcb017 LIKE xrcb_t.xrcb017,
+   xrcb017_desc LIKE type_t.chr80,
+   xrcb021 LIKE xrcb_t.xrcb021,
+   xrcb021_desc LIKE type_t.chr80,
+   xrcblegl LIKE xrcb_t.xrcblegl,
+   xrcblegl_desc LIKE type_t.chr80,
+   xrcborga LIKE xrcb_t.xrcborga,
+   xrcborga_desc LIKE type_t.chr80
+       END RECORD
+
+#模組變數(Module Variables)
+DEFINE g_xrcb_m        type_g_xrcb_m
+DEFINE g_xrcb_m_t      type_g_xrcb_m                #備份舊值
+DEFINE g_xrcbld_t   LIKE xrcb_t.xrcbld    #Key值備份
+DEFINE g_xrcbdocno_t   LIKE xrcb_t.xrcbdocno    #Key值備份
+
+DEFINE g_xrcbseq_t   LIKE xrcb_t.xrcbseq    #Key值備份
+
+
+
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位
+         b_statepic     LIKE type_t.chr50,
+            b_xrcbld LIKE xrcb_t.xrcbld,
+      b_xrcbdocno LIKE xrcb_t.xrcbdocno,
+      b_xrcbseq LIKE xrcb_t.xrcbseq
+         #,rank           LIKE type_t.num10
+      END RECORD
+
+#無單頭append欄位定義
+
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+
+DEFINE g_sql                 STRING                        #組 sql 用
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗
+DEFINE g_rec_b               LIKE type_t.num5              #單身筆數
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num5   #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num5   #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num5   #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num5   #Browser 總筆數(所有資料)
+DEFINE g_tmp_page            LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num5
+DEFINE g_chk                 BOOLEAN
+{</Module define>}]]>
+  </point>
+  <point name="input.a.xrcb010" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcb010
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcb010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcb010_desc
+]]>
+  </point>
+  <point name="input.a.xrcb011" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcb011
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcb011_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcb011_desc
+]]>
+  </point>
+  <point name="input.a.xrcb012" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcb012
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='200' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcb012_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcb012_desc
+]]>
+  </point>
+  <point name="input.a.xrcb017" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcb017
+            CALL ap_ref_array2(g_ref_fields,"SELECT bgaal003 FROM bgaal_t WHERE bgaalent='"||g_enterprise||"' AND bgaal001=? AND bgaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcb017_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcb017_desc
+]]>
+  </point>
+  <point name="input.a.xrcb021" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcb021
+            CALL ap_ref_array2(g_ref_fields,"SELECT glacl003 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001='' AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcb021_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcb021_desc
+]]>
+  </point>
+  <point name="input.a.xrcbdocno" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrcb_m.xrcbld) AND NOT cl_null(g_xrcb_m.xrcbdocno) AND NOT cl_null(g_xrcb_m.xrcbseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrcb_m.xrcbld != g_xrcbld_t  OR g_xrcb_m.xrcbdocno != g_xrcbdocno_t  OR g_xrcb_m.xrcbseq != g_xrcbseq_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrcb_t WHERE "||"xrcbent = '" ||g_enterprise|| "' AND "||"xrcbld = '"||g_xrcb_m.xrcbld ||"' AND "|| "xrcbdocno = '"||g_xrcb_m.xrcbdocno ||"' AND "|| "xrcbseq = '"||g_xrcb_m.xrcbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.xrcbld" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrcb_m.xrcbld) AND NOT cl_null(g_xrcb_m.xrcbdocno) AND NOT cl_null(g_xrcb_m.xrcbseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrcb_m.xrcbld != g_xrcbld_t  OR g_xrcb_m.xrcbdocno != g_xrcbdocno_t  OR g_xrcb_m.xrcbseq != g_xrcbseq_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrcb_t WHERE "||"xrcbent = '" ||g_enterprise|| "' AND "||"xrcbld = '"||g_xrcb_m.xrcbld ||"' AND "|| "xrcbdocno = '"||g_xrcb_m.xrcbdocno ||"' AND "|| "xrcbseq = '"||g_xrcb_m.xrcbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.xrcblegl" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcblegl
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcblegl_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcblegl_desc
+]]>
+  </point>
+  <point name="input.a.xrcborga" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcborga
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcborga_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcborga_desc
+]]>
+  </point>
+  <point name="input.a.xrcbseq" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrcb_m.xrcbld) AND NOT cl_null(g_xrcb_m.xrcbdocno) AND NOT cl_null(g_xrcb_m.xrcbseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrcb_m.xrcbld != g_xrcbld_t  OR g_xrcb_m.xrcbdocno != g_xrcbdocno_t  OR g_xrcb_m.xrcbseq != g_xrcbseq_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrcb_t WHERE "||"xrcbent = '" ||g_enterprise|| "' AND "||"xrcbld = '"||g_xrcb_m.xrcbld ||"' AND "|| "xrcbdocno = '"||g_xrcb_m.xrcbdocno ||"' AND "|| "xrcbseq = '"||g_xrcb_m.xrcbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="show.head.reference" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcb010
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcb010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcb010_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcb011
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcb011_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcb011_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcb012
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='200' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcb012_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcb012_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcb017
+            CALL ap_ref_array2(g_ref_fields,"SELECT bgaal003 FROM bgaal_t WHERE bgaalent='"||g_enterprise||"' AND bgaal001=? AND bgaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcb017_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcb017_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcb021
+            CALL ap_ref_array2(g_ref_fields,"SELECT glacl003 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001='' AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcb021_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcb021_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcblegl
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcblegl_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcblegl_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_m.xrcborga
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_m.xrcborga_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_m.xrcborga_desc
+]]>
+  </point>
+  <point name="function.axrt300_11" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION axrt300_11(--)
+   #add-point:main段變數傳入
+   p_xrcadocno,p_xrcald,p_xrcbseq,p_cmd,p_xrcborga          {#ADP版次:1#}
+   #end add-point
+   )
+   #add-point:main段define
+   DEFINE p_xrcadocno    LIKE xrca_t.xrcadocno
+   DEFINE p_xrcald       LIKE xrca_t.xrcald
+   DEFINE p_xrcbseq      LIKE xrcb_t.xrcbseq          {#ADP版次:1#}
+   DEFINE p_cmd          LIKE type_t.chr1
+   DEFINE p_xrcborga     LIKE xrcb_t.xrcborga
+   #end add-point
+
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   #add-point:作業初始化
+   LET g_xrcbdocno = p_xrcadocno
+   LET g_xrcbld = p_xrcald
+   LET g_xrcbseq = p_xrcbseq
+   LET g_xrcborga = p_xrcborga
+   LET g_cmd = p_cmd
+
+   LET g_forupd_sql = "SELECT xrcbdocno,xrcbld,xrcbseq,xrcb010,'',xrcb011,'',xrcb012,'',xrcb014,xrcb015,xrcb016,xrcb017,'',xrcb021,'',xrcblegl,'',xrcborga,'' FROM xrcb_t WHERE xrcbent= ? AND xrcbld=? AND xrcbdocno=? AND xrcbseq=? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)   #轉換不同資料庫語法
+   DECLARE axrt300_11_cl CURSOR FROM g_forupd_sql     # LOCK CURSOR
+
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt300_11 WITH FORM cl_ap_formpath("axr","axrt300_11")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+
+   #程式初始化
+   CALL axrt300_11_init()
+
+   #進入選單 Menu (="N")
+   CALL axrt300_11_ui_dialog()
+
+   #畫面關閉
+   CLOSE WINDOW w_axrt300_11
+
+   CLOSE axrt300_11_cl
+
+   IF g_cmd ='a' THEN 
+      RETURN g_xrcb_m.xrcb011,g_xrcb_m.xrcb015,g_xrcb_m.xrcb021,g_xrcb_m.xrcblegl,g_xrcb_m.xrcb014,g_xrcb_m.xrcb012,g_xrcb_m.xrcb010,g_xrcb_m.xrcb017,g_xrcb_m.xrcb016
+   ELSE
+      RETURN '','','','','','','','',''
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_init" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrt300_11_init()
+   CALL axrt300_11_browser_fill()
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_ui_dialog" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrt300_11_ui_dialog()
+DEFINE li_exit  LIKE type_t.chr1
+
+   IF g_cmd = 'a' THEN 
+      CALL axrt300_11_input('a')
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+      END IF
+      RETURN
+   END IF
+   LET li_exit = TRUE
+   WHILE li_exit
+     MENU
+        ON ACTION exit
+           LET li_exit = FALSE
+           EXIT MENU
+
+        ON ACTION close
+           LET li_exit = FALSE
+           EXIT MENU
+
+        ON ACTION modify
+           LET g_action_choice="modify"
+           IF cl_auth_chk_act("modify") THEN
+              CALL axrt300_11_modify()
+           END IF
+           
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         
+      END MENU
+   END WHILE
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+   END IF   
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_browser_fill" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrt300_11_browser_fill()
+   SELECT UNIQUE xrcbdocno,xrcbld,xrcbseq,xrcb010,xrcb011,xrcb012,xrcb014,xrcb015,xrcb016,xrcb017,xrcb021,xrcblegl,xrcborga
+      INTO g_xrcb_m.xrcbdocno,g_xrcb_m.xrcbld,g_xrcb_m.xrcbseq,g_xrcb_m.xrcb010,g_xrcb_m.xrcb011,g_xrcb_m.xrcb012,g_xrcb_m.xrcb014,g_xrcb_m.xrcb015,g_xrcb_m.xrcb016,g_xrcb_m.xrcb017,g_xrcb_m.xrcb021,g_xrcb_m.xrcblegl,g_xrcb_m.xrcborga
+      FROM xrcb_t
+     WHERE xrcbent = g_enterprise AND xrcbld = g_xrcbld AND xrcbdocno = g_xrcbdocno AND xrcbseq = g_xrcbseq
+     
+   IF cl_null(g_xrcb_m.xrcborga) THEN 
+      LET g_xrcb_m.xrcborga = g_xrcborga 
+   END IF
+   IF cl_null(g_xrcb_m.xrcb010) THEN 
+      SELECT xrca015 INTO g_xrcb_m.xrcb010 FROM xrca_t WHERE xrcaent = g_enterprise AND xrcald= g_xrcbld AND xrcadocno = g_xrcbdocno
+   END IF   
+   CALL axrt300_11_show()
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_modify" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrt300_11_modify()
+DEFINE l_xrcastus  LIKE xrca_t.xrcastus
+   
+   SELECT xrcastus INTO l_xrcastus FROM xrca_t 
+    WHERE xrcaent = g_enterprise AND xrcald = g_xrcbld AND xrcadocno = g_xrcbdocno
+   
+   IF l_xrcastus = 'Y' THEN
+      CALL cl_err('','axr-00037',1)
+      RETURN      
+   END IF
+   
+   CALL s_transaction_begin()
+
+   OPEN axrt300_11_cl USING g_enterprise,g_xrcb_m.xrcbld,g_xrcb_m.xrcbdocno,g_xrcb_m.xrcbseq
+   IF STATUS THEN
+      CALL cl_err("OPEN axrt300_11_cl:", STATUS, 1)
+      CLOSE axrt300_11_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   #鎖住將被更改或取消的資料
+   FETCH axrt300_11_cl INTO g_xrcb_m.xrcbdocno,g_xrcb_m.xrcbld,g_xrcb_m.xrcbseq,g_xrcb_m.xrcb010,g_xrcb_m.xrcb010_desc,g_xrcb_m.xrcb011,g_xrcb_m.xrcb011_desc,g_xrcb_m.xrcb012,g_xrcb_m.xrcb012_desc,g_xrcb_m.xrcb014,g_xrcb_m.xrcb015,g_xrcb_m.xrcb016,g_xrcb_m.xrcb017,g_xrcb_m.xrcb017_desc,g_xrcb_m.xrcb021,g_xrcb_m.xrcb021_desc,g_xrcb_m.xrcblegl,g_xrcb_m.xrcblegl_desc,g_xrcb_m.xrcborga,g_xrcb_m.xrcborga_desc
+
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("xrcb_t",SQLCA.sqlcode,0)
+      CLOSE axrt300_11_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+
+
+   CALL axrt300_11_show()
+
+   WHILE TRUE
+      #LET g_xrcb_m.xrcbld = g_xrcbld_t
+      #LET g_xrcb_m.xrcbdocno = g_xrcbdocno_t
+      #LET g_xrcb_m.xrcbseq = g_xrcbseq_t
+
+      CALL axrt300_11_input("u")     #欄位更改
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_xrcb_m.* = g_xrcb_m_t.*
+         CALL axrt300_11_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+
+      EXIT WHILE
+
+   END WHILE
+
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_xrcb_m.xrcbld,g_site) THEN
+      CALL s_transaction_end('N','0')
+   END IF
+
+   CLOSE axrt300_11_cl
+   CALL s_transaction_end('Y','0')
+
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_xrcb_m.xrcbld,"U")
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_input" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrt300_11_input(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+
+   CALL cl_set_head_visible("","YES")
+
+   LET l_insert = FALSE
+
+   DISPLAY BY NAME g_xrcb_m.xrcbdocno,g_xrcb_m.xrcbld,g_xrcb_m.xrcbseq,g_xrcb_m.xrcb010,g_xrcb_m.xrcb011,g_xrcb_m.xrcb012,g_xrcb_m.xrcb014,g_xrcb_m.xrcb015,g_xrcb_m.xrcb016,g_xrcb_m.xrcb017,g_xrcb_m.xrcb021,g_xrcb_m.xrcblegl,g_xrcb_m.xrcborga
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #單頭段
+      INPUT BY NAME g_xrcb_m.xrcbdocno,g_xrcb_m.xrcbld,g_xrcb_m.xrcbseq,g_xrcb_m.xrcb010,g_xrcb_m.xrcb011,g_xrcb_m.xrcb012,g_xrcb_m.xrcb014,g_xrcb_m.xrcb015,g_xrcb_m.xrcb016,g_xrcb_m.xrcb017,g_xrcb_m.xrcb021,g_xrcb_m.xrcblegl,g_xrcb_m.xrcborga
+         ATTRIBUTE(WITHOUT DEFAULTS)
+
+         #自訂ACTION(master_input)
+
+
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) AND g_cmd = 'u' THEN
+               CALL s_transaction_begin()
+            END IF
+
+         AFTER FIELD xrcb010
+            CALL axrt300_11_xrcb010_desc()
+            IF NOT cl_null(g_xrcb_m.xrcb010) THEN 
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb010,"SELECT COUNT(*) FROM ooea_t WHERE "||"ooeaent = '" ||g_enterprise|| "' AND "||"ooea001 = ? ",'aoo-00094',1) THEN 
+                  LET g_xrcb_m.xrcb010 = g_xrcb_m_t.xrcb010
+                  NEXT FIELD CURRENT
+               END IF
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb010,"SELECT COUNT(*) FROM ooea_t WHERE "||"ooeaent = '" ||g_enterprise|| "' AND "||"ooea001 = ? AND ooeastus = 'Y' ",'aoo-00095',1) THEN 
+                  LET g_xrcb_m.xrcb010 = g_xrcb_m_t.xrcb010
+                  NEXT FIELD CURRENT
+               END IF  
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb010,"SELECT COUNT(*) FROM ooea_t WHERE "||"ooeaent = '" ||g_enterprise|| "' AND "||"ooea001 = ? AND ooeastus = 'Y' AND ooea016 = 'Y' ",'aoo-00092',1) THEN 
+                  LET g_xrcb_m.xrcb010 = g_xrcb_m_t.xrcb010
+                  NEXT FIELD CURRENT
+               END IF                
+            END IF
+
+         BEFORE FIELD xrcb010
+            CALL axrt300_11_xrcb010_desc()
+
+
+         AFTER FIELD xrcb011
+            CALL axrt300_11_xrcb011_desc()
+            IF NOT cl_null(g_xrcb_m.xrcb011) THEN 
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb011,"SELECT COUNT(*) FROM ooea_t WHERE "||"ooeaent = '" ||g_enterprise|| "' AND "||"ooea001 = ? ",'aoo-00094',1) THEN 
+                  LET g_xrcb_m.xrcb011 = g_xrcb_m_t.xrcb011 
+                  NEXT FIELD CURRENT
+               END IF
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb011,"SELECT COUNT(*) FROM ooea_t WHERE "||"ooeaent = '" ||g_enterprise|| "' AND "||"ooea001 = ? AND ooeastus = 'Y' ",'aoo-00095',1) THEN 
+                  LET g_xrcb_m.xrcb011 = g_xrcb_m_t.xrcb011
+                  NEXT FIELD CURRENT
+               END IF                
+            END IF
+
+         BEFORE FIELD xrcb011
+            CALL axrt300_11_xrcb011_desc()
+
+         AFTER FIELD xrcb012
+            CALL axrt300_11_xrcb012_desc()
+            IF NOT cl_null(g_xrcb_m.xrcb012) THEN 
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb012,"SELECT COUNT(*) FROM rtax_t WHERE "||"rtaxent = '" ||g_enterprise|| "' AND "||"rtax001 = ? ",'aoo-00137',1) THEN 
+                  LET g_xrcb_m.xrcb012 = g_xrcb_m_t.xrcb012 
+                  NEXT FIELD CURRENT
+               END IF  
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb012,"SELECT COUNT(*) FROM rtax_t WHERE "||"rtaxent = '" ||g_enterprise|| "' AND "||"rtax001 = ? AND rtaxstus = 'Y' ",'art-00048',1) THEN 
+                  LET g_xrcb_m.xrcb012 = g_xrcb_m_t.xrcb012 
+                  NEXT FIELD CURRENT
+               END IF                   
+            END IF
+            
+         BEFORE FIELD xrcb012
+            CALL axrt300_11_xrcb012_desc()
+            
+           
+         BEFORE FIELD xrcb014
+
+         AFTER FIELD xrcb014
+
+         BEFORE FIELD xrcb015
+
+         AFTER FIELD xrcb015
+
+         BEFORE FIELD xrcb016
+
+         AFTER FIELD xrcb016
+
+         AFTER FIELD xrcb017
+            CALL axrt300_11_xrcb017_desc()
+            IF NOT cl_null(g_xrcb_m.xrcb017) THEN 
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb017,"SELECT COUNT(*) FROM bgaa_t WHERE bgaaent = '" ||g_enterprise|| "' AND "||"bgaa001 = ? ",'abg-00007',1) THEN 
+                  LET g_xrcb_m.xrcb017 = g_xrcb_m_t.xrcb017 
+                  NEXT FIELD CURRENT
+               END IF
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb017,"SELECT COUNT(*) FROM bgaa_t WHERE bgaaent = '" ||g_enterprise|| "' AND "||"bgaa001 = ? AND bgaastus = 'Y' ",'abg-00008',1) THEN 
+                  LET g_xrcb_m.xrcb017 = g_xrcb_m_t.xrcb017 
+                  NEXT FIELD CURRENT
+               END IF                
+            END IF
+
+         BEFORE FIELD xrcb017
+            CALL axrt300_11_xrcb017_desc()
+            
+         ON CHANGE xrcb017
+
+         AFTER FIELD xrcb021
+            CALL axrt300_11_xrcb021_desc()
+            IF NOT cl_null(g_xrcb_m.xrcb021) THEN 
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb021,"SELECT COUNT(*) FROM glaa_t,glac_t WHERE glaaent = glacent AND glaa004 = glac001 AND "||"glacent = '" ||g_enterprise|| "' AND glaald = '"||g_xrcbld||"' AND "||"glac002 = ? ",'agl-00011',1) THEN 
+                  LET g_xrcb_m.xrcb021 = g_xrcb_m_t.xrcb021 
+                  NEXT FIELD CURRENT
+               END IF 
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb021,"SELECT COUNT(*) FROM glaa_t,glac_t WHERE glaaent = glacent AND glaa004 = glac001 AND "||"glacent = '" ||g_enterprise|| "' AND glaald = '"||g_xrcbld||"' AND "||"glac002 = ? AND glacstus = 'Y' ",'agl-00012',1) THEN 
+                  LET g_xrcb_m.xrcb021 = g_xrcb_m_t.xrcb021 
+                  NEXT FIELD CURRENT
+               END IF   
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcb021,"SELECT COUNT(*) FROM glaa_t,glac_t WHERE glaaent = glacent AND glaa004 = glac001 AND "||"glacent = '" ||g_enterprise|| "' AND glaald = '"||g_xrcbld||"' AND "||"glac002 = ? AND glacstus = 'Y' AND glac003 <> '1' ",'agl-00013',1) THEN 
+                  LET g_xrcb_m.xrcb021 = g_xrcb_m_t.xrcb021
+                  NEXT FIELD CURRENT
+               END IF               
+            END IF
+
+         BEFORE FIELD xrcb021
+            CALL axrt300_11_xrcb021_desc()
+            
+         AFTER FIELD xrcblegl
+            CALL axrt300_11_xrcblegl_desc()
+            IF NOT cl_null(g_xrcb_m.xrcblegl) THEN 
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcblegl,"SELECT COUNT(*) FROM ooef_t WHERE "||"ooefent = '" ||g_enterprise|| "' AND "||"ooef001 = ? ",'aoo-00090',1) THEN 
+                  LET g_xrcb_m.xrcblegl = g_xrcb_m_t.xrcblegl
+                  NEXT FIELD CURRENT
+               END IF  
+               IF NOT ap_chk_isExist(g_xrcb_m.xrcblegl,"SELECT COUNT(*) FROM ooef_t WHERE "||"ooefent = '" ||g_enterprise|| "' AND "||"ooef001 = ? AND ooefstus = 'Y' ",'aoo-00091',1) THEN 
+                  LET g_xrcb_m.xrcblegl = g_xrcb_m_t.xrcblegl
+                  NEXT FIELD CURRENT
+               END IF                 
+            END IF
+
+         BEFORE FIELD xrcblegl
+            CALL axrt300_11_xrcblegl_desc()
+
+         ON CHANGE xrcblegl
+
+         AFTER FIELD xrcborga
+
+
+         BEFORE FIELD xrcborga
+ 
+
+         
+         #Ctrlp:input.c.xrcb010
+         ON ACTION controlp INFIELD xrcb010
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrcb_m.xrcb011             #給予default值
+            #給予arg
+            CALL q_ooea001_1()                                #呼叫開窗
+            LET g_xrcb_m.xrcb010 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_xrcb_m.xrcb010 TO xrca010              #顯示到畫面上
+            CALL axrt300_11_xrcb010_desc()
+            NEXT FIELD xrcb010                          #返回原欄位
+
+         #----<<xrcb011>>----
+         #Ctrlp:input.c.xrcb011
+         ON ACTION controlp INFIELD xrcb011
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrcb_m.xrcb011       #給予default值
+            #給予arg
+            CALL q_ooeg001_2()                                 #呼叫開窗
+            LET g_xrcb_m.xrcb011 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_xrcb_m.xrcb011 TO xrcb011              #顯示到畫面上
+            NEXT FIELD xrcb011                               #返回原欄位
+
+         #----<<xrcb012>>----
+         #Ctrlp:input.c.xrcb012
+         ON ACTION controlp INFIELD xrcb012
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrcb_m.xrcb012       #給予default值
+            #給予arg
+            CALL q_rtax001()                                 #呼叫開窗
+            LET g_xrcb_m.xrcb012 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_xrcb_m.xrcb012 TO xrcb012              #顯示到畫面上
+            CALL axrt300_11_xrcb012_desc()
+            NEXT FIELD xrcb012                               #返回原欄位
+
+         #----<<xrcb014>>----
+         #Ctrlp:input.c.xrcb014
+         ON ACTION controlp INFIELD xrcb014
+            #add-point:ON ACTION controlp INFIELD xrcb014
+            {<point name="input.c.xrcb014" />}
+            #END add-point
+
+         #----<<xrcb015>>----
+         #Ctrlp:input.c.xrcb015
+         ON ACTION controlp INFIELD xrcb015
+            #add-point:ON ACTION controlp INFIELD xrcb015
+            {<point name="input.c.xrcb015" />}
+            #END add-point
+
+         #----<<xrcb016>>----
+         #Ctrlp:input.c.xrcb016
+         ON ACTION controlp INFIELD xrcb016
+            #add-point:ON ACTION controlp INFIELD xrcb016
+            {<point name="input.c.xrcb016" />}
+            #END add-point
+
+         #----<<xrcb017>>----
+         #Ctrlp:input.c.xrcb017
+         ON ACTION controlp INFIELD xrcb017
+            #add-point:ON ACTION controlp INFIELD xrcb017
+            {<point name="input.c.xrcb017" />}
+            #END add-point
+
+         #----<<xrcb021>>----
+         #Ctrlp:input.c.xrcb021
+         ON ACTION controlp INFIELD xrcb021
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrcb_m.xrcb021       #給予default值
+            LET g_qryparam.where = " glac001 = (SELECT glaa004 FROM glaa_t WHERE glaaent = '",g_enterprise,"' AND glaald ='",g_xrcbld,"') AND glac003 <> '1' " 
+            #給予arg
+            CALL aglt310_04()                                 #呼叫開窗
+            LET g_xrcb_m.xrcb021 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY g_xrcb_m.xrcb021 TO xrcb021              #顯示到畫面上
+            NEXT FIELD xrcb021                               #返回原欄位
+            
+         #----<<xrcblegl>>----
+         #Ctrlp:input.c.xrcblegl
+         ON ACTION controlp INFIELD xrcblegl
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrcb_m.xrcblegl        #給予default值
+            #給予arg
+            CALL q_ooef001()                                   #呼叫開窗
+            LET g_xrcb_m.xrcblegl = g_qryparam.return1         #將開窗取得的值回傳到變數
+            DISPLAY g_xrcb_m.xrcblegl TO xrcblegl              #顯示到畫面上
+            CALL axrt300_11_xrcblegl_desc()
+            NEXT FIELD xrcblegl                                #返回原欄位
+
+         #----<<xrcborga>>----
+         #Ctrlp:input.c.xrcborga
+         ON ACTION controlp INFIELD xrcborga
+            #add-point:ON ACTION controlp INFIELD xrcborga
+            {<point name="input.c.xrcborga" />}
+            #END add-point
+
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+            IF g_cmd = 'u' THEN 
+               UPDATE xrcb_t SET (xrcbdocno,xrcbld,xrcbseq,xrcb010,xrcb011,xrcb012,xrcb014,xrcb015,xrcb016,xrcb017,xrcb021,xrcblegl,xrcborga) = (g_xrcb_m.xrcbdocno,g_xrcb_m.xrcbld,g_xrcb_m.xrcbseq,g_xrcb_m.xrcb010,g_xrcb_m.xrcb011,g_xrcb_m.xrcb012,g_xrcb_m.xrcb014,g_xrcb_m.xrcb015,g_xrcb_m.xrcb016,g_xrcb_m.xrcb017,g_xrcb_m.xrcb021,g_xrcb_m.xrcblegl,g_xrcb_m.xrcborga)
+                WHERE xrcbent = g_enterprise AND xrcbld = g_xrcbld
+                  AND xrcbdocno = g_xrcbdocno
+                  AND xrcbseq = g_xrcbseq
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("xrcb_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF
+      END INPUT
+
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_show" order="7" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrt300_11_show()
+   LET g_xrcb_m_t.* = g_xrcb_m.*      #保存單頭舊值
+
+   CALL cl_show_fld_cont()
+
+   CALL axrt300_11_xrcb021_desc()
+   CALL axrt300_11_xrcborga_desc()
+   CALL axrt300_11_xrcb011_desc()
+   CALL axrt300_11_xrcb012_desc()
+   CALL axrt300_11_xrcb010_desc()
+   CALL axrt300_11_xrcblegl_desc()
+   CALL axrt300_11_xrcb017_desc()
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_xrcb_m.xrcbdocno,g_xrcb_m.xrcbld,g_xrcb_m.xrcbseq,g_xrcb_m.xrcb010,g_xrcb_m.xrcb010_desc,g_xrcb_m.xrcb011,g_xrcb_m.xrcb011_desc,g_xrcb_m.xrcb012,g_xrcb_m.xrcb012_desc,g_xrcb_m.xrcb014,g_xrcb_m.xrcb015,g_xrcb_m.xrcb016,g_xrcb_m.xrcb017,g_xrcb_m.xrcb017_desc,g_xrcb_m.xrcb021,g_xrcb_m.xrcb021_desc,g_xrcb_m.xrcblegl,g_xrcb_m.xrcblegl_desc,g_xrcb_m.xrcborga,g_xrcb_m.xrcborga_desc
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_xrcb021_desc" order="8" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_11_xrcb021_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrcbld
+   LET g_ref_fields[2] = g_xrcb_m.xrcb021
+   CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glaa_t,glacl_t WHERE glaaent = glaclent AND glaa004 = glacl001 AND glaclent='"||g_enterprise||"' AND glaald=? AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrcb_m.xrcb021_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrcb_m.xrcb021_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_xrcborga_desc" order="9" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_11_xrcborga_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrcb_m.xrcborga
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrcb_m.xrcborga_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrcb_m.xrcborga_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_xrcb011_desc" order="10" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_11_xrcb011_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrcb_m.xrcb011
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrcb_m.xrcb011_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrcb_m.xrcb011_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_xrcb012_desc" order="11" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_11_xrcb012_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrcb_m.xrcb012
+   CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrcb_m.xrcb012_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrcb_m.xrcb012_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_xrcb010_desc" order="12" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_11_xrcb010_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrcb_m.xrcb010
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrcb_m.xrcb010_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrcb_m.xrcb010_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_xrcblegl_desc" order="13" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_11_xrcblegl_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrcb_m.xrcblegl
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrcb_m.xrcblegl_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrcb_m.xrcblegl_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt300_11_xrcb017_desc" order="14" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_11_xrcb017_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrcb_m.xrcb017
+   CALL ap_ref_array2(g_ref_fields,"SELECT bgaal003 FROM bgaal_t WHERE bgaalent='"||g_enterprise||"' AND bgaal001=? AND bgaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrcb_m.xrcb017_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrcb_m.xrcb017_desc
+END FUNCTION]]>
+  </point>
+  <point name="browser_fill.wc" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET p_wc = p_wc," AND xrcbdocno ='",g_xrcbdocno,"' AND xrcbld = '",g_xrcbld,"' AND xrcbseq = ",g_xrcbseq]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_xrcbdocno    LIKE xrcb_t.xrcbdocno
+DEFINE g_xrcbld       LIKE xrcb_t.xrcbld
+DEFINE g_xrcbseq      LIKE xrcb_t.xrcbseq
+DEFINE g_cmd          LIKE type_t.chr1
+DEFINE g_xrcborga     LIKE xrcb_t.xrcborga]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_xrcadocno    LIKE xrca_t.xrcadocno
+   DEFINE p_xrcald       LIKE xrca_t.xrcald
+   DEFINE p_xrcbseq      LIKE xrcb_t.xrcbseq]]>
+  </point>
+  <point name="main.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_xrcadocno,p_xrcald,p_xrcbseq]]>
+  </point>
+  <point name="main.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_xrcbdocno = p_xrcadocno
+   LET g_xrcbld = p_xrcald
+   LET g_xrcbseq = p_xrcbseq
+   DISPLAY BY NAME g_xrcb_m.xrcbdocno,g_xrcb_m.xrcbld,g_xrcb_m.xrcbseq ]]>
+  </point>
+  <section id="axrt300_11.description" ver="9" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000120
+#+ 
+#+ Filename...: axrt300_11
+#+ Description: ...
+#+ Creator....: 02295(2013/11/06)
+#+ Modifier...: 02295(2013/11/06)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="axrt300_11.free_style_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style
+{<point name="free_style.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrt300_11.free_style_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrt300_11.global" ver="1" status="" src="s">
+    <![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="axrt300_11.global_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrt300_11.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="axrt300_11.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aprq131" module="apr" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="01533" crtdt="2015-02-11 15:27:57" modid="01533" moddt="2015-04-29 16:34:52" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="特殊條碼查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="type(chr1),prbodocno,prbosite,prbosite_desc(chr500),prbo001,prbo001_desc(chr500),prbo012,prbo012_desc(chr500),prbo013,prbo013_desc(chr500),prbo002,prbo003,prbo004,prbo005,prbo006,prbo007,prbo007_desc(chr500),prbo008,prbo009,prbo010,prbo011,prbostus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="prbp001,prbp002,imaal003(chr500),imaal004(chr500),imaa009(chr500),rtaxl003(chr500),prbp004,oocal003(chr500),prbp005,prbp006,prbp007,prbp008,prbp009,prbp010"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="type(b_type),prbodocno(b_prbodocno),prbosite(b_prbosite),prbosite_desc(b_prbosite_desc),prbo001(b_prbo001),prbo001_desc(b_prbo001_desc),prbo012(b_prbo012),prbo012_desc(b_prbo012_desc),prbo013(b_prbo013),prbo013_desc(b_prbo013_desc),prbo002(b_prbo002),prbo003(b_prbo003),prbo004(b_prbo004),prbo005(b_prbo005),prbo006(b_prbo006),prbo007(b_prbo007),prbo007_desc(b_prbo007_desc),prbo008(b_prbo008),prbo009(b_prbo009),prbo010(b_prbo010),prbo011(b_prbo011),prbostus(b_prbostus)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="prbp001(b_prbp001),prbp002(b_prbp002),imaal003(b_imaal003),imaal004(b_imaal004),imaa009(b_imaa009),rtaxl003(b_rtaxl003),prbp004(b_prbp004),oocal003(b_oocal003),prbp005(b_prbp005),prbp006(b_prbp006),prbp007(b_prbp007),prbp008(b_prbp008),prbp009(b_prbp009),prbp010(b_prbp010)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="aprq131" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="type,prbodocno,prbosite,prbo001,prbo012,prbo013,prbo002,prbo003,prbo004,prbo005,prbo006,prbo007,prbo008,prbo009,prbo010,prbo011,prbostus" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="prbp001,prbp002,imaa009,rtaxl003,prbp004,oocal003,prbp005,prbp006,prbp007,prbp008,prbp009,prbp010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="prbosite(b_prbosite),prbo001(b_prbo001),prbo012(b_prbo012),prbo013(b_prbo013),prbo002(b_prbo002),prbo003(b_prbo003),prbo004(b_prbo004),prbo005(b_prbo005),prbo006(b_prbo006),prbo007(b_prbo007),prbo008(b_prbo008),prbo009(b_prbo009),prbo010(b_prbo010),prbo011(b_prbo011),prbostus(b_prbostus)"/>
+      <construct id="body" page="2" field="prbp001(b_prbp001),prbp002(b_prbp002),prbp004(b_prbp004),prbp005(b_prbp005),prbp006(b_prbp006),prbp007(b_prbp007),prbp008(b_prbp008),prbp009(b_prbp009),prbp010(b_prbp010)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="type"/>
+      <column id="prbodocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_ooba002_1" state="c"/>
+      </column>
+      <column id="prbosite">
+        <after>
+          <reference field="prbosite_desc" ref_field="prbosite" map_field="prboent,prbosite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="prbosite_desc"/>
+      <column id="prbo001">
+        <after>
+          <check chkid="v_rtax001_3" id="isExist"/>
+          <reference field="prbo001_desc" ref_field="prbo001" map_field="prboent,prbo001" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_4" state="c"/>
+      </column>
+      <column id="prbo001_desc"/>
+      <column id="prbo012">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="prbo012_desc" ref_field="prbo012" map_field="prbo012" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="prbo012_desc"/>
+      <column id="prbo013">
+        <after>
+          <check chkid="v_ooeg001_3" id="isExist"/>
+          <reference field="prbo013_desc" ref_field="prbo013" map_field="prbo013" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="prbo013_desc"/>
+      <column id="prbo002"/>
+      <column id="prbo003"/>
+      <column id="prbo004"/>
+      <column id="prbo005"/>
+      <column id="prbo006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prbo007">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="prbo007_desc" ref_field="prbo007" map_field="prboent,prbo007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="prbo007_desc"/>
+      <column id="prbo008" type="S" default="0"/>
+      <column id="prbo009"/>
+      <column id="prbo010" type="S" default="0"/>
+      <column id="prbo011"/>
+      <column id="prbostus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="prbp001">
+        <after>
+          <check chkid="v_rtdx001_6" id="isExist"/>
+        </after>
+        <controlp form="q_rtdx001_8" state="i"/>
+        <controlp form="q_rtdx001_8" state="c"/>
+      </column>
+      <column id="prbp002">
+        <controlp form="q_rtdx002_1" state="i"/>
+        <controlp form="q_rtdx002_1" state="c"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="imaa009"/>
+      <column id="rtaxl003"/>
+      <column id="prbp004">
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="oocal003"/>
+      <column id="prbp005" type="S" default="0">
+        <after>
+          <check id="range" bt="&gt;=0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prbp006" type="S" default="0"/>
+      <column id="prbp007" type="S" default="0"/>
+      <column id="prbp008" type="S" default="0"/>
+      <column id="prbp009"/>
+      <column id="prbp010"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="prbo_t" page="1" linked="" pk="prbodocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,prbodocno,prbosite,&apos;&apos;,prbo001,&apos;&apos;,prbo012,&apos;&apos;,prbo013,&apos;&apos;,prbo002,prbo003,prbo004,prbo005,prbo006,prbo007,&apos;&apos;,prbo008,prbo009,prbo010,prbo011,prbostus FROM prbo_t WHERE prboent= ? AND 1=1 "/>
+    </body>
+    <body id="prbp_t" page="2" linked="" pk="prbpseq" fk="prbpdocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT prbp001,prbp002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,prbp004,&apos;&apos;,prbp005,prbp006,prbp007,prbp008,prbp009,prbp010 FROM prbp_t WHERE prbpent=? AND prbpdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

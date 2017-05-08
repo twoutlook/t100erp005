@@ -1,0 +1,179 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="awsp200.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(1900-01-01 00:00:00), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000048
+#+ Filename...: awsp200
+#+ Description: ETL 工具程式
+#+ Creator....: 00544(2015-02-06 18:23:02)
+#+ Modifier...: 00000 -SD/PR-
+
+{</section>}
+
+{<section id="awsp200.global" >}
+#應用 p01 樣板自動產生(Version:4)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+
+
+ 
+
+{<point name="global.parameter"/>}
+   
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="awsp200.main" >}
+MAIN
+   DEFINE ls_js    STRING
+  
+   #add-point:main段define
+{<point name="main.define" edit="s"/>}
+   #end add-point 
+   #add-point:main段define
+{<point name="main.define_customerization" edit="c"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   #CALL cl_ap_init("aws","")
+   
+
+   CALL cl_tool_init()   
+   #CALL cl_db_connect(g_dbs,FALSE)
+   CONNECT TO g_dbs   
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   #測試傳入的編號
+
+{<point name="main.background"/>}
+   #end add-point
+   
+   
+{<point name="main.servicecall" />}
+     
+{<point name="main.before_close" />}
+    
+{<point name="main.exit" />}
+  
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+
+{</section>}
+
+{<section id="awsp200.init" >}
+#+ 初始化作業
+
+{<point name="init.define" edit="s"/>}
+
+{<point name="init.define_customerization" edit="c"/>}
+
+{<point name="init.init" />}
+
+   
+
+
+{</section>}
+
+{<section id="awsp200.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+
+{<section id="awsp200.ui_dialog" >}
+#+ 選單功能實際執行處
+
+{<point name="ui_dialog.define" edit="s"/>}
+
+{<point name="ui_dialog.define_customerization" edit="c"/>}
+   
+{<point name="ui_dialog.before_dialog"/>}
+
+{<point name="ui_dialog.before_dialog2"/>}
+     
+{<point name="ui_dialog.more_construct"/>}
+      
+{<point name="ui_dialog.more_input"/>}
+
+{<point name="ui_dialog.more_displayarray"/>}
+       
+{<point name="ui_dialog.before_dialog3"/>}
+
+ 
+       
+{<point name="ui_dialog.before_qbeclear" mark="Y"/>}
+       
+{<point name="ui_dialog.qbeclear"/>}
+           
+{<point name="ui_dialog.more_action"/>}
+      
+{<point name="process.exit_dialog"/>}
+      
+{<point name="process.after_schedule"/>}
+        
+
+{</section>}
+
+{<section id="awsp200.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+
+ 
+
+{<point name="transfer.argv.define"/>}
+
+
+{</section>}
+
+{<section id="awsp200.process" >}
+#+ 資料處理
+
+{<point name="process.define" edit="s"/>}
+
+{<point name="process.define_customerization" edit="c"/>}
+
+{<point name="process.pre_process"/>}
+   #end add-point
+
+{<point name="process.count_progress"/>}
+
+{<point name="process.process"/>}
+
+{<point name="process.foreground_finish"/>}
+
+{<point name="process.background_finish"/>}
+
+
+{</section>}
+
+{<section id="awsp200.get_buffer" >}
+{<point name="get_buffer.others"/>}
+
+{</section>}
+

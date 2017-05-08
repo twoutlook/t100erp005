@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt300_13" module="aap" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02097" crtdt="2014-04-16 15:53:20" modid="02097" moddt="2014-10-08 22:07:02" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="留置">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apca040,apca042,apca041,apca041_desc(chr80),apca044,apcald,apca045,apcadocno,apca043"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt300_13" method="dialog">
+    <section id="input">
+      <input id="head" field="apca040,apca042,apca041,apca044,apcald,apca045,apcadocno,apca043"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="apca040" type="S" default="N"/>
+      <column id="apca042"/>
+      <column id="apca041">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="apca041_desc"/>
+      <column id="apca044" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apcald">
+        <after>
+          <check chkid="v_glaald_3" id="isExist"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="apca045"/>
+      <column id="apcadocno"/>
+      <column id="apca043"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apca_t" pk="apcald,apcadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT apca040,apca042,apca041,&apos;&apos;,apca044,apcald,apca045,apcadocno,apca043 FROM apca_t WHERE apcaent= ? AND apcald=? AND apcadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="apcald,apcadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

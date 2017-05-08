@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt420" module="anm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02114" crtdt="2014-01-17 14:16:42" modid="01531" moddt="2016-10-08 13:46:33" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="空白支票作廢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmcd008,nmcd002,nmaf002_desc(chr500),nmcd003,nmcd001,nmcd001_desc(chr500),nmcd004,nmcd004_desc(chr100),nmcd005,nmcd005_desc(chr500),nmcd006,nmcd007,nmcd007_desc(chr500),nmcd010"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmcd002,nmcd003,nmcdownid,nmcdownid_desc(chr500),nmcdowndp,nmcdowndp_desc(chr500),nmcdcrtid,nmcdcrtid_desc(chr500),nmcdcrtdp,nmcdcrtdp_desc(chr500),nmcdcrtdt,nmcdmodid,nmcdmodid_desc(chr500),nmcdmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt420" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmcd008,nmcd002,nmaf002_desc,nmcd003,nmcd001,nmcd001_desc,nmcd004,nmcd004_desc,nmcd005,nmcd006,nmcd007,nmcd010" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmcd008,nmcd002,nmaf002_desc,nmcd003,nmcd001,nmcd001_desc,nmcd004,nmcd004_desc,nmcd005,nmcd006,nmcd007,nmcd010"/>
+      <construct id="body" page="2" field="nmcdownid,nmcdowndp,nmcdcrtid,nmcdcrtdp,nmcdcrtdt,nmcdmodid,nmcdmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmcd008"/>
+      <column id="nmcd002"/>
+      <column id="nmaf002_desc"/>
+      <column id="nmcd003"/>
+      <column id="nmcd001">
+        <after/>
+      </column>
+      <column id="nmcd001_desc"/>
+      <column id="nmcd004">
+        <after>
+          <check chkid="v_oocq002_3303" id="isExist"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="nmcd004_desc">
+        <after>
+          <check chkid="v_oocq002_3303" id="isExist"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="nmcd005">
+        <after>
+          <reference field="nmcd005_desc" ref_field="nmcd_t.nmcd005" map_field="nmcd005" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="nmcd005_desc"/>
+      <column id="nmcd006"/>
+      <column id="nmcd007">
+        <after>
+          <reference field="nmcd007_desc" ref_field="nmcd_t.nmcd007" map_field="nmcd007" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="nmcd007_desc"/>
+      <column id="nmcd010"/>
+    </init>
+    <init id="body" page="2">
+      <column id="nmcdownid">
+        <after>
+          <reference field="nmcdownid_desc" ref_field="nmcd_t.nmcdownid" map_field="nmcdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmcdownid_desc"/>
+      <column id="nmcdowndp">
+        <after>
+          <reference field="nmcdowndp_desc" ref_field="nmcd_t.nmcdowndp" map_field="nmcdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmcdowndp_desc"/>
+      <column id="nmcdcrtid">
+        <after>
+          <reference field="nmcdcrtid_desc" ref_field="nmcd_t.nmcdcrtid" map_field="nmcdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmcdcrtid_desc"/>
+      <column id="nmcdcrtdp">
+        <after>
+          <reference field="nmcdcrtdp_desc" ref_field="nmcd_t.nmcdcrtdp" map_field="nmcdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmcdcrtdp_desc"/>
+      <column id="nmcdcrtdt"/>
+      <column id="nmcdmodid">
+        <after>
+          <reference field="nmcdmodid_desc" ref_field="nmcd_t.nmcdmodid" map_field="nmcdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmcdmodid_desc"/>
+      <column id="nmcdmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmcd_t" page="1,2" linked="" pk="nmcd002,nmcd003">
+      <sql id="forupd_sql_detail" query="SELECT nmcd008,nmcd002,&apos;&apos;,nmcd003,nmcd001,&apos;&apos;,nmcd004,&apos;&apos;,nmcd005,&apos;&apos;,nmcd006,nmcd007,&apos;&apos;,nmcd010,&apos;&apos;,&apos;&apos;,nmcdownid,&apos;&apos;,nmcdowndp,&apos;&apos;,nmcdcrtid,&apos;&apos;,nmcdcrtdp,&apos;&apos;,nmcdcrtdt,nmcdmodid,&apos;&apos;,nmcdmoddt FROM nmcd_t WHERE nmcdent=? AND nmcd002=? AND nmcd003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmcd008,nmcd002,&apos;&apos;,nmcd003,nmcd001,&apos;&apos;,nmcd004,&apos;&apos;,nmcd005,&apos;&apos;,nmcd006,nmcd007,&apos;&apos;,nmcd010,&apos;&apos;,&apos;&apos;,nmcdownid,&apos;&apos;,nmcdowndp,&apos;&apos;,nmcdcrtid,&apos;&apos;,nmcdcrtdp,&apos;&apos;,nmcdcrtdt,nmcdmodid,&apos;&apos;,nmcdmoddt FROM nmcd_t WHERE nmcdent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

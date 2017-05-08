@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrr701_g01" module="acr" jobmode="N" type="g01" industry="std" crtid="01251" crtdt="2014-09-10 14:49:37" modid="03247" moddt="2016-04-19 11:24:15" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.a(STRING|one),tm.b(STRING|two),tm.c(STRING|three)">
+    <var seq="1" value="zip(chr30|NULL),adr(chr500|NULL),l_adr(chr500|NULL),name(chr300|NULL),staff(chr300|NULL),honor(chr30|NULL),craaent"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="zip(chr30|NULL),adr(chr500|NULL),l_adr(chr500|NULL),name(chr300|NULL),staff(chr300|NULL),honor(chr30|NULL),craaent"/>
+    <sql id="g_from" query="craa_t"/>
+    <sql id="g_where" query="" maintable="craa_t"/>
+    <sql id="g_order" query="craaent"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="craaent"/>
+    <section id="b_group" reptype="d01">
+      <rep type="craaent" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="craaent,craaent"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="craaent,craaent"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="craaent,craaent"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="craaent" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="craaent,craaent"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci120" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02299" crtdt="2013-10-22 17:51:18" modid="03297" moddt="2015-08-07 16:39:49" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件成本基礎資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbbcomp,xcbbcomp_desc(chr80),xcbb001,xcbb002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcbbstus,xcbb003,xcbb003_desc(chr500),xcbb003_desc_1(chr500),xcbb004,xcbb005,xcbb005_desc(chr500),xcbb012,xcbb012_desc(chr500),xcbb006,xcbb008,xcbb007,xcbb010,xcbb010_desc(chr500),xcbb009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcbb003,xcbb004,xcbbownid,xcbbownid_desc(chr500),xcbbowndp,xcbbowndp_desc(chr500),xcbbcrtid,xcbbcrtid_desc(chr500),xcbbcrtdp,xcbbcrtdp_desc(chr500),xcbbcrtdt,xcbbmodid,xcbbmodid_desc(chr500),xcbbmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci120" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbbcomp,xcbb001,xcbb002"/>
+      <input id="body" page="1" field="xcbbstus,xcbb003,xcbb003_desc,xcbb003_desc_1,xcbb004,xcbb005,xcbb012,xcbb006,xcbb008,xcbb007,xcbb010,xcbb009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcbbcomp,xcbb001,xcbb002"/>
+      <construct id="body" page="1" field="xcbbstus,xcbb003,xcbb003_desc,xcbb003_desc_1,xcbb004,xcbb005,xcbb012,xcbb006,xcbb008,xcbb007,xcbb010,xcbb009"/>
+      <construct id="body" page="2" field="xcbbownid,xcbbowndp,xcbbcrtid,xcbbcrtdp,xcbbcrtdt,xcbbmodid,xcbbmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcbbcomp,xcbb001,xcbb002"/>
+      <set id="head" type="no_entry" field="xcbbcomp,xcbb001,xcbb002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcbbcomp">
+        <after>
+          <reference field="xcbbcomp_desc" ref_field="xcbb_t.xcbbcomp" map_field="xcbbent,xcbbcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcbbcomp_desc"/>
+      <column id="xcbb001"/>
+      <column id="xcbb002"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcbbstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xcbb003">
+        <after>
+          <check chkid="v_xcbb003" id="isExist"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="xcbb003_desc"/>
+      <column id="xcbb003_desc_1"/>
+      <column id="xcbb004">
+        <after>
+          <check chkid="v_inaj006" id="isExist"/>
+        </after>
+        <controlp form="q_inaj006" state="i"/>
+        <controlp form="q_xcbb004" state="c"/>
+      </column>
+      <column id="xcbb005">
+        <after>
+          <reference field="xcbb005_desc" ref_field="xcbb_t.xcbb005" map_field="xcbb005" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcbb005_desc"/>
+      <column id="xcbb012">
+        <after>
+          <check chkid="v_imaa003" id="isExist"/>
+          <reference field="xcbb012_desc" ref_field="xcbb012" map_field="xcbb012" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa003" state="i"/>
+        <controlp form="q_imaa003" state="c"/>
+      </column>
+      <column id="xcbb012_desc"/>
+      <column id="xcbb006"/>
+      <column id="xcbb008"/>
+      <column id="xcbb007"/>
+      <column id="xcbb010">
+        <after>
+          <reference field="xcbb010_desc" ref_field="xcbb010" map_field="xcbb010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;206&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcbb010_desc"/>
+      <column id="xcbb009"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcbbownid">
+        <after>
+          <reference field="xcbbownid_desc" ref_field="xcbb_t.xcbbownid" map_field="xcbbownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbbownid_desc"/>
+      <column id="xcbbowndp">
+        <after>
+          <reference field="xcbbowndp_desc" ref_field="xcbb_t.xcbbowndp" map_field="xcbbcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbbowndp_desc"/>
+      <column id="xcbbcrtid">
+        <after>
+          <reference field="xcbbcrtid_desc" ref_field="xcbb_t.xcbbcrtid" map_field="xcbbcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbbcrtid_desc"/>
+      <column id="xcbbcrtdp">
+        <after>
+          <reference field="xcbbcrtdp_desc" ref_field="xcbb_t.xcbbcrtdp" map_field="xcbbcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbbcrtdp_desc"/>
+      <column id="xcbbcrtdt"/>
+      <column id="xcbbmodid">
+        <after>
+          <reference field="xcbbmodid_desc" ref_field="xcbb_t.xcbbmodid" map_field="xcbbmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbbmodid_desc"/>
+      <column id="xcbbmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcbb_t" pk="xcbbcomp,xcbb001,xcbb002">
+      <sql id="forupd_sql" type="sql" query="SELECT xcbbcomp,&apos;&apos;,xcbb001,xcbb002 FROM xcbb_t WHERE xcbbent= ? AND xcbbcomp=? AND xcbb001=? AND xcbb002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcbbcomp,&apos;&apos;,xcbb001,xcbb002 FROM xcbb_t" order="xcbbcomp,xcbb001,xcbb002"/>
+    </head>
+    <body id="xcbb_t" page="1,2" linked="" pk="xcbb003,xcbb004" fk="xcbbcomp,xcbb001,xcbb002">
+      <sql id="forupd_sql_detail" query="SELECT xcbbstus,xcbb003,&apos;&apos;,&apos;&apos;,xcbb004,xcbb005,&apos;&apos;,xcbb012,&apos;&apos;,xcbb006,xcbb008,xcbb007,xcbb010,&apos;&apos;,xcbb009,&apos;&apos;,&apos;&apos;,xcbbownid,&apos;&apos;,xcbbowndp,&apos;&apos;,xcbbcrtid,&apos;&apos;,xcbbcrtdp,&apos;&apos;,xcbbcrtdt,xcbbmodid,&apos;&apos;,xcbbmoddt FROM xcbb_t WHERE xcbbent=? AND xcbbcomp=? AND xcbb001=? AND xcbb002=? AND xcbb003=? AND xcbb004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcbbstus,xcbb003,&apos;&apos;,&apos;&apos;,xcbb004,xcbb005,&apos;&apos;,xcbb012,&apos;&apos;,xcbb006,xcbb008,xcbb007,xcbb010,&apos;&apos;,xcbb009,&apos;&apos;,&apos;&apos;,xcbbownid,&apos;&apos;,xcbbowndp,&apos;&apos;,xcbbcrtid,&apos;&apos;,xcbbcrtdp,&apos;&apos;,xcbbcrtdt,xcbbmodid,&apos;&apos;,xcbbmoddt FROM xcbb_t WHERE xcbbent= ? AND xcbbcomp=? AND xcbb001=? AND xcbb002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

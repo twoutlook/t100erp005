@@ -1,0 +1,875 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axrt920_01" std_prog="axrt920_01" erpver="1.0" module="AXR" ver="1" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.axrt920_01_xreb_ref" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt920_01_xreb_ref(p_lab)
+   DEFINE p_lab         LIKE type_t.chr20
+
+   CASE
+      WHEN p_lab = 'xrebld'
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = g_xreb_m.xrebld
+         CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET g_xreb_m.xrebld_desc = '', g_rtn_fields[1] , ''
+         DISPLAY BY NAME g_xreb_m.xrebld_desc
+   END CASE
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt920_01_get_date" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axrt920_01_get_date(p_xreb001,p_xreb002,p_glaa003)
+#                  RETURNING ---
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt920_01_get_date(p_xreb001,p_xreb002,p_glaa003)
+   DEFINE p_xreb001         LIKE xreb_t.xreb001
+   DEFINE p_xreb002         LIKE xreb_t.xreb002
+   DEFINE p_glaa003         LIKE glaa_t.glaa003
+   DEFINE r_glav004         LIKE glav_t.glav004
+
+   SELECT MAX(glav004) INTO r_glav004 FROM glav_t WHERE glavent = g_enterprise
+      AND glav001 = p_glaa003
+      AND glav002 = p_xreb001
+      AND glav006 = p_xreb002
+
+   RETURN r_glav004
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt920_01_upd_1" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 更新本幣重評價匯率
+# Memo...........:
+# Usage..........: CALL axrt920_01_upd_1()
+#                  RETURNING ---
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/04/24 By zhangwei
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt920_01_upd_1()
+   DEFINE l_sql         STRING
+   DEFINE l_xreb        RECORD LIKE xreb_t.*
+   DEFINE l_date        LIKE type_t.dat
+   DEFINE l_success     LIKE type_t.chr1
+   DEFINE l_xreb114     LIKE xreb_t.xreb114
+   
+   LET l_sql = "SELECT * FROM xreb_t",
+               " WHERE xrebent = '",g_enterprise,"'",
+               "   AND xreb001 = '",g_xreb_m.xreb001,"'",
+               "   AND xreb002 = '",g_xreb_m.xreb002,"'",
+               "   AND xrebld  = '",g_xreb_m.xrebld,"'"
+   PREPARE axrt920_01_prep FROM l_sql
+   DECLARE axrt920_01_curs CURSOR FOR axrt920_01_prep
+
+   #  xreb101	重評價匯率 = 條件式重評價匯率 
+   #  xreb114	本期重評價後本幣金額  =xreb015 * xreb014 重評價匯率
+   #  xreb115	本期匯差金額 =xreb113-xreb114 
+   #  xrcc102	原幣重估後匯率    = xreb101 
+   #  xrcc113	本幣重評價調整數  = xreb115 
+
+   LET l_date = axrt920_01_get_date(g_xreb_m.xreb001,g_xreb_m.xreb002,g_glaa_t.glaa003)
+
+   FOREACH axrt920_01_curs INTO l_xreb.*
+      CALL s_axrt300_exrate(g_glaa_t.glaa002,l_date,g_xreb_m.xreb100,g_xreb_m.ooai001,l_xreb.xreb103,g_xreb_m.xreb101,g_glaa_t.glaacomp)
+         RETURNING l_success,l_xreb114
+      LET l_xreb.xreb101 = g_xreb_m.xreb101
+      LET l_xreb.xreb114 = l_xreb114
+      LET l_xreb.xreb115 = l_xreb.xreb113 - l_xreb.xreb114
+      
+      UPDATE xreb_t SET xreb101 = l_xreb.xreb101,
+                        xreb114 = l_xreb.xreb114,
+                        xreb115 = l_xreb.xreb115
+       WHERE xrebent = g_enterprise
+         AND xreb001 = l_xreb.xreb001
+         AND xreb002 = l_xreb.xreb002
+         AND xrebld  = l_xreb.xrebld
+         AND xreb005 = l_xreb.xreb005
+         AND xreb006 = l_xreb.xreb006
+         AND xreb007 = l_xreb.xreb007
+
+      UPDATE xrcc_t SET xrcc102 = l_xreb.xreb101,
+                        xrcc113 = l_xreb.xreb115
+       WHERE xrccent  = g_enterprise
+         AND xrccdocno= l_xreb.xreb005
+         AND xrccseq  = l_xreb.xreb006
+         AND xrcc001  = l_xreb.xreb007
+   END FOREACH
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt920_01_upd_2" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 更新本幣二重評價匯率
+# Memo...........:
+# Usage..........: CALL axrt920_01_upd_2()
+#                  RETURNING ---
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/04/24 By zhangwei
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt920_01_upd_2()
+   DEFINE l_sql         STRING
+   DEFINE l_xreb        RECORD LIKE xreb_t.*
+   DEFINE l_date        LIKE type_t.dat
+   DEFINE l_success     LIKE type_t.chr1
+   DEFINE l_xreb124     LIKE xreb_t.xreb124
+   
+   LET l_sql = "SELECT * FROM xreb_t",
+               " WHERE xrebent = '",g_enterprise,"'",
+               "   AND xreb001 = '",g_xreb_m.xreb001,"'",
+               "   AND xreb002 = '",g_xreb_m.xreb002,"'",
+               "   AND xrebld  = '",g_xreb_m.xrebld,"'"
+   PREPARE axrt920_01_prep2 FROM l_sql
+   DECLARE axrt920_01_curs2 CURSOR FOR axrt920_01_prep2
+
+   #  xreb121	本位幣二重評價匯率 = 依其他本位幣原則計算取得匯率
+   #  xreb124	本期本位幣二重評價後金額 = xreb123*xreb121
+   #  xreb125	本期本位幣二匯差金額 = xreb123 -xrcb124
+   #  xrcc122	本位幣二重估後匯率  = xreb121
+   #  xrcc123	本位幣二重評價調整數 = xreb125 
+
+   LET l_date = axrt920_01_get_date(g_xreb_m.xreb001,g_xreb_m.xreb002,g_glaa_t.glaa003)
+
+   FOREACH axrt920_01_curs2 INTO l_xreb.*
+      IF g_glaa_t.glaa015 = 'Y' THEN
+         IF g_glaa_t.glaa017 = '1' THEN
+            #换算基准:交易原幣
+            CALL s_axrt300_exrate(g_glaa_t.glaa002,l_date,g_xreb_m.xreb100,g_xreb_m.ooai001,l_xreb.xreb103,g_xreb_m.xreb101,g_glaa_t.glaacomp)
+               RETURNING l_success,l_xreb124
+         ELSE
+            #换算基准:帳簿幣別
+            CALL s_axrt300_exrate(g_glaa_t.glaa002,l_date,g_glaa_t.glaa001,g_xreb_m.ooai001,l_xreb.xreb123,g_xreb_m.xreb101,g_glaa_t.glaacomp)
+               RETURNING l_success,l_xreb124
+         END IF
+      ELSE
+         LET l_xreb124 = 0
+      END IF
+      LET l_xreb.xreb121 = g_xreb_m.xreb101
+      LET l_xreb.xreb124 = l_xreb124
+      LET l_xreb.xreb125 = l_xreb.xreb123 - l_xreb.xreb124
+      
+      UPDATE xreb_t SET xreb121 = l_xreb.xreb121,
+                        xreb124 = l_xreb.xreb124,
+                        xreb125 = l_xreb.xreb125
+       WHERE xrebent = g_enterprise
+         AND xreb001 = l_xreb.xreb001
+         AND xreb002 = l_xreb.xreb002
+         AND xrebld  = l_xreb.xrebld
+         AND xreb005 = l_xreb.xreb005
+         AND xreb006 = l_xreb.xreb006
+         AND xreb007 = l_xreb.xreb007
+
+      UPDATE xrcc_t SET xrcc122 = l_xreb.xreb121,
+                        xrcc123 = l_xreb.xreb125
+       WHERE xrccent  = g_enterprise
+         AND xrccdocno= l_xreb.xreb005
+         AND xrccseq  = l_xreb.xreb006
+         AND xrcc001  = l_xreb.xreb007
+   END FOREACH
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt920_01_upd_3" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 更新本幣三重評價匯率
+# Memo...........:
+# Usage..........: CALL axrt920_01_upd_3()
+#                  RETURNING ---
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/04/24 By zhangwei
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt920_01_upd_3()
+   DEFINE l_sql         STRING
+   DEFINE l_xreb        RECORD LIKE xreb_t.*
+   DEFINE l_date        LIKE type_t.dat
+   DEFINE l_success     LIKE type_t.chr1
+   DEFINE l_xreb134     LIKE xreb_t.xreb134
+   
+   LET l_sql = "SELECT * FROM xreb_t",
+               " WHERE xrebent = '",g_enterprise,"'",
+               "   AND xreb001 = '",g_xreb_m.xreb001,"'",
+               "   AND xreb002 = '",g_xreb_m.xreb002,"'",
+               "   AND xrebld  = '",g_xreb_m.xrebld,"'"
+   PREPARE axrt920_01_prep3 FROM l_sql
+   DECLARE axrt920_01_curs3 CURSOR FOR axrt920_01_prep3
+
+   #  xreb131	本位幣三重評價匯率   = 依其他本位幣原則計算取得匯率
+   #  xreb134	本期本位幣三重評價後金額 = xreb133*xreb131
+   #  xreb135	本期本位幣三匯差金額 = xreb133-xreb134
+   #  xrcc132	本位幣三重估後匯率  = xreb131
+   #  xrcc133	本位幣三重評價調整數 = xreb135 
+
+   LET l_date = axrt920_01_get_date(g_xreb_m.xreb001,g_xreb_m.xreb002,g_glaa_t.glaa003)
+
+   FOREACH axrt920_01_curs3 INTO l_xreb.*
+      IF g_glaa_t.glaa019 = 'Y' THEN
+         #計算本位幣三金額
+         IF g_glaa_t.glaa021 = '1' THEN
+            #换算基准:交易原幣
+            CALL s_axrt300_exrate(g_glaa_t.glaa002,l_date,g_xreb_m.xreb100,g_xreb_m.ooai001,l_xreb.xreb103,g_xreb_m.xreb101,g_glaa_t.glaacomp)
+               RETURNING l_success,l_xreb134
+         ELSE
+            #换算基准:帳簿幣別
+            CALL s_axrt300_exrate(g_glaa_t.glaa002,l_date,g_glaa_t.glaa001,g_glaa_t.glaa020,l_xreb.xreb113,g_xreb_m.xreb101,g_glaa_t.glaacomp)
+               RETURNING l_success,l_xreb134
+         END IF
+      ELSE
+         LET l_xreb134 = 0
+      END IF
+      LET l_xreb.xreb131 = g_xreb_m.xreb101
+      LET l_xreb.xreb134 = l_xreb134
+      LET l_xreb.xreb135 = l_xreb.xreb133 - l_xreb.xreb134
+      
+      UPDATE xreb_t SET xreb131 = l_xreb.xreb131,
+                        xreb134 = l_xreb.xreb134,
+                        xreb135 = l_xreb.xreb135
+       WHERE xrebent = g_enterprise
+         AND xreb001 = l_xreb.xreb001
+         AND xreb002 = l_xreb.xreb002
+         AND xrebld  = l_xreb.xrebld
+         AND xreb005 = l_xreb.xreb005
+         AND xreb006 = l_xreb.xreb006
+         AND xreb007 = l_xreb.xreb007
+
+      UPDATE xrcc_t SET xrcc132 = l_xreb.xreb131,
+                        xrcc133 = l_xreb.xreb135
+       WHERE xrccent  = g_enterprise
+         AND xrccdocno= l_xreb.xreb005
+         AND xrccseq  = l_xreb.xreb006
+         AND xrcc001  = l_xreb.xreb007
+   END FOREACH
+END FUNCTION]]>
+  </point>
+  <point name="function.axrt920_01_ref_cur" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 重新计算汇率
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt920_01_ref_cur()
+   DEFINE l_date        LIKE type_t.dat
+   DEFINE l_ooab002     LIKE ooab_t.ooab002
+   DEFINE l_tmp         LIKE xreb_t.xreb103
+
+   LET l_date = axrt920_01_get_date(g_xreb_m.xreb001,g_xreb_m.xreb002,g_glaa_t.glaa003)
+
+   CALL cl_get_para(g_enterprise,g_glaa_t.glaacomp,'S-BAS-0010') RETURNING l_ooab002
+   CALL s_aooi160_get_exrate('2',g_xreb_m.xrebld,l_date,g_xreb_m.xreb100,g_glaa_t.glaa001,0,l_ooab002)
+      RETURNING l_tmp
+
+   CASE
+      WHEN g_xreb_m.lbl_comb = '0'      #目的幣別為:本位幣
+         LET g_xreb_m.xreb101 = l_tmp
+      WHEN g_xreb_m.lbl_comb = '1'      #目的幣別為:本位幣二
+         IF g_glaa_t.glaa017 = '1' THEN
+            #换算基准:交易原幣
+            CALL s_aooi160_get_exrate('2',g_xreb_m.xrebld,l_date,g_xreb_m.xreb100,g_xreb_m.ooai001,0,g_glaa_t.glaa018)
+               RETURNING g_xreb_m.xreb101
+         ELSE
+            #换算基准:帳簿幣別
+            CALL s_aooi160_get_exrate('2',g_xreb_m.xrebld,l_date,g_glaa_t.glaa001,g_xreb_m.ooai001,l_tmp,g_glaa_t.glaa018)
+               RETURNING g_xreb_m.xreb101
+         END IF
+      WHEN g_xreb_m.lbl_comb = '2'      #目的幣別為:本位幣二
+         IF g_glaa_t.glaa019 = '1' THEN
+            #换算基准:交易原幣
+            CALL s_aooi160_get_exrate('2',g_xreb_m.xrebld,l_date,g_xreb_m.xreb100,g_xreb_m.ooai001,0,g_glaa_t.glaa022)
+               RETURNING g_xreb_m.xreb101
+         ELSE
+            #换算基准:帳簿幣別
+            CALL s_aooi160_get_exrate('2',g_xreb_m.xrebld,l_date,g_glaa_t.glaa001,g_xreb_m.ooai001,l_tmp,g_glaa_t.glaa022)
+               RETURNING g_xreb_m.xreb101
+         END IF
+   END CASE
+
+   DISPLAY BY NAME g_xreb_m.xreb101
+
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_glaa_t              RECORD LIKE glaa_t.*
+DEFINE g_xreb_t        type_g_xreb_m]]>
+  </point>
+  <point name="input.a.xreb001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xreb_m.xreb001) AND NOT cl_null(g_xreb_m.xreb002) THEN
+               LET l_date = axrt920_01_get_date(g_xreb_m.xreb001,g_xreb_m.xreb002,g_glaa_t.glaa003)
+               IF l_date <= g_glaa_t.glaa013 THEN
+                  CALL cl_err(g_xreb_m.xreb001,'axr-00117',1)
+                  NEXT FIELD CURRENT
+               END IF
+               SELECT COUNT(*) INTO l_count FROM xreb_t WHERE xrebent = g_enterprise
+                  AND xrebld = g_xreb_m.xrebld
+                  AND xreb001= g_xreb_m.xreb001
+                  AND xreb002= g_xreb_m.xreb002
+                  AND xreb035 IS NOT NULL
+               IF l_count > 0 THEN
+                  CALL cl_err(g_xreb_m.xreb001,'axr-00118',1)
+                  NEXT FIELD CURRENT
+               END IF
+               IF cl_null(g_xreb_t.xreb001) OR g_xreb_t.xreb001 <> g_xreb_m.xreb001 THEN
+                  CALL axrt920_01_ref_cur()
+               END IF
+            END IF
+            LET g_xreb_t.xreb001 = g_xreb_m.xreb001]]>
+  </point>
+  <point name="input.a.xreb002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xreb_m.xreb001) AND NOT cl_null(g_xreb_m.xreb002) THEN
+               LET l_date = axrt920_01_get_date(g_xreb_m.xreb001,g_xreb_m.xreb002,g_glaa_t.glaa003)
+               IF l_date <= g_glaa_t.glaa013 THEN
+                  CALL cl_err(l_date,'axr-00117',1)
+                  NEXT FIELD CURRENT
+               END IF
+               SELECT COUNT(*) INTO l_count FROM xreb_t WHERE xrebent = g_enterprise
+                  AND xrebld = g_xreb_m.xrebld
+                  AND xreb001= g_xreb_m.xreb001
+                  AND xreb002= g_xreb_m.xreb002
+                  AND xreb035 IS NOT NULL
+               IF l_count > 0 THEN
+                  CALL cl_err(g_xreb_m.xreb001,'axr-00118',1)
+                  NEXT FIELD CURRENT
+               END IF
+               IF cl_null(g_xreb_t.xreb002) OR g_xreb_t.xreb002 <> g_xreb_m.xreb002 THEN
+                  CALL axrt920_01_ref_cur()
+               END IF
+            END IF
+            LET g_xreb_t.xreb002 = g_xreb_m.xreb002]]>
+  </point>
+  <point name="input.a.xreb100" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xreb_m.xreb100) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_glaa_t.glaa026
+               LET g_chkparam.arg2 = g_xreb_m.xreb100
+               IF NOT cl_chk_exist("v_ooaj002_1") THEN
+                  LET g_xreb_m.xreb100 = ''
+                  NEXT FIELD CURRENT
+               END IF
+               IF cl_null(g_xreb_t.xreb100) OR g_xreb_t.xreb100 <> g_xreb_m.xreb100 THEN
+                  CALL axrt920_01_ref_cur()
+               END IF
+            END IF
+            LET g_xreb_t.xreb100 = g_xreb_m.xreb100]]>
+  </point>
+  <point name="input.a.xrebld" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_xreb_m.xrebld_desc = ' '
+            DISPLAY BY NAME g_xreb_m.xrebld_desc
+            IF NOT cl_null(g_xreb_m.xrebld) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_xreb_m.xrebld
+               LET g_chkparam.arg2 = ' '
+               IF NOT cl_chk_exist("v_glaald_1") THEN
+                  LET g_xreb_m.xrebld = ''
+                  CALL axrt920_01_xreb_ref('xrebld')
+                  NEXT FIELD CURRENT
+               END IF
+               #資料邏輯正確性檢查
+               CALL s_ld_chk_authorization(g_user,g_xreb_m.xrebld) RETURNING l_success
+               IF l_success = 'N' THEN
+                  CALL cl_err(g_xreb_m.xrebld,'axr-00022',1)
+                  LET g_xreb_m.xrebld = ''
+                  CALL axrt920_01_xreb_ref('xrebld')
+                  NEXT FIELD CURRENT
+               END IF
+               SELECT * INTO g_glaa_t.* FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_xreb_m.xrebld
+               CASE
+                  WHEN g_xreb_m.lbl_comb = '0'
+                     LET g_xreb_m.ooai001 = g_glaa_t.glaa001
+                  WHEN g_xreb_m.lbl_comb = '1'
+                     LET g_xreb_m.ooai001 = g_glaa_t.glaa016
+                  WHEN g_xreb_m.lbl_comb = '2'
+                     LET g_xreb_m.ooai001 = g_glaa_t.glaa020
+               END CASE
+               DISPLAY BY NAME g_xreb_m.ooai001
+               IF cl_null(g_xreb_t.xrebld) OR g_xreb_t.xrebld <> g_xreb_m.xrebld THEN
+                  CALL axrt920_01_ref_cur()
+               END IF
+            END IF
+            CALL axrt920_01_xreb_ref('xrebld')
+            LET g_xreb_t.xrebld = g_xreb_m.xrebld]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      CASE
+         WHEN g_xreb_m.lbl_comb = '0'
+            CALL axrt920_01_upd_1()
+         WHEN g_xreb_m.lbl_comb = '1'
+            CALL axrt920_01_upd_2()
+         WHEN g_xreb_m.lbl_comb = '2'
+            CALL axrt920_01_upd_3()
+      END CASE
+   END IF]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_xreb_m.xrebld  = g_glaa_t.glaald
+            CALL axrt920_01_xreb_ref('xrebld')
+            LET g_xreb_m.lbl_comb= '0'
+            LET g_xreb_m.ooai001 = g_glaa_t.glaa001
+            LET g_xreb_m.xreb001 = p_xreb001
+            LET g_xreb_m.xreb002 = p_xreb002
+            LET l_date = axrt920_01_get_date(g_xreb_m.xreb001,g_xreb_m.xreb002,g_glaa_t.glaa003)
+            DISPLAY BY NAME g_xreb_m.xrebld,g_xreb_m.lbl_comb,g_xreb_m.ooai001,g_xreb_m.xreb001,g_xreb_m.xreb002
+            LET g_xreb_t.* = g_xreb_m.*]]>
+  </point>
+  <point name="input.c.xreb100" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xreb_m.xreb100             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = g_glaa_t.glaa026
+
+            CALL q_ooaj002_4()                                     #呼叫開窗
+            LET g_xreb_m.xreb100 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_xreb_m.xreb100 TO xreb100                    #顯示到畫面上
+            NEXT FIELD xreb100                                     #返回原欄位]]>
+  </point>
+  <point name="input.c.xrebld" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+            
+            LET g_qryparam.default1 = g_xreb_m.xrebld             #給予default值
+            
+            #給予arg
+            SELECT ooag003 INTO l_ooag003 FROM ooag_t WHERE ooagent = g_enterprise
+               AND ooag001 = g_user
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = l_ooag003
+
+            CALL q_authorised_ld()                                #呼叫開窗
+            
+            LET g_xreb_m.xrebld = g_qryparam.return1              #將開窗取得的值回傳到變數
+            
+            DISPLAY g_xreb_m.xrebld TO xrebld                     #顯示到畫面上
+            CALL axrt920_01_xreb_ref('xrebld')
+            
+            NEXT FIELD xrebld                                     #返回原欄位]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_xrebld        LIKE xreb_t.xrebld
+   DEFINE p_xreb001       LIKE xreb_t.xreb001
+   DEFINE p_xreb002       LIKE xreb_t.xreb002
+   DEFINE l_success       LIKE type_t.chr1
+   DEFINE l_ooag003       LIKE ooag_t.ooag003
+   DEFINE l_date          LIKE type_t.dat
+   DEFINE l_ooab002       LIKE ooab_t.ooab002]]>
+  </point>
+  <point name="input.g.lbl_comb" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CASE
+               WHEN g_xreb_m.lbl_comb = '0'
+                  LET g_xreb_m.ooai001 = g_glaa_t.glaa001
+               WHEN g_xreb_m.lbl_comb = '1'
+                  LET g_xreb_m.ooai001 = g_glaa_t.glaa016
+               WHEN g_xreb_m.lbl_comb = '2'
+                  LET g_xreb_m.ooai001 = g_glaa_t.glaa020
+            END CASE
+            DISPLAY BY NAME g_xreb_m.ooai001
+            CALL axrt920_01_ref_cur()]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_xrebld,p_xreb001,p_xreb002]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   SELECT * INTO g_glaa_t.* FROM glaa_t WHERE glaaent = g_enterprise AND glaald = p_xrebld]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xreb_m.xrebld
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xreb_m.xrebld_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xreb_m.xrebld_desc
+]]>
+  </point>
+  <section id="axrt920_01.description" ver="25" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000028
+#+ 
+#+ Filename...: axrt920_01
+#+ Description: ...
+#+ Creator....: 01727(2014/04/23)
+#+ Modifier...: 01727(2014/04/23)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="axrt920_01.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xreb_m        RECORD
+       xrebld LIKE xreb_t.xrebld, 
+   xrebld_desc LIKE type_t.chr80, 
+   lbl_comb LIKE type_t.chr80, 
+   ooai001 LIKE type_t.chr80, 
+   xreb001 LIKE xreb_t.xreb001, 
+   xreb002 LIKE xreb_t.xreb002, 
+   xreb100 LIKE xreb_t.xreb100, 
+   xreb101 LIKE xreb_t.xreb101, 
+   xreb006 LIKE xreb_t.xreb006, 
+   xreb007 LIKE xreb_t.xreb007, 
+   xreb005 LIKE xreb_t.xreb005
+       END RECORD
+DEFINE g_xreb_m        type_g_xreb_m
+ 
+   DEFINE g_xrebld_t LIKE xreb_t.xrebld
+DEFINE g_xreb001_t LIKE xreb_t.xreb001
+DEFINE g_xreb002_t LIKE xreb_t.xreb002
+DEFINE g_xreb006_t LIKE xreb_t.xreb006
+DEFINE g_xreb007_t LIKE xreb_t.xreb007
+DEFINE g_xreb005_t LIKE xreb_t.xreb005
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrt920_01.input" ver="2" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION axrt920_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt920_01 WITH FORM cl_ap_formpath("axr","axrt920_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xreb_m.xrebld,g_xreb_m.lbl_comb,g_xreb_m.ooai001,g_xreb_m.xreb001,g_xreb_m.xreb002, 
+          g_xreb_m.xreb100,g_xreb_m.xreb101 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD xrebld
+            
+            #add-point:AFTER FIELD xrebld
+            {<point name="input.a.xrebld" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xrebld
+            #add-point:BEFORE FIELD xrebld
+            {<point name="input.b.xrebld" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xrebld
+            #add-point:ON CHANGE xrebld
+            {<point name="input.g.xrebld" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD lbl_comb
+            #add-point:BEFORE FIELD lbl_comb
+            {<point name="input.b.lbl_comb" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD lbl_comb
+            
+            #add-point:AFTER FIELD lbl_comb
+            {<point name="input.a.lbl_comb" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE lbl_comb
+            #add-point:ON CHANGE lbl_comb
+            {<point name="input.g.lbl_comb" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooai001
+            #add-point:BEFORE FIELD ooai001
+            {<point name="input.b.ooai001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooai001
+            
+            #add-point:AFTER FIELD ooai001
+            {<point name="input.a.ooai001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ooai001
+            #add-point:ON CHANGE ooai001
+            {<point name="input.g.ooai001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xreb001
+            #add-point:BEFORE FIELD xreb001
+            {<point name="input.b.xreb001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xreb001
+            
+            #add-point:AFTER FIELD xreb001
+            {<point name="input.a.xreb001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xreb001
+            #add-point:ON CHANGE xreb001
+            {<point name="input.g.xreb001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xreb002
+            #add-point:BEFORE FIELD xreb002
+            {<point name="input.b.xreb002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xreb002
+            
+            #add-point:AFTER FIELD xreb002
+            {<point name="input.a.xreb002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xreb002
+            #add-point:ON CHANGE xreb002
+            {<point name="input.g.xreb002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xreb100
+            #add-point:BEFORE FIELD xreb100
+            {<point name="input.b.xreb100" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xreb100
+            
+            #add-point:AFTER FIELD xreb100
+            {<point name="input.a.xreb100" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xreb100
+            #add-point:ON CHANGE xreb100
+            {<point name="input.g.xreb100" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xreb101
+            #add-point:BEFORE FIELD xreb101
+            {<point name="input.b.xreb101" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xreb101
+            
+            #add-point:AFTER FIELD xreb101
+            {<point name="input.a.xreb101" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xreb101
+            #add-point:ON CHANGE xreb101
+            {<point name="input.g.xreb101" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xrebld
+         ON ACTION controlp INFIELD xrebld
+            #add-point:ON ACTION controlp INFIELD xrebld
+            {<point name="input.c.xrebld" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.lbl_comb
+         ON ACTION controlp INFIELD lbl_comb
+            #add-point:ON ACTION controlp INFIELD lbl_comb
+            {<point name="input.c.lbl_comb" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.ooai001
+         ON ACTION controlp INFIELD ooai001
+            #add-point:ON ACTION controlp INFIELD ooai001
+            {<point name="input.c.ooai001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xreb001
+         ON ACTION controlp INFIELD xreb001
+            #add-point:ON ACTION controlp INFIELD xreb001
+            {<point name="input.c.xreb001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xreb002
+         ON ACTION controlp INFIELD xreb002
+            #add-point:ON ACTION controlp INFIELD xreb002
+            {<point name="input.c.xreb002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xreb100
+         ON ACTION controlp INFIELD xreb100
+            #add-point:ON ACTION controlp INFIELD xreb100
+            {<point name="input.c.xreb100" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xreb101
+         ON ACTION controlp INFIELD xreb101
+            #add-point:ON ACTION controlp INFIELD xreb101
+            {<point name="input.c.xreb101" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt920_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axrt920_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="axrt920_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

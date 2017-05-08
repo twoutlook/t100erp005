@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axcp203" std_prog="axcp203" erpver="1.0" ver="1" module="AXC" type="M" booking="N" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[
+BQE条件：
+录入的工单号码、生产料件、开单日期为and条件，决定需要写入至axct203并撷取工单数据的工单来源
+
+委外工单撷取否：
+勾选：需撷取工单档类型为委外的工单
+不勾选：不撷取工单档类型为委外的工单
+
+1.根据QBE去生产工单相关档案抓取在单据日期(xcbq001)归属年度期别内有入库和报工的工单信息，分site及归属法人分开产生数据。
+2.产生单头(xcbq_t)资料：按工单归属的site和法人别和单据日期产生单据编号（xcbqdocno）.
+3.产生单身(xcbr_t)资料：
+   3.1成本中心(xcbr001)根据成本中心：则axct203的成本中心=工单档中的成本中心
+   3.2良品数量(xcbr99)抓取单据日期归属年度月份的报工单sffb017
+         报废数量（xcbr100)抓取单据日期归属年度月份的报工单sffb017
+   3.3期末在制数量(xcbr101)=0
+   3.4期末在制约当率(xcbr102)=0
+   3.5期末在制约当量(xcbr103)=0
+   3.6报工数量(xcbr104)=xcbr099+(xcbr100)+期末在制约当量(xcbr103)
+   3.7实际工时(xcbr201)=sffb014
+   3.8实际机时(xcbr202)=sffb015
+   3.9标准工时(xcbr203)=报工数量(xcbr104)*工单生产主件的单位标准工时
+   3.10标准机时(xcbr204)=报工数量(xcbr104)*工单生产主件的单位标准机时
+xcbr003=sffb007
+xcbr004=sffb008]]>
+  </all>
+  <field cite_std="N" name="Outsourcing" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="comp" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa010" ver="1" src="s" column="sfaa010" table="sfaa_t" attribute="" type="" req="N" i_zoom="q_imaa001_9" c_zoom="q_imaa001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaadocdt" ver="1" src="s" column="sfaadocdt" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaadocno" ver="1" src="s" column="sfaadocno" table="sfaa_t" attribute="" type="" req="N" i_zoom="q_ooba002" c_zoom="q_sfaadocno_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaasite" ver="1" src="s" column="sfaasite" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbq001" ver="1" src="s" column="xcbq001" table="xcbq_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbqdocno" ver="1" src="s" column="xcbqdocno" table="xcbq_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="a" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbq_t." ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbq_t.xcbqcomp" ver="1" src="s" column="xcbqcomp" table="xcbq_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="comp_desc" src="s" depend_field="comp" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="1" name="sfaa010_desc" src="s" depend_field="sfaa010" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="1" name="sfaadocno_desc" src="s" depend_field="sfaadocno" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="1" name="sfaasite_desc" src="s" depend_field="sfaasite" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="Outsourcing" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="a" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="comp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbq001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbq_t." src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="xcbq_t.xcbqcomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="xcbqdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_sfaasite" text="營運據點" lstr=""/>
+    <sfield name="lbl_comp" text="法人組織" lstr=""/>
+    <sfield name="lbl_sfaadocno" text="單號" lstr=""/>
+    <sfield name="lbl_sfaa010" text="生產料號" lstr=""/>
+    <sfield name="lbl_sfaadocdt" text="開單日期" lstr=""/>
+    <sfield name="group_input" text="INPUT條件" lstr=""/>
+    <sfield name="lbl_xcbqdocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_xcbq001" text="單據日期" lstr=""/>
+    <sfield name="lbl_a" text="委外工單截取否" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

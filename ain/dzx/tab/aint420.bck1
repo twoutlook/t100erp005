@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint420" module="ain" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="03247" crtdt="2015-02-06 15:20:01" modid="02159" moddt="2015-08-17 16:49:26" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="商品上下架維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="infgsite,infgsite_desc(chr80),infgdocdt,infgdocno,infg001,infg002,infg003,infg004,infg004_desc(chr80),infg005,infg005_desc(chr80),infgunit,infgstus,infgownid,infgownid_desc(chr80),infgowndp,infgowndp_desc(chr80),infgcrtid,infgcrtid_desc(chr80),infgcrtdp,infgcrtdp_desc(chr80),infgcrtdt,infgmodid,infgmodid_desc(chr80),infgmoddt,infgcnfid,infgcnfid_desc(chr80),infgcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="infhseq,infh012,infh013,infh002,infh001,infh001_desc(chr500),infh001_desc_desc(chr500),infh001_desc_1(chr500),infh001_desc_1_desc(chr500),infh003,infh004,infh004_desc(chr500),infh005,infh005_desc(chr10),infh005_desc_desc(chr500),infh006,infh006_desc(chr10),infh006_desc_desc(chr500),infh007,infh008,infh008_desc(chr10),infh008_desc_desc(chr500),infh009,infh010,infh011,infhsite,infhunit"/>
+      <var id="bs_field" value="infgsite,infgsite_desc(chr80),infgdocdt,infgdocno,infg001,infg002,infg003,infg004,infg004_desc(chr80),infg005,infg005_desc(chr80)" pk="infgdocno" order=""/>
+      <bs_reference field="infgsite_desc" ref_field="infgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="infg004_desc" ref_field="infg004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="infg005_desc" ref_field="infg005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="prog_apmt862" prog="apmt862" parameter="infg003"/>
+      <action id="prog_infg004" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_infg_m.infg004"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_apmt862" prog="apmt862" parameter="infh012"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint420" method="dialog">
+    <section id="input">
+      <input id="head" field="infgsite,infgdocdt,infgdocno,infg001,infg002,infg003,infg004,infg005,infgunit,infgstus"/>
+      <input id="body" page="1" field="infhseq,infh012,infh013,infh002,infh001,infh003,infh004,infh005,infh006,infh007,infh008,infh009,infh010,infh011,infhsite,infhunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="infgsite,infgdocdt,infgdocno,infg001,infg002,infg003,infg004,infg005,infgunit,infgstus,infgownid,infgowndp,infgcrtid,infgcrtdp,infgcrtdt,infgmodid,infgmoddt,infgcnfid,infgcnfdt"/>
+      <construct id="body" page="1" field="infhseq,infh012,infh013,infh002,infh001,infh003,infh004,infh005,infh006,infh007,infh008,infh009,infh010,infh011,infhsite,infhunit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="infgdocno"/>
+      <set id="head" type="no_entry" field="infgdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="infgsite">
+        <after>
+          <reference field="infgsite_desc" ref_field="infg_t.infgsite" map_field="infgent,infgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="infgsite_desc"/>
+      <column id="infgdocdt"/>
+      <column id="infgdocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_infgdocno" state="c"/>
+      </column>
+      <column id="infg001" type="S" default="1" def_scc="6756"/>
+      <column id="infg002" type="S" default="1" def_scc="6757"/>
+      <column id="infg003"/>
+      <column id="infg004">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="infg004_desc" ref_field="infg_t.infg004" map_field="infg004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="i"/>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="infg004_desc"/>
+      <column id="infg005">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="infg005_desc" ref_field="infg_t.infg005" map_field="infg005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="infg005_desc"/>
+      <column id="infgunit"/>
+      <column id="infgstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="infgownid">
+        <after>
+          <reference field="infgownid_desc" ref_field="infg_t.infgownid" map_field="infgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="infgownid_desc"/>
+      <column id="infgowndp">
+        <after>
+          <reference field="infgowndp_desc" ref_field="infg_t.infgowndp" map_field="infgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="infgowndp_desc"/>
+      <column id="infgcrtid">
+        <after>
+          <reference field="infgcrtid_desc" ref_field="infg_t.infgcrtid" map_field="infgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="infgcrtid_desc"/>
+      <column id="infgcrtdp">
+        <after>
+          <reference field="infgcrtdp_desc" ref_field="infg_t.infgcrtdp" map_field="infgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="infgcrtdp_desc"/>
+      <column id="infgcrtdt"/>
+      <column id="infgmodid">
+        <after>
+          <reference field="infgmodid_desc" ref_field="infg_t.infgmodid" map_field="infgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="infgmodid_desc"/>
+      <column id="infgmoddt"/>
+      <column id="infgcnfid">
+        <after>
+          <reference field="infgcnfid_desc" ref_field="infg_t.infgcnfid" map_field="infgcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="infgcnfid_desc"/>
+      <column id="infgcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="infhseq" type="S" default="0"/>
+      <column id="infh012"/>
+      <column id="infh013" type="S" default="0"/>
+      <column id="infh002">
+        <after>
+          <check chkid="v_imay003_1" id="isExist"/>
+        </after>
+        <controlp form="q_imay003_8" state="i"/>
+        <controlp form="q_imay003_8" state="c"/>
+      </column>
+      <column id="infh001">
+        <after>
+          <check chkid="v_rtdx001_6" id="isExist"/>
+          <reference field="infh001_desc" ref_field="infh_t.infh001" map_field="infhent,infh001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_9" state="i"/>
+        <controlp form="q_rtdx001_9" state="c"/>
+      </column>
+      <column id="infh001_desc">
+        <after>
+          <reference field="infh001_desc_desc" ref_field="infh_t.infh001" map_field="infh001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh001_desc_desc"/>
+      <column id="infh001_desc_1">
+        <after>
+          <reference field="infh001_desc_1_desc" ref_field="infh001_desc_1" map_field="infh001_desc_1" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh001_desc_1_desc"/>
+      <column id="infh003"/>
+      <column id="infh004">
+        <after>
+          <reference field="infh004_desc" ref_field="infh_t.infh004" map_field="infhent,infh004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh004_desc"/>
+      <column id="infh005">
+        <after>
+          <check chkid="v_infc001" id="isExist"/>
+          <reference field="infh005_desc" ref_field="infhsite,infh005" map_field="infhsite,infh005" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infcsite=? AND infc001=? "/>
+        </after>
+        <controlp form="q_infc001_1" state="i"/>
+        <controlp form="q_infc001_1" state="c"/>
+      </column>
+      <column id="infh005_desc">
+        <after>
+          <reference field="infh005_desc_desc" ref_field="infh005_desc" map_field="infh005_desc" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2116&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh005_desc_desc"/>
+      <column id="infh006">
+        <after>
+          <check chkid="v_infc001" id="isExist"/>
+          <reference field="infh006_desc" ref_field="infhsite,infh006" map_field="infhsite,infh006" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infcsite=? AND infc001=? "/>
+        </after>
+        <controlp form="q_infc001_1" state="i"/>
+        <controlp form="q_infc001_1" state="c"/>
+      </column>
+      <column id="infh006_desc">
+        <after>
+          <reference field="infh006_desc_desc" ref_field="infh006_desc" map_field="infh006_desc" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2116&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh006_desc_desc"/>
+      <column id="infh007"/>
+      <column id="infh008">
+        <after>
+          <check chkid="v_infc001" id="isExist"/>
+          <reference field="infh008_desc" ref_field="infhsite,infh008" map_field="infhsite,infh008" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infcsite=? AND infc001=? "/>
+        </after>
+        <controlp form="q_infc001_1" state="i"/>
+        <controlp form="q_infc001_1" state="c"/>
+      </column>
+      <column id="infh008_desc">
+        <after>
+          <reference field="infh008_desc_desc" ref_field="infh008_desc" map_field="infh008_desc" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2116&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh008_desc_desc"/>
+      <column id="infh009" def_scc="6758"/>
+      <column id="infh010" type="S" default="0"/>
+      <column id="infh011" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="infhsite"/>
+      <column id="infhunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="infg_t" pk="infgdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT infgsite,&apos;&apos;,infgdocdt,infgdocno,infg001,infg002,infg003,infg004,&apos;&apos;,infg005,&apos;&apos;,infgunit,infgstus,infgownid,&apos;&apos;,infgowndp,&apos;&apos;,infgcrtid,&apos;&apos;,infgcrtdp,&apos;&apos;,infgcrtdt,infgmodid,&apos;&apos;,infgmoddt,infgcnfid,&apos;&apos;,infgcnfdt FROM infg_t WHERE infgent= ? AND infgdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT infgsite,&apos;&apos;,infgdocdt,infgdocno,infg001,infg002,infg003,infg004,&apos;&apos;,infg005,&apos;&apos;,infgunit,infgstus,infgownid,&apos;&apos;,infgowndp,&apos;&apos;,infgcrtid,&apos;&apos;,infgcrtdp,&apos;&apos;,infgcrtdt,infgmodid,&apos;&apos;,infgmoddt,infgcnfid,&apos;&apos;,infgcnfdt FROM infg_t" order="infgdocno"/>
+    </head>
+    <body id="infh_t" page="1" linked="" pk="infhseq" fk="infhdocno">
+      <sql id="forupd_sql_detail" query="SELECT infhseq,infh012,infh013,infh002,infh001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,infh003,infh004,&apos;&apos;,infh005,&apos;&apos;,&apos;&apos;,infh006,&apos;&apos;,&apos;&apos;,infh007,infh008,&apos;&apos;,&apos;&apos;,infh009,infh010,infh011,infhsite,infhunit FROM infh_t WHERE infhent=? AND infhdocno=? AND infhseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT infhseq,infh012,infh013,infh002,infh001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,infh003,infh004,&apos;&apos;,infh005,&apos;&apos;,&apos;&apos;,infh006,&apos;&apos;,&apos;&apos;,infh007,infh008,&apos;&apos;,&apos;&apos;,infh009,infh010,infh011,infhsite,infhunit FROM infh_t WHERE infhent=? AND infhdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

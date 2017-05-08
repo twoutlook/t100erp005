@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli041" module="agl" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02295" crtdt="2013-07-30 09:51:33" modid="02295" moddt="2013-09-06 15:25:57" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="核算項類型維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glaestus,glae001,glael003,glae002,glae003,glae003_desc(chr500),glae004,glae004_desc(chr500),glae005,glae005_desc(chr500),glae006,glae006_desc(chr500),glae007,glae008,glae009,glae009_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glae001,glaemodid,glaemodid_desc(chr500),glaemoddt,glaeownid,glaeownid_desc(chr500),glaeowndp,glaeowndp_desc(chr500),glaecrtid,glaecrtid_desc(chr500),glaecrtdp,glaecrtdp_desc(chr500),glaecrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="agli042"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli041" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glaestus,glae001,glael003,glae002,glae003,glae004,glae005,glae006,glae007,glae008,glae009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glaestus,glae001,glael003,glae002,glae003,glae004,glae005,glae006,glae007,glae008,glae009"/>
+      <construct id="body" page="2" field="glaemodid,glaemoddt,glaeownid,glaeowndp,glaecrtid,glaecrtdp,glaecrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="glaestus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glae001">
+        <controlp form="q_glae001" state="c"/>
+      </column>
+      <column id="glael003"/>
+      <column id="glae002" def_scc="8006"/>
+      <column id="glae003">
+        <after>
+          <reference field="glae003_desc" ref_field="glae_t.glae003" map_field="glae003" ref_sql="SELECT dzea002 FROM dzea_t WHERE dzea001=? "/>
+        </after>
+        <controlp form="q_dzea002" state="i"/>
+        <controlp form="q_dzea002" state="c"/>
+      </column>
+      <column id="glae003_desc"/>
+      <column id="glae004">
+        <after>
+          <reference field="glae004_desc" ref_field="glae003,glae004" map_field="glae003,glae004" ref_sql="SELECT dzeb003 FROM dzeb_t WHERE dzeb001=? AND dzeb002=? "/>
+        </after>
+        <controlp form="q_dzeb001" state="i"/>
+        <controlp form="q_dzeb001" state="c"/>
+      </column>
+      <column id="glae004_desc"/>
+      <column id="glae005">
+        <after>
+          <reference field="glae005_desc" ref_field="glae_t.glae005" map_field="glae005" ref_sql="SELECT dzea002 FROM dzea_t WHERE dzea001=? "/>
+        </after>
+        <controlp form="q_dzea002" state="i"/>
+        <controlp form="q_dzea002" state="c"/>
+      </column>
+      <column id="glae005_desc"/>
+      <column id="glae006">
+        <after>
+          <reference field="glae006_desc" ref_field="glae005,glae006" map_field="glae005,glae006" ref_sql="SELECT dzeb003 FROM dzeb_t WHERE dzeb001=? AND dzeb002=? "/>
+        </after>
+        <controlp form="q_dzeb001" state="i"/>
+        <controlp form="q_dzeb001" state="c"/>
+      </column>
+      <column id="glae006_desc"/>
+      <column id="glae007">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glae008"/>
+      <column id="glae009">
+        <after>
+          <reference field="glae009_desc" ref_field="glae_t.glae009" map_field="glae009" ref_sql="SELECT dzcal003 FROM dzcal_t WHERE dzcal001=? AND dzcal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzza001_2" state="i"/>
+        <controlp form="q_gzza001_2" state="c"/>
+      </column>
+      <column id="glae009_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glaemodid">
+        <after>
+          <reference field="glaemodid_desc" ref_field="glae_t.glaemodid" map_field="glaemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glaemodid_desc"/>
+      <column id="glaemoddt"/>
+      <column id="glaeownid">
+        <after>
+          <reference field="glaeownid_desc" ref_field="glae_t.glaeownid" map_field="glaeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glaeownid_desc"/>
+      <column id="glaeowndp">
+        <after>
+          <reference field="glaeowndp_desc" ref_field="glae_t.glaeowndp" map_field="glaeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glaeowndp_desc"/>
+      <column id="glaecrtid">
+        <after>
+          <reference field="glaecrtid_desc" ref_field="glae_t.glaecrtid" map_field="glaecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glaecrtid_desc"/>
+      <column id="glaecrtdp">
+        <after>
+          <reference field="glaecrtdp_desc" ref_field="glae_t.glaecrtdp" map_field="glaecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glaecrtdp_desc"/>
+      <column id="glaecrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glae_t" page="1,2" linked="" pk="glae001">
+      <sql id="forupd_sql_detail" query="SELECT glaestus,glae001,&apos;&apos;,glae002,glae003,&apos;&apos;,glae004,&apos;&apos;,glae005,&apos;&apos;,glae006,&apos;&apos;,glae007,glae008,glae009,&apos;&apos;,&apos;&apos;,glaemodid,&apos;&apos;,glaemoddt,glaeownid,&apos;&apos;,glaeowndp,&apos;&apos;,glaecrtid,&apos;&apos;,glaecrtdp,&apos;&apos;,glaecrtdt FROM glae_t WHERE glaeent=? AND glae001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glaestus,glae001,&apos;&apos;,glae002,glae003,&apos;&apos;,glae004,&apos;&apos;,glae005,&apos;&apos;,glae006,&apos;&apos;,glae007,glae008,glae009,&apos;&apos;,&apos;&apos;,glaemodid,&apos;&apos;,glaemoddt,glaeownid,&apos;&apos;,glaeowndp,&apos;&apos;,glaecrtid,&apos;&apos;,glaecrtdp,&apos;&apos;,glaecrtdt FROM glae_t WHERE glaeent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="glael_t.glael003" table="glael_t" fk="glae001" pk="glael001,glael002" field="glael003"/>
+    </body>
+  </dataset>
+</assembly>
+

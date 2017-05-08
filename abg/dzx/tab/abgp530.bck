@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgp530" module="abg" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02599" crtdt="2016-12-21 14:42:33" modid="02599" moddt="2016-12-22 21:43:47" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="銷售預算轉採購預算">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgcj002,bgcj002_desc(chr80),bgcj003,bgcj007,bgcj007_desc(chr80),lower(chr500),set_num(chr500),set_price(chr500),source(chr500),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="abg" filename="abgp530" method="dialog">
+    <section id="input">
+      <input id="head" field="bgcj002,bgcj003,bgcj007,lower,set_num,set_price,source"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bgcj002">
+        <after>
+          <check chkid="v_bgaa001" id="isExist"/>
+          <reference field="bgcj002_desc" ref_field="bgcj_t.bgcj002" map_field="bgcjent,bgcj002" ref_sql="SELECT bgaal003 FROM bgaal_t WHERE bgaalent=$varg_enterprise$var AND bgaal001=? AND bgaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgaa001" state="i"/>
+        <controlp form="q_bgaa001" state="c"/>
+      </column>
+      <column id="bgcj002_desc"/>
+      <column id="bgcj003"/>
+      <column id="bgcj007">
+        <after>
+          <reference field="bgcj007_desc" ref_field="bgcj_t.bgcj007" map_field="bgcjent,bgcj007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="bgcj007_desc"/>
+      <column id="lower" type="S" default="Y"/>
+      <column id="set_num"/>
+      <column id="set_price"/>
+      <column id="source" type="S" default="Y"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

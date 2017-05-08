@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axci150" std_prog="axci150" erpver="1.0" ver="3" module="AXC" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="xcbf_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 用于成本域范围设置作业
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：假雙檔無搭配任何方案F003_00
+作業資料來源(Master)：
+ 資料來源表：xcbf_t
+]]>
+  </all>
+  <field cite_std="N" name="xcbf002_2" ver="1" src="s" column="xcbf002" table="xcbf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbf001" ver="3" src="s" column="xcbf001" table="xcbf_t" attribute="" type="" req="Y" i_zoom="q_xcbf001" c_zoom="q_xcbf001" chk_ref="v_xcbf001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[成本域编码（xcbf001）:
+此為key值欄位,不可空白
+用户手工录入
+]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbf002" ver="1" src="s" column="xcbf002" table="xcbf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="v_ooef001_9" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[组织/仓库编码:
+此栏位为key值，不可空白。
+(1)单头"成本域类型"=组织，此栏位选项值来源于:[T:组织档].[C:组织编号]
+    輸入值須存在[T:组织档].[C:组织编号]且為有效資料
+    组织类型“法人组织”or“营运组织否”or“核算组织否”勾选项
+    校驗：1.若不存在，報錯
+              2.若無效，報錯
+              3.若非“法人组织”or“营运组织否”or“核算组织否”，報錯
+              4.若組織不存在與法人組織下，報錯
+      
+
+(2)单头"成本域类型"=货主/仓库，此栏位选项值来源于:[T:仓库档].[C:仓库编号]
+    校驗：1.若不存在，報錯
+              2.若無效，報錯]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbf003" ver="3" src="s" column="xcbf003" table="xcbf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="8911" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[成本域类型(xcbf003):
+不允许空白
+SCC：8911]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbf004" ver="3" src="s" column="xcbf004" table="xcbf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[成本计价方式(xcbf004):
+资料必须是:
+1.标准成本
+2.先进先出
+3.批次成本
+4.移动加权平均
+5.月加权平均，选此类型时要同时检查主账套采用的成本类型的成本计算时点（xcat003）是否是实时的？如果是实时的则不能选“5.月加权平均”。
+不可空白，必须输入
+
+SCC:8907,去除6和7
+校驗：
+     5.月加權平均，
+       1.选此类型时要同时检查主账套采用的成本类型的成本计算时点（xcat003）是实时，則報錯
+       2.若主張套採用的成本類型為空，報錯
+     
+
+]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbfcomp" ver="1" src="s" column="xcbfcomp" table="xcbf_t" attribute="" type="" req="Y" i_zoom="q_ooef001_10" c_zoom="q_ooef001_10" chk_ref="v_ooef001_8" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[法人组织（xcbfcomp）：
+必录项
+   ●欄位控管：
+     資料欄位:[T:xcbf_t].[C:xcbfcomp]/可input及Display
+              輸入值須存在[T:组织档].[C:组织编号]且為有效資料
+             组织类型“法人组织”
+   校驗：1.若不存在，報錯
+             2.若無效，報錯
+             3.若非法人組織，報錯
+   
+]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbfcrtdp" ver="1" src="s" column="xcbfcrtdp" table="xcbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbfcrtdt" ver="1" src="s" column="xcbfcrtdt" table="xcbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbfcrtid" ver="1" src="s" column="xcbfcrtid" table="xcbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbfmoddt" ver="1" src="s" column="xcbfmoddt" table="xcbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbfmodid" ver="1" src="s" column="xcbfmodid" table="xcbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbfowndp" ver="1" src="s" column="xcbfowndp" table="xcbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbfownid" ver="1" src="s" column="xcbfownid" table="xcbf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbf_t.xcbfstus" ver="1" src="s" column="xcbfstus" table="xcbf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="3" name="xcbf001_desc" src="s" depend_field="xcbf_t.xcbf001" correspon_key="xcbfent,xcbfcomp" ref_table="xcbfl_t" ref_fk="xcbflent,xcbfl001" ref_dlang="xcbfl002" ref_rtn="xcbfl003" status="d"/>
+    <rfield cite_std="N" ver="1" name="xcbf002_desc" src="s" depend_field="xcbf_t.xcbf002" correspon_key="xcbfent,xcbf002" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xcbfcomp_desc" src="s" depend_field="xcbf_t.xcbfcomp" correspon_key="xcbfent,xcbfcomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xcbfcrtdp_desc" src="s" depend_field="xcbf_t.xcbfcrtdp" correspon_key="xcbfcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xcbfcrtid_desc" src="s" depend_field="xcbf_t.xcbfcrtid" correspon_key="xcbfcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xcbfmodid_desc" src="s" depend_field="xcbf_t.xcbfmodid" correspon_key="xcbfmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xcbfowndp_desc" src="s" depend_field="xcbf_t.xcbfowndp" correspon_key="xcbfowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xcbfownid_desc" src="s" depend_field="xcbf_t.xcbfownid" correspon_key="xcbfownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="3" name="xcbfl_t.xcbfl003" src="s" depend_field="xcbf_t.xcbf001" correspon_key="xcbfcomp,xcbf001" lang_table="xcbfl_t" lang_fk="xcbflcomp,xcbfl001" lang_dlang="xcbfl002" lang_rtn="xcbfl003" status="u">
+      <![CDATA[成本域说明(xcbfl003):
+用户手工录入
+]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="xcbf002_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="xcbf_t.xcbf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="xcbf_t.xcbf002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="xcbf_t.xcbf003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xcbf_t.xcbf004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="xcbf_t.xcbfcomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbf_t.xcbfcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbf_t.xcbfcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbf_t.xcbfcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbf_t.xcbfmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbf_t.xcbfmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbf_t.xcbfowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbf_t.xcbfownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbf_t.xcbfstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_xcbfcomp" text="法人組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明" lstr=""/>
+    <sfield name="lbl_xcbf003" text="成本域類型" lstr=""/>
+    <sfield name="lbl_xcbf004" text="成本計價方式" lstr=""/>
+    <sfield name="lbl_xcbf001" text="成本域編號" lstr=""/>
+    <sfield name="lbl_xcbfl003" text="成本域說明" lstr=""/>
+    <sfield name="bpage_1" text="項目" lstr=""/>
+    <sfield name="lbl_xcbfstus" text="有效" lstr=""/>
+    <sfield name="lbl_xcbf002" text="組織/倉庫編號" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_xcbflcomp" text="法人組織" lstr=""/>
+    <sfield name="lbl_xcbfl001" text="成本域編號" lstr=""/>
+    <sfield name="lbl_xcbfl002" text="語言別" lstr=""/>
+    <sfield name="lbl_xcbfl004" text="助記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

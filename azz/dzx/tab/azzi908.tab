@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi908" module="azz" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="00845" crtdt="2015-01-15 13:42:18" modid="01856" moddt="2015-03-23 15:25:15" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="inc 程式共用變數設定檔維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzzg001,gzzg002,gzzg003,gzzg004,gzzg006,gzzgstus,gzzgownid,gzzgownid_desc(chr80),gzzgowndp,gzzgowndp_desc(chr80),gzzgcrtid,gzzgcrtid_desc(chr80),gzzgcrtdp,gzzgcrtdp_desc(chr80),gzzgcrtdt,gzzgmodid,gzzgmodid_desc(chr80),gzzgmoddt"/>
+      <var id="bs_field" value="gzzg001,gzzg002,gzzg003,gzzg004" pk="gzzg001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi908" method="dialog">
+    <section id="input">
+      <input id="head" field="gzzg001,gzzg002,gzzg003,gzzg004,gzzg006,gzzgstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzzg001,gzzg002,gzzg003,gzzg004,gzzg006,gzzgstus,gzzgownid,gzzgowndp,gzzgcrtid,gzzgcrtdp,gzzgcrtdt,gzzgmodid,gzzgmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzzg001"/>
+      <set id="head" type="no_entry" field="gzzg001"/>
+    </init>
+    <init id="head">
+      <column id="gzzg001">
+        <controlp form="q_gzzg001" state="c"/>
+      </column>
+      <column id="gzzg002"/>
+      <column id="gzzg003" type="S" default="sd"/>
+      <column id="gzzg004" type="S" default="s"/>
+      <column id="gzzg006"/>
+      <column id="gzzgstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzzgownid">
+        <after>
+          <reference field="gzzgownid_desc" ref_field="gzzg_t.gzzgownid" map_field="gzzgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzzgownid_desc"/>
+      <column id="gzzgowndp">
+        <after>
+          <reference field="gzzgowndp_desc" ref_field="gzzg_t.gzzgowndp" map_field="gzzgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzzgowndp_desc"/>
+      <column id="gzzgcrtid">
+        <after>
+          <reference field="gzzgcrtid_desc" ref_field="gzzg_t.gzzgcrtid" map_field="gzzgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzzgcrtid_desc"/>
+      <column id="gzzgcrtdp">
+        <after>
+          <reference field="gzzgcrtdp_desc" ref_field="gzzg_t.gzzgcrtdp" map_field="gzzgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzzgcrtdp_desc"/>
+      <column id="gzzgcrtdt"/>
+      <column id="gzzgmodid">
+        <after>
+          <reference field="gzzgmodid_desc" ref_field="gzzg_t.gzzgmodid" map_field="gzzgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzzgmodid_desc"/>
+      <column id="gzzgmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzzg_t" pk="gzzg001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzzg001,gzzg002,gzzg003,gzzg004,gzzg006,gzzgstus,gzzgownid,&apos;&apos;,gzzgowndp,&apos;&apos;,gzzgcrtid,&apos;&apos;,gzzgcrtdp,&apos;&apos;,gzzgcrtdt,gzzgmodid,&apos;&apos;,gzzgmoddt FROM gzzg_t WHERE gzzg001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzzg001 FROM gzzg_t" order="gzzg001"/>
+    </head>
+  </dataset>
+</assembly>
+

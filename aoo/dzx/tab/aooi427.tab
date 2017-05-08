@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi427" module="aoo" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02298" crtdt="2013-08-13 09:44:11" modid="02298" moddt="2013-08-13 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="製造組別資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oogestus,ooge001,ooge002"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="ooge001,oogemodid,oogemodid_desc(chr500),oogemoddt,oogeownid,oogeownid_desc(chr500),oogeowndp,oogeowndp_desc(chr500),oogecrtid,oogecrtid_desc(chr500),oogecrtdt,oogecrtdp,oogecrtdp_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi427" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="oogestus,ooge001,ooge002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="oogestus,ooge001,ooge002"/>
+      <construct id="body" page="2" field="oogemodid,oogemoddt,oogeownid,oogeowndp,oogecrtid,oogecrtdt,oogecrtdp"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="oogestus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="ooge001">
+        <controlp form="q_ooge001" state="c"/>
+      </column>
+      <column id="ooge002"/>
+    </init>
+    <init id="body" page="2">
+      <column id="oogemodid">
+        <after>
+          <reference field="oogemodid_desc" ref_field="ooge_t.oogemodid" map_field="oogemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oogemodid_desc"/>
+      <column id="oogemoddt"/>
+      <column id="oogeownid">
+        <after>
+          <reference field="oogeownid_desc" ref_field="ooge_t.oogeownid" map_field="oogeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oogeownid_desc"/>
+      <column id="oogeowndp">
+        <after>
+          <reference field="oogeowndp_desc" ref_field="ooge_t.oogeowndp" map_field="oogeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oogeowndp_desc"/>
+      <column id="oogecrtid">
+        <after>
+          <reference field="oogecrtid_desc" ref_field="ooge_t.oogecrtid" map_field="oogecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oogecrtid_desc"/>
+      <column id="oogecrtdt"/>
+      <column id="oogecrtdp">
+        <after>
+          <reference field="oogecrtdp_desc" ref_field="ooge_t.oogecrtdp" map_field="oogecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oogecrtdp_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="ooge_t" page="1,2" linked="" pk="ooge001">
+      <sql id="forupd_sql_detail" query="SELECT oogestus,ooge001,ooge002,&apos;&apos;,oogemodid,&apos;&apos;,oogemoddt,oogeownid,&apos;&apos;,oogeowndp,&apos;&apos;,oogecrtid,&apos;&apos;,oogecrtdt,oogecrtdp,&apos;&apos; FROM ooge_t WHERE oogeent=? AND oogesite=? AND ooge001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oogestus,ooge001,ooge002,&apos;&apos;,oogemodid,&apos;&apos;,oogemoddt,oogeownid,&apos;&apos;,oogeowndp,&apos;&apos;,oogecrtid,&apos;&apos;,oogecrtdt,oogecrtdp,&apos;&apos; FROM ooge_t WHERE oogeent= ? AND oogesite= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

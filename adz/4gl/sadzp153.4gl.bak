@@ -1,0 +1,29 @@
+#+ Version..: T6-ERP-1.00.00 Build-00001
+#+
+#+ Filename.: adzp153
+#+ Buildtype: 
+#+ Memo.....: 產生參數作業
+ 
+IMPORT os
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+
+#+ 檢核 gzsz016 是否存在scc 
+PUBLIC FUNCTION sadzp153_chk_gzsz016(lc_gzsz016)
+   DEFINE lc_gzsz016 LIKE gzsz_t.gzsz016
+   DEFINE li_cnt     LIKE type_t.num5
+   DEFINE li_chk     LIKE type_t.num5
+   
+   #LET li_chk = FALSE 
+   SELECT COUNT(*) INTO li_cnt FROM gzca_t 
+      WHERE gzca001 = lc_gzsz016
+
+   IF li_cnt > 0 THEN
+      RETURN TRUE  
+   END IF   
+   RETURN FALSE 
+END FUNCTION 
+
+
+

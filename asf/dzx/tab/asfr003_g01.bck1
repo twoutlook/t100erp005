@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfr003_g01" module="asf" jobmode="N" type="g01" industry="std" crtid="04226" crtdt="2014-09-02 17:02:38" modid="03079" moddt="2016-05-12 10:12:54" sdver="3" tabver="10001" description="工單在製狀況表">
+  <define arg="tm.wc(STRING|條件),tm.a(chr1|列印在製明細),tm.b(chr1|有在製製程站),tm.c(chr1|列印報工時間)">
+    <var seq="1" value="sfaaent,sfaadocno,sfaa020,sfaa010,sfaa012,sfaa013,sfaa050,sfaa051,sfaastus,sfaa049,l_stus(chr30|NULL),l_imaal003(chr300|NULL),l_imaal004(chr300|NULL),l_pass(num20_6|NULL),l_sets(num20_6|NULL),l_allcomplet(num20_6|NULL),l_setcomplet(num20_6|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="sfaaent,sfaadocno,sfaa020,sfaa010,sfaa012,sfaa013,sfaa050,sfaa051,sfaastus,sfaa049,l_stus(chr30|NULL),l_imaal003(chr300|NULL),l_imaal004(chr300|NULL),l_pass(num20_6|NULL),l_sets(num20_6|NULL),l_allcomplet(num20_6|NULL),l_setcomplet(num20_6|NULL)"/>
+    <sql id="g_from" query="sfaa_t"/>
+    <sql id="g_where" query="" maintable="sfaa_t"/>
+    <sql id="g_order" query="sfaadocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="sfaadocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="sfaadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="sfaaent,sfaadocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="sfaaent,sfaadocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff002" where="sfaaent,sfaadocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="sfaadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="sfaaent,sfaadocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

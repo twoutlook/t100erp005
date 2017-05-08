@@ -1,0 +1,169 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artm700" module="art" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="04226" crtdt="2014-04-08 16:13:29" modid="04226" moddt="2014-12-01 18:22:26" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="門店商品補貨參數維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtkf001,rtkf001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtkfunit,rtkfstus,rtkf002,rtkf002_desc(chr500),imaa009(chr10),imaa009_desc(chr500),rtkf003,rtkf003_desc(chr500),rtkf004,rtkf006,rtkf007,rtkf008,rtkf009,rtkf010,rtkf011,rtkf012,rtkf005,rtkf005_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtkf002,rtkfownid,rtkfownid_desc(chr500),rtkfowndp,rtkfowndp_desc(chr500),rtkfcrtid,rtkfcrtid_desc(chr500),rtkfcrtdp,rtkfcrtdp_desc(chr500),rtkfcrtdt,rtkfmodid,rtkfmodid_desc(chr500),rtkfmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artm700" method="dialog">
+    <section id="input">
+      <input id="head" field="rtkf001"/>
+      <input id="body" page="1" field="rtkfunit,rtkfstus,rtkf002,rtkf003,rtkf004,rtkf006,rtkf007,rtkf008,rtkf009,rtkf010,rtkf011,rtkf012,rtkf005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtkf001"/>
+      <construct id="body" page="1" field="rtkfunit,rtkfstus,rtkf002,rtkf003,rtkf004,rtkf006,rtkf007,rtkf008,rtkf009,rtkf010,rtkf011,rtkf012,rtkf005"/>
+      <construct id="body" page="2" field="rtkfownid,rtkfowndp,rtkfcrtid,rtkfcrtdp,rtkfcrtdt,rtkfmodid,rtkfmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtkf001"/>
+      <set id="head" type="no_entry" field="rtkf001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtkf001">
+        <after>
+          <reference field="rtkf001_desc" ref_field="rtkf_t.rtkf001" map_field="rtkf001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtkf001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtkfunit">
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtkfstus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="rtkf002">
+        <after>
+          <reference field="rtkf002_desc" ref_field="rtkf_t.rtkf002" map_field="rtkf002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_13" state="i"/>
+        <controlp form="q_rtdx001_13" state="c"/>
+      </column>
+      <column id="rtkf002_desc"/>
+      <column id="imaa009">
+        <after>
+          <reference field="imaa009_desc" ref_field="imaa009" map_field="imaa009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imaa009_desc"/>
+      <column id="rtkf003">
+        <after>
+          <reference field="rtkf003_desc" ref_field="rtkf_t.rtkf003" map_field="rtkf003" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="rtkf003_desc"/>
+      <column id="rtkf004" def_scc="6014"/>
+      <column id="rtkf006">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkf007">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkf008">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkf009">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkf010">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkf011">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkf012"/>
+      <column id="rtkf005">
+        <after>
+          <reference field="rtkf005_desc" ref_field="rtkf_t.rtkf005" map_field="rtkf005" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="rtkf005_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtkfownid">
+        <after>
+          <reference field="rtkfownid_desc" ref_field="rtkf_t.rtkfownid" map_field="rtkfownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkfownid_desc"/>
+      <column id="rtkfowndp">
+        <after>
+          <reference field="rtkfowndp_desc" ref_field="rtkf_t.rtkfowndp" map_field="rtkfowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkfowndp_desc"/>
+      <column id="rtkfcrtid">
+        <after>
+          <reference field="rtkfcrtid_desc" ref_field="rtkf_t.rtkfcrtid" map_field="rtkfcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkfcrtid_desc"/>
+      <column id="rtkfcrtdp">
+        <after>
+          <reference field="rtkfcrtdp_desc" ref_field="rtkf_t.rtkfcrtdp" map_field="rtkfcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkfcrtdp_desc"/>
+      <column id="rtkfcrtdt"/>
+      <column id="rtkfmodid">
+        <after>
+          <reference field="rtkfmodid_desc" ref_field="rtkf_t.rtkfmodid" map_field="rtkfmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkfmodid_desc"/>
+      <column id="rtkfmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtkf_t" pk="rtkf001">
+      <sql id="forupd_sql" type="sql" query="SELECT rtkf001,&apos;&apos; FROM rtkf_t WHERE rtkfent= ? AND rtkf001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtkf001,&apos;&apos; FROM rtkf_t" order="rtkf001"/>
+    </head>
+    <body id="rtkf_t" page="1,2" linked="" pk="rtkf002" fk="rtkf001">
+      <sql id="forupd_sql_detail" query="SELECT rtkfunit,rtkfstus,rtkf002,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtkf003,&apos;&apos;,rtkf004,rtkf006,rtkf007,rtkf008,rtkf009,rtkf010,rtkf011,rtkf012,rtkf005,&apos;&apos;,&apos;&apos;,rtkfownid,&apos;&apos;,rtkfowndp,&apos;&apos;,rtkfcrtid,&apos;&apos;,rtkfcrtdp,&apos;&apos;,rtkfcrtdt,rtkfmodid,&apos;&apos;,rtkfmoddt FROM rtkf_t WHERE rtkfent=? AND rtkf001=? AND rtkf002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtkfunit,rtkfstus,rtkf002,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtkf003,&apos;&apos;,rtkf004,rtkf006,rtkf007,rtkf008,rtkf009,rtkf010,rtkf011,rtkf012,rtkf005,&apos;&apos;,&apos;&apos;,rtkfownid,&apos;&apos;,rtkfowndp,&apos;&apos;,rtkfcrtid,&apos;&apos;,rtkfcrtdp,&apos;&apos;,rtkfcrtdt,rtkfmodid,&apos;&apos;,rtkfmoddt FROM rtkf_t WHERE rtkfent= ? AND rtkf001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

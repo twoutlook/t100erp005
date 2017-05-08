@@ -1,0 +1,152 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrt400" module="acr" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="02749" crtdt="2014-04-18 17:21:41" modid="06189" moddt="2015-04-29 16:00:56" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="潛在客戶等級資料變更作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="cracunit,cracunit_desc(chr80),cracdocdt,cracdocno,cracsite(chr10),crac001,crac001_desc(chr80),crac002,craa032(chr10),crac003,crac003_desc(chr80),cracstus,crac004,crac004_desc(chr80),crac005,crac005_desc(chr80),cracownid,cracownid_desc(chr80),cracowndp,cracowndp_desc(chr80),craccrtid,craccrtid_desc(chr80),craccrtdp,craccrtdp_desc(chr80),craccrtdt,cracmodid,cracmodid_desc(chr80),cracmoddt,craccnfid,craccnfid_desc(chr80),craccnfdt"/>
+      <var id="bs_field" value="cracunit,cracunit_desc(chr80),cracdocdt,cracdocno,crac001,crac001_desc(chr80),crac002,crac003,crac003_desc(chr80),crac004,crac004_desc(chr80),crac005,crac005_desc(chr80)" pk="cracdocno" order=""/>
+      <bs_reference field="cracunit_desc" ref_field="cracunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="crac001_desc" ref_field="crac001" ref_sql="SELECT craal003 FROM craal_t WHERE craalent=$varg_enterprise$var AND craal001=? AND craal002=$varg_dlang$var"/>
+      <bs_reference field="crac003_desc" ref_field="crac003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2109&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+      <bs_reference field="crac004_desc" ref_field="crac004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2105&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+      <bs_reference field="crac005_desc" ref_field="crac005" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_crac005" prog="cl_user_contact(&quot;aooi130&quot;," parameter="&quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acrt400" method="dialog">
+    <section id="input">
+      <input id="head" field="cracunit,cracdocdt,cracdocno,crac001,crac002,crac003,cracstus,crac004,crac005"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="cracunit,cracdocdt,cracdocno,crac001,crac002,craa032,crac003,cracstus,crac004,crac005,cracownid,cracowndp,craccrtid,craccrtdp,craccrtdt,cracmodid,cracmoddt,craccnfid,craccnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="cracdocno"/>
+      <set id="head" type="no_entry" field="cracdocno"/>
+    </init>
+    <init id="head">
+      <column id="cracunit">
+        <after>
+          <reference field="cracunit_desc" ref_field="crac_t.cracunit" map_field="cracent,cracunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="cracunit_desc"/>
+      <column id="cracdocdt"/>
+      <column id="cracdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_cracdocno" state="c"/>
+      </column>
+      <column id="cracsite">
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="crac001">
+        <after>
+          <check chkid="v_craa001_1" id="isExist"/>
+          <reference field="crac001_desc" ref_field="crac_t.crac001" map_field="cracent,crac001" ref_sql="SELECT craal004 FROM craal_t WHERE craalent=$varg_enterprise$var AND craal001=? AND craal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_craa001" state="i"/>
+        <controlp form="q_craa001" state="c"/>
+      </column>
+      <column id="crac001_desc"/>
+      <column id="crac002"/>
+      <column id="craa032" type="S" default="0"/>
+      <column id="crac003">
+        <after>
+          <reference field="crac003_desc" ref_field="crac003" map_field="crac003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2109&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="crac003_desc"/>
+      <column id="cracstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="crac004">
+        <after>
+          <reference field="crac004_desc" ref_field="crac004" map_field="crac004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2105&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="crac004_desc"/>
+      <column id="crac005">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="crac005_desc" ref_field="crac_t.crac005" map_field="crac005" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crac005_desc"/>
+      <column id="cracownid">
+        <after>
+          <reference field="cracownid_desc" ref_field="crac_t.cracownid" map_field="cracownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="cracownid_desc"/>
+      <column id="cracowndp">
+        <after>
+          <reference field="cracowndp_desc" ref_field="crac_t.cracowndp" map_field="cracowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="cracowndp_desc"/>
+      <column id="craccrtid">
+        <after>
+          <reference field="craccrtid_desc" ref_field="crac_t.craccrtid" map_field="craccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="craccrtid_desc"/>
+      <column id="craccrtdp">
+        <after>
+          <reference field="craccrtdp_desc" ref_field="crac_t.craccrtdp" map_field="craccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="craccrtdp_desc"/>
+      <column id="craccrtdt"/>
+      <column id="cracmodid">
+        <after>
+          <reference field="cracmodid_desc" ref_field="crac_t.cracmodid" map_field="cracmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="cracmodid_desc"/>
+      <column id="cracmoddt"/>
+      <column id="craccnfid">
+        <after>
+          <reference field="craccnfid_desc" ref_field="crac_t.craccnfid" map_field="craccnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="craccnfid_desc"/>
+      <column id="craccnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="crac_t" pk="cracdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT cracunit,&apos;&apos;,cracdocdt,cracdocno,&apos;&apos;,crac001,&apos;&apos;,crac002,&apos;&apos;,crac003,&apos;&apos;,cracstus,crac004,&apos;&apos;,crac005,&apos;&apos;,cracownid,&apos;&apos;,cracowndp,&apos;&apos;,craccrtid,&apos;&apos;,craccrtdp,&apos;&apos;,craccrtdt,cracmodid,&apos;&apos;,cracmoddt,craccnfid,&apos;&apos;,craccnfdt FROM crac_t WHERE cracent= ? AND cracdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT cracdocno FROM crac_t" order="cracdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

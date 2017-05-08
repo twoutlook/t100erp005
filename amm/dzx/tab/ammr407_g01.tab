@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammr407_g01" module="amm" jobmode="N" type="g01" industry="std" crtid="01251" crtdt="2015-07-02 21:48:16" modid="01251" moddt="2015-07-03 16:54:14" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|查询条件)">
+    <var seq="1" value="l_order(chr50|&apos;&apos;),rtiaent,mmeb009_desc(chr30|&apos;&apos;),mmeb002_desc(chr30|&apos;&apos;),mmebsite_desc(chr30|&apos;&apos;),rtiapstid_desc(chr30|&apos;&apos;),rtiasite_desc(chr30|&apos;&apos;),mmaf_t_mmaf004(mmaf004|mmaf_t.mmaf004),mmaf_t_mmaf008(mmaf008|mmaf_t.mmaf008),mmaf_t_mmaf014(mmaf014|mmaf_t.mmaf014),mmeb001,mmeb002,mmeb005,mmeb006,mmeb008,mmeb009,mmeb012,mmebsite,rtia041,rtiadocdt,rtiadocno,rtiapstdt,rtiapstid,rtiasite"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_order(chr50|&apos;&apos;),rtiaent,mmeb009_desc(chr30|&apos;&apos;),mmeb002_desc(chr30|&apos;&apos;),mmebsite_desc(chr30|&apos;&apos;),rtiapstid_desc(chr30|&apos;&apos;),rtiasite_desc(chr30|&apos;&apos;),mmaf_t_mmaf004(mmaf004|mmaf_t.mmaf004),mmaf_t_mmaf008(mmaf008|mmaf_t.mmaf008),mmaf_t_mmaf014(mmaf014|mmaf_t.mmaf014),mmeb001,mmeb002,mmeb005,mmeb006,mmeb008,mmeb009,mmeb012,mmebsite,rtia041,rtiadocdt,rtiadocno,rtiapstdt,rtiapstid,rtiasite"/>
+    <sql id="g_from" query="rtia_t,mmeb_t,mmaf_t"/>
+    <sql id="g_where" query="" maintable="rtia_t"/>
+    <sql id="g_order" query="rtiadocno,mmeb001"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="l_order"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="rtiaent,l_order"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="rtiaent,l_order"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="rtiaent,l_order"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="rtiaent,l_order"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

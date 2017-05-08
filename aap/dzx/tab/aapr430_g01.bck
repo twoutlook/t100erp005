@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapr430_g01" module="aap" jobmode="N" type="g01" industry="std" crtid="04152" crtdt="2015-02-10 09:56:55" modid="07025" moddt="2016-12-07 17:48:59" sdver="7" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="apdadocno,apdadocdt,apda003,apdasite,apda018,apda021,apda020,apda014,apdaent,apdacomp,apdald,apda001,apceseq,apceorga,apce003,apce004,apce048,apce010,apce018,apce016,apce119,l_apdasite_desc(chr50|&apos;&apos;),l_apda018_desc(chr100|&apos;&apos;),l_apda021_desc(chr30|&apos;&apos;),l_apda020_desc(chr30|&apos;&apos;),l_apceorga_desc(chr30|&apos;&apos;),l_apce003_desc(chr30|&apos;&apos;),l_apce018_desc(chr30|&apos;&apos;),l_apce016_desc(chr30|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="apdadocno(apdadocno|apdadocno),apdadocdt(apdadocdt|apdadocdt),apda003(apda003|apda003),apdasite(apdasite|apdasite),apda018(apda018|apda018),apda021(apda021|apda021),apda020(apda020|apda020),apda014(apda014|apda014),apdaent(apdaent|apdaent),apdacomp(apdacomp|apdacomp),apdald(apdald|apdald),apda001(apda001|apda001),apceseq(apceseq|apceseq),apceorga(apceorga|apceorga),apce003(apce003|apce003),apce004(apce004|apce004),apce048(apce048|apce048),apce010(apce010|apce010),apce018(apce018|apce018),apce016(apce016|apce016),apce119(apce119|apce119),l_apdasite_desc(chr50|&apos;&apos;),l_apda018_desc(chr100|&apos;&apos;),l_apda021_desc(chr30|&apos;&apos;),l_apda020_desc(chr30|&apos;&apos;),l_apceorga_desc(chr30|&apos;&apos;),l_apce003_desc(chr30|&apos;&apos;),l_apce018_desc(chr30|&apos;&apos;),l_apce016_desc(chr30|&apos;&apos;)"/>
+    <sql id="g_from" query=" apda_t  LEFT OUTER JOIN ( SELECT apce_t.* FROM apce_t  ) x  ON apda_t.apdaent = x.apceent AND apda_t.apdald = x.apceld AND apda_t.apdadocno = x.apcedocno"/>
+    <sql id="g_where" query="" maintable="apda_t"/>
+    <sql id="g_order" query="apdadocno,apceseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="apdadocno,apceseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="apdadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="apdaent,apdadocno"/>
+      <rep type="apceseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="apdaent,apdadocno,apceseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="apdaent,apdadocno,apceseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="apdadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="apdaent,apdadocno"/>
+      <rep type="apceseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

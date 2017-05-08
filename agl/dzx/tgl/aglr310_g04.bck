@@ -1,0 +1,1013 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglr310_g04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:3(2016-11-28 16:56:11), PR版次:
+#+ Customerized Version.: SD版次:(), PR版次:
+#+ Build......: 000040
+#+ Filename...: aglr310_g04
+#+ Description: ...
+#+ Creator....: 02599(2016-05-10 17:55:40)
+#+ Modifier...: 02481 -SD/PR-
+
+{</section>}
+
+{<section id="aglr310_g04.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   glap012 LIKE glap_t.glap012, 
+   glap014 LIKE glap_t.glap014, 
+   glap015 LIKE glap_t.glap015, 
+   glaq007 LIKE glaq_t.glaq007, 
+   glaq009 LIKE glaq_t.glaq009, 
+   glaq021 LIKE glaq_t.glaq021, 
+   glapdocno LIKE glap_t.glapdocno, 
+   glapld LIKE glap_t.glapld, 
+   l_glapld_desc LIKE glaal_t.glaal002, 
+   glap004 LIKE glap_t.glap004, 
+   glap006 LIKE glap_t.glap006, 
+   glaq006 LIKE glaq_t.glaq006, 
+   glaq004 LIKE glaq_t.glaq004, 
+   glaq013 LIKE glaq_t.glaq013, 
+   glaq018 LIKE glaq_t.glaq018, 
+   glaq025 LIKE glaq_t.glaq025, 
+   glapdocdt LIKE glap_t.glapdocdt, 
+   glaq011 LIKE glaq_t.glaq011, 
+   glaq012 LIKE glaq_t.glaq012, 
+   glaq015 LIKE glaq_t.glaq015, 
+   glaq016 LIKE glaq_t.glaq016, 
+   glaq027 LIKE glaq_t.glaq027, 
+   glaq044 LIKE glaq_t.glaq044, 
+   glap007 LIKE glap_t.glap007, 
+   glap013 LIKE glap_t.glap013, 
+   glaq003 LIKE glaq_t.glaq003, 
+   glaq014 LIKE glaq_t.glaq014, 
+   glaq017 LIKE glaq_t.glaq017, 
+   glaq020 LIKE glaq_t.glaq020, 
+   glaq022 LIKE glaq_t.glaq022, 
+   glaq040 LIKE glaq_t.glaq040, 
+   glap009 LIKE glap_t.glap009, 
+   glaq039 LIKE glaq_t.glaq039, 
+   glaq042 LIKE glaq_t.glaq042, 
+   glapcomp LIKE glap_t.glapcomp, 
+   glapstus LIKE glap_t.glapstus, 
+   glaq010 LIKE glaq_t.glaq010, 
+   glaq024 LIKE glaq_t.glaq024, 
+   glaq043 LIKE glaq_t.glaq043, 
+   glaqseq LIKE glaq_t.glaqseq, 
+   glap001 LIKE glap_t.glap001, 
+   glap002 LIKE glap_t.glap002, 
+   glaq001 LIKE glaq_t.glaq001, 
+   glaq019 LIKE glaq_t.glaq019, 
+   glaq023 LIKE glaq_t.glaq023, 
+   glaq028 LIKE glaq_t.glaq028, 
+   glap008 LIKE glap_t.glap008, 
+   glap010 LIKE glap_t.glap010, 
+   glap011 LIKE glap_t.glap011, 
+   glaq005 LIKE glaq_t.glaq005, 
+   glaq002 LIKE glaq_t.glaq002, 
+   l_first LIKE type_t.chr30, 
+   glaq008 LIKE glaq_t.glaq008, 
+   glaq041 LIKE glaq_t.glaq041, 
+   glaqcomp LIKE glaq_t.glaqcomp, 
+   l_glapcomp_desc LIKE ooefl_t.ooefl004, 
+   glapcnfid LIKE glap_t.glapcnfid, 
+   glappstid LIKE glap_t.glappstid, 
+   glapcrtid LIKE glap_t.glapcrtid, 
+   glapent LIKE glap_t.glapent, 
+   glaq051 LIKE glaq_t.glaq051, 
+   glaq052 LIKE glaq_t.glaq052, 
+   glaq053 LIKE glaq_t.glaq053, 
+   l_glaq003_fmt LIKE type_t.chr30, 
+   glaq029 LIKE glaq_t.glaq029, 
+   glaq030 LIKE glaq_t.glaq030, 
+   glaq031 LIKE glaq_t.glaq031, 
+   glaq032 LIKE glaq_t.glaq032, 
+   glaq033 LIKE glaq_t.glaq033, 
+   glaq034 LIKE glaq_t.glaq034, 
+   glaq035 LIKE glaq_t.glaq035, 
+   glaq036 LIKE glaq_t.glaq036, 
+   glaq037 LIKE glaq_t.glaq037, 
+   glaq038 LIKE glaq_t.glaq038, 
+   l_yy LIKE type_t.num5, 
+   l_mm LIKE type_t.num5, 
+   l_dd LIKE type_t.num5, 
+   l_first_account LIKE type_t.chr500, 
+   l_part_account LIKE type_t.chr500, 
+   l_master LIKE type_t.chr500, 
+   l_checker LIKE type_t.chr500, 
+   l_printer LIKE type_t.chr500
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+
+{</section>}
+
+{<section id="aglr310_g04.main" readonly="Y" >}
+PUBLIC FUNCTION aglr310_g04(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define (客製用) name="component_name.define_customerization"
+{<point name="component_name.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+{<point name="component_name.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   {<point name="component.arg.prep" />}
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "aglr310_g04"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL aglr310_g04_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL aglr310_g04_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL aglr310_g04_rep_data()
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="aglr310_g04.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aglr310_g04_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   {<point name="sel_prep.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   {<point name="sel_prep.define"/>}
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT glap012,glap014,glap015,glaq007,glaq009,glaq021,glapdocno,glapld,'',glap004, 
+       glap006,glaq006,glaq004,glaq013,glaq018,glaq025,glapdocdt,glaq011,glaq012,glaq015,glaq016,glaq027, 
+       glaq044,glap007,glap013,glaq003,glaq014,glaq017,glaq020,glaq022,glaq040,glap009,glaq039,glaq042, 
+       glapcomp,glapstus,glaq010,glaq024,glaq043,glaqseq,glap001,glap002,glaq001,glaq019,glaq023,glaq028, 
+       glap008,glap010,glap011,glaq005,glaq002,NULL,glaq008,glaq041,glaqcomp,NULL,glapcnfid,glappstid, 
+       glapcrtid,glapent,glaq051,glaq052,glaq053,'',glaq029,glaq030,glaq031,glaq032,glaq033,glaq034, 
+       glaq035,glaq036,glaq037,glaq038,NULL,NULL,NULL,'','','','',''"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM glap_t,glaq_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+    LET g_order = " ORDER BY glapdocno,glaqseq"
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("glap_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE aglr310_g04_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE aglr310_g04_curs CURSOR FOR aglr310_g04_prepare
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="aglr310_g04.ins_data" readonly="Y" >}
+PRIVATE FUNCTION aglr310_g04_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   glap012 LIKE glap_t.glap012, 
+   glap014 LIKE glap_t.glap014, 
+   glap015 LIKE glap_t.glap015, 
+   glaq007 LIKE glaq_t.glaq007, 
+   glaq009 LIKE glaq_t.glaq009, 
+   glaq021 LIKE glaq_t.glaq021, 
+   glapdocno LIKE glap_t.glapdocno, 
+   glapld LIKE glap_t.glapld, 
+   l_glapld_desc LIKE glaal_t.glaal002, 
+   glap004 LIKE glap_t.glap004, 
+   glap006 LIKE glap_t.glap006, 
+   glaq006 LIKE glaq_t.glaq006, 
+   glaq004 LIKE glaq_t.glaq004, 
+   glaq013 LIKE glaq_t.glaq013, 
+   glaq018 LIKE glaq_t.glaq018, 
+   glaq025 LIKE glaq_t.glaq025, 
+   glapdocdt LIKE glap_t.glapdocdt, 
+   glaq011 LIKE glaq_t.glaq011, 
+   glaq012 LIKE glaq_t.glaq012, 
+   glaq015 LIKE glaq_t.glaq015, 
+   glaq016 LIKE glaq_t.glaq016, 
+   glaq027 LIKE glaq_t.glaq027, 
+   glaq044 LIKE glaq_t.glaq044, 
+   glap007 LIKE glap_t.glap007, 
+   glap013 LIKE glap_t.glap013, 
+   glaq003 LIKE glaq_t.glaq003, 
+   glaq014 LIKE glaq_t.glaq014, 
+   glaq017 LIKE glaq_t.glaq017, 
+   glaq020 LIKE glaq_t.glaq020, 
+   glaq022 LIKE glaq_t.glaq022, 
+   glaq040 LIKE glaq_t.glaq040, 
+   glap009 LIKE glap_t.glap009, 
+   glaq039 LIKE glaq_t.glaq039, 
+   glaq042 LIKE glaq_t.glaq042, 
+   glapcomp LIKE glap_t.glapcomp, 
+   glapstus LIKE glap_t.glapstus, 
+   glaq010 LIKE glaq_t.glaq010, 
+   glaq024 LIKE glaq_t.glaq024, 
+   glaq043 LIKE glaq_t.glaq043, 
+   glaqseq LIKE glaq_t.glaqseq, 
+   glap001 LIKE glap_t.glap001, 
+   glap002 LIKE glap_t.glap002, 
+   glaq001 LIKE glaq_t.glaq001, 
+   glaq019 LIKE glaq_t.glaq019, 
+   glaq023 LIKE glaq_t.glaq023, 
+   glaq028 LIKE glaq_t.glaq028, 
+   glap008 LIKE glap_t.glap008, 
+   glap010 LIKE glap_t.glap010, 
+   glap011 LIKE glap_t.glap011, 
+   glaq005 LIKE glaq_t.glaq005, 
+   glaq002 LIKE glaq_t.glaq002, 
+   l_first LIKE type_t.chr30, 
+   glaq008 LIKE glaq_t.glaq008, 
+   glaq041 LIKE glaq_t.glaq041, 
+   glaqcomp LIKE glaq_t.glaqcomp, 
+   l_glapcomp_desc LIKE ooefl_t.ooefl004, 
+   glapcnfid LIKE glap_t.glapcnfid, 
+   glappstid LIKE glap_t.glappstid, 
+   glapcrtid LIKE glap_t.glapcrtid, 
+   glapent LIKE glap_t.glapent, 
+   glaq051 LIKE glaq_t.glaq051, 
+   glaq052 LIKE glaq_t.glaq052, 
+   glaq053 LIKE glaq_t.glaq053, 
+   l_glaq003_fmt LIKE type_t.chr30, 
+   glaq029 LIKE glaq_t.glaq029, 
+   glaq030 LIKE glaq_t.glaq030, 
+   glaq031 LIKE glaq_t.glaq031, 
+   glaq032 LIKE glaq_t.glaq032, 
+   glaq033 LIKE glaq_t.glaq033, 
+   glaq034 LIKE glaq_t.glaq034, 
+   glaq035 LIKE glaq_t.glaq035, 
+   glaq036 LIKE glaq_t.glaq036, 
+   glaq037 LIKE glaq_t.glaq037, 
+   glaq038 LIKE glaq_t.glaq038, 
+   l_yy LIKE type_t.num5, 
+   l_mm LIKE type_t.num5, 
+   l_dd LIKE type_t.num5, 
+   l_first_account LIKE type_t.chr500, 
+   l_part_account LIKE type_t.chr500, 
+   l_master LIKE type_t.chr500, 
+   l_checker LIKE type_t.chr500, 
+   l_printer LIKE type_t.chr500
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+{<point name="ins_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH aglr310_g04_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].glap012 = sr_s.glap012
+       LET sr[l_cnt].glap014 = sr_s.glap014
+       LET sr[l_cnt].glap015 = sr_s.glap015
+       LET sr[l_cnt].glaq007 = sr_s.glaq007
+       LET sr[l_cnt].glaq009 = sr_s.glaq009
+       LET sr[l_cnt].glaq021 = sr_s.glaq021
+       LET sr[l_cnt].glapdocno = sr_s.glapdocno
+       LET sr[l_cnt].glapld = sr_s.glapld
+       LET sr[l_cnt].l_glapld_desc = sr_s.l_glapld_desc
+       LET sr[l_cnt].glap004 = sr_s.glap004
+       LET sr[l_cnt].glap006 = sr_s.glap006
+       LET sr[l_cnt].glaq006 = sr_s.glaq006
+       LET sr[l_cnt].glaq004 = sr_s.glaq004
+       LET sr[l_cnt].glaq013 = sr_s.glaq013
+       LET sr[l_cnt].glaq018 = sr_s.glaq018
+       LET sr[l_cnt].glaq025 = sr_s.glaq025
+       LET sr[l_cnt].glapdocdt = sr_s.glapdocdt
+       LET sr[l_cnt].glaq011 = sr_s.glaq011
+       LET sr[l_cnt].glaq012 = sr_s.glaq012
+       LET sr[l_cnt].glaq015 = sr_s.glaq015
+       LET sr[l_cnt].glaq016 = sr_s.glaq016
+       LET sr[l_cnt].glaq027 = sr_s.glaq027
+       LET sr[l_cnt].glaq044 = sr_s.glaq044
+       LET sr[l_cnt].glap007 = sr_s.glap007
+       LET sr[l_cnt].glap013 = sr_s.glap013
+       LET sr[l_cnt].glaq003 = sr_s.glaq003
+       LET sr[l_cnt].glaq014 = sr_s.glaq014
+       LET sr[l_cnt].glaq017 = sr_s.glaq017
+       LET sr[l_cnt].glaq020 = sr_s.glaq020
+       LET sr[l_cnt].glaq022 = sr_s.glaq022
+       LET sr[l_cnt].glaq040 = sr_s.glaq040
+       LET sr[l_cnt].glap009 = sr_s.glap009
+       LET sr[l_cnt].glaq039 = sr_s.glaq039
+       LET sr[l_cnt].glaq042 = sr_s.glaq042
+       LET sr[l_cnt].glapcomp = sr_s.glapcomp
+       LET sr[l_cnt].glapstus = sr_s.glapstus
+       LET sr[l_cnt].glaq010 = sr_s.glaq010
+       LET sr[l_cnt].glaq024 = sr_s.glaq024
+       LET sr[l_cnt].glaq043 = sr_s.glaq043
+       LET sr[l_cnt].glaqseq = sr_s.glaqseq
+       LET sr[l_cnt].glap001 = sr_s.glap001
+       LET sr[l_cnt].glap002 = sr_s.glap002
+       LET sr[l_cnt].glaq001 = sr_s.glaq001
+       LET sr[l_cnt].glaq019 = sr_s.glaq019
+       LET sr[l_cnt].glaq023 = sr_s.glaq023
+       LET sr[l_cnt].glaq028 = sr_s.glaq028
+       LET sr[l_cnt].glap008 = sr_s.glap008
+       LET sr[l_cnt].glap010 = sr_s.glap010
+       LET sr[l_cnt].glap011 = sr_s.glap011
+       LET sr[l_cnt].glaq005 = sr_s.glaq005
+       LET sr[l_cnt].glaq002 = sr_s.glaq002
+       LET sr[l_cnt].l_first = sr_s.l_first
+       LET sr[l_cnt].glaq008 = sr_s.glaq008
+       LET sr[l_cnt].glaq041 = sr_s.glaq041
+       LET sr[l_cnt].glaqcomp = sr_s.glaqcomp
+       LET sr[l_cnt].l_glapcomp_desc = sr_s.l_glapcomp_desc
+       LET sr[l_cnt].glapcnfid = sr_s.glapcnfid
+       LET sr[l_cnt].glappstid = sr_s.glappstid
+       LET sr[l_cnt].glapcrtid = sr_s.glapcrtid
+       LET sr[l_cnt].glapent = sr_s.glapent
+       LET sr[l_cnt].glaq051 = sr_s.glaq051
+       LET sr[l_cnt].glaq052 = sr_s.glaq052
+       LET sr[l_cnt].glaq053 = sr_s.glaq053
+       LET sr[l_cnt].l_glaq003_fmt = sr_s.l_glaq003_fmt
+       LET sr[l_cnt].glaq029 = sr_s.glaq029
+       LET sr[l_cnt].glaq030 = sr_s.glaq030
+       LET sr[l_cnt].glaq031 = sr_s.glaq031
+       LET sr[l_cnt].glaq032 = sr_s.glaq032
+       LET sr[l_cnt].glaq033 = sr_s.glaq033
+       LET sr[l_cnt].glaq034 = sr_s.glaq034
+       LET sr[l_cnt].glaq035 = sr_s.glaq035
+       LET sr[l_cnt].glaq036 = sr_s.glaq036
+       LET sr[l_cnt].glaq037 = sr_s.glaq037
+       LET sr[l_cnt].glaq038 = sr_s.glaq038
+       LET sr[l_cnt].l_yy = sr_s.l_yy
+       LET sr[l_cnt].l_mm = sr_s.l_mm
+       LET sr[l_cnt].l_dd = sr_s.l_dd
+       LET sr[l_cnt].l_first_account = sr_s.l_first_account
+       LET sr[l_cnt].l_part_account = sr_s.l_part_account
+       LET sr[l_cnt].l_master = sr_s.l_master
+       LET sr[l_cnt].l_checker = sr_s.l_checker
+       LET sr[l_cnt].l_printer = sr_s.l_printer
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    {<point name="ins_data.after"/>}
+    #end add-point
+END FUNCTION
+
+{</section>}
+
+{<section id="aglr310_g04.rep_data" readonly="Y" >}
+PRIVATE FUNCTION aglr310_g04_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       {<point name="rep_data.before"/>}
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT aglr310_g04_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT aglr310_g04_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT aglr310_g04_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       {<point name="rep_data.after"/>}
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    {<point name="rep_data.end.before"/>}
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    {<point name="rep_data.end.after"/>}
+    #end add-point    
+END FUNCTION
+
+{</section>}
+
+{<section id="aglr310_g04.rep" readonly="Y" >}
+PRIVATE REPORT aglr310_g04_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+{<point name="rep.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+{<point name="rep.define"/>}
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    {<point name="rep.order.before" mark="Y"/>}
+    #end add-point
+    ORDER  BY sr1.glapdocno,sr1.glaqseq
+    #add-point:rep段ORDER_after name="rep.order.after"
+    {<point name="rep.order.after"/>}
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.glapdocno
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            {<point name="rep.header"  mark="Y"/>}
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.glapdocno
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+            {<point name="rep.apr.signstr.before"  mark="Y"/>}              
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'glapent=' ,sr1.glapent,'{+}glapld=' ,sr1.glapld,'{+}glapdocno=' ,sr1.glapdocno         
+            CALL cl_gr_init_apr(sr1.glapdocno)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+            {<point name="rep.apr.signstr"/>}              
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.glapdocno.before name="rep.b_group.glapdocno.before"
+           {<point name="rep.b_group.glapdocno.before"/>}
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           {<point name="rep.sub01.before"/>}
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           {<point name="rep.sub01.sql" mark="Y"/>}
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", 
+                sr1.glapent CLIPPED ,"'", " AND  ooff003 = '", sr1.glapdocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           {<point name="rep.sub01.afsql"/>}
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aglr310_g04_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE aglr310_g04_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT aglr310_g04_subrep01
+           DECLARE aglr310_g04_repcur01 CURSOR FROM g_sql
+           FOREACH aglr310_g04_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aglr310_g04_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              {<point name="rep.sub01.foreach"/>}
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT aglr310_g04_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT aglr310_g04_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           {<point name="rep.sub01.after"/>}
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.glapdocno.after name="rep.b_group.glapdocno.after"
+           {<point name="rep.b_group.glapdocno.after"/>}
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.glaqseq
+ 
+           #add-point:rep.b_group.glaqseq.before name="rep.b_group.glaqseq.before"
+           {<point name="rep.b_group.glaqseq.before"/>}
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.glaqseq.after name="rep.b_group.glaqseq.after"
+           {<point name="rep.b_group.glaqseq.after"/>}
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          {<point name="rep.everyrow.before"/>}
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           {<point name="rep.sub02.before"/>}
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           {<point name="rep.sub02.sql" mark="Y"/>}
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.glapent CLIPPED ,"'", " AND  ooff003 = '", sr1.glapdocno CLIPPED ,"'", " AND  ooff004 = ", 
+                sr1.glaqseq CLIPPED ,""
+ 
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           {<point name="rep.sub02.afsql"/>}
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aglr310_g04_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE aglr310_g04_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT aglr310_g04_subrep02
+           DECLARE aglr310_g04_repcur02 CURSOR FROM g_sql
+           FOREACH aglr310_g04_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aglr310_g04_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              {<point name="rep.sub02.foreach"/>}
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT aglr310_g04_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT aglr310_g04_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           {<point name="rep.sub02.after"/>}
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          {<point name="rep.everyrow.beforerow"/>}
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          {<point name="rep.everyrow.afterrow"/>}
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           {<point name="rep.sub03.before"/>}
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           {<point name="rep.sub03.sql" mark="Y"/>}
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooffent = '", 
+                sr1.glapent CLIPPED ,"'", " AND  ooff003 = '", sr1.glapdocno CLIPPED ,"'", " AND  ooff004 = ", 
+                sr1.glaqseq CLIPPED ,""
+ 
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           {<point name="rep.sub03.afsql"/>}
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aglr310_g04_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE aglr310_g04_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT aglr310_g04_subrep03
+           DECLARE aglr310_g04_repcur03 CURSOR FROM g_sql
+           FOREACH aglr310_g04_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aglr310_g04_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              {<point name="rep.sub03.foreach"/>}
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT aglr310_g04_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT aglr310_g04_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           {<point name="rep.sub03.after"/>}
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          {<point name="rep.everyrow.after"/>}
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.glapdocno
+ 
+           #add-point:rep.a_group.glapdocno.before name="rep.a_group.glapdocno.before"
+           {<point name="rep.a_group.glapdocno.before"/>}
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           {<point name="rep.sub04.before"/>}
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           {<point name="rep.sub04.sql" mark="Y"/>}
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", 
+                sr1.glapent CLIPPED ,"'", " AND  ooff003 = '", sr1.glapdocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           {<point name="rep.sub04.afsql"/>}
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aglr310_g04_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE aglr310_g04_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT aglr310_g04_subrep04
+           DECLARE aglr310_g04_repcur04 CURSOR FROM g_sql
+           FOREACH aglr310_g04_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aglr310_g04_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              {<point name="rep.sub04.foreach"/>}
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT aglr310_g04_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT aglr310_g04_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           {<point name="rep.sub04.after"/>}
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.glapdocno.after name="rep.a_group.glapdocno.after"
+           {<point name="rep.a_group.glapdocno.after"/>}
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.glaqseq
+ 
+           #add-point:rep.a_group.glaqseq.before name="rep.a_group.glaqseq.before"
+           {<point name="rep.a_group.glaqseq.before"/>}
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.glaqseq.after name="rep.a_group.glaqseq.after"
+           {<point name="rep.a_group.glaqseq.after"/>}
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+            {<point name="rep.lastrow.before"/>}        
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            {<point name="rep.lastrow.after"/>}
+            #end add-point :rep.lastrow.after
+END REPORT
+
+{</section>}
+
+{<section id="aglr310_g04.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aglr310_g04_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+{<point name="sub01.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+{<point name="sub01.define"/>}
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    {<point name="sub01.order.before"/>}
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+            {<point name="sub01.everyrow.before"/>}              
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            {<point name="sub01.everyrow.after"/>}
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aglr310_g04_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+{<point name="sub02.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+{<point name="sub02.define"/>}
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    {<point name="sub02.order.before"/>}
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+            {<point name="sub02.everyrow.before"/>}              
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            {<point name="sub02.everyrow.after"/>}
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aglr310_g04_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+{<point name="sub03.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+{<point name="sub03.define"/>}
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    {<point name="sub03.order.before"/>}
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+            {<point name="sub03.everyrow.before"/>}              
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            {<point name="sub03.everyrow.after"/>}
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aglr310_g04_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+{<point name="sub04.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+{<point name="sub04.define"/>}
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    {<point name="sub04.order.before"/>}
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+            {<point name="sub04.everyrow.before"/>}              
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            {<point name="sub04.everyrow.after"/>}
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="aglr310_g04.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+
+{<section id="aglr310_g04.other_report" readonly="Y" >}
+{<point name="other.report"/>}
+
+{</section>}
+

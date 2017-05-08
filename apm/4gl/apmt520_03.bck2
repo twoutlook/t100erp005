@@ -1,0 +1,2569 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmt520_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0017(2016-06-29 14:02:06), PR版次:0017(2016-08-10 16:28:33)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000269
+#+ Filename...: apmt520_03
+#+ Description: 多庫儲批收貨
+#+ Creator....: 02294(2014-04-29 16:46:19)
+#+ Modifier...: 07024 -SD/PR- 02294
+ 
+{</section>}
+ 
+{<section id="apmt520_03.global" >}
+#應用 c02b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160122-00017#1   2016/02/02  By lixiang   储位管理若设置事前定义时，才需检验储位是否存在储位基本资料档中
+#160127-00018#1   2016/02/02  By lixiang   并入#160122-00017#1一并调整
+#160316-00007#3   2016/03/16  By lixiang   製造批序號相關的邏輯加上對庫存管理特徵的處理
+#160407-00028#1   2016/04/07  By lixiang   收货单走制造批序号时，验退单、入库单更改库储批栏位不需弹出提示
+#160411-00017#1   2016/04/13  By lixiang   修正倉退單在挑選製造批序號時的操作方式
+#160318-00025#20  2016/04/18  BY 07900     校验代码重复错误讯息的修改
+#160617-00005#2   2016/06/27  By lixiang   輸入收貨、入庫明細時， 使用多庫儲批時，同一項次的批號一樣。即第一層(收貨、入庫明細)編好後直接給多庫儲批的批號
+#160512-00004#6   2016/06/29  By dorislai  1.新增欄位-製造日期(pmdu202) 2.檢查是否為 有效日期>製造日期
+#160519-00022#2   2016/06/30  By xianghui  入库单apmt530/apmt532/pmat570添加批号控管
+#160801-00043#1   2016/08/10  By lixiang   收貨入庫單的採購性質為"3.VMI採購"時，單身的庫位僅能選"VMI存貨庫位";反之非VMI採購，不可選VMI相關庫位
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pmdu_d        RECORD
+       pmduseq1 LIKE pmdu_t.pmduseq1, 
+   pmdu005 LIKE pmdu_t.pmdu005, 
+   pmdu006 LIKE pmdu_t.pmdu006, 
+   pmdu006_desc LIKE type_t.chr500, 
+   pmdu007 LIKE pmdu_t.pmdu007, 
+   pmdu007_desc LIKE type_t.chr500, 
+   pmdu008 LIKE pmdu_t.pmdu008, 
+   pmdu009 LIKE pmdu_t.pmdu009, 
+   pmdu009_desc LIKE type_t.chr500, 
+   pmdu010 LIKE pmdu_t.pmdu010, 
+   pmdu011 LIKE pmdu_t.pmdu011, 
+   pmdu011_desc LIKE type_t.chr500, 
+   pmdu012 LIKE pmdu_t.pmdu012, 
+   pmdu202 LIKE pmdu_t.pmdu202, 
+   pmdu017 LIKE pmdu_t.pmdu017, 
+   pmdu016 LIKE pmdu_t.pmdu016
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_pmdu_d_o        type_g_pmdu_d
+
+DEFINE g_pmdsdocno    LIKE pmds_t.pmdsdocno
+DEFINE g_pmdtseq      LIKE pmdt_t.pmdtseq
+DEFINE g_pmdt006      LIKE pmdt_t.pmdt006
+DEFINE g_pmdt007      LIKE pmdt_t.pmdt007
+DEFINE g_pmdt009      LIKE pmdt_t.pmdt009
+DEFINE g_pmdt010      LIKE pmdt_t.pmdt010
+DEFINE g_pmdt019      LIKE pmdt_t.pmdt019
+DEFINE g_pmdt020      LIKE pmdt_t.pmdt020
+DEFINE g_pmdt021      LIKE pmdt_t.pmdt021
+DEFINE g_pmdt028      LIKE pmdt_t.pmdt028
+DEFINE g_pmdt081      LIKE pmdt_t.pmdt081
+DEFINE g_pmdt082      LIKE pmdt_t.pmdt082
+DEFINE g_pmdt072      LIKE pmdt_t.pmdt072
+
+DEFINE g_pmdu_m        RECORD
+   pmdusite LIKE pmdu_t.pmdusite,
+   pmdudocno LIKE pmdu_t.pmdudocno,
+   pmduseq LIKE pmdu_t.pmduseq, 
+   pmdu001 LIKE pmdu_t.pmdu001, 
+   imaal003 LIKE imaal_t.imaal003,
+   imaal004 LIKE imaal_t.imaal004,
+   pmdu002 LIKE pmdu_t.pmdu002,
+   pmdu002_desc LIKE type_t.chr80,   
+   pmdu003 LIKE pmdu_t.pmdu003, 
+   pmdu004 LIKE pmdu_t.pmdu004,
+   pmdt019 LIKE pmdt_t.pmdt019,
+   pmdt019_desc LIKE oocal_t.oocal003,
+   pmdt020 LIKE pmdt_t.pmdt020
+       END RECORD
+ 
+DEFINE g_bas_0043  LIKE type_t.chr80   #160801-00043#1
+DEFINE g_pmds011   LIKE pmds_t.pmds011 #160801-00043#1
+#end add-point
+ 
+DEFINE g_pmdu_d          DYNAMIC ARRAY OF type_g_pmdu_d
+DEFINE g_pmdu_d_t        type_g_pmdu_d
+ 
+ 
+DEFINE g_pmdudocno_t   LIKE pmdu_t.pmdudocno    #Key值備份
+DEFINE g_pmduseq_t      LIKE pmdu_t.pmduseq    #Key值備份
+DEFINE g_pmduseq1_t      LIKE pmdu_t.pmduseq1    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="apmt520_03.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION apmt520_03(--)
+   #add-point:input段變數傳入
+   p_type,p_pmdsdocno,p_pmdtseq,p_pmdt006,p_pmdt007,p_pmdt009,p_pmdt010,p_pmdt019,p_pmdt020,p_pmdt021,p_pmdt028,p_pmdt081,p_pmdt082,p_pmdt072
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_type          LIKE type_t.chr1   #判斷是透過ACTION 來執行，還是程序中直接開啟
+   DEFINE p_pmdsdocno     LIKE pmds_t.pmdsdocno
+   DEFINE p_pmdtseq       LIKE pmdt_t.pmdtseq
+   DEFINE p_pmdt006       LIKE pmdt_t.pmdt006
+   DEFINE p_pmdt007       LIKE pmdt_t.pmdt007
+   DEFINE p_pmdt009       LIKE pmdt_t.pmdt009
+   DEFINE p_pmdt010       LIKE pmdt_t.pmdt010
+   DEFINE p_pmdt019       LIKE pmdt_t.pmdt019
+   DEFINE p_pmdt020       LIKE pmdt_t.pmdt020
+   DEFINE p_pmdt021       LIKE pmdt_t.pmdt021
+   DEFINE p_pmdt028       LIKE pmdt_t.pmdt028
+   DEFINE p_pmdt081       LIKE pmdt_t.pmdt081
+   DEFINE p_pmdt082       LIKE pmdt_t.pmdt082
+   DEFINE p_pmdt072       LIKE pmdt_t.pmdt072   #專案編號
+   DEFINE l_sql           STRING
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_imaf082       LIKE imaf_t.imaf082
+   DEFINE l_pmdu010       LIKE pmdu_t.pmdu010
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_rate          LIKE inaj_t.inaj014
+   DEFINE l_pmds000       LIKE pmds_t.pmds000
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_pmdsdocdt     LIKE pmds_t.pmdsdocdt
+   DEFINE l_pmdu010_1     LIKE pmdu_t.pmdu010
+   DEFINE l_imaf071       LIKE imaf_t.imaf071
+   DEFINE l_imaf081       LIKE imaf_t.imaf081
+   DEFINE l_amount        LIKE pmdt_t.pmdt020
+   DEFINE l_pmds006       LIKE pmds_t.pmds006
+   DEFINE l_pmds007       LIKE pmds_t.pmds007
+   DEFINE l_pmdt028       LIKE pmdt_t.pmdt028
+   DEFINE l_pmdt026       LIKE pmdt_t.pmdt026
+   DEFINE l_pmdt081       LIKE pmdt_t.pmdt081
+   DEFINE l_pmdt082       LIKE pmdt_t.pmdt082
+   DEFINE l_inao013       LIKE inao_t.inao013
+   DEFINE l_pmdtdocno     LIKE pmdt_t.pmdtdocno
+   DEFINE l_pmdtseq_1     LIKE pmdt_t.pmdtseq
+   DEFINE l_inaa007       LIKE inaa_t.inaa007 
+   DEFINE l_imaf064       LIKE imaf_t.imaf064  #160519-00022#7
+   DEFINE l_imaf061       LIKE imaf_t.imaf061  #160519-00022#7   
+   DEFINE l_cnt           LIKE type_t.num10  #160519-00022#7   
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmt520_03 WITH FORM cl_ap_formpath("apm","apmt520_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   LET r_success = TRUE
+   
+   LET g_pmdsdocno = p_pmdsdocno
+   LET g_pmdtseq = p_pmdtseq
+   
+   LET g_pmdt006 = p_pmdt006
+   LET g_pmdt007 = p_pmdt007
+   LET g_pmdt009 = p_pmdt009
+   LET g_pmdt010 = p_pmdt010
+   LET g_pmdt019 = p_pmdt019
+   LET g_pmdt020 = p_pmdt020
+   LET g_pmdt021 = p_pmdt021
+   LET g_pmdt028 = p_pmdt028
+   LET g_pmdt081 = p_pmdt081
+   LET g_pmdt082 = p_pmdt082
+   LET g_pmdt072 = p_pmdt072
+   
+   #如果是程序中調用的，有非多庫儲批 --> 多庫儲批，先刪除之前維護的資料
+   #IF p_type = '1' THEN
+   #   DELETE FROM pmdu_t WHERE pmduent = g_enterprise AND pmdudocno = g_pmdsdocno AND pmduseq = g_pmdtseq
+   #END IF
+   
+   #委外時顯示作業編號和製程序
+   SELECT pmds000 INTO l_pmds000 FROM pmds_t WHERE pmdsent = g_enterprise AND pmdsdocno = g_pmdsdocno
+   IF l_pmds000 MATCHES '[1234567]' THEN
+       CALL cl_set_comp_visible("pmdu003,pmdu004,lbl_pmdu003,lbl_pmdu004",FALSE)
+   END IF
+   
+   #判斷據點參數若不使用參考單位時，則參考單位、數量需隱藏不可以維護(據點參數:S-BAS-0028)
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0028') = 'N' THEN
+      CALL cl_set_comp_visible("pmdu011,pmdu011_desc,pmdu012",FALSE)
+   END IF
+
+   #判斷據點參數若不使用產品特徵時，則產品特徵需隱藏不可以維護(據點參數:S-BAS-0036)
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0036') = 'N' THEN
+      CALL cl_set_comp_visible("pmdu002,pmdu002_desc",FALSE)
+   END IF
+   
+   #160801-00043#1--s 
+   LET g_bas_0043 = ''
+   LET g_bas_0043 = cl_get_para(g_enterprise,g_site,'S-BAS-0043')  #VMI存貨庫位Tag
+   SELECT pmds011 INTO g_pmds011 FROM pmds_t WHERE pmdsent = g_enterprise AND pmdsdocno = g_pmdsdocno
+   #160801-00043#1--e
+   
+   CALL apmt520_03_master_show()
+   SELECT pmds006,pmds007 INTO l_pmds006,l_pmds007 FROM pmds_t WHERE pmdsent = g_enterprise AND pmdsdocno = g_pmdsdocno
+   SELECT pmdt026,pmdt081,pmdt082,pmdt028 INTO l_pmdt026,l_pmdt081,l_pmdt082,l_pmdt028 FROM pmdt_t WHERE pmdtent = g_enterprise AND pmdtdocno = g_pmdsdocno AND pmdtseq = g_pmdtseq
+   IF cl_null(l_pmdt081) OR cl_null(l_pmdt082) OR l_pmdt082 = 0 THEN
+      LET l_pmdt081 = g_pmdt081
+      LET l_pmdt082 = g_pmdt082
+   END IF
+   IF cl_null(l_pmdt028) OR l_pmdt028 = 0 THEN
+      LET l_pmdt028 = g_pmdt028
+   END IF
+                     
+   
+   #LET l_sql = "SELECT pmdssite,pmdsdocno,'',pmdsdocdt,'',pmds002,'','','',pmds001,'',pmds003, ",
+   #            " '',pmdsstus,pmds006,pmds007,'',pmds008,'',pmds009,'',pmds010,pmds000,pmds100,pmds011,pmds081, ",
+   #            "pmds045,pmds021,pmds022,pmds023,pmds024,pmds031,'',pmds032,'',pmds033,'',pmds034,pmds035,pmds036, ",
+   #            "pmds037,'',pmds038,pmds039,'',pmds040,'',pmds048,pmds047,pmds049,pmds041,pmds042,pmds043,pmds044, ",
+   #            "pmds046,pmdsownid,'',pmdsowndp,'',pmdscrtid,'',pmdscrtdp,'',pmdscrtdt,pmdsmodid,'',pmdsmoddt, ",
+   #            "pmdscnfid,'',pmdscnfdt,pmdspstid,'',pmdspstdt FROM pmds_t WHERE pmdsent= ? AND pmdsdocno=? "
+   #
+   #LET l_sql = cl_sql_forupd(l_sql)                #轉換不同資料庫語法
+   ##LET l_sql = cl_sql_add_mask(l_sql)
+   #DECLARE apmt520_03_cl CURSOR FROM l_sql
+   #OPEN apmt520_03_cl USING g_enterprise,g_pmdsdocno
+   #160512-00004#6-add-'pmdu202'
+   LET l_sql = "SELECT pmduseq1,pmdu005,pmdu006,'',pmdu007,'',pmdu008,pmdu009,'',pmdu010,pmdu011,'',pmdu012,pmdu202,pmdu017,pmdu016 ",
+               " FROM pmdu_t WHERE pmduent= ? AND pmdudocno=? AND pmduseq = ? AND pmduseq1 = ? FOR UPDATE "
+   
+   LET l_sql = cl_sql_forupd(l_sql)                #轉換不同資料庫語法
+   LET l_sql = cl_sql_add_mask(l_sql)
+   DECLARE apmt520_03_bcl CURSOR FROM l_sql
+   
+   CALL apmt520_03_b_fill()
+   
+   LET g_errshow = 1
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_pmdu_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+
+            #CALL s_transaction_begin()
+            #OPEN apmt520_03_cl USING g_enterprise,g_pmdsdocno
+
+            #IF STATUS THEN
+            #   INITIALIZE g_errparam TO NULL
+            #   LET g_errparam.code =  STATUS
+            #   LET g_errparam.extend = "OPEN apmt520_03_cl:"
+            #   LET g_errparam.popup = TRUE
+            #   CALL cl_err()
+            #
+            #   CLOSE apmt520_03_cl
+            #   CALL s_transaction_end('N','0')
+            #   RETURN
+            #END IF
+
+            LET g_rec_b = g_pmdu_d.getLength()
+
+            IF g_rec_b >= l_ac
+               AND g_pmdu_d[l_ac].pmduseq1 IS NOT NULL
+
+            THEN
+               LET l_cmd='u'
+               LET g_pmdu_d_t.* = g_pmdu_d[l_ac].*
+               LET g_pmdu_d_o.* = g_pmdu_d[l_ac].*
+               
+               OPEN apmt520_03_bcl USING g_enterprise,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "apmt520_03_bcl"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apmt520_03_bcl INTO g_pmdu_d[l_ac].pmduseq1,g_pmdu_d[l_ac].pmdu005,
+                      g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu006_desc,g_pmdu_d[l_ac].pmdu007,
+                      g_pmdu_d[l_ac].pmdu007_desc,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,
+                      g_pmdu_d[l_ac].pmdu009_desc,g_pmdu_d[l_ac].pmdu010,g_pmdu_d[l_ac].pmdu011,
+                      g_pmdu_d[l_ac].pmdu011_desc,g_pmdu_d[l_ac].pmdu012,
+                      g_pmdu_d[l_ac].pmdu202,#160512-00004#6-add
+                      g_pmdu_d[l_ac].pmdu017,g_pmdu_d[l_ac].pmdu016
+                      
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_pmdu_d_t.pmduseq1
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+
+                  CALL apmt520_03_b_fill()
+
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL apmt520_03_set_entry()
+            CALL apmt520_03_set_no_required()
+            CALL apmt520_03_set_required()
+            CALL apmt520_03_set_no_entry()
+            
+         BEFORE INSERT
+
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_pmdu_d[l_ac].* TO NULL
+            
+            SELECT MAX(pmduseq1)+1 INTO g_pmdu_d[l_ac].pmduseq1 FROM pmdu_t
+              WHERE pmduent = g_enterprise AND pmdudocno = g_pmdsdocno AND pmduseq = g_pmdtseq
+            IF cl_null(g_pmdu_d[l_ac].pmduseq1) OR g_pmdu_d[l_ac].pmduseq1 = 0 THEN
+               LET g_pmdu_d[l_ac].pmduseq1 = 1
+            END IF
+            
+            LET g_pmdu_d[l_ac].pmdu009 = g_pmdu_m.pmdt019
+            CALL s_desc_get_unit_desc(g_pmdu_d[l_ac].pmdu009) RETURNING g_pmdu_d[l_ac].pmdu009_desc
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu009_desc
+            
+            SELECT pmdt021 INTO g_pmdu_d[l_ac].pmdu011 FROM pmdt_t
+               WHERE pmdtent = g_enterprise AND pmdtdocno = g_pmdsdocno AND pmdtseq = g_pmdtseq
+            IF SQLCA.SQLCODE = 100 THEN
+               LET g_pmdu_d[l_ac].pmdu011 = g_pmdt021
+            END IF
+            CALL s_desc_get_unit_desc(g_pmdu_d[l_ac].pmdu011) RETURNING g_pmdu_d[l_ac].pmdu011_desc
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu011_desc
+            
+            #160617-00005#2---s---
+            IF g_argv[1] MATCHES '[1234689]' OR g_argv[1] = '12' OR g_argv[1] = '13'  OR g_argv[1] = '20' THEN
+               SELECT pmdt018 INTO g_pmdu_d[l_ac].pmdu008 FROM pmdt_t
+                  WHERE pmdtent = g_enterprise AND pmdtdocno = g_pmdsdocno AND pmdtseq = g_pmdtseq
+            END IF
+            #160617-00005#2---e---
+            
+            LET g_pmdu_d_t.* = g_pmdu_d[l_ac].*     #新輸入資料
+            LET g_pmdu_d_o.* = g_pmdu_d[l_ac].*
+            CALL cl_show_fld_cont()
+            
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            
+            #新增確認時需檢核庫存管理特徵、庫位、儲位、批號至少需一個欄位需要有一個欄位有值
+            IF cl_null(g_pmdu_d[l_ac].pmdu005) AND cl_null(g_pmdu_d[l_ac].pmdu006) AND
+               cl_null(g_pmdu_d[l_ac].pmdu007) AND cl_null(g_pmdu_d[l_ac].pmdu008) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00495'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD pmdu005
+            END IF
+
+            LET l_count = 1
+            SELECT COUNT(*) INTO l_count FROM pmdu_t
+             WHERE pmduent = g_enterprise AND pmdudocno = g_pmdsdocno
+               AND pmduseq = g_pmdtseq AND pmduseq1 = g_pmdu_d[l_ac].pmduseq1
+
+
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN
+               #160512-00004#6-add-'pmdu202','g_pmdu_d[l_ac].pmdu202'
+               INSERT INTO pmdu_t(pmduent,pmdusite,pmdudocno,pmduseq,pmduseq1,pmdu001,pmdu002,pmdu003,pmdu004,pmdu005,
+                                  pmdu006,pmdu007,pmdu008,pmdu009,pmdu010,pmdu011,pmdu012,pmdu013,pmdu014,pmdu015,pmdu016,pmdu202,pmdu017)
+                VALUES (g_enterprise,g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,
+                        g_pmdu_m.pmdu002,g_pmdu_m.pmdu003,g_pmdu_m.pmdu004,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,
+                        g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,
+                        g_pmdu_d[l_ac].pmdu011,g_pmdu_d[l_ac].pmdu012,0,0,0,g_pmdu_d[l_ac].pmdu016,g_pmdu_d[l_ac].pmdu202,g_pmdu_d[l_ac].pmdu017)
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_pmdu_d[l_ac].* TO NULL
+               #CALL s_transaction_end('N','0')
+               LET r_success = FALSE
+               CANCEL INSERT
+            END IF
+
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "pmdu_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               #CALL s_transaction_end('N','0')
+               LET r_success = FALSE
+               CANCEL INSERT
+            ELSE
+               #CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_pmdu_d.getLength() < l_ac THEN
+               #以入庫單為例
+               #在打入庫單時，若料號走QC，則根據QC單的製造批序號帶入入庫單，且同時回寫對應QC單的製造批序號中的已入庫量欄位
+               #             若不走QC，則根據來源收貨單的製造批序號帶入入庫單，且同事回寫收貨單的製造批序號的已入庫量欄位
+               #所以入庫單在刪除，或作廢時，也需將入庫單來源單據中的已入庫量欄位更新
+               IF g_argv[1] MATCHES '[567]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+                  SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = g_pmdsdocno AND inaoseq = g_pmdtseq
+                  IF l_n > 0 THEN
+                     IF NOT s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                        LET r_success = FALSE
+                        CANCEL DELETE
+                     END IF
+                  END IF
+               END IF       
+              
+               DELETE FROM inao_t
+                WHERE inaoent = g_enterprise AND inaodocno = g_pmdsdocno 
+                  AND inaoseq = g_pmdtseq
+                  AND inaoseq1 = g_pmdu_d[l_ac].pmduseq1
+               
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_pmdu_d.deleteElement(l_ac)
+               
+               NEXT FIELD pmduseq1
+            END IF
+
+            IF g_pmdu_d[l_ac].pmduseq1 IS NOT NULL THEN
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               
+               #以入庫單為例
+               #在打入庫單時，若料號走QC，則根據QC單的製造批序號帶入入庫單，且同時回寫對應QC單的製造批序號中的已入庫量欄位
+               #             若不走QC，則根據來源收貨單的製造批序號帶入入庫單，且同事回寫收貨單的製造批序號的已入庫量欄位
+               #所以入庫單在刪除，或作廢時，也需將入庫單來源單據中的已入庫量欄位更新
+               IF g_argv[1] MATCHES '[567]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+                  SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = g_pmdsdocno AND inaoseq = g_pmdtseq
+                  IF l_n > 0 THEN
+                     IF NOT s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d_t.pmduseq1) THEN
+                        LET r_success = FALSE
+                        CANCEL DELETE
+                     END IF
+                  END IF
+               END IF       
+               
+               DELETE FROM pmdu_t
+                WHERE pmduent = g_enterprise AND pmdudocno = g_pmdsdocno 
+                  AND pmduseq = g_pmdtseq
+                  AND pmduseq1 = g_pmdu_d_t.pmduseq1
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "pmdu_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  #CALL s_transaction_end('N','0')
+                  LET r_success = FALSE
+                  CANCEL DELETE
+               ELSE
+                  DELETE FROM inao_t
+                   WHERE inaoent = g_enterprise AND inaodocno = g_pmdsdocno 
+                     AND inaoseq = g_pmdtseq
+                     AND inaoseq1 = g_pmdu_d_t.pmduseq1
+                  LET g_rec_b = g_rec_b-1
+                  #CALL s_transaction_end('Y','0')
+                  
+               END IF
+               CLOSE apmt520_03_bcl
+               LET l_count = g_pmdu_d.getLength()
+            END IF
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_pmdu_d[l_ac].* = g_pmdu_d_t.*
+               CLOSE apmt520_03_bcl
+               #CALL s_transaction_end('N','0')
+               LET r_success = FALSE
+               EXIT DIALOG
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_pmdu_d[l_ac].pmduseq1
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_pmdu_d[l_ac].* = g_pmdu_d_t.*
+            ELSE
+               #160512-00004#6-add-'pmdu202','g_pmdu_d[l_ac].pmdu202'
+               UPDATE pmdu_t SET (pmduseq1,pmdu005,pmdu006,pmdu007,pmdu008,pmdu009,pmdu010,pmdu011,pmdu012,pmdu202,pmdu017,pmdu016)
+                               = (g_pmdu_d[l_ac].pmduseq1,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,
+                                  g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,g_pmdu_d[l_ac].pmdu011,
+                                  g_pmdu_d[l_ac].pmdu012,g_pmdu_d[l_ac].pmdu202,g_pmdu_d[l_ac].pmdu017,g_pmdu_d[l_ac].pmdu016)
+                     WHERE pmduent = g_enterprise AND pmdudocno = g_pmdsdocno 
+                       AND pmduseq = g_pmdtseq AND pmduseq1 = g_pmdu_d_t.pmduseq1
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "std-00009"
+                     LET g_errparam.extend = "pmdu_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     #CALL s_transaction_end('N','0')
+                     LET r_success = FALSE
+                     LET g_pmdu_d[l_ac].* = g_pmdu_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "pmdu_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_pmdu_d[l_ac].* = g_pmdu_d_t.*
+                     #CALL s_transaction_end('N','0')
+                     LET r_success = FALSE
+               END CASE
+            END IF             
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmduseq1
+            #add-point:BEFORE FIELD pmduseq1 name="input.b.page1.pmduseq1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmduseq1
+            
+            #add-point:AFTER FIELD pmduseq1 name="input.a.page1.pmduseq1"
+            #此段落由子樣板a05產生
+            IF  g_pmdu_m.pmdudocno IS NOT NULL AND g_pmdu_m.pmduseq IS NOT NULL AND g_pmdu_d[l_ac].pmduseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmdu_d[l_ac].pmduseq1 != g_pmdu_d_t.pmduseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmdu_t WHERE "||"pmduent = '" ||g_enterprise|| "' AND "||"pmdudocno = '"||g_pmdsdocno ||"' AND "|| "pmduseq = '"||g_pmdtseq ||"' AND "|| "pmduseq1 = '"||g_pmdu_d[l_ac].pmduseq1 ||"'",'std-00004',0) THEN 
+                     LET g_pmdu_d[l_ac].pmduseq1 = g_pmdu_d_t.pmduseq1
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmduseq1
+            #add-point:ON CHANGE pmduseq1 name="input.g.page1.pmduseq1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu005
+            #add-point:BEFORE FIELD pmdu005 name="input.b.page1.pmdu005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu005
+            
+            #add-point:AFTER FIELD pmdu005 name="input.a.page1.pmdu005"
+            #160316-00007#3--add---begin----
+            IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+               LET g_pmdu_d[l_ac].pmdu005 = ' '
+            END IF
+            IF (g_pmdu_d[l_ac].pmdu005 IS NOT NULL) AND (g_pmdu_d[l_ac].pmdu005 != g_pmdu_d_o.pmdu005 OR g_pmdu_d_o.pmdu005 IS NULL) THEN
+               
+               #修改批號後，若是收貨單，則需同步更新製造批序號的庫儲批，若是驗退、入庫、倉退單，則詢問是否確認修改，若確認修改，則刪除原先的製造批序號資料，開窗重新挑選
+               IF g_argv[1] MATCHES '[128934]' OR g_argv[1] = '20' 
+                  OR g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN  #160407-00028#1 add
+                  CALL s_lot_upd_inao(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_site,g_pmdu_d[l_ac].pmdu005)
+                       RETURNING l_success
+               END IF
+               #160407-00028#1--mark---begin----
+               ##驗退單、入庫單
+               ##1、先判斷是否有收貨單，再判斷收貨單是否有維護製造批序號
+               ##1.1 若有，則根據來再判斷當前料號是否走QC，若走QC，則批序號來源是qc單的，若不走，則來源收貨單
+               ##1.2若收貨單沒有維護製造批序號，則入庫單、無收貨來源的倉退單可自行新增
+               #IF g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+               #   SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+               #   IF l_n > 0 THEN
+               #      CALL s_lot_inao_chk(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_site) RETURNING l_success,l_n
+               #      IF l_n > 0 THEN
+               #         IF l_success THEN
+               #            #驗退、入庫、倉退單據，賦值來源單據的製造批序號資料inao_t
+               #            IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+               #               CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+               #            END IF
+               #            CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+               #            
+               #            IF g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+               #               #IF l_pmdt026 = 'Y' THEN
+               #               IF NOT cl_null(l_pmdt081) AND NOT cl_null(l_pmdt082) THEN
+               #                  IF NOT s_apmt520_ins_inao('1',l_pmdt081,l_pmdt082,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+               #                     #LET r_success = FALSE
+               #                     #RETURN r_success
+               #                  END IF
+               #               ELSE
+               #                  IF NOT s_apmt520_ins_inao('1',l_pmds006,l_pmdt028,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+               #                     #LET r_success = FALSE
+               #                     #RETURN r_success
+               #                  END IF
+               #               END IF
+               #            END IF
+               #            CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'1',g_prog,'','','','','0')
+               #                  RETURNING l_success
+               #            CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+               #            CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+               #         ELSE
+               #            LET g_pmdu_d[l_ac].pmdu005 = g_pmdu_d_o.pmdu005
+               #         END IF
+               #      END IF
+               #   ELSE
+               #      IF g_argv[1] MATCHES '[6]' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+               #         CALL s_lot_upd_inao(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_site,g_pmdu_d[l_ac].pmdu005)
+               #            RETURNING l_success
+               #      END IF
+               #   END IF
+               #END IF
+               #160407-00028#1--mark--end0000
+               
+               #仓退单：若有指定收货单号：
+               #   1)	收货单有维护制造批序号资料，只能挑选收货单制造批序号资料
+               #   2)	收货单没有维护制造批序号资料，只能挑选收货单对应的入库单的资料
+               #若没有指定收货单号则直接由库存档选取
+               IF g_argv[1] MATCHES '[7]' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+                  IF NOT cl_null(g_pmdu_d[l_ac].pmdu006) AND g_pmdu_d[l_ac].pmdu007 IS NOT NULL THEN #160411-00017#1 add
+                     IF g_pmdu_d[l_ac].pmdu005 != g_pmdu_d_o.pmdu005 THEN  #160411-00017#1 add
+                        CALL s_lot_inao_chk(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_site) RETURNING l_success,l_n
+                        IF l_n > 0 THEN
+                           IF l_success THEN
+                              IF NOT cl_null(l_pmds006) THEN
+                                 #SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+                                 #IF l_n > 0 THEN
+                                    IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                                       CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                    END IF
+                                    CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                    
+                                    DECLARE sel_pmdt_cs8 CURSOR FOR
+                                        SELECT pmdtdocno,pmdtseq INTO l_pmdtdocno,l_pmdtseq_1 FROM pmdt_t,pmds_t
+                                           WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno 
+                                             AND pmdsent = g_enterprise 
+                                             AND ((pmds006 = l_pmds006 AND pmdt028 = l_pmdt028 AND pmds000 IN ('6','12','13'))
+                                                OR (pmdsdocno = l_pmds006 AND pmdtseq = l_pmdt028 AND pmds000 IN ('3','4','20')))
+                                             AND pmdsstus = 'S'
+                                    FOREACH sel_pmdt_cs8 INTO l_pmdtdocno,l_pmdtseq_1
+                                       IF NOT s_apmt520_ins_inao('1',l_pmdtdocno,l_pmdtseq_1,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                                          #LET r_success = FALSE
+                                          #RETURN r_success
+                                       END IF
+                                    END FOREACH
+                                 #END IF
+                                    
+                                 CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                    RETURNING l_success
+                                 CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                 CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              ELSE
+                                  CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                  CALL s_lot_sel('1','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                     RETURNING l_success
+                              END IF
+                           ELSE
+                              LET g_pmdu_d[l_ac].pmdu005 = g_pmdu_d_o.pmdu005
+                           END IF
+                        END IF
+                     #160411-00017#1--add--begin----
+                     ELSE
+                        IF NOT cl_null(l_pmds006) THEN
+                           #SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+                           #IF l_n > 0 THEN
+                              IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                                 CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              END IF
+                              CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              
+                              DECLARE sel_pmdt_cs11 CURSOR FOR
+                                  SELECT pmdtdocno,pmdtseq INTO l_pmdtdocno,l_pmdtseq_1 FROM pmdt_t,pmds_t
+                                     WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno 
+                                       AND pmdsent = g_enterprise 
+                                       AND ((pmds006 = l_pmds006 AND pmdt028 = l_pmdt028 AND pmds000 IN ('6','12','13'))
+                                          OR (pmdsdocno = l_pmds006 AND pmdtseq = l_pmdt028 AND pmds000 IN ('3','4','20')))
+                                       AND pmdsstus = 'S'
+                              FOREACH sel_pmdt_cs11 INTO l_pmdtdocno,l_pmdtseq_1
+                                 IF NOT s_apmt520_ins_inao('1',l_pmdtdocno,l_pmdtseq_1,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                                    #LET r_success = FALSE
+                                    #RETURN r_success
+                                 END IF
+                              END FOREACH
+                           #END IF
+                              
+                           CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                              RETURNING l_success
+                           CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                           CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                        ELSE
+                            CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                            CALL s_lot_sel('1','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                               RETURNING l_success
+                        END IF
+                     END IF
+                  END IF
+               END IF
+            END IF
+
+            LET g_pmdu_d_o.pmdu005 = g_pmdu_d[l_ac].pmdu005
+            
+            #160316-00007#3--add---end----
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu005
+            #add-point:ON CHANGE pmdu005 name="input.g.page1.pmdu005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu006
+            
+            #add-point:AFTER FIELD pmdu006 name="input.a.page1.pmdu006"
+            CALL s_desc_get_stock_desc(g_site,g_pmdu_d[l_ac].pmdu006) RETURNING g_pmdu_d[l_ac].pmdu006_desc
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu006_desc
+
+            IF (NOT cl_null(g_pmdu_d[l_ac].pmdu006)) AND (g_pmdu_d[l_ac].pmdu006 != g_pmdu_d_o.pmdu006 OR cl_null(g_pmdu_d_o.pmdu006)) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               #LET g_chkparam.arg1 = g_site
+               LET g_chkparam.arg1 = g_pmdu_d[l_ac].pmdu006
+               
+               #160318-00025#20  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aim-00065:sub-01302|aini001|",cl_get_progname("aini001",g_lang,"2"),"|:EXEPROGaini001"
+               #160318-00025#20  by 07900 --add-end
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_inaa001_9") THEN
+                  #檢查失敗時後續處理
+                  LET  g_pmdu_d[l_ac].pmdu006 =  g_pmdu_d_o.pmdu006
+                  CALL s_desc_get_stock_desc( g_site,g_pmdu_d[l_ac].pmdu006) RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+                  DISPLAY BY NAME  g_pmdu_d[l_ac].pmdu006_desc
+                  NEXT FIELD CURRENT
+               ELSE
+                  #160801-00043#1--s
+                  IF NOT cl_null(g_bas_0043) THEN  #VMI存貨庫位Tag
+                     LET l_n = 0
+                     SELECT COUNT(*) INTO l_n FROM inac_t WHERE inacent = g_enterprise AND inacsite = g_site AND inac001 = g_pmdu_d[l_ac].pmdu006 AND inac003 = g_bas_0043
+                     IF g_pmds011 = '3' THEN   #VMI采购
+                        IF l_n = 0 OR cl_null(l_n) THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'apm-01060'
+                           LET g_errparam.extend = g_pmdu_d[l_ac].pmdu006
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                           LET  g_pmdu_d[l_ac].pmdu006 =  g_pmdu_d_o.pmdu006
+                           CALL s_desc_get_stock_desc( g_site,g_pmdu_d[l_ac].pmdu006) RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+                           DISPLAY BY NAME  g_pmdu_d[l_ac].pmdu006_desc
+                           NEXT FIELD CURRENT
+                        END IF
+                     ELSE
+                        IF l_n > 0 THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'apm-01122'
+                           LET g_errparam.extend = g_pmdu_d[l_ac].pmdu006
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                           LET  g_pmdu_d[l_ac].pmdu006 =  g_pmdu_d_o.pmdu006
+                           CALL s_desc_get_stock_desc( g_site,g_pmdu_d[l_ac].pmdu006) RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+                           DISPLAY BY NAME  g_pmdu_d[l_ac].pmdu006_desc
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                  END IF
+                  #160801-00043#1--e
+               
+                  #160122-00017#1---add----begin------
+                  IF NOT cl_null(g_pmdu_d[l_ac].pmdu007) THEN
+                     IF NOT apmt520_03_pmdu007_chk() THEN
+                        LET  g_pmdu_d[l_ac].pmdu007 = ''
+                        CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) RETURNING g_pmdu_d[l_ac].pmdu007_desc
+                        DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+                        NEXT FIELD pmdu007
+                     END IF
+                  END IF
+                  SELECT inaa007 INTO l_inaa007 FROM inaa_t WHERE inaaent = g_enterprise AND inaasite = g_site AND inaa001 = g_pmdu_d[l_ac].pmdu006
+                  
+                  #若該庫位設置不做儲位管理時，則儲位欄位不可以維護
+                  IF l_inaa007 = '5' THEN
+                     LET g_pmdu_d[l_ac].pmdu007 = ' '
+                  ELSE
+                     IF cl_null(g_pmdu_d[l_ac].pmdu007) THEN
+                        LET g_pmdu_d[l_ac].pmdu007 = ''
+                     END IF
+                  END IF
+    
+                  #160122-00017#1---add----end------
+                  #倉退時 輸入的料件+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+                  IF g_argv[1] MATCHES '[7]' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+                     IF NOT apmt520_03_chk_inag004(g_pmdu_d[l_ac].pmdu006) THEN
+                        LET  g_pmdu_d[l_ac].pmdu006 =  g_pmdu_d_o.pmdu006
+                        CALL s_desc_get_stock_desc( g_site,g_pmdu_d[l_ac].pmdu006) RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+                        DISPLAY BY NAME  g_pmdu_d[l_ac].pmdu006_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF  
+                  
+                  #修改庫位後，若是收貨單，則需同步更新製造批序號的庫儲批，若是驗退、入庫、倉退單，則詢問是否確認修改，若確認修改，則刪除原先的製造批序號資料，開窗重新挑選
+                  IF g_argv[1] MATCHES '[128934]' OR g_argv[1] = '20' 
+                     OR g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13'  THEN   #160407-00028#1 add
+                     CALL s_lot_upd_inao(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_site,g_pmdu_d[l_ac].pmdu005) #160316-00007#3 add pmdu005
+                          RETURNING l_success
+                  END IF
+                  #160407-00028#1 --mark----begin--    
+                  ##驗退單、入庫單
+                  ##1、先判斷是否有收貨單，再判斷收貨單是否有維護製造批序號
+                  ##1.1 若有，則根據來再判斷當前料號是否走QC，若走QC，則批序號來源是qc單的，若不走，則來源收貨單
+                  ##1.2若收貨單沒有維護製造批序號，則入庫單、無收貨來源的倉退單可自行新增
+                  #IF g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+                  #   SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+                  #   IF l_n > 0 THEN
+                  #      CALL s_lot_inao_chk(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_site) RETURNING l_success,l_n
+                  #      IF l_n > 0 THEN
+                  #         IF l_success THEN
+                  #            #驗退、入庫、倉退單據，賦值來源單據的製造批序號資料inao_t
+                  #            IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                  #               CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                  #            END IF
+                  #            CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                  #            
+                  #            IF g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+                  #               #IF l_pmdt026 = 'Y' THEN
+                  #               IF NOT cl_null(l_pmdt081) AND NOT cl_null(l_pmdt082) THEN
+                  #                  IF NOT s_apmt520_ins_inao('1',l_pmdt081,l_pmdt082,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                  #                     #LET r_success = FALSE
+                  #                     #RETURN r_success
+                  #                  END IF
+                  #               ELSE
+                  #                  IF NOT s_apmt520_ins_inao('1',l_pmds006,l_pmdt028,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                  #                     #LET r_success = FALSE
+                  #                     #RETURN r_success
+                  #                  END IF
+                  #               END IF
+                  #            END IF
+                  #            CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'1',g_prog,'','','','','0')
+                  #                  RETURNING l_success
+                  #            CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                  #            CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                  #         ELSE
+                  #            LET g_pmdu_d[l_ac].pmdu006 = g_pmdu_d_o.pmdu006
+                  #            CALL s_desc_get_stock_desc( g_site,g_pmdu_d[l_ac].pmdu006) RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+                  #            DISPLAY BY NAME  g_pmdu_d[l_ac].pmdu006_desc
+                  #         END IF
+                  #      END IF
+                  #   ELSE
+                  #      IF g_argv[1] MATCHES '[6]' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+                  #         CALL s_lot_upd_inao(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_site,g_pmdu_d[l_ac].pmdu005) #160316-00007#3 add pmdu005
+                  #            RETURNING l_success
+                  #      END IF
+                  #   END IF
+                  #END IF
+                  #160407-00028#1---mark---end----
+                  
+                  #仓退单：若有指定收货单号：
+                  #   1)	收货单有维护制造批序号资料，只能挑选收货单制造批序号资料
+                  #   2)	收货单没有维护制造批序号资料，只能挑选收货单对应的入库单的资料
+                  #若没有指定收货单号则直接由库存档选取
+                  IF g_argv[1] MATCHES '[7]' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+                     #庫位修改的時候才彈窗詢問，直接維護的話，不彈窗詢問，直接開窗維護
+                     IF g_pmdu_d[l_ac].pmdu007 IS NOT NULL THEN #160411-00017#1 add
+                        IF g_pmdu_d[l_ac].pmdu006 != g_pmdu_d_o.pmdu006 THEN   #160411-00017#1 add
+                           CALL s_lot_inao_chk(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_site) RETURNING l_success,l_n
+                           IF l_n > 0 THEN
+                              IF l_success THEN
+                                 IF NOT cl_null(l_pmds006) THEN
+                                    #SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+                                    #IF l_n > 0 THEN
+                                       IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                                          CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                       END IF
+                                       CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                       DECLARE sel_pmdt_cs5 CURSOR FOR
+                                           SELECT pmdtdocno,pmdtseq INTO l_pmdtdocno,l_pmdtseq_1 FROM pmdt_t,pmds_t
+                                              WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno 
+                                                AND pmdsent = g_enterprise 
+                                                AND ((pmds006 = l_pmds006 AND pmdt028 = l_pmdt028 AND pmds000 IN ('6','12','13'))
+                                                   OR (pmdsdocno = l_pmds006 AND pmdtseq = l_pmdt028 AND pmds000 IN ('3','4','20')))
+                                                AND pmdsstus = 'S'
+                                       FOREACH sel_pmdt_cs5 INTO l_pmdtdocno,l_pmdtseq_1
+                                          IF NOT s_apmt520_ins_inao('1',l_pmdtdocno,l_pmdtseq_1,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                                             #LET r_success = FALSE
+                                             #RETURN r_success
+                                          END IF
+                                       END FOREACH
+                                    #END IF
+                                       
+                                    CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                       RETURNING l_success
+                                    CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                    CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                    #ELSE
+                                    #   SELECT COUNT(inaodocno) INTO l_n FROM inao_t,pmds_t,pmdt_t 
+                                    #      WHERE inaoent = pmdsent AND inaodocno = pmdsdocno AND inaoseq = pmdtseq
+                                    #        AND pmdsent = pmdtent AND pmdsdocno = pmdtdocno
+                                    #        AND pmdsent = g_enterprise AND pmds006 = l_pmds006 AND pmdt028 = l_pmdt028
+                                    #        AND pmds000 IN ('6','12','13') AND pmdsstus = 'S'
+                                    #   IF l_n > 0 THEN
+                                    #      CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq) RETURNING l_success
+                                    #      CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                    #         RETURNING l_success
+                                    #      CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq) RETURNING l_success
+                                    #   END IF
+                                    #END IF
+                                 ELSE
+                                     CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                     CALL s_lot_sel('1','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                        RETURNING l_success
+                                 END IF
+                              ELSE
+                                 LET g_pmdu_d[l_ac].pmdu006 = g_pmdu_d_o.pmdu006
+                                 CALL s_desc_get_stock_desc( g_site,g_pmdu_d[l_ac].pmdu006) RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+                                 DISPLAY BY NAME  g_pmdu_d[l_ac].pmdu006_desc
+                              END IF
+                              
+                           END IF
+                        #160411-00017#1--add---begin---
+                        ELSE
+                           IF NOT cl_null(l_pmds006) THEN
+                              IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                                 CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              END IF
+                              CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              DECLARE sel_pmdt_cs9 CURSOR FOR
+                                  SELECT pmdtdocno,pmdtseq INTO l_pmdtdocno,l_pmdtseq_1 FROM pmdt_t,pmds_t
+                                     WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno 
+                                       AND pmdsent = g_enterprise 
+                                       AND ((pmds006 = l_pmds006 AND pmdt028 = l_pmdt028 AND pmds000 IN ('6','12','13'))
+                                          OR (pmdsdocno = l_pmds006 AND pmdtseq = l_pmdt028 AND pmds000 IN ('3','4','20')))
+                                       AND pmdsstus = 'S'
+                              FOREACH sel_pmdt_cs9 INTO l_pmdtdocno,l_pmdtseq_1
+                                 IF NOT s_apmt520_ins_inao('1',l_pmdtdocno,l_pmdtseq_1,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                               
+                                 END IF
+                              END FOREACH
+                                 
+                              CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                 RETURNING l_success
+                              CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                           ELSE
+                               CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                               CALL s_lot_sel('1','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                  RETURNING l_success
+                           END IF
+                        END IF
+                     END IF
+                     #160411-00017#1-add---end----
+                  END IF
+               END IF
+            END IF
+            
+            CALL apmt520_03_set_entry()
+            CALL apmt520_03_set_no_required()
+            CALL apmt520_03_set_required()
+            CALL apmt520_03_set_no_entry()
+            
+            LET g_pmdu_d_o.pmdu006 = g_pmdu_d[l_ac].pmdu006
+            LET g_pmdu_d_o.pmdu007 = g_pmdu_d[l_ac].pmdu007 #160411-00017#1 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu006
+            #add-point:BEFORE FIELD pmdu006 name="input.b.page1.pmdu006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu006
+            #add-point:ON CHANGE pmdu006 name="input.g.page1.pmdu006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu007
+            
+            #add-point:AFTER FIELD pmdu007 name="input.a.page1.pmdu007"
+            #160316-00007#3--add---begin----
+            IF cl_null(g_pmdu_d[l_ac].pmdu007) THEN
+               LET g_pmdu_d[l_ac].pmdu007 = ' '
+            END IF
+            #160316-00007#3--add---end----
+            CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) RETURNING g_pmdu_d[l_ac].pmdu007_desc
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+
+            #IF (NOT cl_null(g_pmdu_d[l_ac].pmdu007)) AND (g_pmdu_d[l_ac].pmdu007 != g_pmdu_d_o.pmdu007 OR cl_null(g_pmdu_d_o.pmdu007)) THEN #160316-00007#3 mark
+            IF (NOT cl_null(g_pmdu_d[l_ac].pmdu006)) AND (g_pmdu_d[l_ac].pmdu007 IS NOT NULL) AND (g_pmdu_d[l_ac].pmdu007 != g_pmdu_d_o.pmdu007 OR g_pmdu_d_o.pmdu007 IS NULL) THEN #160316-00007#3 add
+               #160122-00017---mark---begin---
+               #改成調用apmt520_03_pmdu007_chk()
+               ##設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               #INITIALIZE g_chkparam.* TO NULL
+               #
+               ##設定g_chkparam.*的參數
+               #LET g_chkparam.arg1 = g_site
+               #LET g_chkparam.arg2 = g_pmdu_d[l_ac].pmdu006
+               #LET g_chkparam.arg3 = g_pmdu_d[l_ac].pmdu007
+               #
+               #
+               ##呼叫檢查存在並帶值的library
+               #IF NOT cl_chk_exist("v_inab002_1") THEN
+               #160122-00017---mark---end---
+               IF NOT apmt520_03_pmdu007_chk() THEN  #160122-00017 add
+                  #檢查失敗時後續處理
+                  LET g_pmdu_d[l_ac].pmdu007 = g_pmdu_d_o.pmdu007
+                  CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) RETURNING g_pmdu_d[l_ac].pmdu007_desc
+                  DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+                  NEXT FIELD CURRENT
+               ELSE
+                  #倉退時 輸入的料件+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+                  IF g_argv[1] MATCHES '[7]' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+                     IF NOT apmt520_03_chk_inag005(g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) THEN
+                        LET g_pmdu_d[l_ac].pmdu007 = g_pmdu_d_o.pmdu007
+                        CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) RETURNING g_pmdu_d[l_ac].pmdu007_desc
+                        DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  
+                  #修改儲位後，若是收貨單，則需同步更新製造批序號的庫儲批，若是驗退、入庫、倉退單，則詢問是否確認修改，若確認修改，則刪除原先的製造批序號資料，開窗重新挑選
+                  IF g_argv[1] MATCHES '[128934]' OR g_argv[1] = '20'
+                     OR g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN  #160407-00028#1 add
+                     CALL s_lot_upd_inao(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_site,g_pmdu_d[l_ac].pmdu005) #160316-00007#3 add pmdu005
+                          RETURNING l_success
+                  END IF
+                  #160407-00028#1--mark---begin--- 
+                  ##驗退單、入庫單
+                  ##1、先判斷是否有收貨單，再判斷收貨單是否有維護製造批序號
+                  ##1.1 若有，則根據來再判斷當前料號是否走QC，若走QC，則批序號來源是qc單的，若不走，則來源收貨單
+                  ##1.2若收貨單沒有維護製造批序號，則入庫單、無收貨來源的倉退單可自行新增
+                  #IF g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+                  #   SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+                  #   IF l_n > 0 THEN
+                  #      CALL s_lot_inao_chk(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_site) RETURNING l_success,l_n
+                  #      IF l_n > 0 THEN
+                  #         IF l_success THEN
+                  #            #驗退、入庫、倉退單據，賦值來源單據的製造批序號資料inao_t
+                  #            IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                  #               CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                  #            END IF
+                  #            CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                  #            
+                  #            IF g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+                  #               #IF l_pmdt026 = 'Y' THEN
+                  #               IF NOT cl_null(l_pmdt081) AND NOT cl_null(l_pmdt082) THEN
+                  #                  IF NOT s_apmt520_ins_inao('1',l_pmdt081,l_pmdt082,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                  #                     #LET r_success = FALSE
+                  #                     #RETURN r_success
+                  #                  END IF
+                  #               ELSE
+                  #                  IF NOT s_apmt520_ins_inao('1',l_pmds006,l_pmdt028,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                  #                     #LET r_success = FALSE
+                  #                     #RETURN r_success
+                  #                  END IF
+                  #               END IF
+                  #            END IF
+                  #            CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'1',g_prog,'','','','','0')
+                  #                  RETURNING l_success
+                  #            CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                  #            CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                  #         ELSE
+                  #            LET g_pmdu_d[l_ac].pmdu007 = g_pmdu_d_o.pmdu007
+                  #            CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) RETURNING g_pmdu_d[l_ac].pmdu007_desc
+                  #            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+                  #         END IF
+                  #      END IF
+                  #   ELSE
+                  #      IF g_argv[1] MATCHES '[6]' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+                  #         CALL s_lot_upd_inao(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_site,g_pmdu_d[l_ac].pmdu005) #160316-00007#3 add pmdu005
+                  #            RETURNING l_success
+                  #      END IF
+                  #   END IF
+                  #END IF
+                  #160407-00028#1--mark---end---
+                  
+                  #仓退单：若有指定收货单号：
+                  #   1)	收货单有维护制造批序号资料，只能挑选收货单制造批序号资料
+                  #   2)	收货单没有维护制造批序号资料，只能挑选收货单对应的入库单的资料
+                  #若没有指定收货单号则直接由库存档选取
+                  IF g_argv[1] MATCHES '[7]' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+                     IF NOT cl_null(g_pmdu_d[l_ac].pmdu006) THEN   #160411-00017#1 add
+                        IF g_pmdu_d[l_ac].pmdu007 != g_pmdu_d_o.pmdu007 THEN  #160411-00017#1 add
+                           CALL s_lot_inao_chk(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_site) RETURNING l_success,l_n
+                           IF l_n > 0 THEN
+                              IF l_success THEN
+                                 IF NOT cl_null(l_pmds006) THEN
+                                    #SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+                                    #IF l_n > 0 THEN
+                                       IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                                          CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                       END IF
+                                       CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                       
+                                       DECLARE sel_pmdt_cs6 CURSOR FOR
+                                           SELECT pmdtdocno,pmdtseq INTO l_pmdtdocno,l_pmdtseq_1 FROM pmdt_t,pmds_t
+                                              WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno 
+                                                AND pmdsent = g_enterprise 
+                                                AND ((pmds006 = l_pmds006 AND pmdt028 = l_pmdt028 AND pmds000 IN ('6','12','13'))
+                                                   OR (pmdsdocno = l_pmds006 AND pmdtseq = l_pmdt028 AND pmds000 IN ('3','4','20')))
+                                                AND pmdsstus = 'S'
+                                       FOREACH sel_pmdt_cs6 INTO l_pmdtdocno,l_pmdtseq_1
+                                          IF NOT s_apmt520_ins_inao('1',l_pmdtdocno,l_pmdtseq_1,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                                             #LET r_success = FALSE
+                                             #RETURN r_success
+                                          END IF
+                                       END FOREACH
+                                    #END IF
+                                       
+                                    CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                       RETURNING l_success
+                                    CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                    CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                    #ELSE
+                                    #   SELECT COUNT(inaodocno) INTO l_n FROM inao_t,pmds_t,pmdt_t 
+                                    #      WHERE inaoent = pmdsent AND inaodocno = pmdsdocno AND inaoseq = pmdtseq
+                                    #        AND pmdsent = pmdtent AND pmdsdocno = pmdtdocno
+                                    #        AND pmdsent = g_enterprise AND pmds006 = l_pmds006 AND pmdt028 = l_pmdt028
+                                    #        AND pmds000 IN ('6','12','13') AND pmdsstus = 'S'
+                                    #   IF l_n > 0 THEN
+                                    #      CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq) RETURNING l_success
+                                    #      CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                    #         RETURNING l_success
+                                    #      CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq) RETURNING l_success
+                                    #   END IF
+                                    #END IF
+                                 ELSE
+                                     CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                     CALL s_lot_sel('1','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                        RETURNING l_success
+                                 END IF
+                              ELSE
+                                 LET g_pmdu_d[l_ac].pmdu007 = g_pmdu_d_o.pmdu007
+                                 CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) RETURNING g_pmdu_d[l_ac].pmdu007_desc
+                                 DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+                              END IF
+                           END IF
+                        #160411-00017#1-add--begin---
+                        ELSE
+                           IF NOT cl_null(l_pmds006) THEN
+                              IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                                 CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              END IF
+                              CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              
+                              DECLARE sel_pmdt_cs10 CURSOR FOR
+                                  SELECT pmdtdocno,pmdtseq INTO l_pmdtdocno,l_pmdtseq_1 FROM pmdt_t,pmds_t
+                                     WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno 
+                                       AND pmdsent = g_enterprise 
+                                       AND ((pmds006 = l_pmds006 AND pmdt028 = l_pmdt028 AND pmds000 IN ('6','12','13'))
+                                          OR (pmdsdocno = l_pmds006 AND pmdtseq = l_pmdt028 AND pmds000 IN ('3','4','20')))
+                                       AND pmdsstus = 'S'
+                              FOREACH sel_pmdt_cs10 INTO l_pmdtdocno,l_pmdtseq_1
+                                 IF NOT s_apmt520_ins_inao('1',l_pmdtdocno,l_pmdtseq_1,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                           
+                                 END IF
+                              END FOREACH
+                                 
+                              CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                 RETURNING l_success
+                              CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                           ELSE
+                               CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                               CALL s_lot_sel('1','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                  RETURNING l_success
+                           END IF
+                        END IF
+                     END IF
+                     #160411-00017#1-add---end----
+                     
+                  END IF   
+               END IF
+            END IF
+            
+            LET g_pmdu_d_o.pmdu007 = g_pmdu_d[l_ac].pmdu007
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu007
+            #add-point:BEFORE FIELD pmdu007 name="input.b.page1.pmdu007"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu007
+            #add-point:ON CHANGE pmdu007 name="input.g.page1.pmdu007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu008
+            #add-point:BEFORE FIELD pmdu008 name="input.b.page1.pmdu008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu008
+            
+            #add-point:AFTER FIELD pmdu008 name="input.a.page1.pmdu008"
+            #160519-00022#7---mod---s
+            ##160316-00007#3--add---begin----
+            #IF cl_null(g_pmdu_d[l_ac].pmdu008) THEN
+            #   LET g_pmdu_d[l_ac].pmdu008 = ' '
+            #END IF
+            ##160316-00007#3--add---end----
+            IF g_argv[1] MATCHES '[346]' THEN 
+               SELECT imaf064,imaf061 
+                 INTO l_imaf064,l_imaf061
+                 FROM imaf_t  
+                WHERE imafent = g_enterprise
+                  AND imafsite = g_site
+                  AND imaf001 = g_pmdu_m.pmdu001
+               IF l_imaf061 <> '1' THEN
+                  IF cl_null(g_pmdu_d[l_ac].pmdu008) THEN
+                     LET g_pmdu_d[l_ac].pmdu008 = ' '
+                  END IF
+               ELSE
+                  IF cl_null(g_pmdu_d[l_ac].pmdu008) THEN
+                     LET g_pmdu_d[l_ac].pmdu008 = ''
+                  END IF                                 
+               END IF
+            ELSE
+               IF cl_null(g_pmdu_d[l_ac].pmdu008) THEN
+                  LET g_pmdu_d[l_ac].pmdu008 = ' '
+               END IF            
+            END IF            
+            #160519-00022#7---mod---e
+            #IF (NOT cl_null(g_pmdu_d[l_ac].pmdu008)) AND (g_pmdu_d[l_ac].pmdu008 != g_pmdu_d_o.pmdu008 OR cl_null(g_pmdu_d_o.pmdu008)) THEN  #160316-00007#3 mark
+            IF (g_pmdu_d[l_ac].pmdu008 IS NOT NULL) AND (g_pmdu_d[l_ac].pmdu008 != g_pmdu_d_o.pmdu008 OR g_pmdu_d_o.pmdu008 IS NULL) THEN    #160316-00007#3 add
+               #160519-00022#7---add---s
+               #入库单的批号需要根据料件设定进行控管
+               IF g_argv[1] MATCHES '[346]' THEN 
+                  SELECT imaf064,imaf061 
+                    INTO l_imaf064,l_imaf061
+                    FROM imaf_t  
+                   WHERE imafent = g_enterprise
+                     AND imafsite = g_site
+                     AND imaf001 = g_pmdu_m.pmdu001
+                  IF l_imaf061 <> '2' THEN 
+                     LET l_cnt = 0 
+                     IF NOT cl_null(g_pmdu_m.pmdu002) THEN 
+                        SELECT COUNT(*) INTO l_cnt
+                          FROM inad_t
+                         WHERE inadent = g_enterprise
+                           AND inadsite = g_site
+                           AND inad001 = g_pmdu_m.pmdu001  
+                           AND inad002 = g_pmdu_m.pmdu002
+                           AND inad003 = g_pmdu_d[l_ac].pmdu008
+                     ELSE
+                        SELECT COUNT(*) INTO l_cnt
+                          FROM inad_t
+                         WHERE inadent = g_enterprise
+                           AND inadsite = g_site
+                           AND inad001 = g_pmdu_m.pmdu001  
+                           AND inad003 = g_pmdu_d[l_ac].pmdu008
+                     END IF
+                     IF l_n > 0 THEN
+                        IF l_imaf064 = '1' THEN 
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'ain-00269'
+                           LET g_errparam.extend = g_pmdu_d[l_ac].pmdu008
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                           LET g_pmdu_d[l_ac].pmdu008 = g_pmdu_d_o.pmdu008
+                           NEXT FIELD CURRENT
+                        END IF  
+                        IF l_imaf064 = '2' THEN 
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'ain-00269'
+                           LET g_errparam.extend = g_pmdu_d[l_ac].pmdu008
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                        END IF                      
+                     END IF                     
+                  END IF
+               END IF                  
+               #160519-00022#7---add---e               
+               #修改批號後，若是收貨單，則需同步更新製造批序號的庫儲批，若是驗退、入庫、倉退單，則詢問是否確認修改，若確認修改，則刪除原先的製造批序號資料，開窗重新挑選
+               IF g_argv[1] MATCHES '[128934]' OR g_argv[1] = '20' 
+                  OR g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN #160407-00028#1 add
+                  CALL s_lot_upd_inao(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_site,g_pmdu_d[l_ac].pmdu005) #160316-00007#3 add pmdu005
+                       RETURNING l_success
+               END IF
+               #160407-00028#1--mark---begin---
+               ##驗退單、入庫單
+               ##1、先判斷是否有收貨單，再判斷收貨單是否有維護製造批序號
+               ##1.1 若有，則根據來再判斷當前料號是否走QC，若走QC，則批序號來源是qc單的，若不走，則來源收貨單
+               ##1.2若收貨單沒有維護製造批序號，則入庫單、無收貨來源的倉退單可自行新增
+               #IF g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+               #   SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+               #   IF l_n > 0 THEN
+               #      CALL s_lot_inao_chk(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_site) RETURNING l_success,l_n
+               #      IF l_n > 0 THEN
+               #         IF l_success THEN
+               #            #驗退、入庫、倉退單據，賦值來源單據的製造批序號資料inao_t
+               #            IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+               #               CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+               #            END IF
+               #            CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+               #            
+               #            IF g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+               #               #IF l_pmdt026 = 'Y' THEN
+               #               IF NOT cl_null(l_pmdt081) AND NOT cl_null(l_pmdt082) THEN
+               #                  IF NOT s_apmt520_ins_inao('1',l_pmdt081,l_pmdt082,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+               #                     #LET r_success = FALSE
+               #                     #RETURN r_success
+               #                  END IF
+               #               ELSE
+               #                  IF NOT s_apmt520_ins_inao('1',l_pmds006,l_pmdt028,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+               #                     #LET r_success = FALSE
+               #                     #RETURN r_success
+               #                  END IF
+               #               END IF
+               #            END IF
+               #            CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'1',g_prog,'','','','','0')
+               #                  RETURNING l_success
+               #            CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+               #            CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+               #         ELSE
+               #            LET g_pmdu_d[l_ac].pmdu008 = g_pmdu_d_o.pmdu008
+               #         END IF
+               #      END IF
+               #   ELSE
+               #      IF g_argv[1] MATCHES '[6]' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+               #         CALL s_lot_upd_inao(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_site,g_pmdu_d[l_ac].pmdu005) #160316-00007#3 add pmdu005
+               #            RETURNING l_success
+               #      END IF
+               #   END IF
+               #END IF
+               #160407-00028#1--mark---end---
+               
+               #仓退单：若有指定收货单号：
+               #   1)	收货单有维护制造批序号资料，只能挑选收货单制造批序号资料
+               #   2)	收货单没有维护制造批序号资料，只能挑选收货单对应的入库单的资料
+               #若没有指定收货单号则直接由库存档选取
+               IF g_argv[1] MATCHES '[7]' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+                  IF NOT cl_null(g_pmdu_d[l_ac].pmdu006) AND g_pmdu_d[l_ac].pmdu007 IS NOT NULL THEN #160411-00017#1 add
+                     IF g_pmdu_d[l_ac].pmdu008 != g_pmdu_d_o.pmdu008 THEN #160411-00017#1 add
+                        CALL s_lot_inao_chk(g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,'2',g_site) RETURNING l_success,l_n
+                        IF l_n > 0 THEN
+                           IF l_success THEN
+                              IF NOT cl_null(l_pmds006) THEN
+                                 #SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+                                 #IF l_n > 0 THEN
+                                    IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                                       CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                    END IF
+                                    CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                    
+                                    DECLARE sel_pmdt_cs7 CURSOR FOR
+                                        SELECT pmdtdocno,pmdtseq INTO l_pmdtdocno,l_pmdtseq_1 FROM pmdt_t,pmds_t
+                                           WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno 
+                                             AND pmdsent = g_enterprise 
+                                             AND ((pmds006 = l_pmds006 AND pmdt028 = l_pmdt028 AND pmds000 IN ('6','12','13'))
+                                                OR (pmdsdocno = l_pmds006 AND pmdtseq = l_pmdt028 AND pmds000 IN ('3','4','20')))
+                                             AND pmdsstus = 'S'
+                                    FOREACH sel_pmdt_cs7 INTO l_pmdtdocno,l_pmdtseq_1
+                                       IF NOT s_apmt520_ins_inao('1',l_pmdtdocno,l_pmdtseq_1,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                                          #LET r_success = FALSE
+                                          #RETURN r_success
+                                       END IF
+                                    END FOREACH
+                                 #END IF
+                                    
+                                 CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                    RETURNING l_success
+                                 CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                 CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                 #ELSE
+                                 #   SELECT COUNT(inaodocno) INTO l_n FROM inao_t,pmds_t,pmdt_t 
+                                 #      WHERE inaoent = pmdsent AND inaodocno = pmdsdocno AND inaoseq = pmdtseq
+                                 #        AND pmdsent = pmdtent AND pmdsdocno = pmdtdocno
+                                 #        AND pmdsent = g_enterprise AND pmds006 = l_pmds006 AND pmdt028 = l_pmdt028
+                                 #        AND pmds000 IN ('6','12','13') AND pmdsstus = 'S'
+                                 #   IF l_n > 0 THEN
+                                 #      CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq) RETURNING l_success
+                                 #      CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                 #         RETURNING l_success
+                                 #      CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq) RETURNING l_success
+                                 #   END IF
+                                 #END IF
+                              ELSE
+                                  CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                  CALL s_lot_sel('1','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                     RETURNING l_success
+                              END IF
+                           ELSE
+                              LET g_pmdu_d[l_ac].pmdu008 = g_pmdu_d_o.pmdu008
+                           END IF
+                        #160411-00017#1--add--begin---
+                        ELSE
+                           IF NOT cl_null(l_pmds006) THEN
+                              #SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+                              #IF l_n > 0 THEN
+                                 IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                                    CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                 END IF
+                                 CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                 
+                                 DECLARE sel_pmdt_cs12 CURSOR FOR
+                                     SELECT pmdtdocno,pmdtseq INTO l_pmdtdocno,l_pmdtseq_1 FROM pmdt_t,pmds_t
+                                        WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno 
+                                          AND pmdsent = g_enterprise 
+                                          AND ((pmds006 = l_pmds006 AND pmdt028 = l_pmdt028 AND pmds000 IN ('6','12','13'))
+                                             OR (pmdsdocno = l_pmds006 AND pmdtseq = l_pmdt028 AND pmds000 IN ('3','4','20')))
+                                          AND pmdsstus = 'S'
+                                 FOREACH sel_pmdt_cs12 INTO l_pmdtdocno,l_pmdtseq_1
+                                    IF NOT s_apmt520_ins_inao('1',l_pmdtdocno,l_pmdtseq_1,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                                       #LET r_success = FALSE
+                                       #RETURN r_success
+                                    END IF
+                                 END FOREACH
+                              #END IF
+                                 
+                              CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                 RETURNING l_success
+                              CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              #ELSE
+                              #   SELECT COUNT(inaodocno) INTO l_n FROM inao_t,pmds_t,pmdt_t 
+                              #      WHERE inaoent = pmdsent AND inaodocno = pmdsdocno AND inaoseq = pmdtseq
+                              #        AND pmdsent = pmdtent AND pmdsdocno = pmdtdocno
+                              #        AND pmdsent = g_enterprise AND pmds006 = l_pmds006 AND pmdt028 = l_pmdt028
+                              #        AND pmds000 IN ('6','12','13') AND pmdsstus = 'S'
+                              #   IF l_n > 0 THEN
+                              #      CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq) RETURNING l_success
+                              #      CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                              #         RETURNING l_success
+                              #      CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq) RETURNING l_success
+                              #   END IF
+                              #END IF
+                           ELSE
+                               CALL s_apmt520_del_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                               CALL s_lot_sel('1','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                  RETURNING l_success
+                           END IF
+                        END IF
+                     END IF
+                     #160411-00017#1---add--end   
+                  END IF
+               END IF
+            END IF
+            
+            #判斷[T:料件據點進銷存檔].[C:批號自動編碼]是否有勾選，若勾選自動編碼時,呼叫命名規則產生的應用元件產生批號
+            #若輸入的料件+批號不存在[T:料件批號資料檔]時，則呼叫應用元件新增料件批號基本資料
+            #若料件要做批號管理且又有做有效期管理時，需要自動計算該批的有效日期
+            SELECT pmdsdocdt INTO l_pmdsdocdt FROM pmds_t WHERE pmdsent = g_enterprise AND pmdsdocno = g_pmdsdocno
+            CALL s_aini010_calculate_effdt(g_site,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu008,l_pmdsdocdt) RETURNING g_pmdu_d[l_ac].pmdu017                  
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu017
+            
+            LET g_pmdu_d_o.pmdu008 = g_pmdu_d[l_ac].pmdu008
+               
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu008
+            #add-point:ON CHANGE pmdu008 name="input.g.page1.pmdu008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu009
+            
+            #add-point:AFTER FIELD pmdu009 name="input.a.page1.pmdu009"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu009
+            #add-point:BEFORE FIELD pmdu009 name="input.b.page1.pmdu009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu009
+            #add-point:ON CHANGE pmdu009 name="input.g.page1.pmdu009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu010
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdu_d[l_ac].pmdu010,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD pmdu010
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdu010 name="input.a.page1.pmdu010"
+            IF NOT cl_null(g_pmdu_d[l_ac].pmdu010) THEN
+               IF g_pmdu_d[l_ac].pmdu010 <> g_pmdu_d_o.pmdu010 OR cl_null(g_pmdu_d_o.pmdu010) THEN
+                  LET l_pmdu010 = 0
+                  SELECT SUM(pmdu010) INTO l_pmdu010 FROM pmdu_t
+                    WHERE pmduent = g_enterprise AND pmdudocno = g_pmdsdocno AND pmduseq = g_pmdtseq
+                  IF cl_null(l_pmdu010) THEN
+                     LET l_pmdu010 = 0
+                  END IF
+                  #若是修改狀態，則需加上當前項序已經存在的數量
+                  SELECT pmdu010 INTO l_pmdu010_1 FROM pmdu_t 
+                     WHERE pmduent = g_enterprise AND pmdudocno = g_pmdsdocno AND pmduseq = g_pmdtseq AND pmduseq1 = g_pmdu_d_t.pmduseq1
+                     
+                  IF cl_null(l_pmdu010_1) THEN
+                     LET l_pmdu010_1 = 0
+                  END IF
+                  
+                  IF g_pmdu_d[l_ac].pmdu010 > g_pmdu_m.pmdt020 - l_pmdu010 + l_pmdu010_1 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'apm-00496'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                  
+                     LET g_pmdu_d[l_ac].pmdu010 = g_pmdu_d_o.pmdu010
+                     NEXT FIELD pmdu010
+                  END IF
+                  
+                  #抓取料件據點進銷存相關資訊
+                  LET l_imaf071 = NULL
+                  LET l_imaf081 = NULL
+                  SELECT imaf071,imaf081 INTO l_imaf071,l_imaf081 FROM imaf_t WHERE imafent = g_enterprise
+                    AND imafsite = g_site AND imaf001 = g_pmdu_m.pmdu001
+                  #若料件設置要做製造批序號管理時，新增時維護完數量時自動開啟批序號維護作業維護相關資料
+                  IF (l_imaf071 = '1' OR l_imaf081 = '1') AND g_pmdu_d[l_ac].pmdu010 > 0
+                        AND ( NOT cl_null(g_pmdu_d[l_ac].pmduseq1) AND
+                              NOT cl_null(g_pmdu_m.pmdu001) AND
+                              NOT cl_null(g_pmdu_d[l_ac].pmdu009) AND
+                              NOT cl_null(g_pmdu_d[l_ac].pmdu010) ) THEN 
+                     #SELECT pmds006,pmds007 INTO l_pmds006,l_pmds007 FROM pmds_t WHERE pmdsent = g_enterprise AND pmdsdocno = g_pmdsdocno
+                     #SELECT pmdt026,pmdt081,pmdt082,pmdt028 INTO l_pmdt026,l_pmdt081,l_pmdt082,l_pmdt028 FROM pmdt_t WHERE pmdtent = g_enterprise AND pmdtdocno = g_pmdsdocno AND pmdtseq = g_pmdtseq
+                     #IF cl_null(l_pmdt081) OR cl_null(l_pmdt082) OR l_pmdt082 = 0 THEN
+                     #   LET l_pmdt081 = g_pmdt081
+                     #   LET l_pmdt082 = g_pmdt082
+                     #END IF
+                     #IF cl_null(l_pmdt028) OR l_pmdt028 = 0 THEN
+                     #   LET l_pmdt028 = g_pmdt028
+                     #END IF
+                     #判斷據點參數若收貨單使用製造批序號時，則製造批序號頁簽可以維護(據點參數:S-BAS-0049)
+                     IF g_argv[1] MATCHES '[1289]' THEN
+                        IF cl_get_para(g_enterprise,g_site,'S-BAS-0049') = 'Y' THEN
+                           CALL s_lot_ins(g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'2',l_pmds007,'1','',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu005) #160316-00007#3 add pmdu005
+                              RETURNING l_success,l_amount
+                        END IF
+                     END IF
+                     
+                     #直接收貨入庫單
+                     IF g_argv[1] MATCHES '[34]' OR g_argv[1] = '20' THEN
+                        CALL s_lot_ins(g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'2',l_pmds007,'1','',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu005)  #160316-00007#3 add pmdu005
+                           RETURNING l_success,l_amount
+                     END IF
+
+                     #驗退單、入庫單
+                     #1、先判斷是否有收貨單，再判斷收貨單是否有維護製造批序號
+                     #1.1 若有，則根據來再判斷當前料號是否走QC，若走QC，則批序號來源是qc單的，若不走，則來源收貨單
+                     #1.2若收貨單沒有維護製造批序號，則入庫單、無收貨來源的倉退單可自行新增
+                     IF g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+                        SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+                        IF l_n > 0 THEN
+                           #驗退、入庫、倉退單據，賦值來源單據的製造批序號資料inao_t
+                           IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                              CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                           END IF
+                           IF g_argv[1] MATCHES '[56]' OR g_argv[1] = '10' OR g_argv[1] = '11' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+                              #IF l_pmdt026 = 'Y' THEN
+                              IF NOT cl_null(l_pmdt081) AND NOT cl_null(l_pmdt082) THEN
+                                 IF NOT s_apmt520_ins_inao('1',l_pmdt081,l_pmdt082,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                                    #LET r_success = FALSE
+                                    #RETURN r_success
+                                 END IF
+                              ELSE
+                                 IF NOT s_apmt520_ins_inao('1',l_pmds006,l_pmdt028,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                                    #LET r_success = FALSE
+                                    #RETURN r_success
+                                 END IF
+                              END IF
+                           END IF
+                           CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'1',g_prog,'','','','','0')
+                                 RETURNING l_success
+                           CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                           CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                        ELSE
+                           IF g_argv[1] MATCHES '[6]' OR g_argv[1] = '12' OR g_argv[1] = '13' THEN
+                              CALL s_lot_ins(g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'2',l_pmds007,'1','',g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu005)  #160316-00007#3 add pmdu005
+                                 RETURNING l_success,l_amount
+                           END IF
+                        END IF
+                     END IF
+                     
+                     #仓退单：若有指定收货单号：
+                     #   1)	收货单有维护制造批序号资料，只能挑选收货单制造批序号资料
+                     #   2)	收货单没有维护制造批序号资料，只能挑选收货单对应的入库单的资料
+                     #若没有指定收货单号则直接由库存档选取
+                     IF g_argv[1] MATCHES '[7]' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+                        IF NOT cl_null(g_pmdu_d[l_ac].pmdu006) AND g_pmdu_d[l_ac].pmdu007 IS NOT NULL THEN #160411-00017#1 add
+                           IF NOT cl_null(l_pmds006) THEN
+                              #SELECT COUNT(*) INTO l_n FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = l_pmds006 AND inaoseq = l_pmdt028
+                              #IF l_n > 0 THEN
+                                 IF NOT cl_null(g_pmdu_d_o.pmdu010) THEN
+                                    CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                                 END IF
+                                 
+                                 DECLARE sel_pmdt_cs4 CURSOR FOR
+                                     SELECT pmdtdocno,pmdtseq INTO l_pmdtdocno,l_pmdtseq_1 FROM pmdt_t,pmds_t
+                                        WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno 
+                                          AND pmdsent = g_enterprise 
+                                          AND ((pmds006 = l_pmds006 AND pmdt028 = l_pmdt028 AND pmds000 IN ('6','12','13'))
+                                             OR (pmdsdocno = l_pmds006 AND pmdtseq = l_pmdt028 AND pmds000 IN ('3','4','20')))
+                                          AND pmdsstus = 'S'
+                                 FOREACH sel_pmdt_cs4 INTO l_pmdtdocno,l_pmdtseq_1
+                                    IF NOT s_apmt520_ins_inao('1',l_pmdtdocno,l_pmdtseq_1,'',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) THEN
+                                       #LET r_success = FALSE
+                                       #RETURN r_success
+                                    END IF
+                                 END FOREACH
+                              #END IF
+                                 
+                              CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                 RETURNING l_success
+                              CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              CALL s_apmt520_del_inao('1',g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1) RETURNING l_success
+                              #ELSE
+                              #   SELECT COUNT(inaodocno) INTO l_n FROM inao_t,pmds_t,pmdt_t 
+                              #      WHERE inaoent = pmdsent AND inaodocno = pmdsdocno AND inaoseq = pmdtseq
+                              #        AND pmdsent = pmdtent AND pmdsdocno = pmdtdocno
+                              #        AND pmdsent = g_enterprise AND pmds006 = l_pmds006 AND pmdt028 = l_pmdt028
+                              #        AND pmds000 IN ('6','12','13') AND pmdsstus = 'S'
+                              #   IF l_n > 0 THEN
+                              #      CALL s_apmt520_upd_inao('2',g_pmdsdocno,g_pmdtseq) RETURNING l_success
+                              #      CALL s_lot_sel('2','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                              #         RETURNING l_success
+                              #      CALL s_apmt520_upd_inao('1',g_pmdsdocno,g_pmdtseq) RETURNING l_success
+                              #   END IF
+                              #END IF
+                           ELSE
+                               CALL s_lot_sel('1','2',g_site,g_pmdsdocno,g_pmdtseq,g_pmdu_d[l_ac].pmduseq1,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,g_pmdu_d[l_ac].pmdu005,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu010,'-1',g_prog,'','','','','0')
+                                  RETURNING l_success
+                           END IF
+                        END IF #160411-00017#1 add 
+                     END IF
+                     
+                  END IF
+                  
+                  IF NOT cl_null(g_pmdu_d[l_ac].pmdu011) THEN
+                     #CALL s_aimi190_get_convert(g_pmdu_m.pmdu001,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu011)
+                     #    RETURNING l_success,l_rate
+                     #LET g_pmdu_d[l_ac].pmdu012 = g_pmdu_d[l_ac].pmdu010*l_rate
+                     CALL s_aooi250_convert_qty(g_pmdu_m.pmdu001,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu011,g_pmdu_d[l_ac].pmdu010)
+                        RETURNING l_success,g_pmdu_d[l_ac].pmdu012
+                  ELSE
+                     LET g_pmdu_d[l_ac].pmdu012 = ''
+                  END IF
+               END IF
+               
+            END IF
+            LET g_pmdu_d_o.pmdu010 = g_pmdu_d[l_ac].pmdu010
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu010
+            #add-point:BEFORE FIELD pmdu010 name="input.b.page1.pmdu010"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu010
+            #add-point:ON CHANGE pmdu010 name="input.g.page1.pmdu010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu011
+            
+            #add-point:AFTER FIELD pmdu011 name="input.a.page1.pmdu011"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu011
+            #add-point:BEFORE FIELD pmdu011 name="input.b.page1.pmdu011"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu011
+            #add-point:ON CHANGE pmdu011 name="input.g.page1.pmdu011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu012
+            #add-point:BEFORE FIELD pmdu012 name="input.b.page1.pmdu012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu012
+            
+            #add-point:AFTER FIELD pmdu012 name="input.a.page1.pmdu012"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu012
+            #add-point:ON CHANGE pmdu012 name="input.g.page1.pmdu012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu202
+            #add-point:BEFORE FIELD pmdu202 name="input.b.page1.pmdu202"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu202
+            
+            #add-point:AFTER FIELD pmdu202 name="input.a.page1.pmdu202"
+            #160512-00004#6-add-(S)
+            IF NOT apmt520_03_pmdu202_pmdu017_chk(g_pmdu_d[l_ac].pmdu202,g_pmdu_d[l_ac].pmdu017) THEN
+               LET g_pmdu_d[l_ac].pmdu202 = g_pmdu_d_o.pmdu202
+               NEXT FIELD CURRENT
+            END IF
+            LET g_pmdu_d_o.pmdu202 = g_pmdu_d[l_ac].pmdu202
+            #160512-00004#6-add-(E)
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu202
+            #add-point:ON CHANGE pmdu202 name="input.g.page1.pmdu202"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu017
+            #add-point:BEFORE FIELD pmdu017 name="input.b.page1.pmdu017"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu017
+            
+            #add-point:AFTER FIELD pmdu017 name="input.a.page1.pmdu017"
+            IF NOT apmt520_03_pmdu202_pmdu017_chk(g_pmdu_d[l_ac].pmdu202,g_pmdu_d[l_ac].pmdu017) THEN
+               LET g_pmdu_d[l_ac].pmdu017 = g_pmdu_d_o.pmdu017
+               NEXT FIELD CURRENT
+            END IF
+            LET g_pmdu_d_o.pmdu017 = g_pmdu_d[l_ac].pmdu017
+            #160512-00004#6-add-(E)
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu017
+            #add-point:ON CHANGE pmdu017 name="input.g.page1.pmdu017"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdu016
+            #add-point:BEFORE FIELD pmdu016 name="input.b.page1.pmdu016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdu016
+            
+            #add-point:AFTER FIELD pmdu016 name="input.a.page1.pmdu016"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdu016
+            #add-point:ON CHANGE pmdu016 name="input.g.page1.pmdu016"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.pmduseq1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmduseq1
+            #add-point:ON ACTION controlp INFIELD pmduseq1 name="input.c.page1.pmduseq1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu005
+            #add-point:ON ACTION controlp INFIELD pmdu005 name="input.c.page1.pmdu005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu006
+            #add-point:ON ACTION controlp INFIELD pmdu006 name="input.c.page1.pmdu006"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmdu_d[l_ac].pmdu006             #給予default值
+
+            #給予arg
+            #倉退时，開有庫存的庫位
+            IF g_argv[1] MATCHES '[7]' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+               LET g_qryparam.arg1 = g_pmdu_m.pmdu001
+               IF cl_null(g_pmdu_m.pmdu002) THEN
+                  LET g_pmdu_m.pmdu002 = ' '
+               END IF
+               LET g_qryparam.arg2 = g_pmdu_m.pmdu002
+               
+               #160801-00043#1--s
+               IF NOT cl_null(g_bas_0043) THEN  #VMI存貨庫位Tag
+                  IF g_pmds011 = '3' THEN   #VMI采购
+                     LET g_qryparam.where = " inag004 IN (SELECT inac001 FROM inac_t WHERE inacent = '",g_enterprise,"' AND inacsite = '",g_site,"' AND inac003 = '",g_bas_0043,"') "
+                  ELSE
+                     LET g_qryparam.where = " inag004 NOT IN (SELECT inac001 FROM inac_t WHERE inacent = '",g_enterprise,"' AND inacsite = '",g_site,"' AND inac003 = '",g_bas_0043,"') "
+                  END IF
+               END IF
+               #160801-00043#1--e
+               
+               CALL q_inag004_13()  
+               LET g_pmdu_d[l_ac].pmdu006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               LET g_pmdu_d[l_ac].pmdu007 = g_qryparam.return2              #將開窗取得的值回傳到變數
+               LET g_pmdu_d[l_ac].pmdu008 = g_qryparam.return3              #將開窗取得的值回傳到變數
+               LET g_pmdu_d[l_ac].pmdu005 = g_qryparam.return4
+               DISPLAY g_pmdu_d[l_ac].pmdu006 TO pmdu006              #顯示到畫面上
+               DISPLAY g_pmdu_d[l_ac].pmdu007 TO pmdu007              #顯示到畫面上
+               DISPLAY g_pmdu_d[l_ac].pmdu008 TO pmdu008              #顯示到畫面上
+               DISPLAY g_pmdu_d[l_ac].pmdu005 TO pmdu005 
+               
+               CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) RETURNING g_pmdu_d[l_ac].pmdu007_desc
+               DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+            ELSE
+            
+               #160801-00043#1--s
+               IF NOT cl_null(g_bas_0043) THEN  #VMI存貨庫位Tag
+                  IF g_pmds011 = '3' THEN   #VMI采购
+                     LET g_qryparam.where = " inaa001 IN (SELECT inac001 FROM inac_t WHERE inacent = '",g_enterprise,"' AND inacsite = '",g_site,"' AND inac003 = '",g_bas_0043,"') "
+                  ELSE
+                     LET g_qryparam.where = " inaa001 NOT IN (SELECT inac001 FROM inac_t WHERE inacent = '",g_enterprise,"' AND inacsite = '",g_site,"' AND inac003 = '",g_bas_0043,"') "
+                  END IF
+               END IF
+               #160801-00043#1--e
+
+               CALL q_inaa001_15()                                #呼叫開窗
+               
+               LET g_pmdu_d[l_ac].pmdu006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               
+               DISPLAY g_pmdu_d[l_ac].pmdu006 TO pmdu006              #顯示到畫面上
+            END IF
+            
+            CALL s_desc_get_stock_desc(g_site,g_pmdu_d[l_ac].pmdu006) RETURNING g_pmdu_d[l_ac].pmdu006_desc
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu006_desc
+
+            NEXT FIELD pmdu006
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu007
+            #add-point:ON ACTION controlp INFIELD pmdu007 name="input.c.page1.pmdu007"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmdu_d[l_ac].pmdu006
+            LET g_qryparam.default2 = g_pmdu_d[l_ac].pmdu007             #給予default值
+            LET g_qryparam.default3 = g_pmdu_d[l_ac].pmdu008
+            LET g_qryparam.default4 = g_pmdu_d[l_ac].pmdu005
+
+            #給予arg
+            LET g_qryparam.arg1 = g_pmdu_d[l_ac].pmdu006
+            #倉退时，開有庫存的庫位
+            IF g_argv[1] MATCHES '[7]' OR g_argv[1] = '14' OR g_argv[1] = '15' THEN
+               LET g_qryparam.arg1 = g_pmdu_m.pmdu001
+               IF cl_null(g_pmdu_m.pmdu002) THEN
+                  LET g_pmdu_m.pmdu002 = ' '
+               END IF
+               LET g_qryparam.arg2 = g_pmdu_m.pmdu002
+               
+               CALL q_inag004_13()  
+               LET g_pmdu_d[l_ac].pmdu006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               LET g_pmdu_d[l_ac].pmdu007 = g_qryparam.return2              #將開窗取得的值回傳到變數
+               LET g_pmdu_d[l_ac].pmdu008 = g_qryparam.return3              #將開窗取得的值回傳到變數
+               LET g_pmdu_d[l_ac].pmdu005 = g_qryparam.return4
+               DISPLAY g_pmdu_d[l_ac].pmdu006 TO pmdu006              #顯示到畫面上
+               DISPLAY g_pmdu_d[l_ac].pmdu007 TO pmdu007              #顯示到畫面上
+               DISPLAY g_pmdu_d[l_ac].pmdu008 TO pmdu008              #顯示到畫面上
+               DISPLAY g_pmdu_d[l_ac].pmdu005 TO pmdu005 
+               
+               CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) RETURNING g_pmdu_d[l_ac].pmdu007_desc
+               DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+            ELSE
+               LET g_qryparam.default1 = g_pmdu_d[l_ac].pmdu007
+               CALL q_inab002_3()                                #呼叫開窗
+               
+               LET g_pmdu_d[l_ac].pmdu007 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               
+               DISPLAY g_pmdu_d[l_ac].pmdu007 TO pmdu007              #顯示到畫面上
+            END IF
+            
+            CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) RETURNING g_pmdu_d[l_ac].pmdu007_desc
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+            NEXT FIELD pmdu007
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu008
+            #add-point:ON ACTION controlp INFIELD pmdu008 name="input.c.page1.pmdu008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu009
+            #add-point:ON ACTION controlp INFIELD pmdu009 name="input.c.page1.pmdu009"
+ 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu010
+            #add-point:ON ACTION controlp INFIELD pmdu010 name="input.c.page1.pmdu010"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu011
+            #add-point:ON ACTION controlp INFIELD pmdu011 name="input.c.page1.pmdu011"
+ 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu012
+            #add-point:ON ACTION controlp INFIELD pmdu012 name="input.c.page1.pmdu012"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu202
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu202
+            #add-point:ON ACTION controlp INFIELD pmdu202 name="input.c.page1.pmdu202"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu017
+            #add-point:ON ACTION controlp INFIELD pmdu017 name="input.c.page1.pmdu017"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdu016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdu016
+            #add-point:ON ACTION controlp INFIELD pmdu016 name="input.c.page1.pmdu016"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            LET l_pmdu010 = 0
+            SELECT SUM(pmdu010) INTO l_pmdu010 FROM pmdu_t
+              WHERE pmduent = g_enterprise AND pmdudocno = g_pmdsdocno AND pmduseq = g_pmdtseq
+            IF cl_null(l_pmdu010) THEN
+               LET l_pmdu010 = 0
+            END IF
+            
+            #單身所有收貨數量加總是否與該收貨項次的收貨數量一致，若不一致則show訊息不允許離開
+            IF g_pmdt020 != l_pmdu010 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00497'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_pmdu_d[l_ac].pmdu010 = g_pmdu_d_t.pmdu010
+               NEXT FIELD pmdu010
+            END IF
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   #CLOSE apmt520_03_cl
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmt520_03 
+   
+   #add-point:input段after input 
+   LET INT_FLAG = FALSE
+   RETURN r_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmt520_03.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="apmt520_03.other_function" readonly="Y" >}
+
+#顯示單頭資料
+PRIVATE FUNCTION apmt520_03_master_show()
+DEFINE l_success   LIKE type_t.num5    
+    
+    IF (NOT cl_null(g_pmdsdocno)) AND (NOT cl_null(g_pmdtseq)) AND (NOT cl_null(g_pmdt006)) AND (NOT cl_null(g_pmdt007)) 
+       AND (NOT cl_null(g_pmdt019)) AND (NOT cl_null(g_pmdt020)) THEN
+       LET g_pmdu_m.pmdusite = g_site
+       LET g_pmdu_m.pmdudocno = g_pmdsdocno
+       LET g_pmdu_m.pmduseq = g_pmdtseq
+       LET g_pmdu_m.pmdu001 = g_pmdt006
+       LET g_pmdu_m.pmdu002 = g_pmdt007
+       LET g_pmdu_m.pmdu003 = g_pmdt009
+       LET g_pmdu_m.pmdu004 = g_pmdt010
+       LET g_pmdu_m.pmdt019 = g_pmdt019
+       LET g_pmdu_m.pmdt020 = g_pmdt020
+    ELSE
+       SELECT pmdtsite,pmdtdocno,pmdtseq,pmdt006,pmdt007,pmdt009,pmdt010,pmdt019,pmdt020,pmdt021,pmdt028,pmdt081,pmdt082,pmdt072
+          INTO g_pmdu_m.pmdusite,g_pmdu_m.pmdudocno,g_pmdu_m.pmduseq,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,
+               g_pmdu_m.pmdu003,g_pmdu_m.pmdu004,g_pmdu_m.pmdt019,g_pmdu_m.pmdt020,
+               g_pmdt021,g_pmdt028,g_pmdt081,g_pmdt082,g_pmdt072
+         FROM pmdt_t
+         WHERE pmdtent = g_enterprise AND pmdtdocno = g_pmdsdocno AND pmdtseq = g_pmdtseq
+    END IF
+    
+    #IF SQLCA.SQLCODE = 100 THEN
+    #   LET g_pmdu_m.pmdusite = g_site
+    #   LET g_pmdu_m.pmdudocno = g_pmdsdocno
+    #   LET g_pmdu_m.pmduseq = g_pmdtseq
+    #   LET g_pmdu_m.pmdu001 = g_pmdt006
+    #   LET g_pmdu_m.pmdu002 = g_pmdt007
+    #   LET g_pmdu_m.pmdu003 = g_pmdt009
+    #   LET g_pmdu_m.pmdu004 = g_pmdt010
+    #   LET g_pmdu_m.pmdt019 = g_pmdt019
+    #   LET g_pmdu_m.pmdt020 = g_pmdt020
+    #END IF
+    
+    
+    CALL s_desc_get_item_desc(g_pmdu_m.pmdu001) RETURNING g_pmdu_m.imaal003,g_pmdu_m.imaal004
+    DISPLAY BY NAME g_pmdu_m.imaal003,g_pmdu_m.imaal004
+    
+    CALL s_feature_description(g_pmdu_m.pmdu001,g_pmdu_m.pmdu002) RETURNING l_success,g_pmdu_m.pmdu002_desc
+    DISPLAY BY NAME g_pmdu_m.pmdu002_desc
+    
+    CALL s_desc_get_unit_desc(g_pmdu_m.pmdt019) RETURNING g_pmdu_m.pmdt019_desc
+    DISPLAY BY NAME g_pmdu_m.pmdt019_desc
+
+    DISPLAY BY NAME g_pmdu_m.pmdusite,g_pmdu_m.pmdudocno,g_pmdu_m.pmduseq,g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,
+                    g_pmdu_m.pmdu003,g_pmdu_m.pmdu004,g_pmdu_m.pmdt019,g_pmdu_m.pmdt020
+            
+END FUNCTION
+
+#單身填充
+PRIVATE FUNCTION apmt520_03_b_fill()
+DEFINE l_sql           STRING
+DEFINE l_cnt           LIKE type_t.num5
+
+   CALL g_pmdu_d.clear()
+   #160512-00004#6-add-'pmdu202'
+   LET l_sql = "SELECT pmduseq1,pmdu005,pmdu006,'',pmdu007,'',pmdu008,pmdu009,'',pmdu010,pmdu011,'',pmdu012,pmdu202,pmdu017,pmdu016 ",
+               " FROM pmdu_t WHERE pmduent= ? AND pmdudocno=? AND pmduseq = ? ",
+               " ORDER BY pmduseq1 "
+   PREPARE apmt520_03_pb FROM l_sql
+   DECLARE b_fill_cs CURSOR FOR apmt520_03_pb
+   
+   LET l_cnt = l_ac
+   LET l_ac = 1
+
+   OPEN b_fill_cs USING g_enterprise,g_pmdsdocno,g_pmdtseq
+   
+   FOREACH b_fill_cs INTO g_pmdu_d[l_ac].pmduseq1,g_pmdu_d[l_ac].pmdu005,
+                      g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu006_desc,g_pmdu_d[l_ac].pmdu007,
+                      g_pmdu_d[l_ac].pmdu007_desc,g_pmdu_d[l_ac].pmdu008,g_pmdu_d[l_ac].pmdu009,
+                      g_pmdu_d[l_ac].pmdu009_desc,g_pmdu_d[l_ac].pmdu010,g_pmdu_d[l_ac].pmdu011,
+                      g_pmdu_d[l_ac].pmdu011_desc,g_pmdu_d[l_ac].pmdu012,
+                      g_pmdu_d[l_ac].pmdu202,  #160512-00004#6-add
+                      g_pmdu_d[l_ac].pmdu017,g_pmdu_d[l_ac].pmdu016
+                     
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = "FOREACH:"
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+
+          EXIT FOREACH
+       END IF
+       
+       CALL s_desc_get_stock_desc(g_site,g_pmdu_d[l_ac].pmdu006) RETURNING g_pmdu_d[l_ac].pmdu006_desc
+       DISPLAY BY NAME g_pmdu_d[l_ac].pmdu006_desc
+
+       CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007) RETURNING g_pmdu_d[l_ac].pmdu007_desc
+       DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+          
+       CALL s_desc_get_unit_desc(g_pmdu_d[l_ac].pmdu009) RETURNING g_pmdu_d[l_ac].pmdu009_desc
+       DISPLAY BY NAME g_pmdu_d[l_ac].pmdu009_desc
+       
+       CALL s_desc_get_unit_desc(g_pmdu_d[l_ac].pmdu011) RETURNING g_pmdu_d[l_ac].pmdu011_desc
+       DISPLAY BY NAME g_pmdu_d[l_ac].pmdu011_desc
+       
+       LET l_ac = l_ac + 1
+       IF l_ac > g_max_rec THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code =  9035
+          LET g_errparam.extend =  ''
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+
+          EXIT FOREACH
+       END IF
+    
+    END FOREACH
+    LET l_ac = l_cnt
+    CALL g_pmdu_d.deleteElement(g_pmdu_d.getLength())
+       
+END FUNCTION
+
+PRIVATE FUNCTION apmt520_03_set_entry()
+    
+    CALL cl_set_comp_entry("pmdu007,pmdu008,pmdu005",TRUE)
+    CALL cl_set_comp_required("pmdu008",FALSE)  #160519-00022#7 add 
+END FUNCTION
+
+PRIVATE FUNCTION apmt520_03_set_no_entry()
+DEFINE l_inaa007   LIKE inaa_t.inaa007
+DEFINE l_imaf061   LIKE imaf_t.imaf061
+DEFINE l_imaf055   LIKE imaf_t.imaf055
+DEFINE l_pjaa013   LIKE pjaa_t.pjaa013
+DEFINE l_pmdt018   LIKE pmdt_t.pmdt018  #160617-00005#2
+
+    LET l_inaa007 = ''
+    SELECT inaa007 INTO l_inaa007 FROM inaa_t
+       WHERE inaaent = g_enterprise AND inaasite = g_site AND inaa001 = g_pmdu_d[l_ac].pmdu006
+    
+    #若該庫位設置不做儲位管理時，則儲位欄位不可以維護
+    IF l_inaa007 = '5' THEN
+       LET g_pmdu_d[l_ac].pmdu007 = ''
+       CALL cl_set_comp_entry("pmdu007",FALSE)
+    END IF
+    
+    #[T:料件據點進銷存檔].[C:批號控管]=1或3時才可輸入
+    LET l_imaf061 = ''
+    LET l_imaf055 = ''
+    SELECT imaf061,imaf055 INTO l_imaf061,l_imaf055 FROM imaf_t
+      WHERE imafent = g_enterprise AND imafsite = g_site AND imaf001 = g_pmdu_m.pmdu001
+    IF l_imaf061 = '2' THEN
+       LET g_pmdu_d[l_ac].pmdu008 = ''
+       CALL cl_set_comp_entry("pmdu008",FALSE)
+    END IF
+    #160519-00022#7---add---s
+    #入库单的批号需要根据料件设定进行控管
+    IF g_argv[1] MATCHES '[346]' THEN     
+       CASE l_imaf061
+          WHEN '1'
+             CALL cl_set_comp_required("pmdu008",TRUE)
+          WHEN '2'
+             CALL cl_set_comp_entry("pmdu008",FALSE)
+       END CASE
+    END IF   
+    #160519-00022#7---add---e      
+    #160617-00005#2---s---
+    IF g_argv[1] MATCHES '[1234689]' OR g_argv[1] = '12' OR g_argv[1] = '13'  OR g_argv[1] = '20' THEN
+       SELECT pmdt018 INTO l_pmdt018 FROM pmdt_t
+          WHERE pmdtent = g_enterprise AND pmdtdocno = g_pmdsdocno AND pmdtseq = g_pmdtseq
+       IF NOT cl_null(l_pmdt018) THEN
+          CALL cl_set_comp_entry("pmdu008",FALSE)
+       END IF
+    END IF
+    #160617-00005#2---e---
+            
+    #若設定imaf055(庫存管理特徵)等於'2.不可有庫存管理特徵'時，則[C:庫存管理特徵]欄位不可輸入
+    IF l_imaf055 = '2' THEN
+       CALL cl_set_comp_entry("pmdu005",FALSE)
+       LET g_pmdu_d[l_ac].pmdu005 = ''
+    END IF
+    
+    #庫存單據有專案代號且"專案庫存控管"="Y"時，自動將專案代號帶入庫存管理特徵欄位中，不可修改
+    IF g_argv[1] MATCHES '[3467]' OR g_argv[1] = '12' OR g_argv[1] = '13' OR g_argv[1] = '14' OR g_argv[1] = '15' OR g_argv[1] = '20' THEN
+       IF NOT cl_null(g_pmdt072) THEN
+          SELECT pjaa013 INTO l_pjaa013 FROM pjaa_t,pjba_t 
+             WHERE pjaaent = pjbaent AND pjaa001 = pjba000 AND pjaaent = g_enterprise AND pjba001 = g_pmdt072
+          IF l_pjaa013 = 'Y' THEN
+             LET g_pmdu_d[l_ac].pmdu005 = g_pmdt072
+             CALL cl_set_comp_entry("pmdu005",FALSE)
+          END IF
+       END IF
+    END IF
+    
+END FUNCTION
+
+PRIVATE FUNCTION apmt520_03_set_required()
+DEFINE l_imaf055  LIKE imaf_t.imaf055
+
+   LET l_imaf055 = ''
+   SELECT imaf055 INTO l_imaf055 FROM imaf_t WHERE imafent = g_enterprise AND imaf001 = g_pmdu_m.pmdu001 AND imafsite = g_site
+   
+   #若設定imaf055(庫存管理特徵)等於'1.必須有庫存管理特徵'時，則[C:庫存管理特徵]欄位必須輸入
+   IF l_imaf055 = '1' THEN
+      CALL cl_set_comp_required("pmdu005",TRUE)
+   END IF
+   
+END FUNCTION
+
+PRIVATE FUNCTION apmt520_03_set_no_required()
+
+   CALL cl_set_comp_required("pmdu005",FALSE)
+
+END FUNCTION
+
+#輸入的料件+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+PRIVATE FUNCTION apmt520_03_chk_inag004(p_pmdu006)
+DEFINE p_pmdu006   LIKE pmdu_t.pmdu006
+DEFINE r_success   LIKE type_t.num5
+      
+      LET r_success = TRUE
+      
+      IF cl_null(g_pmdu_m.pmdu002) THEN
+         LET g_pmdu_m.pmdu002 = ' '
+      END IF
+      IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+         LET g_pmdu_d[l_ac].pmdu005 = ' '
+      END IF
+      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+      INITIALIZE g_chkparam.* TO NULL
+      
+      #設定g_chkparam.*的參數
+      LET g_chkparam.arg1 = g_site
+      LET g_chkparam.arg2 = g_pmdu_m.pmdu001
+      LET g_chkparam.arg3 = g_pmdu_m.pmdu002
+      LET g_chkparam.arg4 = g_pmdu_d[l_ac].pmdu005
+      LET g_chkparam.arg5 = p_pmdu006
+      
+      #呼叫檢查存在並帶值的library
+      IF NOT cl_chk_exist("v_inag004") THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+         
+      RETURN r_success
+      
+END FUNCTION
+#輸入的料件+產品特徵+庫存管理特徵+庫位+儲位必須存在[T:庫存明細檔]中
+PRIVATE FUNCTION apmt520_03_chk_inag005(p_pmdu006,p_pmdu007)
+DEFINE p_pmdu006   LIKE pmdu_t.pmdu006
+DEFINE p_pmdu007   LIKE pmdu_t.pmdu007
+DEFINE r_success   LIKE type_t.num5
+
+      LET r_success = TRUE   
+      
+      IF cl_null(p_pmdu007) THEN
+         LET p_pmdu007 = ' '
+      END IF
+      IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+         LET g_pmdu_d[l_ac].pmdu005 = ' '
+      END IF
+
+      #若是倉退作業時，輸入的料件+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+      IF cl_null(g_pmdu_m.pmdu002) THEN
+         LET g_pmdu_m.pmdu002 = ' '
+      END IF
+
+      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+      INITIALIZE g_chkparam.* TO NULL
+      
+      #設定g_chkparam.*的參數
+      LET g_chkparam.arg1 = g_site
+      LET g_chkparam.arg2 = g_pmdu_m.pmdu001
+      LET g_chkparam.arg3 = g_pmdu_m.pmdu002
+      LET g_chkparam.arg4 = g_pmdu_d[l_ac].pmdu005
+      LET g_chkparam.arg5 = p_pmdu006
+      LET g_chkparam.arg6 = p_pmdu007
+      
+      #呼叫檢查存在並帶值的library
+      IF NOT cl_chk_exist("v_inag005") THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+      RETURN r_success  
+      
+END FUNCTION
+
+#160122-00017 add
+#儲位的檢核
+PRIVATE FUNCTION apmt520_03_pmdu007_chk()
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_inaa007   LIKE inaa_t.inaa007
+
+      LET r_success = TRUE
+
+      #储位管理若设置事前定义时，才需检验储位是否存在储位基本资料档中
+      LET l_inaa007 = ''
+      SELECT inaa007 INTO l_inaa007 FROM inaa_t WHERE inaaent = g_enterprise AND inaasite = g_site AND inaa001 = g_pmdu_d[l_ac].pmdu006
+      IF l_inaa007 <> '1' THEN
+         RETURN r_success  
+      END IF
+      
+      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+      INITIALIZE g_chkparam.* TO NULL
+      
+      #設定g_chkparam.*的參數
+      LET g_chkparam.arg1 = g_site
+      LET g_chkparam.arg2 = g_pmdu_d[l_ac].pmdu006
+      LET g_chkparam.arg3 = g_pmdu_d[l_ac].pmdu007
+      
+      
+      #呼叫檢查存在並帶值的library
+      IF NOT cl_chk_exist("v_inab002_1") THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+      
+      RETURN r_success  
+      
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查是否為 有效日期>製造日期
+# Memo...........:
+# Usage..........: CALL apmt520_03_pmdu202_pmdu017_chk(p_pmdu202,p_pmdu017)
+#                  RETURNING r_success
+# Input parameter: p_pmdu202      製造日期
+#                : p_pmdu017      有效日期
+# Return code....: r_success      TRUE/FASLE
+# Date & Author..: 2016/06/29 By dorislai (#160512-00004#6)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt520_03_pmdu202_pmdu017_chk(p_pmdu202,p_pmdu017)
+   DEFINE p_pmdu202  LIKE pmdu_t.pmdu202
+   DEFINE p_pmdu017  LIKE pmdu_t.pmdu017
+   DEFINE r_success  LIKE type_t.num5
+   
+   LET r_success = TRUE
+   IF cl_null(p_pmdu202) OR cl_null(p_pmdu017) THEN
+      RETURN r_success
+   END IF
+   #製造日期>有效日期
+   IF p_pmdu202 > p_pmdu017 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "ain-00311"  #有效日期不可以小於製造日期！
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      LET r_success = FALSE
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

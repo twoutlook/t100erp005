@@ -1,0 +1,174 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apjq400" module="apj" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01996" crtdt="2017-01-04 11:22:39" modid="01996" moddt="2017-01-04 11:22:39" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="項目費用分攤查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pjeccomp,pjeccomp_desc(chr80),pjecld,pjecld_desc(chr80),pjec002,pjec003,byear(num5),bmonth(num5),eyear(num5),emonth(num5)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pjecseq,pjec004,pjec004_desc(chr500),pjec005,pjec005_desc(chr500),pjec010,pjec010_desc(chr500),pjec011,pjec011_desc(chr500),pjec012,pjec012_desc(chr500),pjec013,pjec013_desc(chr500),pjec014,pjec015,pjec016,pjec017,pjec018,pjec019,pjec020,pjec021,pjec022,pjec099,pjec200,pjec100,pjec110,pjec120,pjec300,pjec310,pjec320"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pjecownid,pjecownid_desc(chr500),pjecowndp,pjecowndp_desc(chr500),pjeccrtid,pjeccrtid_desc(chr500),pjeccrtdp,pjeccrtdp_desc(chr500),pjeccrtdt,pjecmodid,pjecmodid_desc(chr500),pjecmoddt,pjecseq"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="sub_query"/>
+    </section>
+  </structure>
+  <form id="0" module="apj" filename="apjq400" method="dialog">
+    <section id="input">
+      <input id="head" field="pjeccomp,pjecld,pjec002,pjec003,byear,bmonth,eyear,emonth"/>
+      <input id="body" page="1" field="pjecseq,pjec004,pjec005,pjec010,pjec011,pjec012,pjec013,pjec014,pjec015,pjec016,pjec017,pjec018,pjec019,pjec020,pjec021,pjec022,pjec099,pjec200,pjec100,pjec110,pjec120,pjec300,pjec310,pjec320" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pjeccomp,pjecld,pjec002,pjec003"/>
+      <construct id="body" page="1" field="pjecseq,pjec004,pjec005,pjec010,pjec010_desc,pjec011,pjec012,pjec013,pjec014,pjec015,pjec016,pjec017,pjec018,pjec019,pjec020,pjec021,pjec022,pjec099,pjec200,pjec100,pjec110,pjec120,pjec300,pjec310,pjec320"/>
+      <construct id="body" page="2" field="pjecownid,pjecowndp,pjeccrtid,pjeccrtdp,pjeccrtdt,pjecmodid,pjecmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pjecld,pjec002,pjec003"/>
+      <set id="head" type="no_entry" field="pjecld,pjec002,pjec003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pjeccomp">
+        <after>
+          <reference field="pjeccomp_desc" ref_field="pjec_t.pjeccomp" map_field="pjeccomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="pjeccomp_desc"/>
+      <column id="pjecld">
+        <after>
+          <reference field="pjecld_desc" ref_field="pjec_t.pjecld" map_field="pjecld" ref_sql="SELECT glaal003 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaal001=? AND glaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_glaald_01" state="c"/>
+      </column>
+      <column id="pjecld_desc"/>
+      <column id="pjec002"/>
+      <column id="pjec003"/>
+      <column id="byear"/>
+      <column id="bmonth"/>
+      <column id="eyear"/>
+      <column id="emonth"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pjecseq"/>
+      <column id="pjec004">
+        <after>
+          <reference field="pjec004_desc" ref_field="pjec_t.pjec004" map_field="pjec004" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="pjec004_desc"/>
+      <column id="pjec005">
+        <after>
+          <reference field="pjec005_desc" ref_field="pjec004,pjec005" map_field="pjec004,pjec005" ref_sql="SELECT pjbbl004 FROM pjbbl_t WHERE pjbblent=$varg_enterprise$var AND pjbbl001=? AND pjbbl002=? AND pjbbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbb002" state="c"/>
+      </column>
+      <column id="pjec005_desc"/>
+      <column id="pjec010">
+        <after/>
+        <controlp form="q_glac002_5" state="c"/>
+      </column>
+      <column id="pjec010_desc"/>
+      <column id="pjec011">
+        <after>
+          <reference field="pjec011_desc" ref_field="pjec_t.pjec011" map_field="pjec011" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="pjec011_desc"/>
+      <column id="pjec012">
+        <after>
+          <reference field="pjec012_desc" ref_field="pjec_t.pjec012" map_field="pjec012" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_71" state="c"/>
+      </column>
+      <column id="pjec012_desc"/>
+      <column id="pjec013">
+        <after>
+          <reference field="pjec013_desc" ref_field="pjec_t.pjec013" map_field="pjec013" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="pjec013_desc"/>
+      <column id="pjec014"/>
+      <column id="pjec015"/>
+      <column id="pjec016">
+        <controlp form="q_ooeg001_6" state="c"/>
+      </column>
+      <column id="pjec017"/>
+      <column id="pjec018"/>
+      <column id="pjec019"/>
+      <column id="pjec020"/>
+      <column id="pjec021">
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="pjec022">
+        <controlp form="q_pjbb002" state="c"/>
+      </column>
+      <column id="pjec099"/>
+      <column id="pjec200" type="S" default="0"/>
+      <column id="pjec100" type="S" default="0"/>
+      <column id="pjec110" type="S" default="0"/>
+      <column id="pjec120" type="S" default="0"/>
+      <column id="pjec300" type="S" default="0"/>
+      <column id="pjec310" type="S" default="0"/>
+      <column id="pjec320" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pjecownid">
+        <after>
+          <reference field="pjecownid_desc" ref_field="pjec_t.pjecownid" map_field="pjecownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjecownid_desc"/>
+      <column id="pjecowndp">
+        <after>
+          <reference field="pjecowndp_desc" ref_field="pjec_t.pjecowndp" map_field="pjecowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjecowndp_desc"/>
+      <column id="pjeccrtid">
+        <after>
+          <reference field="pjeccrtid_desc" ref_field="pjec_t.pjeccrtid" map_field="pjeccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjeccrtid_desc"/>
+      <column id="pjeccrtdp">
+        <after>
+          <reference field="pjeccrtdp_desc" ref_field="pjec_t.pjeccrtdp" map_field="pjeccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjeccrtdp_desc"/>
+      <column id="pjeccrtdt"/>
+      <column id="pjecmodid">
+        <after>
+          <reference field="pjecmodid_desc" ref_field="pjec_t.pjecmodid" map_field="pjecmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjecmodid_desc"/>
+      <column id="pjecmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pjec_t" pk="pjecld,pjec002,pjec003">
+      <sql id="forupd_sql" type="sql" query="SELECT pjeccomp,&apos;&apos;,pjecld,&apos;&apos;,pjec002,pjec003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM pjec_t WHERE pjecent= ? AND pjecld=? AND pjec002=? AND pjec003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pjeccomp,&apos;&apos;,pjecld,&apos;&apos;,pjec002,pjec003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM pjec_t" order="pjecld,pjec002,pjec003"/>
+    </head>
+    <body id="pjec_t" page="1,2" linked="" pk="pjecseq" fk="pjecld,pjec002,pjec003">
+      <sql id="forupd_sql_detail" query="SELECT pjecseq,pjec004,&apos;&apos;,pjec005,&apos;&apos;,pjec010,&apos;&apos;,pjec011,&apos;&apos;,pjec012,&apos;&apos;,pjec013,&apos;&apos;,pjec014,pjec015,pjec016,pjec017,pjec018,pjec019,pjec020,pjec021,pjec022,pjec099,pjec200,pjec100,pjec110,pjec120,pjec300,pjec310,pjec320,pjecownid,&apos;&apos;,pjecowndp,&apos;&apos;,pjeccrtid,&apos;&apos;,pjeccrtdp,&apos;&apos;,pjeccrtdt,pjecmodid,&apos;&apos;,pjecmoddt,&apos;&apos; FROM pjec_t WHERE pjecent=? AND pjecld=? AND pjec002=? AND pjec003=? AND pjecseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pjecseq,pjec004,&apos;&apos;,pjec005,&apos;&apos;,pjec010,&apos;&apos;,pjec011,&apos;&apos;,pjec012,&apos;&apos;,pjec013,&apos;&apos;,pjec014,pjec015,pjec016,pjec017,pjec018,pjec019,pjec020,pjec021,pjec022,pjec099,pjec200,pjec100,pjec110,pjec120,pjec300,pjec310,pjec320,pjecownid,&apos;&apos;,pjecowndp,&apos;&apos;,pjeccrtid,&apos;&apos;,pjeccrtdp,&apos;&apos;,pjeccrtdt,pjecmodid,&apos;&apos;,pjecmoddt,&apos;&apos; FROM pjec_t WHERE pjecent= ? AND pjecld=? AND pjec002=? AND pjec003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

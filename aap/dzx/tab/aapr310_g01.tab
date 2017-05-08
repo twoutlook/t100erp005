@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapr310_g01" module="aap" jobmode="N" type="g01" industry="std" crtid="05016" crtdt="2015-07-23 09:25:59" modid="04152" moddt="2016-11-28 11:28:41" sdver="6" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|Where condition),tm.a1(chr10|apcasite),tm.a2(dat|strdate),tm.a3(dat|enddate),tm.a4(chr1|是否包含暫估),tm.a5(dat|截止日期)">
+    <var seq="1" value="l_pmaa016(chr100|&apos;&apos;),l_order(chr100|&apos;&apos;),l_enddate(dat|NULL),l_strdate(dat|NULL),l_apca004_pmaal004(chr100|&apos;&apos;),apca100,l_apca004_oofc0122(chr100|&apos;&apos;),l_apca014_desc(chr100|&apos;&apos;),l_type(chr100|&apos;&apos;),apcasite,apcald,apcaent,apcadocno,apcadocdt,l_apce109(apce109|&apos;&apos;),apcacomp,apca108,l_apca004_desc(chr100|&apos;&apos;),l_apca004_oofc012(chr100|&apos;&apos;),apca004,apcaud001,l_memo(chr500|&apos;&apos;),apca010,l_apcb028(apcb028|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_pmaa016(chr100|&apos;&apos;),l_order(chr100|&apos;&apos;),l_enddate(dat|NULL),l_strdate(dat|NULL),l_apca004_pmaal004(chr100|&apos;&apos;),apca100,l_apca004_oofc0122(chr100|&apos;&apos;),l_apca014_desc(chr100|&apos;&apos;),l_type(chr100|&apos;&apos;),apcasite,apcald,apcaent,apcadocno,apcadocdt,l_apce109(apce109|&apos;&apos;),apcacomp,apca108,l_apca004_desc(chr100|&apos;&apos;),l_apca004_oofc012(chr100|&apos;&apos;),apca004,apcaud001,l_memo(chr500|&apos;&apos;),apca010,l_apcb028(apcb028|&apos;&apos;)"/>
+    <sql id="g_from" query="apca_t"/>
+    <sql id="g_where" query="" maintable="apca_t"/>
+    <sql id="g_order" query="apcacomp,apca004"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="l_order"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="apcaent,l_order"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="apcaent,l_order"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="apcaent,l_order"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="apcaent,l_order"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

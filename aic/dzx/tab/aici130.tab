@@ -1,0 +1,176 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aici130" module="aic" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02295" crtdt="2014-04-16 14:05:05" modid="04543" moddt="2015-11-09 17:18:11" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="多角貿易轉撥單價維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="icah001,icah001_desc(chr80),icah002,icah002_desc(chr80),icah003,icah003_desc(chr80),icah004,icah005,icah005_desc(chr80),icahsite"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="icah006,icah006_desc(chr500),icah006_desc_desc(chr500),icah007,icah011,icah011_desc(chr500),icah012,icah012_desc(chr500),icah009,icah010"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="icah006,icah007,icahownid,icahownid_desc(chr500),icahowndp,icahowndp_desc(chr500),icahcrtid,icahcrtid_desc(chr500),icahcrtdp,icahcrtdp_desc(chr500),icahcrtdt,icahmodid,icahmodid_desc(chr500),icahmoddt"/>
+      <var id="bs_field" value="icah001,icah001_desc(chr80),icah002,icah002_desc(chr80),icah003,icah003_desc(chr80),icah004" pk="icah001,icah002,icah003,icah004" order=""/>
+      <bs_reference field="icah001_desc" ref_field="icah001" ref_sql="SELECT icaal003 FROM icaal_t WHERE icaalent=$varg_enterprise$var AND icaal001=? AND icaal002=$varg_dlang$var"/>
+      <bs_reference field="icah002_desc" ref_field="icah002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="icah003_desc" ref_field="icah003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aic" filename="aici130" method="dialog">
+    <section id="input">
+      <input id="head" field="icah001,icah002,icah003,icah004,icah005,icahsite"/>
+      <input id="body" page="1" field="icah006,icah007,icah011,icah012,icah009,icah010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="icah001,icah002,icah003,icah004,icah005,icahsite"/>
+      <construct id="body" page="1" field="icah006,icah007,icah011,icah012,icah009,icah010"/>
+      <construct id="body" page="2" field="icahownid,icahowndp,icahcrtid,icahcrtdp,icahcrtdt,icahmodid,icahmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="icah001,icah002,icah003,icah004"/>
+      <set id="head" type="no_entry" field="icah001,icah002,icah003,icah004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="icah001">
+        <after>
+          <check chkid="v_icaa001" id="isExist"/>
+          <reference field="icah001_desc" ref_field="icah_t.icah001" map_field="icah001" ref_sql="SELECT icaal003 FROM icaal_t WHERE icaalent=$varg_enterprise$var AND icaal001=? AND icaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_icaa001" state="i"/>
+        <controlp form="q_icaa001" state="c"/>
+      </column>
+      <column id="icah001_desc"/>
+      <column id="icah002">
+        <after>
+          <check chkid="v_ooef001_13" id="isExist"/>
+          <reference field="icah002_desc" ref_field="icah_t.icah002" map_field="icah002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_12" state="i"/>
+        <controlp form="q_ooef001_12" state="c"/>
+      </column>
+      <column id="icah002_desc"/>
+      <column id="icah003">
+        <after>
+          <check chkid="v_ooef001_13" id="isExist"/>
+          <reference field="icah003_desc" ref_field="icah_t.icah003" map_field="icah003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_12" state="i"/>
+        <controlp form="q_ooef001_12" state="c"/>
+      </column>
+      <column id="icah003_desc"/>
+      <column id="icah004"/>
+      <column id="icah005">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="icah005_desc" ref_field="icah_t.icah005" map_field="icah005" ref_sql="SELECT ooail001 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_3" state="i"/>
+        <controlp form="q_ooaj002_3" state="c"/>
+      </column>
+      <column id="icah005_desc"/>
+      <column id="icahsite"/>
+    </init>
+    <init id="body" page="1">
+      <column id="icah006">
+        <after>
+          <check chkid="v_imaf001_3" id="isExist"/>
+          <reference field="icah006_desc" ref_field="icah_t.icah006" map_field="icah006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_7" state="i"/>
+        <controlp form="q_imaf001_7" state="c"/>
+      </column>
+      <column id="icah006_desc">
+        <after>
+          <reference field="icah006_desc_desc" ref_field="icah_t.icah006" map_field="icah006" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="icah006_desc_desc"/>
+      <column id="icah007"/>
+      <column id="icah011">
+        <after>
+          <reference field="icah011_desc" ref_field="icah_t.icah011" map_field="icah011" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="icah011_desc"/>
+      <column id="icah012">
+        <after>
+          <reference field="icah012_desc" ref_field="icah012" map_field="icah012" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2003&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="icah012_desc"/>
+      <column id="icah009">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="icah010">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="icahownid">
+        <after>
+          <reference field="icahownid_desc" ref_field="icah_t.icahownid" map_field="icahownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="icahownid_desc"/>
+      <column id="icahowndp">
+        <after>
+          <reference field="icahowndp_desc" ref_field="icah_t.icahowndp" map_field="icahowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="icahowndp_desc"/>
+      <column id="icahcrtid">
+        <after>
+          <reference field="icahcrtid_desc" ref_field="icah_t.icahcrtid" map_field="icahcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="icahcrtid_desc"/>
+      <column id="icahcrtdp">
+        <after>
+          <reference field="icahcrtdp_desc" ref_field="icah_t.icahcrtdp" map_field="icahcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="icahcrtdp_desc"/>
+      <column id="icahcrtdt"/>
+      <column id="icahmodid">
+        <after>
+          <reference field="icahmodid_desc" ref_field="icah_t.icahmodid" map_field="icahmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="icahmodid_desc"/>
+      <column id="icahmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="icah_t" pk="icah001,icah002,icah003,icah004">
+      <sql id="forupd_sql" type="sql" query="SELECT icah001,&apos;&apos;,icah002,&apos;&apos;,icah003,&apos;&apos;,icah004,icah005,&apos;&apos;,icahsite FROM icah_t WHERE icahent= ? AND icah001=? AND icah002=? AND icah003=? AND icah004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT icah001,&apos;&apos;,icah002,&apos;&apos;,icah003,&apos;&apos;,icah004,icah005,&apos;&apos;,icahsite FROM icah_t" order="icah001,icah002,icah003,icah004"/>
+    </head>
+    <body id="icah_t" page="1,2" linked="" pk="icah006,icah007" fk="icah001,icah002,icah003,icah004">
+      <sql id="forupd_sql_detail" query="SELECT icah006,&apos;&apos;,&apos;&apos;,icah007,icah011,&apos;&apos;,icah012,&apos;&apos;,icah009,icah010,&apos;&apos;,&apos;&apos;,icahownid,&apos;&apos;,icahowndp,&apos;&apos;,icahcrtid,&apos;&apos;,icahcrtdp,&apos;&apos;,icahcrtdt,icahmodid,&apos;&apos;,icahmoddt FROM icah_t WHERE icahent=? AND icah001=? AND icah002=? AND icah003=? AND icah004=? AND icah006=? AND icah007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT icah006,&apos;&apos;,&apos;&apos;,icah007,icah011,&apos;&apos;,icah012,&apos;&apos;,icah009,icah010,&apos;&apos;,&apos;&apos;,icahownid,&apos;&apos;,icahowndp,&apos;&apos;,icahcrtid,&apos;&apos;,icahcrtdp,&apos;&apos;,icahcrtdt,icahmodid,&apos;&apos;,icahmoddt FROM icah_t WHERE icahent= ? AND icah001=? AND icah002=? AND icah003=? AND icah004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

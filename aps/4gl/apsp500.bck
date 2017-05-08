@@ -1,0 +1,1934 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apsp500.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0011(2016-07-04 15:18:41), PR版次:0011(2017-02-02 13:45:48)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000163
+#+ Filename...: apsp500
+#+ Description: APS計算作業
+#+ Creator....: 01588(2014-04-01 14:34:15)
+#+ Modifier...: 03079 -SD/PR- 07024
+ 
+{</section>}
+ 
+{<section id="apsp500.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#151207-00012#2   2015/12/17 By shiun   呼叫s_apsp500_aps前，加上判斷APS引擎(psca039)
+#160318-00025#50  2016/04/26 By 07673   將重複內容的錯誤訊息置換為公用錯誤訊息
+#160322-00020#1   2016/04/28 By shiun   apsp500的計算基準日期，當參數沒給值時，應該自動取目前的時間
+#160516-00007#1   2016/05/31 By dorislai 1.在計算完之後的提示視窗中，加入→APS版本：LI001
+#                                                                      計算基準日：20160516112204
+#                                                                      批次作業已執行完成
+#                                        2.APS計算完後，計算基準日重新取值顯示
+#160506-00015#1 2016/05/31 By dorislai   將抓取訂單的sql條件做調整(apsp500_demand_order)
+#                                        抓值條件→apsi002的供需種類
+#                                        --已選取的條件有 "R01" -->未確認是否納入='Y'-> xmdastus <> 'X'
+#                                                              -->            ='N' -> xmdastus = 'Y' 
+#                                        --           無 "R01" -->xmdastus = 'Y'  
+#160519-00052#1  2016/06/13 By ming      1.修改背景執行時的參數接收方式 
+#                                        2.背景執行時，重新產生base_date 計算基準日的值 
+#160622-00022#1  2016/06/27 By ming      處理「背景執行還是失敗，沒看到aps執行的log檔」的bug 
+#160704-00006#1  2016/07/04 By ming      背景執行時，由傳入的參數判斷是排程 or aps手調器  
+#                                        由T100設定的排程執行，此時要重新產生計算基準日(版本)
+#                                        由aps手調器呼叫執行，此時不重新產生計算基準日(版本)
+#160805-00072#1  2016/09/08 By dorislai  apsp500_demand_condition()裡的psdb_t、apsp500_supply_condition()裡的psdc_t，組字串，改成OR
+#161228-00044#1  2017/02/02 By dorislai  apsp500執行時會多新增psea005，記錄執行人
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   ent                   LIKE psca_t.pscaent,
+   site                  LIKE psca_t.pscasite,
+   psca001               LIKE psca_t.psca001,
+   base_date             LIKE psea_t.psea002,
+   rebuild_date          LIKE type_t.chr1, 
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       psca001 LIKE psca_t.psca001, 
+   psca001_desc LIKE type_t.chr80, 
+   base_date LIKE type_t.chr500, 
+   rebuild_date LIKE type_t.chr500, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_ref_fields      DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars        DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields      DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_psca001         LIKE psca_t.psca001
+DEFINE g_psca002         LIKE psca_t.psca002
+DEFINE g_datetime        LIKE psea_t.psea002
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp500.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aps","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   IF g_argv[3] IS NOT NULL THEN 
+      LET g_bgjob = 'Y'
+   END IF
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      #160519-00052#1 20160613 modify by ming -----(S) 
+      #LET lc_param.ent = g_argv[1]
+      #LET lc_param.site = g_argv[2]
+      #LET lc_param.psca001 = g_argv[3]
+      #LET lc_param.base_date = g_argv[4]
+      #
+      #IF NOT cl_null(lc_param.ent) THEN
+      #   LET g_enterprise = lc_param.ent
+      #END IF
+      #
+      #IF NOT cl_null(lc_param.site) THEN
+      #   LET g_site = lc_param.site
+      #END IF      
+      
+      IF (NOT cl_null(g_argv[1])) AND (NOT cl_null(g_argv[2])) AND
+         (NOT cl_null(g_argv[3])) AND (NOT cl_null(g_argv[4])) THEN
+         LET lc_param.ent       = g_argv[1]
+         LET lc_param.site      = g_argv[2]
+         LET lc_param.psca001   = g_argv[3]
+         LET lc_param.base_date = g_argv[4]
+
+         IF NOT cl_null(lc_param.ent) THEN
+            LET g_enterprise = lc_param.ent
+         END IF
+
+         IF NOT cl_null(lc_param.site) THEN
+            LET g_site = lc_param.site
+         END IF
+
+         LET ls_js = util.JSON.stringify(lc_param)
+      END IF
+      #160519-00052#1 20160613 modify by ming -----(E) 
+      
+      #160622-00022 20160627 mark -----(S) 
+      #LET ls_js = util.JSON.stringify(lc_param)
+      #160622-00022 20160627 mark -----(E) 
+      
+      #順便放一下log 
+      DISPLAY "ls_js:",ls_js 
+      #end add-point
+      CALL apsp500_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apsp500 WITH FORM cl_ap_formpath("aps",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL apsp500_init()
+ 
+      #進入選單 Menu (="N")
+      CALL apsp500_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apsp500
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apsp500.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION apsp500_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   IF cl_null(g_bgjob) THEN
+      LET g_bgjob = 'N'
+   END IF
+   LET g_errshow = 1
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp500.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apsp500_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   DEFINE l_datetime1  DATETIME YEAR TO SECOND
+   DEFINE l_str        STRING
+   DEFINE l_str1       STRING
+   DEFINE l_max_days   LIKE type_t.num5
+
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   IF cl_null(lc_param.psca001) THEN
+      INITIALIZE lc_param.* TO NULL
+      #160516-00007#1-mark-(S)
+#      LET lc_param.base_date = g_today
+#      LET l_datetime1 = cl_get_current()
+#      LET lc_param.base_date = cl_replace_str(l_datetime1,':','')
+#      LET lc_param.base_date = cl_replace_str(lc_param.base_date,' ','')
+#      LET lc_param.base_date = cl_replace_str(lc_param.base_date,'-','')
+      #160516-00007#1-mark-(E)
+      LET lc_param.ent = g_enterprise
+      LET lc_param.site= g_site
+   END IF
+   
+   #160704-00006#1 20160704 add -----(S) 
+   LET lc_param.rebuild_date = 'Y' 
+   #160704-00006#1 20160704 add -----(E) 
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         
+         
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         INPUT lc_param.psca001,lc_param.base_date,lc_param.rebuild_date
+          FROM psca001,base_date,rebuild_date
+               ATTRIBUTE(WITHOUT DEFAULTS)
+            BEFORE INPUT
+               #160516-00007#1-mod-(S)
+               #重抓計算基準日
+               LET lc_param.base_date = ''
+               LET lc_param.base_date = g_today
+               LET l_datetime1 = cl_get_current()
+               LET lc_param.base_date = cl_replace_str(l_datetime1,':','')
+               LET lc_param.base_date = cl_replace_str(lc_param.base_date,' ','')
+               LET lc_param.base_date = cl_replace_str(lc_param.base_date,'-','')
+               DISPLAY lc_param.base_date TO FORMONLY.base_date 
+               #160516-00007#1-mod-(E)
+               
+            AFTER FIELD psca001
+               CALL apsp500_psca001_ref(lc_param.psca001) 
+               IF NOT cl_null(lc_param.psca001) THEN
+                  IF NOT apsp500_psca001_chk(lc_param.psca001) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               
+            BEFORE FIELD base_date
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'aps-00087'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               
+            AFTER FIELD base_date
+               IF NOT cl_null(lc_param.base_date) THEN
+                  IF NOT s_num_isnum(lc_param.base_date) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-00005'
+                     LET g_errparam.extend = lc_param.base_date
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF LENGTH(lc_param.base_date) <> 14 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'sub-00262'
+                     LET g_errparam.extend = lc_param.base_date
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD CURRENT
+                  END IF
+                  LET l_str = lc_param.base_date
+                  LET l_str1 = l_str.subString(1,4)
+                  IF l_str1 < 1900 OR l_str1 > 2100 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'sub-00262'
+                     LET g_errparam.extend = lc_param.base_date
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD CURRENT
+                  END IF
+                  LET l_str1 = l_str.subString(5,6)
+                  IF l_str1 < 1 OR l_str1 > 12 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'sub-00262'
+                     LET g_errparam.extend = lc_param.base_date
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD CURRENT
+                  END IF
+                  LET l_str1 = l_str.subString(7,8)
+                  LET l_max_days = s_date_get_max_day(l_str.subString(1,4),l_str.subString(5,6))
+                  IF l_str1 < 0 OR l_str1 > l_max_days THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'sub-00262'
+                     LET g_errparam.extend = lc_param.base_date
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD CURRENT
+                  END IF
+                  LET l_str1 = l_str.subString(9,10)
+                  IF l_str1 < 0 OR l_str1 > 24 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'sub-00262'
+                     LET g_errparam.extend = lc_param.base_date
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD CURRENT
+                  END IF
+                  LET l_str1 = l_str.subString(11,12)
+                  IF l_str1 < 0 OR l_str1 > 60 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'sub-00262'
+                     LET g_errparam.extend = lc_param.base_date
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD CURRENT
+                  END IF
+                  LET l_str1 = l_str.subString(13,14)
+                  IF l_str1 < 0 OR l_str1 > 60 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'sub-00262'
+                     LET g_errparam.extend = lc_param.base_date
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            
+            ON ACTION controlp INFIELD psca001
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = lc_param.psca001
+               LET g_qryparam.where = " pscasite = '",g_site,"'"
+               CALL q_psca001()
+               LET lc_param.psca001 = g_qryparam.return1
+               DISPLAY lc_param.psca001 TO psca001
+               
+               CALL apsp500_psca001_ref(lc_param.psca001)
+               
+               NEXT FIELD psca001
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL apsp500_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL apsp500_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL apsp500_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = apsp500_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp500.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apsp500_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   LET la_cmdrun.param[1] = la_param.ent
+   LET la_cmdrun.param[2] = la_param.site
+   LET la_cmdrun.param[3] = la_param.psca001
+   LET la_cmdrun.param[4] = la_param.base_date
+   LET la_cmdrun.param[5] = la_param.rebuild_date 
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp500.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION apsp500_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_psce      DYNAMIC ARRAY OF RECORD
+            psce002   LIKE psce_t.psce002,
+            psce003   LIKE psce_t.psce003
+                      END RECORD
+   DEFINE l_ac        LIKE type_t.num5
+   DEFINE l_msg       STRING
+   DEFINE l_psca039   LIKE psca_t.psca039   #add--151207-00012#2 By shiun
+   #ming 20160122 add -----(S) 
+   DEFINE l_code_mfg_0036 LIKE type_t.chr10 
+   #ming 20160122 add -----(E) 
+   DEFINE l_datetime1  DATETIME YEAR TO SECOND   #add--160322-00020#1 By shiun
+
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   #160704-00006#1 20160704 add -----(S) 
+   IF cl_null(lc_param.rebuild_date) THEN 
+      LET lc_param.rebuild_date = 'N' 
+   END IF 
+   DISPLAY "lc_param.rebuild_date:",lc_param.rebuild_date 
+   DISPLAY "lc_param.base_date:",lc_param.base_date 
+   #160704-00006#1 20160704 add -----(E) 
+   
+   #add--160322-00020#1 By shiun--(S)
+   IF cl_null(lc_param.base_date) THEN
+      LET lc_param.base_date = g_today
+      LET l_datetime1 = cl_get_current()
+      LET lc_param.base_date = cl_replace_str(l_datetime1,':','')
+      LET lc_param.base_date = cl_replace_str(lc_param.base_date,' ','')
+      LET lc_param.base_date = cl_replace_str(lc_param.base_date,'-','')
+   END IF
+   #add--160322-00020#1 By shiun--(E) 
+   
+   #160519-00052#1 20160613 add -----(S) 
+   #160704-00006#1 20160704 modify -----(S) 
+   #IF g_bgjob = 'Y' THEN 
+   IF g_bgjob = 'Y' AND lc_param.rebuild_date = 'Y' THEN 
+   #160704-00006#1 20160704 modify -----(E) 
+      LET lc_param.base_date = g_today
+      LET l_datetime1 = cl_get_current()
+      LET lc_param.base_date = cl_replace_str(l_datetime1,':','')
+      LET lc_param.base_date = cl_replace_str(lc_param.base_date,' ','')
+      LET lc_param.base_date = cl_replace_str(lc_param.base_date,'-','')
+      DISPLAY "背景執行的時間：",lc_param.base_date
+   END IF 
+   #160519-00052#1 20160613 add -----(E) 
+   
+   DISPLAY "lc_param.base_date:",lc_param.base_date 
+   
+   LET g_psca001 = lc_param.psca001
+   LET g_datetime = lc_param.base_date
+   LET l_success = TRUE
+   
+   #抓取計算模式
+   SELECT psca002 INTO g_psca002 
+     FROM psca_t
+    WHERE pscaent = g_enterprise
+      AND pscasite= g_site
+      AND psca001 = g_psca001
+   
+   #抓取供給法則
+   LET ls_sql = "SELECT psce002,psce003 ",
+                "  FROM psce_t ",
+                " WHERE psceent = ",g_enterprise,
+                "   AND pscesite='",g_site,"'",
+                "   AND psce001 ='",g_psca001,"'",
+                " ORDER BY psce003 "
+   DECLARE apsp500_process_cs CURSOR FROM ls_sql
+   
+   LET l_ac = 1
+   FOREACH apsp500_process_cs INTO l_psce[l_ac].psce002,l_psce[l_ac].psce003
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg("FOREACH apsp500_process_cs","","",SQLCA.sqlcode,1)
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec AND g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET l_ac = l_ac -1
+   CALL l_psce.deleteElement(l_psce.getLength())
+   IF NOT l_success THEN
+      RETURN
+   END IF
+   #160309-00002-add-(S)
+   SELECT psca039 INTO l_psca039
+     FROM psca_t
+    WHERE pscaent  = g_enterprise
+      AND pscasite = g_site
+      AND psca001  = g_psca001
+   #160309-00002-add-(E)
+   
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      #160309-00002-mod-(S)
+#      IF g_psca002 = '1' THEN
+#         LET li_count = 9 + (l_ac * 7)
+#      ELSE
+#         LET li_count = 22 + (l_ac * 7)
+#      END IF
+        #多判斷apsi002的APS引擎
+      IF l_psca039 = '1' OR cl_null(l_psca039) THEN
+         IF g_psca002 = '1' THEN
+            LET li_count = 9 + (l_ac * 7)
+         ELSE
+            LET li_count = 22 + (l_ac * 7)
+         END IF
+      ELSE
+         IF g_psca002 = '1' THEN
+            LET li_count = 10 + (l_ac * 7)
+         ELSE
+            LET li_count = 23 + (l_ac * 7)
+         END IF
+      END IF
+      #160309-00002-mod-(E)
+      CALL cl_progress_bar_no_window(li_count)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apsp500_process_cs CURSOR FROM ls_sql
+#  FOREACH apsp500_process_cs INTO
+   #add-point:process段process name="process.process"
+   CALL s_transaction_begin()
+   
+   FOR l_ac = 1 TO l_psce.getLength()
+      IF cl_null(l_psce[l_ac].psce002) THEN
+         CONTINUE FOR
+      END IF
+      
+      #需求條件中來源為訂單
+      IF g_bgjob <> "Y" THEN
+         LET l_msg = cl_getmsg_parm('aps-00088',g_dlang,l_psce[l_ac].psce002)
+         CALL cl_progress_no_window_ing(l_msg)
+      END IF
+
+      CALL apsp500_demand_order(l_psce[l_ac].psce002)
+           RETURNING l_success
+
+      IF NOT l_success THEN
+         EXIT FOR
+      END IF
+      
+      #將資料寫入APS需求單據供給法則檔
+      #需求條件中來源為銷售預測
+      IF g_bgjob <> "Y" THEN
+         LET l_msg = cl_getmsg_parm('aps-00089',g_dlang,l_psce[l_ac].psce002)
+         CALL cl_progress_no_window_ing(l_msg)
+      END IF
+      CALL apsp500_demand_forecast(l_psce[l_ac].psce002)
+           RETURNING l_success
+      IF NOT l_success THEN
+         EXIT FOR
+      END IF
+      
+      #需求條件中來源為獨立需求
+      IF g_bgjob <> "Y" THEN
+         LET l_msg = cl_getmsg_parm('aps-00090',g_dlang,l_psce[l_ac].psce002)
+         CALL cl_progress_no_window_ing(l_msg)
+      END IF
+      CALL apsp500_demand_independent_demand(l_psce[l_ac].psce002)
+           RETURNING l_success
+      IF NOT l_success THEN
+         EXIT FOR
+      END IF
+      
+      #將資料寫入APS供給單據供給法則檔、APS需求單據供給法則檔(供給類對應法則)
+      #供給條件中來源為庫存
+      IF g_bgjob <> "Y" THEN
+         LET l_msg = cl_getmsg_parm('aps-00119',g_dlang,l_psce[l_ac].psce002)
+         CALL cl_progress_no_window_ing(l_msg)
+      END IF
+      CALL apsp500_supply_inventory(l_psce[l_ac].psce002)
+           RETURNING l_success
+      IF NOT l_success THEN
+         EXIT FOR
+      END IF
+      
+      #供給條件中來源為請購單
+      IF g_bgjob <> "Y" THEN
+         LET l_msg = cl_getmsg_parm('aps-00120',g_dlang,l_psce[l_ac].psce002)
+         CALL cl_progress_no_window_ing(l_msg)
+      END IF
+      CALL apsp500_supply_pr(l_psce[l_ac].psce002)
+           RETURNING l_success
+      IF NOT l_success THEN
+         EXIT FOR
+      END IF
+      
+      #供給條件中來源為採購單
+      IF g_bgjob <> "Y" THEN
+         LET l_msg = cl_getmsg_parm('aps-00121',g_dlang,l_psce[l_ac].psce002)
+         CALL cl_progress_no_window_ing(l_msg)
+      END IF
+      CALL apsp500_supply_po(l_psce[l_ac].psce002)
+           RETURNING l_success
+      IF NOT l_success THEN
+         EXIT FOR
+      END IF
+      
+      #供給條件中來源為工單
+      IF g_bgjob <> "Y" THEN
+         LET l_msg = cl_getmsg_parm('aps-00122',g_dlang,l_psce[l_ac].psce002)
+         CALL cl_progress_no_window_ing(l_msg)
+      END IF
+      CALL apsp500_supply_wo(l_psce[l_ac].psce002)
+           RETURNING l_success
+      IF NOT l_success THEN
+         EXIT FOR
+      END IF
+   END FOR
+   
+   IF l_success THEN
+      CALL s_transaction_end('Y','0')
+      #add--151207-00012#2 By shiun--(S)
+      ##20160122 modify by ming -----(S) 
+      #SELECT psca039 INTO l_psca039
+      #  FROM psca_t
+      # WHERE pscaent = g_enterprise
+      #   AND pscasite = g_site
+      #   AND psca001 = g_psca001
+      #
+      #IF l_psca039 = '1' THEN
+      #   CALL s_apsp500_aps(g_psca002,g_psca001,g_datetime,'','','')
+      #     RETURNING l_success
+      #ELSE
+      #   CALL s_apsp500_advanced_command('erp_export',g_psca001,g_datetime,'','')
+      #     RETURNING l_success
+      #END IF 
+      CALL cl_get_para(g_enterprise,g_site,'S-MFG-0036') RETURNING l_code_mfg_0036 
+      IF l_code_mfg_0036 = '1' THEN 
+         CALL s_apsp500_aps(g_psca002,g_psca001,g_datetime,'','','')
+              RETURNING l_success
+      ELSE 
+         SELECT psca039 INTO l_psca039
+           FROM psca_t
+          WHERE pscaent  = g_enterprise
+            AND pscasite = g_site
+            AND psca001  = g_psca001
+         IF cl_null(l_psca039) THEN 
+            LET l_psca039 = '1' 
+         END IF 
+         
+         IF l_psca039 = '1' THEN
+            CALL s_apsp500_aps(g_psca002,g_psca001,g_datetime,'','','')
+              RETURNING l_success
+         ELSE
+            CALL s_apsp500_advanced_command('erp_export',g_psca001,g_datetime,'','')
+              RETURNING l_success
+         END IF 
+      END IF 
+      #20160122 modify by ming -----(E) 
+      #add--151207-00012#2 By shiun--(E)
+      #mark--151207-00012#2 By shiun--(S)
+#      CALL s_apsp500_aps(g_psca002,g_psca001,g_datetime,'','','')
+#           RETURNING l_success
+      #mark--151207-00012#2 By shiun--(S)
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+   #161228-00044#1-s-add 更新最後執行人
+   UPDATE psea_t SET psea005 = g_user
+    WHERE pseaent = g_enterprise AND pseasite = g_site
+      AND psea001 = g_psca001    AND psea002 = g_datetime
+   #161228-00044#1-e-add
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      #160516-00007#1-mod-(S)
+#      IF NOT l_success THEN
+#         RETURN
+#      END IF
+
+      LET l_msg = cl_getmsg_parm('aps-00186',g_lang,lc_param.psca001) #APS版本：%1
+      LET l_msg = l_msg CLIPPED,"\n",cl_getmsg_parm('aps-00187',g_lang,lc_param.base_date) #計算基準日：%1 
+      LET l_msg = l_msg CLIPPED,"\n",cl_getmsg('std-00012',g_lang) 
+      IF NOT l_success THEN
+         RETURN
+      END IF
+      
+      CALL cl_ask_confirm3("",l_msg)
+      
+      CALL cl_schedule_exec_call(li_p01_status)
+      RETURN
+      
+      #160516-00007#1-mod-(E)
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL apsp500_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp500.get_buffer" >}
+PRIVATE FUNCTION apsp500_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp500.msgcentre_notify" >}
+PRIVATE FUNCTION apsp500_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp500.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 抓取APS版本的說明
+# Memo...........:
+# Usage..........: CALL apsp500_psca001_ref(p_psca001)
+#                  
+# Input parameter: p_psca001      APS版本
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2014/04/01 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_psca001_ref(p_psca001)
+DEFINE p_psca001         LIKE psca_t.psca001
+DEFINE l_psca001_desc    LIKE pscal_t.pscal003
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_psca001
+   CALL ap_ref_array2(g_ref_fields,"SELECT pscal003 FROM pscal_t WHERE pscalent='"||g_enterprise||"' AND pscalsite='"||g_site||"' AND pscal001=? AND pscal002='"||g_lang||"'",
+       "") RETURNING g_rtn_fields
+   LET l_psca001_desc = '', g_rtn_fields[1] , ''
+   DISPLAY l_psca001_desc TO psca001_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查APS版本是否存在
+# Memo...........:
+# Usage..........: CALL apsp500_psca001_chk(p_psca001)
+#                  RETURNING r_success
+# Input parameter: p_psca001      APS版本
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/01 By stellar0130
+# Modify.........: 151207-00012#2 2016/01/15 by ming 加入進階aps的檢查，未建立資料庫的不可執行
+################################################################################
+PRIVATE FUNCTION apsp500_psca001_chk(p_psca001)
+   DEFINE p_psca001         LIKE psca_t.psca001
+   DEFINE r_success         LIKE type_t.num5 
+   #151207-00012#2 20160115 add by ming -----(S) 
+   DEFINE l_psca039         LIKE psca_t.psca039
+   DEFINE l_psca040         LIKE psca_t.psca040
+   #151207-00012#2 20160115 add by ming -----(E) 
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_psca001) THEN
+      RETURN r_success
+   END IF
+   
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = p_psca001
+   LET g_errshow = TRUE   #160318-00025#50
+   LET g_chkparam.err_str[1] = "aps-00074:sub-01302|apsi002|",cl_get_progname("apsi002",g_lang,"2"),"|:EXEPROGapsi002"    #160318-00025#50
+   IF NOT cl_chk_exist("v_psca001") THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF 
+   
+   #151207-00012#2 20160115 add by ming -----(S) 
+   #如果是進階aps的話，需要看aps資料庫是否已經建立 
+   #若未建立則不可執行 
+   LET l_psca039 = ''     #APS引擎  
+   LET l_psca040 = ''     #APS資料庫是否建立  
+   SELECT psca039,psca040 INTO l_psca039,l_psca040
+     FROM psca_t
+    WHERE pscaent  = g_enterprise
+      AND pscasite = g_site
+      AND psca001  = p_psca001
+   IF l_psca039 = '2' THEN
+      #如果是進階aps 
+      IF l_psca040 = 'N' THEN
+         #未建立aps資料庫，不可執行 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 'aps-00162'     #進階APS未建立資料庫，不可計算！  
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   #151207-00012#2 20160115 add by ming -----(E) 
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取訂單資料，新增到APS需求單據供給法則檔(pseb_t)
+# Memo...........:
+# Usage..........: CALL apsp500_demand_order(p_psce002)
+#                  RETURNING r_success
+# Input parameter: p_psce002      供給法則編號
+#                :
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/02 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_demand_order(p_psce002)
+DEFINE p_psce002         LIKE psce_t.psce002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_condition       STRING
+DEFINE l_sql             STRING
+DEFINE l_xmdadocno       LIKE xmda_t.xmdadocno
+DEFINE l_xmddseq         LIKE xmdd_t.xmddseq
+DEFINE l_xmddseq1        LIKE xmdd_t.xmddseq1
+DEFINE l_xmddseq2        LIKE xmdd_t.xmddseq2
+#160506-00015#1-add-(S)
+DEFINE l_pscb002         LIKE pscb_t.pscb002 #供需來源
+DEFINE l_pscb004         LIKE pscb_t.pscb004 #未確認是否納入
+#160506-00015#1-add-(E)
+   LET r_success = TRUE
+   
+   #供給法則的需求條件
+   CALL apsp500_demand_condition(p_psce002,'1')
+        RETURNING r_success,l_condition
+   IF NOT r_success OR cl_null(l_condition) THEN
+      RETURN r_success
+   END IF
+   
+   LET l_sql = "SELECT xmdadocno,xmddseq,xmddseq1,xmddseq2 ",
+               "  FROM xmda_t,xmdc_t,xmdd_t ",
+               " WHERE xmdaent = xmdcent ",
+               "   AND xmdaent = xmddent ",
+               "   AND xmdadocno = xmdcdocno ",
+               "   AND xmdadocno = xmdddocno ",
+               "   AND xmdcseq = xmddseq ",
+               "   AND xmdaent = ",g_enterprise,
+               "   AND xmdcunit = '",g_site,"'",
+#               "   AND xmdastus = 'Y' ", #160506-00015#1-mark
+               "   AND xmdd017 <> '5' ",
+               "   AND xmdd006 - xmdd014 + xmdd015 > 0 ",
+               "   AND xmda019 = 'Y' "
+   #160506-00015#1-add-(S)   
+   #抓值條件→apsi002的供需種類
+   #--已選取的條件有 "R01" -->未確認是否納入='Y'-> xmdastus <> 'X'
+   #                      -->            ='N' -> xmdastus = 'Y' 
+   #--           無 "R01" -->xmdastus = 'Y' 
+   LET l_pscb002 = ''
+   LET l_pscb004 = ''
+   SELECT pscb002,pscb004 INTO l_pscb002,l_pscb004
+     FROM pscb_t
+    WHERE pscbent = g_enterprise
+      AND pscbsite = g_site
+      AND pscb001 = g_psca001
+      AND pscb002 = 'R01'
+   IF cl_null(l_pscb002) THEN
+      LET l_sql = l_sql CLIPPED,"   AND xmdastus = 'Y' "
+   ELSE
+      IF l_pscb004 = 'Y' THEN
+         LET l_sql = l_sql CLIPPED,"   AND xmdastus <> 'X' "
+      ELSE
+         LET l_sql = l_sql CLIPPED,"   AND xmdastus = 'Y' "  
+      END IF
+   END IF
+   #160506-00015#1-add-(E)
+   LET l_sql = l_sql CLIPPED,l_condition CLIPPED
+               
+   PREPARE apsp500_order_pre FROM l_sql
+   DECLARE apsp500_order_cs CURSOR FOR apsp500_order_pre
+   
+   FOREACH apsp500_order_cs INTO l_xmdadocno,l_xmddseq,l_xmddseq1,l_xmddseq2
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH order_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #新增到APS需求單據供給法則檔
+      CALL apsp500_demand_pseb_ins(l_xmdadocno,l_xmddseq,l_xmddseq1,l_xmddseq2,p_psce002)
+           RETURNING r_success
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取銷售預測資料，新增到APS需求單據供給法則檔(pseb_t)
+# Memo...........:
+# Usage..........: CALL apsp500_demand_forecast(p_psce002)
+#                  RETURNING r_success
+# Input parameter: p_psce002      供給法則編號
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/02 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_demand_forecast(p_psce002)
+DEFINE p_psce002         LIKE psce_t.psce002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_condition       STRING
+DEFINE l_sql             STRING
+DEFINE l_psbbdocno       LIKE psbb_t.psbbdocno
+DEFINE l_psbbseq         LIKE psbb_t.psbbseq
+DEFINE l_psbbseq1        LIKE psbb_t.psbbseq1
+DEFINE l_psbbseq2        LIKE psbb_t.psbbseq2
+
+   LET r_success = TRUE
+   
+   #供給法則的需求條件
+   CALL apsp500_demand_condition(p_psce002,'2')
+        RETURNING r_success,l_condition
+   IF NOT r_success OR cl_null(l_condition) THEN
+      RETURN r_success
+   END IF
+   
+   LET l_sql = "SELECT psbbdocno,psbbseq,psbbseq1,psbbseq2 ",
+               "  FROM psba_t,psbb_t,xmig_t ",
+               " WHERE psbaent = psbbent ",
+               "   AND psba001 = psbb001 ",
+               "   AND psbaent = xmigent ",
+               "   AND psba007 = xmig001 ",
+               "   AND psbbsite= xmigsite",
+               "   AND psbb002 = '2' ",
+               "   AND psbb003 = xmig006 ",
+               "   AND psbb004 = xmig007 ",
+               "   AND psbb005 = xmig018 ",
+               "   AND psbb008 = xmig008 ",
+               "   AND psbb009 = xmig005 ",
+               "   AND psbb010 = xmig004 ",
+               "   AND psbb011 = xmig009 ",
+               "   AND xmigent = ",g_enterprise,
+               "   AND xmigsite= '",g_site,"'",
+               "   AND xmig002 = (SELECT MAX(xmig002) FROM xmig_t,psba_t,psbb_t ",
+               "                   WHERE psbaent = psbbent ",
+               "                     AND psba001 = psbb001 ",
+               "                     AND psba007 = xmig001 ",
+               "                     AND psbaent = xmigent ",
+               "                     AND psbbsite= xmigsite",
+               "                     AND psbbent = ",g_enterprise,
+               "                     AND psbbsite= '",g_site,"')"
+               
+   LET l_sql = l_sql CLIPPED,l_condition CLIPPED
+               
+   PREPARE apsp500_forecast_pre FROM l_sql
+   DECLARE apsp500_forecast_cs CURSOR FOR apsp500_forecast_pre
+   
+   FOREACH apsp500_forecast_cs INTO l_psbbdocno,l_psbbseq,l_psbbseq1,l_psbbseq2
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH forecast_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #新增到APS需求單據供給法則檔
+      CALL apsp500_demand_pseb_ins(l_psbbdocno,l_psbbseq,l_psbbseq1,l_psbbseq2,p_psce002)
+           RETURNING r_success
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依來源類型，將供給法則的需要條件組成SQL的條件
+# Memo...........:
+# Usage..........: CALL apsp500_demand_condition(p_psdb001,p_psdb002)
+#                  RETURNING r_success,r_condition
+# Input parameter: p_psdb001      供給法則編號
+#                : p_psdb002      需求來源
+# Return code....: r_success      TRUE/FALSE
+#                : r_condition    SQL條件
+# Date & Author..: 2014/04/02 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_demand_condition(p_psdb001,p_psdb002)
+DEFINE p_psdb001         LIKE psdb_t.psdb001
+DEFINE p_psdb002         LIKE psdb_t.psdb002
+DEFINE r_success         LIKE type_t.num5
+DEFINE r_condition       STRING
+DEFINE l_psdb004         LIKE psdb_t.psdb004
+DEFINE l_psdb005         LIKE psdb_t.psdb005
+DEFINE l_psdb006         LIKE psdb_t.psdb006
+DEFINE l_psdb007         LIKE psdb_t.psdb007
+DEFINE l_len             LIKE type_t.num5
+#160805-00072#1-s-add
+DEFINE l_condition       STRING 
+DEFINE l_str             STRING 
+DEFINE l_cnt             LIKE type_t.num5
+#160805-00072#1-e-add
+
+   LET r_success = TRUE
+   LET r_condition = ''
+   LET l_cnt = 1  #160805-00072#1-add
+   
+   DECLARE apsp500_demand_condition_cs CURSOR FOR
+    SELECT psdb004,psdb005,psdb006,psdb007
+      FROM psdb_t
+     WHERE psdbent = g_enterprise
+       AND psdbsite= g_site
+       AND psdb001 = p_psdb001
+       AND psdb002 = p_psdb002
+     ORDER BY psdbseq
+     
+   FOREACH apsp500_demand_condition_cs INTO l_psdb004,l_psdb005,l_psdb006,l_psdb007
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH demand_condition_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      #160805-00072#1-s-mod
+      #IF NOT cl_null(l_psdb005) AND NOT cl_null(l_psdb006) THEN
+      #   LET l_len = l_psdb006 - l_psdb005 + 1
+      #   LET r_condition = r_condition CLIPPED,
+      #                     " AND SUBSTR(",l_psdb004,",",l_psdb005,",",l_len,") = '",l_psdb007,"'"
+      #ELSE
+      #   LET r_condition = r_condition CLIPPED,
+      #                     " AND ",l_psdb004," = '",l_psdb007,"'"
+      #END IF
+      IF NOT cl_null(l_psdb005) AND NOT cl_null(l_psdb006) THEN
+         LET l_len = l_psdb006 - l_psdb005 + 1
+         LET l_str = " SUBSTR(",l_psdb004,",",l_psdb005,",",l_len,") = '",l_psdb007,"'"
+      ELSE
+         LET l_str = l_psdb004," = '",l_psdb007,"'"
+      END IF
+      IF l_cnt = 1 THEN
+         LET l_condition = l_str
+      ELSE
+         LET l_condition = l_condition CLIPPED," OR ",l_str
+      END IF
+      LET l_cnt = l_cnt + 1
+      #160805-00072#1-e-mod
+   END FOREACH
+   #160805-00072#1-s-add
+   IF l_cnt = 2 THEN
+      LET r_condition = " AND ",l_condition
+   ELSE
+      LET r_condition = " AND (",l_condition,") "
+   END IF
+   #160805-00072#1-e-add
+   RETURN r_success,r_condition
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取獨立需求資料，新增到APS需求單據供給法則檔(pseb_t)
+# Memo...........:
+# Usage..........: CALL apsp500_demand_independent_demand(p_psce002)
+#                  RETURNING r_success
+# Input parameter: p_psce002      供給法則編號
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/02 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_demand_independent_demand(p_psce002)
+DEFINE p_psce002         LIKE psce_t.psce002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_condition       STRING
+DEFINE l_sql             STRING
+DEFINE l_psaadocno       LIKE psaa_t.psaadocno
+DEFINE l_psabseq         LIKE psab_t.psabseq
+
+   LET r_success = TRUE
+   
+   #供給法則的需求條件
+   CALL apsp500_demand_condition(p_psce002,'3')
+        RETURNING r_success,l_condition
+   IF NOT r_success OR cl_null(l_condition) THEN
+      RETURN r_success
+   END IF
+   
+   LET l_sql = "SELECT psaadocno,psabseq ",
+               "  FROM psaa_t,psab_t ",
+               " WHERE psaaent = psabent ",
+               "   AND psaadocno = psabdocno ",
+               "   AND psaaent = ",g_enterprise,
+               "   AND psaasite= '",g_site,"'",
+               "   AND psaastus= 'Y' ",
+               "   AND psab008 = 'N' ",
+               "   AND psab005 - psab006 > 0 "
+               
+   LET l_sql = l_sql CLIPPED,l_condition CLIPPED
+               
+   PREPARE apsp500_independent_demand_pre FROM l_sql
+   DECLARE apsp500_independent_demand_cs CURSOR FOR apsp500_independent_demand_pre
+   
+   FOREACH apsp500_independent_demand_cs INTO l_psaadocno,l_psabseq
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH independent_demand_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #新增到APS需求單據供給法則檔
+      CALL apsp500_demand_pseb_ins(l_psaadocno,l_psabseq,0,0,p_psce002)
+           RETURNING r_success
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增資料到APS需求單據供給法則檔
+# Memo...........:
+# Usage..........: CALL apsp500_demand_pseb_ins(p_docno,p_seq,p_seq1,p_seq2,p_pseb007)
+#                  RETURNING r_success
+# Input parameter: p_docno        單據編號
+#                : p_seq          項次
+#                : p_seq1         項序
+#                : p_seq2         分批序
+#                : p_pseb007      供給法則編號
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/02 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_demand_pseb_ins(p_docno,p_seq,p_seq1,p_seq2,p_pseb007)
+DEFINE p_docno           LIKE pseb_t.pseb003
+DEFINE p_seq             LIKE pseb_t.pseb004
+DEFINE p_seq1            LIKE pseb_t.pseb005
+DEFINE p_seq2            LIKE pseb_t.pseb006
+DEFINE p_pseb007         LIKE pseb_t.pseb007
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_cnt             LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   #檢查該資料是否已存在於pseb_t內，若有，則不做新增
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt 
+     FROM pseb_t
+    WHERE psebent = g_enterprise
+      AND psebsite= g_site
+      AND pseb001 = g_psca001
+      AND pseb002 = g_datetime
+      AND pseb003 = p_docno
+      AND pseb004 = p_seq
+      AND pseb005 = p_seq1
+      AND pseb006 = p_seq2
+   IF NOT cl_null(l_cnt) AND l_cnt > 0 THEN
+      RETURN r_success
+   END IF
+   
+   #新增pseb_t
+   INSERT INTO pseb_t (psebent,psebsite,pseb001,pseb002,pseb003,pseb004,pseb005,pseb006,pseb007)
+      VALUES (g_enterprise,g_site,g_psca001,g_datetime,p_docno,p_seq,p_seq1,p_seq2,p_pseb007)
+   IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ins pseb_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依來源類型，將供給法則的供給條件組成SQL的條件
+# Memo...........:
+# Usage..........: CALL apsp500_supply_condition(p_psdc001,p_psdc002)
+#                  RETURNING r_success,r_condition
+# Input parameter: p_psdc001      供給法則編號
+#                : p_psdc002      供給來源
+# Return code....: r_success      TRUE/FALSE
+#                : r_condition    SQL條件
+# Date & Author..: 2014/07/28 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_supply_condition(p_psdc001,p_psdc002)
+DEFINE p_psdc001         LIKE psdc_t.psdc001
+DEFINE p_psdc002         LIKE psdc_t.psdc002
+DEFINE r_success         LIKE type_t.num5
+DEFINE r_condition       STRING
+DEFINE l_psdc004         LIKE psdc_t.psdc004
+DEFINE l_psdc005         LIKE psdc_t.psdc005
+DEFINE l_psdc006         LIKE psdc_t.psdc006
+DEFINE l_psdc007         LIKE psdc_t.psdc007
+DEFINE l_len             LIKE type_t.num5
+#160805-00072#1-s-add
+DEFINE l_condition       STRING 
+DEFINE l_str             STRING 
+DEFINE l_cnt             LIKE type_t.num5
+#160805-00072#1-e-add
+
+   LET r_success = TRUE
+   LET r_condition = ''
+   LET l_cnt = 1  #160805-00072#1-add
+   
+   DECLARE apsp500_supply_condition_cs CURSOR FOR
+    SELECT psdc004,psdc005,psdc006,psdc007
+      FROM psdc_t
+     WHERE psdcent = g_enterprise
+       AND psdcsite= g_site
+       AND psdc001 = p_psdc001
+       AND psdc002 = p_psdc002
+     ORDER BY psdcseq
+
+   FOREACH apsp500_supply_condition_cs INTO l_psdc004,l_psdc005,l_psdc006,l_psdc007  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH supply_condition_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #160805-00072#1-s-mod
+      #IF NOT cl_null(l_psdc005) AND NOT cl_null(l_psdc006) THEN
+      #   LET l_len = l_psdc006 - l_psdc005 + 1
+      #   LET r_condition = r_condition CLIPPED,
+      #                     " AND SUBSTR(",l_psdc004,",",l_psdc005,",",l_len,") = '",l_psdc007,"'"
+      #ELSE
+      #   LET r_condition = r_condition CLIPPED,
+      #                     " AND ",l_psdc004," = '",l_psdc007,"'"
+      #END IF
+      IF NOT cl_null(l_psdc005) AND NOT cl_null(l_psdc006) THEN
+         LET l_len = l_psdc006 - l_psdc005 + 1
+         LET l_str = " SUBSTR(",l_psdc004,",",l_psdc005,",",l_len,") = '",l_psdc007,"'"
+      ELSE
+         LET l_str = l_psdc004," = '",l_psdc007,"'"
+      END IF
+      IF l_cnt = 1 THEN
+         LET l_condition = l_str
+      ELSE
+         LET l_condition = l_condition CLIPPED," OR ",l_str
+      END IF
+      LET l_cnt = l_cnt + 1
+      #160805-00072#1-e-mod
+   END FOREACH
+   
+   #160805-00072#1-s-add
+   IF l_cnt = 2 THEN
+      LET r_condition = " AND ",l_condition
+   ELSE
+      LET r_condition = " AND (",l_condition,") "
+   END IF
+   #160805-00072#1-e-add
+   
+   RETURN r_success,r_condition
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取庫存資料，新增到APS供給單據供給法則檔(pseb_t)
+# Memo...........:
+# Usage..........: CALL apsp500_supply_inventory(p_psce002)
+#                  RETURNING r_success
+# Input parameter: p_psce002      供給法則編號
+#                :
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/07/28 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_supply_inventory(p_psce002)
+DEFINE p_psce002         LIKE psce_t.psce002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_condition       STRING
+DEFINE l_sql             STRING
+DEFINE l_inag001         LIKE inag_t.inag001
+DEFINE l_inag002         LIKE inag_t.inag002
+DEFINE l_inag003         LIKE inag_t.inag003
+DEFINE l_inag004         LIKE inag_t.inag004
+DEFINE l_inag005         LIKE inag_t.inag005
+DEFINE l_inag006         LIKE inag_t.inag006
+
+   LET r_success = TRUE
+   
+   #供給法則的供給條件
+   CALL apsp500_supply_condition(p_psce002,'1')
+        RETURNING r_success,l_condition
+   IF NOT r_success OR cl_null(l_condition) THEN
+      RETURN r_success
+   END IF
+   
+   LET l_sql = "SELECT inag001,inag002,inag003,inag004,inag005,inag006 ",
+               "  FROM inag_t,inaa_t ",
+               " WHERE inagent = inaaent ",
+               "   AND inagsite= inaasite",
+               "   AND inag004 = inaa001 ",
+               "   AND inagent = ",g_enterprise,
+               "   AND inagsite='",g_site,"'",
+               "   AND inag009 > 0 "
+
+   LET l_sql = l_sql CLIPPED,l_condition CLIPPED
+   
+   PREPARE apsp500_inventory_pre FROM l_sql
+   DECLARE apsp500_inventory_cs CURSOR FOR apsp500_inventory_pre
+   
+   FOREACH apsp500_inventory_cs INTO l_inag001,l_inag002,l_inag003,l_inag004,l_inag005,l_inag006
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH inventory_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #新增到APS供給單據供給法則檔、APS需求單據供給法則檔(供給類對應法則)
+      CALL apsp500_supply_psed_ins('','','','','1',l_inag001,l_inag002,l_inag004,l_inag005,l_inag006,l_inag003,p_psce002)
+           RETURNING r_success 
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取請購單資料，新增到APS供給單據供給法則檔(pseb_t)
+# Memo...........:
+# Usage..........: CALL apsp500_supply_pr(p_psce002)
+#                  RETURNING r_success
+# Input parameter: p_psce002      供給法則編號
+#                :
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/07/28 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_supply_pr(p_psce002)
+DEFINE p_psce002         LIKE psce_t.psce002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_condition       STRING
+DEFINE l_sql             STRING
+DEFINE l_pmdadocno       LIKE pmda_t.pmdadocno
+DEFINE l_pmdbseq         LIKE pmdb_t.pmdbseq
+
+   LET r_success = TRUE
+   
+   #供給法則的供給條件
+   CALL apsp500_supply_condition(p_psce002,'2')
+        RETURNING r_success,l_condition
+   IF NOT r_success OR cl_null(l_condition) THEN
+      RETURN r_success
+   END IF
+   
+   LET l_sql = "SELECT pmdadocno,pmdbseq ",
+               "  FROM pmda_t,pmdb_t ",
+               " WHERE pmdaent = pmdbent ",
+               "   AND pmdadocno = pmdbdocno ",
+               "   AND pmdaent = ",g_enterprise,
+               "   AND pmdastus = 'Y' ",
+               "   AND pmdb037 = '",g_site,"'",
+               "   AND pmdb032 = '1' ",
+               "   AND (pmdb006 - pmdb049) > 0 ",
+               "   AND pmda020 = 'Y' "
+               
+   LET l_sql = l_sql CLIPPED,l_condition CLIPPED
+   
+   PREPARE apsp500_pr_pre FROM l_sql
+   DECLARE apsp500_pr_cs CURSOR FOR apsp500_pr_pre
+   
+   FOREACH apsp500_pr_cs INTO l_pmdadocno,l_pmdbseq
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH pr_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #新增到APS供給單據供給法則檔、APS需求單據供給法則檔(供給類對應法則)
+      CALL apsp500_supply_psed_ins(l_pmdadocno,l_pmdbseq,0,0,'2','','','','','','',p_psce002)
+           RETURNING r_success 
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取採購單資料，新增到APS供給單據供給法則檔(pseb_t)
+# Memo...........:
+# Usage..........: CALL apsp500_supply_po(p_psce002)
+#                  RETURNING r_success
+# Input parameter: p_psce002      供給法則編號
+#                :
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/07/28 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_supply_po(p_psce002)
+DEFINE p_psce002         LIKE psce_t.psce002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_condition       STRING
+DEFINE l_sql             STRING
+DEFINE l_pmdldocno       LIKE pmdl_t.pmdldocno
+DEFINE l_pmdnseq         LIKE pmdn_t.pmdnseq
+DEFINE l_pmdoseq1        LIKE pmdo_t.pmdoseq1
+DEFINE l_pmdoseq2        LIKE pmdo_t.pmdoseq2
+DEFINE l_qty             LIKE pmdo_t.pmdo006
+DEFINE l_qty1            LIKE pmdo_t.pmdo006
+
+   LET r_success = TRUE
+   
+   #供給法則的供給條件
+   CALL apsp500_supply_condition(p_psce002,'3')
+        RETURNING r_success,l_condition
+   IF NOT r_success OR cl_null(l_condition) THEN
+      RETURN r_success
+   END IF
+   
+   LET l_sql = "SELECT pmdldocno,pmdnseq,pmdoseq1,pmdoseq2,(pmdo006-pmdo015+pmdo016) ",
+               "  FROM pmdl_t,pmdn_t,pmdo_t ",
+               " WHERE pmdlent = pmdnent ",
+               "   AND pmdldocno = pmdndocno ",
+               "   AND pmdlent = pmdoent ",
+               "   AND pmdldocno = pmdodocno ",
+               "   AND pmdnseq = pmdoseq ",
+               "   AND pmdlent = ",g_enterprise,
+               "   AND pmdnunit = '",g_site,"'",
+               "   AND pmdlstus = 'Y' ",
+               "   AND pmdn045 = '1' ",
+               "   AND (pmdo006 - pmdo015 + pmdo016) > 0 ",
+               "   AND pmdl019 = 'Y' "
+               
+   LET l_sql = l_sql CLIPPED,l_condition CLIPPED
+   
+   PREPARE apsp500_po_pre FROM l_sql
+   DECLARE apsp500_po_cs CURSOR FOR apsp500_po_pre
+   
+   FOREACH apsp500_po_cs INTO l_pmdldocno,l_pmdnseq,l_pmdoseq1,l_pmdoseq2,l_qty
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH po_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      LET l_qty1 = 0
+      SELECT SUM(NVL(pmdt020,0)) INTO l_qty1 FROM pmds_t,pmdt_t
+       WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno
+         AND pmdsent = g_enterprise
+         AND pmdsstus = 'N'
+         AND pmdt001 = l_pmdldocno AND pmdt002 = l_pmdnseq
+         AND pmdt003 = l_pmdoseq1 AND pmdt004 = l_pmdoseq2
+      IF cl_null(l_qty1) THEN
+         LET l_qty1 = 0 
+      END IF
+      
+      IF (l_qty - l_qty1) <= 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      #新增到APS供給單據供給法則檔、APS需求單據供給法則檔(供給類對應法則)
+      CALL apsp500_supply_psed_ins(l_pmdldocno,l_pmdnseq,l_pmdoseq1,l_pmdoseq2,'3','','','','','','',p_psce002)
+           RETURNING r_success 
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取工單資料，新增到APS供給單據供給法則檔(pseb_t)
+# Memo...........:
+# Usage..........: CALL apsp500_supply_wo(p_psce002)
+#                  RETURNING r_success
+# Input parameter: p_psce002      供給法則編號
+#                :
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/07/28 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_supply_wo(p_psce002)
+DEFINE p_psce002         LIKE psce_t.psce002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_condition       STRING
+DEFINE l_sql             STRING
+DEFINE l_sfaadocno       LIKE sfaa_t.sfaadocno
+
+   LET r_success = TRUE
+   
+   #供給法則的供給條件
+   CALL apsp500_supply_condition(p_psce002,'4')
+        RETURNING r_success,l_condition
+   IF NOT r_success OR cl_null(l_condition) THEN
+      RETURN r_success
+   END IF
+   
+   LET l_sql = "SELECT sfaadocno ",
+               "  FROM sfaa_t ",
+               " WHERE sfaaent = ",g_enterprise,
+               "   AND sfaasite='",g_site,"'",
+               "   AND sfaastus = 'Y' ",
+               "   AND sfaa012 > (sfaa050+sfaa051+sfaa055+sfaa056) ",
+               "   AND sfaa062 = 'Y' "
+               
+   LET l_sql = l_sql CLIPPED,l_condition CLIPPED
+   
+   PREPARE apsp500_wo_pre FROM l_sql
+   DECLARE apsp500_wo_cs CURSOR FOR apsp500_wo_pre
+   
+   FOREACH apsp500_wo_cs INTO l_sfaadocno
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH wo_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #新增到APS供給單據供給法則檔、APS需求單據供給法則檔(供給類對應法則)
+      CALL apsp500_supply_psed_ins(l_sfaadocno,0,0,0,'4','','','','','','',p_psce002)
+           RETURNING r_success 
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增資料到APS供給單據供給法則檔、APS需求單據供給法則檔(供給類對應法則)
+# Memo...........:
+# Usage..........: CALL apsp500_supply_psed_ins(p_psed004,p_psed005,p_psed006,p_psed007,p_psed008,p_psed009,p_psed010,p_psed011,p_psed012,p_psed013,p_psed014,p_psee004)
+#                  RETURNING r_success
+# Input parameter: p_psed004      單據編號
+#                : p_psed005      項次
+#                : p_psed006      項序
+#                : p_psed007      分批序
+#                : p_psed008      供需類別
+#                : p_psed009      料號
+#                : p_psed010      產品特徵
+#                : p_psed011      庫位
+#                : p_psed012      儲位
+#                : p_psed013      批號
+#                : p_psed014      庫存管理特徵
+#                : p_psee004      供給法則
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2014/07/28 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp500_supply_psed_ins(p_psed004,p_psed005,p_psed006,p_psed007,p_psed008,p_psed009,p_psed010,p_psed011,p_psed012,p_psed013,p_psed014,p_psee004)
+DEFINE p_psed004         LIKE psed_t.psed004
+DEFINE p_psed005         LIKE psed_t.psed005
+DEFINE p_psed006         LIKE psed_t.psed006
+DEFINE p_psed007         LIKE psed_t.psed007
+DEFINE p_psed008         LIKE psed_t.psed008
+DEFINE p_psed009         LIKE psed_t.psed009
+DEFINE p_psed010         LIKE psed_t.psed010
+DEFINE p_psed011         LIKE psed_t.psed011
+DEFINE p_psed012         LIKE psed_t.psed012
+DEFINE p_psed013         LIKE psed_t.psed013
+DEFINE p_psed014         LIKE psed_t.psed014
+DEFINE p_psee004         LIKE psee_t.psee004
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_psed003         LIKE psed_t.psed003
+
+   LET r_success = TRUE
+   
+   LET l_psed003 = ''
+   SELECT MAX(psed003)+1 INTO l_psed003 FROM psed_t
+    WHERE psedent = g_enterprise
+      AND psedsite= g_site
+      AND psed001 = g_psca001
+      AND psed002 = g_datetime
+   IF cl_null(l_psed003) OR l_psed003 = 0 THEN
+      LET l_psed003 = 1
+   END IF
+   
+   INSERT INTO psed_t(psedent,psedsite,
+                      psed001,psed002,psed003,psed004,psed005,psed006,psed007,psed008,psed009,psed010,
+                      psed011,psed012,psed013,psed014)
+      VALUES(g_enterprise,g_site,
+             g_psca001,g_datetime,l_psed003,p_psed004,p_psed005,p_psed006,p_psed007,p_psed008,p_psed009,p_psed010,
+             p_psed011,p_psed012,p_psed013,p_psed014)
+   IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ins psed_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   INSERT INTO psee_t(pseeent,pseesite,
+                      psee001,psee002,psee003,psee004)
+      VALUES(g_enterprise,g_site,
+             g_psca001,g_datetime,l_psed003,p_psee004)
+   IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ins psee_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

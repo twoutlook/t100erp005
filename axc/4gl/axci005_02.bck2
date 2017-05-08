@@ -1,0 +1,944 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axci005_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2013-12-09 14:07:18), PR版次:0001(2014-04-17 16:12:18)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000183
+#+ Filename...: axci005_02
+#+ Description: 製程資源維護作業
+#+ Creator....: 02114(2013-09-16 16:57:03)
+#+ Modifier...: 02291 -SD/PR- 01856
+ 
+{</section>}
+ 
+{<section id="axci005_02.global" >}
+#應用 c02b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xcaf_d        RECORD
+       xcaf001 LIKE xcaf_t.xcaf001, 
+   xcafsite LIKE xcaf_t.xcafsite, 
+   xcaf002 LIKE xcaf_t.xcaf002, 
+   xcafseq1 LIKE xcaf_t.xcafseq1, 
+   xcafseq2 LIKE xcaf_t.xcafseq2, 
+   xcaf003 LIKE xcaf_t.xcaf003, 
+   xcaf003_desc LIKE type_t.chr500, 
+   xcaf003_desc1 LIKE type_t.chr500, 
+   xcaf003_desc2 LIKE type_t.chr500, 
+   xcaf004 LIKE xcaf_t.xcaf004, 
+   xcaf005 LIKE xcaf_t.xcaf005, 
+   xcaf006 LIKE xcaf_t.xcaf006, 
+   xcaf007 LIKE xcaf_t.xcaf007
+       END RECORD
+PRIVATE TYPE type_g_xcaf2_d RECORD
+       xcaf001 LIKE xcaf_t.xcaf001, 
+   xcaf002 LIKE xcaf_t.xcaf002, 
+   xcafseq1 LIKE xcaf_t.xcafseq1, 
+   xcafseq2 LIKE xcaf_t.xcafseq2, 
+   xcafownid LIKE xcaf_t.xcafownid, 
+   xcafownid_desc LIKE type_t.chr500, 
+   xcafowndp LIKE xcaf_t.xcafowndp, 
+   xcafowndp_desc LIKE type_t.chr500, 
+   xcafcrtid LIKE xcaf_t.xcafcrtid, 
+   xcafcrtid_desc LIKE type_t.chr500, 
+   xcafcrtdp LIKE xcaf_t.xcafcrtdp, 
+   xcafcrtdp_desc LIKE type_t.chr500, 
+   xcafcrtdt DATETIME YEAR TO SECOND, 
+   xcafmodid LIKE xcaf_t.xcafmodid, 
+   xcafmodid_desc LIKE type_t.chr500, 
+   xcafmoddt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_xcaf001       LIKE xcaf_t.xcaf001
+DEFINE g_xcaf002       LIKE xcaf_t.xcaf002
+DEFINE g_xcafseq1      LIKE xcaf_t.xcafseq1
+DEFINE l_xcaf          RECORD LIKE xcaf_t.*
+#end add-point
+ 
+DEFINE g_xcaf_d          DYNAMIC ARRAY OF type_g_xcaf_d
+DEFINE g_xcaf_d_t        type_g_xcaf_d
+DEFINE g_xcaf2_d   DYNAMIC ARRAY OF type_g_xcaf2_d
+DEFINE g_xcaf2_d_t type_g_xcaf2_d
+ 
+ 
+DEFINE g_xcaf001_t   LIKE xcaf_t.xcaf001    #Key值備份
+DEFINE g_xcaf002_t      LIKE xcaf_t.xcaf002    #Key值備份
+DEFINE g_xcafseq1_t      LIKE xcaf_t.xcafseq1    #Key值備份
+DEFINE g_xcafseq2_t      LIKE xcaf_t.xcafseq2    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="axci005_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axci005_02(--)
+   #add-point:input段變數傳入
+   p_xcaf001,p_xcafsite,p_xcaf002,p_xcafseq1
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_xcaf001       LIKE xcaf_t.xcaf001
+   DEFINE p_xcafsite      LIKE xcaf_t.xcafsite
+   DEFINE p_xcaf002       LIKE xcaf_t.xcaf002
+   DEFINE p_xcafseq1      LIKE xcaf_t.xcafseq1
+   DEFINE l_lock_sw       LIKE type_t.chr1 
+   DEFINE l_forupd_sql    STRING
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axci005_02 WITH FORM cl_ap_formpath("axc","axci005_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   WHENEVER ERROR CONTINUE      
+   LET g_xcaf001  = p_xcaf001
+   LET g_xcaf002  = p_xcaf002
+   LET g_xcafseq1 = p_xcafseq1
+   CALL axci005_02_b_fill(p_xcaf001,p_xcaf002,p_xcafseq1)
+   LET l_forupd_sql = " SELECT xcaf001,xcafsite,xcaf002,xcafseq1,xcafseq2,xcaf003,'','','',xcaf004,xcaf005,xcaf006,xcaf007 ",
+                      "   FROM xcaf_t ",
+                      "  WHERE xcafent = '",g_enterprise,"'",
+                      "    AND xcaf001 = '",p_xcaf001,"'",
+                      "    AND xcaf002 = '",p_xcaf002,"'",
+                      "    AND xcafseq1 = '",p_xcafseq1,"'",
+                      "    AND xcafseq2 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)  
+   PREPARE axci005_02_b FROM l_forupd_sql
+   DECLARE axci005_02_bcl CURSOR FOR axci005_02_b 
+   LET INT_FLAG = FALSE    
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xcaf_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            LET g_rec_b = g_xcaf_d.getLength()
+            
+            IF g_rec_b >= l_ac THEN  
+               LET l_cmd='u'
+               LET g_xcaf_d_t.* = g_xcaf_d[l_ac].*  #BACKUP
+               OPEN axci005_02_bcl USING g_xcaf_d_t.xcafseq2
+               #IF NOT axci005_02_lock_b(l_ac) THEN
+               IF STATUS THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  STATUS
+                  LET g_errparam.extend = "OPEN axci005_02_bcl:"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH axci005_02_bcl INTO g_xcaf_d[l_ac].*
+                  IF SQLCA.sqlcode THEN
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+         BEFORE INSERT
+            CALL s_transaction_begin()
+            LET l_cmd = 'a'
+            INITIALIZE g_xcaf_d_t.* TO NULL
+            INITIALIZE g_xcaf_d[l_ac].* TO NULL 
+            
+            LET g_xcaf_d_t.* = g_xcaf_d[l_ac].*     #新輸入資料
+            LET g_xcaf_d[l_ac].xcaf001  = p_xcaf001
+            LET g_xcaf_d[l_ac].xcafsite = p_xcafsite
+            LET g_xcaf_d[l_ac].xcaf002  = p_xcaf002
+            LET g_xcaf_d[l_ac].xcafseq1 = p_xcafseq1
+            IF l_cmd = 'a' THEN 
+               SELECT MAX(xcafseq2) INTO g_xcaf_d[l_ac].xcafseq2 
+                 FROM xcaf_t
+                WHERE xcaf001 = p_xcaf001
+                  AND xcaf002 = p_xcaf002
+                  AND xcafseq1 =p_xcafseq1
+                  AND xcafent = g_enterprise                  
+               IF cl_null(g_xcaf_d[l_ac].xcafseq2) THEN 
+                  LET g_xcaf_d[l_ac].xcafseq2 = 10
+               ELSE
+                  LET g_xcaf_d[l_ac].xcafseq2 = g_xcaf_d[l_ac].xcafseq2 + 10
+               END IF
+            END IF 
+            CALL cl_show_fld_cont()   
+
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            {LET l_oofc.oofcent = g_enterprise
+            LET l_oofc.oofcstus =g_oofc_d[l_ac].oofcstus
+            LET l_success = NULL
+            LET l_wc = " oofcent = '",g_enterprise,"' "
+            CALL s_aooi350_get_idno('oofc001','oofc_t',l_wc) RETURNING l_success,l_oofc.oofc001
+            LET l_oofc.oofc002 = p_oofc002
+            LET l_oofc.oofc008 = g_oofc_d[l_ac].oofc008
+            LET l_oofc.oofc009 = g_oofc_d[l_ac].oofc009
+            LET l_oofc.oofc010 = g_oofc_d[l_ac].oofc010 
+            LET l_oofc.oofc011 = g_oofc_d[l_ac].oofc011
+            LET l_oofc.oofc012 = g_oofc_d[l_ac].oofc012
+            LET l_oofc.oofc013 = g_oofc_d[l_ac].oofc013
+            LET l_oofc.oofc014 = g_oofc_d[l_ac].oofc014}
+            
+            LET l_xcaf.xcafent = g_enterprise
+            LET l_xcaf.xcaf001  = g_xcaf_d[l_ac].xcaf001
+            LET l_xcaf.xcafsite = g_xcaf_d[l_ac].xcafsite
+            LET l_xcaf.xcaf002  = g_xcaf_d[l_ac].xcaf002
+            LET l_xcaf.xcafseq1 = g_xcaf_d[l_ac].xcafseq1
+            LET l_xcaf.xcafseq2 = g_xcaf_d[l_ac].xcafseq2
+            LET l_xcaf.xcaf003  = g_xcaf_d[l_ac].xcaf003
+            LET l_xcaf.xcaf004  = g_xcaf_d[l_ac].xcaf004
+            LET l_xcaf.xcaf005  = g_xcaf_d[l_ac].xcaf005
+            LET l_xcaf.xcaf006  = g_xcaf_d[l_ac].xcaf006
+            IF cl_null(l_xcaf.xcaf006) THEN 
+               LET l_xcaf.xcaf006 = 1
+            END IF 
+            LET l_xcaf.xcaf007  = g_xcaf_d[l_ac].xcaf007
+            
+            LET l_xcaf.xcafownid = g_user
+            LET l_xcaf.xcafowndp = g_dept
+            LET l_xcaf.xcafcrtid = g_user
+            LET l_xcaf.xcafcrtdp = g_dept 
+            LET l_xcaf.xcafcrtdt = cl_get_current()
+            LET l_xcaf.xcafmodid = g_user
+            LET l_xcaf.xcafmoddt = cl_get_current()
+            SELECT COUNT(*) INTO l_count FROM xcaf_t 
+             WHERE xcafent = g_enterprise AND xcaf001 = l_xcaf.xcaf001  AND xcaf002 = l_xcaf.xcaf002
+               AND xcafseq1 = l_xcaf.xcafseq1  AND xcafseq2 = l_xcaf.xcafseq2       
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INSERT INTO xcaf_t VALUES(l_xcaf.*)
+                    
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "xcaf_t"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+               END IF
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_xcaf_d[l_ac].* TO NULL
+               CALL s_transaction_end('N',0)
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "xcaf_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N',0)                   
+               CANCEL INSERT
+            ELSE
+              
+               CALL s_transaction_end('Y',0)
+               
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+ 
+        BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_xcaf_d[l_ac].xcaf003) THEN
+
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               DELETE FROM xcaf_t
+                WHERE xcafent = g_enterprise AND xcaf001 = p_xcaf001 AND xcaf002 = p_xcaf002
+                  AND xcafseq1 = p_xcafseq1  AND xcafseq2 = g_xcaf_d[l_ac].xcafseq2
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "xcaf_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                  CALL s_transaction_end('N',0)
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  
+                  CALL s_transaction_end('Y',0)
+               END IF 
+               CLOSE axci005_02_bcl
+               LET l_count = g_xcaf_d.getLength()
+            END IF 
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_xcaf_d[l_ac].* = g_xcaf_d_t.*
+               CLOSE axci005_02_bcl
+               CALL s_transaction_end('N',0)
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = l_xcaf.xcafseq2
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_xcaf_d[l_ac].* = g_xcaf_d_t.*
+            ELSE
+               UPDATE xcaf_t SET (xcafseq2,xcaf003,xcaf004,xcaf005,xcaf006,xcaf007)
+                               = (g_xcaf_d[l_ac].xcafseq2,g_xcaf_d[l_ac].xcaf003,g_xcaf_d[l_ac].xcaf004,
+                                  g_xcaf_d[l_ac].xcaf005,g_xcaf_d[l_ac].xcaf006,g_xcaf_d[l_ac].xcaf007)
+                WHERE xcafent = g_enterprise AND xcaf001 = p_xcaf001 AND xcaf002 = p_xcaf002 
+                  AND xcafseq1 = p_xcafseq1  AND xcafseq2 = g_xcaf_d_t.xcafseq2
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "xcaf_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+   
+                  LET g_xcaf_d[l_ac].* = g_xcaf_d_t.*
+                  CALL s_transaction_end('N',0)
+               ELSE
+                  CALL s_transaction_end('Y',0)               
+               END IF
+
+            END IF
+            
+         AFTER ROW
+            CALL axci005_02_unlock_b()
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf001
+            #add-point:BEFORE FIELD xcaf001 name="input.b.page1.xcaf001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf001
+            
+            #add-point:AFTER FIELD xcaf001 name="input.a.page1.xcaf001"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xcaf_d[l_ac].xcaf001) AND NOT cl_null(g_xcaf_d[l_ac].xcaf002) AND NOT cl_null(g_xcaf_d[l_ac].xcafseq1) AND NOT cl_null(g_xcaf_d[l_ac].xcafseq2) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_xcaf_d[l_ac].xcaf001 != g_xcaf_d_t.xcaf001 OR g_xcaf_d[l_ac].xcaf002 != g_xcaf_d_t.xcaf002 OR g_xcaf_d[l_ac].xcafseq1 != g_xcaf_d_t.xcafseq1 OR g_xcaf_d[l_ac].xcafseq2 != g_xcaf_d_t.xcafseq2))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcaf_t WHERE "||"xcafent = '" ||g_enterprise|| "' AND "||"xcaf001 = '"||g_xcaf_d[l_ac].xcaf001 ||"' AND "|| "xcaf002 = '"||g_xcaf_d[l_ac].xcaf002 ||"' AND "|| "xcafseq1 = '"||g_xcaf_d[l_ac].xcafseq1 ||"' AND "|| "xcafseq2 = '"||g_xcaf_d[l_ac].xcafseq2 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf001
+            #add-point:ON CHANGE xcaf001 name="input.g.page1.xcaf001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcafsite
+            #add-point:BEFORE FIELD xcafsite name="input.b.page1.xcafsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcafsite
+            
+            #add-point:AFTER FIELD xcafsite name="input.a.page1.xcafsite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcafsite
+            #add-point:ON CHANGE xcafsite name="input.g.page1.xcafsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf002
+            #add-point:BEFORE FIELD xcaf002 name="input.b.page1.xcaf002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf002
+            
+            #add-point:AFTER FIELD xcaf002 name="input.a.page1.xcaf002"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xcaf_d[l_ac].xcaf001) AND NOT cl_null(g_xcaf_d[l_ac].xcaf002) AND NOT cl_null(g_xcaf_d[l_ac].xcafseq1) AND NOT cl_null(g_xcaf_d[l_ac].xcafseq2) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_xcaf_d[l_ac].xcaf001 != g_xcaf_d_t.xcaf001 OR g_xcaf_d[l_ac].xcaf002 != g_xcaf_d_t.xcaf002 OR g_xcaf_d[l_ac].xcafseq1 != g_xcaf_d_t.xcafseq1 OR g_xcaf_d[l_ac].xcafseq2 != g_xcaf_d_t.xcafseq2))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcaf_t WHERE "||"xcafent = '" ||g_enterprise|| "' AND "||"xcaf001 = '"||g_xcaf_d[l_ac].xcaf001 ||"' AND "|| "xcaf002 = '"||g_xcaf_d[l_ac].xcaf002 ||"' AND "|| "xcafseq1 = '"||g_xcaf_d[l_ac].xcafseq1 ||"' AND "|| "xcafseq2 = '"||g_xcaf_d[l_ac].xcafseq2 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf002
+            #add-point:ON CHANGE xcaf002 name="input.g.page1.xcaf002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcafseq1
+            #add-point:BEFORE FIELD xcafseq1 name="input.b.page1.xcafseq1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcafseq1
+            
+            #add-point:AFTER FIELD xcafseq1 name="input.a.page1.xcafseq1"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xcaf_d[l_ac].xcaf001) AND NOT cl_null(g_xcaf_d[l_ac].xcaf002) AND NOT cl_null(g_xcaf_d[l_ac].xcafseq1) AND NOT cl_null(g_xcaf_d[l_ac].xcafseq2) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_xcaf_d[l_ac].xcaf001 != g_xcaf_d_t.xcaf001 OR g_xcaf_d[l_ac].xcaf002 != g_xcaf_d_t.xcaf002 OR g_xcaf_d[l_ac].xcafseq1 != g_xcaf_d_t.xcafseq1 OR g_xcaf_d[l_ac].xcafseq2 != g_xcaf_d_t.xcafseq2))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcaf_t WHERE "||"xcafent = '" ||g_enterprise|| "' AND "||"xcaf001 = '"||g_xcaf_d[l_ac].xcaf001 ||"' AND "|| "xcaf002 = '"||g_xcaf_d[l_ac].xcaf002 ||"' AND "|| "xcafseq1 = '"||g_xcaf_d[l_ac].xcafseq1 ||"' AND "|| "xcafseq2 = '"||g_xcaf_d[l_ac].xcafseq2 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcafseq1
+            #add-point:ON CHANGE xcafseq1 name="input.g.page1.xcafseq1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcafseq2
+            #add-point:BEFORE FIELD xcafseq2 name="input.b.page1.xcafseq2"
+            IF cl_null(g_xcaf_d[l_ac].xcafseq2 ) THEN 
+               SELECT MAX(xcafseq2) INTO g_xcaf_d[l_ac].xcafseq2 
+                 FROM xcaf_t
+                WHERE xcaf001 = p_xcaf001
+                  AND xcaf002 = p_xcaf002
+                  AND xcafseq1 =p_xcafseq1
+                  AND xcafent = g_enterprise                  
+               IF cl_null(g_xcaf_d[l_ac].xcafseq2) THEN 
+                  LET g_xcaf_d[l_ac].xcafseq2 = 10
+               ELSE
+                  LET g_xcaf_d[l_ac].xcafseq2 = g_xcaf_d[l_ac].xcafseq2 + 10
+               END IF
+            END IF 
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcafseq2
+            
+            #add-point:AFTER FIELD xcafseq2 name="input.a.page1.xcafseq2"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xcaf_d[l_ac].xcaf001) AND NOT cl_null(g_xcaf_d[l_ac].xcaf002) AND NOT cl_null(g_xcaf_d[l_ac].xcafseq1) AND NOT cl_null(g_xcaf_d[l_ac].xcafseq2) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_xcaf_d[l_ac].xcaf001 != g_xcaf_d_t.xcaf001 OR g_xcaf_d[l_ac].xcaf002 != g_xcaf_d_t.xcaf002 OR g_xcaf_d[l_ac].xcafseq1 != g_xcaf_d_t.xcafseq1 OR g_xcaf_d[l_ac].xcafseq2 != g_xcaf_d_t.xcafseq2))) THEN 
+                  IF NOT ap_chk_notDup(g_xcaf_d[l_ac].xcafseq2,"SELECT COUNT(*) FROM xcaf_t WHERE "||"xcafent = '" ||g_enterprise|| "' AND "||"xcaf001 = '"||g_xcaf_d[l_ac].xcaf001 ||"' AND "|| "xcaf002 = '"||g_xcaf_d[l_ac].xcaf002 ||"' AND "|| "xcafseq1 = '"||g_xcaf_d[l_ac].xcafseq1 ||"' AND "|| "xcafseq2 = '"||g_xcaf_d[l_ac].xcafseq2 ||"'",'std-00004',0) THEN 
+                     LET g_xcaf_d[l_ac].xcafseq2 = ''
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcafseq2
+            #add-point:ON CHANGE xcafseq2 name="input.g.page1.xcafseq2"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf003
+            
+            #add-point:AFTER FIELD xcaf003 name="input.a.page1.xcaf003"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf003
+            #add-point:BEFORE FIELD xcaf003 name="input.b.page1.xcaf003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf003
+            #add-point:ON CHANGE xcaf003 name="input.g.page1.xcaf003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xcaf_d[l_ac].xcaf004,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD xcaf004
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xcaf004 name="input.a.page1.xcaf004"
+            IF NOT cl_null(g_xcaf_d[l_ac].xcaf004) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf004
+            #add-point:BEFORE FIELD xcaf004 name="input.b.page1.xcaf004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf004
+            #add-point:ON CHANGE xcaf004 name="input.g.page1.xcaf004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf005
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xcaf_d[l_ac].xcaf005,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD xcaf005
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xcaf005 name="input.a.page1.xcaf005"
+            IF NOT cl_null(g_xcaf_d[l_ac].xcaf005) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf005
+            #add-point:BEFORE FIELD xcaf005 name="input.b.page1.xcaf005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf005
+            #add-point:ON CHANGE xcaf005 name="input.g.page1.xcaf005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf006
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xcaf_d[l_ac].xcaf006,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD xcaf006
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xcaf006 name="input.a.page1.xcaf006"
+            IF NOT cl_null(g_xcaf_d[l_ac].xcaf006) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf006
+            #add-point:BEFORE FIELD xcaf006 name="input.b.page1.xcaf006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf006
+            #add-point:ON CHANGE xcaf006 name="input.g.page1.xcaf006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf007
+            #add-point:BEFORE FIELD xcaf007 name="input.b.page1.xcaf007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf007
+            
+            #add-point:AFTER FIELD xcaf007 name="input.a.page1.xcaf007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf007
+            #add-point:ON CHANGE xcaf007 name="input.g.page1.xcaf007"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.xcaf001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf001
+            #add-point:ON ACTION controlp INFIELD xcaf001 name="input.c.page1.xcaf001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcafsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcafsite
+            #add-point:ON ACTION controlp INFIELD xcafsite name="input.c.page1.xcafsite"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf002
+            #add-point:ON ACTION controlp INFIELD xcaf002 name="input.c.page1.xcaf002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcafseq1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcafseq1
+            #add-point:ON ACTION controlp INFIELD xcafseq1 name="input.c.page1.xcafseq1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcafseq2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcafseq2
+            #add-point:ON ACTION controlp INFIELD xcafseq2 name="input.c.page1.xcafseq2"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf003
+            #add-point:ON ACTION controlp INFIELD xcaf003 name="input.c.page1.xcaf003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf004
+            #add-point:ON ACTION controlp INFIELD xcaf004 name="input.c.page1.xcaf004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf005
+            #add-point:ON ACTION controlp INFIELD xcaf005 name="input.c.page1.xcaf005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf006
+            #add-point:ON ACTION controlp INFIELD xcaf006 name="input.c.page1.xcaf006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf007
+            #add-point:ON ACTION controlp INFIELD xcaf007 name="input.c.page1.xcaf007"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axci005_02 
+   
+   #add-point:input段after input 
+   CLOSE axci005_02_bcl
+   LET INT_FLAG = FALSE
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axci005_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axci005_02.other_function" readonly="Y" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION axci005_02_b_fill(p_xcaf001,p_xcaf002,p_xcafseq1)
+DEFINE p_xcaf001       LIKE xcaf_t.xcaf001
+DEFINE p_xcaf002       LIKE xcaf_t.xcaf002
+DEFINE p_xcafseq1      LIKE xcaf_t.xcafseq1
+DEFINE l_sql           STRING
+DEFINE l_ac1           LIKE type_t.num5
+
+   LET l_sql = " SELECT xcaf001,xcafsite,xcaf002,xcafseq1,xcafseq2,xcaf003,'','','',xcaf004,xcaf005,xcaf006,xcaf007  FROM xcaf_t ",
+               "  WHERE xcafent = '",g_enterprise,"'",
+               "    AND xcaf001 = '",p_xcaf001,"'",
+               "    AND xcaf002 = '",p_xcaf002,"'",
+               "    AND xcafseq1= '",p_xcafseq1,"'",
+               "  ORDER BY xcafseq2 " 
+   PREPARE axci005_02_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR axci005_02_pb 
+   
+   CALL g_xcaf_d.clear()
+   LET l_ac1 = 1
+   FOREACH b_fill_curs INTO g_xcaf_d[l_ac1].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET l_ac1 = l_ac1 + 1
+      IF l_ac1 > g_max_rec THEN
+         #CALL cl_err( "", 9035, 0 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH 
+   CALL g_xcaf_d.deleteElement(g_xcaf_d.getLength())   
+   LET g_rec_b = l_ac1 - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   CLOSE b_fill_curs
+   FREE axci005_02_pb
+   
+END FUNCTION
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION axci005_02_unlock_b()
+   CLOSE axci005_02_bcl
+END FUNCTION
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION axci005_02_lock_b(p_ac)
+DEFINE p_ac  LIKE type_t.num5
+
+   OPEN axci005_02_bcl USING g_xcaf_d[p_ac].xcafseq2
+
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = STATUS
+      LET g_errparam.extend = "axci005_02_bcl"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF
+   RETURN TRUE
+END FUNCTION
+
+ 
+{</section>}
+ 

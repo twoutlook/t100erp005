@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi199_01" module="aoo" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02295" crtdt="2014-02-24 16:27:47" modid="00593" moddt="2014-10-20 19:40:59" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="維護對應作業編號">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oobl001,oobl002,oobl002_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi199_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="oobl001,oobl002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="oobl002"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="oobl001"/>
+      <column id="oobl002">
+        <after>
+          <check chkid="v_gzzz001,v_gzzz001_3" id="isExist"/>
+          <reference field="oobl002_desc" ref_field="oobl_t.oobl002" map_field="oobl002" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001" state="i"/>
+      </column>
+      <column id="oobl002_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="oobl_t" page="1" linked="" pk="oobl001,oobl002">
+      <sql id="forupd_sql_detail" query="SELECT oobl001,oobl002,&apos;&apos; FROM oobl_t WHERE ooblent=? AND oobl001=? AND oobl002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oobl001,oobl002,&apos;&apos; FROM oobl_t WHERE ooblent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,454 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrt940_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2014-11-18 17:58:48), PR版次:0003(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000081
+#+ Filename...: axrt940_02
+#+ Description: 拋轉傳票
+#+ Creator....: 02599(2014-11-02 19:42:43)
+#+ Modifier...: 02599 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="axrt940_02.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#+ Modifier...: No.160318-00005#55  2016/3/31   pengxin  修正azzi902重复定义之错误讯息
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glap_m        RECORD
+       glapdocno LIKE glap_t.glapdocno, 
+   glapdocdt LIKE glap_t.glapdocdt
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_glaa013             LIKE glaa_t.glaa013
+DEFINE g_glaa024             LIKE glaa_t.glaa024   #150416-00004(1)--20150416 add
+DEFINE g_glaa121             LIKE glaa_t.glaa121
+DEFINE g_ooef004             LIKE ooef_t.ooef004
+#end add-point
+ 
+DEFINE g_glap_m        type_g_glap_m
+ 
+   DEFINE g_glapdocno_t LIKE glap_t.glapdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrt940_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrt940_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_xrejld,p_xrejcomp,p_xrejdocno,p_flag
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_xrejld        LIKE xrej_t.xrejld
+   DEFINE p_xrejcomp      LIKE xrej_t.xrejcomp
+   DEFINE p_xrejdocno     LIKE xrej_t.xrejdocno
+   DEFINE p_flag          LIKE type_t.chr1
+   DEFINE l_wc            STRING
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE r_start_no      LIKE glap_t.glapdocno
+   DEFINE r_end_no        LIKE glap_t.glapdocno
+   DEFINE l_xrem006       LIKE xrem_t.xrem006
+   DEFINE l_glcb002       LIKE glca_t.glca002   #150416-00004(1)--20150416 add
+   DEFINE l_prog          LIKE type_t.chr10     #150416-00004(1)--20150416 add
+   DEFINE l_success       LIKE type_t.num5      #150416-00004(1)--20150416 add
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt940_02 WITH FORM cl_ap_formpath("axr","axrt940_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   SELECT ooef004 INTO g_ooef004 FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = p_xrejcomp
+   SELECT glaa013,glaa024,glaa121 INTO g_glaa013,g_glaa024,g_glaa121 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = p_xrejld   #150416-00004(1)--20150416  add glaa024
+   CALL cl_set_comp_visible("docno",FALSE)
+   LET g_glap_m.glapdocno = ''
+   LET g_glap_m.glapdocdt = g_today
+   DISPLAY BY NAME g_glap_m.glapdocdt   
+   LET r_start_no = ''
+   LET r_end_no = ''
+   
+   #150416-00004(1)--20150416--add--str--
+   SELECT glcb002 INTO l_glcb002
+     FROM glcb_t
+    WHERE glcbent = g_enterprise
+      AND glcbld = p_xrejld
+      AND glcb001 = 'AR'
+      
+   IF l_glcb002 = '2' AND g_prog = 'axrt940' THEN
+      LET l_prog = 'aglt350'
+   ELSE
+      LET l_prog = 'aglt310'
+   END IF
+   #150416-00004(1)--20150416--add--end--
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glap_m.glapdocno,g_glap_m.glapdocdt ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glapdocno
+            #add-point:BEFORE FIELD glapdocno name="input.b.glapdocno"
+            LET g_glapdocno_t = g_glap_m.glapdocno
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glapdocno
+            
+            #add-point:AFTER FIELD glapdocno name="input.a.glapdocno"
+            IF NOT cl_null(g_glap_m.glapdocno) THEN
+               #150416-00004(1)--20150416--mark--str--
+               #CALL axrt940_02_glapdocno_chk(g_glap_m.glapdocno)
+               #IF NOT cl_null(g_errno) THEN
+               #   INITIALIZE g_errparam TO NULL
+               #   LET g_errparam.code = g_errno
+               #   LET g_errparam.extend = g_glap_m.glapdocno
+               #   LET g_errparam.popup = TRUE
+               #   CALL cl_err()
+               #
+               #   LET g_glap_m.glapdocno = g_glapdocno_t
+               #   NEXT FIELD glapdocno
+               #END IF
+               #150416-00004(1)--20150416--mark--end--
+               
+               #150416-00004(1)--20150416--add--str--
+               CALL s_aooi200_fin_chk_slip(p_xrejld,'',g_glap_m.glapdocno,l_prog) RETURNING l_success   
+               IF l_success = FALSE THEN 
+                  LET g_glap_m.glapdocno = ''
+                  NEXT FIELD glapdocno
+               END IF
+               #150416-00004(1)--20150416--add--end-- 
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glapdocno
+            #add-point:ON CHANGE glapdocno name="input.g.glapdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glapdocdt
+            #add-point:BEFORE FIELD glapdocdt name="input.b.glapdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glapdocdt
+            
+            #add-point:AFTER FIELD glapdocdt name="input.a.glapdocdt"
+            IF NOT cl_null(g_glap_m.glapdocdt) THEN
+               IF g_glap_m.glapdocdt < g_glaa013 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'agl-00160'
+                  LET g_errparam.extend = g_glap_m.glapdocdt
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_glap_m.glapdocdt = ''
+                  NEXT FIELD glapdocdt
+               END IF                
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glapdocdt
+            #add-point:ON CHANGE glapdocdt name="input.g.glapdocdt"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glapdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glapdocno
+            #add-point:ON ACTION controlp INFIELD glapdocno name="input.c.glapdocno"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glap_m.glapdocno             #給予default值
+
+            #給予arg
+            #150416-00004(1)--20150416--mark--str--
+            #LET g_qryparam.where = "ooba001 = '",g_ooef004,"' AND oobx002 = 'AGL' AND oobx003 = 'aglt310' "
+            #
+            #
+            #CALL q_ooba002_4()                                #呼叫開窗
+            #150416-00004(1)--20150416--mark--end--
+            
+            #150416-00004(1)--20150416--add--str--
+            LET g_qryparam.arg1 = g_glaa024
+            LET g_qryparam.arg2 = l_prog      
+
+            CALL q_ooba002_1()                              #呼叫開窗
+            #150416-00004(1)--20150416--add--end--
+
+            LET g_glap_m.glapdocno = g_qryparam.return1              
+
+            DISPLAY g_glap_m.glapdocno TO glapdocno              #
+
+            NEXT FIELD glapdocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glapdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glapdocdt
+            #add-point:ON ACTION controlp INFIELD glapdocdt name="input.c.glapdocdt"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            ELSE
+               CALL s_transaction_begin()
+               CALL cl_err_collect_init()
+               LET r_success = TRUE
+               #帳齡及壞帳提列
+               
+               IF p_flag = '1' THEN
+                  #axrt940
+                  #150416-00004(1)--20150416--add--str--
+                  IF l_prog = 'aglt350' THEN 
+                     LET g_prog = 'aglt350'
+                  END IF
+                  #150416-00004(1)--20150416--add--end--
+                  IF g_glaa121 = 'Y' THEN 
+                     LET l_wc = "glgbdocno = '",p_xrejdocno,"'"
+                     CALL s_pre_voucher_ins_glap('AR','R60',p_xrejld,g_glap_m.glapdocdt,g_glap_m.glapdocno,'1',l_wc) 
+                     RETURNING r_success,r_start_no,r_end_no
+                  ELSE
+                     LET l_wc = "xrejdocno = '",p_xrejdocno,"'"
+                     CALL s_axrt940_gen_ar('4',p_xrejld,g_glap_m.glapdocdt,g_glap_m.glapdocno,1,l_wc,'N') 
+                     RETURNING r_success,r_start_no,r_end_no
+                  END IF
+                  LET g_prog = 'axrt940'   #150416-00004(1) add
+                  IF r_success = TRUE AND NOT cl_null(r_start_no) THEN
+                     UPDATE xrej_t SET xrej005=r_start_no 
+                     WHERE xrejent=g_enterprise AND xrejdocno=p_xrejdocno
+                     IF SQLCA.SQLCODE THEN
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = "update xrej_t"
+                        LET g_errparam.code   = SQLCA.SQLCODE
+                        LET g_errparam.popup  = TRUE      
+                        CALL cl_err()
+                        LET r_success = FALSE 
+                     END IF 
+                  END IF
+               END IF
+               #暫估沖回
+               IF p_flag = '2' THEN
+                  LET l_wc = "xremdocno = '",p_xrejdocno,"'"
+                  SELECT xrem006 INTO l_xrem006 FROM xrem_t 
+                  WHERE xrement=g_enterprise AND xremdocno=p_xrejdocno
+                  IF l_xrem006 = '1' THEN #axrt930
+                     IF g_glaa121 = 'Y' THEN 
+                        LET l_wc = "glgbdocno = '",p_xrejdocno,"'"
+                        CALL s_pre_voucher_ins_glap('AR','R50',p_xrejld,g_glap_m.glapdocdt,g_glap_m.glapdocno,'1',l_wc) 
+                        RETURNING r_success,r_start_no,r_end_no
+                     ELSE                
+                        CALL s_axrt940_gen_ar('5',p_xrejld,g_glap_m.glapdocdt,g_glap_m.glapdocno,1,l_wc,'N') 
+                        RETURNING r_success,r_start_no,r_end_no
+                     END IF
+                  ELSE #axrt931
+                     IF g_glaa121 = 'Y' THEN 
+                        LET l_wc = "glgbdocno = '",p_xrejdocno,"'"
+                        CALL s_pre_voucher_ins_glap('AR','R51',p_xrejld,g_glap_m.glapdocdt,g_glap_m.glapdocno,'1',l_wc) 
+                        RETURNING r_success,r_start_no,r_end_no
+                     ELSE  
+                        CALL s_axrt940_gen_ar('6',p_xrejld,g_glap_m.glapdocdt,g_glap_m.glapdocno,1,l_wc,'N') 
+                        RETURNING r_success,r_start_no,r_end_no
+                     END IF
+                  END IF
+                  IF r_success = TRUE AND NOT cl_null(r_start_no) THEN
+                     UPDATE xrem_t SET xrem005=r_start_no 
+                     WHERE xrement=g_enterprise AND xremdocno=p_xrejdocno
+                     IF SQLCA.SQLCODE THEN
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = "update xrem_t"
+                        LET g_errparam.code   = SQLCA.SQLCODE
+                        LET g_errparam.popup  = TRUE      
+                        CALL cl_err()
+                        LET r_success = FALSE 
+                     END IF 
+                  END IF
+               END IF
+               IF r_success = FALSE THEN
+                  CALL cl_err_collect_show()
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   IF r_success AND NOT cl_null(r_start_no) THEN
+      CALL cl_set_comp_visible("docno",TRUE)
+      DISPLAY r_start_no TO FORMONLY.docno
+   END IF
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         CALL cl_set_act_visible('close,exit',TRUE)
+   END MENU
+#   #删除临时表
+#   DROP TABLE s_voucher_ar_tmp;
+#   DROP TABLE s_voucher_ar_group;
+#   DROP TABLE s_voucher_glbc;
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt940_02 
+   
+   #add-point:input段after input name="input.post_input"
+   RETURN r_start_no
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrt940_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axrt940_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 單據別檢查
+# Memo...........:
+# Usage..........: CALL axrt940_02_glapdocno_chk(p_glapdocno)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt940_02_glapdocno_chk(p_glapdocno)
+   DEFINE p_glapdocno      LIKE glap_t.glapdocno
+   DEFINE l_oobastus       LIKE ooba_t.oobastus
+   
+   LET g_errno = '' 
+   SELECT oobastus INTO l_oobastus 
+     FROM ooba_t LEFT OUTER JOIN oobx_t ON (oobaent=oobxent AND ooba002=oobx001)
+    WHERE oobaent = g_enterprise
+      AND ooba001 = g_ooef004      #单据别参照表号
+      AND ooba002 = p_glapdocno    #单据别
+      AND oobx002 = 'AGL'          #模组 
+      AND oobx003 = 'aglt310'      #单据性质
+   CASE
+      WHEN SQLCA.SQLCODE =100  LET g_errno = 'aim-00056'
+#      WHEN l_oobastus = 'N'    LET g_errno = 'aim-00057'   #160318-00005#55  mark
+      WHEN l_oobastus = 'N'    LET g_errno = 'sub-01302'    #160318-00005#55  add
+   END CASE
+END FUNCTION
+
+ 
+{</section>}
+ 

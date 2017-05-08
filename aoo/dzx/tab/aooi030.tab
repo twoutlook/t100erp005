@@ -1,0 +1,120 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi030" module="aoo" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01996" crtdt="2013-07-01 00:00:00" modid="01996" moddt="2014-06-28 12:27:02" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="州省維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooci001,ooci001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oocistus,ooci002,oocil004,oocil006,oocil005"/>
+      <var id="body" page="2" record="s_detail1_info" page_id="1_info" value="ooci002_s_detail1_info(chr500),oocimodid,oocimodid_desc(chr500),oocimoddt,oociownid,oociownid_desc(chr500),oociowndp,oociowndp_desc(chr500),oocicrtid,oocicrtid_desc(chr500),oocicrtdp,oocicrtdp_desc(chr500),oocicrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi030" method="dialog">
+    <section id="input">
+      <input id="head" field="ooci001"/>
+      <input id="body" page="1" field="ooci002,oocil004,oocil006,oocil005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ooci001"/>
+      <construct id="body" page="1" field="ooci002,oocil004,oocil006,oocil005"/>
+      <construct id="body" page="2" field="oocimodid,oocimoddt,oociownid,oociowndp,oocicrtid,oocicrtdp,oocicrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ooci001"/>
+      <set id="head" type="no_entry" field="ooci001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ooci001">
+        <after>
+          <check chkid="v_oocg001" id="isExist"/>
+          <reference field="ooci001_desc" ref_field="ooci_t.ooci001" map_field="ooci001" ref_sql="SELECT oocgl003 FROM oocgl_t WHERE oocglent=$varg_enterprise$var AND oocgl001=? AND oocgl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocg001" state="i"/>
+        <controlp form="q_oocg001" state="c"/>
+      </column>
+      <column id="ooci001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="oocistus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="ooci002">
+        <controlp form="q_ooci002_1" state="c"/>
+      </column>
+      <column id="oocil004"/>
+      <column id="oocil006"/>
+      <column id="oocil005"/>
+    </init>
+    <init id="body" page="2">
+      <column id="ooci002_s_detail1_info"/>
+      <column id="oocimodid">
+        <after>
+          <reference field="oocimodid_desc" ref_field="ooci_t.oocimodid" map_field="oocimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocimodid_desc"/>
+      <column id="oocimoddt"/>
+      <column id="oociownid">
+        <after>
+          <reference field="oociownid_desc" ref_field="ooci_t.oociownid" map_field="oociownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oociownid_desc"/>
+      <column id="oociowndp">
+        <after>
+          <reference field="oociowndp_desc" ref_field="ooci_t.oociowndp" map_field="oociowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oociowndp_desc"/>
+      <column id="oocicrtid">
+        <after>
+          <reference field="oocicrtid_desc" ref_field="ooci_t.oocicrtid" map_field="oocicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocicrtid_desc"/>
+      <column id="oocicrtdp">
+        <after>
+          <reference field="oocicrtdp_desc" ref_field="ooci_t.oocicrtdp" map_field="oocicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oocicrtdp_desc"/>
+      <column id="oocicrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooci_t" pk="ooci001">
+      <sql id="forupd_sql" type="sql" query="SELECT ooci001,&apos;&apos; FROM ooci_t WHERE oocient= ? AND ooci001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ooci001,&apos;&apos; FROM ooci_t" order="ooci001"/>
+    </head>
+    <body id="ooci_t" page="1,2" linked="" pk="ooci002" fk="ooci001">
+      <sql id="forupd_sql_detail" query="SELECT oocistus,ooci002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,oocimodid,&apos;&apos;,oocimoddt,oociownid,&apos;&apos;,oociowndp,&apos;&apos;,oocicrtid,&apos;&apos;,oocicrtdp,&apos;&apos;,oocicrtdt FROM ooci_t WHERE oocient=? AND ooci001=? AND ooci002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oocistus,ooci002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,oocimodid,&apos;&apos;,oocimoddt,oociownid,&apos;&apos;,oociowndp,&apos;&apos;,oocicrtid,&apos;&apos;,oocicrtdp,&apos;&apos;,oocicrtdt FROM ooci_t WHERE oocient= ? AND ooci001=?"/>
+      <sql id="detail_append" type="lang" target="oocil_t.oocil004,oocil_t.oocil006,oocil_t.oocil005" table="oocil_t" fk="ooci001,ooci002" pk="oocil001,oocil002,oocil003" field="oocil004,oocil006,oocil005"/>
+    </body>
+  </dataset>
+</assembly>
+

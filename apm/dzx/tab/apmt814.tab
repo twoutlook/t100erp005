@@ -1,0 +1,185 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt814" module="apm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="01752" crtdt="2013-07-01 00:00:00" modid="02159" moddt="2015-07-24 10:18:07" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="供應商績效評核綜合得分調整作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmcldocno,pmcldocdt,pmcl001,pmcl001_desc(chr80),pmcl002,pmcl002_desc(chr80),pmclstus,pmclownid,pmclownid_desc(chr80),pmclowndp,pmclowndp_desc(chr80),pmclcrtid,pmclcrtid_desc(chr80),pmclcrtdp,pmclcrtdp_desc(chr80),pmclcrtdt,pmclmodid,pmclmodid_desc(chr80),pmclmoddt,pmclcnfid,pmclcnfid_desc(chr80),pmclcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmcmseq,pmcm001,pmcm001_desc(chr500),pmcm002,pmcm003,pmcm003_desc(chr500),pmcm004,pmcm005,pmcf003(chr500),pmcf003_desc(chr500),pmcm007,pmcm006,pmcm008,pmcm008_desc(chr500),pmcm009,pmcm009_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="prog_pmcl001" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_pmcl_m.pmcl001"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_apmm800" prog="apmm800" parameter="pmcm001"/>
+        <action id="prog_apmi810" prog="apmi810" parameter="pmcm002"/>
+        <action id="prog_arti202" prog="arti202" parameter="pmcm003"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt814" method="dialog">
+    <section id="input">
+      <input id="head" field="pmcl001,pmcl002,pmclstus,pmclownid,pmclowndp,pmclcrtid,pmclcrtdp,pmclcrtdt,pmclmodid,pmclmoddt,pmclcnfid,pmclcnfdt"/>
+      <input id="body" page="1" field="pmcm001,pmcm002,pmcm003,pmcm006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmcldocno,pmcldocdt,pmcl001,pmcl002,pmclstus,pmclownid,pmclowndp,pmclcrtid,pmclcrtdp,pmclcrtdt,pmclmodid,pmclmoddt,pmclcnfid,pmclcnfdt"/>
+      <construct id="body" page="1" field="pmcmseq,pmcm001,pmcm002,pmcm003,pmcm004,pmcm005,pmcm007,pmcm006,pmcm008,pmcm009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmcldocno"/>
+      <set id="head" type="no_entry" field="pmcldocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmcldocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_pmcadocno" state="c"/>
+      </column>
+      <column id="pmcldocdt"/>
+      <column id="pmcl001">
+        <after>
+          <reference field="pmcl001_desc" ref_field="pmcl_t.pmcl001" map_field="pmcl001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="pmcl001_desc"/>
+      <column id="pmcl002">
+        <after>
+          <reference field="pmcl002_desc" ref_field="pmcl_t.pmcl002" map_field="pmcl002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="pmcl002_desc"/>
+      <column id="pmclstus" scc="13" type="S" default="N">
+        <stus id="Y" pic="confirmed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="pmclownid">
+        <after>
+          <reference field="pmclownid_desc" ref_field="pmcl_t.pmclownid" map_field="pmclownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmclownid_desc"/>
+      <column id="pmclowndp">
+        <after>
+          <reference field="pmclowndp_desc" ref_field="pmcl_t.pmclowndp" map_field="pmclowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmclowndp_desc"/>
+      <column id="pmclcrtid">
+        <after>
+          <reference field="pmclcrtid_desc" ref_field="pmcl_t.pmclcrtid" map_field="pmclcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmclcrtid_desc"/>
+      <column id="pmclcrtdp">
+        <after>
+          <reference field="pmclcrtdp_desc" ref_field="pmcl_t.pmclcrtdp" map_field="pmclcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmclcrtdp_desc"/>
+      <column id="pmclcrtdt"/>
+      <column id="pmclmodid">
+        <after>
+          <reference field="pmclmodid_desc" ref_field="pmcl_t.pmclmodid" map_field="pmclmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmclmodid_desc"/>
+      <column id="pmclmoddt"/>
+      <column id="pmclcnfid">
+        <after>
+          <reference field="pmclcnfid_desc" ref_field="pmcl_t.pmclcnfid" map_field="pmclcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmclcnfid_desc"/>
+      <column id="pmclcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmcmseq"/>
+      <column id="pmcm001">
+        <after>
+          <reference field="pmcm001_desc" ref_field="pmcm_t.pmcm001" map_field="pmcm001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmck001" state="i"/>
+        <controlp form="q_pmck003" state="c"/>
+      </column>
+      <column id="pmcm001_desc"/>
+      <column id="pmcm002">
+        <controlp form="q_pmck001" state="i"/>
+        <controlp form="q_pmck001" state="c"/>
+      </column>
+      <column id="pmcm003">
+        <after>
+          <reference field="pmcm003_desc" ref_field="pmcm_t.pmcm003" map_field="pmcm003" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmck001" state="i"/>
+        <controlp form="q_pmck002" state="c"/>
+      </column>
+      <column id="pmcm003_desc"/>
+      <column id="pmcm004"/>
+      <column id="pmcm005"/>
+      <column id="pmcf003">
+        <after>
+          <reference field="pmcf003_desc" ref_field="pmcf003" map_field="pmcf003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2053&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmcf003_desc"/>
+      <column id="pmcm007"/>
+      <column id="pmcm006">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pmcm008">
+        <after>
+          <reference field="pmcm008_desc" ref_field="pmcm008" map_field="pmcm008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2053&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmcm008_desc"/>
+      <column id="pmcm009">
+        <after>
+          <reference field="pmcm009_desc" ref_field="pmcm009" map_field="pmcm009" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2054&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmcm009_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmcl_t" pk="pmcldocno">
+      <sql id="forupd_sql" type="sql" query="SELECT pmcldocno,pmcldocdt,pmcl001,&apos;&apos;,pmcl002,&apos;&apos;,pmclstus,pmclownid,&apos;&apos;,pmclowndp,&apos;&apos;,pmclcrtid,&apos;&apos;,pmclcrtdp,&apos;&apos;,pmclcrtdt,pmclmodid,&apos;&apos;,pmclmoddt,pmclcnfid,&apos;&apos;,pmclcnfdt FROM pmcl_t WHERE pmclent= ? AND pmcldocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmcldocno,pmcldocdt,pmcl001,&apos;&apos;,pmcl002,&apos;&apos;,pmclstus,pmclownid,&apos;&apos;,pmclowndp,&apos;&apos;,pmclcrtid,&apos;&apos;,pmclcrtdp,&apos;&apos;,pmclcrtdt,pmclmodid,&apos;&apos;,pmclmoddt,pmclcnfid,&apos;&apos;,pmclcnfdt FROM pmcl_t" order="pmcldocno"/>
+    </head>
+    <body id="pmcm_t" page="1" linked="" pk="pmcmseq" fk="pmcmdocno">
+      <sql id="forupd_sql_detail" query="SELECT pmcmseq,pmcm001,&apos;&apos;,pmcm002,pmcm003,&apos;&apos;,pmcm004,pmcm005,&apos;&apos;,&apos;&apos;,pmcm007,pmcm006,pmcm008,&apos;&apos;,pmcm009,&apos;&apos; FROM pmcm_t WHERE pmcment=? AND pmcmdocno=? AND pmcmseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmcmseq,pmcm001,&apos;&apos;,pmcm002,pmcm003,&apos;&apos;,pmcm004,pmcm005,&apos;&apos;,&apos;&apos;,pmcm007,pmcm006,pmcm008,&apos;&apos;,pmcm009,&apos;&apos; FROM pmcm_t WHERE pmcment=? AND pmcmdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

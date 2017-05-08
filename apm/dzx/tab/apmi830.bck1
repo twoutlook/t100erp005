@@ -1,0 +1,248 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmi830" module="apm" jobmode="N" type="t02" industry="std" fix_arg="0" crtid="02749" crtdt="2014-11-21 19:07:47" modid="02749" moddt="2015-03-02 13:31:41" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="7" tabver="10001" description="庫存組織要貨範圍維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inaastus,inaasite,inaasite_desc(chr500),inaa001,inayl003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmcqstus,pmcq002,pmcq003,pmcq003_desc(chr500)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="pmcq002,pmcq003,pmcqownid,pmcqownid_desc(chr500),pmcqowndp,pmcqowndp_desc(chr500),pmcqcrtid,pmcqcrtid_desc(chr500),pmcqcrtdp,pmcqcrtdp_desc(chr500),pmcqcrtdt,pmcqmodid,pmcqmodid_desc(chr500),pmcqmoddt"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="pmcrstus,pmcr002"/>
+      <var id="body" page="5" record="s_detail5" page_id="5" value="pmcr002,pmcrownid,pmcrownid_desc(chr500),pmcrowndp,pmcrowndp_desc(chr500),pmcrcrtid,pmcrcrtid_desc(chr500),pmcrcrtdp,pmcrcrtdp_desc(chr500),pmcrcrtdt,pmcrmodid,pmcrmodid_desc(chr500),pmcrmoddt"/>
+      <var id="body" page="6" record="s_detail6" page_id="6" value="pmcsstus,pmcs002,pmcs002_desc(chr500)"/>
+      <var id="body" page="7" record="s_detail7" page_id="7" value="pmcs002,pmcsownid,pmcsownid_desc(chr500),pmcsowndp,pmcsowndp_desc(chr500),pmcscrtid,pmcscrtid_desc(chr500),pmcscrtdp,pmcscrtdp_desc(chr500),pmcscrtdt,pmcsmodid,pmcsmodid_desc(chr500),pmcsmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="3">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="4">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="5">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="6">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="7">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmi830" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="inaastus,inaasite,inaa001,inayl003" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="pmcqstus,pmcq002,pmcq003,pmcq003_desc" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="4" field="pmcrstus,pmcr002" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="6" field="pmcsstus,pmcs002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="inaastus,inaasite,inaa001,inayl003"/>
+      <construct id="body" page="2" field="pmcqstus,pmcq002,pmcq003,pmcq003_desc"/>
+      <construct id="body" page="3" field="pmcqownid,pmcqowndp,pmcqcrtid,pmcqcrtdp,pmcqcrtdt,pmcqmodid,pmcqmoddt"/>
+      <construct id="body" page="4" field="pmcrstus,pmcr002"/>
+      <construct id="body" page="5" field="pmcrownid,pmcrowndp,pmcrcrtid,pmcrcrtdp,pmcrcrtdt,pmcrmodid,pmcrmoddt"/>
+      <construct id="body" page="6" field="pmcsstus,pmcs002"/>
+      <construct id="body" page="7" field="pmcsownid,pmcsowndp,pmcscrtid,pmcscrtdp,pmcscrtdt,pmcsmodid,pmcsmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="inaastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="inaasite">
+        <after>
+          <reference field="inaasite_desc" ref_field="inaa_t.inaasite" map_field="inaasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="inaasite_desc"/>
+      <column id="inaa001">
+        <controlp form="q_inaa001" state="c"/>
+      </column>
+      <column id="inayl003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pmcqstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmcq002" def_scc="6077"/>
+      <column id="pmcq003">
+        <after/>
+      </column>
+      <column id="pmcq003_desc"/>
+    </init>
+    <init id="body" page="3">
+      <column id="pmcqownid">
+        <after>
+          <reference field="pmcqownid_desc" ref_field="pmcq_t.pmcqownid" map_field="pmcqownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmcqownid_desc"/>
+      <column id="pmcqowndp">
+        <after>
+          <reference field="pmcqowndp_desc" ref_field="pmcq_t.pmcqowndp" map_field="pmcqowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmcqowndp_desc"/>
+      <column id="pmcqcrtid">
+        <after>
+          <reference field="pmcqcrtid_desc" ref_field="pmcq_t.pmcqcrtid" map_field="pmcqcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmcqcrtid_desc"/>
+      <column id="pmcqcrtdp">
+        <after>
+          <reference field="pmcqcrtdp_desc" ref_field="pmcq_t.pmcqcrtdp" map_field="pmcqcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmcqcrtdp_desc"/>
+      <column id="pmcqcrtdt"/>
+      <column id="pmcqmodid">
+        <after>
+          <reference field="pmcqmodid_desc" ref_field="pmcq_t.pmcqmodid" map_field="pmcqmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmcqmodid_desc"/>
+      <column id="pmcqmoddt"/>
+    </init>
+    <init id="body" page="4">
+      <column id="pmcrstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmcr002" def_scc="6014"/>
+    </init>
+    <init id="body" page="5">
+      <column id="pmcrownid">
+        <after>
+          <reference field="pmcrownid_desc" ref_field="pmcr_t.pmcrownid" map_field="pmcrownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmcrownid_desc"/>
+      <column id="pmcrowndp">
+        <after>
+          <reference field="pmcrowndp_desc" ref_field="pmcr_t.pmcrowndp" map_field="pmcrowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmcrowndp_desc"/>
+      <column id="pmcrcrtid">
+        <after>
+          <reference field="pmcrcrtid_desc" ref_field="pmcr_t.pmcrcrtid" map_field="pmcrcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmcrcrtid_desc"/>
+      <column id="pmcrcrtdp">
+        <after>
+          <reference field="pmcrcrtdp_desc" ref_field="pmcr_t.pmcrcrtdp" map_field="pmcrcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmcrcrtdp_desc"/>
+      <column id="pmcrcrtdt"/>
+      <column id="pmcrmodid">
+        <after>
+          <reference field="pmcrmodid_desc" ref_field="pmcr_t.pmcrmodid" map_field="pmcrmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmcrmodid_desc"/>
+      <column id="pmcrmoddt"/>
+    </init>
+    <init id="body" page="6">
+      <column id="pmcsstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmcs002">
+        <after>
+          <reference field="pmcs002_desc" ref_field="pmcs_t.pmcs002" map_field="pmcs002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmcs002_desc"/>
+    </init>
+    <init id="body" page="7">
+      <column id="pmcsownid">
+        <after>
+          <reference field="pmcsownid_desc" ref_field="pmcs_t.pmcsownid" map_field="pmcsownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmcsownid_desc"/>
+      <column id="pmcsowndp">
+        <after>
+          <reference field="pmcsowndp_desc" ref_field="pmcs_t.pmcsowndp" map_field="pmcsowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmcsowndp_desc"/>
+      <column id="pmcscrtid">
+        <after>
+          <reference field="pmcscrtid_desc" ref_field="pmcs_t.pmcscrtid" map_field="pmcscrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmcscrtid_desc"/>
+      <column id="pmcscrtdp">
+        <after>
+          <reference field="pmcscrtdp_desc" ref_field="pmcs_t.pmcscrtdp" map_field="pmcscrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmcscrtdp_desc"/>
+      <column id="pmcscrtdt"/>
+      <column id="pmcsmodid">
+        <after>
+          <reference field="pmcsmodid_desc" ref_field="pmcs_t.pmcsmodid" map_field="pmcsmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmcsmodid_desc"/>
+      <column id="pmcsmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="inaa_t" page="1" linked="" pk="inaasite,inaa001">
+      <sql id="forupd_sql_detail" query="SELECT inaastus,inaasite,&apos;&apos;,inaa001,&apos;&apos; FROM inaa_t WHERE inaaent=? AND inaa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inaastus,inaasite,&apos;&apos;,inaa001,&apos;&apos; FROM inaa_t WHERE inaaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="inayl_t.inayl003" table="inayl_t" fk="inaa001" pk="inayl001,inayl002" field="inayl003"/>
+    </body>
+    <body id="pmcq_t" page="2,3" linked="" pk="pmcq002,pmcq003" fk="pmcqsite,pmcq001" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT pmcqstus,pmcq002,pmcq003,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmcqownid,&apos;&apos;,pmcqowndp,&apos;&apos;,pmcqcrtid,&apos;&apos;,pmcqcrtdp,&apos;&apos;,pmcqcrtdt,pmcqmodid,&apos;&apos;,pmcqmoddt FROM pmcq_t WHERE pmcqent=? AND pmcqsite=? AND pmcq001=? AND pmcq002=? AND pmcq003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmcqstus,pmcq002,pmcq003,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmcqownid,&apos;&apos;,pmcqowndp,&apos;&apos;,pmcqcrtid,&apos;&apos;,pmcqcrtdp,&apos;&apos;,pmcqcrtdt,pmcqmodid,&apos;&apos;,pmcqmoddt FROM pmcq_t WHERE pmcqent=? AND pmcqsite=? AND pmcq001=?"/>
+    </body>
+    <body id="pmcr_t" page="4,5" linked="" pk="pmcr002" fk="pmcrsite,pmcr001" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT pmcrstus,pmcr002,&apos;&apos;,pmcrownid,&apos;&apos;,pmcrowndp,&apos;&apos;,pmcrcrtid,&apos;&apos;,pmcrcrtdp,&apos;&apos;,pmcrcrtdt,pmcrmodid,&apos;&apos;,pmcrmoddt FROM pmcr_t WHERE pmcrent=? AND pmcrsite=? AND pmcr001=? AND pmcr002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmcrstus,pmcr002,&apos;&apos;,pmcrownid,&apos;&apos;,pmcrowndp,&apos;&apos;,pmcrcrtid,&apos;&apos;,pmcrcrtdp,&apos;&apos;,pmcrcrtdt,pmcrmodid,&apos;&apos;,pmcrmoddt FROM pmcr_t WHERE pmcrent=? AND pmcrsite=? AND pmcr001=?"/>
+    </body>
+    <body id="pmcs_t" page="6,7" linked="" pk="pmcs002" fk="pmcssite,pmcs001" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT pmcsstus,pmcs002,&apos;&apos;,&apos;&apos;,pmcsownid,&apos;&apos;,pmcsowndp,&apos;&apos;,pmcscrtid,&apos;&apos;,pmcscrtdp,&apos;&apos;,pmcscrtdt,pmcsmodid,&apos;&apos;,pmcsmoddt FROM pmcs_t WHERE pmcsent=? AND pmcssite=? AND pmcs001=? AND pmcs002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmcsstus,pmcs002,&apos;&apos;,&apos;&apos;,pmcsownid,&apos;&apos;,pmcsowndp,&apos;&apos;,pmcscrtid,&apos;&apos;,pmcscrtdp,&apos;&apos;,pmcscrtdt,pmcsmodid,&apos;&apos;,pmcsmoddt FROM pmcs_t WHERE pmcsent=? AND pmcssite=? AND pmcs001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

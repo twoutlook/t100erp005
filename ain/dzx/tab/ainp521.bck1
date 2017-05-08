@@ -1,0 +1,169 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainp521" module="ain" jobmode="N" type="t02" industry="std" fix_arg="0" crtid="01726" crtdt="2014-04-11 10:29:46" modid="02159" moddt="2016-10-19 15:24:52" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="調撥差異調整單整批處理作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr500),indestus,indesite,indesite_desc(chr500),indedocdt,indedocno,inde001,inde002,inde002_desc(chr500),inde003,inde003_desc(chr500),inde004,inde004_desc(chr500),inde005,inde005_desc(chr500),inde006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="indedocno,indeownid,indeownid_desc(chr500),indeowndp,indeowndp_desc(chr500),indecrtid,indecrtid_desc(chr500),indecrtdp,indecrtdp_desc(chr500),indecrtdt,indemodid,indemodid_desc(chr500),indemoddt,indecnfid,indecnfid_desc(chr500),indecnfdt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="indfseq,indf001,indf003,indf002,indf002_desc(chr500),indf002_desc_1(chr500),indf006,indf006_desc(chr500),indf040,indf041,indf042,indf042_desc(chr500),indf043"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="batch_confirm"/>
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainp521" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,indestus,indesite,indedocdt,indedocno,inde001,inde002,inde003,inde004,inde005,inde006" insert="N" append="N" delete="N"/>
+      <input id="body" page="3" field="indfseq,indf001,indf003,indf002,indf006,indf040,indf041,indf042,indf043" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="indestus,indesite,indedocdt,indedocno,inde001,inde002,inde003,inde004,inde005,inde006"/>
+      <construct id="body" page="2" field="indeownid,indeowndp,indecrtid,indecrtdp,indecrtdt,indemodid,indemoddt,indecnfid,indecnfdt"/>
+      <construct id="body" page="3" field="indfseq,indf001,indf003,indf002,indf006,indf040,indf041,indf042,indf043"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel" type="S" default="N"/>
+      <column id="indestus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="indesite">
+        <after>
+          <reference field="indesite_desc" ref_field="inde_t.indesite" map_field="indeent,indesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indesite_desc"/>
+      <column id="indedocdt"/>
+      <column id="indedocno"/>
+      <column id="inde001"/>
+      <column id="inde002">
+        <after>
+          <reference field="inde002_desc" ref_field="inde_t.inde002" map_field="inde002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="inde002_desc"/>
+      <column id="inde003">
+        <after>
+          <reference field="inde003_desc" ref_field="inde_t.inde003" map_field="indeent,inde003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="inde003_desc"/>
+      <column id="inde004">
+        <after>
+          <reference field="inde004_desc" ref_field="inde_t.inde004" map_field="indeent,inde004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="inde004_desc"/>
+      <column id="inde005">
+        <after>
+          <reference field="inde005_desc" ref_field="inde_t.inde005" map_field="indeent,inde005" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inde005_desc"/>
+      <column id="inde006"/>
+    </init>
+    <init id="body" page="2">
+      <column id="indeownid">
+        <after>
+          <reference field="indeownid_desc" ref_field="inde_t.indeownid" map_field="indeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="indeownid_desc"/>
+      <column id="indeowndp">
+        <after>
+          <reference field="indeowndp_desc" ref_field="inde_t.indeowndp" map_field="indeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="indeowndp_desc"/>
+      <column id="indecrtid">
+        <after>
+          <reference field="indecrtid_desc" ref_field="inde_t.indecrtid" map_field="indecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="indecrtid_desc"/>
+      <column id="indecrtdp">
+        <after>
+          <reference field="indecrtdp_desc" ref_field="inde_t.indecrtdp" map_field="indecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="indecrtdp_desc"/>
+      <column id="indecrtdt"/>
+      <column id="indemodid">
+        <after>
+          <reference field="indemodid_desc" ref_field="inde_t.indemodid" map_field="indemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="indemodid_desc"/>
+      <column id="indemoddt"/>
+      <column id="indecnfid">
+        <after>
+          <reference field="indecnfid_desc" ref_field="inde_t.indecnfid" map_field="indecnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="indecnfid_desc"/>
+      <column id="indecnfdt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="indfseq"/>
+      <column id="indf001"/>
+      <column id="indf003"/>
+      <column id="indf002">
+        <after>
+          <reference field="indf002_desc" ref_field="indf_t.indf002" map_field="indfent,indf002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indf002_desc"/>
+      <column id="indf002_desc_1"/>
+      <column id="indf006">
+        <after>
+          <reference field="indf006_desc" ref_field="indf_t.indf006" map_field="indfent,indf006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indf006_desc"/>
+      <column id="indf040" type="S" default="0"/>
+      <column id="indf041" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="indf042">
+        <after>
+          <reference field="indf042_desc" ref_field="indf042" map_field="indf042" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2102&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="indf042_desc"/>
+      <column id="indf043"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="inde_t" page="1,2" linked="" pk="indedocno">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,indestus,indesite,&apos;&apos;,indedocdt,indedocno,inde001,inde002,&apos;&apos;,inde003,&apos;&apos;,inde004,&apos;&apos;,inde005,&apos;&apos;,inde006,&apos;&apos;,indeownid,&apos;&apos;,indeowndp,&apos;&apos;,indecrtid,&apos;&apos;,indecrtdp,&apos;&apos;,indecrtdt,indemodid,&apos;&apos;,indemoddt,indecnfid,&apos;&apos;,indecnfdt FROM inde_t WHERE indeent=? AND indedocno=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,indestus,indesite,&apos;&apos;,indedocdt,indedocno,inde001,inde002,&apos;&apos;,inde003,&apos;&apos;,inde004,&apos;&apos;,inde005,&apos;&apos;,inde006,&apos;&apos;,indeownid,&apos;&apos;,indeowndp,&apos;&apos;,indecrtid,&apos;&apos;,indecrtdp,&apos;&apos;,indecrtdt,indemodid,&apos;&apos;,indemoddt,indecnfid,&apos;&apos;,indecnfdt FROM inde_t WHERE indeent= ? AND 1=1 "/>
+    </body>
+    <body id="indf_t" page="3" linked="" pk="indfseq" fk="indfdocno" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT indfseq,indf001,indf003,indf002,&apos;&apos;,&apos;&apos;,indf006,&apos;&apos;,indf040,indf041,indf042,&apos;&apos;,indf043 FROM indf_t WHERE indfent=? AND indfdocno=? AND indfseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT indfseq,indf001,indf003,indf002,&apos;&apos;,&apos;&apos;,indf006,&apos;&apos;,indf040,indf041,indf042,&apos;&apos;,indf043 FROM indf_t WHERE indfent=? AND indfdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

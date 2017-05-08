@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmm826" module="apm" jobmode="N" type="i05" industry="std" fix_arg="0" crtid="01996" crtdt="2013-09-18 15:59:39" modid="02159" moddt="2016-10-20 18:25:45" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="供應商不良記錄維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmai001,pmai002,pmaal004,pmaastus,pmaa083,pmai003,pmai003_desc(chr80),pmai004,pmai005,pmai006,pmai006_desc(chr80),pmaiunit,pmaiunit_desc(chr80),pmaistus,pmai007,pmai008,pmai009,pmai010,pmai011,pmaiownid,pmaiownid_desc(chr80),pmaiowndp,pmaiowndp_desc(chr80),pmaicrtid,pmaicrtid_desc(chr80),pmaicrtdp,pmaicrtdp_desc(chr80),pmaicrtdt,pmaimodid,pmaimodid_desc(chr80),pmaimoddt,pmaicnfid,pmaicnfid_desc(chr80),pmaicnfdt"/>
+      <var id="bs_field" value="pmai001,pmai001_desc(chr80),pmaastus(pmaa_t.pmaastus),pmaa083(pmaa_t.pmaa083),pmai002,pmai005,pmai003,pmai004,pmai006,pmai006_desc(chr80),pmai007,pmai009,pmai010,pmaistus" pk="pmai001,pmai002" order=""/>
+      <bs_reference field="pmai001_desc" ref_field="pmai001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+      <bs_reference field="pmai006_desc" ref_field="pmai006" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2048&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="follow_up"/>
+      <action id="prog_pmai001" prog="apmm800" parameter="pmai001"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmm826" method="dialog">
+    <section id="input">
+      <input id="head" field="pmai001,pmai002,pmaal004,pmaastus,pmaa083,pmai003,pmai004,pmai005,pmai006,pmaiunit,pmaistus,pmai007,pmai008,pmai009,pmai010,pmai011"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmai001,pmai002,pmaal004,pmaastus,pmaa083,pmai003,pmai004,pmai005,pmai006,pmaiunit,pmaistus,pmai007,pmai008,pmai009,pmai010,pmai011,pmaiownid,pmaiowndp,pmaicrtid,pmaicrtdp,pmaicrtdt,pmaimodid,pmaimoddt,pmaicnfid,pmaicnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmai001,pmai002"/>
+      <set id="head" type="no_entry" field="pmai001,pmai002"/>
+    </init>
+    <init id="head">
+      <column id="pmai001">
+        <controlp form="q_pmaa001_1" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="pmai002"/>
+      <column id="pmaal004"/>
+      <column id="pmaastus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="pmaa083"/>
+      <column id="pmai003">
+        <after>
+          <reference field="pmai003_desc" ref_field="pmai_t.pmai003" map_field="pmai003" ref_sql="SELECT ooefl004 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_34" state="i"/>
+        <controlp form="q_ooef001_34" state="c"/>
+      </column>
+      <column id="pmai003_desc"/>
+      <column id="pmai004"/>
+      <column id="pmai005"/>
+      <column id="pmai006">
+        <after>
+          <reference field="pmai006_desc" ref_field="pmai006" map_field="pmai006" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2048&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmai006_desc"/>
+      <column id="pmaiunit">
+        <after>
+          <reference field="pmaiunit_desc" ref_field="pmai_t.pmaiunit" map_field="pmaiunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="pmaiunit_desc"/>
+      <column id="pmaistus" scc="50" type="S" default="N">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="pmai007"/>
+      <column id="pmai008"/>
+      <column id="pmai009"/>
+      <column id="pmai010"/>
+      <column id="pmai011"/>
+      <column id="pmaiownid">
+        <after>
+          <reference field="pmaiownid_desc" ref_field="pmai_t.pmaiownid" map_field="pmaiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmaiownid_desc"/>
+      <column id="pmaiowndp">
+        <after>
+          <reference field="pmaiowndp_desc" ref_field="pmai_t.pmaiowndp" map_field="pmaiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmaiowndp_desc"/>
+      <column id="pmaicrtid">
+        <after>
+          <reference field="pmaicrtid_desc" ref_field="pmai_t.pmaicrtid" map_field="pmaicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmaicrtid_desc"/>
+      <column id="pmaicrtdp">
+        <after>
+          <reference field="pmaicrtdp_desc" ref_field="pmai_t.pmaicrtdp" map_field="pmaicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmaicrtdp_desc"/>
+      <column id="pmaicrtdt"/>
+      <column id="pmaimodid">
+        <after>
+          <reference field="pmaimodid_desc" ref_field="pmai_t.pmaimodid" map_field="pmaimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmaimodid_desc"/>
+      <column id="pmaimoddt"/>
+      <column id="pmaicnfid">
+        <after>
+          <reference field="pmaicnfid_desc" ref_field="pmai_t.pmaicnfid" map_field="pmaicnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmaicnfid_desc"/>
+      <column id="pmaicnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmai_t" lid="pmai005" pid="pmai001" type="" desc="" speed="pmais_t" stype="" slid="pmais001" spid="pmais003" pk="pmai001,pmai002">
+      <sql id="forupd_sql" type="sql" query="SELECT pmai001,pmai002,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmai003,&apos;&apos;,pmai004,pmai005,pmai006,&apos;&apos;,pmaiunit,&apos;&apos;,pmaistus,pmai007,pmai008,pmai009,pmai010,pmai011,pmaiownid,&apos;&apos;,pmaiowndp,&apos;&apos;,pmaicrtid,&apos;&apos;,pmaicrtdp,&apos;&apos;,pmaicrtdt,pmaimodid,&apos;&apos;,pmaimoddt,pmaicnfid,&apos;&apos;,pmaicnfdt FROM pmai_t WHERE pmaient= ? AND pmai001=? AND pmai002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmai001,pmai002,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmai003,&apos;&apos;,pmai004,pmai005,pmai006,&apos;&apos;,pmaiunit,&apos;&apos;,pmaistus,pmai007,pmai008,pmai009,pmai010,pmai011,pmaiownid,&apos;&apos;,pmaiowndp,&apos;&apos;,pmaicrtid,&apos;&apos;,pmaicrtdp,&apos;&apos;,pmaicrtdt,pmaimodid,&apos;&apos;,pmaimoddt,pmaicnfid,&apos;&apos;,pmaicnfdt FROM pmai_t" order="pmai001,pmai002"/>
+    </head>
+  </dataset>
+</assembly>
+

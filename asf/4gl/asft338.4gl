@@ -1,0 +1,12397 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asft338.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0027(2017-01-16 10:12:12), PR版次:0027(2017-01-13 18:09:24)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000234
+#+ Filename...: asft338
+#+ Description: 工單製程重工轉出作業
+#+ Creator....: 00537(2014-03-28 14:53:49)
+#+ Modifier...: 01996 -SD/PR- 01996
+ 
+{</section>}
+ 
+{<section id="asft338.global" >}
+#應用 t01 樣板自動產生(Version:79)
+#add-point:填寫註解說明 name="global.memo" 
+#151102-00014#2   2015/11/04  By charles4m  在呼叫s_asft335_default_sffb056時，回傳變數值與接收變數值不符
+#151110-00029#1   2015/11/10  By Sarah      抓取工作站(sfib009)的說明時，因為少組了ecaasite條件結果抓到錯的說明
+#160303-00018#1   2016/03/03  By dorislai   列印條件多增加ent
+#160318-00025#3   2016/04/11  By 07675      將重複內容的錯誤訊息置換為公用錯誤訊息(r.v）
+#160701-00034#1   2016/07/04  By ywtsai     刪除存在備註作業(aooi360)時錯誤訊息給錯，更正為顯示"DELETE ooff_t"
+#160818-00017#36  2016/08/28  By lixh       单据类作业修改，删除时需重新检查状态
+#161109-00085#31  2016/11/14  By lienjunqi  整批調整系統星號寫法
+#161109-00085#62  2016/11/30  By 08171      整批調整系統星號寫法
+#160824-00007#216 2016/12/14  By sakura     新舊值備份處理
+#170110-00023#1   2017/01/10  By Ann_Huang  修正工單單號(sfia003)新增段開窗需傳入參數arg2 
+#170106-00002#1   2017/01/13  By xujing     取消4个工时栏位的预设值
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+ 
+#end add-point 
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_sfia_m        RECORD
+       sfiadocno LIKE sfia_t.sfiadocno, 
+   sfiadocdt LIKE sfia_t.sfiadocdt, 
+   sfia001 LIKE sfia_t.sfia001, 
+   sfia001_desc LIKE type_t.chr80, 
+   sfiadocno_desc LIKE type_t.chr80, 
+   sfia002 LIKE sfia_t.sfia002, 
+   sfia002_desc LIKE type_t.chr80, 
+   sfiastus LIKE sfia_t.sfiastus, 
+   sfia003 LIKE sfia_t.sfia003, 
+   sfia004 LIKE sfia_t.sfia004, 
+   sfia005 LIKE sfia_t.sfia005, 
+   sfia005_desc LIKE type_t.chr80, 
+   sfia009 LIKE sfia_t.sfia009, 
+   sfaa010 LIKE type_t.chr500, 
+   sfia006 LIKE sfia_t.sfia006, 
+   imaal003 LIKE type_t.chr500, 
+   sfia007 LIKE sfia_t.sfia007, 
+   imaal004 LIKE type_t.chr500, 
+   sfia008 LIKE sfia_t.sfia008, 
+   sfiaownid LIKE sfia_t.sfiaownid, 
+   sfiaownid_desc LIKE type_t.chr80, 
+   sfiaowndp LIKE sfia_t.sfiaowndp, 
+   sfiaowndp_desc LIKE type_t.chr80, 
+   sfiacrtid LIKE sfia_t.sfiacrtid, 
+   sfiacrtid_desc LIKE type_t.chr80, 
+   sfiacrtdp LIKE sfia_t.sfiacrtdp, 
+   sfiacrtdp_desc LIKE type_t.chr80, 
+   sfiacrtdt LIKE sfia_t.sfiacrtdt, 
+   sfiamodid LIKE sfia_t.sfiamodid, 
+   sfiamodid_desc LIKE type_t.chr80, 
+   sfiamoddt LIKE sfia_t.sfiamoddt, 
+   sfiacnfid LIKE sfia_t.sfiacnfid, 
+   sfiacnfid_desc LIKE type_t.chr80, 
+   sfiacnfdt LIKE sfia_t.sfiacnfdt
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_sffd_d        RECORD
+       sffdseq1 LIKE sffd_t.sffdseq1, 
+   sffd001 LIKE sffd_t.sffd001, 
+   sffd001_desc LIKE type_t.chr500, 
+   sffd002 LIKE sffd_t.sffd002, 
+   sffd003 LIKE sffd_t.sffd003
+       END RECORD
+PRIVATE TYPE type_g_sffd2_d RECORD
+       sfibseq LIKE sfib_t.sfibseq, 
+   sfib001 LIKE sfib_t.sfib001, 
+   sfib001_desc LIKE type_t.chr500, 
+   sfib002 LIKE sfib_t.sfib002, 
+   sfib003 LIKE sfib_t.sfib003, 
+   sfib004 LIKE sfib_t.sfib004, 
+   sfib005 LIKE sfib_t.sfib005, 
+   sfib005_desc LIKE type_t.chr500, 
+   sfib006 LIKE sfib_t.sfib006, 
+   sfib007 LIKE sfib_t.sfib007, 
+   sfib007_desc LIKE type_t.chr500, 
+   sfib008 LIKE sfib_t.sfib008, 
+   sfib009 LIKE sfib_t.sfib009, 
+   sfib009_desc LIKE type_t.chr500, 
+   sfib021 LIKE sfib_t.sfib021, 
+   sfib022 LIKE sfib_t.sfib022, 
+   sfib023 LIKE sfib_t.sfib023, 
+   sfib024 LIKE sfib_t.sfib024, 
+   sfib026 LIKE sfib_t.sfib026, 
+   sfib027 LIKE sfib_t.sfib027, 
+   sfib010 LIKE sfib_t.sfib010, 
+   sfib011 LIKE sfib_t.sfib011, 
+   sfib011_desc LIKE type_t.chr500, 
+   sfib012 LIKE sfib_t.sfib012, 
+   sfib013 LIKE sfib_t.sfib013, 
+   sfib014 LIKE sfib_t.sfib014, 
+   sfib015 LIKE sfib_t.sfib015, 
+   sfib016 LIKE sfib_t.sfib016, 
+   sfib017 LIKE sfib_t.sfib017, 
+   sfib028 LIKE sfib_t.sfib028, 
+   sfib028_desc LIKE type_t.chr500, 
+   sfib029 LIKE sfib_t.sfib029, 
+   sfib030 LIKE sfib_t.sfib030, 
+   sfib018 LIKE sfib_t.sfib018, 
+   sfib018_desc LIKE type_t.chr500, 
+   sfib019 LIKE sfib_t.sfib019, 
+   sfib020 LIKE sfib_t.sfib020, 
+   ooff013 LIKE type_t.chr500
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_sfiadocno LIKE sfia_t.sfiadocno,
+   b_sfiadocno_desc LIKE type_t.chr80,
+      b_sfiadocdt LIKE sfia_t.sfiadocdt,
+      b_sfia001 LIKE sfia_t.sfia001,
+   b_sfia001_desc LIKE type_t.chr80,
+      b_sfia002 LIKE sfia_t.sfia002,
+   b_sfia002_desc LIKE type_t.chr80,
+      b_sfia003 LIKE sfia_t.sfia003,
+      b_sfia004 LIKE sfia_t.sfia004,
+      b_sfia005 LIKE sfia_t.sfia005,
+   b_sfia005_desc LIKE type_t.chr80,
+      b_sfia006 LIKE sfia_t.sfia006,
+      b_sfia007 LIKE sfia_t.sfia007,
+      b_sfia008 LIKE sfia_t.sfia008
+       END RECORD
+       
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_end                 LIKE type_t.num5              #标识单身的制程是否是最后一站
+#end add-point
+       
+#模組變數(Module Variables)
+DEFINE g_sfia_m          type_g_sfia_m
+DEFINE g_sfia_m_t        type_g_sfia_m
+DEFINE g_sfia_m_o        type_g_sfia_m
+DEFINE g_sfia_m_mask_o   type_g_sfia_m #轉換遮罩前資料
+DEFINE g_sfia_m_mask_n   type_g_sfia_m #轉換遮罩後資料
+ 
+   DEFINE g_sfiadocno_t LIKE sfia_t.sfiadocno
+ 
+ 
+DEFINE g_sffd_d          DYNAMIC ARRAY OF type_g_sffd_d
+DEFINE g_sffd_d_t        type_g_sffd_d
+DEFINE g_sffd_d_o        type_g_sffd_d
+DEFINE g_sffd_d_mask_o   DYNAMIC ARRAY OF type_g_sffd_d #轉換遮罩前資料
+DEFINE g_sffd_d_mask_n   DYNAMIC ARRAY OF type_g_sffd_d #轉換遮罩後資料
+DEFINE g_sffd2_d          DYNAMIC ARRAY OF type_g_sffd2_d
+DEFINE g_sffd2_d_t        type_g_sffd2_d
+DEFINE g_sffd2_d_o        type_g_sffd2_d
+DEFINE g_sffd2_d_mask_o   DYNAMIC ARRAY OF type_g_sffd2_d #轉換遮罩前資料
+DEFINE g_sffd2_d_mask_n   DYNAMIC ARRAY OF type_g_sffd2_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+DEFINE g_wc2_table2   STRING
+ 
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                         #Current Dialog
+                                                               
+DEFINE g_pagestart           LIKE type_t.num10                 
+DEFINE gwin_curr             ui.Window                         #Current Window
+DEFINE gfrm_curr             ui.Form                           #Current Form
+DEFINE g_page_action         STRING                            #page action
+DEFINE g_header_hidden       LIKE type_t.num5                  #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5                  #隱藏工作Panel
+DEFINE g_page                STRING                            #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10                  #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx_tmp      LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10                  #單身2目前所在筆數
+DEFINE g_detail_idx_list     DYNAMIC ARRAY OF LIKE type_t.num10 #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10                  #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10                  #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10                  #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                             #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10                  #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                            #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10                  #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5                   #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+DEFINE g_idx_group           om.SaxAttributes              #頁籤群組
+DEFINE g_master_commit       LIKE type_t.chr1              #確認單頭是否修改過
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asft338.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT sfiadocno,sfiadocdt,sfia001,'','',sfia002,'',sfiastus,sfia003,sfia004, 
+       sfia005,'',sfia009,'',sfia006,'',sfia007,'',sfia008,sfiaownid,'',sfiaowndp,'',sfiacrtid,'',sfiacrtdp, 
+       '',sfiacrtdt,sfiamodid,'',sfiamoddt,sfiacnfid,'',sfiacnfdt", 
+                      " FROM sfia_t",
+                      " WHERE sfiaent= ? AND sfiadocno=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE asft338_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.sfiadocno,t0.sfiadocdt,t0.sfia001,t0.sfia002,t0.sfiastus,t0.sfia003, 
+       t0.sfia004,t0.sfia005,t0.sfia009,t0.sfia006,t0.sfia007,t0.sfia008,t0.sfiaownid,t0.sfiaowndp,t0.sfiacrtid, 
+       t0.sfiacrtdp,t0.sfiacrtdt,t0.sfiamodid,t0.sfiamoddt,t0.sfiacnfid,t0.sfiacnfdt,t1.oocql004 ,t2.ooag011 , 
+       t3.ooefl003 ,t4.ooag011 ,t5.ooefl003 ,t6.ooag011 ,t7.ooag011",
+               " FROM sfia_t t0",
+                              " LEFT JOIN oocql_t t1 ON t1.oocqlent="||g_enterprise||" AND t1.oocql001='221' AND t1.oocql002=t0.sfia005 AND t1.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t2 ON t2.ooagent="||g_enterprise||" AND t2.ooag001=t0.sfiaownid  ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent="||g_enterprise||" AND t3.ooefl001=t0.sfiaowndp AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t4 ON t4.ooagent="||g_enterprise||" AND t4.ooag001=t0.sfiacrtid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent="||g_enterprise||" AND t5.ooefl001=t0.sfiacrtdp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t6 ON t6.ooagent="||g_enterprise||" AND t6.ooag001=t0.sfiamodid  ",
+               " LEFT JOIN ooag_t t7 ON t7.ooagent="||g_enterprise||" AND t7.ooag001=t0.sfiacnfid  ",
+ 
+               " WHERE t0.sfiaent = " ||g_enterprise|| " AND t0.sfiadocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE asft338_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asft338 WITH FORM cl_ap_formpath("asf",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL asft338_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL asft338_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_asft338
+      
+   END IF 
+   
+   CLOSE asft338_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="asft338.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION asft338_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point    
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   
+   #各個page指標
+   LET g_detail_idx_list[1] = 1 
+   LET g_detail_idx_list[2] = 1
+ 
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+      CALL cl_set_combo_scc_part('sfiastus','13','N,Y,A,D,R,W,X')
+ 
+   
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #page群組
+   LET g_idx_group = om.SaxAttributes.create()
+   CALL g_idx_group.addAttribute("'1',","1")
+   CALL g_idx_group.addAttribute("'2',","1")
+ 
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc('sfib003','1202')
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL asft338_default_search()
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.ui_dialog" >}
+#+ 功能選單
+PRIVATE FUNCTION asft338_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   DEFINE  l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE  l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE  l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   DEFINE l_wc      STRING
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   #因應查詢方案進行處理
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL asft338_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_sfia_m.* TO NULL
+         CALL g_sffd_d.clear()
+         CALL g_sffd2_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL asft338_init()
+      END IF
+   
+      CALL lib_cl_dlg.cl_dlg_before_display()
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+         #左側瀏覽頁簽
+         DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTES(COUNT=g_header_cnt)
+            BEFORE ROW
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+         
+               IF g_current_idx > g_browser.getLength() THEN
+                  LET g_current_idx = g_browser.getLength()
+               END IF 
+               
+               CALL asft338_fetch('') # reload data
+               LET l_ac = 1
+               CALL asft338_ui_detailshow() #Setting the current row 
+         
+               CALL asft338_idx_chk()
+               #NEXT FIELD sffdseq1
+         
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+         END DISPLAY
+    
+         DISPLAY ARRAY g_sffd_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL asft338_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[1] = l_ac
+               CALL g_idx_group.addAttribute("'1',",l_ac)
+               
+               #add-point:page1, before row動作 name="ui_dialog.page1.before_row"
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL asft338_idx_chk()
+               #add-point:page1自定義行為 name="ui_dialog.page1.before_display"
+               
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為 name="ui_dialog.page1.action"
+            
+            #end add-point
+               
+         END DISPLAY
+        
+         #第一階單身段落
+         DISPLAY ARRAY g_sffd2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL asft338_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[2] = l_ac
+               CALL g_idx_group.addAttribute("'2',",l_ac)
+               
+               #add-point:page2, before row動作 name="ui_dialog.body2.before_row"
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               #顯示單身筆數
+               CALL asft338_idx_chk()
+               #add-point:page2自定義行為 name="ui_dialog.body2.before_display"
+               
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_2)
+            
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION gen_sfic
+            LET g_action_choice="gen_sfic"
+            IF cl_auth_chk_act("gen_sfic") THEN
+               
+               #add-point:ON ACTION gen_sfic name="menu.detail_show.page2.gen_sfic"
+               CALL asft338_01(g_sfia_m.sfiadocno,g_sffd2_d[g_detail_idx].sfibseq,'N')
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+            
+            #end add-point
+         
+         END DISPLAY
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+         
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+         SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL asft338_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+            IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               LET g_current_idx = g_current_row
+            END IF
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL asft338_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL asft338_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL asft338_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #add-point:ui_dialog段more_action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #狀態碼切換
+         ON ACTION statechange
+            LET g_action_choice = "statechange"
+            CALL asft338_statechange()
+            #根據資料狀態切換action狀態
+            CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+            CALL asft338_set_act_visible()   
+            CALL asft338_set_act_no_visible()
+            IF NOT (g_sfia_m.sfiadocno IS NULL
+ 
+              ) THEN
+               #組合條件
+               LET g_add_browse = " sfiaent = " ||g_enterprise|| " AND",
+                                  " sfiadocno = '", g_sfia_m.sfiadocno, "' "
+ 
+               #填到對應位置
+               CALL asft338_browser_fill("")
+            END IF
+         #應用 a32 樣板自動產生(Version:3)
+         #簽核狀況
+         ON ACTION bpm_status
+            #查詢簽核狀況, 統一建立HyperLink
+            CALL cl_bpm_status()
+            #add-point:ON ACTION bpm_status name="menu.bpm_status"
+            
+            #END add-point
+ 
+ 
+ 
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "sfia_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "sffd_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "sfib_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+                  OR NOT cl_null(g_wc2_table2)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL asft338_browser_fill("F")   #browser_fill()會將notice區塊清空
+               CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "sfia_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "sffd_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "sfib_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+                  OR NOT cl_null(g_wc2_table2)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL asft338_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code = "-100" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL asft338_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            CALL cl_notice()
+          
+         #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+               
+               #end add-point
+               CALL asft338_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL asft338_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL asft338_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL asft338_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL asft338_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL asft338_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL asft338_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL asft338_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL asft338_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL asft338_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL asft338_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_sffd_d)
+                  LET g_export_id[1]   = "s_detail1"
+                  LET g_export_node[2] = base.typeInfo.create(g_sffd2_d)
+                  LET g_export_id[2]   = "s_detail2"
+ 
+                  #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+                  
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+         #瀏覽頁折疊
+         ON ACTION worksheethidden   
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD sffdseq1
+            END IF
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL asft338_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL asft338_modify()
+               #add-point:ON ACTION modify_detail name="menu.modify_detail"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL asft338_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL asft338_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               #160303-00018#1-mod-(S)
+#               LET l_wc = " sfiadocno = '",g_sfia_m.sfiadocno,"'"
+               LET l_wc = " sfiadocno = '",g_sfia_m.sfiadocno,"' AND sfiaent='",g_enterprise,"'"
+               #160303-00018#1-mod-(E)
+               LET g_rep_wc = l_wc
+               
+               #END add-point
+               &include "erp/asf/asft338_rep.4gl"
+               #add-point:ON ACTION output.after name="menu.after_output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               #160303-00018#1-mod-(S)
+#               LET l_wc = " sfiadocno = '",g_sfia_m.sfiadocno,"'"
+               LET l_wc = " sfiadocno = '",g_sfia_m.sfiadocno,"' AND sfiaent='",g_enterprise,"'"
+               #160303-00018#1-mod-(E)
+               LET g_rep_wc = l_wc
+               
+               #END add-point
+               &include "erp/asf/asft338_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu.after_quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL asft338_reproduce()
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL asft338_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL asft338_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL asft338_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL asft338_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow(g_sfia_m.sfiadocdt)
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:79) ---add start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:79) --- add end ---
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.browser_fill" >}
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION asft338_browser_fill(ps_page_action)
+   #add-point:browser_fill段define(客製用) name="browser_fill.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理 name="browser_fill.before_browser_fill"
+   
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前 name="browser_fill.before_foreach"
+   IF cl_null(g_wc) THEN
+      LET g_wc = " sfiasite = '",g_site,"' "
+   ELSE
+      LET g_wc = g_wc," AND sfiasite = '",g_site,"' "
+   END IF
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT DISTINCT sfiadocno ",
+                      " FROM sfia_t ",
+                      " ",
+                      " LEFT JOIN sffd_t ON sffdent = sfiaent AND sfiadocno = sffddocno ", "  ",
+                      #add-point:browser_fill段sql(sffd_t1) name="browser_fill.cnt.join.}"
+                      
+                      #end add-point
+                      " LEFT JOIN sfib_t ON sfibent = sfiaent AND sfiadocno = sfibdocno", "  ",
+                      #add-point:browser_fill段sql(sfib_t1) name="browser_fill.cnt.join.sfib_t1"
+                      
+                      #end add-point
+ 
+ 
+ 
+                      " ", 
+                      " ", 
+                      " ",                      
+ 
+ 
+ 
+                      " WHERE sfiaent = " ||g_enterprise|| " AND sffdent = " ||g_enterprise|| " AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("sfia_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT DISTINCT sfiadocno ",
+                      " FROM sfia_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE sfiaent = " ||g_enterprise|| " AND ",l_wc CLIPPED, cl_sql_add_filter("sfia_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc name="browser_fill.cnt_sqlwc"
+   
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(1) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前 name="browser_fill.before_count"
+   
+   #end add-point
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+      FREE header_cnt_pre
+   END IF
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code = 9035 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_sfia_m.* TO NULL
+      CALL g_sffd_d.clear()        
+      CALL g_sffd2_d.clear() 
+ 
+      #add-point:browser_fill g_add_browse段額外處理 name="browser_fill.add_browse.other"
+      
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.sfiadocno,t0.sfiadocdt,t0.sfia001,t0.sfia002,t0.sfia003,t0.sfia004,t0.sfia005,t0.sfia006,t0.sfia007,t0.sfia008 Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.sfiastus,t0.sfiadocno,t0.sfiadocdt,t0.sfia001,t0.sfia002,t0.sfia003, 
+          t0.sfia004,t0.sfia005,t0.sfia006,t0.sfia007,t0.sfia008,t1.oocql004 ",
+                  " FROM sfia_t t0",
+                  "  ",
+                  "  LEFT JOIN sffd_t ON sffdent = sfiaent AND sfiadocno = sffddocno ", "  ", 
+                  #add-point:browser_fill段sql(sffd_t1) name="browser_fill.join.sffd_t1"
+                  
+                  #end add-point
+                  "  LEFT JOIN sfib_t ON sfibent = sfiaent AND sfiadocno = sfibdocno", "  ", 
+                  #add-point:browser_fill段sql(sfib_t1) name="browser_fill.join.sfib_t1"
+                  
+                  #end add-point
+ 
+ 
+ 
+                  " ", 
+                  " ",                      
+ 
+ 
+ 
+                                 " LEFT JOIN oocql_t t1 ON t1.oocqlent="||g_enterprise||" AND t1.oocql001='221' AND t1.oocql002=t0.sfia005 AND t1.oocql003='"||g_dlang||"' ",
+ 
+                  " WHERE t0.sfiaent = " ||g_enterprise|| " AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("sfia_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.sfiastus,t0.sfiadocno,t0.sfiadocdt,t0.sfia001,t0.sfia002,t0.sfia003, 
+          t0.sfia004,t0.sfia005,t0.sfia006,t0.sfia007,t0.sfia008,t1.oocql004 ",
+                  " FROM sfia_t t0",
+                  "  ",
+                                 " LEFT JOIN oocql_t t1 ON t1.oocqlent="||g_enterprise||" AND t1.oocql001='221' AND t1.oocql002=t0.sfia005 AND t1.oocql003='"||g_dlang||"' ",
+ 
+                  " WHERE t0.sfiaent = " ||g_enterprise|| " AND ",l_wc, cl_sql_add_filter("sfia_t")
+   END IF
+   #add-point:browser_fill,sql wc name="browser_fill.fill_sqlwc"
+   
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY sfiadocno ",g_order
+ 
+   #add-point:browser_fill,before_prepare name="browser_fill.before_prepare"
+   
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"sfia_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      #add-point:browser_fill段open cursor name="browser_fill.open"
+      
+      #end add-point
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_sfiadocno,g_browser[g_cnt].b_sfiadocdt, 
+          g_browser[g_cnt].b_sfia001,g_browser[g_cnt].b_sfia002,g_browser[g_cnt].b_sfia003,g_browser[g_cnt].b_sfia004, 
+          g_browser[g_cnt].b_sfia005,g_browser[g_cnt].b_sfia006,g_browser[g_cnt].b_sfia007,g_browser[g_cnt].b_sfia008, 
+          g_browser[g_cnt].b_sfia005_desc
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "Foreach:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+      
+         #add-point:browser_fill段reference name="browser_fill.reference"
+      LET g_browser[g_cnt].b_sfiadocno_desc = s_aooi200_get_slip_desc(g_browser[g_cnt].b_sfiadocno)
+      DISPLAY BY NAME g_browser[g_cnt].b_sfiadocno_desc
+      
+      LET g_browser[g_cnt].b_sfia001_desc = s_desc_get_person_desc(g_browser[g_cnt].b_sfia001)
+      DISPLAY BY NAME g_browser[g_cnt].b_sfia001_desc  
+
+      LET g_browser[g_cnt].b_sfia002_desc = s_desc_get_department_desc(g_browser[g_cnt].b_sfia002)
+      DISPLAY BY NAME g_browser[g_cnt].b_sfia002_desc
+         #end add-point
+      
+         #遮罩相關處理
+         CALL asft338_browser_mask()
+      
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/unconfirmed.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/confirmed.png"
+         WHEN "A"
+            LET g_browser[g_cnt].b_statepic = "stus/16/approved.png"
+         WHEN "D"
+            LET g_browser[g_cnt].b_statepic = "stus/16/withdraw.png"
+         WHEN "R"
+            LET g_browser[g_cnt].b_statepic = "stus/16/rejection.png"
+         WHEN "W"
+            LET g_browser[g_cnt].b_statepic = "stus/16/signing.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/invalid.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_browse THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      FREE browse_pre
+   END IF
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_sfiadocno) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+ 
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.ui_headershow" >}
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION asft338_ui_headershow()
+   #add-point:ui_headershow段define(客製用) name="ui_headershow.define_customerization"
+   
+   #end add-point  
+   #add-point:ui_headershow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_headershow.define"
+   
+   #end add-point      
+   
+   #add-point:Function前置處理  name="ui_headershow.pre_function"
+   
+   #end add-point
+   
+   LET g_sfia_m.sfiadocno = g_browser[g_current_idx].b_sfiadocno   
+ 
+   EXECUTE asft338_master_referesh USING g_sfia_m.sfiadocno INTO g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt, 
+       g_sfia_m.sfia001,g_sfia_m.sfia002,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+       g_sfia_m.sfia009,g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp, 
+       g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt, 
+       g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt,g_sfia_m.sfia005_desc,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp_desc, 
+       g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp_desc,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiacnfid_desc 
+ 
+   
+   CALL asft338_sfia_t_mask()
+   CALL asft338_show()
+      
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.ui_detailshow" >}
+#+ 單身資料重新顯示
+PRIVATE FUNCTION asft338_ui_detailshow()
+   #add-point:ui_detailshow段define(客製用) name="ui_detailshow.define_customerization"
+   
+   #end add-point    
+   #add-point:ui_detailshow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_detailshow.define"
+   
+   #end add-point    
+ 
+   #add-point:Function前置處理 name="ui_detailshow.before"
+   
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after name="ui_detailshow.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION asft338_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point    
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_sfiadocno = g_sfia_m.sfiadocno 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after name="ui_browser_refresh.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION asft338_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_sfia_m.* TO NULL
+   CALL g_sffd_d.clear()        
+   CALL g_sffd2_d.clear() 
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+   INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前 name="cs.before_construct"
+   
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON sfiadocno,sfiadocdt,sfia001,sfiadocno_desc,sfia002,sfiastus,sfia003, 
+          sfia004,sfia005,sfia009,sfia006,sfia007,sfia008,sfiaownid,sfiaowndp,sfiacrtid,sfiacrtdp,sfiacrtdt, 
+          sfiamodid,sfiamoddt,sfiacnfid,sfiacnfdt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.head.before_construct"
+            
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<sfiacrtdt>>----
+         AFTER FIELD sfiacrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<sfiamoddt>>----
+         AFTER FIELD sfiamoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<sfiacnfdt>>----
+         AFTER FIELD sfiacnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<sfiapstdt>>----
+ 
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiadocno
+            #add-point:BEFORE FIELD sfiadocno name="construct.b.sfiadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiadocno
+            
+            #add-point:AFTER FIELD sfiadocno name="construct.a.sfiadocno"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfiadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiadocno
+            #add-point:ON ACTION controlp INFIELD sfiadocno name="construct.c.sfiadocno"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_sfiadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfiadocno  #顯示到畫面上
+
+            NEXT FIELD sfiadocno                     #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiadocdt
+            #add-point:BEFORE FIELD sfiadocdt name="construct.b.sfiadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiadocdt
+            
+            #add-point:AFTER FIELD sfiadocdt name="construct.a.sfiadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfiadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiadocdt
+            #add-point:ON ACTION controlp INFIELD sfiadocdt name="construct.c.sfiadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia001
+            #add-point:BEFORE FIELD sfia001 name="construct.b.sfia001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia001
+            
+            #add-point:AFTER FIELD sfia001 name="construct.a.sfia001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfia001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia001
+            #add-point:ON ACTION controlp INFIELD sfia001 name="construct.c.sfia001"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfia001        #顯示到畫面上
+
+            NEXT FIELD sfia001                           #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiadocno_desc
+            #add-point:BEFORE FIELD sfiadocno_desc name="construct.b.sfiadocno_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiadocno_desc
+            
+            #add-point:AFTER FIELD sfiadocno_desc name="construct.a.sfiadocno_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfiadocno_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiadocno_desc
+            #add-point:ON ACTION controlp INFIELD sfiadocno_desc name="construct.c.sfiadocno_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia002
+            #add-point:BEFORE FIELD sfia002 name="construct.b.sfia002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia002
+            
+            #add-point:AFTER FIELD sfia002 name="construct.a.sfia002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfia002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia002
+            #add-point:ON ACTION controlp INFIELD sfia002 name="construct.c.sfia002"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfia002      #顯示到畫面上
+
+            NEXT FIELD sfia002                         #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiastus
+            #add-point:BEFORE FIELD sfiastus name="construct.b.sfiastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiastus
+            
+            #add-point:AFTER FIELD sfiastus name="construct.a.sfiastus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfiastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiastus
+            #add-point:ON ACTION controlp INFIELD sfiastus name="construct.c.sfiastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia003
+            #add-point:BEFORE FIELD sfia003 name="construct.b.sfia003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia003
+            
+            #add-point:AFTER FIELD sfia003 name="construct.a.sfia003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfia003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia003
+            #add-point:ON ACTION controlp INFIELD sfia003 name="construct.c.sfia003"
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_sfaadocno_17()                  #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfia003  #顯示到畫面上
+            NEXT FIELD CURRENT                     #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia004
+            #add-point:BEFORE FIELD sfia004 name="construct.b.sfia004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia004
+            
+            #add-point:AFTER FIELD sfia004 name="construct.a.sfia004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfia004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia004
+            #add-point:ON ACTION controlp INFIELD sfia004 name="construct.c.sfia004"
+            #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_sfca001_1()                         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfia004      #顯示到畫面上
+
+            NEXT FIELD CURRENT                         #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia005
+            #add-point:BEFORE FIELD sfia005 name="construct.b.sfia005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia005
+            
+            #add-point:AFTER FIELD sfia005 name="construct.a.sfia005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfia005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia005
+            #add-point:ON ACTION controlp INFIELD sfia005 name="construct.c.sfia005"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "221" #
+
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfia005      #顯示到畫面上
+
+            NEXT FIELD CURRENT                         #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia009
+            #add-point:BEFORE FIELD sfia009 name="construct.b.sfia009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia009
+            
+            #add-point:AFTER FIELD sfia009 name="construct.a.sfia009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfia009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia009
+            #add-point:ON ACTION controlp INFIELD sfia009 name="construct.c.sfia009"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia006
+            #add-point:BEFORE FIELD sfia006 name="construct.b.sfia006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia006
+            
+            #add-point:AFTER FIELD sfia006 name="construct.a.sfia006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfia006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia006
+            #add-point:ON ACTION controlp INFIELD sfia006 name="construct.c.sfia006"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_sfcb004()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfia006      #顯示到畫面上
+
+            NEXT FIELD CURRENT                         #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia007
+            #add-point:BEFORE FIELD sfia007 name="construct.b.sfia007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia007
+            
+            #add-point:AFTER FIELD sfia007 name="construct.a.sfia007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfia007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia007
+            #add-point:ON ACTION controlp INFIELD sfia007 name="construct.c.sfia007"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia008
+            #add-point:BEFORE FIELD sfia008 name="construct.b.sfia008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia008
+            
+            #add-point:AFTER FIELD sfia008 name="construct.a.sfia008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfia008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia008
+            #add-point:ON ACTION controlp INFIELD sfia008 name="construct.c.sfia008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.sfiaownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiaownid
+            #add-point:ON ACTION controlp INFIELD sfiaownid name="construct.c.sfiaownid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfiaownid  #顯示到畫面上
+            NEXT FIELD sfiaownid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiaownid
+            #add-point:BEFORE FIELD sfiaownid name="construct.b.sfiaownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiaownid
+            
+            #add-point:AFTER FIELD sfiaownid name="construct.a.sfiaownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfiaowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiaowndp
+            #add-point:ON ACTION controlp INFIELD sfiaowndp name="construct.c.sfiaowndp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfiaowndp  #顯示到畫面上
+            NEXT FIELD sfiaowndp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiaowndp
+            #add-point:BEFORE FIELD sfiaowndp name="construct.b.sfiaowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiaowndp
+            
+            #add-point:AFTER FIELD sfiaowndp name="construct.a.sfiaowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfiacrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiacrtid
+            #add-point:ON ACTION controlp INFIELD sfiacrtid name="construct.c.sfiacrtid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfiacrtid  #顯示到畫面上
+            NEXT FIELD sfiacrtid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiacrtid
+            #add-point:BEFORE FIELD sfiacrtid name="construct.b.sfiacrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiacrtid
+            
+            #add-point:AFTER FIELD sfiacrtid name="construct.a.sfiacrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfiacrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiacrtdp
+            #add-point:ON ACTION controlp INFIELD sfiacrtdp name="construct.c.sfiacrtdp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfiacrtdp  #顯示到畫面上
+            NEXT FIELD sfiacrtdp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiacrtdp
+            #add-point:BEFORE FIELD sfiacrtdp name="construct.b.sfiacrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiacrtdp
+            
+            #add-point:AFTER FIELD sfiacrtdp name="construct.a.sfiacrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiacrtdt
+            #add-point:BEFORE FIELD sfiacrtdt name="construct.b.sfiacrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.sfiamodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiamodid
+            #add-point:ON ACTION controlp INFIELD sfiamodid name="construct.c.sfiamodid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfiamodid  #顯示到畫面上
+            NEXT FIELD sfiamodid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiamodid
+            #add-point:BEFORE FIELD sfiamodid name="construct.b.sfiamodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiamodid
+            
+            #add-point:AFTER FIELD sfiamodid name="construct.a.sfiamodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiamoddt
+            #add-point:BEFORE FIELD sfiamoddt name="construct.b.sfiamoddt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.sfiacnfid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiacnfid
+            #add-point:ON ACTION controlp INFIELD sfiacnfid name="construct.c.sfiacnfid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfiacnfid  #顯示到畫面上
+            NEXT FIELD sfiacnfid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiacnfid
+            #add-point:BEFORE FIELD sfiacnfid name="construct.b.sfiacnfid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiacnfid
+            
+            #add-point:AFTER FIELD sfiacnfid name="construct.a.sfiacnfid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiacnfdt
+            #add-point:BEFORE FIELD sfiacnfdt name="construct.b.sfiacnfdt"
+            
+            #END add-point
+ 
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON sffdseq1,sffd001,sffd002,sffd003
+           FROM s_detail1[1].sffdseq1,s_detail1[1].sffd001,s_detail1[1].sffd002,s_detail1[1].sffd003
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffdseq1
+            #add-point:BEFORE FIELD sffdseq1 name="construct.b.page1.sffdseq1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffdseq1
+            
+            #add-point:AFTER FIELD sffdseq1 name="construct.a.page1.sffdseq1"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.sffdseq1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffdseq1
+            #add-point:ON ACTION controlp INFIELD sffdseq1 name="construct.c.page1.sffdseq1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.sffd001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffd001
+            #add-point:ON ACTION controlp INFIELD sffd001 name="construct.c.page1.sffd001"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.arg1 = "1053" 
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sffd001      #顯示到畫面上
+
+            NEXT FIELD sffd001                         #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffd001
+            #add-point:BEFORE FIELD sffd001 name="construct.b.page1.sffd001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffd001
+            
+            #add-point:AFTER FIELD sffd001 name="construct.a.page1.sffd001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffd002
+            #add-point:BEFORE FIELD sffd002 name="construct.b.page1.sffd002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffd002
+            
+            #add-point:AFTER FIELD sffd002 name="construct.a.page1.sffd002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.sffd002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffd002
+            #add-point:ON ACTION controlp INFIELD sffd002 name="construct.c.page1.sffd002"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffd003
+            #add-point:BEFORE FIELD sffd003 name="construct.b.page1.sffd003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffd003
+            
+            #add-point:AFTER FIELD sffd003 name="construct.a.page1.sffd003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.sffd003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffd003
+            #add-point:ON ACTION controlp INFIELD sffd003 name="construct.c.page1.sffd003"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc2_table2 ON sfibseq,sfib001,sfib002,sfib003,sfib004,sfib005,sfib006,sfib007,sfib008, 
+          sfib009,sfib021,sfib022,sfib023,sfib024,sfib026,sfib027,sfib010,sfib011,sfib012,sfib013,sfib014, 
+          sfib015,sfib016,sfib017,sfib028,sfib029,sfib030,sfib018,sfib019,sfib020,ooff013
+           FROM s_detail2[1].sfibseq,s_detail2[1].sfib001,s_detail2[1].sfib002,s_detail2[1].sfib003, 
+               s_detail2[1].sfib004,s_detail2[1].sfib005,s_detail2[1].sfib006,s_detail2[1].sfib007,s_detail2[1].sfib008, 
+               s_detail2[1].sfib009,s_detail2[1].sfib021,s_detail2[1].sfib022,s_detail2[1].sfib023,s_detail2[1].sfib024, 
+               s_detail2[1].sfib026,s_detail2[1].sfib027,s_detail2[1].sfib010,s_detail2[1].sfib011,s_detail2[1].sfib012, 
+               s_detail2[1].sfib013,s_detail2[1].sfib014,s_detail2[1].sfib015,s_detail2[1].sfib016,s_detail2[1].sfib017, 
+               s_detail2[1].sfib028,s_detail2[1].sfib029,s_detail2[1].sfib030,s_detail2[1].sfib018,s_detail2[1].sfib019, 
+               s_detail2[1].sfib020,s_detail2[1].ooff013
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body2.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfibseq
+            #add-point:BEFORE FIELD sfibseq name="construct.b.page2.sfibseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfibseq
+            
+            #add-point:AFTER FIELD sfibseq name="construct.a.page2.sfibseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfibseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfibseq
+            #add-point:ON ACTION controlp INFIELD sfibseq name="construct.c.page2.sfibseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib001
+            #add-point:BEFORE FIELD sfib001 name="construct.b.page2.sfib001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib001
+            
+            #add-point:AFTER FIELD sfib001 name="construct.a.page2.sfib001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib001
+            #add-point:ON ACTION controlp INFIELD sfib001 name="construct.c.page2.sfib001"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfib001      #顯示到畫面上
+
+            NEXT FIELD sfib001                         #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib002
+            #add-point:BEFORE FIELD sfib002 name="construct.b.page2.sfib002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib002
+            
+            #add-point:AFTER FIELD sfib002 name="construct.a.page2.sfib002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib002
+            #add-point:ON ACTION controlp INFIELD sfib002 name="construct.c.page2.sfib002"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib003
+            #add-point:BEFORE FIELD sfib003 name="construct.b.page2.sfib003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib003
+            
+            #add-point:AFTER FIELD sfib003 name="construct.a.page2.sfib003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib003
+            #add-point:ON ACTION controlp INFIELD sfib003 name="construct.c.page2.sfib003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib004
+            #add-point:BEFORE FIELD sfib004 name="construct.b.page2.sfib004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib004
+            
+            #add-point:AFTER FIELD sfib004 name="construct.a.page2.sfib004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib004
+            #add-point:ON ACTION controlp INFIELD sfib004 name="construct.c.page2.sfib004"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib005
+            #add-point:BEFORE FIELD sfib005 name="construct.b.page2.sfib005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib005
+            
+            #add-point:AFTER FIELD sfib005 name="construct.a.page2.sfib005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib005
+            #add-point:ON ACTION controlp INFIELD sfib005 name="construct.c.page2.sfib005"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfib005      #顯示到畫面上
+
+            NEXT FIELD sfib005                         #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib006
+            #add-point:BEFORE FIELD sfib006 name="construct.b.page2.sfib006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib006
+            
+            #add-point:AFTER FIELD sfib006 name="construct.a.page2.sfib006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib006
+            #add-point:ON ACTION controlp INFIELD sfib006 name="construct.c.page2.sfib006"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib007
+            #add-point:BEFORE FIELD sfib007 name="construct.b.page2.sfib007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib007
+            
+            #add-point:AFTER FIELD sfib007 name="construct.a.page2.sfib007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib007
+            #add-point:ON ACTION controlp INFIELD sfib007 name="construct.c.page2.sfib007"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib008
+            #add-point:BEFORE FIELD sfib008 name="construct.b.page2.sfib008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib008
+            
+            #add-point:AFTER FIELD sfib008 name="construct.a.page2.sfib008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib008
+            #add-point:ON ACTION controlp INFIELD sfib008 name="construct.c.page2.sfib008"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib009
+            #add-point:BEFORE FIELD sfib009 name="construct.b.page2.sfib009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib009
+            
+            #add-point:AFTER FIELD sfib009 name="construct.a.page2.sfib009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib009
+            #add-point:ON ACTION controlp INFIELD sfib009 name="construct.c.page2.sfib009"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ecaa001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfib009        #顯示到畫面上
+
+            NEXT FIELD sfib009                           #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib021
+            #add-point:BEFORE FIELD sfib021 name="construct.b.page2.sfib021"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib021
+            
+            #add-point:AFTER FIELD sfib021 name="construct.a.page2.sfib021"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib021
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib021
+            #add-point:ON ACTION controlp INFIELD sfib021 name="construct.c.page2.sfib021"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib022
+            #add-point:BEFORE FIELD sfib022 name="construct.b.page2.sfib022"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib022
+            
+            #add-point:AFTER FIELD sfib022 name="construct.a.page2.sfib022"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib022
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib022
+            #add-point:ON ACTION controlp INFIELD sfib022 name="construct.c.page2.sfib022"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib023
+            #add-point:BEFORE FIELD sfib023 name="construct.b.page2.sfib023"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib023
+            
+            #add-point:AFTER FIELD sfib023 name="construct.a.page2.sfib023"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib023
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib023
+            #add-point:ON ACTION controlp INFIELD sfib023 name="construct.c.page2.sfib023"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib024
+            #add-point:BEFORE FIELD sfib024 name="construct.b.page2.sfib024"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib024
+            
+            #add-point:AFTER FIELD sfib024 name="construct.a.page2.sfib024"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib024
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib024
+            #add-point:ON ACTION controlp INFIELD sfib024 name="construct.c.page2.sfib024"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib026
+            #add-point:BEFORE FIELD sfib026 name="construct.b.page2.sfib026"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib026
+            
+            #add-point:AFTER FIELD sfib026 name="construct.a.page2.sfib026"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib026
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib026
+            #add-point:ON ACTION controlp INFIELD sfib026 name="construct.c.page2.sfib026"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib027
+            #add-point:BEFORE FIELD sfib027 name="construct.b.page2.sfib027"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib027
+            
+            #add-point:AFTER FIELD sfib027 name="construct.a.page2.sfib027"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib027
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib027
+            #add-point:ON ACTION controlp INFIELD sfib027 name="construct.c.page2.sfib027"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib010
+            #add-point:BEFORE FIELD sfib010 name="construct.b.page2.sfib010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib010
+            
+            #add-point:AFTER FIELD sfib010 name="construct.a.page2.sfib010"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib010
+            #add-point:ON ACTION controlp INFIELD sfib010 name="construct.c.page2.sfib010"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib011
+            #add-point:ON ACTION controlp INFIELD sfib011 name="construct.c.page2.sfib011"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfib011      #顯示到畫面上
+
+            NEXT FIELD sfib011                         #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib011
+            #add-point:BEFORE FIELD sfib011 name="construct.b.page2.sfib011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib011
+            
+            #add-point:AFTER FIELD sfib011 name="construct.a.page2.sfib011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib012
+            #add-point:BEFORE FIELD sfib012 name="construct.b.page2.sfib012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib012
+            
+            #add-point:AFTER FIELD sfib012 name="construct.a.page2.sfib012"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib012
+            #add-point:ON ACTION controlp INFIELD sfib012 name="construct.c.page2.sfib012"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib013
+            #add-point:BEFORE FIELD sfib013 name="construct.b.page2.sfib013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib013
+            
+            #add-point:AFTER FIELD sfib013 name="construct.a.page2.sfib013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib013
+            #add-point:ON ACTION controlp INFIELD sfib013 name="construct.c.page2.sfib013"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib014
+            #add-point:BEFORE FIELD sfib014 name="construct.b.page2.sfib014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib014
+            
+            #add-point:AFTER FIELD sfib014 name="construct.a.page2.sfib014"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib014
+            #add-point:ON ACTION controlp INFIELD sfib014 name="construct.c.page2.sfib014"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib015
+            #add-point:BEFORE FIELD sfib015 name="construct.b.page2.sfib015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib015
+            
+            #add-point:AFTER FIELD sfib015 name="construct.a.page2.sfib015"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib015
+            #add-point:ON ACTION controlp INFIELD sfib015 name="construct.c.page2.sfib015"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib016
+            #add-point:BEFORE FIELD sfib016 name="construct.b.page2.sfib016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib016
+            
+            #add-point:AFTER FIELD sfib016 name="construct.a.page2.sfib016"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib016
+            #add-point:ON ACTION controlp INFIELD sfib016 name="construct.c.page2.sfib016"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib017
+            #add-point:BEFORE FIELD sfib017 name="construct.b.page2.sfib017"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib017
+            
+            #add-point:AFTER FIELD sfib017 name="construct.a.page2.sfib017"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib017
+            #add-point:ON ACTION controlp INFIELD sfib017 name="construct.c.page2.sfib017"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib028
+            #add-point:BEFORE FIELD sfib028 name="construct.b.page2.sfib028"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib028
+            
+            #add-point:AFTER FIELD sfib028 name="construct.a.page2.sfib028"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib028
+            #add-point:ON ACTION controlp INFIELD sfib028 name="construct.c.page2.sfib028"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooca001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfib028      #顯示到畫面上
+
+            NEXT FIELD sfib028                         #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib029
+            #add-point:BEFORE FIELD sfib029 name="construct.b.page2.sfib029"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib029
+            
+            #add-point:AFTER FIELD sfib029 name="construct.a.page2.sfib029"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib029
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib029
+            #add-point:ON ACTION controlp INFIELD sfib029 name="construct.c.page2.sfib029"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib030
+            #add-point:BEFORE FIELD sfib030 name="construct.b.page2.sfib030"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib030
+            
+            #add-point:AFTER FIELD sfib030 name="construct.a.page2.sfib030"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib030
+            #add-point:ON ACTION controlp INFIELD sfib030 name="construct.c.page2.sfib030"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib018
+            #add-point:BEFORE FIELD sfib018 name="construct.b.page2.sfib018"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib018
+            
+            #add-point:AFTER FIELD sfib018 name="construct.a.page2.sfib018"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib018
+            #add-point:ON ACTION controlp INFIELD sfib018 name="construct.c.page2.sfib018"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooca001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfib018      #顯示到畫面上
+
+            NEXT FIELD sfib018                         #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib019
+            #add-point:BEFORE FIELD sfib019 name="construct.b.page2.sfib019"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib019
+            
+            #add-point:AFTER FIELD sfib019 name="construct.a.page2.sfib019"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib019
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib019
+            #add-point:ON ACTION controlp INFIELD sfib019 name="construct.c.page2.sfib019"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib020
+            #add-point:BEFORE FIELD sfib020 name="construct.b.page2.sfib020"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib020
+            
+            #add-point:AFTER FIELD sfib020 name="construct.a.page2.sfib020"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.sfib020
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib020
+            #add-point:ON ACTION controlp INFIELD sfib020 name="construct.c.page2.sfib020"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff013
+            #add-point:BEFORE FIELD ooff013 name="construct.b.page2.ooff013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff013
+            
+            #add-point:AFTER FIELD ooff013 name="construct.a.page2.ooff013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.ooff013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff013
+            #add-point:ON ACTION controlp INFIELD ooff013 name="construct.c.page2.ooff013"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令) name="cs.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+            INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "sfia_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "sffd_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "sfib_t" 
+                     LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+   IF g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+   END IF
+ 
+ 
+ 
+ 
+   
+   #add-point:cs段結束前 name="cs.after_construct"
+   
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION asft338_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON sfiadocno,sfiadocdt,sfia001,sfia002,sfia003,sfia004,sfia005,sfia006,sfia007, 
+          sfia008
+                          FROM s_browse[1].b_sfiadocno,s_browse[1].b_sfiadocdt,s_browse[1].b_sfia001, 
+                              s_browse[1].b_sfia002,s_browse[1].b_sfia003,s_browse[1].b_sfia004,s_browse[1].b_sfia005, 
+                              s_browse[1].b_sfia006,s_browse[1].b_sfia007,s_browse[1].b_sfia008
+ 
+         BEFORE CONSTRUCT
+               DISPLAY asft338_filter_parser('sfiadocno') TO s_browse[1].b_sfiadocno
+            DISPLAY asft338_filter_parser('sfiadocdt') TO s_browse[1].b_sfiadocdt
+            DISPLAY asft338_filter_parser('sfia001') TO s_browse[1].b_sfia001
+            DISPLAY asft338_filter_parser('sfia002') TO s_browse[1].b_sfia002
+            DISPLAY asft338_filter_parser('sfia003') TO s_browse[1].b_sfia003
+            DISPLAY asft338_filter_parser('sfia004') TO s_browse[1].b_sfia004
+            DISPLAY asft338_filter_parser('sfia005') TO s_browse[1].b_sfia005
+            DISPLAY asft338_filter_parser('sfia006') TO s_browse[1].b_sfia006
+            DISPLAY asft338_filter_parser('sfia007') TO s_browse[1].b_sfia007
+            DISPLAY asft338_filter_parser('sfia008') TO s_browse[1].b_sfia008
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL asft338_filter_show('sfiadocno')
+   CALL asft338_filter_show('sfiadocdt')
+   CALL asft338_filter_show('sfia001')
+   CALL asft338_filter_show('sfia002')
+   CALL asft338_filter_show('sfia003')
+   CALL asft338_filter_show('sfia004')
+   CALL asft338_filter_show('sfia005')
+   CALL asft338_filter_show('sfia006')
+   CALL asft338_filter_show('sfia007')
+   CALL asft338_filter_show('sfia008')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION asft338_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION asft338_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = asft338_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION asft338_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_wc STRING
+   #add-point:query段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF   
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_sffd_d.clear()
+   CALL g_sffd2_d.clear()
+ 
+   
+   #add-point:query段other name="query.other"
+   
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL asft338_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL asft338_browser_fill("")
+      CALL asft338_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx_list[1] = 1
+   LET g_detail_idx_list[2] = 1
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+      CALL asft338_filter_show('sfiadocno')
+   CALL asft338_filter_show('sfiadocdt')
+   CALL asft338_filter_show('sfia001')
+   CALL asft338_filter_show('sfia002')
+   CALL asft338_filter_show('sfia003')
+   CALL asft338_filter_show('sfia004')
+   CALL asft338_filter_show('sfia005')
+   CALL asft338_filter_show('sfia006')
+   CALL asft338_filter_show('sfia007')
+   CALL asft338_filter_show('sfia008')
+   CALL asft338_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "-100" 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL asft338_fetch("F") 
+      #顯示單身筆數
+      CALL asft338_idx_chk()
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION asft338_fetch(p_flag)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point    
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   #清空第二階單身
+ 
+   
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx) #設定browse 索引
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_sfia_m.sfiadocno = g_browser[g_current_idx].b_sfiadocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE asft338_master_referesh USING g_sfia_m.sfiadocno INTO g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt, 
+       g_sfia_m.sfia001,g_sfia_m.sfia002,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+       g_sfia_m.sfia009,g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp, 
+       g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt, 
+       g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt,g_sfia_m.sfia005_desc,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp_desc, 
+       g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp_desc,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiacnfid_desc 
+ 
+   
+   #遮罩相關處理
+   LET g_sfia_m_mask_o.* =  g_sfia_m.*
+   CALL asft338_sfia_t_mask()
+   LET g_sfia_m_mask_n.* =  g_sfia_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL asft338_set_act_visible()   
+   CALL asft338_set_act_no_visible()
+   
+   #add-point:fetch段action控制 name="fetch.action_control"
+   
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前 name="fetch.after"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_sfia_m_t.* = g_sfia_m.*
+   LET g_sfia_m_o.* = g_sfia_m.*
+   
+   LET g_data_owner = g_sfia_m.sfiaownid      
+   LET g_data_dept  = g_sfia_m.sfiaowndp
+   
+   #重新顯示   
+   CALL asft338_show()
+ 
+   #應用 a56 樣板自動產生(Version:3)
+   #檢查此單據是否需顯示BPM簽核狀況按鈕 
+   IF cl_bpm_chk() THEN
+      CALL cl_set_act_visible("bpm_status",TRUE)
+   ELSE
+      CALL cl_set_act_visible("bpm_status",FALSE)
+   END IF
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION asft338_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point    
+   #add-point:insert段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_sffd_d.clear()   
+   CALL g_sffd2_d.clear()  
+ 
+ 
+   INITIALIZE g_sfia_m.* TO NULL             #DEFAULT 設定
+   
+   LET g_sfiadocno_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_sfia_m.sfiaownid = g_user
+      LET g_sfia_m.sfiaowndp = g_dept
+      LET g_sfia_m.sfiacrtid = g_user
+      LET g_sfia_m.sfiacrtdp = g_dept 
+      LET g_sfia_m.sfiacrtdt = cl_get_current()
+      LET g_sfia_m.sfiamodid = g_user
+      LET g_sfia_m.sfiamoddt = cl_get_current()
+      LET g_sfia_m.sfiastus = 'N'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+  
+      #add-point:單頭預設值 name="insert.default"
+      LET g_sfia_m.sfiadocdt = cl_get_today()
+      LET g_sfia_m.sfia001 = g_user
+      LET g_sfia_m.sfia001_desc = s_desc_get_person_desc(g_sfia_m.sfia001)
+      DISPLAY BY NAME g_sfia_m.sfia001_desc
+      LET g_sfia_m.sfia002 = g_dept
+      LET g_sfia_m.sfia002_desc = s_desc_get_department_desc(g_sfia_m.sfia002)
+      DISPLAY BY NAME g_sfia_m.sfia002_desc
+      LET g_sfia_m.sfiastus = 'N'
+      INITIALIZE g_sfia_m_t.* TO NULL
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_sfia_m_t.* = g_sfia_m.*
+      LET g_sfia_m_o.* = g_sfia_m.*
+      
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_sfia_m.sfiastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+    
+      CALL asft338_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_sfia_m.* TO NULL
+         INITIALIZE g_sffd_d TO NULL
+         INITIALIZE g_sffd2_d TO NULL
+ 
+         #add-point:取消新增後 name="insert.cancel"
+         
+         #end add-point 
+         CALL asft338_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_sffd_d.clear()
+      #CALL g_sffd2_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL asft338_set_act_visible()   
+   CALL asft338_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_sfiadocno_t = g_sfia_m.sfiadocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " sfiaent = " ||g_enterprise|| " AND",
+                      " sfiadocno = '", g_sfia_m.sfiadocno, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後 name="insert.after.add_browse"
+   
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL asft338_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE asft338_cl
+   
+   CALL asft338_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE asft338_master_referesh USING g_sfia_m.sfiadocno INTO g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt, 
+       g_sfia_m.sfia001,g_sfia_m.sfia002,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+       g_sfia_m.sfia009,g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp, 
+       g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt, 
+       g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt,g_sfia_m.sfia005_desc,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp_desc, 
+       g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp_desc,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiacnfid_desc 
+ 
+   
+   
+   #遮罩相關處理
+   LET g_sfia_m_mask_o.* =  g_sfia_m.*
+   CALL asft338_sfia_t_mask()
+   LET g_sfia_m_mask_n.* =  g_sfia_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_sfia_m.sfia001,g_sfia_m.sfia001_desc,g_sfia_m.sfiadocno_desc, 
+       g_sfia_m.sfia002,g_sfia_m.sfia002_desc,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+       g_sfia_m.sfia005_desc,g_sfia_m.sfia009,g_sfia_m.sfaa010,g_sfia_m.sfia006,g_sfia_m.imaal003,g_sfia_m.sfia007, 
+       g_sfia_m.imaal004,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp, 
+       g_sfia_m.sfiaowndp_desc,g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdp_desc, 
+       g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiamoddt,g_sfia_m.sfiacnfid, 
+       g_sfia_m.sfiacnfid_desc,g_sfia_m.sfiacnfdt
+   
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+   
+   LET g_data_owner = g_sfia_m.sfiaownid      
+   LET g_data_dept  = g_sfia_m.sfiaowndp
+   
+   #功能已完成,通報訊息中心
+   CALL asft338_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION asft338_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point    
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+   DEFINE l_wc2_table2   STRING
+ 
+ 
+ 
+   #add-point:modify段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   DEFINE l_success    LIKE type_t.num5   #160203-00003#1-add
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   IF g_sfia_m.sfiastus NOT MATCHES '[NDR]' THEN #MOD BY zhujing 2015-6-16
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'apm-00035'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   END IF
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_sfia_m_t.* = g_sfia_m.*
+   LET g_sfia_m_o.* = g_sfia_m.*
+   
+   IF g_sfia_m.sfiadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_sfiadocno_t = g_sfia_m.sfiadocno
+ 
+   CALL s_transaction_begin()
+   
+   OPEN asft338_cl USING g_enterprise,g_sfia_m.sfiadocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN asft338_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE asft338_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE asft338_master_referesh USING g_sfia_m.sfiadocno INTO g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt, 
+       g_sfia_m.sfia001,g_sfia_m.sfia002,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+       g_sfia_m.sfia009,g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp, 
+       g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt, 
+       g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt,g_sfia_m.sfia005_desc,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp_desc, 
+       g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp_desc,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiacnfid_desc 
+ 
+   
+   #檢查是否允許此動作
+   IF NOT asft338_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_sfia_m_mask_o.* =  g_sfia_m.*
+   CALL asft338_sfia_t_mask()
+   LET g_sfia_m_mask_n.* =  g_sfia_m.*
+   
+   
+   
+   #add-point:modify段show之前 name="modify.before_show"
+   
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+   #LET l_wc2_table2 = g_wc2_table2
+   #LET l_wc2_table2 = " 1=1"
+ 
+ 
+ 
+   
+   CALL asft338_show()
+   #add-point:modify段show之後 name="modify.after_show"
+   
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+   #LET  g_wc2_table2 = l_wc2_table2 
+ 
+ 
+ 
+    
+   WHILE TRUE
+      LET g_sfiadocno_t = g_sfia_m.sfiadocno
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_sfia_m.sfiamodid = g_user 
+LET g_sfia_m.sfiamoddt = cl_get_current()
+LET g_sfia_m.sfiamodid_desc = cl_get_username(g_sfia_m.sfiamodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      #「D抽單 / R已拒絕」狀況碼更改資料後，需還原為「N未確認」
+      IF g_sfia_m.sfiastus MATCHES "[DR]" THEN
+         LET g_sfia_m.sfiastus = "N"
+      END IF
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      LET g_master_commit = "N"
+      CALL asft338_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF g_update OR NOT INT_FLAG THEN
+         #若有modid跟moddt則進行update
+         UPDATE sfia_t SET (sfiamodid,sfiamoddt) = (g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt)
+          WHERE sfiaent = g_enterprise AND sfiadocno = g_sfiadocno_t
+ 
+      END IF
+    
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         #若單頭無commit則還原
+         IF g_master_commit = "N" THEN
+            LET g_sfia_m.* = g_sfia_m_t.*
+            CALL asft338_show()
+         END IF
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_sfia_m.sfiadocno != g_sfia_m_t.sfiadocno
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前 name="modify.body.b_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         UPDATE sffd_t SET sffddocno = g_sfia_m.sfiadocno
+ 
+          WHERE sffdent = g_enterprise AND sffddocno = g_sfia_m_t.sfiadocno
+ 
+            
+         #add-point:單身fk修改中 name="modify.body.m_fk_update"
+         
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "sffd_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "sffd_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後 name="modify.body.a_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         #add-point:單身fk修改前 name="modify.body.b_fk_update2"
+         
+         #end add-point
+         
+         UPDATE sfib_t
+            SET sfibdocno = g_sfia_m.sfiadocno
+ 
+          WHERE sfibent = g_enterprise AND
+                sfibdocno = g_sfiadocno_t
+ 
+         #add-point:單身fk修改中 name="modify.body.m_fk_update2"
+         
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "sfib_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "sfib_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後 name="modify.body.a_fk_update2"
+         
+         #end add-point
+ 
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL asft338_set_act_visible()   
+   CALL asft338_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " sfiaent = " ||g_enterprise|| " AND",
+                      " sfiadocno = '", g_sfia_m.sfiadocno, "' "
+ 
+   #填到對應位置
+   CALL asft338_browser_fill("")
+ 
+   CLOSE asft338_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL asft338_msgcentre_notify('modify')
+ 
+END FUNCTION 
+ 
+{</section>}
+ 
+{<section id="asft338.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION asft338_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point  
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_ac_t                LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE  l_ooef004             LIKE ooef_t.ooef004
+   DEFINE  l_sffb009             LIKE sffb_t.sffb009
+   DEFINE  l_success             LIKE type_t.num5
+   DEFINE  l_sys                 LIKE type_t.num5
+   DEFINE  l_sfaa013             LIKE sfaa_t.sfaa013
+   DEFINE  l_sfaa020             LIKE sfaa_t.sfaa020
+   DEFINE  l_sffb030             LIKE sffb_t.sffb030 #151102-00014#2 add
+   DEFINE  l_where               STRING              #160204-00004#4 Add By Ken 160222
+   #end add-point  
+   
+   #add-point:Function前置處理  name="input.pre_function"
+ 
+   #end add-point
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_sfia_m.sfia001,g_sfia_m.sfia001_desc,g_sfia_m.sfiadocno_desc, 
+       g_sfia_m.sfia002,g_sfia_m.sfia002_desc,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+       g_sfia_m.sfia005_desc,g_sfia_m.sfia009,g_sfia_m.sfaa010,g_sfia_m.sfia006,g_sfia_m.imaal003,g_sfia_m.sfia007, 
+       g_sfia_m.imaal004,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp, 
+       g_sfia_m.sfiaowndp_desc,g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdp_desc, 
+       g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiamoddt,g_sfia_m.sfiacnfid, 
+       g_sfia_m.sfiacnfid_desc,g_sfia_m.sfiacnfdt
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql name="input.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = "SELECT sffdseq1,sffd001,sffd002,sffd003 FROM sffd_t WHERE sffdent=? AND sffddocno=?  
+       AND sffdseq1=? AND sffd001=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE asft338_bcl CURSOR FROM g_forupd_sql
+   
+   #add-point:input段define_sql name="input.define_sql2"
+   
+   #end add-point    
+   LET g_forupd_sql = "SELECT sfibseq,sfib001,sfib002,sfib003,sfib004,sfib005,sfib006,sfib007,sfib008, 
+       sfib009,sfib021,sfib022,sfib023,sfib024,sfib026,sfib027,sfib010,sfib011,sfib012,sfib013,sfib014, 
+       sfib015,sfib016,sfib017,sfib028,sfib029,sfib030,sfib018,sfib019,sfib020 FROM sfib_t WHERE sfibent=?  
+       AND sfibdocno=? AND sfibseq=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql2"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE asft338_bcl2 CURSOR FROM g_forupd_sql
+ 
+ 
+   
+ 
+ 
+   #add-point:input段define_sql name="input.other_sql"
+   
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL asft338_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL asft338_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_sfia_m.sfia001,g_sfia_m.sfia002,g_sfia_m.sfiastus, 
+       g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia009,g_sfia_m.sfia006,g_sfia_m.imaal003, 
+       g_sfia_m.sfia007,g_sfia_m.imaal004,g_sfia_m.sfia008
+   
+   LET lb_reproduce = FALSE
+   LET l_ac_t = 1
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前 name="input.before_input"
+   
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+{</section>}
+ 
+{<section id="asft338.input.head" >}
+      #單頭段
+      INPUT BY NAME g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_sfia_m.sfia001,g_sfia_m.sfia002,g_sfia_m.sfiastus, 
+          g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia009,g_sfia_m.sfia006,g_sfia_m.imaal003, 
+          g_sfia_m.sfia007,g_sfia_m.imaal004,g_sfia_m.sfia008 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN asft338_cl USING g_enterprise,g_sfia_m.sfiadocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN asft338_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE asft338_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL asft338_set_entry(p_cmd)
+            #add-point:資料輸入前 name="input.m.before_input"
+            CALL asft338_set_no_required()
+            CALL asft338_set_required()
+            #end add-point
+            CALL asft338_set_no_entry(p_cmd)
+    
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiadocno
+            
+            #add-point:AFTER FIELD sfiadocno name="input.a.sfiadocno"
+
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_sfia_m.sfiadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_sfia_m.sfiadocno != g_sfiadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(1) FROM sfia_t WHERE "||"sfiaent = '" ||g_enterprise|| "' AND "||"sfiadocno = '"||g_sfia_m.sfiadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            IF NOT cl_null(g_sfia_m.sfiadocno) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_sfia_m_t.sfiadocno IS NULL OR g_sfia_m.sfiadocno <> g_sfia_m_t.sfiadocno)) THEN  
+#有单别检查单别，是完整单号检查完整单号，传入完整单号的话，会截取单别做单别合法性检查               
+                  IF NOT s_aooi200_chk_docno(g_site,g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_prog) THEN
+                     LET g_sfia_m.sfiadocno = g_sfiadocno_t
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+               END IF
+               #160204-00004#4 Add By Ken 160222(S)
+               IF (g_sfia_m.sfiadocno <> g_sfia_m_o.sfiadocno) OR cl_null(g_sfia_m_o.sfiadocno) THEN
+                  LET g_sfia_m.sfia003 = ''
+                  DISPLAY BY NAME g_sfia_m.sfia003
+               END IF
+               #160204-00004#4 Add By Ken 160222(E)
+            END IF 
+            LET g_sfia_m_o.sfiadocno = g_sfia_m.sfiadocno  #160204-00004#4 Add By Ken 160222
+            LET g_sfia_m.sfiadocno_desc = s_aooi200_get_slip_desc(g_sfia_m.sfiadocno)
+            DISPLAY BY NAME g_sfia_m.sfiadocno_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiadocno
+            #add-point:BEFORE FIELD sfiadocno name="input.b.sfiadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfiadocno
+            #add-point:ON CHANGE sfiadocno name="input.g.sfiadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiadocdt
+            #add-point:BEFORE FIELD sfiadocdt name="input.b.sfiadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiadocdt
+            
+            #add-point:AFTER FIELD sfiadocdt name="input.a.sfiadocdt"
+            IF  NOT cl_null(g_sfia_m.sfiadocdt) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_sfia_m_t.sfiadocdt IS NULL OR g_sfia_m.sfiadocdt != g_sfia_m_t.sfiadocdt)) THEN 
+                  IF NOT s_date_chk_close(g_sfia_m.sfiadocdt,'1') THEN
+
+                     LET g_sfia_m.sfiadocdt = g_sfia_m_t.sfiadocdt
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfiadocdt
+            #add-point:ON CHANGE sfiadocdt name="input.g.sfiadocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia001
+            
+            #add-point:AFTER FIELD sfia001 name="input.a.sfia001"
+            IF NOT cl_null(g_sfia_m.sfia001) THEN 
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_sfia_m_t.sfia001 IS NULL OR g_sfia_m.sfia001 <> g_sfia_m_t.sfia001)) THEN
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sfia_m.sfia001
+                  #160318-00025#3--add--str
+                  LET g_errshow = TRUE 
+                  LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"
+                  #160318-00025#3--add--end
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_ooag001") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+   
+                  ELSE
+                     #檢查失敗時後續處理
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            
+
+            END IF 
+            LET g_sfia_m.sfia001_desc = s_desc_get_person_desc(g_sfia_m.sfia001)
+            DISPLAY BY NAME g_sfia_m.sfia001_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia001
+            #add-point:BEFORE FIELD sfia001 name="input.b.sfia001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfia001
+            #add-point:ON CHANGE sfia001 name="input.g.sfia001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia002
+            
+            #add-point:AFTER FIELD sfia002 name="input.a.sfia002"
+            IF NOT cl_null(g_sfia_m.sfia002) THEN 
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_sfia_m_t.sfia002 IS NULL OR g_sfia_m.sfia002 <> g_sfia_m_t.sfia002)) THEN
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sfia_m.sfia002
+                  LET g_chkparam.arg2 = g_sfia_m.sfiadocdt
+			         #160318-00025#3--add--str
+                  LET g_errshow = TRUE 
+                  LET g_chkparam.err_str[1] = "aoo-00029:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+                  #160318-00025#3--add--end
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_ooeg001_3") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+			      
+                  ELSE
+                     #檢查失敗時後續處理
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            
+
+            END IF 
+            LET g_sfia_m.sfia002_desc = s_desc_get_department_desc(g_sfia_m.sfia002)
+            DISPLAY BY NAME g_sfia_m.sfia002_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia002
+            #add-point:BEFORE FIELD sfia002 name="input.b.sfia002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfia002
+            #add-point:ON CHANGE sfia002 name="input.g.sfia002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfiastus
+            #add-point:BEFORE FIELD sfiastus name="input.b.sfiastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfiastus
+            
+            #add-point:AFTER FIELD sfiastus name="input.a.sfiastus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfiastus
+            #add-point:ON CHANGE sfiastus name="input.g.sfiastus"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia003
+            #add-point:BEFORE FIELD sfia003 name="input.b.sfia003"
+#根据工单制程否决定作业编号和制程序栏位的动态开启关闭，这里无条件的开启
+            CALL asft338_set_entry(p_cmd)
+            CALL asft338_set_no_required()
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia003
+            
+            #add-point:AFTER FIELD sfia003 name="input.a.sfia003"
+            #160906-00040#1-s
+            IF NOT cl_null(g_sfia_m.sfia003) THEN
+               IF cl_null(g_sfia_m_o.sfia003) OR g_sfia_m.sfia003 != g_sfia_m_o.sfia003 THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_sfia_m.sfia003
+                  IF NOT cl_chk_exist("v_sfaadocno_7") THEN
+                     LET g_sfia_m.sfia003 = g_sfia_m_o.sfia003
+                     DISPLAY BY NAME g_sfia_m.sfia003
+                     NEXT FIELD CURRENT
+                  END IF
+                  #160204-00004#4 Add By Ken 160222(S)
+                  IF NOT cl_null(g_sfia_m.sfiadocno) THEN
+                     IF NOT s_aooi210_check_doc(g_site,'',g_sfia_m.sfia003,g_sfia_m.sfiadocno,'4','') THEN
+                        LET g_sfia_m.sfia003 = g_sfia_m_o.sfia003
+                        DISPLAY BY NAME g_sfia_m.sfia003
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  #160204-00004#4 Add By Ken 160222(E)                  
+                  IF NOT s_asft335_chk_sffb0078('3',g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006) THEN
+                     LET g_sfia_m.sfia003 = g_sfia_m_o.sfia003
+                     DISPLAY BY NAME g_sfia_m.sfia003
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT asft338_chk_sfia007(g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,g_sfia_m.sfia007) THEN
+                     LET g_sfia_m.sfia003 = g_sfia_m_o.sfia003
+                     DISPLAY BY NAME g_sfia_m.sfia003
+                     NEXT FIELD CURRENT
+                  END IF                           
+                  CALL s_asft335_default_sffb056('3',g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006)
+                       RETURNING g_sfia_m.sfaa010,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,l_sffb009,l_sffb030
+                  LET g_sfia_m.sfia005_desc = s_desc_get_acc_desc('221',g_sfia_m.sfia005)
+                  CALL s_desc_get_item_desc(g_sfia_m.sfaa010)
+                       RETURNING g_sfia_m.imaal003,g_sfia_m.imaal004 
+                  DISPLAY BY NAME g_sfia_m.sfaa010,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,
+                                  g_sfia_m.sfia005_desc,g_sfia_m.imaal003,g_sfia_m.imaal004
+               END IF
+            END IF
+            LET g_sfia_m_o.sfia003 = g_sfia_m.sfia003
+            CALL asft338_set_no_entry(p_cmd)
+            CALL asft338_set_required()
+            #160906-00040#1-e
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfia003
+            #add-point:ON CHANGE sfia003 name="input.g.sfia003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia004
+            #add-point:BEFORE FIELD sfia004 name="input.b.sfia004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia004
+            
+            #add-point:AFTER FIELD sfia004 name="input.a.sfia004"
+            IF NOT cl_null(g_sfia_m.sfia004) THEN 
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_sfia_m_t.sfia004 IS NULL OR g_sfia_m.sfia004 != g_sfia_m_t.sfia004)) THEN   #160824-00007#216 by sakura mark
+               IF g_sfia_m_o.sfia004 IS NULL OR g_sfia_m.sfia004 != g_sfia_m_o.sfia004 THEN   #160824-00007#216 by sakura add
+                  IF NOT s_asft335_chk_sffb0078('3',g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006) THEN
+                    #LET g_sfia_m.sfia004 = g_sfia_m_t.sfia004   #160824-00007#216 by sakura mark
+                     LET g_sfia_m.sfia004 = g_sfia_m_o.sfia004   #160824-00007#216 by sakura add
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT asft338_chk_sfia007(g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,g_sfia_m.sfia007) THEN
+                    #LET g_sfia_m.sfia004 = g_sfia_m_t.sfia004   #160824-00007#216 by sakura mark
+                     LET g_sfia_m.sfia004 = g_sfia_m_o.sfia004   #160824-00007#216 by sakura add
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_asft335_default_sffb056('3',g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006)
+                  #RETURNING g_sfia_m.sfaa010,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,l_sffb009          #151102-00014#2 mark
+                  RETURNING g_sfia_m.sfaa010,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,l_sffb009,l_sffb030 #151102-00014#2 add
+               END IF           
+            END IF
+            LET g_sfia_m_o.* = g_sfia_m.*   #160824-00007#216 by sakura add    
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfia004
+            #add-point:ON CHANGE sfia004 name="input.g.sfia004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia005
+            
+            #add-point:AFTER FIELD sfia005 name="input.a.sfia005"
+            IF NOT cl_null(g_sfia_m.sfia005) THEN 
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_sfia_m_t.sfia005 IS NULL OR g_sfia_m.sfia005 != g_sfia_m_t.sfia005)) THEN   #160824-00007#216 by sakura mark
+               IF g_sfia_m_o.sfia005 IS NULL OR g_sfia_m.sfia005 != g_sfia_m_o.sfia005 THEN   #160824-00007#216 by sakura add
+#共用检查逻辑搬到同一个function内
+                  IF NOT s_asft335_chk_sffb0078('3',g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006) THEN
+                    #LET g_sfia_m.sfia005 = g_sfia_m_t.sfia005   #160824-00007#216 by sakura mark
+                     LET g_sfia_m.sfia005 = g_sfia_m_o.sfia005   #160824-00007#216 by sakura add
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT asft338_chk_sfia007(g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,g_sfia_m.sfia007) THEN
+                    #LET g_sfia_m.sfia005 = g_sfia_m_t.sfia005   #160824-00007#216 by sakura mark
+                     LET g_sfia_m.sfia005 = g_sfia_m_o.sfia005   #160824-00007#216 by sakura add
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_asft335_default_sffb056('3',g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006)
+                  #RETURNING g_sfia_m.sfaa010,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,l_sffb009          #151102-00014#2 mark
+                  RETURNING g_sfia_m.sfaa010,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,l_sffb009,l_sffb030 #151102-00014#2 add
+               END IF
+            END IF
+            LET g_sfia_m_o.* = g_sfia_m.*   #160824-00007#216 by sakura add          
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfia_m.sfia005
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sfia_m.sfia005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfia_m.sfia005_desc 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia005
+            #add-point:BEFORE FIELD sfia005 name="input.b.sfia005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfia005
+            #add-point:ON CHANGE sfia005 name="input.g.sfia005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia009
+            #add-point:BEFORE FIELD sfia009 name="input.b.sfia009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia009
+            
+            #add-point:AFTER FIELD sfia009 name="input.a.sfia009"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfia009
+            #add-point:ON CHANGE sfia009 name="input.g.sfia009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia006
+            #add-point:BEFORE FIELD sfia006 name="input.b.sfia006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia006
+            
+            #add-point:AFTER FIELD sfia006 name="input.a.sfia006"
+            IF NOT cl_null(g_sfia_m.sfia006) THEN 
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_sfia_m_t.sfia006 IS NULL OR g_sfia_m.sfia006 != g_sfia_m_t.sfia006)) THEN   #160824-00007#216 by sakura mark
+               IF g_sfia_m_o.sfia006 IS NULL OR g_sfia_m.sfia006 != g_sfia_m_o.sfia006 THEN   #160824-00007#216 by sakura add
+#共用检查逻辑搬到同一个function内
+                  IF NOT s_asft335_chk_sffb0078('3',g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006) THEN
+                    #LET g_sfia_m.sfia006 = g_sfia_m_t.sfia006   #160824-00007#216 by sakura mark
+                     LET g_sfia_m.sfia006 = g_sfia_m_o.sfia006   #160824-00007#216 by sakura add
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT asft338_chk_sfia007(g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,g_sfia_m.sfia007) THEN
+                    #LET g_sfia_m.sfia006 = g_sfia_m_t.sfia006   #160824-00007#216 by sakura mark
+                     LET g_sfia_m.sfia006 = g_sfia_m_o.sfia006   #160824-00007#216 by sakura add
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_sfia_m_o.* = g_sfia_m.*   #160824-00007#216 by sakura add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfia006
+            #add-point:ON CHANGE sfia006 name="input.g.sfia006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaal003
+            #add-point:BEFORE FIELD imaal003 name="input.b.imaal003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaal003
+            
+            #add-point:AFTER FIELD imaal003 name="input.a.imaal003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imaal003
+            #add-point:ON CHANGE imaal003 name="input.g.imaal003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia007
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sfia_m.sfia007,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD sfia007
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfia007 name="input.a.sfia007"
+            IF g_sfia_m.sfia007 IS NOT NULL THEN        
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_sfia_m_t.sfia007 IS NULL OR g_sfia_m.sfia007 <> g_sfia_m_t.sfia007)) THEN
+                  IF NOT asft338_chk_sfia007(g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,g_sfia_m.sfia007) THEN
+                     LET g_sfia_m.sfia007 = g_sfia_m_t.sfia007
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia007
+            #add-point:BEFORE FIELD sfia007 name="input.b.sfia007"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfia007
+            #add-point:ON CHANGE sfia007 name="input.g.sfia007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaal004
+            #add-point:BEFORE FIELD imaal004 name="input.b.imaal004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaal004
+            
+            #add-point:AFTER FIELD imaal004 name="input.a.imaal004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imaal004
+            #add-point:ON CHANGE imaal004 name="input.g.imaal004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfia008
+            #add-point:BEFORE FIELD sfia008 name="input.b.sfia008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfia008
+            
+            #add-point:AFTER FIELD sfia008 name="input.a.sfia008"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfia008
+            #add-point:ON CHANGE sfia008 name="input.g.sfia008"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.sfiadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiadocno
+            #add-point:ON ACTION controlp INFIELD sfiadocno name="input.c.sfiadocno"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfia_m.sfiadocno             #給予default值
+
+            #給予arg
+            SELECT ooef004 INTO l_ooef004 
+              FROM ooef_t
+             WHERE ooefent = g_enterprise
+               AND ooef001 = g_site
+               
+            LET g_qryparam.arg1 = l_ooef004          #
+            LET g_qryparam.arg2 = g_prog      #
+
+            CALL q_ooba002_1()                                       #呼叫開窗
+
+            LET g_sfia_m.sfiadocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sfia_m.sfiadocno TO sfiadocno                  #顯示到畫面上
+
+            NEXT FIELD sfiadocno                                     #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfiadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiadocdt
+            #add-point:ON ACTION controlp INFIELD sfiadocdt name="input.c.sfiadocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfia001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia001
+            #add-point:ON ACTION controlp INFIELD sfia001 name="input.c.sfia001"
+      #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfia_m.sfia001             #給予default值
+
+            #給予arg
+
+            CALL q_ooag001_4()                                     #呼叫開窗
+
+            LET g_sfia_m.sfia001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sfia_m.sfia001 TO sfia001                    #顯示到畫面上
+
+            NEXT FIELD sfia001                                     #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfia002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia002
+            #add-point:ON ACTION controlp INFIELD sfia002 name="input.c.sfia002"
+            #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfia_m.sfia002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_sfia_m.sfiadocdt
+
+            CALL q_ooeg001()                                       #呼叫開窗
+
+            LET g_sfia_m.sfia002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sfia_m.sfia002 TO sfia002                    #顯示到畫面上
+
+            NEXT FIELD sfia002                                     #返回原欄位
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfiastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfiastus
+            #add-point:ON ACTION controlp INFIELD sfiastus name="input.c.sfiastus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfia003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia003
+            #add-point:ON ACTION controlp INFIELD sfia003 name="input.c.sfia003"
+            #160906-00040#1-s
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_sfia_m.sfia003  #給予default值
+            LET g_qryparam.arg1 = 'F'                   #給予arg
+            LET g_qryparam.arg2 = '1'                   #170110-00023#1 add 
+            #160204-00004#4 Add By Ken 160222(S)
+            #組合過濾前後置單據資料SQL
+            IF NOT cl_null(g_sfia_m.sfiadocno) THEN
+               CALL s_aooi210_get_check_sql(g_site,'',g_sfia_m.sfiadocno,'4','','sfaadocno') RETURNING l_success,l_where
+               IF l_success THEN
+                  LET g_qryparam.where = l_where
+                  #CALL q_sfaadocno_1()
+               END IF
+            END IF
+            #160204-00004#4 Add By Ken 160222(E)             
+            CALL q_sfaadocno_17()
+            LET g_sfia_m.sfia003  = g_qryparam.return1  #將開窗取得的值回傳到變數
+            DISPLAY g_sfia_m.sfia003  TO sfia003        #顯示到畫面上
+            NEXT FIELD sfia003                          #返回原欄位
+            #160906-00040#1-e
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfia004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia004
+            #add-point:ON ACTION controlp INFIELD sfia004 name="input.c.sfia004"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfia_m.sfia004             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sfia_m.sfia003
+
+            CALL q_sfca001()                                #呼叫開窗
+
+            LET g_sfia_m.sfia004   = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sfia_m.sfia004  TO sfia004              #顯示到畫面上
+
+            NEXT FIELD sfia004                          #返回原欄位
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfia005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia005
+            #add-point:ON ACTION controlp INFIELD sfia005 name="input.c.sfia005"
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfia_m.sfia005
+            LET g_qryparam.default2 = g_sfia_m.sfia006
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sfia_m.sfia003
+            LET g_qryparam.arg3 = g_sfia_m.sfia004
+            CALL q_sfcb003()                               #呼叫開窗
+
+            LET g_sfia_m.sfia005 = g_qryparam.return1
+            LET g_sfia_m.sfia006 = g_qryparam.return2
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfia_m.sfia005
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sfia_m.sfia005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfia_m.sfia005_desc  
+            NEXT FIELD CURRENT                                #返回原欄位
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfia009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia009
+            #add-point:ON ACTION controlp INFIELD sfia009 name="input.c.sfia009"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfia006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia006
+            #add-point:ON ACTION controlp INFIELD sfia006 name="input.c.sfia006"
+            #開窗i段
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfia_m.sfia005
+            LET g_qryparam.default2 = g_sfia_m.sfia006
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sfia_m.sfia003
+            LET g_qryparam.arg3 = g_sfia_m.sfia004
+            CALL q_sfcb003()                               #呼叫開窗
+
+            LET g_sfia_m.sfia005 = g_qryparam.return1
+            LET g_sfia_m.sfia006 = g_qryparam.return2
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfia_m.sfia005
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sfia_m.sfia005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfia_m.sfia005_desc  
+            NEXT FIELD CURRENT                                #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imaal003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaal003
+            #add-point:ON ACTION controlp INFIELD imaal003 name="input.c.imaal003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfia007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia007
+            #add-point:ON ACTION controlp INFIELD sfia007 name="input.c.sfia007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imaal004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaal004
+            #add-point:ON ACTION controlp INFIELD imaal004 name="input.c.imaal004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfia008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfia008
+            #add-point:ON ACTION controlp INFIELD sfia008 name="input.c.sfia008"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_sfia_m.sfiadocno
+                        
+            #add-point:單頭INPUT後 name="input.head.after_input"
+            
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前 name="input.head.b_insert"
+               CALL s_aooi200_gen_docno(g_site,g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_prog) RETURNING l_success,g_sfia_m.sfiadocno
+               IF NOT l_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apm-00003'
+                  LET g_errparam.extend = g_sfia_m.sfiadocno
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  NEXT FIELD CURRENT
+               END IF
+#               #end add-point
+#               
+#               INSERT INTO sfia_t (sfiaent,sfiadocno,sfiadocdt,sfia001,sfia002,sfiastus,sfia003,sfia004, 
+#                   sfia005,sfia009,sfia006,sfia007,sfia008,sfiaownid,sfiaowndp,sfiacrtid,sfiacrtdp,sfiacrtdt, 
+#                   sfiamodid,sfiamoddt,sfiacnfid,sfiacnfdt)
+#               VALUES (g_enterprise,g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_sfia_m.sfia001,g_sfia_m.sfia002, 
+#                   g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia009, 
+#                   g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp, 
+#                   g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt, 
+#                   g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt) 
+#               IF SQLCA.SQLCODE THEN
+#                  INITIALIZE g_errparam TO NULL 
+#                  LET g_errparam.extend = "g_sfia_m:",SQLERRMESSAGE 
+#                  LET g_errparam.code = SQLCA.SQLCODE 
+#                  LET g_errparam.popup = TRUE 
+#                  CALL s_transaction_end('N','0')
+#                  CALL cl_err()
+#                  NEXT FIELD CURRENT
+#               END IF
+#               
+#               #add-point:單頭新增中 name="input.head.m_insert"
+#sfiasite不是key，所以pattern产生的没法用，少了site
+               IF g_sfia_m.sfia005 IS NULL THEN LET g_sfia_m.sfia005 = ' ' END IF
+               IF g_sfia_m.sfia006 IS NULL THEN LET g_sfia_m.sfia006 = ' ' END IF
+               INSERT INTO sfia_t (sfiaent,sfiasite,sfiadocno,sfiadocdt,sfia001,sfia002,sfiastus,sfia003,sfia004, 
+                   sfia005,sfia009,sfia006,sfia007,sfia008,sfiaownid,sfiaowndp,sfiacrtid,sfiacrtdp,sfiacrtdt, 
+                   sfiacnfid,sfiacnfdt)
+               VALUES (g_enterprise,g_site,g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_sfia_m.sfia001,g_sfia_m.sfia002, 
+                   g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia009, 
+                   g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp, 
+                   g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt,g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt)  
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "g_sfia_m"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後 name="input.head.a_insert"
+               IF p_cmd = 'a' THEN
+                  LET g_end = TRUE
+                  IF NOT asft338_ins_sfib(g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006) THEN
+                     CALL s_transaction_end('N','0')
+                     CONTINUE DIALOG
+                  END IF
+               END IF
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL asft338_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL asft338_b_fill()
+                  CALL asft338_b_fill2('0')
+               END IF
+               
+               #add-point:單頭新增後 name="input.head.a_insert2"
+               
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前 name="input.head.b_update"
+ 
+#               #end add-point
+#               
+#               #將遮罩欄位還原
+#               CALL asft338_sfia_t_mask_restore('restore_mask_o')
+#               
+#               UPDATE sfia_t SET (sfiadocno,sfiadocdt,sfia001,sfia002,sfiastus,sfia003,sfia004,sfia005, 
+#                   sfia009,sfia006,sfia007,sfia008,sfiaownid,sfiaowndp,sfiacrtid,sfiacrtdp,sfiacrtdt, 
+#                   sfiamodid,sfiamoddt,sfiacnfid,sfiacnfdt) = (g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt, 
+#                   g_sfia_m.sfia001,g_sfia_m.sfia002,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004, 
+#                   g_sfia_m.sfia005,g_sfia_m.sfia009,g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008, 
+#                   g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp,g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt, 
+#                   g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt,g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt)
+#                WHERE sfiaent = g_enterprise AND sfiadocno = g_sfiadocno_t
+# 
+#               IF SQLCA.SQLCODE THEN
+#                  INITIALIZE g_errparam TO NULL 
+#                  LET g_errparam.extend = "sfia_t:",SQLERRMESSAGE 
+#                  LET g_errparam.code = SQLCA.SQLCODE 
+#                  LET g_errparam.popup = TRUE 
+#                  CALL s_transaction_end('N','0')
+#                  CALL cl_err()
+#                  NEXT FIELD CURRENT
+#               END IF
+#               
+#               #add-point:單頭修改中 name="input.head.m_update"
+#少了site条件
+               IF g_sfia_m.sfia005 IS NULL THEN LET g_sfia_m.sfia005 = ' ' END IF
+               IF g_sfia_m.sfia006 IS NULL THEN LET g_sfia_m.sfia006 = ' ' END IF
+               UPDATE sfia_t SET (sfiadocno,sfiadocdt,sfia001,sfia002,sfiastus,sfia003,sfia004,sfia005, 
+                   sfia009,sfia006,sfia007,sfia008,sfiaownid,sfiaowndp,sfiacrtid,sfiacrtdp,sfiacrtdt, 
+                   sfiacnfid,sfiacnfdt) = (g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_sfia_m.sfia001,g_sfia_m.sfia002, 
+                   g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia009, 
+                   g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp, 
+                   g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt,g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt) 
+                WHERE sfiaent = g_enterprise AND sfiadocno = g_sfiadocno_t AND sfiasite = g_site
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "sfia_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               #end add-point
+               
+               
+               
+               
+               #將遮罩欄位進行遮蔽
+               CALL asft338_sfia_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_sfia_m_t)
+               LET g_log2 = util.JSON.stringify(g_sfia_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後 name="input.head.a_update"
+               
+               #end add-point
+            END IF
+            
+            LET g_master_commit = "Y"
+            LET g_sfiadocno_t = g_sfia_m.sfiadocno
+ 
+            
+      END INPUT
+   
+ 
+{</section>}
+ 
+{<section id="asft338.input.body" >}
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_sffd_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_sffd_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL asft338_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_sffd_d.getLength()
+            #add-point:資料輸入前 name="input.d.before_input"
+            
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2 name="input.body.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_detail_idx_list[1] = l_ac
+            LET g_current_page = 1
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN asft338_cl USING g_enterprise,g_sfia_m.sfiadocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN asft338_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE asft338_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_sffd_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_sffd_d[l_ac].sffdseq1 IS NOT NULL
+               AND g_sffd_d[l_ac].sffd001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_sffd_d_t.* = g_sffd_d[l_ac].*  #BACKUP
+               LET g_sffd_d_o.* = g_sffd_d[l_ac].*  #BACKUP
+               CALL asft338_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body.after_set_entry_b"
+               
+               #end add-point  
+               CALL asft338_set_no_entry_b(l_cmd)
+               IF NOT asft338_lock_b("sffd_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH asft338_bcl INTO g_sffd_d[l_ac].sffdseq1,g_sffd_d[l_ac].sffd001,g_sffd_d[l_ac].sffd002, 
+                      g_sffd_d[l_ac].sffd003
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_sffd_d_t.sffdseq1,":",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_sffd_d_mask_o[l_ac].* =  g_sffd_d[l_ac].*
+                  CALL asft338_sffd_t_mask()
+                  LET g_sffd_d_mask_n[l_ac].* =  g_sffd_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL asft338_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body.before_row"
+            
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+        
+         BEFORE INSERT  
+            
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_sffd_d[l_ac].* TO NULL 
+            INITIALIZE g_sffd_d_t.* TO NULL 
+            INITIALIZE g_sffd_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值
+            
+            #add-point:modify段before備份 name="input.body.insert.before_bak"
+            
+            #end add-point
+            LET g_sffd_d_t.* = g_sffd_d[l_ac].*     #新輸入資料
+            LET g_sffd_d_o.* = g_sffd_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL asft338_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL asft338_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_sffd_d[li_reproduce_target].* = g_sffd_d[li_reproduce].*
+ 
+               LET g_sffd_d[li_reproduce_target].sffdseq1 = NULL
+               LET g_sffd_d[li_reproduce_target].sffd001 = NULL
+ 
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body.before_insert"
+            IF g_sffd_d[l_ac].sffdseq1 IS NULL OR g_sffd_d[l_ac].sffdseq1 = 0 THEN
+               SELECT MAX(sffdseq1)+1 INTO g_sffd_d[l_ac].sffdseq1
+                 FROM sffd_t
+                WHERE sffdent   = g_enterprise 
+                  AND sffddocno = g_sfia_m.sfiadocno 
+                  AND sffdseq   = 0
+            END IF
+            IF g_sffd_d[l_ac].sffdseq1 IS NULL THEN
+               LET g_sffd_d[l_ac].sffdseq1 = 1
+            END IF 
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增 name="input.body.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM sffd_t 
+             WHERE sffdent = g_enterprise AND sffddocno = g_sfia_m.sfiadocno
+ 
+               AND sffdseq1 = g_sffd_d[l_ac].sffdseq1
+               AND sffd001 = g_sffd_d[l_ac].sffd001
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_sfia_m.sfiadocno
+               LET gs_keys[2] = g_sffd_d[g_detail_idx].sffdseq1
+               LET gs_keys[3] = g_sffd_d[g_detail_idx].sffd001
+               CALL asft338_insert_b('sffd_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code = "std-00006" 
+               LET g_errparam.popup = TRUE 
+               INITIALIZE g_sffd_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "sffd_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL asft338_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d) name="input.body.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code = -263 
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_sfia_m.sfiadocno
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_sffd_d_t.sffdseq1
+               LET gs_keys[gs_keys.getLength()+1] = g_sffd_d_t.sffd001
+ 
+            
+               #刪除同層單身
+               IF NOT asft338_delete_b('sffd_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE asft338_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT asft338_key_delete_b(gs_keys,'sffd_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE asft338_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE asft338_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後 name="input.body.a_delete"
+               
+               #end add-point
+               LET l_count = g_sffd_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body.after_delete"
+               
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_sffd_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffdseq1
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd_d[l_ac].sffdseq1,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffdseq1
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sffdseq1 name="input.a.page1.sffdseq1"
+            IF NOT cl_null(g_sffd_d[l_ac].sffdseq1) THEN 
+            END IF 
+
+
+            #此段落由子樣板a05產生
+            IF  g_sfia_m.sfiadocno IS NOT NULL AND g_sffd_d[g_detail_idx].sffdseq1 IS NOT NULL AND g_sffd_d[g_detail_idx].sffd001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfia_m.sfiadocno != g_sfiadocno_t OR g_sffd_d[g_detail_idx].sffdseq1 != g_sffd_d_t.sffdseq1 OR g_sffd_d[g_detail_idx].sffd001 != g_sffd_d_t.sffd001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(1) FROM sffd_t WHERE "||"sffdent = '" ||g_enterprise|| "' AND "||"sffddocno = '"||g_sfia_m.sfiadocno ||"' AND "|| "sffdseq1 = '"||g_sffd_d[g_detail_idx].sffdseq1 ||"' AND "|| "sffd001 = '"||g_sffd_d[g_detail_idx].sffd001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffdseq1
+            #add-point:BEFORE FIELD sffdseq1 name="input.b.page1.sffdseq1"
+            IF g_sffd_d[l_ac].sffdseq1 IS NULL OR g_sffd_d[l_ac].sffdseq1 = 0 THEN
+               SELECT MAX(sffdseq1)+1 INTO g_sffd_d[l_ac].sffdseq1
+                 FROM sffd_t
+                WHERE sffdent   = g_enterprise 
+                  AND sffddocno = g_sfia_m.sfiadocno 
+                  AND sffdseq   = 0
+            END IF
+            IF g_sffd_d[l_ac].sffdseq1 IS NULL THEN
+               LET g_sffd_d[l_ac].sffdseq1 = 1
+            END IF 
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffdseq1
+            #add-point:ON CHANGE sffdseq1 name="input.g.page1.sffdseq1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffd001
+            
+            #add-point:AFTER FIELD sffd001 name="input.a.page1.sffd001"
+            IF NOT cl_null(g_sffd_d[l_ac].sffd001) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_sffd_d_t.sffd001 IS NULL OR g_sffd_d[l_ac].sffd001 <> g_sffd_d_t.sffd001)) THEN
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sffd_d[l_ac].sffd001
+			         #160318-00025#3--add--str
+                  LET g_errshow = TRUE 
+                  LET g_chkparam.err_str[1] = "aqc-00032:sub-01302|aqci030|",cl_get_progname("aqci030",g_lang,"2"),"|:EXEPROGaqci030"
+                  LET g_chkparam.err_str[2] = "aqc-00031:sub-01303|aqci030|",cl_get_progname("aqci030",g_lang,"2"),"|:EXEPROGaqci030"
+                  #160318-00025#3--add--end
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_oocq002_1053") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+			      
+                  ELSE
+                     #檢查失敗時後續處理
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffd_d[l_ac].sffd001
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='1053' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffd_d[l_ac].sffd001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffd_d[l_ac].sffd001_desc
+
+
+            #此段落由子樣板a05產生
+            IF  g_sfia_m.sfiadocno IS NOT NULL AND g_sffd_d[g_detail_idx].sffdseq1 IS NOT NULL AND g_sffd_d[g_detail_idx].sffd001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfia_m.sfiadocno != g_sfiadocno_t OR g_sffd_d[g_detail_idx].sffdseq1 != g_sffd_d_t.sffdseq1 OR g_sffd_d[g_detail_idx].sffd001 != g_sffd_d_t.sffd001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(1) FROM sffd_t WHERE "||"sffdent = '" ||g_enterprise|| "' AND "||"sffddocno = '"||g_sfia_m.sfiadocno ||"' AND "|| "sffdseq1 = '"||g_sffd_d[g_detail_idx].sffdseq1 ||"' AND "|| "sffd001 = '"||g_sffd_d[g_detail_idx].sffd001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffd001
+            #add-point:BEFORE FIELD sffd001 name="input.b.page1.sffd001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffd001
+            #add-point:ON CHANGE sffd001 name="input.g.page1.sffd001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffd002
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd_d[l_ac].sffd002,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffd002
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sffd002 name="input.a.page1.sffd002"
+            IF NOT cl_null(g_sffd_d[l_ac].sffd002) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffd002
+            #add-point:BEFORE FIELD sffd002 name="input.b.page1.sffd002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffd002
+            #add-point:ON CHANGE sffd002 name="input.g.page1.sffd002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffd003
+            #add-point:BEFORE FIELD sffd003 name="input.b.page1.sffd003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffd003
+            
+            #add-point:AFTER FIELD sffd003 name="input.a.page1.sffd003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffd003
+            #add-point:ON CHANGE sffd003 name="input.g.page1.sffd003"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.sffdseq1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffdseq1
+            #add-point:ON ACTION controlp INFIELD sffdseq1 name="input.c.page1.sffdseq1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.sffd001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffd001
+            #add-point:ON ACTION controlp INFIELD sffd001 name="input.c.page1.sffd001"
+                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffd_d[l_ac].sffd001             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "1053" #
+
+            CALL q_oocq002()                                             #呼叫開窗
+
+            LET g_sffd_d[l_ac].sffd001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffd_d[l_ac].sffd001 TO sffd001                    #顯示到畫面上
+
+            NEXT FIELD sffd001                                           #返回原欄位
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.sffd002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffd002
+            #add-point:ON ACTION controlp INFIELD sffd002 name="input.c.page1.sffd002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.sffd003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffd003
+            #add-point:ON ACTION controlp INFIELD sffd003 name="input.c.page1.sffd003"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_sffd_d[l_ac].* = g_sffd_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE asft338_bcl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_sffd_d[l_ac].sffdseq1 
+               LET g_errparam.code = -263 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               LET g_sffd_d[l_ac].* = g_sffd_d_t.*
+            ELSE
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               #將遮罩欄位還原
+               CALL asft338_sffd_t_mask_restore('restore_mask_o')
+      
+               UPDATE sffd_t SET (sffddocno,sffdseq1,sffd001,sffd002,sffd003) = (g_sfia_m.sfiadocno, 
+                   g_sffd_d[l_ac].sffdseq1,g_sffd_d[l_ac].sffd001,g_sffd_d[l_ac].sffd002,g_sffd_d[l_ac].sffd003) 
+ 
+                WHERE sffdent = g_enterprise AND sffddocno = g_sfia_m.sfiadocno 
+ 
+                  AND sffdseq1 = g_sffd_d_t.sffdseq1 #項次   
+                  AND sffd001 = g_sffd_d_t.sffd001  
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_sffd_d[l_ac].* = g_sffd_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "sffd_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     LET g_sffd_d[l_ac].* = g_sffd_d_t.*  
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "sffd_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()                   
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_sfia_m.sfiadocno
+               LET gs_keys_bak[1] = g_sfiadocno_t
+               LET gs_keys[2] = g_sffd_d[g_detail_idx].sffdseq1
+               LET gs_keys_bak[2] = g_sffd_d_t.sffdseq1
+               LET gs_keys[3] = g_sffd_d[g_detail_idx].sffd001
+               LET gs_keys_bak[3] = g_sffd_d_t.sffd001
+               CALL asft338_update_b('sffd_t',gs_keys,gs_keys_bak,"'1'")
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL asft338_sffd_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_sffd_d[g_detail_idx].sffdseq1 = g_sffd_d_t.sffdseq1 
+                  AND g_sffd_d[g_detail_idx].sffd001 = g_sffd_d_t.sffd001 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_sfia_m.sfiadocno
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_sffd_d_t.sffdseq1
+                  LET gs_keys[gs_keys.getLength()+1] = g_sffd_d_t.sffd001
+ 
+                  CALL asft338_key_update_b(gs_keys,'sffd_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_sfia_m),util.JSON.stringify(g_sffd_d_t)
+               LET g_log2 = util.JSON.stringify(g_sfia_m),util.JSON.stringify(g_sffd_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後 name="input.body.a_update"
+ 
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row name="input.body.after_row"
+            
+            #end add-point
+            CALL asft338_unlock_b("sffd_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2 name="input.body.after_row2"
+            
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input  name="input.body.after_input"
+            
+            #end add-point 
+    
+         ON ACTION controlo    
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_sffd_d[li_reproduce_target].* = g_sffd_d[li_reproduce].*
+ 
+               LET g_sffd_d[li_reproduce_target].sffdseq1 = NULL
+               LET g_sffd_d[li_reproduce_target].sffd001 = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_sffd_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_sffd_d.getLength()+1
+            END IF
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+      INPUT ARRAY g_sffd2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_2)
+         
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION gen_sfic
+            LET g_action_choice="gen_sfic"
+            IF cl_auth_chk_act("gen_sfic") THEN
+               
+               #add-point:ON ACTION gen_sfic name="input.detail_input.page2.gen_sfic"
+               CALL asft338_01(g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,'Y')
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body2.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_sffd2_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL asft338_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'd' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+            END IF
+            LET g_loc = 'd'
+            LET g_rec_b = g_sffd2_d.getLength()
+            #add-point:資料輸入前 name="input.body2.before_input"
+            
+            #end add-point
+            
+         BEFORE INSERT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_sffd2_d[l_ac].* TO NULL 
+            INITIALIZE g_sffd2_d_t.* TO NULL 
+            INITIALIZE g_sffd2_d_o.* TO NULL 
+            #公用欄位給值(單身2)
+            
+            #自定義預設值(單身2)
+                  LET g_sffd2_d[l_ac].sfib021 = "0"
+      LET g_sffd2_d[l_ac].sfib022 = "0"
+      LET g_sffd2_d[l_ac].sfib023 = "0"
+      LET g_sffd2_d[l_ac].sfib024 = "0"
+ 
+            #add-point:modify段before備份 name="input.body2.insert.before_bak"
+            
+            #end add-point
+            LET g_sffd2_d_t.* = g_sffd2_d[l_ac].*     #新輸入資料
+            LET g_sffd2_d_o.* = g_sffd2_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL asft338_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body2.insert.after_set_entry_b"
+            LET g_sffd2_d[l_ac].sfib003 = "1"
+            #170106-00002#1 mark(s)
+#            LET g_sffd2_d[l_ac].sfib021 = "0"
+#            LET g_sffd2_d[l_ac].sfib022 = "0"
+#            LET g_sffd2_d[l_ac].sfib023 = "0"
+#            LET g_sffd2_d[l_ac].sfib024 = "0"
+            #170106-00002#1 mark(e)
+            LET g_sffd2_d[l_ac].sfib010 = "N"
+            LET g_sffd2_d[l_ac].sfib012 = "N"
+            LET g_sffd2_d[l_ac].sfib013 = "N"
+            LET g_sffd2_d[l_ac].sfib014 = "Y"
+            LET g_sffd2_d[l_ac].sfib015 = "N"
+            LET g_sffd2_d[l_ac].sfib016 = "N"
+            LET g_sffd2_d[l_ac].sfib017 = "N"
+            LET g_sffd2_d[l_ac].sfib029 = "1"
+            LET g_sffd2_d[l_ac].sfib030 = "1"
+            LET g_sffd2_d[l_ac].sfib019 = "1"
+            LET g_sffd2_d[l_ac].sfib020 = "1"
+            SELECT sfaa013,sfaa020 INTO l_sfaa013,l_sfaa020 
+              FROM sfaa_t
+             WHERE sfaaent   = g_enterprise
+               AND sfaasite  = g_site
+               AND sfaadocno = g_sfia_m.sfia003
+               
+            LET g_sffd2_d[l_ac].sfib027 = l_sfaa020
+            LET g_sffd2_d[l_ac].sfib018 = l_sfaa013
+            LET g_sffd2_d[l_ac].sfib028 = l_sfaa013
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib028
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffd2_d[l_ac].sfib028_desc = '', g_rtn_fields[1] , ''
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib018
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffd2_d[l_ac].sfib018_desc = '', g_rtn_fields[1] , ''
+#旧值应该在这里备份，上面备份是错的
+            LET g_sffd2_d_t.* = g_sffd2_d[l_ac].*     #新輸入資料
+            #end add-point
+            CALL asft338_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_sffd2_d[li_reproduce_target].* = g_sffd2_d[li_reproduce].*
+ 
+               LET g_sffd2_d[li_reproduce_target].sfibseq = NULL
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body2.before_insert"
+            IF cl_null(g_sffd2_d[l_ac].sfibseq) THEN 
+               SELECT MAX(sfibseq) INTO g_sffd2_d[l_ac].sfibseq FROM sfib_t
+                WHERE sfibent = g_enterprise
+                  AND sfibsite = g_site
+                  AND sfibdocno = g_sfia_m.sfiadocno
+
+               CALL cl_get_para(g_enterprise,g_site,'E-MFG-0001') RETURNING l_sys
+               IF cl_null(l_sys) OR l_sys = 0 THEN LET l_sys = 1 END IF    
+               IF cl_null(g_sffd2_d[l_ac].sfibseq) THEN 
+                  LET g_sffd2_d[l_ac].sfibseq = l_sys 
+                  LET g_sffd2_d[l_ac].sfib005 = 'INIT'
+                  LET g_sffd2_d[l_ac].sfib006 = '0'                  
+               ELSE
+                  SELECT sfib001,sfib002 INTO g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006 FROM sfib_t
+                   WHERE sfibent   = g_enterprise
+                     AND sfibsite  = g_site
+                     AND sfibdocno = g_sfia_m.sfiadocno
+                     AND sfibseq   = g_sffd2_d[l_ac].sfibseq  
+                     
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = '221'
+                  LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib005
+                  CALL cl_ref_val("v_oocql002")
+                  LET g_sffd2_d[l_ac].sfib005_desc = g_chkparam.return1
+                  DISPLAY BY NAME g_sffd2_d[l_ac].sfib005_desc                     
+                  LET g_sffd2_d[l_ac].sfibseq = g_sffd2_d[l_ac].sfibseq+l_sys
+               END IF
+               CALL asft338_default_sfib026(g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006) RETURNING g_sffd2_d[l_ac].sfib026               
+             END IF
+            #end add-point  
+ 
+         BEFORE ROW     
+            #add-point:modify段before row2 name="input.body2.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET g_detail_idx_list[2] = l_ac
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_current_page = 2
+              
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN asft338_cl USING g_enterprise,g_sfia_m.sfiadocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN asft338_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE asft338_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_sffd2_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_sffd2_d[l_ac].sfibseq IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_sffd2_d_t.* = g_sffd2_d[l_ac].*  #BACKUP
+               LET g_sffd2_d_o.* = g_sffd2_d[l_ac].*  #BACKUP
+               CALL asft338_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body2.after_set_entry_b"
+               
+               #end add-point  
+               CALL asft338_set_no_entry_b(l_cmd)
+               IF NOT asft338_lock_b("sfib_t","'2'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH asft338_bcl2 INTO g_sffd2_d[l_ac].sfibseq,g_sffd2_d[l_ac].sfib001,g_sffd2_d[l_ac].sfib002, 
+                      g_sffd2_d[l_ac].sfib003,g_sffd2_d[l_ac].sfib004,g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006, 
+                      g_sffd2_d[l_ac].sfib007,g_sffd2_d[l_ac].sfib008,g_sffd2_d[l_ac].sfib009,g_sffd2_d[l_ac].sfib021, 
+                      g_sffd2_d[l_ac].sfib022,g_sffd2_d[l_ac].sfib023,g_sffd2_d[l_ac].sfib024,g_sffd2_d[l_ac].sfib026, 
+                      g_sffd2_d[l_ac].sfib027,g_sffd2_d[l_ac].sfib010,g_sffd2_d[l_ac].sfib011,g_sffd2_d[l_ac].sfib012, 
+                      g_sffd2_d[l_ac].sfib013,g_sffd2_d[l_ac].sfib014,g_sffd2_d[l_ac].sfib015,g_sffd2_d[l_ac].sfib016, 
+                      g_sffd2_d[l_ac].sfib017,g_sffd2_d[l_ac].sfib028,g_sffd2_d[l_ac].sfib029,g_sffd2_d[l_ac].sfib030, 
+                      g_sffd2_d[l_ac].sfib018,g_sffd2_d[l_ac].sfib019,g_sffd2_d[l_ac].sfib020
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = SQLERRMESSAGE  
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_sffd2_d_mask_o[l_ac].* =  g_sffd2_d[l_ac].*
+                  CALL asft338_sfib_t_mask()
+                  LET g_sffd2_d_mask_n[l_ac].* =  g_sffd2_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL asft338_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body2.before_row"
+            
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身AFTER DELETE (=d) name="input.body2.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body2.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code = -263 
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身2刪除前 name="input.body2.b_delete"
+               
+               #end add-point    
+                  
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_sfia_m.sfiadocno
+               LET gs_keys[gs_keys.getLength()+1] = g_sffd2_d_t.sfibseq
+            
+               #刪除同層單身
+               IF NOT asft338_delete_b('sfib_t',gs_keys,"'2'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE asft338_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT asft338_key_delete_b(gs_keys,'sfib_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE asft338_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身2刪除中 name="input.body2.m_delete"
+               
+               #end add-point    
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE asft338_bcl
+ 
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身2刪除後 name="input.body2.a_delete"
+               CALL s_transaction_begin() #160203-00003#1-add
+               DELETE FROM sfic_t
+                WHERE sficent = g_enterprise AND sficdocno = g_sfia_m.sfiadocno AND
+                      sficseq = g_sffd2_d_t.sfibseq
+           
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "sffd_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+           
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE 
+               ELSE
+                  IF NOT asft338_upd_sfib007_all() THEN
+                     CALL s_transaction_end('N','0')
+                     CANCEL DELETE 
+                  END IF
+               END IF
+               #160203-00003#1-add-(S)
+               #刪除備註資料
+               CALL s_aooi360_del('7',g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,' ',' ',' ',' ',' ',' ',' ',' ','4')
+                    RETURNING l_success
+               IF NOT l_success THEN
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE
+               END IF
+               CALL s_transaction_end('Y','0')
+               #160203-00003#1-add-(E)
+               
+               #end add-point
+               LET l_count = g_sffd_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body2.after_delete"
+               
+               #end add-point
+            END IF 
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_sffd2_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身2新增前 name="input.body2.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM sfib_t 
+             WHERE sfibent = g_enterprise AND sfibdocno = g_sfia_m.sfiadocno
+               AND sfibseq = g_sffd2_d[l_ac].sfibseq
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身2新增前 name="input.body2.b_insert"
+               
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_sfia_m.sfiadocno
+               LET gs_keys[2] = g_sffd2_d[g_detail_idx].sfibseq
+               CALL asft338_insert_b('sfib_t',gs_keys,"'2'")
+                           
+               #add-point:單身新增後2 name="input.body2.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_sffd_d[l_ac].* TO NULL
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code = "std-00006" 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "sfib_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL asft338_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後 name="input.body2.after_insert"
+               INSERT INTO sfic_t(sficent,sficsite,sficdocno,sficseq,sfic001,sfic002)
+                 VALUES(g_enterprise,g_site,g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006)
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "ins_sfic_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+ 
+                  CALL s_transaction_end('N','0')
+                  CANCEL INSERT
+               ELSE
+                  IF NOT asft338_upd_sfib007_all() THEN
+                     CALL s_transaction_end('N','0')
+                     CANCEL INSERT 
+                  END IF
+               END IF
+               #160203-00003#1-add-(S)
+               #新增備註
+               IF NOT cl_null(g_sffd2_d[l_ac].ooff013) THEN
+                  CALL s_aooi360_gen('7',g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,' ',' ',' ',' ',' ',' ',' ',' ','4',g_sffd2_d[l_ac].ooff013)
+                     RETURNING l_success
+                  IF NOT l_success THEN
+                     CALL s_transaction_end('N','0')
+                  END IF
+               END IF
+               #160203-00003#1-add-(E)
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_sffd2_d[l_ac].* = g_sffd2_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE asft338_bcl2
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = -263 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               LET g_sffd2_d[l_ac].* = g_sffd2_d_t.*
+            ELSE
+               #add-point:單身page2修改前 name="input.body2.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身2)
+               
+               
+               #將遮罩欄位還原
+               CALL asft338_sfib_t_mask_restore('restore_mask_o')
+                              
+               UPDATE sfib_t SET (sfibdocno,sfibseq,sfib001,sfib002,sfib003,sfib004,sfib005,sfib006, 
+                   sfib007,sfib008,sfib009,sfib021,sfib022,sfib023,sfib024,sfib026,sfib027,sfib010,sfib011, 
+                   sfib012,sfib013,sfib014,sfib015,sfib016,sfib017,sfib028,sfib029,sfib030,sfib018,sfib019, 
+                   sfib020) = (g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,g_sffd2_d[l_ac].sfib001,g_sffd2_d[l_ac].sfib002, 
+                   g_sffd2_d[l_ac].sfib003,g_sffd2_d[l_ac].sfib004,g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006, 
+                   g_sffd2_d[l_ac].sfib007,g_sffd2_d[l_ac].sfib008,g_sffd2_d[l_ac].sfib009,g_sffd2_d[l_ac].sfib021, 
+                   g_sffd2_d[l_ac].sfib022,g_sffd2_d[l_ac].sfib023,g_sffd2_d[l_ac].sfib024,g_sffd2_d[l_ac].sfib026, 
+                   g_sffd2_d[l_ac].sfib027,g_sffd2_d[l_ac].sfib010,g_sffd2_d[l_ac].sfib011,g_sffd2_d[l_ac].sfib012, 
+                   g_sffd2_d[l_ac].sfib013,g_sffd2_d[l_ac].sfib014,g_sffd2_d[l_ac].sfib015,g_sffd2_d[l_ac].sfib016, 
+                   g_sffd2_d[l_ac].sfib017,g_sffd2_d[l_ac].sfib028,g_sffd2_d[l_ac].sfib029,g_sffd2_d[l_ac].sfib030, 
+                   g_sffd2_d[l_ac].sfib018,g_sffd2_d[l_ac].sfib019,g_sffd2_d[l_ac].sfib020) #自訂欄位頁簽 
+ 
+                WHERE sfibent = g_enterprise AND sfibdocno = g_sfia_m.sfiadocno
+                  AND sfibseq = g_sffd2_d_t.sfibseq #項次 
+                  
+               #add-point:單身page2修改中 name="input.body2.m_update"
+               
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_sffd2_d[l_ac].* = g_sffd2_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "sfib_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     LET g_sffd2_d[l_ac].* = g_sffd2_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "sfib_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_sfia_m.sfiadocno
+               LET gs_keys_bak[1] = g_sfiadocno_t
+               LET gs_keys[2] = g_sffd2_d[g_detail_idx].sfibseq
+               LET gs_keys_bak[2] = g_sffd2_d_t.sfibseq
+               CALL asft338_update_b('sfib_t',gs_keys,gs_keys_bak,"'2'")
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL asft338_sfib_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT (g_sffd2_d[g_detail_idx].sfibseq = g_sffd2_d_t.sfibseq 
+                  ) THEN
+                  LET gs_keys[01] = g_sfia_m.sfiadocno
+                  LET gs_keys[gs_keys.getLength()+1] = g_sffd2_d_t.sfibseq
+                  CALL asft338_key_update_b(gs_keys,'sfib_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_sfia_m),util.JSON.stringify(g_sffd2_d_t)
+               LET g_log2 = util.JSON.stringify(g_sfia_m),util.JSON.stringify(g_sffd2_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身page2修改後 name="input.body2.a_update"
+               IF g_sffd2_d[l_ac].sfib005 <> 'MULT' AND g_sffd2_d[l_ac].sfib005 <> g_sffd2_d_t.sfib005 THEN
+                  DELETE FROM sfic_t 
+                   WHERE sficent   = g_enterprise 
+                     AND sficsite  = g_site
+                     AND sficdocno = g_sfia_m.sfiadocno
+                     AND sficseq   = g_sffd2_d_t.sfibseq
+                     
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "del_sfic_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+ 
+                     CALL s_transaction_end('N','0')
+                  ELSE 
+                     INSERT INTO sfic_t(sficent,sficsite,sficdocno,sficseq,sfic001,sfic002)
+                       VALUES(g_enterprise,g_site,g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006)
+                     IF SQLCA.sqlcode THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = "ins_sfic_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+ 
+                        CALL s_transaction_end('N','0')
+                     END IF
+                  END IF                     
+               END IF
+
+               IF NOT asft338_upd_sfib007_all() THEN
+                  CALL s_transaction_end('N','0') 
+               END IF
+               #160203-00003#1-add-(S)
+               #處理備註
+               IF cl_null(g_sffd2_d[l_ac].ooff013) THEN
+                  CALL s_aooi360_del('7',g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,' ',' ',' ',' ',' ',' ',' ',' ','4')
+                       RETURNING l_success
+               ELSE
+                  CALL s_aooi360_gen('7',g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,' ',' ',' ',' ',' ',' ',' ',' ','4',g_sffd2_d[l_ac].ooff013)
+                     RETURNING l_success
+               END IF
+               IF NOT l_success THEN
+                  CALL s_transaction_end('N','0')
+               END IF
+               #160203-00003#1-add-(E)
+               #end add-point
+            END IF
+         
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfibseq
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd2_d[l_ac].sfibseq,"1","1","","","azz-00079",1) THEN
+               NEXT FIELD sfibseq
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfibseq name="input.a.page2.sfibseq"
+            #此段落由子樣板a05產生
+            IF  g_sfia_m.sfiadocno IS NOT NULL AND g_sffd2_d[g_detail_idx].sfibseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfia_m.sfiadocno != g_sfiadocno_t OR g_sffd2_d[g_detail_idx].sfibseq != g_sffd2_d_t.sfibseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(1) FROM sfib_t WHERE "||"sfibent = '" ||g_enterprise|| "' AND "||"sfibdocno = '"||g_sfia_m.sfiadocno ||"' AND "|| "sfibseq = '"||g_sffd2_d[g_detail_idx].sfibseq ||"'",'std-00004',0) THEN 
+                     LET g_sffd2_d[l_ac].sfibseq = g_sffd2_d_t.sfibseq
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfibseq
+            #add-point:BEFORE FIELD sfibseq name="input.b.page2.sfibseq"
+            IF cl_null(g_sffd2_d[l_ac].sfibseq) THEN 
+               SELECT MAX(sfibseq) INTO g_sffd2_d[l_ac].sfibseq FROM sfib_t
+                WHERE sfibent = g_enterprise
+                  AND sfibsite = g_site
+                  AND sfibdocno = g_sfia_m.sfiadocno
+
+               CALL cl_get_para(g_enterprise,g_site,'E-MFG-0001') RETURNING l_sys
+               IF cl_null(l_sys) OR l_sys = 0 THEN LET l_sys = 1 END IF    
+               IF cl_null(g_sffd2_d[l_ac].sfibseq) THEN 
+                  LET g_sffd2_d[l_ac].sfibseq = l_sys 
+                  LET g_sffd2_d[l_ac].sfib005 = 'INIT'
+                  LET g_sffd2_d[l_ac].sfib006 = '0'                  
+               ELSE
+                  SELECT sfib001,sfib002 INTO g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006 FROM sfib_t
+                   WHERE sfibent   = g_enterprise
+                     AND sfibsite  = g_site
+                     AND sfibdocno = g_sfia_m.sfiadocno
+                     AND sfibseq   = g_sffd2_d[l_ac].sfibseq  
+                     
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = '221'
+                  LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib005
+                  CALL cl_ref_val("v_oocql002")
+                  LET g_sffd2_d[l_ac].sfib005_desc = g_chkparam.return1
+                  DISPLAY BY NAME g_sffd2_d[l_ac].sfib005_desc                     
+                  LET g_sffd2_d[l_ac].sfibseq = g_sffd2_d[l_ac].sfibseq+l_sys
+               END IF
+               CALL asft338_default_sfib026(g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006) RETURNING g_sffd2_d[l_ac].sfib026               
+             END IF
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfibseq
+            #add-point:ON CHANGE sfibseq name="input.g.page2.sfibseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib001
+            
+            #add-point:AFTER FIELD sfib001 name="input.a.page2.sfib001"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib001) THEN
+              #IF l_cmd = 'a' OR  (l_cmd = 'u' AND g_sffd2_d[l_ac].sfib001<>　g_sffd2_d_t.sfib001) THEN #160824-00007#216 by sakura mark
+               IF g_sffd2_d[l_ac].sfib001 <> g_sffd2_d_o.sfib001 OR cl_null(g_sffd2_d_o.sfib001) THEN   #160824-00007#216 by sakura add
+                  IF NOT s_azzi650_chk_exist ('221',g_sffd2_d[l_ac].sfib001) THEN
+                    #LET g_sffd2_d[l_ac].sfib001 = g_sffd2_d_t.sfib001   #160824-00007#216 by sakura mark
+                     LET g_sffd2_d[l_ac].sfib001 = g_sffd2_d_o.sfib001   #160824-00007#216 by sakura add
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = '221'
+                     LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib001
+                     CALL cl_ref_val("v_oocql002")
+                     LET g_sffd2_d[l_ac].sfib001_desc = g_chkparam.return1
+                     DISPLAY BY NAME g_sffd2_d[l_ac].sfib001_desc                     
+                     NEXT FIELD sfib001
+                  END IF
+                  IF NOT asft338_chk_station(g_sffd2_d[l_ac].sfib001,g_sffd2_d[l_ac].sfib002,g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006) THEN
+                    #LET g_sffd2_d[l_ac].sfib001 = g_sffd2_d_t.sfib001   #160824-00007#216 by sakura mark
+                     LET g_sffd2_d[l_ac].sfib001 = g_sffd2_d_o.sfib001   #160824-00007#216 by sakura add
+                     NEXT FIELD sfib001
+                  END IF
+                  CALL asft338_default_sfib002(g_sffd2_d[l_ac].sfib001) RETURNING g_sffd2_d[l_ac].sfib002
+                  #150716-00003#1   add
+                  IF NOT cl_null(g_sffd2_d[l_ac].sfib026) AND NOT cl_null(g_sffd2_d[l_ac].sfib027) THEN 
+                  IF g_sffd2_d[l_ac].sfib026 > g_sffd2_d[l_ac].sfib027 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'asf-00058'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD sfib026
+                  END IF
+               END IF
+               END IF
+            END IF
+            LET g_sffd2_d_o.* = g_sffd2_d[l_ac].*   #160824-00007#216 by sakura add
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = '221'
+            LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib001
+            CALL cl_ref_val("v_oocql002")
+            LET g_sffd2_d[l_ac].sfib001_desc = g_chkparam.return1
+            DISPLAY BY NAME g_sffd2_d[l_ac].sfib001_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib001
+            #add-point:BEFORE FIELD sfib001 name="input.b.page2.sfib001"
+            #170106-00002#1 add(s)
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = '221'
+            LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib001
+            CALL cl_ref_val("v_oocql002")
+            LET g_sffd2_d[l_ac].sfib001_desc = g_chkparam.return1
+            DISPLAY BY NAME g_sffd2_d[l_ac].sfib001_desc
+            #170106-00002 add(e)
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib001
+            #add-point:ON CHANGE sfib001 name="input.g.page2.sfib001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib002
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd2_d[l_ac].sfib002,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD sfib002
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfib002 name="input.a.page2.sfib002"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib002) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_sffd2_d[l_ac].sfib002 <> g_sffd2_d_t.sfib002)) THEN
+                  IF NOT asft338_chk_station(g_sffd2_d[l_ac].sfib001,g_sffd2_d[l_ac].sfib002,g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006) THEN
+                     LET g_sffd2_d[l_ac].sfib002 = g_sffd2_d_t.sfib002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib002
+            #add-point:BEFORE FIELD sfib002 name="input.b.page2.sfib002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib002
+            #add-point:ON CHANGE sfib002 name="input.g.page2.sfib002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib003
+            #add-point:BEFORE FIELD sfib003 name="input.b.page2.sfib003"
+            CALL asft338_set_entry_b(l_cmd)
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib003
+            
+            #add-point:AFTER FIELD sfib003 name="input.a.page2.sfib003"
+            IF g_sffd2_d[l_ac].sfib003 IS NOT NULL THEN
+               CALL asft338_set_no_entry_b(l_cmd)
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib003
+            #add-point:ON CHANGE sfib003 name="input.g.page2.sfib003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib004
+            #add-point:BEFORE FIELD sfib004 name="input.b.page2.sfib004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib004
+            
+            #add-point:AFTER FIELD sfib004 name="input.a.page2.sfib004"
+            IF g_sffd2_d[l_ac].sfib003 MATCHES '[23]' THEN
+               IF cl_null(g_sffd2_d[l_ac].sfib004) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'asf-00130'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_sffd2_d[l_ac].sfib004 = g_sffd2_d_t.sfib004
+                  NEXT FIELD sfib004
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib004
+            #add-point:ON CHANGE sfib004 name="input.g.page2.sfib004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib005
+            
+            #add-point:AFTER FIELD sfib005 name="input.a.page2.sfib005"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib005) THEN
+              #IF l_cmd = 'a' OR  (l_cmd = 'u' AND (g_sffd2_d_t.sfib005 IS NULL OR g_sffd2_d[l_ac].sfib005 <>　g_sffd2_d_t.sfib005)) THEN   #160824-00007#216 by sakura mark
+               IF g_sffd2_d_o.sfib005 IS NULL OR g_sffd2_d[l_ac].sfib005 <> g_sffd2_d_o.sfib005 THEN   #160824-00007#216 by sakura add
+                  IF NOT asft338_chk_station(g_sffd2_d[l_ac].sfib001,g_sffd2_d[l_ac].sfib002,g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006) THEN
+                    #LET g_sffd2_d[l_ac].sfib005 = g_sffd2_d_t.sfib005   #160824-00007#216 by sakura mark
+                     LET g_sffd2_d[l_ac].sfib005 = g_sffd2_d_o.sfib005   #160824-00007#216 by sakura add
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL asft338_default_sfib026(g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006) RETURNING g_sffd2_d[l_ac].sfib026
+               END IF
+               IF g_sffd2_d[l_ac].sfib005 = 'MULT' THEN
+                  CALL asft338_01(g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,'Y')
+                  LET l_cnt = 0
+                  SELECT COUNT(1) INTO l_cnt 
+                    FROM sfic_t 
+                   WHERE sficent   = g_enterprise 
+                     AND sficsite  = g_site 
+                     AND sficdocno = g_sfia_m.sfiadocno
+                     AND sficseq   = g_sffd2_d[l_ac].sfibseq
+                     
+                  IF l_cnt = 0 THEN    #用户在子程序画面放弃输入，先给空，若要离开这行会卡住
+                     LET g_sffd2_d[l_ac].sfib005 = ''
+                     LET g_sffd2_d[l_ac].sfib006 = ''
+                  END IF
+                  IF l_n = 1 THEN
+                     SELECT sfic001,sfic002 
+                       INTO g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006 
+                       FROM sfic_t 
+                      WHERE sficent   = g_enterprise 
+                        AND sficsite  = g_site 
+                        AND sficdocno = g_sfia_m.sfiadocno 
+                        AND sficseq   = g_sffd2_d[l_ac].sfibseq
+                  END IF 
+                  IF l_n > 1 THEN
+                     LET g_sffd2_d[l_ac].sfib005 = 'MULT'
+                     LET g_sffd2_d[l_ac].sfib006 = 0
+                  END IF
+               END IF
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = '221'
+               LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib005
+               CALL cl_ref_val("v_oocql002")
+               LET g_sffd2_d[l_ac].sfib005_desc = g_chkparam.return1
+               DISPLAY BY NAME g_sffd2_d[l_ac].sfib005_desc
+               CALL asft338_set_no_entry_b(l_cmd)
+            END IF
+            LET g_sffd2_d_o.* = g_sffd2_d[l_ac].*   #160824-00007#216 by sakura add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib005
+            #add-point:BEFORE FIELD sfib005 name="input.b.page2.sfib005"
+            CALL asft338_set_entry_b(l_cmd)
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib005
+            #add-point:ON CHANGE sfib005 name="input.g.page2.sfib005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib006
+            #add-point:BEFORE FIELD sfib006 name="input.b.page2.sfib006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib006
+            
+            #add-point:AFTER FIELD sfib006 name="input.a.page2.sfib006"
+            IF g_sffd2_d[l_ac].sfib006 IS NOT NULL THEN
+              #IF l_cmd = 'a' OR  (l_cmd = 'u' AND (g_sffd2_d_t.sfib006 IS NULL OR g_sffd2_d[l_ac].sfib006 <>　g_sffd2_d_t.sfib006)) THEN   #160824-00007#216 by sakura mark
+               IF g_sffd2_d_o.sfib006 IS NULL OR g_sffd2_d[l_ac].sfib006 <> g_sffd2_d_o.sfib006 THEN   #160824-00007#216 by sakura add
+                  IF NOT asft338_chk_station(g_sffd2_d[l_ac].sfib001,g_sffd2_d[l_ac].sfib002,g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006) THEN
+                    #LET g_sffd2_d[l_ac].sfib006 = g_sffd2_d_t.sfib006   #160824-00007#216 by sakura mark
+                     LET g_sffd2_d[l_ac].sfib006 = g_sffd2_d_o.sfib006   #160824-00007#216 by sakura add
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL asft338_default_sfib026(g_sffd2_d[l_ac].sfib005,g_sffd2_d[l_ac].sfib006) RETURNING g_sffd2_d[l_ac].sfib026
+               END IF               
+            END IF
+            LET g_sffd2_d_o.* = g_sffd2_d[l_ac].*   #160824-00007#216 by sakura add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib006
+            #add-point:ON CHANGE sfib006 name="input.g.page2.sfib006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib007
+            
+            #add-point:AFTER FIELD sfib007 name="input.a.page2.sfib007"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib007
+            #add-point:BEFORE FIELD sfib007 name="input.b.page2.sfib007"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib007
+            #add-point:ON CHANGE sfib007 name="input.g.page2.sfib007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib008
+            #add-point:BEFORE FIELD sfib008 name="input.b.page2.sfib008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib008
+            
+            #add-point:AFTER FIELD sfib008 name="input.a.page2.sfib008"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib008
+            #add-point:ON CHANGE sfib008 name="input.g.page2.sfib008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib009
+            
+            #add-point:AFTER FIELD sfib009 name="input.a.page2.sfib009"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib009) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND g_sffd2_d[l_ac].sfib009 != g_sffd2_d_t.sfib009) THEN
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sffd2_d[l_ac].sfib009
+                  #160318-00025#3--add--str
+                  LET g_errshow = TRUE 
+                  LET g_chkparam.err_str[1] = "aec-00010:sub-01302|aeci001|",cl_get_progname("aeci001",g_lang,"2"),"|:EXEPROGaeci001"
+                  #160318-00025#3--add--end
+                  #呼叫檢查存在並帶值的library
+                  IF NOT cl_chk_exist("v_ecaa001_1") THEN
+                     LET g_sffd2_d[l_ac].sfib009 = g_sffd2_d_t.sfib009
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib009
+               CALL ap_ref_array2(g_ref_fields,"SELECT ecaa002 FROM ecaa_t WHERE ecaaent='"||g_enterprise||"' AND ecaasite='"||g_site||"' AND ecaa001=? ","") RETURNING g_rtn_fields  #151110-00029#1
+               LET g_sffd2_d[l_ac].sfib009_desc = g_rtn_fields[1] 
+               DISPLAY BY NAME g_sffd2_d[l_ac].sfib009_desc    
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib009
+            #add-point:BEFORE FIELD sfib009 name="input.b.page2.sfib009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib009
+            #add-point:ON CHANGE sfib009 name="input.g.page2.sfib009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib021
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd2_d[l_ac].sfib021,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD sfib021
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfib021 name="input.a.page2.sfib021"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib021) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib021
+            #add-point:BEFORE FIELD sfib021 name="input.b.page2.sfib021"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib021
+            #add-point:ON CHANGE sfib021 name="input.g.page2.sfib021"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib022
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd2_d[l_ac].sfib022,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD sfib022
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfib022 name="input.a.page2.sfib022"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib022) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib022
+            #add-point:BEFORE FIELD sfib022 name="input.b.page2.sfib022"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib022
+            #add-point:ON CHANGE sfib022 name="input.g.page2.sfib022"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib023
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd2_d[l_ac].sfib023,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD sfib023
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfib023 name="input.a.page2.sfib023"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib023) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib023
+            #add-point:BEFORE FIELD sfib023 name="input.b.page2.sfib023"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib023
+            #add-point:ON CHANGE sfib023 name="input.g.page2.sfib023"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib024
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd2_d[l_ac].sfib024,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD sfib024
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfib024 name="input.a.page2.sfib024"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib024) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib024
+            #add-point:BEFORE FIELD sfib024 name="input.b.page2.sfib024"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib024
+            #add-point:ON CHANGE sfib024 name="input.g.page2.sfib024"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib026
+            #add-point:BEFORE FIELD sfib026 name="input.b.page2.sfib026"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib026
+            
+            #add-point:AFTER FIELD sfib026 name="input.a.page2.sfib026"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib026) AND NOT cl_null(g_sffd2_d[l_ac].sfib027) THEN 
+               IF g_sffd2_d[l_ac].sfib026 > g_sffd2_d[l_ac].sfib027 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'asf-00058'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_sffd2_d[l_ac].sfib026 = g_sffd2_d_t.sfib026
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib026
+            #add-point:ON CHANGE sfib026 name="input.g.page2.sfib026"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib027
+            #add-point:BEFORE FIELD sfib027 name="input.b.page2.sfib027"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib027
+            
+            #add-point:AFTER FIELD sfib027 name="input.a.page2.sfib027"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib026) AND NOT cl_null(g_sffd2_d[l_ac].sfib027) THEN 
+               IF g_sffd2_d[l_ac].sfib026 > g_sffd2_d[l_ac].sfib027 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'asf-00058'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_sffd2_d[l_ac].sfib027 = g_sffd2_d_t.sfib027
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib027
+            #add-point:ON CHANGE sfib027 name="input.g.page2.sfib027"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib010
+            #add-point:BEFORE FIELD sfib010 name="input.b.page2.sfib010"
+            CALL asft338_set_entry_b(l_cmd)
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib010
+            
+            #add-point:AFTER FIELD sfib010 name="input.a.page2.sfib010"
+            IF g_sffd2_d[l_ac].sfib010 IS NOT NULL THEN
+               CALL asft338_set_no_entry_b(l_cmd)
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib010
+            #add-point:ON CHANGE sfib010 name="input.g.page2.sfib010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib011
+            
+            #add-point:AFTER FIELD sfib011 name="input.a.page2.sfib011"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib011) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_sffd2_d_t.sfib011 IS NULL OR g_sffd2_d[l_ac].sfib011 != g_sffd2_d_t.sfib011)) THEN
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sffd2_d[l_ac].sfib011
+                  #呼叫檢查存在並帶值的library
+                  IF NOT cl_chk_exist("v_pmaa001_1") THEN
+                     LET g_sffd2_d[l_ac].sfib011 = g_sffd2_d_t.sfib011
+                     NEXT FIELD sfib011
+                  END IF
+               END IF
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib011
+               CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+               LET g_sffd2_d[l_ac].sfib011_desc = '', g_rtn_fields[1] , ''
+               DISPLAY BY NAME g_sffd2_d[l_ac].sfib011_desc          
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib011
+            #add-point:BEFORE FIELD sfib011 name="input.b.page2.sfib011"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib011
+            #add-point:ON CHANGE sfib011 name="input.g.page2.sfib011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib012
+            #add-point:BEFORE FIELD sfib012 name="input.b.page2.sfib012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib012
+            
+            #add-point:AFTER FIELD sfib012 name="input.a.page2.sfib012"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib012
+            #add-point:ON CHANGE sfib012 name="input.g.page2.sfib012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib013
+            #add-point:BEFORE FIELD sfib013 name="input.b.page2.sfib013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib013
+            
+            #add-point:AFTER FIELD sfib013 name="input.a.page2.sfib013"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib013
+            #add-point:ON CHANGE sfib013 name="input.g.page2.sfib013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib014
+            #add-point:BEFORE FIELD sfib014 name="input.b.page2.sfib014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib014
+            
+            #add-point:AFTER FIELD sfib014 name="input.a.page2.sfib014"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib014
+            #add-point:ON CHANGE sfib014 name="input.g.page2.sfib014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib015
+            #add-point:BEFORE FIELD sfib015 name="input.b.page2.sfib015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib015
+            
+            #add-point:AFTER FIELD sfib015 name="input.a.page2.sfib015"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib015
+            #add-point:ON CHANGE sfib015 name="input.g.page2.sfib015"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib016
+            #add-point:BEFORE FIELD sfib016 name="input.b.page2.sfib016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib016
+            
+            #add-point:AFTER FIELD sfib016 name="input.a.page2.sfib016"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib016
+            #add-point:ON CHANGE sfib016 name="input.g.page2.sfib016"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib017
+            #add-point:BEFORE FIELD sfib017 name="input.b.page2.sfib017"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib017
+            
+            #add-point:AFTER FIELD sfib017 name="input.a.page2.sfib017"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib017
+            #add-point:ON CHANGE sfib017 name="input.g.page2.sfib017"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib028
+            
+            #add-point:AFTER FIELD sfib028 name="input.a.page2.sfib028"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib028) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND g_sffd2_d[l_ac].sfib028 != g_sffd2_d_t.sfib028) THEN
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL             
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sffd2_d[l_ac].sfib028
+                  #160318-00025#3--add--str
+                  LET g_errshow = TRUE 
+                  LET g_chkparam.err_str[1] = "aim-00005:sub-01302|aooi250|",cl_get_progname("aooi250",g_lang,"2"),"|:EXEPROGaooi250"
+                  #160318-00025#3--add--end               
+                  #呼叫檢查存在並帶值的library
+                  IF NOT cl_chk_exist("v_ooca001") THEN
+                     LET g_sffd2_d[l_ac].sfib028 = g_sffd2_d_t.sfib028
+                     NEXT FIELD sfib028
+                  END IF
+               END IF
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib028
+               CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+               LET g_sffd2_d[l_ac].sfib028_desc = '', g_rtn_fields[1] , ''
+               DISPLAY BY NAME g_sffd2_d[l_ac].sfib028_desc
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib028
+            #add-point:BEFORE FIELD sfib028 name="input.b.page2.sfib028"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib028
+            #add-point:ON CHANGE sfib028 name="input.g.page2.sfib028"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib029
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd2_d[l_ac].sfib029,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD sfib029
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfib029 name="input.a.page2.sfib029"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib029) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib029
+            #add-point:BEFORE FIELD sfib029 name="input.b.page2.sfib029"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib029
+            #add-point:ON CHANGE sfib029 name="input.g.page2.sfib029"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib030
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd2_d[l_ac].sfib030,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD sfib030
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfib030 name="input.a.page2.sfib030"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib030) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib030
+            #add-point:BEFORE FIELD sfib030 name="input.b.page2.sfib030"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib030
+            #add-point:ON CHANGE sfib030 name="input.g.page2.sfib030"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib018
+            
+            #add-point:AFTER FIELD sfib018 name="input.a.page2.sfib018"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib018) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND g_sffd2_d[l_ac].sfib018 != g_sffd2_d_t.sfib018) THEN
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL             
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sffd2_d[l_ac].sfib018 
+                  #160318-00025#3--add--str
+                  LET g_errshow = TRUE 
+                  LET g_chkparam.err_str[1] = "aim-00005:sub-01302|aooi250|",cl_get_progname("aooi250",g_lang,"2"),"|:EXEPROGaooi250"
+                  #160318-00025#3--add--end                  
+                  #呼叫檢查存在並帶值的library
+                  IF NOT cl_chk_exist("v_ooca001") THEN
+                     LET g_sffd2_d[l_ac].sfib018 = g_sffd2_d_t.sfib018
+                     NEXT FIELD sfib018
+                  END IF
+               END IF
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib018
+               CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+               LET g_sffd2_d[l_ac].sfib018_desc = '', g_rtn_fields[1] , ''
+               DISPLAY BY NAME g_sffd2_d[l_ac].sfib018_desc
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib018
+            #add-point:BEFORE FIELD sfib018 name="input.b.page2.sfib018"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib018
+            #add-point:ON CHANGE sfib018 name="input.g.page2.sfib018"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib019
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd2_d[l_ac].sfib019,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD sfib019
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfib019 name="input.a.page2.sfib019"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib019) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib019
+            #add-point:BEFORE FIELD sfib019 name="input.b.page2.sfib019"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib019
+            #add-point:ON CHANGE sfib019 name="input.g.page2.sfib019"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfib020
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffd2_d[l_ac].sfib020,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD sfib020
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sfib020 name="input.a.page2.sfib020"
+            IF NOT cl_null(g_sffd2_d[l_ac].sfib020) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfib020
+            #add-point:BEFORE FIELD sfib020 name="input.b.page2.sfib020"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfib020
+            #add-point:ON CHANGE sfib020 name="input.g.page2.sfib020"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff013
+            #add-point:BEFORE FIELD ooff013 name="input.b.page2.ooff013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff013
+            
+            #add-point:AFTER FIELD ooff013 name="input.a.page2.ooff013"
+            #160203-00003#1-add-(S)
+            #刪除備註資料
+            IF cl_null(g_sffd2_d[l_ac].ooff013) THEN
+               CALL s_aooi360_del('7',g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,' ',' ',' ',' ',' ',' ',' ',' ','4')
+                    RETURNING l_success
+            END IF 
+            #160203-00003#1-add-(E)
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff013
+            #add-point:ON CHANGE ooff013 name="input.g.page2.ooff013"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page2.sfibseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfibseq
+            #add-point:ON ACTION controlp INFIELD sfibseq name="input.c.page2.sfibseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib001
+            #add-point:ON ACTION controlp INFIELD sfib001 name="input.c.page2.sfib001"
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffd2_d[l_ac].sfib001             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "221" #
+
+            CALL q_oocq002()                                              #呼叫開窗
+
+            LET g_sffd2_d[l_ac].sfib001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffd2_d[l_ac].sfib001 TO sfib001                    #顯示到畫面上
+            NEXT FIELD sfib001
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib002
+            #add-point:ON ACTION controlp INFIELD sfib002 name="input.c.page2.sfib002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib003
+            #add-point:ON ACTION controlp INFIELD sfib003 name="input.c.page2.sfib003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib004
+            #add-point:ON ACTION controlp INFIELD sfib004 name="input.c.page2.sfib004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib005
+            #add-point:ON ACTION controlp INFIELD sfib005 name="input.c.page2.sfib005"
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffd2_d[l_ac].sfib005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "221" #
+
+            CALL q_oocq002()                                              #呼叫開窗
+
+            LET g_sffd2_d[l_ac].sfib005 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffd2_d[l_ac].sfib005 TO sfib005                    #顯示到畫面上
+            NEXT FIELD sfib005                                           #返回原欄位 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib006
+            #add-point:ON ACTION controlp INFIELD sfib006 name="input.c.page2.sfib006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib007
+            #add-point:ON ACTION controlp INFIELD sfib007 name="input.c.page2.sfib007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib008
+            #add-point:ON ACTION controlp INFIELD sfib008 name="input.c.page2.sfib008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib009
+            #add-point:ON ACTION controlp INFIELD sfib009 name="input.c.page2.sfib009"
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffd2_d[l_ac].sfib009             #給予default值
+
+            #給予arg
+
+            CALL q_ecaa001_1()                                            #呼叫開窗
+
+            LET g_sffd2_d[l_ac].sfib009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffd2_d[l_ac].sfib009 TO sfib009                    #顯示到畫面上
+            NEXT FIELD sfib009                                            #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib021
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib021
+            #add-point:ON ACTION controlp INFIELD sfib021 name="input.c.page2.sfib021"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib022
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib022
+            #add-point:ON ACTION controlp INFIELD sfib022 name="input.c.page2.sfib022"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib023
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib023
+            #add-point:ON ACTION controlp INFIELD sfib023 name="input.c.page2.sfib023"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib024
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib024
+            #add-point:ON ACTION controlp INFIELD sfib024 name="input.c.page2.sfib024"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib026
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib026
+            #add-point:ON ACTION controlp INFIELD sfib026 name="input.c.page2.sfib026"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib027
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib027
+            #add-point:ON ACTION controlp INFIELD sfib027 name="input.c.page2.sfib027"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib010
+            #add-point:ON ACTION controlp INFIELD sfib010 name="input.c.page2.sfib010"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib011
+            #add-point:ON ACTION controlp INFIELD sfib011 name="input.c.page2.sfib011"
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffd2_d[l_ac].sfib011             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = " ('1','3')" #交易對象類型
+
+            CALL q_pmaa001_1()                                            #呼叫開窗
+
+            LET g_sffd2_d[l_ac].sfib011 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            NEXT FIELD sfib011                                            #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib012
+            #add-point:ON ACTION controlp INFIELD sfib012 name="input.c.page2.sfib012"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib013
+            #add-point:ON ACTION controlp INFIELD sfib013 name="input.c.page2.sfib013"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib014
+            #add-point:ON ACTION controlp INFIELD sfib014 name="input.c.page2.sfib014"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib015
+            #add-point:ON ACTION controlp INFIELD sfib015 name="input.c.page2.sfib015"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib016
+            #add-point:ON ACTION controlp INFIELD sfib016 name="input.c.page2.sfib016"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib017
+            #add-point:ON ACTION controlp INFIELD sfib017 name="input.c.page2.sfib017"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib028
+            #add-point:ON ACTION controlp INFIELD sfib028 name="input.c.page2.sfib028"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			      LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_sffd2_d[l_ac].sfib028             #給予default值
+            #給予arg
+            CALL q_ooca001()                                              #呼叫開窗
+            LET g_sffd2_d[l_ac].sfib028 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_sffd2_d[l_ac].sfib028 TO sfib028                    #顯示到畫面上
+            NEXT FIELD sfib028                                            #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib029
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib029
+            #add-point:ON ACTION controlp INFIELD sfib029 name="input.c.page2.sfib029"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib030
+            #add-point:ON ACTION controlp INFIELD sfib030 name="input.c.page2.sfib030"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib018
+            #add-point:ON ACTION controlp INFIELD sfib018 name="input.c.page2.sfib018"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_sffd2_d[l_ac].sfib018             #給予default值
+            #給予arg
+            CALL q_ooca001()                                              #呼叫開窗
+            LET g_sffd2_d[l_ac].sfib018 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_sffd2_d[l_ac].sfib018 TO sfib018                    #顯示到畫面上
+            NEXT FIELD sfib018                                            #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib019
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib019
+            #add-point:ON ACTION controlp INFIELD sfib019 name="input.c.page2.sfib019"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.sfib020
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfib020
+            #add-point:ON ACTION controlp INFIELD sfib020 name="input.c.page2.sfib020"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.ooff013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff013
+            #add-point:ON ACTION controlp INFIELD ooff013 name="input.c.page2.ooff013"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER ROW
+            #add-point:單身page2 after_row name="input.body2.after_row"
+            
+            #end add-point
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_sffd2_d[l_ac].* = g_sffd2_d_t.*
+               END IF
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE asft338_bcl2
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+            CALL asft338_unlock_b("sfib_t","'2'")
+            CALL s_transaction_end('Y','0')
+            #add-point:單身page2 after_row2 name="input.body2.after_row2"
+            
+            #end add-point
+ 
+         AFTER INPUT
+            #add-point:input段after input  name="input.body2.after_input"
+            
+            #end add-point   
+    
+         ON ACTION controlo
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_sffd2_d[li_reproduce_target].* = g_sffd2_d[li_reproduce].*
+ 
+               LET g_sffd2_d[li_reproduce_target].sfibseq = NULL
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_sffd2_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_sffd2_d.getLength()+1
+            END IF
+            
+      END INPUT
+ 
+      
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="asft338.input.other" >}
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog name="input.before_dialog"
+         
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_idx_group.getValue("'1',"))      
+         CALL DIALOG.setCurrentRow("s_detail2",g_idx_group.getValue("'2',"))
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field name="input.next_field"
+            
+            #end add-point  
+            NEXT FIELD sfiadocno
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD sffdseq1
+               WHEN "s_detail2"
+                  NEXT FIELD sfibseq
+ 
+               #add-point:input段modify_detail  name="input.modify_detail.other"
+               
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog name="input.after_dialog"
+         
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept  name="input.accept"
+               #150716-00003#1   add
+               IF NOT cl_null(g_sffd2_d[l_ac].sfib026) AND NOT cl_null(g_sffd2_d[l_ac].sfib027) THEN 
+                  IF g_sffd2_d[l_ac].sfib026 > g_sffd2_d[l_ac].sfib027 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'asf-00058'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                  END IF
+               END IF
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel name="input.cancel"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close name="input.close"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit name="input.exit"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION asft338_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point  
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   DEFINE  l_sffb009             LIKE sffb_t.sffb009
+   DEFINE  l_sffb030             LIKE sffb_t.sffb030 #151102-00014#2 add
+   DEFINE  l_success             LIKE type_t.num5    #160203-00003#1-add
+   #end add-point  
+   
+   #add-point:Function前置處理 name="show.before"
+   
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL asft338_b_fill() #單身填充
+      CALL asft338_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL asft338_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   LET g_sfia_m.sfiadocno_desc = s_aooi200_get_slip_desc(g_sfia_m.sfiadocno)
+   DISPLAY BY NAME g_sfia_m.sfiadocno_desc
+   LET g_sfia_m.sfia001_desc = s_desc_get_person_desc(g_sfia_m.sfia001)
+   DISPLAY BY NAME g_sfia_m.sfia001_desc
+   LET g_sfia_m.sfia002_desc = s_desc_get_department_desc(g_sfia_m.sfia002)
+   DISPLAY BY NAME g_sfia_m.sfia002_desc
+   
+   CALL s_asft335_default_sffb056('3',g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006)
+      #RETURNING g_sfia_m.sfaa010,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,l_sffb009          #151102-00014#2 mark
+       RETURNING g_sfia_m.sfaa010,g_sfia_m.sfia004,g_sfia_m.sfia005,g_sfia_m.sfia006,l_sffb009,l_sffb030 #151102-00014#2 add
+#display工单对应料件的品名规格                                   
+   CALL s_desc_get_item_desc(g_sfia_m.sfaa010)
+      RETURNING g_sfia_m.imaal003,g_sfia_m.imaal004
+         
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_sfia_m.sfia005
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_sfia_m.sfia005_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_sfia_m.sfia005_desc
+  
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_sfia_m.sfiaownid
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_sfia_m.sfiaownid_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_sfia_m.sfiaownid_desc
+  
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_sfia_m.sfiaowndp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_sfia_m.sfiaowndp_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_sfia_m.sfiaowndp_desc
+  
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_sfia_m.sfiacrtid
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_sfia_m.sfiacrtid_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_sfia_m.sfiacrtid_desc
+  
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_sfia_m.sfiacrtdp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_sfia_m.sfiacrtdp_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_sfia_m.sfiacrtdp_desc
+  
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_sfia_m.sfiamodid
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_sfia_m.sfiamodid_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_sfia_m.sfiamodid_desc
+  
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_sfia_m.sfiacnfid
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_sfia_m.sfiacnfid_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_sfia_m.sfiacnfid_desc
+   
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_sfia_m_mask_o.* =  g_sfia_m.*
+   CALL asft338_sfia_t_mask()
+   LET g_sfia_m_mask_n.* =  g_sfia_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_sfia_m.sfia001,g_sfia_m.sfia001_desc,g_sfia_m.sfiadocno_desc, 
+       g_sfia_m.sfia002,g_sfia_m.sfia002_desc,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+       g_sfia_m.sfia005_desc,g_sfia_m.sfia009,g_sfia_m.sfaa010,g_sfia_m.sfia006,g_sfia_m.imaal003,g_sfia_m.sfia007, 
+       g_sfia_m.imaal004,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp, 
+       g_sfia_m.sfiaowndp_desc,g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdp_desc, 
+       g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiamoddt,g_sfia_m.sfiacnfid, 
+       g_sfia_m.sfiacnfid_desc,g_sfia_m.sfiacnfdt
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_sfia_m.sfiastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_sffd_d.getLength()
+      #add-point:show段單身reference name="show.body.reference"
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_sffd_d[l_ac].sffd001
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='1053' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_sffd_d[l_ac].sffd001_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_sffd_d[l_ac].sffd001_desc
+      
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_sffd2_d.getLength()
+      #add-point:show段單身reference name="show.body2.reference"
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = '221'
+      LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib001
+      CALL cl_ref_val("v_oocql002")
+      LET g_sffd2_d[l_ac].sfib001_desc = g_chkparam.return1
+      DISPLAY BY NAME g_sffd2_d[l_ac].sfib001_desc
+      
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = '221'
+      LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib005
+      CALL cl_ref_val("v_oocql002")
+      LET g_sffd2_d[l_ac].sfib005_desc = g_chkparam.return1
+      DISPLAY BY NAME g_sffd2_d[l_ac].sfib005_desc
+   
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = '221'
+      LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib007
+      CALL cl_ref_val("v_oocql002")
+      LET g_sffd2_d[l_ac].sfib007_desc = g_chkparam.return1
+      DISPLAY BY NAME g_sffd2_d[l_ac].sfib007_desc
+                 
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib009
+      CALL ap_ref_array2(g_ref_fields,"SELECT ecaa002 FROM ecaa_t WHERE ecaaent='"||g_enterprise||"' AND ecaasite='"||g_site||"' AND ecaa001=? ","") RETURNING g_rtn_fields  #151110-00029#1
+      LET g_sffd2_d[l_ac].sfib009_desc = g_rtn_fields[1] 
+      DISPLAY BY NAME g_sffd2_d[l_ac].sfib009_desc 
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib011
+      CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_sffd2_d[l_ac].sfib011_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_sffd2_d[l_ac].sfib011_desc  
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib028
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_sffd2_d[l_ac].sfib028_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_sffd2_d[l_ac].sfib028_desc
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib018
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_sffd2_d[l_ac].sfib018_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_sffd2_d[l_ac].sfib018_desc
+      #160203-00003#1-add-(S)
+      #抓取備註
+      CALL s_aooi360_sel('7',g_sfia_m.sfiadocno,g_sffd2_d[l_ac].sfibseq,'','','','','','','','','4')
+         RETURNING l_success,g_sffd2_d[l_ac].ooff013
+      DISPLAY BY NAME g_sffd2_d[l_ac].ooff013
+      #160203-00003#1-add-(E)
+      #end add-point
+   END FOR
+ 
+   
+    
+   
+   #add-point:show段other name="show.other"
+   
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL asft338_detail_show()
+ 
+   #add-point:show段之後 name="show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.detail_show" >}
+#+ 第二階單身reference
+PRIVATE FUNCTION asft338_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point  
+   #add-point:detail_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="detail_show.before"
+   
+   #end add-point
+   
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION asft338_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point   
+   DEFINE l_newno     LIKE sfia_t.sfiadocno 
+   DEFINE l_oldno     LIKE sfia_t.sfiadocno 
+ 
+   DEFINE l_master    RECORD LIKE sfia_t.* #此變數樣板目前無使用
+   DEFINE l_detail    RECORD LIKE sffd_t.* #此變數樣板目前無使用
+   DEFINE l_detail2    RECORD LIKE sfib_t.* #此變數樣板目前無使用
+ 
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   LET g_master_insert = FALSE
+   
+   IF g_sfia_m.sfiadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_sfiadocno_t = g_sfia_m.sfiadocno
+ 
+    
+   LET g_sfia_m.sfiadocno = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_sfia_m.sfiaownid = g_user
+      LET g_sfia_m.sfiaowndp = g_dept
+      LET g_sfia_m.sfiacrtid = g_user
+      LET g_sfia_m.sfiacrtdp = g_dept 
+      LET g_sfia_m.sfiacrtdt = cl_get_current()
+      LET g_sfia_m.sfiamodid = g_user
+      LET g_sfia_m.sfiamoddt = cl_get_current()
+      LET g_sfia_m.sfiastus = 'N'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   LET g_sfia_m.sfiacnfid = NULL 
+   LET g_sfia_m.sfiacnfdt = NULL  
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_sfia_m.sfiastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+      LET g_sfia_m.sfiadocno_desc = ''
+   DISPLAY BY NAME g_sfia_m.sfiadocno_desc
+ 
+   
+   CALL asft338_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_sfia_m.* TO NULL
+      INITIALIZE g_sffd_d TO NULL
+      INITIALIZE g_sffd2_d TO NULL
+ 
+      #add-point:複製取消後 name="reproduce.cancel"
+      
+      #end add-point
+      CALL asft338_show()
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code = 9001 
+      LET g_errparam.popup = FALSE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL asft338_set_act_visible()   
+   CALL asft338_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_sfiadocno_t = g_sfia_m.sfiadocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " sfiaent = " ||g_enterprise|| " AND",
+                      " sfiadocno = '", g_sfia_m.sfiadocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL asft338_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+   
+   CALL asft338_idx_chk()
+   
+   LET g_data_owner = g_sfia_m.sfiaownid      
+   LET g_data_dept  = g_sfia_m.sfiaowndp
+   
+   #功能已完成,通報訊息中心
+   CALL asft338_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.detail_reproduce" >}
+#+ 單身自動複製
+PRIVATE FUNCTION asft338_detail_reproduce()
+   #add-point:delete段define(客製用) name="detail_reproduce.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE sffd_t.* #此變數樣板目前無使用
+   DEFINE l_detail2    RECORD LIKE sfib_t.* #此變數樣板目前無使用
+ 
+ 
+ 
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_reproduce.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="detail_reproduce.pre_function"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE asft338_detail
+   
+   #add-point:單身複製前1 name="detail_reproduce.body.table1.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM sffd_t
+    WHERE sffdent = g_enterprise AND sffddocno = g_sfiadocno_t
+ 
+    INTO TEMP asft338_detail
+ 
+   #將key修正為調整後   
+   UPDATE asft338_detail 
+      #更新key欄位
+      SET sffddocno = g_sfia_m.sfiadocno
+ 
+      #更新共用欄位
+      
+ 
+   #add-point:單身修改前 name="detail_reproduce.body.table1.b_update"
+   
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO sffd_t SELECT * FROM asft338_detail
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1 name="detail_reproduce.body.table1.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE asft338_detail
+   
+   #add-point:單身複製後1 name="detail_reproduce.body.table1.a_insert"
+   
+   #end add-point
+ 
+   #add-point:單身複製前 name="detail_reproduce.body.table2.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM sfib_t 
+    WHERE sfibent = g_enterprise AND sfibdocno = g_sfiadocno_t
+ 
+    INTO TEMP asft338_detail
+ 
+   #將key修正為調整後   
+   UPDATE asft338_detail SET sfibdocno = g_sfia_m.sfiadocno
+ 
+  
+   #add-point:單身修改前 name="detail_reproduce.body.table2.b_update"
+   
+   #end add-point    
+ 
+   #將資料塞回原table   
+   INSERT INTO sfib_t SELECT * FROM asft338_detail
+   
+   #add-point:單身複製中 name="detail_reproduce.body.table2.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE asft338_detail
+   
+   #add-point:單身複製後 name="detail_reproduce.body.table2.a_insert"
+   
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_sfiadocno_t = g_sfia_m.sfiadocno
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION asft338_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point     
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   IF g_sfia_m.sfiastus <> 'N' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'apm-00034'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   END IF
+   #end add-point
+   
+   IF g_sfia_m.sfiadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   
+   
+   CALL s_transaction_begin()
+ 
+   OPEN asft338_cl USING g_enterprise,g_sfia_m.sfiadocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN asft338_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE asft338_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE asft338_master_referesh USING g_sfia_m.sfiadocno INTO g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt, 
+       g_sfia_m.sfia001,g_sfia_m.sfia002,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+       g_sfia_m.sfia009,g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp, 
+       g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt, 
+       g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt,g_sfia_m.sfia005_desc,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp_desc, 
+       g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp_desc,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiacnfid_desc 
+ 
+   
+   
+   #檢查是否允許此動作
+   IF NOT asft338_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_sfia_m_mask_o.* =  g_sfia_m.*
+   CALL asft338_sfia_t_mask()
+   LET g_sfia_m_mask_n.* =  g_sfia_m.*
+   
+   CALL asft338_show()
+   
+   #add-point:delete段before ask name="delete.before_ask"
+   
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL asft338_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+  
+  
+      #資料備份
+      LET g_sfiadocno_t = g_sfia_m.sfiadocno
+ 
+ 
+      DELETE FROM sfia_t
+       WHERE sfiaent = g_enterprise AND sfiadocno = g_sfia_m.sfiadocno
+ 
+       
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+       
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_sfia_m.sfiadocno,":",SQLERRMESSAGE  
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      IF NOT s_aooi200_del_docno(g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt) THEN CALL s_transaction_end('N','0') RETURN END IF          
+      #end add-point
+  
+      #add-point:單身刪除前 name="delete.body.b_delete"
+      
+      #end add-point
+      
+      DELETE FROM sffd_t
+       WHERE sffdent = g_enterprise AND sffddocno = g_sfia_m.sfiadocno
+ 
+ 
+      #add-point:單身刪除中 name="delete.body.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "sffd_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete"
+ 
+      #end add-point
+      
+            
+                                                               
+      #add-point:單身刪除前 name="delete.body.b_delete2"
+      
+      #end add-point
+      DELETE FROM sfib_t
+       WHERE sfibent = g_enterprise AND
+             sfibdocno = g_sfia_m.sfiadocno
+      #add-point:單身刪除中 name="delete.body.m_delete2"
+      
+      #end add-point
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "sfib_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete2"
+      DELETE FROM sfic_t
+       WHERE sficent = g_enterprise AND
+             sficdocno = g_sfia_m.sfiadocno
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "sfic_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      #160203-00003#1-add-(S)
+      #刪除存在aooi360裡的資料
+      DELETE FROM ooff_t 
+       WHERE ooffent = g_enterprise
+         AND ooff002 = g_sfia_m.sfiadocno
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         #LET g_errparam.extend = 'DELETE ooef_t'      #160701-00034#1 mark
+         LET g_errparam.extend = 'DELETE ooff_t'       #160701-00034#1 add
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      #160203-00003#1-add-(E)
+      #end add-point
+ 
+ 
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_sfia_m)   #(ver:78)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:78)
+         CLOSE asft338_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_sffd_d.clear() 
+      CALL g_sffd2_d.clear()       
+ 
+     
+      CALL asft338_ui_browser_refresh()  
+      #CALL asft338_ui_headershow()  
+      #CALL asft338_ui_detailshow()
+ 
+      #add-point:多語言刪除 name="delete.lang.before_delete"
+      
+      #end add-point
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+      
+ 
+   
+      #add-point:多語言刪除 name="delete.lang.delete"
+      
+      #end add-point
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL asft338_browser_fill("")
+         CALL asft338_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+      
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE asft338_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL asft338_msgcentre_notify('delete')
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION asft338_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point     
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   #清空第一階單身
+   CALL g_sffd_d.clear()
+   CALL g_sffd2_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   
+   #end add-point
+   
+   #判斷是否填充
+   IF asft338_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+      #add-point:b_fill段long_sql_if name="b_fill.long_sql_if"
+      
+      #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT sffdseq1,sffd001,sffd002,sffd003 ,t1.oocql004 FROM sffd_t",   
+              
+                     " INNER JOIN sfia_t ON sfiaent = " ||g_enterprise|| " AND sfiadocno = sffddocno ",
+ 
+                     #"",
+                     
+                     "",
+                     #下層單身所需的join條件
+ 
+                                    " LEFT JOIN oocql_t t1 ON t1.oocqlent="||g_enterprise||" AND t1.oocql001='1053' AND t1.oocql002=sffd001 AND t1.oocql003='"||g_dlang||"' ",
+ 
+                     " WHERE sffdent=? AND sffddocno=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body.fill_sql"
+         
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY sffd_t.sffdseq1,sffd_t.sffd001"
+         
+         #add-point:單身填充控制 name="b_fill.sql"
+         
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE asft338_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR asft338_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs USING g_enterprise,g_sfia_m.sfiadocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs USING g_enterprise,g_sfia_m.sfiadocno INTO g_sffd_d[l_ac].sffdseq1,g_sffd_d[l_ac].sffd001, 
+          g_sffd_d[l_ac].sffd002,g_sffd_d[l_ac].sffd003,g_sffd_d[l_ac].sffd001_desc   #(ver:78)
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill.fill"
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = g_sffd_d[l_ac].sffd001
+         CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='1053' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET g_sffd_d[l_ac].sffd001_desc = '', g_rtn_fields[1] , ''
+         DISPLAY BY NAME g_sffd_d[l_ac].sffd001_desc
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code = 9035 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+    
+   #判斷是否填充
+   IF asft338_fill_chk(2) THEN
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+         #add-point:b_fill段long_sql_if name="b_fill.body2.long_sql_if"
+         
+         #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT sfibseq,sfib001,sfib002,sfib003,sfib004,sfib005,sfib006,sfib007, 
+             sfib008,sfib009,sfib021,sfib022,sfib023,sfib024,sfib026,sfib027,sfib010,sfib011,sfib012, 
+             sfib013,sfib014,sfib015,sfib016,sfib017,sfib028,sfib029,sfib030,sfib018,sfib019,sfib020 , 
+             t2.oocql004 FROM sfib_t",   
+                     " INNER JOIN  sfia_t ON sfiaent = " ||g_enterprise|| " AND sfiadocno = sfibdocno ",
+ 
+                     "",
+                     
+                                    " LEFT JOIN oocql_t t2 ON t2.oocqlent="||g_enterprise||" AND t2.oocql001='221' AND t2.oocql002=sfib001 AND t2.oocql003='"||g_dlang||"' ",
+ 
+                     " WHERE sfibent=? AND sfibdocno=?"   
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段fill_sql name="b_fill.body2.fill_sql"
+         
+         #end add-point
+         IF NOT cl_null(g_wc2_table2) THEN
+            LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY sfib_t.sfibseq"
+         
+         #add-point:單身填充控制 name="b_fill.sql2"
+         
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE asft338_pb2 FROM g_sql
+         DECLARE b_fill_cs2 CURSOR FOR asft338_pb2
+      END IF
+    
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs2 USING g_enterprise,g_sfia_m.sfiadocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs2 USING g_enterprise,g_sfia_m.sfiadocno INTO g_sffd2_d[l_ac].sfibseq,g_sffd2_d[l_ac].sfib001, 
+          g_sffd2_d[l_ac].sfib002,g_sffd2_d[l_ac].sfib003,g_sffd2_d[l_ac].sfib004,g_sffd2_d[l_ac].sfib005, 
+          g_sffd2_d[l_ac].sfib006,g_sffd2_d[l_ac].sfib007,g_sffd2_d[l_ac].sfib008,g_sffd2_d[l_ac].sfib009, 
+          g_sffd2_d[l_ac].sfib021,g_sffd2_d[l_ac].sfib022,g_sffd2_d[l_ac].sfib023,g_sffd2_d[l_ac].sfib024, 
+          g_sffd2_d[l_ac].sfib026,g_sffd2_d[l_ac].sfib027,g_sffd2_d[l_ac].sfib010,g_sffd2_d[l_ac].sfib011, 
+          g_sffd2_d[l_ac].sfib012,g_sffd2_d[l_ac].sfib013,g_sffd2_d[l_ac].sfib014,g_sffd2_d[l_ac].sfib015, 
+          g_sffd2_d[l_ac].sfib016,g_sffd2_d[l_ac].sfib017,g_sffd2_d[l_ac].sfib028,g_sffd2_d[l_ac].sfib029, 
+          g_sffd2_d[l_ac].sfib030,g_sffd2_d[l_ac].sfib018,g_sffd2_d[l_ac].sfib019,g_sffd2_d[l_ac].sfib020, 
+          g_sffd2_d[l_ac].sfib001_desc   #(ver:78)
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill2.fill"
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = '221'
+            LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib001
+            CALL cl_ref_val("v_oocql002")
+            LET g_sffd2_d[l_ac].sfib001_desc = g_chkparam.return1
+            DISPLAY BY NAME g_sffd2_d[l_ac].sfib001_desc
+            
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = '221'
+            LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib005
+            CALL cl_ref_val("v_oocql002")
+            LET g_sffd2_d[l_ac].sfib005_desc = g_chkparam.return1
+            DISPLAY BY NAME g_sffd2_d[l_ac].sfib005_desc
+ 
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = '221'
+            LET g_chkparam.arg2 = g_sffd2_d[l_ac].sfib007
+            CALL cl_ref_val("v_oocql002")
+            LET g_sffd2_d[l_ac].sfib007_desc = g_chkparam.return1
+            DISPLAY BY NAME g_sffd2_d[l_ac].sfib007_desc
+                       
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib009
+            CALL ap_ref_array2(g_ref_fields,"SELECT ecaa002 FROM ecaa_t WHERE ecaaent='"||g_enterprise||"' AND ecaasite='"||g_site||"' AND ecaa001=? ","") RETURNING g_rtn_fields  #151110-00029#1
+            LET g_sffd2_d[l_ac].sfib009_desc = g_rtn_fields[1] 
+            DISPLAY BY NAME g_sffd2_d[l_ac].sfib009_desc 
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib011
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffd2_d[l_ac].sfib011_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffd2_d[l_ac].sfib011_desc  
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib028
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffd2_d[l_ac].sfib028_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffd2_d[l_ac].sfib028_desc
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffd2_d[l_ac].sfib018
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffd2_d[l_ac].sfib018_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffd2_d[l_ac].sfib018_desc
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code = 9035 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   END IF
+ 
+ 
+   
+   #add-point:browser_fill段其他table處理 name="browser_fill.other_fill"
+   
+   #end add-point
+   
+   CALL g_sffd_d.deleteElement(g_sffd_d.getLength())
+   CALL g_sffd2_d.deleteElement(g_sffd2_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE asft338_pb
+   FREE asft338_pb2
+ 
+ 
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_sffd_d.getLength()
+      LET g_sffd_d_mask_o[l_ac].* =  g_sffd_d[l_ac].*
+      CALL asft338_sffd_t_mask()
+      LET g_sffd_d_mask_n[l_ac].* =  g_sffd_d[l_ac].*
+   END FOR
+   
+   LET g_sffd2_d_mask_o.* =  g_sffd2_d.*
+   FOR l_ac = 1 TO g_sffd2_d.getLength()
+      LET g_sffd2_d_mask_o[l_ac].* =  g_sffd2_d[l_ac].*
+      CALL asft338_sfib_t_mask()
+      LET g_sffd2_d_mask_n[l_ac].* =  g_sffd2_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION asft338_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete"
+ 
+#      #end add-point    
+#      DELETE FROM sffd_t
+#       WHERE sffdent = g_enterprise AND
+#         sffddocno = ps_keys_bak[1] AND sffdseq1 = ps_keys_bak[2] AND sffd001 = ps_keys_bak[3]
+#      #add-point:delete_b段刪除中 name="delete_b.m_delete"
+      DELETE FROM sffd_t
+       WHERE sffdent = g_enterprise AND
+         sffddocno = ps_keys_bak[1] AND sffdseq1 = ps_keys_bak[2] AND sffd001 = ps_keys_bak[3] AND sffdseq = '0'
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ":",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_sffd_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete2"
+      
+      #end add-point    
+      DELETE FROM sfib_t
+       WHERE sfibent = g_enterprise AND
+             sfibdocno = ps_keys_bak[1] AND sfibseq = ps_keys_bak[2]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete2"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "sfib_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_sffd2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      #add-point:delete_b段刪除後 name="delete_b.a_delete2"
+ 
+      #end add-point    
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:delete_b段other name="delete_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION asft338_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert"
+ 
+#      #end add-point 
+#      INSERT INTO sffd_t
+#                  (sffdent,
+#                   sffddocno,
+#                   sffdseq1,sffd001
+#                   ,sffd002,sffd003) 
+#            VALUES(g_enterprise,
+#                   ps_keys[1],ps_keys[2],ps_keys[3]
+#                   ,g_sffd_d[g_detail_idx].sffd002,g_sffd_d[g_detail_idx].sffd003)
+#      #add-point:insert_b段資料新增中 name="insert_b.m_insert"
+      INSERT INTO sffd_t
+                  (sffdent,sffdsite,
+                   sffddocno,sffdseq,
+                   sffdseq1,sffd001
+                   ,sffd002,sffd003) 
+            VALUES(g_enterprise,g_site,
+                   ps_keys[1],'0',ps_keys[2],ps_keys[3]
+                   ,g_sffd_d[g_detail_idx].sffd002,g_sffd_d[g_detail_idx].sffd003)
+      #end add-point 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "sffd_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_sffd_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert"
+      
+      #end add-point 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert2"
+ 
+#      #end add-point 
+#      INSERT INTO sfib_t
+#                  (sfibent,
+#                   sfibdocno,
+#                   sfibseq
+#                   ,sfib001,sfib002,sfib003,sfib004,sfib005,sfib006,sfib007,sfib008,sfib009,sfib021,sfib022,sfib023,sfib024,sfib026,sfib027,sfib010,sfib011,sfib012,sfib013,sfib014,sfib015,sfib016,sfib017,sfib028,sfib029,sfib030,sfib018,sfib019,sfib020) 
+#            VALUES(g_enterprise,
+#                   ps_keys[1],ps_keys[2]
+#                   ,g_sffd2_d[g_detail_idx].sfib001,g_sffd2_d[g_detail_idx].sfib002,g_sffd2_d[g_detail_idx].sfib003, 
+#                       g_sffd2_d[g_detail_idx].sfib004,g_sffd2_d[g_detail_idx].sfib005,g_sffd2_d[g_detail_idx].sfib006, 
+#                       g_sffd2_d[g_detail_idx].sfib007,g_sffd2_d[g_detail_idx].sfib008,g_sffd2_d[g_detail_idx].sfib009, 
+#                       g_sffd2_d[g_detail_idx].sfib021,g_sffd2_d[g_detail_idx].sfib022,g_sffd2_d[g_detail_idx].sfib023, 
+#                       g_sffd2_d[g_detail_idx].sfib024,g_sffd2_d[g_detail_idx].sfib026,g_sffd2_d[g_detail_idx].sfib027, 
+#                       g_sffd2_d[g_detail_idx].sfib010,g_sffd2_d[g_detail_idx].sfib011,g_sffd2_d[g_detail_idx].sfib012, 
+#                       g_sffd2_d[g_detail_idx].sfib013,g_sffd2_d[g_detail_idx].sfib014,g_sffd2_d[g_detail_idx].sfib015, 
+#                       g_sffd2_d[g_detail_idx].sfib016,g_sffd2_d[g_detail_idx].sfib017,g_sffd2_d[g_detail_idx].sfib028, 
+#                       g_sffd2_d[g_detail_idx].sfib029,g_sffd2_d[g_detail_idx].sfib030,g_sffd2_d[g_detail_idx].sfib018, 
+#                       g_sffd2_d[g_detail_idx].sfib019,g_sffd2_d[g_detail_idx].sfib020)
+#      #add-point:insert_b段資料新增中 name="insert_b.m_insert2"
+      INSERT INTO sfib_t
+                  (sfibent,sfibsite,
+                   sfibdocno,
+                   sfibseq
+                   ,sfib001,sfib002,sfib003,sfib004,sfib005,sfib006,sfib007,sfib008,sfib009,sfib021,sfib022,sfib023,sfib024,sfib026,sfib027,sfib010,sfib011,sfib012,sfib013,sfib014,sfib015,sfib016,sfib017,sfib028,sfib029,sfib030,sfib018,sfib019,sfib020) 
+            VALUES(g_enterprise,g_site,
+                   ps_keys[1],ps_keys[2]
+                   ,g_sffd2_d[g_detail_idx].sfib001,g_sffd2_d[g_detail_idx].sfib002,g_sffd2_d[g_detail_idx].sfib003, 
+                       g_sffd2_d[g_detail_idx].sfib004,g_sffd2_d[g_detail_idx].sfib005,g_sffd2_d[g_detail_idx].sfib006, 
+                       g_sffd2_d[g_detail_idx].sfib007,g_sffd2_d[g_detail_idx].sfib008,g_sffd2_d[g_detail_idx].sfib009, 
+                       g_sffd2_d[g_detail_idx].sfib021,g_sffd2_d[g_detail_idx].sfib022,g_sffd2_d[g_detail_idx].sfib023, 
+                       g_sffd2_d[g_detail_idx].sfib024,g_sffd2_d[g_detail_idx].sfib026,g_sffd2_d[g_detail_idx].sfib027, 
+                       g_sffd2_d[g_detail_idx].sfib010,g_sffd2_d[g_detail_idx].sfib011,g_sffd2_d[g_detail_idx].sfib012, 
+                       g_sffd2_d[g_detail_idx].sfib013,g_sffd2_d[g_detail_idx].sfib014,g_sffd2_d[g_detail_idx].sfib015, 
+                       g_sffd2_d[g_detail_idx].sfib016,g_sffd2_d[g_detail_idx].sfib017,g_sffd2_d[g_detail_idx].sfib028, 
+                       g_sffd2_d[g_detail_idx].sfib029,g_sffd2_d[g_detail_idx].sfib030,g_sffd2_d[g_detail_idx].sfib018, 
+                       g_sffd2_d[g_detail_idx].sfib019,g_sffd2_d[g_detail_idx].sfib020)
+      #end add-point
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "sfib_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_sffd2_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert2"
+ 
+      #end add-point
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:insert_b段other name="insert_b.other"
+   
+   #end add-point     
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION asft338_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "sffd_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update"
+ 
+#      #end add-point 
+#      
+#      #將遮罩欄位還原
+#      CALL asft338_sffd_t_mask_restore('restore_mask_o')
+#               
+#      UPDATE sffd_t 
+#         SET (sffddocno,
+#              sffdseq1,sffd001
+#              ,sffd002,sffd003) 
+#              = 
+#             (ps_keys[1],ps_keys[2],ps_keys[3]
+#              ,g_sffd_d[g_detail_idx].sffd002,g_sffd_d[g_detail_idx].sffd003) 
+#         WHERE sffdent = g_enterprise AND sffddocno = ps_keys_bak[1] AND sffdseq1 = ps_keys_bak[2] AND sffd001 = ps_keys_bak[3]
+#      #add-point:update_b段修改中 name="update_b.m_update"
+      UPDATE sffd_t 
+         SET (sffddocno,
+              sffdseq1,sffd001
+              ,sffd002,sffd003) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_sffd_d[g_detail_idx].sffd002,g_sffd_d[g_detail_idx].sffd003) 
+         WHERE sffdent = g_enterprise AND sffddocno = ps_keys_bak[1] AND sffdseq1 = ps_keys_bak[2] AND sffd001 = ps_keys_bak[3] AND sffdseq = '0'
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "sffd_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "sffd_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+ 
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL asft338_sffd_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後 name="update_b.after_update"
+      
+      #end add-point  
+   END IF
+   
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+   
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "sfib_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update2"
+      
+      #end add-point  
+      
+      #將遮罩欄位還原
+      CALL asft338_sfib_t_mask_restore('restore_mask_o')
+               
+      UPDATE sfib_t 
+         SET (sfibdocno,
+              sfibseq
+              ,sfib001,sfib002,sfib003,sfib004,sfib005,sfib006,sfib007,sfib008,sfib009,sfib021,sfib022,sfib023,sfib024,sfib026,sfib027,sfib010,sfib011,sfib012,sfib013,sfib014,sfib015,sfib016,sfib017,sfib028,sfib029,sfib030,sfib018,sfib019,sfib020) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_sffd2_d[g_detail_idx].sfib001,g_sffd2_d[g_detail_idx].sfib002,g_sffd2_d[g_detail_idx].sfib003, 
+                  g_sffd2_d[g_detail_idx].sfib004,g_sffd2_d[g_detail_idx].sfib005,g_sffd2_d[g_detail_idx].sfib006, 
+                  g_sffd2_d[g_detail_idx].sfib007,g_sffd2_d[g_detail_idx].sfib008,g_sffd2_d[g_detail_idx].sfib009, 
+                  g_sffd2_d[g_detail_idx].sfib021,g_sffd2_d[g_detail_idx].sfib022,g_sffd2_d[g_detail_idx].sfib023, 
+                  g_sffd2_d[g_detail_idx].sfib024,g_sffd2_d[g_detail_idx].sfib026,g_sffd2_d[g_detail_idx].sfib027, 
+                  g_sffd2_d[g_detail_idx].sfib010,g_sffd2_d[g_detail_idx].sfib011,g_sffd2_d[g_detail_idx].sfib012, 
+                  g_sffd2_d[g_detail_idx].sfib013,g_sffd2_d[g_detail_idx].sfib014,g_sffd2_d[g_detail_idx].sfib015, 
+                  g_sffd2_d[g_detail_idx].sfib016,g_sffd2_d[g_detail_idx].sfib017,g_sffd2_d[g_detail_idx].sfib028, 
+                  g_sffd2_d[g_detail_idx].sfib029,g_sffd2_d[g_detail_idx].sfib030,g_sffd2_d[g_detail_idx].sfib018, 
+                  g_sffd2_d[g_detail_idx].sfib019,g_sffd2_d[g_detail_idx].sfib020) 
+         WHERE sfibent = g_enterprise AND sfibdocno = ps_keys_bak[1] AND sfibseq = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update2"
+      
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "sfib_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "sfib_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+          
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL asft338_sfib_t_mask_restore('restore_mask_n')
+ 
+      #add-point:update_b段修改後 name="update_b.after_update2"
+ 
+      #end add-point  
+   END IF
+ 
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:update_b段other name="update_b.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.key_update_b" >}
+#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION asft338_key_update_b(ps_keys_bak,ps_table)
+   #add-point:update_b段define(客製用) name="key_update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_key       DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_update_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_update_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.key_delete_b" >}
+#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION asft338_key_delete_b(ps_keys_bak,ps_table)
+   #add-point:delete_b段define(客製用) name="key_delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_delete_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_delete_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION asft338_lock_b(ps_table,ps_page)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+    
+   #先刷新資料
+   #CALL asft338_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "sffd_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN asft338_bcl USING g_enterprise,
+                                       g_sfia_m.sfiadocno,g_sffd_d[g_detail_idx].sffdseq1,g_sffd_d[g_detail_idx].sffd001  
+                                               
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "asft338_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+   #鎖定整組table
+   #LET ls_group = "'2',"
+   #僅鎖定自身table
+   LET ls_group = "sfib_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN asft338_bcl2 USING g_enterprise,
+                                             g_sfia_m.sfiadocno,g_sffd2_d[g_detail_idx].sfibseq
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "asft338_bcl2:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:lock_b段other name="lock_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION asft338_unlock_b(ps_table,ps_page)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE asft338_bcl
+   END IF
+   
+   LET ls_group = "'2',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE asft338_bcl2
+   END IF
+ 
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other name="unlock_b.other"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION asft338_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization"
+   
+   #end add-point       
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point       
+   
+   #add-point:Function前置處理  name="set_entry.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_comp_entry("sfiadocno",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("sfiadocno",TRUE)
+      CALL cl_set_comp_entry("sfiadocdt",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   CALL cl_set_comp_entry("sfia005,sfia006",TRUE)
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION asft338_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   DEFINE l_sfaa061  LIKE sfaa_t.sfaa061
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("sfiadocno",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN  #docno,ld欄位確認是絕對關閉
+      CALL cl_set_comp_entry("sfiadocno",FALSE)
+   END IF 
+ 
+#  IF p_cmd = 'u' THEN  #docdt欄位依照設定關閉(FALSE則為設定不同意修正) #(ver:78)
+      IF NOT cl_chk_update_docdt() THEN
+         CALL cl_set_comp_entry("sfiadocdt",FALSE)
+      END IF
+#  END IF 
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+#根据工单制程否决定作业编号和制程序栏位的动态开启关闭，这里是有条件的关闭
+   SELECT sfaa061 INTO l_sfaa061 FROM sfaa_t
+    WHERE sfaaent   = g_enterprise
+     AND sfaasite  = g_site
+     AND sfaadocno = g_sfia_m.sfia003
+        
+   IF l_sfaa061 IS NULL THEN LET l_sfaa061 ='N' END IF
+      
+   IF l_sfaa061 = 'N' THEN
+      CALL cl_set_comp_entry("sfia005,sfia006",FALSE)
+      LET g_sfia_m.sfia005 = NULL  
+      LET g_sfia_m.sfia005_desc = NULL
+      LET g_sfia_m.sfia006 = NULL 
+      DISPLAY BY NAME g_sfia_m.sfia005_desc                     
+   END IF   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION asft338_set_entry_b(p_cmd)
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_entry_b.pre_function"
+   
+   #end add-point
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段 name="set_entry_b.set_entry_b"
+   CALL cl_set_comp_entry("sfib004,sfib006,sfib011",TRUE)
+   #end add-point  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION asft338_set_no_entry_b(p_cmd)
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point    
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   DEFINE l_cnt   LIKE type_t.num5
+   #end add-point    
+   
+   #add-point:Function前置處理  name="set_no_entry_b.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段 name="set_no_entry_b.set_no_entry_b"
+   IF g_sffd2_d[l_ac].sfib003 NOT MATCHES '[23]' THEN
+      CALL cl_set_comp_entry("sfib004",FALSE)
+      LET g_sffd2_d[l_ac].sfib004 = NULL
+   END IF
+#根据上站作业决定上站作业序是否关闭
+#1:是初始站或者多上站的
+   IF g_sffd2_d[l_ac].sfib005 = 'INIT' OR g_sffd2_d[l_ac].sfib005 = 'MULT' THEN
+      LET g_sffd2_d[l_ac].sfib006 = '0'
+      CALL cl_set_comp_entry("sfib006",FALSE)
+   END IF
+#2：是群组的
+   SELECT COUNT(1) INTO l_cnt FROM sfib_t
+    WHERE sfibent   = g_enterprise
+      AND sfibsite  = g_site
+      AND sfibdocno = g_sfia_m.sfiadocno
+      AND sfib004   = g_sffd2_d[l_ac].sfib005
+    
+   IF l_cnt > 0 THEN
+      LET g_sffd2_d[l_ac].sfib006 = '0'
+      CALL cl_set_comp_entry("sfib006",FALSE)
+   END IF
+#不委外的，没加工厂
+   IF g_sffd2_d[l_ac].sfib010 = 'N' THEN
+      LET g_sffd2_d[l_ac].sfib011 = NULL
+      CALL cl_set_comp_entry("sfib011",FALSE)
+   END IF
+   #end add-point     
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION asft338_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION asft338_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   #應用 a63 樣板自動產生(Version:1)
+   IF g_sfia_m.sfiastus NOT MATCHES "[NDR]" THEN   # N未確認/D抽單/R已拒絕允許修改
+      CALL cl_set_act_visible("modify,delete,modify_detail", FALSE)
+   END IF
+
+
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.set_act_visible_b" >}
+#+ 單身權限開啟
+PRIVATE FUNCTION asft338_set_act_visible_b()
+   #add-point:set_act_visible_b段define(客製用) name="set_act_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段 name="set_act_visible_b.set_act_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.set_act_no_visible_b" >}
+#+ 單身權限關閉
+PRIVATE FUNCTION asft338_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define(客製用) name="set_act_no_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段 name="set_act_no_visible_b.set_act_no_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION asft338_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point  
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="default_search.before"
+   
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " sfiadocno = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+         INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "sfia_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "sffd_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "sfib_t" 
+                  LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+            OR NOT cl_null(g_wc2_table2)
+ 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+            IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+            END IF
+ 
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION asft338_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   IF NOT s_asft335_cre_tmp_table() THEN
+      RETURN      
+   END IF
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_sfia_m.sfiadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN asft338_cl USING g_enterprise,g_sfia_m.sfiadocno
+   IF STATUS THEN
+      CLOSE asft338_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN asft338_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE asft338_master_referesh USING g_sfia_m.sfiadocno INTO g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt, 
+       g_sfia_m.sfia001,g_sfia_m.sfia002,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+       g_sfia_m.sfia009,g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp, 
+       g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt, 
+       g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt,g_sfia_m.sfia005_desc,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp_desc, 
+       g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp_desc,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiacnfid_desc 
+ 
+   
+ 
+   #檢查是否允許此動作
+   IF NOT asft338_action_chk() THEN
+      CLOSE asft338_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_sfia_m.sfia001,g_sfia_m.sfia001_desc,g_sfia_m.sfiadocno_desc, 
+       g_sfia_m.sfia002,g_sfia_m.sfia002_desc,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+       g_sfia_m.sfia005_desc,g_sfia_m.sfia009,g_sfia_m.sfaa010,g_sfia_m.sfia006,g_sfia_m.imaal003,g_sfia_m.sfia007, 
+       g_sfia_m.imaal004,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp, 
+       g_sfia_m.sfiaowndp_desc,g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdp_desc, 
+       g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiamoddt,g_sfia_m.sfiacnfid, 
+       g_sfia_m.sfiacnfid_desc,g_sfia_m.sfiacnfdt
+ 
+   CASE g_sfia_m.sfiastus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+      WHEN "A"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+      WHEN "D"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+      WHEN "R"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+      WHEN "W"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+      WHEN "X"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_sfia_m.sfiastus
+            
+            WHEN "N"
+               HIDE OPTION "unconfirmed"
+            WHEN "Y"
+               HIDE OPTION "confirmed"
+            WHEN "A"
+               HIDE OPTION "approved"
+            WHEN "D"
+               HIDE OPTION "withdraw"
+            WHEN "R"
+               HIDE OPTION "rejection"
+            WHEN "W"
+               HIDE OPTION "signing"
+            WHEN "X"
+               HIDE OPTION "invalid"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+#将一些不能切换的状态给隐藏掉，比如post时只能切confimed，不可切unconfirmed和invalid 
+         IF g_sfia_m.sfiastus = 'X' THEN
+            CLOSE asft338_cl
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+         
+         HIDE OPTION "signing"
+         HIDE OPTION "withdraw"
+         HIDE OPTION "closed"
+         HIDE OPTION "hold"
+         
+         CASE g_sfia_m.sfiastus
+            WHEN "N"
+               HIDE OPTION "unconfirmed"
+               HIDE OPTION "posted"
+               HIDE OPTION "unposted"
+            #需提交至BPM時，則顯示「提交」功能並隱藏「確認」功能
+               IF cl_bpm_chk() THEN
+                  SHOW OPTION "signing"
+                  HIDE OPTION "confirmed"
+               END IF
+            WHEN "X"
+               HIDE OPTION "invalid"
+               HIDE OPTION "confirmed"
+               HIDE OPTION "posted"
+               HIDE OPTION "unposted"               
+               HIDE OPTION "hold"
+            WHEN "Y"
+               HIDE OPTION "confirmed"
+               HIDE OPTION "invalid"
+               HIDE OPTION "hold"
+               HIDE OPTION "unposted"
+            WHEN "S"
+               HIDE OPTION "posted"
+               HIDE OPTION "unconfirmed"
+               HIDE OPTION "invalid" 
+               HIDE OPTION "confirmed"
+               #MOD BY zhujing 2015-6-16 应该根据状态码隐藏posted 和unposted以及withdraw
+            WHEN "R"
+            #保留修改的功能(如作廢)，隱藏其他應用功能(如: 確認、未確認、留置、過帳…)
+               HIDE OPTION "confirmed"
+               HIDE OPTION "unconfirmed"
+               HIDE OPTION "hold" 
+               HIDE OPTION "posted"
+               HIDE OPTION "unposted" 
+               HIDE OPTION "withdraw"   
+            WHEN "D"
+            #保留修改的功能(如作廢)，隱藏其他應用功能(如: 確認、未確認、留置、過帳…)
+               HIDE OPTION "confirmed"
+               HIDE OPTION "unconfirmed"
+               HIDE OPTION "hold" 
+               HIDE OPTION "posted"
+               HIDE OPTION "unposted" 
+               HIDE OPTION "withdraw"   
+            WHEN "W"    #只能顯示抽單;其餘應用功能皆隱藏
+               SHOW OPTION "withdraw"  
+               HIDE OPTION "unconfirmed"
+               HIDE OPTION "invalid"
+               HIDE OPTION "confirmed"
+               HIDE OPTION "hold"
+               HIDE OPTION "posted"
+               HIDE OPTION "unposted" 
+            
+            WHEN "A"     #只能顯示確認; 其餘應用功能皆隱藏
+               SHOW OPTION "confirmed" 
+               HIDE OPTION "unconfirmed"
+               HIDE OPTION "invalid"
+               HIDE OPTION "hold"    
+               HIDE OPTION "posted"
+               HIDE OPTION "unposted" 
+               HIDE OPTION "withdraw"                   
+         END CASE 
+          
+      #end add-point
+      
+      #應用 a36 樣板自動產生(Version:5)
+      #提交
+      ON ACTION signing
+         IF cl_auth_chk_act("signing") THEN
+            IF NOT asft338_send() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE asft338_cl
+            RETURN
+         END IF
+    
+      #抽單
+      ON ACTION withdraw
+         IF cl_auth_chk_act("withdraw") THEN
+            IF NOT asft338_draw_out() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE asft338_cl
+            RETURN
+         END IF
+ 
+ 
+ 
+	  
+      ON ACTION unconfirmed
+         IF cl_auth_chk_act("unconfirmed") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.unconfirmed"
+            IF NOT cl_ask_confirm('aim-00110') THEN
+               CLOSE asft338_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            IF g_sfia_m.sfiastus NOT MATCHES '[XY]' THEN
+               CLOSE asft338_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            IF g_sfia_m.sfiastus = 'Y' THEN      
+               IF NOT s_asft338_unconf_chk(g_sfia_m.sfiadocno) THEN
+                  LET lc_state = "Y"
+                  CLOSE asft338_cl
+                  CALL s_transaction_end('N',0)
+                  CALL s_asft335_drop_tmp_table()
+                  RETURN
+               END IF
+               IF NOT s_asft338_unconf_upd(g_sfia_m.sfiadocno) THEN
+                  LET lc_state = "Y"
+                  CLOSE asft338_cl
+                  CALL s_transaction_end('N',0) 
+                  CALL s_asft335_drop_tmp_table()                  
+                  RETURN               
+               END IF
+                  CLOSE asft338_cl
+               CALL s_transaction_end('Y',0) 
+               CALL s_asft335_drop_tmp_table()
+               CALL asft338_refresh_stus()
+               RETURN                
+            END IF
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION confirmed
+         IF cl_auth_chk_act("confirmed") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.confirmed"
+            IF NOT cl_ask_confirm('aim-00108') THEN
+               CLOSE asft338_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            IF g_sfia_m.sfiastus NOT MATCHES '[NA]' THEN #MOD BY zhujing 2015-6-16 核准状态也可确认
+               RETURN
+            END IF  
+            IF g_sfia_m.sfiastus = 'N' THEN        
+               IF NOT s_asft338_conf_chk(g_sfia_m.sfiadocno) THEN
+                  LET lc_state = "N"
+                  CLOSE asft338_cl
+                  CALL s_transaction_end('N',0)
+                  RETURN
+               END IF
+               IF NOT s_asft338_conf_upd(g_sfia_m.sfiadocno) THEN
+                  LET lc_state = "N"
+                  CLOSE asft338_cl
+                  CALL s_transaction_end('N',0)  
+                  RETURN               
+               END IF
+               CLOSE asft338_cl
+               CALL s_transaction_end('Y',0) 
+               CALL s_asft335_drop_tmp_table()
+               CALL asft338_refresh_stus()
+               RETURN                
+            END IF
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION approved
+         IF cl_auth_chk_act("approved") THEN
+            LET lc_state = "A"
+            #add-point:action控制 name="statechange.approved"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION withdraw
+      #   IF cl_auth_chk_act("withdraw") THEN
+      #      LET lc_state = "D"
+      #      #add-point:action控制 name="statechange.withdraw"
+      #      
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION rejection
+         IF cl_auth_chk_act("rejection") THEN
+            LET lc_state = "R"
+            #add-point:action控制 name="statechange.rejection"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION signing
+      #   IF cl_auth_chk_act("signing") THEN
+      #      LET lc_state = "W"
+      #      #add-point:action控制 name="statechange.signing"
+      #      
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION invalid
+         IF cl_auth_chk_act("invalid") THEN
+            LET lc_state = "X"
+            #add-point:action控制 name="statechange.invalid"
+            IF NOT cl_ask_confirm('aim-00109') THEN
+               CLOSE asft338_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+      
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      AND lc_state <> "A"
+      AND lc_state <> "D"
+      AND lc_state <> "R"
+      AND lc_state <> "W"
+      AND lc_state <> "X"
+      ) OR 
+      g_sfia_m.sfiastus = lc_state OR cl_null(lc_state) THEN
+      CLOSE asft338_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   
+   #end add-point
+   
+   LET g_sfia_m.sfiamodid = g_user
+   LET g_sfia_m.sfiamoddt = cl_get_current()
+   LET g_sfia_m.sfiastus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE sfia_t 
+      SET (sfiastus,sfiamodid,sfiamoddt) 
+        = (g_sfia_m.sfiastus,g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt)     
+    WHERE sfiaent = g_enterprise AND sfiadocno = g_sfia_m.sfiadocno
+ 
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE asft338_master_referesh USING g_sfia_m.sfiadocno INTO g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt, 
+          g_sfia_m.sfia001,g_sfia_m.sfia002,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004,g_sfia_m.sfia005, 
+          g_sfia_m.sfia009,g_sfia_m.sfia006,g_sfia_m.sfia007,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp, 
+          g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt, 
+          g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt,g_sfia_m.sfia005_desc,g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp_desc, 
+          g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp_desc,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiacnfid_desc 
+ 
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_sfia_m.sfiadocno,g_sfia_m.sfiadocdt,g_sfia_m.sfia001,g_sfia_m.sfia001_desc,g_sfia_m.sfiadocno_desc, 
+          g_sfia_m.sfia002,g_sfia_m.sfia002_desc,g_sfia_m.sfiastus,g_sfia_m.sfia003,g_sfia_m.sfia004, 
+          g_sfia_m.sfia005,g_sfia_m.sfia005_desc,g_sfia_m.sfia009,g_sfia_m.sfaa010,g_sfia_m.sfia006, 
+          g_sfia_m.imaal003,g_sfia_m.sfia007,g_sfia_m.imaal004,g_sfia_m.sfia008,g_sfia_m.sfiaownid,g_sfia_m.sfiaownid_desc, 
+          g_sfia_m.sfiaowndp,g_sfia_m.sfiaowndp_desc,g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtid_desc,g_sfia_m.sfiacrtdp, 
+          g_sfia_m.sfiacrtdp_desc,g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamodid_desc,g_sfia_m.sfiamoddt, 
+          g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfid_desc,g_sfia_m.sfiacnfdt
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   
+   #end add-point  
+ 
+   CLOSE asft338_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL asft338_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="asft338.idx_chk" >}
+#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION asft338_idx_chk()
+   #add-point:idx_chk段define(客製用) name="idx_chk.define_customerization"
+   
+   #end add-point  
+   #add-point:idx_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="idx_chk.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="idx_chk.pre_function"
+   
+   #end add-point
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_sffd_d.getLength() THEN
+         LET g_detail_idx = g_sffd_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_sffd_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_sffd_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx > g_sffd2_d.getLength() THEN
+         LET g_detail_idx = g_sffd2_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_sffd2_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_sffd2_d.getLength() TO FORMONLY.cnt
+   END IF
+ 
+   
+   #add-point:idx_chk段other name="idx_chk.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION asft338_b_fill2(pi_idx)
+   #add-point:b_fill2段define(客製用) name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE pi_idx                 LIKE type_t.num10
+   DEFINE li_ac                  LIKE type_t.num10
+   DEFINE li_detail_idx_tmp      LIKE type_t.num10
+   DEFINE ls_chk                 LIKE type_t.chr1
+   #add-point:b_fill2段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill2.pre_function"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+   LET li_detail_idx_tmp = g_detail_idx
+   
+ 
+      
+ 
+      
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL asft338_detail_show()
+   
+   LET g_detail_idx = li_detail_idx_tmp
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.fill_chk" >}
+#+ 單身填充確認
+PRIVATE FUNCTION asft338_fill_chk(ps_idx)
+   #add-point:fill_chk段define(客製用) name="fill_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fill_chk.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="fill_chk.before_chk"
+   
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table2) OR g_wc2_table2.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk name="fill_chk.other_chk"
+      
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk name="fill_chk.after_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.status_show" >}
+PRIVATE FUNCTION asft338_status_show()
+   #add-point:status_show段define(客製用) name="status_show.define_customerization"
+   
+   #end add-point
+   #add-point:status_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="status_show.define"
+   
+   #end add-point
+   
+   #add-point:status_show段status_show name="status_show.status_show"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.mask_functions" >}
+&include "erp/asf/asft338_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="asft338.signature" >}
+   #應用 a39 樣板自動產生(Version:10)
+#+ BPM提交
+PRIVATE FUNCTION asft338_send()
+   #add-point:send段define(客製用) name="send.define_customerization"
+   
+   #end add-point 
+   #add-point:send段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="send.define"
+   DEFINE l_success  LIKE type_t.num5
+   #end add-point 
+   
+   #add-point:Function前置處理  name="send.pre_function"
+   
+   #end add-point
+   
+   #依據單據個數，需要指定所有單身條件為" 1=1"  (單身有幾個就要設幾個)
+   LET g_wc2_table1 = " 1=1"
+   LET g_wc2_table2 = " 1=1"
+ 
+ 
+   CALL asft338_show()
+   CALL asft338_set_pk_array()
+   
+   #add-point: 初始化的ADP name="send.before_send"
+   CALL s_asft338_conf_chk(g_sfia_m.sfiadocno) RETURNING l_success
+   IF NOT l_success THEN
+      CLOSE asft338_cl
+      CALL s_transaction_end('N','0')
+      RETURN FALSE
+   END IF
+   #end add-point
+   
+   #公用變數初始化
+   CALL cl_bpm_data_init()
+                  
+   #依照主檔/單身個數產生 CALL cl_bpm_set_master_data() / cl_bpm_set_detail_data() 
+   #單頭固定為 CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(xxxx)) 傳入參數: (1)單頭陣列  ; 回傳值: 無
+   CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(g_sfia_m))
+                              
+   #單身固定為 CALL cl_bpm_set_detail_data(s_detailX, util.JSONArray.fromFGL(xxxx)) 傳入參數: (1)單身SR名稱  (2)單身陣列  ; 回傳值: 無
+   CALL cl_bpm_set_detail_data("s_detail1", util.JSONArray.fromFGL(g_sffd_d))
+   CALL cl_bpm_set_detail_data("s_detail2", util.JSONArray.fromFGL(g_sffd2_d))
+ 
+ 
+   # cl_bpm_cli() 裡有包含以前的aws_condition()=>送簽資料檢核和更新單據狀況碼為'W'
+   # cl_bpm_cli() 傳入參數:無  ;  回傳值: 0 開單失敗; 1 開單成功
+ 
+   #add-point: 提交前的ADP name="send.before_cli"
+   
+   #end add-point
+ 
+   #開單失敗
+   IF NOT cl_bpm_cli() THEN 
+      RETURN FALSE
+   END IF
+ 
+   #add-point: 提交後的ADP name="send.after_send"
+   
+   #end add-point
+ 
+   #此段落不需要刪除資料,但是否需要refresh圖片樣式???
+   #CALL asft338_ui_browser_refresh()
+ 
+   #重新指定此筆單據資料狀態圖片=>送簽中
+   LET g_browser[g_current_idx].b_statepic = "stus/16/signing.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL asft338_ui_headershow()
+   CALL asft338_ui_detailshow()
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+#應用 a40 樣板自動產生(Version:9)
+#+ BPM抽單
+PRIVATE FUNCTION asft338_draw_out()
+   #add-point:draw段define name="draw.define_customerization"
+   
+   #end add-point
+   #add-point:draw段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="draw.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="draw.pre_function"
+   
+   #end add-point
+   
+   #抽單失敗
+   IF NOT cl_bpm_draw_out() THEN 
+      RETURN FALSE
+   END IF    
+          
+   #重新指定此筆單據資料狀態圖片=>抽單
+   LET g_browser[g_current_idx].b_statepic = "stus/16/draw_out.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL asft338_ui_headershow()  
+   CALL asft338_ui_detailshow()
+ 
+   #add-point:Function後置處理  name="draw.after_function"
+   
+   #end add-point
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="asft338.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION asft338_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_sfia_m.sfiadocno
+   LET g_pk_array[1].column = 'sfiadocno'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="asft338.other_dialog" readonly="Y" >}
+   
+ 
+{</section>}
+ 
+{<section id="asft338.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION asft338_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL asft338_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_sfia_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="asft338.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION asft338_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization"
+   
+   #end add-point
+   #add-point:action_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   #160818-00017#36-s
+   SELECT sfiastus INTO g_sfia_m.sfiastus FROM sfia_t
+    WHERE sfiaent = g_enterprise
+      AND sfiasite = g_site
+      AND sfiadocno = g_sfia_m.sfiadocno
+   IF (g_action_choice="modify" OR g_action_choice="delete" OR g_action_choice="modify_detail")  THEN
+     LET g_errno = NULL
+     CASE g_sfia_m.sfiastus
+        WHEN 'W'
+           LET g_errno = 'sub-01347'
+        WHEN 'X'
+           LET g_errno = 'sub-00229'
+        WHEN 'Y'
+           LET g_errno = 'sub-00178'
+     END CASE
+
+     IF NOT cl_null(g_errno) THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = g_errno
+        LET g_errparam.extend = g_sfia_m.sfiadocno
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        LET g_errno = NULL
+        CALL asft338_set_act_visible()
+        CALL asft338_set_act_no_visible()
+        CALL asft338_show()
+        RETURN FALSE
+     END IF
+   END IF      
+   #160818-00017#36-e
+   #end add-point
+      
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft338.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL asft338_chk_sfia007(p_sfia003,p_sfia004,p_sfia005,p_sfia006,p_sfia007)
+#                  RETURNING r_success
+# Input parameter: p_sfia003      工单
+#                : p_sfia004      runcard
+#                : p_sfia005      作业编号
+#                : p_sfia006      作业序
+#                : p_sfia007      重工转出数量
+# Return code....: r_success      回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/04/03 By wujie
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_chk_sfia007(p_sfia003,p_sfia004,p_sfia005,p_sfia006,p_sfia007)
+   DEFINE p_sfia003          LIKE sfia_t.sfia003
+   DEFINE p_sfia004          LIKE sfia_t.sfia004
+   DEFINE p_sfia005          LIKE sfia_t.sfia005
+   DEFINE p_sfia006          LIKE sfia_t.sfia006
+   DEFINE p_sfia007          LIKE sfia_t.sfia007
+   DEFINE r_success          LIKE type_t.num5
+   DEFINE l_qty              LIKE sfia_t.sfia007
+   DEFINE l_sffb016          LIKE sffb_t.sffb016
+
+   LET r_success = TRUE
+   LET l_qty = 0
+   IF p_sfia003 IS NULL OR p_sfia004 IS NULL OR p_sfia005 IS NULL OR p_sfia006 IS NULL OR p_sfia007 IS NULL THEN
+      LET r_success = TRUE
+      RETURN r_success
+   END IF
+   IF p_sfia007 = 0 THEN
+      LET r_success = TRUE
+      RETURN r_success
+   END IF
+   
+   CALL s_asft335_set_qty('','','3',p_sfia003,p_sfia004,p_sfia005,p_sfia006) RETURNING l_qty,l_sffb016
+   IF p_sfia007 > l_qty THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00208'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL asft338_set_required()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_set_required()
+   DEFINE l_sfaa061     LIKE sfaa_t.sfaa061
+   
+   SELECT sfaa061 INTO l_sfaa061 FROM sfaa_t
+    WHERE sfaaent   = g_enterprise
+      AND sfaasite  = g_site
+      AND sfaadocno = g_sfha_m.sfha004
+      
+   IF l_sfaa061 IS NULL THEN LET l_sfaa061 ='N' END IF
+   
+   IF l_sfaa061 = 'Y' THEN
+      CALL cl_set_comp_required("sfia005,sfia006",TRUE)              
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 检查作业编号+作业序
+# Memo...........:
+# Usage..........: CALL asft338_chk_sfib0012(p_sfib001,p_sfib002,p_sfib005,p_sfib006)
+#                  RETURNING r_success
+# Input parameter: p_sfib001      作业编号
+#                : p_sfib002      作业序
+#                : p_sfib005      上站作业编号
+#                : p_sfib006      上站作业序
+# Return code....: r_success      回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/04/08 By wujie
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_chk_station(p_sfib001,p_sfib002,p_sfib005,p_sfib006)
+   DEFINE p_sfib001         LIKE sfib_t.sfib001
+   DEFINE p_sfib002         LIKE sfib_t.sfib002
+   DEFINE p_sfib005         LIKE sfib_t.sfib005
+   DEFINE p_sfib006         LIKE sfib_t.sfib006
+   DEFINE r_success         LIKE type_t.num5
+   DEFINE l_cnt             LIKE type_t.num5
+
+   LET r_success = TRUE
+   IF cl_null(p_sfib001) OR cl_null(p_sfib002) THEN
+      LET r_success = TRUE
+      RETURN r_success
+   END IF 
+   SELECT COUNT(1) INTO l_cnt 
+     FROM sfib_t 
+    WHERE sfibent   = g_enterprise 
+      AND sfibsite  = g_site 
+      AND sfibdocno = g_sfia_m.sfia003
+      AND sfib001   = p_sfib001 
+      AND sfib002   = p_sfib002
+      
+   IF l_cnt > 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00129'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   IF p_sfib005 IS NOT NULL THEN
+#初始站或者多上站的，不用检查上站群组填的是否合法
+      IF p_sfib005 = 'INIT' OR p_sfib005 = 'MULT' THEN
+         LET r_success = TRUE
+         RETURN r_success
+      END IF
+      LET l_cnt = 0
+      SELECT COUNT(1) INTO l_cnt FROM sfib_t
+       WHERE sfibent   = g_enterprise
+         AND sfibsite  = g_site
+         AND sfibdocno = g_sfia_m.sfiadocno
+         AND sfib004   = p_sfib005
+       
+      IF l_cnt > 0 THEN   #这是群组，咱不检查了，走
+         LET r_success = TRUE
+         RETURN r_success
+      END IF
+#剩下填的上站作业就当作是单个作业编号来看待了
+#需要检查2点
+#1：存在于本单身存在的作业编号+作业序里
+      LET l_cnt = 0
+      IF p_sfib006 IS NULL THEN
+         SELECT COUNT(1) INTO l_cnt FROM sfib_t
+          WHERE sfibent   = g_enterprise
+            AND sfibsite  = g_site
+            AND sfibdocno = g_sfia_m.sfiadocno
+            AND sfib001   = p_sfib005
+            AND sfib001   <> p_sfib001
+      ELSE
+         SELECT COUNT(1) INTO l_cnt FROM sfib_t
+          WHERE sfibent   = g_enterprise
+            AND sfibsite  = g_site
+            AND sfibdocno = g_sfia_m.sfiadocno
+            AND sfib001   = p_sfib005
+            AND sfib002   = p_sfib006
+            AND sfib001   <> p_sfib001
+            AND sfib002   <> p_sfib002
+      END IF
+      IF l_cnt > 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'aec-00007'
+         LET g_errparam.extend = p_sfib005
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success         
+      END IF      
+#2：不可与本行的本站作业编号与作业序重复
+      IF p_sfib006 IS NOT NULL THEN
+         IF p_sfib001 = p_sfib005 AND p_sfib002 = p_sfib006 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aec-00008'
+            LET g_errparam.extend = p_sfib005
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            LET r_success = FALSE
+            RETURN r_success 
+         END IF
+      END IF
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 找到本站的下一站，回传sfib007，sfib008
+# Memo...........:
+# Usage..........: CALL asft338_get_sfib007(p_sfib001,p_sfib002)
+#                  RETURNING r_sfib007,r_sfib008
+# Input parameter: p_sfib001      作业编号
+#                : p_sfib002      作业序
+# Return code....: r_sfib007      下站作业编号
+#                : r_sfib008      下站作业序
+# Date & Author..: 2014/04/09 By wujie
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_get_sfib007(p_sfib001,p_sfib002)
+   DEFINE p_sfib001     LIKE sfib_t.sfib001
+   DEFINE p_sfib002     LIKE sfib_t.sfib002
+   DEFINE r_sfib007     LIKE sfib_t.sfib007
+   DEFINE r_sfib008     LIKE sfib_t.sfib008   
+   #161109-00085#31-s
+   #DEFINE l_sfib        RECORD LIKE sfib_t.*
+   DEFINE l_sfib RECORD  #重工轉出製程單身檔
+       sfib001 LIKE sfib_t.sfib001, #本站作業
+       sfib002 LIKE sfib_t.sfib002, #作業序
+       sfib003 LIKE sfib_t.sfib003, #群組性質
+       sfib004 LIKE sfib_t.sfib004  #群組
+   END RECORD
+   #161109-00085#31-e
+   DEFINE l_sfib004     LIKE sfib_t.sfib004
+   DEFINE i             LIKE type_t.num5
+
+#先找到本站的所有下一站
+#只有一个下一站的，就抓他的作业编号+作业序
+#多个下一站的
+#看有多少个群组，只有一个群组，写这个群组+0
+#               多个群组或者没有群组的，写MULT+0
+   LET r_sfib007 = NULL
+   LET r_sfib008 = NULL
+   IF p_sfib001 IS NULL OR p_sfib002 IS NULL THEN 
+      RETURN r_sfib007,r_sfib008      
+   END IF
+   
+   DECLARE asft338_sel_sfib_next CURSOR FOR
+     #161109-00085#31-s
+     #SELECT B.* FROM sfib_t A,sfib_t B,sfic_t    #A是本站，B是下站,sfic里存的是具体的作业编号
+     SELECT B.sfib001,B.sfib002,B.sfib003,B.sfib004 FROM sfib_t A,sfib_t B,sfic_t    #A是本站，B是下站,sfic里存的是具体的作业编号
+     #161109-00085#31-e
+      WHERE A.sfibent   = g_enterprise
+        AND A.sfibsite  = g_site
+        AND A.sfibdocno = g_sfia_m.sfiadocno
+        AND A.sfib001   = p_sfib001
+        AND A.sfib002   = p_sfib002
+        AND A.sfibent   = sficent
+        AND A.sfibsite  = sficsite
+        AND A.sfibdocno = sficdocno
+        AND A.sfib001   = sfic001
+        AND A.sfib002   = sfic002
+        AND B.sfibent   = sficent
+        AND B.sfibsite  = sficsite
+        AND B.sfibdocno = sficdocno
+        AND B.sficseq   = sficseq
+     UNION
+     #161109-00085#31-s
+     #SELECT B.* FROM sfib_t A,sfib_t B,sfic_t    #A是本站，B是下站,sfic里存的是群组编号
+     SELECT B.sfib001,B.sfib002,B.sfib003,B.sfib004 FROM sfib_t A,sfib_t B,sfic_t    #A是本站，B是下站,sfic里存的是群组编号
+     #161109-00085#31-e
+      WHERE A.sfibent   = g_enterprise
+        AND A.sfibsite  = g_site
+        AND A.sfibdocno = g_sfia_m.sfiadocno
+        AND A.sfib001   = p_sfib001
+        AND A.sfib002   = p_sfib002
+        AND A.sfibent   = sficent
+        AND A.sfibsite  = sficsite
+        AND A.sfibdocno = sficdocno
+        AND A.sfib004   = sfic001
+        AND sfic002     = 0
+        AND B.sfibent   = sficent
+        AND B.sfibsite  = sficsite
+        AND B.sfibdocno = sficdocno
+        AND B.sficseq   = sficseq     
+
+   LET i = 0
+   LET l_sfib004 = NULL
+   #161109-00085#31-s
+   #FOREACH asft338_sel_sfib_next INTO l_sfib.*
+   FOREACH asft338_sel_sfib_next INTO l_sfib.sfib001,l_sfib.sfib002,l_sfib.sfib003,l_sfib.sfib004
+   #161109-00085#31-e
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      LET i = i + 1
+      IF i = 1 THEN     #将第一个群组作为初始值
+         LET l_sfib004 = l_sfib.sfib004
+         IF l_sfib004 IS NULL THEN LET l_sfib004 = 'MULT' END IF   
+      END IF 
+      IF l_sfib.sfib003 MATCHES '[23]' THEN
+         IF l_sfib004 <> l_sfib.sfib004 THEN  #只要群组有不同，就是MULT，往下不用走了
+            LET l_sfib004 = 'MULT'
+            EXIT FOREACH
+         END IF
+      END IF
+   END FOREACH
+   
+   IF i = 1 THEN  #只有一个下一站
+      LET r_sfib007 = l_sfib.sfib001
+      LET r_sfib008 = l_sfib.sfib002
+   ELSE
+      LET r_sfib007 = l_sfib004
+      LET r_sfib008 = '0'
+   END IF
+   IF i = 0 THEN
+      LET r_sfib007 = 'END'
+      LET r_sfib008 = '0'   
+   END IF
+   RETURN r_sfib007,r_sfib008
+END FUNCTION
+
+################################################################################
+# Descriptions...: 预设开工日期
+# Memo...........:
+# Usage..........: CALL asft338_default_sfib026(p_sfib001,p_sfib002)
+#                  RETURNING r_sfib026
+# Input parameter: p_sfib001      本站作业编号
+#                : p_sfib002      本站作业序
+# Return code....: r_sfib026      预计开工日期
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/04/04 By wujie
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_default_sfib026(p_sfib001,p_sfib002)
+DEFINE p_sfib001         LIKE sfib_t.sfib001   #本站作业编号
+DEFINE p_sfib002         LIKE sfib_t.sfib002   #本站作业序
+DEFINE r_sfib026         LIKE sfib_t.sfib026   #回传预计开工日
+DEFINE l_sfib026_1       LIKE sfib_t.sfib026 
+DEFINE l_sfib026_2       LIKE sfib_t.sfib026 
+
+   LET r_sfib026 = NULL
+   IF cl_null(p_sfib001) THEN
+      RETURN r_sfib026
+   END IF
+   
+   IF p_sfib001 = 'INIT' THEN   #上站是首站的，直接取工单上的开工日期
+     SELECT sfaa019 INTO r_sfib026 FROM sfaa_t WHERE sfaaent = g_enterprise AND sfaadocno = g_sfia_m.sfia003
+     RETURN r_sfib026
+   END IF
+    
+   SELECT B.sfib027 INTO l_sfib026_1 FROM sfib_t A,sfib_t B,sfic_t        #上站群组存的是具体作业编号的  A是本站，B是上站
+    WHERE A.sfibent   = g_enterprise 
+      AND A.sfibsite  = g_site 
+      AND A.sfibdocno = g_sfia_m.sfiadocno
+      AND A.sfib001   = p_sfib001
+      AND A.sfib002   = p_sfib002
+      AND A.sfibent   = sficent
+      AND A.sfibsite  = sficsite
+      AND A.sfibdocno = sficdocno
+      AND A.sfibseq   = sficseq
+      AND B.sfibent   = sficent
+      AND B.sfibsite  = sficsite
+      AND B.sfibdocno = sficdocno              
+      AND B.sfib001   = sfic001
+      AND B.sfib002   = sfic002
+   
+   SELECT B.sfib027 INTO l_sfib026_2 FROM sfib_t A,sfib_t B,sfic_t        #上站群组存的是群组的  A是本站，B是上站
+    WHERE A.sfibent   = g_enterprise 
+      AND A.sfibsite  = g_site 
+      AND A.sfibdocno = g_sfia_m.sfiadocno
+      AND A.sfib001   = p_sfib001
+      AND A.sfib002   = p_sfib002
+      AND A.sfibent   = sficent
+      AND A.sfibsite  = sficsite
+      AND A.sfibdocno = sficdocno
+      AND A.sfibseq   = sficseq
+      AND B.sfibent   = sficent
+      AND B.sfibsite  = sficsite
+      AND B.sfibdocno = sficdocno              
+      AND B.sfib004   = sfic001 
+      AND sfic002     = '0'              
+
+      IF l_sfib026_1 IS NULL THEN LET r_sfib026 = l_sfib026_2 END IF
+   IF l_sfib026_2 IS NULL THEN LET r_sfib026 = l_sfib026_1 END IF
+
+   IF l_sfib026_1 > l_sfib026_2 THEN
+      LET r_sfib026 = l_sfib026_1
+   ELSE
+      #LET r_sfib026 = l_sfib026_2           #150716-00003#1   mark
+      LET r_sfib026 = cl_get_current()       #150716-00003#1   add
+   END IF   
+   RETURN r_sfib026
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL asft338_set_no_required()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_set_no_required()
+ 
+   CALL cl_set_comp_required("sfia005,sfia006",FALSE)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 更新本站所有上站的下一站作业编号+作业序
+# Memo...........:
+# Usage..........: CALL asft338_upd_sfib007(p_sfib001,p_sfib002)
+#                  RETURNING r_success
+# Input parameter: p_sfib001      作业编号
+#                : p_sfib002      作业序
+# Return code....: r_success      回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+#暂时先不用这个函数，整个单身遍历一次，用asft338_upd_sfib007_all()
+# Date & Author..: 2014/04/09 By wujie
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_upd_sfib007(p_sfib001,p_sfib002)
+   DEFINE p_sfib001     LIKE sfib_t.sfib001
+   DEFINE p_sfib002     LIKE sfib_t.sfib002
+   DEFINE r_success     LIKE type_t.num5
+   #161109-00085#31-s
+   #DEFINE l_sfib        RECORD LIKE sfib_t.*
+   DEFINE l_sfib RECORD  #重工轉出製程單身檔
+       sfib001 LIKE sfib_t.sfib001, #本站作業
+       sfib002 LIKE sfib_t.sfib002  #作業序
+   END RECORD
+   #161109-00085#31-e
+   DEFINE l_sfib007     LIKE sfib_t.sfib007
+   DEFINE l_sfib008     LIKE sfib_t.sfib008
+
+   LET r_success = TRUE
+   IF p_sfib001 IS NULL OR p_sfib002 IS NULL THEN 
+      LET r_success = TRUE
+      RETURN r_success     
+   END IF
+   
+   DECLARE asft338_sel_sfib_prev CURSOR FOR
+     #161109-00085#31-s
+     #SELECT B.* FROM sfib_t A,sfib_t B,sfic_t    #A是本站，B是上站,sfic里存的是具体的作业编号
+     SELECT B.sfib001,B.sfib002 FROM sfib_t A,sfib_t B,sfic_t    #A是本站，B是上站,sfic里存的是具体的作业编号
+     #161109-00085#31-e
+      WHERE A.sfibent   = g_enterprise
+        AND A.sfibsite  = g_site
+        AND A.sfibdocno = g_sfia_m.sfiadocno
+        AND A.sfib001   = p_sfib001
+        AND A.sfib002   = p_sfib002
+        AND A.sfibent   = sficent
+        AND A.sfibsite  = sficsite
+        AND A.sfibdocno = sficdocno
+        AND A.sfibseq   = sficseq
+        AND B.sfibent   = sficent
+        AND B.sfibsite  = sficsite
+        AND B.sfibdocno = sficdocno
+        AND B.sfib001   = sfic001
+        AND B.sfib002   = sfic002        
+     UNION
+     #161109-00085#31-s
+     #SELECT B.* FROM sfib_t A,sfib_t B,sfic_t    #A是本站，B是上站,sfic里存的是群组编号
+     SELECT B.sfib001,B.sfib002 FROM sfib_t A,sfib_t B,sfic_t    #A是本站，B是上站,sfic里存的是群组编号
+     #161109-00085#31-e
+      WHERE A.sfibent   = g_enterprise
+        AND A.sfibsite  = g_site
+        AND A.sfibdocno = g_sfia_m.sfiadocno
+        AND A.sfib001   = p_sfib001
+        AND A.sfib002   = p_sfib002
+        AND A.sfibent   = sficent
+        AND A.sfibsite  = sficsite
+        AND A.sfibdocno = sficdocno
+        AND A.sfibseq   = sficseq
+        AND B.sfibent   = sficent
+        AND B.sfibsite  = sficsite
+        AND B.sfibdocno = sficdocno
+        AND B.sfib004   = sfic001
+        AND sfic002     = 0  
+   #161109-00085#31-s
+   #FOREACH asft338_sel_sfib_next INTO l_sfib.*
+   FOREACH asft338_sel_sfib_next INTO l_sfib.sfib001,l_sfib.sfib002
+   #161109-00085#31-e
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      LET l_sfib007 = NULL
+      LET l_sfib008 = NULL
+      CALL asft338_get_sfib007(l_sfib.sfib001,l_sfib.sfib002) RETURNING l_sfib007,l_sfib008
+      IF l_sfib007 IS NULL THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      UPDATE sfib_t SET sfib007 = l_sfib007,
+                        sfib008 = l_sfib008
+       WHERE sfibent   = g_enterprise
+         AND sfibsite  = g_site
+         AND sfibdocno = g_sfia_m.sfiadocno
+         AND sfib001   = l_sfib.sfib001
+         AND sfib002   = l_sfib.sfib002 
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "upd_sfib007"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END FOREACH
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 根据单头的工单+runcard+作业编号+作业序找到此站前的所有站点资料
+# Memo...........:
+# Usage..........: CALL asft338_ins_sfib(p_sfia003,p_sfia004,p_sfia005,p_sfia006)
+#                  RETURNING r_success
+# Input parameter: p_sfia003      重工转出工单
+#                : p_sfia004      转出runcard
+#                : p_sfia005      作业编号
+#                : p_sfia006      作业序
+# Return code....: r_success      回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/04/11 By wujie
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_ins_sfib(p_sfia003,p_sfia004,p_sfia005,p_sfia006)
+   DEFINE p_sfia003        LIKE sfia_t.sfia003
+   DEFINE p_sfia004        LIKE sfia_t.sfia004
+   DEFINE p_sfia005        LIKE sfia_t.sfia005
+   DEFINE p_sfia006        LIKE sfia_t.sfia006
+   DEFINE r_success        LIKE type_t.num5   
+   #161109-00085#31-s
+   #DEFINE l_sfcb           DYNAMIC ARRAY OF RECORD LIKE sfcb_t.*
+   DEFINE l_sfcb DYNAMIC ARRAY OF RECORD  #工單製程單身檔
+          sfcbent LIKE sfcb_t.sfcbent, #企業編號
+          sfcbsite LIKE sfcb_t.sfcbsite, #營運據點
+          sfcbdocno LIKE sfcb_t.sfcbdocno, #單號
+          sfcb001 LIKE sfcb_t.sfcb001, #RUN CARD
+          sfcb002 LIKE sfcb_t.sfcb002, #項次
+          sfcb003 LIKE sfcb_t.sfcb003, #本站作業
+          sfcb004 LIKE sfcb_t.sfcb004, #作業序
+          sfcb005 LIKE sfcb_t.sfcb005, #群組性質
+          sfcb006 LIKE sfcb_t.sfcb006, #群組
+          sfcb007 LIKE sfcb_t.sfcb007, #上站作業
+          sfcb008 LIKE sfcb_t.sfcb008, #上站作業序
+          sfcb009 LIKE sfcb_t.sfcb009, #下站作業
+          sfcb010 LIKE sfcb_t.sfcb010, #下站作業序
+          sfcb011 LIKE sfcb_t.sfcb011, #工作站
+          sfcb012 LIKE sfcb_t.sfcb012, #允許委外
+          sfcb013 LIKE sfcb_t.sfcb013, #主要加工廠
+          sfcb014 LIKE sfcb_t.sfcb014, #Move in
+          sfcb015 LIKE sfcb_t.sfcb015, #Check in
+          sfcb016 LIKE sfcb_t.sfcb016, #報工站
+          sfcb017 LIKE sfcb_t.sfcb017, #PQC
+          sfcb018 LIKE sfcb_t.sfcb018, #Check out
+          sfcb019 LIKE sfcb_t.sfcb019, #Move out
+          sfcb020 LIKE sfcb_t.sfcb020, #轉出單位
+          sfcb021 LIKE sfcb_t.sfcb021, #單位轉換率分子
+          sfcb022 LIKE sfcb_t.sfcb022, #單位轉換率分母
+          sfcb023 LIKE sfcb_t.sfcb023, #固定工時
+          sfcb024 LIKE sfcb_t.sfcb024, #標準工時
+          sfcb025 LIKE sfcb_t.sfcb025, #固定機時
+          sfcb026 LIKE sfcb_t.sfcb026, #標準機時
+          sfcb027 LIKE sfcb_t.sfcb027, #標準產出量
+          sfcb028 LIKE sfcb_t.sfcb028, #良品轉入
+          sfcb029 LIKE sfcb_t.sfcb029, #重工轉入
+          sfcb030 LIKE sfcb_t.sfcb030, #回收轉入
+          sfcb031 LIKE sfcb_t.sfcb031, #分割轉入
+          sfcb032 LIKE sfcb_t.sfcb032, #合併轉入
+          sfcb033 LIKE sfcb_t.sfcb033, #良品轉出
+          sfcb034 LIKE sfcb_t.sfcb034, #重工轉出
+          sfcb035 LIKE sfcb_t.sfcb035, #回收轉出
+          sfcb036 LIKE sfcb_t.sfcb036, #當站報廢
+          sfcb037 LIKE sfcb_t.sfcb037, #當站下線
+          sfcb038 LIKE sfcb_t.sfcb038, #分割轉出
+          sfcb039 LIKE sfcb_t.sfcb039, #合併轉出
+          sfcb040 LIKE sfcb_t.sfcb040, #Bonus
+          sfcb041 LIKE sfcb_t.sfcb041, #委外加工數
+          sfcb042 LIKE sfcb_t.sfcb042, #委外完工數
+          sfcb043 LIKE sfcb_t.sfcb043, #盤點數
+          sfcb044 LIKE sfcb_t.sfcb044, #預計開工日
+          sfcb045 LIKE sfcb_t.sfcb045, #預計完工日
+          sfcb046 LIKE sfcb_t.sfcb046, #待Move in數
+          sfcb047 LIKE sfcb_t.sfcb047, #待Check in數
+          sfcb048 LIKE sfcb_t.sfcb048, #待Check out數
+          sfcb049 LIKE sfcb_t.sfcb049, #待Move out數
+          sfcb050 LIKE sfcb_t.sfcb050, #在製數
+          sfcb051 LIKE sfcb_t.sfcb051, #待PQC數
+          sfcb052 LIKE sfcb_t.sfcb052, #轉入單位
+          sfcb053 LIKE sfcb_t.sfcb053, #轉入單位轉換率分子
+          sfcb054 LIKE sfcb_t.sfcb054, #轉入單位轉換率分母
+         #sfcb055 LIKE sfcb_t.sfcb055  #回收站 #161109-00085#62 mark
+          #161109-00085#62 --s add 
+          sfcb055 LIKE sfcb_t.sfcb055, #回收站
+          sfcbud001 LIKE sfcb_t.sfcbud001, #自定義欄位(文字)001
+          sfcbud002 LIKE sfcb_t.sfcbud002, #自定義欄位(文字)002
+          sfcbud003 LIKE sfcb_t.sfcbud003, #自定義欄位(文字)003
+          sfcbud004 LIKE sfcb_t.sfcbud004, #自定義欄位(文字)004
+          sfcbud005 LIKE sfcb_t.sfcbud005, #自定義欄位(文字)005
+          sfcbud006 LIKE sfcb_t.sfcbud006, #自定義欄位(文字)006
+          sfcbud007 LIKE sfcb_t.sfcbud007, #自定義欄位(文字)007
+          sfcbud008 LIKE sfcb_t.sfcbud008, #自定義欄位(文字)008
+          sfcbud009 LIKE sfcb_t.sfcbud009, #自定義欄位(文字)009
+          sfcbud010 LIKE sfcb_t.sfcbud010, #自定義欄位(文字)010
+          sfcbud011 LIKE sfcb_t.sfcbud011, #自定義欄位(數字)011
+          sfcbud012 LIKE sfcb_t.sfcbud012, #自定義欄位(數字)012
+          sfcbud013 LIKE sfcb_t.sfcbud013, #自定義欄位(數字)013
+          sfcbud014 LIKE sfcb_t.sfcbud014, #自定義欄位(數字)014
+          sfcbud015 LIKE sfcb_t.sfcbud015, #自定義欄位(數字)015
+          sfcbud016 LIKE sfcb_t.sfcbud016, #自定義欄位(數字)016
+          sfcbud017 LIKE sfcb_t.sfcbud017, #自定義欄位(數字)017
+          sfcbud018 LIKE sfcb_t.sfcbud018, #自定義欄位(數字)018
+          sfcbud019 LIKE sfcb_t.sfcbud019, #自定義欄位(數字)019
+          sfcbud020 LIKE sfcb_t.sfcbud020, #自定義欄位(數字)020
+          sfcbud021 LIKE sfcb_t.sfcbud021, #自定義欄位(日期時間)021
+          sfcbud022 LIKE sfcb_t.sfcbud022, #自定義欄位(日期時間)022
+          sfcbud023 LIKE sfcb_t.sfcbud023, #自定義欄位(日期時間)023
+          sfcbud024 LIKE sfcb_t.sfcbud024, #自定義欄位(日期時間)024
+          sfcbud025 LIKE sfcb_t.sfcbud025, #自定義欄位(日期時間)025
+          sfcbud026 LIKE sfcb_t.sfcbud026, #自定義欄位(日期時間)026
+          sfcbud027 LIKE sfcb_t.sfcbud027, #自定義欄位(日期時間)027
+          sfcbud028 LIKE sfcb_t.sfcbud028, #自定義欄位(日期時間)028
+          sfcbud029 LIKE sfcb_t.sfcbud029, #自定義欄位(日期時間)029
+          sfcbud030 LIKE sfcb_t.sfcbud030  #自定義欄位(日期時間)030
+          #161109-00085#62 --e add
+   END RECORD
+   #161109-00085#31-e
+   
+   DEFINE i                LIKE type_t.num5
+   #161109-00085#31-s
+   #DEFINE l_sfib        RECORD LIKE sfib_t.*
+   DEFINE l_sfib RECORD  #重工轉出製程單身檔
+          sfibent LIKE sfib_t.sfibent, #企業編號
+          sfibsite LIKE sfib_t.sfibsite, #營運據點
+          sfibdocno LIKE sfib_t.sfibdocno, #重工轉出單號
+          sfibseq LIKE sfib_t.sfibseq, #項次
+          sfib001 LIKE sfib_t.sfib001, #本站作業
+          sfib002 LIKE sfib_t.sfib002, #作業序
+          sfib003 LIKE sfib_t.sfib003, #群組性質
+          sfib004 LIKE sfib_t.sfib004, #群組
+          sfib005 LIKE sfib_t.sfib005, #上站作業
+          sfib006 LIKE sfib_t.sfib006, #上站作業序
+          sfib007 LIKE sfib_t.sfib007, #下站作業
+          sfib008 LIKE sfib_t.sfib008, #下站作業序
+          sfib009 LIKE sfib_t.sfib009, #工作站
+          sfib010 LIKE sfib_t.sfib010, #允許委外
+          sfib011 LIKE sfib_t.sfib011, #主要加工廠
+          sfib012 LIKE sfib_t.sfib012, #Move In
+          sfib013 LIKE sfib_t.sfib013, #Check In
+          sfib014 LIKE sfib_t.sfib014, #報工站
+          sfib015 LIKE sfib_t.sfib015, #PQC
+          sfib016 LIKE sfib_t.sfib016, #Check Out
+          sfib017 LIKE sfib_t.sfib017, #Move Out
+          sfib018 LIKE sfib_t.sfib018, #轉出單位
+          sfib019 LIKE sfib_t.sfib019, #轉出單位轉換率分子
+          sfib020 LIKE sfib_t.sfib020, #轉出單位轉換率分母
+          sfib021 LIKE sfib_t.sfib021, #固定工時
+          sfib022 LIKE sfib_t.sfib022, #標準工時
+          sfib023 LIKE sfib_t.sfib023, #固定機時
+          sfib024 LIKE sfib_t.sfib024, #標準機時
+          sfib025 LIKE sfib_t.sfib025, #標準產出量
+          sfib026 LIKE sfib_t.sfib026, #預計開工日
+          sfib027 LIKE sfib_t.sfib027, #預計完工日
+          sfib028 LIKE sfib_t.sfib028, #轉入單位
+          sfib029 LIKE sfib_t.sfib029, #轉入單位轉換率分子
+          sfib030 LIKE sfib_t.sfib030, #轉入單位轉換率分母
+          #161109-00085#62 --s add
+          sfibud001 LIKE sfib_t.sfibud001, #自定義欄位(文字)001
+          sfibud002 LIKE sfib_t.sfibud002, #自定義欄位(文字)002
+          sfibud003 LIKE sfib_t.sfibud003, #自定義欄位(文字)003
+          sfibud004 LIKE sfib_t.sfibud004, #自定義欄位(文字)004
+          sfibud005 LIKE sfib_t.sfibud005, #自定義欄位(文字)005
+          sfibud006 LIKE sfib_t.sfibud006, #自定義欄位(文字)006
+          sfibud007 LIKE sfib_t.sfibud007, #自定義欄位(文字)007
+          sfibud008 LIKE sfib_t.sfibud008, #自定義欄位(文字)008
+          sfibud009 LIKE sfib_t.sfibud009, #自定義欄位(文字)009
+          sfibud010 LIKE sfib_t.sfibud010, #自定義欄位(文字)010
+          sfibud011 LIKE sfib_t.sfibud011, #自定義欄位(數字)011
+          sfibud012 LIKE sfib_t.sfibud012, #自定義欄位(數字)012
+          sfibud013 LIKE sfib_t.sfibud013, #自定義欄位(數字)013
+          sfibud014 LIKE sfib_t.sfibud014, #自定義欄位(數字)014
+          sfibud015 LIKE sfib_t.sfibud015, #自定義欄位(數字)015
+          sfibud016 LIKE sfib_t.sfibud016, #自定義欄位(數字)016
+          sfibud017 LIKE sfib_t.sfibud017, #自定義欄位(數字)017
+          sfibud018 LIKE sfib_t.sfibud018, #自定義欄位(數字)018
+          sfibud019 LIKE sfib_t.sfibud019, #自定義欄位(數字)019
+          sfibud020 LIKE sfib_t.sfibud020, #自定義欄位(數字)020
+          sfibud021 LIKE sfib_t.sfibud021, #自定義欄位(日期時間)021
+          sfibud022 LIKE sfib_t.sfibud022, #自定義欄位(日期時間)022
+          sfibud023 LIKE sfib_t.sfibud023, #自定義欄位(日期時間)023
+          sfibud024 LIKE sfib_t.sfibud024, #自定義欄位(日期時間)024
+          sfibud025 LIKE sfib_t.sfibud025, #自定義欄位(日期時間)025
+          sfibud026 LIKE sfib_t.sfibud026, #自定義欄位(日期時間)026
+          sfibud027 LIKE sfib_t.sfibud027, #自定義欄位(日期時間)027
+          sfibud028 LIKE sfib_t.sfibud028, #自定義欄位(日期時間)028
+          sfibud029 LIKE sfib_t.sfibud029, #自定義欄位(日期時間)029
+          sfibud030 LIKE sfib_t.sfibud030, #自定義欄位(日期時間)030
+          #161109-00085#62 --e add
+          sfib031 LIKE sfib_t.sfib031, #生產計劃
+          sfib032 LIKE sfib_t.sfib032, #生產料號
+          sfib033 LIKE sfib_t.sfib033, #BOM特徵
+          sfib034 LIKE sfib_t.sfib034  #產品特徵
+   END RECORD
+   #161109-00085#31-e
+
+   LET r_success = TRUE
+   CALL l_sfcb.clear()
+   IF p_sfia003 IS NULL OR p_sfia004 IS NULL OR p_sfia005 IS NULL OR p_sfia006 IS NULL THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   DECLARE asft338_sel_sfcb_prev CURSOR FOR
+     #161109-00085#31-s
+     #SELECT B.* FROM sfcb_t A,sfcb_t B,sfcc_t    #A是本站，B是上站,sfcc里存的是具体的作业编号
+     #161109-00085#62 --s mark
+     #SELECT B.sfcbent,B.sfcbsite,B.sfcbdocno,B.sfcb001,B.sfcb002,
+     #       B.sfcb003,B.sfcb004,B.sfcb005,B.sfcb006,B.sfcb007,
+     #       B.sfcb008,B.sfcb009,B.sfcb010,B.sfcb011,B.sfcb012,
+     #       B.sfcb013,B.sfcb014,B.sfcb015,B.sfcb016,B.sfcb017,
+     #       B.sfcb018,B.sfcb019,B.sfcb020,B.sfcb021,B.sfcb022,
+     #       B.sfcb023,B.sfcb024,B.sfcb025,B.sfcb026,B.sfcb027,
+     #       B.sfcb028,B.sfcb029,B.sfcb030,B.sfcb031,B.sfcb032,
+     #       B.sfcb033,B.sfcb034,B.sfcb035,B.sfcb036,B.sfcb037,
+     #       B.sfcb038,B.sfcb039,B.sfcb040,B.sfcb041,B.sfcb042,
+     #       B.sfcb043,B.sfcb044,B.sfcb045,B.sfcb046,B.sfcb047,
+     #       B.sfcb048,B.sfcb049,B.sfcb050,B.sfcb051,B.sfcb052,
+     #       B.sfcb053,B.sfcb054,B.sfcb055 
+     #161109-00085#62 --e mark
+     #161109-00085#62 --s add
+     SELECT B.sfcbent,B.sfcbsite,B.sfcbdocno,B.sfcb001,B.sfcb002,
+            B.sfcb003,B.sfcb004,B.sfcb005,B.sfcb006,B.sfcb007,
+            B.sfcb008,B.sfcb009,B.sfcb010,B.sfcb011,B.sfcb012,
+            B.sfcb013,B.sfcb014,B.sfcb015,B.sfcb016,B.sfcb017,
+            B.sfcb018,B.sfcb019,B.sfcb020,B.sfcb021,B.sfcb022,
+            B.sfcb023,B.sfcb024,B.sfcb025,B.sfcb026,B.sfcb027,
+            B.sfcb028,B.sfcb029,B.sfcb030,B.sfcb031,B.sfcb032,
+            B.sfcb033,B.sfcb034,B.sfcb035,B.sfcb036,B.sfcb037,
+            B.sfcb038,B.sfcb039,B.sfcb040,B.sfcb041,B.sfcb042,
+            B.sfcb043,B.sfcb044,B.sfcb045,B.sfcb046,B.sfcb047,
+            B.sfcb048,B.sfcb049,B.sfcb050,B.sfcb051,B.sfcb052,
+            B.sfcb053,B.sfcb054,B.sfcb055,B.sfcbud001,B.sfcbud002,
+            B.sfcbud003,B.sfcbud004,B.sfcbud005,B.sfcbud006,B.sfcbud007,
+            B.sfcbud008,B.sfcbud009,B.sfcbud010,B.sfcbud011,B.sfcbud012,
+            B.sfcbud013,B.sfcbud014,B.sfcbud015,B.sfcbud016,B.sfcbud017,
+            B.sfcbud018,B.sfcbud019,B.sfcbud020,B.sfcbud021,B.sfcbud022,
+            B.sfcbud023,B.sfcbud024,B.sfcbud025,B.sfcbud026,B.sfcbud027,
+            B.sfcbud028,B.sfcbud029,B.sfcbud030
+     #161109-00085#62 --e add
+       FROM sfcb_t A,sfcb_t B,sfcc_t
+     #161109-00085#31-e  
+      WHERE A.sfcbent   = g_enterprise
+        AND A.sfcbsite  = g_site
+        AND A.sfcbdocno = p_sfia003
+        AND A.sfcb001   = p_sfia004
+        AND A.sfcb003   = p_sfia005
+        AND A.sfcb004   = p_sfia006
+        AND A.sfcbent   = sfccent
+        AND A.sfcbsite  = sfccsite
+        AND A.sfcbdocno = sfccdocno
+        AND A.sfcb001   = sfcc001
+        AND A.sfcb002   = sfcc002
+        AND B.sfcbent   = sfccent
+        AND B.sfcbsite  = sfccsite
+        AND B.sfcbdocno = sfccdocno
+        AND B.sfcb001   = sfcc001
+        AND B.sfcb003   = sfcc003
+        AND B.sfcb004   = sfcc004        
+     UNION
+     #161109-00085#31-s
+     #SELECT B.* FROM sfcb_t A,sfcb_t B,sfcc_t    #A是本站，B是上站,sfcc里存的是群组编号
+     #161109-00085#62 --s mark
+     #SELECT B.sfcbent,B.sfcbsite,B.sfcbdocno,B.sfcb001,B.sfcb002,
+     #       B.sfcb003,B.sfcb004,B.sfcb005,B.sfcb006,B.sfcb007,
+     #       B.sfcb008,B.sfcb009,B.sfcb010,B.sfcb011,B.sfcb012,
+     #       B.sfcb013,B.sfcb014,B.sfcb015,B.sfcb016,B.sfcb017,
+     #       B.sfcb018,B.sfcb019,B.sfcb020,B.sfcb021,B.sfcb022,
+     #       B.sfcb023,B.sfcb024,B.sfcb025,B.sfcb026,B.sfcb027,
+     #       B.sfcb028,B.sfcb029,B.sfcb030,B.sfcb031,B.sfcb032,
+     #       B.sfcb033,B.sfcb034,B.sfcb035,B.sfcb036,B.sfcb037,
+     #       B.sfcb038,B.sfcb039,B.sfcb040,B.sfcb041,B.sfcb042,
+     #       B.sfcb043,B.sfcb044,B.sfcb045,B.sfcb046,B.sfcb047,
+     #       B.sfcb048,B.sfcb049,B.sfcb050,B.sfcb051,B.sfcb052,
+     #       B.sfcb053,B.sfcb054,B.sfcb055 
+     #161109-00085#62 --s add
+     #161109-00085#62 --e mark
+     SELECT B.sfcbent,B.sfcbsite,B.sfcbdocno,B.sfcb001,B.sfcb002,
+            B.sfcb003,B.sfcb004,B.sfcb005,B.sfcb006,B.sfcb007,
+            B.sfcb008,B.sfcb009,B.sfcb010,B.sfcb011,B.sfcb012,
+            B.sfcb013,B.sfcb014,B.sfcb015,B.sfcb016,B.sfcb017,
+            B.sfcb018,B.sfcb019,B.sfcb020,B.sfcb021,B.sfcb022,
+            B.sfcb023,B.sfcb024,B.sfcb025,B.sfcb026,B.sfcb027,
+            B.sfcb028,B.sfcb029,B.sfcb030,B.sfcb031,B.sfcb032,
+            B.sfcb033,B.sfcb034,B.sfcb035,B.sfcb036,B.sfcb037,
+            B.sfcb038,B.sfcb039,B.sfcb040,B.sfcb041,B.sfcb042,
+            B.sfcb043,B.sfcb044,B.sfcb045,B.sfcb046,B.sfcb047,
+            B.sfcb048,B.sfcb049,B.sfcb050,B.sfcb051,B.sfcb052,
+            B.sfcb053,B.sfcb054,B.sfcb055,B.sfcbud001,B.sfcbud002,
+            B.sfcbud003,B.sfcbud004,B.sfcbud005,B.sfcbud006,B.sfcbud007,
+            B.sfcbud008,B.sfcbud009,B.sfcbud010,B.sfcbud011,B.sfcbud012,
+            B.sfcbud013,B.sfcbud014,B.sfcbud015,B.sfcbud016,B.sfcbud017,
+            B.sfcbud018,B.sfcbud019,B.sfcbud020,B.sfcbud021,B.sfcbud022,
+            B.sfcbud023,B.sfcbud024,B.sfcbud025,B.sfcbud026,B.sfcbud027,
+            B.sfcbud028,B.sfcbud029,B.sfcbud030
+     #161109-00085#62 --e add
+       FROM sfcb_t A,sfcb_t B,sfcc_t
+     #161109-00085#31-e
+      WHERE A.sfcbent   = g_enterprise
+        AND A.sfcbsite  = g_site
+        AND A.sfcbdocno = p_sfia003
+        AND A.sfcb001   = p_sfia004
+        AND A.sfcb003   = p_sfia005
+        AND A.sfcb004   = p_sfia006
+        AND A.sfcbent   = sfccent
+        AND A.sfcbsite  = sfccsite
+        AND A.sfcbdocno = sfccdocno
+        AND A.sfcb001   = sfcc001
+        AND A.sfcb002   = sfcc002
+        AND B.sfcbent   = sfccent
+        AND B.sfcbsite  = sfccsite
+        AND B.sfcbdocno = sfccdocno
+        AND A.sfcb001   = sfcc001
+        AND B.sfcb006   = sfcc003
+        AND sfcc004     = 0 
+   LET i = 1   
+   #161109-00085#39-s
+   #FOREACH asft338_sel_sfcb_prev INTO l_sfcb[i].*
+   FOREACH asft338_sel_sfcb_prev 
+   #161109-00085#62 --s mark
+   #   INTO l_sfcb[i].sfcbent,l_sfcb[i].sfcbsite,l_sfcb[i].sfcbdocno,l_sfcb[i].sfcb001,l_sfcb[i].sfcb002,
+   #        l_sfcb[i].sfcb003,l_sfcb[i].sfcb004,l_sfcb[i].sfcb005,l_sfcb[i].sfcb006,l_sfcb[i].sfcb007,
+   #        l_sfcb[i].sfcb008,l_sfcb[i].sfcb009,l_sfcb[i].sfcb010,l_sfcb[i].sfcb011,l_sfcb[i].sfcb012,
+   #        l_sfcb[i].sfcb013,l_sfcb[i].sfcb014,l_sfcb[i].sfcb015,l_sfcb[i].sfcb016,l_sfcb[i].sfcb017,
+   #        l_sfcb[i].sfcb018,l_sfcb[i].sfcb019,l_sfcb[i].sfcb020,l_sfcb[i].sfcb021,l_sfcb[i].sfcb022,
+   #        l_sfcb[i].sfcb023,l_sfcb[i].sfcb024,l_sfcb[i].sfcb025,l_sfcb[i].sfcb026,l_sfcb[i].sfcb027,
+   #        l_sfcb[i].sfcb028,l_sfcb[i].sfcb029,l_sfcb[i].sfcb030,l_sfcb[i].sfcb031,l_sfcb[i].sfcb032,
+   #        l_sfcb[i].sfcb033,l_sfcb[i].sfcb034,l_sfcb[i].sfcb035,l_sfcb[i].sfcb036,l_sfcb[i].sfcb037,
+   #        l_sfcb[i].sfcb038,l_sfcb[i].sfcb039,l_sfcb[i].sfcb040,l_sfcb[i].sfcb041,l_sfcb[i].sfcb042,
+   #        l_sfcb[i].sfcb043,l_sfcb[i].sfcb044,l_sfcb[i].sfcb045,l_sfcb[i].sfcb046,l_sfcb[i].sfcb047,
+   #        l_sfcb[i].sfcb048,l_sfcb[i].sfcb049,l_sfcb[i].sfcb050,l_sfcb[i].sfcb051,l_sfcb[i].sfcb052,
+   #        l_sfcb[i].sfcb053,l_sfcb[i].sfcb054,l_sfcb[i].sfcb055
+   #161109-00085#62 --e mark
+   #161109-00085#62 --s add
+       INTO l_sfcb[i].sfcbent,l_sfcb[i].sfcbsite,l_sfcb[i].sfcbdocno,l_sfcb[i].sfcb001,l_sfcb[i].sfcb002,
+            l_sfcb[i].sfcb003,l_sfcb[i].sfcb004,l_sfcb[i].sfcb005,l_sfcb[i].sfcb006,l_sfcb[i].sfcb007,
+            l_sfcb[i].sfcb008,l_sfcb[i].sfcb009,l_sfcb[i].sfcb010,l_sfcb[i].sfcb011,l_sfcb[i].sfcb012,
+            l_sfcb[i].sfcb013,l_sfcb[i].sfcb014,l_sfcb[i].sfcb015,l_sfcb[i].sfcb016,l_sfcb[i].sfcb017,
+            l_sfcb[i].sfcb018,l_sfcb[i].sfcb019,l_sfcb[i].sfcb020,l_sfcb[i].sfcb021,l_sfcb[i].sfcb022,
+            l_sfcb[i].sfcb023,l_sfcb[i].sfcb024,l_sfcb[i].sfcb025,l_sfcb[i].sfcb026,l_sfcb[i].sfcb027,
+            l_sfcb[i].sfcb028,l_sfcb[i].sfcb029,l_sfcb[i].sfcb030,l_sfcb[i].sfcb031,l_sfcb[i].sfcb032,
+            l_sfcb[i].sfcb033,l_sfcb[i].sfcb034,l_sfcb[i].sfcb035,l_sfcb[i].sfcb036,l_sfcb[i].sfcb037,
+            l_sfcb[i].sfcb038,l_sfcb[i].sfcb039,l_sfcb[i].sfcb040,l_sfcb[i].sfcb041,l_sfcb[i].sfcb042,
+            l_sfcb[i].sfcb043,l_sfcb[i].sfcb044,l_sfcb[i].sfcb045,l_sfcb[i].sfcb046,l_sfcb[i].sfcb047,
+            l_sfcb[i].sfcb048,l_sfcb[i].sfcb049,l_sfcb[i].sfcb050,l_sfcb[i].sfcb051,l_sfcb[i].sfcb052,
+            l_sfcb[i].sfcb053,l_sfcb[i].sfcb054,l_sfcb[i].sfcb055,l_sfcb[i].sfcbud001,l_sfcb[i].sfcbud002,
+            l_sfcb[i].sfcbud003,l_sfcb[i].sfcbud004,l_sfcb[i].sfcbud005,l_sfcb[i].sfcbud006,l_sfcb[i].sfcbud007,
+            l_sfcb[i].sfcbud008,l_sfcb[i].sfcbud009,l_sfcb[i].sfcbud010,l_sfcb[i].sfcbud011,l_sfcb[i].sfcbud012,
+            l_sfcb[i].sfcbud013,l_sfcb[i].sfcbud014,l_sfcb[i].sfcbud015,l_sfcb[i].sfcbud016,l_sfcb[i].sfcbud017,
+            l_sfcb[i].sfcbud018,l_sfcb[i].sfcbud019,l_sfcb[i].sfcbud020,l_sfcb[i].sfcbud021,l_sfcb[i].sfcbud022,
+            l_sfcb[i].sfcbud023,l_sfcb[i].sfcbud024,l_sfcb[i].sfcbud025,l_sfcb[i].sfcbud026,l_sfcb[i].sfcbud027,
+            l_sfcb[i].sfcbud028,l_sfcb[i].sfcbud029,l_sfcb[i].sfcbud030
+   #161109-00085#62 --e add
+   #161109-00085#39-e
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      IF g_end THEN   #这个变量表示这是新制程的最后一站,只有进来的第一层找出的站点才是END
+         LET l_sfcb[i].sfcb009 = 'END'
+         LET l_sfcb[i].sfcb010 =  0
+      END IF
+      LET i = i + 1
+   END FOREACH
+   LET g_end = FALSE
+   FREE asft338_sel_sfcb_prev
+   CLOSE asft338_sel_sfcb_prev 
+   CALL l_sfcb.deleteElement(l_sfcb.getLength())
+   IF l_sfcb.getLength() > 0 THEN  
+      FOR i = 1 TO l_sfcb.getLength()
+#这站插入sfib，还要找上上站继续插入，一直到INIT
+         INITIALIZE l_sfib.* TO NULL
+         LET l_sfib.sfibent   = l_sfcb[i].sfcbent    
+         LET l_sfib.sfibsite  = l_sfcb[i].sfcbsite   
+         LET l_sfib.sfibdocno = g_sfia_m.sfiadocno  
+         LET l_sfib.sfibseq   = l_sfcb[i].sfcb002    
+         LET l_sfib.sfib001   = l_sfcb[i].sfcb003    
+         LET l_sfib.sfib002   = l_sfcb[i].sfcb004    
+         LET l_sfib.sfib003   = l_sfcb[i].sfcb005    
+         LET l_sfib.sfib004   = l_sfcb[i].sfcb006    
+         LET l_sfib.sfib005   = l_sfcb[i].sfcb007    
+         LET l_sfib.sfib006   = l_sfcb[i].sfcb008        
+         LET l_sfib.sfib007   = l_sfcb[i].sfcb009    
+         LET l_sfib.sfib008   = l_sfcb[i].sfcb010    
+         LET l_sfib.sfib009   = l_sfcb[i].sfcb011    
+         LET l_sfib.sfib010   = l_sfcb[i].sfcb012    
+         LET l_sfib.sfib011   = l_sfcb[i].sfcb013    
+         LET l_sfib.sfib012   = l_sfcb[i].sfcb014    
+         LET l_sfib.sfib013   = l_sfcb[i].sfcb015    
+         LET l_sfib.sfib014   = l_sfcb[i].sfcb016    
+         LET l_sfib.sfib015   = l_sfcb[i].sfcb017    
+         LET l_sfib.sfib016   = l_sfcb[i].sfcb018    
+         LET l_sfib.sfib017   = l_sfcb[i].sfcb019    
+         LET l_sfib.sfib018   = l_sfcb[i].sfcb020    
+         LET l_sfib.sfib019   = l_sfcb[i].sfcb021    
+         LET l_sfib.sfib020   = l_sfcb[i].sfcb022               
+         LET l_sfib.sfib021   = l_sfcb[i].sfcb023           
+         LET l_sfib.sfib022   = l_sfcb[i].sfcb024    
+         LET l_sfib.sfib023   = l_sfcb[i].sfcb025    
+         LET l_sfib.sfib024   = l_sfcb[i].sfcb026    
+         LET l_sfib.sfib025   = l_sfcb[i].sfcb027    
+         LET l_sfib.sfib026   = l_sfcb[i].sfcb044       
+         LET l_sfib.sfib027   = l_sfcb[i].sfcb045           
+         LET l_sfib.sfib028   = l_sfcb[i].sfcb052           
+         LET l_sfib.sfib029   = l_sfcb[i].sfcb053           
+         LET l_sfib.sfib030   = l_sfcb[i].sfcb054          
+         #161109-00085#31-s
+         #INSERT INTO sfib_t VALUES(l_sfib.*)
+         #161109-00085#62 --s mark
+         #INSERT INTO sfib_t(sfibent,sfibsite,sfibdocno,sfibseq,sfib001,sfib002,sfib003,sfib004,sfib005,sfib006,
+         #                   sfib007,sfib008,sfib009,sfib010,sfib011,sfib012,sfib013,sfib014,sfib015,sfib016,
+         #                   sfib017,sfib018,sfib019,sfib020,sfib021,sfib022,sfib023,sfib024,sfib025,sfib026,
+         #                   sfib027,sfib028,sfib029,sfib030,sfib031,sfib032,sfib033,sfib034) 
+         #VALUES(l_sfib.sfibent,l_sfib.sfibsite,l_sfib.sfibdocno,l_sfib.sfibseq,l_sfib.sfib001,
+         #       l_sfib.sfib002,l_sfib.sfib003,l_sfib.sfib004,l_sfib.sfib005,l_sfib.sfib006,
+         #       l_sfib.sfib007,l_sfib.sfib008,l_sfib.sfib009,l_sfib.sfib010,l_sfib.sfib011,
+         #       l_sfib.sfib012,l_sfib.sfib013,l_sfib.sfib014,l_sfib.sfib015,l_sfib.sfib016,
+         #       l_sfib.sfib017,l_sfib.sfib018,l_sfib.sfib019,l_sfib.sfib020,l_sfib.sfib021,
+         #       l_sfib.sfib022,l_sfib.sfib023,l_sfib.sfib024,l_sfib.sfib025,l_sfib.sfib026,
+         #       l_sfib.sfib027,l_sfib.sfib028,l_sfib.sfib029,l_sfib.sfib030,l_sfib.sfib031,
+         #       l_sfib.sfib032,l_sfib.sfib033,l_sfib.sfib034)  
+         #161109-00085#62 --e mark
+         #161109-00085#62 --s add
+         INSERT INTO sfib_t(sfibent,sfibsite,sfibdocno,sfibseq,sfib001,
+                            sfib002,sfib003,sfib004,sfib005,sfib006,
+                            sfib007,sfib008,sfib009,sfib010,sfib011,
+                            sfib012,sfib013,sfib014,sfib015,sfib016,
+                            sfib017,sfib018,sfib019,sfib020,sfib021,
+                            sfib022,sfib023,sfib024,sfib025,sfib026,
+                            sfib027,sfib028,sfib029,sfib030,sfibud001,
+                            sfibud002,sfibud003,sfibud004,sfibud005,sfibud006,
+                            sfibud007,sfibud008,sfibud009,sfibud010,sfibud011,
+                            sfibud012,sfibud013,sfibud014,sfibud015,sfibud016,
+                            sfibud017,sfibud018,sfibud019,sfibud020,sfibud021,
+                            sfibud022,sfibud023,sfibud024,sfibud025,sfibud026,
+                            sfibud027,sfibud028,sfibud029,sfibud030,sfib031,
+                            sfib032,sfib033,sfib034)
+         VALUES(l_sfib.sfibent,l_sfib.sfibsite,l_sfib.sfibdocno,l_sfib.sfibseq,l_sfib.sfib001,
+                l_sfib.sfib002,l_sfib.sfib003,l_sfib.sfib004,l_sfib.sfib005,l_sfib.sfib006,
+                l_sfib.sfib007,l_sfib.sfib008,l_sfib.sfib009,l_sfib.sfib010,l_sfib.sfib011,
+                l_sfib.sfib012,l_sfib.sfib013,l_sfib.sfib014,l_sfib.sfib015,l_sfib.sfib016,
+                l_sfib.sfib017,l_sfib.sfib018,l_sfib.sfib019,l_sfib.sfib020,l_sfib.sfib021,
+                l_sfib.sfib022,l_sfib.sfib023,l_sfib.sfib024,l_sfib.sfib025,l_sfib.sfib026,
+                l_sfib.sfib027,l_sfib.sfib028,l_sfib.sfib029,l_sfib.sfib030,l_sfib.sfibud001,
+                l_sfib.sfibud002,l_sfib.sfibud003,l_sfib.sfibud004,l_sfib.sfibud005,l_sfib.sfibud006,
+                l_sfib.sfibud007,l_sfib.sfibud008,l_sfib.sfibud009,l_sfib.sfibud010,l_sfib.sfibud011,
+                l_sfib.sfibud012,l_sfib.sfibud013,l_sfib.sfibud014,l_sfib.sfibud015,l_sfib.sfibud016,
+                l_sfib.sfibud017,l_sfib.sfibud018,l_sfib.sfibud019,l_sfib.sfibud020,l_sfib.sfibud021,
+                l_sfib.sfibud022,l_sfib.sfibud023,l_sfib.sfibud024,l_sfib.sfibud025,l_sfib.sfibud026,
+                l_sfib.sfibud027,l_sfib.sfibud028,l_sfib.sfibud029,l_sfib.sfibud030,l_sfib.sfib031,
+                l_sfib.sfib032,l_sfib.sfib033,l_sfib.sfib034)
+         #161109-00085#62 --e add         
+         #161109-00085#31-e
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+         IF SQLCA.sqlerrd[3] = 0 THEN
+            LET r_success = FALSE
+            RETURN r_success
+         END IF 
+         
+         IF NOT asft338_ins_sfic(p_sfia003,p_sfia004,l_sfib.sfibseq) THEN
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+         
+         IF NOT asft338_ins_sfib(p_sfia003,p_sfia004,l_sfib.sfib001,l_sfib.sfib002) THEN
+            LET r_success = FALSE
+            RETURN r_success
+         END IF  
+      END FOR
+   END IF
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 通过作业编号预设作业序
+# Memo...........:
+# Usage..........: CALL asft338_default_sfib002(p_sfib001)
+#                  RETURNING r_sfib002
+# Input parameter: p_sfib001      作业编号
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: r_sfib002      作业序
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/04/08 By wujie
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_default_sfib002(p_sfib001)
+   DEFINE p_sfib001         LIKE sfib_t.sfib001
+   #DEFINE r_sfib002         LIKE sfib_t.sfib002   #170104-00070#1 mark
+   DEFINE r_sfib002         LIKE type_t.num5       #170104-00070#1 add
+   LET r_sfib002 = NULL
+
+   SELECT MAX(sfib002)+1 INTO r_sfib002
+     FROM sfib_t
+    WHERE sfibent   = g_enterprise
+      AND sfibsite  = g_site
+      AND sfibdocno = g_sfia_m.sfiadocno
+      AND sfib001   = p_sfib001
+      
+   RETURN r_sfib002
+END FUNCTION
+
+################################################################################
+# Descriptions...: 根据sfib插入多上站资料，从sfcc取，取不到就不取
+# Memo...........:
+# Usage..........: CALL asft338_ins_sfic(p_sfia003,p_sfia004,p_sfibseq)
+#                  RETURNING r_success
+# Input parameter: p_sfia003      重工转出工单
+#                : p_sfia004      转出runcard
+#                : p_sfibseq      作业单身项次
+# Return code....: r_success      回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/05/27 By wujie
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_ins_sfic(p_sfia003,p_sfia004,p_sfibseq)
+   DEFINE p_sfia003        LIKE sfia_t.sfia003
+   DEFINE p_sfia004        LIKE sfia_t.sfia004
+   DEFINE p_sfibseq        LIKE sfib_t.sfibseq
+   DEFINE r_success        LIKE type_t.num5   
+   #161109-00085#31-s
+   #DEFINE l_sfic           RECORD LIKE sfic_t.*
+   #DEFINE l_sfcc           RECORD LIKE sfcc_t.*
+   DEFINE l_sfic RECORD  #重工轉出製程上站作業資料
+       sficent LIKE sfic_t.sficent, #企業編號
+       sficsite LIKE sfic_t.sficsite, #營運據點
+       sficdocno LIKE sfic_t.sficdocno, #重工轉出單號
+       sficseq LIKE sfic_t.sficseq, #項次
+       sfic001 LIKE sfic_t.sfic001, #上站作業
+       sfic002 LIKE sfic_t.sfic002  #上站作序
+   END RECORD
+   DEFINE l_sfcc RECORD  #工單製程上站作業資料
+       sfcc003 LIKE sfcc_t.sfcc003, #上站作業
+       sfcc004 LIKE sfcc_t.sfcc004  #上站作業序
+   END RECORD
+   #161109-00085#31-e
+   LET r_success = TRUE
+   INITIALIZE l_sfic.* TO NULL
+   INITIALIZE l_sfcc.* TO NULL
+   IF p_sfia003 IS NULL OR p_sfia004 IS NULL OR p_sfibseq IS NULL THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF 
+
+   DECLARE asft338_sel_sfcc CURSOR FOR 
+   #161109-00085#31-s
+     #SELECT * FROM sfcc_t
+     SELECT sfcc003,sfcc004 FROM sfcc_t
+      WHERE sfccent   = g_enterprise
+        AND sfccsite  = g_site
+        AND sfccdocno = p_sfia003
+        AND sfcc001   = p_sfia004
+        AND sfcc002   = p_sfibseq
+   #FOREACH asft338_sel_sfcc INTO l_sfcc.*
+   FOREACH asft338_sel_sfcc INTO l_sfcc.sfcc003,l_sfcc.sfcc004
+   #161109-00085#31-e
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      INITIALIZE l_sfic.* TO NULL
+      LET l_sfic.sficent   = g_enterprise
+      LET l_sfic.sficsite  = g_site
+      LET l_sfic.sficdocno = g_sfia_m.sfiadocno
+      LET l_sfic.sficseq   = p_sfibseq
+      LET l_sfic.sfic001   = l_sfcc.sfcc003
+      LET l_sfic.sfic002   = l_sfcc.sfcc004
+      #161109-00085#31-s
+      #INSERT INTO sfic_t VALUES(l_sfic.*)
+      INSERT INTO sfic_t(sficent,sficsite,sficdocno,sficseq,sfic001,sfic002) 
+      VALUES(l_sfic.sficent,l_sfic.sficsite,l_sfic.sficdocno,l_sfic.sficseq,l_sfic.sfic001,l_sfic.sfic002) 
+      #161109-00085#31-e
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      IF SQLCA.sqlerrd[3] = 0 THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF 
+      
+   
+   END FOREACH
+   FREE asft338_sel_sfcc
+   CLOSE asft338_sel_sfcc 
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 遍历单身更新下站作业和作业序
+# Memo...........:
+# Usage..........: CALL asft338_upd_sfib007_all()
+#                  RETURNING r_success
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: r_success      回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_upd_sfib007_all()
+DEFINE l_sql          STRING
+#161109-00085#31-s
+#DEFINE l_sfib        RECORD LIKE sfib_t.*
+#DEFINE l_sfic        RECORD LIKE sfic_t.*
+DEFINE l_sfib RECORD  #重工轉出製程單身檔
+       sfibseq LIKE sfib_t.sfibseq, #項次
+       sfib001 LIKE sfib_t.sfib001, #本站作業
+       sfib002 LIKE sfib_t.sfib002, #作業序
+       sfib004 LIKE sfib_t.sfib004, #群組
+       sfib007 LIKE sfib_t.sfib007  #下站作業
+END RECORD
+DEFINE l_sfic RECORD  #重工轉出製程上站作業資料
+       sfic001 LIKE sfic_t.sfic001, #上站作業
+       sfic002 LIKE sfic_t.sfic002  #上站作序
+END RECORD
+#161109-00085#31-e
+DEFINE l_n            LIKE type_t.num5
+DEFINE l_n1           LIKE type_t.num5
+DEFINE l_n2           LIKE type_t.num5
+DEFINE l_n3           LIKE type_t.num5
+DEFINE r_success      LIKE type_t.num5
+DEFINE l_n0           LIKE type_t.num5
+DEFINE l_sfib007      LIKE sfib_t.sfib007
+DEFINE l_sfib008      LIKE sfib_t.sfib008
+#这个元件是抄晓军的asft301_upd_sffb009()的，若发现有逻辑问题请找他！   
+   LET r_success = TRUE
+   LET l_n = 0 
+   #161109-00085#31-s
+   #LET l_sql = "SELECT * FROM sfib_t WHERE sfibent=",g_enterprise," AND sfibsite='",g_site,"'",
+   LET l_sql = "SELECT sfibseq,sfib001,sfib002,sfib004,sfib007 ",
+               "  FROM sfib_t ",
+               " WHERE sfibent=",g_enterprise,
+               "   AND sfibsite='",g_site,"'",
+               "   AND sfibdocno='",g_sfia_m.sfiadocno,"'"
+   PREPARE asft338_upd_sfib007_pre0 FROM l_sql
+   DECLARE asft338_upd_sfib007_cs0 CURSOR FOR asft338_upd_sfib007_pre0
+   #FOREACH asft338_upd_sfib007_cs0 INTO l_sfib.*
+   FOREACH asft338_upd_sfib007_cs0 INTO l_sfib.sfibseq,l_sfib.sfib001,l_sfib.sfib002,l_sfib.sfib004,l_sfib.sfib007
+   #161109-00085#31-e
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+         EXIT FOREACH
+      END IF
+      
+      #161109-00085#31-s
+      #LET l_sql = "SELECT * FROM sfic_t WHERE sficent='",g_enterprise,"' AND sficsite='",g_site,"' AND sficdocno='",g_sfia_m.sfiadocno,"'",
+      LET l_sql = "SELECT sfic001,sfic002 ",
+                  "  FROM sfic_t ",
+                  " WHERE sficent=",g_enterprise,
+                  "   AND sficsite='",g_site,"' ",
+                  "   AND sficdocno='",g_sfia_m.sfiadocno,"'",
+                  "   AND sficseq=",l_sfib.sfibseq
+      PREPARE asft338_upd_sfib007_pre FROM l_sql
+      DECLARE asft338_upd_sfib007_cs CURSOR FOR asft338_upd_sfib007_pre
+      #FOREACH asft338_upd_sfib007_cs INTO l_sfic.*
+      FOREACH asft338_upd_sfib007_cs INTO l_sfic.sfic001,l_sfic.sfic002
+      #161109-00085#31-s
+         SELECT COUNT(1) INTO l_n FROM sfic_t WHERE sficent=g_enterprise AND sficsite=g_site AND sficdocno=g_sfia_m.sfiadocno
+            AND sfic001=l_sfic.sfic001 AND sfic002=l_sfic.sfic002
+         IF l_n = 1 THEN 
+            #維護群組
+            IF NOT cl_null(l_sfib.sfib004) THEN       
+               #更新上站作業+上站制程序且無維護群組或群組不一樣的資料對應下站程序+下站制程序為本資料的群組+本站 
+               UPDATE sfib_t SET sfib007=l_sfib.sfib004,sfib008=0
+                WHERE sfibent=g_enterprise AND sfibsite=g_site AND sfibdocno=g_sfia_m.sfiadocno
+                  AND sfib001=l_sfic.sfic001 AND sfib002=l_sfic.sfic002
+                  AND (sfib004 IS NULL OR sfib004!=l_sfib.sfib004)
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "sfib_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET r_success = FALSE
+                  RETURN r_success
+               END IF
+               #更新上站作業+上站制程序且有維護群組(相同群組)的資料對應下站程序+下站制程序為本資料的群組+本站 
+               UPDATE sfib_t SET sfib007=l_sfib.sfib001,sfib008=l_sfib.sfib002
+                WHERE sfibent=g_enterprise AND sfibsite=g_site AND sfibdocno=g_sfia_m.sfiadocno
+                  AND sfib001=l_sfic.sfic001 AND sfib002=l_sfic.sfic002
+                  AND sfib004=l_sfib.sfib004
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "sfib_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET r_success = FALSE
+                  RETURN r_success
+               END IF
+            ELSE
+               #無維護群組
+               #更新上站作業+上站制程序對應下站程序+下站制程序為本資料的本站程序+本站制程序
+               UPDATE sfib_t SET sfib007=l_sfib.sfib001,sfib008=l_sfib.sfib002
+                WHERE sfibent=g_enterprise AND sfibsite=g_site AND sfibdocno=g_sfia_m.sfiadocno
+                  AND sfib001=l_sfic.sfic001 AND sfib002=l_sfic.sfic002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "sfib_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET r_success = FALSE
+                  RETURN r_success
+               END IF
+            END IF
+            
+            SELECT COUNT(1) INTO l_n1 FROM sfib_t WHERE sfibent=g_enterprise AND sfibsite=g_site AND sfibdocno=g_sfia_m.sfiadocno
+               AND sfib004=l_sfic.sfic001
+            IF l_n1 > 0 THEN
+               UPDATE sfib_t SET sfib007=l_sfib.sfib001,sfib008=l_sfib.sfib002
+                WHERE sfibent=g_enterprise AND sfibsite=g_site AND sfibdocno=g_sfia_m.sfiadocno
+                  AND sfib004=l_sfic.sfic001
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "sfib_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET r_success = FALSE
+                  RETURN r_success
+               END IF
+            END IF
+         ELSE
+            SELECT COUNT(DISTINCT sfic001) INTO l_n2 FROM sfic_t WHERE sficent=g_enterprise AND sficsite=g_site AND sficdocno=g_sfia_m.sfiadocno
+               AND sfic001=l_sfic.sfic001 AND sfic002=l_sfic.sfic002
+            SELECT COUNT(DISTINCT sfic002) INTO l_n3 FROM sfic_t WHERE sficent=g_enterprise AND sficsite=g_site AND sficdocno=g_sfia_m.sfiadocno
+               AND sfic001=l_sfic.sfic001 AND sfic002=l_sfic.sfic002
+            IF l_n2 = 1 AND l_n3 = 1 THEN         
+               UPDATE sfib_t SET sfib007='MULT',sfib008=0
+                WHERE sfibent=g_enterprise AND sfibsite=g_site AND sfibdocno=g_sfia_m.sfiadocno
+                  AND sfib001=l_sfic.sfic001 AND sfib002=l_sfic.sfic002
+            ELSE
+               UPDATE sfib_t SET sfib007=l_sfib.sfib004,sfib008=0
+                WHERE sfibent=g_enterprise AND sfibsite=g_site AND sfibdocno=g_sfia_m.sfiadocno
+                  AND sfib001=l_sfic.sfic001 AND sfib002=l_sfic.sfic002
+            END IF
+            IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "sfib_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET r_success = FALSE
+                  RETURN r_success
+            END IF
+         END IF
+      END FOREACH
+      
+      #若当站对应下站不存在或者为空，则更新下站作业+下站作业序END+0
+      SELECT sfib007,sfib008 INTO l_sfib007,l_sfib008 FROM sfib_t WHERE sfibent=g_enterprise AND sfibsite=g_site
+         AND sfibdocno=g_sfia_m.sfiadocno AND sfibseq=l_sfib.sfibseq 
+      IF NOT cl_null(l_sfib007) AND NOT cl_null(l_sfib008) THEN
+         SELECT COUNT(1) INTO l_n0 FROM sfic_t WHERE sficent=g_enterprise AND sficsite=g_site AND sficdocno=g_sfia_m.sfiadocno
+            AND sfic001=l_sfib007 AND sfic002=l_sfib008
+         IF l_n0 = 0 THEN
+            IF l_sfib.sfib007 = 'MULT' THEN
+               SELECT COUNT(1) INTO l_n0 FROM sfic_t WHERE sficent=g_enterprise AND sficsite=g_site AND sficdocno=g_sfia_m.sfiadocno
+                  AND sfic001=l_sfib.sfib001 AND sfic002=l_sfib.sfib002
+            ELSE
+               #群组
+               SELECT COUNT(1) INTO l_n0 FROM sfib_t WHERE sfibent=g_enterprise AND sfibsite=g_site AND sfibdocno=g_sfia_m.sfiadocno
+                  AND sfib005=l_sfib.sfib001 AND sfib006=l_sfib.sfib002 AND sfib004=l_sfib007
+            END IF
+         END IF
+      END IF
+      IF cl_null(l_sfib007) OR l_n0 = 0 THEN           
+         UPDATE sfib_t SET sfib007 = 'END',sfib008 = 0
+          WHERE sfibent = g_enterprise
+            AND sfibsite = g_site
+            AND sfibdocno = g_sfia_m.sfiadocno
+            AND sfibseq = l_sfib.sfibseq
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "UPDATE sfib_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_refresh_stus()
+       SELECT DISTINCT sfiastus,sfiaownid,sfiaowndp,sfiacrtid,sfiacrtdp,
+                       sfiacrtdt,sfiamodid,sfiamoddt,sfiacnfid,sfiacnfdt
+                      ,sfia008    #add by wuxja  20150824  审核（取消审核）时，转入runcard栏位的即时显示
+         INTO g_sfia_m.sfiastus,g_sfia_m.sfiaownid,g_sfia_m.sfiaowndp,g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtdp,
+              g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamoddt,g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfdt
+             ,g_sfia_m.sfia008    #add by wuxja  20150824  审核（取消审核）时，转入runcard栏位的即时显示
+         
+         FROM sfia_t
+        WHERE sfiaent   = g_enterprise
+          AND sfiadocno = g_sfia_m.sfiadocno
+       
+       LET g_sfia_m.sfiaownid_desc = s_desc_get_person_desc(g_sfia_m.sfiaownid)
+       LET g_sfia_m.sfiacrtid_desc = s_desc_get_person_desc(g_sfia_m.sfiacrtid)
+       LET g_sfia_m.sfiamodid_desc = s_desc_get_person_desc(g_sfia_m.sfiamodid)
+       LET g_sfia_m.sfiacnfid_desc = s_desc_get_person_desc(g_sfia_m.sfiacnfid)
+       
+       LET g_sfia_m.sfiaowndp_desc = s_desc_get_department_desc(g_sfia_m.sfiaowndp)
+       LET g_sfia_m.sfiacrtdp_desc = s_desc_get_department_desc(g_sfia_m.sfiacrtdp)
+ 
+       CASE g_sfia_m.sfiastus
+          WHEN "N"
+             CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+          WHEN "X"
+             CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+          WHEN "Y"
+             CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+          WHEN "A"
+             CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+          WHEN "D"
+             CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+          WHEN "R"
+             CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+          WHEN "W"
+             CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+          
+       END CASE 
+       
+       DISPLAY BY NAME
+       g_sfia_m.sfiastus,g_sfia_m.sfiaownid,
+       g_sfia_m.sfiaownid_desc,g_sfia_m.sfiaowndp,g_sfia_m.sfiaowndp_desc,g_sfia_m.sfiacrtid,g_sfia_m.sfiacrtid_desc, 
+       g_sfia_m.sfiacrtdp,g_sfia_m.sfiacrtdp_desc,g_sfia_m.sfiacrtdt,g_sfia_m.sfiamodid,g_sfia_m.sfiamodid_desc, 
+       g_sfia_m.sfiamoddt,g_sfia_m.sfiacnfid,g_sfia_m.sfiacnfid_desc,g_sfia_m.sfiacnfdt
+      ,g_sfia_m.sfia008    #add by wuxja  20150824  审核（取消审核）时，转入runcard栏位的即时显示
+END FUNCTION
+
+ 
+{</section>}
+ 

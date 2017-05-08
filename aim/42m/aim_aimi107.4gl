@@ -1,0 +1,3458 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aimi107.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2016-10-24 17:27:25), PR版次:0008(2016-10-31 14:13:50)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000096
+#+ Filename...: aimi107
+#+ Description: 集團預設料件財務分群資料維護作業
+#+ Creator....: 01996(2014-07-08 14:36:13)
+#+ Modifier...: 05423 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="aimi107.global" >}
+#應用 i02 樣板自動產生(Version:38)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00025#40  2016/04/22  By pengxin  將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#160705-00042#9   2016/07/13  By sakura   程式中寫死g_prog部分改寫MATCHES方式
+#161013-00017#7   2016/10/24  By zhujing  可以直接在aimi107增加新的分群代號，不用先在aimi007增加
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS   #(ver:36) add
+   DEFINE mc_data_owner_check LIKE type_t.num5   #(ver:36) add
+END GLOBALS   #(ver:36) add
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_imch_d RECORD
+       imchstus LIKE imch_t.imchstus, 
+   imchsite LIKE imch_t.imchsite, 
+   imch011 LIKE imch_t.imch011, 
+   oocql004 LIKE oocql_t.oocql004, 
+   oocql005 LIKE oocql_t.oocql005, 
+   imch013 LIKE imch_t.imch013, 
+   imch013_desc LIKE type_t.chr500, 
+   imch013_desc_desc LIKE type_t.chr500, 
+   imch014 LIKE imch_t.imch014, 
+   imch014_desc LIKE type_t.chr500, 
+   imch015 LIKE imch_t.imch015
+       END RECORD
+PRIVATE TYPE type_g_imch2_d RECORD
+       imchsite LIKE imch_t.imchsite, 
+   imch011 LIKE imch_t.imch011, 
+   imchownid LIKE imch_t.imchownid, 
+   imchownid_desc LIKE type_t.chr500, 
+   imchowndp LIKE imch_t.imchowndp, 
+   imchowndp_desc LIKE type_t.chr500, 
+   imchcrtid LIKE imch_t.imchcrtid, 
+   imchcrtid_desc LIKE type_t.chr500, 
+   imchcrtdp LIKE imch_t.imchcrtdp, 
+   imchcrtdp_desc LIKE type_t.chr500, 
+   imchcrtdt DATETIME YEAR TO SECOND, 
+   imchmodid LIKE imch_t.imchmodid, 
+   imchmodid_desc LIKE type_t.chr500, 
+   imchmoddt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+DEFINE g_detail_multi_table_t    RECORD
+      oocql001 LIKE oocql_t.oocql001,
+      oocql002 LIKE oocql_t.oocql002,
+      oocql003 LIKE oocql_t.oocql003,
+      oocql004 LIKE oocql_t.oocql004,
+      oocql005 LIKE oocql_t.oocql005
+      END RECORD
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_imch_d          DYNAMIC ARRAY OF type_g_imch_d #單身變數
+DEFINE g_imch_d_t        type_g_imch_d                  #單身備份
+DEFINE g_imch_d_o        type_g_imch_d                  #單身備份
+DEFINE g_imch_d_mask_o   DYNAMIC ARRAY OF type_g_imch_d #單身變數
+DEFINE g_imch_d_mask_n   DYNAMIC ARRAY OF type_g_imch_d #單身變數
+DEFINE g_imch2_d   DYNAMIC ARRAY OF type_g_imch2_d
+DEFINE g_imch2_d_t type_g_imch2_d
+DEFINE g_imch2_d_o type_g_imch2_d
+DEFINE g_imch2_d_mask_o DYNAMIC ARRAY OF type_g_imch2_d
+DEFINE g_imch2_d_mask_n DYNAMIC ARRAY OF type_g_imch2_d
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aimi107.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aim","")
+ 
+   #add-point:作業初始化 name="main.init"
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_site = g_argv[01]
+   END IF
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+ 
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = "SELECT imchstus,imchsite,imch011,imch013,imch014,imch015,imchsite,imch011,imchownid, 
+       imchowndp,imchcrtid,imchcrtdp,imchcrtdt,imchmodid,imchmoddt FROM imch_t WHERE imchent=? AND imchsite=?  
+       AND imch011=? FOR UPDATE"
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aimi107_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aimi107 WITH FORM cl_ap_formpath("aim",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aimi107_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aimi107_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aimi107
+      
+   END IF 
+   
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aimi107.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aimi107_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   
+      CALL cl_set_combo_scc('imch015','8907') 
+ 
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化 name="init.init"
+   
+   #end add-point
+   
+   CALL aimi107_default_search()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION aimi107_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_imch_d.clear()
+         CALL g_imch2_d.clear()
+ 
+         LET g_wc2 = ' 1=2'
+         LET g_action_choice = ""
+         CALL aimi107_init()
+      END IF
+   
+      CALL aimi107_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_imch_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display  name="ui_dialog.body.before_display"
+               
+               #end add-point
+               #讓各頁籤能夠同步指到特定資料
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2 name="ui_dialog.body.before_display2"
+               
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               LET g_data_owner = g_imch2_d[g_detail_idx].imchownid   #(ver:35)
+               LET g_data_dept = g_imch2_d[g_detail_idx].imchowndp  #(ver:35)
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:3)
+   CALL aimi107_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+               #add-point:display array-before row name="ui_dialog.before_row"
+               
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         DISPLAY ARRAY g_imch2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display  name="ui_dialog.body2.before_display"
+               
+               #end add-point
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2 name="ui_dialog.body2.before_display2"
+               
+               #end add-point
+         
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:3)
+   CALL aimi107_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+               #add-point:display array-before row name="ui_dialog.before_row2"
+               
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+ 
+      
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL DIALOG.setSelectionMode("s_detail2", 1)
+ 
+            #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+            #若執行集團級程式，則不開放切換營運中心的功能
+            #IF g_prog = 'aimi107' THEN        #160705-00042#9 160713 by sakura mark 
+            IF g_prog MATCHES 'aimi107' THEN   #160705-00042#9 160713 by sakura add
+               CALL cl_set_act_visible("logistics", FALSE)
+            ELSE
+               CALL cl_set_act_visible("logistics", TRUE)
+            END IF
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #應用 a67 樣板自動產生(Version:1)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            LET g_aw = ''
+            CALL aimi107_show_ownid_msg()
+            #因為不呼叫cl_auth_chk_act()，所以需另外紀錄log，
+            #但紀錄log時需紀錄status，與鴻傑討論後，決議先一律紀錄成功
+            CALL cl_log_act(g_action_choice,TRUE)
+            CALL aimi107_modify()
+            #add-point:ON ACTION modify name="menu.modify"
+            
+            #END add-point
+            
+ 
+ 
+ 
+ 
+         #應用 a67 樣板自動產生(Version:1)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            LET g_aw = g_curr_diag.getCurrentItem()
+            CALL aimi107_show_ownid_msg()
+            #因為不呼叫cl_auth_chk_act()，所以需另外紀錄log，
+            #但紀錄log時需紀錄status，與鴻傑討論後，決議先一律紀錄成功
+            CALL cl_log_act(g_action_choice,TRUE)
+            CALL aimi107_modify()
+            #add-point:ON ACTION modify_detail name="menu.modify_detail"
+            
+            #END add-point
+            
+ 
+ 
+ 
+ 
+         #應用 a67 樣板自動產生(Version:1)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            CALL aimi107_show_ownid_msg()
+            #因為不呼叫cl_auth_chk_act()，所以需另外紀錄log，
+            #但紀錄log時需紀錄status，與鴻傑討論後，決議先一律紀錄成功
+            CALL cl_log_act(g_action_choice,TRUE)
+            CALL aimi107_delete()
+            #add-point:ON ACTION delete name="menu.delete"
+            
+            #END add-point
+            
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aimi107_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aimi107_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+      
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_imch_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_imch2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+            
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+            
+         
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aimi107_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aimi107_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aimi107_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aimi107_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   DEFINE l_ooef017  LIKE ooef_t.ooef017
+   #end add-point 
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_imch_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON imchstus,imchsite,imch011,oocql004,oocql005,imch013,imch014,imch015,imchownid, 
+          imchowndp,imchcrtid,imchcrtdp,imchcrtdt,imchmodid,imchmoddt 
+ 
+         FROM s_detail1[1].imchstus,s_detail1[1].imchsite,s_detail1[1].imch011,s_detail1[1].oocql004, 
+             s_detail1[1].oocql005,s_detail1[1].imch013,s_detail1[1].imch014,s_detail1[1].imch015,s_detail2[1].imchownid, 
+             s_detail2[1].imchowndp,s_detail2[1].imchcrtid,s_detail2[1].imchcrtdp,s_detail2[1].imchcrtdt, 
+             s_detail2[1].imchmodid,s_detail2[1].imchmoddt 
+      
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<imchcrtdt>>----
+         AFTER FIELD imchcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<imchmoddt>>----
+         AFTER FIELD imchmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<imchcnfdt>>----
+         
+         #----<<imchpstdt>>----
+ 
+ 
+ 
+      
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchstus
+            #add-point:BEFORE FIELD imchstus name="query.b.page1.imchstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imchstus
+            
+            #add-point:AFTER FIELD imchstus name="query.a.page1.imchstus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.imchstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imchstus
+            #add-point:ON ACTION controlp INFIELD imchstus name="query.c.page1.imchstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchsite
+            #add-point:BEFORE FIELD imchsite name="query.b.page1.imchsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imchsite
+            
+            #add-point:AFTER FIELD imchsite name="query.a.page1.imchsite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.imchsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imchsite
+            #add-point:ON ACTION controlp INFIELD imchsite name="query.c.page1.imchsite"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.imch011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imch011
+            #add-point:ON ACTION controlp INFIELD imch011 name="construct.c.page1.imch011"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "206"
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imch011  #顯示到畫面上
+            NEXT FIELD imch011                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imch011
+            #add-point:BEFORE FIELD imch011 name="query.b.page1.imch011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imch011
+            
+            #add-point:AFTER FIELD imch011 name="query.a.page1.imch011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD oocql004
+            #add-point:BEFORE FIELD oocql004 name="query.b.page1.oocql004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD oocql004
+            
+            #add-point:AFTER FIELD oocql004 name="query.a.page1.oocql004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.oocql004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD oocql004
+            #add-point:ON ACTION controlp INFIELD oocql004 name="query.c.page1.oocql004"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD oocql005
+            #add-point:BEFORE FIELD oocql005 name="query.b.page1.oocql005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD oocql005
+            
+            #add-point:AFTER FIELD oocql005 name="query.a.page1.oocql005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.oocql005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD oocql005
+            #add-point:ON ACTION controlp INFIELD oocql005 name="query.c.page1.oocql005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.imch013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imch013
+            #add-point:ON ACTION controlp INFIELD imch013 name="construct.c.page1.imch013"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imch013  #顯示到畫面上
+            NEXT FIELD imch013                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imch013
+            #add-point:BEFORE FIELD imch013 name="query.b.page1.imch013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imch013
+            
+            #add-point:AFTER FIELD imch013 name="query.a.page1.imch013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.imch014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imch014
+            #add-point:ON ACTION controlp INFIELD imch014 name="construct.c.page1.imch014"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imch014  #顯示到畫面上
+            NEXT FIELD imch014                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imch014
+            #add-point:BEFORE FIELD imch014 name="query.b.page1.imch014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imch014
+            
+            #add-point:AFTER FIELD imch014 name="query.a.page1.imch014"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imch015
+            #add-point:BEFORE FIELD imch015 name="query.b.page1.imch015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imch015
+            
+            #add-point:AFTER FIELD imch015 name="query.a.page1.imch015"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.imch015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imch015
+            #add-point:ON ACTION controlp INFIELD imch015 name="query.c.page1.imch015"
+            
+            #END add-point
+ 
+ 
+  
+         
+                  #Ctrlp:construct.c.page2.imchownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imchownid
+            #add-point:ON ACTION controlp INFIELD imchownid name="construct.c.page2.imchownid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imchownid  #顯示到畫面上
+            NEXT FIELD imchownid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchownid
+            #add-point:BEFORE FIELD imchownid name="query.b.page2.imchownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imchownid
+            
+            #add-point:AFTER FIELD imchownid name="query.a.page2.imchownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.imchowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imchowndp
+            #add-point:ON ACTION controlp INFIELD imchowndp name="construct.c.page2.imchowndp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imchowndp  #顯示到畫面上
+            NEXT FIELD imchowndp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchowndp
+            #add-point:BEFORE FIELD imchowndp name="query.b.page2.imchowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imchowndp
+            
+            #add-point:AFTER FIELD imchowndp name="query.a.page2.imchowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.imchcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imchcrtid
+            #add-point:ON ACTION controlp INFIELD imchcrtid name="construct.c.page2.imchcrtid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imchcrtid  #顯示到畫面上
+            NEXT FIELD imchcrtid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchcrtid
+            #add-point:BEFORE FIELD imchcrtid name="query.b.page2.imchcrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imchcrtid
+            
+            #add-point:AFTER FIELD imchcrtid name="query.a.page2.imchcrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.imchcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imchcrtdp
+            #add-point:ON ACTION controlp INFIELD imchcrtdp name="construct.c.page2.imchcrtdp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imchcrtdp  #顯示到畫面上
+            NEXT FIELD imchcrtdp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchcrtdp
+            #add-point:BEFORE FIELD imchcrtdp name="query.b.page2.imchcrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imchcrtdp
+            
+            #add-point:AFTER FIELD imchcrtdp name="query.a.page2.imchcrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchcrtdt
+            #add-point:BEFORE FIELD imchcrtdt name="query.b.page2.imchcrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.imchmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imchmodid
+            #add-point:ON ACTION controlp INFIELD imchmodid name="construct.c.page2.imchmodid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imchmodid  #顯示到畫面上
+            NEXT FIELD imchmodid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchmodid
+            #add-point:BEFORE FIELD imchmodid name="query.b.page2.imchmodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imchmodid
+            
+            #add-point:AFTER FIELD imchmodid name="query.a.page2.imchmodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchmoddt
+            #add-point:BEFORE FIELD imchmoddt name="query.b.page2.imchmoddt"
+            
+            #END add-point
+ 
+ 
+  
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.before_construct"
+            
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct name="query.more_construct"
+      
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog name="query.before_dialog"
+         
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct name="query.after_construct"
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc2 = g_wc2," AND imchsite = '",g_argv[01],"'"
+   ELSE   
+      LET l_ooef017 = aimi107_get_site()
+      LET g_wc2 = g_wc2," AND imchsite = '",l_ooef017,"'"
+   END IF
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      #LET g_wc2 = ls_wc
+      LET g_wc2 = " 1=2"
+      RETURN
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+    
+   CALL aimi107_b_fill(g_wc2)
+   LET g_data_owner = g_imch2_d[g_detail_idx].imchownid   #(ver:35)
+   LET g_data_dept = g_imch2_d[g_detail_idx].imchowndp   #(ver:35)
+ 
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION aimi107_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point                
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #add-point:單身新增前 name="insert.b_insert"
+   
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL aimi107_modify()
+            
+   #add-point:單身新增後 name="insert.a_insert"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION aimi107_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num10               #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num10
+   DEFINE  l_i                    LIKE type_t.num10
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num10
+   DEFINE  li_reproduce_target    LIKE type_t.num10
+   DEFINE  lb_reproduce           BOOLEAN
+   DEFINE  l_insert               BOOLEAN
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+#  LET g_action_choice = ""   #(ver:35) mark
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前 name="modify.define_sql"
+   
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+   LET l_insert = FALSE
+ 
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+ 
+   #add-point:modify段修改前 name="modify.before_input"
+   LET g_errshow = 1
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_imch_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item name="input.detail_input.page1.update_item"
+               #161013-00017#7 add-S
+               IF NOT cl_null(g_imch_d[l_ac].imch011) THEN
+                  CALL n_oocql('206',g_imch_d[l_ac].imch011)    
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = '206'
+                  LET g_ref_fields[2] = g_imch_d[l_ac].imch011
+                  CALL ap_ref_array2(g_ref_fields," SELECT oocql004,oocql005 FROM oocql_t WHERE oocqlent = '"
+                      ||g_enterprise||"' AND oocql001 = ? AND oocql002 = ? AND oocql003 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_imch_d[l_ac].oocql004= g_rtn_fields[1]
+                  LET g_imch_d[l_ac].oocql005= g_rtn_fields[2]
+
+                  DISPLAY BY NAME g_imch_d[l_ac].oocql004
+                  DISPLAY BY NAME g_imch_d[l_ac].oocql005
+               END IF
+               #161013-00017#7 add-E
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_imch_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aimi107_b_fill(g_wc2)
+            LET g_detail_cnt = g_imch_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row name="input.body.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_imch_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_imch_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_imch_d[l_ac].imchsite IS NOT NULL
+               AND g_imch_d[l_ac].imch011 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_imch_d_t.* = g_imch_d[l_ac].*  #BACKUP
+               LET g_imch_d_o.* = g_imch_d[l_ac].*  #BACKUP
+               IF NOT aimi107_lock_b("imch_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aimi107_bcl INTO g_imch_d[l_ac].imchstus,g_imch_d[l_ac].imchsite,g_imch_d[l_ac].imch011, 
+                      g_imch_d[l_ac].imch013,g_imch_d[l_ac].imch014,g_imch_d[l_ac].imch015,g_imch2_d[l_ac].imchsite, 
+                      g_imch2_d[l_ac].imch011,g_imch2_d[l_ac].imchownid,g_imch2_d[l_ac].imchowndp,g_imch2_d[l_ac].imchcrtid, 
+                      g_imch2_d[l_ac].imchcrtdp,g_imch2_d[l_ac].imchcrtdt,g_imch2_d[l_ac].imchmodid, 
+                      g_imch2_d[l_ac].imchmoddt
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_imch_d_t.imchsite,":",SQLERRMESSAGE  
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_imch_d_mask_o[l_ac].* =  g_imch_d[l_ac].*
+                  CALL aimi107_imch_t_mask()
+                  LET g_imch_d_mask_n[l_ac].* =  g_imch_d[l_ac].*
+                  
+                  CALL aimi107_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL aimi107_set_entry_b(l_cmd)
+            CALL aimi107_set_no_entry_b(l_cmd)
+            #add-point:modify段before row name="input.body.before_row"
+            
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+LET g_detail_multi_table_t.oocql001 = '206'
+LET g_detail_multi_table_t.oocql002 = g_imch_d[l_ac].imch011
+LET g_detail_multi_table_t.oocql003 = g_dlang
+LET g_detail_multi_table_t.oocql004 = g_imch_d[l_ac].oocql004
+LET g_detail_multi_table_t.oocql005 = g_imch_d[l_ac].oocql005
+ 
+ 
+            #其他table進行lock
+            
+            INITIALIZE l_var_keys TO NULL 
+            INITIALIZE l_field_keys TO NULL 
+            LET l_field_keys[01] = 'oocqlent'
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[02] = 'oocql001'
+            LET l_var_keys[02] = '206'
+            LET l_field_keys[03] = 'oocql002'
+            LET l_var_keys[03] = g_imch_d[l_ac].imch011
+            LET l_field_keys[04] = 'oocql003'
+            LET l_var_keys[04] = g_dlang
+            IF NOT cl_multitable_lock(l_var_keys,l_field_keys,'oocql_t') THEN
+               RETURN 
+            END IF 
+ 
+ 
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_imch_d_t.* TO NULL
+            INITIALIZE g_imch_d_o.* TO NULL
+            INITIALIZE g_imch_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_imch2_d[l_ac].imchownid = g_user
+      LET g_imch2_d[l_ac].imchowndp = g_dept
+      LET g_imch2_d[l_ac].imchcrtid = g_user
+      LET g_imch2_d[l_ac].imchcrtdp = g_dept 
+      LET g_imch2_d[l_ac].imchcrtdt = cl_get_current()
+      LET g_imch2_d[l_ac].imchmodid = g_user
+      LET g_imch2_d[l_ac].imchmoddt = cl_get_current()
+      LET g_imch_d[l_ac].imchstus = ''
+ 
+ 
+ 
+            #自定義預設值(單身2)
+                  LET g_imch_d[l_ac].imchstus = "Y"
+ 
+            #add-point:modify段before備份 name="input.body.before_bak"
+            
+            #end add-point
+            LET g_imch_d_t.* = g_imch_d[l_ac].*     #新輸入資料
+            LET g_imch_d_o.* = g_imch_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_imch_d[li_reproduce_target].* = g_imch_d[li_reproduce].*
+               LET g_imch2_d[li_reproduce_target].* = g_imch2_d[li_reproduce].*
+ 
+               LET g_imch_d[g_imch_d.getLength()].imchsite = NULL
+               LET g_imch_d[g_imch_d.getLength()].imch011 = NULL
+ 
+            END IF
+            
+LET g_detail_multi_table_t.oocql001 = '206'
+LET g_detail_multi_table_t.oocql002 = g_imch_d[l_ac].imch011
+LET g_detail_multi_table_t.oocql003 = g_dlang
+LET g_detail_multi_table_t.oocql004 = g_imch_d[l_ac].oocql004
+LET g_detail_multi_table_t.oocql005 = g_imch_d[l_ac].oocql005
+ 
+ 
+            CALL aimi107_set_entry_b(l_cmd)
+            CALL aimi107_set_no_entry_b(l_cmd)
+            #add-point:modify段before insert name="input.body.before_insert"
+            IF NOT cl_null(g_argv[01]) THEN
+               LET g_imch_d[l_ac].imchsite = g_argv[01]
+            ELSE
+               LET g_imch_d[l_ac].imchsite =  aimi107_get_site()
+            END IF
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM imch_t 
+             WHERE imchent = g_enterprise AND imchsite = g_imch_d[l_ac].imchsite
+                                       AND imch011 = g_imch_d[l_ac].imch011
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_imch_d[g_detail_idx].imchsite
+               LET gs_keys[2] = g_imch_d[g_detail_idx].imch011
+               CALL aimi107_insert_b('imch_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_imch_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "imch_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aimi107_b_fill(g_wc2)
+               #資料多語言用-增/改
+                        INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF '206' = g_detail_multi_table_t.oocql001 AND
+         g_imch_d[l_ac].imch011 = g_detail_multi_table_t.oocql002 AND
+         g_imch_d[l_ac].oocql004 = g_detail_multi_table_t.oocql004 AND
+         g_imch_d[l_ac].oocql005 = g_detail_multi_table_t.oocql005 THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'oocqlent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = '206'
+            LET l_field_keys[02] = 'oocql001'
+            LET l_var_keys_bak[02] = g_detail_multi_table_t.oocql001
+            LET l_var_keys[03] = g_imch_d[l_ac].imch011
+            LET l_field_keys[03] = 'oocql002'
+            LET l_var_keys_bak[03] = g_detail_multi_table_t.oocql002
+            LET l_var_keys[04] = g_dlang
+            LET l_field_keys[04] = 'oocql003'
+            LET l_var_keys_bak[04] = g_detail_multi_table_t.oocql003
+            LET l_vars[01] = g_imch_d[l_ac].oocql004
+            LET l_fields[01] = 'oocql004'
+            LET l_vars[02] = g_imch_d[l_ac].oocql005
+            LET l_fields[02] = 'oocql005'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'oocql_t')
+         END IF 
+ 
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (imchsite = '", g_imch_d[l_ac].imchsite, "' "
+                                  ," AND imch011 = '", g_imch_d[l_ac].imch011, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               #add-point:單身刪除ask前 name="input.body.b_delete_ask"
+               
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               
+               #end add-point   
+               
+               DELETE FROM imch_t
+                WHERE imchent = g_enterprise AND 
+                      imchsite = g_imch_d_t.imchsite
+                      AND imch011 = g_imch_d_t.imch011
+ 
+                      
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point  
+                      
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "imch_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+INITIALIZE l_var_keys_bak TO NULL 
+                  INITIALIZE l_field_keys TO NULL 
+                  LET l_field_keys[01] = 'oocqlent'
+                  LET l_var_keys_bak[01] = g_enterprise
+                  LET l_field_keys[02] = 'oocql001'
+                  LET l_var_keys_bak[02] = g_detail_multi_table_t.oocql001
+                  LET l_field_keys[03] = 'oocql002'
+                  LET l_var_keys_bak[03] = g_detail_multi_table_t.oocql002
+                  CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'oocql_t')
+ 
+ 
+                  #add-point:單身刪除後 name="input.body.a_delete"
+                  
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  CALL aimi107_set_pk_array()
+                  LET g_log1 = util.JSON.stringify(g_imch_d[l_ac])   #(ver:38)
+                  IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:38)
+                     CALL s_transaction_end('N','0')
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF
+               END IF 
+               CLOSE aimi107_bcl
+               #add-point:單身關閉bcl name="input.body.close"
+               
+               #end add-point
+               LET l_count = g_imch_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_imch_d_t.imchsite
+               LET gs_keys[2] = g_imch_d_t.imch011
+ 
+               #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aimi107_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            END IF 
+              
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2 name="input.body.after_delete"
+               
+               #end add-point
+                              CALL aimi107_delete_b('imch_t',gs_keys,"'1'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_imch_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            #add-point:單身刪除後3 name="input.body.after_delete3"
+            
+            #end add-point
+ 
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchstus
+            #add-point:BEFORE FIELD imchstus name="input.b.page1.imchstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imchstus
+            
+            #add-point:AFTER FIELD imchstus name="input.a.page1.imchstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imchstus
+            #add-point:ON CHANGE imchstus name="input.g.page1.imchstus"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imchsite
+            #add-point:BEFORE FIELD imchsite name="input.b.page1.imchsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imchsite
+            
+            #add-point:AFTER FIELD imchsite name="input.a.page1.imchsite"
+            #此段落由子樣板a05產生
+            IF  g_imch_d[g_detail_idx].imchsite IS NOT NULL AND g_imch_d[g_detail_idx].imch011 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_imch_d[g_detail_idx].imchsite != g_imch_d_t.imchsite OR g_imch_d[g_detail_idx].imch011 != g_imch_d_t.imch011)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM imch_t WHERE "||"imchent = '" ||g_enterprise|| "' AND "||"imchsite = '"||g_imch_d[g_detail_idx].imchsite ||"' AND "|| "imch011 = '"||g_imch_d[g_detail_idx].imch011 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imchsite
+            #add-point:ON CHANGE imchsite name="input.g.page1.imchsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imch011
+            #add-point:BEFORE FIELD imch011 name="input.b.page1.imch011"
+            CALL aimi107_imch011_desc()
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imch011
+            
+            #add-point:AFTER FIELD imch011 name="input.a.page1.imch011"
+            #此段落由子樣板a05產生
+            CALL aimi107_imch011_desc()
+            IF  g_imch_d[g_detail_idx].imchsite IS NOT NULL AND g_imch_d[g_detail_idx].imch011 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_imch_d[g_detail_idx].imchsite != g_imch_d_t.imchsite OR g_imch_d[g_detail_idx].imch011 != g_imch_d_t.imch011)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM imch_t WHERE "||"imchent = '" ||g_enterprise|| "' AND "||"imchsite = '"||g_imch_d[g_detail_idx].imchsite ||"' AND "|| "imch011 = '"||g_imch_d[g_detail_idx].imch011 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_imch_d[l_ac].imch011) THEN
+               #161013-00017#7 mod-S
+#               IF NOT s_azzi650_chk_exist('206',g_imch_d[l_ac].imch011) THEN
+#                  LET g_imch_d[l_ac].imch011 = g_imch_d_t.imch011
+#                  NEXT FIELD CURRENT
+#               END IF
+               LET l_count = 1
+               SELECT COUNT(1) INTO l_count FROM oocq_t
+                WHERE oocqent = g_enterprise AND oocq001 = '206' AND oocq002 = g_imch_d[l_ac].imch011
+               IF l_count > 0 THEN
+                  LET l_count = 1
+                  SELECT COUNT(1) INTO l_count FROM oocq_t
+                   WHERE oocqent = g_enterprise AND oocq001 = '206' AND oocq002 = g_imch_d[l_ac].imch011 AND oocqstus = 'Y'
+                  IF l_count = 0 OR cl_null(l_count) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'sub-00295'     
+                     LET g_errparam.extend = g_imch_d[l_ac].imch011
+                     LET g_errparam.popup = TRUE
+                     LET g_errparam.replace[1]='aimi007'
+                     CALL cl_err()
+                     LET g_imch_d[l_ac].imch011 = g_imch_d_t.imch011
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               #161013-00017#7 mod-E
+            END IF
+
+            
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imch011
+            #add-point:ON CHANGE imch011 name="input.g.page1.imch011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD oocql004
+            #add-point:BEFORE FIELD oocql004 name="input.b.page1.oocql004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD oocql004
+            
+            #add-point:AFTER FIELD oocql004 name="input.a.page1.oocql004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE oocql004
+            #add-point:ON CHANGE oocql004 name="input.g.page1.oocql004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD oocql005
+            #add-point:BEFORE FIELD oocql005 name="input.b.page1.oocql005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD oocql005
+            
+            #add-point:AFTER FIELD oocql005 name="input.a.page1.oocql005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE oocql005
+            #add-point:ON CHANGE oocql005 name="input.g.page1.oocql005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imch013
+            
+            #add-point:AFTER FIELD imch013 name="input.a.page1.imch013"
+            CALL aimi107_imch013_desc()
+            IF NOT cl_null(g_imch_d[l_ac].imch013) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_imch_d[l_ac].imch013
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_imaa001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_imch_d[l_ac].imch013 = g_imch_d_t.imch013
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            IF NOT aimi107_unit_chk() THEN
+               LET g_imch_d[l_ac].imch013 = g_imch_d_t.imch013
+               NEXT FIELD CURRENT
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imch013
+            #add-point:BEFORE FIELD imch013 name="input.b.page1.imch013"
+            CALL aimi107_imch013_desc()
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imch013
+            #add-point:ON CHANGE imch013 name="input.g.page1.imch013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imch014
+            
+            #add-point:AFTER FIELD imch014 name="input.a.page1.imch014"
+            CALL aimi107_imch014_desc()
+            IF NOT cl_null(g_imch_d[l_ac].imch014) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_imch_d[l_ac].imch014
+               #160318-00025#40  2016/04/22  by pengxin  add(S)
+               LET g_errshow = TRUE #是否開窗 
+               LET g_chkparam.err_str[1] = "aim-00005:sub-01302|aooi250|",cl_get_progname("aooi250",g_lang,"2"),"|:EXEPROGaooi250"
+               #160318-00025#40  2016/04/22  by pengxin  add(E)
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooca001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_imch_d[l_ac].imch014 = g_imch_d_t.imch014
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            IF NOT aimi107_unit_chk() THEN
+               LET g_imch_d[l_ac].imch014 = g_imch_d_t.imch014
+               NEXT FIELD CURRENT
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imch014
+            #add-point:BEFORE FIELD imch014 name="input.b.page1.imch014"
+            CALL aimi107_imch014_desc()
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imch014
+            #add-point:ON CHANGE imch014 name="input.g.page1.imch014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imch015
+            #add-point:BEFORE FIELD imch015 name="input.b.page1.imch015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imch015
+            
+            #add-point:AFTER FIELD imch015 name="input.a.page1.imch015"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imch015
+            #add-point:ON CHANGE imch015 name="input.g.page1.imch015"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.imchstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imchstus
+            #add-point:ON ACTION controlp INFIELD imchstus name="input.c.page1.imchstus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.imchsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imchsite
+            #add-point:ON ACTION controlp INFIELD imchsite name="input.c.page1.imchsite"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.imch011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imch011
+            #add-point:ON ACTION controlp INFIELD imch011 name="input.c.page1.imch011"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imch_d[l_ac].imch011             #給予default值
+            LET g_qryparam.default2 = "" #g_imch_d[l_ac].oocq002 #應用分類碼
+            #給予arg
+            LET g_qryparam.arg1 = "206" #
+
+            
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_imch_d[l_ac].imch011 = g_qryparam.return1              
+            #LET g_imch_d[l_ac].oocq002 = g_qryparam.return2 
+            DISPLAY g_imch_d[l_ac].imch011 TO imch011              #
+            #DISPLAY g_imch_d[l_ac].oocq002 TO oocq002 #應用分類碼
+            NEXT FIELD imch011                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.oocql004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD oocql004
+            #add-point:ON ACTION controlp INFIELD oocql004 name="input.c.page1.oocql004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.oocql005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD oocql005
+            #add-point:ON ACTION controlp INFIELD oocql005 name="input.c.page1.oocql005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.imch013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imch013
+            #add-point:ON ACTION controlp INFIELD imch013 name="input.c.page1.imch013"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imch_d[l_ac].imch013             #給予default值
+            LET g_qryparam.default2 = "" #g_imch_d[l_ac].imaal003 #品名
+            LET g_qryparam.default3 = "" #g_imch_d[l_ac].imaal004 #規格
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_imaa001()                                #呼叫開窗
+
+            LET g_imch_d[l_ac].imch013 = g_qryparam.return1              
+            #LET g_imch_d[l_ac].imaal003 = g_qryparam.return2 
+            #LET g_imch_d[l_ac].imaal004 = g_qryparam.return3 
+            DISPLAY g_imch_d[l_ac].imch013 TO imch013              #
+            #DISPLAY g_imch_d[l_ac].imaal003 TO imaal003 #品名
+            #DISPLAY g_imch_d[l_ac].imaal004 TO imaal004 #規格
+            NEXT FIELD imch013                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.imch014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imch014
+            #add-point:ON ACTION controlp INFIELD imch014 name="input.c.page1.imch014"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imch_d[l_ac].imch014             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooca001_1()                                #呼叫開窗
+
+            LET g_imch_d[l_ac].imch014 = g_qryparam.return1              
+
+            DISPLAY g_imch_d[l_ac].imch014 TO imch014              #
+
+            NEXT FIELD imch014                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.imch015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imch015
+            #add-point:ON ACTION controlp INFIELD imch015 name="input.c.page1.imch015"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CLOSE aimi107_bcl
+               CALL s_transaction_end('N','0')
+               LET INT_FLAG = 0
+               LET g_imch_d[l_ac].* = g_imch_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               #add-point:單身取消時 name="input.body.cancel"
+               
+               #end add-point
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_imch_d[l_ac].imchsite 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_imch_d[l_ac].* = g_imch_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身)
+               LET g_imch2_d[l_ac].imchmodid = g_user 
+LET g_imch2_d[l_ac].imchmoddt = cl_get_current()
+LET g_imch2_d[l_ac].imchmodid_desc = cl_get_username(g_imch2_d[l_ac].imchmodid)
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL aimi107_imch_t_mask_restore('restore_mask_o')
+ 
+               UPDATE imch_t SET (imchstus,imchsite,imch011,imch013,imch014,imch015,imchownid,imchowndp, 
+                   imchcrtid,imchcrtdp,imchcrtdt,imchmodid,imchmoddt) = (g_imch_d[l_ac].imchstus,g_imch_d[l_ac].imchsite, 
+                   g_imch_d[l_ac].imch011,g_imch_d[l_ac].imch013,g_imch_d[l_ac].imch014,g_imch_d[l_ac].imch015, 
+                   g_imch2_d[l_ac].imchownid,g_imch2_d[l_ac].imchowndp,g_imch2_d[l_ac].imchcrtid,g_imch2_d[l_ac].imchcrtdp, 
+                   g_imch2_d[l_ac].imchcrtdt,g_imch2_d[l_ac].imchmodid,g_imch2_d[l_ac].imchmoddt)
+                WHERE imchent = g_enterprise AND
+                  imchsite = g_imch_d_t.imchsite #項次   
+                  AND imch011 = g_imch_d_t.imch011  
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               #161013-00017#7 mod-S     
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "imch_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "imch_t:",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_imch_d[g_detail_idx].imchsite
+               LET gs_keys_bak[1] = g_imch_d_t.imchsite
+               LET gs_keys[2] = g_imch_d[g_detail_idx].imch011
+               LET gs_keys_bak[2] = g_imch_d_t.imch011
+               CALL aimi107_update_b('imch_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                              INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF '206' = g_detail_multi_table_t.oocql001 AND
+         g_imch_d[l_ac].imch011 = g_detail_multi_table_t.oocql002 AND
+         g_imch_d[l_ac].oocql004 = g_detail_multi_table_t.oocql004 AND
+         g_imch_d[l_ac].oocql005 = g_detail_multi_table_t.oocql005 THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'oocqlent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = '206'
+            LET l_field_keys[02] = 'oocql001'
+            LET l_var_keys_bak[02] = '206'
+            LET l_var_keys[03] = g_imch_d[l_ac].imch011
+            LET l_field_keys[03] = 'oocql002'
+            LET l_var_keys_bak[03] = g_imch_d[l_ac].imch011
+            LET l_var_keys[04] = g_dlang
+            LET l_field_keys[04] = 'oocql003'
+            LET l_var_keys_bak[04] = g_dlang
+            LET l_vars[01] = g_imch_d[l_ac].oocql004
+            LET l_fields[01] = 'oocql004'
+            LET l_vars[02] = g_imch_d[l_ac].oocql005
+            LET l_fields[02] = 'oocql005'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'oocql_t')
+         END IF 
+ 
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_imch_d_t)
+                     LET g_log2 = util.JSON.stringify(g_imch_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL aimi107_imch_t_mask_restore('restore_mask_n')
+               {
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "imch_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "imch_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_imch_d[g_detail_idx].imchsite
+               LET gs_keys_bak[1] = g_imch_d_t.imchsite
+               LET gs_keys[2] = g_imch_d[g_detail_idx].imch011
+               LET gs_keys_bak[2] = g_imch_d_t.imch011
+               CALL aimi107_update_b('imch_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                              INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF '206' = g_detail_multi_table_t.oocql001 AND
+         g_imch_d[l_ac].imch011 = g_detail_multi_table_t.oocql002 AND
+         g_imch_d[l_ac].oocql004 = g_detail_multi_table_t.oocql004 AND
+         g_imch_d[l_ac].oocql005 = g_detail_multi_table_t.oocql005 THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'oocqlent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = '206'
+            LET l_field_keys[02] = 'oocql001'
+            LET l_var_keys_bak[02] = g_detail_multi_table_t.oocql001
+            LET l_var_keys[03] = g_imch_d[l_ac].imch011
+            LET l_field_keys[03] = 'oocql002'
+            LET l_var_keys_bak[03] = g_detail_multi_table_t.oocql002
+            LET l_var_keys[04] = g_dlang
+            LET l_field_keys[04] = 'oocql003'
+            LET l_var_keys_bak[04] = g_detail_multi_table_t.oocql003
+            LET l_vars[01] = g_imch_d[l_ac].oocql004
+            LET l_fields[01] = 'oocql004'
+            LET l_vars[02] = g_imch_d[l_ac].oocql005
+            LET l_fields[02] = 'oocql005'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'oocql_t')
+         END IF 
+ 
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_imch_d_t)
+                     LET g_log2 = util.JSON.stringify(g_imch_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL aimi107_imch_t_mask_restore('restore_mask_n')
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               }
+               #161013-00017#7 mod-E
+               #161013-00017#7 add-S
+               LET l_count = 1
+               SELECT COUNT(1) INTO l_count FROM oocq_t
+                WHERE oocqent = g_enterprise AND oocq001 = '206' AND oocq002 = g_imch_d[l_ac].imch011
+               IF l_count = 0 THEN #新增分类码及说明
+                  INSERT INTO oocq_t (oocqent,oocqstus,oocq001,oocq002,oocq003)
+                  VALUES (g_enterprise,'Y','206',g_imch_d[l_ac].imch011,'206')
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "oocq_t:",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                  END IF
+               END IF
+               #161013-00017#7 add-E
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL aimi107_unlock_b("imch_t")
+            IF INT_FLAG THEN
+               CALL s_transaction_end('N','0')
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_imch_d[l_ac].* = g_imch_d_t.*
+               END IF
+               #add-point:單身after row name="input.body.a_close"
+               
+               #end add-point
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #其他table進行unlock
+            CALL cl_multitable_unlock()
+             #add-point:單身after row name="input.body.a_row"
+            
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後 name="input.body.a_input"
+            
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+            
+         ON ACTION controlo   
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_imch_d[li_reproduce_target].* = g_imch_d[li_reproduce].*
+               LET g_imch2_d[li_reproduce_target].* = g_imch2_d[li_reproduce].*
+ 
+               LET g_imch_d[li_reproduce_target].imchsite = NULL
+               LET g_imch_d[li_reproduce_target].imch011 = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_imch_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_imch_d.getLength()+1
+            END IF
+            
+      END INPUT
+      
+ 
+      
+      DISPLAY ARRAY g_imch2_d TO s_detail2.*
+         ATTRIBUTES(COUNT=g_detail_cnt)  
+      
+         BEFORE DISPLAY 
+            CALL aimi107_b_fill(g_wc2)
+            CALL FGL_SET_ARR_CURR(g_detail_idx)
+      
+         BEFORE ROW
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+            LET l_ac = g_detail_idx
+            LET g_temp_idx = l_ac
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            CALL cl_show_fld_cont() 
+            
+         #add-point:page2自定義行為 name="input.body2.action"
+         
+         #end add-point
+            
+      END DISPLAY
+ 
+      
+      #add-point:before_more_input name="input.more_input"
+      
+      #end add-point
+      
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()      
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         #LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog name="input.before_dialog"
+         
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD imchstus
+            WHEN "s_detail2"
+               NEXT FIELD imchsite_2
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+    
+   #新增後取消
+   IF l_cmd = 'a' THEN
+      #當取消或無輸入資料按確定時刪除對應資料
+      IF INT_FLAG OR cl_null(g_imch_d[g_detail_idx].imchsite) THEN
+         CALL g_imch_d.deleteElement(g_detail_idx)
+         CALL g_imch2_d.deleteElement(g_detail_idx)
+ 
+      END IF
+   END IF
+   
+   #修改後取消
+   IF l_cmd = 'u' AND INT_FLAG THEN
+      LET g_imch_d[g_detail_idx].* = g_imch_d_t.*
+   END IF
+   
+   #add-point:modify段修改後 name="modify.after_input"
+   
+   #end add-point
+ 
+   CLOSE aimi107_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION aimi107_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx          LIKE type_t.num10
+   DEFINE li_ac_t         LIKE type_t.num10
+   DEFINE li_detail_tmp   LIKE type_t.num10
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="delete.body.before_delete"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_ac_t = l_ac
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_imch_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT aimi107_lock_b("imch_t") THEN
+            #已被他人鎖定
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+ 
+         #(ver:35) ---add start---
+         #確定是否有刪除的權限
+         #先確定該table有ownid
+         IF cl_getField("imch_t","imchownid") THEN
+            LET g_data_owner = g_imch2_d[g_detail_idx].imchownid
+            LET g_data_dept = g_imch2_d[g_detail_idx].imchowndp
+            IF NOT cl_auth_chk_act_permission("delete") THEN
+               #有目前權限無法刪除的資料
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+         END IF
+         #(ver:35) --- add end ---
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前 name="delete.body.b_delete_ask"
+   
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_imch_d.getLength()
+      IF g_imch_d[li_idx].imchsite IS NOT NULL
+         AND g_imch_d[li_idx].imch011 IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前 name="delete.body.b_delete"
+         
+         #end add-point   
+         
+         DELETE FROM imch_t
+          WHERE imchent = g_enterprise AND 
+                imchsite = g_imch_d[li_idx].imchsite
+                AND imch011 = g_imch_d[li_idx].imch011
+ 
+         #add-point:單身刪除中 name="delete.body.m_delete"
+         #161013-00017#7 mod-S
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "imch_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            RETURN
+         ELSE
+{
+         #end add-point  
+                
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "imch_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            LET l_ac = li_idx
+            
+LET g_detail_multi_table_t.oocql001 = '206'
+LET g_detail_multi_table_t.oocql002 = g_imch_d[l_ac].imch011
+LET g_detail_multi_table_t.oocql003 = g_dlang
+LET g_detail_multi_table_t.oocql004 = g_imch_d[l_ac].oocql004
+LET g_detail_multi_table_t.oocql005 = g_imch_d[l_ac].oocql005
+ 
+ 
+            
+LET g_detail_multi_table_t.oocql001 = '206'
+LET g_detail_multi_table_t.oocql002 = g_imch_d[l_ac].imch011
+LET g_detail_multi_table_t.oocql003 = g_dlang
+LET g_detail_multi_table_t.oocql004 = g_imch_d[l_ac].oocql004
+LET g_detail_multi_table_t.oocql005 = g_imch_d[l_ac].oocql005
+ 
+ 
+ 
+            
+INITIALIZE l_var_keys_bak TO NULL 
+                  INITIALIZE l_field_keys TO NULL 
+                  LET l_field_keys[01] = 'oocqlent'
+                  LET l_var_keys_bak[01] = g_enterprise
+                  LET l_field_keys[02] = 'oocql001'
+                  LET l_var_keys_bak[02] = g_detail_multi_table_t.oocql001
+                  LET l_field_keys[03] = 'oocql002'
+                  LET l_var_keys_bak[03] = g_detail_multi_table_t.oocql002
+                  CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'oocql_t')
+ 
+ 
+            
+INITIALIZE l_var_keys_bak TO NULL 
+                  INITIALIZE l_field_keys TO NULL 
+                  LET l_field_keys[01] = 'oocqlent'
+                  LET l_var_keys_bak[01] = g_enterprise
+                  LET l_field_keys[02] = 'oocql001'
+                  LET l_var_keys_bak[02] = g_detail_multi_table_t.oocql001
+                  LET l_field_keys[03] = 'oocql002'
+                  LET l_var_keys_bak[03] = g_detail_multi_table_t.oocql002
+                  CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'oocql_t')
+ 
+ 
+ 
+            #add-point:單身同步刪除前(同層table) name="delete.body.a_delete"
+}
+            #161013-00017#7 mod-E
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_imch_d_t.imchsite
+               LET gs_keys[2] = g_imch_d_t.imch011
+ 
+            #add-point:單身同步刪除中(同層table) name="delete.body.a_delete2"
+            
+            #end add-point
+                           CALL aimi107_delete_b('imch_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table) name="delete.body.a_delete3"
+            
+            #end add-point
+            #刪除相關文件
+            #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aimi107_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove.func"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            
+         END IF 
+      END IF 
+    
+   END FOR
+   CALL s_transaction_end('Y','0')
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後 name="delete.after"
+   
+   #end add-point  
+   
+   LET l_ac = li_ac_t
+   
+   #刷新資料
+   CALL aimi107_b_fill(g_wc2)
+            
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aimi107_b_fill(p_wc2)              #BODY FILL UP
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE p_wc2            STRING
+   DEFINE ls_owndept_list  STRING  #(ver:35) add
+   DEFINE ls_ownuser_list  STRING  #(ver:35) add
+   #add-point:b_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前 name="b_fill.sql_before"
+   
+   #end add-point
+ 
+   LET g_sql = "SELECT  DISTINCT t0.imchstus,t0.imchsite,t0.imch011,t0.imch013,t0.imch014,t0.imch015, 
+       t0.imchsite,t0.imch011,t0.imchownid,t0.imchowndp,t0.imchcrtid,t0.imchcrtdp,t0.imchcrtdt,t0.imchmodid, 
+       t0.imchmoddt ,t1.imaal003 ,t2.imaal004 ,t3.oocal003 ,t4.ooag011 ,t5.ooefl003 ,t6.ooag011 ,t7.ooefl003 , 
+       t8.ooag011 FROM imch_t t0",
+               " LEFT JOIN oocql_t ON oocqlent = "||g_enterprise||" AND '206' = oocql001 AND imch011 = oocql002 AND oocql003 = '",g_dlang,"'",
+                              " LEFT JOIN imaal_t t1 ON t1.imaalent="||g_enterprise||" AND t1.imaal001=t0.imch013 AND t1.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t2 ON t2.imaalent="||g_enterprise||" AND t2.imaal001=t0.imch013 AND t2.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN oocal_t t3 ON t3.oocalent="||g_enterprise||" AND t3.oocal001=t0.imch014 AND t3.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t4 ON t4.ooagent="||g_enterprise||" AND t4.ooag001=t0.imchownid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent="||g_enterprise||" AND t5.ooefl001=t0.imchowndp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t6 ON t6.ooagent="||g_enterprise||" AND t6.ooag001=t0.imchcrtid  ",
+               " LEFT JOIN ooefl_t t7 ON t7.ooeflent="||g_enterprise||" AND t7.ooefl001=t0.imchcrtdp AND t7.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t8 ON t8.ooagent="||g_enterprise||" AND t8.ooag001=t0.imchmodid  ",
+ 
+               " WHERE t0.imchent= ?  AND  1=1 AND (", p_wc2, ") "
+ 
+   #(ver:35) ---add start---
+      #應用 a68 樣板自動產生(Version:1)
+   #若是修改，須視權限加上條件
+   IF g_action_choice = "modify" OR g_action_choice = "modify_detail" THEN
+      LET ls_owndept_list = NULL
+      LET ls_ownuser_list = NULL
+ 
+      #若有設定部門權限
+      CALL cl_get_owndept_list("imch_t","modify") RETURNING ls_owndept_list
+      IF NOT cl_null(ls_owndept_list) THEN
+         LET g_sql = g_sql, " AND imchowndp IN (",ls_owndept_list,")"
+      END IF
+ 
+      #若有設定個人權限
+      CALL cl_get_ownuser_list("imch_t","modify") RETURNING ls_ownuser_list
+      IF NOT cl_null(ls_ownuser_list) THEN
+         LET g_sql = g_sql," AND imchownid IN (",ls_ownuser_list,")"
+      END IF
+   END IF
+ 
+ 
+ 
+   #(ver:35) --- add end ---
+ 
+   #add-point:b_fill段sql wc name="b_fill.sql_wc"
+   
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("imch_t"),
+                      " ORDER BY t0.imchsite,t0.imch011"
+   
+   #add-point:b_fill段sql之後 name="b_fill.sql_after"
+   
+   #end add-point
+   
+   #LET g_sql = cl_sql_add_tabid(g_sql,"imch_t")            #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE aimi107_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aimi107_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_imch_d.clear()
+   CALL g_imch2_d.clear()   
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_imch_d[l_ac].imchstus,g_imch_d[l_ac].imchsite,g_imch_d[l_ac].imch011,g_imch_d[l_ac].imch013, 
+       g_imch_d[l_ac].imch014,g_imch_d[l_ac].imch015,g_imch2_d[l_ac].imchsite,g_imch2_d[l_ac].imch011, 
+       g_imch2_d[l_ac].imchownid,g_imch2_d[l_ac].imchowndp,g_imch2_d[l_ac].imchcrtid,g_imch2_d[l_ac].imchcrtdp, 
+       g_imch2_d[l_ac].imchcrtdt,g_imch2_d[l_ac].imchmodid,g_imch2_d[l_ac].imchmoddt,g_imch_d[l_ac].imch013_desc, 
+       g_imch_d[l_ac].imch013_desc_desc,g_imch_d[l_ac].imch014_desc,g_imch2_d[l_ac].imchownid_desc,g_imch2_d[l_ac].imchowndp_desc, 
+       g_imch2_d[l_ac].imchcrtid_desc,g_imch2_d[l_ac].imchcrtdp_desc,g_imch2_d[l_ac].imchmodid_desc
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH b_fill_curs:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      
+      #end add-point
+      
+      CALL aimi107_detail_show()      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_imch_d.deleteElement(g_imch_d.getLength())   
+   CALL g_imch2_d.deleteElement(g_imch2_d.getLength())
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_imch_d.getLength()
+      LET g_imch2_d[l_ac].imchsite = g_imch_d[l_ac].imchsite 
+      LET g_imch2_d[l_ac].imch011 = g_imch_d[l_ac].imch011 
+ 
+      #add-point:b_fill段key值相關欄位 name="b_fill.keys.fill"
+      
+      #end add-point
+   END FOR
+   
+   IF g_cnt > g_imch_d.getLength() THEN
+      LET l_ac = g_imch_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_imch_d.getLength()
+      LET g_imch_d_mask_o[l_ac].* =  g_imch_d[l_ac].*
+      CALL aimi107_imch_t_mask()
+      LET g_imch_d_mask_n[l_ac].* =  g_imch_d[l_ac].*
+   END FOR
+   
+   LET g_imch2_d_mask_o.* =  g_imch2_d.*
+   FOR l_ac = 1 TO g_imch2_d.getLength()
+      LET g_imch2_d_mask_o[l_ac].* =  g_imch2_d[l_ac].*
+      CALL aimi107_imch_t_mask()
+      LET g_imch2_d_mask_n[l_ac].* =  g_imch2_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = g_cnt
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_imch_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE aimi107_pb
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aimi107_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="detail_show.before"
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+   #帶出公用欄位reference值page2
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference name="detail_show.reference"
+
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = '206'
+   LET g_ref_fields[2] = g_imch_d[l_ac].imch011
+   CALL ap_ref_array2(g_ref_fields," SELECT oocql004,oocql005 FROM oocql_t WHERE oocqlent = "||g_enterprise||" AND oocql001 = ? AND oocql002 = ? AND oocql003 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_imch_d[l_ac].oocql004 = g_rtn_fields[1] 
+   LET g_imch_d[l_ac].oocql005 = g_rtn_fields[2] 
+   DISPLAY BY NAME g_imch_d[l_ac].oocql004,g_imch_d[l_ac].oocql005
+   #end add-point
+   
+   #add-point:show段單身reference name="detail_show.body2.reference"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION aimi107_set_entry_b(p_cmd)                                                  
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry_b段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry_b段control name="set_entry_b.set_entry_b"
+   
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                 
+ 
+{</section>}
+ 
+{<section id="aimi107.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION aimi107_set_no_entry_b(p_cmd)                                               
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point   
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry_b段control name="set_no_entry_b.set_no_entry_b"
+   
+   #end add-point       
+                                                                                
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION aimi107_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   DEFINE l_ooef017  LIKE ooef_t.ooef017
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.before"
+   
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " imchsite = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " imch011 = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+    IF cl_null(g_argv[01]) THEN
+      LET l_ooef017 =  aimi107_get_site()
+      LET ls_wc = ls_wc, " imchsite = '", l_ooef017, "' AND "
+   END IF
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+      #預設查詢條件
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=1"
+      END IF
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION aimi107_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "imch_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      IF ps_table <> 'imch_t' THEN
+         #add-point:delete_b段刪除前 name="delete_b.b_delete"
+         
+         #end add-point     
+         
+         DELETE FROM imch_t
+          WHERE imchent = g_enterprise AND
+            imchsite = ps_keys_bak[1] AND imch011 = ps_keys_bak[2]
+         
+         #add-point:delete_b段刪除中 name="delete_b.m_delete"
+         
+         #end add-point  
+            
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = ":",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = FALSE 
+            CALL cl_err()
+         END IF
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_imch_d.deleteElement(li_idx) 
+      END IF 
+      IF ps_page <> "'2'" THEN 
+         CALL g_imch2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      
+      #add-point:delete_b段刪除後 name="delete_b.a_delete"
+      
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION aimi107_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   DEFINE l_count     LIKE type_t.num5    #161013-00017#7 add
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "imch_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前 name="insert_b.b_insert"
+      
+      #end add-point    
+      INSERT INTO imch_t
+                  (imchent,
+                   imchsite,imch011
+                   ,imchstus,imch013,imch014,imch015,imchownid,imchowndp,imchcrtid,imchcrtdp,imchcrtdt,imchmodid,imchmoddt) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_imch_d[l_ac].imchstus,g_imch_d[l_ac].imch013,g_imch_d[l_ac].imch014,g_imch_d[l_ac].imch015, 
+                       g_imch2_d[l_ac].imchownid,g_imch2_d[l_ac].imchowndp,g_imch2_d[l_ac].imchcrtid, 
+                       g_imch2_d[l_ac].imchcrtdp,g_imch2_d[l_ac].imchcrtdt,g_imch2_d[l_ac].imchmodid, 
+                       g_imch2_d[l_ac].imchmoddt)
+      #add-point:insert_b段新增中 name="insert_b.m_insert"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "imch_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後 name="insert_b.a_insert"
+      #161013-00017#7 add-S
+      LET l_count = 1
+      SELECT COUNT(1) INTO l_count FROM oocq_t
+       WHERE oocqent = g_enterprise AND oocq001 = '206' AND oocq002 = g_imch_d[l_ac].imch011
+      IF l_count = 0 THEN #新增分类码及说明
+         INSERT INTO oocq_t (oocqent,oocqstus,oocq001,oocq002,oocq003)
+         VALUES (g_enterprise,'Y','206',g_imch_d[l_ac].imch011,'206')
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "oocq_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE
+            CALL cl_err()
+         END IF
+      END IF
+      #161013-00017#7 add-E
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION aimi107_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   DEFINE l_count     LIKE type_t.num5    #161013-00017#7 add
+   #end add-point     
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   #比對新舊值, 判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #若key無變動, 不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #若key有變動, 則連動其他table的資料   
+   #判斷是否是同一群組的table
+   LET ls_group = "imch_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "imch_t" THEN
+      #add-point:update_b段修改前 name="update_b.b_update"
+      
+      #end add-point     
+      UPDATE imch_t 
+         SET (imchsite,imch011
+              ,imchstus,imch013,imch014,imch015,imchownid,imchowndp,imchcrtid,imchcrtdp,imchcrtdt,imchmodid,imchmoddt) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_imch_d[l_ac].imchstus,g_imch_d[l_ac].imch013,g_imch_d[l_ac].imch014,g_imch_d[l_ac].imch015, 
+                  g_imch2_d[l_ac].imchownid,g_imch2_d[l_ac].imchowndp,g_imch2_d[l_ac].imchcrtid,g_imch2_d[l_ac].imchcrtdp, 
+                  g_imch2_d[l_ac].imchcrtdt,g_imch2_d[l_ac].imchmodid,g_imch2_d[l_ac].imchmoddt) 
+         WHERE imchent = g_enterprise AND imchsite = ps_keys_bak[1] AND imch011 = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL s_transaction_end('N','0')
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "imch_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "imch_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後 name="update_b.a_update"
+      #161013-00017#7 add-S
+      LET l_count = 1
+      SELECT COUNT(1) INTO l_count FROM oocq_t
+       WHERE oocqent = g_enterprise AND oocq001 = '206' AND oocq002 = g_imch_d[l_ac].imch011
+      IF l_count = 0 THEN #新增分类码及说明
+         INSERT INTO oocq_t (oocqent,oocqstus,oocq001,oocq002,oocq003)
+         VALUES (g_enterprise,'Y','206',g_imch_d[l_ac].imch011,'206')
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "oocq_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+         END IF
+      END IF
+      #161013-00017#7 add-E
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION aimi107_lock_b(ps_table)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+   
+   #先刷新資料
+   #CALL aimi107_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "imch_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN aimi107_bcl USING g_enterprise,
+                                       g_imch_d[g_detail_idx].imchsite,g_imch_d[g_detail_idx].imch011 
+ 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "aimi107_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION aimi107_unlock_b(ps_table)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE aimi107_bcl
+   #END IF
+   
+ 
+   
+   #add-point:unlock_b段結束前 name="unlock_b.after"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.modify_detail_chk" >}
+#+ 單身輸入判定(因應modify_detail)
+PRIVATE FUNCTION aimi107_modify_detail_chk(ps_record)
+   #add-point:modify_detail_chk段define(客製用) name="modify_detail_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify_detail_chk.define"
+   
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前 name="modify_detail_chk.before"
+   
+   #end add-point
+   
+   #根據sr名稱確定該page第一個欄位的名稱
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "imchstus"
+      WHEN "s_detail2"
+         LET ls_return = "imchsite_2"
+ 
+      #add-point:modify_detail_chk段自訂page控制 name="modify_detail_chk.page_control"
+      
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前 name="modify_detail_chk.after"
+   
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimi107.show_ownid_msg" >}
+#+ 判斷是否顯示只能修改自己權限資料的訊息
+#(ver:35) ---add start---
+PRIVATE FUNCTION aimi107_show_ownid_msg()
+   #add-point:show_ownid_msg段define(客製用) name="show_ownid_msg.define_customerization"
+   
+   #end add-point
+   #add-point:show_ownid_msg段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show_ownid_msg.define"
+   
+   #end add-point
+  
+ 
+   IF g_action_choice = 'modify' OR g_action_choice = 'modify_detail' THEN
+      IF mc_data_owner_check THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = ''
+         LET g_errparam.code   = 'lib-00419'
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+   END IF
+ 
+END FUNCTION
+#(ver:35) --- add end ---
+ 
+{</section>}
+ 
+{<section id="aimi107.mask_functions" >}
+&include "erp/aim/aimi107_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aimi107.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION aimi107_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_imch_d[l_ac].imchsite
+   LET g_pk_array[1].column = 'imchsite'
+   LET g_pk_array[2].values = g_imch_d[l_ac].imch011
+   LET g_pk_array[2].column = 'imch011'
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aimi107.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="aimi107.other_dialog" readonly="Y" >}
+ 
+ 
+{</section>}
+ 
+{<section id="aimi107.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION aimi107_imch011_desc()
+   #161013-00017#7 mod-S
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imch_d[l_ac].imch011
+#   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='206' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#   LET g_imch_d[l_ac].imch011_desc = '', g_rtn_fields[1] , ''
+#   DISPLAY BY NAME g_imch_d[l_ac].imch011_desc
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004,oocql005 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='206' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imch_d[l_ac].oocql004 = '', g_rtn_fields[1] , ''
+   LET g_imch_d[l_ac].oocql005 = '', g_rtn_fields[2] , ''
+   DISPLAY BY NAME g_imch_d[l_ac].oocql004
+   DISPLAY BY NAME g_imch_d[l_ac].oocql005
+   
+   #161013-00017#7 mod-E
+END FUNCTION
+
+PRIVATE FUNCTION aimi107_imch013_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imch_d[l_ac].imch013
+   CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imch_d[l_ac].imch013_desc = '', g_rtn_fields[1] , ''
+   LET g_imch_d[l_ac].imch013_desc_desc = '', g_rtn_fields[2] , ''
+   DISPLAY BY NAME g_imch_d[l_ac].imch013_desc,g_imch_d[l_ac].imch013_desc_desc
+END FUNCTION
+
+PRIVATE FUNCTION aimi107_imch014_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imch_d[l_ac].imch014
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imch_d[l_ac].imch014_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imch_d[l_ac].imch014_desc
+END FUNCTION
+
+PRIVATE FUNCTION aimi107_unit_chk()
+DEFINE l_imaa006  LIKE imaa_t.imaa006
+DEFINE l_rate     LIKE inaj_t.inaj014
+   IF NOT cl_null(g_imch_d[l_ac].imch013) AND NOT cl_null(g_imch_d[l_ac].imch014) THEN
+      SELECT imaa006 INTO l_imaa006 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_imch_d[l_ac].imch013
+      CALL s_aimi190_get_convert(g_imch_d[l_ac].imch013,l_imaa006,g_imch_d[l_ac].imch014) RETURNING g_success,l_rate
+      IF NOT g_success THEN
+         RETURN FALSE
+      END IF
+   END IF
+   RETURN TRUE
+END FUNCTION
+
+PRIVATE FUNCTION aimi107_get_site()
+DEFINE r_site   LIKE ooef_t.ooef017   
+   SELECT ooef017 INTO r_site  FROM ooef_t 
+                WHERE ooefent = g_enterprise AND ooef001 = g_site
+   RETURN r_site
+END FUNCTION
+
+ 
+{</section>}
+ 

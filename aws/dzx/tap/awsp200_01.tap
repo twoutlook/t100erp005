@@ -1,0 +1,832 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="awsp200_01" std_prog="awsp200_01" erpver="1.0" module="AWS" ver="3" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="Y" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.awsp200_01_etl_joblist" order="1" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp200_01_etl_joblist()
+
+   DEFINE l_req_doc              xml.DomDocument
+   DEFINE l_request_root         xml.DomNode
+   DEFINE l_file                 STRING
+   DEFINE l_attr                 type_g_param   #節點屬性資料
+   
+   DEFINE l_i                    LIKE type_t.num5
+   DEFINE l_acct                 STRING
+   DEFINE l_job_name             STRING
+   DEFINE l_job_time             STRING
+   DEFINE l_job_desc             STRING
+   
+   DEFINE l_res_doc              xml.DomDocument
+   DEFINE l_response_content     xml.DomNode
+   DEFINE l_node                 xml.DomNode
+   DEFINE l_node_list            xml.DomNodeList
+   DEFINE l_job_list          DYNAMIC ARRAY OF RECORD            
+             job_name          STRING,
+             job_desc          STRING
+             END RECORD
+   DEFINE l_response_content_str	 STRING
+   DEFINE l_status		          INTEGER     
+   DEFINE l_job_attr              type_g_attribute
+   
+   
+   CALL l_job_list.clear()
+   #設定 ETL server
+   IF NOT awsp200_01_chk_etl_server() THEN
+      RETURN l_job_list
+   END IF  
+   
+   CALL cl_eai_create_job_request("","",l_job_attr)
+      RETURNING l_req_doc, l_request_root
+      
+   #base64
+   LET l_acct = security.Base64.FromString("etl")
+  
+   #建立request真正資料內容(payload)
+   CALL l_attr.clear()
+   
+   LET l_attr[1].name = "acct"
+   LET l_attr[1].value = "string"
+   LET l_attr[1].text = l_acct
+
+   LET l_attr[2].name = "pwd"
+   LET l_attr[2].value = "string"
+   LET l_attr[2].text = l_acct
+   
+   CALL awsp900_04_create_payload(l_req_doc, l_request_root,l_attr)
+      RETURNING l_req_doc, l_request_root
+      
+   CALL l_req_doc.setFeature("format-pretty-print", true)
+   
+   LET l_file = os.Path.join(FGL_GETENV("TEMPDIR"), "etl_ws.xml")   
+   CALL l_req_doc.save(l_file)
+
+   CALL cl_eai_start_log()
+   
+   #呼叫 ETL 服務  
+   CALL awsp200_01_getEtlJobList(l_req_doc.saveToString()) 
+        RETURNING l_status,l_response_content_str
+
+   CALL cl_eai_end_log(l_req_doc.saveToString(),l_response_content_str)
+   
+   CALL awsp900_04_get_response(l_response_content_str) 
+         RETURNING l_res_doc,l_response_content   
+   
+   LET l_node_list = l_response_content.getElementsByTagName("job")   
+   
+
+   #取得 job 資料
+   FOR l_i = 1 TO l_node_list.getCount()
+      LET l_node = l_node_list.getitem(l_i)
+      LET l_job_list[l_i].job_name = l_node.getAttribute("name")
+      #LET l_job_time = l_node.getAttribute("updatetime")
+      LET l_job_list[l_i].job_desc = l_node.getAttribute("desc")    
+      IF NOT cl_null(l_node.getAttribute("desc")) THEN
+         LET l_job_list[l_i].job_desc = security.Base64.ToString(l_node.getAttribute("desc"))
+      END IF
+   END FOR
+   
+   RETURN l_job_list
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp200_01_invokeEtl" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp200_01_invokeEtl(p_str)
+  DEFINE	p_str		      STRING
+  DEFINE	soapStatus		INTEGER
+
+  LET invokeEtl.in0 = p_str
+
+  LET soapStatus = awsp200_01_invokeEtl_g()
+
+  RETURN soapStatus, invokeEtlResponse.invokeEtlReturn
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp200_01_invokeEtl_g" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp200_01_invokeEtl_g()
+  DEFINE wsstatus   INTEGER
+  DEFINE retryAuth  INTEGER
+  DEFINE retryProxy INTEGER
+  DEFINE retry      INTEGER
+  DEFINE nb         INTEGER
+  DEFINE uri        STRING
+  DEFINE setcookie  STRING
+  DEFINE mustUnderstand INTEGER
+  DEFINE request    com.HTTPRequest
+  DEFINE response   com.HTTPResponse
+  DEFINE writer     xml.StaxWriter
+  DEFINE reader     xml.StaxReader
+
+  #
+  # INIT VARIABLES
+  #
+  LET wsstatus = -1
+  LET retryAuth = FALSE
+  LET retryProxy = FALSE
+  LET retry = TRUE
+  LET uri = com.WebServiceEngine.GetOption("SoapModuleURI")
+  
+  IF IntegrationEntry_IntegrationEntryEndpoint.Address.Uri IS NULL THEN
+     LET IntegrationEntry_IntegrationEntryEndpoint.Address.Uri = g_eai_server ## http://10.20.86.19:9999/IntegrationEntry
+  END IF
+
+  #
+  # CREATE REQUEST
+  #
+  TRY
+    LET request = com.HTTPRequest.Create(IntegrationEntry_IntegrationEntryEndpoint.Address.Uri)
+    CALL request.setMethod("POST")
+    CALL request.setCharset("UTF-8")
+    CALL request.setHeader("SOAPAction","\"\"")
+    CALL WSHelper_SetRequestHeaders(request, IntegrationEntry_IntegrationEntryEndpoint.Binding.Request.Headers)
+    IF IntegrationEntry_IntegrationEntryEndpoint.Binding.Version IS NOT NULL THEN
+      CALL request.setVersion(IntegrationEntry_IntegrationEntryEndpoint.Binding.Version)
+    END IF
+    IF IntegrationEntry_IntegrationEntryEndpoint.Binding.Cookie IS NOT NULL THEN
+      CALL request.setHeader("Cookie",IntegrationEntry_IntegrationEntryEndpoint.Binding.Cookie)
+    END IF
+    IF IntegrationEntry_IntegrationEntryEndpoint.Binding.ConnectionTimeout <> 0 THEN
+      CALL request.setConnectionTimeout(IntegrationEntry_IntegrationEntryEndpoint.Binding.ConnectionTimeout)
+    END IF
+    IF IntegrationEntry_IntegrationEntryEndpoint.Binding.ReadWriteTimeout <> 0 THEN
+      CALL request.setTimeout(IntegrationEntry_IntegrationEntryEndpoint.Binding.ReadWriteTimeout)
+    END IF
+    IF IntegrationEntry_IntegrationEntryEndpoint.Binding.CompressRequest IS NOT NULL THEN
+      CALL request.setHeader("Content-Encoding",IntegrationEntry_IntegrationEntryEndpoint.Binding.CompressRequest)
+    END IF
+    CALL request.setHeader("Accept-Encoding","gzip, deflate")
+  CATCH
+    LET wsstatus = STATUS
+    CALL WSHelper_FillSOAP11WSError("Client","Cannot create HTTPRequest")
+    RETURN wsstatus
+  END TRY
+
+  # START LOOP
+  WHILE retry
+    LET retry = FALSE
+
+    #
+    # Stax request
+    #
+    TRY
+      LET writer = request.beginXmlRequest()
+      CALL WSHelper_WriteStaxSOAP11StartEnvelope(writer)
+      CALL WSHelper_WriteStaxSOAP11StartBody(writer)
+      #
+      # STAX SOAP REQUEST SERIALIZE
+      #
+      CALL xml.Serializer.VariableToStax(invokeEtl,writer)
+      CALL WSHelper_WriteStaxSOAP11EndBody(writer)
+      CALL WSHelper_WriteStaxSOAP11EndEnvelope(writer)
+      CALL request.endXmlRequest(writer)
+    CATCH
+      LET wsstatus = STATUS
+      CALL WSHelper_FillSOAP11WSError("Client",SQLCA.SQLERRM)
+      RETURN wsstatus
+    END TRY
+
+    #
+    # PROCESS RESPONSE
+    #
+    TRY
+      LET response = request.getResponse()
+
+      #
+      # RETRIEVE SERVICE SESSION COOKIE
+      #
+      LET setcookie = response.getHeader("Set-Cookie")
+      IF setcookie IS NOT NULL THEN
+        LET IntegrationEntry_IntegrationEntryEndpoint.Binding.Cookie = WSHelper_ExtractServerCookie(setcookie,IntegrationEntry_IntegrationEntryEndpoint.Address.Uri)
+      END IF
+
+      #
+      # RETRIEVE HTTP RESPONSE Headers
+      #
+      CALL WSHelper_SetResponseHeaders(response, IntegrationEntry_IntegrationEntryEndpoint.Binding.Response.Headers)
+      CASE response.getStatusCode()
+
+        WHEN 500 # SOAP Fault
+          #
+          # STAX SOAP FAULT
+          #
+          LET reader = response.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP11StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP11Header(reader) AND NOT reader.isEmptyElement() THEN
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP11HeaderActor(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP11HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP11WSError("Client","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP11WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP11Header(reader) THEN
+              CALL WSHelper_FillSOAP11WSError("Client","No ending header tag found")
+              EXIT CASE
+            ELSE
+              CALL reader.nextTag()
+            END IF
+          ELSE
+            IF WSHelper_CheckStaxSOAP11Header(reader) THEN
+              CALL reader.nextSibling() # Skip SOAP headers
+            END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11StartFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11FaultUntilDetail(reader) THEN
+            EXIT CASE
+          END IF
+          IF WSHelper_CheckStaxSOAP11FaultDetail(reader) THEN
+            #
+            # STAX SOAP FAULT DESERIALIZE
+            #
+            CALL reader.nextSibling() # Skip SOAP detail
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11EndFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL response.endXmlResponse(reader)
+
+        WHEN 200 # SOAP Result
+          #
+          # STAX SOAP RESPONSE
+          #
+          LET reader = response.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP11StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP11Header(reader) AND NOT reader.isEmptyElement() THEN
+            LET nb = 0
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP11HeaderActor(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP11HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP11WSError("Client","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                #
+                # STAX SOAP RESPONSE HEADER DESERIALIZE
+                #
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP11WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP11Header(reader) THEN
+              CALL WSHelper_FillSOAP11WSError("Client","No ending header tag found")
+              EXIT CASE
+            ELSE
+              IF nb != 0 THEN
+                CALL WSHelper_FillSOAP11WSError("Client","One or more headers are missing")
+                EXIT CASE
+              ELSE
+                CALL reader.nextTag()
+              END IF
+            END IF
+          ELSE
+           IF reader.isEmptyElement() THEN
+             CALL reader.nextTag()
+           END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          # Retrieve SOAP Message taking soap:root attribute into account
+          IF NOT WSHelper_RetrieveStaxSOAP11Message(reader) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP RESPONSE DESERIALIZE
+          #
+          CALL xml.Serializer.StaxToVariable(reader,invokeEtlResponse)
+          IF NOT WSHelper_ReadStaxSOAP11EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL response.endXmlResponse(reader)
+          LET wsstatus = 0
+
+        WHEN 401 # HTTP Authentication
+          IF retryAuth THEN
+            CALL WSHelper_FillSOAP11WSError("Server","HTTP Error 401 ("||response.getStatusDescription()||")")
+          ELSE
+            LET retryAuth = TRUE
+            LET retry = TRUE
+          END IF
+
+        WHEN 407 # Proxy Authentication
+          IF retryProxy THEN
+            CALL WSHelper_FillSOAP11WSError("Server","HTTP Error 407 ("||response.getStatusDescription()||")")
+          ELSE
+            LET retryProxy = TRUE
+            LET retry = TRUE
+          END IF
+
+        OTHERWISE
+          CALL WSHelper_FillSOAP11WSError("Server","HTTP Error "||response.getStatusCode()||" ("||response.getStatusDescription()||")")
+
+      END CASE
+    CATCH
+      LET wsstatus = status
+      CALL WSHelper_FillSOAP11WSError("Server",SQLCA.SQLERRM)
+      RETURN wsstatus
+    END TRY
+
+  # END LOOP
+  END WHILE
+
+  RETURN wsstatus
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp200_01_getEtlJobList" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp200_01_getEtlJobList(p_str)
+  DEFINE	p_str		      STRING
+  DEFINE	soapStatus		INTEGER
+  
+  LET getEtlJobList.in0 = p_str
+
+  LET soapStatus = awsp200_01_getEtlJobList_g()
+
+  RETURN soapStatus, getEtlJobListResponse.getEtlJobListReturn
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp200_01_getEtlJobList_g" order="5" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp200_01_getEtlJobList_g()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp200_01_getEtlJobList_g()
+  DEFINE wsstatus   INTEGER
+  DEFINE retryAuth  INTEGER
+  DEFINE retryProxy INTEGER
+  DEFINE retry      INTEGER
+  DEFINE nb         INTEGER
+  DEFINE uri        STRING
+  DEFINE setcookie  STRING
+  DEFINE mustUnderstand INTEGER
+  DEFINE request    com.HTTPRequest
+  DEFINE response   com.HTTPResponse
+  DEFINE writer     xml.StaxWriter
+  DEFINE reader     xml.StaxReader
+
+  #
+  # INIT VARIABLES
+  #
+  LET wsstatus = -1
+  LET retryAuth = FALSE
+  LET retryProxy = FALSE
+  LET retry = TRUE
+  LET uri = com.WebServiceEngine.GetOption("SoapModuleURI")
+
+  IF IntegrationEntry_IntegrationEntryEndpoint.Address.Uri IS NULL THEN
+    LET IntegrationEntry_IntegrationEntryEndpoint.Address.Uri = g_eai_server ##http://10.20.86.19:9999/IntegrationEntry
+  END IF
+
+  #
+  # CREATE REQUEST
+  #
+  TRY
+    LET request = com.HTTPRequest.Create(IntegrationEntry_IntegrationEntryEndpoint.Address.Uri)
+    CALL request.setMethod("POST")
+    CALL request.setCharset("UTF-8")
+    CALL request.setHeader("SOAPAction","\"\"")
+    CALL WSHelper_SetRequestHeaders(request, IntegrationEntry_IntegrationEntryEndpoint.Binding.Request.Headers)
+    IF IntegrationEntry_IntegrationEntryEndpoint.Binding.Version IS NOT NULL THEN
+      CALL request.setVersion(IntegrationEntry_IntegrationEntryEndpoint.Binding.Version)
+    END IF
+    IF IntegrationEntry_IntegrationEntryEndpoint.Binding.Cookie IS NOT NULL THEN
+      CALL request.setHeader("Cookie",IntegrationEntry_IntegrationEntryEndpoint.Binding.Cookie)
+    END IF
+    IF IntegrationEntry_IntegrationEntryEndpoint.Binding.ConnectionTimeout <> 0 THEN
+      CALL request.setConnectionTimeout(IntegrationEntry_IntegrationEntryEndpoint.Binding.ConnectionTimeout)
+    END IF
+    IF IntegrationEntry_IntegrationEntryEndpoint.Binding.ReadWriteTimeout <> 0 THEN
+      CALL request.setTimeout(IntegrationEntry_IntegrationEntryEndpoint.Binding.ReadWriteTimeout)
+    END IF
+    IF IntegrationEntry_IntegrationEntryEndpoint.Binding.CompressRequest IS NOT NULL THEN
+      CALL request.setHeader("Content-Encoding",IntegrationEntry_IntegrationEntryEndpoint.Binding.CompressRequest)
+    END IF
+    CALL request.setHeader("Accept-Encoding","gzip, deflate")
+  CATCH
+    LET wsstatus = STATUS
+    CALL WSHelper_FillSOAP11WSError("Client","Cannot create HTTPRequest")
+    RETURN wsstatus
+  END TRY
+
+  # START LOOP
+  WHILE retry
+    LET retry = FALSE
+
+    #
+    # Stax request
+    #
+    TRY
+      LET writer = request.beginXmlRequest()
+      CALL WSHelper_WriteStaxSOAP11StartEnvelope(writer)
+      CALL WSHelper_WriteStaxSOAP11StartBody(writer)
+      #
+      # STAX SOAP REQUEST SERIALIZE
+      #
+      CALL xml.Serializer.VariableToStax(getEtlJobList,writer)
+      CALL WSHelper_WriteStaxSOAP11EndBody(writer)
+      CALL WSHelper_WriteStaxSOAP11EndEnvelope(writer)
+      CALL request.endXmlRequest(writer)
+    CATCH
+      LET wsstatus = STATUS
+      CALL WSHelper_FillSOAP11WSError("Client",SQLCA.SQLERRM)
+      RETURN wsstatus
+    END TRY
+
+    #
+    # PROCESS RESPONSE
+    #
+    TRY
+      LET response = request.getResponse()
+
+      #
+      # RETRIEVE SERVICE SESSION COOKIE
+      #
+      LET setcookie = response.getHeader("Set-Cookie")
+      IF setcookie IS NOT NULL THEN
+        LET IntegrationEntry_IntegrationEntryEndpoint.Binding.Cookie = WSHelper_ExtractServerCookie(setcookie,IntegrationEntry_IntegrationEntryEndpoint.Address.Uri)
+      END IF
+
+      #
+      # RETRIEVE HTTP RESPONSE Headers
+      #
+      CALL WSHelper_SetResponseHeaders(response, IntegrationEntry_IntegrationEntryEndpoint.Binding.Response.Headers)
+      CASE response.getStatusCode()
+
+        WHEN 500 # SOAP Fault
+          #
+          # STAX SOAP FAULT
+          #
+          LET reader = response.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP11StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP11Header(reader) AND NOT reader.isEmptyElement() THEN
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP11HeaderActor(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP11HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP11WSError("Client","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP11WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP11Header(reader) THEN
+              CALL WSHelper_FillSOAP11WSError("Client","No ending header tag found")
+              EXIT CASE
+            ELSE
+              CALL reader.nextTag()
+            END IF
+          ELSE
+            IF WSHelper_CheckStaxSOAP11Header(reader) THEN
+              CALL reader.nextSibling() # Skip SOAP headers
+            END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11StartFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11FaultUntilDetail(reader) THEN
+            EXIT CASE
+          END IF
+          IF WSHelper_CheckStaxSOAP11FaultDetail(reader) THEN
+            #
+            # STAX SOAP FAULT DESERIALIZE
+            #
+            CALL reader.nextSibling() # Skip SOAP detail
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11EndFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL response.endXmlResponse(reader)
+
+        WHEN 200 # SOAP Result
+          #
+          # STAX SOAP RESPONSE
+          #
+          LET reader = response.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP11StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP11Header(reader) AND NOT reader.isEmptyElement() THEN
+            LET nb = 0
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP11HeaderActor(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP11HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP11WSError("Client","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                #
+                # STAX SOAP RESPONSE HEADER DESERIALIZE
+                #
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP11WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP11Header(reader) THEN
+              CALL WSHelper_FillSOAP11WSError("Client","No ending header tag found")
+              EXIT CASE
+            ELSE
+              IF nb != 0 THEN
+                CALL WSHelper_FillSOAP11WSError("Client","One or more headers are missing")
+                EXIT CASE
+              ELSE
+                CALL reader.nextTag()
+              END IF
+            END IF
+          ELSE
+           IF reader.isEmptyElement() THEN
+             CALL reader.nextTag()
+           END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          # Retrieve SOAP Message taking soap:root attribute into account
+          IF NOT WSHelper_RetrieveStaxSOAP11Message(reader) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP RESPONSE DESERIALIZE
+          #
+          CALL xml.Serializer.StaxToVariable(reader,getEtlJobListResponse)
+          IF NOT WSHelper_ReadStaxSOAP11EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP11EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL response.endXmlResponse(reader)
+          LET wsstatus = 0
+
+        WHEN 401 # HTTP Authentication
+          IF retryAuth THEN
+            CALL WSHelper_FillSOAP11WSError("Server","HTTP Error 401 ("||response.getStatusDescription()||")")
+          ELSE
+            LET retryAuth = TRUE
+            LET retry = TRUE
+          END IF
+
+        WHEN 407 # Proxy Authentication
+          IF retryProxy THEN
+            CALL WSHelper_FillSOAP11WSError("Server","HTTP Error 407 ("||response.getStatusDescription()||")")
+          ELSE
+            LET retryProxy = TRUE
+            LET retry = TRUE
+          END IF
+
+        OTHERWISE
+          CALL WSHelper_FillSOAP11WSError("Server","HTTP Error "||response.getStatusCode()||" ("||response.getStatusDescription()||")")
+
+      END CASE
+    CATCH
+      LET wsstatus = status
+      CALL WSHelper_FillSOAP11WSError("Server",SQLCA.SQLERRM)
+      RETURN wsstatus
+    END TRY
+
+  # END LOOP
+  END WHILE
+
+  RETURN wsstatus
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp200_01_chk_etl_server" order="6" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp200_01_chk_etl_server()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp200_01_chk_etl_server()
+   LET g_eai_server = cl_get_para(g_enterprise,"","E-SYS-0704") 
+   IF cl_null(g_eai_server) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "aws-00024"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   
+      RETURN FALSE
+   END IF
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT xml
+IMPORT com
+IMPORT util
+IMPORT security]]>
+  </point>
+  <point name="global.inc" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[GLOBALS "../../cfg/top_ws.inc"
+GLOBALS "../../aws/4gl/aws_eai.inc"]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[TYPE type_g_attribute DYNAMIC ARRAY OF RECORD
+                name         STRING,      #屬性名稱
+                value        STRING       #屬性值
+             END RECORD
+             
+TYPE type_g_param DYNAMIC ARRAY OF RECORD
+                name         STRING,      #屬性名稱
+                value        STRING,      #屬性值
+                text         STRING       #node value
+             END RECORD ]]>
+  </point>
+  <point name="input.a.wsca001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+
+]]>
+  </point>
+  <point name="main.import" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT xml
+IMPORT com
+IMPORT security]]>
+  </point>
+  <section id="awsp200_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000016
+#+ 
+#+ Filename...: awsp200_01
+#+ Description:  ETL 程式
+#+ Creator....: 00544(2015-02-06 17:11:59)
+#+ Modifier...: 00544(2015-02-06 17:14:57) -SD/PR-
+]]>
+  </section>
+  <section id="awsp200_01.free_style_variable" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="awsp200_01.global" ver="2" status="" src="s" readonly="">
+    <![CDATA[#應用 p00 樣板自動產生(Version:2)
+#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="awsp200_01.global_variable" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="awsp200_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="awsp200_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

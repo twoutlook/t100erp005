@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmp812" std_prog="apmp812" erpver="1.0" ver="1" module="APM" type="M" booking="Y" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 利用此作業整批產生供應商評核定量評分單據，供使用者依評核期別/評核品類及評核部門將單據查出直接評分，不需再新增單據。
+作業功能：說明/離開
+作業類型：批次作業
+輸入模式： P01
+作業資料來源(Master)：
+資料來源表：pmcc_t(供應商評核項目設定檔)
+                        pmcd_t(供應商評核定量項目設定檔)
+資料目的表：pmcj_t(供應商評核評核項目得分檔)
+
+資料處理：
+條件輸入完執行批次產生時，處理如下：
+檢核：(1)評核期別不可空白
+ 
+
+批次處理：
+(1)依QBE條件，至 [T:供應商評核項目設定檔]，[T:供應商評核定性項目設定檔]中抓取符合條件資料
+(2)資料寫入[T:供應商評核評核項目得分檔]
+
+供應商評核定量評核項目=SCC(6001)
+1:銷售額佔比 = (SCC=6001#1)日期區間+管理品類+供應商抓取門店品類日結檔(debs_t)的總應收金額(debs016)/日期區間+管理品類抓取門店品類日結檔(debs_t)的總應收金額(debs016)
+2:毛利額佔比 = (SCC=6001#2)日期區間+管理品類+供應商抓取門店品類日結檔(debs_t)的總毛利(debs017)/日期區間+管理品類抓取門店品類日結檔(debs_t)的總毛利(debs017)
+3:毛利率     = (SCC=6001#3)日期區間+管理品類+供應商抓取門店品類日結檔(debs_t)的總應收金額(debs016)- 總銷售成本(debs012)/日期區間+管理品類+供應商抓取門店品類日結檔(debs_t)的總應收金額(debs016)
+4:週轉天數      = SCC刪除(4.以後的SCC編號往前遞補)
+5:採購收入佔比  = (SCC=6001#4)依日期區間+管理品類+供應商+已確認 SUM[T:費用單明細資料表](C:費用金額)/依日期區間+評核品類+已確認 SUM[T:費用單明細資料表](C:費用金額)
+6:進貨額佔比    = (SCC=6001#5)依日期區間+管理品類+供應商+已確認+單據性質3,4 SUM[T:收貨/入庫單身明細檔][C:含稅金額)/日期區間+管理品類+已確認+單據性質3,4 SUM[T:收貨/入庫單身明細檔][C:含稅金額)
+7:退貨額佔比    = (SCC=6001#6)依日期區間+管理品類+供應商+已確認+單據性質7 SUM[T:收貨/入庫單身明細檔][C:含稅金額)/日期區間+管理品類+已確認+單據性質7 SUM[T:收貨/入庫單身明細檔][C:含稅金額)
+8:淨進貨額佔比  = (SCC=6001#7)依日期區間+管理品類+供應商+已確認+單據性質3,4 SUM[T:收貨/入庫單身明細檔][C:含稅金額) - 
+                    日期區間+管理品類+供應商+已確認+單據性質7 SUM[T:收貨/入庫單身明細檔][C:含稅金額) /
+                  依日期區間+管理品類+已確認+單據性質3,4 SUM[T:收貨/入庫單身明細檔][C:含稅金額) -
+                    日期區間+管理品類+已確認+單據性質7 SUM[T:收貨/入庫單身明細檔][C:含稅金額)
+9.配送能力      = (SCC=6001#8)count(已確認採購單已入庫量<>0)/count(已確認採購單數)   
+10.送貨達標率   = (SCC=6001#9)count(已確認採購項次已入庫量<>0)/count(已確認採購項次)
+11.訂單滿足率   = (SCC=6001#10)count(已確認採購項次已入庫量>=採購量)/count(已確認採購項次)]]>
+  </all>
+  <field cite_std="N" name="pmcc_t.pmcc001" ver="1" src="s" column="pmcc001" table="pmcc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_pmcc001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmcc_t.pmcc002" ver="1" src="s" column="pmcc002" table="pmcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pmcc002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="buttonedit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="buttonedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmcc_t.pmcc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmcc_t.pmcc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_pmcc001" text="評核期別" lstr=""/>
+    <sfield name="lbl_pmcc002" text="評核品類" lstr=""/>
+    <sfield name="group_input" text="其他條件" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,1027 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aoot101" std_prog="aoot101" erpver="1.0" ver="3" module="AOO" type="M" booking="N" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="1" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="oojl_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oojm_t" main="N" head="N" pk="" fk_detail="" parent="oojl_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="3" src="s" status="u">
+    <![CDATA[程式說明及目的： 提供營運組織基本資料申請(除了辦事處及銷售範圍外)
+標準作業功能取消：複製
+狀態功能：[有效/無效] / [確認/取消確認/作廢/過帳/取消過帳] / [確認/取消確認/無效]
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：ookl_t(組織基本資料申請單頭檔)
+作業資料來源(Detail)：oojm_t(組織基本資料申請單身檔)
+                                         oojml_t(組織基本資料申請單身多語言檔)
+                                         oofb_t(聯絡地址檔)
+                                         oofc_t(通訊方式檔)
+資料處理：
+1.此作業與aoot102/aoot103 共用4gl
+   當作業編號為aoot101時，處理[C:資料類型]=1.其他組織
+   當作業編號為aoot102時，處理[C:資料類型]=2.辦事處
+   當作業編號為aoot103時，處理[C:資料類型]=3.銷售範圍
+   1.1.[150424-00018#4 調整] 增加集團級參數管控組織資料建立是否走申請作業
+          若參數＝Ｙ，則必須透過aoot101/aoot102/aoot103申請
+          若參數 = N，則開啟申請作業時提供訊息提示，並在訊息提示後自動關閉程式
+2.聯絡地址與通訊方式依標準嵌入
+3.整單操作：Action "備註"，CALL aooi360
+4.當作業編號為 aoot102 時，組織類型/法人資訊/營運據點 頁籤隱藏
+5.當作業編號為 aoot103 時，下方5個頁籤全部隱藏
+6.當作業編號為 aoot101/aoot102時，單身 [C:銷售組織]/[C:銷售渠道]/[C:產品組]/[C:辦事處] 欄位隱藏，INSERT時值給空白
+7.當作業編號為 aoot103 時，單身[C:法人]/[C:歸屬法人] 隱藏，INSERT時值給'N',空白
+8.當異動生效日期=系統日期，確認時自動執行aoop101
+9.當oojm003= Y(代表是法人)時，不可維護法人資訊，法人編號 = 組織編號
+                        =N 時，才需要維護法人資訊，並控制必填欄位]]>
+  </all>
+  <field cite_std="N" name="b_oojl000" ver="1" src="s" column="oojl000" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="32" default="&apos;I&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oojl002" ver="1" src="s" column="oojl002" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oojl003" ver="1" src="s" column="oojl003" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oojl004" ver="1" src="s" column="oojl004" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oojl005" ver="1" src="s" column="oojl005" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oojldocdt" ver="1" src="s" column="oojldocdt" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oojldocno" ver="1" src="s" column="oojldocno" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oojlstus" ver="1" src="s" column="oojlstus" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_oojm002" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[當ooef003='Y'(代表是法人)時,才可維護本欄位]]>
+  </field>
+  <field cite_std="N" name="l_oojm004" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="q_ooal002_2" c_zoom="q_ooal002_2" chk_ref="v_ooal002_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單據別參照表號：oojm004
+校驗：v_ooal002_3, arg1 = oojm004]]>
+  </field>
+  <field cite_std="N" name="l_oojm005" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[1.單據編號編碼分三段(單別據點代碼 - 單據編碼 期別與流水),
+   第一段的單別據點代碼就是[C:單據據點代號]欄位值,故本欄位不允許空白
+2.輸入值不可重複]]>
+  </field>
+  <field cite_std="N" name="l_oojm006" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_oocg001" c_zoom="q_oocg001" chk_ref="v_oocg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[所屬國家地區：oojm006
+校驗：v_oocg001, arg1 = oojm006
+計算或處理：當oojm003=Y(代表是法人)時，才需要維護本欄位，且不可空白]]>
+  </field>
+  <field cite_std="N" name="l_oojm007" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[當ooef003='Y'(代表是法人)時,才可維護本欄位]]>
+  </field>
+  <field cite_std="N" name="l_oojm008" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="q_ooal002_5" c_zoom="q_ooal002_5" chk_ref="v_ooal002_4" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[行事曆參照表號：oojm008
+校驗：v_ooal002_4, arg1 = oojm008]]>
+  </field>
+  <field cite_std="N" name="l_oojm009" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="2" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[製造行事曆對應類別：oojm009
+SCC：25]]>
+  </field>
+  <field cite_std="N" name="l_oojm010" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[辦公行事曆對應類別：oojm010
+SCC：25]]>
+  </field>
+  <field cite_std="N" name="l_oojm011" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[專屬國家地區功能：oojm011
+SCC：27
+計算或處理：當oojm003=Y(代表是法人)時，才需要維護本欄位，且不可空白]]>
+  </field>
+  <field cite_std="N" name="l_oojm013" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[日期顯示格式：oojm013
+SCC：10
+計算或處理：當oojm003=Y(代表是法人)時，才需要維護本欄位，且不可空白]]>
+  </field>
+  <field cite_std="N" name="l_oojm014" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_ooal002_10" c_zoom="q_ooal002_10" chk_ref="v_ooal002_10" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[幣別參照表：oojm014
+校驗：v_ooal002_10, arg1 = oojm014
+計算或處理：當oojm003=Y(代表是法人)時，才需要維護本欄位，且不可空白]]>
+  </field>
+  <field cite_std="N" name="l_oojm015" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_ooal002_3" c_zoom="q_ooal002_3" chk_ref="v_ooal002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[匯率參照表號：oojm015
+校驗：v_ooal002_1, arg1 = oojm015
+計算或處理：當oojm003=Y(代表是法人)時，才需要維護本欄位，且不可空白]]>
+  </field>
+  <field cite_std="N" name="l_oojm016" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_ooaj002_5" c_zoom="q_ooaj002" chk_ref="v_ooaj002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[主幣別編號：oojm016
+開窗：q_ooaj002_5, arg1 = oojm014
+校驗：v_ooaj002_1, arg1 = oojm014, arg2 = oojm016
+計算或處理：當oojm003=Y(代表是法人)時，才需要維護本欄位，且不可空白]]>
+  </field>
+  <field cite_std="N" name="l_oojm018" ver="1" src="s" column="oojm018" table="oojm_t" attribute="" type="" req="N" i_zoom="q_gzot001" c_zoom="q_gzot001" chk_ref="v_gzot001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[時區：oojm018
+校驗：v_gzot001, arg1 = oojm018
+帶值：帶出gzot002(時區簡碼)]與gzot003(代表城市)來做顯示
+計算或處理：當oojm003=Y(代表是法人)時，才需要維護本欄位，且不可空白]]>
+  </field>
+  <field cite_std="N" name="l_oojm019" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_ooal002_11" c_zoom="q_ooal002_11" chk_ref="v_ooal002_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[稅區：oojm019
+校驗：v_ooal002_2, arg1 = oojm019
+計算或處理：當oojm003=Y(代表是法人)時，才需要維護本欄位，且不可空白]]>
+  </field>
+  <field cite_std="N" name="l_oojm020" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[當ooef003='Y'(代表是法人)時,才可維護本欄位]]>
+  </field>
+  <field cite_std="N" name="l_oojm021" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[當ooef003='Y'(代表是法人)時,才可維護本欄位]]>
+  </field>
+  <field cite_std="N" name="l_oojm022" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[當ooef003='Y'(代表是法人)時,才可維護本欄位]]>
+  </field>
+  <field cite_std="N" name="l_oojm023" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[數字/金額顯示格式：oojm023
+SCC：49
+計算或處理：當oojm003=Y(代表是法人)時，才需要維護本欄位，且不可空白]]>
+  </field>
+  <field cite_std="N" name="l_oojm024" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="v_pmaa001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[據點對應客戶/廠商編號：oojm024
+校驗：v_pmaa001_2, arg1 = oojm024
+其他說明:本欄位用於多角貿易預設用
+]]>
+  </field>
+  <field cite_std="N" name="l_oojm201" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_oojm208" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_oojm210" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_oojm211" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_oojm212" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_oojm405" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_inaa001_23" c_zoom="q_inaa001" chk_ref="v_inaa001_14" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[141009-00031#34新增
+●異動類型(oojl000)為新增"I"時,不能維護;為修改"U"且申請組織類型= 物流組織時,才能維護
+●預設收貨成本倉
+   1.查詢:q_inaa001
+   2.新增:q_inaa001_23
+       g_qryparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_qryparam.where = "inaa010 = 'Y' "
+   3.校驗:v_inaa001_14
+       g_chkparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_chkparam.arg2 = g_oojm.oojm405         #庫位
+       g_chkparam.err_str[1] = "aim-00064:aoo-00106"
+       g_chkparam.err_str[2] = "aim-00065:aoo-00108"
+       g_chkparam.err_str[2] = "ain-00163:aoo-00157"
+]]>
+  </field>
+  <field cite_std="N" name="l_oojm406" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_inaa001_23" c_zoom="q_inaa001" chk_ref="v_inaa001_14" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[141009-00031#34新增
+●異動類型(oojl000)為新增"I"時,不能維護;為修改"U"且申請組織類型= 物流組織時,才能維護
+●預設出貨成本倉
+   1.查詢:q_inaa001
+   2.新增:q_inaa001_23
+       g_qryparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_qryparam.where = "inaa010 = 'Y' "
+   3.校驗:v_inaa001_14
+       g_chkparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_chkparam.arg2 = g_oojm.oojm409         #庫位
+       g_chkparam.err_str[1] = "aim-00064:aoo-00106"
+       g_chkparam.err_str[2] = "aim-00065:aoo-00108"
+       g_chkparam.err_str[2] = "ain-00163:aoo-00157"]]>
+  </field>
+  <field cite_std="N" name="l_oojm407" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_inaa001_23" c_zoom="q_inaa001" chk_ref="v_inaa001_14" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[141009-00031#34新增
+●異動類型(oojl000)為新增"I"時,不能維護;為修改"U"且申請組織類型= 物流組織時,才能維護
+●預設在途成本倉
+   1.查詢:q_inaa001
+   2.新增:q_inaa001_23
+       g_qryparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_qryparam.where = "inaa010 = 'Y' "
+   3.校驗:v_inaa001_14
+       g_chkparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_chkparam.arg2 = g_oojm.oojm407         #庫位
+       g_chkparam.err_str[1] = "aim-00064:aoo-00106"
+       g_chkparam.err_str[2] = "aim-00065:aoo-00108"
+       g_chkparam.err_str[2] = "ain-00163:aoo-00157"]]>
+  </field>
+  <field cite_std="N" name="l_oojm408" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_inaa001_23" c_zoom="q_inaa001" chk_ref="v_inaa001_15" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[141009-00031#34新增
+●異動類型(oojl000)為新增"I"時,不能維護;為修改"U"且申請組織類型= 物流組織時,才能維護
+●預設收貨非成本倉
+   1.查詢:q_inaa001
+   2.新增:q_inaa001_23
+       g_qryparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_qryparam.where = "inaa010 = 'N' "
+   3.校驗:v_inaa001_15
+       g_chkparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_chkparam.arg2 = g_oojm.oojm408         #庫位
+       g_chkparam.err_str[1] = "aim-00064:aoo-00106"
+       g_chkparam.err_str[2] = "aim-00065:aoo-00108"
+       g_chkparam.err_str[2] = "ain-00164:aoo-00158"]]>
+  </field>
+  <field cite_std="N" name="l_oojm409" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_inaa001_23" c_zoom="q_inaa001" chk_ref="v_inaa001_15" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[141009-00031#34新增
+●異動類型(oojl000)為新增"I"時,不能維護;為修改"U"且申請組織類型= 物流組織時,才能維護
+●預設出貨非成本倉
+   1.查詢:q_inaa001
+   2.新增:q_inaa001_23
+       g_qryparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_qryparam.where = "inaa010 = 'N' "
+   3.校驗:v_inaa001_15
+       g_chkparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_chkparam.arg2 = g_oojm.oojm409         #庫位
+       g_chkparam.err_str[1] = "aim-00064:aoo-00106"
+       g_chkparam.err_str[2] = "aim-00065:aoo-00108"
+       g_chkparam.err_str[2] = "ain-00164:aoo-00158"]]>
+  </field>
+  <field cite_std="N" name="l_oojm410" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_inaa001_23" c_zoom="q_inaa001" chk_ref="v_inaa001_15" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[141009-00031#34新增
+●異動類型(oojl000)為新增"I"時,不能維護;為修改"U"且申請組織類型= 物流組織時,才能維護
+●預設在途非成本倉
+   1.查詢:q_inaa001
+   2.新增:q_inaa001_23
+       g_qryparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_qryparam.where = "inaa010 = 'N' "
+   3.校驗:v_inaa001_15
+       g_chkparam.arg1 = g_oojm_d[l_ac].oojm001 #營運據點
+       g_chkparam.arg2 = g_oojm.oojm410         #庫位
+       g_chkparam.err_str[1] = "aim-00064:aoo-00106"
+       g_chkparam.err_str[2] = "aim-00065:aoo-00108"
+       g_chkparam.err_str[2] = "ain-00164:aoo-00158"]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojl000" ver="1" src="s" column="oojl000" table="oojl_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="32" default="&apos;I&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[異動類型：oojl000
+計算或處理：單身有資料時，不開放修改]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojl001" ver="1" src="s" column="oojl001" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6078" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[資料類型：oojl001　　　
+預設值：aoot101時 = 1 
+                aoot102時 = 2
+                aoot103時 = 3]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojl002" ver="1" src="s" column="oojl002" table="oojl_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[異動生效日期：oojl002
+校驗：異動生效日期不允許<系統日期]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojl003" ver="3" src="s" column="oojl003" table="oojl_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[申請人員：oojl003
+預設值：g_user
+校驗：v_ooag001, arg1 = oojl003
+帶值：帶出該人員的所屬部門]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojl004" ver="3" src="s" column="oojl004" table="oojl_t" attribute="" type="" req="Y" i_zoom="q_ooeg001_4" c_zoom="q_ooeg001_4" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[申請部門：oojl004
+預設值：由申請人員預設帶出對應申請部門
+開窗：q_ooeg001_4,arg1 = oojldocdt
+校驗：v_ooeg001, arg1 = oojl004 ,arg2 = oojldocdt]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojl005" ver="1" src="s" column="oojl005" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[資料更新成功：oojl005
+由 aoop101 批次更新後回寫]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlcnfdt" ver="1" src="s" column="oojlcnfdt" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlcnfid" ver="1" src="s" column="oojlcnfid" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlcrtdp" ver="1" src="s" column="oojlcrtdp" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlcrtdt" ver="1" src="s" column="oojlcrtdt" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlcrtid" ver="1" src="s" column="oojlcrtid" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojldocdt" ver="1" src="s" column="oojldocdt" table="oojl_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[單據日期：oojldocdt
+預設值：g_today]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojldocno" ver="1" src="s" column="oojldocno" table="oojl_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_oojldocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單據編號：oojldocno
+開窗：編輯：q_ooba002_1, arg1 = ooef004 ,arg2 = g_prog
+　　　查詢：q_oojldocno, aoot101時, arg1 = 1 
+                                                  aoot102時, arg1 = 2
+                                                  aoot103時, arg1 = 3
+校驗：s_aooi200_chk_slip]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlmoddt" ver="1" src="s" column="oojlmoddt" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlmodid" ver="1" src="s" column="oojlmodid" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlowndp" ver="1" src="s" column="oojlowndp" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlownid" ver="1" src="s" column="oojlownid" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlsite" ver="1" src="s" column="oojlsite" table="oojl_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[申請組織：oojmsite
+    預設值：套用 作業組織應用設定作業(aooi500)的內容進行
+    校驗：套用 作業組織應用設定作業(aooi500)的內容進行
+    開窗：套用 作業組織應用設定作業(aooi500)的內容進行]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlstus" ver="1" src="s" column="oojlstus" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojl_t.oojlunit" ver="1" src="s" column="oojlunit" table="oojl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[應用組織：oojlunit
+預設值：oojlsite]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm000" ver="1" src="s" column="oojm000" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6078" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[資料類型：oojm000
+預設值 = oojl001]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm001" ver="1" src="s" column="oojm001" table="oojm_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_oojm001" chk_ref="v_ooef001_19" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[組織編號：oojm001
+校驗：1.組織類型原本有勾銷售範圍時，顯示訊息，ｘｘｘ為銷售範圍，銷售範圍請至aoot103進行維護
+            2.異動類型=I.新增，(1)不允許存在於ooef_t，如編號已存在，則報錯說明此編號已存在 辦事處/銷售範圍/其他組織 資料
+                                                (2)不允許存在於oojm_t, 且異動型態為I.新增, 且未生效的申請單中，若已經存在則報錯說明  辦事處/銷售範圍/其他組  編號已有申請資料
+                                 U.修改，v_ooef001_19, arg1 = oojm001
+查詢開窗：q_oojm001, arg1 = oojl001
+欄位title/輸入開窗：aoot101時，組織編號/q_ooef001_22
+                                     aoot102時，辦事處編號/q_ooef001_19
+                                     aoot103時，銷售範圍編號/q_ooef001_21
+計算或處理：異動類型為修改時，組織有無效均可輸入]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm002" ver="1" src="s" column="oojm002" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm003" ver="1" src="s" column="oojm003" table="oojm_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[法人否：oojm003
+預設值：異動類型='I.新增'時,Default 'N'
+                異動類型='U.修改'時,由[T:組織基本資料申請單身檔][C:組織編號]抓取[T:組織基本資料檔ooef_t]C:法人]帶入
+帶值或處理：若oojm003(法人否)='N'，但oojm017(歸屬法人) =空白或NOT NULL，則清空oojm017(歸屬法人) 欄位資料，且欄位為必填
+                                                           ='Y' ，則 oojm017(歸屬法人) = oojm001(組織編號)，且欄位No entry
+其他說明：aoot103時，隱藏
+            ]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm004" ver="1" src="s" column="oojm004" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm005" ver="1" src="s" column="oojm005" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm006" ver="1" src="s" column="oojm006" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm007" ver="1" src="s" column="oojm007" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm008" ver="1" src="s" column="oojm008" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm009" ver="1" src="s" column="oojm009" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="25" default="2" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm010" ver="1" src="s" column="oojm010" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="25" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm011" ver="1" src="s" column="oojm011" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="27" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm012" ver="1" src="s" column="oojm012" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[聯絡識別碼：oojm012
+異動類型 = U.修改，輸入oojm001後，自ooef_t 帶值到本欄位，並查詢oofb_t, oofc_t的資料顯示於所在地址,通訊地址]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm013" ver="1" src="s" column="oojm013" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="10" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm014" ver="1" src="s" column="oojm014" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm015" ver="1" src="s" column="oojm015" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm016" ver="1" src="s" column="oojm016" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm017" ver="1" src="s" column="oojm017" table="oojm_t" attribute="" type="" req="Y" i_zoom="q_ooef001_2" c_zoom="q_ooef001_2" chk_ref="v_ooef001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[所屬法人組織：oojm017
+預設值：異動類型='I.新增'時,Default oojm001
+                異動類型='U.修改'時,由[T:組織基本資料申請單身檔][C:組織編號]抓取[T:組織基本資料檔ooef_t]C:法人]帶入
+校驗：若[T:組織基本資料申請單身檔][C:法人]=N，為必填；異動類型＝I 時就不檢查存在否，
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　U 則要檢查 v_ooef001_1，arg1 = oojm017
+                                                                                =Y，不允許輸入
+其他說明：aoot103時，隱藏]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm018" ver="1" src="s" column="oojm018" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm019" ver="1" src="s" column="oojm019" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm020" ver="1" src="s" column="oojm020" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm021" ver="1" src="s" column="oojm021" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm022" ver="1" src="s" column="oojm022" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm023" ver="1" src="s" column="oojm023" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="49" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm024" ver="1" src="s" column="oojm024" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm200" ver="1" src="s" column="oojm200" table="oojm_t" attribute="" type="" req="N" i_zoom="q_ooei001" c_zoom="q_ooei001" chk_ref="v_ooei001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[分群編號：oojm200
+預設值：異動類型=I.新增 時，則依分群碼 Default 帶入相關資料.
+                異動類型=U.修改 時，若組織分群碼有異動時，則程式開窗詢問是否依組織分群碼 Default 帶入須設值(Y/N)?
+                                  'Y',則依組織分群對應的資料寫入，若已存在則刪除後新增
+                                  'N',則相關資料不做任何異動 
+校驗：v_ooei001, arg1 = oojm200
+開窗跟校驗須加上過濾條件：1.aoot102時, ooei305 = 'Y'
+                                                    2.aoot103時, ooei209 = 'Y' 
+計算或處理：若帶出oojm003 = Y，則Default oojm017 = oojm001]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm201" ver="1" src="s" column="oojm201" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm202" ver="1" src="s" column="oojm202" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm203" ver="1" src="s" column="oojm203" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm204" ver="1" src="s" column="oojm204" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm205" ver="1" src="s" column="oojm205" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm206" ver="1" src="s" column="oojm206" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm207" ver="1" src="s" column="oojm207" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm208" ver="1" src="s" column="oojm208" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm209" ver="1" src="s" column="oojm209" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm210" ver="1" src="s" column="oojm210" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm211" ver="1" src="s" column="oojm211" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm212" ver="1" src="s" column="oojm212" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm301" ver="1" src="s" column="oojm301" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm302" ver="1" src="s" column="oojm302" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm303" ver="1" src="s" column="oojm303" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm304" ver="1" src="s" column="oojm304" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm305" ver="1" src="s" column="oojm305" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm401" ver="1" src="s" column="oojm401" table="oojm_t" attribute="" type="" req="Y" i_zoom="q_ooef001_18" c_zoom="q_ooef001_18" chk_ref="v_ooef001_17" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售組織編號：oojm401
+預設值：g_site，可修改
+校驗：
+       當aooi500 有設定
+           套用 作業組織應用設定作業(aooi500)的內容進行
+       當aooi500 未設定
+            v_ooef001_17, arg1 = oojm401
+計算或處理：銷售組織+渠道編號+產品組編號+辦事處編號 應為唯一，不可重複
+(1)銷售組織+渠道編號+產品組編號+辦事處編號應為唯一，不可存在於dbbc_t，若已經存在則報錯說明資料已存在
+(2)銷售組織+渠道編號+產品組編號+辦事處編號應為唯一，不允許存在於oojm_t, 且異動型態為I.新增, 且未生效的申請單中，若已經存在則報錯說明申請資料重複
+其他說明：aoot103時才顯示
+
+開窗：
+       當aooi500 有設定
+           套用 作業組織應用設定作業(aooi500)的內容進行
+       當aooi500 未設定
+           使用q_ooef001_18]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm402" ver="1" src="s" column="oojm402" table="oojm_t" attribute="" type="" req="Y" i_zoom="q_oojd001" c_zoom="q_oojd001" chk_ref="v_oojd001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售渠道：oojm402
+開窗：q_oojd001, arg1 = 1
+校驗：異動類型 =  U.更新，v_oojd001, arg1 = oojm402, arg2 = 1
+計算或處理：銷售組織+渠道編號+產品組編號+辦事處編號 應為唯一，不可重複
+(1)銷售組織+渠道編號+產品組編號+辦事處編號應為唯一，不可存在於dbbc_t，若已經存在則報錯說明資料已存在
+(2)銷售組織+渠道編號+產品組編號+辦事處編號應為唯一，不允許存在於oojm_t, 且異動型態為I.新增, 且未生效的申請單中，若已經存在則報錯說明申請資料重複
+其他說明：aoot103時才顯示]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm403" ver="1" src="s" column="oojm403" table="oojm_t" attribute="" type="" req="Y" i_zoom="q_dbba001" c_zoom="q_dbba001" chk_ref="v_dbba001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品組編號：oojm403
+校驗：v_dbba001, arg1 = oojm403
+計算或處理：銷售組織+渠道編號+產品組編號+辦事處編號 應為唯一，不可重複
+(1)銷售組織+渠道編號+產品組編號+辦事處編號應為唯一，不可存在於dbbc_t，若已經存在則報錯說明資料已存在
+(2)銷售組織+渠道編號+產品組編號+辦事處編號應為唯一，不允許存在於oojm_t, 且異動型態為I.新增, 且未生效的申請單中，若已經存在則報錯說明申請資料重複
+其他說明：aoot103時才顯示]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm404" ver="1" src="s" column="oojm404" table="oojm_t" attribute="" type="" req="Y" i_zoom="q_ooef001_19" c_zoom="q_ooef001_19" chk_ref="v_ooef001_18" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[所屬辦事處：oojm404
+校驗：
+     當aooi500 有設定
+          套用 作業組織應用設定作業(aooi500)的內容進行
+     當aooi500 未設定
+           v_ooef001_18, arg1 = oojm404
+計算或處理：銷售組織+渠道編號+產品組編號+辦事處編號 應為唯一，不可重複
+(1)銷售組織+渠道編號+產品組編號+辦事處編號應為唯一，不可存在於dbbc_t，若已經存在則報錯說明資料已存在
+(2)銷售組織+渠道編號+產品組編號+辦事處編號應為唯一，不允許存在於oojm_t, 且異動型態為I.新增, 且未生效的申請單中，若已經存在則報錯說明申請資料重複
+其他說明：aoot103時才顯示
+
+開窗：
+     當aooi500 有設定
+         套用 作業組織應用設定作業(aooi500)的內容進行
+     當aooi500 未設定
+         使用q_ooef001_19]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm405" ver="2" src="s" column="oojm405" table="oojm_t" attribute="" type="" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_6" chk_ref="v_inaa001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm406" ver="2" src="s" column="oojm406" table="oojm_t" attribute="" type="" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_6" chk_ref="v_inaa001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm407" ver="2" src="s" column="oojm407" table="oojm_t" attribute="" type="" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_6" chk_ref="v_inaa001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm408" ver="2" src="s" column="oojm408" table="oojm_t" attribute="" type="" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_6" chk_ref="v_inaa001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm409" ver="2" src="s" column="oojm409" table="oojm_t" attribute="" type="" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_6" chk_ref="v_inaa001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojm410" ver="2" src="s" column="oojm410" table="oojm_t" attribute="" type="" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_6" chk_ref="v_inaa001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojmacti" ver="1" src="s" column="oojmacti" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojmsite" ver="1" src="s" column="oojmsite" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運據點：oojmsite
+預設值 = oojlsite]]>
+  </field>
+  <field cite_std="N" name="oojm_t.oojmunit" ver="1" src="s" column="oojmunit" table="oojm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[應用組織：oojmunit
+預設值 = oojlunit]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="3" name="prog_oojl003" depend_field="oojl_t.oojl003" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_oojl003_desc" src="s" depend_field="b_oojl003" correspon_key="oojl003" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_oojl004_desc" src="s" depend_field="b_oojl004" correspon_key="oojl004" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="2" name="l_oojm405_desc" src="s" depend_field="l_oojm405" correspon_key="oojment,oojm405" ref_table="inayl_t" ref_fk="inayent,inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="2" name="l_oojm406_desc" src="s" depend_field="l_oojm406" correspon_key="oojment,oojm406" ref_table="inayl_t" ref_fk="inaylent,inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="2" name="l_oojm407_desc" src="s" depend_field="l_oojm407" correspon_key="oojment,oojm407" ref_table="inayl_t" ref_fk="inaylent,inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="2" name="l_oojm408_desc" src="s" depend_field="l_oojm408" correspon_key="oojment,oojm408" ref_table="inayl_t" ref_fk="inaylent,inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="2" name="l_oojm409_desc" src="s" depend_field="l_oojm409" correspon_key="oojment,oojm409" ref_table="inayl_t" ref_fk="inaylent,inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="2" name="l_oojm410_desc" src="s" depend_field="l_oojm410" correspon_key="oojment,oojm410" ref_table="inayl_t" ref_fk="inaylent,inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojl003_desc" src="s" depend_field="oojl_t.oojl003" correspon_key="oojl003" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oojl004_desc" src="s" depend_field="oojl_t.oojl004" correspon_key="oojl004" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojlcnfid_desc" src="s" depend_field="oojl_t.oojlcnfid" correspon_key="oojlcnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oojlcrtdp_desc" src="s" depend_field="oojl_t.oojlcrtdp" correspon_key="oojlcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojlcrtid_desc" src="s" depend_field="oojl_t.oojlcrtid" correspon_key="oojlcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oojlmodid_desc" src="s" depend_field="oojl_t.oojlmodid" correspon_key="oojlmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oojlowndp_desc" src="s" depend_field="oojl_t.oojlowndp" correspon_key="oojlowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojlownid_desc" src="s" depend_field="oojl_t.oojlownid" correspon_key="oojlownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oojlsite_desc" src="s" depend_field="oojl_t.oojlsite" correspon_key="oojlsite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm004_desc" src="s" depend_field="oojm_t.oojm004" correspon_key="&apos;3&apos;,oojm004" ref_table="ooall_t" ref_fk="ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm006_desc" src="s" depend_field="oojm006" correspon_key="oojm006" ref_table="oocgl_t" ref_fk="oocgl001" ref_dlang="oocgl002" ref_rtn="oocgl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm008_desc" src="s" depend_field="oojm008" correspon_key="&apos;4&apos;,oojm008" ref_table="ooall_t" ref_fk="ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm014_desc" src="s" depend_field="oojm_t.oojm014" correspon_key="&apos;10&apos;,oojm014" ref_table="ooall_t" ref_fk="ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm015_desc" src="s" depend_field="oojm015" correspon_key="&apos;1&apos;,oojm015" ref_table="ooall_t" ref_fk="ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm016_desc" src="s" depend_field="oojm_t.oojm016" correspon_key="oojm016" ref_table="ooail_t" ref_fk="ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm017_desc" src="s" depend_field="oojm_t.oojm017" correspon_key="oojm017" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm018_desc" src="s" depend_field="oojm018" correspon_key="oojm018" ref_table="gzot_t" ref_fk="gzot001" ref_dlang="" ref_rtn="gzot002" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm018_desc_1" src="s" depend_field="oojm018" correspon_key="oojm018" ref_table="gzot_t" ref_fk="gzot001" ref_dlang="" ref_rtn="gzot003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm019_desc" src="s" depend_field="oojm019" correspon_key="&apos;2&apos;,oojm019" ref_table="ooall_t" ref_fk="ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm024_desc" src="s" depend_field="oojm024" correspon_key="oojm024" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm200_desc" src="s" depend_field="oojm_t.oojm200" correspon_key="oojm200" ref_table="ooeil_t" ref_fk="ooeil001" ref_dlang="ooeil002" ref_rtn="ooeil003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm401_desc" src="s" depend_field="oojm_t.oojm401" correspon_key="oojm401" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm402_desc" src="s" depend_field="oojm_t.oojm402" correspon_key="oojm402" ref_table="oojdl_t" ref_fk="oojdl001" ref_dlang="oojdl002" ref_rtn="oojdl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm403_desc" src="s" depend_field="oojm_t.oojm403" correspon_key="oojm403" ref_table="dbbal_t" ref_fk="dbbal001" ref_dlang="dbbal002" ref_rtn="dbbal003" status=""/>
+    <rfield cite_std="N" ver="1" name="oojm404_desc" src="s" depend_field="oojm_t.oojm404" correspon_key="oojm404" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="oojml_t.oojml003" src="s" depend_field="oojm_t.oojm001" correspon_key="oojldocno,oojm001" lang_table="oojml_t" lang_fk="oojmldocno,oojml001" lang_dlang="oojml002" lang_rtn="oojml003" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="oojml_t.oojml004" src="s" depend_field="oojm_t.oojm001" correspon_key="oojldocno,oojm001" lang_table="oojml_t" lang_fk="oojmldocno,oojml001" lang_dlang="oojml002" lang_rtn="oojml004" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="oojml_t.oojml005" src="s" depend_field="oojm_t.oojm001" correspon_key="oojldocno,oojm001" lang_table="oojml_t" lang_fk="oojmldocno,oojml001" lang_dlang="oojml002" lang_rtn="oojml005" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="oojml_t.oojml006" src="s" depend_field="oojm_t.oojm001" correspon_key="oojldocno,oojm001" lang_table="oojml_t" lang_fk="oojmldocno,oojml001" lang_dlang="oojml002" lang_rtn="oojml006" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_oojl000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_oojl002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_oojl003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_oojl004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_oojl005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_oojldocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_oojldocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_oojlstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm208" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm210" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm211" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_oojm212" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="l_oojm405" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="l_oojm406" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="l_oojm407" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="l_oojm408" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="l_oojm409" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="l_oojm410" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojl000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojl001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojl002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="oojl_t.oojl003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="oojl_t.oojl004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojl005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlcnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlcnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojldocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojldocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojl_t.oojlunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm200" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm202" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm203" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm204" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm205" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm206" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm207" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm208" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm209" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm210" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm211" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm212" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm301" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm302" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm303" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm304" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm305" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm401" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm402" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm403" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojm404" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="oojm_t.oojm405" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="oojm_t.oojm406" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="oojm_t.oojm407" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="oojm_t.oojm408" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="oojm_t.oojm409" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="oojm_t.oojm410" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojmacti" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojmsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oojm_t.oojmunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_aoi360" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_oofcstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_oofc001" text="通訊方式識別碼" lstr=""/>
+    <sfield name="lbl_oofc008" text="通訊類型" lstr=""/>
+    <sfield name="lbl_oofc009" text="通訊應用分類" lstr=""/>
+    <sfield name="lbl_oocql004_desc" text="通訊應用分類碼說明" lstr=""/>
+    <sfield name="lbl_oofc012" text="通訊內容" lstr=""/>
+    <sfield name="lbl_oofc010" text="主要通訊方式" lstr=""/>
+    <sfield name="lbl_oofc014" text="簡要代碼" lstr=""/>
+    <sfield name="lbl_oofc011" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofc013" text="失效日期" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_oofbstus" text="有效" lstr=""/>
+    <sfield name="lbl_oofb001" text="聯絡地址識別碼" lstr=""/>
+    <sfield name="lbl_oofb019" text="簡要代碼" lstr=""/>
+    <sfield name="lbl_oofb011" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofb008" text="地址類型" lstr=""/>
+    <sfield name="lbl_oofb009" text="地址應用分類" lstr=""/>
+    <sfield name="lbl_oocql004x" text="地址應用分類碼說明" lstr=""/>
+    <sfield name="lbl_oofb010" text="主要聯絡地址" lstr=""/>
+    <sfield name="lbl_oofb012" text="國家/地區" lstr=""/>
+    <sfield name="lbl_oocgl003_desc" text="國家/地區說明" lstr=""/>
+    <sfield name="lbl_oofb013" text="郵政編號" lstr=""/>
+    <sfield name="lbl_oofb014" text="州/省/直轄市" lstr=""/>
+    <sfield name="lbl_oocil004_desc" text="州/省/直轄市說明" lstr=""/>
+    <sfield name="lbl_oofb015" text="縣/市" lstr=""/>
+    <sfield name="lbl_oockl005_desc" text="說明" lstr=""/>
+    <sfield name="lbl_oofb016" text="行政區域" lstr=""/>
+    <sfield name="lbl_oocml006_desc" text="行政地區說明" lstr=""/>
+    <sfield name="lbl_oofb017" text="地址" lstr=""/>
+    <sfield name="lbl_oofb022" text="送貨站點" lstr=""/>
+    <sfield name="lbl_dbadl003_desc" text="站點簡稱" lstr=""/>
+    <sfield name="lbl_oofb020" text="經度" lstr=""/>
+    <sfield name="lbl_oofb021" text="維度" lstr=""/>
+    <sfield name="lbl_oofb018" text="失效日期" lstr=""/>
+    <sfield name="b_oojlstus" text="狀態" lstr=""/>
+    <sfield name="lbl_oojldocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_oojl000" text="異動類型" lstr=""/>
+    <sfield name="lbl_oojl002" text="異動生效日期" lstr=""/>
+    <sfield name="lbl_oojl003" text="申請人員" lstr=""/>
+    <sfield name="lbl_ooag011" text="申請人姓名" lstr=""/>
+    <sfield name="lbl_oojl004" text="申請部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_oojl005" text="資料更新成功" lstr=""/>
+    <sfield name="lbl_oojldocdt" text="單據日期" lstr=""/>
+    <sfield name="page_1" text="組織類型" lstr=""/>
+    <sfield name="lbl_oojlsite" text="申請組織" lstr=""/>
+    <sfield name="lbl_oojl001" text="資料類型" lstr=""/>
+    <sfield name="lbl_oojlunit" text="應用組織" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_oojm001" text="組織編號" lstr=""/>
+    <sfield name="lbl_oojm000" text="資料類型" lstr=""/>
+    <sfield name="lbl_oojml003" text="簡稱" lstr=""/>
+    <sfield name="lbl_oojml004" text="對內全稱" lstr=""/>
+    <sfield name="lbl_oojml005" text="對外全稱" lstr=""/>
+    <sfield name="lbl_oojml006" text="助記碼" lstr=""/>
+    <sfield name="lbl_oojm200" text="組織分群編號" lstr=""/>
+    <sfield name="lbl_ooeil003" text="分群碼說明" lstr=""/>
+    <sfield name="lbl_oojm003" text="法人" lstr=""/>
+    <sfield name="lbl_oojm017" text="所屬法人" lstr=""/>
+    <sfield name="lbl_ooefl003_1" text="法人說明" lstr=""/>
+    <sfield name="lbl_oojm401" text="銷售組織" lstr=""/>
+    <sfield name="lbl_ooefl003_2" text="銷售組織說明" lstr=""/>
+    <sfield name="lbl_oojm402" text="銷售渠道" lstr=""/>
+    <sfield name="lbl_oojdl003" text="渠道說明" lstr=""/>
+    <sfield name="lbl_oojm403" text="產品組編號" lstr=""/>
+    <sfield name="lbl_dbbal003" text="產品組說明" lstr=""/>
+    <sfield name="lbl_oojm404" text="所屬辦事處" lstr=""/>
+    <sfield name="lbl_ooefl003_3" text="辦事處說明" lstr=""/>
+    <sfield name="lbl_oojmacti" text="資料有效" lstr=""/>
+    <sfield name="lbl_oojmsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_oojmunit" text="應用組織" lstr=""/>
+    <sfield name="lbl_oojm012" text="聯絡對象識別碼" lstr=""/>
+    <sfield name="lbl_oojm201" text="營運組織(可登入據點)" lstr=""/>
+    <sfield name="lbl_oojm202" text="預測組織" lstr=""/>
+    <sfield name="lbl_oojm203" text="部門組織" lstr=""/>
+    <sfield name="lbl_oojm204" text="核算組織" lstr=""/>
+    <sfield name="lbl_oojm205" text="預算組織" lstr=""/>
+    <sfield name="lbl_oojm206" text="資金組織" lstr=""/>
+    <sfield name="lbl_oojm207" text="資產組織" lstr=""/>
+    <sfield name="lbl_oojm208" text="銷售組織" lstr=""/>
+    <sfield name="lbl_oojm209" text="銷售範圍" lstr=""/>
+    <sfield name="lbl_oojm210" text="採購組織" lstr=""/>
+    <sfield name="lbl_oojm211" text="物流組織" lstr=""/>
+    <sfield name="lbl_oojm212" text="結算組織" lstr=""/>
+    <sfield name="lbl_oojm301" text="營銷中心" lstr=""/>
+    <sfield name="lbl_oojm302" text="配送中心" lstr=""/>
+    <sfield name="lbl_oojm303" text="採購中心" lstr=""/>
+    <sfield name="lbl_oojm304" text="門店" lstr=""/>
+    <sfield name="lbl_oojm305" text="辦事處" lstr=""/>
+    <sfield name="lbl_oojm002" text="統一編號" lstr=""/>
+    <sfield name="lbl_oojm007" text="上市櫃公司代號" lstr=""/>
+    <sfield name="lbl_oojm020" text="工商登記號" lstr=""/>
+    <sfield name="lbl_oojm021" text="法人代表" lstr=""/>
+    <sfield name="lbl_oojm022" text="註冊資本" lstr=""/>
+    <sfield name="lbl_oojm011" text="專屬國家地區功能" lstr=""/>
+    <sfield name="lbl_oojm013" text="日期顯示格式" lstr=""/>
+    <sfield name="lbl_oojm023" text="數字/金額顯示格式" lstr=""/>
+    <sfield name="lbl_oojm014" text="幣別參照表" lstr=""/>
+    <sfield name="lbl_oojm016" text="主幣別編號" lstr=""/>
+    <sfield name="lbl_oojm015" text="匯率參照表號" lstr=""/>
+    <sfield name="lbl_oojm018" text="時區" lstr=""/>
+    <sfield name="lbl_oojm019" text="稅區" lstr=""/>
+    <sfield name="lbl_oojm008" text="行事曆參照表號" lstr=""/>
+    <sfield name="lbl_oojm009" text="製造行事曆對應類別" lstr=""/>
+    <sfield name="lbl_oojm010" text="辦公行事曆對應類別" lstr=""/>
+    <sfield name="lbl_oojm004" text="單據別參照表號" lstr=""/>
+    <sfield name="lbl_oojm024" text="據點對應客戶/廠商編號" lstr=""/>
+    <sfield name="lbl_oojm005" text="單據據點代號" lstr=""/>
+    <sfield name="lbl_oojm405" text="預設收貨成本倉" lstr=""/>
+    <sfield name="lbl_oojm408" text="預設收貨非成本倉" lstr=""/>
+    <sfield name="lbl_oojm406" text="預設出貨成本倉" lstr=""/>
+    <sfield name="lbl_oojm409" text="預設出貨非成本倉" lstr=""/>
+    <sfield name="lbl_oojm407" text="預設在途成本倉" lstr=""/>
+    <sfield name="lbl_oojm410" text="預設在途非成本倉" lstr=""/>
+    <sfield name="page_3.aoot101" text="法人資訊" lstr=""/>
+    <sfield name="Legal Profile" text="法人基本資料" lstr=""/>
+    <sfield name="Legal Basic Setting" text="法人基礎設置" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_oojm006" text="所屬國家地區" lstr=""/>
+    <sfield name="lbl_oocgl003" text="說明" lstr=""/>
+    <sfield name="lbl_gzot002" text="時區簡碼" lstr=""/>
+    <sfield name="lbl_gzot003" text="代表城市" lstr=""/>
+    <sfield name="page_4.aoot101" text="營運據點" lstr=""/>
+    <sfield name="Site Basic Setting" text="據點基礎設置" lstr=""/>
+    <sfield name="Site Data" text="據點對應資料設置" lstr=""/>
+    <sfield name="lbl_pmaal003" text="交易對象全名" lstr=""/>
+    <sfield name="group_11" text="預設倉庫設置" lstr=""/>
+    <sfield name="lbl_inayl003" text="說明" lstr=""/>
+    <sfield name="aoot101.page_2" text="所在地址" lstr=""/>
+    <sfield name="aoot101.page_5" text="通訊方式" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_ooff001" text="備註類型" lstr=""/>
+    <sfield name="lbl_ooff002" text="第一KEY值" lstr=""/>
+    <sfield name="lbl_ooff004" text="第三KEY值" lstr=""/>
+    <sfield name="lbl_ooff005" text="第四KEY值" lstr=""/>
+    <sfield name="lbl_ooff006" text="第五KEY值" lstr=""/>
+    <sfield name="lbl_ooff007" text="第六KEY值" lstr=""/>
+    <sfield name="lbl_ooff008" text="第七KEY值" lstr=""/>
+    <sfield name="lbl_ooff009" text="第八KEY值" lstr=""/>
+    <sfield name="lbl_ooff010" text="第九KEY值" lstr=""/>
+    <sfield name="lbl_ooff011" text="第十KEY值" lstr=""/>
+    <sfield name="lbl_ooff003" text="單據項次" lstr=""/>
+    <sfield name="lbl_ooff012" text="控制類型" lstr=""/>
+    <sfield name="lbl_ooff013" text="備註" lstr=""/>
+    <sfield name="lbl_ooff014" text="失效日期" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_oojmldocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_oojml001" text="組織編號" lstr=""/>
+    <sfield name="lbl_oojml002" text="語言別" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="open_aoi360" text="備註" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="3" cite_std="N" src="s">
+    <widget name="l_oojm002" status="u"/>
+    <widget name="l_oojm004" status="u"/>
+    <widget name="l_oojm005" status="u"/>
+    <widget name="l_oojm006" status="u"/>
+    <widget name="l_oojm007" status="u"/>
+    <widget name="l_oojm008" status="u"/>
+    <widget name="l_oojm009" status="u"/>
+    <widget name="l_oojm010" status="u"/>
+    <widget name="l_oojm011" status="u"/>
+    <widget name="l_oojm013" status="u"/>
+    <widget name="l_oojm014" status="u"/>
+    <widget name="l_oojm015" status="u"/>
+    <widget name="l_oojm016" status="u"/>
+    <widget name="l_oojm018" status="u"/>
+    <widget name="l_oojm019" status="u"/>
+    <widget name="l_oojm020" status="u"/>
+    <widget name="l_oojm021" status="u"/>
+    <widget name="l_oojm022" status="u"/>
+    <widget name="l_oojm023" status="u"/>
+    <widget name="l_oojm024" status="u"/>
+    <widget name="l_oojm201" status="u"/>
+    <widget name="l_oojm208" status="u"/>
+    <widget name="l_oojm210" status="u"/>
+    <widget name="l_oojm211" status="u"/>
+    <widget name="l_oojm212" status="u"/>
+    <widget name="l_oojm405" status="u"/>
+    <widget name="l_oojm405_desc" status="u"/>
+    <widget name="l_oojm406" status="u"/>
+    <widget name="l_oojm406_desc" status="u"/>
+    <widget name="l_oojm407" status="u"/>
+    <widget name="l_oojm407_desc" status="u"/>
+    <widget name="l_oojm408" status="u"/>
+    <widget name="l_oojm408_desc" status="u"/>
+    <widget name="l_oojm409" status="u"/>
+    <widget name="l_oojm409_desc" status="u"/>
+    <widget name="l_oojm410" status="u"/>
+    <widget name="l_oojm410_desc" status="u"/>
+    <widget name="lbl_oojm407" status="u"/>
+    <widget name="oojm004_desc" status="u"/>
+    <widget name="oojm006_desc" status="u"/>
+    <widget name="oojm008_desc" status="u"/>
+    <widget name="oojm014_desc" status="u"/>
+    <widget name="oojm015_desc" status="u"/>
+    <widget name="oojm016_desc" status="u"/>
+    <widget name="oojm018_desc" status="u"/>
+    <widget name="oojm018_desc_1" status="u"/>
+    <widget name="oojm019_desc" status="u"/>
+    <widget name="oojm024_desc" status="u"/>
+    <widget name="oojm_t.oojm002" status="u"/>
+    <widget name="oojm_t.oojm004" status="u"/>
+    <widget name="oojm_t.oojm005" status="u"/>
+    <widget name="oojm_t.oojm006" status="u"/>
+    <widget name="oojm_t.oojm007" status="u"/>
+    <widget name="oojm_t.oojm008" status="u"/>
+    <widget name="oojm_t.oojm009" status="u"/>
+    <widget name="oojm_t.oojm011" status="u"/>
+    <widget name="oojm_t.oojm013" status="u"/>
+    <widget name="oojm_t.oojm014" status="u"/>
+    <widget name="oojm_t.oojm015" status="u"/>
+    <widget name="oojm_t.oojm016" status="u"/>
+    <widget name="oojm_t.oojm018" status="u"/>
+    <widget name="oojm_t.oojm020" status="u"/>
+    <widget name="oojm_t.oojm021" status="u"/>
+    <widget name="oojm_t.oojm022" status="u"/>
+    <widget name="oojm_t.oojm024" status="u"/>
+    <widget name="oojm_t.oojm208" status="u"/>
+    <widget name="oojm_t.oojm405" status="u"/>
+  </exclude>
+</spec>

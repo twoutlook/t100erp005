@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint302_01" module="ain" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02294" crtdt="2013-10-17 17:32:29" modid="07024" moddt="2016-06-27 10:59:32" sdver="0009" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="雜項庫存異動庫儲批明細維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inbcsite,inbcdocno,inbcseq,inbcseq1,inbc001,inbc002,inbc005,inbc005_desc(chr500),inbc006,inbc006_desc(chr500),inbc007,inbc003,inbc010,inbc015,inbc021,inbc021_desc(chr500),inbc022,inbc022_desc(chr500),inbc023,inbc023_desc(chr500),inbc203,inbc016,inbc017"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint302_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="inbcsite,inbcdocno,inbcseq,inbcseq1,inbc001,inbc005,inbc006,inbc007,inbc003,inbc010,inbc015,inbc021,inbc022,inbc023,inbc203,inbc016,inbc017" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="inbcsite,inbcdocno,inbcseq,inbcseq1,inbc001,inbc005,inbc006,inbc007,inbc003,inbc010,inbc015,inbc021,inbc022,inbc023,inbc203,inbc016,inbc017"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="inbcsite"/>
+      <column id="inbcdocno"/>
+      <column id="inbcseq"/>
+      <column id="inbcseq1"/>
+      <column id="inbc001"/>
+      <column id="inbc002"/>
+      <column id="inbc005">
+        <after/>
+      </column>
+      <column id="inbc005_desc"/>
+      <column id="inbc006">
+        <after/>
+      </column>
+      <column id="inbc006_desc"/>
+      <column id="inbc007"/>
+      <column id="inbc003"/>
+      <column id="inbc010" type="S" default="0"/>
+      <column id="inbc015" type="S" default="0"/>
+      <column id="inbc021">
+        <after>
+          <check chkid="v_pjba001" id="isExist"/>
+          <reference field="inbc021_desc" ref_field="inbc_t.inbc021" map_field="inbc021" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="inbc021_desc"/>
+      <column id="inbc022">
+        <after>
+          <check chkid="v_pjbb002" id="isExist"/>
+          <reference field="inbc022_desc" ref_field="inbc021,inbc022" map_field="inbc021,inbc022" ref_sql="SELECT pjbbl004 FROM pjbbl_t WHERE pjbblent=$varg_enterprise$var AND pjbbl001=? AND pjbbl002=? AND pjbbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbb002_1" state="i"/>
+        <controlp form="q_pjbb002_1" state="c"/>
+      </column>
+      <column id="inbc022_desc"/>
+      <column id="inbc023">
+        <after>
+          <check chkid="v_pjbm002" id="isExist"/>
+          <reference field="inbc023_desc" ref_field="inbc021,inbc023" map_field="inbc021,inbc023" ref_sql="SELECT pjbml004 FROM pjbml_t WHERE pjbmlent=$varg_enterprise$var AND pjbml001=? AND pjbml002=? AND pjbml003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbm002" state="i"/>
+        <controlp form="q_pjbm002" state="c"/>
+      </column>
+      <column id="inbc023_desc"/>
+      <column id="inbc203"/>
+      <column id="inbc016"/>
+      <column id="inbc017"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="inbc_t" page="1" linked="" pk="inbcdocno,inbcseq,inbcseq1">
+      <sql id="forupd_sql_detail" query="SELECT inbcsite,inbcdocno,inbcseq,inbcseq1,inbc001,inbc002,inbc005,&apos;&apos;,inbc006,&apos;&apos;,inbc007,inbc003,inbc010,inbc015,inbc021,&apos;&apos;,inbc022,&apos;&apos;,inbc023,&apos;&apos;,inbc203,inbc016,inbc017 FROM inbc_t WHERE inbcent=? AND inbcdocno=? AND inbcseq=? AND inbcseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inbcsite,inbcdocno,inbcseq,inbcseq1,inbc001,inbc002,inbc005,&apos;&apos;,inbc006,&apos;&apos;,inbc007,inbc003,inbc010,inbc015,inbc021,&apos;&apos;,inbc022,&apos;&apos;,inbc023,&apos;&apos;,inbc203,inbc016,inbc017 FROM inbc_t WHERE inbcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi220" module="anm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02481" crtdt="2014-09-01 15:38:48" modid="06821" moddt="2015-07-16 14:41:14" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="網銀交易類型維護">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmao001,nmao001_desc(chr500),nmao002,nmaol004,nmao003,nmao004,nmaostus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmao001,nmao002,nmaoownid,nmaoownid_desc(chr500),nmaoowndp,nmaoowndp_desc(chr500),nmaocrtid,nmaocrtid_desc(chr500),nmaocrtdp,nmaocrtdp_desc(chr500),nmaocrtdt,nmaomodid,nmaomodid_desc(chr500),nmaomoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi220" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmao001,nmao002,nmaol004,nmao003,nmao004,nmaostus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmao001,nmao002,nmaol004,nmao003,nmao004,nmaostus"/>
+      <construct id="body" page="2" field="nmaoownid,nmaoowndp,nmaocrtid,nmaocrtdp,nmaocrtdt,nmaomodid,nmaomoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmao001">
+        <after>
+          <check chkid="v_nmaq001" id="chkandReturn"/>
+          <reference field="nmao001_desc" ref_field="nmao_t.nmao001" map_field="nmaoent,nmao001" ref_sql="SELECT nmanl003 FROM nmanl_t WHERE nmanlent=$varg_enterprise$var AND nmanl001=? AND nmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nman001" state="i"/>
+        <controlp form="q_nman001" state="c"/>
+      </column>
+      <column id="nmao001_desc"/>
+      <column id="nmao002"/>
+      <column id="nmaol004"/>
+      <column id="nmao003" def_scc="9948"/>
+      <column id="nmao004" def_scc="9949"/>
+      <column id="nmaostus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmaoownid">
+        <after>
+          <reference field="nmaoownid_desc" ref_field="nmao_t.nmaoownid" map_field="nmaoownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaoownid_desc"/>
+      <column id="nmaoowndp">
+        <after>
+          <reference field="nmaoowndp_desc" ref_field="nmao_t.nmaoowndp" map_field="nmaoowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmaoowndp_desc"/>
+      <column id="nmaocrtid">
+        <after>
+          <reference field="nmaocrtid_desc" ref_field="nmao_t.nmaocrtid" map_field="nmaocrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaocrtid_desc"/>
+      <column id="nmaocrtdp">
+        <after>
+          <reference field="nmaocrtdp_desc" ref_field="nmao_t.nmaocrtdp" map_field="nmaocrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmaocrtdp_desc"/>
+      <column id="nmaocrtdt"/>
+      <column id="nmaomodid">
+        <after>
+          <reference field="nmaomodid_desc" ref_field="nmao_t.nmaomodid" map_field="nmaomodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaomodid_desc"/>
+      <column id="nmaomoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmao_t" page="1,2" linked="" pk="nmao001,nmao002">
+      <sql id="forupd_sql_detail" query="SELECT nmao001,&apos;&apos;,nmao002,&apos;&apos;,nmao003,nmao004,nmaostus,&apos;&apos;,&apos;&apos;,nmaoownid,&apos;&apos;,nmaoowndp,&apos;&apos;,nmaocrtid,&apos;&apos;,nmaocrtdp,&apos;&apos;,nmaocrtdt,nmaomodid,&apos;&apos;,nmaomoddt FROM nmao_t WHERE nmaoent=? AND nmao001=? AND nmao002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmao001,&apos;&apos;,nmao002,&apos;&apos;,nmao003,nmao004,nmaostus,&apos;&apos;,&apos;&apos;,nmaoownid,&apos;&apos;,nmaoowndp,&apos;&apos;,nmaocrtid,&apos;&apos;,nmaocrtdp,&apos;&apos;,nmaocrtdt,nmaomodid,&apos;&apos;,nmaomoddt FROM nmao_t WHERE nmaoent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="nmaol_t.nmaol004" table="nmaol_t" fk="nmao001,nmao002" pk="nmaol001,nmaol002,nmaol003" field="nmaol004"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq445" module="ain" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-02-05 16:57:00" modid="02159" moddt="2016-10-19 17:21:18" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="商品貨架庫存交易查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="inflsite,sel1,sel2,oocq019,infc002,infl007,imaa009,infl005"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),inflsite,inflsite_desc(chr500),infl001,infl002,infl003,infl007,infl007_desc(chr10),infl005,infl005_desc(chr500),infl005_desc_1(chr500),infl005_desc_1_desc(chr500),infl008,infl004,infl009,infl011,infl012,infl013,infl014,infl015"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),inflsite(b_inflsite),inflsite_desc(b_inflsite_desc),infl001(b_infl001),infl002(b_infl002),infl003(b_infl003),infl007(b_infl007),infl007_desc(b_infl007_desc),infl005(b_infl005),infl005_desc(b_infl005_desc),infl005_desc_1(b_infl005_desc_1),infl005_desc_1_desc(b_infl005_desc_1_desc),infl008(b_infl008),infl004(b_infl004),infl009(b_infl009),infl011(b_infl011),infl012(b_infl012),infl013(b_infl013),infl014(b_infl014),infl015(b_infl015)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainq445" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="inflsite,infl001,infl002,infl003,infl007,infl005,infl008,infl004,infl009,infl011,infl012,infl013,infl014,infl015" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="inflsite(b_inflsite),infl001(b_infl001),infl002(b_infl002),infl003(b_infl003),infl007(b_infl007),infl005(b_infl005),infl008(b_infl008),infl004(b_infl004),infl009(b_infl009),infl011(b_infl011),infl012(b_infl012),infl013(b_infl013),infl014(b_infl014),infl015(b_infl015)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="inflsite">
+        <after>
+          <reference field="inflsite_desc" ref_field="inflsite" map_field="inflent,inflsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inflsite_desc"/>
+      <column id="infl001"/>
+      <column id="infl002"/>
+      <column id="infl003"/>
+      <column id="infl007">
+        <after>
+          <reference field="infl007_desc" ref_field="infl007,inflsite" map_field="infl007,inflsite" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infc001=? AND infcsite=? "/>
+        </after>
+      </column>
+      <column id="infl007_desc"/>
+      <column id="infl005">
+        <after>
+          <reference field="infl005_desc" ref_field="infl005" map_field="inflent,infl005" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infl005_desc"/>
+      <column id="infl005_desc_1">
+        <after>
+          <reference field="infl005_desc_1_desc" ref_field="infl005_desc_1" map_field="infkent,b_infl005_desc_1" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infl005_desc_1_desc"/>
+      <column id="infl008"/>
+      <column id="infl004"/>
+      <column id="infl009"/>
+      <column id="infl011"/>
+      <column id="infl012"/>
+      <column id="infl013"/>
+      <column id="infl014"/>
+      <column id="infl015"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="infl_t" page="1" linked="" pk="inflsite,infl001,infl002,infl003,infl004">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,inflsite,&apos;&apos;,infl001,infl002,infl003,infl007,&apos;&apos;,infl005,&apos;&apos;,&apos;&apos;,&apos;&apos;,infl008,infl004,infl009,infl011,infl012,infl013,infl014,infl015 FROM infl_t WHERE inflent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

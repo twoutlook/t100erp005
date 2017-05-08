@@ -1,0 +1,606 @@
+{<section id="aisi050_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2014-07-07 11:17:43), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000326
+#+ Filename...: aisi050_02
+#+ Description: 發票簿拆分
+#+ Creator....: 05016(2014-06-19 15:09:47)
+#+ Modifier...: 05016 -SD/PR-
+{</section>}
+
+
+
+{<section id="aisi050_02.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_isae_m        RECORD
+       isaesite LIKE isae_t.isaesite, 
+   isaesite_desc LIKE type_t.chr80, 
+   isae016 LIKE isae_t.isae016, 
+   isae017 LIKE isae_t.isae017, 
+   isae018 LIKE isae_t.isae018, 
+   isae001 LIKE isae_t.isae001, 
+   isae004 LIKE isae_t.isae004, 
+   isae004_desc LIKE type_t.chr80, 
+   isae009 LIKE isae_t.isae009, 
+   isae010 LIKE isae_t.isae010, 
+   isae011 LIKE isae_t.isae011, 
+   chr LIKE type_t.chr500, 
+   num LIKE type_t.chr500, 
+   sheet LIKE type_t.chr500, 
+   isae002 LIKE isae_t.isae002, 
+   isae003 LIKE isae_t.isae003, 
+   isae018_desc LIKE type_t.chr80, 
+   isaecomp LIKE isae_t.isaecomp, 
+   isaecomp_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_isae_m        type_g_isae_m
+ 
+   DEFINE g_isaesite_t LIKE isae_t.isaesite
+DEFINE g_isae016_t LIKE isae_t.isae016
+DEFINE g_isae017_t LIKE isae_t.isae017
+DEFINE g_isae018_t LIKE isae_t.isae018
+DEFINE g_isae001_t LIKE isae_t.isae001
+DEFINE g_isae004_t LIKE isae_t.isae004
+DEFINE g_isae002_t LIKE isae_t.isae002
+DEFINE g_isae003_t LIKE isae_t.isae003
+DEFINE g_isaecomp_t LIKE isae_t.isaecomp
+
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="aisi050_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aisi050_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aisi050_02 WITH FORM cl_ap_formpath("ais","aisi050_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_isae_m.isaesite,g_isae_m.isae016,g_isae_m.isae017,g_isae_m.isae018,g_isae_m.isae001,g_isae_m.isae010,g_isae_m.isae011,g_isae_m.chr,g_isae_m.num,g_isae_m.sheet,g_isae_m.isae002,g_isae_m.isae003,g_isae_m.isaecomp ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isaesite
+            
+            #add-point:AFTER FIELD isaesite name="input.a.isaesite"
+            {<point name="input.a.isaesite" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isaesite
+            #add-point:BEFORE FIELD isaesite name="input.b.isaesite"
+            {<point name="input.b.isaesite" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isaesite
+            #add-point:ON CHANGE isaesite name="input.g.isaesite"
+            {<point name="input.g.isaesite" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isae016
+            #add-point:BEFORE FIELD isae016 name="input.b.isae016"
+            {<point name="input.b.isae016" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isae016
+            
+            #add-point:AFTER FIELD isae016 name="input.a.isae016"
+            {<point name="input.a.isae016" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isae016
+            #add-point:ON CHANGE isae016 name="input.g.isae016"
+            {<point name="input.g.isae016" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isae017
+            #add-point:BEFORE FIELD isae017 name="input.b.isae017"
+            {<point name="input.b.isae017" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isae017
+            
+            #add-point:AFTER FIELD isae017 name="input.a.isae017"
+            {<point name="input.a.isae017" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isae017
+            #add-point:ON CHANGE isae017 name="input.g.isae017"
+            {<point name="input.g.isae017" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isae018
+            
+            #add-point:AFTER FIELD isae018 name="input.a.isae018"
+            {<point name="input.a.isae018" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isae018
+            #add-point:BEFORE FIELD isae018 name="input.b.isae018"
+            {<point name="input.b.isae018" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isae018
+            #add-point:ON CHANGE isae018 name="input.g.isae018"
+            {<point name="input.g.isae018" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isae001
+            #add-point:BEFORE FIELD isae001 name="input.b.isae001"
+            {<point name="input.b.isae001" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isae001
+            
+            #add-point:AFTER FIELD isae001 name="input.a.isae001"
+            {<point name="input.a.isae001" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isae001
+            #add-point:ON CHANGE isae001 name="input.g.isae001"
+            {<point name="input.g.isae001" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isae010
+            #add-point:BEFORE FIELD isae010 name="input.b.isae010"
+            {<point name="input.b.isae010" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isae010
+            
+            #add-point:AFTER FIELD isae010 name="input.a.isae010"
+            {<point name="input.a.isae010" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isae010
+            #add-point:ON CHANGE isae010 name="input.g.isae010"
+            {<point name="input.g.isae010" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isae011
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_isae_m.isae011,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD isae011
+            END IF 
+
+
+
+            #add-point:AFTER FIELD isae011 name="input.a.isae011"
+            {<point name="input.a.isae011" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isae011
+            #add-point:BEFORE FIELD isae011 name="input.b.isae011"
+            {<point name="input.b.isae011" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isae011
+            #add-point:ON CHANGE isae011 name="input.g.isae011"
+            {<point name="input.g.isae011" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD chr
+            #add-point:BEFORE FIELD chr name="input.b.chr"
+            {<point name="input.b.chr" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD chr
+            
+            #add-point:AFTER FIELD chr name="input.a.chr"
+            {<point name="input.a.chr" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE chr
+            #add-point:ON CHANGE chr name="input.g.chr"
+            {<point name="input.g.chr" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num
+            #add-point:BEFORE FIELD num name="input.b.num"
+            {<point name="input.b.num" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num
+            
+            #add-point:AFTER FIELD num name="input.a.num"
+            {<point name="input.a.num" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num
+            #add-point:ON CHANGE num name="input.g.num"
+            {<point name="input.g.num" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sheet
+            #add-point:BEFORE FIELD sheet name="input.b.sheet"
+            {<point name="input.b.sheet" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sheet
+            
+            #add-point:AFTER FIELD sheet name="input.a.sheet"
+            {<point name="input.a.sheet" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sheet
+            #add-point:ON CHANGE sheet name="input.g.sheet"
+            {<point name="input.g.sheet" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isae002
+            #add-point:BEFORE FIELD isae002 name="input.b.isae002"
+            {<point name="input.b.isae002" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isae002
+            
+            #add-point:AFTER FIELD isae002 name="input.a.isae002"
+            {<point name="input.a.isae002" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isae002
+            #add-point:ON CHANGE isae002 name="input.g.isae002"
+            {<point name="input.g.isae002" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isae003
+            #add-point:BEFORE FIELD isae003 name="input.b.isae003"
+            {<point name="input.b.isae003" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isae003
+            
+            #add-point:AFTER FIELD isae003 name="input.a.isae003"
+            {<point name="input.a.isae003" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isae003
+            #add-point:ON CHANGE isae003 name="input.g.isae003"
+            {<point name="input.g.isae003" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isaecomp
+            
+            #add-point:AFTER FIELD isaecomp name="input.a.isaecomp"
+            {<point name="input.a.isaecomp" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isaecomp
+            #add-point:BEFORE FIELD isaecomp name="input.b.isaecomp"
+            {<point name="input.b.isaecomp" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isaecomp
+            #add-point:ON CHANGE isaecomp name="input.g.isaecomp"
+            {<point name="input.g.isaecomp" />}
+            #END add-point 
+
+
+ #欄位檢查
+                  #Ctrlp:input.c.isaesite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isaesite
+            #add-point:ON ACTION controlp INFIELD isaesite name="input.c.isaesite"
+            {<point name="input.c.isaesite" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.isae016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isae016
+            #add-point:ON ACTION controlp INFIELD isae016 name="input.c.isae016"
+            {<point name="input.c.isae016" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.isae017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isae017
+            #add-point:ON ACTION controlp INFIELD isae017 name="input.c.isae017"
+            {<point name="input.c.isae017" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.isae018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isae018
+            #add-point:ON ACTION controlp INFIELD isae018 name="input.c.isae018"
+            {<point name="input.c.isae018" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.isae001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isae001
+            #add-point:ON ACTION controlp INFIELD isae001 name="input.c.isae001"
+            {<point name="input.c.isae001" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.isae010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isae010
+            #add-point:ON ACTION controlp INFIELD isae010 name="input.c.isae010"
+            {<point name="input.c.isae010" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.isae011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isae011
+            #add-point:ON ACTION controlp INFIELD isae011 name="input.c.isae011"
+            {<point name="input.c.isae011" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.chr
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD chr
+            #add-point:ON ACTION controlp INFIELD chr name="input.c.chr"
+            {<point name="input.c.chr" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.num
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num
+            #add-point:ON ACTION controlp INFIELD num name="input.c.num"
+            {<point name="input.c.num" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.sheet
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sheet
+            #add-point:ON ACTION controlp INFIELD sheet name="input.c.sheet"
+            {<point name="input.c.sheet" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.isae002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isae002
+            #add-point:ON ACTION controlp INFIELD isae002 name="input.c.isae002"
+            {<point name="input.c.isae002" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.isae003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isae003
+            #add-point:ON ACTION controlp INFIELD isae003 name="input.c.isae003"
+            {<point name="input.c.isae003" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.isaecomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isaecomp
+            #add-point:ON ACTION controlp INFIELD isaecomp name="input.c.isaecomp"
+            {<point name="input.c.isaecomp" />}
+            #END add-point
+
+
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aisi050_02 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="aisi050_02.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="aisi050_02.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

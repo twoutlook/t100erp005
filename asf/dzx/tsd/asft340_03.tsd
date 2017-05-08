@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="asft340_03" std_prog="asft340_03" erpver="1.0" ver="1" module="ASF" booking="Y" class="T" template="F001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="sfda_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[產生倒扣領料單(asft314)
+
+發料單頭:
+sfdadocno發料單別:依畫面輸入單別自動編碼
+sfdadocdt單據日期:依畫面輸入的日期
+sfda001扣帳日期:依畫面輸入的日期
+sfda002發料類別=14.倒扣領料
+sfda003生產部門=入庫單的部門sfea003
+sfda004申請人=入庫單的人員sfea004
+sfdastat=N
+
+發料需求單身:
+sfdcdocno=sfdadocno
+sfdcseq=自動流水號
+sfdc001工單單號=入庫單的工單號碼
+sfdc002項次=工單需倒扣領的項次
+sfdc003項序=工單需倒扣領的項序
+sfdc004需求料號=工單需倒扣領的需求料號
+sfdc005特徵=工單需倒扣領的特徵
+sfdc006單位=工單需倒扣領的單位
+sfdc007申請數量=依入庫量*標準QPA分子/標準QPA分母
+sfdc008實際數量=依入庫量*標準QPA分子/標準QPA分母
+sfdc009參考單位=料件的參考單位
+sfdc010參考單位申請數量=申請數量*轉換率
+sfdc011參考單位實發數量=申請數量*轉換率
+sfdc012指定庫位=料件預設在製庫位
+sfdc013指定儲位=料件預設在製儲位
+sfdc014指定批號=' '一個空白
+sfdc016庫存管理特徵=' '一個空白
+sfdc017正負值=1
+
+發料明細單身
+sfdddocno=sfdadocno
+sfddseq=sfdcseq
+sfddseq1項序:1
+sfdd001發料料號=sfdc004
+sfdd002替代率=1
+sfdd003庫位=sfdc012
+sfdd004儲位=sfdc013
+sfdd005批號=sfdc014
+sfdd010庫存管理特徵=sfdc016
+sfdd006單位=sfdc006
+sfdd007數量=sfdc007
+sfdd008參考單位=sfdc009
+sfdd009參考數量=sfdc010
+sfdd012正負值=1
+
+發料料號匯總檔:
+sfdedocno=sfdadocno
+sfdeseq=自動流水號
+sfde001需求料號=sfdc004，同樣的料號+特徵+單位+參考單位+客供料匯總在同一筆
+sfde002特徵=sfdc005
+sfde003單位=sfdc006
+sfde004申請數量=sum(sfdc007)
+sfde005實際數量=sum(sfdc008)
+sfde006參考單位=sfdc009
+sfde007參考單位申請數量=sum(sfdc010)
+sfde008參考單位實際數量=sum(sfdc011)
+sfde009正負值=1
+
+發料料號匯總倉儲批檔:
+sfdfdocno=sfdadocno
+sfdfseq=sfdeseq
+sfdfseq1=自動流水號
+sfdf001發料料號=sfde001
+sfdf002替代率=1
+sfdf003庫位=sfdd003，將同樣的需求料號、發料料號、庫位、儲位、批號、庫存管理特徵、單位、參考單位匯總在同一筆
+sfdf004儲位=sfdd004
+sfdf005批號=sfdd005
+sfdf010庫存管理特徵=sfdd010
+sfdf006單位=sfdd006
+sfdf007數量=sum(sfdd007)
+sfdf008參考單位=sfdd008
+sfdf009參考數量=sum(sfdd009)
+sfdf012正負值=1
+]]>
+  </all>
+  <field cite_std="N" name="sfda_t.sfdadocdt" ver="1" src="s" column="sfdadocdt" table="sfda_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[單據日期:預設當天日期，不可小於關帳日期
+]]>
+  </field>
+  <field cite_std="N" name="sfda_t.sfdadocno" ver="1" src="s" column="sfdadocno" table="sfda_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[倒扣領料單別:需存在倒扣領料單別，不可空白
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="sfda_t.sfdadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfda_t.sfdadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_sfdadocno" text="發退料單號" lstr=""/>
+    <sfield name="lbl_sfdadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,773 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapt300_13.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2014-10-08 22:07:02), PR版次:0008(2016-07-15 16:46:10)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000150
+#+ Filename...: aapt300_13
+#+ Description: 留置
+#+ Creator....: 02097(2014-04-16 15:53:20)
+#+ Modifier...: 02097 -SD/PR- 06821
+ 
+{</section>}
+ 
+{<section id="aapt300_13.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160318-00025#7   2016/04/20 By 07675       將重複內容的錯誤訊息置換為公用錯誤訊息(r.v）
+#160704-00022#3   2016/07/15 By 06821       1.aapt3* 未確認單據不可執行topmenu帳款留置設定 2.取消確認檢核是否有帳款留置,若有則不可取消確認,建議執行"解除帳款留置" 
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_apca_m        RECORD
+       apca040 LIKE apca_t.apca040, 
+   apca042 LIKE apca_t.apca042, 
+   apca041 LIKE apca_t.apca041, 
+   apca041_desc LIKE type_t.chr80, 
+   apca044 LIKE apca_t.apca044, 
+   apcald LIKE apca_t.apcald, 
+   apca045 LIKE apca_t.apca045, 
+   apcadocno LIKE apca_t.apcadocno, 
+   apca043 LIKE apca_t.apca043
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_apca_t      type_g_apca_m 
+#end add-point
+ 
+DEFINE g_apca_m        type_g_apca_m
+ 
+   DEFINE g_apcald_t LIKE apca_t.apcald
+DEFINE g_apcadocno_t LIKE apca_t.apcadocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapt300_13.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt300_13(--)
+   #add-point:input段變數傳入
+   
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt300_13 WITH FORM cl_ap_formpath("aap","aapt300_13")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_apca_m.apca040,g_apca_m.apca042,g_apca_m.apca041,g_apca_m.apca044,g_apca_m.apcald, 
+          g_apca_m.apca045,g_apca_m.apcadocno,g_apca_m.apca043 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apca040
+            #add-point:BEFORE FIELD apca040 name="input.b.apca040"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apca040
+            
+            #add-point:AFTER FIELD apca040 name="input.a.apca040"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apca040
+            #add-point:ON CHANGE apca040 name="input.g.apca040"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apca042
+            #add-point:BEFORE FIELD apca042 name="input.b.apca042"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apca042
+            
+            #add-point:AFTER FIELD apca042 name="input.a.apca042"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apca042
+            #add-point:ON CHANGE apca042 name="input.g.apca042"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apca041
+            
+            #add-point:AFTER FIELD apca041 name="input.a.apca041"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apca041
+            #add-point:BEFORE FIELD apca041 name="input.b.apca041"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apca041
+            #add-point:ON CHANGE apca041 name="input.g.apca041"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apca044
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_apca_m.apca044,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD apca044
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD apca044 name="input.a.apca044"
+            IF NOT cl_null(g_apca_m.apca044) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apca044
+            #add-point:BEFORE FIELD apca044 name="input.b.apca044"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apca044
+            #add-point:ON CHANGE apca044 name="input.g.apca044"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcald
+            
+            #add-point:AFTER FIELD apcald name="input.a.apcald"
+            IF NOT cl_null(g_apca_m.apcald) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               #160318-00025#7--add--str
+               LET g_errshow = TRUE 
+               LET g_chkparam.err_str[1] = "agl-00051:sub-01302|agli010|",cl_get_progname("agli010",g_lang,"2"),"|:EXEPROGagli010"
+               #160318-00025#7--add--end
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_glaald_3") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_apca_m.apcald) AND NOT cl_null(g_apca_m.apcadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_apca_m.apcald != g_apcald_t  OR g_apca_m.apcadocno != g_apcadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apca_t WHERE "||"apcaent = '" ||g_enterprise|| "' AND "||"apcald = '"||g_apca_m.apcald ||"' AND "|| "apcadocno = '"||g_apca_m.apcadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcald
+            #add-point:BEFORE FIELD apcald name="input.b.apcald"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcald
+            #add-point:ON CHANGE apcald name="input.g.apcald"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apca045
+            #add-point:BEFORE FIELD apca045 name="input.b.apca045"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apca045
+            
+            #add-point:AFTER FIELD apca045 name="input.a.apca045"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apca045
+            #add-point:ON CHANGE apca045 name="input.g.apca045"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcadocno
+            #add-point:BEFORE FIELD apcadocno name="input.b.apcadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcadocno
+            
+            #add-point:AFTER FIELD apcadocno name="input.a.apcadocno"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_apca_m.apcald) AND NOT cl_null(g_apca_m.apcadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_apca_m.apcald != g_apcald_t  OR g_apca_m.apcadocno != g_apcadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apca_t WHERE "||"apcaent = '" ||g_enterprise|| "' AND "||"apcald = '"||g_apca_m.apcald ||"' AND "|| "apcadocno = '"||g_apca_m.apcadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcadocno
+            #add-point:ON CHANGE apcadocno name="input.g.apcadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apca043
+            #add-point:BEFORE FIELD apca043 name="input.b.apca043"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apca043
+            
+            #add-point:AFTER FIELD apca043 name="input.a.apca043"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apca043
+            #add-point:ON CHANGE apca043 name="input.g.apca043"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.apca040
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apca040
+            #add-point:ON ACTION controlp INFIELD apca040 name="input.c.apca040"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apca042
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apca042
+            #add-point:ON ACTION controlp INFIELD apca042 name="input.c.apca042"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apca041
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apca041
+            #add-point:ON ACTION controlp INFIELD apca041 name="input.c.apca041"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_apca_m.apca041             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_apca_m.apca041 = g_qryparam.return1              
+
+            DISPLAY g_apca_m.apca041 TO apca041              #
+
+            NEXT FIELD apca041                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apca044
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apca044
+            #add-point:ON ACTION controlp INFIELD apca044 name="input.c.apca044"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apcald
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcald
+            #add-point:ON ACTION controlp INFIELD apcald name="input.c.apcald"
+ 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apca045
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apca045
+            #add-point:ON ACTION controlp INFIELD apca045 name="input.c.apca045"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apcadocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcadocno
+            #add-point:ON ACTION controlp INFIELD apcadocno name="input.c.apcadocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apca043
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apca043
+            #add-point:ON ACTION controlp INFIELD apca043 name="input.c.apca043"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt300_13 
+   
+   #add-point:input段after input 
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapt300_13.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aapt300_13.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 留置設定
+# Memo...........:
+# Usage..........: CALL aapt300_13_set_lien(p_flag,p_apcald,p_apcadocno)
+# Input parameter: p_apcald       帳別
+#                : p_apcadocno    單據日期
+#                : p_flag         T/F
+# Return code....: void
+# Date & Author..: 14/04/16 By Belle
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapt300_13_set_lien(p_apcald,p_apcadocno,p_flag)
+DEFINE p_flag        LIKE type_t.num5
+DEFINE p_apcald      LIKE apca_t.apcald
+DEFINE p_apcadocno   LIKE apca_t.apcadocno
+DEFINE l_docdt       LIKE apca_t.apcamoddt
+DEFINE l_apca044     LIKE apca_t.apca044
+DEFINE l_apcastus    LIKE apca_t.apcastus
+DEFINE l_ld          LIKE glaa_t.glaald      #160225-00001#1
+DEFINE l_dfin0033    LIKE type_t.chr1        #160225-00001#1
+DEFINE l_slip        LIKE apca_t.apcadocno   #160225-00001#1
+DEFINE l_apcacomp    LIKE apca_t.apcacomp    #160225-00001#1
+DEFINE l_apcadocdt   LIKE apca_t.apcadocdt   #160225-00001#1
+   
+   #應先查出單據
+   IF cl_null(p_apcald) OR cl_null(p_apcadocno) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF   
+   LET g_apca_m.apcald    = p_apcald
+   LET g_apca_m.apcadocno = p_apcadocno
+
+   SELECT apca040,apca041,apca042,apca043,apca044,apca045,
+          apcastus,apcacomp,apcadocdt
+     INTO g_apca_m.apca040,g_apca_m.apca041,g_apca_m.apca042,
+          g_apca_m.apca043,g_apca_m.apca044,g_apca_m.apca045,
+          l_apcastus,l_apcacomp,l_apcadocdt
+     FROM apca_t
+    WHERE apcaent  = g_enterprise AND apcald = g_apca_m.apcald
+      AND apcadocno = g_apca_m.apcadocno
+   IF l_apcastus = 'X' THEN
+      RETURN
+   END IF
+   
+   #160704-00022#3 --s add
+   #aapt3* 未確認單據不可執行topmenu帳款留置設定
+   IF g_prog[1,5] = 'aapt3' AND l_apcastus = 'N' AND p_flag THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aap-00324'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   #160704-00022#3 --e add
+   
+   #160225-00001#1--(S)
+   IF NOT cl_null(g_apca_m.apcadocno) THEN
+      SELECT glaald INTO l_ld FROM glaa_t
+       WHERE glaaent = g_enterprise
+         AND glaacomp = l_apcacomp
+         AND glaa014 = 'Y'
+      CALL s_aooi200_fin_get_slip(g_apca_m.apcadocno) RETURNING g_sub_success,l_slip
+      CALL s_fin_get_doc_para(l_ld,l_apcacomp,l_slip,'D-FIN-0033') RETURNING l_dfin0033
+      CALL s_fin_date_close_chk('',l_apcacomp,'AAP',l_apcadocdt) RETURNING g_sub_success
+      IF l_dfin0033 = "N" AND NOT g_sub_success THEN 
+         RETURN
+      END IF
+   END IF
+   #160225-00001#1--(E)
+   LET g_apca_t.* = g_apca_m.*
+   IF p_flag THEN
+      SELECT sum(apcc108) INTO l_apca044
+        FROM apcc_t
+       WHERE apccent  = g_enterprise AND apccld = g_apca_m.apcald
+         AND apccdocno = g_apca_m.apcadocno
+      IF cl_null(l_apca044) THEN LET l_apca044 = 0 END IF
+      IF l_apca044 = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'aap-00036'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN
+      END IF
+   END IF
+   CALL cl_set_comp_entry("apca041,apca042,apca043,apca044,apca045",TRUE)
+
+   INPUT BY NAME g_apca_m.apca041,g_apca_m.apca042,
+                 g_apca_m.apca043,g_apca_m.apca044,g_apca_m.apca045
+      ATTRIBUTE(WITHOUT DEFAULTS)
+      BEFORE INPUT
+         #留置狀態碼:Y留置,N取消留置
+         IF p_flag THEN
+            LET g_apca_m.apca040 = 'Y'
+            LET g_apca_m.apca042 = g_today
+            LET g_apca_m.apca043 = ''
+            IF cl_null (g_apca_m.apca044) THEN LET g_apca_m.apca044 = l_apca044 END IF
+            DISPLAY BY NAME g_apca_m.apca040,g_apca_m.apca042,g_apca_m.apca043
+            CALL cl_set_comp_entry("apca043",FALSE)
+         ELSE
+            LET g_apca_m.apca040 = 'N'
+            LET g_apca_m.apca044 = 0
+            LET g_apca_m.apca043 = g_today
+            DISPLAY BY NAME g_apca_m.apca040,g_apca_m.apca043,g_apca_m.apca044
+            CALL cl_set_comp_entry("apca041,apca042,apca044,apca045",FALSE)
+         END IF
+
+      AFTER FIELD apca044     #原幣金額
+         IF l_apca044 < g_apca_m.apca044 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aap-00037'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            NEXT FIELD CURRENT
+         END IF
+        
+      AFTER FIELD apca043     #留置解除日期
+         IF NOT cl_null(g_apca_m.apca043) AND g_apca_m.apca043 < g_today THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aap-00035'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            NEXT FIELD CURRENT
+         END IF
+
+      AFTER FIELD apca041     #理由碼
+         IF NOT cl_null(g_apca_m.apca041) THEN
+            IF g_apca_m.apca041 != g_apca_t.apca041 OR g_apca_t.apca041 IS NULL THEN
+               IF NOT s_azzi650_chk_exist('298',g_apca_m.apca041) THEN
+               LET g_apca_m.apca041 = g_apca_t.apca041
+                  CALL s_desc_get_acc_desc('298',g_apca_m.apca041) RETURNING g_apca_m.apca041_desc
+                  DISPLAY BY NAME g_apca_m.apca041_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+         END IF
+         CALL s_desc_get_acc_desc('298',g_apca_m.apca041) RETURNING g_apca_m.apca041_desc
+         DISPLAY BY NAME g_apca_m.apca041_desc  
+
+      ON ACTION controlp INFIELD apca041
+         #開窗i段
+	     INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+	     LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_apca_m.apca041     #給予default值
+         
+         LET g_qryparam.arg1 = "298"
+         CALL q_oocq002()                               #呼叫開窗
+         LET g_apca_m.apca041 = g_qryparam.return1      #將開窗取得的值回傳到變數
+         DISPLAY g_apca_m.apca041 TO apca041            #顯示到畫面上
+         CALL s_desc_get_acc_desc('298',g_apca_m.apca041) RETURNING g_apca_m.apca041_desc
+         DISPLAY BY NAME g_apca_m.apca041_desc 
+         NEXT FIELD apca041                             #返回原欄位
+         
+      AFTER INPUT
+
+         LET l_docdt = cl_get_current()
+         CALL s_transaction_begin()
+         UPDATE apca_t 
+            SET apca040   = g_apca_m.apca040, apca041 = g_apca_m.apca041,
+                apca042   = g_apca_m.apca042, apca044 = g_apca_m.apca044,
+                apca045   = g_apca_m.apca045, apca043 = g_apca_m.apca043,
+                apcamodid = g_user          , apcamoddt = l_docdt
+          WHERE apcaent   = g_enterprise AND apcald = g_apca_m.apcald
+            AND apcadocno = g_apca_m.apcadocno
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00009"
+               LET g_errparam.extend = "apca_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               CALL s_transaction_end('N','0')
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "apca_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')
+            OTHERWISE
+               CALL s_transaction_end('Y','0')
+         END CASE
+         
+      ON ACTION accept
+         ACCEPT INPUT
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT INPUT
+   END INPUT
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      LET g_apca_m.* = g_apca_t.*
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 9001
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      DISPLAY BY NAME g_apca_m.apca040,g_apca_m.apca042,g_apca_m.apca043
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 留置資料顯示
+# Memo...........:
+# Usage..........: CALL aapt300_13_show_lien(p_apcald,p_apcadocno)
+# Input parameter: p_apcald       帳別
+#                : p_apcadocno    單據號碼
+# Return code....: void
+# Date & Author..: 14/04/16 By Belle
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapt300_13_show_lien(p_apcald,p_apcadocno)
+DEFINE p_apcald      LIKE apca_t.apcald
+DEFINE p_apcadocno   LIKE apca_t.apcadocno
+
+   LET g_apca_m.apcald    = p_apcald
+   LET g_apca_m.apcadocno = p_apcadocno
+   
+   SELECT apca040,apca041,apca042,apca043,apca044,apca045
+     INTO g_apca_m.apca040,g_apca_m.apca041,g_apca_m.apca042,
+          g_apca_m.apca043,g_apca_m.apca044,g_apca_m.apca045
+     FROM apca_t
+    WHERE apcaent  = g_enterprise AND apcald = g_apca_m.apcald
+      AND apcadocno = g_apca_m.apcadocno
+      
+   LET g_apca_m.apca041_desc  = s_desc_get_acc_desc('298',g_apca_m.apca041)    #留置理由碼
+      
+   DISPLAY BY NAME g_apca_m.apca040,g_apca_m.apca041,g_apca_m.apca042,
+                   g_apca_m.apca043,g_apca_m.apca044,g_apca_m.apca045,
+                   g_apca_m.apca041_desc
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 清空畫面
+# Memo...........:
+# Usage..........: CALL aapt300_13_clear() 
+# Date & Author..: 2015/02/24 By Hans 
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapt300_13_clear()
+
+  # LET g_apca_m.* = g_apca_t.*
+   INITIALIZE g_apca_m.* TO NULL
+   DISPLAY BY NAME g_apca_m.apca040,g_apca_m.apca041,g_apca_m.apca042,
+                   g_apca_m.apca043,g_apca_m.apca044,g_apca_m.apca045,
+                   g_apca_m.apca041_desc
+END FUNCTION
+
+ 
+{</section>}
+ 

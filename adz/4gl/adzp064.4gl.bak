@@ -1,0 +1,667 @@
+#+ 程式版本......: T6 Version 1.00.00 Build-0001 at 14/02/27
+#
+#+ 程式代碼......: adzp064
+#+ 設計人員......: Hiko
+# Prog. Version..: 'T6-12.01.21(00000)'     #
+#
+# Program name   : adzp064.4gl
+# Description    : 標準與客製程式段相互還原作業
+# Modify         : 2015/09/01 by Hiko : 修改清單殘留的問題.
+# Modify         : 2015/09/09 by Hiko : 清單改以客製為主,這樣可以避免標準add point原本為NULL的情況而導致清單沒有列出的問題.
+# Modify         : 2015/09/11 by Hiko : 增加M/S類的section還原標準功能
+
+IMPORT os
+SCHEMA ds
+GLOBALS "../../cfg/top_global.inc"
+
+DEFINE gs_option STRING,
+       g_prog        LIKE dzaf_t.dzaf001, #程式代號 
+       g_cons_type   LIKE dzaf_t.dzaf005, #建構類型 
+       g_std_dzaf002 LIKE dzaf_t.dzaf002, #標準建構版次
+       g_std_dzaf004 LIKE dzaf_t.dzaf004, #標準程式版次
+       g_cus_dzaf002 LIKE dzaf_t.dzaf002, #客製建構版次
+       g_cus_dzaf004 LIKE dzaf_t.dzaf004  #客製程式版次
+DEFINE ga_apt_lst DYNAMIC ARRAY OF RECORD
+                  sel LIKE type_t.chr1,
+                  apt_name LIKE dzba_t.dzba003 
+                  END RECORD
+DEFINE gr_std_apt RECORD
+                  dzbb003 LIKE dzbb_t.dzbb003, #dzba004
+                  dzbb004 LIKE dzbb_t.dzbb004, #dzba005
+                  dzbb098 LIKE dzbb_t.dzbb098
+                  END RECORD
+DEFINE gr_cus_apt RECORD
+                  dzbb003 LIKE dzbb_t.dzbb003, #dzba004
+                  dzbb004 LIKE dzbb_t.dzbb004, #dzba005
+                  dzbb098 LIKE dzbb_t.dzbb098
+                  END RECORD
+#Begin:2015/09/11 by Hiko:和add point雷同的程式,除非不同的處理,否則底下就不再標示註解.
+DEFINE ga_scn_lst DYNAMIC ARRAY OF RECORD
+                  sel LIKE type_t.chr1,
+                  scn_name LIKE dzbc_t.dzbc003 
+                  END RECORD
+DEFINE gr_std_scn RECORD
+                  dzbd003 LIKE dzbd_t.dzbd003, #dzbc004
+                  dzbd004 LIKE dzbd_t.dzbd004, #dzbc005
+                  dzbd098 LIKE dzbd_t.dzbd098
+                  END RECORD
+DEFINE gr_cus_scn RECORD
+                  dzbd003 LIKE dzbd_t.dzbd003, #dzbc004
+                  dzbd004 LIKE dzbd_t.dzbd004, #dzbc005
+                  dzbd098 LIKE dzbd_t.dzbd098
+                  END RECORD
+#End:2015/09/11 by Hiko
+DEFINE g_date DATETIME YEAR TO SECOND
+ 
+MAIN
+   DEFINE lw_window   ui.Window,
+          lf_form     ui.Form,
+          ls_cfg_path STRING,
+          ls_4st_path STRING,
+          ls_img_path STRING
+
+   OPTIONS FIELD ORDER FORM, INPUT WRAP    
+
+   CALL cl_tool_init()
+
+   IF FGL_GETENV("DGENV")="s" THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "adz-00644" #add point相互還原工具限定客製環境使用
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      EXIT PROGRAM 
+   END IF
+
+   OPEN WINDOW w_adzp064 WITH FORM cl_ap_formpath("adz", g_code)
+
+   CLOSE WINDOW screen
+
+   CALL cl_ui_wintitle(1) #工具抬頭名稱
+
+   CALL cl_load_4ad_interface(NULL)
+
+   LET lw_window = ui.Window.getCurrent()
+   LET ls_img_path = os.Path.join(os.Path.join(FGL_GETENV("RES"), "img"), "ui")
+   CALL lw_window.setImage(os.Path.join(os.Path.join(ls_img_path, "logo"), "dsc_logo.ico"))
+
+   LET ls_cfg_path = os.Path.join(FGL_GETENV("ERP"), "cfg")
+   LET ls_4st_path = os.Path.join(os.Path.join(os.Path.join(ls_cfg_path, "4st"), g_lang), "designer.4st")
+   CALL ui.Interface.loadStyles(ls_4st_path)
+
+   LET g_date = cl_get_current()
+
+   CALL adzp064_ui_dialog() 
+
+   #Begin:2015/09/11 by Hiko:最後再次提醒.
+   INITIALIZE g_errparam TO NULL
+   LET g_errparam.code = "adz-00698" #再次提醒 : 若有執行過還原動作,請記得要重新下載程式.
+   LET g_errparam.popup = TRUE
+   CALL cl_err()
+   #End:2015/09/11 by Hiko
+
+   CLOSE WINDOW w_adzp064 
+END MAIN
+
+PRIVATE FUNCTION adzp064_ui_dialog()
+   DEFINE l_select   LIKE type_t.chr1,
+          l_apt_name LIKE dzba_t.dzba003,
+          li_i       SMALLINT,
+          li_curr    SMALLINT,
+          ls_err_msg STRING 
+          
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         INPUT gs_option,g_prog FROM cbo_option,txt_prog ATTRIBUTE(WITHOUT DEFAULTS)
+            ON CHANGE cbo_option
+               DISPLAY "cbo_option=",gs_option,"<<"
+
+            ON ACTION controlp INFIELD txt_prog
+               LET g_qryparam.state = "i"
+               LET g_qryparam.reqry = TRUE  #預查詢
+               LET g_qryparam.default1 = ""
+
+               CALL q_dzaf001_1()
+               LET g_prog = g_qryparam.return1
+               LET g_cons_type = g_qryparam.return2
+
+            AFTER FIELD txt_prog
+               IF NOT cl_null(g_prog) THEN
+                  LET g_chkparam.arg1 = g_prog
+                  IF NOT cl_chk_exist_and_ref_val("v_dzaf005") THEN #2015/09/11 by Hiko
+                     DISPLAY '','','',''
+                          TO edt_std_dzaf002,edt_std_dzaf004,edt_cus_dzaf002,edt_cus_dzaf004
+                     CALL ga_apt_lst.clear()
+                     CALL ga_scn_lst.clear()
+                     INITIALIZE gr_cus_apt TO NULL
+                     INITIALIZE gr_std_apt TO NULL
+                     INITIALIZE gr_cus_scn TO NULL
+                     INITIALIZE gr_std_scn TO NULL
+                     NEXT FIELD txt_prog
+                  ELSE
+                     LET g_cons_type = g_chkparam.return1 #2015/09/11 by Hiko
+
+                     SELECT af1.dzaf002,af1.dzaf004 INTO g_std_dzaf002,g_std_dzaf004 FROM dzaf_t af1
+                      WHERE af1.dzaf001=g_prog AND af1.dzaf005=g_cons_type AND af1.dzaf010='s'
+                        AND af1.dzaf002=(SELECT MAX(af2.dzaf002)FROM dzaf_t af2
+                                          WHERE af2.dzaf001=af1.dzaf001
+                                            AND af2.dzaf005=af1.dzaf005
+                                            AND af2.dzaf010=af1.dzaf010)
+
+                     SELECT af1.dzaf002,af1.dzaf004 INTO g_cus_dzaf002,g_cus_dzaf004 FROM dzaf_t af1
+                      WHERE af1.dzaf001=g_prog AND af1.dzaf005=g_cons_type AND af1.dzaf010='c'
+                        AND af1.dzaf002=(SELECT MAX(af2.dzaf002)FROM dzaf_t af2
+                                          WHERE af2.dzaf001=af1.dzaf001
+                                            AND af2.dzaf005=af1.dzaf005
+                                            AND af2.dzaf010=af1.dzaf010)
+
+                     DISPLAY g_std_dzaf002,g_std_dzaf004,g_cus_dzaf002,g_cus_dzaf004
+                          TO edt_std_dzaf002,edt_std_dzaf004,edt_cus_dzaf002,edt_cus_dzaf004
+
+                     CALL adzp064_prepare_list()
+                  END IF
+               ELSE 
+               #Begin:2015/09/11 by Hiko
+                  LET g_cons_type = NULL
+                  DISPLAY '','','',''
+                       TO edt_std_dzaf002,edt_std_dzaf004,edt_cus_dzaf002,edt_cus_dzaf004
+                  CALL ga_apt_lst.clear()
+                  CALL ga_scn_lst.clear()
+                  INITIALIZE gr_cus_apt TO NULL
+                  INITIALIZE gr_std_apt TO NULL
+                  INITIALIZE gr_cus_scn TO NULL
+                  INITIALIZE gr_std_scn TO NULL
+                  NEXT FIELD txt_prog
+               END IF
+
+               DISPLAY ARRAY ga_apt_lst TO s_detail1.*
+                  BEFORE DISPLAY 
+                     EXIT DISPLAY
+               END DISPLAY
+
+               DISPLAY ARRAY ga_scn_lst TO s_detail2.*
+                  BEFORE DISPLAY 
+                     EXIT DISPLAY
+               END DISPLAY
+               #End:2015/09/11 by Hiko
+         END INPUT
+
+         INPUT ARRAY ga_apt_lst FROM s_detail1.* ATTRIBUTE(APPEND ROW=FALSE)
+            ON CHANGE chk_sel
+               FOR li_i=1 TO ga_apt_lst.getLength()
+                  LET ga_apt_lst[li_i].sel = "N"
+               END FOR
+               IF gr_cus_apt.dzbb004<>gr_std_apt.dzbb004 OR #避免重複執行還原.
+                  cl_null(gr_std_apt.dzbb004) THEN #2015/09/11 by Hiko:只有客製沒有標準,也是可以勾選.
+                  LET ga_apt_lst[li_curr].sel = "Y"
+               END IF
+
+            BEFORE ROW
+               LET li_curr = ARR_CURR()
+               CALL adzp064_show_apt(ga_apt_lst[li_curr].apt_name)
+               DISPLAY gr_cus_apt.dzbb003 TO edt_cus_dzbb003
+               DISPLAY gr_cus_apt.dzbb004 TO edt_cus_dzbb004
+               DISPLAY gr_cus_apt.dzbb098 TO txt_cus
+               DISPLAY gr_std_apt.dzbb003 TO edt_std_dzbb003
+               DISPLAY gr_std_apt.dzbb004 TO edt_std_dzbb004
+               DISPLAY gr_std_apt.dzbb098 TO txt_std
+
+            ON ACTION btn_go
+               #檢查是否為本人簽出.
+               CALL sadzp060_2_have_checked_out(g_prog, g_cons_type, "PR", "1") RETURNING ls_err_msg
+               IF cl_null(ls_err_msg) THEN
+                  IF ga_apt_lst[li_curr].sel="Y" THEN
+                     IF adzp064_exchange_apt(ga_apt_lst[li_curr].apt_name) THEN
+                        #Begin:2015/09/11 by Hiko
+                        #CALL adzp064_show_apt(ga_apt_lst[li_curr].apt_name)
+                        #DISPLAY gr_cus_apt.dzbb003 TO edt_cus_dzbb003
+                        #DISPLAY gr_cus_apt.dzbb004 TO edt_cus_dzbb004
+                        #DISPLAY gr_cus_apt.dzbb098 TO txt_cus
+                        #DISPLAY gr_std_apt.dzbb003 TO edt_std_dzbb003
+                        #DISPLAY gr_std_apt.dzbb004 TO edt_std_dzbb004
+                        #DISPLAY gr_std_apt.dzbb098 TO txt_std
+                        #LET ga_apt_lst[li_curr].sel = "N"
+                        CALL ga_apt_lst.deleteElement(li_curr) 
+                        IF ga_apt_lst.getLength()>0 THEN
+                           IF li_curr>ga_apt_lst.getLength() THEN #表示刪除最後一筆.
+                              LET li_curr = ga_apt_lst.getLength()
+                           ELSE
+                              LET li_curr = ARR_CURR()
+                           END IF
+
+                           CALL adzp064_show_apt(ga_apt_lst[li_curr].apt_name)
+                        ELSE
+                           LET li_curr = 0                      
+                           CALL adzp064_show_apt("none") #表示刪除乾淨了.
+                        END IF
+
+                        #刪除陣列後沒有觸發BEFORE ROW,底下為BEFORE ROW的程式段.
+                        DISPLAY gr_cus_apt.dzbb003 TO edt_cus_dzbb003
+                        DISPLAY gr_cus_apt.dzbb004 TO edt_cus_dzbb004
+                        DISPLAY gr_cus_apt.dzbb098 TO txt_cus
+                        DISPLAY gr_std_apt.dzbb003 TO edt_std_dzbb003
+                        DISPLAY gr_std_apt.dzbb004 TO edt_std_dzbb004
+                        DISPLAY gr_std_apt.dzbb098 TO txt_std
+                        #End:2015/09/11 by Hiko
+                     END IF
+                  END IF
+               END IF
+         END INPUT
+          
+         #Begin:2015/09/11 by Hiko
+         INPUT ARRAY ga_scn_lst FROM s_detail2.* ATTRIBUTE(APPEND ROW=FALSE)
+            ON CHANGE chk_sel2
+               FOR li_i=1 TO ga_scn_lst.getLength()
+                  LET ga_scn_lst[li_i].sel = "N"
+               END FOR
+               IF gr_cus_scn.dzbd004<>gr_std_scn.dzbd004 OR #避免重複執行還原.
+                  cl_null(gr_std_scn.dzbd004) THEN #只有客製沒有標準,也是可以勾選.
+                  LET ga_scn_lst[li_curr].sel = "Y"
+               END IF
+
+            BEFORE ROW
+               LET li_curr = ARR_CURR()
+               CALL adzp064_show_scn(ga_scn_lst[li_curr].scn_name)
+               DISPLAY gr_cus_scn.dzbd003 TO edt_cus_dzbd003
+               DISPLAY gr_cus_scn.dzbd004 TO edt_cus_dzbd004
+               DISPLAY gr_cus_scn.dzbd098 TO txt_cus2
+               DISPLAY gr_std_scn.dzbd003 TO edt_std_dzbd003
+               DISPLAY gr_std_scn.dzbd004 TO edt_std_dzbd004
+               DISPLAY gr_std_scn.dzbd098 TO txt_std2
+          
+            ON ACTION btn_go2
+               #檢查是否為本人簽出.
+               CALL sadzp060_2_have_checked_out(g_prog, g_cons_type, "PR", "1") RETURNING ls_err_msg
+               IF cl_null(ls_err_msg) THEN
+                  IF ga_scn_lst[li_curr].sel="Y" THEN
+                     IF adzp064_exchange_scn(ga_scn_lst[li_curr].scn_name) THEN
+                        CALL ga_scn_lst.deleteElement(li_curr) 
+                        IF ga_scn_lst.getLength()>0 THEN
+                           IF li_curr>ga_scn_lst.getLength() THEN #表示刪除最後一筆.
+                              LET li_curr = ga_scn_lst.getLength()
+                           ELSE
+                              LET li_curr = ARR_CURR()
+                           END IF
+
+                           CALL adzp064_show_scn(ga_scn_lst[li_curr].scn_name)
+                        ELSE
+                           LET li_curr = 0                      
+                           CALL adzp064_show_scn("none") #表示刪除乾淨了.
+                        END IF
+
+                        #刪除陣列後沒有觸發BEFORE ROW,底下為BEFORE ROW的程式段.
+                        DISPLAY gr_cus_scn.dzbd003 TO edt_cus_dzbd003
+                        DISPLAY gr_cus_scn.dzbd004 TO edt_cus_dzbd004
+                        DISPLAY gr_cus_scn.dzbd098 TO txt_cus2
+                        DISPLAY gr_std_scn.dzbd003 TO edt_std_dzbd003
+                        DISPLAY gr_std_scn.dzbd004 TO edt_std_dzbd004
+                        DISPLAY gr_std_scn.dzbd098 TO txt_std2
+                     END IF
+                  END IF
+               END IF
+         END INPUT
+         #End:2015/09/11 by Hiko
+
+         ON ACTION CLOSE
+            LET g_action_choice="exit"
+            EXIT DIALOG
+
+         BEFORE DIALOG                
+            LET gs_option = "1"
+            CLEAR FORM
+
+      END DIALOG
+
+      IF g_action_choice = "exit" THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+END FUNCTION
+
+PRIVATE FUNCTION adzp064_prepare_list()
+   DEFINE ls_sql  STRING,
+          li_i    SMALLINT
+   TRY
+      #取得同時擁有標準和客製內容的add point名稱.
+      #Begin:2015/09/09 by Hiko
+     #LET ls_sql = "SELECT 'N',ba1.dzba003",
+     #             "  FROM dzba_t ba1",
+     #             " WHERE ba1.dzba001='",g_prog,"' AND ba1.dzba002=",g_std_dzaf004," AND ba1.dzba010='s' AND ba1.dzbastus='Y'",
+     #             "   AND EXISTS (",
+     #             "              SELECT ba2.dzba003",
+     #             "                FROM dzba_t ba2",
+     #             "               WHERE ba2.dzba001=ba1.dzba001 AND ba2.dzba002=",g_cus_dzaf004," AND ba2.dzba010='c' AND ba2.dzbastus='Y'",
+     #             "                 AND ba2.dzba003=ba1.dzba003 AND ba2.dzba005<>ba1.dzba005",
+     #             "              )",
+     #             " ORDER BY ba1.dzba003"
+      
+      #改以客製資料為主,這樣才有機會取得原本標準是NULL的add point.
+      LET ls_sql = "SELECT 'N',ba1.dzba003",
+                   "  FROM dzba_t ba1",
+                   "  LEFT JOIN dzba_t ba2 ON ba2.dzba001=ba1.dzba001 AND ba2.dzba002=",g_std_dzaf004," AND ba2.dzba003=ba1.dzba003 AND ba2.dzba005<>ba1.dzba005 AND ba2.dzba010='s'",
+                   " WHERE ba1.dzba001='",g_prog,"' AND ba1.dzba002=",g_cus_dzaf004," AND ba1.dzba005='c' AND ba1.dzba010='c' AND ba1.dzbastus='Y'",
+                   " ORDER BY ba1.dzba003"
+      #End:2015/09/09 by Hiko
+      PREPARE dzba_prep FROM ls_sql
+      DECLARE dzba_curs CURSOR FOR dzba_prep
+      
+      CALL ga_apt_lst.clear() #2015/09/01 by Hiko
+
+      LET li_i = 1
+      FOREACH dzba_curs INTO ga_apt_lst[li_i].*
+         LET li_i = li_i + 1
+      END FOREACH
+      CALL ga_apt_lst.deleteElement(li_i)
+
+      #Begin:2015/09/11 by Hiko
+      LET ls_sql = "SELECT 'N',bc1.dzbc003",
+                   "  FROM dzbc_t bc1",
+                   "  LEFT JOIN dzbc_t bc2 ON bc2.dzbc001=bc1.dzbc001 AND bc2.dzbc002=",g_std_dzaf004," AND bc2.dzbc003=bc1.dzbc003 AND bc2.dzbc005<>bc1.dzbc005 AND bc2.dzbc007='s'",
+                   " WHERE bc1.dzbc001='",g_prog,"' AND bc1.dzbc002=",g_cus_dzaf004," AND bc1.dzbc005='c' AND bc1.dzbc007='c' AND bc1.dzbcstus='Y'",
+                   " ORDER BY bc1.dzbc003"
+      PREPARE dzbc_prep FROM ls_sql
+      DECLARE dzbc_curs CURSOR FOR dzbc_prep
+      CALL ga_scn_lst.clear()
+
+      LET li_i = 1
+      FOREACH dzbc_curs INTO ga_scn_lst[li_i].*
+         LET li_i = li_i + 1
+      END FOREACH
+      CALL ga_scn_lst.deleteElement(li_i)
+      #End:2015/09/11 by Hiko
+   CATCH
+      DISPLAY "SQLCA.SQLCODE=",SQLCA.SQLCODE
+      DISPLAY "ERROR : adzp064_prepare_list : ls_sql=",ls_sql,"<<"
+   END TRY
+END  FUNCTION
+ 
+PRIVATE FUNCTION adzp064_show_apt(p_apt_name)
+   DEFINE p_apt_name LIKE dzba_t.dzba003
+   DEFINE ls_sql STRING
+
+   TRY
+      #取得標準add point內容.
+      INITIALIZE gr_std_apt.* TO NULL #2015/09/11 by Hiko
+
+      FREE gr_std_apt.dzbb098
+      LOCATE gr_std_apt.dzbb098 IN FILE
+      LET ls_sql = "SELECT bb1.dzbb003,bb1.dzbb004,bb1.dzbb098",
+                   "  FROM dzbb_t bb1",
+                   " INNER JOIN dzba_t ba1 ON ba1.dzba001=bb1.dzbb001 AND ba1.dzba003=bb1.dzbb002 AND ba1.dzba004=bb1.dzbb003 AND ba1.dzba005=bb1.dzbb004",
+                   " WHERE ba1.dzba001='",g_prog,"' AND ba1.dzba002=",g_std_dzaf004," AND ba1.dzba003='",p_apt_name CLIPPED,"' AND ba1.dzba010='s' AND ba1.dzbastus='Y'"
+      PREPARE std_dzbb_prep FROM ls_sql
+      EXECUTE std_dzbb_prep INTO gr_std_apt.*
+      FREE std_dzbb_prep
+
+      #取得客製add point內容.
+      INITIALIZE gr_cus_apt.* TO NULL #2015/09/11 by Hiko
+
+      FREE gr_cus_apt.dzbb098
+      LOCATE gr_cus_apt.dzbb098 IN FILE
+      LET ls_sql = "SELECT bb1.dzbb003,bb1.dzbb004,bb1.dzbb098",
+                   "  FROM dzbb_t bb1",
+                   " INNER JOIN dzba_t ba1 ON ba1.dzba001=bb1.dzbb001 AND ba1.dzba003=bb1.dzbb002 AND ba1.dzba004=bb1.dzbb003 AND ba1.dzba005=bb1.dzbb004",
+                   " WHERE ba1.dzba001='",g_prog,"' AND ba1.dzba002=",g_cus_dzaf004," AND ba1.dzba003='",p_apt_name CLIPPED,"' AND ba1.dzba010='c' AND ba1.dzbastus='Y'"
+      PREPARE cus_dzbb_prep FROM ls_sql
+      EXECUTE cus_dzbb_prep INTO gr_cus_apt.*
+      FREE cus_dzbb_prep
+   CATCH
+      DISPLAY "SQLCA.SQLCODE=",SQLCA.SQLCODE
+      DISPLAY "ERROR : adzp064_show_apt : ls_sql=",ls_sql,"<<"
+   END TRY
+END  FUNCTION
+
+PRIVATE FUNCTION adzp064_exchange_apt(p_apt_name)
+   DEFINE p_apt_name LIKE dzba_t.dzba003
+   DEFINE lr_dzba    RECORD LIKE dzba_t.*,
+          ls_dzba006 STRING
+   DEFINE ls_sql    STRING,
+          ls_where  STRING,
+          lb_trans  BOOLEAN,
+          l_dzbb003 LIKE dzbb_t.dzbb003 #2015/09/11 by Hiko
+
+   TRY
+      CASE gs_option
+         WHEN "1" #客製程式段還原成標準程式段
+            IF NOT cl_ask_confirm("adz-00645") THEN #請問是否要將客製程式段還原成標準程式段?
+               RETURN FALSE
+            END IF
+            #取得標準程式樹的標準程式段.
+            LET ls_sql = "SELECT * FROM dzba_t",
+                         " WHERE dzba001='",g_prog,"' AND dzba002=",g_std_dzaf004," AND dzba003='",p_apt_name CLIPPED,"' AND dzba005='s' AND dzba010='s'"
+            #UPDATE/DELETE使用 #2015/09/11 by Hiko
+            LET ls_where = " WHERE dzba001='",g_prog,"' AND dzba002=",g_cus_dzaf004," AND dzba003='",p_apt_name CLIPPED,"' AND dzba010='c'"
+            LET l_dzbb003 = gr_std_apt.dzbb003
+         WHEN "2" #標準程式段還原成客製程式段 
+            IF NOT cl_ask_confirm("adz-00646") THEN #請問是否要將標準程式段還原成客製程式段?
+               RETURN FALSE
+            END IF
+            #取得客製程式樹的客製程式段.
+            LET ls_sql = "SELECT * FROM dzba_t",
+                         " WHERE dzba001='",g_prog,"' AND dzba002=",g_cus_dzaf004," AND dzba003='",p_apt_name CLIPPED,"' AND dzba005='c' AND dzba010='c'"
+            #UPDATE/DELETE使用 #2015/09/11 by Hiko
+            LET ls_where = " WHERE dzba001='",g_prog,"' AND dzba002=",g_std_dzaf004," AND dzba003='",p_apt_name CLIPPED,"' AND dzba010='s'"
+            LET l_dzbb003 = gr_cus_apt.dzbb003
+      END CASE
+
+      IF cl_null(l_dzbb003) THEN
+         LET l_dzbb003 = 0
+      END IF
+
+      PREPARE sel_dzba_prep FROM ls_sql
+      EXECUTE sel_dzba_prep INTO lr_dzba.*
+      FREE sel_dzba_prep
+
+      #IF NOT cl_null(lr_dzba.dzba002) THEN #防呆
+      IF NOT cl_null(lr_dzba.dzba004) AND lr_dzba.dzba004<>0 THEN #防呆 #2015/09/09 by Hiko:改成判斷是否有標準add point的版次.
+         BEGIN WORK
+         LET lb_trans = TRUE
+
+         LET ls_dzba006 = lr_dzba.dzba006
+         LET ls_dzba006 = ls_dzba006.trim()
+         LET ls_sql = "UPDATE dzba_t",
+                        " SET dzba004=",lr_dzba.dzba004,",",
+                             "dzba005='",lr_dzba.dzba005 CLIPPED,"',",
+                             "dzba006='",ls_dzba006,"',",
+                             "dzba007='",lr_dzba.dzba007 CLIPPED,"',",
+                             "dzba008='",lr_dzba.dzba008 CLIPPED,"',",
+                             "dzba009='",lr_dzba.dzba009 CLIPPED,"',",
+                             "dzba011='",lr_dzba.dzba011 CLIPPED,"',",
+                             "dzbamoddt=?,",
+                             "dzbamodid='",g_user,"' ",ls_where
+         PREPARE upd_dzba_prep FROM ls_sql
+         EXECUTE upd_dzba_prep USING g_date
+         FREE upd_dzba_prep
+
+         #紀錄異動資料.
+         DELETE FROM dzbf_t WHERE dzbf001=g_prog AND dzbf002=p_apt_name AND dzbf008=g_cus_dzaf004
+
+         LET ls_sql = "INSERT INTO dzbf_t(dzbf001,dzbf002,dzbf003,dzbf004,dzbf005,dzbf006,dzbf007,dzbf008,",
+                                         "dzbfcrtdt,dzbfcrtdp,dzbfowndp,dzbfownid,dzbfcrtid)"
+         CASE gs_option
+            WHEN "1" #客製程式段還原成標準程式段
+               LET ls_sql = ls_sql," VALUES('",g_prog,"','",p_apt_name,"','1',",gr_cus_apt.dzbb003,",'c',",l_dzbb003,",'s',",g_cus_dzaf004,","
+            WHEN "2" #標準程式段還原成客製程式段 
+               LET ls_sql = ls_sql," VALUES('",g_prog,"','",p_apt_name,"','2',",gr_std_apt.dzbb003,",'s',",l_dzbb003,",'c',",g_cus_dzaf004,","
+         END CASE
+         LET ls_sql = ls_sql,"?,'",g_dept CLIPPED,"','",g_dept CLIPPED,"','",g_user,"','",g_user,"')"
+         
+         PREPARE ins_dzbf_prep FROM ls_sql
+         EXECUTE ins_dzbf_prep USING g_date
+         FREE ins_dzbf_prep
+
+         COMMIT WORK
+         LET lb_trans = FALSE
+      ELSE
+         #Begin:2015/09/09 by Hiko:找不到標準,表示此客製add point是多出來的,則還原指的是刪除此客製add point.
+         LET ls_sql = "DELETE FROM dzba_t",ls_where
+         PREPARE del_dzba_prep FROM ls_sql
+         EXECUTE del_dzba_prep
+         FREE del_dzba_prep
+         #End:2015/09/09 by Hiko
+      END IF 
+         
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "adz-00647" #請記得要重新下載程式.
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN TRUE
+   CATCH
+      IF lb_trans THEN
+         ROLLBACK WORK
+      END IF
+
+      DISPLAY "SQLCA.SQLCODE=",SQLCA.SQLCODE
+      DISPLAY "ERROR : adzp064_show_apt : ls_sql=",ls_sql,"<<"
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "adz-00648" #還原過程出現錯誤,請查看伺服端的錯誤訊息.
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END TRY
+END  FUNCTION
+
+#Begin:2015/09/11 by Hiko
+PRIVATE FUNCTION adzp064_show_scn(p_scn_name)
+   DEFINE p_scn_name LIKE dzbc_t.dzbc003
+   DEFINE ls_sql STRING
+
+   TRY
+      #取得標準section內容.
+      INITIALIZE gr_std_scn.* TO NULL
+
+      FREE gr_std_scn.dzbd098
+      LOCATE gr_std_scn.dzbd098 IN FILE
+      LET ls_sql = "SELECT bb1.dzbd003,bb1.dzbd004,bb1.dzbd098",
+                   "  FROM dzbd_t bb1",
+                   " INNER JOIN dzbc_t ba1 ON ba1.dzbc001=bb1.dzbd001 AND ba1.dzbc003=bb1.dzbd002 AND ba1.dzbc004=bb1.dzbd003 AND ba1.dzbc005=bb1.dzbd004",
+                   " WHERE ba1.dzbc001='",g_prog,"' AND ba1.dzbc002=",g_std_dzaf004," AND ba1.dzbc003='",p_scn_name CLIPPED,"' AND ba1.dzbc007='s' AND ba1.dzbcstus='Y'"
+      PREPARE std_dzbd_prep FROM ls_sql
+      EXECUTE std_dzbd_prep INTO gr_std_scn.*
+      FREE std_dzbd_prep
+
+      #取得客製section內容.
+      INITIALIZE gr_cus_scn.* TO NULL
+
+      FREE gr_cus_scn.dzbd098
+      LOCATE gr_cus_scn.dzbd098 IN FILE
+      LET ls_sql = "SELECT bb1.dzbd003,bb1.dzbd004,bb1.dzbd098",
+                   "  FROM dzbd_t bb1",
+                   " INNER JOIN dzbc_t ba1 ON ba1.dzbc001=bb1.dzbd001 AND ba1.dzbc003=bb1.dzbd002 AND ba1.dzbc004=bb1.dzbd003 AND ba1.dzbc005=bb1.dzbd004",
+                   " WHERE ba1.dzbc001='",g_prog,"' AND ba1.dzbc002=",g_cus_dzaf004," AND ba1.dzbc003='",p_scn_name CLIPPED,"' AND ba1.dzbc007='c' AND ba1.dzbcstus='Y'"
+      PREPARE cus_dzbd_prep FROM ls_sql
+      EXECUTE cus_dzbd_prep INTO gr_cus_scn.*
+      FREE cus_dzbd_prep
+   CATCH
+      DISPLAY "SQLCA.SQLCODE=",SQLCA.SQLCODE
+      DISPLAY "ERROR : adzp064_show_scn : ls_sql=",ls_sql,"<<"
+   END TRY
+END  FUNCTION
+
+PRIVATE FUNCTION adzp064_exchange_scn(p_scn_name)
+   DEFINE p_scn_name LIKE dzbc_t.dzbc003
+   DEFINE lr_dzbc  RECORD LIKE dzbc_t.* 
+   DEFINE ls_sql    STRING,
+          ls_where  STRING,
+          lb_trans  BOOLEAN,
+          l_dzbd003 LIKE dzbd_t.dzbd003
+
+   TRY
+      CASE gs_option
+         WHEN "1" #客製程式段還原成標準程式段
+            IF NOT cl_ask_confirm("adz-00645") THEN #請問是否要將客製程式段還原成標準程式段?
+               RETURN FALSE
+            END IF
+            #取得標準程式樹的標準程式段.
+            LET ls_sql = "SELECT * FROM dzbc_t",
+                         " WHERE dzbc001='",g_prog,"' AND dzbc002=",g_std_dzaf004," AND dzbc003='",p_scn_name CLIPPED,"' AND dzbc005 IN ('s','m') AND dzbc007='s'"
+            #UPDATE/DELETE使用
+            LET ls_where = " WHERE dzbc001='",g_prog,"' AND dzbc002=",g_cus_dzaf004," AND dzbc003='",p_scn_name CLIPPED,"' AND dzbc007='c'"
+            LET l_dzbd003 = gr_std_scn.dzbd003
+         WHEN "2" #標準程式段還原成客製程式段 
+            IF NOT cl_ask_confirm("adz-00646") THEN #請問是否要將標準程式段還原成客製程式段?
+               RETURN FALSE
+            END IF
+            #取得客製程式樹的客製程式段.
+            LET ls_sql = "SELECT * FROM dzbc_t",
+                         " WHERE dzbc001='",g_prog,"' AND dzbc002=",g_cus_dzaf004," AND dzbc003='",p_scn_name CLIPPED,"' AND dzbc005='c' AND dzbc007='c'"
+            #UPDATE/DELETE使用
+            LET ls_where = " WHERE dzbc001='",g_prog,"' AND dzbc002=",g_std_dzaf004," AND dzbc003='",p_scn_name CLIPPED,"' AND dzbc007='s'"
+            LET l_dzbd003 = gr_cus_scn.dzbd003
+      END CASE
+
+      IF cl_null(l_dzbd003) THEN
+         LET l_dzbd003 = 0
+      END IF
+
+      PREPARE sel_dzbc_prep FROM ls_sql
+      EXECUTE sel_dzbc_prep INTO lr_dzbc.*
+      FREE sel_dzbc_prep
+
+      IF NOT cl_null(lr_dzbc.dzbc004) AND lr_dzbc.dzbc004<>0 THEN #防呆.
+         BEGIN WORK
+         LET lb_trans = TRUE
+
+         LET ls_sql = "UPDATE dzbc_t",
+                        " SET dzbc004=",lr_dzbc.dzbc004,",",
+                             "dzbc005='",lr_dzbc.dzbc005 CLIPPED,"',",
+                             "dzbc006='",lr_dzbc.dzbc006 CLIPPED,"',",
+                             "dzbc008='",lr_dzbc.dzbc008 CLIPPED,"',",
+                             "dzbc009='",lr_dzbc.dzbc009 CLIPPED,"',",
+                             "dzbc011='",lr_dzbc.dzbc011 CLIPPED,"',",
+                             "dzbcmoddt=?,",
+                             "dzbcmodid='",g_user,"' ",ls_where
+         PREPARE upd_dzbc_prep FROM ls_sql
+         EXECUTE upd_dzbc_prep USING g_date
+         FREE upd_dzbc_prep
+
+         #紀錄異動資料.
+         DELETE FROM dzbf_t WHERE dzbf001=g_prog AND dzbf002=p_scn_name AND dzbf008=g_cus_dzaf004
+
+         LET ls_sql = "INSERT INTO dzbf_t(dzbf001,dzbf002,dzbf003,dzbf004,dzbf005,dzbf006,dzbf007,dzbf008,",
+                                         "dzbfcrtdt,dzbfcrtdp,dzbfowndp,dzbfownid,dzbfcrtid)"
+         CASE gs_option
+            WHEN "1" #客製程式段還原成標準程式段
+               LET ls_sql = ls_sql," VALUES('",g_prog,"','",p_scn_name,"','1',",gr_cus_scn.dzbd003,",'c',",l_dzbd003,",'",lr_dzbc.dzbc005 CLIPPED,"',",g_cus_dzaf004,","
+            WHEN "2" #標準程式段還原成客製程式段 
+               LET ls_sql = ls_sql," VALUES('",g_prog,"','",p_scn_name,"','2',",gr_std_scn.dzbd003,",'",lr_dzbc.dzbc005 CLIPPED,"',",l_dzbd003,",'c',",g_cus_dzaf004,","
+         END CASE
+         LET ls_sql = ls_sql,"?,'",g_dept CLIPPED,"','",g_dept CLIPPED,"','",g_user,"','",g_user,"')"
+         
+         PREPARE ins_dzbf_prep2 FROM ls_sql
+         EXECUTE ins_dzbf_prep2 USING g_date
+         FREE ins_dzbf_prep2
+
+         COMMIT WORK
+         LET lb_trans = FALSE
+      ELSE
+         #找不到標準,表示此客製add point是多出來的,則還原指的是刪除此客製add point.
+         LET ls_sql = "DELETE FROM dzbc_t",ls_where
+         PREPARE del_dzbc_prep FROM ls_sql
+         EXECUTE del_dzbc_prep
+         FREE del_dzbc_prep
+      END IF 
+         
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "adz-00647" #請記得要重新下載程式.
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN TRUE
+   CATCH
+      IF lb_trans THEN
+         ROLLBACK WORK
+      END IF
+
+      DISPLAY "SQLCA.SQLCODE=",SQLCA.SQLCODE
+      DISPLAY "ERROR : adzp064_show_scn : ls_sql=",ls_sql,"<<"
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "adz-00648" #還原過程出現錯誤,請查看伺服端的錯誤訊息.
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END TRY
+END  FUNCTION
+#End:2015/09/11 by Hiko

@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astr550_g01" module="ast" jobmode="N" type="g01" industry="std" crtid="06536" crtdt="2015-07-15 17:45:32" modid="06540" moddt="2016-02-15 11:34:49" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="steu001,steu002,steu003,steu004,steu005,steu006,steu007,steu009,steu012,steudocno,steudocnt,steuent,steusite,steustus,steuunit,stev002,stev003,l_stev003(chr10|NULL),stev004,stev005,stev006,stev007,stev013,stevseq,stevsite,mhael_t_mhael023(mhael023|mhael_t.mhael023),pmaal_t_pmaal004(pmaal004|pmaal_t.pmaal004),ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),x_stael_t_stael003(stael003|x.stael_t_stael003),steucrtid,l_steucrtid(chr30|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="steu001,steu002,steu003,steu004,steu005,steu006,steu007,steu009,steu012,steudocno,steudocnt,steuent,steusite,steustus,steuunit,stev002,stev003,l_stev003(chr10|NULL),stev004,stev005,stev006,stev007,stev013,stevseq,stevsite,mhael_t_mhael023(mhael023|( SELECT mhael023 FROM mhael_t WHERE mhael_t.mhaelent = steu_t.steuent AND mhael_t.mhael001 = steu_t.steu002 AND mhael_t.mhael022 = g_dlang)),pmaal_t_pmaal004(pmaal004|( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaalent = steu_t.steuent AND pmaal_t.pmaal001 = steu_t.steu003 AND pmaal_t.pmaal002 = g_dlang)),ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = steu_t.steuent AND ooefl_t.ooefl001 = steu_t.steusite AND ooefl_t.ooefl002 = g_dlang)),x_stael_t_stael003(stael003|x.stael_t_stael003),steucrtid,l_steucrtid(chr30|NULL)"/>
+    <sql id="g_from" query="steu_t LEFT OUTER JOIN ( SELECT stev_t.*,( SELECT stael003 FROM stael_t WHERE stael_t.staelent = stev_t.stevent AND stael_t.stael001 = stev_t.stev005 AND stael_t.stael002 = g_dlang) stael_t_stael003 FROM stev_t ) x  ON steu_t.steuent = x.stevent AND steu_t.steudocno = x.stevdocno"/>
+    <sql id="g_where" query="" maintable="steu_t"/>
+    <sql id="g_order" query="steudocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="steudocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="steudocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="steuent,steudocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="steuent,steudocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="steuent,steudocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="steudocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="steuent,steudocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

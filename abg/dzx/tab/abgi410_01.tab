@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi410_01" module="abg" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02114" crtdt="2016-11-12 20:58:15" modid="02114" moddt="2016-11-12 21:02:01" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="預算料件BOM批次產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="source(chr500),bgcj002,bgcj003,bgda001,bgda001_desc(chr80),bgda003"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi410_01" method="dialog">
+    <section id="input">
+      <input id="head" field="source,bgcj002,bgcj003,bgda001,bgda003"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="source"/>
+      <column id="bgcj002">
+        <after>
+          <check chkid="v_bgaa001" id="isExist"/>
+        </after>
+        <controlp form="q_bgaa001" state="i"/>
+        <controlp form="q_bgaa001" state="c"/>
+      </column>
+      <column id="bgcj003"/>
+      <column id="bgda001">
+        <after>
+          <check chkid="v_ooef001_24" id="isExist"/>
+          <reference field="bgda001_desc" ref_field="bgda_t.bgda001" map_field="bgda001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_77" state="i"/>
+        <controlp form="q_ooef001_77" state="c"/>
+      </column>
+      <column id="bgda001_desc"/>
+      <column id="bgda003"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgda_t" pk="bgda001,bgda002,bgda003">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,bgda001,&apos;&apos;,bgda003 FROM bgda_t WHERE bgdaent= ? AND bgda001=? AND bgda002=? AND bgda003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="bgda001,bgda002,bgda003"/>
+    </head>
+  </dataset>
+</assembly>
+

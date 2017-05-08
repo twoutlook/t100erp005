@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt110_07" module="aap" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02040" crtdt="2016-10-19 15:13:06" modid="02040" moddt="2016-10-19 15:26:07" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="進項發票查">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isam011,isam009,isam010,isam200,isam023,isam024,isam025,isam026,isam027,isam028,isam036,isam117,isam118,isamdocno,isam050,isamseq"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_aapt110" prog="aapt110" parameter="isamdocno"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt110_07" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isam117,isam118,isamseq" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isam011,isam009,isam010,isam200,isam023,isam024,isam025,isam026,isam027,isam028,isam036,isam117,isam118,isamdocno,isam050,isamseq"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isam011"/>
+      <column id="isam009"/>
+      <column id="isam010">
+        <controlp form="q_isam010" state="i"/>
+        <controlp form="q_isam010" state="c"/>
+      </column>
+      <column id="isam200" type="S" default="N"/>
+      <column id="isam023"/>
+      <column id="isam024"/>
+      <column id="isam025"/>
+      <column id="isam026"/>
+      <column id="isam027"/>
+      <column id="isam028"/>
+      <column id="isam036" def_scc="9716"/>
+      <column id="isam117"/>
+      <column id="isam118"/>
+      <column id="isamdocno">
+        <controlp form="q_isamdocno" state="c"/>
+      </column>
+      <column id="isam050"/>
+      <column id="isamseq"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isam_t" page="1" linked="" pk="isamdocno,isamseq">
+      <sql id="forupd_sql_detail" query="SELECT isam011,isam009,isam010,isam200,isam023,isam024,isam025,isam026,isam027,isam028,isam036,isam117,isam118,isamdocno,isam050,isamseq FROM isam_t WHERE isament=? AND isamdocno=? AND isamseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isam011,isam009,isam010,isam200,isam023,isam024,isam025,isam026,isam027,isam028,isam036,isam117,isam118,isamdocno,isam050,isamseq FROM isam_t WHERE isament= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

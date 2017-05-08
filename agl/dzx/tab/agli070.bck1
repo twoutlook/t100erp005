@@ -1,0 +1,142 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli070" module="agl" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02599" crtdt="2014-05-13 18:29:25" modid="02599" moddt="2016-05-12 18:10:33" sdver="0009" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="財務報表結構設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glfa001,glfal003,glfa004,glfa004_desc(chr80),glfa002,glfa003,glfa016,glfa005,glfa005_desc(chr80),glfa006,glfa007,glfa010,glfa013,glfa011,glfa012,glfa014,glfa015,glfa009,glfa008,glfaownid,glfaownid_desc(chr80),glfacrtid,glfacrtid_desc(chr80),glfacrtdt,glfaowndp,glfaowndp_desc(chr80),glfacrtdp,glfacrtdp_desc(chr80),glfamodid,glfamodid_desc(chr80),glfamoddt,desc(chr500)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glfbseq,glfbseq1,glfb002,glfbl004,glfb003,amt1(num20_6),amt2(num20_6),glfb008,glfb009,glfb010"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="btn_test"/>
+      <action id="modify" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli070" method="dialog">
+    <section id="input">
+      <input id="head" field="glfa001,glfal003,glfa004,glfa002,glfa003,glfa016,glfa005,glfa006,glfa007,glfa010,glfa013,glfa011,glfa012,glfa014,glfa015,glfa009,glfa008"/>
+      <input id="body" page="1" field="glfbseq,glfbseq1,glfb002,glfbl004,glfb003,amt1,amt2,glfb008,glfb009,glfb010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glfa001,glfal003,glfa004,glfa002,glfa003,glfa016,glfa005,glfa006,glfa007,glfa010,glfa013,glfa011,glfa012,glfa014,glfa015,glfa009,glfa008,glfaownid,glfacrtid,glfacrtdt,glfaowndp,glfacrtdp,glfamodid,glfamoddt"/>
+      <construct id="body" page="1" field="glfbseq,glfbseq1,glfb002,glfbl004,glfb003,glfb008,glfb009,glfb010"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glfa001"/>
+      <set id="head" type="no_entry" field="glfa001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glfa001">
+        <controlp form="q_glfa001" state="c"/>
+      </column>
+      <column id="glfal003"/>
+      <column id="glfa004">
+        <after>
+          <check chkid="v_ooal002_7" id="isExist"/>
+          <reference field="glfa004_desc" ref_field="glfa004" map_field="glfa004" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;0&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="glfa004_desc"/>
+      <column id="glfa002" type="S" default="1" def_scc="9930"/>
+      <column id="glfa003" type="S" default="1" def_scc="9931"/>
+      <column id="glfa016" type="S" default="1"/>
+      <column id="glfa005">
+        <after>
+          <reference field="glfa005_desc" ref_field="glfa_t.glfa005" map_field="glfaent,glfa005" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="glfa005_desc"/>
+      <column id="glfa006"/>
+      <column id="glfa007"/>
+      <column id="glfa010"/>
+      <column id="glfa013"/>
+      <column id="glfa011"/>
+      <column id="glfa012"/>
+      <column id="glfa014"/>
+      <column id="glfa015"/>
+      <column id="glfa009" type="S" default="2"/>
+      <column id="glfa008" type="S" default="1" def_scc="8705"/>
+      <column id="glfaownid">
+        <after>
+          <reference field="glfaownid_desc" ref_field="glfa_t.glfaownid" map_field="glfaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfaownid_desc"/>
+      <column id="glfacrtid">
+        <after>
+          <reference field="glfacrtid_desc" ref_field="glfa_t.glfacrtid" map_field="glfacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfacrtid_desc"/>
+      <column id="glfacrtdt"/>
+      <column id="glfaowndp">
+        <after>
+          <reference field="glfaowndp_desc" ref_field="glfa_t.glfaowndp" map_field="glfaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glfaowndp_desc"/>
+      <column id="glfacrtdp">
+        <after>
+          <reference field="glfacrtdp_desc" ref_field="glfa_t.glfacrtdp" map_field="glfacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glfacrtdp_desc"/>
+      <column id="glfamodid">
+        <after>
+          <reference field="glfamodid_desc" ref_field="glfa_t.glfamodid" map_field="glfamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfamodid_desc"/>
+      <column id="glfamoddt"/>
+      <column id="desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glfbseq"/>
+      <column id="glfbseq1"/>
+      <column id="glfb002"/>
+      <column id="glfbl004"/>
+      <column id="glfb003"/>
+      <column id="amt1"/>
+      <column id="amt2"/>
+      <column id="glfb008"/>
+      <column id="glfb009" type="S" default="N"/>
+      <column id="glfb010" type="S" default="0" def_scc="9994"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glfa_t" pk="glfa001">
+      <sql id="forupd_sql" type="sql" query="SELECT glfa001,&apos;&apos;,glfa004,&apos;&apos;,glfa002,glfa003,glfa016,glfa005,&apos;&apos;,glfa006,glfa007,glfa010,glfa013,glfa011,glfa012,glfa014,glfa015,glfa009,glfa008,glfaownid,&apos;&apos;,glfacrtid,&apos;&apos;,glfacrtdt,glfaowndp,&apos;&apos;,glfacrtdp,&apos;&apos;,glfamodid,&apos;&apos;,glfamoddt,&apos;&apos; FROM glfa_t WHERE glfaent= ? AND glfa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glfa001,&apos;&apos;,glfa004,&apos;&apos;,glfa002,glfa003,glfa016,glfa005,&apos;&apos;,glfa006,glfa007,glfa010,glfa013,glfa011,glfa012,glfa014,glfa015,glfa009,glfa008,glfaownid,&apos;&apos;,glfacrtid,&apos;&apos;,glfacrtdt,glfaowndp,&apos;&apos;,glfacrtdp,&apos;&apos;,glfamodid,&apos;&apos;,glfamoddt,&apos;&apos; FROM glfa_t" order="glfa001"/>
+      <sql id="append" type="lang" target="glfal_t.glfal003" table="glfal_t" fk="glfa001" pk="glfal001,glfal002" field="glfal003"/>
+    </head>
+    <body id="glfb_t" page="1" linked="" pk="glfbseq,glfbseq1" fk="glfb001">
+      <sql id="forupd_sql_detail" query="SELECT glfbseq,glfbseq1,glfb002,&apos;&apos;,glfb003,&apos;&apos;,&apos;&apos;,glfb008,glfb009,glfb010 FROM glfb_t WHERE glfbent=? AND glfb001=? AND glfbseq=? AND glfbseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glfbseq,glfbseq1,glfb002,&apos;&apos;,glfb003,&apos;&apos;,&apos;&apos;,glfb008,glfb009,glfb010 FROM glfb_t WHERE glfbent=? AND glfb001=?"/>
+      <sql id="detail_append" type="lang" target="glfbl_t.glfbl004" table="glfbl_t" fk="glfa001,glfbseq,glfb002" pk="glfbl001,glfblseq,glfbl002,glfbl003" field="glfbl004"/>
+    </body>
+  </dataset>
+</assembly>
+

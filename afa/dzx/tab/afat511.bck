@@ -1,0 +1,347 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afat511" module="afa" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02003" crtdt="2015-04-27 16:12:41" modid="02003" moddt="2015-05-05 15:14:30" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資產類型異動維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fabgsite,fabgsite_desc(chr80),fabg001,fabg001_desc(chr80),fabgld,fabgld_desc(chr80),fabgcomp,fabg002,fabg002_desc(chr80),fabg003,fabg003_desc(chr80),fabg004,fabg005,fabgdocno,fabgdocdt,fabg008,fabg009(dat),fabg015(chr10),fabg016(num26_10),fabgstus,fabgownid,fabgownid_desc(chr80),fabgowndp,fabgowndp_desc(chr80),fabgcrtid,fabgcrtid_desc(chr80),fabgcrtdp,fabgcrtdp_desc(chr80),fabgcrtdt,fabgmodid,fabgmodid_desc(chr80),fabgmoddt,fabgcnfid,fabgcnfid_desc(chr80),fabgcnfdt,fabgpstid,fabgpstid_desc(chr80),fabgpstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fabpseq,fabp001,fabp002,fabp000,fabp004,fabp005,fabp003,fabp006(num20_6),fabp007,fabp010(chr10),fabp010_desc(chr500),fabp011(chr10),fabp011_desc(chr500),fabp012(chr10),fabp012_desc(chr500),fabp013(chr500),fabp013_desc(chr500),fabp014(chr500),fabp014_desc(chr500),fabp015(chr500),fabp015_desc(chr500),fabp016(chr500),fabp016_desc(chr500),fabp020(chr10),fabp020_desc(chr500),fabp021(chr10),fabp021_desc(chr500),fabp022(chr10),fabp022_desc(chr500),fabp023(chr500),fabp023_desc(chr500),fabp024(chr500),fabp024_desc(chr500),fabp025(chr500),fabp025_desc(chr500),fabp026(chr500),fabp026_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail4" page_id="4" value="fabpseq_3(num10),fabp100,fabp101,fabp102(num20_6),fabp103,fabp110,fabp111(num26_10),fabp112(num20_6),fabp113"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_pre"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="open_afap280"/>
+      <action id="open_afap290"/>
+      <action id="query" type="standard"/>
+      <action id="afat511_02"/>
+      <action id="open_afat502_03"/>
+      <action id="prog_fabg001" prog="cl_user_contact(&quot;aooi130&quot;," parameter="&quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+      <action id="prog_fabg002" prog="cl_user_contact(&quot;aooi130&quot;," parameter="&quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+      <action id="prog_fabg008" prog="aglt310" parameter="fabg008"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afat511" method="dialog">
+    <section id="input">
+      <input id="head" field="fabgsite,fabg001,fabgld,fabgcomp,fabg002,fabg003,fabg004,fabg005,fabgdocno,fabgdocdt,fabg008,fabg015,fabg016,fabgstus"/>
+      <input id="body" page="1" field="fabpseq,fabp001,fabp002,fabp000,fabp003,fabp006,fabp007,fabp020,fabp021,fabp022,fabp023,fabp024,fabp025,fabp026" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="fabpseq_3,fabp100,fabp101,fabp102,fabp103,fabp110,fabp111,fabp112,fabp113" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fabgsite,fabg001,fabgld,fabgcomp,fabg002,fabg003,fabg004,fabg005,fabgdocno,fabgdocdt,fabg008,fabg009,fabg015,fabg016,fabgstus,fabgownid,fabgowndp,fabgcrtid,fabgcrtdp,fabgcrtdt,fabgmodid,fabgmoddt,fabgcnfid,fabgcnfdt,fabgpstid,fabgpstdt"/>
+      <construct id="body" page="1" field="fabpseq,fabp001,fabp002,fabp000,fabp003,fabp006,fabp007,fabp010,fabp011,fabp012,fabp013,fabp014,fabp015,fabp016,fabp020,fabp021,fabp022,fabp023,fabp024,fabp025,fabp026"/>
+      <construct id="body" page="2" field="fabpseq_3,fabp100,fabp101,fabp102,fabp103,fabp110,fabp111,fabp112,fabp113"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fabgld,fabgdocno"/>
+      <set id="head" type="no_entry" field="fabgld,fabgdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fabgsite">
+        <after>
+          <reference field="fabgsite_desc" ref_field="fabg_t.fabgsite" map_field="fabgent,fabgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_faab001" state="i"/>
+        <controlp form="q_faab001" state="c"/>
+      </column>
+      <column id="fabgsite_desc"/>
+      <column id="fabg001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="fabg001_desc" ref_field="fabg_t.fabg001" map_field="fabg001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fabg001_desc"/>
+      <column id="fabgld">
+        <after>
+          <check chkid="v_fabgld" id="isExist"/>
+          <reference field="fabgld_desc" ref_field="fabg_t.fabgld" map_field="fabgent,fabgld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="fabgld_desc"/>
+      <column id="fabgcomp"/>
+      <column id="fabg002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="fabg002_desc" ref_field="fabg_t.fabg002" map_field="fabg002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fabg002_desc"/>
+      <column id="fabg003">
+        <after>
+          <check chkid="v_ooef001_14" id="isExist"/>
+          <reference field="fabg003_desc" ref_field="fabg_t.fabg003" map_field="fabgent,fabg003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_9" state="i"/>
+        <controlp form="q_ooef001_9" state="c"/>
+      </column>
+      <column id="fabg003_desc"/>
+      <column id="fabg004"/>
+      <column id="fabg005" type="S" default="30" def_scc="9910"/>
+      <column id="fabgdocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_fabgdocno" state="c"/>
+      </column>
+      <column id="fabgdocdt"/>
+      <column id="fabg008">
+        <controlp form="q_fabg008" state="c"/>
+      </column>
+      <column id="fabg009"/>
+      <column id="fabg015">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="fabg016"/>
+      <column id="fabgstus" scc="13" type="S" default="N">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="Z" pic="unposted"/>
+        <stus id="S" pic="posted"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="fabgownid">
+        <after>
+          <reference field="fabgownid_desc" ref_field="fabg_t.fabgownid" map_field="fabgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fabgownid_desc"/>
+      <column id="fabgowndp">
+        <after>
+          <reference field="fabgowndp_desc" ref_field="fabg_t.fabgowndp" map_field="fabgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fabgowndp_desc"/>
+      <column id="fabgcrtid">
+        <after>
+          <reference field="fabgcrtid_desc" ref_field="fabg_t.fabgcrtid" map_field="fabgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fabgcrtid_desc"/>
+      <column id="fabgcrtdp">
+        <after>
+          <reference field="fabgcrtdp_desc" ref_field="fabg_t.fabgcrtdp" map_field="fabgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fabgcrtdp_desc"/>
+      <column id="fabgcrtdt"/>
+      <column id="fabgmodid">
+        <after>
+          <reference field="fabgmodid_desc" ref_field="fabg_t.fabgmodid" map_field="fabgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fabgmodid_desc"/>
+      <column id="fabgmoddt"/>
+      <column id="fabgcnfid">
+        <after>
+          <reference field="fabgcnfid_desc" ref_field="fabg_t.fabgcnfid" map_field="fabgcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fabgcnfid_desc"/>
+      <column id="fabgcnfdt"/>
+      <column id="fabgpstid">
+        <after>
+          <reference field="fabgpstid_desc" ref_field="fabg_t.fabgpstid" map_field="fabgpstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fabgpstid_desc"/>
+      <column id="fabgpstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fabpseq"/>
+      <column id="fabp001">
+        <after>
+          <check chkid="v_faah003" id="isExist"/>
+        </after>
+        <controlp form="q_faah003_3" state="i"/>
+        <controlp form="q_faah003_3" state="c"/>
+      </column>
+      <column id="fabp002">
+        <after>
+          <check chkid="v_faah004" id="isExist"/>
+        </after>
+        <controlp form="q_faah003_3" state="i"/>
+        <controlp form="q_faah003_3" state="c"/>
+      </column>
+      <column id="fabp000">
+        <after>
+          <check chkid="v_faah001" id="isExist"/>
+        </after>
+        <controlp form="q_faah003_3" state="i"/>
+        <controlp form="q_faah003_3" state="c"/>
+      </column>
+      <column id="fabp004"/>
+      <column id="fabp005"/>
+      <column id="fabp003"/>
+      <column id="fabp006"/>
+      <column id="fabp007"/>
+      <column id="fabp010">
+        <after>
+          <reference field="fabp010_desc" ref_field="fabp010" map_field="fabpent,fabp010" ref_sql="SELECT faacl003 FROM faacl_t WHERE faaclent=$varg_enterprise$var AND faacl001=? AND faacl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_faac001" state="c"/>
+      </column>
+      <column id="fabp010_desc"/>
+      <column id="fabp011">
+        <after>
+          <reference field="fabp011_desc" ref_field="fabp011" map_field="fabpent,fabp011" ref_sql="SELECT faadl003 FROM faadl_t WHERE faadlent=$varg_enterprise$var AND faadl001=? AND faadl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_faad001" state="c"/>
+      </column>
+      <column id="fabp011_desc"/>
+      <column id="fabp012">
+        <after>
+          <reference field="fabp012_desc" ref_field="fabp012" map_field="fabp012" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;3903&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="fabp012_desc"/>
+      <column id="fabp013">
+        <after>
+          <reference field="fabp013_desc" ref_field="fabp013" map_field="fabp013" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabp013_desc"/>
+      <column id="fabp014">
+        <after>
+          <reference field="fabp014_desc" ref_field="fabp014" map_field="fabp014" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabp014_desc"/>
+      <column id="fabp015">
+        <after>
+          <reference field="fabp015_desc" ref_field="fabp015" map_field="fabp015" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabp015_desc"/>
+      <column id="fabp016">
+        <after>
+          <reference field="fabp016_desc" ref_field="fabp016" map_field="fabp016" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabp016_desc"/>
+      <column id="fabp020">
+        <after>
+          <check chkid="v_faac001" id="isExist"/>
+          <reference field="fabp020_desc" ref_field="fabp020" map_field="fabpent,fabp020" ref_sql="SELECT faacl003 FROM faacl_t WHERE faaclent=$varg_enterprise$var AND faacl001=? AND faacl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_faac001" state="i"/>
+        <controlp form="q_faac001" state="c"/>
+      </column>
+      <column id="fabp020_desc"/>
+      <column id="fabp021">
+        <after>
+          <check chkid="v_faad001" id="isExist"/>
+          <reference field="fabp021_desc" ref_field="fabp021" map_field="fabpent,fabp021" ref_sql="SELECT faadl003 FROM faadl_t WHERE faadlent=$varg_enterprise$var AND faadl001=? AND faadl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_faad001" state="i"/>
+        <controlp form="q_faad001" state="c"/>
+      </column>
+      <column id="fabp021_desc"/>
+      <column id="fabp022">
+        <after>
+          <check chkid="v_oocq002_3903" id="isExist"/>
+          <reference field="fabp022_desc" ref_field="fabp022" map_field="fabp022" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;3903&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="fabp022_desc"/>
+      <column id="fabp023">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+          <reference field="fabp023_desc" ref_field="fabp023" map_field="fabp023" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabp023_desc"/>
+      <column id="fabp024">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+          <reference field="fabp024_desc" ref_field="fabp024" map_field="fabp024" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabp024_desc"/>
+      <column id="fabp025">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+          <reference field="fabp025_desc" ref_field="fabp025" map_field="fabp025" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabp025_desc"/>
+      <column id="fabp026">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+          <reference field="fabp026_desc" ref_field="fabp026" map_field="fabp026" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabp026_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="fabpseq_3"/>
+      <column id="fabp100">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="fabp101"/>
+      <column id="fabp102"/>
+      <column id="fabp103"/>
+      <column id="fabp110">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="fabp111"/>
+      <column id="fabp112"/>
+      <column id="fabp113"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fabg_t" pk="fabgld,fabgdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fabgsite,&apos;&apos;,fabg001,&apos;&apos;,fabgld,&apos;&apos;,fabgcomp,fabg002,&apos;&apos;,fabg003,&apos;&apos;,fabg004,fabg005,fabgdocno,fabgdocdt,fabg008,&apos;&apos;,&apos;&apos;,&apos;&apos;,fabgstus,fabgownid,&apos;&apos;,fabgowndp,&apos;&apos;,fabgcrtid,&apos;&apos;,fabgcrtdp,&apos;&apos;,fabgcrtdt,fabgmodid,&apos;&apos;,fabgmoddt,fabgcnfid,&apos;&apos;,fabgcnfdt,fabgpstid,&apos;&apos;,fabgpstdt FROM fabg_t WHERE fabgent= ? AND fabgld=? AND fabgdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fabgsite,&apos;&apos;,fabg001,&apos;&apos;,fabgld,&apos;&apos;,fabgcomp,fabg002,&apos;&apos;,fabg003,&apos;&apos;,fabg004,fabg005,fabgdocno,fabgdocdt,fabg008,&apos;&apos;,&apos;&apos;,&apos;&apos;,fabgstus,fabgownid,&apos;&apos;,fabgowndp,&apos;&apos;,fabgcrtid,&apos;&apos;,fabgcrtdp,&apos;&apos;,fabgcrtdt,fabgmodid,&apos;&apos;,fabgmoddt,fabgcnfid,&apos;&apos;,fabgcnfdt,fabgpstid,&apos;&apos;,fabgpstdt FROM fabg_t" order="fabgld,fabgdocno"/>
+    </head>
+    <body id="fabp_t" page="1,2" linked="" pk="fabpseq" fk="fabpld,fabpdocno">
+      <sql id="forupd_sql_detail" query="SELECT fabpseq,fabp001,fabp002,fabp000,fabp004,fabp005,fabp003,&apos;&apos;,fabp007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fabp100,fabp101,&apos;&apos;,fabp103,fabp110,&apos;&apos;,&apos;&apos;,fabp113 FROM fabp_t WHERE fabpent=? AND fabpld=? AND fabpdocno=? AND fabpseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fabpseq,fabp001,fabp002,fabp000,fabp004,fabp005,fabp003,&apos;&apos;,fabp007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fabp100,fabp101,&apos;&apos;,fabp103,fabp110,&apos;&apos;,&apos;&apos;,fabp113 FROM fabp_t WHERE fabpent=? AND fabpld=? AND fabpdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

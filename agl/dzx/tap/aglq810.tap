@@ -1,0 +1,1643 @@
+<add_points prog="aglq810" std_prog="aglq810" erpver="1.0" module="AGL" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="detail_show.body.reference" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glfb001" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_glfb_d[g_detail_idx].glfb001 IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_glfb_d[g_detail_idx].glfb001 != g_glfb_d_t.glfb001 OR g_glfb_d[g_detail_idx].glfbseq != g_glfb_d_t.glfbseq OR g_glfb_d[g_detail_idx].glfbseq1 != g_glfb_d_t.glfbseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glfb_t WHERE "||"glfbent = '" ||g_enterprise|| "' AND "||"glfb001 = '"||g_glfb_d[g_detail_idx].glfb001 ||"' AND "|| "glfbseq = '"||g_glfb_d[g_detail_idx].glfbseq ||"' AND "|| "glfbseq1 = '"||g_glfb_d[g_detail_idx].glfbseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.glfbseq" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_glfb_d[g_detail_idx].glfb001 IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_glfb_d[g_detail_idx].glfb001 != g_glfb_d_t.glfb001 OR g_glfb_d[g_detail_idx].glfbseq != g_glfb_d_t.glfbseq OR g_glfb_d[g_detail_idx].glfbseq1 != g_glfb_d_t.glfbseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glfb_t WHERE "||"glfbent = '" ||g_enterprise|| "' AND "||"glfb001 = '"||g_glfb_d[g_detail_idx].glfb001 ||"' AND "|| "glfbseq = '"||g_glfb_d[g_detail_idx].glfbseq ||"' AND "|| "glfbseq1 = '"||g_glfb_d[g_detail_idx].glfbseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.glfbseq1" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_glfb_d[g_detail_idx].glfb001 IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_glfb_d[g_detail_idx].glfb001 != g_glfb_d_t.glfb001 OR g_glfb_d[g_detail_idx].glfbseq != g_glfb_d_t.glfbseq OR g_glfb_d[g_detail_idx].glfbseq1 != g_glfb_d_t.glfbseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glfb_t WHERE "||"glfbent = '" ||g_enterprise|| "' AND "||"glfb001 = '"||g_glfb_d[g_detail_idx].glfb001 ||"' AND "|| "glfbseq = '"||g_glfb_d[g_detail_idx].glfbseq ||"' AND "|| "glfbseq1 = '"||g_glfb_d[g_detail_idx].glfbseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="function.aglq810_create_temp_table" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 建立臨時表
+# Memo...........:
+# Usage..........: CALL aglq810_create_temp_table()
+# Date & Author..: 2014/05/18 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq810_create_temp_table()
+   DROP TABLE aglq810_tmp
+   CREATE TEMP TABLE aglq810_tmp(
+   type           VARCHAR(1),
+   glfbseq        DECIMAL(5,0),
+   glfb002        VARCHAR(10),
+   glfbl004       VARCHAR(500),
+   glfb003        DECIMAL(5,0),
+   amt1           DECIMAL(20,6),
+   amt2           DECIMAL(20,6))
+END FUNCTION]]>
+</point>
+  <point name="function.aglq810_b_fill1" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 填充單身
+# Memo...........:
+# Usage..........: CALL aglq810_b_fill1()
+# Date & Author..: 2014/5/18 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq810_b_fill1()
+   DEFINE l_glfbseq       LIKE glfb_t.glfbseq
+   
+   CALL g_glfb_d.clear()
+   #資產
+   LET g_sql = "SELECT UNIQUE glfbseq,glfb002,glfbl004,glfb003,amt1,amt2",
+               "  FROM aglq810_tmp ",
+               " WHERE type='1' ",
+               " ORDER BY glfbseq"
+  
+   PREPARE aglq810_pb1 FROM g_sql
+   DECLARE b_fill_curs1 CURSOR FOR aglq810_pb1
+   #負債
+   LET g_sql = "SELECT UNIQUE glfbseq,glfb002,glfbl004,glfb003,amt1,amt2",
+               "  FROM aglq810_tmp ",
+               " WHERE type='2' ",
+               " ORDER BY glfbseq"
+  
+   PREPARE aglq810_pb2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR aglq810_pb2
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+   #資產
+   FOREACH b_fill_curs1 INTO l_glfbseq,g_glfb_d[l_ac].glfb002,g_glfb_d[l_ac].glfbl004,g_glfb_d[l_ac].glfb003, 
+                             g_glfb_d[l_ac].amt1,g_glfb_d[l_ac].amt2
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET g_glfb_d[l_ac].sel = "N"     
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   #負債
+   LET l_ac=1
+   FOREACH b_fill_curs2 INTO l_glfbseq,g_glfb_d[l_ac].item,g_glfb_d[l_ac].item_desc,g_glfb_d[l_ac].line,
+                             g_glfb_d[l_ac].amt3,g_glfb_d[l_ac].amt4
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_glfb_d.deleteElement(g_glfb_d.getLength())   
+       
+   LET g_detail_cnt = g_glfb_d.getLength() 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   LET l_ac = 1
+   CALL aglq810_fetch()
+   
+   CALL aglq810_filter_show('glfb002','b_glfb002')
+   CALL aglq810_filter_show('glfbl004','b_glfbl004')
+   CALL aglq810_filter_show('glfb003','b_glfb003')
+END FUNCTION]]>
+</point>
+  <point name="function.aglq810_get_data" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aglq810_get_data()
+# Date & Author..: 2014/5/18 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq810_get_data()
+   DEFINE l_sql                STRING
+   DEFINE l_glfbseq            LIKE glfb_t.glfbseq
+   DEFINE l_glfbseq1           LIKE glfb_t.glfbseq1
+   DEFINE l_glfb002            LIKE glfb_t.glfb002
+   DEFINE l_glfbl004           LIKE glfbl_t.glfbl004
+   DEFINE l_glfb003            LIKE glfb_t.glfb003
+   DEFINE l_success            LIKE type_t.num5
+   DEFINE l_amt1               LIKE type_t.num20_6
+   DEFINE l_amt2               LIKE type_t.num20_6
+   
+   #刪除臨時表中資料
+   DELETE FROM aglq810_tmp
+   LET l_sql="SELECT DISTINCT glfbseq,glfb002,glfbl004,glfb003 ",
+             "  FROM glfb_t ",
+             "  LEFT JOIN glfbl_t ON glfbent=glfblent AND glfb001 = glfbl001 AND glfbseq = glfblseq AND glfb002 = glfbl002 AND glfbl003 = '",g_lang,"' ", 
+             " WHERE glfbent=",g_enterprise," AND glfb001='",tm.glfa001,"'"
+   #資產
+   LET g_sql=l_sql," AND glfbseq1 IN ('A','B')  AND ",g_wc_table,
+                   " ORDER BY glfbseq"
+   PREPARE aglq810_pr1 FROM g_sql
+   DECLARE aglq810_cs1 CURSOR FOR aglq810_pr1   
+   #負債
+   LET g_sql=l_sql," AND glfbseq1 IN ('C','D')  AND ",g_wc_table1,
+                   " ORDER BY glfbseq"
+   PREPARE aglq810_pr2 FROM g_sql
+   DECLARE aglq810_cs2 CURSOR FOR aglq810_pr2
+   
+   CALL cl_showmsg_init()
+   LET l_success = TRUE
+   #資產
+   FOREACH aglq810_cs1 INTO l_glfbseq,l_glfb002,l_glfbl004,l_glfb003
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('','FOREACH aglq810_cs1','',SQLCA.sqlcode,1)
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      #年初數
+      LET l_glfbseq1='A'
+      CALL aglq810_get_amt(l_glfbseq,l_glfbseq1) RETURNING l_amt1
+      #期末數
+      LET l_glfbseq1='B'
+      CALL aglq810_get_amt(l_glfbseq,l_glfbseq1) RETURNING l_amt2
+      INSERT INTO aglq810_tmp(glfbseq,type,glfb002,glfbl004,glfb003,amt1,amt2)
+      VALUES(l_glfbseq,'1',l_glfb002,l_glfbl004,l_glfb003,l_amt1,l_amt2)
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('','insert','',SQLCA.sqlcode,1)
+         LET l_success = FALSE
+      END IF 
+   END FOREACH
+   #負債
+   FOREACH aglq810_cs2 INTO l_glfbseq,l_glfb002,l_glfbl004,l_glfb003
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('','FOREACH aglq810_cs2','',SQLCA.sqlcode,1)
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      #年初數
+      LET l_glfbseq1='C'
+      CALL aglq810_get_amt(l_glfbseq,l_glfbseq1) RETURNING l_amt1
+      #期末數
+      LET l_glfbseq1='D'
+      CALL aglq810_get_amt(l_glfbseq,l_glfbseq1) RETURNING l_amt2
+      INSERT INTO aglq810_tmp(glfbseq,type,glfb002,glfbl004,glfb003,amt1,amt2)
+      VALUES(l_glfbseq,'2',l_glfb002,l_glfbl004,l_glfb003,l_amt1,l_amt2)
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('','insert','',SQLCA.sqlcode,1)
+         LET l_success = FALSE
+      END IF 
+   END FOREACH
+   IF l_success = FALSE THEN
+      CALL cl_err_showmsg()
+      DELETE FROM aglq810_tmp
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.aglq810_glfa005_desc" cite_std="N" status="" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 抓取帳套說明
+# Memo...........:
+# Usage..........: CALL aglq810_glfa005_desc(p_glfa005)
+#                  RETURNING r_desc
+# Input parameter: p_glfb005      帳套編號
+# Return code....: r_desc         說明
+# Date & Author..: 2014/5/18 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq810_glfa005_desc(p_glfa005)
+   DEFINE p_glfa005             LIKE glfa_t.glfa005
+   DEFINE r_desc                LIKE glaal_t.glaal002
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_glfa005
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_desc = '', g_rtn_fields[1] , ''
+   RETURN r_desc
+END FUNCTION]]>
+</point>
+  <point name="function.aglq810_get_amt" cite_std="N" status="" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aglq810_get_amt(p_glfbseq,p_glfbseq1)
+#                  RETURNING r_amt
+# Input parameter: p_glfbseq      取數公式來源
+#                : p_glfbseq1     數值取數公式
+# Return code....: r_amt          金額
+# Date & Author..: 2014/5/18 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq810_get_amt(p_glfbseq,p_glfbseq1)
+   DEFINE p_glfbseq          LIKE glfb_t.glfbseq
+   DEFINE p_glfbseq1         LIKE glfb_t.glfbseq1
+   DEFINE r_amt              LIKE type_t.num20_6
+   DEFINE l_glfb004         LIKE glfb_t.glfb004
+   DEFINE l_glfb005         LIKE glfb_t.glfb005
+   DEFINE l_glfa007         LIKE glfa_t.glfa007
+   DEFINE l_success         LIKE type_t.num5
+   
+   SELECT glfb004,glfb005 INTO l_glfb004,l_glfb005 
+     FROM glfb_t
+    WHERE glfbent=g_enterprise AND glfb001=tm.glfa001
+      AND glfbseq=p_glfbseq AND glfbseq1=p_glfbseq1
+   IF NOT cl_null(l_glfb005) THEN
+      IF p_glfbseq1='A' OR p_glfbseq1='C' THEN
+         LET l_glfa007=0
+      ELSE
+         LET l_glfa007=tm.glfa007
+      END IF
+                        #帳別      #年度       #起始期別  #截止期別 #小數位數   #單位      #報表模板編號       
+      CALL s_analy_form(tm.glfa005,tm.glfa006,l_glfa007,l_glfa007,tm.glfa009,tm.glfa008,tm.glfa001,
+                        #取數公式來源  #計算公式
+                        l_glfb004,    l_glfb005)
+      RETURNING l_success,r_amt
+   ELSE
+      LET r_amt=' '
+   END IF 
+   RETURN r_amt
+END FUNCTION]]>
+</point>
+  <point name="b_fill.array_clear" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE l_flag          LIKE type_t.num5]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET l_flag=TRUE
+   IF l_flag=TRUE THEN
+      CALL aglq810_b_fill1()
+      RETURN
+   END IF]]>
+</point>
+  <point name="cs.after_construct" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   IF NOT cl_null(g_wc_table1) AND g_wc_table1 <> " 1=1" THEN
+      LET g_wc_table1=cl_replace_str(g_wc_table1,'item_desc','glfbl004')
+      LET g_wc_table1=cl_replace_str(g_wc_table1,'line','glfb003')
+   END IF
+   CALL aglq810_get_data()
+]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[DEFINE g_wc_table1           STRING
+DEFINE tm                    RECORD 
+       glfa001               LIKE glfa_t.glfa001,
+       glfa005               LIKE glfa_t.glfa005,
+       glfa005_desc          LIKE glaal_t.glaal002,
+       glfa006               LIKE glfa_t.glfa006,
+       glfa007               LIKE glfa_t.glfa007,
+       glfa008               LIKE glfa_t.glfa008,
+       glfa009               LIKE glfa_t.glfa009
+       END RECORD]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   CALL cl_set_combo_scc('glfa008','8705')
+   #建立临时表
+   CALL aglq810_create_temp_table()]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               EXIT DIALOG]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE l_glfa004  LIKE glfa_t.glfa004
+   DEFINE l_cnt      LIKE type_t.num5
+   DEFINE l_glfa002  LIKE glfa_t.glfa002
+   DEFINE l_glav006  LIKE glav_t.glav006
+   
+   LET tm.glfa006=YEAR(g_today)
+   LET tm.glfa007=MONTH(g_today)
+   LET tm.glfa008='1' 
+   LET tm.glfa009=2
+   DISPLAY BY NAME tm.glfa006,tm.glfa007,tm.glfa008,tm.glfa009]]>
+</point>
+  <point name="query.more_construct" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[      CONSTRUCT g_wc_table1 ON item_desc,line
+          FROM s_detail1[1].item_desc,s_detail1[1].line
+          
+      END CONSTRUCT
+      
+      INPUT BY NAME tm.glfa001,tm.glfa005,tm.glfa006,tm.glfa007,tm.glfa008,tm.glfa009
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT
+            
+         AFTER FIELD glfa001
+            IF NOT cl_null(tm.glfa001) THEN
+               SELECT COUNT(*) INTO l_cnt FROM glfa_t
+                WHERE glfaent=g_enterprise AND glfa001=tm.glfa001 
+               IF l_cnt=0 THEN
+                  CALL cl_err(tm.glfa001,'agl-00249',0)
+                  NEXT FIELD glfa001
+               END IF
+               SELECT glfa002 INTO l_glfa002 FROM glfa_t
+                WHERE glfaent=g_enterprise AND glfa001=tm.glfa001 
+               IF l_glfa002<>'1' THEN
+                  CALL cl_err(tm.glfa001,'agl-00255',0)
+                  NEXT FIELD glfa001
+               END IF
+               SELECT glfa004 INTO l_glfa004 FROM glfa_t WHERE glfaent=g_enterprise AND glfa001=tm.glfa001
+            END IF
+            
+         AFTER FIELD glfa005
+            IF NOT cl_null(tm.glfa005) THEN
+               SELECT COUNT(*) INTO l_cnt FROM glaa_t WHERE glaaent=g_enterprise AND glaald=tm.glfa005
+               IF l_cnt=0 THEN
+                  CALL cl_err(tm.glfa005,'agl-00055',0)
+                  NEXT FIELD glfa005
+               END IF
+               IF NOT cl_null(tm.glfa001) THEN
+                  SELECT glfa004 INTO l_glfa004 FROM glfa_t 
+                   WHERE glfaent=g_enterprise AND glfa001=tm.glfa001
+                  SELECT COUNT(*) INTO l_cnt FROM glaa_t 
+                  WHERE glaaent=g_enterprise AND glaald=t_m.glfa005 AND glaa004=l_glfa004
+                  IF l_cnt=0 THEN
+                     CALL cl_err(tm.glfa005,'agl-00242',0)
+                     NEXT FIELD glfa005
+                  END IF
+               END IF
+               CALL aglq810_glfa005_desc(tm.glfa005) RETURNING tm.glfa005_desc
+               DISPLAY tm.glfa005_desc TO glfa005_desc
+            END IF
+           
+         AFTER FIELD glfa007
+            SELECT MAX(glav006) INTO l_glav006 FROM glav_t
+            WHERE glavent=g_enterprise AND glav001=l_glfa004 AND glav002=tm.glfa006
+            IF NOT cl_null(l_glav006) THEN
+               IF tm.glfa007>l_glav006 THEN
+                  CALL cl_err('','sub-00427',0)
+                  NEXT FIELD glfa007
+               END IF
+            END IF 
+            
+         ON ACTION controlp INFIELD glfa001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " glfa002='1' "
+            CALL q_glfa001()                          #呼叫開窗
+            LET tm.glfa001 = g_qryparam.return1
+            DISPLAY tm.glfa001 TO glfa001  #顯示到畫面上
+            NEXT FIELD glfa001 
+               
+         ON ACTION controlp INFIELD glfa005
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+       
+            LET g_qryparam.default1 = tm.glfa005        #給予default值
+            LET g_qryparam.default2 = "" #glaald #帳別編號
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            IF NOT cl_null(tm.glfa001) THEN
+               SELECT glfa004 INTO l_glfa004 FROM glfa_t WHERE glfaent=g_enterprise AND glfa001=tm.glfa001
+               LET g_qryparam.where = " glaa004='",l_glfa004,"'"
+            END IF
+            CALL q_authorised_ld()                                #呼叫開窗
+       
+            LET tm.glfa005 = g_qryparam.return1              
+            DISPLAY tm.glfa005 TO glfa005            
+            NEXT FIELD glfa005
+      END INPUT
+      ]]>
+</point>
+  <point name="ui_dialog.bef_dialog" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_refresh_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.body.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.body.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_row" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.datainfo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_selall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_selnone" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_sel" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_unsel" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.filter" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.agendum" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="query.before_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.head.before_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.b_glfb002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.b_glfb002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.b_glfb002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.b_glfbl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.b_glfbl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.b_glfbl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.b_glfb003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.b_glfb003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.b_glfb003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="query.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql_after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.array_deleteElement" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.others.fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.array_clear" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.after_fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.array_deleteElement" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.add_cs" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.b_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter_parser.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="insert.control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="aglq810.b_fill" ver="10" status="" src="s">
+<![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION aglq810_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+   
+   LET g_sql = "SELECT  UNIQUE glfb002,'',glfb003,'','','','','','','' FROM glfb_t",
+ 
+ 
+               "",
+               " WHERE glfbent= ? AND 1=1 AND ", ls_wc
+    
+   LET g_sql = g_sql, " ORDER BY glfb_t.glfb001,glfb_t.glfbseq,glfb_t.glfbseq1"
+  
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+  
+   PREPARE aglq810_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aglq810_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_glfb_d.clear()
+ 
+   #add-point:陣列清空
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+#  ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_glfb_d[l_ac].glfb002,g_glfb_d[l_ac].glfbl004,g_glfb_d[l_ac].glfb003,g_glfb_d[l_ac].amt1, 
+       g_glfb_d[l_ac].amt2,g_glfb_d[l_ac].item,g_glfb_d[l_ac].item_desc,g_glfb_d[l_ac].line,g_glfb_d[l_ac].amt3, 
+       g_glfb_d[l_ac].amt4
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET g_glfb_d[l_ac].sel = "N"
+      #LET g_glfb_d[l_ac].statepic = cl_get_actipic(g_glfb_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL aglq810_detail_show("'1'")      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_glfb_d.deleteElement(g_glfb_d.getLength())   
+   #add-point:陣列長度調整
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET g_detail_idx = 1
+   DISPLAY g_detail_idx TO FORMONLY.h_index
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aglq810_pb
+   
+   LET l_ac = 1
+   CALL aglq810_fetch()
+   
+      CALL aglq810_filter_show('glfb002','b_glfb002')
+   CALL aglq810_filter_show('glfbl004','b_glfbl004')
+   CALL aglq810_filter_show('glfb003','b_glfb003')
+ 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.delete" ver="1" status="" src="s">
+<![CDATA[#+ delete
+PRIVATE FUNCTION aglq810_delete()
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point
+ 
+   #add-point:delete段control
+   {<point name="delete.control"/>}
+   #end add-point 
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.description" ver="35" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000046
+#+ 
+#+ Filename...: aglq810
+#+ Description: 帳戶式資產負債表查詢作業
+#+ Creator....: 02599(2014/05/17)
+#+ Modifier...: 02599(2014/05/19)
+#+ Buildtype..: 應用 q02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="aglq810.detail_show" ver="1" status="" src="s">
+<![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION aglq810_detail_show(ps_page)
+   DEFINE ps_page    STRING
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+    
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.fetch" ver="2" status="" src="s">
+<![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION aglq810_fetch()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+ 
+   #add-point:陣列清空
+   {<point name="fetch.array_clear" />}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+   
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+ 
+   #add-point:陣列筆數調整
+   {<point name="fetch.array_deleteElement" />}
+   #end add-point
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.filter" ver="5" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION aglq810_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+   
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON glfb002,glfbl004,glfb003
+                          FROM s_detail1[1].b_glfb002,s_detail1[1].b_glfbl004,s_detail1[1].b_glfb003
+ 
+         BEFORE CONSTRUCT
+#saki       CALL cl_qbe_init()
+                     DISPLAY aglq810_filter_parser('glfb002') TO s_detail1[1].b_glfb002
+            DISPLAY aglq810_filter_parser('glfbl004') TO s_detail1[1].b_glfbl004
+            DISPLAY aglq810_filter_parser('glfb003') TO s_detail1[1].b_glfb003
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL aglq810_filter_show('glfb002','b_glfb002')
+   CALL aglq810_filter_show('glfbl004','b_glfbl004')
+   CALL aglq810_filter_show('glfb003','b_glfb003')
+ 
+    
+   CALL aglq810_b_fill()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.filter_parser" ver="1" status="" src="s">
+<![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION aglq810_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.filter_show" ver="2" status="" src="s">
+<![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aglq810_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aglq810_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.global" ver="10" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_glfb_d RECORD
+       #statepic       LIKE type_t.chr1,
+       sel            LIKE type_t.chr1,
+       glfb002 LIKE glfb_t.glfb002, 
+   glfbl004 LIKE glfbl_t.glfbl004, 
+   glfb003 LIKE glfb_t.glfb003, 
+   amt1 LIKE type_t.chr80, 
+   amt2 LIKE type_t.chr80, 
+   item LIKE type_t.chr80, 
+   item_desc LIKE type_t.chr80, 
+   line LIKE type_t.chr80, 
+   amt3 LIKE type_t.chr80, 
+   amt4 LIKE type_t.chr80 
+       END RECORD
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_glfb_d
+DEFINE g_master_t                   type_g_glfb_d
+DEFINE g_glfb_d          DYNAMIC ARRAY OF type_g_glfb_d
+DEFINE g_glfb_d_t        type_g_glfb_d
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_detail_cnt2        LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_detail_idx2        LIKE type_t.num5
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+ 
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="aglq810.init" ver="1" status="" src="s">
+<![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION aglq810_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   
+   
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.insert" ver="1" status="" src="s">
+<![CDATA[#+ insert
+PRIVATE FUNCTION aglq810_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point
+ 
+   #add-point:insert段control
+   {<point name="insert.control"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.main" ver="2" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("agl","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE aglq810_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               " WHERE  "
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE aglq810_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE aglq810_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aglq810 WITH FORM cl_ap_formpath("agl",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aglq810_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aglq810_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aglq810
+      
+   END IF 
+   
+   CLOSE aglq810_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+</section>
+  <section id="aglq810.modify" ver="1" status="" src="s">
+<![CDATA[#+ modify
+PRIVATE FUNCTION aglq810_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+ 
+   #add-point:modify段control
+   {<point name="modify.control"/>}
+   #end add-point 
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="aglq810.query" ver="11" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION aglq810_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_glfb_d.clear()
+   LET g_wc_filter = " 1=1"
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      #add-point:query段before_construct
+      {<point name="query.before_construct"/>}
+      #end add-point 
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON glfb002,glfbl004,glfb003
+           FROM s_detail1[1].b_glfb002,s_detail1[1].b_glfbl004,s_detail1[1].b_glfb003
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #----<<b_glfb002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glfb002
+            #add-point:BEFORE FIELD b_glfb002
+            {<point name="construct.b.page1.b_glfb002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glfb002
+            
+            #add-point:AFTER FIELD b_glfb002
+            {<point name="construct.a.page1.b_glfb002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_glfb002
+         ON ACTION controlp INFIELD b_glfb002
+            #add-point:ON ACTION controlp INFIELD b_glfb002
+            {<point name="construct.c.page1.b_glfb002" />}
+            #END add-point
+ 
+         #----<<b_glfbl004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glfbl004
+            #add-point:BEFORE FIELD b_glfbl004
+            {<point name="construct.b.page1.b_glfbl004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glfbl004
+            
+            #add-point:AFTER FIELD b_glfbl004
+            {<point name="construct.a.page1.b_glfbl004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_glfbl004
+         ON ACTION controlp INFIELD b_glfbl004
+            #add-point:ON ACTION controlp INFIELD b_glfbl004
+            {<point name="construct.c.page1.b_glfbl004" />}
+            #END add-point
+ 
+         #----<<b_glfb003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glfb003
+            #add-point:BEFORE FIELD b_glfb003
+            {<point name="construct.b.page1.b_glfb003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glfb003
+            
+            #add-point:AFTER FIELD b_glfb003
+            {<point name="construct.a.page1.b_glfb003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_glfb003
+         ON ACTION controlp INFIELD b_glfb003
+            #add-point:ON ACTION controlp INFIELD b_glfb003
+            {<point name="construct.c.page1.b_glfb003" />}
+            #END add-point
+ 
+         #----<<amt1>>----
+         #----<<amt2>>----
+         #----<<item>>----
+         #----<<item_desc>>----
+         #----<<line>>----
+         #----<<amt3>>----
+         #----<<amt4>>----
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:query段befor_dialog
+         {<point name="query.before_dialog"/>}
+         #end add-point
+         
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+   ELSE
+      LET g_master_idx = 1
+   END IF
+   
+   LET g_wc = g_wc_table 
+ 
+ 
+        
+   LET g_wc2 = " 1=1"
+ 
+        
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aglq810_b_fill()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.reproduce" ver="1" status="" src="s">
+<![CDATA[#+ reproduce
+PRIVATE FUNCTION aglq810_reproduce()
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #add-point:reproduce段control
+   {<point name="reproduce.control"/>}
+   #end add-point 
+END FUNCTION
+]]>
+</section>
+  <section id="aglq810.ui_dialog" ver="4" status="" src="s">
+<![CDATA[#+ 功能選單 
+PRIVATE FUNCTION aglq810_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   
+   CALL aglq810_query()
+   
+   WHILE TRUE
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_glfb_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_glfb_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL aglq810_fetch()
+               #add-point:input段before row
+               {<point name="input.body.before_row"/>}
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page自定義行為
+            {<point name="input.body.action"/>}
+            #end add-point
+               
+         END DISPLAY
+      
+ 
+         
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG      
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+ 
+            NEXT FIELD sel
+      
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aglq810_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aglq810_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+      
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_glfb_d.getLength()
+               LET g_glfb_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_glfb_d.getLength()
+               LET g_glfb_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_glfb_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_glfb_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_glfb_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_glfb_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aglq810_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+ 
+         ON ACTION datarefresh   # 重新整理
+            LET g_error_show = 1
+            CALL aglq810_b_fill()
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq340" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="05947" crtdt="2015-07-30 14:12:26" modid="04543" moddt="2016-05-20 11:11:03" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="料件領用與投入數量和金額差異查詢">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcckcomp,xcckcomp_desc(chr80),xcckld,xcckld_desc(chr80),xcck004,xcck005,xcck003,xcck003_desc(chr80),chk(chr500)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcck002,xcck010,xcck010_desc(chr500),xcck010_desc_1(chr500),xcck011,xcck017,xcbb006(chr500),xcck047,sfaa010(chr500),sfaa010_desc(chr500),sfaa010_desc_1(chr500),xcbb006a(chr500),sfaa003(chr500),sfaa042(chr500),xcck201(chr500),xcck202(chr500),xcce201(chr500),xcce202(chr500),diffqty(chr500),diffamt(chr500),xcck001,xcck006,xcck007,xcck008,xcck009"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq340" method="dialog">
+    <section id="input">
+      <input id="head" field="xcckcomp,xcckld,xcck004,xcck005,xcck003,chk"/>
+      <input id="body" page="1" field="xcck002,xcck010,xcck011,xcck017,xcbb006,xcck047,sfaa010,sfaa010_desc,sfaa010_desc_1,xcbb006a,sfaa003,sfaa042,xcck201,xcck202,xcce201,xcce202,diffqty,diffamt,xcck001,xcck006,xcck007,xcck008,xcck009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcckcomp,xcckld,xcck004,xcck005,xcck003"/>
+      <construct id="body" page="1" field="xcck002,xcck010,xcck011,xcck017,xcbb006,xcck047,sfaa010,sfaa010_desc,sfaa010_desc_1,xcbb006a,sfaa003,sfaa042,xcck201,xcck202,xcce201,xcce202,diffqty,diffamt,xcck001,xcck006,xcck007,xcck008,xcck009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcckld,xcck003,xcck004,xcck005"/>
+      <set id="head" type="no_entry" field="xcckld,xcck003,xcck004,xcck005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcckcomp">
+        <after>
+          <reference field="xcckcomp_desc" ref_field="xcck_t.xcckcomp" map_field="xcckent,xcckcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xcckcomp_desc"/>
+      <column id="xcckld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcckld_desc" ref_field="xcck_t.xcckld" map_field="xcckent,xcckld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcckld_desc"/>
+      <column id="xcck004"/>
+      <column id="xcck005"/>
+      <column id="xcck003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="xcck003_desc" ref_field="xcck_t.xcck003" map_field="xcckent,xcck003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcck003_desc"/>
+      <column id="chk" type="S" default="N"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcck002"/>
+      <column id="xcck010">
+        <after/>
+      </column>
+      <column id="xcck010_desc"/>
+      <column id="xcck010_desc_1"/>
+      <column id="xcck011">
+        <controlp form="q_xcck011" state="c"/>
+      </column>
+      <column id="xcck017"/>
+      <column id="xcbb006"/>
+      <column id="xcck047"/>
+      <column id="sfaa010">
+        <after/>
+      </column>
+      <column id="sfaa010_desc"/>
+      <column id="sfaa010_desc_1"/>
+      <column id="xcbb006a"/>
+      <column id="sfaa003"/>
+      <column id="sfaa042" type="S" default="Y"/>
+      <column id="xcck201"/>
+      <column id="xcck202"/>
+      <column id="xcce201"/>
+      <column id="xcce202"/>
+      <column id="diffqty"/>
+      <column id="diffamt"/>
+      <column id="xcck001"/>
+      <column id="xcck006"/>
+      <column id="xcck007"/>
+      <column id="xcck008"/>
+      <column id="xcck009"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcck_t" pk="xcckld,xcck003,xcck004,xcck005">
+      <sql id="forupd_sql" type="sql" query="SELECT xcckcomp,&apos;&apos;,xcckld,&apos;&apos;,xcck004,xcck005,xcck003,&apos;&apos;,&apos;&apos; FROM xcck_t WHERE xcckent= ? AND xcckld=? AND xcck003=? AND xcck004=? AND xcck005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcckcomp,&apos;&apos;,xcckld,&apos;&apos;,xcck004,xcck005,xcck003,&apos;&apos;,&apos;&apos; FROM xcck_t" order="xcckld,xcck003,xcck004,xcck005"/>
+    </head>
+    <body id="xcck_t" page="1" linked="" pk="xcck001,xcck002,xcck006,xcck007,xcck008,xcck009" fk="xcckld,xcck003,xcck004,xcck005">
+      <sql id="forupd_sql_detail" query="SELECT xcck002,xcck010,&apos;&apos;,&apos;&apos;,xcck011,xcck017,&apos;&apos;,xcck047,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck001,xcck006,xcck007,xcck008,xcck009 FROM xcck_t WHERE xcckent=? AND xcckld=? AND xcck003=? AND xcck004=? AND xcck005=? AND xcck001=? AND xcck002=? AND xcck006=? AND xcck007=? AND xcck008=? AND xcck009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcck002,xcck010,&apos;&apos;,&apos;&apos;,xcck011,xcck017,&apos;&apos;,xcck047,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck001,xcck006,xcck007,xcck008,xcck009 FROM xcck_t WHERE xcckent= ? AND xcckld=? AND xcck003=? AND xcck004=? AND xcck005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

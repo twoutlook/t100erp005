@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt821_02" module="anm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02291" crtdt="2015-02-16 10:13:25" modid="02291" moddt="2015-02-16 10:26:01" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="批次產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xregsite,xregsite_desc(chr80),xregld,xregld_desc(chr80),xreg004,xreg004_desc(chr80),xregdocno,xreg001,xreg002(chr500),xregdocdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt821_02" method="dialog">
+    <section id="input">
+      <input id="head" field="xregsite,xregld,xreg004,xregdocno,xreg001,xreg002,xregdocdt"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xregsite">
+        <after>
+          <reference field="xregsite_desc" ref_field="xreg_t.xregsite" map_field="xregent,xregsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="xregsite_desc"/>
+      <column id="xregld">
+        <after>
+          <reference field="xregld_desc" ref_field="xreg_t.xregld" map_field="xregent,xregld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="xregld_desc"/>
+      <column id="xreg004">
+        <after>
+          <reference field="xreg004_desc" ref_field="xreg_t.xreg004" map_field="xreg004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+      </column>
+      <column id="xreg004_desc"/>
+      <column id="xregdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+      </column>
+      <column id="xreg001"/>
+      <column id="xreg002"/>
+      <column id="xregdocdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xreg_t" pk="xregdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xregsite,&apos;&apos;,xregld,&apos;&apos;,xreg004,&apos;&apos;,xregdocno,xreg001,&apos;&apos;,xregdocdt FROM xreg_t WHERE xregent= ? AND xregdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xregdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

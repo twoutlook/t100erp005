@@ -1,0 +1,1190 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ammp424.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0010(2016-06-28 18:24:59), PR版次:0010(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000151
+#+ Filename...: ammp424
+#+ Description: 會員卡自動續期批次處理作業
+#+ Creator....: 02482(2014-04-09 16:19:18)
+#+ Modifier...: 02159 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="ammp424.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#160318-00025#23    16/04/22   BY 07900   校验代码重复错误讯息的修改
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+        #mman001          LIKE mman_t.mman001,   #160628-00019#1 160628 by sakura mark
+        #mmbn006          LIKE mmbn_t.mmbn006,   #160118-00014#1 dongsz mark
+        mmbnsite         LIKE mmbn_t.mmbnsite,   #160118-00014#1 dongsz add
+        mmbm001          LIKE mmbm_t.mmbm001,
+        mmbm002          LIKE mmbm_t.mmbm002,
+        #mman001_desc     LIKE type_t.chr80,     #160628-00019#1 160628 by sakura mark
+        #mmbn006_desc     LIKE type_t.chr80,     #160118-00014#1 dongsz mark
+        mmbnsite_desc    LIKE type_t.chr80,      #160118-00014#1 dongsz add
+        mmbm001_desc     LIKE type_t.chr80,
+        mmbm002_desc     LIKE type_t.chr80,
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       mmaq005 LIKE mmaq_t.mmaq005, 
+   mmaq002 LIKE mmaq_t.mmaq002, 
+   mmbnsite LIKE mmbn_t.mmbnsite, 
+   mmbnsite_desc LIKE type_t.chr80, 
+   mmbm001_desc LIKE type_t.chr80, 
+   mmbm002_desc LIKE type_t.chr80, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE l_success         LIKE type_t.num5
+DEFINE g_ref_fields      DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars        DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields      DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE lc_param1    type_parameter 
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammp424.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   DEFINE l_success LIKE type_t.num5   #150308-00001#3 150309 pomelo add
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("amm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      DISPLAY "ls_js:",ls_js  #160628-00019#1 160628 by sakura add
+      #end add-point
+      CALL ammp424_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ammp424 WITH FORM cl_ap_formpath("amm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL ammp424_init()
+ 
+      #進入選單 Menu (="N")
+      CALL ammp424_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_ammp424
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL s_aooi500_drop_temp() RETURNING l_success   #150308-00001#3 150309 pomelo add
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="ammp424.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION ammp424_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   DEFINE l_success LIKE type_t.num5   #150308-00001#3 150309 pomelo add
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_aooi500_create_temp() RETURNING l_success   #150308-00001#3 150309 pomelo add
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ammp424.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ammp424_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   DEFINE l_errno  LIKE type_t.chr10
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   LET g_errshow = 1
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.mmbnsite 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               LET g_master.mmbnsite = g_site  
+               LET lc_param1.mmbnsite = g_master.mmbnsite
+               CALL ammp424_desc()
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmbnsite
+            
+            #add-point:AFTER FIELD mmbnsite name="input.a.mmbnsite"
+            LET lc_param1.* = lc_param.*
+            CALL ammp424_desc()
+            IF NOT cl_null(g_master.mmbnsite) THEN
+#               INITIALIZE g_chkparam.* TO NULL
+#               LET g_chkparam.arg1 = lc_param.mmbn006
+#               LET g_chkparam.arg2 = '8'
+#               LET g_chkparam.arg3 = g_site
+#               IF NOT cl_chk_exist("v_ooed004") THEN
+#                  LET lc_param.mmbn006 = ''
+#                  LET lc_param1.* = lc_param.*
+#                  CALL ammp424_desc()
+#                  NEXT FIELD CURRENT
+#               END IF
+               IF s_aooi500_setpoint(g_prog,'mmbnsite') THEN
+                  CALL s_aooi500_chk(g_prog,'mmbnsite',g_master.mmbnsite,g_site) RETURNING l_success,l_errno
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ''
+                     LET g_errparam.code   = l_errno
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                  
+                     LET g_master.mmbnsite = ''
+                     LET lc_param1.mmbnsite = g_master.mmbnsite
+                     CALL ammp424_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               ELSE
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_master.mmbnsite
+                  LET g_chkparam.arg2 = '8'
+                  LET g_chkparam.arg3 = g_site
+                  IF NOT cl_chk_exist("v_ooed004") THEN
+                     LET g_master.mmbnsite = ''
+                     LET lc_param1.mmbnsite = g_master.mmbnsite
+                     CALL ammp424_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF  
+            #160118-00014#1 dongsz add--end
+            LET lc_param1.mmbnsite = g_master.mmbnsite
+            CALL ammp424_desc()
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmbnsite
+            #add-point:BEFORE FIELD mmbnsite name="input.b.mmbnsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmbnsite
+            #add-point:ON CHANGE mmbnsite name="input.g.mmbnsite"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.mmbnsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmbnsite
+            #add-point:ON ACTION controlp INFIELD mmbnsite name="input.c.mmbnsite"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = "i"
+            LET g_qryparam.reqry = FALSE
+#            LET g_qryparam.arg1 = g_site
+#            LET g_qryparam.arg2 = '8'
+#            CALL q_ooed004()                       #呼叫開窗
+            #160118-00014#1 dongsz mark--str
+#            IF s_aooi500_setpoint(g_prog,'mmbn006') THEN
+#               LET g_qryparam.where = s_aooi500_q_where(g_prog,'mmbn006',g_site,'i') #150308-00001#3 150309 pomelo add 'i'
+#               CALL q_ooef001_24()
+#            ELSE
+#               LET g_qryparam.arg1 = g_site
+#               LET g_qryparam.arg2 = '8'
+#               CALL q_ooed004()                       #呼叫開窗
+#            END IF
+#            LET lc_param.mmbn006 = g_qryparam.return1
+#            DISPLAY lc_param.mmbn006 TO mmbn006    #顯示到畫面上
+#            LET lc_param1.* = lc_param.*
+#            CALL ammp424_desc()
+#            NEXT FIELD mmbn006                     #返回原欄位   
+            #160118-00014#1 dongsz mark--end
+            #160118-00014#1 dongsz add--str
+            IF s_aooi500_setpoint(g_prog,'mmbnsite') THEN
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'mmbnsite',g_site,'i') #150308-00001#3 150309 pomelo add 'i'
+               CALL q_ooef001_24()
+            ELSE
+               LET g_qryparam.arg1 = g_site
+               LET g_qryparam.arg2 = '8'
+               CALL q_ooed004()                       #呼叫開窗
+            END IF
+            LET g_master.mmbnsite = g_qryparam.return1
+            DISPLAY g_master.mmbnsite TO mmbnsite    #顯示到畫面上
+            LET lc_param.mmbnsite = g_master.mmbnsite
+            LET lc_param1.mmbnsite = g_master.mmbnsite
+            CALL ammp424_desc()
+            NEXT FIELD mmbnsite                     #返回原欄位 
+            #160118-00014#1 dongsz add--end
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               LET lc_param.mmbnsite = g_master.mmbnsite
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON mmaq005,mmaq002
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmaq005
+            #add-point:BEFORE FIELD mmaq005 name="construct.b.mmaq005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmaq005
+            
+            #add-point:AFTER FIELD mmaq005 name="construct.a.mmaq005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mmaq005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmaq005
+            #add-point:ON ACTION controlp INFIELD mmaq005 name="construct.c.mmaq005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.mmaq002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmaq002
+            #add-point:ON ACTION controlp INFIELD mmaq002 name="construct.c.mmaq002"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " mmanstus = 'Y' "   #160628-00019#1 160628 by sakura add
+            CALL q_mman001_10()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaq002  #顯示到畫面上
+            NEXT FIELD mmaq002                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmaq002
+            #add-point:BEFORE FIELD mmaq002 name="construct.b.mmaq002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmaq002
+            
+            #add-point:AFTER FIELD mmaq002 name="construct.a.mmaq002"
+            
+            #END add-point
+            
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            #160628-00019#1 160628 by sakura add(S)
+            AFTER CONSTRUCT    
+              IF g_master.wc = " 1=1" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'sub-00379'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+            
+                  NEXT FIELD mmaq005
+              END IF
+            #160628-00019#1 160628 by sakura add(E)
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         #160628-00019#1 160628 by sakura mark(S)
+         #CONSTRUCT BY NAME lc_param.wc ON mmaq005   #160118-00014#1 dongsz mark
+         #CONSTRUCT BY NAME g_master.wc ON mmaq005   #160118-00014#1 dongsz add
+         #   AFTER CONSTRUCT    
+         #      #IF lc_param.wc = " 1=1" THEN    #160118-00014#1 dongsz mark
+         #      IF g_master.wc = " 1=1" THEN     #160118-00014#1 dongsz add
+         #         INITIALIZE g_errparam TO NULL
+         #         LET g_errparam.code = 'sub-00379'
+         #         LET g_errparam.extend = ''
+         #         LET g_errparam.popup = TRUE
+         #         CALL cl_err()
+         #   
+         #         NEXT FIELD mmaq005
+         #      END IF
+         #   
+         #END CONSTRUCT
+         #160628-00019#1 160628 by sakura mark(E)
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         #INPUT lc_param.mman001,lc_param.mmbn006,lc_param.mmbm001,lc_param.mmbm002 FROM mman001,mmbn006,mmbm001,mmbm002 ATTRIBUTE(WITHOUT DEFAULTS)  #160118-00014#1 dongsz mark
+         #INPUT lc_param.mman001,lc_param.mmbm001,lc_param.mmbm002 FROM mman001,mmbm001,mmbm002 ATTRIBUTE(WITHOUT DEFAULTS)   #160118-00014#1 dongsz add #160628-00019#1 160628 by sakura mark
+         INPUT lc_param.mmbm001,lc_param.mmbm002 FROM mmbm001,mmbm002 ATTRIBUTE(WITHOUT DEFAULTS)      #160628-00019#1 160628 by sakura add
+            BEFORE INPUT
+               #LET lc_param.mmbn006 = g_site    #160118-00014#1 dongsz mark
+               #LET lc_param.mmbnsite = g_site    #160118-00014#1 dongsz add
+               LET lc_param1.* = lc_param.*
+               CALL ammp424_desc()
+            
+            #160628-00019#1 160628 by sakura mark(S)
+            #ON ACTION controlp INFIELD mman001
+            #   #開窗i段
+            #   INITIALIZE g_qryparam.* TO NULL
+            #   LET g_qryparam.state = "i"
+            #   LET g_qryparam.reqry = FALSE
+            #   CALL q_mman001_10()                    #呼叫開窗
+            #   LET lc_param.mman001 = g_qryparam.return1
+            #   DISPLAY lc_param.mman001 TO mman001    #顯示到畫面上
+            #   LET lc_param1.* = lc_param.*
+            #   CALL ammp424_desc()
+            #   NEXT FIELD mman001                     #返回原欄位
+            #160628-00019#1 160628 by sakura mark(E)
+               
+            #ON ACTION controlp INFIELD mmbn006   #160118-00014#1 dongsz mark
+            ON ACTION controlp INFIELD mmbnsite    #160118-00014#1 dongsz add
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = "i"
+               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.arg1 = g_site
+#               LET g_qryparam.arg2 = '8'
+#               CALL q_ooed004()                       #呼叫開窗
+               #160118-00014#1 dongsz mark--str
+#               IF s_aooi500_setpoint(g_prog,'mmbn006') THEN
+#                  LET g_qryparam.where = s_aooi500_q_where(g_prog,'mmbn006',g_site,'i') #150308-00001#3 150309 pomelo add 'i'
+#                  CALL q_ooef001_24()
+#               ELSE
+#                  LET g_qryparam.arg1 = g_site
+#                  LET g_qryparam.arg2 = '8'
+#                  CALL q_ooed004()                       #呼叫開窗
+#               END IF
+#               LET lc_param.mmbn006 = g_qryparam.return1
+#               DISPLAY lc_param.mmbn006 TO mmbn006    #顯示到畫面上
+#               LET lc_param1.* = lc_param.*
+#               CALL ammp424_desc()
+#               NEXT FIELD mmbn006                     #返回原欄位   
+               #160118-00014#1 dongsz mark--end
+               #160118-00014#1 dongsz add--str
+               IF s_aooi500_setpoint(g_prog,'mmbnsite') THEN
+                  LET g_qryparam.where = s_aooi500_q_where(g_prog,'mmbnsite',g_site,'i') #150308-00001#3 150309 pomelo add 'i'
+                  CALL q_ooef001_24()
+               ELSE
+                  LET g_qryparam.arg1 = g_site
+                  LET g_qryparam.arg2 = '8'
+                  CALL q_ooed004()                       #呼叫開窗
+               END IF
+               LET lc_param.mmbnsite = g_qryparam.return1
+               DISPLAY lc_param.mmbnsite TO mmbnsite    #顯示到畫面上
+               LET lc_param1.* = lc_param.*
+               CALL ammp424_desc()
+               NEXT FIELD mmbnsite                     #返回原欄位 
+               #160118-00014#1 dongsz add--end
+
+            ON ACTION controlp INFIELD mmbm001
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = "i"
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '2056'
+               CALL q_oocq002()                       #呼叫開窗
+               LET lc_param.mmbm001 = g_qryparam.return1
+               DISPLAY lc_param.mmbm001 TO mmbm001    #顯示到畫面上
+               LET lc_param1.* = lc_param.*
+               CALL ammp424_desc()
+               NEXT FIELD mmbm001                     #返回原欄位 
+               
+            ON ACTION controlp INFIELD mmbm002
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = "i"
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '2055'
+               CALL q_oocq002()                    #呼叫開窗
+               LET lc_param.mmbm002 = g_qryparam.return1
+               DISPLAY lc_param.mmbm002 TO mmbm002    #顯示到畫面上
+               LET lc_param1.* = lc_param.*
+               CALL ammp424_desc()
+               NEXT FIELD mmbm002                     #返回原欄位     
+            
+            #160628-00019#1 160628 by sakura mark(S)            
+            #AFTER FIELD mman001
+            #   LET lc_param1.* = lc_param.*
+            #   CALL ammp424_desc()
+            #   IF NOT cl_null(lc_param.mman001) THEN
+            #      INITIALIZE g_chkparam.* TO NULL
+            #      LET g_chkparam.arg1 = lc_param.mman001
+            #      #160318-00025#23  by 07900 --add-str
+            #     LET g_errshow = TRUE #是否開窗                   
+            #     LET g_chkparam.err_str[1] ="apr-00089:sub-01307|ammm320|",cl_get_progname("ammm320",g_lang,"2"),"|:EXEPROGammm320"
+            #     LET g_chkparam.err_str[2] ="apr-00090:sub-01302|ammm320|",cl_get_progname("ammm320",g_lang,"2"),"|:EXEPROGammm320"
+            #     #160318-00025#23  by 07900 --add-end 
+            #      IF NOT cl_chk_exist("v_mman001_5") THEN
+            #         LET lc_param.mman001 = ''
+            #         LET lc_param1.* = lc_param.*
+            #         CALL ammp424_desc()
+            #         NEXT FIELD CURRENT
+            #      END IF
+            #   END IF
+            #160628-00019#1 160628 by sakura mark(E)
+               
+            #160118-00014#1 dongsz mark--str
+#            AFTER FIELD mmbn006
+#               LET lc_param1.* = lc_param.*
+#               CALL ammp424_desc()
+#               IF NOT cl_null(lc_param.mmbn006) THEN
+##                  INITIALIZE g_chkparam.* TO NULL
+##                  LET g_chkparam.arg1 = lc_param.mmbn006
+##                  LET g_chkparam.arg2 = '8'
+##                  LET g_chkparam.arg3 = g_site
+##                  IF NOT cl_chk_exist("v_ooed004") THEN
+##                     LET lc_param.mmbn006 = ''
+##                     LET lc_param1.* = lc_param.*
+##                     CALL ammp424_desc()
+##                     NEXT FIELD CURRENT
+##                  END IF
+#                  IF s_aooi500_setpoint(g_prog,'mmbn006') THEN
+#                     CALL s_aooi500_chk(g_prog,'mmbn006',lc_param.mmbn006,g_site) RETURNING l_success,l_errno
+#                     IF NOT l_success THEN
+#                        INITIALIZE g_errparam TO NULL
+#                        LET g_errparam.extend = ''
+#                        LET g_errparam.code   = l_errno
+#                        LET g_errparam.popup  = TRUE
+#                        CALL cl_err()
+#                     
+#                        LET lc_param.mmbn006 = ''
+#                        LET lc_param1.* = lc_param.*
+#                        CALL ammp424_desc()
+#                        NEXT FIELD CURRENT
+#                     END IF
+#                  ELSE
+#                     INITIALIZE g_chkparam.* TO NULL
+#                     LET g_chkparam.arg1 = lc_param.mmbn006
+#                     LET g_chkparam.arg2 = '8'
+#                     LET g_chkparam.arg3 = g_site
+#                     IF NOT cl_chk_exist("v_ooed004") THEN
+#                        LET lc_param.mmbn006 = ''
+#                        LET lc_param1.* = lc_param.*
+#                        CALL ammp424_desc()
+#                        NEXT FIELD CURRENT
+#                     END IF
+#                  END IF
+#               END IF  
+               #160118-00014#1 dongsz mark--end
+            #160118-00014#1 dongsz add--str
+            AFTER FIELD mmbnsite
+               LET lc_param1.* = lc_param.*
+               CALL ammp424_desc()
+               IF NOT cl_null(lc_param.mmbnsite) THEN
+#                  INITIALIZE g_chkparam.* TO NULL
+#                  LET g_chkparam.arg1 = lc_param.mmbn006
+#                  LET g_chkparam.arg2 = '8'
+#                  LET g_chkparam.arg3 = g_site
+#                  IF NOT cl_chk_exist("v_ooed004") THEN
+#                     LET lc_param.mmbn006 = ''
+#                     LET lc_param1.* = lc_param.*
+#                     CALL ammp424_desc()
+#                     NEXT FIELD CURRENT
+#                  END IF
+                  IF s_aooi500_setpoint(g_prog,'mmbnsite') THEN
+                     CALL s_aooi500_chk(g_prog,'mmbnsite',lc_param.mmbnsite,g_site) RETURNING l_success,l_errno
+                     IF NOT l_success THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend = ''
+                        LET g_errparam.code   = l_errno
+                        LET g_errparam.popup  = TRUE
+                        CALL cl_err()
+                     
+                        LET lc_param.mmbnsite = ''
+                        LET lc_param1.* = lc_param.*
+                        CALL ammp424_desc()
+                        NEXT FIELD CURRENT
+                     END IF
+                  ELSE
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = lc_param.mmbnsite
+                     LET g_chkparam.arg2 = '8'
+                     LET g_chkparam.arg3 = g_site
+                     IF NOT cl_chk_exist("v_ooed004") THEN
+                        LET lc_param.mmbnsite = ''
+                        LET lc_param1.* = lc_param.*
+                        CALL ammp424_desc()
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF  
+               #160118-00014#1 dongsz add--end
+
+            AFTER FIELD mmbm001
+               LET lc_param1.* = lc_param.*
+               CALL ammp424_desc()
+               IF NOT cl_null(lc_param.mmbm001) THEN
+                  IF NOT s_azzi650_chk_exist('2056',lc_param.mmbm001) THEN
+                     LET lc_param.mmbm001 = ''
+                     LET lc_param1.* = lc_param.*
+                     CALL ammp424_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF  
+               
+            AFTER FIELD mmbm002
+               LET lc_param1.* = lc_param.*
+               CALL ammp424_desc()
+               IF NOT cl_null(lc_param.mmbm002) THEN
+                  IF NOT s_azzi650_chk_exist('2055',lc_param.mmbm002) THEN
+                     LET lc_param.mmbm002 = ''
+                     LET lc_param1.* = lc_param.*
+                     CALL ammp424_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF 
+               
+            AFTER INPUT 
+               LET lc_param1.* = lc_param.*            
+            
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+#         DISPLAY  BY NAME lc_param.mman001_desc,lc_param.mmbn006_desc,lc_param.mmbm001_desc,lc_param.mmbm002_desc
+#         DISPLAY  lc_param.mman001_desc TO mman001_desc
+#         END DISPLAY
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL ammp424_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL ammp424_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      LET lc_param.mmbnsite = g_master.mmbnsite     #160118-00014#1 dongsz add
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL ammp424_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = ammp424_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ammp424.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION ammp424_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ammp424.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION ammp424_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   DEFINE l_sql       STRING
+   DEFINE l_mmaq001   LIKE mmaq_t.mmaq001
+   DEFINE l_mmaq005   LIKE mmaq_t.mmaq005
+   DEFINE l_mmaq002   LIKE mmaq_t.mmaq002   #160628-00019#1 160628 by sakura add
+   DEFINE l_docno     LIKE mmbm_t.mmbmdocno
+   DEFINE l_n         LIKE type_t.num5   
+   DEFINE l_success1  LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_msg       STRING   #160225-00040# 20160302 s983961--add
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   #160628-00019#1 160628 by sakura add(S)
+   DISPLAY "門店       |(lc_param.mmbnsite):",lc_param.mmbnsite
+   DISPLAY "異動來源   |(lc_param.mmbm001) :",lc_param.mmbm001
+   DISPLAY "異動理由碼 |(lc_param.mmbm002) :",lc_param.mmbm002
+   #160628-00019#1 160628 by sakura add(E)
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      LET l_sql = "SELECT COUNT(*) FROM mmaq_t",
+                  "  WHERE mmaqent = '",g_enterprise,"'",
+                  #"    AND mmaq002 = '",lc_param.mman001,"'",   #160628-00019#1 160628 by sakura mark
+                  "    AND mmaq006 = '3' ",
+                  "    AND ",lc_param.wc CLIPPED,
+                  #160628-00019#1 160628 by sakura add(S)
+                  "    AND EXISTS (SELECT 1 ",
+                  "                  FROM mman_t ",
+                  "                 WHERE mmanent = mmaqent ",
+                  "                   AND mman001 = mmaq002 ",
+                  "                   AND mman023 = 'Y' ",
+                  "                   AND mmanstus = 'Y' )"
+                  #160628-00019#1 160628 by sakura add(E)
+      PREPARE ammp424_sel_cnt_pr1 FROM l_sql
+      EXECUTE ammp424_sel_cnt_pr1 INTO li_count
+      LET li_count = li_count+2    #160225-00040# 20160302 s983961--add
+      CALL cl_progress_bar_no_window(li_count)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE ammp424_process_cs CURSOR FROM ls_sql
+#  FOREACH ammp424_process_cs INTO
+   #add-point:process段process name="process.process"
+   LET l_sql = "SELECT COUNT(*) FROM mmaq_t",
+               "  WHERE mmaqent = '",g_enterprise,"'",
+               #"    AND mmaq002 = '",lc_param.mman001,"'",   #160628-00019#1 160628 by sakura mark
+               "    AND mmaq006 = '3' ",
+               "    AND ",lc_param.wc CLIPPED,
+               #160628-00019#1 160628 by sakura add(S)
+               "    AND EXISTS (SELECT 1 ",
+               "                  FROM mman_t ",
+               "                 WHERE mmanent = mmaqent ",
+               "                   AND mman001 = mmaq002 ",               
+               "                   AND mman023 = 'Y' ",
+               "                   AND mmanstus = 'Y' )"
+               #160628-00019#1 160628 by sakura add(E)
+   PREPARE ammp424_sel_cnt_pr FROM l_sql
+   EXECUTE ammp424_sel_cnt_pr INTO l_n
+   IF l_n = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-00491'
+      LET g_errparam.extend = l_mmaq001
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN         
+   END IF
+   CALL s_transaction_begin()
+   LET l_success = TRUE
+   LET l_success1 = TRUE
+   LET l_docno = ''
+   #160628-00019#1 160628 by sakura add(S)
+   LET l_mmaq001 = ''
+   LET l_mmaq005 = ''
+   LET l_mmaq002 = ''
+   #160628-00019#1 160628 by sakura add(E)
+   CALL cl_showmsg_init()
+   let l_cnt=0
+   LET l_sql = " SELECT mmaq001,mmaq005,mmaq002 FROM mmaq_t",   #160628-00019#1 160628 by sakura add mmaq002
+               "  WHERE mmaqent = '",g_enterprise,"'",
+               #"    AND mmaq002 = '",lc_param.mman001,"'",   #160628-00019#1 160628 by sakura mark
+               "    AND mmaq006 = '3' ",
+               "    AND ",lc_param.wc CLIPPED,
+               #160628-00019#1 160628 by sakura add(S)
+               "    AND EXISTS (SELECT 1 ",
+               "                  FROM mman_t ",
+               "                 WHERE mmanent = mmaqent ",
+               "                   AND mman001 = mmaq002 ",               
+               "                   AND mman023 = 'Y' ",
+               "                   AND mmanstus = 'Y' )"
+               #160628-00019#1 160628 by sakura add(E)               
+   PREPARE ammp424_sel_mmaq001_pr FROM l_sql
+   DECLARE ammp424_sel_mmaq001_cs CURSOR FOR ammp424_sel_mmaq001_pr
+   FOREACH ammp424_sel_mmaq001_cs INTO l_mmaq001,l_mmaq005,l_mmaq002   #160628-00019#1 160628 by sakura add l_mmaq002
+   
+      IF SQLCA.sqlcode THEN
+         LET l_success = FALSE
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = l_mmaq001
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end("N","0")
+         EXIT FOREACH
+      END IF
+      
+      #160225-00040# 20160302 s983961--add(s)
+      LET l_msg = cl_getmsg_parm('amm-00495',g_lang,l_mmaq001)   
+      CALL cl_progress_no_window_ing(l_msg) 
+      #160225-00040# 20160302 s983961--add(e)
+      
+      LET g_errno = ''
+      #CALL s_ammp424_effectivedate_chk(l_mmaq001,lc_param.mman001) RETURNING l_success,g_errno   #160628-00019#1 160628 by sakura mark
+      CALL s_ammp424_effectivedate_chk(l_mmaq001,l_mmaq002) RETURNING l_success,g_errno    #160628-00019#1 160628 by sakura add
+      IF NOT l_success THEN
+         CALL cl_errmsg('mmaq001',l_mmaq001,'',g_errno,1)
+         LET l_success1 = FALSE
+         CONTINUE FOREACH
+      END IF
+      #CALL s_ammp424_effectivedate_upd(l_mmaq001,lc_param.mman001,l_mmaq005,lc_param.mmbm001,lc_param.mmbm002,lc_param.mmbn006,l_docno) RETURNING l_success,l_docno,g_errno  #160118-00014#1 dongsz mark #160628-00019#1 160628 by sakura mark
+      #160628-00019#1 160628 by sakura add(S)
+      IF cl_null(lc_param.mmbnsite) THEN
+         LET lc_param.mmbnsite = g_site
+      END IF
+      CALL s_ammp424_effectivedate_upd(l_mmaq001,l_mmaq002,l_mmaq005,lc_param.mmbm001,lc_param.mmbm002,lc_param.mmbnsite,l_docno) RETURNING l_success,l_docno,g_errno
+      #160628-00019#1 160628 by sakura add(E)
+      IF NOT l_success THEN
+         CALL cl_errmsg('mmaq001',l_mmaq001,'',g_errno,1)
+         LET l_success1 = FALSE
+         CONTINUE FOREACH 
+      END IF
+      LET l_cnt = l_cnt+1
+   END FOREACH
+#   IF NOT l_success1 THEN   #qiaozy---有错误报错，程序要可以继续运行
+#      CALL cl_showmsg()     #qiaozy
+#   END IF                   #qiaozy   
+#   IF l_success1 THEN       #qiaozy
+   #160225-00040# 20160302 s983961--add(s)
+   LET l_msg = cl_getmsg('amm-00494',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)  
+   #160225-00040# 20160302 s983961--add(e)
+   IF l_cnt>0 THEN           #qiaozy---只有有资料延期时才做确认   
+      CALL s_ammt423_conf_upd(l_docno) RETURNING l_success
+      IF NOT l_success THEN
+#         LET l_success1 = FALSE #qiaozy
+      END IF
+   END IF
+#qiaozy----mark---begin-程序不要管上面程序是否报错，只处理upd 状态
+#   IF l_success1 THEN
+#      CALL cl_err('','adz-00217',1)
+#      CALL s_transaction_end("Y","0")
+#   ELSE
+#      CALL cl_err('','adz-00218',1)
+#      CALL s_transaction_end("N","0")
+#   END IF
+#qiaozy---mark---end -----
+#qiaozy----add---begin-程序不要管上面程序是否报错，只处理upd 状态
+   #160225-00040# 20160302 s983961--add(s)
+   LET l_msg = cl_getmsg('std-00012',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040# 20160302 s983961--add(e)    
+   IF l_cnt>0 THEN
+      IF l_success THEN                  
+         CALL cl_errmsg('',l_docno,'','adz-00217',2)     
+         CALL s_transaction_end("Y","0")
+      ELSE
+         LET l_success1 = FALSE
+         CALL cl_errmsg('',l_docno,'','adz-00218',2)
+         CALL s_transaction_end("N","0")
+      END IF
+      
+   END IF
+   CALL cl_showmsg()
+
+#qiaozy----add---end-程序不要管上面程序是否报错，只处理upd 状态   
+   #LET lc_param.mman001 = ""    #160628-00019#1 160628 by sakura mark
+   #LET lc_param.mmbn006 = ""    #160118-00014#1 dongsz mark
+   LET lc_param.mmbnsite = ""    #160118-00014#1 dongsz add
+   LET lc_param.mmbm001 = ""
+   LET lc_param.mmbm002 = ""
+   CLEAR FORM
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL ammp424_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ammp424.get_buffer" >}
+PRIVATE FUNCTION ammp424_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.mmbnsite = p_dialog.getFieldBuffer('mmbnsite')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ammp424.msgcentre_notify" >}
+PRIVATE FUNCTION ammp424_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ammp424.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 參考欄位顯示
+# Memo...........:
+# Usage..........: CALL ammp424_desc()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/10 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammp424_desc()
+   
+   #160628-00019#1 160628 by sakura add(S)
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = lc_param1.mman001
+   #CALL ap_ref_array2(g_ref_fields,"SELECT mmanl003 FROM mmanl_t WHERE mmanlent='"||g_enterprise||"' AND mmanl001=? AND mmanl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET lc_param1.mman001_desc = '', g_rtn_fields[1] , ''
+   #DISPLAY BY NAME lc_param1.mman001_desc 
+   #160628-00019#1 160628 by sakura add(E)
+   
+   #160118-00014#1 dongsz mark--str
+#   INITIALIZE g_ref_fields TO NULL
+#   LET g_ref_fields[1] = lc_param1.mmbn006
+#   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#   LET lc_param1.mmbn006_desc = '', g_rtn_fields[1] , ''
+#   DISPLAY BY NAME lc_param1.mmbn006_desc 
+   #160118-00014#1 dongsz mark--end
+   #160118-00014#1 dongsz add--str
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = lc_param1.mmbnsite
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET lc_param1.mmbnsite_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME lc_param1.mmbnsite_desc 
+   #160118-00014#1 dongsz add--end
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = lc_param1.mmbm001
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001 = '2056' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET lc_param1.mmbm001_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME lc_param1.mmbm001_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = lc_param1.mmbm002
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001 = '2055' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET lc_param1.mmbm002_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME lc_param1.mmbm002_desc 
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

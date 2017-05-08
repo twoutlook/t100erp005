@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi045_02" module="abg" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="06821" crtdt="2016-04-08 11:26:20" modid="03080" moddt="2016-07-12 16:34:13" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="由科目參照表整批產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgae006,bgae006_desc(chr80),glac001,glac001_desc(chr80),glac002,glac003,glac005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi045_02" method="dialog">
+    <section id="input">
+      <input id="head" field="bgae006,glac001"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="bgae006">
+        <after>
+          <reference field="bgae006_desc" ref_field="bgae006" map_field="bgae006" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;11&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_12" state="i"/>
+        <controlp form="q_bgae006" state="c"/>
+      </column>
+      <column id="bgae006_desc"/>
+      <column id="glac001">
+        <after>
+          <reference field="glac001_desc" ref_field="glac_t.glac001" map_field="glacent,glac001" ref_sql="SELECT glacl003 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=? AND glacl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_1" state="i"/>
+        <controlp form="q_ooal002_1" state="c"/>
+      </column>
+      <column id="glac001_desc"/>
+      <column id="glac002">
+        <controlp form="q_glac002" state="i"/>
+        <controlp form="q_glac" state="c"/>
+      </column>
+      <column id="glac003" def_scc="8011"/>
+      <column id="glac005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glac_t" pk="glac001,glac002">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,&apos;&apos;,glac001,&apos;&apos;,glac002,glac003,glac005 FROM glac_t WHERE glacent= ? AND glac001=? AND glac002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="glac001,glac002"/>
+    </head>
+  </dataset>
+</assembly>
+

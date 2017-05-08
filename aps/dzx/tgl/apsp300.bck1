@@ -1,0 +1,145 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="apsp300.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-02-25 09:10:37), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000042
+#+ Filename...: apsp300
+#+ Description: 獨立需求轉工單作業
+#+ Creator....: ()
+#+ Modifier...: 07024 -SD/PR-
+
+{</section>}
+
+{<section id="apsp300.global" >}
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../aps/4gl/apsp300.inc"
+
+
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+
+{</section>}
+
+{<section id="apsp300.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:作業初始化
+{<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+{<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE apsp300_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+{<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apsp300 WITH FORM cl_ap_formpath("aps",g_code)
+   
+      #程式初始化
+      CALL apsp300_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+      
+     ##建立各程式的temp table 
+      CALL apsp300_01_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      CALL apsp300_03_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      CALL apsp300_04_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      LET li_step = 1
+      IF l_success THEN
+         WHILE TRUE
+            CASE li_step
+               WHEN 1
+                  CALL apsp300_ui_dialog_step1() RETURNING li_step
+               WHEN 2
+                  CALL apsp300_ui_dialog_step2() RETURNING li_step
+               WHEN 3
+                  CALL apsp300_ui_dialog_step3() RETURNING li_step
+               WHEN 4
+                  CALL apsp300_ui_dialog_step4() RETURNING li_step
+#                 CALL apsp300_delete_temp()
+               WHEN 0
+                  EXIT WHILE
+               OTHERWISE
+                  EXIT WHILE
+            END CASE
+         END WHILE
+      END IF
+      
+      CALL apsp300_01_drop_temp_table() RETURNING l_success
+      CALL apsp300_03_drop_temp_table() RETURNING l_success
+      CALL apsp300_04_drop_temp_table() RETURNING l_success
+   
+      #畫面關閉
+      CLOSE WINDOW w_apsp300
+   END IF
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+
+{</section>}
+
+{<section id="apsp300.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+

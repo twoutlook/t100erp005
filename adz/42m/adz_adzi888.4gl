@@ -1,0 +1,5048 @@
+{<section id="adzi888.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000114
+#+ 
+#+ Filename...: adzi888
+#+ Description: 程式註冊資料匯出入
+#+ Creator....: 01375(2014/06/09)
+#+ Modifier...: 01375(2014/06/09)
+#+ Buildtype..: 應用 t01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+# Memo           :
+#                  20160223 160223-00028 by madey :patch優化專案
+#                                        將sadzi888_01_get_path()改用sadzp007_util_get_path()
+#                  2016/01/27            by ka0132:調整取包名稱行為 
+#                  2016/03/02            by ka0132:增加dfile005驗證 
+#                  2016/06/02            by ka0132:單身查詢功能&自動填單 
+#                  2016/08/30            by ka0132:匯出入環境檢查
+#                  2016/10/03            by ka0132:匯出入環境判斷(兼容舊版)
+#                  2016/10/04            by ka0132:狀態為P65T不接受修改
+#                  2016/12/13            by ka0132:匯出/匯入增加警語
+    
+IMPORT os
+IMPORT util
+IMPORT security
+IMPORT FGL lib_cl_dlg
+
+SCHEMA ds 
+&include "../4gl/sadzp200_cnst.inc"
+&include "../4gl/sadzp200_type.inc"
+&include "../4gl/sadzp000_type.inc"
+
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../4gl/adzi888_global.inc"
+
+#模組變數(Module Variables)
+DEFINE gwin_curr             ui.Window                         #Current Window
+DEFINE gfrm_curr             ui.Form                           #Current Form
+DEFINE g_forupd_sql          STRING
+DEFINE g_sql                 STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500)     #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500)     #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500)     #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500)     #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500)     #同步資料用陣列
+DEFINE g_insert              LIKE type_t.chr5                  #是否導到其他page
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_bfill               LIKE type_t.chr5                  #是否刷新單身
+DEFINE g_aw                  STRING                            #確定當下點擊的單身
+DEFINE g_current_page        LIKE type_t.num5                  #目前所在頁數
+DEFINE g_curr_diag           ui.Dialog                         #Current Dialog
+DEFINE g_export_flag         LIKE type_t.chr1                  #是否已匯出adzi888維護作業上所填寫的所有資訊    
+DEFINE g_order               STRING                            #查詢排序欄位
+DEFINE g_default             BOOLEAN                           #是否有外部參數查詢
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                            #單身CONSTRUCT結果
+DEFINE g_wc3                 STRING                            #單身CONSTRUCT結果
+DEFINE g_browser_cnt         LIKE type_t.num5                  #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num5                  #Browser目前所在筆數
+DEFINE g_detail_cnt          LIKE type_t.num5
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_state               STRING
+DEFINE g_current_row         LIKE type_t.num5                  #Browser所在筆數
+DEFINE g_page_action         STRING                            #page ACTION
+DEFINE g_pagestart           LIKE type_t.num5
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5  
+
+
+DEFINE g_master_m            type_g_master_m
+DEFINE g_master_m_t          type_g_master_m
+DEFINE g_ddata_d             DYNAMIC ARRAY OF type_g_ddata_d
+DEFINE g_ddata_d_t           type_g_ddata_d
+DEFINE g_dfile_d             DYNAMIC ARRAY OF type_g_dfile_d
+DEFINE g_dfile_d_t           type_g_dfile_d
+DEFINE g_dtool_d             DYNAMIC ARRAY OF type_g_dtool_d
+DEFINE g_dtool_d_t           type_g_dtool_d
+DEFINE g_rec_b               LIKE type_t.num5 
+DEFINE g_detail_idx          LIKE type_t.num5              #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num5              #單身2目前所在筆數
+DEFINE g_detail_idx3         LIKE type_t.num5              #單身3目前所在筆數
+DEFINE g_master001_t         LIKE type_t.chr50
+DEFINE g_dzld_browser        DYNAMIC ARRAY OF type_g_dzld_browser
+DEFINE g_dzld_wc             STRING                        #2016/06/02
+DEFINE g_dzlf_wc             STRING                        #2016/06/02
+DEFINE g_dzlt_wc             STRING                        #2016/06/02
+
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("adz", "")
+
+   #CALL sadzi888_01_create_temp_table()
+   IF NOT sadzi888_01_create_temp_table() THEN
+      CALL sadzi888_01_drop_temp_table()
+      RETURN
+   END IF
+ 
+   #LOCK CURSOR (identifier)
+   LET g_forupd_sql = "SELECT master001, master002, master003, master004, master005, ",
+                      "       master006, master007, master008, master009, master010, ",
+                      "       master011, master012, master013, master014 ",
+                      "  FROM adzi888_master ",
+                      "  WHERE master001 = ? FOR UPDATE "
+   
+   DECLARE adzi888_cl CURSOR FROM g_forupd_sql                   # LOCK CURSOR
+ 
+   LET g_sql = "SELECT master001, master002, master003, master004, master005, ",
+               "       master006, master007, master008, master009, master010, ",
+               "       master011, master012, master013, master014 ",
+               "  FROM adzi888_master",
+               "  WHERE master001 = ?"
+
+   PREPARE adzi888_master_referesh FROM g_sql
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_adzi888 WITH FORM cl_ap_formpath("adz", g_code)
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   IF NOT adzi888_init() THEN
+      CALL sadzi888_01_drop_temp_table()
+      RETURN
+   END IF
+
+   CALL adzi888_ui_dialog()
+
+   #dorp temp TABLE
+   CALL sadzi888_01_drop_temp_table()
+   
+   #畫面關閉
+   CLOSE WINDOW w_adzi888
+   
+   CLOSE adzi888_cl
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION adzi888_init()
+   DEFINE l_sql             STRING
+   
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+
+   LET g_show_msg = "Y"        #GUI模式操作
+   LET g_bfill = "Y"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx3 = 1
+   LET g_error_show = 1
+   LET g_dzld_wc = " 1=1" #2016/06/02
+   LET g_dzlf_wc = " 1=1" #2016/06/02
+   LET g_dzlt_wc = " 1=1" #2016/06/02
+   
+
+   CALL sadzi888_01_init()
+
+   #未串接ALM環境時不需填[需求單號],[作業項次]
+   #user='topstd'時,也不走需求單簽出
+   IF g_top_alm = "N" OR g_account = "topstd" THEN
+      CALL cl_set_comp_visible("master013,master014", FALSE)
+   END IF
+
+   #DGENV='c'時,不提供IT工具類過單項
+   IF g_alm_jb = g_dgenv_c THEN
+      CALL gfrm_curr.setElementHidden("bpage_3", 1)
+   END IF
+   
+   #串接ALM環境時已和ALM需求單結合,不需要額外匯出(因為未和需求單結合時,只採temp table運行,如果沒有匯出將遺失所有填寫的資訊)
+   IF g_top_alm = "Y" THEN
+      LET g_export_flag = TRUE
+   ELSE
+      LET g_export_flag = FALSE
+   END IF
+   
+   #設定程式類型Items(gzca001=138)
+   CALL cl_set_combo_scc("master005", 138)
+
+   ##設定匯入動作
+   #CALL cl_set_combo_items("ddata004", "1,2,3", "1:Merge,2:Insert,3:Delete")
+
+   IF NOT adzi888_ddata005_items_fill() THEN
+      RETURN FALSE
+   END IF
+
+   #設定dtool003(工具類可過單模組別)
+   CALL cl_set_combo_items("dtool003", "adz,azz,lib,sub,oth,qry", "1:adz,2:azz,3:lib,4:sub,5:other,6:qry")
+   
+   #依據[程式代碼]取得所有相關註冊資訊作業的主要資料表名稱
+   LET l_sql = "SELECT DISTINCT dzyb001, dzyb002, dzyb003, dzyb004, dzyb005, ",
+               "                dzyb006, dzyb007, dzyb008, dzyb009 ",
+               "  FROM dzyb_t LEFT JOIN dzya_t ON dzyb001 = dzya002 ",
+               "  WHERE dzya001 = ? AND dzyb003 = ? " 
+   DECLARE adzi888_dzyb_prog_cs CURSOR FROM l_sql
+
+   #依據[日期]取得所有相關註冊資訊作業的主要資料表名稱
+   LET l_sql = "SELECT DISTINCT dzyb001, dzyb002, dzyb003, dzyb004, dzyb005, ",
+               "                dzyb006, dzyb007, dzyb008, dzyb009 ",
+               "  FROM dzyb_t LEFT JOIN dzya_t ON dzyb001 = dzya002 ",
+               "  WHERE dzyb003 = ? ", 
+               "    AND dzyb001 NOT IN ('design_data')"
+   DECLARE adzi888_dzyb_date_cs CURSOR FROM l_sql
+
+   CALL adzi888_default_search()
+   
+   RETURN TRUE
+END FUNCTION
+
+
+#+ 設定屬於註冊資料的維護作業有那些
+PRIVATE FUNCTION adzi888_ddata005_items_fill()
+   DEFINE l_sql             STRING
+   DEFINE l_ddata005_value  STRING
+   DEFINE l_ddata005_label  STRING
+   DEFINE l_gzzal001        LIKE gzzal_t.gzzal001
+   DEFINE l_gzzal003        LIKE gzzal_t.gzzal003
+
+   LET l_ddata005_value = ""
+   LET l_ddata005_label = ""
+   
+   #設定程式註冊資料來源的維護作業有那些
+
+   LET l_sql = "SELECT gzzal001, gzzal003 ", 
+               "  FROM gzzal_t ", 
+               "  WHERE gzzal001 IN (SELECT DISTINCT dzyb001 FROM dzyb_t ",
+               "                       WHERE dzyb001 NOT IN ('design_data')) ",
+               "    AND gzzal002 = ? ",
+               "  ORDER BY gzzal001 "
+
+   #DGENV=c 環境提供設計資料的過單
+   IF g_alm_jb = g_dgenv_c AND g_top_alm = "N" OR (g_alm_jb = 's' AND ARG_VAL(2) = 'debug') THEN
+      LET l_sql = "SELECT dzyb001, gzzal003 ", 
+                  "  FROM ((SELECT DISTINCT dzyb001 FROM dzyb_t) UNION (SELECT 'adzi140' FROM dual)) ", 
+                  "           LEFT JOIN gzzal_t ON dzyb001 = gzzal001 AND gzzal002 = ? ",
+                  "  ORDER BY dzyb001 "
+   END IF
+
+   PREPARE adzi888_ddata005_pre FROM l_sql
+   DECLARE adzi888_ddata005_cs CURSOR FOR adzi888_ddata005_pre
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = 'PREPARE adzi888_ddata005_cs:'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   OPEN adzi888_ddata005_cs USING g_lang
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN adzi888_ddata005_cs:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CLOSE adzi888_ddata005_cs
+      RETURN FALSE
+   END IF
+
+   FOREACH adzi888_ddata005_cs INTO l_gzzal001, l_gzzal003
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH adzi888_ddata005_cs:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+
+      #維護作業程式代號
+      IF cl_null(l_ddata005_value) THEN
+         LET l_ddata005_value = l_gzzal001
+      ELSE
+         LET l_ddata005_value = l_ddata005_value, ",", l_gzzal001
+      END IF
+
+      #items說明
+      IF cl_null(l_ddata005_label) THEN
+         LET l_ddata005_label = l_gzzal001, "(", l_gzzal003, ")"
+      ELSE
+         LET l_ddata005_label = l_ddata005_label, ",", l_gzzal001, "(", l_gzzal003, ")"
+      END IF
+   END FOREACH 
+
+   #設定維護作業
+   CALL cl_set_combo_items("ddata005", l_ddata005_value, l_ddata005_label)
+
+   RETURN TRUE
+END FUNCTION
+
+
+#+ 功能選單
+PRIVATE FUNCTION adzi888_ui_dialog()
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_wc     STRING
+   DEFINE lb_first  BOOLEAN
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #2016/06/20
+   DEFINE lb_sadzp640       BOOLEAN
+   DEFINE ls_sadzp640       STRING
+   #2016/06/20
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice = "insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL adzi888_insert()
+         END IF
+         
+      OTHERWISE
+         
+   END CASE
+   
+   LET lb_first = TRUE
+
+   WHILE TRUE 
+   
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_dzld_browser.getLength()
+            IF g_dzld_browser[li_idx].dzld001 = g_master001_t THEN
+               LET g_current_row = li_idx
+               LET g_current_idx = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+      
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+         DISPLAY ARRAY g_ddata_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1
+            BEFORE ROW
+               CALL adzi888_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               CALL adzi888_idx_chk()
+               
+         END DISPLAY
+
+         DISPLAY ARRAY g_dfile_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+            BEFORE ROW
+               CALL adzi888_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx2 = l_ac
+
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               CALL adzi888_idx_chk()
+               
+         END DISPLAY
+
+         DISPLAY ARRAY g_dtool_d TO s_detail3.* ATTRIBUTES(COUNT=g_rec_b)  
+            BEFORE ROW
+               CALL adzi888_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_detail_idx3 = l_ac
+
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx3)
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_current_page = 3
+               CALL adzi888_idx_chk()
+               
+         END DISPLAY
+
+         BEFORE DIALOG
+            #因為未和需求單結合時,只採temp table運行,無法提供查詢功能
+            IF g_top_alm = "N" THEN
+               CALL cl_set_comp_visible("GridT_quantity", FALSE)
+               CALL cl_set_act_visible("query", FALSE)
+            END IF
+   
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_row = g_current_idx #目前指標
+            
+            IF g_current_idx = 0 THEN
+               LET g_current_idx = 1
+            END IF
+            
+            IF g_current_idx > g_dzld_browser.getLength() THEN
+               LET g_current_idx = g_dzld_browser.getLength()
+            END IF 
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL adzi888_fetch('') # reload data
+            END IF
+            
+            IF g_master_m.master001 IS NOT NULL THEN
+               CALL adzi888_show()
+            END IF
+            
+            CALL adzi888_ui_detailshow()
+
+            #筆數顯示
+            LET g_current_page = 1
+            CALL adzi888_idx_chk()
+
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD ddata002
+            END IF
+
+         ON ACTION CLOSE
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION EXIT
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION INSERT
+            LET g_action_choice = "insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL adzi888_insert()
+               EXIT DIALOG
+            END IF
+
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL adzi888_query()
+            END IF
+ 
+         ON ACTION MODIFY
+            LET g_action_choice = "modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL adzi888_modify()
+               EXIT DIALOG
+            END IF
+
+         ON ACTION modify_detail
+            LET g_action_choice = "modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL adzi888_modify()
+               EXIT DIALOG
+            END IF
+   
+         ON ACTION FIRST
+            CALL adzi888_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL adzi888_idx_chk()
+            
+         ON ACTION PREVIOUS
+            CALL adzi888_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL adzi888_idx_chk()
+            
+         ON ACTION jump
+            CALL adzi888_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL adzi888_idx_chk()
+            
+         ON ACTION NEXT
+            CALL adzi888_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL adzi888_idx_chk()
+            
+         ON ACTION LAST
+            CALL adzi888_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL adzi888_idx_chk()
+
+         ON ACTION mainhidden       #主頁摺疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout", 0)
+               CALL gfrm_curr.setElementHidden("worksheet", 1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout", 1)
+               CALL gfrm_curr.setElementHidden("worksheet", 0)
+               LET g_main_hidden = 1
+            END IF
+
+         ON ACTION controls      #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master", 0)
+               CALL gfrm_curr.setElementImage("controls", "small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master", 1)
+               CALL gfrm_curr.setElementImage("controls", "small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+  
+         #匯出(清單+資料)
+         ON ACTION export_data
+            LET g_action_choice = "export_data"
+            #2016/12/13
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "adz-01028"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            #2016/12/13
+            CALL adzi888_export_data_pre()
+
+         #匯出(清單)
+         ON ACTION export_pack_list
+
+         #匯出檔下載
+         ON ACTION download_data
+            LET g_action_choice = "download_data"
+            CALL adzi888_download_data_pre()
+
+         #匯出檔上傳
+         ON ACTION upload_data
+            #尚未將此匯出包資訊做任何存檔(匯出),尋問是否真的放棄此次資訊
+            IF NOT g_export_flag AND (g_master_m.master001 IS NOT NULL AND g_master_m.master002 IS NOT NULL) THEN
+               IF NOT cl_ask_confirm("adz-00344") THEN
+                  CONTINUE DIALOG 
+               END IF 
+            END IF
+         
+            LET g_action_choice = "upload_data"
+            LET g_export_flag = TRUE
+            CALL adzi888_upload_data_pre()
+
+         # 程式註冊資料匯入(清單+資料)
+         ON ACTION import_data
+            #2016/12/13
+            IF NOT cl_ask_confirm("adz-01029") THEN
+               CONTINUE DIALOG
+            END IF
+            #2016/12/13
+            LET g_action_choice = "import_data"
+            LET g_export_flag = TRUE
+            CALL adzi888_import_data_pre()
+            #2016/06/20
+            #呼叫hiko提供sadzp060_4_batch_ins_dzaq_t
+            IF FGL_GETENV("DGENV")="s" AND
+               FGL_GETENV("TOPIND") IS NOT NULL AND
+               FGL_GETENV("TOPIND") <> "sd" THEN
+               DISPLAY "INFO:判定為行業別主機!"
+               CALL sadzp060_4_batch_ins_dzaq_t(g_master_m.master002)
+               RETURNING lb_sadzp640,ls_sadzp640
+            END IF
+            #2016/06/20
+
+         ON ACTION query_data
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+               
+      END DIALOG
+
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #尚未將此匯出包資訊做任何存檔(匯出),尋問是否真的放棄此次資訊
+         IF NOT g_export_flag AND (g_master_m.master001 IS NOT NULL AND g_master_m.master002 IS NOT NULL) THEN
+            IF NOT cl_ask_confirm("adz-00344") THEN
+               CONTINUE WHILE 
+            END IF
+         END IF
+         
+         EXIT WHILE
+      END IF  
+   END WHILE
+
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+END FUNCTION
+
+#+ 資料新增
+PRIVATE FUNCTION adzi888_insert()
+
+   #清畫面欄位內容
+   CLEAR FORM
+   
+   CALL g_ddata_d.clear()
+   CALL g_dfile_d.clear()
+   CALL g_dtool_d.clear()
+
+   INITIALIZE g_master_m TO NULL
+   
+   #刪除所有temp table內的資料
+   DELETE FROM adzi888_master WHERE 1 = 1
+   DELETE FROM adzi888_ddata WHERE 1 = 1
+   DELETE FROM adzi888_dfile WHERE 1 = 1
+   DELETE FROM adzi888_dtool WHERE 1 = 1
+
+   #INITIALIZE g_master_m TO NULL
+   LET g_master001_t = NULL
+
+   #設定一個匯出入的UUID
+   LET g_master_m.master001 = security.RandomGenerator.CreateUUIDString()
+
+   #指定匯出人員
+   LET g_master_m.master003 = g_user
+   CALL adzi888_master003_desc_display()
+
+   #取得註冊資訊資料清單建立區域 
+   #LET g_master_m.master012 = FGL_GETENV("ZONE")    #區域別
+
+   #2016/08/30
+   #取得註冊資訊資料清單建立區域
+   LET g_master_m.master012 = FGL_GETENV("ERPID"), "-", FGL_GETENV("ZONE")    #產品代號-區域別
+   #2016/08/30
+   
+   LET g_master_m.master009 = ""
+   LET g_master_m.master010 = ""
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      IF cl_null(g_master_m.master011) THEN
+         LET g_master_m.master011 = "N"
+      END IF
+      
+      #開始畫面輸入
+      CALL adzi888_input("a")
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_master_m.* = g_master_m_t.*
+         CALL adzi888_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         EXIT WHILE
+      END IF
+      
+      CALL g_ddata_d.clear()
+      CALL g_dfile_d.clear()
+      CALL g_dtool_d.clear()
+
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      
+      EXIT WHILE
+   END WHILE
+
+   LET g_state = "Y"
+   LET g_current_idx = 1
+   LET g_master001_t = g_master_m.master001
+   
+   LET g_wc = g_wc, " OR (dzld001 = '", g_master_m.master001 CLIPPED, "') "
+   
+   CLOSE adzi888_cl
+END FUNCTION
+
+#+ 資料修改
+PRIVATE FUNCTION adzi888_modify()
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_zone       LIKE type_t.chr20
+   DEFINE l_zone_new   LIKE type_t.chr50 #2016/10/03
+   DEFINE l_cnt        LIKE type_t.num5
+   
+   IF g_master_m.master001 IS NULL OR g_master_m.master002 IS NULL THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+
+   #檢查單號是否已完成P99階段
+   IF g_top_alm = "Y" THEN
+   
+      #2016/10/04
+      #狀態為P65T不接受修改
+      #SELECT COUNT(*) INTO l_cnt FROM dzlu_t 
+      #  WHERE dzlu003 = g_master_m.master013 
+      #    AND dzlu004 = g_dzld012
+      #    AND dzlu005 = g_dzld013
+      #    AND dzlu006 = g_master_m.master014
+      SELECT COUNT(*) INTO l_cnt FROM dzlu_t 
+        WHERE dzlu003 = g_master_m.master013 
+          AND dzlu004 = g_dzld012
+          AND dzlu005 = g_dzld013
+          AND dzlu006 = g_master_m.master014
+          AND NOT EXISTS 
+             (SELECT 1                       
+                FROM dzla_t               
+               WHERE dzla007 = dzlu003 
+                 AND dzla010 = dzlu006 
+                 AND dzla001 = 'P65T')  
+      #2016/10/04
+
+      IF l_cnt = 0 AND ARG_VAL(2) <> 'debug' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "adz-00622"
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN
+      END IF
+   END IF
+   
+   
+   #2016/10/03
+   LET l_zone     = FGL_GETENV("ZONE")    #區域別
+   LET l_zone_new = FGL_GETENV("ERPID"), "-", FGL_GETENV("ZONE")    #產品代號-區域別
+   #IF g_master_m.master012 IS NOT NULL AND g_master_m.master012 <> l_zone THEN
+   IF g_master_m.master012 IS NOT NULL AND g_master_m.master012 <> l_zone AND  g_master_m.master012 <> l_zone_new THEN   
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00345"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      IF ARG_VAL(2) <> 'debug' THEN
+         RETURN
+      END IF
+   END IF
+   #2016/10/03  
+ 
+   EXECUTE adzi888_master_referesh USING g_master_m.master001 
+                                   INTO g_master_m.master001, g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005, 
+                                        g_master_m.master006, g_master_m.master007, g_master_m.master008, g_master_m.master009, g_master_m.master010, 
+                                        g_master_m.master011, g_master_m.master012, g_master_m.master013, g_master_m.master014
+   ERROR ""
+
+   LET g_master001_t = g_master_m.master001
+ 
+   CALL s_transaction_begin()
+   
+   OPEN adzi888_cl USING g_master_m.master001
+
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN adzi888_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CLOSE adzi888_cl
+      CALL s_transaction_end('N', '0')
+      RETURN
+   END IF
+
+   #鎖住將被更改或取消的資料
+   FETCH adzi888_cl INTO g_master_m.master001, g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005, 
+                         g_master_m.master006, g_master_m.master007, g_master_m.master008, g_master_m.master009, g_master_m.master010, 
+                         g_master_m.master011, g_master_m.master012, g_master_m.master013, g_master_m.master014
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = g_master_m.master001
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CLOSE adzi888_cl
+      CALL s_transaction_end('N', '0')
+      RETURN
+   END IF
+
+   CALL adzi888_show()
+   WHILE TRUE
+      LET g_master001_t = g_master_m.master001
+
+      CALL adzi888_input("u")     #欄位更改
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_master_m.* = g_master_m_t.*
+         CALL adzi888_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9001
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N', '0')
+         EXIT WHILE
+      END IF
+
+      #若單頭key欄位有變更
+      IF g_master_m.master001 != g_master001_t THEN
+         CALL s_transaction_begin()
+
+         #更新單頭PK
+         UPDATE adzi888_master SET master001 = g_master_m.master001 WHERE master001 = g_master001_t
+
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "std-00009"
+               LET g_errparam.extend = "adzi888_master"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  SQLCA.sqlcode
+               LET g_errparam.extend = "adzi888_master"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')
+               CONTINUE WHILE
+         END CASE
+
+         #更新第一單身PK
+         UPDATE adzi888_ddata SET ddata001 = g_master_m.master001 WHERE ddata001 = g_master001_t
+         
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "std-00009"
+               LET g_errparam.extend = "adzi888_ddata"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  SQLCA.sqlcode
+               LET g_errparam.extend = "adzi888_ddata"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')
+               CONTINUE WHILE
+         END CASE
+         
+         #更新第二單身PK
+         UPDATE adzi888_dfile SET dfile001 = g_master_m.master001 WHERE dfile001 = g_master001_t
+         
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "std-00009"
+               LET g_errparam.extend = "adzi888_dfile"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  SQLCA.sqlcode
+               LET g_errparam.extend = "adzi888_dfile"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')
+               CONTINUE WHILE
+         END CASE
+
+         #更新第三單身PK
+         UPDATE adzi888_dtool SET dtool001 = g_master_m.master001 WHERE dtool001 = g_master001_t
+         
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "std-00009"
+               LET g_errparam.extend = "adzi888_dtool"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  SQLCA.sqlcode
+               LET g_errparam.extend = "adzi888_dtool"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')
+               CONTINUE WHILE
+         END CASE
+
+         CALL s_transaction_end('Y','0')
+      END IF
+      
+      EXIT WHILE
+   END WHILE
+   
+   CLOSE adzi888_cl
+   CALL s_transaction_end('Y','0')
+ 
+END FUNCTION
+  
+#+ 資料輸入
+PRIVATE FUNCTION adzi888_input(p_cmd)
+   DEFINE p_cmd                 LIKE type_t.chr1
+
+   DEFINE l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE l_cmd                 LIKE type_t.chr1
+   DEFINE l_insert              BOOLEAN
+   DEFINE l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE l_n                   LIKE type_t.num5                #檢查重複用  
+   DEFINE l_count               LIKE type_t.num5
+   DEFINE l_cnt                 LIKE type_t.num5
+   DEFINE l_i                   LIKE type_t.num5
+   DEFINE l_auto_generate       LIKE type_t.chr1                #自動產生註冊資訊清單否
+   DEFINE l_dfile003_str        STRING
+   
+   DEFINE lo_DZAF_T             T_DZAF_T
+   DEFINE lo_DZLU_T             DYNAMIC ARRAY OF T_DZLU_T  
+   DEFINE lb_dzlm_exist         BOOLEAN
+   DEFINE lb_result             BOOLEAN
+   DEFINE lo_program_info       DYNAMIC ARRAY OF T_PROGRAM_INFO #程式的動態陣列物件
+   DEFINE lo_user_info          T_USER_INFO                     #使用者資訊物件
+   DEFINE li_step               LIKE type_t.num5
+   DEFINE l_gen_wc              STRING
+   DEFINE l_dtool006_str        STRING
+   #2016/03/02
+   DEFINE l_file_name           STRING
+   #2016/03/02
+   
+   CALL cl_set_head_visible("", "YES")  
+   LET l_auto_generate = FALSE
+
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #adzi888_ddata Data Lock
+   LET g_forupd_sql = "SELECT ddata002, ddata003, ddata004, ddata005, ddata006, ",
+                      "       ddata007, ddata008, ddata009, ddata010, ddata015 ",
+                      "  FROM adzi888_ddata ",  
+                      "  WHERE ddata001 = ? AND ddata002 = ? FOR UPDATE "
+
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE adzi888_bcl CURSOR FROM g_forupd_sql
+
+   #adzi888_dfile Data Lock
+   LET g_forupd_sql = "SELECT dfile002, dfile003, dfile004, dfile005, dfile006, dfile007 ",
+                      "  FROM adzi888_dfile ",
+                      "  WHERE dfile001 = ? AND dfile002 = ? FOR UPDATE "
+
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE adzi888_bcl2 CURSOR FROM g_forupd_sql
+
+   #adzi888_dtool Data Lock
+   LET g_forupd_sql = "SELECT dtool002, dtool003, dtool004, dtool005, dtool006, ", 
+                      "       dtool007, dtool008, dtool009 ",
+                      "  FROM adzi888_dtool ",
+                      "  WHERE dtool001 = ? AND dtool002 = ? FOR UPDATE "
+
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE adzi888_bcl3 CURSOR FROM g_forupd_sql
+
+   
+   LET l_allow_insert = TRUE   #cl_auth_detail_input("insert")
+   LET l_allow_delete = TRUE   #cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+
+   #控制key欄位可否輸入
+   CALL adzi888_set_entry(p_cmd)
+   CALL adzi888_set_no_entry(p_cmd)
+
+   
+   DISPLAY BY NAME g_master_m.master001, g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005, 
+                   g_master_m.master006, g_master_m.master007, g_master_m.master008, g_master_m.master009, g_master_m.master010,  
+                   g_master_m.master011, g_master_m.master012, g_master_m.master013, g_master_m.master014
+
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      #單頭段
+      INPUT BY NAME g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005,      #g_master_m.master006, 
+                    g_master_m.master007, g_master_m.master008, g_master_m.master011, g_master_m.master013, g_master_m.master014
+         ATTRIBUTE(WITHOUT DEFAULTS)
+
+         BEFORE INPUT
+            #初始自動產生清單條件欄位編輯狀態
+            #CALL adzi888_master011_change_value(g_master_m.master011)
+            #串接ALM環境時,[需求單號]+[項次]為必填欄位
+            IF g_top_alm = "Y" THEN
+               CALL adzi888_set_comp_entry("master002", FALSE)
+               CALL cl_set_comp_required("master013,master014", TRUE)
+            END IF
+            
+            LET g_master_m.master007 = cl_get_current()
+            LET g_master_m.master008 = cl_get_current()
+
+         #變更自動產生清單條件相關欄位編輯狀態
+         #ON CHANGE master011
+         #   CALL adzi888_master011_change_value(g_master_m.master011)
+
+         #ON CHANGE master004
+         #   CALL adzi888_set_comp_entry("master005,master006,master007,master008", FALSE)
+         #   IF g_master_m.master004 = "prog" THEN
+         #      CALL adzi888_set_comp_entry("master005,master006", TRUE)
+         #   ELSE
+         #      CALL adzi888_set_comp_entry("master007,master008", TRUE)
+         #   END IF
+   
+         AFTER FIELD master003
+            CALL adzi888_master003_desc_display()
+
+         AFTER FIELD master013
+            IF NOT adzi888_chk_alm_data(p_cmd) THEN
+               NEXT FIELD CURRENT
+            END IF
+
+         AFTER FIELD master014
+            IF NOT adzi888_chk_alm_data(p_cmd) THEN
+               NEXT FIELD CURRENT
+            END IF
+            
+         ON ACTION controlp INFIELD master013
+            #設定使用者資訊
+            LET lo_user_info.ui_NUMBER = g_account
+            LET lo_user_info.ui_NAME   = cl_get_accountname(g_user)
+            LET lo_user_info.ui_LANG   = g_lang 
+            LET lo_user_info.ui_ROLE   = cs_user_role_registry
+
+            #取得DZLU資料
+            CALL sadzp200_ckout_run(lo_USER_INFO.ui_ROLE, lo_USER_INFO.ui_NUMBER, lo_USER_INFO.ui_LANG, li_step, FALSE) 
+               RETURNING lb_result, li_step, lo_DZLU_T
+
+            IF lb_result THEN
+               FOR l_i = 1 TO lo_DZLU_T.getLength()
+                 IF lo_DZLU_T[l_i].DZLU001 IS NOT NULL THEN      
+                    LET g_master_m.master013 = lo_DZLU_T[l_i].DZLU003
+                    LET g_master_m.master014 = lo_DZLU_T[l_i].DZLU006
+
+                    DISPLAY BY NAME g_master_m.master013, g_master_m.master014
+
+                    LET g_master_m.master002 = g_master_m.master013, "#", g_master_m.master014 USING "<<<<<"
+                    
+                    EXIT FOR
+                  END IF
+               END FOR
+            END IF
+
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+
+            IF cl_null(g_master_m.master002) THEN
+               LET g_master_m.master002 = g_master_m.master013, "#", g_master_m.master014 USING "<<<<<"
+            END IF
+
+            IF p_cmd <> 'u' THEN
+               CALL s_transaction_begin()
+               
+               INSERT INTO adzi888_master(master001, master002, master003, master004, master005,
+                                          master006, master007, master008, master009, master010, 
+                                          master011, master012, master013, master014)
+                 VALUES (g_master_m.master001, g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005, 
+                         g_master_m.master006, g_master_m.master007, g_master_m.master008, g_master_m.master009, g_master_m.master010, 
+                         g_master_m.master011, g_master_m.master012, g_master_m.master013, g_master_m.master014) 
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  SQLCA.sqlcode
+                  LET g_errparam.extend = "adzi888_master"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CALL s_transaction_end('N', '0')
+                  CONTINUE DIALOG
+               END IF
+
+               CALL s_transaction_end('Y', '0')                
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+
+               UPDATE adzi888_master SET (master001, master002, master003, master004, master005,
+                                          master006, master007, master008, master009, master010, 
+                                          master011, master012, master013, master014) = 
+                                         (g_master_m.master001, g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005, 
+                                          g_master_m.master006, g_master_m.master007, g_master_m.master008, g_master_m.master009, g_master_m.master010, 
+                                          g_master_m.master011, g_master_m.master012, g_master_m.master013, g_master_m.master014) 
+                WHERE master001 = g_master001_t
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  SQLCA.sqlcode
+                  LET g_errparam.extend = "adzi888_master"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CALL s_transaction_end('N', '0')
+                  CONTINUE DIALOG
+               END IF
+
+               CALL s_transaction_end('Y','0')
+            END IF
+
+            LET g_master001_t = g_master_m.master001
+
+            
+      END INPUT
+
+      #取得自動產生設定資訊清單時的條件
+      #(因這個地方會當成where條件,所以直接利用construct的指令)
+      CONSTRUCT BY NAME l_gen_wc ON master006
+         BEFORE CONSTRUCT 
+            LET g_master_m.master006 = ""
+            LET l_gen_wc = ""
+            
+         AFTER FIELD master006
+            LET g_master_m.master006 = FGL_DIALOG_GETBUFFER()
+         
+      END CONSTRUCT
+      
+      #註冊設計資料清單頁籤
+      INPUT ARRAY g_ddata_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b, MAXCOUNT = g_max_rec, WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+               CALL FGL_SET_ARR_CURR(g_ddata_d.getLength() + 1) 
+               LET g_insert = 'N' 
+            END IF 
+ 
+            CALL adzi888_b_fill()
+            LET g_rec_b = g_ddata_d.getLength()
+
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            LET l_auto_generate = FALSE
+
+            CALL s_transaction_begin()
+            OPEN adzi888_cl USING g_master_m.master001
+ 
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN adzi888_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CLOSE adzi888_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_ddata_d.getLength()
+        
+            IF g_rec_b >= l_ac AND g_ddata_d[l_ac].ddata002 IS NOT NULL THEN
+               LET l_cmd = 'u'
+
+               LET g_ddata_d_t.* = g_ddata_d[l_ac].*   #BACKUP
+               CALL adzi888_set_entry_b(l_cmd)
+               CALL adzi888_set_no_entry_b(l_cmd)
+
+               IF NOT adzi888_lock_b("adzi888_ddata", "'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH adzi888_bcl INTO g_ddata_d[l_ac].ddata002, g_ddata_d[l_ac].ddata003, g_ddata_d[l_ac].ddata004, g_ddata_d[l_ac].ddata005, g_ddata_d[l_ac].ddata006, 
+                                         g_ddata_d[l_ac].ddata007, g_ddata_d[l_ac].ddata008, g_ddata_d[l_ac].ddata009, g_ddata_d[l_ac].ddata010, g_ddata_d[l_ac].ddata015
+
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = 'FETCH adzi888_bcl'
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  LET g_bfill = "N"
+                  CALL adzi888_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+               
+            ELSE
+               LET l_cmd = 'a'
+            END IF
+
+         BEFORE INSERT
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_ddata_d[l_ac].* TO NULL 
+
+            LET g_ddata_d_t.* = g_ddata_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL adzi888_set_entry_b(l_cmd)
+            CALL adzi888_set_no_entry_b(l_cmd)
+            
+            #項次加1
+            SELECT MAX(ddata002) + 1 INTO g_ddata_d[l_ac].ddata002 FROM adzi888_ddata
+              WHERE ddata001 = g_master_m.master001
+             
+            IF cl_null(g_ddata_d[l_ac].ddata002) OR g_ddata_d[l_ac].ddata002 = 0 THEN
+               LET g_ddata_d[l_ac].ddata002 = 1
+            END IF
+
+            #給予單身資料預設值
+            IF g_ddata_d[l_ac].ddata002 = 1 OR l_ac = 1 THEN
+               IF g_top_alm = "Y" THEN
+                  LET g_ddata_d[l_ac].ddata003 = g_master_m.master002
+                  LET g_ddata_d[l_ac].ddata004 = "1"
+               END IF
+            ELSE
+               LET g_ddata_d[l_ac].ddata003 = g_ddata_d[l_ac - 1].ddata003
+               LET g_ddata_d[l_ac].ddata004 = g_ddata_d[l_ac - 1].ddata004
+            END IF
+            
+            #預設匯出/入狀態為(0:建立)
+            LET g_ddata_d[l_ac].ddata015 = "m"
+            LET g_ddata_d[l_ac].ddata008 = "0"
+            LET g_ddata_d[l_ac].ddata009 = "0"
+            LET g_ddata_d[l_ac].ddata010 = "0"   #手工建立清單
+
+            #預設條件式二不是必填欄位
+            CALL cl_set_comp_required("ddata007", FALSE)
+
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+
+            #檢查該筆單身資料是否存在
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM adzi888_ddata 
+              WHERE ddata001 = g_master_m.master001 
+                AND ddata002 = g_ddata_d[l_ac].ddata002
+
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_master_m.master001 
+               LET gs_keys[2] = g_ddata_d[g_detail_idx].ddata002
+
+               CALL adzi888_insert_b('adzi888_ddata', gs_keys, "'1'")
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               INITIALIZE g_ddata_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  SQLCA.sqlcode
+               LET g_errparam.extend = "adzi888_ddata"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')                    
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_ddata_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac - 1)
+               CALL g_ddata_d.deleteElement(l_ac)
+               NEXT FIELD ddata002
+            END IF
+
+            IF g_ddata_d[l_ac].ddata002 IS NOT NULL THEN
+               #檢查是否曾經過單成功
+               IF NOT adzi888_chk_alm_status("adzi888_ddata", g_ddata_d[l_ac].ddata002) THEN
+                  CANCEL DELETE
+               END IF
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+
+               DELETE FROM adzi888_ddata
+                WHERE ddata001 = g_master_m.master001 
+                  AND ddata002 = g_ddata_d[l_ac].ddata002
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  SQLCA.sqlcode
+                  LET g_errparam.extend = "adzi888_ddata"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b - 1
+                  CALL s_transaction_end('Y', '0')
+               END IF 
+               CLOSE adzi888_bcl
+               LET l_count = g_ddata_d.getLength()
+
+               #串接ALM環境時,更新需求單狀態
+               IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+                  CALL s_transaction_begin()
+                  
+                  DELETE FROM dzld_t 
+                    WHERE dzld011 = g_master_m.master013
+                      AND dzld012 = g_dzld012
+                      AND dzld013 = g_dzld013
+                      AND dzld014 = g_master_m.master014
+                      AND dzld002 = g_ddata_d[l_ac].ddata002
+
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = "dzld_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')   
+                  ELSE
+                     CALL s_transaction_end('Y', '0')
+                  END IF
+               END IF
+            END IF
+
+            INITIALIZE gs_keys TO NULL 
+            LET gs_keys[1] = g_master_m.master001 
+            LET gs_keys[2] = g_ddata_d[g_detail_idx].ddata002
+
+         AFTER DELETE 
+
+         AFTER FIELD ddata002
+            IF g_master_m.master001 IS NOT NULL AND g_ddata_d[g_detail_idx].ddata002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_master_m.master001 != g_master001_t OR g_ddata_d[g_detail_idx].ddata002 != g_ddata_d_t.ddata002)) THEN 
+                  IF NOT ap_chk_notDup("ddata002", "SELECT COUNT(*) FROM adzi888_ddata WHERE " || "ddata001 = '" || g_master_m.master001 || "' AND " || "ddata002 = '" || g_ddata_d[g_detail_idx].ddata002 || "'", 'std-00004', 0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+         #todo:先限定azzi993參數作業不可使用刪除功能
+         AFTER FIELD ddata004
+            IF (NOT cl_null(g_ddata_d[g_detail_idx].ddata004)) AND (NOT cl_null(g_ddata_d[g_detail_idx].ddata005)) THEN
+               IF g_ddata_d[g_detail_idx].ddata004 = "3" AND g_ddata_d[g_detail_idx].ddata005 = "azzi993" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = "adz-00662"
+                  LET g_errparam.extend = NULL
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD ddata004
+               END IF
+            END IF
+
+            AFTER FIELD ddata005
+            IF (NOT cl_null(g_ddata_d[g_detail_idx].ddata004)) AND (NOT cl_null(g_ddata_d[g_detail_idx].ddata005)) THEN
+               IF g_ddata_d[g_detail_idx].ddata004 = "3" AND g_ddata_d[g_detail_idx].ddata005 = "azzi993" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = "adz-00662"
+                  LET g_errparam.extend = NULL
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD ddata005
+               END IF
+            END IF
+
+         ON CHANGE ddata015
+            #依選擇項目決定條件式二欄位是否為必填欄位
+            IF g_ddata_d[g_detail_idx].ddata015 IS NOT NULL AND g_ddata_d[g_detail_idx].ddata015 = "d" THEN
+               CALL cl_set_comp_required("ddata007", TRUE)
+            ELSE
+               CALL cl_set_comp_required("ddata007", FALSE)
+            END IF
+
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_ddata_d[l_ac].* = g_ddata_d_t.*
+               CLOSE adzi888_bcl
+               CALL s_transaction_end('N', '0')
+               EXIT DIALOG 
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  -263
+               LET g_errparam.extend = g_ddata_d[l_ac].ddata002
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET g_ddata_d[l_ac].* = g_ddata_d_t.*
+            ELSE
+               UPDATE adzi888_ddata SET (ddata001, ddata002, ddata003, ddata004, ddata005, 
+                                         ddata006, ddata007, ddata008, ddata009, ddata010,
+                                         ddata015) = 
+                                        (g_master_m.master001, g_ddata_d[l_ac].ddata002, g_ddata_d[l_ac].ddata003, g_ddata_d[l_ac].ddata004, g_ddata_d[l_ac].ddata005, 
+                                         g_ddata_d[l_ac].ddata006, g_ddata_d[l_ac].ddata007, g_ddata_d[l_ac].ddata008, g_ddata_d[l_ac].ddata009, g_ddata_d[l_ac].ddata010, 
+                                         g_ddata_d[l_ac].ddata015)  
+                 WHERE ddata001 = g_master_m.master001 
+                   AND ddata002 = g_ddata_d_t.ddata002
+
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  "std-00009"
+                     LET g_errparam.extend = "adzi888_ddata"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N', '0')
+                     LET g_ddata_d[l_ac].* = g_ddata_d_t.*
+                     
+                  WHEN SQLCA.sqlcode         #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = "adzi888_ddata"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_ddata_d[l_ac].* = g_ddata_d_t.*                     
+                     CALL s_transaction_end('N','0')
+                     
+                  OTHERWISE
+                     INITIALIZE gs_keys TO NULL 
+                     LET gs_keys[1] = g_master_m.master001 
+                     LET gs_keys_bak[1] = g_master_m.master001 
+                     LET gs_keys[2] = g_ddata_d[g_detail_idx].ddata002
+                     LET gs_keys_bak[2] = g_ddata_d_t.ddata002
+                     
+               END CASE
+
+               #串接ALM環境時,更新需求單狀態
+               IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+                  #同步回ALM需求單
+                  UPDATE dzld_t SET (dzld001, dzld002, dzld003, dzld004, dzld005, 
+                                     dzld006, dzld007, dzld008, dzld009, dzld010,
+                                     dzld011, dzld012, dzld013, dzld014, dzld015) = 
+                                     (g_master_m.master001, g_ddata_d[l_ac].ddata002, g_ddata_d[l_ac].ddata003, g_ddata_d[l_ac].ddata004, g_ddata_d[l_ac].ddata005, 
+                                      g_ddata_d[l_ac].ddata006, g_ddata_d[l_ac].ddata007, g_ddata_d[l_ac].ddata008, g_ddata_d[l_ac].ddata009, g_ddata_d[l_ac].ddata010,
+                                      g_master_m.master013, g_dzld012, g_dzld013, g_master_m.master014, g_ddata_d[l_ac].ddata015)  
+                    WHERE dzld002 = g_ddata_d_t.ddata002
+                      AND dzld011 = g_master_m.master013
+                      AND dzld012 = g_dzld012
+                      AND dzld013 = g_dzld013
+                      AND dzld014 = g_master_m.master014
+               
+                  CASE
+                     WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code =  "std-00009"
+                        LET g_errparam.extend = "dzld_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        CALL s_transaction_end('N', '0')
+                        LET g_ddata_d[l_ac].* = g_ddata_d_t.*
+                     
+                     WHEN SQLCA.sqlcode         #其他錯誤
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code =  SQLCA.sqlcode
+                        LET g_errparam.extend = "dzld_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_ddata_d[l_ac].* = g_ddata_d_t.*                     
+                        CALL s_transaction_end('N','0')
+                  END CASE
+               END IF
+            END IF
+
+         AFTER ROW
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_ddata_d[l_ac].* = g_ddata_d_t.*
+               END IF
+               
+               CLOSE adzi888_bcl
+               CALL s_transaction_end('N', '0')
+               EXIT DIALOG 
+            END IF
+
+            CALL adzi888_unlock_b("adzi888_ddata", "'1'")
+            CALL s_transaction_end('Y', '0')
+            
+      END INPUT
+
+      
+      INPUT ARRAY g_dfile_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b, MAXCOUNT = g_max_rec, WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert,
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+               CALL FGL_SET_ARR_CURR(g_dfile_d.getLength() + 1) 
+               LET g_insert = 'N' 
+            END IF 
+ 
+            CALL adzi888_b_fill()
+            LET g_rec_b = g_dfile_d.getLength()
+
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx2 = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+            LET l_n = ARR_COUNT()
+
+            CALL s_transaction_begin()
+            OPEN adzi888_cl USING g_master_m.master001
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN adzi888_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CLOSE adzi888_cl
+               CALL s_transaction_end('N', '0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_dfile_d.getLength()
+
+            IF g_rec_b >= l_ac AND g_dfile_d[l_ac].dfile002 IS NOT NULL THEN
+               LET l_cmd = 'u'
+               LET g_dfile_d_t.* = g_dfile_d[l_ac].*   #BACKUP
+               
+               CALL adzi888_set_entry_b(l_cmd)
+               CALL adzi888_set_no_entry_b(l_cmd)
+               
+               IF NOT adzi888_lock_b("adzi888_dfile", "'2'") THEN
+                  LET l_lock_sw = 'Y'
+               ELSE
+                  FETCH adzi888_bcl2 INTO g_dfile_d[l_ac].dfile002, g_dfile_d[l_ac].dfile003, g_dfile_d[l_ac].dfile004, g_dfile_d[l_ac].dfile005, g_dfile_d[l_ac].dfile006,
+                                          g_dfile_d[l_ac].dfile007
+
+                   IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = 'FETCH adzi888_bcl2'
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  LET g_bfill = "N"
+                  CALL adzi888_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF 
+            
+         BEFORE INSERT
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_dfile_d[l_ac].* TO NULL 
+            
+            LET g_dfile_d_t.* = g_dfile_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL adzi888_set_entry_b(l_cmd)
+            CALL adzi888_set_no_entry_b(l_cmd)
+            
+            #項次加1
+            SELECT MAX(dfile002) + 1 INTO g_dfile_d[l_ac].dfile002 FROM adzi888_dfile
+              WHERE dfile001 = g_master_m.master001
+             
+            IF cl_null(g_dfile_d[l_ac].dfile002) OR g_dfile_d[l_ac].dfile002 = 0 THEN
+               LET g_dfile_d[l_ac].dfile002 = 1
+            END IF
+
+            #預設匯出/入狀態為(0:建立)
+            LET g_dfile_d[l_ac].dfile003 = "$TOP"
+            LET g_dfile_d[l_ac].dfile006 = "0"
+            LET g_dfile_d[l_ac].dfile007 = "0"
+            
+         BEFORE DELETE                                #是否取消單身
+            IF l_cmd = 'a' AND g_dfile_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac - 1)
+               CALL g_dfile_d.deleteElement(l_ac)
+               NEXT FIELD dfile002
+            END IF
+
+            IF g_dfile_d[l_ac].dfile002 IS NOT NULL THEN
+               #檢查是否曾經過單成功
+               IF NOT adzi888_chk_alm_status("adzi888_dfile", g_dfile_d[l_ac].dfile002) THEN
+                  CANCEL DELETE
+               END IF
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+
+               DELETE FROM adzi888_dfile 
+                WHERE dfile001 = g_master_m.master001
+                  AND dfile002 = g_dfile_d_t.dfile002
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  SQLCA.sqlcode
+                  LET g_errparam.extend = "adzi888_dfile"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CALL s_transaction_end('N', '0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b - 1
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               
+               CLOSE adzi888_bcl2
+               LET l_count = g_dfile_d.getLength()
+
+               #串接ALM環境時,更新需求單狀態
+               IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+                  CALL s_transaction_begin()
+                  DELETE FROM dzlf_t 
+                    WHERE dzlf008 = g_master_m.master013
+                      AND dzlf009 = g_dzld012
+                      AND dzlf010 = g_dzld013
+                      AND dzlf011 = g_master_m.master014
+                      AND dzlf002 = g_dfile_d_t.dfile002
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = "dzlf_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N', '0')
+                     CANCEL DELETE   
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF 
+               END IF
+            END IF
+
+            INITIALIZE gs_keys TO NULL 
+            LET gs_keys[1] = g_master_m.master001
+            LET gs_keys[2] = g_dfile_d[g_detail_idx2].dfile002
+
+         AFTER DELETE 
+
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM adzi888_dfile 
+             WHERE dfile001 = g_master_m.master001
+               AND dfile002 = g_dfile_d[l_ac].dfile002
+
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_master_m.master001
+               LET gs_keys[2] = g_dfile_d[g_detail_idx2].dfile002
+               CALL adzi888_insert_b('adzi888_dfile', gs_keys, "'2'")
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               INITIALIZE g_dfile_d[l_ac].* TO NULL
+               CALL s_transaction_end('N', '0')
+               CANCEL INSERT
+            END IF
+
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  SQLCA.sqlcode
+               LET g_errparam.extend = "adzi888_dfile"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')                    
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y', '0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_dfile_d[l_ac].* = g_dfile_d_t.*
+               CLOSE adzi888_bcl2
+               CALL s_transaction_end('N', '0')
+               EXIT DIALOG 
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  -263
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET g_dfile_d[l_ac].* = g_dfile_d_t.*
+            ELSE
+               UPDATE adzi888_dfile SET (dfile001, dfile002, dfile003, dfile004, dfile005, 
+                                         dfile006, dfile007) = 
+                                        (g_master_m.master001, g_dfile_d[l_ac].dfile002, g_dfile_d[l_ac].dfile003, g_dfile_d[l_ac].dfile004, g_dfile_d[l_ac].dfile005, 
+                                         g_dfile_d[l_ac].dfile006, g_dfile_d[l_ac].dfile007)
+                 WHERE dfile001 = g_master_m.master001
+                   AND dfile002 = g_dfile_d_t.dfile002
+
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  "std-00009"
+                     LET g_errparam.extend = "adzi888_dfile"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N', '0')
+                     LET g_dfile_d[l_ac].* = g_dfile_d_t.*
+                     
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = "adzi888_dfile"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N', '0')
+                     LET g_dfile_d[l_ac].* = g_dfile_d_t.*
+                     
+                  OTHERWISE
+                     INITIALIZE gs_keys TO NULL 
+                     LET gs_keys[1] = g_master_m.master001 
+                     LET gs_keys_bak[1] = g_master_m.master001 
+                     LET gs_keys[2] = g_dfile_d[g_detail_idx2].dfile002
+                     LET gs_keys_bak[2] = g_dfile_d_t.dfile002                     
+               END CASE
+
+               #串接ALM環境時,更新需求單狀態
+               IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+                  #同步回ALM需求單
+                  UPDATE dzlf_t SET (dzlf001, dzlf002, dzlf003, dzlf004, dzlf005, 
+                                     dzlf006, dzlf007) = 
+                                    (g_master_m.master001, g_dfile_d[l_ac].dfile002, g_dfile_d[l_ac].dfile003, g_dfile_d[l_ac].dfile004, g_dfile_d[l_ac].dfile005, 
+                                     g_dfile_d[l_ac].dfile006, g_dfile_d[l_ac].dfile007)
+                    WHERE dzlf001 = g_master_m.master001
+                      AND dzlf002 = g_dfile_d_t.dfile002
+               
+                  CASE
+                     WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code =  "std-00009"
+                        LET g_errparam.extend = "dzlf_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        CALL s_transaction_end('N', '0')
+                        LET g_dfile_d[l_ac].* = g_dfile_d_t.*
+                        
+                     WHEN SQLCA.sqlcode #其他錯誤
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code =  SQLCA.sqlcode
+                        LET g_errparam.extend = "dzlf_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        CALL s_transaction_end('N', '0')
+                        LET g_dfile_d[l_ac].* = g_dfile_d_t.*
+                        
+                     OTHERWISE
+                        INITIALIZE gs_keys TO NULL 
+                        LET gs_keys[1] = g_master_m.master001 
+                        LET gs_keys_bak[1] = g_master_m.master001 
+                        LET gs_keys[2] = g_dfile_d[g_detail_idx2].dfile002
+                        LET gs_keys_bak[2] = g_dfile_d_t.dfile002                 
+                  END CASE
+               END IF
+            END IF
+
+         AFTER FIELD dfile002
+            IF g_master_m.master001 IS NOT NULL AND g_dfile_d[g_detail_idx2].dfile002 IS NOT NULL THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_master_m.master001 != g_master001_t OR g_dfile_d[g_detail_idx2].dfile002 != g_dfile_d_t.dfile002)) THEN  
+                  IF NOT ap_chk_notDup("dfile002", "SELECT COUNT(*) FROM adzi888_dfile WHERE " || "dfile001 = '" || g_master_m.master001 || "' AND " || "dfile002 = '" || g_dfile_d[g_detail_idx2].dfile002 || "'", 'std-00004', 0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+         AFTER FIELD dfile003
+            #檢查是否有用環境變數來做關鍵字(如:/u1/$ZONE/tmp)
+            IF g_dfile_d[g_detail_idx2].dfile003 IS NOT NULL THEN
+               LET l_dfile003_str = sadzp007_util_get_path(g_dfile_d[g_detail_idx2].dfile003 CLIPPED) #160223-00028
+               IF l_dfile003_str = g_dfile_d[g_detail_idx2].dfile003 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "adz-00377"
+                  LET g_errparam.extend = NULL
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD dfile003
+               END IF
+            END IF
+
+            #檢查檔案是否存在
+            IF g_dfile_d[g_detail_idx2].dfile003 IS NOT NULL AND g_dfile_d[g_detail_idx2].dfile005 IS NOT NULL THEN
+               IF NOT adzi888_chk_file_exist(l_cmd) THEN
+                  NEXT FIELD dfile003
+               END IF
+            END IF
+            
+         AFTER FIELD dfile005
+            #2016/03/02
+            IF NOT cl_null(g_dfile_d[g_detail_idx2].dfile005) THEN
+               LET l_file_name = g_dfile_d[g_detail_idx2].dfile005
+               IF l_file_name.getIndexOf('/',1) THEN
+                  ERROR '禁止輸入/符號!'
+                  NEXT FIELD CURRENT 
+               END IF
+            END IF
+            #2016/03/02
+            
+            #檢查檔案是否存在
+            IF g_dfile_d[g_detail_idx2].dfile003 IS NOT NULL AND g_dfile_d[g_detail_idx2].dfile005 IS NOT NULL THEN
+               IF NOT adzi888_chk_file_exist(l_cmd) THEN
+                  NEXT FIELD dfile005
+               END IF
+            END IF
+         
+         AFTER ROW
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_dfile_d[l_ac].* = g_dfile_d_t.*
+               END IF
+               
+               CLOSE adzi888_bcl2
+               CALL s_transaction_end('N', '0')
+               EXIT DIALOG 
+            END IF
+
+            CALL adzi888_unlock_b("adzi888_dfile", "'2'")
+            CALL s_transaction_end('Y', '0')
+            
+      END INPUT
+
+      INPUT ARRAY g_dtool_d FROM s_detail3.*
+         ATTRIBUTE(COUNT = g_rec_b, MAXCOUNT = g_max_rec, WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert,
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+               CALL FGL_SET_ARR_CURR(g_dtool_d.getLength() + 1) 
+               LET g_insert = 'N' 
+            END IF 
+ 
+            CALL adzi888_b_fill()
+            LET g_rec_b = g_dtool_d.getLength()
+
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx3 = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+            LET l_n = ARR_COUNT()
+
+            CALL s_transaction_begin()
+            OPEN adzi888_cl USING g_master_m.master001
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN adzi888_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CLOSE adzi888_cl
+               CALL s_transaction_end('N', '0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_dtool_d.getLength()
+
+            IF g_rec_b >= l_ac AND g_dtool_d[l_ac].dtool002 IS NOT NULL THEN
+               LET l_cmd = 'u'
+               LET g_dtool_d_t.* = g_dtool_d[l_ac].*   #BACKUP
+               
+               CALL adzi888_set_entry_b(l_cmd)
+               CALL adzi888_set_no_entry_b(l_cmd)
+               
+               IF NOT adzi888_lock_b("adzi888_dtool", "'3'") THEN
+                  LET l_lock_sw = 'Y'
+               ELSE
+                  FETCH adzi888_bcl3 INTO g_dtool_d[l_ac].dtool002, g_dtool_d[l_ac].dtool003, g_dtool_d[l_ac].dtool004, g_dtool_d[l_ac].dtool005, g_dtool_d[l_ac].dtool006,
+                                          g_dtool_d[l_ac].dtool007, g_dtool_d[l_ac].dtool008, g_dtool_d[l_ac].dtool009
+
+                   IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = 'FETCH adzi888_bcl3'
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  LET g_bfill = "N"
+                  CALL adzi888_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF 
+            
+         BEFORE INSERT
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_dtool_d[l_ac].* TO NULL 
+            
+            LET g_dtool_d_t.* = g_dtool_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL adzi888_set_entry_b(l_cmd)
+            CALL adzi888_set_no_entry_b(l_cmd)
+            
+            #項次加1
+            SELECT MAX(dtool002) + 1 INTO g_dtool_d[l_ac].dtool002 FROM adzi888_dtool
+              WHERE dtool001 = g_master_m.master001
+             
+            IF cl_null(g_dtool_d[l_ac].dtool002) OR g_dtool_d[l_ac].dtool002 = 0 THEN
+               LET g_dtool_d[l_ac].dtool002 = 1
+            END IF
+
+            #預設匯出/入狀態為(0:建立)
+            #LET g_dtool_d[l_ac].dtool003 = "adz"
+            LET g_dtool_d[l_ac].dtool005 = "N"
+            LET g_dtool_d[l_ac].dtool007 = "N"
+            LET g_dtool_d[l_ac].dtool008 = "0"
+            LET g_dtool_d[l_ac].dtool009 = "0"
+            
+         BEFORE DELETE                                #是否取消單身
+            IF l_cmd = 'a' AND g_dtool_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac - 1)
+               CALL g_dtool_d.deleteElement(l_ac)
+               NEXT FIELD dtool002
+            END IF
+
+            IF g_dtool_d[l_ac].dtool002 IS NOT NULL THEN
+               #檢查是否曾經過單成功
+               IF NOT adzi888_chk_alm_status("adzi888_dtool", g_dtool_d[l_ac].dtool002) THEN
+                  CANCEL DELETE
+               END IF
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+
+               DELETE FROM adzi888_dtool 
+                WHERE dtool001 = g_master_m.master001
+                  AND dtool002 = g_dtool_d_t.dtool002
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  SQLCA.sqlcode
+                  LET g_errparam.extend = "adzi888_dtool"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CALL s_transaction_end('N', '0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b - 1
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               
+               CLOSE adzi888_bcl3
+               LET l_count = g_dtool_d.getLength()
+
+               #串接ALM環境時,更新需求單狀態
+               IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+                  CALL s_transaction_begin()
+                  DELETE FROM dzlt_t 
+                    WHERE dzlt011 = g_master_m.master013
+                      AND dzlt012 = g_dzld012
+                      AND dzlt013 = g_dzld013
+                      AND dzlt014 = g_master_m.master014
+                      AND dzlt002 = g_dtool_d_t.dtool002
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = "dzlt_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N', '0')
+                     CANCEL DELETE   
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF 
+               END IF
+            END IF
+
+            INITIALIZE gs_keys TO NULL 
+            LET gs_keys[1] = g_master_m.master001
+            LET gs_keys[2] = g_dtool_d[g_detail_idx3].dtool002
+
+         AFTER DELETE 
+
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM adzi888_dtool 
+             WHERE dtool001 = g_master_m.master001
+               AND dtool002 = g_dtool_d[l_ac].dtool002
+
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_master_m.master001
+               LET gs_keys[2] = g_dtool_d[g_detail_idx3].dtool002
+               CALL adzi888_insert_b('adzi888_dtool', gs_keys, "'3'")
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               INITIALIZE g_dtool_d[l_ac].* TO NULL
+               CALL s_transaction_end('N', '0')
+               CANCEL INSERT
+            END IF
+
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  SQLCA.sqlcode
+               LET g_errparam.extend = "adzi888_dtool"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N', '0')                    
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y', '0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_dtool_d[l_ac].* = g_dtool_d_t.*
+               CLOSE adzi888_bcl3
+               CALL s_transaction_end('N', '0')
+               EXIT DIALOG 
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  -263
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET g_dtool_d[l_ac].* = g_dtool_d_t.*
+            ELSE
+               UPDATE adzi888_dtool SET (dtool001, dtool002, dtool003, dtool004, dtool005, 
+                                         dtool006, dtool007, dtool008, dtool009) = 
+                                        (g_master_m.master001, g_dtool_d[l_ac].dtool002, g_dtool_d[l_ac].dtool003, g_dtool_d[l_ac].dtool004, g_dtool_d[l_ac].dtool005, 
+                                         g_dtool_d[l_ac].dtool006, g_dtool_d[l_ac].dtool007, g_dtool_d[l_ac].dtool008, g_dtool_d[l_ac].dtool009)
+                 WHERE dtool001 = g_master_m.master001
+                   AND dtool002 = g_dtool_d_t.dtool002
+
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  "std-00009"
+                     LET g_errparam.extend = "adzi888_dtool"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N', '0')
+                     LET g_dtool_d[l_ac].* = g_dtool_d_t.*
+                     
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = "adzi888_dtool"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N', '0')
+                     LET g_dtool_d[l_ac].* = g_dtool_d_t.*
+                     
+                  OTHERWISE
+                     INITIALIZE gs_keys TO NULL 
+                     LET gs_keys[1] = g_master_m.master001 
+                     LET gs_keys_bak[1] = g_master_m.master001 
+                     LET gs_keys[2] = g_dtool_d[g_detail_idx3].dtool002
+                     LET gs_keys_bak[2] = g_dtool_d_t.dtool002                     
+               END CASE
+
+               #串接ALM環境時,更新需求單狀態
+               IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+                  #同步回ALM需求單
+                  UPDATE dzlt_t SET (dzlt001, dzlt002, dzlt003, dzlt004, dzlt005, 
+                                     dzlt006, dzlt007, dzlt008, dzlt009) = 
+                                    (g_master_m.master001, g_dtool_d[l_ac].dtool002, g_dtool_d[l_ac].dtool003, g_dtool_d[l_ac].dtool004, g_dtool_d[l_ac].dtool005, 
+                                     g_dtool_d[l_ac].dtool006, g_dtool_d[l_ac].dtool007, g_dtool_d[l_ac].dtool008, g_dtool_d[l_ac].dtool009)
+                    WHERE dzlt001 = g_master_m.master001
+                      AND dzlt002 = g_dtool_d_t.dtool002
+               
+                  CASE
+                     WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code =  "std-00009"
+                        LET g_errparam.extend = "dzlt_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        CALL s_transaction_end('N', '0')
+                        LET g_dtool_d[l_ac].* = g_dtool_d_t.*
+                        
+                     WHEN SQLCA.sqlcode #其他錯誤
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code =  SQLCA.sqlcode
+                        LET g_errparam.extend = "dzlt_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        CALL s_transaction_end('N', '0')
+                        LET g_dtool_d[l_ac].* = g_dtool_d_t.*
+                        
+                     OTHERWISE
+                        INITIALIZE gs_keys TO NULL 
+                        LET gs_keys[1] = g_master_m.master001 
+                        LET gs_keys_bak[1] = g_master_m.master001 
+                        LET gs_keys[2] = g_dtool_d[g_detail_idx3].dtool002
+                        LET gs_keys_bak[2] = g_dtool_d_t.dtool002                 
+                  END CASE
+               END IF
+            END IF
+
+         AFTER FIELD dtool002
+            IF g_master_m.master001 IS NOT NULL AND g_dtool_d[g_detail_idx3].dtool002 IS NOT NULL THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_master_m.master001 != g_master001_t OR g_dtool_d[g_detail_idx3].dtool002 != g_dtool_d_t.dtool002)) THEN  
+                  IF NOT ap_chk_notDup("dtool002", "SELECT COUNT(*) FROM adzi888_dtool WHERE " || "dtool001 = '" || g_master_m.master001 || "' AND " || "dtool002 = '" || g_dtool_d[g_detail_idx3].dtool002 || "'", 'std-00004', 0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+         AFTER FIELD dtool003
+            IF (NOT cl_null(g_dtool_d[g_detail_idx3].dtool003)) AND (NOT cl_null(g_dtool_d[g_detail_idx3].dtool004)) THEN
+               IF g_dtool_d[g_detail_idx3].dtool003 = "oth" THEN
+                  #當模組別挑選oth時,匯入類型不可挑選4gl和4fd(因為非標準ERP模組目前無規則判斷做r.c或r.cs)
+                  IF g_dtool_d[g_detail_idx3].dtool004 = "4gl" OR g_dtool_d[g_detail_idx3].dtool004 = "4fd" OR g_dtool_d[g_detail_idx3].dtool004 = "42m" THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "adz-00492"
+                     LET g_errparam.extend = NULL
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD dtool003
+                  END IF
+               ELSE
+                  #當模組別挑選非oth時,匯入類型只可挑選4gl,42m和4fd檔案類型
+                  IF NOT (g_dtool_d[g_detail_idx3].dtool004 = "4gl" OR g_dtool_d[g_detail_idx3].dtool004 = "4fd" OR g_dtool_d[g_detail_idx3].dtool004 = "42m") THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "adz-00580"
+                     LET g_errparam.extend = NULL
+                     LET g_errparam.popup = TRUE
+                     LET g_errparam.replace[1] = g_dtool_d[g_detail_idx3].dtool003 CLIPPED 
+                     CALL cl_err()
+                     NEXT FIELD dtool003
+                  END IF
+               END IF
+            END IF 
+            
+            #檢查檔案是否存在
+            IF (NOT cl_null(g_dtool_d[g_detail_idx3].dtool003)) AND (NOT cl_null(g_dtool_d[g_detail_idx3].dtool004)) AND (NOT cl_null(g_dtool_d[g_detail_idx3].dtool006)) THEN
+               IF NOT adzi888_chk_it_file_exist(l_cmd) THEN
+                  NEXT FIELD dtool003
+               END IF
+            END IF
+
+         AFTER FIELD dtool004
+            IF (NOT cl_null(g_dtool_d[g_detail_idx3].dtool003)) AND (NOT cl_null(g_dtool_d[g_detail_idx3].dtool004)) THEN
+               IF g_dtool_d[g_detail_idx3].dtool003 = "oth" THEN
+                  #當模組別挑選oth時,匯入類型不可挑選4gl和4fd(因為非標準ERP模組目前無規則判斷做r.c或r.cs)
+                  IF g_dtool_d[g_detail_idx3].dtool004 = "4gl" OR g_dtool_d[g_detail_idx3].dtool004 = "4fd" OR g_dtool_d[g_detail_idx3].dtool004 = "42m" THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "adz-00492"
+                     LET g_errparam.extend = NULL
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD dtool004
+                  END IF
+               ELSE
+                  #當模組別挑選非oth時,匯入類型只可挑選4gl,42m和4fd檔案類型
+                  IF NOT (g_dtool_d[g_detail_idx3].dtool004 = "4gl" OR g_dtool_d[g_detail_idx3].dtool004 = "4fd" OR g_dtool_d[g_detail_idx3].dtool004 = "42m") THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "adz-00580"
+                     LET g_errparam.extend = NULL
+                     LET g_errparam.popup = TRUE
+                     LET g_errparam.replace[1] = g_dtool_d[g_detail_idx3].dtool003 CLIPPED 
+                     CALL cl_err()
+                     NEXT FIELD dtool004
+                  END IF
+               END IF
+            END IF 
+
+            #檢查檔案是否存在
+            IF (NOT cl_null(g_dtool_d[g_detail_idx3].dtool003)) AND (NOT cl_null(g_dtool_d[g_detail_idx3].dtool004)) AND (NOT cl_null(g_dtool_d[g_detail_idx3].dtool006)) THEN
+               IF NOT adzi888_chk_it_file_exist(l_cmd) THEN
+                  NEXT FIELD dtool004
+               END IF
+            END IF
+         
+         AFTER FIELD dtool006
+            #檢查是否有用環境變數來做關鍵字(如:/u1/$ZONE/tmp)
+            #IF g_dtool_d[g_detail_idx3].dtool004 <> "del" AND g_dtool_d[g_detail_idx3].dtool003 = "oth" THEN
+            IF (NOT (g_dtool_d[g_detail_idx3].dtool004 = "del" OR g_dtool_d[g_detail_idx3].dtool004 = "load")) AND g_dtool_d[g_detail_idx3].dtool003 = "oth" THEN
+               LET l_dtool006_str = sadzp007_util_get_path(g_dtool_d[g_detail_idx3].dtool006 CLIPPED) #160223-00028
+               IF l_dtool006_str = g_dtool_d[g_detail_idx3].dtool006 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "adz-00377"
+                  LET g_errparam.extend = NULL
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD dtool006
+               END IF
+            END IF
+            
+            #檢查檔案是否存在
+            IF (NOT cl_null(g_dtool_d[g_detail_idx3].dtool003)) AND (NOT cl_null(g_dtool_d[g_detail_idx3].dtool004)) AND (NOT cl_null(g_dtool_d[g_detail_idx3].dtool006)) THEN
+               IF NOT adzi888_chk_it_file_exist(l_cmd) THEN
+                  NEXT FIELD dtool006
+               END IF
+            END IF
+
+         AFTER ROW
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_dtool_d[l_ac].* = g_dtool_d_t.*
+               END IF
+               
+               CLOSE adzi888_bcl3
+               CALL s_transaction_end('N', '0')
+               EXIT DIALOG 
+            END IF
+
+            CALL adzi888_unlock_b("adzi888_dtool", "'3'")
+            CALL s_transaction_end('Y', '0')
+            
+      END INPUT
+
+      BEFORE DIALOG 
+         IF p_cmd = 'a' THEN
+            NEXT FIELD master002
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD ddata002
+               WHEN "s_detail2"
+                  NEXT FIELD dfile002
+               WHEN "s_detail3"
+                  NEXT FIELD dtool002
+ 
+            END CASE
+         END IF
+
+      #自動產生註冊清單資訊
+      #ON ACTION generate_data
+      #   IF (g_top_alm = "Y") AND (cl_null(g_master_m.master013) OR cl_null(g_master_m.master014)) THEN
+      #      INITIALIZE g_errparam TO NULL
+      #      LET g_errparam.code =  "adz-00347"
+      #      LET g_errparam.extend = ""
+      #      LET g_errparam.popup = TRUE
+      #      CALL cl_err()
+      #      NEXT FIELD master013
+      #   END IF
+      #
+      #   IF cl_null(g_master_m.master004) THEN
+      #      INITIALIZE g_errparam TO NULL
+      #      LET g_errparam.code =  "adz-00352"
+      #      LET g_errparam.extend = ""
+      #      LET g_errparam.popup = TRUE
+      #      CALL cl_err()
+      #      NEXT FIELD master004
+      #   END IF
+      #   
+      #   LET l_auto_generate = TRUE
+      #   DISPLAY "gen wc:", l_gen_wc, ";"
+      #   CALL adzi888_generate_data_pre(g_master_m.master004, g_master_m.master005, l_gen_wc)
+      #   CALL adzi888_b_fill()
+      #   LET g_rec_b = g_ddata_d.getLength()
+      #
+      ##取消註冊清單資訊(刪除ddata010="1" OR "2")
+      #ON ACTION generate_data_cancel
+      #   IF g_master_m.master001 IS NOT NULL AND g_ddata_d.getLength() > 0 THEN
+      #      #檢查是否有曾經自動產生註冊清單資訊
+      #      SELECT COUNT(*) INTO l_cnt FROM adzi888_ddata 
+      #        WHERE ddata001 = g_master_m.master001 
+      #          AND (ddata010 = '1' OR ddata010 = '2')
+      #
+      #      IF l_cnt = 0 THEN
+      #         INITIALIZE g_errparam TO NULL
+      #         LET g_errparam.code =  "adz-00322"
+      #         LET g_errparam.extend = "adzi888_ddata"
+      #         LET g_errparam.popup = TRUE
+      #         CALL cl_err()
+      #         CONTINUE DIALOG 
+      #      END IF
+      #
+      #      IF NOT cl_ask_confirm("adz-00336") THEN
+      #         CONTINUE DIALOG 
+      #      END IF
+      #
+      #      #解除單身lock
+      #      CALL adzi888_unlock_b("adzi888_ddata", "'1'")
+      #      CALL s_transaction_end('Y', '0')
+      #      
+      #      CALL s_transaction_begin()
+      #
+      #      #刪除自動產生註冊資訊清單
+      #      DELETE FROM adzi888_ddata 
+      #        WHERE ddata001 = g_master_m.master001 
+      #          AND (ddata010 = '1' OR ddata010 = '2')
+      #          
+      #      IF SQLCA.sqlcode THEN
+      #         INITIALIZE g_errparam TO NULL
+      #         LET g_errparam.code =  SQLCA.sqlcode
+      #         LET g_errparam.extend = "adzi888_ddata"
+      #         LET g_errparam.popup = TRUE
+      #         CALL cl_err()
+      #         CALL s_transaction_end('N','0')   
+      #      ELSE
+      #         LET g_rec_b = g_rec_b - l_cnt
+      #         CALL s_transaction_end('Y', '0')
+      #      END IF 
+      #
+      #      #串接ALM環境時,更新需求單狀態
+      #      IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+      #         CALL s_transaction_begin()
+      #         
+      #         DELETE FROM dzld_t 
+      #           WHERE dzld011 = g_master_m.master013
+      #             AND dzld012 = g_dzld012
+      #             AND dzld013 = g_dzld013
+      #             AND dzld014 = g_master_m.master014
+      #             AND (dzld010 = '1' OR dzld010 = '2')
+      #
+      #         IF SQLCA.sqlcode THEN
+      #            INITIALIZE g_errparam TO NULL
+      #            LET g_errparam.code =  SQLCA.sqlcode
+      #            LET g_errparam.extend = "dzld_t"
+      #            LET g_errparam.popup = TRUE
+      #            CALL cl_err()
+      #            CALL s_transaction_end('N','0')   
+      #         ELSE
+      #            CALL s_transaction_end('Y', '0')
+      #         END IF
+      #      END IF
+      #
+      #      LET l_count = g_ddata_d.getLength()
+      #      CALL adzi888_b_fill()
+      #      LET g_rec_b = g_ddata_d.getLength()
+      #   END IF
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name, g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master", 0)
+            CALL gfrm_curr.setElementImage("controls", "small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master", 1)
+            CALL gfrm_curr.setElementImage("controls", "small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION ACCEPT
+         ACCEPT DIALOG
+
+      ON ACTION CANCEL      #在dialog button (放棄)
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         LET g_detail_idx3 = 1
+         EXIT DIALOG
+
+      ON ACTION CLOSE       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION EXIT        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+     
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+
+   IF g_top_alm = "Y" THEN
+      CALL adzi888_set_comp_entry("master002", TRUE)
+      CALL cl_set_comp_required("master013,master014", FALSE)
+   END IF
+END FUNCTION
+
+#+ 外部參數搜尋
+PRIVATE FUNCTION adzi888_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+
+   #dzld_t註冊清單來自ALM table
+   LET ls_wc = " dzld012 = '", g_dzld012 CLIPPED, "' AND dzld013 = '", g_dzld013 CLIPPED, "' AND "
+   
+   IF (NOT cl_null(g_argv[1])) AND (NOT cl_null(g_argv[2])) THEN
+      LET ls_wc = ls_wc, " dzld011 = '", g_argv[1], "' AND dzld014 = '", g_argv[2], "' AND "
+   END IF
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1, ls_wc.getLength() - 5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+ 
+END FUNCTION
+
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION adzi888_query()
+   DEFINE ls_wc STRING
+
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   #CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   
+   CALL g_ddata_d.CLEAR()
+   CALL g_dfile_d.CLEAR()
+   CALL g_dtool_d.CLEAR()
+
+   DISPLAY ' ' TO FORMONLY.idx
+   DISPLAY ' ' TO FORMONLY.cnt
+   #DISPLAY ' ' TO FORMONLY.b_index
+   #DISPLAY ' ' TO FORMONLY.b_count
+   DISPLAY ' ' TO FORMONLY.h_index
+   DISPLAY ' ' TO FORMONLY.h_count
+   
+   CALL adzi888_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc #2016/06/02
+      #CALL adzi888_browser_fill("") #2016/06/02
+      #CALL adzi888_fetch("") #2016/06/02
+      RETURN
+   END IF
+   
+   #搜尋後資料初始化
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx3 = 1
+   LET g_error_show  = 1
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+   CALL adzi888_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "-100"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   ELSE
+      CALL adzi888_fetch("F") 
+   END IF
+ 
+END FUNCTION
+
+#+ QBE資料查詢
+PRIVATE FUNCTION adzi888_construct()
+   DEFINE ls_return             STRING
+   DEFINE ls_result             STRING 
+   DEFINE ls_wc                 STRING 
+   DEFINE l_wc2_table1          STRING
+
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_master_m.* TO NULL
+   CALL g_ddata_d.CLEAR()        
+   CALL g_dfile_d.CLEAR()
+   CALL g_dtool_d.CLEAR()  
+
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   INITIALIZE g_wc3 TO NULL
+   
+   INITIALIZE l_wc2_table1 TO NULL
+ 
+   LET g_qryparam.state = 'c'
+
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON master013, master014
+
+         #需求單號
+         ON ACTION controlp INFIELD master013
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_dzld012
+            LET g_qryparam.arg2 = g_dzld013
+            CALL q_dzld011()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO master013    #顯示到畫面上
+            NEXT FIELD master013
+            
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT l_wc2_table1 ON ddata003, ddata004, ddata005, ddata006
+         FROM g_ddata_d[l_ac].ddata003, g_ddata_d[l_ac].ddata004, g_ddata_d[l_ac].ddata005, g_ddata_d[l_ac].ddata006
+       
+      END CONSTRUCT
+      
+      #2016/06/02
+      CONSTRUCT g_dzld_wc ON dzld002,dzld003,dzld004,dzld005,dzld006,dzld007,dzld015
+                        FROM s_detail1[1].ddata002,
+                             s_detail1[1].ddata003,
+                             s_detail1[1].ddata004,
+                             s_detail1[1].ddata005,
+                             s_detail1[1].ddata006,
+                             s_detail1[1].ddata007,
+                             s_detail1[1].ddata015
+                             
+      END CONSTRUCT
+      
+      CONSTRUCT g_dzlf_wc ON dzlf002,dzlf003,dzlf004,dzlf005
+                        FROM s_detail2[1].dfile002,
+                             s_detail2[1].dfile003,
+                             s_detail2[1].dfile004,
+                             s_detail2[1].dfile005
+      END CONSTRUCT
+      
+      CONSTRUCT g_dzlt_wc ON dzlt002,dzlt003,dzlt004,dzlt005,dzlt006,dzlt007
+                        FROM s_detail3[1].dtool002,
+                             s_detail3[1].dtool003,
+                             s_detail3[1].dtool004,
+                             s_detail3[1].dtool005,
+                             s_detail3[1].dtool006,
+                             s_detail3[1].dtool007
+      END CONSTRUCT
+      #2016/06/02
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+ 
+      ON ACTION ACCEPT
+         ACCEPT DIALOG
+ 
+      ON ACTION CANCEL
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #data替換
+   #LET g_dzld_wc = cl_str_replace(g_dzld_wc, "ddata005", "dzld005")
+   #LET g_dzld_wc = cl_str_replace(g_dzld_wc, "ddata006", "dzld006")
+   #
+   ##file替換
+   #LET g_dzlf_wc = cl_str_replace(g_dzlf_wc, "dfile003", "dzlf003")
+   #LET g_dzlf_wc = cl_str_replace(g_dzlf_wc, "dfile004", "dzlf004")      
+   #LET g_dzlf_wc = cl_str_replace(g_dzlf_wc, "dfile005", "dzlf005")   
+   #
+   ##tool替換
+   #LET g_dzlt_wc = cl_str_replace(g_dzlt_wc, "dtool003", "dzlt003")
+   #LET g_dzlt_wc = cl_str_replace(g_dzlt_wc, "dtool004", "dzlt004")      
+   #LET g_dzlt_wc = cl_str_replace(g_dzlt_wc, "dtool005", "dzlt005")   
+   #LET g_dzlt_wc = cl_str_replace(g_dzlt_wc, "dtool007", "dzlt007")   
+
+   
+   #組合g_wc2
+   #LET g_wc2 = l_wc2_table1
+   LET g_wc = g_wc, " AND dzld012 = '", g_dzld012 CLIPPED, "' AND dzld013 = '", g_dzld013 CLIPPED, "' "
+   
+   IF l_wc2_table1 <> " 1=1" THEN
+      LET g_wc = g_wc ," AND ", l_wc2_table1
+   END IF
+
+   #轉換字串
+   LET g_wc = cl_str_replace(g_wc, "master013", "dzld011")
+   LET g_wc = cl_str_replace(g_wc, "master014", "dzld014")
+
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION adzi888_browser_fill(ps_page_action)
+   DEFINE ps_page_action    STRING
+   
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_wc3             STRING
+ 
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_master_m.* TO NULL
+  
+   CALL g_ddata_d.CLEAR()
+   CALL g_dfile_d.CLEAR()
+   CALL g_dtool_d.CLEAR()
+
+   CALL g_dzld_browser.CLEAR()
+   
+   LET l_wc  = g_wc.trim() 
+
+   IF cl_null(l_wc) THEN  #p_wc 查詢條件
+      RETURN
+   END IF
+   
+   #轉換查詢檔案清單(dzlf_t)的資料
+   LET g_wc2 = g_wc
+   LET g_wc2 = cl_str_replace(g_wc2, "dzld001", "dzlf001")
+   LET g_wc2 = cl_str_replace(g_wc2, "dzld011", "dzlf008")
+   LET g_wc2 = cl_str_replace(g_wc2, "dzld012", "dzlf009")
+   LET g_wc2 = cl_str_replace(g_wc2, "dzld013", "dzlf010")
+   LET g_wc2 = cl_str_replace(g_wc2, "dzld014", "dzlf011")
+   
+   LET l_wc2 = g_wc2.trim()
+   
+   #轉換查詢IT工具類清單(dzlt_t)的資料
+   LET g_wc3 = g_wc
+   LET g_wc3 = cl_str_replace(g_wc3, "dzld001", "dzlt001")
+   LET g_wc3 = cl_str_replace(g_wc3, "dzld011", "dzlt011")
+   LET g_wc3 = cl_str_replace(g_wc3, "dzld012", "dzlt012")
+   LET g_wc3 = cl_str_replace(g_wc3, "dzld013", "dzlt013")
+   LET g_wc3 = cl_str_replace(g_wc3, "dzld014", "dzlt014")
+
+   LET l_wc3 = g_wc3.trim()
+   
+   #2016/06/02
+   #單身未輸入搜尋條件
+   #LET l_sub_sql = "SELECT DISTINCT dzld001, dzld011, dzld012, dzld013, dzld014 ",
+   #                "  FROM (SELECT DISTINCT dzld001, dzld011, dzld012, dzld013, dzld014 ",
+   #                "          FROM dzld_t WHERE ", l_wc CLIPPED, " AND ", g_dzld_wc, 
+   #                "        UNION ", 
+   #                "        SELECT DISTINCT dzlf001 AS dzld001, dzlf008 AS dzld011, dzlf009 AS dzld012, dzlf010 AS dzld013, dzlf011 AS dzld014 ",
+   #                "          FROM dzlf_t WHERE ", l_wc2 CLIPPED, " AND ", g_dzlf_wc, 
+   #                "        UNION ", 
+   #                "        SELECT DISTINCT dzlt001 AS dzld001, dzlt011 AS dzld011, dzlt012 AS dzld012, dzlt013 AS dzld013, dzlt014 AS dzld014 ",
+   #                "          FROM dzlt_t WHERE ", l_wc3 CLIPPED, " AND ", g_dzlt_wc, ")"
+   #IF g_dzld_wc = ' 1=1' AND g_dzlf_wc = ' 1=1' AND g_dzlt_wc = ' 1=1' THEN
+   #   LET l_sub_sql = "SELECT DISTINCT dzld001, dzld011, dzld012, dzld013, dzld014 ",
+   #                   "  FROM (SELECT DISTINCT dzld001, dzld011, dzld012, dzld013, dzld014 ",
+   #                   "          FROM dzld_t WHERE ", g_wc.trim(),  
+   #                   "        UNION ", 
+   #                   "        SELECT DISTINCT dzlf001 AS dzld001, dzlf008 AS dzld011, dzlf009 AS dzld012, dzlf010 AS dzld013, dzlf011 AS dzld014 ",
+   #                   "          FROM dzlf_t WHERE ", g_wc2.trim(),  
+   #                   "        UNION ", 
+   #                   "        SELECT DISTINCT dzlt001 AS dzld001, dzlt011 AS dzld011, dzlt012 AS dzld012, dzlt013 AS dzld013, dzlt014 AS dzld014 ",
+   #                   "          FROM dzlt_t WHERE ", g_wc3 CLIPPED, ")"
+   #ELSE
+   #   LET l_sub_sql = ""
+   #   IF g_dzld_wc <> ' 1=1' THEN
+   #      LET l_sub_sql = l_sub_sql, 
+   #                      " SELECT DISTINCT dzld001, dzld011, dzld012, dzld013, dzld014 ",
+   #                      " FROM dzld_t WHERE ", g_wc.trim(), " AND ",g_dzld_wc
+   #   END IF
+   #   IF g_dzlf_wc <> ' 1=1' THEN
+   #      IF NOT cl_null(l_sub_sql) THEN
+   #         LET l_sub_sql = l_sub_sql, " UNION "
+   #      END IF 
+   #      LET l_sub_sql = l_sub_sql, 
+   #                      " SELECT DISTINCT dzlf001 AS dzld001, dzlf008 AS dzld011, dzlf009 AS dzld012, dzlf010 AS dzld013, dzlf011 AS dzld014 ",
+   #                      "   FROM dzlf_t WHERE ", g_wc2.trim(), " AND ",g_dzlf_wc 
+   #   END IF
+   #   IF g_dzlt_wc <> ' 1=1' THEN
+   #      IF NOT cl_null(l_sub_sql) THEN
+   #         LET l_sub_sql = l_sub_sql, " UNION "
+   #      END IF 
+   #      LET l_sub_sql = l_sub_sql, 
+   #                      " SELECT DISTINCT dzlt001 AS dzld001, dzlt011 AS dzld011, dzlt012 AS dzld012, dzlt013 AS dzld013, dzlt014 AS dzld014 ",
+   #                      "   FROM dzlt_t WHERE ", g_wc3 CLIPPED, " AND ",g_dzlt_wc 
+   #   END IF
+   #   LET l_sub_sql = "SELECT DISTINCT dzld001, dzld011, dzld012, dzld013, dzld014 ",
+   #                   "  FROM ",
+   #                   " (",l_sub_sql," )"
+   #END IF
+   #
+   #
+   ###串接ALM環境時,找一下是否有dzlm的簽出資料
+   ##IF g_top_alm = "Y" THEN
+   ##   #轉換查詢程式清單(dzlm_t)的資料
+   ##   LET l_wc3 = g_wc
+   ##   LET l_wc3 = cl_str_replace(l_wc3, "dzld001", "dzlm001")
+   ##   LET l_wc3 = cl_str_replace(l_wc3, "dzld011", "dzlm012")
+   ##   LET l_wc3 = cl_str_replace(l_wc3, "dzld012", "dzlm013")
+   ##   LET l_wc3 = cl_str_replace(l_wc3, "dzld013", "dzlm014")
+   ##   LET l_wc3 = cl_str_replace(l_wc3, "dzld014", "dzlm015")
+   ##END IF
+   #
+   #LET g_sql = "SELECT COUNT(*) FROM (", l_sub_sql, ")"
+   #
+   #PREPARE header_cnt_pre FROM g_sql
+   #EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   #FREE header_cnt_pre
+   #
+   ##DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   #DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+   #2016/06/02
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P" OR
+      ps_page_action = "N" OR
+      ps_page_action = "L" THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   CASE ps_page_action
+      WHEN "F" 
+         LET g_pagestart = 1
+          
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - 1
+         IF g_pagestart < 1 THEN
+            LET g_pagestart = 1
+         END IF
+          
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + 1
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt MOD 1) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - 1
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt MOD 1) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - 1
+         END WHILE
+         
+      WHEN '/'
+         LET g_pagestart = g_jump
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = 1
+         END IF
+         
+   END CASE
+
+   #2016/06/02
+   #定義翻頁CURSOR
+   IF g_dzld_wc = ' 1=1' AND g_dzlf_wc = ' 1=1' AND g_dzlt_wc = ' 1=1' THEN
+      LET g_sql= "SELECT DISTINCT dzld001, dzld011, dzld012, dzld013, dzld014 ",
+                 "  FROM (SELECT DISTINCT dzld001, dzld011, dzld012, dzld013, dzld014 ",
+                 "          FROM dzld_t WHERE ", g_wc.trim(),  
+                 "        UNION ", 
+                 "        SELECT DISTINCT dzlf001 AS dzld001, dzlf008 AS dzld011, dzlf009 AS dzld012, dzlf010 AS dzld013, dzlf011 AS dzld014 ",
+                 "          FROM dzlf_t WHERE ", g_wc2.trim(),  
+                 "        UNION ", 
+                 "        SELECT DISTINCT dzlt001 AS dzld001, dzlt011 AS dzld011, dzlt012 AS dzld012, dzlt013 AS dzld013, dzlt014 AS dzld014 ",
+                 "          FROM dzlt_t WHERE ", g_wc3 CLIPPED, ")"
+   ELSE
+      LET l_sub_sql = ""
+      IF g_dzld_wc <> ' 1=1' THEN
+         LET l_sub_sql = l_sub_sql, 
+                         " SELECT DISTINCT dzld001, dzld011, dzld012, dzld013, dzld014 ",
+                         " FROM dzld_t WHERE ", g_wc.trim(), " AND ",g_dzld_wc
+      END IF
+      IF g_dzlf_wc <> ' 1=1' THEN
+         IF NOT cl_null(l_sub_sql) THEN
+            LET l_sub_sql = l_sub_sql, " INTERSECT "
+         END IF 
+         LET l_sub_sql = l_sub_sql, 
+                         " SELECT DISTINCT dzlf001 AS dzld001, dzlf008 AS dzld011, dzlf009 AS dzld012, dzlf010 AS dzld013, dzlf011 AS dzld014 ",
+                         "   FROM dzlf_t WHERE ", g_wc2.trim(), " AND ",g_dzlf_wc 
+      END IF
+      IF g_dzlt_wc <> ' 1=1' THEN
+         IF NOT cl_null(l_sub_sql) THEN
+            LET l_sub_sql = l_sub_sql, " INTERSECT "
+         END IF 
+         LET l_sub_sql = l_sub_sql, 
+                         " SELECT DISTINCT dzlt001 AS dzld001, dzlt011 AS dzld011, dzlt012 AS dzld012, dzlt013 AS dzld013, dzlt014 AS dzld014 ",
+                         "   FROM dzlt_t WHERE ", g_wc3 CLIPPED, " AND ",g_dzlt_wc 
+      END IF
+      LET g_sql= "SELECT DISTINCT dzld001, dzld011, dzld012, dzld013, dzld014 ",
+                 "  FROM ",
+                 " (",l_sub_sql," ) " 
+                 #DISPLAY g_sql
+   END IF
+   LET g_sql = g_sql, " ORDER BY dzld011 "
+   #2016/06/02
+     
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_dzld_browser.CLEAR()
+   LET g_cnt = 1
+   
+   FOREACH browse_cur INTO g_dzld_browser[g_cnt].dzld001, g_dzld_browser[g_cnt].dzld011, g_dzld_browser[g_cnt].dzld012, g_dzld_browser[g_cnt].dzld013, g_dzld_browser[g_cnt].dzld014
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_dzld_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_dzld_browser.getLength() 
+ 
+   LET g_rec_b = g_cnt - 1 
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   FREE browse_pre
+   
+   #顯示總筆數
+   LET g_browser_cnt = g_dzld_browser.getLength() #2016/06/02
+   DISPLAY g_browser_cnt TO FORMONLY.h_count #2016/06/02
+
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange, modify, delete, reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange, modify, delete, reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+ 
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION adzi888_fetch(p_flag)
+   DEFINE p_flag             LIKE type_t.chr1
+   DEFINE ls_msg             STRING
+   DEFINE l_dzld_browser     type_g_dzld_browser
+
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+   
+   CASE p_flag
+      WHEN 'F' LET g_current_idx = 1
+      WHEN 'L' LET g_current_idx = g_header_cnt        
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch', g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_dzld_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         
+         LET g_no_ask = FALSE  
+   END CASE 
+   
+   CALL adzi888_browser_fill(p_flag)
+   
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_pagestart = g_current_idx
+   #DISPLAY g_pagestart TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_pagestart TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting(g_pagestart, g_browser_cnt)
+   
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_dzld_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_dzld_browser.getLength() THEN
+      LET g_current_idx = g_dzld_browser.getLength()
+   END IF
+
+   #因採用temp table運作,所以每次先清空temp table裡的資料
+   #刪除所有temp table內的資料
+   DELETE FROM adzi888_master WHERE 1 = 1
+   DELETE FROM adzi888_ddata WHERE 1 = 1
+   DELETE FROM adzi888_dfile WHERE 1 = 1
+   DELETE FROM adzi888_dtool WHERE 1 = 1
+   
+   LET l_dzld_browser.dzld001 = g_dzld_browser[g_current_idx].dzld001
+   LET l_dzld_browser.dzld011 = g_dzld_browser[g_current_idx].dzld011
+   LET l_dzld_browser.dzld012 = g_dzld_browser[g_current_idx].dzld012
+   LET l_dzld_browser.dzld013 = g_dzld_browser[g_current_idx].dzld013
+   LET l_dzld_browser.dzld014 = g_dzld_browser[g_current_idx].dzld014
+   
+   #取得匯出主檔單頭資訊
+   #SELECT DISTINCT dzld001, dzld011, dzld014 
+   #    INTO g_master_m.master001, g_master_m.master013, g_master_m.master014 
+   #  FROM dzld_t
+   #  WHERE dzld011 = l_dzld_browser.dzld011
+   #    AND dzld012 = l_dzld_browser.dzld012
+   #    AND dzld013 = l_dzld_browser.dzld013
+   #    AND dzld014 = l_dzld_browser.dzld014
+
+   #IF SQLCA.sqlcode THEN
+   #   INITIALIZE g_errparam TO NULL
+   #   LET g_errparam.code =  SQLCA.sqlcode
+   #   LET g_errparam.extend = "adzi888_master"
+   #   LET g_errparam.popup = TRUE
+   #   CALL cl_err()
+   #   INITIALIZE g_master_m.* TO NULL
+   #   RETURN
+   #END IF
+   LET g_master_m.master001 = l_dzld_browser.dzld001
+   LET g_master_m.master013 = l_dzld_browser.dzld011
+   LET g_master_m.master014 = l_dzld_browser.dzld014
+
+   #取得匯出主題
+   LET g_master_m.master002 = g_master_m.master013, "#", g_master_m.master014 USING "<<<<<"
+
+   #指定匯出人員
+   IF cl_null(g_master_m.master003) THEN
+      LET g_master_m.master003 = g_user
+   END IF
+    
+   INSERT INTO adzi888_master(master001, master002, master003, master004, master005,
+                              master006, master007, master008, master009, master010, 
+                              master011, master012, master013, master014)
+     VALUES (g_master_m.master001, g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005, 
+             g_master_m.master006, g_master_m.master007, g_master_m.master008, g_master_m.master009, g_master_m.master010, 
+             g_master_m.master011, g_master_m.master012, g_master_m.master013, g_master_m.master014) 
+ 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = "ins adzi888_master"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      INITIALIZE g_master_m.* TO NULL
+      RETURN
+   END IF
+
+   
+   
+   #取得[需求單號]+[項次]的設計資料匯出清單
+   INSERT INTO adzi888_ddata
+     SELECT dzld001, dzld002, dzld003, dzld004, dzld005,
+            dzld006, dzld007, dzld008, dzld009, dzld010,
+            dzld015
+       FROM dzld_t
+       WHERE dzld011 = l_dzld_browser.dzld011
+         AND dzld012 = l_dzld_browser.dzld012
+         AND dzld013 = l_dzld_browser.dzld013
+         AND dzld014 = l_dzld_browser.dzld014
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = "adzi888_ddata"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      INITIALIZE g_master_m.* TO NULL
+      RETURN
+   END IF
+  
+   #取得[需求單號]+[項次]的檔案匯出清單
+   INSERT INTO adzi888_dfile
+     SELECT dzlf001, dzlf002, dzlf003, dzlf004, dzlf005,
+            dzlf006, dzlf007
+       FROM dzlf_t
+       WHERE dzlf008 = l_dzld_browser.dzld011
+         AND dzlf009 = l_dzld_browser.dzld012
+         AND dzlf010 = l_dzld_browser.dzld013
+         AND dzlf011 = l_dzld_browser.dzld014
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = "adzi888_dfile"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      INITIALIZE g_master_m.* TO NULL
+      RETURN
+   END IF
+   
+   #取得[需求單號]+[項次]的IT工具類匯出清單
+   INSERT INTO adzi888_dtool
+     SELECT dzlt001, dzlt002, dzlt003, dzlt004, dzlt005,
+            dzlt006, dzlt007, dzlt008, dzlt009
+       FROM dzlt_t
+       WHERE dzlt011 = l_dzld_browser.dzld011
+         AND dzlt012 = l_dzld_browser.dzld012
+         AND dzlt013 = l_dzld_browser.dzld013
+         AND dzlt014 = l_dzld_browser.dzld014
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = "adzi888_dtool"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      INITIALIZE g_master_m.* TO NULL
+      RETURN
+   END IF
+   
+   #重新顯示   
+   LET g_bfill = "Y"
+   CALL adzi888_show()
+ 
+END FUNCTION
+
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION adzi888_set_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1  
+ 
+   IF p_cmd = 'a' THEN
+      CALL adzi888_set_comp_entry("master001,master002", TRUE)
+      CALL adzi888_set_comp_entry("master013,master014", TRUE)
+   END IF 
+END FUNCTION
+
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION adzi888_set_no_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+
+   IF p_cmd = 'u' THEN
+      CALL adzi888_set_comp_entry("master001,master002", FALSE)
+      CALL adzi888_set_comp_entry("master013,master014", FALSE)
+   END IF 
+   #CALL adzi888_set_comp_entry("master005,master006", FALSE)
+END FUNCTION
+
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION adzi888_master011_change_value(p_value)
+   DEFINE p_value LIKE type_t.chr1  
+
+   IF p_value = "Y" THEN
+      CALL adzi888_set_comp_entry("master004", TRUE)
+   ELSE
+      CALL adzi888_set_comp_entry("master004,master005,master006,master007,master008", FALSE)
+   END IF
+END FUNCTION
+
+#+ 單身陣列填充
+PRIVATE FUNCTION adzi888_b_fill()
+   DEFINE p_wc2      STRING
+
+   CALL g_ddata_d.clear()
+   CALL g_dfile_d.clear()
+   CALL g_dtool_d.clear()
+
+   #設計資料匯出清單
+   LET g_sql = "SELECT ddata002, ddata003, ddata004, ddata005, ddata006, ", 
+               "       ddata007, ddata008, ddata009, ddata010, ddata015 ",
+               "  FROM adzi888_ddata ",     #INNER JOIN adzi888_master ON master001 = ddata001 ",
+               "  WHERE ddata001 = ? "#AND ", g_dzld_wc
+
+   LET g_sql = g_sql, " ORDER BY ddata002"
+   
+   PREPARE adzi888_pb FROM g_sql
+   DECLARE b_fill_cs CURSOR FOR adzi888_pb
+   
+   LET g_cnt = l_ac
+   LET l_ac = 1
+      
+   OPEN b_fill_cs USING g_master_m.master001
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = "OPEN b_fill_cs:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   FOREACH b_fill_cs INTO g_ddata_d[l_ac].ddata002, g_ddata_d[l_ac].ddata003, g_ddata_d[l_ac].ddata004, g_ddata_d[l_ac].ddata005, g_ddata_d[l_ac].ddata006,
+                          g_ddata_d[l_ac].ddata007, g_ddata_d[l_ac].ddata008, g_ddata_d[l_ac].ddata009, g_ddata_d[l_ac].ddata010, g_ddata_d[l_ac].ddata015 
+ 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+   
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   LET g_error_show = 0
+
+
+   #檔案匯出清單
+   LET g_sql = "SELECT dfile002, dfile003, dfile004, dfile005, dfile006, dfile007 ", 
+               "  FROM adzi888_dfile ",
+               "  WHERE dfile001 = ? "#AND ", g_dzlf_wc
+   
+   LET g_sql = g_sql, " ORDER BY dfile002"
+   
+   PREPARE adzi888_pb2 FROM g_sql
+   DECLARE b_fill_cs2 CURSOR FOR adzi888_pb2
+   
+   LET l_ac = 1
+   
+   OPEN b_fill_cs2 USING g_master_m.master001
+ 
+                                            
+   FOREACH b_fill_cs2 INTO g_dfile_d[l_ac].dfile002, g_dfile_d[l_ac].dfile003, g_dfile_d[l_ac].dfile004, g_dfile_d[l_ac].dfile005, g_dfile_d[l_ac].dfile006, 
+                           g_dfile_d[l_ac].dfile007
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+
+   
+   #IT工具類匯出清單
+   LET g_sql = "SELECT dtool002, dtool003, dtool004, dtool005, dtool006, ",
+               "       dtool007, dtool008, dtool009", 
+               "  FROM adzi888_dtool ", 
+               "  WHERE dtool001 = ? ",#AND ", g_dzlt_wc,
+               "  ORDER BY dtool002"
+   
+   PREPARE adzi888_pb3 FROM g_sql
+   DECLARE b_fill_cs3 CURSOR FOR adzi888_pb3
+   
+   LET l_ac = 1
+   
+   OPEN b_fill_cs3 USING g_master_m.master001
+
+   FOREACH b_fill_cs3 INTO g_dtool_d[l_ac].dtool002, g_dtool_d[l_ac].dtool003, g_dtool_d[l_ac].dtool004, g_dtool_d[l_ac].dtool005, g_dtool_d[l_ac].dtool006, 
+                           g_dtool_d[l_ac].dtool007, g_dtool_d[l_ac].dtool008, g_dtool_d[l_ac].dtool009
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9035
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   IF g_ddata_d.getLength() > 0 THEN
+      CALL g_ddata_d.deleteElement(g_ddata_d.getLength())
+   END IF
+
+   IF g_dfile_d.getLength() > 0 THEN
+      CALL g_dfile_d.deleteElement(g_dfile_d.getLength())
+   END IF
+
+   IF g_dtool_d.getLength() > 0 THEN
+      CALL g_dtool_d.deleteElement(g_dtool_d.getLength())
+   END IF
+
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE adzi888_pb
+   FREE adzi888_pb2
+   FREE adzi888_pb3
+
+END FUNCTION
+
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION adzi888_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+
+END FUNCTION
+
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION adzi888_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+
+END FUNCTION
+
+#+ 單身table資料lock
+PRIVATE FUNCTION adzi888_lock_b(ps_table, ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+
+   #僅鎖定[設計資料匯出清單]table
+   LET ls_group = "adzi888_ddata"
+   
+   IF ls_group.getIndexOf(ps_table, 1) THEN
+      OPEN adzi888_bcl USING g_master_m.master001, g_ddata_d[g_detail_idx].ddata002
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "adzi888_bcl"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+
+   #僅鎖定[檔案匯出清單]table
+   LET ls_group = "adzi888_dfile"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN adzi888_bcl2 USING g_master_m.master001, g_dfile_d[g_detail_idx2].dfile002
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "adzi888_bcl2"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+
+   #僅鎖定[IT工具類匯出清單]table
+   LET ls_group = "adzi888_dtool"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN adzi888_bcl3 USING g_master_m.master001, g_dtool_d[g_detail_idx3].dtool002
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "adzi888_bcl3"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+   RETURN TRUE
+END FUNCTION
+
+#+ 單身table資料unlock
+PRIVATE FUNCTION adzi888_unlock_b(ps_table, ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page, 1) THEN
+      CLOSE adzi888_bcl
+   END IF
+   
+   LET ls_group = "'2',"
+   
+   IF ls_group.getIndexOf(ps_page, 1) THEN
+      CLOSE adzi888_bcl2
+   END IF
+   
+   LET ls_group = "'3',"
+   
+   IF ls_group.getIndexOf(ps_page, 1) THEN
+      CLOSE adzi888_bcl3
+   END IF
+END FUNCTION
+
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION adzi888_show()
+   DEFINE l_ac_t    LIKE type_t.num5
+
+   LET g_master_m_t.* = g_master_m.*      #保存單頭舊值
+
+   IF g_bfill = "Y" THEN
+      CALL adzi888_b_fill() #單身填充
+   END IF
+ 
+   LET l_ac_t = l_ac
+
+   #單頭資料顯示
+   CALL adzi888_master003_desc_display()
+
+   DISPLAY BY NAME g_master_m.master001, g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005, 
+                   g_master_m.master006, g_master_m.master007, g_master_m.master008, g_master_m.master009, g_master_m.master010, 
+                   g_master_m.master011, g_master_m.master012, g_master_m.master013, g_master_m.master014
+
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+   
+END FUNCTION
+
+#+ Display匯出人員姓名
+PRIVATE FUNCTION adzi888_master003_desc_display()
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master_m.master003
+   CALL ap_ref_array2(g_ref_fields, "SELECT oofa011 FROM oofa_t WHERE oofaent='" || g_enterprise || "' AND oofa002='2' AND oofa003=? ", "") 
+      RETURNING g_rtn_fields
+
+   LET g_master_m.master003_desc =  g_rtn_fields[1]
+   DISPLAY BY NAME g_master_m.master003_desc
+END FUNCTION
+
+#+ 新增單身資料
+PRIVATE FUNCTION adzi888_insert_b(ps_table, ps_keys, ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+
+   #設計資料匯出清單單身新增資料
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page, 1) > 0 THEN
+      IF NOT adzi888_insert_adzi888_ddata(g_ddata_d[g_detail_idx].*) THEN
+        RETURN
+      END IF
+   END IF
+
+   #檔案匯出清單單身新增資料
+   LET ls_group = "'2',"
+   IF ls_group.getIndexOf(ps_page, 1) > 0 THEN
+      IF NOT adzi888_insert_adzi888_dfile(g_dfile_d[g_detail_idx2].*) THEN
+         RETURN
+      END IF
+   END IF
+
+   #IT工具類匯出清單單身新增資料
+   LET ls_group = "'3',"
+   IF ls_group.getIndexOf(ps_page, 1) > 0 THEN
+      IF NOT adzi888_insert_adzi888_dtool(g_dtool_d[g_detail_idx3].*) THEN
+         RETURN
+      END IF
+   END IF
+
+END FUNCTION
+
+#+ 單身筆數變更
+PRIVATE FUNCTION adzi888_idx_chk()
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_ddata_d.getLength() THEN
+         LET g_detail_idx = g_ddata_d.getLength()
+      END IF
+      
+      IF g_detail_idx = 0 AND g_ddata_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_ddata_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx2 = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx2 > g_dfile_d.getLength() THEN
+         LET g_detail_idx2 = g_dfile_d.getLength()
+      END IF
+      
+      IF g_detail_idx2 = 0 AND g_dfile_d.getLength() <> 0 THEN
+         LET g_detail_idx2 = 1
+      END IF
+      
+      DISPLAY g_detail_idx2 TO FORMONLY.idx
+      DISPLAY g_dfile_d.getLength() TO FORMONLY.cnt
+   END IF
+
+   IF g_current_page = 3 THEN
+      LET g_detail_idx3 = g_curr_diag.getCurrentRow("s_detail3")
+      IF g_detail_idx3 > g_dtool_d.getLength() THEN
+         LET g_detail_idx3 = g_dtool_d.getLength()
+      END IF
+      
+      IF g_detail_idx3 = 0 AND g_dtool_d.getLength() <> 0 THEN
+         LET g_detail_idx3 = 1
+      END IF
+      
+      DISPLAY g_detail_idx3 TO FORMONLY.idx
+      DISPLAY g_dtool_d.getLength() TO FORMONLY.cnt
+   END IF
+END FUNCTION
+
+#+ 單身資料重新顯示
+PRIVATE FUNCTION adzi888_ui_detailshow()
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1", g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2", g_detail_idx2)
+      CALL g_curr_diag.setCurrentRow("s_detail3", g_detail_idx3)
+   END IF
+END FUNCTION
+
+#+ 根據『自動產生條件』, 撈取相關註冊資訊作業/表格清單
+PRIVATE FUNCTION adzi888_generate_data_pre(p_master004, p_master005, p_master006)
+   DEFINE p_master004     LIKE type_t.chr10    #自動產生類型(依1.prog:程式代號; 2.DATE:異動日期)
+   DEFINE p_master005     LIKE type_t.chr1     #程式類型
+   DEFINE p_master006     LIKE type_t.chr50    #自動產生的作業代號
+
+   IF p_master004 = "prog" THEN
+      IF cl_null(p_master005) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  "adz-00353"
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN
+      END IF
+
+      IF cl_null(p_master006) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  "adz-00354"
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN
+      END IF
+         
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   CASE p_master004 CLIPPED
+      WHEN "prog"
+         IF NOT adzi888_generate_data_prog(p_master005, p_master006) THEN
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+         
+      WHEN "date"
+         IF NOT adzi888_generate_data_date() THEN
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+
+   END CASE
+
+   CALL s_transaction_end('Y','0')
+END FUNCTION
+
+#+ 依據類型, 撈取相關註冊資訊作業/表格清單
+PRIVATE FUNCTION adzi888_generate_data_prog(p_master005, p_master006)
+   DEFINE p_master005       LIKE type_t.chr1      #程式類型
+   DEFINE p_master006       LIKE type_t.chr50     #作業代號
+
+   DEFINE l_sql             STRING
+   DEFINE l_ddata_d         type_g_ddata_d
+   DEFINE l_dzyb            type_g_dzyb
+   DEFINE l_dzya002         LIKE dzya_t.dzya002   #註冊資訊維護作業名稱
+   DEFINE l_ddata002        LIKE type_t.num5
+   DEFINE l_ddata006        LIKE type_t.chr50
+   DEFINE l_dzyb003         LIKE dzyb_t.dzyb003
+   DEFINE l_cnt             LIKE type_t.num5
+   DEFINE l_wc              STRING
+
+   #取得主表
+   LET l_dzyb003 = "Y"
+   
+   IF cl_null(p_master005) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00312"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+
+   #取得目前最大項次
+   SELECT MAX(ddata002) + 1 INTO l_ddata002 FROM adzi888_ddata
+     WHERE ddata001 = g_master_m.master001
+
+   IF cl_null(l_ddata002) OR l_ddata002 = 0 THEN
+      LET l_ddata002 = 1
+   END IF
+
+   #取得程式類型相關註冊資訊作業的主要資料表名稱
+   FOREACH adzi888_dzyb_prog_cs USING p_master005, l_dzyb003
+                                INTO l_dzyb.dzyb001, l_dzyb.dzyb002, l_dzyb.dzyb003, l_dzyb.dzyb004, l_dzyb.dzyb005,
+                                     l_dzyb.dzyb006, l_dzyb.dzyb007, l_dzyb.dzyb008, l_dzyb.dzyb009
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH adzi888_dzyb_prog_cs:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+
+      LET l_cnt = 0
+
+      #取得此[程式代碼]是否有註冊資訊
+      #140721支持[程式代碼]可以有LIKE的功能
+      LET l_wc = cl_str_replace(p_master006, "master006", l_dzyb.dzyb004 CLIPPED)
+
+      IF cl_null(l_wc) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  "adz-00354"
+         LET g_errparam.extend = "data_prog()"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN
+      END IF
+      
+      LET l_sql = "SELECT DISTINCT ", l_dzyb.dzyb004 CLIPPED, " FROM ", l_dzyb.dzyb002,
+                  "  WHERE ", l_wc.trim()
+
+      DECLARE adzi888_reg_ddata006_cs CURSOR FROM l_sql
+
+      #取得該註冊資訊維護作業[資料表代碼]清單
+      FOREACH adzi888_reg_ddata006_cs INTO l_ddata006
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH adzi888_reg_ddata006_cs.", l_dzyb.dzyb002 CLIPPED
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN FALSE
+         END IF
+
+         LET l_ddata_d.ddata002 = l_ddata002
+         LET l_ddata_d.ddata003 = l_ddata006
+         LET l_ddata_d.ddata004 = "1"              #預設為merge
+         LET l_ddata_d.ddata005 = l_dzyb.dzyb001
+         LET l_ddata_d.ddata006 = l_ddata006
+         LET l_ddata_d.ddata007 = ""
+         LET l_ddata_d.ddata008 = "0"
+         LET l_ddata_d.ddata009 = "0"
+         LET l_ddata_d.ddata010 = "1"
+         LET l_ddata_d.ddata015 = "m"
+
+         
+         #檢查[匯入動作], [維護作業], [條件式1], [條件式2]的註冊資訊是否已經重覆產生
+         IF cl_null(l_ddata_d.ddata007) THEN
+            SELECT COUNT(*) INTO l_cnt FROM adzi888_ddata
+              WHERE ddata001 = g_master_m.master001
+                AND ddata004 = l_ddata_d.ddata004
+                AND ddata005 = l_ddata_d.ddata005
+                AND ddata006 = l_ddata_d.ddata006
+         ELSE
+            SELECT COUNT(*) INTO l_cnt FROM adzi888_ddata
+              WHERE ddata001 = g_master_m.master001
+                AND ddata004 = l_ddata_d.ddata004
+                AND ddata005 = l_ddata_d.ddata005
+                AND ddata006 = l_ddata_d.ddata006
+                AND ddata007 = l_ddata_d.ddata007
+         END IF
+         
+         IF l_cnt > 0 THEN
+            CONTINUE FOREACH
+         END IF
+         
+         IF NOT adzi888_insert_adzi888_ddata(l_ddata_d.*) THEN
+           RETURN FALSE
+         END IF
+
+         LET l_ddata002 = l_ddata002 + 1
+      END FOREACH
+
+
+
+      #140721支持[程式代碼]可以有LIKE的功能,以下全mark
+      #LET l_sql = "SELECT COUNT(*) FROM ", l_dzyb.dzyb002,
+      #            "  WHERE ", l_dzyb.dzyb004, " = ? "
+      #LET l_wc = cl_str_replace(p_master006, "master006", l_dzyb.dzyb004 CLIPPED)
+
+      #DECLARE adzi888_reg_cnt_cs CURSOR FROM l_sql
+
+      #EXECUTE adzi888_reg_cnt_cs USING p_master006 INTO l_cnt
+
+      #IF SQLCA.sqlcode THEN
+      #   INITIALIZE g_errparam TO NULL
+      #   LET g_errparam.code =  SQLCA.sqlcode
+      #   LET g_errparam.extend = "EXECUTE adzi888_reg_cnt_cs." || l_dzyb.dzyb002 CLIPPED || "."
+      #   LET g_errparam.popup = TRUE
+      #   CALL cl_err()
+      #   RETURN FALSE
+      #END IF
+
+      ##新增註冊資訊清單
+      #IF l_cnt > 0 THEN         
+      #   LET l_ddata_d.ddata002 = l_ddata002
+      #   LET l_ddata_d.ddata003 = p_master006
+      #   LET l_ddata_d.ddata004 = "1"
+      #   LET l_ddata_d.ddata005 = l_dzyb.dzyb001
+      #   LET l_ddata_d.ddata006 = p_master006
+      #   LET l_ddata_d.ddata007 = ""
+      #   LET l_ddata_d.ddata008 = "0"
+      #   LET l_ddata_d.ddata009 = "0"
+      #   LET l_ddata_d.ddata010 = "1"
+      #   LET l_ddata_d.ddata015 = "m"
+
+      #   #檢查[匯入動作], [維護作業], [條件式1], [條件式2]的註冊資訊是否已經重覆產生
+      #   IF cl_null(l_ddata_d.ddata007) THEN
+      #      SELECT COUNT(*) INTO l_cnt FROM adzi888_ddata
+      #        WHERE ddata001 = g_master_m.master001
+      #          AND ddata004 = l_ddata_d.ddata004
+      #          AND ddata005 = l_ddata_d.ddata005
+      #          AND ddata006 = l_ddata_d.ddata006
+      #   ELSE
+      #      SELECT COUNT(*) INTO l_cnt FROM adzi888_ddata
+      #        WHERE ddata001 = g_master_m.master001
+      #          AND ddata004 = l_ddata_d.ddata004
+      #          AND ddata005 = l_ddata_d.ddata005
+      #          AND ddata006 = l_ddata_d.ddata006
+      #          AND ddata007 = l_ddata_d.ddata007
+      #   END IF
+         
+      #   IF l_cnt > 0 THEN
+      #      CONTINUE FOREACH
+      #   END IF
+         
+      #   IF NOT adzi888_insert_adzi888_ddata(l_ddata_d.*) THEN
+      #     RETURN FALSE
+      #   END IF
+
+      #   LET l_ddata002 = l_ddata002 + 1
+      #END IF
+   END FOREACH
+
+   RETURN TRUE
+END FUNCTION
+
+
+#+ 依據日期, 撈取相關註冊資訊作業/表格清單
+PRIVATE FUNCTION adzi888_generate_data_date()
+   DEFINE l_ddata_d         type_g_ddata_d
+   DEFINE l_dzyb            type_g_dzyb
+   DEFINE l_dzyb003         LIKE dzyb_t.dzyb003
+   DEFINE l_ddata002        LIKE type_t.num5
+   DEFINE l_ddata003        LIKE type_t.chr20
+   DEFINE l_value           LIKE type_t.chr50
+   DEFINE l_sql             STRING
+   DEFINE l_cnt             LIKE type_t.num5
+   DEFINE l_master008       DATE
+
+   #取得主表
+   LET l_dzyb003 = "Y"
+   
+   #取得目前最大項次
+   SELECT MAX(ddata002) + 1 INTO l_ddata002 FROM adzi888_ddata
+     WHERE ddata001 = g_master_m.master001
+
+   IF cl_null(l_ddata002) OR l_ddata002 = 0 THEN
+      LET l_ddata002 = 1
+   END IF
+
+   #將結束日期+1
+   LET l_master008 = g_master_m.master008
+   LET l_master008 = l_master008 + 1
+   
+   #取得所有相關註冊資訊作業的主要資料表名稱
+   FOREACH adzi888_dzyb_date_cs USING l_dzyb003 
+                                INTO l_dzyb.dzyb001, l_dzyb.dzyb002, l_dzyb.dzyb003, l_dzyb.dzyb004, l_dzyb.dzyb005,
+                                     l_dzyb.dzyb006, l_dzyb.dzyb007, l_dzyb.dzyb008, l_dzyb.dzyb009
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH adzi888_dzyb_date_cs:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      IF cl_null(l_dzyb.dzyb004) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  "adz-00316"
+         LET g_errparam.extend = l_dzyb.dzyb002 CLIPPED
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+
+      IF cl_null(l_dzyb.dzyb005) OR cl_null(l_dzyb.dzyb006) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  "adz-00317"
+         LET g_errparam.extend = l_dzyb.dzyb002 CLIPPED
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      
+      LET l_sql = "SELECT DISTINCT ", l_dzyb.dzyb004, " FROM ", l_dzyb.dzyb002,
+                  "  WHERE ", l_dzyb.dzyb005, " BETWEEN ? AND ? ",
+                  "     OR ", l_dzyb.dzyb006, " BETWEEN ? AND ? ",
+                  "    ORDER BY ", l_dzyb.dzyb004
+
+      DECLARE adzi888_reg_list_cs CURSOR FROM l_sql
+      #FOREACH adzi888_reg_list_cs USING g_master_m.master007, g_master_m.master008, g_master_m.master007, g_master_m.master008
+      FOREACH adzi888_reg_list_cs USING g_master_m.master007, l_master008, g_master_m.master007, l_master008  
+                                  INTO l_value
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH adzi888_reg_list_cs:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN FALSE
+         END IF
+      
+         LET l_ddata_d.ddata002 = l_ddata002
+         LET l_ddata_d.ddata003 = l_value
+         LET l_ddata_d.ddata004 = "1"              #預設為merge
+         LET l_ddata_d.ddata005 = l_dzyb.dzyb001
+         LET l_ddata_d.ddata006 = l_value
+         LET l_ddata_d.ddata007 = ""
+         LET l_ddata_d.ddata008 = "0"
+         LET l_ddata_d.ddata009 = "0"
+         LET l_ddata_d.ddata010 = "2"
+         LET l_ddata_d.ddata015 = "m"
+
+         #檢查[匯入動作], [維護作業], [條件式1], [條件式2]的註冊資訊是否已經重覆產生
+         IF cl_null(l_ddata_d.ddata007) THEN
+            SELECT COUNT(*) INTO l_cnt FROM adzi888_ddata
+              WHERE ddata001 = g_master_m.master001
+                AND ddata004 = l_ddata_d.ddata004
+                AND ddata005 = l_ddata_d.ddata005
+                AND ddata006 = l_ddata_d.ddata006
+         ELSE
+            SELECT COUNT(*) INTO l_cnt FROM adzi888_ddata
+              WHERE ddata001 = g_master_m.master001
+                AND ddata004 = l_ddata_d.ddata004
+                AND ddata005 = l_ddata_d.ddata005
+                AND ddata006 = l_ddata_d.ddata006
+                AND ddata007 = l_ddata_d.ddata007
+         END IF
+         
+         IF l_cnt > 0 THEN
+            CONTINUE FOREACH
+         END IF
+         
+         IF NOT adzi888_insert_adzi888_ddata(l_ddata_d.*) THEN
+           RETURN FALSE
+         END IF
+         
+         LET l_ddata002 = l_ddata002 + 1
+      END FOREACH
+      
+   END FOREACH
+
+   RETURN TRUE
+END FUNCTION
+
+#+ 設計資料匯出清單單身新增資料
+PRIVATE FUNCTION adzi888_insert_adzi888_ddata(p_ddata_d)
+   DEFINE p_ddata_d         type_g_ddata_d
+   DEFINE l_cnt             LIKE type_t.num5
+
+   IF l_cnt > 0 THEN
+      RETURN TRUE
+   END IF
+   
+   INSERT INTO adzi888_ddata(ddata001, ddata002, ddata003, ddata004, ddata005, 
+                             ddata006, ddata007, ddata008, ddata009, ddata010,
+                             ddata015) 
+     VALUES(g_master_m.master001, p_ddata_d.ddata002, p_ddata_d.ddata003, p_ddata_d.ddata004, p_ddata_d.ddata005, 
+            p_ddata_d.ddata006, p_ddata_d.ddata007, p_ddata_d.ddata008, p_ddata_d.ddata009, p_ddata_d.ddata010,
+            p_ddata_d.ddata015)
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = "adzi888_ddata"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   #串接ALM環境時,更新需求單狀態
+   IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+      #同步回ALM需求單
+      INSERT INTO dzld_t(dzld001, dzld002, dzld003, dzld004, dzld005, 
+                         dzld006, dzld007, dzld008, dzld009, dzld010,
+                         dzld011, dzld012, dzld013, dzld014, dzld015) 
+        VALUES(g_master_m.master001, p_ddata_d.ddata002, p_ddata_d.ddata003, p_ddata_d.ddata004, p_ddata_d.ddata005, 
+               p_ddata_d.ddata006, p_ddata_d.ddata007, p_ddata_d.ddata008, p_ddata_d.ddata009, p_ddata_d.ddata010,
+               g_master_m.master013, g_dzld012, g_dzld013, g_master_m.master014, p_ddata_d.ddata015)
+ 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = "dzld_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+   
+   RETURN TRUE
+END FUNCTION
+
+#+ 檔案匯出清單單身新增資料
+PRIVATE FUNCTION adzi888_insert_adzi888_dfile(p_dfile_d)
+   DEFINE p_dfile_d         type_g_dfile_d
+
+   INSERT INTO adzi888_dfile(dfile001, dfile002, dfile003, dfile004, dfile005,
+                             dfile006, dfile007) 
+     VALUES(g_master_m.master001, p_dfile_d.dfile002, p_dfile_d.dfile003, p_dfile_d.dfile004, p_dfile_d.dfile005, 
+            p_dfile_d.dfile006, p_dfile_d.dfile007)
+ 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = "adzi888_dfile"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   
+   #串接ALM環境時,更新需求單狀態
+   IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+      #同步回ALM需求單
+      INSERT INTO dzlf_t(dzlf001, dzlf002, dzlf003, dzlf004, dzlf005, 
+                         dzlf006, dzlf007, dzlf008, dzlf009, dzlf010,
+                         dzlf011) 
+        VALUES(g_master_m.master001, p_dfile_d.dfile002, p_dfile_d.dfile003, p_dfile_d.dfile004, p_dfile_d.dfile005, 
+               p_dfile_d.dfile006, p_dfile_d.dfile007, g_master_m.master013, g_dzld012, g_dzld013, 
+               g_master_m.master014)
+ 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = "dzlf_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+   
+   RETURN TRUE
+END FUNCTION
+
+#+ IT工具類匯出清單單身新增資料
+PRIVATE FUNCTION adzi888_insert_adzi888_dtool(p_dtool_d)
+   DEFINE p_dtool_d         type_g_dtool_d
+
+   INSERT INTO adzi888_dtool(dtool001, dtool002, dtool003, dtool004, dtool005,
+                             dtool006, dtool007, dtool008, dtool009) 
+     VALUES(g_master_m.master001, p_dtool_d.dtool002, p_dtool_d.dtool003, p_dtool_d.dtool004, p_dtool_d.dtool005, 
+            p_dtool_d.dtool006, p_dtool_d.dtool007, p_dtool_d.dtool008, p_dtool_d.dtool009)
+ 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = "adzi888_dtool"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   #串接ALM環境時,更新需求單狀態
+   IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+      #同步回ALM需求單
+      INSERT INTO dzlt_t(dzlt001, dzlt002, dzlt003, dzlt004, dzlt005, 
+                         dzlt006, dzlt007, dzlt008, dzlt009,
+                         dzlt011, dzlt012, dzlt013, dzlt014) 
+        VALUES(g_master_m.master001, p_dtool_d.dtool002, p_dtool_d.dtool003, p_dtool_d.dtool004, p_dtool_d.dtool005, 
+               p_dtool_d.dtool006, p_dtool_d.dtool007, p_dtool_d.dtool008, p_dtool_d.dtool009, 
+               g_master_m.master013, g_dzld012, g_dzld013, g_master_m.master014)
+ 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "dzlt_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+   
+   RETURN TRUE
+END FUNCTION
+
+#+ 註冊資訊[清單]+[資料]匯出前置作業
+PRIVATE FUNCTION adzi888_export_data_pre()
+   DEFINE p_dfile_d         type_g_dfile_d
+
+   DEFINE l_folder          STRING     #匯出檔目錄
+   DEFINE l_cmd             STRING
+   DEFINE l_msg             STRING
+   DEFINE l_tar_name        STRING     #匯出包名稱
+   DEFINE l_cnt             LIKE type_t.num5
+   DEFINE l_dirname         STRING     #上一層工作路徑
+   DEFINE l_work_dir        STRING     #目前程式執行路徑
+   DEFINE l_pack_dir        STRING     #打包檔置放路徑
+   DEFINE l_str             STRING
+   DEFINE l_success         LIKE type_t.chr1 
+   
+   IF g_master_m.master001 IS NULL OR g_master_m.master002 IS NULL THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #切換到$TEMPDIR工作目錄下
+   LET l_pack_dir = FGL_GETENV(g_pack_dir_env)
+   
+   IF NOT sadzi888_01_change_pack_dir(l_pack_dir) THEN
+      RETURN FALSE
+   END IF
+
+   LET l_folder = sadzi888_01_get_folder_name(g_master_m.master002, g_master_m.master003)
+
+   LET g_dmp_mode = TRUE
+   LET g_exp_para = sadzi888_02_get_ds_password()
+   LET g_patch_mode = FALSE
+   LET g_run_mode = 1   #手動匯出/入走過單模式
+   
+   #todo:準備呼叫新增[設計資料]
+   IF g_top_alm = "Y" AND (NOT (cl_null(g_master_m.master013) AND cl_null(g_master_m.master014))) THEN
+      CALL sadzi888_02_insert_temp_table_for_design_data(g_run_mode, g_master_m.master013, g_master_m.master014)
+         RETURNING l_success, g_error_message
+
+      IF NOT l_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "adz-00434"
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         DISPLAY "ERROR:", g_error_message
+         RETURN FALSE
+      END IF
+   END IF
+
+   #註冊資訊[清單]+[資料]匯出作業
+   IF NOT sadzi888_01_export(g_master_m.master001, g_master_m.master002, g_master_m.master013, g_master_m.master014, l_pack_dir, l_folder) THEN
+      DISPLAY "sadzi888_01_export is error."
+   END IF
+
+   #切換回正確程式執行路徑
+   IF NOT sadzi888_01_change_work_dir() THEN
+      RETURN FALSE
+   END IF
+
+   
+   LET g_master001_t = NULL
+
+   EXECUTE adzi888_master_referesh USING g_master_m.master001 
+                                   INTO g_master_m.master001, g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005, 
+                                        g_master_m.master006, g_master_m.master007, g_master_m.master008, g_master_m.master009, g_master_m.master010, 
+                                        g_master_m.master011, g_master_m.master012, g_master_m.master013, g_master_m.master014
+                                        
+   
+   IF cl_null(g_master_m.master001) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00335"
+      LET g_errparam.extend = "master001"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   LET g_bfill = "Y"
+   CALL adzi888_show()
+
+   LET g_master001_t = g_master_m.master001
+   
+END FUNCTION
+
+#+ 匯出檔下載前置作業
+PRIVATE FUNCTION adzi888_download_data_pre()
+   DEFINE l_pack_dir        STRING     #打包檔置放路徑
+   
+   #切換到$TEMPDIR工作目錄下
+   LET l_pack_dir = FGL_GETENV(g_pack_dir_env)
+   DISPLAY '切換到:',l_pack_dir 
+   IF NOT sadzi888_01_change_pack_dir(l_pack_dir) THEN
+      RETURN 
+   END IF
+
+   #匯出檔上傳
+   CALL adzi888_download_data(l_pack_dir)
+   
+   #切換回正確程式執行路徑
+   IF NOT sadzi888_01_change_work_dir() THEN
+      RETURN 
+   END IF
+   
+END FUNCTION
+
+#+ 匯出檔下載
+PRIVATE FUNCTION adzi888_download_data(p_pack_dir)
+   DEFINE p_pack_dir        STRING     #打包檔置放路徑
+   
+   DEFINE l_src             STRING     #來源文件
+   DEFINE l_dst             STRING     #目的
+   DEFINE l_work_dir        STRING     #目前程式執行路徑
+   DEFINE l_folder          STRING     #匯出檔目錄
+   DEFINE l_tar_name        STRING     #匯出包名稱
+   DEFINE l_cmd             STRING
+   
+   IF g_master_m.master001 IS NULL OR g_master_m.master002 IS NULL THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   LET l_folder = sadzi888_01_get_folder_name(g_master_m.master002, g_master_m.master003)
+   LET l_tar_name = l_folder, ".tgz"
+
+   #檢查tar是否存在
+   IF NOT os.Path.EXISTS(l_tar_name) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00328"
+      LET g_errparam.extend = NULL
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] =  l_tar_name.trim()
+      CALL cl_err()
+      RETURN
+   END IF
+
+   #Server下載檔案路徑/檔名
+   LET l_src = os.Path.JOIN(p_pack_dir, l_tar_name)
+
+   #選擇本地端下載資料夾
+   LET l_dst = cl_client_browse_dir()
+   LET l_dst = os.Path.JOIN(l_dst, l_tar_name)
+
+   #下載檔案至Client端 
+   IF NOT cl_client_download_file(l_src, l_dst) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00329"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   ELSE
+      CALL cl_ask_confirm3("adz-00330", l_tar_name.trim())
+
+      #下載成功後,從Server端刪除相關檔案
+      #刪除目錄
+      IF os.Path.EXISTS(l_folder) THEN
+         LET l_cmd = "rm -rf ", l_folder
+         RUN l_cmd
+      END IF
+      
+      #刪除tar檔
+      IF os.Path.EXISTS(l_tar_name) THEN
+         LET l_cmd = "rm -f ", l_tar_name
+         RUN l_cmd
+      END IF
+   END IF
+
+   LET g_export_flag = TRUE
+END FUNCTION
+
+#+ 匯出檔上傳前置作業
+PRIVATE FUNCTION adzi888_upload_data_pre()
+   DEFINE l_pack_dir        STRING     #打包檔置放路徑
+   
+   #切換到$TEMPDIR工作目錄下
+   LET l_pack_dir = FGL_GETENV(g_pack_dir_env)
+   DISPLAY '切換到:',l_pack_dir 
+   IF NOT sadzi888_01_change_pack_dir(l_pack_dir) THEN
+      RETURN 
+   END IF
+
+   #匯出檔上傳
+   CALL adzi888_upload_data(l_pack_dir)
+   
+   #切換回正確程式執行路徑
+   IF NOT sadzi888_01_change_work_dir() THEN
+      RETURN 
+   END IF
+
+END FUNCTION
+
+#+ 匯出檔上傳
+PRIVATE FUNCTION adzi888_upload_data(p_pack_dir)
+   DEFINE p_pack_dir        STRING     #打包檔置放路徑
+   
+   DEFINE l_src             STRING     #來源文件
+   DEFINE l_dst             STRING     #目的
+   DEFINE l_work_dir        STRING     #目前程式執行路徑
+   DEFINE l_folder          STRING     #匯出檔目錄
+   DEFINE l_tar_name        STRING     #匯出包名稱
+   DEFINE l_idx             LIKE type_t.num5
+   DEFINE l_cmd             STRING
+   DEFINE l_msg             STRING
+   DEFINE lb_chk            BOOLEAN #2016/01/27
+
+   #Client選擇上傳匯出檔案
+   LET l_src = cl_client_browse_file()
+
+   #取得tar檔案名稱
+   LET l_tar_name = os.Path.basename(l_src.trim())
+
+   #取得匯出檔的目錄名稱
+   LET l_idx = l_tar_name.getIndexOf(".tgz", 1)
+   IF l_idx > 1 THEN
+      LET l_folder = l_tar_name.subString(1, l_idx - 1)
+   END IF
+
+   IF cl_null(l_tar_name) OR cl_null(l_folder) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00331"
+      LET g_errparam.extend = NULL
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] =  l_tar_name.trim()
+      CALL cl_err()
+      RETURN
+   END IF
+
+   #檢查目錄是否存在
+   IF NOT sadzi888_01_delete_pack(l_folder, l_tar_name) THEN
+      RETURN
+   END IF
+
+   #Server上傳檔案路徑/檔名
+   LET l_dst = os.Path.JOIN(p_pack_dir, l_tar_name)
+   
+   #上傳檔案至Server端
+   IF NOT cl_client_upload_file(l_src, l_dst) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00332"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   ELSE
+      CALL cl_ask_pressanykey("adz-00333")
+   END IF
+   
+   #檢查tar是否存在
+   IF NOT os.Path.EXISTS(l_tar_name) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00328"
+      LET g_errparam.extend = NULL
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] =  l_tar_name.trim()
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #解包成tar檔範例:tar xvf $FOLDER.tar
+   LET l_cmd = "tar xvf ", l_tar_name CLIPPED
+   #RUN l_cmd
+   #2016/01/27
+   LET lb_chk = FALSE
+   CALL sadzi888_01_tar_extract_and_get_folder(l_cmd) 
+     RETURNING lb_chk,l_folder
+   IF NOT lb_chk THEN
+      RETURN  
+   END IF 
+
+   #切換到新目錄下,準備讀取匯入檔
+   IF (NOT os.Path.EXISTS(l_folder)) OR (NOT os.Path.chdir(l_folder)) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00340"
+      LET g_errparam.extend = NULL
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] =  l_folder.trim()
+      CALL cl_err()
+      RETURN
+   END IF
+
+   #匯入此次打包註冊資訊清單
+   IF NOT adzi888_import_pack_list() THEN
+      RETURN
+   END IF
+
+   LET g_wc = " dzld001 = '", g_master_m.master001 CLIPPED, "' "
+   
+END FUNCTION
+
+#+ 匯入此次打包清單資訊
+PRIVATE FUNCTION adzi888_import_pack_list()
+   DEFINE l_cmd             STRING
+   DEFINE l_file            STRING
+   DEFINE l_sql             STRING
+   DEFINE l_cnt             LIKE type_t.num5
+
+   #因採用temp table運作,所以每次先清空temp table裡的資料
+   #刪除所有temp table內的資料
+   DELETE FROM adzi888_master WHERE 1 = 1
+   DELETE FROM adzi888_ddata WHERE 1 = 1
+   DELETE FROM adzi888_dfile WHERE 1 = 1
+   DELETE FROM adzi888_dtool WHERE 1 = 1
+ 
+   #匯出[程式註冊資料匯出主檔]
+   LET l_file = "Temp-", "adzi888_master.unl"
+   LET l_sql = "INSERT INTO adzi888_master "
+   LOAD FROM l_file l_sql
+   
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "LOAD FROM " || l_file.trim()
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+      
+   #匯入[設計資料匯出清單]
+   LET l_file = "Temp-", "adzi888_ddata.unl"
+   LET l_sql = "INSERT INTO adzi888_ddata "
+   LOAD FROM l_file l_sql
+   
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "LOAD FROM " || l_file.trim()
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+   
+   #匯入[檔案匯出清單]
+   LET l_file = "Temp-", "adzi888_dfile.unl"
+   LET l_sql = "INSERT INTO adzi888_dfile "
+   LOAD FROM l_file l_sql
+   
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "LOAD FROM " || l_file.trim()
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   #匯入[IT工具類匯出清單]
+   LET l_file = "Temp-", "adzi888_dtool.unl"
+   LET l_sql = "INSERT INTO adzi888_dtool "
+   LOAD FROM l_file l_sql
+   
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "LOAD FROM " || l_file.trim()
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+   
+   #清畫面欄位內容
+   CLEAR FORM
+   CALL g_ddata_d.CLEAR()
+   CALL g_dfile_d.CLEAR()
+   CALL g_dtool_d.CLEAR()
+
+   #取得[程式註冊資料匯出主檔]
+   SELECT COUNT(*) INTO l_cnt FROM adzi888_master
+   IF l_cnt <> 1 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00335"
+      LET g_errparam.extend = "cnt"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   
+   LET g_master001_t = NULL
+   
+   SELECT master001, master002, master003, master004, master005, 
+          master006, master007, master008, master009, master010, 
+          master011, master012, master013, master014
+     INTO g_master_m.master001, g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005, 
+          g_master_m.master006, g_master_m.master007, g_master_m.master008, g_master_m.master009, g_master_m.master010, 
+          g_master_m.master011, g_master_m.master012, g_master_m.master013, g_master_m.master014
+     FROM adzi888_master
+
+   IF cl_null(g_master_m.master001) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00335"
+      LET g_errparam.extend = "master001"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   LET g_bfill = "Y"
+   CALL adzi888_show()
+
+   LET g_master001_t = g_master_m.master001
+   
+   RETURN TRUE
+END FUNCTION
+
+#+ 程式註冊資料匯入前置作業
+PRIVATE FUNCTION adzi888_import_data_pre()
+   DEFINE l_folder          STRING     #匯出檔目錄
+   DEFINE l_work_dir        STRING     #目前程式執行路徑
+   DEFINE l_pack_dir        STRING     #打包檔置放路徑
+   DEFINE l_tar_name        STRING     #匯出包名稱
+   DEFINE l_cnt             LIKE type_t.num5
+   DEFINE l_success         LIKE type_t.chr1 
+   DEFINE l_str             STRING
+
+   IF g_master_m.master001 IS NULL OR g_master_m.master002 IS NULL THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   LET l_success = TRUE
+   LET g_dmp_mode = TRUE
+   LET g_batch_flag = FALSE
+   LET g_patch_mode = FALSE
+   LET g_exp_para = sadzi888_02_get_ds_password()
+   LET g_run_mode = 2   #手動匯出/入走過單模式
+
+   #切換到$TEMPDIR工作目錄下
+   LET l_pack_dir = FGL_GETENV(g_pack_dir_env)
+   
+   IF NOT sadzi888_01_change_pack_dir(l_pack_dir) THEN
+      RETURN FALSE
+   END IF
+
+   LET l_folder = sadzi888_01_get_folder_name(g_master_m.master002, g_master_m.master003)
+   
+   #開始記錄匯入log
+   CALL sadzi888_01_log_file_start(g_run_mode, g_master_m.master002)
+
+   #取得dzye_t資訊
+   IF NOT sadzi888_01_imp_get_dzye(g_master_m.master002, l_folder) THEN
+      RETURN FALSE
+   END IF
+
+   #註冊資訊[清單]+[資料]匯入作業
+   IF NOT sadzi888_01_import(g_master_m.master001, g_master_m.master013, g_master_m.master014, l_pack_dir, l_folder) THEN
+      DISPLAY "sadzi888_01_import is error."
+      LET l_success = FALSE
+   END IF
+
+   IF l_success THEN
+     #Begin :160223-00028 mark
+     ##[qry link]
+     #SELECT COUNT(*) INTO l_cnt FROM adzi888_ddata
+     #  WHERE ddata005 = 'adzi210'
+     #
+     #IF l_cnt > 0 THEN
+     #   DISPLAY "adzi888.s_azzi070_gen_qry() is start."
+     #   LET l_str = "s_azzi070_gen_qry start:", cl_get_current(), ASCII 10
+     #   CALL sadzi888_01_log_file_write(l_str)
+     #
+     #   CALL s_azzi070_gen_qry()
+     #
+     #   LET l_str = "s_azzi070_gen_qry end:", cl_get_current(), ASCII 10
+     #   CALL sadzi888_01_log_file_write(l_str)
+     #END IF
+     #End :160223-00028 mark
+
+      #產生程式
+      SELECT COUNT(*) INTO l_cnt FROM adzi888_ddata
+        WHERE ddata005 = 'design_data' OR ddata005 = 'adzi210' #160223-00028
+       #WHERE ddata005 = 'design_data'
+     
+      IF l_cnt > 0 THEN
+         DISPLAY "adzi888.sadzi888_06_after_imp() is start."
+         LET l_str = "sadzi888_06_after_imp start:", cl_get_current(), ASCII 10
+         CALL sadzi888_01_log_file_write(l_str)
+      
+         CALL sadzi888_06_after_imp(g_run_mode) 
+            RETURNING l_success, g_error_message
+      
+         LET l_str = "sadzi888_06_after_imp end:", cl_get_current(), ASCII 10
+         CALL sadzi888_01_log_file_write(l_str)
+         DISPLAY "adzi888.sadzi888_06_after_imp() is end."
+
+         IF NOT l_success THEN
+            DISPLAY "after_imp error:", g_error_message
+         END IF
+
+         CALL sadzi888_01_log_file_write(g_error_message)
+      END IF
+   END IF
+
+   IF l_success THEN
+      #整批處理程式相關檔案產生
+      DISPLAY "adzi888.generator_program(FALSE) is start."
+      LET l_str = "generator_program start:", cl_get_current(), ASCII 10
+      CALL sadzi888_01_log_file_write(l_str)
+      
+      IF NOT sadzi888_01_generator_program_batch(g_master_m.master001, FALSE) THEN
+         DISPLAY "sadzi888_01_generator_program_batch is error."
+      END IF
+   
+      LET l_str = "generator_program end:", cl_get_current(), ASCII 10
+      CALL sadzi888_01_log_file_write(l_str)
+      DISPLAY "adzi888.generator_program(FALSE) is end."
+   END IF
+   
+   #結束記錄log
+   CALL sadzi888_01_log_file_end()
+
+   #匯入成功
+   IF l_success THEN
+      CALL cl_ask_confirm3("adz-00346", l_folder.trim())
+   END IF
+   
+   #切換回正確程式執行路徑
+   IF NOT sadzi888_01_change_work_dir() THEN
+      RETURN FALSE
+   END IF
+
+   
+   LET g_master001_t = NULL
+
+   EXECUTE adzi888_master_referesh USING g_master_m.master001 
+                                   INTO g_master_m.master001, g_master_m.master002, g_master_m.master003, g_master_m.master004, g_master_m.master005, 
+                                        g_master_m.master006, g_master_m.master007, g_master_m.master008, g_master_m.master009, g_master_m.master010, 
+                                        g_master_m.master011, g_master_m.master012, g_master_m.master013, g_master_m.master014
+                                        
+   
+   IF cl_null(g_master_m.master001) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00335"
+      LET g_errparam.extend = "master001"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   LET g_bfill = "Y"
+   CALL adzi888_show()
+
+   LET g_master001_t = g_master_m.master001
+   
+END FUNCTION
+
+#+ 檢查需求單號與項次是否存在dzlu_t或dzld_t
+PRIVATE FUNCTION adzi888_chk_alm_data(p_cmd)
+   DEFINE p_cmd             LIKE type_t.chr1
+   DEFINE l_cnt             LIKE type_t.num5
+
+   IF ARG_VAL(2) = 'debug' THEN
+      RETURN TRUE
+   END IF
+   
+   IF (NOT cl_null(g_master_m.master013)) AND (NOT cl_null(g_master_m.master014)) THEN
+      #檢查需求單號與項次是否存在dzlu_t
+      SELECT COUNT(*) INTO l_cnt FROM dzlu_t 
+        WHERE dzlu002 = g_account
+          AND dzlu003 = g_master_m.master013
+          AND dzlu004 = g_dzld012
+          AND dzlu005 = g_dzld013
+          AND dzlu006 = g_master_m.master014
+
+      IF l_cnt = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "adz-00360"
+         LET g_errparam.extend = NULL
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = g_master_m.master013 CLIPPED 
+         LET g_errparam.replace[2] = g_master_m.master014 CLIPPED
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+
+      #檢查需求單號與項次是否重覆新增
+      IF p_cmd = 'a' THEN
+         #檢查是否已有程式註冊資料匯出清單
+         SELECT COUNT(*) INTO l_cnt FROM dzld_t
+           WHERE dzld011 = g_master_m.master013
+             AND dzld012 = g_dzld012
+             AND dzld013 = g_dzld013
+             AND dzld014 = g_master_m.master014
+
+         IF l_cnt > 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "adz-00361"
+            LET g_errparam.extend = NULL
+            LET g_errparam.popup = TRUE
+            LET g_errparam.replace[1] = g_master_m.master013 CLIPPED 
+            LET g_errparam.replace[2] = g_master_m.master014 CLIPPED
+            CALL cl_err()
+           RETURN FALSE
+         END IF
+
+         #是否已有檔案匯出清單
+         SELECT COUNT(*) INTO l_cnt FROM dzlf_t
+           WHERE dzlf008 = g_master_m.master013
+             AND dzlf009 = g_dzld012
+             AND dzlf010 = g_dzld013
+             AND dzlf011 = g_master_m.master014
+
+         IF l_cnt > 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "adz-00361"
+            LET g_errparam.extend = NULL
+            LET g_errparam.popup = TRUE
+            LET g_errparam.replace[1] = g_master_m.master013 CLIPPED 
+            LET g_errparam.replace[2] = g_master_m.master014 CLIPPED
+            CALL cl_err()
+           RETURN FALSE
+         END IF
+
+         #是否已有IT工具類匯出清單
+         SELECT COUNT(*) INTO l_cnt FROM dzlt_t
+           WHERE dzlt011 = g_master_m.master013
+             AND dzlt012 = g_dzld012
+             AND dzlt013 = g_dzld013
+             AND dzlt014 = g_master_m.master014
+
+         IF l_cnt > 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "adz-00361"
+            LET g_errparam.extend = NULL
+            LET g_errparam.popup = TRUE
+            LET g_errparam.replace[1] = g_master_m.master013 CLIPPED 
+            LET g_errparam.replace[2] = g_master_m.master014 CLIPPED
+            CALL cl_err()
+           RETURN FALSE
+         END IF
+      END IF
+   END IF
+
+   RETURN TRUE
+END FUNCTION
+
+#+ 檢查file是否存在
+PRIVATE FUNCTION adzi888_chk_file_exist(p_cmd)
+   DEFINE p_cmd             LIKE type_t.chr1
+   DEFINE l_dfile003_str    STRING
+   
+   IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_master_m.master001 != g_master001_t OR 
+                                       (g_dfile_d[g_detail_idx2].dfile005 != g_dfile_d_t.dfile005 OR
+                                        g_dfile_d[g_detail_idx2].dfile003 != g_dfile_d_t.dfile003))) THEN
+      #檢查檔案是否存在
+      LET l_dfile003_str = sadzp007_util_get_path(g_dfile_d[g_detail_idx2].dfile003 CLIPPED) #160223-00028
+      LET l_dfile003_str = os.Path.JOIN(l_dfile003_str, g_dfile_d[g_detail_idx2].dfile005 CLIPPED)
+
+      IF NOT os.Path.EXISTS(l_dfile003_str) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  "adz-00339"
+         LET g_errparam.extend = NULL
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = l_dfile003_str.trim()
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+               
+   RETURN TRUE
+END FUNCTION
+
+#+ 檢查IT工具類file是否存在
+PRIVATE FUNCTION adzi888_chk_it_file_exist(p_cmd)
+   DEFINE p_cmd             LIKE type_t.chr1
+   
+   DEFINE l_str             STRING
+   DEFINE l_dtool006        STRING
+   DEFINE l_cnt             LIKE type_t.num5
+   DEFINE l_dzea001         LIKE dzea_t.dzea001
+   DEFINE l_load_data       type_g_load_data
+   DEFINE l_success         LIKE type_t.chr1
+   
+   LET l_str = ""
+   
+   IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_master_m.master001 != g_master001_t OR 
+                                       (g_dtool_d[g_detail_idx3].dtool003 != g_dtool_d_t.dtool003 OR
+                                        g_dtool_d[g_detail_idx3].dtool004 != g_dtool_d_t.dtool004 OR
+                                        g_dtool_d[g_detail_idx3].dtool006 != g_dtool_d_t.dtool006))) THEN
+
+      #匯入類型為"del"(刪除data模式)或"load"(匯入data模式)時,先檢查table name是否存在r.t
+      IF g_dtool_d[g_detail_idx3].dtool004 = "del" OR g_dtool_d[g_detail_idx3].dtool004 = "load" THEN
+         ##取得資料表名稱(dtool006輸入範例應該unl file路徑,如:"$TEMPDIR/dzld_t", 所以需截取檔名做為資料表名稱的識別)
+         IF g_dtool_d[g_detail_idx3].dtool004 = "load" THEN
+            #LET l_dzea001 = os.Path.basename(g_dtool_d[g_detail_idx3].dtool006)
+            CALL sadzi888_01_get_load_script(g_dtool_d[g_detail_idx3].dtool006)
+               RETURNING l_success, l_load_data.*
+               
+            IF NOT l_success THEN
+               RETURN FALSE
+            END IF
+
+            RETURN TRUE
+         ELSE
+            #刪除資料表名稱時,只需輸入資料表名稱(dtool006輸入範例為"dzld_t")
+            LET l_dzea001 = g_dtool_d[g_detail_idx3].dtool006
+         END IF
+         
+         SELECT COUNT(*) INTO l_cnt FROM dzea_t WHERE dzea001 = l_dzea001
+
+         IF l_cnt = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "adz-00493"
+            LET g_errparam.extend = NULL
+            LET g_errparam.popup = TRUE
+            LET g_errparam.replace[1] = l_dzea001 CLIPPED
+            CALL cl_err()
+            RETURN FALSE
+         END IF
+
+         #匯入類型為"del":不需檢查實體檔案是否存在
+         IF g_dtool_d[g_detail_idx3].dtool004 = "del" THEN
+            RETURN TRUE
+         END IF
+      END IF
+   
+      #檢查檔案是否存在
+      #取得模組
+      IF g_dtool_d[g_detail_idx3].dtool003 <> "oth" THEN
+         LET l_str = UPSHIFT(g_dtool_d[g_detail_idx3].dtool003)
+         LET l_str = FGL_GETENV(l_str)
+      END IF
+
+      #取得是否為4gl,42m或4fd檔案類型
+      IF g_dtool_d[g_detail_idx3].dtool004 = "4gl" OR g_dtool_d[g_detail_idx3].dtool004 = "4fd" OR g_dtool_d[g_detail_idx3].dtool004 = "42m" THEN
+         LET l_str = os.Path.join(l_str, g_dtool_d[g_detail_idx3].dtool004)
+      END IF
+
+      #取得檔案所在完整路徑
+      IF g_dtool_d[g_detail_idx3].dtool003 = "oth" THEN
+         LET l_str = sadzp007_util_get_path(g_dtool_d[g_detail_idx3].dtool006 CLIPPED) #160223-00028
+      ELSE
+         LET l_dtool006 = g_dtool_d[g_detail_idx3].dtool006 CLIPPED
+         IF g_dtool_d[g_detail_idx3].dtool004 = "4gl" OR g_dtool_d[g_detail_idx3].dtool004 = "4fd" THEN
+            LET l_dtool006 = l_dtool006, ".", g_dtool_d[g_detail_idx3].dtool004 CLIPPED
+         END IF
+
+         #42m檔案類型,前置檔名需要加入模組別名稱(例如:adz_sadzi888_01.42m)
+         IF g_dtool_d[g_detail_idx3].dtool004 = "42m" THEN
+            LET l_dtool006 = g_dtool_d[g_detail_idx3].dtool003 CLIPPED, "_", l_dtool006, ".", g_dtool_d[g_detail_idx3].dtool004 CLIPPED 
+         END IF
+         
+         LET l_str = os.Path.JOIN(l_str, l_dtool006.trim())
+      END IF
+      
+      ####load匯入類型,檢查檔名需為[table name].unl(例如:dzyc_t.unl)
+      ###IF g_dtool_d[g_detail_idx3].dtool004 = "load" THEN
+      ###   IF g_dtool_d[g_detail_idx3].dtool006 MATCHES "*.unl" THEN
+      ###      INITIALIZE g_errparam TO NULL
+      ###      LET g_errparam.code =  "adz-00494"
+      ###      LET g_errparam.extend = NULL
+      ###      LET g_errparam.popup = TRUE
+      ###      CALL cl_err()
+      ###      RETURN FALSE
+      ###   END IF
+
+      ###   #load匯入類型需再加上副檔名為".unl"
+      ###   LET l_str = l_str, ".unl"
+      ###END IF
+      
+      IF NOT os.Path.EXISTS(l_str) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  "adz-00339"
+         LET g_errparam.extend = NULL
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = l_str.trim()
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+
+   RETURN TRUE
+END FUNCTION
+
+#+ 檢查data是否存在
+PRIVATE FUNCTION adzi888_chk_data_exist(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   
+   RETURN TRUE
+END FUNCTION
+
+############################################################
+#+ @code
+#+ 函式目的  動態設定元件是否可輸入
+#+ @param    ps_fields  STRING     要設定元件是否可輸入的欄位名稱字串(中間以逗點分隔)
+#+ @param    pi_entry   NUMBER(5)  是否可輸入(TRUE→可輸入,FALSE→不可輸入)
+############################################################
+PRIVATE FUNCTION adzi888_set_comp_entry(ps_fields, pi_entry)
+  DEFINE ps_fields     STRING
+  DEFINE pi_entry      LIKE type_t.num5
+  DEFINE lst_fields    base.StringTokenizer
+  DEFINE ls_field_name STRING
+  DEFINE lwin_curr     ui.Window
+  DEFINE lnode_win     om.DomNode
+  DEFINE llst_items    om.NodeList
+  DEFINE li_i          LIKE type_t.num5
+  DEFINE lnode_item    om.DomNode
+  DEFINE ls_item_name  STRING
+  DEFINE lc_field     LIKE type_t.chr20
+  
+  IF g_bgjob = 'Y' AND g_gui_type NOT MATCHES "[13]" THEN 
+     RETURN
+  END IF
+ 
+  IF (ps_fields IS NULL) THEN
+     RETURN
+  END IF
+
+  LET ps_fields = ps_fields.toLowerCase()
+
+  LET lst_fields = base.StringTokenizer.CREATE(ps_fields, ",")
+ 
+  LET lwin_curr = ui.Window.getCurrent()
+  LET lnode_win = lwin_curr.getNode()
+ 
+  LET llst_items = lnode_win.selectByPath("//Form//*")
+ 
+  WHILE lst_fields.hasMoreTokens()
+    LET ls_field_name = lst_fields.nextToken()
+    LET ls_field_name = ls_field_name.trim()
+
+    IF NOT ls_field_name.getIndexOf("_t",1) OR NOT ls_field_name.getIndexOf("formonly.",1) THEN
+       LET ls_field_name = "formonly.", ls_field_name.trim()
+    END IF 
+    
+    IF (ls_field_name.getLength() > 0) THEN
+       FOR li_i = 1 TO llst_items.getLength()
+           LET lnode_item = llst_items.item(li_i)
+
+           #先抓取Name (有含table.colname) 不存在再試抓 colName (不含table NAME)
+           LET ls_item_name = lnode_item.getAttribute("name")
+  
+           IF (ls_item_name IS NULL) THEN
+              LET ls_item_name = lnode_item.getAttribute("colName")
+              
+              IF (ls_item_name IS NULL) THEN
+                 CONTINUE FOR
+              END IF
+           END IF
+  
+           LET ls_item_name = ls_item_name.trim()
+  
+           IF (ls_item_name.equals(ls_field_name)) THEN
+              #不特別再設active屬性, 讓是否輸入狀態自動導致active值改變
+              #因為在新增狀態下程式規範將pk欄位開啟, 若規格設定INPUT內不輸入pk欄位,
+              #會導致介面被改為active+entry的外觀但卻無法輸入
+              IF (pi_entry) THEN
+                 CALL lnode_item.setAttribute("noEntry", "0")
+              ELSE
+                 CALL lnode_item.setAttribute("noEntry", "1")
+              END IF
+           
+              EXIT FOR
+           END IF
+       END FOR
+    END IF
+  END WHILE
+END FUNCTION
+
+#+ 檢查單身細項過單狀態,若已為過單成功將不再給與刪除功能
+PRIVATE FUNCTION adzi888_chk_alm_status(ps_table, p_seq)
+   DEFINE ps_table    STRING
+   DEFINE p_seq       LIKE type_t.num5     #序號
+   
+   DEFINE ls_group    STRING
+   DEFINE l_stus      LIKE type_t.chr1     #過單狀態
+   DEFINE l_chk       LIKE type_t.chr1     #是否做過檢查
+
+   #串接ALM環境時才確認此過單狀態
+   IF g_top_alm = "N" OR p_seq = 0 OR cl_null(p_seq) THEN
+      RETURN TRUE
+   END IF
+
+   LET l_chk = FALSE
+   LET l_stus = ""
+   
+   #設定和設計資料匯出清單
+   LET ls_group = "adzi888_ddata"
+   
+   IF ls_group.getIndexOf(ps_table, 1) THEN
+      SELECT dzld016 INTO l_stus FROM dzld_t 
+        WHERE dzld011 = g_master_m.master013
+          AND dzld012 = g_dzld012
+          AND dzld013 = g_dzld013
+          AND dzld014 = g_master_m.master014
+          AND dzld002 = p_seq
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "sel dzld002:", p_seq CLIPPED
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+
+      LET l_chk = TRUE
+   END IF
+
+   #檔案匯出清單table
+   LET ls_group = "adzi888_dfile"
+   
+   IF ls_group.getIndexOf(ps_table, 1) THEN
+      SELECT dzlf012 INTO l_stus FROM dzlf_t 
+        WHERE dzlf008 = g_master_m.master013
+          AND dzlf009 = g_dzld012
+          AND dzlf010 = g_dzld013
+          AND dzlf011 = g_master_m.master014
+          AND dzlf002 = p_seq
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "sel dzlf002:", p_seq CLIPPED
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+
+      LET l_chk = TRUE
+   END IF
+
+   #IT工具類匯出清單
+   LET ls_group = "adzi888_dtool"
+   
+   IF ls_group.getIndexOf(ps_table, 1) THEN
+      SELECT dzlt010 INTO l_stus FROM dzlt_t 
+        WHERE dzlt011 = g_master_m.master013
+          AND dzlt012 = g_dzld012
+          AND dzlt013 = g_dzld013
+          AND dzlt014 = g_master_m.master014
+          AND dzlt002 = p_seq
+          
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "sel dzlt002:", p_seq CLIPPED
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+
+      LET l_chk = TRUE
+   END IF
+
+   #當過單狀態(l_stus)不為null時,代表已曾經成功過單,此時不能將此過單資訊刪除
+   IF l_chk AND (NOT cl_null(l_stus)) AND (cl_null(ARG_VAL(2)) OR ARG_VAL(2) <> 'debug') THEN
+      CALL cl_ask_confirm3("adz-00569", p_seq USING "<<<<<")
+      RETURN FALSE
+   END IF
+   
+   RETURN TRUE
+END FUNCTION
+

@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbq700" module="adb" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06137" crtdt="2015-01-26 11:41:07" modid="06815" moddt="2015-07-27 18:03:22" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="配送排車計劃單據查詢列印作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="dbeasite,dbeadocno,dbeadocdt,dbea001,dbea002,dbea003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),dbeasite,dbeasite_desc(chr500),dbeadocno,dbeadocdt,dbea001,dbea002,dbea002_desc(chr500),dbea003,dbea003_desc(chr500),dbeastus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="dbeb001,dbeb001_desc(chr500),dbeb002,dbeb002_desc(chr500),dbeb003,dbeb004,dbeb005,dbeb005_desc(chr500),dbeb007,dbeb006,dbeb008,dbeb008_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),dbeasite(b_dbeasite),dbeasite_desc(b_dbeasite_desc),dbeadocno(b_dbeadocno),dbeadocdt(b_dbeadocdt),dbea001(b_dbea001),dbea002(b_dbea002),dbea002_desc(b_dbea002_desc),dbea003(b_dbea003),dbea003_desc(b_dbea003_desc),dbeastus(b_dbeastus)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="dbeb001(b_dbeb001),dbeb001_desc(b_dbeb001_desc),dbeb002(b_dbeb002),dbeb002_desc(b_dbeb002_desc),dbeb003(b_dbeb003),dbeb004(b_dbeb004),dbeb005(b_dbeb005),dbeb005_desc(b_dbeb005_desc),dbeb007(b_dbeb007),dbeb006(b_dbeb006),dbeb008(b_dbeb008),dbeb008_desc(b_dbeb008_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="adb" filename="adbq700" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="dbeasite,dbeadocno,dbeadocdt,dbea001,dbea002,dbea003,dbeastus" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="dbeb001,dbeb002,dbeb003,dbeb004,dbeb005,dbeb007,dbeb006,dbeb008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="dbeasite(b_dbeasite),dbeadocno(b_dbeadocno),dbeadocdt(b_dbeadocdt),dbea001(b_dbea001),dbea002(b_dbea002),dbea003(b_dbea003),dbeastus(b_dbeastus)"/>
+      <construct id="body" page="2" field="dbeb001(b_dbeb001),dbeb002(b_dbeb002),dbeb003(b_dbeb003),dbeb004(b_dbeb004),dbeb005(b_dbeb005),dbeb007(b_dbeb007),dbeb006(b_dbeb006),dbeb008(b_dbeb008)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="dbeasite">
+        <after>
+          <reference field="dbeasite_desc" ref_field="dbeasite" map_field="dbeasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="dbeasite_desc"/>
+      <column id="dbeadocno">
+        <controlp form="q_dbeadocno" state="c"/>
+      </column>
+      <column id="dbeadocdt"/>
+      <column id="dbea001"/>
+      <column id="dbea002">
+        <after>
+          <reference field="dbea002_desc" ref_field="dbea002" map_field="dbea002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbea002_desc"/>
+      <column id="dbea003">
+        <after>
+          <reference field="dbea003_desc" ref_field="dbea003" map_field="dbea003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="dbea003_desc"/>
+      <column id="dbeastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="dbeb001">
+        <after>
+          <reference field="dbeb001_desc" ref_field="dbeb001" map_field="dbeb001" ref_sql="SELECT dbabl003 FROM dbabl_t WHERE dbablent=$varg_enterprise$var AND dbabl001=? AND dbabl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="dbeb001_desc"/>
+      <column id="dbeb002">
+        <after>
+          <reference field="dbeb002_desc" ref_field="dbeb002" map_field="dbeb002" ref_sql="SELECT dbael003 FROM dbael_t WHERE dbaelent=$varg_enterprise$var AND dbael001=? AND dbael002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="dbeb002_desc"/>
+      <column id="dbeb003" type="S" default="0"/>
+      <column id="dbeb004" type="S" default="0"/>
+      <column id="dbeb005">
+        <after>
+          <reference field="dbeb005_desc" ref_field="dbeb005" map_field="dbeb005" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="dbeb005_desc"/>
+      <column id="dbeb007"/>
+      <column id="dbeb006"/>
+      <column id="dbeb008">
+        <after>
+          <reference field="dbeb008_desc" ref_field="dbeb008" map_field="dbeb008" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="dbeb008_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="dbea_t" page="1" linked="" pk="dbeadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,dbeasite,&apos;&apos;,dbeadocno,dbeadocdt,dbea001,dbea002,&apos;&apos;,dbea003,&apos;&apos;,dbeastus FROM dbea_t WHERE dbeaent= ? AND 1=1 "/>
+    </body>
+    <body id="dbeb_t" page="2" linked="" pk="dbeb001" fk="dbebdocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT dbeb001,&apos;&apos;,dbeb002,&apos;&apos;,dbeb003,dbeb004,dbeb005,&apos;&apos;,dbeb007,dbeb006,dbeb008,&apos;&apos; FROM dbeb_t WHERE dbebent=? AND dbebdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

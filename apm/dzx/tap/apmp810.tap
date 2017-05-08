@@ -1,0 +1,840 @@
+<add_points prog="apmp810" std_prog="apmp810" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.apmp810_gen_data" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="1" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION apmp810_gen_data(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE l_indx      LIKE type_t.num5
+   DEFINE l_str       STRING
+   DEFINE l_pmcc002   LIKE pmcc_t.pmcc002
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_success   LIKE type_t.num5
+   
+   CALL util.JSON.parse(ls_js,lc_param)
+   CALL s_transaction_begin()
+   CALL cl_showmsg_init()
+   
+   LET g_cnt_s = 0
+   LET g_cnt_f = 0
+   LET l_str = lc_param.pmcc002
+   LET l_success = TRUE
+   LET l_indx = 1
+   
+   WHILE l_indx > 0 
+      LET l_indx = l_str.getIndexOf("|",1)
+      IF l_indx > 0 THEN
+         LET l_pmcc002 = l_str.subString(1,l_indx-1)
+         LET l_str = l_str.subString(l_indx+1,l_str.getLength())
+      ELSE
+         LET l_pmcc002 = l_str
+      END IF
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt
+        FROM pmcc_t
+       WHERE pmccent = g_enterprise
+         AND pmcc001 = lc_param.pmcc001
+         AND pmcc002 = l_pmcc002
+       IF l_cnt > 0 THEN
+          LET g_cnt_f = g_cnt_f + 1
+          CALL cl_errmsg(lc_param.pmcc001,'pmcc_t',l_pmcc002,"apm-00429",1)
+       ELSE
+          IF l_pmcc002 = "ALL" THEN
+             SELECT COUNT(*) INTO l_cnt
+               FROM pmcc_t
+              WHERE pmccent = g_enterprise
+                AND pmcc001 = lc_param.pmcc001
+             IF l_cnt > 0 THEN
+                LET g_cnt_f = g_cnt_f + 1
+                CALL cl_errmsg(lc_param.pmcc001,'pmcc_t',l_pmcc002,"apm-00461",1)
+                CONTINUE WHILE
+             END IF
+          ELSE 
+             SELECT COUNT(*) INTO l_cnt
+               FROM pmcc_t
+              WHERE pmccent = g_enterprise
+                AND pmcc001 = lc_param.pmcc001
+                AND pmcc002 = "ALL"
+             IF l_cnt > 0 THEN
+                LET g_cnt_f = g_cnt_f + 1
+                CALL cl_errmsg(lc_param.pmcc001,'pmcc_t',l_pmcc002,"apm-00461",1)
+                CONTINUE WHILE
+             END IF   
+          END IF
+          CALL apmp810_ins_pmcc(ls_js,l_pmcc002) RETURNING l_success
+          IF l_success THEN
+             CALL apmp810_ins_pmcd(lc_param.pmcc001,l_pmcc002) RETURNING l_success
+          END IF
+          IF l_success THEN
+             CALL apmp810_ins_pmce(lc_param.pmcc001,l_pmcc002) RETURNING l_success
+          END IF
+          IF l_success THEN
+             CALL apmp810_ins_pmcf(lc_param.pmcc001,l_pmcc002) RETURNING l_success
+          END IF
+          LET g_cnt_s = g_cnt_s + 1
+       END IF
+       
+   END WHILE
+   
+   IF l_success THEN
+      CALL s_transaction_end('Y','0') 
+      CALL cl_err_showmsg()
+   ELSE
+      LET g_cnt_s = 0
+      LET g_cnt_f = g_cnt_all
+      CALL s_transaction_end('N','0')
+   END IF
+   
+END FUNCTION]]>
+</point>
+  <point name="function.apmp810_ins_pmcc" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="2" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION apmp810_ins_pmcc(ls_js,p_pmcc002)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE p_pmcc002   LIKE pmcc_t.pmcc002
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_pmcc_d    RECORD 
+      pmccent LIKE pmcc_t.pmccent,
+      pmcc001 LIKE pmcc_t.pmcc001,
+      pmcc002 LIKE pmcc_t.pmcc002,
+      pmcc003 LIKE pmcc_t.pmcc003,
+      pmcc004 LIKE pmcc_t.pmcc004,
+      pmcc005 LIKE pmcc_t.pmcc005,
+      pmcc006 LIKE pmcc_t.pmcc006,
+      pmccstus LIKE pmcc_t.pmccstus,
+      pmccownid LIKE pmcc_t.pmccownid,
+      pmccowndp LIKE pmcc_t.pmccowndp,
+      pmcccrtid LIKE pmcc_t.pmcccrtid,
+      pmcccrtdp LIKE pmcc_t.pmcccrtdp,
+      pmcccrtdt DATETIME YEAR TO SECOND,
+      pmccmodid LIKE pmcc_t.pmccmodid,
+      pmccmoddt LIKE pmcc_t.pmccmoddt
+   END RECORD     
+   
+   CALL util.JSON.parse(ls_js,lc_param)
+   LET l_success = TRUE
+   
+   LET l_pmcc_d.pmccent = g_enterprise
+   LET l_pmcc_d.pmcc001 = lc_param.pmcc001
+   LET l_pmcc_d.pmcc002 = p_pmcc002
+   LET l_pmcc_d.pmcc003 = lc_param.pmcc003
+   LET l_pmcc_d.pmcc004 = lc_param.pmcc004
+   LET l_pmcc_d.pmcc005 = 50
+   LET l_pmcc_d.pmcc006 = 50
+   LET l_pmcc_d.pmccstus = "Y"
+   LET l_pmcc_d.pmccownid = g_user
+   LET l_pmcc_d.pmccowndp = g_dept
+   LET l_pmcc_d.pmcccrtid = g_user
+   LET l_pmcc_d.pmcccrtdp = g_dept
+   LET l_pmcc_d.pmcccrtdt = cl_get_current()
+   LET l_pmcc_d.pmccmoddt = NULL
+   
+   INSERT INTO pmcc_t(pmccent, pmcc001, pmcc002, pmcc003, pmcc004, pmcc005, pmcc006, pmccstus, pmccownid, pmccowndp, pmcccrtid, pmcccrtdp, pmcccrtdt, pmccmodid, pmccmoddt) 
+        VALUES ( l_pmcc_d.pmccent, l_pmcc_d.pmcc001, l_pmcc_d.pmcc002, l_pmcc_d.pmcc003, l_pmcc_d.pmcc004, l_pmcc_d.pmcc005, l_pmcc_d.pmcc006, l_pmcc_d.pmccstus, l_pmcc_d.pmccownid, l_pmcc_d.pmccowndp, l_pmcc_d.pmcccrtid, l_pmcc_d.pmcccrtdp, l_pmcc_d.pmcccrtdt, l_pmcc_d.pmccmodid, l_pmcc_d.pmccmoddt)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("ins pmcc_t",SQLCA.sqlcode,1)  
+      LET l_success = FALSE
+   END IF
+   
+   RETURN l_success
+END FUNCTION]]>
+</point>
+  <point name="function.apmp810_chk_pmcc002" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="3" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION apmp810_chk_pmcc002(p_str)
+   DEFINE p_str      STRING
+   DEFINE l_index    LIKE type_t.num5
+   DEFINE l_num      LIKE type_t.num5
+   DEFINE l_pmcc002  LIKE pmcc_t.pmcc002
+   DEFINE l_str      STRING
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_rtax004  LIKE rtax_t.rtax004
+   DEFINE l_cnt      LIKE type_t.num5
+   DEFINE l_pmcc_d   DYNAMIC ARRAY OF LIKE pmcc_t.pmcc002
+   DEFINE l_i        LIKE type_t.num5
+   
+   CALL l_pmcc_d.clear()
+   LET l_rtax004 = cl_get_para(g_enterprise,g_site,"E-CIR-0001")
+   LET l_index = 1
+   LET l_str = p_str
+   LET l_success = TRUE
+   LET g_cnt_all = 1
+   LET l_cnt = 0
+   WHILE l_index > 0
+      LET l_index = l_str.getIndexOf("|",1)
+      IF l_index > 0 THEN
+         LET l_pmcc002 = l_str.subString(1,l_index-1)
+         LET l_str = l_str.subString(l_index+1,l_str.getLength())
+      ELSE
+         LET l_pmcc002 = l_str
+      END IF 
+
+      IF l_pmcc002 <> "ALL" THEN
+         #校驗
+         SELECT COUNT(*)
+           INTO l_num
+           FROM rtax_t 
+          WHERE rtaxent = g_enterprise 
+            AND rtax004 = l_rtax004 
+            AND rtaxstus = 'Y'
+            AND rtax001 = l_pmcc002
+         IF l_num = 0 THEN
+            LET l_success = FALSE
+            CALL cl_err(l_pmcc002,"-6372",1)
+            RETURN l_success
+         END IF
+      END IF 
+      LET l_cnt = l_cnt + 1
+      LET l_pmcc_d[l_cnt] = l_pmcc002
+   END WHILE
+   
+   FOR l_cnt = 1 TO l_pmcc_d.getLength()
+      #ALL和其他品類不能並存
+      IF l_pmcc_d.getLength() > 1 THEN
+         IF l_pmcc_d[l_cnt] = "ALL" THEN
+            LET l_success = FALSE
+            CALL cl_err("","apm-00461",1)
+            RETURN l_success
+         END IF
+      END IF
+      #重複
+      FOR l_i = 1 TO l_pmcc_d.getLength()
+         IF l_i <> l_cnt THEN
+            IF l_pmcc_d[l_i] = l_pmcc_d[l_cnt] THEN
+               LET l_success = FALSE
+               CALL cl_err("","apm-00430",1)
+               RETURN l_success
+            END IF
+         END IF
+      END FOR
+   END FOR
+   LET g_cnt_all = l_pmcc_d.getLength()
+
+   RETURN l_success
+END FUNCTION]]>
+</point>
+  <point name="function.apmp810_set_entry" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="4" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION apmp810_set_entry(p_limit)
+   DEFINE p_limit    LIKE type_t.chr1
+   
+   IF p_limit = 'N' THEN
+      CALL cl_set_comp_entry("pmcc002",FALSE)
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.apmp810_ins_pmcd" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="5" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION apmp810_ins_pmcd(p_pmcc001,p_pmcc002)
+   DEFINE p_pmcc001   LIKE pmcc_t.pmcc001
+   DEFINE p_pmcc002   LIKE pmcc_t.pmcc002
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_pmcd_d    RECORD LIKE pmcd_t.*
+   DEFINE l_pmcd003   LIKE pmcd_t.pmcd003
+   DEFINE l_pmcd004   LIKE pmcd_t.pmcd004
+   DEFINE l_cnt       LIKE type_t.num5
+   
+   LET l_success = TRUE
+   LET l_cnt = 1
+   LET l_pmcd004 = 100/g_pmcd_cnt
+   LET l_pmcd004 = s_num_round('3',l_pmcd004,0)
+   
+   FOREACH apmp810_pmcd_cl INTO l_pmcd003
+      IF l_cnt = g_pmcd_cnt THEN
+         LET l_pmcd004 = 100-(l_pmcd004*(g_pmcd_cnt-1))
+      END IF
+      LET l_pmcd_d.pmcdent = g_enterprise
+      LET l_pmcd_d.pmcd001 = p_pmcc001
+      LET l_pmcd_d.pmcd002 = p_pmcc002
+      LET l_pmcd_d.pmcd003 = l_pmcd003
+      LET l_pmcd_d.pmcd004 = l_pmcd004
+      
+      INSERT INTO pmcd_t VALUES l_pmcd_d.*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("ins pmcd_t",SQLCA.sqlcode,1)  
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      LET l_cnt = l_cnt +1
+   END FOREACH
+   RETURN l_success
+END FUNCTION]]>
+</point>
+  <point name="function.apmp810_set_no_entry" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="6" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION apmp810_set_no_entry(p_limit)
+   DEFINE p_limit    LIKE type_t.chr1
+   
+   IF p_limit = 'Y' THEN
+      CALL cl_set_comp_entry("pmcc002",TRUE)
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.apmp810_ins_pmce" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="7" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION apmp810_ins_pmce(p_pmcc001,p_pmcc002)
+   DEFINE p_pmcc001   LIKE pmcc_t.pmcc001
+   DEFINE p_pmcc002   LIKE pmcc_t.pmcc002
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_pmce_d    RECORD LIKE pmce_t.*
+   DEFINE l_pmce003   LIKE pmce_t.pmce003
+   DEFINE l_pmce004   LIKE pmce_t.pmce004
+   DEFINE l_pmce005   LIKE pmce_t.pmce005
+   DEFINE l_cnt       LIKE type_t.num5
+   
+   LET l_success = TRUE
+   LET l_cnt = 1
+   LET l_pmce005 = 100/g_pmce_cnt
+   LET l_pmce005 = s_num_round('3',l_pmce005,0)
+   
+   FOREACH apmp810_pmce_cl INTO l_pmce003,l_pmce004
+      IF l_cnt = g_pmce_cnt THEN
+         LET l_pmce005 = 100-(l_pmce005*(g_pmce_cnt-1))
+      END IF
+      LET l_pmce_d.pmceent = g_enterprise
+      LET l_pmce_d.pmce001 = p_pmcc001
+      LET l_pmce_d.pmce002 = p_pmcc002
+      LET l_pmce_d.pmce003 = l_pmce003
+      LET l_pmce_d.pmce004 = l_pmce004
+      LET l_pmce_d.pmce005 = l_pmce005
+      
+      INSERT INTO pmce_t VALUES l_pmce_d.*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("ins pmce_t",SQLCA.sqlcode,1)  
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      LET l_cnt = l_cnt +1
+   END FOREACH
+   RETURN l_success
+END FUNCTION]]>
+</point>
+  <point name="function.apmp810_ins_pmcf" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="8" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION apmp810_ins_pmcf(p_pmcc001,p_pmcc002)
+   DEFINE p_pmcc001   LIKE pmcc_t.pmcc001
+   DEFINE p_pmcc002   LIKE pmcc_t.pmcc002
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_pmcf_d    RECORD LIKE pmcf_t.*
+   DEFINE l_pmcf003   LIKE pmcf_t.pmcf003
+   
+   LET l_success = TRUE
+   
+   FOREACH apmp810_pmcf_cl INTO l_pmcf003
+
+      LET l_pmcf_d.pmcfent = g_enterprise
+      LET l_pmcf_d.pmcf001 = p_pmcc001
+      LET l_pmcf_d.pmcf002 = p_pmcc002
+      LET l_pmcf_d.pmcf003 = l_pmcf003
+      
+      INSERT INTO pmcf_t VALUES l_pmcf_d.*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("ins pmcf_t",SQLCA.sqlcode,1)  
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   RETURN l_success
+END FUNCTION]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   #argv[1] pmcc_t.pmcc001 #評核期別
+   #argv[2] pmcc_t.pmcc003 #評核開始日期
+   #argv[3] pmcc_t.pmcc004 #評核結束日期
+   #argv[4] type_t.chr1 #限定品類
+   #argv[5] STRING #評核品類
+   #argv[6] STRING #wc]]>
+</point>
+  <point name="global.parameter" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[        pmcc001          LIKE pmcc_t.pmcc001,
+        pmcc003          LIKE pmcc_t.pmcc003,
+        pmcc004          LIKE pmcc_t.pmcc004,
+        limit            LIKE type_t.chr1,
+        pmcc002          STRING,]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[DEFINE g_pmcd_cnt        LIKE type_t.num5
+DEFINE g_pmce_cnt        LIKE type_t.num5
+DEFINE g_cnt_s           LIKE type_t.num5
+DEFINE g_cnt_f           LIKE type_t.num5
+DEFINE g_cnt_all         LIKE type_t.num5]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   LET g_errshow = 1]]>
+</point>
+  <point name="main.background" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   LET lc_param.pmcc001 = g_argv[1]
+   LET lc_param.pmcc003 = g_argv[2]
+   LET lc_param.pmcc004 = DOWNSHIFT(g_argv[3])
+   LET lc_param.limit = g_argv[4]
+   LET lc_param.pmcc002 = g_argv[5]
+   LET lc_param.wc = g_argv[6]
+   LET ls_js = util.JSON.stringify(lc_param)
+   
+   IF NOT cl_null(lc_param.pmcc001) THEN
+      LET g_bgjob = "Y"
+   ELSE
+      LET g_bgjob = "N"
+   END IF]]>
+</point>
+  <point name="process.define" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   DEFINE l_msg       STRING
+   DEFINE l_str       STRING]]>
+</point>
+  <point name="process.foreground_finish" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[      LET l_msg = cl_getmsg('apm-00455',g_dlang)
+      LET l_msg = l_msg,g_cnt_s
+      LET l_str = cl_getmsg('apm-00456',g_dlang)
+      LET l_str = l_str,g_cnt_f
+      LET l_msg = l_msg,",",l_str
+      CALL cl_ask_confirm2("",l_msg) RETURNING li_stus
+      RETURN]]>
+</point>
+  <point name="process.pre_process" cite_std="N" status="u" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   LET g_sql = "SELECT gzcb002",
+               "  FROM gzcb_t ",
+               " WHERE gzcb001 = 6001 "
+   DECLARE apmp810_pmcd_cl CURSOR FROM g_sql
+   
+   SELECT COUNT(*) INTO g_pmcd_cnt
+     FROM gzcb_t
+    WHERE gzcb001 = 6001
+    
+   LET g_sql = "SELECT oocq002,oocq004",
+               "  FROM oocq_t ",
+               " WHERE oocqent = '",g_enterprise,"'",
+               "   AND oocq001 = 2052 ",
+               "   AND oocqstus = 'Y' "               
+   DECLARE apmp810_pmce_cl CURSOR FROM g_sql
+    
+   SELECT COUNT(*) INTO g_pmce_cnt
+     FROM oocq_t
+    WHERE oocqent = g_enterprise
+      AND oocq001 = 2052
+      AND oocqstus = 'Y'
+      
+   LET g_sql = "SELECT oocq002",
+               "  FROM oocq_t ",
+               " WHERE oocqent = '",g_enterprise,"'",
+               "   AND oocq001 = 2053 ",
+               "   AND oocqstus = 'Y' "                
+   DECLARE apmp810_pmcf_cl CURSOR FROM g_sql]]>
+</point>
+  <point name="process.process" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   CALL apmp810_gen_data(ls_js)]]>
+</point>
+  <point name="transfer.argv.define" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   LET la_cmdrun.param[1] = la_param.pmcc001
+   LET la_cmdrun.param[2] = la_param.pmcc003     
+   LET la_cmdrun.param[3] = la_param.pmcc004
+   LET la_cmdrun.param[4] = la_param.limit
+   LET la_cmdrun.param[5] = la_param.pmcc002
+   LET la_cmdrun.param[6] = la_param.wc]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   DEFINE l_rtax004         LIKE rtax_t.rtax004]]>
+</point>
+  <point name="ui_dialog.more_input" cite_std="N" status="u" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[         INPUT BY NAME lc_param.pmcc001,lc_param.pmcc003,lc_param.pmcc004,lc_param.limit,lc_param.pmcc002
+            BEFORE INPUT
+               IF cl_null(lc_param.limit) THEN
+                  LET lc_param.limit = 'N'
+                  LET lc_param.pmcc002 = "ALL" 
+               END IF
+               IF cl_null(lc_param.pmcc003) THEN
+                  CALL s_date_get_first_date(g_today) RETURNING lc_param.pmcc003
+               END IF
+               IF cl_null(lc_param.pmcc004) THEN
+                  CALL s_date_get_last_date(g_today) RETURNING lc_param.pmcc004
+               END IF
+               CALL apmp810_set_entry(lc_param.limit)
+               CALL apmp810_set_no_entry(lc_param.limit)
+               
+               
+            AFTER FIELD pmcc003
+               IF lc_param.pmcc003 > lc_param.pmcc004 THEN
+                  CALL cl_err("","amm-00093",1)
+                  NEXT FIELD pmcc003
+               END IF
+               
+            AFTER FIELD pmcc004
+               IF lc_param.pmcc004 < lc_param.pmcc003 THEN
+                  CALL cl_err("","amm-00094",1)
+                  NEXT FIELD pmcc004
+               END IF
+               
+            AFTER FIELD limit
+               IF lc_param.limit = 'N' THEN
+                  LET lc_param.pmcc002 = "ALL"
+               ELSE
+                  LET lc_param.pmcc002 = NULL
+               END IF
+               
+            ON CHANGE limit
+               IF lc_param.limit = 'N' THEN
+                  LET lc_param.pmcc002 = "ALL"
+               ELSE
+                  LET lc_param.pmcc002 = NULL
+               END IF            
+               CALL apmp810_set_entry(lc_param.limit)
+               CALL apmp810_set_no_entry(lc_param.limit)
+               
+            BEFORE FIELD pmcc002
+               CALL apmp810_set_entry(lc_param.limit)
+               CALL apmp810_set_no_entry(lc_param.limit)
+               
+            AFTER FIELD pmcc002   
+               IF NOT apmp810_chk_pmcc002(lc_param.pmcc002) THEN
+                  NEXT FIELD pmcc002
+               END IF
+               
+            ON ACTION controlp INFIELD pmcc002
+               LET l_rtax004 = cl_get_para(g_enterprise,g_site,"E-CIR-0001")
+               
+			   INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE 
+			   LET g_qryparam.arg1 = l_rtax004
+               CALL q_rtax001_3()                           #呼叫開窗
+               LET lc_param.pmcc002 = g_qryparam.return1
+               DISPLAY lc_param.pmcc002 TO pmcc002        #顯示到畫面上
+               NEXT FIELD pmcc002                         #返回原欄位
+         END INPUT]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_construct" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.exit_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.count_progress" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.background_finish" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <section id="apmp810.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000000
+#+ 
+#+ Filename...: apmp810
+#+ Description: 供應商績效評核項目批次產生作業
+#+ Creator....: 02748(2014/03/28)
+#+ Modifier...: 02748(2014/03/28)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="apmp810.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="apmp810.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION apmp810_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="apmp810.main" ver="1" status="" src="s">
+<![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL apmp810_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmp810 WITH FORM cl_ap_formpath("apm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL apmp810_init()
+ 
+      #進入選單 Menu (="N")
+      CALL apmp810_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apmp810
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+</section>
+  <section id="apmp810.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="apmp810.process" ver="1" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION apmp810_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apmp810_process_cs CURSOR FROM ls_sql
+#  FOREACH apmp810_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="apmp810.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apmp810_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="apmp810.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apmp810_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+#saki       CALL cl_qbe_select()
+ 
+         ON ACTION qbe_save
+#saki       CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION batch_qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.*  TO NULL
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION CLOSE 
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #交談指令共用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         &include "common_action.4gl"
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = g_prog,TODAY USING "yyyymmdd",CURRENT HOUR TO SECOND 
+         LET g_jobid = cl_schedule_trim_colon(g_jobid)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL apmp810_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = apmp810_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

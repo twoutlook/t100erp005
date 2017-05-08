@@ -1,0 +1,1859 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apcq500" std_prog="apcq500" erpver="1.0" module="APC" ver="2" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="Q" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.apcq500_get_xmldata" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 解析xml文件
+# Memo...........:
+# Usage..........: CALL apcq500_get_xmldata(p_pcansite,p_pcan001)
+# Date & Author..: 20150622 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apcq500_get_xmldata(p_pcansite,p_pcan001)
+DEFINE p_pcansite     LIKE pcan_t.pcansite
+DEFINE p_pcan001      LIKE pcan_t.pcan001
+DEFINE l_pcan003      LIKE pcan_t.pcan003    #服务名
+DEFINE l_pcan004      LIKE pcan_t.pcan004    #xml文件
+DEFINE p_i            LIKE type_t.num5
+DEFINE l_cnt          LIKE type_t.num5       #单头笔数
+DEFINE l_cnt1         LIKE type_t.num5       #单身笔数
+DEFINE l_m            LIKE type_t.num5
+DEFINE l_d            LIKE type_t.num5
+DEFINE l_node         om.DomNode
+DEFINE l_node1        om.DomNode
+DEFINE l_type         LIKE type_t.chr1
+DEFINE l_type1        LIKE type_t.chr1
+DEFINE l_docno        LIKE rtia_t.rtiadocno
+DEFINE l_reqdoc       xml.DomDocument
+DEFINE l_status       STRING
+DEFINE l_cmd          STRING
+
+   #產生輸入檔案路徑(路徑和唯一檔名+_input)
+   LET g_request_file_path = fgl_getenv("TEMPDIR"), "/",
+       "apcq500_request_", FGL_GETPID() USING '<<<<<<<<<<',".xml"
+
+   LET p_i = l_ac
+   
+   LOCATE l_pcan004 IN FILE
+   
+   SELECT pcan003,pcan004 INTO l_pcan003,l_pcan004
+     FROM pcan_t
+    WHERE pcanent = g_enterprise
+      AND pcansite = p_pcansite
+      AND pcan001 = p_pcan001
+      
+   LET g_request.request = l_pcan004
+   FREE l_pcan004
+
+   #XML 解密
+   LET g_request.request = cl_trust_get_plaintext(g_request.request)
+   IF g_request.request ="-1" THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = 'Decode error'
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+
+   IF NOT cl_null(g_request.request) THEN
+      LET l_reqdoc = xml.DomDocument.create()
+      CALL l_reqdoc.loadFromString(g_request.request)
+      CALL l_reqdoc.save(g_request_file_path)
+   END IF
+
+   IF NOT awsp900_01_get_filetoxml(g_request_file_path) THEN
+      RETURN
+   END IF
+   #CALL awsp900_01_filetoxml(g_request_file_path)
+   #  RETURNING l_status,l_reqdoc,g_response.response
+
+   #IF l_status = FALSE THEN
+   #   RETURN
+   #END IF
+      
+   CASE l_pcan003
+      WHEN 'CashierPasswordUpdate'
+         LET g_pcam_d[p_i].* = g_pcam_d[l_ac].*
+         LET g_pcam_d[p_i].pcam002 = '1'
+         LET g_pcam_d[p_i].pcam006 = '1'
+         LET g_pcam_d[p_i].pcam008 = awsp900_01_getParameter("pcab001")
+         LET g_pcam_d[p_i].pcam010 = awsp900_01_getParameter("pcab008")
+      WHEN 'MemberPointProcess'
+         LET g_pcam_d[p_i].* = g_pcam_d[l_ac].*
+         LET g_pcam_d[p_i].pcam002 = '1'
+         LET g_pcam_d[p_i].pcam006 = '2'
+         LET g_pcam_d[p_i].pcam007 = awsp900_01_getParameter("rtiadocno")
+         LET g_pcam_d[p_i].pcam008 = awsp900_01_getParameter("mmaq001")
+         LET g_pcam_d[p_i].pcam011 = awsp900_01_getParameter("mmar009")
+         LET g_pcam_d[p_i].pcam013 = awsp900_01_getParameter("mmar008")
+      WHEN 'PaymentProcess'
+         LET l_cnt = awsp900_01_getMasterRecordLength("rtif_t")
+         FOR l_m = 1 TO l_cnt
+            LET l_node = awsp900_01_getMasterRecord(l_m,"rtif_t")
+            LET l_type = awsp900_01_getRecordField(l_node,"Type")
+            LET l_docno = awsp900_01_getRecordField(l_node,"rtiadocno")
+            
+            LET l_cnt1 = awsp900_01_getDetailRecordLength(l_node,"mmau_t_8")
+            FOR l_d = 1 TO l_cnt1
+               LET l_node1 = awsp900_01_getDetailRecord(l_node,l_d,"mmau_t_8")
+               LET g_pcam_d[p_i].* = g_pcam_d[l_ac].*
+               LET g_pcam_d[p_i].pcam002 = l_type
+               LET g_pcam_d[p_i].pcam006 = '3'
+               LET g_pcam_d[p_i].pcam007 = l_docno
+               LET g_pcam_d[p_i].pcam008 = awsp900_01_getRecordField(l_node1,"mmau001")
+               LET g_pcam_d[p_i].pcam011 = awsp900_01_getRecordField(l_node1,"mmau009")
+               LET g_pcam_d[p_i].pcam015 = awsp900_01_getRecordField(l_node1,"mmau100")
+               LET p_i = p_i + 1
+            END FOR
+            LET l_cnt1 = awsp900_01_getDetailRecordLength(l_node,"mmau_t_5")
+            FOR l_d = 1 TO l_cnt1
+               LET l_node1 = awsp900_01_getDetailRecord(l_node,l_d,"mmau_t_5")
+               LET g_pcam_d[p_i].* = g_pcam_d[l_ac].*
+               LET g_pcam_d[p_i].pcam002 = l_type
+               LET g_pcam_d[p_i].pcam006 = '4'
+               LET g_pcam_d[p_i].pcam007 = l_docno
+               LET g_pcam_d[p_i].pcam008 = awsp900_01_getRecordField(l_node1,"mmau001")
+               LET g_pcam_d[p_i].pcam011 = awsp900_01_getRecordField(l_node1,"mmau009_1")
+               LET g_pcam_d[p_i].pcam015 = awsp900_01_getRecordField(l_node1,"mmau100")
+               LET p_i = p_i + 1
+            END FOR
+            LET l_cnt1 = awsp900_01_getDetailRecordLength(l_node,"mmaq_t")
+            FOR l_d = 1 TO l_cnt1
+               LET l_node1 = awsp900_01_getDetailRecord(l_node,l_d,"mmaq_t")
+               LET g_pcam_d[p_i].* = g_pcam_d[l_ac].*
+               LET g_pcam_d[p_i].pcam002 = l_type
+               LET l_type1 = awsp900_01_getRecordField(l_node1,"mmaq006")
+               IF l_type1 = '2' THEN
+                  LET g_pcam_d[p_i].pcam006 = '5'
+               END IF
+               IF l_type1 = '5' THEN
+                  LET g_pcam_d[p_i].pcam006 = '5'
+               END IF
+               LET g_pcam_d[p_i].pcam007 = l_docno
+               #LET g_pcam_d[p_i].pcam008 = awsp900_01_getRecordField(l_node1,"mmaq001_1")
+               LET g_pcam_d[p_i].pcam011 = awsp900_01_getRecordField(l_node1,"mmau009_1")
+               LET g_pcam_d[p_i].pcam015 = awsp900_01_getRecordField(l_node1,"mmaq100")
+               LET p_i = p_i + 1
+            END FOR
+            LET l_cnt1 = awsp900_01_getDetailRecordLength(l_node,"mmar_t")
+            FOR l_d = 1 TO l_cnt1
+               LET l_node1 = awsp900_01_getDetailRecord(l_node,l_d,"mmar_t")
+               LET g_pcam_d[p_i].* = g_pcam_d[l_ac].*
+               LET g_pcam_d[p_i].pcam002 = l_type
+               LET l_type1 = awsp900_01_getRecordField(l_node1,"mmar004")
+               IF l_type1 = 'A' THEN
+                  LET g_pcam_d[p_i].pcam006 = '2'
+               END IF
+               IF l_type1 = 'B' THEN
+                  LET g_pcam_d[p_i].pcam006 = '7'
+               END IF
+               LET g_pcam_d[p_i].pcam007 = l_docno
+               LET g_pcam_d[p_i].pcam008 = awsp900_01_getRecordField(l_node1,"mmar001")
+               LET g_pcam_d[p_i].pcam011 = awsp900_01_getRecordField(l_node1,"mmar009")
+               LET g_pcam_d[p_i].pcam013 = awsp900_01_getRecordField(l_node1,"mmar008")
+               LET g_pcam_d[p_i].pcam015 = awsp900_01_getRecordField(l_node1,"mmar100")
+               LET p_i = p_i + 1
+            END FOR
+            LET l_cnt1 = awsp900_01_getDetailRecordLength(l_node,"gcao_t")
+            FOR l_d = 1 TO l_cnt1
+               LET l_node1 = awsp900_01_getDetailRecord(l_node,l_d,"gcao_t")
+               LET g_pcam_d[p_i].* = g_pcam_d[l_ac].*
+               LET g_pcam_d[p_i].pcam002 = l_type
+               LET l_type1 = awsp900_01_getRecordField(l_node1,"gcao005")
+               IF l_type1 = '4' THEN
+                  LET g_pcam_d[p_i].pcam006 = '8'
+               END IF
+               IF l_type1 = '5' THEN
+                  LET g_pcam_d[p_i].pcam006 = '9'
+               END IF
+               IF l_type1 = '6' THEN
+                  LET g_pcam_d[p_i].pcam006 = '10'
+               END IF
+               LET g_pcam_d[p_i].pcam007 = l_docno
+               LET g_pcam_d[p_i].pcam015 = awsp900_01_getRecordField(l_node1,"gcao100")
+               LET p_i = p_i + 1
+            END FOR
+            CALL g_pcam_d.deleteElement(p_i)
+         END FOR
+         CALL g_pcam_d.deleteElement(p_i)
+         LET p_i = p_i - 1
+   END CASE
+   
+   LET l_cmd = "rm g_request_file_path"
+   RUN l_cmd
+   LET l_ac = p_i
+         
+END FUNCTION]]>
+  </point>
+  <point name="function.apcq500_ins_pcap" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 產生差異調整單
+# Memo...........:
+# Usage..........: CALL apcq500_ins_pcap()
+# Date & Author..: 20150622 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apcq500_ins_pcap()
+DEFINE r_success     LIKE type_t.num5
+DEFINE r_doctype     LIKE rtai_t.rtai004
+DEFINE l_flag        LIKE type_t.num5
+DEFINE l_pcap        RECORD LIKE pcap_t.*
+
+   IF g_detail_cnt = 0 THEN RETURN '' END IF
+   
+   CALL s_transaction_begin()
+   INITIALIZE l_pcap.* TO NULL
+   #抓取默認單別
+   CALL s_arti200_get_def_doc_type(g_site,'apct500','1')
+      RETURNING r_success,r_doctype
+   IF NOT r_success THEN
+      RETURN ''
+   END IF
+   #自動編號
+   CALL s_aooi200_gen_docno(g_site,r_doctype,g_today,'apct500') RETURNING l_flag,l_pcap.pcapdocno
+   IF NOT l_flag THEN
+      RETURN ''
+   END IF
+   
+   LET l_pcap.pcapent = g_enterprise           #企業編號
+   LET l_pcap.pcapunit = g_site                #應用組織
+   LET l_pcap.pcapsite = g_site                #營運組織
+   LET l_pcap.pcapdocdt = g_today              #單據日期
+   LET l_pcap.pcap001 = g_user                 #調整人員
+   LET l_pcap.pcap002 = g_dept                 #調整部門
+   LET l_pcap.pcapstus = 'N'                   #狀態
+   LET l_pcap.pcapownid = g_user               
+   LET l_pcap.pcapowndp = g_dept
+   LET l_pcap.pcapcrtid = g_user
+   LET l_pcap.pcapcrtdp = g_dept
+   LET l_pcap.pcapcrtdt = cl_get_current()
+
+   INSERT INTO pcap_t VALUES (l_pcap.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = "ins pcap"
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      RETURN ''
+   END IF
+   
+   #插入單身資料
+   CALL apcq500_ins_pcaq(l_pcap.pcapdocno) RETURNING r_success
+   IF NOT r_success THEN
+      RETURN ''
+   END IF
+      
+   CALL s_transaction_end('Y','0')
+   
+   RETURN l_pcap.pcapdocno
+END FUNCTION]]>
+  </point>
+  <point name="function.apcq500_ins_pcaq" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 插入調整單單身資料
+# Memo...........:
+# Usage..........: CALL apcq500_ins_pcaq(p_pcapdocno)
+# Date & Author..: 20150622 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apcq500_ins_pcaq(p_pcapdocno)
+DEFINE p_pcapdocno      LIKE pcap_t.pcapdocno
+DEFINE l_pcaq           RECORD LIKE pcaq_t.*
+DEFINE l_i              LIKE type_t.num10
+
+   FOR l_i = g_detail_cnt TO 1 STEP -1
+      IF g_pcam_d[l_i].sel <> 'Y' THEN
+         CONTINUE FOR
+      ELSE
+         INITIALIZE l_pcaq.* TO NULL
+         
+         LET l_pcaq.pcaqent = g_enterprise           #企業編號
+         LET l_pcaq.pcaqsite = g_site                #營運組織
+         LET l_pcaq.pcaqunit = g_site                #應用組織
+         LET l_pcaq.pcaqdocno = p_pcapdocno          #單據編號
+         SELECT MAX(pcaqseq)+1 INTO l_pcaq.pcaqseq   #項次
+           FROM pcaq_t
+          WHERE pcaqent = g_enterprise
+            AND pcaqdocno = l_pcaq.pcaqdocno
+         IF cl_null(l_pcaq.pcaqseq) THEN
+            LET l_pcaq.pcaqseq = 1
+         END IF
+         LET l_pcaq.pcaq001 = g_pcam_d[l_i].pcam001  #請求ID
+         LET l_pcaq.pcaq002 = g_pcam_d[l_i].pcam002  #單據類型
+         LET l_pcaq.pcaq003 = g_pcam_d[l_i].pcam003  #服務名
+         LET l_pcaq.pcaq004 = g_pcam_d[l_i].pcam004  #請求日期
+         LET l_pcaq.pcaq005 = g_pcam_d[l_i].pcam005  #請求時間
+         LET l_pcaq.pcaq006 = g_pcam_d[l_i].pcam006  #請求類型
+         LET l_pcaq.pcaq007 = g_pcam_d[l_i].pcam007  #請求單號
+         LET l_pcaq.pcaq008 = g_pcam_d[l_i].pcam008  #使用者名|卡號|券號
+         LET l_pcaq.pcaq009 = g_pcam_d[l_i].pcam009  #更新前資料
+         LET l_pcaq.pcaq010 = g_pcam_d[l_i].pcam010  #更新後資料
+         LET l_pcaq.pcaq011 = g_pcam_d[l_i].pcam011  #本次異動
+         LET l_pcaq.pcaq012 = g_pcam_d[l_i].pcam012  #收銀機號
+         LET l_pcaq.pcaq013 = g_pcam_d[l_i].pcam013  #本次消費金額 
+         LET l_pcaq.pcaq014 = g_pcam_d[l_i].pcam014  #狀態
+         LET l_pcaq.pcaq015 = g_pcam_d[l_i].pcam015  #處理ID
+         LET l_pcaq.pcaq016 = g_pcam_d[l_i].type1    #差異類型
+         
+         INSERT INTO pcaq_t VALUES (l_pcaq.*)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "ins pcaq"
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+            RETURN FALSE
+         END IF
+      END IF
+   END FOR
+   
+   RETURN TRUE
+            
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_pcan004       TEXT]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      #补录类型需解析XML取值
+      IF g_pcam_d[l_ac].type1 = '1' THEN
+         #SELECT pcan004 INTO l_pcan004
+         #  FROM pcan_t
+         # WHERE pcanent = g_enterprise
+         #   AND pcansite = g_pcam_d[l_ac].pcamsite
+         #   AND pcan001 = g_pcam_d[l_ac].pcam001
+         #IF l_pcan004 IS NOT NULL THEN
+         #   CALL apcq500_get_xmldata(g_pcam_d[l_ac].pcam003,l_pcan004)
+         #END IF
+         CALL apcq500_get_xmldata(g_pcam_d[l_ac].pcamsite,g_pcam_d[l_ac].pcam001)
+      END IF]]>
+  </point>
+  <point name="b_fill.rank_sql_after" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_wc = cl_replace_str(g_wc,'pcamsite','pcansite')
+   LET g_wc = cl_replace_str(g_wc,'pcam012','pcan002')
+   LET g_wc = cl_replace_str(g_wc,'pcam004','pcan010')
+   LET ls_sql_rank = " SELECT UNIQUE 'Y',pcamsite,'',pcam001,pcam015,pcam012,'',pcam002,pcam003,pcam007,pcam006,pcam004,pcam005, ",
+                     "        '2' type,pcam008,pcam009,pcam010,pcam011,pcam013,pcam014, ",
+                     "        DENSE_RANK() OVER( ORDER BY pcam001,pcam015) AS RANK ",
+                     "   FROM pcam_t,pcan_t ",
+                     "  WHERE pcament = ? ",
+                     "    AND pcament = pcanent ",
+                     "    AND UPPER(pcam001) = UPPER(pcan001) ",
+                     "    AND ",ls_wc,
+                     "    AND pcanstus = 'Y' "
+   LET ls_sql_rank = ls_sql_rank CLIPPED," UNION ALL ",
+                     " SELECT UNIQUE 'Y',pcansite,'',pcan001,pcan001,pcan002,'','',pcan003,'','',pcan010,pcan011, ",
+                     "        '1','','','',cast('' as number(20,6)),cast('' as number(20,6)),pcan007, ",
+                     "        DENSE_RANK() OVER( ORDER BY pcan001) AS RANK ",
+                     "   FROM pcan_t ",
+                     "  WHERE pcanent = ",g_enterprise," ",
+                     "    AND ",ls_wc,
+                     "    AND pcan003 = 'MemberPointProcess' ",
+                     "    AND pcanstus = 'Y' ",
+                     "    AND UPPER(pcan001) NOT IN (SELECT UPPER(pcam001) FROM pcam_t ",
+                     "                         WHERE pcament = ",g_enterprise," AND pcam003 = 'MemberPointProcess') "
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("pcam_t"),
+                     " ORDER BY pcam001 "]]>
+  </point>
+  <point name="b_fill.sql_after" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql = "SELECT 'Y',pcamsite,'',pcam001,pcam015,pcam012,'',pcam002,pcam003,pcam007,pcam006,pcam004,pcam005,type, 
+       pcam008,pcam009,pcam010,pcam011,pcam013,pcam014",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page]]>
+  </point>
+  <point name="detail_show.body.reference" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_pcam_d[l_ac].pcamsite
+      LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+      LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+      CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+      LET g_pcam_d[l_ac].pcamsite_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_pcam_d[l_ac].pcamsite_desc
+     
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_pcam_d[l_ac].pcam012
+      LET ls_sql = "SELECT pcaal003 FROM pcaal_t WHERE pcaalent='"||g_enterprise||"' AND pcaal001=? AND pcaal002='"||g_dlang||"'"
+      LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+      CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+      LET g_pcam_d[l_ac].pcam012_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_pcam_d[l_ac].pcam012_desc
+]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT xml]]>
+  </point>
+  <point name="global.inc" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[GLOBALS "../../cfg/top_ws.inc"            #TIPTOP Service Gateway 使用的全域變數檔]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('b_pcam002','6827') 
+   CALL cl_set_combo_scc('b_pcam006','6828')
+   CALL cl_set_combo_scc('type1','6829')]]>
+  </point>
+  <point name="input.a.page1.pcam001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pcam_d[g_detail_idx].pcam001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pcam_d[g_detail_idx].pcam001 != g_pcam_d_t.pcam001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pcam_t WHERE "||"pcament = '" ||g_enterprise|| "' AND "||"pcam001 = '"||g_pcam_d[g_detail_idx].pcam001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pcam015" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pcam_d[g_detail_idx].pcam001 IS NOT NULL AND g_pcam_d[g_detail_idx].pcam015 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pcam_d[g_detail_idx].pcam001 != g_pcam_d_t.pcam001 OR g_pcam_d[g_detail_idx].pcam015 != g_pcam_d_t.pcam015)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pcam_t WHERE "||"pcament = '" ||g_enterprise|| "' AND "||"pcam001 = '"||g_pcam_d[g_detail_idx].pcam001 ||"' AND "|| "pcam015 = '"||g_pcam_d[g_detail_idx].pcam015 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="menu.ins_pcap" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               IF cl_null(g_detail_cnt) OR g_detail_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apc-00033'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  EXIT DIALOG
+               END IF
+               CALL apcq500_ins_pcap() RETURNING l_pcapdocno
+               IF NOT cl_null(l_pcapdocno) THEN
+                  LET la_param.prog = "apct500"
+                  LET la_param.param[1] = l_pcapdocno
+                  LET ls_js = util.JSON.stringify(la_param)
+                  CALL cl_cmdrun(ls_js)
+               END IF]]>
+  </point>
+  <point name="menu.query" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               ]]>
+  </point>
+  <point name="ui_dialog.construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         CONSTRUCT g_wc ON pcamsite,pcam012,pcam004
+            FROM pcamsite,pcam012,pcam004
+            
+            BEFORE CONSTRUCT
+               CALL cl_qbe_init()
+               
+            ON ACTION controlp
+               CASE
+                   WHEN INFIELD(pcamsite)
+                       INITIALIZE g_qryparam.* TO NULL
+                       LET g_qryparam.state  = "c"
+                       LET g_qryparam.reqry = FALSE
+                       LET g_qryparam.where = s_aooi500_q_where(g_prog,'pcamsite',g_site,'c')
+                       CALL q_ooef001_24()
+                       DISPLAY g_qryparam.return1 TO pcamsite 
+                       NEXT FIELD pcamsite
+                   WHEN INFIELD(pcam012)
+                       INITIALIZE g_qryparam.* TO NULL
+                       LET g_qryparam.state  = "c"
+                       LET g_qryparam.reqry = FALSE
+                       CALL q_pcaa001()
+                       DISPLAY g_qryparam.return1 TO pcam012 
+                       NEXT FIELD pcam012
+               END CASE
+               
+         END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   #DEFINE la_param  RECORD
+   #       prog      STRING,
+   #       param     DYNAMIC ARRAY OF STRING
+   #                 END RECORD
+   DEFINE l_pcapdocno   LIKE pcap_t.pcapdocno]]>
+  </point>
+  <section id="apcq500.b_fill" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION apcq500_b_fill()
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準
+   {<point name="b_fill.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill段define-客製
+   {<point name="b_fill.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+ 
+   CALL g_pcam_d.clear()
+ 
+   #add-point:陣列清空
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs04 樣板自動產生(Version:4)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET ls_sql_rank = "SELECT  UNIQUE '',pcamsite,'',pcam001,pcam015,pcam012,'',pcam002,pcam003,pcam007, 
+       pcam006,pcam004,pcam005,'',pcam008,pcam009,pcam010,pcam011,pcam013,pcam014  ,DENSE_RANK() OVER( ORDER BY pcam_t.pcam001, 
+       pcam_t.pcam015) AS RANK FROM pcam_t",
+ 
+ 
+                     "",
+                     " WHERE pcament= ? AND 1=1 AND ", ls_wc
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("pcam_t"),
+                     " ORDER BY pcam_t.pcam001,pcam_t.pcam015"
+ 
+   #add-point:b_fill段rank_sql_after
+   {<point name="b_fill.rank_sql_after"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(*) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql  #總筆數
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '',pcamsite,'',pcam001,pcam015,pcam012,'',pcam002,pcam003,pcam007,pcam006,pcam004, 
+       pcam005,'',pcam008,pcam009,pcam010,pcam011,pcam013,pcam014",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE apcq500_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apcq500_pb
+ 
+   OPEN b_fill_curs USING g_enterprise
+ 
+   FOREACH b_fill_curs INTO g_pcam_d[l_ac].sel,g_pcam_d[l_ac].pcamsite,g_pcam_d[l_ac].pcamsite_desc, 
+       g_pcam_d[l_ac].pcam001,g_pcam_d[l_ac].pcam015,g_pcam_d[l_ac].pcam012,g_pcam_d[l_ac].pcam012_desc, 
+       g_pcam_d[l_ac].pcam002,g_pcam_d[l_ac].pcam003,g_pcam_d[l_ac].pcam007,g_pcam_d[l_ac].pcam006,g_pcam_d[l_ac].pcam004, 
+       g_pcam_d[l_ac].pcam005,g_pcam_d[l_ac].type1,g_pcam_d[l_ac].pcam008,g_pcam_d[l_ac].pcam009,g_pcam_d[l_ac].pcam010, 
+       g_pcam_d[l_ac].pcam011,g_pcam_d[l_ac].pcam013,g_pcam_d[l_ac].pcam014
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+      CALL apcq500_detail_show("'1'")
+ 
+      CALL apcq500_pcam_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   CALL g_pcam_d.deleteElement(g_pcam_d.getLength())
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_pcam_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #應用 qs06 樣板自動產生(Version:2)
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE apcq500_pb
+ 
+ 
+ 
+ 
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL apcq500_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL apcq500_detail_action_trans()
+ 
+   LET l_ac = 1
+   CALL apcq500_b_fill2()
+ 
+      CALL apcq500_filter_show('pcamsite','b_pcamsite')
+   CALL apcq500_filter_show('pcam001','b_pcam001')
+   CALL apcq500_filter_show('pcam015','b_pcam015')
+   CALL apcq500_filter_show('pcam012','b_pcam012')
+   CALL apcq500_filter_show('pcam002','b_pcam002')
+   CALL apcq500_filter_show('pcam003','b_pcam003')
+   CALL apcq500_filter_show('pcam007','b_pcam007')
+   CALL apcq500_filter_show('pcam006','b_pcam006')
+   CALL apcq500_filter_show('pcam004','b_pcam004')
+   CALL apcq500_filter_show('pcam005','b_pcam005')
+   CALL apcq500_filter_show('pcam008','b_pcam008')
+   CALL apcq500_filter_show('pcam009','b_pcam009')
+   CALL apcq500_filter_show('pcam010','b_pcam010')
+   CALL apcq500_filter_show('pcam011','b_pcam011')
+   CALL apcq500_filter_show('pcam013','b_pcam013')
+   CALL apcq500_filter_show('pcam014','b_pcam014')
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apcq500.b_fill2" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION apcq500_b_fill2()
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準
+   {<point name="b_fill2.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill2段define-客製
+   {<point name="b_fill2.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #應用 qs07 樣板自動產生(Version:3)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+ 
+   #add-point:陣列清空
+   {<point name="b_fill2.array_clear" />}
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill2.array_deleteElement" />}
+   #end add-point
+ 
+ 
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx2 = 1
+   DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+ 
+ 
+ 
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apcq500.default_search" ver="2" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apcq500_default_search()
+   #add-point:default_search段define-標準
+   {<point name="default_search.define" edit="s"/>}
+   #end add-point
+   #add-point:default_search段define-客製
+   {<point name="default_search.define_customerization" edit="c"/>}
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:2)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " pcam001 = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " pcam015 = '", g_argv[02], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apcq500.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000012
+#+ 
+#+ Filename...: apcq500
+#+ Description: Service差異查詢作業
+#+ Creator....: 03247(2015-06-19 16:43:11)
+#+ Modifier...: 03247(2015-06-30 19:43:15) -SD/PR-
+]]>
+  </section>
+  <section id="apcq500.detail_action_trans" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION apcq500_detail_action_trans()
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apcq500.detail_index_setting" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION apcq500_detail_index_setting()
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+ 
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_pcam_d.getLength() AND g_pcam_d.getLength() > 0
+            LET g_detail_idx = g_pcam_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_pcam_d.getLength() THEN
+               LET g_detail_idx = g_pcam_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apcq500.detail_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION apcq500_detail_show(ps_page)
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準
+   {<point name="detail_show.define" edit="s"/>}
+   #end add-point
+   #add-point:show段define-客製
+   {<point name="detail_show.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apcq500.filter" ver="6" status="" src="s" readonly="">
+    <![CDATA[#應用 qs13 樣板自動產生(Version:4)
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION apcq500_filter()
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準
+   {<point name="filter.define" edit="s"/>}
+   #end add-point
+   #add-point:filter段define-客製
+   {<point name="filter.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #應用 qs08 樣板自動產生(Version:4)
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON pcamsite,pcam001,pcam015,pcam012,pcam002,pcam003,pcam007,pcam006,pcam004, 
+          pcam005,pcam008,pcam009,pcam010,pcam011,pcam013,pcam014
+                          FROM s_detail1[1].b_pcamsite,s_detail1[1].b_pcam001,s_detail1[1].b_pcam015, 
+                              s_detail1[1].b_pcam012,s_detail1[1].b_pcam002,s_detail1[1].b_pcam003,s_detail1[1].b_pcam007, 
+                              s_detail1[1].b_pcam006,s_detail1[1].b_pcam004,s_detail1[1].b_pcam005,s_detail1[1].b_pcam008, 
+                              s_detail1[1].b_pcam009,s_detail1[1].b_pcam010,s_detail1[1].b_pcam011,s_detail1[1].b_pcam013, 
+                              s_detail1[1].b_pcam014
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY apcq500_filter_parser('pcamsite') TO s_detail1[1].b_pcamsite
+            DISPLAY apcq500_filter_parser('pcam001') TO s_detail1[1].b_pcam001
+            DISPLAY apcq500_filter_parser('pcam015') TO s_detail1[1].b_pcam015
+            DISPLAY apcq500_filter_parser('pcam012') TO s_detail1[1].b_pcam012
+            DISPLAY apcq500_filter_parser('pcam002') TO s_detail1[1].b_pcam002
+            DISPLAY apcq500_filter_parser('pcam003') TO s_detail1[1].b_pcam003
+            DISPLAY apcq500_filter_parser('pcam007') TO s_detail1[1].b_pcam007
+            DISPLAY apcq500_filter_parser('pcam006') TO s_detail1[1].b_pcam006
+            DISPLAY apcq500_filter_parser('pcam004') TO s_detail1[1].b_pcam004
+            DISPLAY apcq500_filter_parser('pcam005') TO s_detail1[1].b_pcam005
+            DISPLAY apcq500_filter_parser('pcam008') TO s_detail1[1].b_pcam008
+            DISPLAY apcq500_filter_parser('pcam009') TO s_detail1[1].b_pcam009
+            DISPLAY apcq500_filter_parser('pcam010') TO s_detail1[1].b_pcam010
+            DISPLAY apcq500_filter_parser('pcam011') TO s_detail1[1].b_pcam011
+            DISPLAY apcq500_filter_parser('pcam013') TO s_detail1[1].b_pcam013
+            DISPLAY apcq500_filter_parser('pcam014') TO s_detail1[1].b_pcam014
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+ 
+         #單身一般欄位開窗相關處理
+                  #----<<sel>>----
+         #----<<b_pcamsite>>----
+         #Ctrlp:construct.c.filter.page1.b_pcamsite
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcamsite
+            #add-point:ON ACTION controlp INFIELD b_pcamsite
+            {<point name="construct.c.filter.page1.b_pcamsite" />}
+            #END add-point
+ 
+         #----<<b_pcamsite_desc>>----
+         #----<<b_pcam001>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam001
+            #add-point:ON ACTION controlp INFIELD b_pcam001
+            {<point name="construct.c.filter.page1.b_pcam001" />}
+            #END add-point
+ 
+         #----<<b_pcam015>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam015
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam015
+            #add-point:ON ACTION controlp INFIELD b_pcam015
+            {<point name="construct.c.filter.page1.b_pcam015" />}
+            #END add-point
+ 
+         #----<<b_pcam012>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam012
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam012
+            #add-point:ON ACTION controlp INFIELD b_pcam012
+            {<point name="construct.c.filter.page1.b_pcam012" />}
+            #END add-point
+ 
+         #----<<b_pcam012_desc>>----
+         #----<<b_pcam002>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam002
+            #add-point:ON ACTION controlp INFIELD b_pcam002
+            {<point name="construct.c.filter.page1.b_pcam002" />}
+            #END add-point
+ 
+         #----<<b_pcam003>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam003
+            #add-point:ON ACTION controlp INFIELD b_pcam003
+            {<point name="construct.c.filter.page1.b_pcam003" />}
+            #END add-point
+ 
+         #----<<b_pcam007>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam007
+            #add-point:ON ACTION controlp INFIELD b_pcam007
+            {<point name="construct.c.filter.page1.b_pcam007" />}
+            #END add-point
+ 
+         #----<<b_pcam006>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam006
+            #add-point:ON ACTION controlp INFIELD b_pcam006
+            {<point name="construct.c.filter.page1.b_pcam006" />}
+            #END add-point
+ 
+         #----<<b_pcam004>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam004
+            #add-point:ON ACTION controlp INFIELD b_pcam004
+            {<point name="construct.c.filter.page1.b_pcam004" />}
+            #END add-point
+ 
+         #----<<b_pcam005>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam005
+            #add-point:ON ACTION controlp INFIELD b_pcam005
+            {<point name="construct.c.filter.page1.b_pcam005" />}
+            #END add-point
+ 
+         #----<<type1>>----
+         #----<<b_pcam008>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam008
+            #add-point:ON ACTION controlp INFIELD b_pcam008
+            {<point name="construct.c.filter.page1.b_pcam008" />}
+            #END add-point
+ 
+         #----<<b_pcam009>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam009
+            #add-point:ON ACTION controlp INFIELD b_pcam009
+            {<point name="construct.c.filter.page1.b_pcam009" />}
+            #END add-point
+ 
+         #----<<b_pcam010>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam010
+            #add-point:ON ACTION controlp INFIELD b_pcam010
+            {<point name="construct.c.filter.page1.b_pcam010" />}
+            #END add-point
+ 
+         #----<<b_pcam011>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam011
+            #add-point:ON ACTION controlp INFIELD b_pcam011
+            {<point name="construct.c.filter.page1.b_pcam011" />}
+            #END add-point
+ 
+         #----<<b_pcam013>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam013
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam013
+            #add-point:ON ACTION controlp INFIELD b_pcam013
+            {<point name="construct.c.filter.page1.b_pcam013" />}
+            #END add-point
+ 
+         #----<<b_pcam014>>----
+         #Ctrlp:construct.c.filter.page1.b_pcam014
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pcam014
+            #add-point:ON ACTION controlp INFIELD b_pcam014
+            {<point name="construct.c.filter.page1.b_pcam014" />}
+            #END add-point
+ 
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+ 
+   
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL apcq500_filter_show('pcamsite','b_pcamsite')
+   CALL apcq500_filter_show('pcam001','b_pcam001')
+   CALL apcq500_filter_show('pcam015','b_pcam015')
+   CALL apcq500_filter_show('pcam012','b_pcam012')
+   CALL apcq500_filter_show('pcam002','b_pcam002')
+   CALL apcq500_filter_show('pcam003','b_pcam003')
+   CALL apcq500_filter_show('pcam007','b_pcam007')
+   CALL apcq500_filter_show('pcam006','b_pcam006')
+   CALL apcq500_filter_show('pcam004','b_pcam004')
+   CALL apcq500_filter_show('pcam005','b_pcam005')
+   CALL apcq500_filter_show('pcam008','b_pcam008')
+   CALL apcq500_filter_show('pcam009','b_pcam009')
+   CALL apcq500_filter_show('pcam010','b_pcam010')
+   CALL apcq500_filter_show('pcam011','b_pcam011')
+   CALL apcq500_filter_show('pcam013','b_pcam013')
+   CALL apcq500_filter_show('pcam014','b_pcam014')
+ 
+ 
+   CALL apcq500_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apcq500.filter_parser" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 qs14 樣板自動產生(Version:3)
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION apcq500_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define-標準
+   {<point name="filter_parser.define" edit="s"/>}
+   #end add-point
+   #add-point:filter段define-客製
+   {<point name="filter_parser.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+]]>
+  </section>
+  <section id="apcq500.filter_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 qs15 樣板自動產生(Version:3)
+#+ filter標題欄位顯示搜尋條件
+PRIVATE FUNCTION apcq500_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準
+   {<point name="filter_show.define" edit="s"/>}
+   #end add-point
+   #add-point:filter_show段define-客製
+   {<point name="filter_show.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apcq500_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+]]>
+  </section>
+  <section id="apcq500.global" ver="6" status="" src="s" readonly="">
+    <![CDATA[#應用 q01 樣板自動產生(Version:21)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pcam_d RECORD
+       
+       sel LIKE type_t.chr1, 
+   pcamsite LIKE pcam_t.pcamsite, 
+   pcamsite_desc LIKE type_t.chr500, 
+   pcam001 LIKE pcam_t.pcam001, 
+   pcam015 LIKE pcam_t.pcam015, 
+   pcam012 LIKE pcam_t.pcam012, 
+   pcam012_desc LIKE type_t.chr500, 
+   pcam002 LIKE pcam_t.pcam002, 
+   pcam003 LIKE pcam_t.pcam003, 
+   pcam007 LIKE pcam_t.pcam007, 
+   pcam006 LIKE pcam_t.pcam006, 
+   pcam004 LIKE pcam_t.pcam004, 
+   pcam005 LIKE pcam_t.pcam005, 
+   type1 LIKE type_t.chr500, 
+   pcam008 LIKE pcam_t.pcam008, 
+   pcam009 LIKE pcam_t.pcam009, 
+   pcam010 LIKE pcam_t.pcam010, 
+   pcam011 LIKE pcam_t.pcam011, 
+   pcam013 LIKE pcam_t.pcam013, 
+   pcam014 LIKE pcam_t.pcam014
+       END RECORD
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_pcam_d            DYNAMIC ARRAY OF type_g_pcam_d
+DEFINE g_pcam_d_t          type_g_pcam_d
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+#add-point:自定義模組變數-客製(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+##end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apcq500.init" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION apcq500_init()
+   #add-point:init段define-標準
+   {<point name="init.define" edit="s"/>}
+   #end add-point
+   #add-point:init段define-客製
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+     
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+ 
+   CALL apcq500_default_search()
+END FUNCTION
+]]>
+  </section>
+  <section id="apcq500.main" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a26 樣板自動產生(Version:4)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define
+   {<point name="main.define" edit="s"/>}
+   #end add-point   
+   #add-point:main段define(客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apc","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apcq500_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE apcq500_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apcq500_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apcq500 WITH FORM cl_ap_formpath("apc",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apcq500_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apcq500_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_apcq500
+      
+   END IF 
+   
+   CLOSE apcq500_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="apcq500.mask_functions" ver="1" status="" src="s" readonly="">
+    <![CDATA[&include "erp/apc/apcq500_mask.4gl"
+]]>
+  </section>
+  <section id="apcq500.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="apcq500.ui_dialog" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apcq500_ui_dialog() 
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old   STRING
+   DEFINE ls_js     STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   #add-point:ui_dialog段define-標準
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point
+   #add-point:ui_dialog段define-客製
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   
+   CALL apcq500_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_pcam_d.clear()
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL apcq500_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+         {<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落
+         {<point name="ui_dialog.construct" mark="Y"/>}
+         #end add-point
+     
+         DISPLAY ARRAY g_pcam_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL apcq500_detail_action_trans()
+ 
+               LET g_master_idx = l_ac
+               #為避免按上下筆時影響執行效能，所以做一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL apcq500_b_fill2()
+               LET g_action_choice = lc_action_choice_old
+ 
+               #add-point:input段before row
+               {<point name="input.body.before_row" mark="Y"/>}
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為
+            {<point name="ui_dialog.body.page1.action" mark="Y"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         #add-point:第一頁籤程式段mark結束用
+         {<point name="ui_dialog.page1.mark.end"/>}
+         #end add-point
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL apcq500_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+            NEXT FIELD pcamsite
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+         
+            LET g_wc2 = " 1=1"
+ 
+ 
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            CALL apcq500_b_fill()
+ 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.agendum"/>}
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_pcam_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel
+               {<point name="menu.exporttoexcel" />}
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL apcq500_b_fill()
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL apcq500_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL apcq500_b_fill()
+ 
+         ON ACTION detail_next               #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL apcq500_b_fill()
+ 
+         ON ACTION detail_last               #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL apcq500_b_fill()
+ 
+         #應用 qs19 樣板自動產生(Version:2)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_pcam_d.getLength()
+               LET g_pcam_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_pcam_d.getLength()
+               LET g_pcam_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_pcam_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pcam_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_pcam_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pcam_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+ 
+ 
+ 
+ 
+         #應用 qs16 樣板自動產生(Version:2)
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apcq500_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+ 
+         
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION ins_pcap
+            LET g_action_choice="ins_pcap"
+            IF cl_auth_chk_act("ins_pcap") THEN
+               
+               #add-point:ON ACTION ins_pcap
+               {<point name="menu.ins_pcap" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前
+         {<point name="ui_dialog.set_qbe_action_before" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後
+         {<point name="ui_dialog.set_qbe_action_after"/>}
+         #end add-point
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

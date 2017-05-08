@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisr460" module="ais" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="06816" crtdt="2015-06-05 10:54:20" modid="06816" moddt="2015-06-05 17:27:07" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="營業人申報適用零稅率銷售額清單">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isaj003,isaj003_desc(chr80),isaj019,isaj020"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="ais" filename="aisr460" method="dialog">
+    <section id="input">
+      <input id="head" field="isaj003,isaj019,isaj020"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isaj003">
+        <after>
+          <check chkid="v_isaa001" id="isExist"/>
+          <reference field="isaj003_desc" ref_field="isaj_t.isaj003" map_field="isajent,isaj003" ref_sql="SELECT ooefl004 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_isaa001" state="i"/>
+        <controlp form="q_isaj003" state="c"/>
+      </column>
+      <column id="isaj003_desc"/>
+      <column id="isaj019"/>
+      <column id="isaj020">
+        <after>
+          <check id="range" st="12.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+</assembly>
+

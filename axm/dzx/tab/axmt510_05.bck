@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmt510_05" module="axm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02040" crtdt="2016-11-15 17:26:51" modid="02040" moddt="2016-11-21 00:31:57" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="維護訂單變更單附屬零件明細子作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmfw900,xmfw901,xmfwdocno,xmfwseq,xmfwseq1,sel(chr500),xmfw012,xmfw001,xmfw001_desc(chr500),imaal0041(chr500),xmfw010,xmfw011,xmfw006,xmfw007,xmfw008,xmfw008_desc(chr500),xmfw009,xmfw002,xmfw002_desc(chr500),imaal0042(chr500),xmfw004,xmfw005,xmfw902,xmfw902_desc(chr500),xmfw903"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="reproduce" type="standard"/>
+      <action id="output"/>
+      <action id="modify" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="delete" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmt510_05" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,xmfw006,xmfw007,xmfw902,xmfw903" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xmfw900" type="S" default="0"/>
+      <column id="xmfw901"/>
+      <column id="xmfwdocno"/>
+      <column id="xmfwseq"/>
+      <column id="xmfwseq1"/>
+      <column id="sel" type="S" default="N"/>
+      <column id="xmfw012" def_scc="2055"/>
+      <column id="xmfw001">
+        <after>
+          <reference field="xmfw001_desc" ref_field="xmfw_t.xmfw001" map_field="xmfw001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmfw001_desc"/>
+      <column id="imaal0041"/>
+      <column id="xmfw010" type="S" default="0"/>
+      <column id="xmfw011" type="S" default="0"/>
+      <column id="xmfw006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmfw007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmfw008">
+        <after>
+          <reference field="xmfw008_desc" ref_field="xmfw_t.xmfw008" map_field="xmfw008" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmfw008_desc"/>
+      <column id="xmfw009" type="S" default="0"/>
+      <column id="xmfw002">
+        <after>
+          <reference field="xmfw002_desc" ref_field="xmfw_t.xmfw002" map_field="xmfw002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmfw002_desc"/>
+      <column id="imaal0042"/>
+      <column id="xmfw004"/>
+      <column id="xmfw005"/>
+      <column id="xmfw902">
+        <after>
+          <reference field="xmfw902_desc" ref_field="wmfw902" map_field="wmfw902" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;24&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmfw902_desc"/>
+      <column id="xmfw903"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xmfw_t" page="1" linked="" pk="xmfwdocno,xmfwseq,xmfwseq1,xmfw900">
+      <sql id="forupd_sql_detail" query="SELECT xmfw900,xmfw901,xmfwdocno,xmfwseq,xmfwseq1,&apos;&apos;,xmfw012,xmfw001,&apos;&apos;,&apos;&apos;,xmfw010,xmfw011,xmfw006,xmfw007,xmfw008,&apos;&apos;,xmfw009,xmfw002,&apos;&apos;,&apos;&apos;,xmfw004,xmfw005,xmfw902,&apos;&apos;,xmfw903 FROM xmfw_t WHERE xmfwent=? AND xmfwdocno=? AND xmfwseq=? AND xmfwseq1=? AND xmfw900=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmfw900,xmfw901,xmfwdocno,xmfwseq,xmfwseq1,&apos;&apos;,xmfw012,xmfw001,&apos;&apos;,&apos;&apos;,xmfw010,xmfw011,xmfw006,xmfw007,xmfw008,&apos;&apos;,xmfw009,xmfw002,&apos;&apos;,&apos;&apos;,xmfw004,xmfw005,xmfw902,&apos;&apos;,xmfw903 FROM xmfw_t WHERE xmfwent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

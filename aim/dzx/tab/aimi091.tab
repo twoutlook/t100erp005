@@ -1,0 +1,138 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimi091" module="aim" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02482" crtdt="2013-11-06 14:41:54" modid="02599" moddt="2014-06-28 17:38:35" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件建檔檢核設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imed001,imed001_desc(chr80),imed002,imed002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imedstus,imed003,imed004,imed005,imed005_desc(chr500),imed006,imed006_desc(chr500),imed007,imed008"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="imed003,imedmodid,imedmodid_desc(chr500),imedmoddt,imedownid,imedownid_desc(chr500),imedowndp,imedowndp_desc(chr500),imedcrtid,imedcrtid_desc(chr500),imedcrtdp,imedcrtdp_desc(chr500),imedcrtdt"/>
+      <var id="bs_field" value="imed001,imed001_desc(chr80),imed002,imed002_desc(chr80)" pk="imed001,imed002" order=""/>
+      <bs_reference field="imed001_desc" ref_field="imed001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="imed002_desc" ref_field="imed002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimi091" method="dialog">
+    <section id="input">
+      <input id="head" field="imed001,imed002"/>
+      <input id="body" page="1" field="imedstus,imed003,imed004,imed005,imed006,imed007,imed008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imed001,imed002"/>
+      <construct id="body" page="1" field="imedstus,imed003,imed004,imed005,imed006,imed007,imed008"/>
+      <construct id="body" page="2" field="imedmodid,imedmoddt,imedownid,imedowndp,imedcrtid,imedcrtdp,imedcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imed001,imed002"/>
+      <set id="head" type="no_entry" field="imed001,imed002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imed001">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="imed001_desc" ref_field="imed_t.imed001" map_field="imedent,imed001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="imed001_desc"/>
+      <column id="imed002">
+        <after>
+          <reference field="imed002_desc" ref_field="imed002" map_field="imed002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imed002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="imedstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="imed003" def_scc="1017"/>
+      <column id="imed004" type="S" default="2" def_scc="1007"/>
+      <column id="imed005">
+        <after>
+          <reference field="imed005_desc" ref_field="imed005" map_field="imed005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;5&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imed005_desc"/>
+      <column id="imed006">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="imed006_desc" ref_field="imed_t.imed006" map_field="imed006" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_4" state="i"/>
+        <controlp form="q_ooag001_4" state="c"/>
+      </column>
+      <column id="imed006_desc"/>
+      <column id="imed007"/>
+      <column id="imed008"/>
+    </init>
+    <init id="body" page="2">
+      <column id="imedmodid">
+        <after>
+          <reference field="imedmodid_desc" ref_field="imed_t.imedmodid" map_field="imedmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imedmodid_desc"/>
+      <column id="imedmoddt"/>
+      <column id="imedownid">
+        <after>
+          <reference field="imedownid_desc" ref_field="imed_t.imedownid" map_field="imedownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imedownid_desc"/>
+      <column id="imedowndp">
+        <after>
+          <reference field="imedowndp_desc" ref_field="imed_t.imedowndp" map_field="imedowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imedowndp_desc"/>
+      <column id="imedcrtid">
+        <after>
+          <reference field="imedcrtid_desc" ref_field="imed_t.imedcrtid" map_field="imedcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imedcrtid_desc"/>
+      <column id="imedcrtdp">
+        <after>
+          <reference field="imedcrtdp_desc" ref_field="imed_t.imedcrtdp" map_field="imedcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imedcrtdp_desc"/>
+      <column id="imedcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imed_t" pk="imed001,imed002">
+      <sql id="forupd_sql" type="sql" query="SELECT imed001,&apos;&apos;,imed002,&apos;&apos; FROM imed_t WHERE imedent= ? AND imed001=? AND imed002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imed001,&apos;&apos;,imed002,&apos;&apos; FROM imed_t" order="imed001,imed002"/>
+    </head>
+    <body id="imed_t" page="1,2" linked="" pk="imed003" fk="imed001,imed002">
+      <sql id="forupd_sql_detail" query="SELECT imedstus,imed003,imed004,imed005,&apos;&apos;,imed006,&apos;&apos;,imed007,imed008,&apos;&apos;,imedmodid,&apos;&apos;,imedmoddt,imedownid,&apos;&apos;,imedowndp,&apos;&apos;,imedcrtid,&apos;&apos;,imedcrtdp,&apos;&apos;,imedcrtdt FROM imed_t WHERE imedent=? AND imed001=? AND imed002=? AND imed003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imedstus,imed003,imed004,imed005,&apos;&apos;,imed006,&apos;&apos;,imed007,imed008,&apos;&apos;,imedmodid,&apos;&apos;,imedmoddt,imedownid,&apos;&apos;,imedowndp,&apos;&apos;,imedcrtid,&apos;&apos;,imedcrtdp,&apos;&apos;,imedcrtdt FROM imed_t WHERE imedent= ? AND imed001=? AND imed002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

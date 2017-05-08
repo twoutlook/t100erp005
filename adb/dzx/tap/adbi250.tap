@@ -1,0 +1,3062 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="adbi250" std_prog="adbi250" erpver="1.0" module="ADB" ver="5" env="s" zone="t10prd" booking="Y" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.adbi250_chk_exist_adbi251" order="1" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#檢查是否已存在adbi251的資料中
+PUBLIC FUNCTION adbi250_chk_exist_adbi251(p_dbae001)
+   DEFINE p_dbae001     LIKE dbae_t.dbae001
+   DEFINE l_cnt         LIKE type_t.num5
+   DEFINE r_exist       LIKE type_t.num5
+   
+   LET r_exist = FALSE
+   
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt FROM dbab_t
+    WHERE dbabent = g_enterprise
+      AND dbab002 = p_dbae001
+      
+   IF l_cnt > 0 THEN
+      LET r_exist = TRUE
+   END IF
+   
+   RETURN r_exist
+   
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_flag          LIKE type_t.chr1]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      LET l_flag = 'Y']]>
+  </point>
+  <point name="b_fill.others.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   
+   IF l_flag = 'Y' THEN
+      IF g_cnt > 0 THEN
+         IF NOT cl_null(g_dbae_d[g_cnt].dbae002) THEN
+            LET g_pmaa027_d = g_dbae_d[g_cnt].dbae002
+            CALL aooi350_01_b_fill(g_pmaa027_d)
+            CALL aooi350_02_b_fill(g_pmaa027_d)
+         END IF
+      ELSE
+         IF NOT cl_null(g_dbae_d[1].dbae002) THEN
+            LET g_pmaa027_d = g_dbae_d[1].dbae002
+            CALL aooi350_01_b_fill(g_pmaa027_d)
+            CALL aooi350_02_b_fill(g_pmaa027_d)
+         END IF 
+      END IF
+   END IF]]>
+  </point>
+  <point name="b_fill.sql_after" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql = "SELECT  UNIQUE t0.dbaestus ,t0.dbae001  ,t0.dbae002  ,t0.dbae001  ,t0.dbaeownid,",
+               "               t0.dbaeowndp,t0.dbaecrtid,t0.dbaecrtdp,t0.dbaecrtdt,t0.dbaemodid,",
+               "               t0.dbaemoddt , ",
+               "               t1.ooag011  ,t2.ooefl003 ,t3.ooag011  ,t4.ooefl003 ,t5.ooag011 ",
+               "  FROM dbae_t t0",
+               "       LEFT JOIN dbael_t ON dbae001 = dbael001 AND dbael002 = '",g_lang,"'",
+               "       LEFT JOIN ooag_t t1 ON t1.ooagent='"||g_enterprise||"' AND t1.ooag001=t0.dbaeownid  ",
+               "       LEFT JOIN ooefl_t t2 ON t2.ooeflent='"||g_enterprise||"' AND t2.ooefl001=t0.dbaeowndp AND t2.ooefl002='"||g_dlang||"' ",
+               "       LEFT JOIN ooag_t t3 ON t3.ooagent='"||g_enterprise||"' AND t3.ooag001=t0.dbaecrtid  ",
+               "       LEFT JOIN ooefl_t t4 ON t4.ooeflent='"||g_enterprise||"' AND t4.ooefl001=t0.dbaecrtdp AND t4.ooefl002='"||g_dlang||"' ",
+               "       LEFT JOIN ooag_t t5 ON t5.ooagent='"||g_enterprise||"' AND t5.ooag001=t0.dbaemodid  ",
+               "       LEFT JOIN oofb_t t6 ON t6.oofbent = t0.dbaeent AND t6.oofb002 = t0.dbae002 ",
+               "       LEFT JOIN oofc_t t7 ON t7.oofcent = t0.dbaeent AND t7.oofc002 = t0.dbae002 ",
+               " WHERE t0.dbaeent= ?  AND  1=1 AND ", p_wc2 
+    
+   LET g_sql = g_sql, cl_sql_add_filter("dbae_t"),
+                      " ORDER BY t0.dbae001"
+   INITIALIZE g_pmaa027_d TO NULL
+   CALL aooi350_01_clear_detail()
+   CALL aooi350_02_clear_detail()
+   LET l_flag = 'N']]>
+  </point>
+  <point name="construct.c.page1.dbae001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_dbae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO dbae001  #顯示到畫面上
+            NEXT FIELD dbae001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.dbaecrtdp" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO dbaecrtdp  #顯示到畫面上
+            NEXT FIELD dbaecrtdp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.dbaecrtid" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO dbaecrtid  #顯示到畫面上
+            NEXT FIELD dbaecrtid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.dbaemodid" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO dbaemodid  #顯示到畫面上
+            NEXT FIELD dbaemodid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.dbaeowndp" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO dbaeowndp  #顯示到畫面上
+            NEXT FIELD dbaeowndp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.dbaeownid" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO dbaeownid  #顯示到畫面上
+            NEXT FIELD dbaeownid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="delete.body.b_delete" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         IF adbi250_chk_exist_adbi251( g_dbae_d[li_idx].dbae001) THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = g_dbae_d[li_idx].dbae001
+            LET g_errparam.code   = 'adb-00302'
+            LET g_errparam.popup  = TRUE     
+            CALL cl_err()
+            
+            CONTINUE FOR
+         END IF]]>
+  </point>
+  <point name="delete.body.b_delete_ask" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="delete.body.before_delete" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_err_collect_init()]]>
+  </point>
+  <point name="detail_show.body2.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_dbae2_d[l_ac].dbaeownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_dbae2_d[l_ac].dbaeownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_dbae2_d[l_ac].dbaeownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_dbae2_d[l_ac].dbaeowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_dbae2_d[l_ac].dbaeowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_dbae2_d[l_ac].dbaeowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_dbae2_d[l_ac].dbaecrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_dbae2_d[l_ac].dbaecrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_dbae2_d[l_ac].dbaecrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_dbae2_d[l_ac].dbaecrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_dbae2_d[l_ac].dbaecrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_dbae2_d[l_ac].dbaecrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_dbae2_d[l_ac].dbaemodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_dbae2_d[l_ac].dbaemodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_dbae2_d[l_ac].dbaemodid_desc
+]]>
+  </point>
+  <point name="detail_show.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_dbae_d[l_ac].dbae001
+   CALL ap_ref_array2(g_ref_fields," SELECT dbael003,dbael004,dbael005 FROM dbael_t WHERE dbaelent = '"||g_enterprise||"' AND dbael001 = ? AND dbael002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_dbae_d[l_ac].dbael003 = g_rtn_fields[1] 
+   LET g_dbae_d[l_ac].dbael004 = g_rtn_fields[2] 
+   LET g_dbae_d[l_ac].dbael005 = g_rtn_fields[3] 
+   DISPLAY BY NAME g_dbae_d[l_ac].dbael003,g_dbae_d[l_ac].dbael004,g_dbae_d[l_ac].dbael005]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT FGL aoo_aooi350_01
+IMPORT FGL aoo_aooi350_02]]>
+  </point>
+  <point name="global.inc" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[GLOBALS
+   DEFINE g_detail_insert   LIKE type_t.num5   #單身的新增權限
+   DEFINE g_detail_delete   LIKE type_t.num5   #單身的刪除權限
+   DEFINE g_wc2_i35001      STRING             #聯絡地址QBE條件
+   DEFINE g_wc2_i35002      STRING             #通訊方式QBE條件
+   DEFINE g_d_idx_i35001    LIKE type_t.num5   #聯絡地址所在筆數
+   DEFINE g_d_cnt_i35001    LIKE type_t.num5   #聯絡地址總筆數
+   DEFINE g_d_idx_i35002    LIKE type_t.num5   #通訊方式所在筆數
+   DEFINE g_d_cnt_i35002    LIKE type_t.num5   #通訊方式總筆數
+   DEFINE g_pmaa027_d       LIKE pmaa_t.pmaa027
+   DEFINE g_appoint_idx     LIKE type_t.num5   #指定進入單身行數
+END GLOBALS]]>
+  </point>
+  <point name="global.memo" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.variable" order="" ver="5" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[#ken---add---s 需求單號：150107-00009 項次：4
+GLOBALS
+ TYPE type_g_oofb_d        RECORD
+       oofbstus LIKE oofb_t.oofbstus,
+   oofb001 LIKE oofb_t.oofb001,
+   oofb019 LIKE oofb_t.oofb019,
+   oofb011 LIKE oofb_t.oofb011,
+   oofb008 LIKE oofb_t.oofb008,
+   oofb009 LIKE oofb_t.oofb009,
+   oofb009_desc LIKE type_t.chr500,
+   oofb010 LIKE oofb_t.oofb010,
+   oofb012 LIKE oofb_t.oofb012,
+   oofb012_desc LIKE type_t.chr500,
+   oofb013 LIKE oofb_t.oofb013,
+   oofb014 LIKE oofb_t.oofb014,
+   oofb014_desc LIKE type_t.chr500,
+   oofb015 LIKE oofb_t.oofb015,
+   oofb015_desc LIKE type_t.chr500,
+   oofb016 LIKE oofb_t.oofb016,
+   oofb016_desc LIKE type_t.chr500,
+   oofb017 LIKE oofb_t.oofb017,
+   oofb022 LIKE oofb_t.oofb022,
+   oofb022_desc LIKE type_t.chr500,
+   oofb020 LIKE oofb_t.oofb020,
+   oofb021 LIKE oofb_t.oofb021,
+   oofb018 LIKE oofb_t.oofb018
+       END RECORD
+DEFINE g_pmba_d          DYNAMIC ARRAY OF type_g_oofb_d
+
+ TYPE type_g_oofc_d        RECORD
+       oofcstus LIKE oofc_t.oofcstus,
+   oofc001 LIKE oofc_t.oofc001,
+   oofc008 LIKE oofc_t.oofc008,
+   oofc009 LIKE oofc_t.oofc009,
+   oofc009_desc LIKE type_t.chr500,
+   oofc012 LIKE oofc_t.oofc012,
+   oofc010 LIKE oofc_t.oofc010,
+   oofc014 LIKE oofc_t.oofc014,
+   oofc011 LIKE oofc_t.oofc011,
+   oofc015 LIKE oofc_t.oofc015,
+   oofc013 LIKE oofc_t.oofc013
+       END RECORD
+DEFINE g_pmba2_d          DYNAMIC ARRAY OF type_g_oofc_d
+END GLOBALS
+#ken---add---e]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_ui_replace_sub_window(cl_ap_formpath("aoo", "aooi350_01"), "grid", "Table", "s_detail1_aooi350_01")
+   CALL cl_set_combo_scc('oofb008','9')   #地址類型
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aoo", "aooi350_02"), "grid_1", "Table", "s_detail1_aooi350_02")
+   CALL cl_set_combo_scc('oofc008','6')   #通訊類型]]>
+  </point>
+  <point name="input.a.page1.dbae001" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_dbae_d[l_ac].dbae001) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_dbae_d[l_ac].dbae001 != g_dbae_d_t.dbae001 OR g_dbae_d_t.dbae001 IS NULL)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM dbae_t WHERE "||"dbaeent = '" ||g_enterprise|| "' AND "||"dbae001 = '"||g_dbae_d[l_ac].dbae001 ||"'",'std-00004',0) THEN 
+                     LET g_dbae_d[l_ac].dbae001 = g_dbae_d_t.dbae001
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF adbi250_chk_exist_adbi251(g_dbae_d_t.dbae001) THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_dbae_d_t.dbae001
+               LET g_errparam.code   = 'adb-00302'
+               LET g_errparam.popup  = TRUE     
+               CALL cl_err() 
+               
+               LET g_dbae_d[l_ac].dbae001 = g_dbae_d_t.dbae001
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.page2.dbae001_2" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_dbae2_d[g_detail_idx].dbae001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_dbae2_d[g_detail_idx].dbae001 != g_dbae2_d_t.dbae001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM dbae_t WHERE "||"dbaeent = '" ||g_enterprise|| "' AND "||"dbae001 = '"||g_dbae2_d[g_detail_idx].dbae001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.before_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD dbaestus
+            WHEN "s_detail2"
+               NEXT FIELD dbae001_2
+#            WHEN "s_detail1_aooi350_01"
+#               NEXT FIELD oofbstus
+#            WHEN "s_detail1_aooi350_02"
+#               NEXT FIELD oofcstus
+            OTHERWISE 
+               NEXT FIELD dbaestus 
+         END CASE]]>
+  </point>
+  <point name="input.body.a_delete" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[                  IF NOT s_aooi350_del(g_dbae_d[l_ac].dbae001) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "oofa_t"
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     CALL s_transaction_end('N','0')
+                     CANCEL DELETE
+                  END IF]]>
+  </point>
+  <point name="input.body.a_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #避免在聯絡對象識別碼為空值的情況下讓使用者離開頁籤 進行其他操作
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+            ELSE
+               IF cl_null(g_dbae_d[l_ac].dbae002) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'adb-00021'
+                  LET g_errparam.extend = g_dbae_d[l_ac].dbae001
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+ 
+                  CALL g_dbae_d.deleteElement(l_ac)
+                  NEXT FIELD dbaestus
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.body.a_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.body.a_insert2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               LET g_pmaa027_d = g_dbae_d[l_ac].dbae002
+               LET l_flag = 'Y']]>
+  </point>
+  <point name="input.body.a_row" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF l_cmd = 'a' AND l_ac > 0 AND l_flag = 'Y' THEN
+               IF NOT cl_null(g_dbae_d[l_ac].dbae002) THEN
+                  LET g_pmaa027_d = g_dbae_d[l_ac].dbae002
+                  CALL aooi350_01_b_fill(g_pmaa027_d)
+                  CALL aooi350_02_b_fill(g_pmaa027_d)
+                  NEXT FIELD oofbstus
+               END IF               
+            END IF]]>
+  </point>
+  <point name="input.body.a_update" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               LET g_pmaa027_d = g_dbae_d[l_ac].dbae002]]>
+  </point>
+  <point name="input.body.b_delete_ask" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               IF adbi250_chk_exist_adbi251(g_dbae_d_t.dbae001) THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_dbae_d_t.dbae001
+                  LET g_errparam.code   = 'adb-00302'
+                  LET g_errparam.popup  = TRUE     
+                  CALL cl_err()                
+                  
+                  CANCEL DELETE
+               END IF]]>
+  </point>
+  <point name="input.body.b_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               IF cl_null(g_dbae_d[l_ac].dbae002) THEN
+                  LET l_success = ''
+                  CALL s_aooi350_ins_oofa('12',g_dbae_d[l_ac].dbae001,'') RETURNING l_success,g_dbae_d[l_ac].dbae002
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "oofa_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CONTINUE DIALOG
+                  END IF     
+               END IF
+               
+               LET l_wc = " oofbent = ",g_enterprise
+               CALL s_aooi350_get_idno('oofb001','oofb_t',l_wc)
+                  RETURNING l_success,l_oofb001
+               IF NOT l_success THEN
+                  CALL s_transaction_end('N','0')
+                  CANCEL INSERT
+               END IF
+               
+               LET l_ooef006 = ''
+               SELECT ooef006 INTO l_ooef006 FROM ooef_t 
+                WHERE ooef001 = g_site 
+                
+               INSERT INTO oofb_t(oofbent,oofb001,oofb002,oofb008,oofb010,oofb012,oofbstus) 
+                           VALUES(g_enterprise,l_oofb001,g_dbae_d[l_ac].dbae002,'1','Y',l_ooef006,'Y')
+               IF SQLCA.SQLcode  THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "dbae_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')                    
+                  CANCEL INSERT
+               END IF]]>
+  </point>
+  <point name="input.body.b_update" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               #當聯絡對象識別碼為空
+               IF cl_null(g_dbae_d[l_ac].dbae002) THEN
+                  LET l_success = ''
+                  CALL s_aooi350_ins_oofa('12',g_dbae_d[l_ac].dbae001,'') RETURNING l_success,g_dbae_d[l_ac].dbae002
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "oofa_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CONTINUE DIALOG
+                  END IF     
+               END IF]]>
+  </point>
+  <point name="input.body.before_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_pmaa027_d TO NULL
+            CALL aooi350_01_clear_detail()
+            CALL aooi350_02_clear_detail()
+            LET l_flag = 'N']]>
+  </point>
+  <point name="input.body.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            LET g_temp_idx = l_ac
+            CALL adbi250_set_entry_b(l_cmd)
+            CALL adbi250_set_no_entry_b(l_cmd)
+            
+            IF l_cmd = 'u' THEN
+               IF NOT cl_null(g_dbae_d[l_ac].dbae002) THEN
+                  LET g_pmaa027_d = g_dbae_d[l_ac].dbae002
+                  CALL aooi350_01_b_fill(g_pmaa027_d)
+                  CALL aooi350_02_b_fill(g_pmaa027_d)
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.detail_input.page1.update_item" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_dbae_d[l_ac].dbae001)  THEN
+               CALL n_dbael(g_dbae_d[l_ac].dbae001)
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_dbae_d[l_ac].dbae001
+               CALL ap_ref_array2(g_ref_fields," SELECT dbael003,dbael004,dbael005 FROM dbael_t WHERE dbaelent = '"||g_enterprise||"' AND dbael001 = ? AND dbael002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+               LET g_dbae_d[l_ac].dbael003 = g_rtn_fields[1]
+               LET g_dbae_d[l_ac].dbael004 = g_rtn_fields[2]
+               LET g_dbae_d[l_ac].dbael005 = g_rtn_fields[3]
+               DISPLAY BY NAME g_dbae_d[l_ac].dbael003,g_dbae_d[l_ac].dbael004,g_dbae_d[l_ac].dbael005
+            END IF]]>
+  </point>
+  <point name="input.g.page1.dbaestus" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF g_dbae_d[l_ac].dbaestus = 'N' THEN
+               IF adbi250_chk_exist_adbi251(g_dbae_d_t.dbae001) THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_dbae_d_t.dbae001
+                  LET g_errparam.code   = 'adb-00302'
+                  LET g_errparam.popup  = TRUE     
+                  CALL cl_err() 
+                  
+                  LET g_dbae_d[l_ac].dbaestus = g_dbae_d_t.dbaestus
+                  NEXT FIELD CURRENT
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      SUBDIALOG aoo_aooi350_01.aooi350_01_input
+      SUBDIALOG aoo_aooi350_02.aooi350_02_input]]>
+  </point>
+  <point name="menu.delete" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               CALL cl_err_collect_show()]]>
+  </point>
+  <point name="menu.exporttoexcel" order="" ver="4" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               #ken---add---s 需求單號：150107-00009 項次：4
+               LET g_export_node[3] = base.typeInfo.create(g_pmba_d)
+               LET g_export_id[3]   = "s_detail1_aooi350_01"
+               LET g_export_node[4] = base.typeInfo.create(g_pmba2_d)
+               LET g_export_id[4]   = "s_detail1_aooi350_02"               
+               #ken---add---e]]>
+  </point>
+  <point name="modify.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_detail_insert = l_allow_insert
+   LET g_detail_delete = l_allow_delete]]>
+  </point>
+  <point name="modify.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success               LIKE type_t.num5
+   DEFINE l_wc                    STRING
+   DEFINE l_oofb001               LIKE oofb_t.oofb001
+   DEFINE l_flag                  LIKE type_t.chr1    #判斷是否有經過insert的指令
+   DEFINE l_ooef006               LIKE ooef_t.ooef006]]>
+  </point>
+  <point name="query.after_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF g_wc2_i35001 <> " 1=1" THEN
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = g_wc2_i35001
+      ELSE
+         LET g_wc2 = g_wc2 ," AND ", g_wc2_i35001
+      END IF
+   END IF
+
+   IF g_wc2_i35002 <> " 1=1" THEN
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = g_wc2_i35002
+      ELSE
+         LET g_wc2 = g_wc2 ," AND ", g_wc2_i35002
+      END IF
+   END IF]]>
+  </point>
+  <point name="query.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      SUBDIALOG aoo_aooi350_01.aooi350_01_construct
+      SUBDIALOG aoo_aooi350_02.aooi350_02_construct]]>
+  </point>
+  <point name="set_entry_b.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="set_entry_b.set_entry_b" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_comp_entry('dbae001',TRUE)]]>
+  </point>
+  <point name="set_no_entry_b.set_no_entry_b" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF p_cmd != 'a' THEN
+      CALL cl_set_comp_entry('dbae001',FALSE)
+   END IF]]>
+  </point>
+  <point name="ui_dialog.b_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            NEXT FIELD dbae001]]>
+  </point>
+  <point name="ui_dialog.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               IF l_ac > 0 THEN
+                  IF NOT cl_null(g_dbae_d[l_ac].dbae002) THEN
+                     LET g_pmaa027_d = g_dbae_d[l_ac].dbae002
+                     CALL aooi350_01_b_fill(g_pmaa027_d)
+                     CALL aooi350_02_b_fill(g_pmaa027_d)
+                  END IF
+               END IF]]>
+  </point>
+  <point name="ui_dialog.before_row2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               IF l_ac > 0 THEN
+                  IF NOT cl_null(g_dbae_d[l_ac].dbae002) THEN
+                     LET g_pmaa027_d = g_dbae_d[l_ac].dbae002
+                     CALL aooi350_01_b_fill(g_pmaa027_d)
+                     CALL aooi350_02_b_fill(g_pmaa027_d)
+                  END IF
+               END IF]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         SUBDIALOG aoo_aooi350_01.aooi350_01_display
+         SUBDIALOG aoo_aooi350_02.aooi350_02_display]]>
+  </point>
+  <section id="adbi250.b_fill" ver="17" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION adbi250_b_fill(p_wc2)              #BODY FILL UP
+   DEFINE p_wc2    STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill段define(客製用)
+   {<point name="b_fill.define_customerization" edit="c"/>}
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT  UNIQUE t0.dbaestus,t0.dbae001,t0.dbae002,t0.dbae001,t0.dbaeownid,t0.dbaeowndp, 
+       t0.dbaecrtid,t0.dbaecrtdp,t0.dbaecrtdt,t0.dbaemodid,t0.dbaemoddt ,t1.ooag011 ,t2.ooefl003 ,t3.ooag011 , 
+       t4.ooefl003 ,t5.ooag011 FROM dbae_t t0",
+               " LEFT JOIN dbael_t ON dbaelent = '"||g_enterprise||"' AND dbae001 = dbael001 AND dbael002 = '",g_dlang,"'",
+                              " LEFT JOIN ooag_t t1 ON t1.ooagent='"||g_enterprise||"' AND t1.ooag001=t0.dbaeownid  ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent='"||g_enterprise||"' AND t2.ooefl001=t0.dbaeowndp AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent='"||g_enterprise||"' AND t3.ooag001=t0.dbaecrtid  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent='"||g_enterprise||"' AND t4.ooefl001=t0.dbaecrtdp AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t5 ON t5.ooagent='"||g_enterprise||"' AND t5.ooag001=t0.dbaemodid  ",
+ 
+               " WHERE t0.dbaeent= ?  AND  1=1 AND (", p_wc2, ") " 
+   #add-point:b_fill段sql wc
+   {<point name="b_fill.sql_wc"/>}
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("dbae_t"),
+                      " ORDER BY t0.dbae001"
+   
+   #add-point:b_fill段sql之後
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+   
+   #LET g_sql = cl_sql_add_tabid(g_sql,"dbae_t")            #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE adbi250_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR adbi250_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_dbae_d.clear()
+   CALL g_dbae2_d.clear()   
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_dbae_d[l_ac].dbaestus,g_dbae_d[l_ac].dbae001,g_dbae_d[l_ac].dbae002,g_dbae2_d[l_ac].dbae001, 
+       g_dbae2_d[l_ac].dbaeownid,g_dbae2_d[l_ac].dbaeowndp,g_dbae2_d[l_ac].dbaecrtid,g_dbae2_d[l_ac].dbaecrtdp, 
+       g_dbae2_d[l_ac].dbaecrtdt,g_dbae2_d[l_ac].dbaemodid,g_dbae2_d[l_ac].dbaemoddt,g_dbae2_d[l_ac].dbaeownid_desc, 
+       g_dbae2_d[l_ac].dbaeowndp_desc,g_dbae2_d[l_ac].dbaecrtid_desc,g_dbae2_d[l_ac].dbaecrtdp_desc, 
+       g_dbae2_d[l_ac].dbaemodid_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL adbi250_detail_show()      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_dbae_d.deleteElement(g_dbae_d.getLength())   
+   CALL g_dbae2_d.deleteElement(g_dbae2_d.getLength())
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_dbae_d.getLength()
+      LET g_dbae2_d[l_ac].dbae001 = g_dbae_d[l_ac].dbae001 
+ 
+      #add-point:b_fill段key值相關欄位
+      {<point name="b_fill.keys.fill"/>}
+      #end add-point
+   END FOR
+   
+   IF g_cnt > g_dbae_d.getLength() THEN
+      LET l_ac = g_dbae_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_dbae_d.getLength()
+      LET g_dbae_d_mask_o[l_ac].* =  g_dbae_d[l_ac].*
+      CALL adbi250_dbae_t_mask()
+      LET g_dbae_d_mask_n[l_ac].* =  g_dbae_d[l_ac].*
+   END FOR
+   
+   LET g_dbae2_d_mask_o.* =  g_dbae2_d.*
+   FOR l_ac = 1 TO g_dbae2_d.getLength()
+      LET g_dbae2_d_mask_o[l_ac].* =  g_dbae2_d[l_ac].*
+      CALL adbi250_dbae_t_mask()
+      LET g_dbae2_d_mask_n[l_ac].* =  g_dbae2_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = g_cnt
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_dbae_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE adbi250_pb
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.default_search" ver="8" status="" src="s" readonly="">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION adbi250_default_search()
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define" edit="s"/>}
+   #end add-point  
+   #add-point:default_search段define(客製用)
+   {<point name="default_search.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " dbae001 = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+      #預設查詢條件
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=1"
+      END IF
+   END IF
+ 
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.delete" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION adbi250_delete()
+   DEFINE li_idx          LIKE type_t.num10
+   DEFINE li_ac_t         LIKE type_t.num10
+   DEFINE li_detail_tmp   LIKE type_t.num10
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define" edit="s"/>}
+   #end add-point 
+   #add-point:delete段define(客製用)
+   {<point name="delete.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:單身刪除前
+   {<point name="delete.body.before_delete"/>}
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_ac_t = l_ac
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_dbae_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT adbi250_lock_b("dbae_t") THEN
+            #已被他人鎖定
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前
+   {<point name="delete.body.b_delete_ask"/>}
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_dbae_d.getLength()
+      IF g_dbae_d[li_idx].dbae001 IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前
+         {<point name="delete.body.b_delete" mark="Y"/>}
+         #end add-point   
+         
+         DELETE FROM dbae_t
+          WHERE dbaeent = g_enterprise AND 
+                dbae001 = g_dbae_d[li_idx].dbae001
+ 
+         #add-point:單身刪除中
+         {<point name="delete.body.m_delete"/>}
+         #end add-point  
+                
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "dbae_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            LET l_ac = li_idx
+            LET g_detail_multi_table_t.dbael001 = g_dbae_d[l_ac].dbae001
+LET g_detail_multi_table_t.dbael002 = g_dlang
+LET g_detail_multi_table_t.dbael003 = g_dbae_d[l_ac].dbael003
+LET g_detail_multi_table_t.dbael004 = g_dbae_d[l_ac].dbael004
+LET g_detail_multi_table_t.dbael005 = g_dbae_d[l_ac].dbael005
+ 
+            
+ 
+            INITIALIZE l_var_keys_bak TO NULL 
+                  INITIALIZE l_field_keys TO NULL 
+                  LET l_field_keys[01] = 'dbaelent'
+                  LET l_var_keys_bak[01] = g_enterprise
+                  LET l_field_keys[02] = 'dbael001'
+                  LET l_var_keys_bak[02] = g_detail_multi_table_t.dbael001
+                  CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'dbael_t')
+ 
+            
+ 
+            #add-point:單身同步刪除前(同層table)
+            {<point name="delete.body.a_delete"/>}
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_dbae_d_t.dbae001
+ 
+            #add-point:單身同步刪除中(同層table)
+            {<point name="delete.body.a_delete2"/>}
+            #end add-point
+                           CALL adbi250_delete_b('dbae_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table)
+            {<point name="delete.body.a_delete3"/>}
+            #end add-point
+         END IF 
+      END IF 
+    
+   END FOR
+   CALL s_transaction_end('Y','0')
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後
+   {<point name="delete.after"/>}
+   #end add-point  
+   
+   LET l_ac = li_ac_t
+   
+   #刷新資料
+   CALL adbi250_b_fill(g_wc2)
+            
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.delete_b" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION adbi250_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define
+   {<point name="delete_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:delete_b段define(客製用)
+   {<point name="delete_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "dbae_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      IF ps_table <> 'dbae_t' THEN
+         #add-point:delete_b段刪除前
+         {<point name="delete_b.b_delete" mark="Y"/>}
+         #end add-point     
+         
+         DELETE FROM dbae_t
+          WHERE dbaeent = g_enterprise AND
+            dbae001 = ps_keys_bak[1]
+         
+         #add-point:delete_b段刪除中
+         {<point name="delete_b.m_delete"/>}
+         #end add-point  
+            
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         END IF
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_dbae_d.deleteElement(li_idx) 
+      END IF 
+      IF ps_page <> "'2'" THEN 
+         CALL g_dbae2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.a_delete"/>}
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.description" ver="47" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:5,PR版次:5) Build-000105
+#+ 
+#+ Filename...: adbi250
+#+ Description: 裝載點基本資料維護作業
+#+ Creator....: 01752(2014-04-22 18:27:31)
+#+ Modifier...: 06137(2015-01-09 17:07:54) -SD/PR-
+]]>
+  </section>
+  <section id="adbi250.detail_show" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION adbi250_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define" edit="s"/>}
+   #end add-point
+   #add-point:detail_show段define(客製用)
+   {<point name="detail_show.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+   #帶出公用欄位reference值page2
+   #應用 a12 樣板自動產生(Version:3)
+ 
+ 
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.reference"/>}
+   #end add-point
+   
+   #add-point:show段單身reference
+   {<point name="detail_show.body2.reference"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.global" ver="8" status="" src="s" readonly="">
+    <![CDATA[#應用 i02 樣板自動產生(Version:14)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_dbae_d RECORD
+       dbaestus LIKE dbae_t.dbaestus, 
+   dbae001 LIKE dbae_t.dbae001, 
+   dbael003 LIKE dbael_t.dbael003, 
+   dbael004 LIKE dbael_t.dbael004, 
+   dbael005 LIKE dbael_t.dbael005, 
+   dbae002 LIKE dbae_t.dbae002
+       END RECORD
+PRIVATE TYPE type_g_dbae2_d RECORD
+       dbae001 LIKE dbae_t.dbae001, 
+   dbaeownid LIKE dbae_t.dbaeownid, 
+   dbaeownid_desc LIKE type_t.chr500, 
+   dbaeowndp LIKE dbae_t.dbaeowndp, 
+   dbaeowndp_desc LIKE type_t.chr500, 
+   dbaecrtid LIKE dbae_t.dbaecrtid, 
+   dbaecrtid_desc LIKE type_t.chr500, 
+   dbaecrtdp LIKE dbae_t.dbaecrtdp, 
+   dbaecrtdp_desc LIKE type_t.chr500, 
+   dbaecrtdt DATETIME YEAR TO SECOND, 
+   dbaemodid LIKE dbae_t.dbaemodid, 
+   dbaemodid_desc LIKE type_t.chr500, 
+   dbaemoddt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+DEFINE g_detail_multi_table_t    RECORD
+      dbael001 LIKE dbael_t.dbael001,
+      dbael002 LIKE dbael_t.dbael002,
+      dbael003 LIKE dbael_t.dbael003,
+      dbael004 LIKE dbael_t.dbael004,
+      dbael005 LIKE dbael_t.dbael005
+      END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_dbae_d          DYNAMIC ARRAY OF type_g_dbae_d #單身變數
+DEFINE g_dbae_d_t        type_g_dbae_d                  #單身備份
+DEFINE g_dbae_d_o        type_g_dbae_d                  #單身備份
+DEFINE g_dbae_d_mask_o   DYNAMIC ARRAY OF type_g_dbae_d #單身變數
+DEFINE g_dbae_d_mask_n   DYNAMIC ARRAY OF type_g_dbae_d #單身變數
+DEFINE g_dbae2_d   DYNAMIC ARRAY OF type_g_dbae2_d
+DEFINE g_dbae2_d_t type_g_dbae2_d
+DEFINE g_dbae2_d_o type_g_dbae2_d
+DEFINE g_dbae2_d_mask_o DYNAMIC ARRAY OF type_g_dbae2_d
+DEFINE g_dbae2_d_mask_n DYNAMIC ARRAY OF type_g_dbae2_d
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="adbi250.init" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION adbi250_init()
+   #add-point:init段define
+   {<point name="init.define" edit="s"/>}
+   #end add-point   
+   #add-point:init段define(客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+   
+   
+   
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL adbi250_default_search()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.insert" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION adbi250_insert()
+   #add-point:delete段define
+   {<point name="insert.define" edit="s"/>}
+   #end add-point                
+   #add-point:insert段define(客製用)
+   {<point name="insert.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:單身新增前
+   {<point name="insert.b_insert"/>}
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL adbi250_modify()
+            
+   #add-point:單身新增後
+   {<point name="insert.a_insert"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.insert_b" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION adbi250_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:insert_b段define(客製用)
+   {<point name="insert_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "dbae_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前
+      {<point name="insert_b.b_insert" mark="Y"/>}
+      #end add-point    
+      INSERT INTO dbae_t
+                  (dbaeent,
+                   dbae001
+                   ,dbaestus,dbae002,dbaeownid,dbaeowndp,dbaecrtid,dbaecrtdp,dbaecrtdt,dbaemodid,dbaemoddt) 
+            VALUES(g_enterprise,
+                   ps_keys[1]
+                   ,g_dbae_d[l_ac].dbaestus,g_dbae_d[l_ac].dbae002,g_dbae2_d[l_ac].dbaeownid,g_dbae2_d[l_ac].dbaeowndp, 
+                       g_dbae2_d[l_ac].dbaecrtid,g_dbae2_d[l_ac].dbaecrtdp,g_dbae2_d[l_ac].dbaecrtdt, 
+                       g_dbae2_d[l_ac].dbaemodid,g_dbae2_d[l_ac].dbaemoddt)
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "dbae_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.a_insert"/>}
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.lock_b" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION adbi250_lock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:lock_b段define(客製用)
+   {<point name="lock_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #先刷新資料
+   #CALL adbi250_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "dbae_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN adbi250_bcl USING g_enterprise,
+                                       g_dbae_d[g_detail_idx].dbae001
+                                       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "adbi250_bcl" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.main" ver="6" status="" src="s" readonly="">
+    <![CDATA[#應用 a26 樣板自動產生(Version:4)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define
+   {<point name="main.define" edit="s"/>}
+   #end add-point   
+   #add-point:main段define(客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("adb","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+ 
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT dbaestus,dbae001,dbae002,dbae001,dbaeownid,dbaeowndp,dbaecrtid,dbaecrtdp, 
+       dbaecrtdt,dbaemodid,dbaemoddt FROM dbae_t WHERE dbaeent=? AND dbae001=? FOR UPDATE"
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE adbi250_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adbi250 WITH FORM cl_ap_formpath("adb",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL adbi250_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL adbi250_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_adbi250
+      
+   END IF 
+   
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="adbi250.mask_functions" ver="1" status="" src="s" readonly="">
+    <![CDATA[&include "erp/adb/adbi250_mask.4gl"
+]]>
+  </section>
+  <section id="adbi250.modify" ver="21" status="" src="s" readonly="">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION adbi250_modify()
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num10               #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num10
+   DEFINE  l_i                    LIKE type_t.num10
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num10
+   DEFINE  li_reproduce_target    LIKE type_t.num10
+   DEFINE  lb_reproduce           BOOLEAN
+   #add-point:modify段define
+   {<point name="modify.define" edit="s"/>}
+   #end add-point 
+   #add-point:modify段define(客製用)
+   {<point name="modify.define_customerization" edit="c"/>}
+   #end add-point
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前
+   {<point name="modify.define_sql" mark="Y"/>}
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+ 
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+ 
+   #add-point:modify段修改前
+   {<point name="modify.before_input"/>}
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_dbae_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item
+               {<point name="input.detail_input.page1.update_item" />}
+               #END add-point
+            END IF
+ 
+ 
+ 
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_dbae_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL adbi250_b_fill(g_wc2)
+            LET g_detail_cnt = g_dbae_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_dbae_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_dbae_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_dbae_d[l_ac].dbae001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_dbae_d_t.* = g_dbae_d[l_ac].*  #BACKUP
+               LET g_dbae_d_o.* = g_dbae_d[l_ac].*  #BACKUP
+               IF NOT adbi250_lock_b("dbae_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH adbi250_bcl INTO g_dbae_d[l_ac].dbaestus,g_dbae_d[l_ac].dbae001,g_dbae_d[l_ac].dbae002, 
+                      g_dbae2_d[l_ac].dbae001,g_dbae2_d[l_ac].dbaeownid,g_dbae2_d[l_ac].dbaeowndp,g_dbae2_d[l_ac].dbaecrtid, 
+                      g_dbae2_d[l_ac].dbaecrtdp,g_dbae2_d[l_ac].dbaecrtdt,g_dbae2_d[l_ac].dbaemodid, 
+                      g_dbae2_d[l_ac].dbaemoddt
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_dbae_d_t.dbae001 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_dbae_d_mask_o[l_ac].* =  g_dbae_d[l_ac].*
+                  CALL adbi250_dbae_t_mask()
+                  LET g_dbae_d_mask_n[l_ac].* =  g_dbae_d[l_ac].*
+                  
+                  CALL adbi250_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            LET g_detail_multi_table_t.dbael001 = g_dbae_d[l_ac].dbae001
+LET g_detail_multi_table_t.dbael002 = g_dlang
+LET g_detail_multi_table_t.dbael003 = g_dbae_d[l_ac].dbael003
+LET g_detail_multi_table_t.dbael004 = g_dbae_d[l_ac].dbael004
+LET g_detail_multi_table_t.dbael005 = g_dbae_d[l_ac].dbael005
+ 
+            #其他table進行lock
+                        INITIALIZE l_var_keys TO NULL 
+            INITIALIZE l_field_keys TO NULL 
+            LET l_field_keys[01] = 'dbaelent'
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[02] = 'dbael001'
+            LET l_var_keys[02] = g_dbae_d[l_ac].dbae001
+            LET l_field_keys[03] = 'dbael002'
+            LET l_var_keys[03] = g_dlang
+            IF NOT cl_multitable_lock(l_var_keys,l_field_keys,'dbael_t') THEN
+               RETURN 
+            END IF 
+ 
+        
+         BEFORE INSERT
+            
+            CALL s_transaction_begin()
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_dbae_d_t.* TO NULL
+            INITIALIZE g_dbae_d_o.* TO NULL
+            INITIALIZE g_dbae_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            #應用 a14 樣板自動產生(Version:4)    
+      #公用欄位新增給值  
+      LET g_dbae2_d[l_ac].dbaeownid = g_user
+      LET g_dbae2_d[l_ac].dbaeowndp = g_dept
+      LET g_dbae2_d[l_ac].dbaecrtid = g_user
+      LET g_dbae2_d[l_ac].dbaecrtdp = g_dept 
+      LET g_dbae2_d[l_ac].dbaecrtdt = cl_get_current()
+      LET g_dbae2_d[l_ac].dbaemodid = g_user
+      LET g_dbae2_d[l_ac].dbaemoddt = cl_get_current()
+      LET g_dbae_d[l_ac].dbaestus = ''
+ 
+ 
+            #自定義預設值(單身2)
+                  LET g_dbae_d[l_ac].dbaestus = "Y"
+ 
+            #add-point:modify段before備份
+            {<point name="input.body.before_bak"/>}
+            #end add-point
+            LET g_dbae_d_t.* = g_dbae_d[l_ac].*     #新輸入資料
+            LET g_dbae_d_o.* = g_dbae_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL adbi250_set_entry_b("a")
+            CALL adbi250_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_dbae_d[li_reproduce_target].* = g_dbae_d[li_reproduce].*
+               LET g_dbae2_d[li_reproduce_target].* = g_dbae2_d[li_reproduce].*
+ 
+               LET g_dbae_d[g_dbae_d.getLength()].dbae001 = NULL
+ 
+            END IF
+            LET g_detail_multi_table_t.dbael001 = g_dbae_d[l_ac].dbae001
+LET g_detail_multi_table_t.dbael002 = g_dlang
+LET g_detail_multi_table_t.dbael003 = g_dbae_d[l_ac].dbael003
+LET g_detail_multi_table_t.dbael004 = g_dbae_d[l_ac].dbael004
+LET g_detail_multi_table_t.dbael005 = g_dbae_d[l_ac].dbael005
+ 
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM dbae_t 
+             WHERE dbaeent = g_enterprise AND dbae001 = g_dbae_d[l_ac].dbae001
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_dbae_d[g_detail_idx].dbae001
+               CALL adbi250_insert_b('dbae_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_dbae_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "dbae_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL adbi250_b_fill(g_wc2)
+               #資料多語言用-增/改
+                        INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF g_dbae_d[l_ac].dbae001 = g_detail_multi_table_t.dbael001 AND
+         g_dbae_d[l_ac].dbael003 = g_detail_multi_table_t.dbael003 AND
+         g_dbae_d[l_ac].dbael004 = g_detail_multi_table_t.dbael004 AND
+         g_dbae_d[l_ac].dbael005 = g_detail_multi_table_t.dbael005 THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'dbaelent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_dbae_d[l_ac].dbae001
+            LET l_field_keys[02] = 'dbael001'
+            LET l_var_keys_bak[02] = g_detail_multi_table_t.dbael001
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'dbael002'
+            LET l_var_keys_bak[03] = g_detail_multi_table_t.dbael002
+            LET l_vars[01] = g_dbae_d[l_ac].dbael003
+            LET l_fields[01] = 'dbael003'
+            LET l_vars[02] = g_dbae_d[l_ac].dbael004
+            LET l_fields[02] = 'dbael004'
+            LET l_vars[03] = g_dbae_d[l_ac].dbael005
+            LET l_fields[03] = 'dbael005'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'dbael_t')
+         END IF 
+ 
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (dbae001 = '", g_dbae_d[l_ac].dbae001, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               #add-point:單身刪除ask前
+               {<point name="input.body.b_delete_ask"/>}
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point   
+               
+               DELETE FROM dbae_t
+                WHERE dbaeent = g_enterprise AND 
+                      dbae001 = g_dbae_d_t.dbae001
+ 
+                      
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point  
+                      
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "dbae_t" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  INITIALIZE l_var_keys_bak TO NULL 
+                  INITIALIZE l_field_keys TO NULL 
+                  LET l_field_keys[01] = 'dbaelent'
+                  LET l_var_keys_bak[01] = g_enterprise
+                  LET l_field_keys[02] = 'dbael001'
+                  LET l_var_keys_bak[02] = g_detail_multi_table_t.dbael001
+                  CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'dbael_t')
+ 
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  CALL adbi250_set_pk_array()
+                  IF NOT cl_log_modified_record('','') THEN 
+                     CALL s_transaction_end('N','0')
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF
+               END IF 
+               CLOSE adbi250_bcl
+               #add-point:單身關閉bcl
+               {<point name="input.body.close"/>}
+               #end add-point
+               LET l_count = g_dbae_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_dbae_d_t.dbae001
+ 
+               #應用 a47 樣板自動產生(Version:2)
+      #刪除相關文件
+      CALL adbi250_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+            END IF 
+              
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2
+               {<point name="input.body.after_delete"/>}
+               #end add-point
+                              CALL adbi250_delete_b('dbae_t',gs_keys,"'1'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_dbae_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            #add-point:單身刪除後3
+            {<point name="input.body.after_delete3"/>}
+            #end add-point
+ 
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbaestus
+            #add-point:BEFORE FIELD dbaestus
+            {<point name="input.b.page1.dbaestus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbaestus
+            
+            #add-point:AFTER FIELD dbaestus
+            {<point name="input.a.page1.dbaestus" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE dbaestus
+            #add-point:ON CHANGE dbaestus
+            {<point name="input.g.page1.dbaestus" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbae001
+            
+            #add-point:AFTER FIELD dbae001
+            {<point name="input.a.page1.dbae001" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbae001
+            #add-point:BEFORE FIELD dbae001
+            {<point name="input.b.page1.dbae001" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE dbae001
+            #add-point:ON CHANGE dbae001
+            {<point name="input.g.page1.dbae001" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbael003
+            #add-point:BEFORE FIELD dbael003
+            {<point name="input.b.page1.dbael003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbael003
+            
+            #add-point:AFTER FIELD dbael003
+            {<point name="input.a.page1.dbael003" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE dbael003
+            #add-point:ON CHANGE dbael003
+            {<point name="input.g.page1.dbael003" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbael004
+            #add-point:BEFORE FIELD dbael004
+            {<point name="input.b.page1.dbael004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbael004
+            
+            #add-point:AFTER FIELD dbael004
+            {<point name="input.a.page1.dbael004" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE dbael004
+            #add-point:ON CHANGE dbael004
+            {<point name="input.g.page1.dbael004" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbael005
+            #add-point:BEFORE FIELD dbael005
+            {<point name="input.b.page1.dbael005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbael005
+            
+            #add-point:AFTER FIELD dbael005
+            {<point name="input.a.page1.dbael005" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE dbael005
+            #add-point:ON CHANGE dbael005
+            {<point name="input.g.page1.dbael005" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbae002
+            #add-point:BEFORE FIELD dbae002
+            {<point name="input.b.page1.dbae002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbae002
+            
+            #add-point:AFTER FIELD dbae002
+            {<point name="input.a.page1.dbae002" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE dbae002
+            #add-point:ON CHANGE dbae002
+            {<point name="input.g.page1.dbae002" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.dbaestus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbaestus
+            #add-point:ON ACTION controlp INFIELD dbaestus
+            {<point name="input.c.page1.dbaestus" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.dbae001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbae001
+            #add-point:ON ACTION controlp INFIELD dbae001
+            {<point name="input.c.page1.dbae001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.dbael003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbael003
+            #add-point:ON ACTION controlp INFIELD dbael003
+            {<point name="input.c.page1.dbael003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.dbael004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbael004
+            #add-point:ON ACTION controlp INFIELD dbael004
+            {<point name="input.c.page1.dbael004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.dbael005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbael005
+            #add-point:ON ACTION controlp INFIELD dbael005
+            {<point name="input.c.page1.dbael005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.dbae002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbae002
+            #add-point:ON ACTION controlp INFIELD dbae002
+            {<point name="input.c.page1.dbae002" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_dbae_d[l_ac].* = g_dbae_d_t.*
+               CLOSE adbi250_bcl
+               #add-point:單身取消時
+               {<point name="input.body.cancel"/>}
+               #end add-point
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_dbae_d[l_ac].dbae001 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_dbae_d[l_ac].* = g_dbae_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身)
+               LET g_dbae2_d[l_ac].dbaemodid = g_user 
+LET g_dbae2_d[l_ac].dbaemoddt = cl_get_current()
+LET g_dbae2_d[l_ac].dbaemodid_desc = cl_get_username(g_dbae2_d[l_ac].dbaemodid)
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL adbi250_dbae_t_mask_restore('restore_mask_o')
+ 
+               UPDATE dbae_t SET (dbaestus,dbae001,dbae002,dbaeownid,dbaeowndp,dbaecrtid,dbaecrtdp,dbaecrtdt, 
+                   dbaemodid,dbaemoddt) = (g_dbae_d[l_ac].dbaestus,g_dbae_d[l_ac].dbae001,g_dbae_d[l_ac].dbae002, 
+                   g_dbae2_d[l_ac].dbaeownid,g_dbae2_d[l_ac].dbaeowndp,g_dbae2_d[l_ac].dbaecrtid,g_dbae2_d[l_ac].dbaecrtdp, 
+                   g_dbae2_d[l_ac].dbaecrtdt,g_dbae2_d[l_ac].dbaemodid,g_dbae2_d[l_ac].dbaemoddt)
+                WHERE dbaeent = g_enterprise AND
+                  dbae001 = g_dbae_d_t.dbae001 #項次   
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "dbae_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                    WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "dbae_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_dbae_d[g_detail_idx].dbae001
+               LET gs_keys_bak[1] = g_dbae_d_t.dbae001
+               CALL adbi250_update_b('dbae_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                              INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF g_dbae_d[l_ac].dbae001 = g_detail_multi_table_t.dbael001 AND
+         g_dbae_d[l_ac].dbael003 = g_detail_multi_table_t.dbael003 AND
+         g_dbae_d[l_ac].dbael004 = g_detail_multi_table_t.dbael004 AND
+         g_dbae_d[l_ac].dbael005 = g_detail_multi_table_t.dbael005 THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'dbaelent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_dbae_d[l_ac].dbae001
+            LET l_field_keys[02] = 'dbael001'
+            LET l_var_keys_bak[02] = g_detail_multi_table_t.dbael001
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'dbael002'
+            LET l_var_keys_bak[03] = g_detail_multi_table_t.dbael002
+            LET l_vars[01] = g_dbae_d[l_ac].dbael003
+            LET l_fields[01] = 'dbael003'
+            LET l_vars[02] = g_dbae_d[l_ac].dbael004
+            LET l_fields[02] = 'dbael004'
+            LET l_vars[03] = g_dbae_d[l_ac].dbael005
+            LET l_fields[03] = 'dbael005'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'dbael_t')
+         END IF 
+ 
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_dbae_d_t)
+                     LET g_log2 = util.JSON.stringify(g_dbae_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL adbi250_dbae_t_mask_restore('restore_mask_n')
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL adbi250_unlock_b("dbae_t")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            CALL cl_multitable_unlock()
+             #add-point:單身after row
+            {<point name="input.body.a_row"/>}
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後
+            {<point name="input.body.a_input"/>}
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_dbae_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_dbae_d.getLength()+1
+            
+      END INPUT
+      
+ 
+      
+      DISPLAY ARRAY g_dbae2_d TO s_detail2.*
+         ATTRIBUTES(COUNT=g_detail_cnt)  
+      
+         BEFORE DISPLAY 
+            CALL adbi250_b_fill(g_wc2)
+            CALL FGL_SET_ARR_CURR(g_detail_idx)
+      
+         BEFORE ROW
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+            LET l_ac = g_detail_idx
+            LET g_temp_idx = l_ac
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            CALL cl_show_fld_cont() 
+            
+         #add-point:page2自定義行為
+         {<point name="input.body2.action"/>}
+         #end add-point
+            
+      END DISPLAY
+ 
+      
+      #add-point:before_more_input
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()      
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         #LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD dbaestus
+            WHEN "s_detail2"
+               NEXT FIELD dbae001_2
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+    
+   #新增後取消
+   IF l_cmd = 'a' THEN
+      #當取消或無輸入資料按確定時刪除對應資料
+      IF INT_FLAG OR cl_null(g_dbae_d[g_detail_idx].dbae001) THEN
+         CALL g_dbae_d.deleteElement(g_detail_idx)
+         CALL g_dbae2_d.deleteElement(g_detail_idx)
+ 
+      END IF
+   END IF
+   
+   #修改後取消
+   IF l_cmd = 'u' AND INT_FLAG THEN
+      LET g_dbae_d[g_detail_idx].* = g_dbae_d_t.*
+   END IF
+   
+   #add-point:modify段修改後
+   {<point name="modify.after_input"/>}
+   #end add-point
+ 
+   CLOSE adbi250_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.modify_detail_chk" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 單身輸入判定(因應modify_detail)
+PRIVATE FUNCTION adbi250_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define" edit="s"/>}
+   #end add-point
+   #add-point:modify_detail_chk段define(客製用)
+   {<point name="modify_detail_chk.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   #根據sr名稱確定該page第一個欄位的名稱
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "dbaestus"
+      WHEN "s_detail2"
+         LET ls_return = "dbae001_2"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[ 
+]]>
+  </section>
+  <section id="adbi250.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="adbi250.query" ver="9" status="" src="s" readonly="">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION adbi250_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" edit="s"/>}
+   #end add-point 
+   #add-point:query段define(客製用)
+   {<point name="query.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_dbae_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON dbaestus,dbae001,dbael003,dbael004,dbael005,dbae002,dbaeownid,dbaeowndp,dbaecrtid, 
+          dbaecrtdp,dbaecrtdt,dbaemodid,dbaemoddt 
+ 
+         FROM s_detail1[1].dbaestus,s_detail1[1].dbae001,s_detail1[1].dbael003,s_detail1[1].dbael004, 
+             s_detail1[1].dbael005,s_detail1[1].dbae002,s_detail2[1].dbaeownid,s_detail2[1].dbaeowndp, 
+             s_detail2[1].dbaecrtid,s_detail2[1].dbaecrtdp,s_detail2[1].dbaecrtdt,s_detail2[1].dbaemodid, 
+             s_detail2[1].dbaemoddt 
+      
+         #應用 a11 樣板自動產生(Version:2)
+         #共用欄位查詢處理  
+         ##----<<dbaecrtdt>>----
+         AFTER FIELD dbaecrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<dbaemoddt>>----
+         AFTER FIELD dbaemoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<dbaecnfdt>>----
+         
+         #----<<dbaepstdt>>----
+ 
+ 
+      
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbaestus
+            #add-point:BEFORE FIELD dbaestus
+            {<point name="query.b.page1.dbaestus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbaestus
+            
+            #add-point:AFTER FIELD dbaestus
+            {<point name="query.a.page1.dbaestus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.dbaestus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbaestus
+            #add-point:ON ACTION controlp INFIELD dbaestus
+            {<point name="query.c.page1.dbaestus" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1.dbae001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbae001
+            #add-point:ON ACTION controlp INFIELD dbae001
+            {<point name="construct.c.page1.dbae001" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbae001
+            #add-point:BEFORE FIELD dbae001
+            {<point name="query.b.page1.dbae001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbae001
+            
+            #add-point:AFTER FIELD dbae001
+            {<point name="query.a.page1.dbae001" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbael003
+            #add-point:BEFORE FIELD dbael003
+            {<point name="query.b.page1.dbael003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbael003
+            
+            #add-point:AFTER FIELD dbael003
+            {<point name="query.a.page1.dbael003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.dbael003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbael003
+            #add-point:ON ACTION controlp INFIELD dbael003
+            {<point name="query.c.page1.dbael003" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbael004
+            #add-point:BEFORE FIELD dbael004
+            {<point name="query.b.page1.dbael004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbael004
+            
+            #add-point:AFTER FIELD dbael004
+            {<point name="query.a.page1.dbael004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.dbael004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbael004
+            #add-point:ON ACTION controlp INFIELD dbael004
+            {<point name="query.c.page1.dbael004" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbael005
+            #add-point:BEFORE FIELD dbael005
+            {<point name="query.b.page1.dbael005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbael005
+            
+            #add-point:AFTER FIELD dbael005
+            {<point name="query.a.page1.dbael005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.dbael005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbael005
+            #add-point:ON ACTION controlp INFIELD dbael005
+            {<point name="query.c.page1.dbael005" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbae002
+            #add-point:BEFORE FIELD dbae002
+            {<point name="query.b.page1.dbae002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbae002
+            
+            #add-point:AFTER FIELD dbae002
+            {<point name="query.a.page1.dbae002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.dbae002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbae002
+            #add-point:ON ACTION controlp INFIELD dbae002
+            {<point name="query.c.page1.dbae002" />}
+            #END add-point
+ 
+  
+         
+                  #Ctrlp:construct.c.page2.dbaeownid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbaeownid
+            #add-point:ON ACTION controlp INFIELD dbaeownid
+            {<point name="construct.c.page2.dbaeownid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbaeownid
+            #add-point:BEFORE FIELD dbaeownid
+            {<point name="query.b.page2.dbaeownid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbaeownid
+            
+            #add-point:AFTER FIELD dbaeownid
+            {<point name="query.a.page2.dbaeownid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.dbaeowndp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbaeowndp
+            #add-point:ON ACTION controlp INFIELD dbaeowndp
+            {<point name="construct.c.page2.dbaeowndp" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbaeowndp
+            #add-point:BEFORE FIELD dbaeowndp
+            {<point name="query.b.page2.dbaeowndp" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbaeowndp
+            
+            #add-point:AFTER FIELD dbaeowndp
+            {<point name="query.a.page2.dbaeowndp" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.dbaecrtid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbaecrtid
+            #add-point:ON ACTION controlp INFIELD dbaecrtid
+            {<point name="construct.c.page2.dbaecrtid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbaecrtid
+            #add-point:BEFORE FIELD dbaecrtid
+            {<point name="query.b.page2.dbaecrtid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbaecrtid
+            
+            #add-point:AFTER FIELD dbaecrtid
+            {<point name="query.a.page2.dbaecrtid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.dbaecrtdp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbaecrtdp
+            #add-point:ON ACTION controlp INFIELD dbaecrtdp
+            {<point name="construct.c.page2.dbaecrtdp" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbaecrtdp
+            #add-point:BEFORE FIELD dbaecrtdp
+            {<point name="query.b.page2.dbaecrtdp" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbaecrtdp
+            
+            #add-point:AFTER FIELD dbaecrtdp
+            {<point name="query.a.page2.dbaecrtdp" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbaecrtdt
+            #add-point:BEFORE FIELD dbaecrtdt
+            {<point name="query.b.page2.dbaecrtdt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page2.dbaemodid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dbaemodid
+            #add-point:ON ACTION controlp INFIELD dbaemodid
+            {<point name="construct.c.page2.dbaemodid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbaemodid
+            #add-point:BEFORE FIELD dbaemodid
+            {<point name="query.b.page2.dbaemodid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dbaemodid
+            
+            #add-point:AFTER FIELD dbaemodid
+            {<point name="query.a.page2.dbaemodid" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dbaemoddt
+            #add-point:BEFORE FIELD dbaemoddt
+            {<point name="query.b.page2.dbaemoddt" />}
+            #END add-point
+ 
+  
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog
+         {<point name="query.before_dialog"/>}
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct
+   {<point name="query.after_construct"/>}
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+    
+   CALL adbi250_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.set_entry_b" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION adbi250_set_entry_b(p_cmd)                                                  
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:set_entry_b段define(客製用)
+   {<point name="set_entry_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:set_entry_b段control
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                    
+]]>
+  </section>
+  <section id="adbi250.set_no_entry_b" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION adbi250_set_no_entry_b(p_cmd)                                               
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define" edit="s"/>}
+   #end add-point
+   #add-point:set_no_entry_b段define(客製用)
+   {<point name="set_no_entry_b.define_customerization" edit="c"/>}
+   #end add-point   
+ 
+   #add-point:set_no_entry_b段control
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point       
+                                                                                
+END FUNCTION  
+]]>
+  </section>
+  <section id="adbi250.set_pk_array" ver="3" status="" src="s" readonly="">
+    <![CDATA[   #應用 a51 樣板自動產生(Version:5)
+#+ 給予pk_array內容
+PRIVATE FUNCTION adbi250_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define" edit="s"/>}
+   #end add-point
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_dbae_d[l_ac].dbae001
+   LET g_pk_array[1].column = 'dbae001'
+ 
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="adbi250.state_change" ver="1" status="" src="s" readonly="">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="adbi250.ui_dialog" ver="27" status="" src="s" readonly="">
+    <![CDATA[#+ 功能選單 
+PRIVATE FUNCTION adbi250_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point 
+   #add-point:ui_dialog段define(客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_dbae_d.clear()
+         CALL g_dbae2_d.clear()
+ 
+         LET g_wc2 = ' 1=2'
+         LET g_action_choice = ""
+         CALL adbi250_init()
+      END IF
+   
+      CALL adbi250_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_dbae_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display 
+               {<point name="ui_dialog.body.before_display" mark="Y"/>}
+               #end add-point
+               #讓各頁籤能夠同步指到特定資料
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2
+               {<point name="ui_dialog.body.before_display2"/>}
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:2)
+   CALL adbi250_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+               #add-point:display array-before row
+               {<point name="ui_dialog.before_row"/>}
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         DISPLAY ARRAY g_dbae2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display 
+               {<point name="ui_dialog.body2.before_display" mark="Y"/>}
+               #end add-point
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2
+               {<point name="ui_dialog.body2.before_display2"/>}
+               #end add-point
+         
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:2)
+   CALL adbi250_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+               #add-point:display array-before row
+               {<point name="ui_dialog.before_row2"/>}
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL DIALOG.setSelectionMode("s_detail2", 1)
+ 
+            #add-point:ui_dialog段before
+            {<point name="ui_dialog.b_dialog"/>}
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL adbi250_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL adbi250_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL adbi250_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL adbi250_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL adbi250_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               #應用 a59 樣板自動產生(Version:2)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+      
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_dbae_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_dbae2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+               #add-point:ON ACTION exporttoexcel
+               {<point name="menu.exporttoexcel" />}
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+            
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+            
+         
+         
+         #應用 a46 樣板自動產生(Version:2)
+         #新增相關文件
+         ON ACTION related_document
+            CALL adbi250_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL adbi250_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL adbi250_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前
+         {<point name="ui_dialog.b_exit"/>}
+         #end add-point
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.unlock_b" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION adbi250_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define" edit="s"/>}
+   #end add-point  
+   #add-point:unlock_b段define(客製用)
+   {<point name="unlock_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE adbi250_bcl
+   #END IF
+   
+ 
+   
+   #add-point:unlock_b段結束前
+   {<point name="unlock_b.after"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adbi250.update_b" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION adbi250_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:update_b段define(客製用)
+   {<point name="update_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #比對新舊值, 判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #若key無變動, 不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #若key有變動, 則連動其他table的資料   
+   #判斷是否是同一群組的table
+   LET ls_group = "dbae_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "dbae_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.b_update" mark="Y"/>}
+      #end add-point     
+      UPDATE dbae_t 
+         SET (dbae001
+              ,dbaestus,dbae002,dbaeownid,dbaeowndp,dbaecrtid,dbaecrtdp,dbaecrtdt,dbaemodid,dbaemoddt) 
+              = 
+             (ps_keys[1]
+              ,g_dbae_d[l_ac].dbaestus,g_dbae_d[l_ac].dbae002,g_dbae2_d[l_ac].dbaeownid,g_dbae2_d[l_ac].dbaeowndp, 
+                  g_dbae2_d[l_ac].dbaecrtid,g_dbae2_d[l_ac].dbaecrtdp,g_dbae2_d[l_ac].dbaecrtdt,g_dbae2_d[l_ac].dbaemodid, 
+                  g_dbae2_d[l_ac].dbaemoddt) 
+         WHERE dbae001 = ps_keys_bak[1]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "dbae_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "dbae_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.a_update"/>}
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

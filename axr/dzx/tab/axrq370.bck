@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrq370" module="axr" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="07166" crtdt="2015-11-26 13:02:12" modid="01531" moddt="2016-05-31 16:28:02" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="出貨單銷退開票資料查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="lbl_b_01,01_desc(chr80),lbl_b_02,lbl_b_03"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xmdksite,xmdksite_desc(chr500),xmdk000,xmdk008,xmdk008_desc(chr500),xmdk001,xmdldocno,xmdlseq,xmdl001,xmdl002,xmdl003,xmdl004(chr500),xmdl008,xmdl008_desc(chr500),xmdl008_desc_1(chr500),xmdk016,xmdl018,xmdl027,xmdl028,xmdl047,xmdl018_desc(num20_6),xmdl048,xmdl049,isafdocno(chr20),xmdl038"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xmdksite(b_xmdksite),xmdksite_desc(b_xmdksite_desc),xmdk000(b_xmdk000),xmdk008(b_xmdk008),xmdk008_desc(b_xmdk008_desc),xmdk001(b_xmdk001),xmdldocno(b_xmdldocno),xmdlseq(b_xmdlseq),xmdl001(b_xmdl001),xmdl002(b_xmdl002),xmdl003(b_xmdl003),xmdl004(b_xmdl004),xmdl008(b_xmdl008),xmdl008_desc(b_xmdl008_desc),xmdl008_desc_1(b_xmdl008_desc_1),xmdk016(b_xmdk016),xmdl018(b_xmdl018),xmdl027(b_xmdl027),xmdl028(b_xmdl028),xmdl047(b_xmdl047),xmdl018_desc(xmdl018_desc),xmdl048(b_xmdl048),xmdl049(b_xmdl049),isafdocno(isafdocno),xmdl038(b_xmdl038)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrq370" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xmdksite,xmdk000,xmdk008,xmdk001,xmdldocno,xmdlseq,xmdl001,xmdl002,xmdl003,xmdl008,xmdk016,xmdl018,xmdl027,xmdl028,xmdl047,xmdl048,xmdl049,xmdl038" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="xmdksite(b_xmdksite),xmdk000(b_xmdk000),xmdk008(b_xmdk008),xmdk001(b_xmdk001),xmdldocno(b_xmdldocno),xmdlseq(b_xmdlseq),xmdl001(b_xmdl001),xmdl002(b_xmdl002),xmdl003(b_xmdl003),xmdl008(b_xmdl008),xmdk016(b_xmdk016),xmdl018(b_xmdl018),xmdl027(b_xmdl027),xmdl028(b_xmdl028),xmdl047(b_xmdl047),xmdl048(b_xmdl048),xmdl049(b_xmdl049),xmdl038(b_xmdl038)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xmdksite">
+        <after>
+          <reference field="xmdksite_desc" ref_field="xmdksite" map_field="xmdksite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bmaasite" state="c"/>
+      </column>
+      <column id="xmdksite_desc"/>
+      <column id="xmdk000" def_scc="2077"/>
+      <column id="xmdk008">
+        <after>
+          <reference field="xmdk008_desc" ref_field="xmdk008" map_field="xmdk008" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_isak001" state="c"/>
+      </column>
+      <column id="xmdk008_desc"/>
+      <column id="xmdk001"/>
+      <column id="xmdldocno"/>
+      <column id="xmdlseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdl001">
+        <after>
+          <check chkid="v_xmdgdocno" id="isExist"/>
+        </after>
+        <controlp form="q_xmdgdocno" state="c"/>
+      </column>
+      <column id="xmdl002">
+        <after>
+          <check id="isExist" bt="0.000" bt_type="0" errno="azz-00079" ow="1" chkid="v_xmdhseq"/>
+        </after>
+      </column>
+      <column id="xmdl003">
+        <after>
+          <check chkid="v_xmdadocno_1" id="isExist"/>
+        </after>
+        <controlp form="q_xmdadocno_2" state="c"/>
+      </column>
+      <column id="xmdl004"/>
+      <column id="xmdl008">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+          <reference field="xmdl008_desc" ref_field="xmdl008" map_field="xmdl008" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="xmdl008_desc"/>
+      <column id="xmdl008_desc_1"/>
+      <column id="xmdk016">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+        </after>
+        <controlp form="q_ooai001_1" state="i"/>
+        <controlp form="q_ooai001_1" state="c"/>
+      </column>
+      <column id="xmdl018" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdl027" type="S" default="0"/>
+      <column id="xmdl028" type="S" default="0"/>
+      <column id="xmdl047" type="S" default="0"/>
+      <column id="xmdl018_desc"/>
+      <column id="xmdl048"/>
+      <column id="xmdl049"/>
+      <column id="isafdocno"/>
+      <column id="xmdl038" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xmdk_t" page="1" linked="" pk="xmdkdocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xmdksite,&apos;&apos;,xmdk000,xmdk008,&apos;&apos;,xmdk001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xmdk016,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xmdk_t WHERE xmdkent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

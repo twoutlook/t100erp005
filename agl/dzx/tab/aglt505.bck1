@@ -1,0 +1,173 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglt505" module="agl" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="04152" crtdt="2015-12-10 09:19:41" modid="04152" moddt="2015-12-17 16:02:18" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併報表調整項目-長期投資成本法轉權益法作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glfild,glfild_desc(chr80),glfi001,glfi001_desc(chr80),glfi002,glfi003,glfi004,glfistus,glfiownid,glfiownid_desc(chr80),glfiowndp,glfiowndp_desc(chr80),glficrtid,glficrtid_desc(chr80),glficrtdp,glficrtdp_desc(chr80),glficrtdt,glfimodid,glfimodid_desc(chr80),glfimoddt,glficnfid,glficnfid_desc(chr80),glficnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gldr004,gldr004_desc(chr500),gldr005,gldr006,gldr006_desc(chr500),gldr008,gldr009,gldr010,gldr011,gldr012,gldr013"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glds004,glds004_desc(chr500),glds005,glds006,glds006_desc(chr500),glds007,glds008,glds009,glds010,glds011,glds012,glds013,glds014,glds014_desc(chr500),glds015,glds016,glds017,glds018,glds019,glds020"/>
+      <var id="bs_field" value="glfild,glfi001,glfi002,glfi003,glfi004" pk="glfild,glfi001,glfi002,glfi003" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="aglt505_01"/>
+      <action id="open_aglt502_01"/>
+      <action id="prog_aglt506" prog="aglt506" parameter="glfi004"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglt505" method="dialog">
+    <section id="input">
+      <input id="head" field="glfild,glfi001,glfi002,glfi003,glfistus"/>
+      <input id="body" page="1" field="gldr004,gldr006,gldr008,gldr009,gldr010,gldr011,gldr012,gldr013" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="glds004,glds006,glds007,glds008,glds009,glds010,glds011,glds012,glds013,glds014,glds015,glds016,glds017,glds018,glds019,glds020" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glfild,glfi001,glfi002,glfi003,glfi004,glfistus,glfiownid,glfiowndp,glficrtid,glficrtdp,glficrtdt,glfimodid,glfimoddt,glficnfid,glficnfdt"/>
+      <construct id="body" page="1" field="gldr004,gldr005,gldr006,gldr008,gldr009,gldr010,gldr011,gldr012,gldr013"/>
+      <construct id="body" page="2" field="glds004,glds005,glds006,glds007,glds008,glds009,glds010,glds011,glds012,glds013,glds014,glds015,glds016,glds017,glds018,glds019,glds020"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glfild,glfi001,glfi002,glfi003"/>
+      <set id="head" type="no_entry" field="glfild,glfi001,glfi002,glfi003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glfild">
+        <after/>
+      </column>
+      <column id="glfild_desc"/>
+      <column id="glfi001">
+        <after/>
+      </column>
+      <column id="glfi001_desc"/>
+      <column id="glfi002">
+        <after>
+          <check id="range" st="2099" st_type="1" errno="azz-00087" bt="0" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="glfi003">
+        <after>
+          <check id="range" st="13" st_type="1" errno="azz-00087" bt="0" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="glfi004"/>
+      <column id="glfistus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="Y" pic="confirmed"/>
+      </column>
+      <column id="glfiownid">
+        <after>
+          <reference field="glfiownid_desc" ref_field="glfi_t.glfiownid" map_field="glfiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfiownid_desc"/>
+      <column id="glfiowndp">
+        <after>
+          <reference field="glfiowndp_desc" ref_field="glfi_t.glfiowndp" map_field="glfiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glfiowndp_desc"/>
+      <column id="glficrtid">
+        <after>
+          <reference field="glficrtid_desc" ref_field="glfi_t.glficrtid" map_field="glficrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glficrtid_desc"/>
+      <column id="glficrtdp">
+        <after>
+          <reference field="glficrtdp_desc" ref_field="glfi_t.glficrtdp" map_field="glficrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glficrtdp_desc"/>
+      <column id="glficrtdt"/>
+      <column id="glfimodid">
+        <after>
+          <reference field="glfimodid_desc" ref_field="glfi_t.glfimodid" map_field="glfimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfimodid_desc"/>
+      <column id="glfimoddt"/>
+      <column id="glficnfid">
+        <after>
+          <reference field="glficnfid_desc" ref_field="glfi_t.glficnfid" map_field="glficnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glficnfid_desc"/>
+      <column id="glficnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gldr004">
+        <after/>
+      </column>
+      <column id="gldr004_desc"/>
+      <column id="gldr005"/>
+      <column id="gldr006">
+        <after/>
+      </column>
+      <column id="gldr006_desc"/>
+      <column id="gldr008" type="S" default="0"/>
+      <column id="gldr009" type="S" default="0"/>
+      <column id="gldr010" type="S" default="0"/>
+      <column id="gldr011" type="S" default="0"/>
+      <column id="gldr012" type="S" default="0"/>
+      <column id="gldr013" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glds004">
+        <after/>
+      </column>
+      <column id="glds004_desc"/>
+      <column id="glds005"/>
+      <column id="glds006">
+        <after/>
+      </column>
+      <column id="glds006_desc"/>
+      <column id="glds007" type="S" default="0"/>
+      <column id="glds008" type="S" default="0"/>
+      <column id="glds009" type="S" default="0"/>
+      <column id="glds010" type="S" default="0"/>
+      <column id="glds011" type="S" default="0"/>
+      <column id="glds012" type="S" default="0"/>
+      <column id="glds013"/>
+      <column id="glds014">
+        <after/>
+      </column>
+      <column id="glds014_desc"/>
+      <column id="glds015" type="S" default="0"/>
+      <column id="glds016" type="S" default="0"/>
+      <column id="glds017" type="S" default="0"/>
+      <column id="glds018" type="S" default="0"/>
+      <column id="glds019" type="S" default="0"/>
+      <column id="glds020" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glfi_t" pk="glfild,glfi001,glfi002,glfi003">
+      <sql id="forupd_sql" type="sql" query="SELECT glfild,&apos;&apos;,glfi001,&apos;&apos;,glfi002,glfi003,glfi004,glfistus,glfiownid,&apos;&apos;,glfiowndp,&apos;&apos;,glficrtid,&apos;&apos;,glficrtdp,&apos;&apos;,glficrtdt,glfimodid,&apos;&apos;,glfimoddt,glficnfid,&apos;&apos;,glficnfdt FROM glfi_t WHERE glfient= ? AND glfild=? AND glfi001=? AND glfi002=? AND glfi003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glfild,&apos;&apos;,glfi001,&apos;&apos;,glfi002,glfi003,glfi004,glfistus,glfiownid,&apos;&apos;,glfiowndp,&apos;&apos;,glficrtid,&apos;&apos;,glficrtdp,&apos;&apos;,glficrtdt,glfimodid,&apos;&apos;,glfimoddt,glficnfid,&apos;&apos;,glficnfdt FROM glfi_t" order="glfild,glfi001,glfi002,glfi003"/>
+    </head>
+    <body id="gldr_t" page="1" linked="" pk="gldr004,gldr006" fk="gldrld,gldr001,gldr002,gldr003">
+      <sql id="forupd_sql_detail" query="SELECT gldr004,&apos;&apos;,gldr005,gldr006,&apos;&apos;,gldr008,gldr009,gldr010,gldr011,gldr012,gldr013 FROM gldr_t WHERE gldrent=? AND gldrld=? AND gldr001=? AND gldr002=? AND gldr003=? AND gldr004=? AND gldr006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gldr004,&apos;&apos;,gldr005,gldr006,&apos;&apos;,gldr008,gldr009,gldr010,gldr011,gldr012,gldr013 FROM gldr_t WHERE gldrent=? AND gldrld=? AND gldr001=? AND gldr002=? AND gldr003=?"/>
+    </body>
+    <body id="glds_t" page="2" linked="" pk="glds004,glds006" fk="gldsld,glds001,glds002,glds003">
+      <sql id="forupd_sql_detail" query="SELECT glds004,&apos;&apos;,glds005,glds006,&apos;&apos;,glds007,glds008,glds009,glds010,glds011,glds012,glds013,glds014,&apos;&apos;,glds015,glds016,glds017,glds018,glds019,glds020 FROM glds_t WHERE gldsent=? AND gldsld=? AND glds001=? AND glds002=? AND glds003=? AND glds004=? AND glds006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glds004,&apos;&apos;,glds005,glds006,&apos;&apos;,glds007,glds008,glds009,glds010,glds011,glds012,glds013,glds014,&apos;&apos;,glds015,glds016,glds017,glds018,glds019,glds020 FROM glds_t WHERE gldsent=? AND gldsld=? AND glds001=? AND glds002=? AND glds003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

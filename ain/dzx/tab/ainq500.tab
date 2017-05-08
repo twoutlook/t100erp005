@@ -1,0 +1,165 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq500" module="ain" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02159" crtdt="2015-02-12 16:38:34" modid="02159" moddt="2015-06-01 09:35:07" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="調撥申請單查詢列印作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="indadocno,indadocdt,inda005,inda003,inda001,inda101,l_stus"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),indastus,indasite,indasite_desc(chr500),indadocno,indadocdt,inda001,inda001_desc(chr500),inda101,inda101_desc(chr500),inda003,inda003_desc(chr500),inda004,inda004_desc(chr500),inda002,inda002_desc(chr500),inda005,inda005_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="indbseq,indb002,indb001,indb001_desc(chr500),indb001_desc_desc(chr500),indb004,indb004_desc(chr500),indb005,indb005_desc(chr500),indb007,indb008,indb009,indb010,indb011,indb012,indb013"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),indastus(b_indastus),indasite(b_indasite),indasite_desc(b_indasite_desc),indadocno(b_indadocno),indadocdt(b_indadocdt),inda001(b_inda001),inda001_desc(b_inda001_desc),inda101(b_inda101),inda101_desc(b_inda101_desc),inda003(b_inda003),inda003_desc(b_inda003_desc),inda004(b_inda004),inda004_desc(b_inda004_desc),inda002(b_inda002),inda002_desc(b_inda002_desc),inda005(b_inda005),inda005_desc(b_inda005_desc)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="indbseq(b_indbseq),indb002(b_indb002),indb001(b_indb001),indb001_desc(b_indb001_desc),indb001_desc_desc(b_indb001_desc_desc),indb004(b_indb004),indb004_desc(b_indb004_desc),indb005(b_indb005),indb005_desc(b_indb005_desc),indb007(b_indb007),indb008(b_indb008),indb009(b_indb009),indb010(b_indb010),indb011(b_indb011),indb012(b_indb012),indb013(b_indb013)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainq500" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="indastus,indasite,indadocno,indadocdt,inda001,inda101,inda003,inda004,inda002,inda005" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="indbseq,indb002,indb001,indb004,indb005,indb007,indb008,indb009,indb010,indb011,indb012,indb013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="indastus(b_indastus),indasite(b_indasite),indadocno(b_indadocno),indadocdt(b_indadocdt),inda001(b_inda001),inda101(b_inda101),inda003(b_inda003),inda004(b_inda004),inda002(b_inda002),inda005(b_inda005)"/>
+      <construct id="body" page="2" field="indbseq(b_indbseq),indb002(b_indb002),indb001(b_indb001),indb004(b_indb004),indb005(b_indb005),indb007(b_indb007),indb008(b_indb008),indb009(b_indb009),indb010(b_indb010),indb011(b_indb011),indb012(b_indb012),indb013(b_indb013)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="indastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="C" pic="closed"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="T" pic="org_approved"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="indasite">
+        <after>
+          <reference field="indasite_desc" ref_field="indasite" map_field="indaent,indasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="indasite_desc"/>
+      <column id="indadocno">
+        <controlp form="q_indadocno" state="c"/>
+      </column>
+      <column id="indadocdt"/>
+      <column id="inda001">
+        <after>
+          <reference field="inda001_desc" ref_field="inda001" map_field="inda001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inda001_desc"/>
+      <column id="inda101">
+        <after>
+          <reference field="inda101_desc" ref_field="inda101" map_field="inda101" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="inda101_desc"/>
+      <column id="inda003">
+        <after>
+          <reference field="inda003_desc" ref_field="inda003" map_field="indaent,inda003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="inda003_desc"/>
+      <column id="inda004">
+        <after>
+          <reference field="inda004_desc" ref_field="inda004" map_field="indaent,inda004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="inda004_desc"/>
+      <column id="inda002">
+        <after>
+          <reference field="inda002_desc" ref_field="inda002" map_field="indaent,inda002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="inda002_desc"/>
+      <column id="inda005">
+        <after>
+          <reference field="inda005_desc" ref_field="inda005" map_field="inda005" ref_sql="SELECT oofb011 FROM oofb_t WHERE oofbent=$varg_enterprise$var AND oofb001=? "/>
+        </after>
+      </column>
+      <column id="inda005_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="indbseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="indb002"/>
+      <column id="indb001">
+        <after>
+          <reference field="indb001_desc" ref_field="indb001" map_field="indbent,indb001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indb001_desc">
+        <after>
+          <reference field="indb001_desc_desc" ref_field="indb001" map_field="indbent,indb001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indb001_desc_desc"/>
+      <column id="indb004">
+        <after>
+          <reference field="indb004_desc" ref_field="indb004" map_field="indbent,indb004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indb004_desc"/>
+      <column id="indb005">
+        <after>
+          <reference field="indb005_desc" ref_field="indb005" map_field="indbent,indb005" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indb005_desc"/>
+      <column id="indb007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="indb008" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="indb009" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="indb010" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="indb011" type="S" default="0"/>
+      <column id="indb012" type="S" default="0"/>
+      <column id="indb013"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="inda_t" page="1" linked="" pk="indadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,indastus,indasite,&apos;&apos;,indadocno,indadocdt,inda001,&apos;&apos;,inda101,&apos;&apos;,inda003,&apos;&apos;,inda004,&apos;&apos;,inda002,&apos;&apos;,inda005,&apos;&apos; FROM inda_t WHERE indaent= ? AND 1=1 "/>
+    </body>
+    <body id="indb_t" page="2" linked="" pk="indbseq" fk="indbdocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT indbseq,indb002,indb001,&apos;&apos;,&apos;&apos;,indb004,&apos;&apos;,indb005,&apos;&apos;,indb007,indb008,indb009,indb010,indb011,indb012,indb013 FROM indb_t WHERE indbent=? AND indbdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

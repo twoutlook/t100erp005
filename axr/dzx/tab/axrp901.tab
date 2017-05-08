@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrp901" module="axr" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="01727" crtdt="2015-01-27 14:55:16" modid="01727" moddt="2015-01-27 15:00:16" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="應收帳款檢核作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="site,site_desc(chr80),date(chr80),chk1,chk2,chk3,chk4"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xrebcomp,xrebcomp_desc(chr500),xreb008"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xrebcomp(b_xrebcomp),xrebcomp_desc(b_xrebcomp_desc),xreb008(b_xreb008)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrp901" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xrebcomp,xrebcomp_desc,xreb008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="xrebcomp(b_xrebcomp),xreb008(b_xreb008)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xrebcomp">
+        <after/>
+      </column>
+      <column id="xrebcomp_desc"/>
+      <column id="xreb008"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xreb_t" page="1" linked="" pk="xrebld,xreb001,xreb002,xreb003,xreb005,xreb006,xreb007">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xrebcomp,&apos;&apos;,xreb008 FROM xreb_t WHERE xrebent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

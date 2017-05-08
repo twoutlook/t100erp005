@@ -1,0 +1,3555 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="azzi002" std_prog="azzi002" erpver="1.0" module="AZZ" ver="1" env="s" zone="t10prd" booking="Y" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="Y" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.azzi002_init" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_init()
+   #add-point:init段define
+   DEFINE l_sql      STRING
+   #end add-point
+   #add-point:init段define
+
+   #覆寫預設4st，避免開窗的位置不在中間而亂跳
+   CALL ui.Interface.loadStyles(FGL_GETENV("ERP")||os.Path.separator()||
+                                "cfg"||os.Path.separator()||
+                                "4st"||os.Path.separator()||
+                                "azzi002.4st")
+                                
+   #end add-point
+   #定義combobox狀態
+
+   #未讀訊息
+   DECLARE azzi002_gzbe_declare CURSOR FOR
+         SELECT gzbeent, gzbe001, gzbe002, gzbe003, gzbe004, gzbe005, gzbe006, gzbe007 FROM gzbe_t
+            WHERE gzbeent = g_enterprise
+              AND gzbe002 = g_user
+              AND gzbe004 = 'N'
+            ORDER BY gzbe003 ASC
+
+   #歷史訊息的連絡人
+   LET l_sql = " SELECT gzbe002, gzbf002, MAX(gzbe003) lasttime FROM gzbe_t LEFT JOIN gzbf_t ",
+               " ON gzbe001 = gzbf001 AND gzbe002 = gzbf002 AND gzbeent = gzbfent WHERE gzbeent = ? AND gzbe001 = ? ",
+               " GROUP BY gzbe002, gzbf002 ORDER BY gzbe002"
+               
+   DECLARE azzi002_history_targets_declare CURSOR FROM l_sql     
+          
+   #指定使用者的歷史訊息
+   LET l_sql = "SELECT * FROM gzbe_t WHERE gzbeent = ? AND ((gzbe001 = ? AND gzbe002 = ?) OR (gzbe001 = ? AND gzbe002 = ?)) ",
+               " AND (gzbe003 > ? AND gzbe003 < ?) ORDER BY gzbe003 DESC"
+   DECLARE azzi002_gzbe_history_declare CURSOR FROM l_sql
+   
+   #常用連絡人
+   DECLARE azzi002_gzbf_declare CURSOR FOR
+         SELECT * FROM gzbf_t
+            WHERE gzbfent = g_enterprise
+              AND gzbf001 = g_user
+              
+   #連絡方式
+   LET l_sql =  " SELECT oofc008, oofc012 FROM oofc_t ",
+                " INNER JOIN oofa_t ON oofa001 = oofc002 WHERE oofa003 = ? AND oofaent = ? AND oofc010 = 'Y' "
+   DECLARE azzi002_oofc_declare CURSOR FROM l_sql
+        
+         
+#   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   #add-point:畫面資料初始化
+
+   #end add-point
+
+   #根據外部參數進行搜尋
+   CALL azzi002_default_search()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_ui_dialog" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_ui_dialog()
+   DEFINE li_exit   LIKE type_t.num5        #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5        #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+             prog   STRING,                 #串查程式名稱
+             param  DYNAMIC ARRAY OF STRING #傳遞變數
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   #add-point:ui_dialog段define
+
+   #end add-point
+   #add-point:ui_dialog段define
+
+   #end add-point
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 0
+
+
+   #action default動作
+   #應用 a42 樣板自動產生(Version:2)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL azzi002_insert()
+            #add-point:ON ACTION insert
+
+            #END add-point
+         END IF
+
+      #add-point:action default自訂
+
+      #end add-point
+      OTHERWISE
+         CALL azzi002_chat()
+         LET li_exit = TRUE
+   END CASE
+
+
+
+   #add-point:ui_dialog段before dialog
+
+   #end add-point
+
+   WHILE li_exit = FALSE
+
+      #確保g_current_idx位於正常區間內
+      #小於,等於0則指到第1筆
+      IF g_current_idx <= 0 THEN
+         LET g_current_idx = 1
+      END IF
+
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU
+               #先填充browser資料
+               CALL azzi002_browser_fill(g_wc,"")
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+
+               #當每次點任一筆資料都會需要用到
+               IF g_browser_cnt > 0 THEN
+                  CALL azzi002_fetch("")
+               END IF
+               #add-point:ui_dialog段 before menu
+
+               #end add-point
+
+
+
+
+            #第一筆資料
+            ON ACTION first
+               CALL azzi002_fetch("F")
+               LET g_current_row = g_current_idx
+
+            #下一筆資料
+            ON ACTION next
+               CALL azzi002_fetch("N")
+               LET g_current_row = g_current_idx
+
+            #指定筆資料
+            ON ACTION jump
+               CALL azzi002_fetch("/")
+               LET g_current_row = g_current_idx
+
+            #上一筆資料
+            ON ACTION previous
+               CALL azzi002_fetch("P")
+               LET g_current_row = g_current_idx
+
+            #最後筆資料
+            ON ACTION last
+               CALL azzi002_fetch("L")
+               LET g_current_row = g_current_idx
+
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+
+            #主頁摺疊
+            ON ACTION mainhidden
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+
+            ON ACTION worksheethidden   #瀏覽頁折疊
+
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden
+               END IF
+
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL azzi002_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL azzi002_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ""
+                     LET g_errparam.code   = "-100"
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL azzi002_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+
+
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+
+               #add-point:ON ACTION exporttoexcel
+
+               #END add-point
+
+            END IF
+
+
+
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+#               LET g_aw = ''
+               CALL azzi002_modify()
+               #add-point:ON ACTION modify
+
+               #END add-point
+
+            END IF
+
+
+
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL azzi002_delete()
+               #add-point:ON ACTION delete
+
+               #END add-point
+
+            END IF
+
+
+
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL azzi002_insert()
+               #add-point:ON ACTION insert
+
+               #END add-point
+
+            END IF
+
+
+
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+
+               #add-point:ON ACTION output
+
+               #END add-point
+
+            END IF
+
+
+
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL azzi002_reproduce()
+               #add-point:ON ACTION reproduce
+
+               #END add-point
+
+            END IF
+
+
+
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL azzi002_query()
+               #add-point:ON ACTION query
+
+               #END add-point
+
+            END IF
+
+
+
+
+
+
+            #應用 a46 樣板自動產生(Version:2)
+         #新增相關文件
+         ON ACTION related_document
+            CALL azzi002_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+
+               #END add-point
+               CALL cl_doc()
+            END IF
+
+         ON ACTION agendum
+            CALL azzi002_set_pk_array()
+            #add-point:ON ACTION agendum
+
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+
+         ON ACTION followup
+            CALL azzi002_set_pk_array()
+            #add-point:ON ACTION followup
+
+            #END add-point
+            CALL cl_user_overview_follow('')
+
+
+
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+
+         END MENU
+
+      ELSE
+
+#         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+#
+#
+#            #左側瀏覽頁簽
+#            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+#
+#               BEFORE ROW
+#                  #回歸舊筆數位置 (回到當時異動的筆數)
+#                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+#                  IF g_current_idx = 0 THEN
+#                     LET g_current_idx = 1
+#                  END IF
+#                  LET g_current_row = g_current_idx  #目前指標
+#                  LET g_current_sw = TRUE
+#                  CALL cl_show_fld_cont()
+#
+#                  #當每次點任一筆資料都會需要用到
+#                  CALL azzi002_fetch("")
+#
+#               ON ACTION qbefield_user   #欄位隱藏設定
+#                  LET g_action_choice="qbefield_user"
+#                  CALL cl_ui_qbefield_user()
+#
+#
+#
+#            END DISPLAY
+#
+#            #add-point:ui_dialog段自定義display array
+#
+#            #end add-point
+#
+#
+#            BEFORE DIALOG
+#               #先填充browser資料
+#               CALL azzi002_browser_fill(g_wc,"")
+#
+#               #當每次點任一筆資料都會需要用到
+#               IF g_browser_cnt > 0 THEN
+#                  CALL azzi002_fetch("")
+#               END IF
+#
+#               #add-point:ui_dialog段before
+#
+#               #end add-point
+#
+#            AFTER DIALOG
+#               #add-point:ui_dialog段 after dialog
+#
+#               #end add-point
+#
+#
+#
+#
+#
+#
+#            #第一筆資料
+#            ON ACTION first
+#               CALL azzi002_fetch("F")
+#               LET g_current_row = g_current_idx
+#
+#            #下一筆資料
+#            ON ACTION next
+#               CALL azzi002_fetch("N")
+#               LET g_current_row = g_current_idx
+#
+#            #指定筆資料
+#            ON ACTION jump
+#               CALL azzi002_fetch("/")
+#               LET g_current_row = g_current_idx
+#
+#            #上一筆資料
+#            ON ACTION previous
+#               CALL azzi002_fetch("P")
+#               LET g_current_row = g_current_idx
+#
+#            #最後筆資料
+#            ON ACTION last
+#               CALL azzi002_fetch("L")
+#               LET g_current_row = g_current_idx
+#
+#            #離開程式
+#            ON ACTION exit
+#               LET g_action_choice="exit"
+#               LET INT_FLAG = FALSE
+#               LET li_exit = TRUE
+#               EXIT DIALOG
+#
+#            #離開程式
+#            ON ACTION close
+#               LET g_action_choice="exit"
+#               LET INT_FLAG = FALSE
+#               LET li_exit = TRUE
+#               EXIT DIALOG
+#
+#            #主頁摺疊
+#            ON ACTION mainhidden
+#               IF g_main_hidden THEN
+#                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+#                  CALL gfrm_curr.setElementHidden("worksheet",1)
+#                  LET g_main_hidden = 0
+#               ELSE
+#                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+#                  CALL gfrm_curr.setElementHidden("worksheet",0)
+#                  LET g_main_hidden = 1
+#               END IF
+#               #EXIT DIALOG
+#
+#
+#            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+#            ON ACTION controls
+#               IF g_header_hidden THEN
+#                  CALL gfrm_curr.setElementHidden("vb_master",0)
+#                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+#                  LET g_header_hidden = 0     #visible
+#               ELSE
+#                  CALL gfrm_curr.setElementHidden("vb_master",1)
+#                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+#                  LET g_header_hidden = 1     #hidden
+#               END IF
+#
+#
+#            #查詢方案用
+#            ON ACTION queryplansel
+#               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+#               #不是空條件才寫入g_wc跟重新找資料
+#               IF NOT cl_null(ls_wc) THEN
+#                  LET g_wc = ls_wc
+#                  CALL azzi002_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+#                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+#               END IF
+#
+#            #查詢方案用
+#            ON ACTION qbe_select
+#               CALL cl_qbe_list("m") RETURNING ls_wc
+#               IF NOT cl_null(ls_wc) THEN
+#                  LET g_wc = ls_wc
+#                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+#                  CALL azzi002_browser_fill(g_wc,"F")
+#                  IF g_browser_cnt = 0 THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.extend = ""
+#                     LET g_errparam.code   = "-100"
+#                     LET g_errparam.popup  = TRUE
+#                     CALL cl_err()
+#                     CLEAR FORM
+#                  ELSE
+#                     CALL azzi002_fetch("F")
+#                  END IF
+#               END IF
+#               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+#               CALL cl_notice()
+#
+#
+#         #應用 a43 樣板自動產生(Version:2)
+#         ON ACTION exporttoexcel
+#            LET g_action_choice="exporttoexcel"
+#            IF cl_auth_chk_act("exporttoexcel") THEN
+#
+#               #add-point:ON ACTION exporttoexcel
+#
+#               #END add-point
+#
+#            END IF
+#
+#
+#
+#         #應用 a43 樣板自動產生(Version:2)
+#         ON ACTION modify
+#            LET g_action_choice="modify"
+#            IF cl_auth_chk_act("modify") THEN
+#               LET g_aw = ''
+#               CALL azzi002_modify()
+#               #add-point:ON ACTION modify
+#
+#               #END add-point
+#
+#            END IF
+#
+#
+#
+#         #應用 a43 樣板自動產生(Version:2)
+#         ON ACTION delete
+#            LET g_action_choice="delete"
+#            IF cl_auth_chk_act("delete") THEN
+#               CALL azzi002_delete()
+#               #add-point:ON ACTION delete
+#
+#               #END add-point
+#
+#            END IF
+#
+#
+#
+#         #應用 a43 樣板自動產生(Version:2)
+#         ON ACTION insert
+#            LET g_action_choice="insert"
+#            IF cl_auth_chk_act("insert") THEN
+#               CALL azzi002_insert()
+#               #add-point:ON ACTION insert
+#
+#               #END add-point
+#
+#            END IF
+#
+#
+#
+#         #應用 a43 樣板自動產生(Version:2)
+#         ON ACTION output
+#            LET g_action_choice="output"
+#            IF cl_auth_chk_act("output") THEN
+#
+#               #add-point:ON ACTION output
+#
+#               #END add-point
+#
+#            END IF
+#
+#
+#
+#         #應用 a43 樣板自動產生(Version:2)
+#         ON ACTION reproduce
+#            LET g_action_choice="reproduce"
+#            IF cl_auth_chk_act("reproduce") THEN
+#               CALL azzi002_reproduce()
+#               #add-point:ON ACTION reproduce
+#
+#               #END add-point
+#
+#            END IF
+#
+#
+#
+#         #應用 a43 樣板自動產生(Version:2)
+#         ON ACTION query
+#            LET g_action_choice="query"
+#            IF cl_auth_chk_act("query") THEN
+#               CALL azzi002_query()
+#               #add-point:ON ACTION query
+#
+#               #END add-point
+#
+#            END IF
+#
+#
+#
+#
+#
+#
+#            #應用 a46 樣板自動產生(Version:2)
+#         #新增相關文件
+#         ON ACTION related_document
+#            CALL azzi002_set_pk_array()
+#            IF cl_auth_chk_act("related_document") THEN
+#               #add-point:ON ACTION related_document
+#
+#               #END add-point
+#               CALL cl_doc()
+#            END IF
+#
+#         ON ACTION agendum
+#            CALL azzi002_set_pk_array()
+#            #add-point:ON ACTION agendum
+#
+#            #END add-point
+#            CALL cl_user_overview()
+#            CALL cl_user_overview_set_follow_pic()
+#
+#         ON ACTION followup
+#            CALL azzi002_set_pk_array()
+#            #add-point:ON ACTION followup
+#
+#            #END add-point
+#            CALL cl_user_overview_follow('')
+#
+#
+#
+#            #主選單用ACTION
+#            &include "main_menu.4gl"
+#            &include "relating_action.4gl"
+#            #交談指令共用ACTION
+#            &include "common_action.4gl"
+#
+#         END DIALOG
+
+      END IF
+
+      #add-point:ui_dialog段 after dialog
+
+      #end add-point
+
+   END WHILE
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_browser_fill" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_browser_fill(p_wc,ps_page_action)
+   DEFINE p_wc              STRING
+   DEFINE ls_wc             STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define
+
+   #end add-point
+   #add-point:browser_fill段define
+
+   #end add-point
+
+#   LET l_searchcol = "gzbe001,gzbe002,gzbe003"
+#
+#   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+#   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+#      LET p_wc = " 1=1 "
+#   END IF
+#   #add-point:browser_fill段wc控制
+#
+#   #end add-point
+#
+#   LET g_sql = " SELECT COUNT(*) FROM gzbe_t ",
+#               "  ",
+#               "  ",
+#               " WHERE gzbeent = '" ||g_enterprise|| "' AND ",
+#               p_wc CLIPPED, cl_sql_add_filter("gzbe_t")
+#
+#   #add-point:browser_fill段cnt_sql
+#
+#   #end add-point
+#
+#   PREPARE header_cnt_pre FROM g_sql
+#   EXECUTE header_cnt_pre INTO g_browser_cnt
+#   FREE header_cnt_pre
+#
+#   #若超過最大顯示筆數
+#   IF g_browser_cnt > g_max_browse THEN
+#      IF g_error_show = 1 THEN
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.extend = g_browser_cnt
+#         LET g_errparam.code   = 9035
+#         LET g_errparam.popup  = TRUE
+#         CALL cl_err()
+#      END IF
+#   END IF
+#
+#
+#   IF ps_page_action = "F" OR
+#      ps_page_action = "P"  OR
+#      ps_page_action = "N"  OR
+#      ps_page_action = "L"  THEN
+#      LET g_page_action = ps_page_action
+#   END IF
+#
+#   IF cl_null(g_add_browse) THEN
+#      #清除畫面
+#      CLEAR FORM
+#      INITIALIZE g_gzbe_m.* TO NULL
+#      CALL g_browser.clear()
+#      LET g_cnt = 1
+#      LET ls_wc = p_wc
+#   ELSE
+#      LET ls_wc = g_add_browse
+#      LET g_cnt = g_current_idx
+#   END IF
+#
+#   LET g_sql = " SELECT '',t0.gzbe001,t0.gzbe002,t0.gzbe003",
+#               " FROM gzbe_t t0 ",
+#               "  ",
+#
+#               " WHERE t0.gzbeent = '" ||g_enterprise|| "' AND ", ls_wc, cl_sql_add_filter("gzbe_t")
+#   #add-point:browser_fill段fill_wc
+#
+#   #end add-point
+#   LET g_sql = g_sql, " ORDER BY ",l_searchcol," ",g_order
+#   #add-point:browser_fill段before_pre
+#
+#   #end add-point
+#
+#   #LET g_sql = cl_sql_add_tabid(g_sql,"gzbe_t")             #WC重組
+#   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+#   PREPARE browse_pre FROM g_sql
+#   DECLARE browse_cur CURSOR FOR browse_pre
+#
+#   #CALL g_browser.clear()
+#   #LET g_cnt = 1
+#   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_gzbe001,g_browser[g_cnt].b_gzbe002,
+#       g_browser[g_cnt].b_gzbe003
+#      IF SQLCA.sqlcode THEN
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.extend = "foreach:"
+#         LET g_errparam.code   = SQLCA.sqlcode
+#         LET g_errparam.popup  = TRUE
+#         CALL cl_err()
+#
+#         EXIT FOREACH
+#      END IF
+#
+#
+#
+#      #add-point:browser_fill段reference
+#
+#      #end add-point
+#
+#
+#      LET g_cnt = g_cnt + 1
+#      IF g_cnt > g_max_rec THEN
+#         EXIT FOREACH
+#      END IF
+#   END FOREACH
+#
+#   #清空g_add_browse, 並指定指標位置
+#   IF NOT cl_null(g_add_browse) THEN
+#      LET g_add_browse = ""
+#      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+#   END IF
+#
+#   IF cl_null(g_browser[g_cnt].b_gzbe001) THEN
+#      CALL g_browser.deleteElement(g_cnt)
+#   END IF
+#
+#   LET g_header_cnt = g_browser.getLength()
+#   LET g_current_cnt = g_browser.getLength()
+#   LET g_rec_b = g_browser.getLength()
+#   LET g_cnt = 0
+#   DISPLAY g_browser_cnt TO FORMONLY.b_count
+#   DISPLAY g_browser_cnt TO FORMONLY.h_count
+#
+#
+#   FREE browse_pre
+#
+#   #若無資料則關閉相關功能
+#   IF g_browser_cnt = 0 THEN
+#      CALL cl_set_act_visible("statechange,modify,delete,reproduce,mainhidden", FALSE)
+#      CALL cl_navigator_setting(0,0)
+#   ELSE
+#      CALL cl_set_act_visible("statechange,modify,delete,reproduce,mainhidden", TRUE)
+#   END IF
+
+   #add-point:browser_fill段結束前
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_construct" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_construct()
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING
+   DEFINE ls_wc          STRING
+   #add-point:cs段define
+
+   #end add-point
+   #add-point:cs段define
+
+   #end add-point
+
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE g_gzbe_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+
+   LET g_qryparam.state = "c"
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON gzbe001,gzbe002,gzbe003
+
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+
+            #end add-point
+
+         #公用欄位開窗相關處理
+
+
+         #一般欄位
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzbe001
+            #add-point:BEFORE FIELD gzbe001
+
+            #END add-point
+
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzbe001
+
+            #add-point:AFTER FIELD gzbe001
+
+            #END add-point
+
+
+         #Ctrlp:construct.c.gzbe001
+#         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzbe001
+            #add-point:ON ACTION controlp INFIELD gzbe001
+
+            #END add-point
+
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzbe002
+            #add-point:BEFORE FIELD gzbe002
+
+            #END add-point
+
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzbe002
+
+            #add-point:AFTER FIELD gzbe002
+
+            #END add-point
+
+
+         #Ctrlp:construct.c.gzbe002
+#         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzbe002
+            #add-point:ON ACTION controlp INFIELD gzbe002
+
+            #END add-point
+
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzbe003
+            #add-point:BEFORE FIELD gzbe003
+
+            #END add-point
+
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzbe003
+
+            #add-point:AFTER FIELD gzbe003
+
+            #END add-point
+
+
+         #Ctrlp:construct.c.gzbe003
+#         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzbe003
+            #add-point:ON ACTION controlp INFIELD gzbe003
+
+            #END add-point
+
+
+
+      END CONSTRUCT
+
+      #add-point:cs段more_construct
+
+      #end add-point
+
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+
+         #end add-point
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #add-point:cs段after_construct
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_query" order="5" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_query()
+#   DEFINE ls_wc STRING
+#   #add-point:query段define
+#
+#   #end add-point
+#   #add-point:query段define
+#
+#   #end add-point
+#
+#   LET INT_FLAG = 0
+#   LET ls_wc = g_wc
+#
+#   #切換畫面
+#
+#   CALL g_browser.clear()
+#
+#   #browser panel折疊
+#   IF g_worksheet_hidden THEN
+#      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+#      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+#      LET g_worksheet_hidden = 0
+#   END IF
+#
+#   #單頭折疊
+#   IF g_header_hidden THEN
+#      CALL gfrm_curr.setElementHidden("vb_master",0)
+#      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+#      LET g_header_hidden = 0
+#   END IF
+#
+#   INITIALIZE g_gzbe_m.* TO NULL
+#   ERROR ""
+#
+#   DISPLAY " " TO FORMONLY.b_count
+#   DISPLAY " " TO FORMONLY.h_count
+#   CALL azzi002_construct()
+#
+#   IF INT_FLAG THEN
+#      #取消查詢
+#      LET INT_FLAG = 0
+#      LET g_wc = ls_wc
+#      CALL azzi002_browser_fill(g_wc,"F")
+#      CALL azzi002_fetch("")
+#      RETURN
+#   ELSE
+#      LET g_current_row = 1
+#      LET g_current_cnt = 0
+#   END IF
+#
+#   #根據條件從新抓取資料
+#   LET g_error_show = 1
+#   CALL azzi002_browser_fill(g_wc,"F")   # 移到第一頁
+#
+#   #儲存WC資訊
+#   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+#
+#   #備份搜尋條件
+#   LET ls_wc = g_wc
+#
+#   IF g_browser.getLength() = 0 THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = ""
+#      LET g_errparam.code   = "-100"
+#      LET g_errparam.popup  = TRUE
+#      CALL cl_err()
+#   ELSE
+#      CALL azzi002_fetch("F")
+#   END IF
+#
+#   LET g_wc_filter = ""
+#
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_fetch" order="6" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_fetch(p_fl)
+   DEFINE p_fl       LIKE type_t.chr1
+#   DEFINE ls_msg     STRING
+#   #add-point:fetch段define
+#
+#   #end add-point
+#   #add-point:fetch段define
+#
+#   #end add-point
+#
+#   #根據傳入的條件決定抓取的資料
+#   CASE p_fl
+#      WHEN "F"
+#         LET g_current_idx = 1
+#      WHEN "P"
+#         IF g_current_idx > 1 THEN
+#            LET g_current_idx = g_current_idx - 1
+#         END IF
+#      WHEN "N"
+#         IF g_current_idx < g_header_cnt THEN
+#            LET g_current_idx =  g_current_idx + 1
+#         END IF
+#      WHEN "L"
+#         #LET g_current_idx = g_header_cnt
+#         LET g_current_idx = g_browser.getLength()
+#      WHEN "/"
+#         #詢問要指定的筆數
+#         IF (NOT g_no_ask) THEN
+#            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+#            LET INT_FLAG = 0
+#
+#            PROMPT ls_msg CLIPPED,": " FOR g_jump
+#               #交談指令共用ACTION
+#               &include "common_action.4gl"
+#            END PROMPT
+#
+#            IF INT_FLAG THEN
+#               LET INT_FLAG = 0
+#               EXIT CASE
+#            END IF
+#         END IF
+#         IF g_jump > 0 THEN
+#            LET g_current_idx = g_jump
+#         END IF
+#         LET g_no_ask = FALSE
+#   END CASE
+#
+#   LET g_browser_cnt = g_browser.getLength()
+#
+#   #筆數顯示
+#   LET g_browser_idx = g_current_idx
+#   IF g_browser_cnt > 0 THEN
+#      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+#      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+#      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+#      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+#   ELSE
+#      DISPLAY '' TO FORMONLY.b_index #當下筆數
+#      DISPLAY '' TO FORMONLY.b_count #總筆數
+#      DISPLAY '' TO FORMONLY.h_index #當下筆數
+#      DISPLAY '' TO FORMONLY.h_count #總筆數
+#   END IF
+#
+#
+#
+#   #避免超出browser資料筆數上限
+#   IF g_current_idx > g_browser.getLength() THEN
+#      LET g_current_idx = g_browser.getLength()
+#   END IF
+#
+#   # 設定browse索引
+#   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt)
+#
+#   #代表沒有資料, 無需做後續資料撈取之動作
+#   IF g_current_idx = 0 THEN
+#      RETURN
+#   END IF
+#
+#   #根據選定的筆數給予key欄位值
+#   LET g_gzbe_m.gzbe001 = g_browser[g_current_idx].b_gzbe001
+#   LET g_gzbe_m.gzbe002 = g_browser[g_current_idx].b_gzbe002
+#   LET g_gzbe_m.gzbe003 = g_browser[g_current_idx].b_gzbe003
+#
+#
+#   #讀取單頭所有欄位資料
+#   EXECUTE azzi002_master_referesh USING g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003 INTO g_gzbe_m.gzbe001,
+#       g_gzbe_m.gzbe002,g_gzbe_m.gzbe003
+#   IF SQLCA.sqlcode THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = "gzbe_t"
+#      LET g_errparam.code   = SQLCA.sqlcode
+#      LET g_errparam.popup  = FALSE
+#      CALL cl_err()
+#      INITIALIZE g_gzbe_m.* TO NULL
+#      RETURN
+#   END IF
+#
+#   #根據資料狀態切換action狀態
+#   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+#   CALL azzi002_set_act_visible()
+#   CALL azzi002_set_act_no_visible()
+#
+#   #add-point:fetch段action控制
+#
+#   #end add-point
+#
+#
+#
+#   #保存單頭舊值
+#   LET g_gzbe_m_t.* = g_gzbe_m.*
+#   LET g_gzbe_m_o.* = g_gzbe_m.*
+#
+#
+#   #重新顯示
+#   CALL azzi002_show()
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_insert" order="7" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_insert()
+#   #add-point:insert段define
+#
+#   #end add-point
+#   #add-point:insert段define
+#
+#   #end add-point
+#
+#   CLEAR FORM #清畫面欄位內容
+#   INITIALIZE g_gzbe_m.* LIKE gzbe_t.*             #DEFAULT 設定
+#   LET g_gzbe001_t = NULL
+#   LET g_gzbe002_t = NULL
+#   LET g_gzbe003_t = NULL
+#
+#
+#   #add-point:insert段before
+#
+#   #end add-point
+#
+#   CALL s_transaction_begin()
+#
+#   WHILE TRUE
+#
+#      #公用欄位給值
+#
+#
+#      #append欄位給值
+#
+#
+#      #一般欄位給值
+#
+#
+#      #add-point:單頭預設值
+#
+#      #end add-point
+#
+#      #顯示狀態(stus)圖片
+#
+#
+#      #資料輸入
+#      CALL azzi002_input("a")
+#
+#      #add-point:單頭輸入後
+#
+#      #end add-point
+#
+#      IF INT_FLAG THEN
+#         #取消
+#         LET INT_FLAG = 0
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.extend = ""
+#         LET g_errparam.code   = 9001
+#         LET g_errparam.popup  = FALSE
+#         CALL cl_err()
+#         DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+#         DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+#         INITIALIZE g_gzbe_m.* TO NULL
+#         CALL azzi002_show()
+#         RETURN
+#      END IF
+#
+#      LET g_rec_b = 0
+#      EXIT WHILE
+#   END WHILE
+#
+#   #根據資料狀態切換action狀態
+#   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+#   CALL azzi002_set_act_visible()
+#   CALL azzi002_set_act_no_visible()
+#
+#   #將新增的資料併入搜尋條件中
+#   LET g_state = "insert"
+#
+#   LET g_gzbe001_t = g_gzbe_m.gzbe001
+#   LET g_gzbe002_t = g_gzbe_m.gzbe002
+#   LET g_gzbe003_t = g_gzbe_m.gzbe003
+#
+#
+#   #組合新增資料的條件
+#   LET g_add_browse = " gzbeent = '" ||g_enterprise|| "' AND",
+#                      " gzbe001 = '", g_gzbe_m.gzbe001, "' "
+#                      ," AND gzbe002 = '", g_gzbe_m.gzbe002, "' "
+#                      ," AND gzbe003 = '", g_gzbe_m.gzbe003, "' "
+#
+#   #填到最後面
+#   LET g_current_idx = g_browser.getLength() + 1
+#   CALL azzi002_browser_fill("","")
+#
+#   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+#   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+#   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+#
+#   #撈取異動後的資料(主要是帶出reference)
+#   EXECUTE azzi002_master_referesh USING g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003 INTO g_gzbe_m.gzbe001,
+#       g_gzbe_m.gzbe002,g_gzbe_m.gzbe003
+#
+#   #將資料顯示到畫面上
+#   DISPLAY BY NAME g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003
+#
+#   #add-point:新增結束後
+#
+#   #end add-point
+#
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_modify" order="8" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_modify()
+#   #add-point:modify段define
+#
+#   #end add-point
+#   #add-point:modify段define
+#
+#   #end add-point
+#
+#   #先確定key值無遺漏
+#   IF g_gzbe_m.gzbe001 IS NULL
+#
+#   THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = ""
+#      LET g_errparam.code   = "std-00003"
+#      LET g_errparam.popup  = FALSE
+#      CALL cl_err()
+#      RETURN
+#   END IF
+#
+#   ERROR ""
+#
+#   #備份key值
+#   LET g_gzbe001_t = g_gzbe_m.gzbe001
+#   LET g_gzbe002_t = g_gzbe_m.gzbe002
+#   LET g_gzbe003_t = g_gzbe_m.gzbe003
+#
+#
+#   CALL s_transaction_begin()
+#
+#   #先lock資料
+#   OPEN azzi002_cl USING g_enterprise,g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003
+#   IF STATUS THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = "OPEN azzi002_cl:"
+#      LET g_errparam.code   = STATUS
+#      LET g_errparam.popup  = TRUE
+#      CALL cl_err()
+#      CLOSE azzi002_cl
+#      CALL s_transaction_end('N','0')
+#      RETURN
+#   END IF
+#
+#   #顯示最新的資料
+#   EXECUTE azzi002_master_referesh USING g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003 INTO g_gzbe_m.gzbe001,
+#       g_gzbe_m.gzbe002,g_gzbe_m.gzbe003
+#
+#   #資料被他人LOCK, 或是sql執行時出現錯誤
+#   IF SQLCA.sqlcode THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = "gzbe_t"
+#      LET g_errparam.code   = SQLCA.sqlcode
+#      LET g_errparam.popup  = FALSE
+#      CALL cl_err()
+#      CLOSE azzi002_cl
+#      CALL s_transaction_end('N','0')
+#      RETURN
+#   END IF
+#
+#
+#
+#   #顯示資料
+#   CALL azzi002_show()
+#
+#   WHILE TRUE
+#      LET g_gzbe_m.gzbe001 = g_gzbe001_t
+#      LET g_gzbe_m.gzbe002 = g_gzbe002_t
+#      LET g_gzbe_m.gzbe003 = g_gzbe003_t
+#
+#
+#      #寫入修改者/修改日期資訊
+#
+#
+#      #add-point:modify段修改前
+#
+#      #end add-point
+#
+#      #資料輸入
+#      CALL azzi002_input("u")
+#
+#      #add-point:modify段修改後
+#
+#      #end add-point
+#
+#      IF INT_FLAG THEN
+#         LET INT_FLAG = 0
+#         LET g_gzbe_m.* = g_gzbe_m_t.*
+#         CALL azzi002_show()
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.extend = ""
+#         LET g_errparam.code   = 9001
+#         LET g_errparam.popup  = FALSE
+#         CALL cl_err()
+#         EXIT WHILE
+#      END IF
+#
+#      #若有modid跟moddt則進行update
+#
+#
+#      EXIT WHILE
+#
+#   END WHILE
+#
+#   #根據資料狀態切換action狀態
+#   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+#   CALL azzi002_set_act_visible()
+#   CALL azzi002_set_act_no_visible()
+#
+#   #組合新增資料的條件
+#   LET g_add_browse = " gzbeent = '" ||g_enterprise|| "' AND",
+#                      " gzbe001 = '", g_gzbe_m.gzbe001, "' "
+#                      ," AND gzbe002 = '", g_gzbe_m.gzbe002, "' "
+#                      ," AND gzbe003 = '", g_gzbe_m.gzbe003, "' "
+#
+#   #填到對應位置
+#   CALL azzi002_browser_fill(g_wc,"")
+#
+#   CLOSE azzi002_cl
+#   CALL s_transaction_end('Y','0')
+#
+#   #流程通知預埋點-U(暫時無用)
+#   #CALL cl_flow_notify(g_gzbe_m.gzbe001,"U")
+#
+#   LET g_worksheet_hidden = 0
+#
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_input" order="9" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_input(p_cmd)
+   DEFINE p_cmd           LIKE type_t.chr1
+#   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+#   DEFINE l_n             LIKE type_t.num5        #檢查重複用
+#   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用
+#   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否
+#   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+#   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+#   DEFINE l_count         LIKE type_t.num5
+#   DEFINE l_i             LIKE type_t.num5
+#   DEFINE l_insert        LIKE type_t.num5
+#   DEFINE ls_return       STRING
+#   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+#   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+#   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+#   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+#   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+#   #add-point:input段define
+#
+#   #end add-point
+#   #add-point:input段define
+#
+#   #end add-point
+#
+#   #切換至輸入畫面
+#
+#   #將資料輸出到畫面上
+#   DISPLAY BY NAME g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003
+#
+#   CALL cl_set_head_visible("","YES")
+#
+#   #a-新增,r-複製,u-修改
+#   IF p_cmd = 'r' THEN
+#      #此段落的r動作等同於a
+#      LET p_cmd = 'a'
+#   END IF
+#
+#   LET l_insert = FALSE
+#   LET g_action_choice = ""
+#
+#   LET g_qryparam.state = "i"
+#
+#   #控制key欄位可否輸入
+#   CALL azzi002_set_entry(p_cmd)
+#   #add-point:set_entry後
+#
+#   #end add-point
+#   CALL azzi002_set_no_entry(p_cmd)
+#   #add-point:資料輸入前
+#
+#   #end add-point
+#
+#   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+#
+#      #單頭段
+#      INPUT BY NAME g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003
+#         ATTRIBUTE(WITHOUT DEFAULTS)
+#
+#         #自訂ACTION(master_input)
+#
+#
+#         BEFORE INPUT
+#            IF s_transaction_chk("N",0) THEN
+#               CALL s_transaction_begin()
+#            END IF
+#            #其他table資料備份(確定是否更改用)
+#
+#            #add-point:input開始前
+#
+#            #end add-point
+#
+#                  #應用 a01 樣板自動產生(Version:1)
+#         BEFORE FIELD gzbe001
+#            #add-point:BEFORE FIELD gzbe001
+#
+#            #END add-point
+#
+#         #應用 a02 樣板自動產生(Version:1)
+#         AFTER FIELD gzbe001
+#
+#            #add-point:AFTER FIELD gzbe001
+#            #應用 a05 樣板自動產生(Version:2)
+#            #確認資料無重複
+#            IF  NOT cl_null(g_gzbe_m.gzbe001) AND NOT cl_null(g_gzbe_m.gzbe002) AND NOT cl_null(g_gzbe_m.gzbe003) THEN
+#               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_gzbe_m.gzbe001 != g_gzbe001_t  OR g_gzbe_m.gzbe002 != g_gzbe002_t  OR g_gzbe_m.gzbe003 != g_gzbe003_t )) THEN
+#                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzbe_t WHERE "||"gzbeent = '" ||g_enterprise|| "' AND "||"gzbe001 = '"||g_gzbe_m.gzbe001 ||"' AND "|| "gzbe002 = '"||g_gzbe_m.gzbe002 ||"' AND "|| "gzbe003 = '"||g_gzbe_m.gzbe003 ||"'",'std-00004',0) THEN
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF
+#            END IF
+#
+#
+#
+#            #END add-point
+#
+#
+#         #應用 a04 樣板自動產生(Version:2)
+#         ON CHANGE gzbe001
+#            #add-point:ON CHANGE gzbe001
+#
+#            #END add-point
+#
+#         #應用 a01 樣板自動產生(Version:1)
+#         BEFORE FIELD gzbe002
+#            #add-point:BEFORE FIELD gzbe002
+#
+#            #END add-point
+#
+#         #應用 a02 樣板自動產生(Version:1)
+#         AFTER FIELD gzbe002
+#
+#            #add-point:AFTER FIELD gzbe002
+#            #應用 a05 樣板自動產生(Version:2)
+#            #確認資料無重複
+#            IF  NOT cl_null(g_gzbe_m.gzbe001) AND NOT cl_null(g_gzbe_m.gzbe002) AND NOT cl_null(g_gzbe_m.gzbe003) THEN
+#               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_gzbe_m.gzbe001 != g_gzbe001_t  OR g_gzbe_m.gzbe002 != g_gzbe002_t  OR g_gzbe_m.gzbe003 != g_gzbe003_t )) THEN
+#                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzbe_t WHERE "||"gzbeent = '" ||g_enterprise|| "' AND "||"gzbe001 = '"||g_gzbe_m.gzbe001 ||"' AND "|| "gzbe002 = '"||g_gzbe_m.gzbe002 ||"' AND "|| "gzbe003 = '"||g_gzbe_m.gzbe003 ||"'",'std-00004',0) THEN
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF
+#            END IF
+#
+#
+#
+#            #END add-point
+#
+#
+#         #應用 a04 樣板自動產生(Version:2)
+#         ON CHANGE gzbe002
+#            #add-point:ON CHANGE gzbe002
+#
+#            #END add-point
+#
+#         #應用 a01 樣板自動產生(Version:1)
+#         BEFORE FIELD gzbe003
+#            #add-point:BEFORE FIELD gzbe003
+#
+#            #END add-point
+#
+#         #應用 a02 樣板自動產生(Version:1)
+#         AFTER FIELD gzbe003
+#
+#            #add-point:AFTER FIELD gzbe003
+#            #應用 a05 樣板自動產生(Version:2)
+#            #確認資料無重複
+#            IF  NOT cl_null(g_gzbe_m.gzbe001) AND NOT cl_null(g_gzbe_m.gzbe002) AND NOT cl_null(g_gzbe_m.gzbe003) THEN
+#               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_gzbe_m.gzbe001 != g_gzbe001_t  OR g_gzbe_m.gzbe002 != g_gzbe002_t  OR g_gzbe_m.gzbe003 != g_gzbe003_t )) THEN
+#                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzbe_t WHERE "||"gzbeent = '" ||g_enterprise|| "' AND "||"gzbe001 = '"||g_gzbe_m.gzbe001 ||"' AND "|| "gzbe002 = '"||g_gzbe_m.gzbe002 ||"' AND "|| "gzbe003 = '"||g_gzbe_m.gzbe003 ||"'",'std-00004',0) THEN
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF
+#            END IF
+#
+#
+#
+#            #END add-point
+#
+#
+#         #應用 a04 樣板自動產生(Version:2)
+#         ON CHANGE gzbe003
+#            #add-point:ON CHANGE gzbe003
+#
+#            #END add-point
+#
+# #欄位檢查
+#                  #Ctrlp:input.c.gzbe001
+##         #應用 a03 樣板自動產生(Version:2)
+#         ON ACTION controlp INFIELD gzbe001
+#            #add-point:ON ACTION controlp INFIELD gzbe001
+#
+#            #END add-point
+#
+#         #Ctrlp:input.c.gzbe002
+##         #應用 a03 樣板自動產生(Version:2)
+#         ON ACTION controlp INFIELD gzbe002
+#            #add-point:ON ACTION controlp INFIELD gzbe002
+#
+#            #END add-point
+#
+#         #Ctrlp:input.c.gzbe003
+##         #應用 a03 樣板自動產生(Version:2)
+#         ON ACTION controlp INFIELD gzbe003
+#            #add-point:ON ACTION controlp INFIELD gzbe003
+#
+#            #END add-point
+#
+# #欄位開窗
+#
+#         AFTER INPUT
+#            #若點選cancel則離開dialog
+#            IF INT_FLAG THEN
+#               EXIT DIALOG
+#            END IF
+#
+#            #錯誤訊息統整顯示
+#            #CALL cl_err_collect_show()
+#            #CALL cl_showmsg()
+#
+#            IF p_cmd <> "u" THEN
+#               #當p_cmd不為u代表為新增/複製
+#               LET l_count = 1
+#
+#               #確定新增的資料不存在(不重複)
+#               SELECT COUNT(*) INTO l_count FROM gzbe_t
+#                WHERE gzbeent = g_enterprise AND gzbe001 = g_gzbe_m.gzbe001
+#                  AND gzbe002 = g_gzbe_m.gzbe002
+#                  AND gzbe003 = g_gzbe_m.gzbe003
+#
+#               IF l_count = 0 THEN
+#
+#                  #add-point:單頭新增前
+#
+#                  #end add-point
+#
+#                  #將新增的單頭資料寫入資料庫
+#                  INSERT INTO gzbe_t (gzbeent,gzbe001,gzbe002,gzbe003)
+#                  VALUES (g_enterprise,g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003)
+#
+#                  #add-point:單頭新增中
+#
+#                  #end add-point
+#
+#                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+#                  IF SQLCA.sqlcode THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.extend = "gzbe_t"
+#                     LET g_errparam.code   = SQLCA.sqlcode
+#                     LET g_errparam.popup  = TRUE
+#                     CALL cl_err()
+#                     NEXT FIELD CURRENT
+#                  END IF
+#
+#
+#
+#                  #資料多語言用-增/改
+#
+#
+#                  #add-point:單頭新增後
+#
+#                  #end add-point
+#
+#                  CALL s_transaction_end('Y','0')
+#               ELSE
+#                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.extend =  "g_gzbe_m.gzbe001"
+#                  LET g_errparam.code   = "std-00006"
+#                  LET g_errparam.popup  = TRUE
+#                  CALL cl_err()
+#                  CALL s_transaction_end('N','0')
+#               END IF
+#            ELSE
+#               #add-point:單頭修改前
+#
+#               #end add-point
+#               UPDATE gzbe_t SET (gzbe001,gzbe002,gzbe003) = (g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003)
+#
+#                WHERE gzbeent = g_enterprise AND gzbe001 = g_gzbe001_t #
+#                  AND gzbe002 = g_gzbe002_t
+#                  AND gzbe003 = g_gzbe003_t
+#
+#               #add-point:單頭修改中
+#
+#               #end add-point
+#               CASE
+#                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.extend = "gzbe_t"
+#                     LET g_errparam.code   = "std-00009"
+#                     LET g_errparam.popup  = TRUE
+#                     CALL cl_err()
+#                     CALL s_transaction_end('N','0')
+#                     NEXT FIELD CURRENT
+#                  WHEN SQLCA.sqlcode #其他錯誤
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.extend = "gzbe_t"
+#                     LET g_errparam.code   = SQLCA.sqlcode
+#                     LET g_errparam.popup  = TRUE
+#                     CALL cl_err()
+#                     CALL s_transaction_end('N','0')
+#                     NEXT FIELD CURRENT
+#                  OTHERWISE
+#
+#                     #資料多語言用-增/改
+#
+#                     #add-point:單頭修改後
+#
+#                     #end add-point
+#                     #紀錄資料更動
+#                     LET g_log1 = util.JSON.stringify(g_gzbe_m_t)
+#                     LET g_log2 = util.JSON.stringify(g_gzbe_m)
+#                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN
+#                        CALL s_transaction_end('N','0')
+#                     ELSE
+#                        CALL s_transaction_end('Y','0')
+#                     END IF
+#               END CASE
+#            END IF
+#           #controlp
+#      END INPUT
+#
+#      #add-point:input段more input
+#
+#      #end add-point
+#
+#      BEFORE DIALOG
+#         #CALL cl_err_collect_init()
+#         #add-point:input段before_dialog
+#
+#         #end add-point
+#
+#      ON ACTION controlf
+#         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+#         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+#
+#      ON ACTION controlr
+#         CALL cl_show_req_fields()
+#
+#      ON ACTION controls
+#         IF g_header_hidden THEN
+#            CALL gfrm_curr.setElementHidden("vb_master",0)
+#            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+#            LET g_header_hidden = 0     #visible
+#         ELSE
+#            CALL gfrm_curr.setElementHidden("vb_master",1)
+#            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+#            LET g_header_hidden = 1     #hidden
+#         END IF
+#
+#      ON ACTION accept
+#         ACCEPT DIALOG
+#
+#      #放棄輸入
+#      ON ACTION cancel
+#         LET g_action_choice=""
+#         LET INT_FLAG = TRUE
+#         EXIT DIALOG
+#
+#      #在dialog 右上角 (X)
+#      ON ACTION close
+#         LET INT_FLAG = TRUE
+#         EXIT DIALOG
+#
+#      #toolbar 離開
+#      ON ACTION exit
+#         LET INT_FLAG = TRUE
+#         EXIT DIALOG
+#
+#      #交談指令共用ACTION
+#      &include "common_action.4gl"
+#         CONTINUE DIALOG
+#   END DIALOG
+#
+#   #add-point:input段after input
+#
+#   #end add-point
+#
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_reproduce" order="10" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_reproduce()
+#   DEFINE l_newno     LIKE gzbe_t.gzbe001
+#   DEFINE l_oldno     LIKE gzbe_t.gzbe001
+#   DEFINE l_newno02     LIKE gzbe_t.gzbe002
+#   DEFINE l_oldno02     LIKE gzbe_t.gzbe002
+#   DEFINE l_newno03     LIKE gzbe_t.gzbe003
+#   DEFINE l_oldno03     LIKE gzbe_t.gzbe003
+#
+#   DEFINE l_master    RECORD LIKE gzbe_t.*
+#   DEFINE l_cnt       LIKE type_t.num5
+#   #add-point:reproduce段define
+#
+#   #end add-point
+#   #add-point:reproduce段define
+#
+#   #end add-point
+#
+#   #切換畫面
+#
+#   #先確定key值無遺漏
+#   IF g_gzbe_m.gzbe001 IS NULL
+#      OR g_gzbe_m.gzbe002 IS NULL
+#      OR g_gzbe_m.gzbe003 IS NULL
+#
+#   THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = ""
+#      LET g_errparam.code   = "std-00003"
+#      LET g_errparam.popup  = FALSE
+#      CALL cl_err()
+#      RETURN
+#   END IF
+#
+#   #備份key值
+#   LET g_gzbe001_t = g_gzbe_m.gzbe001
+#   LET g_gzbe002_t = g_gzbe_m.gzbe002
+#   LET g_gzbe003_t = g_gzbe_m.gzbe003
+#
+#
+#   #清空key值
+#   LET g_gzbe_m.gzbe001 = ""
+#   LET g_gzbe_m.gzbe002 = ""
+#   LET g_gzbe_m.gzbe003 = ""
+#
+#
+#   CALL azzi002_set_entry("a")
+#   CALL azzi002_set_no_entry("a")
+#
+#   #公用欄位給予預設值
+#
+#
+#   CALL s_transaction_begin()
+#
+#   #add-point:複製輸入前
+#
+#   #end add-point
+#
+#   #顯示狀態(stus)圖片
+#
+#
+#   #清空key欄位的desc
+#
+#
+#   #資料輸入
+#   CALL azzi002_input("r")
+#
+#   IF INT_FLAG THEN
+#      #取消
+#      LET INT_FLAG = 0
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = ""
+#      LET g_errparam.code   = 9001
+#      LET g_errparam.popup  = FALSE
+#      CALL cl_err()
+#      INITIALIZE g_gzbe_m.* TO NULL
+#      CALL azzi002_show()
+#      RETURN
+#   END IF
+#
+#   CALL s_transaction_begin()
+#
+#   #add-point:單頭複製前
+#
+#   #end add-point
+#
+#   #add-point:單頭複製中
+#
+#   #end add-point
+#
+#   IF SQLCA.sqlcode THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = "gzbe_t"
+#      LET g_errparam.code   = SQLCA.sqlcode
+#      LET g_errparam.popup  = TRUE
+#      CALL cl_err()
+#      CALL s_transaction_end('N','0')
+#      RETURN
+#   END IF
+#
+#   #add-point:單頭複製後
+#
+#   #end add-point
+#
+#   CALL s_transaction_end('Y','0')
+#
+#   #根據資料狀態切換action狀態
+#   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+#   CALL azzi002_set_act_visible()
+#   CALL azzi002_set_act_no_visible()
+#
+#   #將新增的資料併入搜尋條件中
+#   LET g_state = "insert"
+#
+#   LET g_gzbe001_t = g_gzbe_m.gzbe001
+#   LET g_gzbe002_t = g_gzbe_m.gzbe002
+#   LET g_gzbe003_t = g_gzbe_m.gzbe003
+#
+#
+#   #組合新增資料的條件
+#   LET g_add_browse = " gzbeent = '" ||g_enterprise|| "' AND",
+#                      " gzbe001 = '", g_gzbe_m.gzbe001, "' "
+#                      ," AND gzbe002 = '", g_gzbe_m.gzbe002, "' "
+#                      ," AND gzbe003 = '", g_gzbe_m.gzbe003, "' "
+#
+#   #填到最後面
+#   LET g_current_idx = g_browser.getLength() + 1
+#   CALL azzi002_browser_fill("","")
+#
+#   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+#   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+#   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+#
+#   #add-point:完成複製段落後
+#
+#   #end add-point
+#
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_show" order="11" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_show()
+   #add-point:show段define
+
+   #end add-point
+   #add-point:show段define
+
+   #end add-point
+
+   #add-point:show段之前
+
+   #end add-point
+
+
+
+   #帶出公用欄位reference值
+
+
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:2)
+   CALL azzi002_set_pk_array()
+   #add-point:ON ACTION agendum
+
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+
+
+
+
+   #讀入ref值(單頭)
+   #add-point:show段reference
+
+   #end add-point
+
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003
+
+   #顯示狀態(stus)圖片
+
+
+   #顯示有特殊格式設定的欄位或說明
+   CALL cl_show_fld_cont()
+
+   #add-point:show段之後
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_delete" order="12" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_delete()
+#   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+#   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+#   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+#   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+#   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+#   #add-point:delete段define
+#
+#   #end add-point
+#   #add-point:delete段define
+#
+#   #end add-point
+#
+#   #先確定key值無遺漏
+#   IF g_gzbe_m.gzbe001 IS NULL
+#   OR g_gzbe_m.gzbe002 IS NULL
+#   OR g_gzbe_m.gzbe003 IS NULL
+#
+#   THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = ""
+#      LET g_errparam.code   = "std-00003"
+#      LET g_errparam.popup  = FALSE
+#      CALL cl_err()
+#      RETURN
+#   END IF
+#
+#   CALL s_transaction_begin()
+#
+#   LET g_gzbe001_t = g_gzbe_m.gzbe001
+#   LET g_gzbe002_t = g_gzbe_m.gzbe002
+#   LET g_gzbe003_t = g_gzbe_m.gzbe003
+#
+#
+#
+#
+#   OPEN azzi002_cl USING g_enterprise,g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003
+#
+#   IF STATUS THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = "OPEN azzi002_cl:"
+#      LET g_errparam.code   = STATUS
+#      LET g_errparam.popup  = TRUE
+#      CALL cl_err()
+#      CLOSE azzi002_cl
+#      CALL s_transaction_end('N','0')
+#      RETURN
+#   END IF
+#
+#   #顯示最新的資料
+#   EXECUTE azzi002_master_referesh USING g_gzbe_m.gzbe001,g_gzbe_m.gzbe002,g_gzbe_m.gzbe003 INTO g_gzbe_m.gzbe001,
+#       g_gzbe_m.gzbe002,g_gzbe_m.gzbe003
+#   IF SQLCA.sqlcode THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.extend = g_gzbe_m.gzbe001
+#      LET g_errparam.code   = SQLCA.sqlcode
+#      LET g_errparam.popup  = FALSE
+#      CALL cl_err()
+#      RETURN
+#   END IF
+#
+#   #將最新資料顯示到畫面上
+#   CALL azzi002_show()
+#
+#   IF cl_ask_delete() THEN
+#
+#      #add-point:單頭刪除前
+#
+#      #end add-point
+#
+#      #應用 a47 樣板自動產生(Version:2)
+#      #刪除相關文件
+#      CALL azzi002_set_pk_array()
+#      #add-point:相關文件刪除前
+#
+#      #end add-point
+#      CALL cl_doc_remove()
+#
+#
+#
+#
+#      DELETE FROM gzbe_t
+#       WHERE gzbeent = g_enterprise AND gzbe001 = g_gzbe_m.gzbe001
+#         AND gzbe002 = g_gzbe_m.gzbe002
+#         AND gzbe003 = g_gzbe_m.gzbe003
+#
+#
+#      #add-point:單頭刪除中
+#
+#      #end add-point
+#
+#      IF SQLCA.sqlcode THEN
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.extend = "gzbe_t"
+#         LET g_errparam.code   = SQLCA.sqlcode
+#         LET g_errparam.popup  = FALSE
+#         CALL cl_err()
+#         CALL s_transaction_end('N','0')
+#      END IF
+#
+#
+#
+#      #add-point:單頭刪除後
+#
+#      #end add-point
+#
+#
+#      CLEAR FORM
+#      CALL azzi002_ui_browser_refresh()
+#
+#      #確保畫面上保有資料
+#      IF g_browser_cnt > 0 THEN
+#         #CALL azzi002_browser_fill(g_wc,"")
+#         CALL azzi002_fetch("P")
+#      ELSE
+#         CLEAR FORM
+#      END IF
+#
+#   END IF
+#
+#   CLOSE azzi002_cl
+#   CALL s_transaction_end('Y','0')
+#
+#   #流程通知預埋點-D
+#   CALL cl_flow_notify(g_gzbe_m.gzbe001,"D")
+#
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_ui_browser_refresh" order="13" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_ui_browser_refresh()
+#   DEFINE l_i  LIKE type_t.num10
+#   #add-point:ui_browser_refresh段define
+#
+#   #end add-point
+#   #add-point:ui_browser_refresh段define
+#
+#   #end add-point
+#
+#   LET g_browser_cnt = g_browser.getLength()
+#   LET g_header_cnt  = g_browser.getLength()
+#   FOR l_i =1 TO g_browser.getLength()
+#      IF g_browser[l_i].b_gzbe001 = g_gzbe_m.gzbe001
+#         AND g_browser[l_i].b_gzbe002 = g_gzbe_m.gzbe002
+#         AND g_browser[l_i].b_gzbe003 = g_gzbe_m.gzbe003
+#
+#         THEN
+#         CALL g_browser.deleteElement(l_i)
+#       END IF
+#   END FOR
+#   LET g_browser_cnt = g_browser_cnt - 1
+#   LET g_header_cnt = g_header_cnt - 1
+#
+#   DISPLAY g_browser_cnt TO FORMONLY.b_count     #page count
+#   DISPLAY g_header_cnt  TO FORMONLY.h_count     #page count
+#
+#   #若無資料則關閉相關功能
+#   IF g_browser_cnt = 0 THEN
+#      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+#      CALL cl_navigator_setting(0,0)
+#      CLEAR FORM
+#   ELSE
+#      CALL cl_set_act_visible("mainhidden", TRUE)
+#   END IF
+#
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_set_entry" order="14" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_set_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define
+
+   #end add-point
+   #add-point:set_entry段define
+
+   #end add-point
+
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("gzbe001,gzbe002,gzbe003",TRUE)
+      #add-point:set_entry段欄位控制
+
+      #end add-point
+   END IF
+
+   #add-point:set_entry段欄位控制後
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_set_no_entry" order="15" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_set_no_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define
+
+   #end add-point
+   #add-point:set_no_entry段define
+
+   #end add-point
+
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("gzbe001,gzbe002,gzbe003",FALSE)
+      #add-point:set_no_entry段欄位控制
+
+      #end add-point
+   END IF
+
+   #add-point:set_no_entry段欄位控制後
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_set_act_visible" order="16" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_set_act_visible()
+   #add-point:set_act_visible段define
+
+   #end add-point
+   #add-point:set_act_visible段define
+
+   #end add-point
+   #add-point:set_act_visible段
+
+   #end add-point
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_set_act_no_visible" order="17" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_set_act_no_visible()
+   #add-point:set_act_no_visible段define
+
+   #end add-point
+   #add-point:set_act_no_visible段define
+
+   #end add-point
+   #add-point:set_act_no_visible段
+
+   #end add-point
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_default_search" order="18" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_default_search()
+#   DEFINE li_idx  LIKE type_t.num5
+#   DEFINE li_cnt  LIKE type_t.num5
+#   DEFINE ls_wc   STRING
+#   #add-point:default_search段define
+#
+#   #end add-point
+#   #add-point:default_search段define
+#
+#   #end add-point
+#
+#   IF cl_null(g_order) THEN
+#      LET g_order = "ASC"
+#   END IF
+#
+#   #add-point:default_search段開始前
+#
+#   #end add-point
+#
+#   #根據外部參數(g_argv)組合wc
+#   IF NOT cl_null(g_argv[01]) THEN
+#      LET ls_wc = ls_wc, " gzbe001 = '", g_argv[01], "' AND "
+#   END IF
+#
+#   IF NOT cl_null(g_argv[02]) THEN
+#      LET ls_wc = ls_wc, " gzbe002 = '", g_argv[02], "' AND "
+#   END IF
+#   IF NOT cl_null(g_argv[03]) THEN
+#      LET ls_wc = ls_wc, " gzbe003 = '", g_argv[03], "' AND "
+#   END IF
+#
+#
+#   #add-point:default_search段after sql
+#
+#   #end add-point
+#
+#   IF NOT cl_null(ls_wc) THEN
+#      #若有外部參數則根據該參數組合
+#      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+#      LET g_default = TRUE
+#   ELSE
+#      #若無外部參數則預設為1=2
+#      LET g_default = FALSE
+#      #預設查詢條件
+#      LET g_wc = cl_qbe_get_default_qryplan()
+#      IF cl_null(g_wc) THEN
+#         LET g_wc = " 1=2"
+#      END IF
+#   END IF
+#
+#   #add-point:default_search段結束前
+#
+#   #end add-point
+#
+#   IF g_wc.getIndexOf(" 1=2", 1) THEN
+#      LET g_default = TRUE
+#   END IF
+#
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_set_pk_array" order="19" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_set_pk_array()
+#   #add-point:set_pk_array段define
+#
+#   #end add-point
+#   #add-point:set_pk_array段define
+#
+#   #end add-point
+#
+#   #add-point:set_pk_array段之前
+#
+#   #end add-point
+#
+#   #若l_ac<=0代表沒有資料
+#   IF l_ac <= 0 THEN
+#      RETURN
+#   END IF
+#
+#   CALL g_pk_array.clear()
+#   LET g_pk_array[1].values = g_gzbe_m.gzbe001
+#   LET g_pk_array[1].column = 'gzbe001'
+#   LET g_pk_array[2].values = g_gzbe_m.gzbe002
+#   LET g_pk_array[2].column = 'gzbe002'
+#   LET g_pk_array[3].values = g_gzbe_m.gzbe003
+#   LET g_pk_array[3].column = 'gzbe003'
+#
+#   #add-point:set_pk_array段之後
+#
+#   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_chat" order="20" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 進行交談
+# Memo...........:
+# Usage..........: CALL azzi002_chat()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 2015/02/24 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_chat()
+   DEFINE l_wc_chat     STRING
+   DEFINE l_userinfo    RECORD
+            source_id      STRING,  #自己
+            source_name    STRING,  #自己名稱
+            type           STRING,  #類型(CHAT)
+            target_id      STRING,  #交談對象(可忽略)
+            target_name    STRING,  #交談對象名稱(可忽略)
+            server         STRING,  #WebSocket Server
+            iss            STRING,  #是否為容服(不使用了)
+            contact_way    DYNAMIC ARRAY OF t_cway
+                        END record
+
+   DEFINE l_target      STRING      #交談對象
+   DEFINE l_unread_cnt  INTEGER
+   DEFINE l_file        STRING,
+          l_file_seq    STRING,
+          l_file_target STRING
+   DEFINE l_wc_json     STRING
+   
+   LET l_target = g_argv[1]
+  
+   LET l_userinfo.source_id   = g_user
+   LET l_userinfo.source_name = azzi002_get_username(g_user, true)
+   IF NOT cl_null(l_target) THEN
+      LET l_userinfo.target_id   = g_argv[1]
+      LET l_userinfo.target_name = azzi002_get_username(g_argv[1], true)
+      LET l_userinfo.contact_way = azzi002_get_contact_way(g_argv[1])
+   END IF
+   LET l_userinfo.type        = "CHAT"
+   LET l_userinfo.iss         = "false"
+   LET l_userinfo.server      = FGL_GETENV("APIP"), ":16200/chat/chat"
+
+    
+   LET l_wc_json = security.Base64.FromString(util.JSON.stringify(l_userinfo))
+
+   
+   DIALOG ATTRIBUTES(UNBUFFERED=TRUE)
+      INPUT l_wc_chat FROM wc_chat ATTRIBUTE(WITHOUT DEFAULTS=TRUE)
+      END INPUT
+      
+      #上傳檔案
+      ON ACTION chat_file_upload
+         LET l_file = NULL
+         CALL azzi002_chat_upload_file(l_wc_chat) RETURNING l_file, l_file_seq, l_file_target
+         IF NOT cl_null(l_file) THEN
+            CALL azzi002_chat_send_file(l_file, l_file_seq, l_file_target)
+         END IF
+      
+      #儲存訊息
+      ON ACTION wc_save_msg
+         CALL azzi002_chat_save_msg(l_wc_chat)
+         
+      #選擇連絡人開窗
+      ON ACTION chat_contact_add
+         CALL azzi002_chat_add_contact()
+         
+      #設為常用連絡人
+      ON ACTION chat_set_favorite
+         CALL azzi002_chat_add_favorite(l_wc_chat)
+         
+      #下載檔案
+      ON ACTION wc_get_file
+         CALL azzi002_chat_get_file(l_wc_chat)      
+       
+      ON ACTION CLOSE
+         EXIT DIALOG
+         
+      #歷史訊息的交談清單
+      ON ACTION chat_history_targets
+         CALL azzi002_get_history_targets()
+         
+      #歷史訊息的交談內容
+      ON ACTION chat_view_history
+         CALL azzi002_get_contact_history(l_wc_chat)
+      
+      #將未讀設定為已讀
+      ON ACTION chat_mark_read
+         CALL azzi002_chat_mark_read(l_wc_chat)
+      
+      ON ACTION EXIT
+         EXIT DIALOG
+      
+      #點擊了其它的連絡方式
+      ON ACTION chat_contact_other
+         CALL azzi002_exec_contact_way(l_wc_chat)
+         
+      #Chat已準備完成，如果有未讀訊息的發送者，則邀請加入
+      ON ACTION wc_chat_init
+        LET l_wc_chat = "" 
+        LET l_wc_chat = l_wc_json
+        #發送未讀訊息及常用連絡人清單    
+        CALL azzi002_clean_wc_properties("wc_chat")
+        CALL azzi002_property_comp("wc_chat", "unread", azzi002_get_unread_msg())   
+        CALL azzi002_property_comp("wc_chat", "favorites", azzi002_get_favorites())
+        CALL azzi002_property_comp("wc_chat", "chatsinfo", azzi002_get_unread_sender())
+        
+   END DIALOG
+   
+
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_get_encode_username" order="21" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_get_encode_username(p_account)
+   DEFINE p_account     LIKE gzxa_t.gzxa003
+   DEFINE lc_ooag011    LIKE ooag_t.ooag011
+   DEFINE l_encode      STRING
+   SELECT DISTINCT  ooag011 INTO lc_ooag011
+     FROM  gzxa_t  LEFT OUTER JOIN ooag_t ON gzxa003 = ooag001
+     WHERE  gzxaent = g_enterprise AND gzxa001 = p_account
+   IF SQLCA.SQLCODE THEN
+      LET lc_ooag011 = p_account
+   END IF
+   IF lc_ooag011 IS NULL THEN LET lc_ooag011 = p_account END if
+   LET l_encode = URLEncoder.encode(lc_ooag011, "UTF-8")
+   RETURN l_encode
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_get_username" order="21" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_get_username(p_user,p_encode)
+   DEFINE p_user        LIKE gzxa_t.gzxa003
+   DEFINE p_encode      BOOLEAN
+   DEFINE lc_ooag011    LIKE ooag_t.ooag011
+   DEFINE l_encode      STRING
+   #SELECT DISTINCT  ooag011 INTO lc_ooag011
+   #  FROM  gzxa_t  LEFT OUTER JOIN ooag_t ON gzxa003 = ooag001
+   #  WHERE  gzxaent = g_enterprise AND gzxa001 = p_account
+   #IF SQLCA.SQLCODE THEN
+   #   LET lc_ooag011 = p_account
+   #END IF
+   #IF lc_ooag011 IS NULL THEN LET lc_ooag011 = p_account END if
+   LET lc_ooag011 = cl_get_username(p_user)
+   IF p_encode == TRUE THEN
+      LET l_encode = URLEncoder.encode(lc_ooag011, "UTF-8")
+   ELSE
+      LET l_encode = lc_ooag011
+   END IF
+   RETURN l_encode
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_send_unread_msg" order="22" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_send_unread_msg()
+   DEFINE l_gzbe_t      RECORD LIKE gzbe_t.*
+   DEFINE l_gzbf_t      RECORD LIKE gzbf_t.*
+   DEFINE l_idx         INTEGER
+   DEFINE l_msg_arr     DYNAMIC ARRAY OF RECORD
+            source_id      STRING,
+            source_name    STRING,
+            message        STRING,
+            msg_date       STRING
+                        END RECORD
+   DEFINE l_favs        DYNAMIC ARRAY OF RECORD
+            user_id        STRING,
+            username       STRING,
+            contact_way    DYNAMIC ARRAY OF RECORD
+               c_type           STRING,
+               c_content        STRING
+                           END RECORD
+                        END RECORD
+   DEFINE l_json_str    STRING
+   DEFINE l_favs_str    base.StringBuffer
+   
+   OPEN azzi002_gzbe_declare
+   LET l_idx = 0
+   FOREACH azzi002_gzbe_declare INTO l_gzbe_t.*
+      LET l_idx = l_idx + 1
+      LET l_msg_arr[l_idx].source_id = l_gzbe_t.gzbe001
+      LET l_msg_arr[l_idx].source_name = azzi002_get_username(l_gzbe_t.gzbe001, false)
+      LET l_msg_arr[l_idx].message = l_gzbe_t.gzbe005
+      LET l_msg_arr[l_idx].msg_date = l_gzbe_t.gzbe003
+   END FOREACH
+   LET l_json_str = util.JSON.stringify(l_msg_arr)
+   
+   OPEN azzi002_gzbf_declare
+   LET l_idx = 0
+   FOREACH azzi002_gzbf_declare INTO l_gzbf_t.*
+      LET l_idx = l_idx + 1
+      LET l_favs[l_idx].user_id = l_gzbf_t.gzbf002
+      LET l_favs[l_idx].username = azzi002_get_username(l_gzbf_t.gzbf002, false)
+      LET l_favs[l_idx].contact_way = azzi002_get_contact_way(l_gzbf_t.gzbf002)
+   END FOREACH
+   LET l_favs_str = base.StringBuffer.create()
+   
+   CALL l_favs_str.append(util.JSON.stringify(l_favs))
+
+   CALL azzi002_property_comp("wc_chat", "unread", "")
+   CALL azzi002_property_comp("wc_chat", "unread", l_json_str)
+   CALL azzi002_property_comp("wc_chat", "favorites", "")
+   CALL azzi002_property_comp("wc_chat", "favorites", l_favs_str.toString())
+   CALL azzi002_property_comp("wc_chat", "chatsinfo", "")
+   CALL azzi002_property_comp("wc_chat", "chatsinfo", azzi002_get_unread_sender())
+   CALL azzi002_property_comp("wc_chat", "add_contact", "")
+   RETURN l_idx
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_get_unread_msg" order="22" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_get_unread_msg()
+   DEFINE l_gzbe_t      RECORD 
+            gzbeent        LIKE gzbe_t.gzbeent,
+            gzbe001        LIKE gzbe_t.gzbe001,
+            gzbe002        LIKE gzbe_t.gzbe002,
+            gzbe003        LIKE gzbe_t.gzbe003,
+            gzbe004        LIKE gzbe_t.gzbe004,
+            gzbe005        LIKE gzbe_t.gzbe005,
+            gzbe006        LIKE gzbe_t.gzbe006,
+            gzbe007        LIKE gzbe_t.gzbe007
+                        END RECORD
+   DEFINE l_gzbe007     TEXT
+   DEFINE l_idx         INTEGER
+   DEFINE l_msg_arr     DYNAMIC ARRAY OF RECORD
+            source_id      STRING,
+            source_name    STRING,
+            message        STRING,
+            msg_date       STRING,
+            type           STRING
+                        END RECORD
+   DEFINE l_favs        DYNAMIC ARRAY OF RECORD
+            user_id        STRING,
+            username       STRING,
+            contact_way    DYNAMIC ARRAY OF t_cway
+                        END RECORD
+   DEFINE l_json_str    STRING
+   DEFINE l_favs_str    base.StringBuffer
+
+   
+   OPEN azzi002_gzbe_declare
+   LET l_idx = 0
+   LOCATE l_gzbe_t.gzbe007 IN MEMORY
+   FOREACH azzi002_gzbe_declare INTO l_gzbe_t.*
+      LET l_idx = l_idx + 1
+      LET l_msg_arr[l_idx].source_id = l_gzbe_t.gzbe001
+      LET l_msg_arr[l_idx].source_name = azzi002_get_username(l_gzbe_t.gzbe001, false)      
+      LET l_msg_arr[l_idx].msg_date = l_gzbe_t.gzbe003
+      CASE l_gzbe_t.gzbe005
+         WHEN '1'
+            LET l_msg_arr[l_idx].type = 'TEXT'
+            LET l_msg_arr[l_idx].message = l_gzbe_t.gzbe007
+         WHEN '2'
+            LET l_msg_arr[l_idx].type = 'IMAGE'
+            LET l_msg_arr[l_idx].message = l_gzbe_t.gzbe007
+         WHEN '3'
+            LET l_msg_arr[l_idx].type = 'FILE'
+            LET l_msg_arr[l_idx].message = l_gzbe_t.gzbe006
+      END CASE
+   END FOREACH
+   FREE l_gzbe_t.gzbe007
+   LET l_json_str = util.JSON.stringify(l_msg_arr)
+   RETURN l_json_str
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_property_comp" order="23" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi002_property_comp(p_wcname,p_prop_name,p_prop_value)
+   DEFINE p_wcname STRING
+   DEFINE p_prop_name STRING
+   DEFINE p_prop_value STRING
+   DEFINE win ui.Window
+   DEFINE l_ff    om.DomNode
+   DEFINE win_node      om.DomNode
+   DEFINE l_nl   om.NodeList
+   DEFINE l_wc  om.DomNode
+   DEFINE l_dict    om.DomNode
+   DEFINE l_prop    om.DomNode
+
+   LET win = ui.Window.getCurrent()
+   LET win_node = win.getNode()
+
+   LET l_nl = win_node.selectByPath("//FormField[@name=\"formonly."|| p_wcname ||"\"]")
+
+   IF l_nl.getLength() > 0 THEN
+      LET l_ff = l_nl.item(1)
+      LET l_wc = l_ff.getFirstChild()
+      LET l_dict = l_wc.getFirstChild()
+      IF l_dict IS NULL THEN
+        LET l_dict = l_wc.createChild("PropertyDict")
+        CALL l_dict.setAttribute("name", "properties")
+      END IF
+      LET l_nl = l_dict.selectByPath("//Property[@name=\"" || p_prop_name || "\"]")
+      LET l_prop = l_nl.item(1)
+      IF l_prop IS NULL THEN
+         LET l_prop = l_dict.createChild("Property")
+         CALL l_prop.setAttribute("name", p_prop_name)
+      END IF
+      CALL l_prop.setAttribute("value", p_prop_value)
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_send_unread_sender" order="24" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="function.azzi002_get_unread_sender" order="24" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_get_unread_sender()
+   DEFINE l_senders     DYNAMIC ARRAY OF RECORD
+            user_id        STRING,
+            username       STRING, 
+            contact_way       DYNAMIC ARRAY OF t_cway
+                        END RECORD
+   DEFINE l_idx         INTEGER
+   DEFINE l_sender      RECORD
+            gzbe001        LIKE gzbe_t.gzbe001,
+            ooag011        LIKE ooag_t.ooag011
+                        END RECORD
+                        
+   DECLARE azzi002_unread_sender_declare CURSOR FOR 
+      SELECT distinct gzbe001 FROM gzbe_t
+         WHERE gzbeent = g_enterprise
+           AND gzbe002 = g_user
+           AND  gzbe004 = 'N'
+           ORDER BY gzbe002
+           
+   LET l_idx = 1
+   FOREACH azzi002_unread_sender_declare INTO l_sender.*
+      LET l_senders[l_idx].user_id = l_sender.gzbe001
+      LET l_senders[l_idx].username = cl_get_username(l_sender.gzbe001)
+      LET l_senders[l_idx].contact_way = azzi002_get_contact_way(l_sender.gzbe001)
+      LET l_idx = l_idx + 1
+   END FOREACH
+   RETURN util.JSON.stringify(l_senders)
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_chat_add_contact" order="25" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 新增交談名單
+# Memo...........:
+# Usage..........: CALL azzi002_chat_add_contact()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 2015/03/17 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_chat_add_contact()
+   DEFINE l_return      STRING
+   DEFINE l_st          base.StringTokenizer
+   DEFINE l_gzxa003     LIKE gzxa_t.gzxa003
+   DEFINE l_favorite    DYNAMIC ARRAY OF RECORD
+            user_id         STRING,
+            username       STRING,
+            contact_way    DYNAMIC ARRAY OF t_cway
+                        END RECORD
+   DEFINE l_cnt         INTEGER
+   
+   LET g_qryparam.return1 = ""
+   LET g_qryparam.reqry = FALSE
+   LET g_qryparam.state = 'c'
+   CALL q_gzxa003_3()                            #呼叫開窗
+   LET l_return = g_qryparam.return1
+   IF l_return.getLength() > 0 THEN
+      LET l_st = base.StringTokenizer.create(l_return, "|")
+      LET l_cnt = 1
+      WHILE(l_st.hasMoreTokens())
+         LET l_gzxa003 = l_st.nextToken()
+         LET l_favorite[l_cnt].user_id    = l_gzxa003
+         LET l_favorite[l_cnt].username   = cl_get_username(l_gzxa003)
+         LET l_favorite[l_cnt].contact_way = azzi002_get_contact_way(l_gzxa003)
+         LET l_cnt = l_cnt + 1
+      END WHILE
+      CALL azzi002_clean_wc_properties("wc_chat")  
+      CALL azzi002_property_comp("wc_chat", "add_contact", util.Json.stringify(l_favorite))
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_chat_add_favorite" order="26" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 新增常用連絡人
+# Memo...........:
+# Usage..........: CALL azzi002_chat_add_favorite(p_json_str)
+#                  RETURNING none
+# Input parameter: p_json_str  JSON格式
+# Return code....: none
+# Date & Author..: 2015/03/17 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_chat_add_favorite(p_json_str)
+   DEFINE p_json_str    STRING
+   DEFINE l_json        RECORD
+            user_id        LIKE gzbf_t.gzbf002,    #常用連絡人
+            act            STRING                  #動作(add, remove)
+                        END RECORD
+   DEFINE l_cnt         INTEGER
+   
+   CALL util.JSON.parse(p_json_str, l_json)
+   
+   SELECT COUNT(*) INTO l_cnt FROM gzbf_t 
+      WHERE gzbfent = g_enterprise
+        AND gzbf001 = g_user
+        AND gzbf002 = l_json.user_id   
+           
+   IF l_json.act == "add" AND l_cnt == 0 THEN
+      INSERT INTO gzbf_t (gzbfent, gzbf001, gzbf002) VALUES (g_enterprise, g_user, l_json.user_id)
+   ELSE 
+      IF l_json.act == "remove" THEN
+         DELETE FROM gzbf_t WHERE gzbfent = g_enterprise AND gzbf001 = g_user AND gzbf002 = l_json.user_id          
+      END IF
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_get_favorites" order="27" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得常用連絡人清單
+# Memo...........:
+# Usage..........: CALL azzi002_get_favorites()
+#                  RETURNING lr_json_str
+# Input parameter: none
+# Return code....: lr_json_str  JSON格式
+# Date & Author..: 2015/03/17 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_get_favorites()
+   DEFINE l_favs      DYNAMIC ARRAY OF RECORD
+             user_id          STRING,
+             username         STRING,
+             contact_way      DYNAMIC ARRAY OF t_cway
+                           END RECORD
+   DEFINE l_gzbf_t      RECORD LIKE gzbf_t.*
+   DEFINE l_idx            INTEGER
+   
+   OPEN azzi002_gzbf_declare
+   LET l_idx = 0
+   FOREACH azzi002_gzbf_declare INTO l_gzbf_t.*
+      LET l_idx = l_idx + 1
+      LET l_favs[l_idx].user_id = l_gzbf_t.gzbf002
+      LET l_favs[l_idx].username = azzi002_get_username(l_gzbf_t.gzbf002, false)
+      LET l_favs[l_idx].contact_way = azzi002_get_contact_way(l_gzbf_t.gzbf002)
+   END FOREACH
+   
+   RETURN util.Json.stringify(l_favs)
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_get_contact_way" order="28" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得連絡方式
+# Memo...........:
+# Usage..........: CALL azzi002_get_contact_way(p_user)
+#                  RETURNING array
+# Input parameter: p_user     使用者編號
+# Return code....: array      連絡方式
+# Date & Author..: 2015/03/23  劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_get_contact_way(p_user)
+   DEFINE p_user           LIKE oofa_t.oofa003
+   DEFINE lr_contact_way   DYNAMIC ARRAY OF t_cway
+   DEFINE l_oofc_t         RECORD
+            oofc008           LIKE oofc_t.oofc008,
+            oofc012           LIKE oofc_t.oofc012
+                           END RECORD
+   DEFINE l_idx            INTEGER
+   
+   LET l_idx = 0
+   OPEN azzi002_oofc_declare USING p_user, g_enterprise
+   FOREACH azzi002_oofc_declare INTO l_oofc_t.*
+      LET l_idx = l_idx + 1
+      LET lr_contact_way[l_idx].c_type    = l_oofc_t.oofc008 
+      LET lr_contact_way[l_idx].c_content = l_oofc_t.oofc012
+   END FOREACH
+
+   RETURN lr_contact_way
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_exec_contact_way" order="29" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_exec_contact_way(p_jsonstr)
+   DEFINE p_jsonstr     STRING
+   DEFINE l_gzcb003     LIKE gzcb_t.gzcb003
+   DEFINE l_gzcb004     LIKE gzcb_t.gzcb004
+   DEFINE l_gzcb005     LIKE gzcb_t.gzcb005
+   DEFINE l_gzcb002     LIKE gzcb_t.gzcb002,
+          l_oofc012     LIKE oofc_t.oofc012
+   DEFINE l_contact    RECORD
+               c_type         STRING,
+               c_content      STRING
+                           END RECORD
+   DEFINE l_sb          base.StringBuffer
+   DEFINE l_json        STRING
+   DEFINE l_cmd         STRING
+   
+   
+   LET l_sb = base.StringBuffer.create()
+   CALL l_sb.append(p_jsonstr)
+   CALL l_sb.replace('\\"', '"', 0)
+   IF l_sb.getLength() > 1 THEN
+      #去除字串前後的雙引號
+      LET l_json = l_sb.subString(2, l_sb.getLength()-1)
+   END IF
+   #改用JsonObject比較不麻煩？
+   CALL util.JSON.parse(l_json, l_contact)
+   
+   LET l_gzcb002 = l_contact.c_type
+   LET l_oofc012 = l_contact.c_content.trim()
+   
+   SELECT gzcb003, gzcb004, gzcb005 INTO l_gzcb003, l_gzcb004, l_gzcb005
+      FROM gzcb_t WHERE gzcb001 = '6' AND gzcb002 = l_gzcb002
+      
+   LET l_cmd = (l_gzcb003 CLIPPED), (l_oofc012 CLIPPED), (l_gzcb004 CLIPPED)
+   
+   CALL ui.Interface.frontCall("standard", "launchurl", [l_cmd], [])
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_get_contacat_history" order="30" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得歷史對話記錄
+# Memo...........:
+# Usage..........: CALL azzi002_get_contacat_history(p_user)
+#                  RETURNING lr_history
+# Input parameter: p_user  使用者編號
+# Return code....: lr_history
+# Date & Author..: 2015/03/26 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_get_contacat_history(p_user)
+   DEFINE p_user        LIKE type_t.chr20
+   DEFINE lr_history    DYNAMIC ARRAY OF RECORD LIKE gzbe_t.*
+   DEFINE l_gzbe_t      RECORD LIKE gzbe_t.*
+   DEFINE l_i           INTEGER
+   
+   OPEN azzi002_gzbe_history_declare USING g_enterprise, g_user, p_user
+   LET l_i = 1
+   FOREACH azzi002_gzbe_history_declare INTO l_gzbe_t.*
+      LET lr_history[l_i].* = l_gzbe_t.*
+      LET l_i = l_i + 1
+   END FOREACH
+   
+   CALL azzi002_clean_wc_properties("wc_chat")
+   CALL azzi002_property_comp("wc_chat", "history", util.Json.stringify(lr_history))
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_get_contact_history" order="30" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得歷史對話記錄
+# Memo...........:
+# Usage..........: CALL azzi002_get_contacat_history(p_user)
+#                  RETURNING lr_history
+# Input parameter: p_json  
+# Return code....: lr_history
+# Date & Author..: 2015/03/26 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_get_contact_history(p_json)
+   DEFINE p_json        STRING
+   DEFINE l_data        RECORD
+            user_id     LIKE gzbe_t.gzbe002,
+            endtime     DATETIME YEAR TO FRACTION(5)
+                        END RECORD
+   DEFINE lr_history    RECORD 
+            target_id      STRING,
+            start_date     LIKE gzbe_t.gzbe003,
+            chats          DYNAMIC ARRAY OF RECORD 
+               mtile          LIKE gzbe_t.gzbe003,
+               source_id         STRING,
+               target_id         STRING,
+               message           STRING,
+               type              STRING
+                           END RECORD
+                        END RECORD
+   DEFINE l_gzbe_t      RECORD LIKE gzbe_t.*
+   DEFINE l_i           INTEGER
+   DEFINE l_start_date  DATETIME YEAR TO FRACTION(5)
+   DEFINE l_gzbe002     LIKE gzbe_t.gzbe002
+   DEFINE l_gzbe003     LIKE gzbe_t.gzbe003
+
+   
+   LOCATE l_gzbe_t.gzbe007 IN MEMORY
+   LOCATE l_gzbe_t.gzbe008 IN MEMORY
+   
+   CALL util.json.parse(p_json, l_data)
+   IF l_data.endtime IS NULL THEN LET l_data.endtime = cl_get_timestamp() END IF
+    
+   LET l_gzbe002 = l_data.user_id  
+   LET l_gzbe003 = l_data.endtime
+      
+   LET lr_history.target_id = l_data.user_id
+
+#取得離endtime最近的一筆時間，再將該筆時間往前推1週？？？
+   
+   SELECT (MAX(gzbe003) - 7) t INTO l_start_date FROM gzbe_t
+      WHERE gzbeent = g_enterprise
+        AND (( gzbe001 = g_user AND gzbe002 = l_gzbe002)
+            OR
+            (gzbe001 = l_gzbe002 AND gzbe002 = g_user))
+        AND gzbe003 <= l_gzbe003
+        
+   #LET l_start_date = l_start_date -7 #把時間往前推7天
+   LET lr_history.start_date = l_start_date
+   
+   OPEN azzi002_gzbe_history_declare USING g_enterprise, g_user, l_gzbe002, l_gzbe002, 
+                                           g_user, l_start_date, l_data.endtime
+   LET l_i = 1
+   FOREACH azzi002_gzbe_history_declare INTO l_gzbe_t.*
+      LET lr_history.chats[l_i].mtile     = l_gzbe_t.gzbe003
+      LET lr_history.chats[l_i].source_id = l_gzbe_t.gzbe001
+      LET lr_history.chats[l_i].target_id = l_gzbe_t.gzbe002
+
+      CASE l_gzbe_t.gzbe005
+         WHEN '1'
+            LET lr_history.chats[l_i].type    = 'TEXT'
+            LET lr_history.chats[l_i].message = l_gzbe_t.gzbe007
+         WHEN '2'
+            LET lr_history.chats[l_i].type    = 'IMAGE'
+            LET lr_history.chats[l_i].message = l_gzbe_t.gzbe007
+         WHEN '3'
+            LET lr_history.chats[l_i].type    = 'FILE'
+            LET lr_history.chats[l_i].message = l_gzbe_t.gzbe006
+      END CASE
+      LET l_i = l_i + 1
+   END FOREACH
+   
+   FREE l_gzbe_t.gzbe007
+   FREE l_gzbe_t.gzbe008
+   
+   CALL azzi002_clean_wc_properties("wc_chat")
+   CALL azzi002_property_comp("wc_chat", "history_chats", util.Json.stringify(lr_history))
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_get_history_targets" order="31" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_get_history_targets()
+   DEFINE l_targets  DYNAMIC ARRAY OF RECORD
+            user_id     STRING,
+            username    STRING,
+            favorite    STRING,
+            contact_way DYNAMIC ARRAY OF t_cway,
+            timespan    STRING,
+            lasttime    LIKE gzbe_t.gzbe003
+                     END RECORD
+   DEFINE l_target   RECORD
+            gzbe002     LIKE gzbe_t.gzbe002,
+            gzbf002     LIKE gzbf_t.gzbf002,
+            gzbe003     LIKE gzbe_t.gzbe003
+                     END RECORD
+   DEFINE l_i        INTEGER
+   
+
+   OPEN azzi002_history_targets_declare USING g_enterprise, g_user
+   LET l_i = 1   
+   FOREACH azzi002_history_targets_declare INTO l_target.*
+      LET l_targets[l_i].user_id = l_target.gzbe002
+      LET l_targets[l_i].username = azzi002_get_username(l_target.gzbe002, FALSE)
+      LET l_targets[l_i].favorite = IIF(l_target.gzbf002 IS NULL, "false", "true")
+      LET l_targets[l_i].contact_way = azzi002_get_contact_way(l_target.gzbe002)
+      LET l_targets[l_i].timespan = cl_get_syscurrent()
+      LET l_targets[l_i].lasttime = l_target.gzbe003
+      LET l_i = l_i + 1
+   END FOREACH
+   CALL azzi002_clean_wc_properties("wc_chat")  
+   CALL azzi002_property_comp("wc_chat", "history_targets", util.Json.stringify(l_targets))
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_clean_wc_properties" order="32" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_clean_wc_properties(p_wc)
+   DEFINE p_wc       STRING
+   CALL azzi002_property_comp(p_wc, "history", "")
+   CALL azzi002_property_comp(p_wc, "unread", "")    
+   CALL azzi002_property_comp(p_wc, "favorites", "")
+   CALL azzi002_property_comp(p_wc, "chatsinfo", "")
+   CALL azzi002_property_comp(p_wc, "add_contact", "")
+   CALL azzi002_property_comp(p_wc, "history_targets", "")
+   CALL azzi002_property_comp(p_wc, "history_chats", "")
+   CALL azzi002_property_comp(p_wc, "file_msg", "")
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_mark_read" order="33" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 將未讀設為已讀
+# Memo...........:
+# Usage..........: CALL azzi002_mark_read(p_json)
+#                  RETURNING none
+# Input parameter: p_user    使用者編號
+# Return code....: none
+# Date & Author..: 2015/03/31  劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_mark_read(p_user)
+   DEFINE p_user LIKE gzbe_t.gzbe001
+   UPDATE gzbe_t SET gzbe004 = 'Y'
+         WHERE gzbeent = g_enterprise
+           AND gzbe001 = p_user
+           AND gzbe004 = 'N'
+   DISPLAY SQLCA.sqlcode
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_chat_mark_read" order="33" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 將未讀設為已讀
+# Memo...........:
+# Usage..........: CALL azzi002_chat_mark_read(p_json)
+#                  RETURNING none
+# Input parameter: p_user    使用者編號
+# Return code....: none
+# Date & Author..: 2015/03/31  劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_chat_mark_read(p_user)
+   DEFINE p_user LIKE gzbe_t.gzbe001
+   UPDATE gzbe_t SET gzbe004 = 'Y'
+         WHERE gzbeent = g_enterprise
+           AND gzbe001 = p_user
+           AND gzbe004 = 'N'
+   DISPLAY SQLCA.sqlcode
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_chat_save_msg" order="34" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 儲存訊息
+# Memo...........:
+# Usage..........: CALL azzi002_chat_save_msg(p_json)
+#                  RETURNING none
+# Input parameter: p_json
+# Return code....: none
+# Date & Author..: 2015/04/17 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_chat_save_msg(p_json)
+   DEFINE p_json        STRING
+   DEFINE l_save_msg    RECORD      #儲存訊息
+            target         STRING,
+            message        STRING,
+            is_online      STRING,
+            type           STRING
+                        END RECORD
+   DEFINE l_gzbe_save   RECORD LIKE gzbe_t.*
+   DEFINE l_gzbe007     TEXT
+   DEFINE l_gzbe008     BYTE
+   LOCATE l_gzbe007 IN MEMORY
+   LOCATE l_gzbe008 IN MEMORY  
+   CALL util.JSON.parse(p_json, l_save_msg)
+   
+   IF cl_null(l_save_msg.type) THEN LET l_save_msg.type = 'TEXT' END IF
+   
+   CASE l_save_msg.type
+      WHEN 'IMAGE'
+         LET l_gzbe_save.gzbe005 = '2'
+      WHEN 'TEXT'
+         LET l_gzbe_save.gzbe005 = '1'
+      WHEN 'FILE'  #不會在此ACTION中儲存檔案
+         LET l_gzbe_save.gzbe005 = '3'
+         RETURN
+   END CASE
+   LET l_gzbe007 = l_save_msg.message
+   IF l_save_msg.type != 'FILE' THEN
+      LET l_gzbe_save.gzbe001 = g_user
+      LET l_gzbe_save.gzbe002 = l_save_msg.target
+      LET l_gzbe_save.gzbe003 = cl_get_current()
+      LET l_gzbe_save.gzbe004 = IIF( l_save_msg.is_online == "0", 'N', 'Y')
+      LET l_gzbe_save.gzbe007 = l_gzbe007
+      LET l_gzbe_save.gzbe008 = l_gzbe008
+      LET l_gzbe_save.gzbeent = g_enterprise
+      INSERT INTO gzbe_t VALUES(l_gzbe_save.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'INSERT:'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+   END IF
+   FREE l_gzbe007
+   FREE l_gzbe008
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_chat_upload_file" order="35" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 上傳檔案
+# Memo...........:
+# Usage..........: CALL azzi002_chat_upload_file()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 2015/04/17 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_chat_upload_file(p_json)
+   DEFINE p_json        STRING
+   DEFINE l_file        STRING
+   DEFINE lr_file        STRING,
+          lr_file_seq    STRING,
+          lr_file_target STRING
+          
+   IF ui.interface.getFrontEndName() == "GWC" THEN
+      OPEN WINDOW azzi002_s01_w WITH FORM cl_ap_formpath("azz","azzi002_s01")
+      
+      DIALOG ATTRIBUTES(UNBUFFERED=TRUE)
+         INPUT l_file FROM upload_file ATTRIBUTES(WITHOUT DEFAULTS=TRUE)
+         END INPUT
+         
+         ON ACTION upload
+            CALL azzi002_chat_save_file(l_file, p_json) RETURNING lr_file, lr_file_seq, lr_file_target
+            EXIT DIALOG
+            
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         ON ACTION EXIT
+            LET INT_FLAG = TRUE
+            EXIT DIALOG            
+      END DIALOG
+      
+      CLOSE WINDOW azzi002_s01_w
+      
+      IF INT_FLAG == TRUE THEN
+         LET l_file = NULL
+         LET INT_FLAG = FALSE
+      END IF
+      
+   ELSE  #GDC直接開啟檔案選擇對話框選檔
+      CALL ui.interface.frontcall("standard", "openfile", ["", "All Files", "*.*", "Select File"], [l_file])
+      CALL azzi002_chat_save_file(l_file, p_json) RETURNING lr_file, lr_file_seq, lr_file_target
+   END IF
+
+   RETURN lr_file, lr_file_seq, lr_file_target
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_chat_send_file" order="36" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 發送檔案訊息回客戶端
+# Memo...........:
+# Usage..........: CALL azzi002_chat_send_file(p_fname,  p_seq, p_target)
+#                  RETURNING none
+# Input parameter: p_fname   檔案名稱
+#                : p_seq     檔案序號
+#                : p_target  發送對象
+# Return code....: none
+# Date & Author..: 2015/04/20 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_chat_send_file(p_fname,p_seq,p_target)
+   DEFINE p_fname    STRING,
+          p_seq      STRING,
+          p_target   STRING
+   DEFINE l_r        RECORD
+            file_name   STRING,
+            file_seq    STRING,
+            target      STRING
+                     END RECORD
+   LET l_r.file_name = p_fname
+   LET l_r.file_seq  = p_seq
+   LET l_r.target    = p_target
+   
+   CALL azzi002_clean_wc_properties("wc_chat")
+   CALL azzi002_property_comp("wc_chat", "file_msg", util.JSON.stringify(l_r)) 
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_chat_save_file" order="37" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_chat_save_file(p_file,p_json)
+   DEFINE p_file        STRING,
+          p_json        STRING
+   DEFINE l_save_msg    RECORD      #儲存訊息
+            target         STRING,  #對象
+            is_online      STRING,  #是否在線
+            seq            STRING   #時間序
+                        END RECORD
+   DEFINE l_file        STRING,
+          l_file_dst    STRING
+   DEFINE l_gzbe_t      RECORD LIKE gzbe_t.*
+   DEFINE l_gzbe007     TEXT,
+          l_gzbe008     BYTE
+   DEFINE l_basename    STRING,
+          l_seq         STRING
+   DEFINE l_sb          base.StringBuffer
+   
+   LOCATE l_gzbe007     IN MEMORY
+   LOCATE l_gzbe008     IN MEMORY
+   
+   CALL util.JSON.parse(p_json, l_save_msg)
+   LET l_file = p_file
+   
+   IF l_file IS NOT NULL THEN
+
+      LET l_file_dst = os.Path.join(FGL_GETENV("TEMPDIR"), l_save_msg.target || ".tmp")
+      
+      CALL FGL_GETFILE(l_file, l_file_dst)
+      CALL l_gzbe008.readFile(l_file_dst)
+
+      LET l_sb = base.StringBuffer.create()
+      CALL l_sb.append(l_file)
+      CALL l_sb.replace('\\','/',0)
+      LET l_file = l_sb.toString()
+
+      LET l_basename = os.Path.basename(l_file)
+      LET l_seq = l_save_msg.seq || l_save_msg.target
+      
+      LET l_gzbe_t.gzbeent = g_enterprise
+      LET l_gzbe_t.gzbe001 = g_user
+      LET l_gzbe_t.gzbe002 = l_save_msg.target
+      LET l_gzbe_t.gzbe003 = cl_get_current()
+      LET l_gzbe_t.gzbe004 = IIF( l_save_msg.is_online == "0", 'N', 'Y')
+      LET l_gzbe_t.gzbe005 = '3'
+      LET l_gzbe_t.gzbe006 = l_basename || "|" || l_seq
+      LET l_gzbe_t.gzbe007 = l_gzbe007
+      LET l_gzbe_t.gzbe008 = l_gzbe008
+
+      INSERT INTO gzbe_t VALUES( l_gzbe_t.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'INSERT:'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      ELSE
+      
+      END IF
+   END IF
+   
+   FREE l_gzbe007
+   FREE l_gzbe008
+   
+   RETURN l_basename, l_seq, l_save_msg.target
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi002_chat_get_file" order="38" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi002_chat_get_file(p_fid)
+   DEFINE p_fid         LIKE gzbe_t.gzbe006
+   DEFINE l_gzbe008     BYTE
+   DEFINE l_gzbe006     LIKE gzbe_t.gzbe006
+   DEFINE l_gzbe006_t   LIKE gzbe_t.gzbe006
+   DEFINE l_file        STRING
+   DEFINE l_file_tmp    STRING
+   DEFINE l_file_dst    STRING
+   
+   LOCATE l_gzbe008 IN MEMORY
+   
+   LET l_gzbe006_t = '%', p_fid
+   SELECT gzbe006, gzbe008 INTO l_gzbe006, l_gzbe008 FROM gzbe_t
+      WHERE gzbeent = g_enterprise
+        AND (gzbe002 = g_user OR gzbe001 = g_user)
+        AND gzbe006 LIKE l_gzbe006_t
+   
+   IF NOT cl_null(l_gzbe006) THEN
+      LET l_file = l_gzbe006
+      LET l_file = l_file.subString(1, l_file.getIndexOf('|', 1) -1)
+      IF NOT cl_null(l_file) THEN
+         LET l_file_tmp = os.Path.join(FGL_GETENV("TEMPDIR"), l_file)
+         LET l_file_dst = "C:/", l_file
+         IF ui.interface.getFrontEndName() == "GDC" THEN
+            LET l_file_dst = WINSAVEFILE("C:/"||l_file, "All", "*.*", "Save")
+         END IF
+         IF NOT cl_null(l_file_dst) THEN
+            CALL l_gzbe008.writeFile(l_file_tmp)
+            CALL FGL_PUTFILE(l_file_tmp, l_file_dst)
+         END IF
+      END IF
+   END IF
+   
+   
+   FREE l_gzbe008
+END FUNCTION]]>
+  </point>
+  <point name="free_style.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[TYPE t_cway RECORD
+               c_type           STRING,  #連絡方式
+               c_content        STRING   #連絡內容
+            END RECORD]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT util
+IMPORT security
+IMPORT JAVA java.net.URLEncoder
+IMPORT JAVA java.net.URLDecoder]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_sql                  STRING
+DEFINE g_forupd_sql           STRING
+DEFINE gwin_curr              ui.Window                     #Current Window
+DEFINE gfrm_curr              ui.Form                       #Current Form
+DEFINE g_current_idx          LIKE type_t.num10
+DEFINE g_current_row          LIKE type_t.num5              #Browser所在筆數
+DEFINE g_current_cnt          LIKE type_t.num5              #Browser所在筆數
+DEFINE g_wc                   STRING
+DEFINE g_browser_cnt          LIKE type_t.num5              #Browser總筆數
+DEFINE g_browser_idx          LIKE type_t.num5              #Browser目前所在筆數
+DEFINE g_no_ask              LIKE type_t.num5
+DEFINE g_gzbe_m               RECORD
+         gzbe001     LIKE gzbe_t.gzbe001,
+         gzbe002     LIKE gzbe_t.gzbe002,
+         gzbe003     LIKE gzbe_t.gzbe003
+                              END RECORD]]>
+  </point>
+  <point name="input.a.itch001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_itch_m.itch001) AND NOT cl_null(g_itch_m.itch002) AND NOT cl_null(g_itch_m.itch003) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_itch_m.itch001 != g_itch001_t  OR g_itch_m.itch002 != g_itch002_t  OR g_itch_m.itch003 != g_itch003_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM itch_t WHERE "||"itchent = '" ||g_enterprise|| "' AND "||"itch001 = '"||g_itch_m.itch001 ||"' AND "|| "itch002 = '"||g_itch_m.itch002 ||"' AND "|| "itch003 = '"||g_itch_m.itch003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.itch002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_itch_m.itch001) AND NOT cl_null(g_itch_m.itch002) AND NOT cl_null(g_itch_m.itch003) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_itch_m.itch001 != g_itch001_t  OR g_itch_m.itch002 != g_itch002_t  OR g_itch_m.itch003 != g_itch003_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM itch_t WHERE "||"itchent = '" ||g_enterprise|| "' AND "||"itch001 = '"||g_itch_m.itch001 ||"' AND "|| "itch002 = '"||g_itch_m.itch002 ||"' AND "|| "itch003 = '"||g_itch_m.itch003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.itch003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_itch_m.itch001) AND NOT cl_null(g_itch_m.itch002) AND NOT cl_null(g_itch_m.itch003) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_itch_m.itch001 != g_itch001_t  OR g_itch_m.itch002 != g_itch002_t  OR g_itch_m.itch003 != g_itch003_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM itch_t WHERE "||"itchent = '" ||g_enterprise|| "' AND "||"itch001 = '"||g_itch_m.itch001 ||"' AND "|| "itch002 = '"||g_itch_m.itch002 ||"' AND "|| "itch003 = '"||g_itch_m.itch003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_wcpath      STRING]]>
+  </point>
+  <point name="main.define_sql" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   
+   IF ui.Interface.getFrontEndName() == "GDC" THEN
+      LET l_wcpath = FGL_GETENV("FGLASIP"),"/components"
+      CALL ui.interface.frontCall("standard", "setwebcomponentpath",[l_wcpath],[])
+   END IF
+
+   LET g_forupd_sql = " SELECT gzbe001,gzbe002,gzbe003"]]>
+  </point>
+  <point name="main.init" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_hidden_4tm = TRUE  #不使用TopMenu
+   LET g_hidden_4tb = TRUE  #不使用ToolBar]]>
+  </point>
+  <section id="azzi002.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000000
+#+ 
+#+ Filename...: azzi002
+#+ Description: 線上交談
+#+ Creator....: 01274(2015-02-24 14:31:42)
+#+ Modifier...: 01274(2015-02-24 16:00:29) -SD/PR-
+]]>
+  </section>
+  <section id="azzi002.global" ver="3" status="" src="s" readonly="">
+    <![CDATA[#應用 i00 樣板自動產生(Version:3)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzi002.main" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define (標準程式用)
+   {<point name="main.define" edit="s"/>}
+   #end add-point    
+   #add-point:main段define (客製程式用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE azzi002_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_azzi002 WITH FORM cl_ap_formpath("azz",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL azzi002_init()
+ 
+      #進入選單 Menu (='N')
+      CALL azzi002_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_azzi002
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+  </section>
+  <section id="azzi002.other_function" ver="2" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+</add_points>

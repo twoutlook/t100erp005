@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axcp120" std_prog="axcp120" erpver="1.0" ver="4" module="AXC" type="M" booking="Y" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：1.按法人按期计算该法人下的料件的成本阶
+                2.成本阶是用于成本计算先后顺序的主要依据．
+               
+作業功能：按法人计算料件的成本阶
+作業類型：批次作業
+輸入模式： 
+資料來源：料件据点财务资料檔(imag_t)
+          料件资讯档(imac_t)
+          成本分群成本阶范围设定档(xcbc_t)
+
+
+处理逻辑：
+计算成本阶的逻辑：
+依法人来计算料件的成本阶，先找出法人范围，然后按单个法人找出料件范围，一个一个料件计算成本阶。
+先按条件找出法人组织，然后按每个法人组织进行数据处理。
+  按法人组织（xcbbsite）、年度（xcbb001）和期别（xcbb002）删除料件据点成本期数据档(xcbb_file)的数据。
+  1.以“低阶码计算成本阶”：
+    1.1 用年度（yy）、期别(mm)和按法人从料件据点财务资料档（imag_t）和料件资讯档(imac_t)、商品料件主档（imaa_t）、料件成本要素设置档(xcax_t)取出法人组织(imagsite)、料号(imag001)、成本单位（imaa006）、成本阶(imag013)、低阶码(imac003)、发料低阶码字段（先默认为“0”）、当月入联产品否(先默认“N”)、成本分群(imag011)、成本次要素(xcax002)、主分群码(imaa003)。
+      1.1.1把料件的低阶码(imac003)更新到成本阶栏位(xcbb005)
+      1.1.2如果该料件的来源码是采购性质，则成本阶(xcbb005)=99。
+      1.1.3如果该料件是采购性质，但有开工单的话成本阶(xcbb005)=98
+      1.1.4判断该料件是否是当月入库联产品否，如果是则把当月入库联产品否（xcbb008）更新为“Y”
+      1.1.5判断是否“按成本分群的成本阶范围设定”
+        1.1.5.1 选择"Y",根据料号在该法人所属的成本分群(xcax002)和法人(imagsite)去法人成本分群成本阶范围设定档(xcbc_t)中找出成本阶范围（xcbc002、xcbc003）。
+        1.1.5.2 如果成本阶(xcbb005)在成本阶范围内则不改变成本阶(xcbb005)的值
+        1.1.5.3 如果成本阶(xcbb005)不在成本阶范围内，大于xcbc003的，则取xcbc003的值；小于xcbc002的，则取xcbc002。
+      1.1.6判断料件成本阶（xcbb005）是否为0，如果是0则走下列步骤
+        1.1.6.1 判断该料件是否有BOM，如果有BOM就退出；没有BOM再找其是否有开工单，如果没有就退出。
+        1.1.6.2 该料件有工单没有BOM的成本阶（xcbb005）为0的，再去按工单和临时档找出其最小的成本阶，如果成本阶大于0，则新的成本阶更新为最小成本阶减一；如果最小成本阶等于0，那么新的成本阶=97。
+      1.1.7如果该料件是当月入库联产品（xcbb008='Y'）的，判断其成本阶是否比主件(注意会有多个主件,取最大成本阶的主件)的成本阶大，如果比主件的成本阶大就把联产品的成本阶更新为主件的成本阶。
+      1.1.8把集团码（xcbbent）法人组织（xcbbsite）、年度（xcbb001）、期别（xcbb002）、料件（xcbb003）、成本单位（xcbb004）、成本阶（xcbb005）、低阶码（xcbb006）、发料成本阶（xcbb007）、当月入联产品否（xcbb008）、成本分群（xcbb009）、成本次要素（xcbb010）和主分群码（xcbb011）至料件据点成本资料期别档(xcbb_t)
+    1.2计算逻辑结束
+ 2.以"发料计算成本阶"
+　2.1把该法人组织（xcbbsite）的上一期的xcbb_t的数据复制到本年度（xcbb001）和本期别（xcbb002）的xcbb_t中。
+  2.2按法人组织(xcbbsite)和发料扣账日期在年度(xcbb001)和期别(xcbb002)之内的所有发料单及其对应的工单找出唯一的主件料号和发料料号组合，把主件料号、发料料号insert到临时表中，同时把在xcbb_t中没有的主件料号和发料料号的资料insert到xcbb_t中[集团码（xcbbent）、法人组织（xcbbsite）、年度（xcbb001）、期别（xcbb002）、料件（xcbb003）、成本单位（xcbb004）、成本阶（xcbb005）、低阶码（xcbb006）、发料成本阶（xcbb007）、当月入联产品否（xcbb008）、成本分群（xcbb009）、成本次要素（xcbb010）和主分群码（xcbb011）这些字段]。
+       下面这段写法是TOP GP版本的，供参考
+        SELECT DISTINCT sfb05,sfe07 FROM sfb_file a,sfe_file 
+        WHERE sfb01=sfe01 
+          AND sfb05<>sfe07                #排除返工工单/拆件工单A领A的情况
+          AND sfb87='Y' AND sfbacti='Y' 
+          AND EXISTS               #本月发料单对应的工单涉及到的所有料都要算到
+             (SELECT sfb01 FROM sfb_file,sfe_file 
+               WHERE sfb01=sfe01 AND sfb05<>sfe07  
+             AND sfb87='Y' AND sfbacti='Y' 
+             AND sfb01= a.sfb01 
+             AND sfe04 g_bdate AND g_edate )
+         ORDER BY sfb05,sfe07
+  2.3从临时档抓出主件料号和发料料号进行成本阶计算.
+    2.3.1其逻辑和按BOM计算低阶码一样（参考BOM低阶码计算逻辑），把低阶码计算的值直接更新到xcbb_t的成本阶字段
+    2.3.2在参考BOM低阶码计算的逻辑中加入判断是否“按成本分群的成本阶范围设定”的处理段
+      2.3.2.1 选择"Y",根据料号在该法人所属的成本分群(xcax002)和法人(imagsite)去法人成本分群成本阶范围设定档(xcbc_t)中找出成本阶范围（xcbc002、xcbc003）。
+        2.3.2.1.1 如果成本阶(xcbb005)在成本阶范围内则不改变成本阶(xcbb005)的值
+        2.3.2.1.2 如果成本阶(xcbb005)不在成本阶范围内，大于xcbc003的，则取xcbc003的值；小于xcbc002的，则取xcbc002。
+    2.3.3判断该料件是否是当月入库联产品否，如果是则把当月入库联产品否（xcbb008）更新为“Y”。
+结束一个法人的成本阶计算，继续下一个法人的成本阶计算。
+]]>
+  </all>
+  <field cite_std="N" name="check" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[可选值为"Y/N".
+默认为"Y",可以修改为"N".
+]]>
+  </field>
+  <field cite_std="N" name="imagsite" ver="1" src="s" column="imagsite" table="imag_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[ ●欄位控管：
+     資料欄位:[T.法人帳務設定檔ooidsite]
+              可Display可Input
+     預設值:無 
+     校驗:1.不允許空白
+
+  
+   開窗設定:
+ 查询時: 取[F.組織基本資料檔ooef_t]，為"法人" 
+     CHECK: 須存在於組織資料檔(ooef_t)，为法人组织，且為"法人＂者。]]>
+  </field>
+  <field cite_std="N" name="level" ver="4" src="s" column="num5" table="type_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="20" max_compare="&lt;=" max="99" min_compare="&gt;=" min="0" can_edit="Y" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="month" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[1.根据法人组织找到主账套
+2.預設主帳套的現行會計年度期別]]>
+  </field>
+  <field cite_std="N" name="order" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：成本阶来源
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:"1.依BOM低阶码"
+    SCC:8913
+     校驗:1.不允許空白
+             
+]]>
+  </field>
+  <field cite_std="N" name="year" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[1.根据法人组织找到主账套
+2.預設主帳套的現行會計年度期別]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="4" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="imagsite_desc" src="s" depend_field="imagsite" correspon_key="imagent,imagsite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="check" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="imagsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="level" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="month" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="order" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="year" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="條件選項" lstr=""/>
+    <sfield name="lbl_imagsite" text="法人組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_year" text="成本計算年期" lstr=""/>
+    <sfield name="lbl_month" text="/" lstr=""/>
+    <sfield name="lbl_order" text="成本階計算來源" lstr=""/>
+    <sfield name="lbl_level" text="計算階數" lstr=""/>
+    <sfield name="lbl_check" text="按材料類型成本類型範圍設定" lstr=""/>
+    <sfield name="group_input" text="其他條件" lstr=""/>
+    <sfield name="lbl_disp1" text="1.本作業將參考法人組織料件檔的低階碼字段更新至該檔的料件成本階字段" lstr=""/>
+    <sfield name="lbl_disp2" text="2.原物料部分" lstr=""/>
+    <sfield name="lbl_disp3" text="針對單一料件（即無BOM）者一律為98或99階" lstr=""/>
+    <sfield name="lbl_disp4" text="依其本月是否開立重工工單區分為98階及99階" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

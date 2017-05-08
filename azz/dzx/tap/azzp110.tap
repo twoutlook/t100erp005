@@ -1,0 +1,3497 @@
+<add_points prog="azzp110" std_prog="azzp110" erpver="1.0" module="AZZ" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.azzp110_ins_gzgdl_zhtw" cite_std="N" status="d" ver="" src="s" new="Y" order="41">
+<![CDATA[
+################################################################################
+# Descriptions...: 報表樣板說明多語言檔(GR+XtraGrid)
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzgdl_zhtw()
+#                  RETURNING
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzgdl_zhtw()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzgdl002 LIKE gzgdl_t.gzgdl002
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzgdl002 FROM gzgdl_t WHERE gzgdlent = ",g_enterprise," AND gzgdl001 = 'zh_TW'  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzgdl_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzgdl_zhtw_cs INTO lc_gzgdl002
+       IF cl_null(lc_gzgdl002) THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzgdl002) RETURNING lc_gzgdl002
+       IF NOT cl_chk_tworcn("zh_TW",lc_gzgdl002,0) THEN
+          CONTINUE FOREACH
+       END IF
+
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_gzgdl002
+       IF li_row = 0 THEN
+          INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzgdl002,'Y','N')
+          LET li_cnt = li_cnt + 1
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzge_zhtw" cite_std="N" status="d" ver="" src="s" new="Y" order="42">
+<![CDATA[
+################################################################################
+# Descriptions...: 報表樣板多語言紀錄檔(GR+XtraGrid)
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzge_zhtw()
+#                  RETURNING 
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzge_zhtw()
+      DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzge003  LIKE gzge_t.gzge003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzge003 FROM gzge_t WHERE gzgeent = ",g_enterprise," AND gzge002 = 'zh_TW' "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzge_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzge_zhtw_cs INTO lc_gzge003
+       IF cl_null(lc_gzge003) THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzge003) RETURNING lc_gzge003
+       IF NOT cl_chk_tworcn("zh_TW",lc_gzge003,0) THEN
+          CONTINUE FOREACH
+       END IF
+
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_gzge003
+       IF li_row = 0 THEN 
+          INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzge003,'Y','N')
+          LET li_cnt = li_cnt + 1   
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzgdl_twcn" cite_std="N" status="d" ver="" src="s" new="Y" order="43">
+<![CDATA[
+################################################################################
+# Descriptions...: 檢查 gzgdl 簡繁互用
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzgdl_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzgdl_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzgdl000 LIKE gzgdl_t.gzgdl000
+   DEFINE lc_gzgdl001 LIKE gzgdl_t.gzgdl001
+   DEFINE lc_gzgdl002 LIKE gzgdl_t.gzgdl002
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzgdl000,gzgdl001,gzgdl002 FROM gzgdl_t ",
+                " WHERE gzgdlent = ",g_enterprise," AND (gzgdl001 = 'zh_TW' OR gzgdl001 = 'zh_CN' )",
+                " ORDER BY gzgdl000,gzgdl001  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzgdl_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzgdl_twcn_cs INTO lc_gzgdl000,lc_gzgdl001,lc_gzgdl002
+      IF cl_null(lc_gzgdl002) THEN
+         CONTINUE FOREACH
+      END IF
+      
+      CALL azzp110_trim(lc_gzgdl002) RETURNING lc_gzgdl002
+      IF NOT cl_chk_tworcn(lc_gzgdl001 CLIPPED,lc_gzgdl002 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_gzgdl000:",lc_gzgdl000,"   lc_gzgdl001:",lc_gzgdl001,"   lc_gzgdl002:",lc_gzgdl002  
+            
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH  
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzge_twcn" cite_std="N" status="d" ver="" src="s" new="Y" order="44">
+<![CDATA[
+################################################################################
+# Descriptions...: 檢查 gzge 簡繁互用
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzge_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzge_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzge000 LIKE gzge_t.gzge000
+   DEFINE lc_gzge001 LIKE gzge_t.gzge001
+   DEFINE lc_gzge002 LIKE gzge_t.gzge002
+   DEFINE lc_gzge003 LIKE gzge_t.gzge003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzge000,gzge001,gzge002,gzge003 FROM gzge_t ",
+                " WHERE gzgeent = ",g_enterprise," AND (gzge002 = 'zh_TW' OR gzge002 = 'zh_CN') ",
+                " ORDER BY gzge000,gzge001,gzge002  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzge_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzge_twcn_cs INTO lc_gzge000,lc_gzge001,lc_gzge002,lc_gzge003
+      IF cl_null(lc_gzge003) THEN
+         CONTINUE FOREACH
+      END IF
+      CALL azzp110_trim(lc_gzge003) RETURNING lc_gzge003
+      IF NOT cl_chk_tworcn(lc_gzge002 CLIPPED,lc_gzge003 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_gzge000:",lc_gzge000,"   lc_gzge001:",lc_gzge001,"   lc_gzge002:",lc_gzge002 ," lc_gzge003:",lc_gzge003  
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH  
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzgdl" cite_std="N" status="d" ver="" src="s" new="Y" order="45">
+<![CDATA[
+################################################################################
+# Descriptions...: 匯出 gzgdl 所有語言除了zh_TW
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzgdl()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzgdl()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzgdl000     LIKE gzgdl_t.gzgdl000
+   DEFINE lc_gzgdl002_tw  LIKE gzgdl_t.gzgdl002
+   DEFINE lc_gzgdl002_old LIKE gzgdl_t.gzgdl002
+   DEFINE lc_gzgdl002_new LIKE gzgdl_t.gzgdl002
+  
+
+   LET ls_sql = "SELECT gzgdl000,gzcal002 FROM gzgdl_t WHERE gzgdl001 = 'zh_TW' AND gzgdlent = ",g_enterprise ," ORDER BY gzgdl001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy()  #除了zh_TW 之外
+
+   DECLARE exp_gzgdl_cs CURSOR FROM ls_sql
+   FOREACH exp_gzgdl_cs INTO lc_gzgdl000,lc_gzgdl002_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzgdl002_tw CLIPPED,"' "
+         PREPARE s17 FROM ls_sql_gzoz
+         EXECUTE s17 INTO lc_gzgdl002_new
+
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_gzgdl002_new) THEN
+            SELECT gzgdl002 INTO lc_gzgdl002_old FROM gzgdl_t
+             WHERE gzgdlent = g_enterprise 
+               AND gzgdl000 = lc_gzgdl000
+               AND gzgdl001 = la_gzzy[li_cnt].gzzy001
+               
+            IF SQLCA.SQLCODE THEN
+               
+               INSERT INTO gzgdl_t(gzgdlent,gzgdl000,gzgdl001,gzgdl002)
+                  VALUES(g_enterprise,lc_gzgdl000,la_gzzy[li_cnt].gzzy001,lc_gzgdl002_new)
+               DISPLAY "INSERT sqlca.sqlcode ",sqlca.sqlcode , " g_enterprise:",g_enterprise , " lc_gzgdl000:",lc_gzgdl000 
+            ELSE
+               IF cl_null(lc_gzgdl002_old) THEN
+                 UPDATE gzgdl_t SET gzgdl002 = lc_gzgdl002_new
+                  WHERE gzgdlent = g_enterprise 
+                    AND gzgdl000 = lc_gzgdl000 
+                    AND gzgdl001 = la_gzzy[li_cnt].gzzy001
+                 DISPLAY "UPDATE sqlca.sqlcode ",sqlca.sqlcode , " g_enterprise:",g_enterprise , " lc_gzgdl000:",lc_gzgdl000 
+               END IF
+            END IF
+         END IF
+         FREE s17
+
+      END FOR
+   END FOREACH  
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzge" cite_std="N" status="d" ver="" src="s" new="Y" order="46">
+<![CDATA[
+################################################################################
+# Descriptions...: 匯出 gzge 所有語言除了zh_TW 
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzge()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzge()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzge000     LIKE gzge_t.gzge000
+   DEFINE lc_gzge001     LIKE gzge_t.gzge001
+   DEFINE lc_gzge003_tw  LIKE gzge_t.gzge003
+   DEFINE lc_gzge003_old LIKE gzge_t.gzge003
+   DEFINE lc_gzge003_new LIKE gzge_t.gzge003
+   DEFINE lc_gzgecrtid   LIKE gzge_t.gzgecrtid
+   DEFINE lc_gzgecrtdp   LIKE gzge_t.gzgecrtdp
+   DEFINE lc_gzgecrtdt   DATETIME YEAR TO SECOND
+   DEFINE lc_gzgemodid   LIKE gzge_t.gzgemodid
+   DEFINE lc_gzgemoddt   DATETIME YEAR TO SECOND
+   DEFINE lc_gzgeownid   LIKE gzge_t.gzgeownid
+   DEFINE lc_gzgeowndp   LIKE gzge_t.gzgeowndp
+
+   LET lc_gzgeownid = g_user
+   LET lc_gzgeowndp = g_dept
+   LET lc_gzgecrtid = g_user
+   LET lc_gzgecrtdp = g_dept
+   LET lc_gzgecrtdt = cl_get_current()
+
+   LET lc_gzgemodid = g_user
+   LET lc_gzgemoddt = cl_get_current()
+   
+   
+   LET ls_sql = "SELECT gzge000,gzge001,gzge003 FROM gzge_t WHERE gzgeent = ",g_enterprise,"gzge001 = 'zh_TW' ORDER BY gzge000,gzge001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy()  #除了zh_TW 之外
+
+   DECLARE exp_gzge_cs CURSOR FROM ls_sql
+   FOREACH exp_gzge_cs INTO lc_gzge000,lc_gzge001,lc_gzge003_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzge003_tw CLIPPED,"' "
+         PREPARE s18 FROM ls_sql_gzoz
+         EXECUTE s18 INTO lc_gzge003_new
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_gzge003_new) THEN
+            SELECT gzge003 INTO lc_gzge003_old FROM gzge_t
+             WHERE gzgeent = g_enterprise 
+               AND gzge000 = lc_gzge000
+               AND gzge001 = lc_gzge001
+               AND gzge002 = la_gzzy[li_cnt].gzzy001
+               
+            IF SQLCA.SQLCODE THEN
+               
+               INSERT INTO gzge_t(gzgestus,gzgeent,gzge000,gzge001,gzge002,gzge003,
+                                  gzgecrtid,gzgecrtdp,gzgecrtdt,gzgeownid,gzgeowndp)
+                  VALUES('Y',g_enterprise,lc_gzge000,lc_gzge001,la_gzzy[li_cnt].gzzy001,lc_gzge003_new,
+                         lc_gzgecrtid,lc_gzgecrtdp,lc_gzgecrtdt,lc_gzgeownid,lc_gzgeowndp)
+            ELSE
+               IF cl_null(lc_gzge003_old) THEN
+                 UPDATE gzge003_t SET gzge003 = lc_gzge003_new,
+                                      gzgemodid = lc_gzzdmodid,gzgemoddt = lc_gzzdmoddt
+                  WHERE gzgeent = g_enterprise 
+                    AND gzge000 = lc_gzge000
+                    AND gzge001 = lc_gzge001
+                    AND gzge002 = la_gzzy[li_cnt].gzzy001
+
+                  
+               END IF
+            END IF
+         END IF
+         FREE s18
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_dzeal_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 從表格名稱insert到字典檔
+# Memo...........:
+# Usage..........: CALL azzp110_ins_dzeal_zhtw()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_dzeal_zhtw()
+    DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_dzeal003 LIKE dzeal_t.dzeal003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT dzeal003 FROM dzeal_t WHERE dzeal002 = 'zh_TW'"
+   LET li_cnt = 1
+
+   DECLARE azzp110_dzea_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_dzea_zhtw_cs INTO lc_dzeal003
+       IF cl_null(lc_dzeal003) THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白
+       CALL azzp110_trim(lc_dzeal003) RETURNING lc_dzeal003
+       IF NOT cl_chk_tworcn("zh_TW",lc_dzeal003,0) THEN
+          CONTINUE FOREACH
+       END IF
+
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_dzeal003
+       IF li_row = 0 THEN
+          INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_dzeal003,'Y','N')
+          LET li_cnt = li_cnt + 1
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_dzebl_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 從欄位名稱insert到字典檔
+# Memo...........:
+# Usage..........: CALL azzp110_ins_dzebl_zhtw()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_dzebl_zhtw()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_dzebl003 LIKE dzebl_t.dzebl003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT dzebl003 FROM dzebl_t WHERE dzebl002 = 'zh_TW'"
+   LET li_cnt = 1
+
+   DECLARE azzp110_dzeb_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_dzeb_zhtw_cs INTO lc_dzebl003
+       IF cl_null(lc_dzebl003) THEN
+          CONTINUE FOREACH
+       END IF
+
+        #去掉前後空白
+       CALL azzp110_trim(lc_dzebl003) RETURNING lc_dzebl003
+       
+       IF NOT cl_chk_tworcn("zh_TW",lc_dzebl003,0) THEN
+          CONTINUE FOREACH
+       END IF
+       
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_dzebl003
+       IF li_row = 0 THEN
+          INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_dzebl003,'Y','N')
+          LET li_cnt = li_cnt + 1
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzzal_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 程式/作業名稱 insert 到字典檔
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzzal_zhtw()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzzal_zhtw()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzzal003 LIKE gzzal_t.gzzal003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzzal003 FROM gzzal_t WHERE gzzal002 = 'zh_TW'"
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzzal_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzzal_zhtw_cs INTO lc_gzzal003
+       IF cl_null(lc_gzzal003) THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzzal003) RETURNING lc_gzzal003
+       IF NOT cl_chk_tworcn("zh_TW",lc_gzzal003,0) THEN
+          CONTINUE FOREACH
+       END IF
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_gzzal003
+       IF li_row = 0 THEN
+          INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzzal003,'Y','N')
+          #display "sqlca.code ",SQLCA.SQLCODE 
+          LET li_cnt = li_cnt + 1
+       END IF
+   END FOREACH
+
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzzd_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 畫面元件 insert 到字典檔
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzzd_zhtw()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzzd_zhtw()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_cnt2      LIKE type_t.num10
+   DEFINE lc_gzzd003  LIKE gzzd_t.gzzd003
+   DEFINE lc_gzzd005  LIKE gzzd_t.gzzd005
+   DEFINE lc_gzzd006  LIKE gzzd_t.gzzd006
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzzd003,gzzd005,gzzd006 FROM gzzd_t WHERE gzzd002 = 'zh_TW'"
+   LET li_cnt = 1
+   LET li_cnt2 = 1
+   DECLARE azzp110_gzzd_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzzd_zhtw_cs INTO lc_gzzd003,lc_gzzd005,lc_gzzd006
+       IF cl_null(lc_gzzd005) AND cl_null(lc_gzzd006)  THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白 
+       CALL azzp110_trim(lc_gzzd005) RETURNING lc_gzzd005
+       IF NOT cl_null(lc_gzzd005) THEN 
+          
+          IF cl_chk_tworcn("zh_TW",lc_gzzd005,0) THEN
+             SELECT COUNT(*) INTO li_row FROM gzoz_t
+                WHERE gzoz000 = lc_gzzd005
+
+             IF li_row = 0 THEN
+                INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzzd005,'Y','N')
+                LET li_cnt = li_cnt + 1
+             END IF   
+          END IF
+       END IF
+       #去掉前後空白 
+       CALL azzp110_trim(lc_gzzd006) RETURNING lc_gzzd006
+       IF NOT cl_null(lc_gzzd006) THEN 
+          
+          IF cl_chk_tworcn("zh_TW",lc_gzzd006,0) THEN
+             SELECT COUNT(*) INTO li_row FROM gzoz_t
+                WHERE gzoz000 = lc_gzzd006
+             IF li_row = 0 THEN
+                INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzzd006,'Y','N')           
+                LET li_cnt = li_cnt2 + 1
+             END IF   
+          END IF
+       END IF
+       
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzdfl_zhtw" cite_std="N" status="u" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 子畫面名稱 insert 到字典檔
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzdfl_zhtw()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzdfl_zhtw()
+    DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzdfl003 LIKE gzdfl_t.gzdfl003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzdfl003 FROM gzdfl_t WHERE gzdfl002 = 'zh_TW'"
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzdfl_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzdfl_zhtw_cs INTO lc_gzdfl003
+       IF cl_null(lc_gzdfl003) THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzdfl003) RETURNING lc_gzdfl003
+       
+       IF NOT cl_chk_tworcn("zh_TW",lc_gzdfl003,0) THEN
+          CONTINUE FOREACH
+       END IF
+       
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_gzdfl003
+       IF li_row = 0 THEN
+         INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzdfl003,'Y','N')
+          LET li_cnt = li_cnt + 1
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzzq_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 功能名稱 insert 到字典檔
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzzq_zhtw()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzzq_zhtw()
+    DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_cnt2      LIKE type_t.num10
+   DEFINE lc_gzzq004  LIKE gzzq_t.gzzq004
+   DEFINE lc_gzzq005  LIKE gzzq_t.gzzq005
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzzq004,gzzq005 FROM gzzq_t WHERE gzzq003 = 'zh_TW'"
+   LET li_cnt = 1
+   LET li_cnt2 = 1
+   DECLARE azzp110_gzzql_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzzql_zhtw_cs INTO lc_gzzq004,lc_gzzq005
+       IF cl_null(lc_gzzq004) AND cl_null(lc_gzzq005)  THEN
+          CONTINUE FOREACH
+       END IF
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzzq004) RETURNING lc_gzzq004
+       IF NOT cl_null(lc_gzzq004) THEN 
+          
+          IF cl_chk_tworcn("zh_TW",lc_gzzq004,0) THEN
+             SELECT COUNT(*) INTO li_row FROM gzoz_t
+                WHERE gzoz000 = lc_gzzq004
+
+             IF li_row = 0 THEN
+                INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzzq004,'Y','N')
+                LET li_cnt = li_cnt + 1
+             END IF   
+          END IF
+       END IF 
+    
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzzq005) RETURNING lc_gzzq005
+       
+       IF NOT cl_null(lc_gzzq005) THEN
+          IF cl_chk_tworcn("zh_TW",lc_gzzq005,0) THEN
+             SELECT COUNT(*) INTO li_row FROM gzoz_t
+                WHERE gzoz000 = lc_gzzq005
+             IF li_row = 0 THEN
+                INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzzq005,'Y','N')              
+                LET li_cnt2 = li_cnt2 + 1
+             END IF   
+          END IF
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzswl_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="7" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 參數分頁 insert 到字典檔
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzswl_zhtw()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzswl_zhtw()
+  DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzswl004 LIKE gzswl_t.gzswl004
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzswl004 FROM gzswl_t WHERE gzswl003 = 'zh_TW'"
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzswl_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzswl_zhtw_cs INTO lc_gzswl004
+       IF cl_null(lc_gzswl004) THEN
+          CONTINUE FOREACH
+       END IF
+
+        #去掉前後空白
+       CALL azzp110_trim(lc_gzswl004) RETURNING lc_gzswl004
+       
+       IF NOT cl_chk_tworcn("zh_TW",lc_gzswl004,0) THEN
+          CONTINUE FOREACH
+       END IF
+      
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_gzswl004
+       IF li_row = 0 THEN
+          INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzswl004,'Y','N')          
+          LET li_cnt = li_cnt + 1
+       END IF
+   END FOREACH
+
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzsxl_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="8" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 參數分項 insert 到字典檔
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzsxl_zhtw()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzsxl_zhtw()
+    DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzsxl005 LIKE gzsxl_t.gzsxl005
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzsxl005 FROM gzsxl_t WHERE gzsxl004 = 'zh_TW'"
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzsxl_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzsxl_zhtw_cs INTO lc_gzsxl005
+       IF cl_null(lc_gzsxl005) THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzsxl005) RETURNING lc_gzsxl005
+       
+       IF NOT cl_chk_tworcn("zh_TW",lc_gzsxl005,0) THEN
+          CONTINUE FOREACH
+       END IF
+       
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_gzsxl005
+       IF li_row = 0 THEN
+          INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzsxl005,'Y','N')          
+          LET li_cnt = li_cnt + 1
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzszl_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="9" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 參數名稱 insert 到字典檔
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzszl_zhtw()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzszl_zhtw()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_cnt2      LIKE type_t.num10
+   DEFINE lc_gzszl004 LIKE gzszl_t.gzszl004
+   DEFINE lc_gzszl005 LIKE gzszl_t.gzszl005
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzszl004,gzszl005 FROM gzszl_t WHERE gzszl003 = 'zh_TW'"
+   LET li_cnt = 1
+   LET li_cnt2 = 1
+   DECLARE azzp110_gzszl_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzszl_zhtw_cs INTO lc_gzszl004,lc_gzszl005
+       IF cl_null(lc_gzszl004) AND cl_null(lc_gzszl005) THEN
+          CONTINUE FOREACH
+       END IF
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzszl004) RETURNING lc_gzszl004
+       IF NOT cl_null(lc_gzszl004) THEN 
+          
+          IF cl_chk_tworcn("zh_TW",lc_gzszl004,0) THEN
+             SELECT COUNT(*) INTO li_row FROM gzoz_t
+                WHERE gzoz000 = lc_gzszl004
+             IF li_row = 0 THEN
+                INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzszl004,'Y','N')             
+                LET li_cnt = li_cnt + 1
+             END IF   
+          END IF
+       END IF 
+       #去掉前後空白 
+       CALL azzp110_trim(lc_gzszl005) RETURNING lc_gzszl005
+       IF NOT cl_null(lc_gzszl005) THEN 
+          
+          IF cl_chk_tworcn("zh_TW",lc_gzszl005,0) THEN
+             SELECT COUNT(*) INTO li_row FROM gzoz_t
+                WHERE gzoz000 = lc_gzszl005
+             IF li_row = 0 THEN
+                INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzszl005,'Y','N')              
+                LET li_cnt2 = li_cnt2 + 1
+             END IF   
+          END IF
+       END IF  
+
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzwel_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="10" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 選單名稱 insert 到字典檔
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzwel_zhtw()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzwel_zhtw()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzwel003 LIKE gzwel_t.gzwel003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzwel003 FROM gzwel_t WHERE gzwel002 = 'zh_TW'"
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzwel_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzwel_zhtw_cs INTO lc_gzwel003
+       IF cl_null(lc_gzwel003) THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzwel003) RETURNING lc_gzwel003
+
+       IF NOT cl_chk_tworcn("zh_TW",lc_gzwel003,0) THEN
+          CONTINUE FOREACH
+       END IF
+      
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_gzwel003
+       IF li_row = 0 THEN
+         INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzwel003,'Y','N')
+          
+          LET li_cnt = li_cnt + 1
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_upd_gzoz_tw2cn" cite_std="N" status="" ver="1" src="s" new="Y" order="11" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_upd_gzoz_tw2cn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_upd_gzoz_tw2cn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzoz000  LIKE gzoz_t.gzoz000
+   DEFINE lc_gzoz002  LIKE gzoz_t.gzoz002
+
+   LET ls_sql = "SELECT gzoz000 FROM gzoz_t WHERE gzoz002 IS NULL "
+   LET li_cnt = 1
+
+   DECLARE azzp110_upd_tw2cn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_upd_tw2cn_cs INTO lc_gzoz000
+
+       LET lc_gzoz002 = cl_trans_code_tw_cn("zh_CN",lc_gzoz000)
+       #DISPLAY LENGTH(lc_gzoz002),'UPD 簡體:',lc_gzoz002,"       FROM:",lc_gzoz000
+
+       UPDATE gzoz_t SET gzoz002=lc_gzoz002,gzoz102='Y' WHERE gzoz000=lc_gzoz000
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_trim" cite_std="N" status="" ver="1" src="s" new="Y" order="12" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 去掉前後空白
+# Memo...........:
+# Usage..........: CALL azzp110_trim(ps_str)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_trim(ps_str)
+   DEFINE ps_str  STRING 
+
+   LET ps_str = ps_str.trim()
+   
+   RETURN ps_str
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_dzeal" cite_std="N" status="" ver="1" src="s" new="Y" order="13" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_dzeal()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_dzeal()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_dzeal001     LIKE dzeal_t.dzeal001
+   DEFINE lc_dzeal003_tw   LIKE dzeal_t.dzeal003
+   DEFINE lc_dzeal003_old  LIKE dzeal_t.dzeal003
+   DEFINE lc_dzeal003_new  LIKE dzeal_t.dzeal003
+
+   LET ls_sql = "SELECT dzeal001,dzeal003 FROM dzeal_t WHERE dzeal002 = 'zh_TW' ORDER BY dzeal001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy() #除了zh_TW 之外
+
+   DECLARE exp_dzeal_cs CURSOR FROM ls_sql
+   FOREACH exp_dzeal_cs INTO lc_dzeal001,lc_dzeal003_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+
+         #字典檔找出該語言別資料
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_dzeal003_tw CLIPPED,"' "
+         PREPARE s2 FROM ls_sql_gzoz
+         EXECUTE s2 INTO lc_dzeal003_new
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_dzeal003_new) THEN
+            SELECT dzeal003 INTO lc_dzeal003_old FROM dzeal_t
+             WHERE dzeal001 = lc_dzeal001
+               AND dzeal002 = la_gzzy[li_cnt].gzzy001
+            IF SQLCA.SQLCODE THEN
+
+               #DISPLAY "INS:",lc_dzeal001," 002-",la_gzzy[li_cnt].gzzy001," 003-",lc_dzeal003_tw
+               INSERT INTO dzeal_t(dzeal001,dzeal002,dzeal003)
+                  VALUES(lc_dzeal001,la_gzzy[li_cnt].gzzy001,lc_dzeal003_new)
+            ELSE
+               IF cl_null(lc_dzeal003_old) THEN
+                 UPDATE dzeal_t SET dzeal003 = lc_dzeal003_new
+                  WHERE dzeal001 = lc_dzeal001 AND dzeal002 = la_gzzy[li_cnt].gzzy001
+                  
+               END IF
+            END IF
+         END IF
+         FREE s2
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_dzebl" cite_std="N" status="" ver="1" src="s" new="Y" order="14" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_dzebl()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_dzebl()
+    DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_dzebl001     LIKE dzebl_t.dzebl001
+   DEFINE lc_dzebl003_tw  LIKE dzebl_t.dzebl003
+   DEFINE lc_dzebl003_old LIKE dzebl_t.dzebl003
+   DEFINE lc_dzebl003_new LIKE dzebl_t.dzebl003
+
+   LET ls_sql = "SELECT dzebl001,dzebl003 FROM dzebl_t WHERE dzebl002 = 'zh_TW' ORDER BY dzebl001"
+
+   #取出語言種類與項目 
+   LET la_gzzy = azzp110_get_gzzy() #除了zh_TW 之外
+
+   DECLARE exp_dzebl_cs CURSOR FROM ls_sql
+   FOREACH exp_dzebl_cs INTO lc_dzebl001,lc_dzebl003_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #字典檔找出該語言別資料
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_dzebl003_tw CLIPPED,"' "
+         PREPARE s1 FROM ls_sql_gzoz
+         EXECUTE s1 INTO lc_dzebl003_new
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_dzebl003_new) THEN
+            SELECT dzebl003 INTO lc_dzebl003_old FROM dzebl_t
+             WHERE dzebl001 = lc_dzebl001
+               AND dzebl002 = la_gzzy[li_cnt].gzzy001
+            IF SQLCA.SQLCODE THEN
+              
+               INSERT INTO dzebl_t(dzebl001,dzebl002,dzebl003)
+                 VALUES(lc_dzebl001,la_gzzy[li_cnt].gzzy001,lc_dzebl003_new)
+            ELSE
+               IF cl_null(lc_dzebl003_old) THEN
+                 UPDATE dzebl_t SET dzebl003 = lc_dzebl003_new
+                  WHERE dzebl001 = lc_dzebl001 AND dzebl002 = la_gzzy[li_cnt].gzzy001
+                  
+               END IF
+            END IF
+         END IF
+         FREE s1
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzzal" cite_std="N" status="" ver="1" src="s" new="Y" order="15" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzzal()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzzal()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzzal001     LIKE gzzal_t.gzzal001
+   DEFINE lc_gzzal003_tw  LIKE gzzal_t.gzzal003
+   DEFINE lc_gzzal003_old LIKE gzzal_t.gzzal003
+   DEFINE lc_gzzal003_new LIKE gzzal_t.gzzal003
+
+   LET ls_sql = "SELECT gzzal001,gzzal003 FROM gzzal_t WHERE gzzal002 = 'zh_TW' ORDER BY gzzal001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy() #除了zh_TW 之外
+
+   DECLARE exp_gzzal_cs CURSOR FROM ls_sql
+   FOREACH exp_gzzal_cs INTO lc_gzzal001,lc_gzzal003_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzzal003_tw CLIPPED,"' "
+         PREPARE s3 FROM ls_sql_gzoz
+         EXECUTE s3 INTO lc_gzzal003_new
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_gzzal003_new) THEN
+            SELECT gzzal003 INTO lc_gzzal003_old FROM gzzal_t
+             WHERE gzzal001 = lc_gzzal001
+               AND gzzal002 = la_gzzy[li_cnt].gzzy001
+            IF SQLCA.SQLCODE THEN
+               
+               INSERT INTO gzzal_t(gzzal001,gzzal002,gzzal003)
+                  VALUES(lc_gzzal001,la_gzzy[li_cnt].gzzy001,lc_gzzal003_new)
+            ELSE
+               IF cl_null(lc_gzzal003_old) THEN
+                 UPDATE gzzal_t SET gzzal003 = lc_gzzal003_new
+                   WHERE gzzal001 = lc_gzzal001 AND gzzal002 = la_gzzy[li_cnt].gzzy001
+                 
+               END IF
+            END IF
+         END IF
+         FREE s3
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzzd" cite_std="N" status="u" ver="1" src="s" new="Y" order="16" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzzd()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzzd()
+    DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzzd001     LIKE gzzd_t.gzzd001
+   DEFINE lc_gzzd003     LIKE gzzd_t.gzzd003  
+   DEFINE lc_gzzd005_tw  LIKE gzzd_t.gzzd005  #轉換標籤
+   DEFINE lc_gzzd005_old LIKE gzzd_t.gzzd005
+   DEFINE lc_gzzd005_new LIKE gzzd_t.gzzd005
+   DEFINE lc_gzzd006_tw  LIKE gzzd_t.gzzd006  #轉換註解
+   DEFINE lc_gzzd006_old LIKE gzzd_t.gzzd006
+   DEFINE lc_gzzd006_new LIKE gzzd_t.gzzd006
+   DEFINE lc_std_or_cust LIKE type_t.chr1
+   DEFINE li_result      LIKE type_t.num5
+   DEFINE li_result2     LIKE type_t.num5
+   DEFINE li_count       LIKE type_t.num5
+
+   DEFINE lc_gzzdcrtid     LIKE gzzd_t.gzzdcrtid
+   DEFINE lc_gzzdcrtdp     LIKE gzzd_t.gzzdcrtdp
+   DEFINE lc_gzzdcrtdt     DATETIME YEAR TO SECOND
+   DEFINE lc_gzzdmodid     LIKE gzzd_t.gzzdmodid
+   DEFINE lc_gzzdmoddt     DATETIME YEAR TO SECOND
+   DEFINE lc_gzzdownid     LIKE gzzd_t.gzzdownid
+   DEFINE lc_gzzdowndp     LIKE gzzd_t.gzzdowndp
+
+   LET lc_gzzdownid = g_user
+   LET lc_gzzdowndp = g_dept
+   LET lc_gzzdcrtid = g_user
+   LET lc_gzzdcrtdp = g_dept
+   LET lc_gzzdcrtdt = cl_get_current()
+
+   LET lc_gzzdmodid = g_user
+   LET lc_gzzdmoddt = cl_get_current()
+   #取標準或客製
+   LET lc_std_or_cust = FGL_GETENV("DGENV")    
+   #gzzd 有標準及客製
+   LET ls_sql = "SELECT gzzd001,gzzd003,gzzd005,gzzd006 FROM gzzd_t WHERE gzzd002 = 'zh_TW' AND gzzd004 ='",lc_std_or_cust CLIPPED ,"' ORDER BY gzzd001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy()
+
+   DECLARE exp_gzzd_cs CURSOR FROM ls_sql
+   FOREACH exp_gzzd_cs INTO lc_gzzd001,lc_gzzd003,lc_gzzd005_tw,lc_gzzd006_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzzd005_tw CLIPPED,"' "
+         PREPARE s4 FROM ls_sql_gzoz
+         EXECUTE s4 INTO lc_gzzd005_new
+         LET li_result = SQLCA.SQLCODE
+
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzzd006_tw CLIPPED,"' "
+         PREPARE s5 FROM ls_sql_gzoz
+         EXECUTE s5 INTO lc_gzzd006_new
+
+         IF (NOT li_result AND NOT cl_null(lc_gzzd005_new) ) OR (NOT li_result2 AND NOT cl_null(lc_gzzd006_new) ) THEN 
+
+            SELECT COUNT(*)  INTO li_count FROM gzzd_t
+             WHERE gzzd001 = lc_gzzd001
+               AND gzzd002 = la_gzzy[li_cnt].gzzy001
+               AND gzzd003 = lc_gzzd003
+               AND gzzd004 = lc_std_or_cust
+           
+            IF li_count = 0 THEN 
+               INSERT INTO gzzd_t(gzzdstus,gzzd001,gzzd002,gzzd003,gzzd004,gzzd005,gzzd006,
+                                  gzzdcrtid,gzzdcrtdp,gzzdcrtdt,gzzdownid,gzzdowndp)
+                  VALUES('Y',lc_gzzd001,la_gzzy[li_cnt].gzzy001,lc_gzzd003,lc_std_or_cust,lc_gzzd005_new,lc_gzzd006_new,
+                         lc_gzzdcrtid,lc_gzzdcrtdp,lc_gzzdcrtdt,lc_gzzdownid,lc_gzzdowndp)
+            ELSE 
+              SELECT gzzd006 INTO lc_gzzd005_old,lc_gzzd006_old FROM gzzd_t
+               WHERE gzzd001 = lc_gzzd001
+                 AND gzzd002 = la_gzzy[li_cnt].gzzy001
+                 AND gzzd003 = lc_gzzd003
+                 AND gzzd004 = lc_std_or_cust
+
+               IF NOT SQLCA.SQLCODE THEN
+                  IF NOT cl_null(lc_gzzd005_old) THEN
+                     LET lc_gzzd005_new = lc_gzzd005_old
+                  END IF
+                  IF NOT cl_null(lc_gzzd006_old) THEN
+                     LET lc_gzzd006_new = lc_gzzd006_old  
+                  END IF  
+                  UPDATE gzzd_t SET gzzd005 = lc_gzzd005_new,gzzd006 = lc_gzzd006_new,
+                                    gzzdmodid = lc_gzzdmodid,gzzdmoddt = lc_gzzdmoddt
+                      WHERE gzzd001 = lc_gzzd001 
+                        AND gzzd002 = la_gzzy[li_cnt].gzzy001
+                        AND gzzd003 = lc_gzzd003
+                        AND gzzd004 = lc_std_or_cust   
+               END IF 
+            END IF 
+
+         END IF 
+         FREE s4
+         FREE s5
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzdfl" cite_std="N" status="u" ver="1" src="s" new="Y" order="17" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzdfl()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzdfl001     LIKE gzdfl_t.gzdfl001
+   DEFINE lc_gzdfl003_tw  LIKE gzdfl_t.gzdfl003
+   DEFINE lc_gzdfl003_old LIKE gzdfl_t.gzdfl003
+   DEFINE lc_gzdfl003_new LIKE gzdfl_t.gzdfl003
+
+   LET ls_sql = "SELECT gzdfl001,gzdfl003 FROM gzdfl_t WHERE gzdfl002 = 'zh_TW' ORDER BY gzdfl001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy() #除了zh_TW 之外
+
+   DECLARE exp_gzdfl_cs CURSOR FROM ls_sql
+   FOREACH exp_gzdfl_cs INTO lc_gzdfl001,lc_gzdfl003_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzdfl003_tw CLIPPED,"' "
+         PREPARE s6 FROM ls_sql_gzoz
+         EXECUTE s6 INTO lc_gzdfl003_new
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_gzdfl003_new) THEN
+            SELECT gzdfl003 INTO lc_gzdfl003_old FROM gzdfl_t
+             WHERE gzdfl001 = lc_gzdfl001
+               AND gzdfl002 = la_gzzy[li_cnt].gzzy001
+            IF SQLCA.SQLCODE THEN
+               
+               INSERT INTO gzdfl_t(gzdfl001,gzdfl002,gzdfl003)
+                  VALUES(lc_gzdfl001,la_gzzy[li_cnt].gzzy001,lc_gzdfl003_new)
+            ELSE
+               IF cl_null(lc_gzdfl003_old) THEN
+                 UPDATE gzdfl_t SET gzdfl003 = lc_gzdfl003_new
+                  WHERE gzdfl001 = lc_gzzal001 AND gzdfl002 = la_gzzy[li_cnt].gzzy001
+                  
+               END IF
+            END IF
+         END IF
+         FREE s6
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzzq" cite_std="N" status="" ver="1" src="s" new="Y" order="18" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzzq()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzzq()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzzq001      LIKE gzzq_t.gzzq001
+   DEFINE lc_gzzq002      LIKE gzzq_t.gzzq002
+   DEFINE lc_gzzq004_tw   LIKE gzzq_t.gzzq004
+   DEFINE lc_gzzq004_old  LIKE gzzq_t.gzzq004
+   DEFINE lc_gzzq004_new  LIKE gzzq_t.gzzq004
+   DEFINE lc_gzzq005_tw   LIKE gzzq_t.gzzq005
+   DEFINE lc_gzzq005_old  LIKE gzzq_t.gzzq005
+   DEFINE lc_gzzq005_new  LIKE gzzq_t.gzzq005
+   DEFINE lc_std_or_cust  LIKE type_t.chr1
+   DEFINE li_result      LIKE type_t.num5
+   DEFINE li_result2     LIKE type_t.num5
+   DEFINE li_count       LIKE type_t.num5
+ 
+   LET lc_std_or_cust = FGL_GETENV("DGENV")  
+   #gzzd 有標準及客製
+   LET ls_sql = "SELECT gzzq001,gzzq002,gzzq004,gzzq005 FROM gzzq_t WHERE gzzq003 = 'zh_TW' AND gzzq006 ='",lc_std_or_cust CLIPPED ,"' ORDER BY gzzq001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy()
+
+   DECLARE exp_gzzq_cs CURSOR FROM ls_sql
+   FOREACH exp_gzzq_cs INTO lc_gzzq001,lc_gzzq002,lc_gzzq004_tw,lc_gzzq005_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzzq004_tw CLIPPED,"' "
+         PREPARE s7 FROM ls_sql_gzoz
+         EXECUTE s7 INTO lc_gzzq004_new
+         LET li_result = SQLCA.SQLCODE
+
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzzq005_tw CLIPPED,"' "
+         PREPARE s8 FROM ls_sql_gzoz
+         EXECUTE s8 INTO lc_gzzq005_new
+
+         IF (NOT li_result AND NOT cl_null(lc_gzzq004_new) ) OR (NOT li_result2 AND NOT cl_null(lc_gzzq005_new) ) THEN 
+
+            SELECT COUNT(*) INTO li_count FROM gzzq_t
+             WHERE gzzq001 = lc_gzzq001
+               AND gzzq002 = lc_gzzq002
+               AND gzzq003 = la_gzzy[li_cnt].gzzy001
+               AND gzzq006 = lc_std_or_cust
+               
+            IF li_count = 0 THEN            
+               INSERT INTO gzzq_t(gzzq001,gzzq002,gzzq003,gzzq004,gzzq005,gzzq006)
+                  VALUES(lc_gzzq001,lc_gzzq002,la_gzzy[li_cnt].gzzy001,lc_gzzq004_new,lc_gzzq005_new,lc_std_or_cust)
+            ELSE 
+               SELECT gzzq004 INTO lc_gzzq004_old,lc_gzzq005_old FROM gzzq_t
+                WHERE gzzq001 = lc_gzzq001
+                  AND gzzq002 = lc_gzzq002
+                  AND gzzq003 = la_gzzy[li_cnt].gzzy001
+                  AND gzzq006 = lc_std_or_cust
+
+               IF NOT SQLCA.SQLCODE THEN
+                  IF NOT cl_null(lc_gzzq004_old) THEN
+                     LET lc_gzzq004_new = lc_gzzq004_old
+                  END IF
+                  IF NOT cl_null(lc_gzzq005_old) THEN
+                     LET lc_gzzq005_new = lc_gzzq005_old
+                  END IF
+                  UPDATE gzzq_t SET gzzq004 = lc_gzzq004_new,gzzq005 = lc_gzzq005_new
+                      WHERE gzzq001 = lc_gzzal001 
+                        AND gzzq002 = lc_gzzq002
+                        AND gzzq003 = la_gzzy[li_cnt].gzzy001
+                        AND gzzq006 = lc_std_or_cust      
+               END IF 
+            END IF 
+         END IF 
+         FREE s7
+         FREE s8
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzswl" cite_std="N" status="" ver="1" src="s" new="Y" order="19" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzswl()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzswl()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzswl001     LIKE gzswl_t.gzswl001
+   DEFINE lc_gzswl002     LIKE gzswl_t.gzswl002
+   DEFINE lc_gzswl004_tw  LIKE gzswl_t.gzswl004
+   DEFINE lc_gzswl004_old LIKE gzswl_t.gzswl004
+   DEFINE lc_gzswl004_new LIKE gzswl_t.gzswl004
+
+   LET ls_sql = "SELECT gzswl001,gzswl002,gzswl004 FROM gzswl_t WHERE gzswl003 = 'zh_TW' ORDER BY gzswl001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy() #除了zh_TW 之外
+
+   DECLARE exp_gzswl_cs CURSOR FROM ls_sql
+   FOREACH exp_gzswl_cs INTO lc_gzswl001,lc_gzswl002,lc_gzswl004_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzswl004_tw CLIPPED,"' "
+         PREPARE s9 FROM ls_sql_gzoz
+         EXECUTE s9 INTO lc_gzswl004_new
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_gzswl004_new) THEN
+            SELECT gzswl004 INTO lc_gzswl004_old FROM gzswl_t
+             WHERE gzswl001 = lc_gzswl001
+               AND gzswl002 = lc_gzswl002
+               AND gzswl003 = la_gzzy[li_cnt].gzzy001
+            
+            IF SQLCA.SQLCODE THEN
+               
+               INSERT INTO gzswl_t(gzswl001,gzswl002,gzswl003,gzswl004)
+                  VALUES(lc_gzswl001,lc_gzswl002,la_gzzy[li_cnt].gzzy001,lc_gzswl004_new)
+            ELSE
+               IF cl_null(lc_gzswl004_old) THEN
+                 UPDATE gzswl_t SET gzswl004 = lc_gzswl004_new
+                   WHERE gzswl001 = lc_gzswl001
+                     AND gzswl002 = lc_gzswl002
+                     AND gzswl003 = la_gzzy[li_cnt].gzzy001
+                  
+               END IF
+            END IF
+         END IF
+         FREE s9
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzsxl" cite_std="N" status="" ver="1" src="s" new="Y" order="20" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzsxl()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzsxl()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzsxl001     LIKE gzsxl_t.gzsxl001
+   DEFINE lc_gzsxl002     LIKE gzsxl_t.gzsxl002
+   DEFINE lc_gzsxl003     LIKE gzsxl_t.gzsxl003
+   DEFINE lc_gzsxl005_tw  LIKE gzsxl_t.gzsxl005
+   DEFINE lc_gzsxl005_old LIKE gzsxl_t.gzsxl005
+   DEFINE lc_gzsxl005_new LIKE gzsxl_t.gzsxl005
+
+   LET ls_sql = "SELECT gzsxl001,gzsxl002,gzsxl003,gzsxl005 FROM gzsxl_t WHERE gzsxl004 = 'zh_TW' ORDER BY gzsxl001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy() #除了zh_TW 之外
+
+   DECLARE exp_gzsxl_cs CURSOR FROM ls_sql
+   FOREACH exp_gzsxl_cs INTO lc_gzsxl001,lc_gzsxl002,lc_gzsxl003,lc_gzsxl005_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzsxl005_tw CLIPPED,"' "
+         PREPARE s10 FROM ls_sql_gzoz
+         EXECUTE s10 INTO lc_gzsxl005_new
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_gzsxl005_new) THEN
+            SELECT gzsxl005 INTO lc_gzsxl005_old FROM gzsxl_t
+             WHERE gzsxl001 = lc_gzsxl001
+               AND gzsxl002 = lc_gzsxl002
+               AND gzsxl003 = lc_gzsxl003
+               AND gzsxl004 = la_gzzy[li_cnt].gzzy001
+               
+            IF SQLCA.SQLCODE THEN
+               
+               INSERT INTO gzsxl_t(gzsxl001,gzsxl002,gzsxl003,gzsxl004,gzsxl005)
+                  VALUES(lc_gzsxl001,lc_gzsxl002,lc_gzsxl003,la_gzzy[li_cnt].gzzy001,lc_gzsxl005_new)
+            ELSE
+               IF cl_null(lc_gzsxl005_old) THEN
+                 UPDATE gzsxl_t SET gzsxl005 = lc_gzsxl005_new
+                  WHERE gzsxl001 = lc_gzzal001 
+                    AND gzsxl002 = lc_gzsxl002 
+                    AND gzsxl003 = lc_gzsxl003 
+                    AND gzsxl004 = la_gzzy[li_cnt].gzzy001
+                  
+               END IF
+            END IF
+         END IF
+         FREE s10
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzwel" cite_std="N" status="" ver="1" src="s" new="Y" order="21" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzwel()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzwel()
+    DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzwel001     LIKE gzwel_t.gzwel001
+   DEFINE lc_gzwel003_tw  LIKE gzwel_t.gzwel003
+   DEFINE lc_gzwel003_old LIKE gzwel_t.gzwel003
+   DEFINE lc_gzwel003_new LIKE gzwel_t.gzwel003
+
+   LET ls_sql = "SELECT gzwel001,gzwel003 FROM gzwel_t WHERE gzwel002 = 'zh_TW' ORDER BY gzwel001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy()  #除了zh_TW 之外
+
+   DECLARE exp_gzwel_cs CURSOR FROM ls_sql
+   FOREACH exp_gzwel_cs INTO lc_gzwel001,lc_gzwel003_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzwel003_tw CLIPPED,"' "
+         PREPARE s13 FROM ls_sql_gzoz
+         EXECUTE s13 INTO lc_gzwel003_new
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_gzwel003_new) THEN
+            SELECT gzwel003 INTO lc_gzwel003_old FROM gzwel_t
+             WHERE gzwel001 = lc_gzwel001
+               AND gzwel002 = la_gzzy[li_cnt].gzzy001
+               
+            IF SQLCA.SQLCODE THEN
+               
+               INSERT INTO gzwel_t(gzwel001,gzwel002,gzwel003)
+                  VALUES(lc_gzwel001,la_gzzy[li_cnt].gzzy001,lc_gzwel003_new)
+            ELSE
+               IF cl_null(lc_gzwel003_old) THEN
+                 UPDATE gzwel_t SET gzwel003 = lc_gzwel003_new
+                  WHERE gzwel001 = lc_gzwel001 
+                    AND gzwel002 = la_gzzy[li_cnt].gzzy001
+
+                  
+               END IF
+            END IF
+         END IF
+         FREE s13
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_get_gzzy" cite_std="N" status="" ver="1" src="s" new="Y" order="22" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 取得繁體中文之外的其他語言別
+# Memo...........:
+# Usage..........: CALL azzp110_get_gzzy()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_get_gzzy()
+   DEFINE ls_sql  STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001,
+             gzozcol LIKE type_t.chr10
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+
+   IF ma_gzzy.getLength() = 0 THEN
+      LET ls_sql = "SELECT gzzy001 FROM gzzy_t WHERE gzzystus = 'Y' "
+      DECLARE get_gzzy_cs CURSOR FROM ls_sql
+      LET li_cnt = 1
+      FOREACH get_gzzy_cs INTO la_gzzy[li_cnt].gzzy001
+         IF SQLCA.SQLCODE THEN
+            EXIT FOREACH
+         END IF
+         #除了繁體中文取其他語言別
+         CASE la_gzzy[li_cnt].gzzy001
+            WHEN "en_US" LET la_gzzy[li_cnt].gzozcol = "gzoz001"
+            WHEN "zh_CN" LET la_gzzy[li_cnt].gzozcol = "gzoz002"
+            WHEN "ja_JP" LET la_gzzy[li_cnt].gzozcol = "gzoz003"
+            WHEN "vi_VN" LET la_gzzy[li_cnt].gzozcol = "gzoz004"
+            WHEN "th_TH" LET la_gzzy[li_cnt].gzozcol = "gzoz005"
+            OTHERWISE
+               CONTINUE FOREACH
+         END CASE
+         LET li_cnt = li_cnt + 1
+      END FOREACH
+      CALL la_gzzy.deleteElement(li_cnt)
+      LET ma_gzzy = la_gzzy
+   END IF
+   RETURN ma_gzzy
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_dzeal_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="23" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_dzeal_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_dzeal_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_dzeal001 LIKE dzeal_t.dzeal001
+   DEFINE lc_dzeal002 LIKE dzeal_t.dzeal002
+   DEFINE lc_dzeal003 LIKE dzeal_t.dzeal003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT dzeal001,dzeal002,dzeal003 FROM dzeal_t ",
+                " WHERE dzeal002 = 'zh_TW' OR dzeal002 = 'zh_CN' ",
+                " ORDER BY dzeal001,dzeal002"
+   LET li_cnt = 1
+
+   DECLARE azzp110_dzea_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_dzea_twcn_cs INTO lc_dzeal001,lc_dzeal002,lc_dzeal003
+      IF cl_null(lc_dzeal003) THEN
+         CONTINUE FOREACH
+      END IF
+      CALL azzp110_trim(lc_dzeal003) RETURNING lc_dzeal003
+      IF NOT cl_chk_tworcn(lc_dzeal002 CLIPPED,lc_dzeal003 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_dzeal001:",lc_dzeal001,"   lc_dzeal002:",lc_dzeal002,"   lc_dzeal003:",lc_dzeal003
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_dzebl_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="24" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_dzebl_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_dzebl001 LIKE dzebl_t.dzebl001
+   DEFINE lc_dzebl002 LIKE dzebl_t.dzebl002
+   DEFINE lc_dzebl003 LIKE dzebl_t.dzebl003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT dzebl001,dzebl002,dzebl003 FROM dzebl_t ",
+                " WHERE dzebl002 = 'zh_TW' OR dzebl002 = 'zh_CN' ",
+                " ORDER BY dzebl001,dzebl002"
+   LET li_cnt = 1
+
+   DECLARE azzp110_dzeb_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_dzeb_twcn_cs INTO lc_dzebl001,lc_dzebl002,lc_dzebl003
+      IF cl_null(lc_dzebl003) THEN
+         CONTINUE FOREACH
+      END IF
+      CALL azzp110_trim(lc_dzebl002) RETURNING lc_dzebl002
+      IF NOT cl_chk_tworcn(lc_dzebl002 CLIPPED,lc_dzebl002 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-dzebl001:",lc_dzebl001,"   dzebl002:",lc_dzebl002,"   dzebl003:",lc_dzebl003
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH
+
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzzal_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="25" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzzal_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzzal_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzzal001 LIKE gzzal_t.gzzal001
+   DEFINE lc_gzzal002 LIKE gzzal_t.gzzal002
+   DEFINE lc_gzzal003 LIKE gzzal_t.gzzal003
+   
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzzal001,gzzal002,gzzal003 FROM gzzal_t ",
+                " WHERE gzzal002 = 'zh_TW' OR gzzal002 = 'zh_CN' ",
+                " ORDER BY gzzal001,gzzal002"
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzzal_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzzal_twcn_cs INTO lc_gzzal001,lc_gzzal002,lc_gzzal003
+      IF cl_null(lc_gzzal003) THEN
+         CONTINUE FOREACH
+      END IF
+      CALL azzp110_trim(lc_gzzal003) RETURNING lc_gzzal003
+      IF NOT cl_chk_tworcn(lc_gzzal002 CLIPPED,lc_gzzal003 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_gzzal001:",lc_gzzal001,"   lc_gzzal002:",lc_gzzal002,"   lc_gzzal003:",lc_gzzal003 
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzzd_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="26" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzzd_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzzd_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_cnt2      LIKE type_t.num10
+   DEFINE lc_gzzd001 LIKE gzzd_t.gzzd001
+   DEFINE lc_gzzd002 LIKE gzzd_t.gzzd002
+   DEFINE lc_gzzd003 LIKE gzzd_t.gzzd003
+   DEFINE lc_gzzd005 LIKE gzzd_t.gzzd005
+   DEFINE lc_gzzd006 LIKE gzzd_t.gzzd006
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzzd001,gzzd002,gzzd003,gzzd005,gzzd006 FROM gzzd_t ",
+                " WHERE gzzd002 = 'zh_TW' OR gzzd002 = 'zh_CN' ",
+                " ORDER BY gzzd001,gzzd002,gzzd003"
+   LET li_cnt = 1
+   LET li_cnt2 = 1
+   DECLARE azzp110_gzzd_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzzd_twcn_cs INTO lc_gzzd001,lc_gzzd002,lc_gzzd003,lc_gzzd005,lc_gzzd006
+
+      IF cl_null(lc_gzzd005) AND cl_null(lc_gzzd006) THEN
+         CONTINUE FOREACH
+      END IF
+      
+      CALL azzp110_trim(lc_gzzd005) RETURNING lc_gzzd005
+      IF NOT cl_null(lc_gzzd005) THEN 
+         IF NOT cl_chk_tworcn(lc_gzzd002 CLIPPED,lc_gzzd005 CLIPPED,0) THEN
+            DISPLAY li_cnt," Error Translate-lc_gzzd001:",lc_gzzd001,"   lc_gzzd002:",lc_gzzd002,"   lc_gzzd003:",lc_gzzd003 ,"   lc_gzzd005:",lc_gzzd005
+            LET li_cnt = li_cnt + 1
+         END IF  
+      END IF 
+
+      CALL azzp110_trim(lc_gzzd006) RETURNING lc_gzzd006
+      IF NOT cl_null(lc_gzzd006) THEN 
+         IF NOT cl_chk_tworcn(lc_gzzd002 CLIPPED,lc_gzzd006 CLIPPED,0) THEN
+            DISPLAY li_cnt2," Error Translate-lc_gzzd001:",lc_gzzd001,"   lc_gzzd002:",lc_gzzd002,"   lc_gzzd003:",lc_gzzd003 ,"   lc_gzzd006:",lc_gzzd006
+            LET li_cnt2 = li_cnt2 + 1
+         END IF  
+      END IF 
+      
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzdfl_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="27" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzdfl_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzdfl_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzdfl001 LIKE gzdfl_t.gzdfl001
+   DEFINE lc_gzdfl002 LIKE gzdfl_t.gzdfl002
+   DEFINE lc_gzdfl003 LIKE gzdfl_t.gzdfl003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzdfl001,gzdfl002,gzdfl003 FROM gzdfl_t ",
+                " WHERE gzdfl002 = 'zh_TW' OR gzdfl002 = 'zh_CN' ",
+                " ORDER BY gzdfl001,gzdfl002 "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzdfl_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzzd_twcn_cs INTO lc_gzdfl001,lc_gzdfl002,lc_gzdfl003
+      IF cl_null(lc_gzdfl003) THEN
+         CONTINUE FOREACH
+      END IF
+      CALL azzp110_trim(lc_gzdfl003) RETURNING lc_gzdfl003
+      IF NOT cl_chk_tworcn(lc_gzdfl002 CLIPPED,lc_gzdfl003 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_gzdfl001:",lc_gzdfl001,"   lc_gzdfl002:",lc_gzdfl002,"   lc_gzdfl003:",lc_gzdfl003 
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH 
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzzq_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="28" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzzq_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzzq_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_cnt2      LIKE type_t.num10
+   DEFINE lc_gzzq001 LIKE  gzzq_t.gzzq001
+   DEFINE lc_gzzq002 LIKE  gzzq_t.gzzq002
+   DEFINE lc_gzzq003 LIKE  gzzq_t.gzzq003
+   DEFINE lc_gzzq004 LIKE  gzzq_t.gzzq004
+   DEFINE lc_gzzq005 LIKE  gzzq_t.gzzq005
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzzq001,gzzq002,gzzq003,gzzq004,gzzq005 FROM gzzq_t ",
+                " WHERE gzzq003 = 'zh_TW' OR gzzq003 = 'zh_CN' ",
+                " ORDER BY gzzq001,gzzq002,gzzq003 "
+   LET li_cnt = 1
+   LET li_cnt2 = 1
+   DECLARE azzp110_gzzq_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzzq_twcn_cs INTO lc_gzzq001,lc_gzzq002,lc_gzzq003,lc_gzzq004,lc_gzzq005
+      IF cl_null(lc_gzzq004) AND cl_null(lc_gzzq005) THEN
+         CONTINUE FOREACH
+      END IF
+
+      CALL azzp110_trim(lc_gzzq004) RETURNING lc_gzzq004
+      IF NOT cl_null(lc_gzzq004) THEN 
+         IF NOT cl_chk_tworcn(lc_gzzq003 CLIPPED, lc_gzzq004 CLIPPED,0) THEN
+            DISPLAY li_cnt," Error Translate-lc_gzzq001:",lc_gzzq001,"   lc_gzzq002:",lc_gzzq002,"   lc_gzzq003:",lc_gzzq003 ,"   lc_gzzq004:",lc_gzzq004
+            LET li_cnt = li_cnt + 1
+         END IF 
+      END IF 
+
+      CALL azzp110_trim(lc_gzzq005) RETURNING lc_gzzq005
+      IF NOT cl_null(lc_gzzq005) THEN 
+         IF NOT cl_chk_tworcn(lc_gzzq003 CLIPPED, lc_gzzq005 CLIPPED,0) THEN
+            DISPLAY li_cnt2," Error Translate-lc_gzzq001:",lc_gzzq001,"   lc_gzzq002:",lc_gzzq002,"   lc_gzzq003:",lc_gzzq003 ,"   lc_gzzq005:",lc_gzzq005
+            LET li_cnt2 = li_cnt2 + 1
+         END IF 
+      END IF  
+
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzswl_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="29" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzswl_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzswl_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzswl001 LIKE gzswl_t.gzswl001
+   DEFINE lc_gzswl002 LIKE gzswl_t.gzswl002
+   DEFINE lc_gzswl003 LIKE gzswl_t.gzswl003
+   DEFINE lc_gzswl004 LIKE gzswl_t.gzswl004
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzswl001,gzswl002,gzswl003,gzswl004 FROM gzswl_t",
+                " WHERE gzswl003 = 'zh_TW' OR gzswl003 = 'zh_CN' ",
+                " ORDER BY gzswl001,gzswl002,gzswl003 "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzswl_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzswl_twcn_cs INTO lc_gzswl001,lc_gzswl002,lc_gzswl003,lc_gzswl004
+      IF cl_null(lc_gzswl004) THEN
+         CONTINUE FOREACH
+      END IF
+      CALL azzp110_trim(lc_gzswl004) RETURNING lc_gzswl004
+      IF NOT cl_chk_tworcn(lc_gzswl003 CLIPPED,lc_gzswl004 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_gzswl001:",lc_gzswl001,"   lc_gzswl002:",lc_gzswl002,"   lc_gzswl003:",lc_gzswl003  ,"   lc_gzswl004:",lc_gzswl004
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH 
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzsxl_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="30" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzsxl_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzsxl_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzsxl001 LIKE gzsxl_t.gzsxl001
+   DEFINE lc_gzsxl002 LIKE gzsxl_t.gzsxl002
+   DEFINE lc_gzsxl003 LIKE gzsxl_t.gzsxl003
+   DEFINE lc_gzsxl004 LIKE gzsxl_t.gzsxl004 
+   DEFINE lc_gzsxl005 LIKE gzsxl_t.gzsxl005 
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzsxl001,gzsxl002,gzsxl003,gzsxl004,gzsxl005 FROM gzsxl_t",
+                " WHERE gzsxl004 = 'zh_TW' OR gzsxl004 = 'zh_CN' ",
+                " ORDER BY gzsxl001,gzsxl002,gzsxl003,gzsxl004  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzsxl_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzsxl_twcn_cs INTO lc_gzsxl001,lc_gzsxl002,lc_gzsxl003,lc_gzsxl004,lc_gzsxl005
+      IF cl_null(lc_gzsxl005) THEN
+         CONTINUE FOREACH
+      END IF
+      CALL azzp110_trim(lc_gzsxl005) RETURNING lc_gzsxl005
+      IF NOT cl_chk_tworcn(lc_gzsxl004 CLIPPED,lc_gzsxl005 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_gzsxl001:",lc_gzsxl001,"   lc_gzsxl002:",lc_gzsxl002,"   lc_gzsxl003:",lc_gzsxl003  ,
+            "   lc_gzsxl004:",lc_gzsxl004,"   lc_gzsxl005:",lc_gzsxl005
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH 
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzszl_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="31" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzszl_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzszl_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_cnt2     LIKE type_t.num10
+   DEFINE lc_gzszl001 LIKE gzszl_t.gzszl001
+   DEFINE lc_gzszl002 LIKE gzszl_t.gzszl002
+   DEFINE lc_gzszl003 LIKE gzszl_t.gzszl003
+   DEFINE lc_gzszl004 LIKE gzszl_t.gzszl004
+   DEFINE lc_gzszl005 LIKE gzszl_t.gzszl005
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzszl001,gzszl002,gzszl003,gzszl004,gzszl005 FROM gzszl_t ",
+                " WHERE gzszl003 = 'zh_TW' OR gzszl003 = 'zh_CN' ",
+                " ORDER BY gzszl001,gzszl002,gzszl003,gzszl004  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzszl_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzszl_twcn_cs INTO lc_gzszl001,lc_gzszl002,lc_gzszl003,lc_gzszl004,lc_gzszl005
+      IF cl_null(lc_gzszl004) AND cl_null(lc_gzszl005) THEN
+         CONTINUE FOREACH
+      END IF
+
+      CALL azzp110_trim(lc_gzszl004) RETURNING lc_gzszl004
+      IF NOT cl_null(lc_gzszl004) THEN 
+         IF NOT cl_chk_tworcn(lc_gzszl003 CLIPPED, lc_gzszl004 CLIPPED,0) THEN
+            DISPLAY li_cnt," Error Translate-lc_gzszl001:",lc_gzszl001,"   lc_gzszl002:",lc_gzszl002,"   lc_gzszl003:",lc_gzszl003 ,"   lc_gzszl004:",lc_gzszl004
+            LET li_cnt = li_cnt + 1
+         END IF 
+      END IF 
+
+      CALL azzp110_trim(lc_gzszl005) RETURNING lc_gzszl005
+      IF NOT cl_null(lc_gzszl005) THEN 
+         IF NOT cl_chk_tworcn(lc_gzszl003 CLIPPED, lc_gzszl005 CLIPPED,0) THEN
+            DISPLAY li_cnt2," Error Translate-lc_gzzq001:",lc_gzszl001,"   lc_gzszl002:",lc_gzszl002,"   lc_gzszl003:",lc_gzszl003 ,"   lc_gzszl005:",lc_gzszl005
+            LET li_cnt2 = li_cnt2 + 1
+         END IF 
+      END IF  
+
+   END FOREACH 
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzwel_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="32" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzwel_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzwel_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzwel001 LIKE gzwel_t.gzwel001
+   DEFINE lc_gzwel002 LIKE gzwel_t.gzwel002
+   DEFINE lc_gzwel003 LIKE gzwel_t.gzwel003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzwel001,gzwel002,gzwel003 FROM gzwel_t ",
+                " WHERE gzwel002 = 'zh_TW' OR gzwel002 = 'zh_CN' ",
+                " ORDER BY gzwel001,gzwel002  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzwel_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzwel_twcn_cs INTO lc_gzwel001,lc_gzwel002,lc_gzwel003
+      IF cl_null(lc_gzwel003) THEN
+         CONTINUE FOREACH
+      END IF
+      CALL azzp110_trim(lc_gzwel003) RETURNING lc_gzwel003
+      IF NOT cl_chk_tworcn(lc_gzwel002 CLIPPED,lc_gzwel003 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_gzwel001:",lc_gzwel001,"   lc_gzwel002:",lc_gzwel002,"   lc_gzwel003:",lc_gzwel003  
+            
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH  
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_zhtw_fr_gzdi" cite_std="N" status="" ver="1" src="s" new="Y" order="33" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_ins_zhtw_fr_gzdi
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_zhtw_fr_gzdi()
+   DEFINE ls_sql      STRING
+   DEFINE lc_gzdi001  LIKE gzdi_t.gzdi001  #正體中文
+   DEFINE lc_gzdi002  LIKE gzdi_t.gzdi002  #英文
+   DEFINE lc_gzdi004  LIKE gzdi_t.gzdi004  #簡體
+   DEFINE lc_gzdi010  LIKE gzdi_t.gzdi010  #日文
+   DEFINE lc_gzdi011  LIKE gzdi_t.gzdi011  #越文
+   DEFINE lc_gzdi014  LIKE gzdi_t.gzdi014  #泰文
+   DEFINE lc_gzoz001  LIKE gzoz_t.gzoz001  #英文
+   DEFINE lc_gzoz002  LIKE gzoz_t.gzoz002  #簡體
+   DEFINE lc_gzoz003  LIKE gzoz_t.gzoz003  #日文
+   DEFINE lc_gzoz004  LIKE gzoz_t.gzoz004  #越文
+   DEFINE lc_gzoz005  LIKE gzoz_t.gzoz005  #泰文
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzdi001,gzdi002,gzdi004,gzdi010,gzdi011,gzdi014 FROM gzdi_t "
+   LET li_cnt = 1
+
+   DECLARE azzp110_dzea_zhtw_frgzdi_cs CURSOR FROM ls_sql
+   FOREACH azzp110_dzea_zhtw_frgzdi_cs INTO lc_gzdi001,lc_gzdi002,lc_gzdi004,lc_gzdi010,lc_gzdi011,lc_gzdi014
+       IF cl_null(lc_gzdi001) THEN
+          CONTINUE FOREACH
+       END IF
+
+       SELECT gzoz001,gzoz002,gzoz003,gzoz004,gzoz005
+         INTO lc_gzoz001,lc_gzoz002,lc_gzoz003,lc_gzoz004,lc_gzoz005 FROM gzoz_t
+        WHERE gzoz000 = lc_gzdi001
+       IF NOT SQLCA.SQLCODE THEN
+          LET li_cnt = li_cnt + 1
+
+          #英文 
+          IF NOT cl_null(lc_gzdi002) AND cl_null(lc_gzoz001) THEN
+             #DISPLAY LENGTH(lc_gzdi002),'UPD 英文:',lc_gzdi002,"       FROM:",lc_gzdi001
+             UPDATE gzoz_t SET gzoz001=lc_gzdi002, gzoz101='Y'
+              WHERE gzoz000 = lc_gzdi001
+          END IF
+
+          #日文 
+          IF NOT cl_null(lc_gzdi010) AND cl_null(lc_gzoz003) THEN
+             #DISPLAY LENGTH(lc_gzdi010),'UPD 日文:',lc_gzdi010,"       FROM:",lc_gzdi001
+             UPDATE gzoz_t SET gzoz003=lc_gzdi010, gzoz103='Y'
+              WHERE gzoz000 = lc_gzdi001
+          END IF
+
+          #越文 
+          IF NOT cl_null(lc_gzdi011) AND cl_null(lc_gzoz004) THEN
+             #DISPLAY LENGTH(lc_gzdi011),'UPD 越文:',lc_gzdi011,"       FROM:",lc_gzdi001
+             UPDATE gzoz_t SET gzoz004=lc_gzdi011, gzoz104='Y'
+              WHERE gzoz000 = lc_gzdi001
+          END IF
+
+          #泰文 
+          IF NOT cl_null(lc_gzdi014) AND cl_null(lc_gzoz005) THEN
+             #DISPLAY LENGTH(lc_gzdi014),'UPD 泰文:',lc_gzdi014,"       FROM:",lc_gzdi001
+             UPDATE gzoz_t SET gzoz005=lc_gzdi014, gzoz105='Y'
+              WHERE gzoz000 = lc_gzdi001
+          END IF
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzszl" cite_std="N" status="" ver="1" src="s" new="Y" order="34" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzszl()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzszl()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt             LIKE type_t.num5
+   DEFINE lc_gzszl001        LIKE gzszl_t.gzszl001
+   DEFINE lc_gzszl002        LIKE gzszl_t.gzszl002
+   DEFINE lc_gzszl004_tw     LIKE gzszl_t.gzszl004
+   DEFINE lc_gzszl004_old    LIKE gzszl_t.gzszl004
+   DEFINE lc_gzszl004_new    LIKE gzszl_t.gzszl004
+   DEFINE lc_gzszl005_tw     LIKE gzszl_t.gzszl005
+   DEFINE lc_gzszl005_old    LIKE gzszl_t.gzszl005
+   DEFINE lc_gzszl005_new    LIKE gzszl_t.gzszl005
+   DEFINE li_result          LIKE type_t.num5
+   DEFINE li_result2         LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num5
+   
+   LET ls_sql = "SELECT gzszl001,gzszl002,gzszl004,gzszl005 FROM gzszl_t WHERE gzszl003 = 'zh_TW' ORDER BY gzszl001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy()
+
+   DECLARE exp_gzszl_cs CURSOR FROM ls_sql
+   FOREACH exp_gzszl_cs INTO lc_gzszl001,lc_gzszl002,lc_gzszl004_tw,lc_gzszl005_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzszl004_tw CLIPPED,"' "
+         PREPARE s11 FROM ls_sql_gzoz
+         EXECUTE s11 INTO lc_gzszl004_new
+         LET li_result = SQLCA.SQLCODE
+
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzszl005_tw CLIPPED,"' "
+         PREPARE s12 FROM ls_sql_gzoz
+         EXECUTE s12 INTO lc_gzszl005_new
+         LET li_result2 = SQLCA.SQLCODE
+
+         IF (NOT li_result AND NOT cl_null(lc_gzszl004_new) ) OR (NOT li_result2 AND NOT cl_null(lc_gzszl005_new) ) THEN 
+     
+            SELECT COUNT(*) INTO li_count FROM gzszl_t
+             WHERE gzszl001 = lc_gzszl001
+               AND gzszl002 = lc_gzszl002
+               AND gzszl003 = la_gzzy[li_cnt].gzzy001
+
+            IF li_count = 0 THEN 
+               INSERT INTO gzszl_t(gzszl001,gzszl002,gzszl003,gzszl004,gzszl005)
+                  VALUES(lc_gzszl001,lc_gzszl002,la_gzzy[li_cnt].gzzy001,lc_gzszl004_new,lc_gzszl005_new)
+            ELSE 
+               SELECT gzszl004,gzszl005 INTO lc_gzszl004_old,lc_gzszl005_old FROM gzszl_t
+                WHERE gzszl001 = lc_gzszl001
+                  AND gzszl002 = lc_gzszl002 
+                  AND gzszl003 = la_gzzy[li_cnt].gzzy001
+
+               IF NOT SQLCA.SQLCODE THEN
+                  IF NOT cl_null(lc_gzszl004_old)THEN
+                     LET lc_gzszl004_new = lc_gzszl004_old 
+                  END IF  
+
+                  IF NOT cl_null(lc_gzszl005_old)THEN
+                     LET lc_gzszl005_new = lc_gzszl005_old  
+                  END IF
+                  UPDATE gzszl_t SET gzszl004 = lc_gzszl004_new,gzszl005 = lc_gzszl005_new
+                      WHERE gzszl001 = lc_gzszl001 
+                        AND gzszl002 = lc_gzszl002
+                        AND gzszl003 = la_gzzy[li_cnt].gzzy001                       
+               END IF 
+            END IF 
+         END IF 
+         FREE s11
+         FREE s12
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzcal_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="35" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzcal_zhtw()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzcal_zhtw()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzcal003 LIKE gzcal_t.gzcal003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzcal003 FROM gzcal_t WHERE gzcal002 = 'zh_TW'"
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzcal_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzcal_zhtw_cs INTO lc_gzcal003
+       IF cl_null(lc_gzcal003) THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzcal003) RETURNING lc_gzcal003
+
+       IF NOT cl_chk_tworcn("zh_TW",lc_gzcal003,0) THEN
+          CONTINUE FOREACH
+       END IF
+      
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_gzcal003
+       IF li_row = 0 THEN
+         INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzcal003,'Y','N')
+          
+          LET li_cnt = li_cnt + 1
+       END IF
+   END FOREACH
+
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzcbl_zhtw" cite_std="N" status="" ver="1" src="s" new="Y" order="36" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzcbl_zhtw()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzcbl_zhtw()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_cnt2      LIKE type_t.num10
+   DEFINE lc_gzcbl004 LIKE gzcbl_t.gzcbl004
+   DEFINE lc_gzcbl006 LIKE gzcbl_t.gzcbl006
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzcbl004,gzcbl006 FROM gzcbl_t WHERE gzcbl003 = 'zh_TW'"
+   LET li_cnt = 1
+   LET li_cnt2 = 1
+   DECLARE azzp110_gzcbl_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzcbl_zhtw_cs INTO lc_gzcbl004,lc_gzcbl006
+       IF cl_null(lc_gzcbl004) AND cl_null(lc_gzcbl006) THEN
+          CONTINUE FOREACH
+       END IF
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzcbl004) RETURNING lc_gzcbl004
+       IF NOT cl_null(lc_gzcbl004) THEN 
+          
+          IF cl_chk_tworcn("zh_TW",lc_gzcbl004,0) THEN
+             SELECT COUNT(*) INTO li_row FROM gzoz_t
+                WHERE gzoz000 = lc_gzcbl004
+             IF li_row = 0 THEN
+                INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzcbl004,'Y','N')             
+                LET li_cnt = li_cnt + 1
+             END IF   
+          END IF
+       END IF 
+       #去掉前後空白 
+       CALL azzp110_trim(lc_gzcbl006) RETURNING lc_gzcbl006
+       IF NOT cl_null(lc_gzcbl006) THEN 
+          
+          IF cl_chk_tworcn("zh_TW",lc_gzcbl006,0) THEN
+             SELECT COUNT(*) INTO li_row FROM gzoz_t
+                WHERE gzoz000 = lc_gzcbl006
+             IF li_row = 0 THEN
+                INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzcbl006,'Y','N')              
+                LET li_cnt2 = li_cnt2 + 1
+             END IF   
+          END IF
+       END IF  
+
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzcal_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="37" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzcal_twcn()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzcal_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzcal001 LIKE gzcal_t.gzcal001
+   DEFINE lc_gzcal002 LIKE gzcal_t.gzcal002
+   DEFINE lc_gzcal003 LIKE gzcal_t.gzcal003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzcal001,gzcal002,gzcal003 FROM gzcal_t ",
+                " WHERE gzcal002 = 'zh_TW' OR gzcal002 = 'zh_CN' ",
+                " ORDER BY gzcal001,gzcal002  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzcal_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzcal_twcn_cs INTO lc_gzcal001,lc_gzcal002,lc_gzcal003
+      IF cl_null(lc_gzcal003) THEN
+         CONTINUE FOREACH
+      END IF
+      CALL azzp110_trim(lc_gzcal003) RETURNING lc_gzcal003
+      IF NOT cl_chk_tworcn(lc_gzcal002 CLIPPED,lc_gzcal003 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_gzcal001:",lc_gzcal001,"   lc_gzcal002:",lc_gzcal002,"   lc_gzcal003:",lc_gzcal003  
+            
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH  
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzcbl_twcn" cite_std="N" status="" ver="1" src="s" new="Y" order="38" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzcbl_twcn()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzcbl_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_cnt2     LIKE type_t.num10
+   DEFINE lc_gzcbl001 LIKE gzcbl_t.gzcbl001
+   DEFINE lc_gzcbl002 LIKE gzcbl_t.gzcbl002
+   DEFINE lc_gzcbl003 LIKE gzcbl_t.gzcbl003
+   DEFINE lc_gzcbl004 LIKE gzcbl_t.gzcbl004
+   DEFINE lc_gzcbl006 LIKE gzcbl_t.gzcbl006
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzcbl001,gzcbl002,gzcbl003,gzcbl004,gzcbl006 FROM gzcbl_t ",
+                " WHERE gzcbl003 = 'zh_TW' OR gzcbl003 = 'zh_CN' ",
+                " ORDER BY gzcbl001,gzcbl002,gzcbl003,gzcbl004  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzcbl_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzcbl_twcn_cs INTO lc_gzcbl001,lc_gzcbl002,lc_gzcbl003,lc_gzcbl004,lc_gzcbl006
+      IF cl_null(lc_gzcbl004) AND cl_null(lc_gzcbl006) THEN
+         CONTINUE FOREACH
+      END IF
+
+      CALL azzp110_trim(lc_gzcbl004) RETURNING lc_gzcbl004
+      IF NOT cl_null(lc_gzcbl004) THEN 
+         IF NOT cl_chk_tworcn(lc_gzcbl003 CLIPPED, lc_gzcbl004 CLIPPED,0) THEN
+            DISPLAY li_cnt," Error Translate-lc_gzcbl001:",lc_gzcbl001,"   lc_gzcbl002:",lc_gzcbl002,"   lc_gzcbl003:",lc_gzcbl003 ,"   lc_gzcbl004:",lc_gzcbl004
+            LET li_cnt = li_cnt + 1
+         END IF 
+      END IF 
+
+      CALL azzp110_trim(lc_gzcbl006) RETURNING lc_gzcbl006
+      IF NOT cl_null(lc_gzcbl006) THEN 
+         IF NOT cl_chk_tworcn(lc_gzcbl003 CLIPPED, lc_gzcbl006 CLIPPED,0) THEN
+            DISPLAY li_cnt," Error Translate-lc_gzcbl001:",lc_gzcbl001,"   lc_gzcbl002:",lc_gzcbl002,"   lc_gzcbl003:",lc_gzcbl003 ,"   lc_gzcbl006:",lc_gzcbl006
+            LET li_cnt2 = li_cnt2 + 1
+         END IF 
+      END IF  
+
+   END FOREACH 
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzcal" cite_std="N" status="" ver="1" src="s" new="Y" order="39" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzcal()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzcal()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzcal001     LIKE gzcal_t.gzcal001
+   DEFINE lc_gzcal003_tw  LIKE gzcal_t.gzcal003
+   DEFINE lc_gzcal003_old LIKE gzcal_t.gzcal003
+   DEFINE lc_gzcal003_new LIKE gzcal_t.gzcal003
+
+   LET ls_sql = "SELECT gzcal001,gzcal003 FROM gzcal_t WHERE gzcal002 = 'zh_TW' ORDER BY gzcal001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy()  #除了zh_TW 之外
+
+   DECLARE exp_gzcal_cs CURSOR FROM ls_sql
+   FOREACH exp_gzcal_cs INTO lc_gzcal001,lc_gzcal003_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzcal003_tw CLIPPED,"' "
+         PREPARE s14 FROM ls_sql_gzoz
+         EXECUTE s14 INTO lc_gzcal003_new
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_gzcal003_new) THEN
+            SELECT gzcal003 INTO lc_gzcal003_old FROM gzcal_t
+             WHERE gzcal001 = lc_gzcal001
+               AND gzcal002 = la_gzzy[li_cnt].gzzy001
+               
+            IF SQLCA.SQLCODE THEN
+               
+               INSERT INTO gzcal_t(gzcal001,gzcal002,gzcal003)
+                  VALUES(lc_gzcal001,la_gzzy[li_cnt].gzzy001,lc_gzcal003_new)
+            ELSE
+               IF cl_null(lc_gzcal003_old) THEN
+                 UPDATE gzcal_t SET gzcal003 = lc_gzcal003_new
+                  WHERE gzcal001 = lc_gzcal001 
+                    AND gzcal002 = la_gzzy[li_cnt].gzzy001
+
+                  
+               END IF
+            END IF
+         END IF
+         FREE s14
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzcbl" cite_std="N" status="" ver="1" src="s" new="Y" order="40" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzcbl()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzcbl()
+  DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt             LIKE type_t.num5
+   DEFINE lc_gzcbl001        LIKE gzcbl_t.gzcbl001
+   DEFINE lc_gzcbl002        LIKE gzcbl_t.gzcbl002
+   DEFINE lc_gzcbl004_tw     LIKE gzcbl_t.gzcbl004
+   DEFINE lc_gzcbl004_old    LIKE gzcbl_t.gzcbl004
+   DEFINE lc_gzcbl004_new    LIKE gzcbl_t.gzcbl004
+   DEFINE lc_gzcbl006_tw     LIKE gzcbl_t.gzcbl006 #應用說明
+   DEFINE lc_gzcbl006_old    LIKE gzcbl_t.gzcbl006 #應用說明
+   DEFINE lc_gzcbl006_new    LIKE gzcbl_t.gzcbl006 #應用說明
+   DEFINE li_result          LIKE type_t.num5
+   DEFINE li_result2         LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num5
+   
+   LET ls_sql = "SELECT gzcbl001,gzcbl002,gzcbl004,gzcbl006 FROM gzcbl_t WHERE gzcbl003 = 'zh_TW' ORDER BY gzcbl001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy()
+
+   DECLARE exp_gzcbl_cs CURSOR FROM ls_sql
+   FOREACH exp_gzcbl_cs INTO lc_gzcbl001,lc_gzcbl002,lc_gzcbl004_tw,lc_gzcbl006_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzcbl004_tw CLIPPED,"' "
+         PREPARE s15 FROM ls_sql_gzoz
+         EXECUTE s15 INTO lc_gzcbl004_new
+         LET li_result = SQLCA.SQLCODE
+
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzcbl006_tw CLIPPED,"' "
+         PREPARE s16 FROM ls_sql_gzoz
+         EXECUTE s16 INTO lc_gzcbl006_new
+         LET li_result2 = SQLCA.SQLCODE
+
+         IF (NOT li_result AND NOT cl_null(lc_gzcbl004_new) ) OR (NOT li_result2 AND NOT cl_null(lc_gzcbl006_new) ) THEN 
+     
+            SELECT COUNT(*) INTO li_count FROM gzcbl_t
+             WHERE gzcbl001 = lc_gzcbl001
+               AND gzcbl002 = lc_gzcbl002
+               AND gzcbl003 = la_gzzy[li_cnt].gzzy001
+
+            IF li_count = 0 THEN 
+               INSERT INTO gzcbl_t(gzcbl001,gzcbl002,gzcbl003,gzcbl004,gzcbl006)
+                  VALUES(lc_gzcbl001,lc_gzcbl002,la_gzzy[li_cnt].gzzy001,lc_gzcbl004_new,lc_gzcbl006_new)
+            ELSE 
+               SELECT gzcbl004,gzcbl006 INTO lc_gzcbl004_old,lc_gzcbl006_old FROM gzcbl_t
+                WHERE gzcbl001 = lc_gzcbl001
+                  AND gzcbl002 = lc_gzcbl002 
+                  AND gzcbl003 = la_gzzy[li_cnt].gzzy001
+
+               IF NOT SQLCA.SQLCODE THEN
+                  IF NOT cl_null(lc_gzcbl004_old) THEN
+                     LET lc_gzcbl004_new = lc_gzcbl004_old
+                  END IF 
+                  IF NOT cl_null(lc_gzcbl006_old) THEN
+                     LET lc_gzcbl006_new = lc_gzcbl006_old   
+                  END IF  
+                  UPDATE gzcbl_t SET gzcbl004 = lc_gzcbl004_new ,gzcbl006 = lc_gzcbl006_new 
+                      WHERE gzcbl001 = lc_gzcbl001 
+                        AND gzcbl002 = lc_gzcbl002
+                        AND gzcbl003 = la_gzzy[li_cnt].gzzy001                     
+               END IF 
+            END IF 
+         END IF 
+         FREE s15
+         FREE s16
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE ma_gzzy DYNAMIC ARRAY OF RECORD
+          gzzy001 LIKE gzzy_t.gzzy001,
+          gzozcol LIKE type_t.chr10
+               END RECORD]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.parameter" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.background" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.qbe_select" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.exit_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="transfer.argv.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.pre_process" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.count_progress" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.process" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.foreground_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.background_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="function.azzp110_ins_gzgdl_zhtw" cite_std="N" status="u" ver="" src="s" new="Y" order="41">
+<![CDATA[
+################################################################################
+# Descriptions...: 報表樣板說明多語言檔(GR+XtraGrid)
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzgdl_zhtw()
+#                  RETURNING
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzgdl_zhtw()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzgdl002 LIKE gzgdl_t.gzgdl002
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzgdl002 FROM gzgdl_t WHERE gzgdlent = ",g_enterprise," AND gzgdl001 = 'zh_TW'  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzgdl_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzgdl_zhtw_cs INTO lc_gzgdl002
+       IF cl_null(lc_gzgdl002) THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzgdl002) RETURNING lc_gzgdl002
+       IF NOT cl_chk_tworcn("zh_TW",lc_gzgdl002,0) THEN
+          CONTINUE FOREACH
+       END IF
+
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_gzgdl002
+       IF li_row = 0 THEN
+          INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzgdl002,'Y','N')
+          LET li_cnt = li_cnt + 1
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_ins_gzge_zhtw" cite_std="N" status="u" ver="" src="s" new="Y" order="42">
+<![CDATA[
+################################################################################
+# Descriptions...: 報表樣板多語言紀錄檔(GR+XtraGrid)
+# Memo...........:
+# Usage..........: CALL azzp110_ins_gzge_zhtw()
+#                  RETURNING 
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_ins_gzge_zhtw()
+      DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzge003  LIKE gzge_t.gzge003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzge003 FROM gzge_t WHERE gzgeent = ",g_enterprise," AND gzge002 = 'zh_TW' "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzge_zhtw_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzge_zhtw_cs INTO lc_gzge003
+       IF cl_null(lc_gzge003) THEN
+          CONTINUE FOREACH
+       END IF
+
+       #去掉前後空白
+       CALL azzp110_trim(lc_gzge003) RETURNING lc_gzge003
+       IF NOT cl_chk_tworcn("zh_TW",lc_gzge003,0) THEN
+          CONTINUE FOREACH
+       END IF
+
+       SELECT COUNT(*) INTO li_row FROM gzoz_t
+        WHERE gzoz000 = lc_gzge003
+       IF li_row = 0 THEN 
+          INSERT INTO gzoz_t(gzoz000,gzozstus,gzoz500) VALUES(lc_gzge003,'Y','N')
+          LET li_cnt = li_cnt + 1   
+       END IF
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzgdl_twcn" cite_std="N" status="u" ver="" src="s" new="Y" order="43">
+<![CDATA[
+################################################################################
+# Descriptions...: 檢查 gzgdl 簡繁互用
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzgdl_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzgdl_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzgdl000 LIKE gzgdl_t.gzgdl000
+   DEFINE lc_gzgdl001 LIKE gzgdl_t.gzgdl001
+   DEFINE lc_gzgdl002 LIKE gzgdl_t.gzgdl002
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzgdl000,gzgdl001,gzgdl002 FROM gzgdl_t ",
+                " WHERE gzgdlent = ",g_enterprise," AND (gzgdl001 = 'zh_TW' OR gzgdl001 = 'zh_CN' )",
+                " ORDER BY gzgdl000,gzgdl001  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzgdl_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzgdl_twcn_cs INTO lc_gzgdl000,lc_gzgdl001,lc_gzgdl002
+      IF cl_null(lc_gzgdl002) THEN
+         CONTINUE FOREACH
+      END IF
+      
+      CALL azzp110_trim(lc_gzgdl002) RETURNING lc_gzgdl002
+      IF NOT cl_chk_tworcn(lc_gzgdl001 CLIPPED,lc_gzgdl002 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_gzgdl000:",lc_gzgdl000,"   lc_gzgdl001:",lc_gzgdl001,"   lc_gzgdl002:",lc_gzgdl002  
+            
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH  
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_chk_gzge_twcn" cite_std="N" status="u" ver="" src="s" new="Y" order="44">
+<![CDATA[
+################################################################################
+# Descriptions...: 檢查 gzge 簡繁互用
+# Memo...........:
+# Usage..........: CALL azzp110_chk_gzge_twcn()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_chk_gzge_twcn()
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE lc_gzge000 LIKE gzge_t.gzge000
+   DEFINE lc_gzge001 LIKE gzge_t.gzge001
+   DEFINE lc_gzge002 LIKE gzge_t.gzge002
+   DEFINE lc_gzge003 LIKE gzge_t.gzge003
+   DEFINE li_row      LIKE type_t.num10
+
+   LET ls_sql = "SELECT gzge000,gzge001,gzge002,gzge003 FROM gzge_t ",
+                " WHERE gzgeent = ",g_enterprise," AND (gzge002 = 'zh_TW' OR gzge002 = 'zh_CN') ",
+                " ORDER BY gzge000,gzge001,gzge002  "
+   LET li_cnt = 1
+
+   DECLARE azzp110_gzge_twcn_cs CURSOR FROM ls_sql
+   FOREACH azzp110_gzge_twcn_cs INTO lc_gzge000,lc_gzge001,lc_gzge002,lc_gzge003
+      IF cl_null(lc_gzge003) THEN
+         CONTINUE FOREACH
+      END IF
+      CALL azzp110_trim(lc_gzge003) RETURNING lc_gzge003
+      IF NOT cl_chk_tworcn(lc_gzge002 CLIPPED,lc_gzge003 CLIPPED,0) THEN
+         DISPLAY li_cnt," Error Translate-lc_gzge000:",lc_gzge000,"   lc_gzge001:",lc_gzge001,"   lc_gzge002:",lc_gzge002 ," lc_gzge003:",lc_gzge003  
+         LET li_cnt = li_cnt + 1
+      END IF
+   END FOREACH  
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzgdl" cite_std="N" status="u" ver="" src="s" new="Y" order="45">
+<![CDATA[
+################################################################################
+# Descriptions...: 匯出 gzgdl 所有語言除了zh_TW
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzgdl()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzgdl()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzgdl000     LIKE gzgdl_t.gzgdl000
+   DEFINE lc_gzgdl002_tw  LIKE gzgdl_t.gzgdl002
+   DEFINE lc_gzgdl002_old LIKE gzgdl_t.gzgdl002
+   DEFINE lc_gzgdl002_new LIKE gzgdl_t.gzgdl002
+  
+
+   LET ls_sql = "SELECT gzgdl000,gzcal002 FROM gzgdl_t WHERE gzgdl001 = 'zh_TW' AND gzgdlent = ",g_enterprise ," ORDER BY gzgdl001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy()  #除了zh_TW 之外
+
+   DECLARE exp_gzgdl_cs CURSOR FROM ls_sql
+   FOREACH exp_gzgdl_cs INTO lc_gzgdl000,lc_gzgdl002_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzgdl002_tw CLIPPED,"' "
+         PREPARE s17 FROM ls_sql_gzoz
+         EXECUTE s17 INTO lc_gzgdl002_new
+
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_gzgdl002_new) THEN
+            SELECT gzgdl002 INTO lc_gzgdl002_old FROM gzgdl_t
+             WHERE gzgdlent = g_enterprise 
+               AND gzgdl000 = lc_gzgdl000
+               AND gzgdl001 = la_gzzy[li_cnt].gzzy001
+               
+            IF SQLCA.SQLCODE THEN
+               
+               INSERT INTO gzgdl_t(gzgdlent,gzgdl000,gzgdl001,gzgdl002)
+                  VALUES(g_enterprise,lc_gzgdl000,la_gzzy[li_cnt].gzzy001,lc_gzgdl002_new)
+               DISPLAY "INSERT sqlca.sqlcode ",sqlca.sqlcode , " g_enterprise:",g_enterprise , " lc_gzgdl000:",lc_gzgdl000 
+            ELSE
+               IF cl_null(lc_gzgdl002_old) THEN
+                 UPDATE gzgdl_t SET gzgdl002 = lc_gzgdl002_new
+                  WHERE gzgdlent = g_enterprise 
+                    AND gzgdl000 = lc_gzgdl000 
+                    AND gzgdl001 = la_gzzy[li_cnt].gzzy001
+                 DISPLAY "UPDATE sqlca.sqlcode ",sqlca.sqlcode , " g_enterprise:",g_enterprise , " lc_gzgdl000:",lc_gzgdl000 
+               END IF
+            END IF
+         END IF
+         FREE s17
+
+      END FOR
+   END FOREACH  
+END FUNCTION]]>
+</point>
+  <point name="function.azzp110_exp_gzge" cite_std="N" status="u" ver="" src="s" new="Y" order="46">
+<![CDATA[
+################################################################################
+# Descriptions...: 匯出 gzge 所有語言除了zh_TW 
+# Memo...........:
+# Usage..........: CALL azzp110_exp_gzge()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp110_exp_gzge()
+   DEFINE ls_sql STRING
+   DEFINE ls_sql_gzoz STRING
+   DEFINE la_gzzy DYNAMIC ARRAY OF RECORD
+             gzzy001 LIKE gzzy_t.gzzy001, #語言別
+             gzozcol LIKE type_t.chr10    #語言別欄位
+                  END RECORD
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE lc_gzge000     LIKE gzge_t.gzge000
+   DEFINE lc_gzge001     LIKE gzge_t.gzge001
+   DEFINE lc_gzge003_tw  LIKE gzge_t.gzge003
+   DEFINE lc_gzge003_old LIKE gzge_t.gzge003
+   DEFINE lc_gzge003_new LIKE gzge_t.gzge003
+   DEFINE lc_gzgecrtid   LIKE gzge_t.gzgecrtid
+   DEFINE lc_gzgecrtdp   LIKE gzge_t.gzgecrtdp
+   DEFINE lc_gzgecrtdt   DATETIME YEAR TO SECOND
+   DEFINE lc_gzgemodid   LIKE gzge_t.gzgemodid
+   DEFINE lc_gzgemoddt   DATETIME YEAR TO SECOND
+   DEFINE lc_gzgeownid   LIKE gzge_t.gzgeownid
+   DEFINE lc_gzgeowndp   LIKE gzge_t.gzgeowndp
+
+   LET lc_gzgeownid = g_user
+   LET lc_gzgeowndp = g_dept
+   LET lc_gzgecrtid = g_user
+   LET lc_gzgecrtdp = g_dept
+   LET lc_gzgecrtdt = cl_get_current()
+
+   LET lc_gzgemodid = g_user
+   LET lc_gzgemoddt = cl_get_current()
+   
+   
+   LET ls_sql = "SELECT gzge000,gzge001,gzge003 FROM gzge_t WHERE gzgeent = ",g_enterprise,"gzge001 = 'zh_TW' ORDER BY gzge000,gzge001"
+
+   #取出語言種類與項目
+   LET la_gzzy = azzp110_get_gzzy()  #除了zh_TW 之外
+
+   DECLARE exp_gzge_cs CURSOR FROM ls_sql
+   FOREACH exp_gzge_cs INTO lc_gzge000,lc_gzge001,lc_gzge003_tw
+      #跑單身陣列
+      FOR li_cnt = 1 TO la_gzzy.getLength()
+         #以繁體中文為主
+         LET ls_sql_gzoz = "SELECT ",la_gzzy[li_cnt].gzozcol CLIPPED,
+                            " FROM gzoz_t WHERE gzoz000= '",lc_gzge003_tw CLIPPED,"' "
+         PREPARE s18 FROM ls_sql_gzoz
+         EXECUTE s18 INTO lc_gzge003_new
+         #如果有資料且該筆資料不是null  
+         #然後判斷該語言別是否有資料 沒有資料就insert 有資料確認該筆資料是否是null，是就update 
+         IF NOT SQLCA.SQLCODE AND NOT cl_null(lc_gzge003_new) THEN
+            SELECT gzge003 INTO lc_gzge003_old FROM gzge_t
+             WHERE gzgeent = g_enterprise 
+               AND gzge000 = lc_gzge000
+               AND gzge001 = lc_gzge001
+               AND gzge002 = la_gzzy[li_cnt].gzzy001
+               
+            IF SQLCA.SQLCODE THEN
+               
+               INSERT INTO gzge_t(gzgestus,gzgeent,gzge000,gzge001,gzge002,gzge003,
+                                  gzgecrtid,gzgecrtdp,gzgecrtdt,gzgeownid,gzgeowndp)
+                  VALUES('Y',g_enterprise,lc_gzge000,lc_gzge001,la_gzzy[li_cnt].gzzy001,lc_gzge003_new,
+                         lc_gzgecrtid,lc_gzgecrtdp,lc_gzgecrtdt,lc_gzgeownid,lc_gzgeowndp)
+            ELSE
+               IF cl_null(lc_gzge003_old) THEN
+                 UPDATE gzge003_t SET gzge003 = lc_gzge003_new,
+                                      gzgemodid = lc_gzzdmodid,gzgemoddt = lc_gzzdmoddt
+                  WHERE gzgeent = g_enterprise 
+                    AND gzge000 = lc_gzge000
+                    AND gzge001 = lc_gzge001
+                    AND gzge002 = la_gzzy[li_cnt].gzzy001
+
+                  
+               END IF
+            END IF
+         END IF
+         FREE s18
+
+      END FOR
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <section id="azzp110.main" ver="1" status="u" src="m">
+<![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   DEFINE ls_target   STRING
+   DEFINE ls_temp     STRING
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+   LET g_bgjob = "Y"
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+{<point name="main.background"/>}
+   #end add-point
+    #DISPLAY "azzp110: ",g_argv[1] 
+    CASE
+      WHEN g_argv[1] = "import_fr_dzeal_tw"    #表格名稱
+         CALL azzp110_ins_dzeal_zhtw()
+ 
+      WHEN g_argv[1] = "import_fr_dzebl_tw"    #欄位名稱
+         CALL azzp110_ins_dzebl_zhtw()
+ 
+      WHEN g_argv[1] = "import_fr_gzzal_tw"    #程式/作業名稱
+         CALL azzp110_ins_gzzal_zhtw()
+ 
+      WHEN g_argv[1] = "import_fr_gzzd_tw"     #畫面元件
+         CALL azzp110_ins_gzzd_zhtw()
+ 
+      WHEN g_argv[1] = "import_fr_gzdfl_tw"    #子畫面名稱
+         CALL azzp110_ins_gzdfl_zhtw()
+ 
+      WHEN g_argv[1] = "import_fr_gzzq_tw"     #功能名稱
+         CALL azzp110_ins_gzzq_zhtw()
+ 
+      WHEN g_argv[1] = "import_fr_gzswl_tw"    #參數分頁
+         CALL azzp110_ins_gzswl_zhtw()
+ 
+      WHEN g_argv[1] = "import_fr_gzsxl_tw"    #參數分項
+         CALL azzp110_ins_gzsxl_zhtw()
+ 
+      WHEN g_argv[1] = "import_fr_gzszl_tw"    #參數名稱
+         CALL azzp110_ins_gzszl_zhtw()
+ 
+      WHEN g_argv[1] = "import_fr_gzwel_tw"    #選單名稱
+         CALL azzp110_ins_gzwel_zhtw()
+
+      WHEN g_argv[1] = "import_fr_gzcal_tw"    #系統分類碼
+         CALL azzp110_ins_gzcal_zhtw()  
+
+      WHEN g_argv[1] = "import_fr_gzcbl_tw"    #系統分類值檔
+         CALL azzp110_ins_gzcbl_zhtw()  
+         
+      WHEN g_argv[1] = "import_fr_gzgdl_tw"    #報表樣板說明多語言檔(GR+XtraGrid)
+         CALL azzp110_ins_gzgdl_zhtw()
+
+      WHEN g_argv[1] = "import_fr_gzge_tw"     #報表樣板多語言紀錄檔(GR+XtraGrid)
+         CALL azzp110_ins_gzge_zhtw()
+         
+      WHEN g_argv[1] = "translate_gzoz_tw2cn"  #從正體中文翻成簡體
+         CALL azzp110_upd_gzoz_tw2cn()
+ 
+      WHEN g_argv[1] = "update_fr_gzdi"        #從舊字典檔取出可用資料
+         CALL azzp110_ins_zhtw_fr_gzdi()
+ 
+      WHEN g_argv[1] = "chk_dzeal_twcn"        #檢查 dzeal 簡繁互用
+         CALL azzp110_chk_dzeal_twcn()
+ 
+      WHEN g_argv[1] = "chk_dzebl_twcn"        #檢查 dzebl 簡繁互用
+         CALL azzp110_chk_dzebl_twcn()
+ 
+      WHEN g_argv[1] = "chk_gzzal_twcn"        #檢查 gzzal 簡繁互用
+         CALL azzp110_chk_gzzal_twcn()
+ 
+      WHEN g_argv[1] = "chk_gzzd_twcn"         #檢查 gzzd 簡繁互用
+         CALL azzp110_chk_gzzd_twcn()
+ 
+      WHEN g_argv[1] = "chk_gzdfl_twcn"        #檢查 gzdfl 簡繁互用
+         CALL azzp110_chk_gzdfl_twcn()   
+ 
+      WHEN g_argv[1] = "chk_gzzq_twcn"         #檢查 gzzq 簡繁互用
+         CALL azzp110_chk_gzzq_twcn() 
+ 
+      WHEN g_argv[1] = "chk_gzswl_twcn"        #檢查 gzswl 簡繁互用
+         CALL azzp110_chk_gzswl_twcn()
+ 
+      WHEN g_argv[1] = "chk_gzsxl_twcn"        #檢查 gzsxl 簡繁互用
+         CALL azzp110_chk_gzsxl_twcn()   
+ 
+      WHEN g_argv[1] = "chk_gzszl_twcn"        #檢查 gzszl 簡繁互用
+         CALL azzp110_chk_gzszl_twcn()   
+ 
+      WHEN g_argv[1] = "chk_gzwel_twcn"        #檢查 gzszl 簡繁互用
+         CALL azzp110_chk_gzwel_twcn()
+
+      WHEN g_argv[1] = "chk_gzcal_twcn"        #檢查 gzcal 簡繁互用
+         CALL azzp110_chk_gzcal_twcn()
+
+      WHEN g_argv[1] = "chk_gzcbl_twcn"        #檢查 gzcbl 簡繁互用
+         CALL azzp110_chk_gzcbl_twcn()   
+             
+      WHEN g_argv[1] = "chk_gzgdl_twcn"        #檢查 gzgdl 簡繁互用
+         CALL azzp110_chk_gzgdl_twcn()  
+
+      WHEN g_argv[1] = "chk_gzge_twcn"          #檢查 gzge 簡繁互用
+         CALL azzp110_chk_gzge_twcn()    
+  
+      WHEN g_argv[1] = "exp_dzeal"             #匯出 dzeal 所有語言除了zh_TW 
+         CALL azzp110_exp_dzeal()
+ 
+      WHEN g_argv[1] = "exp_dzebl"             #匯出 dzebl 所有語言除了zh_TW 
+         CALL azzp110_exp_dzebl()
+         
+      WHEN g_argv[1] = "exp_gzzal"             #匯出 gzzal 所有語言除了zh_TW 
+         CALL azzp110_exp_gzzal()
+ 
+      WHEN g_argv[1] = "exp_gzzd"              #匯出 gzzd 所有語言除了zh_TW 
+         CALL azzp110_exp_gzzd()               #從字典檔匯到gzzd 要注意gzzd_t有標準及客製
+ 
+      WHEN g_argv[1] = "exp_gzdfl"             #匯出 gzdfl 所有語言除了zh_TW 
+         CALL azzp110_exp_gzdfl() 
+ 
+      WHEN g_argv[1] = "exp_gzzq"              #匯出 gzzq 所有語言除了zh_TW 
+         CALL azzp110_exp_gzzq()               #從字典檔匯到gzzd 要注意gzzd_t有標準及客製
+ 
+      WHEN g_argv[1] = "exp_gzswl"             #匯出 gzswl 所有語言除了zh_TW 
+         CALL azzp110_exp_gzswl()
+ 
+      WHEN g_argv[1] = "exp_gzsxl"             #匯出 gzsxl 所有語言除了zh_TW 
+         CALL azzp110_exp_gzsxl()  
+      
+      WHEN g_argv[1] = "exp_gzszl"             #匯出 gzszl 所有語言除了zh_TW 
+         CALL azzp110_exp_gzszl() 
+ 
+      WHEN g_argv[1] = "exp_gzwel"             #匯出 gzwel 所有語言除了zh_TW 
+         CALL azzp110_exp_gzwel()
+         
+      WHEN g_argv[1] = "exp_gzcal"             #匯出 gzcal 所有語言除了zh_TW 
+         CALL azzp110_exp_gzcal()   
+
+      WHEN g_argv[1] = "exp_gzcbl"             #匯出 gzcbl 所有語言除了zh_TW 
+         CALL azzp110_exp_gzcbl()
+            
+      WHEN g_argv[1] = "exp_gzgdl"             #匯出 gzgdl 所有語言除了zh_TW 
+         CALL azzp110_exp_gzgdl() 
+
+      WHEN g_argv[1] = "exp_gzge"              #匯出 gzge 所有語言除了zh_TW 
+         CALL azzp110_exp_gzge() 
+         
+      END CASE   
+   DISPLAY "azzp110: ",g_argv[1] ," 執行完成"
+   #IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+{<point name="main.servicecall" />}
+      #end add-point
+   #   CALL azzp110_process(ls_js)
+   #ELSE
+      #畫面開啟 (identifier)
+   #   OPEN WINDOW w_azzp110 WITH FORM cl_ap_formpath("azz",g_code)
+ 
+      #瀏覽頁簽資料初始化
+    #  CALL cl_ui_init()
+ 
+      #程式初始化
+    #  CALL azzp110_init()
+ 
+      #進入選單 Menu (="N")
+   #   CALL azzp110_ui_dialog()
+ 
+      #add-point:畫面關閉前
+{<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+   #   CLOSE WINDOW w_azzp110
+   #END IF
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+</section>
+  <section id="azzp110.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000020
+#+ 
+#+ Filename...: azzp110
+#+ Description: 補入多語言資料批次作業
+#+ Creator....: 01856(2014/06/05)
+#+ Modifier...: (1899/12/31)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="azzp110.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="azzp110.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION azzp110_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="azzp110.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="azzp110.process" ver="1" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION azzp110_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE azzp110_process_cs CURSOR FROM ls_sql
+#  FOREACH azzp110_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="azzp110.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION azzp110_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="azzp110.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION azzp110_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.*  TO NULL
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION CLOSE 
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = g_prog,TODAY USING "yyyymmdd",CURRENT HOUR TO SECOND 
+         LET g_jobid = cl_schedule_trim_colon(g_jobid)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL azzp110_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = azzp110_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

@@ -1,0 +1,902 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="asfp360.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2015-08-14 14:02:33), PR版次:0006(2016-08-04 10:57:52)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000065
+#+ Filename...: asfp360
+#+ Description: 工單挪料作業
+#+ Creator....: 00768(2014-05-15 14:34:43)
+#+ Modifier...: 01258 -SD/PR- 08734
+ 
+{</section>}
+ 
+{<section id="asfp360.global" >}
+#應用 i00 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01,asfp360_03_temp3 ——> asfp360_tmp02,asfp360_05_temp3 ——> asfp360_tmp04
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util
+IMPORT FGL asf_asfp360_01
+IMPORT FGL asf_asfp360_02
+IMPORT FGL asf_asfp360_03
+IMPORT FGL asf_asfp360_05
+IMPORT FGL asf_asfp360_04
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+GLOBALS "../../asf/4gl/asfp360.inc"
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE li_step              LIKE type_t.num5
+DEFINE gwin_curr            ui.Window   #Current Window
+DEFINE gfrm_curr            ui.Form     #Current Form
+DEFINE g_forupd_sql         STRING
+DEFINE g_error_show         LIKE type_t.num5
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp360.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   DEFINE l_success     LIKE type_t.num5
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:作業初始化
+   CALL cl_get_para(g_enterprise,g_site,'S-BAS-0028') RETURNING g_ref_unit  #是否启用参考单位
+   #end add-point
+ 
+   #add-point:SQL_define
+
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE asfp360_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asfp360 WITH FORM cl_ap_formpath("asf",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL asfp360_init()
+   
+      #進入選單 Menu (='N')
+      #CALL asfp360_ui_dialog()
+ 
+      #建立各程式的temp table
+      #CALL asfp360_01_create_temp_table() RETURNING l_success
+      #IF NOT l_success THEN
+      #   EXIT PROGRAM
+      #END IF
+      CALL asfp360_02_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      CALL asfp360_03_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      CALL asfp360_05_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      LET li_step = 1
+      IF l_success THEN
+         WHILE TRUE
+            CASE li_step
+               WHEN 1
+                  CALL asfp360_ui_dialog_step1() RETURNING li_step
+               WHEN 2
+                  CALL asfp360_ui_dialog_step2() RETURNING li_step
+               WHEN 3  #成套挪料
+                  CALL asfp360_ui_dialog_step3() RETURNING li_step
+               WHEN 5  #单颗挪料
+                  CALL asfp360_ui_dialog_step5() RETURNING li_step
+               WHEN 4
+                  CALL asfp360_ui_dialog_step4() RETURNING li_step
+               WHEN 0
+                  EXIT WHILE
+               OTHERWISE
+                  EXIT WHILE
+            END CASE
+         END WHILE
+      END IF
+ 
+      #CALL asfp360_01_drop_temp_table() RETURNING l_success
+      CALL asfp360_02_drop_temp_table() RETURNING l_success
+      CALL asfp360_03_drop_temp_table() RETURNING l_success
+      CALL asfp360_05_drop_temp_table() RETURNING l_success
+      
+      #畫面關閉
+      CLOSE WINDOW w_asfp360
+   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+{</section>}
+ 
+{<section id="asfp360.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION asfp360_init()
+   
+   LET g_error_show  = 1
+   
+   #add-point:畫面資料初始化
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   #畫面嵌入
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp360_01"), "main_grid01", "VBox", "master")
+   CALL asfp360_01_init()        #asfp360_01的畫面預設
+
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp360_02"), "main_grid02", "Group", "master")
+   CALL asfp360_02_init()        #asfp360_02的畫面預設
+
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp360_03"), "main_grid03", "Group", "master")
+   CALL asfp360_03_init()        #asfp360_03的畫面預設
+
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp360_05"), "main_grid05", "VBox", "master")
+   CALL asfp360_05_init()        #asfp360_05的畫面預設
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp360_04"), "main_grid04", "Group", "master")
+   CALL asfp360_04_init()        #asfp360_04的畫面預設
+
+   #先將嵌入的畫面都隱藏
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox05",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+END FUNCTION
+
+PRIVATE FUNCTION asfp360_ui_dialog_step1()
+   DEFINE l_success          LIKE type_t.num5
+   DEFINE l_cnt              LIKE type_t.num5
+   
+   CLEAR FORM
+
+   #設定左方的流程圖
+   CALL gfrm_curr.setElementImage("step01","32/step01on.png")
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+
+   #設定左方的流程风格——style属性
+   CALL gfrm_curr.setElementstyle("step01","menuitemfocus")
+   CALL gfrm_curr.setElementstyle("step02","menuitem")
+   CALL gfrm_curr.setElementstyle("step03","menuitem")
+   CALL gfrm_curr.setElementstyle("step04","menuitem")
+   
+   #設定嵌入畫面的 顯示 與 隱藏
+   CALL cl_set_comp_visible("main_vbox01",TRUE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox05",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏
+   CALL cl_set_comp_visible("save",FALSE)             #寫入 (不启用)
+   CALL cl_set_comp_visible("back_step",FALSE)        #回上一步
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步
+   CALL cl_set_comp_visible("continue",FALSE)          #處理其他資料
+   
+   #160120-00002#8 s983961--add(s)   
+   #開啟transaction 
+   CALL s_transaction_begin()
+   #160120-00002#8 s983961--add(e)
+   
+   #预处理
+   #根据g_sfaadocno_01，若没值，则显示画面
+   CALL asfp360_01_show()
+
+   LET g_action_choice = ''
+   
+   
+   WHILE TRUE
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG asf_asfp360_01.asfp360_01_input
+         SUBDIALOG asf_asfp360_01.asfp360_01_display
+         
+         BEFORE DIALOG
+         
+         ON ACTION save
+         
+         ON ACTION continue
+
+         ON ACTION back_step
+         
+         ON ACTION next_step
+            IF cl_null(g_sfaadocno_01) THEN
+               #请先选择工单资料
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00391'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               
+               NEXT FIELD sfaadocno_01
+            END IF
+            #IF g_rec_b_01 = 0 THEN
+            #   #拟调拨料号中没有选择要处理的资料,請先選擇要處理的資料!
+            #   INITIALIZE g_errparam TO NULL
+            #   LET g_errparam.code = 'asf-00355'
+            #   LET g_errparam.extend = ''
+            #   LET g_errparam.popup = TRUE
+            #   CALL cl_err()
+            #   
+            #   NEXT FIELD sfaadocno_01
+            #END IF
+            CALL asfp360_01_chk_column('sfaadocno_01') RETURNING l_success
+            IF NOT l_success THEN
+               NEXT FIELD sfaadocno_01
+            END IF
+            LET g_action_choice = "next_step"
+            EXIT DIALOG
+
+         ON ACTION step01
+
+         ON ACTION step02
+
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+
+   #160120-00002#1 s983961--add(s)   
+   CALL s_transaction_end('Y','0')
+   #160120-00002#1 s983961--add(e) 
+
+   CASE g_action_choice
+      WHEN "next_step"
+         LET g_action_choice = ''
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION asfp360_ui_dialog_step2()
+   DEFINE l_success          LIKE type_t.num5
+   DEFINE l_cnt              LIKE type_t.num5
+   #160120-00002#8 s983961--add(s)
+   DEFINE l_sql              STRING
+   DEFINE l_where            STRING
+   #160120-00002#8 s983961--add(e)
+   CLEAR FORM
+
+   #設定左方的流程圖
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")
+   CALL gfrm_curr.setElementImage("step02","32/step02on.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+
+   #設定左方的流程风格——style属性
+   CALL gfrm_curr.setElementstyle("step01","menuitem")
+   CALL gfrm_curr.setElementstyle("step02","menuitemfocus")
+   CALL gfrm_curr.setElementstyle("step03","menuitem")
+   CALL gfrm_curr.setElementstyle("step04","menuitem")
+   
+   #設定嵌入畫面的 顯示 與 隱藏
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",TRUE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox05",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏
+   CALL cl_set_comp_visible("save",FALSE)             #寫入 (不启用)
+   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步
+   CALL cl_set_comp_visible("continue",FALSE)         #處理其他資料
+   
+   #160120-00002#8 s983961--add(s)   
+   #開啟transaction 
+   CALL s_transaction_begin()
+   
+   LET l_sql = "SELECT sfbadocno ", 
+               "  FROM sfba_t,sfaa_t ", 
+               " WHERE (sfbadocno = sfaadocno AND sfbaent= sfaaent AND "               
+   LET l_where = ''
+   LET l_where = " sfbadocno = '",g_sfaadocno_01,"')"   
+   LET l_sql = l_sql,l_where," FOR UPDATE " 
+   PREPARE asfp360_lock2_body_prep FROM l_sql
+   DECLARE asfp360_lock2_body_curs CURSOR FOR asfp360_lock2_body_prep
+   OPEN asfp360_lock2_body_curs      
+   #160120-00002#8 s983961--add(e)
+  
+   #预处理
+   #栏位预设
+   CALL asfp360_02_get_max_sets()   #计算g_max_sets_02
+   LET g_asfp360_02_m.insets = g_max_sets_02    #拟挪入套数
+   IF cl_null(g_asfp360_02_m.type) THEN
+      LET g_asfp360_02_m.type   = '1'  #挪料类型 1成套 2单颗
+   END IF
+
+   #显示画面
+   CALL asfp360_02_show()
+
+   LET g_action_choice = ''
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG asf_asfp360_02.asfp360_02_inputa
+         #SUBDIALOG asf_asfp360_02.asfp360_02_display
+         SUBDIALOG asf_asfp360_02.asfp360_02_inputb
+
+         BEFORE DIALOG
+
+         ON ACTION save
+
+         ON ACTION continue
+
+         ON ACTION back_step
+            #此页设置的相关数据将会依第一页数据重新产生,是否确定回到上一步？
+            IF cl_ask_confirm('apm-00541') THEN
+               CALL asfp360_02_delete_temp_table()
+               LET g_action_choice = "back_step"
+               EXIT DIALOG
+            END IF
+
+         ON ACTION next_step
+            IF g_asfp360_02_m.type = '1' THEN
+               CALL asfp360_02_gen_b('N')
+            END IF
+            #chk
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM asfp360_02_temp
+             WHERE sel = 'Y'
+               AND plan_inqty > 0
+            IF l_cnt > 0 THEN
+               LET g_action_choice = "next_step"
+               EXIT DIALOG
+            ELSE
+               #请至少选择一笔要处理的资料!请检查!
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'afa-00063'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            END IF
+
+         ON ACTION step01
+
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   #160120-00002#1 s983961--add(s)   
+   CALL s_transaction_end('Y','0')
+   #160120-00002#1 s983961--add(e) 
+
+   CASE g_action_choice
+      WHEN "next_step"
+         IF g_asfp360_02_m.type = '1' THEN
+            #成套挪料
+            RETURN 3
+         ELSE
+            #单颗挪料
+            RETURN 5
+         END IF
+      WHEN "back_step"
+         CALL asfp360_02_delete_temp_table()
+         RETURN 1
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+#成套挪料
+PRIVATE FUNCTION asfp360_ui_dialog_step3()
+   DEFINE l_success          LIKE type_t.num5
+   DEFINE l_cnt              LIKE type_t.num5
+   #160120-00002#8 s983961--add(s)
+   DEFINE l_sql              STRING
+   DEFINE l_where            STRING
+   #160120-00002#8 s983961--add(e)
+   CLEAR FORM
+
+   #設定左方的流程圖
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03on.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+
+   #設定左方的流程风格——style属性
+   CALL gfrm_curr.setElementstyle("step01","menuitem")
+   CALL gfrm_curr.setElementstyle("step02","menuitem")
+   CALL gfrm_curr.setElementstyle("step03","menuitemfocus")
+   CALL gfrm_curr.setElementstyle("step04","menuitem")
+   
+   #設定嵌入畫面的 顯示 與 隱藏
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",TRUE)
+   CALL cl_set_comp_visible("main_vbox05",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏
+   CALL cl_set_comp_visible("save",FALSE)             #寫入 (不启用)
+   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步
+   CALL cl_set_comp_visible("continue",FALSE)         #處理其他資料
+
+   #160120-00002#8 s983961--add(s)   
+   #開啟transaction 
+   CALL s_transaction_begin()
+   
+   LET l_sql = "SELECT sfbadocno ", 
+               "  FROM sfba_t,sfaa_t ", 
+               " WHERE (sfbadocno = sfaadocno AND sfbaent= sfaaent AND "               
+   LET l_where = ''
+   LET l_where = " sfbadocno = '",g_sfaadocno_01,"')"   
+   LET l_sql = l_sql,l_where," FOR UPDATE " 
+   PREPARE asfp360_lock3_body_prep FROM l_sql
+   DECLARE asfp360_lock3_body_curs CURSOR FOR asfp360_lock3_body_prep
+   OPEN asfp360_lock3_body_curs      
+   #160120-00002#8 s983961--add(e)
+
+   #预处理
+   CALL asfp360_03_show()
+   #IF cl_null(g_asfp360_03_m.chief_default) THEN
+   #   LET g_asfp360_03_m.chief_default = 'N'
+   #END IF
+
+
+   LET g_action_choice = ''
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+         SUBDIALOG asf_asfp360_03.asfp360_03_construct
+         SUBDIALOG asf_asfp360_03.asfp360_03_input1
+         SUBDIALOG asf_asfp360_03.asfp360_03_display2
+         SUBDIALOG asf_asfp360_03.asfp360_03_input3
+         SUBDIALOG asf_asfp360_03.asfp360_03_input4
+         SUBDIALOG asf_asfp360_03.asfp360_03_display5
+
+         BEFORE DIALOG
+
+         ON ACTION save
+
+         ON ACTION continue
+
+         ON ACTION back_step
+            #此页设置的相关数据将会依第一页数据重新产生,是否确定回到上一步？
+            IF cl_ask_confirm('apm-00541') THEN
+               CALL asfp360_03_delete_temp_table()
+               LET g_action_choice = "back_step"
+               EXIT DIALOG
+            END IF
+
+         ON ACTION next_step
+            #chk
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt
+              FROM asfp360_tmp01,asfp360_tmp02          #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01,asfp360_03_temp3 ——> asfp360_tmp02
+             WHERE asfp360_tmp01.sfaadocno = asfp360_tmp02.sfaadocno  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01,asfp360_03_temp3 ——> asfp360_tmp02
+               AND asfp360_tmp01.sel = 'Y'   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01
+               AND asfp360_tmp02.outqty > 0    #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp3 ——> asfp360_tmp02
+            IF l_cnt > 0 THEN
+               LET g_action_choice = "next_step"
+               EXIT DIALOG
+            ELSE
+               #请至少选择一笔要处理的资料!请检查!
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'afa-00063'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            END IF
+
+         ON ACTION step01
+
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   #160120-00002#1 s983961--add(s)   
+   CALL s_transaction_end('Y','0')
+   #160120-00002#1 s983961--add(e) 
+
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 4
+      WHEN "back_step"
+         CALL asfp360_03_delete_temp_table()
+         UPDATE asfp360_02_temp SET inqty_sum = 0,inqtyr_sum=0 
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+#单颗挪料
+PRIVATE FUNCTION asfp360_ui_dialog_step5()
+   DEFINE l_success          LIKE type_t.num5
+   DEFINE l_cnt              LIKE type_t.num5
+   
+   CLEAR FORM
+
+   #設定左方的流程圖
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03on.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+
+   #設定左方的流程风格——style属性
+   CALL gfrm_curr.setElementstyle("step01","menuitem")
+   CALL gfrm_curr.setElementstyle("step02","menuitem")
+   CALL gfrm_curr.setElementstyle("step03","menuitemfocus")
+   CALL gfrm_curr.setElementstyle("step04","menuitem")
+   
+   #設定嵌入畫面的 顯示 與 隱藏
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox05",TRUE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏
+   CALL cl_set_comp_visible("save",FALSE)             #寫入 (不启用)
+   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步
+   CALL cl_set_comp_visible("continue",FALSE)         #處理其他資料
+
+   #预处理
+   CALL asfp360_05_show()
+
+   LET g_action_choice = ''
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+         SUBDIALOG asf_asfp360_05.asfp360_05_construct
+         SUBDIALOG asf_asfp360_05.asfp360_05_display1
+         SUBDIALOG asf_asfp360_05.asfp360_05_input3
+         SUBDIALOG asf_asfp360_05.asfp360_05_input4
+
+         BEFORE DIALOG
+
+         ON ACTION save
+
+         ON ACTION continue
+
+         ON ACTION back_step
+            #此页设置的相关数据将会依第一页数据重新产生,是否确定回到上一步？
+            IF cl_ask_confirm('apm-00541') THEN
+               CALL asfp360_05_delete_temp_table()
+               LET g_action_choice = "back_step"
+               EXIT DIALOG
+            END IF
+
+         ON ACTION next_step
+            #chk
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM asfp360_tmp04  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+             WHERE sel = 'Y' AND outqty > 0
+            IF l_cnt > 0 THEN
+               LET g_action_choice = "next_step"
+               EXIT DIALOG
+            ELSE
+               #请至少选择一笔要处理的资料!请检查!
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'afa-00063'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            END IF
+
+         ON ACTION step01
+
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 4
+      WHEN "back_step"
+         CALL asfp360_05_delete_temp_table()
+         UPDATE asfp360_02_temp SET inqty_sum = 0,inqtyr_sum=0 
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+#第四步
+PRIVATE FUNCTION asfp360_ui_dialog_step4()
+   DEFINE l_success          LIKE type_t.num5
+   #160120-00002#8 s983961--add(s)
+   DEFINE l_sql              STRING
+   DEFINE l_where            STRING
+   #160120-00002#8 s983961--add(e)
+   CLEAR FORM
+
+   #設定左方的流程圖
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04on.png")
+
+   #設定左方的流程风格——style属性
+   CALL gfrm_curr.setElementstyle("step01","menuitem")
+   CALL gfrm_curr.setElementstyle("step02","menuitem")
+   CALL gfrm_curr.setElementstyle("step03","menuitem")
+   CALL gfrm_curr.setElementstyle("step04","menuitemfocus")
+   
+   #設定嵌入畫面的 顯示 與 隱藏
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox05",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",TRUE)
+
+   #設定下方的button的 顯示 與 隱藏
+   CALL cl_set_comp_visible("save",FALSE)             #寫入 (不启用)
+   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步
+   CALL cl_set_comp_visible("next_step",FALSE)        #下一步
+   CALL cl_set_comp_visible("continue",TRUE)          #處理其他資料
+
+   #160120-00002#8 s983961--add(s)   
+   #開啟transaction 
+   CALL s_transaction_begin()
+   
+   LET l_sql = "SELECT sfbadocno ", 
+               "  FROM sfba_t,sfaa_t ", 
+               " WHERE (sfbadocno = sfaadocno AND sfbaent= sfaaent AND "               
+   LET l_where = ''
+   LET l_where = " sfbadocno = '",g_sfaadocno_01,"')"   
+   LET l_sql = l_sql,l_where," FOR UPDATE " 
+   PREPARE asfp360_lock4_body_prep FROM l_sql
+   DECLARE asfp360_lock4_body_curs CURSOR FOR asfp360_lock4_body_prep
+   OPEN asfp360_lock4_body_curs      
+   #160120-00002#8 s983961--add(e)
+
+   #预处理
+   IF cl_null(g_asfp360_04_m.user) THEN
+      LET g_asfp360_04_m.user = g_user
+   END IF
+   CALL asfp360_04_show()
+
+   LET g_action_choice = ''
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG asf_asfp360_04.asfp360_04_input
+         SUBDIALOG asf_asfp360_04.asfp360_04_display1
+         SUBDIALOG asf_asfp360_04.asfp360_04_display2
+
+         BEFORE DIALOG
+
+         ON ACTION save
+
+         ON ACTION continue
+            LET g_action_choice = "continue"
+            EXIT DIALOG
+
+         ON ACTION back_step
+            IF NOT cl_null(g_asfp360_04_m2.send_no) THEN
+               #已产生单据，不可返回上一步;请选择“处理其他资料”
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00396'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            ELSE
+               LET g_action_choice = "back_step"
+               EXIT DIALOG
+            END IF
+
+         #ON ACTION next_step
+
+         ON ACTION step01
+
+         ON ACTION step02
+
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+            
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+
+   #160120-00002#1 s983961--add(s)   
+   CALL s_transaction_end('Y','0')
+   #160120-00002#1 s983961--add(e) 
+
+   CASE g_action_choice
+      WHEN "continue"
+         CALL asfp360_delete_temp()
+         #清空
+         LET g_sfaadocno_01 = ''
+         LET g_asfp360_04_m2.sfladocno =''  #挪料序号
+         LET g_asfp360_04_m2.send_no =''
+         LET g_asfp360_04_m2.return_no =''
+         CALL g_asfp360_04_d1.clear()
+         CALL g_asfp360_04_d2.clear()
+         RETURN 1
+      WHEN "back_step"
+         IF g_asfp360_02_m.type = '1' THEN #挪料类型 1成套 2单颗
+            RETURN 3
+         ELSE
+            RETURN 5
+         END IF
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION asfp360_delete_temp()
+   #CALL asfp360_01_delete_temp_table()
+   CALL asfp360_02_delete_temp_table()
+   CALL asfp360_03_delete_temp_table()
+   CALL asfp360_05_delete_temp_table()
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

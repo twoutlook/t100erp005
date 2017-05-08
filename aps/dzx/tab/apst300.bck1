@@ -1,0 +1,217 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apst300" module="aps" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02295" crtdt="2014-03-05 15:31:26" modid="03079" moddt="2016-05-16 15:08:58" sdver="0010" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="獨立需求維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psaadocno,psaadocno_desc(chr80),psaadocdt,psaasite,psaa001,psaa001_desc(chr80),psaa002,psaa002_desc(chr80),psaa003,psaastus,psaaownid,psaaownid_desc(chr80),psaaowndp,psaaowndp_desc(chr80),psaacrtid,psaacrtid_desc(chr80),psaacrtdp,psaacrtdp_desc(chr80),psaacrtdt,psaamodid,psaamodid_desc(chr80),psaamoddt,psaacnfid,psaacnfid_desc(chr80),psaacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="psabseq,psab001,psab012,psab001_desc(chr500),psab001_desc_desc(chr500),psab002,psab002_desc(chr500),psab003,psab004,psab005,psab006,net(num20_6),psab010,psab010_desc(chr500),psab011,psab011_desc(chr500),psab007,psab008,psab009,psabsite,psab013"/>
+      <var id="bs_field" value="psaadocno,psaadocno_desc(chr80),psaadocdt,psaa001,psaa001_desc(chr80),psaa002,psaa002_desc(chr80)" pk="psaadocno" order=""/>
+      <bs_reference field="psaa001_desc" ref_field="psaa001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="psaa002_desc" ref_field="psaa002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="single_closed"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="single_unclosed"/>
+      <action id="con_qty"/>
+      <action id="prog_psaa001" prog="cl_user_contact(&quot;aooi130&quot;," parameter="&quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+      <action id="prog_button" prog="cl_user_contact(&quot;aooi130&quot;," parameter="&quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </section>
+  </structure>
+  <form id="0" module="aps" filename="apst300" method="dialog">
+    <section id="input">
+      <input id="head" field="psaadocno,psaadocdt,psaasite,psaa001,psaa002,psaa003,psaastus"/>
+      <input id="body" page="1" field="psabseq,psab001,psab012,psab002,psab003,psab004,psab005,psab006,psab010,psab011,psab008,psab009,psabsite,psab013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psaadocno,psaadocno_desc,psaadocdt,psaasite,psaa001,psaa002,psaa003,psaastus,psaaownid,psaaowndp,psaacrtid,psaacrtdp,psaacrtdt,psaamodid,psaamoddt,psaacnfid,psaacnfdt"/>
+      <construct id="body" page="1" field="psabseq,psab001,psab012,psab002,psab003,psab004,psab005,psab006,psab010,psab011,psab008,psab009,psabsite,psab013"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="psaadocno"/>
+      <set id="head" type="no_entry" field="psaadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psaadocno">
+        <after/>
+        <controlp form="q_psaadocno" state="i"/>
+        <controlp form="q_ooba002_1" state="c"/>
+      </column>
+      <column id="psaadocno_desc"/>
+      <column id="psaadocdt"/>
+      <column id="psaasite"/>
+      <column id="psaa001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="psaa001_desc" ref_field="psaa_t.psaa001" map_field="psaa001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psaa001_desc"/>
+      <column id="psaa002">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="psaa002_desc" ref_field="psaa_t.psaa002" map_field="psaa002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="psaa002_desc"/>
+      <column id="psaa003"/>
+      <column id="psaastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="C" pic="closed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="psaaownid">
+        <after>
+          <reference field="psaaownid_desc" ref_field="psaa_t.psaaownid" map_field="psaaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psaaownid_desc"/>
+      <column id="psaaowndp">
+        <after>
+          <reference field="psaaowndp_desc" ref_field="psaa_t.psaaowndp" map_field="psaaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="psaaowndp_desc"/>
+      <column id="psaacrtid">
+        <after>
+          <reference field="psaacrtid_desc" ref_field="psaa_t.psaacrtid" map_field="psaacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psaacrtid_desc"/>
+      <column id="psaacrtdp">
+        <after>
+          <reference field="psaacrtdp_desc" ref_field="psaa_t.psaacrtdp" map_field="psaacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="psaacrtdp_desc"/>
+      <column id="psaacrtdt"/>
+      <column id="psaamodid">
+        <after>
+          <reference field="psaamodid_desc" ref_field="psaa_t.psaamodid" map_field="psaamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psaamodid_desc"/>
+      <column id="psaamoddt"/>
+      <column id="psaacnfid">
+        <after>
+          <reference field="psaacnfid_desc" ref_field="psaa_t.psaacnfid" map_field="psaacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psaacnfid_desc"/>
+      <column id="psaacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="psabseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psab001">
+        <after>
+          <check chkid="v_imaf001_3" id="isExist"/>
+          <reference field="psab001_desc" ref_field="psab_t.psab001" map_field="psabent,psab001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_7" state="i"/>
+        <controlp form="q_imaf001_7" state="c"/>
+      </column>
+      <column id="psab012">
+        <after>
+          <check chkid="v_bmaa002" id="isExist"/>
+        </after>
+      </column>
+      <column id="psab001_desc">
+        <after>
+          <reference field="psab001_desc_desc" ref_field="psab_t.psab001" map_field="psab001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="psab001_desc_desc"/>
+      <column id="psab002">
+        <after/>
+        <controlp form="aimm200_02" state="i"/>
+        <controlp form="aimm200_02" state="c"/>
+      </column>
+      <column id="psab002_desc"/>
+      <column id="psab003"/>
+      <column id="psab004">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="psab005">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psab006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="net" type="S" default="0">
+        <after>
+          <check id="range" st="0.000" st_type="0" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="psab010">
+        <after>
+          <check chkid="v_pjba001" id="isExist"/>
+          <reference field="psab010_desc" ref_field="psab_t.psab010" map_field="psab010" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="psab010_desc"/>
+      <column id="psab011">
+        <after>
+          <check chkid="v_pjbb002" id="isExist"/>
+          <reference field="psab011_desc" ref_field="psab010,psab011" map_field="psab010,psab011" ref_sql="SELECT pjbbl004 FROM pjbbl_t WHERE pjbblent=$varg_enterprise$var AND pjbbl001=? AND pjbbl002=? AND pjbbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbb002_1" state="i"/>
+        <controlp form="q_pjbb002_1" state="c"/>
+      </column>
+      <column id="psab011_desc"/>
+      <column id="psab007"/>
+      <column id="psab008" type="S" default="N"/>
+      <column id="psab009" type="S" default="N"/>
+      <column id="psabsite"/>
+      <column id="psab013" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="psaa_t" pk="psaadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT psaadocno,&apos;&apos;,psaadocdt,psaasite,psaa001,&apos;&apos;,psaa002,&apos;&apos;,psaa003,psaastus,psaaownid,&apos;&apos;,psaaowndp,&apos;&apos;,psaacrtid,&apos;&apos;,psaacrtdp,&apos;&apos;,psaacrtdt,psaamodid,&apos;&apos;,psaamoddt,psaacnfid,&apos;&apos;,psaacnfdt FROM psaa_t WHERE psaaent= ? AND psaadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT psaadocno,&apos;&apos;,psaadocdt,psaasite,psaa001,&apos;&apos;,psaa002,&apos;&apos;,psaa003,psaastus,psaaownid,&apos;&apos;,psaaowndp,&apos;&apos;,psaacrtid,&apos;&apos;,psaacrtdp,&apos;&apos;,psaacrtdt,psaamodid,&apos;&apos;,psaamoddt,psaacnfid,&apos;&apos;,psaacnfdt FROM psaa_t" order="psaadocno"/>
+    </head>
+    <body id="psab_t" page="1" linked="" pk="psabseq" fk="psabdocno">
+      <sql id="forupd_sql_detail" query="SELECT psabseq,psab001,psab012,&apos;&apos;,&apos;&apos;,psab002,&apos;&apos;,psab003,psab004,psab005,psab006,&apos;&apos;,psab010,&apos;&apos;,psab011,&apos;&apos;,psab007,psab008,psab009,psabsite,psab013 FROM psab_t WHERE psabent=? AND psabdocno=? AND psabseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT psabseq,psab001,psab012,&apos;&apos;,&apos;&apos;,psab002,&apos;&apos;,psab003,psab004,psab005,psab006,&apos;&apos;,psab010,&apos;&apos;,psab011,&apos;&apos;,psab007,psab008,psab009,psabsite,psab013 FROM psab_t WHERE psabent=? AND psabdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

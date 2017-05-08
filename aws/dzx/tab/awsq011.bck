@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="awsq011" module="aws" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="07375" crtdt="2016-11-21 15:43:01" modid="07375" moddt="2016-11-21 15:43:01" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="BPM簽核歷程查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="wsba003,wsba005,wsba001,wsba002,wsba007"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="wsba001,wsba002,wsba003,wsba005,wsba006,wsba007(chr500),wsba004,wsba008"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="wsbd001(chr500),wsbd003,wsbd003_desc(chr500),wsbd004(chr500),wsbd005,wsbd007"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="wsba001(b_wsba001),wsba002(b_wsba002),wsba003(b_wsba003),wsba005(b_wsba005),wsba006(b_wsba006),wsba007(b_wsba007),wsba004(b_wsba004),wsba008(b_wsba008)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="wsbd001(b_wsbd001),wsbd003(b_wsbd003),wsbd003_desc(b_wsbd003_desc),wsbd004(b_wsbd004),wsbd005(b_wsbd005),wsbd007(b_wsbd007)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+      <action id="query_detail" chk="N"/>
+    </section>
+  </structure>
+  <form id="0" module="aws" filename="awsq011" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="wsba001,wsba002,wsba003,wsba005,wsba006,wsba004,wsba008" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="wsbd003,wsbd005,wsbd007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="wsba001(b_wsba001),wsba002(b_wsba002),wsba003(b_wsba003),wsba005(b_wsba005),wsba006(b_wsba006),wsba004(b_wsba004),wsba008(b_wsba008)"/>
+      <construct id="body" page="2" field="wsbd003(b_wsbd003),wsbd005(b_wsbd005),wsbd007(b_wsbd007)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="wsba001"/>
+      <column id="wsba002"/>
+      <column id="wsba003"/>
+      <column id="wsba005"/>
+      <column id="wsba006"/>
+      <column id="wsba007"/>
+      <column id="wsba004"/>
+      <column id="wsba008"/>
+    </init>
+    <init id="body" page="2">
+      <column id="wsbd001"/>
+      <column id="wsbd003">
+        <after>
+          <reference field="wsbd003_desc" ref_field="wsbd003" map_field="wsbd003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="wsbd003_desc"/>
+      <column id="wsbd004"/>
+      <column id="wsbd005"/>
+      <column id="wsbd007"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="wsba_t" page="1" linked="" pk="wsba001,wsba002,wsba003,wsba005,wsba007">
+      <sql id="b_fill_sql" query="SELECT wsba001,wsba002,wsba003,wsba005,wsba006,&apos;&apos;,wsba004,wsba008 FROM wsba_t WHERE 1=1 "/>
+    </body>
+    <body id="wsbd_t" page="2" linked="" pk="wsbd001,wsbd002" fk="" detail="Y">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,wsbd003,&apos;&apos;,&apos;&apos;,wsbd005,wsbd007 FROM wsbd_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

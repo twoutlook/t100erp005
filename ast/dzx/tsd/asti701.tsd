@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="asti701" std_prog="asti701" erpver="1.0" ver="2" module="AST" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="stdb_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="stdc_t" main="N" head="N" pk="" fk_detail="" parent="stdb_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：设定内部交易参数，管理与控制内部交易方式与过程
+標準作業功能取消：无
+狀態功能：[有效/無效] 
+作業類型：(基本資料)維護作業
+輸入模式：雙檔(子程式)無搭配任何方案F003_00
+作業資料來源(Master)：
+ 資料來源表：stdb_t(内部结算参数设定资料表)
+作業資料來源(Detail)：
+ 資料來源表：stdc_t(内部结算参数流程价格设定表)
+
+補充說明：(輸入此作的補充說明事項)
+
+
+1.当往来关系=1.两角时，内部交易页签只可以维护两笔资料，自动产生两笔数据 ，后续可以修改取价类型以及比例值
+          第一笔供货对象资料
+          第二笔需求对象资料
+  当往来关系=2.多角时，内部交易页签至少维护三笔资料，并检验第一笔(即顺序最小的)为供货对象，最后一笔为需求对象
+2.当业务类型是1:采购时，隐藏单身页签中取价类型与比例值两个栏位
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[]]>
+  </di_all>
+  <field cite_std="N" name="stdb001_2" ver="1" src="s" column="stdb001" table="stdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdb001" ver="1" src="s" column="stdb001" table="stdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[流程编号：
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:如果设定自动编号则自动给值
+     校驗:1.不允許空白
+          2.不允许重复
+     帶值:无
+     計算或處理:无
+]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdb002" ver="1" src="s" column="stdb002" table="stdb_t" attribute="" type="" req="Y" i_zoom="q_ooef001_3" c_zoom="q_ooef001_3" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[結算中心：
+   ●欄位控管：
+     資料欄位:可INPUT  可DISPLAY
+     預設值:無
+     校驗: 1.不可空白
+           2.須存在[T:組織基本資料檔].[C:組織編號]且[C:結算中心否] = 'Y'
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+       參考函式：q_ooef001_3抓取結算中心資料
+]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdb003" ver="1" src="s" column="stdb003" table="stdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6082" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[业务类型：
+   ●欄位控管：
+     資料欄位:可Display可Input
+     允許空白:No
+     預設值:无
+     資料選項來源:
+       常數型態:1.采购，2.销售，3.调拨，4.领用
+       SCC: SCC號碼
+     校驗:1.不允許空白
+          2.輸入值須存在該SCC的單身項目中
+          3.输入时如果内部交易类型中相同业务类型的个数<>2则提示【内部交易类型未配置，请运行asti700进行配置!】 
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdb004" ver="1" src="s" column="stdb004" table="stdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6085" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[暂时隐藏此栏位
+栏位默认值=1.法人-法人
+]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdb005" ver="1" src="s" column="stdb005" table="stdb_t" attribute="" type="" req="Y" i_zoom="q_ooef001_4" c_zoom="q_ooef001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[供货法人：
+   ●欄位控管：
+     資料欄位:可INPUT  可DISPLAY
+     預設值:無
+     校驗: 1.不可空白
+           2.須存在[T:組織基本資料檔]且有效
+           3.当对象类型=1.法人则要求结算对应属于法人组织
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+       依照标准开窗：q_ooef001_4组织编号，组织名称
+       条件:当对象类型=1.法人则要求结算对应属于法人组织 ANd有效
+]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdb006" ver="1" src="s" column="stdb006" table="stdb_t" attribute="" type="" req="Y" i_zoom="q_ooef001_4" c_zoom="q_ooef001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[需求法人：
+   ●欄位控管：
+     資料欄位:可INPUT  可DISPLAY
+     預設值:無
+     校驗: 1.不可空白
+           2.須存在[T:組織基本資料檔]且有效
+           3.当对象类型=1.法人则要求结算对应属于法人组织
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+       依照标准开窗：q_ooef001_4组织编号，组织名称
+       条件:当对象类型=1.法人则要求结算对应属于法人组织 ANd有效
+]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdb007" ver="1" src="s" column="stdb007" table="stdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6086" default="&apos;2&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[关联交易频率：
+   ●欄位控管：
+     資料欄位:可Display可Input
+     允許空白:No
+     預設值:2
+     資料選項來源:
+       常數型態: 1.实时，2.结算周期汇总
+       SCC: SCC號碼
+     校驗:1.不允許空白
+          2.輸入值須存在該SCC的單身項目中
+          3.当频率=1.实时则不允许供货对象与需求对象重复，即两笔或两笔以上的相同的 供货对象+需求对象
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdb008" ver="1" src="s" column="stdb008" table="stdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6087" default="&apos;2&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[往来关系：
+   ●欄位控管：
+     資料欄位:可Display可Input
+     允許空白:No
+     預設值:2
+     資料選項來源:
+       常數型態: 1.两角贸易，2.多角贸易
+       SCC: SCC號碼
+     校驗:1.不允許空白
+          2.輸入值須存在該SCC的單身項目中
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdb009" ver="1" src="s" column="stdb009" table="stdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[退可冲销：
+   ●欄位控管：
+     資料欄位:可Display可Input
+     允許空白:No
+     預設值:未勾選
+     選項組合:選取為Y，無選取為N
+     校驗:1.不允許空白
+          2.[Y/N]
+          3.当关联频率设定=2.结算周期汇总时，才可进行勾选 
+     帶值:无
+     計算或處理:无
+]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdb010" ver="1" src="s" column="stdb010" table="stdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdbcrtdp" ver="1" src="s" column="stdbcrtdp" table="stdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdbcrtdt" ver="1" src="s" column="stdbcrtdt" table="stdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdbcrtid" ver="1" src="s" column="stdbcrtid" table="stdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdbmoddt" ver="1" src="s" column="stdbmoddt" table="stdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdbmodid" ver="1" src="s" column="stdbmodid" table="stdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdbowndp" ver="1" src="s" column="stdbowndp" table="stdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdb_t.stdbownid" ver="1" src="s" column="stdbownid" table="stdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdbstus" ver="1" src="s" column="stdbstus" table="stdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[內部交易流程維護正確才為有效否則無效，也可手动维护有效否，有效时需判断是否设置正确]]>
+  </field>
+  <field cite_std="N" name="stdc_t.stdc002" ver="1" src="s" column="stdc002" table="stdc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdc_t.stdc003" ver="1" src="s" column="stdc003" table="stdc_t" attribute="" type="" req="Y" i_zoom="q_ooef001_4" c_zoom="q_ooef001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[对象编号：
+   ●欄位控管：
+     資料欄位:可INPUT  可DISPLAY
+     預設值:無
+     校驗: 1.不可空白
+           2.須存在[T:組織基本資料檔]且有效
+           3.当对象类型=1.法人则要求结算对应属于法人组织
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+       依照标准开窗：组织编号，组织名称
+       条件:当对象类型=1.法人则要求结算对应属于法人组织 ANd有效
+]]>
+  </field>
+  <field cite_std="N" name="stdc_t.stdc004" ver="1" src="s" column="stdc004" table="stdc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6088" default="&apos;2&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[取价类型：
+   ●欄位控管：
+     資料欄位:可Display可Input
+     允許空白:No
+     預設值:1
+     資料選項來源:
+       常數型態: 1.平价，2.内部交易价格，3.成本价格比例，4.费用比例
+       SCC: SCC號碼
+     校驗:1.不允許空白
+          2.輸入值須存在該SCC的單身項目中
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="stdc_t.stdc005" ver="1" src="s" column="stdc005" table="stdc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[比例值：
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗: 当价格类型=3.成本价格比例/4.费用比例
+                            1.不允許空白
+                            2.不可小於0
+           其它取价类型则不许输入
+     帶值:无
+     計算或處理:无
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="stdb002_desc" src="s" depend_field="stdb_t.stdb002" correspon_key="stdb002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stdb005_desc" src="s" depend_field="stdb_t.stdb005" correspon_key="stdb005" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stdb006_desc" src="s" depend_field="stdb_t.stdb006" correspon_key="stdb006" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stdbcrtdp_desc" src="s" depend_field="stdb_t.stdbcrtdp" correspon_key="stdbcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stdbcrtid_desc" src="s" depend_field="stdb_t.stdbcrtid" correspon_key="stdbcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="stdbmodid_desc" src="s" depend_field="stdb_t.stdbmodid" correspon_key="stdbmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="stdbowndp_desc" src="s" depend_field="stdb_t.stdbowndp" correspon_key="stdbowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stdbownid_desc" src="s" depend_field="stdb_t.stdbownid" correspon_key="stdbownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="stdc003_desc" src="s" depend_field="stdc_t.stdc003" correspon_key="stdc003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="stdb001_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdbcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdbcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdbcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdbmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdbmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdbowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdb_t.stdbownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdbstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdc_t.stdc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdc_t.stdc003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdc_t.stdc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdc_t.stdc005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="bpage_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_stdbstus" text="有效否" lstr=""/>
+    <sfield name="lbl_stdb001" text="流程代碼" lstr=""/>
+    <sfield name="lbl_stdb002" text="結算中心" lstr=""/>
+    <sfield name="lbl_stdb002_desc" text="結算中心名稱" lstr=""/>
+    <sfield name="lbl_stdb003" text="業務類型" lstr=""/>
+    <sfield name="lbl_stdb004" text="對象類型" lstr=""/>
+    <sfield name="lbl_stdb005" text="供貨對象" lstr=""/>
+    <sfield name="lbl_stdb005_desc" text="供貨對象名稱" lstr=""/>
+    <sfield name="lbl_stdb006" text="需求對象" lstr=""/>
+    <sfield name="lbl_stdb006_desc" text="需求對象名稱" lstr=""/>
+    <sfield name="lbl_stdb007" text="關聯交易頻率" lstr=""/>
+    <sfield name="lbl_stdb008" text="往來關係" lstr=""/>
+    <sfield name="lbl_stdb009" text="退可沖銷" lstr=""/>
+    <sfield name="lbl_stdb010" text="備註" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="page_2.asti701" text="內部交易流程" lstr=""/>
+    <sfield name="lbl_stdc002" text="順序" lstr=""/>
+    <sfield name="lbl_stdc003" text="對象編號" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_stdc004" text="價格類型" lstr=""/>
+    <sfield name="lbl_stdc005" text="價格比例" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="page_s_aooi390_s01_1" text="QBE條件" lstr=""/>
+    <sfield name="lbl_oofg001" text="編碼分類" lstr=""/>
+    <sfield name="lbl_oofg002" text="編碼性質" lstr=""/>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_oofg005" text="節點編號" lstr=""/>
+    <sfield name="lbl_oofg006" text="前段節點編號" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_2" text="基本資料" lstr=""/>
+    <sfield name="lbl_n0" text="編碼分類" lstr=""/>
+    <sfield name="lbl_n1" text="編碼總長度" lstr=""/>
+    <sfield name="lbl_n2" text="編碼總段數" lstr=""/>
+    <sfield name="lbl_n3" text="自動編號" lstr=""/>
+    <sfield name="page_s_aooi390_s01_3" text="明細資料" lstr=""/>
+    <sfield name="lbl_oofg007" text="段次" lstr=""/>
+    <sfield name="lbl_oofgl004" text="節點名稱" lstr=""/>
+    <sfield name="lbl_oofg009" text="長度" lstr=""/>
+    <sfield name="lbl_oofg016" text="使用轉換表" lstr=""/>
+    <sfield name="lbl_oofg008" text="節點型態" lstr=""/>
+    <sfield name="lbl_value" text="輸入值" lstr=""/>
+    <sfield name="lbl_value_desc" text="說明" lstr=""/>
+    <sfield name="lbl_tbegin" text="第" lstr=""/>
+    <sfield name="lbl_tend" text="組" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

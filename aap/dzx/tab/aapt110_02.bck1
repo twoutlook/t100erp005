@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt110_02" module="aap" jobmode="N" type="c01c" industry="std" fix_arg="0" crtid="04152" crtdt="2015-01-13 23:38:16" modid="04152" moddt="2016-08-10 15:21:08" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產生對帳明細">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="l_type(chr500),pmdsdocno,pmds001,pmds002,pmds003,pmdldocno"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="prog_pmds002" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_pmds_m.pmds002"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt110_02" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field="pmdsdocno,pmds001,pmds002,pmds003,pmdldocno"/>
+    </section>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="l_type" type="S" default="1"/>
+      <column id="pmdsdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_pmdsdocno" state="c"/>
+      </column>
+      <column id="pmds001"/>
+      <column id="pmds002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmds003">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="pmdldocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_pmdldocno" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmds_t" pk="pmdsdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,pmdsdocno,pmds001,pmds002,pmds003,&apos;&apos; FROM pmds_t WHERE pmdsent= ? AND pmdsdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="pmdsdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

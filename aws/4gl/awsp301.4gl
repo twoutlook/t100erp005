@@ -1,0 +1,795 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="awsp301.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2015-03-03 15:43:19), PR版次:0003(2015-11-04 09:37:13)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000043
+#+ Filename...: awsp301
+#+ Description: 上傳logo至報表主機
+#+ Creator....: 04010(2015-03-03 15:43:19)
+#+ Modifier...: 04010 -SD/PR- 04010
+ 
+{</section>}
+ 
+{<section id="awsp301.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#+ Modifier...: No.151102-00034#3 15/11/02 Cynthia  報表環境變數入資料庫
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT FGL WSHelper
+IMPORT com
+IMPORT xml
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+&include "../../aws/4gl/awsp301.inc"
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+ TYPE type_parameter RECORD
+        wc1              STRING,
+        wc2              STRING,
+        wc3              STRING,
+#        wc3              BYTE,        
+        wc               STRING
+                     END RECORD
+                     
+ DEFINE awsp301_UploadHTTPReq     com.HTTPRequest
+ DEFINE awsp301_UploadHTTPResp    com.HTTPResponse
+ DEFINE g_ip                      LIKE type_t.chr100  #150323 add   
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="awsp301.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   DEFINE lc_param         type_parameter
+   DEFINE soapStatus       INTEGER
+   DEFINE l_fb             BYTE
+   DEFINE l_str            STRING  #150323 add
+   DEFINE l_n              LIKE type_t.num5 #150323 add 
+   #end add-point    
+   #add-point:main段define
+
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aws","")
+ 
+   #add-point:作業初始化
+
+   #end add-point
+ 
+   #add-point:SQL_define
+
+#   LET g_forupd_sql = ""
+   #end add-point
+#   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+#   DECLARE awsp301_cl CURSOR FROM g_forupd_sql 
+#   
+#   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+
+      #end add-point
+#   ELSE
+      #畫面開啟 (identifier)
+#      OPEN WINDOW w_awsp301 WITH FORM cl_ap_formpath("aws",g_code)
+   
+      #程式初始化
+#      CALL awsp301_init()
+   
+      #瀏覽頁簽資料初始化
+#      CALL cl_ui_init()
+   
+      #進入選單 Menu (='N')
+#      CALL awsp301_ui_dialog()
+   
+      #畫面關閉
+#      CLOSE WINDOW w_awsp301
+#   END IF
+ 
+   #add-point:作業離開前
+   LET lc_param.wc1 = g_argv[1]
+   LET lc_param.wc2 = g_argv[2]
+   LET lc_param.wc3 = g_argv[3]
+
+   #150323 add(s)
+#   LET l_str = FGL_GETENV("XTRAGRIDIP")             #151102-00034#3 mark
+   LET l_str = cl_rpt_get_env_global("XTRAGRIDIP")   #151102-00034#3 add
+   LET l_n = l_str.getIndexOf("/",8)
+   LET g_ip = l_str
+   LET g_ip = g_ip[1,l_n-1]   
+   #150323 add(e)
+
+   #將檔案內容讀取到BYTE變數
+   LOCATE l_fb IN FILE lc_param.wc3
+               
+   CALL awsp301_Upload(lc_param.wc1, lc_param.wc2, l_fb) RETURNING soapStatus, awsp301_UploadResponse.awsp301_UploadResult
+
+   IF soapStatus != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "lib-00125"
+      LET g_errparam.extend = awsp301_UploadResponse.awsp301_UploadResult
+      LET g_errparam.popup = TRUE
+      CALL cl_err()     
+   END IF
+   #end add-point
+ 
+   #離開作業
+#   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="awsp301.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/03/03 By Cynthia
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp301_Upload(p_area,p_fileName,p_fileContent)
+  DEFINE	p_area		   STRING
+  DEFINE	p_fileName		STRING
+  DEFINE	p_fileContent	BYTE
+  DEFINE	soapStatus		INTEGER
+
+
+  LET awsp301_Upload.area = p_area
+  LET awsp301_Upload.fileName = p_fileName
+  LET awsp301_Upload.fileContent = p_fileContent
+
+  LET soapStatus = awsp301_Upload_g()
+
+  RETURN soapStatus, awsp301_UploadResponse.awsp301_UploadResult
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/03/03 By Cynthia
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp301_Upload_g()
+  DEFINE wsstatus   INTEGER
+  DEFINE retryAuth  INTEGER
+  DEFINE retryProxy INTEGER
+  DEFINE retry      INTEGER
+  DEFINE nb         INTEGER
+  DEFINE uri        STRING
+  DEFINE setcookie  STRING
+  DEFINE mustUnderstand INTEGER
+  DEFINE request    com.HTTPRequest
+  DEFINE response   com.HTTPResponse
+  DEFINE writer     xml.StaxWriter
+  DEFINE reader     xml.StaxReader
+
+  #
+  # INIT VARIABLES
+  #
+  LET wsstatus = -1
+  LET retryAuth = FALSE
+  LET retryProxy = FALSE
+  LET retry = TRUE
+  LET uri = com.WebServiceEngine.GetOption("SoapModuleURI")
+
+  IF Uploader_UploaderSoap12Endpoint.Address.Uri IS NULL THEN
+#    LET Uploader_UploaderSoap12Endpoint.Address.Uri = "http://10.40.40.24/Uploader/Uploader.asmx"  #150323 mark
+    LET Uploader_UploaderSoap12Endpoint.Address.Uri = g_ip,"/Uploader/Uploader.asmx"   #150323 add
+  END IF
+
+  #
+  # CREATE REQUEST
+  #
+  TRY
+    LET request = com.HTTPRequest.Create(Uploader_UploaderSoap12Endpoint.Address.Uri)
+    CALL request.setMethod("POST")
+    CALL request.setCharset("UTF-8")
+    CALL request.setHeader("Content-Type","application/soap+xml; action=\"http://tempuri.org/T100/ReportServiceGateWay/awsp301_Upload\"")
+    CALL WSHelper_SetRequestHeaders(request, Uploader_UploaderSoap12Endpoint.Binding.Request.Headers)
+    IF Uploader_UploaderSoap12Endpoint.Binding.Version IS NOT NULL THEN
+      CALL request.setVersion(Uploader_UploaderSoap12Endpoint.Binding.Version)
+    END IF
+    IF Uploader_UploaderSoap12Endpoint.Binding.Cookie IS NOT NULL THEN
+      CALL request.setHeader("Cookie",Uploader_UploaderSoap12Endpoint.Binding.Cookie)
+    END IF
+    IF Uploader_UploaderSoap12Endpoint.Binding.ConnectionTimeout <> 0 THEN
+      CALL request.setConnectionTimeout(Uploader_UploaderSoap12Endpoint.Binding.ConnectionTimeout)
+    END IF
+    IF Uploader_UploaderSoap12Endpoint.Binding.ReadWriteTimeout <> 0 THEN
+      CALL request.setTimeout(Uploader_UploaderSoap12Endpoint.Binding.ReadWriteTimeout)
+    END IF
+    IF Uploader_UploaderSoap12Endpoint.Binding.CompressRequest IS NOT NULL THEN
+      CALL request.setHeader("Content-Encoding",Uploader_UploaderSoap12Endpoint.Binding.CompressRequest)
+    END IF
+    CALL request.setHeader("Accept-Encoding","gzip, deflate")
+  CATCH
+    LET wsstatus = STATUS
+    CALL WSHelper_FillSOAP12WSError("Sender","Cannot create HTTPRequest")
+    RETURN wsstatus
+  END TRY
+
+  # START LOOP
+  WHILE retry
+    LET retry = FALSE
+
+    #
+    # Stax request
+    #
+    TRY
+      LET writer = request.beginXmlRequest()
+      CALL WSHelper_WriteStaxSOAP12StartEnvelope(writer)
+      CALL WSHelper_WriteStaxSOAP12StartBody(writer)
+      #
+      # STAX SOAP REQUEST SERIALIZE
+      #
+      CALL xml.Serializer.VariableToStax(awsp301_Upload,writer)
+      CALL WSHelper_WriteStaxSOAP12EndBody(writer)
+      CALL WSHelper_WriteStaxSOAP12EndEnvelope(writer)
+      CALL request.endXmlRequest(writer)
+    CATCH
+      LET wsstatus = STATUS
+      CALL WSHelper_FillSOAP12WSError("Sender",SQLCA.SQLERRM)
+      RETURN wsstatus
+    END TRY
+
+    #
+    # PROCESS RESPONSE
+    #
+    TRY
+      LET response = request.getResponse()
+
+      #
+      # RETRIEVE SERVICE SESSION COOKIE
+      #
+      LET setcookie = response.getHeader("Set-Cookie")
+      IF setcookie IS NOT NULL THEN
+        LET Uploader_UploaderSoap12Endpoint.Binding.Cookie = WSHelper_ExtractServerCookie(setcookie,Uploader_UploaderSoap12Endpoint.Address.Uri)
+      END IF
+
+      #
+      # RETRIEVE HTTP RESPONSE Headers
+      #
+      CALL WSHelper_SetResponseHeaders(response, Uploader_UploaderSoap12Endpoint.Binding.Response.Headers)
+      CASE response.getStatusCode()
+
+        WHEN 500 # SOAP Fault
+          #
+          # Check SOAP 1.2 MimeType
+          #
+          IF NOT WSHelper_CheckSOAP12HttpMimeType(response) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP FAULT
+          #
+          LET reader = response.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP12StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP12Header(reader) AND NOT reader.isEmptyElement() THEN
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP12HeaderRole(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP12HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP11WSError("Sender","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP12WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL WSHelper_FillSOAP11WSError("Sender","No ending header tag found")
+              EXIT CASE
+            ELSE
+              CALL reader.nextTag()
+            END IF
+          ELSE
+            IF WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL reader.nextSibling() # Skip SOAP headers
+            END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12FaultUntilDetail(reader) THEN
+            EXIT CASE
+          END IF
+          IF WSHelper_CheckStaxSOAP12FaultDetail(reader) THEN
+            #
+            # STAX SOAP FAULT DESERIALIZE
+            #
+            CALL reader.nextSibling() # Skip SOAP detail
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL response.endXmlResponse(reader)
+
+        WHEN 200 # SOAP Result
+          #
+          # Check SOAP 1.2 MimeType
+          #
+          IF NOT WSHelper_CheckSOAP12HttpMimeType(response) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP RESPONSE
+          #
+          LET reader = response.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP12StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP12Header(reader) AND NOT reader.isEmptyElement() THEN
+            LET nb = 0
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP12HeaderRole(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP12HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP12WSError("Sender","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                #
+                # STAX SOAP RESPONSE HEADER DESERIALIZE
+                #
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP12WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL WSHelper_FillSOAP12WSError("Sender","No ending header tag found")
+              EXIT CASE
+            ELSE
+              IF nb != 0 THEN
+                CALL WSHelper_FillSOAP12WSError("Sender","One or more headers are missing")
+                EXIT CASE
+              ELSE
+                CALL reader.nextTag()
+              END IF
+            END IF
+          ELSE
+           IF reader.isEmptyElement() THEN
+             CALL reader.nextTag()
+           END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_RetrieveStaxSOAP12Message(reader) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP RESPONSE DESERIALIZE
+          #
+          CALL xml.Serializer.StaxToVariable(reader,awsp301_UploadResponse)
+          IF NOT WSHelper_ReadStaxSOAP12EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL response.endXmlResponse(reader)
+          LET wsstatus = 0
+
+        WHEN 401 # HTTP Authentication
+          IF retryAuth THEN
+            CALL WSHelper_FillSOAP12WSError("Receiver","HTTP Error 401 ("||response.getStatusDescription()||")")
+          ELSE
+            LET retryAuth = TRUE
+            LET retry = TRUE
+          END IF
+
+        WHEN 407 # Proxy Authentication
+          IF retryProxy THEN
+            CALL WSHelper_FillSOAP12WSError("Receiver","HTTP Error 407 ("||response.getStatusDescription()||")")
+          ELSE
+            LET retryProxy = TRUE
+            LET retry = TRUE
+          END IF
+
+        OTHERWISE
+          CALL WSHelper_FillSOAP12WSError("Receiver","HTTP Error "||response.getStatusCode()||" ("||response.getStatusDescription()||")")
+
+      END CASE
+    CATCH
+      LET wsstatus = status
+      CALL WSHelper_FillSOAP12WSError("Receiver",SQLCA.SQLERRM)
+      RETURN wsstatus
+    END TRY
+
+  # END LOOP
+  END WHILE
+
+  RETURN wsstatus
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp301_UploadRequest_g()
+  DEFINE wsstatus   INTEGER
+  DEFINE writer     xml.StaxWriter
+
+  #
+  # CHECK PREVIOUS CALL  
+  #
+  IF awsp301_UploadHTTPReq IS NOT NULL AND awsp301_UploadHTTPResp IS NULL THEN
+    # Request was sent but there was no response yet
+    CALL WSHelper_FillSOAP12WSError("Sender","Cannot issue a new request until previous response was received")
+    RETURN -2 # waiting for the response
+  ELSE
+    IF Uploader_UploaderSoap12Endpoint.Address.Uri IS NULL THEN
+#      LET Uploader_UploaderSoap12Endpoint.Address.Uri = "http://10.40.40.24/Uploader/Uploader.asmx"  #150323
+      LET Uploader_UploaderSoap12Endpoint.Address.Uri = g_ip,"/Uploader/Uploader.asmx"
+    END IF
+  END IF
+
+  #
+  # CREATE REQUEST
+  #
+  TRY
+    LET awsp301_UploadHTTPReq = com.HTTPRequest.Create(Uploader_UploaderSoap12Endpoint.Address.Uri)
+    CALL awsp301_UploadHTTPReq.setMethod("POST")
+    CALL awsp301_UploadHTTPReq.setCharset("UTF-8")
+    CALL awsp301_UploadHTTPReq.setHeader("Content-Type","application/soap+xml; action=\"http://tempuri.org/T100/ReportServiceGateWay/awsp301_Upload\"")
+    CALL WSHelper_SetRequestHeaders(awsp301_UploadHTTPReq, Uploader_UploaderSoap12Endpoint.Binding.Request.Headers)
+    IF Uploader_UploaderSoap12Endpoint.Binding.Version IS NOT NULL THEN
+      CALL awsp301_UploadHTTPReq.setVersion(Uploader_UploaderSoap12Endpoint.Binding.Version)
+    END IF
+    IF Uploader_UploaderSoap12Endpoint.Binding.Cookie IS NOT NULL THEN
+      CALL awsp301_UploadHTTPReq.setHeader("Cookie",Uploader_UploaderSoap12Endpoint.Binding.Cookie)
+    END IF
+    IF Uploader_UploaderSoap12Endpoint.Binding.ConnectionTimeout <> 0 THEN
+      CALL awsp301_UploadHTTPReq.setConnectionTimeout(Uploader_UploaderSoap12Endpoint.Binding.ConnectionTimeout)
+    END IF
+    IF Uploader_UploaderSoap12Endpoint.Binding.ReadWriteTimeout <> 0 THEN
+      CALL awsp301_UploadHTTPReq.setTimeout(Uploader_UploaderSoap12Endpoint.Binding.ReadWriteTimeout)
+    END IF
+    IF Uploader_UploaderSoap12Endpoint.Binding.CompressRequest IS NOT NULL THEN
+      CALL awsp301_UploadHTTPReq.setHeader("Content-Encoding",Uploader_UploaderSoap12Endpoint.Binding.CompressRequest)
+    END IF
+    CALL awsp301_UploadHTTPReq.setHeader("Accept-Encoding","gzip, deflate")
+  CATCH
+    LET wsstatus = STATUS
+    CALL WSHelper_FillSOAP12WSError("Sender","Cannot create HTTPRequest")
+    LET awsp301_UploadHTTPReq = NULL
+    RETURN wsstatus
+  END TRY
+
+    #
+    # Stax request
+    #
+    TRY
+      LET writer = awsp301_UploadHTTPReq.beginXmlRequest()
+      CALL WSHelper_WriteStaxSOAP12StartEnvelope(writer)
+      CALL WSHelper_WriteStaxSOAP12StartBody(writer)
+      #
+      # STAX SOAP REQUEST SERIALIZE
+      #
+      CALL xml.Serializer.VariableToStax(awsp301_Upload,writer)
+      CALL WSHelper_WriteStaxSOAP12EndBody(writer)
+      CALL WSHelper_WriteStaxSOAP12EndEnvelope(writer)
+      CALL awsp301_UploadHTTPReq.endXmlRequest(writer)
+    CATCH
+      LET wsstatus = STATUS
+      CALL WSHelper_FillSOAP12WSError("Sender",SQLCA.SQLERRM)
+      LET awsp301_UploadHTTPReq = NULL
+      RETURN wsstatus
+    END TRY
+
+  #
+  # PROCESS RESPONSE
+  #
+  TRY
+    LET awsp301_UploadHTTPResp = awsp301_UploadHTTPReq.getAsyncResponse()
+    RETURN 0 # SUCCESS
+  CATCH
+    LET wsstatus = STATUS
+    CALL WSHelper_FillSOAP12WSError("Receiver",SQLCA.SQLERRM)
+    LET awsp301_UploadHTTPReq = NULL
+    RETURN wsstatus
+  END TRY
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp301_UploadResponse_g()
+  DEFINE wsstatus        INTEGER
+  DEFINE nb              INTEGER
+  DEFINE uri             STRING
+  DEFINE setcookie       STRING
+  DEFINE mustUnderstand  INTEGER
+  DEFINE reader          xml.StaxReader
+
+  LET wsstatus = -1
+
+  LET uri = com.WebServiceEngine.GetOption("SoapModuleURI")
+  #
+  # CHECK PREVIOUS CALL  
+  #
+  IF awsp301_UploadHTTPReq IS NULL THEN
+    # No request was sent
+    CALL WSHelper_FillSOAP12WSError("Sender","No request has been sent")
+    RETURN -1
+  END IF
+
+  TRY
+    #
+    # PROCESS RESPONSE
+    #
+    IF awsp301_UploadHTTPResp IS NULL THEN
+      # Still no response, try again
+      LET awsp301_UploadHTTPResp = awsp301_UploadHTTPReq.getAsyncResponse()
+    END IF
+
+    IF awsp301_UploadHTTPResp IS NULL THEN
+      # We got no response, still waiting for
+      CALL WSHelper_FillSOAP12WSError("Sender","Response was not yet received")
+      RETURN -2
+    END IF
+
+      #
+      # RETRIEVE SERVICE SESSION COOKIE
+      #
+      LET setcookie = awsp301_UploadHTTPResp.getHeader("Set-Cookie")
+      IF setcookie IS NOT NULL THEN
+        LET Uploader_UploaderSoap12Endpoint.Binding.Cookie = WSHelper_ExtractServerCookie(setcookie,Uploader_UploaderSoap12Endpoint.Address.Uri)
+      END IF
+
+      #
+      # RETRIEVE HTTP RESPONSE Headers
+      #
+      CALL WSHelper_SetResponseHeaders(awsp301_UploadHTTPResp, Uploader_UploaderSoap12Endpoint.Binding.Response.Headers)
+      CASE awsp301_UploadHTTPResp.getStatusCode()
+
+        WHEN 500 # SOAP Fault
+          #
+          # Check SOAP 1.2 MimeType
+          #
+          IF NOT WSHelper_CheckSOAP12HttpMimeType(awsp301_UploadHTTPResp) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP FAULT
+          #
+          LET reader = awsp301_UploadHTTPResp.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP12StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP12Header(reader) AND NOT reader.isEmptyElement() THEN
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP12HeaderRole(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP12HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP11WSError("Sender","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP12WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL WSHelper_FillSOAP11WSError("Sender","No ending header tag found")
+              EXIT CASE
+            ELSE
+              CALL reader.nextTag()
+            END IF
+          ELSE
+            IF WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL reader.nextSibling() # Skip SOAP headers
+            END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12FaultUntilDetail(reader) THEN
+            EXIT CASE
+          END IF
+          IF WSHelper_CheckStaxSOAP12FaultDetail(reader) THEN
+            #
+            # STAX SOAP FAULT DESERIALIZE
+            #
+            CALL reader.nextSibling() # Skip SOAP detail
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL awsp301_UploadHTTPResp.endXmlResponse(reader)
+
+        WHEN 200 # SOAP Result
+          #
+          # Check SOAP 1.2 MimeType
+          #
+          IF NOT WSHelper_CheckSOAP12HttpMimeType(awsp301_UploadHTTPResp) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP RESPONSE
+          #
+          LET reader = awsp301_UploadHTTPResp.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP12StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP12Header(reader) AND NOT reader.isEmptyElement() THEN
+            LET nb = 0
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP12HeaderRole(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP12HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP12WSError("Sender","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                #
+                # STAX SOAP RESPONSE HEADER DESERIALIZE
+                #
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP12WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL WSHelper_FillSOAP12WSError("Sender","No ending header tag found")
+              EXIT CASE
+            ELSE
+              IF nb != 0 THEN
+                CALL WSHelper_FillSOAP12WSError("Sender","One or more headers are missing")
+                EXIT CASE
+              ELSE
+                CALL reader.nextTag()
+              END IF
+            END IF
+          ELSE
+           IF reader.isEmptyElement() THEN
+             CALL reader.nextTag()
+           END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_RetrieveStaxSOAP12Message(reader) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP RESPONSE DESERIALIZE
+          #
+          CALL xml.Serializer.StaxToVariable(reader,awsp301_UploadResponse)
+          IF NOT WSHelper_ReadStaxSOAP12EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL awsp301_UploadHTTPResp.endXmlResponse(reader)
+          LET wsstatus = 0
+
+        OTHERWISE
+          CALL WSHelper_FillSOAP12WSError("Receiver","HTTP Error "||awsp301_UploadHTTPResp.getStatusCode()||" ("||awsp301_UploadHTTPResp.getStatusDescription()||")")
+
+      END CASE
+    CATCH
+      LET wsstatus = status
+      CALL WSHelper_FillSOAP12WSError("Receiver",SQLCA.SQLERRM)
+    END TRY
+
+  #
+  # RESET VARIABLES
+  #
+  LET awsp301_UploadHTTPReq = NULL
+  LET awsp301_UploadHTTPResp = NULL
+  RETURN wsstatus
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

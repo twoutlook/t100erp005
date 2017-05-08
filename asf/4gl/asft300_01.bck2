@@ -1,0 +1,788 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asft300_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-02-25 10:39:38), PR版次:0004(2016-04-12 11:18:02)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000158
+#+ Filename...: asft300_01
+#+ Description: 多訂單來源產生
+#+ Creator....: 01258(2013-12-25 15:13:32)
+#+ Modifier...: 07024 -SD/PR- 07024
+ 
+{</section>}
+ 
+{<section id="asft300_01.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+#160318-00025#3   2016/04/12  By 07675       將重複內容的錯誤訊息置換為公用錯誤訊息(r.v）
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asft300_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+DEFINE g_xmdd_m        RECORD
+       xmdd001         LIKE xmdd_t.xmdd001, 
+       xmdd040         LIKE xmdd_t.xmdd040, #160214-00005#3-add
+       xmdd001_desc    LIKE imaal_t.imaal003,
+       xmdd001_desc1   LIKE imaal_t.imaal004,
+       imae016         LIKE imae_t.imae016,
+       imae016_desc    LIKE oocal_t.oocal003,
+       date_begin      LIKE xmdd_t.xmdd011,
+       date_end        LIKE xmdd_t.xmdd011,
+       sum             LIKE xmdd_t.xmdd006
+                       END RECORD
+DEFINE g_xmdd_d        DYNAMIC ARRAY OF RECORD
+       select          LIKE type_t.chr1,
+       xmdddocno       LIKE xmdd_t.xmdddocno,
+       xmddseq         LIKE xmdd_t.xmddseq,
+       xmddseq1        LIKE xmdd_t.xmddseq1,
+       xmddseq2	       LIKE xmdd_t.xmddseq2,
+       xmdd006         LIKE xmdd_t.xmdd006,
+       xmdd004         LIKE xmdd_t.xmdd004,
+       xmdd004_desc    LIKE oocal_t.oocal003,
+       qty1            LIKE xmdd_t.xmdd006,
+       unit            LIKE xmdd_t.xmdd004,
+       unit_desc       LIKE oocal_t.oocal003,
+       qty2            LIKE xmdd_t.xmdd006,
+       qty3            LIKE xmdd_t.xmdd006,
+       xmda004         LIKE xmda_t.xmda004,
+       xmda004_desc    LIKE type_t.chr80,
+       xmda003         LIKE xmda_t.xmda003,
+       xmda003_desc    LIKE type_t.chr80,
+       xmda002         LIKE xmda_t.xmda003,
+       xmda002_desc    LIKE type_t.chr80,
+       xmdd011         LIKE xmdd_t.xmdd011
+                       END RECORD
+
+DEFINE g_sfaa          RECORD LIKE sfaa_t.*
+DEFINE l_ac            LIKE type_t.num5
+DEFINE g_x             LIKE type_t.num5
+DEFINE g_ref_fields    DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars      DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields    DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+       
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asft300_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asft300_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="asft300_01.other_function" readonly="Y" >}
+#说明栏位显示
+PRIVATE FUNCTION asft300_01_desc(p_type)
+DEFINE p_type    LIKE type_t.chr1
+   IF p_type = 'N' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_xmdd_m.xmdd001
+      CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_xmdd_m.xmdd001_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_xmdd_m.xmdd001_desc
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_xmdd_m.xmdd001
+      CALL ap_ref_array2(g_ref_fields,"SELECT imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_xmdd_m.xmdd001_desc1 = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_xmdd_m.xmdd001_desc1
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_xmdd_m.imae016
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_xmdd_m.imae016_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_xmdd_m.imae016_desc
+   END IF
+   
+   IF p_type = 'Y' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_xmdd_d[l_ac].xmdd004
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_xmdd_d[l_ac].xmdd004_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_xmdd_d[l_ac].xmdd004_desc
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_xmdd_d[l_ac].unit
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_xmdd_d[l_ac].unit_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_xmdd_d[l_ac].unit_desc
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_xmdd_d[l_ac].xmda002
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+      LET g_xmdd_d[l_ac].xmda002_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_xmdd_d[l_ac].xmda002_desc
+     
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_xmdd_d[l_ac].xmda003
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_xmdd_d[l_ac].xmda003_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_xmdd_d[l_ac].xmda003_desc
+     
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_xmdd_d[l_ac].xmda004
+      CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_xmdd_d[l_ac].xmda004_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_xmdd_d[l_ac].xmda004_desc
+   END IF 
+END FUNCTION
+################################################################################
+# Descriptions...: 多订单来源产生
+# Memo...........:
+# Usage..........: CALL asft300_01(p_sfaadocno)
+#                  RETURNING 回传参数
+# Input parameter: 1.p_sfaadocno       LIKE sfaa_t.sfaadocno
+# Return code....: 
+# Date & Author..: 2014/3/31 By wuxja
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asft300_01(p_sfaadocno)
+DEFINE p_sfaadocno        LIKE sfaa_t.sfaadocno
+DEFINE l_allow_insert     LIKE type_t.num5         #可新增否 
+DEFINE l_allow_delete     LIKE type_t.num5        #可刪除否
+DEFINE l_sfab             RECORD LIKE sfab_t.*
+DEFINE l_flag             LIKE type_t.chr1
+DEFINE l_i                LIKE type_t.num5
+DEFINE l_success          LIKE type_t.num5
+DEFINE l_rate             LIKE type_t.num5
+DEFINE l_ooef008          LIKE ooef_t.ooef008
+DEFINE l_n                LIKE type_t.num5
+DEFINE l_days             LIKE type_t.num5
+DEFINE l_flag1            LIKE type_t.chr1
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asft300_01 WITH FORM cl_ap_formpath("asf","asft300_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   CLEAR FORM
+   CALL g_xmdd_d.clear()
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   LET g_sfaa.sfaadocno = p_sfaadocno
+   SELECT * INTO g_sfaa.* FROM sfaa_t 
+    WHERE sfaaent = g_enterprise AND sfaasite = g_site AND sfaadocno = g_sfaa.sfaadocno
+   IF NOT cl_null(g_sfaa.sfaa010) AND NOT cl_null(g_sfaa.sfaa013) THEN
+      LET g_xmdd_m.xmdd001 = g_sfaa.sfaa010
+      LET g_xmdd_m.imae016 = g_sfaa.sfaa013
+      DISPLAY BY NAME g_xmdd_m.xmdd001,g_xmdd_m.imae016  
+      CALL asft300_01_desc('N')      
+      CALL cl_set_comp_entry("xmdd001",FALSE)     
+   ELSE
+      CALL cl_set_comp_entry("xmdd001",TRUE)
+   END IF 
+   
+   LET g_xmdd_m.date_begin = ''
+   LET g_xmdd_m.date_end = ''
+   LET g_xmdd_m.sum = 0
+   DISPLAY BY NAME g_xmdd_m.date_begin,g_xmdd_m.date_end,g_xmdd_m.sum
+   
+   WHILE TRUE
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT BY NAME g_xmdd_m.xmdd001,g_xmdd_m.xmdd040,g_xmdd_m.date_begin,g_xmdd_m.date_end ATTRIBUTE(WITHOUT DEFAULTS) #160214-00005#3-add-'xmdd040'
+         AFTER FIELD xmdd001
+            IF NOT cl_null(g_xmdd_m.xmdd001) THEN
+               IF NOT asft300_01_xmdd001() THEN
+                  NEXT FIELD xmdd001
+               END IF
+               SELECT imae016 INTO g_xmdd_m.imae016 FROM imae_t
+                WHERE imaeent = g_enterprise AND imaesite = g_site AND imae001 = g_xmdd_m.xmdd001
+               IF cl_null(g_xmdd_m.imae016) THEN
+                  SELECT imaa006 INTO g_xmdd_m.imae016 FROM imaa_t
+                   WHERE imaaent = g_enterprise AND imaa001 = g_xmdd_m.xmdd001
+               END IF
+               DISPLAY BY NAME g_xmdd_m.imae016
+               CALL asft300_01_desc('N')
+            END IF
+
+         #160214-00005#3-add----(S)
+         AFTER FIELD xmdd040
+            IF NOT cl_null(g_xmdd_m.xmdd040) THEN
+               IF NOT cl_null(g_xmdd_m.xmdd001) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                   LET g_chkparam.arg1 = g_xmdd_m.xmdd001
+                   LET g_chkparam.arg2 = g_xmdd_m.xmdd040
+                   #160318-00025#3--add--str
+                   LET g_errshow = TRUE 
+                   LET g_chkparam.err_str[1] = "aim-00127:sub-01302|abmm200|",cl_get_progname("abmm200",g_lang,"2"),"|:EXEPROGabmm200"
+                   #160318-00025#3--add--end
+                   IF NOT cl_chk_exist("v_bmaa002") THEN
+                      LET g_xmdd_m.xmdd040 = ''
+                      DISPLAY BY NAME g_xmdd_m.xmdd040
+                      NEXT FIELD CURRENT
+                   END IF
+                END IF
+             END IF
+         #160214-00005#3-add----(E)
+         
+         AFTER FIELD date_begin
+            IF NOT cl_null(g_xmdd_m.date_begin) AND NOT cl_null(g_xmdd_m.date_end) THEN
+               IF g_xmdd_m.date_begin > g_xmdd_m.date_end THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'asf-00202'
+                  LET g_errparam.extend = g_xmdd_m.date_begin
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+ 
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            
+         AFTER FIELD date_end
+            IF NOT cl_null(g_xmdd_m.date_begin) AND NOT cl_null(g_xmdd_m.date_end) THEN
+               IF g_xmdd_m.date_begin > g_xmdd_m.date_end THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'asf-00202'
+                  LET g_errparam.extend = g_xmdd_m.date_end
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+ 
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+                        
+         ON ACTION controlp INFIELD xmdd001
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+		    	LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xmdd_m.xmdd001             #給予default值
+            #給予arg
+            CALL q_imaf001_6()                               #呼叫開窗
+            LET g_xmdd_m.xmdd001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_xmdd_m.xmdd001 TO xmdd001             #顯示到畫面上
+            NEXT FIELD xmdd001                          #返回原欄位 
+
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            IF cl_null(g_xmdd_m.xmdd001) THEN
+               NEXT FIELD xmdd001
+            END IF
+                         
+            CALL asft300_01_b_fill()
+            IF g_x = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00203'
+               LET g_errparam.extend = g_xmdd_m.xmdd001
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD xmdd001
+            ELSE
+               LET l_flag = 'N'
+            END IF 
+      END INPUT
+   
+      #輸入開始
+      INPUT ARRAY g_xmdd_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_xmdd_d.getLength(),MAXCOUNT = g_xmdd_d.getLength(),WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+                  
+          BEFORE ROW 
+             LET l_flag = 'Y'
+             LET l_ac = ARR_CURR()
+             
+          ON CHANGE select
+             IF g_xmdd_d[l_ac].select = 'Y' THEN
+                LET g_xmdd_m.sum = g_xmdd_m.sum + g_xmdd_d[l_ac].qty3
+             END IF
+             IF g_xmdd_d[l_ac].select = 'N' THEN
+                LET g_xmdd_m.sum = g_xmdd_m.sum - g_xmdd_d[l_ac].qty3
+             END IF
+             DISPLAY BY NAME g_xmdd_m.sum
+             
+      END INPUT
+      
+      AFTER DIALOG
+         #输入完单头后点确定后强制进入单身
+         IF l_flag = 'N' AND INT_FLAG = FALSE THEN
+            NEXT FIELD select
+         END IF 
+         
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel      #在dialog button (放棄)
+           LET INT_FLAG = TRUE
+           EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+   END DIALOG
+
+   IF INT_FLAG THEN
+      LET INT_FLAG = TRUE
+      IF cl_null(g_sfaa.sfaa010) THEN
+         IF NOT s_aooi200_del_docno(g_sfaa.sfaadocno,g_sfaa.sfaadocdt) THEN
+         END IF
+      END IF
+      
+      EXIT WHILE
+   END IF
+   
+   LET l_flag1 = 'N'
+   FOR l_i = 1 TO g_x
+      IF g_xmdd_d[l_i].select = 'N' THEN
+         CONTINUE FOR
+      END IF
+      LET l_flag1 = 'Y'
+      LET l_sfab.sfabent=g_enterprise
+      LET l_sfab.sfabsite=g_site
+      LET l_sfab.sfabdocno=g_sfaa.sfaadocno
+      LET l_sfab.sfab001='2'
+      LET l_sfab.sfab002=g_xmdd_d[l_i].xmdddocno
+      LET l_sfab.sfab003=g_xmdd_d[l_i].xmddseq
+      LET l_sfab.sfab004=g_xmdd_d[l_i].xmddseq1
+      LET l_sfab.sfab005=g_xmdd_d[l_i].xmddseq2
+      LET l_sfab.sfab007=g_xmdd_d[l_i].qty3
+      SELECT MAX(sfabseq)+1 INTO l_sfab.sfabseq FROM sfab_t
+       WHERE sfabent = g_enterprise AND sfabsite = g_site
+         AND sfabdocno = l_sfab.sfabdocno
+      IF cl_null(l_sfab.sfabseq) THEN
+         LET l_sfab.sfabseq = 1
+      END IF     
+      SELECT MAX(sfab006) INTO l_sfab.sfab006 FROM sfab_t WHERE sfabent=g_enterprise AND sfabsite = g_site
+         AND sfabdocno = g_sfaa.sfaadocno
+      IF cl_null(l_sfab.sfab006) THEN
+         LET l_sfab.sfab006 = 10
+      ELSE
+         LET l_sfab.sfab006 = l_sfab.sfab006 + 10
+      END IF
+      INSERT INTO sfab_t VALUES(l_sfab.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins sfab_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         CONTINUE FOR
+      END IF
+   END FOR 
+   
+   IF l_flag1 = 'N' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00338'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CONTINUE WHILE
+   END IF
+   
+   #回写工单单头资料
+   SELECT sum(sfab007) INTO g_sfaa.sfaa012 FROM sfab_t WHERE sfabent=g_enterprise AND sfabsite=g_site AND sfabdocno=g_sfaa.sfaadocno
+   LET g_sfaa.sfaa010 = g_xmdd_m.xmdd001
+   #160214-00005#3-mod-(S)
+#   SELECT imae037 INTO g_sfaa.sfaa011 FROM imae_t WHERE imaeent=g_enterprise AND imaesite=g_site AND imae001=g_sfaa.sfaa010
+   LET g_sfaa.sfaa011 = g_xmdd_m.xmdd040
+   #160214-00005#3-mod-(E)
+   IF cl_null(g_sfaa.sfaa011) THEN
+      LET g_sfaa.sfaa011 = ' '
+   END IF
+   
+   LET g_sfaa.sfaa013 = g_xmdd_m.imae016
+   SELECT imaf015 INTO g_sfaa.sfaa060 FROM imaf_t
+    WHERE imafent = g_enterprise AND imafsite = g_site AND imaf001 = g_sfaa.sfaa010
+   IF NOT cl_null(g_sfaa.sfaa060) THEN
+     #CALL s_aimi190_get_convert(g_sfaa.sfaa010,g_sfaa.sfaa013,g_sfaa.sfaa060) RETURNING l_success,l_rate
+     #IF l_success THEN
+     #   LET g_sfaa.sfaa058 = g_sfaa.sfaa012 * l_rate
+     #ELSE
+     #   LET g_sfaa.sfaa058 = g_sfaa.sfaa012
+     #END IF
+      CALL s_aooi250_convert_qty(g_sfaa.sfaa010,g_sfaa.sfaa013,g_sfaa.sfaa060,g_sfaa.sfaa012)
+           RETURNING l_success,g_sfaa.sfaa058
+      IF NOT l_success THEN
+         LET g_sfaa.sfaa058 = g_sfaa.sfaa012
+      END IF
+   END IF
+   IF NOT cl_null(g_sfaa.sfaa020) THEN
+      CALL s_asft300_06('2',g_sfaa.sfaa010,g_sfaa.sfaa012,g_sfaa.sfaa020) RETURNING l_success,g_sfaa.sfaa019
+      IF g_sfaa.sfaa019 < g_sfaa.sfaadocdt THEN   
+         LET l_days = g_sfaa.sfaadocdt - g_sfaa.sfaa019
+         LET g_sfaa.sfaa019 = g_sfaa.sfaadocdt
+         #根据当前营运据点g_site抓取aooi120中设置的行事历参照表号
+         SELECT ooef008 INTO l_ooef008 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001=g_site
+         CALL s_date_get_work_date(g_site,l_ooef008,'2',g_sfaa.sfaa020,0,l_days) RETURNING g_sfaa.sfaa020 
+      END IF         
+   ELSE
+      IF NOT cl_null(g_sfaa.sfaa019) THEN
+         CALL s_asft300_06('1',g_sfaa.sfaa010,g_sfaa.sfaa012,g_sfaa.sfaa019) RETURNING l_success,g_sfaa.sfaa020
+      END IF
+   END IF 
+   UPDATE sfaa_t SET sfaa_t.* = g_sfaa.* WHERE sfaaent = g_enterprise AND sfaasite = g_site AND sfaadocno = g_sfaa.sfaadocno
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "upd sfaa_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      EXIT WHILE
+   END IF
+      
+   EXIT WHILE
+   END WHILE
+   CLOSE WINDOW w_asft300_01
+END FUNCTION
+#chk料号
+PRIVATE FUNCTION asft300_01_xmdd001()
+DEFINE l_sql                STRING
+DEFINE l_n                  LIKE type_t.num5
+DEFINE l_imaa010            LIKE imaa_t.imaa010
+DEFINE l_imae036            LIKE imae_t.imae036
+DEFINE l_oocq005            LIKE oocq_t.oocq005
+DEFINE l_oocq006            LIKE oocq_t.oocq006
+DEFINE r_success            LIKE type_t.num5
+DEFINE l_success            LIKE type_t.num5
+DEFINE l_flag               LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = g_xmdd_m.xmdd001
+   #呼叫檢查存在並帶值的library
+   IF cl_chk_exist("v_imaa001") THEN
+      IF NOT cl_chk_exist("v_imaf001_1") THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   ELSE
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   #160214-00005#3-add-(S)
+   IF NOT cl_null(g_xmdd_m.xmdd040) THEN
+     INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = g_xmdd_m.xmdd001
+      LET g_chkparam.arg2 = g_xmdd_m.xmdd040
+      #160318-00025#3--add--str
+      LET g_errshow = TRUE 
+      LET g_chkparam.err_str[1] = "aim-00127:sub-01302|abmm200|",cl_get_progname("abmm200",g_lang,"2"),"|:EXEPROGabmm200"
+      #160318-00025#3--add--end
+      IF NOT cl_chk_exist("v_bmaa002") THEN
+         LET g_xmdd_m.xmdd040 = ''
+         DISPLAY BY NAME g_xmdd_m.xmdd040
+      END IF
+   END IF
+   #160214-00005#3-add-(E)          
+   #判斷輸入的料件編號是否在控制組限制的產品範圍內，若不在限制內則不允許請購此料
+   CALL s_control_chk_group('3','6',g_user,g_dept,g_xmdd_m.xmdd001,'','','','') RETURNING l_success,l_flag
+   IF NOT l_success THEN      #处理状态
+      LET r_success = FALSE
+      RETURN r_success
+   ELSE
+      IF NOT l_flag THEN      #是否存在
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'asf-00324'
+         LET g_errparam.extend = g_xmdd_m.xmdd001
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+
+   #檢核輸入的料件的生命週期是否在單據別限制範圍內，若不在限制內則不允許請購此料
+   CALL s_control_chk_doc('4',g_sfaa.sfaadocno,g_xmdd_m.xmdd001,'','','','') RETURNING l_success,l_flag
+   IF NOT l_success THEN      #处理状态
+      LET r_success = FALSE
+      RETURN r_success
+   ELSE
+      IF NOT l_flag THEN      #是否存在
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   
+   #檢核輸入的料件的產品分類是否在單據別限制範圍內，若不在限制內則不允許請購此料
+   CALL s_control_chk_doc('5',g_sfaa.sfaadocno,g_xmdd_m.xmdd001,'','','','') RETURNING l_success,l_flag
+   IF NOT l_success THEN      #处理状态
+      LET r_success = FALSE
+      RETURN r_success
+   ELSE
+      IF NOT l_flag THEN      #是否存在
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+      
+   
+   IF g_sfaa.sfaa003 MATCHES '[145]' THEN
+      LET l_sql = "SELECT COUNT(bmaa001) FROM bmaa_t WHERE bmaaent=",g_enterprise," AND bmaasite='",g_site,"'",
+                  "   AND bmaa001='", g_xmdd_m.xmdd001,"' AND bmaastus='Y'"
+      IF NOT cl_null(g_sfaa.sfaa011) THEN
+         LET l_sql = l_sql," AND bmaa002='",g_sfaa.sfaa011,"'"
+      END IF
+      PREPARE sel_bmaa_pre FROM l_sql
+      EXECUTE sel_bmaa_pre INTO l_n
+      IF l_n = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'asf-00045'
+         LET g_errparam.extend = g_xmdd_m.xmdd001
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   
+   SELECT imaa010 INTO l_imaa010 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmdd_m.xmdd001
+   IF NOT cl_null(l_imaa010) THEN
+      SELECT oocq005,oocq006 INTO l_oocq005,l_oocq006 FROM oocq_t WHERE oocqent = g_enterprise 
+         AND oocq001 = '210' AND oocq002 = l_imaa010 AND oocqstus = 'Y'
+      IF g_sfaa.sfaa003 = '4' THEN
+         IF l_oocq005 != 'Y' THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00052'
+            LET g_errparam.extend = g_xmdd_m.xmdd001
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+      ELSE
+         IF l_oocq006 != 'Y' THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00053'
+            LET g_errparam.extend = g_xmdd_m.xmdd001
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+      END IF 
+   END IF 
+   
+   SELECT imae036 INTO l_imae036 FROM imae_t WHERE imaeent = g_enterprise AND imaesite = g_site AND imae001 = g_xmdd_m.xmdd001
+   IF cl_null(l_imae036) OR l_imae036 = 'N' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00330'
+      LET g_errparam.extend = g_xmdd_m.xmdd001
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+#根据单头下的条件抓出资料并于单身显示
+PRIVATE FUNCTION asft300_01_b_fill()
+DEFINE l_sql                        STRING
+DEFINE l_sql_1                      STRING
+DEFINE l_xmdd014                    LIKE xmdd_t.xmdd014
+DEFINE l_xmdd031                    LIKE xmdd_t.xmdd031
+DEFINE l_success                    LIKE type_t.num5
+DEFINE l_rate                       LIKE type_t.num26_10 
+DEFINE l_imae015                    LIKE imae_t.imae015
+DEFINE l_xmdddocno                  LIKE xmdd_t.xmdddocno
+DEFINE l_xmddseq                    LIKE xmdd_t.xmddseq
+DEFINE l_xmddseq1                   LIKE xmdd_t.xmddseq1
+DEFINE l_xmddseq2                   LIKE xmdd_t.xmddseq2
+DEFINE l_xmda008                    LIKE xmda_t.xmda008
+DEFINE l_num                        LIKE sfaa_t.sfaa012
+DEFINE l_num1                       LIKE sfaa_t.sfaa012
+DEFINE l_where                      STRING #150909 earl add
+
+  LET l_sql = "SELECT 'N',xmdddocno,xmddseq,xmddseq1,xmddseq2,xmdd006,xmdd004,'','','','','','',xmda004,'',xmda003,'',xmda002,'',xmdd011 FROM xmda_t,xmdd_t",
+              " WHERE xmdaent=xmddent AND xmdasite=xmddsite AND xmdadocno=xmdddocno AND xmddent=",g_enterprise," AND xmddsite='",g_site,"'",
+              "   AND xmdd001='",g_xmdd_m.xmdd001,"' AND xmdastus='Y'"
+  IF NOT cl_null(g_xmdd_m.date_begin) THEN
+     LET l_sql = l_sql," AND xmdd011>='",g_xmdd_m.date_begin,"'"
+  END IF
+  IF NOT cl_null(g_xmdd_m.date_end) THEN
+     LET l_sql = l_sql," AND xmdd011<='",g_xmdd_m.date_end,"'"
+  END IF
+  #160214-00005#3-add-(S)
+  IF cl_null(g_xmdd_m.xmdd040) THEN
+     LET l_sql = l_sql CLIPPED," AND xmdd040 = ' ' "
+  ELSE
+     LET l_sql = l_sql CLIPPED," AND xmdd040 = '",g_xmdd_m.xmdd040,"'"
+  END IF
+  #160214-00005#3-add-(E)
+  
+  
+  #150909 earl mod s
+  #組合過濾前後置單據資料SQL
+  CALL s_aooi210_get_check_sql(g_site,'',g_sfaa.sfaadocno,'4','','xmdddocno') RETURNING l_success,l_where
+  IF l_success THEN
+     LET l_sql = l_sql," AND ",l_where
+  ELSE
+     LET l_sql = l_sql," AND 1=2 "
+  END IF
+  #150909 earl mod e
+  
+  PREPARE asft300_01_pre FROM l_sql
+  DECLARE asft300_01_cs CURSOR FOR asft300_01_pre
+  LET l_ac = 1
+  FOREACH asft300_01_cs INTO g_xmdd_d[l_ac].*
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = "FOREACH:"
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+
+        EXIT FOREACH
+     END IF
+     SELECT xmdd031,xmdd014 INTO l_xmdd031,l_xmdd014 FROM xmdd_t WHERE xmddent=g_enterprise AND xmddsite=g_site 
+        AND xmdddocno=g_xmdd_d[l_ac].xmdddocno AND xmddseq=g_xmdd_d[l_ac].xmddseq
+        AND xmddseq1=g_xmdd_d[l_ac].xmddseq1 AND xmddseq2=g_xmdd_d[l_ac].xmddseq2
+     IF l_xmdd031 > l_xmdd014 THEN
+        LET l_xmdd014 = l_xmdd031
+     END IF
+     IF g_xmdd_d[l_ac].xmdd006 <=l_xmdd014 THEN
+        CONTINUE FOREACH
+     END IF
+     
+     LET g_xmdd_d[l_ac].unit = g_xmdd_m.imae016
+    #CALL s_aimi190_get_convert(g_xmdd_m.xmdd001,g_xmdd_d[l_ac].xmdd004,g_xmdd_m.imae016) RETURNING l_success,l_rate
+    #IF l_success THEN
+    #   LET g_xmdd_d[l_ac].qty1 = g_xmdd_d[l_ac].xmdd006 * l_rate
+    #ELSE
+    #   LET g_xmdd_d[l_ac].qty1 = g_xmdd_d[l_ac].xmdd006
+    #END IF        
+     CALL s_aooi250_convert_qty(g_xmdd_m.xmdd001,g_xmdd_d[l_ac].xmdd004,g_xmdd_m.imae016,g_xmdd_d[l_ac].xmdd006)
+          RETURNING l_success,g_xmdd_d[l_ac].qty1
+     IF NOT l_success THEN
+        LET g_xmdd_d[l_ac].qty1 = g_xmdd_d[l_ac].xmdd006
+     END IF
+     CALL asft300_01_qty2(g_xmdd_d[l_ac].xmdddocno,g_xmdd_d[l_ac].xmddseq,g_xmdd_d[l_ac].xmddseq1,g_xmdd_d[l_ac].xmddseq2,g_xmdd_d[l_ac].unit) RETURNING g_xmdd_d[l_ac].qty2
+     
+     #找预先订单对应已开工单量
+     SELECT xmda008 INTO l_xmda008 FROM xmda_t WHERE xmdaent=g_enterprise AND xmdasite=g_site 
+        AND xmdadocno=g_xmdd_d[l_ac].xmdddocno AND xmda007='2'
+     IF NOT cl_null(l_xmda008) THEN
+        LET l_sql_1 = "SELECT xmdddocno,xmddseq,xmddseq1,xmddseq2 FROM xmdd_t,xmda_t WHERE xmdaent=xmddent AND xmdasite=xmddsite AND xmdadocno=xmdddocno",
+                      "   AND xmddent=",g_enterprise," AND xmddsite='",g_site,"' AND xmdadocno='",l_xmda008,"'",
+                      "   AND xmdd001='",g_xmdd_m.xmdd001,"' AND xmdastus='Y'"
+        PREPARE asft300_01_pre_1 FROM l_sql_1
+        DECLARE asft300_01_cs_1 CURSOR FOR asft300_01_pre_1
+        LET l_num = 0
+        FOREACH asft300_01_cs_1 INTO l_xmdddocno,l_xmddseq,l_xmddseq1,l_xmddseq2
+           IF SQLCA.sqlcode THEN
+              INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = "FOREACH:"
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+
+              EXIT FOREACH
+           END IF
+           CALL asft300_01_qty2(l_xmdddocno,l_xmddseq,l_xmddseq1,l_xmddseq2,g_xmdd_d[l_ac].unit) RETURNING l_num1
+           LET l_num = l_num + l_num1
+        END FOREACH
+        LET g_xmdd_d[l_ac].qty2 = g_xmdd_d[l_ac].qty2 + l_num 
+     END IF
+     
+     #生产超交率
+     SELECT imae015 INTO l_imae015 FROM imae_t WHERE imaeent=g_enterprise AND imaesite=g_site AND imae001=g_xmdd_m.xmdd001
+     IF cl_null(l_imae015) THEN
+        LET l_imae015 = 0 
+     END IF
+     LET g_xmdd_d[l_ac].qty3 = (g_xmdd_d[l_ac].qty1 - g_xmdd_d[l_ac].qty2)  * (1 + l_imae015 / 100)
+     IF g_xmdd_d[l_ac].qty3 <= 0 THEN 
+        CONTINUE FOREACH
+     END IF
+     
+     CALL asft300_01_desc('Y')    
+     LET l_ac = l_ac + 1
+  END FOREACH
+  
+  CALL g_xmdd_d.deleteElement(l_ac)
+  LET g_x = l_ac - 1
+
+END FUNCTION
+#已开工单量汇总
+PRIVATE FUNCTION asft300_01_qty2(p_sfab002,p_sfab003,p_sfab004,p_sfab005,p_unit)
+DEFINE p_sfab002         LIKE sfab_t.sfab002
+DEFINE p_sfab003         LIKE sfab_t.sfab003
+DEFINE p_sfab004         LIKE sfab_t.sfab004
+DEFINE p_sfab005         LIKE sfab_t.sfab005
+DEFINE p_unit            LIKE sfaa_t.sfaa013
+DEFINE l_sql             STRING
+DEFINE l_sum             LIKE sfaa_t.sfaa012
+DEFINE l_sfab007         LIKE sfab_t.sfab007
+DEFINE l_sfaa013         LIKE sfaa_t.sfaa013
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_rate            LIKE type_t.num26_10
+
+  LET l_sql = "SELECT sfaa013,sfab007 FROM sfaa_t,sfab_t WHERE sfaaent=sfabent AND sfaadocno=sfabdocno",
+              "   AND sfaaent=",g_enterprise," AND sfaasite='",g_site,"'",
+              "   AND sfaa010='",g_xmdd_m.xmdd001,"' AND sfaastus != 'X'",
+              "   AND sfab002=? AND sfab003=? AND sfab004=? AND sfab005=?"
+  PREPARE asft300_01_qty2_pre FROM l_sql
+  DECLARE asft300_01_qty2_cs CURSOR FOR asft300_01_qty2_pre
+  LET l_sum = 0
+  FOREACH asft300_01_qty2_cs USING p_sfab002,p_sfab003,p_sfab004,p_sfab005 INTO l_sfaa013,l_sfab007
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = "FOREACH:"
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+
+        EXIT FOREACH
+     END IF    
+    #CALL s_aimi190_get_convert(g_xmdd_m.xmdd001,l_sfaa013,g_xmdd_m.imae016) RETURNING l_success,l_rate
+    #IF l_success THEN
+    #   LET l_sfab007 = l_sfab007 * l_rate
+    #END IF
+     CALL s_aooi250_convert_qty(g_xmdd_m.xmdd001,l_sfaa013,g_xmdd_m.imae016,l_sfab007)
+          RETURNING l_success,l_sfab007
+     LET l_sum = l_sum + l_sfab007
+  END FOREACH     
+     
+  RETURN l_sum   
+
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq800" module="agl" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02599" crtdt="2014-03-27 16:34:40" modid="02599" moddt="2015-01-29 23:08:07" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="傳票細項沖帳明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),glaxdocdt,glaxdocno,glaxseq,glax010,glax046,glax045,amt(chr500),glax003,glax042,glax041,amt1(chr500),glax052,glax054,glax053,amt2(chr500),glax056,glax058,glax057,amt3(chr500),glax008,glax044,glax043,num(chr500),glapcrtid,glapcrtid_desc(chr500),glapstus,glax001"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),glaxdocdt(b_glaxdocdt),glaxdocno(b_glaxdocno),glaxseq(b_glaxseq),glax010(b_glax010),glax046(b_glax046),glax045(b_glax045),amt(amt),glax003(b_glax003),glax042(b_glax042),glax041(b_glax041),amt1(amt1),glax052(b_glax052),glax054(b_glax054),glax053(b_glax053),amt2(amt2),glax056(b_glax056),glax058(b_glax058),glax057(b_glax057),amt3(amt3),glax008(b_glax008),glax044(b_glax044),glax043(b_glax043),num(num),glapcrtid(b_glapcrtid),glapcrtid_desc(b_glapcrtid_desc),glapstus(b_glapstus),glax001(b_glax001)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+      <action id="exchange_ld"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq800" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glaxdocdt,glaxdocno,glaxseq,glax010,glax046,glax003,glax042,glax052,glax054,glax053,glax056,glax058,glax008,glax044,glapstus,glax001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glaxdocno(b_glaxdocno)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="glaxdocdt"/>
+      <column id="glaxdocno">
+        <controlp form="q_glaxdocno" state="c"/>
+      </column>
+      <column id="glaxseq"/>
+      <column id="glax010">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax046"/>
+      <column id="glax045"/>
+      <column id="amt"/>
+      <column id="glax003">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax042"/>
+      <column id="glax041"/>
+      <column id="amt1"/>
+      <column id="glax052">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax054">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax053"/>
+      <column id="amt2"/>
+      <column id="glax056">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax058">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax057"/>
+      <column id="amt3"/>
+      <column id="glax008">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax044"/>
+      <column id="glax043"/>
+      <column id="num"/>
+      <column id="glapcrtid">
+        <after>
+          <reference field="glapcrtid_desc" ref_field="glapcrtid" map_field="glapcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glapcrtid_desc"/>
+      <column id="glapstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="glax001">
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="glax_t" page="1" linked="" pk="glaxld,glaxdocno,glaxseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,glaxdocdt,glaxdocno,glaxseq,glax010,glax046,glax045,&apos;&apos;,glax003,glax042,glax041,&apos;&apos;,glax052,glax054,glax053,&apos;&apos;,glax056,glax058,glax057,&apos;&apos;,glax008,glax044,glax043,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glax001 FROM glax_t WHERE glaxent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

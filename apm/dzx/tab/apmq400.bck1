@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmq400" module="apm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="03079" crtdt="2014-07-25 14:24:08" modid="04441" moddt="2016-04-28 09:49:17" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="請購追蹤查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="pmdadocno,pmdadocdt,pmda002,pmda003,pmdb004,imaa009,pmdastus,pmdb032"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pmdastus,pmdb032,pmdadocno,pmdadocdt,pmda002,prog_b_pmda002(string),pmda002_desc(chr500),pmda003,pmda003_desc(chr500),pmdbseq,pmdb004,pmdb004_desc(chr500),pmdb004_desc_1(chr500),pmdb005,pmdb005_desc(chr500),pmdb006,pmdb007,pmdb007_desc(chr500),pmdb030,pmdb049,pmdb050"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pmdastus(b_pmdastus),pmdb032(b_pmdb032),pmdadocno(b_pmdadocno),pmdadocdt(b_pmdadocdt),pmda002(b_pmda002),prog_b_pmda002(prog_b_pmda002),pmda002_desc(b_pmda002_desc),pmda003(b_pmda003),pmda003_desc(b_pmda003_desc),pmdbseq(b_pmdbseq),pmdb004(b_pmdb004),pmdb004_desc(b_pmdb004_desc),pmdb004_desc_1(b_pmdb004_desc_1),pmdb005(b_pmdb005),pmdb005_desc(b_pmdb005_desc),pmdb006(b_pmdb006),pmdb007(b_pmdb007),pmdb007_desc(b_pmdb007_desc),pmdb030(b_pmdb030),pmdb049(b_pmdb049),pmdb050(b_pmdb050)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <cluster id="prog_b_pmda002" qry_field="pmda002" prog="aooi130" parameter="pmda002"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_aooi130" prog="aooi130" parameter="pmda002"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmq400" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmdastus,pmdb032,pmdadocno,pmdadocdt,pmda002,pmda003,pmdbseq,pmdb004,pmdb005,pmdb005_desc,pmdb006,pmdb007,pmdb030,pmdb049,pmdb050" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="pmdastus(b_pmdastus),pmdb032(b_pmdb032),pmdadocno(b_pmdadocno),pmdadocdt(b_pmdadocdt),pmda002(b_pmda002),pmda003(b_pmda003),pmdbseq(b_pmdbseq),pmdb004(b_pmdb004),pmdb005(b_pmdb005),pmdb006(b_pmdb006),pmdb007(b_pmdb007),pmdb030(b_pmdb030),pmdb049(b_pmdb049),pmdb050(b_pmdb050)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pmdastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="C" pic="closed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="UH" pic="unhold"/>
+        <stus id="H" pic="hold"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="pmdb032" def_scc="2035"/>
+      <column id="pmdadocno">
+        <controlp form="q_pmdadocno" state="c"/>
+      </column>
+      <column id="pmdadocdt"/>
+      <column id="pmda002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="pmda002_desc" ref_field="pmda002" map_field="pmda002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prog_b_pmda002"/>
+      <column id="pmda002_desc"/>
+      <column id="pmda003">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="pmda003_desc" ref_field="pmda003" map_field="pmda003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="pmda003_desc"/>
+      <column id="pmdbseq"/>
+      <column id="pmdb004">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+          <reference field="pmdb004_desc" ref_field="pmdb004" map_field="pmdb004" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="pmdb004_desc"/>
+      <column id="pmdb004_desc_1"/>
+      <column id="pmdb005">
+        <after/>
+      </column>
+      <column id="pmdb005_desc"/>
+      <column id="pmdb006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmdb007">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="pmdb007_desc" ref_field="pmdb007" map_field="pmdb007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmdb007_desc"/>
+      <column id="pmdb030"/>
+      <column id="pmdb049" type="S" default="0"/>
+      <column id="pmdb050"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmda_t" page="1" linked="" pk="pmdadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pmdastus,&apos;&apos;,pmdadocno,pmdadocdt,pmda002,&apos;&apos;,pmda003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM pmda_t WHERE pmdaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

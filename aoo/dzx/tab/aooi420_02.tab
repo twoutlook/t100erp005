@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi420_02" module="aoo" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01258" crtdt="2013-08-16 10:54:05" modid="01996" moddt="2013-07-23 11:18:20" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="時數整批更新">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="oogc001,oogc001_desc(chr80),oogc002,bdate(dat),edate(dat),hours(num15_3)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aoo" filename="aooi420_02" method="dialog">
+    <section id="input">
+      <input id="head" field="oogc001,oogc002,bdate,edate,hours"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="oogc001">
+        <after>
+          <reference field="oogc001_desc" ref_field="oogc_t.oogc001" map_field="oogcent,oogc001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+      </column>
+      <column id="oogc001_desc"/>
+      <column id="oogc002" type="S" default="2" def_scc="25"/>
+      <column id="bdate"/>
+      <column id="edate"/>
+      <column id="hours">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="oogc_t" pk="oogc001,oogc002,oogc003,oogc015">
+      <sql id="forupd_sql" type="sql" query="SELECT oogc001,&apos;&apos;,oogc002,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM oogc_t WHERE oogcent= ? AND oogc001=? AND oogc002=? AND oogc003=? AND oogc015=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="oogc001,oogc002,oogc003,oogc015"/>
+    </head>
+  </dataset>
+</assembly>
+

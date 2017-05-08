@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="anmq510_x01" std_prog="anmq510_x01" erpver="1.0" module="ANM" ver="2" env="s" zone="t10prd" booking="Y" type="X" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="X" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="global.import" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ins_data.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE l_desc     STRING ]]>
+  </point>
+  <point name="ins_data.foreach" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       #票況nmbb042
+       IF NOT cl_null(sr.nmbb042) THEN
+          CALL s_desc_gzcbl004_desc('8714',sr.nmbb042) RETURNING l_desc
+          LET sr.nmbb042 = sr.nmbb042,':',l_desc
+       END IF
+       #狀態碼
+       IF NOT cl_null(sr.nmbastus) THEN
+          CALL s_desc_gzcbl004_desc('13',sr.nmbastus) RETURNING l_desc
+          LET sr.nmbastus = sr.nmbastus,':',l_desc
+       END IF]]>
+  </point>
+  <point name="sel_prep.g_from" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_select = " SELECT nmbbseq,nmbb042,nmbastus,nmbbdocno,nmbb030,nmbb028,nmbb028_desc,nmbadocdt,nmbb065,nmbb031,nmbb004, 
+       nmbb006,nmbb008,nmbb045,nmba004,nmbb046_desc,nmbb003,nmbb003_desc,nmbb046,nmbbcomp"   #150616-00026#8]]>
+  </point>
+  <point name="sel_prep.g_where" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_from = " FROM ",tm.table]]>
+  </point>
+  <point name="sel_prep.sql.after" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql = g_sql," ORDER BY seq"]]>
+  </point>
+  <section id="anmq510_x01.create_tmptable" ver="2" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION anmq510_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "nmbbseq.nmbb_t.nmbbseq,nmbb042.type_t.chr30,nmbastus.type_t.chr10,nmbbdocno.nmbb_t.nmbbdocno,nmbb030.nmbb_t.nmbb030,nmbb028.nmbb_t.nmbb028,nmbb028_desc.type_t.chr500,nmbadocdt.type_t.dat,nmbb065.nmbb_t.nmbb065,nmbb031.nmbb_t.nmbb031,nmbb004.nmbb_t.nmbb004,nmbb006.nmbb_t.nmbb006,nmbb008.nmbb_t.nmbb008,nmbb045.nmbb_t.nmbb045,nmba004.type_t.chr10,nmbb046_desc.type_t.chr500,nmbb003.nmbb_t.nmbb003,nmbb003_desc.type_t.chr500,nmbb046.nmbb_t.nmbb046,nmbbcomp.nmbb_t.nmbbcomp" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+  </section>
+  <section id="anmq510_x01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000010
+#+ 
+#+ Filename...: anmq510_x01
+#+ Description: 應收票據列印
+#+ Creator....: 00810(2015-03-26 15:04:19)
+#+ Modifier...: 03538(2015-06-23 18:41:41) -SD/PR-
+]]>
+  </section>
+  <section id="anmq510_x01.global" ver="1" status="" src="s" readonly="">
+    <![CDATA[#報表 x01 樣板自動產生(Version:1)
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       table LIKE type_t.chr500,         #  
+       wc STRING                   #
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="anmq510_x01.ins_data" ver="2" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION anmq510_x01_ins_data()
+DEFINE sr RECORD 
+   nmbbseq LIKE nmbb_t.nmbbseq, 
+   nmbb042 LIKE type_t.chr30, 
+   nmbastus LIKE type_t.chr10, 
+   nmbbdocno LIKE nmbb_t.nmbbdocno, 
+   nmbb030 LIKE nmbb_t.nmbb030, 
+   nmbb028 LIKE nmbb_t.nmbb028, 
+   nmbb028_desc LIKE type_t.chr500, 
+   nmbadocdt LIKE type_t.dat, 
+   nmbb065 LIKE nmbb_t.nmbb065, 
+   nmbb031 LIKE nmbb_t.nmbb031, 
+   nmbb004 LIKE nmbb_t.nmbb004, 
+   nmbb006 LIKE nmbb_t.nmbb006, 
+   nmbb008 LIKE nmbb_t.nmbb008, 
+   nmbb045 LIKE nmbb_t.nmbb045, 
+   nmba004 LIKE type_t.chr10, 
+   nmbb046_desc LIKE type_t.chr500, 
+   nmbb003 LIKE nmbb_t.nmbb003, 
+   nmbb003_desc LIKE type_t.chr500, 
+   nmbb046 LIKE nmbb_t.nmbb046, 
+   nmbbcomp LIKE nmbb_t.nmbbcomp
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH anmq510_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.nmbbseq,sr.nmbb042,sr.nmbastus,sr.nmbbdocno,sr.nmbb030,sr.nmbb028,sr.nmbb028_desc,sr.nmbadocdt,sr.nmbb065,sr.nmbb031,sr.nmbb004,sr.nmbb006,sr.nmbb008,sr.nmbb045,sr.nmba004,sr.nmbb046_desc,sr.nmbb003,sr.nmbb003_desc,sr.nmbb046,sr.nmbbcomp
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "anmq510_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmq510_x01.ins_prep" ver="2" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION anmq510_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+]]>
+  </section>
+  <section id="anmq510_x01.main" ver="1" status="" src="s" readonly="">
+    <![CDATA[PUBLIC FUNCTION anmq510_x01(p_arg1,p_arg2)
+DEFINE  p_arg1 LIKE type_t.chr500         #tm.table    
+DEFINE  p_arg2 STRING                  #tm.wc
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.table = p_arg1
+   LET tm.wc = p_arg2
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "anmq510_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL anmq510_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL anmq510_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL anmq510_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL anmq510_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL anmq510_x01_rep_data()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmq510_x01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="anmq510_x01.rep_data" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION anmq510_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+  </section>
+  <section id="anmq510_x01.sel_prep" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION anmq510_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT nmbbseq,NULL,NULL,nmbbdocno,nmbb030,nmbb028,NULL,NULL,nmbb065,nmbb031,nmbb004, 
+       nmbb006,nmbb008,nmbb045,NULL,NULL,nmbb003,NULL,nmbb046,nmbbcomp"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM nmbb_t"
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("nmbb_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE anmq510_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE anmq510_x01_curs CURSOR FOR anmq510_x01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr300_g01" module="aps" jobmode="N" type="g01" industry="std" crtid="04543" crtdt="2014-09-12 14:39:31" modid="06815" moddt="2016-05-06 18:54:09" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="psab003,psab008,psaadocno,psaa003,psab002,psab004,psaadocdt,psaasite,psab005,psab006,psabsite,psaastus,psabseq,psaa001,psaa002,psab001,psab007,psab009,ooag_t_ooag011(ooag011|ooag_t.ooag011),ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),x_t1_imaal003(imaal003|x.t1_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),l_psaa001_ooag011(chr300|trim(psaa001)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psaa_t.psaa001 AND ooag_t.ooagent = psaa_t.psaaent))),l_psaa002_ooefl003(chr1000|trim(psaa002)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = psaa_t.psaa002 AND ooefl_t.ooeflent = psaa_t.psaaent AND ooefl_t.ooefl002 = g_dlang))),l_psab005_psab006(psab005|&apos;&apos;),x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),l_psab008_show(chr1|&apos;&apos;),l_psab009_show(chr1|&apos;&apos;),psaaent,psabent,l_psab007_show(chr1|&apos;&apos;),l_psaa003_show(chr1|&apos;&apos;),l_detail02_show(chr1|&apos;&apos;),l_detail03_show(chr1|&apos;&apos;),l_detail04_show(chr1|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="psab003,psab008,psaadocno,psaa003,psab002,psab004,psaadocdt,psaasite,psab005,psab006,psabsite,psaastus,psabseq,psaa001,psaa002,psab001,psab007,psab009,ooag_t_ooag011(ooag011|( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psaa_t.psaa001 AND ooag_t.ooagent = psaa_t.psaaent)),ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = psaa_t.psaa002 AND ooefl_t.ooeflent = psaa_t.psaaent AND ooefl_t.ooefl002 = g_dlang)),x_t1_imaal003(imaal003|x.t1_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),l_psaa001_ooag011(chr300|trim(psaa001)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psaa_t.psaa001 AND ooag_t.ooagent = psaa_t.psaaent))),l_psaa002_ooefl003(chr1000|trim(psaa002)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = psaa_t.psaa002 AND ooefl_t.ooeflent = psaa_t.psaaent AND ooefl_t.ooefl002 = g_dlang))),l_psab005_psab006(psab005|&apos;&apos;),x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),l_psab008_show(chr1|&apos;&apos;),l_psab009_show(chr1|&apos;&apos;),psaaent,psabent,l_psab007_show(chr1|&apos;&apos;),l_psaa003_show(chr1|&apos;&apos;),l_detail02_show(chr1|&apos;&apos;),l_detail03_show(chr1|&apos;&apos;),l_detail04_show(chr1|&apos;&apos;)"/>
+    <sql id="g_from" query="psaa_t LEFT OUTER JOIN ( SELECT psab_t.*,( SELECT imaal003 FROM imaal_t t1 WHERE t1.imaalent = psab_t.psabent AND t1.imaal001 = psab_t.psab001 AND t1.imaal002 = g_dlang) t1_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = psab_t.psab001 AND imaal_t.imaalent = psab_t.psabent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal004,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = psab_t.psab001 AND imaal_t.imaalent = psab_t.psabent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal003 FROM psab_t ) x  ON psaa_t.psaaent = x.psabent AND psaa_t.psaadocno = x.psabdocno"/>
+    <sql id="g_where" query="" maintable="psaa_t"/>
+    <sql id="g_order" query="psaadocno,psabseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="psaadocno,psabseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="psaadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="psaaent,psaadocno"/>
+      <rep type="psabseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="psaaent,psaadocno,psabseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="psaaent,psaadocno,psabseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="psaadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="psaaent,psaadocno"/>
+      <rep type="psabseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

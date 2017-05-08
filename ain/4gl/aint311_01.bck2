@@ -1,0 +1,885 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aint311_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2016-03-15 23:08:10), PR版次:0006(2016-06-21 11:38:52)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000163
+#+ Filename...: aint311_01
+#+ Description: 庫存報廢整批產生子作業
+#+ Creator....: 01996(2014-05-14 15:15:25)
+#+ Modifier...: 01996 -SD/PR- 04441
+ 
+{</section>}
+ 
+{<section id="aint311_01.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+#160318-00025#19  16/04/14 BY 07900   校验代码重复错误讯息的修改
+#160512-00004#1   16/06/20 By Whitney inai012製造日期改抓inae010
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aint311_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+DEFINE g_inbj_m  RECORD
+       inbj005 LIKE inbj_t.inbj005,
+       inbj006 LIKE inbj_t.inbj006
+             END RECORD
+DEFINE g_wc_m  STRING
+ TYPE type_g_inbj_d     RECORD
+                 seq      LIKE inbj_t.inbjseq,
+                 sel      LIKE type_t.chr1,
+                 inaq011  LIKE inaq_t.inaq011,
+                 inbj001  LIKE inbj_t.inbj001,
+                 imaal003 LIKE imaal_t.imaal003,
+                 imaal004 LIKE imaal_t.imaal004,
+                 inbj002  LIKE inbj_t.inbj002,
+                 inbj003  LIKE inbj_t.inbj003,
+                 inbj0051 LIKE inbj_t.inbj005,
+                 inaa002  LIKE inaa_t.inaa002,
+                 inbj0061 LIKE inbj_t.inbj006,
+                 inab003  LIKE inab_t.inab003,
+                 inbj007  LIKE inbj_t.inbj007,
+                 inbj008  LIKE inbj_t.inbj008,
+                 inbj016  LIKE inbj_t.inbj016,
+                 oocql004 LIKE oocql_t.oocql004,
+                 inbj017  LIKE inbj_t.inbj017,
+                 ooefl003 LIKE ooefl_t.ooefl003,
+                 inbj018  LIKE inbj_t.inbj018
+                           END RECORD
+DEFINE g_inbj_d          DYNAMIC ARRAY OF type_g_inbj_d
+DEFINE g_inbj_d_t        type_g_inbj_d
+DEFINE g_rec_b           LIKE type_t.num5
+DEFINE l_ac              LIKE type_t.num5
+DEFINE g_inav            RECORD LIKE inav_t.*
+DEFINE g_inbidocno       LIKE inbi_t.inbidocno
+TYPE type_g_old_qty      LIKE type_t.num20_6
+DEFINE g_old_qty         DYNAMIC ARRAY OF type_g_old_qty
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aint311_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aint311_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="aint311_01.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION aint311_01(--)
+   #add-point:construct段變數傳入
+   p_inbidocno
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:construct段define
+   DEFINE p_inbidocno     LIKE inbi_t.inbidocno
+   DEFINE l_inbi  RECORD  LIKE inbi_t.*
+   DEFINE l_flag          LIKE type_t.num5
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_imaf053       LIKE imaf_t.imaf053
+   DEFINE l_inbj          RECORD LIKE inbj_t.*
+   DEFINE l_sql           STRING
+   DEFINE l_seq           LIKE type_t.num5
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aint311_01 WITH FORM cl_ap_formpath("ain","aint311_01")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+  
+   LET g_inbidocno = p_inbidocno
+
+   LET g_qryparam.state = "i"
+
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+
+   #輸入前處理
+   #add-point:單頭前置處理
+   SELECT * INTO l_inbi.* FROM inbi_t WHERE inbient = g_enterprise
+      AND inbidocno = p_inbidocno AND inbi000 = '2'
+   CALL cl_set_comp_entry("inbj005,inbj006",TRUE)
+   IF cl_null(l_inbi.inbi032) OR l_inbi.inbi032 = 'N' THEN
+      CALL cl_set_comp_entry("inbj005,inbj006",FALSE)
+   END IF
+   #end add-point
+   CLEAR FORM
+   INITIALIZE g_inbj_m.* TO NULL
+   CALL g_inbj_d.clear()
+   LET g_errshow = 1
+   CALL s_transaction_begin()
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #輸入開始
+      CONSTRUCT BY NAME g_wc_m ON inaq004,inaq005,inaq002,inaq001,inaq008,inaq010,inaq009
+
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+
+            #end add-point
+
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+
+            #end add-point
+         ON ACTION controlp INFIELD inaq004
+            #add-point:ON ACTION controlp INFIELD inbidocno
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaq004()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaq004  #顯示到畫面上
+            NEXT FIELD inaq004
+            
+         ON ACTION controlp INFIELD inaq005
+            #add-point:ON ACTION controlp INFIELD inbidocno
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaq005()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaq005  #顯示到畫面上
+            NEXT FIELD inaq005
+ 
+         ON ACTION controlp INFIELD inaq002
+            #add-point:ON ACTION controlp INFIELD inbidocno
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaq002  #顯示到畫面上
+            NEXT FIELD inaq002
+ 
+         ON ACTION controlp INFIELD inaq001
+            #add-point:ON ACTION controlp INFIELD inbidocno
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaq001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaq001  #顯示到畫面上
+            NEXT FIELD inaq001
+            
+         ON ACTION controlp INFIELD inaq008
+            #add-point:ON ACTION controlp INFIELD inbidocno
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaq008()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaq008  #顯示到畫面上
+            NEXT FIELD inaq008
+            
+         ON ACTION controlp INFIELD inaq009
+            #add-point:ON ACTION controlp INFIELD inbidocno
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaq009()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaq009  #顯示到畫面上
+            NEXT FIELD inaq009
+            
+         ON ACTION controlp INFIELD inaq010
+            #add-point:ON ACTION controlp INFIELD inbidocno
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaq010()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaq010  #顯示到畫面上
+            NEXT FIELD inaq010
+
+      END CONSTRUCT
+
+      #輸入開始
+      INPUT BY NAME g_inbj_m.inbj005,g_inbj_m.inbj006 ATTRIBUTE(WITHOUT DEFAULTS)
+
+         #自訂ACTION
+         #add-point:自訂ACTION
+
+         #end add-point
+
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+
+            #end add-point
+
+         AFTER FIELD inbj005
+            #add-point:單頭輸入後處理
+            IF NOT cl_null(g_inbj_m.inbj005) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_inbj_m.inbj005
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aim-00065:sub-01302|aini001|",cl_get_progname("aini001",g_lang,"2"),"|:EXEPROGaini001"
+               #160318-00025#19  by 07900 --add-end
+               IF NOT cl_chk_exist("v_inaa001_8") THEN
+                  LET g_inbj_m.inbj005 = ''
+                  NEXT FIELD CURRENT
+               END IF
+            
+               CALL s_control_chk_doc('7',l_inbi.inbidocno,g_inbj_m.inbj005,'','','','') RETURNING g_success,l_flag
+               IF g_success THEN
+                  IF NOT l_flag THEN
+                     LET g_inbj_m.inbj005 = ''
+                     NEXT FIELD CURRENT
+                  END IF
+               ELSE
+                  LET g_inbj_m.inbj005 = ''
+                  NEXT FIELD CURRENT
+               END IF
+               
+               CALL cl_set_comp_visible("inbj006",TRUE)
+               LET l_n = 0
+               SELECT COUNT(*) INTO l_n FROM inaa_t  WHERE inaaent = g_enterprise AND inaasite = g_site 
+                  AND inaa001 = g_inbj_m.inbj005 AND inaa007 = '5'
+               IF l_n != 0 THEN
+                  INITIALIZE g_inbj_m.inbj006 TO NULL 
+                  DISPLAY BY NAME g_inbj_m.inbj006
+                  CALL cl_set_comp_visible("inbj006",FALSE)
+               END IF
+            END IF
+            
+          AFTER FIELD inbj006 
+             IF NOT cl_null(g_inbj_m.inbj006) THEN
+               
+                INITIALIZE g_chkparam.* TO NULL
+                
+                #設定g_chkparam.*的參數
+                LET g_chkparam.arg1 = g_inbj_m.inbj005
+                LET g_chkparam.arg2 = g_inbj_m.inbj006  
+                #160318-00025#19  by 07900 --add-str
+                LET g_errshow = TRUE #是否開窗                   
+                LET g_chkparam.err_str[1] ="aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+                #160318-00025#19  by 07900 --add-end
+                #呼叫檢查存在並帶值的library
+                IF NOT cl_chk_exist("v_inab002_2") THEN 
+                   LET g_inbj_m.inbj006 = ''
+                   NEXT FIELD CURRENT
+                END IF
+             END IF
+          ON ACTION controlp INFIELD inbj005
+            #add-point:ON ACTION controlp INFIELD inbj014
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inbj_m.inbj005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            LET g_qryparam.where = " inaa010 = 'N' AND inaa016 = 'N'"
+            CALL q_inaa001()                                #呼叫開窗
+
+            LET g_inbj_m.inbj005 = g_qryparam.return1              
+
+            DISPLAY g_inbj_m.inbj005 TO inbj005              #
+
+            NEXT FIELD inbj005
+            
+         ON ACTION controlp INFIELD inbj006
+            #add-point:ON ACTION controlp INFIELD inbj015
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inbj_m.inbj006             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            IF NOT cl_null(g_inbj_m.inbj005) THEN
+               LET g_qryparam.where = " inab001 = '",g_inbj_m.inbj005,"'"
+            END IF
+            CALL q_inab002()                                #呼叫開窗
+
+            LET g_inbj_m.inbj006 = g_qryparam.return1              
+
+            DISPLAY g_inbj_m.inbj006 TO inbj006              #
+
+            NEXT FIELD inbj006
+            #end add-point
+       END INPUT
+      
+      AFTER DIALOG
+         IF INT_FLAG THEN
+            EXIT DIALOG
+         END IF
+         CALL aint311_01_b_fill()
+         IF g_rec_b = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = -100
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            NEXT FIELD inaq004
+         END IF
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG
+
+   #add-point:畫面關閉前
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      CALL s_transaction_end("N","0") 
+      CLOSE WINDOW w_aint311_01
+      RETURN 
+   END IF
+   
+    DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+       INPUT ARRAY g_inbj_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+           BEFORE ROW
+              LET l_ac = ARR_CURR()
+#              CALL aint311_01_set_entry_b()
+#              CALL aint311_01_set_no_entry()
+              LET g_inbj_d_t.* = g_inbj_d[l_ac].*
+           AFTER FIELD inaq011
+              IF NOT cl_null(g_inbj_d[l_ac].inaq011) THEN
+                 IF NOT cl_ap_chk_Range(g_inbj_d[l_ac].inaq011,"0.000","0","","","azz-00079",1) THEN
+                    NEXT FIELD inaq011
+                 END IF
+                 IF NOT aint311_01_inaq011_chk() THEN
+                    NEXT FIELD CURRENT
+                 END IF
+                 IF g_inbj_d[l_ac].sel = 'Y' THEN
+                    IF NOT cl_null(g_inbj_d_t.inaq011) AND g_inbj_d_t.inaq011 != g_inbj_d[l_ac].inaq011 THEN
+                       CALL aint311_01_default_inav(g_inbj_d[l_ac].*)
+                       IF NOT s_aint311_lot_sel(g_inav.*,g_inbidocno,g_inbj_d[l_ac].seq) THEN
+#                          NEXT FIELD CURRENT
+                       END IF
+                    END IF
+                 END IF
+              END IF
+              LET g_inbj_d_t.inaq011 = g_inbj_d[l_ac].inaq011
+
+           ON CHANGE sel
+#              CALL aint311_01_set_entry_b()
+#              CALL aint311_01_set_no_entry()  
+              CALL aint311_01_default_inav(g_inbj_d[l_ac].*)
+              IF g_inbj_d[l_ac].sel = 'N' THEN
+                 UPDATE inav_t SET inav017 = 0
+                  WHERE inavent = g_enterprise
+                    AND inavsite = g_site
+                    AND inav001 = g_inav.inav001 
+                    AND inav002 = g_inav.inav002   
+                    AND inav003 = g_inav.inav003   
+                    AND inav004 = g_inav.inav004   
+                    AND inav005 = g_inav.inav005  
+                    AND inav006 = g_inav.inav006 
+                    AND inav007 = g_inav.inav007   
+                    AND inav008 = g_inav.inav008  
+                    AND inav009 = g_inav.inav009  
+                    AND inav010 = g_inav.inav010
+                    AND EXISTS( SELECT 1 FROM inao_t WHERE inaoent = g_enterprise
+                    AND inaodocno = g_inbidocno  AND inaoseq = g_inbj_d[l_ac].seq
+                    AND inao008 = inav012 AND inao009 = inav013)
+                 DELETE FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = g_inbidocno AND inaoseq = g_inbj_d[l_ac].seq
+              ELSE
+#                 IF NOT s_aint311_lot_sel(g_inav.*,g_inbidocno,g_inbj_d[l_ac].seq) THEN
+#                    NEXT FIELD CURRENT
+#                 END IF
+                  IF g_old_qty[l_ac] = g_inbj_d[l_ac].inaq011 THEN
+                     CALL aint311_01_default_inav(g_inbj_d[l_ac].*)
+                     IF NOT s_aint311_upd_inav017('2', g_inbidocno,g_inbj_d[l_ac].seq,'','',g_inav.*) THEN
+                        NEXT FIELD CURRENT
+                     END IF
+                  ELSE
+                    CALL aint311_01_default_inav(g_inbj_d[l_ac].*)
+                    IF NOT s_aint311_lot_sel(g_inav.*,g_inbidocno,g_inbj_d[l_ac].seq) THEN
+#                       NEXT FIELD CURRENT
+                    END IF
+                  END IF
+              END IF
+              
+        END INPUT    
+     ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+    END DIALOG
+    
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      CALL s_transaction_end("N","0") 
+      CLOSE WINDOW w_aint311_01
+      RETURN 
+   END IF 
+   
+   
+     
+   FOR l_i = 1 TO g_rec_b
+      IF g_inbj_d[l_i].sel = 'Y' THEN
+         INITIALIZE l_inbj.* TO NULL
+         SELECT MAX(inbjseq)+1 INTO l_inbj.inbjseq FROM inbj_t WHERE inbjent=g_enterprise AND inbjdocno=l_inbi.inbidocno
+         IF cl_null(l_inbj.inbjseq) THEN 
+            LET l_inbj.inbjseq = 1
+         END IF
+         UPDATE inao_t SET inaoseq = l_inbj.inbjseq
+                     WHERE inaoent = g_enterprise
+                       AND inaosite = g_site
+                       AND inaodocno = g_inbidocno
+                       AND inaoseq = g_inbj_d[l_i].seq
+         SELECT * INTO l_inbj.* FROM inbj_t WHERE inbjent=g_enterprise AND inbjdocno=l_inbi.inbidocno AND inbjseq = l_inbj.inbjseq
+         INITIALIZE l_inbj.inbj014 TO NULL
+         INITIALIZE l_inbj.inbj015 TO NULL
+         LET l_inbj.inbjent = g_enterprise
+         LET l_inbj.inbjdocno = l_inbi.inbidocno
+         LET l_inbj.inbjsite = l_inbi.inbisite
+         
+         LET l_inbj.inbj001 = g_inbj_d[l_i].inbj001
+         LET l_inbj.inbj002 = g_inbj_d[l_i].inbj002
+         LET l_inbj.inbj003 = g_inbj_d[l_i].inbj003
+         LET l_inbj.inbj005 = g_inbj_d[l_i].inbj0051
+         LET l_inbj.inbj006 = g_inbj_d[l_i].inbj0061
+         LET l_inbj.inbj007 = g_inbj_d[l_i].inbj007
+         LET l_inbj.inbj008 = g_inbj_d[l_i].inbj008
+         LET l_inbj.inbj016 = g_inbj_d[l_i].inbj016
+         LET l_inbj.inbj017 = g_inbj_d[l_i].inbj017
+         LET l_inbj.inbj018 = g_inbj_d[l_i].inbj018
+         LET l_inbj.inbj009 = g_inbj_d[l_i].inaq011
+         IF NOT cl_null(l_inbi.inbi032) AND l_inbi.inbi032 = 'Y' THEN
+            LET l_inbj.inbj014 = g_inbj_m.inbj005
+            LET l_inbj.inbj015 = g_inbj_m.inbj006
+         END IF
+         SELECT inaq012,inaq013 INTO l_inbj.inbj011,l_inbj.inbj012 FROM inaq_t 
+          WHERE inaqent = g_enterprise AND inaq001 = l_inbj.inbj001
+            AND inaq002 = l_inbj.inbj002 AND inaq003 = l_inbj.inbj003
+            AND inaq004 = l_inbj.inbj005 AND inaq005 = l_inbj.inbj006
+            AND inaq006 = l_inbj.inbj007 AND inaq007 = l_inbj.inbj008
+            AND inaq008 = l_inbj.inbj016 AND inaq010 = l_inbj.inbj017
+            AND inaq009 = l_inbj.inbj018 AND inaqsite = g_site
+         
+         INSERT INTO inbj_t VALUES l_inbj.*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "ins inbj_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            CALL s_transaction_end("N","0")
+            EXIT FOR
+         END IF
+         #产生报废制造[批序号
+         
+#         SELECT imaf053 INTO l_imaf053 FROM imaf_t WHERE imafent = g_enterprise AND imafsite = g_site AND imaf001 = l_inbj.inbj001
+#         IF NOT aint311_01_lot_ins('1','1',g_site,l_inbi.inbidocno,l_inbj.inbjseq,1,l_inbj.inbj001,l_inbj.inbj002,l_inbj.inbj003,l_inbj.inbj005,l_inbj.inbj006,l_inbj.inbj007,l_imaf053,l_inbj.inbj009,-1,g_prog,g_site) THEN
+#            CALL s_transaction_end("N","0")
+#            EXIT FOR
+#         END IF
+      END IF
+   END FOR
+   #end add-point
+   CALL s_transaction_end("Y","0") 
+   #畫面關閉
+
+   CLOSE WINDOW w_aint311_01
+
+   #add-point:construct段after construct
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION aint311_01_b_fill()
+DEFINE l_sql    STRING
+DEFINE l_cnt    LIKE type_t.num5
+DEFINE l_inbj009_sum LIKE inbj_t.inbj009
+DEFINE l_inaq011 LIKE inaq_t.inaq011
+DEFINE l_deff_num LIKE inaq_t.inaq011
+DEFINE l_cnt2 LIKE type_t.num5
+   LET l_sql = "SELECT '','Y',inaq011,inaq001,imaal003,imaal004,inaq002,inaq003,inaq004,inaa002,",
+               "       inaq005,inab003,inaq006,inaq007,inaq008,oocql004,inaq010,ooefl003,inaq009 ",
+               "  FROM inaq_t LEFT OUTER JOIN imaal_t ON imaalent = inaqent AND imaal001 = inaq001 AND imaal002 = '",g_dlang,"'",
+               "              LEFT OUTER JOIN inaa_t  ON inaaent = inaqent AND inaasite = inaqsite AND inaa001 = inaq004 ",
+               "              LEFT OUTER JOIN inab_t  ON inabent = inaqent AND inabsite = inaqsite AND inab001 = inaq004 AND inab002 = inaq005",
+               "              LEFT OUTER JOIN oocql_t ON oocqlent = inaqent AND oocql001 = '302' AND oocql002 = inaq008 AND oocql003 = '",g_dlang,"'",
+               "              LEFT OUTER JOIN ooefl_t ON ooeflent = inaqent AND ooefl001 = inaq010 AND ooefl002 = '",g_dlang,"'",
+               " WHERE inaqent = ",g_enterprise," AND inaqsite = '",g_site,"' AND inaq011 > 0 AND ",g_wc_m
+   PREPARE sel_inaq_pre FROM l_sql
+   DECLARE sel_inaq_cur CURSOR FOR sel_inaq_pre
+   
+   LET l_cnt = 1
+   SELECT MAX(inbjseq)+1 INTO l_cnt2 FROM inbj_t WHERE inbjent=g_enterprise AND inbjdocno = g_inbidocno
+   IF cl_null(l_cnt2) THEN LET l_cnt2 = 1 END IF
+   FOREACH sel_inaq_cur INTO g_inbj_d[l_cnt].* 
+      LET g_inbj_d[l_cnt].seq = l_cnt2
+      SELECT SUM(inbj009) INTO l_inbj009_sum FROM inbj_t,inbi_t WHERE inbjent = inbient
+         AND inbjdocno = inbidocno AND inbient = g_enterprise AND inbistus <> 'X' AND inbi000 = '2'
+         AND inbj001 = g_inbj_d[l_cnt].inbj001 AND inbj005 = g_inbj_d[l_cnt].inbj0051 AND inbj002 = g_inbj_d[l_cnt].inbj002
+         AND inbj003 = g_inbj_d[l_cnt].inbj003 AND inbj006 = g_inbj_d[l_cnt].inbj0061 AND inbj007 = g_inbj_d[l_cnt].inbj007 
+         AND inbj008 = g_inbj_d[l_cnt].inbj008 AND inbj016 = g_inbj_d[l_cnt].inbj016 AND inbj017 = g_inbj_d[l_cnt].inbj017 
+         AND inbj018 = g_inbj_d[l_cnt].inbj018
+      IF cl_null(l_inbj009_sum) THEN LET l_inbj009_sum = 0 END IF
+      LET l_inaq011 = 0
+      SELECT inaq011 INTO l_inaq011 FROM inaq_t WHERE inaqent = g_enterprise
+                     AND inaqsite = g_site AND inaq001 = g_inbj_d[l_cnt].inbj001
+                     AND inaq004 = g_inbj_d[l_cnt].inbj0051 AND inaq002 = g_inbj_d[l_cnt].inbj002
+                     AND inaq003 = g_inbj_d[l_cnt].inbj003 AND inaq005 = g_inbj_d[l_cnt].inbj0061
+                     AND inaq006 = g_inbj_d[l_cnt].inbj007 AND inaq007 = g_inbj_d[l_cnt].inbj008
+                     AND inaq008 = g_inbj_d[l_cnt].inbj016 AND inaq010 = g_inbj_d[l_cnt].inbj017
+                     AND inaq009 = g_inbj_d[l_cnt].inbj018 
+      LET l_deff_num = l_inaq011 - l_inbj009_sum     
+      IF l_deff_num <=0 THEN
+         CONTINUE FOREACH
+      END IF
+      LET g_inbj_d[l_cnt].inaq011 = l_deff_num
+      LET g_old_qty[l_cnt] = g_inbj_d[l_cnt].inaq011
+      CALL aint311_01_default_inav(g_inbj_d[l_cnt].*)
+      
+      IF NOT s_aint311_upd_inav017('2', g_inbidocno,g_inbj_d[l_cnt].seq,'','',g_inav.*) THEN
+         EXIT FOREACH
+      END IF
+
+      LET l_cnt = l_cnt + 1
+      LET l_cnt2 =l_cnt2 + 1
+   END FOREACH  
+   LET g_rec_b = l_cnt - 1   
+   CALL g_inbj_d.deleteElement(g_inbj_d.getLength())
+   DISPLAY ARRAY g_inbj_d TO s_detail1.* ATTRIBUTES(COUNT=g_inbj_d.getLength())
+      BEFORE DISPLAY 
+         EXIT DISPLAY
+   END DISPLAY 
+   FREE sel_inaq_cur
+END FUNCTION
+
+PRIVATE FUNCTION aint311_01_inaq011_chk()
+DEFINE l_inaq011 LIKE inaq_t.inaq011
+DEFINE l_inbj009_sum LIKE inbj_t.inbj009
+DEFINE l_sql STRING
+   IF NOT cl_null(g_inbj_d[l_ac].inaq011) THEN
+      IF cl_null(g_inbj_d[l_ac].inbj002) THEN LET g_inbj_d[l_ac].inbj002 = " " END IF
+      IF cl_null(g_inbj_d[l_ac].inbj003) THEN LET g_inbj_d[l_ac].inbj003 = " " END IF
+      IF cl_null(g_inbj_d[l_ac].inbj0051) THEN LET g_inbj_d[l_ac].inbj0051 = " " END IF
+      IF cl_null(g_inbj_d[l_ac].inbj0061) THEN LET g_inbj_d[l_ac].inbj0061 = " " END IF
+      IF cl_null(g_inbj_d[l_ac].inbj007) THEN LET g_inbj_d[l_ac].inbj007 = " " END IF
+      IF cl_null(g_inbj_d[l_ac].inbj008) THEN LET g_inbj_d[l_ac].inbj008 = " " END IF
+      IF cl_null(g_inbj_d[l_ac].inbj016) THEN LET g_inbj_d[l_ac].inbj016 = " " END IF
+      IF cl_null(g_inbj_d[l_ac].inbj017) THEN LET g_inbj_d[l_ac].inbj017 = " " END IF
+      IF cl_null(g_inbj_d[l_ac].inbj018) THEN LET g_inbj_d[l_ac].inbj018 = " " END IF
+      LET l_sql = "SELECT inaq011 FROM inaq_t WHERE inaqent = ",g_enterprise,
+                   "  AND inaqsite = '",g_site,"' AND inaq001 = '",g_inbj_d[l_ac].inbj001,"'",
+                   "  AND inaq004 = '",g_inbj_d[l_ac].inbj0051,"' AND inaq002 = '",g_inbj_d[l_ac].inbj002,"'",
+                   "  AND inaq003 = '",g_inbj_d[l_ac].inbj003,"' AND inaq005 = '",g_inbj_d[l_ac].inbj0061,"'",
+                   "  AND inaq006 = '",g_inbj_d[l_ac].inbj007,"' AND inaq007 = '",g_inbj_d[l_ac].inbj008,"'",
+                   "  AND inaq008 = '",g_inbj_d[l_ac].inbj016,"' AND inaq010 = '",g_inbj_d[l_ac].inbj017,"'",
+                   "  AND inaq009 = '",g_inbj_d[l_ac].inbj018,"'"
+      LET l_inaq011 = 0
+      PREPARE sel_inaq011_prep FROM l_sql
+      EXECUTE sel_inaq011_prep INTO l_inaq011
+      
+      SELECT SUM(inbj009) INTO l_inbj009_sum FROM inbj_t,inbi_t WHERE inbjent = inbient
+         AND inbjdocno = inbidocno AND inbient = g_enterprise AND inbistus <> 'X' 
+         AND inbj001 = g_inbj_d[l_ac].inbj001
+         AND inbj005 = g_inbj_d[l_ac].inbj0051 AND inbj002 = g_inbj_d[l_ac].inbj002
+         AND inbj003 = g_inbj_d[l_ac].inbj003 AND inbj006 = g_inbj_d[l_ac].inbj0061
+         AND inbj007 = g_inbj_d[l_ac].inbj007 AND inbj008 = g_inbj_d[l_ac].inbj008
+         AND inbj016 = g_inbj_d[l_ac].inbj016 AND inbj017 = g_inbj_d[l_ac].inbj017
+         AND inbj018 = g_inbj_d[l_ac].inbj018
+      IF cl_null(l_inbj009_sum) THEN LET l_inbj009_sum = 0 END IF
+      LET l_inaq011 = l_inaq011 - l_inbj009_sum 
+      IF g_inbj_d[l_ac].inaq011 > l_inaq011 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'ain-00320'
+         LET g_errparam.extend = g_inbj_d[l_ac].inaq011||" > "||l_inaq011
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+   END IF
+   RETURN TRUE
+END FUNCTION
+
+PRIVATE FUNCTION aint311_01_set_entry_b()
+#   CALL cl_set_comp_entry("inaq011",TRUE)
+END FUNCTION
+
+PRIVATE FUNCTION aint311_01_set_no_entry_b()
+#   IF g_inbj_d[l_ac].sel = 'N' THEN
+#      CALL cl_set_comp_entry("inaq011",FALSE)
+#      INITIALIZE g_inbj_d[l_ac].inaq001 TO NULL
+#   END IF
+END FUNCTION
+
+PRIVATE FUNCTION aint311_01_pxh_chk()
+DEFINE l_n LIKE type_t.num5
+   LET l_n = 0 
+   SELECT COUNT(*) INTO l_n FROM imaf_t 
+    WHERE imafent = g_enterprise AND imafsite = g_site
+      AND imaf001 = g_inbj_d[l_ac].inbj001 AND (imaf071 = '1' OR imaf071 = '3') 
+      AND (imaf081 = '1' OR imaf081 = '3')
+   IF l_n = 0 THEN
+      RETURN FALSE 
+   END IF
+   
+   LET l_n = 0 
+   SELECT COUNT(*) INTO l_n FROM inai_t
+    WHERE inaient = g_enterprise AND inaisite = g_inbi_m.inbisite
+      AND inai001 = g_inbj_d[l_ac].inbj001 AND inai002 = g_inbj_d[l_ac].inbj002
+      AND inai003 = g_inbj_d[l_ac].inbj003 AND inai004 = g_inbj_d[l_ac].inbj0051
+      AND inai005 = g_inbj_d[l_ac].inbj0061 AND inai006 = g_inbj_d[l_ac].inbj007
+      AND inai010 > 0
+   IF l_n = 0 THEN
+      RETURN FALSE
+   END IF
+   RETURN TRUE
+END FUNCTION
+
+PRIVATE FUNCTION aint311_01_lot_ins(p_source,p_type,p_site,p_docno,p_seq,p_seq1,p_item,p_feature,p_feature1,p_stock,p_locat,p_lot,p_unit,p_qty,p_inao013,p_prog,p_site1)
+DEFINE l_sql           STRING   
+DEFINE l_inag032       LIKE inag_t.inag032
+DEFINE l_inao          RECORD LIKE inao_t.*
+DEFINE p_source        LIKE type_t.chr5
+DEFINE p_type          LIKE type_t.chr5
+DEFINE p_site          LIKE inao_t.inaosite
+DEFINE p_docno         LIKE inao_t.inaodocno
+DEFINE p_seq           LIKE inao_t.inaoseq
+DEFINE p_seq1          LIKE inao_t.inaoseq1
+DEFINE p_item          LIKE inao_t.inao001
+DEFINE p_feature       LIKE inao_t.inao002
+DEFINE p_feature1      LIKE inao_t.inao003
+DEFINE p_stock         LIKE inao_t.inao005
+DEFINE p_locat         LIKE inao_t.inao006
+DEFINE p_lot           LIKE inao_t.inao007
+DEFINE p_unit          LIKE inag_t.inag032
+DEFINE p_qty           LIKE inag_t.inag033
+DEFINE p_inao013       LIKE inao_t.inao013
+DEFINE p_prog          LIKE type_t.chr10
+DEFINE p_site1         LIKE imaf_t.imafsite
+DEFINE r_success       LIKE type_t.num5
+DEFINE lwin_curr       ui.Window
+DEFINE lfrm_curr       ui.Form
+DEFINE ls_path         STRING
+DEFINE l_cnt           LIKE type_t.num5
+DEFINE l_cnt1          LIKE type_t.num5
+DEFINE l_cnt2          LIKE type_t.num5
+DEFINE l_inao008       LIKE inao_t.inao008
+DEFINE l_inao010       LIKE inao_t.inao010
+DEFINE l_inao011       LIKE inao_t.inao011
+DEFINE l_inao012       LIKE inao_t.inao012
+DEFINE l_imaf071       LIKE imaf_t.imaf071
+DEFINE l_imaf081       LIKE imaf_t.imaf081
+DEFINE l_success       LIKE type_t.num5
+DEFINE l_inai          RECORD LIKE inai_t.*
+DEFINE l_inae010       LIKE inae_t.inae010  #160512-00004#1 by whitney add
+
+
+   LET r_success = TRUE
+   
+   SELECT imaa006 INTO l_inag032
+     FROM imaa_t
+    WHERE imaaent = g_enterprise
+      AND imaa001 = p_item
+      
+   #160512-00004#1 by whitney modify start
+   #LET l_sql = " SELECT SUM(inai011),inai007,inai012,'' ",
+   #            "   FROM inai_t ",
+   #            "  WHERE inaient = '",g_enterprise,"' AND inaisite = '",p_site,"' ",
+   #            "    AND inai001 = '",p_item,"' AND inai002 = '",p_feature,"' ",
+   #            "    AND inai003 = '",p_feature1,"' AND inai004 = '",p_stock,"' ",
+   #            "    AND inai005 = '",p_locat,"' AND inai006 = '",p_lot,"' ",
+   #            "    AND inai009 = '",l_inag032,"' ",
+   #            "  GROUP BY inai007,inai012 "
+   LET l_sql = " SELECT SUM(inai011),inai007,inae010,'' ",
+               "   FROM inai_t ",
+               "   LEFT JOIN inae_t ON inaeent=inaient AND inae001=inai001 AND inaesite=inaisite AND inae002=inai002 AND inae003=inai007 AND inae004=inai008 ",
+               "  WHERE inaient = ",g_enterprise," AND inaisite = '",p_site,"' ",
+               "    AND inai001 = '",p_item,"' AND inai002 = '",p_feature,"' ",
+               "    AND inai003 = '",p_feature1,"' AND inai004 = '",p_stock,"' ",
+               "    AND inai005 = '",p_locat,"' AND inai006 = '",p_lot,"' ",
+               "    AND inai009 = '",l_inag032,"' ",
+               "  GROUP BY inai007,inae010 "
+   #160512-00004#1 by whitney modify end
+   PREPARE s_lot_sel_pb1 FROM l_sql
+   DECLARE s_lot_sel_cs1 CURSOR FOR s_lot_sel_pb1
+#   LET l_sql = " SELECT '','','',inai011,inai007,inai012,'','','',inai008 ",
+   #160512-00004#1 by whitney modify start
+   #LET l_sql = " SELECT *  FROM inai_t ",
+   #            "  WHERE inaient = '",g_enterprise,"' AND inaisite = '",p_site,"' ",
+   #            "    AND inai001 = '",p_item,"' AND inai002 = '",p_feature,"' ",
+   #            "    AND inai003 = '",p_feature1,"' AND inai004 = '",p_stock,"' ",
+   #            "    AND inai005 = '",p_locat,"' AND inai006 = '",p_lot,"' ",
+   #            "    AND inai009 = '",l_inag032,"' ",
+   #            "    AND inai007 = ? AND inai012 = ? "
+   LET l_sql = " SELECT inae010,inai_t.* FROM inai_t ",
+               "   LEFT JOIN inae_t ON inaeent=inaient AND inae001=inai001 AND inaesite=inaisite AND inae002=inai002 AND inae003=inai007 AND inae004=inai008 ",
+               "  WHERE inaient = ",g_enterprise," AND inaisite = '",p_site,"' ",
+               "    AND inai001 = '",p_item,"' AND inai002 = '",p_feature,"' ",
+               "    AND inai003 = '",p_feature1,"' AND inai004 = '",p_stock,"' ",
+               "    AND inai005 = '",p_locat,"' AND inai006 = '",p_lot,"' ",
+               "    AND inai009 = '",l_inag032,"' ",
+               "    AND inai007 = ? AND inae010 = ? "
+   #160512-00004#1 by whitney modify end
+   PREPARE s_lot_sel_pb2 FROM l_sql
+   DECLARE s_lot_sel_cs2 CURSOR FOR s_lot_sel_pb2    
+   LET l_inao008 = ''
+   LET l_inao010 = ''
+   LET l_inao011 = ''
+   LET l_inao012 = ''
+   LET l_cnt1 = 1
+   LET l_cnt2 = 1
+   FOREACH s_lot_sel_cs1 INTO l_inao012,l_inao008,l_inao010,l_inao011
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      OPEN s_lot_sel_cs2 USING l_inao008,l_inao010
+      FOREACH s_lot_sel_cs2 INTO l_inae010,l_inai.*  #160512-00004#1 by whitney add l_inae010
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+           
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+#         LET l_success = ''
+#         CALL s_lot_sel_inao009(l_inao.inao009) RETURNING l_success
+#         IF NOT l_success THEN
+#            EXIT FOREACH
+#         END IF
+         IF p_qty < l_cnt2 THEN
+            EXIT FOREACH
+         END IF
+         LET l_inao.inaoent = g_enterprise
+         LET l_inao.inaosite = g_site
+         LET l_inao.inaodocno = p_docno
+         LET l_inao.inaoseq = p_seq
+         LET l_inao.inaoseq1 = l_cnt1
+         LET l_inao.inaoseq2 = l_cnt2
+         LET l_inao.inao000 = '1'
+         LET l_inao.inao001 = p_item
+         LET l_inao.inao002 = p_feature
+         LET l_inao.inao003 = p_feature1
+         LET l_inao.inao004 = ''
+         LET l_inao.inao005 = p_stock
+         LET l_inao.inao006 = p_locat
+         LET l_inao.inao007 = p_lot
+         LET l_inao.inao008 = l_inai.inai007
+         LET l_inao.inao009 = l_inai.inai008
+         LET l_inao.inao010 = l_inae010  #160512-00004#1 by whitney modify l_inai.inai012->l_inae010
+         LET l_inao.inao011 = l_inao.inao010
+         LET l_inao.inao012 = l_inai.inai011
+         LET l_inao.inao013 = p_inao013
+         INSERT INTO inao_t VALUES(l_inao.*)
+         INITIALIZE l_inao.* TO NULL
+         LET l_cnt2 = l_cnt2 + 1
+      END FOREACH
+      LET l_inao008 = ''
+      LET l_inao010 = ''
+      LET l_inao011 = ''
+      LET l_inao012 = ''
+      LET l_cnt1 = l_cnt1 + 1
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+PRIVATE FUNCTION aint311_01_default_inav(p_inbj)
+DEFINE p_inbj  type_g_inbj_d 
+   LET g_inav.inavent = g_enterprise
+   LET g_inav.inavsite = g_site
+   LET g_inav.inav001 = p_inbj.inbj001
+   LET g_inav.inav002 = p_inbj.inbj002
+   LET g_inav.inav003 = p_inbj.inbj003
+   LET g_inav.inav004 = p_inbj.inbj0051
+   LET g_inav.inav005 = p_inbj.inbj0061
+   LET g_inav.inav006 = p_inbj.inbj007
+   LET g_inav.inav007 = p_inbj.inbj008
+   LET g_inav.inav008 = p_inbj.inbj016
+   LET g_inav.inav009 = p_inbj.inbj018
+   LET g_inav.inav010 = p_inbj.inbj017
+   LET g_inav.inav016 = p_inbj.inaq011
+
+END FUNCTION
+
+ 
+{</section>}
+ 

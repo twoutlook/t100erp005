@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrq911" module="axr" jobmode="N" type="q02" industry="std" fix_arg="7" crtid="01727" crtdt="2015-02-12 12:34:41" modid="05016" moddt="2015-09-14 10:19:07" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="客戶帳款明細查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xrcacomp,xrcacomp_desc(chr500),xrcald,xrcald_desc(chr500),xrca004,xrca004_desc(chr500),xrca014,xrca014_desc(chr500),type(chr500),xrcadocdt,xrca001,xrca001_desc(chr500),xrcadocno,xrcb047,xrca035,xrca035_desc(chr500),xrca038,xrca066,xrca100,xrca108,l_xrca1081(num20_6),l_xrca1082(num20_6),xrca118,l_xrca1181(num20_6),l_xrca1182(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xrcacomp(b_xrcacomp),xrcacomp_desc(xrcacomp_desc),xrcald(b_xrcald),xrcald_desc(xrcald_desc),xrca004(b_xrca004),xrca004_desc(xrca004_desc),xrca014(b_xrca014),xrca014_desc(xrca014_desc),type(b_type),xrcadocdt(b_xrcadocdt),xrca001(b_xrca001),xrca001_desc(xrca001_desc),xrcadocno(b_xrcadocno),xrcb047(b_xrcb047),xrca035(b_xrca035),xrca035_desc(xrca035_desc),xrca038(b_xrca038),xrca066(b_xrca066),xrca100(b_xrca100),xrca108(b_xrca108),l_xrca1081(l_xrca1081),l_xrca1082(l_xrca1082),xrca118(b_xrca118),l_xrca1181(l_xrca1181),l_xrca1182(l_xrca1182)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrq911" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xrcacomp,xrcald,xrca014,type,xrcadocdt,xrca001,xrcadocno,xrca035,xrca038,xrca066,xrca100,xrca108,xrca118" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xrcacomp(b_xrcacomp),xrcald(b_xrcald),xrca004(b_xrca004),xrca014(b_xrca014),xrcadocdt(b_xrcadocdt),xrca001(b_xrca001),xrcadocno(b_xrcadocno),xrcb047(b_xrcb047),xrca035(b_xrca035),xrca038(b_xrca038),xrca066(b_xrca066),xrca100(b_xrca100),xrca108(b_xrca108),xrca118(b_xrca118)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xrcacomp">
+        <after/>
+      </column>
+      <column id="xrcacomp_desc"/>
+      <column id="xrcald">
+        <after>
+          <check chkid="v_glaald_3" id="isExist"/>
+        </after>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xrcald_desc"/>
+      <column id="xrca004">
+        <after/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="xrca004_desc"/>
+      <column id="xrca014">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrca014_desc"/>
+      <column id="type"/>
+      <column id="xrcadocdt"/>
+      <column id="xrca001" def_scc="8302">
+        <after/>
+      </column>
+      <column id="xrca001_desc"/>
+      <column id="xrcadocno">
+        <controlp form="q_apcadocno" state="c"/>
+      </column>
+      <column id="xrcb047"/>
+      <column id="xrca035">
+        <after>
+          <check chkid="v_glac002_2" id="chkandReturn"/>
+        </after>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="xrca035_desc"/>
+      <column id="xrca038">
+        <controlp form="q_xrca038" state="c"/>
+      </column>
+      <column id="xrca066"/>
+      <column id="xrca100">
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="xrca108" type="S" default="0"/>
+      <column id="l_xrca1081"/>
+      <column id="l_xrca1082"/>
+      <column id="xrca118" type="S" default="0"/>
+      <column id="l_xrca1181"/>
+      <column id="l_xrca1182"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xrca_t" page="1" linked="" pk="xrcald,xrcadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xrcacomp,&apos;&apos;,xrcald,&apos;&apos;,xrca004,&apos;&apos;,xrca014,&apos;&apos;,&apos;&apos;,xrcadocdt,xrca001,&apos;&apos;,xrcadocno,&apos;&apos;,xrca035,&apos;&apos;,xrca038,xrca066,xrca100,xrca108,&apos;&apos;,&apos;&apos;,xrca118,&apos;&apos;,&apos;&apos; FROM xrca_t WHERE xrcaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

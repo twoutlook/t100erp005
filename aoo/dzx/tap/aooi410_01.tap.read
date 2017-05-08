@@ -1,0 +1,776 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aooi410_01" std_prog="aooi410_01" erpver="1.0" module="AOO" ver="1" env="s" zone="t10tst" booking="N" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.aooi410_01_oogb003_chk" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION aooi410_01_oogb003_chk(p_str,p_cmd)
+DEFINE l_n   LIKE type_t.num5
+DEFINE p_cmd LIKE type_t.num5
+DEFINE p_str LIKE oogb_t.oogb003
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n FROM oocq_t
+    WHERE oocqent =  g_enterprise
+      AND oocq001 = p_cmd
+      AND oocq002 = p_str
+   IF l_n = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aoo-00055'
+      LET g_errparam.extend = p_str
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF 
+   
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n FROM oocq_t
+    WHERE oocqent =  g_enterprise
+      AND oocq001 = p_cmd
+      AND oocq002 = p_str
+      AND oocqstus= 'Y'
+   IF l_n = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aoo-00056'
+      LET g_errparam.extend = p_str
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF 
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_oogb_m_t        type_g_oogb_m]]>
+  </point>
+  <point name="input.a.bdate" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_oogb_m.bdate) AND NOT cl_null(g_oogb_m.edate) THEN
+              
+              LET g_oogb_m.edate = s_date_get_date(g_oogb_m.bdate,12,-1)
+              DISPLAY BY NAME g_oogb_m.edate
+              IF g_oogb_m.bdate > g_oogb_m.edate THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'sub-00095'
+                  LET g_errparam.extend = g_oogb_m.bdate
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD bdate
+              END IF
+           END IF]]>
+  </point>
+  <point name="input.a.edate" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[             IF NOT cl_null(g_oogb_m.bdate) AND NOT cl_null(g_oogb_m.edate) THEN
+                IF g_oogb_m.bdate > g_oogb_m.edate THEN
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = 'sub-00095'
+                    LET g_errparam.extend = g_oogb_m.edate
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+
+                    NEXT FIELD edate
+                END IF
+             END IF]]>
+  </point>
+  <point name="input.a.oogb001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_oogb_m.oogb001) THEN 
+                LET l_n = 0 
+                SELECT COUNT(*) INTO l_n FROM ooal_t
+                 WHERE ooalent = g_enterprise
+                   AND ooal002 = g_oogb_m.oogb001
+                   AND ooal001 = 4
+                IF l_n = 0 THEN
+                   INITIALIZE g_errparam TO NULL
+                   LET g_errparam.code = 'aoo-00076'
+                   LET g_errparam.extend = g_oogb_m.oogb001
+                   LET g_errparam.popup = TRUE
+                   CALL cl_err()
+ 
+                   LET g_oogb_m.oogb001 = ''
+                   DISPLAY BY NAME g_oogb_m.oogb001 
+                   NEXT FIELD CURRENT
+                END IF
+                
+                IF NOT ap_chk_isExist(g_oogb_m.oogb001,"SELECT COUNT(*) FROM ooal_t WHERE ooalent ='"||g_enterprise||"' AND ooal002=? AND ooal001 = 4 AND ooalstus='Y'" ,'aoo-00124',0) THEN
+                   LET g_oogb_m.oogb001 = ''
+                   DISPLAY BY NAME g_oogb_m.oogb001 
+                   NEXT FIELD CURRENT
+                END IF
+            END IF
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oogb_m.oogb001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oogb_m.oogb001_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oogb_m.oogb001_desc]]>
+  </point>
+  <point name="input.a.oogb003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_oogb_m.oogb003) THEN
+               IF NOT aooi410_01_oogb003_chk(g_oogb_m.oogb003,6) THEN
+                  LET g_oogb_m.oogb003 = ''
+                  NEXT FIELD CURRENT
+               END IF 
+             END IF
+             
+             INITIALIZE g_ref_fields TO NULL
+             LET g_ref_fields[1] = g_oogb_m.oogb003
+             CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='6' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+             LET g_oogb_m.oogb003_desc = g_rtn_fields[1]
+             DISPLAY BY NAME g_oogb_m.oogb003_desc
+            
+]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[           LET g_oogb_m.lbl_ooga002_1 = 'N'
+           LET g_oogb_m.lbl_ooga002_2 = 'N'
+           LET g_oogb_m.lbl_ooga002_3 = 'N'
+           LET g_oogb_m.lbl_ooga002_4 = 'N'
+           LET g_oogb_m.lbl_ooga002_5 = 'N'
+           LET g_oogb_m.lbl_ooga002_6 = 'Y'
+           LET g_oogb_m.lbl_ooga002_7 = 'Y'
+           LET l_year = YEAR(g_today) + 1
+           LET g_oogb_m.bdate = MDY(1,1,l_year)
+           LET g_oogb_m.edate = MDY(12,31,l_year) 
+           DISPLAY BY NAME g_oogb_m.bdate,g_oogb_m.edate,g_oogb_m.lbl_ooga002_1,g_oogb_m.lbl_ooga002_2,
+                           g_oogb_m.lbl_ooga002_3,g_oogb_m.lbl_ooga002_4,g_oogb_m.lbl_ooga002_5,g_oogb_m.lbl_ooga002_6,
+                           g_oogb_m.lbl_ooga002_7
+           LET g_oogb_m_t.bdate = g_oogb_m.bdate
+           LET g_oogb_m_t.edate = g_oogb_m.edate]]>
+  </point>
+  <point name="input.c.oogb001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_oogb_m.oogb001             #給予default值
+
+            #給予arg
+            LET g_qryparam.where = " ooal001 = '4'"           
+             
+            CALL q_ooal002()                                #呼叫開窗
+          
+            LET g_oogb_m.oogb001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_oogb_m.oogb001 TO oogb001              #顯示到畫面上
+
+            NEXT FIELD oogb001                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.oogb003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_oogb_m.oogb003             #給予default值
+
+            #給予arg
+
+            LET g_qryparam.arg1 = 6
+            CALL q_oocq002()                           #呼叫開窗
+
+            LET g_oogb_m.oogb003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_oogb_m.oogb003 TO oogb003              #顯示到畫面上
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oogb_m.oogb003
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='6' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oogb_m.oogb003_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oogb_m.oogb003_desc
+
+            NEXT FIELD oogb003                          #返回原欄位
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_date_first          LIKE type_t.dat 
+   DEFINE l_date_last           LIKE type_t.dat
+   DEFINE l_year                  LIKE type_t.chr10
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_sql           STRING
+   DEFINE l_sql1          STRING
+   DEFINE l_success       LIKE type_t.chr1
+   DEFINE l_crtdt         LIKE type_t.dat
+   DEFINE p_oogb001       LIKE oogb_t.oogb001]]>
+  </point>
+  <point name="input.g.bdate" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[p_oogb001]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF NOT INT_FLAG THEN
+      
+      LET l_crtdt = cl_get_current()   
+      LET l_sql = "SELECT '",g_enterprise CLIPPED,"','",g_oogb_m.oogb001 CLIPPED,"',ooga001,'",g_oogb_m.oogb003,"',",
+                  "          ooga004,ooga005,ooga006,ooga007,ooga008,to_char(ooga001,'YYYY'),oogastus,",
+                  "         '",g_user CLIPPED,"',",
+                  "         '",g_dept CLIPPED,"',",   
+                  "         '",g_user CLIPPED,"',",
+                  "         '",g_dept CLIPPED,"',",
+                  "         '",l_crtdt,"'",                  
+            " FROM ooga_t WHERE ooga001 BETWEEN '",g_oogb_m.bdate CLIPPED,"'",
+            " AND '",g_oogb_m.edate CLIPPED,"'",
+            " AND oogaent = '",g_enterprise CLIPPED,"'"
+       IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' AND
+         g_oogb_m.lbl_ooga002_4 = 'N' AND g_oogb_m.lbl_ooga002_5 = 'N' AND g_oogb_m.lbl_ooga002_6 = 'N' AND g_oogb_m.lbl_ooga002_7 = 'N' THEN 
+       ELSE
+         LET l_sql = l_sql," AND ( "
+       END IF
+       
+      IF g_oogb_m.lbl_ooga002_1 = 'Y' THEN
+         LET l_sql = l_sql,"ooga002 = '1'"
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_2 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' THEN
+            LET l_sql = l_sql," OR ooga002 = '2'"
+         ELSE
+            LET l_sql = l_sql," ooga002 = '2'"
+         END IF
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_3 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' OR g_oogb_m.lbl_ooga002_2 = 'Y' THEN
+            LET l_sql = l_sql," OR ooga002 = '3'"
+         END IF
+         IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' THEN
+            LET l_sql = l_sql," ooga002 = '3'"
+         END IF
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_4 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' OR g_oogb_m.lbl_ooga002_2 = 'Y' OR g_oogb_m.lbl_ooga002_3 = 'Y' THEN
+            LET l_sql = l_sql," OR ooga002 = '4'"
+         END IF
+         IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' THEN
+            LET l_sql = l_sql," ooga002 = '4'"
+         END IF
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_5 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' OR g_oogb_m.lbl_ooga002_2 = 'Y' OR g_oogb_m.lbl_ooga002_3 = 'Y' OR g_oogb_m.lbl_ooga002_4 = 'Y' THEN
+            LET l_sql = l_sql," OR ooga002 = '5'"
+         END IF
+         IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' AND g_oogb_m.lbl_ooga002_5 = 'N' THEN
+            LET l_sql = l_sql," ooga002 = '5'"
+         END IF
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_6 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' OR g_oogb_m.lbl_ooga002_2 = 'Y' OR g_oogb_m.lbl_ooga002_3 = 'Y' OR g_oogb_m.lbl_ooga002_4 = 'Y' OR
+            g_oogb_m.lbl_ooga002_5 = 'Y' THEN
+            LET l_sql = l_sql," OR ooga002 = '6'"
+         END IF
+         IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' AND g_oogb_m.lbl_ooga002_4 = 'N' AND
+            g_oogb_m.lbl_ooga002_5 = 'N' THEN
+            LET l_sql = l_sql," ooga002 = '6'"
+         END IF
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_7 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' OR g_oogb_m.lbl_ooga002_2 = 'Y' OR g_oogb_m.lbl_ooga002_3 = 'Y' OR g_oogb_m.lbl_ooga002_4 = 'Y' OR
+            g_oogb_m.lbl_ooga002_5 = 'Y' OR g_oogb_m.lbl_ooga002_6 = 'Y' THEN 
+            LET l_sql = l_sql," OR ooga002 = '0'"
+         END IF
+         IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' AND g_oogb_m.lbl_ooga002_4 = 'N' AND
+            g_oogb_m.lbl_ooga002_5 = 'N' AND g_oogb_m.lbl_ooga002_6 = 'N' THEN 
+            LET l_sql = l_sql," ooga002 = '0'"
+         END IF
+      END IF
+
+      IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' AND
+         g_oogb_m.lbl_ooga002_4 = 'N' AND g_oogb_m.lbl_ooga002_5 = 'N' AND g_oogb_m.lbl_ooga002_6 = 'N' AND g_oogb_m.lbl_ooga002_7 = 'N' THEN 
+       ELSE
+         LET l_sql = l_sql,")"
+       END IF
+
+      LET l_sql1 = "INSERT INTO oogb_t(oogbent,oogb001,oogb002,oogb003,oogb005,oogb006,oogb007,oogb008,oogb009,oogb010,",
+                   "                   oogbstus,oogbownid,oogbowndp,oogbcrtid,oogbcrtdp,oogbcrtdt) "
+      LET l_sql = l_sql1,l_sql
+      CALL s_transaction_begin()
+      PREPARE aooi410_01_pre1 FROM l_sql
+      EXECUTE aooi410_01_pre1
+      IF sqlca.sqlcode THEN
+         LET l_success = 'N'
+         #CALL cl_err('','aoo-00146',1)
+      ELSE
+         LET l_success = 'Y'
+         #CALL cl_err('','aoo-00147',1)
+      END IF
+      CALL s_transaction_end(l_success,'1')
+   END IF]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_oogb_m.oogb001 = p_oogb001
+   DISPLAY BY NAME g_oogb_m.oogb001]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oogb_m.oogb001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oogb_m.oogb001_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oogb_m.oogb001_desc
+]]>
+  </point>
+  <section id="aooi410_01.description" ver="7" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000168
+#+ 
+#+ Filename...: aooi410_01
+#+ Description: 例假日产生
+#+ Creator....: 01996(2013/07/18)
+#+ Modifier...: 01996(2013/07/22) -SD/PR-
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="aooi410_01.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_oogb_m        RECORD
+       oogb001 LIKE oogb_t.oogb001, 
+   oogb001_desc LIKE type_t.chr80, 
+   bdate LIKE type_t.chr80, 
+   edate LIKE type_t.chr80, 
+   lbl_ooga002_1 LIKE type_t.chr80, 
+   lbl_ooga002_2 LIKE type_t.chr80, 
+   lbl_ooga002_3 LIKE type_t.chr80, 
+   lbl_ooga002_4 LIKE type_t.chr80, 
+   lbl_ooga002_5 LIKE type_t.chr80, 
+   lbl_ooga002_6 LIKE type_t.chr80, 
+   lbl_ooga002_7 LIKE type_t.chr80, 
+   oogb003 LIKE oogb_t.oogb003, 
+   oogb003_desc LIKE type_t.chr80
+       END RECORD
+DEFINE g_oogb_m        type_g_oogb_m
+ 
+   DEFINE g_oogb001_t LIKE oogb_t.oogb001
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aooi410_01.input" ver="3" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aooi410_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aooi410_01 WITH FORM cl_ap_formpath("aoo","aooi410_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_oogb_m.oogb001,g_oogb_m.bdate,g_oogb_m.edate,g_oogb_m.lbl_ooga002_1,g_oogb_m.lbl_ooga002_2, 
+          g_oogb_m.lbl_ooga002_3,g_oogb_m.lbl_ooga002_4,g_oogb_m.lbl_ooga002_5,g_oogb_m.lbl_ooga002_6, 
+          g_oogb_m.lbl_ooga002_7,g_oogb_m.oogb003 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD oogb001
+            
+            #add-point:AFTER FIELD oogb001
+            {<point name="input.a.oogb001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD oogb001
+            #add-point:BEFORE FIELD oogb001
+            {<point name="input.b.oogb001" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oogb001
+            #add-point:ON CHANGE oogb001
+            {<point name="input.g.oogb001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD bdate
+            #add-point:BEFORE FIELD bdate
+            {<point name="input.b.bdate" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD bdate
+            
+            #add-point:AFTER FIELD bdate
+            {<point name="input.a.bdate" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE bdate
+            #add-point:ON CHANGE bdate
+            {<point name="input.g.bdate" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD edate
+            #add-point:BEFORE FIELD edate
+            {<point name="input.b.edate" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD edate
+            
+            #add-point:AFTER FIELD edate
+            {<point name="input.a.edate" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE edate
+            #add-point:ON CHANGE edate
+            {<point name="input.g.edate" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD lbl_ooga002_1
+            #add-point:BEFORE FIELD lbl_ooga002_1
+            {<point name="input.b.lbl_ooga002_1" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD lbl_ooga002_1
+            
+            #add-point:AFTER FIELD lbl_ooga002_1
+            {<point name="input.a.lbl_ooga002_1" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE lbl_ooga002_1
+            #add-point:ON CHANGE lbl_ooga002_1
+            {<point name="input.g.lbl_ooga002_1" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD lbl_ooga002_2
+            #add-point:BEFORE FIELD lbl_ooga002_2
+            {<point name="input.b.lbl_ooga002_2" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD lbl_ooga002_2
+            
+            #add-point:AFTER FIELD lbl_ooga002_2
+            {<point name="input.a.lbl_ooga002_2" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE lbl_ooga002_2
+            #add-point:ON CHANGE lbl_ooga002_2
+            {<point name="input.g.lbl_ooga002_2" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD lbl_ooga002_3
+            #add-point:BEFORE FIELD lbl_ooga002_3
+            {<point name="input.b.lbl_ooga002_3" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD lbl_ooga002_3
+            
+            #add-point:AFTER FIELD lbl_ooga002_3
+            {<point name="input.a.lbl_ooga002_3" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE lbl_ooga002_3
+            #add-point:ON CHANGE lbl_ooga002_3
+            {<point name="input.g.lbl_ooga002_3" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD lbl_ooga002_4
+            #add-point:BEFORE FIELD lbl_ooga002_4
+            {<point name="input.b.lbl_ooga002_4" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD lbl_ooga002_4
+            
+            #add-point:AFTER FIELD lbl_ooga002_4
+            {<point name="input.a.lbl_ooga002_4" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE lbl_ooga002_4
+            #add-point:ON CHANGE lbl_ooga002_4
+            {<point name="input.g.lbl_ooga002_4" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD lbl_ooga002_5
+            #add-point:BEFORE FIELD lbl_ooga002_5
+            {<point name="input.b.lbl_ooga002_5" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD lbl_ooga002_5
+            
+            #add-point:AFTER FIELD lbl_ooga002_5
+            {<point name="input.a.lbl_ooga002_5" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE lbl_ooga002_5
+            #add-point:ON CHANGE lbl_ooga002_5
+            {<point name="input.g.lbl_ooga002_5" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD lbl_ooga002_6
+            #add-point:BEFORE FIELD lbl_ooga002_6
+            {<point name="input.b.lbl_ooga002_6" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD lbl_ooga002_6
+            
+            #add-point:AFTER FIELD lbl_ooga002_6
+            {<point name="input.a.lbl_ooga002_6" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE lbl_ooga002_6
+            #add-point:ON CHANGE lbl_ooga002_6
+            {<point name="input.g.lbl_ooga002_6" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD lbl_ooga002_7
+            #add-point:BEFORE FIELD lbl_ooga002_7
+            {<point name="input.b.lbl_ooga002_7" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD lbl_ooga002_7
+            
+            #add-point:AFTER FIELD lbl_ooga002_7
+            {<point name="input.a.lbl_ooga002_7" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE lbl_ooga002_7
+            #add-point:ON CHANGE lbl_ooga002_7
+            {<point name="input.g.lbl_ooga002_7" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD oogb003
+            
+            #add-point:AFTER FIELD oogb003
+            {<point name="input.a.oogb003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD oogb003
+            #add-point:BEFORE FIELD oogb003
+            {<point name="input.b.oogb003" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oogb003
+            #add-point:ON CHANGE oogb003
+            {<point name="input.g.oogb003" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.oogb001
+         ON ACTION controlp INFIELD oogb001
+            #add-point:ON ACTION controlp INFIELD oogb001
+            {<point name="input.c.oogb001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.bdate
+         ON ACTION controlp INFIELD bdate
+            #add-point:ON ACTION controlp INFIELD bdate
+            {<point name="input.c.bdate" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.edate
+         ON ACTION controlp INFIELD edate
+            #add-point:ON ACTION controlp INFIELD edate
+            {<point name="input.c.edate" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.lbl_ooga002_1
+         ON ACTION controlp INFIELD lbl_ooga002_1
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_1
+            {<point name="input.c.lbl_ooga002_1" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.lbl_ooga002_2
+         ON ACTION controlp INFIELD lbl_ooga002_2
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_2
+            {<point name="input.c.lbl_ooga002_2" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.lbl_ooga002_3
+         ON ACTION controlp INFIELD lbl_ooga002_3
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_3
+            {<point name="input.c.lbl_ooga002_3" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.lbl_ooga002_4
+         ON ACTION controlp INFIELD lbl_ooga002_4
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_4
+            {<point name="input.c.lbl_ooga002_4" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.lbl_ooga002_5
+         ON ACTION controlp INFIELD lbl_ooga002_5
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_5
+            {<point name="input.c.lbl_ooga002_5" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.lbl_ooga002_6
+         ON ACTION controlp INFIELD lbl_ooga002_6
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_6
+            {<point name="input.c.lbl_ooga002_6" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.lbl_ooga002_7
+         ON ACTION controlp INFIELD lbl_ooga002_7
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_7
+            {<point name="input.c.lbl_ooga002_7" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.oogb003
+         ON ACTION controlp INFIELD oogb003
+            #add-point:ON ACTION controlp INFIELD oogb003
+            {<point name="input.c.oogb003" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aooi410_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aooi410_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aooi410_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

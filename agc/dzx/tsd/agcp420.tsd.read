@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="agcp420" std_prog="agcp420" erpver="1.0" ver="1" module="AGC" type="M" booking="N" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：  已發售券失效更新狀態批次處理作業
+作業功能：相關文件/說明/離開
+作業類型：P
+輸入模式：
+
+1.程式依QBE 及條件選項抓取 [T:券資料檔 gcao_t] 且券狀態=4.發售/5.發售退回 且失效日期 <= 條件選項失效基準日
+2.更新券狀態='7.失效核銷'及核銷組織,核銷日期
+3.券資料檔 gcao_t 加入一欄位 for 失效券財務立帳否 ]]>
+  </all>
+  <field cite_std="N" name="date" ver="1" src="s" column="dat" table="type_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gcao_t.gcao001" ver="1" src="s" column="gcao001" table="gcao_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_gcao001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[
+]]>
+  </field>
+  <field cite_std="N" name="gcao_t.gcao002" ver="1" src="s" column="gcao002" table="gcao_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_gcaf001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[卡種編號：
+   ●欄位控管：
+     1.資料欄位:Input 選項/可Input
+     2.預設值:無,不允許空白.
+     3.輸入完卡種編號後,程式需 check 是否存在[T:卡種基本資料檔]且為已確認有效資料
+       且[T:卡種基本資料檔][C:積點清零規則]<>'1'.否則顯示 error message .
+     4.資料無誤時一併帶入對應卡種說明於畫面右方.
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:卡種基本資料檔].[C:卡種代號],[T:卡種基本資料檔].[C:卡種說明]
+       回值類型：單一回值
+     
+]]>
+  </field>
+  <field cite_std="N" name="gcao_t.gcao011" ver="1" src="s" column="gcao011" table="gcao_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[需求營運據點：
+   ●欄位控管：
+     1.資料欄位:Input 選項/可Input
+     2.預設值:User 登入營運據點.不允許空白,欄位必填.可修改.依 aooi500 設定,default 銷售組織可下傳]]>
+  </field>
+  <field cite_std="N" name="buttonedit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="buttonedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="date" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcao_t.gcao001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcao_t.gcao002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcao_t.gcao011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_gcao011" text="發行營運組織" lstr=""/>
+    <sfield name="lbl_gcao002" text="券種編號" lstr=""/>
+    <sfield name="lbl_gcao001" text="券編號" lstr=""/>
+    <sfield name="group_input" text="條件選項" lstr=""/>
+    <sfield name="lbl_date" text="失效基準日" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

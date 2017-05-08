@@ -1,0 +1,195 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmi125" module="axm" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="01534" crtdt="2014-01-20 16:55:14" modid="01534" moddt="2015-02-09 11:21:21" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="客戶料件一般銷售價格維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xmag000,xmag001,pmaal003,pmaal004,pmaa003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmagstus,xmag002,xmag002_desc(chr500),xmag002_desc_desc(chr500),xmag003,xmag003_desc(chr500),xmag004,xmag004_desc(chr500),xmag005,xmag006,xmag006_desc(chr500),xmag007,xmag007_desc(chr500),xmag008,xmag009,xmag009_desc(chr500),xmag010,xmag011,xmag012,xmag013,xmag014,xmag014_desc(chr500),xmag015,xmag017,xmag016,xmag018,xmag019,xmag020,xmag020_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xmag002,xmag003,xmag004,xmag005,xmag006,xmag007,xmag009,xmagownid,xmagownid_desc(chr500),xmagowndp,xmagowndp_desc(chr500),xmagcrtid,xmagcrtid_desc(chr500),xmagcrtdp,xmagcrtdp_desc(chr500),xmagcrtdt,xmagmodid,xmagmodid_desc(chr500),xmagmoddt,xmag000"/>
+      <var id="bs_field" value="xmag000,xmag001,xmag001_desc(chr80),xmag001_desc_desc(chr80)" pk="xmag000,xmag001" order=""/>
+      <bs_reference field="xmag001_desc" ref_field="xmag001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+      <bs_reference field="xmag001_desc_desc" ref_field="xmag001" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmi125" method="dialog">
+    <section id="input">
+      <input id="head" field="xmag000,xmag001"/>
+      <input id="body" page="1" field="xmagstus,xmag002,xmag003,xmag003_desc,xmag004,xmag005,xmag006,xmag007,xmag009,xmag012,xmag014,xmag017,xmag018,xmag020" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xmag000,xmag001"/>
+      <construct id="body" page="1" field="xmagstus,xmag002,xmag003,xmag003_desc,xmag004,xmag005,xmag006,xmag007,xmag008,xmag009,xmag010,xmag011,xmag012,xmag013,xmag014,xmag015,xmag017,xmag016,xmag018,xmag019,xmag020"/>
+      <construct id="body" page="2" field="xmagownid,xmagowndp,xmagcrtid,xmagcrtdp,xmagcrtdt,xmagmodid,xmagmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xmag000,xmag001"/>
+      <set id="head" type="no_entry" field="xmag000,xmag001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xmag000"/>
+      <column id="xmag001">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="i"/>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="pmaal003"/>
+      <column id="pmaal004"/>
+      <column id="pmaa003"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xmagstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xmag002">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="xmag002_desc" ref_field="xmag_t.xmag002" map_field="xmag002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="xmag002_desc">
+        <after>
+          <reference field="xmag002_desc_desc" ref_field="xmag002_desc" map_field="xmag002" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmag002_desc_desc"/>
+      <column id="xmag003">
+        <after/>
+      </column>
+      <column id="xmag003_desc"/>
+      <column id="xmag004">
+        <after>
+          <check chkid="v_oocq002_221" id="isExist"/>
+          <reference field="xmag004_desc" ref_field="xmag004" map_field="xmag004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xmag004_desc"/>
+      <column id="xmag005"/>
+      <column id="xmag006">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="xmag006_desc" ref_field="xmag_t.xmag006" map_field="xmag006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="xmag006_desc"/>
+      <column id="xmag007">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="xmag007_desc" ref_field="xmag_t.xmag007" map_field="xmag007" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="xmag007_desc"/>
+      <column id="xmag008"/>
+      <column id="xmag009">
+        <after>
+          <check chkid="v_oodb002" id="isExist"/>
+        </after>
+        <controlp form="q_oodb002_2" state="i"/>
+        <controlp form="q_oodb002_2" state="c"/>
+      </column>
+      <column id="xmag009_desc"/>
+      <column id="xmag010" type="S" default="N"/>
+      <column id="xmag011"/>
+      <column id="xmag012">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmag013"/>
+      <column id="xmag014">
+        <after>
+          <reference field="xmag014_desc" ref_field="xmag_t.xmag014" map_field="xmag014" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="xmag014_desc"/>
+      <column id="xmag015"/>
+      <column id="xmag017"/>
+      <column id="xmag016"/>
+      <column id="xmag018">
+        <controlp form="q_xmdkdocno" state="c"/>
+      </column>
+      <column id="xmag019"/>
+      <column id="xmag020">
+        <after>
+          <reference field="xmag020_desc" ref_field="xmag_t.xmag020" map_field="xmag020" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmag020_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xmagownid">
+        <after>
+          <reference field="xmagownid_desc" ref_field="xmag_t.xmagownid" map_field="xmagownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmagownid_desc"/>
+      <column id="xmagowndp">
+        <after>
+          <reference field="xmagowndp_desc" ref_field="xmag_t.xmagowndp" map_field="xmagowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xmagowndp_desc"/>
+      <column id="xmagcrtid">
+        <after>
+          <reference field="xmagcrtid_desc" ref_field="xmag_t.xmagcrtid" map_field="xmagcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmagcrtid_desc"/>
+      <column id="xmagcrtdp">
+        <after>
+          <reference field="xmagcrtdp_desc" ref_field="xmag_t.xmagcrtdp" map_field="xmagcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xmagcrtdp_desc"/>
+      <column id="xmagcrtdt"/>
+      <column id="xmagmodid">
+        <after>
+          <reference field="xmagmodid_desc" ref_field="xmag_t.xmagmodid" map_field="xmagmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmagmodid_desc"/>
+      <column id="xmagmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xmag_t" pk="xmag000,xmag001">
+      <sql id="forupd_sql" type="sql" query="SELECT xmag000,xmag001,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xmag_t WHERE xmagent= ? AND xmagsite= ? AND xmag000=? AND xmag001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xmag000,xmag001,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xmag_t" order="xmag000,xmag001"/>
+    </head>
+    <body id="xmag_t" page="1,2" linked="" pk="xmag002,xmag003,xmag004,xmag005,xmag006,xmag007,xmag009" fk="xmag000,xmag001">
+      <sql id="forupd_sql_detail" query="SELECT xmagstus,xmag002,&apos;&apos;,&apos;&apos;,xmag003,&apos;&apos;,xmag004,&apos;&apos;,xmag005,xmag006,&apos;&apos;,xmag007,&apos;&apos;,xmag008,xmag009,&apos;&apos;,xmag010,xmag011,xmag012,xmag013,xmag014,&apos;&apos;,xmag015,xmag017,xmag016,xmag018,xmag019,xmag020,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xmagownid,&apos;&apos;,xmagowndp,&apos;&apos;,xmagcrtid,&apos;&apos;,xmagcrtdp,&apos;&apos;,xmagcrtdt,xmagmodid,&apos;&apos;,xmagmoddt,&apos;&apos; FROM xmag_t WHERE xmagent=? AND xmagsite=? AND xmag000=? AND xmag001=? AND xmag002=? AND xmag003=? AND xmag004=? AND xmag005=? AND xmag006=? AND xmag007=? AND xmag009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmagstus,xmag002,&apos;&apos;,&apos;&apos;,xmag003,&apos;&apos;,xmag004,&apos;&apos;,xmag005,xmag006,&apos;&apos;,xmag007,&apos;&apos;,xmag008,xmag009,&apos;&apos;,xmag010,xmag011,xmag012,xmag013,xmag014,&apos;&apos;,xmag015,xmag017,xmag016,xmag018,xmag019,xmag020,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xmagownid,&apos;&apos;,xmagowndp,&apos;&apos;,xmagcrtid,&apos;&apos;,xmagcrtdp,&apos;&apos;,xmagcrtdt,xmagmodid,&apos;&apos;,xmagmoddt,&apos;&apos; FROM xmag_t WHERE xmagent= ? AND xmagsite= ? AND xmag000=? AND xmag001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

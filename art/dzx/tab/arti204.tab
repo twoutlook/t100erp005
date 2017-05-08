@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti204" module="art" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="01752" crtdt="2015-02-06 19:26:04" modid="02749" moddt="2016-04-22 17:03:56" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="部門品類分配維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtaystus,rtay001,rtay001_desc(chr500),rtay002,rtay002_desc(chr500),l_rtax002(chr500),l_rtax004(chr500),l_rtax006(chr500),l_rtax006_desc(chr500),l_rtax003(chr500),l_rtax003_desc(chr500),l_rtax005(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtay001,rtay001_2_desc(chr500),rtay002,rtay002_2_desc(chr500),rtayownid,rtayownid_desc(chr500),rtayowndp,rtayowndp_desc(chr500),rtaycrtid,rtaycrtid_desc(chr500),rtaycrtdp,rtaycrtdp_desc(chr500),rtaycrtdt,rtaymodid,rtaymodid_desc(chr500),rtaymoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="detail_qrystr"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti204" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtaystus,rtay001,rtay002,l_rtax002,l_rtax004,l_rtax006,l_rtax003,l_rtax005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="rtaystus,rtay001,rtay002,l_rtax002,l_rtax004,l_rtax006,l_rtax003,l_rtax005"/>
+      <construct id="body" page="2" field="rtayownid,rtayowndp,rtaycrtid,rtaycrtdp,rtaycrtdt,rtaymodid,rtaymoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtaystus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="rtay001">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="rtay001_desc" ref_field="rtay_t.rtay001" map_field="rtay001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="rtay001_desc"/>
+      <column id="rtay002">
+        <after>
+          <check chkid="v_rtax001_2" id="isExist"/>
+          <reference field="rtay002_desc" ref_field="rtay_t.rtay002" map_field="rtay002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_3" state="i"/>
+        <controlp form="q_rtax001_3" state="c"/>
+      </column>
+      <column id="rtay002_desc"/>
+      <column id="l_rtax002"/>
+      <column id="l_rtax004"/>
+      <column id="l_rtax006">
+        <after>
+          <reference field="l_rtax006_desc" ref_field="l_rtax006" map_field="rtax006" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="l_rtax006_desc"/>
+      <column id="l_rtax003">
+        <after>
+          <reference field="l_rtax003_desc" ref_field="l_rtax003" map_field="rtax003" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="l_rtax003_desc"/>
+      <column id="l_rtax005"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtay001_2_desc"/>
+      <column id="rtay002_2_desc"/>
+      <column id="rtayownid">
+        <after>
+          <reference field="rtayownid_desc" ref_field="rtay_t.rtayownid" map_field="rtayownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtayownid_desc"/>
+      <column id="rtayowndp">
+        <after>
+          <reference field="rtayowndp_desc" ref_field="rtay_t.rtayowndp" map_field="rtayowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtayowndp_desc"/>
+      <column id="rtaycrtid">
+        <after>
+          <reference field="rtaycrtid_desc" ref_field="rtay_t.rtaycrtid" map_field="rtaycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtaycrtid_desc"/>
+      <column id="rtaycrtdp">
+        <after>
+          <reference field="rtaycrtdp_desc" ref_field="rtay_t.rtaycrtdp" map_field="rtaycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtaycrtdp_desc"/>
+      <column id="rtaycrtdt"/>
+      <column id="rtaymodid">
+        <after>
+          <reference field="rtaymodid_desc" ref_field="rtay_t.rtaymodid" map_field="rtaymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtaymodid_desc"/>
+      <column id="rtaymoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtay_t" page="1,2" linked="" pk="rtay001,rtay002">
+      <sql id="forupd_sql_detail" query="SELECT rtaystus,rtay001,&apos;&apos;,rtay002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtayownid,&apos;&apos;,rtayowndp,&apos;&apos;,rtaycrtid,&apos;&apos;,rtaycrtdp,&apos;&apos;,rtaycrtdt,rtaymodid,&apos;&apos;,rtaymoddt FROM rtay_t WHERE rtayent=? AND rtay001=? AND rtay002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtaystus,rtay001,&apos;&apos;,rtay002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtayownid,&apos;&apos;,rtayowndp,&apos;&apos;,rtaycrtid,&apos;&apos;,rtaycrtdp,&apos;&apos;,rtaycrtdt,rtaymodid,&apos;&apos;,rtaymoddt FROM rtay_t WHERE rtayent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

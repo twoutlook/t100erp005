@@ -1,0 +1,592 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="azzp195" std_prog="azzp195" erpver="1.0" module="AZZ" ver="6" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="Y" designer_ver="1.0">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="Y" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.azzp195_init" order="1" ver="6" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp195_init()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp195_process" order="2" ver="6" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp195_process(ls_js)
+   DEFINE ls_js       STRING
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp195_transfer_argv" order="3" ver="6" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp195_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp195_ui_dialog" order="4" ver="6" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp195_ui_dialog()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp195_select" order="5" ver="6" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 使用 fglrun -b 找出連結的 42m
+# Memo...........:
+# Usage..........: CALL azzp195_select()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp195_select()
+   DEFINE ls_sub_act    STRING
+   DEFINE ls_sub_ctl    STRING
+   DEFINE ls_sql        STRING
+   DEFINE li_cnt        LIKE type_t.num5
+   DEFINE li_pos        LIKE type_t.num5
+   DEFINE ls_temp       STRING
+   DEFINE la_get        DYNAMIC ARRAY OF RECORD
+            gzzr002         LIKE gzzr_t.gzzr002,  #功能編號
+            gzzr004         LIKE gzzr_t.gzzr004,  #來源程式編號
+            gzzr005         LIKE gzzr_t.gzzr005   #功能權限識別碼 (1:功能/2:權限/3:都有)
+                        END RECORD
+
+   CALL s_azzp191_reads_fglrun_info(gc_prog)
+
+   FOR li_cnt = 1 TO gd_4gl_arr.getLength()
+      #由截出的fglrun -b資料拆解出檔案路徑
+      LET ls_temp = gd_4gl_arr[li_cnt]
+      LET li_pos = ls_temp.getIndexOf(FGL_GETENV("TOP"),1)
+      IF li_pos = 0 THEN
+         LET li_pos = ls_temp.getIndexOf("/u1/t10prd",1)
+         LET ls_temp = os.Path.join(FGL_GETENV("TOP"),ls_temp.subString(li_pos+11,ls_temp.getIndexOf(" ",li_pos+1)))
+      ELSE
+         LET ls_temp = ls_temp.subString(li_pos,ls_temp.getIndexOf(" ",li_pos+1))
+      END IF
+
+      #解出作業內的 action id
+      IF ls_temp.getLength() > 0 THEN
+         CALL azzp195_s(ls_temp) RETURNING la_get
+      END IF
+
+      CALL azzp195_bfill(la_get)
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp195_compose" order="6" ver="4" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 合併查到的東西再一個個比對 gzzr_t中是否存在
+# Memo...........:
+# Usage..........: CALL azzp195_compose()
+#                  RETURNING 回传参数
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp195_compose()
+    DEFINE li_count      LIKE type_t.num5  
+    DEFINE li_temp       LIKE type_t.num5 
+    DEFINE ls_compose    STRING
+    DEFINE ls_act        STRING
+
+    LET ls_compose = ""
+    FOR li_count = 1 TO g_gzzr.getLength()
+       #不為空值時可變更
+       IF cl_null(g_gzzr[li_count].gzzr002) THEN
+          CONTINUE FOR
+       END IF
+
+       #不納入的action清單 (此處排除是指不控管權限的項目) 應改寫到 gzzu_t
+       #要卡權限只是不納入 TOPMENU 的項目在 azzp195 設定
+       LET ls_act = g_gzzr[li_count].gzzr002 CLIPPED
+       #exporttoexcel 放入樣板 有管控權限 就排除清單不加入 #14/09/15 jrg542
+       #IF ls_act = "ok" OR ls_act = "exporttoexcel" OR ls_act = "exit" OR
+       IF ls_act = "ok" OR ls_act = "exit" OR
+          ls_act = "cancel" OR ls_act = "controlg" OR ls_act = "about" OR 
+          ls_act = "help" OR ls_act = "accept" OR ls_act = "yes" OR ls_act = "no" OR
+          ls_act = "pg_first" OR ls_act = "pg_prev" OR ls_act = "pg_next" OR
+          ls_act = "pg_last" OR ls_act = "refresh" OR ls_act = "reconstruct" OR
+          ls_act = "selectall" OR ls_act = "selectnone" OR ls_act = "selectpageall" OR
+          ls_act = "selectpagenone" OR ls_act = "check_stack" OR ls_act = "ie_to_dsc" OR
+          ls_act = "yes_i_see" OR ls_act = "select" OR ls_act = "close" OR 
+          ls_act = "update_rollback" OR ls_act = "makecond" OR ls_act = "more" OR 
+          ls_act = "statechange" OR ls_act = "first" OR ls_act = "next" OR ls_act = "jump" OR
+          ls_act = "previous" OR ls_act = "last" OR ls_act = "mainhidden" OR
+          ls_act = "worksheethidden" OR ls_act = "controls" OR ls_act = "filter" OR
+          ls_act = "controlp" OR ls_act = "controlf" OR ls_act = "controlr" OR
+          ls_act = "update_item" OR ls_act = "agendum" OR ls_act = "followup" OR
+          ls_act = "qbe_select" OR ls_act = "qbe_save" OR ls_act = "act1" OR ls_act = "act2" OR
+          ls_act = "sel" OR ls_act = "unsel" OR ls_act = "selall" OR ls_act = "selnone" OR
+          ls_act = "err_detail" OR ls_act = "err_contact" OR #cl_err
+          ls_act = "qbesetting" OR ls_act.getIndexOf("qbebtn_",1) OR #出現在cl_qbe
+          ls_act = "signature_list" OR ls_act = "follow_list" OR ls_act = "string_query" OR #cl_user_overview
+          ls_act.getIndexOf("contactbtn_",1) #出現在cl_user_contact
+       THEN
+          CONTINUE FOR
+       END IF
+
+       #檢核gzzr中是否存在此筆資料
+       SELECT COUNT(*) INTO li_temp
+         FROM gzzr_t
+        WHERE gzzr001 = gc_prog
+          AND gzzr002 = g_gzzr[li_count].gzzr002
+        CASE
+          WHEN li_temp = 0
+             INSERT INTO gzzr_t(gzzr001,gzzr002,gzzr003,gzzr004,gzzr005)
+                 VALUES (gc_prog, g_gzzr[li_count].gzzr002,"R",
+                         g_gzzr[li_count].gzzr004,
+                         g_gzzr[li_count].gzzr005)
+          WHEN li_temp = 1
+             UPDATE gzzr_t SET gzzr003 = "R",
+                               gzzr004 = g_gzzr[li_count].gzzr004,
+                               gzzr005 = g_gzzr[li_count].gzzr005
+              WHERE gzzr001 = gc_prog
+                AND gzzr002 = g_gzzr[li_count].gzzr002
+          OTHERWISE
+             CONTINUE FOR
+       END CASE
+
+       LET ls_compose = ls_compose,g_gzzr[li_count].gzzr002 CLIPPED,", "
+    END FOR
+
+    #砍除N指標未變成R的部份
+    DELETE FROM gzzr_t
+     WHERE gzzr001 = gc_prog AND gzzr003 = "N"
+
+    #更新指標R回到N
+     UPDATE gzzr_t SET gzzr003 = "N"
+      WHERE gzzr001 = gc_prog AND gzzr003 = "R"
+
+    #請注意:在上述機制下,若有系統中ACT被寫入程式ACT,則會自動轉換為N
+    #       若無則不予理會指標為Y部份
+    LET ls_compose = ls_compose.subString(1,ls_compose.getLength()-2)
+
+    RETURN ls_compose
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp195_system_chk" order="7" ver="6" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp195_system_chk()
+   DEFINE li_array_length LIKE type_t.num5   
+   DEFINE li_i            LIKE type_t.num5 
+   DEFINE lc_chk          LIKE type_t.chr3 
+
+   # 抓取總數
+   LET li_array_length = g_gzzr.getLength()
+   LET lc_chk="NNN"
+   FOR li_i = 1 TO li_array_length
+      CASE g_gzzr[li_i].gzzr002
+         WHEN "accept" LET lc_chk[1] = "Y"
+         WHEN "cancel" LET lc_chk[2] = "Y"
+         WHEN "exit"   LET lc_chk[3] = "Y"
+         OTHERWISE     CONTINUE FOR
+      END CASE
+   END FOR
+
+   IF lc_chk[1] = "N" THEN
+      LET li_array_length = g_gzzr.getLength() + 1
+      LET g_gzzr[li_array_length].gzzr002 = "accept"
+   END IF
+   IF lc_chk[2] = "N" THEN
+      LET li_array_length = g_gzzr.getLength() + 1
+      LET g_gzzr[li_array_length].gzzr002 = "cancel"
+   END IF
+   IF lc_chk[3] = "N" THEN
+      LET li_array_length = g_gzzr.getLength() + 1
+      LET g_gzzr[li_array_length].gzzr002 = "exit"
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp195_s" order="8" ver="6" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 分解出該作業內的 action id 後組合成 array回傳
+# Memo...........:
+# Usage..........: CALL azzp195_s(ls_prog)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp195_s(ls_prog)
+    DEFINE ls_prog       STRING
+    DEFINE lp_prog       base.Channel
+    DEFINE lc_analy      LIKE type_t.chr1000
+    DEFINE ls_analy      STRING
+    DEFINE li_i,li_j     LIKE type_t.num5
+    DEFINE li_k          LIKE type_t.num5
+    DEFINE li_stus       LIKE type_t.num5
+    DEFINE li_length     LIKE type_t.num5
+    DEFINE la_get        DYNAMIC ARRAY OF RECORD
+             gzzr002         LIKE gzzr_t.gzzr002, #功能編號
+             gzzr004         LIKE gzzr_t.gzzr004, #來源程式編號
+             gzzr005         LIKE gzzr_t.gzzr005  #功能權限識別碼 (1:功能/2:權限/3:都有)
+                         END RECORD
+    DEFINE li_array      LIKE type_t.num5
+    DEFINE ls_analy_tmp  STRING
+    DEFINE ls_path       STRING
+
+    CALL la_get.clear()
+
+    #判斷檔案是否存在
+    IF NOT os.Path.exists(ls_prog.trim()) OR NOT os.Path.isfile(ls_prog.trim()) THEN
+       RETURN la_get
+    END IF
+
+   #DISPLAY "INFO: CATCH:",ls_prog
+
+    LET lp_prog = base.Channel.create()
+    CALL lp_prog.openFile(ls_prog,"r")
+    IF g_t100debug = "9" THEN
+       DISPLAY "查詢程式:",ls_prog
+    END IF
+
+    WHILE lp_prog.read([lc_analy])
+       LET ls_analy = DOWNSHIFT(lc_analy)
+       LET ls_analy = ls_analy.trim()
+       LET li_stus = TRUE
+
+       #先判斷本行行頭是否以 # 或 -- 為開頭, 如果是就放棄這個找下個
+       #補上 { 符號   請勿在行首放大括號
+       IF ls_analy.subString(1,1) = "#" OR ls_analy.subString(1,2) = "--" OR
+          ls_analy.subString(1,1) = "{" THEN
+          CONTINUE WHILE
+       END IF
+
+       LET ls_analy_tmp = ls_analy.trim()    
+
+       #抓 ON ACTION
+       CALL ls_analy.getIndexOf("on action",1) RETURNING li_i
+       IF li_i > 0 THEN
+          #DISPLAY ":",ls_analy 
+          #若on action行前有單引號或雙引號,本行on action不算 (視為字元之內)
+          LET li_j = ls_analy.getIndexOf('"',1)
+          LET li_k = ls_analy.getIndexOf("'",1)
+          IF ( li_j <> 0 AND li_j < li_i ) OR (li_k <> 0 AND li_k < li_i ) THEN
+          ELSE
+             LET ls_analy = ls_analy.subString(li_i+9,ls_analy.getLength())
+             LET ls_analy = ls_analy.trim()
+             LET li_length = ls_analy.getLength()
+             FOR li_j = 1 TO li_length
+                IF ls_analy.getCharAt(li_j) = " " THEN
+                   LET ls_analy = ls_analy.subString(1,li_j-1)
+                   EXIT FOR
+                END IF
+                IF li_j = li_length THEN
+                   LET ls_analy = ls_analy.subString(1,li_j)
+                   EXIT FOR
+                END IF
+             END FOR
+
+             # 比對是否已經有加進來的  所以把它寫到 array 最後再組出來
+             LET li_array = la_get.getLength()
+             FOR li_j = 1 TO li_array
+                 IF ls_analy.trim() = la_get[li_j].gzzr002 CLIPPED THEN
+                    LET li_stus = FALSE
+                    EXIT FOR
+                 END IF
+             END FOR
+             #DISPLAY ":",ls_analy ," li_stus:",li_stus
+             IF li_stus THEN
+                LET li_j = li_array + 1
+
+                #每次新增只做一次的放這邊
+                LET la_get[li_j].gzzr002 = ls_analy CLIPPED
+                LET ls_path = os.Path.rootname(os.Path.basename(ls_prog))
+                LET ls_path = ls_path.subString(ls_path.getIndexOf("_",1)+1,
+                                                ls_path.getLength())
+                LET la_get[li_j].gzzr004 = ls_path
+             END IF 
+
+             #處理功能權限識別碼 (若為空,則指示有功能. 若為2,則增加有功能.其他不異動)
+             CASE
+                WHEN la_get[li_j].gzzr005 IS NULL   #還沒記錄過的
+                   LET la_get[li_j].gzzr005 = 1
+                   IF g_t100debug = 9 THEN
+                      DISPLAY "    新增:",la_get[li_j].gzzr002,"   <--要寫入權限"
+                   END IF
+
+                WHEN la_get[li_j].gzzr005 = 2       #在辨識權限處有看到的
+                   LET la_get[li_j].gzzr005 = la_get[li_j].gzzr005 + 1
+                   IF g_t100debug = 9 THEN
+                      DISPLAY "    變更:",la_get[li_j].gzzr002,"  <--改為要寫入權限"
+                   END IF
+
+                OTHERWISE
+                   #原有資料可能為1或3,此處又找到時,則值仍保持 1 or 3
+             END CASE
+          END IF
+       END IF
+
+       #抓 cl_auth_act_chk
+       LET ls_analy = DOWNSHIFT(lc_analy)
+       LET ls_analy = ls_analy.trim()
+       LET li_stus = TRUE
+
+       CALL ls_analy.getIndexOf(" cl_auth_chk_act(",1) RETURNING li_i
+       IF li_i > 0 THEN
+          LET li_j = ls_analy.getIndexOf(")",li_i)
+          LET ls_analy = ls_analy.subString(li_i+17,li_j-1)
+          IF ls_analy.getLength() > 2 AND 
+             ls_analy.subString(1,1) = "'" OR ls_analy.subString(1,1) = '"' THEN
+             LET ls_analy = ls_analy.subString(2,ls_analy.getLength()-1)
+
+             # 比對是否已經有加進來的  所以把它寫到 array 最後再組出來
+             LET li_array = la_get.getLength()
+             FOR li_j = 1 TO li_array
+                 IF ls_analy.trim() = la_get[li_j].gzzr002 CLIPPED THEN
+                    LET li_stus = FALSE
+                    EXIT FOR
+                 END IF
+             END FOR
+             IF li_stus THEN
+                LET li_j = li_array + 1
+                #每次新增只做一次的放這邊
+                LET la_get[li_j].gzzr002 = ls_analy CLIPPED
+                LET ls_path = os.Path.rootname(os.Path.basename(ls_prog))
+                LET ls_path = ls_path.subString(ls_path.getIndexOf("_",1)+1,
+                                                ls_path.getLength())
+                LET la_get[li_j].gzzr004 = ls_path
+             END IF
+
+             #處理功能權限識別碼 (若為空,則指示有權限. 若為1,則增加有權限.其他不異動)
+             CASE
+                WHEN la_get[li_j].gzzr005 IS NULL   #還沒記錄過的
+                   LET la_get[li_j].gzzr005 = 2
+                   IF g_t100debug = 9 THEN
+                      DISPLAY "    新增:",la_get[li_j].gzzr002,"   <--不要權限"
+                   END IF
+
+                WHEN la_get[li_j].gzzr005 = 1       #在辨識權限處有看到的
+                   LET la_get[li_j].gzzr005 = la_get[li_j].gzzr005 + 2
+                   IF g_t100debug = 9 THEN
+                      DISPLAY "    修改:",la_get[li_j].gzzr002,"   <--要寫入權限"
+                   END IF
+
+                OTHERWISE
+                   #原來可能還有2or 3,此類的值就不處理
+             END CASE
+          END IF
+       END IF
+    END WHILE
+
+    CALL lp_prog.close()
+    RETURN la_get
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp195_bfill" order="9" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 組合個別作業到指定程式內
+# Memo...........:
+# Usage..........: CALL azzp195_bfill(la_get)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp195_bfill(la_get)
+   DEFINE li_array_length LIKE type_t.num5
+   DEFINE li_i            LIKE type_t.num5
+   DEFINE li_cnt          LIKE type_t.num5
+   DEFINE li_exist        LIKE type_t.num5   #判別是否重複
+   DEFINE la_get          DYNAMIC ARRAY OF RECORD
+            gzzr002           LIKE gzzr_t.gzzr002,  #功能編號
+            gzzr004           LIKE gzzr_t.gzzr004,  #來源程式編號
+            gzzr005           LIKE gzzr_t.gzzr005   #功能權限識別碼 (1:功能/2:權限/3:都有)
+                          END RECORD
+   DEFINE li_gzzrtemp     LIKE type_t.num5
+
+   # 抓取總數
+   LET li_array_length = g_gzzr.getLength()
+   FOR li_cnt = 1 TO la_get.getLength()
+
+      #檢查是否重複
+      LET li_exist = FALSE
+      FOR li_i = 1 TO li_array_length
+         IF la_get[li_cnt].gzzr002 = g_gzzr[li_i].gzzr002 THEN
+            LET li_exist = TRUE
+            LET li_gzzrtemp = li_i
+         END IF
+      END FOR
+
+      #如果沒有重複的話,就增加到g_gzzr
+      IF NOT li_exist THEN
+         LET li_array_length = li_array_length + 1
+         LET g_gzzr[li_array_length].gzzr002 = la_get[li_cnt].gzzr002
+         LET g_gzzr[li_array_length].gzzr004 = la_get[li_cnt].gzzr004
+         LET g_gzzr[li_array_length].gzzr005 = la_get[li_cnt].gzzr005
+      ELSE
+         #已存在時判斷
+         CASE
+            WHEN g_gzzr[li_gzzrtemp].gzzr005 = "3"
+            WHEN g_gzzr[li_gzzrtemp].gzzr005 = "2"
+               IF la_get[li_cnt].gzzr005 = "3" OR la_get[li_cnt].gzzr005 = "1" THEN
+                  LET g_gzzr[li_gzzrtemp].gzzr005 = "3"
+               END IF
+            WHEN g_gzzr[li_gzzrtemp].gzzr005 = "1"
+               IF la_get[li_cnt].gzzr005 = "3" OR la_get[li_cnt].gzzr005 = "2" THEN
+                  LET g_gzzr[li_gzzrtemp].gzzr005 = "3"
+               END IF
+         END CASE
+      END IF
+   END FOR
+
+END FUNCTION]]>
+  </point>
+  <point name="free_style.variable" order="" ver="5" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[GLOBALS
+   DEFINE gd_4gl_arr    DYNAMIC ARRAY OF STRING
+END GLOBALS
+
+DEFINE gc_prog       LIKE gzza_t.gzza001
+DEFINE g_gzzr        DYNAMIC ARRAY OF RECORD
+         gzzr002     LIKE gzzr_t.gzzr002, #功能編號
+         gzzr004     LIKE gzzr_t.gzzr004, #來源程式編號
+         gzzr005     LIKE gzzr_t.gzzr005  #功能權限識別碼 (1:功能/2:權限/3:都有)
+      END RECORD
+DEFINE g_t100debug   LIKE type_t.chr1]]>
+  </point>
+  <point name="main.define" order="" ver="6" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE ls_compose    STRING]]>
+  </point>
+  <section id="azzp195.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:6,PR版次:6) Build-000033
+#+ 
+#+ Filename...: azzp195
+#+ Description: action編號更新檢視工具
+#+ Creator....: 01856(2014-07-02 14:14:21)
+#+ Modifier...: 00000() -SD/PR-
+]]>
+  </section>
+  <section id="azzp195.global" ver="3" status="" src="s" readonly="">
+    <![CDATA[#應用 i00 樣板自動產生(Version:3)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzp195.main" ver="2" status="" src="m" readonly="">
+    <![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+   
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+   LET g_bgjob = "Y" 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+   LET gc_prog = g_argv[1]
+   LET g_t100debug = FGL_GETENV("T100DEBUG")
+   CALL g_gzzr.clear()
+
+   CALL azzp195_select()
+
+   CALL azzp195_system_chk()
+   CALL azzp195_compose() RETURNING ls_compose
+   DISPLAY ' '
+   DISPLAY 'Action List: '
+   DISPLAY ls_compose
+   DISPLAY ' '
+   DISPLAY 'Update ',gc_prog CLIPPED,' Data Succeed!'
+   #add-point:作業初始化
+{<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+{<point name="main.define_sql" />}
+   #end add-point
+#   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+#   DECLARE azzp195_cl CURSOR FROM g_forupd_sql 
+#   
+#   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+{<point name="main.servicecall" />}
+      #end add-point
+#   ELSE
+#      #畫面開啟 (identifier)
+#      OPEN WINDOW w_azzp195 WITH FORM cl_ap_formpath("azz",g_code)
+#   
+#      #程式初始化
+#      CALL azzp195_init()
+#   
+#      #瀏覽頁簽資料初始化
+#      CALL cl_ui_init()
+#   
+#      #進入選單 Menu (='N')
+#      CALL azzp195_ui_dialog()
+#   
+#      #畫面關閉
+#      CLOSE WINDOW w_azzp195
+#   END IF
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+  </section>
+  <section id="azzp195.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+</add_points>

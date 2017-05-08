@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmi002_01" module="abm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02294" crtdt="2013-08-27 12:40:16" modid="02295" moddt="2016-07-26 17:46:25" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="BOM公式驗證">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmzf001,bmzf002,bmzf003,bmzf008(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="compute"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmi002_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="bmzf001,bmzf002,bmzf003,bmzf008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="bmzf001"/>
+      <column id="bmzf002">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmzf003"/>
+      <column id="bmzf008"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="bmzf_t" page="1" linked="" pk="bmzf001,bmzf002">
+      <sql id="forupd_sql_detail" query="SELECT bmzf001,bmzf002,bmzf003,&apos;&apos; FROM bmzf_t WHERE bmzfent=? AND bmzf001=? AND bmzf002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmzf001,bmzf002,bmzf003,&apos;&apos; FROM bmzf_t WHERE bmzfent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

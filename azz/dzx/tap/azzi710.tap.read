@@ -1,0 +1,4704 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="azzi710" std_prog="azzi710" erpver="1.0" module="AZZ" ver="1" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="1" status="u"/>
+  </other>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE  l_tmp                 STRING   
+   DEFINE  l_in                  STRING]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#      IF g_gzka_d[l_ac].gzka009 IS NULL THEN
+#         LET g_gzka_d[l_ac].gzka009 = "N"
+#      END IF
+#      
+#      LET l_tmp = g_gzka_d[l_ac].gzka001
+#      IF l_tmp.getIndexOf('i',4) > 0 THEN
+#         LET l_in = '(186,13)'
+#      ELSE
+#         IF l_tmp.getIndexOf('t',4) > 0 THEN
+#            LET l_in = '(186,17)'
+#         ELSE
+#            IF l_tmp.getIndexOf('m',4) > 0 THEN
+#               LET l_in = '(186,50)'
+#            ELSE
+#               LET l_in = '(186)'
+#            END IF 
+#         END IF
+#      END IF    
+#      
+#      LET g_ref_fields[1] = g_gzka_d[l_ac].gzka002
+#      CALL ap_ref_array2(g_ref_fields,"SELECT gzcbl004 FROM gzcbl_t WHERE  gzcbl002=? AND gzcbl001 IN "||l_in||" AND gzcbl003='"||g_dlang||"'","") RETURNING g_rtn_fields 
+#      LET g_gzka_d[l_ac].gzka002_desc = '', g_rtn_fields[1] , ''      ]]>
+  </point>
+  <point name="b_fill.others.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#   15/06/23 放在MAIN 段宣告
+#   LET g_sql = "SELECT  UNIQUE t0.gzkc003,t0.gzkc004,t0.gzkc007,t0.gzkc008  FROM gzkc_t t0",                              
+#                  " WHERE t0.gzkcent=? AND t0.gzkc001=?  AND t0.gzkc002=? AND t0.gzkc005=? AND t0.gzkc009=?"
+#      
+#   PREPARE azzi710_gzkc FROM g_sql
+#   DECLARE gzkc_cur CURSOR FOR azzi710_gzkc]]>
+  </point>
+  <point name="b_fill.sql_after" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql = cl_replace_str(g_sql,' ORDER BY t0.gzka001,t0.gzka002,t0.gzka003,t0.gzka008',' ORDER BY t0.gzka001,t0.gzka002,t0.gzka003')]]>
+  </point>
+  <point name="b_fill.sql_wc" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql = g_sql, " AND gzka012 = '"||g_arg_gzka012||"'"]]>
+  </point>
+  <point name="construct.a.page1.gzka001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="construct.b.page1.gzka001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="construct.c.page1.gzka001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_gzka001()                     #呼叫開窗
+            LET g_gzka_d[g_detail_idx].gzka001 = g_qryparam.return1 
+            DISPLAY BY NAME g_gzka_d[g_detail_idx].gzka001 #顯示到畫面上
+            NEXT FIELD gzka001 ]]>
+  </point>
+  <point name="construct.c.page2.gzkacrtdp" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gzkacrtdp  #顯示到畫面上
+            NEXT FIELD gzkacrtdp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.gzkacrtid" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gzkacrtid  #顯示到畫面上
+            NEXT FIELD gzkacrtid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.gzkamodid" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gzkamodid  #顯示到畫面上
+            NEXT FIELD gzkamodid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.gzkaowndp" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gzkaowndp  #顯示到畫面上
+            NEXT FIELD gzkaowndp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.gzkaownid" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gzkaownid  #顯示到畫面上
+            NEXT FIELD gzkaownid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="default_search.after_sql" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF NOT cl_null(g_argv[1]) THEN
+      LET g_arg_gzka012 = "1" #azzi710
+   ELSE
+      LET g_arg_gzka012 = "2" #azzi720
+      LET ls_wc = ls_wc, " gzka012 = '", g_arg_gzka012, "' AND "
+   END IF]]>
+  </point>
+  <point name="delete.after_delete2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[        ]]>
+  </point>
+  <point name="delete.before_delete" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="delete_b.after_body_delete2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      DELETE FROM gzkc_t
+       WHERE gzkc001 = ps_keys_bak[1] 
+         AND gzkc002 = ps_keys_bak[2] 
+         AND gzkc005 = ps_keys_bak[3] 
+         AND gzkc006 = ps_keys_bak[4] 
+         AND gzkc009 = g_arg_gzka012
+    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "gzkc_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF         ]]>
+  </point>
+  <point name="delete_b.before_body_delete2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[]]>
+  </point>
+  <point name="delete_b.before_delete" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[]]>
+  </point>
+  <point name="delete_b.before_delete2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[]]>
+  </point>
+  <point name="delete_b.m_body_delete2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      DELETE FROM gzkb_t
+       WHERE gzkbent = g_enterprise AND
+         gzkb001 = ps_keys_bak[1] AND gzkb002 = ps_keys_bak[2] AND gzkb009 = ps_keys_bak[3] AND gzkb010 = ps_keys_bak[4] AND 
+         gzkb013 = g_arg_gzka012]]>
+  </point>
+  <point name="delete_b.m_delete" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      DELETE FROM gzka_t
+       WHERE gzkaent = g_enterprise AND
+         gzka001 = ps_keys_bak[1] AND gzka002 = ps_keys_bak[2] AND gzka003 = ps_keys_bak[3] AND gzka008 = ps_keys_bak[4] AND 
+         gzka012 = g_arg_gzka012]]>
+  </point>
+  <point name="delete_b.m_delete2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      DELETE FROM gzkb_t
+       WHERE gzkbent = g_enterprise AND
+         gzkb001 = ps_keys_bak[1] AND gzkb002 = ps_keys_bak[2] AND gzkb009 = ps_keys_bak[3] AND gzkb010 = ps_keys_bak[4] AND gzkb003 = ps_keys_bak[5] AND gzkb004 = ps_keys_bak[6] AND 
+         gzkb013 = g_arg_gzka012
+      ]]>
+  </point>
+  <point name="detail_show.before" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DISPLAY BY NAME g_gzkc.gzkc003,g_gzkc.gzkc004
+   DISPLAY g_content_help TO textedit_1]]>
+  </point>
+  <point name="fetch.after_fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   #LET l_ac = 1
+   OPEN gzkc_cur USING g_enterprise,g_gzka_d[li_ac].gzka001,g_gzka_d[li_ac].gzka002,g_gzka_d[li_ac].gzka003,g_gzka_d[li_ac].gzka008,g_arg_gzka012
+      
+   LET g_gzkc.gzkc003 = ""   
+   LET g_gzkc.gzkc004 = ""   
+   LET g_gzkc.gzkc007 = ""   
+   LET g_gzkc.gzkc008 = ""     
+   FOREACH gzkc_cur INTO g_gzkc.gzkc003,g_gzkc.gzkc004
+      IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF        
+   END FOREACH
+   
+   #
+   #FOR l_ac = 1 TO g_gzka_d.getLength() 
+   #   IF g_gzka_d[l_ac].gzka003= '1' THEN
+   #      LET g_gzka_d[l_ac].gzka008 = ""
+   #   END IF
+   #END FOR]]>
+  </point>
+  <point name="fetch.before_fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      ]]>
+  </point>
+  <point name="fetch.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   
+ ]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_gzkc RECORD
+          gzkc003 LIKE gzkc_t.gzkc003, 
+          gzkc004 LIKE gzkc_t.gzkc004,
+          gzkc007 LIKE gzkc_t.gzkc007,
+          gzkc008 LIKE gzkc_t.gzkc008
+         END RECORD
+         
+DEFINE g_gzkc_t RECORD
+          gzkc003 LIKE gzkc_t.gzkc003, 
+          gzkc004 LIKE gzkc_t.gzkc004,
+          gzkc007 LIKE gzkc_t.gzkc007,
+          gzkc008 LIKE gzkc_t.gzkc008
+         END RECORD
+         
+DEFINE g_content_help  STRING 
+DEFINE g_arg_gzka012   LIKE gzka_t.gzka012
+DEFINE g_arg_gzka012_t LIKE gzka_t.gzka012]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('gzka002_2','186') 
+   CALL cl_set_combo_scc('gzka003_2','188') 
+   CALL cl_set_combo_scc('gzka010','301')
+   CALL cl_set_combo_scc('gzka011','302')
+   IF g_arg_gzka012 = '2' THEN
+      CALL cl_set_comp_visible("gzka010",FALSE)
+   END If
+   LET g_content_help = "用法: %(欄位名稱)",ASCII 10,
+                        "範例: %(xmdg005_desc)"]]>
+  </point>
+  <point name="input.a.page1.gzka001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka008 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka_d[g_detail_idx].gzka001 != g_gzka_d_t.gzka001 OR g_gzka_d[g_detail_idx].gzka002 != g_gzka_d_t.gzka002 OR g_gzka_d[g_detail_idx].gzka003 != g_gzka_d_t.gzka003 OR g_gzka_d[g_detail_idx].gzka008 != g_gzka_d_t.gzka008)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzka_t WHERE "||"gzka001 = '"||g_gzka_d[g_detail_idx].gzka001 ||"' AND "|| "gzka002 = '"||g_gzka_d[g_detail_idx].gzka002 ||"' AND "|| "gzka003 = '"||g_gzka_d[g_detail_idx].gzka003 ||"' AND "|| "gzka008 = '"||g_gzka_d[g_detail_idx].gzka008 ||"' ",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+            SELECT COUNT(*) INTO l_cnt FROM gzzz_t WHERE gzzz001 = g_gzka_d[g_detail_idx].gzka001              
+            IF cl_null(l_cnt) OR l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "aws-00006"
+               LET g_errparam.extend = ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD gzka001
+            END IF
+            
+            LET g_ref_fields[1] = g_gzka_d[g_detail_idx].gzka001
+            CALL ap_ref_array2(g_ref_fields,"SELECT gzzal003 FROM gzzal_t WHERE  gzzal001=? AND gzzal002='"||g_dlang||"'","") RETURNING g_rtn_fields 
+            LET g_gzka_d[g_detail_idx].gzka001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gzka_d[g_detail_idx].gzka001_desc
+            
+            LET l_tmp = g_gzka_d[g_detail_idx].gzka001
+            IF g_arg_gzka012 = '2' THEN
+               IF l_tmp.getIndexOf('r',4) > 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "azz-00906"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  NEXT FIELD gzka001                
+               END IF
+            END IF
+#            IF l_tmp.getIndexOf('r',4) > 0 THEN
+#               LET g_gzka_d[g_detail_idx].gzka002 = 'O'
+#               LET g_gzka_d[g_detail_idx].gzka003 = '1'
+#               DISPLAY BY NAME g_gzka_d[g_detail_idx].gzka002
+#               DISPLAY BY NAME g_gzka_d[g_detail_idx].gzka003
+#               CALL cl_set_comp_entry("gzka002,gzka003,gzka008",FALSE)
+#               LET g_gzka_d[g_detail_idx].gzka004 = '2'
+#               LET g_gzka_d[g_detail_idx].gzka005 = '1'
+#            ELSE
+#               IF l_tmp.getIndexOf('p',4) > 0 THEN
+#                  LET g_gzka_d[g_detail_idx].gzka002 = 'P'
+#                  DISPLAY BY NAME g_gzka_d[g_detail_idx].gzka002
+#                  CALL cl_set_comp_entry("gzka002",FALSE)
+#               ELSE
+#                  LET g_gzka_d[g_detail_idx].gzka004 = '1'
+#               END IF                  
+#                LET g_gzka_d[g_detail_idx].gzka005 = '1'
+#            END IF]]>
+  </point>
+  <point name="input.a.page1.gzka002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka008 IS NOT NULL  THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka_d[g_detail_idx].gzka001 != g_gzka_d_t.gzka001 OR g_gzka_d[g_detail_idx].gzka002 != g_gzka_d_t.gzka002 OR g_gzka_d[g_detail_idx].gzka003 != g_gzka_d_t.gzka003 OR g_gzka_d[g_detail_idx].gzka008 != g_gzka_d_t.gzka008 )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzka_t WHERE "||"gzka001 = '"||g_gzka_d[g_detail_idx].gzka001 ||"' AND "|| "gzka002 = '"||g_gzka_d[g_detail_idx].gzka002 ||"' AND "|| "gzka003 = '"||g_gzka_d[g_detail_idx].gzka003 ||"' AND "|| "gzka008 = '"||g_gzka_d[g_detail_idx].gzka008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            IF  g_gzka_d[g_detail_idx].gzka001 IS NOT NULL THEN
+                LET l_tmp = g_gzka_d[g_detail_idx].gzka001
+                IF l_tmp.getIndexOf('r',4) = 0 and g_gzka_d[g_detail_idx].gzka002 = 'O' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "azz-00805"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  NEXT FIELD gzka002                
+                END IF                
+            END IF
+            
+            IF l_tmp.getIndexOf('i',4) > 0 THEN
+               LET l_in = '(186,13)'
+            ELSE
+               IF l_tmp.getIndexOf('t',4) > 0 THEN
+                  LET l_in = '(186,17)'
+               ELSE
+                  IF l_tmp.getIndexOf('m',4) > 0 THEN
+                     LET l_in = '(186,50)'
+                  ELSE
+                     LET l_in = '(186)'
+                  END IF 
+               END IF
+            END IF             
+            LET g_ref_fields[1] = g_gzka_d[g_detail_idx].gzka002
+            CALL ap_ref_array2(g_ref_fields,"SELECT gzcbl004 FROM gzcbl_t WHERE  gzcbl002=? AND gzcbl001 IN "||l_in||" AND gzcbl003='"||g_dlang||"'","") RETURNING g_rtn_fields 
+            LET g_gzka_d[g_detail_idx].gzka002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gzka_d[g_detail_idx].gzka002_desc            ]]>
+  </point>
+  <point name="input.a.page1.gzka003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka008 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka_d[g_detail_idx].gzka001 != g_gzka_d_t.gzka001 OR g_gzka_d[g_detail_idx].gzka002 != g_gzka_d_t.gzka002 OR g_gzka_d[g_detail_idx].gzka003 != g_gzka_d_t.gzka003 OR g_gzka_d[g_detail_idx].gzka008 != g_gzka_d_t.gzka008 )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzka_t WHERE "||"gzka001 = '"||g_gzka_d[g_detail_idx].gzka001 ||"' AND "|| "gzka002 = '"||g_gzka_d[g_detail_idx].gzka002 ||"' AND "|| "gzka003 = '"||g_gzka_d[g_detail_idx].gzka003 ||"' AND "|| "gzka008 = '"||g_gzka_d[g_detail_idx].gzka008 ||"' ",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            IF g_gzka_d[g_detail_idx].gzka003 = '1' THEN
+               #CALL cl_set_comp_entry("gzka008",FALSE)
+               #NEXT FIELD gzka009
+            ELSE 
+               CALL cl_set_comp_entry("gzka008",TRUE)
+               NEXT FIELD gzka008
+            END IF
+]]>
+  </point>
+  <point name="input.a.page1.gzka006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzka_d[l_ac].gzka006
+            CALL ap_ref_array2(g_ref_fields,"SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002='"||g_lang||"'","") RETURNING g_rtn_fields
+            LET g_gzka_d[l_ac].gzka006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gzka_d[l_ac].gzka006_desc
+
+]]>
+  </point>
+  <point name="input.a.page1.gzka008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF g_gzka_d[g_detail_idx].gzka003 = '2' THEN
+               IF cl_null(g_gzka_d[g_detail_idx].gzka008) THEN
+                  NEXT FIELD gzka008
+               END IF
+            END IF
+
+            IF  g_gzka_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka008 IS NOT NULL  THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka_d[g_detail_idx].gzka001 != g_gzka_d_t.gzka001 OR g_gzka_d[g_detail_idx].gzka002 != g_gzka_d_t.gzka002 OR g_gzka_d[g_detail_idx].gzka003 != g_gzka_d_t.gzka003 OR g_gzka_d[g_detail_idx].gzka008 != g_gzka_d_t.gzka008 )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzka_t WHERE "||"gzka001 = '"||g_gzka_d[g_detail_idx].gzka001 ||"' AND "|| "gzka002 = '"||g_gzka_d[g_detail_idx].gzka002 ||"' AND "|| "gzka003 = '"||g_gzka_d[g_detail_idx].gzka003 ||"' AND "|| "gzka008 = '"||g_gzka_d[g_detail_idx].gzka008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.gzka012" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka008 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka012 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka_d[g_detail_idx].gzka001 != g_gzka_d_t.gzka001 OR g_gzka_d[g_detail_idx].gzka002 != g_gzka_d_t.gzka002 OR g_gzka_d[g_detail_idx].gzka003 != g_gzka_d_t.gzka003 OR g_gzka_d[g_detail_idx].gzka008 != g_gzka_d_t.gzka008 OR g_gzka_d[g_detail_idx].gzka012 != g_gzka_d_t.gzka012)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzka_t WHERE "||"gzka001 = '"||g_gzka_d[g_detail_idx].gzka001 ||"' AND "|| "gzka002 = '"||g_gzka_d[g_detail_idx].gzka002 ||"' AND "|| "gzka003 = '"||g_gzka_d[g_detail_idx].gzka003 ||"' AND "|| "gzka008 = '"||g_gzka_d[g_detail_idx].gzka008 ||"' AND "|| "gzka012 = '"||g_gzka_d[g_detail_idx].gzka012 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.gzka001_2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka2_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka008 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka2_d[g_detail_idx].gzka001 != g_gzka2_d_t.gzka001 OR g_gzka2_d[g_detail_idx].gzka002 != g_gzka2_d_t.gzka002 OR g_gzka2_d[g_detail_idx].gzka003 != g_gzka2_d_t.gzka003 OR g_gzka2_d[g_detail_idx].gzka008 != g_gzka2_d_t.gzka008)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzka_t WHERE "||"gzka001 = '"||g_gzka2_d[g_detail_idx].gzka001 ||"' AND "|| "gzka002 = '"||g_gzka2_d[g_detail_idx].gzka002 ||"' AND "|| "gzka003 = '"||g_gzka2_d[g_detail_idx].gzka003 ||"' AND "|| "gzka008 = '"||g_gzka2_d[g_detail_idx].gzka008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.gzka002_2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka2_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka008 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka2_d[g_detail_idx].gzka001 != g_gzka2_d_t.gzka001 OR g_gzka2_d[g_detail_idx].gzka002 != g_gzka2_d_t.gzka002 OR g_gzka2_d[g_detail_idx].gzka003 != g_gzka2_d_t.gzka003 OR g_gzka2_d[g_detail_idx].gzka008 != g_gzka2_d_t.gzka008)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzka_t WHERE "||"gzka001 = '"||g_gzka2_d[g_detail_idx].gzka001 ||"' AND "|| "gzka002 = '"||g_gzka2_d[g_detail_idx].gzka002 ||"' AND "|| "gzka003 = '"||g_gzka2_d[g_detail_idx].gzka003 ||"' AND "|| "gzka008 = '"||g_gzka2_d[g_detail_idx].gzka008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.gzka003_2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka2_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka008 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka2_d[g_detail_idx].gzka001 != g_gzka2_d_t.gzka001 OR g_gzka2_d[g_detail_idx].gzka002 != g_gzka2_d_t.gzka002 OR g_gzka2_d[g_detail_idx].gzka003 != g_gzka2_d_t.gzka003 OR g_gzka2_d[g_detail_idx].gzka008 != g_gzka2_d_t.gzka008)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzka_t WHERE "||"gzka001 = '"||g_gzka2_d[g_detail_idx].gzka001 ||"' AND "|| "gzka002 = '"||g_gzka2_d[g_detail_idx].gzka002 ||"' AND "|| "gzka003 = '"||g_gzka2_d[g_detail_idx].gzka003 ||"' AND "|| "gzka008 = '"||g_gzka2_d[g_detail_idx].gzka008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.gzka008_2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka2_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka008 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka2_d[g_detail_idx].gzka001 != g_gzka2_d_t.gzka001 OR g_gzka2_d[g_detail_idx].gzka002 != g_gzka2_d_t.gzka002 OR g_gzka2_d[g_detail_idx].gzka003 != g_gzka2_d_t.gzka003 OR g_gzka2_d[g_detail_idx].gzka008 != g_gzka2_d_t.gzka008)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzka_t WHERE "||"gzka001 = '"||g_gzka2_d[g_detail_idx].gzka001 ||"' AND "|| "gzka002 = '"||g_gzka2_d[g_detail_idx].gzka002 ||"' AND "|| "gzka003 = '"||g_gzka2_d[g_detail_idx].gzka003 ||"' AND "|| "gzka008 = '"||g_gzka2_d[g_detail_idx].gzka008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.gzka012_2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka2_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka008 IS NOT NULL AND g_gzka2_d[g_detail_idx].gzka012 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka2_d[g_detail_idx].gzka001 != g_gzka2_d_t.gzka001 OR g_gzka2_d[g_detail_idx].gzka002 != g_gzka2_d_t.gzka002 OR g_gzka2_d[g_detail_idx].gzka003 != g_gzka2_d_t.gzka003 OR g_gzka2_d[g_detail_idx].gzka008 != g_gzka2_d_t.gzka008 OR g_gzka2_d[g_detail_idx].gzka012 != g_gzka2_d_t.gzka012)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzka_t WHERE "||"gzka001 = '"||g_gzka2_d[g_detail_idx].gzka001 ||"' AND "|| "gzka002 = '"||g_gzka2_d[g_detail_idx].gzka002 ||"' AND "|| "gzka003 = '"||g_gzka2_d[g_detail_idx].gzka003 ||"' AND "|| "gzka008 = '"||g_gzka2_d[g_detail_idx].gzka008 ||"' AND "|| "gzka012 = '"||g_gzka2_d[g_detail_idx].gzka012 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.gzkb003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka008 IS NOT NULL  AND g_gzka3_d[g_detail_idx2].gzkb003 IS NOT NULL AND g_gzka3_d[g_detail_idx2].gzkb004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka_d[g_detail_idx].gzka001 != g_gzka_d[g_detail_idx].gzka001 OR g_gzka_d[g_detail_idx].gzka002 != g_gzka_d[g_detail_idx].gzka002 OR g_gzka_d[g_detail_idx].gzka003 != g_gzka_d[g_detail_idx].gzka003 OR g_gzka_d[g_detail_idx].gzka008 != g_gzka_d[g_detail_idx].gzka008 OR g_gzka3_d[g_detail_idx2].gzkb003 != g_gzka3_d_t.gzkb003 OR g_gzka3_d[g_detail_idx2].gzkb004 != g_gzka3_d_t.gzkb004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzkb_t WHERE "||"gzkb001 = '"||g_gzka_d[g_detail_idx].gzka001 ||"' AND "|| "gzkb002 = '"||g_gzka_d[g_detail_idx].gzka002 ||"' AND "|| "gzkb009 = '"||g_gzka_d[g_detail_idx].gzka003 ||"' AND "|| "gzkb010 = '"||g_gzka_d[g_detail_idx].gzka008 ||"' AND "|| "gzkb003 = '"||g_gzka3_d[g_detail_idx2].gzkb003 ||"' AND "|| "gzkb004 = '"||g_gzka3_d[g_detail_idx2].gzkb004 ||"' ",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.gzkb004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_gzka_d[g_detail_idx].gzka001 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka002 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka003 IS NOT NULL AND g_gzka_d[g_detail_idx].gzka008 IS NOT NULL AND g_gzka3_d[g_detail_idx2].gzkb003 IS NOT NULL AND g_gzka3_d[g_detail_idx2].gzkb004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzka_d[g_detail_idx].gzka001 != g_gzka_d[g_detail_idx].gzka001 OR g_gzka_d[g_detail_idx].gzka002 != g_gzka_d[g_detail_idx].gzka002 OR g_gzka_d[g_detail_idx].gzka003 != g_gzka_d[g_detail_idx].gzka003 OR g_gzka_d[g_detail_idx].gzka008 != g_gzka_d[g_detail_idx].gzka008 OR g_gzka3_d[g_detail_idx2].gzkb003 != g_gzka3_d_t.gzkb003 OR g_gzka3_d[g_detail_idx2].gzkb004 != g_gzka3_d_t.gzkb004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzkb_t WHERE "||"gzkb001 = '"||g_gzka_d[g_detail_idx].gzka001 ||"' AND "|| "gzkb002 = '"||g_gzka_d[g_detail_idx].gzka002 ||"' AND "|| "gzkb009 = '"||g_gzka_d[g_detail_idx].gzka003 ||"' AND "|| "gzkb010 = '"||g_gzka_d[g_detail_idx].gzka008 ||"' AND "|| "gzkb003 = '"||g_gzka3_d[g_detail_idx2].gzkb003 ||"' AND "|| "gzkb004 = '"||g_gzka3_d[g_detail_idx2].gzkb004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+                  LET g_ref_fields[1] = g_gzka3_d[g_detail_idx2].gzkb004
+                  LET g_rtn_fields[1] = ""
+                  CASE g_gzka3_d[g_detail_idx2].gzkb003
+                     WHEN '1'
+                     CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE  ooag001=? ","") RETURNING g_rtn_fields 
+                  WHEN '2'
+                     CALL ap_ref_array2(g_ref_fields,"SELECT gzyal003 FROM gzyal_t WHERE  gzyal001=? AND gzyal002='"||g_dlang||"' AND gzyalent='"||g_enterprise||"'","") RETURNING g_rtn_fields 
+                  WHEN '3'
+                     CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE  ooefl001=? AND ooefl002='"||g_dlang||"' AND ooeflent='"||g_enterprise||"'","") RETURNING g_rtn_fields 
+                  WHEN '4'
+                     CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE  ooefl001=? AND ooefl002='"||g_dlang||"' AND ooeflent='"||g_enterprise||"'","") RETURNING g_rtn_fields
+                  WHEN '5'
+                     CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE  ooefl001=? AND ooefl002='"||g_dlang||"' AND ooeflent='"||g_enterprise||"'","") RETURNING g_rtn_fields
+                  WHEN '6'
+                      CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE  dzebl001=? AND dzebl002='"||g_dlang||"'","") RETURNING g_rtn_fields                
+                  END CASE
+                  LET g_gzka3_d[g_detail_idx2].gzkb005 = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_gzka3_d[g_detail_idx2].gzkb005
+               END IF
+            END IF
+#            IF g_gzka3_d[g_detail_idx2].gzkb006 = '4' and g_gzka3_d[g_detail_idx2].gzkb003 = '1' THEN
+#               SELECT oofc012 INTO g_gzka3_d[g_detail_idx2].gzkb007
+#                 FROM oofa_t LEFT JOIN oofc_t ON oofa001 = oofc002 AND oofa002='2'
+#                  AND oofc008 = '4'  AND oofc010 = 'Y'
+#                WHERE oofa003 = g_gzka3_d[g_detail_idx2].gzkb004 AND oofaent = g_enterprise
+#                DISPLAY BY NAME g_gzka3_d[g_detail_idx2].gzkb007
+#            END IF
+
+#            LET g_ref_fields[1] = g_gzka3_d[g_detail_idx2].gzkb004
+#            CASE g_gzka3_d[g_detail_idx2].gzkb003
+#              WHEN '1'
+#                CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE  ooag001=? ","") RETURNING g_rtn_fields 
+#              WHEN '2'
+#                CALL ap_ref_array2(g_ref_fields,"SELECT gzyal003 FROM gzyal_t WHERE  gzyal001=? AND gzyal002='"||g_dlang||"' AND gzyalent='"||g_enterprise||"'","") RETURNING g_rtn_fields 
+#              WHEN '3'
+#                CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE  ooefl001=? AND ooefl002='"||g_dlang||"' AND ooeflent='"||g_enterprise||"'","") RETURNING g_rtn_fields 
+#              WHEN '4'
+#                CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE  ooefl001=? AND ooefl002='"||g_dlang||"' AND ooeflent='"||g_enterprise||"'","") RETURNING g_rtn_fields
+#              WHEN '5'
+#                CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE  ooefl001=? AND ooefl002='"||g_dlang||"' AND ooeflent='"||g_enterprise||"'","") RETURNING g_rtn_fields
+#              WHEN '6'
+#                CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE  dzebl001=? AND dzebl002='"||g_dlang||"'","") RETURNING g_rtn_fields                
+#            END CASE
+#            LET g_gzka3_d[g_detail_idx2].gzkb005 = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_gzka3_d[g_detail_idx2].gzkb005]]>
+  </point>
+  <point name="input.a.page3.gzkb006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF g_gzka3_d[g_detail_idx2].gzkb006 = '4' and g_gzka3_d[g_detail_idx2].gzkb003 = '1' THEN
+               SELECT oofc012 INTO g_gzka3_d[g_detail_idx2].gzkb007
+                 FROM oofa_t LEFT JOIN oofc_t ON oofa001 = oofc002 AND oofa002='2'
+                  AND oofc008 = '4'  AND oofc010 = 'Y'
+                WHERE oofa003 = g_gzka3_d[g_detail_idx2].gzkb004 AND oofaent = g_enterprise
+                DISPLAY BY NAME g_gzka3_d[g_detail_idx2].gzkb007
+            END IF]]>
+  </point>
+  <point name="input.b.page1.gzka001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL cl_set_comp_entry("gzka002,gzka003,gzka008",TRUE)]]>
+  </point>
+  <point name="input.b.page1.gzka003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.body.b_update" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               #IF g_gzka_d[g_detail_idx].gzka003 = '1' THEN
+               #   LET g_gzka_d[g_detail_idx].gzka008 = " "  #一個空白
+               #END IF]]>
+  </point>
+  <point name="input.body.before_bak" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            LET g_gzka_d[l_ac].gzka003 = '1' 
+            #LET g_gzka_d[l_ac].gzka008 = " "      #一個空白           ]]>
+  </point>
+  <point name="input.body.before_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[        LET g_gzka_d[l_ac].gzkastus = 'Y']]>
+  </point>
+  <point name="input.body.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF l_cmd='a' THEN
+              
+            END IF]]>
+  </point>
+  <point name="input.c.page1.gzka001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            CALL q_gzzz001_1()                     #呼叫開窗
+            LET g_gzka_d[g_detail_idx].gzka001 = g_qryparam.return1 
+            DISPLAY BY NAME g_gzka_d[g_detail_idx].gzka001 #顯示到畫面上
+            NEXT FIELD gzka001                     #返回原欄位]]>
+  </point>
+  <point name="input.c.page1.gzka002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.arg1 = g_gzka_d[g_detail_idx].gzka001
+            CALL q_gzka002()                          #呼叫開窗
+            LET g_gzka_d[g_detail_idx].gzka002 = g_qryparam.return1     #顯示到畫面上
+
+            NEXT FIELD gzka002                        #返回原欄位         
+ ]]>
+  </point>
+  <point name="input.c.page1.gzka006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            CALL q_gzza001_5()                     #呼叫開窗
+            LET g_gzka_d[g_detail_idx].gzka006 = g_qryparam.return1 
+            DISPLAY BY NAME g_gzka_d[g_detail_idx].gzka006 #顯示到畫面上
+            NEXT FIELD gzka006]]>
+  </point>
+  <point name="input.c.page1.gzka007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_gzka_d[l_ac].gzka007             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_gzka_d[g_detail_idx].gzka006
+            
+            CALL q_gzka002()                                #呼叫開窗
+
+            LET g_gzka_d[l_ac].gzka007 = g_qryparam.return1              
+
+            DISPLAY g_gzka_d[l_ac].gzka007 TO gzka007              #
+
+            NEXT FIELD gzka007                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page3.gzkb004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            CASE g_gzka3_d[g_detail_idx2].gzkb003
+              WHEN '1'
+                CALL q_gzxa003_3()                     #呼叫開窗
+              WHEN '2'
+                CALL q_gzya001()
+              WHEN '3'
+                LET g_qryparam.arg1 = g_today
+                CALL q_ooeg001_4()
+              WHEN '4'
+                LET g_qryparam.arg1 = g_today
+                CALL q_ooeg001_4()     
+              WHEN '5'
+                LET g_qryparam.arg1 = g_today
+                CALL q_ooeg001_4()                
+              WHEN '6'
+                LET g_qryparam.arg1 = g_gzka_d[g_detail_idx].gzka001
+                CALL q_dzeb001_2()              
+            END CASE
+            LET g_gzka3_d[g_detail_idx2].gzkb004 = g_qryparam.return1 
+            DISPLAY BY NAME g_gzka3_d[g_detail_idx2].gzkb004 #顯示到畫面上
+            NEXT FIELD gzkb004                     #返回原欄位]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE  l_tmp                 STRING
+   DEFINE  l_in                  STRING]]>
+  </point>
+  <point name="input.g.page1.gzka002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF  g_gzka_d[g_detail_idx].gzka001 IS NOT NULL THEN
+                LET l_tmp = g_gzka_d[g_detail_idx].gzka001
+                IF l_tmp.getIndexOf('r',4) = 0 and g_gzka_d[g_detail_idx].gzka002 = 'O' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "azz-00805"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  NEXT FIELD gzka002                
+                END IF                
+            END IF]]>
+  </point>
+  <point name="input.g.page1.gzka003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF g_gzka_d[g_detail_idx].gzka003 = '1' THEN
+               #LET g_gzka_d[g_detail_idx].gzka008 = " "
+               #CALL cl_set_comp_entry("gzka008",FALSE)
+               #NEXT FIELD gzka009
+            ELSE
+               CALL cl_set_comp_entry("gzka008",TRUE)
+               NEXT FIELD gzka008            
+            END IF]]>
+  </point>
+  <point name="input.g.page3.gzkb004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#            IF g_gzka3_d[g_detail_idx2].gzkb006 = '4' and g_gzka3_d[g_detail_idx2].gzkb003 = '1' THEN
+#               SELECT oofc012 INTO g_gzka3_d[g_detail_idx2].gzkb007
+#                 FROM oofa_t LEFT JOIN oofc_t ON oofa001 = oofc002 AND oofa002='2'
+#                  AND oofc008 = '4'  AND oofc010 = 'Y'
+#                WHERE oofa003 = g_gzka3_d[g_detail_idx2].gzkb004 AND oofaent = g_enterprise
+#                DISPLAY BY NAME g_gzka3_d[g_detail_idx2].gzkb007
+#            END IF]]>
+  </point>
+  <point name="input.g.page3.gzkb006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF g_gzka3_d[g_detail_idx2].gzkb006 = '4' and g_gzka3_d[g_detail_idx2].gzkb003 = '1' THEN
+               SELECT oofc012 INTO g_gzka3_d[g_detail_idx2].gzkb007
+                 FROM oofa_t LEFT JOIN oofc_t ON oofa001 = oofc002 AND oofa002='2'
+                  AND oofc008 = '4'  AND oofc010 = 'Y'
+                WHERE oofa003 = g_gzka3_d[g_detail_idx2].gzkb004 AND oofaent = g_enterprise
+                DISPLAY BY NAME g_gzka3_d[g_detail_idx2].gzkb007
+            END IF]]>
+  </point>
+  <point name="input.more_inputarray" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      INPUT BY NAME g_gzkc.gzkc003, g_gzkc.gzkc004
+         ATTRIBUTE(WITHOUT DEFAULTS)
+          
+         BEFORE INPUT 
+           LET g_gzkc_t.* = g_gzkc.*
+           
+         AFTER FIELD gzkc003
+         
+         
+         AFTER FIELD gzkc004
+      
+         #確認資料無重複            
+     
+         AFTER INPUT 
+           
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               
+               #RETURN
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM gzkc_t 
+             WHERE gzkcent = g_enterprise
+               AND gzkc001 = g_gzka_d_t.gzka001
+               AND gzkc002 = g_gzka_d_t.gzka002
+               AND gzkc005 = g_gzka_d_t.gzka003
+               AND gzkc006 = g_gzka_d_t.gzka008
+               AND gzkc009 = g_arg_gzka012
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN               
+                INSERT INTO gzkc_t  (gzkcent,gzkc001,gzkc002,gzkc003,gzkc004,gzkc005,gzkc006,gzkc009)                   
+                 VALUES(g_enterprise,g_gzka_d[g_detail_idx].gzka001,g_gzka_d[g_detail_idx].gzka002,
+                        g_gzkc.gzkc003 ,g_gzkc.gzkc004 ,g_gzka_d[g_detail_idx].gzka003 , 
+                        g_gzka_d[g_detail_idx].gzka008, g_arg_gzka012)
+                   
+                IF SQLCA.sqlcode THEN
+                   INITIALIZE g_errparam TO NULL 
+                   LET g_errparam.extend = "gzkc_t" 
+                   LET g_errparam.code   = SQLCA.sqlcode 
+                   LET g_errparam.popup  = FALSE 
+                   CALL cl_err()
+                END IF
+            ELSE
+              UPDATE gzkc_t SET (gzkcent,gzkc003,gzkc004) =(g_enterprise,g_gzkc.gzkc003,g_gzkc.gzkc004)
+               WHERE gzkcent = g_enterprise
+                 AND gzkc001 = g_gzka_d_t.gzka001
+                 AND gzkc002 = g_gzka_d_t.gzka002   
+                 AND gzkc005 = g_gzka_d_t.gzka003
+                 AND gzkc006 = g_gzka_d_t.gzka008
+                 AND gzkc009 = g_arg_gzka012
+                 
+            END IF
+           
+      END INPUT]]>
+  </point>
+  <point name="insert_b.before_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[      #IF g_gzka_d[g_detail_idx].gzka003 = '1' THEN
+      #    LET g_gzka_d[g_detail_idx].gzka008 = " "  #一個空白
+      #END IF]]>
+  </point>
+  <point name="insert_b.before_insert2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[      IF g_gzka_d[g_detail_idx].gzka003 = '1' THEN
+         #LET ps_keys[4]= " "  #一個空白
+      END IF]]>
+  </point>
+  <point name="insert_b.m_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[     INSERT INTO gzka_t
+                  (gzkaent,
+                   gzka001,gzka002,gzka003,gzka008
+                   ,gzkastus,gzka005,gzka010,gzka011,gzka006,gzka007,gzka012,gzkaownid,gzkaowndp,gzkacrtid,gzkacrtdp,gzkacrtdt,gzkamodid,gzkamoddt) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+                   ,g_gzka_d[g_detail_idx].gzkastus, 
+                       g_gzka_d[g_detail_idx].gzka005,g_gzka_d[g_detail_idx].gzka010,g_gzka_d[g_detail_idx].gzka011, 
+                       g_gzka_d[g_detail_idx].gzka006,g_gzka_d[g_detail_idx].gzka007,g_arg_gzka012,g_gzka2_d[g_detail_idx].gzkaownid, 
+                       g_gzka2_d[g_detail_idx].gzkaowndp,g_gzka2_d[g_detail_idx].gzkacrtid,g_gzka2_d[g_detail_idx].gzkacrtdp, 
+                       g_gzka2_d[g_detail_idx].gzkacrtdt,g_gzka2_d[g_detail_idx].gzkamodid,g_gzka2_d[g_detail_idx].gzkamoddt) 
+]]>
+  </point>
+  <point name="insert_b.m_insert2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      INSERT INTO gzkb_t
+                  (gzkbent,
+                   gzkb001,gzkb002,gzkb009,gzkb010,gzkb003,gzkb004
+                   ,gzkb005,gzkb011,gzkb012,gzkb013) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6]
+                   ,g_gzka3_d[g_detail_idx2].gzkb005,g_gzka3_d[g_detail_idx2].gzkb011,g_gzka3_d[g_detail_idx2].gzkb012,g_arg_gzka012) 
+]]>
+  </point>
+  <point name="key_update_b.after_update2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      UPDATE gzkc_t 
+        SET (gzkc001,gzkc002,gzkc005,gzkc006,gzkc009) =
+            (g_master.gzka001,g_master.gzka002,g_master.gzka003,g_master.gzka008,'azzi710') 
+       WHERE gzkc001 = g_master_t.gzka001
+         AND gzkc002 = g_master_t.gzka002                 
+         AND gzkc005 = g_master_t.gzka003
+         AND gzkc006 = g_master_t.gzka008
+         #AND gzkc009 = g_master_t.gzka012]]>
+  </point>
+  <point name="main.define_sql" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql = "SELECT  UNIQUE t0.gzkc003,t0.gzkc004,t0.gzkc007,t0.gzkc008  FROM gzkc_t t0",                              
+               " WHERE t0.gzkcent=? ",
+               "   AND t0.gzkc001=? ",
+               "   AND t0.gzkc002=? ",  
+               "   AND t0.gzkc005=? ", 
+               "   AND t0.gzkc006=? ",
+               "   AND t0.gzkc009=? "
+      
+   PREPARE azzi710_gzkc FROM g_sql
+   DECLARE gzkc_cur CURSOR FOR azzi710_gzkc]]>
+  </point>
+  <point name="main.init" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   #LET g_arg_gzka012 = g_argv[1]]]>
+  </point>
+  <point name="ui_dialog.b_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL cl_set_act_visible("insert",FALSE)]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+   #CALL cl_set_toolbaritem_visible("insert",FALSE)]]>
+  </point>
+  <point name="update_b.before_update" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[]]>
+  </point>
+  <point name="update_b.before_update2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[]]>
+  </point>
+  <point name="update_b.m_update" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      CALL azzi710_gzka_t_mask_restore('restore_mask_o')
+      
+      UPDATE gzka_t 
+         SET (gzka001,gzka002,gzka003,gzka008
+              ,gzkastus,gzka005,gzka010,gzka011,gzka006,gzka007,gzka012,gzkaownid,gzkaowndp,gzkacrtid,gzkacrtdp,gzkacrtdt,gzkamodid,gzkamoddt) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+              ,g_gzka_d[g_detail_idx].gzkastus, 
+                  g_gzka_d[g_detail_idx].gzka005,g_gzka_d[g_detail_idx].gzka010,g_gzka_d[g_detail_idx].gzka011, 
+                  g_gzka_d[g_detail_idx].gzka006,g_gzka_d[g_detail_idx].gzka007,g_arg_gzka012,g_gzka2_d[g_detail_idx].gzkaownid, 
+                  g_gzka2_d[g_detail_idx].gzkaowndp,g_gzka2_d[g_detail_idx].gzkacrtid,g_gzka2_d[g_detail_idx].gzkacrtdp, 
+                  g_gzka2_d[g_detail_idx].gzkacrtdt,g_gzka2_d[g_detail_idx].gzkamodid,g_gzka2_d[g_detail_idx].gzkamoddt)  
+
+         WHERE gzka001 = ps_keys_bak[1] AND gzka002 = ps_keys_bak[2] AND gzka003 = ps_keys_bak[3] AND gzka008 = ps_keys_bak[4] AND gzka012 = g_arg_gzka012
+ ]]>
+  </point>
+  <point name="update_b.m_update2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      CALL azzi710_gzkb_t_mask_restore('restore_mask_o')
+      
+      UPDATE gzkb_t 
+         SET (gzkb001,gzkb002,gzkb009,gzkb010,gzkb003,gzkb004
+              ,gzkb005,gzkb011,gzkb012,gzkb013) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6]
+              ,g_gzka3_d[g_detail_idx2].gzkb005,g_gzka3_d[g_detail_idx2].gzkb011,g_gzka3_d[g_detail_idx2].gzkb012,g_arg_gzka012)  
+
+         WHERE gzkb001 = ps_keys_bak[1] AND gzkb002 = ps_keys_bak[2] AND gzkb009 = ps_keys_bak[3] AND gzkb010 = ps_keys_bak[4] AND gzkb003 = ps_keys_bak[5] AND gzkb004 = ps_keys_bak[6]
+            AND gzkb013 = g_arg_gzka012 ]]>
+  </point>
+  <section id="azzi710.b_fill" ver="14" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION azzi710_b_fill(p_wc2)
+   DEFINE p_wc2           STRING
+   DEFINE l_ac_t          LIKE type_t.num10
+   #add-point:b_fill段define
+   {<point name="b_fill.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill段define(客製用)
+   {<point name="b_fill.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   LET g_sql = "SELECT  UNIQUE t0.gzkastus,t0.gzka001,t0.gzka002,t0.gzka003,t0.gzka008,t0.gzka005,t0.gzka010, 
+       t0.gzka011,t0.gzka006,t0.gzka007,t0.gzka001,t0.gzka002,t0.gzka003,t0.gzka008,t0.gzkaownid,t0.gzkaowndp, 
+       t0.gzkacrtid,t0.gzkacrtdp,t0.gzkacrtdt,t0.gzkamodid,t0.gzkamoddt ,t1.gzzal003 ,t2.gzzal003 ,t3.ooag011 , 
+       t4.ooefl003 ,t5.ooag011 ,t6.ooefl003 ,t7.ooag011 FROM gzka_t t0",
+ 
+               " LEFT JOIN gzkb_t ON gzkbent = gzkaent AND gzka001 = gzkb001 AND gzka002 = gzkb002 AND gzka003 = gzkb009 AND gzka008 = gzkb010",
+ 
+ 
+               "",
+                              " LEFT JOIN gzzal_t t1 ON t1.gzzal001=t0.gzka001 AND t1.gzzal002='"||g_lang||"' ",
+               " LEFT JOIN gzzal_t t2 ON t2.gzzal001=t0.gzka006 AND t2.gzzal002='"||g_lang||"' ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent='"||g_enterprise||"' AND t3.ooag001=t0.gzkaownid  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent='"||g_enterprise||"' AND t4.ooefl001=t0.gzkaowndp AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t5 ON t5.ooagent='"||g_enterprise||"' AND t5.ooag001=t0.gzkacrtid  ",
+               " LEFT JOIN ooefl_t t6 ON t6.ooeflent='"||g_enterprise||"' AND t6.ooefl001=t0.gzkacrtdp AND t6.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t7 ON t7.ooagent='"||g_enterprise||"' AND t7.ooag001=t0.gzkamodid  ",
+ 
+               " WHERE t0.gzkaent= ?  AND  1=1 AND (", p_wc2, ") "
+   #add-point:b_fill段sql_wc
+   {<point name="b_fill.sql_wc"/>}
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("gzka_t"),
+                      " ORDER BY t0.gzka001,t0.gzka002,t0.gzka003,t0.gzka008"
+  
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+  
+   #LET g_sql = cl_sql_add_tabid(g_sql,"gzka_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料  
+   PREPARE azzi710_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR azzi710_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_gzka_d.clear()
+   CALL g_gzka2_d.clear()   
+   CALL g_gzka3_d.clear()   
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_gzka_d[l_ac].gzkastus,g_gzka_d[l_ac].gzka001,g_gzka_d[l_ac].gzka002,g_gzka_d[l_ac].gzka003, 
+       g_gzka_d[l_ac].gzka008,g_gzka_d[l_ac].gzka005,g_gzka_d[l_ac].gzka010,g_gzka_d[l_ac].gzka011,g_gzka_d[l_ac].gzka006, 
+       g_gzka_d[l_ac].gzka007,g_gzka2_d[l_ac].gzka001,g_gzka2_d[l_ac].gzka002,g_gzka2_d[l_ac].gzka003, 
+       g_gzka2_d[l_ac].gzka008,g_gzka2_d[l_ac].gzkaownid,g_gzka2_d[l_ac].gzkaowndp,g_gzka2_d[l_ac].gzkacrtid, 
+       g_gzka2_d[l_ac].gzkacrtdp,g_gzka2_d[l_ac].gzkacrtdt,g_gzka2_d[l_ac].gzkamodid,g_gzka2_d[l_ac].gzkamoddt, 
+       g_gzka_d[l_ac].gzka001_desc,g_gzka_d[l_ac].gzka006_desc,g_gzka2_d[l_ac].gzkaownid_desc,g_gzka2_d[l_ac].gzkaowndp_desc, 
+       g_gzka2_d[l_ac].gzkacrtid_desc,g_gzka2_d[l_ac].gzkacrtdp_desc,g_gzka2_d[l_ac].gzkamodid_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   CALL g_gzka_d.deleteElement(g_gzka_d.getLength())   
+   CALL g_gzka2_d.deleteElement(g_gzka2_d.getLength())
+   CALL g_gzka3_d.deleteElement(g_gzka3_d.getLength())
+ 
+   
+   #確定指標無超過上限, 超過則指到最後一筆
+   IF g_detail_idx > g_gzka_d.getLength() THEN
+      LET g_detail_idx = g_gzka_d.getLength()
+   END IF
+   
+   #將key欄位填到每個page
+   LET l_ac_t = g_detail_idx
+   FOR g_detail_idx = 1 TO g_gzka_d.getLength()
+      LET g_gzka2_d[g_detail_idx].gzka001 = g_gzka_d[g_detail_idx].gzka001 
+      LET g_gzka2_d[g_detail_idx].gzka002 = g_gzka_d[g_detail_idx].gzka002 
+      LET g_gzka2_d[g_detail_idx].gzka003 = g_gzka_d[g_detail_idx].gzka003 
+      LET g_gzka2_d[g_detail_idx].gzka008 = g_gzka_d[g_detail_idx].gzka008 
+      #LET g_gzka3_d[g_detail_idx2].gzkb003 = g_gzka_d[g_detail_idx].gzka001 
+      #LET g_gzka3_d[g_detail_idx2].gzkb004 = g_gzka_d[g_detail_idx].gzka002 
+ 
+   END FOR
+   LET g_detail_idx = l_ac_t
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1
+   IF g_detail_cnt > 0 THEN
+      DISPLAY g_detail_cnt TO FORMONLY.h_count
+   END IF
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE azzi710_pb
+   
+   LET g_loc = 'm'
+   CALL azzi710_detail_show() 
+   
+   LET l_ac = 1
+   IF g_gzka_d.getLength() > 0 THEN
+      CALL azzi710_fetch()
+   END IF
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_gzka_d.getLength()
+      LET g_gzka_d_mask_o[l_ac].* =  g_gzka_d[l_ac].*
+      CALL azzi710_gzka_t_mask()
+      LET g_gzka_d_mask_n[l_ac].* =  g_gzka_d[l_ac].*
+   END FOR
+   
+   LET g_gzka2_d_mask_o.* =  g_gzka2_d.*
+   FOR l_ac = 1 TO g_gzka2_d.getLength()
+      LET g_gzka2_d_mask_o[l_ac].* =  g_gzka2_d[l_ac].*
+      CALL azzi710_gzka_t_mask()
+      LET g_gzka2_d_mask_n[l_ac].* =  g_gzka2_d[l_ac].*
+   END FOR
+   LET g_gzka3_d_mask_o.* =  g_gzka3_d.*
+   FOR l_ac = 1 TO g_gzka3_d.getLength()
+      LET g_gzka3_d_mask_o[l_ac].* =  g_gzka3_d[l_ac].*
+      CALL azzi710_gzkb_t_mask()
+      LET g_gzka3_d_mask_n[l_ac].* =  g_gzka3_d[l_ac].*
+   END FOR
+ 
+   
+   ERROR "" 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.default_search" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION azzi710_default_search()
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define" edit="s"/>}
+   #end add-point  
+   #add-point:default_search段define(客製用)
+   {<point name="default_search.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " gzka001 = '", g_argv[02], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " gzka002 = '", g_argv[03], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[04]) THEN
+      LET ls_wc = ls_wc, " gzka003 = '", g_argv[04], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[05]) THEN
+      LET ls_wc = ls_wc, " gzka008 = '", g_argv[05], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc = ls_wc
+   ELSE
+      LET g_wc = " 1=2"
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.delete" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION azzi710_delete()
+   DEFINE li_ac LIKE type_t.num10
+   #add-point:delete段define
+   {<point name="delete.define" edit="s"/>}
+   #end add-point 
+   #add-point:delete段define(客製用)
+   {<point name="delete.define_customerization" edit="c"/>}
+   #end add-point 
+   
+   IF NOT cl_ask_delete() THEN
+      #不刪除
+      RETURN
+   END IF
+   
+   LET li_ac = ARR_CURR()
+   LET g_gzka_d_t.* = g_gzka_d[li_ac].*
+   LET g_gzka_d_o.* = g_gzka_d[li_ac].*
+   
+   CALL s_transaction_begin()  
+   
+   #add-point:delete段刪除前
+   {<point name="delete.before_delete" mark="Y"/>}
+   #end add-point 
+   
+   #刪除單頭
+   DELETE FROM gzka_t 
+         WHERE gzka001 = g_gzka_d_t.gzka001
+           AND gzka002 = g_gzka_d_t.gzka002
+           AND gzka003 = g_gzka_d_t.gzka003
+           AND gzka008 = g_gzka_d_t.gzka008
+ 
+           
+   #add-point:delete段刪除中
+   {<point name="delete.m_delete"/>}
+   #end add-point 
+           
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "gzka_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:delete段刪除後
+   {<point name="delete.after_delete"/>}
+   #end add-point 
+   
+   #刪除單頭
+   #add-point:delete段刪除前
+   {<point name="delete.before_delete2" mark="Y"/>}
+   #end add-point 
+   DELETE FROM gzkb_t 
+         WHERE gzkb001 = g_gzka_d_t.gzka001
+           AND gzkb002 = g_gzka_d_t.gzka002
+           AND gzkb009 = g_gzka_d_t.gzka003
+           AND gzkb010 = g_gzka_d_t.gzka008
+ 
+   #add-point:delete段刪除中
+   {<point name="delete.m_delete2"/>}
+   #end add-point 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "gzkb_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      RETURN
+   ELSE
+      CALL s_transaction_end('Y','0')
+   END IF
+   #add-point:delete段刪除後
+   {<point name="delete.after_delete2"/>}
+   #end add-point 
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.delete_b" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION azzi710_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   {<point name="delete_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:delete_b段define(客製用)
+   {<point name="delete_b.define_customerization" edit="c"/>}
+   #end add-point     
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "gzka_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.before_delete" mark="Y"/>}
+      #end add-point  
+      DELETE FROM gzka_t
+       WHERE gzkaent = g_enterprise AND
+         gzka001 = ps_keys_bak[1] AND gzka002 = ps_keys_bak[2] AND gzka003 = ps_keys_bak[3] AND gzka008 = ps_keys_bak[4]
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete"/>}
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.after_delete"/>}
+      #end add-point  
+   END IF
+   
+ 
+   
+   LET ls_group = "gzkb_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.before_delete2" mark="Y"/>}
+      #end add-point  
+      DELETE FROM gzkb_t
+       WHERE gzkbent = g_enterprise AND
+         gzkb001 = ps_keys_bak[1] AND gzkb002 = ps_keys_bak[2] AND gzkb009 = ps_keys_bak[3] AND gzkb010 = ps_keys_bak[4] AND gzkb003 = ps_keys_bak[5] AND gzkb004 = ps_keys_bak[6]
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete2"/>}
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "gzkb_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.after_delete2"/>}
+      #end add-point  
+      RETURN
+   END IF
+ 
+ 
+   
+   #單頭刪除, 連帶刪除單身
+   LET ls_group = "gzka_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.before_body_delete2" mark="Y"/>}
+      #end add-point  
+      DELETE FROM gzkb_t
+       WHERE gzkbent = g_enterprise AND
+         gzkb001 = ps_keys_bak[1] AND gzkb002 = ps_keys_bak[2] AND gzkb009 = ps_keys_bak[3] AND gzkb010 = ps_keys_bak[4]
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_body_delete2"/>}
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "gzkb_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.after_body_delete2"/>}
+      #end add-point  
+      RETURN
+   END IF
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000002
+#+ 
+#+ Filename...: azzi710
+#+ Description: 訊息中心設定
+#+ Creator....: 00544(2015-02-05 11:33:20)
+#+ Modifier...: 01856(2015-07-03 18:32:30) -SD/PR-
+]]>
+  </section>
+  <section id="azzi710.detail_show" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION azzi710_detail_show()
+   DEFINE l_ac_t LIKE type_t.num10
+   #add-point:show段define
+   {<point name="detail_show.define" edit="s"/>}
+   #end add-point
+   #add-point:show段define(客製用)
+   {<point name="detail_show.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET l_ac_t = l_ac
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+   #帶出公用欄位reference值page2
+   #應用 a12 樣板自動產生(Version:3)
+ 
+ 
+   #帶出公用欄位reference值page3
+   
+ 
+   
+   IF g_loc = 'm' THEN
+      #讀入ref值
+      FOR l_ac = 1 TO g_gzka_d.getLength()
+         #add-point:show段單頭reference
+         {<point name="detail_show.body.reference"/>}
+         #end add-point
+         #add-point:show段單頭reference
+         {<point name="detail_show.body2.reference"/>}
+         #end add-point
+ 
+      END FOR
+   END IF
+   
+   IF g_loc = 'd' THEN
+      FOR l_ac = 1 TO g_gzka3_d.getLength()
+        #add-point:show段單身reference
+        {<point name="detail_show.body3.reference"/>}
+        #end add-point
+      END FOR
+ 
+      
+      #add-point:detail_show段之後
+      {<point name="detail_show.after"/>}
+      #end add-point
+   END IF
+   
+   LET l_ac = l_ac_t
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.fetch" ver="8" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION azzi710_fetch()
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define
+   {<point name="fetch.define" edit="s"/>}
+   #end add-point
+   #add-point:fetch段define(客製用)
+   {<point name="fetch.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #判定單頭是否有資料
+   IF g_detail_idx <= 0 OR g_gzka_d.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #CALL g_gzka2_d.clear()
+   CALL g_gzka3_d.clear()
+ 
+   
+   LET li_ac = l_ac 
+    
+   IF g_action_choice <> 'fetch' OR cl_null(g_action_choice) THEN
+      LET g_sql = "SELECT  UNIQUE t0.gzkb003,t0.gzkb004,t0.gzkb005,t0.gzkb011,t0.gzkb012  FROM gzkb_t t0", 
+              
+                  "",
+                  
+                  " WHERE t0.gzkbent=?  AND t0. gzkb001=?  AND t0. gzkb002=?  AND t0. gzkb009=?  AND t0. gzkb010=?"
+      #add-point:單身sql wc
+      {<point name="fetch.sql_wc" />}
+      #end add-point
+      IF NOT cl_null(g_wc2_table2) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+      END IF
+      
+      LET g_sql = g_sql, " ORDER BY t0.gzkb003,t0.gzkb004" 
+                         
+      #add-point:單身填充前
+      {<point name="fetch.before_fill" />}
+      #end add-point
+      
+      LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料    
+      PREPARE azzi710_pb2 FROM g_sql
+      DECLARE b_fill_curs2 CURSOR FOR azzi710_pb2
+   END IF
+   
+   LET l_ac = g_detail_idx
+   OPEN b_fill_curs2 USING g_enterprise,g_gzka_d[l_ac].gzka001,g_gzka_d[l_ac].gzka002,g_gzka_d[l_ac].gzka003, 
+       g_gzka_d[l_ac].gzka008
+   
+   LET l_ac = 1
+   FOREACH b_fill_curs2 INTO g_gzka3_d[l_ac].gzkb003,g_gzka3_d[l_ac].gzkb004,g_gzka3_d[l_ac].gzkb005, 
+       g_gzka3_d[l_ac].gzkb011,g_gzka3_d[l_ac].gzkb012
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      {<point name="fetch.fill2"/>}
+      #end add-point
+      
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+ 
+ 
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point
+   
+   #CALL g_gzka2_d.deleteElement(g_gzka2_d.getLength())   
+   CALL g_gzka3_d.deleteElement(g_gzka3_d.getLength())   
+ 
+   
+   LET g_gzka3_d_mask_o.* =  g_gzka3_d.*
+   FOR l_ac = 1 TO g_gzka3_d.getLength()
+      LET g_gzka3_d_mask_o[l_ac].* =  g_gzka3_d[l_ac].*
+      CALL azzi710_gzkb_t_mask()
+      LET g_gzka3_d_mask_n[l_ac].* =  g_gzka3_d[l_ac].*
+   END FOR
+ 
+   
+   DISPLAY g_gzka3_d.getLength() TO FORMONLY.cnt
+   #LET g_loc = 'd'
+   CALL azzi710_detail_show()
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.func_signature" ver="1" status="" src="s" readonly="">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="azzi710.global" ver="19" status="" src="s" readonly="">
+    <![CDATA[#應用 t02 樣板自動產生(Version:16)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+    
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_gzka_d RECORD
+       gzkastus LIKE gzka_t.gzkastus, 
+   gzka001 LIKE gzka_t.gzka001, 
+   gzka001_desc LIKE type_t.chr500, 
+   gzka002 LIKE gzka_t.gzka002, 
+   gzka002_desc LIKE type_t.chr500, 
+   gzka003 LIKE gzka_t.gzka003, 
+   gzka008 LIKE gzka_t.gzka008, 
+   gzka005 LIKE gzka_t.gzka005, 
+   gzka010 LIKE gzka_t.gzka010, 
+   gzka011 LIKE gzka_t.gzka011, 
+   gzka006 LIKE gzka_t.gzka006, 
+   gzka006_desc LIKE type_t.chr500, 
+   gzka007 LIKE gzka_t.gzka007
+       END RECORD
+PRIVATE TYPE type_g_gzka2_d RECORD
+       gzka001 LIKE gzka_t.gzka001, 
+   gzka002 LIKE gzka_t.gzka002, 
+   gzka003 LIKE gzka_t.gzka003, 
+   gzka008 LIKE gzka_t.gzka008, 
+   gzkaownid LIKE gzka_t.gzkaownid, 
+   gzkaownid_desc LIKE type_t.chr500, 
+   gzkaowndp LIKE gzka_t.gzkaowndp, 
+   gzkaowndp_desc LIKE type_t.chr500, 
+   gzkacrtid LIKE gzka_t.gzkacrtid, 
+   gzkacrtid_desc LIKE type_t.chr500, 
+   gzkacrtdp LIKE gzka_t.gzkacrtdp, 
+   gzkacrtdp_desc LIKE type_t.chr500, 
+   gzkacrtdt DATETIME YEAR TO SECOND, 
+   gzkamodid LIKE gzka_t.gzkamodid, 
+   gzkamodid_desc LIKE type_t.chr500, 
+   gzkamoddt DATETIME YEAR TO SECOND
+       END RECORD
+PRIVATE TYPE type_g_gzka3_d RECORD
+       gzkb003 LIKE gzkb_t.gzkb003, 
+   gzkb004 LIKE gzkb_t.gzkb004, 
+   gzkb005 LIKE gzkb_t.gzkb005, 
+   gzkb011 LIKE gzkb_t.gzkb011, 
+   gzkb012 LIKE gzkb_t.gzkb012
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_gzka_d
+DEFINE g_master_t                   type_g_gzka_d
+DEFINE g_gzka_d          DYNAMIC ARRAY OF type_g_gzka_d
+DEFINE g_gzka_d_t        type_g_gzka_d
+DEFINE g_gzka_d_o        type_g_gzka_d
+DEFINE g_gzka_d_mask_o   DYNAMIC ARRAY OF type_g_gzka_d #轉換遮罩前資料
+DEFINE g_gzka_d_mask_n   DYNAMIC ARRAY OF type_g_gzka_d #轉換遮罩後資料
+DEFINE g_gzka2_d          DYNAMIC ARRAY OF type_g_gzka2_d
+DEFINE g_gzka2_d_t        type_g_gzka2_d
+DEFINE g_gzka2_d_o        type_g_gzka2_d
+DEFINE g_gzka2_d_mask_o   DYNAMIC ARRAY OF type_g_gzka2_d #轉換遮罩前資料
+DEFINE g_gzka2_d_mask_n   DYNAMIC ARRAY OF type_g_gzka2_d #轉換遮罩後資料
+DEFINE g_gzka3_d          DYNAMIC ARRAY OF type_g_gzka3_d
+DEFINE g_gzka3_d_t        type_g_gzka3_d
+DEFINE g_gzka3_d_o        type_g_gzka3_d
+DEFINE g_gzka3_d_mask_o   DYNAMIC ARRAY OF type_g_gzka3_d #轉換遮罩前資料
+DEFINE g_gzka3_d_mask_n   DYNAMIC ARRAY OF type_g_gzka3_d #轉換遮罩後資料
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             
+DEFINE g_ac_last            LIKE type_t.num10             
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_detail_idx         LIKE type_t.num10             #單身所在筆數(第一階單身)
+DEFINE g_detail_idx2        LIKE type_t.num10             #單身所在筆數(第二階單身)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身總筆數 (第一階單身)
+DEFINE g_detail_cnt2        LIKE type_t.num10             #單身總筆數 (第二階單身)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_current_page       LIKE type_t.num10             #判斷單身筆數用
+DEFINE g_loc                LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+DEFINE g_wc2_table2   STRING
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzi710.idx_chk" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 單身筆數變更
+PRIVATE FUNCTION azzi710_idx_chk(ps_loc)
+   DEFINE ps_loc   LIKE type_t.chr10
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE li_cnt   LIKE type_t.num10
+   #add-point:idx_chk段define
+   {<point name="idx_chk.define" edit="s"/>}
+   #end add-point  
+   #add-point:idx_chk段define(客製用)
+   {<point name="idx_chk.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_gzka_d.getLength() THEN
+         LET g_detail_idx = g_gzka_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_gzka_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      LET li_idx = g_detail_idx
+      LET li_cnt = g_gzka_d.getLength()
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx > g_gzka2_d.getLength() THEN
+         LET g_detail_idx = g_gzka2_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_gzka2_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      LET li_idx = g_detail_idx
+      LET li_cnt = g_gzka2_d.getLength()
+   END IF
+   IF g_current_page = 3 THEN
+      LET g_detail_idx2 = g_curr_diag.getCurrentRow("s_detail3")
+      IF g_detail_idx2 > g_gzka3_d.getLength() THEN
+         LET g_detail_idx2 = g_gzka3_d.getLength()
+      END IF
+      IF g_detail_idx2 = 0 AND g_gzka3_d.getLength() <> 0 THEN
+         LET g_detail_idx2 = 1
+      END IF
+      LET li_idx = g_detail_idx2
+      LET li_cnt = g_gzka3_d.getLength()
+   END IF
+ 
+    
+   IF ps_loc = 'm' THEN
+      DISPLAY li_idx TO FORMONLY.h_index
+      DISPLAY li_cnt TO FORMONLY.h_count
+      IF g_gzka3_d.getLength() = 0 THEN
+         DISPLAY '' TO FORMONLY.idx
+         DISPLAY '' TO FORMONLY.cnt
+      ELSE
+         DISPLAY 1 TO FORMONLY.idx
+         DISPLAY g_gzka3_d.getLength() TO FORMONLY.cnt
+      END IF
+ 
+   ELSE
+      DISPLAY li_idx TO FORMONLY.idx
+      DISPLAY li_cnt TO FORMONLY.cnt
+   END IF
+   
+   #add-point:idx_chk段other
+   {<point name="idx_chk.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.init" ver="8" status="" src="s" readonly="">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION azzi710_init()
+   #add-point:init段define
+   {<point name="init.define" edit="s"/>}
+   #end add-point   
+   #add-point:init段define(客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show  = 1
+      CALL cl_set_combo_scc_part('gzkastus','50','N,Y,X')
+ 
+      CALL cl_set_combo_scc('gzka003','188') 
+   CALL cl_set_combo_scc('gzka005','181') 
+   CALL cl_set_combo_scc('gzka010','301') 
+   CALL cl_set_combo_scc('gzkb003','187') 
+   CALL cl_set_combo_scc('gzkb011','184') 
+   CALL cl_set_combo_scc('gzkb012','177') 
+ 
+   LET l_ac = 1
+   
+   
+   
+ 
+   #避免USER直接進入第二單身時無資料
+   IF g_gzka_d.getLength() > 0 THEN
+      LET g_master_t.* = g_gzka_d[1].*
+      LET g_master.* = g_gzka_d[1].*
+   END IF
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL azzi710_default_search()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.input" ver="18" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PRIVATE FUNCTION azzi710_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_ac_t                LIKE type_t.num10               #未取消的ARRAY CNT 
+   DEFINE  l_n                   LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point 
+   #add-point:input段define(客製用)
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point 
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+ 
+   #add-point:input段define_sql
+   {<point name="input.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT gzkastus,gzka001,gzka002,gzka003,gzka008,gzka005,gzka010,gzka011,gzka006, 
+       gzka007,gzka001,gzka002,gzka003,gzka008,gzkaownid,gzkaowndp,gzkacrtid,gzkacrtdp,gzkacrtdt,gzkamodid, 
+       gzkamoddt FROM gzka_t WHERE gzkaent=? AND gzka001=? AND gzka002=? AND gzka003=? AND gzka008=?  
+       FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE azzi710_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+   
+ 
+   
+   #add-point:input段define_sql
+   {<point name="input.define_sql2" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT gzkb003,gzkb004,gzkb005,gzkb011,gzkb012 FROM gzkb_t WHERE gzkbent=? AND  
+       gzkb001=? AND gzkb002=? AND gzkb009=? AND gzkb010=? AND gzkb003=? AND gzkb004=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql2"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE azzi710_bcl2 CURSOR FROM g_forupd_sql
+ 
+ 
+ 
+   LET lb_reproduce = FALSE
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:input段修改前
+   {<point name="input.before_input"/>}
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_gzka_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_gzka_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            LET g_current_page = 1
+            IF p_cmd = 'u' THEN
+               CALL azzi710_b_fill(g_wc)
+            END IF
+            LET g_loc = 'm'
+            LET g_detail_cnt = g_gzka_d.getLength()
+            #add-point:資料輸入前
+            {<point name="input.body.before_input"/>}
+            #end add-point
+            
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_ac_last = l_ac
+            LET g_detail_idx = l_ac
+            LET g_master_t.* = g_gzka_d[l_ac].*
+            LET g_master.* = g_gzka_d[l_ac].*
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            LET g_detail_idx = l_ac
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_gzka_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_gzka_d[l_ac].gzka001 IS NOT NULL
+               AND g_gzka_d[l_ac].gzka002 IS NOT NULL
+               AND g_gzka_d[l_ac].gzka003 IS NOT NULL
+               AND g_gzka_d[l_ac].gzka008 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_gzka_d_t.* = g_gzka_d[l_ac].*  #BACKUP
+               LET g_gzka_d_o.* = g_gzka_d[l_ac].*  #BACKUP
+               IF NOT azzi710_lock_b("gzka_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH azzi710_bcl INTO g_gzka_d[l_ac].gzkastus,g_gzka_d[l_ac].gzka001,g_gzka_d[l_ac].gzka002, 
+                      g_gzka_d[l_ac].gzka003,g_gzka_d[l_ac].gzka008,g_gzka_d[l_ac].gzka005,g_gzka_d[l_ac].gzka010, 
+                      g_gzka_d[l_ac].gzka011,g_gzka_d[l_ac].gzka006,g_gzka_d[l_ac].gzka007,g_gzka2_d[l_ac].gzka001, 
+                      g_gzka2_d[l_ac].gzka002,g_gzka2_d[l_ac].gzka003,g_gzka2_d[l_ac].gzka008,g_gzka2_d[l_ac].gzkaownid, 
+                      g_gzka2_d[l_ac].gzkaowndp,g_gzka2_d[l_ac].gzkacrtid,g_gzka2_d[l_ac].gzkacrtdp, 
+                      g_gzka2_d[l_ac].gzkacrtdt,g_gzka2_d[l_ac].gzkamodid,g_gzka2_d[l_ac].gzkamoddt
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_gzka_d_t.gzka001 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+ 
+                  #遮罩相關處理
+                  LET g_gzka_d_mask_o[l_ac].* =  g_gzka_d[l_ac].*
+                  CALL azzi710_gzka_t_mask()
+                  LET g_gzka_d_mask_n[l_ac].* =  g_gzka_d[l_ac].*
+                  
+                  CALL cl_show_fld_cont()
+                  #CALL azzi710_detail_show()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL azzi710_set_entry_b(l_cmd)
+            CALL azzi710_set_no_entry_b(l_cmd)
+            #add-point:input段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            #讀取對應的單身資料
+            LET g_action_choice = "fetch"
+            CALL azzi710_fetch()
+            CALL azzi710_idx_chk('m')
+ 
+         BEFORE INSERT
+            
+            #判斷能否在此頁面進行資料新增
+            
+            #清空下層單身
+                        CALL g_gzka3_d.clear()
+ 
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_gzka_d[l_ac].* TO NULL 
+            INITIALIZE g_gzka_d_t.* TO NULL 
+            INITIALIZE g_gzka_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            #應用 a14 樣板自動產生(Version:4)    
+      #公用欄位新增給值  
+      LET g_gzka2_d[l_ac].gzkaownid = g_user
+      LET g_gzka2_d[l_ac].gzkaowndp = g_dept
+      LET g_gzka2_d[l_ac].gzkacrtid = g_user
+      LET g_gzka2_d[l_ac].gzkacrtdp = g_dept 
+      LET g_gzka2_d[l_ac].gzkacrtdt = cl_get_current()
+      LET g_gzka2_d[l_ac].gzkamodid = g_user
+      LET g_gzka2_d[l_ac].gzkamoddt = cl_get_current()
+      LET g_gzka_d[l_ac].gzkastus = ''
+ 
+ 
+                  LET g_gzka_d[l_ac].gzkastus = "N"
+      LET g_gzka_d[l_ac].gzka005 = "2"
+      LET g_gzka_d[l_ac].gzka010 = "2"
+ 
+            #add-point:modify段before備份
+            {<point name="input.body.before_bak"/>}
+            #end add-point
+            LET g_gzka_d_t.* = g_gzka_d[l_ac].*     #新輸入資料
+            LET g_gzka_d_o.* = g_gzka_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL azzi710_set_entry_b("a")
+            CALL azzi710_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_gzka_d[li_reproduce_target].* = g_gzka_d[li_reproduce].*
+               LET g_gzka2_d[li_reproduce_target].* = g_gzka2_d[li_reproduce].*
+ 
+               LET g_gzka_d[g_gzka_d.getLength()].gzka001 = NULL
+               LET g_gzka_d[g_gzka_d.getLength()].gzka002 = NULL
+               LET g_gzka_d[g_gzka_d.getLength()].gzka003 = NULL
+               LET g_gzka_d[g_gzka_d.getLength()].gzka008 = NULL
+ 
+            END IF
+            #add-point:input段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM gzka_t 
+             WHERE gzkaent = g_enterprise AND gzka001 = g_gzka_d[l_ac].gzka001 
+                                       AND gzka002 = g_gzka_d[l_ac].gzka002 
+                                       AND gzka003 = g_gzka_d[l_ac].gzka003 
+                                       AND gzka008 = g_gzka_d[l_ac].gzka008 
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gzka_d[g_detail_idx].gzka001
+               LET gs_keys[2] = g_gzka_d[g_detail_idx].gzka002
+               LET gs_keys[3] = g_gzka_d[g_detail_idx].gzka003
+               LET gs_keys[4] = g_gzka_d[g_detail_idx].gzka008
+               CALL azzi710_insert_b('gzka_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_gzka_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "gzka_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL azzi710_b_fill(g_wc)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               LET g_master.* = g_gzka_d[l_ac].*
+            END IF
+              
+         BEFORE DELETE  #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   =  -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point
+               
+               DELETE FROM gzka_t
+                WHERE gzkaent = g_enterprise AND 
+                      gzka001 = g_gzka_d_t.gzka001
+                      AND gzka002 = g_gzka_d_t.gzka002
+                      AND gzka003 = g_gzka_d_t.gzka003
+                      AND gzka008 = g_gzka_d_t.gzka008
+ 
+                      
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point
+                      
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "gzka_t" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  IF NOT cl_log_modified_record('','') THEN 
+                     CALL s_transaction_end('N','0')
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF
+               END IF 
+               CLOSE azzi710_bcl
+               LET l_count = g_gzka_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gzka_d_t.gzka001
+               LET gs_keys[2] = g_gzka_d_t.gzka002
+               LET gs_keys[3] = g_gzka_d_t.gzka003
+               LET gs_keys[4] = g_gzka_d_t.gzka008
+    
+               #應用 a47 樣板自動產生(Version:2)
+      #刪除相關文件
+      CALL azzi710_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+        
+            END IF 
+              
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2
+               {<point name="input.body.after_delete"/>}
+               #end add-point
+                              CALL azzi710_delete_b('gzka_t',gs_keys,"'1'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_gzka_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkastus
+            #add-point:BEFORE FIELD gzkastus
+            {<point name="input.b.page1.gzkastus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkastus
+            
+            #add-point:AFTER FIELD gzkastus
+            {<point name="input.a.page1.gzkastus" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzkastus
+            #add-point:ON CHANGE gzkastus
+            {<point name="input.g.page1.gzkastus" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka001
+            
+            #add-point:AFTER FIELD gzka001
+            {<point name="input.a.page1.gzka001" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka001
+            #add-point:BEFORE FIELD gzka001
+            {<point name="input.b.page1.gzka001" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzka001
+            #add-point:ON CHANGE gzka001
+            {<point name="input.g.page1.gzka001" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka002
+            #add-point:BEFORE FIELD gzka002
+            {<point name="input.b.page1.gzka002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka002
+            
+            #add-point:AFTER FIELD gzka002
+            {<point name="input.a.page1.gzka002" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzka002
+            #add-point:ON CHANGE gzka002
+            {<point name="input.g.page1.gzka002" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka003
+            #add-point:BEFORE FIELD gzka003
+            {<point name="input.b.page1.gzka003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka003
+            
+            #add-point:AFTER FIELD gzka003
+            {<point name="input.a.page1.gzka003" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzka003
+            #add-point:ON CHANGE gzka003
+            {<point name="input.g.page1.gzka003" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka008
+            #add-point:BEFORE FIELD gzka008
+            {<point name="input.b.page1.gzka008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka008
+            
+            #add-point:AFTER FIELD gzka008
+            {<point name="input.a.page1.gzka008" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzka008
+            #add-point:ON CHANGE gzka008
+            {<point name="input.g.page1.gzka008" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka005
+            #add-point:BEFORE FIELD gzka005
+            {<point name="input.b.page1.gzka005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka005
+            
+            #add-point:AFTER FIELD gzka005
+            {<point name="input.a.page1.gzka005" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzka005
+            #add-point:ON CHANGE gzka005
+            {<point name="input.g.page1.gzka005" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka010
+            #add-point:BEFORE FIELD gzka010
+            {<point name="input.b.page1.gzka010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka010
+            
+            #add-point:AFTER FIELD gzka010
+            {<point name="input.a.page1.gzka010" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzka010
+            #add-point:ON CHANGE gzka010
+            {<point name="input.g.page1.gzka010" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka011
+            #add-point:BEFORE FIELD gzka011
+            {<point name="input.b.page1.gzka011" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka011
+            
+            #add-point:AFTER FIELD gzka011
+            {<point name="input.a.page1.gzka011" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzka011
+            #add-point:ON CHANGE gzka011
+            {<point name="input.g.page1.gzka011" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka006
+            
+            #add-point:AFTER FIELD gzka006
+            {<point name="input.a.page1.gzka006" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka006
+            #add-point:BEFORE FIELD gzka006
+            {<point name="input.b.page1.gzka006" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzka006
+            #add-point:ON CHANGE gzka006
+            {<point name="input.g.page1.gzka006" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka007
+            #add-point:BEFORE FIELD gzka007
+            {<point name="input.b.page1.gzka007" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka007
+            
+            #add-point:AFTER FIELD gzka007
+            {<point name="input.a.page1.gzka007" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzka007
+            #add-point:ON CHANGE gzka007
+            {<point name="input.g.page1.gzka007" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.gzkastus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkastus
+            #add-point:ON ACTION controlp INFIELD gzkastus
+            {<point name="input.c.page1.gzkastus" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzka001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka001
+            #add-point:ON ACTION controlp INFIELD gzka001
+            {<point name="input.c.page1.gzka001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzka002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka002
+            #add-point:ON ACTION controlp INFIELD gzka002
+            {<point name="input.c.page1.gzka002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzka003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka003
+            #add-point:ON ACTION controlp INFIELD gzka003
+            {<point name="input.c.page1.gzka003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzka008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka008
+            #add-point:ON ACTION controlp INFIELD gzka008
+            {<point name="input.c.page1.gzka008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzka005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka005
+            #add-point:ON ACTION controlp INFIELD gzka005
+            {<point name="input.c.page1.gzka005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzka010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka010
+            #add-point:ON ACTION controlp INFIELD gzka010
+            {<point name="input.c.page1.gzka010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzka011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka011
+            #add-point:ON ACTION controlp INFIELD gzka011
+            {<point name="input.c.page1.gzka011" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzka006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka006
+            #add-point:ON ACTION controlp INFIELD gzka006
+            {<point name="input.c.page1.gzka006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzka007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka007
+            #add-point:ON ACTION controlp INFIELD gzka007
+            {<point name="input.c.page1.gzka007" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_gzka_d[l_ac].* = g_gzka_d_t.*
+               CLOSE azzi710_bcl
+               CALL s_transaction_end('N','0')
+               CANCEL DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_gzka_d[l_ac].gzka001 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_gzka_d[l_ac].* = g_gzka_d_t.*
+            ELSE
+               
+               #寫入修改者/修改日期資訊(單身)
+               LET g_gzka2_d[l_ac].gzkamodid = g_user 
+LET g_gzka2_d[l_ac].gzkamoddt = cl_get_current()
+LET g_gzka2_d[l_ac].gzkamodid_desc = cl_get_username(g_gzka2_d[l_ac].gzkamodid)
+               
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL azzi710_gzka_t_mask_restore('restore_mask_o')
+      
+               UPDATE gzka_t SET (gzkastus,gzka001,gzka002,gzka003,gzka008,gzka005,gzka010,gzka011,gzka006, 
+                   gzka007,gzkaownid,gzkaowndp,gzkacrtid,gzkacrtdp,gzkacrtdt,gzkamodid,gzkamoddt) = (g_gzka_d[l_ac].gzkastus, 
+                   g_gzka_d[l_ac].gzka001,g_gzka_d[l_ac].gzka002,g_gzka_d[l_ac].gzka003,g_gzka_d[l_ac].gzka008, 
+                   g_gzka_d[l_ac].gzka005,g_gzka_d[l_ac].gzka010,g_gzka_d[l_ac].gzka011,g_gzka_d[l_ac].gzka006, 
+                   g_gzka_d[l_ac].gzka007,g_gzka2_d[l_ac].gzkaownid,g_gzka2_d[l_ac].gzkaowndp,g_gzka2_d[l_ac].gzkacrtid, 
+                   g_gzka2_d[l_ac].gzkacrtdp,g_gzka2_d[l_ac].gzkacrtdt,g_gzka2_d[l_ac].gzkamodid,g_gzka2_d[l_ac].gzkamoddt) 
+
+                WHERE gzkaent = g_enterprise AND
+                  gzka001 = g_gzka_d_t.gzka001 #項次   
+                  AND gzka002 = g_gzka_d_t.gzka002  
+                  AND gzka003 = g_gzka_d_t.gzka003  
+                  AND gzka008 = g_gzka_d_t.gzka008  
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "gzka_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_gzka_d[l_ac].* = g_gzka_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "gzka_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_gzka_d[l_ac].* = g_gzka_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gzka_d[g_detail_idx].gzka001
+               LET gs_keys_bak[1] = g_gzka_d_t.gzka001
+               LET gs_keys[2] = g_gzka_d[g_detail_idx].gzka002
+               LET gs_keys_bak[2] = g_gzka_d_t.gzka002
+               LET gs_keys[3] = g_gzka_d[g_detail_idx].gzka003
+               LET gs_keys_bak[3] = g_gzka_d_t.gzka003
+               LET gs_keys[4] = g_gzka_d[g_detail_idx].gzka008
+               LET gs_keys_bak[4] = g_gzka_d_t.gzka008
+               CALL azzi710_update_b('gzka_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+                     
+                     #將遮罩欄位進行遮蔽
+                     CALL azzi710_gzka_t_mask_restore('restore_mask_n')
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_gzka_d_t)
+                     LET g_log2 = util.JSON.stringify(g_gzka_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #若Key欄位有變動
+               LET g_master.* = g_gzka_d[l_ac].*
+               CALL azzi710_key_update_b()
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL azzi710_unlock_b("gzka_t")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+            IF l_cmd = 'u' AND INT_FLAG THEN
+               LET g_gzka_d[l_ac].* = g_gzka_d_t.*
+            END IF
+            LET l_cmd = ''
+              
+         AFTER INPUT
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()      
+            #CALL cl_showmsg()            
+    
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_gzka_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_gzka_d.getLength()+1
+        
+      END INPUT
+      
+ 
+      
+      #實際單身段落
+      INPUT ARRAY g_gzka3_d FROM s_detail3.*
+         ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_3)
+         
+         
+         BEFORE INPUT
+            #檢查上層單身是否有資料
+            IF cl_null(g_gzka_d[g_detail_idx].gzka001) THEN
+               NEXT FIELD gzkastus
+            END IF
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_gzka3_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            LET g_loc = 'd'
+            LET g_detail_cnt = g_gzka3_d.getLength()
+            LET g_current_page = 3
+            #add-point:資料輸入前
+            {<point name="input.body3.before_input"/>}
+            #end add-point
+ 
+         BEFORE INSERT
+            IF g_gzka_d.getLength() = 0 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 'std-00013' 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               NEXT FIELD gzka001
+            END IF 
+            #判斷能否在此頁面進行資料新增
+            
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_gzka3_d[l_ac].* TO NULL 
+            INITIALIZE g_gzka3_d_t.* TO NULL 
+            INITIALIZE g_gzka3_d_o.* TO NULL 
+            
+            #add-point:modify段before備份
+            {<point name="input.body3.before_bak"/>}
+            #end add-point
+            LET g_gzka3_d_t.* = g_gzka3_d[l_ac].*     #新輸入資料
+            LET g_gzka3_d_o.* = g_gzka3_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL azzi710_set_entry_b("a")
+            CALL azzi710_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_gzka3_d[li_reproduce_target].* = g_gzka3_d[li_reproduce].*
+ 
+               LET g_gzka3_d[li_reproduce_target].gzkb003 = NULL
+               LET g_gzka3_d[li_reproduce_target].gzkb004 = NULL
+            END IF
+            #add-point:input段before insert
+            {<point name="input.body3.before_insert"/>}
+            #end add-point  
+            
+         BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx2 = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_gzka3_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_gzka3_d[l_ac].gzkb003 IS NOT NULL
+               AND g_gzka3_d[l_ac].gzkb004 IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_gzka3_d_t.* = g_gzka3_d[l_ac].*  #BACKUP
+               LET g_gzka3_d_o.* = g_gzka3_d[l_ac].*  #BACKUP
+               IF NOT azzi710_lock_b("gzkb_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH azzi710_bcl2 INTO g_gzka3_d[l_ac].gzkb003,g_gzka3_d[l_ac].gzkb004,g_gzka3_d[l_ac].gzkb005, 
+                      g_gzka3_d[l_ac].gzkb011,g_gzka3_d[l_ac].gzkb012
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = '' 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_gzka3_d_mask_o[l_ac].* =  g_gzka3_d[l_ac].*
+                  CALL azzi710_gzkb_t_mask()
+                  LET g_gzka3_d_mask_n[l_ac].* =  g_gzka3_d[l_ac].*
+                  
+                  CALL cl_show_fld_cont()
+                  #CALL azzi710_detail_show()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL azzi710_set_entry_b(l_cmd)
+            CALL azzi710_set_no_entry_b(l_cmd)
+            #add-point:input段before row
+            {<point name="input.body3.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            CALL azzi710_idx_chk('d')
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   =  -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身3刪除前
+               {<point name="input.body3.b_delete" mark="Y"/>}
+               #end add-point  
+               
+               DELETE FROM gzkb_t
+                WHERE gzkbent = g_enterprise AND
+                   gzkb001 = g_master.gzka001
+                   AND gzkb002 = g_master.gzka002
+                   AND gzkb009 = g_master.gzka003
+                   AND gzkb010 = g_master.gzka008
+                   AND gzkb003 = g_gzka3_d_t.gzkb003
+                   AND gzkb004 = g_gzka3_d_t.gzkb004
+                   
+               #add-point:單身3刪除中
+               {<point name="input.body3.m_delete"/>}
+               #end add-point  
+                   
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "gzkb_t" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身3刪除後
+                  {<point name="input.body3.a_delete"/>}
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE azzi710_bcl
+               LET l_count = g_gzka_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gzka_d[g_detail_idx].gzka001
+               LET gs_keys[2] = g_gzka_d[g_detail_idx].gzka002
+               LET gs_keys[3] = g_gzka_d[g_detail_idx].gzka003
+               LET gs_keys[4] = g_gzka_d[g_detail_idx].gzka008
+               LET gs_keys[5] = g_gzka3_d_t.gzkb003
+               LET gs_keys[6] = g_gzka3_d_t.gzkb004
+ 
+            END IF 
+            
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身AFTER DELETE 
+               {<point name="input.body3.after_delete"/>}
+               #end add-point
+                              CALL azzi710_delete_b('gzkb_t',gs_keys,"'3'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_gzka3_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM gzkb_t 
+             WHERE gzkbent = g_enterprise AND
+                   gzkb001 = g_master.gzka001
+                   AND gzkb002 = g_master.gzka002
+                   AND gzkb009 = g_master.gzka003
+                   AND gzkb010 = g_master.gzka008
+                   AND gzkb003 = g_gzka3_d[g_detail_idx2].gzkb003
+                   AND gzkb004 = g_gzka3_d[g_detail_idx2].gzkb004
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身3新增前
+               {<point name="input.body3.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gzka_d[g_detail_idx].gzka001
+               LET gs_keys[2] = g_gzka_d[g_detail_idx].gzka002
+               LET gs_keys[3] = g_gzka_d[g_detail_idx].gzka003
+               LET gs_keys[4] = g_gzka_d[g_detail_idx].gzka008
+               LET gs_keys[5] = g_gzka3_d[g_detail_idx2].gzkb003
+               LET gs_keys[6] = g_gzka3_d[g_detail_idx2].gzkb004
+               CALL azzi710_insert_b('gzkb_t',gs_keys,"'3'")
+                           
+               #add-point:單身新增後3
+               {<point name="input.body3.a_insert"/>}
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_gzka_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "gzkb_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL azzi710_b_fill(g_wc)
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後
+               {<point name="input.body3.after_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_gzka3_d[l_ac].* = g_gzka3_d_t.*
+               CLOSE azzi710_bcl2
+               CALL s_transaction_end('N','0')
+               CANCEL DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_gzka3_d[l_ac].* = g_gzka3_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身3)
+               
+               
+               #add-point:單身page3修改前
+               {<point name="input.body3.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL azzi710_gzkb_t_mask_restore('restore_mask_o')
+               
+               UPDATE gzkb_t SET (gzkb003,gzkb004,gzkb005,gzkb011,gzkb012) = (g_gzka3_d[l_ac].gzkb003, 
+                   g_gzka3_d[l_ac].gzkb004,g_gzka3_d[l_ac].gzkb005,g_gzka3_d[l_ac].gzkb011,g_gzka3_d[l_ac].gzkb012)  
+                   #自訂欄位頁簽
+                WHERE gzkbent = g_enterprise AND
+                   gzkb001 = g_master.gzka001
+                   AND gzkb002 = g_master.gzka002
+                   AND gzkb009 = g_master.gzka003
+                   AND gzkb010 = g_master.gzka008
+                   AND gzkb003 = g_gzka3_d_t.gzkb003
+                   AND gzkb004 = g_gzka3_d_t.gzkb004
+                   
+               #add-point:單身修改中
+               {<point name="input.body3.m_update"/>}
+               #end add-point
+                   
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "gzkb_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_gzka3_d[l_ac].* = g_gzka3_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "gzkb_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_gzka3_d[l_ac].* = g_gzka3_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gzka_d[g_detail_idx].gzka001
+               LET gs_keys_bak[1] = g_gzka_d[g_detail_idx].gzka001
+               LET gs_keys[2] = g_gzka_d[g_detail_idx].gzka002
+               LET gs_keys_bak[2] = g_gzka_d[g_detail_idx].gzka002
+               LET gs_keys[3] = g_gzka_d[g_detail_idx].gzka003
+               LET gs_keys_bak[3] = g_gzka_d[g_detail_idx].gzka003
+               LET gs_keys[4] = g_gzka_d[g_detail_idx].gzka008
+               LET gs_keys_bak[4] = g_gzka_d[g_detail_idx].gzka008
+               LET gs_keys[5] = g_gzka3_d[g_detail_idx2].gzkb003
+               LET gs_keys_bak[5] = g_gzka3_d_t.gzkb003
+               LET gs_keys[6] = g_gzka3_d[g_detail_idx2].gzkb004
+               LET gs_keys_bak[6] = g_gzka3_d_t.gzkb004
+               CALL azzi710_update_b('gzkb_t',gs_keys,gs_keys_bak,"'3'")
+                     #資料多語言用-增/改
+                     
+                     
+                     #將遮罩欄位進行遮蔽
+                     CALL azzi710_gzkb_t_mask_restore('restore_mask_n')
+                     #修改歷程記錄(下層修改)
+                     LET g_log1 = util.JSON.stringify(g_gzka3_d_t)
+                     LET g_log2 = util.JSON.stringify(g_gzka3_d[l_ac])
+                     IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               #add-point:單身page3修改後
+               {<point name="input.body3.a_update"/>}
+               #end add-point
+            END IF
+         
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkb003
+            #add-point:BEFORE FIELD gzkb003
+            {<point name="input.b.page3.gzkb003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkb003
+            
+            #add-point:AFTER FIELD gzkb003
+            {<point name="input.a.page3.gzkb003" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzkb003
+            #add-point:ON CHANGE gzkb003
+            {<point name="input.g.page3.gzkb003" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkb004
+            #add-point:BEFORE FIELD gzkb004
+            {<point name="input.b.page3.gzkb004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkb004
+            
+            #add-point:AFTER FIELD gzkb004
+            {<point name="input.a.page3.gzkb004" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzkb004
+            #add-point:ON CHANGE gzkb004
+            {<point name="input.g.page3.gzkb004" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkb005
+            #add-point:BEFORE FIELD gzkb005
+            {<point name="input.b.page3.gzkb005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkb005
+            
+            #add-point:AFTER FIELD gzkb005
+            {<point name="input.a.page3.gzkb005" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzkb005
+            #add-point:ON CHANGE gzkb005
+            {<point name="input.g.page3.gzkb005" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkb011
+            #add-point:BEFORE FIELD gzkb011
+            {<point name="input.b.page3.gzkb011" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkb011
+            
+            #add-point:AFTER FIELD gzkb011
+            {<point name="input.a.page3.gzkb011" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzkb011
+            #add-point:ON CHANGE gzkb011
+            {<point name="input.g.page3.gzkb011" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkb012
+            #add-point:BEFORE FIELD gzkb012
+            {<point name="input.b.page3.gzkb012" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkb012
+            
+            #add-point:AFTER FIELD gzkb012
+            {<point name="input.a.page3.gzkb012" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzkb012
+            #add-point:ON CHANGE gzkb012
+            {<point name="input.g.page3.gzkb012" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page3.gzkb003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkb003
+            #add-point:ON ACTION controlp INFIELD gzkb003
+            {<point name="input.c.page3.gzkb003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page3.gzkb004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkb004
+            #add-point:ON ACTION controlp INFIELD gzkb004
+            {<point name="input.c.page3.gzkb004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page3.gzkb005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkb005
+            #add-point:ON ACTION controlp INFIELD gzkb005
+            {<point name="input.c.page3.gzkb005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page3.gzkb011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkb011
+            #add-point:ON ACTION controlp INFIELD gzkb011
+            {<point name="input.c.page3.gzkb011" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page3.gzkb012
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkb012
+            #add-point:ON ACTION controlp INFIELD gzkb012
+            {<point name="input.c.page3.gzkb012" />}
+            #END add-point
+ 
+ 
+ 
+         AFTER ROW
+            LET l_ac = ARR_CURR()
+            LET l_ac_t = l_ac
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_gzka3_d[l_ac].* = g_gzka3_d_t.*
+               END IF
+               CLOSE azzi710_bcl2
+               CALL s_transaction_end('N','0')
+               CANCEL DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+ 
+            CALL azzi710_unlock_b("gzkb_t")
+            CALL s_transaction_end('Y','0')
+            LET l_cmd = ''
+ 
+         AFTER INPUT
+            #add-point:input段after input 
+            {<point name="input.body3.after_input"/>}
+            #end add-point   
+ 
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_gzka3_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_gzka3_d.getLength()+1
+ 
+      END INPUT
+ 
+      
+      DISPLAY ARRAY g_gzka2_d TO s_detail2.*
+         ATTRIBUTES(COUNT=g_detail_cnt)  
+      
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(g_detail_idx)
+            CALL azzi710_b_fill(g_wc)
+            LET g_current_page = 2
+        
+         BEFORE ROW
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+            LET l_ac = g_detail_idx
+            CALL cl_show_fld_cont() 
+            LET g_action_choice = "fetch"
+            CALL azzi710_fetch()
+            CALL azzi710_idx_chk('m')
+            
+         #add-point:page2自定義行為
+         {<point name="input.body2.action"/>}
+         #end add-point
+            
+      END DISPLAY
+ 
+    
+ 
+      
+      #add-point:input段input_array"
+      {<point name="input.more_inputarray"/>}
+      #end add-point
+      
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         LET g_curr_diag = ui.DIALOG.getCurrent()
+         IF g_detail_idx > 0 THEN
+            IF g_detail_idx > g_gzka_d.getLength() THEN
+               LET g_detail_idx = g_gzka_d.getLength()
+            END IF
+            CALL DIALOG.setCurrentRow("s_detail1", g_detail_idx)
+            LET l_ac = g_detail_idx
+         END IF 
+         LET g_detail_idx = l_ac
+         #add-point:input段input_array"
+         {<point name="input.before_dialog"/>}
+         #end add-point
+         #先確定單頭(第一單身)是否有資料
+         IF g_gzka_d.getLength() > 0 THEN
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD gzkastus
+               WHEN "s_detail2"
+                  NEXT FIELD gzka001_2
+               WHEN "s_detail3"
+                  NEXT FIELD gzkb003
+ 
+            END CASE
+         ELSE
+            NEXT FIELD gzkastus
+         END IF
+            
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   
+   CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)
+   CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+ 
+   CALL g_curr_diag.setCurrentRow("s_detail3",g_detail_idx2)
+ 
+   
+   #add-point:input段修改後
+   {<point name="input.after_input"/>}
+   #end add-point
+ 
+   CLOSE azzi710_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.insert" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION azzi710_insert()
+   #add-point:insert段define
+   {<point name="insert.define" edit="s"/>}
+   #end add-point 
+   #add-point:insert段define(客製用)
+   {<point name="insert.define_customerization" edit="c"/>}
+   #end add-point 
+   
+   #add-point:insert段新增前
+   {<point name="insert.before_insert"/>}
+   #end add-point 
+   
+   #進入資料輸入段落
+   CALL g_gzka_d.clear() 
+   CALL g_gzka2_d.clear() 
+   CALL g_gzka3_d.clear() 
+ 
+   CALL azzi710_input('a')
+   
+   CALL azzi710_b_fill(g_wc)
+   
+   #add-point:insert段新增後
+   {<point name="insert.after_insert"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.insert_b" ver="11" status="" src="s" readonly="">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION azzi710_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define" edit="s"/>}
+   #end add-point
+   #add-point:insert_b段define(客製用)
+   {<point name="insert_b.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "gzka_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:insert_b段新增前
+      {<point name="insert_b.before_insert" mark="Y"/>}
+      #end add-point
+      INSERT INTO gzka_t
+                  (gzkaent,
+                   gzka001,gzka002,gzka003,gzka008
+                   ,gzkastus,gzka005,gzka010,gzka011,gzka006,gzka007,gzkaownid,gzkaowndp,gzkacrtid,gzkacrtdp,gzkacrtdt,gzkamodid,gzkamoddt) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+                   ,g_gzka_d[g_detail_idx].gzkastus,g_gzka_d[g_detail_idx].gzka005,g_gzka_d[g_detail_idx].gzka010, 
+                       g_gzka_d[g_detail_idx].gzka011,g_gzka_d[g_detail_idx].gzka006,g_gzka_d[g_detail_idx].gzka007, 
+                       g_gzka2_d[g_detail_idx].gzkaownid,g_gzka2_d[g_detail_idx].gzkaowndp,g_gzka2_d[g_detail_idx].gzkacrtid, 
+                       g_gzka2_d[g_detail_idx].gzkacrtdp,g_gzka2_d[g_detail_idx].gzkacrtdt,g_gzka2_d[g_detail_idx].gzkamodid, 
+                       g_gzka2_d[g_detail_idx].gzkamoddt)
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "gzka_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.after_insert"/>}
+      #end add-point
+   END IF
+   
+ 
+   
+   LET ls_group = "gzkb_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:insert_b段新增前
+      {<point name="insert_b.before_insert2" mark="Y"/>}
+      #end add-point
+      INSERT INTO gzkb_t
+                  (gzkbent,
+                   gzkb001,gzkb002,gzkb009,gzkb010,gzkb003,gzkb004
+                   ,gzkb005,gzkb011,gzkb012) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6]
+                   ,g_gzka3_d[g_detail_idx2].gzkb005,g_gzka3_d[g_detail_idx2].gzkb011,g_gzka3_d[g_detail_idx2].gzkb012) 
+
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert2"/>}
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         RETURN
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.after_insert2"/>}
+      #end add-point
+   END IF
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.key_update_b" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭key欄位變動後, 連帶修正其他單身table
+PRIVATE FUNCTION azzi710_key_update_b()
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="key_update_b.define" edit="s"/>}
+   #end add-point
+   #add-point:update_b段define(客製用)
+   {<point name="key_update_b.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   
+   IF g_master.gzka001 <> g_master_t.gzka001 THEN
+      LET lb_chk = FALSE
+   END IF
+   IF g_master.gzka002 <> g_master_t.gzka002 THEN
+      LET lb_chk = FALSE
+   END IF
+   IF g_master.gzka003 <> g_master_t.gzka003 THEN
+      LET lb_chk = FALSE
+   END IF
+   IF g_master.gzka008 <> g_master_t.gzka008 THEN
+      LET lb_chk = FALSE
+   END IF
+ 
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #add-point:update_b段修改前
+   {<point name="key_update_b.before_update2" mark="Y"/>}
+   #end add-point
+   
+   UPDATE gzkb_t 
+      SET (gzkb001,gzkb002,gzkb009,gzkb010) 
+           = 
+          (g_master.gzka001,g_master.gzka002,g_master.gzka003,g_master.gzka008) 
+      WHERE 
+           gzkb001 = g_master_t.gzka001
+           AND gzkb002 = g_master_t.gzka002
+           AND gzkb009 = g_master_t.gzka003
+           AND gzkb010 = g_master_t.gzka008
+ 
+           
+   #add-point:update_b段修改中
+   {<point name="key_update_b.m_update2"/>}
+   #end add-point
+           
+   CASE
+      WHEN SQLCA.sqlcode #其他錯誤
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "gzkb_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+      OTHERWISE
+         #若有多語言table資料一同更新
+         
+   END CASE
+   
+   #add-point:update_b段修改後
+   {<point name="key_update_b.after_update2"/>}
+   #end add-point
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.lock_b" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION azzi710_lock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:lock_b段define(客製用)
+   {<point name="lock_b.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL azzi710_b_fill(g_wc)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "gzka_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN azzi710_bcl USING g_enterprise,
+                                       g_gzka_d[g_detail_idx].gzka001,g_gzka_d[g_detail_idx].gzka002, 
+                                           g_gzka_d[g_detail_idx].gzka003,g_gzka_d[g_detail_idx].gzka008 
+
+                                       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "azzi710_bcl" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   #鎖定整組table
+   #LET ls_group = "gzkb_t,"
+   #僅鎖定自身table
+   LET ls_group = "gzkb_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN azzi710_bcl2 USING g_enterprise,
+                                             g_master.gzka001,g_master.gzka002,g_master.gzka003,g_master.gzka008,
+                                             g_gzka3_d[g_detail_idx2].gzkb003,g_gzka3_d[g_detail_idx2].gzkb004 
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "azzi710_bcl2" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.main" ver="2" status="" src="s" readonly="">
+    <![CDATA[#應用 a26 樣板自動產生(Version:4)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define
+   {<point name="main.define" edit="s"/>}
+   #end add-point   
+   #add-point:main段define(客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+ 
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_azzi710 WITH FORM cl_ap_formpath("azz",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL azzi710_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL azzi710_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_azzi710
+      
+   END IF 
+   
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="azzi710.mask_functions" ver="1" status="" src="s" readonly="">
+    <![CDATA[&include "erp/azz/azzi710_mask.4gl"
+]]>
+  </section>
+  <section id="azzi710.modify" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION azzi710_modify()
+   DEFINE l_ac_t LIKE type_t.num10
+   #add-point:modify段define
+   {<point name="modify.define" edit="s"/>}
+   #end add-point 
+   #add-point:modify段define(客製用)
+   {<point name="modify.define_customerization" edit="c"/>}
+   #end add-point 
+   
+   LET l_ac_t = g_detail_idx
+ 
+   #add-point:modify段新增前
+   {<point name="modify.before_modify"/>}
+   #end add-point 
+   
+   #進入資料輸入段落
+   CALL azzi710_input('u')
+    
+   IF INT_FLAG AND g_gzka_d.getLength() > 0 THEN
+      LET g_detail_idx = l_ac_t
+      LET l_ac = l_ac_t
+      CALL azzi710_fetch()
+   END IF
+   
+   #add-point:modify段新增後
+   {<point name="modify.after_modify"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[ 
+]]>
+  </section>
+  <section id="azzi710.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="azzi710.query" ver="11" status="" src="s" readonly="">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION azzi710_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" edit="s"/>}
+   #end add-point 
+   #add-point:query段define(客製用)
+   {<point name="query.define_customerization" edit="c"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_gzka_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET g_detail_idx = l_ac
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON gzkastus,gzka001,gzka002,gzka003,gzka008,gzka005,gzka010,gzka011,gzka006, 
+          gzka007,gzkaownid,gzkaowndp,gzkacrtid,gzkacrtdp,gzkacrtdt,gzkamodid,gzkamoddt
+           FROM s_detail1[1].gzkastus,s_detail1[1].gzka001,s_detail1[1].gzka002,s_detail1[1].gzka003, 
+               s_detail1[1].gzka008,s_detail1[1].gzka005,s_detail1[1].gzka010,s_detail1[1].gzka011,s_detail1[1].gzka006, 
+               s_detail1[1].gzka007,s_detail2[1].gzkaownid,s_detail2[1].gzkaowndp,s_detail2[1].gzkacrtid, 
+               s_detail2[1].gzkacrtdp,s_detail2[1].gzkacrtdt,s_detail2[1].gzkamodid,s_detail2[1].gzkamoddt 
+
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       #應用 a11 樣板自動產生(Version:2)
+         #共用欄位查詢處理  
+         ##----<<gzkacrtdt>>----
+         AFTER FIELD gzkacrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<gzkamoddt>>----
+         AFTER FIELD gzkamoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<gzkacnfdt>>----
+         
+         #----<<gzkapstdt>>----
+ 
+ 
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkastus
+            #add-point:BEFORE FIELD gzkastus
+            {<point name="construct.b.page1.gzkastus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkastus
+            
+            #add-point:AFTER FIELD gzkastus
+            {<point name="construct.a.page1.gzkastus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.gzkastus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkastus
+            #add-point:ON ACTION controlp INFIELD gzkastus
+            {<point name="construct.c.page1.gzkastus" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1.gzka001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka001
+            #add-point:ON ACTION controlp INFIELD gzka001
+            {<point name="construct.c.page1.gzka001" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka001
+            #add-point:BEFORE FIELD gzka001
+            {<point name="construct.b.page1.gzka001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka001
+            
+            #add-point:AFTER FIELD gzka001
+            {<point name="construct.a.page1.gzka001" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka002
+            #add-point:BEFORE FIELD gzka002
+            {<point name="construct.b.page1.gzka002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka002
+            
+            #add-point:AFTER FIELD gzka002
+            {<point name="construct.a.page1.gzka002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.gzka002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka002
+            #add-point:ON ACTION controlp INFIELD gzka002
+            {<point name="construct.c.page1.gzka002" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka003
+            #add-point:BEFORE FIELD gzka003
+            {<point name="construct.b.page1.gzka003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka003
+            
+            #add-point:AFTER FIELD gzka003
+            {<point name="construct.a.page1.gzka003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.gzka003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka003
+            #add-point:ON ACTION controlp INFIELD gzka003
+            {<point name="construct.c.page1.gzka003" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka008
+            #add-point:BEFORE FIELD gzka008
+            {<point name="construct.b.page1.gzka008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka008
+            
+            #add-point:AFTER FIELD gzka008
+            {<point name="construct.a.page1.gzka008" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.gzka008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka008
+            #add-point:ON ACTION controlp INFIELD gzka008
+            {<point name="construct.c.page1.gzka008" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka005
+            #add-point:BEFORE FIELD gzka005
+            {<point name="construct.b.page1.gzka005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka005
+            
+            #add-point:AFTER FIELD gzka005
+            {<point name="construct.a.page1.gzka005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.gzka005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka005
+            #add-point:ON ACTION controlp INFIELD gzka005
+            {<point name="construct.c.page1.gzka005" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka010
+            #add-point:BEFORE FIELD gzka010
+            {<point name="construct.b.page1.gzka010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka010
+            
+            #add-point:AFTER FIELD gzka010
+            {<point name="construct.a.page1.gzka010" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.gzka010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka010
+            #add-point:ON ACTION controlp INFIELD gzka010
+            {<point name="construct.c.page1.gzka010" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka011
+            #add-point:BEFORE FIELD gzka011
+            {<point name="construct.b.page1.gzka011" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka011
+            
+            #add-point:AFTER FIELD gzka011
+            {<point name="construct.a.page1.gzka011" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.gzka011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka011
+            #add-point:ON ACTION controlp INFIELD gzka011
+            {<point name="construct.c.page1.gzka011" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka006
+            #add-point:BEFORE FIELD gzka006
+            {<point name="construct.b.page1.gzka006" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka006
+            
+            #add-point:AFTER FIELD gzka006
+            {<point name="construct.a.page1.gzka006" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.gzka006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka006
+            #add-point:ON ACTION controlp INFIELD gzka006
+            {<point name="construct.c.page1.gzka006" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzka007
+            #add-point:BEFORE FIELD gzka007
+            {<point name="construct.b.page1.gzka007" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzka007
+            
+            #add-point:AFTER FIELD gzka007
+            {<point name="construct.a.page1.gzka007" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.gzka007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzka007
+            #add-point:ON ACTION controlp INFIELD gzka007
+            {<point name="construct.c.page1.gzka007" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page2.gzkaownid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkaownid
+            #add-point:ON ACTION controlp INFIELD gzkaownid
+            {<point name="construct.c.page2.gzkaownid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkaownid
+            #add-point:BEFORE FIELD gzkaownid
+            {<point name="construct.b.page2.gzkaownid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkaownid
+            
+            #add-point:AFTER FIELD gzkaownid
+            {<point name="construct.a.page2.gzkaownid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.gzkaowndp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkaowndp
+            #add-point:ON ACTION controlp INFIELD gzkaowndp
+            {<point name="construct.c.page2.gzkaowndp" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkaowndp
+            #add-point:BEFORE FIELD gzkaowndp
+            {<point name="construct.b.page2.gzkaowndp" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkaowndp
+            
+            #add-point:AFTER FIELD gzkaowndp
+            {<point name="construct.a.page2.gzkaowndp" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.gzkacrtid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkacrtid
+            #add-point:ON ACTION controlp INFIELD gzkacrtid
+            {<point name="construct.c.page2.gzkacrtid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkacrtid
+            #add-point:BEFORE FIELD gzkacrtid
+            {<point name="construct.b.page2.gzkacrtid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkacrtid
+            
+            #add-point:AFTER FIELD gzkacrtid
+            {<point name="construct.a.page2.gzkacrtid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.gzkacrtdp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkacrtdp
+            #add-point:ON ACTION controlp INFIELD gzkacrtdp
+            {<point name="construct.c.page2.gzkacrtdp" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkacrtdp
+            #add-point:BEFORE FIELD gzkacrtdp
+            {<point name="construct.b.page2.gzkacrtdp" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkacrtdp
+            
+            #add-point:AFTER FIELD gzkacrtdp
+            {<point name="construct.a.page2.gzkacrtdp" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkacrtdt
+            #add-point:BEFORE FIELD gzkacrtdt
+            {<point name="construct.b.page2.gzkacrtdt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page2.gzkamodid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkamodid
+            #add-point:ON ACTION controlp INFIELD gzkamodid
+            {<point name="construct.c.page2.gzkamodid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkamodid
+            #add-point:BEFORE FIELD gzkamodid
+            {<point name="construct.b.page2.gzkamodid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkamodid
+            
+            #add-point:AFTER FIELD gzkamodid
+            {<point name="construct.a.page2.gzkamodid" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkamoddt
+            #add-point:BEFORE FIELD gzkamoddt
+            {<point name="construct.b.page2.gzkamoddt" />}
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+      CONSTRUCT g_wc2_table2 ON gzkb003,gzkb004,gzkb005,gzkb011,gzkb012
+           FROM s_detail3[1].gzkb003,s_detail3[1].gzkb004,s_detail3[1].gzkb005,s_detail3[1].gzkb011, 
+               s_detail3[1].gzkb012
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.body2.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkb003
+            #add-point:BEFORE FIELD gzkb003
+            {<point name="construct.b.page3.gzkb003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkb003
+            
+            #add-point:AFTER FIELD gzkb003
+            {<point name="construct.a.page3.gzkb003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.gzkb003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkb003
+            #add-point:ON ACTION controlp INFIELD gzkb003
+            {<point name="construct.c.page3.gzkb003" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkb004
+            #add-point:BEFORE FIELD gzkb004
+            {<point name="construct.b.page3.gzkb004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkb004
+            
+            #add-point:AFTER FIELD gzkb004
+            {<point name="construct.a.page3.gzkb004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.gzkb004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkb004
+            #add-point:ON ACTION controlp INFIELD gzkb004
+            {<point name="construct.c.page3.gzkb004" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkb005
+            #add-point:BEFORE FIELD gzkb005
+            {<point name="construct.b.page3.gzkb005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkb005
+            
+            #add-point:AFTER FIELD gzkb005
+            {<point name="construct.a.page3.gzkb005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.gzkb005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkb005
+            #add-point:ON ACTION controlp INFIELD gzkb005
+            {<point name="construct.c.page3.gzkb005" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkb011
+            #add-point:BEFORE FIELD gzkb011
+            {<point name="construct.b.page3.gzkb011" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkb011
+            
+            #add-point:AFTER FIELD gzkb011
+            {<point name="construct.a.page3.gzkb011" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.gzkb011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkb011
+            #add-point:ON ACTION controlp INFIELD gzkb011
+            {<point name="construct.c.page3.gzkb011" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzkb012
+            #add-point:BEFORE FIELD gzkb012
+            {<point name="construct.b.page3.gzkb012" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzkb012
+            
+            #add-point:AFTER FIELD gzkb012
+            {<point name="construct.a.page3.gzkb012" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.gzkb012
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzkb012
+            #add-point:ON ACTION controlp INFIELD gzkb012
+            {<point name="construct.c.page3.gzkb012" />}
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         {<point name="query.b_dialog"/>}
+         #end add-point  
+ 
+      ON ACTION qbe_select     #條件查詢
+         CALL cl_qbe_list('m') RETURNING ls_wc
+ 
+      ON ACTION qbe_save       #條件儲存
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+   ELSE
+      #資料導回第一筆
+      LET g_detail_idx  = 1
+      LET g_detail_idx2 = 1
+   END IF
+   
+   LET g_wc = g_wc_table 
+ 
+              , " AND ", g_wc2_table2
+ 
+ 
+        
+   LET g_wc2 = " 1=1"
+               , " AND ", g_wc2_table2
+ 
+ 
+        
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+   
+   LET g_error_show = 1
+   CALL azzi710_b_fill(g_wc)
+   LET l_ac = g_detail_idx
+   
+   CALL azzi710_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+ 
+   #資料導回第一筆(假設有資料)
+   IF g_gzka_d.getLength() > 0 THEN
+      DISPLAY g_detail_idx  TO FORMONLY.h_index
+   ELSE
+      DISPLAY ' ' TO FORMONLY.h_index
+   END IF
+   IF g_gzka3_d.getLength() > 0 THEN
+      DISPLAY g_detail_idx2 TO FORMONLY.idx
+   ELSE
+      DISPLAY ' ' TO FORMONLY.idx
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.set_entry_b" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION azzi710_set_entry_b(p_cmd)                                                  
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define" edit="s"/>}
+   #end add-point
+   #add-point:set_entry_b段define(客製用)
+   {<point name="set_entry_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   IF p_cmd = 'a' THEN
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+                                                                     
+END FUNCTION                                                                    
+]]>
+  </section>
+  <section id="azzi710.set_no_entry_b" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION azzi710_set_no_entry_b(p_cmd)                                               
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define" edit="s"/>}
+   #end add-point
+   #add-point:set_no_entry_b段define(客製用)
+   {<point name="set_no_entry_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   IF p_cmd = 'u' THEN
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+                                                                          
+END FUNCTION  
+]]>
+  </section>
+  <section id="azzi710.set_pk_array" ver="3" status="" src="s" readonly="">
+    <![CDATA[   #應用 a51 樣板自動產生(Version:5)
+#+ 給予pk_array內容
+PRIVATE FUNCTION azzi710_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define" edit="s"/>}
+   #end add-point
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_gzka_d[g_detail_idx].gzka001
+   LET g_pk_array[1].column = 'gzka001'
+   LET g_pk_array[2].values = g_gzka_d[g_detail_idx].gzka002
+   LET g_pk_array[2].column = 'gzka002'
+   LET g_pk_array[3].values = g_gzka_d[g_detail_idx].gzka003
+   LET g_pk_array[3].column = 'gzka003'
+   LET g_pk_array[4].values = g_gzka_d[g_detail_idx].gzka008
+   LET g_pk_array[4].column = 'gzka008'
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="azzi710.state_change" ver="1" status="" src="s" readonly="">
+    <![CDATA[    
+]]>
+  </section>
+  <section id="azzi710.ui_dialog" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 功能選單 
+PRIVATE FUNCTION azzi710_ui_dialog()
+   DEFINE la_param  RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point 
+   #add-point:ui_dialog段define(客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point 
+   
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm() 
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_gzka_d.clear()
+         CALL g_gzka2_d.clear()
+         CALL g_gzka3_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL azzi710_init()
+      END IF
+   
+      #add-point:ui_dialog段before while
+      {<point name="ui_dialog.before_while"/>}
+      #end add-point
+   
+      CALL azzi710_b_fill(g_wc)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_gzka_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET g_current_page = 1
+      
+            BEFORE ROW
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_master.* = g_gzka_d[g_detail_idx].*
+               CALL cl_show_fld_cont()
+               LET g_action_choice = "fetch"
+               CALL azzi710_fetch()
+               CALL azzi710_idx_chk('m')
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:2)
+   CALL azzi710_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         DISPLAY ARRAY g_gzka2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET g_current_page = 2
+               
+            BEFORE ROW
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               LET g_master.* = g_gzka_d[g_detail_idx].*
+               CALL cl_show_fld_cont() 
+               LET g_action_choice = "fetch"
+               CALL azzi710_fetch()
+               CALL azzi710_idx_chk('m')
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:2)
+   CALL azzi710_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+               
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+ 
+         
+         DISPLAY ARRAY g_gzka3_d TO s_detail3.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'd' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               END IF
+               LET g_loc = 'd'
+               LET g_current_page = 3
+         
+            BEFORE ROW
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx2
+               CALL azzi710_idx_chk('d')
+               LET g_master.* = g_gzka_d[g_detail_idx].*
+               CALL cl_show_fld_cont() 
+               
+            #自訂ACTION(detail_show,page_3)
+            
+               
+         END DISPLAY
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+    
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            IF g_detail_idx > 0 THEN
+               IF g_detail_idx > g_gzka_d.getLength() THEN
+                  LET g_detail_idx = g_gzka_d.getLength()
+               END IF
+               CALL DIALOG.setCurrentRow("s_detail1", g_detail_idx)
+               LET l_ac = g_detail_idx
+            END IF 
+            LET g_detail_idx = l_ac
+            #add-point:ui_dialog段before
+            {<point name="ui_dialog.b_dialog"/>}
+            #end add-point  
+            NEXT FIELD CURRENT
+        
+         AFTER DIALOG
+            #add-point:ui_dialog段after dialog
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+         
+      ON ACTION exporttoexcel
+         LET g_action_choice="exporttoexcel"
+         IF cl_auth_chk_act("exporttoexcel") THEN
+            CALL g_export_node.clear()
+            LET g_export_node[1] = base.typeInfo.create(g_gzka_d)
+            LET g_export_id[1]   = "s_detail1"
+            LET g_export_node[2] = base.typeInfo.create(g_gzka2_d)
+            LET g_export_id[2]   = "s_detail2"
+            LET g_export_node[3] = base.typeInfo.create(g_gzka3_d)
+            LET g_export_id[3]   = "s_detail3"
+ 
+            #add-point:ON ACTION exporttoexcel
+            {<point name="menu.exporttoexcel" />}
+            #END add-point
+            CALL cl_export_to_excel_getpage()
+            CALL cl_export_to_excel()
+         END IF
+         
+         
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL azzi710_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL azzi710_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL azzi710_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               #應用 a59 樣板自動產生(Version:2)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+               CALL g_curr_diag.setCurrentRow("s_detail3",1)
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+           
+         
+         
+         #應用 a46 樣板自動產生(Version:2)
+         #新增相關文件
+         ON ACTION related_document
+            CALL azzi710_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL azzi710_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL azzi710_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.unlock_b" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION azzi710_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define" edit="s"/>}
+   #end add-point  
+   #add-point:unlock_b段define(客製用)
+   {<point name="unlock_b.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE azzi710_bcl
+   END IF
+   
+ 
+    
+   LET ls_group = "gzkb_t,"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE azzi710_bcl2
+   END IF
+ 
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="azzi710.update_b" ver="10" status="" src="s" readonly="">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION azzi710_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:update_b段define(客製用)
+   {<point name="update_b.define_customerization" edit="c"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "gzka_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "gzka_t" THEN
+   
+      #add-point:update_b段修改前
+      {<point name="update_b.before_update" mark="Y"/>}
+      #end add-point     
+   
+      #將遮罩欄位還原
+      CALL azzi710_gzka_t_mask_restore('restore_mask_o')
+               
+      UPDATE gzka_t 
+         SET (gzka001,gzka002,gzka003,gzka008
+              ,gzkastus,gzka005,gzka010,gzka011,gzka006,gzka007,gzkaownid,gzkaowndp,gzkacrtid,gzkacrtdp,gzkacrtdt,gzkamodid,gzkamoddt) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+              ,g_gzka_d[g_detail_idx].gzkastus,g_gzka_d[g_detail_idx].gzka005,g_gzka_d[g_detail_idx].gzka010, 
+                  g_gzka_d[g_detail_idx].gzka011,g_gzka_d[g_detail_idx].gzka006,g_gzka_d[g_detail_idx].gzka007, 
+                  g_gzka2_d[g_detail_idx].gzkaownid,g_gzka2_d[g_detail_idx].gzkaowndp,g_gzka2_d[g_detail_idx].gzkacrtid, 
+                  g_gzka2_d[g_detail_idx].gzkacrtdp,g_gzka2_d[g_detail_idx].gzkacrtdt,g_gzka2_d[g_detail_idx].gzkamodid, 
+                  g_gzka2_d[g_detail_idx].gzkamoddt) 
+         WHERE gzka001 = ps_keys_bak[1] AND gzka002 = ps_keys_bak[2] AND gzka003 = ps_keys_bak[3] AND gzka008 = ps_keys_bak[4]
+ 
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point 
+         
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "gzka_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "gzka_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+ 
+      #將遮罩欄位進行遮蔽
+      CALL azzi710_gzka_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後
+      {<point name="update_b.after_update"/>}
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+   LET ls_group = "gzkb_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "gzkb_t" THEN
+   
+      #add-point:update_b段修改前
+      {<point name="update_b.before_update2" mark="Y"/>}
+      #end add-point    
+      
+      #將遮罩欄位還原
+      CALL azzi710_gzkb_t_mask_restore('restore_mask_o')
+      
+      UPDATE gzkb_t 
+         SET (gzkb001,gzkb002,gzkb009,gzkb010,gzkb003,gzkb004
+              ,gzkb005,gzkb011,gzkb012) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6]
+              ,g_gzka3_d[g_detail_idx2].gzkb005,g_gzka3_d[g_detail_idx2].gzkb011,g_gzka3_d[g_detail_idx2].gzkb012)  
+
+         WHERE gzkb001 = ps_keys_bak[1] AND gzkb002 = ps_keys_bak[2] AND gzkb009 = ps_keys_bak[3] AND gzkb010 = ps_keys_bak[4] AND gzkb003 = ps_keys_bak[5] AND gzkb004 = ps_keys_bak[6]
+ 
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update2"/>}
+      #end add-point 
+         
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "gzkb_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "gzkb_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL azzi710_gzkb_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後
+      {<point name="update_b.after_update2"/>}
+      #end add-point 
+      
+      RETURN
+   END IF
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

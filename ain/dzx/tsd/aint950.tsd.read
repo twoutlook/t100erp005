@@ -1,0 +1,1044 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aint950" std_prog="aint950" erpver="1.0" ver="1" module="AIN" type="M" booking="N" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="1" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="inqa_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="inqb_t" main="N" head="N" pk="" fk_detail="" parent="inqa_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail3" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="inqc_t" main="N" head="N" pk="" fk_detail="" parent="inqb_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供產品組合拆解維護記錄
+標準作業功能取消：無
+狀態功能：確認/取消確認/作廢/過帳/取消過帳
+作業類型：交易單據 維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：inqa_t(產品組合拆解單頭檔)
+                          (Detail)：inqb_t(產品組合拆解單產品主檔)
+                                            inqc_t(產品組合拆解單產品明細檔)
+
+資料處理：
+(1) aint950 產品組合維護作業  與 aint951 產品拆解維護作業 共用此程式
+(2)當傳入參數=1, 為 aint950作業時，則單據性質='1.產品組合'，資料處理時應過濾此條件
+(3)當傳入參數=2, 為 aint951作業時，則單據性質='2.產品拆解'，資料處理時應過濾此條件
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[全部商品組合(拆解)明細：
+此畫面為Display Only
+抓取商品組合(拆解)單商品主檔及明細檔顯示整張單據明細全貌]]>
+  </db_all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[商品清單：
+(1)輸入完組合或拆解的主產品後，應依抓取該產品的 產品組成用量，自動產生 產品組合拆解單產品明細檔(inqc_t)
+     產生方式： 抓取 商品組成用量單頭檔(rtdm_t)，依產品編號+單位抓取 有效的產品組成用量資料
+                          依抓取到的商品組成用量單頭檔，抓取 商品組成用量單身檔(rtdn_t)，抓取條件：單頭Key+生失效日期+狀態碼
+                          產生品組合拆解單產品明細檔(inqc_t)數量 = 產品組合拆解單商品主檔.數量(inqb005)*產品組合拆解單產品明細檔.組成用量/主件底數
+(2)產生後可修改明細資料. 
+]]>
+  </di_all>
+  <field cite_std="N" name="b_inqa002" ver="1" src="s" column="inqa002" table="inqa_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_inqa003" ver="1" src="s" column="inqa003" table="inqa_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_inqa005" ver="1" src="s" column="inqa005" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inbadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_inqa006" ver="1" src="s" column="inqa006" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inbadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_inqadocno" ver="1" src="s" column="inqadocno" table="inqa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_inqasite" ver="1" src="s" column="inqasite" table="inqa_t" attribute="" type="" req="N" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa004_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqa000" ver="1" src="s" column="inqa000" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單據性質：inqa000
+預設值：(1) 當傳入參數=1, 為 aint950作業時，則單據性質='1.產品組合'，資料處理時應過濾此條件
+                (2) 當傳入參數=2, 為 aint951作業時，則單據性質='2.產品拆解'，資料處理時應過濾此條件]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqa001" ver="1" src="s" column="inqa001" table="inqa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[扣帳日期：inqa001
+預設值：inqadocdt
+計算或處理：於單據過帳時，開放維護此欄位後執行過帳]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqa002" ver="1" src="s" column="inqa002" table="inqa_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[申請人員：inqa002
+預設值：g_user
+校驗：v_ooag001, arg1 = inqa002，arg2 = inqadocdt
+帶值：依[T:員工檔]抓取[C:歸屬部門]的值，並預設到inqa003(申請部門)]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqa003" ver="1" src="s" column="inqa003" table="inqa_t" attribute="" type="" req="Y" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[申請部門：inqa003
+預設值：g_dept
+開窗：q_ooeg001, 編輯時單據日期有值時 arg1 =  inqadocdt, 否則 arg1 =  g_today
+                                   查詢時 arg1 =  g_today
+校驗：v_ooeg001, arg1 = inqa003，arg2 = inqadocdt]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqa004" ver="1" src="s" column="inqa004" table="inqa_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[理由碼：inqa004
+ACC：抓取SCC=24且[T:系統分類值檔].[C:系統分類碼] = g_prog的[T:系統分類值檔].[C:參考欄位二]的欄位值(對應的ACC碼下面規格用g_inqa004_acc代表此欄位值),
+           inqa004的值須存在[T:應用分類碼檔].[C:應用分類]=g_inqa004_acc且為有效資料
+校驗：CALL s_azzi650_chk_exist(g_inqa004_acc,inqa004)應用元件            
+開窗：q_oocq002, g_qryparam.arg1 = g_inqa004_acc]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqa005" ver="1" src="s" column="inqa005" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inbadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[對應雜收單號：inqa005
+計算或處理：後續扣帳實際產生雜收單號時回寫]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqa006" ver="1" src="s" column="inqa006" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inbadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[對應雜發單號：inqa006
+計算或處理：後續扣帳實際產生雜發單號時回寫]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqa007" ver="1" src="s" column="inqa007" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqacnfdt" ver="1" src="s" column="inqacnfdt" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqacnfid" ver="1" src="s" column="inqacnfid" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqacrtdp" ver="1" src="s" column="inqacrtdp" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqacrtdt" ver="1" src="s" column="inqacrtdt" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqacrtid" ver="1" src="s" column="inqacrtid" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqadocdt" ver="1" src="s" column="inqadocdt" table="inqa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[單據日期：inqadocno
+預設值：g_today]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqadocno" ver="1" src="s" column="inqadocno" table="inqa_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_inqadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單據編號：inqadocno
+預設值：s_arti200_get_def_doc_type(g_inqa_m.inqasite ,g_prog,'1')
+開窗：編輯時, q_ooba002_1, arg1 = l_ooef004 (根據當前應用據點到aooi120中獲取ooef0004), arg2 = g_prog
+            查詢時, q_inqadocno, arg1 = inqa000
+單別校驗：s_aooi200_chk_slip(g_inqa_m.inqasite,'',g_inqa_m.inqadocno,g_prog)
+計算或處理:1.當新增時才可輸入單別，修改時此欄位為NoEntry
+                     2.新增存檔時，s_aooi200_gen_docno自動編申請單號
+                     3.刪除存檔時，s_aooi200_del_docno(g_inqa_m.inqadocno,g_inqa_m.inqadocdt)刪除單號紀錄]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqamoddt" ver="1" src="s" column="inqamoddt" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqamodid" ver="1" src="s" column="inqamodid" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqaowndp" ver="1" src="s" column="inqaowndp" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqaownid" ver="1" src="s" column="inqaownid" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqapstdt" ver="1" src="s" column="inqapstdt" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqapstid" ver="1" src="s" column="inqapstid" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqasite" ver="1" src="s" column="inqasite" table="inqa_t" attribute="" type="" req="Y" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運組織：inqasite
+預設值：s_aooi500_default(g_prog,'inqasite',g_inqa_m.inqasite)
+開窗：q_ooef001_24, g_qryparam.where = s_aooi500_q_where(g_prog,'inqasite',g_inqasite)
+校驗：s_aooi500_chk(g_prog,'inqasite',g_inqa_m.inqasite,g_inqa_m.inqasite)
+輸入控制：s_aooi500_comp_entry(g_prog,'inqasite')]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqastus" ver="1" src="s" column="inqastus" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqa_t.inqaunit" ver="1" src="s" column="inqaunit" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[應用組織：inqaunit
+預設值：inqaite]]>
+  </field>
+  <field cite_std="N" name="inqb001_1" ver="1" src="s" column="inqb001" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtdx002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb002_1" ver="1" src="s" column="inqb002" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb003_1" ver="1" src="s" column="inqb003" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb003_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb004_1" ver="1" src="s" column="inqb004" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb005_1" ver="1" src="s" column="inqb005" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb006_1" ver="1" src="s" column="inqb006" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inaa001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb007_1" ver="1" src="s" column="inqb007" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inab002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb008_1" ver="1" src="s" column="inqb008" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb009_1" ver="1" src="s" column="inqb009" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqb001" ver="1" src="s" column="inqb001" table="inqb_t" attribute="" type="" req="N" i_zoom="q_imay001_1" c_zoom="q_imay001_1" chk_ref="v_imay003" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[商品主條碼：inqb001
+開窗：q_imay001_1, 查詢時 arg1 = g_site
+                                      編輯時 arg1 = inqasite
+帶值：依商品條碼帶出商品編號至inqb002, 包裝單位至inqb004且不可修改
+校驗：1) v_imay003, arg1 = inqb001
+            2) v_rtdx002, arg1 = inqb001 ,arg2 = inqasite
+計算或處理：1.修改商品時，需把產品特徵、單位、數量庫位、儲位、批號、庫存管理特徵的值一併清空
+                        2.[150427-00001#8 新增] 帶值商品編號後，依批號管控方式判斷批號是否開放輸入/必填
+                            CALL s_lot_out_entry(g_inqa_m.inqadocno,g_inqa_m.inqasite,g_inqb_d[l_ac].inqb002)
+                            CALL s_lot_out_required(g_inqb_d[l_ac].inqb002) ]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqb002" ver="1" src="s" column="inqb002" table="inqb_t" attribute="" type="" req="Y" i_zoom="q_imaf001_18" c_zoom="q_imaf001_18" chk_ref="v_imaf001_15" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[商品編號：inqb002
+帶值：依商品編號代主條碼至inqb001, 且帶庫存單位至inqb004
+開窗：q_imaf001_18, 查詢, arg1 = ALL
+                                        編輯, arg1 = ALL, arg2 = inqasite
+校驗：v_imaf001_15, arg1= inqb002, arg2 = ALL
+計算或處理：1.修改商品時，需把產品特徵、單位、數量庫位、儲位、批號、庫存管理特徵的值一併清空
+                        2.若商品imaa005(特徵組別)不為空, 則[C:產品特徵]欄位可輸入
+                                                                              為空, 則[C:產品特徵]欄位不可輸入
+                        3.若商品imaf055(庫存管理特徵)  = 1.必須有庫存管理特徵，則[C:批號]欄位可輸入且為必填
+                                                                                   = 2.不可有庫存管理特徵，則[C:批號]欄位不可輸入
+                                                                                   = 3.不管控，則[C:批號]欄位可輸入但非必填
+                        4.若商品imaf061(批號控管方式)  = 1.必須有批號，則[C:批號]欄位可輸入且為必填
+                                                                                   = 2.不可有批號，則[C:批號]欄位不可輸入
+                                                                                   = 3.不管控，則[C:批號]欄位可輸入但非必填
+                            [150427-00001#8 新增] 帶值商品編號後，依批號管控方式判斷批號是否開放輸入/必填
+                            CALL s_lot_out_entry(g_inqa_m.inqadocno,g_inqa_m.inqasite,g_inqb_d[l_ac].inqb002)
+                            CALL s_lot_out_required(g_inqb_d[l_ac].inqb002) ]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqb003" ver="1" src="s" column="inqb003" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品特徵：inqb003
+校驗：s_feature_check(g_inqb_d[l_ac].inqb002,g_inqb_d[l_ac].inqb003)
+說明欄位：s_feature_description(g_inqb_d[l_ac].inqb002,g_inqb_d[l_ac].inqb003)
+開窗：查詢, q_inqb003,      IF aint950 THEN arg1 = '1'
+                                           ELSE aint951 THEN arg2 = '2'
+            編輯,       IF l_cmd = 'a' THEN s_feature(l_cmd,g_inqb_d[l_ac].inqb002,'','',g_inqa_m.inqasite,g_inqa_m.inqadocno) 
+                      ELSE l_cmd = 'u' THEN s_feature_single(g_inqb_d[l_ac].inqb002,g_inqb_d[l_ac].inqb003,gg_inqa_m.inqasite,g_inqa_m.inqadocno)
+計算或處理：當料件有使用產品特徵功能時此欄位才可輸入]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqb004" ver="1" src="s" column="inqb004" table="inqb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單位：inqb004
+預設值與處理：(1)當有輸入商品條碼時，應自動帶出條碼的包裝單位且不可修改
+                            (2)當沒有輸入商品條碼時，帶出庫存單位，不可修改
+]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqb005" ver="1" src="s" column="inqb005" table="inqb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqb006" ver="1" src="s" column="inqb006" table="inqb_t" attribute="" type="" req="Y" i_zoom="q_inag004_18" c_zoom="q_inaa001_1" chk_ref="v_inaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[出入庫庫位：inqb006
+庫位說明：s_desc_get_stock_desc(g_inqa_m.inqasite,g_inqb_d[l_ac].inqb006)
+(1) aint950 組合單, 入庫庫位
+     (1.1)開窗：q_inaa001_1, arg1 = (查詢時)g_site / (編輯時) g_inqa_m.inqasite
+     (1.2)校驗：校驗：v_inaa001_9, arg1 = inqb006
+(2) aint951 拆解單, 出庫庫位
+     (2.1)開窗：編輯時, q_inag004_18, arg1 = inqasite, arg2 = inqb002, arg3 = inqb003 , arg4 = inqb009, arg5 = inqb006, arg6 = inqb007, arg7 = inqb008
+                         查詢時, q_inaa001_1, arg1 = g_site
+     (2.2)校驗：v_inaa001, arg1 = inqasite, arg2 = inqb006
+計算或處理：1.若庫位設定inaa007(儲位管控) = 1:使用儲位管理-事先規劃, 則可輸入且為必填, 並且需存在於儲位基本資料檔和庫位儲位資料檔
+                                                                                  = 2:使用儲位管理-人工指定, 則可輸入且為必填, 可不存在於儲位基本資料檔
+                                                                                  = 5:不使用儲位管理, 則不可輸入    ]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqb007" ver="1" src="s" column="inqb007" table="inqb_t" attribute="" type="" req="N" i_zoom="q_inab002_3" c_zoom="q_inab002_3" chk_ref="v_inab002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[儲位：inqb007
+說明：s_desc_get_locator_desc(g_inqa_m.inqasite,g_inqb_d[l_ac].inqb006,g_inqb_d[l_ac].inqb007)
+校驗：v_inab002, arg1 = inqasite, arg2 = inqb006, arg3 = inqb007
+(1) aint950 組合單
+     (1.1)開窗：q_inab002_3, 編輯時 arg1 = inqb006
+(2) aint951 拆解單,
+     (2.1)開窗：編輯時, q_inag004_18, arg1 = inqasite, arg2 = inqb002, arg3 = inqb003 , arg4 = inqb009, arg5 = inqb006, arg6 = inqb007, arg7 = inqb008
+                         查詢時, q_inab002_3]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqb008" ver="1" src="s" column="inqb008" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[批號：inab008
+校驗：[150427-00001#8 新增] 帶值商品編號後，依批號管控方式判斷批號是否開放輸入/必填
+             s_lot_out_chk(inqasite,inqadocno,inqb002,inqb003,inqb008)
+計算或處理：依商品基本資料設定批號管理判斷是否允許輸入]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqb009" ver="1" src="s" column="inqb009" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqb010" ver="1" src="s" column="inqb010" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqbseq" ver="1" src="s" column="inqbseq" table="inqb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次：inqbseq
+預設值：同單據中的商品清單最大項次+1]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqbsite" ver="1" src="s" column="inqbsite" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb_t.inqbunit" ver="1" src="s" column="inqbunit" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqbseq_1" ver="1" src="s" column="inqbseq" table="inqb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc001_1" ver="1" src="s" column="inqc001" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtdx002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc002_1" ver="1" src="s" column="inqc002" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc003_1" ver="1" src="s" column="inqc003" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc003_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc004_1" ver="1" src="s" column="inqc004" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc005_1" ver="1" src="s" column="inqc005" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc006_1" ver="1" src="s" column="inqc006" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inaa001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc007_1" ver="1" src="s" column="inqc007" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inab002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc008_1" ver="1" src="s" column="inqc008" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc009_1" ver="1" src="s" column="inqc009" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc010_1" ver="1" src="s" column="inqc010" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqc001" ver="1" src="s" column="inqc001" table="inqc_t" attribute="" type="" req="N" i_zoom="q_imay001_1" c_zoom="q_imay001_1" chk_ref="v_imay003" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[商品主條碼：inqc001
+開窗：q_imay001_1, 查詢時 arg1 = g_site
+                                      編輯時 arg1 = inqasite
+帶值：(1)依商品條碼帶出商品編號至inqc002, 包裝單位至inqc004且不可修改
+            (2)當輸入的商品資料有存在商品組成用量表中時，
+                 則依商品組成用量表中的設定自動預算出數量 = [T.產品組合拆解單商品主檔].[C.數量(inqb005)] * [T.產品組合拆解單產品明細檔].[C.組成用量/主件底數]
+校驗：1) v_imay003, arg1 = inqc001
+            2) v_rtdx002, arg1 = inqc001 ,arg2 = inqasite
+計算或處理：1.修改商品時，需把產品特徵、單位、數量庫位、儲位、批號、庫存管理特徵的值一併清空
+                        2.[150427-00001#8 新增] 帶值商品編號後，依批號管控方式判斷批號是否開放輸入/必填
+                            CALL s_lot_out_entry(g_inqa_m.inqadocno,g_inqa_m.inqasite,g_inqb2_d[l_ac].inqc002)
+                            CALL s_lot_out_required(g_inqb2_d[l_ac].inqc002) 
+]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqc002" ver="1" src="s" column="inqc002" table="inqc_t" attribute="" type="" req="Y" i_zoom="q_imaf001_18" c_zoom="q_imaf001_18" chk_ref="v_imaf001_15" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[商品編號：inqc002
+帶值：(1)當商品主條碼為空時，依商品編號代主條碼至inqc001, 且帶庫存單位至inqc004
+            (2)當輸入的商品資料有存在商品組成用量表中時，
+                 則依商品組成用量表中的設定自動預算出數量 = [T.產品組合拆解單商品主檔].[C.數量(inqb005)] * [T.產品組合拆解單產品明細檔].[C.組成用量/主件底數]
+開窗：q_imaf001_18, 查詢, arg1 = ALL
+                                        編輯, arg1 = ALL, arg2 = inqasite
+校驗：(1) v_imaf001_15, arg1 = inqc002, arg2 = 'ALL'
+            (2)不可等於單頭的主商品資料
+計算或處理：1.修改商品時，需把產品特徵、單位、數量庫位、儲位、批號、庫存管理特徵的值一併清空
+                        2.若商品imaa005(特徵組別)不為空, 則[C:產品特徵]欄位可輸入
+                                                                              為空, 則[C:產品特徵]欄位不可輸入
+                        3.若商品imaf055(庫存管理特徵)不等於'0.無'，則[C:庫存管理特徵]欄位可輸入
+                                                                                    等於'0.無'時，則[C:庫存管理特徵]欄位不可輸入
+                        4.若商品imaf061(批號控管方式)  = 1.必須有批號，則[C:批號]欄位可輸入且為必填
+                                                                                   = 2.不可有批號，則[C:批號]欄位不可輸入
+                                                                                   = 3.不管控，則[C:批號]欄位可輸入但非必填
+                            [150427-00001#8 新增] 帶值商品編號後，依批號管控方式判斷批號是否開放輸入/必填
+                            CALL s_lot_out_entry(g_inqa_m.inqadocno,g_inqa_m.inqasite,g_inqb2_d[l_ac].inqc002)
+                            CALL s_lot_out_required(g_inqb2_d[l_ac].inqc002) ]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqc003" ver="1" src="s" column="inqc003" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品特徵：inqc003
+校驗：s_feature_check(g_inq2b_d[l_ac].inqc002,g_inqb2_d[l_ac].inqc003)
+說明欄位：s_feature_description(g_inqb2_d[l_ac].inqc002,g_inqb2_d[l_ac].inqc003)
+計算或處理：當料件有使用產品特徵功能時此欄位才可輸入]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqc004" ver="1" src="s" column="inqc004" table="inqc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單位：inqc004
+預設值與處理：(1)當有輸入商品條碼時，應自動帶出條碼的包裝單位且不可修改
+                            (2)當沒有輸入商品條碼時，帶出庫存單位，不可修改
+]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqc005" ver="1" src="s" column="inqc005" table="inqc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[數量：inqc005
+計算或處理：當輸入的商品資料有存在商品組成用量表中時，
+                        則依商品組成用量表中的設定自動預算出數量 = [T.產品組合拆解單商品主檔].[C.數量(inqb005)] * [T.產品組合拆解單產品明細檔].[C.組成用量/主件底數]]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqc006" ver="1" src="s" column="inqc006" table="inqc_t" attribute="" type="" req="Y" i_zoom="q_inag001_18" c_zoom="q_inaa001_4" chk_ref="v_inaa001_16" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[出入庫庫位：inq006
+庫位說明：s_desc_get_stock_desc(g_inqa_m.inqasite,g_inqc_d[l_ac].inq006)
+(1) aint950 組合單, 出庫庫位
+     (1.1)開窗：編輯時, q_inag004_18, arg1 = inqasite, arg2 = inqc002, arg3 = inqc003 , arg4 = inqc009, arg5 = inqc006, arg6 = inqc007, arg7 = inqc008
+                         查詢時, q_inaa001_1, arg1 = g_site
+     (1.2)校驗：v_inaa001, arg1 = inqasite, arg2 = inqc006
+(2) aint951 拆解單, 入庫庫位
+     (2.1)開窗：q_inaa001_1, arg1 = (查詢時)g_site / (編輯時) g_inqa_m.inqasite
+     (2.2)校驗：校驗：v_inaa001_9, arg1 = inq006
+計算或處理：1.若庫位設定inaa007(儲位管控) = 1:使用儲位管理-事先規劃, 則可輸入且為必填, 並且需存在於儲位基本資料檔和庫位儲位資料檔
+                                                                                  = 2:使用儲位管理-人工指定, 則可輸入且為必填, 可不存在於儲位基本資料檔
+                                                                                  = 5:不使用儲位管理, 則不可輸入   ]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqc007" ver="1" src="s" column="inqc007" table="inqc_t" attribute="" type="" req="N" i_zoom="q_inab002_3" c_zoom="q_inab002_3" chk_ref="v_inab002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[儲位：inqc007
+說明：s_desc_get_locator_desc(g_inqa_m.inqasite,g_inqc_d[l_ac].inqc006,g_inqc_d[l_ac].inqc007)
+校驗：v_inab002, arg1 = inqasite, arg2 = inqc006, arg3 = inqc007
+(1) aint950 組合單
+     (1.1)開窗：編輯時, q_inag004_18, arg1 = inqasite, arg2 = inqc002, arg3 = inqc003 , arg4 = inqc009, arg5 = inqc006, arg6 = inqc007, arg7 = inqc008
+                         查詢時, q_inab002_3
+(2) aint951 拆解單,
+     (2.1)開窗：q_inab002_3, 編輯時 arg1 = inqc006
+]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqc008" ver="1" src="s" column="inqc008" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[批號：inac008
+校驗：[150427-00001#8 新增] 帶值商品編號後，依批號管控方式判斷批號是否開放輸入/必填
+             s_lot_out_chk(inqasite,inqadocno,inqc002,inqc003,inqc008)
+計算或處理：依商品基本資料設定批號管理判斷是否允許輸入]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqc009" ver="1" src="s" column="inqc009" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[庫存管理特徵：inqc009
+計算或處理：拆解單時(aint951)，自動代主商品的庫存款理特徵]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqc010" ver="1" src="s" column="inqc010" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqcseq1" ver="1" src="s" column="inqcseq1" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項序：inqbceq1
+預設值：同單據同項次中的商品組合明細最大項序+1]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqcsite" ver="1" src="s" column="inqcsite" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqcunit" ver="1" src="s" column="inqcunit" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqcseq1_1" ver="1" src="s" column="inqcseq1" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="1" src="s" column="inqa000" table="inqa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[單據性質：inqa000
+預設值：(1) 當傳入參數=1, 為 aint950作業時，則單據性質='1.產品組合'，資料處理時應過濾此條件
+                (2) 當傳入參數=2, 為 aint951作業時，則單據性質='2.產品拆解'，資料處理時應過濾此條件]]>
+  </field>
+  <field cite_std="N" name="inqb001" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb002" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb003" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb004" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb005" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb006" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb007" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb008" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqb009" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqbseq" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc001" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc002" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc003" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc004" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc005" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc006" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc007" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc008" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc009" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc010" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqc_t.inqcseq2" ver="1" src="s" column="inqcseq2" table="inqc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[項序：inqbceq1
+預設值：同單據同項次中的商品組合明細最大項序+1]]>
+  </field>
+  <field cite_std="N" name="inqcseq2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inqcseq2_1" ver="1" src="s" column="inqcseq2" table="inqc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_inqa002" depend_field="inqa_t.inqa002" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_inqa005" depend_field="inqa_t.inqa005" src="s" status="">
+      <program order="1" type="1" name="aint912"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_inqa006" depend_field="inqa_t.inqa006" src="s" status="">
+      <program order="1" type="1" name="aint911"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_inqa002_desc" src="s" depend_field="b_inqa002" correspon_key="inqa002" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_inqa003_desc" src="s" depend_field="b_inqa003" correspon_key="inqa003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_inqasite_desc" src="s" depend_field="b_inqasite" correspon_key="inqasite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqa002_desc" src="s" depend_field="inqa_t.inqa002" correspon_key="inqa002" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="inqa003_desc" src="s" depend_field="inqa_t.inqa003" correspon_key="inqa003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqacnfid_desc" src="s" depend_field="inqa_t.inqacnfid" correspon_key="inqacnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="inqacrtdp_desc" src="s" depend_field="inqa_t.inqacrtdp" correspon_key="inqacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqacrtid_desc" src="s" depend_field="inqa_t.inqacrtid" correspon_key="inqacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="inqamodid_desc" src="s" depend_field="inqa_t.inqamodid" correspon_key="inqamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="inqaowndp_desc" src="s" depend_field="inqa_t.inqaowndp" correspon_key="inqaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqaownid_desc" src="s" depend_field="inqa_t.inqaownid" correspon_key="inqaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="inqapstid_desc" src="s" depend_field="inqa_t.inqapstid" correspon_key="inqapstid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="inqasite_desc" src="s" depend_field="inqa_t.inqasite" correspon_key="inqasite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqb002_1_desc" src="s" depend_field="inqb002_1" correspon_key="inqb002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqb002_1_desc_1" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="1" name="inqb002_1_desc_desc" src="s" depend_field="inqb002_1" correspon_key="inqb002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="inqb002_desc" src="s" depend_field="inqb_t.inqb002" correspon_key="inqb002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqb002_desc_1" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="1" name="inqb002_desc_desc" src="s" depend_field="inqb_t.inqb002" correspon_key="inqb002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="inqb004_1_desc" src="s" depend_field="inqb004_1" correspon_key="inqb004" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqb004_desc" src="s" depend_field="inqb_t.inqb004" correspon_key="inqb004" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqb006_1_desc" src="s" depend_field="inqb006_1" correspon_key="inqb006" ref_table="inayl_t" ref_fk="inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqb006_desc" src="s" depend_field="inqb_t.inqb006" correspon_key="inqb006" ref_table="inayl_t" ref_fk="inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqb007_1_desc" src="s" depend_field="inqb007_1" correspon_key="inqasite,inqb006,inqb007" ref_table="inab_t" ref_fk="inabsite,inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqb007_desc" src="s" depend_field="inqb_t.inqb007" correspon_key="inqasite,inqb006,inqb007" ref_table="inab_t" ref_fk="inabsite,inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqc002_1_desc" src="s" depend_field="inqc002_1" correspon_key="inqc002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqc002_1_desc_1" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="1" name="inqc002_1_desc_desc" src="s" depend_field="inqc002_1" correspon_key="inqc002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="inqc002_desc" src="s" depend_field="inqc_t.inqc002" correspon_key="inqc002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqc002_desc_1" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="1" name="inqc002_desc_desc" src="s" depend_field="inqc_t.inqc002" correspon_key="inqb002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqc004_desc" src="s" depend_field="inqc_t.inqc004" correspon_key="inqc004" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqc006_1_desc" src="s" depend_field="inqc006_1" correspon_key="inqc006" ref_table="inayl_t" ref_fk="inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqc006_desc" src="s" depend_field="inqc_t.inqc006" correspon_key="inqc006" ref_table="inayl_t" ref_fk="inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqc007_1_desc" src="s" depend_field="inqc007_1" correspon_key="inqasite,inqc006,inqc007" ref_table="inab_t" ref_fk="inabsite,inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+    <rfield cite_std="N" ver="1" name="inqc007_desc" src="s" depend_field="inqc_t.inqc007" correspon_key="inqasite,inqc006,inqc007" ref_table="inab_t" ref_fk="inabsite,inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_inqa002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inqa003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inqa005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inqa006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inqadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inqasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqa004_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqa000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqa002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqa003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqa004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqa005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqa006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqa007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqapstdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqapstid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqa_t.inqaunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqb001_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqb002_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqb003_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqb004_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqb005_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqb006_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqb007_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqb008_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqb009_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqbseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqbsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqb_t.inqbunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqbseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqbseq_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc001_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc002_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc003_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc004_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc005_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc006_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc007_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc008_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc009_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc010_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqc003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqc005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqc006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqc007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqc008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqc009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqc010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqcseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqcseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqcsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqc_t.inqcunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqcseq1_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inqcseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inqcseq2_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="exporttoexcel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_inqasite" text="營運組織" lstr=""/>
+    <sfield name="lbl_inqasite_desc" text="營運組織說明" lstr=""/>
+    <sfield name="lbl_inqadocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_inqa002" text="申請人員" lstr=""/>
+    <sfield name="lbl_inqa002_desc" text="申請人員全名" lstr=""/>
+    <sfield name="lbl_inqa003" text="申請部門" lstr=""/>
+    <sfield name="lbl_inqa003_desc" text="申請部門說明" lstr=""/>
+    <sfield name="lbl_inqa005" text="對應雜收單號" lstr=""/>
+    <sfield name="lbl_inqa006" text="對應雜發單號" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_inqa000" text="單據性質" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_inqadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_inqa001" text="扣帳日期" lstr=""/>
+    <sfield name="lbl_ooag011" text="全名" lstr=""/>
+    <sfield name="lbl_inqa004" text="理由碼" lstr=""/>
+    <sfield name="lbl_inqaunit" text="應用組織" lstr=""/>
+    <sfield name="lbl_inqa007" text="備註" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_pstid" text="資料過帳者" lstr=""/>
+    <sfield name="bpage_1" text="商品清單" lstr=""/>
+    <sfield name="lbl_inqbseq" text="項次" lstr=""/>
+    <sfield name="lbl_inqb001" text="商品主條碼" lstr=""/>
+    <sfield name="lbl_inqb002" text="主商品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_inqb003" text="產品特徵" lstr=""/>
+    <sfield name="lbl_inqb003_desc" text="產品特徵說明" lstr=""/>
+    <sfield name="lbl_inqb004" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="單位說明" lstr=""/>
+    <sfield name="lbl_inqb005" text="數量" lstr=""/>
+    <sfield name="lbl_inqb006" text="入庫庫位" lstr=""/>
+    <sfield name="lbl_inqb006_desc" text="庫位說明" lstr=""/>
+    <sfield name="lbl_inqb007" text="儲位" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_inqb008" text="批號" lstr=""/>
+    <sfield name="lbl_inqb009" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_inqb010" text="備註" lstr=""/>
+    <sfield name="lbl_inqbsite" text="營運組織" lstr=""/>
+    <sfield name="lbl_inqbunit" text="應用組織" lstr=""/>
+    <sfield name="page_3.aint950" text="商品組合明細" lstr=""/>
+    <sfield name="lbl_inqcseq1" text="項序" lstr=""/>
+    <sfield name="lbl_inqc001" text="商品主條碼" lstr=""/>
+    <sfield name="lbl_inqc002" text="商品編號" lstr=""/>
+    <sfield name="lbl_inqc003" text="產品特徵" lstr=""/>
+    <sfield name="lbl_inqc003_desc" text="產品特徵說明" lstr=""/>
+    <sfield name="lbl_inqc004" text="單位" lstr=""/>
+    <sfield name="lbl_inqc005" text="數量" lstr=""/>
+    <sfield name="lbl_inqc006" text="出庫庫位" lstr=""/>
+    <sfield name="lbl_inqc006_desc" text="庫位說明" lstr=""/>
+    <sfield name="lbl_inqc007" text="儲位" lstr=""/>
+    <sfield name="lbl_inqc008" text="批號" lstr=""/>
+    <sfield name="lbl_inqc009" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_inqc010" text="備註" lstr=""/>
+    <sfield name="lbl_inqcsite" text="營運組織" lstr=""/>
+    <sfield name="lbl_inqcunit" text="應用組織" lstr=""/>
+    <sfield name="page_2" text="全部商品組合明細" lstr=""/>
+    <sfield name="lbl_inqb002_1_desc" text="主商品品名" lstr=""/>
+    <sfield name="lbl_inqb002_1_desc_desc" text="主商品規格" lstr=""/>
+    <sfield name="lbl_inqb003_1" text="主商品產品特徵" lstr=""/>
+    <sfield name="lbl_inqb004_1" text="主商品單位" lstr=""/>
+    <sfield name="lbl_inqb004_1_desc" text="主商品單位說明" lstr=""/>
+    <sfield name="lbl_inqb005_" text="主商品數量" lstr=""/>
+    <sfield name="lbl_inqb006_1_desc" text="入庫庫位說明" lstr=""/>
+    <sfield name="lbl_inqb007_1" text="入庫儲位" lstr=""/>
+    <sfield name="lbl_inqb008_1" text="入庫批號" lstr=""/>
+    <sfield name="lbl_inqb009_1" text="入庫庫存管理特徵" lstr=""/>
+    <sfield name="lbl_inqc001_1" text="明細商品主條碼" lstr=""/>
+    <sfield name="lbl_inqc002_1" text="明細商品編號" lstr=""/>
+    <sfield name="lbl_inqc002_1_desc" text="明細商品品名" lstr=""/>
+    <sfield name="lbl_inqc002_1_desc_desc" text="明細商品規格" lstr=""/>
+    <sfield name="lbl_inqc003_1" text="明細商品產品特徵" lstr=""/>
+    <sfield name="lbl_inqc004_1" text="明細商品單位" lstr=""/>
+    <sfield name="lbl_inqc005_1" text="明細商品數量" lstr=""/>
+    <sfield name="lbl_inqc006_1" text="出庫庫位" lstr=""/>
+    <sfield name="lbl_inqc006_1_desc" text="出庫庫位說明" lstr=""/>
+    <sfield name="lbl_inqc007_1" text="出庫儲位" lstr=""/>
+    <sfield name="lbl_inqc008_1" text="出庫批號" lstr=""/>
+    <sfield name="lbl_inqc009_1" text="出庫管理特徵" lstr=""/>
+    <sfield name="lbl_inqc010_1" text="出庫備註" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_master" text="拋轉傳票條件" lstr=""/>
+    <sfield name="lbl_glapdocno" text="傳票憑證單別" lstr=""/>
+    <sfield name="lbl_glapdocdt" text="傳票憑證日期" lstr=""/>
+    <sfield name="lbl_flag" text="補傳票空號" lstr=""/>
+    <sfield name="lbl_glap010" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_docno_e" text="~" lstr=""/>
+    <sfield name="lbl_accept" text="執行" lstr=""/>
+    <sfield name="lbl_cancel" text="取消" lstr=""/>
+    <sfield name="accept" text="確認" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="lbl_docno" text="應收單號" lstr=""/>
+    <sfield name="lbl_seq" text="項次" lstr=""/>
+    <sfield name="lbl_glaq002" text="會計科目" lstr=""/>
+    <sfield name="lbl_glaq002_desc" text="科目編號" lstr=""/>
+    <sfield name="lbl_glaq017" text="營運據點" lstr=""/>
+    <sfield name="lbl_glaq017_desc" text="營運據點" lstr=""/>
+    <sfield name="lbl_glaq018" text="部門編號" lstr=""/>
+    <sfield name="lbl_glaq018_desc" text="部門" lstr=""/>
+    <sfield name="lbl_glaq019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq019_desc" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq020" text="區域" lstr=""/>
+    <sfield name="lbl_glaq020_desc" text="區域" lstr=""/>
+    <sfield name="lbl_glaq021" text="交易客商" lstr=""/>
+    <sfield name="lbl_glaq021_desc" text="交易客商" lstr=""/>
+    <sfield name="lbl_glaq022" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq022_desc" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq023" text="客群" lstr=""/>
+    <sfield name="lbl_glaq023_desc" text="客群" lstr=""/>
+    <sfield name="lbl_glaq024" text="產品類別" lstr=""/>
+    <sfield name="lbl_glaq024_desc" text="產品類別" lstr=""/>
+    <sfield name="lbl_glaq025" text="人員" lstr=""/>
+    <sfield name="lbl_glaq025_desc" text="人員" lstr=""/>
+    <sfield name="lbl_glaq027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glaq028" text="WBS" lstr=""/>
+    <sfield name="lbl_glaq029" text="核算項(一)" lstr=""/>
+    <sfield name="lbl_glaq029_desc" text="核算項(一)" lstr=""/>
+    <sfield name="lbl_glaq030" text="核算項(二)" lstr=""/>
+    <sfield name="lbl_glaq030_desc" text="核算項(二)" lstr=""/>
+    <sfield name="lbl_glaq031" text="核算項(三)" lstr=""/>
+    <sfield name="lbl_glaq031_desc" text="核算項(三)" lstr=""/>
+    <sfield name="lbl_glaq032" text="核算項(四)" lstr=""/>
+    <sfield name="lbl_glaq032_desc" text="核算項(四)" lstr=""/>
+    <sfield name="lbl_glaq033" text="核算項(五)" lstr=""/>
+    <sfield name="lbl_glaq033_desc" text="核算項(五)" lstr=""/>
+    <sfield name="lbl_glaq034" text="核算項(六)" lstr=""/>
+    <sfield name="lbl_glaq034_desc" text="核算項(六)" lstr=""/>
+    <sfield name="lbl_glaq035" text="核算項(七)" lstr=""/>
+    <sfield name="lbl_glaq035_desc" text="核算項(七)" lstr=""/>
+    <sfield name="lbl_glaq036" text="核算項(八)" lstr=""/>
+    <sfield name="lbl_glaq036_desc" text="核算項(八)" lstr=""/>
+    <sfield name="lbl_glaq037" text="核算項(九)" lstr=""/>
+    <sfield name="lbl_glaq037_desc" text="核算項(九)" lstr=""/>
+    <sfield name="lbl_glaq038" text="核算項(十)" lstr=""/>
+    <sfield name="lbl_glaq038_desc" text="核算項(十)" lstr=""/>
+    <sfield name="lbl_source" text="科目來源" lstr=""/>
+    <sfield name="lbl_sw" text="借/貸" lstr=""/>
+    <sfield name="lbl_glaq001" text="摘要" lstr=""/>
+    <sfield name="lbl_docdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_glaqseq" text="項次" lstr=""/>
+    <sfield name="lbl_lc_subject" text="會計科目" lstr=""/>
+    <sfield name="lbl_glaq003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glaq004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glaq040" text="借方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glaq041" text="貸方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glaq043" text="借方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glaq044" text="貸方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_glbc004" text="現金變動碼" lstr=""/>
+    <sfield name="lbl_glaq051" text="經營方式" lstr=""/>
+    <sfield name="lbl_glaq026" text="預算編號" lstr=""/>
+    <sfield name="lbl_glaq052" text="渠道" lstr=""/>
+    <sfield name="lbl_oojdl003" text="說明" lstr=""/>
+    <sfield name="lbl_glaq053" text="品牌" lstr=""/>
+    <sfield name="lbl_page_1" text="資產類" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_glac002" text="會計科目編號" lstr=""/>
+    <sfield name="lbl_glacl004" text="說明" lstr=""/>
+    <sfield name="lbl_glac003" text="統制/明細別" lstr=""/>
+    <sfield name="lbl_glac009" text="內部管理科目" lstr=""/>
+    <sfield name="lbl_page_2" text="負債類" lstr=""/>
+    <sfield name="lbl_page_3" text="公用類" lstr=""/>
+    <sfield name="lbl_page_4" text="股東權益類" lstr=""/>
+    <sfield name="lbl_page_5" text="成本類" lstr=""/>
+    <sfield name="lbl_page_6" text="損益類" lstr=""/>
+    <sfield name="lbl_glaqdocno" text="單號" lstr=""/>
+    <sfield name="lbl_glaqld" text="帳別" lstr=""/>
+    <sfield name="lbl_glaq005" text="幣別" lstr=""/>
+    <sfield name="lbl_glaq006" text="匯率" lstr=""/>
+    <sfield name="lbl_glaq010" text="原幣金額" lstr=""/>
+    <sfield name="lbl_page1" text="固定核算項" lstr=""/>
+    <sfield name="lbl_page2" text="自由核算項" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_ooff001" text="備註類型" lstr=""/>
+    <sfield name="lbl_ooff002" text="第一KEY值" lstr=""/>
+    <sfield name="lbl_ooff003" text="第二KEY值" lstr=""/>
+    <sfield name="lbl_ooff004" text="第三KEY值" lstr=""/>
+    <sfield name="lbl_ooff005" text="第四KEY值" lstr=""/>
+    <sfield name="lbl_ooff006" text="第五KEY值" lstr=""/>
+    <sfield name="lbl_ooff007" text="第六KEY值" lstr=""/>
+    <sfield name="lbl_ooff008" text="第七KEY值" lstr=""/>
+    <sfield name="lbl_ooff009" text="第八KEY值" lstr=""/>
+    <sfield name="lbl_ooff010" text="第九KEY值" lstr=""/>
+    <sfield name="lbl_ooff011" text="第十KEY值" lstr=""/>
+    <sfield name="lbl_ooff012" text="控制類型" lstr=""/>
+    <sfield name="lbl_ooff013" text="備註說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_1" text="QBE條件" lstr=""/>
+    <sfield name="lbl_oofg001" text="編碼分類" lstr=""/>
+    <sfield name="lbl_oofg002" text="編碼性質" lstr=""/>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_oofg005" text="節點編號" lstr=""/>
+    <sfield name="lbl_oofg006" text="前段節點編號" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_2" text="基本資料" lstr=""/>
+    <sfield name="lbl_n0" text="編碼分類" lstr=""/>
+    <sfield name="lbl_n1" text="編碼總長度" lstr=""/>
+    <sfield name="lbl_n2" text="編碼總段數" lstr=""/>
+    <sfield name="lbl_n3" text="自動編號" lstr=""/>
+    <sfield name="page_s_aooi390_s01_3" text="明細資料" lstr=""/>
+    <sfield name="lbl_oofg007" text="段次" lstr=""/>
+    <sfield name="lbl_oofgl004" text="節點名稱" lstr=""/>
+    <sfield name="lbl_oofg009" text="長度" lstr=""/>
+    <sfield name="lbl_oofg016" text="使用轉換表" lstr=""/>
+    <sfield name="lbl_oofg008" text="節點型態" lstr=""/>
+    <sfield name="lbl_value" text="輸入值" lstr=""/>
+    <sfield name="lbl_value_desc" text="說明" lstr=""/>
+    <sfield name="lbl_tbegin" text="第" lstr=""/>
+    <sfield name="lbl_tend" text="組" lstr=""/>
+    <sfield name="lbl_axrt300_07_xrcbdocno" text="單號_隱藏" lstr=""/>
+    <sfield name="lbl_axrt300_07_xrcbld" text="帳別_隱藏" lstr=""/>
+    <sfield name="lbl_xrcbseq" text="項次" lstr=""/>
+    <sfield name="lbl_xrcb047" text="摘要" lstr=""/>
+    <sfield name="lbl_xrcb029" text="應收帳款科目" lstr=""/>
+    <sfield name="lbl_xrcb021" text="收入會計科目" lstr=""/>
+    <sfield name="lbl_xrcb051" text="業務人員" lstr=""/>
+    <sfield name="lbl_xrcb010" text="業務部門" lstr=""/>
+    <sfield name="lbl_xrcb011" text="責任中心" lstr=""/>
+    <sfield name="lbl_xrcb024" text="區域" lstr=""/>
+    <sfield name="lbl_xrcb036" text="客群" lstr=""/>
+    <sfield name="lbl_xrcb012" text="產品類別" lstr=""/>
+    <sfield name="lbl_xrcb015" text="專案代號" lstr=""/>
+    <sfield name="lbl_xrcb016" text="WBS編號" lstr=""/>
+    <sfield name="lbl_xrcb033" text="經營方式" lstr=""/>
+    <sfield name="lbl_xrcb034" text="渠道" lstr=""/>
+    <sfield name="lbl_xrcb035" text="品牌" lstr=""/>
+    <sfield name="lbl_xrcb037" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_xrcb038" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_xrcb039" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_xrcb040" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_xrcb041" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_xrcb042" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_xrcb043" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_xrcb044" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_xrcb045" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_xrcb046" text="自由核算項十" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sfield name="s_feature_s01.page1" text="基本資料" lstr=""/>
+    <sfield name="lbl_inam012" text="特徵一值" lstr=""/>
+    <sfield name="lbl_inam014" text="特徵二值" lstr=""/>
+    <sfield name="lbl_inam016" text="特徵三值" lstr=""/>
+    <sfield name="lbl_inam018" text="特徵四值" lstr=""/>
+    <sfield name="lbl_inam020" text="特徵五值" lstr=""/>
+    <sfield name="lbl_inam022" text="特徵六值" lstr=""/>
+    <sfield name="lbl_inam024" text="特徵七值" lstr=""/>
+    <sfield name="lbl_inam026" text="特徵八值" lstr=""/>
+    <sfield name="lbl_inam028" text="特徵九值" lstr=""/>
+    <sfield name="lbl_inam030" text="特徵十值" lstr=""/>
+    <sfield name="lbl_inam032" text="特徵十一值" lstr=""/>
+    <sfield name="lbl_inam034" text="特徵十二值" lstr=""/>
+    <sfield name="lbl_inam036" text="特徵十三值" lstr=""/>
+    <sfield name="lbl_inam038" text="特徵十四值" lstr=""/>
+    <sfield name="lbl_inam040" text="特徵十五值" lstr=""/>
+    <sfield name="lbl_inam042" text="特徵十六值" lstr=""/>
+    <sfield name="lbl_inam044" text="特徵十七值" lstr=""/>
+    <sfield name="lbl_inam046" text="特徵十八值" lstr=""/>
+    <sfield name="lbl_inam048" text="特徵十九值" lstr=""/>
+    <sfield name="lbl_inam050" text="特徵二十值" lstr=""/>
+    <sfield name="lbl_imak001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imeb003" text="歸屬層級" lstr=""/>
+    <sfield name="lbl_imak002" text="特徵類型" lstr=""/>
+    <sfield name="lbl_imak003" text="特徵值" lstr=""/>
+    <sfield name="lbl_imecl005" text="說明" lstr=""/>
+    <sfield name="lbl_glapld" text="帳別" lstr=""/>
+    <sfield name="lbl_glgald" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glgacomp" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_glaa001" text="帳簿幣別" lstr=""/>
+    <sfield name="lbl_glgadocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_glgadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_glga100" text="系統/類別" lstr=""/>
+    <sfield name="lbl_glga007" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_glga008" text="傳票日期" lstr=""/>
+    <sfield name="lbl_glga006" text="附件張數" lstr=""/>
+    <sfield name="lbl_glgbseq" text="項次" lstr=""/>
+    <sfield name="lbl_glgb001" text="摘要" lstr=""/>
+    <sfield name="lbl_glgb002" text="科目編號" lstr=""/>
+    <sfield name="lbl_glgb005" text="幣別" lstr=""/>
+    <sfield name="lbl_glgb006" text="匯率" lstr=""/>
+    <sfield name="lbl_glgb010" text="原幣金額" lstr=""/>
+    <sfield name="lbl_glgb003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glgb004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glgb039" text="匯率(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb040" text="借方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb041" text="貸方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_amt2" text="金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb042" text="匯率(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb043" text="借方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb044" text="貸方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_amt3" text="金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb017" text="營運據點" lstr=""/>
+    <sfield name="lbl_glgb018" text="部門編號" lstr=""/>
+    <sfield name="lbl_glgb019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glgb020" text="區域" lstr=""/>
+    <sfield name="lbl_glgb021" text="交易客商" lstr=""/>
+    <sfield name="lbl_glgb022" text="帳款客商" lstr=""/>
+    <sfield name="lbl_glgb023" text="客群" lstr=""/>
+    <sfield name="lbl_glgb024" text="產品類別" lstr=""/>
+    <sfield name="lbl_glgb051" text="經營方式" lstr=""/>
+    <sfield name="lbl_glgb052" text="渠道" lstr=""/>
+    <sfield name="lbl_glgb053" text="品牌" lstr=""/>
+    <sfield name="lbl_glgb025" text="人員" lstr=""/>
+    <sfield name="lbl_glgb027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glgb028" text="WBS" lstr=""/>
+    <sfield name="lbl_glgb055" text="現金變動碼" lstr=""/>
+    <sfield name="lbl_glgb029" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_glgb030" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_glgb031" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_glgb032" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_glgb033" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_glgb034" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_glgb035" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_glgb036" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_glgb037" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_glgb038" text="自由核算項十" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="inqa002_desc" status="d"/>
+    <widget name="inqa003_desc" status="d"/>
+    <widget name="inqasite_desc" status="d"/>
+    <widget name="s_detail3" status=""/>
+  </exclude>
+</spec>

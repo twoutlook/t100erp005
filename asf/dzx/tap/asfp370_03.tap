@@ -1,0 +1,705 @@
+<add_points prog="asfp370_03" std_prog="asfp370_03" erpver="1.0" module="ASF" ver="1" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status="" />
+    <free_style value="Y" status="" />
+  </other>
+  <point name="function.asfp370_03" cite_std="N" status="d" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION asfp370_03(--)
+
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="d" ver="" src="s" new="Y">
+<![CDATA[#單頭 type 宣告
+ type type_g_indc_m        RECORD
+       indcdocno      LIKE indc_t.indcdocno,  #input
+       indcdocno_desc LIKE indc_t.chr80,      #input
+       indcdocdt      LIKE indc_t.indcdocdt,  #input
+       indcdocno_03   LIKE indc_t.indcdocno,  #show
+       indcdocdt_03   LIKE indc_t.indcdocdt   #show
+       END RECORD
+DEFINE g_indc_m        type_g_indc_m
+
+#單身 type 宣告
+ TYPE type_g_indd_d        RECORD
+       inddseq         LIKE indd_t.inddseq, 
+       indd002         LIKE indd_t.indd002, 
+       indd002_03_desc LIKE type_t.chr500, 
+       indd002_03_desc_desc LIKE type_t.chr500, 
+       indd004         LIKE indd_t.indd004, 
+       indd102         LIKE indd_t.indd102, 
+       indd022         LIKE indd_t.indd022, 
+       indd022_03_desc LIKE type_t.chr500, 
+       indd023         LIKE indd_t.indd023, 
+       indd023_03_desc LIKE type_t.chr500, 
+       indd024         LIKE indd_t.indd024, 
+       indd006         LIKE indd_t.indd006, 
+       indd103         LIKE indd_t.indd103, 
+       indd021         LIKE indd_t.indd021, 
+       indd104         LIKE indd_t.indd104, 
+       indd105         LIKE indd_t.indd105, 
+       indd106         LIKE indd_t.indd106, 
+       indd151         LIKE indd_t.indd151, 
+       indd032         LIKE indd_t.indd032, 
+       indd032_03_desc LIKE type_t.chr500, 
+       indd033         LIKE indd_t.indd033, 
+       indd033_03_desc LIKE type_t.chr500, 
+       indd031         LIKE indd_t.indd031, 
+       indd109         LIKE indd_t.indd109, 
+       indd040         LIKE indd_t.indd040, 
+       indd152         LIKE indd_t.indd152
+       END RECORD
+DEFINE g_indd_d          DYNAMIC ARRAY OF type_g_indd_d
+DEFINE g_indd_d_t        type_g_indd_d
+
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_master_idx          LIKE type_t.num5
+
+DEFINE g_ooef004             LIKE ooef_t.ooef004  #单据别参照表号]]>
+</point>
+  <point name="function.asfp370_03_init" cite_std="N" status="d" ver="" src="s" new="Y" order="2">
+<![CDATA[
+#畫面資料初始化
+PUBLIC FUNCTION asfp370_03_init()
+
+   #no scc
+   #CALL cl_set_combo_scc('pmds011_d1_03','2061')
+
+END FUNCTION]]>
+</point>
+  <point name="dialog.asfp370_03_display" cite_std="N" status="d" ver="" src="s" new="Y" order="1">
+<![CDATA[
+DIALOG asfp370_03_display()
+    DISPLAY ARRAY g_indd_d TO s_detail1_asfp370_03.* ATTRIBUTE(COUNT = g_rec_b2)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(l_ac)
+
+      BEFORE ROW
+        LET l_ac = DIALOG.getCurrentRow("s_detail1_asfp370_03")
+
+   END DISPLAY
+END DIALOG]]>
+</point>
+  <point name="input.a.indcdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_indc_m.indcdocno
+            CALL ap_ref_array2(g_ref_fields,"SELECT oobxl003 FROM oobxl_t WHERE oobxlent='"||g_enterprise||"' AND oobxl001=? AND oobxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_indc_m.indcdocno_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_indc_m.indcdocno_desc
+
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_indc_m.indcdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_indc_m.indcdocno != g_indcdocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM indc_t WHERE "||"indcent = '" ||g_enterprise|| "' AND "||"indcdocno = '"||g_indc_m.indcdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.inddseq" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_indc_m.indcdocno IS NOT NULL AND g_indd_d[g_detail_idx].inddseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_indc_m.indcdocno != g_indcdocno_t OR g_indd_d[g_detail_idx].inddseq != g_indd_d_t.inddseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM indd_t WHERE "||"inddent = '" ||g_enterprise|| "' AND "||"indddocno = '"||g_indc_m.indcdocno ||"' AND "|| "inddseq = '"||g_indd_d[g_detail_idx].inddseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="main.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[GLOBALS "../4gl/asfp370_03.inc"]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="function.asfp370_03_delete_temp_table" cite_std="N" status="u" ver="" src="s" new="Y" order="7">
+<![CDATA[#删除临时表中的资料
+PUBLIC FUNCTION asfp370_03_delete_temp_table()
+#   DELETE FROM asfp370_03_temp_d1
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_03_init" cite_std="N" status="u" ver="" src="s" new="Y" order="1">
+<![CDATA[
+#畫面資料初始化
+PUBLIC FUNCTION asfp370_03_init()
+
+   #no scc
+   #CALL cl_set_combo_scc('pmds011_d1_03','2061')
+
+END FUNCTION]]>
+</point>
+  <point name="dialog.asfp370_03_display1" cite_std="N" status="u" ver="" src="s" new="Y" order="1">
+<![CDATA[
+DIALOG asfp370_03_display1()
+    DISPLAY ARRAY g_indd_d TO s_detail1_asfp370_03.* ATTRIBUTE(COUNT = g_rec_b1)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(l_ac)
+
+      BEFORE ROW
+        LET l_ac = DIALOG.getCurrentRow("s_detail1_asfp370_03")
+
+   END DISPLAY
+END DIALOG]]>
+</point>
+  <point name="function.asfp370_03_create_temp_table" cite_std="N" status="u" ver="" src="s" new="Y" order="5">
+<![CDATA[
+PUBLIC FUNCTION asfp370_03_create_temp_table()
+#   DEFINE r_success         LIKE type_t.num5
+#
+#   WHENEVER ERROR CONTINUE
+#
+#   LET r_success = TRUE
+#
+#   IF NOT asfp370_03_drop_temp_table() THEN
+#      LET r_success = FALSE
+#      RETURN r_success
+#   END IF
+#
+#   CREATE TEMP TABLE asfp370_03_temp_d1(
+#       inddseq LIKE indd_t.inddseq,  #项次
+#       indd002 LIKE indd_t.indd002,  #料件编号
+#       indd004 LIKE indd_t.indd004,  #产品特征
+#       indd102 LIKE indd_t.indd102,  #库存管理特征
+#       indd022 LIKE indd_t.indd022,  #拨出库位
+#       indd023 LIKE indd_t.indd023,  #拨出储位
+#       indd024 LIKE indd_t.indd024,  #拨出批号
+#       indd006 LIKE indd_t.indd006,  #库存单位
+#       indd103 LIKE indd_t.indd103,  #拨出申请量
+#       indd021 LIKE indd_t.indd021,  #拨出数量
+#       indd104 LIKE indd_t.indd104,  #参考单位
+#       indd105 LIKE indd_t.indd105,  #拨出申请参考数量
+#       indd106 LIKE indd_t.indd106,  #拨出合格参考数量
+#       indd151 LIKE indd_t.indd151,  #理由码
+#       indd032 LIKE indd_t.indd032,  #拨入库位
+#       indd033 LIKE indd_t.indd033,  #拨入储位
+#       indd031 LIKE indd_t.indd031,  #拨入数量
+#       indd109 LIKE indd_t.indd109,  #拨入合格参考数量
+#       indd040 LIKE indd_t.indd040,  #结案否
+#       indd152 LIKE indd_t.indd152   #备注
+#      )
+#
+#   IF SQLCA.sqlcode != 0 THEN
+#      CALL cl_err('create asfp370_03_temp_d1',SQLCA.sqlcode,1)
+#      LET r_success = FALSE
+#      RETURN r_success
+#   END IF
+#
+#   RETURN r_success
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_03_drop_temp_table" cite_std="N" status="u" ver="" src="s" new="Y" order="6">
+<![CDATA[
+PUBLIC FUNCTION asfp370_03_drop_temp_table()
+#   DEFINE r_success          LIKE type_t.num5
+#
+#   WHENEVER ERROR CONTINUE
+#
+#   LET r_success = TRUE
+#
+#   DROP TABLE asfp370_03_temp_d1
+#
+#   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+#      CALL cl_err('drop asfp370_03_temp_d1',SQLCA.sqlcode,1)
+#      LET r_success = FALSE
+#      RETURN r_success
+#   END IF
+#
+#   RETURN r_success
+#
+END FUNCTION]]>
+</point>
+  <point name="dialog.asfp370_03_input" cite_std="N" status="u" ver="" src="s" new="Y" order="2">
+<![CDATA[
+DIALOG asfp370_03_input()
+   DEFINE  l_ooef004    LIKE ooef_t.ooef004  #单据别参照表号
+   
+   INPUT BY NAME g_asfp370_03_m.indcdocno,g_asfp370_03_m.indcdocdt ATTRIBUTE(WITHOUT DEFAULTS)
+
+      BEFORE INPUT
+
+      AFTER FIELD indcdocno
+         IF NOT cl_null(g_asfp370_03_m.indcdocno) THEN
+            IF NOT s_aooi200_chk_slip(g_site,'',g_asfp370_03_m.indcdocno,'aint330') THEN
+               NEXT FIELD CURRENT
+            END IF
+            CALL s_aooi200_get_slip_desc(g_asfp370_03_m.indcdocno) RETURNING g_asfp370_03_m.indcdocno_desc
+            DISPLAY BY NAME g_asfp370_03_m.indcdocno_desc
+         END IF
+
+      ON ACTION controlp INFIELD indcdocno
+         #開窗i段
+         SELECT ooef004 INTO l_ooef004 FROM ooef_t
+          WHERE ooefent = g_enterprise
+            AND ooef001 = g_site
+
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_asfp370_03_m.indcdocno             #給予default值
+         #給予arg
+         LET g_qryparam.arg1 = l_ooef004  #单据别参照标号
+         LET g_qryparam.arg2 = "aint330"  #
+         CALL q_ooba002_8()                                #呼叫開窗
+         LET g_asfp370_03_m.indcdocno = g_qryparam.return1
+         DISPLAY g_asfp370_03_m.indcdocno TO indcdocno              #
+         NEXT FIELD indcdocno                          #返回原欄位
+
+      ON ACTION gen_aint330  #产生发料前调拨单据
+         CALL asfp370_03_gen_aint330()
+         CALL asfp370_03_show()
+         
+   END INPUT
+     
+
+END DIALOG]]>
+</point>
+  <point name="function.asfp370_03_gen_aint330" cite_std="N" status="u" ver="" src="s" new="Y" order="2">
+<![CDATA[#产生发料前调拨单据
+PUBLIC FUNCTION asfp370_03_gen_aint330()
+   #产生单头
+   #LET g_asfp370_03_m.indcdocno_03 =      #显示栏位赋值
+   #LET g_asfp370_03_m.indcdocdt_03 =      #显示栏位赋值
+
+   #产生单身
+   
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_03_b_fill" cite_std="N" status="u" ver="" src="s" new="Y" order="4">
+<![CDATA[
+PUBLIC FUNCTION asfp370_03_b_fill()
+   DEFINE l_sql        STRING
+   DEFINE l_ac_t       LIKE type_t.num5
+   
+   CALL g_indd_d.clear()
+   
+   LET l_sql = "SELECT UNIQUE inddseq,indd002,t1.imaal003,t1.imaal004,indd004,indd102, ",
+               "       indd022,t2.inaa002,indd023,t3.inab003,indd024,indd006,indd103, ",
+               "       indd021,indd104,indd105,indd106,indd151, ",
+               "       indd032,t4.inaa002,indd033,t5.inab003,indd031,indd109,indd040,indd152 ",
+               "  FROM indd_t LEFT JOIN imaal_t t1 ON t1.imaalent='"||g_enterprise||"' AND t1.imaal001=indd002 AND t1.imaal002='"||g_dlang||"' ",
+               "              LEFT JOIN inaa_t t2 ON t2.inaaent='"||g_enterprise||"' AND t2.inaasite=inddsite AND t2.inaa001=indd022  ",
+               "              LEFT JOIN inab_t t3 ON t3.inabent='"||g_enterprise||"' AND t3.inabsite=inddsite AND t3.inab001=indd022 AND t3.inab002=indd023  ",
+               "              LEFT JOIN inaa_t t4 ON t4.inaaent='"||g_enterprise||"' AND t4.inaasite=inddsite AND t4.inaa001=indd032  ",
+               "              LEFT JOIN inab_t t5 ON t5.inabent='"||g_enterprise||"' AND t5.inabsite=inddsite AND t5.inab001=indd032 AND t5.inab002=indd033  ",
+               " WHERE inddent=",g_enterprise,
+               "   AND indddocno='",g_asfp370_03_m.indcdocno_03,"'",
+               " ORDER BY indd_t.inddseq"
+   PREPARE asfp370_03_b_fill_sel FROM l_sql
+   DECLARE asfp370_03_b_fill_curs CURSOR FOR asfp370_03_b_fill_sel
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+   FOREACH asfp370_03_b_fill_curs INTO g_indd_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:asfp370_03_b_fill_curs",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+   
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( "", 9035, 1 )
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b1 = l_ac - 1
+   CALL g_indd_d.deleteElement(l_ac)
+   LET l_ac = l_ac_t
+   CLOSE asfp370_03_b_fill_curs
+   FREE asfp370_03_b_fill_sel
+   
+   LET g_master_idx = l_ac
+
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[
+#單身 type 宣告
+ TYPE type_g_indd_d        RECORD
+       inddseq         LIKE indd_t.inddseq, 
+       indd002         LIKE indd_t.indd002, 
+       indd002_03_desc LIKE type_t.chr500, 
+       indd002_03_desc_desc LIKE type_t.chr500, 
+       indd004         LIKE indd_t.indd004, 
+       indd102         LIKE indd_t.indd102, 
+       indd022         LIKE indd_t.indd022, 
+       indd022_03_desc LIKE type_t.chr500, 
+       indd023         LIKE indd_t.indd023, 
+       indd023_03_desc LIKE type_t.chr500, 
+       indd024         LIKE indd_t.indd024, 
+       indd006         LIKE indd_t.indd006, 
+       indd103         LIKE indd_t.indd103, 
+       indd021         LIKE indd_t.indd021, 
+       indd104         LIKE indd_t.indd104, 
+       indd105         LIKE indd_t.indd105, 
+       indd106         LIKE indd_t.indd106, 
+       indd151         LIKE indd_t.indd151, 
+       indd032         LIKE indd_t.indd032, 
+       indd032_03_desc LIKE type_t.chr500, 
+       indd033         LIKE indd_t.indd033, 
+       indd033_03_desc LIKE type_t.chr500, 
+       indd031         LIKE indd_t.indd031, 
+       indd109         LIKE indd_t.indd109, 
+       indd040         LIKE indd_t.indd040, 
+       indd152         LIKE indd_t.indd152
+       END RECORD
+DEFINE g_indd_d          DYNAMIC ARRAY OF type_g_indd_d
+DEFINE g_indd_d_t        type_g_indd_d
+
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+
+DEFINE g_rec_b1               LIKE type_t.num5  
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_master_idx          LIKE type_t.num5]]>
+</point>
+  <point name="function.asfp370_03_show" cite_std="N" status="u" ver="" src="s" new="Y" order="3">
+<![CDATA[
+PUBLIC FUNCTION asfp370_03_show()
+   
+   DISPLAY g_asfp370_03_m.indcdocno_03 TO indcdocno_03
+   DISPLAY g_asfp370_03_m.indcdocdt_03 TO indcdocdt_03
+   
+   CALL asfp370_03_b_fill()
+END FUNCTION]]>
+</point>
+  <section id="asfp370.free_style_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp370.global" ver="1" status="" src="s">
+<![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+</section>
+  <section id="asfp370.global_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp370.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="asfp370.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="asfp370_03.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000011
+#+ 
+#+ Filename...: asfp370_03
+#+ Description: ...
+#+ Creator....: 00768(2014/07/03)
+#+ Modifier...: 00768(2014/07/04)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="asfp370_03.global" ver="2" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_indc_m        RECORD
+       indcdocno LIKE type_t.chr20, 
+   indcdocno_desc LIKE type_t.chr80, 
+   indcdocdt LIKE type_t.dat, 
+   indcdocno_03 LIKE type_t.chr20, 
+   indcdocdt_03 LIKE type_t.dat
+       END RECORD
+DEFINE g_indc_m        type_g_indc_m
+ 
+   
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_indd_d        RECORD
+       inddseq LIKE indd_t.inddseq, 
+   indd002 LIKE indd_t.indd002, 
+   indd002_03_desc LIKE type_t.chr500, 
+   indd002_03_desc_desc LIKE type_t.chr500, 
+   indd004 LIKE indd_t.indd004, 
+   indd102 LIKE indd_t.indd102, 
+   indd022 LIKE indd_t.indd022, 
+   indd022_03_desc LIKE type_t.chr500, 
+   indd023 LIKE indd_t.indd023, 
+   indd023_03_desc LIKE type_t.chr500, 
+   indd024 LIKE indd_t.indd024, 
+   indd006 LIKE indd_t.indd006, 
+   indd103 LIKE indd_t.indd103, 
+   indd021 LIKE indd_t.indd021, 
+   indd104 LIKE indd_t.indd104, 
+   indd105 LIKE indd_t.indd105, 
+   indd106 LIKE indd_t.indd106, 
+   indd151 LIKE indd_t.indd151, 
+   indd032 LIKE indd_t.indd032, 
+   indd032_03_desc LIKE type_t.chr500, 
+   indd033 LIKE indd_t.indd033, 
+   indd033_03_desc LIKE type_t.chr500, 
+   indd031 LIKE indd_t.indd031, 
+   indd109 LIKE indd_t.indd109, 
+   indd040 LIKE indd_t.indd040, 
+   indd152 LIKE indd_t.indd152
+       END RECORD
+ 
+ 
+DEFINE g_indd_d          DYNAMIC ARRAY OF type_g_indd_d
+DEFINE g_indd_d_t        type_g_indd_d
+ 
+ 
+DEFINE g_inddseq_t   LIKE indd_t.inddseq    #Key值備份
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE l_ac                  LIKE type_t.num5
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+       
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp370_03.input" ver="2" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION asfp370_03(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asfp370_03 WITH FORM cl_ap_formpath("asf","asfp370_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT BY NAME g_indc_m.indcdocno,g_indc_m.indcdocdt ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.head.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.head.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD indcdocno
+            
+            #add-point:AFTER FIELD indcdocno
+            {<point name="input.a.indcdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD indcdocno
+            #add-point:BEFORE FIELD indcdocno
+            {<point name="input.b.indcdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE indcdocno
+            #add-point:ON CHANGE indcdocno
+            {<point name="input.g.indcdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD indcdocdt
+            #add-point:BEFORE FIELD indcdocdt
+            {<point name="input.b.indcdocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD indcdocdt
+            
+            #add-point:AFTER FIELD indcdocdt
+            {<point name="input.a.indcdocdt" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE indcdocdt
+            #add-point:ON CHANGE indcdocdt
+            {<point name="input.g.indcdocdt" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.indcdocno
+         ON ACTION controlp INFIELD indcdocno
+            #add-point:ON ACTION controlp INFIELD indcdocno
+            {<point name="input.c.indcdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.indcdocdt
+         ON ACTION controlp INFIELD indcdocdt
+            #add-point:ON ACTION controlp INFIELD indcdocdt
+            {<point name="input.c.indcdocdt" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.head.after_input"/>}
+            #end add-point
+            
+      END INPUT
+   
+      INPUT ARRAY g_indd_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = ,
+                  DELETE ROW = ,
+                  APPEND ROW = )
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.body.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.body.before_input"/>}
+            #end add-point
+          
+          
+         
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.body.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asfp370_03 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="asfp370_03.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="asfp370_03.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

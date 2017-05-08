@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapq510" module="aap" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="03080" crtdt="2016-05-18 16:48:25" modid="03080" moddt="2016-06-13 09:47:15" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="信用狀歷程查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="apgacomp,apgadocno,apga002,apgadocdt,apga004,apga004_desc(chr500),apga001,apga006,apga007,apga007_desc(chr500),apga003,apga010,apga100,apga109,l_apga109103(num20_6),apga103,apga102,apga105,apga104,l_paysum(num20_6),l_unpay(num20_6),l_payback(num20_6),l_unpayback(num20_6),l_apgb001(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="apgacomp(b_apgacomp),apgadocno(b_apgadocno),apga002(b_apga002),apgadocdt(b_apgadocdt),apga004(b_apga004),apga004_desc(b_apga004_desc),apga001(b_apga001),apga006(b_apga006),apga007(b_apga007),apga007_desc(b_apga007_desc),apga003(b_apga003),apga010(b_apga010),apga100(b_apga100),apga109(b_apga109),l_apga109103(l_apga109103),apga103(b_apga103),apga102(b_apga102),apga105(b_apga105),apga104(b_apga104),l_paysum(l_paysum),l_unpay(l_unpay),l_payback(l_payback),l_unpayback(l_unpayback),l_apgb001(l_apgb001)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapq510" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="apgacomp,apgadocno,apga002,apgadocdt,apga004,apga001,apga006,apga007,apga003,apga010,apga100,apga109,apga103,apga102,apga105,apga104" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="apgacomp(b_apgacomp),apgadocno(b_apgadocno),apgadocdt(b_apgadocdt),apga004(b_apga004),apga006(b_apga006),apga007(b_apga007),apga003(b_apga003),apga010(b_apga010),apga100(b_apga100),apga109(b_apga109),apga103(b_apga103),apga102(b_apga102),apga105(b_apga105),apga104(b_apga104)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="apgacomp">
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="apgadocno">
+        <controlp form="q_apgadocno" state="c"/>
+      </column>
+      <column id="apga002" type="S" default="0"/>
+      <column id="apgadocdt"/>
+      <column id="apga004">
+        <after>
+          <reference field="apga004_desc" ref_field="apga004" map_field="apga004" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="apga004_desc"/>
+      <column id="apga001">
+        <controlp form="q_apga001" state="c"/>
+      </column>
+      <column id="apga006" def_scc="8517"/>
+      <column id="apga007">
+        <after>
+          <reference field="apga007_desc" ref_field="apga007" map_field="apga007" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="apga007_desc"/>
+      <column id="apga003"/>
+      <column id="apga010"/>
+      <column id="apga100">
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="apga109" type="S" default="0"/>
+      <column id="l_apga109103"/>
+      <column id="apga103" type="S" default="0"/>
+      <column id="apga102" type="S" default="0"/>
+      <column id="apga105" type="S" default="0"/>
+      <column id="apga104" type="S" default="0"/>
+      <column id="l_paysum"/>
+      <column id="l_unpay"/>
+      <column id="l_payback"/>
+      <column id="l_unpayback"/>
+      <column id="l_apgb001"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="apga_t" page="1" linked="" pk="apgacomp,apgadocno">
+      <sql id="b_fill_sql" query="SELECT apgacomp,apgadocno,apga002,apgadocdt,apga004,&apos;&apos;,apga001,apga006,apga007,&apos;&apos;,apga003,apga010,apga100,apga109,&apos;&apos;,apga103,apga102,apga105,apga104,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM apga_t WHERE apgaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

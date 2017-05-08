@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisr310_g01" module="ais" jobmode="N" type="g01" industry="std" crtid="08732" crtdt="2016-11-14 15:10:31" modid="08732" moddt="2016-11-22 11:18:39" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="isaf001,l_isaf001_desc(chr100|NULL),isaf003,l_isaf003_desc(chr30|NULL),isaf004,l_isaf004_desc(chr100|NULL),isaf016,l_isaf016_desc(chr100|NULL),isaf018,l_isaf018_desc(chr100|NULL),isaf022,isaf033,isaf055,l_isaf055_desc(chr100|NULL),isaf057,l_isaf057_desc(chr100|NULL),isaf100,l_isaf100_desc(chr100|NULL),isaf101,isafcomp,isafdocdt,isafdocno,isafent,isafsite,isag001,l_isag001_desc(chr100|NULL),isag002,isag003,isag004,isag005,l_isag005_desc(chr100|NULL),l_isag018_desc(chr100|NULL),isag009,isag010,isag015,isag018,isag101,isag103,isag105,isag113,isag115,isagseq"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="isaf001(isaf001|isaf001),l_isaf001_desc(chr100|NULL),isaf003(isaf003|isaf003),l_isaf003_desc(chr30|NULL),isaf004(isaf004|isaf004),l_isaf004_desc(chr100|NULL),isaf016(isaf016|isaf016),l_isaf016_desc(chr100|NULL),isaf018(isaf018|isaf018),l_isaf018_desc(chr100|NULL),isaf022(isaf022|isaf022),isaf033(isaf033|isaf033),isaf055(isaf055|isaf055),l_isaf055_desc(chr100|NULL),isaf057(isaf057|isaf057),l_isaf057_desc(chr100|NULL),isaf100(isaf100|isaf100),l_isaf100_desc(chr100|NULL),isaf101(isaf101|isaf101),isafcomp(isafcomp|isafcomp),isafdocdt(isafdocdt|isafdocdt),isafdocno(isafdocno|isafdocno),isafent(isafent|isafent),isafsite(isafsite|isafsite),isag001(isag001|isag001),l_isag001_desc(chr100|NULL),isag002(isag002|isag002),isag003(isag003|isag003),isag004(isag004|isag004),isag005(isag005|isag005),l_isag005_desc(chr100|NULL),l_isag018_desc(chr100|NULL),isag009(isag009|isag009),isag010(isag010|isag010),isag015(isag015|isag015),isag018(isag018|isag018),isag101(isag101|isag101),isag103(isag103|isag103),isag105(isag105|isag105),isag113(isag113|isag113),isag115(isag115|isag115),isagseq(isagseq|isagseq)"/>
+    <sql id="g_from" query=" isaf_t  LEFT OUTER JOIN ( SELECT isag_t.* FROM isag_t  ) x  ON isaf_t.isafent = x.isagent AND isaf_t.isafcomp = x.isagcomp AND isaf_t.isafdocno = x.isagdocno"/>
+    <sql id="g_where" query="" maintable="isaf_t"/>
+    <sql id="g_order" query="isafdocno,isagseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="isafdocno,isagseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="isafdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="isafent,isafdocno"/>
+      <rep type="isagseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="isafent,isafdocno,isagseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="isafent,isafdocno,isagseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="isafdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="isafent,isafdocno"/>
+      <rep type="isagseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

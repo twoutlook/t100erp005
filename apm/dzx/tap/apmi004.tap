@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmi004" std_prog="apmi004" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="input.a.page1.pmak001" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_pmak_d[l_ac].pmak001) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_pmak_d[l_ac].pmak001 != g_pmak_d_t.pmak001))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmak_t WHERE "||"pmakent = '" ||g_enterprise|| "' AND "||"pmak001 = '"||g_pmak_d[l_ac].pmak001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmak003" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL apmi004_01('1','',g_pmak_d[l_ac].pmak002,g_pmak_d[l_ac].pmak006) RETURNING g_pmak_d[l_ac].pmak001]]>
+  </point>
+  <point name="input.body.before_row" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF cl_null(g_pmak_d[l_ac].pmak008) THEN
+               LET g_pmak_d[l_ac].pmak008 = g_today
+            END IF]]>
+  </point>
+  <point name="modify.before_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_allow_insert = FALSE
+   LET l_allow_delete = FALSE]]>
+  </point>
+</add_points>

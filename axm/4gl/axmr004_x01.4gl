@@ -1,0 +1,783 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmr004_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:9(2016-12-21 19:34:03), PR版次:0009(2016-12-22 15:58:20)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000067
+#+ Filename...: axmr004_x01
+#+ Description: ...
+#+ Creator....: 05384(2014-10-24 15:59:40)
+#+ Modifier...: 08993 -SD/PR- 08993
+ 
+{</section>}
+ 
+{<section id="axmr004_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+#160107-00022#1 2016/01/08 By dorislai 改善效能，將FOREACH中的資料拿去外圈SQL
+#161207-00033#5 2016/12/21 By 08993    一次性交易對象名稱顯示要改抓pmak003
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       a1 LIKE type_t.chr1          #出貨狀況
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmr004_x01.main" readonly="Y" >}
+PUBLIC FUNCTION axmr004_x01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr1         #tm.a1  出貨狀況
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axmr004_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axmr004_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axmr004_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axmr004_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axmr004_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axmr004_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr004_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION axmr004_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "xmdadocno.xmda_t.xmdadocno,xmdadocdt.xmda_t.xmdadocdt,l_xmda005_desc.gzcbl_t.gzcbl004,l_xmdastus_desc.gzcbl_t.gzcbl004,xmda002.xmda_t.xmda002,ooag_t_ooag011.ooag_t.ooag011,xmda003.xmda_t.xmda003,ooefl_t_ooefl003.ooefl_t.ooefl003,xmda004.xmda_t.xmda004,t8_pmaal004.pmaal_t.pmaal004,xmda021.xmda_t.xmda021,t6_pmaal004.pmaal_t.pmaal004,xmda022.xmda_t.xmda022,pmaal_t_pmaal004.pmaal_t.pmaal004,xmda023.xmda_t.xmda023,t1_oocql004.oocql_t.oocql004,xmda024.xmda_t.xmda024,t2_oocql004.oocql_t.oocql004,xmda033.xmda_t.xmda033,xmddseq.xmdd_t.xmddseq,xmddseq1.xmdd_t.xmddseq1,xmddseq2.xmdd_t.xmddseq2,l_xmdd003_desc.gzcbl_t.gzcbl004,l_imaa009.imaa_t.imaa009,l_imaa009_desc.rtaxl_t.rtaxl003,l_imaf111.imaf_t.imaf111,l_imaf111_desc.oocql_t.oocql004,xmdd001.xmdd_t.xmdd001,x_imaal_t_imaal003.imaal_t.imaal003,x_imaal_t_imaal004.imaal_t.imaal004,xmdd002.xmdd_t.xmdd002,l_xmdd002_desc.type_t.chr1000,xmdd011.xmdd_t.xmdd011,xmdd006.xmdd_t.xmdd006,xmdd004.xmdd_t.xmdd004,xmdd025.xmdd_t.xmdd025,xmdd024.xmdd_t.xmdd024,xmdd027.xmdd_t.xmdd027,xmdd026.xmdd_t.xmdd026,xmdd018.xmdd_t.xmdd018,xmdd028.xmdd_t.xmdd028,xmdd029.xmdd_t.xmdd029,xmdd014.xmdd_t.xmdd014,xmdd016.xmdd_t.xmdd016,xmdd015.xmdd_t.xmdd015,l_unship_count.xmdd_t.xmdd014,xmda034.xmda_t.xmda034,t5_pmaal004.pmaal_t.pmaal004,xmda036.xmda_t.xmda036,t9_pmaal004.pmaal_t.pmaal004,xmda032.xmda_t.xmda032,t4_oocql004.oocql_t.oocql004,l_imaa127.imaa_t.imaa127,l_imaa127_desc.type_t.chr300" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr004_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION axmr004_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 
+             ?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr004_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axmr004_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+DEFINE l_ooef019  LIKE ooef_t.ooef019   #稅區  by dorislai-20150910-add
+DEFINE l_oocq019  LIKE oocq_t.oocq019   #参考字段十六
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   #dorislai-20150910-add----(S)
+   SELECT ooef019 INTO l_ooef019 FROM ooef_t 
+    WHERE ooefent = g_enterprise AND ooef001 = g_site
+   #dorislai-20150910-add----(E)
+
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+#160411-00027 by whitney mark start
+#   #----#160107-00022#1-mod----(S)
+#   LET g_select = " SELECT DISTINCT xmdadocno,xmdadocdt,xmda005,Sa4.gzcbl004,
+#                    CASE WHEN trim(Sa4.gzcbl004) IS NULL THEN trim(xmda005) ELSE trim(xmda005)||'.'||trim(Sa4.gzcbl004) END,
+#                    xmdastus,Sa7.gzcbl004,
+#                    CASE WHEN trim(Sa7.gzcbl004) IS NULL THEN trim(xmdastus) ELSE trim(xmdastus)||'.'||trim(Sa7.gzcbl004) END,
+#                    xmda002,Ta10.ooag011,
+#                    CASE WHEN trim(Ta10.ooag011) IS NULL THEN trim(xmda002) ELSE trim(xmda002)||'.'||trim(Ta10.ooag011) END,
+#                    xmda003,Ta9.ooefl003,
+#                    CASE WHEN trim(Ta9.ooefl003) IS NULL THEN trim(xmda003) ELSE trim(xmda003)||'.'||trim(Ta9.ooefl003) END,
+#                    xmda004,Ba4.pmaal004,
+#                    CASE WHEN trim(Ba4.pmaal004) IS NULL THEN trim(xmda004) ELSE trim(xmda004)||'.'||trim(Ba4.pmaal004) END, 
+#                    xmda021,Ba3.pmaal003,Ba3.pmaal004,
+#                    CASE WHEN trim(Ba3.pmaal003) IS NULL THEN trim(xmda021) ELSE trim(xmda021)||'.'||trim(Ba3.pmaal003) END,
+#                    xmda022,Ba1.pmaal003,Ba1.pmaal004,
+#                    CASE WHEN trim(Ba1.pmaal003) IS NULL THEN trim(xmda022) ELSE trim(xmda022)||'.'||trim(Ba1.pmaal003) END,
+#                    xmda023,Aa2.oocql004,
+#                    CASE WHEN trim(Aa2.oocql004) IS NULL THEN trim(xmda023) ELSE trim(xmda023)||'.'||trim(Aa2.oocql004) END,
+#                    xmda024,Aa3.oocql004,
+#                    CASE WHEN trim(Aa3.oocql004) IS NULL THEN trim(xmda024) ELSE trim(xmda024)||'.'||trim(Aa3.oocql004) END,
+#                    xmda033,xmddseq,xmddseq1,xmddseq2,xmdd003,x.Sd2_gzcbl004,
+#                    CASE WHEN trim(x.Sd2_gzcbl004) IS NULL THEN trim(xmdd003) ELSE trim(xmdd003)||'.'||trim(x.Sd2_gzcbl004) END,
+#                    imaa009,Td4_rtaxl003,imaf111,x.Ad3_oocql004,xmdd001,x.Td3_imaal003,x.Td3_imaal004,xmdd002,'','',xmdd009,x.Sd3_gzcbl004,
+#                    CASE WHEN trim(x.Sd3_gzcbl004) IS NULL THEN trim(xmdd009) ELSE trim(xmdd009)||'.'||trim(x.Sd3_gzcbl004) END,
+#                    xmdd011,NVL(xmdd006,0),xmdd004,xmdd025,xmdd024,xmdd027,xmdd026,xmdd018,xmdd028,xmdd029,NVL(xmdd014,0),NVL(xmdd016,0),xmdd015,
+#                    (NVL(xmdd006,0)-NVL(xmdd014,0)+NVL(xmdd016,0)),xmdc045,xmdc050,xmddsite,xmdasite,xmdaent,x.Td1_ooag011,Ba2.pmaal003,Ba5.pmaal004,
+#                    Ta8.ooibl004,Aa4.oocql004,Aa5.oocql004,Aa1.oocql004,x.Ad1_oocql004,Ta7.ooail003,Ta5.xmahl003,Ta2.ooidl003,Da1.oofb011,Da2.oofb011,
+#                    Ta1.oofa011,x.Cd1_oocal003,x.Cd2_oocal003,x.Cd3_oocal003,
+#                    CASE WHEN trim(Ba5.pmaal004) IS NULL THEN trim(xmda036) ELSE trim(xmda036)||'.'||trim(Ba5.pmaal004) END, 
+#                    CASE WHEN trim(Ba2.pmaal003) IS NULL THEN trim(xmda034) ELSE trim(xmda034)||'.'||trim(Ba2.pmaal003) END,
+#                    CASE WHEN trim(x.Td1_ooag011) IS NULL THEN trim(xmdd022) ELSE trim(xmdd022)||'.'||trim(x.Td1_ooag011) END, 
+#                    xmda006,Sa5.gzcbl004,
+#                    CASE WHEN trim(Sa5.gzcbl004) IS NULL THEN trim(xmda006) ELSE trim(xmda006)||'.'||trim(Sa5.gzcbl004) END,
+#                    xmda007,Sa6.gzcbl004,
+#                    CASE WHEN trim(Sa6.gzcbl004) IS NULL THEN trim(xmda007) ELSE trim(xmda007)||'.'||trim(Sa6.gzcbl004) END,
+#                    xmda008,xmda009,
+#                    CASE WHEN trim(Ta8.ooibl004) IS NULL THEN trim(xmda009) ELSE trim(xmda009)||'.'||trim(Ta8.ooibl004) END,
+#                    xmda010,
+#                    CASE WHEN trim(Aa5.oocql004) IS NULL THEN trim(xmda010) ELSE trim(xmda010)||'.'||trim(Aa5.oocql004) END,
+#                    xmda011,Ta3.oodbl004,
+#                    CASE WHEN trim(Ta3.oodbl004) IS NULL THEN trim(xmda011) ELSE trim(xmda011)||'.'||trim(Ta3.oodbl004) END,
+#                    xmda012,xmda015,
+#                    CASE WHEN trim(Ta7.ooail003) IS NULL THEN trim(xmda015) ELSE trim(xmda015)||'.'||trim(Ta7.ooail003) END,
+#                    xmda016,xmda017,Ta5.xmahl003,
+#                    CASE WHEN trim(Ta5.xmahl003) IS NULL THEN trim(xmda017) ELSE trim(xmda017)||'.'||trim(Ta5.xmahl003) END,
+#                    xmda018,
+#                    CASE WHEN trim(Ta2.ooidl003) IS NULL THEN trim(xmda018) ELSE trim(xmda018)||'.'||trim(Ta2.ooidl003) END,
+#                    xmda027,Ta4.pmaj012,
+#                    CASE WHEN trim(Ta4.pmaj012) IS NULL THEN trim(xmda027) ELSE trim(xmda027)||'.'||trim(Ta4.pmaj012) END,      
+#                    xmda032,
+#                    CASE WHEN trim(Aa4.oocql004) IS NULL THEN trim(xmda032) ELSE trim(xmda032)||'.'||trim(Aa4.oocql004) END,
+#                    xmda035,Ta6.isacl004,
+#                    CASE WHEN trim(Ta6.isacl004) IS NULL THEN trim(xmda035) ELSE trim(xmda035)||'.'||trim(Ta6.isacl004) END,
+#                    xmda050,xmda071,xmda031,xmda034,xmda044,Ta12.xmaol004,
+#                    CASE WHEN trim(Ta12.xmaol004) IS NULL THEN trim(xmda044) ELSE trim(xmda044)||'.'||trim(Ta12.xmaol004) END,
+#                    xmda048,Sa1.gzcbl004,
+#                    CASE WHEN trim(Sa1.gzcbl004) IS NULL THEN trim(xmda048) ELSE trim(xmda048)||'.'||trim(Sa1.gzcbl004) END,
+#                    xmda049,Sa2.gzcbl004,
+#                    CASE WHEN trim(Sa2.gzcbl004) IS NULL THEN trim(xmda049) ELSE trim(xmda049)||'.'||trim(Sa2.gzcbl004) END,
+#                    xmda203,Ba6.pmaal003,
+#                    CASE WHEN trim(Ba6.pmaal003) IS NULL THEN trim(xmda203) ELSE trim(xmda203)||'.'||trim(Ba6.pmaal003) END,
+#                    xmda020,
+#                    CASE WHEN trim(Aa1.oocql004) IS NULL THEN trim(xmda020) ELSE trim(xmda020)||'.'||trim(Aa1.oocql004) END,
+#                    xmda025,Ca1.pmaa027,
+#                    CASE WHEN trim(Da1.oofb011) IS NULL THEN trim(xmda025) ELSE trim(xmda025)||'.'||trim(Da1.oofb011) END,      
+#                    xmda026,Ca2.pmaa027,
+#                    CASE WHEN trim(Da2.oofb011) IS NULL THEN trim(xmda026) ELSE trim(xmda026)||'.'||trim(Da2.oofb011) END,
+#                    xmda036,xmda037,
+#                    CASE 
+#                       WHEN (Ta11.oocq019='1' OR Ta11.oocq019='4') THEN
+#                          Aa6.oocql004
+#                       WHEN (Ta11.oocq019='2') THEN
+#                          Aa7.oocql004
+#                       WHEN (Ta11.oocq019='3') THEN
+#                          Aa8.oocql004
+#                    END,
+#                    CASE 
+#                       WHEN (Ta11.oocq019='1' OR Ta11.oocq019='4') THEN
+#                          CASE WHEN Aa6.oocql004 IS NULL THEN trim(xmda037) ELSE trim(xmda037)||'.'||trim(Aa6.oocql004) END
+#                       WHEN (Ta11.oocq019='2') THEN
+#                          CASE WHEN Aa7.oocql004 IS NULL THEN trim(xmda037) ELSE trim(xmda037)||'.'||trim(Aa7.oocql004) END
+#                       WHEN (Ta11.oocq019='3') THEN
+#                          CASE WHEN Aa8.oocql004 IS NULL THEN trim(xmda037) ELSE trim(xmda037)||'.'||trim(Aa8.oocql004) END
+#                    END,
+#                    xmda038,
+#                    CASE 
+#                       WHEN (Ta11.oocq019='1' OR Ta11.oocq019='4') THEN
+#                          Aa9.oocql004
+#                       WHEN (Ta11.oocq019='2') THEN
+#                          Aa10.oocql004
+#                       WHEN (Ta11.oocq019='3') THEN
+#                          Aa11.oocql004
+#                    END,
+#                    CASE 
+#                       WHEN (Ta11.oocq019='1' OR Ta11.oocq019='4') THEN
+#                          CASE WHEN Aa9.oocql004 IS NULL THEN trim(xmda038) ELSE trim(xmda038)||'.'||trim(Aa9.oocql004) END
+#                       WHEN (Ta11.oocq019='2') THEN
+#                          CASE WHEN Aa10.oocql004 IS NULL THEN trim(xmda038) ELSE trim(xmda038)||'.'||trim(Aa10.oocql004) END
+#                       WHEN (Ta11.oocq019='3') THEN
+#                          CASE WHEN Aa11.oocql004 IS NULL THEN trim(xmda038) ELSE trim(xmda038)||'.'||trim(Aa11.oocql004) END
+#                     END, 
+#                    xmda039,Sa3.gzcbl004,
+#                    CASE WHEN trim(Sa3.gzcbl004) IS NULL THEN trim(xmda039) ELSE trim(xmda039)||'.'||trim(Sa3.gzcbl004) END,
+#                    xmda041,xmda042,xmdd005,xmdd010,x.Ad1_oocql004,
+#                    CASE WHEN trim(x.Ad1_oocql004) IS NULL THEN trim(xmdd010) ELSE trim(xmdd010)||'.'||trim(x.Ad1_oocql004) END,
+#                    xmdd012,xmdd013,xmdd017,x.Sd1_gzcbl004,
+#                    CASE WHEN trim(x.Sd1_gzcbl004) IS NULL THEN trim(xmdd017) ELSE trim(xmdd017)||'.'||trim(x.Sd1_gzcbl004) END,
+#                    xmdd019,Td2_oodbl004,
+#                    CASE WHEN trim(x.Td2_oodbl004) IS NULL THEN trim(xmdd019) ELSE trim(xmdd019)||'.'||trim(x.Td2_oodbl004) END,
+#                    xmdd020,xmdd021,xmdd030,xmdd031,xmda001,xmda013,xmda019,xmda028,xmda029,xmda030,xmda043,xmda045,xmda046,xmda047,xmda051,
+#                    xmda200,xmda201,xmda202,xmda204,xmda205,xmda206,xmda207,xmda208,xmda209,xmda210,xmda211,xmda212,xmda213,xmdacnfdt,xmdacnfid,
+#                    xmdacrtdp,xmdacrtdt,xmdd022,xmdd023,'','',imaa127,x.Ad2_oocql004,
+#                    CASE WHEN trim(x.Ad2_oocql004) IS NULL THEN trim(imaa127) ELSE trim(imaa127)||'.'||trim(x.Ad2_oocql004) END"
+#   #----#160107-00022#1-mod----(E)
+#160411-00027 by whitney mark end
+   #160411-00027 by whitney add start
+   LET g_select = " SELECT xmdadocno,xmdadocdt,xmda005, ",
+                  "(SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001='2063' AND gzcbl002=xmda005 AND gzcbl003='"||g_dlang||"') gzcbl004, ",
+                  "        xmdastus, ",
+                  "(SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001='13' AND gzcbl002=xmdastus AND gzcbl003='"||g_dlang||"') gzcbl004, ",
+                  "        xmda002, ",
+                  "(SELECT ooag011 FROM ooag_t WHERE ooag001=xmda002 AND ooagent=xmdaent) ooag011, ",
+                  "        xmda003, ",
+                  "(SELECT ooefl003 FROM ooefl_t WHERE ooefl001=xmda003 AND ooeflent=xmdaent AND ooefl002='"||g_dlang||"') ooefl003, ",
+                  "        xmda004, ",
+                  "(SELECT pmaal004 FROM pmaal_t WHERE pmaal001=xmda004 AND pmaalent=xmdaent AND pmaal002='"||g_dlang||"') pmaal004, ",
+                  "        xmda021, ",
+                  "(SELECT pmaal004 FROM pmaal_t WHERE pmaal001=xmda021 AND pmaalent=xmdaent AND pmaal002='"||g_dlang||"') pmaal004, ",
+                  "        xmda022, ",
+                  "(SELECT pmaal004 FROM pmaal_t WHERE pmaal001=xmda022 AND pmaalent=xmdaent AND pmaal002='"||g_dlang||"') pmaal004, ",
+                  "        xmda023, ",
+                 #160621-00003#6 160629 by lori mark and add---(S) 
+                 #"(SELECT oocql004 FROM oocql_t WHERE oocql001='275' AND oocql002=xmda023 AND oocqlent=xmdaent AND oocql003='"||g_dlang||"') oocql004, ",
+                  "(SELECT oojdl003 FROM oojdl_t WHERE oojdl001=xmda023 AND oojdlent=xmdaent AND oojdl002='"||g_dlang||"') oocql004, ",
+                 #160621-00003#6 160629 by lori mark and add---(E) 
+                  "        xmda024, ",
+                  "(SELECT oocql004 FROM oocql_t WHERE oocql001='295' AND oocql002=xmda024 AND oocqlent=xmdaent AND oocql003='"||g_dlang||"') oocql004, ",
+                  "        xmda033,xmddseq,xmddseq1,xmddseq2,xmdd003, ",
+                  "(SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001='2055' AND gzcbl002=xmdd003 AND gzcbl003='"||g_dlang||"') gzcbl004, ",
+                  "        t1.imaa009,t1.rtaxl003,t2.imaf111,t2.oocql004,xmdd001,t3.imaal003,t3.imaal004,xmdd002, ",
+                  "(SELECT inaml004 FROM inaml_t WHERE inamlent=xmddent AND inaml001=xmdd001 AND inaml002=xmdd002 AND inaml003='"||g_dlang||"') inaml004, ",
+                  "        xmdd011,xmdd006,xmdd004,xmdd025,xmdd024,xmdd027,xmdd026,xmdd018,xmdd028,xmdd029,xmdd014,xmdd016, ",
+                  "        xmdd015,(NVL(xmdd006,0)-NVL(xmdd014,0)+NVL(xmdd016,0)),xmdc045,xmdasite,xmdaent,xmda034, ",
+                  "(SELECT pmaal004 FROM pmaal_t WHERE pmaal001=xmda034 AND pmaalent=xmdaent AND pmaal002='"||g_dlang||"') pmaal004, ",
+                  "        xmda036, ",
+                  "(SELECT pmaal004 FROM pmaal_t WHERE pmaal001=xmda036 AND pmaalent=xmdaent AND pmaal002='"||g_dlang||"') pmaal004, ",
+                  "        xmda032, ",
+                  "(SELECT oocql004 FROM oocql_t WHERE oocql001='297' AND oocql002=xmda032 AND oocqlent=xmdaent AND oocql003='"||g_dlang||"') oocql004, ",
+                  "        t1.imaa127,t1.oocql004 "
+   #160411-00027 by whitney add end
+
+#   #end add-point
+#   LET g_select = " SELECT xmdadocno,xmdadocdt,xmda005,'',xmdastus,'',xmda002,( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = xmda_t.xmda002 AND ooag_t.ooagent = xmda_t.xmdaent), 
+#       xmda003,( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = xmda_t.xmda003 AND ooefl_t.ooeflent = xmda_t.xmdaent AND ooefl_t.ooefl002 = '" , 
+#       g_dlang,"'" ,"),xmda004,( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda004 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = '" , 
+#       g_dlang,"'" ,"),xmda021,( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda021 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = '" , 
+#       g_dlang,"'" ,"),xmda022,( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda022 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = '" , 
+#       g_dlang,"'" ,"),xmda023,( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '275' AND oocql_t.oocql002 = xmda_t.xmda023 AND oocql_t.oocqlent = xmda_t.xmdaent AND oocql_t.oocql003 = '" , 
+#       g_dlang,"'" ,"),xmda024,( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '295' AND oocql_t.oocql002 = xmda_t.xmda024 AND oocql_t.oocqlent = xmda_t.xmdaent AND oocql_t.oocql003 = '" , 
+#       g_dlang,"'" ,"),xmda033,xmddseq,xmddseq1,xmddseq2,xmdd003,'','','','','',xmdd001,x.imaal_t_imaal003, 
+#       x.imaal_t_imaal004,xmdd002,'',xmdd011,xmdd006,xmdd004,xmdd025,xmdd024,xmdd027,xmdd026,xmdd018, 
+#       xmdd028,xmdd029,xmdd014,xmdd016,xmdd015,'',NULL,xmdasite,xmdaent,xmda034,( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda034 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = '" , 
+#       g_dlang,"'" ,"),xmda036,( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda036 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = '" , 
+#       g_dlang,"'" ,"),xmda032,( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '297' AND oocql_t.oocql002 = xmda_t.xmda032 AND oocql_t.oocqlent = xmda_t.xmdaent AND oocql_t.oocql003 = '" , 
+#       g_dlang,"'" ,"),'',''"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+#160411-00027 by whitney mark start
+#   #----#160107-00022#1-mod----(S)
+#   LET g_from = " FROM xmda_t ",
+#                #pmaa 代碼：Ca
+#                " LEFT OUTER JOIN pmaa_t Ca1 ON Ca1.pmaaent = xmdaent AND Ca1.pmaa001 = xmda_t.xmda022 ",
+#                " LEFT OUTER JOIN pmaa_t Ca2 ON Ca2.pmaaent = xmdaent AND Ca2.pmaa001 = xmda_t.xmda021 ",
+#                #oofb 代碼：Da
+#                " LEFT JOIN oofb_t Da1 ON Da1.oofbent = xmda_t.xmdaent AND Da1.oofb002 = Ca1.pmaa027 AND Da1.oofbstus ='Y' AND Da1.oofb019 = xmda_t.xmda025 ",
+#                " LEFT JOIN oofb_t Da2 ON Da2.oofbent = xmda_t.xmdaent AND Da2.oofb002 = Ca2.pmaa027 AND Da2.oofbstus ='Y' AND Da2.oofb019 = xmda_t.xmda026 ",
+#                #剩餘的 代碼：Ta
+#                " LEFT OUTER JOIN oofa_t Ta1 ON Ta1.oofa001 = xmda_t.xmda027 AND Ta1.oofaent = xmda_t.xmdaent ",
+#                " LEFT OUTER JOIN ooidl_t Ta2 ON Ta2.ooidl001 = xmda_t.xmda018 AND Ta2.ooidlent = xmda_t.xmdaent AND Ta2.ooidl002 = '",g_dlang,"'", 
+#                " LEFT OUTER JOIN oodbl_t Ta3 ON Ta3.oodblent = xmda_t.xmdaent AND Ta3.oodbl001 = '",l_ooef019,"' AND Ta3.oodbl002 = xmda_t.xmda011 AND Ta3.oodbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN pmaj_t Ta4 ON Ta4.pmajent = xmda_t.xmdaent AND Ta4.pmaj001 = xmda_t.xmda004 AND Ta4.pmaj002 = xmda_t.xmda027 ",
+#                " LEFT OUTER JOIN xmahl_t Ta5 ON Ta5.xmahl001 = xmda_t.xmda017 AND Ta5.xmahlent = xmda_t.xmdaent AND Ta5.xmahl002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN isacl_t Ta6 ON Ta6.isaclent = xmda_t.xmdaent AND Ta6.isacl001 = '",l_ooef019,"' AND Ta6.isacl002 = xmda_t.xmda035 AND Ta6.isacl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN ooail_t Ta7 ON Ta7.ooail001 = xmda_t.xmda015 AND Ta7.ooailent = xmda_t.xmdaent AND Ta7.ooail002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN ooibl_t Ta8 ON Ta8.ooibl002 = xmda_t.xmda009 AND Ta8.ooiblent = xmda_t.xmdaent AND Ta8.ooibl003 = '",g_dlang,"'", 
+#                " LEFT OUTER JOIN ooefl_t Ta9 ON Ta9.ooefl001 = xmda_t.xmda003 AND Ta9.ooeflent = xmda_t.xmdaent AND Ta9.ooefl002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN ooag_t Ta10 ON Ta10.ooag001 = xmda_t.xmda002 AND Ta10.ooagent = xmda_t.xmdaent",
+#                " LEFT OUTER JOIN oocq_t Ta11 ON Ta11.oocqent = xmda_t.xmdaent AND Ta11.oocq001 = '263' AND Ta11.oocq002 = xmda_t.xmda020 ",
+#                " LEFT OUTER JOIN xmaol_t Ta12 ON Ta12.xmaolent = xmda_t.xmdaent AND Ta12.xmaol001 = xmda_t.xmda004 AND Ta12.xmaol002 = xmda_t.xmda044 AND Ta12.xmaol003 = '",g_dlang,"'",
+#                #oocql 代碼：Aa
+#                " LEFT OUTER JOIN oocql_t Aa1 ON Aa1.oocql001 = '263' AND Aa1.oocql002 = xmda_t.xmda020 AND Aa1.oocqlent = xmda_t.xmdaent AND Aa1.oocql003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Aa2 ON Aa2.oocql001 = '275' AND Aa2.oocql002 = xmda_t.xmda023 AND Aa2.oocqlent = xmda_t.xmdaent AND Aa2.oocql003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Aa3 ON Aa3.oocql001 = '295' AND Aa3.oocql002 = xmda_t.xmda024 AND Aa3.oocqlent = xmda_t.xmdaent AND Aa3.oocql003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Aa4 ON Aa4.oocql001 = '297' AND Aa4.oocql002 = xmda_t.xmda032 AND Aa4.oocqlent = xmda_t.xmdaent AND Aa4.oocql003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Aa5 ON Aa5.oocql001 = '238' AND Aa5.oocql002 = xmda_t.xmda010 AND Aa5.oocqlent = xmda_t.xmdaent AND Aa5.oocql003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Aa6 ON Aa6.oocqlent=xmda_t.xmdaent AND Aa6.oocql001='315' AND Aa6.oocql002=xmda_t.xmda037 AND Aa6.oocql003='",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Aa7 ON Aa7.oocqlent=xmda_t.xmdaent AND Aa7.oocql001='262' AND Aa7.oocql002=xmda_t.xmda037 AND Aa7.oocql003='",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Aa8 ON Aa8.oocqlent=xmda_t.xmdaent AND Aa8.oocql001='276' AND Aa8.oocql002=xmda_t.xmda037 AND Aa8.oocql003='",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Aa9 ON Aa9.oocqlent=xmda_t.xmdaent AND Aa9.oocql001='315' AND Aa9.oocql002=xmda_t.xmda038 AND Aa9.oocql003='",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Aa10 ON Aa10.oocqlent=xmda_t.xmdaent AND Aa10.oocql001='262' AND Aa10.oocql002=xmda_t.xmda038 AND Aa10.oocql003='",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Aa11 ON Aa11.oocqlent=xmda_t.xmdaent AND Aa11.oocql001='276' AND Aa11.oocql002=xmda_t.xmda038 AND Aa11.oocql003='",g_dlang,"'",
+#                #pmaal 代碼：Ba
+#                " LEFT OUTER JOIN pmaal_t Ba1 ON Ba1.pmaal001 = xmda_t.xmda022 AND Ba1.pmaalent = xmda_t.xmdaent AND Ba1.pmaal002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN pmaal_t Ba2 ON Ba2.pmaal001 = xmda_t.xmda034 AND Ba2.pmaalent = xmda_t.xmdaent AND Ba2.pmaal002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN pmaal_t Ba3 ON Ba3.pmaal001 = xmda_t.xmda021 AND Ba3.pmaalent = xmda_t.xmdaent AND Ba3.pmaal002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN pmaal_t Ba4 ON Ba4.pmaal001 = xmda_t.xmda004 AND Ba4.pmaalent = xmda_t.xmdaent AND Ba4.pmaal002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN pmaal_t Ba5 ON Ba5.pmaal001 = xmda_t.xmda036 AND Ba5.pmaalent = xmda_t.xmdaent AND Ba5.pmaal002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN pmaal_t Ba6 ON Ba6.pmaal001 = xmda_t.xmda203 AND Ba6.pmaalent = xmda_t.xmdaent AND Ba6.pmaal002 = '",g_dlang,"'",
+#                #gzcbl 代碼：Sa
+#                " LEFT OUTER JOIN gzcbl_t Sa1 ON Sa1.gzcbl001 = '2085' AND Sa1.gzcbl002 = xmda_t.xmda048 AND Sa1.gzcbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN gzcbl_t Sa2 ON Sa2.gzcbl001 = '2084' AND Sa2.gzcbl002 = xmda_t.xmda049 AND Sa2.gzcbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN gzcbl_t Sa3 ON Sa3.gzcbl001 = '8321' AND Sa3.gzcbl002 = xmda_t.xmda039 AND Sa3.gzcbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN gzcbl_t Sa4 ON Sa4.gzcbl001 = '2063' AND Sa4.gzcbl002 = xmda_t.xmda005 AND Sa4.gzcbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN gzcbl_t Sa5 ON Sa5.gzcbl001 = '2064' AND Sa5.gzcbl002 = xmda_t.xmda006 AND Sa5.gzcbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN gzcbl_t Sa6 ON Sa6.gzcbl001 = '2065' AND Sa6.gzcbl002 = xmda_t.xmda006 AND Sa6.gzcbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN gzcbl_t Sa7 ON Sa7.gzcbl001 = '13' AND Sa7.gzcbl002 = xmda_t.xmdastus AND Sa7.gzcbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN ( SELECT xmdd_t.*,imaa009,imaa127,imaf111,Td3.imaal003 Td3_imaal003,Td3.imaal004 Td3_imaal004, 
+#                                           Td1.ooag011 Td1_ooag011,Ad1.oocql004 Ad1_oocql004,Cd1.oocal003 Cd1_oocal003,
+#                                           Cd2.oocal003 Cd2_oocal003,Cd3.oocal003 Cd3_oocal003,Sd2.gzcbl004 Sd2_gzcbl004,
+#                                           Sd3.gzcbl004 Sd3_gzcbl004,Td2.oodbl004 Td2_oodbl004,Sd1.gzcbl004 Sd1_gzcbl004,
+#                                           Ad2.oocql004 Ad2_oocql004,Ad3.oocql004 Ad3_oocql004,Td4.rtaxl003 Td4_rtaxl003,xmdc045,xmdc050 ",
+#                " FROM xmdd_t",
+#                " LEFT OUTER JOIN xmdc_t ON xmdd_t.xmddent = xmdc_t.xmdcent AND xmdd_t.xmdddocno = xmdc_t.xmdcdocno AND xmdd_t.xmddseq = xmdc_t.xmdcseq",
+#                " LEFT OUTER JOIN imaa_t ON imaa_t.imaa001 = xmdd_t.xmdd001 AND imaa_t.imaaent = xmdd_t.xmddent",
+#                " LEFT OUTER JOIN imaf_t ON imaf_t.imaf001 = xmdd_t.xmdd001 AND imaf_t.imafent = xmdd_t.xmddent AND imaf_t.imafsite = xmdd_t.xmddsite",
+#                #剩下的 代碼：Td
+#                " LEFT OUTER JOIN ooag_t Td1 ON Td1.ooag001 = xmdd_t.xmdd022 AND Td1.ooagent = xmdd_t.xmddent",
+#                " LEFT OUTER JOIN oodbl_t Td2 ON Td2.oodblent = xmdd_t.xmddent AND Td2.oodbl001 = '",l_ooef019,"' AND Td2.oodbl002 = xmdd_t.xmdd019 AND Td2.oodbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN imaal_t Td3 ON Td3.imaal001 = xmdd_t.xmdd001 AND Td3.imaalent = xmdd_t.xmddent AND Td3.imaal002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN rtaxl_t Td4 ON Td4.rtaxlent = imaaent AND Td4.rtaxl001 = imaa_t.imaa009 AND Td4.rtaxl002 = '",g_dlang,"'",
+#                #oocal 代碼：Cd
+#                " LEFT OUTER JOIN oocal_t Cd1 ON Cd1.oocal001 = xmdd_t.xmdd026 AND Cd1.oocalent = xmdd_t.xmddent AND Cd1.oocal002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN oocal_t Cd2 ON Cd2.oocal001 = xmdd_t.xmdd024 AND Cd2.oocalent = xmdd_t.xmddent AND Cd2.oocal002 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN oocal_t Cd3 ON Cd3.oocal001 = xmdd_t.xmdd004 AND Cd3.oocalent = xmdd_t.xmddent AND Cd3.oocal002 = '",g_dlang,"'",
+#                #oocql 代碼：Ad
+#                " LEFT OUTER JOIN oocql_t Ad1 ON Ad1.oocql001 = '274' AND Ad1.oocql002 = xmdd_t.xmdd010 AND Ad1.oocqlent = xmdd_t.xmddent AND Ad1.oocql003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Ad2 ON Ad2.oocql001 = '2003' AND Ad2.oocql002 = imaa_t.imaa127 AND Ad2.oocqlent = xmdd_t.xmddent AND Ad2.oocql003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN oocql_t Ad3 ON Ad3.oocql001 = '202' AND Ad3.oocql002 = imaf_t.imaf111 AND Ad3.oocqlent = imaf_t.imafent AND Ad3.oocql003 = '",g_dlang,"'",
+#                #gzcbl 代碼：Sd
+#                " LEFT OUTER JOIN gzcbl_t Sd1 ON Sd1.gzcbl001 = '2058' AND Sd1.gzcbl002 = xmdd_t.xmdd017 AND Sd1.gzcbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN gzcbl_t Sd2 ON Sd2.gzcbl001 = '2055' AND Sd2.gzcbl002 = xmdd_t.xmdd003 AND Sd2.gzcbl003 = '",g_dlang,"'",
+#                " LEFT OUTER JOIN gzcbl_t Sd3 ON Sd3.gzcbl001 = '2057' AND Sd3.gzcbl002 = xmdd_t.xmdd009 AND Sd3.gzcbl003 = '",g_dlang,"'",
+#                " ) x  ON xmda_t.xmdaent = x.xmddent AND xmda_t.xmdadocno = x.xmdddocno"
+#   #----#160107-00022#1-mod----(E)
+#160411-00027 by whitney mark end
+   #160411-00027 by whitney add start
+   LET g_from = " FROM xmda_t,xmdc_t,xmdd_t ",
+                " LEFT JOIN (SELECT imaaent,imaa001,imaa009,rtaxl003,imaa127,oocql004 FROM imaa_t ",
+                " LEFT JOIN rtaxl_t ON rtaxlent=imaaent AND rtaxl001=imaa009 AND rtaxl002='"||g_dlang||"' ",
+                " LEFT JOIN oocql_t ON oocqlent=imaaent AND oocql001='2003' AND oocql002=imaa127 AND oocql003='"||g_dlang||"') t1 ",
+                "   ON t1.imaaent=xmddent AND t1.imaa001=xmdd001 ",
+                " LEFT JOIN (SELECT imafent,imafsite,imaf001,imaf111,oocql004 FROM imaf_t ",
+                " LEFT JOIN oocql_t ON oocqlent=imafent AND oocql001='202' AND oocql002=imaf111 AND oocql003='"||g_dlang||"') t2 ",
+                "   ON t2.imafent=xmddent AND t2.imafsite=xmddsite AND t2.imaf001=xmdd001 ",
+                " LEFT JOIN imaal_t t3 ON t3.imaalent=xmddent AND t3.imaal001=xmdd001 AND t3.imaal002='"||g_dlang||"' "
+   #160411-00027 by whitney add end
+
+#   #end add-point
+#    LET g_from = " FROM xmda_t LEFT OUTER JOIN ( SELECT xmdd_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = xmdd_t.xmdd001 AND imaal_t.imaalent = xmdd_t.xmddent AND imaal_t.imaal002 = '" , 
+#        g_dlang,"'" ,") imaal_t_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = xmdd_t.xmdd001 AND imaal_t.imaalent = xmdd_t.xmddent AND imaal_t.imaal002 = '" , 
+#        g_dlang,"'" ,") imaal_t_imaal004 FROM xmdd_t ) x  ON xmda_t.xmdaent = x.xmddent AND xmda_t.xmdadocno  
+#        = x.xmdddocno"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   #160411-00027 by whitney add start
+   LET g_where = " WHERE xmdaent = ",g_enterprise,
+                 "   AND xmdcent = xmdaent ",
+                 "   AND xmdcdocno = xmdadocno ",
+                 "   AND xmddent = xmdcent ",
+                 "   AND xmdddocno = xmdcdocno ",
+                 "   AND xmddseq = xmdcseq AND ",tm.wc CLIPPED
+   #160411-00027 by whitney add end
+   #160107-00022#1-mod----(S)
+    CASE tm.a1
+       WHEN '0'   #未出貨
+          LET g_where = g_where ," AND (NVL(xmdd006,0)-NVL(xmdd014,0)+NVL(xmdd016,0)) <> 0",
+                                 " AND xmdc045 NOT IN ('2','3','4')"
+       WHEN '1'   #已出貨
+          LET g_where = g_where ," AND (NVL(xmdd006,0)-NVL(xmdd014,0)+NVL(xmdd016,0)) = 0"
+    END CASE
+   #160107-00022#1-mod----(E)
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+ 
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xmda_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+ 
+   #end add-point
+   PREPARE axmr004_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axmr004_x01_curs CURSOR FOR axmr004_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr004_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axmr004_x01_ins_data()
+DEFINE sr RECORD 
+   xmdadocno LIKE xmda_t.xmdadocno, 
+   xmdadocdt LIKE xmda_t.xmdadocdt, 
+   xmda005 LIKE xmda_t.xmda005, 
+   l_xmda005_desc LIKE gzcbl_t.gzcbl004, 
+   xmdastus LIKE xmda_t.xmdastus, 
+   l_xmdastus_desc LIKE gzcbl_t.gzcbl004, 
+   xmda002 LIKE xmda_t.xmda002, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   xmda003 LIKE xmda_t.xmda003, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   xmda004 LIKE xmda_t.xmda004, 
+   t8_pmaal004 LIKE pmaal_t.pmaal004, 
+   xmda021 LIKE xmda_t.xmda021, 
+   t6_pmaal004 LIKE pmaal_t.pmaal004, 
+   xmda022 LIKE xmda_t.xmda022, 
+   pmaal_t_pmaal004 LIKE pmaal_t.pmaal004, 
+   xmda023 LIKE xmda_t.xmda023, 
+   t1_oocql004 LIKE oocql_t.oocql004, 
+   xmda024 LIKE xmda_t.xmda024, 
+   t2_oocql004 LIKE oocql_t.oocql004, 
+   xmda033 LIKE xmda_t.xmda033, 
+   xmddseq LIKE xmdd_t.xmddseq, 
+   xmddseq1 LIKE xmdd_t.xmddseq1, 
+   xmddseq2 LIKE xmdd_t.xmddseq2, 
+   xmdd003 LIKE xmdd_t.xmdd003, 
+   l_xmdd003_desc LIKE gzcbl_t.gzcbl004, 
+   l_imaa009 LIKE imaa_t.imaa009, 
+   l_imaa009_desc LIKE rtaxl_t.rtaxl003, 
+   l_imaf111 LIKE imaf_t.imaf111, 
+   l_imaf111_desc LIKE oocql_t.oocql004, 
+   xmdd001 LIKE xmdd_t.xmdd001, 
+   x_imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   x_imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   xmdd002 LIKE xmdd_t.xmdd002, 
+   l_xmdd002_desc LIKE type_t.chr1000, 
+   xmdd011 LIKE xmdd_t.xmdd011, 
+   xmdd006 LIKE xmdd_t.xmdd006, 
+   xmdd004 LIKE xmdd_t.xmdd004, 
+   xmdd025 LIKE xmdd_t.xmdd025, 
+   xmdd024 LIKE xmdd_t.xmdd024, 
+   xmdd027 LIKE xmdd_t.xmdd027, 
+   xmdd026 LIKE xmdd_t.xmdd026, 
+   xmdd018 LIKE xmdd_t.xmdd018, 
+   xmdd028 LIKE xmdd_t.xmdd028, 
+   xmdd029 LIKE xmdd_t.xmdd029, 
+   xmdd014 LIKE xmdd_t.xmdd014, 
+   xmdd016 LIKE xmdd_t.xmdd016, 
+   xmdd015 LIKE xmdd_t.xmdd015, 
+   l_unship_count LIKE xmdd_t.xmdd014, 
+   l_xmdc045 LIKE xmdc_t.xmdc045, 
+   xmdasite LIKE xmda_t.xmdasite, 
+   xmdaent LIKE xmda_t.xmdaent, 
+   xmda034 LIKE xmda_t.xmda034, 
+   t5_pmaal004 LIKE pmaal_t.pmaal004, 
+   xmda036 LIKE xmda_t.xmda036, 
+   t9_pmaal004 LIKE pmaal_t.pmaal004, 
+   xmda032 LIKE xmda_t.xmda032, 
+   t4_oocql004 LIKE oocql_t.oocql004, 
+   l_imaa127 LIKE imaa_t.imaa127, 
+   l_imaa127_desc LIKE type_t.chr300
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_success  LIKE type_t.num5
+DEFINE r_pmak003  LIKE pmak_t.pmak003   #一次性交易對象名稱   #161207-00033#5 add
+DEFINE l_pmaa004  LIKE pmaa_t.pmaa004   #法人類型            #161207-00033#5 add
+DEFINE l_sql      STRING                                    #161207-00033#5 add
+#DEFINE l_xmdc045  LIKE xmdc_t.xmdc045
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    #161207-00033#5-s add
+    LET l_sql = "SELECT pmaa004 FROM pmaa_t        ",
+                " WHERE pmaaent ='",g_enterprise,"'",
+                "   AND pmaa001 = ?                "
+    PREPARE axmr004_x01_prep FROM l_sql
+    #161207-00033#5-e add
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axmr004_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #161207-00033#5-s add
+       EXECUTE axmr004_x01_prep USING sr.xmda004 INTO l_pmaa004
+       IF l_pmaa004 = '2' THEN   #2.一次性交易對象
+          #一次性交易對象全名
+          CALL s_desc_axm_get_oneturn_guest_desc('1',sr.xmdadocno)
+               RETURNING r_pmak003
+          
+         IF NOT cl_null(r_pmak003) THEN
+            LET sr.t8_pmaal004 = r_pmak003
+            IF sr.xmda021 = sr.xmda004 THEN   #帳款客戶
+               LET sr.t6_pmaal004 = sr.t8_pmaal004
+            END IF
+            IF sr.xmda022 = sr.xmda004 THEN   #收貨客戶
+               LET sr.pmaal_t_pmaal004 = sr.t8_pmaal004
+            END IF
+            IF sr.xmda034 = sr.xmda004 THEN   #最終客戶
+               LET sr.t5_pmaal004 = sr.t8_pmaal004
+            END IF
+         END IF
+       END IF
+       #161207-00033#5-e add
+#       INITIALIZE l_xmdc045 TO NULL
+#160107-00022#1-mark----(S)
+#       CALL s_desc_gzcbl004_desc('2063',sr.xmda005) RETURNING sr.l_xmda005_desc
+#
+#       CALL s_desc_gzcbl004_desc('13',sr.xmdastus) RETURNING sr.l_xmdastus_desc
+#
+#       CALL s_desc_gzcbl004_desc('2055',sr.xmdd003) RETURNING sr.l_xmdd003_desc
+#
+#       CALL s_desc_gzcbl004_desc('2057',sr.xmdd009) RETURNING sr.l_xmdd009_desc
+#
+#       CALL s_desc_get_rtaxl003_desc(sr.l_imaa009) RETURNING sr.l_imaa009_desc
+#       CALL s_desc_get_acc_desc('202',sr.l_imaf111) RETURNING sr.l_imaf111_desc
+#160107-00022#1-mark----(E)
+#160411-00027 by whitney mark start
+#       CALL s_feature_description(sr.xmdd001,sr.xmdd002) RETURNING l_success,sr.l_xmdd002_desc
+#       IF NOT l_success THEN
+#          LET sr.l_xmdd002_desc = ''
+#       END IF
+#       #dorislai-20150911-add---(S)
+#       #組產品特徵說明
+#       IF NOT cl_null(sr.l_xmdd002_desc) THEN
+#          LET sr.l_xmdd002_imecl005 = sr.xmdd002,'.',sr.l_xmdd002_desc
+#       END IF
+#       #dorislai-20150911-add---(E)
+#160411-00027 by whitney mark end
+#160107-00022#1-mark----(S)
+#       CALL axmr004_x01_nulltozero(sr.xmdd006) RETURNING sr.xmdd006
+#       CALL axmr004_x01_nulltozero(sr.xmdd014) RETURNING sr.xmdd014
+#       CALL axmr004_x01_nulltozero(sr.xmdd016) RETURNING sr.xmdd016
+#       LET sr.l_unship_count = sr.xmdd006 - sr.xmdd014 + sr.xmdd016
+#       SELECT xmdc045,xmdc050 INTO l_xmdc045,sr.l_xmdc050
+#         FROM xmdc_t
+#        WHERE xmdcent = sr.xmdaent
+#          AND xmdcdocno = sr.xmdadocno
+#          AND xmdcseq = sr.xmddseq
+#160107-00022#1-mark----(E)
+#       #160107-00022#1-mod----(S) l_xmdc045有放進去sr中
+#       CASE tm.a1
+#          WHEN '0'
+#             IF sr.l_unship_count = 0 OR l_xmdc045 MATCHES "[234]" THEN
+#                CONTINUE FOREACH
+#             END IF
+#          WHEN '1'
+#             IF sr.l_unship_count != 0 THEN
+#                CONTINUE FOREACH
+#             END IF
+#       END CASE
+#       
+#       CASE tm.a1
+#          WHEN '0'
+#             IF sr.l_unship_count = 0 OR sr.l_xmdc045 MATCHES "[234]" THEN
+#                CONTINUE FOREACH
+#             END IF
+#          WHEN '1'
+#             IF sr.l_unship_count != 0 THEN
+#                CONTINUE FOREACH
+#             END IF
+#       END CASE
+#       #160107-00022#1-mod----(E)
+#160107-00022#1-mark----(S)
+#       #dorislai-20150911-add---(S)
+#       #起運點
+#       CALL s_apmi011_location_ref(sr.xmda020,sr.xmda037) RETURNING sr.l_xmda037_desc #160107-00022#1-mark
+#       IF NOT cl_null(sr.l_xmda037_desc) THEN
+#          LET sr.l_xmda037_oocql004 = sr.xmda037,'.',sr.l_xmda037_desc 
+#       END IF
+#       #目的地
+#       CALL s_apmi011_location_ref(sr.xmda020,sr.xmda038) RETURNING sr.l_xmda038_desc #160107-00022#1-mark----(S)
+#       IF NOT cl_null(sr.l_xmda038_desc) THEN
+#          LET sr.l_xmda038_oocql004 = sr.xmda038,'.',sr.l_xmda038_desc 
+#       END IF
+#160107-00022#1-mark----(E)
+#160411-00027 by whitney mark start
+#       #收貨地址地址
+#       CALL s_aooi350_get_address(sr.l_xmda025_pmaa027,sr.xmda025,g_dlang) RETURNING l_success,sr.l_oofb017_1 
+#       #帳款地址地址     
+#       CALL s_aooi350_get_address(sr.l_xmda026_pmaa027,sr.xmda026,g_dlang) RETURNING l_success,sr.l_oofb017_2
+#       #dorislai-20150911-add---(E)
+#160411-00027 by whitney mark end
+
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.xmdadocno,sr.xmdadocdt,sr.l_xmda005_desc,sr.l_xmdastus_desc,sr.xmda002,sr.ooag_t_ooag011,sr.xmda003,sr.ooefl_t_ooefl003,sr.xmda004,sr.t8_pmaal004,sr.xmda021,sr.t6_pmaal004,sr.xmda022,sr.pmaal_t_pmaal004,sr.xmda023,sr.t1_oocql004,sr.xmda024,sr.t2_oocql004,sr.xmda033,sr.xmddseq,sr.xmddseq1,sr.xmddseq2,sr.l_xmdd003_desc,sr.l_imaa009,sr.l_imaa009_desc,sr.l_imaf111,sr.l_imaf111_desc,sr.xmdd001,sr.x_imaal_t_imaal003,sr.x_imaal_t_imaal004,sr.xmdd002,sr.l_xmdd002_desc,sr.xmdd011,sr.xmdd006,sr.xmdd004,sr.xmdd025,sr.xmdd024,sr.xmdd027,sr.xmdd026,sr.xmdd018,sr.xmdd028,sr.xmdd029,sr.xmdd014,sr.xmdd016,sr.xmdd015,sr.l_unship_count,sr.xmda034,sr.t5_pmaal004,sr.xmda036,sr.t9_pmaal004,sr.xmda032,sr.t4_oocql004,sr.l_imaa127,sr.l_imaa127_desc
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axmr004_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr004_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axmr004_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr004_x01.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION axmr004_x01_nulltozero(p_num)
+   DEFINE p_num LIKE type_t.num20_6
+   
+   IF cl_null(p_num) THEN
+      LET p_num = 0
+   END IF
+   
+   RETURN p_num
+END FUNCTION
+
+ 
+{</section>}
+ 

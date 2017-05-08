@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afar520_g01" module="afa" jobmode="N" type="g01" industry="std" crtid="02291" crtdt="2015-11-25 16:31:33" modid="02291" moddt="2016-01-11 16:56:04" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|condition:where),tm.a1(chr1|包含資產標籤),tm.a2(chr10|資產中心),tm.a3(chr10|法人組織)">
+    <var seq="1" value="fabrent,l_order1(chr500|trim(fabr003)||trim(fabr004)),l_fabr001_desc(chr500|trim(fabr001)||&apos;.&apos;||trim(ooefl_t.ooefl003)),l_fabrcomp_desc(chr500|trim(fabrcomp)||&apos;.&apos;||trim(ooefl_t.ooefl003)),fabr003,fabr004,fabr005,fabr006,fabr007,l_fabr014_desc(chr500|trim(fabr014)||&apos;.&apos;||trim(ooefl_t.ooefl003)),faah012,faah013,l_fabr019_desc(chr500|trim(fabr019)||&apos;.&apos;||trim(ooefl_t.ooefl003)),fabr012"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="fabrent,l_order1(chr500|trim(fabr003)||trim(fabr004)),l_fabr001_desc(chr500|trim(fabr001)||&apos;.&apos;||trim(ooefl_t.ooefl003)),fabrcomp,l_fabrcomp_desc(chr500|trim(fabrcomp)||&apos;.&apos;||trim(ooefl_t.ooefl003)),fabr003,fabr004,fabr005,fabr006,fabr007,l_fabr014_desc(chr500|trim(fabr014)||&apos;.&apos;||trim(ooefl_t.ooefl003)),faah012,faah013,l_fabr019_desc(chr500|trim(fabr019)||&apos;.&apos;||trim(ooefl_t.ooefl003)),fabr012"/>
+    <sql id="g_from" query="fabr_t,faah_t,ooefl_t"/>
+    <sql id="g_where" query="" maintable="fabr_t"/>
+    <sql id="g_order" query="fabr003,fabr004"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="l_order1"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_order1" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fabrent,l_order1"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="fabrent,l_order1"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="fabrent,l_order1"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_order1" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fabrent,l_order1"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

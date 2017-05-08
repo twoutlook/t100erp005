@@ -1,0 +1,1326 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axrp342" std_prog="axrp342" erpver="1.0" module="AXR" ver="2" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+  </other>
+  <point name="construct.c.xrcacrtid" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrcacrtid  #顯示到畫面上
+
+            NEXT FIELD xrcacrtid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="free_style.variable" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[{<Module define>}
+
+#單頭 type 宣告
+ TYPE type_g_xrca_m RECORD
+       xrcald LIKE xrca_t.xrcald,
+   xrcald_desc LIKE type_t.chr80,
+   glaacomp LIKE glaa_t.glaacomp,
+   glaacomp_desc LIKE type_t.chr80,
+   xrcadocno LIKE xrca_t.xrcadocno,
+   xrcadocdt LIKE xrca_t.xrcadocdt,
+   xrca004 LIKE xrca_t.xrca004,
+   xrca038 LIKE xrca_t.xrca038,
+   glapcrtid LIKE glap_t.glapcrtid
+       END RECORD
+
+#模組變數(Module Variables)
+DEFINE g_xrca_m        type_g_xrca_m
+DEFINE g_xrca_m_t      type_g_xrca_m                #備份舊值
+   DEFINE g_xrcald_t LIKE xrca_t.xrcald
+DEFINE g_xrcadocno_t LIKE xrca_t.xrcadocno
+
+
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位
+                #外顯欄位
+       b_show          LIKE type_t.chr100,
+       #父節點id
+       b_pid           LIKE type_t.chr100,
+       #本身節點id
+       b_id            LIKE type_t.chr100,
+       #是否展開
+       b_exp           LIKE type_t.chr100,
+       #是否有子節點
+       b_hasC          LIKE type_t.num5,
+       #是否已展開
+       b_isExp         LIKE type_t.num5,
+       #展開值
+       b_expcode       LIKE type_t.num5,
+       #tree自定義欄位
+            b_xrca038 LIKE xrca_t.xrca038,
+      b_xrcadocno LIKE xrca_t.xrcadocno,
+      b_xrcadocdt LIKE xrca_t.xrcadocdt,
+      b_xrca007 LIKE type_t.chr100,
+      b_xrca004 LIKE type_t.chr100,
+      b_xrca100 LIKE xrca_t.xrca100,
+      b_xrca108 LIKE xrca_t.xrca108,
+      b_xrca118 LIKE xrca_t.xrca118,
+      b_xrca128 LIKE xrca_t.xrca128,
+      b_xrca138 LIKE xrca_t.xrca138,
+      b_xrcald LIKE xrca_t.xrcald,
+      b_xrca057 LIKE xrca_t.xrca057
+         #,rank           LIKE type_t.num10
+      END RECORD
+
+#無單頭append欄位定義
+
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+
+DEFINE g_sql                 STRING                        #組 sql 用
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗
+DEFINE g_rec_b               LIKE type_t.num5              #單身筆數
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num5   #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num5   #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num5   #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num5   #Browser 總筆數(所有資料)
+DEFINE g_tmp_page            LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num5
+DEFINE g_chk                 BOOLEAN
+{</Module define>}]]>
+  </point>
+  <point name="input.a.xrcadocno" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrca_m.xrcald) AND NOT cl_null(g_xrca_m.xrcadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrca_m.xrcald != g_xrcald_t  OR g_xrca_m.xrcadocno != g_xrcadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrca_t WHERE "||"xrcaent = '" ||g_enterprise|| "' AND "||"xrcald = '"||g_xrca_m.xrcald ||"' AND "|| "xrcadocno = '"||g_xrca_m.xrcadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.xrcald" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrca_m.xrcald) AND NOT cl_null(g_xrca_m.xrcadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrca_m.xrcald != g_xrcald_t  OR g_xrca_m.xrcadocno != g_xrcadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrca_t WHERE "||"xrcaent = '" ||g_enterprise|| "' AND "||"xrcald = '"||g_xrca_m.xrcald ||"' AND "|| "xrcadocno = '"||g_xrca_m.xrcadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="main.define_sql" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_forupd_sql = "SELECT xrcald,'',xrcacomp,xrcadocno,xrcadocdt,xrca004,xrca038,xrcacrtid FROM xrca_t WHERE xrcaent= ? AND xrcadocno=? FOR UPDATE"]]>
+  </point>
+  <point name="show.head.reference" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrca_m.xrcald
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrca_m.xrcald_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrca_m.xrcald_desc
+]]>
+  </point>
+  <point name="function.axrp342_init" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+   DEFINE l_success     LIKE type_t.num5
+
+   LET g_main_hidden = 0
+
+
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   #获取预设主帐别
+   CALL s_ld_bookno()  RETURNING l_success,g_glalld
+   IF l_success = FALSE THEN
+      RETURN 
+   END IF 
+
+   #CALL axrp342_default_search()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_ui_dialog" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_ui_dialog()
+   {<Local define>}
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE l_flag   LIKE type_t.num5
+
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 1
+
+
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+
+   WHILE li_exit = FALSE
+      
+      IF NOT cl_null(g_argv[1]) 
+         AND NOT cl_null(g_argv[02]) AND NOT cl_null(g_argv[03]) 
+         AND NOT cl_null(g_argv[04]) AND NOT cl_null(g_argv[05]) AND NOT cl_null(g_argv[06]) 
+         THEN 
+         CALL axrp342_default_search()
+      ELSE
+         CALL axrp342_construct()
+      END IF
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0      
+         EXIT WHILE
+      END IF
+ 
+      CALL axrp342_browser_fill(g_wc,"")
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+         #左側瀏覽頁簽
+         DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+
+            BEFORE ROW
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_idx = 0 THEN
+                  LET g_current_idx = 1
+               END IF
+               LET g_current_row = g_current_idx  #目前指標
+               LET g_current_sw = TRUE
+               CALL cl_show_fld_cont()
+
+               #當每次點任一筆資料都會需要用到
+               #CALL axrp342_fetch("")
+
+            ON EXPAND (g_row_index)
+               #樹展開
+               #CALL axrp342_browser_expand(g_row_index)
+               #LET g_browser[g_row_index].b_isExp = 1
+
+            ON COLLAPSE (g_row_index)
+               #樹關閉
+
+         END DISPLAY
+
+
+         #add-point:ui_dialog段define
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+
+         BEFORE DIALOG
+            #CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+            #LET g_curr_diag = ui.DIALOG.getCurrent()
+            ##LET g_page = "first"
+            ##還原為原本指定筆數
+            #IF g_current_row > 1 THEN
+            #   #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+            #   IF g_current_row > g_browser.getLength() THEN
+            #      LET g_current_row = g_browser.getLength()
+            #   END IF
+            #   LET g_current_idx = g_current_row
+            #   CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+            #END IF
+            
+            #當每次點任一筆資料都會需要用到
+            #IF g_browser_cnt > 0 THEN
+            #   CALL axrp342_fetch("")
+            #END IF
+            IF cl_null(g_argv[1]) 
+               #AND NOT cl_null(g_argv[02]) AND NOT cl_null(g_argv[03]) 
+               #AND NOT cl_null(g_argv[04]) AND NOT cl_null(g_argv[05]) AND NOT cl_null(g_argv[06]) 
+               THEN 
+               DISPLAY g_xrca_m.xrcald  TO xrcald
+               CALL axrp342_xrcald_desc(g_xrca_m.xrcald)
+            END IF
+
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+         
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+
+         ON ACTION close
+            LET li_exit = TRUE
+            EXIT DIALOG
+
+
+         #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+         ON ACTION controls
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden
+            END IF
+
+
+      ON ACTION reduction
+
+         LET g_action_choice="reduction"
+         IF cl_auth_chk_act("reduction") THEN
+            LET g_success = 'Y'
+            CALL axrp342_p() 
+            IF g_success = 'N' THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_err_showmsg() 
+               CALL cl_ask_end2(2) RETURNING l_flag
+            ELSE
+               CALL s_transaction_end('Y','0')
+               CALL cl_err_showmsg() 
+               CALL cl_ask_end2(1) RETURNING l_flag
+            END IF
+           
+            IF l_flag THEN
+               LET g_argv[1]  = ''
+               LET g_argv[02] = ''
+               LET g_argv[03] = ''
+               LET g_argv[04] = ''
+               LET g_argv[05] = ''
+               LET g_argv[05] = ''
+               CONTINUE WHILE 
+            ELSE   
+               CLOSE WINDOW w_axrp342
+               EXIT WHILE 
+            END IF
+         END IF
+
+      ON ACTION link  
+          IF NOT cl_null(g_browser[g_current_idx].b_xrca038) AND cl_null(g_browser[g_current_idx].b_xrcadocno) THEN 
+             CALL cl_cmdrun("aglt310  '"||g_browser[g_current_idx].b_xrca038||"'")
+          END IF          
+          
+          IF NOT cl_null(g_browser[g_current_idx].b_xrcadocno) THEN 
+             CALL cl_cmdrun("axrt330 '"||g_xrca_m.xrcald||"' '"||g_browser[g_current_idx].b_xrcadocno||"'")
+          END IF
+          
+      ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL axrp342_construct()
+            END IF
+          
+
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+
+      END DIALOG
+
+   END WHILE
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_browser_fill" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_browser_fill(ps_wc,ps_page_action)
+   {<Local define>}
+   DEFINE ps_wc              STRING
+   DEFINE ps_page_action     STRING
+   DEFINE ls_sql             STRING
+   DEFINE li_idx             LIKE type_t.num5
+   DEFINE li_idx2            LIKE type_t.num5
+   DEFINE li_lv              LIKE type_t.num10
+   DEFINE pi_id              LIKE type_t.num10
+   DEFINE l_pmaa004          LIKE pmaa_t.pmaa004
+   DEFINE l_xrca004_desc     LIKE type_t.chr100    
+   DEFINE l_xrca007_desc     LIKE type_t.chr100 
+   {</Local define>}
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point
+
+   #CLEAR FORM
+   #INITIALIZE g_xrca_m.* TO NULL
+   CALL g_browser.clear()
+
+   LET li_idx = 1
+   LET g_browser[li_idx].b_pid     = 0
+   LET g_browser[li_idx].b_id      = 0, ".", 1 USING "<<<"
+   LET g_browser[li_idx].b_exp     = TRUE
+   LET g_browser[li_idx].b_expcode = 1
+   LET g_browser[li_idx].b_hasC    = TRUE
+   #LET g_browser[li_idx].b_show    = ''
+   CALL axrp342_desc_show(1)
+   LET li_idx = li_idx + 1
+
+   LET ls_sql = " SELECT UNIQUE xrca038 ",
+                " FROM xrca_t,glap_t ",
+                " WHERE xrcaent = '" ||g_enterprise|| "' AND ", g_wc,
+                "   AND xrca038 IS NOT NULL",
+                "   AND glapdocno = xrca038",
+                "   AND xrcald = '",g_xrca_m.xrcald,"'",
+                " ORDER BY xrca038"
+
+   PREPARE browse_pre FROM ls_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+
+   FOREACH browse_cur INTO g_browser[li_idx].b_xrca038
+
+      LET g_browser[li_idx].b_pid     = g_browser[1].b_id
+      LET g_browser[li_idx].b_id      = g_browser[1].b_id, ".", li_idx USING "<<<"
+      LET g_browser[li_idx].b_exp     = TRUE
+      LET g_browser[li_idx].b_isExp   = TRUE
+      LET g_browser[li_idx].b_expcode = 1
+      LET g_browser[li_idx].b_hasC    = TRUE
+      LET g_browser[li_idx].b_show    = g_browser[li_idx].b_xrca038
+      CALL axrp342_desc_show(li_idx)
+      LET li_idx = li_idx + 1
+
+      
+      LET ls_sql = " SELECT UNIQUE xrca038,xrcadocno,xrcadocdt,xrca007,xrca004,xrca100,xrca108,xrca118,xrca128,xrca138,xrcald,xrca057 ",
+                   "   FROM xrca_t ",
+                   #"  WHERE xrcaent = '" ||g_enterprise|| "' AND ", g_wc,
+                   "  WHERE xrcaent = '" ||g_enterprise|| "' ", 
+                   "    AND xrca038 = ? ",
+                   "  ORDER BY xrca038"
+   
+      #LET li_lv = g_browser[pi_id].b_expcode
+      LET li_lv = g_browser[li_idx].b_expcode
+   
+      PREPARE leaf_pre FROM ls_sql
+      DECLARE leaf_cur CURSOR FOR leaf_pre
+      OPEN leaf_cur USING g_browser[li_idx-1].b_xrca038
+      
+      LET li_idx2 = li_idx
+      CALL g_browser.insertElement(g_cnt)
+      FOREACH leaf_cur INTO g_browser[li_idx2].b_xrca038,g_browser[li_idx2].b_xrcadocno,g_browser[li_idx2].b_xrcadocdt,
+                            g_browser[li_idx2].b_xrca007,g_browser[li_idx2].b_xrca004,g_browser[li_idx2].b_xrca100,g_browser[li_idx2].b_xrca108,
+                            g_browser[li_idx2].b_xrca118,g_browser[li_idx2].b_xrca128,g_browser[li_idx2].b_xrca138,g_browser[li_idx2].b_xrcald,
+                            g_browser[li_idx2].b_xrca057
+   
+         LET g_browser[li_idx2].b_pid     = g_browser[li_idx-1].b_id
+         LET g_browser[li_idx2].b_id      = g_browser[li_idx-1].b_id , ".", li_idx2 USING "<<<"
+         LET g_browser[li_idx2].b_exp     = TRUE
+         LET g_browser[li_idx2].b_expcode = 2
+         LET g_browser[li_idx2].b_hasC    = FALSE
+         LET g_browser[li_idx2].b_show = g_browser[li_idx2].b_xrcadocno
+         CALL axrp342_desc_show(li_idx2)
+         
+         SELECT pmaa004 INTO l_pmaa004 FROM pmaa_t WHERE pmaaent = g_enterprise AND pmaa001 = g_browser[li_idx2].b_xrca004
+   
+         INITIALIZE g_ref_fields TO NULL 
+         IF g_browser[li_idx2].b_xrca057 IS NOT NULL AND l_pmaa004 = '2'THEN 
+            LET g_ref_fields[1] = g_browser[li_idx2].b_xrca057
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmak003 FROM pmak_t WHERE pmakent='"||g_enterprise||"' AND pmak001=? ","") RETURNING g_rtn_fields   
+         ELSE
+            LET g_ref_fields[1] = g_browser[li_idx2].b_xrca004
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+         END IF
+         LET l_xrca004_desc = '', g_rtn_fields[1] , ''
+         
+         LET g_browser[li_idx2].b_xrca004 = g_browser[li_idx2].b_xrca004,' ',l_xrca004_desc
+         
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = g_browser[li_idx2].b_xrca007
+         CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3111' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET l_xrca007_desc = '', g_rtn_fields[1] , ''
+         
+         LET g_browser[li_idx2].b_xrca007 = g_browser[li_idx2].b_xrca007,' ',l_xrca007_desc
+         
+         
+         LET li_idx2 = li_idx2 + 1
+         CALL g_browser.insertElement(li_idx2)
+         
+         IF li_idx2 > g_max_rec AND g_error_show = 1 THEN
+            CALL cl_err( '', 9035, 1)
+            EXIT FOREACH
+         END IF
+      END FOREACH
+   
+#      CALL g_browser.deleteElement(li_idx2)
+      
+      LET li_idx = g_browser.getLength()
+
+      IF li_idx > g_max_rec AND g_error_show = 1 THEN
+         CALL cl_err( '', 9035, 1)
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+   LET g_error_show = 0
+
+   CALL g_browser.deleteElement(g_browser.getLength())
+
+   LET g_browser_cnt = g_browser.getLength()
+
+   #瀏覽頁筆數顯示
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+
+   #CALL axrp342_fetch("")
+
+   FREE browse_pre
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_browser_expand" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_browser_expand(pi_id)
+   {<Local define>}
+   DEFINE pi_id            LIKE type_t.num10
+   DEFINE li_lv            LIKE type_t.num10
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE ls_wc            STRING
+   DEFINE ls_type_list     STRING
+   DEFINE ls_sql           STRING
+   {</Local define>}
+   #add-point:browser_expand段define
+   {<point name="browser_expand.define"/>}
+   #end add-point
+
+   #已經展開過
+   IF g_browser[pi_id].b_isExp = TRUE THEN
+      RETURN
+   END IF
+
+   #leaf展開
+   IF g_browser[pi_id].b_expcode = (2-1) THEN
+      #CALL axrp342_browser_expand_leaf(pi_id)
+      RETURN
+   END IF
+
+   LET li_lv = g_browser[pi_id].b_expcode
+   LET g_browser[pi_id].b_isExp = TRUE
+
+   CASE li_lv
+      WHEN 1
+         LET ls_wc = " AND xrca038 = '",g_browser[pi_id].b_xrca038,"' "
+         LET ls_type_list = "xrca038"
+                            #,","
+
+      WHEN 2
+         LET ls_wc = " AND xrca038 = '", g_browser[pi_id].b_xrca038, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "xrca038"
+                            #,","
+                            #,","
+
+      WHEN 3
+         LET ls_wc = " AND xrca038 = '", g_browser[pi_id].b_xrca038, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "xrca038"
+                            #,","
+                            #,","
+                            #,","
+
+      WHEN 4
+         LET ls_wc = " AND xrca038 = '", g_browser[pi_id].b_xrca038, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "xrca038"
+                            #,","
+                            #,","
+                            #,","
+                            #,","
+
+      WHEN 5
+         LET ls_wc = " AND xrca038 = '", g_browser[pi_id].b_xrca038, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "xrca038"
+                            #,","
+                            #,","
+                            #,","
+                            #,","
+                            #,","
+   END CASE
+
+   LET ls_sql = " SELECT UNIQUE   ", ls_type_list,
+                " FROM xrca_t ",
+                "  ",
+                "  ",
+                " WHERE xrcaent = '" ||g_enterprise|| "' AND ", g_wc, ls_wc
+
+   LET li_lv = g_browser[pi_id].b_expcode
+
+   #add-point:browser_expand段before prepare
+   {<point name="browser_expand.before_prepare"/>}
+   #end add-point
+
+   PREPARE expand_pre FROM ls_sql
+   DECLARE expand_cur CURSOR FOR expand_pre
+
+   LET li_idx = pi_id + 1
+   CALL g_browser.insertElement(li_idx)
+   FOREACH expand_cur INTO g_browser[li_idx].b_xrca038
+      LET g_browser[li_idx].b_pid     = g_browser[pi_id].b_id
+      LET g_browser[li_idx].b_id      = g_browser[pi_id].b_id , ".", li_idx USING "<<<"
+      LET g_browser[li_idx].b_exp     = FALSE
+      LET g_browser[li_idx].b_expcode = li_lv + 1
+      LET g_browser[li_idx].b_hasC    = TRUE
+      CASE li_lv
+         WHEN 1
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 2
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 3
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 4
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 5
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+      END CASE
+      CALL axrp342_desc_show(li_idx)
+      LET li_idx = li_idx + 1
+      CALL g_browser.insertElement(li_idx)
+   END FOREACH
+
+   CALL g_browser.deleteElement(li_idx)
+
+   LET g_browser_cnt = g_browser.getLength()
+
+   #瀏覽頁筆數顯示
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_desc_show" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_desc_show(pi_ac)
+   {<Local define>}
+   DEFINE pi_ac   LIKE type_t.num5
+   DEFINE li_tmp  LIKE type_t.num5
+   {</Local define>}
+   #add-point:desc_show段define
+   {<point name="desc_show.define"/>}
+   #end add-point
+
+   LET li_tmp = g_cnt
+   LET g_cnt = pi_ac
+
+   #add-point:desc_show段desc處理
+   IF g_cnt = 1 THEN 
+      LET g_browser[g_cnt].b_show = cl_getmsg('axr-00075',g_lang)
+   END IF 
+   
+   
+   #end add-point
+   LET g_cnt = li_tmp
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_construct" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_construct()
+   {<Local define>}
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING
+   {</Local define>}
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point
+
+   CLEAR FORM
+   INITIALIZE g_xrca_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+
+   LET g_qryparam.state = "c"
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT BY NAME g_xrca_m.xrcald    
+         BEFORE INPUT
+            LET g_xrca_m.xrcald = g_glalld
+        
+         BEFORE FIELD xrcald
+            CALL axrp342_xrcald_desc(g_xrca_m.xrcald)
+         
+         AFTER FIELD xrcald
+            CALL axrp342_xrcald_desc(g_xrca_m.xrcald)
+            IF NOT cl_null(g_xrca_m.xrcald) THEN 
+               IF NOT ap_chk_isExist(g_xrca_m.xrcald,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? ",'agl-00016',1) THEN 
+                  LET g_xrca_m.xrcald = ''
+                  NEXT FIELD CURRENT
+               END IF 
+               IF NOT ap_chk_isExist(g_xrca_m.xrcald,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? AND glaastus = 'Y' ",'agl-00051',1) THEN 
+                  LET g_xrca_m.xrcald = ''
+                  NEXT FIELD CURRENT
+               END IF 
+               IF NOT ap_chk_isExist(g_xrca_m.xrcald,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? AND (glaa014 = 'Y' OR glaa008 = 'Y') AND glaastus = 'Y' ",'axr-00021',1) THEN 
+                  LET g_xrca_m.xrcald = ''
+                  NEXT FIELD CURRENT
+               END IF 
+               IF NOT s_ld_chk_authorization(g_user,g_xrca_m.xrcald) THEN 
+                  CALL cl_err(g_xrca_m.xrcald,'axr-00022',1)
+                  LET g_xrca_m.xrcald = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            LET g_xrcald = g_xrca_m.xrcald
+            
+         ON ACTION controlp INFIELD xrcald
+	  	    INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+	  	    LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xrca_m.xrcald      #給予default值
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            CALL  q_authorised_ld()                                  #呼叫開窗
+            LET g_xrca_m.xrcald = g_qryparam.return1       #將開窗取得的值回傳到變數
+            DISPLAY g_xrca_m.xrcald TO xrcald              #顯示到畫面上
+            CALL axrp342_xrcald_desc(g_xrca_m.xrcald)
+            NEXT FIELD xrcald                              #返回原欄位  
+            
+         AFTER INPUT
+
+      END INPUT  
+       
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON xrcadocno,xrcadocdt,xrca004,xrca038,glapcrtid
+
+         BEFORE CONSTRUCT
+            #CALL cl_qbe_init()
+            
+
+         #----<<xrcadocno>>----
+         ON ACTION controlp INFIELD xrcadocno
+            #add-point:ON ACTION controlp INFIELD xrcadocno
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.where = " xrcald = '",g_xrca_m.xrcald,"'",
+			                       "   AND xrcastus = 'Y'",
+			                       "   AND xrca038 IS NOT NULL"
+            CALL q_xrcadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrcadocno  #顯示到畫面上
+
+            NEXT FIELD xrcadocno                     #返回原欄位
+            
+            
+         #----<<xrca004>>----
+         #Ctrlp:construct.c.xrca004
+         ON ACTION controlp INFIELD xrca004
+            #add-point:ON ACTION controlp INFIELD xrca004
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.where = " pmaa002 = '2' OR pmaa002 = '3'"
+            CALL q_pmaa001_7()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrca004  #顯示到畫面上
+
+            NEXT FIELD xrca004                     #返回原欄位 
+
+         #----<<xrca038>>----
+         #Ctrlp:construct.c.xrca038
+         ON ACTION controlp INFIELD xrca038
+            #add-point:ON ACTION controlp INFIELD xrca038
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.where = " xrcald = '",g_xrca_m.xrcald,"'"
+            CALL q_xrca038()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrca038  #顯示到畫面上
+
+            NEXT FIELD xrca038                     #返回原欄位 
+
+         #----<<glapcrtid>>----
+         #Ctrlp:construct.c.glapcrtid
+         ON ACTION controlp INFIELD glapcrtid
+            #add-point:ON ACTION controlp INFIELD glapcrtid
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glapcrtid  #顯示到畫面上
+
+            NEXT FIELD glapcrtid                     #返回原欄位
+
+      END CONSTRUCT
+       
+
+	
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+
+      #查詢CONSTRUCT共用ACTION
+      &include "construct_action.4gl"
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #LET g_wc = g_wc CLIPPED,cl_get_extra_cond("", "")
+   #LET g_wc = g_wc1," AND ",g_wc2," AND ",g_wc3
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_fetch" order="7" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_fetch(p_fl)
+   {<Local define>}
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   {</Local define>}
+
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+
+   CASE p_fl
+      WHEN "F" LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN
+            LET g_current_idx = g_current_idx - 1
+         END IF
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF
+      WHEN "L"
+         LET g_current_idx = g_header_cnt
+      WHEN "/"
+         IF (NOT g_no_ask) THEN
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE
+            END IF
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE
+   END CASE
+
+   LET g_browser_cnt = g_browser.getLength()
+
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   CALL ui.Interface.refresh()
+
+   #單頭筆數顯示
+   #DISPLAY g_browser_idx TO FORMONLY.idx            #當下筆數
+   #DISPLAY g_browser_cnt TO FORMONLY.cnt            #總筆數
+
+   IF g_browser[g_current_idx].b_expcode <> "2" THEN
+      INITIALIZE g_xrca_m.* TO NULL
+      DISPLAY BY NAME g_xrca_m.*
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+      RETURN
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+
+
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+
+   CALL cl_navigator_setting(g_browser_idx, g_current_cnt)
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+
+   LET g_xrca_m.xrcald = g_browser[g_current_idx].b_xrcald
+   LET g_xrca_m.xrcadocno = g_browser[g_current_idx].b_xrcadocno
+
+
+
+   #重讀DB,因TEMP有不被更新特性
+    SELECT UNIQUE xrcald,xrcacomp,xrcadocno,xrcadocdt,xrca004,xrca038,glapcrtid
+ INTO g_xrca_m.xrcald,g_xrca_m.glaacomp,g_xrca_m.xrcadocno,g_xrca_m.xrcadocdt,g_xrca_m.xrca004,g_xrca_m.xrca038,
+     g_xrca_m.glapcrtid
+ FROM xrca_t
+ WHERE xrcaent = g_enterprise AND xrcald = g_xrca_m.xrcald AND xrcadocno = g_xrca_m.xrcadocno
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("xrca_t",SQLCA.sqlcode,0)
+      INITIALIZE g_xrca_m.* TO NULL
+      RETURN
+   END IF
+
+   #若無資料則關閉相關功能
+
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point
+
+
+
+   #重新顯示
+   CALL axrp342_show()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_show" order="8" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point
+
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+
+
+
+   LET g_xrca_m_t.* = g_xrca_m.*      #保存單頭舊值
+
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+
+   #帶出公用欄位reference值
+   #此段落由子樣板a12產生
+      ##LET g_xrca_m.xrcaownid_desc = cl_get_username(g_xrca_m.xrcaownid)
+      ##LET g_xrca_m.xrcaowndp_desc = cl_get_deptname(g_xrca_m.xrcaowndp)
+      #LET g_xrca_m.xrcacrtid_desc = cl_get_username(g_xrca_m.xrcacrtid)
+      ##LET g_xrca_m.xrcacrtdp_desc = cl_get_deptname(g_xrca_m.xrcacrtdp)
+      ##LET g_xrca_m.xrcamodid_desc = cl_get_username(g_xrca_m.xrcamodid)
+      ##LET g_xrca_m.xrcacnfid_desc = cl_get_deptname(g_xrca_m.xrcacnfid)
+      ##LET g_xrca_m.xrcapstid_desc = cl_get_deptname(g_xrca_m.xrcapstid)
+
+
+
+
+   #讀入ref值(單頭)
+   #add-point:show段reference
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrca_m.xrcald
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrca_m.xrcald_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrca_m.xrcald_desc
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrca_m.glaacomp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrca_m.glaacomp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_xrca_m.glaacomp_desc
+          {#ADP版次:1#}
+   #end add-point
+
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_xrca_m.xrcald,g_xrca_m.xrcald_desc,g_xrca_m.glaacomp,g_xrca_m.xrcadocno,g_xrca_m.xrcadocdt,
+       g_xrca_m.xrca004,g_xrca_m.xrca038,g_xrca_m.glapcrtid
+
+   #顯示狀態(stus)圖片
+
+
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_set_entry" order="9" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_set_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd LIKE type_t.chr1
+   {</Local define>}
+
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point
+
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("xrcald,xrcadocno",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point
+   END IF
+
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_set_no_entry" order="10" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_set_no_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd LIKE type_t.chr1
+   {</Local define>}
+
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point
+
+   IF p_cmd = "u" THEN
+      CALL cl_set_comp_entry("xrcald,xrcadocno",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point
+   END IF
+
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_default_search" order="11" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axrp342_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point
+
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point
+
+   LET g_pagestart = 1
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " xrcald = '", g_argv[1], "' AND "
+   END IF
+
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " xrcadocno = '", g_argv[02], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " xrcadocdt = '", g_argv[03], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[04]) THEN
+      LET ls_wc = ls_wc, " xrca004 = '", g_argv[04], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[05]) THEN
+      LET ls_wc = ls_wc, " xrca038 = '", g_argv[05], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[06]) THEN
+      LET ls_wc = ls_wc, " glapcrtid = '", g_argv[06], "' AND "
+   END IF
+   
+   LET g_xrca_m.xrcald = g_argv[1]
+   
+   DISPLAY g_argv[1]  TO xrcald
+   CALL axrp342_xrcald_desc(g_argv[1])
+   DISPLAY g_argv[02] TO xrcadocno
+   DISPLAY g_argv[03] TO xrcadocdt
+   DISPLAY g_argv[04] TO xrca004
+   DISPLAY g_argv[05] TO xrca038 
+   DISPLAY g_argv[05] TO glapcrtid
+
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+   ELSE
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_p" order="12" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 批處理邏輯
+PRIVATE FUNCTION axrp342_p()
+   DEFINE l_xrca038          LIKE xrca_t.xrca038
+   DEFINE l_xrcadocno        LIKE xrca_t.xrcadocno
+   DEFINE l_glapstus         LIKE glap_t.glapstus
+   DEFINE l_glapdocdt        LIKE glap_t.glapdocdt
+   
+   #开启事务
+   CALL s_transaction_begin()
+   #错误信息汇总初始化
+   CALL cl_showmsg_init()
+   
+   LET g_sql = " SELECT UNIQUE xrca038,xrcadocno ",
+                "  FROM xrca_t,glap_t ",
+                " WHERE xrcaent = '",g_enterprise,"' AND ", g_wc,
+                "   AND xrca038 IS NOT NULL",
+                "   AND glapdocno = xrca038 ",
+                "   AND xrcald = '",g_xrca_m.xrcald,"'",
+                " ORDER BY xrca038"
+   PREPARE axrp342_pre FROM g_sql
+   DECLARE axrp342_cur CURSOR FOR axrp342_pre
+   
+   FOREACH axrp342_cur INTO l_xrca038,l_xrcadocno
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      SELECT glapstus,glapdocdt INTO l_glapstus,l_glapdocdt
+        FROM glap_t
+       WHERE glapent = g_enterprise
+         AND glapld = g_xrca_m.xrcald
+         AND glapdocno = l_xrca038
+         
+      IF l_glapstus = 'Y' OR l_glapstus = 'S' THEN 
+         CALL cl_errmsg(l_xrcadocno,l_xrca038,'','axr-00076',1)
+         LET g_success = 'N' 
+      END IF 
+      
+      DELETE FROM glap_t 
+       WHERE glapent = g_enterprise
+         AND glapld = g_xrca_m.xrcald
+         AND glapdocno = l_xrca038 
+         
+      
+      IF SQLCA.SQLCODE THEN
+         CALL cl_errmsg('DELETE glap_t',l_xrca038,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+         EXIT FOREACH
+      END IF
+      
+      #IF NOT s_aooi200_del_docno(l_xrca038,l_glapdocdt) THEN
+      #   CALL s_transaction_end('N','0')
+      #   LET g_success = 'N' 
+      #   EXIT FOREACH
+      #END IF
+      
+      DELETE FROM glaq_t 
+       WHERE glaqent = g_enterprise
+         AND glaqld = g_xrca_m.xrcald
+         AND glaqdocno = l_xrca038 
+      
+      IF SQLCA.SQLCODE THEN
+         CALL cl_errmsg('DELETE glaq_t',l_xrca038,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+         EXIT FOREACH
+      END IF
+      
+      UPDATE xrca_t SET xrca038 = NULL
+       WHERE xrcaent = g_enterprise
+         AND xrcald = g_xrca_m.xrcald
+         #AND xrcadocno = l_xrcadocno 
+         AND xrca038 = l_xrca038 
+         
+      IF SQLCA.SQLCODE THEN
+         CALL cl_errmsg('update xrca_t',l_xrcadocno,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH 
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp342_xrcald_desc" order="13" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 帳別帶值
+PRIVATE FUNCTION axrp342_xrcald_desc(p_xrcald)
+   DEFINE p_xrcald         LIKE xrca_t.xrcald
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_xrcald
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrca_m.xrcald_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xrca_m.xrcald_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_xrcald
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaacomp FROM glaa_t WHERE glaaent='"||g_enterprise||"' AND glaald=? ","") RETURNING g_rtn_fields
+   LET g_xrca_m.glaacomp = g_rtn_fields[1]
+   DISPLAY BY NAME g_xrca_m.glaacomp
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca_m.glaacomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrca_m.glaacomp_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xrca_m.glaacomp_desc
+   
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_wc1          STRING 
+DEFINE g_wc2          STRING
+DEFINE g_wc3          STRING
+DEFINE g_xrcald       LIKE xrca_t.xrcald
+DEFINE g_glalld       LIKE glal_t.glalld]]>
+  </point>
+  <section id="axrp342.description" ver="9" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000215
+#+ 
+#+ Filename...: axrp342
+#+ Description: 應收傳票批次還原作業
+#+ Creator....: 02114(2014/01/14)
+#+ Modifier...: 02114(2014/07/10)
+#+ Buildtype..: 應用 i00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="axrp342.free_style_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style
+{<point name="free_style.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrp342.global" ver="2" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrp342.main" ver="1" status="" src="s">
+    <![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axr","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE axrp342_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axrp342 WITH FORM cl_ap_formpath("axr",g_code)
+   
+      #程式初始化
+      CALL axrp342_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #進入選單 Menu (='N')
+      CALL axrp342_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_axrp342
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+  </section>
+  <section id="axrp342.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+</add_points>

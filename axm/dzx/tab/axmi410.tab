@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmi410" module="axm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="05293" crtdt="2014-06-16 14:07:15" modid="07024" moddt="2016-05-12 08:55:21" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="銷售報價範本維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xmfasite,xmfadocno,xmfal003,xmfal004,xmfa001,xmfastus,xmfaownid,xmfaownid_desc(chr80),xmfaowndp,xmfaowndp_desc(chr80),xmfacrtid,xmfacrtid_desc(chr80),xmfacrtdp,xmfacrtdp_desc(chr80),xmfacrtdt,xmfamodid,xmfamodid_desc(chr80),xmfamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmfbsite,xmfb002,xmfb003,xmfb003_desc(chr500),xmfb004,xmfb005,xmfb006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xmfcsite,xmfc003,xmfc004,xmfc004_desc(chr500),xmfc004_desc_desc(chr500),xmfc005,xmfc005_desc(chr500),xmfc006,xmfc007,xmfc007_desc(chr500),xmfc008"/>
+      <var id="bs_field" value="xmfadocno,xmfadocno_desc(chr80),xmfa001" pk="xmfadocno,xmfa001" order=""/>
+      <bs_reference field="xmfadocno_desc" ref_field="xmfadocno" ref_sql="SELECT xmfal003 FROM xmfal_t WHERE xmfalent=$varg_enterprise$var AND xmfaldocno=? AND xmfal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmi410" method="dialog">
+    <section id="input">
+      <input id="head" field="xmfasite,xmfadocno,xmfal003,xmfal004,xmfa001,xmfastus"/>
+      <input id="body" page="1" field="xmfbsite,xmfb002,xmfb003,xmfb004,xmfb005,xmfb006" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xmfcsite,xmfc003,xmfc004,xmfc005,xmfc006,xmfc007,xmfc008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xmfasite,xmfadocno,xmfal003,xmfal004,xmfa001,xmfastus,xmfaownid,xmfaowndp,xmfacrtid,xmfacrtdp,xmfacrtdt,xmfamodid,xmfamoddt"/>
+      <construct id="body" page="1" field="xmfbsite,xmfb002,xmfb003,xmfb004,xmfb005,xmfb006"/>
+      <construct id="body" page="2" field="xmfcsite,xmfc003,xmfc004,xmfc005,xmfc006,xmfc007,xmfc008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xmfadocno,xmfa001"/>
+      <set id="head" type="no_entry" field="xmfadocno,xmfa001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xmfasite"/>
+      <column id="xmfadocno">
+        <controlp form="q_xmfadocno" state="c"/>
+      </column>
+      <column id="xmfal003"/>
+      <column id="xmfal004"/>
+      <column id="xmfa001" type="S" default="0">
+        <after>
+          <check chkid="v_xmfa001" id="isExist"/>
+        </after>
+      </column>
+      <column id="xmfastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xmfaownid">
+        <after>
+          <reference field="xmfaownid_desc" ref_field="xmfa_t.xmfaownid" map_field="xmfaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmfaownid_desc"/>
+      <column id="xmfaowndp">
+        <after>
+          <reference field="xmfaowndp_desc" ref_field="xmfa_t.xmfaowndp" map_field="xmfaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xmfaowndp_desc"/>
+      <column id="xmfacrtid">
+        <after>
+          <reference field="xmfacrtid_desc" ref_field="xmfa_t.xmfacrtid" map_field="xmfacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmfacrtid_desc"/>
+      <column id="xmfacrtdp">
+        <after>
+          <reference field="xmfacrtdp_desc" ref_field="xmfa_t.xmfacrtdp" map_field="xmfacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xmfacrtdp_desc"/>
+      <column id="xmfacrtdt"/>
+      <column id="xmfamodid">
+        <after>
+          <reference field="xmfamodid_desc" ref_field="xmfa_t.xmfamodid" map_field="xmfamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmfamodid_desc"/>
+      <column id="xmfamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xmfbsite"/>
+      <column id="xmfb002">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmfb003">
+        <after>
+          <reference field="xmfb003_desc" ref_field="xmfb003" map_field="xmfb003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;803&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_5" state="i"/>
+        <controlp form="q_oocq002_5" state="c"/>
+      </column>
+      <column id="xmfb003_desc"/>
+      <column id="xmfb004" type="S" default="Y"/>
+      <column id="xmfb005" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmfb006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xmfcsite"/>
+      <column id="xmfc003">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmfc004">
+        <after>
+          <check chkid="v_imaf001_14" id="isExist"/>
+          <reference field="xmfc004_desc" ref_field="xmfc_t.xmfc004" map_field="xmfcent,xmfc004" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_15" state="i"/>
+        <controlp form="q_imaf001_15" state="c"/>
+      </column>
+      <column id="xmfc004_desc">
+        <after>
+          <reference field="xmfc004_desc_desc" ref_field="xmfc_t.xmfc004" map_field="xmfcent,xmfc004" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmfc004_desc_desc"/>
+      <column id="xmfc005">
+        <after/>
+      </column>
+      <column id="xmfc005_desc"/>
+      <column id="xmfc006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmfc007">
+        <after>
+          <check chkid="v_imao002" id="isExist"/>
+          <reference field="xmfc007_desc" ref_field="xmfc_t.xmfc007" map_field="xmfcent,xmfc007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imao002" state="i"/>
+        <controlp form="q_imao002" state="c"/>
+      </column>
+      <column id="xmfc007_desc"/>
+      <column id="xmfc008"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xmfa_t" pk="xmfadocno,xmfa001">
+      <sql id="forupd_sql" type="sql" query="SELECT xmfasite,xmfadocno,&apos;&apos;,&apos;&apos;,xmfa001,xmfastus,xmfaownid,&apos;&apos;,xmfaowndp,&apos;&apos;,xmfacrtid,&apos;&apos;,xmfacrtdp,&apos;&apos;,xmfacrtdt,xmfamodid,&apos;&apos;,xmfamoddt FROM xmfa_t WHERE xmfaent= ? AND xmfadocno=? AND xmfa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xmfasite,xmfadocno,&apos;&apos;,&apos;&apos;,xmfa001,xmfastus,xmfaownid,&apos;&apos;,xmfaowndp,&apos;&apos;,xmfacrtid,&apos;&apos;,xmfacrtdp,&apos;&apos;,xmfacrtdt,xmfamodid,&apos;&apos;,xmfamoddt FROM xmfa_t" order="xmfadocno,xmfa001"/>
+      <sql id="append" type="lang" target="xmfal_t.xmfal003,xmfal_t.xmfal004" table="xmfal_t" fk="xmfadocno" pk="xmfaldocno,xmfal002" field="xmfal003,xmfal004"/>
+    </head>
+    <body id="xmfb_t" page="1" linked="" pk="xmfb002" fk="xmfbdocno,xmfb001">
+      <sql id="forupd_sql_detail" query="SELECT xmfbsite,xmfb002,xmfb003,&apos;&apos;,xmfb004,xmfb005,xmfb006 FROM xmfb_t WHERE xmfbent=? AND xmfbdocno=? AND xmfb001=? AND xmfb002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmfbsite,xmfb002,xmfb003,&apos;&apos;,xmfb004,xmfb005,xmfb006 FROM xmfb_t WHERE xmfbent=? AND xmfbdocno=? AND xmfb001=?"/>
+    </body>
+    <body id="xmfc_t" page="2" linked="" detail="Y" master="xmfb_t" default_site="N" pk="xmfc003" fk="xmfcdocno,xmfc001,xmfc002">
+      <sql id="forupd_sql_detail" query="SELECT xmfcsite,xmfc003,xmfc004,&apos;&apos;,&apos;&apos;,xmfc005,&apos;&apos;,xmfc006,xmfc007,&apos;&apos;,xmfc008 FROM xmfc_t WHERE xmfcent=? AND xmfcdocno=? AND xmfc001=? AND xmfc002=? AND xmfc003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmfcsite,xmfc003,xmfc004,&apos;&apos;,&apos;&apos;,xmfc005,&apos;&apos;,xmfc006,xmfc007,&apos;&apos;,xmfc008 FROM xmfc_t WHERE xmfcent=? AND xmfcdocno=? AND xmfc001=? AND xmfc002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

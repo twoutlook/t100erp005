@@ -1,0 +1,138 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbi255" module="adb" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02749" crtdt="2014-04-30 16:36:12" modid="02749" moddt="2015-03-02 09:41:45" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="路線順序規劃維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="dbaf001,dbaf001_desc(chr80),f_dbaf011(chr500),f_dbaf012(chr500),f_dbaf013(chr500),f_dbaf014(chr500),f_dbaf015(chr500),f_dbaf0111(chr500),f_dbaf0121(chr500),f_dbaf0131(chr500),f_dbaf0141(chr500),f_dbaf0151(chr500)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="dbafstus,dbaf004,dbaf003,dbaf003_desc(chr500),l_dbad002(chr500),l_dbad002_desc(chr500),dbaf011,dbaf012,dbaf013,dbaf014,dbaf015,dbaf002"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="dbaf003,dbaf002,dbafownid,dbafownid_desc(chr500),dbafowndp,dbafowndp_desc(chr500),dbafcrtid,dbafcrtid_desc(chr500),dbafcrtdp,dbafcrtdp_desc(chr500),dbafcrtdt,dbafmodid,dbafmodid_desc(chr500),dbafmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="open_adbi255_01_1"/>
+      <action id="modify" type="standard"/>
+      <action id="open_adbi255_01_2"/>
+      <action id="return_trip"/>
+    </section>
+  </structure>
+  <form id="0" module="adb" filename="adbi255" method="dialog">
+    <section id="input">
+      <input id="head" field="dbaf001"/>
+      <input id="body" page="1" field="dbafstus,dbaf004,dbaf003,dbaf011,dbaf012,dbaf013,dbaf014,dbaf015,dbaf002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="dbaf001"/>
+      <construct id="body" page="1" field="dbafstus,dbaf003,l_dbad002,l_dbad002_desc,dbaf011,dbaf012,dbaf013,dbaf014,dbaf015,dbaf002"/>
+      <construct id="body" page="2" field="dbafownid,dbafowndp,dbafcrtid,dbafcrtdp,dbafcrtdt,dbafmodid,dbafmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="dbaf001"/>
+      <set id="head" type="no_entry" field="dbaf001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="dbaf001">
+        <after>
+          <check chkid="v_dbab001" id="isExist"/>
+          <reference field="dbaf001_desc" ref_field="dbaf_t.dbaf001" map_field="dbafent,dbaf001" ref_sql="SELECT dbabl003 FROM dbabl_t WHERE dbablent=$varg_enterprise$var AND dbabl001=? AND dbabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbab001" state="i"/>
+        <controlp form="q_dbab001" state="c"/>
+      </column>
+      <column id="dbaf001_desc"/>
+      <column id="f_dbaf011"/>
+      <column id="f_dbaf012"/>
+      <column id="f_dbaf013"/>
+      <column id="f_dbaf014"/>
+      <column id="f_dbaf015"/>
+      <column id="f_dbaf0111"/>
+      <column id="f_dbaf0121"/>
+      <column id="f_dbaf0131"/>
+      <column id="f_dbaf0141"/>
+      <column id="f_dbaf0151"/>
+    </init>
+    <init id="body" page="1">
+      <column id="dbafstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="dbaf004"/>
+      <column id="dbaf003">
+        <after>
+          <check chkid="v_adbd001" id="isExist"/>
+          <reference field="dbaf003_desc" ref_field="dbaf_t.dbaf003" map_field="dbafent,dbaf003" ref_sql="SELECT dbadl003 FROM dbadl_t WHERE dbadlent=$varg_enterprise$var AND dbadl001=? AND dbadl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbad001" state="i"/>
+        <controlp form="q_dbad001" state="c"/>
+      </column>
+      <column id="dbaf003_desc"/>
+      <column id="l_dbad002">
+        <after/>
+      </column>
+      <column id="l_dbad002_desc"/>
+      <column id="dbaf011"/>
+      <column id="dbaf012"/>
+      <column id="dbaf013"/>
+      <column id="dbaf014"/>
+      <column id="dbaf015"/>
+      <column id="dbaf002" type="S" default="1"/>
+    </init>
+    <init id="body" page="2">
+      <column id="dbafownid">
+        <after>
+          <reference field="dbafownid_desc" ref_field="dbaf_t.dbafownid" map_field="dbafownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbafownid_desc"/>
+      <column id="dbafowndp">
+        <after>
+          <reference field="dbafowndp_desc" ref_field="dbaf_t.dbafowndp" map_field="dbafowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbafowndp_desc"/>
+      <column id="dbafcrtid">
+        <after>
+          <reference field="dbafcrtid_desc" ref_field="dbaf_t.dbafcrtid" map_field="dbafcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbafcrtid_desc"/>
+      <column id="dbafcrtdp">
+        <after>
+          <reference field="dbafcrtdp_desc" ref_field="dbaf_t.dbafcrtdp" map_field="dbafcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbafcrtdp_desc"/>
+      <column id="dbafcrtdt"/>
+      <column id="dbafmodid">
+        <after>
+          <reference field="dbafmodid_desc" ref_field="dbaf_t.dbafmodid" map_field="dbafmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbafmodid_desc"/>
+      <column id="dbafmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="dbaf_t" pk="dbaf001">
+      <sql id="forupd_sql" type="sql" query="SELECT dbaf001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM dbaf_t WHERE dbafent= ? AND dbaf001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT dbaf001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM dbaf_t" order="dbaf001"/>
+    </head>
+    <body id="dbaf_t" page="1,2" linked="" pk="dbaf002,dbaf003" fk="dbaf001">
+      <sql id="forupd_sql_detail" query="SELECT dbafstus,dbaf004,dbaf003,&apos;&apos;,&apos;&apos;,&apos;&apos;,dbaf011,dbaf012,dbaf013,dbaf014,dbaf015,dbaf002,&apos;&apos;,&apos;&apos;,dbafownid,&apos;&apos;,dbafowndp,&apos;&apos;,dbafcrtid,&apos;&apos;,dbafcrtdp,&apos;&apos;,dbafcrtdt,dbafmodid,&apos;&apos;,dbafmoddt FROM dbaf_t WHERE dbafent=? AND dbaf001=? AND dbaf002=? AND dbaf003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT dbafstus,dbaf004,dbaf003,&apos;&apos;,&apos;&apos;,&apos;&apos;,dbaf011,dbaf012,dbaf013,dbaf014,dbaf015,dbaf002,&apos;&apos;,&apos;&apos;,dbafownid,&apos;&apos;,dbafowndp,&apos;&apos;,dbafcrtid,&apos;&apos;,dbafcrtdp,&apos;&apos;,dbafcrtdt,dbafmodid,&apos;&apos;,dbafmoddt FROM dbaf_t WHERE dbafent= ? AND dbaf001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

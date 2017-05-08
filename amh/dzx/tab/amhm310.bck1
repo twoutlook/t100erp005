@@ -1,0 +1,152 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhm310" module="amh" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="03247" crtdt="2015-04-03 17:32:31" modid="07142" moddt="2016-06-21 16:47:24" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="供應商人員資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mhafsite,mhafsite_desc(chr80),mhaf001,mhaf002,mhaf003,mhaf004,mhaf004_desc(chr80),mhaf005,mhaf006,mhaf017,mhaf007,mhaf008,mhaf009,mhaf010,mhaf011,mhaf018,mhaf012,mhaf012_desc(chr500),mhaf019,mhaf019_desc(chr80),mhaf013,mhaf013_desc(chr80),mhaf014,mhaf015,mhaf016,mhafunit,mhafstus,mhafownid,mhafownid_desc(chr80),mhafowndp,mhafowndp_desc(chr80),mhafcrtid,mhafcrtid_desc(chr80),mhafcrtdp,mhafcrtdp_desc(chr80),mhafcrtdt,mhafmodid,mhafmodid_desc(chr80),mhafmoddt,mhafcnfid,mhafcnfid_desc(chr80),mhafcnfdt"/>
+      <var id="bs_field" value="mhafsite,mhaf001,mhaf002,mhaf003,mhaf004,mhaf005,mhaf006,mhaf007,mhaf008,mhaf009,mhaf010,mhaf011,mhaf018,mhaf012,mhaf013,mhaf014,mhaf015" pk="mhaf001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="cancel_refuse"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="formal_entry"/>
+      <action id="output"/>
+      <action id="produce_payment"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="cancel_entry"/>
+      <action id="refuse_entry"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhm310" method="dialog">
+    <section id="input">
+      <input id="head" field="mhafsite,mhaf001,mhaf002,mhaf003,mhaf004,mhaf005,mhaf006,mhaf017,mhaf007,mhaf008,mhaf009,mhaf010,mhaf011,mhaf018,mhaf012,mhaf012_desc,mhaf019,mhaf013,mhaf014,mhaf015,mhaf016,mhafunit,mhafstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mhafsite,mhaf001,mhaf002,mhaf003,mhaf004,mhaf005,mhaf006,mhaf017,mhaf007,mhaf008,mhaf009,mhaf010,mhaf011,mhaf018,mhaf012,mhaf012_desc,mhaf019,mhaf013,mhaf014,mhaf015,mhaf016,mhafunit,mhafstus,mhafownid,mhafowndp,mhafcrtid,mhafcrtdp,mhafcrtdt,mhafmodid,mhafmoddt,mhafcnfid,mhafcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mhaf001"/>
+      <set id="head" type="no_entry" field="mhaf001"/>
+    </init>
+    <init id="head">
+      <column id="mhafsite">
+        <after>
+          <reference field="mhafsite_desc" ref_field="mhaf_t.mhafsite" map_field="mhafsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="mhafsite_desc"/>
+      <column id="mhaf001">
+        <controlp form="q_mhaf001" state="c"/>
+      </column>
+      <column id="mhaf002"/>
+      <column id="mhaf003"/>
+      <column id="mhaf004">
+        <after>
+          <reference field="mhaf004_desc" ref_field="mhaf004" map_field="mhaf004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2016&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mhaf004_desc"/>
+      <column id="mhaf005" type="S" default="1" def_scc="6773"/>
+      <column id="mhaf006"/>
+      <column id="mhaf017" type="S" default="1" def_scc="6853"/>
+      <column id="mhaf007"/>
+      <column id="mhaf008"/>
+      <column id="mhaf009" type="S" default="0" def_scc="6774"/>
+      <column id="mhaf010" type="S" default="0" def_scc="6774"/>
+      <column id="mhaf011" type="S" default="0" def_scc="6775"/>
+      <column id="mhaf018"/>
+      <column id="mhaf012">
+        <after>
+          <check chkid="v_mhae001" id="isExist"/>
+        </after>
+        <controlp form="q_mhae001" state="i"/>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="mhaf012_desc"/>
+      <column id="mhaf019">
+        <after>
+          <reference field="mhaf019_desc" ref_field="mhaf_t.mhaf019" map_field="mhafent,mhaf019" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mhaf019_desc"/>
+      <column id="mhaf013">
+        <after>
+          <reference field="mhaf013_desc" ref_field="mhaf013" map_field="mhaf013" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2002&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mhaf013_desc"/>
+      <column id="mhaf014"/>
+      <column id="mhaf015"/>
+      <column id="mhaf016"/>
+      <column id="mhafunit"/>
+      <column id="mhafstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="mhafownid">
+        <after>
+          <reference field="mhafownid_desc" ref_field="mhaf_t.mhafownid" map_field="mhafownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhafownid_desc"/>
+      <column id="mhafowndp">
+        <after>
+          <reference field="mhafowndp_desc" ref_field="mhaf_t.mhafowndp" map_field="mhafowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhafowndp_desc"/>
+      <column id="mhafcrtid">
+        <after>
+          <reference field="mhafcrtid_desc" ref_field="mhaf_t.mhafcrtid" map_field="mhafcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhafcrtid_desc"/>
+      <column id="mhafcrtdp">
+        <after>
+          <reference field="mhafcrtdp_desc" ref_field="mhaf_t.mhafcrtdp" map_field="mhafcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhafcrtdp_desc"/>
+      <column id="mhafcrtdt"/>
+      <column id="mhafmodid">
+        <after>
+          <reference field="mhafmodid_desc" ref_field="mhaf_t.mhafmodid" map_field="mhafmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhafmodid_desc"/>
+      <column id="mhafmoddt"/>
+      <column id="mhafcnfid">
+        <after>
+          <reference field="mhafcnfid_desc" ref_field="mhaf_t.mhafcnfid" map_field="mhafcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhafcnfid_desc"/>
+      <column id="mhafcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mhaf_t" pk="mhaf001">
+      <sql id="forupd_sql" type="sql" query="SELECT mhafsite,&apos;&apos;,mhaf001,mhaf002,mhaf003,mhaf004,&apos;&apos;,mhaf005,mhaf006,mhaf017,mhaf007,mhaf008,mhaf009,mhaf010,mhaf011,mhaf018,mhaf012,&apos;&apos;,mhaf019,&apos;&apos;,mhaf013,&apos;&apos;,mhaf014,mhaf015,mhaf016,mhafunit,mhafstus,mhafownid,&apos;&apos;,mhafowndp,&apos;&apos;,mhafcrtid,&apos;&apos;,mhafcrtdp,&apos;&apos;,mhafcrtdt,mhafmodid,&apos;&apos;,mhafmoddt,mhafcnfid,&apos;&apos;,mhafcnfdt FROM mhaf_t WHERE mhafent= ? AND mhaf001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mhaf001 FROM mhaf_t" order="mhaf001"/>
+    </head>
+  </dataset>
+</assembly>
+

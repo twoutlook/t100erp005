@@ -1,0 +1,1376 @@
+<add_points prog="axcp161" std_prog="axcp161" erpver="1.0" module="AXC" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.axcp161_create" cite_std="N" status="d" ver="" src="" new="Y" cite_ver="" order="4">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp161_create()
+
+END FUNCTION]]>
+</point>
+  <point name="function.axcp161_1" cite_std="N" status="d" ver="" src="" new="Y" cite_ver="" order="3">
+<![CDATA[
+################################################################################
+# Descriptions...: # 1.將已完工(預計產量=已入庫量)的工單自動結案之
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp161_1()
+DEFINE l_sql         STRING
+DEFINE l_sfaa        RECORD LIKE sfaa_t.*
+DEFINE l_inaj022     LIKE inaj_t.inaj022
+DEFINE l_sfeadocdt   LIKE sfea_t.sfeadocdt
+DEFINE l_cnt         LIKE type_t.num5
+DEFINE l_str1        STRING
+
+   LET l_sql = " UPDATE sfaa_t SET sfaastus = 'M' WHERE sfaadocno=? "
+   PREPARE upd_sfaastus_prep FROM l_sql
+
+   LET l_sql = " UPDATE pmdl_t SET pmdlstus = 'C' WHERE pmdldocno = ? "
+   PREPARE upd_pmdlstus_prep FROM l_sql
+
+   
+
+   LET l_sql = " SELECT * FROM sfaa_t a ",
+               "  WHERE a.sfaaent = '",g_enterprise,"' AND a.sfaastus <> 'M'",
+               "    AND a.sfaastus <> 'X' AND a.sfaadocdt <= '",l_edate,"'",
+               "    AND a.sfaasite IN ( SELECT ooef001 FROM ooef_t,ooee_t ",
+               "  WHERE ooefent = ooeeent AND ooef001 = ooee001 ",
+               "    AND ooee002 = '1' AND ooee003 = '2' ",
+               "    AND ooef003 = 'Y' AND ooef017 = '",g_glaa_m.glaacomp,"')",
+               "    AND ",g_wc2 CLIPPED ,
+               "    AND NOT EXISTS(SELECT 1 FROM axcp161_tmp t WHERE a.sfaadocno <> t.sfaadocno)",
+               "  ORDER BY a.sfaadocdt"
+   PREPARE axcp161_p1 FROM l_sql
+   DECLARE axcp161_c1 CURSOR FOR axcp161_p1
+     
+   CALL cl_showmsg_init()  
+   FOREACH axcp161_c1 INTO l_sfaa.*
+      #增加現行成會結算年月之判斷
+      SELECT MAX(inaj022) INTO l_inaj022 FROM inaj_t
+       WHERE inajent = g_enterprise AND inaj020 = l_sfaa.sfaadocno
+         AND inaj015[1,3]='asf'
+      IF l_inaj022 > l_edate THEN CONTINUE FOREACH END IF
+      
+      #判斷工單報工日期是否等於現行會計年度,工单报功单未出
+      
+      #
+      IF l_sfaa.sfaastus = 'C' THEN
+         IF l_edate < l_sfaa.sfaa047 THEN
+            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00219',1) 
+            CONTINUE FOREACH
+         END IF
+      END IF
+      # 生产工时已结束,不能再发料及输入工时,和30有区别
+#      IF l_sfaa.sfaastus = 'E' THEN
+#         IF l_edate < l_sfaa.sfaa047 THEN
+#            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00219',1) 
+#            CONTINUE FOREACH
+#         END IF
+#      END IF
+
+       ##查此工單是否在ccj_file輸入大於現行成會結算年月的工時資料,有則不結案，工单报功单未出
+       
+       #判斷工單的工藝的最后報工日期是否大于現行會計年度，有則不結案。
+       
+       #結案日期不可小於最後入庫日期
+       SELECT COUNT(sfeadocdt) INTO l_sfeadocdt FROM sfea_t,sfec_t 
+        WHERE sfecent = sfeadocno AND sfeadocno = sfecdocno 
+          AND sfeaent = '",g_enterprise,"' AND sfec001 = l_sfaa.sfaadocno 
+          AND sfeastus <> 'X' 
+       IF NOT cl_null(l_sfeadocdt) THEN
+          IF l_edate < l_sfeadocdt THEN
+             CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00220',1)   
+             CONTINUE FOREACH
+          END IF
+       END IF
+       
+       EXECUTE upd_sfaastus_prep USING l_sfaa.sfaadocno 
+       IF SQLCA.SQLCODE THEN
+          CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'Update sfaastus fail',SQLCA.SQLCODE,1)  
+          LET g_success='N'
+          RETURN
+      END IF
+      
+      SELECT COUNT(*) INTO l_cnt FROM pmdlfile WHERE pmdldocno = l_sfaa.sfaadocno
+      IF cl_null(l_cnt) THEN
+         LET l_cnt = 0
+      END IF
+      IF l_cnt > 0 THEN
+         EXECUTE upd_pmdlstus_prep USING l_sfaa.sfaadocno
+         IF SQLCA.SQLCODE THEN
+            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'Update pmdlstus fail',SQLCA.SQLCODE,1)  
+            LET g_success='N'
+            RETURN
+         END IF
+      END IF
+
+#采购单单身无状况码
+#       EXECUTE upd_pmn16_prep USING g_sfb.sfb01 
+#       IF SQLCA.sqlcode THEN
+#          CALL s_errmsg('sfaadocno',l_sfaa.sfaadocno,'Update sfaastus fail',SQLCA.SQLCODE,1) 
+#          LET g_success='N' 
+#          RETURN            
+#       END IF
+
+      #工单备置作业及其相关作业未开
+       
+      LET l_str1 = '1',l_sfaa.sfaadocno,' '
+      CALL cl_errmsg('type,sfaadocno,docno',l_str1,'summary display',SQLCA.sqlcode,1)
+   
+   END FOREACH
+   
+   CALL cl_err_showmsg()
+END FUNCTION]]>
+</point>
+  <point name="function.axcp161_1" cite_std="N" status="d" ver="" src="" new="Y" cite_ver="" order="3">
+<![CDATA[
+################################################################################
+# Descriptions...: 1.將已完工(預計產量=已入庫量)的工單自動結案之
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp161_1()
+DEFINE l_sql         STRING
+DEFINE l_sfaa        RECORD LIKE sfaa_t.*
+DEFINE l_inaj022     LIKE inaj_t.inaj022
+DEFINE l_sfeadocdt   LIKE sfea_t.sfeadocdt
+DEFINE l_cnt         LIKE type_t.num5
+DEFINE l_str1        STRING
+
+   LET l_sql = " UPDATE sfaa_t SET sfaastus = 'M' WHERE sfaadocno=? "
+   PREPARE upd_sfaastus_prep FROM l_sql
+
+   LET l_sql = " UPDATE pmdl_t SET pmdlstus = 'C' WHERE pmdldocno = ? "
+   PREPARE upd_pmdlstus_prep FROM l_sql
+
+   
+
+   LET l_sql = " SELECT * FROM sfaa_t a ",
+               "  WHERE a.sfaaent = '",g_enterprise,"' AND a.sfaastus <> 'M'",
+               "    AND a.sfaastus <> 'X' AND a.sfaadocdt <= '",l_edate,"'",
+               "    AND a.sfaasite IN ( SELECT ooef001 FROM ooef_t,ooee_t ",
+               "  WHERE ooefent = ooeeent AND ooef001 = ooee001 ",
+               "    AND ooee002 = '1' AND ooee003 = '2' ",
+               "    AND ooef003 = 'Y' AND ooef017 = '",g_glaa_m.glaacomp,"')",
+               "    AND ",g_wc2 CLIPPED ,
+               "    AND NOT EXISTS(SELECT 1 FROM axcp161_tmp t WHERE a.sfaadocno <> t.sfaadocno)",
+               "  ORDER BY a.sfaadocdt"
+   PREPARE axcp161_p1 FROM l_sql
+   DECLARE axcp161_c1 CURSOR FOR axcp161_p1
+     
+   CALL cl_showmsg_init()  
+   FOREACH axcp161_c1 INTO l_sfaa.*
+      #增加現行成會結算年月之判斷
+      SELECT MAX(inaj022) INTO l_inaj022 FROM inaj_t
+       WHERE inajent = g_enterprise AND inaj020 = l_sfaa.sfaadocno
+         AND inaj015[1,3]='asf'
+      IF l_inaj022 > l_edate THEN CONTINUE FOREACH END IF
+      
+      #判斷工單報工日期是否等於現行會計年度,工单报功单未出
+      
+      #
+      IF l_sfaa.sfaastus = 'C' THEN
+         IF l_edate < l_sfaa.sfaa047 THEN
+            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00219',1) 
+            CONTINUE FOREACH
+         END IF
+      END IF
+      # 生产工时已结束,不能再发料及输入工时,和30有区别
+#      IF l_sfaa.sfaastus = 'E' THEN
+#         IF l_edate < l_sfaa.sfaa047 THEN
+#            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00219',1) 
+#            CONTINUE FOREACH
+#         END IF
+#      END IF
+
+       ##查此工單是否在ccj_file輸入大於現行成會結算年月的工時資料,有則不結案，工单报功单未出
+       
+       #判斷工單的工藝的最后報工日期是否大于現行會計年度，有則不結案。
+       
+       #結案日期不可小於最後入庫日期
+       SELECT COUNT(sfeadocdt) INTO l_sfeadocdt FROM sfea_t,sfec_t 
+        WHERE sfecent = sfeadocno AND sfeadocno = sfecdocno 
+          AND sfeaent = '",g_enterprise,"' AND sfec001 = l_sfaa.sfaadocno 
+          AND sfeastus <> 'X' 
+       IF NOT cl_null(l_sfeadocdt) THEN
+          IF l_edate < l_sfeadocdt THEN
+             CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00220',1)   
+             CONTINUE FOREACH
+          END IF
+       END IF
+       
+       EXECUTE upd_sfaastus_prep USING l_sfaa.sfaadocno 
+       IF SQLCA.SQLCODE THEN
+          CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'Update sfaastus fail',SQLCA.SQLCODE,1)  
+          LET g_success='N'
+          RETURN
+      END IF
+      
+      SELECT COUNT(*) INTO l_cnt FROM pmdlfile WHERE pmdldocno = l_sfaa.sfaadocno
+      IF cl_null(l_cnt) THEN
+         LET l_cnt = 0
+      END IF
+      IF l_cnt > 0 THEN
+         EXECUTE upd_pmdlstus_prep USING l_sfaa.sfaadocno
+         IF SQLCA.SQLCODE THEN
+            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'Update pmdlstus fail',SQLCA.SQLCODE,1)  
+            LET g_success='N'
+            RETURN
+         END IF
+      END IF
+
+#采购单单身无状况码
+#       EXECUTE upd_pmn16_prep USING g_sfb.sfb01 
+#       IF SQLCA.sqlcode THEN
+#          CALL s_errmsg('sfaadocno',l_sfaa.sfaadocno,'Update sfaastus fail',SQLCA.SQLCODE,1) 
+#          LET g_success='N' 
+#          RETURN            
+#       END IF
+
+      #工单备置作业及其相关作业未开
+       
+      LET l_str1 = '1',l_sfaa.sfaadocno,' '
+      CALL cl_errmsg('type,sfaadocno,docno',l_str1,'summary display',SQLCA.sqlcode,1)
+   
+   END FOREACH
+   
+   CALL cl_err_showmsg()
+END FUNCTION]]>
+</point>
+  <point name="function.axcp161_2" cite_std="N" status="d" ver="" src="" new="Y" cite_ver="" order="5">
+<![CDATA[
+################################################################################
+# Descriptions...: 2.將已結案的工單自動設定結案日
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp161_2()
+DEFINE l_sql         STRING
+DEFINE l_str1        STRING
+DEFINE l_sfaa        RECORD LIKE sfaa_t.*
+DEFINE l_inaj022     LIKE inaj_t.inaj022
+DEFINE l_sfeadocdt   LIKE sfea_t.sfeadocdt
+DEFINE l_cnt         LIKE type_t.num5
+
+   LET l_sql = " UPDATE sfaa_t SET sfaastus ='M', ",
+               " sfb048=? ",
+               " WHERE sfaaent = '",g_enterprise,"' AND  sfaadocno=? "
+   PREPARE axcp161_upd_sfaastus_p1 FROM l_sql
+   
+   LET l_sql = " SELECT * FROM sfaa_t a ",
+               "  WHERE a.sfaaent = '",g_enterprise,"' AND a.sfaastus = 'M' ",
+               "    AND a.sfaastus <> 'X' AND a.sfaadocdt <= '",l_edate,"'",
+               "    AND a.sfaa048 IS NULL",
+               "    AND a.sfaasite IN ( SELECT ooef001 FROM ooef_t,ooee_t ",
+               "  WHERE ooefent = ooeeent AND ooef001 = ooee001 ",
+               "    AND ooee002 = '1' AND ooee003 = '2' ",
+               "    AND ooef003 = 'Y' AND ooef017 = '",g_glaa_m.glaacomp,"')",
+               "    AND ",g_wc2 CLIPPED ,
+               "    AND NOT EXISTS(SELECT 1 FROM axcp161_tmp t WHERE a.sfaadocno <> t.sfaadocno)",
+               "  ORDER BY a.sfaadocdt"
+   PREPARE axcp161_p2 FROM l_sql
+   DECLARE axcp161_c2 CURSOR FOR axcp161_p2
+     
+   CALL cl_showmsg_init()   
+   FOREACH axcp161_c2 INTO l_sfaa.*
+   
+      #增加現行成會結算年月之判斷
+      SELECT MAX(inaj022) INTO l_inaj022 FROM inaj_t
+       WHERE inajent = g_enterprise AND inaj020 = l_sfaa.sfaadocno
+         AND inaj015[1,3]='asf'
+      IF l_inaj022 IS NULL THEN LET l_inaj022 = l_sfaa.sfaadocdt END IF
+      IF l_inaj022 IS NULL THEN LET l_inaj022 = l_sfaa.sfaa019 END IF
+      IF l_inaj022 > l_edate THEN 
+         CONTINUE FOREACH 
+      ELSE
+         LET l_sfaa.sfaa048 = g_glaa_m.date_close
+      END IF
+      
+      IF g_glaa_m.date_close <> l_edate THEN   
+         CALL cl_errmsg('',g_glaa_m.date_close,'','axc-00221',1)   
+      END IF
+      
+      #判斷工單報工日期是否等於現行會計年度,工单报功单未出
+      
+      #判斷工單下階料最後報廢日期是否等於現行會計年度,报废单未开
+      
+      #
+      IF l_sfaa.sfaastus = 'C' THEN
+         IF l_edate < l_sfaa.sfaa047 THEN
+            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00219',1) 
+            CONTINUE FOREACH
+         END IF
+      END IF
+      # 生产工时已结束,不能再发料及输入工时,和30有区别
+#      IF l_sfaa.sfaastus = 'E' THEN
+#         IF l_edate < l_sfaa.sfaa047 THEN
+#            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00219',1) 
+#            CONTINUE FOREACH
+#         END IF
+#      END IF
+
+       ##查此工單是否在ccj_file輸入大於現行成會結算年月的工時資料,有則不結案，工单报功单未出
+       
+       #判斷工單的工藝的最后報工日期是否大于現行會計年度，有則不結案。
+       
+       #結案日期不可小於最後入庫日期
+       SELECT COUNT(sfeadocdt) INTO l_sfeadocdt FROM sfea_t,sfec_t 
+        WHERE sfecent = sfeadocno AND sfeadocno = sfecdocno 
+          AND sfeaent = '",g_enterprise,"' AND sfec001 = l_sfaa.sfaadocno 
+          AND sfeastus <> 'X' 
+       IF NOT cl_null(l_sfeadocdt) THEN
+          IF g_glaa_m.date_close < l_sfeadocdt THEN
+             CONTINUE FOREACH
+          ELSE
+             LET l_sfaa.sfaa048 = g_glaa_m.date_close
+          END IF
+       END IF
+       
+       EXECUTE axcp161_upd_sfaastus_p1 USING l_sfaa.sfaa048,l_sfaa.sfaadocno 
+       IF SQLCA.SQLCODE THEN
+          CALL cl_errmsg('sfaa048',l_sfaa.sfaa048,'Update sfaa048 fail',SQLCA.SQLCODE,1)  
+          LET g_success='N'
+          RETURN
+      END IF
+      
+       
+      LET l_str1 = '2',l_sfaa.sfaadocno,l_sfaa.sfaa038
+      CALL cl_errmsg('type,sfaadocno,docno',l_str1,'summary display',SQLCA.sqlcode,1)
+   
+   END FOREACH
+   CALL cl_err_showmsg()
+END FUNCTION]]>
+</point>
+  <point name="function.axcp161_construct" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp161_construct()
+CLEAR FORM
+   INITIALIZE g_glaa_m.* TO NULL
+   LET g_glaa_m.sw_1 = 'N'
+   LET g_glaa_m.sw_2 = 'Y'
+   INITIALIZE g_wc2 TO NULL
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT BY NAME g_glaa_m.glaacomp
+       
+      
+         BEFORE INPUT 
+            LET g_glaa_m.sw_1 = 'N'
+            LET g_glaa_m.sw_2 = 'Y'
+            DISPLAY BY NAME g_glaa_m.sw_1,g_glaa_m.sw_2
+         
+         AFTER FIELD glaacomp
+        
+            IF NOT cl_null(g_glaa_m.glaacomp) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaa_m.glaacomp
+
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist('v_ooef001_15') THEN
+                  #檢查失敗時後續處理
+                  LET g_glaa_m.glaacomp = g_glaa_m_t.glaacomp
+                  CALL axcp161_glaacomp_desc()
+                  NEXT FIELD glaacomp
+               END IF
+               CALL axcp161_glaacomp_desc()        {#ADP版次:1#}
+               
+               SELECT glaa003,glaa010,glaa011 INTO g_glaa003,g_glaa_m.year,g_glaa_m.month FROM glaa_t
+                WHERE glaaent = g_enterprise AND glaa014 = 'Y'
+                  AND glaacomp = g_glaa_m.glaacomp 
+              DISPLAY BY NAME g_glaa_m.year,g_glaa_m.month
+                                                    
+            END IF            
+            
+             
+          ON ACTION controlp INFIELD glaacomp
+	  	     #開窗i段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+                LET g_qryparam.reqry = FALSE
+		        
+                LET g_qryparam.default1 = g_glaa_m.glaacomp            #給予default值
+                LET g_qryparam.where = " ooef003 = 'Y'"
+		        
+                #給予arg
+                CALL q_ooef001()
+		        
+                LET g_glaa_m.glaacomp = g_qryparam.return1              #將開窗取得的值回傳到變數
+		        
+		        
+                DISPLAY g_glaa_m.glaacomp TO glaacomp              #顯示到畫面上
+                LET g_qryparam.where = NULL
+                CALL axcp161_glaacomp_desc()
+		        
+                NEXT FIELD glaacomp                          #返回原欄位          
+            
+        AFTER INPUT
+     END INPUT
+     
+     CONSTRUCT BY NAME g_wc2 ON sfaadocno
+       BEFORE CONSTRUCT
+          CALL cl_qbe_init() 
+               
+          
+       ON ACTION controlp INFIELD sfaadocno     #單據單號開窗
+          INITIALIZE g_qryparam.* TO NULL
+          LET g_qryparam.state = 'c'
+		  LET g_qryparam.reqry = FALSE
+		  LET g_qryparam.where = " sfaastus <> 'M'  "
+          CALL q_sfaadocno_1()                    #呼叫開窗
+          DISPLAY g_qryparam.return1 TO sfaadocno  #顯示到畫面上
+          NEXT FIELD sfaadocno
+          
+       
+      END CONSTRUCT   
+     
+      INPUT BY NAME g_glaa_m.year,g_glaa_m.month,g_glaa_m.date_close,g_glaa_m.sw_1,g_glaa_m.sw_2
+       
+      
+         BEFORE INPUT 
+         
+         AFTER FIELD year
+        
+            IF NOT cl_null(g_glaa_m.year) THEN
+               IF NOT s_fin_date_chk_year(g_glaa_m.year) THEN
+                  LET g_glaa_m.year = g_glaa_m_t.year
+                  DISPLAY BY NAME g_glaa_m.year
+                  CALL cl_err(g_glaa_m.year,'aoo-00113',1)
+                  NEXT FIELD CURRENT
+               END IF
+                                                    
+            END IF  
+            IF NOT cl_null(g_glaa_m.year) AND NOT cl_null(g_glaa_m.month) THEN
+               CALL s_fin_date_get_period_range(g_glaa003, g_glaa_m.year,g_glaa_m.month)
+                   RETURNING l_bdate,l_edate               
+            END IF               
+            
+         BEFORE FIELD month
+            IF cl_null(g_glaa_m.year) THEN
+               NEXT FIELD year
+            END IF
+
+         AFTER FIELD month
+            IF NOT cl_null(g_glaa_m.month) THEN                      
+               IF NOT s_fin_date_chk_period(g_glaa003,g_glaa_m.year,g_glaa_m.month) THEN
+                  LET g_glaa_m.month = g_glaa_m_t.month
+                  DISPLAY BY NAME g_glaa_m.month
+                  CALL cl_err(g_glaa_m.month,'amm-00106',1)
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            IF NOT cl_null(g_glaa_m.year) AND NOT cl_null(g_glaa_m.month) THEN
+               CALL s_fin_date_get_period_range(g_glaa003, g_glaa_m.year,g_glaa_m.month)
+                   RETURNING l_bdate,l_edate               
+            END IF 
+        AFTER INPUT
+     END INPUT
+       
+      BEFORE DIALOG
+          
+ 
+      ON ACTION qbe_select      
+ 
+      ON ACTION qbe_save       
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   
+ 
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF 
+END FUNCTION]]>
+</point>
+  <point name="function.axcp161_glaacomp_desc" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp161_glaacomp_desc()
+   SELECT ooefl003 INTO g_glaa_m.glaacomp_desc FROM ooefl_t 
+    WHERE ooeflent=g_enterprise AND ooefl001=g_glaa_m.glaacomp AND ooefl002=g_dlang
+
+   DISPLAY BY NAME g_glaa_m.glaacomp_desc
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[#單頭 type 宣告
+ TYPE type_g_glaa_m RECORD
+   glaacomp LIKE glaa_t.glaacomp,
+   glaacomp_desc LIKE type_t.chr80,
+   year LIKE type_t.num5,
+   month LIKE type_t.num5,
+   date_close LIKE type_t.dat,
+   sw_1 LIKE type_t.chr1,
+   sw_2 LIKE type_t.chr1
+END RECORD
+DEFINE g_glaa_m     type_g_glaa_m
+DEFINE g_glaa_m_t   type_g_glaa_m
+DEFINE l_bdate      LIKE glav_t.glav004 #起始年度+期別對應的起始截止日期
+DEFINE l_edate      LIKE glav_t.glav004
+DEFINE g_success    LIKE type_t.chr1
+DEFINE g_wc2        STRING
+DEFINE g_glaa003    LIKE glaa_t.glaa003]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.parameter" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.background" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[   CALL axcp161_construct()]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_construct" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.exit_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="transfer.argv.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.pre_process" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.count_progress" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[      LET g_success = 'Y'
+      #啟用事務
+      CALL s_transaction_begin()
+      CALL axcp161_doc_chk()
+      IF g_glaa_m.sw_1 = 'Y' THEN
+        #CALL axcp161_doc_chk()
+         CALL axcp161_1()
+      END IF
+      IF g_glaa_m.sw_2 = 'Y' THEN
+         CALL axcp161_2()
+      END IF
+      #結束事務
+      CALL s_transaction_end(g_success,1)]]>
+</point>
+  <point name="process.process" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.foreground_finish" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[      LET g_success = 'Y'
+      #啟用事務
+      CALL s_transaction_begin()
+      CALL axcp161_doc_chk()
+      IF g_glaa_m.sw_1 = 'Y' THEN
+#         CALL axcp161_doc_chk()
+         CALL axcp161_1()
+      END IF
+      IF g_glaa_m.sw_2 = 'Y' THEN
+         CALL axcp161_2()
+      END IF
+      #結束事務
+      CALL s_transaction_end(g_success,1)]]>
+</point>
+  <point name="process.background_finish" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[      LET g_success = 'Y'
+      #啟用事務
+      CALL s_transaction_begin()
+      CALL axcp161_doc_chk()
+      IF g_glaa_m.sw_1 = 'Y' THEN
+#         CALL axcp161_doc_chk()
+         CALL axcp161_1()
+      END IF
+      IF g_glaa_m.sw_2 = 'Y' THEN
+         CALL axcp161_2()
+      END IF
+      #結束事務
+      CALL s_transaction_end(g_success,1)]]>
+</point>
+  <point name="function.axcp161_doc_chk" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="" order="4">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp161_doc_chk()
+DEFINE l_sql         STRING
+DEFINE l_sfaa        RECORD LIKE sfaa_t.*
+DEFINE l_cnt         LIKE type_t.num5
+DEFINE l_docno       LIKE sfda_t.sfdadocno
+DEFINE l_str1        STRING
+
+   CALL axcp161_create_tmp()
+   LET l_sql = " INSERT INTO axcp161_tmp (sfaadocno,type,sfdadocno) VALUES (?,?,?) "
+   PREPARE axcp161_ins_p1 FROM l_sql
+
+   LET l_sql = " SELECT COUNT(sfdadocno),sfdadocno FROM sfda_t,sfdc_t ",
+               "  WHERE sfdcent = sfdaent AND sfdadocno = sfdcdocno ",
+               "    AND sfdaent = '",g_enterprise,"' AND sfdcdocno = ? ",
+               "    AND sfdastus <> 'S' AND sfdastus <> 'X' ",
+               "    AND sfda002 IN('11','12','13','14','15') ",
+               "  GROUP BY sfdadocno "  
+   PREPARE axcp161_chk_p1 FROM l_sql
+   DECLARE axcp161_chk_c1 CURSOR FOR axcp161_chk_p1
+   
+   LET l_sql = " SELECT COUNT(sfdadocno),sfdadocno FROM sfda_t,sfdc_t ",
+               "  WHERE sfdcent = sfdaent AND sfdadocno = sfdcdocno ",
+               "    AND sfdaent = '",g_enterprise,"' AND sfdcdocno = ? ",
+               "    AND sfdastus <> 'S' AND sfdastus <> 'X' ",
+               "    AND sfda002 IN('21','22','23','24','25') ",
+               "  GROUP BY sfdadocno "  
+   PREPARE axcp161_chk_p2 FROM l_sql
+   DECLARE axcp161_chk_c2 CURSOR FOR axcp161_chk_p2
+   
+   LET l_sql = " SELECT COUNT(sfeadocno),sfeadocno FROM sfea_t,sfec_t ",
+               "  WHERE sfecent = sfeaent AND sfeadocno = sfecdocno ",
+               "    AND sfeaent = '",g_enterprise,"' AND sfecdocno = ? ",
+               "    AND sfeastus <> 'S' AND sfeastus <> 'X' ",
+               "  GROUP BY sfeadocno "  
+   PREPARE axcp161_chk_p3 FROM l_sql
+   DECLARE axcp161_chk_c3 CURSOR FOR axcp161_chk_p3
+   
+   LET l_sql = " SELECT * FROM sfaa_t ",
+               "  WHERE sfaaent = '",g_enterprise,"' AND sfaastus <> 'M' ",
+               "    AND sfaastus <> 'X' AND sfaadocdt <= '",l_edate,"'",
+               "    AND sfaasite IN ( SELECT ooef001 FROM ooef_t,ooee_t ",
+               "  WHERE ooefent = ooeeent AND ooef001 = ooee001 ",
+               "    AND ooee002 = '1' AND ooee003 = '2' ",
+               "    AND ooef003 = 'Y' AND ooef017 = '",g_glaa_m.glaacomp,"')",
+               "    AND ",g_wc2 CLIPPED ,
+               "  ORDER BY sfaadocdt"
+   PREPARE axcp161_p0 FROM l_sql
+   DECLARE axcp161_c0 CURSOR FOR axcp161_p0
+    
+   CALL cl_showmsg_init()
+   FOREACH axcp161_c0 INTO l_sfaa.*
+      #若發料單、退料單、完工入庫單有單據未過帳，則出報表
+      #發料單
+      LET l_cnt = 0
+      FOREACH axcp161_chk_c1 USING l_sfaa.sfaadocno INTO l_cnt,l_docno
+         IF STATUS THEN
+             CALL cl_err('for sfdc:',STATUS,0)         
+            LET g_success='N'
+            EXIT FOREACH
+         END IF
+
+         IF l_cnt > 0 THEN
+            EXECUTE axcp161_ins_p1 USING l_sfaa.sfaadocno,'1',l_docno
+            IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] =0 THEN
+                CALL cl_err('INSERT axcp161_tmp',SQLCA.SQLCODE,0)  
+            END IF
+            LET l_str1 = l_sfaa.sfaadocno,'1',l_docno
+            CALL cl_errmsg('sfaadocno,type,docno',l_str1,'summary display',SQLCA.sqlcode,1) 
+         END IF
+      END FOREACH
+      
+      #發料單
+      LET l_cnt = 0
+      FOREACH axcp161_chk_c2 USING l_sfaa.sfaadocno INTO l_cnt,l_docno
+         IF STATUS THEN
+             CALL cl_err('for sfdc:',STATUS,0)         
+            LET g_success='N'
+            EXIT FOREACH
+         END IF
+
+         IF l_cnt > 0 THEN
+            EXECUTE axcp161_ins_p1 USING l_sfaa.sfaadocno,'2',l_docno
+            IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] =0 THEN
+                CALL cl_err('INSERT axcp161_tmp',SQLCA.SQLCODE,0)  
+            END IF
+            LET l_str1 = l_sfaa.sfaadocno,'2',l_docno
+            CALL cl_errmsg('sfaadocno,type,docno',l_str1,'summary display',SQLCA.sqlcode,1)
+         END IF
+      END FOREACH
+      
+      #完工入庫單
+      LET l_cnt = 0
+      FOREACH axcp161_chk_c3 USING l_sfaa.sfaadocno INTO l_cnt,l_docno
+         IF STATUS THEN
+             CALL cl_err('for sfec:',STATUS,0)         
+            LET g_success='N'
+            EXIT FOREACH
+         END IF
+
+         IF l_cnt > 0 THEN
+            EXECUTE axcp161_ins_p1 USING l_sfaa.sfaadocno,'3',l_docno
+            IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] =0 THEN
+                CALL cl_err('INSERT axcp161_tmp',SQLCA.SQLCODE,0)  
+            END IF
+            LET l_str1 = l_sfaa.sfaadocno,'3',l_docno
+            CALL cl_errmsg('sfaadocno,type,docno',l_str1,'summary display',SQLCA.sqlcode,1)
+         END IF
+      END FOREACH
+   END FOREACH
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt FROM axcp161_tmp
+   
+   IF l_cnt > 0  THEN        
+      CALL cl_err_showmsg()
+   END IF            
+
+END FUNCTION]]>
+</point>
+  <point name="function.axcp161_create_tmp" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="" order="6">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp161_create_tmp()
+   DROP TABLE axcp161_tmp
+
+   CREATE TEMP TABLE axcp161_tmp
+   (
+   sfaadocno VARCHAR(20),
+   type VARCHAR(1),
+   sfdadocno VARCHAR(20)
+    );
+END FUNCTION]]>
+</point>
+  <point name="function.axcp161_1" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="" order="3">
+<![CDATA[
+################################################################################
+# Descriptions...: 1.將已完工(預計產量=已入庫量)的工單自動結案之
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp161_1()
+DEFINE l_sql         STRING
+DEFINE l_sfaa        RECORD LIKE sfaa_t.*
+DEFINE l_inaj022     LIKE inaj_t.inaj022
+DEFINE l_sfeadocdt   LIKE sfea_t.sfeadocdt
+DEFINE l_cnt         LIKE type_t.num5
+DEFINE l_str1        STRING
+
+   LET l_sql = " UPDATE sfaa_t SET sfaastus = 'M' WHERE sfaadocno=? "
+   PREPARE upd_sfaastus_prep FROM l_sql
+
+   LET l_sql = " UPDATE pmdl_t SET pmdlstus = 'C' WHERE pmdldocno = ? "
+   PREPARE upd_pmdlstus_prep FROM l_sql
+
+   
+
+   LET l_sql = " SELECT * FROM sfaa_t a ",
+               "  WHERE a.sfaaent = '",g_enterprise,"' AND a.sfaastus <> 'M'",
+               "    AND a.sfaastus <> 'X' AND a.sfaadocdt <= '",l_edate,"'",
+               "    AND a.sfaasite IN ( SELECT ooef001 FROM ooef_t,ooee_t ",
+               "  WHERE ooefent = ooeeent AND ooef001 = ooee001 ",
+               "    AND ooee002 = '1' AND ooee003 = '2' ",
+               "    AND ooef003 = 'Y' AND ooef017 = '",g_glaa_m.glaacomp,"')",
+               "    AND ",g_wc2 CLIPPED ,
+               "    AND NOT EXISTS(SELECT 1 FROM axcp161_tmp t WHERE a.sfaadocno <> t.sfaadocno)",
+               "  ORDER BY a.sfaadocdt"
+   PREPARE axcp161_p1 FROM l_sql
+   DECLARE axcp161_c1 CURSOR FOR axcp161_p1
+     
+   CALL cl_showmsg_init()  
+   FOREACH axcp161_c1 INTO l_sfaa.*
+      #增加現行成會結算年月之判斷
+      SELECT MAX(inaj022) INTO l_inaj022 FROM inaj_t
+       WHERE inajent = g_enterprise AND inaj020 = l_sfaa.sfaadocno
+         AND inaj015[1,3]='asf'
+      IF l_inaj022 > l_edate THEN CONTINUE FOREACH END IF
+      
+      #判斷工單報工日期是否等於現行會計年度,工单报功单未出
+      
+      #
+      IF l_sfaa.sfaastus = 'C' THEN
+         IF l_edate < l_sfaa.sfaa047 THEN
+            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00219',1) 
+            CONTINUE FOREACH
+         END IF
+      END IF
+      # 生产工时已结束,不能再发料及输入工时,和30有区别
+#      IF l_sfaa.sfaastus = 'E' THEN
+#         IF l_edate < l_sfaa.sfaa047 THEN
+#            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00219',1) 
+#            CONTINUE FOREACH
+#         END IF
+#      END IF
+
+       ##查此工單是否在ccj_file輸入大於現行成會結算年月的工時資料,有則不結案，工单报功单未出
+       
+       #判斷工單的工藝的最后報工日期是否大于現行會計年度，有則不結案。
+       
+       #結案日期不可小於最後入庫日期
+       SELECT COUNT(sfeadocdt) INTO l_sfeadocdt FROM sfea_t,sfec_t 
+        WHERE sfecent = sfeadocno AND sfeadocno = sfecdocno 
+          AND sfeaent = '",g_enterprise,"' AND sfec001 = l_sfaa.sfaadocno 
+          AND sfeastus <> 'X' 
+       IF NOT cl_null(l_sfeadocdt) THEN
+          IF l_edate < l_sfeadocdt THEN
+             CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00220',1)   
+             CONTINUE FOREACH
+          END IF
+       END IF
+       
+       EXECUTE upd_sfaastus_prep USING l_sfaa.sfaadocno 
+       IF SQLCA.SQLCODE THEN
+          CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'Update sfaastus fail',SQLCA.SQLCODE,1)  
+          LET g_success='N'
+          RETURN
+      END IF
+      
+      SELECT COUNT(*) INTO l_cnt FROM pmdlfile WHERE pmdldocno = l_sfaa.sfaadocno
+      IF cl_null(l_cnt) THEN
+         LET l_cnt = 0
+      END IF
+      IF l_cnt > 0 THEN
+         EXECUTE upd_pmdlstus_prep USING l_sfaa.sfaadocno
+         IF SQLCA.SQLCODE THEN
+            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'Update pmdlstus fail',SQLCA.SQLCODE,1)  
+            LET g_success='N'
+            RETURN
+         END IF
+      END IF
+
+#采购单单身无状况码
+#       EXECUTE upd_pmn16_prep USING g_sfb.sfb01 
+#       IF SQLCA.sqlcode THEN
+#          CALL s_errmsg('sfaadocno',l_sfaa.sfaadocno,'Update sfaastus fail',SQLCA.SQLCODE,1) 
+#          LET g_success='N' 
+#          RETURN            
+#       END IF
+
+      #工单备置作业及其相关作业未开
+       
+      LET l_str1 = '1',l_sfaa.sfaadocno,' '
+      CALL cl_errmsg('type,sfaadocno,docno',l_str1,'summary display',SQLCA.sqlcode,1)
+   
+   END FOREACH
+   
+   CALL cl_err_showmsg()
+END FUNCTION]]>
+</point>
+  <point name="function.axcp161_2" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="" order="5">
+<![CDATA[
+################################################################################
+# Descriptions...: 2.將已結案的工單自動設定結案日
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp161_2()
+DEFINE l_sql         STRING
+DEFINE l_str1        STRING
+DEFINE l_sfaa        RECORD LIKE sfaa_t.*
+DEFINE l_inaj022     LIKE inaj_t.inaj022
+DEFINE l_sfeadocdt   LIKE sfea_t.sfeadocdt
+DEFINE l_cnt         LIKE type_t.num5
+
+   LET l_sql = " UPDATE sfaa_t SET sfaastus ='M', ",
+               " sfb048=? ",
+               " WHERE sfaaent = '",g_enterprise,"' AND  sfaadocno=? "
+   PREPARE axcp161_upd_sfaastus_p1 FROM l_sql
+   
+   LET l_sql = " SELECT * FROM sfaa_t a ",
+               "  WHERE a.sfaaent = '",g_enterprise,"' AND a.sfaastus = 'M' ",
+               "    AND a.sfaastus <> 'X' AND a.sfaadocdt <= '",l_edate,"'",
+               "    AND a.sfaa048 IS NULL",
+               "    AND a.sfaasite IN ( SELECT ooef001 FROM ooef_t,ooee_t ",
+               "  WHERE ooefent = ooeeent AND ooef001 = ooee001 ",
+               "    AND ooee002 = '1' AND ooee003 = '2' ",
+               "    AND ooef003 = 'Y' AND ooef017 = '",g_glaa_m.glaacomp,"')",
+               "    AND ",g_wc2 CLIPPED ,
+               "    AND NOT EXISTS(SELECT 1 FROM axcp161_tmp t WHERE a.sfaadocno <> t.sfaadocno)",
+               "  ORDER BY a.sfaadocdt"
+   PREPARE axcp161_p2 FROM l_sql
+   DECLARE axcp161_c2 CURSOR FOR axcp161_p2
+     
+   CALL cl_showmsg_init()   
+   FOREACH axcp161_c2 INTO l_sfaa.*
+   
+      #增加現行成會結算年月之判斷
+      SELECT MAX(inaj022) INTO l_inaj022 FROM inaj_t
+       WHERE inajent = g_enterprise AND inaj020 = l_sfaa.sfaadocno
+         AND inaj015[1,3]='asf'
+      IF l_inaj022 IS NULL THEN LET l_inaj022 = l_sfaa.sfaadocdt END IF
+      IF l_inaj022 IS NULL THEN LET l_inaj022 = l_sfaa.sfaa019 END IF
+      IF l_inaj022 > l_edate THEN 
+         CONTINUE FOREACH 
+      ELSE
+         LET l_sfaa.sfaa048 = g_glaa_m.date_close
+      END IF
+      
+      IF g_glaa_m.date_close <> l_edate THEN   
+         CALL cl_errmsg('',g_glaa_m.date_close,'','axc-00221',1)   
+      END IF
+      
+      #判斷工單報工日期是否等於現行會計年度,工单报功单未出
+      
+      #判斷工單下階料最後報廢日期是否等於現行會計年度,报废单未开
+      
+      #
+      IF l_sfaa.sfaastus = 'C' THEN
+         IF l_edate < l_sfaa.sfaa047 THEN
+            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00219',1) 
+            CONTINUE FOREACH
+         END IF
+      END IF
+      # 生产工时已结束,不能再发料及输入工时,和30有区别
+#      IF l_sfaa.sfaastus = 'E' THEN
+#         IF l_edate < l_sfaa.sfaa047 THEN
+#            CALL cl_errmsg('sfaadocno',l_sfaa.sfaadocno,'','axc-00219',1) 
+#            CONTINUE FOREACH
+#         END IF
+#      END IF
+
+       ##查此工單是否在ccj_file輸入大於現行成會結算年月的工時資料,有則不結案，工单报功单未出
+       
+       #判斷工單的工藝的最后報工日期是否大于現行會計年度，有則不結案。
+       
+       #結案日期不可小於最後入庫日期
+       SELECT COUNT(sfeadocdt) INTO l_sfeadocdt FROM sfea_t,sfec_t 
+        WHERE sfecent = sfeadocno AND sfeadocno = sfecdocno 
+          AND sfeaent = '",g_enterprise,"' AND sfec001 = l_sfaa.sfaadocno 
+          AND sfeastus <> 'X' 
+       IF NOT cl_null(l_sfeadocdt) THEN
+          IF g_glaa_m.date_close < l_sfeadocdt THEN
+             CONTINUE FOREACH
+          ELSE
+             LET l_sfaa.sfaa048 = g_glaa_m.date_close
+          END IF
+       END IF
+       
+       EXECUTE axcp161_upd_sfaastus_p1 USING l_sfaa.sfaa048,l_sfaa.sfaadocno 
+       IF SQLCA.SQLCODE THEN
+          CALL cl_errmsg('sfaa048',l_sfaa.sfaa048,'Update sfaa048 fail',SQLCA.SQLCODE,1)  
+          LET g_success='N'
+          RETURN
+      END IF
+      
+       
+      LET l_str1 = '2',l_sfaa.sfaadocno,l_sfaa.sfaa038
+      CALL cl_errmsg('type,sfaadocno,docno',l_str1,'summary display',SQLCA.sqlcode,1)
+   
+   END FOREACH
+   CALL cl_err_showmsg()
+END FUNCTION]]>
+</point>
+  <section id="axcp161.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000000
+#+ 
+#+ Filename...: axcp161
+#+ Description: 工單結案自動設置作業
+#+ Creator....: 02291(2014/04/06)
+#+ Modifier...: 02291(2014/04/06)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="axcp161.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="axcp161.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION axcp161_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axcp161.main" ver="1" status="" src="s">
+<![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axc","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL axcp161_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axcp161 WITH FORM cl_ap_formpath("axc",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axcp161_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axcp161_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axcp161
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+</section>
+  <section id="axcp161.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="axcp161.process" ver="1" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION axcp161_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axcp161_process_cs CURSOR FROM ls_sql
+#  FOREACH axcp161_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="axcp161.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axcp161_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="axcp161.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION axcp161_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+#saki       CALL cl_qbe_select()
+ 
+         ON ACTION qbe_save
+#saki       CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION batch_qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.*  TO NULL
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION CLOSE 
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #交談指令共用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         &include "common_action.4gl"
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = g_prog,TODAY USING "yyyymmdd",CURRENT HOUR TO SECOND 
+         LET g_jobid = cl_schedule_trim_colon(g_jobid)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axcp161_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = axcp161_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

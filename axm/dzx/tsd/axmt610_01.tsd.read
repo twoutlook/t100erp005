@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axmt610_01" std_prog="axmt610_01" erpver="1.0" ver="3" module="AXM" type="S" booking="N" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xmem_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：當採購單據別參數設至要做請採勾稽時，透過此程式整批將請購資料轉成採購明細
+標準作業功能取消：
+狀態功能：無
+作業類型：批處處理作業
+輸入模式：非標準版型
+
+補充說明：
+
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.主畫面單頭的來源單號有輸入時，自動帶出該來源單號所有資料，不可輸入其他單號
+2.此單身僅可修改，不可新增刪除
+3.除滿箱選取、餘數選取、包裝容器欄位外，其餘欄位皆不可維護
+
+包裝單底稿單身
+1.此單身僅可修改不可以新增刪除
+2.僅能修改包裝序、包裝容器、每箱裝數、箱數、字軌、棧板號、起始包裝箱數、截止包裝箱數、單位淨重、總淨重、單位毛重、總毛重、單位材積、總材積
+
+
+]]>
+  </di_all>
+  <field cite_std="N" name="all_space" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[1.單身一中[C.滿箱選取]="Y"之滿箱數及[C.餘數選取]="Y"之餘數所需空間 加總
+]]>
+  </field>
+  <field cite_std="N" name="every_num" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[每箱裝數：
+1.每箱裝數預設 = 包裝容器的[T.料件主檔(imaa_t)].[C.容量] / 料號的[T.料件主檔(imaa_t)].[C.體積] 無條件捨去取整數
+2.可修改，不可空白或小於0
+3.每箱裝數變更時，滿箱數、餘數、餘數所需空間皆需重新計算
+   
+]]>
+  </field>
+  <field cite_std="N" name="full_num" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[滿箱數：
+1.[C.滿箱數] = [C.數量] / 每箱裝數 無條件捨去取整數
+   
+]]>
+  </field>
+  <field cite_std="N" name="imaa001" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal003" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal004" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sel1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sel2" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="space" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[餘數所需空間：
+1.[C.餘數所需空間] = [C.數量] / 每箱裝數 取餘數
+
+]]>
+  </field>
+  <field cite_std="N" name="unfull_num" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[餘數：
+1.[C.餘數] = 數量 - (每箱裝數 * 滿箱數)
+
+]]>
+  </field>
+  <field cite_std="N" name="xman005" ver="2" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="q_imaf001_12" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[包裝容器：
+   ●欄位控管：
+     資料欄位: Formonly/可Display 可Input
+     預設值:無
+     校驗:無
+     帶值:無
+     計算或處理:包裝容器變更時，每箱裝數、滿箱數、餘數、餘數所需空間皆需重新計算
+               
+  ●開窗處理:
+    1.依包裝容器標準開窗
+   
+]]>
+  </field>
+  <field cite_std="N" name="xmdh007" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh015" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh016" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem001" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_xmel005" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[來源單號：
+   ●欄位控管：
+     資料欄位: Formonly/可查詢不可維護
+     預設值:無
+     校驗:1.輸入的單號需依據xmel004(包裝單來源)做檢核，例如來源類型選擇'1:出貨通知單'時，
+            則輸入的來源單號需存在出貨通知單單頭檔中且是已確認的
+
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理:
+      1.查詢時：
+       參考函式：開窗查詢包裝單上的來源單號
+       查詢欄位：包裝單來源、來源單號
+       查詢條件：無
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依據包裝單來源開相關單據的資料
+           查詢欄位：來源單號、單據日期、客戶/供應商、收貨客戶/供應商、收款客戶/付款供應商
+           查詢條件：已確認單據
+           回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="xmem002" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[來源項次：
+   ●欄位控管：
+     資料欄位: Formonly/可查詢不可維護
+     預設值:
+     校驗:1.輸入的單號需依據xmel004(包裝單來源)做檢核，例如來源類型選擇'1:出貨通知單'時，
+            則輸入的來源單號需存在出貨通知單單頭檔中且是已確認的      
+     帶值:1.輸入來源項次後需將來源單據上相關欄位值預設到包裝單單身對應欄位上
+            每箱裝數=包裝容器的[T.料件主檔(imaa_t)].[C.容量] / 料號的[T.料件主檔(imaa_t)].[C.體積] 無條件捨去取整數
+            [C.滿箱數] = [C.數量] / 每箱裝數 無條件捨去取整數
+            [C.餘數所需空間] = [C.數量] / 每箱裝數 取餘數
+]]>
+  </field>
+  <field cite_std="N" name="xmem007" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[箱數：
+1.不可小於0
+2.變更時，截止包裝箱數、數量、單位淨重、總淨重、單位毛重、總毛重、單位材積、總材積需重新計算
+]]>
+  </field>
+  <field cite_std="N" name="xmem0081" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[字軌：
+1.必輸不可空白
+]]>
+  </field>
+  <field cite_std="N" name="xmem0091" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem0101" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[起始箱號：
+1.必輸不可空白且需大於0
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem001" ver="1" src="s" column="xmem001" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_xmel005" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem002" ver="1" src="s" column="xmem002" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem003" ver="1" src="s" column="xmem003" table="xmem_t" attribute="" type="" req="N" i_zoom="q_imaf001" c_zoom="q_imaf001" chk_ref="v_imaf001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem004" ver="1" src="s" column="xmem004" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[包裝序：
+1.包裝單底稿資料中相同的來源單號、來源項次的包裝序不可重覆
+   
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem005" ver="1" src="s" column="xmem005" table="xmem_t" attribute="" type="" req="N" i_zoom="q_imaf001_12" c_zoom="q_imaf001_12" chk_ref="v_imaf001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[包裝容器：
+   ●欄位控管：
+     資料欄位: Formonly/可Display 可Input
+     預設值:無
+     校驗:無
+     帶值:無
+     計算或處理:包裝容器變更時，每箱裝數、箱數、截止包裝箱數、單位淨重、總淨重、單位毛重、總毛重、單位材積、總材積需重新計算
+               
+  ●開窗處理:
+    1.依包裝容器標準開窗
+   
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem006" ver="1" src="s" column="xmem006" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[每箱裝數：
+1.不可小於0
+2.變更時，截止包裝箱數、數量、單位淨重、總淨重、單位毛重、總毛重、單位材積、總材積需重新計算
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem008" ver="1" src="s" column="xmem008" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem009" ver="1" src="s" column="xmem009" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem010" ver="1" src="s" column="xmem010" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[起始包裝箱號：
+1.不可小於0
+2.變更時，截止包裝箱數需重新計算
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem011" ver="1" src="s" column="xmem011" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[起始包裝箱號：
+1.可修改不可小於0
+2.預設為起始包裝箱號 + 箱數 -1
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem012" ver="2" src="s" column="xmem012" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[數量：
+1.可修改不可小於0
+
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem013" ver="1" src="s" column="xmem013" table="xmem_t" attribute="" type="" req="Y" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[重量單位：
+   ●欄位控管：
+     資料欄位: Formonly/可Display 可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值需存在[T:單位基本資料檔].[C:單位編號]，且[T:單位基本資料檔].[C:資料狀態]為有效
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理:
+    1.依單位標準開窗
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem014" ver="1" src="s" column="xmem014" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單位淨重：
+1.可修改不可小於0
+2.變更後，總淨重需重新計算
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem015" ver="1" src="s" column="xmem015" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[總淨重：
+1.可修改不可小於0
+
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem016" ver="1" src="s" column="xmem016" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單位毛重：
+1.可修改不可小於0
+2.變更後，總毛重需重新計算
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem017" ver="1" src="s" column="xmem017" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[總毛重：
+1.可修改不可小於0
+
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem018" ver="1" src="s" column="xmem018" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單位材積：
+1.可修改不可小於0
+2.變更後，總材積需重新計算
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem019" ver="1" src="s" column="xmem019" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[總材積：
+1.可修改不可小於0
+
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmemseq" ver="1" src="s" column="xmemseq" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xmem003_desc" src="s" depend_field="xmem_t.xmem003" correspon_key="xmem003" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="2" name="xmem003_desc_desc" src="s" depend_field="xmem_t.xmem003" correspon_key="xmem003" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="all_space" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="every_num" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="full_num" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sel1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sel2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="space" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="unfull_num" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="xman005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdh007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdh015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdh016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="xmem007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem0081" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem0091" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem0101" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="xmem_t.xmem012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmemseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="all_sel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1.將單身一所有資料的滿箱選取、餘數選取欄位更新為勾選狀態
+]]>
+  </act>
+  <act cite_std="N" id="cancel_sel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1.將單身一所有資料的滿箱選取、餘數選取欄位原勾選狀態更新為未勾選狀態、原未勾選狀態更新為勾選狀態
+]]>
+  </act>
+  <act cite_std="N" id="full_sel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1.將單身一所有資料的滿箱選取欄位更新為勾選狀態
+]]>
+  </act>
+  <act cite_std="N" id="make_detail" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1.將包裝單底稿資料寫入[T.包裝單身明細檔(xmem_t)]
+2.來源單號+來源項次之數量加總不可大於原單據數量
+
+]]>
+  </act>
+  <act cite_std="N" id="make_paper" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1.將上方"來源明細"單身有勾選的資料產生到下面"包裝單底稿"的單身清單中
+2.針對"來源明細"單身有勾選的資料，滿箱數與餘數分別產生至"包裝單底稿"單身中
+3.產生包裝單底稿資料，除原本來源明細有的欄位直接預設外，其餘欄位預設如下：
+  [C.包裝序] = 包裝單底稿資料中相同的來源單號、來源項次的最大包裝序+1
+  [C.每箱裝數] = 滿箱數的部份為來源明細.每箱裝數，餘數的部份為來源明細.餘數
+  [C.箱數] = 分別記錄滿箱數或餘數所需空間
+  [C.字軌] = 畫面上的字軌欄位值
+  [C.棧板號] = 畫面上的字軌欄位值
+  [C.起始包裝箱號] = 包裝單底稿資料中相同的字軌的最大截止包裝箱號+1，如抓不到則為畫面上的起始箱號欄位值
+  [C.截止包裝箱號] = 起始包裝箱號 + 箱數 - 1 ，如箱數<1，則為起始包裝箱號
+  [C.重量單位] = 產品編號的[T.料件主檔].[C.重量單位]
+  [C.單位淨重] = 每箱裝數 * 產品編號的[T.料件主檔].[C.淨重]
+  [C.總淨重] = 單位淨重 * 箱數
+  [C.單位毛重] = 每箱裝數 * 產品編號的[T.料件主檔].[C.毛重] + 包裝容器的[T.料件主檔].[C.毛重]
+  [C.總毛重] = 單位毛重 * 箱數
+  [C.單位材積] = 如果主畫面的[C.材積計量計度] = "英制"(CUFT) 則
+                   材積 = 包裝容器的[T.料件主檔].[C.長度] * 包裝容器的[T.料件主檔].[C.寬度] * 
+                          包裝容器的[T.料件主檔].[C.高度] * 0.0000353
+                   (長度、寬度、高度皆需換算為公分)
+                 如果主畫面的[C.材積計量計度] = "公制"(CBM) 則
+                   材積 = 英制(CUFT)的材積 / 35.315
+  [C.總材積] = 單位材積 * 箱數
+
+]]>
+  </act>
+  <act cite_std="N" id="un_sel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1.將單身一所有資料的滿箱選取、餘數選取欄位更新為未勾選狀態
+]]>
+  </act>
+  <strings>
+    <sfield name="group3" text="來源明細" lstr=""/>
+    <sfield name="lbl_xmem001" text="來源單號" lstr=""/>
+    <sfield name="lbl_xmem002" text="來源項次" lstr=""/>
+    <sfield name="lbl_imaa001" text="料號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_xmdh007" text="產品特徵" lstr=""/>
+    <sfield name="lbl_xmdh015" text="單位" lstr=""/>
+    <sfield name="lbl_xmdh016" text="數量" lstr=""/>
+    <sfield name="lbl_xman005" text="包装方式" lstr=""/>
+    <sfield name="lbl_every_num" text="每箱裝數" lstr=""/>
+    <sfield name="lbl_sel1" text="滿箱選取" lstr=""/>
+    <sfield name="lbl_full_num" text="滿箱數" lstr=""/>
+    <sfield name="lbl_sel2" text="剩餘選取" lstr=""/>
+    <sfield name="lbl_unfull_num" text="餘數" lstr=""/>
+    <sfield name="lbl_space" text="餘數所需空間" lstr=""/>
+    <sfield name="lbl_all_space" text="已選取之總空間" lstr=""/>
+    <sfield name="full_sel" text="滿箱選取" lstr=""/>
+    <sfield name="all_sel" text="全選" lstr=""/>
+    <sfield name="un_sel" text="取消選取" lstr=""/>
+    <sfield name="cancel_sel" text="反向選取" lstr=""/>
+    <sfield name="group2" text="箱號資料" lstr=""/>
+    <sfield name="lbl_xmem0081" text="字軌" lstr=""/>
+    <sfield name="lbl_xmem0101" text="起始箱號" lstr=""/>
+    <sfield name="lbl_xmem0091" text="棧板編號" lstr=""/>
+    <sfield name="make_paper" text="產生底稿" lstr=""/>
+    <sfield name="group1" text="包裝單底稿" lstr=""/>
+    <sfield name="lbl_xmemseq" text="項次" lstr=""/>
+    <sfield name="lbl_xmem003" text="料件編號" lstr=""/>
+    <sfield name="lbl_xmem004" text="包裝序" lstr=""/>
+    <sfield name="lbl_xmem005" text="包裝方式" lstr=""/>
+    <sfield name="lbl_xmem006" text="每箱裝數" lstr=""/>
+    <sfield name="lbl_xmem007" text="箱數" lstr=""/>
+    <sfield name="lbl_xmem008" text="字軌" lstr=""/>
+    <sfield name="lbl_xmem009" text="棧板號" lstr=""/>
+    <sfield name="lbl_xmem010" text="起始包裝箱號" lstr=""/>
+    <sfield name="lbl_xmem011" text="截止包裝箱號" lstr=""/>
+    <sfield name="lbl_xmem012" text="數量" lstr=""/>
+    <sfield name="lbl_xmem013" text="重量單位" lstr=""/>
+    <sfield name="lbl_xmem014" text="單位淨重" lstr=""/>
+    <sfield name="lbl_xmem015" text="總淨重" lstr=""/>
+    <sfield name="lbl_xmem016" text="單位毛重" lstr=""/>
+    <sfield name="lbl_xmem017" text="總毛重" lstr=""/>
+    <sfield name="lbl_xmem018" text="單位材積" lstr=""/>
+    <sfield name="lbl_xmem019" text="總材積" lstr=""/>
+    <sfield name="make_detail" text="產生包裝單明細" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="all_sel" text="全選" lstr=""/>
+    <sact name="cancel_sel" text="取消全選" lstr=""/>
+    <sact name="full_sel" text="滿箱選取" lstr=""/>
+    <sact name="make_detail" text="產生包裝單明細" lstr=""/>
+    <sact name="make_paper" text="產生底稿" lstr=""/>
+    <sact name="un_sel" text="取消選取" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="s_detail2" status=""/>
+  </exclude>
+</spec>

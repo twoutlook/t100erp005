@@ -1,0 +1,1313 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apjp192.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2015-12-08 17:54:28), PR版次:0002(2016-12-15 15:41:44)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000030
+#+ Filename...: apjp192
+#+ Description: 專案保固結案作業
+#+ Creator....: 01996(2015-12-02 16:29:05)
+#+ Modifier...: 01996 -SD/PR- 08734
+ 
+{</section>}
+ 
+{<section id="apjp192.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#161124-00048#14   2016/12/15  By 08734    星号整批调整
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+  sel  LIKE type_t.chr1,
+  b_pjba024 LIKE pjba_t.pjba024,
+  b_pjba014 LIKE pjba_t.pjba014,
+  b_pjba014_desc LIKE type_t.chr80,
+  b_pjba023 LIKE pjba_t.pjba023,
+  b_pjba001 LIKE pjba_t.pjba001,
+  b_pjba001_desc LIKE type_t.chr80,
+  b_pjba000 LIKE pjba_t.pjba000,
+  b_pjba000_desc LIKE type_t.chr80,
+  b_pjba004 LIKE pjba_t.pjba004,
+  b_pjba004_desc LIKE type_t.chr80,
+  b_pjba005 LIKE pjba_t.pjba005,
+  b_pjba010 LIKE pjba_t.pjba010,
+  b_pjba010_desc LIKE type_t.chr80
+END RECORD 
+
+TYPE type_g_detail2_d RECORD
+  b_pjbb002 LIKE pjbb_t.pjbb002,
+  b_pjbb002_desc LIKE type_t.chr80,
+  b_pjbb004 LIKE pjbb_t.pjbb004,
+  b_pjbb004_desc LIKE type_t.chr80,
+  b_pjbb005 LIKE pjbb_t.pjbb005,
+  b_pjbb006 LIKE pjbb_t.pjbb006,
+  b_pjbb007 LIKE pjbb_t.pjbb007,
+  b_pjbb008 LIKE pjbb_t.pjbb008,
+  b_pjbb009 LIKE pjbb_t.pjbb009,
+  b_pjbb010 LIKE pjbb_t.pjbb010,
+  b_pjbb010_desc LIKE type_t.chr80,
+  b_pjbb011 LIKE pjbb_t.pjbb011,
+  b_pjbb011_desc LIKE type_t.chr80,
+  b_pjbb012 LIKE pjbb_t.pjbb012
+END RECORD
+
+TYPE type_g_detail3_d RECORD
+  b_pjbh002 LIKE pjbh_t.pjbh002,
+  b_pjbh002_desc LIKE type_t.chr80,
+  b_pjbh003 LIKE pjbh_t.pjbh003,
+  b_pjbh004 LIKE pjbh_t.pjbh004,
+  b_pjbh005 LIKE pjbh_t.pjbh005,
+  b_pjbh006 LIKE pjbh_t.pjbh006,
+  b_pjbh009 LIKE pjbh_t.pjbh009,
+  b_pjbh007 LIKE pjbh_t.pjbh007,
+  b_pjbh008 LIKE pjbh_t.pjbh008,
+  b_pjbh008_desc LIKE type_t.chr80
+END RECORD
+
+TYPE type_g_detail4_d RECORD
+  b_pjbm002 LIKE pjbm_t.pjbm002,
+  b_pjbm002_desc LIKE type_t.chr80,
+  b_pjbm002_desc_desc LIKE type_t.chr80,
+  b_pjbm003 LIKE pjbm_t.pjbm003,
+  b_pjbm003_desc LIKE type_t.chr80,
+  b_pjbm004 LIKE pjbm_t.pjbm004,
+  b_pjbm004_desc LIKE type_t.chr80,
+  b_pjbm005 LIKE pjbm_t.pjbm005,
+  b_pjbm005_desc LIKE type_t.chr80,
+  b_pjbm006 LIKE pjbm_t.pjbm006,
+  b_pjbm007 LIKE pjbm_t.pjbm007,
+  b_pjbm007_desc LIKE type_t.chr80,
+  b_pjbm008 LIKE pjbm_t.pjbm008,
+  b_pjbm009 LIKE pjbm_t.pjbm009,
+  b_pjbm009_desc LIKE type_t.chr80,
+  b_pjbm010 LIKE pjbm_t.pjbm010,
+  b_pjbm010_desc LIKE type_t.chr80,
+  b_pjbm011 LIKE pjbm_t.pjbm011,
+  b_pjbm011_desc LIKE type_t.chr80,
+  b_pjbm012 LIKE pjbm_t.pjbm012,
+  b_pjbm013 LIKE pjbm_t.pjbm013,
+  b_pjbm013_desc LIKE type_t.chr80,
+  b_pjbm014 LIKE pjbm_t.pjbm014,
+  b_pjbm014_desc LIKE type_t.chr80,
+  b_pjbm015 LIKE pjbm_t.pjbm015,
+  b_pjbm016 LIKE pjbm_t.pjbm016,
+  b_pjbm017 LIKE pjbm_t.pjbm017,
+  b_pjbm018 LIKE pjbm_t.pjbm018
+END RECORD
+
+TYPE type_g_detail5_d RECORD
+  b_pjbi002 LIKE pjbi_t.pjbi002,
+  b_pjbi002_desc LIKE type_t.chr80,
+  b_pjbi003 LIKE pjbi_t.pjbi003,
+  b_pjbi004 LIKE pjbi_t.pjbi004,
+  b_pjbi005 LIKE pjbi_t.pjbi005,
+  b_pjbi006 LIKE pjbi_t.pjbi006,
+  b_pjbi009 LIKE pjbi_t.pjbi009,
+  b_pjbi007 LIKE pjbi_t.pjbi007,
+  b_pjbi008 LIKE pjbi_t.pjbi008,
+  b_pjbi008_desc LIKE type_t.chr80
+END RECORD
+DEFINE g_detail2_d  DYNAMIC ARRAY OF type_g_detail2_d
+DEFINE g_detail3_d  DYNAMIC ARRAY OF type_g_detail3_d
+DEFINE g_detail4_d  DYNAMIC ARRAY OF type_g_detail4_d
+DEFINE g_detail5_d  DYNAMIC ARRAY OF type_g_detail5_d
+DEFINE g_detail_idx          LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num5
+DEFINE g_detail_idx3         LIKE type_t.num5
+DEFINE g_detail_d_t   type_g_detail_d
+DEFINE p_type LIKE type_t.chr1
+DEFINE g_pjba013 LIKE type_t.dat
+DEFINE g_pjba013_o LIKE type_t.dat
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+ 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apjp192.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apj","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   LET p_type = g_argv[1]
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apjp192 WITH FORM cl_ap_formpath("apj",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apjp192_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apjp192_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apjp192
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apjp192.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION apjp192_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc('b_pjbb012','16003')
+   IF p_type != '1' THEN
+      CALL cl_set_comp_entry("b_pjba024,b_pjba014",FALSE)
+   END IF
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apjp192.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apjp192_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE l_yy LIKE type_t.num5
+   DEFINE l_mm LIKE type_t.num5
+   DEFINE l_days LIKE type_t.num5
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   LET g_forupd_sql = "SELECT '',pjba014,'',pjba001,'',pjba000,'',pjba004,'',pjba005,pjba010,'' FROM pjba_t",
+                      " WHERE pjbaent = ",g_enterprise," AND pjba001 = ? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apjp192_bcl CURSOR FROM g_forupd_sql  
+   CALL cl_set_comp_visible("grid_1",TRUE)
+   IF p_type = '1' THEN
+      LET l_yy = cl_get_para(g_enterprise,g_site,'S-FIN-6010') 
+      LET l_mm = cl_get_para(g_enterprise,g_site,'S-FIN-6011') 
+      CALL s_date_get_max_day(l_yy,l_mm) RETURNING l_days
+      LET g_pjba013 = MDY(l_mm,l_days,l_yy) 
+      DISPLAY  g_pjba013 TO pjba013
+   ELSE
+      CALL cl_set_comp_visible("grid_1",FALSE)
+   END IF
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL apjp192_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+           CONSTRUCT BY NAME g_wc ON pjba001,pjba000,pjba004,pjba005,pjba010
+              BEFORE CONSTRUCT
+              
+              ON ACTION controlp INFIELD pjba001
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'c'
+                LET g_qryparam.reqry = FALSE
+                LET g_qryparam.where = " (pjba021 ='1' OR (pjba021 = '2' AND pjba023 IS NOT NULL))"
+                CALL q_pjba001()                           #呼叫開窗
+                DISPLAY g_qryparam.return1 TO pjba001 #顯示到畫面上
+                NEXT FIELD pjba001
+              ON ACTION controlp INFIELD pjba000
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'c'
+                LET g_qryparam.reqry = FALSE
+                CALL q_pjaa001()                           #呼叫開窗
+                DISPLAY g_qryparam.return1 TO pjba000  #顯示到畫面上
+               
+                NEXT FIELD pjba000
+              ON ACTION controlp INFIELD pjba004
+                 INITIALIZE g_qryparam.* TO NULL
+                 LET g_qryparam.state = 'c'
+                 LET g_qryparam.reqry = FALSE
+                 LET g_qryparam.arg1 = g_site
+                 CALL q_ooaj002_1()                           #呼叫開窗
+                 DISPLAY g_qryparam.return1 TO pjba004 #顯示到畫面上
+                 NEXT FIELD pjba004
+               ON ACTION controlp INFIELD pjba010
+                 INITIALIZE g_qryparam.* TO NULL
+                 LET g_qryparam.state = 'c'
+                 LET g_qryparam.reqry = FALSE
+                 LET g_qryparam.arg1 = 8006
+                 CALL q_oocq002()
+                 DISPLAY g_qryparam.return1 TO pjba010 #顯示到畫面上
+                 NEXT FIELD pjba010
+           END CONSTRUCT
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+          INPUT g_pjba013 FROM pjba013 ATTRIBUTE(WITHOUT DEFAULTS)
+              AFTER FIELD pjba013
+                 IF NOT cl_null(g_pjba013) AND NOT cl_null(g_pjba013_o) THEN
+                    IF g_pjba013 <> g_pjba013_o THEN 
+                       CALL apjp192_b_fill()
+                    END IF
+                 END IF
+                 LET g_pjba013_o = g_pjba013
+          END INPUT
+          INPUT ARRAY g_detail_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_detail_d.getLength(),WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE, 
+                     DELETE ROW = FALSE,
+                     APPEND ROW = FALSE)
+             BEFORE INPUT
+#                CALL apjp192_b_fill()
+#                DISPLAY g_detail_d.getLength() TO FORMONLY.h_count
+             BEFORE ROW
+                LET l_ac = ARR_CURR()
+                LET g_detail_idx = l_ac
+                DISPLAY l_ac TO FORMONLY.h_index
+                LET g_current_page = 1
+                IF g_detail_d[l_ac].sel = 'Y' THEN
+                   CALL cl_set_comp_required("b_pjba014",TRUE)
+                ELSE
+                   CALL cl_set_comp_required("b_pjba014",FALSE)
+                END IF
+#                CALL apjp192_b_fill2(2,g_detail_d[g_detail_idx].b_pjba001)
+#                CALL apjp192_b_fill2(4,g_detail_d[g_detail_idx].b_pjba001)
+#                CALL s_transaction_begin()
+#                LET g_detail_d_t.* = g_detail_d[g_detail_idx].*
+#                OPEN apjp192_bcl USING g_detail_d[g_detail_idx].b_pjba001
+#                IF STATUS THEN
+#                   INITIALIZE g_errparam TO NULL 
+#                   LET g_errparam.extend = "OPEN apjp192_bcl:" 
+#                   LET g_errparam.code   = STATUS 
+#                   LET g_errparam.popup  = TRUE 
+#                   CALL cl_err()
+#                   CLOSE apjp192_bcl
+#                   CALL s_transaction_end('N','0')
+#                END IF
+             ON CHANGE sel
+                IF g_detail_d[l_ac].sel = 'Y' THEN
+                   CALL cl_set_comp_required("b_pjba014",TRUE)
+                ELSE
+                   CALL cl_set_comp_required("b_pjba014",FALSE)
+                END IF
+             AFTER FIELD b_pjba014
+                IF NOT cl_null(g_detail_d[l_ac].b_pjba014) THEN
+                  IF NOT s_azzi650_chk_exist('8007',g_detail_d[l_ac].b_pjba014) THEN
+                     LET g_detail_d[l_ac].b_pjba014 = g_detail_d_t.b_pjba014
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL s_desc_get_acc_desc('8007',g_detail_d[l_ac].b_pjba014) RETURNING g_detail_d[l_ac].b_pjba014_desc 
+             BEFORE FIELD b_pjba014
+                CALL s_desc_get_acc_desc('8007',g_detail_d[l_ac].b_pjba014) RETURNING g_detail_d[l_ac].b_pjba014_desc 
+             AFTER ROW
+                CALL s_transaction_end('N','0')
+                
+             ON ACTION controlp INFIELD b_pjba014
+            
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+                LET g_qryparam.reqry = FALSE
+            
+                LET g_qryparam.default1 = g_detail_d[l_ac].b_pjba014           
+                LET g_qryparam.arg1 = "8007" #
+            
+                
+                CALL q_oocq002()                                #呼叫開窗
+            
+                LET g_detail_d[l_ac].b_pjba014  = g_qryparam.return1              
+                #LET g_qcbd_d[l_ac].oocq002 = g_qryparam.return2 
+                DISPLAY g_detail_d[l_ac].b_pjba014  TO b_pjba014              #
+                #DISPLAY g_qcbd_d[l_ac].oocq002 TO oocq002 #應用分類碼
+                CALL s_desc_get_acc_desc('8007',g_detail_d[l_ac].b_pjba014) RETURNING g_detail_d[l_ac].b_pjba014_desc 
+                NEXT FIELD b_pjba014    
+         END INPUT
+               #add-point:input段before row
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+
+         
+#         DISPLAY ARRAY g_detail2_d TO s_detail2.* ATTRIBUTE(COUNT=g_detail_cnt)
+# 
+#            BEFORE DISPLAY
+#               LET g_current_page = 2
+# 
+#            BEFORE ROW
+#               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+#               LET l_ac = g_detail_idx2
+#               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+#               DISPLAY g_detail2_d.getLength() TO FORMONLY.h_count
+#               LET g_master_idx = l_ac
+#               CALL apjp192_b_fill3(g_current_page,g_detail_d[g_detail_idx].b_pjba001,g_detail2_d[g_detail_idx2].b_pjbb002)
+# 
+#               #add-point:input段before row
+#            #自訂ACTION(detail_show,page_1)
+#            
+# 
+#         END DISPLAY
+#         
+#         DISPLAY ARRAY g_detail3_d TO s_detail3.* ATTRIBUTE(COUNT=g_detail_cnt)
+# 
+#            BEFORE DISPLAY
+#               LET g_current_page = 3
+# 
+#            BEFORE ROW
+#               LET g_detail_idx3 = DIALOG.getCurrentRow("s_detail3")
+#               LET l_ac = g_detail_idx3
+#               DISPLAY g_detail_idx3 TO FORMONLY.h_index
+#               DISPLAY g_detail3_d.getLength() TO FORMONLY.h_count
+#               LET g_master_idx = l_ac
+# 
+#               #add-point:input段before row
+#            #自訂ACTION(detail_show,page_1)
+#            
+# 
+#         END DISPLAY
+#         
+#         DISPLAY ARRAY g_detail4_d TO s_detail4.* ATTRIBUTE(COUNT=g_detail_cnt)
+# 
+#            BEFORE DISPLAY
+#               LET g_current_page = 4
+# 
+#            BEFORE ROW
+#               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail4")
+#               LET l_ac = g_detail_idx2
+#               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+#               DISPLAY g_detail4_d.getLength() TO FORMONLY.h_count
+#               LET g_master_idx = l_ac
+#               CALL apjp192_b_fill3(g_current_page,g_detail_d[g_detail_idx].b_pjba001,g_detail4_d[g_detail_idx2].b_pjbm002)
+# 
+#               #add-point:input段before row
+#            #自訂ACTION(detail_show,page_1)
+#            
+# 
+#         END DISPLAY
+#         
+#         DISPLAY ARRAY g_detail5_d TO s_detail5.* ATTRIBUTE(COUNT=g_detail_cnt)
+# 
+#            BEFORE DISPLAY
+#               LET g_current_page = 5
+# 
+#            BEFORE ROW
+#               LET g_detail_idx3 = DIALOG.getCurrentRow("s_detail5")
+#               LET l_ac = g_detail_idx3
+#               DISPLAY g_detail_idx3 TO FORMONLY.h_index
+#               DISPLAY g_detail5_d.getLength() TO FORMONLY.h_count
+#               LET g_master_idx = l_ac
+# 
+#               #add-point:input段before row
+#            #自訂ACTION(detail_show,page_1)
+#            
+# 
+#         END DISPLAY
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            CALL apjp192_b_fill()
+            DISPLAY g_detail_d.getLength() TO FORMONLY.h_count
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apjp192_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL apjp192_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL apjp192_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+          ON ACTION batch_execute
+             IF l_ac > 0 THEN
+                IF g_detail_d[l_ac].sel = 'Y' AND cl_null(g_detail_d[l_ac].b_pjba014) THEN
+                   NEXT FIELD b_pjba014
+                END IF
+             END IF
+             IF g_detail_d.getLength() > 0 THEN
+                CALL s_transaction_begin()
+                IF NOT apjp192_upd_pjba014() THEN
+                   CALL s_transaction_end('N','0')
+                ELSE
+                   CALL s_transaction_end('Y','0')
+                   CALL apjp192_b_fill()
+                   CALL cl_ask_confirm3("std-00012","")
+                   
+                END IF
+             END IF  
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apjp192.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION apjp192_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+   
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL apjp192_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apjp192.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION apjp192_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   DEFINE l_sql STRING
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   LET g_sql = "SELECT 'N',pjba024,pjba014,'',pjba023,pjba001,'',pjba000,'',pjba004,'',pjba005,pjba010,'' ",
+               "  FROM pjba_t WHERE pjbaent = ? AND pjbastus = 'Y' ",
+               "   AND (pjba021 = '1' OR (pjba021 = '2' AND pjba023 IS NOT NULL)) AND ",g_wc
+   IF p_type = '1' THEN
+      LET g_sql = g_sql," AND pjba011 = 'N'"
+   ELSE
+      LET g_sql = g_sql," AND pjba011 = 'Y'"
+   END IF
+   #end add-point
+ 
+   PREPARE apjp192_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apjp192_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+   CALL g_detail2_d.clear()
+   CALL g_detail3_d.clear()
+   CALL g_detail4_d.clear()
+   CALL g_detail5_d.clear()
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+      g_detail_d[l_ac].*
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      IF p_type = '1' THEN
+         LET g_detail_d[l_ac].b_pjba024 = g_pjba013
+      END IF
+      CALL s_desc_get_acc_desc('8007',g_detail_d[l_ac].b_pjba014) RETURNING g_detail_d[l_ac].b_pjba014_desc   #取acc说明
+      CALL s_desc_get_project_desc(g_detail_d[l_ac].b_pjba001) RETURNING g_detail_d[l_ac].b_pjba001_desc      #取专案编号说明
+      CALL apjp192_pjba000_desc(g_detail_d[l_ac].b_pjba000) RETURNING g_detail_d[l_ac].b_pjba000_desc      
+      CALL s_desc_get_currency_desc(g_detail_d[l_ac].b_pjba004) RETURNING g_detail_d[l_ac].b_pjba004_desc     #取币别说明
+      CALL s_desc_get_acc_desc('8006',g_detail_d[l_ac].b_pjba010) RETURNING g_detail_d[l_ac].b_pjba010_desc   #取acc说明
+#      CALL apjp192_b_fill2(2,g_detail_d[l_ac].b_pjba001)
+#      CALL apjp192_b_fill2(4,g_detail_d[l_ac].b_pjba001)
+      #end add-point
+      
+      CALL apjp192_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE apjp192_sel
+   
+   LET l_ac = 1
+   CALL apjp192_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apjp192.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION apjp192_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apjp192.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION apjp192_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apjp192.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION apjp192_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL apjp192_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apjp192.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION apjp192_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apjp192.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION apjp192_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apjp192_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apjp192.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION apjp192_pjba000_desc(p_pjba000)
+DEFINE p_pjba000   LIKE pjba_t.pjba000
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_pjba000
+   CALL ap_ref_array2(g_ref_fields,"SELECT pjaal003 FROM pjaal_t WHERE pjaalent='"||g_enterprise||"' AND pjaal001=? AND pjaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   RETURN g_rtn_fields[1]
+
+END FUNCTION
+
+PRIVATE FUNCTION apjp192_b_fill2(p_page,p_pjba001)
+DEFINE l_sql  STRING
+DEFINE p_page LIKE type_t.num5
+DEFINE p_pjba001 LIKE pjba_t.pjba001
+DEFINE l_cnt  LIKE type_t.num10
+DEFINE l_para STRING
+    IF p_page = 2 AND NOT cl_null(p_pjba001) THEN
+       CALL g_detail2_d.clear()
+       CALL g_detail3_d.clear()
+       LET l_sql = "SELECT pjbb002,'',pjbb004,'',pjbb005,pjbb006,pjbb007,pjbb008,pjbb009,pjbb010,'',pjbb011,'',pjbb012 ",
+                   "  FROM pjbb_t WHERE pjbbent = ",g_enterprise," AND pjbb001 = '",p_pjba001,"'"
+       PREPARE apjp192_sel2 FROM l_sql
+       DECLARE b_fill_curs2 CURSOR FOR apjp192_sel2
+       
+       LET l_cnt = 1
+       FOREACH b_fill_curs2 INTO g_detail2_d[l_cnt].*
+          IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         
+            EXIT FOREACH
+         END IF
+         CALL s_desc_get_pjbbl004_desc(p_pjba001,g_detail2_d[l_cnt].b_pjbb002) RETURNING g_detail2_d[l_cnt].b_pjbb002_desc
+         CALL s_desc_get_acc_desc('8001',g_detail2_d[l_cnt].b_pjbb004) RETURNING g_detail2_d[l_cnt].b_pjbb004_desc   #取acc说明
+         CALL s_desc_get_person_desc(g_detail2_d[l_cnt].b_pjbb010) RETURNING g_detail2_d[l_cnt].b_pjbb010_desc #取人员说明
+         CALL s_desc_get_department_desc(g_detail2_d[l_cnt].b_pjbb011) RETURNING g_detail2_d[l_cnt].b_pjbb011_desc #取部门说明
+#         CALL apjp192_b_fill3(2,p_pjba001,g_detail2_d[l_cnt].b_pjbb002)
+          IF l_cnt > g_max_rec THEN
+             IF g_error_show = 1 THEN
+                INITIALIZE g_errparam TO NULL 
+                LET g_errparam.extend =  "" 
+                LET g_errparam.code   =  9035 
+                LET g_errparam.popup  = TRUE 
+                CALL cl_err()
+               
+             END IF
+             EXIT FOREACH
+          END IF
+          LET l_cnt = l_cnt + 1
+       END FOREACH
+       CALL g_detail2_d.deleteElement(g_detail2_d.getLength())
+       IF g_detail2_d.getLength() > 0 THEN
+          CALL apjp192_b_fill3(2,p_pjba001,g_detail2_d[1].b_pjbb002)
+       END IF
+    END IF
+    
+    IF p_page = 4 AND NOT cl_null(p_pjba001) THEN
+       CALL g_detail4_d.clear()
+       CALL g_detail5_d.clear()
+       LET l_sql = "SELECT pjbm002,'','',pjbm003,'',pjbm004,'',pjbm005,'',pjbm006,pjbm007,'',pjbm008,pjbm009,'',pjbm010,'',",
+                   " pjbm011,'',pjbm012,pjbm013,'',pjbm014,'',pjbm015,pjbm016,pjbm017,pjbm018",
+                   "  FROM pjbm_t WHERE pjbment = ",g_enterprise," AND pjbm001 = '",p_pjba001,"'"
+       PREPARE apjp192_sel3 FROM l_sql
+       DECLARE b_fill_curs3 CURSOR FOR apjp192_sel3
+       LET l_cnt = 1
+       FOREACH b_fill_curs3 INTO g_detail4_d[l_cnt].*
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "FOREACH:" 
+             LET g_errparam.code   = SQLCA.sqlcode 
+             LET g_errparam.popup  = TRUE 
+             CALL cl_err()
+             EXIT FOREACH
+          END IF
+          CALL apjp192_pjbm002_desc(p_pjba001,g_detail4_d[l_cnt].b_pjbm002) RETURNING g_detail4_d[l_cnt].b_pjbm002_desc,g_detail4_d[l_cnt].b_pjbm002_desc_desc
+          CALL s_desc_get_acc_desc('8004',g_detail4_d[l_cnt].b_pjbm003) RETURNING g_detail4_d[l_cnt].b_pjbm003_desc   #取acc说明
+          CALL s_desc_get_department_desc(g_detail4_d[l_cnt].b_pjbm004) RETURNING g_detail4_d[l_cnt].b_pjbm004_desc
+          CALL apjp192_pjbm002_desc(p_pjba001,g_detail4_d[l_cnt].b_pjbm005) RETURNING g_detail4_d[l_cnt].b_pjbm005_desc,l_para
+          CALL apjp192_pjbm002_desc(p_pjba001,g_detail4_d[l_cnt].b_pjbm007) RETURNING g_detail4_d[l_cnt].b_pjbm007_desc,l_para
+          CALL s_desc_get_person_desc(g_detail4_d[l_cnt].b_pjbm009) RETURNING g_detail4_d[l_cnt].b_pjbm009_desc
+          CALL s_desc_get_department_desc(g_detail4_d[l_cnt].b_pjbm010) RETURNING g_detail4_d[l_cnt].b_pjbm010_desc
+          CALL s_desc_get_pjbbl004_desc(p_pjba001,g_detail4_d[l_cnt].b_pjbm011) RETURNING g_detail4_d[l_cnt].b_pjbm011_desc
+          CALL s_desc_get_acc_desc('8005',g_detail4_d[l_cnt].b_pjbm013) RETURNING g_detail4_d[l_cnt].b_pjbm013_desc   #取acc说明
+          CALL s_desc_get_acc_desc('8005',g_detail4_d[l_cnt].b_pjbm014) RETURNING g_detail4_d[l_cnt].b_pjbm014_desc   #取acc说明
+#          CALL apjp192_b_fill3(4,p_pjba001,g_detail4_d[l_cnt].b_pjbm002)
+          IF l_cnt > g_max_rec THEN
+             IF g_error_show = 1 THEN
+                INITIALIZE g_errparam TO NULL 
+                LET g_errparam.extend =  "" 
+                LET g_errparam.code   =  9035 
+                LET g_errparam.popup  = TRUE 
+                CALL cl_err()
+               
+             END IF
+             EXIT FOREACH
+          END IF
+          LET l_cnt = l_cnt + 1
+       END FOREACH
+       CALL g_detail4_d.deleteElement(g_detail4_d.getLength())
+       IF g_detail4_d.getLength() > 0 THEN
+          CALL apjp192_b_fill3(4,p_pjba001,g_detail4_d[1].b_pjbm002)
+       END IF
+    END IF
+END FUNCTION
+
+PRIVATE FUNCTION apjp192_pjbm002_desc(p_pjbm001,p_pjbm002)
+DEFINE p_pjbm001 LIKE pjbm_t.pjbm001
+DEFINE p_pjbm002 LIKE pjbm_t.pjbm002
+DEFINE r_pjbml004 LIKE pjbml_t.pjbml004
+DEFINE r_pjbml005 LIKE pjbml_t.pjbml005
+   SELECT pjbml004,pjbml005 INTO r_pjbml004,r_pjbml005 FROM pjbml_t
+    WHERE pjbmlent = g_enterprise AND pjbml001 = p_pjbm001
+      AND pjbml002 = p_pjbm002 AND pmbml003 = g_dlang
+   RETURN r_pjbml004,r_pjbml005
+END FUNCTION
+
+PRIVATE FUNCTION apjp192_b_fill3(p_page,p_key1,p_key2)
+DEFINE p_page LIKE type_t.num5
+DEFINE p_key1  LIKE pjba_t.pjba001
+DEFINE p_key2  LIKE pjbh_t.pjbh002
+DEFINE l_sql STRING
+DEFINE l_cnt  LIKE type_t.num10
+DEFINE l_para STRING
+   IF p_page = 2 AND NOT cl_null(p_key1) AND NOT cl_null(p_key2) THEN
+      CALL g_detail3_d.clear()
+   
+      LET l_sql = "SELECT pjbh002,'',pjbh003,pjbh004,pjbh005,pjbh006,pjbh009,pjbh007,pjbh008,'' ",
+                  "  FROM pjbh_t WHERE pjbhent = ",g_enterprise," AND pjbh001 = '",p_key1,"' AND pjbh002 = '",p_key2,"'",
+                  "  ORDER BY pjbh007,pjbh006 DESC"
+      PREPARE apjp192_sel4 FROM l_sql
+      DECLARE b_fill_curs4 CURSOR FOR apjp192_sel4
+      LET l_cnt = 1
+      FOREACH b_fill_curs4 INTO g_detail3_d[l_cnt].*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         CALL s_desc_get_pjbbl004_desc(p_key1,g_detail3_d[l_cnt].b_pjbh002) RETURNING g_detail3_d[l_cnt].b_pjbh002_desc
+         CALL s_desc_get_person_desc(g_detail3_d[l_cnt].b_pjbh008) RETURNING g_detail3_d[l_cnt].b_pjbh008_desc
+         EXIT FOREACH
+#          LET l_cnt = l_cnt + 1
+      END FOREACH
+#      CALL g_detail3_d.deleteElement(g_detail3_d.getLength())
+   END IF
+   
+   IF p_page = 4 AND NOT cl_null(p_key1) AND NOT cl_null(p_key2) THEN
+      CALL g_detail5_d.clear()
+      LET l_sql = "SELECT pjbi002,'',pjbi003,pjbi004,pjbi005,pjbi006,pjbi009,pjbi007,pjbi008,'' ",
+                  "  FROM pjbi_t WHERE pjbient = ",g_enterprise," AND pjbi001 = '",p_key1,"' AND pjbi002 = '",p_key2,"'",
+                  " ORDER BY pjbi007,pjbi006 DESC"
+      PREPARE apjp192_sel5 FROM l_sql
+      DECLARE b_fill_curs5 CURSOR FOR apjp192_sel5
+      LET l_cnt = 1
+      FOREACH b_fill_curs5 INTO g_detail5_d[l_cnt].*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         CALL apjp192_pjbm002_desc(p_key1,g_detail5_d[l_cnt].b_pjbi002) RETURNING g_detail5_d[l_cnt].b_pjbi002_desc,l_para
+         CALL s_desc_get_person_desc(g_detail5_d[l_cnt].b_pjbi008) RETURNING g_detail5_d[l_cnt].b_pjbi008_desc
+         EXIT FOREACH
+#          LET l_cnt = l_cnt + 1
+      END FOREACH
+#      CALL g_detail5_d.deleteElement(g_detail5_d.getLength())
+   END IF
+END FUNCTION
+#更新回写pjba_t结案相关栏位
+PRIVATE FUNCTION apjp192_upd_pjba014()
+DEFINE l_i  LIKE type_t.num10
+#DEFINE l_pjba RECORD LIKE pjba_t.*  #161124-00048#14  2016/12/15 By 08734 mark
+#161124-00048#14  2016/12/15 By 08734 add(S)
+DEFINE l_pjba RECORD  #專案資料單頭檔
+       pjbaent LIKE pjba_t.pjbaent, #企业编号
+       pjba000 LIKE pjba_t.pjba000, #项目类型
+       pjba001 LIKE pjba_t.pjba001, #项目编号
+       pjba002 LIKE pjba_t.pjba002, #范本
+       pjba003 LIKE pjba_t.pjba003, #范本项目编号
+       pjba004 LIKE pjba_t.pjba004, #项目计算币种
+       pjba005 LIKE pjba_t.pjba005, #立案日期
+       pjba006 LIKE pjba_t.pjba006, #备注
+       pjba007 LIKE pjba_t.pjba007, #WBS计划起始/截止日遇非工作日的处理方式
+       pjba008 LIKE pjba_t.pjba008, #参考行事历参照表号
+       pjbaownid LIKE pjba_t.pjbaownid, #资料所有者
+       pjbaowndp LIKE pjba_t.pjbaowndp, #资料所有部门
+       pjbacrtid LIKE pjba_t.pjbacrtid, #资料录入者
+       pjbacrtdp LIKE pjba_t.pjbacrtdp, #资料录入部门
+       pjbacrtdt LIKE pjba_t.pjbacrtdt, #资料创建日
+       pjbamodid LIKE pjba_t.pjbamodid, #资料更改者
+       pjbamoddt LIKE pjba_t.pjbamoddt, #最近更改日
+       pjbacnfid LIKE pjba_t.pjbacnfid, #资料审核者
+       pjbacnfdt LIKE pjba_t.pjbacnfdt, #数据审核日
+       pjbastus LIKE pjba_t.pjbastus, #状态码
+       pjba009 LIKE pjba_t.pjba009, #版次
+       pjba010 LIKE pjba_t.pjba010, #项目进度
+       pjba011 LIKE pjba_t.pjba011, #项目结案
+       pjba012 LIKE pjba_t.pjba012, #结案人员
+       pjba013 LIKE pjba_t.pjba013, #结案日期
+       pjba014 LIKE pjba_t.pjba014, #结案理由码
+       pjba015 LIKE pjba_t.pjba015, #认列方式
+       pjba016 LIKE pjba_t.pjba016, #本币预算金额(税前)
+       pjba017 LIKE pjba_t.pjba017, #本币合同金额(税前)
+       pjba018 LIKE pjba_t.pjba018, #本币预算合同金额(含税)
+       pjba019 LIKE pjba_t.pjba019, #本币合同金额(含税)
+       pjba020 LIKE pjba_t.pjba020, #报价版本
+       pjba021 LIKE pjba_t.pjba021, #结案阶段设置
+       pjba022 LIKE pjba_t.pjba022, #结案状态
+       pjba023 LIKE pjba_t.pjba023, #财会结案日
+       pjba024 LIKE pjba_t.pjba024, #保固结案日
+       pjba025 LIKE pjba_t.pjba025, #最终业主
+       pjba026 LIKE pjba_t.pjba026, #人工分摊选项
+       pjba027 LIKE pjba_t.pjba027, #请款审核单是否签回
+       pjba028 LIKE pjba_t.pjba028, #签回日
+       pjba029 LIKE pjba_t.pjba029, #保固切结书是否签回
+       pjba030 LIKE pjba_t.pjba030, #签回日
+       pjba031 LIKE pjba_t.pjba031, #保固起始日期
+       pjba032 LIKE pjba_t.pjba032, #保固截止日期
+       pjba033 LIKE pjba_t.pjba033, #估列保固成本
+       pjba034 LIKE pjba_t.pjba034, #备注
+       pjba035 LIKE pjba_t.pjba035, #检核否
+       pjba036 LIKE pjba_t.pjba036, #估列材料
+       pjba037 LIKE pjba_t.pjba037, #估列工包
+       pjba038 LIKE pjba_t.pjba038, #估列费用
+       pjba039 LIKE pjba_t.pjba039, #估列总计
+       pjba040 LIKE pjba_t.pjba040, #检验否
+       pjba041 LIKE pjba_t.pjba041, #估列材料
+       pjba042 LIKE pjba_t.pjba042, #估列工包
+       pjba043 LIKE pjba_t.pjba043, #估列费用
+       pjba044 LIKE pjba_t.pjba044, #估列总计
+       pjba045 LIKE pjba_t.pjba045, #检验否
+       pjba046 LIKE pjba_t.pjba046, #估列材料
+       pjba047 LIKE pjba_t.pjba047, #估列工包
+       pjba048 LIKE pjba_t.pjba048, #估列费用
+       pjba049 LIKE pjba_t.pjba049, #估列总计
+       pjba050 LIKE pjba_t.pjba050, #检验否
+       pjba051 LIKE pjba_t.pjba051, #项目预估成本-材料
+       pjba052 LIKE pjba_t.pjba052, #项目预估成本-人工
+       pjba053 LIKE pjba_t.pjba053, #项目预估成本-加工费
+       pjba054 LIKE pjba_t.pjba054, #项目预估成本-制费一
+       pjba055 LIKE pjba_t.pjba055, #项目预估成本-制费二
+       pjba056 LIKE pjba_t.pjba056, #项目预估成本-制费三
+       pjba057 LIKE pjba_t.pjba057, #项目预估成本-制费四
+       pjba058 LIKE pjba_t.pjba058 #项目预估成本-制费五
+END RECORD
+#161124-00048#14  2016/12/15 By 08734 add(E)
+DEFINE l_cnt LIKE type_t.num5
+DEFINE ls_value    STRING
+DEFINE l_date DATETIME YEAR TO SECOND
+
+LET l_cnt = 1
+FOR l_i = 1 TO g_detail_d.getLength()
+   IF g_detail_d[l_i].sel = 'Y' THEN
+      LET l_cnt = l_cnt + 1
+   END IF
+END FOR
+LET l_cnt = l_cnt - 1
+IF l_cnt = 0 THEN
+   INITIALIZE g_errparam TO NULL 
+   LET g_errparam.extend =  "" 
+   LET g_errparam.code   =  "afa-00063"
+   LET g_errparam.popup  = TRUE 
+   CALL cl_err()
+   RETURN FALSE
+END IF
+CALL cl_progress_bar_no_window(l_cnt) 
+
+FOR l_i = 1 TO g_detail_d.getLength()
+   
+#   LET l_date = cl_get_current() 
+   SELECT pjba021 INTO l_pjba.pjba021 FROM pjba_t       #抓去結案階段 1:一階段 2:二階段
+       WHERE pjbaent = g_enterprise AND pjba001 = g_detail_d[l_i].b_pjba001
+   IF p_type = '1' THEN
+      LET l_pjba.pjba014 = g_detail_d[l_i].b_pjba014
+      LET l_pjba.pjba011 = 'Y'
+      LET l_pjba.pjba012 = g_user
+      LET l_pjba.pjba013 = g_detail_d[l_i].b_pjba024
+      LET l_pjba.pjba024 = g_detail_d[l_i].b_pjba024
+      LET l_pjba.pjba022 = '2'
+      IF l_pjba.pjba021 = '1' THEN
+         LET l_pjba.pjba023 = g_detail_d[l_i].b_pjba024
+      END IF
+   ELSE 
+      LET l_pjba.pjba014 = ''
+      LET l_pjba.pjba011 = 'N'
+      LET l_pjba.pjba012 = ''
+      LET l_pjba.pjba013 = ''
+      IF l_pjba.pjba021 = '1' THEN   #如果是一階段結案,直接回寫未結案
+         LET l_pjba.pjba022 = '0'
+         LET l_pjba.pjba023 = ''
+      ELSE
+         LET l_pjba.pjba022 = '1'    #如果是二階段結案,需要把結案狀態回寫為財會結案       
+      END IF
+      LET l_pjba.pjba024 = ''
+   END IF
+   IF g_detail_d[l_i].sel = 'Y' THEN
+      LET ls_value = g_detail_d[l_i].b_pjba001
+      CALL cl_progress_no_window_ing(ls_value)
+      UPDATE pjba_t SET pjba014 = l_pjba.pjba014,
+                        pjba011 = l_pjba.pjba011,
+                        pjba012 = l_pjba.pjba012,
+                        pjba013 = l_pjba.pjba013,
+                        pjba022 = l_pjba.pjba022,
+                        pjba024 = l_pjba.pjba024
+                  WHERE pjbaent = g_enterprise
+                    AND pjba001 = g_detail_d[l_i].b_pjba001
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend =  "" 
+         LET g_errparam.code   =  SQLCA.SQLCODE
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      
+      IF l_pjba.pjba021 = '1' THEN   #如果是一階段結案 需要回寫 財會結案日
+         UPDATE pjba_t SET pjba023 = l_pjba.pjba023
+                     WHERE pjbaent = g_enterprise
+                       AND pjba001 = g_detail_d[l_i].b_pjba001
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  SQLCA.SQLCODE
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            RETURN FALSE
+         END IF
+      END IF
+   END IF
+END FOR
+
+RETURN TRUE
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

@@ -1,0 +1,89 @@
+---------------------------------------------------------------------------------- 
+-- File created from /u1/topprd/erp/ade/42f/adep220.4fd by Genero Studio
+-- WARNING! All changes made in this file will be lost!
+----------------------------------------------------------------------------------
+
+SCHEMA ds
+
+LAYOUT (tag="P001_00", minWidth=0, minHeight=0, spacing=compact, text=%"adep220")
+VBox mainlayout(tag="CantDel_FormRoot", splitter)
+Folder condition
+Page condition_page(action=condition_input, text=%"condition_page")
+VBox vb_qbe(tag="CantDel")
+Grid grid_1(tag="", comment=%"cmt_grid_1")
+{
+ <G group_qbe                                                           >
+ [lbl_rtjasi|rtjasite     ]
+
+
+
+ <                                                                      >
+ <G group_input                                                         >
+ [lbl_rtjada|rtjadocdt    |lbl_]
+ [lbl_rtjado|rtjadocdt_end]
+
+
+
+ <                                                                      >
+
+}
+END -- grid_1
+Group group_progress(text=%"group_progress")
+Grid grid1
+{
+[lbl_stagen][stagenow                                                         ]
+[lbl_stagec][stagecomplete                           ]
+
+}
+END -- grid1
+END -- group_progress
+END -- vb_qbe
+END -- condition_page
+Page scheduling_page(tag="CantDel", action=scheduling_setting, text=%"scheduling_page")
+Grid scheduling_grid(tag="CantDel")
+{
+
+
+
+
+
+}
+END -- scheduling_grid
+END -- scheduling_page
+Page history_page(action=history_fill, text=%"history_page")
+Grid executehistory_grid
+{
+
+
+
+
+
+}
+END -- executehistory_grid
+END -- history_page
+END -- condition
+END -- mainlayout
+END -- adep220
+
+TABLES
+rtja_t
+ATTRIBUTES
+Group group_qbe:group_qbe, text=%"group_qbe", gridChildrenInParent;
+Label lbl_rtjasi:lbl_rtjasite, tag="", text=%"lbl_rtjasite", color = black, sizePolicy=initial, comment=%"";
+ButtonEdit rtjasite=formonly.rtjasite type like rtja_t.rtjasite, tag="", action=controlp, tabIndex=1, default = "", not null, required, INCLUDE = (NULL), color = black, image="16/openwindow.png", program="", scroll, sizePolicy=initial, style="[[RE][SET]] required", century="R", comment=%"";
+Group group_input:group_input, text=%"group_input", gridChildrenInParent;
+Label lbl_rtjada:lbl_rtjadate, tag="", text=%"lbl_rtjadate", color = black, sizePolicy=initial, comment=%"";
+DateEdit rtjadocdt=formonly.rtjadocdt type like rtja_t.rtjadocdt, tag="", tabIndex=2, default = "", not null, required, INCLUDE = (NULL), color = black, sizePolicy=initial, style="[[RE][SET]] required", century="R", comment=%"cmt_dateedit";
+Label lbl_:lbl_rtjadocdt_str, tag="", text=%"lbl_rtjadocdt_str", color = black, hidden, sizePolicy=initial, comment=%"";
+Label lbl_rtjado:lbl_rtjadocdt_end, tag="", text=%"lbl_rtjadocdt_end", color = black, sizePolicy=initial, comment=%"";
+DateEdit rtjadocdt_end=formonly.rtjadocdt_end type CHAR, tag="", tabIndex=3, default = "", INCLUDE = (NULL), color = black, sizePolicy=initial, century="R", comment=%"";
+Label lbl_stagen:lbl_stagenow, text=%"lbl_stagenow", color = black, sizePolicy=initial;
+LABEL stagenow=formonly.stagenow type CHAR, color = black, sizePolicy=initial;
+Label lbl_stagec:lbl_stagecomplete, text=%"lbl_stagecomplete", color = black, sizePolicy=initial;
+ProgressBar stagecomplete=formonly.stagecomplete type CHAR, valueMin=0, valueMax=100, color = black, sizePolicy=initial;
+END -- ATTRIBUTES
+
+INSTRUCTIONS
+SCREEN RECORD Undefined(formonly.rtjasite,formonly.rtjadocdt,formonly.rtjadocdt_end,formonly.stagenow,formonly.stagecomplete)
+END -- INSTRUCTIONS
+

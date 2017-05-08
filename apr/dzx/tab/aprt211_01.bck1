@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aprt211_01" module="apr" jobmode="N" type="c04a" industry="std" fix_arg="0" crtid="02482" crtdt="2014-03-13 16:14:46" modid="03247" moddt="2015-03-26 17:32:35" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="參與對象高級設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="prdbacti,prdb004,prdb002,prdb003,prdb005,prdbdocno,prdb001,prdbsite,prdbunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="prdcacti,prdc002,prdc003,prdc004,prdc004_desc(chr500),prdc001,prdcsite,prdcunit"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_v_prdi002" prog="v_prdi002" parameter="prdb004"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="aprt211_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="prdbacti,prdb004,prdb002,prdb003,prdb005,prdbdocno,prdb001,prdbsite,prdbunit" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="prdcacti,prdc002,prdc003,prdc004,prdc001,prdcsite,prdcunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="prdbacti,prdb004,prdb002,prdb003,prdb005,prdbdocno,prdb001,prdbsite,prdbunit"/>
+      <construct id="body" page="2" field="prdcacti,prdc002,prdc003,prdc004,prdc001,prdcsite,prdcunit"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="prdbacti" type="S" default="Y"/>
+      <column id="prdb004">
+        <after>
+          <check chkid="v_prdh002" id="isExist"/>
+        </after>
+        <controlp form="q_prdh002" state="i"/>
+      </column>
+      <column id="prdb002"/>
+      <column id="prdb003" def_scc="6567"/>
+      <column id="prdb005" type="S" default="0"/>
+      <column id="prdbdocno"/>
+      <column id="prdb001"/>
+      <column id="prdbsite"/>
+      <column id="prdbunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="prdcacti" type="S" default="Y"/>
+      <column id="prdc002">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+        <controlp form="q_prdb002" state="i"/>
+      </column>
+      <column id="prdc003"/>
+      <column id="prdc004">
+        <after>
+          <reference field="prdc004_desc" ref_field="prdc_t.prdc004" map_field="prdc004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_prdc004" state="c"/>
+      </column>
+      <column id="prdc004_desc"/>
+      <column id="prdc001"/>
+      <column id="prdcsite"/>
+      <column id="prdcunit"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="prdb_t" page="1" linked="" pk="prdbdocno,prdb002,prdb004">
+      <sql id="forupd_sql_detail" query="SELECT prdbacti,prdb004,prdb002,prdb003,prdb005,prdbdocno,prdb001,prdbsite,prdbunit FROM prdb_t WHERE prdbent=? AND prdbdocno=? AND prdb002=? AND prdb004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT prdbacti,prdb004,prdb002,prdb003,prdb005,prdbdocno,prdb001,prdbsite,prdbunit FROM prdb_t WHERE prdbent= ? AND 1=1 "/>
+    </body>
+    <body id="prdc_t" page="2" linked="" pk="prdc003,prdc004" fk="prdcdocno,prdc002" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT prdcacti,prdc002,prdc003,prdc004,&apos;&apos;,prdc001,prdcsite,prdcunit FROM prdc_t WHERE prdcent=? AND prdcdocno=? AND prdc002=? AND prdc003=? AND prdc004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT prdcacti,prdc002,prdc003,prdc004,&apos;&apos;,prdc001,prdcsite,prdcunit FROM prdc_t WHERE prdcent=? AND prdcdocno=? AND prdc002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

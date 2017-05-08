@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axmt590_s01" std_prog="axmt590_s01" erpver="1.0" ver="2" module="AXM" type="F" booking="N" class="" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <table ver="1" cite_std="N">
+    <tbl name="inaa_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[●資料檢核:
+  1.若簽退單已經確認不可以執行此子畫面
+  1.本支作業只提供倉庫人員進行庫位/儲位修改並進行過帳，所以本作業不提供新增/刪除功能
+  2.本作業只能修改單身的庫位/儲位兩個欄位
+
+●資料處理:
+  1.整批將簽退單明細的庫位/儲位整批換成子畫面上維護的庫位/儲位
+    1-1.若簽退單對應出貨項次的出貨庫位的成本庫性質為"成本庫"時，則簽退的庫位/儲位整批換成子畫面上
+        維護的成本庫位/儲位
+    1-2.若簽退單對應出貨項次的出貨庫位的成本庫性質為"非成本庫"時，則簽退的庫位/儲位整批換成子畫面上
+        維護的非成本庫位/儲位
+  2.若簽退項次有作多庫/儲/批出貨時，則須整批將多庫/儲/批出貨資料的庫位/儲位換成子畫面上維護的庫位/儲位，
+    替換原則跟步驟1的邏輯一樣]]>
+  </all>
+  <field cite_std="N" name="a_inaa001" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="q_inaa001_2" c_zoom="" chk_ref="v_inaa001_6" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[input開窗q_inaa001_2
+where inaa010 = 'Y'    #成本庫
+
+v_inaa001_6
+arg1 = g_site
+arg2 = inaa001
+arg3 = 'Y'    #成本庫
+]]>
+  </field>
+  <field cite_std="N" name="a_inab002" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_inab002_5" c_zoom="" chk_ref="v_inab002" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[input開窗
+arg1 = inaa001
+
+v_inab002
+arg1 = inaa001
+arg2 = inab002]]>
+  </field>
+  <field cite_std="N" name="b_inaa001" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="q_inaa001_2" c_zoom="" chk_ref="v_inaa001_6" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[input開窗q_inaa001_2
+where inaa010 = 'N'    #非成本庫
+
+v_inaa001_6
+arg1 = g_site
+arg2 = inaa001
+arg3 = 'N'           #非成本庫]]>
+  </field>
+  <field cite_std="N" name="b_inab002" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_inab002_5" c_zoom="" chk_ref="v_inab002" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[input開窗
+arg1 = inaa001
+
+v_inab002
+arg1 = inaa001
+arg2 = inab002]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="a_inaa001_desc" src="s" depend_field="a_inaa001" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="a_inab002_desc" src="s" depend_field="a_inab002" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="b_inaa001_desc" src="s" depend_field="b_inaa001" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="b_inab002_desc" src="s" depend_field="b_inab002" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="a_inaa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="a_inab002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inaa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inab002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="accept" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="cancel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_master" text="成本庫" lstr=""/>
+    <sfield name="lbl_inaa001" text="庫位編號" lstr=""/>
+    <sfield name="lbl_inab002" text="儲位編號" lstr=""/>
+    <sfield name="lbl_group1" text="非成本庫" lstr=""/>
+    <sfield name="lbl_accept" text="確認" lstr=""/>
+    <sfield name="lbl_cancel" text="取消" lstr=""/>
+    <sact name="accept" text="確定" lstr=""/>
+    <sact name="cancel" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

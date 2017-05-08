@@ -1,0 +1,358 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammm320" module="amm" jobmode="N" type="i10" industry="std" fix_arg="0" crtid="01752" crtdt="2013-11-21 10:07:10" modid="00700" moddt="2016-10-21 14:37:50" sdver="0013" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="會員卡種基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mman001,mman002,mmanl003,mmanl004,mman066,mmanunit,mmanunit_desc(chr80),mman003,mman004,mman004_desc(chr80),mmanstus,mmanownid,mmanownid_desc(chr80),mmanowndp,mmanowndp_desc(chr80),mmancrtid,mmancrtid_desc(chr80),mmancrtdp,mmancrtdp_desc(chr80),mmancrtdt,mmanmodid,mmanmodid_desc(chr80),mmanmoddt,mmancnfid,mmancnfid_desc(chr80),mmancnfdt,mman005,mman006,mman007,mman008,mman009,mman010,mman011,mman012,mman012_desc(chr80),mman013,mman014,mman015,mman069,mman016,mman017,mman018,mman019,mman020,mman021,mman022,mman023,mman024,mman025,mman062,mman063,mman026,mman064,mman053,mman053_desc(chr80),mman060,mman060_desc(chr80),mman054,mman054_desc(chr80),mman061,mman058,mman058_desc(chr80),mman072,mman057,mman057_desc(chr80),mman073,mman059,mman027,mman028,mman029,mman030,mman067,mman068,mman036,mman037,mman031,mman032,mman033,mman034,mman035,mman070,mman038,mman039,mman040,mman041,mman055,mman056,mman042,mman043,mman065,mman044,mman045,mman046,mman047,mman048,mman049,mman071,mman050,mman051,mman052"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_ammm320_01"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_ammm320_02"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammm320" method="dialog">
+    <section id="input">
+      <input id="head" field="mman001,mman002,mmanl003,mmanl004,mman066,mmanunit,mman003,mman004,mmanstus,mman005,mman006,mman007,mman008,mman009,mman010,mman011,mman012,mman013,mman014,mman015,mman069,mman016,mman017,mman018,mman019,mman020,mman021,mman022,mman023,mman024,mman025,mman062,mman063,mman026,mman064,mman053,mman060,mman054,mman061,mman058,mman072,mman057,mman073,mman059,mman027,mman028,mman029,mman030,mman067,mman068,mman036,mman037,mman031,mman032,mman033,mman034,mman035,mman070,mman038,mman039,mman040,mman041,mman055,mman056,mman042,mman043,mman065,mman044,mman045,mman046,mman047,mman048,mman049,mman071,mman050,mman051,mman052"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mman001,mman002,mmanl003,mmanl004,mman066,mmanunit,mman003,mman004,mmanstus,mmanownid,mmanowndp,mmancrtid,mmancrtdp,mmancrtdt,mmanmodid,mmanmoddt,mmancnfid,mmancnfdt,mman005,mman006,mman007,mman008,mman009,mman010,mman011,mman012,mman013,mman014,mman015,mman069,mman016,mman017,mman018,mman019,mman020,mman021,mman022,mman023,mman024,mman025,mman062,mman063,mman026,mman064,mman053,mman060,mman054,mman061,mman058,mman072,mman057,mman073,mman059,mman027,mman028,mman029,mman030,mman067,mman068,mman036,mman037,mman031,mman032,mman033,mman034,mman035,mman070,mman038,mman039,mman040,mman041,mman055,mman056,mman042,mman043,mman065,mman044,mman045,mman046,mman047,mman048,mman049,mman071,mman050,mman051,mman052"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mman001"/>
+      <set id="head" type="no_entry" field="mman001"/>
+    </init>
+    <init id="head">
+      <column id="mman001">
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mman002" type="S" default="0"/>
+      <column id="mmanl003"/>
+      <column id="mmanl004"/>
+      <column id="mman066" def_scc="6823"/>
+      <column id="mmanunit">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="mmanunit_desc" ref_field="mman_t.mmanunit" map_field="mmanunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mmanunit_desc"/>
+      <column id="mman003" type="S" default="N"/>
+      <column id="mman004">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="mman004_desc" ref_field="mman_t.mman004" map_field="mman004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mman004_desc"/>
+      <column id="mmanstus" scc="50" type="S" default="N">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="mmanownid">
+        <after>
+          <reference field="mmanownid_desc" ref_field="mman_t.mmanownid" map_field="mmanownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmanownid_desc"/>
+      <column id="mmanowndp">
+        <after>
+          <reference field="mmanowndp_desc" ref_field="mman_t.mmanowndp" map_field="mmanowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmanowndp_desc"/>
+      <column id="mmancrtid">
+        <after>
+          <reference field="mmancrtid_desc" ref_field="mman_t.mmancrtid" map_field="mmancrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmancrtid_desc"/>
+      <column id="mmancrtdp">
+        <after>
+          <reference field="mmancrtdp_desc" ref_field="mman_t.mmancrtdp" map_field="mmancrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmancrtdp_desc"/>
+      <column id="mmancrtdt"/>
+      <column id="mmanmodid">
+        <after>
+          <reference field="mmanmodid_desc" ref_field="mman_t.mmanmodid" map_field="mmanmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmanmodid_desc"/>
+      <column id="mmanmoddt"/>
+      <column id="mmancnfid">
+        <after>
+          <reference field="mmancnfid_desc" ref_field="mman_t.mmancnfid" map_field="mmancnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmancnfid_desc"/>
+      <column id="mmancnfdt"/>
+      <column id="mman005">
+        <after>
+          <check id="range" st="30.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="mman006">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman007"/>
+      <column id="mman008">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman009" type="S" default="1" def_scc="6505"/>
+      <column id="mman010" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman011" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman012">
+        <after>
+          <reference field="mman012_desc" ref_field="mman_t.mman012" map_field="mman012" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_1" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="mman012_desc"/>
+      <column id="mman013" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman014" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman015" type="S" default="N"/>
+      <column id="mman069">
+        <after>
+          <check id="range" bt="0.00" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman016" type="S" default="N"/>
+      <column id="mman017" type="S" default="N"/>
+      <column id="mman018" type="S" default="N"/>
+      <column id="mman019" def_scc="6506"/>
+      <column id="mman020" def_scc="6507"/>
+      <column id="mman021"/>
+      <column id="mman022">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman023" type="S" default="N"/>
+      <column id="mman024">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman025">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman062" type="S" default="Y"/>
+      <column id="mman063"/>
+      <column id="mman026" type="S" default="N"/>
+      <column id="mman064"/>
+      <column id="mman053">
+        <after>
+          <reference field="mman053_desc" ref_field="mman_t.mman053" map_field="mman053" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_1" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="mman053_desc"/>
+      <column id="mman060">
+        <after>
+          <reference field="mman060_desc" ref_field="mman_t.mman060" map_field="mmanent,mman060" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_1" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="mman060_desc"/>
+      <column id="mman054">
+        <after>
+          <reference field="mman054_desc" ref_field="mman_t.mman054" map_field="mman054" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_1" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="mman054_desc"/>
+      <column id="mman061" type="S" default="1"/>
+      <column id="mman058">
+        <after>
+          <check chkid="v_ooia001_1" id="isExist"/>
+          <reference field="mman058_desc" ref_field="mman_t.mman058" map_field="mmanent,mman058" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001" state="i"/>
+        <controlp form="q_ooia001" state="c"/>
+      </column>
+      <column id="mman058_desc"/>
+      <column id="mman072" type="S" default="Y"/>
+      <column id="mman057">
+        <after>
+          <check chkid="v_ooia001_1" id="isExist"/>
+          <reference field="mman057_desc" ref_field="mman_t.mman057" map_field="mmanent,mman057" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001" state="i"/>
+        <controlp form="q_ooia001" state="c"/>
+      </column>
+      <column id="mman057_desc"/>
+      <column id="mman073" type="S" default="N"/>
+      <column id="mman059" type="S" default="1" def_scc="6021"/>
+      <column id="mman027" type="S" default="N"/>
+      <column id="mman028" def_scc="6503"/>
+      <column id="mman029">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman030">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman067">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman068">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman036" def_scc="6509"/>
+      <column id="mman037" def_scc="12"/>
+      <column id="mman031" def_scc="6504"/>
+      <column id="mman032">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman033">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman034">
+        <after>
+          <check id="range" st="12.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="mman035">
+        <after>
+          <check id="range" st="31.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="mman070" type="S" default="N"/>
+      <column id="mman038" type="S" default="N"/>
+      <column id="mman039">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman040">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman041">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman055">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="mman056">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman042" type="S" default="N"/>
+      <column id="mman043" type="S" default="N"/>
+      <column id="mman065" type="S" default="N"/>
+      <column id="mman044">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman045">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman046">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman047" type="S" default="N"/>
+      <column id="mman048">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="mman049" type="S" default="N"/>
+      <column id="mman071" def_scc="6947"/>
+      <column id="mman050">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman051">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman052">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="mman_t" pk="mman001">
+      <sql id="forupd_sql" type="sql" query="SELECT mman001,mman002,&apos;&apos;,&apos;&apos;,mman066,mmanunit,&apos;&apos;,mman003,mman004,&apos;&apos;,mmanstus,mmanownid,&apos;&apos;,mmanowndp,&apos;&apos;,mmancrtid,&apos;&apos;,mmancrtdp,&apos;&apos;,mmancrtdt,mmanmodid,&apos;&apos;,mmanmoddt,mmancnfid,&apos;&apos;,mmancnfdt,mman005,mman006,mman007,mman008,mman009,mman010,mman011,mman012,&apos;&apos;,mman013,mman014,mman015,mman069,mman016,mman017,mman018,mman019,mman020,mman021,mman022,mman023,mman024,mman025,mman062,mman063,mman026,mman064,mman053,&apos;&apos;,mman060,&apos;&apos;,mman054,&apos;&apos;,mman061,mman058,&apos;&apos;,mman072,mman057,&apos;&apos;,mman073,mman059,mman027,mman028,mman029,mman030,mman067,mman068,mman036,mman037,mman031,mman032,mman033,mman034,mman035,mman070,mman038,mman039,mman040,mman041,mman055,mman056,mman042,mman043,mman065,mman044,mman045,mman046,mman047,mman048,mman049,mman071,mman050,mman051,mman052 FROM mman_t WHERE mmanent= ? AND mman001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mman001 FROM mman_t" order="mman001"/>
+      <sql id="append" type="lang" target="mmanl_t.mmanl003,mmanl_t.mmanl004" table="mmanl_t" fk="mman001" pk="mmanl001,mmanl002" field="mmanl003,mmanl004"/>
+    </head>
+  </dataset>
+</assembly>
+

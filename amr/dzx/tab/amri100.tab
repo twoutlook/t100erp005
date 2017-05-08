@@ -1,0 +1,171 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amri100" module="amr" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="04543" crtdt="2014-04-24 17:26:00" modid="00593" moddt="2016-07-29 00:58:32" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資源保修項目設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mrajsite,mraj001,mraj001_desc(chr80),mraj002,mraj002_desc(chr80),mraj003,mraj003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mrajseq,mraj004,mraj004_desc(chr500),mraj005,mraj005_desc(chr500),mraj006,mraj007,mraj008,mraj009,mraj012,mraj013"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mrajseq,mrajownid,mrajownid_desc(chr500),mrajowndp,mrajowndp_desc(chr500),mrajcrtid,mrajcrtid_desc(chr500),mrajcrtdp,mrajcrtdp_desc(chr500),mrajcrtdt,mrajmodid,mrajmodid_desc(chr500),mrajmoddt,mrajcnfid,mrajcnfid_desc(chr500),mrajcnfdt,mrajstus"/>
+      <var id="bs_field" value="mrajsite,mraj001,mraj001_desc(chr80),mraj002,mraj002_desc(chr80),mraj003,mraj003_desc(chr80)" pk="mrajsite,mraj001,mraj002,mraj003" order=""/>
+      <bs_reference field="mraj001_desc" ref_field="mraj001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1101&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+      <bs_reference field="mraj003_desc" ref_field="mraj003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1104&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amr" filename="amri100" method="dialog">
+    <section id="input">
+      <input id="head" field="mrajsite,mraj001,mraj002,mraj003"/>
+      <input id="body" page="1" field="mrajseq,mraj004,mraj005,mraj006,mraj007,mraj008,mraj009,mraj012,mraj013" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="mrajstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mrajsite,mraj001,mraj002,mraj002_desc,mraj003"/>
+      <construct id="body" page="1" field="mrajseq,mraj004,mraj005,mraj006,mraj007,mraj008,mraj009,mraj012,mraj013"/>
+      <construct id="body" page="2" field="mrajownid,mrajowndp,mrajcrtid,mrajcrtdp,mrajcrtdt,mrajmodid,mrajmoddt,mrajcnfid,mrajcnfdt,mrajstus"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mrajsite,mraj001,mraj002,mraj003"/>
+      <set id="head" type="no_entry" field="mrajsite,mraj001,mraj002,mraj003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mrajsite"/>
+      <column id="mraj001">
+        <after>
+          <reference field="mraj001_desc" ref_field="mraj001" map_field="mraj001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1101&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mraj001_desc"/>
+      <column id="mraj002">
+        <after>
+          <check chkid="v_mrba001_5" id="isExist"/>
+        </after>
+        <controlp form="q_mrba001_4" state="i"/>
+        <controlp form="q_mraj002" state="c"/>
+      </column>
+      <column id="mraj002_desc"/>
+      <column id="mraj003">
+        <after>
+          <reference field="mraj003_desc" ref_field="mraj003" map_field="mraj003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1104&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mraj003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mrajseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mraj004">
+        <after>
+          <reference field="mraj004_desc" ref_field="mraj004" map_field="mraj004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1110&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mraj004_desc"/>
+      <column id="mraj005">
+        <after>
+          <reference field="mraj005_desc" ref_field="mraj005" map_field="mraj005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1114&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mraj005_desc"/>
+      <column id="mraj006"/>
+      <column id="mraj007">
+        <after>
+          <check chkid="v_mrbc002" id="isExist"/>
+        </after>
+        <controlp form="q_mrbc002_1" state="i"/>
+        <controlp form="q_mraj007" state="c"/>
+      </column>
+      <column id="mraj008"/>
+      <column id="mraj009"/>
+      <column id="mraj012">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mraj013" type="S" default="2" def_scc="5204"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mrajownid">
+        <after>
+          <reference field="mrajownid_desc" ref_field="mraj_t.mrajownid" map_field="mrajownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrajownid_desc"/>
+      <column id="mrajowndp">
+        <after>
+          <reference field="mrajowndp_desc" ref_field="mraj_t.mrajowndp" map_field="mrajowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mrajowndp_desc"/>
+      <column id="mrajcrtid">
+        <after>
+          <reference field="mrajcrtid_desc" ref_field="mraj_t.mrajcrtid" map_field="mrajcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrajcrtid_desc"/>
+      <column id="mrajcrtdp">
+        <after>
+          <reference field="mrajcrtdp_desc" ref_field="mraj_t.mrajcrtdp" map_field="mrajcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mrajcrtdp_desc"/>
+      <column id="mrajcrtdt"/>
+      <column id="mrajmodid">
+        <after>
+          <reference field="mrajmodid_desc" ref_field="mraj_t.mrajmodid" map_field="mrajmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrajmodid_desc"/>
+      <column id="mrajmoddt"/>
+      <column id="mrajcnfid">
+        <after>
+          <reference field="mrajcnfid_desc" ref_field="mraj_t.mrajcnfid" map_field="mrajcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrajcnfid_desc"/>
+      <column id="mrajcnfdt"/>
+      <column id="mrajstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="mraj_t" pk="mrajsite,mraj001,mraj002,mraj003">
+      <sql id="forupd_sql" type="sql" query="SELECT mrajsite,mraj001,&apos;&apos;,mraj002,&apos;&apos;,mraj003,&apos;&apos; FROM mraj_t WHERE mrajent= ? AND mrajsite=? AND mraj001=? AND mraj002=? AND mraj003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mrajsite,mraj001,&apos;&apos;,mraj002,&apos;&apos;,mraj003,&apos;&apos; FROM mraj_t" order="mrajsite,mraj001,mraj002,mraj003"/>
+    </head>
+    <body id="mraj_t" page="1,2" linked="" pk="mrajseq" fk="mrajsite,mraj001,mraj002,mraj003">
+      <sql id="forupd_sql_detail" query="SELECT mrajseq,mraj004,&apos;&apos;,mraj005,&apos;&apos;,mraj006,mraj007,mraj008,mraj009,mraj012,mraj013,&apos;&apos;,mrajownid,&apos;&apos;,mrajowndp,&apos;&apos;,mrajcrtid,&apos;&apos;,mrajcrtdp,&apos;&apos;,mrajcrtdt,mrajmodid,&apos;&apos;,mrajmoddt,mrajcnfid,&apos;&apos;,mrajcnfdt,mrajstus FROM mraj_t WHERE mrajent=? AND mrajsite=? AND mraj001=? AND mraj002=? AND mraj003=? AND mrajseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mrajseq,mraj004,&apos;&apos;,mraj005,&apos;&apos;,mraj006,mraj007,mraj008,mraj009,mraj012,mraj013,&apos;&apos;,mrajownid,&apos;&apos;,mrajowndp,&apos;&apos;,mrajcrtid,&apos;&apos;,mrajcrtdp,&apos;&apos;,mrajcrtdt,mrajmodid,&apos;&apos;,mrajmoddt,mrajcnfid,&apos;&apos;,mrajcnfdt,mrajstus FROM mraj_t WHERE mrajent= ? AND mrajsite=? AND mraj001=? AND mraj002=? AND mraj003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

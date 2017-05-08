@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq612" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02159" crtdt="2014-11-25 14:44:25" modid="06815" moddt="2015-07-06 20:18:08" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="配銷銷售日結查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),debosite,debosite_desc(chr500),debo002,debo003,debo004,debo005,debo006,debo007,debo008,debo009,debo010,l_tax(num20_6),debo014,debo015,debo016,debo018,debo019"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),debosite(b_debosite),debosite_desc(b_debosite_desc),debo002(b_debo002),debo003(b_debo003),debo004(b_debo004),debo005(b_debo005),debo006(b_debo006),debo007(b_debo007),debo008(b_debo008),debo009(b_debo009),debo010(b_debo010),l_tax(l_tax),debo014(b_debo014),debo015(b_debo015),debo016(b_debo016),debo018(b_debo018),debo019(b_debo019)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq612" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="debosite,debo002,debo003,debo004,debo005,debo006,debo007,debo008,debo009,debo010,debo014,debo015,debo016,debo018,debo019" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="debosite(b_debosite),debo002(b_debo002),debo003(b_debo003),debo004(b_debo004),debo005(b_debo005),debo006(b_debo006),debo007(b_debo007),debo008(b_debo008),debo009(b_debo009),debo010(b_debo010),debo014(b_debo014),debo015(b_debo015),debo016(b_debo016),debo018(b_debo018),debo019(b_debo019)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="debosite">
+        <after>
+          <reference field="debosite_desc" ref_field="debosite" map_field="debosite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="debosite_desc"/>
+      <column id="debo002"/>
+      <column id="debo003"/>
+      <column id="debo004"/>
+      <column id="debo005" type="S" default="0"/>
+      <column id="debo006" type="S" default="0"/>
+      <column id="debo007" type="S" default="0"/>
+      <column id="debo008" type="S" default="0"/>
+      <column id="debo009" type="S" default="0"/>
+      <column id="debo010" type="S" default="0"/>
+      <column id="l_tax"/>
+      <column id="debo014" type="S" default="0"/>
+      <column id="debo015"/>
+      <column id="debo016" type="S" default="0"/>
+      <column id="debo018" type="S" default="0"/>
+      <column id="debo019" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="debo_t" page="1" linked="" pk="debosite,debo002">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,debosite,&apos;&apos;,debo002,debo003,debo004,debo005,debo006,debo007,debo008,debo009,debo010,&apos;&apos;,debo014,debo015,debo016,debo018,debo019 FROM debo_t WHERE deboent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

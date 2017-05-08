@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi350" std_prog="aooi350" erpver="1.0" ver="4" module="AOO" type="M" booking="N" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="3" cite_std="N">
+    <tbl name="oofa_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：本作業是用來維護組織、員工、客戶、廠商、客戶聯絡人、廠商聯絡人、銀行、庫位、WMS倉庫、會員、司機(SCC1)等基本資料的聯絡人、聯絡地址、通訊方式等資料。
+作業功能：修改/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+          修改功能只能調整oofa008、oofa009、oofa010、oofa011、oofa012、oofa013、oofa014、oofa015、oofa016、oofa017等欄位
+作業類型：基本資料維護作業
+輸入模式：單檔不搭配查詢方案模式F003_00
+作業資料來源(Master)：oofa_t(聯絡對象檔)
+作業資料來源(Detail)：oofb_t(聯絡地址檔)
+                      oofc_t(通訊方式檔)
+TOPMENU:
+1.整單操作：執行aooi350_01(地址資料)
+            執行aooi350_02(通訊方式)
+2.相關資料：執行aooi100(組織維護作業)
+            執行aooi130(員工維護作業)
+            執行apmp200(客戶維護作業)
+            執行axmm200(廠商維護作業) 
+            執行anmi100(銀行維護作業) 
+            執行aini001(庫位維護作業) 
+            執行??(WMS倉庫維護作業)
+            執行??(會員維護作業)
+            執行??(司機維護作業) 
+    
+]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[本作業不允許新增,資料新增的觸發都是從其他聯絡人基本資料過來]]>
+  </mi_all>
+  <field cite_std="N" name="b_oofa001" ver="3" src="s" column="oofa001" table="oofa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oofa002" ver="3" src="s" column="oofa002" table="oofa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oofa003" ver="3" src="s" column="oofa003" table="oofa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_oofa003" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa001" ver="1" src="s" column="oofa001" table="oofa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[聯絡對象識別碼：
+   ●欄位控管：
+     資料欄位:[T:聯絡對象資料檔].[C:聯絡對象識別碼]/Display Only
+     預設值:由系統自動編出(以流水號的方式,抓取最大號+1,未滿20碼者,前面補0,例如:
+            抓到的最大號為8,則系統自動編出的號碼為00000000000000000009)
+            請呼叫應用元件s_aooi350_get_idno來取得預設值
+     校驗:1.不允許空白
+          2.key值不可重複
+     帶值:無
+     計算或處理:本欄位應設定為Noentry]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa002" ver="3" src="s" column="oofa002" table="oofa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[聯絡對象類型：
+   ●欄位控管：
+     資料欄位:[T:聯絡對象檔].[C:聯絡對象類型]
+     允許空白:No
+     預設值:無
+     資料選項來源: 
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=1的資料,
+　　     　　　　　[T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:1.不允許空白
+          3.輸入值須存在[T:系統分類值檔].[C:系統分類值]，若不存在，報錯信息(aoo-00148)[輸入值不存在于系統分類碼=1的系統分類碼值檔中]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa003" ver="3" src="s" column="oofa003" table="oofa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_oofa003" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[聯絡對象代碼一：
+   ●欄位控管：
+     資料欄位:[T:聯絡對象檔].[C:聯絡對象代碼一]/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值不可重複
+          3.若[C:聯絡對象類型]是1.組織,
+            則[C:聯絡對象代碼一]輸入值須存在[T:組織基本資料檔].[C:組織編號];
+            若[C:聯絡對象類型]是2.員工,
+            則[C:聯絡對象代碼一]輸入值須存在[T:員工檔].[C:員工編號];
+            若[C:聯絡對象類型]是3.客戶,
+            則[C:聯絡對象代碼一]輸入值須存在[T:客戶主檔].[C:客戶編號];
+            若[C:聯絡對象類型]是4.廠商,
+            則[C:聯絡對象代碼一]輸入值須存在[T:廠商主檔].[C:廠商編號];
+            若[C:聯絡對象類型]是5.客戶聯絡對象,
+            則[C:聯絡對象代碼一]輸入值須存在[T:客戶主檔].[C:客戶編號]、
+              [C:聯絡對象代碼二]輸入值須存在[T:客戶聯絡人檔].[C:聯絡對象項次];
+            若[C:聯絡對象類型]是6.廠商聯絡對象,
+            則[C:聯絡對象代碼一]輸入值須存在[T:廠商主檔].[C:廠商編號]、
+              [C:聯絡對象代碼二]輸入值須存在[T:廠商聯絡人檔].[C:聯絡對象項次];
+            若[C:聯絡對象類型]是7.銀行,
+            則[C:聯絡對象代碼一]輸入值須存在[T:銀行主檔].[C:銀行編號];
+            若[C:聯絡對象類型]是8.庫位,
+            則[C:聯絡對象代碼一]輸入值須存在[T:庫位主檔].[C:庫位編號];
+            若[C:聯絡對象類型]是9.WMS倉庫,
+            則[C:聯絡對象代碼一]輸入值須存在[T:WMS倉庫主檔].[C:WMS倉庫編號];
+            若[C:聯絡對象類型]是10.會員,
+            則[C:聯絡對象代碼一]輸入值須存在[T:會員檔].[C:會員編號];
+            若[C:聯絡對象類型]是11.司機,
+            則[C:聯絡對象代碼一]輸入值須存在[T:司機檔].[C:司機編號]
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：(q_oofa003)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:聯絡對象資料檔].[C:聯絡對象代碼一],
+                 [T:聯絡對象資料檔].[C:聯絡對象代碼二],
+                 [T:聯絡對象資料檔].[C:聯絡對象代碼三]
+       回值類型：多重回值
+     2.新增時：
+       不提供開窗功能
+]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa004" ver="1" src="s" column="oofa004" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oofa004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[聯絡對象代碼二：
+   ●欄位控管：
+     資料欄位:[T:聯絡對象檔].[C:聯絡對象代碼二]/可Display可Input
+     預設值:無
+     校驗:無
+     帶值:無
+     計算或處理:無
+   ●開窗處理：
+     1.查詢時：(q_oofa004)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:聯絡對象資料檔].[C:聯絡對象代碼一],
+                 [T:聯絡對象資料檔].[C:聯絡對象代碼二],
+                 [T:聯絡對象資料檔].[C:聯絡對象代碼三]
+       回值類型：多重回值
+     2.新增時：
+       不提供開窗功能]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa005" ver="1" src="s" column="oofa005" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oofa005" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[聯絡對象代碼三：
+   ●欄位控管：
+     資料欄位:[T:聯絡對象檔].[C:聯絡對象代碼三]/可Display可Input
+     預設值:無
+     校驗:無
+     帶值:無
+     計算或處理:無
+   ●開窗處理：
+     1.查詢時：(q_oofa005)
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:聯絡對象資料檔].[C:聯絡對象代碼一],
+                 [T:聯絡對象資料檔].[C:聯絡對象代碼二],
+                 [T:聯絡對象資料檔].[C:聯絡對象代碼三]
+       回值類型：多重回值
+     2.新增時：
+       不提供開窗功能]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa008" ver="1" src="s" column="oofa008" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa009" ver="1" src="s" column="oofa009" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa010" ver="1" src="s" column="oofa010" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa011" ver="1" src="s" column="oofa011" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[全名：
+   ●欄位控管：
+     資料欄位: [T:聯絡對象檔].[C:全名]/可Display可Input
+     預設值: 依據User登入的營運據點串回[T:營運據點檔],
+             得到該營運據點屬於哪一個[C:所屬國家地區],
+             再以此國家地區的值串到[T:國家地區檔]取得[C:全名組合方式]的設定，
+             來產生全名。
+　     　　　全名的組合處理，請呼叫應用元件s_aooi350_gen_fullname
+　     　　　第一個傳入參數：g_site
+　　     　　第二個傳入參數：畫面上的[C:姓氏]
+　     　　　第三個傳入參數：畫面上的[C:中間名]
+　　     　　第四個傳入參數：畫面上的[C:名字]
+　　     　　回傳值1：success
+             回傳值2：全名
+     校驗: 無
+     帶值: 無
+     計算或處理: 無]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa012" ver="1" src="s" column="oofa012" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[參考名：
+   ●欄位控管：
+     資料欄位:[T:聯絡對象檔].[C:參考名]/可Display可Input
+     預設值:無
+     校驗:無
+     帶值:無
+     計算或處理:無
+     其他:使用上可拿來存放英文名
+]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa013" ver="1" src="s" column="oofa013" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[暱稱：
+   ●欄位控管：
+     資料欄位:[T:聯絡對象檔].[C:暱稱]/可Display可Input
+     預設值:無
+     校驗:無
+     帶值:無
+     計算或處理:無
+     其他:使用上可拿來存放暱稱或小名
+]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa014" ver="1" src="s" column="oofa014" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa015" ver="1" src="s" column="oofa015" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[識別證號：
+   ●欄位控管：
+     資料欄位:[T:聯絡對象檔].[C:識別證號]/可Display可Input
+     預設值:同一識別證號資料的處理，請呼叫應用元件s_aooi350_gen_data_oofb
+      　　　第一個傳入參數：g_oofa015
+            第三個傳入參數：'1'
+ 　     　　回傳值1：success
+     校驗:無
+     帶值:無
+     計算或處理:無
+     其他:若聯絡對象是自然人,則本欄位可存放身分證號、護照號碼或其他能識別個人身分的證件號碼;
+　　　    若聯絡對象是法人,則可存放企業統一編號或其他能識別法人身分的證件號碼]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa016" ver="1" src="s" column="oofa016" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofa017" ver="1" src="s" column="oofa017" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofacrtdp" ver="1" src="s" column="oofacrtdp" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofacrtdt" ver="1" src="s" column="oofacrtdt" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofacrtid" ver="1" src="s" column="oofacrtid" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofamoddt" ver="1" src="s" column="oofamoddt" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofamodid" ver="1" src="s" column="oofamodid" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofaowndp" ver="1" src="s" column="oofaowndp" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofaownid" ver="1" src="s" column="oofaownid" table="oofa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofa_t.oofastus" ver="3" src="s" column="oofastus" table="oofa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="oofacrtdp_desc" src="s" depend_field="oofa_t.oofacrtdp" correspon_key="oofacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oofacrtid_desc" src="s" depend_field="oofa_t.oofacrtid" correspon_key="oofacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oofamodid_desc" src="s" depend_field="oofa_t.oofamodid" correspon_key="oofamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oofaowndp_desc" src="s" depend_field="oofa_t.oofaowndp" correspon_key="oofaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oofaownid_desc" src="s" depend_field="oofa_t.oofaownid" correspon_key="oofaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="3" name="b_oofa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="b_oofa002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="b_oofa003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="oofa_t.oofa002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="oofa_t.oofa003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofa017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofa_t.oofaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="oofa_t.oofastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="exporttoexcel" ver="4" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify_detail" ver="3" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_dzzl" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_txfs" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_oofcstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_oofc001" text="通訊方式識別碼" lstr=""/>
+    <sfield name="lbl_oofc008" text="通訊類型" lstr=""/>
+    <sfield name="lbl_oofc009" text="通訊應用分類" lstr=""/>
+    <sfield name="lbl_oocql004_desc" text="通訊應用分類碼說明" lstr=""/>
+    <sfield name="lbl_oofc012" text="通訊內容" lstr=""/>
+    <sfield name="lbl_oofc010" text="主要通訊方式" lstr=""/>
+    <sfield name="lbl_oofc014" text="簡要代碼" lstr=""/>
+    <sfield name="lbl_oofc011" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofc015" text="寄發郵件" lstr=""/>
+    <sfield name="lbl_oofc013" text="失效日期" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_oofbstus" text="有效" lstr=""/>
+    <sfield name="lbl_oofb001" text="聯絡地址識別碼" lstr=""/>
+    <sfield name="lbl_oofb019" text="簡要代碼" lstr=""/>
+    <sfield name="lbl_oofb011" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofb008" text="地址類型" lstr=""/>
+    <sfield name="lbl_oofb009" text="地址應用分類" lstr=""/>
+    <sfield name="lbl_oocql004x" text="地址應用分類碼說明" lstr=""/>
+    <sfield name="lbl_oofb010" text="主要聯絡地址" lstr=""/>
+    <sfield name="lbl_oofb012" text="國家/地區" lstr=""/>
+    <sfield name="lbl_oocgl003_desc" text="國家/地區說明" lstr=""/>
+    <sfield name="lbl_oofb013" text="郵政編號" lstr=""/>
+    <sfield name="lbl_oofb014" text="州/省/直轄市" lstr=""/>
+    <sfield name="lbl_oocil004_desc" text="州/省/直轄市說明" lstr=""/>
+    <sfield name="lbl_oofb015" text="縣/市" lstr=""/>
+    <sfield name="lbl_oockl005_desc" text="說明" lstr=""/>
+    <sfield name="lbl_oofb016" text="行政區域" lstr=""/>
+    <sfield name="lbl_oocml006_desc" text="行政地區說明" lstr=""/>
+    <sfield name="lbl_oofb017" text="地址" lstr=""/>
+    <sfield name="lbl_oofb022" text="送貨站點" lstr=""/>
+    <sfield name="lbl_dbadl003_desc" text="站點簡稱" lstr=""/>
+    <sfield name="lbl_oofb020" text="經度" lstr=""/>
+    <sfield name="lbl_oofb021" text="維度" lstr=""/>
+    <sfield name="lbl_oofb018" text="失效日期" lstr=""/>
+    <sfield name="lbl_oofa001" text="聯絡對象識別碼" lstr=""/>
+    <sfield name="lbl_oofa002" text="聯絡對象類型" lstr=""/>
+    <sfield name="lbl_oofa003" text="聯絡對象代碼一" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_oofa004" text="聯絡對象代碼二" lstr=""/>
+    <sfield name="lbl_oofa005" text="聯絡對象代碼三" lstr=""/>
+    <sfield name="lbl_oofa016" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofa008" text="姓氏" lstr=""/>
+    <sfield name="lbl_oofa010" text="名字" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_oofa012" text="參考名" lstr=""/>
+    <sfield name="lbl_oofa009" text="中間名" lstr=""/>
+    <sfield name="lbl_oofa013" text="暱稱" lstr=""/>
+    <sfield name="lbl_oofa014" text="助記碼" lstr=""/>
+    <sfield name="lbl_oofa015" text="識別證號" lstr=""/>
+    <sfield name="lbl_oofa017" text="失效日期" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="bpage_1" text="地址資料" lstr=""/>
+    <sfield name="bpage_2" text="通訊方式" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="modify_detail" text="領用明細修改" lstr=""/>
+    <sact name="open_dzzl" text="聯絡地址" lstr=""/>
+    <sact name="open_txfs" text="通訊方式" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

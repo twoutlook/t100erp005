@@ -1,0 +1,1795 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzi801.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0017(2014-08-28 10:42:05), PR版次:0017(2016-12-28 11:05:27)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000115
+#+ Filename...: azzi801
+#+ Description: 登入密碼設定
+#+ Creator....: 00845(2013-11-25 15:17:29)
+#+ Modifier...: 01856 -SD/PR- 00845
+ 
+{</section>}
+ 
+{<section id="azzi801.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160607-00020#1  2016/06/07 By jrg542 azzi801 bug 修正 未指定 LET g_gzxd_m.gzxd001 = g_argv[1]
+#160802-00042#1  2016/08/04 By jrg542 當賬號dj001的密碼更改後，無法更新欄位【上次密碼更新時間】、【密碼已用次數】
+#161020-00003#1  2016/10/20 By jrg542 修正密碼更新的 密碼已用次數(gzxz003)
+#161130-00040#1  2016/12/1  By Gucci Gu 增加OS層帳號控卡功能
+#161206-00028#1  2016/12/6  By Gucci Gu 確認帳號建立成功再進入OS層控卡功能
+#161220-00012#1  2016/12/20 By hjwang   判斷參數確定是否額外複寫gzxd
+#161228-00003#1  2016/12/28 By hjwang   gzxs參數抓取相反
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+ TYPE type_g_gzxd_m RECORD
+       gzxd001 LIKE gzxd_t.gzxd001, 
+   gzxd002 LIKE gzxd_t.gzxd002, 
+   passwd LIKE type_t.chr80, 
+   gzxd004 LIKE gzxd_t.gzxd004
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_gzxd_m        type_g_gzxd_m
+DEFINE g_gzxd_m_t      type_g_gzxd_m                #備份舊值
+   DEFINE g_gzxd001_t LIKE gzxd_t.gzxd001
+ 
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位  
+         b_statepic     LIKE type_t.chr50,
+            b_gzxd001 LIKE gzxd_t.gzxd001
+         #,rank           LIKE type_t.num10
+      END RECORD 
+          
+#無單頭append欄位定義
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+  
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num5              #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_aw                  STRING             #確定當下點擊的單身
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num5   #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num5   #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num5   #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num5   #Browser 總筆數(所有資料)
+DEFINE g_tmp_page            LIKE type_t.num5   
+DEFINE g_row_index           LIKE type_t.num5
+DEFINE g_chk                 BOOLEAN
+DEFINE g_default             BOOLEAN            #是否有外部參數查詢
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzi801.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+   IF NOT azzi801_init_chk() THEN 
+      CALL cl_ap_exitprogram("0")
+   END IF 
+   #end add-point
+ 
+   #add-point:SQL_define
+
+   LET g_forupd_sql = "SELECT gzxd001,gzxd002,'',gzxd004 FROM gzxd_t WHERE gzxdent= ? AND gzxd001=? FOR UPDATE"
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE azzi801_cl CURSOR FROM g_forupd_sql 
+   LET g_sql = " SELECT DISTINCT gzxd001,gzxd002,gzxd004",
+               " FROM gzxd_t",
+               " WHERE gzxdent = '" ||g_enterprise|| "' AND gzxd001 = ?"
+   PREPARE azzi801_master_referesh FROM g_sql
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_azzi801 WITH FORM cl_ap_formpath("azz",g_code)
+   
+      #程式初始化
+      CALL azzi801_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #進入選單 Menu (='N')
+      CALL azzi801_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_azzi801
+   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="azzi801.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION azzi801_init()
+   #add-point:init段define
+
+   #end add-point
+   LET g_current_row = 0
+   LET g_current_idx = 1
+
+
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   #add-point:畫面資料初始化
+   #160607-00020 #1
+   LET g_gzxd_m.gzxd001 = g_argv[1]
+   #end add-point
+
+   CALL azzi801_default_search()
+   CALL azzi801_browser_fill(g_wc,"")
+   CALL azzi801_fetch("")
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_ui_dialog()
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_wc     STRING
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE p_cmd     LIKE  type_t.chr1
+   DEFINE l_count   LIKE  type_t.num5
+   DEFINE lc_gzxd002 LIKE gzxd_t.gzxd002  #密碼
+   DEFINE l_gzxz002  LIKE gzxz_t.gzxz002  #上次密碼更新時間 
+
+   LET li_exit = FALSE
+
+   #是否有其他人lock 
+   IF azzi801_chk_lock() THEN 
+      RETURN  
+   END IF
+   
+    DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   #單頭段
+      INPUT BY NAME g_gzxd_m.gzxd001,g_gzxd_m.gzxd002,g_gzxd_m.passwd,g_gzxd_m.gzxd004 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         BEFORE INPUT
+            LET p_cmd = "u"
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+         
+         AFTER FIELD gzxd001
+            IF  NOT cl_null(g_gzxd_m.gzxd001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_gzxd_m.gzxd001 != g_gzxd001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzxd_t WHERE "||"gzxdent = '" ||g_enterprise|| "' AND "||"gzxd001 = '"||g_gzxd_m.gzxd001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+                
+            #再確認密碼:是否有輸入
+            IF cl_null(g_gzxd_m.passwd) THEN 
+               NEXT FIELD passwd
+            END IF
+
+            #新密碼兩次驗證
+            IF g_gzxd_m.gzxd002 <> g_gzxd_m.passwd THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "azz-00225"
+               LET g_errparam.extend = ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_gzxd_m.passwd = ""
+               NEXT FIELD passwd
+            END IF
+            #檢核密碼
+            IF NOT s_azzi801_chk_gzxd002(g_gzxd_m.gzxd002,g_gzxd_m_t.gzxd002) THEN 
+               LET g_gzxd_m.passwd = ""
+               NEXT FIELD gzxd002
+            END IF
+            
+            IF p_cmd <> "u" THEN
+               LET l_count = 1  
+ 
+               SELECT COUNT(*) INTO l_count FROM gzxd_t
+                WHERE gzxdent = g_enterprise AND gzxd001 = g_gzxd_m.gzxd001
+ 
+               IF l_count = 0 THEN
+                  #密碼加密
+                  #161220-00012#1 -start   #161228-00003#1
+                  IF cl_get_para(g_enterprise,"","E-SYS-2010") IS NOT NULL AND cl_get_para(g_enterprise,"","E-SYS-2010") = "Y" THEN
+                     INSERT INTO gzxs_t(gzxsent,gzxs001,gzxs002)
+                     VALUES(g_enterprise,g_gzxd_m.gzxd001,g_gzxd_m.gzxd002)
+                     IF SQLCA.SQLCODE THEN
+                        DISPLAY "ins gzxs:",SQLCA.SQLCODE,":",SQLERRMESSAGE
+                     END IF
+                  END IF
+                  #161220-00012#1 -end
+                  
+                  LET lc_gzxd002 = cl_hashkey_user_encode(g_gzxd_m.gzxd002)
+                  IF g_gzxd_m.gzxd004 IS NULL THEN LET g_gzxd_m.gzxd004 = "N" END IF
+
+                  INSERT INTO gzxd_t (gzxdent,gzxd001,gzxd002,gzxd004,gzxdstus)
+                  VALUES (g_enterprise,g_gzxd_m.gzxd001,lc_gzxd002,g_gzxd_m.gzxd004,"Y") 
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "gzxd_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CONTINUE DIALOG
+                  END IF
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL s_transaction_end('N','0')   #161220-00012#1
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "std-00006"
+                  LET g_errparam.extend =  "g_gzxd_m.gzxd001"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+               END IF 
+            ELSE
+               #密碼加密
+               #161220-00012#1 -start   #161228-00003#1
+               IF cl_get_para(g_enterprise,"","E-SYS-2010") IS NOT NULL AND cl_get_para(g_enterprise,"","E-SYS-2010") = "Y" THEN
+                  UPDATE gzxs_t SET gzxs002 = g_gzxd_m.gzxd002
+                   WHERE gzxsent = g_enterprise AND gzxs001 = g_gzxd001_t
+                  IF SQLCA.SQLCODE THEN
+                     DISPLAY "upd gzxs:",SQLCA.SQLCODE,":",SQLERRMESSAGE
+                  END IF
+               END IF
+               #161220-00012#1 -end
+               LET lc_gzxd002 = cl_hashkey_user_encode(g_gzxd_m.gzxd002)
+
+               UPDATE gzxd_t SET gzxd001 = g_gzxd_m.gzxd001,
+                                 gzxd002 = lc_gzxd002,
+                                 gzxd004 = g_gzxd_m.gzxd004,
+                                 gzxdstus = "Y"
+                WHERE gzxdent = g_enterprise AND gzxd001 = g_gzxd001_t
+                
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')  #161220-00012#1
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "std-00009"
+                     LET g_errparam.extend = "gzxd_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL s_transaction_end('N','0')  #161220-00012#1
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "gzxd_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                  OTHERWISE
+                     #161020-00003 #1 start
+                      LET l_count = 0
+                      #160802-00042 #1 start
+                      #SELECT MAX(gzxz003)+1 INTO l_count FROM gzxz_t
+                      # WHERE gzxzent = g_enterprise 
+                      #  AND  gzxz001 = g_gzxd001_t
+
+                      #LET l_count = NVL(l_count,1)
+                    #161020-00003 #1 end  
+                      LET l_gzxz002 = cl_get_today()
+
+                     UPDATE gzxz_t SET gzxz002 = l_gzxz002,
+                                       gzxz003 = l_count
+                       WHERE gzxzent = g_enterprise
+                        AND  gzxz001 =  g_gzxd001_t                
+
+                     IF SQLCA.sqlerrd[3] OR SQLCA.sqlcode THEN 
+                        CASE
+                           WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                              CALL s_transaction_end('N','0')   #161220-00012#1
+                              INITIALIZE g_errparam TO NULL
+                              LET g_errparam.code = "std-00009"
+                              LET g_errparam.extend = "gzxz_t"
+                              LET g_errparam.popup = TRUE
+                              CALL cl_err()
+
+                           WHEN SQLCA.sqlcode #其他錯誤
+                              CALL s_transaction_end('N','0')   #161220-00012#1
+                              INITIALIZE g_errparam TO NULL
+                              LET g_errparam.code = SQLCA.sqlcode
+                              LET g_errparam.extend = "gzxz_t"
+                              LET g_errparam.popup = TRUE
+                              CALL cl_err()
+                           END CASE 
+                        ELSE
+                           CALL s_transaction_end('Y','0')
+                           # 修改OS層user password #161206-00028
+                           CALL s_azzi800_01_passwd_os_user(g_gzxd_m.gzxd001, g_gzxd_m.gzxd002)
+                        END IF 
+                     #CALL s_transaction_end('Y','0')
+                     #160802-00042 #1 end
+               END CASE
+            END IF
+           #controlp
+      END INPUT
+          
+      #add-point:input段more input 
+      
+      #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG 
+
+
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_gzxd_m.gzxd001,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE azzi801_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_gzxd_m.gzxd001,"U")
+   
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_browser_fill(p_wc,ps_page_action)
+   DEFINE p_wc              STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define
+
+   #end add-point
+
+   CLEAR FORM
+   INITIALIZE g_gzxd_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   CALL g_browser.clear()
+
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET l_searchcol = "gzxd001"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 "
+   END IF
+
+   #add-point:browser_fill段wc控制
+
+   #end add-point
+
+   LET g_sql = " SELECT COUNT(*) FROM gzxd_t ",
+               "  ",
+               "  ",
+               " WHERE gzxdent = '" ||g_enterprise|| "' AND ",
+               p_wc CLIPPED, cl_sql_add_filter("gzxd_t")
+
+   #add-point:browser_fill段cnt_sql
+
+   #end add-point
+				
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt
+   FREE header_cnt_pre
+
+   #若超過最大顯示筆數
+
+
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+
+   LET g_wc = p_wc
+   #LET g_page_action = ps_page_action          # Keep Action
+
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+
+   CASE ps_page_action
+
+      WHEN "F"
+         LET g_pagestart = 1
+
+      WHEN "P"
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+            LET g_pagestart = 1
+         END IF
+
+      WHEN "N"
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+
+      WHEN "L"
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+
+      WHEN '/'
+         LET g_pagestart = g_jump
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = 1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'azz-998'
+            LET g_errparam.extend = g_jump
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+
+         END IF
+
+      OTHERWISE
+
+   END CASE
+
+   LET l_sql_rank = "SELECT gzxdstus,gzxd001,RANK() OVER(ORDER BY gzxd001 ",
+
+                    g_order,
+                    ") AS RANK ",
+                    " FROM gzxd_t ",
+                    "  ",
+                    "  ",
+                    " WHERE gzxdent = '" ||g_enterprise|| "' AND ", g_wc, cl_sql_add_filter("gzxd_t")
+
+   #add-point:browser_fill段before_pre
+
+   #end add-point					
+					
+   #定義翻頁CURSOR
+   LET g_sql= " SELECT gzxdstus,gzxd001 FROM (",l_sql_rank,") ",
+              "  WHERE RANK >= ", g_pagestart,
+              "    AND RANK <  ", (g_pagestart + g_max_browse) ,
+              "  ORDER BY ",l_searchcol," ",g_order
+
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_gzxd001
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "foreach:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      #add-point:browser_fill段reference
+
+      #end add-point
+
+      #LET g_browser[g_cnt].b_statepic = cl_get_actipic(g_browser[g_cnt].b_statepic)
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "std-00002"
+         LET g_errparam.extend = "Max_Row:"||g_max_rec USING "<<<<<"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser_cnt
+   LET g_rec_b = g_cnt - 1
+   LET g_current_cnt = g_browser_cnt
+   LET g_cnt = 0
+
+
+   FREE browse_pre
+
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_construct()
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING
+   DEFINE ls_wc          STRING
+   #add-point:cs段define
+
+   #end add-point
+
+   CLEAR FORM
+   INITIALIZE g_gzxd_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+
+   LET g_qryparam.state = "c"
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON gzxd001,gzxd002,passwd,gzxd004
+
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+
+            #end add-point
+
+         #公用欄位開窗相關處理
+
+
+         #一般欄位
+         #---------------------------<  Master  >---------------------------
+         #----<<gzxd001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxd001
+            #add-point:BEFORE FIELD gzxd001
+
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxd001
+
+            #add-point:AFTER FIELD gzxd001
+
+            #END add-point
+
+
+         #Ctrlp:construct.c.gzxd001
+#         ON ACTION controlp INFIELD gzxd001
+            #add-point:ON ACTION controlp INFIELD gzxd001
+
+            #END add-point
+
+         #----<<gzxd002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxd002
+            #add-point:BEFORE FIELD gzxd002
+
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxd002
+
+            #add-point:AFTER FIELD gzxd002
+
+            #END add-point
+
+
+         #Ctrlp:construct.c.gzxd002
+#         ON ACTION controlp INFIELD gzxd002
+            #add-point:ON ACTION controlp INFIELD gzxd002
+
+            #END add-point
+
+         #----<<passwd>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD passwd
+            #add-point:BEFORE FIELD passwd
+
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD passwd
+
+            #add-point:AFTER FIELD passwd
+
+            #END add-point
+
+
+         #Ctrlp:construct.c.passwd
+#         ON ACTION controlp INFIELD passwd
+            #add-point:ON ACTION controlp INFIELD passwd
+
+            #END add-point
+
+         #----<<gzxd004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxd004
+            #add-point:BEFORE FIELD gzxd004
+
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxd004
+
+            #add-point:AFTER FIELD gzxd004
+
+            #END add-point
+
+
+         #Ctrlp:construct.c.gzxd004
+#         ON ACTION controlp INFIELD gzxd004
+            #add-point:ON ACTION controlp INFIELD gzxd004
+
+            #END add-point
+
+
+
+      END CONSTRUCT
+
+      #add-point:cs段more_construct
+
+      #end add-point
+
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+
+         #end add-point
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #add-point:cs段after_construct
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+
+   #end add-point
+
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+
+   #切換畫面
+
+   CALL g_browser.clear()
+
+   IF g_worksheet_hidden THEN  #browser panel折疊
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   IF g_header_hidden THEN    #單頭折疊
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+
+   INITIALIZE g_gzxd_m.* TO NULL
+   ERROR ""
+
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL azzi801_construct()
+
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL azzi801_browser_fill(g_wc,"F")
+      CALL azzi801_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+
+   LET g_error_show = 1
+   CALL azzi801_browser_fill(g_wc,"F")   # 移到第一頁
+
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+
+   #備份搜尋條件
+   LET ls_wc = g_wc
+
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "-100"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   ELSE
+      CALL azzi801_fetch("F")
+   END IF
+
+   LET g_wc_filter = ""
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_fetch(p_fl)
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+
+   #end add-point
+
+   CASE p_fl
+      WHEN "F" LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN
+            LET g_current_idx = g_current_idx - 1
+         END IF
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF
+      WHEN "L"
+         LET g_current_idx = g_header_cnt
+      WHEN "/"
+         IF (NOT g_no_ask) THEN
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE
+            END IF
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE
+   END CASE
+
+   LET g_browser_cnt = g_browser.getLength()
+
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+
+   # 設定browse索引
+
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+
+   LET g_gzxd_m.gzxd001 = g_browser[g_current_idx].b_gzxd001
+
+
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE azzi801_master_referesh USING g_gzxd_m.gzxd001 INTO g_gzxd_m.gzxd001,g_gzxd_m.gzxd002,g_gzxd_m.gzxd004
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "gzxd_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      INITIALIZE g_gzxd_m.* TO NULL
+      RETURN
+   END IF
+
+   #add-point:fetch段action控制
+
+   #end add-point
+
+   #重新顯示
+   CALL azzi801_show()
+
+   #檢查此單據是否需顯示BPM簽核狀況按鈕
+   IF cl_bpm_chk() THEN
+      CALL cl_set_act_visible("bpm_status",TRUE)
+   ELSE
+      CALL cl_set_act_visible("bpm_status",FALSE)
+   END IF
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_insert()
+   #add-point:insert段define
+
+   #end add-point
+
+   CLEAR FORM #清畫面欄位內容
+
+   INITIALIZE g_gzxd_m.* LIKE gzxd_t.*             #DEFAULT 設定
+   LET g_gzxd001_t = NULL
+
+
+   CALL s_transaction_begin()
+
+   WHILE TRUE
+     
+      #一般欄位給值
+
+
+      #add-point:單頭預設值
+
+      #end add-point
+
+      CALL azzi801_input("a")
+
+      #add-point:單頭輸入後
+
+      #end add-point
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_gzxd_m.* = g_gzxd_m_t.*
+         CALL azzi801_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT WHILE
+      END IF
+
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+
+   LET g_gzxd001_t = g_gzxd_m.gzxd001
+
+
+   LET g_state = "Y"
+
+   LET g_wc = g_wc,
+              " OR ( gzxdent = '" ||g_enterprise|| "' AND",
+              " gzxd001 = '", g_gzxd_m.gzxd001 CLIPPED, "' "
+
+              , ") "
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_modify()
+   #add-point:modify段define
+
+   #end add-point
+
+   IF g_gzxd_m.gzxd001 IS NULL
+
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   EXECUTE azzi801_master_referesh USING g_gzxd_m.gzxd001 INTO g_gzxd_m.gzxd001,g_gzxd_m.gzxd002,g_gzxd_m.gzxd004
+
+
+   ERROR ""
+
+   LET g_gzxd001_t = g_gzxd_m.gzxd001
+
+
+   CALL s_transaction_begin()
+
+   OPEN azzi801_cl USING g_enterprise,g_gzxd_m.gzxd001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN azzi801_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CLOSE azzi801_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   #鎖住將被更改或取消的資料
+   FETCH azzi801_cl INTO g_gzxd_m.gzxd001,g_gzxd_m.gzxd002,g_gzxd_m.passwd,g_gzxd_m.gzxd004
+
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CLOSE azzi801_cl
+      CALL s_transaction_end('N','0')   #161220-00012#1
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "gzxd_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      RETURN
+   END IF
+
+   CALL azzi801_show()
+
+   WHILE TRUE
+      LET g_gzxd_m.gzxd001 = g_gzxd001_t
+
+
+      #寫入修改者/修改日期資訊
+
+
+      #add-point:modify段修改前
+
+      #end add-point
+
+      CALL azzi801_input("u")     #欄位更改
+
+      #add-point:modify段修改後
+
+      #end add-point
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_gzxd_m.* = g_gzxd_m_t.*
+         CALL azzi801_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT WHILE
+      END IF
+
+      #若有modid跟moddt則進行update
+
+
+      EXIT WHILE
+
+   END WHILE
+
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_gzxd_m.gzxd001,g_site) THEN
+      CALL s_transaction_end('N','0')
+   END IF
+
+   CLOSE azzi801_cl
+   CALL s_transaction_end('Y','0')
+
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_gzxd_m.gzxd001,"U")
+
+   LET g_worksheet_hidden = 0
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_input(p_cmd)
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE lc_gzxd002      LIKE gzxd_t.gzxd002    #使用者密碼
+   DEFINE l_gzxz002  LIKE gzxz_t.gzxz002         #上次密碼更新時間 
+
+   CALL cl_set_head_visible("","YES")
+
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+   LET g_qryparam.state = "i"
+
+   #控制key欄位可否輸入
+   CALL azzi801_set_entry(p_cmd)
+   CALL azzi801_set_no_entry(p_cmd)
+
+   DISPLAY BY NAME g_gzxd_m.gzxd001,g_gzxd_m.gzxd002,g_gzxd_m.passwd,g_gzxd_m.gzxd004
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #單頭段
+      INPUT BY NAME g_gzxd_m.gzxd001,g_gzxd_m.gzxd002,g_gzxd_m.passwd,g_gzxd_m.gzxd004
+         ATTRIBUTE(WITHOUT DEFAULTS)
+
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+
+         AFTER FIELD gzxd001
+            IF  NOT cl_null(g_gzxd_m.gzxd001) THEN
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_gzxd_m.gzxd001 != g_gzxd001_t )) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzxd_t WHERE "||"gzxdent = '" ||g_enterprise|| "' AND "||"gzxd001 = '"||g_gzxd_m.gzxd001 ||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            IF g_gzxd_m.gzxd002 IS NULL THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "azz-00110"
+               LET g_errparam.extend = "g_gzxd_m.gzxd001"
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+               EXIT DIALOG
+            END IF
+
+            IF p_cmd <> "u" THEN
+               LET l_count = 1
+
+               SELECT COUNT(*) INTO l_count FROM gzxd_t
+                WHERE gzxdent = g_enterprise AND gzxd001 = g_gzxd_m.gzxd001
+
+               IF l_count = 0 THEN
+                  #密碼加密
+                  #161220-00012#1 -start   #161228-00003#1
+                  IF cl_get_para(g_enterprise,"","E-SYS-2010") IS NOT NULL AND cl_get_para(g_enterprise,"","E-SYS-2010") = "Y" THEN
+                     UPDATE gzxs_t SET gzxs002 = g_gzxd_m.gzxd002
+                      WHERE gzxsent = g_enterprise AND gzxs001 = g_gzxd_m.gzxd002
+                     IF SQLCA.SQLCODE THEN
+                        DISPLAY "upd gzxs_t:",SQLCA.SQLCODE,":",SQLERRMESSAGE
+                     END IF
+                  END IF
+                  #161220-00012#1 -end
+                  LET lc_gzxd002 = cl_hashkey_user_encode(g_gzxd_m.gzxd002)
+                  IF g_gzxd_m.gzxd004 IS NULL THEN LET g_gzxd_m.gzxd004 = "N" END IF
+                  
+                  INSERT INTO gzxd_t (gzxdent,gzxd001,gzxd002,gzxd004,gzxdstus)
+                  VALUES (g_enterprise,g_gzxd_m.gzxd001,lc_gzxd002,g_gzxd_m.gzxd004,"Y")
+
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "gzxd_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CONTINUE DIALOG
+                  END IF
+
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL s_transaction_end('N','0')    #161220-00012#1
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "std-00006"
+                  LET g_errparam.extend =  "g_gzxd_m.gzxd001"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+               END IF
+            ELSE
+               #add-point:單頭修改前
+               #密碼加密
+               #161220-00012#1 -start   #161228-00003#1
+               IF cl_get_para(g_enterprise,"","E-SYS-2010") IS NOT NULL AND cl_get_para(g_enterprise,"","E-SYS-2010") = "Y" THEN
+                  UPDATE gzxs_t SET gzxs002 = g_gzxd_m.gzxd002
+                   WHERE gzxsent = g_enterprise AND gzxs001 = g_gzxd_m.gzxd001
+                  IF SQLCA.SQLCODE THEN
+                     DISPLAY "ins gzxs_t:",SQLCA.SQLCODE,":",SQLERRMESSAGE
+                  END IF
+               END IF
+               #161220-00012#1 -end
+               LET lc_gzxd002 = cl_hashkey_user_encode(g_gzxd_m.gzxd002)
+               #end add-point
+               UPDATE gzxd_t SET gzxd001 = g_gzxd_m.gzxd001,
+                                 gzxd002 = lc_gzxd002,
+                                 gzxd004 = g_gzxd_m.gzxd004,
+                                 gzxdstus = "Y"
+                WHERE gzxdent = g_enterprise AND gzxd001 = g_gzxd001_t
+               
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')    #161220-00012#1
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "std-00009"
+                     LET g_errparam.extend = "gzxd_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL s_transaction_end('N','0')    #161220-00012#1
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "gzxd_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                  OTHERWISE
+                     #161020-00003 #1 start
+                      LET l_count = 0                    
+                      #160802-00042 #1 start
+                      #SELECT MAX(gzxz003)+1 INTO l_count FROM gzxz_t
+                      # WHERE gzxzent = g_enterprise 
+                      #  AND  gzxz001 = g_gzxd001_t
+
+                      #LET l_count = NVL(l_count,1)
+                     #161020-00003 #1 end 
+                     LET l_gzxz002 = cl_get_today()
+
+                     UPDATE gzxz_t SET gzxz002 = l_gzxz002,
+                                       gzxz003 = l_count
+                      WHERE gzxzent = g_enterprise
+                        AND gzxz001 = g_gzxd001_t                
+
+                     IF SQLCA.sqlerrd[3] OR SQLCA.sqlcode THEN 
+                        CASE
+                           WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                              CALL s_transaction_end('N','0')    #161220-00012#1
+                              INITIALIZE g_errparam TO NULL
+                              LET g_errparam.code = "std-00009"
+                              LET g_errparam.extend = "gzxz_t"
+                              LET g_errparam.popup = TRUE
+                              CALL cl_err()
+
+                           WHEN SQLCA.sqlcode #其他錯誤
+                              CALL s_transaction_end('N','0')    #161220-00012#1
+                              INITIALIZE g_errparam TO NULL
+                              LET g_errparam.code = SQLCA.sqlcode
+                              LET g_errparam.extend = "gzxz_t"
+                              LET g_errparam.popup = TRUE
+                              CALL cl_err()
+                           END CASE 
+                        ELSE
+                           CALL s_transaction_end('Y','0')
+                           # 修改OS層user password #161206-00028
+                           CALL s_azzi800_01_passwd_os_user(g_gzxd_m.gzxd001, g_gzxd_m.gzxd002)
+                        END IF 
+                     #CALL s_transaction_end('Y','0')
+                     #160802-00042 #1 end 
+                                          
+               END CASE
+            END IF
+           #controlp
+      END INPUT
+
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden
+         END IF
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #add-point:input段after input
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_reproduce()
+   DEFINE l_newno     LIKE gzxd_t.gzxd001
+   DEFINE l_oldno     LIKE gzxd_t.gzxd001
+
+   DEFINE l_master    RECORD LIKE gzxd_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+
+   #end add-point
+
+   #切換畫面
+
+   IF g_gzxd_m.gzxd001 IS NULL
+
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   LET g_gzxd001_t = g_gzxd_m.gzxd001
+
+
+   LET g_gzxd_m.gzxd001 = ""
+
+
+   CALL azzi801_set_entry("a")
+   CALL azzi801_set_no_entry("a")
+
+   #公用欄位給予預設值
+
+
+   CALL s_transaction_begin()
+
+   #add-point:複製輸入前
+
+   #end add-point
+
+   CALL azzi801_input("r")
+
+
+
+   IF INT_FLAG  THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+
+   CALL s_transaction_begin()
+
+   #add-point:單頭複製前
+
+   #end add-point
+
+   #add-point:單頭複製中
+
+   #end add-point
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "gzxd_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   #add-point:單頭複製後
+
+   #end add-point
+
+   CALL s_transaction_end('Y','0')
+
+   LET g_state = "Y"
+
+   LET g_wc = g_wc,
+              " OR (",
+              " gzxd001 = '", g_gzxd_m.gzxd001 CLIPPED, "' "
+
+              , ") "
+
+   LET g_gzxd001_t = g_gzxd_m.gzxd001
+
+
+   #add-point:完成複製段落後
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_show()
+
+   LET g_gzxd_m_t.* = g_gzxd_m.*      #保存單頭舊值
+
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+
+   #帶出公用欄位reference值
+
+
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL azzi801_set_pk_array()
+   #add-point:ON ACTION agendum
+
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+
+
+
+   #讀入ref值(單頭)
+   #add-point:show段reference
+
+   #end add-point
+
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_gzxd_m.gzxd001,g_gzxd_m.gzxd002,g_gzxd_m.passwd,g_gzxd_m.gzxd004
+
+   #顯示狀態(stus)圖片
+
+
+   #add-point:show段之後
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+
+   #end add-point
+
+   IF g_gzxd_m.gzxd001 IS NULL
+
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   CALL azzi801_show()
+   CALL s_transaction_begin()
+
+   LET g_gzxd001_t = g_gzxd_m.gzxd001
+
+   OPEN azzi801_cl USING g_enterprise,g_gzxd_m.gzxd001
+   IF STATUS THEN
+      CLOSE azzi801_cl
+      CALL s_transaction_end('N','0')   #161220-00012#1
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN azzi801_cl:"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      RETURN
+   END IF
+
+   FETCH azzi801_cl INTO g_gzxd_m.gzxd001,g_gzxd_m.gzxd002,g_gzxd_m.passwd,g_gzxd_m.gzxd004
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_gzxd_m.gzxd001
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      RETURN
+   END IF
+
+   IF cl_ask_delete() THEN
+
+      #add-point:單頭刪除前
+
+      #end add-point
+
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL azzi801_set_pk_array()
+      #add-point:相關文件刪除前
+
+      #end add-point
+      CALL cl_doc_remove()
+
+      DELETE FROM gzxd_t
+       WHERE gzxdent = g_enterprise AND gzxd001 = g_gzxd_m.gzxd001
+      #161220-00012#1 -strat
+      DELETE FROM gzxs_t
+       WHERE gzxsent = g_enterprise AND gzxs001 = g_gzxd_m.gzxd001
+      #161220-00012#1 -end
+
+      #add-point:單頭刪除中
+
+      #end add-point
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "gzxd_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         CALL s_transaction_end('N','0')
+      END IF
+
+
+
+      #add-point:單頭刪除後
+
+      #end add-point
+
+
+
+      CLEAR FORM
+      CALL azzi801_ui_browser_refresh()
+      IF g_browser_cnt > 0 THEN
+         CALL azzi801_browser_fill(g_wc,"")
+         CALL azzi801_fetch("P")
+      ELSE
+         CALL azzi801_browser_fill(" 1=1 ","F")
+      END IF
+
+   END IF
+
+   CLOSE azzi801_cl
+   CALL s_transaction_end('Y','0')
+
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_gzxd_m.gzxd001,"D")
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+
+   #end add-point
+
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_gzxd001 = g_gzxd_m.gzxd001
+
+	 THEN
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_set_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define
+
+   #end add-point
+
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("gzxd001",TRUE)
+      #add-point:set_entry段欄位控制
+
+      #end add-point
+   END IF
+
+   #add-point:set_entry段欄位控制後
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_set_no_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define
+
+   #end add-point
+
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("gzxd001",FALSE)
+      #add-point:set_no_entry段欄位控制
+
+      #end add-point
+   END IF
+
+   #add-point:set_no_entry段欄位控制後
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+
+   #end add-point
+
+   #add-point:default_search段開始前
+
+   #end add-point
+
+   LET g_pagestart = 1
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " gzxd001 = '", g_argv[1], "' AND "
+   END IF
+
+
+
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+
+   #add-point:default_search段結束前
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION azzi801_set_pk_array()
+   #add-point:set_pk_array段define
+
+   #end add-point
+
+   #add-point:set_pk_array段之前
+
+   #end add-point
+
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_gzxd_m.gzxd001
+   LET g_pk_array[1].column = 'gzxd001'
+
+
+   #add-point:set_pk_array段之後
+
+   #end add-point
+
+END FUNCTION
+################################################################################
+#+ 傳入參數 lc_gzxd001，若NOTFOUND或未傳入則程式顯示錯誤訊息後直接關閉
+################################################################################
+PRIVATE FUNCTION azzi801_init_chk()
+
+   DEFINE ls_sql STRING
+   DEFINE li_cnt LIKE type_t.num5
+
+   IF cl_null(g_argv[1]) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "azz-00230"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   LET ls_sql = " SELECT gzxa001 FROM gzxa_t ",
+                 " WHERE gzxaent = ",g_enterprise,
+                   " AND gzxa001 = '",g_argv[1] CLIPPED,"'"
+   PREPARE azzi801_init_chk FROM ls_sql
+   EXECUTE azzi801_init_chk
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "azz-00230"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+   FREE azzi801_init_chk
+
+   RETURN TRUE
+END FUNCTION
+################################################################################
+# Usage..........: CALL azzi801_chk_lock()
+#                  RETURNING TRUE/FALSE
+################################################################################
+PRIVATE FUNCTION azzi801_chk_lock()
+   LET g_gzxd001_t = g_gzxd_m.gzxd001
+ 
+   CALL s_transaction_begin()
+   
+   OPEN azzi801_cl USING g_enterprise,g_gzxd_m.gzxd001
+   IF STATUS THEN
+      CLOSE azzi801_cl
+      CALL s_transaction_end('N','0')   #161220-00012#1
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN azzi801_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN TRUE  
+   END IF
+
+   #鎖住將被更改或取消的資料
+   FETCH azzi801_cl INTO g_gzxd_m.gzxd001,g_gzxd_m.gzxd002,g_gzxd_m.passwd,g_gzxd_m.gzxd004
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CLOSE azzi801_cl
+      CALL s_transaction_end('N','0')   #161220-00012#1
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "gzxd_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      RETURN TRUE  
+   END IF
+   RETURN FALSE  
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

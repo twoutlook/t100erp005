@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq810_g01" module="agl" jobmode="N" type="g01" industry="std" crtid="05416" crtdt="2014-07-22 16:12:06" modid="07675" moddt="2016-03-29 14:00:32" sdver="7" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.a1(STRING|暫存檔),tm.a2(glfa006|年度),tm.a3(glfa007|期別),tm.a4(glfa005|帳套),tm.a5(glfa001|報表模板編號),tm.a6(glfa008|單位),tm.a7(glfa009|小數位數),tm.a8(glfa001|是否顯示XRBL),tm.a9(glfa001|顯示比例)">
+    <var seq="1" value="glfbent,glfb001,glfbseq,glfb002,l_glfbl004(chr500|NULL),glfb003,l_amt1(num20_6|NULL),l_per1(num20_6|0),l_amt2(num20_6|0),l_per2(num20_6|0),glfb008,glfb010,l_item_desc(chr500|&apos;&apos;),l_line(chr80|&apos;&apos;),l_amt3(num20_6|&apos;&apos;),l_per3(num20_6|0),l_amt4(num20_6|0),l_per4(num20_6|0),l_account(chr50|&apos;&apos;),l_style(chr1|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="glfbent,glfb001,glfbseq,glfb002,l_glfbl004(chr500|NULL),glfb003,l_amt1(num20_6|NULL),l_per1(num20_6|0),l_amt2(num20_6|0),l_per2(num20_6|0),glfb008,glfb010,l_item_desc(chr500|&apos;&apos;),l_line(chr80|&apos;&apos;),l_amt3(num20_6|&apos;&apos;),l_per3(num20_6|0),l_amt4(num20_6|0),l_per4(num20_6|0),l_account(chr50|&apos;&apos;),l_style(chr1|&apos;&apos;)"/>
+    <sql id="g_from" query="glfb_t"/>
+    <sql id="g_where" query="" maintable="glfb_t"/>
+    <sql id="g_order" query="glfb001"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="glfb001"/>
+    <section id="b_group" reptype="d01">
+      <rep type="glfb001" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="glfbent,glfb001"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="glfbent,glfb001"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="glfbent,glfb001"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="glfb001" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="glfbent,glfb001"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

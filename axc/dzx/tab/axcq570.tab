@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq570" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01534" crtdt="2016-11-22 14:38:55" modid="01534" moddt="2016-11-22 14:38:55" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="製程在製主件成本查詢">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xchacomp,xchacomp_desc(chr80),xchald,xchald_desc(chr80),xcha003,xcha003_desc(chr80),xcha004,xcha005,xcha006,xcha009,xcha009_desc(chr80),xcha009_desc_1(chr80),xcha007,xcha007_desc(chr80),xcha008,imag014(chr10),imag014_desc(chr80),xcha010,xcha012,xcha012_desc(chr80),xcha011,xcha002,xcha002_desc(chr80),sfaa048(dat),xcbb006(num5)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="item(chr100),xcha001,xcha102,xcha204,xcha202,xcha306,xcha302,xcha304,xcha308,xcha310,xcha902"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="prog_axcq503"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+      <action id="prog_axcq500"/>
+      <action id="prog_axcq501"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq570" method="dialog">
+    <section id="input">
+      <input id="head" field="xchacomp,xchald,xcha003,xcha004,xcha005,xcha006,xcha009,xcha007,xcha008,xcha010,xcha012,xcha011,xcha002"/>
+      <input id="body" page="1" field="item,xcha001,xcha102,xcha204,xcha202,xcha306,xcha302,xcha304,xcha308,xcha310,xcha902" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xchacomp,xchald,xcha003,xcha004,xcha005,xcha006,xcha009,xcha007,xcha008,xcha010,xcha012,xcha011,xcha002"/>
+      <construct id="body" page="1" field="item,xcha001,xcha102,xcha204,xcha202,xcha306,xcha302,xcha304,xcha308,xcha310,xcha902"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xchald,xcha002,xcha003,xcha004,xcha005,xcha006,xcha007,xcha008"/>
+      <set id="head" type="no_entry" field="xchald,xcha002,xcha003,xcha004,xcha005,xcha006,xcha007,xcha008"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xchacomp">
+        <after>
+          <reference field="xchacomp_desc" ref_field="xcha_t.xchacomp" map_field="xchacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xchacomp_desc"/>
+      <column id="xchald">
+        <after>
+          <reference field="xchald_desc" ref_field="xcha_t.xchald" map_field="xchaent,xchald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xchald_desc"/>
+      <column id="xcha003">
+        <after>
+          <reference field="xcha003_desc" ref_field="xcha_t.xcha003" map_field="xchaent,xcha003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcha003_desc"/>
+      <column id="xcha004"/>
+      <column id="xcha005"/>
+      <column id="xcha006">
+        <controlp form="q_sfaadocno_1" state="c"/>
+      </column>
+      <column id="xcha009">
+        <after>
+          <reference field="xcha009_desc" ref_field="xcha_t.xcha009" map_field="xcha009" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="xcha009_desc"/>
+      <column id="xcha009_desc_1"/>
+      <column id="xcha007">
+        <after>
+          <reference field="xcha007_desc" ref_field="xcha007" map_field="xcha007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xcha007_desc"/>
+      <column id="xcha008"/>
+      <column id="imag014">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imag014_desc" ref_field="imag014" map_field="imag014" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_imag014" state="c"/>
+      </column>
+      <column id="imag014_desc"/>
+      <column id="xcha010">
+        <controlp form="q_inam002_2" state="c"/>
+      </column>
+      <column id="xcha012">
+        <after>
+          <reference field="xcha012_desc" ref_field="xcha_t.xcha012" map_field="xcha012" ref_sql="SELECT pjabl003 FROM pjabl_t WHERE pjablent=$varg_enterprise$var AND pjabl001=? AND pjabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="xcha012_desc"/>
+      <column id="xcha011"/>
+      <column id="xcha002">
+        <after>
+          <reference field="xcha002_desc" ref_field="xchacomp,xcha002" map_field="xchacomp,xcha002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbflcomp=? AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcbf001" state="c"/>
+      </column>
+      <column id="xcha002_desc"/>
+      <column id="sfaa048"/>
+      <column id="xcbb006"/>
+    </init>
+    <init id="body" page="1">
+      <column id="item"/>
+      <column id="xcha001"/>
+      <column id="xcha102" type="S" default="0"/>
+      <column id="xcha204" type="S" default="0"/>
+      <column id="xcha202" type="S" default="0"/>
+      <column id="xcha306" type="S" default="0"/>
+      <column id="xcha302" type="S" default="0"/>
+      <column id="xcha304" type="S" default="0"/>
+      <column id="xcha308" type="S" default="0"/>
+      <column id="xcha310" type="S" default="0"/>
+      <column id="xcha902" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcha_t" pk="xchald,xcha002,xcha003,xcha004,xcha005,xcha006,xcha007,xcha008">
+      <sql id="forupd_sql" type="sql" query="SELECT xchacomp,&apos;&apos;,xchald,&apos;&apos;,xcha003,&apos;&apos;,xcha004,xcha005,xcha006,xcha009,&apos;&apos;,&apos;&apos;,xcha007,&apos;&apos;,xcha008,&apos;&apos;,&apos;&apos;,xcha010,xcha012,&apos;&apos;,xcha011,xcha002,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcha_t WHERE xchaent= ? AND xchald=? AND xcha002=? AND xcha003=? AND xcha004=? AND xcha005=? AND xcha006=? AND xcha007=? AND xcha008=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xchacomp,&apos;&apos;,xchald,&apos;&apos;,xcha003,&apos;&apos;,xcha004,xcha005,xcha006,xcha009,&apos;&apos;,&apos;&apos;,xcha007,&apos;&apos;,xcha008,&apos;&apos;,&apos;&apos;,xcha010,xcha012,&apos;&apos;,xcha011,xcha002,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcha_t" order="xchald,xcha002,xcha003,xcha004,xcha005,xcha006,xcha007,xcha008"/>
+    </head>
+    <body id="xcha_t" page="1" linked="" pk="xcha001" fk="xchald,xcha002,xcha003,xcha004,xcha005,xcha006,xcha007,xcha008">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,xcha001,xcha102,xcha204,xcha202,xcha306,xcha302,xcha304,xcha308,xcha310,xcha902 FROM xcha_t WHERE xchaent=? AND xchald=? AND xcha002=? AND xcha003=? AND xcha004=? AND xcha005=? AND xcha006=? AND xcha007=? AND xcha008=? AND xcha001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xcha001,xcha102,xcha204,xcha202,xcha306,xcha302,xcha304,xcha308,xcha310,xcha902 FROM xcha_t WHERE xchaent= ? AND xchald=? AND xcha002=? AND xcha003=? AND xcha004=? AND xcha005=? AND xcha006=? AND xcha007=? AND xcha008=?"/>
+    </body>
+  </dataset>
+</assembly>
+

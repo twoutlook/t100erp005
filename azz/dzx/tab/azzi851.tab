@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi851" module="azz" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="00413" crtdt="2015-07-09 13:41:17" modid="00413" moddt="2015-07-13 18:38:58" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="部門最大上線人數設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzyg001,gzyg001_desc(chr500),gzyg002,gzygstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzyg001,gzygownid,gzygownid_desc(chr500),gzygowndp,gzygowndp_desc(chr500),gzygcrtid,gzygcrtid_desc(chr500),gzygcrtdp,gzygcrtdp_desc(chr500),gzygcrtdt,gzygmodid,gzygmodid_desc(chr500),gzygmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi851" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzyg001,gzyg002,gzygstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzyg001,gzyg002,gzygstus"/>
+      <construct id="body" page="2" field="gzygownid,gzygowndp,gzygcrtid,gzygcrtdp,gzygcrtdt,gzygmodid,gzygmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzyg001">
+        <after>
+          <reference field="gzyg001_desc" ref_field="gzyg_t.gzyg001" map_field="gzyg001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzyg001_desc"/>
+      <column id="gzyg002" type="S" default="0"/>
+      <column id="gzygstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="gzygownid">
+        <after>
+          <reference field="gzygownid_desc" ref_field="gzyg_t.gzygownid" map_field="gzygownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzygownid_desc"/>
+      <column id="gzygowndp">
+        <after>
+          <reference field="gzygowndp_desc" ref_field="gzyg_t.gzygowndp" map_field="gzygowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzygowndp_desc"/>
+      <column id="gzygcrtid">
+        <after>
+          <reference field="gzygcrtid_desc" ref_field="gzyg_t.gzygcrtid" map_field="gzygcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzygcrtid_desc"/>
+      <column id="gzygcrtdp">
+        <after>
+          <reference field="gzygcrtdp_desc" ref_field="gzyg_t.gzygcrtdp" map_field="gzygcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzygcrtdp_desc"/>
+      <column id="gzygcrtdt"/>
+      <column id="gzygmodid">
+        <after>
+          <reference field="gzygmodid_desc" ref_field="gzyg_t.gzygmodid" map_field="gzygmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzygmodid_desc"/>
+      <column id="gzygmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzyg_t" page="1,2" linked="" pk="gzyg001">
+      <sql id="forupd_sql_detail" query="SELECT gzyg001,&apos;&apos;,gzyg002,gzygstus,&apos;&apos;,gzygownid,&apos;&apos;,gzygowndp,&apos;&apos;,gzygcrtid,&apos;&apos;,gzygcrtdp,&apos;&apos;,gzygcrtdt,gzygmodid,&apos;&apos;,gzygmoddt FROM gzyg_t WHERE gzygent=? AND gzyg001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzyg001,&apos;&apos;,gzyg002,gzygstus,&apos;&apos;,gzygownid,&apos;&apos;,gzygowndp,&apos;&apos;,gzygcrtid,&apos;&apos;,gzygcrtdp,&apos;&apos;,gzygcrtdt,gzygmodid,&apos;&apos;,gzygmoddt FROM gzyg_t WHERE gzygent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

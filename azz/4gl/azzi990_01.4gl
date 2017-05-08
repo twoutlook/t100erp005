@@ -1,0 +1,1385 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="azzi990_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-03-25 18:54:30), PR版次:0001(2014-04-03 14:16:09)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000085
+#+ Filename...: azzi990_01
+#+ Description: 查詢據點參數
+#+ Creator....: 00845(2013-10-02 10:33:43)
+#+ Modifier...: 01856 -SD/PR- 01856
+ 
+{</section>}
+ 
+{<section id="azzi990_01.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+   
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzi990_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+ 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzi990_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+ TYPE type_gr_qry RECORD
+         check  LIKE type_t.chr1,
+         gzsz001   LIKE gzsz_t.gzsz001, 
+         gzsz002   LIKE gzsz_t.gzsz002, 
+         gzszl004   LIKE gzszl_t.gzszl004, 
+         gzsz011   LIKE gzsz_t.gzsz011
+       END RECORD
+ 
+#@查詢資料的暫存器.
+DEFINE gr_qry            DYNAMIC ARRAY OF type_gr_qry  
+DEFINE gr_qry_sel        DYNAMIC ARRAY OF type_gr_qry  #多選時記錄已勾選的資料
+ 
+DEFINE gi_multi_sel      LIKE type_t.num5   #是否需要複選資料(TRUE/FALSE)
+DEFINE gi_need_cons      LIKE type_t.num5   #是否需要CONSTRUCT(TRUE/FALSE)
+DEFINE gi_cons_where     STRING                #暫存CONSTRUCT區塊的WHERE條件
+DEFINE gi_cons_where_old STRING                #暫存CONSTRUCT區塊的WHERE條件(舊的,用來比對條件是否改變)
+ 
+DEFINE gs_default1       STRING 
+DEFINE gs_default2       STRING 
+DEFINE gs_default3       STRING 
+DEFINE gs_default4       STRING 
+
+DEFINE gi_page_count     LIKE type_t.num10  #每頁顯現資料筆數
+DEFINE gs_pageswitch     STRING                #選擇的頁面
+DEFINE gs_action         STRING
+DEFINE gi_reconstruct    LIKE type_t.num5   #重新查詢
+DEFINE g_pagestart       LIKE type_t.num5
+DEFINE g_data_cnt        LIKE type_t.num5
+DEFINE g_page_idx        LIKE type_t.num5   #目前所在頁數
+DEFINE g_page_last       LIKE type_t.num5   #最後一頁
+DEFINE g_sel_limit       LIKE type_t.num5   #選擇筆數的上限
+DEFINE gwin_curr         ui.Window  
+
+
+
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+
+       
+DEFINE g_gzsz_d DYNAMIC ARRAY OF RECORD
+       gzsz002  LIKE gzsz_t.gzsz002,  #參數編號
+       gzszl004 LIKE gzszl_t.gzszl004,
+       ooab002  LIKE gzsz_t.gzsz002   #參數資料
+                END RECORD 
+
+DEFINE g_ooab_d DYNAMIC ARRAY OF RECORD 
+       ooab001  LIKE gzsz_t.gzsz001,  #參數編號
+       ooab002  LIKE gzsz_t.gzsz002   #參數資料
+                END RECORD 
+
+DEFINE g_param_d DYNAMIC ARRAY OF RECORD
+         site       LIKE type_t.chr80,
+         site_desc  LIKE type_t.chr80,
+         col01      LIKE type_t.chr80,
+         col02      LIKE type_t.chr80,
+         col03      LIKE type_t.chr80,
+         col04      LIKE type_t.chr80,
+         col05      LIKE type_t.chr80,
+         col06      LIKE type_t.chr80,
+         col07      LIKE type_t.chr80,
+         col08      LIKE type_t.chr80,
+         col09      LIKE type_t.chr80,
+         col10      LIKE type_t.chr80
+              END RECORD
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzi990_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="azzi990_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi990_01()
+   
+   DEFINE pi_multi_sel   LIKE type_t.num5
+   DEFINE pi_need_cons   LIKE type_t.num5
+   DEFINE lwin_curr      ui.Window
+   DEFINE lfrm_curr      ui.Form
+   DEFINE ls_path        STRING
+ 
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+
+
+   OPEN WINDOW w_azzi990_01_qry WITH FORM cl_ap_formpath("azz","azzi990_01_s01")
+      ATTRIBUTE(STYLE="openwin")
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lfrm_curr = lwin_curr.getForm()
+   LET ls_path = os.Path.join(os.Path.join(FGL_GETENV("ERP"),"cfg"),"4tb")
+   LET ls_path = os.Path.join(ls_path,"toolbar_openwin.4tb")
+   CALL lfrm_curr.loadToolBar(ls_path)
+   IF g_qryparam.state = 'i' THEN
+      LET gi_multi_sel = FALSE
+   ELSE
+      LET gi_multi_sel = TRUE
+   END IF 
+   LET gi_need_cons = g_qryparam.reqry
+   LET gs_default1 = g_qryparam.default1 
+   LET gs_default2 = g_qryparam.default2 
+   LET gs_default3 = g_qryparam.default3 
+   LET gs_default4 = g_qryparam.default4 
+
+ 
+   CALL azzi990_01_qry_init()
+   CALL azzi990_01_sel()
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+   END IF 
+ 
+   CLOSE WINDOW w_azzi990_01_qry
+
+   IF NOT cl_null(g_qryparam.return1) THEN
+
+      #g_wc = "gzsz001 in ('gzsa_t','ooaa_t','ooab_t')"
+ 
+       #畫面開啟 (identifier)
+      OPEN WINDOW w_azzi990_01 WITH FORM cl_ap_formpath("azz","azzi990_01")
+
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+      #程式起始資料初始化
+      CALL azzi990_01_init()
+
+      CALL azzi990_01_menu()
+
+      CLOSE WINDOW w_azzi990_01
+   END IF 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzi990_01_qry_init()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_qry_init()
+   DEFINE l_qry_text LIKE dzcal_t.dzcal003
+   DEFINE l_qry_id   LIKE dzca_t.dzca001
+   DEFINE l_text     STRING
+ 
+   IF NOT (gi_multi_sel) THEN
+      CALL cl_set_comp_visible("check", FALSE)
+      CALL cl_set_toolbaritem_visible("selectall, selectnone, selectpageall, selectpagenone", FALSE)
+   END IF
+ 
+   IF (gi_multi_sel) THEN
+      #lib尚未修正
+      #CALL cl_set_comp_font_color("oea01", "red")
+   END IF
+ 
+   LET INT_FLAG = FALSE         #避免被其他函式影響
+   LET g_page_idx = 0
+   LET g_page_last = 0
+   LET g_sel_limit = azzi990_01_get_sel_limit()     #選擇筆數的上限
+   LET gi_page_count = azzi990_01_get_page_count()  #每頁顯現資料筆數
+   LET gi_cons_where = " 1=1"   #預設查詢全部資料
+   LET gi_cons_where_old = NULL
+   LET gi_reconstruct = FALSE
+   INITIALIZE gs_pageswitch TO NULL
+   INITIALIZE gs_action TO NULL
+   INITIALIZE g_qryparam.return1 TO NULL  
+   INITIALIZE g_qryparam.return2 TO NULL  
+   INITIALIZE g_qryparam.return3 TO NULL  
+   INITIALIZE g_qryparam.return4 TO NULL  
+
+   CALL gr_qry.clear()
+   CALL gr_qry_sel.clear()
+ 
+   #動態設定comboBox項目
+   CALL azzi990_01_setting_comboBox('gzsz011')
+
+ 
+   #設定開窗識別碼的說明
+   LET gwin_curr = ui.Window.forName("w_azzi990_01_qry")
+   SELECT gzdf002,gzdfl003 INTO l_qry_id,l_qry_text FROM gzdf_t
+      LEFT JOIN gzdfl_t ON gzdf002=gzdfl001 AND gzdfl002=g_dlang
+         WHERE gzdf002='azzi990_01_s01'   
+
+   LET l_text = l_qry_text,"(",l_qry_id,")"
+   CALL gwin_curr.setText(l_text)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzi990_01_init()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_init()
+   #取出標準參數資料 (from gzsz)
+   CALL azzi990_01_prep_param_info() 
+
+   #準備site參數資料
+   CALL azzi990_01_get_site_param_info()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzi990_01_menu()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_menu()
+   
+   DISPLAY ARRAY g_param_d TO s_parameter.*
+
+   ON ACTION CLOSE 
+      EXIT DISPLAY    
+   ON ACTION CANCEL 
+      EXIT DISPLAY
+   END DISPLAY 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzi990_01_token_param()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_token_param()
+   DEFINE l_token          base.StringTokenizer
+   DEFINE ls_token       STRING
+  
+
+   #優先處理 token
+   #l_token = "gzsz001 in ('gzsa_t','ooaa_t','ooab_t')"
+   LET l_token = base.StringTokenizer.create(g_qryparam.return1,"|")
+   WHILE l_token.hasMoreTokens()
+      LET ls_token = ls_token,"'",l_token.nextToken() CLIPPED ,"'",","
+   END WHILE
+   LET ls_token = ls_token.trim()
+   LET ls_token = ls_token.subString(1,ls_token.getLength()-1)
+   LET ls_token = "gzsz002 in (",ls_token,")"
+   RETURN ls_token
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取出標準參數資料
+# Memo...........:
+# Usage..........: CALL azzi990_01_prep_param_info()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_prep_param_info()
+   DEFINE ls_sql     STRING 
+   DEFINE li_cnt     LIKE type_t.num5
+   DEFINE ls_gzsz002 STRING 
+   DEFINE ls_wc      STRING 
+
+   CALL azzi990_01_token_param() RETURNING ls_wc
+
+   LET ls_sql = " SELECT gzsz002 from gzsz_t ",
+                " WHERE gzsz001 = 'ooab_t' ",
+                " AND ", ls_wc
+   DECLARE azzi990_01_ooab_cs CURSOR FROM ls_sql
+
+
+   LET li_cnt = 1      
+   FOREACH azzi990_01_ooab_cs INTO g_gzsz_d[li_cnt].gzsz002
+
+      LET ls_gzsz002 = g_gzsz_d[li_cnt].gzsz002
+      LET ls_gzsz002 = ls_gzsz002.trim()
+      LET g_gzsz_d[li_cnt].gzsz002 = ls_gzsz002
+      LET li_cnt = li_cnt + 1
+   END FOREACH
+   CALL g_gzsz_d.deleteElement(li_cnt) 
+   FOR li_cnt = 1 TO g_gzsz_d.getLength()
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = "ooab_t"
+       LET g_ref_fields[2] = g_gzsz_d[li_cnt].gzsz002
+       CALL ap_ref_array2(g_ref_fields," SELECT gzszl004 FROM gzszl_t WHERE gzszl001 = ? AND gzszl002 = ? AND gzszl003 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET g_gzsz_d[li_cnt].gzszl004 = g_rtn_fields[1]
+       
+       #DISPLAY "gzszl004:",g_gzsz_d[li_cnt].gzszl004
+   END FOR 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 準備site參數資料
+# Memo...........:
+# Usage..........: CALL azzi990_01_get_site_param_info()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_get_site_param_info()
+   DEFINE lc_ooef001 LIKE ooef_t.ooef001
+   DEFINE lc_ooab001 LIKE ooab_t.ooab001
+   DEFINE lc_ooab002 LIKE ooab_t.ooab002
+   DEFINE ls_sql     STRING 
+   DEFINE li_cnt     LIKE type_t.num5
+   DEFINE li_cnt2    LIKE type_t.num5
+   DEFINE li_site    LIKE type_t.num5
+   DEFINE lc_site    LIKE ooef_t.ooef001  #營運據點
+   DEFINE lc_site_desc    LIKE ooefl_t.ooefl003
+   DEFINE ls_ooab001 STRING
+   #第一陣列放參數編號
+   LET g_param_d[1].col01 = g_gzsz_d[01].gzsz002
+   LET g_param_d[1].col02 = g_gzsz_d[02].gzsz002
+   LET g_param_d[1].col03 = g_gzsz_d[03].gzsz002
+   LET g_param_d[1].col04 = g_gzsz_d[04].gzsz002
+   LET g_param_d[1].col05 = g_gzsz_d[05].gzsz002
+   LET g_param_d[1].col06 = g_gzsz_d[06].gzsz002
+   LET g_param_d[1].col07 = g_gzsz_d[07].gzsz002
+   LET g_param_d[1].col08 = g_gzsz_d[08].gzsz002
+   LET g_param_d[1].col09 = g_gzsz_d[09].gzsz002
+   LET g_param_d[1].col10 = g_gzsz_d[10].gzsz002
+
+   #第二陣列放參數說明
+   LET g_param_d[2].col01 = g_gzsz_d[01].gzszl004
+   LET g_param_d[2].col02 = g_gzsz_d[02].gzszl004
+   LET g_param_d[2].col03 = g_gzsz_d[03].gzszl004
+   LET g_param_d[2].col04 = g_gzsz_d[04].gzszl004
+   LET g_param_d[2].col05 = g_gzsz_d[05].gzszl004
+   LET g_param_d[2].col06 = g_gzsz_d[06].gzszl004
+   LET g_param_d[2].col07 = g_gzsz_d[07].gzszl004
+   LET g_param_d[2].col08 = g_gzsz_d[08].gzszl004
+   LET g_param_d[2].col09 = g_gzsz_d[09].gzszl004
+   LET g_param_d[2].col10 = g_gzsz_d[10].gzszl004
+
+   LET ls_sql = "SELECT ooab001,ooab002 FROM ooab_t ",
+                " WHERE ooabent = ? AND ooabsite  = ? "
+   PREPARE azzi990_01_get_ooab_pre FROM ls_sql
+   DECLARE azzi990_01_get_ooab_cs CURSOR FOR azzi990_01_get_ooab_pre
+
+
+   LET ls_sql = " SELECT DISTINCT ooef001,ooefl003",
+                " FROM ooef_t LEFT OUTER JOIN ooefl_t ON ooef001 = ooefl001 ", 
+                " AND ooefl002='",g_dlang,"' AND ooefent=ooeflent ",
+                " WHERE ooefent= ?  AND   (ooef201 = 'Y' OR ooef003 = 'Y') AND ooefstus='Y'"
+   PREPARE azzi990_01_get_ooef_pre FROM ls_sql
+   DECLARE azzi990_01_get_ooef_cs CURSOR FOR azzi990_01_get_ooef_pre
+
+   LET li_site = 3
+   
+   FOREACH azzi990_01_get_ooef_cs USING g_enterprise INTO lc_site,lc_site_desc
+      #抓取據點
+      LET li_cnt = 1
+      FOREACH azzi990_01_get_ooab_cs USING g_enterprise,lc_site
+                                     INTO g_ooab_d[li_cnt].ooab001,g_ooab_d[li_cnt].ooab002
+         #display "g_enterprise:",g_enterprise,"lc_site:",lc_site , " ooab001:",g_ooab_d[li_cnt].ooab001, " ooab002",g_ooab_d[li_cnt].ooab002
+         LET ls_ooab001 = g_ooab_d[li_cnt].ooab001
+         LET ls_ooab001 = ls_ooab001.trim() 
+         LET g_ooab_d[li_cnt].ooab001 = ls_ooab001
+         LET li_cnt = li_cnt + 1 
+      END FOREACH 
+      CALL g_ooab_d.deleteElement(li_cnt)
+
+      
+      
+      #與標準gzsz比對
+      FOR li_cnt = 1 TO g_ooab_d.getLength()
+         #DISPLAY "li_cnt:",li_cnt , "ooab001:",g_ooab_d[li_cnt].ooab001 , "ooab002:",g_ooab_d[li_cnt].ooab002 
+         FOR li_cnt2 = 1 TO g_gzsz_d.getLength()
+            IF g_gzsz_d[li_cnt2].gzsz002 CLIPPED = g_ooab_d[li_cnt].ooab001 CLIPPED THEN 
+               #把值抄寫過來
+               LET g_gzsz_d[li_cnt2].ooab002 = g_ooab_d[li_cnt].ooab002
+            END IF  
+         END FOR 
+      END FOR 
+      
+
+      #參數資料回填到 g_param_d
+      LET g_param_d[li_site].site = lc_site
+      LET g_param_d[li_site].site_desc = lc_site_desc
+      LET g_param_d[li_site].col01 = g_gzsz_d[01].ooab002
+      LET g_param_d[li_site].col02 = g_gzsz_d[02].ooab002
+      LET g_param_d[li_site].col03 = g_gzsz_d[03].ooab002
+      LET g_param_d[li_site].col04 = g_gzsz_d[04].ooab002
+      LET g_param_d[li_site].col05 = g_gzsz_d[05].ooab002
+      LET g_param_d[li_site].col06 = g_gzsz_d[06].ooab002
+      LET g_param_d[li_site].col07 = g_gzsz_d[07].ooab002
+      LET g_param_d[li_site].col08 = g_gzsz_d[08].ooab002
+      LET g_param_d[li_site].col09 = g_gzsz_d[09].ooab002
+      LET g_param_d[li_site].col10 = g_gzsz_d[10].ooab002
+
+      LET li_site = li_site + 1
+   END FOREACH
+
+   CLOSE azzi990_01_get_ooab_cs    
+   CLOSE azzi990_01_get_ooef_cs  
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得每頁顯現資料筆數
+# Memo...........:
+# Usage..........: CALL azzi990_01_get_page_count()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_get_page_count()
+    DEFINE l_sel_limit  LIKE type_t.num5,
+          l_ooaa002    LIKE ooaa_t.ooaa002,
+          l_default    LIKE type_t.num5
+ 
+   LET l_default = 10 #設定預設值
+ 
+   #取值優先權: ds.dzca_t>dsdemo.ooaa_t
+   
+   #從ds.dzca_t提取開窗每頁顯現資料筆數
+   #SELECT dzca004 INTO l_ooaa002 FROM dzca_t
+   #   WHERE dzca001 = "q_gzsz002"
+   #LET l_ooaa002 = 10   
+ 
+ 
+   IF l_ooaa002 <10 OR cl_null(l_ooaa002) THEN
+      #從dsdemo.ooaa_t提取開窗每頁顯現資料筆數
+      SELECT ooaa002 INTO l_ooaa002 FROM dsdemo.ooaa_t
+         WHERE ooaa001= "E-SYS-0002"  #開窗每頁顯現資料筆數 >=10
+           AND ooaaent = g_enterprise
+ 
+      IF l_ooaa002 <10 OR cl_null(l_ooaa002) THEN
+         LET l_sel_limit = l_default
+      ELSE
+         LET l_sel_limit = l_ooaa002
+      END IF
+   ELSE
+      LET l_sel_limit = l_ooaa002
+   END IF
+ 
+   RETURN l_sel_limit
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得選擇筆數的上限
+# Memo...........:
+# Usage..........: CALL azzi990_01_get_sel_limit()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_get_sel_limit()
+    DEFINE l_sel_limit  LIKE type_t.num5,
+          l_ooaa002    LIKE ooaa_t.ooaa002,
+          l_default    LIKE type_t.num5
+ 
+   LET l_default = 200 #設定預設值
+ 
+   #從資料庫提取開窗選擇筆數資料上限
+   SELECT ooaa002 INTO l_ooaa002 FROM dsdemo.ooaa_t
+      WHERE ooaa001= "E-SYS-0003"  #開窗選擇筆數資料上限 >=200
+        AND ooaaent = g_enterprise
+ 
+   IF l_ooaa002 <200 OR cl_null(l_ooaa002) THEN
+      LET l_sel_limit = l_default
+   ELSE
+      LET l_sel_limit = l_ooaa002
+   END IF
+ 
+   RETURN l_sel_limit
+END FUNCTION
+
+################################################################################
+# Descriptions...: 畫面顯現與資料的選擇
+# Memo...........:
+# Usage..........: CALL azzi990_01_sel()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_sel()
+    WHILE TRUE
+      CALL azzi990_01_prep_result_set()
+ 
+      IF (gi_multi_sel) THEN
+         CALL azzi990_01_input_array()
+      ELSE
+         CALL azzi990_01_display_array()
+      END IF
+ 
+      IF gs_action = "exit" THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 準備查詢畫面的資料集
+# Memo...........:
+# Usage..........: CALL azzi990_01_prep_result_set()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_prep_result_set()
+    CALL gr_qry.clear()
+   CALL gr_qry_sel.clear()
+ 
+   IF (gi_need_cons) OR (gi_reconstruct) THEN
+ 
+      #避免使用預先查詢時,按重新整理的時候,進入CONSTRUCT段
+      LET gi_need_cons = FALSE
+ 
+      LET gi_reconstruct = FALSE
+      LET gi_cons_where_old = NULL
+      DISPLAY "" TO formonly.idx
+      CONSTRUCT gi_cons_where ON gzsz001, gzsz002, gzszl004, gzsz011 
+         FROM s_detail1[1].gzsz001, s_detail1[1].gzsz002, s_detail1[1].gzszl004, s_detail1[1].gzsz011
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         LET gi_cons_where = " 1=1"
+      END IF
+   END IF
+ 
+   IF cl_null(gs_pageswitch) THEN
+      LET gs_pageswitch = "first"
+   END IF
+   CALL azzi990_01_pagedata_fill(gs_pageswitch)
+   INITIALIZE gs_pageswitch TO NULL
+END FUNCTION
+
+################################################################################
+# Descriptions...: 採用INPUT ARRAY的方式來顯現查詢過後的資料
+# Memo...........:
+# Usage..........: CALL azzi990_01_input_array()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_input_array()
+    DEFINE li_ac     LIKE type_t.num5
+   DEFINE ldig_curr ui.Dialog
+   DEFINE l_msg     STRING           
+   DEFINE l_chk     LIKE type_t.num5 
+ 
+   #動態設定comboBox項目
+   CALL azzi990_01_setting_comboBox('gzsz011')
+
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED)
+      INPUT ARRAY gr_qry FROM s_detail1.*
+         ATTRIBUTES(COUNT=g_data_cnt, 
+                    APPEND ROW=FALSE, INSERT ROW=FALSE, DELETE ROW=FALSE) 
+         
+         BEFORE INPUT
+            CALL azzi990_01_set_pagebutton(ldig_curr) 
+            
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail1") 
+            
+         ON CHANGE check   #改變勾選狀態
+            IF NOT azzi990_01_qry_check("", gr_qry[li_ac].check, li_ac, li_ac) THEN 
+               NEXT FIELD check
+            END IF  
+      END INPUT
+ 
+      BEFORE DIALOG
+         LET ldig_curr = ui.Dialog.getCurrent()
+ 
+      ON ACTION accept
+         CALL azzi990_01_get_multiret()
+         LET gs_action = "exit"
+         EXIT DIALOG
+         
+      ON ACTION cancel
+         LET g_qryparam.return1 = NULL
+         
+         LET gs_action = "exit"
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+         
+      ON ACTION pg_first
+         CALL azzi990_01_pagedata_fill("first")
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_prev
+         CALL azzi990_01_pagedata_fill("prev")
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_next
+         CALL azzi990_01_pagedata_fill("next")
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_last
+         CALL azzi990_01_pagedata_fill("last")
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      #重新整理
+      ON ACTION refresh
+         CALL azzi990_01_pagedata_fill("first")
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+         EXIT DIALOG
+         
+      #重新查詢
+      ON ACTION reconstruct
+         LET gi_reconstruct = TRUE
+         CALL gr_qry.clear()
+         CALL gr_qry_sel.clear()
+         CALL azzi990_01_data_count("0")    #總筆數
+         EXIT DIALOG
+         
+      #全部選取 不開放
+      #ON ACTION selectall
+      # 連未選擇的頁面都必須選擇
+      #   CALL azzi990_01_qry_check("selectall", "Y", 1, gr_qry.getLength()) 
+         
+      #全部取消選取
+      ON ACTION selectnone
+         IF NOT azzi990_01_qry_check("selectnone", "N", 1, gr_qry.getLength()) THEN 
+
+         END IF   
+         
+      #此頁全選
+      ON ACTION selectpageall
+         #選前10筆
+         IF NOT azzi990_01_qry_check("selectpageall", "Y", 1, 10) THEN 
+
+         END IF    
+         
+      #此頁取消選取
+      ON ACTION selectpagenone
+         IF NOT azzi990_01_qry_check("selectpagenone", "N", 1, gr_qry.getLength()) THEN 
+
+         END IF  
+         
+      ON ACTION exporttoexcel
+         MESSAGE ""
+ 
+      #開窗程式串查沒有設定
+ 
+         
+   END DIALOG
+END FUNCTION
+
+################################################################################
+# Descriptions...: 採用DISPLAY ARRAY的方式來顯現查詢過後的資料
+# Memo...........:
+# Usage..........: CALL azzi990_01_display_array()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_display_array()
+   
+   DEFINE li_ac       LIKE type_t.num5
+   DEFINE ldig_curr   ui.Dialog
+   DEFINE l_msg       STRING           
+   DEFINE l_chk       LIKE type_t.num5 
+ 
+   #動態設定comboBox項目
+   CALL azzi990_01_setting_comboBox('gzsz011')
+
+   
+   DIALOG ATTRIBUTES(UNBUFFERED)
+      DISPLAY ARRAY gr_qry TO s_detail1.*
+         ATTRIBUTES(COUNT=g_data_cnt)
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail1")
+      END DISPLAY
+ 
+      BEFORE DIALOG
+         LET ldig_curr = ui.Dialog.getCurrent()
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+ 
+      ON ACTION accept
+         IF li_ac > 0 THEN
+            LET g_qryparam.return1 = gr_qry[li_ac].gzsz002 CLIPPED 
+            LET g_qryparam.return2 = gr_qry[li_ac].gzszl004 CLIPPED 
+            LET g_qryparam.return3 = gr_qry[li_ac].gzsz011 CLIPPED 
+            #LET g_qryparam.return4 = gr_qry[li_ac].gzsz012 CLIPPED 
+          
+         ELSE
+            LET g_qryparam.return1 = gs_default1 
+            LET g_qryparam.return2 = gs_default2 
+            LET g_qryparam.return3 = gs_default3 
+            LET g_qryparam.return4 = gs_default4 
+
+         END IF
+         LET gs_action = "exit"
+         EXIT DIALOG
+         
+      ON ACTION CANCEL
+            LET g_qryparam.return1 = gs_default1 
+            LET g_qryparam.return2 = gs_default2 
+            LET g_qryparam.return3 = gs_default3 
+            LET g_qryparam.return4 = gs_default4 
+
+ 
+         LET gs_action = "exit"
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+         
+      ON ACTION pg_first
+         CALL azzi990_01_pagedata_fill("first")
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_prev
+         CALL azzi990_01_pagedata_fill("prev")
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_next
+         CALL azzi990_01_pagedata_fill("next")
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_last
+         CALL azzi990_01_pagedata_fill("last")
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION refresh       #重新整理
+         CALL azzi990_01_pagedata_fill("first") 
+         CALL azzi990_01_set_pagebutton(ldig_curr)
+         EXIT DIALOG
+         
+      ON ACTION reconstruct   #重新查詢 
+         LET gi_reconstruct = TRUE
+         CALL gr_qry.clear()
+         CALL azzi990_01_data_count("0")    #總筆數
+         EXIT DIALOG
+         
+      ON ACTION exporttoexcel
+         MESSAGE ""
+ 
+      #開窗程式串查沒有設定
+ 
+         
+   END DIALOG
+END FUNCTION
+
+################################################################################
+# Descriptions...: 準備查詢畫面的資料集
+# Memo...........:
+# Usage..........: CALL azzi990_01_pagedata_fill(ps_page_action)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_pagedata_fill(ps_page_action)
+   DEFINE ps_page_action STRING
+   DEFINE ls_sql         STRING
+   DEFINE ls_where       STRING
+   DEFINE li_i           LIKE type_t.num10
+   DEFINE li_j           LIKE type_t.num10
+   DEFINE l_datarange    STRING   #第m-n筆
+   DEFINE l_str          STRING   #字串
+   DEFINE l_str1         STRING
+   DEFINE l_str2         STRING
+ 
+   CASE ps_page_action
+      WHEN "first"
+         LET g_page_idx = 1
+      WHEN "prev"
+         LET g_page_idx = g_page_idx - 1
+      WHEN "next"
+         LET g_page_idx = g_page_idx + 1
+      WHEN "last"
+         LET g_page_idx = g_page_last
+   END CASE
+ 
+   IF g_page_idx > 0 THEN
+      LET g_pagestart = (g_page_idx - 1) * gi_page_count + 1
+   END IF
+ 
+   CALL azzi990_01_sqlwhere() RETURNING ls_where
+   #全部選取
+   LET ls_sql = 
+   "SELECT  'Y',  gzsz001,gzsz002,gzszl004,gzsz011 
+  FROM  gzsz_t LEFT JOIN gzszl_t ON gzsz001 = gzszl001 AND gzsz002 = gzszl002   AND gzszl003 = '",g_dlang,"'  
+  WHERE  gzsz001 = '",g_qryparam.arg1,"'   AND ", ls_where CLIPPED, ""
+   DECLARE lcurs_qry_all CURSOR FROM ls_sql
+ 
+   #此頁
+   #@如果不需要複選資料,則不要設定check的預設值(將'N'刪除)
+   LET ls_sql = 
+   "SELECT 'N', gzsz001, gzsz002, gzszl004, gzsz011, RANK 
+  FROM ( SELECT gzsz001, gzsz002, gzszl004, gzsz011 ,RANK() OVER(ORDER BY gzsz001, gzsz002, gzszl004, gzsz011) AS RANK  FROM (SELECT  gzsz001 , gzsz002 , gzszl004 , gzsz011 , gzsz012  
+  FROM  gzsz_t LEFT JOIN gzszl_t ON gzsz001 = gzszl001 AND gzsz002 = gzszl002   AND gzszl003 = '",g_dlang,"'  
+  WHERE  gzsz001 = '",g_qryparam.arg1,"'   AND ", ls_where CLIPPED, "))",
+   " WHERE RANK >= ", g_pagestart," AND RANK < ", g_pagestart + gi_page_count
+ 
+
+ 
+   DECLARE lcurs_qry CURSOR FROM ls_sql
+ 
+   CALL gr_qry.clear()
+ 
+   LET li_i = 1
+   FOREACH lcurs_qry INTO gr_qry[li_i].*
+      LET l_str1 = gr_qry[li_i].gzsz001, gr_qry[li_i].gzsz002, gr_qry[li_i].gzszl004, gr_qry[li_i].gzsz011
+      FOR li_j = 1 TO gr_qry_sel.getLength()
+         LET l_str2 = gr_qry_sel[li_j].gzsz001, gr_qry_sel[li_j].gzsz002, gr_qry_sel[li_j].gzszl004, gr_qry_sel[li_j].gzsz011
+         IF l_str1 = l_str2 THEN
+            LET gr_qry[li_i].check = gr_qry_sel[li_j].check
+         END IF
+      END FOR
+      LET li_i = li_i + 1
+   END FOREACH
+   CALL gr_qry.deleteElement(li_i)
+ 
+   IF gi_cons_where <> gi_cons_where_old OR cl_null(gi_cons_where) OR cl_null(gi_cons_where_old) THEN   #查詢條件改變
+      LET gi_cons_where_old = gi_cons_where
+      #CALL azzi990_01_data_count("db")  #查詢資料的總筆數,給下一段計算第m-n筆
+   END IF
+ 
+   CALL azzi990_01_data_count("db") #查詢資料的總筆數,給下一段計算第m-n筆
+ 
+   #第m-n筆
+   IF g_page_idx > 0 THEN
+      LET li_i = g_data_cnt MOD gi_page_count
+      #現在在最後一頁，而且不是滿頁的狀況
+      IF g_page_idx = g_page_last AND li_i > 0 THEN
+         LET l_str = g_pagestart - 1 + li_i
+      ELSE
+         LET l_str = g_pagestart - 1 + gi_page_count
+      END IF
+      LET l_datarange = g_pagestart
+      LET l_datarange = l_datarange CLIPPED, " - ", l_str
+   ELSE
+      LET l_datarange = ""
+   END IF
+   DISPLAY l_datarange TO formonly.idx
+END FUNCTION
+
+################################################################################
+# Descriptions...: 查詢資料的總筆數
+# Memo...........:
+# Usage..........: CALL azzi990_01_data_count(p_data_cnt)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_data_count(p_data_cnt)
+   DEFINE p_data_cnt  STRING     #總筆數計算方式 "db":資料庫中的資料/非"db"則以此值為總筆數
+   DEFINE ls_sql      STRING
+   DEFINE ls_where    STRING
+   DEFINE ls_sql_1    STRING
+ 
+ 
+   IF p_data_cnt = "db" THEN
+      CALL azzi990_01_sqlwhere() RETURNING ls_where
+      LET ls_sql = "SELECT COUNT(1) FROM (", "SELECT  'Y',  gzsz001,gzsz002,gzszl004,gzsz011 
+  FROM  gzsz_t LEFT JOIN gzszl_t ON gzsz001 = gzszl001 AND gzsz002 = gzszl002   AND gzszl003 = '",g_dlang,"'  
+  WHERE  gzsz001 = '",g_qryparam.arg1,"'   AND ", ls_where CLIPPED, "", ")"
+      LET ls_sql_1 = "SELECT  'Y',  gzsz001,gzsz002,gzszl004,gzsz011 
+  FROM  gzsz_t LEFT JOIN gzszl_t ON gzsz001 = gzszl001 AND gzsz002 = gzszl002   AND gzszl003 = '",g_dlang,"'  
+  WHERE  gzsz001 = '",g_qryparam.arg1,"'   AND ", ls_where CLIPPED, ""
+      DISPLAY "########################################################################"
+      DISPLAY "[sql for azzi990_01] = ",ls_sql_1
+      DISPLAY "########################################################################"
+      CALL azzi990_01_sql_verify(ls_sql_1)
+      PREPARE qry_count FROM ls_sql
+      EXECUTE qry_count INTO g_data_cnt
+   ELSE
+      LET g_data_cnt = p_data_cnt
+   END IF
+ 
+   IF g_data_cnt > 0 THEN
+      IF g_data_cnt MOD gi_page_count = 0 THEN
+         LET g_page_last = g_data_cnt / gi_page_count   #總筆數 / 每頁顯現資料筆數
+      ELSE
+         LET g_page_last = g_data_cnt / gi_page_count + 1
+      END IF
+   ELSE
+      LET g_page_last = 0
+   END IF
+
+ 
+   DISPLAY g_data_cnt TO formonly.cnt    #顯示總筆數
+   DISPLAY 0 TO formonly.cnt2            #顯示勾選筆數
+END FUNCTION
+
+################################################################################
+# Descriptions...: 進行SQL驗證
+# Memo...........:
+# Usage..........: CALL azzi990_01_sql_verify(p_sql)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_sql_verify(p_sql)
+   DEFINE p_sql      STRING
+   DEFINE l_sql      STRING
+   DEFINE l_sql_msg  STRING
+   
+   TRY
+      LET l_sql = "SELECT COUNT(1) FROM (",p_sql,")"
+       
+      #實際進行驗證
+      EXECUTE IMMEDIATE l_sql
+ 
+ 
+      MESSAGE 'Verify OK!' 
+   CATCH
+      DISPLAY ":SQLCA.SQLCODE=",SQLCA.SQLCODE,SQLERRMESSAGE
+      LET l_sql_msg = ":SQLCA.SQLCODE=",SQLCA.SQLCODE,ASCII 10," \ sql = ",l_sql,ASCII 10," \ SQLERRMESSAGE=",SQLERRMESSAGE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00024"
+      LET g_errparam.extend = l_sql_msg
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+ 
+   END TRY 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 組SQL的where條件
+# Memo...........:
+# Usage..........: CALL azzi990_01_sqlwhere()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_sqlwhere()
+     DEFINE ls_where   STRING
+ 
+   LET ls_where = gi_cons_where CLIPPED   #gi_cons_where 螢幕抓取的where 條件
+ 
+   #在input段開窗的時候自動加入<inwc></inwc>之間的where條件 cch_20130605
+   IF  g_qryparam.state = "i" THEN
+      LET ls_where = ls_where," ",""
+   END IF
+   
+   #entprise - Start -
+    
+   #entprise -  End  -
+   IF NOT cl_null(g_qryparam.where) THEN
+      LET ls_where = ls_where, " AND ", g_qryparam.where CLIPPED   # g_qryparam.where查詢資料的條件
+   END IF
+   RETURN ls_where
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定上下頁按鈕狀態
+# Memo...........:
+# Usage..........: CALL azzi990_01_set_pagebutton(pdig_curr)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_set_pagebutton(pdig_curr)
+    DEFINE pdig_curr ui.Dialog
+ 
+   CALL pdig_curr.setActionActive("pg_first", 0)
+   CALL pdig_curr.setActionActive("pg_prev", 0)
+   CALL pdig_curr.setActionActive("pg_next", 0)
+   CALL pdig_curr.setActionActive("pg_last", 0)
+ 
+   IF g_page_idx > 1 THEN
+      CALL pdig_curr.setActionActive("pg_first", 1)
+      CALL pdig_curr.setActionActive("pg_prev", 1)
+   END IF
+ 
+   IF g_page_idx < g_page_last THEN
+      CALL pdig_curr.setActionActive("pg_next", 1)
+      CALL pdig_curr.setActionActive("pg_last", 1)
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 組合多選資料
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_get_multiret()
+   
+   DEFINE li_i   LIKE type_t.num10
+ 
+   IF g_qryparam.state = "c" THEN
+      LET g_qryparam.return1 = ""
+      FOR li_i = 1 TO gr_qry_sel.getLength()
+         IF gr_qry_sel[li_i].check = "Y" THEN
+            #@因為複選資料(display array)只能回傳一個欄位的組合字串.這裡不處理多欄位的回傳,以序號最小的回傳欄位為回傳值
+            IF cl_null(g_qryparam.return1) THEN
+               LET g_qryparam.return1 = gr_qry_sel[li_i].gzsz002 CLIPPED 
+
+            ELSE
+               LET g_qryparam.return1 = g_qryparam.return1 CLIPPED, "|", gr_qry_sel[li_i].gzsz002 CLIPPED 
+
+            END IF
+         END IF
+      END FOR
+   END IF
+ 
+#   IF g_qryparam.state = "m" THEN
+#      CALL g_qryparam.str_array.clear()
+# 
+#      FOR li_i = 1 TO gr_qry_sel.getLength()
+#         #DISPLAY "gr_qry_sel[",li_i,"] = ",gr_qry_sel[li_i].*
+#         
+#         LET g_qryparam.str_array[li_i] = gr_qry_sel[li_i].gzsz002,'|', 
+#         gr_qry_sel[li_i].gzszl004,'|', 
+#         gr_qry_sel[li_i].gzsz011,'|' 
+#         
+#         #DISPLAY "g_qryparam.str_array[",li_i,"] = ",g_qryparam.str_array[li_i]
+#      END FOR
+#   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定comboBox
+# Memo...........:
+# Usage..........: CALL azzi990_01_setting_comboBox(p_col_str)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_setting_comboBox(p_col_str)
+   DEFINE p_col_str           STRING,
+          l_i                 LIKE type_t.num5,
+          l_dzep011           LIKE dzep_t.dzep010, #系統分類碼
+          l_dzeb001           LIKE dzeb_t.dzeb001, #表格代號
+          l_gzcc003           LIKE gzcc_t.gzcc003, #系統分類碼
+          l_gzcc004_str       STRING,              #系統分類值的字串 
+          l_token             base.StringTokenizer,
+          l_token_str         LIKE dzeb_t.dzeb002,
+          l_str               STRING,
+          l_parameter1        STRING,
+          l_parameter2        STRING,
+          l_parameter3        STRING,
+          l_col_id            LIKE dzeb_t.dzeb002
+          
+   #優先處理 token
+   LET l_token = base.StringTokenizer.create(p_col_str,"|")
+ 
+   WHILE l_token.hasMoreTokens()
+ 
+      LET l_token_str =l_token.nextToken()
+ 
+      LET l_str = l_token_str
+      #LET l_str = l_str.subString(1,l_str.getLength()-2)
+      #LET l_str = l_str.subString(1,l_str.getIndexOf("_",1)-1)
+      LET l_col_id = l_str.trim()
+      #DISPLAY "l_col_id = ",l_col_id
+ 
+         
+      #找出欄位的所屬表格代號
+      SELECT dzeb001 INTO l_dzeb001 FROM dzeb_t WHERE dzeb002 = l_col_id
+      
+      IF l_col_id MATCHES "*stus" THEN
+         #找出該表格的狀態碼欄位和系統分類碼
+         SELECT DISTINCT gzcc003 INTO l_gzcc003 FROM gzcc_t WHERE gzcc001 = l_dzeb001
+         #組合出表格有效的系統分類值的字串
+         LET l_gzcc004_str = azzi990_01_setting_system_type_value_for_table(l_dzeb001)
+ 
+         #DISPLAY "###########",l_token_str
+         LET l_parameter1 = "formonly.",l_token_str
+         LET l_parameter2 = l_gzcc003
+         LET l_parameter3 = l_gzcc004_str
+         
+         #DISPLAY l_parameter1
+         #DISPLAY l_parameter2
+         #DISPLAY l_parameter3
+         
+         #組合 動態設定有選擇SCC資料的ComboBox選項 的程式碼,列出部分的系統分類值
+         CALL cl_set_combo_scc_part(l_parameter1,l_parameter2,l_parameter3)
+      ELSE
+         #找出該欄位的系統分類碼
+         SELECT dzep011 INTO l_dzep011 FROM dzep_t WHERE dzep002 = l_col_id
+ 
+         #DISPLAY "###########",l_token_str
+         LET l_parameter1 = "formonly.",l_token_str
+         LET l_parameter2 = l_dzep011
+               
+         #組合 動態設定有選擇SCC資料的ComboBox選項 的程式碼,列出全部的系統分類值
+         CALL cl_set_combo_scc(l_parameter1,l_parameter2)
+      END IF
+ 
+   END WHILE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 記錄已勾選的資料
+# Memo...........:
+# Usage..........: CALL azzi990_01_qry_check(p_mod,p_check,p_start,p_end)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_qry_check(p_mode,p_check,p_start,p_end)
+    DEFINE p_mode   STRING                 #選取方式
+   DEFINE p_check  LIKE type_t.chr1    #選取狀態 Y/N
+   DEFINE p_start  LIKE type_t.num10   #此頁選取範圍第一筆
+   DEFINE p_end    LIKE type_t.num10   #此頁選取範圍最後一筆
+   DEFINE li_i     LIKE type_t.num10
+   DEFINE li_j     LIKE type_t.num10
+   DEFINE l_check  LIKE type_t.chr1
+   DEFINE l_str1   STRING
+   DEFINE l_str2   STRING
+   DEFINE li_cnt   LIKE type_t.num5
+ 
+   CASE
+      #全部選取
+      WHEN p_mode = "selectall"
+         IF g_data_cnt > g_sel_limit THEN   #選取資料筆數超出系統容許上限
+            #qry-005:選取資料筆數超出系統容許上限%1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         ELSE
+            FOR li_i = p_start TO p_end
+               LET gr_qry[li_i].check = "Y"
+            END FOR
+ 
+            CALL gr_qry_sel.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all INTO gr_qry_sel[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel.deleteElement(li_i)
+         END IF
+      #全部取消選取
+      WHEN p_mode = "selectnone"
+         CALL gr_qry_sel.clear()
+         FOR li_i = p_start TO p_end
+            LET gr_qry[li_i].check = "N"
+         END FOR
+      #改變單筆資料的選取狀態/此頁全選/此頁取消選取
+      WHEN p_end > 0 AND (cl_null(p_mode) OR p_mode = "selectpageall" OR p_mode = "selectpagenone")
+         FOR li_i = p_start TO p_end
+         	  #將所有欄位值串在一起,以利做開窗record唯一值判斷
+            #要和已被選取的陣列(gr_qry_sel)做唯一值判斷比較
+         	  LET l_str1 = gr_qry[li_i].gzsz001, gr_qry[li_i].gzsz002, gr_qry[li_i].gzszl004, gr_qry[li_i].gzsz011
+         	  
+            IF p_check = "Y" THEN
+               IF gr_qry_sel.getLength() >= g_sel_limit THEN   #選取資料筆數超出系統容許上限
+                  LET gr_qry[li_i].check = "N"
+                  INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+                  EXIT FOR
+               ELSE
+                  LET l_check = "Y"
+                  LET gr_qry[li_i].check = "Y"             #此頁全選時,用程式批次改變值
+                  FOR li_j = 1 TO gr_qry_sel.getLength()   #勾選清單中有此筆資料
+                     LET l_str2 = gr_qry_sel[li_j].gzsz001, gr_qry_sel[li_j].gzsz002, gr_qry_sel[li_j].gzszl004, gr_qry_sel[li_j].gzsz011
+                     IF l_str1 = l_str2 THEN
+                        LET l_check = ""
+                        EXIT FOR
+                     END IF
+                  END FOR
+                  IF l_check = "Y" THEN  #加入勾選清單
+                     LET li_j = gr_qry_sel.getLength() + 1
+                     LET gr_qry_sel[li_j].* = gr_qry[li_i].*
+                  END IF
+               END IF
+            ELSE
+               LET gr_qry[li_i].check = "N"             #此頁取消選取時,用程式批次改變值
+               FOR li_j = 1 TO gr_qry_sel.getLength()   #刪除勾選清單中的此筆資料
+                  LET l_str2 = gr_qry_sel[li_j].gzsz001, gr_qry_sel[li_j].gzsz002, gr_qry_sel[li_j].gzszl004, gr_qry_sel[li_j].gzsz011
+                  IF l_str1 = l_str2 THEN
+                      CALL gr_qry_sel.deleteElement(li_j)
+                     EXIT FOR
+                  END IF
+               END FOR
+            END IF
+         END FOR
+
+   END CASE
+   LET li_cnt = 0
+   FOR li_i = 1 TO gr_qry.getLength()
+       IF gr_qry[li_i].CHECK = "Y" THEN 
+          LET li_cnt = li_cnt + 1 
+       END IF 
+       IF li_cnt > 10 THEN 
+          LET gr_qry[li_i].CHECK = "N"
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code =  "azz-00162"
+          LET g_errparam.extend = ""
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+
+          RETURN FALSE 
+       END IF 
+   END FOR
+   DISPLAY li_cnt TO formonly.cnt2
+   RETURN TRUE 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 組合出表格有效的系統分類值的字串
+# Memo...........:
+# Usage..........: CALL azzi990_01_setting_system_type_value_for_table(p_table)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi990_01_setting_system_type_value_for_table(p_table)
+  DEFINE p_table     LIKE  gzcc_t.gzcc001,
+          l_gzcc_d    DYNAMIC ARRAY OF  RECORD
+            gzcc004     LIKE dzeb_t.dzeb001
+                      END  RECORD,
+          l_cnt       LIKE type_t.num5,
+          ls_sql      STRING,
+          r_str       STRING
+ 
+   LET ls_sql = "SELECT gzcc004 FROM gzcc_t ",
+               "WHERE gzcc001='",p_table,"' AND gzccstus='Y' ",
+               "ORDER BY gzcc006 "
+ 
+   LET r_str = ""
+ 
+   PREPARE gzcc_prep FROM ls_sql
+   DECLARE gzcc_curs CURSOR FOR gzcc_prep
+   LET l_cnt = 1
+   FOREACH gzcc_curs INTO l_gzcc_d[l_cnt].gzcc004
+      LET r_str = r_str,l_gzcc_d[l_cnt].gzcc004,","
+ 
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+ 
+   CALL l_gzcc_d.deleteElement(l_cnt)
+ 
+   #去掉最後面的逗號
+   LET r_str = r_str.subString(1,r_str.getLength()-1)
+   
+   RETURN r_str
+END FUNCTION
+
+ 
+{</section>}
+ 

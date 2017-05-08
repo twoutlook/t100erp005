@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisr350_g01" module="ais" jobmode="N" type="g01" industry="std" crtid="04152" crtdt="2015-01-15 18:12:34" modid="04152" moddt="2015-07-01 10:05:05" sdver="4" tabver="10001" description="業務往來對帳單">
+  <define arg="tm.wc(STRING|where condition),tm.a1(STRING|帳務中心),tm.a2(dat|帳款期間起),tm.a3(dat|帳款期間迄)">
+    <var seq="1" value="l_group(chr1|NULL),isaf057,isafdocdt,isafdocno,l_isag001(chr30|NULL),isaf100,isaf105,isaf115,isafent,isafsite,isafcomp,isaf003,l_isafcomp_ooefl003(chr1000|NULL),l_isaf003_pmaal004(chr100|NULL),l_isaf003_oofc012(chr30|trim(isaf001)||&apos;.&apos;||trim(isaf002)),l_oofc012(chr30|trim(isaf001)||&apos;.&apos;||trim(isaf002)),pmaal_t_pmaal003(pmaal003|pmaal_t.pmaal003),l_pmaa016(pmaa016|NULL),l_date1(isafdocdt|NULL),l_date2(isafdocdt|NULL),l_print_line(chr1|&apos;&apos;),l_memo(chr1000|&apos;&apos;),l_order(chr20|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_group(chr1|NULL),isaf057,isafdocdt,isafdocno,l_isag001(chr30|NULL),isaf100,isaf105,isaf115,isafent,isafsite,isafcomp,isaf003,l_isafcomp_ooefl003(chr1000|NULL),l_isaf003_pmaal004(chr100|NULL),l_isaf003_oofc012(chr30|trim(isaf001)||&apos;.&apos;||trim(isaf002)),l_oofc012(chr30|trim(isaf001)||&apos;.&apos;||trim(isaf002)),pmaal_t_pmaal003(pmaal003|( SELECT pmaal003 FROM pmaal_t WHERE pmaal_t.pmaalent = isaf_t.isafent AND pmaal_t.pmaal001 = isaf_t.isaf003 AND pmaal_t.pmaal002 = g_dlang)),l_pmaa016(pmaa016|NULL),l_date1(isafdocdt|NULL),l_date2(isafdocdt|NULL),l_print_line(chr1|&apos;&apos;),l_memo(chr1000|&apos;&apos;),l_order(chr20|&apos;&apos;)"/>
+    <sql id="g_from" query="isaf_t"/>
+    <sql id="g_where" query="" maintable="isaf_t"/>
+    <sql id="g_order" query="isafcomp,isaf003"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="l_order,l_group,isafdocdt,isaf100"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="isafent,l_order"/>
+      <rep type="l_group"/>
+      <rep type="isafdocdt"/>
+      <rep type="isaf100"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="isafent,l_order,l_group,isafdocdt,isaf100"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff002" where="isafent,l_order,l_group,isafdocdt,isaf100"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="isafent,l_order"/>
+      <rep type="l_group"/>
+      <rep type="isafdocdt"/>
+      <rep type="isaf100"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

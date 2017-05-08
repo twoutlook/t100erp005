@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci110" module="axc" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02295" crtdt="2013-12-10 15:29:26" modid="02295" moddt="2013-12-11 11:02:38" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="成本次要素分類設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcavstus,xcav001,xcavl003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcav001,xcavownid,xcavownid_desc(chr500),xcavowndp,xcavowndp_desc(chr500),xcavcrtid,xcavcrtid_desc(chr500),xcavcrtdp,xcavcrtdp_desc(chr500),xcavcrtdt,xcavmodid,xcavmodid_desc(chr500),xcavmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci110" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xcavstus,xcav001,xcavl003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xcavstus,xcav001,xcavl003"/>
+      <construct id="body" page="2" field="xcavownid,xcavowndp,xcavcrtid,xcavcrtdp,xcavcrtdt,xcavmodid,xcavmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcavstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xcav001">
+        <controlp form="q_xcav001" state="c"/>
+      </column>
+      <column id="xcavl003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcavownid">
+        <after>
+          <reference field="xcavownid_desc" ref_field="xcav_t.xcavownid" map_field="xcavownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcavownid_desc"/>
+      <column id="xcavowndp">
+        <after>
+          <reference field="xcavowndp_desc" ref_field="xcav_t.xcavowndp" map_field="xcavowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcavowndp_desc"/>
+      <column id="xcavcrtid">
+        <after>
+          <reference field="xcavcrtid_desc" ref_field="xcav_t.xcavcrtid" map_field="xcavcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcavcrtid_desc"/>
+      <column id="xcavcrtdp">
+        <after>
+          <reference field="xcavcrtdp_desc" ref_field="xcav_t.xcavcrtdp" map_field="xcavcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcavcrtdp_desc"/>
+      <column id="xcavcrtdt"/>
+      <column id="xcavmodid">
+        <after>
+          <reference field="xcavmodid_desc" ref_field="xcav_t.xcavmodid" map_field="xcavmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcavmodid_desc"/>
+      <column id="xcavmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xcav_t" page="1,2" linked="" pk="xcav001">
+      <sql id="forupd_sql_detail" query="SELECT xcavstus,xcav001,&apos;&apos;,&apos;&apos;,xcavownid,&apos;&apos;,xcavowndp,&apos;&apos;,xcavcrtid,&apos;&apos;,xcavcrtdp,&apos;&apos;,xcavcrtdt,xcavmodid,&apos;&apos;,xcavmoddt FROM xcav_t WHERE xcavent=? AND xcav001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcavstus,xcav001,&apos;&apos;,&apos;&apos;,xcavownid,&apos;&apos;,xcavowndp,&apos;&apos;,xcavcrtid,&apos;&apos;,xcavcrtdp,&apos;&apos;,xcavcrtdt,xcavmodid,&apos;&apos;,xcavmoddt FROM xcav_t WHERE xcavent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="xcavl_t.xcavl003" table="xcavl_t" fk="xcav001" pk="xcavl001,xcavl002" field="xcavl003"/>
+    </body>
+  </dataset>
+</assembly>
+

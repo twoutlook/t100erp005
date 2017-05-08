@@ -1,0 +1,210 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq707" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03297" crtdt="2014-10-22 16:53:45" modid="05016" moddt="2016-05-23 15:32:08" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="一般採購入庫成本次要素查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcdkcomp,xcdkcomp_desc(chr80),xcdk004,xcdk001,xcdk001_desc(chr80),xcdkld,xcdkld_desc(chr80),xcdk005,xcdk003,xcdk003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcdksite,xcdksite_desc(chr500),xcdk022,xcdk022_desc(chr500),xcdk021,xcdk002,xcdk002_desc(chr500),xcdk014,xcdk006,xcdk007,xcdk008,xcdk009,xcdk010,xcdk010_desc(chr500),xcdk011,xcdk011_desc(chr500),xcdk011_desc_desc(chr500),xcdk012,xcdk016,xcdk016_desc(chr500),xcdk018,xcdk201,xcdk202"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcdkownid,xcdkownid_desc(chr500),xcdkowndp,xcdkowndp_desc(chr500),xcdkcrtid,xcdkcrtid_desc(chr500),xcdkcrtdp,xcdkcrtdp_desc(chr500),xcdkcrtdt,xcdkmodid,xcdkmodid_desc(chr500),xcdkmoddt,xcdk002,xcdk006,xcdk007,xcdk008,xcdk009,xcdk010"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="xcdksite,xcdksite_3_desc(chr500),xcdk022,xcdk022_3_desc(chr500),xcdk021,xcdk002,xcdk002_3_desc(chr500),xcdk011,xcdk011_3_desc(chr500),xcdk011_3_desc_desc(chr500),xcdk010,xcdk010_3_desc(chr500),xcdk012,xcdk018,xcau003,xcdk006,xcdk007,xcdk008,xcdk009,xcdk201,l_xcdk202a(num20_6),l_xcdk202b(num20_6),l_xcdk202c(num20_6),l_xcdk202d(num20_6),l_xcdk202e(num20_6),l_xcdk202f(num20_6),l_xcdk202g(num20_6),l_xcdk202h(num20_6),xcdk202"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq707" method="dialog">
+    <section id="input">
+      <input id="head" field="xcdkcomp,xcdk004,xcdk001,xcdkld,xcdk005,xcdk003"/>
+      <input id="body" page="1" field="xcdksite,xcdk022,xcdk021,xcdk002,xcdk014,xcdk006,xcdk007,xcdk008,xcdk009,xcdk010,xcdk011,xcdk012,xcdk016,xcdk018,xcdk201,xcdk202" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="l_xcdk202a,l_xcdk202b,l_xcdk202c,l_xcdk202d,l_xcdk202e,l_xcdk202f,l_xcdk202g,l_xcdk202h" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcdkcomp,xcdk004,xcdk001,xcdkld,xcdk005,xcdk003"/>
+      <construct id="body" page="1" field="xcdksite,xcdk022,xcdk021,xcdk002,xcdk014,xcdk006,xcdk007,xcdk008,xcdk009,xcdk010,xcdk011,xcdk012,xcdk016,xcdk018,xcdk201,xcdk202"/>
+      <construct id="body" page="2" field="xcdkownid,xcdkowndp,xcdkcrtid,xcdkcrtdp,xcdkcrtdt,xcdkmodid,xcdkmoddt"/>
+      <construct id="body" page="3" field="l_xcdk202a,l_xcdk202b,l_xcdk202c,l_xcdk202d,l_xcdk202e,l_xcdk202f,l_xcdk202g,l_xcdk202h"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcdkld,xcdk001,xcdk003,xcdk004,xcdk005"/>
+      <set id="head" type="no_entry" field="xcdkld,xcdk001,xcdk003,xcdk004,xcdk005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcdkcomp">
+        <after>
+          <reference field="xcdkcomp_desc" ref_field="xcdk_t.xcdkcomp" map_field="xcdkent,xcdkcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xcdkcomp_desc"/>
+      <column id="xcdk004"/>
+      <column id="xcdk001">
+        <after/>
+      </column>
+      <column id="xcdk001_desc"/>
+      <column id="xcdkld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcdkld_desc" ref_field="xcdk_t.xcdkld" map_field="xcdkent,xcdkld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcdkld_desc"/>
+      <column id="xcdk005"/>
+      <column id="xcdk003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="xcdk003_desc" ref_field="xcdk_t.xcdk003" map_field="xcdkent,xcdk003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcdk003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcdksite">
+        <after>
+          <reference field="xcdksite_desc" ref_field="xcdk_t.xcdksite" map_field="xcdkent,xcdksite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xcdksite_desc"/>
+      <column id="xcdk022">
+        <after>
+          <reference field="xcdk022_desc" ref_field="xcdk_t.xcdk022" map_field="xcdkent,xcdk022" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_4" state="c"/>
+      </column>
+      <column id="xcdk022_desc"/>
+      <column id="xcdk021">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xcdk002">
+        <after>
+          <reference field="xcdk002_desc" ref_field="xcdkcomp,xcdk002" map_field="xcdkcomp,xcdk002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbflcomp=? AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcdk002" state="c"/>
+      </column>
+      <column id="xcdk002_desc"/>
+      <column id="xcdk014"/>
+      <column id="xcdk006">
+        <controlp form="q_inbadocno_4" state="i"/>
+        <controlp form="q_inbadocno_4" state="c"/>
+      </column>
+      <column id="xcdk007"/>
+      <column id="xcdk008"/>
+      <column id="xcdk009"/>
+      <column id="xcdk010">
+        <after>
+          <check chkid="v_xcau001" id="isExist"/>
+          <reference field="xcdk010_desc" ref_field="xcdk_t.xcdk010" map_field="xcdkent,xcdk010" ref_sql="SELECT xcaul003 FROM xcaul_t WHERE xcaulent=$varg_enterprise$var AND xcaul001=? AND xcaul002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcau001" state="i"/>
+        <controlp form="q_xcau001" state="c"/>
+      </column>
+      <column id="xcdk010_desc"/>
+      <column id="xcdk011">
+        <after>
+          <reference field="xcdk011_desc" ref_field="xcdk_t.xcdk011" map_field="xcdkent,xcdk011" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdk011_desc">
+        <after>
+          <reference field="xcdk011_desc_desc" ref_field="xcdk_t.xcdk011" map_field="xcdkent,xcdk011" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdk011_desc_desc"/>
+      <column id="xcdk012">
+        <controlp form="q_xcck011" state="c"/>
+      </column>
+      <column id="xcdk016">
+        <after>
+          <reference field="xcdk016_desc" ref_field="xcdk_t.xcdk016" map_field="xcdkent,xcdk016" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdk016_desc"/>
+      <column id="xcdk018">
+        <controlp form="q_inaj010" state="i"/>
+        <controlp form="q_inaj010" state="c"/>
+      </column>
+      <column id="xcdk201"/>
+      <column id="xcdk202"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcdkownid">
+        <after>
+          <reference field="xcdkownid_desc" ref_field="xcdk_t.xcdkownid" map_field="xcdkownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcdkownid_desc"/>
+      <column id="xcdkowndp">
+        <after>
+          <reference field="xcdkowndp_desc" ref_field="xcdk_t.xcdkowndp" map_field="xcdkowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcdkowndp_desc"/>
+      <column id="xcdkcrtid">
+        <after>
+          <reference field="xcdkcrtid_desc" ref_field="xcdk_t.xcdkcrtid" map_field="xcdkcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcdkcrtid_desc"/>
+      <column id="xcdkcrtdp">
+        <after>
+          <reference field="xcdkcrtdp_desc" ref_field="xcdk_t.xcdkcrtdp" map_field="xcdkcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcdkcrtdp_desc"/>
+      <column id="xcdkcrtdt"/>
+      <column id="xcdkmodid">
+        <after>
+          <reference field="xcdkmodid_desc" ref_field="xcdk_t.xcdkmodid" map_field="xcdkmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcdkmodid_desc"/>
+      <column id="xcdkmoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="xcdksite_3_desc"/>
+      <column id="xcdk022_3_desc"/>
+      <column id="xcdk002_3_desc"/>
+      <column id="xcdk011_3_desc">
+        <after/>
+      </column>
+      <column id="xcdk011_3_desc_desc"/>
+      <column id="xcdk010_3_desc"/>
+      <column id="l_xcdk202a"/>
+      <column id="l_xcdk202b"/>
+      <column id="l_xcdk202c"/>
+      <column id="l_xcdk202d"/>
+      <column id="l_xcdk202e"/>
+      <column id="l_xcdk202f"/>
+      <column id="l_xcdk202g"/>
+      <column id="l_xcdk202h"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcdk_t" pk="xcdkld,xcdk001,xcdk003,xcdk004,xcdk005">
+      <sql id="forupd_sql" type="sql" query="SELECT xcdkcomp,&apos;&apos;,xcdk004,xcdk001,&apos;&apos;,xcdkld,&apos;&apos;,xcdk005,xcdk003,&apos;&apos; FROM xcdk_t WHERE xcdkent= ? AND xcdkld=? AND xcdk001=? AND xcdk003=? AND xcdk004=? AND xcdk005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcdkcomp,&apos;&apos;,xcdk004,xcdk001,&apos;&apos;,xcdkld,&apos;&apos;,xcdk005,xcdk003,&apos;&apos; FROM xcdk_t" order="xcdkld,xcdk001,xcdk003,xcdk004,xcdk005"/>
+    </head>
+    <body id="xcdk_t" page="1,2,3" linked="" pk="xcdk002,xcdk006,xcdk007,xcdk008,xcdk009,xcdk010" fk="xcdkld,xcdk001,xcdk003,xcdk004,xcdk005">
+      <sql id="forupd_sql_detail" query="SELECT xcdksite,&apos;&apos;,xcdk022,&apos;&apos;,xcdk021,xcdk002,&apos;&apos;,xcdk014,xcdk006,xcdk007,xcdk008,xcdk009,xcdk010,&apos;&apos;,xcdk011,&apos;&apos;,&apos;&apos;,xcdk012,xcdk016,&apos;&apos;,xcdk018,xcdk201,xcdk202,xcdkownid,&apos;&apos;,xcdkowndp,&apos;&apos;,xcdkcrtid,&apos;&apos;,xcdkcrtdp,&apos;&apos;,xcdkcrtdt,xcdkmodid,&apos;&apos;,xcdkmoddt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdk_t WHERE xcdkent=? AND xcdkld=? AND xcdk001=? AND xcdk003=? AND xcdk004=? AND xcdk005=? AND xcdk002=? AND xcdk006=? AND xcdk007=? AND xcdk008=? AND xcdk009=? AND xcdk010=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcdksite,&apos;&apos;,xcdk022,&apos;&apos;,xcdk021,xcdk002,&apos;&apos;,xcdk014,xcdk006,xcdk007,xcdk008,xcdk009,xcdk010,&apos;&apos;,xcdk011,&apos;&apos;,&apos;&apos;,xcdk012,xcdk016,&apos;&apos;,xcdk018,xcdk201,xcdk202,xcdkownid,&apos;&apos;,xcdkowndp,&apos;&apos;,xcdkcrtid,&apos;&apos;,xcdkcrtdp,&apos;&apos;,xcdkcrtdt,xcdkmodid,&apos;&apos;,xcdkmoddt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdk_t WHERE xcdkent= ? AND xcdkld=? AND xcdk001=? AND xcdk003=? AND xcdk004=? AND xcdk005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

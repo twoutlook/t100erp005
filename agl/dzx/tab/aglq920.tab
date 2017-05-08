@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq920" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06816" crtdt="2015-05-15 11:20:01" modid="06821" moddt="2016-06-01 15:57:18" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="合併報表沖銷前各期科目餘額查詢">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gldtld,gldtld_desc(chr80),gldt001,gldt001_desc(chr80),gldt003,gldt003_desc(chr80),gldt005,gldt006,gldt009,gldt025,gldt028"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gldt002,gldt004,gldt008,gldt031,gldt032,gldt007,gldt033,gldt010,gldt011,l_gldt010_gldt011(num20_6)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gldt002,gldt004,gldt008,gldt031,gldt032,gldt007,gldt034,gldt026,gldt027,l_gldt026_gldt027(num20_6)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="gldt002,gldt004,gldt008,gldt031,gldt032,gldt007,gldt035,gldt029,gldt030,l_gldt029_gldt030(num20_6)"/>
+      <var id="bs_field" value="gldtld,gldt001,gldt003,gldt005,gldt006" pk="gldtld,gldt001,gldt003,gldt005,gldt006" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq920" method="dialog">
+    <section id="input">
+      <input id="head" field="gldtld,gldt001,gldt003,gldt005,gldt006,gldt009,gldt025,gldt028"/>
+      <input id="body" page="1" field="gldt002,gldt004,gldt008,gldt031,gldt032,gldt007,gldt033,gldt010,gldt011,l_gldt010_gldt011" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="gldt034,gldt026,gldt027,l_gldt026_gldt027" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="gldt035,gldt029,gldt030,l_gldt029_gldt030" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gldtld,gldt001,gldt003,gldt005,gldt006,gldt009,gldt025,gldt028"/>
+      <construct id="body" page="1" field="gldt007"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gldtld,gldt001,gldt003,gldt005,gldt006"/>
+      <set id="head" type="no_entry" field="gldtld,gldt001,gldt003,gldt005,gldt006"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gldtld">
+        <after/>
+      </column>
+      <column id="gldtld_desc"/>
+      <column id="gldt001">
+        <after/>
+      </column>
+      <column id="gldt001_desc"/>
+      <column id="gldt003">
+        <after/>
+      </column>
+      <column id="gldt003_desc"/>
+      <column id="gldt005" type="S" default="0"/>
+      <column id="gldt006" type="S" default="0"/>
+      <column id="gldt009"/>
+      <column id="gldt025"/>
+      <column id="gldt028"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gldt002"/>
+      <column id="gldt004"/>
+      <column id="gldt008"/>
+      <column id="gldt031"/>
+      <column id="gldt032"/>
+      <column id="gldt007"/>
+      <column id="gldt033" type="S" default="0"/>
+      <column id="gldt010" type="S" default="0"/>
+      <column id="gldt011" type="S" default="0"/>
+      <column id="l_gldt010_gldt011" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gldt034" type="S" default="0"/>
+      <column id="gldt026" type="S" default="0"/>
+      <column id="gldt027" type="S" default="0"/>
+      <column id="l_gldt026_gldt027" type="S" default="0"/>
+    </init>
+    <init id="body" page="3">
+      <column id="gldt035" type="S" default="0"/>
+      <column id="gldt029" type="S" default="0"/>
+      <column id="gldt030" type="S" default="0"/>
+      <column id="l_gldt029_gldt030" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gldt_t" pk="gldtld,gldt001,gldt003,gldt005,gldt006">
+      <sql id="forupd_sql" type="sql" query="SELECT gldtld,&apos;&apos;,gldt001,&apos;&apos;,gldt003,&apos;&apos;,gldt005,gldt006,gldt009,gldt025,gldt028 FROM gldt_t WHERE gldtent= ? AND gldtld=? AND gldt001=? AND gldt003=? AND gldt005=? AND gldt006=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gldtld,&apos;&apos;,gldt001,&apos;&apos;,gldt003,&apos;&apos;,gldt005,gldt006,gldt009,gldt025,gldt028 FROM gldt_t" order="gldtld,gldt001,gldt003,gldt005,gldt006"/>
+    </head>
+    <body id="gldt_t" page="1,2,3" linked="" pk="gldt002,gldt004,gldt007,gldt008,gldt031,gldt032" fk="gldtld,gldt001,gldt003,gldt005,gldt006">
+      <sql id="forupd_sql_detail" query="SELECT gldt002,gldt004,gldt008,gldt031,gldt032,gldt007,gldt033,gldt010,gldt011,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldt034,gldt026,gldt027,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldt035,gldt029,gldt030,&apos;&apos; FROM gldt_t WHERE gldtent=? AND gldtld=? AND gldt001=? AND gldt003=? AND gldt005=? AND gldt006=? AND gldt002=? AND gldt004=? AND gldt007=? AND gldt008=? AND gldt031=? AND gldt032=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gldt002,gldt004,gldt008,gldt031,gldt032,gldt007,gldt033,gldt010,gldt011,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldt034,gldt026,gldt027,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldt035,gldt029,gldt030,&apos;&apos; FROM gldt_t WHERE gldtent= ? AND gldtld=? AND gldt001=? AND gldt003=? AND gldt005=? AND gldt006=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="asft300_01" std_prog="asft300_01" erpver="1.0" ver="1" module="ASF" booking="Y" class="I" template="F002_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xmdd_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.輸入此工單要生產的料號，帶出品名、規格、生產單位
+2.輸入排定交貨日的起迄日期，可以空白，若空白則不限制起始或截止日期，若是兩個都空白則是完全不限制
+3.單頭的條件輸入完後，產生單身
+4.單身只有選擇欄位可以輸入，其他欄位不可修改，提供全選、全部取消功能
+5.單身可做2次籂選
+6.產生的來源為訂單資料，只顯示已確認、未全部出貨、未結案，且尚有可開工單數量的訂單
+7.單身選擇完後，新增到工單來源檔
+]]>
+  </all>
+  <field cite_std="N" name="date_begin" ver="1" src="s" column="xmdd011" table="xmdd_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[約定交貨起始日期：
+   ●欄位控管：
+     資料欄位:Input Only
+     預設值:無
+     校驗:1.允許空白
+          2.不可大於截止日期
+     計算或處理:當不輸入時，代表不限制起始日期
+]]>
+  </field>
+  <field cite_std="N" name="date_end" ver="1" src="s" column="xmdd011" table="xmdd_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[約定交截止日期：
+   ●欄位控管：
+     資料欄位:Input Only
+     預設值:無
+     校驗:1.允許空白
+          2.不可小於起始日期
+     計算或處理:當不輸入時，代表不限截止日期
+]]>
+  </field>
+  <field cite_std="N" name="imae_t.imae016" ver="1" src="s" column="imae016" table="imae_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="qty1" ver="1" src="s" column="xmdd006" table="xmdd_t" attribute="N101" type="number(20, 6)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="qty2" ver="1" src="s" column="xmdd006" table="xmdd_t" attribute="N101" type="number(20, 6)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="qty3" ver="1" src="s" column="xmdd006" table="xmdd_t" attribute="N101" type="number(20, 6)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="select" ver="1" src="s" column="xmdd013" table="xmdd_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[選擇：
+   ●欄位控管：
+     資料欄位:Input Only
+     允許空白:No
+     預設值:勾選
+     選項組合:勾選為Y，未勾選為N
+     校驗:1.不允許空白
+     計算或處理:1.提供全選、全部取消功能
+]]>
+  </field>
+  <field cite_std="N" name="sum" ver="1" src="s" column="xmdd006" table="xmdd_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[生產數量合計：不可輸入，由單身選擇的可開工單數量合計顯示於此欄位
+]]>
+  </field>
+  <field cite_std="N" name="unit" ver="1" src="s" column="xmdd004" table="xmdd_t" attribute="C009" type="varchar2(10)" req="" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmda_t.xmda002" ver="1" src="s" column="xmda002" table="xmda_t" attribute="C006" type="varchar2(10)" req="" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmda_t.xmda003" ver="1" src="s" column="xmda003" table="xmda_t" attribute="C007" type="varchar2(10)" req="" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmda_t.xmda004" ver="1" src="s" column="xmda004" table="xmda_t" attribute="C004" type="varchar2(10)" req="" i_zoom="q_pmaa001_3" c_zoom="q_pmaa001_3" chk_ref="v_pmaa001_1" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd001" ver="1" src="s" column="xmdd001" table="xmdd_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="q_imaa001" c_zoom="q_imaa001" chk_ref="v_imaa001_5" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[生產料號：
+   ●欄位控管：
+     資料欄位:Input Only
+     預設值:工單的生產料號，如果沒有則自行輸入，若已有其他來源單據時，料號不可修改
+     校驗:1.不允許空白
+          2.需存在料件基本資料
+          3.一般工單、研發工單、接續工單，輸入值須存在BOM，且有效
+          4.檢查料件的生命週期設定(aimi012)
+            (1)如果工單類型為研發工單，生命週期內的可開立研發工單需為Y
+            (2)其他工單類型，生命週期的可開立正式工單需為Y才可使用
+     帶值:品名、規格
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗
+       查詢欄位：料號、品名、規格、產品分類、生命週期
+       回傳類型：單一回傳值
+]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd004" ver="1" src="s" column="xmdd004" table="xmdd_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd006" ver="1" src="s" column="xmdd006" table="xmdd_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd011" ver="1" src="s" column="xmdd011" table="xmdd_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdddocno" ver="1" src="s" column="xmdddocno" table="xmdd_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmddseq" ver="1" src="s" column="xmddseq" table="xmdd_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmddseq1" ver="1" src="s" column="xmddseq1" table="xmdd_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmddseq2" ver="1" src="s" column="xmddseq2" table="xmdd_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="imae016_desc" src="s" depend_field="imae_t.imae016" correspon_key="imae016" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="unit_desc" src="s" depend_field="unit" correspon_key="unit" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmda002_desc" src="s" depend_field="xmda_t.xmda002" correspon_key="&apos;2&apos;,xmda002002" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="xmda003_desc" src="s" depend_field="xmda_t.xmda003" correspon_key="xmda003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmda004_desc" src="s" depend_field="xmda_t.xmda004" correspon_key="xmda004" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdd001_desc" src="s" depend_field="xmdd_t.xmdd001" correspon_key="xmdd001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdd001_desc1" src="s" depend_field="xmdd001_desc" correspon_key="xmdd001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdd004_desc" src="s" depend_field="xmdd_t.xmdd004" correspon_key="xmdd004" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="date_begin" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="date_end" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imae_t.imae016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="qty1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="qty2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="qty3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="select" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sum" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="unit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmda_t.xmda002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmda_t.xmda003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmda_t.xmda004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdddocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmddseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmddseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmddseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_xmdd001" text="料件編號" lstr=""/>
+    <sfield name="lbl_sum" text="生產數量合計" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_imae016" text="生產單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_xmdd011" text="約定交貨日期" lstr=""/>
+    <sfield name="lbl_a" text="~" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_xmdddocno" text="訂單單號" lstr=""/>
+    <sfield name="lbl_xmddseq" text="項次" lstr=""/>
+    <sfield name="lbl_xmddseq1" text="項序" lstr=""/>
+    <sfield name="lbl_xmddseq2" text="分批序" lstr=""/>
+    <sfield name="lbl_xmdd006" text="分批訂購數量" lstr=""/>
+    <sfield name="lbl_xmdd004" text="單位" lstr=""/>
+    <sfield name="lbl_qty1" text="折合生產數量" lstr=""/>
+    <sfield name="lbl_unit" text="生產單位" lstr=""/>
+    <sfield name="lbl_qty2" text="已開工單數量" lstr=""/>
+    <sfield name="lbl_qty3" text="可開工單數量" lstr=""/>
+    <sfield name="lbl_xmda004" text="客戶編號" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_xmda003" text="業務部門" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_xmda002" text="業務人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

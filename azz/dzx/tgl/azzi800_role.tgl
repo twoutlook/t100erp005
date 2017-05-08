@@ -1,0 +1,546 @@
+#+ Version..: T6-ERP-1.00.00 Build-000077
+#+ 
+#+ Filename...: azzi800_role
+#+ Buildtype..: 應用 c02b 樣板自動產生
+#+ Memo.......: 
+#+ 以上段落由子樣板a00產生
+
+
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+#單身 type 宣告
+PRIVATE TYPE type_g_gzxw_d        RECORD
+       gzxwstus LIKE gzxw_t.gzxwstus, 
+   gzxw002 LIKE gzxw_t.gzxw002, 
+   gzxw003 LIKE gzxw_t.gzxw003, 
+   gzxw004 LIKE gzxw_t.gzxw004, 
+   gzxw005 LIKE gzxw_t.gzxw005
+       END RECORD
+PRIVATE TYPE type_g_gzxw2_d RECORD
+       gzxw002 LIKE gzxw_t.gzxw002, 
+   gzxw003 LIKE gzxw_t.gzxw003, 
+   gzxwownid LIKE gzxw_t.gzxwownid, 
+   gzxwownid_desc LIKE type_t.chr80, 
+   gzxwowndp LIKE gzxw_t.gzxwowndp, 
+   gzxwowndp_desc LIKE type_t.chr80, 
+   gzxwcrtid LIKE gzxw_t.gzxwcrtid, 
+   gzxwcrtid_desc LIKE type_t.chr80, 
+   gzxwcrtdp LIKE gzxw_t.gzxwcrtdp, 
+   gzxwcrtdp_desc LIKE type_t.chr80, 
+   gzxwcrtdt DATETIME YEAR TO SECOND, 
+   gzxwmodid LIKE gzxw_t.gzxwmodid, 
+   gzxwmodid_desc LIKE type_t.chr80, 
+   gzxwmoddt DATETIME YEAR TO SECOND
+       END RECORD
+
+
+ 
+DEFINE g_gzxw_d          DYNAMIC ARRAY OF type_g_gzxw_d
+DEFINE g_gzxw_d_t        type_g_gzxw_d
+DEFINE g_gzxw2_d   DYNAMIC ARRAY OF type_g_gzxw2_d
+DEFINE g_gzxw2_d_t type_g_gzxw2_d
+
+
+ 
+DEFINE g_gzxw001_t   LIKE gzxw_t.gzxw001    #Key值備份
+DEFINE g_gzxw002_t      LIKE gzxw_t.gzxw002    #Key值備份
+
+DEFINE g_gzxw003_t      LIKE gzxw_t.gzxw003    #Key值備份
+
+
+ 
+DEFINE l_ac                  LIKE type_t.chr5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+ 
+{</Module define>} 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+       
+       
+#+ 資料輸入
+PUBLIC FUNCTION azzi800_role(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_azzi800_role WITH FORM cl_ap_formpath("azz","azzi800_role")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_detail_input_auth("insert")
+   LET l_allow_delete = cl_detail_input_auth("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_gzxw_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+         #---------------------<  Detail: page1  >---------------------
+         #----<<gzxwstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxwstus
+            #add-point:BEFORE FIELD gzxwstus
+            {<point name="input.b.page1.gzxwstus" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxwstus
+            
+            #add-point:AFTER FIELD gzxwstus
+            {<point name="input.a.page1.gzxwstus" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxwstus
+            #add-point:ON CHANGE gzxwstus
+            {<point name="input.g.page1.gzxwstus" />}
+            #END add-point
+
+         #----<<gzxw002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxw002
+            #add-point:BEFORE FIELD gzxw002
+            {<point name="input.b.page1.gzxw002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxw002
+            
+            #add-point:AFTER FIELD gzxw002
+            {<point name="input.a.page1.gzxw002" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxw002
+            #add-point:ON CHANGE gzxw002
+            {<point name="input.g.page1.gzxw002" />}
+            #END add-point
+
+         #----<<gzxw003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxw003
+            #add-point:BEFORE FIELD gzxw003
+            {<point name="input.b.page1.gzxw003" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxw003
+            
+            #add-point:AFTER FIELD gzxw003
+            {<point name="input.a.page1.gzxw003" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxw003
+            #add-point:ON CHANGE gzxw003
+            {<point name="input.g.page1.gzxw003" />}
+            #END add-point
+
+         #----<<gzxw004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxw004
+            #add-point:BEFORE FIELD gzxw004
+            {<point name="input.b.page1.gzxw004" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxw004
+            
+            #add-point:AFTER FIELD gzxw004
+            {<point name="input.a.page1.gzxw004" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxw004
+            #add-point:ON CHANGE gzxw004
+            {<point name="input.g.page1.gzxw004" />}
+            #END add-point
+
+         #----<<gzxw005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxw005
+            #add-point:BEFORE FIELD gzxw005
+            {<point name="input.b.page1.gzxw005" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxw005
+            
+            #add-point:AFTER FIELD gzxw005
+            {<point name="input.a.page1.gzxw005" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxw005
+            #add-point:ON CHANGE gzxw005
+            {<point name="input.g.page1.gzxw005" />}
+            #END add-point
+
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<gzxwstus>>----
+         #Ctrlp:input.c.page1.gzxwstus
+         ON ACTION controlp INFIELD gzxwstus
+            #add-point:ON ACTION controlp INFIELD gzxwstus
+            {<point name="input.c.page1.gzxwstus" />}
+            #END add-point
+
+         #----<<gzxw002>>----
+         #Ctrlp:input.c.page1.gzxw002
+         ON ACTION controlp INFIELD gzxw002
+            #add-point:ON ACTION controlp INFIELD gzxw002
+            {<point name="input.c.page1.gzxw002" />}
+            #END add-point
+
+         #----<<gzxw003>>----
+         #Ctrlp:input.c.page1.gzxw003
+         ON ACTION controlp INFIELD gzxw003
+            #add-point:ON ACTION controlp INFIELD gzxw003
+            {<point name="input.c.page1.gzxw003" />}
+            #END add-point
+
+         #----<<gzxw004>>----
+         #Ctrlp:input.c.page1.gzxw004
+         ON ACTION controlp INFIELD gzxw004
+            #add-point:ON ACTION controlp INFIELD gzxw004
+            {<point name="input.c.page1.gzxw004" />}
+            #END add-point
+
+         #----<<gzxw005>>----
+         #Ctrlp:input.c.page1.gzxw005
+         ON ACTION controlp INFIELD gzxw005
+            #add-point:ON ACTION controlp INFIELD gzxw005
+            {<point name="input.c.page1.gzxw005" />}
+            #END add-point
+
+
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+      INPUT ARRAY g_gzxw2_d FROM s_detail2.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action2"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input2"/>}
+            #end add-point
+          
+         #---------------------<  Detail: page2  >---------------------
+         #----<<gzxwownid>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxwownid
+            
+            #add-point:AFTER FIELD gzxwownid
+            {<point name="input.a.page2.gzxwownid" />}
+            #END add-point
+            
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxwownid
+            #add-point:BEFORE FIELD gzxwownid
+            {<point name="input.b.page2.gzxwownid" />}
+            #END add-point
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxwownid
+            #add-point:ON CHANGE gzxwownid
+            {<point name="input.g.page2.gzxwownid" />}
+            #END add-point
+
+         #----<<gzxwowndp>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxwowndp
+            
+            #add-point:AFTER FIELD gzxwowndp
+            {<point name="input.a.page2.gzxwowndp" />}
+            #END add-point
+            
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxwowndp
+            #add-point:BEFORE FIELD gzxwowndp
+            {<point name="input.b.page2.gzxwowndp" />}
+            #END add-point
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxwowndp
+            #add-point:ON CHANGE gzxwowndp
+            {<point name="input.g.page2.gzxwowndp" />}
+            #END add-point
+
+         #----<<gzxwcrtid>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxwcrtid
+            
+            #add-point:AFTER FIELD gzxwcrtid
+            {<point name="input.a.page2.gzxwcrtid" />}
+            #END add-point
+            
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxwcrtid
+            #add-point:BEFORE FIELD gzxwcrtid
+            {<point name="input.b.page2.gzxwcrtid" />}
+            #END add-point
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxwcrtid
+            #add-point:ON CHANGE gzxwcrtid
+            {<point name="input.g.page2.gzxwcrtid" />}
+            #END add-point
+
+         #----<<gzxwcrtdp>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxwcrtdp
+            
+            #add-point:AFTER FIELD gzxwcrtdp
+            {<point name="input.a.page2.gzxwcrtdp" />}
+            #END add-point
+            
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxwcrtdp
+            #add-point:BEFORE FIELD gzxwcrtdp
+            {<point name="input.b.page2.gzxwcrtdp" />}
+            #END add-point
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxwcrtdp
+            #add-point:ON CHANGE gzxwcrtdp
+            {<point name="input.g.page2.gzxwcrtdp" />}
+            #END add-point
+
+         #----<<gzxwcrtdt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxwcrtdt
+            #add-point:BEFORE FIELD gzxwcrtdt
+            {<point name="input.b.page2.gzxwcrtdt" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxwcrtdt
+            
+            #add-point:AFTER FIELD gzxwcrtdt
+            {<point name="input.a.page2.gzxwcrtdt" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxwcrtdt
+            #add-point:ON CHANGE gzxwcrtdt
+            {<point name="input.g.page2.gzxwcrtdt" />}
+            #END add-point
+
+         #----<<gzxwmodid>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxwmodid
+            
+            #add-point:AFTER FIELD gzxwmodid
+            {<point name="input.a.page2.gzxwmodid" />}
+            #END add-point
+            
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxwmodid
+            #add-point:BEFORE FIELD gzxwmodid
+            {<point name="input.b.page2.gzxwmodid" />}
+            #END add-point
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxwmodid
+            #add-point:ON CHANGE gzxwmodid
+            {<point name="input.g.page2.gzxwmodid" />}
+            #END add-point
+
+         #----<<gzxwmoddt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxwmoddt
+            #add-point:BEFORE FIELD gzxwmoddt
+            {<point name="input.b.page2.gzxwmoddt" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxwmoddt
+            
+            #add-point:AFTER FIELD gzxwmoddt
+            {<point name="input.a.page2.gzxwmoddt" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE gzxwmoddt
+            #add-point:ON CHANGE gzxwmoddt
+            {<point name="input.g.page2.gzxwmoddt" />}
+            #END add-point
+
+ 
+         #---------------------<  Detail: page2  >---------------------
+         #----<<gzxwownid>>----
+         #Ctrlp:input.c.page2.gzxwownid
+         ON ACTION controlp INFIELD gzxwownid
+            #add-point:ON ACTION controlp INFIELD gzxwownid
+            {<point name="input.c.page2.gzxwownid" />}
+            #END add-point
+
+         #----<<gzxwowndp>>----
+         #Ctrlp:input.c.page2.gzxwowndp
+         ON ACTION controlp INFIELD gzxwowndp
+            #add-point:ON ACTION controlp INFIELD gzxwowndp
+            {<point name="input.c.page2.gzxwowndp" />}
+            #END add-point
+
+         #----<<gzxwcrtid>>----
+         #Ctrlp:input.c.page2.gzxwcrtid
+         ON ACTION controlp INFIELD gzxwcrtid
+            #add-point:ON ACTION controlp INFIELD gzxwcrtid
+            {<point name="input.c.page2.gzxwcrtid" />}
+            #END add-point
+
+         #----<<gzxwcrtdp>>----
+         #Ctrlp:input.c.page2.gzxwcrtdp
+         ON ACTION controlp INFIELD gzxwcrtdp
+            #add-point:ON ACTION controlp INFIELD gzxwcrtdp
+            {<point name="input.c.page2.gzxwcrtdp" />}
+            #END add-point
+
+         #----<<gzxwcrtdt>>----
+         #Ctrlp:input.c.page2.gzxwcrtdt
+         ON ACTION controlp INFIELD gzxwcrtdt
+            #add-point:ON ACTION controlp INFIELD gzxwcrtdt
+            {<point name="input.c.page2.gzxwcrtdt" />}
+            #END add-point
+
+         #----<<gzxwmodid>>----
+         #Ctrlp:input.c.page2.gzxwmodid
+         ON ACTION controlp INFIELD gzxwmodid
+            #add-point:ON ACTION controlp INFIELD gzxwmodid
+            {<point name="input.c.page2.gzxwmodid" />}
+            #END add-point
+
+         #----<<gzxwmoddt>>----
+         #Ctrlp:input.c.page2.gzxwmoddt
+         ON ACTION controlp INFIELD gzxwmoddt
+            #add-point:ON ACTION controlp INFIELD gzxwmoddt
+            {<point name="input.c.page2.gzxwmoddt" />}
+            #END add-point
+
+
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input2"/>}
+            #end add-point
+            
+      END INPUT
+
+
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #畫面關閉
+   CLOSE WINDOW w_azzi800_role 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+ 
+{<point name="other.function"/>}
+

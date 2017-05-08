@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apsr001_x01" std_prog="apsr001_x01" erpver="1.0" module="APS" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="component.get_var" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[p_arg1,p_arg2,p_arg3]]>
+  </point>
+  <section id="apsr001_x01.create_tmptable" ver="1" status="" src="s">
+    <![CDATA[FUNCTION apsr001_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #建立TEMP TABLE 透過此lib(組字串+create temp table+組ins的問號)
+   IF NOT cl_xg_create_tmptable() THEN
+      CALL cl_ap_exitprogram("0")           
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+  </section>
+  <section id="apsr001_x01.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:) Build-000001
+#+ 
+#+ Filename...: apsr001_x01
+#+ Description: APS料件供需平衡明細表
+#+ Creator....: 04010(2014/05/26)
+#+ Modifier...: 02716(2014/05/26)
+#+ Buildtype..: 應用 x01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="apsr001_x01.global" ver="1" status="" src="s">
+    <![CDATA[ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       a LIKE pspa_t.pspa001,         #APS版本 
+       b LIKE type_t.chr1          #列印原始需求
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apsr001_x01.ins_data" ver="1" status="" src="s">
+    <![CDATA[PRIVATE FUNCTION apsr001_x01_ins_data()
+DEFINE sr RECORD 
+   pspa012 LIKE pspa_t.pspa012, 
+   pspa015 LIKE pspa_t.pspa015, 
+   pspa004 LIKE pspa_t.pspa004, 
+   pspa006 LIKE pspa_t.pspa006, 
+   pspa009 LIKE pspa_t.pspa009, 
+   pspa017 LIKE pspa_t.pspa017, 
+   pspa020 LIKE pspa_t.pspa020
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH apsr001_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          CALL cl_err('foreach:',STATUS,1)
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.pspa012,sr.pspa015,sr.pspa004,sr.pspa006,sr.pspa009,sr.pspa017,sr.pspa020
+ 
+        IF SQLCA.sqlcode THEN
+          CALL cl_err("apsr001_x01_execute",SQLCA.sqlcode,0)
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+        END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+ 
+    END FOREACH
+ 
+    IF g_rep_success = 'N' THEN
+      EXIT PROGRAM
+    END IF
+ 
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsr001_x01.ins_prep" ver="2" status="" src="s">
+    <![CDATA[FUNCTION apsr001_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+       LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+       CASE i
+         WHEN 1
+         PREPARE insert_prep FROM g_sql
+ 
+ 
+       END CASE
+       IF STATUS THEN
+          LET l_prep_str="insert_prep",i
+          CALL cl_err(l_prep_str,status,1)
+          CALL cl_xg_drop_tmptable()
+          CALL cl_ap_exitprogram("0")
+       END IF
+   END FOR
+END FUNCTION
+]]>
+  </section>
+  <section id="apsr001_x01.main" ver="2" status="" src="s">
+    <![CDATA[PUBLIC FUNCTION apsr001_x01(--)
+   #add-point:component段變數傳入
+   {<point name="component.get_var"/>}
+   #end add-point
+   )
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE pspa_t.pspa001         #tm.a  APS版本 
+DEFINE  p_arg3 LIKE type_t.chr1         #tm.b  列印原始需求
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a = p_arg2
+   LET tm.b = p_arg3
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   #報表元件代號
+   LET g_rep_code = "apsr001_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL apsr001_x01_create_tmptable()
+ 
+   #報表select欄位準備
+   CALL apsr001_x01_sel_prep()
+ 
+   #報表insert的prepare
+   CALL apsr001_x01_ins_prep()  
+ 
+   #將資料存入tmptable
+   CALL apsr001_x01_ins_data() 
+ 
+   #將tmptable資料印出
+   CALL apsr001_x01_rep_data()
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsr001_x01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="apsr001_x01.rep_data" ver="1" status="" src="s">
+    <![CDATA[FUNCTION apsr001_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+  </section>
+  <section id="apsr001_x01.sel_prep" ver="1" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apsr001_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT pspa012,pspa015,pspa004,pspa006,pspa009,pspa017,pspa020"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM pspa_t"
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+ 
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE apsr001_x01_prepare FROM g_sql
+   IF STATUS THEN
+      CALL cl_err('prepare:',STATUS,1)
+      CALL cl_ap_exitprogram("0")
+   END IF
+   DECLARE apsr001_x01_curs CURSOR FOR apsr001_x01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

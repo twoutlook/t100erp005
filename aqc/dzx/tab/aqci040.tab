@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aqci040" module="aqc" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="01996" crtdt="2013-11-11 15:10:27" modid="01996" moddt="2015-02-28 16:40:22" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件據點檢驗條件設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imae001,imaal003(chr500),imaal004(chr500),imaa004(chr500),imaf013(chr500),imaa009(chr500),rtaxl003(chr500),imae111,imae111_desc(chr500),imae112,imae112_desc(chr500),imaa006(chr500),imaa006_desc(chr500),imae113,imae113_desc(chr500),imae120,imae114,imae115,imae116,imae117"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="imae001,imaeownid,imaeownid_desc(chr500),imaeowndp,imaeowndp_desc(chr500),imaecrtid,imaecrtid_desc(chr500),imaecrtdp,imaecrtdp_desc(chr500),imaecrtdt,imaemodid,imaemodid_desc(chr500),imaemoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aqc" filename="aqci040" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="imaal003,imaal004,imaa004,imaf013,imaa009,imae111,imae112,imae113,imae120,imae114,imae115,imae116,imae117" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="imae001,imaal003,imaal004,imaa004,imaf013,imaa009,imae111,imae112,imaa006,imae113,imae120,imae114,imae115,imae116,imae117"/>
+      <construct id="body" page="2" field="imaeownid,imaeowndp,imaecrtid,imaecrtdp,imaecrtdt,imaemodid,imaemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="imae001">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="imaa004"/>
+      <column id="imaf013" type="S" default="1"/>
+      <column id="imaa009">
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="rtaxl003"/>
+      <column id="imae111">
+        <after>
+          <reference field="imae111_desc" ref_field="imae111" map_field="imae111" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;205&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imae111_desc"/>
+      <column id="imae112">
+        <after>
+          <reference field="imae112_desc" ref_field="imae_t.imae112" map_field="imae112" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imae112_desc"/>
+      <column id="imaa006">
+        <after>
+          <reference field="imaa006_desc" ref_field="imaa006" map_field="imaa006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imaa006_desc"/>
+      <column id="imae113">
+        <after>
+          <reference field="imae113_desc" ref_field="imae_t.imae113" map_field="imae113" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imae113_desc"/>
+      <column id="imae120" type="S" default="N"/>
+      <column id="imae114" type="S" default="N"/>
+      <column id="imae115" type="S" default="N" def_scc="5051"/>
+      <column id="imae116" type="S" default="1" def_scc="5052"/>
+      <column id="imae117" type="S" default="1" def_scc="5053"/>
+    </init>
+    <init id="body" page="2">
+      <column id="imaeownid">
+        <after>
+          <reference field="imaeownid_desc" ref_field="imae_t.imaeownid" map_field="imaeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaeownid_desc"/>
+      <column id="imaeowndp">
+        <after>
+          <reference field="imaeowndp_desc" ref_field="imae_t.imaeowndp" map_field="imaeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imaeowndp_desc"/>
+      <column id="imaecrtid">
+        <after>
+          <reference field="imaecrtid_desc" ref_field="imae_t.imaecrtid" map_field="imaecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaecrtid_desc"/>
+      <column id="imaecrtdp">
+        <after>
+          <reference field="imaecrtdp_desc" ref_field="imae_t.imaecrtdp" map_field="imaecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imaecrtdp_desc"/>
+      <column id="imaecrtdt"/>
+      <column id="imaemodid">
+        <after>
+          <reference field="imaemodid_desc" ref_field="imae_t.imaemodid" map_field="imaemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaemodid_desc"/>
+      <column id="imaemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="imae_t" page="1,2" linked="" pk="imae001">
+      <sql id="forupd_sql_detail" query="SELECT imae001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,imae111,&apos;&apos;,imae112,&apos;&apos;,&apos;&apos;,&apos;&apos;,imae113,&apos;&apos;,imae120,imae114,imae115,imae116,imae117,&apos;&apos;,imaeownid,&apos;&apos;,imaeowndp,&apos;&apos;,imaecrtid,&apos;&apos;,imaecrtdp,&apos;&apos;,imaecrtdt,imaemodid,&apos;&apos;,imaemoddt FROM imae_t WHERE imaeent=? AND imaesite=? AND imae001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imae001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,imae111,&apos;&apos;,imae112,&apos;&apos;,&apos;&apos;,&apos;&apos;,imae113,&apos;&apos;,imae120,imae114,imae115,imae116,imae117,&apos;&apos;,imaeownid,&apos;&apos;,imaeowndp,&apos;&apos;,imaecrtid,&apos;&apos;,imaecrtdp,&apos;&apos;,imaecrtdt,imaemodid,&apos;&apos;,imaemoddt FROM imae_t WHERE imaeent= ? AND imaesite= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

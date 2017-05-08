@@ -1,0 +1,973 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapp415.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2016-11-21 09:11:01), PR版次:0003(2017-01-11 18:28:48)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000000
+#+ Filename...: aapp415
+#+ Description: 發票請款已付款註記整批更新作業
+#+ Creator....: 06821(2016-11-17 16:33:32)
+#+ Modifier...: 06821 -SD/PR- 04152
+ 
+{</section>}
+ 
+{<section id="aapp415.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#161229-00047#15 2017/01/10 By Reanna   財務用供應商對象控制組,法人條件改為用 IN (site...)的方式,QBE時,傳入符合權限的法人；INPUT時傳入目前法人據點
+#161229-00047#76 2017/01/11 By Reanna   修正 #161229-00047#15 bug
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+        apeasite            LIKE apea_t.apeasite,
+        apeasite_desc       LIKE type_t.chr80,
+        apea019             LIKE apea_t.apea019,
+        apea020             LIKE apea_t.apea020,
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+        sel                 LIKE type_t.chr1,
+        apeadocno           LIKE apea_t.apeadocno,
+        apeadocdt           LIKE apea_t.apeadocdt,
+        apea005             LIKE apea_t.apea005,
+        apea005_desc        LIKE type_t.chr100,
+        apeb108             LIKE apeb_t.apeb108,
+        apeb118             LIKE apeb_t.apeb118
+                      END RECORD
+DEFINE g_input        type_parameter  
+DEFINE g_apeacomp     LIKE apea_t.apeacomp                      
+DEFINE g_ld           LIKE glaa_t.glaald
+DEFINE g_sql_ctrl     STRING
+DEFINE g_comp_str     STRING   #161229-00047#15
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapp415.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aap","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      #161229-00047#76 add ------
+      SELECT ooef017 INTO g_apeacomp
+        FROM ooef_t
+       WHERE ooefent = g_enterprise
+         AND ooef001 = g_site
+         AND ooefstus = 'Y'
+      CALL s_fin_get_wc_str(g_apeacomp) RETURNING g_comp_str
+      CALL s_control_get_supplier_sql_pmab('4',g_site,g_user,g_dept,'',g_comp_str) RETURNING g_sub_success,g_sql_ctrl
+      #161229-00047#76 add end---
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aapp415 WITH FORM cl_ap_formpath("aap",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aapp415_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aapp415_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aapp415
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aapp415.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aapp415_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   #161229-00047#15 mark ------
+   ##控制組條件
+   #LET g_sql_ctrl = NULL
+   #SELECT ooef017 INTO g_apeacomp FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_site AND ooefstus = 'Y'
+   #CALL s_control_get_supplier_sql_pmab('4',g_site,g_user,g_dept,'',g_apeacomp) RETURNING g_sub_success,g_sql_ctrl
+   #161229-00047#15 mark end---
+   
+   CALL aapp415_default() #161229-00047#76
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp415.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aapp415_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE l_choice     LIKE type_t.chr1
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   #CALL aapp415_default() #161229-00047#76 mark
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL aapp415_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         INPUT BY NAME g_input.apeasite,g_input.apeasite_desc,g_input.apea019,g_input.apea020  
+               ATTRIBUTE(WITHOUT DEFAULTS)
+               
+            BEFORE INPUT 
+
+            AFTER FIELD apeasite   
+               LET g_input.apeasite_desc = ''
+               DISPLAY BY NAME g_input.apeasite_desc
+               IF NOT cl_null(g_input.apeasite) THEN
+                  CALL s_fin_account_center_with_ld_chk(g_input.apeasite,'','','6','N','',g_today) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.apeasite = g_site
+                     LET g_input.apeasite_desc = s_desc_get_department_desc(g_input.apeasite)
+                     DISPLAY BY NAME g_input.apeasite,g_input.apeasite_desc
+                     NEXT FIELD apeasite
+                  END IF
+               END IF
+               LET g_input.apeasite_desc = s_desc_get_department_desc(g_input.apeasite)
+               DISPLAY BY NAME g_input.apeasite_desc
+               #營運據點取得帳別與法人
+               CALL s_fin_orga_get_comp_ld(g_input.apeasite) RETURNING g_sub_success,g_errno,g_apeacomp,g_ld
+               #CALL s_control_get_supplier_sql_pmab('4',g_site,g_user,g_dept,'',g_apeacomp) RETURNING g_sub_success,g_sql_ctrl #161229-00047#15 mark
+               #161229-00047#15 add ------
+               CALL s_fin_get_wc_str(g_apeacomp) RETURNING g_comp_str
+               CALL s_control_get_supplier_sql_pmab('4',g_site,g_user,g_dept,'',g_comp_str) RETURNING g_sub_success,g_sql_ctrl
+               #161229-00047#15 add end---
+
+            ON ACTION controlp INFIELD apeasite
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.apeasite
+               CALL q_ooef001_33()  
+               LET g_input.apeasite = g_qryparam.return1
+               CALL s_desc_get_department_desc(g_input.apeasite) RETURNING g_input.apeasite_desc
+               DISPLAY BY NAME g_input.apeasite,g_input.apeasite_desc
+               NEXT FIELD apeasite
+
+         END INPUT
+         
+         #查詢QBE
+         CONSTRUCT BY NAME g_wc ON apeadocno,apea005,apea003,apeadocdt
+
+            BEFORE CONSTRUCT
+               CALL cl_qbe_init()
+            
+            AFTER CONSTRUCT
+               
+            ON ACTION controlp INFIELD apeadocno
+               #請款單號
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = " apeasite = '",g_input.apeasite,"' AND apea019 = '",g_input.apea019,"' ",
+                                      " AND apea020 = '",g_input.apea020,"' AND apeastus = 'Y' AND apea013 = 'N' "
+               IF NOT cl_null(g_sql_ctrl) AND NOT g_sql_ctrl = ' 1=1'  THEN
+                  LET g_qryparam.where = g_qryparam.where," AND EXISTS (SELECT 1 FROM pmaa_t ",
+                                                          "              WHERE pmaaent = ",g_enterprise,
+                                                          "                AND ",g_sql_ctrl,
+                                                          "                AND pmaaent = apeaent ",
+                                                          "                AND pmaa001 = apea005 )"
+               END IF            
+               
+               #anmt440/anmt460 當 nmck001 = 'IV:發票請款單' 時,且已存在 nmcl001 = apeadocno 狀態 nmckstus 為 Y    
+               LET g_qryparam.where = g_qryparam.where," AND (EXISTS (SELECT 1 FROM nmck_t,nmcl_t ",
+                                                       "              WHERE nmckent = ",g_enterprise,
+                                                       "                AND nmckent = nmclent AND nmckcomp = nmclcomp AND nmckdocno = nmcldocno  ",
+                                                       "                AND nmcl001 = apeadocno AND nmckent = apeaent AND nmck001 = 'IV' AND nmckstus = 'Y' )",
+                                                       " OR EXISTS (SELECT 1 FROM apda_t,apce_t ",
+                                                       "              WHERE apceent = ",g_enterprise,
+                                                       "                AND apceent = apdaent AND apceld = apdald AND apcedocno = apdadocno ",
+                                                       "                AND apceld IN (SELECT apeald FROM apea_t WHERE apeaent =  ",g_enterprise," AND apeadocno = apebdocno)",
+                                                       "                AND apce003 = apeb003 AND apdastus = 'Y')) "            
+               CALL q_apeadocno()
+               DISPLAY g_qryparam.return1 TO apeadocno    
+               NEXT FIELD apeadocno          
+            
+            ON ACTION controlp INFIELD apea005
+               #付款對象
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               IF NOT cl_null(g_sql_ctrl) AND NOT g_sql_ctrl = ' 1=1'  THEN
+                  LET g_qryparam.where = " EXISTS (SELECT 1 FROM pmaa_t ",
+                                         "          WHERE pmaaent = ",g_enterprise,
+                                         "            AND ",g_sql_ctrl,
+                                         "            AND pmaaent = apcaent ",                                   
+                                         "            AND pmaa001 = apca005 )"
+               END IF
+               CALL q_apca005()  
+               DISPLAY g_qryparam.return1 TO apea005 
+               NEXT FIELD apea005    
+               
+            ON ACTION controlp INFIELD apea003
+               #請款人員
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               DISPLAY g_qryparam.return1 TO apea003      #顯示到畫面上
+               NEXT FIELD apea003        
+               
+         END CONSTRUCT
+                     
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+            ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                       INSERT ROW = FALSE,
+                       DELETE ROW = FALSE,
+                       APPEND ROW = FALSE)
+            BEFORE ROW
+               LET l_ac = ARR_CURR()
+               DISPLAY l_ac TO FORMONLY.h_index
+         END INPUT         
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aapp415_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL aapp415_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            CLEAR FORM
+            INITIALIZE g_input.* TO NULL
+            CALL aapp415_default()
+            CALL g_detail_d.clear()
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL aapp415_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         ON ACTION batch_execute
+            LET l_choice = FALSE
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF g_detail_d[li_idx].sel = 'Y' THEN
+                  LET l_choice = TRUE
+               END IF
+            END FOR
+            #沒選取資料
+            IF NOT l_choice THEN
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.code = 'axr-00159'
+                LET g_errparam.extend = ''
+                LET g_errparam.popup = TRUE
+                CALL cl_err()
+            ELSE
+               CALL s_transaction_begin()
+               CALL cl_err_collect_init()
+               CALL aapp415_process() RETURNING g_sub_success
+               IF g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'adz-00217'   #執行成功
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CALL s_transaction_end('Y',0)
+               ELSE
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'adz-00218'   #執行失敗
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CALL s_transaction_end('N',0)
+               END IF
+               CALL cl_err_collect_show()
+               CALL aapp415_b_fill()
+            END IF
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp415.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aapp415_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+   
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aapp415_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp415.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aapp415_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   DEFINE l_sql           STRING
+   DEFINE l_cnt_anm       LIKE type_t.num10
+   DEFINE l_cnt_aap       LIKE type_t.num10
+   DEFINE l_apeb003       LIKE apeb_t.apeb003
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   IF cl_null(g_wc) THEN LET g_wc = " 1=1 " END IF
+   
+   #相關DECLARE定義
+   LET l_sql = " SELECT DISTINCT apeb003 ",
+               "   FROM apea_t,apeb_t ",
+               "  WHERE apeaent = ",g_enterprise," ",
+               "    AND apeaent = apebent AND apeadocno = apebdocno ",
+               "    AND apeastus = 'Y' AND apeadocno = ? "
+   PREPARE sel_apebp1 FROM l_sql
+   DECLARE sel_apebc1 CURSOR FOR sel_apebp1  
+   
+   #主SQL
+   LET g_sql = "SELECT 'N',apeadocno,apeadocdt,apea005,",
+               "       (SELECT pmaal004 FROM pmaal_t WHERE pmaalent = apeaent AND pmaal001 = apea005 AND pmaal002 = '",g_dlang,"'), ",
+               "       SUM(apeb108),SUM(apeb118) ",
+               "  FROM apea_t,apeb_t ",
+               " WHERE apeaent = ? ",
+               "   AND apeaent = apebent ",
+               "   AND apeadocno = apebdocno ",
+               "   AND apeasite='",g_input.apeasite,"'",
+               "   AND apea019=",g_input.apea019,
+               "   AND apea020=",g_input.apea020,
+               "   AND apea013 = 'N' ",
+               "   AND apeastus = 'Y' ",
+               "   AND ",g_wc
+            
+   IF NOT cl_null(g_sql_ctrl) AND NOT g_sql_ctrl = ' 1=1'  THEN
+      LET g_sql = g_sql," AND EXISTS (SELECT 1 FROM pmaa_t ",
+                        "              WHERE pmaaent = ",g_enterprise,
+                        "                AND ",g_sql_ctrl,
+                        "                AND pmaaent = apeaent ",
+                        "                AND pmaa001 = apea005 )"
+   END IF               
+   
+   LET g_sql = g_sql," GROUP BY apeaent,apeadocno,apeadocdt,apea005 "
+   LET g_sql = g_sql," ORDER BY apeadocno,apeadocdt,apea005 "   
+   #end add-point
+ 
+   PREPARE aapp415_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aapp415_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+      g_detail_d[l_ac].*
+      
+      #增加過濾條件-----------------               
+      #anmt440/anmt460 當 nmck001 = 'IV:發票請款單' 時,且已存在 nmcl001 = apeadocno 狀態 nmckstus 為 Y    
+      LET l_cnt_anm = 0
+      SELECT COUNT(1) INTO l_cnt_anm 
+        FROM nmck_t,nmcl_t,apea_t
+       WHERE nmckent = g_enterprise
+         AND nmckent = nmclent AND nmckcomp = nmclcomp AND nmckdocno = nmcldocno 
+         AND nmcl001 = apeadocno AND nmckent = apeaent AND nmck001 = 'IV' AND nmckstus = 'Y' 
+         AND apeadocno = g_detail_d[l_ac].apeadocno 
+      IF cl_null(l_cnt_anm) THEN LET l_cnt_anm = 0 END IF
+      
+      #apeb003為aapt110的對帳單號, 若aapt415所有單身的對帳單皆已存在於aapt420才認定符合條件 
+      #(整張aapt415的 apeb003 存在aapt420的apce003中 且stus=Y )
+      LET l_cnt_aap = 0
+      LET l_apeb003 = ''
+      FOREACH sel_apebc1 USING g_detail_d[l_ac].apeadocno INTO l_apeb003
+         LET l_cnt_aap = 0
+         SELECT COUNT(1) INTO l_cnt_aap
+           FROM apda_t,apce_t
+          WHERE apceent = g_enterprise
+            AND apceent = apdaent AND apceld = apdald AND apcedocno = apdadocno  
+            AND apce003 = l_apeb003
+            AND apceld IN (SELECT apeald FROM apea_t WHERE apeaent = g_enterprise AND apeadocno = g_detail_d[l_ac].apeadocno)
+            AND apdastus = 'Y'
+         IF cl_null(l_cnt_aap) THEN LET l_cnt_aap = 0 END IF
+         
+         IF l_cnt_aap = 0 THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+      
+      #以上兩種邏輯都不成立,則不寫入該筆
+      IF (l_cnt_anm + l_cnt_aap) = 0 THEN
+         CONTINUE FOREACH 
+      END IF
+      #-----------------------------   
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      
+      #end add-point
+      
+      CALL aapp415_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   IF g_detail_d.getLength() > 0 THEN
+      CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   END IF 
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aapp415_sel
+   
+   LET l_ac = 1
+   CALL aapp415_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+   DISPLAY l_ac TO FORMONLY.h_index
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp415.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aapp415_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp415.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aapp415_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp415.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aapp415_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL aapp415_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp415.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION aapp415_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp415.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aapp415_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aapp415_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp415.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 預設值
+# Memo...........:
+# Usage..........: CALL aapp415_default()
+# Date & Author..: 161117 By 06821
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapp415_default()
+   LET g_input.apeasite = g_site
+   LET g_input.apeasite_desc = s_desc_get_department_desc(g_input.apeasite)
+   
+   LET g_input.apea019 = YEAR(g_today)
+   LET g_input.apea020 = MONTH(g_today)
+   LET g_apeacomp = ''
+   LET g_ld = ''
+   CALL s_fin_orga_get_comp_ld(g_input.apeasite) RETURNING g_sub_success,g_errno,g_apeacomp,g_ld
+   #CALL s_control_get_supplier_sql_pmab('4',g_site,g_user,g_dept,'',g_apeacomp) RETURNING g_sub_success,g_sql_ctrl #161229-00047#15 mark
+   #161229-00047#15 add ------
+   CALL s_fin_get_wc_str(g_apeacomp) RETURNING g_comp_str
+   CALL s_control_get_supplier_sql_pmab('4',g_site,g_user,g_dept,'',g_comp_str) RETURNING g_sub_success,g_sql_ctrl
+   #161229-00047#15 add end---
+   
+   DISPLAY BY NAME g_input.apeasite,g_input.apeasite_desc,g_input.apea019,g_input.apea020
+END FUNCTION
+
+################################################################################
+# Descriptions...: 批次執行
+# Memo...........:
+# Usage..........: CALL aapp415_process()
+# Date & Author..: 161117 By 06821
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapp415_process()
+DEFINE l_wc          STRING  
+DEFINE l_today       DATETIME YEAR TO SECOND
+DEFINE l_i           LIKE type_t.num5   
+DEFINE r_success     LIKE type_t.num5 
+   
+   LET r_success = TRUE
+   LET l_wc = ''
+   LET l_today = cl_get_current()
+
+   #確認必要欄位是否有輸入值否則報錯
+   IF cl_null(g_input.apeasite) OR cl_null(g_input.apea019) OR cl_null(g_input.apea020) THEN
+      INITIALIZE g_errparam.* TO NULL
+      LET g_errparam.code = 'aap-00332'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #取得有勾選的單據,回寫aapt415 已付款註記(apea013) 為 Y
+   FOR l_i = 1 TO g_detail_cnt
+      IF g_detail_d[l_i].sel = 'Y' THEN
+         IF cl_null(g_detail_d[l_i].apeadocno) THEN
+            LET r_success = FALSE
+            EXIT FOR
+         END IF
+      
+         UPDATE apea_t
+            SET apea013 = 'Y',
+                apeamodid = g_user,
+                apeacnfid = g_user,
+                apeamoddt = l_today,
+                apeacnfdt = l_today
+          WHERE apeaent = g_enterprise
+            AND apeadocno = g_detail_d[l_i].apeadocno
+         
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'UPDATE_apea_t_ERR'
+            LET g_errparam.popup = TRUE
+            LET g_errparam.sqlerr = SQLCA.SQLCODE
+            CALL cl_err()
+            LET r_success = FALSE
+            EXIT FOR
+         END IF           
+      END IF
+   END FOR
+ 
+   RETURN r_success   
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

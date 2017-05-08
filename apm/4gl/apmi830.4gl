@@ -1,0 +1,6095 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="apmi830.description" >}
+#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000030
+#+ 
+#+ Filename...: apmi830
+#+ Description: 庫存組織要貨範圍維護作業
+#+ Creator....: 02749(2014-11-21 19:07:47)
+#+ Modifier...: 02749(2014-11-24 18:27:41) -SD/PR- 06814
+ 
+{</section>}
+ 
+{<section id="apmi830.global" >}
+#應用 t02 樣板自動產生(Version:1)
+#160318-00025#45 2016/04/19 by 07959     將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#160905-00007#19 2016/09/05 By 01531     调整系统中无ENT的SQL条件增加ent
+#161006-00008#2  2016/10/18 By 06814     修正aooi500相關邏輯
+#170120-00038#1  2017/01/23 By 06814     修正WHERE 條件沒下ent
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+
+#end add-point
+    
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_inaa_d RECORD
+       inaastus LIKE inaa_t.inaastus, 
+   inaasite LIKE inaa_t.inaasite, 
+   inaasite_desc LIKE type_t.chr500, 
+   inaa001 LIKE inaa_t.inaa001, 
+   inayl003 LIKE inayl_t.inayl003
+       END RECORD
+PRIVATE TYPE type_g_inaa2_d RECORD
+       pmcqstus LIKE pmcq_t.pmcqstus, 
+   pmcq002 LIKE pmcq_t.pmcq002, 
+   pmcq003 LIKE pmcq_t.pmcq003, 
+   pmcq003_desc LIKE type_t.chr500
+       END RECORD
+PRIVATE TYPE type_g_inaa3_d RECORD
+       pmcq002 LIKE pmcq_t.pmcq002, 
+   pmcq003 LIKE pmcq_t.pmcq003, 
+   pmcqownid LIKE pmcq_t.pmcqownid, 
+   pmcqownid_desc LIKE type_t.chr500, 
+   pmcqowndp LIKE pmcq_t.pmcqowndp, 
+   pmcqowndp_desc LIKE type_t.chr500, 
+   pmcqcrtid LIKE pmcq_t.pmcqcrtid, 
+   pmcqcrtid_desc LIKE type_t.chr500, 
+   pmcqcrtdp LIKE pmcq_t.pmcqcrtdp, 
+   pmcqcrtdp_desc LIKE type_t.chr500, 
+   pmcqcrtdt DATETIME YEAR TO SECOND, 
+   pmcqmodid LIKE pmcq_t.pmcqmodid, 
+   pmcqmodid_desc LIKE type_t.chr500, 
+   pmcqmoddt DATETIME YEAR TO SECOND
+       END RECORD
+PRIVATE TYPE type_g_inaa4_d RECORD
+       pmcrstus LIKE pmcr_t.pmcrstus, 
+   pmcr002 LIKE pmcr_t.pmcr002
+       END RECORD
+PRIVATE TYPE type_g_inaa5_d RECORD
+       pmcr002 LIKE pmcr_t.pmcr002, 
+   pmcrownid LIKE pmcr_t.pmcrownid, 
+   pmcrownid_desc LIKE type_t.chr500, 
+   pmcrowndp LIKE pmcr_t.pmcrowndp, 
+   pmcrowndp_desc LIKE type_t.chr500, 
+   pmcrcrtid LIKE pmcr_t.pmcrcrtid, 
+   pmcrcrtid_desc LIKE type_t.chr500, 
+   pmcrcrtdp LIKE pmcr_t.pmcrcrtdp, 
+   pmcrcrtdp_desc LIKE type_t.chr500, 
+   pmcrcrtdt DATETIME YEAR TO SECOND, 
+   pmcrmodid LIKE pmcr_t.pmcrmodid, 
+   pmcrmodid_desc LIKE type_t.chr500, 
+   pmcrmoddt DATETIME YEAR TO SECOND
+       END RECORD
+PRIVATE TYPE type_g_inaa6_d RECORD
+       pmcsstus LIKE pmcs_t.pmcsstus, 
+   pmcs002 LIKE pmcs_t.pmcs002, 
+   pmcs002_desc LIKE type_t.chr500
+       END RECORD
+PRIVATE TYPE type_g_inaa7_d RECORD
+       pmcs002 LIKE pmcs_t.pmcs002, 
+   pmcsownid LIKE pmcs_t.pmcsownid, 
+   pmcsownid_desc LIKE type_t.chr500, 
+   pmcsowndp LIKE pmcs_t.pmcsowndp, 
+   pmcsowndp_desc LIKE type_t.chr500, 
+   pmcscrtid LIKE pmcs_t.pmcscrtid, 
+   pmcscrtid_desc LIKE type_t.chr500, 
+   pmcscrtdp LIKE pmcs_t.pmcscrtdp, 
+   pmcscrtdp_desc LIKE type_t.chr500, 
+   pmcscrtdt DATETIME YEAR TO SECOND, 
+   pmcsmodid LIKE pmcs_t.pmcsmodid, 
+   pmcsmodid_desc LIKE type_t.chr500, 
+   pmcsmoddt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+DEFINE g_detail_multi_table_t    RECORD
+      inayl001 LIKE inayl_t.inayl001,
+      inayl002 LIKE inayl_t.inayl002,
+      inayl003 LIKE inayl_t.inayl003
+      END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_inaa_d
+DEFINE g_master_t                   type_g_inaa_d
+DEFINE g_inaa_d          DYNAMIC ARRAY OF type_g_inaa_d
+DEFINE g_inaa_d_t        type_g_inaa_d
+DEFINE g_inaa_d_o        type_g_inaa_d
+DEFINE g_inaa2_d   DYNAMIC ARRAY OF type_g_inaa2_d
+DEFINE g_inaa2_d_t type_g_inaa2_d
+DEFINE g_inaa2_d_o type_g_inaa2_d
+DEFINE g_inaa3_d   DYNAMIC ARRAY OF type_g_inaa3_d
+DEFINE g_inaa3_d_t type_g_inaa3_d
+DEFINE g_inaa3_d_o type_g_inaa3_d
+DEFINE g_inaa4_d   DYNAMIC ARRAY OF type_g_inaa4_d
+DEFINE g_inaa4_d_t type_g_inaa4_d
+DEFINE g_inaa4_d_o type_g_inaa4_d
+DEFINE g_inaa5_d   DYNAMIC ARRAY OF type_g_inaa5_d
+DEFINE g_inaa5_d_t type_g_inaa5_d
+DEFINE g_inaa5_d_o type_g_inaa5_d
+DEFINE g_inaa6_d   DYNAMIC ARRAY OF type_g_inaa6_d
+DEFINE g_inaa6_d_t type_g_inaa6_d
+DEFINE g_inaa6_d_o type_g_inaa6_d
+DEFINE g_inaa7_d   DYNAMIC ARRAY OF type_g_inaa7_d
+DEFINE g_inaa7_d_t type_g_inaa7_d
+DEFINE g_inaa7_d_o type_g_inaa7_d
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE g_ac_last            LIKE type_t.num5              
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_detail_idx         LIKE type_t.num5              #單身所在筆數(第一階單身)
+DEFINE g_detail_idx2        LIKE type_t.num5              #單身所在筆數(第二階單身)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身總筆數 (第一階單身)
+DEFINE g_detail_cnt2        LIKE type_t.num5              #單身總筆數 (第二階單身)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_current_page       LIKE type_t.num5              #判斷單身筆數用
+DEFINE g_loc                LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+DEFINE g_wc2_table2   STRING
+ 
+DEFINE g_wc2_table3   STRING
+ 
+DEFINE g_wc2_table4   STRING
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmi830.main" >}
+#應用 a26 樣板自動產生(Version:1)
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   DEFINE l_success LIKE type_t.num5   #150308-00001#3 150309 pomelo add
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:作業初始化
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   
+   #end add-point
+ 
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmi830 WITH FORM cl_ap_formpath("apm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apmi830_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apmi830_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_apmi830
+      
+   END IF 
+   
+   
+   
+ 
+   #add-point:作業離開前
+   CALL s_aooi500_drop_temp() RETURNING l_success   #150308-00001#3 150309 pomelo add
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="apmi830.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION apmi830_init()
+   #add-point:init段define
+   DEFINE l_success LIKE type_t.num5   #150308-00001#3 150309 pomelo add
+   #end add-point   
+   
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show = 1
+   
+      CALL cl_set_combo_scc('pmcq002','6077') 
+   CALL cl_set_combo_scc('pmcr002','6014') 
+ 
+   LET l_ac = 1
+   LET g_detail_multi_table_t.inayl001 = g_inaa_d[l_ac].inaa001
+LET g_detail_multi_table_t.inayl002 = g_dlang
+LET g_detail_multi_table_t.inayl003 = g_inaa_d[l_ac].inayl003
+ 
+   
+   
+   
+   
+   
+   
+ 
+   #避免USER直接進入第二單身時無資料
+   IF g_inaa_d.getLength() > 0 THEN
+      LET g_master_t.* = g_inaa_d[1].*
+      LET g_master.* = g_inaa_d[1].*
+   END IF
+ 
+   #add-point:畫面資料初始化
+   LET g_errshow = 1   
+   CALL s_aooi500_create_temp() RETURNING l_success   #150308-00001#3 150309 pomelo add
+   #end add-point
+   
+   CALL apmi830_default_search()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION apmi830_ui_dialog()
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE li_idx   LIKE type_t.num5
+   #add-point:ui_dialog段define
+
+   #end add-point 
+ 
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm() 
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   #add-point:ui_dialog段before dialog 
+   
+   #end add-point
+   
+   WHILE TRUE
+   
+      #add-point:ui_dialog段before while
+
+      #end add-point
+   
+      CALL apmi830_b_fill(g_wc)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_inaa_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET g_current_page = 1
+      
+            BEFORE ROW
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_master.* = g_inaa_d[g_detail_idx].*
+               CALL cl_show_fld_cont()
+               CALL apmi830_fetch()
+               CALL apmi830_idx_chk('m')
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:1)
+   CALL apmi830_set_pk_array()
+   #add-point:ON ACTION agendum
+   LET g_loc = 'd'
+   CALL apmi830_detail_show()
+   LET g_loc = 'm'
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+         
+         DISPLAY ARRAY g_inaa2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'd' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               END IF
+               LET g_loc = 'd'
+               LET g_current_page = 2
+         
+            BEFORE ROW
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               CALL apmi830_idx_chk('d')
+               LET g_master.* = g_inaa_d[g_detail_idx].*
+               CALL cl_show_fld_cont() 
+               
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+         DISPLAY ARRAY g_inaa3_d TO s_detail3.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'd' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               END IF
+               LET g_loc = 'd'
+               LET g_current_page = 3
+         
+            BEFORE ROW
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx2
+               CALL apmi830_idx_chk('d')
+               LET g_master.* = g_inaa_d[g_detail_idx].*
+               CALL cl_show_fld_cont() 
+               
+            #自訂ACTION(detail_show,page_3)
+            
+               
+         END DISPLAY
+         DISPLAY ARRAY g_inaa4_d TO s_detail4.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'd' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               END IF
+               LET g_loc = 'd'
+               LET g_current_page = 4
+         
+            BEFORE ROW
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail4")
+               LET l_ac = g_detail_idx2
+               CALL apmi830_idx_chk('d')
+               LET g_master.* = g_inaa_d[g_detail_idx].*
+               CALL cl_show_fld_cont() 
+               
+            #自訂ACTION(detail_show,page_4)
+            
+               
+         END DISPLAY
+         DISPLAY ARRAY g_inaa5_d TO s_detail5.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'd' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               END IF
+               LET g_loc = 'd'
+               LET g_current_page = 5
+         
+            BEFORE ROW
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail5")
+               LET l_ac = g_detail_idx2
+               CALL apmi830_idx_chk('d')
+               LET g_master.* = g_inaa_d[g_detail_idx].*
+               CALL cl_show_fld_cont() 
+               
+            #自訂ACTION(detail_show,page_5)
+            
+               
+         END DISPLAY
+         DISPLAY ARRAY g_inaa6_d TO s_detail6.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'd' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               END IF
+               LET g_loc = 'd'
+               LET g_current_page = 6
+         
+            BEFORE ROW
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail6")
+               LET l_ac = g_detail_idx2
+               CALL apmi830_idx_chk('d')
+               LET g_master.* = g_inaa_d[g_detail_idx].*
+               CALL cl_show_fld_cont() 
+               
+            #自訂ACTION(detail_show,page_6)
+            
+               
+         END DISPLAY
+         DISPLAY ARRAY g_inaa7_d TO s_detail7.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'd' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               END IF
+               LET g_loc = 'd'
+               LET g_current_page = 7
+         
+            BEFORE ROW
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail7")
+               LET l_ac = g_detail_idx2
+               CALL apmi830_idx_chk('d')
+               LET g_master.* = g_inaa_d[g_detail_idx].*
+               CALL cl_show_fld_cont() 
+               
+            #自訂ACTION(detail_show,page_7)
+            
+               
+         END DISPLAY
+ 
+      
+         #add-point:ui_dialog段自定義display array
+
+         #end add-point
+    
+         BEFORE DIALOG
+            CALL cl_set_act_visible("insert,delete,reproduce",FALSE)   #unstrandard：新增/刪除/複製,按鈕失效並灰階顯示
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            IF g_detail_idx > 0 THEN
+               IF g_detail_idx > g_inaa_d.getLength() THEN
+                  LET g_detail_idx = g_inaa_d.getLength()
+               END IF
+               CALL DIALOG.setCurrentRow("s_detail1", g_detail_idx)
+               LET l_ac = g_detail_idx
+            END IF 
+            LET g_detail_idx = l_ac
+            NEXT FIELD CURRENT
+         
+         AFTER DIALOG
+            #add-point:ui_dialog段after dialog
+
+            #end add-point
+         
+         
+         #應用 a43 樣板自動產生(Version:1)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL apmi830_modify()
+               #add-point:ON ACTION modify
+         
+               #END add-point
+               
+            END IF
+ 
+ 
+         #應用 a43 樣板自動產生(Version:1)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL apmi830_modify()
+               #add-point:ON ACTION modify_detail
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #應用 a43 樣板自動產生(Version:1)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               
+               #add-point:ON ACTION delete
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #應用 a43 樣板自動產生(Version:1)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #應用 a43 樣板自動產生(Version:1)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #應用 a43 樣板自動產生(Version:1)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL apmi830_query()
+               #add-point:ON ACTION query
+
+               #END add-point
+               #應用 a59 樣板自動產生(Version:1)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+               CALL g_curr_diag.setCurrentRow("s_detail3",1)
+               CALL g_curr_diag.setCurrentRow("s_detail4",1)
+               CALL g_curr_diag.setCurrentRow("s_detail5",1)
+               CALL g_curr_diag.setCurrentRow("s_detail6",1)
+               CALL g_curr_diag.setCurrentRow("s_detail7",1)
+ 
+			   
+ 
+ 
+            END IF
+ 
+ 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+           
+         
+         
+         #應用 a46 樣板自動產生(Version:1)
+         #新增相關文件
+         ON ACTION related_document
+            CALL apmi830_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL apmi830_set_pk_array()
+            #add-point:ON ACTION agendum
+
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL apmi830_set_pk_array()
+            #add-point:ON ACTION followup
+
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+      #2015/3/2 lori add 增加標準功能：匯出excel------(S)
+      ON ACTION exporttoexcel
+         LET g_action_choice="exporttoexcel"
+         IF cl_auth_chk_act("exporttoexcel") THEN
+            CALL g_export_node.clear()
+            LET g_export_node[1] = base.typeInfo.create(g_inaa_d)
+            LET g_export_id[1]   = "s_detail1"
+            LET g_export_node[2] = base.typeInfo.create(g_inaa2_d)
+            LET g_export_id[2]   = "s_detail2"
+            LET g_export_node[3] = base.typeInfo.create(g_inaa3_d)
+            LET g_export_id[3]   = "s_detail3"
+            LET g_export_node[4] = base.typeInfo.create(g_inaa4_d)
+            LET g_export_id[4]   = "s_detail4"
+            LET g_export_node[5] = base.typeInfo.create(g_inaa5_d)
+            LET g_export_id[5]   = "s_detail5"
+            LET g_export_node[6] = base.typeInfo.create(g_inaa6_d)
+            LET g_export_id[6]   = "s_detail6"
+            LET g_export_node[7] = base.typeInfo.create(g_inaa7_d)
+            LET g_export_id[7]   = "s_detail7"
+            
+            CALL cl_export_to_excel_getpage()
+            CALL cl_export_to_excel()
+         END IF 
+      #2015/3/2 lori add 增加標準功能：匯出excel------(E)
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION apmi830_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_inaa_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET g_detail_idx = l_ac
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON inaastus,inaasite,inaa001,inayl003
+           FROM s_detail1[1].inaastus,s_detail1[1].inaasite,s_detail1[1].inaa001,s_detail1[1].inayl003 
+ 
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       #應用 a11 樣板自動產生(Version:1)
+         #共用欄位查詢處理
+         ##----<<inaacrtdt>>----
+         
+         #----<<inaamoddt>>----
+         
+         #----<<inaacnfdt>>----
+         
+         #----<<inaapstdt>>----
+ 
+ 
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD inaastus
+            #add-point:BEFORE FIELD inaastus
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD inaastus
+            
+            #add-point:AFTER FIELD inaastus
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.inaastus
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD inaastus
+            #add-point:ON ACTION controlp INFIELD inaastus
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1.inaasite
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD inaasite
+            #add-point:ON ACTION controlp INFIELD inaasite
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'inaasite',g_site,'c') #150308-00001#3 150309 pomelo add 'c'
+            CALL q_ooef001_24()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaasite  #顯示到畫面上
+            NEXT FIELD inaasite                     #返回原欄位
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD inaasite
+            #add-point:BEFORE FIELD inaasite
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD inaasite
+            
+            #add-point:AFTER FIELD inaasite
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.inaa001
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD inaa001
+            #add-point:ON ACTION controlp INFIELD inaa001
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaa001  #顯示到畫面上
+            NEXT FIELD inaa001                     #返回原欄位
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD inaa001
+            #add-point:BEFORE FIELD inaa001
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD inaa001
+            
+            #add-point:AFTER FIELD inaa001
+            
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD inayl003
+            #add-point:BEFORE FIELD inayl003
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD inayl003
+            
+            #add-point:AFTER FIELD inayl003
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.inayl003
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD inayl003
+            #add-point:ON ACTION controlp INFIELD inayl003
+            
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+      CONSTRUCT g_wc2_table2 ON pmcqstus,pmcq002,pmcq003,pmcq003_desc,pmcqownid,pmcqowndp,pmcqcrtid, 
+          pmcqcrtdp,pmcqcrtdt,pmcqmodid,pmcqmoddt
+           FROM s_detail2[1].pmcqstus,s_detail2[1].pmcq002,s_detail2[1].pmcq003,s_detail2[1].pmcq003_desc, 
+               s_detail3[1].pmcqownid,s_detail3[1].pmcqowndp,s_detail3[1].pmcqcrtid,s_detail3[1].pmcqcrtdp, 
+               s_detail3[1].pmcqcrtdt,s_detail3[1].pmcqmodid,s_detail3[1].pmcqmoddt
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       #應用 a11 樣板自動產生(Version:1)
+         #共用欄位查詢處理
+         ##----<<pmcqcrtdt>>----
+         AFTER FIELD pmcqcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<pmcqmoddt>>----
+         AFTER FIELD pmcqmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<pmcqcnfdt>>----
+         
+         #----<<pmcqpstdt>>----
+ 
+ 
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcqstus
+            #add-point:BEFORE FIELD pmcqstus
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcqstus
+            
+            #add-point:AFTER FIELD pmcqstus
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.pmcqstus
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcqstus
+            #add-point:ON ACTION controlp INFIELD pmcqstus
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcq002
+            #add-point:BEFORE FIELD pmcq002
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcq002
+            
+            #add-point:AFTER FIELD pmcq002
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.pmcq002
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcq002
+            #add-point:ON ACTION controlp INFIELD pmcq002
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcq003
+            #add-point:BEFORE FIELD pmcq003
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcq003
+            
+            #add-point:AFTER FIELD pmcq003
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.pmcq003
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcq003
+            #add-point:ON ACTION controlp INFIELD pmcq003
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcq003_desc
+            #add-point:BEFORE FIELD pmcq003_desc
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcq003_desc
+            
+            #add-point:AFTER FIELD pmcq003_desc
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.pmcq003_desc
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcq003_desc
+            #add-point:ON ACTION controlp INFIELD pmcq003_desc
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.page3.pmcqownid
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcqownid
+            #add-point:ON ACTION controlp INFIELD pmcqownid
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcqownid  #顯示到畫面上
+            NEXT FIELD pmcqownid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcqownid
+            #add-point:BEFORE FIELD pmcqownid
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcqownid
+            
+            #add-point:AFTER FIELD pmcqownid
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.pmcqowndp
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcqowndp
+            #add-point:ON ACTION controlp INFIELD pmcqowndp
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcqowndp  #顯示到畫面上
+            NEXT FIELD pmcqowndp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcqowndp
+            #add-point:BEFORE FIELD pmcqowndp
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcqowndp
+            
+            #add-point:AFTER FIELD pmcqowndp
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.pmcqcrtid
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcqcrtid
+            #add-point:ON ACTION controlp INFIELD pmcqcrtid
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcqcrtid  #顯示到畫面上
+            NEXT FIELD pmcqcrtid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcqcrtid
+            #add-point:BEFORE FIELD pmcqcrtid
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcqcrtid
+            
+            #add-point:AFTER FIELD pmcqcrtid
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page3.pmcqcrtdp
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcqcrtdp
+            #add-point:ON ACTION controlp INFIELD pmcqcrtdp
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcqcrtdp  #顯示到畫面上
+            NEXT FIELD pmcqcrtdp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcqcrtdp
+            #add-point:BEFORE FIELD pmcqcrtdp
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcqcrtdp
+            
+            #add-point:AFTER FIELD pmcqcrtdp
+            
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcqcrtdt
+            #add-point:BEFORE FIELD pmcqcrtdt
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.page3.pmcqmodid
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcqmodid
+            #add-point:ON ACTION controlp INFIELD pmcqmodid
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcqmodid  #顯示到畫面上
+            NEXT FIELD pmcqmodid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcqmodid
+            #add-point:BEFORE FIELD pmcqmodid
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcqmodid
+            
+            #add-point:AFTER FIELD pmcqmodid
+            
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcqmoddt
+            #add-point:BEFORE FIELD pmcqmoddt
+            
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+ 
+      CONSTRUCT g_wc2_table3 ON pmcrstus,pmcr002,pmcrownid,pmcrowndp,pmcrcrtid,pmcrcrtdp,pmcrcrtdt,pmcrmodid, 
+          pmcrmoddt
+           FROM s_detail4[1].pmcrstus,s_detail4[1].pmcr002,s_detail5[1].pmcrownid,s_detail5[1].pmcrowndp, 
+               s_detail5[1].pmcrcrtid,s_detail5[1].pmcrcrtdp,s_detail5[1].pmcrcrtdt,s_detail5[1].pmcrmodid, 
+               s_detail5[1].pmcrmoddt
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 3)
+       #應用 a11 樣板自動產生(Version:1)
+         #共用欄位查詢處理
+         ##----<<pmcrcrtdt>>----
+         AFTER FIELD pmcrcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<pmcrmoddt>>----
+         AFTER FIELD pmcrmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<pmcrcnfdt>>----
+         
+         #----<<pmcrpstdt>>----
+ 
+ 
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcrstus
+            #add-point:BEFORE FIELD pmcrstus
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcrstus
+            
+            #add-point:AFTER FIELD pmcrstus
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page4.pmcrstus
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcrstus
+            #add-point:ON ACTION controlp INFIELD pmcrstus
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcr002
+            #add-point:BEFORE FIELD pmcr002
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcr002
+            
+            #add-point:AFTER FIELD pmcr002
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page4.pmcr002
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcr002
+            #add-point:ON ACTION controlp INFIELD pmcr002
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.page5.pmcrownid
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcrownid
+            #add-point:ON ACTION controlp INFIELD pmcrownid
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcrownid  #顯示到畫面上
+            NEXT FIELD pmcrownid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcrownid
+            #add-point:BEFORE FIELD pmcrownid
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcrownid
+            
+            #add-point:AFTER FIELD pmcrownid
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page5.pmcrowndp
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcrowndp
+            #add-point:ON ACTION controlp INFIELD pmcrowndp
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcrowndp  #顯示到畫面上
+            NEXT FIELD pmcrowndp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcrowndp
+            #add-point:BEFORE FIELD pmcrowndp
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcrowndp
+            
+            #add-point:AFTER FIELD pmcrowndp
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page5.pmcrcrtid
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcrcrtid
+            #add-point:ON ACTION controlp INFIELD pmcrcrtid
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcrcrtid  #顯示到畫面上
+            NEXT FIELD pmcrcrtid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcrcrtid
+            #add-point:BEFORE FIELD pmcrcrtid
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcrcrtid
+            
+            #add-point:AFTER FIELD pmcrcrtid
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page5.pmcrcrtdp
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcrcrtdp
+            #add-point:ON ACTION controlp INFIELD pmcrcrtdp
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcrcrtdp  #顯示到畫面上
+            NEXT FIELD pmcrcrtdp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcrcrtdp
+            #add-point:BEFORE FIELD pmcrcrtdp
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcrcrtdp
+            
+            #add-point:AFTER FIELD pmcrcrtdp
+            
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcrcrtdt
+            #add-point:BEFORE FIELD pmcrcrtdt
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.page5.pmcrmodid
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcrmodid
+            #add-point:ON ACTION controlp INFIELD pmcrmodid
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcrmodid  #顯示到畫面上
+            NEXT FIELD pmcrmodid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcrmodid
+            #add-point:BEFORE FIELD pmcrmodid
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcrmodid
+            
+            #add-point:AFTER FIELD pmcrmodid
+            
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcrmoddt
+            #add-point:BEFORE FIELD pmcrmoddt
+            
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+ 
+      CONSTRUCT g_wc2_table4 ON pmcsstus,pmcs002,pmcsownid,pmcsowndp,pmcscrtid,pmcscrtdp,pmcscrtdt,pmcsmodid, 
+          pmcsmoddt
+           FROM s_detail6[1].pmcsstus,s_detail6[1].pmcs002,s_detail7[1].pmcsownid,s_detail7[1].pmcsowndp, 
+               s_detail7[1].pmcscrtid,s_detail7[1].pmcscrtdp,s_detail7[1].pmcscrtdt,s_detail7[1].pmcsmodid, 
+               s_detail7[1].pmcsmoddt
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 4)
+       #應用 a11 樣板自動產生(Version:1)
+         #共用欄位查詢處理
+         ##----<<pmcscrtdt>>----
+         AFTER FIELD pmcscrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<pmcsmoddt>>----
+         AFTER FIELD pmcsmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<pmcscnfdt>>----
+         
+         #----<<pmcspstdt>>----
+ 
+ 
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcsstus
+            #add-point:BEFORE FIELD pmcsstus
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcsstus
+            
+            #add-point:AFTER FIELD pmcsstus
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page6.pmcsstus
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcsstus
+            #add-point:ON ACTION controlp INFIELD pmcsstus
+            
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcs002
+            #add-point:BEFORE FIELD pmcs002
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcs002
+            
+            #add-point:AFTER FIELD pmcs002
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page6.pmcs002
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcs002
+            #add-point:ON ACTION controlp INFIELD pmcs002
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+               
+            IF s_aooi500_setpoint(g_prog,'pmcs002') THEN
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmcs002',g_site,'c') #150308-00001#3 150309 pomelo add 'c'
+               CALL q_ooef001_24()
+               DISPLAY g_qryparam.return1 TO pmcs002          #顯示到畫面上
+               NEXT FIELD pmcs002                             #返回原欄位            
+            ELSE
+               CALL q_ooef001_35()                        #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmcs002      #顯示到畫面上
+               NEXT FIELD pmcs002                         #返回原欄位
+            END IF
+            #END add-point
+ 
+         #Ctrlp:construct.c.page7.pmcsownid
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcsownid
+            #add-point:ON ACTION controlp INFIELD pmcsownid
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcsownid  #顯示到畫面上
+            NEXT FIELD pmcsownid                     #返回原欄位
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcsownid
+            #add-point:BEFORE FIELD pmcsownid
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcsownid
+            
+            #add-point:AFTER FIELD pmcsownid
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page7.pmcsowndp
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcsowndp
+            #add-point:ON ACTION controlp INFIELD pmcsowndp
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcsowndp  #顯示到畫面上
+            NEXT FIELD pmcsowndp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcsowndp
+            #add-point:BEFORE FIELD pmcsowndp
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcsowndp
+            
+            #add-point:AFTER FIELD pmcsowndp
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page7.pmcscrtid
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcscrtid
+            #add-point:ON ACTION controlp INFIELD pmcscrtid
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcscrtid  #顯示到畫面上
+            NEXT FIELD pmcscrtid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcscrtid
+            #add-point:BEFORE FIELD pmcscrtid
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcscrtid
+            
+            #add-point:AFTER FIELD pmcscrtid
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page7.pmcscrtdp
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcscrtdp
+            #add-point:ON ACTION controlp INFIELD pmcscrtdp
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcscrtdp  #顯示到畫面上
+            NEXT FIELD pmcscrtdp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcscrtdp
+            #add-point:BEFORE FIELD pmcscrtdp
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcscrtdp
+            
+            #add-point:AFTER FIELD pmcscrtdp
+            
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcscrtdt
+            #add-point:BEFORE FIELD pmcscrtdt
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.page7.pmcsmodid
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcsmodid
+            #add-point:ON ACTION controlp INFIELD pmcsmodid
+            #應用 a08 樣板自動產生(Version:1)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmcsmodid  #顯示到畫面上
+            NEXT FIELD pmcsmodid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcsmodid
+            #add-point:BEFORE FIELD pmcsmodid
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcsmodid
+            
+            #add-point:AFTER FIELD pmcsmodid
+            
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcsmoddt
+            #add-point:BEFORE FIELD pmcsmoddt
+            
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+  
+      #add-point:query段more_construct
+      
+      #end add-point 
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         
+         #end add-point  
+ 
+      ON ACTION qbe_select     #條件查詢
+         CALL cl_qbe_list('m') RETURNING ls_wc
+ 
+      ON ACTION qbe_save       #條件儲存
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+   ELSE
+      #資料導回第一筆
+      LET g_detail_idx  = 1
+      LET g_detail_idx2 = 1
+   END IF
+   
+   LET g_wc = g_wc_table 
+ 
+              , " AND ", g_wc2_table2
+ 
+              , " AND ", g_wc2_table3
+ 
+              , " AND ", g_wc2_table4
+ 
+ 
+        
+   LET g_wc2 = " 1=1"
+               , " AND ", g_wc2_table2
+ 
+               , " AND ", g_wc2_table3
+ 
+               , " AND ", g_wc2_table4
+ 
+ 
+        
+   #add-point:cs段after_construct
+   
+   #end add-point
+   
+   LET g_error_show = 1
+   CALL apmi830_b_fill(g_wc)
+   LET l_ac = g_detail_idx
+   
+   CALL apmi830_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+ 
+   #資料導回第一筆(假設有資料)
+   IF g_inaa_d.getLength() > 0 THEN
+      DISPLAY g_detail_idx  TO FORMONLY.h_index
+   ELSE
+      DISPLAY ' ' TO FORMONLY.h_index
+   END IF
+   IF g_inaa2_d.getLength() > 0 THEN
+      DISPLAY g_detail_idx2 TO FORMONLY.idx
+   ELSE
+      DISPLAY ' ' TO FORMONLY.idx
+   END IF
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.insert" >}
+#+ 資料修改
+PRIVATE FUNCTION apmi830_insert()
+   #add-point:insert段define
+   
+   #end add-point 
+ 
+   #add-point:insert段新增前
+   
+   #end add-point 
+   
+   #進入資料輸入段落
+   CALL g_inaa_d.clear() 
+   CALL g_inaa2_d.clear() 
+   CALL g_inaa3_d.clear() 
+   CALL g_inaa4_d.clear() 
+   CALL g_inaa5_d.clear() 
+   CALL g_inaa6_d.clear() 
+   CALL g_inaa7_d.clear() 
+ 
+   CALL apmi830_input('a')
+   
+   CALL apmi830_b_fill(g_wc)
+   
+   #add-point:insert段新增後
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.modify" >}
+#+ 資料新增
+PRIVATE FUNCTION apmi830_modify()
+   DEFINE l_ac_t LIKE type_t.num5
+   #add-point:modify段define
+   
+   #end add-point 
+ 
+    LET l_ac_t = g_detail_idx
+ 
+   #add-point:modify段新增前
+   
+   #end add-point 
+   
+   #進入資料輸入段落
+   CALL apmi830_input('u')
+    
+   IF INT_FLAG AND g_inaa_d.getLength() > 0 THEN
+      LET g_detail_idx = l_ac_t
+      LET l_ac = l_ac_t
+      CALL apmi830_fetch()
+   END IF
+   
+   #add-point:modify段新增後
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION apmi830_delete()
+   DEFINE li_ac LIKE type_t.num5
+   #add-point:delete段define
+   
+   #end add-point 
+   IF NOT cl_ask_delete() THEN
+      #不刪除
+      RETURN
+   END IF
+   
+   LET li_ac = ARR_CURR()
+   LET g_inaa_d_t.* = g_inaa_d[li_ac].*
+   LET g_inaa_d_o.* = g_inaa_d[li_ac].*
+   
+   CALL s_transaction_begin()  
+   
+   #add-point:delete段刪除前
+   
+   #end add-point 
+   
+   #刪除單頭
+   DELETE FROM inaa_t 
+         WHERE inaasite = g_inaa_d_t.inaasite
+           AND inaa001 = g_inaa_d_t.inaa001
+ 
+           
+   #add-point:delete段刪除中
+           AND inaaent = g_enterprise  #160905-00007#19
+   #end add-point 
+           
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "inaa_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:delete段刪除後
+   
+   #end add-point 
+   
+   #刪除單頭
+   #add-point:delete段刪除前
+   
+   #end add-point 
+   DELETE FROM pmcq_t 
+         WHERE pmcqsite = g_inaa_d_t.inaasite
+           AND pmcq001 = g_inaa_d_t.inaa001
+ 
+   #add-point:delete段刪除中
+           AND pmcqent = g_enterprise #160905-00007#19
+   #end add-point 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "pmcq_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      CALL s_transaction_end('N','0')
+      RETURN
+   ELSE
+      CALL s_transaction_end('Y','0')
+   END IF
+   #add-point:delete段刪除後
+   
+   #end add-point 
+ 
+   #add-point:delete段刪除前
+   #170120-00038#1 mark by beckxie(已有段落刪除pmcq_t與pmcr_t,將下方剛性結構註解)
+#   #end add-point 
+#   DELETE FROM pmcq_t 
+#         WHERE pmcrsite = g_inaa_d_t.inaasite
+#           AND pmcr001 = g_inaa_d_t.inaa001
+# 
+#   #add-point:delete段刪除中
+   #160905-00007#19 add s---
+   DELETE FROM pmcr_t 
+         WHERE pmcrsite = g_inaa_d_t.inaasite
+           AND pmcr001 = g_inaa_d_t.inaa001   
+           AND pmcrent = g_enterprise
+   #160905-00007#19 add e---          
+   #end add-point 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "pmcq_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      CALL s_transaction_end('N','0')
+      RETURN
+   ELSE
+      CALL s_transaction_end('Y','0')
+   END IF
+   #add-point:delete段刪除後
+   
+   #end add-point 
+ 
+   #add-point:delete段刪除前
+   
+   #end add-point 
+   DELETE FROM pmcr_t 
+         WHERE pmcssite = g_inaa_d_t.inaasite
+           AND pmcs001 = g_inaa_d_t.inaa001
+ 
+   #add-point:delete段刪除中
+   #160905-00007#19 add s---
+   DELETE FROM pmcs_t 
+         WHERE pmcssite = g_inaa_d_t.inaasite
+           AND pmcs001 = g_inaa_d_t.inaa001           
+           AND pmcsent = g_enterprise   
+   #160905-00007#19 add e---        
+   #end add-point 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "pmcr_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      CALL s_transaction_end('N','0')
+      RETURN
+   ELSE
+      CALL s_transaction_end('Y','0')
+   END IF
+   #add-point:delete段刪除後
+   
+   #end add-point 
+ 
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION apmi830_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_ac_t                LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                   LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num5
+   DEFINE  l_i                   LIKE type_t.num5
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num5
+   DEFINE  li_reproduce_target   LIKE type_t.num5
+   #add-point:input段define
+   DEFINE  l_acc_code            LIKE oocq_t.oocq001
+   DEFINE  l_success             LIKE type_t.num5
+   DEFINE  l_errno               STRING
+   DEFINE  l_imaal004            LIKE imaal_t.imaal004
+   #end add-point 
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+ 
+   #add-point:input段define_sql
+
+   #end add-point 
+   LET g_forupd_sql = "SELECT inaastus,inaasite,inaa001 FROM inaa_t WHERE inaaent=? AND inaa001=? FOR  
+       UPDATE"
+   #add-point:input段define_sql
+
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE apmi830_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+   
+ 
+   
+   #add-point:input段define_sql
+
+   #end add-point 
+   LET g_forupd_sql = "SELECT pmcqstus,pmcq002,pmcq003,pmcq002,pmcq003,pmcqownid,pmcqowndp,pmcqcrtid, 
+       pmcqcrtdp,pmcqcrtdt,pmcqmodid,pmcqmoddt FROM pmcq_t WHERE pmcqent=? AND pmcqsite=? AND pmcq001=?  
+       AND pmcq002=? AND pmcq003=? FOR UPDATE"
+   #add-point:input段define_sql
+
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE apmi830_bcl2 CURSOR FROM g_forupd_sql
+ 
+   #add-point:input段define_sql
+
+   #end add-point 
+   LET g_forupd_sql = "SELECT pmcrstus,pmcr002,pmcr002,pmcrownid,pmcrowndp,pmcrcrtid,pmcrcrtdp,pmcrcrtdt, 
+       pmcrmodid,pmcrmoddt FROM pmcr_t WHERE pmcrent=? AND pmcrsite=? AND pmcr001=? AND pmcr002=? FOR  
+       UPDATE"
+   #add-point:input段define_sql
+
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE apmi830_bcl3 CURSOR FROM g_forupd_sql
+ 
+   #add-point:input段define_sql
+
+   #end add-point 
+   LET g_forupd_sql = "SELECT pmcsstus,pmcs002,pmcs002,pmcsownid,pmcsowndp,pmcscrtid,pmcscrtdp,pmcscrtdt, 
+       pmcsmodid,pmcsmoddt FROM pmcs_t WHERE pmcsent=? AND pmcssite=? AND pmcs001=? AND pmcs002=? FOR  
+       UPDATE"
+   #add-point:input段define_sql
+
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE apmi830_bcl4 CURSOR FROM g_forupd_sql
+ 
+ 
+ 
+   LET lb_reproduce = FALSE
+   
+   #add-point:input段修改前
+
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+#Modify Begin-----
+#註：因資料階層與規格關係,需改成DISPLAY(inaa_t Display Only,But s_detail1 not support)
+       DISPLAY ARRAY g_inaa_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+          BEFORE DISPLAY 
+             #如果一直都在單頭則控制筆數位置
+             IF g_loc = 'm' THEN
+                CALL FGL_SET_ARR_CURR(g_detail_idx)
+             END IF
+             LET g_loc = 'm'
+             LET g_current_page = 1
+      
+          BEFORE ROW
+             LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+             LET l_ac = g_detail_idx
+             LET g_master.* = g_inaa_d[g_detail_idx].*
+             CALL cl_show_fld_cont()
+             CALL apmi830_fetch()
+             CALL apmi830_idx_chk('m')
+             CALL apmi830_set_pk_array()
+             CALL cl_user_overview_set_follow_pic()
+       END DISPLAY
+#Modify End-----
+ 
+#Standard Begin------
+#      #Page1 預設值產生於此處
+#      INPUT ARRAY g_inaa_d FROM s_detail1.*
+#          ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+#                  INSERT ROW = l_allow_insert,
+#                  DELETE ROW = l_allow_delete,
+#                  APPEND ROW = l_allow_insert)
+# 
+#         #自訂ACTION(detail_input,page_1)
+#         
+# 
+#         #應用 a43 樣板自動產生(Version:1)
+#         ON ACTION update_item
+#            LET g_action_choice="update_item"
+#            IF cl_auth_chk_act("update_item") THEN
+#               
+#               #add-point:ON ACTION update_item
+
+#               #END add-point
+#            END IF
+# 
+# 
+#         
+#         BEFORE INPUT
+#            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+#              CALL FGL_SET_ARR_CURR(g_inaa_d.getLength()+1) 
+#              LET g_insert = 'N' 
+#           END IF 
+# 
+#            LET g_current_page = 1
+#            IF p_cmd = 'u' THEN
+#               CALL apmi830_b_fill(g_wc)
+#            END IF
+#            LET g_loc = 'm'
+#            LET g_detail_cnt = g_inaa_d.getLength()
+#            #add-point:資料輸入前
+
+#            #end add-point
+#            
+#         BEFORE ROW
+#            LET l_cmd = ''
+#            LET l_ac = ARR_CURR()
+#            LET g_ac_last = l_ac
+#            LET g_detail_idx = l_ac
+#            LET g_master_t.* = g_inaa_d[l_ac].*
+#            LET g_master.* = g_inaa_d[l_ac].*
+#            LET l_lock_sw = 'N'            #DEFAULT
+#            LET l_n = ARR_COUNT()
+#            LET g_detail_idx = l_ac
+#         
+#            CALL s_transaction_begin()
+#            LET g_detail_cnt = g_inaa_d.getLength()
+#            
+#            IF g_detail_cnt >= l_ac 
+#               AND g_inaa_d[l_ac].inaasite IS NOT NULL
+#               AND g_inaa_d[l_ac].inaa001 IS NOT NULL
+# 
+#            THEN
+#               LET l_cmd='u'
+#               LET g_inaa_d_t.* = g_inaa_d[l_ac].*  #BACKUP
+#               LET g_inaa_d_o.* = g_inaa_d[l_ac].*  #BACKUP
+#               IF NOT apmi830_lock_b("inaa_t") THEN
+#                  LET l_lock_sw='Y'
+#               ELSE
+#                  FETCH apmi830_bcl INTO g_inaa_d[l_ac].inaastus,g_inaa_d[l_ac].inaasite,g_inaa_d[l_ac].inaa001 
+#
+#                  IF SQLCA.sqlcode THEN
+#                     INITIALIZE g_errparam TO NULL 
+#                     LET g_errparam.extend = g_inaa_d_t.inaasite 
+#                     LET g_errparam.code   = SQLCA.sqlcode 
+#                     LET g_errparam.popup  = TRUE 
+#                     CALL cl_err()
+#                     LET l_lock_sw = "Y"
+#                  END IF
+#                  CALL cl_show_fld_cont()
+#                  #CALL apmi830_detail_show()
+#               END IF
+#            ELSE
+#               LET l_cmd='a'
+#            END IF
+#            CALL apmi830_set_entry_b(l_cmd)
+#            CALL apmi830_set_no_entry_b(l_cmd)
+#            #add-point:input段before row
+
+#            #end add-point  
+#            #其他table資料備份(確定是否更改用)
+#            LET g_detail_multi_table_t.inayl001 = g_inaa_d[l_ac].inaa001
+#LET g_detail_multi_table_t.inayl002 = g_dlang
+#LET g_detail_multi_table_t.inayl003 = g_inaa_d[l_ac].inayl003
+# 
+#            #其他table進行lock
+#                        INITIALIZE l_var_keys TO NULL 
+#            INITIALIZE l_field_keys TO NULL 
+#            LET l_field_keys[01] = 'inayl001'
+#            LET l_var_keys[01] = g_inaa_d[l_ac].inaa001
+#            LET l_field_keys[02] = 'inayl002'
+#            LET l_var_keys[02] = g_dlang
+#            IF NOT cl_multitable_lock(l_var_keys,l_field_keys,'inayl_t') THEN
+#               RETURN 
+#            END IF 
+# 
+#            #讀取對應的單身資料
+#            CALL apmi830_fetch()
+#            CALL apmi830_idx_chk('m')
+# 
+#         BEFORE INSERT
+#            LET g_detail_multi_table_t.inayl001 = g_inaa_d[l_ac].inaa001
+#LET g_detail_multi_table_t.inayl002 = g_dlang
+#LET g_detail_multi_table_t.inayl003 = g_inaa_d[l_ac].inayl003
+# 
+#            #判斷能否在此頁面進行資料新增
+#            
+#            #清空下層單身
+#                        CALL g_inaa2_d.clear()
+#            CALL g_inaa3_d.clear()
+#            CALL g_inaa4_d.clear()
+#            CALL g_inaa5_d.clear()
+#            CALL g_inaa6_d.clear()
+#            CALL g_inaa7_d.clear()
+# 
+#            LET l_n = ARR_COUNT()
+#            LET l_cmd = 'a'
+#            INITIALIZE g_inaa_d[l_ac].* TO NULL 
+#            INITIALIZE g_inaa_d_t.* TO NULL 
+#            INITIALIZE g_inaa_d_o.* TO NULL 
+#            #公用欄位給值(單身)
+#            #應用 a14 樣板自動產生(Version:1)    
+#      #公用欄位新增給值
+#      LET g_inaa_d[l_ac].inaastus = ""
+# 
+# 
+#                  LET g_inaa_d[l_ac].inaastus = "Y"
+# 
+#            #add-point:modify段before備份
+
+#            #end add-point
+#            LET g_inaa_d_t.* = g_inaa_d[l_ac].*     #新輸入資料
+#            LET g_inaa_d_o.* = g_inaa_d[l_ac].*     #新輸入資料
+#            CALL cl_show_fld_cont()
+#            CALL apmi830_set_entry_b("a")
+#            CALL apmi830_set_no_entry_b("a")
+#            IF lb_reproduce THEN
+#               LET lb_reproduce = FALSE
+#               LET g_inaa_d[li_reproduce_target].* = g_inaa_d[li_reproduce].*
+# 
+#               LET g_inaa_d[g_inaa_d.getLength()].inaasite = NULL
+#               LET g_inaa_d[g_inaa_d.getLength()].inaa001 = NULL
+# 
+#            END IF
+#            #add-point:input段before insert
+
+#            #end add-point  
+#  
+#         AFTER INSERT
+#            IF INT_FLAG THEN
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = '' 
+#               LET g_errparam.code   = 9001 
+#               LET g_errparam.popup  = FALSE 
+#               CALL cl_err()
+# 
+#               LET INT_FLAG = 0
+#               CANCEL INSERT
+#            END IF
+#            
+#            LET l_count = 1  
+#            SELECT COUNT(*) INTO l_count FROM inaa_t 
+#             WHERE inaaent = g_enterprise AND inaasite = g_inaa_d[l_ac].inaasite 
+#                                       AND inaa001 = g_inaa_d[l_ac].inaa001 
+# 
+#                
+#            #資料未重複, 插入新增資料
+#            IF l_count = 0 THEN 
+#               #add-point:單身新增前
+
+#               #end add-point
+#            
+#                              INITIALIZE gs_keys TO NULL 
+#               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+#               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+#               CALL apmi830_insert_b('inaa_t',gs_keys,"'1'")
+#                           
+#               #add-point:單身新增後
+
+#               #end add-point
+#            ELSE    
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = 'INSERT' 
+#               LET g_errparam.code   = "std-00006" 
+#               LET g_errparam.popup  = TRUE 
+#               CALL cl_err()
+# 
+#               INITIALIZE g_inaa_d[l_ac].* TO NULL
+#               CALL s_transaction_end('N','0')
+#               CANCEL INSERT
+#            END IF
+# 
+#            IF SQLCA.SQLcode  THEN
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = "inaa_t" 
+#               LET g_errparam.code   = SQLCA.sqlcode 
+#               LET g_errparam.popup  = TRUE 
+#               CALL cl_err()
+# 
+#               CALL s_transaction_end('N','0')                    
+#               CANCEL INSERT
+#            ELSE
+#               #先刷新資料
+#               #CALL apmi830_b_fill(g_wc)
+#               #資料多語言用-增/改
+#                        INITIALIZE l_var_keys TO NULL 
+#         INITIALIZE l_field_keys TO NULL 
+#         INITIALIZE l_vars TO NULL 
+#         INITIALIZE l_fields TO NULL 
+#         INITIALIZE l_var_keys_bak TO NULL 
+#         IF g_inaa_d[l_ac].inaa001 = g_detail_multi_table_t.inayl001 AND
+#         g_inaa_d[l_ac].inayl003 = g_detail_multi_table_t.inayl003 THEN
+#         ELSE 
+#            LET l_var_keys[01] = g_inaa_d[l_ac].inaa001
+#            LET l_field_keys[01] = 'inayl001'
+#            LET l_var_keys[02] = g_dlang
+#            LET l_field_keys[02] = 'inayl002'
+#            LET l_vars[01] = g_inaa_d[l_ac].inayl003
+#            LET l_fields[01] = 'inayl003'
+#            LET l_vars[02] = g_enterprise 
+#            LET l_fields[02] = 'inaylent'
+#            LET l_var_keys_bak[01] = g_detail_multi_table_t.inayl001
+#            LET l_var_keys_bak[02] = g_detail_multi_table_t.inayl002
+#            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'inayl_t')
+#         END IF 
+# 
+#               #add-point:input段-after_insert
+
+#               #end add-point
+#               CALL s_transaction_end('Y','0')
+#               ##ERROR 'INSERT O.K'
+#               LET g_detail_cnt = g_detail_cnt + 1
+#               LET g_master.* = g_inaa_d[l_ac].*
+#            END IF
+#              
+#         BEFORE DELETE  #是否取消單身
+#            IF l_cmd = 'a' THEN
+#               LET l_cmd='d'
+#            ELSE
+#               IF NOT cl_ask_del_detail() THEN
+#                  CANCEL DELETE
+#               END IF
+#               IF l_lock_sw = "Y" THEN
+#                  INITIALIZE g_errparam TO NULL 
+#                  LET g_errparam.extend = "" 
+#                  LET g_errparam.code   =  -263 
+#                  LET g_errparam.popup  = TRUE 
+#                  CALL cl_err()
+# 
+#                  CANCEL DELETE
+#               END IF
+#               
+#               #add-point:單身刪除前
+
+#               #end add-point
+#               
+#               DELETE FROM inaa_t
+#                WHERE inaaent = g_enterprise AND 
+#                      inaasite = g_inaa_d_t.inaasite
+#                      AND inaa001 = g_inaa_d_t.inaa001
+# 
+#                      
+#               #add-point:單身刪除中
+
+#               #end add-point
+#                      
+#               IF SQLCA.sqlcode THEN
+#                  INITIALIZE g_errparam TO NULL 
+#                  LET g_errparam.extend = "inaa_t" 
+#                  LET g_errparam.code   = SQLCA.sqlcode 
+#                  LET g_errparam.popup  = TRUE 
+#                  CALL cl_err()
+# 
+#                  CALL s_transaction_end('N','0')
+#                  CANCEL DELETE   
+#               ELSE
+#                  LET g_detail_cnt = g_detail_cnt-1
+#                  INITIALIZE l_var_keys_bak TO NULL 
+#                  INITIALIZE l_field_keys TO NULL 
+#                  LET l_field_keys[01] = 'inayl001'
+#                  LET l_var_keys_bak[01] = g_detail_multi_table_t.inayl001
+#                  CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'inayl_t')
+# 
+#                  #add-point:單身刪除後
+
+#                  #end add-point
+#                  CALL s_transaction_end('Y','0')
+#               END IF 
+#               CLOSE apmi830_bcl
+#               LET l_count = g_inaa_d.getLength()
+#                              INITIALIZE gs_keys TO NULL 
+#               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+#               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+#    
+#               #應用 a47 樣板自動產生(Version:1)
+#      #刪除相關文件
+#      CALL apmi830_set_pk_array()
+#      #add-point:相關文件刪除前
+
+#      #end add-point   
+#      CALL cl_doc_remove()  
+# 
+#        
+#            END IF 
+#              
+#         AFTER DELETE 
+#            IF l_cmd <> 'd' THEN
+#               #add-point:單身刪除後2
+
+#               #end add-point
+#                              CALL apmi830_delete_b('inaa_t',gs_keys,"'1'")
+#            END IF
+#            #如果是最後一筆
+#            IF l_ac = (g_inaa_d.getLength() + 1) THEN
+#               CALL FGL_SET_ARR_CURR(l_ac-1)
+#            END IF
+# 
+#                  #應用 a01 樣板自動產生(Version:1)
+#         BEFORE FIELD inaastus
+#            #add-point:BEFORE FIELD inaastus
+
+#            #END add-point
+# 
+#         #應用 a02 樣板自動產生(Version:1)
+#         AFTER FIELD inaastus
+#            
+#            #add-point:AFTER FIELD inaastus
+
+#            #END add-point
+#            
+# 
+#         #應用 a04 樣板自動產生(Version:1)
+#         ON CHANGE inaastus
+#            #add-point:ON CHANGE inaastus
+
+#            #END add-point
+# 
+#         #應用 a02 樣板自動產生(Version:1)
+#         AFTER FIELD inaasite
+#            
+#            #add-point:AFTER FIELD inaasite
+#            #應用 a05 樣板自動產生(Version:1)
+#            #確認資料無重複
+#            IF  g_inaa_d[g_detail_idx].inaasite IS NOT NULL AND g_inaa_d[g_detail_idx].inaa001 IS NOT NULL THEN 
+#               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inaa_d[g_detail_idx].inaasite != g_inaa_d_t.inaasite OR g_inaa_d[g_detail_idx].inaa001 != g_inaa_d_t.inaa001)) THEN 
+#                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inaa_t WHERE "||"inaaent = '" ||g_enterprise|| "' AND "||"inaasite = '"||g_inaa_d[g_detail_idx].inaasite ||"' AND "|| "inaa001 = '"||g_inaa_d[g_detail_idx].inaa001 ||"'",'std-00004',0) THEN 
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF
+#            END IF
+#
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_inaa_d[l_ac].inaasite
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_inaa_d[l_ac].inaasite_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_inaa_d[l_ac].inaasite_desc
+
+
+#            #END add-point
+#            
+# 
+#         #應用 a01 樣板自動產生(Version:1)
+#         BEFORE FIELD inaasite
+#            #add-point:BEFORE FIELD inaasite
+
+#            #END add-point
+# 
+#         #應用 a04 樣板自動產生(Version:1)
+#         ON CHANGE inaasite
+#            #add-point:ON CHANGE inaasite
+
+#            #END add-point
+# 
+#         #應用 a01 樣板自動產生(Version:1)
+#         BEFORE FIELD inaa001
+#            #add-point:BEFORE FIELD inaa001
+
+#            #END add-point
+# 
+#         #應用 a02 樣板自動產生(Version:1)
+#         AFTER FIELD inaa001
+#            
+#            #add-point:AFTER FIELD inaa001
+#            #應用 a05 樣板自動產生(Version:1)
+#            #確認資料無重複
+#            IF  g_inaa_d[g_detail_idx].inaasite IS NOT NULL AND g_inaa_d[g_detail_idx].inaa001 IS NOT NULL THEN 
+#               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inaa_d[g_detail_idx].inaasite != g_inaa_d_t.inaasite OR g_inaa_d[g_detail_idx].inaa001 != g_inaa_d_t.inaa001)) THEN 
+#                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inaa_t WHERE "||"inaaent = '" ||g_enterprise|| "' AND "||"inaasite = '"||g_inaa_d[g_detail_idx].inaasite ||"' AND "|| "inaa001 = '"||g_inaa_d[g_detail_idx].inaa001 ||"'",'std-00004',0) THEN 
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF
+#            END IF
+
+
+#            #END add-point
+#            
+# 
+#         #應用 a04 樣板自動產生(Version:1)
+#         ON CHANGE inaa001
+#            #add-point:ON CHANGE inaa001
+
+#            #END add-point
+# 
+#         #應用 a01 樣板自動產生(Version:1)
+#         BEFORE FIELD inayl003
+#            #add-point:BEFORE FIELD inayl003
+
+#            #END add-point
+# 
+#         #應用 a02 樣板自動產生(Version:1)
+#         AFTER FIELD inayl003
+#            
+#            #add-point:AFTER FIELD inayl003
+
+#            #END add-point
+#            
+# 
+#         #應用 a04 樣板自動產生(Version:1)
+#         ON CHANGE inayl003
+#            #add-point:ON CHANGE inayl003
+
+#            #END add-point
+# 
+# 
+#                  #Ctrlp:input.c.page1.inaastus
+#         #應用 a03 樣板自動產生(Version:1)
+#         ON ACTION controlp INFIELD inaastus
+#            #add-point:ON ACTION controlp INFIELD inaastus
+
+#            #END add-point
+# 
+#         #Ctrlp:input.c.page1.inaasite
+#         #應用 a03 樣板自動產生(Version:1)
+#         ON ACTION controlp INFIELD inaasite
+#            #add-point:ON ACTION controlp INFIELD inaasite
+ 
+#            #END add-point
+# 
+#         #Ctrlp:input.c.page1.inaa001
+#         #應用 a03 樣板自動產生(Version:1)
+#         ON ACTION controlp INFIELD inaa001
+#            #add-point:ON ACTION controlp INFIELD inaa001
+
+#            #END add-point
+# 
+#         #Ctrlp:input.c.page1.inayl003
+#         #應用 a03 樣板自動產生(Version:1)
+#         ON ACTION controlp INFIELD inayl003
+#            #add-point:ON ACTION controlp INFIELD inayl003
+
+#            #END add-point
+# 
+# 
+# 
+#         ON ROW CHANGE
+#            IF INT_FLAG THEN
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = '' 
+#               LET g_errparam.code   = 9001 
+#               LET g_errparam.popup  = FALSE 
+#               CALL cl_err()
+# 
+#               LET INT_FLAG = 0
+#               LET g_inaa_d[l_ac].* = g_inaa_d_t.*
+#               CLOSE apmi830_bcl
+#               CALL s_transaction_end('N','0')
+#               CANCEL DIALOG 
+#            END IF
+#              
+#            IF l_lock_sw = 'Y' THEN
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = g_inaa_d[l_ac].inaasite 
+#               LET g_errparam.code   = -263 
+#               LET g_errparam.popup  = TRUE 
+#               CALL cl_err()
+# 
+#               LET g_inaa_d[l_ac].* = g_inaa_d_t.*
+#            ELSE
+#               
+#               #寫入修改者/修改日期資訊(單身)
+#               
+#               #add-point:單身修改前
+
+#               #end add-point
+#               
+#               UPDATE inaa_t SET (inaastus,inaasite,inaa001) = (g_inaa_d[l_ac].inaastus,g_inaa_d[l_ac].inaasite, 
+#                   g_inaa_d[l_ac].inaa001)
+#                WHERE inaaent = g_enterprise AND
+#                  inaasite = g_inaa_d_t.inaasite #項次   
+#                  AND inaa001 = g_inaa_d_t.inaa001  
+# 
+#                  
+#               #add-point:單身修改中
+
+#               #end add-point
+#                  
+#               CASE
+#                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+#                     INITIALIZE g_errparam TO NULL 
+#                     LET g_errparam.extend = "inaa_t" 
+#                     LET g_errparam.code   = "std-00009" 
+#                     LET g_errparam.popup  = TRUE 
+#                     CALL cl_err()
+# 
+#                     CALL s_transaction_end('N','0')
+#                     LET g_inaa_d[l_ac].* = g_inaa_d_t.*
+#                  WHEN SQLCA.sqlcode #其他錯誤
+#                     INITIALIZE g_errparam TO NULL 
+#                     LET g_errparam.extend = "inaa_t" 
+#                     LET g_errparam.code   = SQLCA.sqlcode 
+#                     LET g_errparam.popup  = TRUE 
+#                     CALL cl_err()
+# 
+#                     CALL s_transaction_end('N','0')
+#                     LET g_inaa_d[l_ac].* = g_inaa_d_t.*
+#                  OTHERWISE
+#                                    INITIALIZE gs_keys TO NULL 
+#               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+#               LET gs_keys_bak[1] = g_inaa_d_t.inaasite
+#               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+#               LET gs_keys_bak[2] = g_inaa_d_t.inaa001
+#               CALL apmi830_update_b('inaa_t',gs_keys,gs_keys_bak,"'1'")
+#                     #資料多語言用-增/改
+#                              INITIALIZE l_var_keys TO NULL 
+#         INITIALIZE l_field_keys TO NULL 
+#         INITIALIZE l_vars TO NULL 
+#         INITIALIZE l_fields TO NULL 
+#         INITIALIZE l_var_keys_bak TO NULL 
+#         IF g_inaa_d[l_ac].inaa001 = g_detail_multi_table_t.inayl001 AND
+#         g_inaa_d[l_ac].inayl003 = g_detail_multi_table_t.inayl003 THEN
+#         ELSE 
+#            LET l_var_keys[01] = g_inaa_d[l_ac].inaa001
+#            LET l_field_keys[01] = 'inayl001'
+#            LET l_var_keys[02] = g_dlang
+#            LET l_field_keys[02] = 'inayl002'
+#            LET l_vars[01] = g_inaa_d[l_ac].inayl003
+#            LET l_fields[01] = 'inayl003'
+#            LET l_vars[02] = g_enterprise 
+#            LET l_fields[02] = 'inaylent'
+#            LET l_var_keys_bak[01] = g_detail_multi_table_t.inayl001
+#            LET l_var_keys_bak[02] = g_detail_multi_table_t.inayl002
+#            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'inayl_t')
+#         END IF 
+# 
+#                     
+#                     LET g_log1 = util.JSON.stringify(g_inaa_d_t)
+#                     LET g_log2 = util.JSON.stringify(g_inaa_d[l_ac])
+#                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+#                        CALL s_transaction_end('N','0')
+#                     END IF
+#               END CASE
+#               
+#               #若Key欄位有變動
+#               LET g_master.* = g_inaa_d[l_ac].*
+#               CALL apmi830_key_update_b()
+#               
+#               #add-point:單身修改後
+
+#               #end add-point
+# 
+#            END IF
+#            
+#         AFTER ROW
+#            CALL apmi830_unlock_b("inaa_t")
+#            CALL s_transaction_end('Y','0')
+#            #其他table進行unlock
+#            CALL cl_multitable_unlock()
+#            IF l_cmd = 'u' AND INT_FLAG THEN
+#               LET g_inaa_d[l_ac].* = g_inaa_d_t.*
+#            END IF
+#            LET l_cmd = ''
+#              
+#         AFTER INPUT
+#            #add-point:input段after input 
+
+#            #end add-point
+#            #錯誤訊息統整顯示
+#            #CALL cl_err_collect_show()      
+#            #CALL cl_showmsg()            
+#    
+#         ON ACTION controlo   
+#            CALL FGL_SET_ARR_CURR(g_inaa_d.getLength()+1)
+#            LET lb_reproduce = TRUE
+#            LET li_reproduce = l_ac
+#            LET li_reproduce_target = g_inaa_d.getLength()+1
+#        
+#      END INPUT
+#Standard End-----          
+ 
+      
+      #實際單身段落
+      INPUT ARRAY g_inaa2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_2)
+         
+ 
+         #應用 a43 樣板自動產生(Version:1)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item
+
+               #END add-point
+            END IF
+ 
+ 
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_inaa2_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            LET g_loc = 'd'
+            LET g_detail_cnt = g_inaa2_d.getLength()
+            LET g_current_page = 2
+            #add-point:資料輸入前
+
+            #end add-point
+ 
+         BEFORE INSERT
+            IF g_inaa_d.getLength() = 0 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 'std-00013' 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               NEXT FIELD inaasite
+            END IF 
+            #判斷能否在此頁面進行資料新增
+            
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_inaa2_d[l_ac].* TO NULL 
+            INITIALIZE g_inaa2_d_t.* TO NULL 
+            INITIALIZE g_inaa2_d_o.* TO NULL 
+                  LET g_inaa2_d[l_ac].pmcqstus = "Y"
+ 
+            #add-point:modify段before備份
+            LET g_inaa3_d[l_ac].pmcqownid = g_user
+            LET g_inaa3_d[l_ac].pmcqowndp = g_dept
+            LET g_inaa3_d[l_ac].pmcqcrtid = g_user
+            LET g_inaa3_d[l_ac].pmcqcrtdp = g_dept 
+            LET g_inaa3_d[l_ac].pmcqcrtdt = cl_get_current()
+            LET g_inaa3_d[l_ac].pmcqmodid = ""
+            LET g_inaa3_d[l_ac].pmcqmoddt = ""
+            #end add-point
+            LET g_inaa2_d_t.* = g_inaa2_d[l_ac].*     #新輸入資料
+            LET g_inaa2_d_o.* = g_inaa2_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL apmi830_set_entry_b("a")
+            CALL apmi830_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_inaa2_d[li_reproduce_target].* = g_inaa2_d[li_reproduce].*
+               LET g_inaa3_d[li_reproduce_target].* = g_inaa3_d[li_reproduce].*
+ 
+               LET g_inaa2_d[li_reproduce_target].pmcq002 = NULL
+               LET g_inaa2_d[li_reproduce_target].pmcq003 = NULL
+            END IF
+            #add-point:input段before insert
+
+            #end add-point  
+            
+         BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx2 = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_inaa2_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_inaa2_d[l_ac].pmcq002 IS NOT NULL
+               AND g_inaa2_d[l_ac].pmcq003 IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_inaa2_d_t.* = g_inaa2_d[l_ac].*  #BACKUP
+               LET g_inaa2_d_o.* = g_inaa2_d[l_ac].*  #BACKUP
+               IF NOT apmi830_lock_b("pmcq_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apmi830_bcl2 INTO g_inaa2_d[l_ac].pmcqstus,g_inaa2_d[l_ac].pmcq002,g_inaa2_d[l_ac].pmcq003, 
+                      g_inaa3_d[l_ac].pmcq002,g_inaa3_d[l_ac].pmcq003,g_inaa3_d[l_ac].pmcqownid,g_inaa3_d[l_ac].pmcqowndp, 
+                      g_inaa3_d[l_ac].pmcqcrtid,g_inaa3_d[l_ac].pmcqcrtdp,g_inaa3_d[l_ac].pmcqcrtdt, 
+                      g_inaa3_d[l_ac].pmcqmodid,g_inaa3_d[l_ac].pmcqmoddt
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = '' 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  CALL cl_show_fld_cont()
+                  #CALL apmi830_detail_show()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL apmi830_set_entry_b(l_cmd)
+            CALL apmi830_set_no_entry_b(l_cmd)
+            #add-point:input段before row
+
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            CALL apmi830_idx_chk('d')
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   =  -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身2刪除前
+
+               #end add-point  
+               
+               DELETE FROM pmcq_t
+                WHERE pmcqent = g_enterprise AND
+                   pmcqsite = g_master.inaasite
+                   AND pmcq001 = g_master.inaa001
+                   AND pmcq002 = g_inaa2_d_t.pmcq002
+                   AND pmcq003 = g_inaa2_d_t.pmcq003
+                   
+               #add-point:單身2刪除中
+
+               #end add-point  
+                   
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "inaa_t" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身2刪除後
+
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE apmi830_bcl
+               LET l_count = g_inaa_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys[3] = g_inaa2_d[g_detail_idx2].pmcq002
+               LET gs_keys[4] = g_inaa2_d[g_detail_idx2].pmcq003
+ 
+            END IF 
+            
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身AFTER DELETE 
+
+               #end add-point
+                              CALL apmi830_delete_b('pmcq_t',gs_keys,"'2'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_inaa2_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM pmcq_t 
+             WHERE pmcqent = g_enterprise AND
+                   pmcqsite = g_master.inaasite
+                   AND pmcq001 = g_master.inaa001
+                   AND pmcq002 = g_inaa2_d[g_detail_idx2].pmcq002
+                   AND pmcq003 = g_inaa2_d[g_detail_idx2].pmcq003
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身2新增前
+
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys[3] = g_inaa2_d[g_detail_idx2].pmcq002
+               LET gs_keys[4] = g_inaa2_d[g_detail_idx2].pmcq003
+               CALL apmi830_insert_b('pmcq_t',gs_keys,"'2'")
+                           
+               #add-point:單身新增後2
+
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_inaa_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "pmcq_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL apmi830_b_fill(g_wc)
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後
+
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_inaa2_d[l_ac].* = g_inaa2_d_t.*
+               CLOSE apmi830_bcl2
+               CALL s_transaction_end('N','0')
+               CANCEL DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_inaa2_d[l_ac].* = g_inaa2_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身2)
+               LET g_inaa3_d[l_ac].pmcqmodid = g_user 
+LET g_inaa3_d[l_ac].pmcqmoddt = cl_get_current()
+LET g_inaa3_d[l_ac].pmcqmodid_desc = cl_get_username(g_inaa3_d[l_ac].pmcqmodid)
+               
+               #add-point:單身page2修改前
+
+               #end add-point
+               
+               UPDATE pmcq_t SET (pmcqstus,pmcq002,pmcq003,pmcqownid,pmcqowndp,pmcqcrtid,pmcqcrtdp,pmcqcrtdt, 
+                   pmcqmodid,pmcqmoddt) = (g_inaa2_d[l_ac].pmcqstus,g_inaa2_d[l_ac].pmcq002,g_inaa2_d[l_ac].pmcq003, 
+                   g_inaa3_d[l_ac].pmcqownid,g_inaa3_d[l_ac].pmcqowndp,g_inaa3_d[l_ac].pmcqcrtid,g_inaa3_d[l_ac].pmcqcrtdp, 
+                   g_inaa3_d[l_ac].pmcqcrtdt,g_inaa3_d[l_ac].pmcqmodid,g_inaa3_d[l_ac].pmcqmoddt) #自訂欄位頁簽 
+ 
+                WHERE pmcqent = g_enterprise AND
+                   pmcqsite = g_master.inaasite
+                   AND pmcq001 = g_master.inaa001
+                   AND pmcq002 = g_inaa2_d_t.pmcq002
+                   AND pmcq003 = g_inaa2_d_t.pmcq003
+                   
+               #add-point:單身修改中
+
+               #end add-point
+                   
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pmcq_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_inaa2_d[l_ac].* = g_inaa2_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pmcq_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_inaa2_d[l_ac].* = g_inaa2_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys_bak[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys_bak[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys[3] = g_inaa2_d[g_detail_idx2].pmcq002
+               LET gs_keys_bak[3] = g_inaa2_d_t.pmcq002
+               LET gs_keys[4] = g_inaa2_d[g_detail_idx2].pmcq003
+               LET gs_keys_bak[4] = g_inaa2_d_t.pmcq003
+               CALL apmi830_update_b('pmcq_t',gs_keys,gs_keys_bak,"'2'")
+                     #資料多語言用-增/改
+                     
+                     LET g_log1 = util.JSON.stringify(g_inaa2_d_t)
+                     LET g_log2 = util.JSON.stringify(g_inaa2_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               #add-point:單身page2修改後
+
+               #end add-point
+            END IF
+         
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcqstus
+            #add-point:BEFORE FIELD pmcqstus
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcqstus
+            
+            #add-point:AFTER FIELD pmcqstus
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:1)
+         ON CHANGE pmcqstus
+            #add-point:ON CHANGE pmcqstus
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcq002
+            #add-point:BEFORE FIELD pmcq002
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcq002
+            
+            #add-point:AFTER FIELD pmcq002
+            #應用 a05 樣板自動產生(Version:1)
+            #確認資料無重複
+            IF  g_inaa_d[g_detail_idx].inaasite IS NOT NULL AND g_inaa_d[g_detail_idx].inaa001 IS NOT NULL AND g_inaa2_d[g_detail_idx2].pmcq002 IS NOT NULL AND g_inaa2_d[g_detail_idx2].pmcq003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inaa_d[g_detail_idx].inaasite != g_inaa_d[g_detail_idx].inaasite OR g_inaa_d[g_detail_idx].inaa001 != g_inaa_d[g_detail_idx].inaa001 OR g_inaa2_d[g_detail_idx2].pmcq002 != g_inaa2_d_t.pmcq002 OR g_inaa2_d[g_detail_idx2].pmcq003 != g_inaa2_d_t.pmcq003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmcq_t WHERE "||"pmcqent = '" ||g_enterprise|| "' AND "||"pmcqsite = '"||g_inaa_d[g_detail_idx].inaasite ||"' AND "|| "pmcq001 = '"||g_inaa_d[g_detail_idx].inaa001 ||"' AND "|| "pmcq002 = '"||g_inaa2_d[g_detail_idx2].pmcq002 ||"' AND "|| "pmcq003 = '"||g_inaa2_d[g_detail_idx2].pmcq003 ||"'",'std-00004',0) THEN 
+                     LET g_inaa2_d[l_ac].pmcq002 = g_inaa2_d_t.pmcq002 
+                     NEXT FIELD CURRENT
+                  ELSE
+                     IF g_inaa2_d[l_ac].pmcq002 <> g_inaa2_d_t.pmcq002 THEN
+                        LET g_inaa2_d[l_ac].pmcq003 = ''
+                        LET g_inaa2_d[l_ac].pmcq003_desc = ''
+                     END IF
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:1)
+         ON CHANGE pmcq002
+            #add-point:ON CHANGE pmcq002
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcq003
+            
+            #add-point:AFTER FIELD pmcq003
+            #應用 a05 樣板自動產生(Version:1)
+            #確認資料無重複
+            IF  g_inaa_d[g_detail_idx].inaasite IS NOT NULL AND g_inaa_d[g_detail_idx].inaa001 IS NOT NULL AND g_inaa2_d[g_detail_idx2].pmcq002 IS NOT NULL AND g_inaa2_d[g_detail_idx2].pmcq003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inaa_d[g_detail_idx].inaasite != g_inaa_d[g_detail_idx].inaasite OR g_inaa_d[g_detail_idx].inaa001 != g_inaa_d[g_detail_idx].inaa001 OR g_inaa2_d[g_detail_idx2].pmcq002 != g_inaa2_d_t.pmcq002 OR g_inaa2_d[g_detail_idx2].pmcq003 != g_inaa2_d_t.pmcq003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmcq_t WHERE "||"pmcqent = '" ||g_enterprise|| "' AND "||"pmcqsite = '"||g_inaa_d[g_detail_idx].inaasite ||"' AND "|| "pmcq001 = '"||g_inaa_d[g_detail_idx].inaa001 ||"' AND "|| "pmcq002 = '"||g_inaa2_d[g_detail_idx2].pmcq002 ||"' AND "|| "pmcq003 = '"||g_inaa2_d[g_detail_idx2].pmcq003 ||"'",'std-00004',0) THEN 
+                     LET g_inaa2_d[l_ac].pmcq003 = g_inaa2_d_t.pmcq003
+                     CALL apmi830_pmcq003_ref()
+                     NEXT FIELD CURRENT
+                  ELSE
+                     CASE g_inaa2_d[l_ac].pmcq002
+                        WHEN '3'   #品牌
+                           LET l_acc_code = '2002'
+                        WHEN '4'   #系列
+                           LET l_acc_code = '2003'
+                        WHEN '5'   #型別 
+                           LET l_acc_code = '2004'
+                        WHEN '6'   #功能 
+                           LET l_acc_code = '2005'
+                        WHEN '7'   #價格帶
+                           LET l_acc_code = '2001'
+                        WHEN '8'   #其他屬性一
+                           LET l_acc_code = '2006'
+                        WHEN '9'   #其他屬性二
+                           LET l_acc_code = '2007'
+                        WHEN '10'  #其他屬性三
+                           LET l_acc_code = '2008'
+                        WHEN '11'  #其他屬性四
+                           LET l_acc_code = '2009'
+                        WHEN '12'  #其他屬性五
+                           LET l_acc_code = '2010'
+                        WHEN '13'  #其他屬性六
+                           LET l_acc_code = '2011'
+                        WHEN '14'  #其他屬性七
+                           LET l_acc_code = '2012'
+                        WHEN '15'  #其他屬性八
+                           LET l_acc_code = '2013'
+                        WHEN '16'  #其他屬性九
+                           LET l_acc_code = '2014'
+                        WHEN '17'  #其他屬性十
+                           LET l_acc_code = '2015'                  
+                     END CASE
+
+                     CASE g_inaa2_d[l_ac].pmcq002
+                        WHEN '1'   #產品編號
+                           LET g_chkparam.arg1 = g_inaa2_d[l_ac].pmcq003
+                           IF NOT cl_chk_exist("v_imaa001") THEN
+                              LET g_inaa2_d[l_ac].pmcq003 = g_inaa2_d_t.pmcq003
+                              CALL apmi830_pmcq003_ref() 
+                              NEXT FIELD CURRENT                            
+                           END IF
+                        WHEN '2'   #產品品類
+                           LET g_chkparam.arg1 = g_inaa2_d[l_ac].pmcq003
+                           IF NOT cl_chk_exist("v_rtax001_1") THEN
+                              LET g_inaa2_d[l_ac].pmcq003 = g_inaa2_d_t.pmcq003
+                              CALL apmi830_pmcq003_ref() 
+                              NEXT FIELD CURRENT                            
+                           END IF
+                        OTHERWISE
+                           IF NOT s_azzi650_chk_exist(l_acc_code,g_inaa2_d[l_ac].pmcq003) THEN
+                              LET g_inaa2_d[l_ac].pmcq003 = g_inaa2_d_t.pmcq003
+                              CALL apmi830_pmcq003_ref() 
+                              NEXT FIELD CURRENT                           
+                           END IF                           
+                     END CASE                  
+                  END IF
+               END IF
+            END IF
+       
+            CALL apmi830_pmcq003_ref()
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcq003
+            #add-point:BEFORE FIELD pmcq003
+            IF cl_null(g_inaa2_d[l_ac].pmcq002) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "apm-00652"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()               
+            END IF
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:1)
+         ON CHANGE pmcq003
+            #add-point:ON CHANGE pmcq003
+
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page2.pmcqstus
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcqstus
+            #add-point:ON ACTION controlp INFIELD pmcqstus
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page2.pmcq002
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcq002
+            #add-point:ON ACTION controlp INFIELD pmcq002
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page2.pmcq003
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcq003
+            #add-point:ON ACTION controlp INFIELD pmcq003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_inaa2_d[l_ac].pmcq003            
+            
+            CASE g_inaa2_d[l_ac].pmcq002
+               WHEN '1'   #產品編號
+                  CALL q_imaa001()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #CALL s_desc_get_item_desc(g_inaa2_d[l_ac].pmcq003) RETURNING g_inaa2_d[l_ac].pmcq003_desc, l_imaal004
+               WHEN '2'   #產品品類
+                  CALL q_rtax001()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_rtaxl003_desc(g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '3'   #品牌
+                  LET g_qryparam.arg1 = "2002"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2002',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '4'   #系列
+                  LET g_qryparam.arg1 = "2003"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2003',g_inaa2_d[l_ac].pmcq003)                    
+               WHEN '5'   #型別
+                  LET g_qryparam.arg1 = "2004"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2004',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '6'   #功能
+                  LET g_qryparam.arg1 = "2005"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2005',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '7'   #價格帶
+                  LET g_qryparam.arg1 = "2001"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2001',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '8'   #其他屬性一
+                  LET g_qryparam.arg1 = "2006"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2006',g_inaa2_d[l_ac].pmcq003)                   
+               WHEN '9'   #其他屬性二
+                  LET g_qryparam.arg1 = "2007"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2007',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '10'  #其他屬性三
+                  LET g_qryparam.arg1 = "2008"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2008',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '11'  #其他屬性四
+                  LET g_qryparam.arg1 = "2009"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1  
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2009',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '12'  #其他屬性五
+                  LET g_qryparam.arg1 = "2010"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2010',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '13'  #其他屬性六
+                  LET g_qryparam.arg1 = "2011"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1  
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2011',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '14'  #其他屬性七
+                  LET g_qryparam.arg1 = "2012"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1   
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2012',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '15'  #其他屬性八
+                  LET g_qryparam.arg1 = "2013"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2013',g_inaa2_d[l_ac].pmcq003)                   
+               WHEN '16'  #其他屬性九
+                  LET g_qryparam.arg1 = "2014"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1 
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2014',g_inaa2_d[l_ac].pmcq003)                  
+               WHEN '17'  #其他屬性十
+                  LET g_qryparam.arg1 = "2015"
+                  CALL q_oocq002()
+                  LET g_inaa2_d[l_ac].pmcq003 = g_qryparam.return1   
+                  #LET g_inaa2_d[l_ac].pmcq003_desc = s_desc_get_acc_desc('2015',g_inaa2_d[l_ac].pmcq003)                  
+            END CASE
+            
+            CALL apmi830_pmcq003_ref()
+            #END add-point
+ 
+ 
+ 
+         AFTER ROW
+            LET l_ac = ARR_CURR()
+            LET l_ac_t = l_ac
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_inaa2_d[l_ac].* = g_inaa2_d_t.*
+               END IF
+               CLOSE apmi830_bcl2
+               CALL s_transaction_end('N','0')
+               CANCEL DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+ 
+            CALL apmi830_unlock_b("pmcq_t")
+            CALL s_transaction_end('Y','0')
+            LET l_cmd = ''
+ 
+         AFTER INPUT
+            #add-point:input段after input 
+
+            #end add-point   
+ 
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_inaa2_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_inaa2_d.getLength()+1
+ 
+      END INPUT
+      #實際單身段落
+      INPUT ARRAY g_inaa4_d FROM s_detail4.*
+         ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_4)
+         
+ 
+         #應用 a43 樣板自動產生(Version:1)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item
+
+               #END add-point
+            END IF
+ 
+ 
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_inaa4_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            LET g_loc = 'd'
+            LET g_detail_cnt = g_inaa4_d.getLength()
+            LET g_current_page = 4
+            #add-point:資料輸入前
+
+            #end add-point
+ 
+         BEFORE INSERT
+            IF g_inaa_d.getLength() = 0 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 'std-00013' 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               NEXT FIELD inaasite
+            END IF 
+            #判斷能否在此頁面進行資料新增
+            
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_inaa4_d[l_ac].* TO NULL 
+            INITIALIZE g_inaa4_d_t.* TO NULL 
+            INITIALIZE g_inaa4_d_o.* TO NULL 
+                  LET g_inaa4_d[l_ac].pmcrstus = "Y"
+ 
+            #add-point:modify段before備份
+            LET g_inaa5_d[l_ac].pmcrownid = g_user
+            LET g_inaa5_d[l_ac].pmcrowndp = g_dept
+            LET g_inaa5_d[l_ac].pmcrcrtid = g_user
+            LET g_inaa5_d[l_ac].pmcrcrtdp = g_dept 
+            LET g_inaa5_d[l_ac].pmcrcrtdt = cl_get_current()
+            LET g_inaa5_d[l_ac].pmcrmodid = ""
+            LET g_inaa5_d[l_ac].pmcrmoddt = ""
+            #end add-point
+            LET g_inaa4_d_t.* = g_inaa4_d[l_ac].*     #新輸入資料
+            LET g_inaa4_d_o.* = g_inaa4_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL apmi830_set_entry_b("a")
+            CALL apmi830_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_inaa4_d[li_reproduce_target].* = g_inaa4_d[li_reproduce].*
+               LET g_inaa5_d[li_reproduce_target].* = g_inaa5_d[li_reproduce].*
+ 
+               LET g_inaa4_d[li_reproduce_target].pmcr002 = NULL
+            END IF
+            #add-point:input段before insert
+
+            #end add-point  
+            
+         BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx2 = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_inaa4_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_inaa4_d[l_ac].pmcr002 IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_inaa4_d_t.* = g_inaa4_d[l_ac].*  #BACKUP
+               LET g_inaa4_d_o.* = g_inaa4_d[l_ac].*  #BACKUP
+               IF NOT apmi830_lock_b("pmcr_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apmi830_bcl3 INTO g_inaa4_d[l_ac].pmcrstus,g_inaa4_d[l_ac].pmcr002,g_inaa5_d[l_ac].pmcr002, 
+                      g_inaa5_d[l_ac].pmcrownid,g_inaa5_d[l_ac].pmcrowndp,g_inaa5_d[l_ac].pmcrcrtid, 
+                      g_inaa5_d[l_ac].pmcrcrtdp,g_inaa5_d[l_ac].pmcrcrtdt,g_inaa5_d[l_ac].pmcrmodid, 
+                      g_inaa5_d[l_ac].pmcrmoddt
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = '' 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  CALL cl_show_fld_cont()
+                  #CALL apmi830_detail_show()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL apmi830_set_entry_b(l_cmd)
+            CALL apmi830_set_no_entry_b(l_cmd)
+            #add-point:input段before row
+
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            CALL apmi830_idx_chk('d')
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   =  -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身4刪除前
+
+               #end add-point  
+               
+               DELETE FROM pmcr_t
+                WHERE pmcrent = g_enterprise AND
+                   pmcrsite = g_master.inaasite
+                   AND pmcr001 = g_master.inaa001
+                   AND pmcr002 = g_inaa4_d_t.pmcr002
+                   
+               #add-point:單身4刪除中
+
+               #end add-point  
+                   
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "inaa_t" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身4刪除後
+
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE apmi830_bcl
+               LET l_count = g_inaa_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys[3] = g_inaa4_d[g_detail_idx2].pmcr002
+ 
+            END IF 
+            
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身AFTER DELETE 
+
+               #end add-point
+                              CALL apmi830_delete_b('pmcr_t',gs_keys,"'4'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_inaa4_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM pmcr_t 
+             WHERE pmcrent = g_enterprise AND
+                   pmcrsite = g_master.inaasite
+                   AND pmcr001 = g_master.inaa001
+                   AND pmcr002 = g_inaa4_d[g_detail_idx2].pmcr002
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身4新增前
+
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys[3] = g_inaa4_d[g_detail_idx2].pmcr002
+               CALL apmi830_insert_b('pmcr_t',gs_keys,"'4'")
+                           
+               #add-point:單身新增後4
+
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_inaa_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "pmcr_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL apmi830_b_fill(g_wc)
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後
+
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_inaa4_d[l_ac].* = g_inaa4_d_t.*
+               CLOSE apmi830_bcl3
+               CALL s_transaction_end('N','0')
+               CANCEL DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_inaa4_d[l_ac].* = g_inaa4_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身4)
+               LET g_inaa5_d[l_ac].pmcrmodid = g_user 
+LET g_inaa5_d[l_ac].pmcrmoddt = cl_get_current()
+LET g_inaa5_d[l_ac].pmcrmodid_desc = cl_get_username(g_inaa5_d[l_ac].pmcrmodid)
+               
+               #add-point:單身page4修改前
+
+               #end add-point
+               
+               UPDATE pmcr_t SET (pmcrstus,pmcr002,pmcrownid,pmcrowndp,pmcrcrtid,pmcrcrtdp,pmcrcrtdt, 
+                   pmcrmodid,pmcrmoddt) = (g_inaa4_d[l_ac].pmcrstus,g_inaa4_d[l_ac].pmcr002,g_inaa5_d[l_ac].pmcrownid, 
+                   g_inaa5_d[l_ac].pmcrowndp,g_inaa5_d[l_ac].pmcrcrtid,g_inaa5_d[l_ac].pmcrcrtdp,g_inaa5_d[l_ac].pmcrcrtdt, 
+                   g_inaa5_d[l_ac].pmcrmodid,g_inaa5_d[l_ac].pmcrmoddt) #自訂欄位頁簽
+                WHERE pmcrent = g_enterprise AND
+                   pmcrsite = g_master.inaasite
+                   AND pmcr001 = g_master.inaa001
+                   AND pmcr002 = g_inaa4_d_t.pmcr002
+                   
+               #add-point:單身修改中
+
+               #end add-point
+                   
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pmcr_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_inaa4_d[l_ac].* = g_inaa4_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pmcr_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_inaa4_d[l_ac].* = g_inaa4_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys_bak[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys_bak[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys[3] = g_inaa4_d[g_detail_idx2].pmcr002
+               LET gs_keys_bak[3] = g_inaa4_d_t.pmcr002
+               CALL apmi830_update_b('pmcr_t',gs_keys,gs_keys_bak,"'4'")
+                     #資料多語言用-增/改
+                     
+                     LET g_log1 = util.JSON.stringify(g_inaa4_d_t)
+                     LET g_log2 = util.JSON.stringify(g_inaa4_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               #add-point:單身page4修改後
+
+               #end add-point
+            END IF
+         
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcrstus
+            #add-point:BEFORE FIELD pmcrstus
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcrstus
+            
+            #add-point:AFTER FIELD pmcrstus
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:1)
+         ON CHANGE pmcrstus
+            #add-point:ON CHANGE pmcrstus
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcr002
+            #add-point:BEFORE FIELD pmcr002
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcr002
+            
+            #add-point:AFTER FIELD pmcr002
+            #應用 a05 樣板自動產生(Version:1)
+            #確認資料無重複
+            IF  g_inaa_d[g_detail_idx].inaasite IS NOT NULL AND g_inaa_d[g_detail_idx].inaa001 IS NOT NULL AND g_inaa4_d[g_detail_idx2].pmcr002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inaa_d[g_detail_idx].inaasite != g_inaa_d[g_detail_idx].inaasite OR g_inaa_d[g_detail_idx].inaa001 != g_inaa_d[g_detail_idx].inaa001 OR g_inaa4_d[g_detail_idx2].pmcr002 != g_inaa4_d_t.pmcr002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmcr_t WHERE "||"pmcrent = '" ||g_enterprise|| "' AND "||"pmcrsite = '"||g_inaa_d[g_detail_idx].inaasite ||"' AND "|| "pmcr001 = '"||g_inaa_d[g_detail_idx].inaa001 ||"' AND "|| "pmcr002 = '"||g_inaa4_d[g_detail_idx2].pmcr002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:1)
+         ON CHANGE pmcr002
+            #add-point:ON CHANGE pmcr002
+
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page4.pmcrstus
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcrstus
+            #add-point:ON ACTION controlp INFIELD pmcrstus
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page4.pmcr002
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcr002
+            #add-point:ON ACTION controlp INFIELD pmcr002
+
+            #END add-point
+ 
+ 
+ 
+         AFTER ROW
+            LET l_ac = ARR_CURR()
+            LET l_ac_t = l_ac
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_inaa4_d[l_ac].* = g_inaa4_d_t.*
+               END IF
+               CLOSE apmi830_bcl3
+               CALL s_transaction_end('N','0')
+               CANCEL DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+ 
+            CALL apmi830_unlock_b("pmcr_t")
+            CALL s_transaction_end('Y','0')
+            LET l_cmd = ''
+ 
+         AFTER INPUT
+            #add-point:input段after input 
+
+            #end add-point   
+ 
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_inaa4_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_inaa4_d.getLength()+1
+ 
+      END INPUT
+      #實際單身段落
+      INPUT ARRAY g_inaa6_d FROM s_detail6.*
+         ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_6)
+         
+ 
+         #應用 a43 樣板自動產生(Version:1)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item
+
+               #END add-point
+            END IF
+ 
+ 
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_inaa6_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            LET g_loc = 'd'
+            LET g_detail_cnt = g_inaa6_d.getLength()
+            LET g_current_page = 6
+            #add-point:資料輸入前
+
+            #end add-point
+ 
+         BEFORE INSERT
+            IF g_inaa_d.getLength() = 0 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 'std-00013' 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               NEXT FIELD inaasite
+            END IF 
+            #判斷能否在此頁面進行資料新增
+            
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_inaa6_d[l_ac].* TO NULL 
+            INITIALIZE g_inaa6_d_t.* TO NULL 
+            INITIALIZE g_inaa6_d_o.* TO NULL 
+                  LET g_inaa6_d[l_ac].pmcsstus = "Y"
+ 
+            #add-point:modify段before備份
+            LET g_inaa7_d[l_ac].pmcsownid = g_user
+            LET g_inaa7_d[l_ac].pmcsowndp = g_dept
+            LET g_inaa7_d[l_ac].pmcscrtid = g_user
+            LET g_inaa7_d[l_ac].pmcscrtdp = g_dept 
+            LET g_inaa7_d[l_ac].pmcscrtdt = cl_get_current()
+            LET g_inaa7_d[l_ac].pmcsmodid = ""
+            LET g_inaa7_d[l_ac].pmcsmoddt = ""
+            #end add-point
+            LET g_inaa6_d_t.* = g_inaa6_d[l_ac].*     #新輸入資料
+            LET g_inaa6_d_o.* = g_inaa6_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL apmi830_set_entry_b("a")
+            CALL apmi830_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_inaa6_d[li_reproduce_target].* = g_inaa6_d[li_reproduce].*
+               LET g_inaa7_d[li_reproduce_target].* = g_inaa7_d[li_reproduce].*
+ 
+               LET g_inaa6_d[li_reproduce_target].pmcs002 = NULL
+            END IF
+            #add-point:input段before insert
+
+            #end add-point  
+            
+         BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx2 = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_inaa6_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_inaa6_d[l_ac].pmcs002 IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_inaa6_d_t.* = g_inaa6_d[l_ac].*  #BACKUP
+               LET g_inaa6_d_o.* = g_inaa6_d[l_ac].*  #BACKUP
+               IF NOT apmi830_lock_b("pmcs_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apmi830_bcl4 INTO g_inaa6_d[l_ac].pmcsstus,g_inaa6_d[l_ac].pmcs002,g_inaa7_d[l_ac].pmcs002, 
+                      g_inaa7_d[l_ac].pmcsownid,g_inaa7_d[l_ac].pmcsowndp,g_inaa7_d[l_ac].pmcscrtid, 
+                      g_inaa7_d[l_ac].pmcscrtdp,g_inaa7_d[l_ac].pmcscrtdt,g_inaa7_d[l_ac].pmcsmodid, 
+                      g_inaa7_d[l_ac].pmcsmoddt
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = '' 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  CALL cl_show_fld_cont()
+                  #CALL apmi830_detail_show()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL apmi830_set_entry_b(l_cmd)
+            CALL apmi830_set_no_entry_b(l_cmd)
+            #add-point:input段before row
+
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            CALL apmi830_idx_chk('d')
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   =  -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身6刪除前
+
+               #end add-point  
+               
+               DELETE FROM pmcs_t
+                WHERE pmcsent = g_enterprise AND
+                   pmcssite = g_master.inaasite
+                   AND pmcs001 = g_master.inaa001
+                   AND pmcs002 = g_inaa6_d_t.pmcs002
+                   
+               #add-point:單身6刪除中
+
+               #end add-point  
+                   
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "inaa_t" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身6刪除後
+
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE apmi830_bcl
+               LET l_count = g_inaa_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys[3] = g_inaa6_d[g_detail_idx2].pmcs002
+ 
+            END IF 
+            
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身AFTER DELETE 
+
+               #end add-point
+                              CALL apmi830_delete_b('pmcs_t',gs_keys,"'6'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_inaa6_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM pmcs_t 
+             WHERE pmcsent = g_enterprise AND
+                   pmcssite = g_master.inaasite
+                   AND pmcs001 = g_master.inaa001
+                   AND pmcs002 = g_inaa6_d[g_detail_idx2].pmcs002
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身6新增前
+
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys[3] = g_inaa6_d[g_detail_idx2].pmcs002
+               CALL apmi830_insert_b('pmcs_t',gs_keys,"'6'")
+                           
+               #add-point:單身新增後6
+
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_inaa_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "pmcs_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL apmi830_b_fill(g_wc)
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後
+
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_inaa6_d[l_ac].* = g_inaa6_d_t.*
+               CLOSE apmi830_bcl4
+               CALL s_transaction_end('N','0')
+               CANCEL DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_inaa6_d[l_ac].* = g_inaa6_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身6)
+               LET g_inaa7_d[l_ac].pmcsmodid = g_user 
+LET g_inaa7_d[l_ac].pmcsmoddt = cl_get_current()
+LET g_inaa7_d[l_ac].pmcsmodid_desc = cl_get_username(g_inaa7_d[l_ac].pmcsmodid)
+               
+               #add-point:單身page6修改前
+
+               #end add-point
+               
+               UPDATE pmcs_t SET (pmcsstus,pmcs002,pmcsownid,pmcsowndp,pmcscrtid,pmcscrtdp,pmcscrtdt, 
+                   pmcsmodid,pmcsmoddt) = (g_inaa6_d[l_ac].pmcsstus,g_inaa6_d[l_ac].pmcs002,g_inaa7_d[l_ac].pmcsownid, 
+                   g_inaa7_d[l_ac].pmcsowndp,g_inaa7_d[l_ac].pmcscrtid,g_inaa7_d[l_ac].pmcscrtdp,g_inaa7_d[l_ac].pmcscrtdt, 
+                   g_inaa7_d[l_ac].pmcsmodid,g_inaa7_d[l_ac].pmcsmoddt) #自訂欄位頁簽
+                WHERE pmcsent = g_enterprise AND
+                   pmcssite = g_master.inaasite
+                   AND pmcs001 = g_master.inaa001
+                   AND pmcs002 = g_inaa6_d_t.pmcs002
+                   
+               #add-point:單身修改中
+
+               #end add-point
+                   
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pmcs_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_inaa6_d[l_ac].* = g_inaa6_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pmcs_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_inaa6_d[l_ac].* = g_inaa6_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys_bak[1] = g_inaa_d[g_detail_idx].inaasite
+               LET gs_keys[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys_bak[2] = g_inaa_d[g_detail_idx].inaa001
+               LET gs_keys[3] = g_inaa6_d[g_detail_idx2].pmcs002
+               LET gs_keys_bak[3] = g_inaa6_d_t.pmcs002
+               CALL apmi830_update_b('pmcs_t',gs_keys,gs_keys_bak,"'6'")
+                     #資料多語言用-增/改
+                     
+                     LET g_log1 = util.JSON.stringify(g_inaa6_d_t)
+                     LET g_log2 = util.JSON.stringify(g_inaa6_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               #add-point:單身page6修改後
+
+               #end add-point
+            END IF
+         
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcsstus
+            #add-point:BEFORE FIELD pmcsstus
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcsstus
+            
+            #add-point:AFTER FIELD pmcsstus
+
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:1)
+         ON CHANGE pmcsstus
+            #add-point:ON CHANGE pmcsstus
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmcs002
+            
+            #add-point:AFTER FIELD pmcs002
+            #應用 a05 樣板自動產生(Version:1)
+            #確認資料無重複
+            IF  g_inaa_d[g_detail_idx].inaasite IS NOT NULL AND g_inaa_d[g_detail_idx].inaa001 IS NOT NULL AND g_inaa6_d[g_detail_idx2].pmcs002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inaa_d[g_detail_idx].inaasite != g_inaa_d[g_detail_idx].inaasite OR g_inaa_d[g_detail_idx].inaa001 != g_inaa_d[g_detail_idx].inaa001 OR g_inaa6_d[g_detail_idx2].pmcs002 != g_inaa6_d_t.pmcs002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmcs_t WHERE "||"pmcsent = '" ||g_enterprise|| "' AND "||"pmcssite = '"||g_inaa_d[g_detail_idx].inaasite ||"' AND "|| "pmcs001 = '"||g_inaa_d[g_detail_idx].inaa001 ||"' AND "|| "pmcs002 = '"||g_inaa6_d[g_detail_idx2].pmcs002 ||"'",'std-00004',0) THEN 
+                     LET g_inaa6_d[l_ac].pmcs002 = g_inaa6_d_t.pmcs002
+                     LET g_inaa6_d[l_ac].pmcs002_desc = s_desc_get_department_desc(g_inaa6_d[l_ac].pmcs002)
+                     NEXT FIELD CURRENT
+                  ELSE
+                     IF s_aooi500_setpoint(g_prog,'pmcs002') THEN
+                        CALL s_aooi500_chk(g_prog,'pmcs002',g_inaa6_d[l_ac].pmcs002,g_inaa_d[l_ac].inaasite) RETURNING l_success,l_errno
+                        IF NOT l_success THEN
+                           #161006-00008#2 20161018 mark by beckxie---S
+                           #LET g_inaa6_d[l_ac].pmcs002 = g_inaa6_d_t.pmcs002
+                           #LET g_inaa6_d[l_ac].pmcs002_desc = s_desc_get_department_desc(g_inaa6_d[l_ac].pmcs002)
+                           #161006-00008#2 20161018 mark by beckxie---E
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = l_errno
+                           LET g_errparam.extend = g_inaa6_d[l_ac].pmcs002
+                           LET g_errparam.popup  = TRUE
+                           CALL cl_err()                        
+                           #161006-00008#2 20161018 add by beckxie---S
+                           #修正extend值顯示錯誤&報錯後應留在此欄位
+                           LET g_inaa6_d[l_ac].pmcs002 = g_inaa6_d_t.pmcs002
+                           LET g_inaa6_d[l_ac].pmcs002_desc = s_desc_get_department_desc(g_inaa6_d[l_ac].pmcs002)
+                           NEXT FIELD CURRENT
+                           #161006-00008#2 20161018 add by beckxie---E
+                        END IF                     
+                     ELSE
+                        INITIALIZE g_chkparam.* TO NULL
+                        LET g_chkparam.arg1 = g_inaa6_d[l_ac].pmcs002
+                        LET g_chkparam.err_str[1] = "apm-00651|",g_inaa6_d[l_ac].pmcs002
+                        IF NOT cl_chk_exist("v_ooef001_37") THEN
+                           LET g_inaa6_d[l_ac].pmcs002 = g_inaa6_d_t.pmcs002
+                           LET g_inaa6_d[l_ac].pmcs002_desc = s_desc_get_department_desc(g_inaa6_d[l_ac].pmcs002)
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF   
+                  END IF
+               END IF
+            END IF
+            
+            LET g_inaa6_d[l_ac].pmcs002_desc = s_desc_get_department_desc(g_inaa6_d[l_ac].pmcs002)
+            DISPLAY BY NAME g_inaa6_d[l_ac].pmcs002_desc
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmcs002
+            #add-point:BEFORE FIELD pmcs002
+
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:1)
+         ON CHANGE pmcs002
+            #add-point:ON CHANGE pmcs002
+ 
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page6.pmcsstus
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcsstus
+            #add-point:ON ACTION controlp INFIELD pmcsstus
+
+            #END add-point
+ 
+         #Ctrlp:input.c.page6.pmcs002
+         #應用 a03 樣板自動產生(Version:1)
+         ON ACTION controlp INFIELD pmcs002
+            #add-point:ON ACTION controlp INFIELD pmcs002
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_inaa6_d[l_ac].pmcs002
+            
+            IF s_aooi500_setpoint(g_prog,'pmcs002') THEN
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmcs002',g_site,'i') #150308-00001#3 150309 pomelo add 'i'
+               CALL q_ooef001_24()
+            ELSE
+               CALL q_ooef001_35()
+            END IF   
+
+            LET g_inaa6_d[l_ac].pmcs002  = g_qryparam.return1
+            DISPLAY BY NAME g_inaa6_d[l_ac].pmcs002
+            
+            LET g_inaa6_d[l_ac].pmcs002_desc = s_desc_get_department_desc(g_inaa6_d[l_ac].pmcs002)
+            DISPLAY BY NAME g_inaa6_d[l_ac].pmcs002_desc
+            #END add-point
+ 
+ 
+ 
+         AFTER ROW
+            LET l_ac = ARR_CURR()
+            LET l_ac_t = l_ac
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_inaa6_d[l_ac].* = g_inaa6_d_t.*
+               END IF
+               CLOSE apmi830_bcl4
+               CALL s_transaction_end('N','0')
+               CANCEL DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+ 
+            CALL apmi830_unlock_b("pmcs_t")
+            CALL s_transaction_end('Y','0')
+            LET l_cmd = ''
+ 
+         AFTER INPUT
+            #add-point:input段after input 
+
+            #end add-point   
+ 
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_inaa6_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_inaa6_d.getLength()+1
+ 
+      END INPUT
+ 
+      
+ 
+    
+      DISPLAY ARRAY g_inaa3_d TO s_detail3.*
+         ATTRIBUTES(COUNT=g_detail_cnt)  
+      
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(g_detail_idx2)
+            CALL apmi830_fetch()
+            LET g_current_page = 3
+            
+         BEFORE ROW
+            LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail3")
+            LET l_ac = g_detail_idx
+            CALL cl_show_fld_cont() 
+            CALL apmi830_idx_chk('d')
+            
+         #add-point:page3自定義行為
+
+         #end add-point
+            
+      END DISPLAY
+      DISPLAY ARRAY g_inaa5_d TO s_detail5.*
+         ATTRIBUTES(COUNT=g_detail_cnt)  
+      
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(g_detail_idx2)
+            CALL apmi830_fetch()
+            LET g_current_page = 5
+            
+         BEFORE ROW
+            LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail5")
+            LET l_ac = g_detail_idx
+            CALL cl_show_fld_cont() 
+            CALL apmi830_idx_chk('d')
+            
+         #add-point:page5自定義行為
+
+         #end add-point
+            
+      END DISPLAY
+      DISPLAY ARRAY g_inaa7_d TO s_detail7.*
+         ATTRIBUTES(COUNT=g_detail_cnt)  
+      
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(g_detail_idx2)
+            CALL apmi830_fetch()
+            LET g_current_page = 7
+            
+         BEFORE ROW
+            LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail7")
+            LET l_ac = g_detail_idx
+            CALL cl_show_fld_cont() 
+            CALL apmi830_idx_chk('d')
+            
+         #add-point:page7自定義行為
+
+         #end add-point
+            
+      END DISPLAY
+ 
+      
+      #add-point:input段input_array"
+
+      #end add-point
+      
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         LET g_curr_diag = ui.DIALOG.getCurrent()
+         IF g_detail_idx > 0 THEN
+            IF g_detail_idx > g_inaa_d.getLength() THEN
+               LET g_detail_idx = g_inaa_d.getLength()
+            END IF
+            CALL DIALOG.setCurrentRow("s_detail1", g_detail_idx)
+            LET l_ac = g_detail_idx
+         END IF 
+         LET g_detail_idx = l_ac
+         #add-point:input段input_array"
+
+         #end add-point
+         #先確定單頭(第一單身)是否有資料
+         IF g_inaa_d.getLength() > 0 THEN
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD inaastus
+               WHEN "s_detail2"
+                  NEXT FIELD pmcqstus
+               WHEN "s_detail3"
+                  NEXT FIELD pmcq002_3
+               WHEN "s_detail4"
+                  NEXT FIELD pmcrstus
+               WHEN "s_detail5"
+                  NEXT FIELD pmcr002_5
+               WHEN "s_detail6"
+                  NEXT FIELD pmcsstus
+               WHEN "s_detail7"
+                  NEXT FIELD pmcs002_7
+ 
+            END CASE
+         ELSE
+            NEXT FIELD inaastus
+         END IF
+   
+      ON ACTION exporttoexcel
+         LET g_action_choice="exporttoexcel"
+         IF cl_auth_chk_act("exporttoexcel") THEN
+            CALL g_export_node.clear()
+            LET g_export_node[1] = base.typeInfo.create(g_inaa_d)
+            LET g_export_node[2] = base.typeInfo.create(g_inaa2_d)
+            LET g_export_node[3] = base.typeInfo.create(g_inaa3_d)
+            LET g_export_node[4] = base.typeInfo.create(g_inaa4_d)
+            LET g_export_node[5] = base.typeInfo.create(g_inaa5_d)
+            LET g_export_node[6] = base.typeInfo.create(g_inaa6_d)
+            LET g_export_node[7] = base.typeInfo.create(g_inaa7_d)
+ 
+            #add-point:ON ACTION exporttoexcel
+ 
+            #END add-point
+            CALL cl_export_to_excel_getpage()
+            CALL cl_export_to_excel()
+         END IF
+            
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   
+   CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)
+ 
+   CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx2)
+   CALL g_curr_diag.setCurrentRow("s_detail3",g_detail_idx2)
+   CALL g_curr_diag.setCurrentRow("s_detail4",g_detail_idx2)
+   CALL g_curr_diag.setCurrentRow("s_detail5",g_detail_idx2)
+   CALL g_curr_diag.setCurrentRow("s_detail6",g_detail_idx2)
+   CALL g_curr_diag.setCurrentRow("s_detail7",g_detail_idx2)
+ 
+   
+   #add-point:input段修改後
+
+   #end add-point
+ 
+   CLOSE apmi830_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION apmi830_b_fill(p_wc2)
+   DEFINE p_wc2           STRING
+   DEFINE l_ac_t          LIKE type_t.num5
+   #add-point:b_fill段define
+   DEFINE l_where         STRING
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   LET l_where = s_aooi500_sql_where(g_prog,'inaasite')
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = l_where
+   ELSE
+      LET p_wc2 = p_wc2 CLIPPED," AND ",l_where
+   END IF
+   #end add-point
+   
+   LET g_sql = "SELECT  UNIQUE t0.inaastus,t0.inaasite,t0.inaa001 ,t1.ooefl003 FROM inaa_t t0",
+ 
+               " LEFT JOIN pmcq_t ON pmcqent = inaaent AND inaasite = pmcqsite AND inaa001 = pmcq001",
+ 
+               " LEFT JOIN pmcr_t ON pmcrent = inaaent AND inaasite = pmcrsite AND inaa001 = pmcr001",
+ 
+               " LEFT JOIN pmcs_t ON pmcsent = inaaent AND inaasite = pmcssite AND inaa001 = pmcs001",
+ 
+ 
+               " LEFT JOIN inayl_t ON inaylent = '"||g_enterprise||"' AND inaa001 = inayl001 AND inayl002 = '",g_dlang,"'",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent='"||g_enterprise||"' AND t1.ooefl001=t0.inaasite AND t1.ooefl002='"||g_dlang||"' ",
+ 
+               " WHERE t0.inaaent= ?  AND  1=1 AND (", p_wc2, ") "
+   #add-point:b_fill段sql_wc
+   
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("inaa_t"),
+                      " ORDER BY t0.inaasite,t0.inaa001"
+  
+   #add-point:b_fill段sql_after
+   
+   #end add-point
+  
+   #LET g_sql = cl_sql_add_tabid(g_sql,"inaa_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料  
+   PREPARE apmi830_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apmi830_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_inaa_d.clear()
+   CALL g_inaa2_d.clear()   
+   CALL g_inaa3_d.clear()   
+   CALL g_inaa4_d.clear()   
+   CALL g_inaa5_d.clear()   
+   CALL g_inaa6_d.clear()   
+   CALL g_inaa7_d.clear()   
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_inaa_d[l_ac].inaastus,g_inaa_d[l_ac].inaasite,g_inaa_d[l_ac].inaa001,g_inaa_d[l_ac].inaasite_desc 
+ 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      
+      #end add-point
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   CALL g_inaa_d.deleteElement(g_inaa_d.getLength())   
+   CALL g_inaa2_d.deleteElement(g_inaa2_d.getLength())
+   CALL g_inaa3_d.deleteElement(g_inaa3_d.getLength())
+   CALL g_inaa4_d.deleteElement(g_inaa4_d.getLength())
+   CALL g_inaa5_d.deleteElement(g_inaa5_d.getLength())
+   CALL g_inaa6_d.deleteElement(g_inaa6_d.getLength())
+   CALL g_inaa7_d.deleteElement(g_inaa7_d.getLength())
+ 
+   
+   #確定指標無超過上限, 超過則指到最後一筆
+   IF g_detail_idx > g_inaa_d.getLength() THEN
+      LET g_detail_idx = g_inaa_d.getLength()
+   END IF
+   
+   #將key欄位填到每個page
+   LET l_ac_t = g_detail_idx
+   FOR g_detail_idx = 1 TO g_inaa_d.getLength()
+      #LET g_inaa2_d[g_detail_idx2].pmcq002 = g_inaa_d[g_detail_idx].inaasite 
+      #LET g_inaa2_d[g_detail_idx2].pmcq003 = g_inaa_d[g_detail_idx].inaa001 
+      #LET g_inaa3_d[g_detail_idx2].pmcq002 = g_inaa_d[g_detail_idx].inaasite 
+      #LET g_inaa3_d[g_detail_idx2].pmcq003 = g_inaa_d[g_detail_idx].inaa001 
+      #LET g_inaa4_d[g_detail_idx2].pmcr002 = g_inaa_d[g_detail_idx].inaasite 
+      #LET g_inaa5_d[g_detail_idx2].pmcr002 = g_inaa_d[g_detail_idx].inaasite 
+      #LET g_inaa6_d[g_detail_idx2].pmcs002 = g_inaa_d[g_detail_idx].inaasite 
+      #LET g_inaa7_d[g_detail_idx2].pmcs002 = g_inaa_d[g_detail_idx].inaasite 
+ 
+   END FOR
+   LET g_detail_idx = l_ac_t
+   
+   #add-point:b_fill段資料填充(其他單身)
+   
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1
+   IF g_detail_cnt > 0 THEN
+      DISPLAY g_detail_cnt TO FORMONLY.h_count
+   END IF
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE apmi830_pb
+   
+   LET g_loc = 'm'
+   CALL apmi830_detail_show() 
+   
+   LET l_ac = 1
+   IF g_inaa_d.getLength() > 0 THEN
+      CALL apmi830_fetch()
+   END IF
+   
+   ERROR "" 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION apmi830_fetch()
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:fetch段define
+   
+   #end add-point
+   
+   #判定單頭是否有資料
+   IF g_detail_idx <= 0 OR g_inaa_d.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_inaa2_d.clear()
+   CALL g_inaa3_d.clear()
+   CALL g_inaa4_d.clear()
+   CALL g_inaa5_d.clear()
+   CALL g_inaa6_d.clear()
+   CALL g_inaa7_d.clear()
+ 
+   
+   LET li_ac = l_ac 
+   
+   LET g_sql = "SELECT  UNIQUE t0.pmcqstus,t0.pmcq002,t0.pmcq003,t0.pmcq002,t0.pmcq003,t0.pmcqownid, 
+       t0.pmcqowndp,t0.pmcqcrtid,t0.pmcqcrtdp,t0.pmcqcrtdt,t0.pmcqmodid,t0.pmcqmoddt ,t2.ooag011 ,t3.ooefl003 , 
+       t4.ooag011 ,t5.ooefl003 ,t6.ooag011 FROM pmcq_t t0",    
+               "",
+                              " LEFT JOIN ooag_t t2 ON t2.ooagent='"||g_enterprise||"' AND t2.ooag001=t0.pmcqownid  ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent='"||g_enterprise||"' AND t3.ooefl001=t0.pmcqowndp AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t4 ON t4.ooagent='"||g_enterprise||"' AND t4.ooag001=t0.pmcqcrtid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent='"||g_enterprise||"' AND t5.ooefl001=t0.pmcqcrtdp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t6 ON t6.ooagent='"||g_enterprise||"' AND t6.ooag001=t0.pmcqmodid  ",
+ 
+               " WHERE t0.pmcqent=?  AND t0. pmcqsite=?  AND t0. pmcq001=?"
+   #add-point:單身sql wc
+   
+   #end add-point
+   IF NOT cl_null(g_wc2_table2) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+   END IF
+ 
+   LET g_sql = g_sql, " ORDER BY t0.pmcq002,t0.pmcq003" 
+                      
+   #add-point:單身填充前
+   
+   #end add-point
+   
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料    
+   PREPARE apmi830_pb2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR apmi830_pb2
+   
+   LET l_ac = g_detail_idx
+   OPEN b_fill_curs2 USING g_enterprise,g_inaa_d[l_ac].inaasite,g_inaa_d[l_ac].inaa001
+   
+   LET l_ac = 1
+   FOREACH b_fill_curs2 INTO g_inaa2_d[l_ac].pmcqstus,g_inaa2_d[l_ac].pmcq002,g_inaa2_d[l_ac].pmcq003, 
+       g_inaa3_d[l_ac].pmcq002,g_inaa3_d[l_ac].pmcq003,g_inaa3_d[l_ac].pmcqownid,g_inaa3_d[l_ac].pmcqowndp, 
+       g_inaa3_d[l_ac].pmcqcrtid,g_inaa3_d[l_ac].pmcqcrtdp,g_inaa3_d[l_ac].pmcqcrtdt,g_inaa3_d[l_ac].pmcqmodid, 
+       g_inaa3_d[l_ac].pmcqmoddt,g_inaa3_d[l_ac].pmcqownid_desc,g_inaa3_d[l_ac].pmcqowndp_desc,g_inaa3_d[l_ac].pmcqcrtid_desc, 
+       g_inaa3_d[l_ac].pmcqcrtdp_desc,g_inaa3_d[l_ac].pmcqmodid_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      CALL apmi830_pmcq003_ref()
+      #end add-point
+      
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_sql = "SELECT  UNIQUE t0.pmcrstus,t0.pmcr002,t0.pmcr002,t0.pmcrownid,t0.pmcrowndp,t0.pmcrcrtid, 
+       t0.pmcrcrtdp,t0.pmcrcrtdt,t0.pmcrmodid,t0.pmcrmoddt ,t7.ooag011 ,t8.ooefl003 ,t9.ooag011 ,t10.ooefl003 , 
+       t11.ooag011 FROM pmcr_t t0",    
+               "",
+                              " LEFT JOIN ooag_t t7 ON t7.ooagent='"||g_enterprise||"' AND t7.ooag001=t0.pmcrownid  ",
+               " LEFT JOIN ooefl_t t8 ON t8.ooeflent='"||g_enterprise||"' AND t8.ooefl001=t0.pmcrowndp AND t8.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t9 ON t9.ooagent='"||g_enterprise||"' AND t9.ooag001=t0.pmcrcrtid  ",
+               " LEFT JOIN ooefl_t t10 ON t10.ooeflent='"||g_enterprise||"' AND t10.ooefl001=t0.pmcrcrtdp AND t10.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t11 ON t11.ooagent='"||g_enterprise||"' AND t11.ooag001=t0.pmcrmodid  ",
+ 
+               " WHERE t0.pmcrent=?  AND t0. pmcrsite=?  AND t0. pmcr001=?"
+   #add-point:單身sql wc
+   
+   #end add-point
+   IF NOT cl_null(g_wc2_table3) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2_table3 CLIPPED
+   END IF
+ 
+   LET g_sql = g_sql, " ORDER BY t0.pmcr002" 
+                      
+   #add-point:單身填充前
+   
+   #end add-point
+   
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料    
+   PREPARE apmi830_pb3 FROM g_sql
+   DECLARE b_fill_curs3 CURSOR FOR apmi830_pb3
+   
+   LET l_ac = g_detail_idx
+   OPEN b_fill_curs3 USING g_enterprise,g_inaa_d[l_ac].inaasite,g_inaa_d[l_ac].inaa001
+   
+   LET l_ac = 1
+   FOREACH b_fill_curs3 INTO g_inaa4_d[l_ac].pmcrstus,g_inaa4_d[l_ac].pmcr002,g_inaa5_d[l_ac].pmcr002, 
+       g_inaa5_d[l_ac].pmcrownid,g_inaa5_d[l_ac].pmcrowndp,g_inaa5_d[l_ac].pmcrcrtid,g_inaa5_d[l_ac].pmcrcrtdp, 
+       g_inaa5_d[l_ac].pmcrcrtdt,g_inaa5_d[l_ac].pmcrmodid,g_inaa5_d[l_ac].pmcrmoddt,g_inaa5_d[l_ac].pmcrownid_desc, 
+       g_inaa5_d[l_ac].pmcrowndp_desc,g_inaa5_d[l_ac].pmcrcrtid_desc,g_inaa5_d[l_ac].pmcrcrtdp_desc, 
+       g_inaa5_d[l_ac].pmcrmodid_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      
+      #end add-point
+      
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_sql = "SELECT  UNIQUE t0.pmcsstus,t0.pmcs002,t0.pmcs002,t0.pmcsownid,t0.pmcsowndp,t0.pmcscrtid, 
+       t0.pmcscrtdp,t0.pmcscrtdt,t0.pmcsmodid,t0.pmcsmoddt ,t12.ooefl003 ,t13.ooag011 ,t14.ooefl003 , 
+       t15.ooag011 ,t16.ooefl003 ,t17.ooag011 FROM pmcs_t t0",    
+               "",
+                              " LEFT JOIN ooefl_t t12 ON t12.ooeflent='"||g_enterprise||"' AND t12.ooefl001=t0.pmcs002 AND t12.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t13 ON t13.ooagent='"||g_enterprise||"' AND t13.ooag001=t0.pmcsownid  ",
+               " LEFT JOIN ooefl_t t14 ON t14.ooeflent='"||g_enterprise||"' AND t14.ooefl001=t0.pmcsowndp AND t14.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t15 ON t15.ooagent='"||g_enterprise||"' AND t15.ooag001=t0.pmcscrtid  ",
+               " LEFT JOIN ooefl_t t16 ON t16.ooeflent='"||g_enterprise||"' AND t16.ooefl001=t0.pmcscrtdp AND t16.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t17 ON t17.ooagent='"||g_enterprise||"' AND t17.ooag001=t0.pmcsmodid  ",
+ 
+               " WHERE t0.pmcsent=?  AND t0. pmcssite=?  AND t0. pmcs001=?"
+   #add-point:單身sql wc
+   
+   #end add-point
+   IF NOT cl_null(g_wc2_table4) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2_table4 CLIPPED
+   END IF
+ 
+   LET g_sql = g_sql, " ORDER BY t0.pmcs002" 
+                      
+   #add-point:單身填充前
+   
+   #end add-point
+   
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料    
+   PREPARE apmi830_pb4 FROM g_sql
+   DECLARE b_fill_curs4 CURSOR FOR apmi830_pb4
+   
+   LET l_ac = g_detail_idx
+   OPEN b_fill_curs4 USING g_enterprise,g_inaa_d[l_ac].inaasite,g_inaa_d[l_ac].inaa001
+   
+   LET l_ac = 1
+   FOREACH b_fill_curs4 INTO g_inaa6_d[l_ac].pmcsstus,g_inaa6_d[l_ac].pmcs002,g_inaa7_d[l_ac].pmcs002, 
+       g_inaa7_d[l_ac].pmcsownid,g_inaa7_d[l_ac].pmcsowndp,g_inaa7_d[l_ac].pmcscrtid,g_inaa7_d[l_ac].pmcscrtdp, 
+       g_inaa7_d[l_ac].pmcscrtdt,g_inaa7_d[l_ac].pmcsmodid,g_inaa7_d[l_ac].pmcsmoddt,g_inaa6_d[l_ac].pmcs002_desc, 
+       g_inaa7_d[l_ac].pmcsownid_desc,g_inaa7_d[l_ac].pmcsowndp_desc,g_inaa7_d[l_ac].pmcscrtid_desc, 
+       g_inaa7_d[l_ac].pmcscrtdp_desc,g_inaa7_d[l_ac].pmcsmodid_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      
+      #end add-point
+      
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+ 
+ 
+   #add-point:單身填充後
+   
+   #end add-point
+   
+   CALL g_inaa2_d.deleteElement(g_inaa2_d.getLength())   
+   CALL g_inaa3_d.deleteElement(g_inaa3_d.getLength())   
+   CALL g_inaa4_d.deleteElement(g_inaa4_d.getLength())   
+   CALL g_inaa5_d.deleteElement(g_inaa5_d.getLength())   
+   CALL g_inaa6_d.deleteElement(g_inaa6_d.getLength())   
+   CALL g_inaa7_d.deleteElement(g_inaa7_d.getLength())   
+ 
+   
+   DISPLAY g_inaa2_d.getLength() TO FORMONLY.cnt
+   #LET g_loc = 'd'
+   CALL apmi830_detail_show()
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION apmi830_detail_show()
+   DEFINE l_ac_t LIKE type_t.num5
+   #add-point:show段define
+   DEFINE l_acc_code   LIKE oocq_t.oocq001
+   DEFINE l_imaal004   LIKE imaal_t.imaal004
+   #end add-point
+   
+   LET l_ac_t = l_ac
+ 
+   #add-point:detail_show段之前
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+   #帶出公用欄位reference值page2
+   
+   #帶出公用欄位reference值page3
+   
+ 
+   #帶出公用欄位reference值page4
+   
+   #帶出公用欄位reference值page5
+   
+ 
+   #帶出公用欄位reference值page6
+   
+   #帶出公用欄位reference值page7
+   
+ 
+ 
+   
+   IF g_loc = 'm' THEN
+      #讀入ref值
+      FOR l_ac = 1 TO g_inaa_d.getLength()
+         #add-point:show段單頭reference
+         LET g_inaa_d[l_ac].inayl003 = s_desc_get_stock_desc(g_inaa_d[l_ac].inaasite,g_inaa_d[l_ac].inaa001)
+         #end add-point
+ 
+      END FOR
+   END IF
+   
+   IF g_loc = 'd' THEN
+      FOR l_ac = 1 TO g_inaa2_d.getLength()
+        #add-point:show段單身reference
+        CALL apmi830_pmcq003_ref()      
+        #end add-point
+      END FOR
+      FOR l_ac = 1 TO g_inaa3_d.getLength()
+        #add-point:show段單身reference
+        
+        #end add-point
+      END FOR
+      FOR l_ac = 1 TO g_inaa4_d.getLength()
+        #add-point:show段單身reference
+        
+        #end add-point
+      END FOR
+      FOR l_ac = 1 TO g_inaa5_d.getLength()
+        #add-point:show段單身reference
+        
+        #end add-point
+      END FOR
+      FOR l_ac = 1 TO g_inaa6_d.getLength()
+        #add-point:show段單身reference
+        LET g_inaa6_d[l_ac].pmcs002_desc = s_desc_get_department_desc(g_inaa6_d[l_ac].pmcs002)
+        #end add-point
+      END FOR
+      FOR l_ac = 1 TO g_inaa7_d.getLength()
+        #add-point:show段單身reference
+        
+        #end add-point
+      END FOR
+ 
+      
+      #add-point:detail_show段之後
+      IF g_loc = 'm' THEN      
+         LET g_loc = 'd'
+         CALL apmi830_detail_show() 
+      END IF  
+      #end add-point
+   END IF
+   
+   LET l_ac = l_ac_t
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION apmi830_set_entry_b(p_cmd)                                                  
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define
+   
+   #end add-point
+   
+   #add-point:set_entry段欄位控制後
+   
+   #end add-point 
+                                                                     
+END FUNCTION                                                                    
+ 
+{</section>}
+ 
+{<section id="apmi830.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION apmi830_set_no_entry_b(p_cmd)                                               
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define
+   
+   #end add-point
+   
+   #add-point:set_no_entry段欄位控制後
+   
+   #end add-point 
+                                                                          
+END FUNCTION  
+ 
+{</section>}
+ 
+{<section id="apmi830.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION apmi830_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " inaasite = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " inaa001 = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc = ls_wc
+   ELSE
+      LET g_wc = " 1=2"
+   END IF
+   
+   #add-point:default_search段結束前
+   IF cl_null(ls_wc) THEN
+      LET g_wc = " 1=1"
+   END IF   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION apmi830_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "inaa_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      
+      #end add-point  
+      DELETE FROM inaa_t
+       WHERE inaaent = g_enterprise AND
+         inaasite = ps_keys_bak[1] AND inaa001 = ps_keys_bak[2]
+      #add-point:delete_b段刪除中
+      
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+      END IF
+      #add-point:delete_b段刪除後
+      
+      #end add-point  
+   END IF
+   
+ 
+   
+   LET ls_group = "pmcq_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      
+      #end add-point  
+      DELETE FROM pmcq_t
+       WHERE pmcqent = g_enterprise AND
+         pmcqsite = ps_keys_bak[1] AND pmcq001 = ps_keys_bak[2] AND pmcq002 = ps_keys_bak[3] AND pmcq003 = ps_keys_bak[4]
+      #add-point:delete_b段刪除中
+      
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pmcq_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+      END IF
+      #add-point:delete_b段刪除後
+      
+      #end add-point  
+      RETURN
+   END IF
+ 
+   LET ls_group = "pmcr_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      
+      #end add-point  
+      DELETE FROM pmcr_t
+       WHERE pmcrent = g_enterprise AND
+         pmcrsite = ps_keys_bak[1] AND pmcr001 = ps_keys_bak[2] AND pmcr002 = ps_keys_bak[3]
+      #add-point:delete_b段刪除中
+      
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pmcr_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+      END IF
+      #add-point:delete_b段刪除後
+      
+      #end add-point  
+      RETURN
+   END IF
+ 
+   LET ls_group = "pmcs_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      
+      #end add-point  
+      DELETE FROM pmcs_t
+       WHERE pmcsent = g_enterprise AND
+         pmcssite = ps_keys_bak[1] AND pmcs001 = ps_keys_bak[2] AND pmcs002 = ps_keys_bak[3]
+      #add-point:delete_b段刪除中
+      
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pmcs_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+      END IF
+      #add-point:delete_b段刪除後
+      
+      #end add-point  
+      RETURN
+   END IF
+ 
+ 
+   
+   #單頭刪除, 連帶刪除單身
+   LET ls_group = "inaa_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      
+      #end add-point  
+      DELETE FROM pmcq_t
+       WHERE pmcqent = g_enterprise AND
+         pmcqsite = ps_keys_bak[1] AND pmcq001 = ps_keys_bak[2]
+      #add-point:delete_b段刪除中
+      
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pmcq_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+      END IF
+      #add-point:delete_b段刪除後
+      
+      #end add-point  
+      RETURN
+   END IF
+ 
+   #單頭刪除, 連帶刪除單身
+   LET ls_group = "inaa_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      
+      #end add-point  
+      DELETE FROM pmcr_t
+       WHERE pmcrent = g_enterprise AND
+         pmcrsite = ps_keys_bak[1] AND pmcr001 = ps_keys_bak[2]
+      #add-point:delete_b段刪除中
+      
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pmcr_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+      END IF
+      #add-point:delete_b段刪除後
+      
+      #end add-point  
+      RETURN
+   END IF
+ 
+   #單頭刪除, 連帶刪除單身
+   LET ls_group = "inaa_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      
+      #end add-point  
+      DELETE FROM pmcs_t
+       WHERE pmcsent = g_enterprise AND
+         pmcssite = ps_keys_bak[1] AND pmcs001 = ps_keys_bak[2]
+      #add-point:delete_b段刪除中
+      
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pmcs_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+      END IF
+      #add-point:delete_b段刪除後
+      
+      #end add-point  
+      RETURN
+   END IF
+ 
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION apmi830_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+   
+   #end add-point
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "inaa_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:insert_b段新增前
+      
+      #end add-point
+      INSERT INTO inaa_t
+                  (inaaent,
+                   inaasite,inaa001
+                   ,inaastus) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_inaa_d[g_detail_idx].inaastus)
+      #add-point:insert_b段新增中
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "inaa_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後
+      
+      #end add-point
+   END IF
+   
+ 
+   
+   LET ls_group = "pmcq_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:insert_b段新增前
+      
+      #end add-point
+      INSERT INTO pmcq_t
+                  (pmcqent,
+                   pmcqsite,pmcq001,pmcq002,pmcq003
+                   ,pmcqstus,pmcqownid,pmcqowndp,pmcqcrtid,pmcqcrtdp,pmcqcrtdt,pmcqmodid,pmcqmoddt) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+                   ,g_inaa2_d[g_detail_idx2].pmcqstus,g_inaa3_d[g_detail_idx2].pmcqownid,g_inaa3_d[g_detail_idx2].pmcqowndp, 
+                       g_inaa3_d[g_detail_idx2].pmcqcrtid,g_inaa3_d[g_detail_idx2].pmcqcrtdp,g_inaa3_d[g_detail_idx2].pmcqcrtdt, 
+                       g_inaa3_d[g_detail_idx2].pmcqmodid,g_inaa3_d[g_detail_idx2].pmcqmoddt)
+      #add-point:insert_b段新增中
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         RETURN
+      END IF
+      #add-point:insert_b段新增後
+      
+      #end add-point
+   END IF
+ 
+   LET ls_group = "pmcr_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:insert_b段新增前
+      
+      #end add-point
+      INSERT INTO pmcr_t
+                  (pmcrent,
+                   pmcrsite,pmcr001,pmcr002
+                   ,pmcrstus,pmcrownid,pmcrowndp,pmcrcrtid,pmcrcrtdp,pmcrcrtdt,pmcrmodid,pmcrmoddt) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_inaa4_d[g_detail_idx2].pmcrstus,g_inaa5_d[g_detail_idx2].pmcrownid,g_inaa5_d[g_detail_idx2].pmcrowndp, 
+                       g_inaa5_d[g_detail_idx2].pmcrcrtid,g_inaa5_d[g_detail_idx2].pmcrcrtdp,g_inaa5_d[g_detail_idx2].pmcrcrtdt, 
+                       g_inaa5_d[g_detail_idx2].pmcrmodid,g_inaa5_d[g_detail_idx2].pmcrmoddt)
+      #add-point:insert_b段新增中
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         RETURN
+      END IF
+      #add-point:insert_b段新增後
+      
+      #end add-point
+   END IF
+ 
+   LET ls_group = "pmcs_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:insert_b段新增前
+      
+      #end add-point
+      INSERT INTO pmcs_t
+                  (pmcsent,
+                   pmcssite,pmcs001,pmcs002
+                   ,pmcsstus,pmcsownid,pmcsowndp,pmcscrtid,pmcscrtdp,pmcscrtdt,pmcsmodid,pmcsmoddt) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_inaa6_d[g_detail_idx2].pmcsstus,g_inaa7_d[g_detail_idx2].pmcsownid,g_inaa7_d[g_detail_idx2].pmcsowndp, 
+                       g_inaa7_d[g_detail_idx2].pmcscrtid,g_inaa7_d[g_detail_idx2].pmcscrtdp,g_inaa7_d[g_detail_idx2].pmcscrtdt, 
+                       g_inaa7_d[g_detail_idx2].pmcsmodid,g_inaa7_d[g_detail_idx2].pmcsmoddt)
+      #add-point:insert_b段新增中
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         RETURN
+      END IF
+      #add-point:insert_b段新增後
+      
+      #end add-point
+   END IF
+ 
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION apmi830_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "inaa_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "inaa_t" THEN
+   
+      #add-point:update_b段修改前
+      
+      #end add-point     
+   
+      UPDATE inaa_t 
+         SET (inaasite,inaa001
+              ,inaastus) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_inaa_d[g_detail_idx].inaastus) 
+         WHERE inaasite = ps_keys_bak[1] AND inaa001 = ps_keys_bak[2]
+ 
+      #add-point:update_b段修改中
+           AND inaaent = g_enterprise  #160905-00007#19
+      #end add-point 
+         
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "inaa_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "inaa_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            LET l_new_key[01] = ps_keys[01] 
+LET l_old_key[01] = ps_keys_bak[01] 
+LET l_field_key[01] = 'inayl001'
+LET l_new_key[02] = g_dlang 
+LET l_old_key[02] = g_dlang 
+LET l_field_key[02] = 'inayl002'
+CALL cl_multitable_key_upd(l_new_key, l_old_key, l_field_key, 'inayl_t')
+      END CASE
+ 
+      #add-point:update_b段修改後
+      
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+   LET ls_group = "pmcq_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "pmcq_t" THEN
+   
+      #add-point:update_b段修改前
+      
+      #end add-point    
+      
+      UPDATE pmcq_t 
+         SET (pmcqsite,pmcq001,pmcq002,pmcq003
+              ,pmcqstus,pmcqownid,pmcqowndp,pmcqcrtid,pmcqcrtdp,pmcqcrtdt,pmcqmodid,pmcqmoddt) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+              ,g_inaa2_d[g_detail_idx2].pmcqstus,g_inaa3_d[g_detail_idx2].pmcqownid,g_inaa3_d[g_detail_idx2].pmcqowndp, 
+                  g_inaa3_d[g_detail_idx2].pmcqcrtid,g_inaa3_d[g_detail_idx2].pmcqcrtdp,g_inaa3_d[g_detail_idx2].pmcqcrtdt, 
+                  g_inaa3_d[g_detail_idx2].pmcqmodid,g_inaa3_d[g_detail_idx2].pmcqmoddt) 
+         WHERE pmcqsite = ps_keys_bak[1] AND pmcq001 = ps_keys_bak[2] AND pmcq002 = ps_keys_bak[3] AND pmcq003 = ps_keys_bak[4]
+ 
+      #add-point:update_b段修改中
+          AND pmcqent = g_enterprise #160905-00007#19
+      #end add-point 
+         
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pmcq_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pmcq_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+      #add-point:update_b段修改後
+      
+      #end add-point 
+      
+      RETURN
+   END IF
+ 
+   LET ls_group = "pmcr_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "pmcr_t" THEN
+   
+      #add-point:update_b段修改前
+      
+      #end add-point    
+      
+      UPDATE pmcr_t 
+         SET (pmcrsite,pmcr001,pmcr002
+              ,pmcrstus,pmcrownid,pmcrowndp,pmcrcrtid,pmcrcrtdp,pmcrcrtdt,pmcrmodid,pmcrmoddt) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_inaa4_d[g_detail_idx2].pmcrstus,g_inaa5_d[g_detail_idx2].pmcrownid,g_inaa5_d[g_detail_idx2].pmcrowndp, 
+                  g_inaa5_d[g_detail_idx2].pmcrcrtid,g_inaa5_d[g_detail_idx2].pmcrcrtdp,g_inaa5_d[g_detail_idx2].pmcrcrtdt, 
+                  g_inaa5_d[g_detail_idx2].pmcrmodid,g_inaa5_d[g_detail_idx2].pmcrmoddt) 
+         WHERE pmcrsite = ps_keys_bak[1] AND pmcr001 = ps_keys_bak[2] AND pmcr002 = ps_keys_bak[3]
+ 
+      #add-point:update_b段修改中
+           AND pmcrent = g_enterprise #160905-00007#19
+      #end add-point 
+         
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pmcr_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pmcr_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+      #add-point:update_b段修改後
+      
+      #end add-point 
+      
+      RETURN
+   END IF
+ 
+   LET ls_group = "pmcs_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "pmcs_t" THEN
+   
+      #add-point:update_b段修改前
+      
+      #end add-point    
+      
+      UPDATE pmcs_t 
+         SET (pmcssite,pmcs001,pmcs002
+              ,pmcsstus,pmcsownid,pmcsowndp,pmcscrtid,pmcscrtdp,pmcscrtdt,pmcsmodid,pmcsmoddt) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_inaa6_d[g_detail_idx2].pmcsstus,g_inaa7_d[g_detail_idx2].pmcsownid,g_inaa7_d[g_detail_idx2].pmcsowndp, 
+                  g_inaa7_d[g_detail_idx2].pmcscrtid,g_inaa7_d[g_detail_idx2].pmcscrtdp,g_inaa7_d[g_detail_idx2].pmcscrtdt, 
+                  g_inaa7_d[g_detail_idx2].pmcsmodid,g_inaa7_d[g_detail_idx2].pmcsmoddt) 
+         WHERE pmcssite = ps_keys_bak[1] AND pmcs001 = ps_keys_bak[2] AND pmcs002 = ps_keys_bak[3]
+ 
+      #add-point:update_b段修改中
+           AND pmcsent = g_enterprise #160905-00007#19
+      #end add-point 
+         
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pmcs_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pmcs_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+      #add-point:update_b段修改後
+      
+      #end add-point 
+      
+      RETURN
+   END IF
+ 
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.key_update_b" >}
+#+ 單頭key欄位變動後, 連帶修正其他單身table
+PRIVATE FUNCTION apmi830_key_update_b()
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   
+   #end add-point
+ 
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   
+   IF g_master.inaasite <> g_master_t.inaasite THEN
+      LET lb_chk = FALSE
+   END IF
+   IF g_master.inaa001 <> g_master_t.inaa001 THEN
+      LET lb_chk = FALSE
+   END IF
+ 
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #add-point:update_b段修改前
+   
+   #end add-point
+   
+   UPDATE pmcq_t 
+      SET (pmcqsite,pmcq001) 
+           = 
+          (g_master.inaasite,g_master.inaa001) 
+      WHERE 
+           pmcqsite = g_master_t.inaasite
+           AND pmcq001 = g_master_t.inaa001
+ 
+           
+   #add-point:update_b段修改中
+          AND pmcqent = g_enterprise #160905-00007#19 
+   #end add-point
+           
+   CASE
+      WHEN SQLCA.sqlcode #其他錯誤
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pmcq_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+      OTHERWISE
+         #若有多語言table資料一同更新
+         
+   END CASE
+   
+   #add-point:update_b段修改後
+   
+   #end add-point
+ 
+   #add-point:update_b段修改前
+   
+   #end add-point
+   
+   UPDATE pmcr_t 
+      SET (pmcrsite,pmcr001) 
+           = 
+          (g_master.inaasite,g_master.inaa001) 
+      WHERE 
+           pmcrsite = g_master_t.inaasite
+           AND pmcr001 = g_master_t.inaa001
+ 
+           
+   #add-point:update_b段修改中
+           AND pmcrent = g_enterprise #160905-00007#19
+   #end add-point
+           
+   CASE
+      WHEN SQLCA.sqlcode #其他錯誤
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pmcr_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+      OTHERWISE
+         #若有多語言table資料一同更新
+         
+   END CASE
+   
+   #add-point:update_b段修改後
+   
+   #end add-point
+ 
+   #add-point:update_b段修改前
+   
+   #end add-point
+   
+   UPDATE pmcs_t 
+      SET (pmcssite,pmcs001) 
+           = 
+          (g_master.inaasite,g_master.inaa001) 
+      WHERE 
+           pmcssite = g_master_t.inaasite
+           AND pmcs001 = g_master_t.inaa001
+ 
+           
+   #add-point:update_b段修改中
+          AND pmcsent = g_enterprise #160905-00007#19 
+   #end add-point
+           
+   CASE
+      WHEN SQLCA.sqlcode #其他錯誤
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pmcs_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+      OTHERWISE
+         #若有多語言table資料一同更新
+         
+   END CASE
+   
+   #add-point:update_b段修改後
+   
+   #end add-point
+ 
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION apmi830_lock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   
+   #end add-point   
+   
+   #先刷新資料
+   #CALL apmi830_b_fill(g_wc)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "inaa_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN apmi830_bcl USING g_enterprise,
+                                       g_inaa_d[g_detail_idx].inaasite,g_inaa_d[g_detail_idx].inaa001 
+ 
+                                       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "apmi830_bcl" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   #鎖定整組table
+   #LET ls_group = "pmcq_t,"
+   #僅鎖定自身table
+   LET ls_group = "pmcq_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN apmi830_bcl2 USING g_enterprise,
+                                             g_master.inaasite,g_master.inaa001,
+                                             g_inaa2_d[g_detail_idx2].pmcq002,g_inaa2_d[g_detail_idx2].pmcq003 
+ 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "apmi830_bcl2" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         RETURN FALSE
+      END IF
+   END IF
+ 
+   #鎖定整組table
+   #LET ls_group = "pmcr_t,"
+   #僅鎖定自身table
+   LET ls_group = "pmcr_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN apmi830_bcl3 USING g_enterprise,
+                                             g_master.inaasite,g_master.inaa001,
+                                             g_inaa4_d[g_detail_idx2].pmcr002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "apmi830_bcl3" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         RETURN FALSE
+      END IF
+   END IF
+ 
+   #鎖定整組table
+   #LET ls_group = "pmcs_t,"
+   #僅鎖定自身table
+   LET ls_group = "pmcs_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN apmi830_bcl4 USING g_enterprise,
+                                             g_master.inaasite,g_master.inaa001,
+                                             g_inaa6_d[g_detail_idx2].pmcs002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "apmi830_bcl4" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION apmi830_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE apmi830_bcl
+   END IF
+   
+ 
+    
+   LET ls_group = "pmcq_t,"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE apmi830_bcl2
+   END IF
+ 
+   LET ls_group = "pmcr_t,"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE apmi830_bcl3
+   END IF
+ 
+   LET ls_group = "pmcs_t,"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE apmi830_bcl4
+   END IF
+ 
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.idx_chk" >}
+#+ 單身筆數變更
+PRIVATE FUNCTION apmi830_idx_chk(ps_loc)
+   DEFINE ps_loc   LIKE type_t.chr10
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE li_cnt   LIKE type_t.num5
+   #add-point:idx_chk段define
+   
+   #end add-point  
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_inaa_d.getLength() THEN
+         LET g_detail_idx = g_inaa_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_inaa_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      LET li_idx = g_detail_idx
+      LET li_cnt = g_inaa_d.getLength()
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx2 = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx2 > g_inaa2_d.getLength() THEN
+         LET g_detail_idx2 = g_inaa2_d.getLength()
+      END IF
+      IF g_detail_idx2 = 0 AND g_inaa2_d.getLength() <> 0 THEN
+         LET g_detail_idx2 = 1
+      END IF
+      LET li_idx = g_detail_idx2
+      LET li_cnt = g_inaa2_d.getLength()
+   END IF
+   IF g_current_page = 3 THEN
+      LET g_detail_idx2 = g_curr_diag.getCurrentRow("s_detail3")
+      IF g_detail_idx2 > g_inaa3_d.getLength() THEN
+         LET g_detail_idx2 = g_inaa3_d.getLength()
+      END IF
+      IF g_detail_idx2 = 0 AND g_inaa3_d.getLength() <> 0 THEN
+         LET g_detail_idx2 = 1
+      END IF
+      LET li_idx = g_detail_idx2
+      LET li_cnt = g_inaa3_d.getLength()
+   END IF
+   IF g_current_page = 4 THEN
+      LET g_detail_idx2 = g_curr_diag.getCurrentRow("s_detail4")
+      IF g_detail_idx2 > g_inaa4_d.getLength() THEN
+         LET g_detail_idx2 = g_inaa4_d.getLength()
+      END IF
+      IF g_detail_idx2 = 0 AND g_inaa4_d.getLength() <> 0 THEN
+         LET g_detail_idx2 = 1
+      END IF
+      LET li_idx = g_detail_idx2
+      LET li_cnt = g_inaa4_d.getLength()
+   END IF
+   IF g_current_page = 5 THEN
+      LET g_detail_idx2 = g_curr_diag.getCurrentRow("s_detail5")
+      IF g_detail_idx2 > g_inaa5_d.getLength() THEN
+         LET g_detail_idx2 = g_inaa5_d.getLength()
+      END IF
+      IF g_detail_idx2 = 0 AND g_inaa5_d.getLength() <> 0 THEN
+         LET g_detail_idx2 = 1
+      END IF
+      LET li_idx = g_detail_idx2
+      LET li_cnt = g_inaa5_d.getLength()
+   END IF
+   IF g_current_page = 6 THEN
+      LET g_detail_idx2 = g_curr_diag.getCurrentRow("s_detail6")
+      IF g_detail_idx2 > g_inaa6_d.getLength() THEN
+         LET g_detail_idx2 = g_inaa6_d.getLength()
+      END IF
+      IF g_detail_idx2 = 0 AND g_inaa6_d.getLength() <> 0 THEN
+         LET g_detail_idx2 = 1
+      END IF
+      LET li_idx = g_detail_idx2
+      LET li_cnt = g_inaa6_d.getLength()
+   END IF
+   IF g_current_page = 7 THEN
+      LET g_detail_idx2 = g_curr_diag.getCurrentRow("s_detail7")
+      IF g_detail_idx2 > g_inaa7_d.getLength() THEN
+         LET g_detail_idx2 = g_inaa7_d.getLength()
+      END IF
+      IF g_detail_idx2 = 0 AND g_inaa7_d.getLength() <> 0 THEN
+         LET g_detail_idx2 = 1
+      END IF
+      LET li_idx = g_detail_idx2
+      LET li_cnt = g_inaa7_d.getLength()
+   END IF
+ 
+    
+   IF ps_loc = 'm' THEN
+      DISPLAY li_idx TO FORMONLY.h_index
+      DISPLAY li_cnt TO FORMONLY.h_count
+      IF g_inaa2_d.getLength() = 0 THEN
+         DISPLAY '' TO FORMONLY.idx
+         DISPLAY '' TO FORMONLY.cnt
+      ELSE
+         DISPLAY 1 TO FORMONLY.idx
+         DISPLAY g_inaa2_d.getLength() TO FORMONLY.cnt
+      END IF
+      IF g_inaa3_d.getLength() = 0 THEN
+         DISPLAY '' TO FORMONLY.idx
+         DISPLAY '' TO FORMONLY.cnt
+      ELSE
+         DISPLAY 1 TO FORMONLY.idx
+         DISPLAY g_inaa3_d.getLength() TO FORMONLY.cnt
+      END IF
+      IF g_inaa4_d.getLength() = 0 THEN
+         DISPLAY '' TO FORMONLY.idx
+         DISPLAY '' TO FORMONLY.cnt
+      ELSE
+         DISPLAY 1 TO FORMONLY.idx
+         DISPLAY g_inaa4_d.getLength() TO FORMONLY.cnt
+      END IF
+      IF g_inaa5_d.getLength() = 0 THEN
+         DISPLAY '' TO FORMONLY.idx
+         DISPLAY '' TO FORMONLY.cnt
+      ELSE
+         DISPLAY 1 TO FORMONLY.idx
+         DISPLAY g_inaa5_d.getLength() TO FORMONLY.cnt
+      END IF
+      IF g_inaa6_d.getLength() = 0 THEN
+         DISPLAY '' TO FORMONLY.idx
+         DISPLAY '' TO FORMONLY.cnt
+      ELSE
+         DISPLAY 1 TO FORMONLY.idx
+         DISPLAY g_inaa6_d.getLength() TO FORMONLY.cnt
+      END IF
+      IF g_inaa7_d.getLength() = 0 THEN
+         DISPLAY '' TO FORMONLY.idx
+         DISPLAY '' TO FORMONLY.cnt
+      ELSE
+         DISPLAY 1 TO FORMONLY.idx
+         DISPLAY g_inaa7_d.getLength() TO FORMONLY.cnt
+      END IF
+ 
+   ELSE
+      DISPLAY li_idx TO FORMONLY.idx
+      DISPLAY li_cnt TO FORMONLY.cnt
+   END IF
+   
+   #add-point:idx_chk段other
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmi830.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:1)
+#+ 給予pk_array內容
+PRIVATE FUNCTION apmi830_set_pk_array()
+   #add-point:set_pk_array段define
+   
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_inaa_d[g_detail_idx].inaasite
+   LET g_pk_array[1].column = 'inaasite'
+   LET g_pk_array[2].values = g_inaa_d[g_detail_idx].inaa001
+   LET g_pk_array[2].column = 'inaa001'
+   
+   #add-point:set_pk_array段之後
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="apmi830.state_change" >}
+    
+ 
+{</section>}
+ 
+{<section id="apmi830.func_signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="apmi830.other_dialog" readonly="Y" >}
+ 
+ 
+{</section>}
+ 
+{<section id="apmi830.other_function" readonly="Y" >}
+
+################################################################################
+# Memo...........:
+# Usage..........: CALL apmi830_pmcq003_ref()
+# Date & Author..: 2014/11/24 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmi830_pmcq003_ref()
+   DEFINE l_acc_code   LIKE oocq_t.oocq001
+   DEFINE l_imaal004   LIKE imaal_t.imaal004
+   
+   CASE g_inaa2_d[l_ac].pmcq002
+      WHEN '3'   #品牌
+         LET l_acc_code = '2002'
+      WHEN '4'   #系列
+         LET l_acc_code = '2003'
+      WHEN '5'   #型別 
+         LET l_acc_code = '2004'
+      WHEN '6'   #功能 
+         LET l_acc_code = '2005'
+      WHEN '7'   #價格帶
+         LET l_acc_code = '2001'
+      WHEN '8'   #其他屬性一
+         LET l_acc_code = '2006'
+      WHEN '9'   #其他屬性二
+         LET l_acc_code = '2007'
+      WHEN '10'  #其他屬性三
+         LET l_acc_code = '2008'
+      WHEN '11'  #其他屬性四
+         LET l_acc_code = '2009'
+      WHEN '12'  #其他屬性五
+         LET l_acc_code = '2010'
+      WHEN '13'  #其他屬性六
+         LET l_acc_code = '2011'
+      WHEN '14'  #其他屬性七
+         LET l_acc_code = '2012'
+      WHEN '15'  #其他屬性八
+         LET l_acc_code = '2013'
+      WHEN '16'  #其他屬性九
+         LET l_acc_code = '2014'
+      WHEN '17'  #其他屬性十
+         LET l_acc_code = '2015'                  
+   END CASE
+   
+   CASE g_inaa2_d[l_ac].pmcq002
+      WHEN '1'   #產品編號
+         CALL s_desc_get_item_desc(g_inaa2_d[l_ac].pmcq003)
+            RETURNING g_inaa2_d[l_ac].pmcq003_desc,l_imaal004
+      WHEN '2'   #產品品類
+         CALL s_desc_get_rtaxl003_desc(g_inaa2_d[l_ac].pmcq003)
+            RETURNING g_inaa2_d[l_ac].pmcq003_desc 
+      OTHERWISE
+         CALL s_desc_get_acc_desc(l_acc_code,g_inaa2_d[l_ac].pmcq003)
+            RETURNING g_inaa2_d[l_ac].pmcq003_desc  
+   END CASE
+   
+   DISPLAY BY NAME g_inaa2_d[l_ac].pmcq003_desc
+END FUNCTION
+
+ 
+{</section>}
+ 

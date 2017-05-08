@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axmr431_x01" std_prog="axmr431_x01" erpver="1.0" module="AXM" ver="1" env="s" zone="t10prd" booking="Y" type="X" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="X" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="ins_data.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE l_success    LIKE type_t.num5]]>
+  </point>
+  <point name="ins_data.foreach" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       #產品分類
+       SELECT imaa009,rtaxl003 INTO sr.l_imaa009,sr.l_imaa009_desc
+         FROM imaa_t LEFT OUTER JOIN rtaxl_t ON rtaxlent = imaaent AND rtaxl001 = imaa009 AND rtaxl002 = g_dlang
+        WHERE imaaent = g_enterprise AND imaa001 = sr.xmde006
+       #銷售分群
+       SELECT imaf111,oocql04 INTO sr.l_imaf111,sr.l_imaf111_desc
+         FROM imaf_t LEFT OUTER JOIN oocql_t ON oocqlent = imafent AND oocql001 = '202' AND oocql002 = imaf111 AND oocql003 = g_dlang
+        WHERE imafent = g_enterprise AND imaf001 = sr.xmde006
+       #料件
+       CALL s_desc_get_item_desc(sr.xmde006) RETURNING sr.l_imaal003,sr.l_imaal004
+       #產品特徵
+       CALL s_feature_description(sr.xmde006,sr.xmde007) RETURNING l_success,sr.l_xmde007_desc
+       #差異處理否
+       CALL s_desc_gzcbl004_desc('5450',sr.xmde025) RETURNING sr.l_xmde025_desc
+]]>
+  </point>
+  <point name="sel_prep.g_from" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[    LET g_from = " FROM xmde_t,xmfl_t,xmfj_t ",
+                 " LEFT OUTER JOIN ooag_t ON ooagent = xmfjent AND ooag001 = xmfj001 ",
+                 " LEFT OUTER JOIN ooefl_t ON ooeflent = xmfjent AND ooefl001 = xmfj002 AND ooefl002 = '",g_dlang,"' ",
+                 " LEFT OUTER JOIN pmaal_t ON pmaalent = xmfjent AND pmaal001 = xmfj003 AND pmaal002 = '",g_dlang,"' "
+]]>
+  </point>
+  <point name="sel_prep.g_select" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[   LET g_select = " SELECT xmde001,xmde002,xmfj001,ooag011,xmfj002,ooefl003,xmfj003,pmaal004,xmde005,xmde003, ",
+                  "        xmde004,NULL,NULL,NULL,NULL,xmde006,NULL,NULL,xmde007,NULL, ",
+                  "        xmde008,xmde009,xmde029,xmde014,xmde015,xmde016,xmde010,xmde011,xmde012,xmde013, ",
+                  "        xmde025,NULL,xmde026,xmde027,xmde028 "
+]]>
+  </point>
+  <point name="sel_prep.g_where" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[    LET g_where = " WHERE " ,tm.wc CLIPPED,
+                  "   AND xmfjent = xmflent ",
+                  "   AND xmfjdocno = xmfldocno ",
+                  "   AND xmdeent = xmflent ",
+                  "   AND xmde000 = '3' ",
+                  "   AND xmde001 = xmfldocno ",
+                  "   AND xmde002 = xmflseq ",
+                  "   AND xmde005 = xmfl010 "
+]]>
+  </point>
+  <section id="axmr431_x01.create_tmptable" ver="6" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axmr431_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "xmde001.xmde_t.xmde001,xmde002.xmde_t.xmde002,xmfj001.xmfj_t.xmfj001,l_xmfj001_desc.type_t.chr100,xmfj002.xmfj_t.xmfj002,l_xmfj002_desc.type_t.chr100,xmfj003.xmfj_t.xmfj003,l_xmfj003_desc.type_t.chr100,xmde005.xmde_t.xmde005,xmde003.xmde_t.xmde003,xmde004.xmde_t.xmde004,l_imaa009.type_t.chr10,l_imaa009_desc.type_t.chr100,l_imaf111.type_t.chr10,l_imaf111_desc.type_t.chr100,xmde006.xmde_t.xmde006,l_imaal003.type_t.chr100,l_imaal004.type_t.chr100,xmde007.xmde_t.xmde007,l_xmde007_desc.type_t.chr100,xmde008.xmde_t.xmde008,xmde009.xmde_t.xmde009,xmde029.xmde_t.xmde029,xmde014.xmde_t.xmde014,xmde015.xmde_t.xmde015,xmde016.xmde_t.xmde016,xmde010.xmde_t.xmde010,xmde011.xmde_t.xmde011,xmde012.xmde_t.xmde012,xmde013.xmde_t.xmde013,l_xmde025_desc.type_t.chr100,xmde027.xmde_t.xmde027,xmde028.xmde_t.xmde028" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+  </section>
+  <section id="axmr431_x01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000001
+#+ 
+#+ Filename...: axmr431_x01
+#+ Description: 銷售折扣合約結算明細
+#+ Creator....: 04441(2015-06-08 14:51:02)
+#+ Modifier...: 04441(2015-06-17 10:44:48) -SD/PR-
+]]>
+  </section>
+  <section id="axmr431_x01.global" ver="2" status="" src="s" readonly="">
+    <![CDATA[#報表 x01 樣板自動產生(Version:1)
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axmr431_x01.ins_data" ver="6" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axmr431_x01_ins_data()
+DEFINE sr RECORD 
+   xmde001 LIKE xmde_t.xmde001, 
+   xmde002 LIKE xmde_t.xmde002, 
+   xmfj001 LIKE xmfj_t.xmfj001, 
+   l_xmfj001_desc LIKE type_t.chr100, 
+   xmfj002 LIKE xmfj_t.xmfj002, 
+   l_xmfj002_desc LIKE type_t.chr100, 
+   xmfj003 LIKE xmfj_t.xmfj003, 
+   l_xmfj003_desc LIKE type_t.chr100, 
+   xmde005 LIKE xmde_t.xmde005, 
+   xmde003 LIKE xmde_t.xmde003, 
+   xmde004 LIKE xmde_t.xmde004, 
+   l_imaa009 LIKE type_t.chr10, 
+   l_imaa009_desc LIKE type_t.chr100, 
+   l_imaf111 LIKE type_t.chr10, 
+   l_imaf111_desc LIKE type_t.chr100, 
+   xmde006 LIKE xmde_t.xmde006, 
+   l_imaal003 LIKE type_t.chr100, 
+   l_imaal004 LIKE type_t.chr100, 
+   xmde007 LIKE xmde_t.xmde007, 
+   l_xmde007_desc LIKE type_t.chr100, 
+   xmde008 LIKE xmde_t.xmde008, 
+   xmde009 LIKE xmde_t.xmde009, 
+   xmde029 LIKE xmde_t.xmde029, 
+   xmde014 LIKE xmde_t.xmde014, 
+   xmde015 LIKE xmde_t.xmde015, 
+   xmde016 LIKE xmde_t.xmde016, 
+   xmde010 LIKE xmde_t.xmde010, 
+   xmde011 LIKE xmde_t.xmde011, 
+   xmde012 LIKE xmde_t.xmde012, 
+   xmde013 LIKE xmde_t.xmde013, 
+   xmde025 LIKE xmde_t.xmde025, 
+   l_xmde025_desc LIKE type_t.chr100, 
+   xmde026 LIKE xmde_t.xmde026, 
+   xmde027 LIKE xmde_t.xmde027, 
+   xmde028 LIKE xmde_t.xmde028
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axmr431_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.xmde001,sr.xmde002,sr.xmfj001,sr.l_xmfj001_desc,sr.xmfj002,sr.l_xmfj002_desc,sr.xmfj003,sr.l_xmfj003_desc,sr.xmde005,sr.xmde003,sr.xmde004,sr.l_imaa009,sr.l_imaa009_desc,sr.l_imaf111,sr.l_imaf111_desc,sr.xmde006,sr.l_imaal003,sr.l_imaal004,sr.xmde007,sr.l_xmde007_desc,sr.xmde008,sr.xmde009,sr.xmde029,sr.xmde014,sr.xmde015,sr.xmde016,sr.xmde010,sr.xmde011,sr.xmde012,sr.xmde013,sr.l_xmde025_desc,sr.xmde027,sr.xmde028
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axmr431_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="axmr431_x01.ins_prep" ver="5" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axmr431_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+]]>
+  </section>
+  <section id="axmr431_x01.main" ver="2" status="" src="s" readonly="">
+    <![CDATA[PUBLIC FUNCTION axmr431_x01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axmr431_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axmr431_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axmr431_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axmr431_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axmr431_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axmr431_x01_rep_data()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="axmr431_x01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="axmr431_x01.rep_data" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axmr431_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+  </section>
+  <section id="axmr431_x01.sel_prep" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION axmr431_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT xmde001,xmde002,xmfj001,NULL,xmfj002,NULL,xmfj003,NULL,xmde005,xmde003,xmde004, 
+       NULL,NULL,NULL,NULL,xmde006,NULL,NULL,xmde007,NULL,xmde008,xmde009,xmde029,xmde014,xmde015,xmde016, 
+       xmde010,xmde011,xmde012,xmde013,xmde025,NULL,xmde026,xmde027,xmde028"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM xmde_t,xmfj_t"
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xmde_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE axmr431_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axmr431_x01_curs CURSOR FOR axmr431_x01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

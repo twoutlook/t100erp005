@@ -1,0 +1,3248 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmq860" std_prog="apmq860" erpver="1.0" module="APM" ver="2" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="Q" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="1" status="u"/>
+  </other>
+  <point name="function.apmq860_comp_visible" order="1" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[#p_cmd 1.畫面初始化
+#      2.依資料開關欄位
+PRIVATE FUNCTION apmq860_comp_visible(p_cmd)
+   DEFINE p_cmd          LIKE type_t.chr1
+   
+
+   CASE p_cmd
+      WHEN '1'
+         
+         #單頭
+         CALL cl_set_comp_visible("lbl_pmds200,pmds200,b_pmds200",TRUE)
+         CALL cl_set_comp_visible("lbl_pmds006,pmds006,b_pmds006",TRUE)
+         #單身1
+         CALL cl_set_comp_visible("b_pmds011",TRUE)
+         CALL cl_set_comp_visible("b_pmds052",TRUE)
+         CALL cl_set_comp_visible("b_pmds081",TRUE)
+         #單身2
+         CALL cl_set_comp_visible("b_pmdt207",TRUE)
+         CALL cl_set_comp_visible("b_pmdt028",TRUE)
+         CALL cl_set_comp_visible("b_pmdt025",TRUE)
+         CALL cl_set_comp_visible("b_pmdt026",TRUE)
+         CALL cl_set_comp_visible("b_pmdt203,b_pmdt203_desc",TRUE)
+         CALL cl_set_comp_visible("b_pmdt204,b_pmdt204_desc",TRUE)
+         CALL cl_set_comp_visible("b_pmdt205,b_pmdt205_desc",TRUE)
+         CALL cl_set_comp_visible("b_pmdt208,b_pmdt208_desc",TRUE)
+         CALL cl_set_comp_visible("b_pmdt209,",TRUE)
+         CALL cl_set_comp_visible("b_pmdt210",TRUE)
+         CALL cl_set_comp_visible("b_pmdt211,b_pmdt211_desc",TRUE)
+         CALL cl_set_comp_visible("b_pmdt212",TRUE)
+         CALL cl_set_comp_visible("b_pmdt213",TRUE)
+         CALL cl_set_comp_visible("b_pmdt053",TRUE)
+         CALL cl_set_comp_visible("b_pmdt055",TRUE)
+         CALL cl_set_comp_visible("b_pmdt060",TRUE)
+         CALL cl_set_comp_visible("b_pmdt061",TRUE)
+         CALL cl_set_comp_visible("l_pmdo001,l_pmdo001_desc,l_pmdo001_desc_desc",TRUE)
+         CALL cl_set_comp_visible("l_pmdo002,l_pmdo002_desc",TRUE)
+         #單身3
+         CALL cl_set_comp_visible("b_pmdu013",TRUE)
+         CALL cl_set_comp_visible("b_pmdu014",TRUE)
+         CALL cl_set_comp_visible("b_pmdu015",TRUE)
+         IF g_argv[1] = '1' THEN
+            CALL cl_set_comp_visible("lbl_pmds006,pmds006,b_pmds006",FALSE)
+            CALL cl_set_comp_visible("b_pmds081",FALSE)            
+            CALL cl_set_comp_visible("b_pmdt028",FALSE)
+         ELSE
+            CALL cl_set_comp_visible("lbl_pmds200,pmds200,b_pmds200",FALSE)
+            CALL cl_set_comp_visible("b_pmds011",FALSE)
+            CALL cl_set_comp_visible("b_pmds052",FALSE)
+            IF g_argv[1] = '6' THEN
+               CALL cl_set_comp_visible("b_pmds081",FALSE)
+            END IF
+            CALL cl_set_comp_visible("b_pmdt207",FALSE)
+            CALL cl_set_comp_visible("b_pmdt025",FALSE)
+            CALL cl_set_comp_visible("b_pmdt026",FALSE)
+            CALL cl_set_comp_visible("b_pmdt203,b_pmdt203_desc",FALSE)
+            CALL cl_set_comp_visible("b_pmdt204,b_pmdt204_desc",FALSE)
+            CALL cl_set_comp_visible("b_pmdt205,b_pmdt205_desc",FALSE)
+            CALL cl_set_comp_visible("b_pmdt208,b_pmdt208_desc",FALSE)
+            CALL cl_set_comp_visible("b_pmdt209,",FALSE)
+            CALL cl_set_comp_visible("b_pmdt210",FALSE)
+            CALL cl_set_comp_visible("b_pmdt211,b_pmdt211_desc",FALSE)
+            CALL cl_set_comp_visible("b_pmdt212",FALSE)
+            CALL cl_set_comp_visible("b_pmdt213",FALSE)
+            CALL cl_set_comp_visible("b_pmdt053",FALSE)
+            CALL cl_set_comp_visible("b_pmdt055",FALSE)
+            CALL cl_set_comp_visible("b_pmdt060",FALSE)
+            CALL cl_set_comp_visible("b_pmdt061",FALSE)
+            CALL cl_set_comp_visible("b_pmdu013",FALSE)
+            CALL cl_set_comp_visible("b_pmdu014",FALSE)
+            CALL cl_set_comp_visible("b_pmdu015",FALSE)
+            CALL cl_set_comp_visible("l_pmdo001,l_pmdo001_desc,l_pmdo001_desc_desc",FALSE)
+            CALL cl_set_comp_visible("l_pmdo002,l_pmdo002_desc",FALSE)
+         END IF
+      WHEN '2'
+         CALL cl_set_comp_visible("b_pmdt207",TRUE)
+         IF g_detail_idx > 0 THEN
+            IF cl_null(g_pmds_d[g_detail_idx].pmds200) THEN
+               CALL cl_set_comp_visible("b_pmdt207",FALSE)
+            END IF
+         END IF
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.apmq860_get_acc" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#依單據編號 找出歸屬的作業其設定的ACC內容
+PRIVATE FUNCTION apmq860_get_acc(p_pmdsdocno)
+   DEFINE p_pmdsdocno     LIKE pmds_t.pmdsdocno
+   DEFINE l_pmds000       LIKE pmds_t.pmds000
+   DEFINE l_prog          LIKE type_t.chr10
+   DEFINE r_acc           LIKE type_t.chr10
+   
+   LET r_acc = ''
+   LET l_pmds000 = ''
+   SELECT pmds000 INTO l_pmds000 FROM pmds_t
+    WHERE pmdsent = g_enterprise
+      AND pmdsdocno = p_pmdsdocno
+      
+   CASE l_pmds000
+      WHEN '1'
+         LET l_prog = 'apmt860'
+      WHEN '2'
+         LET l_prog = 'apmt861'
+      WHEN '3'
+         LET l_prog = 'apmt862'
+      WHEN '4'
+         LET l_prog = 'apmt863'
+      WHEN '5'
+         LET l_prog = 'apmt870'
+      WHEN '6'
+         LET l_prog = 'apmt880'
+      WHEN '7'
+         LET l_prog = 'apmt890'
+      OTHERWISE
+         RETURN r_acc
+   END CASE
+   
+   SELECT gzcb004 INTO r_acc FROM gzcb_t
+    WHERE gzcb001 = '24'
+      AND gzcb002 = l_prog
+      
+   RETURN r_acc
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.array_clear" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CASE g_argv[1]
+      WHEN '1'
+         LET l_where = "pmds000 IN ('1','2','3','4')"
+      WHEN '5'
+         LET l_where = "pmds000 = '5'"
+      WHEN '6'
+         LET l_where = "pmds000 = '6'"
+      WHEN '7'
+         LET l_where = "pmds000 = '7'"
+      OTHERWISE
+         LET l_where = " 1=1"
+   END CASE
+   
+   IF tm.stus != 'ALL' THEN
+      LET l_where = l_where CLIPPED," AND pmdsstus = '",tm.stus CLIPPED,"'"
+   END IF
+   
+   LET ls_wc = ls_wc CLIPPED," AND ",l_where]]>
+  </point>
+  <point name="b_fill.array_deleteElement" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_where         STRING]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      LET g_pmds_d[l_ac].sel = 'N']]>
+  </point>
+  <point name="b_fill.others.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL apmq860_comp_visible('2')]]>
+  </point>
+  <point name="b_fill.sql_after" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   #150302-00004#8 150311 by lori522612 add 效能調整---(S) 
+   LET g_sql = "SELECT  UNIQUE '', ",
+               "               pmdssite, t1.ooefl003, pmdsdocno,   pmds200, pmdsdocdt, ",
+               "               pmds011,  pmds002,     t2.ooag011,  pmds003, t3.ooefl001, ", 
+               "               pmds006,  pmds007,     t4.pmaal004, pmds008, t5.pmaal004, ",
+               "               pmds009,  t6.pmaal004, pmds010,     pmds052, pmds081, ",
+               "               pmds045 ",
+               "  FROM pmds_t ",
+               "       LEFT JOIN pmdt_t ON pmdtent = pmdsent AND pmdsdocno = pmdtdocno ",
+               "       LEFT JOIN pmdu_t ON pmduent = pmdsent AND pmdsdocno = pmdudocno ",
+               "       LEFT JOIN ooefl_t t1 ON t1.ooeflent = pmdsent AND t1.ooefl001 = pmdssite AND t1.ooefl002 = '",g_dlang,"' ",
+               "       LEFT JOIN ooag_t  t2 ON t2.ooagent  = pmdsent AND t2.ooag001  = pmds002 ",
+               "       LEFT JOIN ooefl_t t3 ON t3.ooeflent = pmdsent AND t3.ooefl001 = pmds003 AND t3.ooefl002 = '",g_dlang,"' ",
+               "       LEFT JOIN pmaal_t t4 ON t4.pmaalent = pmdsent AND t4.pmaal001 = pmds007 AND t4.pmaal002 = '",g_dlang,"' ",
+               "       LEFT JOIN pmaal_t t5 ON t5.pmaalent = pmdsent AND t5.pmaal001 = pmds008 AND t5.pmaal002 = '",g_dlang,"' ",
+               "       LEFT JOIN pmaal_t t6 ON t6.pmaalent = pmdsent AND t6.pmaal001 = pmds009 AND t6.pmaal002 = '",g_dlang,"' ",
+               " WHERE pmdsent= ? AND ", ls_wc
+ 
+   LET g_sql = g_sql, cl_sql_add_filter("pmds_t"),
+                      " ORDER BY pmds_t.pmdsdocno"   
+   #150302-00004#8 150311 by lori522612 add 效能調整---(E)   ]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="b_fill2.array_clear" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF g_pmds_d.getLength() = 0 THEN RETURN END IF   ]]>
+  </point>
+  <point name="b_fill2.before_fill2" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[      #150302-00004#8 150311 by lori522612 add 效能調整---(S) 
+      LET g_sql = "SELECT UNIQUE pmdtseq,      pmdt207,      pmdt028,     pmdt001,     pmdt002, ",
+                  "              pmdt003,      pmdt004,      t1.pmdo001,  t1.imaal003, t1.imaal004, ",
+                  "              t1.pmdo002,   '',           pmdt005,     pmdt200,     pmdt006, ",
+                  "              t2.imaal003,  t2.imaal004,  pmdt007,     '',          pmdt025, ",
+                  "              pmdt201,      t3.oocal003,  pmdt202,     pmdt019,     t4.oocal003, ",
+                  "              pmdt020,      pmdt023,      t5.oocal003, pmdt024,     pmdt026,", 
+                  "              pmdt062,      pmdt016,      t6.inayl003, pmdt017,     t7.inab003, ",
+                  "              pmdt018,      pmdt051,      '',          pmdt059,     pmdt203, ",
+                  "              t8.ooefl003,  pmdt204,      t9.ooefl003, pmdt205,     t10.ooefl003, ",
+                  "              pmdt208,      t11.oojdl003, pmdt209,     pmdt210,     pmdt211, ",
+                  "              t12.staal003, pmdt212,      pmdt213,     pmdtorga,    t13.ooefl003, ",
+                  "              pmdt053,      pmdt055,      pmdt060,     pmdt061,     pmdt088, ",
+                  #150707-00027#1 By pomelo add(S)
+                  "              pmdtseq,      pmdt001,      pmdt002,     pmdt003,     pmdt004,",
+                  "              pmdt005,      pmdt006,      t2.imaal003, t2.imaal004, pmdt007,",
+                  "              '',           pmdt201,      t3.oocal003, pmdt202,     pmdt019,",
+                  "              t4.oocal003,  pmdt020,      pmdt023,     t5.oocal003, pmdt024,",
+                  "              pmdt036,      pmdt218,      pmdt044,     pmdt046,     '',",
+                  "              pmdt037,      pmdt038,      pmdt039,     pmdt047",
+                  #150707-00027#1 By pomelo add(E)
+                  "  FROM pmdt_t ",
+                  "       LEFT JOIN (SELECT pmdoent, pmdodocno, pmdoseq,  pmdoseq1, pmdoseq2,",
+                  "                         pmdo001, pmdo002,   imaal003, imaal004",
+                  "                    FROM pmdo_t ",
+                  "                         LEFT JOIN imaal_t ON imaalent = pmdoent AND imaal001 = pmdo001 AND imaal002 = '",g_dlang,"' ) t1 ",
+                  "              ON t1.pmdoent  = pmdtent  AND t1.pmdodocno = pmdt001 AND t1.pmdoseq = pmdt002 ",
+                  "             AND t1.pmdoseq1 = pmdt003 AND t1.pmdoseq2 = pmdt004 ",
+                  "       LEFT JOIN imaal_t t2 ON t2.imaalent = pmdtent AND t2.imaal001 = pmdt006 AND t2.imaal002 = '",g_dlang,"' ",
+                  "       LEFT JOIN oocal_t t3 ON t3.oocalent = pmdtent AND t3.oocal001 = pmdt201 AND t3.oocal002 = '",g_dlang,"' ",
+                  "       LEFT JOIN oocal_t t4 ON t4.oocalent = pmdtent AND t4.oocal001 = pmdt019 AND t4.oocal002 = '",g_dlang,"' ",
+                  "       LEFT JOIN oocal_t t5 ON t5.oocalent = pmdtent AND t5.oocal001 = pmdt023 AND t5.oocal002 = '",g_dlang,"' ",
+                  "       LEFT JOIN inayl_t t6 ON t6.inaylent = pmdtent AND t6.inayl001 = pmdt016 AND t6.inayl002 = '",g_dlang,"' ",
+                  "       LEFT JOIN inab_t  t7 ON t7.inabent  = pmdtent AND t7.inabsite = pmdtsite AND t7.inab001 = pmdt016 AND t7.inab002 = pmdt017 ",
+                  "       LEFT JOIN ooefl_t t8 ON t8.ooeflent = pmdtent AND t8.ooefl001 = pmdt203 AND t8.ooefl002 = '",g_dlang,"' ",
+                  "       LEFT JOIN ooefl_t t9 ON t9.ooeflent = pmdtent AND t9.ooefl001 = pmdt203 AND t9.ooefl002 = '",g_dlang,"' ",
+                  "       LEFT JOIN ooefl_t t10 ON t10.ooeflent = pmdtent AND t10.ooefl001 = pmdt203 AND t10.ooefl002 = '",g_dlang,"' ",
+                  "       LEFT JOIN oojdl_t t11 ON t11.oojdlent = pmdtent AND t11.oojdl001 = pmdt208 AND t11.oojdl002 = '",g_dlang,"' ",
+                  "       LEFT JOIN staal_t t12 ON t12.staalent = pmdtent AND t12.staal001 = pmdt211 AND t12.staal002 = '",g_dlang,"' ",
+                  "       LEFT JOIN ooefl_t t13 ON t13.ooeflent = pmdtent AND t13.ooefl001 = pmdtorga AND t13.ooefl002 = '",g_dlang,"' ",
+                  " WHERE pmdtent = ? AND pmdtdocno = ? "
+  
+      IF NOT cl_null(g_wc2_table2) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+      END IF
+  
+      LET g_sql = g_sql, " ORDER BY pmdt_t.pmdtseq"      
+      #150302-00004#8 150311 by lori522612 add 效能調整---(E)]]>
+  </point>
+  <point name="b_fill2.before_fill3" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      #150302-00004#8 150311 by lori522612 add 效能調整---(S)
+      LET g_sql = "SELECT UNIQUE pmduseq,     pmduseq1, pmdu001, t1.imaal003, t1.imaal004, ",
+                  "              pmdu002,     '',       pmdu006, t2.inayl003, pmdu007, ",
+                  "              t3.inab003,  pmdu008,  pmdu200, ",
+                  "              t4.oocal003, pmdu201,  pmdu009, t5.oocal003, pmdu010, ",
+                  "              pmdu013,     pmdu014,  pmdu015, pmdu016 ",
+                  "  FROM pmdu_t ",
+                  "       LEFT JOIN imaal_t t1 ON t1.imaalent = pmduent AND t1.imaal001 = pmdu001 AND t1.imaal002 = '",g_dlang,"' ",
+                  "       LEFT JOIN inayl_t t2 ON t2.inaylent = pmduent AND t2.inayl001 = pmdu006 AND t2.inayl002 = '",g_dlang,"' ",
+                  "       LEFT JOIN inab_t  t3 ON t3.inabent  = pmduent AND t3.inabsite = pmdusite AND t3.inab001 = pmdu006 AND t3.inab002 = pmdu007 ",
+                  "       LEFT JOIN oocal_t t4 ON t4.oocalent = pmduent AND t4.oocal001 = pmdu200 AND t4.oocal002 = '",g_dlang,"' ",
+                  "       LEFT JOIN oocal_t t5 ON t5.oocalent = pmduent AND t5.oocal001 = pmdu009 AND t5.oocal002 = '",g_dlang,"' ",
+                  " WHERE pmduent = ? AND pmdudocno = ? "
+  
+      IF NOT cl_null(g_wc2_table3) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table3 CLIPPED
+      END IF
+  
+      LET g_sql = g_sql, " ORDER BY pmdu_t.pmduseq,pmdu_t.pmduseq1"   ]]>
+  </point>
+  <point name="b_fill2.before_fill4" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[      LET g_sql = "SELECT UNIQUE xrcdsite, xrcdld,  xrcdseq,     xrcd007,",
+                  "              pmdt200,  pmdt006, t1.imaal003, t1.imall004,",
+                  "              pmdt007,  '',      xrcd002,     '',",
+                  "              xrcdseq2, xrcd003, xrcd006,     xrcd004,",
+                  "              xrcd104",
+                  "  FROM xrcd_t,pmdt_t",
+                  "  LEFT OUTER JOIN imaal_t t1 ON t1.imaalent = pmdtent",
+                  "                            AND t1.imaal001 = pmdt006",
+                  "                            AND t1.imaal002 = '",g_dlang,"'",
+                  " WHERE xrcdent = pmdtent",
+                  "   AND xrcddocno = pmdtdocno",
+                  "   AND xrcdseq = pmdtseq",
+                  "   AND xrcdent = ?",
+                  "   AND xrcddocno=?"
+  
+      IF NOT cl_null(g_wc2_table4) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table4 CLIPPED
+      END IF
+  
+      LET g_sql = g_sql, " ORDER BY xrcd_t.xrcdld,xrcd_t.xrcdseq,xrcd_t.xrcdseq2,xrcd_t.xrcd007"]]>
+  </point>
+  <point name="b_fill2.fill2" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[      ]]>
+  </point>
+  <point name="b_fill2.fill4" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[      ]]>
+  </point>
+  <point name="construct.c.filter.page1.b_pmds002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds002  #顯示到畫面上
+            NEXT FIELD b_pmds002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page1.b_pmds003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds003  #顯示到畫面上
+            NEXT FIELD b_pmds003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page1.b_pmds006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmdsdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds006  #顯示到畫面上
+            NEXT FIELD b_pmds006                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page1.b_pmds007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds007  #顯示到畫面上
+            NEXT FIELD b_pmds007                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page1.b_pmds008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds008  #顯示到畫面上
+            NEXT FIELD b_pmds008                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page1.b_pmds009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds009  #顯示到畫面上
+            NEXT FIELD b_pmds009                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page1.b_pmds010" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmds010()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds010  #顯示到畫面上
+            NEXT FIELD b_pmds010                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page1.b_pmds200" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmeldocno_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds200  #顯示到畫面上
+            NEXT FIELD b_pmds200                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page1.b_pmdsdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmdsdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdsdocno  #顯示到畫面上
+            NEXT FIELD b_pmdsdocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page3.b_pmdu001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdu001  #顯示到畫面上
+            NEXT FIELD b_pmdu001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page3.b_pmdu006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdu006  #顯示到畫面上
+            NEXT FIELD b_pmdu006                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page3.b_pmdu007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inab002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdu007  #顯示到畫面上
+            NEXT FIELD b_pmdu007                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page3.b_pmdu009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdu009  #顯示到畫面上
+            NEXT FIELD b_pmdu009                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.filter.page3.b_pmdu010" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdu010  #顯示到畫面上
+            NEXT FIELD b_pmdu010                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmds002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds002  #顯示到畫面上
+            NEXT FIELD b_pmds002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmds003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds003  #顯示到畫面上
+            NEXT FIELD b_pmds003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmds006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmdldocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds006  #顯示到畫面上
+            NEXT FIELD b_pmds006                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmds007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds007  #顯示到畫面上
+            NEXT FIELD b_pmds007                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmds008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds008  #顯示到畫面上
+            NEXT FIELD b_pmds008                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmds009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds009  #顯示到畫面上
+            NEXT FIELD b_pmds009                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmds010" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmds010()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds010  #顯示到畫面上
+            NEXT FIELD b_pmds010                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmds200" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmeldocno_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmds200  #顯示到畫面上
+            NEXT FIELD b_pmds200                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmdsdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmdsdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdsdocno  #顯示到畫面上
+            NEXT FIELD b_pmdsdocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page3.b_pmdu001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdu001  #顯示到畫面上
+            NEXT FIELD b_pmdu001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page3.b_pmdu006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdu006  #顯示到畫面上
+            NEXT FIELD b_pmdu006                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page3.b_pmdu007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inab002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdu007  #顯示到畫面上
+            NEXT FIELD b_pmdu007                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page3.b_pmdu009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdu009  #顯示到畫面上
+            NEXT FIELD b_pmdu009                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page3.b_pmdu010" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdu010  #顯示到畫面上
+            NEXT FIELD b_pmdu010                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="detail_show.body.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      #150302-00004#8 150311 by lori522612 mark 效能調整---(S)
+      ##營運組織
+      #CALL s_desc_get_department_desc(g_pmds_d[l_ac].pmdssite)
+      # RETURNING g_pmds_d[l_ac].pmdssite_desc
+
+      ##人員
+      #CALL s_desc_get_person_desc(g_pmds_d[l_ac].pmds002)
+      # RETURNING g_pmds_d[l_ac].pmds002_desc
+      # 
+      ##部門
+      #CALL s_desc_get_department_desc(g_pmds_d[l_ac].pmds003)
+      # RETURNING g_pmds_d[l_ac].pmds003_desc
+      # 
+      ##供應商
+      #CALL s_desc_get_trading_partner_abbr_desc(g_pmds_d[l_ac].pmds007)
+      # RETURNING g_pmds_d[l_ac].pmds007_desc
+      # 
+      #CALL s_desc_get_trading_partner_abbr_desc(g_pmds_d[l_ac].pmds008)
+      # RETURNING g_pmds_d[l_ac].pmds008_desc
+      #
+      #CALL s_desc_get_trading_partner_abbr_desc(g_pmds_d[l_ac].pmds009)
+      # RETURNING g_pmds_d[l_ac].pmds009_desc
+      # 
+      ##150302-00004#8 150311 by lori522612 mark 效能調整---(E)]]>
+  </point>
+  <point name="detail_show.body2.reference" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[      #150302-00004#8 150311 by lori522612 mark 效能調整---(S)
+      ##採購商品編號、採購產品特徵
+      #LET g_pmds2_d[l_ac].l_pmdo001 = ''
+      #LET g_pmds2_d[l_ac].l_pmdo002 = ''
+      #SELECT pmdo001,pmdo002 INTO g_pmds2_d[l_ac].l_pmdo001,g_pmds2_d[l_ac].l_pmdo002
+      #  FROM pmdo_t
+      # WHERE pmdoent = g_enterprise
+      #   AND pmdodocno = g_pmds2_d[l_ac].pmdt001
+      #   AND pmdoseq   = g_pmds2_d[l_ac].pmdt002
+      #   AND pmdoseq1  = g_pmds2_d[l_ac].pmdt003
+      #   AND pmdoseq2  = g_pmds2_d[l_ac].pmdt004
+      #   
+      #CALL s_desc_get_item_desc(g_pmds2_d[l_ac].l_pmdo001)
+      # RETURNING g_pmds2_d[l_ac].l_pmdo001_desc,g_pmds2_d[l_ac].l_pmdo001_desc_desc
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(E)
+
+      CALL s_feature_description(g_pmds2_d[l_ac].l_pmdo001,g_pmds2_d[l_ac].l_pmdo002)
+       RETURNING l_success,g_pmds2_d[l_ac].l_pmdo002_desc
+      
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(S)
+      ##商品編號
+      #CALL s_desc_get_item_desc(g_pmds2_d[l_ac].pmdt006)
+      # RETURNING g_pmds2_d[l_ac].pmdt006_desc,g_pmds2_d[l_ac].pmdt006_desc_desc
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(E)
+
+      #產品特徵
+      CALL s_feature_description(g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt007)
+       RETURNING l_success,g_pmds2_d[l_ac].pmdt007_desc
+       
+      #150707-00027#1 150709 By pomelo add(S)
+      #產品特徵
+      LET g_pmds4_d[l_ac].pmdt0071_desc = g_pmds2_d[l_ac].pmdt007_desc
+      
+      #稅別
+      CALL s_desc_get_tax_desc1(g_pmds_d[g_detail_idx].pmdssite,g_pmds4_d[l_ac].pmdt046)
+         RETURNING g_pmds4_d[l_ac].pmdt046_desc
+      #150707-00027#1 150709 By pomelo add(E)
+      
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(S)
+      ##單位
+      #CALL s_desc_get_unit_desc(g_pmds2_d[l_ac].pmdt201)
+      # RETURNING g_pmds2_d[l_ac].pmdt201_desc
+      # 
+      #CALL s_desc_get_unit_desc(g_pmds2_d[l_ac].pmdt019)
+      # RETURNING g_pmds2_d[l_ac].pmdt019_desc
+      # 
+      #CALL s_desc_get_unit_desc(g_pmds2_d[l_ac].pmdt023)
+      # RETURNING g_pmds2_d[l_ac].pmdt023_desc
+      # 
+      ##庫位   
+      #CALL s_desc_get_stock_desc(g_pmds_d[g_detail_idx].pmdssite,g_pmds2_d[l_ac].pmdt016)
+      # RETURNING g_pmds2_d[l_ac].pmdt016_desc
+
+      ##儲位
+      #CALL s_desc_get_locator_desc(g_pmds_d[g_detail_idx].pmdssite,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt017)
+      # RETURNING g_pmds2_d[l_ac].pmdt017_desc
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(E)
+
+      #理由碼
+      CALL apmq860_get_acc(g_pmds_d[g_detail_idx].pmdsdocno)
+       RETURNING l_acc
+      
+      CALL s_desc_get_acc_desc(l_acc,g_pmds2_d[l_ac].pmdt051)
+       RETURNING  g_pmds2_d[l_ac].pmdt051_desc
+       
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(S)
+      ##組織
+      #CALL s_desc_get_department_desc(g_pmds2_d[l_ac].pmdt203)
+      # RETURNING g_pmds2_d[l_ac].pmdt203_desc
+
+      #CALL s_desc_get_department_desc(g_pmds2_d[l_ac].pmdt204)
+      # RETURNING g_pmds2_d[l_ac].pmdt204_desc
+      # 
+      #CALL s_desc_get_department_desc(g_pmds2_d[l_ac].pmdt205)
+      # RETURNING g_pmds2_d[l_ac].pmdt205_desc
+      # 
+      ##渠道
+      #CALL s_desc_get_oojdl003_desc(g_pmds2_d[l_ac].pmdt208)
+      # RETURNING g_pmds2_d[l_ac].pmdt208_desc
+     
+      ##結算方式
+      #INITIALIZE g_ref_fields TO NULL
+      #LET g_ref_fields[1] = g_pmds2_d[l_ac].pmdt211
+      #LET ls_sql = "SELECT staal003 FROM staal_t WHERE staalent='"||g_enterprise||"' AND staal001=? AND staal002='"||g_dlang||"'"
+      #LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+      #CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+      #LET g_pmds2_d[l_ac].pmdt211_desc = '', g_rtn_fields[1] , ''
+      #DISPLAY BY NAME g_pmds2_d[l_ac].pmdt211_desc
+
+      ##帳務組織
+      #CALL s_desc_get_department_desc(g_pmds2_d[l_ac].pmdtorga)
+      # RETURNING g_pmds2_d[l_ac].pmdtorga_desc
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(E)  ]]>
+  </point>
+  <point name="detail_show.body3.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      #帶出公用欄位reference值page3
+      
+      #add-point:show段單身reference
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(S)
+      #商品編號
+      #CALL s_desc_get_item_desc(g_pmds3_d[l_ac].pmdu001)
+      # RETURNING g_pmds3_d[l_ac].pmdu001_desc,g_pmds3_d[l_ac].pmdu001_desc_desc
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(E)
+      
+      #產品特徵
+      CALL s_feature_description(g_pmds3_d[l_ac].pmdu001,g_pmds3_d[l_ac].pmdu002)
+       RETURNING l_success,g_pmds3_d[l_ac].pmdu002_desc
+      
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(S) 
+      ##庫位   
+      #CALL s_desc_get_stock_desc(g_pmds_d[g_detail_idx].pmdssite,g_pmds3_d[l_ac].pmdu006)
+      # RETURNING g_pmds3_d[l_ac].pmdu006_desc
+
+      ##儲位
+      #CALL s_desc_get_locator_desc(g_pmds_d[g_detail_idx].pmdssite,g_pmds3_d[l_ac].pmdu006,g_pmds3_d[l_ac].pmdu007)
+      # RETURNING g_pmds3_d[l_ac].pmdu007_desc
+
+      ##單位
+      #CALL s_desc_get_unit_desc(g_pmds3_d[l_ac].pmdu200)
+      # RETURNING g_pmds3_d[l_ac].pmdu200_desc
+      # 
+      #CALL s_desc_get_unit_desc(g_pmds3_d[l_ac].pmdu009)
+      # RETURNING g_pmds3_d[l_ac].pmdu009_desc
+      #150302-00004#8 150311 by lori522612 mark 效能調整---(E)]]>
+  </point>
+  <point name="detail_show.body5.reference" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[      #150707-00027#1 150709 By pomelo add(S)
+      #產品特徵
+      CALL s_feature_description(g_pmds5_d[l_ac].pmdt0062,g_pmds5_d[l_ac].pmdt0072)
+          RETURNING l_success,g_pmds5_d[l_ac].pmdt0072_desc
+      
+      #稅別
+      CALL s_desc_get_tax_desc1(g_pmds_d[g_detail_idx].pmdssite,g_pmds5_d[l_ac].xrcd002)
+         RETURNING g_pmds5_d[l_ac].xrcd002_desc
+      #150707-00027#1 150709 By pomelo add(E)]]>
+  </point>
+  <point name="detail_show.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_acc      LIKE type_t.chr10]]>
+  </point>
+  <point name="filter.add_cs" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[     #暫時不處理 待樣版調後 整批加上
+     # ON ACTION controlp 
+     #    CASE 
+     #       WHEN INFIELD(b_pmdsdocno)
+     #          INITIALIZE g_qryparam.* TO NULL
+     #          LET g_qryparam.state = 'c'
+     #          LET g_qryparam.reqry = FALSE
+     #          IF g_argv[1] = '1' THEN
+     #             LET g_qryparam.arg1 = "('1','2','3','4')"
+     #          ELSE
+     #             LET g_qryparam.arg1 = g_argv[1]
+     #          END IF
+     #          
+     #          CALL q_pmdsdocno()                       #呼叫開窗
+     #          DISPLAY g_qryparam.return1 TO b_pmdsdocno  #顯示到畫面上
+     #          NEXT FIELD b_pmdsdocno                     #返回原欄位
+     #  
+     #       WHEN INFIELD (b_pmds200)
+     #          INITIALIZE g_qryparam.* TO NULL
+     #          LET g_qryparam.state = 'c'
+     #          LET g_qryparam.reqry = FALSE
+     #          LET g_qryparam.arg1 = '1'               
+     #          CALL q_pmeldocno_1()                       #呼叫開窗
+     #          DISPLAY g_qryparam.return1 TO b_pmds200  #顯示到畫面上
+     #          NEXT FIELD b_pmds200                     #返回原欄位
+     #    
+     #       WHEN INFIELD (b_pmds006)
+     #          INITIALIZE g_qryparam.* TO NULL
+     #          LET g_qryparam.state = 'c'
+     #          LET g_qryparam.reqry = FALSE
+     #          #驗退、入庫時開窗開收貨單號
+     #          IF g_argv[1] MATCHES '[56]' THEN
+     #             LET g_qryparam.arg1 = "('1','2')"
+     #          END IF
+     #          #倉退時開窗開收貨單號
+     #          IF g_argv[1] MATCHES '[7]' THEN
+     #             LET g_qryparam.arg1 = "('1','2','3','4')"
+     #          END IF
+     #          CALL q_pmdsdocno()
+     #          DISPLAY g_qryparam.return1 TO b_pmds006    #顯示到畫面上
+     #          NEXT FIELD b_pmds006                       #返回原欄位
+     #    END CASE]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE tm    RECORD
+         stus           LIKE type_t.chr10,
+         multi_stock    LIKE type_t.chr1
+             END RECORD]]>
+  </point>
+  <point name="init.init" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL apmq860_comp_visible('1')
+   
+   #150707-00027#1 150709 By pomelo add(S)
+   #價格/交易稅頁籤
+   CALL cl_set_comp_visible("page_1,page_4",FALSE)
+   #150707-00027#1 150709 By pomelo add(E)]]>
+  </point>
+  <point name="input.a.page1.pmdsdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d_t.pmdsdocno)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmds_t WHERE "||"pmdsent = '" ||g_enterprise|| "' AND "||"pmdsdocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pmdtseq" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL AND g_pmds2_d[g_detail_idx2].pmdtseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d[g_detail_idx].pmdsdocno OR g_pmds2_d[g_detail_idx2].pmdtseq != g_pmds2_d_t.pmdtseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmdt_t WHERE "||"pmdtent = '" ||g_enterprise|| "' AND "||"pmdtdocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"' AND "|| "pmdtseq = '"||g_pmds2_d[g_detail_idx2].pmdtseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.pmduseq" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL AND g_pmds3_d[g_detail_idx2].pmduseq IS NOT NULL AND g_pmds3_d[g_detail_idx2].pmduseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d[g_detail_idx].pmdsdocno OR g_pmds3_d[g_detail_idx2].pmduseq != g_pmds3_d_t.pmduseq OR g_pmds3_d[g_detail_idx2].pmduseq1 != g_pmds3_d_t.pmduseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmdu_t WHERE "||"pmduent = '" ||g_enterprise|| "' AND "||"pmdudocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"' AND "|| "pmduseq = '"||g_pmds3_d[g_detail_idx2].pmduseq ||"' AND "|| "pmduseq1 = '"||g_pmds3_d[g_detail_idx2].pmduseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.pmduseq1" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL AND g_pmds3_d[g_detail_idx2].pmduseq IS NOT NULL AND g_pmds3_d[g_detail_idx2].pmduseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d[g_detail_idx].pmdsdocno OR g_pmds3_d[g_detail_idx2].pmduseq != g_pmds3_d_t.pmduseq OR g_pmds3_d[g_detail_idx2].pmduseq1 != g_pmds3_d_t.pmduseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmdu_t WHERE "||"pmduent = '" ||g_enterprise|| "' AND "||"pmdudocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"' AND "|| "pmduseq = '"||g_pmds3_d[g_detail_idx2].pmduseq ||"' AND "|| "pmduseq1 = '"||g_pmds3_d[g_detail_idx2].pmduseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page4.pmdtseq_4" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL AND g_pmds4_d[g_detail_idx2].pmdtseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d[g_detail_idx].pmdsdocno OR g_pmds4_d[g_detail_idx2].pmdtseq != g_pmds4_d_t.pmdtseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmdt_t WHERE "||"pmdtent = '" ||g_enterprise|| "' AND "||"pmdtdocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"' AND "|| "pmdtseq = '"||g_pmds4_d[g_detail_idx2].pmdtseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page5.xrcd007" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdld IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdseq IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdseq2 IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcd007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d[g_detail_idx].pmdsdocno OR g_pmds5_d[g_detail_idx2].xrcdld != g_pmds5_d_t.xrcdld OR g_pmds5_d[g_detail_idx2].xrcdseq != g_pmds5_d_t.xrcdseq OR g_pmds5_d[g_detail_idx2].xrcdseq2 != g_pmds5_d_t.xrcdseq2 OR g_pmds5_d[g_detail_idx2].xrcd007 != g_pmds5_d_t.xrcd007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrcd_t WHERE "||"xrcdent = '" ||g_enterprise|| "' AND "||"xrcddocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"' AND "|| "xrcdld = '"||g_pmds5_d[g_detail_idx2].xrcdld ||"' AND "|| "xrcdseq = '"||g_pmds5_d[g_detail_idx2].xrcdseq ||"' AND "|| "xrcdseq2 = '"||g_pmds5_d[g_detail_idx2].xrcdseq2 ||"' AND "|| "xrcd007 = '"||g_pmds5_d[g_detail_idx2].xrcd007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page5.xrcdld" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdld IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdseq IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdseq2 IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcd007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d[g_detail_idx].pmdsdocno OR g_pmds5_d[g_detail_idx2].xrcdld != g_pmds5_d_t.xrcdld OR g_pmds5_d[g_detail_idx2].xrcdseq != g_pmds5_d_t.xrcdseq OR g_pmds5_d[g_detail_idx2].xrcdseq2 != g_pmds5_d_t.xrcdseq2 OR g_pmds5_d[g_detail_idx2].xrcd007 != g_pmds5_d_t.xrcd007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrcd_t WHERE "||"xrcdent = '" ||g_enterprise|| "' AND "||"xrcddocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"' AND "|| "xrcdld = '"||g_pmds5_d[g_detail_idx2].xrcdld ||"' AND "|| "xrcdseq = '"||g_pmds5_d[g_detail_idx2].xrcdseq ||"' AND "|| "xrcdseq2 = '"||g_pmds5_d[g_detail_idx2].xrcdseq2 ||"' AND "|| "xrcd007 = '"||g_pmds5_d[g_detail_idx2].xrcd007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page5.xrcdseq" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdld IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdseq IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdseq2 IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcd007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d[g_detail_idx].pmdsdocno OR g_pmds5_d[g_detail_idx2].xrcdld != g_pmds5_d_t.xrcdld OR g_pmds5_d[g_detail_idx2].xrcdseq != g_pmds5_d_t.xrcdseq OR g_pmds5_d[g_detail_idx2].xrcdseq2 != g_pmds5_d_t.xrcdseq2 OR g_pmds5_d[g_detail_idx2].xrcd007 != g_pmds5_d_t.xrcd007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrcd_t WHERE "||"xrcdent = '" ||g_enterprise|| "' AND "||"xrcddocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"' AND "|| "xrcdld = '"||g_pmds5_d[g_detail_idx2].xrcdld ||"' AND "|| "xrcdseq = '"||g_pmds5_d[g_detail_idx2].xrcdseq ||"' AND "|| "xrcdseq2 = '"||g_pmds5_d[g_detail_idx2].xrcdseq2 ||"' AND "|| "xrcd007 = '"||g_pmds5_d[g_detail_idx2].xrcd007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page5.xrcdseq2" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdld IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdseq IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcdseq2 IS NOT NULL AND g_pmds5_d[g_detail_idx2].xrcd007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d[g_detail_idx].pmdsdocno OR g_pmds5_d[g_detail_idx2].xrcdld != g_pmds5_d_t.xrcdld OR g_pmds5_d[g_detail_idx2].xrcdseq != g_pmds5_d_t.xrcdseq OR g_pmds5_d[g_detail_idx2].xrcdseq2 != g_pmds5_d_t.xrcdseq2 OR g_pmds5_d[g_detail_idx2].xrcd007 != g_pmds5_d_t.xrcd007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrcd_t WHERE "||"xrcdent = '" ||g_enterprise|| "' AND "||"xrcddocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"' AND "|| "xrcdld = '"||g_pmds5_d[g_detail_idx2].xrcdld ||"' AND "|| "xrcdseq = '"||g_pmds5_d[g_detail_idx2].xrcdseq ||"' AND "|| "xrcdseq2 = '"||g_pmds5_d[g_detail_idx2].xrcdseq2 ||"' AND "|| "xrcd007 = '"||g_pmds5_d[g_detail_idx2].xrcd007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.body.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               CALL apmq860_comp_visible('2')]]>
+  </point>
+  <point name="menu.output" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               LET l_wc = ''
+               LET l_flag = 'N'
+               FOR l_i = 1 TO g_pmds_d.getLength()
+                  IF g_pmds_d[l_i].sel = 'Y' THEN
+                     IF cl_null(l_wc) THEN
+                        LET l_wc = "'",g_pmds_d[l_i].pmdsdocno CLIPPED,"'"
+                     ELSE
+                        LET l_wc = l_wc CLIPPED,",'",g_pmds_d[l_i].pmdsdocno CLIPPED,"'"
+                     END IF
+                     LET l_flag = 'Y'
+                  END IF
+               END FOR
+
+               IF l_flag = 'Y' THEN
+                  LET l_wc = "pmdsdocno IN (",l_wc,")"
+                  CASE g_argv[1]
+                    WHEN '1'
+                       CALL apmr860_g01(l_wc,tm.multi_stock,'Y')
+                    WHEN '5'
+                       CALL apmr870_g01(l_wc,tm.multi_stock,'Y')
+                    WHEN '6'
+                       CALL apmr880_g01(l_wc,tm.multi_stock,'Y')   #150410 by lori522612 add 第三個參數值
+                    WHEN '7'
+                       CALL apmr890_g01(l_wc,tm.multi_stock,'Y')
+                  END CASE
+               ELSE
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = "axr-00159"
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+               END IF
+
+               CONTINUE DIALOG]]>
+  </point>
+  <point name="menu.query_price" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[               #150707-00027#1 150709 By pomelo add(S)
+               #價格/交易稅頁籤
+               CALL cl_set_comp_visible("page_1,page_4",TRUE)
+               #150707-00027#1 150709 By pomelo add(E)]]>
+  </point>
+  <point name="ui_dialog.bef_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            LET tm.stus = 'ALL'
+            LET tm.multi_stock = 'N'
+            DISPLAY tm.stus,tm.multi_stock TO l_stus,l_multi_stock
+            DISPLAY g_site,g_argv[2] TO pmdssite,pmdsdocno
+            
+            CALL cl_set_act_visible("insert,query", FALSE)]]>
+  </point>
+  <point name="ui_dialog.construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         CONSTRUCT BY NAME g_wc ON pmdssite,pmdsdocno,pmds200,pmds006,
+                                   pmdsdocdt,pmds003,pmds002,
+                                   pmds007,pmds009,pmds008
+            BEFORE CONSTRUCT
+            
+            BEFORE FIELD pmdssite
+               NEXT FIELD NEXT 
+               
+            BEFORE FIELD pmdsdocno
+               IF NOT cl_null(g_argv[2]) THEN
+                  NEXT FIELD NEXT 
+               END IF
+         
+            ON ACTION controlp INFIELD pmdsdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               IF g_argv[1] = '1' THEN
+                  LET g_qryparam.arg1 = "('1','2','3','4')"
+               ELSE
+                  LET g_qryparam.arg1 = g_argv[1]
+               END IF
+               
+               CALL q_pmdsdocno()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmdsdocno  #顯示到畫面上
+               NEXT FIELD pmdsdocno                     #返回原欄位
+             
+            ON ACTION controlp INFIELD pmds200 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '1'               
+               CALL q_pmeldocno_1()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmdsdocno  #顯示到畫面上
+               NEXT FIELD pmdsdocno                     #返回原欄位
+               
+            ON ACTION controlp INFIELD pmds006
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               #驗退、入庫時開窗開收貨單號
+               IF g_argv[1] MATCHES '[56]' THEN
+                  LET g_qryparam.arg1 = "('1','2')"
+               END IF
+               #倉退時開窗開收貨單號
+               IF g_argv[1] MATCHES '[7]' THEN
+                  LET g_qryparam.arg1 = "('1','2','3','4')"
+               END IF
+               CALL q_pmdsdocno()
+               DISPLAY g_qryparam.return1 TO pmds006    #顯示到畫面上
+               NEXT FIELD pmds006                       #返回原欄位
+            
+            ON ACTION controlp INFIELD pmds003 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE            
+               CALL q_ooeg001()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds003    #顯示到畫面上
+               NEXT FIELD pmds003                       #返回原欄位
+               
+            ON ACTION controlp INFIELD pmds002 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE            
+               CALL q_ooag001()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds002    #顯示到畫面上
+               NEXT FIELD pmds002                       #返回原欄位
+               
+            ON ACTION controlp INFIELD pmds007
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE            
+               CALL q_pmaa001_3()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds007    #顯示到畫面上
+               NEXT FIELD pmds007                       #返回原欄位
+               
+            ON ACTION controlp INFIELD pmds008
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE     
+               LET g_qryparam.where = " pmac003 = '1' "                
+               CALL q_pmac002_2()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds008    #顯示到畫面上
+               NEXT FIELD pmds008                       #返回原欄位
+               
+            ON ACTION controlp INFIELD pmds009
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE     
+               LET g_qryparam.where = " pmac003 = '2' "                
+               CALL q_pmac002_2()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds009    #顯示到畫面上
+               NEXT FIELD pmds009                       #返回原欄位
+               
+         END CONSTRUCT ]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_wc      STRING
+   DEFINE l_flag    LIKE type_t.chr1
+   DEFINE l_i       LIKE type_t.num5]]>
+  </point>
+  <point name="ui_dialog.input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         INPUT tm.stus,tm.multi_stock
+          FROM l_stus,l_multi_stock
+            BEFORE INPUT
+            
+         END INPUT]]>
+  </point>
+  <point name="ui_dialog.qbeclear" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            EXIT DIALOG]]>
+  </point>
+  <point name="ui_dialog.set_qbe_action_after" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[  ]]>
+  </point>
+  <section id="apmq860.b_fill" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION apmq860_b_fill()
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準
+   {<point name="b_fill.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill段define-客製
+   {<point name="b_fill.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+ 
+   CALL g_pmds_d.clear()
+ 
+   #add-point:陣列清空
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs04 樣板自動產生(Version:4)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET ls_sql_rank = "SELECT  UNIQUE '',pmdssite,'',pmdsdocno,pmds200,pmdsdocdt,pmds011,pmds002,'',pmds003, 
+       '',pmds006,pmds007,'',pmds008,'',pmds009,'',pmds010,pmds052,pmds081,pmds045  ,DENSE_RANK() OVER( ORDER BY pmds_t.pmdsdocno) AS RANK FROM pmds_t", 
+
+ 
+#table2
+                     " LEFT JOIN pmdt_t ON pmdtent = pmdsent AND pmdsdocno = pmdtdocno",
+#table3
+                     " LEFT JOIN pmdu_t ON pmduent = pmdsent AND pmdsdocno = pmdudocno",
+#table4
+                     " LEFT JOIN xrcd_t ON xrcdent = pmdsent AND pmdsdocno = xrcddocno",
+ 
+                     "",
+                     " WHERE pmdsent= ? AND 1=1 AND ", ls_wc
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("pmds_t"),
+                     " ORDER BY pmds_t.pmdsdocno"
+ 
+   #add-point:b_fill段rank_sql_after
+   {<point name="b_fill.rank_sql_after"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(*) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql  #總筆數
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '',pmdssite,'',pmdsdocno,pmds200,pmdsdocdt,pmds011,pmds002,'',pmds003,'',pmds006, 
+       pmds007,'',pmds008,'',pmds009,'',pmds010,pmds052,pmds081,pmds045",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE apmq860_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apmq860_pb
+ 
+   OPEN b_fill_curs USING g_enterprise
+ 
+   FOREACH b_fill_curs INTO g_pmds_d[l_ac].sel,g_pmds_d[l_ac].pmdssite,g_pmds_d[l_ac].pmdssite_desc, 
+       g_pmds_d[l_ac].pmdsdocno,g_pmds_d[l_ac].pmds200,g_pmds_d[l_ac].pmdsdocdt,g_pmds_d[l_ac].pmds011, 
+       g_pmds_d[l_ac].pmds002,g_pmds_d[l_ac].pmds002_desc,g_pmds_d[l_ac].pmds003,g_pmds_d[l_ac].pmds003_desc, 
+       g_pmds_d[l_ac].pmds006,g_pmds_d[l_ac].pmds007,g_pmds_d[l_ac].pmds007_desc,g_pmds_d[l_ac].pmds008, 
+       g_pmds_d[l_ac].pmds008_desc,g_pmds_d[l_ac].pmds009,g_pmds_d[l_ac].pmds009_desc,g_pmds_d[l_ac].pmds010, 
+       g_pmds_d[l_ac].pmds052,g_pmds_d[l_ac].pmds081,g_pmds_d[l_ac].pmds045
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+      CALL apmq860_detail_show("'1'")
+ 
+      CALL apmq860_pmds_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   CALL g_pmds_d.deleteElement(g_pmds_d.getLength())
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_pmds_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #應用 qs06 樣板自動產生(Version:2)
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE apmq860_pb
+ 
+ 
+ 
+ 
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL apmq860_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL apmq860_detail_action_trans()
+ 
+   LET l_ac = 1
+   CALL apmq860_b_fill2()
+ 
+      CALL apmq860_filter_show('pmdssite','b_pmdssite')
+   CALL apmq860_filter_show('pmdsdocno','b_pmdsdocno')
+   CALL apmq860_filter_show('pmds200','b_pmds200')
+   CALL apmq860_filter_show('pmdsdocdt','b_pmdsdocdt')
+   CALL apmq860_filter_show('pmds011','b_pmds011')
+   CALL apmq860_filter_show('pmds002','b_pmds002')
+   CALL apmq860_filter_show('pmds003','b_pmds003')
+   CALL apmq860_filter_show('pmds006','b_pmds006')
+   CALL apmq860_filter_show('pmds007','b_pmds007')
+   CALL apmq860_filter_show('pmds008','b_pmds008')
+   CALL apmq860_filter_show('pmds009','b_pmds009')
+   CALL apmq860_filter_show('pmds010','b_pmds010')
+   CALL apmq860_filter_show('pmds052','b_pmds052')
+   CALL apmq860_filter_show('pmds081','b_pmds081')
+   CALL apmq860_filter_show('pmds045','b_pmds045')
+   CALL apmq860_filter_show('pmdtseq','b_pmdtseq')
+   CALL apmq860_filter_show('pmdt207','b_pmdt207')
+   CALL apmq860_filter_show('pmdt028','b_pmdt028')
+   CALL apmq860_filter_show('pmdt001','b_pmdt001')
+   CALL apmq860_filter_show('pmdt002','b_pmdt002')
+   CALL apmq860_filter_show('pmdt003','b_pmdt003')
+   CALL apmq860_filter_show('pmdt004','b_pmdt004')
+   CALL apmq860_filter_show('pmdt005','b_pmdt005')
+   CALL apmq860_filter_show('pmdt200','b_pmdt200')
+   CALL apmq860_filter_show('pmdt006','b_pmdt006')
+   CALL apmq860_filter_show('pmdt007','b_pmdt007')
+   CALL apmq860_filter_show('pmdt025','b_pmdt025')
+   CALL apmq860_filter_show('pmdt201','b_pmdt201')
+   CALL apmq860_filter_show('pmdt202','b_pmdt202')
+   CALL apmq860_filter_show('pmdt019','b_pmdt019')
+   CALL apmq860_filter_show('pmdt020','b_pmdt020')
+   CALL apmq860_filter_show('pmdt023','b_pmdt023')
+   CALL apmq860_filter_show('pmdt024','b_pmdt024')
+   CALL apmq860_filter_show('pmdt026','b_pmdt026')
+   CALL apmq860_filter_show('pmdt062','b_pmdt062')
+   CALL apmq860_filter_show('pmdt016','b_pmdt016')
+   CALL apmq860_filter_show('pmdt017','b_pmdt017')
+   CALL apmq860_filter_show('pmdt018','b_pmdt018')
+   CALL apmq860_filter_show('pmdt051','b_pmdt051')
+   CALL apmq860_filter_show('pmdt059','b_pmdt059')
+   CALL apmq860_filter_show('pmdt203','b_pmdt203')
+   CALL apmq860_filter_show('pmdt204','b_pmdt204')
+   CALL apmq860_filter_show('pmdt205','b_pmdt205')
+   CALL apmq860_filter_show('pmdt208','b_pmdt208')
+   CALL apmq860_filter_show('pmdt209','b_pmdt209')
+   CALL apmq860_filter_show('pmdt210','b_pmdt210')
+   CALL apmq860_filter_show('pmdt211','b_pmdt211')
+   CALL apmq860_filter_show('pmdt212','b_pmdt212')
+   CALL apmq860_filter_show('pmdt213','b_pmdt213')
+   CALL apmq860_filter_show('pmdtorga','b_pmdtorga')
+   CALL apmq860_filter_show('pmdt053','b_pmdt053')
+   CALL apmq860_filter_show('pmdt055','b_pmdt055')
+   CALL apmq860_filter_show('pmdt060','b_pmdt060')
+   CALL apmq860_filter_show('pmdt061','b_pmdt061')
+   CALL apmq860_filter_show('pmdt088','b_pmdt088')
+   CALL apmq860_filter_show('pmdt036','b_pmdt036')
+   CALL apmq860_filter_show('pmdt218','b_pmdt218')
+   CALL apmq860_filter_show('pmdt044','b_pmdt044')
+   CALL apmq860_filter_show('pmdt046','b_pmdt046')
+   CALL apmq860_filter_show('pmdt037','b_pmdt037')
+   CALL apmq860_filter_show('pmdt038','b_pmdt038')
+   CALL apmq860_filter_show('pmdt039','b_pmdt039')
+   CALL apmq860_filter_show('pmdt047','b_pmdt047')
+   CALL apmq860_filter_show('pmduseq','b_pmduseq')
+   CALL apmq860_filter_show('pmduseq1','b_pmduseq1')
+   CALL apmq860_filter_show('pmdu001','b_pmdu001')
+   CALL apmq860_filter_show('pmdu002','b_pmdu002')
+   CALL apmq860_filter_show('pmdu006','b_pmdu006')
+   CALL apmq860_filter_show('pmdu007','b_pmdu007')
+   CALL apmq860_filter_show('pmdu008','b_pmdu008')
+   CALL apmq860_filter_show('pmdu200','b_pmdu200')
+   CALL apmq860_filter_show('pmdu201','b_pmdu201')
+   CALL apmq860_filter_show('pmdu009','b_pmdu009')
+   CALL apmq860_filter_show('pmdu010','b_pmdu010')
+   CALL apmq860_filter_show('pmdu013','b_pmdu013')
+   CALL apmq860_filter_show('pmdu014','b_pmdu014')
+   CALL apmq860_filter_show('pmdu015','b_pmdu015')
+   CALL apmq860_filter_show('pmdu016','b_pmdu016')
+   CALL apmq860_filter_show('xrcdsite','b_xrcdsite')
+   CALL apmq860_filter_show('xrcdld','b_xrcdld')
+   CALL apmq860_filter_show('xrcdseq','b_xrcdseq')
+   CALL apmq860_filter_show('xrcd007','b_xrcd007')
+   CALL apmq860_filter_show('xrcd002','b_xrcd002')
+   CALL apmq860_filter_show('xrcdseq2','b_xrcdseq2')
+   CALL apmq860_filter_show('xrcd003','b_xrcd003')
+   CALL apmq860_filter_show('xrcd006','b_xrcd006')
+   CALL apmq860_filter_show('xrcd004','b_xrcd004')
+   CALL apmq860_filter_show('xrcd104','b_xrcd104')
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq860.b_fill2" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION apmq860_b_fill2()
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準
+   {<point name="b_fill2.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill2段define-客製
+   {<point name="b_fill2.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #應用 qs07 樣板自動產生(Version:3)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+#Page2
+   CALL g_pmds2_d.clear()
+#Page3
+   CALL g_pmds3_d.clear()
+#Page4
+   CALL g_pmds4_d.clear()
+#Page5
+   CALL g_pmds5_d.clear()
+ 
+   #add-point:陣列清空
+   {<point name="b_fill2.array_clear" />}
+   #end add-point
+ 
+#table2
+   #為避免影響執行效能，若是按上下筆就不重組SQL
+   IF g_action_choice <> "fetch" OR cl_null(g_action_choice) THEN
+      LET g_sql = "SELECT  UNIQUE pmdtseq,pmdt207,pmdt028,pmdt001,pmdt002,pmdt003,pmdt004,'','','','', 
+          '',pmdt005,pmdt200,pmdt006,'','',pmdt007,'',pmdt025,pmdt201,'',pmdt202,pmdt019,'',pmdt020, 
+          pmdt023,'',pmdt024,pmdt026,pmdt062,pmdt016,'',pmdt017,'',pmdt018,pmdt051,'',pmdt059,pmdt203, 
+          '',pmdt204,'',pmdt205,'',pmdt208,'',pmdt209,pmdt210,pmdt211,'',pmdt212,pmdt213,pmdtorga,'', 
+          pmdt053,pmdt055,pmdt060,pmdt061,pmdt088,pmdtseq,'','','','','','','','','','','','','','', 
+          '','','','','',pmdt036,pmdt218,pmdt044,pmdt046,'',pmdt037,pmdt038,pmdt039,pmdt047 FROM pmdt_t", 
+
+                  "",
+                  " WHERE pmdtent=? AND pmdtdocno=?"
+  
+      IF NOT cl_null(g_wc2_table2) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+      END IF
+  
+      LET g_sql = g_sql, " ORDER BY pmdt_t.pmdtseq"
+  
+      #add-point:單身填充前
+      {<point name="b_fill2.before_fill2" />}
+      #end add-point
+ 
+      LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+      PREPARE apmq860_pb2 FROM g_sql
+      DECLARE b_fill_curs2 CURSOR FOR apmq860_pb2
+   END IF
+ 
+   OPEN b_fill_curs2 USING g_enterprise,g_pmds_d[g_detail_idx].pmdsdocno
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs2 INTO g_pmds2_d[l_ac].pmdtseq,g_pmds2_d[l_ac].pmdt207,g_pmds2_d[l_ac].pmdt028, 
+       g_pmds2_d[l_ac].pmdt001,g_pmds2_d[l_ac].pmdt002,g_pmds2_d[l_ac].pmdt003,g_pmds2_d[l_ac].pmdt004, 
+       g_pmds2_d[l_ac].l_pmdo001,g_pmds2_d[l_ac].l_pmdo001_desc,g_pmds2_d[l_ac].l_pmdo001_desc_desc, 
+       g_pmds2_d[l_ac].l_pmdo002,g_pmds2_d[l_ac].l_pmdo002_desc,g_pmds2_d[l_ac].pmdt005,g_pmds2_d[l_ac].pmdt200, 
+       g_pmds2_d[l_ac].pmdt006,g_pmds2_d[l_ac].pmdt006_desc,g_pmds2_d[l_ac].pmdt006_desc_desc,g_pmds2_d[l_ac].pmdt007, 
+       g_pmds2_d[l_ac].pmdt007_desc,g_pmds2_d[l_ac].pmdt025,g_pmds2_d[l_ac].pmdt201,g_pmds2_d[l_ac].pmdt201_desc, 
+       g_pmds2_d[l_ac].pmdt202,g_pmds2_d[l_ac].pmdt019,g_pmds2_d[l_ac].pmdt019_desc,g_pmds2_d[l_ac].pmdt020, 
+       g_pmds2_d[l_ac].pmdt023,g_pmds2_d[l_ac].pmdt023_desc,g_pmds2_d[l_ac].pmdt024,g_pmds2_d[l_ac].pmdt026, 
+       g_pmds2_d[l_ac].pmdt062,g_pmds2_d[l_ac].pmdt016,g_pmds2_d[l_ac].pmdt016_desc,g_pmds2_d[l_ac].pmdt017, 
+       g_pmds2_d[l_ac].pmdt017_desc,g_pmds2_d[l_ac].pmdt018,g_pmds2_d[l_ac].pmdt051,g_pmds2_d[l_ac].pmdt051_desc, 
+       g_pmds2_d[l_ac].pmdt059,g_pmds2_d[l_ac].pmdt203,g_pmds2_d[l_ac].pmdt203_desc,g_pmds2_d[l_ac].pmdt204, 
+       g_pmds2_d[l_ac].pmdt204_desc,g_pmds2_d[l_ac].pmdt205,g_pmds2_d[l_ac].pmdt205_desc,g_pmds2_d[l_ac].pmdt208, 
+       g_pmds2_d[l_ac].pmdt208_desc,g_pmds2_d[l_ac].pmdt209,g_pmds2_d[l_ac].pmdt210,g_pmds2_d[l_ac].pmdt211, 
+       g_pmds2_d[l_ac].pmdt211_desc,g_pmds2_d[l_ac].pmdt212,g_pmds2_d[l_ac].pmdt213,g_pmds2_d[l_ac].pmdtorga, 
+       g_pmds2_d[l_ac].pmdtorga_desc,g_pmds2_d[l_ac].pmdt053,g_pmds2_d[l_ac].pmdt055,g_pmds2_d[l_ac].pmdt060, 
+       g_pmds2_d[l_ac].pmdt061,g_pmds2_d[l_ac].pmdt088,g_pmds4_d[l_ac].pmdtseq,g_pmds4_d[l_ac].pmdt0011, 
+       g_pmds4_d[l_ac].pmdt0021,g_pmds4_d[l_ac].pmdt0031,g_pmds4_d[l_ac].pmdt0041,g_pmds4_d[l_ac].pmdt0051, 
+       g_pmds4_d[l_ac].pmdt0061,g_pmds4_d[l_ac].pmdt0061_desc,g_pmds4_d[l_ac].pmdt0061_desc_desc,g_pmds4_d[l_ac].pmdt0071, 
+       g_pmds4_d[l_ac].pmdt0071_desc,g_pmds4_d[l_ac].pmdt2011,g_pmds4_d[l_ac].pmdt2011_desc,g_pmds4_d[l_ac].pmdt2021, 
+       g_pmds4_d[l_ac].pmdt0191,g_pmds4_d[l_ac].pmdt0191_desc,g_pmds4_d[l_ac].pmdt0201,g_pmds4_d[l_ac].pmdt0231, 
+       g_pmds4_d[l_ac].pmdt0231_desc,g_pmds4_d[l_ac].pmdt0241,g_pmds4_d[l_ac].pmdt036,g_pmds4_d[l_ac].pmdt218, 
+       g_pmds4_d[l_ac].pmdt044,g_pmds4_d[l_ac].pmdt046,g_pmds4_d[l_ac].pmdt046_desc,g_pmds4_d[l_ac].pmdt037, 
+       g_pmds4_d[l_ac].pmdt038,g_pmds4_d[l_ac].pmdt039,g_pmds4_d[l_ac].pmdt047
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill2段資料填充
+      {<point name="b_fill2.fill2"/>}
+      #end add-point
+ 
+      CALL apmq860_detail_show("'2'")
+ 
+      CALL apmq860_pmdt_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend =  "" 
+         LET g_errparam.code   =  9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+#table3
+   #為避免影響執行效能，若是按上下筆就不重組SQL
+   IF g_action_choice <> "fetch" OR cl_null(g_action_choice) THEN
+      LET g_sql = "SELECT  UNIQUE pmduseq,pmduseq1,pmdu001,'','',pmdu002,'',pmdu006,'',pmdu007,'',pmdu008, 
+          pmdu200,'',pmdu201,pmdu009,'',pmdu010,pmdu013,pmdu014,pmdu015,pmdu016 FROM pmdu_t",
+                  "",
+                  " WHERE pmduent=? AND pmdudocno=?"
+  
+      IF NOT cl_null(g_wc2_table3) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table3 CLIPPED
+      END IF
+  
+      LET g_sql = g_sql, " ORDER BY pmdu_t.pmduseq,pmdu_t.pmduseq1"
+  
+      #add-point:單身填充前
+      {<point name="b_fill2.before_fill3" />}
+      #end add-point
+ 
+      LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+      PREPARE apmq860_pb3 FROM g_sql
+      DECLARE b_fill_curs3 CURSOR FOR apmq860_pb3
+   END IF
+ 
+   OPEN b_fill_curs3 USING g_enterprise,g_pmds_d[g_detail_idx].pmdsdocno
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs3 INTO g_pmds3_d[l_ac].pmduseq,g_pmds3_d[l_ac].pmduseq1,g_pmds3_d[l_ac].pmdu001, 
+       g_pmds3_d[l_ac].pmdu001_desc,g_pmds3_d[l_ac].pmdu001_desc_desc,g_pmds3_d[l_ac].pmdu002,g_pmds3_d[l_ac].pmdu002_desc, 
+       g_pmds3_d[l_ac].pmdu006,g_pmds3_d[l_ac].pmdu006_desc,g_pmds3_d[l_ac].pmdu007,g_pmds3_d[l_ac].pmdu007_desc, 
+       g_pmds3_d[l_ac].pmdu008,g_pmds3_d[l_ac].pmdu200,g_pmds3_d[l_ac].pmdu200_desc,g_pmds3_d[l_ac].pmdu201, 
+       g_pmds3_d[l_ac].pmdu009,g_pmds3_d[l_ac].pmdu009_desc,g_pmds3_d[l_ac].pmdu010,g_pmds3_d[l_ac].pmdu013, 
+       g_pmds3_d[l_ac].pmdu014,g_pmds3_d[l_ac].pmdu015,g_pmds3_d[l_ac].pmdu016
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill2段資料填充
+      {<point name="b_fill2.fill3"/>}
+      #end add-point
+ 
+      CALL apmq860_detail_show("'3'")
+ 
+      CALL apmq860_pmdu_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend =  "" 
+         LET g_errparam.code   =  9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+#table4
+   #為避免影響執行效能，若是按上下筆就不重組SQL
+   IF g_action_choice <> "fetch" OR cl_null(g_action_choice) THEN
+      LET g_sql = "SELECT  UNIQUE xrcdsite,xrcdld,xrcdseq,xrcd007,'','','','','','',xrcd002,'',xrcdseq2, 
+          xrcd003,xrcd006,xrcd004,xrcd104 FROM xrcd_t",
+                  "",
+                  " WHERE xrcdent=? AND xrcddocno=?"
+  
+      IF NOT cl_null(g_wc2_table4) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table4 CLIPPED
+      END IF
+  
+      LET g_sql = g_sql, " ORDER BY xrcd_t.xrcdld,xrcd_t.xrcdseq,xrcd_t.xrcdseq2,xrcd_t.xrcd007"
+  
+      #add-point:單身填充前
+      {<point name="b_fill2.before_fill4" />}
+      #end add-point
+ 
+      LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+      PREPARE apmq860_pb4 FROM g_sql
+      DECLARE b_fill_curs4 CURSOR FOR apmq860_pb4
+   END IF
+ 
+   OPEN b_fill_curs4 USING g_enterprise,g_pmds_d[g_detail_idx].pmdsdocno
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs4 INTO g_pmds5_d[l_ac].xrcdsite,g_pmds5_d[l_ac].xrcdld,g_pmds5_d[l_ac].xrcdseq, 
+       g_pmds5_d[l_ac].xrcd007,g_pmds5_d[l_ac].pmdt2002,g_pmds5_d[l_ac].pmdt0062,g_pmds5_d[l_ac].pmdt0062_desc, 
+       g_pmds5_d[l_ac].pmdt0062_desc_desc,g_pmds5_d[l_ac].pmdt0072,g_pmds5_d[l_ac].pmdt0072_desc,g_pmds5_d[l_ac].xrcd002, 
+       g_pmds5_d[l_ac].xrcd002_desc,g_pmds5_d[l_ac].xrcdseq2,g_pmds5_d[l_ac].xrcd003,g_pmds5_d[l_ac].xrcd006, 
+       g_pmds5_d[l_ac].xrcd004,g_pmds5_d[l_ac].xrcd104
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill2段資料填充
+      {<point name="b_fill2.fill4"/>}
+      #end add-point
+ 
+      CALL apmq860_detail_show("'4'")
+ 
+      CALL apmq860_pmdt_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend =  "" 
+         LET g_errparam.code   =  9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+#Page2
+   CALL g_pmds2_d.deleteElement(g_pmds2_d.getLength())
+#Page3
+   CALL g_pmds3_d.deleteElement(g_pmds3_d.getLength())
+#Page4
+   CALL g_pmds4_d.deleteElement(g_pmds4_d.getLength())
+#Page5
+   CALL g_pmds5_d.deleteElement(g_pmds5_d.getLength())
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill2.array_deleteElement" />}
+   #end add-point
+ 
+#Page2
+   LET li_ac = g_pmds2_d.getLength()
+#Page3
+   LET li_ac = g_pmds3_d.getLength()
+#Page4
+   LET li_ac = g_pmds4_d.getLength()
+#Page5
+   LET li_ac = g_pmds5_d.getLength()
+ 
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx2 = 1
+   DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+ 
+ 
+ 
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq860.default_search" ver="2" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apmq860_default_search()
+   #add-point:default_search段define-標準
+   {<point name="default_search.define" edit="s"/>}
+   #end add-point
+   #add-point:default_search段define-客製
+   {<point name="default_search.define_customerization" edit="c"/>}
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:2)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " pmdsdocno = '", g_argv[02], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq860.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000018
+#+ 
+#+ Filename...: apmq860
+#+ Description: 採購收貨單查詢列印作業
+#+ Creator....: 01752(2015-02-24 14:06:23)
+#+ Modifier...: 04226(2015-07-09 18:45:13) -SD/PR-
+]]>
+  </section>
+  <section id="apmq860.detail_action_trans" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION apmq860_detail_action_trans()
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq860.detail_index_setting" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION apmq860_detail_index_setting()
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+ 
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_pmds_d.getLength() AND g_pmds_d.getLength() > 0
+            LET g_detail_idx = g_pmds_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_pmds_d.getLength() THEN
+               LET g_detail_idx = g_pmds_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq860.detail_show" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION apmq860_detail_show(ps_page)
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準
+   {<point name="detail_show.define" edit="s"/>}
+   #end add-point
+   #add-point:show段define-客製
+   {<point name="detail_show.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body2.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'3'",1) > 0 THEN
+      #帶出公用欄位reference值page3
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body3.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'4'",1) > 0 THEN
+      #帶出公用欄位reference值page4
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body4.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'5'",1) > 0 THEN
+      #帶出公用欄位reference值page5
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body5.reference"/>}
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq860.filter" ver="4" status="" src="s" readonly="">
+    <![CDATA[#應用 qs13 樣板自動產生(Version:4)
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION apmq860_filter()
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準
+   {<point name="filter.define" edit="s"/>}
+   #end add-point
+   #add-point:filter段define-客製
+   {<point name="filter.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #應用 qs08 樣板自動產生(Version:4)
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON pmdssite,pmdsdocno,pmds200,pmdsdocdt,pmds011,pmds002,pmds003,pmds006, 
+          pmds007,pmds008,pmds009,pmds010,pmds052,pmds081,pmds045
+                          FROM s_detail1[1].b_pmdssite,s_detail1[1].b_pmdsdocno,s_detail1[1].b_pmds200, 
+                              s_detail1[1].b_pmdsdocdt,s_detail1[1].b_pmds011,s_detail1[1].b_pmds002, 
+                              s_detail1[1].b_pmds003,s_detail1[1].b_pmds006,s_detail1[1].b_pmds007,s_detail1[1].b_pmds008, 
+                              s_detail1[1].b_pmds009,s_detail1[1].b_pmds010,s_detail1[1].b_pmds052,s_detail1[1].b_pmds081, 
+                              s_detail1[1].b_pmds045
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY apmq860_filter_parser('pmdssite') TO s_detail1[1].b_pmdssite
+            DISPLAY apmq860_filter_parser('pmdsdocno') TO s_detail1[1].b_pmdsdocno
+            DISPLAY apmq860_filter_parser('pmds200') TO s_detail1[1].b_pmds200
+            DISPLAY apmq860_filter_parser('pmdsdocdt') TO s_detail1[1].b_pmdsdocdt
+            DISPLAY apmq860_filter_parser('pmds011') TO s_detail1[1].b_pmds011
+            DISPLAY apmq860_filter_parser('pmds002') TO s_detail1[1].b_pmds002
+            DISPLAY apmq860_filter_parser('pmds003') TO s_detail1[1].b_pmds003
+            DISPLAY apmq860_filter_parser('pmds006') TO s_detail1[1].b_pmds006
+            DISPLAY apmq860_filter_parser('pmds007') TO s_detail1[1].b_pmds007
+            DISPLAY apmq860_filter_parser('pmds008') TO s_detail1[1].b_pmds008
+            DISPLAY apmq860_filter_parser('pmds009') TO s_detail1[1].b_pmds009
+            DISPLAY apmq860_filter_parser('pmds010') TO s_detail1[1].b_pmds010
+            DISPLAY apmq860_filter_parser('pmds052') TO s_detail1[1].b_pmds052
+            DISPLAY apmq860_filter_parser('pmds081') TO s_detail1[1].b_pmds081
+            DISPLAY apmq860_filter_parser('pmds045') TO s_detail1[1].b_pmds045
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+ 
+         #單身一般欄位開窗相關處理
+                  #----<<sel>>----
+         #----<<b_pmdssite>>----
+         #Ctrlp:construct.c.filter.page1.b_pmdssite
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmdssite
+            #add-point:ON ACTION controlp INFIELD b_pmdssite
+            {<point name="construct.c.filter.page1.b_pmdssite" />}
+            #END add-point
+ 
+         #----<<b_pmdssite_desc>>----
+         #----<<b_pmdsdocno>>----
+         #Ctrlp:construct.c.page1.b_pmdsdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmdsdocno
+            #add-point:ON ACTION controlp INFIELD b_pmdsdocno
+            {<point name="construct.c.filter.page1.b_pmdsdocno" />}
+            #END add-point
+ 
+         #----<<b_pmds200>>----
+         #Ctrlp:construct.c.page1.b_pmds200
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds200
+            #add-point:ON ACTION controlp INFIELD b_pmds200
+            {<point name="construct.c.filter.page1.b_pmds200" />}
+            #END add-point
+ 
+         #----<<b_pmdsdocdt>>----
+         #Ctrlp:construct.c.filter.page1.b_pmdsdocdt
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmdsdocdt
+            #add-point:ON ACTION controlp INFIELD b_pmdsdocdt
+            {<point name="construct.c.filter.page1.b_pmdsdocdt" />}
+            #END add-point
+ 
+         #----<<b_pmds011>>----
+         #Ctrlp:construct.c.filter.page1.b_pmds011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds011
+            #add-point:ON ACTION controlp INFIELD b_pmds011
+            {<point name="construct.c.filter.page1.b_pmds011" />}
+            #END add-point
+ 
+         #----<<b_pmds002>>----
+         #Ctrlp:construct.c.page1.b_pmds002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds002
+            #add-point:ON ACTION controlp INFIELD b_pmds002
+            {<point name="construct.c.filter.page1.b_pmds002" />}
+            #END add-point
+ 
+         #----<<b_pmds002_desc>>----
+         #----<<b_pmds003>>----
+         #Ctrlp:construct.c.page1.b_pmds003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds003
+            #add-point:ON ACTION controlp INFIELD b_pmds003
+            {<point name="construct.c.filter.page1.b_pmds003" />}
+            #END add-point
+ 
+         #----<<b_pmds003_desc>>----
+         #----<<b_pmds006>>----
+         #Ctrlp:construct.c.page1.b_pmds006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds006
+            #add-point:ON ACTION controlp INFIELD b_pmds006
+            {<point name="construct.c.filter.page1.b_pmds006" />}
+            #END add-point
+ 
+         #----<<b_pmds007>>----
+         #Ctrlp:construct.c.page1.b_pmds007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds007
+            #add-point:ON ACTION controlp INFIELD b_pmds007
+            {<point name="construct.c.filter.page1.b_pmds007" />}
+            #END add-point
+ 
+         #----<<b_pmds007_desc>>----
+         #----<<b_pmds008>>----
+         #Ctrlp:construct.c.page1.b_pmds008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds008
+            #add-point:ON ACTION controlp INFIELD b_pmds008
+            {<point name="construct.c.filter.page1.b_pmds008" />}
+            #END add-point
+ 
+         #----<<b_pmds008_desc>>----
+         #----<<b_pmds009>>----
+         #Ctrlp:construct.c.page1.b_pmds009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds009
+            #add-point:ON ACTION controlp INFIELD b_pmds009
+            {<point name="construct.c.filter.page1.b_pmds009" />}
+            #END add-point
+ 
+         #----<<b_pmds009_desc>>----
+         #----<<b_pmds010>>----
+         #Ctrlp:construct.c.page1.b_pmds010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds010
+            #add-point:ON ACTION controlp INFIELD b_pmds010
+            {<point name="construct.c.filter.page1.b_pmds010" />}
+            #END add-point
+ 
+         #----<<b_pmds052>>----
+         #Ctrlp:construct.c.filter.page1.b_pmds052
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds052
+            #add-point:ON ACTION controlp INFIELD b_pmds052
+            {<point name="construct.c.filter.page1.b_pmds052" />}
+            #END add-point
+ 
+         #----<<b_pmds081>>----
+         #Ctrlp:construct.c.filter.page1.b_pmds081
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds081
+            #add-point:ON ACTION controlp INFIELD b_pmds081
+            {<point name="construct.c.filter.page1.b_pmds081" />}
+            #END add-point
+ 
+         #----<<b_pmds045>>----
+         #Ctrlp:construct.c.filter.page1.b_pmds045
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_pmds045
+            #add-point:ON ACTION controlp INFIELD b_pmds045
+            {<point name="construct.c.filter.page1.b_pmds045" />}
+            #END add-point
+ 
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+ 
+   
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL apmq860_filter_show('pmdssite','b_pmdssite')
+   CALL apmq860_filter_show('pmdsdocno','b_pmdsdocno')
+   CALL apmq860_filter_show('pmds200','b_pmds200')
+   CALL apmq860_filter_show('pmdsdocdt','b_pmdsdocdt')
+   CALL apmq860_filter_show('pmds011','b_pmds011')
+   CALL apmq860_filter_show('pmds002','b_pmds002')
+   CALL apmq860_filter_show('pmds003','b_pmds003')
+   CALL apmq860_filter_show('pmds006','b_pmds006')
+   CALL apmq860_filter_show('pmds007','b_pmds007')
+   CALL apmq860_filter_show('pmds008','b_pmds008')
+   CALL apmq860_filter_show('pmds009','b_pmds009')
+   CALL apmq860_filter_show('pmds010','b_pmds010')
+   CALL apmq860_filter_show('pmds052','b_pmds052')
+   CALL apmq860_filter_show('pmds081','b_pmds081')
+   CALL apmq860_filter_show('pmds045','b_pmds045')
+   CALL apmq860_filter_show('pmdtseq','b_pmdtseq')
+   CALL apmq860_filter_show('pmdt207','b_pmdt207')
+   CALL apmq860_filter_show('pmdt028','b_pmdt028')
+   CALL apmq860_filter_show('pmdt001','b_pmdt001')
+   CALL apmq860_filter_show('pmdt002','b_pmdt002')
+   CALL apmq860_filter_show('pmdt003','b_pmdt003')
+   CALL apmq860_filter_show('pmdt004','b_pmdt004')
+   CALL apmq860_filter_show('pmdt005','b_pmdt005')
+   CALL apmq860_filter_show('pmdt200','b_pmdt200')
+   CALL apmq860_filter_show('pmdt006','b_pmdt006')
+   CALL apmq860_filter_show('pmdt007','b_pmdt007')
+   CALL apmq860_filter_show('pmdt025','b_pmdt025')
+   CALL apmq860_filter_show('pmdt201','b_pmdt201')
+   CALL apmq860_filter_show('pmdt202','b_pmdt202')
+   CALL apmq860_filter_show('pmdt019','b_pmdt019')
+   CALL apmq860_filter_show('pmdt020','b_pmdt020')
+   CALL apmq860_filter_show('pmdt023','b_pmdt023')
+   CALL apmq860_filter_show('pmdt024','b_pmdt024')
+   CALL apmq860_filter_show('pmdt026','b_pmdt026')
+   CALL apmq860_filter_show('pmdt062','b_pmdt062')
+   CALL apmq860_filter_show('pmdt016','b_pmdt016')
+   CALL apmq860_filter_show('pmdt017','b_pmdt017')
+   CALL apmq860_filter_show('pmdt018','b_pmdt018')
+   CALL apmq860_filter_show('pmdt051','b_pmdt051')
+   CALL apmq860_filter_show('pmdt059','b_pmdt059')
+   CALL apmq860_filter_show('pmdt203','b_pmdt203')
+   CALL apmq860_filter_show('pmdt204','b_pmdt204')
+   CALL apmq860_filter_show('pmdt205','b_pmdt205')
+   CALL apmq860_filter_show('pmdt208','b_pmdt208')
+   CALL apmq860_filter_show('pmdt209','b_pmdt209')
+   CALL apmq860_filter_show('pmdt210','b_pmdt210')
+   CALL apmq860_filter_show('pmdt211','b_pmdt211')
+   CALL apmq860_filter_show('pmdt212','b_pmdt212')
+   CALL apmq860_filter_show('pmdt213','b_pmdt213')
+   CALL apmq860_filter_show('pmdtorga','b_pmdtorga')
+   CALL apmq860_filter_show('pmdt053','b_pmdt053')
+   CALL apmq860_filter_show('pmdt055','b_pmdt055')
+   CALL apmq860_filter_show('pmdt060','b_pmdt060')
+   CALL apmq860_filter_show('pmdt061','b_pmdt061')
+   CALL apmq860_filter_show('pmdt088','b_pmdt088')
+   CALL apmq860_filter_show('pmdt036','b_pmdt036')
+   CALL apmq860_filter_show('pmdt218','b_pmdt218')
+   CALL apmq860_filter_show('pmdt044','b_pmdt044')
+   CALL apmq860_filter_show('pmdt046','b_pmdt046')
+   CALL apmq860_filter_show('pmdt037','b_pmdt037')
+   CALL apmq860_filter_show('pmdt038','b_pmdt038')
+   CALL apmq860_filter_show('pmdt039','b_pmdt039')
+   CALL apmq860_filter_show('pmdt047','b_pmdt047')
+   CALL apmq860_filter_show('pmduseq','b_pmduseq')
+   CALL apmq860_filter_show('pmduseq1','b_pmduseq1')
+   CALL apmq860_filter_show('pmdu001','b_pmdu001')
+   CALL apmq860_filter_show('pmdu002','b_pmdu002')
+   CALL apmq860_filter_show('pmdu006','b_pmdu006')
+   CALL apmq860_filter_show('pmdu007','b_pmdu007')
+   CALL apmq860_filter_show('pmdu008','b_pmdu008')
+   CALL apmq860_filter_show('pmdu200','b_pmdu200')
+   CALL apmq860_filter_show('pmdu201','b_pmdu201')
+   CALL apmq860_filter_show('pmdu009','b_pmdu009')
+   CALL apmq860_filter_show('pmdu010','b_pmdu010')
+   CALL apmq860_filter_show('pmdu013','b_pmdu013')
+   CALL apmq860_filter_show('pmdu014','b_pmdu014')
+   CALL apmq860_filter_show('pmdu015','b_pmdu015')
+   CALL apmq860_filter_show('pmdu016','b_pmdu016')
+   CALL apmq860_filter_show('xrcdsite','b_xrcdsite')
+   CALL apmq860_filter_show('xrcdld','b_xrcdld')
+   CALL apmq860_filter_show('xrcdseq','b_xrcdseq')
+   CALL apmq860_filter_show('xrcd007','b_xrcd007')
+   CALL apmq860_filter_show('xrcd002','b_xrcd002')
+   CALL apmq860_filter_show('xrcdseq2','b_xrcdseq2')
+   CALL apmq860_filter_show('xrcd003','b_xrcd003')
+   CALL apmq860_filter_show('xrcd006','b_xrcd006')
+   CALL apmq860_filter_show('xrcd004','b_xrcd004')
+   CALL apmq860_filter_show('xrcd104','b_xrcd104')
+ 
+ 
+   CALL apmq860_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq860.filter_parser" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 qs14 樣板自動產生(Version:3)
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION apmq860_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define-標準
+   {<point name="filter_parser.define" edit="s"/>}
+   #end add-point
+   #add-point:filter段define-客製
+   {<point name="filter_parser.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+]]>
+  </section>
+  <section id="apmq860.filter_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 qs15 樣板自動產生(Version:3)
+#+ filter標題欄位顯示搜尋條件
+PRIVATE FUNCTION apmq860_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準
+   {<point name="filter_show.define" edit="s"/>}
+   #end add-point
+   #add-point:filter_show段define-客製
+   {<point name="filter_show.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apmq860_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+]]>
+  </section>
+  <section id="apmq860.global" ver="7" status="" src="s" readonly="">
+    <![CDATA[#應用 q01 樣板自動產生(Version:22)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pmds_d RECORD
+       
+       sel LIKE type_t.chr1, 
+   pmdssite LIKE pmds_t.pmdssite, 
+   pmdssite_desc LIKE type_t.chr500, 
+   pmdsdocno LIKE pmds_t.pmdsdocno, 
+   pmds200 LIKE pmds_t.pmds200, 
+   pmdsdocdt LIKE pmds_t.pmdsdocdt, 
+   pmds011 LIKE pmds_t.pmds011, 
+   pmds002 LIKE pmds_t.pmds002, 
+   pmds002_desc LIKE type_t.chr500, 
+   pmds003 LIKE pmds_t.pmds003, 
+   pmds003_desc LIKE type_t.chr500, 
+   pmds006 LIKE pmds_t.pmds006, 
+   pmds007 LIKE pmds_t.pmds007, 
+   pmds007_desc LIKE type_t.chr500, 
+   pmds008 LIKE pmds_t.pmds008, 
+   pmds008_desc LIKE type_t.chr500, 
+   pmds009 LIKE pmds_t.pmds009, 
+   pmds009_desc LIKE type_t.chr500, 
+   pmds010 LIKE pmds_t.pmds010, 
+   pmds052 LIKE pmds_t.pmds052, 
+   pmds081 LIKE pmds_t.pmds081, 
+   pmds045 LIKE pmds_t.pmds045
+       END RECORD
+PRIVATE TYPE type_g_pmds2_d RECORD
+       pmdtseq LIKE pmdt_t.pmdtseq, 
+   pmdt207 LIKE pmdt_t.pmdt207, 
+   pmdt028 LIKE pmdt_t.pmdt028, 
+   pmdt001 LIKE pmdt_t.pmdt001, 
+   pmdt002 LIKE pmdt_t.pmdt002, 
+   pmdt003 LIKE pmdt_t.pmdt003, 
+   pmdt004 LIKE pmdt_t.pmdt004, 
+   l_pmdo001 LIKE type_t.chr500, 
+   l_pmdo001_desc LIKE type_t.chr500, 
+   l_pmdo001_desc_desc LIKE type_t.chr500, 
+   l_pmdo002 LIKE type_t.chr500, 
+   l_pmdo002_desc LIKE type_t.chr500, 
+   pmdt005 LIKE pmdt_t.pmdt005, 
+   pmdt200 LIKE pmdt_t.pmdt200, 
+   pmdt006 LIKE pmdt_t.pmdt006, 
+   pmdt006_desc LIKE type_t.chr500, 
+   pmdt006_desc_desc LIKE type_t.chr500, 
+   pmdt007 LIKE pmdt_t.pmdt007, 
+   pmdt007_desc LIKE type_t.chr500, 
+   pmdt025 LIKE pmdt_t.pmdt025, 
+   pmdt201 LIKE pmdt_t.pmdt201, 
+   pmdt201_desc LIKE type_t.chr500, 
+   pmdt202 LIKE pmdt_t.pmdt202, 
+   pmdt019 LIKE pmdt_t.pmdt019, 
+   pmdt019_desc LIKE type_t.chr500, 
+   pmdt020 LIKE pmdt_t.pmdt020, 
+   pmdt023 LIKE pmdt_t.pmdt023, 
+   pmdt023_desc LIKE type_t.chr500, 
+   pmdt024 LIKE pmdt_t.pmdt024, 
+   pmdt026 LIKE pmdt_t.pmdt026, 
+   pmdt062 LIKE pmdt_t.pmdt062, 
+   pmdt016 LIKE pmdt_t.pmdt016, 
+   pmdt016_desc LIKE type_t.chr500, 
+   pmdt017 LIKE pmdt_t.pmdt017, 
+   pmdt017_desc LIKE type_t.chr500, 
+   pmdt018 LIKE pmdt_t.pmdt018, 
+   pmdt051 LIKE pmdt_t.pmdt051, 
+   pmdt051_desc LIKE type_t.chr500, 
+   pmdt059 LIKE pmdt_t.pmdt059, 
+   pmdt203 LIKE pmdt_t.pmdt203, 
+   pmdt203_desc LIKE type_t.chr500, 
+   pmdt204 LIKE pmdt_t.pmdt204, 
+   pmdt204_desc LIKE type_t.chr500, 
+   pmdt205 LIKE pmdt_t.pmdt205, 
+   pmdt205_desc LIKE type_t.chr500, 
+   pmdt208 LIKE pmdt_t.pmdt208, 
+   pmdt208_desc LIKE type_t.chr500, 
+   pmdt209 LIKE pmdt_t.pmdt209, 
+   pmdt210 LIKE pmdt_t.pmdt210, 
+   pmdt211 LIKE pmdt_t.pmdt211, 
+   pmdt211_desc LIKE type_t.chr500, 
+   pmdt212 LIKE pmdt_t.pmdt212, 
+   pmdt213 LIKE pmdt_t.pmdt213, 
+   pmdtorga LIKE pmdt_t.pmdtorga, 
+   pmdtorga_desc LIKE type_t.chr500, 
+   pmdt053 LIKE pmdt_t.pmdt053, 
+   pmdt055 LIKE pmdt_t.pmdt055, 
+   pmdt060 LIKE pmdt_t.pmdt060, 
+   pmdt061 LIKE pmdt_t.pmdt061, 
+   pmdt088 LIKE pmdt_t.pmdt088
+       END RECORD
+ 
+PRIVATE TYPE type_g_pmds3_d RECORD
+       pmduseq LIKE pmdu_t.pmduseq, 
+   pmduseq1 LIKE pmdu_t.pmduseq1, 
+   pmdu001 LIKE pmdu_t.pmdu001, 
+   pmdu001_desc LIKE type_t.chr500, 
+   pmdu001_desc_desc LIKE type_t.chr500, 
+   pmdu002 LIKE pmdu_t.pmdu002, 
+   pmdu002_desc LIKE type_t.chr500, 
+   pmdu006 LIKE pmdu_t.pmdu006, 
+   pmdu006_desc LIKE type_t.chr500, 
+   pmdu007 LIKE pmdu_t.pmdu007, 
+   pmdu007_desc LIKE type_t.chr500, 
+   pmdu008 LIKE pmdu_t.pmdu008, 
+   pmdu200 LIKE pmdu_t.pmdu200, 
+   pmdu200_desc LIKE type_t.chr500, 
+   pmdu201 LIKE pmdu_t.pmdu201, 
+   pmdu009 LIKE pmdu_t.pmdu009, 
+   pmdu009_desc LIKE type_t.chr500, 
+   pmdu010 LIKE pmdu_t.pmdu010, 
+   pmdu013 LIKE pmdu_t.pmdu013, 
+   pmdu014 LIKE pmdu_t.pmdu014, 
+   pmdu015 LIKE pmdu_t.pmdu015, 
+   pmdu016 LIKE pmdu_t.pmdu016
+       END RECORD
+ 
+PRIVATE TYPE type_g_pmds4_d RECORD
+       pmdtseq LIKE pmdt_t.pmdtseq, 
+   pmdt0011 LIKE type_t.chr20, 
+   pmdt0021 LIKE type_t.num10, 
+   pmdt0031 LIKE type_t.num10, 
+   pmdt0041 LIKE type_t.num10, 
+   pmdt0051 LIKE type_t.chr10, 
+   pmdt0061 LIKE type_t.chr500, 
+   pmdt0061_desc LIKE type_t.chr500, 
+   pmdt0061_desc_desc LIKE type_t.chr500, 
+   pmdt0071 LIKE type_t.chr500, 
+   pmdt0071_desc LIKE type_t.chr500, 
+   pmdt2011 LIKE type_t.chr10, 
+   pmdt2011_desc LIKE type_t.chr500, 
+   pmdt2021 LIKE type_t.num20_6, 
+   pmdt0191 LIKE type_t.chr10, 
+   pmdt0191_desc LIKE type_t.chr500, 
+   pmdt0201 LIKE type_t.num20_6, 
+   pmdt0231 LIKE type_t.chr10, 
+   pmdt0231_desc LIKE type_t.chr500, 
+   pmdt0241 LIKE type_t.num20_6, 
+   pmdt036 LIKE pmdt_t.pmdt036, 
+   pmdt218 LIKE pmdt_t.pmdt218, 
+   pmdt044 LIKE pmdt_t.pmdt044, 
+   pmdt046 LIKE pmdt_t.pmdt046, 
+   pmdt046_desc LIKE type_t.chr500, 
+   pmdt037 LIKE pmdt_t.pmdt037, 
+   pmdt038 LIKE pmdt_t.pmdt038, 
+   pmdt039 LIKE pmdt_t.pmdt039, 
+   pmdt047 LIKE pmdt_t.pmdt047
+       END RECORD
+ 
+PRIVATE TYPE type_g_pmds5_d RECORD
+       xrcdsite LIKE xrcd_t.xrcdsite, 
+   xrcdld LIKE xrcd_t.xrcdld, 
+   xrcdseq LIKE xrcd_t.xrcdseq, 
+   xrcd007 LIKE xrcd_t.xrcd007, 
+   pmdt2002 LIKE type_t.chr500, 
+   pmdt0062 LIKE type_t.chr500, 
+   pmdt0062_desc LIKE type_t.chr500, 
+   pmdt0062_desc_desc LIKE type_t.chr500, 
+   pmdt0072 LIKE type_t.chr500, 
+   pmdt0072_desc LIKE type_t.chr500, 
+   xrcd002 LIKE xrcd_t.xrcd002, 
+   xrcd002_desc LIKE type_t.chr500, 
+   xrcdseq2 LIKE xrcd_t.xrcdseq2, 
+   xrcd003 LIKE xrcd_t.xrcd003, 
+   xrcd006 LIKE xrcd_t.xrcd006, 
+   xrcd004 LIKE xrcd_t.xrcd004, 
+   xrcd104 LIKE xrcd_t.xrcd104
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_pmds_d            DYNAMIC ARRAY OF type_g_pmds_d
+DEFINE g_pmds_d_t          type_g_pmds_d
+DEFINE g_pmds2_d     DYNAMIC ARRAY OF type_g_pmds2_d
+DEFINE g_pmds2_d_t   type_g_pmds2_d
+ 
+DEFINE g_pmds3_d     DYNAMIC ARRAY OF type_g_pmds3_d
+DEFINE g_pmds3_d_t   type_g_pmds3_d
+ 
+DEFINE g_pmds4_d     DYNAMIC ARRAY OF type_g_pmds4_d
+DEFINE g_pmds4_d_t   type_g_pmds4_d
+ 
+DEFINE g_pmds5_d     DYNAMIC ARRAY OF type_g_pmds5_d
+DEFINE g_pmds5_d_t   type_g_pmds5_d
+ 
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+DEFINE g_wc2_table2   STRING
+DEFINE g_detail2_page_action2 STRING
+ 
+DEFINE g_wc2_table3   STRING
+DEFINE g_detail2_page_action3 STRING
+ 
+DEFINE g_wc2_table4   STRING
+DEFINE g_detail2_page_action4 STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+DEFINE g_wc2_filter_table2   STRING
+ 
+DEFINE g_wc2_filter_table3   STRING
+ 
+DEFINE g_wc2_filter_table4   STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+#add-point:自定義模組變數-客製(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+##end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmq860.init" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION apmq860_init()
+   #add-point:init段define-標準
+   {<point name="init.define" edit="s"/>}
+   #end add-point
+   #add-point:init段define-客製
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+      CALL cl_set_combo_scc('b_pmds011','2061') 
+   CALL cl_set_combo_scc('b_pmdt005','2055') 
+   CALL cl_set_combo_scc('b_pmdt025','2036') 
+   CALL cl_set_combo_scc('b_pmdt209','6739') 
+   CALL cl_set_combo_scc('b_pmdt210','6013') 
+  
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+ 
+   CALL apmq860_default_search()
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq860.main" ver="2" status="" src="s" readonly="">
+    <![CDATA[#應用 a26 樣板自動產生(Version:4)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define
+   {<point name="main.define" edit="s"/>}
+   #end add-point   
+   #add-point:main段define(客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apmq860_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE apmq860_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apmq860_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmq860 WITH FORM cl_ap_formpath("apm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apmq860_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apmq860_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_apmq860
+      
+   END IF 
+   
+   CLOSE apmq860_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="apmq860.mask_functions" ver="1" status="" src="s" readonly="">
+    <![CDATA[&include "erp/apm/apmq860_mask.4gl"
+]]>
+  </section>
+  <section id="apmq860.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="apmq860.ui_dialog" ver="7" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apmq860_ui_dialog() 
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old   STRING
+   DEFINE ls_js     STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   #add-point:ui_dialog段define-標準
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point
+   #add-point:ui_dialog段define-客製
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   
+   CALL apmq860_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_pmds_d.clear()
+         CALL g_pmds2_d.clear()
+ 
+         CALL g_pmds3_d.clear()
+ 
+         CALL g_pmds4_d.clear()
+ 
+         CALL g_pmds5_d.clear()
+ 
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL apmq860_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+         {<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落
+         {<point name="ui_dialog.construct" mark="Y"/>}
+         #end add-point
+     
+         DISPLAY ARRAY g_pmds_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL apmq860_detail_action_trans()
+ 
+               LET g_master_idx = l_ac
+               #為避免按上下筆時影響執行效能，所以做一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL apmq860_b_fill2()
+               LET g_action_choice = lc_action_choice_old
+ 
+               #add-point:input段before row
+               {<point name="input.body.before_row" mark="Y"/>}
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為
+            {<point name="ui_dialog.body.page1.action" mark="Y"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         #add-point:第一頁籤程式段mark結束用
+         {<point name="ui_dialog.page1.mark.end"/>}
+         #end add-point
+ 
+         DISPLAY ARRAY g_pmds2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 2
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body2.before_row" mark="Y"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_2)
+            
+            #add-point:page2自定義行為
+            {<point name="ui_dialog.body2.action"/>}
+            #end add-point
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_pmds3_d TO s_detail3.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 3
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body3.before_row" mark="Y"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_3)
+            
+            #add-point:page3自定義行為
+            {<point name="ui_dialog.body3.action"/>}
+            #end add-point
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_pmds4_d TO s_detail4.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 4
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail4")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body4.before_row" mark="Y"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_4)
+            
+            #add-point:page4自定義行為
+            {<point name="ui_dialog.body4.action"/>}
+            #end add-point
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_pmds5_d TO s_detail5.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 5
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail5")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body5.before_row" mark="Y"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_5)
+            
+            #add-point:page5自定義行為
+            {<point name="ui_dialog.body5.action"/>}
+            #end add-point
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL apmq860_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+            NEXT FIELD pmdssite
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+            IF NOT cl_null(g_wc2_table2) AND g_wc2_table2 <> " 1=1" THEN
+               LET g_wc = g_wc, " AND ", g_wc2_table2
+            END IF
+ 
+            IF NOT cl_null(g_wc2_table3) AND g_wc2_table3 <> " 1=1" THEN
+               LET g_wc = g_wc, " AND ", g_wc2_table3
+            END IF
+ 
+            IF NOT cl_null(g_wc2_table4) AND g_wc2_table4 <> " 1=1" THEN
+               LET g_wc = g_wc, " AND ", g_wc2_table4
+            END IF
+ 
+ 
+         
+            LET g_wc2 = " 1=1"
+            IF NOT cl_null(g_wc2_table2) AND g_wc2_table2 <> " 1=1" THEN
+               LET g_wc2 = g_wc2, " AND ", g_wc2_table2
+            END IF
+ 
+            IF NOT cl_null(g_wc2_table3) AND g_wc2_table3 <> " 1=1" THEN
+               LET g_wc2 = g_wc2, " AND ", g_wc2_table3
+            END IF
+ 
+            IF NOT cl_null(g_wc2_table4) AND g_wc2_table4 <> " 1=1" THEN
+               LET g_wc2 = g_wc2, " AND ", g_wc2_table4
+            END IF
+ 
+ 
+ 
+            #add-point:ON ACTION accept
+            {<point name="ui_dialog.accept"/>}
+            #end add-point
+ 
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            CALL apmq860_b_fill()
+ 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.agendum"/>}
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_pmds_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_pmds2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+               LET g_export_node[3] = base.typeInfo.create(g_pmds3_d)
+               LET g_export_id[3]   = "s_detail3"
+ 
+               LET g_export_node[4] = base.typeInfo.create(g_pmds4_d)
+               LET g_export_id[4]   = "s_detail4"
+ 
+               LET g_export_node[5] = base.typeInfo.create(g_pmds5_d)
+               LET g_export_id[5]   = "s_detail5"
+ 
+ 
+               #add-point:ON ACTION exporttoexcel
+               {<point name="menu.exporttoexcel" />}
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL apmq860_b_fill()
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL apmq860_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL apmq860_b_fill()
+ 
+         ON ACTION detail_next               #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL apmq860_b_fill()
+ 
+         ON ACTION detail_last               #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL apmq860_b_fill()
+ 
+         #應用 qs19 樣板自動產生(Version:2)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_pmds_d.getLength()
+               LET g_pmds_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_pmds_d.getLength()
+               LET g_pmds_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_pmds_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pmds_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_pmds_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pmds_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+ 
+ 
+ 
+ 
+         #應用 qs16 樣板自動產生(Version:2)
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apmq860_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+ 
+         
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query_price
+            LET g_action_choice="query_price"
+            IF cl_auth_chk_act("query_price") THEN
+               
+               #add-point:ON ACTION query_price
+               {<point name="menu.query_price" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前
+         {<point name="ui_dialog.set_qbe_action_before" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後
+         {<point name="ui_dialog.set_qbe_action_after"/>}
+         #end add-point
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

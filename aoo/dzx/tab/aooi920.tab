@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi920" module="aoo" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="05423" crtdt="2016-04-25 10:17:31" modid="05423" moddt="2016-06-13 14:58:28" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="檢核節點維護作業(停用)">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooka002,ooka001,ookal003,ookal004,ooka003,ooka003_desc(chr80),ooka004,ooka005,ooka006,ookastus,ookaownid,ookaownid_desc(chr80),ookaowndp,ookaowndp_desc(chr80),ookacrtid,ookacrtid_desc(chr80),ookacrtdp,ookacrtdp_desc(chr80),ookacrtdt,ookamodid,ookamodid_desc(chr80),ookamoddt"/>
+      <var id="bs_field" value="ooka001,ooka001_desc(chr80),ooka003,ooka006" pk="ooka001" order=""/>
+      <bs_reference field="ooka001_desc" ref_field="ooka001" ref_sql="SELECT ookal003 FROM ookal_t WHERE ookalent=$varg_enterprise$var AND ookal001=? AND ookal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+      <action id="l_open_exception"/>
+      <action id="l_open_warning"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi920" method="dialog">
+    <section id="input">
+      <input id="head" field="ooka002,ooka001,ookal003,ookal004,ooka003,ooka004,ooka005,ookastus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ooka002,ooka001,ookal003,ookal004,ooka003,ooka004,ooka005,ooka006,ookastus,ookaownid,ookaowndp,ookacrtid,ookacrtdp,ookacrtdt,ookamodid,ookamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ooka001"/>
+      <set id="head" type="no_entry" field="ooka001"/>
+    </init>
+    <init id="head">
+      <column id="ooka002" type="S" default="1"/>
+      <column id="ooka001">
+        <controlp form="q_ooka001" state="c"/>
+      </column>
+      <column id="ookal003"/>
+      <column id="ookal004"/>
+      <column id="ooka003">
+        <after>
+          <reference field="ooka003_desc" ref_field="ooka_t.ooka003" map_field="ooka004" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001_1" state="i"/>
+        <controlp form="q_gzzz001_1" state="c"/>
+      </column>
+      <column id="ooka003_desc"/>
+      <column id="ooka004"/>
+      <column id="ooka005"/>
+      <column id="ooka006"/>
+      <column id="ookastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="ookaownid">
+        <after>
+          <reference field="ookaownid_desc" ref_field="ooka_t.ookaownid" map_field="ookaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ookaownid_desc"/>
+      <column id="ookaowndp">
+        <after>
+          <reference field="ookaowndp_desc" ref_field="ooka_t.ookaowndp" map_field="ookaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ookaowndp_desc"/>
+      <column id="ookacrtid">
+        <after>
+          <reference field="ookacrtid_desc" ref_field="ooka_t.ookacrtid" map_field="ookacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ookacrtid_desc"/>
+      <column id="ookacrtdp">
+        <after>
+          <reference field="ookacrtdp_desc" ref_field="ooka_t.ookacrtdp" map_field="ookacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ookacrtdp_desc"/>
+      <column id="ookacrtdt"/>
+      <column id="ookamodid">
+        <after>
+          <reference field="ookamodid_desc" ref_field="ooka_t.ookamodid" map_field="ookamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ookamodid_desc"/>
+      <column id="ookamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooka_t" pk="ooka001">
+      <sql id="forupd_sql" type="sql" query="SELECT ooka002,ooka001,&apos;&apos;,&apos;&apos;,ooka003,&apos;&apos;,ooka004,ooka005,ooka006,ookastus,ookaownid,&apos;&apos;,ookaowndp,&apos;&apos;,ookacrtid,&apos;&apos;,ookacrtdp,&apos;&apos;,ookacrtdt,ookamodid,&apos;&apos;,ookamoddt FROM ooka_t WHERE ookaent= ? AND ooka001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ooka001 FROM ooka_t" order="ooka001"/>
+      <sql id="append" type="lang" target="ookal_t.ookal003,ookal_t.ookal004" table="ookal_t" fk="ooka001" pk="ookal001,ookal002" field="ookal003,ookal004"/>
+    </head>
+  </dataset>
+</assembly>
+

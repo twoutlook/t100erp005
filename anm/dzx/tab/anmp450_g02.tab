@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmp450_g02" module="anm" jobmode="N" type="g01" industry="std" crtid="06816" crtdt="2015-09-04 14:39:30" modid="06816" moddt="2015-09-07 16:44:03" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.a1(STRING|nmckcomp)">
+    <var seq="1" value="nmckdocno,nmckdocdt,nmck025,nmck011,nmck103,nmck034,l_nmck034(chr500|&apos;&apos;),nmck015,nmck002,l_nmck002(chr500|&apos;&apos;),l_memo(chr500|NULL),nmck005,nmcksite,nmckcomp,nmckent"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="nmckdocno,nmckdocdt,nmck025,nmck011,nmck103,nmck034,l_nmck034(chr500|&apos;&apos;),nmck015,nmck002,l_nmck002(chr500|&apos;&apos;),l_memo(chr500|NULL),nmck005,nmcksite,nmckcomp,nmckent"/>
+    <sql id="g_from" query="nmck_t"/>
+    <sql id="g_where" query="" maintable="nmck_t"/>
+    <sql id="g_order" query="nmck025,nmck005"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="nmckent"/>
+    <section id="b_group" reptype="d01">
+      <rep type="nmckent" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmckent,nmckent"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="nmckent,nmckent"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="nmckent,nmckent"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="nmckent" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmckent,nmckent"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

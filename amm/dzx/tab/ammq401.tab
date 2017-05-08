@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammq401" module="amm" jobmode="N" type="q02" industry="std" fix_arg="1" crtid="02748" crtdt="2014-02-11 16:33:25" modid="06814" moddt="2015-09-14 09:38:15" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="卡庫存異動查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),mmbj005,mmbj000,mmbj001,mmbj002,mmbj002_desc(chr500),mmbj007,mmbj007_desc(chr500),mmbj006,mmbj011,mmbjsite,mmbjsite_desc(chr500),mmbj003,mmbj003_desc(chr500),mmbj004"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),mmbj005(b_mmbj005),mmbj000(b_mmbj000),mmbj001(b_mmbj001),mmbj002(b_mmbj002),mmbj002_desc(b_mmbj002_desc),mmbj007(b_mmbj007),mmbj007_desc(b_mmbj007_desc),mmbj006(b_mmbj006),mmbj011(b_mmbj011),mmbjsite(b_mmbjsite),mmbjsite_desc(b_mmbjsite_desc),mmbj003(b_mmbj003),mmbj003_desc(b_mmbj003_desc),mmbj004(b_mmbj004)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammq401" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="mmbj005,mmbj000,mmbj001,mmbj002,mmbj007,mmbj006,mmbj011,mmbjsite,mmbj003,mmbj004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="mmbj005(b_mmbj005),mmbj000(b_mmbj000),mmbj001(b_mmbj001),mmbj002(b_mmbj002),mmbj007(b_mmbj007),mmbj006(b_mmbj006),mmbj011(b_mmbj011),mmbjsite(b_mmbjsite),mmbj003(b_mmbj003),mmbj004(b_mmbj004)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="mmbj005"/>
+      <column id="mmbj000"/>
+      <column id="mmbj001">
+        <controlp form="q_gcao001_9" state="c"/>
+      </column>
+      <column id="mmbj002">
+        <after>
+          <reference field="mmbj002_desc" ref_field="mmbj002" map_field="mmbjent,mmbj002" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmbj002_desc"/>
+      <column id="mmbj007">
+        <after>
+          <reference field="mmbj007_desc" ref_field="mmbj007" map_field="mmbj007" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_5" state="c"/>
+      </column>
+      <column id="mmbj007_desc"/>
+      <column id="mmbj006" def_scc="6738"/>
+      <column id="mmbj011"/>
+      <column id="mmbjsite">
+        <after>
+          <reference field="mmbjsite_desc" ref_field="mmbjsite" map_field="mmbjent,mmbjsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmbjsite_desc"/>
+      <column id="mmbj003">
+        <after>
+          <reference field="mmbj003_desc" ref_field="mmbj003" map_field="mmbj003" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzza001_2" state="c"/>
+      </column>
+      <column id="mmbj003_desc"/>
+      <column id="mmbj004">
+        <controlp form="q_mmbj004" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="mmbj_t" page="1" linked="" pk="mmbj000,mmbj001,mmbj002,mmbj004,mmbj006,mmbj007">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,mmbj005,mmbj000,mmbj001,mmbj002,&apos;&apos;,mmbj007,&apos;&apos;,mmbj006,mmbj011,mmbjsite,&apos;&apos;,mmbj003,&apos;&apos;,mmbj004 FROM mmbj_t WHERE mmbjent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

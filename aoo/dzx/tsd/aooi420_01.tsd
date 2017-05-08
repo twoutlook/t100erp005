@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi420_01" std_prog="aooi420_01" erpver="1.0" ver="1" module="AOO" booking="Y" class="i" template="F001_00" normal_style="Y" env="s" zone="t10dev">
+  <toolbar items="insert,modify,delete,reproduce,output,query"/>
+  <table ver="1">
+    <tbl name="oogc_t" parent="" main="Y" src="s" status=""/>
+  </table>
+  <all src="s" ver="1" cite_std="" cite_ver="" status="">
+    <![CDATA[程式說明及目的：透過日曆檔與行事曆假日檔，產生出行事曆檔的資料。
+作業功能：確定/放棄
+作業類型：子作業
+輸入模式：單檔(子作業)F001_00
+作業資料來源(Master)：
+	資料來源表：oogc_t(行事曆檔)
+	            ooall_t(參照表多語言檔)
+
+當執行"確認"時,
+1.先抓取符合日期起迄範圍的[T:日曆檔]資料
+  SELECT * FROM ooga_t WHERE ooga001 BETWEEN 日期起 AND 日期迄
+  一一將資料寫入[T:行事曆檔]
+  [T:行事曆檔].[C:企業編號]=g_enterprise
+  [T:行事曆檔].[C:行事曆參照表號]=輸入條件的[C:行事曆參照表號]
+  [T:行事曆檔].[C:行事曆類別]=輸入條件的[C:行事曆類別]
+  [T:行事曆檔].[C:日期]=[T:日曆檔].[C:日期]
+  [T:行事曆檔].[C:分類一]=[T:日曆檔].[C:分類一]
+  [T:行事曆檔].[C:分類二]=[T:日曆檔].[C:分類二]
+  [T:行事曆檔].[C:分類三]=[T:日曆檔].[C:分類三]
+  [T:行事曆檔].[C:分類四]=[T:日曆檔].[C:分類四]
+  [T:行事曆檔].[C:分類五]=[T:日曆檔].[C:分類五]
+3.再抓取符合行事曆參照表號條件的[T:行事曆假日檔]資料
+  SELECT * FROM oogb_t WHERE oogb001=畫面上輸入的行事曆參照表號 AND oogb002 BETWEEN 日期起 AND 日期迄
+  一一將休假資料寫入[T:行事曆檔]
+  [T:行事曆檔].[C:休假類型]=[T:行事曆假日檔].[C:休假類型]
+  [T:行事曆檔].[C:原因說明]=[T:行事曆假日檔].[C:原因說明]
+  [T:行事曆檔].[C:分類一]=[T:行事曆假日檔].[C:分類一]
+  [T:行事曆檔].[C:分類二]=[T:行事曆假日檔].[C:分類二]
+  [T:行事曆檔].[C:分類三]=[T:行事曆假日檔].[C:分類三]
+  [T:行事曆檔].[C:分類四]=[T:行事曆假日檔].[C:分類四]
+  [T:行事曆檔].[C:分類五]=[T:行事曆假日檔].[C:分類五]
+4.其他非行事曆假日檔有維護的日期，則將
+  [T:行事曆檔].[C:休假類型]=輸入條件的[C:工作日類型]
+  [T:行事曆檔].[C:上班時數]=輸入條件的[C:工作日上班時數]
+5.季別(oogc007)資料的寫入是依據畫面上[C:第一季從1/1開始]有沒有勾選來決定計算方式，
+  (1)勾選表示
+     1、2、3月是第一季，4、5、6月是第二季，7、8、9月是第三季，10、11、12月是第四季
+  (2)不勾表示以[C:日期起]所在月份為第一季的起始月份，例：[C:日期起]=2013/4/1,則
+     4、5、6月是第一季，7、8、9月是第二季，10、11、12月是第三季，次年1、2、3月是第四季
+6.週別(oogc008)資料的寫入是依據畫面上[C:第一週從1/1開始]有沒有勾選來決定計算方式，
+  (1)勾選表示
+     1/1那天是第一週，以2013/1/1(二)為例，則1/1(二)~1/5(六)是第一週，1/6(日)~1/12(六)是第二週...
+     後面以此類推
+  (2)不勾表示以[C:日期起]為第一週的起始日期，例：[C:日期起]=2013/4/1(一),則4/1(一)~4/6(六)是第一週，
+     4/7(日)~4/13(六)是第二週...後面以此類推
+7.月份(oogc016)=Month(日期)
+8.期別(oogc006)計算：
+  若週期種類選擇
+  (1)月(1月為1期)
+     [C:日期起]       ~[C:日期起]+1個月-1天 =>期別1
+     [C:日期起]+1個月 ~[C:日期起]+2個月-1天 =>期別2
+     [C:日期起]+2個月 ~[C:日期起]+3個月-1天 =>期別3
+     ...
+     [C:日期起]+11個月~[C:日期起]+12個月-1天=>期別12
+  (2)週(4週為1期)
+     [C:日期起]        ~[C:日期起]+28*1天-1天   =>期別1
+     [C:日期起]+28*1天 ~[C:日期起]+28*2天-1天   =>期別2
+     [C:日期起]+28*2天 ~[C:日期起]+28*3天-1天   =>期別3
+     ...
+     [C:日期起]+28*12天~[C:日期起]+28*13個月-1天=>期別13
+  (3)445式(第1期為4週,第2期為4週,第3期為5週)
+     [C:日期起]         ~[C:日期起]+7*4*1天-1天   =>期別1
+     [C:日期起]+7*4*1天 ~[C:日期起]+7*4*2天-1天   =>期別2
+     [C:日期起]+7*4*2天 ~[C:日期起]+7*4*3+7天-1天 =>期別3
+     ...
+     [C:日期起]+7*4*12天~[C:日期起]+7*4*12+7天-1天=>期別12
+9.若產生成功,則顯示"產生完成"訊息;
+  若產生失敗,則顯示"產生失敗"訊息
+]]>
+  </all>
+  <field column="oogc003" name="bdate" ver="1" table="oogc_t" attribute="D001" type="date()" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[日期起：
+   ●欄位控管：
+     資料欄位:[C:日期起]/Input Only
+     預設值:當前年份下一年的一月一日
+     校驗:必輸
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field column="oogc003" name="edate" ver="1" table="oogc_t" attribute="D001" type="date()" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[日期迄：
+   ●欄位控管：
+     資料欄位:[C:日期迄]/Input Only
+     預設值:若[C:日期起]有輸入值,則[C:日期迄]預設值=[C:日期起]+1年-1天;
+            若[C:日期起]無輸入值,則[C:日期迄]預設值=Null
+     校驗:本欄位值不可小於[C:日期起]
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field column="" name="lbl_oogc004_01" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="lbl_oogc009_01" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="lbl_oogc015" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="lbl_to" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="lbl_type" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc017" name="mw1b" ver="1" table="oogc_t" attribute="N402" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc017" name="mw1e" ver="1" table="oogc_t" attribute="N402" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc017" name="mw2b" ver="1" table="oogc_t" attribute="N402" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc017" name="mw2e" ver="1" table="oogc_t" attribute="N402" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc017" name="mw3b" ver="1" table="oogc_t" attribute="N402" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc017" name="mw3e" ver="1" table="oogc_t" attribute="N402" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc017" name="mw4b" ver="1" table="oogc_t" attribute="N402" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc017" name="mw4e" ver="1" table="oogc_t" attribute="N402" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc017" name="mw5b" ver="1" table="oogc_t" attribute="N402" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc017" name="mw5e" ver="1" table="oogc_t" attribute="N402" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc004" name="oogc_t.oogc004" ver="1" table="oogc_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[休假類型：
+   ●欄位控管：
+     資料欄位:oogc004/可Display可Input
+     預設值:無　
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=6且為有效資料
+     帶值:帶出[T:應用分類碼多語言檔].[C:說明]到工作日類型說明顯示
+
+   ●開窗處理：q_oocq002
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=6
+       回值類型：單一回值
+]]>
+  </field>
+  <field column="oogc009" name="oogc_t.oogc009" ver="1" table="oogc_t" attribute="N403" type="number(15,3)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="&gt;=0.00" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[工作日上班時數：
+   ●欄位控管：
+     資料欄位:oogc009/可Display可Input
+     不可小於0
+
+]]>
+  </field>
+  <field column="oogc015" name="oogc_t.oogc015" ver="1" table="oogc_t" attribute="N401" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[年度：
+   ●欄位控管：
+     資料欄位:oogc015/可Display可Input
+     預設值:Year(g_today)+1
+     帶值:帶出下面的日期起迄,預設值為次年度1/1~12/31
+     計算或處理:無
+]]>
+  </field>
+  <field column="" name="season" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="type" ver="1" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="RadioGroup" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="week" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc002" name="oogc_t.oogc002" ver="1" table="oogc_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="25" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[行事曆類別：
+   ●欄位控管：
+     資料欄位:[T:行事曆檔].[C:行事曆類別]
+     允許空白:No
+     預設值:無
+     資料選項來源: 
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=25的資料,
+　　     　　　　　[T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:1.不允許空白
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field column="oogc001" name="oogc_t.oogc001" ver="1" table="oogc_t" attribute="C812" type="varchar2(5)" req="Y" i_zoom="q_ooal002" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[行事曆參照表號：
+   ●欄位控管：
+     資料欄位:[T:行事曆檔].[C:行事曆參照表號]/Input Only
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值須存在[T:參照表檔].[C:參照表號]且[C:參照表類型]=4
+          3.輸入值須存在[T:行事曆假日檔].[C:行事曆參照表號]
+     帶值:帶出[T:參照表多語言檔].[C:說明]到參照表說明顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:行事曆檔].[C:行事曆參照表號],[T:參照表多語言檔].[C:說明]
+     過濾條件：[T:參照表檔].[C:參照表類型]=4
+     回值類型：單一回值
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield src="s" ver="1" name="oogc001_desc" depend_filed="oogc_t.oogc001" correspon_key="oogcent,oogc001" ref_table="ooall_t" ref_fk="ooallent,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield src="s" ver="1" name="oogc004_desc" depend_filed="oogc_t.oogc004" correspon_key="oogcent,&apos;6&apos;,oogc004" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code/>
+  <strings>
+    <sfield name="lbl_oogc001" text="行事曆參照表號" comment="" lstr=""/>
+    <sfield name="lbl_oogc002" text="行事曆類別" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_oogc003" text="日期" comment="" lstr=""/>
+    <sfield name="lbl_oogc003" text="日期" comment="" lstr=""/>
+    <sfield name="lbl_to" text="~" comment="" lstr=""/>
+    <sfield name="lbl_oogc003" text="日期" comment="" lstr=""/>
+    <sfield name="lbl_oogc004_01" text="工作日類型" comment="" lstr=""/>
+    <sfield name="lbl_oogc004" text="休假類型" comment="" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_oogc009_01" text="工作日上班時數" comment="" lstr=""/>
+    <sfield name="lbl_oogc009" text="上班時數" comment="" lstr=""/>
+    <sfield name="lbl_type" text="期別計算方式" comment="" lstr=""/>
+    <sfield name="lbl_1" text="12期" comment="" lstr=""/>
+    <sfield name="lbl_2" text="13期" comment="" lstr=""/>
+    <sfield name="lbl_season" text="第一季從1/1開始" comment="" lstr=""/>
+    <sfield name="lbl_week" text="第一週從1/1開始" comment="" lstr=""/>
+    <sfield name="wm_group" text="月週設定" comment="" lstr=""/>
+    <sfield name="lbl_mw1" text="月週1" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_mw1_to" text="~" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_mw2" text="月週2" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_mw2_to" text="~" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_mw3" text="月週3" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_mw3_to" text="~" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_mw4" text="月週4" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_mw4_to" text="~" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_mw5" text="月週5" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_mw5_to" text="~" comment="" lstr=""/>
+    <sfield name="lbl_oogc015" text="年度" comment="" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" comment="" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1"/>
+</spec>

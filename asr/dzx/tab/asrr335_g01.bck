@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrr335_g01" module="asr" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2015-01-26 16:47:17" modid="05423" moddt="2016-12-09 14:35:44" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="sffadocno,sffadocdt,sffa005,l_sffa005_desc(oocql004|NULL),l_sffa005_show(chr2|&apos;&apos;),sffa002,l_sffa002_desc(ooag011|NULL),sffa003,l_sffa003_desc(ooefl004|NULL),sffa004,l_sffa004_desc(oogd002|NULL),sffa006,l_sffa006_desc(ooge002|NULL),sffa001,sffaent,sffbseq,sffb025,l_sffb025_desc(srza002|NULL),sffb023,l_sffb023_show(chr2|&apos;&apos;),sffb026,l_imaal003(imaal003|NULL),l_imaal004(imaal004|NULL),sffb027,sffb028,sffb007,l_sffb007_desc(oocql004|NULL),sffb009,l_sffb009_desc(ecaa002|NULL),sffb010,l_sffb010_desc(mrba005|NULL),sffb008,l_qty(sffb017|NULL),sffb017,sffb018,sffb019,sffb012,sffb013,sffb011,sffb014,sffb015,sffb001,l_sffb001(oocql004|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="sffadocno(sffadocno|sffadocno),sffadocdt(sffadocdt|sffadocdt),sffa005(sffa005|sffa005),l_sffa005_desc(oocql004|NULL),l_sffa005_show(chr2|&apos;&apos;),sffa002(sffa002|sffa002),l_sffa002_desc(ooag011|NULL),sffa003(sffa003|sffa003),l_sffa003_desc(ooefl004|NULL),sffa004(sffa004|sffa004),l_sffa004_desc(oogd002|NULL),sffa006(sffa006|sffa006),l_sffa006_desc(ooge002|NULL),sffa001(sffa001|sffa001),sffaent(sffaent|sffaent),sffbseq(sffbseq|sffbseq),sffb025(sffb025|sffb025),l_sffb025_desc(srza002|NULL),sffb023(sffb023|sffb023),l_sffb023_show(chr2|&apos;&apos;),sffb026(sffb026|sffb026),l_imaal003(imaal003|NULL),l_imaal004(imaal004|NULL),sffb027(sffb027|sffb027),sffb028(sffb028|sffb028),sffb007(sffb007|sffb007),l_sffb007_desc(oocql004|NULL),sffb009(sffb009|sffb009),l_sffb009_desc(ecaa002|NULL),sffb010(sffb010|sffb010),l_sffb010_desc(mrba005|NULL),sffb008(sffb008|sffb008),l_qty(sffb017|NULL),sffb017(sffb017|sffb017),sffb018(sffb018|sffb018),sffb019(sffb019|sffb019),sffb012(sffb012|sffb012),sffb013(sffb013|sffb013),sffb011(sffb011|sffb011),sffb014(sffb014|sffb014),sffb015(sffb015|sffb015),sffb001(sffb001|sffb001),l_sffb001(oocql004|NULL)"/>
+    <sql id="g_from" query="sffa_t,sffb_t"/>
+    <sql id="g_where" query="" maintable="sffa_t"/>
+    <sql id="g_order" query="sffadocno,sffb025"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="sffadocno,sffb025"/>
+    <section id="b_group" reptype="d01">
+      <rep type="sffadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="sffaent,sffadocno"/>
+      <rep type="sffb025"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="sffaent,sffadocno,sffb025"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="sffaent,sffadocno,sffb025"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="sffadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="sffaent,sffadocno"/>
+      <rep type="sffb025"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

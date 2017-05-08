@@ -1,0 +1,2664 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglt310_04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2014-09-02 18:26:38), PR版次:0007(2016-11-21 18:06:29)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000343
+#+ Filename...: aglt310_04
+#+ Description: 科目開窗查詢
+#+ Creator....: 02298(2013-10-08 16:24:57)
+#+ Modifier...: 02599 -SD/PR- 07900
+ 
+{</section>}
+ 
+{<section id="aglt310_04.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#161118-00019#1  2016/11/21 By 07900   numt5 to num10(需人工调整部分)
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglt310_04.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglt310_04.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+#開窗畫面顯示欄位 type 宣告
+ TYPE type_gr_qry RECORD
+         check          LIKE type_t.chr1,
+         glac002        LIKE glac_t.glac002, 
+         glac002_desc   LIKE glacl_t.glacl004,
+         glac003        LIKE glac_t.glac003,
+         glac009        LIKE glac_t.glac009
+       END RECORD
+ TYPE type_gr_qry2 RECORD
+         check2         LIKE type_t.chr1,
+         glac002_2      LIKE glac_t.glac002, 
+         glac002_2_desc LIKE glacl_t.glacl004,
+         glac003_2      LIKE glac_t.glac003,
+         glac009_2      LIKE glac_t.glac009
+       END RECORD
+ TYPE type_gr_qry3 RECORD
+         check3         LIKE type_t.chr1,
+         glac002_3      LIKE glac_t.glac002, 
+         glac002_3_desc LIKE glacl_t.glacl004,
+         glac003_3      LIKE glac_t.glac003,
+         glac009_3      LIKE glac_t.glac009
+       END RECORD
+ TYPE type_gr_qry4 RECORD
+         check4         LIKE type_t.chr1,
+         glac002_4      LIKE glac_t.glac002, 
+         glac002_4_desc LIKE glacl_t.glacl004,
+         glac003_4      LIKE glac_t.glac003,
+         glac009_4      LIKE glac_t.glac009
+       END RECORD
+ TYPE type_gr_qry5 RECORD
+         check5         LIKE type_t.chr1,
+         glac002_5      LIKE glac_t.glac002, 
+         glac002_5_desc LIKE glacl_t.glacl004,
+         glac003_5      LIKE glac_t.glac003,
+         glac009_5      LIKE glac_t.glac009
+       END RECORD       
+ TYPE type_gr_qry6 RECORD
+         check6         LIKE type_t.chr1,
+         glac002_6      LIKE glac_t.glac002, 
+         glac002_6_desc LIKE glacl_t.glacl004,
+         glac003_6      LIKE glac_t.glac003,
+         glac009_6      LIKE glac_t.glac009
+       END RECORD      
+#@查詢資料的暫存器.
+DEFINE gr_qry             DYNAMIC ARRAY OF type_gr_qry 
+DEFINE gr_qry2            DYNAMIC ARRAY OF type_gr_qry2 
+DEFINE gr_qry3            DYNAMIC ARRAY OF type_gr_qry3 
+DEFINE gr_qry4            DYNAMIC ARRAY OF type_gr_qry4 
+DEFINE gr_qry5            DYNAMIC ARRAY OF type_gr_qry5 
+DEFINE gr_qry6            DYNAMIC ARRAY OF type_gr_qry6 
+DEFINE gr_qry_sel         DYNAMIC ARRAY OF type_gr_qry  #多選時記錄已勾選的資料
+DEFINE gr_qry_sel2         DYNAMIC ARRAY OF type_gr_qry2  #多選時記錄已勾選的資料
+DEFINE gr_qry_sel3         DYNAMIC ARRAY OF type_gr_qry3  #多選時記錄已勾選的資料
+DEFINE gr_qry_sel4         DYNAMIC ARRAY OF type_gr_qry4  #多選時記錄已勾選的資料
+DEFINE gr_qry_sel5         DYNAMIC ARRAY OF type_gr_qry5  #多選時記錄已勾選的資料
+DEFINE gr_qry_sel6         DYNAMIC ARRAY OF type_gr_qry6  #多選時記錄已勾選的資料
+ 
+DEFINE gi_multi_sel      LIKE type_t.num5   #是否需要複選資料(TRUE/FALSE)
+DEFINE gi_need_cons      LIKE type_t.num5   #是否需要CONSTRUCT(TRUE/FALSE)
+DEFINE gi_cons_where     STRING                #暫存CONSTRUCT區塊的WHERE條件
+DEFINE gi_cons_where_old STRING                #暫存CONSTRUCT區塊的WHERE條件(舊的,用來比對條件是否改變)
+ 
+DEFINE gs_default1       STRING 
+
+DEFINE gi_page_count     LIKE type_t.num10  #每頁顯現資料筆數
+DEFINE gs_pageswitch     STRING                #選擇的頁面
+DEFINE gs_action         STRING
+DEFINE gi_reconstruct    LIKE type_t.num5   #重新查詢
+DEFINE g_pagestart       LIKE type_t.num10   #161118-00019#1 mod type_t.num5 -> type_t.num10   
+DEFINE g_data_cnt        LIKE type_t.num5
+DEFINE g_page_idx        LIKE type_t.num5   #目前所在頁數
+DEFINE g_page_last       LIKE type_t.num5   #最後一頁
+DEFINE g_sel_limit       LIKE type_t.num5   #選擇筆數的上限
+DEFINE g_current_page    LIKE type_t.num10   #當前頁簽   #161118-00019#1 mod type_t.num5 -> type_t.num10   
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglt310_04.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="aglt310_04.other_function" readonly="Y" >}
+##################################################
+# Description   : 準備查詢畫面的資料集.
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : ps_page_action  STRING   上下頁
+# Return        : void
+##################################################
+PUBLIC FUNCTION aglt310_04_pagedata_fill(ps_page_action)
+ 
+   DEFINE ps_page_action STRING
+   DEFINE ls_sql         STRING
+   DEFINE ls_where       STRING
+   DEFINE li_i           LIKE type_t.num10
+   DEFINE li_j           LIKE type_t.num10
+   DEFINE l_datarange    STRING   #第m-n筆
+   DEFINE l_str          STRING   #字串
+   DEFINE l_str1         STRING
+   DEFINE l_str2         STRING
+ 
+   CASE ps_page_action
+      WHEN "first"
+         LET g_page_idx = 1
+      WHEN "prev"
+         LET g_page_idx = g_page_idx - 1
+      WHEN "next"
+         LET g_page_idx = g_page_idx + 1
+      WHEN "last"
+         LET g_page_idx = g_page_last
+   END CASE
+ 
+   IF g_page_idx > 0 THEN
+      LET g_pagestart = (g_page_idx - 1) * gi_page_count + 1
+   END IF
+ 
+   CALL aglt310_04_sqlwhere() RETURNING ls_where
+   #全部選取
+   LET ls_sql = 
+   "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '1' AND ", ls_where CLIPPED, "
+  ORDER BY glac002"
+   DECLARE lcurs_qry_all CURSOR FROM ls_sql
+ 
+   #此頁
+   #@如果不需要複選資料,則不要設定check的預設值(將'N'刪除)
+   LET ls_sql = 
+   "SELECT 'N', glac002, glacl004, glac003, glac009, RANK 
+  FROM ( SELECT glac002, glacl004, glac003, glac009, RANK() OVER(ORDER BY glac002, glacl004) AS RANK  FROM (SELECT DISTINCT  glac002,glacl004,glac003,glac009
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise," AND glac007 = '1'  AND ", ls_where CLIPPED, "
+  ORDER BY glac002))",
+   " WHERE RANK >= ", g_pagestart," AND RANK < ", g_pagestart + gi_page_count
+   DECLARE lcurs_qry CURSOR FROM ls_sql
+ 
+   CALL gr_qry.clear()
+ 
+   LET li_i = 1
+   FOREACH lcurs_qry INTO gr_qry[li_i].*
+      LET l_str1 = gr_qry[li_i].glac002, gr_qry[li_i].glac002_desc
+      FOR li_j = 1 TO gr_qry_sel.getLength()
+         LET l_str2 = gr_qry_sel[li_j].glac002, gr_qry_sel[li_j].glac002_desc
+         IF l_str1 = l_str2 THEN
+            LET gr_qry[li_i].check = gr_qry_sel[li_j].check
+         END IF
+      END FOR
+      LET li_i = li_i + 1
+   END FOREACH
+   CALL gr_qry.deleteElement(li_i)
+ 
+   IF gi_cons_where <> gi_cons_where_old OR cl_null(gi_cons_where) OR cl_null(gi_cons_where_old) THEN   #查詢條件改變
+      LET gi_cons_where_old = gi_cons_where
+      CALL aglt310_04_data_count(1,"db")   #查詢資料的總筆數,給下一段計算第m-n筆
+   END IF
+ 
+   #第m-n筆
+   IF g_page_idx > 0 THEN
+      LET li_i = g_data_cnt MOD gi_page_count
+      #現在在最後一頁，而且不是滿頁的狀況
+      IF g_page_idx = g_page_last AND li_i > 0 THEN
+         LET l_str = g_pagestart - 1 + li_i
+      ELSE
+         LET l_str = g_pagestart - 1 + gi_page_count
+      END IF
+      LET l_datarange = g_pagestart
+      LET l_datarange = l_datarange CLIPPED, " - ", l_str
+   ELSE
+      LET l_datarange = ""
+   END IF
+   DISPLAY l_datarange TO formonly.index
+END FUNCTION
+##################################################
+# Description   : 查詢資料的總筆數
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+##################################################
+PUBLIC FUNCTION aglt310_04_data_count(p_current_page,p_data_cnt)
+   DEFINE p_current_page  LIKE type_t.num5    #当前是第几页
+   DEFINE p_data_cnt  STRING     #總筆數計算方式 "db":資料庫中的資料/非"db"則以此值為總筆數
+   DEFINE ls_sql      STRING
+   DEFINE ls_where    STRING
+   DEFINE ls_sql_1    STRING
+   #资产类
+   IF p_current_page = 1 THEN
+      IF p_data_cnt = "db" THEN
+         CALL aglt310_04_sqlwhere() RETURNING ls_where
+         LET ls_sql = "SELECT COUNT(*) FROM (", "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+                       FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                       WHERE   glacent = ",g_enterprise," AND glac007 = '1'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002", ")"
+         LET ls_sql_1 = "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+                         FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                        WHERE   glacent = ",g_enterprise,"  AND glac007 = '1'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002"
+         DISPLAY "########################################################################"
+         DISPLAY "[sql for aglt310_04] = ",ls_sql_1
+         DISPLAY "########################################################################"
+         CALL aglt310_04_sql_verify(ls_sql_1)
+         PREPARE qry_count FROM ls_sql
+         EXECUTE qry_count INTO g_data_cnt
+      ELSE
+         LET g_data_cnt = p_data_cnt
+      END IF
+     
+      IF g_data_cnt > 0 THEN
+         IF g_data_cnt MOD gi_page_count = 0 THEN
+            LET g_page_last = g_data_cnt / gi_page_count   #總筆數 / 每頁顯現資料筆數
+         ELSE
+            LET g_page_last = g_data_cnt / gi_page_count + 1
+         END IF
+      ELSE
+         LET g_page_last = 0
+      END IF
+   END IF  
+   #负债类
+   IF p_current_page = 2 THEN
+      IF p_data_cnt = "db" THEN
+         CALL aglt310_04_sqlwhere() RETURNING ls_where
+         LET ls_sql = "SELECT COUNT(*) FROM (", "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+                       FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                       WHERE   glacent = ",g_enterprise," AND glac007 = '2'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002", ")"
+         LET ls_sql_1 = "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009
+                         FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                        WHERE   glacent = ",g_enterprise," AND glac007 = '2'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002"
+         DISPLAY "########################################################################"
+         DISPLAY "[sql for aglt310_04] = ",ls_sql_1
+         DISPLAY "########################################################################"
+         CALL aglt310_04_sql_verify(ls_sql_1)
+         PREPARE qry_count2 FROM ls_sql
+         EXECUTE qry_count2 INTO g_data_cnt
+      ELSE
+         LET g_data_cnt = p_data_cnt
+      END IF
+     
+      IF g_data_cnt > 0 THEN
+         IF g_data_cnt MOD gi_page_count = 0 THEN
+            LET g_page_last = g_data_cnt / gi_page_count   #總筆數 / 每頁顯現資料筆數
+         ELSE
+            LET g_page_last = g_data_cnt / gi_page_count + 1
+         END IF
+      ELSE
+         LET g_page_last = 0
+      END IF
+   END IF  
+   #公用类
+   IF p_current_page = 3 THEN
+      IF p_data_cnt = "db" THEN
+         CALL aglt310_04_sqlwhere() RETURNING ls_where
+         LET ls_sql = "SELECT COUNT(*) FROM (", "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+                       FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                       WHERE   glacent = ",g_enterprise," AND glac007 = '3'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002", ")"
+         LET ls_sql_1 = "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009
+                         FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                        WHERE   glacent = ",g_enterprise," AND glac007 = '3'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002"
+         DISPLAY "########################################################################"
+         DISPLAY "[sql for aglt310_04] = ",ls_sql_1
+         DISPLAY "########################################################################"
+         CALL aglt310_04_sql_verify(ls_sql_1)
+         PREPARE qry_count3 FROM ls_sql
+         EXECUTE qry_count3 INTO g_data_cnt
+      ELSE
+         LET g_data_cnt = p_data_cnt
+      END IF
+     
+      IF g_data_cnt > 0 THEN
+         IF g_data_cnt MOD gi_page_count = 0 THEN
+            LET g_page_last = g_data_cnt / gi_page_count   #總筆數 / 每頁顯現資料筆數
+         ELSE
+            LET g_page_last = g_data_cnt / gi_page_count + 1
+         END IF
+      ELSE
+         LET g_page_last = 0
+      END IF
+   END IF  
+   #股东权益类
+   IF p_current_page = 4 THEN
+      IF p_data_cnt = "db" THEN
+         CALL aglt310_04_sqlwhere() RETURNING ls_where
+         LET ls_sql = "SELECT COUNT(*) FROM (", "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009
+                       FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                       WHERE   glacent = ",g_enterprise," AND glac007 = '4'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002", ")"
+         LET ls_sql_1 = "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+                         FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                        WHERE   glacent = ",g_enterprise," AND glac007 = '4'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002"
+         DISPLAY "########################################################################"
+         DISPLAY "[sql for aglt310_04] = ",ls_sql_1
+         DISPLAY "########################################################################"
+         CALL aglt310_04_sql_verify(ls_sql_1)
+         PREPARE qry_count4 FROM ls_sql
+         EXECUTE qry_count4 INTO g_data_cnt
+      ELSE
+         LET g_data_cnt = p_data_cnt
+      END IF
+     
+      IF g_data_cnt > 0 THEN
+         IF g_data_cnt MOD gi_page_count = 0 THEN
+            LET g_page_last = g_data_cnt / gi_page_count   #總筆數 / 每頁顯現資料筆數
+         ELSE
+            LET g_page_last = g_data_cnt / gi_page_count + 1
+         END IF
+      ELSE
+         LET g_page_last = 0
+      END IF
+   END IF  
+   #成本类
+   IF p_current_page = 5 THEN
+      IF p_data_cnt = "db" THEN
+         CALL aglt310_04_sqlwhere() RETURNING ls_where
+         LET ls_sql = "SELECT COUNT(*) FROM (", "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009
+                       FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                       WHERE   glacent = ",g_enterprise," AND glac007 = '5'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002", ")"
+         LET ls_sql_1 = "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009
+                         FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                        WHERE   glacent = ",g_enterprise," AND glac007 = '5'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002"
+         DISPLAY "########################################################################"
+         DISPLAY "[sql for aglt310_04] = ",ls_sql_1
+         DISPLAY "########################################################################"
+         CALL aglt310_04_sql_verify(ls_sql_1)
+         PREPARE qry_count5 FROM ls_sql
+         EXECUTE qry_count5 INTO g_data_cnt
+      ELSE
+         LET g_data_cnt = p_data_cnt
+      END IF
+     
+      IF g_data_cnt > 0 THEN
+         IF g_data_cnt MOD gi_page_count = 0 THEN
+            LET g_page_last = g_data_cnt / gi_page_count   #總筆數 / 每頁顯現資料筆數
+         ELSE
+            LET g_page_last = g_data_cnt / gi_page_count + 1
+         END IF
+      ELSE
+         LET g_page_last = 0
+      END IF
+   END IF  
+   
+    #损益类
+   IF p_current_page = 6 THEN
+      IF p_data_cnt = "db" THEN
+         CALL aglt310_04_sqlwhere() RETURNING ls_where
+         LET ls_sql = "SELECT COUNT(*) FROM (", "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+                       FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                       WHERE   glacent = ",g_enterprise," AND glac007 = '6'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002", ")"
+         LET ls_sql_1 = "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+                         FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                        WHERE   glacent = ",g_enterprise," AND glac007 = '6'  AND ", ls_where CLIPPED, "
+                       ORDER BY glac002"
+         DISPLAY "########################################################################"
+         DISPLAY "[sql for aglt310_04] = ",ls_sql_1
+         DISPLAY "########################################################################"
+         CALL aglt310_04_sql_verify(ls_sql_1)
+         PREPARE qry_count6 FROM ls_sql
+         EXECUTE qry_count6 INTO g_data_cnt
+      ELSE
+         LET g_data_cnt = p_data_cnt
+      END IF
+     
+      IF g_data_cnt > 0 THEN
+         IF g_data_cnt MOD gi_page_count = 0 THEN
+            LET g_page_last = g_data_cnt / gi_page_count   #總筆數 / 每頁顯現資料筆數
+         ELSE
+            LET g_page_last = g_data_cnt / gi_page_count + 1
+         END IF
+      ELSE
+         LET g_page_last = 0
+      END IF
+   END IF  
+   DISPLAY g_data_cnt TO formonly.count    #顯示總筆數
+   
+END FUNCTION
+##################################################
+# Description   : 進行SQL驗證
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+##################################################
+PRIVATE FUNCTION aglt310_04_sql_verify(p_sql)
+   DEFINE p_sql      STRING
+   DEFINE l_sql      STRING
+   DEFINE l_sql_msg  STRING
+   
+   TRY
+      LET l_sql = "SELECT * FROM (",p_sql,") WHERE ROWNUM = 1"
+       
+      #實際進行驗證
+      EXECUTE IMMEDIATE l_sql
+ 
+      MESSAGE 'Verify OK!' 
+   CATCH
+      DISPLAY ":SQLCA.SQLCODE=",SQLCA.SQLCODE
+      LET l_sql_msg = "sql = ",p_sql
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00024"
+      LET g_errparam.extend = l_sql_msg
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+ 
+   END TRY 
+END FUNCTION
+##################################################
+# Description   : 組SQL的where條件
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+##################################################
+PRIVATE FUNCTION aglt310_04_sqlwhere()
+ 
+   DEFINE ls_where   STRING
+ 
+   LET ls_where = gi_cons_where CLIPPED   #gi_cons_where 螢幕抓取的where 條件
+ 
+   #在input段開窗的時候自動加入<inwc></inwc>之間的where條件 cch_20130605
+   IF  g_qryparam.state = "i" THEN
+      LET ls_where = ls_where," "," AND glacstus = 'Y'"
+   END IF
+   
+   #entprise - Start -
+    
+   #entprise -  End  -
+   IF NOT cl_null(g_qryparam.where) THEN
+      LET ls_where = ls_where, " AND ", g_qryparam.where CLIPPED   # g_qryparam.where查詢資料的條件
+   END IF
+   RETURN ls_where
+END FUNCTION
+##################################################
+# Description   : 設定上下頁按鈕狀態
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : pdig_curr   ui.Dialog   目的DIALOG
+# Return        : void
+##################################################
+PRIVATE FUNCTION aglt310_04_set_pagebutton(pdig_curr)
+ 
+   DEFINE pdig_curr ui.Dialog
+ 
+   CALL pdig_curr.setActionActive("pg_first", 0)
+   CALL pdig_curr.setActionActive("pg_prev", 0)
+   CALL pdig_curr.setActionActive("pg_next", 0)
+   CALL pdig_curr.setActionActive("pg_last", 0)
+ 
+   IF g_page_idx > 1 THEN
+      CALL pdig_curr.setActionActive("pg_first", 1)
+      CALL pdig_curr.setActionActive("pg_prev", 1)
+   END IF
+ 
+   IF g_page_idx < g_page_last THEN
+      CALL pdig_curr.setActionActive("pg_next", 1)
+      CALL pdig_curr.setActionActive("pg_last", 1)
+   END IF
+ 
+END FUNCTION
+##################################################
+# Description   : 組合多選資料
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+##################################################
+PRIVATE FUNCTION aglt310_04_get_multiret()
+   DEFINE li_i            LIKE type_t.num10
+  
+   IF g_qryparam.state = "c" THEN
+      LET g_qryparam.return1 = ""
+      #资产类
+       FOR li_i = 1 TO gr_qry_sel.getLength()
+            IF gr_qry_sel[li_i].check = "Y" THEN
+               #@因為複選資料(display array)只能回傳一個欄位的組合字串.這裡不處理多欄位的回傳,以序號最小的回傳欄位為回傳值
+               IF cl_null(g_qryparam.return1) THEN
+                  LET g_qryparam.return1 = gr_qry_sel[li_i].glac002 CLIPPED 
+   
+               ELSE
+                  LET g_qryparam.return1 = g_qryparam.return1 CLIPPED, "|", gr_qry_sel[li_i].glac002 CLIPPED 
+   
+               END IF
+            END IF
+         END FOR
+
+      #负债类
+         FOR li_i = 1 TO gr_qry_sel2.getLength()
+            IF gr_qry_sel2[li_i].check2= "Y" THEN
+               #@因為複選資料(display array)只能回傳一個欄位的組合字串.這裡不處理多欄位的回傳,以序號最小的回傳欄位為回傳值
+               IF cl_null(g_qryparam.return1) THEN
+                  LET g_qryparam.return1 = gr_qry_sel2[li_i].glac002_2 CLIPPED 
+   
+               ELSE
+                  LET g_qryparam.return1 = g_qryparam.return1 CLIPPED, "|", gr_qry_sel2[li_i].glac002_2 CLIPPED 
+   
+               END IF
+            END IF
+         END FOR
+      
+       #共用类
+      #IF p_current_page = 3 THEN
+         FOR li_i = 1 TO gr_qry_sel3.getLength()
+            IF gr_qry_sel3[li_i].check3 = "Y" THEN
+               #@因為複選資料(display array)只能回傳一個欄位的組合字串.這裡不處理多欄位的回傳,以序號最小的回傳欄位為回傳值
+               IF cl_null(g_qryparam.return1) THEN
+                  LET g_qryparam.return1 = gr_qry_sel3[li_i].glac002_3 CLIPPED 
+   
+               ELSE
+                  LET g_qryparam.return1 = g_qryparam.return1 CLIPPED, "|", gr_qry_sel3[li_i].glac002_3 CLIPPED 
+   
+               END IF
+            END IF
+         END FOR
+      #END IF
+      
+       #股东权益类
+      #IF p_current_page = 4 THEN
+         FOR li_i = 1 TO gr_qry_sel4.getLength()
+            IF gr_qry_sel4[li_i].check4 = "Y" THEN
+               #@因為複選資料(display array)只能回傳一個欄位的組合字串.這裡不處理多欄位的回傳,以序號最小的回傳欄位為回傳值
+               IF cl_null(g_qryparam.return1) THEN
+                  LET g_qryparam.return1 = gr_qry_sel4[li_i].glac002_4 CLIPPED    
+               ELSE
+                  LET g_qryparam.return1 = g_qryparam.return1 CLIPPED, "|", gr_qry_sel4[li_i].glac002_4 CLIPPED    
+               END IF
+            END IF
+         END FOR
+      #END IF
+      
+       #成本类
+      #IF p_current_page = 5 THEN
+         FOR li_i = 1 TO gr_qry_sel5.getLength()
+            IF gr_qry_sel5[li_i].check5 = "Y" THEN
+               #@因為複選資料(display array)只能回傳一個欄位的組合字串.這裡不處理多欄位的回傳,以序號最小的回傳欄位為回傳值
+               IF cl_null(g_qryparam.return1) THEN
+                  LET g_qryparam.return1 = gr_qry_sel5[li_i].glac002_5 CLIPPED 
+   
+               ELSE
+                  LET g_qryparam.return1 = g_qryparam.return1 CLIPPED, "|", gr_qry_sel5[li_i].glac002_5 CLIPPED 
+   
+               END IF
+            END IF
+         END FOR
+      #END IF
+      
+       #损益类
+      #IF p_current_page = 6 THEN
+         FOR li_i = 1 TO gr_qry_sel6.getLength()
+            IF gr_qry_sel6[li_i].check6 = "Y" THEN
+               #@因為複選資料(display array)只能回傳一個欄位的組合字串.這裡不處理多欄位的回傳,以序號最小的回傳欄位為回傳值
+               IF cl_null(g_qryparam.return1) THEN
+                  LET g_qryparam.return1 = gr_qry_sel6[li_i].glac002_6 CLIPPED    
+               ELSE
+                  LET g_qryparam.return1 = g_qryparam.return1 CLIPPED, "|", gr_qry_sel6[li_i].glac002_6 CLIPPED    
+               END IF
+            END IF
+         END FOR
+      #END IF
+      
+   END IF
+   
+  # IF g_qryparam.state = "m" THEN
+  #    CALL g_qryparam.str_array.clear()
+
+  #    FOR li_i = 1 TO gr_qry_sel.getLength()
+  #       #DISPLAY "gr_qry_sel[",li_i,"] = ",gr_qry_sel[li_i].*
+  #       
+  #       LET g_qryparam.str_array[li_i] = gr_qry_sel[li_i].glac002
+  #       #DISPLAY "g_qryparam.str_array[",li_i,"] = ",g_qryparam.str_array[li_i]
+  #    END FOR
+  # END IF
+ 
+END FUNCTION
+##################################################
+# Description   : 設定comboBox
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+##################################################
+PRIVATE FUNCTION aglt310_04_setting_comboBox(p_col_str)  
+   DEFINE p_col_str           STRING,
+          l_i                 LIKE type_t.num5,
+          l_dzep011           LIKE dzep_t.dzep010, #系統分類碼
+          l_dzeb001           LIKE dzeb_t.dzeb001, #表格代號
+          l_gzcc003           LIKE gzcc_t.gzcc003, #系統分類碼
+          l_gzcc004_str       STRING,              #系統分類值的字串 
+          l_token             base.StringTokenizer,
+          l_token_str         LIKE dzeb_t.dzeb002,
+          l_parameter1        STRING,
+          l_parameter2        STRING,
+          l_parameter3        STRING
+          
+   #優先處理 token
+   LET l_token = base.StringTokenizer.create(p_col_str,"|")
+ 
+   WHILE l_token.hasMoreTokens()
+ 
+      LET l_token_str =l_token.nextToken()
+         
+      #找出欄位的所屬表格代號
+      SELECT dzeb001 INTO l_dzeb001 FROM dzeb_t WHERE dzeb002 = l_token_str
+      
+      IF l_token_str MATCHES "*stus" THEN
+         #找出該表格的狀態碼欄位和系統分類碼
+         SELECT DISTINCT gzcc003 INTO l_gzcc003 FROM gzcc_t WHERE gzcc001 = l_dzeb001
+         #組合出表格有效的系統分類值的字串
+         LET l_gzcc004_str = aglt310_04_setting_system_type_value_for_table(l_dzeb001)
+ 
+         #DISPLAY "###########",l_token_str
+         LET l_parameter1 = l_dzeb001,".",l_token_str
+         LET l_parameter2 = l_gzcc003
+         LET l_parameter3 = l_gzcc004_str
+         
+         #DISPLAY l_parameter1
+         #DISPLAY l_parameter2
+         #DISPLAY l_parameter3
+         
+         #組合 動態設定有選擇SCC資料的ComboBox選項 的程式碼,列出部分的系統分類值
+         CALL cl_set_combo_scc_part(l_parameter1,l_parameter2,l_parameter3)
+      ELSE
+         #找出該欄位的系統分類碼
+         SELECT dzep011 INTO l_dzep011 FROM dzep_t WHERE dzep002 = l_token_str
+ 
+         #DISPLAY "###########",l_token_str
+         LET l_parameter1 = l_dzeb001,".",l_token_str
+         LET l_parameter2 = l_dzep011
+         
+         #DISPLAY l_parameter1
+         #DISPLAY l_parameter2
+         
+         #組合 動態設定有選擇SCC資料的ComboBox選項 的程式碼,列出全部的系統分類值
+         CALL cl_set_combo_scc(l_parameter1,l_parameter2)
+      END IF
+ 
+   END WHILE
+   
+END FUNCTION
+##################################################
+# Description   : 組合出表格有效的系統分類值的字串
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+##################################################
+PRIVATE FUNCTION aglt310_04_setting_system_type_value_for_table(p_table)
+   DEFINE p_table     LIKE  gzcc_t.gzcc001,
+          l_gzcc_d    DYNAMIC ARRAY OF  RECORD
+            gzcc004     LIKE dzeb_t.dzeb001
+                      END  RECORD,
+          l_cnt       LIKE type_t.num5,
+          ls_sql      STRING,
+          r_str       STRING
+ 
+   LET ls_sql = "SELECT gzcc004 FROM gzcc_t ",
+               "WHERE gzcc001='",p_table,"' AND gzccstus='Y' ",
+               "ORDER BY gzcc006 "
+ 
+   LET r_str = ""
+ 
+   PREPARE gzcc_prep FROM ls_sql
+   DECLARE gzcc_curs CURSOR FOR gzcc_prep
+   LET l_cnt = 1
+   FOREACH gzcc_curs INTO l_gzcc_d[l_cnt].gzcc004
+      LET r_str = r_str,l_gzcc_d[l_cnt].gzcc004,","
+ 
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+ 
+   CALL l_gzcc_d.deleteElement(l_cnt)
+ 
+   #去掉最後面的逗號
+   LET r_str = r_str.subString(1,r_str.getLength()-1)
+   
+   RETURN r_str
+END FUNCTION
+#+初始化
+PRIVATE FUNCTION aglt310_04_init()
+   IF NOT (gi_multi_sel) THEN
+      CALL cl_set_comp_visible("check,check2,check3,check4,check5,check6", FALSE)
+      CALL cl_set_toolbaritem_visible("selectall, selectnone, selectpageall, selectpagenone", FALSE)
+   END IF
+ 
+   IF (gi_multi_sel) THEN
+      #lib尚未修正
+      #CALL cl_set_comp_font_color("oea01", "red")
+   END IF
+ 
+   LET INT_FLAG = FALSE         #避免被其他函式影響
+   LET g_page_idx = 0
+   LET g_page_last = 0
+   LET g_sel_limit = aglt310_04_get_sel_limit()     #選擇筆數的上限
+   LET gi_page_count = aglt310_04_get_page_count()  #每頁顯現資料筆數
+   LET gi_cons_where = " 1=1"   #預設查詢全部資料
+   LET gi_cons_where_old = NULL
+   LET gi_reconstruct = FALSE
+   INITIALIZE gs_pageswitch TO NULL
+   INITIALIZE gs_action TO NULL
+   INITIALIZE g_qryparam.return1 TO NULL  
+
+   CALL gr_qry.clear()
+   CALL gr_qry_sel.clear()
+   
+   CALL gr_qry2.clear()
+   CALL gr_qry_sel2.clear()
+   
+    CALL gr_qry3.clear()
+   CALL gr_qry_sel3.clear()
+   
+    CALL gr_qry4.clear()
+   CALL gr_qry_sel4.clear()
+   
+    CALL gr_qry5.clear()
+   CALL gr_qry_sel5.clear()
+   
+    CALL gr_qry6.clear()
+   CALL gr_qry_sel6.clear()
+ 
+   #動態設定comboBox項目
+   ### 此開窗無comboBox的欄位 ###
+END FUNCTION
+#科目开窗
+PUBLIC FUNCTION aglt310_04()
+      DEFINE pi_multi_sel   LIKE type_t.num5
+   DEFINE pi_need_cons   LIKE type_t.num5
+   DEFINE lwin_curr      ui.Window
+   DEFINE lfrm_curr      ui.Form
+   DEFINE ls_path        STRING
+ 
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #目前因為cl_ap_formpath() lib尚未調整
+   #所以open window路徑先寫死,未來應該要call cl_ap_formpath()
+   OPEN WINDOW w_qry WITH FORM cl_ap_formpath("agl","aglt310_04")
+      ATTRIBUTE(STYLE="layoutwin")   #openwin
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lfrm_curr = lwin_curr.getForm()
+   LET ls_path = os.Path.join(os.Path.join(FGL_GETENV("ERP"),"cfg"),"4tb")
+   LET ls_path = os.Path.join(ls_path,"toolbar_openwin.4tb")
+   CALL lfrm_curr.loadToolBar(ls_path)
+#   CALL cl_ui_init()
+   IF g_qryparam.state = 'i' THEN
+      LET gi_multi_sel = FALSE
+   ELSE
+      LET gi_multi_sel = TRUE
+   END IF 
+   LET gi_need_cons = g_qryparam.reqry
+   LET gs_default1 = g_qryparam.default1 
+
+   CALL cl_set_combo_scc('glac003','8011') 
+   CALL cl_set_combo_scc('glac003_2','8011') 
+   CALL cl_set_combo_scc('glac003_3','8011') 
+   CALL cl_set_combo_scc('glac003_4','8011') 
+   CALL cl_set_combo_scc('glac003_5','8011') 
+   CALL cl_set_combo_scc('glac003_6','8011') 
+   CALL aglt310_04_init()
+   CALL aglt310_04_sel()
+
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+   END IF 
+ 
+   CLOSE WINDOW w_qry
+ 
+END FUNCTION
+#第二頁前資料
+PRIVATE FUNCTION aglt310_04_pagedata_fill2(ps_page_action)
+    DEFINE ps_page_action STRING
+   DEFINE ls_sql         STRING
+   DEFINE ls_where       STRING
+   DEFINE li_i           LIKE type_t.num10
+   DEFINE li_j           LIKE type_t.num10
+   DEFINE l_datarange    STRING   #第m-n筆
+   DEFINE l_str          STRING   #字串
+   DEFINE l_str1         STRING
+   DEFINE l_str2         STRING
+ 
+   CASE ps_page_action
+      WHEN "first"
+         LET g_page_idx = 1
+      WHEN "prev"
+         LET g_page_idx = g_page_idx - 1
+      WHEN "next"
+         LET g_page_idx = g_page_idx + 1
+      WHEN "last"
+         LET g_page_idx = g_page_last
+   END CASE
+ 
+   IF g_page_idx > 0 THEN
+      LET g_pagestart = (g_page_idx - 1) * gi_page_count + 1
+   END IF
+ 
+   CALL aglt310_04_sqlwhere() RETURNING ls_where
+   #全部選取
+   LET ls_sql = 
+   "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '2' AND ", ls_where CLIPPED, "
+  ORDER BY glac002"
+   DECLARE lcurs_qry_all2 CURSOR FROM ls_sql
+ 
+   #此頁
+   #@如果不需要複選資料,則不要設定check的預設值(將'N'刪除)
+   LET ls_sql = 
+   "SELECT 'N', glac002, glacl004, glac003, glac009, RANK 
+  FROM ( SELECT glac002, glacl004, glac003, glac009, RANK() OVER(ORDER BY glac002, glacl004) AS RANK  FROM (SELECT DISTINCT  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '2' AND ", ls_where CLIPPED, "
+  ORDER BY glac002))",
+   " WHERE RANK >= ", g_pagestart," AND RANK < ", g_pagestart + gi_page_count
+   DECLARE lcurs_qry2 CURSOR FROM ls_sql
+ 
+   CALL gr_qry2.clear()
+ 
+   LET li_i = 1
+   FOREACH lcurs_qry2 INTO gr_qry2[li_i].*
+      LET l_str1 = gr_qry2[li_i].glac002_2, gr_qry2[li_i].glac002_2_desc
+      FOR li_j = 1 TO gr_qry_sel2.getLength()
+         LET l_str2 = gr_qry_sel2[li_j].glac002_2, gr_qry_sel2[li_j].glac002_2_desc
+         IF l_str1 = l_str2 THEN
+            LET gr_qry2[li_i].check2 = gr_qry_sel2[li_j].check2
+         END IF
+      END FOR
+      LET li_i = li_i + 1
+   END FOREACH
+   CALL gr_qry2.deleteElement(li_i)
+ 
+   IF gi_cons_where <> gi_cons_where_old OR cl_null(gi_cons_where) OR cl_null(gi_cons_where_old) THEN   #查詢條件改變
+      LET gi_cons_where_old = gi_cons_where
+      CALL aglt310_04_data_count(2,"db")   #查詢資料的總筆數,給下一段計算第m-n筆
+   END IF
+ 
+   #第m-n筆
+   IF g_page_idx > 0 THEN
+      LET li_i = g_data_cnt MOD gi_page_count
+      #現在在最後一頁，而且不是滿頁的狀況
+      IF g_page_idx = g_page_last AND li_i > 0 THEN
+         LET l_str = g_pagestart - 1 + li_i
+      ELSE
+         LET l_str = g_pagestart - 1 + gi_page_count
+      END IF
+      LET l_datarange = g_pagestart
+      LET l_datarange = l_datarange CLIPPED, " - ", l_str
+   ELSE
+      LET l_datarange = ""
+   END IF
+   DISPLAY l_datarange TO formonly.index
+END FUNCTION
+#+第三頁簽
+PRIVATE FUNCTION aglt310_04_pagedata_fill3(ps_page_action)
+    DEFINE ps_page_action STRING
+   DEFINE ls_sql         STRING
+   DEFINE ls_where       STRING
+   DEFINE li_i           LIKE type_t.num10
+   DEFINE li_j           LIKE type_t.num10
+   DEFINE l_datarange    STRING   #第m-n筆
+   DEFINE l_str          STRING   #字串
+   DEFINE l_str1         STRING
+   DEFINE l_str2         STRING
+ 
+   CASE ps_page_action
+      WHEN "first"
+         LET g_page_idx = 1
+      WHEN "prev"
+         LET g_page_idx = g_page_idx - 1
+      WHEN "next"
+         LET g_page_idx = g_page_idx + 1
+      WHEN "last"
+         LET g_page_idx = g_page_last
+   END CASE
+ 
+   IF g_page_idx > 0 THEN
+      LET g_pagestart = (g_page_idx - 1) * gi_page_count + 1
+   END IF
+ 
+   CALL aglt310_04_sqlwhere() RETURNING ls_where
+   #全部選取
+   LET ls_sql = 
+   "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '3' AND ", ls_where CLIPPED, "
+  ORDER BY glac002"
+   DECLARE lcurs_qry_all3 CURSOR FROM ls_sql
+ 
+   #此頁
+   #@如果不需要複選資料,則不要設定check的預設值(將'N'刪除)
+   LET ls_sql = 
+   "SELECT 'N', glac002, glacl004, glac003, glac009, RANK 
+  FROM ( SELECT glac002, glacl004, glac003, glac009, RANK() OVER(ORDER BY glac002, glacl004) AS RANK  FROM (SELECT DISTINCT  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '3' AND ", ls_where CLIPPED, "
+  ORDER BY glac002))",
+   " WHERE RANK >= ", g_pagestart," AND RANK < ", g_pagestart + gi_page_count
+   DECLARE lcurs_qry3 CURSOR FROM ls_sql
+ 
+   CALL gr_qry3.clear()
+ 
+   LET li_i = 1
+   FOREACH lcurs_qry3 INTO gr_qry3[li_i].*
+      LET l_str1 = gr_qry3[li_i].glac002_3, gr_qry3[li_i].glac002_3_desc
+      FOR li_j = 1 TO gr_qry_sel3.getLength()
+         LET l_str2 = gr_qry_sel3[li_j].glac002_3, gr_qry_sel3[li_j].glac002_3_desc
+         IF l_str1 = l_str2 THEN
+            LET gr_qry3[li_i].check3 = gr_qry_sel3[li_j].check3
+         END IF
+      END FOR
+      LET li_i = li_i + 1
+   END FOREACH
+   CALL gr_qry3.deleteElement(li_i)
+ 
+   IF gi_cons_where <> gi_cons_where_old OR cl_null(gi_cons_where) OR cl_null(gi_cons_where_old) THEN   #查詢條件改變
+      LET gi_cons_where_old = gi_cons_where
+      CALL aglt310_04_data_count(3,"db")   #查詢資料的總筆數,給下一段計算第m-n筆
+   END IF
+ 
+   #第m-n筆
+   IF g_page_idx > 0 THEN
+      LET li_i = g_data_cnt MOD gi_page_count
+      #現在在最後一頁，而且不是滿頁的狀況
+      IF g_page_idx = g_page_last AND li_i > 0 THEN
+         LET l_str = g_pagestart - 1 + li_i
+      ELSE
+         LET l_str = g_pagestart - 1 + gi_page_count
+      END IF
+      LET l_datarange = g_pagestart
+      LET l_datarange = l_datarange CLIPPED, " - ", l_str
+   ELSE
+      LET l_datarange = ""
+   END IF
+   DISPLAY l_datarange TO formonly.index
+END FUNCTION
+#第四頁簽資料
+PRIVATE FUNCTION aglt310_04_pagedata_fill4(ps_page_action)
+   DEFINE ps_page_action STRING
+   DEFINE ls_sql         STRING
+   DEFINE ls_where       STRING
+   DEFINE li_i           LIKE type_t.num10
+   DEFINE li_j           LIKE type_t.num10
+   DEFINE l_datarange    STRING   #第m-n筆
+   DEFINE l_str          STRING   #字串
+   DEFINE l_str1         STRING
+   DEFINE l_str2         STRING
+ 
+   CASE ps_page_action
+      WHEN "first"
+         LET g_page_idx = 1
+      WHEN "prev"
+         LET g_page_idx = g_page_idx - 1
+      WHEN "next"
+         LET g_page_idx = g_page_idx + 1
+      WHEN "last"
+         LET g_page_idx = g_page_last
+   END CASE
+ 
+   IF g_page_idx > 0 THEN
+      LET g_pagestart = (g_page_idx - 1) * gi_page_count + 1
+   END IF
+ 
+   CALL aglt310_04_sqlwhere() RETURNING ls_where
+   #全部選取
+   LET ls_sql = 
+   "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '4' AND ", ls_where CLIPPED, "
+  ORDER BY glac002"
+   DECLARE lcurs_qry_all4 CURSOR FROM ls_sql
+ 
+   #此頁
+   #@如果不需要複選資料,則不要設定check的預設值(將'N'刪除)
+   LET ls_sql = 
+   "SELECT 'N', glac002, glacl004, glac003, glac009, RANK 
+  FROM ( SELECT glac002, glacl004, glac003, glac009, RANK() OVER(ORDER BY glac002, glacl004) AS RANK  FROM (SELECT DISTINCT  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '4' AND ", ls_where CLIPPED, "
+  ORDER BY glac002))",
+   " WHERE RANK >= ", g_pagestart," AND RANK < ", g_pagestart + gi_page_count
+   DECLARE lcurs_qry4 CURSOR FROM ls_sql
+ 
+   CALL gr_qry4.clear()
+ 
+   LET li_i = 1
+   FOREACH lcurs_qry4 INTO gr_qry4[li_i].*
+      LET l_str1 = gr_qry4[li_i].glac002_4, gr_qry4[li_i].glac002_4_desc
+      FOR li_j = 1 TO gr_qry_sel4.getLength()
+         LET l_str2 = gr_qry_sel4[li_j].glac002_4, gr_qry_sel4[li_j].glac002_4_desc
+         IF l_str1 = l_str2 THEN
+            LET gr_qry4[li_i].check4 = gr_qry_sel4[li_j].check4
+         END IF
+      END FOR
+      LET li_i = li_i + 1
+   END FOREACH
+   CALL gr_qry4.deleteElement(li_i)
+ 
+   IF gi_cons_where <> gi_cons_where_old OR cl_null(gi_cons_where) OR cl_null(gi_cons_where_old) THEN   #查詢條件改變
+      LET gi_cons_where_old = gi_cons_where
+      CALL aglt310_04_data_count(4,"db")   #查詢資料的總筆數,給下一段計算第m-n筆
+   END IF
+ 
+   #第m-n筆
+   IF g_page_idx > 0 THEN
+      LET li_i = g_data_cnt MOD gi_page_count
+      #現在在最後一頁，而且不是滿頁的狀況
+      IF g_page_idx = g_page_last AND li_i > 0 THEN
+         LET l_str = g_pagestart - 1 + li_i
+      ELSE
+         LET l_str = g_pagestart - 1 + gi_page_count
+      END IF
+      LET l_datarange = g_pagestart
+      LET l_datarange = l_datarange CLIPPED, " - ", l_str
+   ELSE
+      LET l_datarange = ""
+   END IF
+   DISPLAY l_datarange TO formonly.index
+END FUNCTION
+#第五頁簽資料
+PRIVATE FUNCTION aglt310_04_pagedata_fill5(ps_page_action)
+    DEFINE ps_page_action STRING
+   DEFINE ls_sql         STRING
+   DEFINE ls_where       STRING
+   DEFINE li_i           LIKE type_t.num10
+   DEFINE li_j           LIKE type_t.num10
+   DEFINE l_datarange    STRING   #第m-n筆
+   DEFINE l_str          STRING   #字串
+   DEFINE l_str1         STRING
+   DEFINE l_str2         STRING
+ 
+   CASE ps_page_action
+      WHEN "first"
+         LET g_page_idx = 1
+      WHEN "prev"
+         LET g_page_idx = g_page_idx - 1
+      WHEN "next"
+         LET g_page_idx = g_page_idx + 1
+      WHEN "last"
+         LET g_page_idx = g_page_last
+   END CASE
+ 
+   IF g_page_idx > 0 THEN
+      LET g_pagestart = (g_page_idx - 1) * gi_page_count + 1
+   END IF
+ 
+   CALL aglt310_04_sqlwhere() RETURNING ls_where
+   #全部選取
+   LET ls_sql = 
+   "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '5' AND ", ls_where CLIPPED, "
+  ORDER BY glac002"
+   DECLARE lcurs_qry_all5 CURSOR FROM ls_sql
+ 
+   #此頁
+   #@如果不需要複選資料,則不要設定check的預設值(將'N'刪除)
+   LET ls_sql = 
+   "SELECT 'N', glac002, glacl004, glac003, glac009, RANK 
+  FROM ( SELECT glac002, glacl004, glac003, glac009, RANK() OVER(ORDER BY glac002, glacl004) AS RANK  FROM (SELECT DISTINCT  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '5' AND ", ls_where CLIPPED, "
+  ORDER BY glac002))",
+   " WHERE RANK >= ", g_pagestart," AND RANK < ", g_pagestart + gi_page_count
+   DECLARE lcurs_qry5 CURSOR FROM ls_sql
+ 
+   CALL gr_qry5.clear()
+ 
+   LET li_i = 1
+   FOREACH lcurs_qry5 INTO gr_qry5[li_i].*
+      LET l_str1 = gr_qry5[li_i].glac002_5, gr_qry5[li_i].glac002_5_desc
+      FOR li_j = 1 TO gr_qry_sel5.getLength()
+         LET l_str2 = gr_qry_sel5[li_j].glac002_5, gr_qry_sel5[li_j].glac002_5_desc
+         IF l_str1 = l_str2 THEN
+            LET gr_qry5[li_i].check5 = gr_qry_sel5[li_j].check5
+         END IF
+      END FOR
+      LET li_i = li_i + 1
+   END FOREACH
+   CALL gr_qry5.deleteElement(li_i)
+ 
+   IF gi_cons_where <> gi_cons_where_old OR cl_null(gi_cons_where) OR cl_null(gi_cons_where_old) THEN   #查詢條件改變
+      LET gi_cons_where_old = gi_cons_where
+      CALL aglt310_04_data_count(5,"db")   #查詢資料的總筆數,給下一段計算第m-n筆
+   END IF
+ 
+   #第m-n筆
+   IF g_page_idx > 0 THEN
+      LET li_i = g_data_cnt MOD gi_page_count
+      #現在在最後一頁，而且不是滿頁的狀況
+      IF g_page_idx = g_page_last AND li_i > 0 THEN
+         LET l_str = g_pagestart - 1 + li_i
+      ELSE
+         LET l_str = g_pagestart - 1 + gi_page_count
+      END IF
+      LET l_datarange = g_pagestart
+      LET l_datarange = l_datarange CLIPPED, " - ", l_str
+   ELSE
+      LET l_datarange = ""
+   END IF
+   DISPLAY l_datarange TO formonly.index
+END FUNCTION
+#+第六頁簽
+PRIVATE FUNCTION aglt310_04_pagedata_fill6(ps_page_action)
+    DEFINE ps_page_action STRING
+   DEFINE ls_sql         STRING
+   DEFINE ls_where       STRING
+   DEFINE li_i           LIKE type_t.num10
+   DEFINE li_j           LIKE type_t.num10
+   DEFINE l_datarange    STRING   #第m-n筆
+   DEFINE l_str          STRING   #字串
+   DEFINE l_str1         STRING
+   DEFINE l_str2         STRING
+ 
+   CASE ps_page_action
+      WHEN "first"
+         LET g_page_idx = 1
+      WHEN "prev"
+         LET g_page_idx = g_page_idx - 1
+      WHEN "next"
+         LET g_page_idx = g_page_idx + 1
+      WHEN "last"
+         LET g_page_idx = g_page_last
+   END CASE
+ 
+   IF g_page_idx > 0 THEN
+      LET g_pagestart = (g_page_idx - 1) * gi_page_count + 1
+   END IF
+ 
+   CALL aglt310_04_sqlwhere() RETURNING ls_where
+   #全部選取
+   LET ls_sql = 
+   "SELECT DISTINCT  'Y',  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '6' AND ", ls_where CLIPPED, "
+  ORDER BY glac002"
+   DECLARE lcurs_qry_all6 CURSOR FROM ls_sql
+ 
+   #此頁
+   #@如果不需要複選資料,則不要設定check的預設值(將'N'刪除)
+   LET ls_sql = 
+   "SELECT 'N', glac002, glacl004, glac003, glac009, RANK 
+  FROM ( SELECT glac002, glacl004, glac003, glac009, RANK() OVER(ORDER BY glac002, glacl004) AS RANK  FROM (SELECT DISTINCT  glac002,glacl004,glac003,glac009 
+  FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+  WHERE   glacent = ",g_enterprise,"  AND glac007 = '6' AND ", ls_where CLIPPED, "
+  ORDER BY glac002))",
+   " WHERE RANK >= ", g_pagestart," AND RANK < ", g_pagestart + gi_page_count
+   DECLARE lcurs_qry6 CURSOR FROM ls_sql
+ 
+   CALL gr_qry6.clear()
+ 
+   LET li_i = 1
+   FOREACH lcurs_qry6 INTO gr_qry6[li_i].*
+      LET l_str1 = gr_qry6[li_i].glac002_6, gr_qry6[li_i].glac002_6_desc
+      FOR li_j = 1 TO gr_qry_sel6.getLength()
+         LET l_str2 = gr_qry_sel6[li_j].glac002_6, gr_qry_sel6[li_j].glac002_6_desc
+         IF l_str1 = l_str2 THEN
+            LET gr_qry6[li_i].check6 = gr_qry_sel6[li_j].check6
+         END IF
+      END FOR
+      LET li_i = li_i + 1
+   END FOREACH
+   CALL gr_qry6.deleteElement(li_i)
+ 
+   IF gi_cons_where <> gi_cons_where_old OR cl_null(gi_cons_where) OR cl_null(gi_cons_where_old) THEN   #查詢條件改變
+      LET gi_cons_where_old = gi_cons_where
+      CALL aglt310_04_data_count(6,"db")   #查詢資料的總筆數,給下一段計算第m-n筆
+   END IF
+ 
+   #第m-n筆
+   IF g_page_idx > 0 THEN
+      LET li_i = g_data_cnt MOD gi_page_count
+      #現在在最後一頁，而且不是滿頁的狀況
+      IF g_page_idx = g_page_last AND li_i > 0 THEN
+         LET l_str = g_pagestart - 1 + li_i
+      ELSE
+         LET l_str = g_pagestart - 1 + gi_page_count
+      END IF
+      LET l_datarange = g_pagestart
+      LET l_datarange = l_datarange CLIPPED, " - ", l_str
+   ELSE
+      LET l_datarange = ""
+   END IF
+   DISPLAY l_datarange TO formonly.index
+END FUNCTION
+#+画面资料显示
+PRIVATE FUNCTION aglt310_04_sel()
+   
+   CALL aglt310_04_prep_result_set()
+   CALL aglt310_04_prep_result_set2()
+   CALL aglt310_04_prep_result_set3()
+   CALL aglt310_04_prep_result_set4()
+   CALL aglt310_04_prep_result_set5()
+   CALL aglt310_04_prep_result_set6()
+   
+   WHILE TRUE
+      #CALL aglt310_04_prep_result_set()
+      #CALL aglt310_04_prep_result_set2()
+      #CALL aglt310_04_prep_result_set3()
+      #CALL aglt310_04_prep_result_set4()
+      #CALL aglt310_04_prep_result_set5()
+      #CALL aglt310_04_prep_result_set6()
+      
+      IF (gi_multi_sel) THEN
+         CALL aglt310_04_input_array()
+      ELSE
+         CALL aglt310_04_display_array()
+      END IF
+ 
+      IF gs_action = "exit" THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+END FUNCTION
+#+當前頁簽
+PRIVATE FUNCTION aglt310_04_pagedata(p_current_page,p_action)
+   DEFINE p_current_page     LIKE type_t.num5
+   DEFINE p_action           LIKE type_t.chr80  
+  
+   IF p_current_page = 1 THEN
+      CALL aglt310_04_pagedata_fill(p_action)
+   END IF
+   
+    IF p_current_page = 2 THEN
+      CALL aglt310_04_pagedata_fill2(p_action)
+   END IF
+
+    IF p_current_page = 3 THEN
+      CALL aglt310_04_pagedata_fill3(p_action)
+   END IF
+   
+    IF p_current_page = 4 THEN
+      CALL aglt310_04_pagedata_fill4(p_action)
+   END IF
+   
+    IF p_current_page = 5 THEN
+      CALL aglt310_04_pagedata_fill5(p_action)
+   END IF
+   
+    IF p_current_page = 6 THEN
+      CALL aglt310_04_pagedata_fill6(p_action)
+   END IF
+   
+END FUNCTION
+#+准备查询画面资料集
+PRIVATE FUNCTION aglt310_04_prep_result_set()
+    CALL gr_qry.clear()
+    CALL gr_qry_sel.clear()
+ 
+  #IF (gi_need_cons) OR (gi_reconstruct) THEN
+  #   LET gi_reconstruct = FALSE
+  #   LET gi_cons_where_old = NULL
+  #   DISPLAY "" TO formonly.index
+  #   CONSTRUCT gi_cons_where ON glac002,glac002_desc 
+  #      FROM s_detail1[1].glac002,s_detail1[1].glac002_desc 
+  #   IF INT_FLAG THEN
+  #      LET INT_FLAG = FALSE
+  #      LET gi_cons_where = " 1=1"
+  #   END IF
+  #END IF
+ 
+   IF cl_null(gs_pageswitch) THEN
+      LET gs_pageswitch = "first"
+   END IF
+   CALL aglt310_04_pagedata_fill(gs_pageswitch)
+   INITIALIZE gs_pageswitch TO NULL
+END FUNCTION
+# Description   : 準備查詢畫面的資料集.
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+PRIVATE FUNCTION aglt310_04_prep_result_set2()
+   CALL gr_qry2.clear()
+   CALL gr_qry_sel2.clear()
+ 
+   #IF (gi_need_cons) OR (gi_reconstruct) THEN
+   #   LET gi_reconstruct = FALSE
+   #   LET gi_cons_where_old = NULL
+   #   DISPLAY "" TO formonly.index
+   #   CONSTRUCT gi_cons_where ON glac002_2,glac002_2_desc 
+   #      FROM s_detail2[1].glac002_2,s_detail2[1].glac002_2_desc 
+   #   IF INT_FLAG THEN
+   #      LET INT_FLAG = FALSE
+   #      LET gi_cons_where = " 1=1"
+   #   END IF
+   #END IF
+ 
+   IF cl_null(gs_pageswitch) THEN
+      LET gs_pageswitch = "first"
+   END IF
+   CALL aglt310_04_pagedata_fill2(gs_pageswitch)
+   INITIALIZE gs_pageswitch TO NULL
+END FUNCTION
+# Description   : 準備查詢畫面的資料集.
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+PRIVATE FUNCTION aglt310_04_prep_result_set3()
+   CALL gr_qry3.clear()
+   CALL gr_qry_sel3.clear()
+ 
+   #IF (gi_need_cons) OR (gi_reconstruct) THEN
+   #   LET gi_reconstruct = FALSE
+   #   LET gi_cons_where_old = NULL
+   #   DISPLAY "" TO formonly.index
+   #   CONSTRUCT gi_cons_where ON glac002_3,glac002_3_desc 
+   #      FROM s_detail3[1].glac002_3,s_detail3[1].glac002_3_desc 
+   #   IF INT_FLAG THEN
+   #      LET INT_FLAG = FALSE
+   #      LET gi_cons_where = " 1=1"
+   #   END IF
+   #END IF
+ 
+   IF cl_null(gs_pageswitch) THEN
+      LET gs_pageswitch = "first"
+   END IF
+   CALL aglt310_04_pagedata_fill3(gs_pageswitch)
+   INITIALIZE gs_pageswitch TO NULL
+END FUNCTION
+# Description   : 準備查詢畫面的資料集.
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+PRIVATE FUNCTION aglt310_04_prep_result_set5()
+    CALL gr_qry5.clear()
+   CALL gr_qry_sel5.clear()
+ 
+  #IF (gi_need_cons) OR (gi_reconstruct) THEN
+  #   LET gi_reconstruct = FALSE
+  #   LET gi_cons_where_old = NULL
+  #   DISPLAY "" TO formonly.index
+  #   CONSTRUCT gi_cons_where ON glac002_5,glac002_5_desc 
+  #      FROM s_detail5[1].glac002_5,s_detail5[1].glac002_5_desc 
+  #   IF INT_FLAG THEN
+  #      LET INT_FLAG = FALSE
+  #      LET gi_cons_where = " 1=1"
+  #   END IF
+  #END IF
+ 
+   IF cl_null(gs_pageswitch) THEN
+      LET gs_pageswitch = "first"
+   END IF
+   CALL aglt310_04_pagedata_fill5(gs_pageswitch)
+   INITIALIZE gs_pageswitch TO NULL
+END FUNCTION
+# Description   : 準備查詢畫面的資料集.
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+PRIVATE FUNCTION aglt310_04_prep_result_set4()
+   CALL gr_qry4.clear()
+   CALL gr_qry_sel4.clear()
+ 
+   #IF (gi_need_cons) OR (gi_reconstruct) THEN
+   #   LET gi_reconstruct = FALSE
+   #   LET gi_cons_where_old = NULL
+   #   DISPLAY "" TO formonly.index
+   #   CONSTRUCT gi_cons_where ON glac002_4,glac002_4_desc 
+   #      FROM s_detail4[1].glac002_4,s_detail4[1].glac002_4_desc 
+   #   IF INT_FLAG THEN
+   #      LET INT_FLAG = FALSE
+   #      LET gi_cons_where = " 1=1"
+   #   END IF
+   #END IF
+ 
+   IF cl_null(gs_pageswitch) THEN
+      LET gs_pageswitch = "first"
+   END IF
+   CALL aglt310_04_pagedata_fill4(gs_pageswitch)
+   INITIALIZE gs_pageswitch TO NULL
+END FUNCTION
+# Description   : 準備查詢畫面的資料集.
+# Date & Author : {%格式為:xxxx/xx/xx by xxx}
+# Parameter     : none
+# Return        : void
+PRIVATE FUNCTION aglt310_04_prep_result_set6()
+    CALL gr_qry6.clear()
+    CALL gr_qry_sel6.clear()
+ 
+  #IF (gi_need_cons) OR (gi_reconstruct) THEN
+  #   LET gi_reconstruct = FALSE
+  #   LET gi_cons_where_old = NULL
+  #   DISPLAY "" TO formonly.index
+  #   CONSTRUCT gi_cons_where ON glac002_6,glac002_6_desc 
+  #      FROM s_detail6[1].glac002_6,s_detail6[1].glac002_6_desc 
+  #   IF INT_FLAG THEN
+  #      LET INT_FLAG = FALSE
+  #      LET gi_cons_where = " 1=1"
+  #   END IF
+  #END IF
+ 
+   IF cl_null(gs_pageswitch) THEN
+      LET gs_pageswitch = "first"
+   END IF
+   CALL aglt310_04_pagedata_fill6(gs_pageswitch)
+   INITIALIZE gs_pageswitch TO NULL
+END FUNCTION
+#+ 取得每页显示资料笔数
+PRIVATE FUNCTION aglt310_04_get_page_count()
+    DEFINE l_sel_limit  LIKE type_t.num5,
+          l_ooaa002    LIKE type_t.num5,
+          l_default    LIKE type_t.num5
+ 
+   LET l_default = 10 #設定預設值
+ 
+   #取值優先權: ds.dzca_t>dsdemo.ooaa_t
+   
+   #從ds.dzca_t提取開窗每頁顯現資料筆數
+   SELECT dzca004 INTO l_ooaa002 FROM dzca_t
+      WHERE dzca001 = "aglt310_04"
+ 
+ 
+   IF l_ooaa002 <10 OR cl_null(l_ooaa002) THEN
+#      #從dsdemo.ooaa_t提取開窗每頁顯現資料筆數
+#      SELECT ooaa002 INTO l_ooaa002 FROM dsdemo.ooaa_t
+#         WHERE ooaa001= "E-SYS-0002"  #開窗每頁顯現資料筆數 >=10
+#           AND ooaaent = g_enterprise
+           
+      CALL cl_get_para(g_enterprise, g_site,"E-SYS-0002") RETURNING l_ooaa002
+      IF l_ooaa002 <10 OR cl_null(l_ooaa002) THEN
+         LET l_sel_limit = l_default
+      ELSE
+         LET l_sel_limit = l_ooaa002
+      END IF
+   ELSE
+      LET l_sel_limit = l_ooaa002
+   END IF
+ 
+   RETURN l_sel_limit
+END FUNCTION
+#+ 取得选取笔数上线
+PRIVATE FUNCTION aglt310_04_get_sel_limit()
+    DEFINE l_sel_limit  LIKE type_t.num5,
+          l_ooaa002    LIKE type_t.num5,
+          l_default    LIKE type_t.num5
+ 
+   LET l_default = 200 #設定預設值
+ 
+   #從資料庫提取開窗選擇筆數資料上限
+#   SELECT ooaa002 INTO l_ooaa002 FROM dsdemo.ooaa_t
+#      WHERE ooaa001= "E-SYS-0003"  #開窗選擇筆數資料上限 >=200
+#        AND ooaaent = g_enterprise 
+
+   CALL cl_get_para(g_enterprise, g_site,"E-SYS-0003") RETURNING l_ooaa002
+ 
+   IF l_ooaa002 <200 OR cl_null(l_ooaa002) THEN
+      LET l_sel_limit = l_default
+   ELSE
+      LET l_sel_limit = l_ooaa002
+   END IF
+ 
+   RETURN l_sel_limit
+END FUNCTION
+#+ 采用INPUT ARRAY的方式来显示查询过后的资料
+PRIVATE FUNCTION aglt310_04_input_array()
+   DEFINE li_ac     LIKE type_t.num5
+   DEFINE ldig_curr ui.Dialog
+ 
+   #動態設定comboBox項目
+   ### 此開窗無comboBox的欄位 ###
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED)
+      INPUT ARRAY gr_qry FROM s_detail1.*
+         ATTRIBUTES(COUNT=g_data_cnt, 
+                    APPEND ROW=FALSE, INSERT ROW=FALSE, DELETE ROW=FALSE) 
+         
+         BEFORE INPUT
+            CALL aglt310_04_set_pagebutton(ldig_curr) 
+            LET g_current_page = 1
+            CALL aglt310_04_data_count(1,'db')
+            CALL aglt310_04_index()
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail1") 
+            
+         ON CHANGE check   #改變勾選狀態
+            CALL aglt310_04_qry_check("", gr_qry[li_ac].check, li_ac, li_ac,1)
+      END INPUT
+      
+      INPUT ARRAY gr_qry2 FROM s_detail2.*
+         ATTRIBUTES(COUNT=g_data_cnt, 
+                    APPEND ROW=FALSE, INSERT ROW=FALSE, DELETE ROW=FALSE) 
+         
+         BEFORE INPUT
+            CALL aglt310_04_set_pagebutton(ldig_curr) 
+            LET g_current_page = 2
+            CALL aglt310_04_data_count(2,'db')
+            CALL aglt310_04_index()
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail2") 
+            
+         ON CHANGE check2   #改變勾選狀態
+            CALL aglt310_04_qry_check("", gr_qry2[li_ac].check2, li_ac, li_ac,2)
+      END INPUT
+      
+      INPUT ARRAY gr_qry3 FROM s_detail3.*
+         ATTRIBUTES(COUNT=g_data_cnt, 
+                    APPEND ROW=FALSE, INSERT ROW=FALSE, DELETE ROW=FALSE) 
+         
+         BEFORE INPUT
+            CALL aglt310_04_set_pagebutton(ldig_curr) 
+            LET g_current_page = 3
+            CALL aglt310_04_data_count(3,'db')
+            CALL aglt310_04_index()
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail3") 
+            
+         ON CHANGE check3   #改變勾選狀態
+            CALL aglt310_04_qry_check("", gr_qry3[li_ac].check3, li_ac, li_ac,3)
+      END INPUT
+      
+      INPUT ARRAY gr_qry4 FROM s_detail4.*
+         ATTRIBUTES(COUNT=g_data_cnt, 
+                    APPEND ROW=FALSE, INSERT ROW=FALSE, DELETE ROW=FALSE) 
+         
+         BEFORE INPUT
+            CALL aglt310_04_set_pagebutton(ldig_curr) 
+            LET g_current_page = 4
+            CALL aglt310_04_data_count(4,'db')
+            CALL aglt310_04_index()
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail4") 
+            
+         ON CHANGE check4   #改變勾選狀態
+            CALL aglt310_04_qry_check("", gr_qry4[li_ac].check4, li_ac, li_ac,4)
+      END INPUT
+      
+      INPUT ARRAY gr_qry5 FROM s_detail5.*
+         ATTRIBUTES(COUNT=g_data_cnt, 
+                    APPEND ROW=FALSE, INSERT ROW=FALSE, DELETE ROW=FALSE) 
+         
+         BEFORE INPUT
+            CALL aglt310_04_set_pagebutton(ldig_curr) 
+            LET g_current_page = 5
+            CALL aglt310_04_data_count(5,'db')
+            CALL aglt310_04_index()
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail5") 
+            
+         ON CHANGE check5   #改變勾選狀態
+            CALL aglt310_04_qry_check("", gr_qry5[li_ac].check5, li_ac, li_ac,5)
+      END INPUT
+      
+      INPUT ARRAY gr_qry6 FROM s_detail6.*
+         ATTRIBUTES(COUNT=g_data_cnt, 
+                    APPEND ROW=FALSE, INSERT ROW=FALSE, DELETE ROW=FALSE) 
+         
+         BEFORE INPUT
+            CALL aglt310_04_set_pagebutton(ldig_curr) 
+            LET g_current_page = 6
+            CALL aglt310_04_data_count(6,'db')
+            CALL aglt310_04_index()
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail6") 
+            
+         ON CHANGE check6   #改變勾選狀態
+            CALL aglt310_04_qry_check("", gr_qry6[li_ac].check6,li_ac, li_ac,6)
+      END INPUT
+      
+      BEFORE DIALOG
+         LET ldig_curr = ui.Dialog.getCurrent()
+         #2015/07/07--by--02599--add--str--
+         CASE g_current_page
+            WHEN 1  NEXT FIELD check
+            WHEN 2  NEXT FIELD check2
+            WHEN 3  NEXT FIELD check3
+            WHEN 4  NEXT FIELD check4
+            WHEN 5  NEXT FIELD check5
+            WHEN 6  NEXT FIELD check6
+         END CASE
+         #2015/07/07--by--02599--add--end
+      ON ACTION accept
+         CALL aglt310_04_get_multiret()
+         LET gs_action = "exit"
+         EXIT DIALOG
+         
+      ON ACTION cancel
+         LET g_qryparam.return1 = NULL
+         
+         LET gs_action = "exit"
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+         
+      ON ACTION pg_first
+         CALL aglt310_04_pagedata(g_current_page,"first")
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_prev
+         CALL aglt310_04_pagedata(g_current_page,"prev")
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_next
+         CALL aglt310_04_pagedata(g_current_page,"next")
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_last
+         CALL aglt310_04_pagedata(g_current_page,"last")
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      #重新整理
+      ON ACTION refresh
+         CALL aglt310_04_pagedata(g_current_page,"first")
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+         EXIT DIALOG
+         
+      #重新查詢
+      ON ACTION reconstruct
+         LET gi_reconstruct = TRUE
+         CALL aglt310_04_reconstruct(g_current_page)
+         EXIT DIALOG
+         
+      #全部選取
+      ON ACTION selectall
+         # 連未選擇的頁面都必須選擇
+         CALL aglt310_04_sel_all_page("selectall") 
+         
+      #全部取消選取
+      ON ACTION selectnone
+         CALL aglt310_04_sel_all_page("selectnone") 
+         
+      #此頁全選
+      ON ACTION selectpageall 
+         CALL aglt310_04_qry("selectpageall",g_current_page) 
+         
+      #此頁取消選取
+      ON ACTION selectpagenone
+         CALL aglt310_04_qry("selectpagenone",g_current_page) 
+         
+      ON ACTION exporttoexcel
+         MESSAGE ""
+         
+   END DIALOG
+END FUNCTION
+#+ 显示资料
+PRIVATE FUNCTION aglt310_04_display_array()
+   DEFINE li_ac       LIKE type_t.num5
+   DEFINE ldig_curr   ui.Dialog
+ 
+   #動態設定comboBox項目
+   ### 此開窗無comboBox的欄位 ###
+   
+   DIALOG ATTRIBUTES(UNBUFFERED)
+      DISPLAY ARRAY gr_qry TO s_detail1.*
+         ATTRIBUTES(COUNT=g_data_cnt)
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail1")
+            LET g_page_idx = li_ac
+      BEFORE DISPLAY
+            CALL FGL_SET_ARR_CURR(g_page_idx)
+            LET g_current_page = 1         
+            CALL aglt310_04_data_count(1,"db")
+            CALL aglt310_04_index()
+      END DISPLAY
+      
+      DISPLAY ARRAY gr_qry2 TO s_detail2.*
+         ATTRIBUTES(COUNT=g_data_cnt)
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail2")
+            LET g_page_idx = li_ac
+         BEFORE DISPLAY
+            CALL FGL_SET_ARR_CURR(g_page_idx)
+            LET g_current_page = 2 
+            CALL aglt310_04_data_count(2,"db")
+            CALL aglt310_04_index()            
+      END DISPLAY
+      
+      DISPLAY ARRAY gr_qry3 TO s_detail3.*
+         ATTRIBUTES(COUNT=g_data_cnt)
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail3")
+            LET g_page_idx = li_ac
+         BEFORE DISPLAY
+            CALL FGL_SET_ARR_CURR(g_page_idx)
+            LET g_current_page = 3 
+            CALL aglt310_04_data_count(3,"db")
+            CALL aglt310_04_index()            
+      END DISPLAY
+      
+      DISPLAY ARRAY gr_qry4 TO s_detail4.*
+         ATTRIBUTES(COUNT=g_data_cnt)
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail4")
+            LET g_page_idx = li_ac
+         BEFORE DISPLAY
+            CALL FGL_SET_ARR_CURR(g_page_idx)
+            LET g_current_page = 4 
+            CALL aglt310_04_data_count(4,"db")
+            CALL aglt310_04_index()            
+      END DISPLAY
+      
+      DISPLAY ARRAY gr_qry5 TO s_detail5.*
+         ATTRIBUTES(COUNT=g_data_cnt)
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail5")
+            LET g_page_idx = li_ac
+         BEFORE DISPLAY
+            CALL FGL_SET_ARR_CURR(g_page_idx)
+            LET g_current_page = 5 
+            CALL aglt310_04_data_count(5,"db")  
+            CALL aglt310_04_index()            
+      END DISPLAY
+      
+      DISPLAY ARRAY gr_qry6 TO s_detail6.*
+         ATTRIBUTES(COUNT=g_data_cnt)
+         BEFORE ROW
+            LET li_ac = DIALOG.getCurrentRow("s_detail6")
+            LET g_page_idx = li_ac
+         BEFORE DISPLAY
+            CALL FGL_SET_ARR_CURR(g_page_idx)
+            LET g_current_page = 6     
+            CALL aglt310_04_data_count(6,"db") 
+            CALL aglt310_04_index()
+      END DISPLAY
+ 
+      BEFORE DIALOG
+         LET ldig_curr = ui.Dialog.getCurrent()
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+ 
+      ON ACTION accept
+         IF li_ac > 0 THEN
+            CALL aglt310_04_accept(g_current_page,li_ac)
+         ELSE
+            LET g_qryparam.return1 = gs_default1 
+
+         END IF
+         LET gs_action = "exit"
+         EXIT DIALOG
+         
+      ON ACTION CANCEL
+            LET g_qryparam.return1 = gs_default1 
+
+ 
+         LET gs_action = "exit"
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+         
+      ON ACTION pg_first
+         CALL aglt310_04_pagedata(g_current_page,"first")
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_prev
+         CALL aglt310_04_pagedata(g_current_page,"prev")
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_next
+         CALL aglt310_04_pagedata(g_current_page,"next")
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION pg_last
+         CALL aglt310_04_pagedata(g_current_page,"last")
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+         NEXT FIELD CURRENT
+         
+      ON ACTION refresh       #重新整理
+         CALL aglt310_04_pagedata_fill("first") 
+         CALL aglt310_04_set_pagebutton(ldig_curr)
+         EXIT DIALOG
+         
+      ON ACTION reconstruct   #重新查詢 
+         LET gi_reconstruct = TRUE
+         CALL aglt310_04_reconstruct(g_current_page)
+         EXIT DIALOG
+         
+      ON ACTION exporttoexcel
+         MESSAGE ""
+         
+   END DIALOG
+END FUNCTION
+#+确定当前是哪个页签
+PRIVATE FUNCTION aglt310_04_qry(p_mode,p_current_page)
+   DEFINE p_mode            LIKE type_t.chr80
+   DEFINE p_current_page    LIKE type_t.num5
+
+   IF p_current_page = 1  THEN
+      CALL aglt310_04_qry_check(p_mode, "Y", 1, gr_qry.getLength(),1)
+   END IF 
+   
+   IF p_current_page = 2  THEN
+      CALL aglt310_04_qry_check(p_mode, "Y", 1, gr_qry2.getLength(),2)
+   END IF 
+   
+   IF p_current_page = 3  THEN
+      CALL aglt310_04_qry_check(p_mode, "Y", 1, gr_qry3.getLength(),3)
+   END IF 
+   
+   IF p_current_page = 4  THEN
+      CALL aglt310_04_qry_check(p_mode, "Y", 1, gr_qry4.getLength(),4)
+   END IF 
+   
+   IF p_current_page = 5  THEN
+      CALL aglt310_04_qry_check(p_mode, "Y", 1, gr_qry5.getLength(),5)
+   END IF 
+   
+   IF p_current_page = 6  THEN
+      CALL aglt310_04_qry_check(p_mode, "Y", 1, gr_qry6.getLength(),6)
+   END IF 
+END FUNCTION
+#+ 记忆已勾选资料
+PRIVATE FUNCTION aglt310_04_qry_check(p_mode,p_check,p_start,p_end,p_current_page)
+    DEFINE p_mode   STRING                 #選取方式
+   DEFINE p_check  LIKE type_t.chr1    #選取狀態 Y/N
+   DEFINE p_start  LIKE type_t.num10   #此頁選取範圍第一筆
+   DEFINE p_end    LIKE type_t.num10   #此頁選取範圍最後一筆
+   DEFINE p_current_page    LIKE type_t.num5   #判断当前是哪个页签
+   DEFINE li_i     LIKE type_t.num10
+   DEFINE li_j     LIKE type_t.num10
+   DEFINE l_check  LIKE type_t.chr1
+   DEFINE l_str1   STRING
+   DEFINE l_str2   STRING
+ 
+   IF p_current_page = 1 THEN
+      CASE
+      #全部選取
+      WHEN p_mode = "selectpageall"
+         IF g_data_cnt > g_sel_limit THEN   #選取資料筆數超出系統容許上限
+            #qry-005:選取資料筆數超出系統容許上限%1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         ELSE
+            FOR li_i = p_start TO p_end
+               LET gr_qry[li_i].check = "Y"
+            END FOR
+ 
+            CALL gr_qry_sel.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all INTO gr_qry_sel[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel.deleteElement(li_i)
+         END IF
+      #全部取消選取
+      WHEN p_mode = "selectpagenone"
+         CALL gr_qry_sel.clear()
+         FOR li_i = p_start TO p_end
+            LET gr_qry[li_i].check = "N"
+         END FOR
+      #改變單筆資料的選取狀態
+      WHEN p_end > 0 AND cl_null(p_mode)
+         FOR li_i = p_start TO p_end
+         	  #將所有欄位值串在一起,以利做開窗record唯一值判斷
+            #要和已被選取的陣列(gr_qry_sel)做唯一值判斷比較
+         	  LET l_str1 = gr_qry[li_i].glac002, gr_qry[li_i].glac002_desc
+         	  
+            IF p_check = "Y" THEN
+               IF gr_qry_sel.getLength() >= g_sel_limit THEN   #選取資料筆數超出系統容許上限
+                  LET gr_qry[li_i].check = "N"
+                  INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+                  EXIT FOR
+               ELSE
+                  LET l_check = "Y"
+                  LET gr_qry[li_i].check = "Y"             #此頁全選時,用程式批次改變值
+                  FOR li_j = 1 TO gr_qry_sel.getLength()   #勾選清單中有此筆資料
+                     LET l_str2 = gr_qry_sel[li_j].glac002, gr_qry_sel[li_j].glac002_desc
+                     IF l_str1 = l_str2 THEN
+                        LET l_check = ""
+                        EXIT FOR
+                     END IF
+                  END FOR
+                  IF l_check = "Y" THEN  #加入勾選清單
+                     LET li_j = gr_qry_sel.getLength() + 1
+                     LET gr_qry_sel[li_j].* = gr_qry[li_i].*
+                  END IF
+               END IF
+            ELSE
+               LET gr_qry[li_i].check = "N"             #此頁取消選取時,用程式批次改變值
+               FOR li_j = 1 TO gr_qry_sel.getLength()   #刪除勾選清單中的此筆資料
+                  LET l_str2 = gr_qry_sel[li_j].glac002, gr_qry_sel[li_j].glac002_desc
+                  IF l_str1 = l_str2 THEN
+                      CALL gr_qry_sel.deleteElement(li_j)
+                     EXIT FOR
+                  END IF
+               END FOR
+            END IF
+         END FOR
+       END CASE
+   END IF 
+   
+   IF p_current_page = 2 THEN
+      CASE
+      #全部選取
+      WHEN p_mode = "selectpageall"
+         IF g_data_cnt > g_sel_limit THEN   #選取資料筆數超出系統容許上限
+            #qry-005:選取資料筆數超出系統容許上限%1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         ELSE
+            FOR li_i = p_start TO p_end
+               LET gr_qry2[li_i].check2 = "Y"
+            END FOR
+ 
+            CALL gr_qry_sel2.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all2 INTO gr_qry_sel2[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel2.deleteElement(li_i)
+         END IF
+      #全部取消選取
+      WHEN p_mode = "selectpagenone"
+         CALL gr_qry_sel2.clear()
+         FOR li_i = p_start TO p_end
+            LET gr_qry2[li_i].check2 = "N"
+         END FOR
+      #改變單筆資料的選取狀態/此頁全選/此頁取消選取
+#      WHEN p_end > 0 AND (cl_null(p_mode) OR p_mode = "selectpageall" OR p_mode = "selectpagenone")
+        WHEN p_end > 0 AND cl_null(p_mode)
+         FOR li_i = p_start TO p_end
+         	  #將所有欄位值串在一起,以利做開窗record唯一值判斷
+            #要和已被選取的陣列(gr_qry_sel)做唯一值判斷比較
+         	  LET l_str1 = gr_qry2[li_i].glac002_2, gr_qry2[li_i].glac002_2_desc
+         	  
+            IF p_check = "Y" THEN
+               IF gr_qry_sel2.getLength() >= g_sel_limit THEN   #選取資料筆數超出系統容許上限
+                  LET gr_qry2[li_i].check2 = "N"
+                  INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+                  EXIT FOR
+               ELSE
+                  LET l_check = "Y"
+                  LET gr_qry2[li_i].check2 = "Y"             #此頁全選時,用程式批次改變值
+                  FOR li_j = 1 TO gr_qry_sel2.getLength()   #勾選清單中有此筆資料
+                     LET l_str2 = gr_qry_sel2[li_j].glac002_2, gr_qry_sel2[li_j].glac002_2_desc
+                     IF l_str1 = l_str2 THEN
+                        LET l_check = ""
+                        EXIT FOR
+                     END IF
+                  END FOR
+                  IF l_check = "Y" THEN  #加入勾選清單
+                     LET li_j = gr_qry_sel2.getLength() + 1
+                     LET gr_qry_sel2[li_j].* = gr_qry2[li_i].*
+                  END IF
+               END IF
+            ELSE
+               LET gr_qry2[li_i].check2 = "N"             #此頁取消選取時,用程式批次改變值
+               FOR li_j = 1 TO gr_qry_sel2.getLength()   #刪除勾選清單中的此筆資料
+                  LET l_str2 = gr_qry_sel2[li_j].glac002_2, gr_qry_sel2[li_j].glac002_2_desc
+                  IF l_str1 = l_str2 THEN
+                      CALL gr_qry_sel2.deleteElement(li_j)
+                     EXIT FOR
+                  END IF
+               END FOR
+            END IF
+         END FOR
+       END CASE
+   END IF 
+   
+   IF p_current_page = 3 THEN
+   CASE
+      #全部選取
+      WHEN p_mode = "selectpageall"
+         IF g_data_cnt > g_sel_limit THEN   #選取資料筆數超出系統容許上限
+            #qry-005:選取資料筆數超出系統容許上限%1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         ELSE
+            FOR li_i = p_start TO p_end
+               LET gr_qry3[li_i].check3 = "Y"
+            END FOR
+ 
+            CALL gr_qry_sel3.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all3 INTO gr_qry_sel3[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel3.deleteElement(li_i)
+         END IF
+      #全部取消選取
+      WHEN p_mode = "selectpagenone"
+         CALL gr_qry_sel3.clear()
+         FOR li_i = p_start TO p_end
+            LET gr_qry3[li_i].check3 = "N"
+         END FOR
+      #改變單筆資料的選取狀態/此頁全選/此頁取消選取
+#      WHEN p_end > 0 AND (cl_null(p_mode) OR p_mode = "selectpageall" OR p_mode = "selectpagenone")
+       WHEN p_end > 0 AND cl_null(p_mode)
+     
+         FOR li_i = p_start TO p_end
+         	  #將所有欄位值串在一起,以利做開窗record唯一值判斷
+            #要和已被選取的陣列(gr_qry_sel)做唯一值判斷比較
+         	  LET l_str1 = gr_qry3[li_i].glac002_3, gr_qry3[li_i].glac002_3_desc
+         	  
+            IF p_check = "Y" THEN
+               IF gr_qry_sel3.getLength() >= g_sel_limit THEN   #選取資料筆數超出系統容許上限
+                  LET gr_qry3[li_i].check3 = "N"
+                  INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+                  EXIT FOR
+               ELSE
+                  LET l_check = "Y"
+                  LET gr_qry3[li_i].check3 = "Y"             #此頁全選時,用程式批次改變值
+                  FOR li_j = 1 TO gr_qry_sel3.getLength()   #勾選清單中有此筆資料
+                     LET l_str2 = gr_qry_sel3[li_j].glac002_3, gr_qry_sel3[li_j].glac002_3_desc
+                     IF l_str1 = l_str2 THEN
+                        LET l_check = ""
+                        EXIT FOR
+                     END IF
+                  END FOR
+                  IF l_check = "Y" THEN  #加入勾選清單
+                     LET li_j = gr_qry_sel3.getLength() + 1
+                     LET gr_qry_sel3[li_j].* = gr_qry3[li_i].*
+                  END IF
+               END IF
+            ELSE
+               LET gr_qry3[li_i].check3 = "N"             #此頁取消選取時,用程式批次改變值
+               FOR li_j = 1 TO gr_qry_sel3.getLength()   #刪除勾選清單中的此筆資料
+                  LET l_str2 = gr_qry_sel3[li_j].glac002_3, gr_qry_sel3[li_j].glac002_3_desc
+                  IF l_str1 = l_str2 THEN
+                      CALL gr_qry_sel3.deleteElement(li_j)
+                     EXIT FOR
+                  END IF
+               END FOR
+            END IF
+         END FOR
+       END CASE
+   END IF 
+   
+   IF p_current_page = 4 THEN
+   CASE
+      #全部選取
+      WHEN p_mode = "selectpageall"
+         IF g_data_cnt > g_sel_limit THEN   #選取資料筆數超出系統容許上限
+            #qry-005:選取資料筆數超出系統容許上限%1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         ELSE
+            FOR li_i = p_start TO p_end
+               LET gr_qry4[li_i].check4 = "Y"
+            END FOR
+ 
+            CALL gr_qry_sel4.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all4 INTO gr_qry_sel4[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel4.deleteElement(li_i)
+         END IF
+      #全部取消選取
+      WHEN p_mode = "selectpagenone"
+         CALL gr_qry_sel4.clear()
+         FOR li_i = p_start TO p_end
+            LET gr_qry4[li_i].check4 = "N"
+         END FOR
+      #改變單筆資料的選取狀態/此頁全選/此頁取消選取
+#      WHEN p_end > 0 AND (cl_null(p_mode) OR p_mode = "selectpageall" OR p_mode = "selectpagenone")
+        WHEN p_end > 0 AND cl_null(p_mode)
+         FOR li_i = p_start TO p_end
+         	  #將所有欄位值串在一起,以利做開窗record唯一值判斷
+            #要和已被選取的陣列(gr_qry_sel)做唯一值判斷比較
+         	  LET l_str1 = gr_qry4[li_i].glac002_4, gr_qry4[li_i].glac002_4_desc
+         	  
+            IF p_check = "Y" THEN
+               IF gr_qry_sel4.getLength() >= g_sel_limit THEN   #選取資料筆數超出系統容許上限
+                  LET gr_qry4[li_i].check4 = "N"
+                  INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+                  EXIT FOR
+               ELSE
+                  LET l_check = "Y"
+                  LET gr_qry4[li_i].check4 = "Y"             #此頁全選時,用程式批次改變值
+                  FOR li_j = 1 TO gr_qry_sel4.getLength()   #勾選清單中有此筆資料
+                     LET l_str2 = gr_qry_sel4[li_j].glac002_4, gr_qry_sel4[li_j].glac002_4_desc
+                     IF l_str1 = l_str2 THEN
+                        LET l_check = ""
+                        EXIT FOR
+                     END IF
+                  END FOR
+                  IF l_check = "Y" THEN  #加入勾選清單
+                     LET li_j = gr_qry_sel4.getLength() + 1
+                     LET gr_qry_sel4[li_j].* = gr_qry4[li_i].*
+                  END IF
+               END IF
+            ELSE
+               LET gr_qry4[li_i].check4 = "N"             #此頁取消選取時,用程式批次改變值
+               FOR li_j = 1 TO gr_qry_sel4.getLength()   #刪除勾選清單中的此筆資料
+                  LET l_str2 = gr_qry_sel4[li_j].glac002_4, gr_qry_sel4[li_j].glac002_4_desc
+                  IF l_str1 = l_str2 THEN
+                      CALL gr_qry_sel4.deleteElement(li_j)
+                     EXIT FOR
+                  END IF
+               END FOR
+            END IF
+         END FOR
+       END CASE
+   END IF 
+   
+   IF p_current_page = 5 THEN
+   CASE
+      #全部選取
+      WHEN p_mode = "selectpageall"
+         IF g_data_cnt > g_sel_limit THEN   #選取資料筆數超出系統容許上限
+            #qry-005:選取資料筆數超出系統容許上限%1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         ELSE
+            FOR li_i = p_start TO p_end
+               LET gr_qry5[li_i].check5 = "Y"
+            END FOR
+ 
+            CALL gr_qry_sel5.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all5 INTO gr_qry_sel5[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel5.deleteElement(li_i)
+         END IF
+      #全部取消選取
+      WHEN p_mode = "selectpagenone"
+         CALL gr_qry_sel5.clear()
+         FOR li_i = p_start TO p_end
+            LET gr_qry5[li_i].check5 = "N"
+         END FOR
+      #改變單筆資料的選取狀態/此頁全選/此頁取消選取
+ #     WHEN p_end > 0 AND (cl_null(p_mode) OR p_mode = "selectpageall" OR p_mode = "selectpagenone")
+        WHEN p_end > 0 AND cl_null(p_mode)
+         FOR li_i = p_start TO p_end
+         	  #將所有欄位值串在一起,以利做開窗record唯一值判斷
+            #要和已被選取的陣列(gr_qry_sel)做唯一值判斷比較
+         	  LET l_str1 = gr_qry5[li_i].glac002_5, gr_qry5[li_i].glac002_5_desc
+         	  
+            IF p_check = "Y" THEN
+               IF gr_qry_sel5.getLength() >= g_sel_limit THEN   #選取資料筆數超出系統容許上限
+                  LET gr_qry5[li_i].check5 = "N"
+                  INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+                  EXIT FOR
+               ELSE
+                  LET l_check = "Y"
+                  LET gr_qry5[li_i].check5 = "Y"             #此頁全選時,用程式批次改變值
+                  FOR li_j = 1 TO gr_qry_sel5.getLength()   #勾選清單中有此筆資料
+                     LET l_str2 = gr_qry_sel5[li_j].glac002_5, gr_qry_sel5[li_j].glac002_5_desc
+                     IF l_str1 = l_str2 THEN
+                        LET l_check = ""
+                        EXIT FOR
+                     END IF
+                  END FOR
+                  IF l_check = "Y" THEN  #加入勾選清單
+                     LET li_j = gr_qry_sel5.getLength() + 1
+                     LET gr_qry_sel5[li_j].* = gr_qry5[li_i].*
+                  END IF
+               END IF
+            ELSE
+               LET gr_qry5[li_i].check5 = "N"             #此頁取消選取時,用程式批次改變值
+               FOR li_j = 1 TO gr_qry_sel5.getLength()   #刪除勾選清單中的此筆資料
+                  LET l_str2 = gr_qry_sel5[li_j].glac002_5, gr_qry_sel5[li_j].glac002_5_desc
+                  IF l_str1 = l_str2 THEN
+                      CALL gr_qry_sel5.deleteElement(li_j)
+                     EXIT FOR
+                  END IF
+               END FOR
+            END IF
+         END FOR
+      END CASE
+   END IF
+
+   IF p_current_page = 6 THEN
+      CASE  
+      #全部選取
+      WHEN p_mode = "selectpageall"
+         IF g_data_cnt > g_sel_limit THEN   #選取資料筆數超出系統容許上限
+            #qry-005:選取資料筆數超出系統容許上限%1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         ELSE
+            FOR li_i = p_start TO p_end
+               LET gr_qry6[li_i].check6 = "Y"
+            END FOR
+ 
+            CALL gr_qry_sel6.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all6 INTO gr_qry_sel6[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel6.deleteElement(li_i)
+         END IF
+      #全部取消選取
+      WHEN p_mode = "selectpagenone"
+         CALL gr_qry_sel6.clear()
+         FOR li_i = p_start TO p_end
+            LET gr_qry6[li_i].check6 = "N"
+         END FOR
+#      #改變單筆資料的選取狀態/此頁全選/此頁取消選取
+#      WHEN p_end > 0 AND (cl_null(p_mode) OR p_mode = "selectpageall" OR p_mode = "selectpagenone")
+        WHEN p_end > 0 AND cl_null(p_mode)
+        FOR li_i = p_start TO p_end
+         	  #將所有欄位值串在一起,以利做開窗record唯一值判斷
+            #要和已被選取的陣列(gr_qry_sel)做唯一值判斷比較
+         	  LET l_str1 = gr_qry[li_i].glac002, gr_qry[li_i].glac002_desc
+         	  
+            IF p_check = "Y" THEN
+               IF gr_qry_sel.getLength() >= g_sel_limit THEN   #選取資料筆數超出系統容許上限
+                  LET gr_qry6[li_i].check6= "N"
+                  INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+                  EXIT FOR
+               ELSE
+                  LET l_check = "Y"
+                  LET gr_qry6[li_i].check6 = "Y"             #此頁全選時,用程式批次改變值
+                  FOR li_j = 1 TO gr_qry_sel6.getLength()   #勾選清單中有此筆資料
+                     LET l_str2 = gr_qry_sel6[li_j].glac002_6, gr_qry_sel6[li_j].glac002_6_desc
+                     IF l_str1 = l_str2 THEN
+                        LET l_check = ""
+                        EXIT FOR
+                     END IF
+                  END FOR
+                  IF l_check = "Y" THEN  #加入勾選清單
+                     LET li_j = gr_qry_sel6.getLength() + 1
+                     LET gr_qry_sel6[li_j].* = gr_qry6[li_i].*
+                  END IF
+               END IF
+            ELSE
+               LET gr_qry6[li_i].check6 = "N"             #此頁取消選取時,用程式批次改變值
+               FOR li_j = 1 TO gr_qry_sel6.getLength()   #刪除勾選清單中的此筆資料
+                  LET l_str2 = gr_qry_sel6[li_j].glac002_6, gr_qry_sel6[li_j].glac002_6_desc
+                  IF l_str1 = l_str2 THEN
+                      CALL gr_qry_sel6.deleteElement(li_j)
+                     EXIT FOR
+                  END IF
+               END FOR
+            END IF
+         END FOR
+      END CASE
+   END IF 
+END FUNCTION
+#+操作页签
+PRIVATE FUNCTION aglt310_04_accept(p_current_page,p_ac)
+   DEFINE p_current_page     LIKE type_t.num5
+   DEFINE p_ac               LIKE type_t.num5
+   
+   IF p_current_page = 1 THEN
+      LET g_qryparam.return1 = gr_qry[p_ac].glac002 CLIPPED
+   END IF 
+
+   IF p_current_page = 2 THEN
+      LET g_qryparam.return1 = gr_qry2[p_ac].glac002_2 CLIPPED
+   END IF 
+
+   IF p_current_page = 3 THEN
+      LET g_qryparam.return1 = gr_qry3[p_ac].glac002_3 CLIPPED
+   END IF 
+
+   IF p_current_page = 4 THEN
+      LET g_qryparam.return1 = gr_qry4[p_ac].glac002_4 CLIPPED
+   END IF 
+
+   IF p_current_page = 5 THEN
+      LET g_qryparam.return1 = gr_qry5[p_ac].glac002_5 CLIPPED
+   END IF 
+
+   IF p_current_page = 6 THEN
+      LET g_qryparam.return1 = gr_qry6[p_ac].glac002_6 CLIPPED
+   END IF 
+
+
+END FUNCTION
+#第m-n笔
+PRIVATE FUNCTION aglt310_04_index()
+   DEFINE li_i           LIKE type_t.num10
+   DEFINE l_datarange    STRING   #第m-n筆
+   DEFINE l_str          STRING   #字串
+   
+    #第m-n筆
+   IF g_page_idx > 0 THEN
+      LET li_i = g_data_cnt MOD gi_page_count
+      #現在在最後一頁，而且不是滿頁的狀況
+      IF g_page_idx = g_page_last AND li_i > 0 THEN
+         LET l_str = g_pagestart - 1 + li_i
+      ELSE
+         LET l_str = g_pagestart - 1 + gi_page_count
+      END IF
+      LET l_datarange = g_pagestart
+      LET l_datarange = l_datarange CLIPPED, " - ", l_str
+   ELSE
+      LET l_datarange = ""
+   END IF
+   DISPLAY l_datarange TO formonly.index
+END FUNCTION
+#重新查询
+PRIVATE FUNCTION aglt310_04_reconstruct(p_page_current)
+   DEFINE  p_page_current     LIKE type_t.num5
+   
+   IF p_page_current = 1 THEN
+      CALL gr_qry.clear()
+      CALL gr_qry_sel.clear()
+      CLEAR FORM
+      CALL aglt310_04_data_count(1,"0")    #總筆數
+      
+      IF (gi_need_cons) OR (gi_reconstruct) THEN
+         LET gi_reconstruct = FALSE
+         LET gi_cons_where_old = NULL
+         DISPLAY "" TO formonly.index
+         CONSTRUCT gi_cons_where ON glac002,glac002_desc 
+            FROM s_detail1[1].glac002,s_detail1[1].glac002_desc 
+         IF INT_FLAG THEN
+            LET INT_FLAG = FALSE
+            LET gi_cons_where = " 1=1"
+         END IF
+      END IF
+      IF cl_null(gs_pageswitch) THEN
+          LET gs_pageswitch = "first"
+      END IF
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_desc','glacl004')
+      CALL aglt310_04_pagedata_fill(gs_pageswitch)
+      INITIALIZE gs_pageswitch TO NULL      
+   END IF
+ 
+   
+   IF p_page_current = 2 THEN
+      CALL gr_qry2.clear()
+      CALL gr_qry_sel2.clear()
+      CLEAR FORM
+      CALL aglt310_04_data_count(2,"0")    #總筆數
+      
+      IF (gi_need_cons) OR (gi_reconstruct) THEN
+         LET gi_reconstruct = FALSE
+         LET gi_cons_where_old = NULL
+         DISPLAY "" TO formonly.index
+         CONSTRUCT gi_cons_where ON glac002_2,glac002_2_desc 
+            FROM s_detail2[1].glac002_2,s_detail2[1].glac002_2_desc 
+         IF INT_FLAG THEN
+            LET INT_FLAG = FALSE
+            LET gi_cons_where = " 1=1"
+         END IF
+      END IF
+      IF cl_null(gs_pageswitch) THEN
+          LET gs_pageswitch = "first"
+      END IF
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_2','glac002')
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_desc','glacl004')
+      CALL aglt310_04_pagedata_fill2(gs_pageswitch)
+      INITIALIZE gs_pageswitch TO NULL         
+   END IF
+   
+   IF p_page_current = 3 THEN
+      CALL gr_qry3.clear()
+      CALL gr_qry_sel3.clear()
+      CLEAR FORM
+      CALL aglt310_04_data_count(3,"0")    #總筆數
+      
+      IF (gi_need_cons) OR (gi_reconstruct) THEN
+         LET gi_reconstruct = FALSE
+         LET gi_cons_where_old = NULL
+         DISPLAY "" TO formonly.index
+         CONSTRUCT gi_cons_where ON glac002_3,glac002_3_desc 
+            FROM s_detail3[1].glac002_3,s_detail3[1].glac002_3_desc 
+         IF INT_FLAG THEN
+            LET INT_FLAG = FALSE
+            LET gi_cons_where = " 1=1"
+         END IF   
+      END IF
+      IF cl_null(gs_pageswitch) THEN
+          LET gs_pageswitch = "first"
+      END IF
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_3','glac002')
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_desc','glacl004')
+      CALL aglt310_04_pagedata_fill3(gs_pageswitch)
+      INITIALIZE gs_pageswitch TO NULL   
+   END IF
+   
+   IF p_page_current = 4 THEN
+      CALL gr_qry4.clear()
+      CALL gr_qry_sel4.clear()
+      CLEAR FORM
+      CALL aglt310_04_data_count(4,"0")    #總筆數
+      
+      IF (gi_need_cons) OR (gi_reconstruct) THEN
+         LET gi_reconstruct = FALSE
+         LET gi_cons_where_old = NULL
+         DISPLAY "" TO formonly.index
+         CONSTRUCT gi_cons_where ON glac002_4,glac002_4_desc 
+            FROM s_detail4[1].glac002_4,s_detail4[1].glac002_4_desc 
+         IF INT_FLAG THEN
+            LET INT_FLAG = FALSE
+            LET gi_cons_where = " 1=1"
+         END IF   
+      END IF
+      IF cl_null(gs_pageswitch) THEN
+          LET gs_pageswitch = "first"
+      END IF
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_4','glac002')
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_desc','glacl004')
+      CALL aglt310_04_pagedata_fill4(gs_pageswitch)
+      INITIALIZE gs_pageswitch TO NULL   
+   END IF
+   
+   IF p_page_current = 5 THEN
+      CALL gr_qry5.clear()
+      CALL gr_qry_sel5.clear()
+      CLEAR FORM
+      CALL aglt310_04_data_count(5,"0")    #總筆數
+      
+      IF (gi_need_cons) OR (gi_reconstruct) THEN
+         LET gi_reconstruct = FALSE
+         LET gi_cons_where_old = NULL
+         DISPLAY "" TO formonly.index
+         CONSTRUCT gi_cons_where ON glac002_5,glac002_5_desc 
+            FROM s_detail5[1].glac002_5,s_detail5[1].glac002_5_desc 
+         IF INT_FLAG THEN
+            LET INT_FLAG = FALSE
+            LET gi_cons_where = " 1=1"
+         END IF
+      END IF
+      IF cl_null(gs_pageswitch) THEN
+          LET gs_pageswitch = "first"
+      END IF
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_5','glac002')
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_desc','glacl004')
+      CALL aglt310_04_pagedata_fill5(gs_pageswitch)
+      INITIALIZE gs_pageswitch TO NULL         
+   END IF
+   
+   IF p_page_current = 6 THEN
+      CALL gr_qry6.clear()
+      CALL gr_qry_sel6.clear()
+      CLEAR FORM
+      CALL aglt310_04_data_count(6,"0")    #總筆數
+      
+      IF (gi_need_cons) OR (gi_reconstruct) THEN
+         LET gi_reconstruct = FALSE
+         LET gi_cons_where_old = NULL
+         DISPLAY "" TO formonly.index
+         CONSTRUCT gi_cons_where ON glac002_6,glac002_6_desc 
+            FROM s_detail6[1].glac002_6,s_detail6[1].glac002_6_desc 
+         IF INT_FLAG THEN
+            LET INT_FLAG = FALSE
+            LET gi_cons_where = " 1=1"
+         END IF
+      END IF
+      IF cl_null(gs_pageswitch) THEN
+          LET gs_pageswitch = "first"
+      END IF
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_6','glac002')
+      LET gi_cons_where = cl_replace_str(gi_cons_where,'glac002_desc','glacl004')
+      CALL aglt310_04_pagedata_fill6(gs_pageswitch)
+      INITIALIZE gs_pageswitch TO NULL         
+   END IF
+END FUNCTION
+#全选/全部选
+PRIVATE FUNCTION aglt310_04_sel_all_page(p_action)
+   DEFINE p_action     LIKE type_t.chr80
+   DEFINE li_i          LIKE type_t.num5
+   DEFINE l_cnt        LIKE type_t.num5
+   DEFINE ls_sql       STRING
+   DEFINE ls_where     STRING
+   
+   CASE
+      WHEN p_action = "selectall" 
+         CALL aglt310_04_sqlwhere() RETURNING ls_where
+         #全部選取
+         LET ls_sql = "SELECT DISTINCT  'Y',  glac002,glacl004 
+                         FROM  glac_t LEFT OUTER JOIN glacl_t ON glacent = glaclent AND glac001 = glacl001 AND glac002 = glacl002 AND glacl003 = '",g_dlang,"' AND glaclent = ",g_enterprise," 
+                        WHERE  glacent = ",g_enterprise,"  AND ", ls_where CLIPPED, "
+                     ORDER BY glac002"
+         PREPARE lcurs_sel_all FROM ls_sql
+         EXECUTE lcurs_sel_all INTO l_cnt
+         IF l_cnt > g_sel_limit THEN   #選取資料筆數超出系統容許上限
+            #qry-005:選取資料筆數超出系統容許上限%1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  "qry-005"
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         ELSE
+            #page1
+            FOR li_i = 1 TO gr_qry.getlength()
+                LET gr_qry[li_i].check = "Y"
+            END FOR
+            CALL gr_qry_sel.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all INTO gr_qry_sel[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel.deleteElement(li_i)
+            
+            #page2
+            FOR li_i = 1 TO gr_qry2.getlength()
+                LET gr_qry2[li_i].check2 = "Y"
+            END FOR
+            CALL gr_qry_sel2.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all2 INTO gr_qry_sel2[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel2.deleteElement(li_i) 
+            
+            #page3
+            FOR li_i = 1 TO gr_qry3.getlength()
+                LET gr_qry3[li_i].check3 = "Y"
+            END FOR
+            CALL gr_qry_sel3.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all3 INTO gr_qry_sel3[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel3.deleteElement(li_i)
+      
+            #page4
+            FOR li_i = 1 TO gr_qry4.getlength()
+                LET gr_qry4[li_i].check4 = "Y"
+            END FOR
+            CALL gr_qry_sel4.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all4 INTO gr_qry_sel4[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel4.deleteElement(li_i) 
+            
+            #page5
+            FOR li_i = 1 TO gr_qry5.getlength()
+                LET gr_qry5[li_i].check5 = "Y"
+            END FOR
+            CALL gr_qry_sel5.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all5 INTO gr_qry_sel5[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel5.deleteElement(li_i)
+            
+            #page6
+            FOR li_i = 1 TO gr_qry6.getlength()
+                LET gr_qry6[li_i].check6 = "Y"
+            END FOR
+            CALL gr_qry_sel6.clear()
+            LET li_i = 1
+            FOREACH lcurs_qry_all6 INTO gr_qry_sel6[li_i].*
+               LET li_i = li_i + 1
+            END FOREACH
+            CALL gr_qry_sel6.deleteElement(li_i)
+         END IF
+       
+    
+      #全部取消選取
+      WHEN p_action = "selectnone"
+         #page1
+         CALL gr_qry_sel.clear()
+         FOR li_i = 1 TO gr_qry.getlength()
+            LET gr_qry[li_i].check = "N"
+         END FOR
+         #page2
+         CALL gr_qry_sel2.clear()
+         FOR li_i = 1 TO gr_qry2.getlength()
+            LET gr_qry2[li_i].check2 = "N"
+         END FOR
+         #page3
+         CALL gr_qry_sel3.clear()
+         FOR li_i = 1 TO gr_qry3.getlength()
+            LET gr_qry3[li_i].check3 = "N"
+         END FOR
+         #page4
+         CALL gr_qry_sel4.clear()
+         FOR li_i = 1 TO gr_qry4.getlength()
+            LET gr_qry4[li_i].check4 = "N"
+         END FOR
+         #page5
+         CALL gr_qry_sel5.clear()
+         FOR li_i = 1 TO gr_qry5.getlength()
+            LET gr_qry5[li_i].check5 = "N"
+         END FOR
+         #page6
+         CALL gr_qry_sel6.clear()
+         FOR li_i = 1 TO gr_qry6.getlength()
+            LET gr_qry6[li_i].check6 = "N"
+         END FOR
+   END CASE    
+END FUNCTION
+
+ 
+{</section>}
+ 

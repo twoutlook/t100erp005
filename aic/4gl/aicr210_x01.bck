@@ -1,0 +1,518 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aicr210_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2016-06-04 15:42:19), PR版次:0001(2016-06-04 16:19:48)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000021
+#+ Filename...: aicr210_x01
+#+ Description: 多角代採買交易價差表
+#+ Creator....: 07024(2016-06-03 13:37:33)
+#+ Modifier...: 07024 -SD/PR- 07024
+ 
+{</section>}
+ 
+{<section id="aicr210_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:7)
+#add-point:填寫註解說明
+
+#end add-point
+#add-point:填寫註解說明
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aicr210_x01.main" readonly="Y" >}
+PUBLIC FUNCTION aicr210_x01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "aicr210_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL aicr210_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL aicr210_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL aicr210_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL aicr210_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL aicr210_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicr210_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION aicr210_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "pmdl051.pmdl_t.pmdl051,pmdldocno.pmdl_t.pmdldocno,pmdldocdt.pmdl_t.pmdldocdt,pmdl004.pmdl_t.pmdl004,l_pmdl004_desc.pmaal_t.pmaal004,pmdl031.pmdl_t.pmdl031,pmdl015.pmdl_t.pmdl015,l_pmdl015_desc.ooail_t.ooail003,pmdl016.pmdl_t.pmdl016,pmdl002.pmdl_t.pmdl002,l_pmdl002_desc.ooag_t.ooag011,pmdl003.pmdl_t.pmdl003,l_pmdl003_desc.ooefl_t.ooefl003,pmdnseq.pmdn_t.pmdnseq,pmdn001.pmdn_t.pmdn001,imaal_t_imaal003.imaal_t.imaal003,imaal_t_imaal004.imaal_t.imaal004,pmdn002.pmdn_t.pmdn002,l_pmdn002_desc.inaml_t.inaml004,imaa_t_imaa003.imaa_t.imaa003,l_imaa003_desc.oocql_t.oocql004,imaf_t_imaf141.imaf_t.imaf141,l_imaf141_desc.oocql_t.oocql004,imaa_t_imaa127.imaa_t.imaa127,l_imaa127_desc.oocql_t.oocql004,pmdo_t_pmdo013.pmdo_t.pmdo013,l_icab002.icab_t.icab002,pmdlsite.pmdl_t.pmdlsite,l_pmdlsite_desc.ooefl_t.ooefl003,xmdc_t_xmdc015.xmdc_t.xmdc015,l_order_oprice.type_t.num20_6,l_order_cprice.type_t.num20_6,pmdn015.pmdn_t.pmdn015,l_purchase_oprice.type_t.num20_6,l_purchase_cprice.type_t.num20_6,l_oprice_diff.type_t.num20_6,l_cprice_diff.type_t.num20_6" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicr210_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION aicr210_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicr210_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aicr210_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   LET g_select = " SELECT pm.pmdlent,pm.pmdl051,pm.pmdldocno,pm.pmdldocdt,pm.pmdl004,",
+                  "        (SELECT pmaal004 FROM pmaal_t WHERE pmaalent=pm.pmdlent AND pmaal001=pm.pmdl004 AND pmaal002='",g_dlang,"') pmaal004,",
+                  "        pm.pmdl031,pm.pmdl015,",
+                  #各站採購單的幣別
+                  "        (SELECT pmdl015 FROM pmdl_t WHERE pm.pmdlent=pmdlent AND pmdlsite=b.icab003 AND pm.pmdl031=pmdl031 ) pmdl015_1,",
+                  "        (SELECT ooail003 FROM ooail_t WHERE ooailent=pm.pmdlent AND ooail001=pm.pmdl015 AND ooail002='",g_dlang,"') ooail003,",
+                  "        pm.pmdl016,pm.pmdl002,",
+                  "        (SELECT ooag011 FROM ooag_t WHERE ooagent=pm.pmdlent AND ooag001=pm.pmdl002) ooag011,",
+                  "        pm.pmdl003,",
+                  "        (SELECT ooefl003 FROM ooefl_t WHERE ooeflent=pm.pmdlent AND ooefl001=pm.pmdl003 AND ooefl002='",g_dlang,"') B1_ooefl003,",
+                  "        c.pmdnseq,c.pmdn001,",
+                  "        (SELECT imaal003 FROM imaal_t WHERE imaalent=c.pmdnent AND imaal001=c.pmdn001 AND imaal002='",g_dlang,"') imaal003,",
+                  "        (SELECT imaal004 FROM imaal_t WHERE imaalent=c.pmdnent AND imaal001=c.pmdn001 AND imaal002='",g_dlang,"') imaal004,",
+                  "        c.pmdn002,",
+                  "        (SELECT inaml004 FROM inaml_t WHERE inamlent=c.pmdnent AND inaml001=c.pmdn001 AND inaml002=c.pmdn002 AND inaml003='",g_dlang,"') inaml004,",
+                  "        c.imaa003,",
+                  "        (SELECT oocql004 FROM oocql_t WHERE oocqlent=c.imaaent AND oocql001='200' AND oocql002=c.imaa003 AND oocql003='",g_dlang,"') A1_oocql004,",
+                  "        c.imaf141,",
+                  "        (SELECT oocql004 FROM oocql_t WHERE oocqlent=c.pmdnent AND oocql001='203' AND oocql002=c.imaf141 AND oocql003='",g_dlang,"') A2_oocql004,",
+                  "        c.imaa127,",
+                  "        (SELECT oocql004 FROM oocql_t WHERE oocqlent=c.imaaent AND oocql001='2003' AND oocql002=c.imaa127 AND oocql003='",g_dlang,"') A3_oocql004,",
+                  "        c.pmdo013,b.icab002,b.icab003,",
+                  "        (SELECT ooefl003 FROM ooefl_t WHERE ooeflent=pm.pmdlent AND ooefl001=b.icab003 AND ooefl002='",g_dlang,"') B2_ooefl003,",
+                  "        NVL(d.xmdc015,0),NVL(d.xmdc046,0),NVL(d.xmdc046*d.xmda016,0),pm.pmdl054,d.xmda015,",
+                  #採購單價
+                  "        NVL((SELECT pmdn015 FROM pmdl_t,pmdn_t WHERE pmdlent=pmdnent AND pmdlsite=pmdnsite AND pmdldocno=pmdndocno 
+                                                                    AND pm.pmdlent=pmdlent AND pmdlsite=b.icab003 AND pm.pmdl031=pmdl031 AND pmdnseq=c.pmdnseq),0) pmdn015,",
+                  #採購原幣金額
+                  "        NVL((SELECT pmdn046 FROM pmdl_t,pmdn_t WHERE pmdlent=pmdnent AND pmdlsite=pmdnsite AND pmdldocno=pmdndocno 
+                                                                    AND pm.pmdlent=pmdlent AND pmdlsite=b.icab003 AND pm.pmdl031=pmdl031 AND pmdnseq=c.pmdnseq),0) pmdn046,",
+                  #採購本幣金額
+                  "        NVL((SELECT (pmdn046*pmdl016) FROM pmdl_t,pmdn_t WHERE pmdlent=pmdnent AND pmdlsite=pmdnsite AND pmdldocno=pmdndocno 
+                                                                              AND pm.pmdlent=pmdlent AND pmdlsite=b.icab003 AND pm.pmdl031=pmdl031 AND pmdnseq=c.pmdnseq),0) pmdn046_1,",
+                  #價差原幣金額、價差本幣金額
+                  "        NULL,NULL "
+#   #end add-point
+#   LET g_select = " SELECT pmdlent,pmdl051,pmdldocno,pmdldocdt,pmdl004,NULL,pmdl031,pmdl015,NULL,NULL, 
+#       pmdl016,pmdl002,NULL,pmdl003,NULL,pmdnseq,pmdn001,imaal_t.imaal003,imaal_t.imaal004,pmdn002,NULL, 
+#       imaa_t.imaa003,NULL,imaf_t.imaf141,NULL,imaa_t.imaa127,NULL,pmdo_t.pmdo013,NULL,pmdlsite,NULL, 
+#       xmdc_t.xmdc015,NULL,NULL,pmdl054,xmda_t.xmda015,pmdn015,NULL,NULL,NULL,NULL"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   LET g_from = " FROM pmdl_t pm",
+                #取站別及各站的據點 (先對到第0站=g_site的流程編號，再拿那個流程編號去抓出各站及各站營運據點)
+                "      LEFT OUTER JOIN (SELECT icab_t.* FROM icab_t,icaa_t WHERE icaaent=icabent AND icaasite=icabsite AND icaa001=icab001 AND icaa003 IN ('2','3')) a ON a.icabent=pmdlent AND a.icab001=pmdl051 AND a.icab003='",g_site,"' AND a.icab002='0'",
+                "      LEFT OUTER JOIN (SELECT icab_t.* FROM icab_t,icaa_t WHERE icaaent=icabent AND icaasite=icabsite AND icaa001=icab001 AND icaa003 IN ('2','3')) b ON b.icabent=pmdlent AND b.icab001=pmdl051 AND b.icab001=a.icab001 ",
+                #取採購單單身
+                "      LEFT OUTER JOIN (SELECT DISTINCT pmdn_t.*,pmdo_t.pmdo013,imaf_t.imaf141,imaa_t.* ",
+                "                         FROM pmdn_t ",
+                "                         LEFT OUTER JOIN imaf_t ON imafent=pmdnent AND imafsite=pmdnsite AND imaf001=pmdn001 ",
+                "                         LEFT OUTER JOIN imaa_t ON imaaent=pmdnent AND imaa001=pmdn001 ",
+                "                              ,pmdo_t",
+                "                        WHERE pmdnent=pmdoent AND pmdnsite=pmdosite AND pmdndocno=pmdodocno AND pmdnseq=pmdoseq) c",
+                "                   ON pm.pmdlent=c.pmdnent AND pm.pmdlsite=c.pmdnsite AND pm.pmdldocno=c.pmdndocno ",
+                #取訂單
+                "      LEFT OUTER JOIN (SELECT xmdc_t.*,xmda_t.xmda031,xmda_t.xmda015,xmda_t.xmda016 FROM xmda_t,xmdc_t ",
+                "                        WHERE xmdaent=xmdcent AND xmdasite=xmdcsite AND xmdadocno=xmdcdocno ) d",
+                "                   ON pm.pmdlent=d.xmdcent AND d.xmdcsite=b.icab003 AND pm.pmdl031=d.xmda031 AND c.pmdnseq=d.xmdcseq AND pm.pmdl031 IS NOT NULL"
+                
+#   #end add-point
+#    LET g_from = " FROM pmdl_t,pmdn_t,pmdo_t,xmda_t,xmdc_t,imaa_t,imaf_t,ooag_t,ooeg_t,imaal_t,ooefl_t" 
+#
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+    LET g_where = " WHERE a.icab003='",g_site,"' AND a.icab002='0' AND b.icab001=a.icab001 ",
+                 #情1:多角序號為空，僅顯示第一筆訂單資料
+                 #情2:多角序號不為空，抓取各站訂單、採購單資料
+                 "   AND ( (pm.pmdl031 IS NULL AND b.icab003='",g_site,"' AND b.icab002='0') OR pm.pmdl031 IS NOT NULL ) ",
+                 "   AND ",tm.wc CLIPPED
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("pmdl_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+#   LET g_sql = g_sql CLIPPED ," ORDER BY pmdl051,pmdldocno,b.icab002,pmdlsite,pmdnseq"
+   LET g_sql = g_sql CLIPPED ," ORDER BY pm.pmdl051,pm.pmdldocno,b.icab002,pm.pmdlsite,c.pmdnseq"
+#   DISPLAY "g_sql:",g_sql
+   #end add-point
+   PREPARE aicr210_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE aicr210_x01_curs CURSOR FOR aicr210_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicr210_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION aicr210_x01_ins_data()
+DEFINE sr RECORD 
+   pmdlent LIKE pmdl_t.pmdlent, 
+   pmdl051 LIKE pmdl_t.pmdl051, 
+   pmdldocno LIKE pmdl_t.pmdldocno, 
+   pmdldocdt LIKE pmdl_t.pmdldocdt, 
+   pmdl004 LIKE pmdl_t.pmdl004, 
+   l_pmdl004_desc LIKE pmaal_t.pmaal004, 
+   pmdl031 LIKE pmdl_t.pmdl031, 
+   pmdl015 LIKE pmdl_t.pmdl015, 
+   l_pmdl015_1 LIKE pmdl_t.pmdl015, 
+   l_pmdl015_desc LIKE ooail_t.ooail003, 
+   pmdl016 LIKE pmdl_t.pmdl016, 
+   pmdl002 LIKE pmdl_t.pmdl002, 
+   l_pmdl002_desc LIKE ooag_t.ooag011, 
+   pmdl003 LIKE pmdl_t.pmdl003, 
+   l_pmdl003_desc LIKE ooefl_t.ooefl003, 
+   pmdnseq LIKE pmdn_t.pmdnseq, 
+   pmdn001 LIKE pmdn_t.pmdn001, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   pmdn002 LIKE pmdn_t.pmdn002, 
+   l_pmdn002_desc LIKE inaml_t.inaml004, 
+   imaa_t_imaa003 LIKE imaa_t.imaa003, 
+   l_imaa003_desc LIKE oocql_t.oocql004, 
+   imaf_t_imaf141 LIKE imaf_t.imaf141, 
+   l_imaf141_desc LIKE oocql_t.oocql004, 
+   imaa_t_imaa127 LIKE imaa_t.imaa127, 
+   l_imaa127_desc LIKE oocql_t.oocql004, 
+   pmdo_t_pmdo013 LIKE pmdo_t.pmdo013, 
+   l_icab002 LIKE icab_t.icab002, 
+   pmdlsite LIKE pmdl_t.pmdlsite, 
+   l_pmdlsite_desc LIKE ooefl_t.ooefl003, 
+   xmdc_t_xmdc015 LIKE xmdc_t.xmdc015, 
+   l_order_oprice LIKE type_t.num20_6, 
+   l_order_cprice LIKE type_t.num20_6, 
+   pmdl054 LIKE pmdl_t.pmdl054, 
+   xmda_t_xmda015 LIKE xmda_t.xmda015, 
+   pmdn015 LIKE pmdn_t.pmdn015, 
+   l_purchase_oprice LIKE type_t.num20_6, 
+   l_purchase_cprice LIKE type_t.num20_6, 
+   l_oprice_diff LIKE type_t.num20_6, 
+   l_cprice_diff LIKE type_t.num20_6
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_exchange   LIKE xmdk_t.xmdk017
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH aicr210_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #採購單幣別轉換成第0站的採購單幣別
+       IF sr.pmdl015 <> sr.l_pmdl015_1 THEN
+          LET l_success = ''
+          LET l_exchange = ''
+          #取匯率(訂單幣別轉採購單幣別)
+          CALL s_aicr210_x01_exchange (sr.pmdl054,sr.pmdlsite,sr.pmdldocdt,sr.l_pmdl015_1,sr.pmdl015)
+               RETURNING l_success,l_exchange
+          IF l_success THEN
+             #採購單價
+             LET sr.pmdn015 = sr.pmdn015 * l_exchange
+             #採購原幣金額
+             LET sr.l_purchase_oprice = sr.l_purchase_oprice * l_exchange
+             #採購本幣金額 (原先的l_purchase_cprice已在SQL*完採購的匯率)
+             LET sr.l_purchase_cprice = sr.l_purchase_cprice * l_exchange
+          END IF
+       END IF
+       #幣別轉換(以第0站的site 採購單幣別為主)
+       IF sr.pmdl015 <>sr.xmda_t_xmda015  THEN
+          LET l_success = ''
+          LET l_exchange = ''
+          #取匯率(訂單幣別轉採購單幣別)
+          CALL s_aicr210_x01_exchange (sr.pmdl054,sr.pmdlsite,sr.pmdldocdt,sr.xmda_t_xmda015,sr.pmdl015)
+               RETURNING l_success,l_exchange
+          IF l_success THEN
+             #訂單價
+             LET sr.xmdc_t_xmdc015 = sr.xmdc_t_xmdc015 * l_exchange
+             #訂單原幣金額
+             LET sr.l_order_oprice = sr.l_order_oprice * l_exchange
+             #訂單本幣金額 (原先的l_order_cprice已在SQL*完採購的匯率)
+             LET sr.l_order_cprice = sr.l_order_cprice * l_exchange
+          END IF
+       END IF
+       #價差原幣金額(訂單原幣金額-採購原幣金額)
+       LET sr.l_oprice_diff = sr.l_order_oprice - sr.l_purchase_oprice
+       #價差本幣金額(訂單本幣金額-採購本幣金額)
+       LET sr.l_cprice_diff = sr.l_order_cprice - sr.l_purchase_cprice
+       
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.pmdl051,sr.pmdldocno,sr.pmdldocdt,sr.pmdl004,sr.l_pmdl004_desc,sr.pmdl031,sr.pmdl015,sr.l_pmdl015_desc,sr.pmdl016,sr.pmdl002,sr.l_pmdl002_desc,sr.pmdl003,sr.l_pmdl003_desc,sr.pmdnseq,sr.pmdn001,sr.imaal_t_imaal003,sr.imaal_t_imaal004,sr.pmdn002,sr.l_pmdn002_desc,sr.imaa_t_imaa003,sr.l_imaa003_desc,sr.imaf_t_imaf141,sr.l_imaf141_desc,sr.imaa_t_imaa127,sr.l_imaa127_desc,sr.pmdo_t_pmdo013,sr.l_icab002,sr.pmdlsite,sr.l_pmdlsite_desc,sr.xmdc_t_xmdc015,sr.l_order_oprice,sr.l_order_cprice,sr.pmdn015,sr.l_purchase_oprice,sr.l_purchase_cprice,sr.l_oprice_diff,sr.l_cprice_diff
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "aicr210_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicr210_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION aicr210_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicr210_x01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 計算匯率
+# Memo...........:
+# Usage..........: CALL s_aicr210_x01_exchange(p_icaa013,p_site,p_date,p_from,p_to)
+#                  RETURNING r_success,r_exchange
+# Input parameter: p_icaa013   #1.內銷(購)  2.外銷(購)
+#                : p_site      #營運據點
+#                : p_date      #單據日期
+#                : p_from      #來源幣別
+#                : p_to        #目的幣別(若為Null則預帶p_site本幣)
+# Return code....: r_success   #執行結果
+#                : r_exchange  #匯率
+# Date & Author..: 2016/06/03 By dorislai
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION s_aicr210_x01_exchange(p_icaa013,p_site,p_date,p_from,p_to)
+   DEFINE p_icaa013      LIKE icaa_t.icaa013
+   DEFINE p_site         LIKE xmdk_t.xmdksite
+   DEFINE p_date         LIKE xmdk_t.xmdkdocdt
+   DEFINE p_from         LIKE xmdk_t.xmdk016
+   DEFINE p_to           LIKE xmdk_t.xmdk016
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE r_exchange     LIKE xmdk_t.xmdk017
+
+   DEFINE l_para_data    LIKE type_t.chr80
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+   LET r_exchange = ''
+
+   LET l_para_data = ''   
+   CASE p_icaa013
+      WHEN '1'  #內
+         CALL cl_get_para(g_enterprise,p_site,'S-BAS-0010') RETURNING l_para_data
+      WHEN '2'  #外
+         CALL cl_get_para(g_enterprise,p_site,'S-BAS-0011') RETURNING l_para_data
+   END CASE
+
+   IF cl_null(l_para_data) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axm-00363'  #查無外幣採用匯率類型！
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success,r_exchange
+   ELSE
+      #取匯率
+      CALL s_aooi160_get_exrate('1',p_site,g_today,p_from,p_to,0,l_para_data) RETURNING r_exchange
+
+   END IF
+
+   RETURN r_success,r_exchange
+END FUNCTION
+
+ 
+{</section>}
+ 

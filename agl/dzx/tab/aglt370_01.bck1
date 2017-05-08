@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglt370_01" module="agl" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02114" crtdt="2013-12-02 14:59:58" modid="02114" moddt="2013-12-12 11:04:05" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="金額來源科目">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glandocno,glanld,glanseq,glan001,lc_subject(chr500),glan002,glan015,glan016,glan017,glan018,glan019,edit1(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglt370_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glandocno,glanld,glanseq,glan001,lc_subject,glan002,glan015,glan016,glan017,glan018,glan019" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glandocno,glanld,glanseq,glan001,lc_subject,glan002,glan015,glan016,glan017,glan018,glan019"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="glandocno"/>
+      <column id="glanld"/>
+      <column id="glanseq"/>
+      <column id="glan001"/>
+      <column id="lc_subject"/>
+      <column id="glan002" type="S" default="100">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="glan015"/>
+      <column id="glan016"/>
+      <column id="glan017"/>
+      <column id="glan018"/>
+      <column id="glan019"/>
+      <column id="edit1"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glan_t" page="1" linked="" pk="glanld,glandocno,glanseq">
+      <sql id="forupd_sql_detail" query="SELECT glandocno,glanld,glanseq,glan001,&apos;&apos;,glan002,glan015,glan016,glan017,glan018,glan019,&apos;&apos; FROM glan_t WHERE glanent=? AND glanld=? AND glandocno=? AND glanseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glandocno,glanld,glanseq,glan001,&apos;&apos;,glan002,glan015,glan016,glan017,glan018,glan019,&apos;&apos; FROM glan_t WHERE glanent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

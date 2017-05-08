@@ -1,0 +1,3520 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axcp006" std_prog="axcp006" erpver="1.0" module="AXC" ver="3" env="s" zone="t10dev" booking="N" type="M" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.axcp006_bom" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 根據最終主件展開BOM
+# Memo...........:
+# Usage..........: CALL axcp006_bom(p_level,p_key,p_xcad001,p_total,p_num)
+# Input parameter:  
+# Return code....: 
+# Date & Author..: 2014/3/27 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp006_bom(p_level,p_key,p_total,p_num)
+DEFINE p_level	LIKE type_t.num5
+DEFINE p_key    LIKE xcad_t.xcad003
+DEFINE i        LIKE type_t.num5
+DEFINE lc_param    type_parameter
+DEFINE l_cnt    LIKE type_t.num5
+DEFINE l_ceshi  LIKE type_t.num5   #测试测试用
+DEFINE p_total  LIKE xcad_t.xcad004
+DEFINE p_num    LIKE xcad_t.xcad006 #損耗量
+DEFINE p_xcad006 LIKE xcad_t.xcad006 #損耗率
+
+DEFINE sr DYNAMIC ARRAY OF RECORD 
+          x_level	LIKE type_t.num5,         #階數        
+          xcad003   LIKE xcad_t.xcad003,      #元件料號 
+          xcad004   LIKE xcad_t.xcad004,      #組成用量/数量
+          num       LIKE xcad_t.xcad006,      #損耗量
+          xcad006   LIKE xcad_t.xcad006,      #損耗率
+          xcad002   LIKE xcad_t.xcad002       #主件料號（本階主件）
+          END RECORD
+          
+   LET p_level = p_level + 1  
+   
+   LET g_sql = " SELECT 0,xcad003,(xcad004/xcad005),0,xcad006,xcad002 FROM xcad_t ",      
+                "  WHERE xcad002 = '",p_key,"'",
+                "    AND xcad001 = '",g_xcad001,"'",  #畫面上的BOM版本
+                " ORDER BY xcad002,xcad003 "
+    LET l_cnt = 1             
+    PREPARE axcp006_pre1 FROM g_sql
+    DECLARE axcp006_cur1 CURSOR FOR axcp006_pre1 
+    FOREACH axcp006_cur1 INTO sr[l_cnt].x_level,sr[l_cnt].xcad003,sr[l_cnt].xcad004,sr[l_cnt].num,sr[l_cnt].xcad006,sr[l_cnt].xcad002
+       IF SQLCA.sqlcode THEN
+          CALL cl_err("foreach1:",SQLCA.sqlcode,1)
+          LET g_success = 'N'  
+          EXIT FOREACH
+       END IF
+       LET l_cnt = l_cnt + 1      
+    END FOREACH
+    
+    FOR i = 1 TO l_cnt-1
+        LET sr[i].x_level = p_level
+        LET sr[i].xcad004 = p_total * sr[i].xcad004 #組成用量/底數計算
+        
+        IF sr[i].xcad006 IS NULL THEN LET sr[i].xcad006 = 0 END IF
+
+        IF p_num IS NULL THEN LET p_num = 0 END IF 
+        IF p_num = 0  THEN
+           LET p_num = 1  
+        END IF        
+        
+#        LET p_num = p_num * (sr[i].xcad004 * (1+(sr[i].xcad006/100))) #實際數量
+#        LET sr[i].num = p_num - sr[i].xcad004   #損耗量
+#        LET sr[i].xcad006 = sr[i].num / sr[i].xcad004
+        LET p_num = p_num*(1+(sr[i].xcad006/100)) #實際數量
+        LET sr[i].num = p_num * sr[i].xcad004 - sr[i].xcad004   #損耗量
+        LET sr[i].xcad006 = (sr[i].num / sr[i].xcad004)*100
+        
+         
+        INSERT INTO axcp006_temp VALUES (sr[i].*)
+        DISPLAY sr[i].x_level,sr[i].xcad003,sr[i].xcad004,sr[i].num,sr[i].xcad006,sr[i].xcad002
+        
+
+        IF SQLCA.sqlcode THEN
+           CALL cl_err("ins temp",SQLCA.sqlcode,1)
+           LET g_success = 'N'            
+        END IF  
+#        
+#         select xcad004 into l_ceshi from axcp006_temp   #测试测试用，检查是否有插入值
+#          where xcad003  = 'S201'
+        IF NOT cl_null(sr[i].xcad002) THEN #若為主件料號
+           CALL axcp006_bom(p_level,sr[i].xcad003,sr[i].xcad004,p_num)
+        END IF
+    END FOR      
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_get_site" order="2" ver="3" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 根據查詢條件獲取符合條件的site
+# Memo...........:
+# Usage..........: CALL axcp006_get_site(ls_js)
+# Input parameter:  
+# Return code....:  
+# Date & Author..: 2014/3/27 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp006_get_site(ls_js)
+DEFINE l_string       STRING 
+DEFINE tok            base.stringtokenizer
+DEFINE lc_param       type_parameter
+DEFINE ls_js          STRING
+
+CALL util.JSON.parse(ls_js,lc_param)
+
+LET g_xcad001 = g_master.xcad001
+
+   #從wc中分別截取xcabsite，imaa001的查詢條件
+   IF NOT cl_null(g_master.wc) OR g_master.wc != " 1=1" THEN 
+      LET g_wc = g_master.wc
+      LET g_wc = cl_replace_str(g_wc,"and","||")
+      LET tok = base.StringTokenizer.create(g_wc,"||")
+      WHILE tok.hasMoreTokens()
+         LET l_string = tok.nextToken()
+         LET l_string = l_string.trim()
+         IF l_string MATCHES '*xcabsite*' THEN
+            LET g_wc_xcabsite = l_string
+#         ELSE
+#            LET g_wc_xcabsite = ""       
+         END IF
+        #IF l_string MATCHES '*imaa001*' THEN #0704mod
+         IF l_string MATCHES '*xcab002*' THEN #0704mod         
+            LET g_wc_imaa001 = l_string
+#         ELSE
+#            LET g_wc_imaa001 = ""
+         END IF
+      END WHILE
+   END IF   
+   
+   LET g_flag = 'N'
+   #foreach營運據點
+   LET g_sql = " SELECT DISTINCT xcabsite FROM xcab_t,xcac_t,xcad_t,xcae_t ",
+               "  WHERE xcabsite = xcacsite AND xcabsite = xcadsite AND xcabsite = xcaesite ",
+               "    AND xcacsite = xcadsite AND xcacsite = xcaesite ",
+               "    AND xcadsite = xcaesite  ",
+               "    AND xcabstus = 'Y' AND xcacstus = 'Y' AND xcadstus = 'Y' AND xcaestus = 'Y'"
+   IF NOT cl_null(g_wc_xcabsite) THEN             
+      LET g_sql = g_sql CLIPPED," AND ",g_wc_xcabsite
+   END IF
+
+   PREPARE axcp006_site_pre FROM g_sql
+   DECLARE axcp006_site_cur CURSOR FOR axcp006_site_pre 
+   FOREACH axcp006_site_cur INTO g_xcabsite
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach site:",SQLCA.sqlcode,1)
+         LET g_success = 'N'  
+         EXIT FOREACH
+      END IF
+      LET g_flag = 'Y'  #標示有符合條件的營運據點資料
+      CALL axcp006_get_imaa001(ls_js) RETURNING g_success
+      IF g_success = 'N' THEN 
+         RETURN g_success    
+      END IF
+   END FOREACH
+   
+   IF g_success = 'Y' AND g_flag = 'N' THEN 
+      LET g_success = 'N'
+   END IF
+   
+   RETURN g_success
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_cursor" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 定義cursor
+PRIVATE FUNCTION axcp006_cursor()
+   LET g_sql = "SELECT COUNT(*) FROM xcad_t", 
+               " WHERE xcad002 = ? ",
+               "   AND xcad001 = ? "
+   PREPARE cursor_pre_1 FROM g_sql   
+   
+   LET g_sql = "SELECT COUNT(*) FROM xcad_t ",
+               " WHERE xcad002 = ? ",
+               "   AND xcad001 = ? "
+   PREPARE cursor_pre_2 FROM g_sql   
+ 
+   #營運據點所屬法人
+   LET g_sql = "SELECT ooef017 FROM ooef_t ",
+               " WHERE ooefent = '",g_enterprise,"'",
+               "   AND ooef001 = ? " 
+   PREPARE cursor_pre_3 FROM g_sql      
+
+   #最終主件的類別碼\單位
+   
+   LET g_sql = "SELECT imaa004,imaa006 FROM imaa_t ", 
+               " WHERE imaa001 = ? "
+   PREPARE cursor_pre_4 FROM g_sql 
+              
+   ##本階主件類別碼
+   LET g_sql = "SELECT imaa004 FROM imaa_t ", 
+               " WHERE imaa001 = ? "
+   PREPARE cursor_pre_5 FROM g_sql   
+
+   #尾階在本階BOM中的底數\組成用量
+   LET g_sql = "SELECT xcad005,xcad004 FROM xcad_t ",  
+               " WHERE xcad002 = ? AND xcad003 = ?",
+               "   AND xcad001 = ? "
+   PREPARE cursor_pre_6 FROM g_sql 
+               
+                             
+   #尾階在本階BOM中的損耗率-取变动比率 
+   LET g_sql = "SELECT xcad006 FROM xcad_t ",
+               " WHERE xcad002 = ? AND xcad003 = ? ",
+               "   AND xcad001 = ? "
+   PREPARE cursor_pre_7 FROM g_sql 
+
+   #本階主件類別碼
+   #LET g_sql = "SELECT imaa004 FROM imaa_t ", 
+   #            " WHERE imaa001 = ? "
+   #PREPARE cursor_pre_8 FROM g_sql 
+
+   #根據元件-成本次要素
+   LET g_sql = "SELECT xcax002 FROM xcax_t ",
+               " WHERE xcaxent = '",g_enterprise,"'",
+               "   AND xcaxsite = ? ",
+               "   AND xcax001 = ? " 
+   PREPARE cursor_pre_9 FROM g_sql 
+      
+   #根據元件-材料成本  #材料幣別、成本
+   LET g_sql = "SELECT xcab003,xcab004 FROM xcab_t ", 
+               " WHERE xcab001 = ? ",       
+               "   AND xcabent = '",g_enterprise,"'",
+               "   AND xcab002 = ? "
+   PREPARE cursor_pre_10 FROM g_sql  
+
+   LET g_sql = "SELECT SUM(xcai107) FROM xcai_t ",
+               " WHERE xcai004 = ? ",
+               "   AND xcai100 = ? ",
+               "   AND xcai201 = ? ",
+               "   AND xcaient = '",g_enterprise,"'",
+               "   AND xcaisite = ? ",
+               "   AND xcai001 = ? ",
+               "   AND xcai002 = ? "
+   PREPARE cursor_pre_11 FROM g_sql  
+
+   LET g_sql = "SELECT COUNT(*) FROM xcag_t ",
+               " WHERE xcagent = '",g_enterprise,"'",  
+               "   AND xcagsite = ? ",
+               "   AND xcag001 = ? ",
+               "   AND xcag004 = ? ", 
+               "   AND xcag002 < ? "
+   PREPARE cursor_pre_12 FROM g_sql  
+
+   #本階材料、人工、委外、制費--這裡的本階就是當前的最終主件
+   LET g_sql = "SELECT SUM(xcah031a) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah022 <> 'DL+OH+SUB' ",
+               "   AND xcah020 = 1 ",    #階數（本階主件是最終元件的時候，階數是給1的）
+               "   AND xcah004 = ?",     #最終主件
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_13 FROM g_sql
+   
+   LET g_sql = "SELECT SUM(xcah031b) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah022 ='DL+OH+SUB' ",
+               "   AND xcah020 = 1 ",    #階數（本階主件是最終元件的時候，階數是給1的）
+               "   AND xcah004 = ? ",    #最終主件   
+               "   AND xcah001 = ? ",   
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_14 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031c) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah022 ='DL+OH+SUB' ",
+               "   AND xcah020 = 1 ",    #階數（本階主件是最終元件的時候，階數是給1的）
+               "   AND xcah004 = ? ",    #最終主件
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_15 FROM g_sql
+
+   LET g_sql ="SELECT SUM(xcah031d) FROM xcah_t ",
+              " WHERE xcahent = '",g_enterprise,"'",
+              "   AND xcahsite = ? ",
+              "   AND xcah022 ='DL+OH+SUB' ",
+              "   AND xcah020 = 1 ",     #階數（本階主件是最終元件的時候，階數是給1的）
+              "   AND xcah004 = ? ",     #最終主件
+              "   AND xcah001 = ? ",
+              "   AND xcah002 = ? "
+   PREPARE cursor_pre_16 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031e) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah022 ='DL+OH+SUB' ",
+               "   AND xcah020 = 1 ",    #階數（本階主件是最終元件的時候，階數是給1的）
+               "   AND xcah004 = ? ",    #最終主件 
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_17 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031f) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah022 ='DL+OH+SUB' ",
+               "   AND xcah020 = 1 ",    #階數（本階主件是最終元件的時候，階數是給1的）
+               "   AND xcah004 = ? ",    #最終主件  
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_18 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031g) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah022 ='DL+OH+SUB' ",
+               "   AND xcah020 = 1 ",    #階數（本階主件是最終元件的時候，階數是給1的）
+               "   AND xcah004 = ? ",    #最終主件      
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_19 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031h) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah022 ='DL+OH+SUB' ",
+               "   AND xcah020 = 1 ",    #階數（本階主件是最終元件的時候，階數是給1的）
+               "   AND xcah004 = ? ",    #最終主件
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_20 FROM g_sql
+
+   #所有非本階（最終）主件的下階材料、人工、委外、制費--這裡的本階就是當前的最終主件
+   LET g_sql = "SELECT SUM(xcah031a) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah020 > 1 ",    #階數（非本階主件（最終元件））
+               "   AND xcah004 = ? ",    #最終主件
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_21 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031b) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah020 > 1 ",   #階數（非本階主件（最終元件））
+               "   AND xcah004 = ? ",   #最終主件   
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_22 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031c) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah020 > 1 ",   #階數（非本階主件（最終元件））
+               "   AND xcah004 = ? ",   #最終主件   
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_23 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031d) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah020 > 1 ",   #階數（非本階主件（最終元件））
+               "   AND xcah004 = ? ",   #最終主件   
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_24 FROM g_sql
+
+   LET g_sql = "SELECT SUM(xcah031e) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah020 > 1 ",   #階數（非本階主件（最終元件））
+               "   AND xcah004 = ? ",   #最終主件   
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_25 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031f) FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah020 > 1 ",   #階數（非本階主件（最終元件））
+               "   AND xcah004 = ? ",   #最終主件   
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_26 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031g) INTO l_xcag.xcag106g FROM xcah_t ",
+               " WHERE xcahent = '",g_enterprise,"'",
+               "   AND xcahsite = ? ",
+               "   AND xcah020 > 1 ",   #階數（非本階主件（最終元件））
+               "   AND xcah004 = ? ",   #最終主件   
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+   PREPARE cursor_pre_27 FROM g_sql
+      
+   LET g_sql = "SELECT SUM(xcah031h) FROM xcah_t ",
+               " WHERE xcahent = g_enterprise ",
+               "   AND xcahsite = ? ",
+               "   AND xcah020 > 1 ",   #階數（非本階主件（最終元件））
+               "   AND xcah004 = ? ",   #最終主件   
+               "   AND xcah001 = ? ",
+               "   AND xcah002 = ? "
+    PREPARE cursor_pre_28 FROM g_sql
+
+    LET g_sql = "SELECT COUNT(*) FROM xcaj_t ",
+                " WHERE xcaj005 = ? ",  #次要素
+                "   AND xcaj004 = ? ",  #最終主件
+                "   AND xcajsite = ? ", 
+                "   AND xcaj001 = ? ",
+                "   AND xcaj002 = ? ",
+                "   AND xcajent = '",g_enterprise,"'"
+    PREPARE cursor_pre_29 FROM g_sql
+
+    LET g_sql = "SELECT xcaj102 FROM xcaj_t ",
+                " WHERE xcaj005 = ? ",  #次要素
+                "   AND xcaj004 = ? ",  #最終主件
+                "   AND xcajsite = ? ",
+                "   AND xcaj001 = ? ",
+                "   AND xcaj002 = ? ",
+                "   AND xcajent = '",g_enterprise,"'"
+    PREPARE cursor_pre_30 FROM g_sql  
+       
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_explosion" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: BOM Explosing(查詢出來的料號獲取BOM資料) 
+# Memo...........:
+# Usage..........: CALL axcp006_explosion()
+# Input parameter:  
+# Return code....:  
+# Date & Author..: 2014/3/27 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp006_explosion()
+   #DROP TABLE axcp006_temp
+   #CREATE TEMP TABLE axcp006_temp
+   #      (
+   #           x_level	DECIMAL(5,0),     #階數        
+   #           xcad003   VARCHAR(40),      #元件料號 
+   #           xcad004   DECIMAL(20,6),    #組成用量/底数 
+   #           num       DECIMAL(20,6),    #損耗量              
+   #           xcad006   DECIMAL(20,6),    #損耗率               
+   #           xcad002   VARCHAR(40)       #主件料號（本階主件）
+   #       );
+
+   DELETE FROM axcp006_temp
+   
+   #當前主件（最終主件）需插入臨時表，階層位1 
+   INSERT INTO axcp006_temp VALUES(1,g_imaa001,1,0,0,g_imaa001)
+
+   CALL axcp006_bom(1,g_imaa001,1,0)  
+   #CALL axcp006_bom_get(g_imaa001)  
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_ins_xcag" order="5" ver="3" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: BOM中最终主件SUM到xcag中
+# Memo...........:
+# Usage..........: CALL axcp006_ins_xcag(ls_js)
+# Input parameter:  
+# Return code....:  
+# Date & Author..: 2014/3/27 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp006_ins_xcag(ls_js)
+DEFINE p_xcad003   LIKE xcad_t.xcad003
+DEFINE l_xcag RECORD LIKE xcag_t.*  
+DEFINE lc_param    type_parameter
+DEFINE ls_js          STRING
+DEFINE l_rate       LIKE apca_t.apca101
+DEFINE l_xcab003    LIKE xcab_t.xcab003
+DEFINE l_xcab004    LIKE xcab_t.xcab004
+DEFINE l_imaa004    LIKE imaa_t.imaa004
+DEFINE l_n          LIKE type_t.num5
+
+CALL util.JSON.parse(ls_js,lc_param)
+   
+   
+   
+   #當前需插入的xcag數據是否已存在且生效日期大於已有的生效日期
+   #若存在則更新之前的失效日期=現在生效日期-1
+   #xcag更新完后，xcah\xcai\xcaj應聯動更新
+   LET l_n = 0
+
+   #-----------------------------------
+   #SELECT COUNT(*) INTO l_n FROM xcag_t
+   # WHERE xcagent = g_enterprise  
+   #   AND xcagsite = g_xcabsite
+   #   AND xcag001 = lc_param.xcaa001 
+   #   AND xcag004 = g_imaa001 
+   #   AND xcag002 < lc_param.date1 
+   EXECUTE cursor_pre_12 USING g_xcabsite,g_master.xcaa001,g_imaa001,g_master.xcag002 INTO l_n
+   #-----------------------------------
+   IF l_n > 0 THEN
+      UPDATE xcag_t SET xcag003 = g_master.xcag002 -1 
+                  WHERE xcagent = g_enterprise
+                    AND xcagsite = g_xcabsite
+                    AND xcag001 = g_master.xcaa001 
+                    AND xcag004 = g_imaa001
+                    AND xcag002 < g_master.xcag002
+     IF SQLCA.sqlcode THEN
+        CALL cl_err("update xcag",SQLCA.sqlcode,1)  
+        CALL s_transaction_end('N','0')
+        LET g_success = 'N'
+        RETURN g_success
+     ELSE
+        UPDATE xcah_t SET xcah003 = g_master.xcag002 -1 
+                    WHERE xcahent = g_enterprise
+                      AND xcahsite = g_xcabsite
+                      AND xcah001 = g_master.xcaa001 
+                      AND xcah004 = g_imaa001
+                      AND xcah002 < g_master.xcag002
+        IF SQLCA.sqlcode THEN
+           CALL cl_err("update xcah",SQLCA.sqlcode,1)  
+           CALL s_transaction_end('N','0')
+           LET g_success = 'N'
+           RETURN g_success
+        ELSE
+           UPDATE xcai_t SET xcai003 = g_master.xcag002 -1 
+                    WHERE xcaient = g_enterprise
+                      AND xcaisite = g_xcabsite
+                      AND xcai001 = g_master.xcaa001 
+                      AND xcai004 = g_imaa001
+                      AND xcai002 < g_master.xcag002
+          IF SQLCA.sqlcode THEN
+             CALL cl_err("update xcai",SQLCA.sqlcode,1)  
+             CALL s_transaction_end('N','0')
+             LET g_success = 'N'
+             RETURN g_success 
+          ELSE
+             UPDATE xcaj_t SET xcaj003 = g_master.xcag002 -1 
+                         WHERE xcajent = g_enterprise
+                           AND xcajsite = g_xcabsite
+                           AND xcaj001 = g_master.xcaa001 
+                           AND xcaj004 = g_imaa001
+                           AND xcaj002 < g_master.xcag002
+             IF SQLCA.sqlcode THEN
+                CALL cl_err("update xcaj",SQLCA.sqlcode,1)  
+                CALL s_transaction_end('N','0')
+                LET g_success = 'N'
+                RETURN g_success
+            END IF           
+          END IF          
+        END IF        
+        
+     END IF   
+   END IF 
+
+   LET l_xcag.xcagent = g_enterprise
+   LET l_xcag.xcagsite = g_xcabsite         #畫面檔中查詢出來的營運據點
+   
+   #營運據點所屬法人
+   #--------------------------------------
+   #SELECT ooef017 INTO l_xcag.xcagcomp FROM ooef_t
+   # WHERE ooef001 = g_xcabsite AND ooefent = g_enterprise
+   EXECUTE cursor_pre_3 USING g_xcabsite INTO l_xcag.xcagcomp
+   #--------------------------------------
+      
+   LET l_xcag.xcag001 = g_master.xcaa001    #標準成本分類
+   LET l_xcag.xcag002 = g_master.xcag002    #生效日期
+   LET l_xcag.xcag003 = ''                  #失效日期
+   LET l_xcag.xcag004 = g_imaa001           #最終主件
+   LET l_xcag.xcag010 = ''                  #版本
+   LET l_xcag.xcag011 = g_master.ooai001    #幣別
+   
+   
+
+   
+   #本階材料、人工、委外、制費--這裡的本階就是當前的最終主件
+   #---------------------------------------------
+   #SELECT SUM(xcah031a) INTO l_xcag.xcag104a FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah022 <>'DL+OH+SUB' 
+   #   AND xcah020 = 1 #階數（本階主件是最終元件的時候，階數是給1的）
+   #   AND xcah004 = g_imaa001 #最終主件
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_13 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002
+      INTO l_xcag.xcag104a
+   
+   #SELECT SUM(xcah031b) INTO l_xcag.xcag104b FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah022 ='DL+OH+SUB' 
+   #   AND xcah020 = 1 #階數（本階主件是最終元件的時候，階數是給1的）
+   #   AND xcah004 = g_imaa001 #最終主件   
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_14 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag104b
+      
+   #SELECT SUM(xcah031c) INTO l_xcag.xcag104c FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah022 ='DL+OH+SUB' 
+   #   AND xcah020 = 1 #階數（本階主件是最終元件的時候，階數是給1的）
+   #   AND xcah004 = g_imaa001 #最終主件
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_15 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002
+      INTO l_xcag.xcag104c
+
+   #SELECT SUM(xcah031d) INTO l_xcag.xcag104d FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah022 ='DL+OH+SUB' 
+   #   AND xcah020 = 1 #階數（本階主件是最終元件的時候，階數是給1的）
+   #   AND xcah004 = g_imaa001 #最終主件
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_16 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag104d
+      
+   #SELECT SUM(xcah031e) INTO l_xcag.xcag104e FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah022 ='DL+OH+SUB' 
+   #   AND xcah020 = 1 #階數（本階主件是最終元件的時候，階數是給1的）
+   #   AND xcah004 = g_imaa001 #最終主件 
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_17 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002
+      INTO l_xcag.xcag104e
+      
+   #SELECT SUM(xcah031f) INTO l_xcag.xcag104f FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah022 ='DL+OH+SUB' 
+   #   AND xcah020 = 1 #階數（本階主件是最終元件的時候，階數是給1的）
+   #   AND xcah004 = g_imaa001 #最終主件  
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_18 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag104f
+      
+   #SELECT SUM(xcah031g) INTO l_xcag.xcag104g FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah022 ='DL+OH+SUB' 
+   #   AND xcah020 = 1 #階數（本階主件是最終元件的時候，階數是給1的）
+   #   AND xcah004 = g_imaa001 #最終主件      
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_19 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag104g
+      
+   #SELECT SUM(xcah031h) INTO l_xcag.xcag104h FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah022 ='DL+OH+SUB' 
+   #   AND xcah020 = 1 #階數（本階主件是最終元件的時候，階數是給1的）
+   #   AND xcah004 = g_imaa001 #最終主件
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_20 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag104h
+      
+   #所有非本階（最終）主件的下階材料、人工、委外、制費--這裡的本階就是當前的最終主件
+   #SELECT SUM(xcah031a) INTO l_xcag.xcag106a FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah020 > 1 #階數（非本階主件（最終元件））
+   #   AND xcah004 = g_imaa001 #最終主件
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_21 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag106a
+      
+   #SELECT SUM(xcah031b) INTO l_xcag.xcag106b FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah020 > 1 #階數（非本階主件（最終元件））
+   #   AND xcah004 = g_imaa001 #最終主件   
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_22 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag106b
+      
+   #SELECT SUM(xcah031c) INTO l_xcag.xcag106c FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah020 > 1 #階數（非本階主件（最終元件））
+   #   AND xcah004 = g_imaa001 #最終主件   
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_23 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag106c
+      
+   #SELECT SUM(xcah031d) INTO l_xcag.xcag106d FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah020 > 1 #階數（非本階主件（最終元件））
+   #   AND xcah004 = g_imaa001 #最終主件   
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_24 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag106d
+
+   #SELECT SUM(xcah031e) INTO l_xcag.xcag106e FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah020 > 1 #階數（非本階主件（最終元件））
+   #   AND xcah004 = g_imaa001 #最終主件   
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_25 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag106e
+      
+   #SELECT SUM(xcah031f) INTO l_xcag.xcag106f FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah020 > 1 #階數（非本階主件（最終元件））
+   #   AND xcah004 = g_imaa001 #最終主件   
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_26 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002
+      INTO l_xcag.xcag106f
+      
+   #SELECT SUM(xcah031g) INTO l_xcag.xcag106g FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah020 > 1 #階數（非本階主件（最終元件））
+   #   AND xcah004 = g_imaa001 #最終主件   
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_27 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag106g
+      
+   #SELECT SUM(xcah031h) INTO l_xcag.xcag106h FROM xcah_t
+   # WHERE xcahent = g_enterprise
+   #   AND xcahsite = g_xcabsite
+   #   AND xcah020 > 1 #階數（非本階主件（最終元件））
+   #   AND xcah004 = g_imaa001 #最終主件   
+   #   AND xcah001 = lc_param.xcaa001
+   #   AND xcah002 = lc_param.date1
+   EXECUTE cursor_pre_28 USING g_xcabsite,g_imaa001,g_master.xcaa001,g_master.xcag002 
+      INTO l_xcag.xcag106h
+      
+   IF cl_null(l_xcag.xcag104a) THEN 
+      LET l_xcag.xcag104a = 0
+   END IF  
+   IF cl_null(l_xcag.xcag104b) THEN 
+      LET l_xcag.xcag104b = 0
+   END IF   
+   IF cl_null(l_xcag.xcag104c) THEN 
+      LET l_xcag.xcag104c = 0
+   END IF   
+   IF cl_null(l_xcag.xcag104d) THEN 
+      LET l_xcag.xcag104d = 0
+   END IF   
+   IF cl_null(l_xcag.xcag104e) THEN 
+      LET l_xcag.xcag104e = 0
+   END IF   
+   IF cl_null(l_xcag.xcag104f) THEN 
+      LET l_xcag.xcag104f = 0
+   END IF   
+   IF cl_null(l_xcag.xcag104g) THEN 
+      LET l_xcag.xcag104g = 0
+   END IF   
+   IF cl_null(l_xcag.xcag104h) THEN 
+      LET l_xcag.xcag104h = 0
+   END IF 
+   IF cl_null(l_xcag.xcag106a) THEN 
+      LET l_xcag.xcag106a = 0
+   END IF  
+   IF cl_null(l_xcag.xcag106b) THEN 
+      LET l_xcag.xcag106b = 0
+   END IF  
+   IF cl_null(l_xcag.xcag106c) THEN 
+      LET l_xcag.xcag106c = 0
+   END IF  
+   IF cl_null(l_xcag.xcag106d) THEN 
+      LET l_xcag.xcag106d = 0
+   END IF  
+   IF cl_null(l_xcag.xcag106e) THEN 
+      LET l_xcag.xcag106e = 0
+   END IF  
+   IF cl_null(l_xcag.xcag106f) THEN 
+      LET l_xcag.xcag106f = 0
+   END IF  
+   IF cl_null(l_xcag.xcag106g) THEN 
+      LET l_xcag.xcag106g = 0
+   END IF  
+   IF cl_null(l_xcag.xcag106h) THEN 
+      LET l_xcag.xcag106h = 0
+   END IF    
+      
+  #單位成本=本階+下階
+  LET l_xcag.xcag102a = l_xcag.xcag104a + l_xcag.xcag106a
+  LET l_xcag.xcag102b = l_xcag.xcag104b + l_xcag.xcag106b  
+  LET l_xcag.xcag102c = l_xcag.xcag104c + l_xcag.xcag106c     
+  LET l_xcag.xcag102d = l_xcag.xcag104d + l_xcag.xcag106d   
+  LET l_xcag.xcag102e = l_xcag.xcag104e + l_xcag.xcag106e
+  LET l_xcag.xcag102f = l_xcag.xcag104f + l_xcag.xcag106f
+  LET l_xcag.xcag102g = l_xcag.xcag104g + l_xcag.xcag106g  
+  LET l_xcag.xcag102h = l_xcag.xcag104h + l_xcag.xcag106h
+  
+  #單位成本
+  LET l_xcag.xcag102 = l_xcag.xcag102a+l_xcag.xcag102b+l_xcag.xcag102c+l_xcag.xcag102d+l_xcag.xcag102e+l_xcag.xcag102f+
+                       l_xcag.xcag102g+l_xcag.xcag102h
+
+   #若最终主件是采购料件则直接算标准成本
+   #--------------------------------------
+   #SELECT imaa004 INTO l_imaa004 FROM imaa_t 
+   # WHERE imaa001 = g_imaa001
+   EXECUTE cursor_pre_5 USING g_imaa001 INTO l_imaa004
+   #-------------------------------------- 
+    
+   IF l_imaa004 = 'M' THEN 
+      #根據元件-材料成本
+       #------------------------------------
+       #SELECT xcab003,xcab004 INTO l_xcab003,l_xcab004 FROM xcab_t  #材料幣別、成本
+       # WHERE xcab001 = lc_param.xcab001  #版本           
+       #   AND xcabent = g_enterprise
+       #   AND xcab002 = g_imaa001   
+       EXECUTE cursor_pre_10 USING g_master.xcab001,g_imaa001 INTO l_xcab003,l_xcab004
+       #------------------------------------
+       IF NOT cl_null(l_xcab003) THEN 
+          #根據畫面幣別、材料成本、畫面匯率方式、畫面匯率日期算出匯率
+          CALL s_aooi160_get_exrate('1',g_xcabsite,g_master.ooam004,l_xcab003,
+                                      #目的幣別                 #匯類類型
+                                      g_master.ooai001,0,g_master.a)
+            RETURNING l_rate
+       ELSE
+          CALL cl_errmsg('',g_imaa001,'','axc-00305',1)
+          LET g_success1 = 'N'
+       END IF
+ 
+       LET l_xcag.xcag102a = l_rate * l_xcab004   #幣別轉化得出的單位成本-材料
+       LET l_xcag.xcag102 = l_xcag.xcag102a+l_xcag.xcag102b+l_xcag.xcag102c+l_xcag.xcag102d+l_xcag.xcag102e+l_xcag.xcag102f+
+                            l_xcag.xcag102g+l_xcag.xcag102h        
+   END IF 
+                       
+  INSERT INTO xcag_t VALUES(l_xcag.*)    
+    IF SQLCA.sqlcode THEN
+       CALL cl_err("ins xcag",SQLCA.sqlcode,1) 
+       CALL s_transaction_end('N','0')
+       LET g_success = 'N'
+       RETURN g_success         
+    END IF  
+    
+  CALL axcp006_ins_xcaj(ls_js) RETURNING g_success
+  IF g_success = 'N' THEN
+     RETURN g_success   
+  END IF
+  
+  RETURN g_success 
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_chk_rate" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢查當前輸入的匯率日期是否有匯率
+# Memo...........:
+# Usage..........: CALL axcp006_chk_rate(p_wc,p_ooai001,p_b)
+# Input parameter:  
+# Return code....:  
+# Date & Author..: 2014/4/3 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp006_chk_rate(p_wc,p_ooai001,p_b)
+DEFINE p_wc         STRING
+DEFINE p_ooai001    LIKE ooai_t.ooai001
+DEFINE p_b          DATE
+DEFINE l_ooef015    LIKE ooef_t.ooef015
+DEFINE l_ooef001    LIKE ooef_t.ooef001
+DEFINE l_n          LIKE type_t.num5
+DEFINE l_wc         STRING
+DEFINE l_string     STRING
+DEFINE l_wc_xcabsite STRING
+DEFINE tok          base.stringtokenizer
+DEFINE l_errmsg     STRING
+   
+
+   IF NOT cl_null(p_wc) OR p_wc != " 1=1" THEN 
+      LET l_wc = p_wc
+      LET l_wc = cl_replace_str(l_wc,"and","||")
+      LET tok = base.StringTokenizer.create(l_wc,"||")
+      WHILE tok.hasMoreTokens()
+         LET l_string = tok.nextToken()
+         LET l_string = l_string.trim()
+         IF l_string MATCHES '*xcabsite*' THEN
+            LET l_wc_xcabsite = l_string
+            EXIT WHILE     
+         END IF
+      END WHILE
+   END IF 
+   LET l_wc_xcabsite = cl_replace_str(l_wc_xcabsite,"xcabsite","ooef001")   
+
+  LET l_errmsg = ""
+  LET g_sql = " SELECT ooef001,ooef015 FROM ooef_t ",
+              "  WHERE ",l_wc_xcabsite
+  PREPARE axcp006_pre_chk_b FROM g_sql
+  DECLARE axcp006_cur_chk_b CURSOR FOR axcp006_pre_chk_b 
+  FOREACH axcp006_cur_chk_b INTO l_ooef001,l_ooef015     
+     IF SQLCA.sqlcode THEN
+        CALL cl_err("foreach chk b:",SQLCA.sqlcode,1)
+        LET g_success = 'N'  
+        EXIT FOREACH
+     END IF  
+     SELECT COUNT(*) INTO l_n FROM ooam_t
+      WHERE ooam001 = l_ooef015 
+        AND ooam003 = p_ooai001
+        AND ooam004 <= p_b
+     IF l_n = 0 THEN 
+        LET l_errmsg = l_errmsg," ",l_ooef001
+     END IF     
+  END FOREACH          
+    
+  RETURN l_errmsg
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_ins_xcah" order="7" ver="3" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: ins xcah
+# Memo...........:
+# Usage..........: CALL axcp006_ins_xcah(ls_js)
+# Input parameter:  
+# Return code....:  
+# Date & Author..: 2014/3/27 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp006_ins_xcah(ls_js)
+DEFINE p_xcah004    LIKE xcah_t.xcah004   #最终主件
+DEFINE l_xcab003    LIKE xcab_t.xcab003
+DEFINE l_xcab004    LIKE xcab_t.xcab004
+DEFINE l_rate       LIKE apca_t.apca101
+DEFINE l_rate1      LIKE apca_t.apca101
+DEFINE l_xcaesite   LIKE xcae_t.xcaesite
+DEFINE l_xcae002    LIKE xcae_t.xcae002
+DEFINE l_xcae003    LIKE xcae_t.xcae003
+DEFINE l_xcae004    LIKE xcae_t.xcae004
+DEFINE l_xcae005    LIKE xcae_t.xcae005
+DEFINE l_xcae006    LIKE xcae_t.xcae006
+DEFINE l_xcaf003    LIKE xcaf_t.xcaf003
+DEFINE l_xcac003    LIKE xcac_t.xcac003
+DEFINE l_xcac004    LIKE xcac_t.xcac004
+DEFINE l_xcac005    LIKE xcac_t.xcac005
+DEFINE l_xcac006    LIKE xcac_t.xcac006
+DEFINE l_xcaf005_sum  LIKE xcaf_t.xcaf005
+DEFINE l_xcah  RECORD LIKE xcah_t.*
+DEFINE l_xcai  RECORD LIKE xcai_t.*
+DEFINE l_xcah_1  RECORD LIKE xcah_t.*
+DEFINE i       LIKE type_t.num5
+DEFINE l_n     LIKE type_t.num5
+DEFINE l_n1    LIKE type_t.num5
+DEFINE l_min   LIKE type_t.num5
+DEFINE l_max   LIKE type_t.num5
+DEFINE lc_param    type_parameter
+DEFINE l_xcah043  LIKE xcah_t.xcah043
+DEFINE l_xcah044  LIKE xcah_t.xcah044
+DEFINE ls_js          STRING
+DEFINE l_ceshi    LIKE type_t.num5
+
+CALL util.JSON.parse(ls_js,lc_param)
+
+   SELECT MAX(x_level) INTO l_max FROM axcp006_temp
+   SELECT MIN(x_level) INTO l_min FROM axcp006_temp
+   
+   LET l_xcah.xcahseq = 0  #項次初始
+   LET l_xcah.xcah021 = 0  #BOM序號初始
+   LET l_xcai.xcaiseq = 0  #項次
+   
+  #SELECT COUNT(*) INTO l_ceshi FROM axcp006_temp   #測試用
+   
+   FOR i =l_max TO l_min STEP -1
+       LET g_sql = " SELECT xcad003,xcad004,xcad006 FROM axcp006_temp ",
+                   "   WHERE x_level = ",i
+       PREPARE axcp006_pre4 FROM g_sql
+       DECLARE axcp006_cur4 CURSOR FOR axcp006_pre4 
+       FOREACH axcp006_cur4 INTO l_xcah.xcah040,l_xcah043,l_xcah044   #本階主件 #本階組成用量       
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("foreach4:",SQLCA.sqlcode,1)
+            LET g_success = 'N'  
+            EXIT FOREACH
+         END IF
+         LET l_n = 0
+         
+         DISPLAY i,l_xcah.xcah040,l_xcah043,l_xcah044
+         #----------------------------
+         #SELECT COUNT(*) INTO l_n FROM xcad_t 
+         # WHERE xcad002 = l_xcah.xcah040
+         #   AND xcad001 = g_xcad001
+         EXECUTE cursor_pre_1 USING l_xcah.xcah040,g_xcad001 INTO l_n
+         #----------------------------
+         IF l_n = 0 THEN #無下階料號
+            IF l_max = 1 AND l_min = 1 THEN #當前的最終主件就是採購料件
+              #可不用在這裡就插入xcag，這裡退出foreach后就直接退出for循環了，在後面有Call ins_xcag
+              #CALL axcp006_ins_xcag()  #為採購料號的最終主件也都需插入xcag中 ，但這裡不考慮本階主件插入xcag,後面直接由xcah匯總插入
+               EXIT FOREACH
+            END IF
+         END IF         
+         IF l_n = 0 THEN   #無下階料號，不需插入xcah
+            CONTINUE FOREACH
+         ELSE
+            LET g_sql = " SELECT xcad003 FROM xcad_t ",
+                        "  WHERE xcad002 = '",l_xcah.xcah040,"'",
+                        "    AND xcad001 = '",g_xcad001,"'"
+            PREPARE axcp006_pre5 FROM g_sql
+            DECLARE axcp006_cur5 CURSOR FOR axcp006_pre5 
+            FOREACH axcp006_cur5 INTO l_xcah.xcah022  #本階元件         
+             IF SQLCA.sqlcode THEN
+                CALL cl_err("foreach5:",SQLCA.sqlcode,1)
+                LET g_success = 'N'  
+                EXIT FOREACH
+             END IF
+             #排除还有下阶的料号（排除本阶料号）
+             LET l_n1 = 0 
+             #-------------------------------------
+             #SELECT COUNT(*) INTO l_n1 FROM xcad_t 
+             # WHERE xcad002 = l_xcah.xcah022
+             #   AND xcad001 = g_xcad001
+             EXECUTE cursor_pre_2 USING l_xcah.xcah022,g_xcad001 INTO l_n1
+             #-------------------------------------   
+             IF l_n1 > 0 THEN 
+                CONTINUE FOREACH
+             END IF             
+                
+                
+             #本階元件ins_xcah
+             LET l_xcah.xcahent = g_enterprise
+             LET l_xcah.xcahsite = g_xcabsite          #畫面檔中查詢出來的營運據點
+                  
+             #營運據點所屬法人  
+             #-----------------------------------------------
+             #SELECT ooef017 INTO l_xcah.xcahcomp FROM ooef_t
+             # WHERE ooef001 = g_xcabsite AND ooefent = g_enterprise
+             EXECUTE cursor_pre_3 USING g_xcabsite INTO l_xcah.xcahcomp
+             #------------------------------------------------         
+              
+             LET l_xcah.xcah001 = g_master.xcaa001    #標準成本分類
+             LET l_xcah.xcah002 = g_master.xcag002     #生效日期
+             LET l_xcah.xcah003 = ''                  #失效日期
+             LET l_xcah.xcah004 = g_imaa001         #最終主件
+             LET l_xcah.xcahseq = l_xcah.xcahseq + 1       #項次    
+             LET l_xcah.xcah011 = g_master.ooai001    #幣別
+             
+             #------------------------------
+             #SELECT imaa004,imaa006 INTO l_xcah.xcah012,l_xcah.xcah013 FROM imaa_t  #最終主件的類別碼\單位
+             # WHERE imaa001 = g_imaa001
+             EXECUTE cursor_pre_4 USING g_imaa001 INTO l_xcah.xcah012,l_xcah.xcah013
+             #------------------------------ 
+              
+             LET l_xcah.xcah022 = l_xcah.xcah022           #本階元件
+             #------------------------------ 
+             #SELECT imaa004,imaa006 INTO l_xcah.xcah023,l_xcah.xcah024 FROM imaa_t  #本階元件的類別碼\單位
+             # WHERE imaa001 = l_xcah.xcah022
+             EXECUTE cursor_pre_4 USING l_xcah.xcah022 INTO l_xcah.xcah023,l_xcah.xcah024
+             #-------------------------------
+              
+             LET l_xcah.xcah020 = i                   #當前階層
+             LET l_xcah.xcah021 = l_xcah.xcah021 + 10      #BOM序號
+             
+             #---------------------------------------
+             #SELECT xcad005,xcad004 INTO l_xcah.xcah025,l_xcah.xcah026 FROM xcad_t  #尾階在本階BOM中的底數\組成用量
+             # WHERE xcad002 = l_xcah.xcah040 AND xcad003 = l_xcah.xcah022  
+             #   AND xcad001 = g_xcad001
+             EXECUTE cursor_pre_6 USING l_xcah.xcah040,l_xcah.xcah022,g_xcad001 INTO l_xcah.xcah025,l_xcah.xcah026
+             #----------------------------------------   
+                
+                              #本階                   #尾階
+             #尾階在本階BOM中的損耗率-取变动比率 
+             #---------------------------------
+             SELECT xcad006 INTO l_xcah.xcah027 FROM xcad_t 
+              WHERE xcad002 = l_xcah.xcah040 AND xcad003 = l_xcah.xcah022
+                AND xcad001 = g_xcad001
+             EXECUTE cursor_pre_7 USING l_xcah.xcah040,l_xcah.xcah022,g_xcad001 INTO l_xcah.xcah027
+             #---------------------------------
+                
+             IF cl_null(l_xcah.xcah027) THEN
+                LET l_xcah.xcah027 = 0             
+             END IF             
+                
+             LET l_xcah.xcah040 =  l_xcah.xcah040  #本階主件
+             #----------------------------------------
+             #SELECT imaa004 INTO l_xcah.xcah041 FROM imaa_t  #本階主件類別碼
+             # WHERE imaa001 = l_xcah.xcah040
+             EXECUTE cursor_pre_5 USING l_xcah.xcah040 INTO l_xcah.xcah041
+             #-----------------------------------------
+              
+             #最終主件底數、本階組件組成用量、暂时为1；損耗率为1
+             LET l_xcah.xcah043 = l_xcah043
+             LET l_xcah.xcah042 = 1
+             LET l_xcah.xcah044 = l_xcah044   
+             
+             #根據元件-成本次要素
+             #------------------------------------------------
+             #SELECT xcax002 INTO l_xcah.xcah102 FROM xcax_t
+             # WHERE xcaxent = g_enterprise
+             #   AND xcaxsite = g_xcabsite
+             #   AND xcax001 = l_xcah.xcah022
+             EXECUTE cursor_pre_9 USING g_xcabsite,l_xcah.xcah022 INTO l_xcah.xcah102
+             #-------------------------------------------------
+                
+             #根據元件-材料成本
+             #----------------------------------------------------
+             #SELECT xcab003,xcab004 INTO l_xcab003,l_xcab004 FROM xcab_t  #材料幣別、成本
+             #WHERE xcab001 = lc_param.xcab001  #版本           
+             #  AND xcabent = g_enterprise
+             #  AND xcab002 = l_xcah.xcah022 
+             EXECUTE cursor_pre_10 USING g_master.xcab001,l_xcah.xcah022 INTO l_xcab003,l_xcab004  
+             #----------------------------------------------------
+               
+               
+             IF NOT cl_null(l_xcab003) THEN 
+                #根據畫面幣別、材料成本、畫面匯率方式、畫面匯率日期算出匯率
+                CALL s_aooi160_get_exrate('1',g_xcabsite,g_master.ooam004,l_xcab003,
+                                      #目的幣別                 #匯類類型
+                                      g_master.ooai001,0,g_master.a)
+                  RETURNING l_rate
+             ELSE
+                CALL cl_errmsg('',l_xcah.xcah022 ,'','axc-00305',1)
+                LET g_success1 = 'N'
+             END IF
+ 
+             LET l_xcah.xcah030a = l_rate * l_xcab004   #幣別轉化得出的單位成本-材料
+             
+             LET l_xcah.xcah030b = 0
+             LET l_xcah.xcah030c = 0    
+             LET l_xcah.xcah030d = 0   
+             LET l_xcah.xcah030e = 0  
+             LET l_xcah.xcah030f = 0               
+             LET l_xcah.xcah030g = 0
+             LET l_xcah.xcah030h = 0
+             LET l_xcah.xcah030 = l_xcah.xcah030a + l_xcah.xcah030b + l_xcah.xcah030c + l_xcah.xcah030d + 
+                                  l_xcah.xcah030e + l_xcah.xcah030f + l_xcah.xcah030g + l_xcah.xcah030h
+             
+             #成本金額-材料
+             LET l_xcah.xcah031a = l_xcah.xcah030a * (l_xcah.xcah026/l_xcah.xcah025)*(1+(l_xcah.xcah027/100))*(l_xcah.xcah043/l_xcah.xcah042)*(1+(l_xcah.xcah044/100))       
+             LET l_xcah.xcah031b = 0
+             LET l_xcah.xcah031c = 0    
+             LET l_xcah.xcah031d = 0   
+             LET l_xcah.xcah031e = 0  
+             LET l_xcah.xcah031f = 0               
+             LET l_xcah.xcah031g = 0
+             LET l_xcah.xcah031h = 0
+             LET l_xcah.xcah031 = l_xcah.xcah031a + l_xcah.xcah031b + l_xcah.xcah031c + l_xcah.xcah031d + l_xcah.xcah031e + l_xcah.xcah031f + l_xcah.xcah031g + l_xcah.xcah031h
+             
+             
+             
+             
+             INSERT INTO xcah_t VALUES(l_xcah.*)
+             IF SQLCA.sqlcode THEN
+                CALL cl_err("ins xcah",SQLCA.sqlcode,1)  
+                CALL s_transaction_end('N','0')
+                LET g_success = 'N'
+                RETURN g_success   
+#               EXIT FOREACH
+             END IF     
+            END FOREACH                             
+         END IF         
+         #本階的本階主件l_xcah.xcah040計算資源費用 階層=i
+         #最終能執行到這裡的肯定是本階主件（1：如果本次的最終主件是F001,本階主件是P301時，l_n=0直接繼續循環）
+         #                             （2：如果本次的最終主件是P301,最大階數和最小階數都是1，直接退出，不插入xcah,但要插入xcag） 
+         LET l_xcah_1.xcahent =  g_enterprise
+         LET l_xcah_1.xcahsite = g_xcabsite         #畫面檔中查詢出來的營運據點
+         
+         #營運據點所屬法人
+         #-----------------------------------------------
+         #SELECT ooef017 INTO l_xcah_1.xcahcomp FROM ooef_t
+         # WHERE ooef001 = g_xcabsite AND ooefent = g_enterprise   
+         EXECUTE cursor_pre_3 USING g_xcabsite INTO l_xcah_1.xcahcomp 
+         #------------------------------------------------
+                     
+         LET l_xcah_1.xcah001 = g_master.xcaa001    #標準成本分類
+         LET l_xcah_1.xcah002 = g_master.xcag002      #生效日期
+         LET l_xcah_1.xcah003 = ''                  #失效日期
+         LET l_xcah_1.xcah004 = l_xcah.xcah004      #最終主件
+         LET l_xcah_1.xcahseq = l_xcah.xcahseq + 1  #項次 
+         LET l_xcah.xcahseq = l_xcah_1.xcahseq      #执行过资源费用，项次需加1
+         LET l_xcah_1.xcah010 = ''                  #版本           
+         LET l_xcah_1.xcah011 = g_master.ooai001    #幣別
+         
+         #----------------------------------------
+         #SELECT imaa004,imaa006 INTO l_xcah_1.xcah012,l_xcah_1.xcah013 FROM imaa_t  #最終主件的類別碼\單位
+         # WHERE imaa001 = l_xcah_1.xcah004
+         EXECUTE cursor_pre_4 USING l_xcah_1.xcah004 INTO l_xcah_1.xcah012,l_xcah_1.xcah013
+         #----------------------------------------
+  
+         LET l_xcah_1.xcah022 = 'DL+OH+SUB'   #元件料號
+         LET l_xcah_1.xcah023 = ''            #元件來源碼
+         LET l_xcah_1.xcah024 = ''            #元件單位 
+         
+         LET l_xcah_1.xcah020 = i #階數
+         LET l_xcah_1.xcah021 = 0 #BOM序號
+         LET l_xcah_1.xcah025 = 1 #底數
+         LET l_xcah_1.xcah026 = 1 #組成用量
+         LET l_xcah_1.xcah027 = 0 #損耗率
+         LET l_xcah_1.xcah040 = l_xcah.xcah040  #本階主件
+
+         #--------------------------------------
+         #SELECT imaa004 INTO l_xcah_1.xcah041 FROM imaa_t  #本階主件類別碼
+         # WHERE imaa001 = l_xcah_1.xcah040
+         EXECUTE cursor_pre_5 USING l_xcah_1.xcah040 INTO l_xcah_1.xcah041
+         #--------------------------------------
+         
+         #最終主件底數、本階主件組成用量、本階主件損耗率 暂时为1
+         LET l_xcah_1.xcah042 = 1
+         LET l_xcah_1.xcah043 = l_xcah043 
+         LET l_xcah_1.xcah044 = l_xcah044
+         
+         #資源費用的成本計算
+         #先新增xaci
+         
+         #本階主件、工藝版本、資源版本
+         LET g_sql = " SELECT xcaesite,xcae002,xcae003,xcae004,xcae005,xcae006,xcaf003,xcac003,xcac004,xcac005,xcac006,SUM(xcaf005) ",
+                     "   FROM xcae_t LEFT OUTER JOIN xcaf_t ON xcaeent = xcafent AND xcae001 = xcaf001 AND xcae002 = xcaf002 AND xcaeseq = xcafseq1",
+                     "               LEFT OUTER JOIN xcac_t ON xcacent = xcafent AND xcac002 = xcaf003 ",
+                     "  WHERE xcae001 = '",g_master.xcae001,"' AND xcac001 = '",g_master.xcac001,"' AND xcae002 = '",l_xcah_1.xcah040,"'" ,
+                     "   GROUP BY xcaesite,xcae002,xcae003,xcae004,xcae005,xcae006,xcaf003,xcac003,xcac004,xcac005,xcac006"
+                     
+          PREPARE axcp006_pre6 FROM g_sql
+          DECLARE axcp006_cur6 CURSOR FOR axcp006_pre6 
+            FOREACH axcp006_cur6 INTO l_xcaesite,l_xcae002,l_xcae003,l_xcae004,l_xcae005,l_xcae006,l_xcaf003,l_xcac003,l_xcac004,l_xcac005,l_xcac006,l_xcaf005_sum     
+             IF SQLCA.sqlcode THEN
+                CALL cl_err("foreach6:",SQLCA.sqlcode,1)
+                LET g_success = 'N' 
+                EXIT FOREACH
+             END IF  
+
+             LET l_xcai.xcaient = g_enterprise
+             LET l_xcai.xcaisite = l_xcaesite
+             
+             #營運據點所屬法人
+             #-------------------------------------------
+             #SELECT ooef017 INTO l_xcai.xcaicomp FROM ooef_t
+             # WHERE ooef001 = l_xcaesite AND ooefent = g_enterprise      
+             EXECUTE cursor_pre_3 USING l_xcaesite INTO l_xcai.xcaicomp 
+             #------------------------------------------- 
+            
+            
+             LET l_xcai.xcai001 = g_master.xcaa001
+             LET l_xcai.xcai002 = g_master.xcag002
+             LET l_xcai.xcai003 = ''
+             LET l_xcai.xcai004 = l_xcah.xcah004  #最終主件
+             LET l_xcai.xcaiseq = l_xcai.xcaiseq + 1
+             LET l_xcai.xcai100 = l_xcae002
+             LET l_xcai.xcai101 = l_xcae003
+             LET l_xcai.xcai103 = l_xcae005
+             LET l_xcai.xcai102 = l_xcae004
+             LET l_xcai.xcai104 = l_xcaf003
+             #轉換匯率
+             #根據畫面幣別、材料成本、畫面匯率方式、畫面匯率日期算出匯率
+             IF NOT cl_null(l_xcac005) THEN 
+                CALL s_aooi160_get_exrate('1',l_xcai.xcaisite,g_master.ooam004,l_xcac005,
+                                      #目的幣別                 #匯類類型
+                                      g_master.ooai001,0,g_master.a)
+                  RETURNING l_rate1
+             ELSE
+                CALL cl_errmsg('',l_xcaf003,'','axc-00305',1)
+                LET g_success1 = 'N'
+             END IF
+            LET l_xcai.xcai105 = l_xcac006 * l_rate1
+            #---0630---mod
+#           LET l_xcai.xcai106 = l_xcaf005_sum
+#           LET l_xcai.xcai107 = l_xcai.xcai105 * l_xcai.xcai106
+            LET l_xcai.xcai106 = l_xcaf005_sum * (l_xcah.xcah026/l_xcah.xcah025)*(1+(l_xcah.xcah027/100))*(l_xcah043/l_xcah.xcah042)*(1+(l_xcah044/100))
+            LET l_xcai.xcai107 = l_xcai.xcai105 * l_xcai.xcai106 
+            #---0630--mod            
+            LET l_xcai.xcai108 = l_xcae006 
+            LET l_xcai.xcai201 = l_xcac003
+            LET l_xcai.xcai202 = l_xcac004
+            
+            INSERT INTO xcai_t VALUES(l_xcai.*)
+            IF SQLCA.sqlcode THEN
+                CALL cl_err("ins xcai",SQLCA.sqlcode,1)  
+                CALL s_transaction_end('N','0')
+                LET g_success = 'N'
+                RETURN g_success   
+#               EXIT FOREACH
+             END IF 
+                                                                                                                                                                                          
+          END FOREACH
+           
+          #繼續新增資源費用的xcah
+          LET l_xcah_1.xcah030a = 0 #单位成本-材料
+          #------------------------------------------
+          #SELECT SUM(xcai107) INTO l_xcah_1.xcah030b FROM xcai_t 
+          # WHERE xcai004 = l_xcah.xcah004  #最终主件
+          #   AND xcai100 = l_xcah.xcah040  #本階主件
+          #   AND xcai201 = '2'   #人工
+          #   AND xcaient = g_enterprise
+          #   AND xcaisite = g_xcabsite
+          #   AND xcai001 = lc_param.xcaa001
+          #   AND xcai002 = lc_param.date1
+          EXECUTE cursor_pre_11 USING l_xcah.xcah004,l_xcah.xcah040,'2',g_xcabsite,g_master.xcaa001,g_master.xcag002
+             INTO l_xcah_1.xcah030b
+             
+          #SELECT SUM(xcai107) INTO l_xcah_1.xcah030c FROM xcai_t 
+          # WHERE xcai004 = l_xcah.xcah004  #最终主件
+          #   AND xcai100 = l_xcah.xcah040  #本階主件
+          #   AND xcai201 = '3'   #委外
+          #   AND xcaient = g_enterprise
+          #   AND xcaisite = g_xcabsite
+          #   AND xcai001 = lc_param.xcaa001
+          #   AND xcai002 = lc_param.date1
+          EXECUTE cursor_pre_11 USING l_xcah.xcah004,l_xcah.xcah040,'3',g_xcabsite,g_master.xcaa001,g_master.xcag002
+             INTO l_xcah_1.xcah030c
+             
+          #SELECT SUM(xcai107) INTO l_xcah_1.xcah030d FROM xcai_t 
+          # WHERE xcai004 = l_xcah.xcah004  #最终主件
+          #   AND xcai100 = l_xcah.xcah040  #本階主件
+          #   AND xcai201 = '4'   #制費一  
+          #   AND xcaient = g_enterprise
+          #   AND xcaisite = g_xcabsite
+          #   AND xcai001 = lc_param.xcaa001
+          #   AND xcai002 = lc_param.date1
+          EXECUTE cursor_pre_11 USING l_xcah.xcah004,l_xcah.xcah040,'4',g_xcabsite,g_master.xcaa001,g_master.xcag002
+             INTO l_xcah_1.xcah030d 
+             
+          #SELECT SUM(xcai107) INTO l_xcah_1.xcah030e FROM xcai_t 
+          # WHERE xcai004 = l_xcah.xcah004  #最终主件
+          #   AND xcai100 = l_xcah.xcah040  #本階主件
+          #   AND xcai201 = '5'   #制費二
+          #   AND xcaient = g_enterprise
+          #   AND xcaisite = g_xcabsite
+          #   AND xcai001 = lc_param.xcaa001
+          #   AND xcai002 = lc_param.date1
+          EXECUTE cursor_pre_11 USING l_xcah.xcah004,l_xcah.xcah040,'5',g_xcabsite,g_master.xcaa001,g_master.xcag002
+             INTO l_xcah_1.xcah030e
+             
+          #SELECT SUM(xcai107) INTO l_xcah_1.xcah030f FROM xcai_t 
+          # WHERE xcai004 = l_xcah.xcah004  #最终主件
+          #   AND xcai100 = l_xcah.xcah040  #本階主件
+          #   AND xcai201 = '6'   #制費三
+          #   AND xcaient = g_enterprise
+          #   AND xcaisite = g_xcabsite
+          #   AND xcai001 = lc_param.xcaa001
+          #   AND xcai002 = lc_param.date1
+          EXECUTE cursor_pre_11 USING l_xcah.xcah004,l_xcah.xcah040,'6',g_xcabsite,g_master.xcaa001,g_master.xcag002
+             INTO l_xcah_1.xcah030f 
+             
+          #SELECT SUM(xcai107) INTO l_xcah_1.xcah030g FROM xcai_t 
+          # WHERE xcai004 = l_xcah.xcah004  #最终主件
+          #   AND xcai100 = l_xcah.xcah040  #本階主件
+          #   AND xcai201 = '7'   #制費四
+          #   AND xcaient = g_enterprise
+          #   AND xcaisite = g_xcabsite
+          #   AND xcai001 = lc_param.xcaa001
+          #   AND xcai002 = lc_param.date1
+          EXECUTE cursor_pre_11 USING l_xcah.xcah004,l_xcah.xcah040,'7',g_xcabsite,g_master.xcaa001,g_master.xcag002
+             INTO l_xcah_1.xcah030g 
+             
+          #SELECT SUM(xcai107) INTO l_xcah_1.xcah030h FROM xcai_t 
+          # WHERE xcai004 = l_xcah.xcah004  #最终主件
+          #   AND xcai100 = l_xcah.xcah040  #本階主件
+          #   AND xcai201 = '8'   #制費五             
+          #   AND xcaient = g_enterprise
+          #   AND xcaisite = g_xcabsite
+          #   AND xcai001 = lc_param.xcaa001
+          #   AND xcai002 = lc_param.date1
+          EXECUTE cursor_pre_11 USING l_xcah.xcah004,l_xcah.xcah040,'8',g_xcabsite,g_master.xcaa001,g_master.xcag002
+             INTO l_xcah_1.xcah030h  
+         
+          #0706 add ---单位成本         
+          LET l_xcah_1.xcah030a = l_xcah_1.xcah030a /((l_xcah.xcah026/l_xcah.xcah025)*(1+(l_xcah.xcah027/100))*(l_xcah043/l_xcah.xcah042)*(1+(l_xcah044/100)))
+          LET l_xcah_1.xcah030b = l_xcah_1.xcah030b /((l_xcah.xcah026/l_xcah.xcah025)*(1+(l_xcah.xcah027/100))*(l_xcah043/l_xcah.xcah042)*(1+(l_xcah044/100)))
+          LET l_xcah_1.xcah030c = l_xcah_1.xcah030c /((l_xcah.xcah026/l_xcah.xcah025)*(1+(l_xcah.xcah027/100))*(l_xcah043/l_xcah.xcah042)*(1+(l_xcah044/100)))
+          LET l_xcah_1.xcah030d = l_xcah_1.xcah030d /((l_xcah.xcah026/l_xcah.xcah025)*(1+(l_xcah.xcah027/100))*(l_xcah043/l_xcah.xcah042)*(1+(l_xcah044/100)))
+          LET l_xcah_1.xcah030e = l_xcah_1.xcah030e /((l_xcah.xcah026/l_xcah.xcah025)*(1+(l_xcah.xcah027/100))*(l_xcah043/l_xcah.xcah042)*(1+(l_xcah044/100)))
+          LET l_xcah_1.xcah030f = l_xcah_1.xcah030f /((l_xcah.xcah026/l_xcah.xcah025)*(1+(l_xcah.xcah027/100))*(l_xcah043/l_xcah.xcah042)*(1+(l_xcah044/100)))
+          LET l_xcah_1.xcah030g = l_xcah_1.xcah030g /((l_xcah.xcah026/l_xcah.xcah025)*(1+(l_xcah.xcah027/100))*(l_xcah043/l_xcah.xcah042)*(1+(l_xcah044/100)))
+          LET l_xcah_1.xcah030h = l_xcah_1.xcah030h /((l_xcah.xcah026/l_xcah.xcah025)*(1+(l_xcah.xcah027/100))*(l_xcah043/l_xcah.xcah042)*(1+(l_xcah044/100)))          
+
+          IF cl_null(l_xcah_1.xcah030a) THEN 
+             LET l_xcah_1.xcah030a = 0
+          END IF    
+          IF cl_null(l_xcah_1.xcah030b) THEN 
+             LET l_xcah_1.xcah030b = 0
+          END IF
+          IF cl_null(l_xcah_1.xcah030d) THEN 
+             LET l_xcah_1.xcah030d = 0
+          END IF    
+          IF cl_null(l_xcah_1.xcah030c) THEN 
+             LET l_xcah_1.xcah030c = 0
+          END IF  
+          IF cl_null(l_xcah_1.xcah030e) THEN 
+             LET l_xcah_1.xcah030e = 0
+          END IF
+          IF cl_null(l_xcah_1.xcah030f) THEN 
+             LET l_xcah_1.xcah030f = 0
+          END IF    
+          IF cl_null(l_xcah_1.xcah030g) THEN 
+             LET l_xcah_1.xcah030g = 0
+          END IF     
+          IF cl_null(l_xcah_1.xcah030h) THEN 
+             LET l_xcah_1.xcah030h = 0
+          END IF            
+          LET l_xcah_1.xcah030 = l_xcah_1.xcah030a+l_xcah_1.xcah030b+l_xcah_1.xcah030c+l_xcah_1.xcah030d+l_xcah_1.xcah030e+
+                                 l_xcah_1.xcah030f+l_xcah_1.xcah030g+l_xcah_1.xcah030h
+             
+          LET l_xcah_1.xcah031a = l_xcah_1.xcah030a * (l_xcah_1.xcah026/l_xcah_1.xcah025)*(1+(l_xcah_1.xcah027/100))*
+                                  (l_xcah_1.xcah043/l_xcah_1.xcah042)*(1+(l_xcah_1.xcah044/100))
+          LET l_xcah_1.xcah031b = l_xcah_1.xcah030b * (l_xcah_1.xcah026/l_xcah_1.xcah025)*(1+(l_xcah_1.xcah027/100))*
+                                  (l_xcah_1.xcah043/l_xcah_1.xcah042)*(1+(l_xcah_1.xcah044/100))                    
+          LET l_xcah_1.xcah031c = l_xcah_1.xcah030c * (l_xcah_1.xcah026/l_xcah_1.xcah025)*(1+(l_xcah_1.xcah027/100))*
+                                  (l_xcah_1.xcah043/l_xcah_1.xcah042)*(1+(l_xcah_1.xcah044/100))                        
+          LET l_xcah_1.xcah031d = l_xcah_1.xcah030d * (l_xcah_1.xcah026/l_xcah_1.xcah025)*(1+(l_xcah_1.xcah027/100))*
+                                  (l_xcah_1.xcah043/l_xcah_1.xcah042)*(1+(l_xcah_1.xcah044/100))
+          LET l_xcah_1.xcah031e = l_xcah_1.xcah030e * (l_xcah_1.xcah026/l_xcah_1.xcah025)*(1+(l_xcah_1.xcah027/100))*
+                                  (l_xcah_1.xcah043/l_xcah_1.xcah042)*(1+(l_xcah_1.xcah044/100))
+          LET l_xcah_1.xcah031f = l_xcah_1.xcah030f * (l_xcah_1.xcah026/l_xcah_1.xcah025)*(1+(l_xcah_1.xcah027/100))*
+                                  (l_xcah_1.xcah043/l_xcah_1.xcah042)*(1+(l_xcah_1.xcah044/100))
+          LET l_xcah_1.xcah031g = l_xcah_1.xcah030g * (l_xcah_1.xcah026/l_xcah_1.xcah025)*(1+(l_xcah_1.xcah027/100))*
+                                  (l_xcah_1.xcah043/l_xcah_1.xcah042)*(1+(l_xcah_1.xcah044/100))
+          LET l_xcah_1.xcah031h = l_xcah_1.xcah030h * (l_xcah_1.xcah026/l_xcah_1.xcah025)*(1+(l_xcah_1.xcah027/100))*
+                                  (l_xcah_1.xcah043/l_xcah_1.xcah042)*(1+(l_xcah_1.xcah044/100))
+                               
+          IF cl_null(l_xcah_1.xcah031a) THEN 
+             LET l_xcah_1.xcah031a = 0
+          END IF    
+          IF cl_null(l_xcah_1.xcah031b) THEN 
+             LET l_xcah_1.xcah031b = 0
+          END IF
+          IF cl_null(l_xcah_1.xcah031d) THEN 
+             LET l_xcah_1.xcah031d = 0
+          END IF    
+          IF cl_null(l_xcah_1.xcah031c) THEN 
+             LET l_xcah_1.xcah031c = 0
+          END IF  
+          IF cl_null(l_xcah_1.xcah031e) THEN 
+             LET l_xcah_1.xcah031e = 0
+          END IF
+          IF cl_null(l_xcah_1.xcah031f) THEN 
+             LET l_xcah_1.xcah031f = 0
+          END IF    
+          IF cl_null(l_xcah_1.xcah031g) THEN 
+             LET l_xcah_1.xcah031g = 0
+          END IF     
+          IF cl_null(l_xcah_1.xcah031h) THEN 
+             LET l_xcah_1.xcah031h = 0
+          END IF                          
+          LET l_xcah_1.xcah031 = l_xcah_1.xcah031a+l_xcah_1.xcah031b+l_xcah_1.xcah031c+l_xcah_1.xcah031d+l_xcah_1.xcah031e+
+                                 l_xcah_1.xcah031f+l_xcah_1.xcah031g+l_xcah_1.xcah031h
+          INSERT INTO xcah_t VALUES(l_xcah_1.*)
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("ins xcah 2",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+               LET g_success = 'N'
+               RETURN g_success   
+#              EXIT FOREACH
+            END IF 
+    END FOREACH             
+   END FOR      
+   
+   RETURN g_success
+#   #需計算標準成本的主件，在階層都循環完之後，可以將xcah的資料彙總到xcag中
+#   CALL axcp006_ins_xcag(ls_js,p_xcah004)
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_get_imaa001" order="8" ver="3" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 根據查詢條件獲取料號
+# Memo...........:
+# Usage..........: CALL axcp006_get_imaa001(ls_js)
+# Input parameter:  
+# Return code....:  
+# Date & Author..: 2014/3/27 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp006_get_imaa001(ls_js)
+DEFINE lc_param       type_parameter
+DEFINE ls_js          STRING
+DEFINE l_n            LIKE type_t.num10
+DEFINE l_wc_imaa001   STRING
+
+CALL util.JSON.parse(ls_js,lc_param)
+   
+   #錯誤訊息彙總初始
+   CALL cl_showmsg_init()
+   CALL axcp006_cursor()
+   CALL axcp006_create()
+
+#foreach料號
+   LET l_wc_imaa001 = cl_replace_str(g_wc_imaa001,"xcab002","imaa001") #0704mod
+   LET g_sql = " SELECT imaa001 FROM imaa_t LEFT OUTER JOIN imac_t ON imaaent = imacent AND imaa001 = imac001 ",
+               "  WHERE imaastus = 'Y' ",
+               "    AND (imaa004 = 'M' OR imaa004 = 'A')"
+   IF NOT cl_null(g_wc_imaa001) THEN 
+     #LET g_sql = g_sql CLIPPED," AND ",g_wc_imaa001 #0704mod
+      LET g_sql = g_sql CLIPPED," AND ",l_wc_imaa001 #0704mod     
+   END IF   
+   LET g_sql = g_sql CLIPPED," ORDER BY imac003 desc"
+   
+   PREPARE axcp006_imaa001_pre FROM g_sql
+   DECLARE axcp006_imaa001_cur CURSOR FOR axcp006_imaa001_pre 
+   DISPLAY TIME
+   LET l_n = 1
+   FOREACH axcp006_imaa001_cur INTO g_imaa001
+      DISPLAY g_imaa001
+      DISPLAY l_n
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach imaa001:",SQLCA.sqlcode,1)
+         LET g_success = 'N'  
+         EXIT FOREACH
+      END IF
+  
+      LET g_flag = 'Y'
+      CALL axcp006_explosion()  #axcp006_tmp中獲取到了BOM結構（階層+料件）
+      
+#     CALL axcp006_get_bom(ls_js) #獲取BOM中所有的料件做最終主件
+      
+      CALL axcp006_ins_xcah(ls_js) RETURNING g_success
+      IF g_success = 'N' THEN
+         RETURN g_success
+      ELSE
+         #需計算標準成本的最终主件，在所有階層卷算完之后，可以將xcah的資料彙總到xcag中
+         CALL axcp006_ins_xcag(ls_js) RETURNING g_success
+         IF g_success = 'N' THEN
+            RETURN g_success   
+         END IF
+      END IF
+      LET l_n = l_n + 1
+   END FOREACH  
+   DISPLAY TIME   
+   IF g_success1 = 'N' THEN 
+      LET g_success = 'N'
+      CALL cl_err_showmsg()  
+   END IF
+  RETURN g_success 
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_ins_xcaj" order="9" ver="3" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 根據最終主鍵新增資源主件和材料主件的資料
+# Memo...........:
+# Usage..........: CALL axcp006_ins_xcaj(ls_js)
+# Input parameter: 
+# Return code....:
+# Date & Author..: 2014/3/27 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp006_ins_xcaj(ls_js)
+DEFINE p_xcad003    LIKE xcad_t.xcad003
+DEFINE l_xcaj102    LIKE xcaj_t.xcaj102
+DEFINE l_n          LIKE type_t.num5
+DEFINE l_xcaj  RECORD LIKE xcaj_t.* 
+DEFINE lc_param    type_parameter
+DEFINE ls_js          STRING
+
+
+CALL util.JSON.parse(ls_js,lc_param)
+
+  LET l_xcaj.xcajent = g_enterprise
+  LET l_xcaj.xcajsite = g_xcabsite
+  
+  #營運據點所屬法人
+  #----------------------------------
+  #SELECT ooef017 INTO l_xcaj.xcajcomp FROM ooef_t
+  # WHERE ooef001 = g_xcabsite AND ooefent = g_enterprise
+  EXECUTE cursor_pre_3 USING g_xcabsite INTO l_xcaj.xcajcomp
+  #----------------------------------
+   
+  LET l_xcaj.xcaj001 = g_master.xcaa001    #標準成本分類
+  LET l_xcaj.xcaj002 = g_master.xcag002      #生效日期
+  LET l_xcaj.xcaj003 = ''                  #失效日期
+  LET l_xcaj.xcaj004 = g_imaa001           #最終主件
+  LET l_xcaj.xcaj010 = ''                  #版本
+  LET l_xcaj.xcaj011 = g_master.ooai001    #幣別
+  
+  #材料（非資源主件）的次成本要素
+  #從xcah中抓取歸屬的次要成本要素
+  LET g_sql = " SELECT xcah102,SUM(xcah031) FROM xcah_t",
+              "  WHERE xcahsite = '",l_xcaj.xcajsite,"'",
+              "    AND xcah001 = '",l_xcaj.xcaj001,"'",
+              "    AND xcah002 = '",l_xcaj.xcaj002,"'",
+              "    AND xcah004 = '",l_xcaj.xcaj004,"'",
+              "    AND xcahent = '",g_enterprise,"'",
+              "    AND xcah022 <> 'DL+OH+SUB' ",
+              "    GROUP BY xcah102 "              
+#
+#  SELECT xcah102,SUM(xcah031) INTO l_xcaj.xcaj005,l_xcaj.xcaj102 FROM xcah_t
+#   WHERE xcahsite = l_xcaj.xcajsite
+#     AND xcah001 = l_xcaj.xcaj001
+#     AND xcah002 = l_xcaj.xcaj002
+#     AND xcah004 = l_xcaj.xcaj004
+#     AND xcah022 <> 'DL+OH+SUB' 
+#   GROUP BY xcah102  
+  PREPARE axcp006_pre7 FROM g_sql
+  DECLARE axcp006_cur7 CURSOR FOR axcp006_pre7
+  FOREACH axcp006_cur7 INTO l_xcaj.xcaj005,l_xcaj.xcaj102     
+     IF SQLCA.sqlcode THEN
+        CALL cl_err("foreach7:",SQLCA.sqlcode,1)
+        LET g_success = 'N'  
+        EXIT FOREACH
+     END IF  
+  #因為材料或費用的次要素可能會相同，所以這裡SUM出一筆后檢查該要素是否已存在
+  #若已存在則update，否則insert
+#  IF NOT cl_null(l_xcaj.xcaj005) AND NOT cl_null(l_xcaj.xcaj102) THEN 
+     LET l_n =0
+     #-------------------------------
+     #SELECT COUNT(*) INTO l_n FROM xcaj_t
+     # WHERE xcaj005 = l_xcaj.xcaj005  #次要素
+     #   AND xcaj004 = l_xcaj.xcaj004  #最終主件
+     #   AND xcajsite = l_xcaj.xcajsite
+     #   AND xcaj001 = l_xcaj.xcaj001
+     #   AND xcaj002 = l_xcaj.xcaj002
+     #   AND xcajent = g_enterprise
+     EXECUTE cursor_pre_29 USING l_xcaj.xcaj005,l_xcaj.xcaj004,l_xcaj.xcajsite,l_xcaj.xcaj001,l_xcaj.xcaj002 
+        INTO l_n
+     #-------------------------------
+     
+     IF l_n = 0 THEN
+        INSERT INTO xcaj_t VALUES(l_xcaj.*)
+        IF SQLCA.sqlcode THEN
+           CALL cl_err("ins xcaj",SQLCA.sqlcode,1)
+           CALL s_transaction_end('N','0')
+           LET g_success = 'N'
+           RETURN g_success              
+        END IF
+     ELSE
+        #-------------------------------------
+        #SELECT xcaj102 INTO l_xcaj102 FROM xcaj_t
+        # WHERE xcaj005 = l_xcaj.xcaj005  #次要素
+        #   AND xcaj004 = l_xcaj.xcaj004  #最終主件
+        #   AND xcajsite = l_xcaj.xcajsite
+        #   AND xcaj001 = l_xcaj.xcaj001
+        #   AND xcaj002 = l_xcaj.xcaj002
+        #   AND xcajent = g_enterprise
+        EXECUTE cursor_pre_30 USING l_xcaj.xcaj005,l_xcaj.xcaj004,l_xcaj.xcajsite,l_xcaj.xcaj001,l_xcaj.xcaj002
+           INTO l_xcaj102
+        #-------------------------------------
+        
+        UPDATE xcaj_t SET xcaj102 = l_xcaj102 + l_xcaj.xcaj102
+                    WHERE xcaj005 = l_xcaj.xcaj005  #次要素
+                      AND xcaj004 = l_xcaj.xcaj004  #最終主件
+                      AND xcajsite = l_xcaj.xcajsite
+                      AND xcaj001 = l_xcaj.xcaj001
+                      AND xcaj002 = l_xcaj.xcaj002 
+                      AND xcajent = g_enterprise                       
+     END IF
+   END FOREACH  
+#  END IF
+  
+  #資源費用的次成本要素
+  #從xcai中抓取歸屬的次要成本要素
+  LET g_sql = " SELECT xcai202,SUM(xcai107) FROM xcai_t",
+              " WHERE xcaisite = '",l_xcaj.xcajsite,"'",
+              "   AND xcai001 = '",l_xcaj.xcaj001,"'",
+              "   AND xcai002 = '",l_xcaj.xcaj002,"'",
+              "   AND xcai004 = '",l_xcaj.xcaj004,"'",
+              "   AND xcaient = '",g_enterprise,"'",              
+              "   GROUP BY xcai202 "   
+   
+#  SELECT xcai202,SUM(xcai107) INTO l_xcaj.xcaj005,l_xcaj.xcaj102 FROM xcai_t
+#   WHERE xcaisite = l_xcaj.xcajsite
+#     AND xcai001 = l_xcaj.xcaj001
+#     AND xcai002 = l_xcaj.xcaj002
+#     AND xcai004 = l_xcaj.xcaj004  
+#   GROUP BY xcai202    
+  PREPARE axcp006_pre8 FROM g_sql
+  DECLARE axcp006_cur8 CURSOR FOR axcp006_pre8
+  FOREACH axcp006_cur8 INTO l_xcaj.xcaj005,l_xcaj.xcaj102
+     IF SQLCA.sqlcode THEN
+        CALL cl_err("foreach8:",SQLCA.sqlcode,1)
+        LET g_success = 'N' 
+        EXIT FOREACH
+     END IF  
+  #因為材料或費用的次要素可能會相同，所以這裡SUM出一筆后檢查該要素是否已存在
+  #若已存在則update，否則insert
+#  IF NOT cl_null(l_xcaj.xcaj005) AND NOT cl_null(l_xcaj.xcaj102) THEN
+     LET l_n = 0
+     #-----------------------------------
+     #SELECT COUNT(*) INTO l_n FROM xcaj_t
+     # WHERE xcaj005 = l_xcaj.xcaj005  #次要素
+     #   AND xcaj004 = l_xcaj.xcaj004  #最終主件
+     #   AND xcajsite = l_xcaj.xcajsite
+     #   AND xcaj001 = l_xcaj.xcaj001
+     #   AND xcaj002 = l_xcaj.xcaj002
+     #   AND xcajent = g_enterprise
+     EXECUTE cursor_pre_29 USING l_xcaj.xcaj005,l_xcaj.xcaj004,l_xcaj.xcajsite,l_xcaj.xcaj001,l_xcaj.xcaj002 
+        INTO l_n
+     #-----------------------------------
+     
+     IF l_n = 0 THEN
+        INSERT INTO xcaj_t VALUES(l_xcaj.*)
+        IF SQLCA.sqlcode THEN
+           CALL cl_err("ins xcaj 2",SQLCA.sqlcode,1)  
+           CALL s_transaction_end('N','0')
+           LET g_success = 'N'
+           RETURN g_success   
+        END IF
+     ELSE
+        #--------------------------------
+        #SELECT xcaj102 INTO l_xcaj102 FROM xcaj_t
+        # WHERE xcaj005 = l_xcaj.xcaj005  #次要素
+        #   AND xcaj004 = l_xcaj.xcaj004  #最終主件
+        #   AND xcajsite = l_xcaj.xcajsite
+        #   AND xcaj001 = l_xcaj.xcaj001
+        #   AND xcaj002 = l_xcaj.xcaj002
+        #   AND xcajent = g_enterprise
+        EXECUTE cursor_pre_30 USING l_xcaj.xcaj005,l_xcaj.xcaj004,l_xcaj.xcajsite,l_xcaj.xcaj001,l_xcaj.xcaj002
+           INTO l_xcaj102
+        #--------------------------------
+        
+        UPDATE xcaj_t SET xcaj102 = l_xcaj102 + l_xcaj.xcaj102
+                    WHERE xcaj005 = l_xcaj.xcaj005  #次要素
+                      AND xcaj004 = l_xcaj.xcaj004  #最終主件
+                      AND xcajsite = l_xcaj.xcajsite
+                      AND xcaj001 = l_xcaj.xcaj001
+                      AND xcaj002 = l_xcaj.xcaj002  
+                      AND xcajent = g_enterprise                        
+     END IF
+   END FOREACH     
+#  END IF   
+   RETURN g_success
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_b_chk" order="10" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 匯率檢查
+PRIVATE FUNCTION axcp006_b_chk(p_wc,p_xcab001,p_b,p_ooai001)
+   DEFINE p_wc          STRING
+   DEFINE l_n           LIKE type_t.num5
+   DEFINE l_wc          STRING
+   DEFINE l_str         STRING
+   DEFINE l_wc_xcab002  STRING
+   DEFINE l_wc_xcacsite STRING
+   DEFINE l_wc_xcac002  STRING
+   DEFINE p_xcab001     LIKE xcab_t.xcab001
+   DEFINE p_xcac001     LIKE xcac_t.xcac001
+   DEFINE p_b           DATE
+   DEFINE p_ooai001     LIKE ooai_t.ooai001
+   DEFINE l_xcab003     LIKE xcab_t.xcab003
+   DEFINE l_xcac005     LIKE xcac_t.xcac005
+   DEFINE r_success     LIKE type_t.num5
+   
+   #CALL cl_showmsg_init()
+   LET r_success = TRUE
+   
+   #材料成本
+   LET l_wc = p_wc
+   LET l_wc = cl_replace_str(l_wc,"and","|")
+   LET l_n = l_wc.getIndexOf('|',1)
+   LET l_str = l_wc.substring(l_n+1,l_wc.getLength())
+   LET l_wc_xcab002 = cl_replace_str(l_str,"imaa001","xcab002")  
+   IF cl_null(l_wc_xcab002) THEN 
+      LET l_wc_xcab002 = " 1=1 "
+   END IF
+   LET g_sql ="SELECT distinct xcab003 FROM xcab_t ",
+              " WHERE xcabent = '",g_enterprise,"'",
+              "   AND xcab001 = '",p_xcab001,"'",
+              "   AND ",l_wc_xcab002     
+   PREPARE axcp006_pre_b FROM g_sql
+   DECLARE axcp006_cs_b CURSOR FOR axcp006_pre_b 
+   
+   FOREACH axcp006_cs_b INTO l_xcab003   
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach chk b:",SQLCA.sqlcode,1)
+         LET g_success = 'N'  
+         EXIT FOREACH
+      END IF  
+      LET l_n = 0
+      IF l_xcab003 <> p_ooai001 THEN 
+         SELECT COUNT(*) INTO l_n FROM ooam_t
+          WHERE ooam001 = l_xcab003 
+            AND ooam003 = p_ooai001
+            AND ooam004 <= p_b
+         IF l_n = 0 THEN 
+            LET r_success = FALSE
+            CALL cl_errmsg('axci002',l_xcab003,'','axc-00218',1)
+         END IF
+      END IF
+   END FOREACH 
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_xcab001_chk" order="11" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# xcab001欄位檢查
+PRIVATE FUNCTION axcp006_xcab001_chk(p_xcab001)
+   DEFINE l_xcabstus    LIKE xcab_t.xcabstus
+   DEFINE p_xcab001     LIKE xcab_t.xcab001
+   
+   LET g_errno = ''
+   SELECT DISTINCT xcabstus INTO l_xcabstus
+     FROM xcab_t
+    WHERE xcabent = g_enterprise 
+      AND xcab001 = p_xcab001
+      
+   CASE
+      WHEN SQLCA.SQLCODE = 100    LET g_errno = 'axc-00076'
+      WHEN l_xcabstus = 'N'       LET g_errno = 'axc-00289'
+   END CASE
+      
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_xcac001_chk" order="12" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# xcac001欄位檢查
+PRIVATE FUNCTION axcp006_xcac001_chk(p_xcac001)
+   DEFINE l_xcacstus    LIKE xcac_t.xcacstus
+   DEFINE p_xcac001     LIKE xcac_t.xcac001
+   
+   LET g_errno = ''
+   SELECT DISTINCT xcacstus INTO l_xcacstus
+     FROM xcac_t
+    WHERE xcacent = g_enterprise 
+      AND xcac001 = p_xcac001
+      
+   CASE
+      WHEN SQLCA.SQLCODE = 100    LET g_errno = 'axc-00076'
+      WHEN l_xcacstus = 'N'       LET g_errno = 'axc-00289'
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_b_chk_1" order="13" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#
+PRIVATE FUNCTION axcp006_b_chk_1(p_wc,p_xcac001,p_b,p_ooai001)
+   DEFINE p_wc          STRING
+   DEFINE l_n           LIKE type_t.num5
+   DEFINE l_wc          STRING
+   DEFINE l_str         STRING
+   DEFINE l_wc_xcab002  STRING
+   DEFINE l_wc_xcacsite STRING
+   DEFINE l_wc_xcac002  STRING
+   DEFINE p_xcab001     LIKE xcab_t.xcab001
+   DEFINE p_xcac001     LIKE xcac_t.xcac001
+   DEFINE p_b           DATE
+   DEFINE p_ooai001     LIKE ooai_t.ooai001
+   DEFINE l_xcab003     LIKE xcab_t.xcab003
+   DEFINE l_xcac005     LIKE xcac_t.xcac005
+   DEFINE r_success     LIKE type_t.num5
+   
+   #CALL cl_showmsg_init()
+   LET r_success = TRUE
+   
+   #資源標準費率
+   LET l_wc = p_wc
+   LET l_wc = cl_replace_str(l_wc,"and","|")
+   LET l_n = l_wc.getIndexOf('|',1)
+   IF l_n = 0 THEN 
+      LET l_str = l_wc
+   ELSE
+      LET l_str = l_wc.substring(1,l_n - 1)
+   END IF
+   LET l_wc_xcacsite = cl_replace_str(l_str,"xcabsite","xcacsite")  
+   IF cl_null(l_wc_xcacsite) THEN 
+      LET l_wc_xcacsite = " 1=1 "
+   END IF
+   
+   IF l_n <> 0 THEN 
+      LET l_wc = p_wc
+      LET l_wc = cl_replace_str(l_wc,"and","|")
+      LET l_n = l_wc.getIndexOf('|',1)
+      LET l_str = l_wc.substring(l_n+1,l_wc.getLength())
+      LET l_wc_xcac002 = cl_replace_str(l_str,"imaa001","xcac002")  
+   END IF
+   IF cl_null(l_wc_xcac002) THEN 
+      LET l_wc_xcac002 = " 1=1 "
+   END IF
+   
+   LET g_sql ="SELECT distinct xcac005 FROM xcac_t ",
+              " WHERE xcacent = '",g_enterprise,"'",
+              "   AND xcac001 = '",p_xcac001,"'",
+              "   AND ",l_wc_xcacsite,  
+              "   AND ",l_wc_xcac002
+                          
+   PREPARE axcp006_pre_b_1 FROM g_sql
+   DECLARE axcp006_cs_b_1 CURSOR FOR axcp006_pre_b_1 
+   
+   FOREACH axcp006_cs_b_1 INTO l_xcac005   
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach chk b:",SQLCA.sqlcode,1)
+         LET g_success = 'N'  
+         EXIT FOREACH
+      END IF  
+      LET l_n = 0
+      IF l_xcac005 <> p_ooai001 THEN 
+         SELECT COUNT(*) INTO l_n FROM ooam_t
+          WHERE ooam001 = l_xcac005 
+            AND ooam003 = p_ooai001
+            AND ooam004 <= p_b
+         IF l_n = 0 THEN 
+            LET r_success = FALSE
+            CALL cl_errmsg('axci003',l_xcac005,'','axc-00218',1)
+         END IF
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_date1_chk" order="14" ver="3" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 生效日期檢查
+PRIVATE FUNCTION axcp006_date1_chk(p_wc,p_xcaa001,p_date)
+#date1=生效日期xcag002
+   DEFINE p_wc          STRING
+   DEFINE l_n           LIKE type_t.num5
+   DEFINE l_wc          STRING
+   DEFINE l_str         STRING
+   DEFINE l_wc_xcag004  STRING
+   DEFINE l_wc_xcagsite STRING
+   DEFINE p_xcaa001     LIKE xcaa_t.xcaa001
+   DEFINE l_xcag002     LIKE xcag_t.xcag002
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE p_date        DATE
+   
+   #CALL cl_showmsg_init()
+   LET r_success = TRUE
+   
+   LET l_wc = p_wc
+   LET l_wc = cl_replace_str(l_wc,"and","|")
+   LET l_n = l_wc.getIndexOf('|',1)
+   IF l_n = 0 THEN 
+      LET l_str = l_wc
+   ELSE
+      LET l_str = l_wc.substring(1,l_n - 1)
+   END IF
+   LET l_wc_xcagsite = cl_replace_str(l_str,"xcabsite","xcagsite")  
+   IF cl_null(l_wc_xcagsite) THEN 
+      LET l_wc_xcagsite = " 1=1 "
+   END IF
+   
+   IF l_n <> 0 THEN 
+      LET l_wc = p_wc
+      LET l_wc = cl_replace_str(l_wc,"and","|")
+      LET l_n = l_wc.getIndexOf('|',1)
+      LET l_str = l_wc.substring(l_n+1,l_wc.getLength())
+      LET l_wc_xcag004 = cl_replace_str(l_str,"imaa001","xcag004")  
+   END IF
+   IF cl_null(l_wc_xcag004) THEN 
+      LET l_wc_xcag004 = " 1=1 "
+   END IF
+   
+   LET g_sql ="SELECT distinct xcag002 FROM xcag_t ",
+              " WHERE xcagent = '",g_enterprise,"'",
+              "   AND xcag001 = '",p_xcaa001,"'",
+              "   AND ",l_wc_xcagsite,  
+              "   AND ",l_wc_xcag004
+                          
+   PREPARE axcp006_pre_b_2 FROM g_sql
+   DECLARE axcp006_cs_b_2 CURSOR FOR axcp006_pre_b_2 
+   
+   FOREACH axcp006_cs_b_2 INTO l_xcag002
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach chk b:",SQLCA.sqlcode,1)
+         LET g_success = 'N'  
+         EXIT FOREACH
+      END IF 
+      IF p_date < l_xcag002 THEN 
+         LET r_success = FALSE
+         CALL cl_errmsg('',l_xcag002,'','axc-00290',1)
+      END IF
+   END FOREACH 
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_bom_get" order="15" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#
+PRIVATE FUNCTION axcp006_bom_get(p_key)
+   DEFINE p_level	LIKE type_t.num5
+   DEFINE p_key      LIKE xcad_t.xcad003
+   DEFINE i          LIKE type_t.num5
+   DEFINE lc_param   type_parameter
+   DEFINE l_cnt      LIKE type_t.num5
+   DEFINE l_ceshi    LIKE type_t.num5   #测试测试用
+   DEFINE p_total    LIKE xcad_t.xcad004
+   DEFINE p_num      LIKE xcad_t.xcad006 #損耗量
+   DEFINE p_xcad006  LIKE xcad_t.xcad006 #損耗率
+   DEFINE p_level_t	LIKE type_t.num5
+   
+   DEFINE sr DYNAMIC ARRAY OF RECORD 
+             x_level	LIKE type_t.num5,         #階數        
+             xcad003   LIKE xcad_t.xcad003,      #元件料號 
+             xcad004   LIKE xcad_t.xcad004,      #組成用量/数量
+             num       LIKE xcad_t.xcad006,      #損耗量
+             xcad006   LIKE xcad_t.xcad006,      #損耗率
+             xcad002   LIKE xcad_t.xcad002       #主件料號（本階主件）
+             END RECORD
+          
+   LET p_level = p_level + 1  
+   
+    LET g_sql = "SELECT DISTINCT level,xcad003,(xcad004/xcad005),0,xcad006,xcad002 from xcad_t ",
+                " WHERE xcad001 = '",g_xcad001,"'",
+                " START WITH  xcad002 = '",p_key,"'",
+                " CONNECT BY PRIOR xcad003 = xcad002 ",
+                " ORDER BY level,xcad002,xcad003  "     
+                
+    LET l_cnt = 1    
+    LET p_total = 1  
+    LET p_num = 1     
+    LET p_level_t = 2    
+    PREPARE axcp006_pre_1 FROM g_sql
+    DECLARE axcp006_cur_1 CURSOR FOR axcp006_pre_1 
+    FOREACH axcp006_cur_1 INTO sr[l_cnt].x_level,sr[l_cnt].xcad003,sr[l_cnt].xcad004,sr[l_cnt].num,sr[l_cnt].xcad006,sr[l_cnt].xcad002
+       IF SQLCA.sqlcode THEN
+          CALL cl_err("foreach1:",SQLCA.sqlcode,1)
+          LET g_success = 'N'  
+          EXIT FOREACH
+       END IF
+       LET sr[l_cnt].x_level = sr[l_cnt].x_level + 1
+       
+       IF p_level_t <> sr[l_cnt].x_level THEN 
+          LET p_total = sr[l_cnt-1].xcad004
+          #SELECT DISTINCT l_xcad002 FROM xcad_t 
+          # WHERE xcad001 = g_xcad001
+          # START WITH   xcad003 = sr[l_cnt].xcad003
+          # CONNECT BY PRIOR xcad002 = xcad003 AND xcad003 = sr[l_cnt].xcad003
+       END IF
+       LET p_level_t = sr[l_cnt].x_level
+       LET sr[l_cnt].xcad004 = p_total * sr[l_cnt].xcad004
+       IF sr[l_cnt].xcad006 IS NULL THEN LET sr[l_cnt].xcad006 = 0 END IF
+       LET p_num = p_num*(1+(sr[l_cnt].xcad006/100)) #實際數量
+       LET sr[l_cnt].num = p_num * sr[l_cnt].xcad004 - sr[l_cnt].xcad004   #損耗量
+       LET sr[l_cnt].xcad006 = (sr[l_cnt].num / sr[l_cnt].xcad004)*100
+       
+       INSERT INTO axcp006_temp VALUES (sr[l_cnt].*)
+       DISPLAY sr[l_cnt].x_level,sr[l_cnt].xcad003,sr[l_cnt].xcad004,sr[l_cnt].num,sr[l_cnt].xcad006,sr[l_cnt].xcad002
+
+       IF SQLCA.sqlcode THEN
+          CALL cl_err("ins temp",SQLCA.sqlcode,1)
+          LET g_success = 'N'            
+       END IF  
+
+        
+       LET l_cnt = l_cnt + 1      
+    END FOREACH
+    CALL sr.deleteElement(sr.getLength())
+    
+    
+      
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp006_create" order="16" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#
+PRIVATE FUNCTION axcp006_create()
+   #DROP TABLE axcp006_temp
+   CREATE TEMP TABLE axcp006_temp
+         (
+              x_level	DECIMAL(5,0),     #階數        
+              xcad003   VARCHAR(40),      #元件料號 
+              xcad004   DECIMAL(20,6),    #組成用量/底数 
+              num       DECIMAL(20,6),    #損耗量              
+              xcad006   DECIMAL(20,6),    #損耗率               
+              xcad002   VARCHAR(40)       #主件料號（本階主件）
+          );
+   CREATE INDEX axc_ix1 ON axcp006_temp (xcad002)
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.imaa001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001_16()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa001  #顯示到畫面上
+            NEXT FIELD imaa001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.ooai001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooai001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooai001  #顯示到畫面上
+            NEXT FIELD ooai001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xcab002" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE 
+            CALL q_imaa001_16()                      #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa001    #顯示到畫面上
+            NEXT FIELD imaa001                       #返回原欄位]]>
+  </point>
+  <point name="construct.c.xcabsite" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+		    	LET g_qryparam.reqry = FALSE 
+            CALL q_xcabsite_1()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcabsite    #顯示到畫面上
+            NEXT FIELD xcabsite                       #返回原欄位                #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="global.parameter" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#        date1            DATE,
+#        date2            DATE,
+#        ooai001          LIKE ooai_t.ooai001,
+#        a                LIKE glaa_t.glaa018,
+#        b                DATE,
+#        xcaa001          LIKE xcaa_t.xcaa001,
+#        xcab001          LIKE xcab_t.xcab001,
+#        xcac001          LIKE xcac_t.xcac001,
+#        xcad001          LIKE xcad_t.xcad001,
+#        xcae001          LIKE xcae_t.xcae001,]]>
+  </point>
+  <point name="global.variable" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_wc_xcabsite     STRING
+DEFINE g_wc_imaa001      STRING
+DEFINE g_cnt             LIKE type_t.num5
+DEFINE g_xcabsite        LIKE xcab_t.xcabsite
+DEFINE g_imaa001         LIKE imaa_t.imaa001
+DEFINE g_xcad001         LIKE xcad_t.xcad001
+DEFINE g_suceess         LIKE type_t.chr1
+DEFINE g_flag            LIKE type_t.chr1
+DEFINE g_success1        LIKE type_t.chr1]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc("a","40")
+   ]]>
+  </point>
+  <point name="input.a.b" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #LET l_errmsg = ''
+            #IF NOT cl_null(lc_param.wc) AND NOT cl_null(lc_param.ooai001) AND NOT cl_null(lc_param.b) THEN
+            #   CALL axcp006_chk_rate(lc_param.wc,lc_param.ooai001,lc_param.b) RETURNING l_errmsg
+            #   IF NOT cl_null(l_errmsg) THEN 
+            #      CALL cl_err(l_errmsg,'axc-00218',1)
+            #      NEXT FIELD b
+            #   END IF                  
+            #END IF
+            LET l_success = TRUE
+            CALL cl_showmsg_init()
+            IF NOT cl_null(g_master.b) AND NOT cl_null(g_master.xcab001) THEN 
+               CALL axcp006_b_chk(g_master.wc,g_master.xcab001,g_master.b,g_master.ooai001)
+               RETURNING l_success
+            END IF  
+            
+            IF NOT cl_null(g_master.b) AND NOT cl_null(g_master.xcac001) THEN 
+               CALL axcp006_b_chk_1(g_master.wc,g_master.xcac001,g_master.b,g_master.ooai001)
+               RETURNING l_success
+            END IF
+            
+            IF l_success = FALSE THEN 
+               CALL cl_err_showmsg()
+               NEXT FIELD b
+            END IF]]>
+  </point>
+  <point name="input.a.date1" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #生效日期不能小於已有的生效日期,一定大於已有的生效日期
+            IF NOT cl_null(g_master.date1) AND NOT cl_null(g_master.xcaa001) THEN 
+               CALL cl_showmsg_init()
+               CALL axcp006_date1_chk(g_master.wc,g_master.xcaa001,g_master.date1)
+               RETURNING l_success
+               
+               IF l_success = FALSE THEN 
+                  CALL cl_err_showmsg()
+                  NEXT FIELD date1
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.date2" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #失效日期大於或等於g_today and 大於生效日期            
+            IF NOT cl_null(g_master.date2) THEN 
+               IF g_master.date2 < g_today THEN 
+                  CALL cl_err('','axc-00067',1)
+                  NEXT FIELD date2
+               END IF
+               IF g_master.date2 < g_master.date1 THEN 
+                  CALL cl_err('','ais-00048',1)
+                  NEXT FIELD date2
+               END IF                  
+            END IF ]]>
+  </point>
+  <point name="input.a.ooam004" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               LET l_success = TRUE
+               CALL cl_showmsg_init()
+               IF NOT cl_null(g_master.ooam004) AND NOT cl_null(g_master.xcab001) THEN 
+                  CALL axcp006_b_chk(g_master.wc,g_master.xcab001,g_master.ooam004,g_master.ooai001)
+                  RETURNING l_success
+               END IF  
+               
+               IF NOT cl_null(g_master.ooam004) AND NOT cl_null(g_master.xcac001) THEN 
+                  CALL axcp006_b_chk_1(g_master.wc,g_master.xcac001,g_master.ooam004,g_master.ooai001)
+                  RETURNING l_success
+               END IF
+               
+               IF l_success = FALSE THEN 
+                  CALL cl_err_showmsg()
+                  NEXT FIELD ooam004
+               END IF]]>
+  </point>
+  <point name="input.a.xcaa001" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xcaa001) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_master.xcaa001
+            
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_xcaa001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_master.xcaa001 = ''
+                  NEXT FIELD CURRENT
+               END IF
+            
+            
+            END IF 
+            
+            IF NOT cl_null(g_master.xcag002) AND NOT cl_null(g_master.xcaa001) THEN 
+               CALL cl_showmsg_init()
+               CALL axcp006_date1_chk(g_master.wc,g_master.xcaa001,g_master.xcag002)
+               RETURNING l_success
+               
+               IF l_success = FALSE THEN 
+                  CALL cl_err_showmsg()
+                  NEXT FIELD xcaa001
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.xcab001" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xcab001) THEN 
+               CALL axcp006_xcab001_chk(g_master.xcab001)
+               IF NOT cl_null(g_errno) THEN 
+                  CALL cl_err(g_master.xcab001,g_errno,1)
+                  LET g_master.xcab001 = ''
+                  NEXT FIELD xcab001
+               END IF
+            END IF
+            
+            IF NOT cl_null(g_master.xcab001) AND NOT cl_null(g_master.ooam004) THEN 
+               CALL cl_showmsg_init()
+               CALL axcp006_b_chk(g_master.wc,g_master.xcab001,g_master.ooam004,g_master.ooai001)
+               RETURNING l_success
+               
+               IF l_success = FALSE THEN 
+                  CALL cl_err_showmsg()
+                  NEXT FIELD xcab001
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.xcac001" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xcac001) THEN 
+               CALL axcp006_xcac001_chk(g_master.xcac001)
+               IF NOT cl_null(g_errno) THEN 
+                  CALL cl_err(g_master.xcab001,g_errno,1)
+                  LET g_master.xcac001 = ''
+                  NEXT FIELD xcac001
+               END IF
+            END IF
+           
+            IF NOT cl_null(g_master.xcac001) AND NOT cl_null(g_master.ooam004) THEN 
+               
+               CALL cl_showmsg_init()
+               CALL axcp006_b_chk_1(g_master.wc,g_master.xcac001,g_master.ooam004,g_master.ooai001)
+               RETURNING l_success
+               
+               IF l_success = FALSE THEN 
+                  CALL cl_err_showmsg()
+                  NEXT FIELD xcac001
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.xcag002" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #生效日期不能小於已有的生效日期,一定大於已有的生效日期
+               IF NOT cl_null(g_master.xcag002) AND NOT cl_null(g_master.xcaa001) THEN 
+                  CALL cl_showmsg_init()
+                  CALL axcp006_date1_chk(g_master.wc,g_master.xcaa001,g_master.xcag002)
+                  RETURNING l_success
+                  
+                  IF l_success = FALSE THEN 
+                     CALL cl_err_showmsg()
+                     NEXT FIELD xcag002
+                  END IF
+               END IF]]>
+  </point>
+  <point name="input.a.xcag003" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #失效日期大於或等於g_today and 大於生效日期            
+               IF NOT cl_null(g_master.xcag003) THEN 
+                  IF g_master.xcag003 < g_today THEN 
+                     CALL cl_err('','axc-00067',1)
+                     NEXT FIELD xcag003
+                  END IF
+                  IF g_master.xcag003 < g_master.xcag002 THEN 
+                     CALL cl_err('','ais-00048',1)
+                     NEXT FIELD xcag003
+                  END IF                  
+               END IF ]]>
+  </point>
+  <point name="input.c.ooai001" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.ooai001      #給予default值
+               #給予arg
+               CALL q_ooai001()                                #呼叫開窗
+               LET g_master.ooai001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+               DISPLAY g_master.ooai001 TO ooai001             #顯示到畫面上
+               NEXT FIELD ooai001                              #返回原欄位  ]]>
+  </point>
+  <point name="input.c.xcaa001" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.xcaa001      #給予default值
+               LET g_qryparam.where = " xcaa003 = 'Y' AND xcaa002 <> 'Y' "
+               #給予arg
+               CALL q_xcaa001()                                #呼叫開窗
+               LET g_master.xcaa001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+               DISPLAY g_master.xcaa001 TO xcaa001             #顯示到畫面上
+               NEXT FIELD xcaa001                              #返回原欄位]]>
+  </point>
+  <point name="input.c.xcab001" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.xcab001      #給予default值
+               #給予arg
+               CALL q_xcab001()                                #呼叫開窗
+               LET g_master.xcab001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+               DISPLAY g_master.xcab001 TO xcab001             #顯示到畫面上
+               NEXT FIELD xcab001                              #返回原欄位 
+
+]]>
+  </point>
+  <point name="input.c.xcabsite" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+
+
+]]>
+  </point>
+  <point name="input.c.xcac001" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.xcac001      #給予default值
+               #給予arg
+               CALL q_xcac001()                                #呼叫開窗
+               LET g_master.xcac001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+               DISPLAY g_master.xcac001 TO xcac001             #顯示到畫面上
+               NEXT FIELD xcac001                              #返回原欄位 
+
+]]>
+  </point>
+  <point name="input.c.xcad001" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.xcad001      #給予default值
+               #給予arg
+               CALL q_xcad001_1()                              #呼叫開窗
+               LET g_master.xcad001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+               DISPLAY g_master.xcad001 TO xcad001             #顯示到畫面上
+               NEXT FIELD xcad001                              #返回原欄位 
+
+]]>
+  </point>
+  <point name="input.c.xcae001" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.xcae001      #給予default值
+               #給予arg
+               CALL q_xcae001()                                #呼叫開窗
+               LET g_master.xcae001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+               DISPLAY g_master.xcae001 TO xcae001             #顯示到畫面上
+               NEXT FIELD xcae001                              #返回原欄位 
+
+]]>
+  </point>
+  <point name="input.m.before_input" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               LET g_master.ooam004 = g_today]]>
+  </point>
+  <point name="main.background" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET ls_js = util.JSON.stringify(lc_param)]]>
+  </point>
+  <point name="main.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      DROP TABLE axcp006_temp]]>
+  </point>
+  <point name="main.exit" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="process.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_n         LIKE type_t.num5
+   DEFINE l_wc        STRING
+   DEFINE r_success   LIKE type_t.chr1]]>
+  </point>
+  <point name="process.pre_process" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_success = 'Y'   
+   LET g_success1 = 'Y'  
+   LET r_success = 'Y'   
+   CALL s_transaction_begin()
+   
+   #錯誤訊息彙總初始
+   CALL cl_showmsg_init()
+   
+   #生效日期小於已有的生效日期
+   LET l_n = 0
+   
+   LET l_wc = cl_replace_str(g_master.wc,"xcabsite","xcagsite")
+  #LET l_wc = cl_replace_str(l_wc,"imaa001","xcag004") #0704mod
+   LET l_wc = cl_replace_str(l_wc,"xcab002","xcag004") #0704mod  
+   
+   LET g_sql = " SELECT COUNT(*) FROM xcag_t ",
+               "  WHERE xcagent = '",g_enterprise,"'",
+               "    AND ",l_wc,                            #營運據點+料號
+               "    AND xcag001 = '",g_master.xcaa001,"'", #標準分類碼
+               "    AND xcag002 > '",g_master.xcag002,"'"    #生效日期
+ 
+   PREPARE axcp006_pre_chk1 FROM g_sql
+   DECLARE axcp006_cur_chk1 CURSOR FOR axcp006_pre_chk1 
+   FOREACH axcp006_cur_chk1 INTO l_n     
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("check1:",SQLCA.sqlcode,1)
+         LET g_success = 'N'  
+         EXIT FOREACH
+      END IF    
+   
+      IF l_n > 0 THEN 
+         CALL cl_errmsg('',g_master.xcag002,'','afa-00118',1) #生效日期小於已有的生效日期
+         LET g_success = 'N'
+      END IF      
+   END FOREACH
+   
+   #生效日期等於失效日期
+   LET l_n = 0
+   
+   LET g_sql = " SELECT COUNT(*) FROM xcag_t ",
+               "  WHERE xcagent = '",g_enterprise,"'",
+               "    AND ",l_wc,                            #營運據點+料號
+               "    AND xcag001 = '",g_master.xcaa001,"'", #標準分類碼
+               "    AND xcag002 = '",g_master.xcag002,"'"    #生效日期
+ 
+   PREPARE axcp006_pre_chk2 FROM g_sql
+   DECLARE axcp006_cur_chk2 CURSOR FOR axcp006_pre_chk2 
+   FOREACH axcp006_cur_chk2 INTO l_n     
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("check1:",SQLCA.sqlcode,1)
+         LET g_success = 'N'  
+         EXIT FOREACH
+      END IF    
+   
+      IF l_n > 0 THEN 
+         CALL cl_errmsg('',g_master.xcag002,'','axc-00213',1) #生效日期等於已有的生效日期
+         LET r_success = 'N'
+      END IF      
+   END FOREACH
+   
+   
+   CALL cl_err_showmsg()
+   
+   IF  r_success = 'N' THEN 
+       IF NOT cl_ask_confirm('axc-00216') THEN
+          RETURN
+       ELSE
+          LET g_sql = 
+          "DELETE FROM xcag_t WHERE xcagent = '",g_enterprise ,"'",
+                              " AND ",l_wc,                      #營運據點+料號
+                              " AND xcag001 = '",g_master.xcaa001,"'", #標準分類碼
+                              " AND xcag002 = '",g_master.xcag002,"'"
+          PREPARE axcp006_del_xcag FROM g_sql   
+          EXECUTE axcp006_del_xcag         
+          IF SQLCA.sqlcode THEN
+             CALL cl_err("del xcag",SQLCA.sqlcode,1)  
+             CALL s_transaction_end('N','0')
+             LET g_success = 'N'
+             RETURN g_success
+          ELSE
+             LET l_wc = cl_replace_str(l_wc,"xcag004","xcah004")
+             LET l_wc = cl_replace_str(l_wc,"xcagsite","xcahsite")
+             LET g_sql = 
+             "DELETE FROM xcah_t WHERE xcahent = '",g_enterprise ,"'", 
+                              " AND ",l_wc,                      #營運據點+料號
+                              " AND xcah001 = '", g_master.xcaa001,"'", #標準分類碼
+                              " AND xcah002 = '",g_master.xcag002,"'"
+             PREPARE axcp006_del_xcah FROM g_sql   
+             EXECUTE axcp006_del_xcah 
+             IF SQLCA.sqlcode THEN
+                CALL cl_err("del xcah",SQLCA.sqlcode,1)  
+                CALL s_transaction_end('N','0')
+                LET g_success = 'N'
+                RETURN g_success
+             ELSE
+                LET l_wc = cl_replace_str(l_wc,"xcah004","xcai004")
+                LET l_wc = cl_replace_str(l_wc,"xcahsite","xcaisite")
+                LET g_sql = 
+                     "DELETE FROM xcai_t WHERE xcaient = '",g_enterprise ,"'",
+                              " AND ",l_wc,                      #營運據點+料號
+                              " AND xcai001 = '", g_master.xcaa001,"'", #標準分類碼
+                              " AND xcai002 = '",g_master.xcag002,"'"
+                PREPARE axcp006_del_xcai FROM g_sql   
+                EXECUTE axcp006_del_xcai
+                IF SQLCA.sqlcode THEN
+                   CALL cl_err("del xcai",SQLCA.sqlcode,1)  
+                   CALL s_transaction_end('N','0')
+                   LET g_success = 'N'
+                   RETURN g_success
+                ELSE
+                   LET l_wc = cl_replace_str(l_wc,"xcai004","xcaj004")
+                   LET l_wc = cl_replace_str(l_wc,"xcaisite","xcajsite")
+                   LET g_sql = 
+                     "DELETE FROM xcaj_t WHERE xcajent = '",g_enterprise ,"'", 
+                              " AND ",l_wc,                      #營運據點+料號
+                              " AND xcaj001 = '", g_master.xcaa001,"'", #標準分類碼
+                              " AND xcaj002 = '",g_master.xcag002,"'"
+                   PREPARE axcp006_del_xcaj FROM g_sql   
+                   EXECUTE axcp006_del_xcaj
+                   IF SQLCA.sqlcode THEN
+                      CALL cl_err("del xcaj",SQLCA.sqlcode,1)  
+                      CALL s_transaction_end('N','0')
+                      LET g_success = 'N'
+                      RETURN g_success   
+                   END IF
+                END IF   
+             END IF                        
+          END IF                               
+       END IF 
+   END IF
+   
+   IF g_success = 'N' THEN 
+      CALL s_transaction_end('N','0')
+      IF NOT cl_ask_confirm('axc-00212') THEN #產生失敗，是否繼續    
+         CLOSE WINDOW w_axcp006         
+         RETURN
+      ELSE
+         RETURN   
+      END IF   
+   END IF
+   
+ 
+   CALL axcp006_get_site(ls_js) RETURNING g_success
+   
+   IF g_success = 'N' THEN
+      CALL s_transaction_end('N','0')
+      IF NOT cl_ask_confirm('axc-00212') THEN #產生失敗，是否繼續    
+         CLOSE WINDOW w_axcp006         
+         RETURN
+      ELSE
+         RETURN   
+      END IF   
+  ELSE  
+     CALL s_transaction_end('Y','0')  
+     IF cl_ask_confirm('axc-00211') THEN #產生成功，是否繼續    
+        RETURN
+     ELSE
+        CLOSE WINDOW w_axcp006 
+        RETURN   
+     END IF          
+   END IF]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_errmsg  STRING
+   DEFINE l_success LIKE type_t.num5
+   
+   LET g_errshow = 1]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#0704 調整為p01版型 --mark--str--
+#         CONSTRUCT BY NAME lc_param.wc ON xcabsite,imaa001
+#            BEFORE CONSTRUCT    
+#            
+#            ON ACTION controlp INFIELD xcabsite
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'c'
+#			   LET g_qryparam.reqry = FALSE 
+#               CALL q_xcabsite_1()                       #呼叫開窗
+#               DISPLAY g_qryparam.return1 TO xcabsite    #顯示到畫面上
+#               NEXT FIELD xcabsite                       #返回原欄位
+               
+#            ON ACTION controlp INFIELD imaa001
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'c'
+#			   LET g_qryparam.reqry = FALSE 
+#               CALL q_imaa001_16()                      #呼叫開窗
+#               DISPLAY g_qryparam.return1 TO imaa001    #顯示到畫面上
+#               NEXT FIELD imaa001                       #返回原欄位
+#         END CONSTRUCT             ]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="3" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#         INPUT BY NAME lc_param.date1,lc_param.date2,lc_param.ooai001,lc_param.a,lc_param.b,
+#                       lc_param.xcaa001,lc_param.xcab001,lc_param.xcac001,lc_param.xcad001,
+#                       lc_param.xcae001        
+#            
+#            BEFORE INPUT
+#               LET lc_param.b = g_today
+#            AFTER FIELD date1
+#            #生效日期不能小於已有的生效日期,一定大於已有的生效日期
+#               IF NOT cl_null(lc_param.date1) AND NOT cl_null(lc_param.xcaa001) THEN 
+#                  CALL cl_showmsg_init()
+#                  CALL axcp006_date1_chk(lc_param.wc,lc_param.xcaa001,lc_param.date1)
+#                  RETURNING l_success
+#                  
+#                  IF l_success = FALSE THEN 
+#                     CALL cl_err_showmsg()
+#                     NEXT FIELD date1
+#                  END IF
+#               END IF
+# 
+#            AFTER FIELD date2
+#            #失效日期大於或等於g_today and 大於生效日期            
+#               IF NOT cl_null(lc_param.date2) THEN 
+#                  IF lc_param.date2 < g_today THEN 
+#                     CALL cl_err('','axc-00067',1)
+#                     NEXT FIELD date2
+#                  END IF
+#                  IF lc_param.date2 < lc_param.date1 THEN 
+#                     CALL cl_err('','ais-00048',1)
+#                     NEXT FIELD date2
+#                  END IF                  
+#               END IF    
+#
+#            AFTER FIELD b
+#               #LET l_errmsg = ''
+#               #IF NOT cl_null(lc_param.wc) AND NOT cl_null(lc_param.ooai001) AND NOT cl_null(lc_param.b) THEN
+#               #   CALL axcp006_chk_rate(lc_param.wc,lc_param.ooai001,lc_param.b) RETURNING l_errmsg
+#               #   IF NOT cl_null(l_errmsg) THEN 
+#               #      CALL cl_err(l_errmsg,'axc-00218',1)
+#               #      NEXT FIELD b
+#               #   END IF                  
+#               #END IF
+#               LET l_success = TRUE
+#               CALL cl_showmsg_init()
+#               IF NOT cl_null(lc_param.b) AND NOT cl_null(lc_param.xcab001) THEN 
+#                  CALL axcp006_b_chk(lc_param.wc,lc_param.xcab001,lc_param.b,lc_param.ooai001)
+#                  RETURNING l_success
+#               END IF  
+#               
+#               IF NOT cl_null(lc_param.b) AND NOT cl_null(lc_param.xcac001) THEN 
+#                  CALL axcp006_b_chk_1(lc_param.wc,lc_param.xcac001,lc_param.b,lc_param.ooai001)
+#                  RETURNING l_success
+#               END IF
+#               
+#               IF l_success = FALSE THEN 
+#                  CALL cl_err_showmsg()
+#                  NEXT FIELD b
+#               END IF
+#               
+#            AFTER FIELD xcaa001
+#               IF NOT cl_null(lc_param.xcaa001) THEN 
+#                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+#                  INITIALIZE g_chkparam.* TO NULL
+#                  
+#                  #設定g_chkparam.*的參數
+#                  LET g_chkparam.arg1 = lc_param.xcaa001
+#               
+#                     
+#                  #呼叫檢查存在並帶值的library
+#                  IF cl_chk_exist("v_xcaa001") THEN
+#                     #檢查成功時後續處理
+#                     #LET  = g_chkparam.return1
+#                     #DISPLAY BY NAME 
+#                  ELSE
+#                     #檢查失敗時後續處理
+#                     LET lc_param.xcaa001 = ''
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               
+#               
+#               END IF 
+#               
+#               IF NOT cl_null(lc_param.date1) AND NOT cl_null(lc_param.xcaa001) THEN 
+#                  CALL cl_showmsg_init()
+#                  CALL axcp006_date1_chk(lc_param.wc,lc_param.xcaa001,lc_param.date1)
+#                  RETURNING l_success
+#                  
+#                  IF l_success = FALSE THEN 
+#                     CALL cl_err_showmsg()
+#                     NEXT FIELD xcaa001
+#                  END IF
+#               END IF
+               
+#            AFTER FIELD xcab001
+#               IF NOT cl_null(lc_param.xcab001) THEN 
+#                  CALL axcp006_xcab001_chk(lc_param.xcab001)
+#                  IF NOT cl_null(g_errno) THEN 
+#                     CALL cl_err(lc_param.xcab001,g_errno,1)
+#                     LET lc_param.xcab001 = ''
+#                     NEXT FIELD xcab001
+#                  END IF
+#               END IF
+#            
+#               IF NOT cl_null(lc_param.xcab001) AND NOT cl_null(lc_param.b) THEN 
+#                  CALL cl_showmsg_init()
+#                  CALL axcp006_b_chk(lc_param.wc,lc_param.xcab001,lc_param.b,lc_param.ooai001)
+#                  RETURNING l_success
+#                  
+#                  IF l_success = FALSE THEN 
+#                     CALL cl_err_showmsg()
+#                     NEXT FIELD xcab001
+#                  END IF
+#               END IF
+#               
+#            AFTER FIELD xcac001
+#               IF NOT cl_null(lc_param.xcac001) THEN 
+#                  CALL axcp006_xcac001_chk(lc_param.xcac001)
+#                  IF NOT cl_null(g_errno) THEN 
+#                     CALL cl_err(lc_param.xcab001,g_errno,1)
+#                     LET lc_param.xcac001 = ''
+#                     NEXT FIELD xcac001
+#                  END IF
+#               END IF
+#            
+#               IF NOT cl_null(lc_param.xcac001) AND NOT cl_null(lc_param.b) THEN 
+#                  
+#                  CALL cl_showmsg_init()
+#                  CALL axcp006_b_chk_1(lc_param.wc,lc_param.xcac001,lc_param.b,lc_param.ooai001)
+#                  RETURNING l_success
+#                  
+#                  IF l_success = FALSE THEN 
+#                     CALL cl_err_showmsg()
+#                     NEXT FIELD xcac001
+#                  END IF
+#               END IF
+#           
+#               
+#           AFTER INPUT 
+#               #LET l_errmsg = ''
+#               #IF NOT cl_null(lc_param.wc) AND NOT cl_null(lc_param.ooai001) AND NOT cl_null(lc_param.b) THEN
+#               #   CALL axcp006_chk_rate(lc_param.wc,lc_param.ooai001,lc_param.b) RETURNING l_errmsg
+#               #   IF NOT cl_null(l_errmsg) THEN 
+#               #      CALL cl_err(l_errmsg,'axc-00218',1)
+#               #      NEXT FIELD b
+#               #   END IF                  
+#               #END IF            
+            
+#            ON ACTION controlp INFIELD ooai001
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.default1 = lc_param.ooai001      #給予default值
+#               #給予arg
+#               CALL q_ooai001()                                #呼叫開窗
+#               LET lc_param.ooai001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+#               DISPLAY lc_param.ooai001 TO ooai001             #顯示到畫面上
+#               NEXT FIELD ooai001                              #返回原欄位  
+#
+#            ON ACTION controlp INFIELD xcaa001
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.default1 = lc_param.xcaa001      #給予default值
+#               LET g_qryparam.where = " xcaa003 = 'Y' AND xcaa002 <> 'Y' "
+#               #給予arg
+#               CALL q_xcaa001()                                #呼叫開窗
+#               LET lc_param.xcaa001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+#               DISPLAY lc_param.xcaa001 TO xcaa001             #顯示到畫面上
+#               NEXT FIELD xcaa001                              #返回原欄位 
+               
+#            ON ACTION controlp INFIELD xcab001
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.default1 = lc_param.xcab001      #給予default值
+#               #給予arg
+#               CALL q_xcab001()                                #呼叫開窗
+#               LET lc_param.xcab001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+#               DISPLAY lc_param.xcab001 TO xcab001             #顯示到畫面上
+#               NEXT FIELD xcab001                              #返回原欄位 
+#              
+#            ON ACTION controlp INFIELD xcac001
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.default1 = lc_param.xcac001      #給予default值
+#               #給予arg
+#               CALL q_xcac001()                                #呼叫開窗
+#               LET lc_param.xcac001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+#               DISPLAY lc_param.xcac001 TO xcac001             #顯示到畫面上
+#               NEXT FIELD xcac001                              #返回原欄位 
+               
+#            ON ACTION controlp INFIELD xcad001
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.default1 = lc_param.xcad001      #給予default值
+#               #給予arg
+#               CALL q_xcad001_1()                              #呼叫開窗
+#               LET lc_param.xcad001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+#               DISPLAY lc_param.xcad001 TO xcad001             #顯示到畫面上
+#               NEXT FIELD xcad001                              #返回原欄位 
+
+#            ON ACTION controlp INFIELD xcae001
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.default1 = lc_param.xcae001      #給予default值
+#               #給予arg
+#               CALL q_xcae001()                                #呼叫開窗
+#               LET lc_param.xcae001 = g_qryparam.return1       #將開窗取得的值回傳到變數
+#               DISPLAY lc_param.xcae001 TO xcae001             #顯示到畫面上
+#               NEXT FIELD xcae001                              #返回原欄位 
+#         END INPUT  
+#0704 調整為p01版型 --mark--end--]]>
+  </point>
+  <section id="axcp006.description" ver="230" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000385
+#+ 
+#+ Filename...: axcp006
+#+ Description: 標準成本卷算作業
+#+ Creator....: 01531(2014/03/26)
+#+ Modifier...: 01531(2014/07/03)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="axcp006.global" ver="6" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       xcabsite LIKE xcab_t.xcabsite, 
+   xcab002 LIKE xcab_t.xcab002, 
+   xcag002 LIKE xcag_t.xcag002, 
+   xcaa001 LIKE type_t.chr10, 
+   xcag003 LIKE xcag_t.xcag003, 
+   xcab001 LIKE type_t.chr10, 
+   ooai001 LIKE type_t.chr10, 
+   xcac001 LIKE type_t.chr10, 
+   a LIKE type_t.chr80, 
+   xcad001 LIKE type_t.chr10, 
+   ooam004 LIKE ooam_t.ooam004, 
+   xcae001 LIKE type_t.chr10, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axcp006.init" ver="1" status="" src="s">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION axcp006_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axcp006.main" ver="2" status="" src="s">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axc","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL axcp006_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axcp006 WITH FORM cl_ap_formpath("axc",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axcp006_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axcp006_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axcp006
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="axcp006.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axcp006.process" ver="2" status="" src="s">
+    <![CDATA[#+ 資料處理
+PRIVATE FUNCTION axcp006_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axcp006_process_cs CURSOR FROM ls_sql
+#  FOREACH axcp006_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+  </section>
+  <section id="axcp006.transfer_argv" ver="1" status="" src="s">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axcp006_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="axcp006.ui_dialog" ver="13" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION axcp006_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #+ 此段落由子樣板a57產生
+         INPUT BY NAME g_master.xcag002,g_master.xcaa001,g_master.xcag003,g_master.xcab001,g_master.ooai001, 
+             g_master.xcac001,g_master.a,g_master.xcad001,g_master.ooam004,g_master.xcae001 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #此段落由子樣板a01產生
+         BEFORE FIELD xcag002
+            #add-point:BEFORE FIELD xcag002
+            {<point name="input.b.xcag002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcag002
+            
+            #add-point:AFTER FIELD xcag002
+            {<point name="input.a.xcag002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcag002
+            #add-point:ON CHANGE xcag002
+            {<point name="input.g.xcag002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcaa001
+            #add-point:BEFORE FIELD xcaa001
+            {<point name="input.b.xcaa001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcaa001
+            
+            #add-point:AFTER FIELD xcaa001
+            {<point name="input.a.xcaa001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcaa001
+            #add-point:ON CHANGE xcaa001
+            {<point name="input.g.xcaa001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcag003
+            #add-point:BEFORE FIELD xcag003
+            {<point name="input.b.xcag003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcag003
+            
+            #add-point:AFTER FIELD xcag003
+            {<point name="input.a.xcag003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcag003
+            #add-point:ON CHANGE xcag003
+            {<point name="input.g.xcag003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcab001
+            #add-point:BEFORE FIELD xcab001
+            {<point name="input.b.xcab001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcab001
+            
+            #add-point:AFTER FIELD xcab001
+            {<point name="input.a.xcab001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcab001
+            #add-point:ON CHANGE xcab001
+            {<point name="input.g.xcab001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooai001
+            #add-point:BEFORE FIELD ooai001
+            {<point name="input.b.ooai001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooai001
+            
+            #add-point:AFTER FIELD ooai001
+            {<point name="input.a.ooai001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ooai001
+            #add-point:ON CHANGE ooai001
+            {<point name="input.g.ooai001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcac001
+            #add-point:BEFORE FIELD xcac001
+            {<point name="input.b.xcac001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcac001
+            
+            #add-point:AFTER FIELD xcac001
+            {<point name="input.a.xcac001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcac001
+            #add-point:ON CHANGE xcac001
+            {<point name="input.g.xcac001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD a
+            #add-point:BEFORE FIELD a
+            {<point name="input.b.a" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD a
+            
+            #add-point:AFTER FIELD a
+            {<point name="input.a.a" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE a
+            #add-point:ON CHANGE a
+            {<point name="input.g.a" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcad001
+            #add-point:BEFORE FIELD xcad001
+            {<point name="input.b.xcad001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcad001
+            
+            #add-point:AFTER FIELD xcad001
+            {<point name="input.a.xcad001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcad001
+            #add-point:ON CHANGE xcad001
+            {<point name="input.g.xcad001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooam004
+            #add-point:BEFORE FIELD ooam004
+            {<point name="input.b.ooam004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooam004
+            
+            #add-point:AFTER FIELD ooam004
+            {<point name="input.a.ooam004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ooam004
+            #add-point:ON CHANGE ooam004
+            {<point name="input.g.ooam004" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcae001
+            #add-point:BEFORE FIELD xcae001
+            {<point name="input.b.xcae001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcae001
+            
+            #add-point:AFTER FIELD xcae001
+            {<point name="input.a.xcae001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcae001
+            #add-point:ON CHANGE xcae001
+            {<point name="input.g.xcae001" />}
+            #END add-point
+ 
+ 
+                     #Ctrlp:input.c.xcag002
+         ON ACTION controlp INFIELD xcag002
+            #add-point:ON ACTION controlp INFIELD xcag002
+            {<point name="input.c.xcag002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xcaa001
+         ON ACTION controlp INFIELD xcaa001
+            #add-point:ON ACTION controlp INFIELD xcaa001
+            {<point name="input.c.xcaa001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xcag003
+         ON ACTION controlp INFIELD xcag003
+            #add-point:ON ACTION controlp INFIELD xcag003
+            {<point name="input.c.xcag003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xcab001
+         ON ACTION controlp INFIELD xcab001
+            #add-point:ON ACTION controlp INFIELD xcab001
+            {<point name="input.c.xcab001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.ooai001
+         ON ACTION controlp INFIELD ooai001
+            #add-point:ON ACTION controlp INFIELD ooai001
+            {<point name="input.c.ooai001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xcac001
+         ON ACTION controlp INFIELD xcac001
+            #add-point:ON ACTION controlp INFIELD xcac001
+            {<point name="input.c.xcac001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.a
+         ON ACTION controlp INFIELD a
+            #add-point:ON ACTION controlp INFIELD a
+            {<point name="input.c.a" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xcad001
+         ON ACTION controlp INFIELD xcad001
+            #add-point:ON ACTION controlp INFIELD xcad001
+            {<point name="input.c.xcad001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.ooam004
+         ON ACTION controlp INFIELD ooam004
+            #add-point:ON ACTION controlp INFIELD ooam004
+            {<point name="input.c.ooam004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xcae001
+         ON ACTION controlp INFIELD xcae001
+            #add-point:ON ACTION controlp INFIELD xcae001
+            {<point name="input.c.xcae001" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+               
+         END INPUT
+ 
+ 
+         
+         #+ 此段落由子樣板a57產生
+         CONSTRUCT BY NAME g_master.wc ON xcabsite,xcab002
+         
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #此段落由子樣板a01產生
+         BEFORE FIELD xcabsite
+            #add-point:BEFORE FIELD xcabsite
+            {<point name="construct.b.xcabsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcabsite
+            
+            #add-point:AFTER FIELD xcabsite
+            {<point name="construct.a.xcabsite" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xcabsite
+         ON ACTION controlp INFIELD xcabsite
+            #add-point:ON ACTION controlp INFIELD xcabsite
+            {<point name="construct.c.xcabsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcab002
+            #add-point:BEFORE FIELD xcab002
+            {<point name="construct.b.xcab002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcab002
+            
+            #add-point:AFTER FIELD xcab002
+            {<point name="construct.a.xcab002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xcab002
+         ON ACTION controlp INFIELD xcab002
+            #add-point:ON ACTION controlp INFIELD xcab002
+            {<point name="construct.c.xcab002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD a
+            #add-point:BEFORE FIELD a
+            {<point name="construct.b.a" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD a
+            
+            #add-point:AFTER FIELD a
+            {<point name="construct.a.a" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.a
+         ON ACTION controlp INFIELD a
+            #add-point:ON ACTION controlp INFIELD a
+            {<point name="construct.c.a" />}
+            #END add-point
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axcp006_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+                 LET ls_js = axcp006_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

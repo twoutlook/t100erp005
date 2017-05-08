@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammq410" module="amm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02748" crtdt="2014-02-13 14:59:43" modid="06814" moddt="2016-09-12 11:32:22" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員積點異動查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),mmar001,mmar002,mmar002_desc(chr500),mmar006,mmar011,mmar009,mmar008,mmar012,mmar003,mmar010,mmar010_desc(chr500),mmar007,mmar007_desc(chr500),mmar004,mmar005,mmarseq"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),mmar001(b_mmar001),mmar002(b_mmar002),mmar002_desc(b_mmar002_desc),mmar006(b_mmar006),mmar011(b_mmar011),mmar009(b_mmar009),mmar008(b_mmar008),mmar012(b_mmar012),mmar003(b_mmar003),mmar010(b_mmar010),mmar010_desc(b_mmar010_desc),mmar007(b_mmar007),mmar007_desc(b_mmar007_desc),mmar004(b_mmar004),mmar005(b_mmar005),mmarseq(b_mmarseq)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammq410" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="mmar001,mmar002,mmar006,mmar011,mmar009,mmar008,mmar012,mmar003,mmar010,mmar007,mmar004,mmar005,mmarseq" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="mmar001(b_mmar001),mmar002(b_mmar002),mmar006(b_mmar006),mmar011(b_mmar011),mmar009(b_mmar009),mmar008(b_mmar008),mmar012(b_mmar012),mmar003(b_mmar003),mmar010(b_mmar010),mmar007(b_mmar007),mmar004(b_mmar004),mmar005(b_mmar005),mmarseq(b_mmarseq)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="mmar001">
+        <controlp form="q_mmaq001_2" state="c"/>
+      </column>
+      <column id="mmar002">
+        <after>
+          <reference field="mmar002_desc" ref_field="mmar002" map_field="mmarent,mmar002" ref_sql="SELECT mmaf008 FROM mmaf_t WHERE mmafent=$varg_enterprise$var AND mmaf001=? "/>
+        </after>
+        <controlp form="q_mmaf001" state="c"/>
+      </column>
+      <column id="mmar002_desc"/>
+      <column id="mmar006"/>
+      <column id="mmar011"/>
+      <column id="mmar009"/>
+      <column id="mmar008"/>
+      <column id="mmar012"/>
+      <column id="mmar003" def_scc="6512"/>
+      <column id="mmar010">
+        <after>
+          <reference field="mmar010_desc" ref_field="mmar010" map_field="mmarent,mmar010" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mmar010_desc"/>
+      <column id="mmar007">
+        <after>
+          <reference field="mmar007_desc" ref_field="mmar007" map_field="mmarent,mmar007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mmar007_desc"/>
+      <column id="mmar004" def_scc="6513"/>
+      <column id="mmar005">
+        <controlp form="q_mmar005" state="c"/>
+      </column>
+      <column id="mmarseq"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="mmar_t" page="1" linked="" pk="mmar001,mmar004,mmar005,mmarseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,mmar001,mmar002,&apos;&apos;,mmar006,mmar011,mmar009,mmar008,mmar012,mmar003,mmar010,&apos;&apos;,mmar007,&apos;&apos;,mmar004,mmar005,mmarseq FROM mmar_t WHERE mmarent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

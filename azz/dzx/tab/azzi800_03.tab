@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi800_03" module="azz" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="01258" crtdt="2013-08-16 10:57:44" modid="01856" moddt="2015-11-06 13:35:03" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="設定各據點額外可用的程式">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzxg001,gzxg002,gzxgstus,gzxgownid,gzxgownid_desc(chr80),gzxgowndp,gzxgowndp_desc(chr80),gzxgcrtid,gzxgcrtid_desc(chr80),gzxgcrtdp,gzxgcrtdp_desc(chr80),gzxgcrtdt,gzxgmodid,gzxgmodid_desc(chr80),gzxgmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzxh003,gzxh003_desc(chr500),gzxh004,gzxh005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="btn_all"/>
+      <action id="btn_cancel"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi800_03" method="dialog">
+    <section id="input">
+      <input id="head" field="gzxg001,gzxg002,gzxgstus"/>
+      <input id="body" page="1" field="gzxh003,gzxh004,gzxh005" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzxg001,gzxg002,gzxgstus,gzxgownid,gzxgowndp,gzxgcrtid,gzxgcrtdp,gzxgcrtdt,gzxgmodid,gzxgmoddt"/>
+      <construct id="body" page="1" field="gzxh003,gzxh004,gzxh005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzxg001,gzxg002"/>
+      <set id="head" type="no_entry" field="gzxg001,gzxg002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzxg001"/>
+      <column id="gzxg002"/>
+      <column id="gzxgstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzxgownid">
+        <after>
+          <reference field="gzxgownid_desc" ref_field="gzxg_t.gzxgownid" map_field="gzxgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzxgownid_desc"/>
+      <column id="gzxgowndp">
+        <after>
+          <reference field="gzxgowndp_desc" ref_field="gzxg_t.gzxgowndp" map_field="gzxgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzxgowndp_desc"/>
+      <column id="gzxgcrtid">
+        <after>
+          <reference field="gzxgcrtid_desc" ref_field="gzxg_t.gzxgcrtid" map_field="gzxgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzxgcrtid_desc"/>
+      <column id="gzxgcrtdp">
+        <after>
+          <reference field="gzxgcrtdp_desc" ref_field="gzxg_t.gzxgcrtdp" map_field="gzxgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzxgcrtdp_desc"/>
+      <column id="gzxgcrtdt"/>
+      <column id="gzxgmodid">
+        <after>
+          <reference field="gzxgmodid_desc" ref_field="gzxg_t.gzxgmodid" map_field="gzxgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzxgmodid_desc"/>
+      <column id="gzxgmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzxh003">
+        <after/>
+      </column>
+      <column id="gzxh003_desc"/>
+      <column id="gzxh004"/>
+      <column id="gzxh005" def_scc="84"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzxg_t" pk="gzxg001,gzxg002">
+      <sql id="forupd_sql" type="sql" query="SELECT gzxg001,gzxg002,gzxgstus,gzxgownid,&apos;&apos;,gzxgowndp,&apos;&apos;,gzxgcrtid,&apos;&apos;,gzxgcrtdp,&apos;&apos;,gzxgcrtdt,gzxgmodid,&apos;&apos;,gzxgmoddt FROM gzxg_t WHERE gzxgent= ? AND gzxg001=? AND gzxg002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzxg001,gzxg002,gzxgstus,gzxgownid,&apos;&apos;,gzxgowndp,&apos;&apos;,gzxgcrtid,&apos;&apos;,gzxgcrtdp,&apos;&apos;,gzxgcrtdt,gzxgmodid,&apos;&apos;,gzxgmoddt FROM gzxg_t" order="gzxg001,gzxg002"/>
+    </head>
+    <body id="gzxh_t" page="1" linked="" pk="gzxh003" fk="gzxh001,gzxh002">
+      <sql id="forupd_sql_detail" query="SELECT gzxh003,&apos;&apos;,gzxh004,gzxh005 FROM gzxh_t WHERE gzxhent=? AND gzxh001=? AND gzxh002=? AND gzxh003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzxh003,&apos;&apos;,gzxh004,gzxh005 FROM gzxh_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

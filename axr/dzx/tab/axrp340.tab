@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrp340" module="axr" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="01727" crtdt="2014-05-07 09:53:59" modid="01727" moddt="2014-05-09 13:34:15" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="輔助帳套應收帳款資料複製作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="xrca103,xrca100,xrca106,xrca104,xrca107,xrca108,fflabel(chr80),xrcald,xrcald_desc(chr80),fflabel_1(chr80),xrcacomp,xrcacomp_desc(chr80),xrca004,xrcadocdt,xrcadocno,xrca003,fflabel_2(chr80),s_xrcald,s_xrcald_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xrcadocno,xrcadocdt,xrca004,xrca004_desc(chr500),xrca100,xrca103,xrca106,xrca104,xrca107,xrca108"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xrcadocno(b_xrcadocno),xrcadocdt(b_xrcadocdt),xrca004(b_xrca004),xrca004_desc(b_xrca004_desc),xrca100(b_xrca100),xrca103(b_xrca103),xrca106(b_xrca106),xrca104(b_xrca104),xrca107(b_xrca107),xrca108(b_xrca108)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrp340" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xrcadocno,xrcadocdt,xrca004,xrca100,xrca103,xrca106,xrca104,xrca107,xrca108" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="xrcadocno(b_xrcadocno),xrcadocdt(b_xrcadocdt),xrca004(b_xrca004),xrca100(b_xrca100),xrca103(b_xrca103),xrca106(b_xrca106),xrca104(b_xrca104),xrca107(b_xrca107),xrca108(b_xrca108)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xrcadocno">
+        <controlp form="q_xrcadocno" state="c"/>
+      </column>
+      <column id="xrcadocdt"/>
+      <column id="xrca004">
+        <after>
+          <reference field="xrca004_desc" ref_field="xrca004" map_field="xrcaent,xrca004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="xrca004_desc"/>
+      <column id="xrca100">
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="xrca103" type="S" default="0"/>
+      <column id="xrca106" type="S" default="0"/>
+      <column id="xrca104" type="S" default="0"/>
+      <column id="xrca107" type="S" default="0"/>
+      <column id="xrca108" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xrca_t" page="1" linked="" pk="xrcald,xrcadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xrcadocno,xrcadocdt,xrca004,&apos;&apos;,xrca100,xrca103,xrca106,xrca104,xrca107,xrca108 FROM xrca_t WHERE xrcaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint330_01" module="ain" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01534" crtdt="2015-08-14 14:18:35" modid="01534" moddt="2015-08-14 14:23:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產生QC單">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="qcbadocno,qcbadocno_desc(chr80),qcbadocdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint330_01" method="dialog">
+    <section id="input">
+      <input id="head" field="qcbadocno,qcbadocdt"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="qcbadocno">
+        <after>
+          <reference field="qcbadocno_desc" ref_field="qcba_t.qcbadocno" map_field="qcbadocno" ref_sql="SELECT oobal004 FROM oobal_t WHERE oobalent=$varg_enterprise$var AND oobal001=? AND oobal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooba002_6" state="i"/>
+      </column>
+      <column id="qcbadocno_desc"/>
+      <column id="qcbadocdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="qcba_t" pk="qcbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT qcbadocno,&apos;&apos;,qcbadocdt FROM qcba_t WHERE qcbaent= ? AND qcbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="qcbadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

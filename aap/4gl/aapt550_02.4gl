@@ -1,0 +1,317 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapt550_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-03-10 18:00:42), PR版次:0001(2016-03-11 09:49:04)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000030
+#+ Filename...: aapt550_02
+#+ Description: 費用轉其他應付單
+#+ Creator....: 05016(2016-03-10 17:59:18)
+#+ Modifier...: 05016 -SD/PR- 05016
+ 
+{</section>}
+ 
+{<section id="aapt550_02.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_apca_m        RECORD
+       apcadocno LIKE apca_t.apcadocno, 
+   apcadocdt LIKE apca_t.apcadocdt
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+DEFINE g_apca_m        type_g_apca_m
+ 
+   DEFINE g_apcadocno_t LIKE apca_t.apcadocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapt550_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt550_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_apglcomp,p_apgldocno
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE l_glaa024        LIKE glaa_t.glaa024
+   DEFINE p_apglcomp       LIKE apgl_t.apglcomp
+   DEFINE p_apgldocno      LIKE apgl_t.apgldocno
+   DEFINE r_success        LIKE type_t.num5
+   DEFINE r_apgl030        LIKE apgl_t.apgl030
+   DEFINE l_apga003        LIKE apga_t.apga003
+   DEFINE l_apgldocdt      LIKE apgl_t.apgldocdt
+   DEFINE l_apgl002        LIKE apgl_t.apgl002
+   DEFINE l_apgl004        LIKE apgl_t.apgl004
+   DEFINE l_apgl005        LIKE apgl_t.apgl005
+   DEFINE l_ld             LIKE apca_t.apcald
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt550_02 WITH FORM cl_ap_formpath("aap","aapt550_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_apca_m.apcadocno,g_apca_m.apcadocdt ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            LET g_apca_m.apcadocdt = g_today LET g_apca_m.apcadocno = ''
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcadocno
+            #add-point:BEFORE FIELD apcadocno name="input.b.apcadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcadocno
+            
+            #add-point:AFTER FIELD apcadocno name="input.a.apcadocno"
+            IF NOT cl_null(g_apca_m.apcadocno) THEN
+               LET l_ld = NULL
+               SELECT glaald INTO l_ld FROM glaa_t
+                WHERE glaaent = g_enterprise
+                  AND glaacomp = p_apglcomp
+                  AND glaa014 = 'Y'
+               IF NOT s_aooi200_fin_chk_docno(l_ld,'','',g_apca_m.apcadocno,g_apca_m.apcadocdt,'aapt301') THEN
+                  LET g_apca_m.apcadocno = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcadocno
+            #add-point:ON CHANGE apcadocno name="input.g.apcadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcadocdt
+            #add-point:BEFORE FIELD apcadocdt name="input.b.apcadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcadocdt
+            
+            #add-point:AFTER FIELD apcadocdt name="input.a.apcadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcadocdt
+            #add-point:ON CHANGE apcadocdt name="input.g.apcadocdt"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.apcadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcadocno
+            #add-point:ON ACTION controlp INFIELD apcadocno name="input.c.apcadocno"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_apca_m.apcadocno
+            LET l_glaa024 = NULL
+            SELECT glaa024 INTO l_glaa024 FROM glaa_t
+             WHERE glaaent = g_enterprise
+               AND glaacomp = p_apglcomp
+               AND glaa014 = 'Y'
+            LET g_qryparam.arg1 = l_glaa024
+            LET g_qryparam.arg2 = 'aapt301'
+            CALL q_ooba002_1()
+            LET g_apca_m.apcadocno = g_qryparam.return1
+            DISPLAY BY NAME g_apca_m.apcadocno
+            NEXT FIELD apcadocno
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apcadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcadocdt
+            #add-point:ON ACTION controlp INFIELD apcadocdt name="input.c.apcadocdt"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   IF INT_FLAG THEN
+      LET r_success = FALSE
+      LET INT_FLAG = FALSE
+      LET r_apgl030 = ''
+      CLOSE WINDOW w_aapt550_02
+      RETURN r_success,r_apgl030
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt550_02 
+   
+   #add-point:input段after input name="input.post_input"
+   LET r_success = TRUE
+   #檢查費用單身是否有資料
+   SELECT COUNT(*) INTO l_count
+    FROM apgc_t WHERE apgcent = g_enterprise
+     AND apgcdocno = p_apgldocno AND apgccomp = p_apglcomp
+     AND apgc900 = '0'
+   IF cl_null(l_count) THEN LET l_count = 0 END IF
+   IF l_count =0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = 'sub-00252'
+       LET g_errparam.extend = ''
+       LET g_errparam.popup = TRUE
+       CALL cl_err()
+       LET r_success = FALSE
+   ELSE   
+      LET l_ld = NULL
+      SELECT glaald INTO l_ld FROM glaa_t
+       WHERE glaaent = g_enterprise
+         AND glaacomp = p_apglcomp
+         AND glaa014 = 'Y'
+      SELECT apgl002,apgl005 INTO l_apgl002,l_apgl005
+        FROM apgl_t WHERE apgldocno = p_apgldocno
+         AND apglcomp = p_apglcomp AND apglent = g_enterprise
+
+      SELECT apga003 INTO l_apga003
+         FROM apga_t WHERE apgaent = g_enterprise AND apgadocno = l_apgl004
+          AND apgacomp = p_apglcomp
+         
+      CALL s_aapt510_ins_ap(p_apglcomp,p_apgldocno,'0',g_apca_m.apcadocdt,l_apgl002,l_apgl005,l_apga003,g_apca_m.apcadocno,'1')
+         RETURNING g_sub_success,r_apgl030  
+   END IF
+   
+   RETURN r_success,r_apgl030
+   
+   
+   
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapt550_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aapt550_02.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

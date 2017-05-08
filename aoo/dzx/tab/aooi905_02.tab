@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi905_02" module="aoo" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02003" crtdt="2014-09-02 16:03:28" modid="02003" moddt="2014-09-11 16:50:45" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="整批複製">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooif000_1(chr10),ooif000_1_desc(chr80),ooif001_1(chr10),ooif001_1_desc(chr80),ooif000_2(chr10),ooif000_2_desc(chr80),chk(chr500),ooif001_2(chr10),ooif001_2_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aoo" filename="aooi905_02" method="dialog">
+    <section id="input">
+      <input id="head" field="ooif000_1,ooif001_1,ooif000_2,chk,ooif001_2"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="ooif000_1">
+        <after>
+          <reference field="ooif000_1_desc" ref_field="ooif000_1" map_field="ooif001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ooif000_1_desc"/>
+      <column id="ooif001_1">
+        <after>
+          <reference field="ooif001_1_desc" ref_field="ooif001_1" map_field="ooif001" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ooif001_1_desc"/>
+      <column id="ooif000_2">
+        <after>
+          <reference field="ooif000_2_desc" ref_field="ooif000_2" map_field="ooif000" ref_sql="SELECT rtaal003 FROM rtaal_t WHERE rtaalent=$varg_enterprise$var AND rtaal001=? AND rtaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtaa001_4" state="i"/>
+      </column>
+      <column id="ooif000_2_desc"/>
+      <column id="chk" type="S" default="N"/>
+      <column id="ooif001_2">
+        <after>
+          <reference field="ooif001_2_desc" ref_field="ooif001_2" map_field="ooif001" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001_04" state="i"/>
+      </column>
+      <column id="ooif001_2_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooif_t" pk="ooif000,ooif001">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM ooif_t WHERE ooifent= ? AND ooif000=? AND ooif001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="ooif000,ooif001"/>
+    </head>
+  </dataset>
+</assembly>
+

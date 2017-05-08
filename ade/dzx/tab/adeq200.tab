@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq200" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="01251" crtdt="2014-01-24 19:18:04" modid="06815" moddt="2015-12-28 11:38:37" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店收入日結查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),debz002,debz003,debz004,debzsite,debzsite_desc(chr500),debz005,debz007,debz007_desc(chr500),debz014,debz014_desc(chr500),debz008,debz008_desc(chr500),debz010,debz011,debz012,debz009,debz013"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),debz002(b_debz002),debz003(b_debz003),debz004(b_debz004),debzsite(b_debzsite),debzsite_desc(b_debzsite_desc),debz005(b_debz005),debz007(b_debz007),debz007_desc(b_debz007_desc),debz014(b_debz014),debz014_desc(b_debz014_desc),debz008(b_debz008),debz008_desc(b_debz008_desc),debz010(b_debz010),debz011(b_debz011),debz012(b_debz012),debz009(b_debz009),debz013(b_debz013)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq200" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="debz002,debz003,debz004,debzsite,debz005,debz007,debz014,debz008,debz010,debz011,debz012,debz009,debz013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="debz002(b_debz002),debz003(b_debz003),debz004(b_debz004),debzsite(b_debzsite),debz005(b_debz005),debz007(b_debz007),debz014(b_debz014),debz008(b_debz008),debz010(b_debz010),debz011(b_debz011),debz012(b_debz012),debz009(b_debz009),debz013(b_debz013)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="debz002"/>
+      <column id="debz003"/>
+      <column id="debz004"/>
+      <column id="debzsite">
+        <after>
+          <reference field="debzsite_desc" ref_field="debzsite" map_field="debzent,debzsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="debzsite_desc"/>
+      <column id="debz005"/>
+      <column id="debz007">
+        <after>
+          <reference field="debz007_desc" ref_field="debz007" map_field="debzent,debz007" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_2" state="c"/>
+      </column>
+      <column id="debz007_desc"/>
+      <column id="debz014">
+        <after/>
+        <controlp form="q_inaa001_7" state="c"/>
+      </column>
+      <column id="debz014_desc"/>
+      <column id="debz008">
+        <after>
+          <reference field="debz008_desc" ref_field="debz008" map_field="debzent,debz008" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002" state="c"/>
+      </column>
+      <column id="debz008_desc"/>
+      <column id="debz010"/>
+      <column id="debz011"/>
+      <column id="debz012"/>
+      <column id="debz009"/>
+      <column id="debz013"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="debz_t" page="1" linked="" pk="debzsite,debz002,debz005,debz007,debz008,debz014,debz018">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,debz002,debz003,debz004,debzsite,&apos;&apos;,debz005,debz007,&apos;&apos;,debz014,&apos;&apos;,debz008,&apos;&apos;,debz010,debz011,debz012,debz009,debz013 FROM debz_t WHERE debzent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,835 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="afai120" std_prog="afai120" erpver="1.0" ver="8" module="AFA" type="M" booking="N" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="faak_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 固定资产维护作业
+作業功能：新增/修改/刪除/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基础资料維護作業
+輸入模式：单檔（）F001_00
+作業資料來源(Master)
+ 資料來源表：faak_t(固定资产底稿基础资料檔)
+ 
+其它信息頁簽:
+         此页签的数据由主要类型（afai020）默认带值
+新增：预设值
+   帐套编号：默认主帐套
+   类型： 主件
+   资产性质：购入
+   在外数量：0
+   币别： 主帐套使用的本位币
+   取得日期：当前系统日期
+   资产状态： 取得
+   取得方式：购入
+   存放组织+管理组织+核算组织：默认当前组织
+
+所有金额栏位要依币别截位
+
+已抛转过的卡片的资产底稿不可再次抛转
+
+        
+TOPMENU
+>>確認:
+   功能名稱：s_conf
+   功能目的：確認
+   注意事項：無
+   關鍵詞：财产编号、確認
+
+   參數值：财产编号
+   回傳值：1.檢核狀態 
+   　　　　2.錯誤訊息
+===============================================================================================
+    1.資料檢查
+    (1).狀態=N 才可執行確認
+    (2).KEY值不得空白
+    (3).原幣金額不可為0 
+
+   2.更新狀態碼=已確認,確認人=登入user,確認日期=g_today   
+
+   3.回傳檢核狀態,錯誤訊息
+   
+>>取消確認:
+===============================================================================================
+功能名稱：s_uconf
+功能目的：取消確認
+注意事項：無
+關鍵詞：财产编号、取消確認
+
+參數值：财产编号
+回傳值：1.檢核狀態 
+　　　　2.錯誤訊息
+===============================================================================================
+1.資料檢查
+  (1).狀態=Y 才可執行取消確認
+  (2).资产除取得外不可執行取消確認
+
+2.更新狀態碼=N ,確認人= null ,確認日期=null    
+
+3.回傳檢核狀態,錯誤訊息
+   
+                       ]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[此页签的数据由主要类型（afai020）默认带值]]>
+  </mi_all>
+  <field cite_std="N" name="faak_t.faak000" ver="1" src="s" column="faak000" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[【批号】默认值:2014020001（4位年度,2位月份,4码流水+1);]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak001" ver="1" src="s" column="faak001" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_faak001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[卡片编号
+
+   ●欄位控管：
+　   資料欄位: faak_t可Display可Input
+　   預設值:   无
+　   允許空白: No
+     校驗值:不可重复
+说明：
+   在多人同时录入时会出现重复的现像，故在整笔资料录入后再取值
+    手動輸入的序號不可重複
+若参数S-FIN-9005 设置为Y,则自动编号十码流水号,累加。若参数不勾选,则用户手key卡片编号
+
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak002" ver="1" src="s" column="faak002" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[匯款類型
+  ●欄位控管：
+　   資料欄位: faak_t可Display可Input
+　   預設值:   1
+　   允許空白: No
+     下接選項：SCC = 9911
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak003" ver="1" src="s" column="faak003" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_faak003" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[底稿编号
+  ●欄位控管：
+　   資料欄位: faak_t【faak003] 可Display可Input
+　   預設值:   無
+　   允許空白: No
+     
+
+  ●開窗處理：依標準
+
+1，存檔前需以財編號碼去資料庫找是否已存在,若是則需再重編財編號碼
+2，当型态为配件或費用时，其財編一定要存在（主件）
+    
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak004" ver="1" src="s" column="faak004" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_faak004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[附号
+  ●欄位控管：
+　   資料欄位: faah_t【faak004] 可Display可Input
+　   預設值:   無
+　   允許空白: No
+     
+
+  ●開窗處理：依標準
+
+after field :財編+附號是否重複
+    
+    ]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak005" ver="1" src="s" column="faak005" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[资产性质
+  ●欄位控管：
+　   資料欄位: [T.faak_t].可Display可Input
+　   預設值:   1，自由
+　   允許空白: No
+     下接選項：SCC = 9903]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak006" ver="4" src="s" column="faak006" table="faak_t" attribute="" type="" req="Y" i_zoom="q_faac001_1" c_zoom="q_faac001_1" chk_ref="v_faac001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料表: faak_t [faak006]
+欄位:
+顏色:白色
+輸入長度:依照資料表長度定義
+特別說明:检核是否存在于afai020中faac_t中，如果不存在，则提示，
+如果存在，则带出afai020中默认的已设置好的栏位
+即：輸入資產類別後,自動帶出該類別之相關欄位
+
+動作:新增/修改：q_faac**(需新增）
+     回传单一值
+查询： q_faac***
+     回传多重值
+
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak007" ver="4" src="s" column="faak007" table="faak_t" attribute="" type="" req="Y" i_zoom="q_faad001" c_zoom="q_faad001" chk_ref="v_faad001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[次要类型
+  ●欄位控管：
+　   資料欄位: faak_t Display /input
+　   預設值:  
+　   允許空白: 
+     
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak008" ver="1" src="s" column="faak008" table="faak_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[關聯檔案：
+ ACC-3903
+欄位控管：
+　1.查詢時：
+參考函式：(ACC-3903)q_oocq002
+查詢欄位：
+回值類型：多重回值
+
+2.新增/修改時：
+參考函式 :(ACC-3903)q_oocq002
+查詢欄位：
+回值類型：单一回传值
+带值：
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak009" ver="4" src="s" column="faak009" table="faak_t" attribute="" type="" req="N" i_zoom="q_pmaa001_10" c_zoom="q_pmaa001_10" chk_ref="v_pmaa001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[客商碼
+   ●欄位控管：
+　   資料欄位: faah_t可Display可Input
+　   預設值:   無
+　   允許空白: No
+     帶值:客商簡稱.
+      
+●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:客商檔].[C:客商代碼],[T:客商多語言檔].[C:簡稱]
+       回值類型：多重回值
+      
+
+     2.新增/修改時：
+       查詢欄位：[T:客商檔].[C:客商代碼],[T:客商多語言檔].[C:簡稱]
+       回值類型：單一回值
+       ]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak010" ver="4" src="s" column="faak010" table="faak_t" attribute="" type="" req="N" i_zoom="q_pmaa001_5" c_zoom="q_pmaa001_5" chk_ref="v_pmaa001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[客商碼
+   ●欄位控管：
+　   資料欄位: faah_t可Display可Input
+　   預設值:   無
+　   允許空白: No
+     帶值:客商簡稱.
+      
+●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:客商檔].[C:客商代碼],[T:客商多語言檔].[C:簡稱]
+       回值類型：多重回值
+      
+
+     2.新增/修改時：
+       查詢欄位：[T:客商檔].[C:客商代碼],[T:客商多語言檔].[C:簡稱]
+       回值類型：單一回值
+       
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak011" ver="4" src="s" column="faak011" table="faak_t" attribute="" type="" req="N" i_zoom="q_oocg001" c_zoom="q_oocg001" chk_ref="v_oocg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak012" ver="1" src="s" column="faak012" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak013" ver="1" src="s" column="faak013" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak014" ver="6" src="s" column="faak014" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak015" ver="6" src="s" column="faak015" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak016" ver="6" src="s" column="faak016" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak017" ver="4" src="s" column="faak017" table="faak_t" attribute="" type="" req="Y" i_zoom="q_ooca001" c_zoom="q_ooca001" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[单位
+  ●欄位控管：
+　   資料欄位: faak_t可Display /input
+　   預設值:  無
+　   允許空白: NO
+     
+
+　1.查詢時：
+參考函式：q_ooca001
+查詢欄位：ooca_file
+回值類型：多重回值
+
+2.新增/修改時：
+參考函式：q_ooca001
+查詢欄位：ooca_file
+回值類型：单一回传值
+
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak018" ver="4" src="s" column="faak018" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[数量
+  ●欄位控管：
+　   資料欄位: faak可Display 
+　   預設值:  無
+　   允許空白: NO
+     检核：不可小于0
+修改數量之後 重新計算 原幣及本幣金額
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak019" ver="4" src="s" column="faak019" table="faak_t" attribute="" type="" req="Y" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="v_ooai001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[币别
+  ●欄位控管：
+　   資料欄位: faak_T.[C:币别]可Display 
+　   預設值:  無
+　   允許空白: yes 
+    
+1.查詢時：
+參考函式：q_ooai
+查詢欄位：ooai_file
+回值類型：多重回值
+
+2.新增/修改時：
+參考函式：q_ooai
+查詢欄位：ooai_file
+回值類型：单一回传值
+
+带出主帐套默认币别
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak020" ver="4" src="s" column="faak020" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[
+
+带出主帐套默认币别，glaa001]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak021" ver="4" src="s" column="faak021" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[交易币种
+不可小于0
+更改單價后 重新計算原幣及本幣金額及本幣單價]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak022" ver="4" src="s" column="faak022" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[不可小于0
+更改原幣金額后 重新計算數量
+及本幣金額]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak023" ver="4" src="s" column="faak023" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[●欄位控管：
+　   資料欄位: 可Display /input
+　   預設值:  原幣单价 * 匯率 
+　   允許空白: No
+     帶值: 帶出主帳套對應匯率取法 ,取出匯率
+
+当币种为本国币时，原币与本币栏值必须相等
+不可小于0
+更改時重新計算本幣金額
+
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak024" ver="4" src="s" column="faak024" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[●欄位控管：
+　   資料欄位: 可Display /input
+　   預設值:  原幣单价 * 匯率 
+　   允許空白: No
+     帶值: 帶出主帳套對應匯率取法 ,取出匯率
+
+主帐套使用的本位币种
+
+不可小于0
+
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak025" ver="7" src="s" column="faak025" table="faak_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak026" ver="4" src="s" column="faak026" table="faak_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak027" ver="4" src="s" column="faak027" table="faak_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_3900" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[關聯檔案：
+ ACC-3900
+欄位控管：
+　1.查詢時：
+參考函式：ACC-3900
+查詢欄位：
+回值類型：多重回值
+
+2.新增/修改時：
+參考函式 :ACC-3900
+查詢欄位：
+回值類型：单一回传值
+带值：
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak028" ver="4" src="s" column="faak028" table="faak_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[所有组织：资产的拥有组织
+
+
+關聯檔案：
+ 組織基本資料檔（ooef_t)
+ 組織多語言資料檔（ooefl_t)
+欄位控管：
+　1.查詢時：
+參考函式：q_ooef
+查詢欄位：[T:組織基本檔].[C:組織編號],[C:簡稱],[C:對內全稱],[C:對外全稱],[C:助記碼]
+回值類型：多重回值
+
+2.新增/修改時：
+參考函式：q_ooef
+查詢欄位：[T:組織基本檔].[C:組織編號],[C:簡稱],[C:對內全稱],[C:對外全稱],[C:助記碼]
+回值類型：单一回传值
+带值：默认当前人员的组织site
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak029" ver="7" src="s" column="faak029" table="faak_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[關聯檔案：
+ 組織基本資料檔（ooef_t)
+ 組織多語言資料檔（ooagl_t)
+欄位控管：
+　1.查詢時：
+參考函式：q_ooag001
+查詢欄位：[T:員工資料檔][C:員工編號][C:員工名稱]
+回值類型：多重回值
+
+2.新增/修改時：
+參考函式：q_ooag001
+查詢欄位：[T:員工資料檔][C:員工編號][C:員工名稱]
+回值類型：单一回传值
+带值：默认当前人员的组织site
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak030" ver="4" src="s" column="faak030" table="faak_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[管理组织：负责处理资产的日常业务，资产建卡，盘点，变更等
+默认由负责人员所在组织带入
+
+ 組織基本資料檔（ooef_t)
+ 組織多語言資料檔（ooefl_t)
+欄位控管：
+　1.查詢時：
+參考函式：q_ooef
+查詢欄位：[T:組織基本檔].[C:組織編號],[C:簡稱],[C:對內全稱],[C:對外全稱],[C:助記碼]
+回值類型：多重回值
+
+2.新增/修改時：
+參考函式：q_ooef
+查詢欄位：[T:組織基本檔].[C:組織編號],[C:簡稱],[C:對內全稱],[C:對外全稱],[C:助記碼]
+回值類型：单一回传值
+带值：默认当前人员的组织site
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak031" ver="4" src="s" column="faak031" table="faak_t" attribute="" type="" req="Y" i_zoom="q_ooef001_04" c_zoom="q_ooef001_04" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[核算组织：为所有组织的资产进行调拨核算的，具有核算职能的组织
+     所有组织的资产进资产调拨时产生的应收或是应付由该组织进行核算
+
+
+
+關聯檔案：
+ 組織基本資料檔（ooef_t)
+ 組織多語言資料檔（ooefl_t)
+欄位控管：
+　1.查詢時：
+參考函式：q_ooef001_04
+查詢欄位：[T:組織基本檔].[C:組織編號],[C:簡稱],[C:對內全稱],[C:對外全稱],[C:助記碼]
+回值類型：多重回值
+
+2.新增/修改時：
+參考函式：q_ooea
+查詢欄位：[T:組織基本檔].[C:組織編號],[C:簡稱],[C:對內全稱],[C:對外全稱],[C:助記碼]
+回值類型：单一回传值
+带值：默认当前人员的组织site
+
+检核：是不否是核算组织的类型
+
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak032" ver="4" src="s" column="faak032" table="faak_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料欄位: [T:組織基本檔].[C:法人歸屬]/可Display不可Input
+默認帶:所屬組織的法人歸屬
+1.查詢時：
+參考函式：q_ooef001
+查詢欄位：依q_ooef查詢程式
+回值類型：多重回值
+
+
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak035" ver="1" src="s" column="faak035" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[  ●欄位控管：
+　   資料欄位: faah_t可Display可Input
+　   預設值:   0
+　   允許空白: No
+     下接選項：SCC-9905
+新增时，可由固定资产主要类型档的值带入
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak036" ver="1" src="s" column="faak036" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[
+  ●欄位控管：
+　   資料欄位: faah_t可Display可Input
+　   預設值:   0
+　   允許空白: No
+     下接選項：SCC-9906
+新增时，可由固定资产主要类型档的值默认
+
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak037" ver="1" src="s" column="faak037" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[
+  ●欄位控管：
+　   資料欄位: faah_t可Display可Input
+　   預設值:   0
+　   允許空白: No
+     下接選項：SCC-9907
+新增时，可由固定资产主要类型档的值默认]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak038" ver="1" src="s" column="faak038" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[  ●欄位控管：
+　   資料欄位: faah_t可Display可Input
+　   預設值:   0
+　   允許空白: No
+     下接選項：SCC-9908
+
+
+新增时，可由固定资产主要类型档的值默认
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak039" ver="7" src="s" column="faak039" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pmdldocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[由制造端数据回写，不可自行维护
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak040" ver="7" src="s" column="faak040" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pmdsdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[由制造端数据回写，不可自行维护]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak041" ver="7" src="s" column="faak041" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_apcadocno_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[由財務端数据回写，不可自行维护]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak042" ver="1" src="s" column="faak042" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位:来源营运中心
+顏色:淺灰色
+检核：当有帐款编号时，来源为帐款编号的存在的营运中心
+     当帐款编号为空时，默认为当前营运中心
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak043" ver="1" src="s" column="faak043" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[当已抛转过卡片时，则回写此栏位，说明已此资料已更新不可更改或删除
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak047" ver="7" src="s" column="faak047" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inbadocno_3" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[由制造端数据回写，不可自行维护]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak048" ver="7" src="s" column="faak048" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_glapdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[抛转总帐后回写的数据
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faak049" ver="8" src="s" column="faak049" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[资产属性
+  ●欄位控管：
+　   資料欄位: faak_t,可Display可Input
+　   預設值:   1 自由
+　   允許空白: NO
+     下接選項：scc-9917
+]]>
+  </field>
+  <field cite_std="N" name="faak_t.faakcrtdp" ver="1" src="s" column="faakcrtdp" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faakcrtdt" ver="1" src="s" column="faakcrtdt" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faakcrtid" ver="1" src="s" column="faakcrtid" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faakld" ver="1" src="s" column="faakld" table="faak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[   帐套编号：默认主帐套]]>
+  </field>
+  <field cite_std="N" name="faak_t.faakmoddt" ver="1" src="s" column="faakmoddt" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faakmodid" ver="1" src="s" column="faakmodid" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faakowndp" ver="1" src="s" column="faakowndp" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faakownid" ver="1" src="s" column="faakownid" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="faak_t.faakstus" ver="1" src="s" column="faakstus" table="faak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[確認: 
+  ●欄位控管：
+     資料欄位:faak_t可Display
+     允許空白:N
+     預設值:N
+     校驗:執行確認/取消確認 ACTION 後回傳本欄
+说明：
+  只有资产状态在0，取得的状态下才可以取消审核
+　　 
+]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="7" name="prog_faak025" depend_field="faak_t.faak025" src="s" status="">
+      <program order="1" type="1" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+    <pfield cite_std="N" ver="7" name="prog_faak029" depend_field="faak_t.faak029" src="s" status="">
+      <program order="1" type="1" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+    <pfield cite_std="N" ver="7" name="prog_faak039" depend_field="faak_t.faak039" src="s" status="">
+      <program order="1" type="1" name="apmt500"/>
+    </pfield>
+    <pfield cite_std="N" ver="7" name="prog_faak040" depend_field="faak_t.faak040" src="s" status="">
+      <program order="1" type="1" name="apmt570"/>
+    </pfield>
+    <pfield cite_std="N" ver="7" name="prog_faak041" depend_field="faak_t.faak041" src="s" status="">
+      <program order="1" type="1" name="aapt300"/>
+    </pfield>
+    <pfield cite_std="N" ver="7" name="prog_faak047" depend_field="faak_t.faak047" src="s" status="">
+      <program order="1" type="1" name="aint301"/>
+    </pfield>
+    <pfield cite_std="N" ver="7" name="prog_faak048" depend_field="faak_t.faak048" src="s" status="">
+      <program order="1" type="1" name="aglt310"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="faak006_desc" src="s" depend_field="faak_t.faak006" correspon_key="faakent,faak006" ref_table="faacl_t" ref_fk="faaclent,faacl001" ref_dlang="faacl002" ref_rtn="faacl003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak007_desc" src="s" depend_field="faak_t.faak007" correspon_key="faakent,faak007" ref_table="faadl_t" ref_fk="faadlent,faadl001" ref_dlang="faadl002" ref_rtn="faadl003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak008_desc" src="s" depend_field="faak_t.faak008" correspon_key="faakent,&apos;3903&apos;,faak008" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="faak009_desc" src="s" depend_field="faak_t.faak009" correspon_key="faakent,faak009" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak010_desc" src="s" depend_field="faak_t.faak010" correspon_key="faakent,faak010" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak011_desc" src="s" depend_field="faak_t.faak011" correspon_key="faakent,faak011" ref_table="oocgl_t" ref_fk="oocglent,oocgl001" ref_dlang="oocgl002" ref_rtn="oocgl003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak017_desc" src="s" depend_field="faak_t.faak017" correspon_key="faakent,faak017" ref_table="oocal_t" ref_fk="oocalent,oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak019_desc" src="s" depend_field="faak_t.faak019" correspon_key="faakent,faak019" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak025_desc" src="s" depend_field="faak_t.faak025" correspon_key="faak025" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="faak026_desc" src="s" depend_field="faak_t.faak026" correspon_key="faakent,faak026" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak027_desc" src="s" depend_field="faak_t.faak027" correspon_key="faakent,&apos;3900&apos;,faak027" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="faak028_desc" src="s" depend_field="faak_t.faak028" correspon_key="faakent,faak028" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak029_desc" src="s" depend_field="faak_t.faak029" correspon_key="faak029" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="faak030_desc" src="s" depend_field="faak_t.faak030" correspon_key="faakent,faak030" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="2" name="faak031_desc" src="s" depend_field="faak_t.faak031" correspon_key="faakent,faak031" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak032_desc" src="s" depend_field="faak_t.faak032" correspon_key="faakent,faak032" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="faak042_desc" src="s" depend_field="faak_t.faak042" correspon_key="faak042" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="faakcrtdp_desc" src="s" depend_field="faak_t.faakcrtdp" correspon_key="faakcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="faakcrtid_desc" src="s" depend_field="faak_t.faakcrtid" correspon_key="faakcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="faakmodid_desc" src="s" depend_field="faak_t.faakmodid" correspon_key="faakmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="faakowndp_desc" src="s" depend_field="faak_t.faakowndp" correspon_key="faakowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="faakownid_desc" src="s" depend_field="faak_t.faakownid" correspon_key="faakownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="faak_t.faak000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="faak_t.faak014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="faak_t.faak015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="faak_t.faak016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="faak_t.faak025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="faak_t.faak029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="faak_t.faak032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="faak_t.faak039" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="faak_t.faak040" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="faak_t.faak041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faak043" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="faak_t.faak047" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="faak_t.faak048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="8" name="faak_t.faak049" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="faak_t.faakcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faakcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faakcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faakld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faakmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faakmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faakowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faakownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="faak_t.faakstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="action_1" ver="8" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_afai120_01" ver="8" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_afai100_01" text="標籤檔批量新增" lstr=""/>
+    <sfield name="lbl_afai100_02" text="標籤檔批量刪除" lstr=""/>
+    <sfield name="lbl_faai000" text="生成批號" lstr=""/>
+    <sfield name="lbl_faai001" text="卡片編號" lstr=""/>
+    <sfield name="lbl_faai002" text="財產編號" lstr=""/>
+    <sfield name="lbl_faai003" text="附號" lstr=""/>
+    <sfield name="lbl_faaiseq" text="項次" lstr=""/>
+    <sfield name="lbl_faai004" text="標籤條碼" lstr=""/>
+    <sfield name="lbl_faai012" text="名稱" lstr=""/>
+    <sfield name="lbl_faai013" text="規格型號" lstr=""/>
+    <sfield name="lbl_faai005" text="S/N號碼" lstr=""/>
+    <sfield name="lbl_faai006" text="單位" lstr=""/>
+    <sfield name="lbl_faai007" text="數量" lstr=""/>
+    <sfield name="lbl_faai008" text="在外數量" lstr=""/>
+    <sfield name="lbl_faai010" text="製造廠商" lstr=""/>
+    <sfield name="lbl_faai009" text="供應廠商" lstr=""/>
+    <sfield name="lbl_faai014" text="取得日期" lstr=""/>
+    <sfield name="lbl_faai015" text="保管人員" lstr=""/>
+    <sfield name="lbl_faai016" text="保管部門" lstr=""/>
+    <sfield name="lbl_faai017" text="存放位置" lstr=""/>
+    <sfield name="lbl_faai018" text="存放組織" lstr=""/>
+    <sfield name="lbl_faai019" text="負責人員" lstr=""/>
+    <sfield name="lbl_faai020" text="管理組織" lstr=""/>
+    <sfield name="lbl_faai021" text="核算組織" lstr=""/>
+    <sfield name="lbl_faai022" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_faai023" text="資產標籤狀態" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_faak001" text="卡片編號" lstr=""/>
+    <sfield name="lbl_faak003" text="底稿編號" lstr=""/>
+    <sfield name="lbl_faak004" text="附號" lstr=""/>
+    <sfield name="lbl_faak002" text="類型" lstr=""/>
+    <sfield name="lbl_faak012" text="名稱" lstr=""/>
+    <sfield name="lbl_faak013" text="規格型號" lstr=""/>
+    <sfield name="lbl_faak006" text="資產主要類型" lstr=""/>
+    <sfield name="lbl_faacl003" text="說明" lstr=""/>
+    <sfield name="lbl_faak007" text="資產次要類型" lstr=""/>
+    <sfield name="lbl_faadl003" text="說明" lstr=""/>
+    <sfield name="lbl_faak049" text="資產屬性" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_faak014" text="取得日期" lstr=""/>
+    <sfield name="lbl_faak015" text="資產狀態" lstr=""/>
+    <sfield name="lbl_faak016" text="取得方式" lstr=""/>
+    <sfield name="lbl_faak017" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_faak018" text="數量" lstr=""/>
+    <sfield name="lbl_faak019" text="幣別" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_faak021" text="原幣單價" lstr=""/>
+    <sfield name="lbl_faak022" text="原幣金額" lstr=""/>
+    <sfield name="lbl_faak020" text="匯率" lstr=""/>
+    <sfield name="lbl_faak023" text="本幣單價" lstr=""/>
+    <sfield name="lbl_faak024" text="本幣金額" lstr=""/>
+    <sfield name="afai120.page_4" text="組織信息" lstr=""/>
+    <sfield name="lbl_faak025" text="保管人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_faak026" text="保管部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_faak027" text="存放位置" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_faak028" text="所屬組織" lstr=""/>
+    <sfield name="lbl_faak030" text="管理組織" lstr=""/>
+    <sfield name="lbl_faak031" text="核算組織" lstr=""/>
+    <sfield name="lbl_faak032" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_faak029" text="負責人員" lstr=""/>
+    <sfield name="lbl_faak009" text="供應廠商" lstr=""/>
+    <sfield name="lbl_pmaal003" text="交易對象全名" lstr=""/>
+    <sfield name="lbl_faak010" text="製造廠商" lstr=""/>
+    <sfield name="lbl_faak011" text="產地" lstr=""/>
+    <sfield name="lbl_oocgl003" text="說明" lstr=""/>
+    <sfield name="lbl_faak000" text="產生批號" lstr=""/>
+    <sfield name="page_3" text="其它信息" lstr=""/>
+    <sfield name="lbl_faak043" text="更新碼" lstr=""/>
+    <sfield name="lbl_faak005" text="資產性質" lstr=""/>
+    <sfield name="lbl_faak008" text="資產組" lstr=""/>
+    <sfield name="lbl_faak035" text="保稅" lstr=""/>
+    <sfield name="lbl_faak036" text="保險" lstr=""/>
+    <sfield name="lbl_faak037" text="免稅" lstr=""/>
+    <sfield name="lbl_faak038" text="抵押" lstr=""/>
+    <sfield name="lbl_faak042" text="來源營運中心" lstr=""/>
+    <sfield name="lbl_faak047" text="雜發單號" lstr=""/>
+    <sfield name="lbl_faak048" text="傳票單號" lstr=""/>
+    <sfield name="lbl_faak039" text="採購單號" lstr=""/>
+    <sfield name="lbl_faak040" text="收貨單號" lstr=""/>
+    <sfield name="lbl_faak041" text="賬款單號" lstr=""/>
+    <sfield name="lbl_faakld" text="帳套別編碼" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_faai004_1" text="財簽條碼起始號" lstr=""/>
+    <sfield name="lbl_faai005_1" text="S/N號碼起始號" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="page_s_aooi390_s01_1" text="QBE條件" lstr=""/>
+    <sfield name="lbl_oofg001" text="編碼分類" lstr=""/>
+    <sfield name="lbl_oofg002" text="編碼性質" lstr=""/>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_oofg005" text="節點編號" lstr=""/>
+    <sfield name="lbl_oofg006" text="前段節點編號" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_2" text="基本資料" lstr=""/>
+    <sfield name="lbl_n0" text="編碼分類" lstr=""/>
+    <sfield name="lbl_n1" text="編碼總長度" lstr=""/>
+    <sfield name="lbl_n2" text="編碼總段數" lstr=""/>
+    <sfield name="lbl_n3" text="自動編號" lstr=""/>
+    <sfield name="page_s_aooi390_s01_3" text="明細資料" lstr=""/>
+    <sfield name="lbl_oofg007" text="段次" lstr=""/>
+    <sfield name="lbl_oofgl004" text="節點名稱" lstr=""/>
+    <sfield name="lbl_oofg009" text="長度" lstr=""/>
+    <sfield name="lbl_oofg016" text="使用轉換表" lstr=""/>
+    <sfield name="lbl_oofg008" text="節點型態" lstr=""/>
+    <sfield name="lbl_value" text="輸入值" lstr=""/>
+    <sfield name="lbl_value_desc" text="說明" lstr=""/>
+    <sfield name="lbl_tbegin" text="第" lstr=""/>
+    <sfield name="lbl_tend" text="組" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="open_afai120_01" text="標籤明細" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

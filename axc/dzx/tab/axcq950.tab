@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq950" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="07673" crtdt="2016-01-11 15:08:59" modid="07673" moddt="2016-03-22 12:25:06" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="料件即時數量成本查詢作業(零售）">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xccucomp,xccucomp_desc(chr80),xcculd,xcculd_desc(chr80),xccu001,xccu003,xccu003_desc(chr80),xccu010,xccu010_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xccu002,xccu004,xccu004_desc(chr500),xccu004_desc_1(chr500),xccu005,xccu006,inadsite(chr500),inadsite_desc(chr500),inad010(chr500),inad010_desc(chr500),xccu101,xccu102,xccu102a,xccu102b,xccu102c,xccu102d,xccu102e,xccu102f,xccu102g,xccu102h,xccu202,xccu202a,xccu202b,xccu202c,xccu202d,xccu202e,xccu202f,xccu202g,xccu202h,xccutime"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq950" method="dialog">
+    <section id="input">
+      <input id="head" field="xccucomp,xcculd,xccu001,xccu003"/>
+      <input id="body" page="1" field="xccu002,xccu004,xccu005,xccu006,xccu101,xccu102,xccu102a,xccu102b,xccu102c,xccu102d,xccu102e,xccu102f,xccu102g,xccu102h,xccu202,xccu202a,xccu202b,xccu202c,xccu202d,xccu202e,xccu202f,xccu202g,xccu202h,xccutime" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xccucomp,xcculd,xccu001,xccu003,xccu010"/>
+      <construct id="body" page="1" field="xccu002,xccu004,xccu005,xccu006,xccu101,xccu102,xccu102a,xccu102b,xccu102c,xccu102d,xccu102e,xccu102f,xccu102g,xccu102h,xccu202,xccu202a,xccu202b,xccu202c,xccu202d,xccu202e,xccu202f,xccu202g,xccu202h,xccutime"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcculd,xccu001,xccu003"/>
+      <set id="head" type="no_entry" field="xcculd,xccu001,xccu003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xccucomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="xccucomp_desc" ref_field="xccu_t.xccucomp" map_field="xccuent,xccucomp" ref_sql="SELECT ooefl004 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xccucomp_desc"/>
+      <column id="xcculd">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcculd_desc" ref_field="xccu_t.xcculd" map_field="xccuent,xcculd" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcculd_desc"/>
+      <column id="xccu001"/>
+      <column id="xccu003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="xccu003_desc" ref_field="xccu_t.xccu003" map_field="xccuent,xccu003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xccu003_desc"/>
+      <column id="xccu010">
+        <after>
+          <reference field="xccu010_desc" ref_field="xccu_t.xccu010" map_field="xccuent,xccu010" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="xccu010_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xccu002"/>
+      <column id="xccu004">
+        <after>
+          <reference field="xccu004_desc" ref_field="xccu_t.xccu004" map_field="xccuent,xccu004" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="xccu004_desc"/>
+      <column id="xccu004_desc_1"/>
+      <column id="xccu005"/>
+      <column id="xccu006"/>
+      <column id="inadsite">
+        <after>
+          <reference field="inadsite_desc" ref_field="inadsite" map_field="inasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="inadsite_desc"/>
+      <column id="inad010">
+        <after>
+          <check chkid="v_pmaa001_2" id="isExist"/>
+          <reference field="inad010_desc" ref_field="inad010" map_field="inad010" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="inad010_desc"/>
+      <column id="xccu101"/>
+      <column id="xccu102"/>
+      <column id="xccu102a"/>
+      <column id="xccu102b"/>
+      <column id="xccu102c"/>
+      <column id="xccu102d"/>
+      <column id="xccu102e"/>
+      <column id="xccu102f"/>
+      <column id="xccu102g"/>
+      <column id="xccu102h"/>
+      <column id="xccu202"/>
+      <column id="xccu202a"/>
+      <column id="xccu202b"/>
+      <column id="xccu202c"/>
+      <column id="xccu202d"/>
+      <column id="xccu202e"/>
+      <column id="xccu202f"/>
+      <column id="xccu202g"/>
+      <column id="xccu202h"/>
+      <column id="xccutime"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xccu_t" pk="xcculd,xccu001,xccu003">
+      <sql id="forupd_sql" type="sql" query="SELECT xccucomp,&apos;&apos;,xcculd,&apos;&apos;,xccu001,xccu003,&apos;&apos;,xccu010,&apos;&apos; FROM xccu_t WHERE xccuent= ? AND xcculd=? AND xccu001=? AND xccu003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xccucomp,&apos;&apos;,xcculd,&apos;&apos;,xccu001,xccu003,&apos;&apos;,xccu010,&apos;&apos; FROM xccu_t" order="xcculd,xccu001,xccu003"/>
+    </head>
+    <body id="xccu_t" page="1" linked="" pk="xccu002,xccu004,xccu005,xccu006" fk="xcculd,xccu001,xccu003">
+      <sql id="forupd_sql_detail" query="SELECT xccu002,xccu004,&apos;&apos;,&apos;&apos;,xccu005,xccu006,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccu101,xccu102,xccu102a,xccu102b,xccu102c,xccu102d,xccu102e,xccu102f,xccu102g,xccu102h,xccu202,xccu202a,xccu202b,xccu202c,xccu202d,xccu202e,xccu202f,xccu202g,xccu202h,xccutime FROM xccu_t WHERE xccuent=? AND xcculd=? AND xccu001=? AND xccu003=? AND xccu002=? AND xccu004=? AND xccu005=? AND xccu006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xccu002,xccu004,&apos;&apos;,&apos;&apos;,xccu005,xccu006,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccu101,xccu102,xccu102a,xccu102b,xccu102c,xccu102d,xccu102e,xccu102f,xccu102g,xccu102h,xccu202,xccu202a,xccu202b,xccu202c,xccu202d,xccu202e,xccu202f,xccu202g,xccu202h,xccutime FROM xccu_t WHERE xccuent= ? AND xcculd=? AND xccu001=? AND xccu003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

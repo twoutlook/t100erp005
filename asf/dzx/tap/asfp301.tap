@@ -1,0 +1,1035 @@
+<add_points prog="asfp301" std_prog="asfp301" erpver="1.0" module="ASF" ver="1" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="P" status="" />
+    <free_style value="Y" status="" />
+  </other>
+  <point name="function.asfp301_init" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp301_init()
+   #add-point:init段define
+
+   #end add-point
+
+   LET g_error_show = 1
+   LET g_errshow = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   
+   #畫面嵌入 
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp301_01"), "main_grid01", "Group", "master")
+   CALL asfp301_01_init()        #asfp301_01的畫面預設   
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp301_02"), "main_grid02", "VBox", "vb_master")
+    
+#   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp301_03"), "main_grid03", "VBox", "master")
+#   CALL asfp301_03_init()        #asfp301_03的畫面預設   
+#
+#   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp301_04"), "main_grid04", "VBox", "master")
+#   CALL asfp301_04_init()        #asfp301_03的畫面預設 
+   
+   #先將嵌入的畫面都隱藏  
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+#   CALL cl_set_comp_visible("main_vbox03",FALSE)
+#   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #end add-point
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp301_process" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp301_process(ls_js)
+   DEFINE ls_js       STRING
+   #DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+
+   #end add-point
+
+   #CALL util.JSON.parse(ls_js,lc_param)
+
+   #add-point:process段前處理
+
+   #end add-point
+
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+
+      #end add-point
+   END IF
+
+   #主SQL及相關FOREACH前置處理
+#  DECLARE asfp301_process_cs CURSOR FROM ls_sql
+#  FOREACH asfp301_process_cs INTO
+   #add-point:process段process
+
+   #end add-point
+#  END FOREACH
+
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+
+      #end add-point
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.asfp301_transfer_argv" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp301_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   #DEFINE la_param    type_parameter
+
+   #CALL util.JSON.parse(ls_js,la_param)
+
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+
+   #end add-point
+
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION]]>
+</point>
+  <point name="function.asfp301_ui_dialog_step1" cite_std="N" status="u" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp301_ui_dialog_step1()
+   DEFINE l_ooef004    LIKE ooef_t.ooef004
+   DEFINE l_sfaa       RECORD
+                       sfaadocno       LIKE sfaa_t.sfaadocno,
+                       sfaadocno_desc  LIKE oobxl_t.oobxl004,
+                       sfaadocdt       LIKE sfaa_t.sfaadocdt
+                       END RECORD
+   DEFINE l_cnt        LIKE type_t.num5
+   DEFINE l_success    LIKE type_t.num5
+   
+                   
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01on.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",TRUE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("back_step",FALSE)        #回上一步     (第一步,第四步不使用)
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步       (第四步不使用) 
+     
+   CALL cl_set_comp_visible("condition_vbox",TRUE)
+   CALL cl_set_comp_visible("main_grid_7,main_grid_9,main_grid_11",FALSE)
+   CALL cl_set_comp_visible("main_grid_2",TRUE)  
+   
+   LET l_ooef004 = ''
+   SELECT ooef004 INTO l_ooef004 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_site
+   
+   WHILE TRUE
+      LET g_sfaadocno = ''
+      LET g_sfaadocdt = ''
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         INPUT BY NAME l_sfaa.sfaadocno,l_sfaa.sfaadocdt
+         
+             BEFORE INPUT
+                IF cl_null(l_sfaa.sfaadocdt) THEN LET l_sfaa.sfaadocdt = cl_get_today() END IF
+                
+             AFTER FIELD sfaadocno
+                CALL asfp301_chk_sfaadocno(l_sfaa.sfaadocno)
+                     RETURNING l_success
+                IF NOT l_success THEN
+                   LET l_sfaa.sfaadocno = ''
+                   LET l_sfaa.sfaadocno_desc = ''
+                   DISPLAY BY NAME l_sfaa.sfaadocno_desc
+                   NEXT FIELD CURRENT                
+                END IF
+                CALL s_aooi200_get_slip_desc(l_sfaa.sfaadocno) RETURNING l_sfaa.sfaadocno_desc
+                DISPLAY BY NAME l_sfaa.sfaadocno_desc
+             
+             AFTER FIELD sfaadocdt
+                IF cl_null(l_sfaa.sfaadocdt) THEN 
+                   NEXT FIELD sfaadocdt
+                END IF
+                
+  
+             ON ACTION controlp
+                CASE
+                   WHEN INFIELD(sfaadocno)
+                        INITIALIZE g_qryparam.* TO NULL
+                        LET g_qryparam.state = 'i'
+                        LET g_qryparam.reqry = FALSE
+                        LET g_qryparam.default1 = l_sfaa.sfaadocno   
+                        
+                        #給予arg
+                        LET g_qryparam.arg1 = l_ooef004 #參照表編號
+                        LET g_qryparam.arg2 = 'asft300'
+                        
+                        CALL q_ooba002_1()                              
+                        LET l_sfaa.sfaadocno = g_qryparam.return1         
+                        DISPLAY BY NAME l_sfaa.sfaadocno 
+                        NEXT FIELD sfaadocno       
+                END CASE
+        END INPUT 
+        
+        
+         CONSTRUCT BY NAME g_wc ON xmdadocno,xmdadocdt,xmdd011,xmda004,imaa009,imae011,imae012 
+
+            BEFORE CONSTRUCT       
+
+            AFTER FIELD xmdadocno
+               LET g_xmdadocno_t = GET_FLDBUF(xmdadocno)
+
+            AFTER FIELD xmdadocdt
+               LET g_xmdadocdt_t = GET_FLDBUF(xmdadocdt)
+
+            AFTER FIELD xmdd011
+               LET g_xmdd011_t = GET_FLDBUF(xmdd011)
+
+            AFTER FIELD xmda004
+               LET g_xmda004_t = GET_FLDBUF(xmda004)
+               
+            AFTER FIELD imaa009
+               LET g_imaa009_t = GET_FLDBUF(imaa009)
+               
+            AFTER FIELD imae011
+               LET g_imae011_t = GET_FLDBUF(imae011)
+               
+            AFTER FIELD imae012
+               LET g_imae012_t = GET_FLDBUF(imae012)
+               
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(xmdadocno)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_xmdadocno()
+                     DISPLAY g_qryparam.return1 TO xmdadocno  #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(xmda004)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmaa001_6()
+                     DISPLAY g_qryparam.return1 TO xmda004  #顯示到畫面上
+                     NEXT FIELD CURRENT
+                     
+                  WHEN INFIELD(imaa009)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_rtax001()
+                     DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+                     NEXT FIELD CURRENT                     
+                     
+                  WHEN INFIELD(imae011)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_imcf011()
+                     DISPLAY g_qryparam.return1 TO imae011  #顯示到畫面上
+                     NEXT FIELD CURRENT
+                     
+                  WHEN INFIELD(imae012)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     LET g_qryparam.where = " ooagstus ='Y' "
+                     CALL q_ooag001_2()                      
+                     DISPLAY g_qryparam.return1 TO imae012  #顯示到畫面上
+                     NEXT FIELD CURRENT
+               END CASE
+               
+               
+         END CONSTRUCT
+
+         SUBDIALOG asf_asfp301_01.asfp301_01_input
+
+         BEFORE DIALOG
+            #不明原因導致 l_sfaa.*的資料被清空,在此將資料還原　讓資料一直維持相同的狀態
+            LET l_sfaa.sfaadocno = g_sfaadocno_t
+            CALL s_aooi200_get_slip_desc(l_sfaa.sfaadocno) RETURNING l_sfaa.sfaadocno_desc
+            DISPLAY BY NAME l_sfaa.sfaadocno_desc
+            
+#            IF NOT cl_null(g_sfaadocdt_t) THEN
+#               LET l_sfaa.sfaadocdt  = g_sfaadocdt_t
+#            ELSE
+               LET l_sfaa.sfaadocdt = cl_get_today()
+#            END IF   
+#            
+#            DISPLAY g_xmdadocno_t  TO xmdadocno            
+#            DISPLAY g_xmdadocdt_t  TO xmdadocdt
+#            DISPLAY g_xmdd011_t    TO xmdd011            
+#            DISPLAY g_xmda004_t    TO xmda004
+#            DISPLAY g_imaa009_t    TO imaa009
+#            DISPLAY g_imae011_t    TO imae011
+#            DISPLAY g_imae012_t    TO imae012 
+
+            ON ACTION search_data
+               CALL cl_set_act_visible("next_step",TRUE)
+               CALL asfp301_01_b_fill()               
+
+
+         ON ACTION back_step
+            
+         ON ACTION next_step
+            CALL asfp301_01_save_data()
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM asfp301_01_temp
+            IF l_cnt > 0 THEN
+               LET g_action_choice = "next_step"
+               EXIT DIALOG
+            ELSE
+               #无待转的订单资料，请先选择处理的订单资料！
+               CALL cl_err('','asf-00352',1)
+            END IF
+            
+            
+         ON ACTION step01
+               
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION step04
+         
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      LET g_sfaadocno_t = l_sfaa.sfaadocno
+      LET g_sfaadocdt_t = l_sfaa.sfaadocdt
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         LET g_action_choice = ''
+         LET g_sfaadocno = l_sfaa.sfaadocno
+         LET g_sfaadocdt = l_sfaa.sfaadocdt
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+   
+END FUNCTION]]>
+</point>
+  <point name="function.asfp301_ui_dialog_step2" cite_std="N" status="u" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp301_ui_dialog_step2()
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02on.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",TRUE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步     (第一步,第四步不使用)
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步       (第四步不使用) 
+   
+   CALL cl_set_comp_visible("condition_vbox",FALSE)
+   CALL cl_set_comp_visible("main_grid_2,main_grid_9,main_grid_11",FALSE)
+   CALL cl_set_comp_visible("main_grid_7",TRUE)
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         SUBDIALOG asf_asfp301_02.asfp301_02_input
+
+         BEFORE DIALOG
+
+         ON ACTION back_step
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+            
+         ON ACTION next_step
+            #是否确定依当前页设置产生下一步资料？
+            IF cl_ask_confirm('asf-00353') THEN
+               LET g_action_choice = "next_step"
+               EXIT DIALOG
+            END IF 
+            
+         ON ACTION step01
+            
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION step04
+         
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 3
+      WHEN "back_step"
+         RETURN 1
+      OTHERWISE
+         RETURN 0
+   END CASE
+   
+   
+END FUNCTION]]>
+</point>
+  <point name="function.asfp301_ui_dialog_step3" cite_std="N" status="u" ver="1" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp301_ui_dialog_step3()
+#   #設定左方的流程圖  
+#   CALL gfrm_curr.setElementImage("step01","32/step01.png")  
+#   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+#   CALL gfrm_curr.setElementImage("step03","32/step03on.png")
+#   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+#   
+#   #設定嵌入畫面的 顯示 與 隱藏 
+#   CALL cl_set_comp_visible("main_vbox01",FALSE)
+#   CALL cl_set_comp_visible("main_vbox02",FALSE)
+#   CALL cl_set_comp_visible("main_vbox03",TRUE)
+#   CALL cl_set_comp_visible("main_vbox04",FALSE)
+#
+#   #設定下方的button的 顯示 與 隱藏 
+#   CALL cl_set_comp_visible("back_step",TRUE)        #回上一步  
+#   CALL cl_set_comp_visible("next_step",TRUE)        #下一步    
+#   
+#   CALL cl_set_comp_visible("condition_vbox",FALSE)
+#   CALL cl_set_comp_visible("main_grid_2,main_grid_7,main_grid_11",FALSE)
+#   CALL cl_set_comp_visible("main_grid_9",TRUE)
+#   
+#   CALL asfp301_03_gen_data(g_sfaadocno,g_sfaadocdt)
+#   CALL asfp301_03_b_fill()
+#   WHILE TRUE
+#      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+#         
+#         SUBDIALOG asf_asfp301_03.asfp301_03_display 
+#         SUBDIALOG asf_asfp301_03.asfp301_03_display2
+#         SUBDIALOG asf_asfp301_03.asfp301_03_input
+#         SUBDIALOG asf_asfp301_03.asfp301_03_input2
+#
+#         BEFORE DIALOG 
+#
+#         ON ACTION back_step
+#            #此页设置的相关数据将会依上一页数据重新产生,是否确定回到上一步？
+#            IF cl_ask_confirm('asf-00354') THEN
+#               LET g_action_choice = "back_step"
+#               EXIT DIALOG
+#            END IF
+#            
+#         ON ACTION next_step
+#            #是否确定依当前页设置产生下一步资料？
+#            IF cl_ask_confirm('asf-00353') THEN
+#               LET g_action_choice = "next_step"
+#               EXIT DIALOG
+#            END IF
+#            
+#         ON ACTION step01
+#            
+#         ON ACTION step02
+#         
+#         ON ACTION step03
+#
+#         ON ACTION step04
+#         
+#         ON ACTION CLOSE
+#            LET INT_FLAG = TRUE
+#            EXIT DIALOG
+#
+#         ON ACTION exit
+#            LET INT_FLAG = TRUE
+#            EXIT DIALOG
+#
+#      END DIALOG
+#
+#      IF INT_FLAG THEN
+#         LET INT_FLAG = FALSE
+#         EXIT WHILE
+#      END IF 
+#      
+#      IF NOT cl_null(g_action_choice) THEN
+#         EXIT WHILE
+#      END IF
+#
+#   END WHILE
+#   
+#   CASE g_action_choice
+#      WHEN "next_step"
+#         RETURN 4
+#      WHEN "back_step"
+#         RETURN 2
+#      OTHERWISE
+#         RETURN 0
+#   END CASE
+#      
+END FUNCTION]]>
+</point>
+  <point name="function.asfp301_delete_temp" cite_std="N" status="u" ver="1" src="s" new="Y" order="8" mark_hard="N">
+<![CDATA[#將 所有temp table 的資料刪除
+PRIVATE FUNCTION asfp301_delete_temp()
+   CALL asfp301_01_delete_temp_table()
+#   CALL asfp301_03_delete_temp_table()
+#   CALL asfp301_04_delete_temp_table()
+END FUNCTION]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[IMPORT util
+IMPORT FGL asf_asfp301_01
+IMPORT FGL asf_asfp301_02
+#IMPORT FGL asf_asfp301_03  
+#IMPORT FGL asf_asfp301_04  ]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[DEFINE li_step              LIKE type_t.num5
+DEFINE gwin_curr            ui.Window
+DEFINE gfrm_curr            ui.Form
+DEFINE g_forupd_sql         STRING
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_sfaadocno_t        LIKE sfaa_t.sfaadocno
+DEFINE g_sfaadocdt_t        LIKE sfaa_t.sfaadocdt
+DEFINE g_xmdadocno_t        LIKE xmda_t.xmdadocno
+DEFINE g_xmdadocdt_t        LIKE xmda_t.xmdadocdt
+DEFINE g_xmdd011_t          LIKE xmdd_t.xmdd011
+DEFINE g_xmda004_t          LIKE xmda_t.xmda004
+DEFINE g_imaa009_t          LIKE imaa_t.imaa009
+DEFINE g_imae011_t          LIKE imae_t.imae011
+DEFINE g_imae012_t          LIKE imae_t.imae012 ]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE l_success     LIKE type_t.num5]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="function.asfp301_chk_sfaadocno" cite_std="N" status="u" ver="" src="s" new="Y" order="9">
+<![CDATA[
+################################################################################
+# Descriptions...: 工单单别检查
+# Memo...........:
+# Usage..........: CALL asfp301_chk_sfaadocno(p_sfaadocno)
+#                  RETURNING 回传参数
+# Input parameter: p_sfaadocno    工单单别
+# Return code....: r_success      成功否标识
+# Date & Author..: 2014-07-07 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp301_chk_sfaadocno(p_sfaadocno)
+   DEFINE p_sfaadocno        LIKE sfaa_t.sfaadocno
+   DEFINE r_success          LIKE type_t.num5
+   DEFINE l_success          LIKE type_t.num5
+   DEFINE l_flag             LIKE type_t.num5
+   
+   LET r_success = FALSE
+   #檢查單別
+   IF NOT s_aooi200_chk_slip(g_site,'',p_sfaadocno,'asft300') THEN
+      RETURN r_success
+   END IF
+   
+   #檢核輸入的單據別是否可以被key人員對應的控制組使用,'2' 為銷售控制組類型
+   CALL s_control_chk_doc('1',p_sfaadocno,'6',g_user,g_dept,'','') 
+        RETURNING l_success,l_flag
+   IF l_success THEN
+      IF NOT l_flag THEN
+         CALL cl_err(p_sfaadocno,'axm-00015',1)
+         RETURN r_success
+      END IF
+   ELSE
+      RETURN r_success
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+   
+END FUNCTION]]>
+</point>
+  <point name="function.asfp301_ui_dialog_step4" cite_std="N" status="u" ver="" src="s" new="Y" order="7">
+<![CDATA[
+PUBLIC FUNCTION asfp301_ui_dialog_step4()
+#   #設定左方的流程圖  
+#   CALL gfrm_curr.setElementImage("step01","32/step01.png")    #有on的是顏色不同的圖  
+#   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+#   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+#   CALL gfrm_curr.setElementImage("step04","32/step04on.png")
+#   
+#   #設定嵌入畫面的 顯示 與 隱藏 
+#   CALL cl_set_comp_visible("main_vbox01",FALSE)       #將第一步的畫面顯示  
+#   CALL cl_set_comp_visible("main_vbox02",FALSE)
+#   CALL cl_set_comp_visible("main_vbox03",FALSE)
+#   CALL cl_set_comp_visible("main_vbox04",TRUE)
+#
+#   #設定下方的button的 顯示 與 隱藏 
+#   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步     
+#   CALL cl_set_comp_visible("next_step",FALSE)        #下一步     
+#   
+#   CALL cl_set_comp_visible("condition_vbox",FALSE)
+#   CALL cl_set_comp_visible("main_grid_2,main_grid_7,main_grid_9",FALSE)
+#   CALL cl_set_comp_visible("main_grid_11",TRUE)
+#   
+#   CALL asfp301_04_gen_data()
+#   CALL asfp301_04_b_fill()
+#   WHILE TRUE
+#      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+#         
+#         SUBDIALOG asf_asfp301_04.asfp301_04_display 
+#         SUBDIALOG asf_asfp301_04.asfp301_04_display2
+#         SUBDIALOG asf_asfp301_04.asfp301_04_input
+#         BEFORE DIALOG
+#
+#         ON ACTION back_step
+#            #此页设置的相关数据将会依上一页数据重新产生,是否确定回到上一步？
+#            IF cl_ask_confirm('asf-00354') THEN
+#               LET g_action_choice = "back_step"
+#               EXIT DIALOG
+#            END IF
+#            
+#         ON ACTION next_step
+##            #是否确定依当前页设置产生下一步资料？
+##            IF cl_ask_confirm('asf-00353') THEN
+##               LET g_action_choice = "next_step"
+##               EXIT DIALOG
+##            END IF 
+#            
+#         ON ACTION step01
+#            
+#         ON ACTION step02
+#         
+#         ON ACTION step03
+#         
+#         ON ACTION step04
+#
+#         ON ACTION CLOSE
+#            LET INT_FLAG = TRUE
+#            EXIT DIALOG
+#
+#         ON ACTION exit
+#            LET INT_FLAG = TRUE
+#            EXIT DIALOG
+#
+#      END DIALOG
+#
+#      IF INT_FLAG THEN
+#         LET INT_FLAG = FALSE
+#         EXIT WHILE
+#      END IF 
+#      
+#      IF NOT cl_null(g_action_choice) THEN
+#         EXIT WHILE
+#      END IF
+#
+#   END WHILE
+#   
+#   CASE g_action_choice
+##      WHEN "next_step"
+##         RETURN 3
+#      WHEN "back_step"
+#         RETURN 2
+#      OTHERWISE
+#         RETURN 0
+#   END CASE
+END FUNCTION]]>
+</point>
+  <section id="asfp301.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000000
+#+ 
+#+ Filename...: asfp301
+#+ Description: 訂單轉工單作業
+#+ Creator....: (1899/12/31)
+#+ Modifier...: 00378(2014/07/07)
+#+ Buildtype..: 應用 i00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="asfp301.global" ver="2" status="u" src="m">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../4gl/asfp301.inc"
+
+
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp301.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION asfp301_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="asfp301.main" ver="2" status="u" src="m">
+<![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:作業初始化
+{<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+{<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE asfp301_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+{<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asfp301 WITH FORM cl_ap_formpath("asf",g_code)
+   
+      #程式初始化
+      CALL asfp301_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+      
+     ##建立各程式的temp table 
+      CALL asfp301_01_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         EXIT PROGRAM
+      END IF
+#      CALL asfp301_03_create_temp_table() RETURNING l_success
+#      IF NOT l_success THEN
+#         EXIT PROGRAM
+#      END IF
+#      CALL asfp301_04_create_temp_table() RETURNING l_success
+#      IF NOT l_success THEN
+#         EXIT PROGRAM
+#      END IF
+      LET li_step = 1
+      IF l_success THEN
+         WHILE TRUE
+            CASE li_step
+               WHEN 1
+                  CALL asfp301_ui_dialog_step1() RETURNING li_step
+               WHEN 2
+                  CALL asfp301_ui_dialog_step2() RETURNING li_step
+#               WHEN 3
+#                  CALL asfp301_ui_dialog_step3() RETURNING li_step
+#               WHEN 4
+#                  CALL asfp301_ui_dialog_step4() RETURNING li_step
+               WHEN 0
+                  EXIT WHILE
+               OTHERWISE
+                  EXIT WHILE
+            END CASE
+         END WHILE
+      END IF
+      
+      CALL asfp301_01_drop_temp_table() RETURNING l_success
+#      CALL asfp301_03_drop_temp_table() RETURNING l_success
+#      CALL asfp301_04_drop_temp_table() RETURNING l_success
+   
+      #畫面關閉
+      CLOSE WINDOW w_asfp301
+   END IF
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+</section>
+  <section id="asfp301.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp301.process" ver="1" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION asfp301_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE asfp301_process_cs CURSOR FROM ls_sql
+#  FOREACH asfp301_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="asfp301.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION asfp301_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="asfp301.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION asfp301_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.*  TO NULL
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION CLOSE 
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = g_prog,TODAY USING "yyyymmdd",CURRENT HOUR TO SECOND 
+         LET g_jobid = cl_schedule_trim_colon(g_jobid)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL asfp301_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = asfp301_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

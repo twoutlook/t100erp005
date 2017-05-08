@@ -1,0 +1,2715 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="aglq740.description" >}
+#+ Version..: T100-ERP-1.00.00(版次:1) Build-000094
+#+ 
+#+ Filename...: aglq740
+#+ Description: 總分類帳查詢作業
+#+ Creator....: 02599(2014/03/27)
+#+ Modifier...: 02599(2014/03/28)
+#+ Buildtype..: 應用 q02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+ 
+{<section id="aglq740.global" >}
+#151204-00013#4    2016/01/12   By 02599   当未勾选‘含月结凭证’是，要排除CE凭证中科目属性为6.损益类科目和XC凭证中科目属性为5.成本类科目
+#160302-00006#1    2016/03/02   By 07675   原本单身为可查询作业，增加二次筛选功能 
+#160503-00037#4    2016/05/06   By 07900   本年累计数不应含期初第0期的数据
+#160511-00006#1    2016/05/11   By 02599   期初只显示余额，借方金额、贷方金额不显示；本年累计的余额=本年累计+年初余额
+#160824-00004#2    2016/08/31   By 02599   排除XC凭证时限定科目费用类别glac010<>N.非费用科目
+#160824-00004#4    2016/09/23   By 02599   排除XC类凭证时，继续增加条件：来源单据的成本凭证类型(xcea002)<>(7 OR 9)
+#161011-00018#1    2016/10/14   By 02599   去除 first next last jump previous 这些action的权限检核
+#161027-00022#1    2016/10/27   By 02599   含月结凭证=N时，在排除XC凭证时，增加条件：来源成本单据的成本类型(xrea002)=9 and 科目对应的费用类别(glac010)=费用类型。
+#161227-00047#1    2016/12/27   By 07900   调整期间异动标示l_flag_amt的给值方式,增加当借贷有值时,此flag也给true
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_glar_d RECORD
+       #statepic       LIKE type_t.chr1,
+       sel            LIKE type_t.chr1,
+       glar001 LIKE glar_t.glar001, 
+   glar001_desc LIKE type_t.chr500, 
+   glar003 LIKE glar_t.glar003, 
+   style LIKE type_t.chr80, 
+   glar005 LIKE glar_t.glar005, 
+   glar006 LIKE glar_t.glar006, 
+   glar034 LIKE glar_t.glar034, 
+   glar035 LIKE glar_t.glar035, 
+   glar036 LIKE glar_t.glar036, 
+   glar037 LIKE glar_t.glar037, 
+   state LIKE type_t.chr80, 
+   amt1 LIKE glaq_t.glaq003, 
+   amt2 LIKE glaq_t.glaq003, 
+   amt3 LIKE glaq_t.glaq003 
+       END RECORD
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_glar_d
+DEFINE g_master_t                   type_g_glar_d
+DEFINE g_glar_d          DYNAMIC ARRAY OF type_g_glar_d
+DEFINE g_glar_d_t        type_g_glar_d
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_detail_idx2        LIKE type_t.num5
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+ 
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+#依据当前账别，抓取账别所归属的法人，使用币别，汇率参照表号，会计科目参照表号
+DEFINE g_bookno        LIKE glap_t.glapld
+DEFINE g_glaald        LIKE glaa_t.glaald
+DEFINE g_glaald_desc   LIKE glaal_t.glaal002
+DEFINE g_glaacomp      LIKE glaa_t.glaacomp
+DEFINE g_glaacomp_desc LIKE ooefl_t.ooefl003
+DEFINE g_glaa001       LIKE glaa_t.glaa001
+DEFINE g_glaa002       LIKE glaa_t.glaa002
+DEFINE g_glaa003       LIKE glaa_t.glaa003
+DEFINE g_glaa004       LIKE glaa_t.glaa004
+DEFINE g_glaa013       LIKE glaa_t.glaa013
+DEFINE g_glaa015       LIKE glaa_t.glaa015
+DEFINE g_glaa016       LIKE glaa_t.glaa016
+DEFINE g_glaa017       LIKE glaa_t.glaa017
+DEFINE g_glaa018       LIKE glaa_t.glaa018
+DEFINE g_glaa019       LIKE glaa_t.glaa019
+DEFINE g_glaa020       LIKE glaa_t.glaa020
+DEFINE g_glaa021       LIKE glaa_t.glaa021
+DEFINE g_glaa022       LIKE glaa_t.glaa022
+#查询条件定义
+DEFINE tm              RECORD
+       year            LIKE glap_t.glap002,    #起始年度
+       speriod         LIKE glap_t.glap004,    #起始期別
+       eperiod         LIKE glap_t.glap004,    #截止期別
+       acc_p           LIKE type_t.chr1,       #按科目分頁
+       ctype           LIKE type_t.chr1,       #多本位幣
+       show_acc        LIKE type_t.chr1, 
+       glac005	       LIKE glac_t.glac005,
+       stus            LIKE type_t.chr1,
+       glac009	       LIKE glac_t.glac009,
+       show_ad         LIKE type_t.chr1,
+       show_ce         LIKE type_t.chr1,
+       show_ye         LIKE type_t.chr1
+       END RECORD
+DEFINE g_glar001       LIKE glar_t.glar001
+DEFINE g_glar_s        DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位 
+       glar001         LIKE glar_t.glar001
+      END RECORD 
+DEFINE g_current_row   LIKE type_t.num5 
+DEFINE g_current_idx   LIKE type_t.num10     
+DEFINE g_jump          LIKE type_t.num10        
+DEFINE g_no_ask        LIKE type_t.num5  
+DEFINE g_rec_b         LIKE type_t.num5
+DEFINE g_max_period    LIKE glap_t.glap004
+DEFINE g_argv_flag     LIKE type_t.num5    #標示是否是串查
+#end add-point
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglq740.main" >}
+#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("agl","")
+ 
+   #add-point:作業初始化
+   
+   #end add-point
+   
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE aglq740_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               " WHERE  "
+   #add-point:SQL_define
+   
+   #end add-point
+   PREPARE aglq740_master_referesh FROM g_sql
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aglq740 WITH FORM cl_ap_formpath("agl",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aglq740_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aglq740_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aglq740
+      
+   END IF 
+   
+   CLOSE aglq740_cl
+   
+   
+ 
+   #add-point:作業離開前
+   DROP TABLE aglq740_tmp
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aglq740.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aglq740_init()
+   #add-point:init段define
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_pass      LIKE type_t.num5
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   
+   
+   
+   #add-point:畫面資料初始化
+   LET g_detail_idx  = 1
+   CALL cl_set_combo_scc('stus','9922')
+   CALL cl_set_combo_scc('state','9926')
+   CALL cl_set_combo_scc('style','9927')
+   #抓取傳參
+   CALL aglq740_default_search()
+   #获取账别
+   IF cl_null(g_glaald) THEN
+      CALL s_ld_bookno()  RETURNING l_success,g_glaald
+      IF l_success = FALSE THEN
+         RETURN 
+      END IF 
+      CALL s_ld_chk_authorization(g_user,g_glaald) RETURNING l_pass
+      IF l_pass = FALSE THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'agl-00164'
+         LET g_errparam.extend = g_glaald
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN
+      END IF
+   END IF      
+   CALL aglq740_glaald_desc(g_glaald)
+   IF cl_null(g_argv[01]) THEN
+      LET g_argv_flag = FALSE
+      CALL aglq740_set_default_value()
+   ELSE
+      LET g_argv_flag = TRUE
+   END IF
+   #建立临时表
+   CALL aglq740_create_temp_table()
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION aglq740_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+ 
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   #add-point:ui_dialog段before dialog 
+   
+   #end add-point
+   
+   CALL aglq740_query()
+   
+   WHILE TRUE
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_glar_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_glar_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL aglq740_fetch()
+               #add-point:input段before row
+               DISPLAY g_current_idx TO FORMONLY.h_index
+               DISPLAY g_glar_s.getLength() TO FORMONLY.h_count
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               DISPLAY g_glar_d.getLength() TO FORMONLY.cnt
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+         
+ 
+      
+         #add-point:ui_dialog段define
+
+         #end add-point
+         
+         BEFORE DIALOG      
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before dialog
+            #上下筆按鈕顯示否設置
+            IF g_header_cnt=1 THEN
+               CALL cl_set_act_visible("first,previous,jump,next,last",FALSE) 
+            ELSE
+               IF g_current_idx=1 THEN
+                  CALL cl_set_act_visible("first,previous", FALSE) 
+                  CALL cl_set_act_visible("jump,next,last", TRUE) 
+               ELSE
+                  IF g_current_idx<>g_header_cnt THEN
+                     CALL cl_set_act_visible("first,previous,jump,next,last",TRUE) 
+                  ELSE
+                     CALL cl_set_act_visible("first,previous,jump",TRUE) 
+                     CALL cl_set_act_visible("next,last", FALSE) 
+                  END IF
+               END IF
+            END IF
+            CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+            #end add-point
+ 
+            NEXT FIELD sel
+      
+         
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               CALL aglq740_g01("aglq740_tmp",g_glaald,tm.year,tm.speriod,tm.eperiod,tm.acc_p,tm.ctype)              
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION exchange_ld
+ 
+            LET g_action_choice="exchange_ld"
+            IF cl_auth_chk_act("exchange_ld") THEN 
+               #add-point:ON ACTION exchange_ld
+               CALL aglt310_01(g_glaald) RETURNING g_bookno
+               IF g_glaald <> g_bookno THEN
+                  CLEAR FORM
+                  CALL g_glar_s.clear()
+                  CALL g_glar_d.clear()
+               END IF
+               LET g_glaald = g_bookno
+               #依据对应的主账套编码，抓取对应法人，币别，汇率参照编号，会计科目参照编号,关账日期
+               CALL aglq740_glaald_desc(g_glaald)
+               CALL aglq740_show()
+                IF cl_null(g_wc) THEN
+                   LET g_wc = '1=1'
+                END IF 
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION first
+ 
+            LET g_action_choice="fetch" #161011-00018#1 mod first-->fetch
+#            IF cl_auth_chk_act("first") THEN  #161011-00018#1 mark
+               #add-point:ON ACTION first
+               CALL aglq740_fetch1('F')
+               LET g_current_row = g_current_idx
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #END add-point
+               EXIT DIALOG
+#            END IF #161011-00018#1 mark
+ 
+ 
+         ON ACTION last
+ 
+            LET g_action_choice="fetch" #161011-00018#1 mod last-->fetch
+#            IF cl_auth_chk_act("last") THEN  #161011-00018#1 mark
+               #add-point:ON ACTION last
+               CALL aglq740_fetch1('L')
+               LET g_current_row = g_current_idx
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #END add-point
+               EXIT DIALOG
+#            END IF #161011-00018#1 mark
+ 
+ 
+         ON ACTION previous
+ 
+            LET g_action_choice="fetch" #161011-00018#1 mod previous-->fetch
+#            IF cl_auth_chk_act("previous") THEN  #161011-00018#1 mark 
+               #add-point:ON ACTION previous
+               CALL aglq740_fetch1('P')
+               LET g_current_row = g_current_idx
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #END add-point
+               EXIT DIALOG
+#            END IF #161011-00018#1 mark
+ 
+ 
+         ON ACTION insert
+ 
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL aglq740_insert()
+               #add-point:ON ACTION insert
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION jump
+ 
+            LET g_action_choice="fetch" #161011-00018#1 mod jump-->fetch
+#            IF cl_auth_chk_act("jump") THEN #161011-00018#1 mark
+               #add-point:ON ACTION jump
+               CALL aglq740_fetch1('/')
+               LET g_current_row = g_current_idx
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #END add-point
+               EXIT DIALOG
+#            END IF #161011-00018#1 mark
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL aglq740_query()
+               #add-point:ON ACTION query
+               EXIT DIALOG
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION datainfo
+ 
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN 
+               #add-point:ON ACTION datainfo
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION next
+ 
+            LET g_action_choice="fetch" #161011-00018#1 mod next-->fetch
+#            IF cl_auth_chk_act("next") THEN  #161011-00018#1 mark
+               #add-point:ON ACTION next
+               CALL aglq740_fetch1('N')
+               LET g_current_row = g_current_idx
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #END add-point
+               EXIT DIALOG
+#            END IF #161011-00018#1 mark
+ 
+      
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_glar_d.getLength()
+               LET g_glar_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_glar_d.getLength()
+               LET g_glar_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_glar_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_glar_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_glar_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_glar_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            CALL aglq740_glaald_desc(g_glaald)
+            CALL aglq740_set_default_value()
+            CALL aglq740_query()
+            EXIT DIALOG
+            
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify_detail") THEN
+               IF g_detail_idx>=1 THEN
+                  CALL aglq740_cmdrun() #串查aglq760明細分類帳資料                   
+               END IF
+               EXIT DIALOG
+            END IF
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aglq740_filter()
+            #add-point:ON ACTION filter
+
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL aglq740_b_fill()
+            CALL aglq740_fetch()
+            
+          ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_glar_d)
+ 
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF         
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aglq740_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   {</Local define>}
+   #add-point:query段define
+   DEFINE l_flag     LIKE type_t.num5
+   DEFINE l_cnt      LIKE type_t.num5
+   
+   #建立临时表
+   CALL aglq740_create_temp_table()
+   #從aglq710串查資料
+   IF g_argv_flag = TRUE THEN 
+      LET g_argv_flag = FALSE
+      CALL aglq740_show()   
+      CALL aglq740_get_data()
+      SELECT COUNT(*) INTO l_cnt FROM aglq740_tmp
+      IF l_cnt=0 THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = -100
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         RETURN
+      END IF
+      CALL aglq740_set_page()
+      CALL aglq740_fetch1('F')      
+      RETURN
+   END IF
+   
+   LET l_flag=TRUE
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_glar_d.clear()
+   LET g_wc_filter = " 1=1"
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON glar001
+           FROM s_detail1[1].b_glar001
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+       #---------------------<  Detail: page1  >---------------------
+         #----<<b_glar001>>----
+         #Ctrlp:construct.c.page1.b_glar001
+         ON ACTION controlp INFIELD b_glar001
+            #add-point:ON ACTION controlp INFIELD b_glar001
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "glac001 = '",g_glaa004,"' AND  glac003 <>'1' AND glac006 = '1'"
+            CALL aglt310_04()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glar001  #顯示到畫面上
+            NEXT FIELD b_glar001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glar001
+            #add-point:BEFORE FIELD b_glar001
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glar001
+            
+            #add-point:AFTER FIELD b_glar001
+
+            #END add-point           
+
+ 
+
+ 
+
+ 
+      END CONSTRUCT
+      
+ 
+      
+ 
+  
+      #add-point:query段more_construct
+      INPUT BY NAME tm.year,tm.speriod,tm.eperiod,tm.acc_p,tm.ctype,tm.show_acc,tm.glac005,tm.stus,
+                    tm.glac009,tm.show_ad,tm.show_ce,tm.show_ye
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT
+         
+         AFTER FIELD year
+            IF not cl_null(tm.year) THEN
+               #獲取現行會計週期最大期別
+               SELECT MAX(glav006) INTO g_max_period FROM glav_t 
+               WHERE glavent=g_enterprise AND glav001=g_glaa003 AND glav002=tm.year
+               
+            END IF
+            
+         AFTER FIELD speriod
+            IF NOT cl_ap_chk_Range(tm.speriod,"0","1",g_max_period,"1","azz-00087",1) THEN
+               NEXT FIELD speriod
+            END IF
+            IF NOT cl_null(tm.speriod) AND NOT cl_null(tm.eperiod) AND (tm.speriod>tm.eperiod) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'agl-00227'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               NEXT FIELD speriod
+            END IF
+            
+         AFTER FIELD eperiod
+            IF NOT cl_ap_chk_Range(tm.eperiod,"0","1",g_max_period,"1","azz-00087",1) THEN
+               NEXT FIELD eperiod
+            END IF
+            IF NOT cl_null(tm.speriod) AND NOT cl_null(tm.eperiod) AND (tm.speriod>tm.eperiod) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'agl-00228'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               NEXT FIELD eperiod
+            END IF
+            
+         AFTER FIELD acc_p
+            IF tm.acc_p NOT MATCHES '[yYnN]' THEN
+               NEXT FIELD acc_p
+            END IF
+            
+         ON CHANGE ctype
+            IF tm.ctype MATCHES '[0123]' THEN
+               CALL aglq740_set_curr_show()
+            ELSE
+               NEXT FIELD ctype
+            END IF
+            
+         AFTER FIELD show_acc
+            IF tm.show_acc NOT MATCHES '[yYnN]' THEN
+               NEXT FIELD show_acc
+            END IF
+         
+         AFTER FIELD glac005
+            IF NOT cl_ap_chk_Range(tm.glac005,"1","1","99","1","azz-00087",1) THEN
+               NEXT FIELD glac005
+            END IF
+         
+         AFTER FIELD stus
+            IF tm.stus NOT MATCHES '[123]' THEN
+               NEXT FIELD stus
+            END IF
+            
+         AFTER FIELD glac009
+            IF tm.glac009 NOT MATCHES '[yYnN]' THEN
+               NEXT FIELD glac009
+            END IF
+          
+         AFTER FIELD show_ad
+            IF tm.show_ad NOT MATCHES '[yYnN]' THEN
+               NEXT FIELD show_ad
+            END IF
+            
+         AFTER FIELD show_ce
+            IF tm.show_ce NOT MATCHES '[yYnN]' THEN
+               NEXT FIELD show_ce
+            END IF
+         
+         AFTER FIELD show_ye
+            IF tm.show_ye NOT MATCHES '[yYnN]' THEN
+               NEXT FIELD show_ye
+            END IF
+         
+         AFTER INPUT
+            IF NOT cl_null(tm.speriod) AND NOT cl_ap_chk_Range(tm.speriod,"0","1",g_max_period,"1","azz-00087",1) THEN
+               NEXT FIELD speriod
+            END IF
+            IF NOT cl_null(tm.eperiod) AND NOT cl_ap_chk_Range(tm.eperiod,"0","1",g_max_period,"1","azz-00087",1) THEN
+               NEXT FIELD eperiod
+            END IF
+      END INPUT
+      
+      BEFORE DIALOG
+        #預設
+        CALL aglq740_show()
+        
+      ON ACTION qbeclear   # 條件清除
+         CLEAR FORM
+         CALL aglq740_glaald_desc(g_glaald)
+         CALL aglq740_set_default_value()
+         CALL aglq740_show()
+      #end add-point 
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+      LET l_flag=FALSE
+   ELSE
+      LET g_master_idx = 1
+   END IF
+   
+   LET g_wc = g_wc_table 
+ 
+ 
+        
+   LET g_wc2 = " 1=1"
+ 
+        
+   #add-point:cs段after_construct
+   IF l_flag=TRUE THEN
+      CALL aglq740_get_data()
+      SELECT COUNT(*) INTO l_cnt FROM aglq740_tmp
+      IF l_cnt=0 THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = -100
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         RETURN
+      END IF
+      CALL aglq740_set_page()
+      CALL aglq740_fetch1('F')
+   ELSE
+      CALL aglq740_b_fill1()
+      DISPLAY g_current_idx TO FORMONLY.h_index
+      DISPLAY g_glar_s.getLength() TO FORMONLY.h_count
+      DISPLAY g_detail_idx TO FORMONLY.idx
+   END IF
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aglq740_b_fill()
+   LET l_ac = g_master_idx
+   CALL aglq740_fetch()
+#   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+#      CALL cl_err("",-100,1)
+#   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aglq740_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+  
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+ RETURN
+   #end add-point
+   
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+   
+   LET g_sql = "SELECT  UNIQUE glar001,'','','','','','','','','','','','','' FROM glar_t",
+ 
+ 
+               "",
+               " WHERE glarent= ? AND 1=1 AND ", ls_wc
+    
+   LET g_sql = g_sql, " ORDER BY glar_t.glarld,glar_t.glar001,glar_t.glar002,glar_t.glar003,glar_t.glar004"
+  
+   #add-point:b_fill段sql_after
+  
+   #end add-point
+  
+   PREPARE aglq740_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aglq740_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_glar_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_glar_d[l_ac].glar001,g_glar_d[l_ac].glar001_desc,g_glar_d[l_ac].glar003, 
+       g_glar_d[l_ac].style,g_glar_d[l_ac].glar005,g_glar_d[l_ac].glar006,g_glar_d[l_ac].glar034,g_glar_d[l_ac].glar035, 
+       g_glar_d[l_ac].glar036,g_glar_d[l_ac].glar037,g_glar_d[l_ac].state,g_glar_d[l_ac].amt1,g_glar_d[l_ac].amt2, 
+       g_glar_d[l_ac].amt3
+ 
+ 
+       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      LET g_glar_d[l_ac].sel = "N"
+      #LET g_glar_d[l_ac].statepic = cl_get_actipic(g_glar_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+
+      #end add-point
+      
+      #xzgCALL aglq740_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_glar_d.deleteElement(g_glar_d.getLength())   
+ 
+   
+   #add-point:b_fill段資料填充(其他單身)
+
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aglq740_pb
+   
+   LET l_ac = 1
+   #CALL aglq740_fetch()
+   
+      CALL aglq740_filter_show('glar001','b_glar001')
+#   CALL aglq740_filter_show('glar003','b_glar001_desc')
+#   CALL aglq740_filter_show('glar005','b_glar001_desc')
+#   CALL aglq740_filter_show('glar006','b_glar001_desc')
+#   CALL aglq740_filter_show('glar034','b_glar001_desc')
+#   CALL aglq740_filter_show('glar035','b_glar001_desc')
+#   CALL aglq740_filter_show('glar036','b_glar001_desc')
+#   CALL aglq740_filter_show('glar037','b_glar001_desc')
+# 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aglq740_fetch()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:fetch段define
+   RETURN
+   #end add-point
+   
+ 
+   
+   LET li_ac = l_ac 
+   
+ 
+   
+   #DISPLAY g_detail_cnt TO FORMONLY.cnt
+ 
+   #add-point:單身填充後
+   
+   #end add-point 
+   
+ 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aglq740_detail_show()
+   #add-point:show段define
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glar_d[l_ac].glar001
+            CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001='' AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glar_d[l_ac].glar001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_glar_d[l_ac].glar001_desc
+
+   #end add-point
+   
+ 
+ 
+   #add-point:detail_show段之後
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aglq740_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+  
+   #end add-point    
+   
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+        
+        #160302-00006#1 add--str
+        CONSTRUCT g_wc_filter ON glar001
+           FROM s_detail1[1].b_glar001
+           
+           BEFORE CONSTRUCT
+ 
+                    DISPLAY aglq740_filter_parser('glar001') TO s_detail1[1].b_glar001
+                    
+                      ON ACTION controlp INFIELD b_glar001
+            #add-point:ON ACTION controlp INFIELD b_glar001
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "glac001 = '",g_glaa004,"' AND  glac003 <>'1' AND glac006 = '1'"
+            CALL aglt310_04()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glar001  #顯示到畫面上
+            NEXT FIELD b_glar001                     #返回原欄位
+    
+            #END add-point
+       #160302-00006#1 add--end
+ 
+            
+ 
+ 
+#      #單頭        ##160302-00006#1 mark by 07675--str
+#      CONSTRUCT g_wc_filter ON glar001,glar003,glar005,glar006,glar034,glar035,glar036,glar037
+#                          FROM s_detail1[1].b_glar001,s_detail1[1].b_glar001_desc,s_detail1[1].b_glar001_desc, 
+#                              s_detail1[1].b_glar001_desc,s_detail1[1].b_glar001_desc,s_detail1[1].b_glar001_desc, 
+#                              s_detail1[1].b_glar001_desc,s_detail1[1].b_glar001_desc
+# 
+#         BEFORE CONSTRUCT
+##saki       CALL cl_qbe_init()
+#                     DISPLAY aglq740_filter_parser('glar001') TO s_detail1[1].b_glar001
+#            DISPLAY aglq740_filter_parser('glar003') TO s_detail1[1].b_glar001_desc
+#            DISPLAY aglq740_filter_parser('glar005') TO s_detail1[1].b_glar001_desc
+#            DISPLAY aglq740_filter_parser('glar006') TO s_detail1[1].b_glar001_desc
+#            DISPLAY aglq740_filter_parser('glar034') TO s_detail1[1].b_glar001_desc
+#            DISPLAY aglq740_filter_parser('glar035') TO s_detail1[1].b_glar001_desc
+#            DISPLAY aglq740_filter_parser('glar036') TO s_detail1[1].b_glar001_desc
+#            DISPLAY aglq740_filter_parser('glar037') TO s_detail1[1].b_glar001_desc
+ # #160302-00006#1 mark by 07675 end
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+ 
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+ 
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL aglq740_filter_show('glar001','b_glar001')
+#   CALL aglq740_filter_show('glar003','b_glar001_desc')#160302-00006#1 mark-str
+#   CALL aglq740_filter_show('glar005','b_glar001_desc')
+#   CALL aglq740_filter_show('glar006','b_glar001_desc')
+#   CALL aglq740_filter_show('glar034','b_glar001_desc')
+#   CALL aglq740_filter_show('glar035','b_glar001_desc')
+#   CALL aglq740_filter_show('glar036','b_glar001_desc')
+#   CALL aglq740_filter_show('glar037','b_glar001_desc')#160302-00006#1 mark-end
+ 
+    
+    
+ 
+   CALL aglq740_b_fill1()#160302-00006#1 add
+   
+    
+    
+#   CALL aglq740_b_fill() 
+#   CALL aglq740_fetch()   
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION aglq740_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aglq740_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aglq740_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.insert" >}
+#+ insert
+PRIVATE FUNCTION aglq740_insert()
+   #add-point:insert段define
+   
+   #end add-point
+ 
+   #add-point:insert段control
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.modify" >}
+#+ modify
+PRIVATE FUNCTION aglq740_modify()
+   #add-point:modify段define
+   
+   #end add-point
+ 
+   #add-point:modify段control
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.reproduce" >}
+#+ reproduce
+PRIVATE FUNCTION aglq740_reproduce()
+   #add-point:reproduce段define
+   
+   #end add-point
+ 
+   #add-point:reproduce段control
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.delete" >}
+#+ delete
+PRIVATE FUNCTION aglq740_delete()
+   #add-point:delete段define
+   
+   #end add-point
+ 
+   #add-point:delete段control
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq740.other_function" >}
+
+################################################################################
+# Descriptions...: 建立臨時表
+# Memo...........:
+# Usage..........: CALL aglq740_create_temp_table()
+# Date & Author..: 2014/03/27 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_create_temp_table()
+   DROP TABLE aglq740_tmp
+   CREATE TEMP TABLE aglq740_tmp(
+   seq           INTEGER,
+   glar001       VARCHAR(24),
+   glar001_desc  VARCHAR(500),
+   glar003       SMALLINT,
+   style         VARCHAR(80), 
+   glar005       DECIMAL(20,6), 
+   glar006       DECIMAL(20,6), 
+   glar034       DECIMAL(20,6), 
+   glar035       DECIMAL(20,6), 
+   glar036       DECIMAL(20,6), 
+   glar037       DECIMAL(20,6), 
+   state         VARCHAR(1), 
+   amt1          DECIMAL(20,6),
+   amt2          DECIMAL(20,6),
+   amt3          DECIMAL(20,6))
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取下一筆資料
+# Memo...........:
+# Usage..........: CALL aglq740_fetch1(p_flag)
+# Input parameter: p_flag            
+# Date & Author..: 2014/3/17 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_fetch1(p_flag)
+   DEFINE p_flag   LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   
+   IF g_header_cnt = 0 THEN
+      RETURN
+   END IF
+   
+   CASE p_flag
+      WHEN 'F' LET g_current_idx = 1
+      WHEN 'L' LET g_current_idx = g_header_cnt        
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_glar_s.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         
+         LET g_no_ask = FALSE  
+   END CASE 
+   
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_glar_s.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_glar_s.getLength() THEN
+      LET g_current_idx = g_glar_s.getLength()
+   END IF
+   
+   DISPLAY g_current_idx TO FORMONLY.h_index
+   LET g_glar001 = g_glar_s[g_current_idx].glar001 
+   CALL aglq740_b_fill1() 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設置本位幣二、別你幣三顯示否
+# Memo...........:
+# Usage..........: CALL aglq740_set_curr_show()
+# Date & Author..: 2014/03/13 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_set_curr_show()
+   #顯示本位幣二
+   IF tm.ctype='1' THEN
+      CALL cl_set_comp_visible("glar034,glar035,amt2",TRUE)
+   ELSE
+      CALL cl_set_comp_visible("glar034,glar035,amt2",FALSE)
+   END IF
+   #顯示本位幣三
+   IF tm.ctype='2' THEN
+      CALL cl_set_comp_visible("glar036,glar037,amt3",TRUE)
+   ELSE
+      CALL cl_set_comp_visible("glar036,glar037,amt3",FALSE)
+   END IF
+   #全部
+   IF tm.ctype='3' THEN
+      CALL cl_set_comp_visible("glar034,glar035,glar036,glar037,amt2,amt3",TRUE)
+      CALL cl_set_comp_visible("glar034,glar035,glar036,glar037,amt2,amt3",TRUE)
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 獲取帳套相關資料
+# Memo...........:
+# Usage..........: CALL aglq740_glaald_desc(p_glaald)
+# Input parameter: p_glaald   帳套
+# Date & Author..: 2014/03/10 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_glaald_desc(p_glaald)
+   DEFINE  p_glaald    LIKE glaa_t.glaald
+   
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = p_glaald 
+    CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_glaald_desc=g_rtn_fields[1]
+    #依据对应的主账套编码，抓取对应法人，币别，汇率参照编号，会计科目参照编号,关账日期
+   SELECT glaacomp,glaa001,glaa002,glaa003,glaa004,glaa013,
+          glaa015,glaa016,glaa017,glaa018,glaa019,glaa020,
+          glaa021,glaa022
+     INTO g_glaacomp,g_glaa001,g_glaa002,g_glaa003,g_glaa004,g_glaa013,
+          g_glaa015,g_glaa016,g_glaa017,g_glaa018,g_glaa019,g_glaa020,
+          g_glaa021,g_glaa022
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = p_glaald 
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaacomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_glaacomp_desc= g_rtn_fields[1]
+   
+   #本位幣二
+   IF g_glaa015='Y' THEN
+      CALL cl_set_comp_visible("glaa016",TRUE)
+   ELSE
+      CALL cl_set_comp_visible("glaa016",FALSE)
+   END IF
+   #本位幣三
+   IF g_glaa019='Y' THEN
+      CALL cl_set_comp_visible("glaa020",TRUE)
+   ELSE
+      CALL cl_set_comp_visible("glaa020",FALSE)
+   END IF 
+   #多本位幣
+#   CALL cl_set_comp_visible("ctype",TRUE)
+   CALL cl_set_comp_entry("ctype",TRUE)
+   CASE
+      WHEN g_glaa015<>'Y' AND g_glaa019<>'Y' 
+#         CALL cl_set_comp_visible("ctype",FALSE)
+#         LET tm.ctype=''
+         CALL cl_set_comp_entry("ctype",FALSE)
+         CALL cl_set_combo_scc_part('ctype','9921','0')
+      WHEN g_glaa015='Y' AND g_glaa019<>'Y' 
+         CALL cl_set_combo_scc_part('ctype','9921','0,1')
+#         LET tm.ctype='1'
+      WHEN g_glaa015<>'Y' AND g_glaa019='Y' 
+         CALL cl_set_combo_scc_part('ctype','9921','0,2')
+#         LET tm.ctype='2'  
+      WHEN g_glaa015='Y' AND g_glaa019='Y' 
+         CALL cl_set_combo_scc_part('ctype','9921','0,1,2,3')
+#         LET tm.ctype='3'
+   END CASE
+   IF cl_null(tm.ctype) THEN
+      LET tm.ctype='0'
+   END IF
+   CALL aglq740_set_curr_show() #顯示本位幣二、本位幣三
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設置默認值
+# Memo...........:
+# Usage..........: CALL aglq740_set_default_value()
+# Date & Author..: 2014/03/13 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_set_default_value()
+   DEFINE l_flag           LIKE type_t.chr1
+   DEFINE l_errno          LIKE type_t.chr100
+   DEFINE l_glav002        LIKE glav_t.glav002
+   DEFINE l_glav005        LIKE glav_t.glav005
+   DEFINE l_sdate_s        LIKE glav_t.glav004
+   DEFINE l_sdate_e        LIKE glav_t.glav004
+   DEFINE l_glav006        LIKE glav_t.glav006
+   DEFINE l_pdate_s        LIKE glav_t.glav004
+   DEFINE l_pdate_e        LIKE glav_t.glav004
+   DEFINE l_glav007        LIKE glav_t.glav007
+   DEFINE l_wdate_s        LIKE glav_t.glav004
+   DEFINE l_wdate_e        LIKE glav_t.glav004
+   
+   CALL s_get_accdate(g_glaa003,g_today,'','')
+   RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+             l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e
+   IF l_flag='N' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = l_errno
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+   END IF
+   LET tm.year=l_glav002
+   LET tm.speriod=l_glav006
+   LET tm.eperiod=l_glav006
+   #獲取現行會計週期最大期別
+   SELECT MAX(glav006) INTO g_max_period FROM glav_t 
+   WHERE glavent=g_enterprise AND glav001=g_glaa003 AND glav002=tm.year
+   
+   #按科目分頁
+   LET tm.acc_p='N'
+   #統制科目
+   LET tm.show_acc='N'
+   #科目層級
+   LET tm.glac005=99
+   #單據狀態
+   LET tm.stus='1'
+   #含內部管理科目
+   LET tm.glac009='Y'
+   #含月結傳票
+   LET tm.show_ce='Y'
+   #含年結傳票
+   LET tm.show_ye='Y'
+   #150827-00036#2--add--str--
+   #含審計調整傳票
+   LET tm.show_ad='Y'
+   #150827-00036#2--add--end
+END FUNCTION
+
+################################################################################
+# Descriptions...: 填充单身资料
+# Memo...........:
+# Usage..........: CALL aglq740_b_fill1()
+# Date & Author..: 2014/03/18 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_b_fill1()
+   DEFINE l_seq  LIKE type_t.num10
+   
+   LET g_sql="SELECT UNIQUE seq,glar001,glar001_desc,",
+             "       glar003,style,glar005,glar006,glar034,glar035,glar036,glar037,",
+             "       state,amt1,amt2,amt3 ",
+             "  FROM aglq740_tmp ",
+             " WHERE 1=1 "#160302-00006#1 ADD by 07675
+   #是否按照幣別分頁
+   IF NOT cl_null(g_glar001) THEN
+      LET g_sql=g_sql," AND glar001='",g_glar001,"'"#160302-00006#1 by 07675  WHERE 改 AND
+   END IF
+   LET g_sql = g_sql, " AND ",g_wc_filter #160302-00006#1  ADD by 07675
+   LET g_sql=g_sql," ORDER BY glar001,seq "
+   #end add-point
+  
+   PREPARE aglq740_pb1 FROM g_sql
+   DECLARE b_fill_curs1 CURSOR FOR aglq740_pb1
+   OPEN b_fill_curs1
+   
+   CALL g_glar_d.clear()
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs1 INTO l_seq,g_glar_d[l_ac].glar001,g_glar_d[l_ac].glar001_desc,g_glar_d[l_ac].glar003, 
+       g_glar_d[l_ac].style,g_glar_d[l_ac].glar005,g_glar_d[l_ac].glar006,g_glar_d[l_ac].glar034,g_glar_d[l_ac].glar035, 
+       g_glar_d[l_ac].glar036,g_glar_d[l_ac].glar037,g_glar_d[l_ac].state,g_glar_d[l_ac].amt1,g_glar_d[l_ac].amt2, 
+       g_glar_d[l_ac].amt3
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      #160511-00006#1--add--str--
+      #期初：只显示余额，借贷方金额不显示
+      IF g_glar_d[l_ac].style = '1' THEN
+         LET g_glar_d[l_ac].glar005 = NULL
+         LET g_glar_d[l_ac].glar006 = NULL
+         LET g_glar_d[l_ac].glar034 = NULL
+         LET g_glar_d[l_ac].glar035 = NULL
+         LET g_glar_d[l_ac].glar036 = NULL
+         LET g_glar_d[l_ac].glar037 = NULL
+      END IF
+      #160511-00006#1--add--end
+      
+      LET g_glar_d[l_ac].sel = "N"
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_glar_d.deleteElement(g_glar_d.getLength())   
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs1
+   FREE aglq740_pb1
+   
+   LET l_ac = 1
+   
+   CALL aglq740_filter_show('glar001','b_glar001')
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取數據
+# Memo...........:
+# Usage..........: CALL aglq740_get_data()
+# Date & Author..: 2014/03/10 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_get_data()
+   DEFINE l_flag           LIKE type_t.num5    #表示是否是完整期別
+   DEFINE l_sql,l_sql1,l_sql2   STRING
+   DEFINE l_sql3,l_sql4,l_sql5  STRING
+   DEFINE l_wc                  STRING 
+   DEFINE l_glar001        LIKE glar_t.glar001
+   DEFINE l_glar001_desc   LIKE glacl_t.glacl004
+   DEFINE l_glar003        LIKE glar_t.glar003
+   DEFINE l_desc           LIKE type_t.num5
+   DEFINE l_glar005        LIKE glar_t.glar005
+   DEFINE l_glar006        LIKE glar_t.glar006
+   DEFINE l_glar034        LIKE glar_t.glar034
+   DEFINE l_glar035        LIKE glar_t.glar035
+   DEFINE l_glar036        LIKE glar_t.glar036
+   DEFINE l_glar037        LIKE glar_t.glar037
+   DEFINE l_state          LIKE type_t.num5
+   DEFINE l_amt1           LIKE type_t.num20_6 
+   DEFINE l_amt2           LIKE type_t.num20_6 
+   DEFINE l_amt3           LIKE type_t.num20_6 
+   DEFINE l_amt4           LIKE type_t.num20_6 
+   DEFINE l_amt5           LIKE type_t.num20_6 
+   DEFINE l_amt6           LIKE type_t.num20_6 
+   DEFINE l_sum1           LIKE type_t.num20_6 
+   DEFINE l_sum2           LIKE type_t.num20_6 
+   DEFINE l_sum3           LIKE type_t.num20_6 
+   DEFINE l_period         LIKE glap_t.glap004
+   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_seq            LIKE type_t.num10
+   DEFINE l_glar           DYNAMIC ARRAY OF RECORD
+          glar001          LIKE glar_t.glar001,
+          glar001_desc     LIKE glacl_t.glacl004
+          END RECORD
+   DEFINE l_i              LIKE type_t.num10
+   DEFINE l_glaq003        LIKE glaq_t.glaq003
+   DEFINE l_glaq004        LIKE glaq_t.glaq004
+   DEFINE l_glaq040        LIKE glaq_t.glaq040
+   DEFINE l_glaq041        LIKE glaq_t.glaq041
+   DEFINE l_glaq043        LIKE glaq_t.glaq043
+   DEFINE l_glaq044        LIKE glaq_t.glaq044
+   DEFINE l_stus_str       STRING #凭证状态
+   DEFINE l_flag_amt       LIKE type_t.num5  #表示是否有期初後者期末金額
+   DEFINE l_glaq002        STRING
+   DEFINE l_glac002_str    STRING              #151204-00013#4 add
+   DEFINE l_state_f        LIKE type_t.num5#160503-00037#4 add by 02599
+   #160511-00006#1--add--str--
+   DEFINE l_year_sum       LIKE type_t.num20_6
+   DEFINE l_year_sum2      LIKE type_t.num20_6
+   DEFINE l_year_sum3      LIKE type_t.num20_6
+   #160511-00006#1--add--end
+   
+   #刪除臨時表中資料
+   DELETE FROM aglq740_tmp
+  
+   
+   LET l_wc=cl_replace_str(g_wc,'glar001','glaq002')
+   LET l_sql5=cl_replace_str(g_wc,'glar001','glac002')
+   #顯示統制科目否
+   IF tm.show_acc<>'Y' THEN
+      LET l_sql1=l_sql1," AND glac003<>'1' "
+   END IF
+   #科目層級
+   IF NOT cl_null(tm.glac005) THEN
+      LET l_sql1=l_sql1," AND glac005<=",tm.glac005
+   END IF
+   #含內部管理科目否
+   IF tm.glac009<>'Y' THEN
+      LET l_sql1=l_sql1," AND glac009<>'Y' "
+   END IF
+#151204-00013#4--mark--str--
+#   #顯示月結CE憑證否
+#   IF tm.show_ce<>'Y' THEN
+#      LET l_sql2=l_sql2," AND glap007<>'CE' "
+#      LET l_sql3="'CE'"
+#   END IF
+#151204-00013#4--mark--end
+   #顯示年結YE憑證否
+   IF tm.show_ye<>'Y' THEN
+      LET l_sql2=l_sql2," AND glap007<>'YE' "
+      IF NOT cl_null(l_sql3) THEN
+         LET l_sql3=l_sql3,",'YE'"
+      ELSE
+         LET l_sql3="'YE'" 
+      END IF
+   END IF
+   #150827-00036#2--add--str--
+   #顯示AD審計調整傳票否
+   IF tm.show_ad<>'Y' THEN
+      LET l_sql2=l_sql2," AND glap007<>'AD' "
+      IF NOT cl_null(l_sql3) THEN
+         LET l_sql3=l_sql3,",'AD'"
+      ELSE
+         LET l_sql3="'AD'" 
+      END IF
+   END IF
+   #150827-00036#2--add--end
+   IF NOT cl_null(l_sql3) THEN
+      LET l_sql3=" AND glap007 IN (",l_sql3,")"
+   END IF  
+   #單據狀態
+   CASE
+      WHEN tm.stus='1'
+         LET l_stus_str=" AND glapstus='S' "
+      WHEN tm.stus='2'
+         LET l_sql4=l_sql4," AND glapstus IN ('Y') "
+         LET l_stus_str=" AND glapstus IN ('Y','S') "
+      WHEN tm.stus='3'
+         LET l_sql4=l_sql4," AND glapstus IN ('Y','N') "
+         LET l_stus_str=" AND glapstus IN ('N','Y','S') "
+   END CASE
+   
+   #抓出所有符合條件的會計科目
+   LET g_sql="SELECT glac002 FROM glac_t",
+             " WHERE glacent=",g_enterprise,
+             "   AND glac001='",g_glaa004,"' AND ",l_sql5,l_sql1,
+             " ORDER BY glac002"
+   PREPARE aglq740_sel_pr FROM g_sql
+   DECLARE aglq740_sel_cr CURSOR FOR aglq740_sel_pr
+   
+   #期初餘額
+   LET l_sql="SELECT SUM(glar005),SUM(glar006),",
+             "       SUM(glar034),SUM(glar035),SUM(glar036),SUM(glar037) FROM glar_t",    
+             " WHERE glarent=",g_enterprise," AND glarld='",g_glaald,"' ",
+             "   AND glar001=? AND glar002=",tm.year," AND glar003<=? "    
+   PREPARE aglq740_sel_pr1 FROM l_sql
+   #本年累计
+   #160503-00037#4  by 07900  add -str
+   LET l_sql="SELECT SUM(glar005),SUM(glar006),",
+             "       SUM(glar034),SUM(glar035),SUM(glar036),SUM(glar037) FROM glar_t",    
+             " WHERE glarent=",g_enterprise," AND glarld='",g_glaald,"' ",
+             "   AND glar001=? AND glar002=",tm.year," AND glar003<=? AND glar003<>0"
+   PREPARE aglq740_sel_pr01 FROM l_sql
+   #160503-00037#4  by 07900  add -end
+   
+   #160511-00006#1--add--str--
+   #年初余额
+   LET l_sql="SELECT SUM(glar005-glar006),",
+             "       SUM(glar034-glar035),SUM(glar036-glar037) FROM glar_t",    
+             " WHERE glarent=",g_enterprise," AND glarld='",g_glaald,"' ",
+             "   AND glar001=? AND glar002=",tm.year," AND glar003=0 "    
+   PREPARE aglq740_year_sum_pr FROM l_sql
+   #160511-00006#1--add--end
+   
+   CALL cl_err_collect_init()
+   LET l_success = TRUE
+   LET l_i=1 
+   CALL l_glar.clear()
+   
+   FOREACH aglq740_sel_cr INTO l_glar[l_i].glar001
+      IF SQLCA.sqlcode THEN
+#         CALL cl_errmsg('','FOREACH aglq740_sel_cr','',SQLCA.sqlcode,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'FOREACH aglq740_sel_cr'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      #科目說明
+      CALL aglq740_glar001_desc(l_glar[l_i].glar001) RETURNING l_glar[l_i].glar001_desc
+      LET l_i=l_i+1
+   END FOREACH
+   LET l_i=l_i-1
+   CALL l_glar.deleteElement(l_glar.getLength()) 
+   
+   LET l_seq=1
+   FOR l_i=1 TO l_glar.getLength()
+      LET l_flag_amt = FALSE 
+      LET l_glar001=l_glar[l_i].glar001
+      LET l_glar001_desc=l_glar[l_i].glar001_desc
+      #抓取科目对应的明细科目或者独立科目
+      LET l_glaq002='' #151204-00013#4 add
+      CALL s_voucher_get_glac_str(g_glaa004,l_glar001) RETURNING l_glaq002
+      #151204-00013#4--add--str--
+      
+      #160824-00004#4--add--str--
+      IF cl_null(l_glaq002) THEN
+         LET l_glaq002 = "'",l_glar001,"'"
+      END IF
+      #160824-00004#4--add--end
+      
+      IF tm.show_ce <> 'Y' THEN
+         LET l_glac002_str = " AND glac002 IN (",l_glaq002,")"
+      END IF
+      #151204-00013#4--add--end
+      #当该统治科目没有下层明细科目时，抓取该科目本身资料
+      IF cl_null(l_glaq002) THEN
+         LET l_glaq002 = " AND glaq002 ='",l_glar001,"'"
+      ELSE
+         LET l_glaq002 = " AND glaq002 IN (",l_glaq002,")"
+      END IF
+      
+      IF tm.stus MATCHES '[23]' THEN
+         #期初餘額、本年累計
+         LET l_sql="SELECT SUM(glaq003),SUM(glaq004),SUM(glaq040),SUM(glaq041),",
+                   "       SUM(glaq043),SUM(glaq044) ",
+                   "  FROM glaq_t INNER JOIN glap_t ON glapent=glaqent AND glapld = glaqld AND glapdocno = glaqdocno ",
+                   " WHERE glaqent=",g_enterprise," AND glaqld='",g_glaald,"' ",
+                   l_glaq002,
+                   "   AND glap002=",tm.year,
+                   "   AND glap004<=?",
+                   l_sql2,l_sql4
+         PREPARE aglq740_sel_pr2 FROM l_sql
+      END IF
+      
+#      IF tm.show_ce<>'Y' OR tm.show_ye<>'Y' OR tm.show_ad<>'Y' THEN #150827-00036#2 add 'tm.show_ad' #151204-00013#4 mark
+      IF tm.show_ye<>'Y' OR tm.show_ad<>'Y' THEN  #151204-00013#4 add
+         #抓取YE或AD傳票金額
+         LET l_sql="SELECT SUM(glaq003),SUM(glaq004),SUM(glaq040),SUM(glaq041),",
+                   "       SUM(glaq043),SUM(glaq044) ",
+                   "  FROM glaq_t INNER JOIN glap_t ON glapent=glaqent AND glapld = glaqld AND glapdocno = glaqdocno ",
+                   " WHERE glaqent=",g_enterprise," AND glaqld='",g_glaald,"' ",
+                   l_glaq002,
+                   "   AND glap002=",tm.year,
+                   "   AND glap004<=?",
+                   "   AND glapstus='S'",
+                   l_sql3
+         PREPARE aglq740_sel_pr3 FROM l_sql
+         #抓取YE或AD傳票金額
+         LET l_sql="SELECT SUM(glaq003),SUM(glaq004),SUM(glaq040),SUM(glaq041),",
+                   "       SUM(glaq043),SUM(glaq044) ",
+                   "  FROM glaq_t INNER JOIN glap_t ON glapent=glaqent AND glapld = glaqld AND glapdocno = glaqdocno ",
+                   " WHERE glaqent=",g_enterprise," AND glaqld='",g_glaald,"' ",
+                   l_glaq002,
+                   "   AND glap002=",tm.year,
+                   "   AND glap004=? ",
+                   "   AND glapstus='S'",
+                   l_sql3
+         PREPARE aglq740_sel_pr4 FROM l_sql
+      END IF
+      
+      #151204-00013#4--add--str--
+      #当未勾选含月结凭证时，要排除CE凭证中损益类科目金额和XC凭证中成本类科目金额
+      IF tm.show_ce <> 'Y' THEN
+         #抓取CE或XC傳票金額
+         LET l_sql="SELECT SUM(glaq003),SUM(glaq004),SUM(glaq040),SUM(glaq041),",
+                   "       SUM(glaq043),SUM(glaq044) ",
+                   "  FROM glaq_t INNER JOIN glap_t ON glapent=glaqent AND glapld = glaqld AND glapdocno = glaqdocno ",
+                   " WHERE glaqent=",g_enterprise," AND glaqld='",g_glaald,"' ",
+                   l_glaq002,
+                   "   AND glap002=",tm.year,
+                   "   AND glap004<=?",
+                   l_stus_str,
+                   "   AND (",
+                   "        (glap007='CE' AND glaq002 IN (SELECT glac002 FROM glac_t ",
+                   "                                       WHERE glacent=",g_enterprise," AND glac001='",g_glaa004,"'",
+                   "                                         AND glac007='6' ",l_glac002_str,"))",
+                   "         OR ",
+                   "        (glap007='XC' AND glaq002 IN (SELECT glac002 FROM glac_t ",
+                   "                                       WHERE glacent=",g_enterprise," AND glac001='",g_glaa004,"'",
+                   "                                         AND glac010 <> 'N' ",   #160824-00004#2 排除非费用类科目
+                   "                                         AND glac007='5' ",l_glac002_str,#"))",  #160824-00004#4 mark '))'
+                   #160824-00004#4--add--str--
+                   "                                     )",
+#                   "                      AND glapdocno NOT IN (SELECT xcea101 FROM xcea_t ", #161027-00022#1 mark
+                   "                      AND glapdocno IN (SELECT xcea101 FROM xcea_t ",      #161027-00022#1 add
+                   "                                             WHERE xceaent=",g_enterprise," AND xceald='",g_glaald,"'",
+#                   "                                               AND xcea002 IN ('7','9') AND xcea101 IS NOT NULL", #161027-00022#1 mark
+                   "                                               AND xcea002 = '9' AND xcea101 IS NOT NULL", #161027-00022#1 add
+                   "                                               AND xcea004=",tm.year," AND xcea005<=? ",
+                   "                                     )",
+                   "        )",
+                   #160824-00004#4--add--end
+                   "       )"
+         PREPARE aglq740_sel_pr3_1 FROM l_sql
+         #抓取CE或XC傳票金額
+         LET l_sql="SELECT SUM(glaq003),SUM(glaq004),SUM(glaq040),SUM(glaq041),",
+                   "       SUM(glaq043),SUM(glaq044) ",
+                   "  FROM glaq_t INNER JOIN glap_t ON glapent=glaqent AND glapld = glaqld AND glapdocno = glaqdocno ",
+                   " WHERE glaqent=",g_enterprise," AND glaqld='",g_glaald,"' ",
+                   l_glaq002,
+                   "   AND glap002=",tm.year,
+                   "   AND glap004=? ",
+                   l_stus_str,
+                   "   AND (",
+                   "        (glap007='CE' AND glaq002 IN (SELECT glac002 FROM glac_t ",
+                   "                                       WHERE glacent=",g_enterprise," AND glac001='",g_glaa004,"'",
+                   "                                         AND glac007='6' ",l_glac002_str,"))",
+                   "         OR ",
+                   "        (glap007='XC' AND glaq002 IN (SELECT glac002 FROM glac_t ",
+                   "                                       WHERE glacent=",g_enterprise," AND glac001='",g_glaa004,"'",
+                   "                                         AND glac010 <> 'N' ",   #160824-00004#2 排除非费用类科目
+                   "                                         AND glac007='5' ",l_glac002_str,#"))",  #160824-00004#4 mark '))'
+                   #160824-00004#4--add--str--
+                   "                                     )",
+#                   "                      AND glapdocno NOT IN (SELECT xcea101 FROM xcea_t ", #161027-00022#1 mark
+                   "                      AND glapdocno IN (SELECT xcea101 FROM xcea_t ",      #161027-00022#1 add
+                   "                                             WHERE xceaent=",g_enterprise," AND xceald='",g_glaald,"'",
+#                   "                                               AND xcea002 IN ('7','9') AND xcea101 IS NOT NULL", #161027-00022#1 mark
+                   "                                               AND xcea002 = '9' AND xcea101 IS NOT NULL", #161027-00022#1 add
+                   "                                               AND xcea004=",tm.year," AND xcea005=? ",
+                   "                                     )",
+                   "        )",
+                   #160824-00004#4--add--end
+                   "       )"
+         PREPARE aglq740_sel_pr4_1 FROM l_sql
+      END IF
+      #151204-00013#4--add--end
+      
+      #本期合計
+      LET l_sql="(SELECT SUM(glar005) glar005,SUM(glar006) glar006,SUM(glar034) glar034,",
+                "        SUM(glar035) glar035,SUM(glar036) glar036,SUM(glar037) glar037",
+                "   FROM glar_t",
+                "   LEFT OUTER JOIN glac_t ON glacent=glarent AND glac002=glar001 AND glac001='",g_glaa004,"'",
+                "  WHERE glarent=",g_enterprise," AND glarld='",g_glaald,"' ",
+                "    AND glar001=? ",
+                "    AND glar002=",tm.year,
+                "    AND glar003=? ",
+                l_sql1," AND ",g_wc," )"  
+      #單據狀態      
+      IF tm.stus MATCHES '[23]' THEN
+         LET l_sql=l_sql,
+                   " UNION ALL ",
+                   "(SELECT SUM(glaq003) glar005,SUM(glaq004) glar006,SUM(glaq040) glar034,",
+                   "        SUM(glaq041) glar035,SUM(glaq043) glar036,SUM(glaq044) glar037 ",
+                   "   FROM glaq_t",
+                   "  INNER JOIN glap_t ON glapent=glaqent AND glapld = glaqld AND glapdocno = glaqdocno ",
+                   "   LEFT OUTER JOIN glac_t ON glacent=glaqent AND glac002=glaq002 AND glac001='",g_glaa004,"'",
+                   "  WHERE glaqent=",g_enterprise," AND glaqld='",g_glaald,"' ",
+                   l_glaq002,
+                   "    AND glap002=",tm.year,
+                   "    AND glap004=? ",l_sql4,
+                   l_sql1,l_sql2,")"
+      END IF
+      
+      LET l_sql=" SELECT SUM(glar005),SUM(glar006),SUM(glar034),SUM(glar035),SUM(glar036),SUM(glar037)",
+                "   FROM (",l_sql,")"
+      PREPARE aglq740_sel_pr5 FROM l_sql
+      
+      #期初餘額
+      LET l_amt1=0
+      LET l_amt2=0
+      LET l_amt3=0 
+      LET l_sum1=0
+      LET l_sum2=0
+      LET l_sum3=0 
+      LET l_state=NULL
+      LET l_period=tm.speriod-1
+      EXECUTE aglq740_sel_pr1 USING l_glar001,l_period 
+                               INTO l_glar005,l_glar006,l_glar034,l_glar035,l_glar036,l_glar037
+      IF SQLCA.sqlcode THEN
+#         CALL cl_errmsg('','aglq740_sel_pr1','',SQLCA.sqlcode,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'aglq740_sel_pr1'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET l_success = FALSE
+      END IF 
+      IF cl_null(l_glar005) THEN LET l_glar005=0 END IF
+      IF cl_null(l_glar006) THEN LET l_glar006=0 END IF
+      IF cl_null(l_glar034) THEN LET l_glar034=0 END IF
+      IF cl_null(l_glar035) THEN LET l_glar035=0 END IF
+      IF cl_null(l_glar036) THEN LET l_glar036=0 END IF
+      IF cl_null(l_glar037) THEN LET l_glar037=0 END IF
+      IF tm.stus MATCHES '[23]' THEN
+         EXECUTE aglq740_sel_pr2 USING l_period 
+                                  INTO l_glaq003,l_glaq004,l_glaq040,l_glaq041,l_glaq043,l_glaq044
+         IF SQLCA.sqlcode THEN
+#            CALL cl_errmsg('','aglq740_sel_pr2','',SQLCA.sqlcode,1)
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'aglq740_sel_pr2'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+         END IF
+         IF cl_null(l_glaq003) THEN LET l_glaq003=0 END IF
+         IF cl_null(l_glaq004) THEN LET l_glaq004=0 END IF
+         IF cl_null(l_glaq040) THEN LET l_glaq040=0 END IF
+         IF cl_null(l_glaq041) THEN LET l_glaq041=0 END IF
+         IF cl_null(l_glaq043) THEN LET l_glaq043=0 END IF
+         IF cl_null(l_glaq044) THEN LET l_glaq044=0 END IF
+         LET l_glar005 = l_glar005 + l_glaq003
+         LET l_glar006 = l_glar006 + l_glaq004
+         LET l_glar034 = l_glar034 + l_glaq040
+         LET l_glar035 = l_glar035 + l_glaq041
+         LET l_glar036 = l_glar036 + l_glaq043
+         LET l_glar037 = l_glar037 + l_glaq044
+      END IF
+      #當不包含YE或AD傳票時，減去YE或AD傳票金額
+#      IF tm.show_ce<>'Y' OR tm.show_ye<>'Y' OR tm.show_ad<>'Y' THEN #150827-00036#2 add 'tm.show_ad'  #151204-00013#4 mark
+      IF tm.show_ye<>'Y' OR tm.show_ad<>'Y' THEN #151204-00013#4 add
+         EXECUTE aglq740_sel_pr3 USING l_period 
+                                  INTO l_glaq003,l_glaq004,l_glaq040,l_glaq041,l_glaq043,l_glaq044
+         IF SQLCA.sqlcode THEN
+#            CALL cl_errmsg('','aglq740_sel_pr3','',SQLCA.sqlcode,1)
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'aglq740_sel_pr3'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+         END IF
+         IF cl_null(l_glaq003) THEN LET l_glaq003=0 END IF
+         IF cl_null(l_glaq004) THEN LET l_glaq004=0 END IF
+         IF cl_null(l_glaq040) THEN LET l_glaq040=0 END IF
+         IF cl_null(l_glaq041) THEN LET l_glaq041=0 END IF
+         IF cl_null(l_glaq043) THEN LET l_glaq043=0 END IF
+         IF cl_null(l_glaq044) THEN LET l_glaq044=0 END IF
+         LET l_glar005 = l_glar005 - l_glaq003
+         LET l_glar006 = l_glar006 - l_glaq004
+         LET l_glar034 = l_glar034 - l_glaq040
+         LET l_glar035 = l_glar035 - l_glaq041
+         LET l_glar036 = l_glar036 - l_glaq043
+         LET l_glar037 = l_glar037 - l_glaq044
+      END IF
+      
+      #151204-00013#4--add--str--
+      #当未勾选含月结凭证时，要排除CE凭证中损益类科目金额和XC凭证中成本类科目金额
+      IF tm.show_ce <> 'Y' THEN
+         LET l_glaq003=0
+         LET l_glaq004=0
+         LET l_glaq040=0
+         LET l_glaq041=0
+         LET l_glaq043=0
+         LET l_glaq044=0
+         EXECUTE aglq740_sel_pr3_1 USING l_period,l_period #160824-00004#4 add 'l_period'
+                                  INTO l_glaq003,l_glaq004,l_glaq040,l_glaq041,l_glaq043,l_glaq044
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'aglq740_sel_pr3_1'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+         END IF
+         IF cl_null(l_glaq003) THEN LET l_glaq003=0 END IF
+         IF cl_null(l_glaq004) THEN LET l_glaq004=0 END IF
+         IF cl_null(l_glaq040) THEN LET l_glaq040=0 END IF
+         IF cl_null(l_glaq041) THEN LET l_glaq041=0 END IF
+         IF cl_null(l_glaq043) THEN LET l_glaq043=0 END IF
+         IF cl_null(l_glaq044) THEN LET l_glaq044=0 END IF
+         LET l_glar005 = l_glar005 - l_glaq003
+         LET l_glar006 = l_glar006 - l_glaq004
+         LET l_glar034 = l_glar034 - l_glaq040
+         LET l_glar035 = l_glar035 - l_glaq041
+         LET l_glar036 = l_glar036 - l_glaq043
+         LET l_glar037 = l_glar037 - l_glaq044
+      END IF
+      #151204-00013#4--add--end
+      
+      #余额
+      LET l_amt1 = l_glar005 - l_glar006
+      LET l_amt2 = l_glar034 - l_glar035
+      LET l_amt3 = l_glar036 - l_glar037
+      #借貸平否
+      CASE
+         WHEN l_amt1>0 
+            LET l_state='1'
+         WHEN l_amt1<0
+            LET l_state='2'
+            LET l_amt1=(-1)*l_amt1
+            LET l_amt2=(-1)*l_amt2
+            LET l_amt3=(-1)*l_amt3
+         WHEN l_amt1=0
+            LET l_state='3'
+      END CASE
+      #判斷是否有期初金額，如果有標示為TRUE
+      IF l_state <> '3' THEN LET l_flag_amt = TRUE END IF
+      
+      INSERT INTO aglq740_tmp
+      VALUES(l_seq,l_glar001,l_glar001_desc,NULL,'1',
+             l_glar005,l_glar006,l_glar034,l_glar035,l_glar036,l_glar037,
+             l_state,l_amt1,l_amt2,l_amt3)
+      IF SQLCA.sqlcode THEN
+#         CALL cl_errmsg('','insert','',SQLCA.sqlcode,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'insert aglq740_tmp'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET l_success = FALSE
+      END IF
+      LET l_seq=l_seq+1
+      #记录期初状态
+      LET l_state_f = l_state #160503-00037#4 add by 02599
+      #本期合計
+      FOR l_glar003=tm.speriod TO tm.eperiod
+         IF tm.stus MATCHES '[23]' THEN
+            EXECUTE aglq740_sel_pr5 USING l_glar001,l_glar003,l_glar003
+                                     INTO l_glar005,l_glar006,l_glar034,l_glar035,l_glar036,l_glar037
+         ELSE
+            EXECUTE aglq740_sel_pr5 USING l_glar001,l_glar003
+                                     INTO l_glar005,l_glar006,l_glar034,l_glar035,l_glar036,l_glar037
+         END IF
+         IF cl_null(l_glar005) THEN LET l_glar005=0 END IF
+         IF cl_null(l_glar006) THEN LET l_glar006=0 END IF
+         IF cl_null(l_glar034) THEN LET l_glar034=0 END IF
+         IF cl_null(l_glar035) THEN LET l_glar035=0 END IF
+         IF cl_null(l_glar036) THEN LET l_glar036=0 END IF
+         IF cl_null(l_glar037) THEN LET l_glar037=0 END IF
+         
+         #當不包含YE或AD傳票時，減去YE或AD傳票金額
+#         IF tm.show_ce<>'Y' OR tm.show_ye<>'Y' OR tm.show_ad<>'Y' THEN #150827-00036#2 add 'tm.show_ad' #151204-00013#4 mark
+         IF tm.show_ye<>'Y' OR tm.show_ad<>'Y' THEN  #151204-00013#4 add
+            EXECUTE aglq740_sel_pr4 USING l_glar003 
+                                     INTO l_glaq003,l_glaq004,l_glaq040,l_glaq041,l_glaq043,l_glaq044
+            IF SQLCA.sqlcode THEN
+#               CALL cl_errmsg('','aglq740_sel_pr4','',SQLCA.sqlcode,1)
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'aglq740_sel_pr4'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET l_success = FALSE
+            END IF
+            IF cl_null(l_glaq003) THEN LET l_glaq003=0 END IF
+            IF cl_null(l_glaq004) THEN LET l_glaq004=0 END IF
+            IF cl_null(l_glaq040) THEN LET l_glaq040=0 END IF
+            IF cl_null(l_glaq041) THEN LET l_glaq041=0 END IF
+            IF cl_null(l_glaq043) THEN LET l_glaq043=0 END IF
+            IF cl_null(l_glaq044) THEN LET l_glaq044=0 END IF
+            LET l_glar005=l_glar005-l_glaq003
+            LET l_glar006=l_glar006-l_glaq004
+            LET l_glar034=l_glar034-l_glaq040
+            LET l_glar035=l_glar035-l_glaq041
+            LET l_glar036=l_glar036-l_glaq043
+            LET l_glar037=l_glar037-l_glaq044
+         END IF
+         
+         #151204-00013#4--add--str--
+         #当未勾选含月结凭证时，要排除CE凭证中损益类科目金额和XC凭证中成本类科目金额
+         IF tm.show_ce <> 'Y' THEN
+            LET l_glaq003=0
+            LET l_glaq004=0
+            LET l_glaq040=0
+            LET l_glaq041=0
+            LET l_glaq043=0
+            LET l_glaq044=0
+            EXECUTE aglq740_sel_pr4_1 USING l_glar003,l_glar003 #160824-00004#4 add 'l_glar003' 
+                                     INTO l_glaq003,l_glaq004,l_glaq040,l_glaq041,l_glaq043,l_glaq044
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'aglq740_sel_pr4_1'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET l_success = FALSE
+            END IF
+            IF cl_null(l_glaq003) THEN LET l_glaq003=0 END IF
+            IF cl_null(l_glaq004) THEN LET l_glaq004=0 END IF
+            IF cl_null(l_glaq040) THEN LET l_glaq040=0 END IF
+            IF cl_null(l_glaq041) THEN LET l_glaq041=0 END IF
+            IF cl_null(l_glaq043) THEN LET l_glaq043=0 END IF
+            IF cl_null(l_glaq044) THEN LET l_glaq044=0 END IF
+            LET l_glar005=l_glar005-l_glaq003
+            LET l_glar006=l_glar006-l_glaq004
+            LET l_glar034=l_glar034-l_glaq040
+            LET l_glar035=l_glar035-l_glaq041
+            LET l_glar036=l_glar036-l_glaq043
+            LET l_glar037=l_glar037-l_glaq044
+         END IF
+         #151204-00013#4--add--end
+         
+         LET l_sum1=0
+         LET l_sum2=0
+         LET l_sum3=0         
+         #本期合計
+         LET l_sum1=l_glar005-l_glar006
+	      LET l_sum2=l_glar034-l_glar035
+	      LET l_sum3=l_glar036-l_glar037
+	      #借餘
+#         IF l_state='1' THEN  #160503-00037#4 mark by 02599
+         IF l_state_f='1' THEN  #160503-00037#4 add by 02599
+            LET l_sum1=l_sum1+l_amt1
+            LET l_sum2=l_sum2+l_amt2
+            LET l_sum3=l_sum3+l_amt3
+         END IF
+         #貸餘
+#         IF l_state='2' THEN  #160503-00037#4 mark by 02599
+         IF l_state_f='2' THEN  #160503-00037#4 add by 02599
+            LET l_sum1=l_sum1-l_amt1
+            LET l_sum2=l_sum2-l_amt2
+            LET l_sum3=l_sum3-l_amt3
+         END IF
+         #借貸平否
+         CASE
+            WHEN l_sum1>0 
+               LET l_state='1'
+            WHEN l_sum1<0
+               LET l_state='2'
+               LET l_sum1=(-1)*l_sum1
+               LET l_sum2=(-1)*l_sum2
+               LET l_sum3=(-1)*l_sum3
+            WHEN l_sum1=0
+               LET l_state='3'
+         END CASE
+         
+         #判斷是否有期間異動金額，如果有標示為TRUE
+         IF l_state <> '3' THEN LET l_flag_amt = TRUE END IF
+         IF l_glar005 <> 0 OR l_glar006 <> 0  THEN LET l_flag_amt = TRUE END IF  #161227-00047#1 add xul
+         INSERT INTO aglq740_tmp
+         VALUES(l_seq,l_glar001,l_glar001_desc,l_glar003,'2',
+                l_glar005,l_glar006,l_glar034,l_glar035,l_glar036,l_glar037,
+                l_state,l_sum1,l_sum2,l_sum3)
+         IF SQLCA.sqlcode THEN
+#            CALL cl_errmsg('','insert','',SQLCA.sqlcode,1)
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'insert aglq740_tmp'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+         END IF
+         LET l_state_f = l_state #160503-00037#4 add by 02599
+         LET l_amt1=l_sum1
+         LET l_amt2=l_sum2
+         LET l_amt3=l_sum3
+         LET l_seq=l_seq+1
+         
+         #本年累計
+         EXECUTE aglq740_sel_pr01 USING l_glar001,l_glar003          #160503-00037#4  by 07900 -mod  "aglq740_sel_pr1"--"aglq740_sel_pr01"
+                                  INTO l_glar005,l_glar006,l_glar034,l_glar035,l_glar036,l_glar037
+         IF SQLCA.sqlcode THEN
+#            CALL cl_errmsg('','aglq740_sel_pr1','',SQLCA.sqlcode,1)
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'aglq740_sel_pr01'   #160503-00037#4  by 07900 -mod  "aglq740_sel_pr1"--"aglq740_sel_pr01"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+         END IF
+         IF cl_null(l_glar005) THEN LET l_glar005=0 END IF
+         IF cl_null(l_glar006) THEN LET l_glar006=0 END IF
+         IF cl_null(l_glar034) THEN LET l_glar034=0 END IF
+         IF cl_null(l_glar035) THEN LET l_glar035=0 END IF
+         IF cl_null(l_glar036) THEN LET l_glar036=0 END IF
+         IF cl_null(l_glar037) THEN LET l_glar037=0 END IF
+         IF tm.stus MATCHES '[23]' THEN
+            EXECUTE aglq740_sel_pr2 USING l_glar003 
+                                     INTO l_glaq003,l_glaq004,l_glaq040,l_glaq041,l_glaq043,l_glaq044
+            IF SQLCA.sqlcode THEN
+#               CALL cl_errmsg('','aglq740_sel_pr2','',SQLCA.sqlcode,1)
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'aglq740_sel_pr2'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET l_success = FALSE
+            END IF
+            IF cl_null(l_glaq003) THEN LET l_glaq003=0 END IF
+            IF cl_null(l_glaq004) THEN LET l_glaq004=0 END IF
+            IF cl_null(l_glaq040) THEN LET l_glaq040=0 END IF
+            IF cl_null(l_glaq041) THEN LET l_glaq041=0 END IF
+            IF cl_null(l_glaq043) THEN LET l_glaq043=0 END IF
+            IF cl_null(l_glaq044) THEN LET l_glaq044=0 END IF
+            LET l_glar005 = l_glar005 + l_glaq003
+            LET l_glar006 = l_glar006 + l_glaq004
+            LET l_glar034 = l_glar034 + l_glaq040
+            LET l_glar035 = l_glar035 + l_glaq041
+            LET l_glar036 = l_glar036 + l_glaq043
+            LET l_glar037 = l_glar037 + l_glaq044
+         END IF
+         #當不包含YE或AD傳票時，減去YE或AD傳票金額
+#         IF tm.show_ce<>'Y' OR tm.show_ye<>'Y' OR tm.show_ad<>'Y' THEN #150827-00036#2 add 'tm.show_ad' #151204-00013#4 mark
+         IF tm.show_ye<>'Y' OR tm.show_ad<>'Y' THEN  #151204-00013#4 add
+            EXECUTE aglq740_sel_pr3 USING l_glar003 
+                                     INTO l_glaq003,l_glaq004,l_glaq040,l_glaq041,l_glaq043,l_glaq044
+            IF SQLCA.sqlcode THEN
+#               CALL cl_errmsg('','aglq740_sel_pr3','',SQLCA.sqlcode,1)
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'aglq740_sel_pr3'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET l_success = FALSE
+            END IF
+            IF cl_null(l_glaq003) THEN LET l_glaq003=0 END IF
+            IF cl_null(l_glaq004) THEN LET l_glaq004=0 END IF
+            IF cl_null(l_glaq040) THEN LET l_glaq040=0 END IF
+            IF cl_null(l_glaq041) THEN LET l_glaq041=0 END IF
+            IF cl_null(l_glaq043) THEN LET l_glaq043=0 END IF
+            IF cl_null(l_glaq044) THEN LET l_glaq044=0 END IF
+            LET l_glar005 = l_glar005 - l_glaq003
+            LET l_glar006 = l_glar006 - l_glaq004
+            LET l_glar034 = l_glar034 - l_glaq040
+            LET l_glar035 = l_glar035 - l_glaq041
+            LET l_glar036 = l_glar036 - l_glaq043
+            LET l_glar037 = l_glar037 - l_glaq044
+         END IF
+         
+         #151204-00013#4--add--str--
+         #当未勾选含月结凭证时，要排除CE凭证中损益类科目金额和XC凭证中成本类科目金额
+         IF tm.show_ce <> 'Y' THEN
+            LET l_glaq003=0
+            LET l_glaq004=0
+            LET l_glaq040=0
+            LET l_glaq041=0
+            LET l_glaq043=0
+            LET l_glaq044=0
+            EXECUTE aglq740_sel_pr3_1 USING l_glar003,l_glar003 #160824-00004#4 add 'l_glar003'
+                                     INTO l_glaq003,l_glaq004,l_glaq040,l_glaq041,l_glaq043,l_glaq044
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'aglq740_sel_pr3_1'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET l_success = FALSE
+            END IF
+            IF cl_null(l_glaq003) THEN LET l_glaq003=0 END IF
+            IF cl_null(l_glaq004) THEN LET l_glaq004=0 END IF
+            IF cl_null(l_glaq040) THEN LET l_glaq040=0 END IF
+            IF cl_null(l_glaq041) THEN LET l_glaq041=0 END IF
+            IF cl_null(l_glaq043) THEN LET l_glaq043=0 END IF
+            IF cl_null(l_glaq044) THEN LET l_glaq044=0 END IF
+            LET l_glar005 = l_glar005 - l_glaq003
+            LET l_glar006 = l_glar006 - l_glaq004
+            LET l_glar034 = l_glar034 - l_glaq040
+            LET l_glar035 = l_glar035 - l_glaq041
+            LET l_glar036 = l_glar036 - l_glaq043
+            LET l_glar037 = l_glar037 - l_glaq044
+         END IF
+         #151204-00013#4--add--end
+         
+         #160511-00006#1--add--str--
+         #本年累计的余额包括年初金额
+         LET l_year_sum=0
+         LET l_year_sum2=0
+         LET l_year_sum3=0
+         EXECUTE aglq740_year_sum_pr USING l_glar001        
+                                  INTO l_year_sum,l_year_sum2,l_year_sum3
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'aglq740_year_sum_pr'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+         END IF
+         IF cl_null(l_year_sum) THEN LET l_year_sum = 0 END IF
+         IF cl_null(l_year_sum2) THEN LET l_year_sum2 = 0 END IF
+         IF cl_null(l_year_sum3) THEN LET l_year_sum3 = 0 END IF
+         #160511-00006#1--add--end
+         
+         LET l_amt4 = l_glar005 - l_glar006
+         LET l_amt5 = l_glar034 - l_glar035
+         LET l_amt6 = l_glar036 - l_glar037
+         
+         #160511-00006#1--add--str--
+         #本年累计余额=本年累计金额+年初余额
+         LET l_amt4 = l_amt4 + l_year_sum
+         LET l_amt5 = l_amt5 + l_year_sum2
+         LET l_amt6 = l_amt6 + l_year_sum3
+         #160511-00006#1--add--end
+         
+         #借貸平否
+         CASE
+            WHEN l_amt4>0 
+               LET l_state='1'
+            WHEN l_amt4<0
+               LET l_state='2'
+               LET l_amt4=(-1)*l_amt4
+               LET l_amt5=(-1)*l_amt5
+               LET l_amt6=(-1)*l_amt6
+            WHEN l_amt4=0
+               LET l_state='3'
+         END CASE
+         INSERT INTO aglq740_tmp
+         VALUES(l_seq,l_glar001,l_glar001_desc,NULL,'3',
+                l_glar005,l_glar006,l_glar034,l_glar035,l_glar036,l_glar037,
+                l_state,l_amt4,l_amt5,l_amt6)
+         IF SQLCA.sqlcode THEN
+#            CALL cl_errmsg('','insert','',SQLCA.sqlcode,1)
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'insert aglq740_tmp'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+         END IF
+         LET l_seq=l_seq+1
+      END FOR
+      #當改科目沒有期初金額和期間異動時不用查詢出來
+      IF l_flag_amt = FALSE THEN
+         DELETE FROM aglq740_tmp WHERE glar001=l_glar001
+      END IF
+   END FOR
+   IF l_success = FALSE THEN
+      CALL cl_err_collect_show()
+      DELETE FROM aglq740_tmp
+   ELSE
+      CALL cl_err_collect_init()
+      CALL cl_err_collect_show()
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 科目说明
+# Memo...........:
+# Usage..........: CALL aglq740_glar001_desc(p_glar001)
+#                  RETURNING r_desc
+# Input parameter: p_glar001   科目編號
+# Return code....: r_desc      科目说明
+# Date & Author..: 2014/03/14 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_glar001_desc(p_glar001)
+   DEFINE p_glar001   LIKE glar_t.glar001
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_glar001
+   CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001 = '"||g_glaa004||"' AND glacl002 = ? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   RETURN  g_rtn_fields[1]
+END FUNCTION
+
+################################################################################
+# Descriptions...: 显示资料
+# Memo...........:
+# Usage..........: CALL aglq740_show()
+# Date & Author..:  2014/03/18 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_show()
+   DISPLAY g_glaald,g_glaald_desc,g_glaacomp,g_glaacomp_desc,g_glaa001,g_glaa016,g_glaa020,
+           tm.year,tm.speriod,tm.eperiod,tm.acc_p,tm.ctype,
+           tm.show_acc,tm.glac005,tm.stus,tm.glac009,tm.show_ad,tm.show_ce,tm.show_ye
+        TO glaald,glaald_desc,glaacomp,glaacomp_desc,glaa001,glaa016,glaa020,
+           year,speriod,eperiod,acc_p,ctype,
+           show_acc,glac005,stus,glac009,show_ad,show_ce,show_ye
+END FUNCTION
+
+################################################################################
+# Descriptions...: 设置分页
+# Memo...........:
+# Usage..........: CALL aglq740_set_page()
+# Date & Author..: 2014/03/18 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_set_page()
+   DEFINE l_sql    STRING
+   DEFINE l_idx    LIKE type_t.num5
+   
+   CALL g_glar_s.clear()
+   IF tm.acc_p <>'Y' THEN
+      LET g_glar_s[1].glar001=''
+      LET g_header_cnt = 1
+      LET g_rec_b = 1
+   ELSE      
+      LET l_sql="SELECT DISTINCT glar001 FROM aglq740_tmp ORDER BY glar001 "
+      PREPARE aglq740_sel_s_pr FROM l_sql
+      DECLARE aglq740_sel_s_cr CURSOR FOR aglq740_sel_s_pr
+      LET l_idx=1
+      FOREACH aglq740_sel_s_cr INTO g_glar_s[l_idx].glar001
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'FOREACH aglq740_sel_s_cr'
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         LET l_idx=l_idx+1
+         IF l_idx > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 9035
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+      END FOREACH
+      CALL g_glar_s.deleteElement(l_idx)
+      LET g_header_cnt = g_glar_s.getLength()
+      LET g_rec_b = l_idx - 1
+   END IF
+   DISPLAY g_header_cnt TO FORMONLY.h_count
+END FUNCTION
+
+################################################################################
+# Descriptions...: 接受傳入參數
+# Memo...........:
+# Usage..........: CALL aglq740_default_search()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_default_search()
+   #帳別
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_glaald = g_argv[01]
+   END IF
+   #年度
+   IF NOT cl_null(g_argv[02]) THEN
+      LET tm.year = g_argv[02]
+   END IF
+   #起始期別
+   IF NOT cl_null(g_argv[03]) THEN
+      LET tm.speriod = g_argv[03]
+   END IF
+   #截止期別
+   IF NOT cl_null(g_argv[04]) THEN
+      LET tm.eperiod = g_argv[04]
+   END IF
+   #按科目分頁
+   IF NOT cl_null(g_argv[05]) THEN
+      LET tm.acc_p = g_argv[05]
+   END IF
+   #多本位幣顯示
+   IF NOT cl_null(g_argv[06]) THEN
+      LET tm.ctype = g_argv[06]
+   END IF
+   #統制科目
+   IF NOT cl_null(g_argv[07]) THEN
+      LET tm.show_acc = g_argv[07]
+   END IF
+   #科目層級
+   IF NOT cl_null(g_argv[08]) THEN
+      LET tm.glac005 = g_argv[08]
+   END IF
+   #單據狀態
+   IF NOT cl_null(g_argv[09]) THEN
+      LET tm.stus = g_argv[09]
+   END IF
+   #含內部管理科目
+   IF NOT cl_null(g_argv[10]) THEN
+      LET tm.glac009 = g_argv[10]
+   END IF
+   #含月結傳票
+   IF NOT cl_null(g_argv[11]) THEN
+      LET tm.show_ce = g_argv[11]
+   END IF
+   #含年結傳票
+   IF NOT cl_null(g_argv[12]) THEN
+      LET tm.show_ye = g_argv[12]
+   END IF
+   #科目
+   IF NOT cl_null(g_argv[13]) THEN
+      IF g_argv[13]='*' THEN
+         LET g_wc = " glar001 LIKE '%' "
+      ELSE
+         LET g_wc = " glar001 = '",g_argv[13],"'"
+      END IF
+   END IF
+   #150827-00036#2--add--str--
+   #含審計調整傳票否
+   IF NOT cl_null(g_argv[14]) THEN
+      LET tm.show_ad = g_argv[14]
+   END IF
+   #150827-00036#2--add--end
+END FUNCTION
+
+################################################################################
+# Descriptions...: 串查aglq760明細分類帳資料
+# Memo...........:
+# Usage..........: CALL aglq740_cmdrun()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglq740_cmdrun()
+   DEFINE la_param     RECORD
+          prog         STRING,
+          param        DYNAMIC ARRAY OF STRING
+                       END RECORD
+   DEFINE ls_js        STRING
+   
+   INITIALIZE la_param.* TO NULL
+   LET la_param.prog = 'aglq760'
+   LET la_param.param[1] = g_glaald    #帳別
+   LET la_param.param[2] = tm.year     #起始年度
+   LET la_param.param[4] = tm.year     #截止年度
+   CASE g_glar_d[g_detail_idx].style
+      WHEN '1' #期初
+         LET la_param.param[3] = g_glar_d[g_detail_idx+1].glar003  #起始期別
+         LET la_param.param[5] = g_glar_d[g_detail_idx+1].glar003  #截止期別
+      WHEN '2' #本期
+         LET la_param.param[3] = g_glar_d[g_detail_idx].glar003  #起始期別
+         LET la_param.param[5] = g_glar_d[g_detail_idx].glar003  #截止期別
+      WHEN '3' #本年
+         LET la_param.param[3] = g_glar_d[g_detail_idx-1].glar003  #起始期別
+         LET la_param.param[5] = g_glar_d[g_detail_idx-1].glar003  #截止期別
+   END CASE
+   LET la_param.param[6] = tm.ctype    #多本位幣顯示
+   LET la_param.param[7] = 'N'         #顯示原幣
+   LET la_param.param[8] = 'N'         #按幣別分頁
+   LET la_param.param[9] = tm.acc_p    #按科目分頁
+   LET la_param.param[10] = tm.show_acc #顯示統制科目
+   LET la_param.param[11] = tm.glac005  #科目層級
+   LET la_param.param[12] = tm.stus     #單據狀態
+   LET la_param.param[13] = tm.glac009 #含內部管理
+   LET la_param.param[14] = tm.show_ce #含月結
+   LET la_param.param[15] = tm.show_ye #含年結
+   LET la_param.param[16] = g_glar_d[g_detail_idx].glar001 #科目編號
+   LET la_param.param[17] = tm.show_ad #含審計調整傳票 #150827-00036#2 add
+   LET ls_js = util.JSON.stringify( la_param )
+   CALL cl_cmdrun(ls_js)
+END FUNCTION
+
+ 
+{</section>}
+ 

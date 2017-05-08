@@ -1,0 +1,195 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrp350_01" module="axr" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="02114" crtdt="2014-09-03 09:52:43" modid="02114" moddt="2014-09-03 14:03:49" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="發票預覽">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isafcomp,isafcomp_desc(chr80),isafdocno,isaf021,isaf022,isaf023,isaf024,isaf025,isaf026,isaf008,isaf008_desc(chr500),isaf014,isaf016,isaf017,isaf016_desc(chr80),isaf100,isaf101,isaf103,isaf104,isaf105"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isahseq,isah001,isah002,isah003,isah004,isah005,isah006,isah101,isah103,isah007,isah104,isah105"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="isagseq,isagorga,isagorga_desc(chr500),isag001,isag002,isag003,isag009(chr500),isag010(chr500),inag001(chr500),imaal003(chr500),imaal004(chr500),inag004(chr10),inag005(chr10),inag006(chr30),inag009(num20_6),inag007(chr10),inag007_desc(chr500),isag004,isag005,isag005_desc(chr500),isag006,isag008,isag101,isag103,isag104,isag105,isag113,isag114,isag115,isag116,isag117"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrp350_01" method="dialog">
+    <section id="input">
+      <input id="head" field="isafcomp,isafdocno,isaf021,isaf022,isaf023,isaf024,isaf025,isaf026,isaf008,isaf008_desc,isaf014,isaf016,isaf017,isaf100,isaf101,isaf103,isaf104,isaf105"/>
+      <input id="body" page="1" field="isahseq,isah001,isah002,isah003,isah004,isah005,isah006,isah101,isah103,isah007,isah104,isah105" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="isagseq,isagorga,isag001,isag002,isag003,isag009,isag010,inag001,imaal003,imaal004,inag004,inag005,inag006,inag009,inag007,inag007_desc,isag004,isag005,isag005_desc,isag006,isag008,isag101,isag103,isag104,isag105,isag113,isag114,isag115,isag116,isag117" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isafcomp,isafdocno,isaf021,isaf022,isaf023,isaf024,isaf025,isaf026,isaf008,isaf008_desc,isaf014,isaf016,isaf017,isaf016_desc,isaf100,isaf101,isaf103,isaf104,isaf105"/>
+      <construct id="body" page="1" field="isahseq,isah001,isah002,isah003,isah004,isah005,isah006,isah101,isah103,isah007,isah104,isah105"/>
+      <construct id="body" page="2" field="isagseq,isagorga,isag001,isag002,isag003,isag009,isag010,inag001,imaal003,imaal004,inag004,inag005,inag006,inag009,inag007,inag007_desc,isag004,isag005,isag005_desc,isag006,isag008,isag101,isag103,isag104,isag105,isag113,isag114,isag115,isag116,isag117"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="isafcomp,isafdocno"/>
+      <set id="head" type="no_entry" field="isafcomp,isafdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isafcomp">
+        <after>
+          <reference field="isafcomp_desc" ref_field="isaf_t.isafcomp" map_field="isafent,isafcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="isafcomp_desc"/>
+      <column id="isafdocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_isafdocno" state="c"/>
+      </column>
+      <column id="isaf021"/>
+      <column id="isaf022"/>
+      <column id="isaf023"/>
+      <column id="isaf024"/>
+      <column id="isaf025"/>
+      <column id="isaf026"/>
+      <column id="isaf008">
+        <after>
+          <check chkid="v_isac002_2" id="isExist"/>
+        </after>
+        <controlp form="q_isac002" state="i"/>
+        <controlp form="q_isac002" state="c"/>
+      </column>
+      <column id="isaf008_desc"/>
+      <column id="isaf014"/>
+      <column id="isaf016">
+        <after>
+          <check chkid="v_oodb002_2" id="isExist"/>
+        </after>
+        <controlp form="q_oodb002_6" state="i"/>
+        <controlp form="q_oodb002_6" state="c"/>
+      </column>
+      <column id="isaf017"/>
+      <column id="isaf016_desc"/>
+      <column id="isaf100">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_aooi001_1" state="i"/>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="isaf101"/>
+      <column id="isaf103"/>
+      <column id="isaf104"/>
+      <column id="isaf105"/>
+    </init>
+    <init id="body" page="1">
+      <column id="isahseq"/>
+      <column id="isah001"/>
+      <column id="isah002"/>
+      <column id="isah003">
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="isah004"/>
+      <column id="isah005"/>
+      <column id="isah006" type="S" default="0"/>
+      <column id="isah101" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isah103" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isah007"/>
+      <column id="isah104" type="S" default="0"/>
+      <column id="isah105" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="isagseq"/>
+      <column id="isagorga">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="isagorga_desc" ref_field="isag_t.isagorga" map_field="isagent,isagorga" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="isagorga_desc"/>
+      <column id="isag001" def_scc="24"/>
+      <column id="isag002">
+        <after>
+          <check chkid="v_xrcadocno" id="isExist"/>
+        </after>
+        <controlp form="q_xrcadocno_2" state="i"/>
+        <controlp form="q_xrcadocno_2" state="c"/>
+      </column>
+      <column id="isag003">
+        <controlp form="q_xrcadocno_2" state="i"/>
+        <controlp form="q_xrcadocno_2" state="c"/>
+      </column>
+      <column id="isag009">
+        <controlp form="q_xrcadocno_3" state="i"/>
+        <controlp form="q_xrcadocno_3" state="c"/>
+      </column>
+      <column id="isag010"/>
+      <column id="inag001">
+        <controlp form="q_imaf001_7" state="c"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="inag004">
+        <controlp form="q_inag004_2" state="c"/>
+      </column>
+      <column id="inag005">
+        <controlp form="q_inag005_5" state="c"/>
+      </column>
+      <column id="inag006">
+        <controlp form="q_inag006_1" state="c"/>
+      </column>
+      <column id="inag009"/>
+      <column id="inag007">
+        <after/>
+        <controlp form="q_inag007" state="c"/>
+      </column>
+      <column id="inag007_desc"/>
+      <column id="isag004"/>
+      <column id="isag005">
+        <after/>
+      </column>
+      <column id="isag005_desc"/>
+      <column id="isag006"/>
+      <column id="isag008"/>
+      <column id="isag101">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isag103"/>
+      <column id="isag104"/>
+      <column id="isag105"/>
+      <column id="isag113"/>
+      <column id="isag114"/>
+      <column id="isag115"/>
+      <column id="isag116" type="S" default="0"/>
+      <column id="isag117" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="isaf_t" pk="isafcomp,isafdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT isafcomp,&apos;&apos;,isafdocno,isaf021,isaf022,isaf023,isaf024,isaf025,isaf026,isaf008,&apos;&apos;,isaf014,isaf016,isaf017,&apos;&apos;,isaf100,isaf101,isaf103,isaf104,isaf105 FROM isaf_t WHERE isafent= ? AND isafcomp=? AND isafdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT isafcomp,&apos;&apos;,isafdocno,isaf021,isaf022,isaf023,isaf024,isaf025,isaf026,isaf008,&apos;&apos;,isaf014,isaf016,isaf017,&apos;&apos;,isaf100,isaf101,isaf103,isaf104,isaf105 FROM isaf_t" order="isafcomp,isafdocno"/>
+    </head>
+    <body id="isah_t" page="1" linked="" pk="isahseq" fk="isahcomp,isahdocno">
+      <sql id="forupd_sql_detail" query="SELECT isahseq,isah001,isah002,isah003,isah004,isah005,isah006,isah101,isah103,isah007,isah104,isah105 FROM isah_t WHERE isahent=? AND isahcomp=? AND isahdocno=? AND isahseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isahseq,isah001,isah002,isah003,isah004,isah005,isah006,isah101,isah103,isah007,isah104,isah105 FROM isah_t WHERE "/>
+    </body>
+    <body id="isag_t" page="2" linked="" pk="isagseq" fk="isagcomp,isagdocno">
+      <sql id="forupd_sql_detail" query="SELECT isagseq,isagorga,&apos;&apos;,isag001,isag002,isag003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,isag004,isag005,&apos;&apos;,isag006,isag008,isag101,isag103,isag104,isag105,isag113,isag114,isag115,isag116,isag117 FROM isag_t WHERE isagent=? AND isagcomp=? AND isagdocno=? AND isagseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isagseq,isagorga,&apos;&apos;,isag001,isag002,isag003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,isag004,isag005,&apos;&apos;,isag006,isag008,isag101,isag103,isag104,isag105,isag113,isag114,isag115,isag116,isag117 FROM isag_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

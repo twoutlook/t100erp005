@@ -1,0 +1,1585 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmt500_06" std_prog="apmt500_06" erpver="1.0" module="APM" ver="5" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.apmt500_06_srac005_chk" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#檢查生產計劃+生產料號+BOM特性是否存在asrt300
+PRIVATE FUNCTION apmt500_06_srac005_chk()
+DEFINE r_success   LIKE type_t.num5
+
+    LET r_success = TRUE
+    IF NOT cl_null(g_srac_m.srac005) THEN 
+       #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+       INITIALIZE g_chkparam.* TO NULL
+       
+       #設定g_chkparam.*的參數
+       LET g_chkparam.arg1 = g_srac_m.srac001
+       LET g_chkparam.arg2 = g_srac_m.srac004
+       LET g_chkparam.arg3 = g_srac_m.srac005
+       
+       #呼叫檢查存在並帶值的library
+       #檢查生產計劃+生產料號是否存在asrt300
+       IF NOT cl_chk_exist("v_srab001_2") THEN
+          #檢查失敗時後續處理
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+    END IF
+    RETURN r_success
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_srac006_chk" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#檢查生產計劃+生產料號+BOM特性+產品特徵是否存在asrt300
+PRIVATE FUNCTION apmt500_06_srac006_chk()
+DEFINE r_success   LIKE type_t.num5
+
+    LET r_success = TRUE
+    IF NOT cl_null(g_srac_m.srac005) THEN 
+       #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+       INITIALIZE g_chkparam.* TO NULL
+       
+       #設定g_chkparam.*的參數
+       LET g_chkparam.arg1 = g_srac_m.srac001
+       LET g_chkparam.arg2 = g_srac_m.srac004
+       LET g_chkparam.arg3 = g_srac_m.srac005
+       LET g_chkparam.arg4 = g_srac_m.srac006
+       
+       #呼叫檢查存在並帶值的library
+       #檢查生產計劃+生產料號是否存在asrt300
+       IF NOT cl_chk_exist("v_srab001_3") THEN
+          #檢查失敗時後續處理
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+    END IF
+    RETURN r_success
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_srac004_ref" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_06_srac004_ref()
+
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_srac_m.srac004
+    CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_srac_m.imaal003 = '', g_rtn_fields[1] , ''
+    LET g_srac_m.imaal004 = '', g_rtn_fields[2] , ''
+    DISPLAY BY NAME g_srac_m.imaal003,g_srac_m.imaal004
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_set_entry" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_06_set_entry()
+
+    CALL cl_set_comp_entry("srac008,srac009",TRUE)
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_set_no_entry" order="5" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_06_set_no_entry()
+DEFINE l_srab007   LIKE srab_t.srab007
+
+    LET l_srab007 = ''
+    SELECT srab007 INTO l_srab007 FROM srab_t WHERE srabent = g_enterprise AND srabsite = g_site AND srab001 = g_srac_m.srac001
+    IF l_srab007 != 'Y' THEN
+       CALL cl_set_comp_entry("srac008,srac009",FALSE)
+    END IF
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_set_required" order="6" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_06_set_required()
+DEFINE l_srab007   LIKE srab_t.srab007
+
+    LET l_srab007 = ''
+    SELECT srab007 INTO l_srab007 FROM srab_t WHERE srabent = g_enterprise AND srabsite = g_site AND srab001 = g_srac_m.srac001
+    IF l_srab007 = 'Y' THEN
+       CALL cl_set_comp_required("srac008,srac009",TRUE)
+    END IF
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_set_no_required" order="7" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_06_set_no_required()
+
+    CALL cl_set_comp_required("srac008,srac009",FALSE)
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_srac008_ref" order="8" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_06_srac008_ref()
+
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_srac_m.srac008
+    CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_srac_m.srac008_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_srac_m.srac008_desc
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_srac009_chk" order="9" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#檢查生產計劃+生產料號+BOM特性+作業編號+作業序是否存在asrt300
+PRIVATE FUNCTION apmt500_06_srac009_chk()
+DEFINE r_success   LIKE type_t.num5
+
+    LET r_success = TRUE
+    IF NOT cl_null(g_srac_m.srac009) THEN 
+       #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+       INITIALIZE g_chkparam.* TO NULL
+       
+       #設定g_chkparam.*的參數
+       LET g_chkparam.arg1 = g_srac_m.srac001
+       LET g_chkparam.arg2 = g_srac_m.srac004
+       LET g_chkparam.arg3 = g_srac_m.srac005
+       LET g_chkparam.arg4 = g_srac_m.srac006
+       LET g_chkparam.arg5 = g_srac_m.srac008
+       LET g_chkparam.arg6 = g_srac_m.srac009
+       
+       #呼叫檢查存在並帶值的library
+       #檢查生產計劃+生產料號是否存在asrt300
+       IF NOT cl_chk_exist("v_srac001") THEN
+          #檢查失敗時後續處理
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+    END IF
+    RETURN r_success
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_srac008_chk" order="10" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#檢查生產計劃+生產料號+BOM特性+作業編號是否存在asrt300_02
+PRIVATE FUNCTION apmt500_06_srac008_chk()
+DEFINE r_success   LIKE type_t.num5
+
+    LET r_success = TRUE
+    IF NOT cl_null(g_srac_m.srac008) THEN 
+       #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+       INITIALIZE g_chkparam.* TO NULL
+       
+       #設定g_chkparam.*的參數
+       LET g_chkparam.arg1 = g_srac_m.srac001
+       LET g_chkparam.arg2 = g_srac_m.srac004
+       LET g_chkparam.arg3 = g_srac_m.srac005
+       LET g_chkparam.arg4 = g_srac_m.srac006
+       LET g_chkparam.arg5 = g_srac_m.srac008
+       
+       #呼叫檢查存在並帶值的library
+       #檢查生產計劃+生產料號是否存在asrt300
+       IF NOT cl_chk_exist("v_srac001_1") THEN
+          #檢查失敗時後續處理
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+    END IF
+    RETURN r_success
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_srac004_chk" order="11" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#檢查生產計劃+生產料號是否存在asrt300
+PRIVATE FUNCTION apmt500_06_srac004_chk()
+DEFINE r_success   LIKE type_t.num5
+
+    LET r_success = TRUE
+    IF NOT cl_null(g_srac_m.srac004) THEN 
+       #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+       INITIALIZE g_chkparam.* TO NULL
+       
+       #設定g_chkparam.*的參數
+       LET g_chkparam.arg1 = g_srac_m.srac001
+       LET g_chkparam.arg2 = g_srac_m.srac004
+       
+       #呼叫檢查存在並帶值的library
+       #檢查生產計劃+生產料號是否存在asrt300
+       IF NOT cl_chk_exist("v_srab001_1") THEN
+          #檢查失敗時後續處理
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+    END IF
+    RETURN r_success
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_ins_pmdn" order="12" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#根據條件，把資料插入採購單身
+PRIVATE FUNCTION apmt500_06_ins_pmdn()
+DEFINE r_success    LIKE type_t.num5
+DEFINE l_pmdl040    LIKE pmdl_t.pmdl040
+DEFINE l_pmdl041    LIKE pmdl_t.pmdl041
+DEFINE l_pmdl042    LIKE pmdl_t.pmdl042
+
+    LET r_success = TRUE
+    
+    IF NOT apmt500_06_ins_pmdn_1() THEN
+       LET r_success = FALSE
+       RETURN r_success
+    END IF
+    
+    #更新單頭的未税/含税/税额
+    SELECT SUM(pmdn046),SUM(pmdn047),SUM(pmdn048) INTO l_pmdl040,l_pmdl041,l_pmdl042
+      FROM pmdn_t
+     WHERE pmdnent   = g_enterprise
+       AND pmdndocno = p_pmdndocno
+    IF cl_null(l_pmdl040) THEN LET l_pmdl040 = 0 END IF
+    IF cl_null(l_pmdl041) THEN LET l_pmdl041 = 0 END IF
+    IF cl_null(l_pmdl042) THEN LET l_pmdl042 = 0 END IF
+    UPDATE pmdl_t SET pmdl040 = l_pmdl040, pmdl041 = l_pmdl041, pmdl042 = l_pmdl042
+     WHERE pmdlent   = g_enterprise
+       AND pmdldocno = g_pmdldocno
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = SQLCA.sqlcode
+       LET g_errparam.extend = 'update pmdl_t SUM'
+       LET g_errparam.popup = TRUE
+       CALL cl_err()
+
+       LET r_success = FALSE
+       RETURN r_success
+    END IF
+    
+    RETURN r_success
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_ins_pmdn_1" order="13" ver="5" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#插入採購單單身
+PRIVATE FUNCTION apmt500_06_ins_pmdn_1()
+DEFINE l_pmdn       RECORD LIKE pmdn_t.*
+DEFINE l_srac       RECORD LIKE srac_t.*
+DEFINE l_srab010    LIKE srab_t.srab010
+DEFINE r_success    LIKE type_t.num5
+DEFINE l_pmdl       RECORD LIKE pmdl_t.*
+DEFINE l_rate       LIKE inaj_t.inaj014
+DEFINE l_sql        STRING
+DEFINE l_qty        LIKE pmdp_t.pmdp023
+DEFINE l_imaf173    LIKE imaf_t.imaf173
+DEFINE l_imaf174    LIKE imaf_t.imaf174
+DEFINE l_cnt        LIKE type_t.num10
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_qty1       LIKE pmdn_t.pmdn007
+DEFINE l_qty2       LIKE pmdn_t.pmdn007
+DEFINE l_srab009    LIKE srab_t.srab009
+DEFINE l_ooef008    LIKE ooef_t.ooef008
+DEFINE l_ooef009    LIKE ooef_t.ooef009
+DEFINE l_oodbl004  LIKE oodbl_t.oodbl004  #稅別名稱
+DEFINE l_oodb005   LIKE oodb_t.oodb005    #含稅否
+DEFINE l_oodb006   LIKE oodb_t.oodb006    #稅率 
+DEFINE l_oodb011   LIKE oodb_t.oodb011    #取得稅別類型1:正常稅率2:依料件設定
+
+   LET r_success = TRUE
+ 
+   SELECT * INTO l_pmdl.* FROM pmdl_t WHERE pmdlent = g_enterprise AND pmdldocno = g_pmdldocno
+   
+   LET l_sql = " SELECT srac_t.*,srab009,srab010 ",
+               "   FROM sraa_t,srab_t,srac_t",
+               " WHERE srabent  = sraaent  AND srabent  = sracent  AND srabent  = ",g_enterprise,
+               "   AND srabsite = sraasite AND srabsite = sracsite AND srabsite = '",g_site,"'",
+               "   AND srab000  = sraa000 ",
+               "   AND srab001  = sraa001  AND srab001  = srac001 ",
+               "   AND srab002  = sraa002 ",
+               "   AND srab003  = sraa003 ",
+               "   AND srab004  = srac004 ",
+               "   AND srab005  = srac005 ",
+               "   AND srab006  = srac006 ",
+               "   AND srab008  = srac002 ",
+               "   AND srac036  = 'Y' ",
+               "   AND sraastus = 'Y' ",
+               "   AND srac001 = '",g_srac_m.srac001,"'",
+               "   AND srac004 = '",g_srac_m.srac004,"'"
+   IF g_srac_m.srac005 IS NOT NULL THEN
+      LET l_sql = l_sql , " AND srac005 = '",g_srac_m.srac005,"' "
+   END IF
+   IF g_srac_m.srac006 IS NOT NULL THEN
+      LET l_sql = l_sql , " AND srac006 = '",g_srac_m.srac006,"' "
+   END IF
+   IF NOT cl_null(g_srac_m.srac008) THEN
+      LET l_sql = l_sql , " AND srac008 = '",g_srac_m.srac008,"' "
+   END IF
+   IF NOT cl_null(g_srac_m.srac009) THEN
+      LET l_sql = l_sql , " AND srac009 = '",g_srac_m.srac009,"' "
+   END IF
+   
+   PREPARE apmt500_06_ins_pmdn_p1 FROM l_sql
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'prepare apmt500_06_ins_pmdn_p1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF      
+   
+   DECLARE apmt500_06_ins_pmdn_cs1 CURSOR FOR apmt500_06_ins_pmdn_p1
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'declare apmt500_06_ins_pmdn_cs1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   FOREACH apmt500_06_ins_pmdn_cs1 INTO l_srac.*,l_srab009,l_srab010
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach apmt500_06_ins_pmdn_cs1'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      INITIALIZE l_pmdn.* TO NULL
+      
+      LET l_pmdn.pmdnent   = g_enterprise      #企業編號
+      LET l_pmdn.pmdnsite  = g_site            #營運據點
+      LET l_pmdn.pmdndocno = g_pmdldocno       #採購單號
+      
+      #項次
+      SELECT MAX(pmdnseq) + 1 INTO l_pmdn.pmdnseq
+        FROM pmdn_t
+       WHERE pmdnent   = g_enterprise
+         AND pmdndocno = l_pmdn.pmdndocno
+      IF cl_null(l_pmdn.pmdnseq) THEN
+         LET l_pmdn.pmdnseq = 1
+      END IF
+      LET l_pmdn.pmdn001   = l_srac.srac004    #料件編號
+      LET l_pmdn.pmdn002   = l_srac.srac006    #產品特徵
+      LET l_pmdn.pmdn003   = ''                #包裝容器
+      LET l_pmdn.pmdn004   = l_srac.srac008    #作業編號
+      LET l_pmdn.pmdn005   = l_srac.srac009    #製程序  
+      LET l_pmdn.pmdn006   = l_srac.srac027    #採購單位
+      
+      #採購數量
+      LET l_qty1 = l_srab010 * l_srac.srac028 / l_srac.srac029
+      IF cl_null(l_qty1) THEN 
+         LET l_qty1 = 0 
+      END IF
+      #carrier 这里应该是少了一个"生产计划"的参数
+      #从采购单取已经委外的数量
+      CALL s_asrp400_get_carried_qty(g_srac_m.srac001,l_srac.srac004,l_srac.srac006,
+                                     l_srac.srac008,l_srac.srac009,l_srac.srac005,
+                                     l_srac.srac009,l_srac.srac027)
+           RETURNING l_qty2
+           
+      LET l_pmdn.pmdn007 = l_qty1 - l_qty2
+      
+      IF l_pmdn.pmdn007 <=0 THEN
+         CONTINUE FOREACH
+      END IF
+       
+      #參考單位
+      SELECT imaf015 INTO l_pmdn.pmdn008 FROM imaf_t
+       WHERE imafent  = g_enterprise
+         AND imafsite = l_pmdn.pmdnsite
+         AND imaf001  = l_pmdn.pmdn001
+         
+      #參考數量 
+      #若没有参考单位时,参考数量DEFAULT NULL
+      IF cl_null(l_pmdn.pmdn008) THEN
+         LET l_pmdn.pmdn009 = NULL
+      ELSE
+         #CALL s_aimi190_get_convert(l_pmdn.pmdn001,l_pmdn.pmdn006,l_pmdn.pmdn008)
+         #     RETURNING l_success,l_rate
+         #IF NOT l_success THEN
+         #   LET l_rate = 1
+         #END IF
+         #LET l_pmdn.pmdn009 = l_pmdn.pmdn007 * l_rate
+         CALL s_aooi250_convert_qty(l_pmdn.pmdn001,l_pmdn.pmdn006,l_pmdn.pmdn008,l_pmdn.pmdn007)
+                   RETURNING l_success,l_pmdn.pmdn009
+      END IF
+         
+      LET l_pmdn.pmdn010   = l_pmdn.pmdn006    #計價單位
+      LET l_pmdn.pmdn011   = l_pmdn.pmdn007    #計價數量
+      LET l_pmdn.pmdn014   = l_srab009         #到庫日期
+      
+      IF NOT cl_null(l_pmdn.pmdn014) THEN
+         #推算"到厂日期"及"出貨日期"
+         LET l_imaf173 = 0
+         LET l_imaf174 = 0
+         SELECT imaf173,imaf174 INTO l_imaf173,l_imaf174
+           FROM imaf_t
+          WHERE imafent = g_enterprise AND imafsite = l_pmdn.pmdnsite AND imaf001 = l_pmdn.pmdn001
+         LET l_imaf173 = l_imaf173 * -1
+         LET l_imaf174 = l_imaf174 * -1
+         
+         #根据当前营运据点g_site抓取aooi120中设置的行事历参照表号
+         SELECT ooef008,ooef009 INTO l_ooef008,l_ooef009 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001=l_pmdn.pmdnsite
+          
+         #以下倒推,由到库日期往前推算到厂日期,再由到厂日期推算交货日期
+         #1.到廠日期 = 到库日期 - [T:料件據點進銷存檔].[C:到庫前置時間]
+         IF NOT cl_null(l_imaf174) AND l_imaf174 <> 0 THEN
+            CALL s_date_get_work_date(l_pmdn.pmdnsite,l_ooef008,l_ooef009,l_pmdn.pmdn014,0,l_imaf174) RETURNING l_pmdn.pmdn013
+         ELSE
+            LET l_pmdn.pmdn013 = l_pmdn.pmdn014
+         END IF
+         #2.出貨日期= 到厂日期 - [T:料件據點進銷存檔].[C:到廠前置時間]                              
+         IF NOT cl_null(l_imaf173) AND l_imaf173 <> 0 THEN
+            CALL s_date_get_work_date(l_pmdn.pmdnsite,l_ooef008,l_ooef009,l_pmdn.pmdn013,0,l_imaf173) RETURNING l_pmdn.pmdn012
+         ELSE
+            LET l_pmdn.pmdn012 = l_pmdn.pmdn013
+         END IF
+      END IF
+      
+      LET l_pmdn.pmdn016   = l_pmdl.pmdl011    #稅別 
+      LET l_pmdn.pmdn017   = l_pmdl.pmdl012    #稅率 
+      
+      #取得稅別類型
+      CALL s_tax_chk(g_site,l_pmdl.pmdl011)
+        RETURNING l_success,l_oodbl004,l_oodb005,l_oodb006,l_oodb011
+      IF l_oodb011 = '2' AND NOT cl_null(l_pmdn.pmdn001) AND NOT cl_null(l_pmdl.pmdl024) THEN
+         #依料件設定
+         CALL s_tax_chktype(g_site,l_pmdl.pmdl004,l_pmdn.pmdn001,'2',l_pmdl.pmdl024)
+              RETURNING l_success,l_pmdn.pmdn016,l_pmdn.pmdn017
+         IF NOT l_success THEN
+            #稅別檢查失敗，將稅別、稅率清空
+            LET l_pmdn.pmdn016 = ''
+            LET l_pmdn.pmdn017 = ''
+         END IF                   
+      END IF
+      IF cl_null(l_pmdn.pmdn016) OR cl_null(l_pmdn.pmdn017) THEN
+         #依正常稅率
+         LET l_pmdn.pmdn016 = l_pmdl.pmdl011
+         LET l_pmdn.pmdn017 = l_pmdl.pmdl012
+      END IF 
+      
+      LET l_pmdn.pmdn019= '1'                  #子件特性
+      LET l_pmdn.pmdn020   = '1'               #緊急度                       
+      LET l_pmdn.pmdn021   = 'N'               #保稅                    
+      LET l_pmdn.pmdn022   = 'Y'               #部分交貨                
+      LET l_pmdn.pmdnunit  = g_site            #收貨據點                 
+      LET l_pmdn.pmdnorga  = g_site            #付款據點                 
+      LET l_pmdn.pmdn023   = l_pmdl.pmdl004    #送貨供應商              
+      LET l_pmdn.pmdn024   = 'N'               #多交期                  
+      LET l_pmdn.pmdn025   = l_pmdl.pmdl025    #收貨地址代碼            
+      LET l_pmdn.pmdn026   = l_pmdl.pmdl026    #帳款地址代碼  
+
+      #供應商料號
+      DECLARE s_apmt500_gen_ins_pmdn_sel_cs1 SCROLL CURSOR FOR
+       SELECT pmao004 FROM pmao_t
+        WHERE pmaoent = g_enterprise 
+          AND pmao001 = l_pmdl.pmdl004
+          AND pmao002 = l_pmdn.pmdn001
+          AND pmao003 = l_pmdn.pmdn002
+        ORDER BY pmao007 DESC
+        
+      OPEN s_apmt500_gen_ins_pmdn_sel_cs1 
+      FETCH FIRST s_apmt500_gen_ins_pmdn_sel_cs1 INTO l_pmdn.pmdn027
+           
+      LET l_pmdn.pmdn028   = ''                #收貨庫位                
+      LET l_pmdn.pmdn029   = ''                #收貨儲位                
+      LET l_pmdn.pmdn030   = ''                #收貨批號                
+      LET l_pmdn.pmdn031   = l_pmdl.pmdl020    #運輸方式                
+      LET l_pmdn.pmdn032   = '1'               #取貨模式                
+      LET l_pmdn.pmdn033   = 0                 #備品率
+
+      
+      LET l_pmdn.pmdn035   = '1'               #價格核決                
+      LET l_pmdn.pmdn036   = ''                #專案編號                
+      LET l_pmdn.pmdn037   = ''                #WBS編號                 
+      LET l_pmdn.pmdn038   = ''                #活動編號                
+      LET l_pmdn.pmdn039   = ''                #費用原因
+      #carrier 以下5个字段等价格应用元件      
+      LET l_pmdn.pmdn040   = '1'               #取價來源    
+      LET l_pmdn.pmdn041   = ''                #價格參考單號
+      LET l_pmdn.pmdn042   = ''                #價格參考項次
+      LET l_pmdn.pmdn043   = 0                 #取出價格    
+      LET l_pmdn.pmdn044   = 0                 #價差比      
+      LET l_pmdn.pmdn045   ='1'                #行狀態   
+
+      CALL s_apmt500_get_price(l_pmdl.pmdl017,l_pmdl.pmdl004,l_pmdn.pmdn001,l_pmdn.pmdn002,l_pmdl.pmdl015,
+          l_pmdn.pmdn016,l_pmdl.pmdl009,l_pmdl.pmdl010,l_pmdl.pmdl023,g_pmdldocno,
+          l_pmdl.pmdldocdt,l_pmdn.pmdn010,l_pmdn.pmdn011,g_site,l_pmdl.pmdl054,'1',l_pmdn.pmdn004,l_pmdn.pmdn005)
+        RETURNING l_pmdn.pmdn040,l_pmdn.pmdn043,l_pmdn.pmdn041,l_pmdn.pmdn042
+      
+      LET l_pmdn.pmdn015 = l_pmdn.pmdn043
+      
+      #未稅金額/#含稅金額/#稅額
+      CALL s_apmt500_get_amount(l_pmdn.pmdndocno,l_pmdn.pmdnseq,l_pmdl.pmdl015,
+                                l_pmdn.pmdn007,l_pmdn.pmdn015,l_pmdn.pmdn016)
+           RETURNING l_pmdn.pmdn046,l_pmdn.pmdn048,l_pmdn.pmdn047
+           
+      LET l_pmdn.pmdn049   = ''                #理由碼      
+      LET l_pmdn.pmdn050   = ''                #備註        
+      LET l_pmdn.pmdn051   = ''                #結案理由碼  
+      LET l_pmdn.pmdn900   = ''                #保留欄位str 
+      LET l_pmdn.pmdn999   = ''                #保留欄位end 
+      
+      LET l_pmdn.pmdn052 = ''
+      LET l_sql = " SELECT qcap006 FROM qcap_t ",
+                 " WHERE qcapent = '",g_enterprise,"' ",
+                 "  AND qcapsite = '",l_pmdn.pmdnsite,"' ",
+                 "  AND qcap001 = '",l_pmdn.pmdn001,"' ",
+                 "  AND qcap002 = '",l_pmdl.pmdl004,"' "
+                 
+      IF l_pmdn.pmdn002 IS NOT NULL THEN
+         LET l_sql = l_sql ," AND ( qcap005 = '",l_pmdn.pmdn002,"' OR qcap005 = 'ALL' )"
+      END IF
+      IF (NOT cl_null(l_pmdn.pmdn004)) AND (NOT cl_null(l_pmdn.pmdn005)) THEN
+         LET l_sql = l_sql ," AND ( qcap003 = '",l_pmdn.pmdn004,"' OR qcap003 = 'ALL' ) AND qcap004 = '",l_pmdn.pmdn005,"' "
+      END IF
+      
+      PREPARE get_qcap1 FROM l_sql
+      EXECUTE get_qcap1 INTO l_pmdn.pmdn052   #總筆數
+      FREE get_qcap1
+      IF cl_null(l_pmdn.pmdn052) THEN
+         #若沒有維護aqci050,再從aqci040中帶值
+         SELECT imae114 INTO l_pmdn.pmdn052 FROM imae_t 
+             WHERE imaeent = g_enterprise AND imaesite = l_pmdn.pmdnsite AND imae001 = l_pmdn.pmdn001
+             
+      END IF
+      
+      IF cl_null(l_pmdn.pmdn052) THEN
+         LET l_pmdn.pmdn052 = 'N'
+      END IF  
+      
+      INSERT INTO pmdn_t VALUES(l_pmdn.*)
+      IF SQLCA.sqlcode THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      CALL s_apmt500_gen_pmdq(l_pmdn.pmdndocno,l_pmdn.pmdnseq) RETURNING l_success
+      IF NOT l_success THEN
+         RETURN r_success
+      END IF
+      
+
+      #插入"pmdo_t:採購交期明細檔"
+      CALL apmt500_06_gen_ins_pmdo(l_srac.*,l_pmdn.*)
+           RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF           
+      #插入"pmdp_t:採購關聯單據明細檔"
+      CALL apmt500_06_gen_ins_pmdp(l_srac.*,l_pmdn.*)
+           RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF     
+
+   END FOREACH
+   
+   RETURN r_success
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_gen_ins_pmdo" order="14" ver="4" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#採購交期明細檔
+PRIVATE FUNCTION apmt500_06_gen_ins_pmdo(p_srac,p_pmdn)
+   DEFINE p_srac          RECORD LIKE srac_t.*
+   DEFINE p_pmdn          RECORD LIKE pmdn_t.*                          
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_pmdo          RECORD LIKE pmdo_t.*  
+   DEFINE l_rate          LIKE inaj_t.inaj014
+   
+   LET r_success = FALSE
+
+   #检查:应在事物中的
+   IF NOT s_transaction_chk('Y','0') THEN
+      RETURN r_success
+   END IF
+   
+   INITIALIZE l_pmdo.* TO NULL
+   LET l_pmdo.pmdoent   = p_pmdn.pmdnent               #企業編號    
+   LET l_pmdo.pmdosite  = p_pmdn.pmdnsite              #營運據點    
+   LET l_pmdo.pmdodocno = p_pmdn.pmdndocno             #採購單號    
+   LET l_pmdo.pmdoseq   = p_pmdn.pmdnseq               #採購項次 
+   LET l_pmdo.pmdoseq1 = 1                             #項序 
+   LET l_pmdo.pmdoseq2  = 1                            #分批序   
+   LET l_pmdo.pmdo001   = p_pmdn.pmdn001               #料件編號    
+   LET l_pmdo.pmdo002   = p_pmdn.pmdn002               #產品特徵    
+   LET l_pmdo.pmdo003   = p_pmdn.pmdn019               #子件特性    
+   LET l_pmdo.pmdo004   = p_pmdn.pmdn006               #採購單位  
+   LET l_pmdo.pmdo005   = p_pmdn.pmdn007               #採購數量               
+   LET l_pmdo.pmdo006   = l_pmdo.pmdo005               #分批採購數量
+   LET l_pmdo.pmdo007   = l_pmdo.pmdo005               #折合主件數量
+   LET l_pmdo.pmdo008   = 1                            #QPA      
+   LET l_pmdo.pmdo009   = '1'                          #交期類型    
+   LET l_pmdo.pmdo010   = ''                           #收貨時段    
+   LET l_pmdo.pmdo011   = p_pmdn.pmdn012               #出貨日期    
+   LET l_pmdo.pmdo012   = p_pmdn.pmdn013               #到廠日期    
+   LET l_pmdo.pmdo013   = p_pmdn.pmdn014               #到庫日期    
+   LET l_pmdo.pmdo014   = 'N'                          #MRP交期凍結 
+   LET l_pmdo.pmdo015   = 0                            #已收貨量    
+   LET l_pmdo.pmdo016   = 0                            #驗退量      
+   LET l_pmdo.pmdo017   = 0                            #倉退換貨量     
+   LET l_pmdo.pmdo019   = 0                            #已入庫量    
+   LET l_pmdo.pmdo020   = 0                            #VMI請款量   
+   LET l_pmdo.pmdo021   = '2'                          #交貨狀態    
+   LET l_pmdo.pmdo022   = p_pmdn.pmdn015               #參考價格 
+   LET l_pmdo.pmdo023   = p_pmdn.pmdn016               #稅別
+   LET l_pmdo.pmdo024   = p_pmdn.pmdn017               #稅率
+   LET l_pmdo.pmdo025   = ''                           #電子採購單號
+   LET l_pmdo.pmdo026   = g_user                       #最近修改人員
+   LET l_pmdo.pmdo027   = g_dept                       #最近修改時間
+   #分批參考單位
+   SELECT imaf015 INTO l_pmdo.pmdo028 FROM imaf_t
+    WHERE imafent  = g_enterprise
+      AND imafsite = g_site
+      AND imaf001  = l_pmdo.pmdo001
+      
+   #分批參考數量 
+   #若没有参考单位时,参考数量DEFAULT NULL
+   IF cl_null(l_pmdo.pmdo028) THEN
+      LET l_pmdo.pmdo029 = NULL
+   ELSE
+      #CALL s_aimi190_get_convert(l_pmdo.pmdo001,l_pmdo.pmdo004,l_pmdo.pmdo028)
+      #     RETURNING l_success,l_rate
+      #IF NOT l_success THEN
+      #   LET l_rate = 1
+      #END IF
+      #LET l_pmdo.pmdo029 = l_pmdo.pmdo006 * l_rate
+      CALL s_aooi250_convert_qty(l_pmdo.pmdo001,l_pmdo.pmdo004,l_pmdo.pmdo028,l_pmdo.pmdo006)
+                   RETURNING l_success,l_pmdo.pmdo029
+   END IF
+
+   LET l_pmdo.pmdo030   = l_pmdo.pmdo004               #分批計價單位
+   LET l_pmdo.pmdo031   = l_pmdo.pmdo006               #分批計價數量
+   
+   LET l_pmdo.pmdo032   = p_pmdn.pmdn046               #分批未稅金額
+   LET l_pmdo.pmdo033   = p_pmdn.pmdn047               #分批含稅金額
+   LET l_pmdo.pmdo034   = p_pmdn.pmdn048               #分批稅額    
+   LET l_pmdo.pmdo900   = p_pmdn.pmdn900               #保留欄位str 
+   LET l_pmdo.pmdo999   = p_pmdn.pmdn999               #保留欄位end 
+   INSERT INTO pmdo_t VALUES(l_pmdo.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert pmdo_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF   
+
+   LET r_success = TRUE
+   RETURN r_success
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_06_gen_ins_pmdp" order="15" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#採購關聯單據明細檔
+PRIVATE FUNCTION apmt500_06_gen_ins_pmdp(p_srac,p_pmdn)
+   DEFINE p_srac          RECORD LIKE srac_t.*
+   DEFINE p_pmdn          RECORD LIKE pmdn_t.*                          
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_pmdp          RECORD LIKE pmdp_t.*
+   
+   LET r_success = FALSE
+
+   #检查:应在事物中的
+   IF NOT s_transaction_chk('Y','0') THEN
+      RETURN r_success
+   END IF
+   
+   INITIALIZE l_pmdp.* TO NULL
+
+   LET l_pmdp.pmdpent   = p_pmdn.pmdnent                #企業編號      
+   LET l_pmdp.pmdpsite  = p_pmdn.pmdnsite               #營運據點      
+   LET l_pmdp.pmdpdocno = p_pmdn.pmdndocno              #採購單號      
+   LET l_pmdp.pmdpseq   = p_pmdn.pmdnseq                #採購項次      
+   LET l_pmdp.pmdpseq1  = 1                             #項序          
+   LET l_pmdp.pmdp001   = p_pmdn.pmdn001                #料件編號      
+   LET l_pmdp.pmdp002   = p_pmdn.pmdn002                #產品特徵      
+   LET l_pmdp.pmdp003   = ''                            #來源單號      
+   LET l_pmdp.pmdp004   = 0                             #來源項次      
+   LET l_pmdp.pmdp005   = 0                             #來源項序      
+   LET l_pmdp.pmdp006   = 0                             #來源分批序    
+   LET l_pmdp.pmdp007   = p_pmdn.pmdn001                #來源料號      
+   LET l_pmdp.pmdp008   = p_pmdn.pmdn002                #來源產品特徵  
+   LET l_pmdp.pmdp009   = p_srac.srac008                #來源作業編號  
+   LET l_pmdp.pmdp010   = p_srac.srac009                #來源製程序    
+   LET l_pmdp.pmdp011   = p_srac.srac005                #來源BOM特性   
+   LET l_pmdp.pmdp012   = p_srac.srac001                #來源生產控制組
+   LET l_pmdp.pmdp021   = 1                             #沖銷順序      
+   LET l_pmdp.pmdp022   = p_srac.srac027                #需求單位      
+   LET l_pmdp.pmdp023   = p_pmdn.pmdn007                #需求數量      
+   LET l_pmdp.pmdp024   = p_pmdn.pmdn007                #折合採購量    
+   LET l_pmdp.pmdp025   = 0                             #已收貨量      
+   LET l_pmdp.pmdp026   = 0                             #已入庫量      
+   LET l_pmdp.pmdp900   = p_pmdn.pmdn900                #保留欄位str   
+   LET l_pmdp.pmdp999   = p_pmdn.pmdn999                #保留欄位end   
+   
+   INSERT INTO pmdp_t VALUES(l_pmdp.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert pmdp_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+   
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_pmdldocno   LIKE pmdl_t.pmdldocno]]>
+  </point>
+  <point name="input.a.srac001" order="" ver="4" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_srac_m.srac001) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_srac_m.srac001
+               
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_srab001") THEN
+                  #檢查失敗時後續處理
+                  LET g_srac_m.srac001 = ''
+                  NEXT FIELD srac001
+               END IF
+               
+               IF NOT cl_null(g_srac_m.srac004) THEN 
+                  #檢查生產計劃+生產料號是否存在asrt300
+                  IF NOT apmt500_06_srac004_chk() THEN
+                     #檢查失敗時後續處理
+                     LET g_srac_m.srac004 = ''
+                     LET g_srac_m.imaal003 = ''
+                     LET g_srac_m.imaal004 = ''
+                     DISPLAY BY NAME g_srac_m.srac004,g_srac_m.imaal003,g_srac_m.imaal004
+                     NEXT FIELD srac004
+                  END IF
+               END IF
+               
+               #檢查生產計劃+生產料號+BOM特性是否存在asrt300
+               IF NOT cl_null(g_srac_m.srac005) THEN
+                  IF NOT apmt500_06_srac005_chk() THEN
+                     LET g_srac_m.srac004 = ''
+                     LET g_srac_m.imaal003 = ''
+                     LET g_srac_m.imaal004 = ''
+                     DISPLAY BY NAME g_srac_m.srac004,g_srac_m.imaal003,g_srac_m.imaal004
+                     NEXT FIELD srac004
+                  END IF
+               END IF
+               
+               #檢查生產計劃+生產料號+BOM特性+產品特徵是否存在asrt300
+               IF NOT cl_null(g_srac_m.srac006) THEN
+                  IF NOT apmt500_06_srac006_chk() THEN
+                     LET g_srac_m.srac004 = ''
+                     LET g_srac_m.imaal003 = ''
+                     LET g_srac_m.imaal004 = ''
+                     DISPLAY BY NAME g_srac_m.srac004,g_srac_m.imaal003,g_srac_m.imaal004
+                     NEXT FIELD srac004
+                  END IF
+               END IF
+               
+               #檢查生產計劃+生產料號+BOM特性+作業編號是否存在asrt300_02
+               IF NOT cl_null(g_srac_m.srac008) THEN
+                  IF NOT apmt500_06_srac008_chk() THEN
+                     LET g_srac_m.srac004 = ''
+                     LET g_srac_m.imaal003 = ''
+                     LET g_srac_m.imaal004 = ''
+                     DISPLAY BY NAME g_srac_m.srac004,g_srac_m.imaal003,g_srac_m.imaal004
+                     NEXT FIELD srac004
+                  END IF
+               END IF
+               
+               #檢查生產計劃+生產料號+BOM特性+作業編號+作業序是否存在asrt300_02
+               IF NOT cl_null(g_srac_m.srac009) THEN
+                  IF NOT apmt500_06_srac009_chk() THEN
+                     LET g_srac_m.srac004 = ''
+                     LET g_srac_m.imaal003 = ''
+                     LET g_srac_m.imaal004 = ''
+                     DISPLAY BY NAME g_srac_m.srac004,g_srac_m.imaal003,g_srac_m.imaal004
+                     NEXT FIELD srac004
+                  END IF
+               END IF
+               
+            END IF
+            #CALL apmt500_06_set_entry()
+            #CALL apmt500_06_set_no_required()
+            #CALL apmt500_06_set_required()
+            #CALL apmt500_06_set_no_entry()
+            ]]>
+  </point>
+  <point name="input.a.srac002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.srac004" order="" ver="4" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_srac_m.srac004) THEN 
+               
+               #檢查生產計劃+生產料號是否存在asrt300
+               IF NOT apmt500_06_srac004_chk() THEN
+                  #檢查失敗時後續處理
+                  LET g_srac_m.srac004 = ''
+                  LET g_srac_m.imaal003 = ''
+                  LET g_srac_m.imaal004 = ''
+                  DISPLAY BY NAME g_srac_m.srac004,g_srac_m.imaal003,g_srac_m.imaal004
+                  NEXT FIELD srac004
+               END IF
+               
+               #檢查生產計劃+生產料號+BOM特性是否存在asrt300
+               IF NOT cl_null(g_srac_m.srac005) THEN
+                  IF NOT apmt500_06_srac005_chk() THEN
+                     LET g_srac_m.srac004 = ''
+                     LET g_srac_m.imaal003 = ''
+                     LET g_srac_m.imaal004 = ''
+                     DISPLAY BY NAME g_srac_m.srac004,g_srac_m.imaal003,g_srac_m.imaal004
+                     NEXT FIELD srac004
+                  END IF
+               END IF
+               
+               #檢查生產計劃+生產料號+BOM特性+產品特徵是否存在asrt300
+               IF NOT cl_null(g_srac_m.srac006) THEN
+                  IF NOT apmt500_06_srac006_chk() THEN
+                     LET g_srac_m.srac004 = ''
+                     LET g_srac_m.imaal003 = ''
+                     LET g_srac_m.imaal004 = ''
+                     DISPLAY BY NAME g_srac_m.srac004,g_srac_m.imaal003,g_srac_m.imaal004
+                     NEXT FIELD srac004
+                  END IF
+               END IF
+               
+               #檢查生產計劃+生產料號+BOM特性+作業編號是否存在asrt300_02
+               IF NOT cl_null(g_srac_m.srac008) THEN
+                  IF NOT apmt500_06_srac008_chk() THEN
+                     LET g_srac_m.srac004 = ''
+                     LET g_srac_m.imaal003 = ''
+                     LET g_srac_m.imaal004 = ''
+                     DISPLAY BY NAME g_srac_m.srac004,g_srac_m.imaal003,g_srac_m.imaal004
+                     NEXT FIELD srac004
+                  END IF
+               END IF
+               
+               #檢查生產計劃+生產料號+BOM特性+作業編號+作業序是否存在asrt300_02
+               IF NOT cl_null(g_srac_m.srac009) THEN
+                  IF NOT apmt500_06_srac009_chk() THEN
+                     LET g_srac_m.srac004 = ''
+                     LET g_srac_m.imaal003 = ''
+                     LET g_srac_m.imaal004 = ''
+                     DISPLAY BY NAME g_srac_m.srac004,g_srac_m.imaal003,g_srac_m.imaal004
+                     NEXT FIELD srac004
+                  END IF
+               END IF
+               
+               CALL apmt500_06_srac004_ref()
+               DISPLAY BY NAME g_srac_m.imaal003,g_srac_m.imaal004
+               
+               LET l_n = 0 
+               SELECT COUNT(*) INTO l_n FROM srab_t 
+                  WHERE srabent = g_enterprise AND srabsite = g_site 
+                    AND srab001 = g_srac_m.srac001 AND srab004 = g_srac_m.srac004
+               IF l_n = 1 THEN
+                  SELECT srab005,srab006 INTO g_srac_m.srac005,g_srac_m.srac006 FROM srab_t
+                     WHERE srabent = g_enterprise AND srabsite = g_site 
+                       AND srab001 = g_srac_m.srac001 AND srab004 = g_srac_m.srac004
+                  DISPLAY BY NAME g_srac_m.srac005,g_srac_m.srac006
+               END IF
+            END IF
+            #CALL apmt500_06_set_entry()
+            #CALL apmt500_06_set_no_required()
+            #CALL apmt500_06_set_required()
+            #CALL apmt500_06_set_no_entry()
+
+
+]]>
+  </point>
+  <point name="input.a.srac005" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_srac_m.srac005) THEN 
+               IF NOT apmt500_06_srac005_chk() THEN
+                  LET g_srac_m.srac005 = ''
+                  NEXT FIELD srac005
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.srac006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_srac_m.srac006) THEN 
+               IF NOT apmt500_06_srac006_chk() THEN
+                  LET g_srac_m.srac006 = ''
+                  NEXT FIELD srac006
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.srac007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.srac008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            
+            IF NOT cl_null(g_srac_m.srac008) THEN 
+               IF NOT apmt500_06_srac008_chk() THEN
+                  LET g_srac_m.srac008 = ''
+                  NEXT FIELD srac008
+               END IF
+               
+               IF NOT cl_null(g_srac_m.srac009) THEN 
+                  IF NOT apmt500_06_srac009_chk() THEN
+                     LET g_srac_m.srac008 = ''
+                     NEXT FIELD srac008
+                  END IF
+               END IF
+            END IF
+            
+            CALL apmt500_06_srac008_ref()
+            DISPLAY BY NAME g_srac_m.srac008_desc
+
+]]>
+  </point>
+  <point name="input.a.srac009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_srac_m.srac009) THEN 
+               IF NOT apmt500_06_srac009_chk() THEN
+                  LET g_srac_m.srac009 = ''
+                  NEXT FIELD srac009
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.sracsite" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT apmt500_06_ins_pmdn() THEN
+               LET r_success = FALSE
+               EXIT DIALOG
+            END IF]]>
+  </point>
+  <point name="input.c.srac001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_srac_m.srac001             #給予default值
+
+            CALL q_sraa001()                                #呼叫開窗
+
+            LET g_srac_m.srac001 = g_qryparam.return1              
+
+            DISPLAY g_srac_m.srac001 TO srac001              #
+
+            NEXT FIELD srac001                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.srac004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_srac_m.srac004             #給予default值
+       
+            LET g_qryparam.where = " srab001 = '",g_srac_m.srac001,"' "
+
+            
+            CALL q_srab004()                                #呼叫開窗
+
+            LET g_srac_m.srac004 = g_qryparam.return1 
+            LET g_srac_m.srac005 = g_qryparam.return2
+            LET g_srac_m.srac006 = g_qryparam.return3
+            DISPLAY g_srac_m.srac004 TO srac004 
+            DISPLAY g_srac_m.srac005 TO srac005 
+            DISPLAY g_srac_m.srac006 TO srac006 
+            
+            CALL apmt500_06_srac004_ref()
+            DISPLAY BY NAME g_srac_m.imaal003,g_srac_m.imaal004
+            
+            NEXT FIELD srac004                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.srac005" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_srac_m.srac005             #給予default值
+
+            LET g_qryparam.where = " srab001 = '",g_srac_m.srac001,"' AND srab004 = '",g_srac_m.srac004,"' "
+
+            
+            CALL q_srab005_1()                                #呼叫開窗
+
+            LET g_srac_m.srac005 = g_qryparam.return1              
+
+            DISPLAY g_srac_m.srac005 TO srac005              #
+
+            NEXT FIELD srac005                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.srac006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_srac_m.srac006             #給予default值
+
+            LET g_qryparam.where = " srab001 = '",g_srac_m.srac001,"' AND srab004 = '",g_srac_m.srac004,"' AND srab005 = '",g_srac_m.srac005,"' "
+
+            
+            CALL q_srab006_1()                                #呼叫開窗
+
+            LET g_srac_m.srac006 = g_qryparam.return1              
+
+            DISPLAY g_srac_m.srac006 TO srac006              #
+
+            NEXT FIELD srac006                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.srac008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_srac_m.srac008             #給予default值
+            
+            LET g_qryparam.where = " srac001 = '",g_srac_m.srac001,"' AND srac004 = '",g_srac_m.srac004,"' AND srac005 = '",g_srac_m.srac005,"' AND srac006 = '",g_srac_m.srac006,"' "
+
+            CALL q_srac008()                                #呼叫開窗
+
+            LET g_srac_m.srac008 = g_qryparam.return1              
+            LET g_srac_m.srac009 = g_qryparam.return2 
+            DISPLAY g_srac_m.srac008 TO srac008              #
+            DISPLAY g_srac_m.srac009 TO srac009 
+            
+            CALL apmt500_06_srac008_ref()
+            DISPLAY BY NAME g_srac_m.srac008_desc
+            
+            NEXT FIELD srac008                          #返回原欄位
+            
+]]>
+  </point>
+  <point name="input.c.srac009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_srac_m.srac009             #給予default值
+            
+            LET g_qryparam.where = " srac001 = '",g_srac_m.srac001,"' AND srac004 = '",g_srac_m.srac004,"' AND srac005 = '",g_srac_m.srac005,"' AND srac006 = '",g_srac_m.srac006,"' AND srac008 = '",g_srac_m.srac008,"' "
+
+            CALL q_srac008_2()                                #呼叫開窗
+
+            LET g_srac_m.srac009 = g_qryparam.return1    
+            DISPLAY g_srac_m.srac009 TO srac009 
+            NEXT FIELD srac009                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_pmdldocno     LIKE pmdl_t.pmdldocno
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE r_success       LIKE type_t.num5]]>
+  </point>
+  <point name="input.g.srac001" order="" ver="4" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL apmt500_06_set_entry()
+            CALL apmt500_06_set_no_required()
+            CALL apmt500_06_set_required()
+            CALL apmt500_06_set_no_entry()]]>
+  </point>
+  <point name="input.g.srac004" order="" ver="4" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL apmt500_06_set_entry()
+            CALL apmt500_06_set_no_required()
+            CALL apmt500_06_set_required()
+            CALL apmt500_06_set_no_entry()]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_pmdldocno]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET INT_FLAG = FALSE
+   RETURN r_success]]>
+  </point>
+  <point name="input.pre_input" order="" ver="4" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   LET g_pmdldocno = p_pmdldocno
+   LET g_errshow = 1
+   
+   CLEAR FORM
+   INITIALIZE g_srac_m.* TO NULL
+   ]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_srac_m.srac008
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_srac_m.srac008_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_srac_m.srac008_desc
+]]>
+  </point>
+  <section id="apmt500_06.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:5,PR版次:5) Build-000123
+#+ 
+#+ Filename...: apmt500_06
+#+ Description: 重覆性生產計畫來源
+#+ Creator....: 02294(2014-06-04 14:24:35)
+#+ Modifier...: 02294(2015-01-22 09:36:55) -SD/PR-
+]]>
+  </section>
+  <section id="apmt500_06.global" ver="5" status="" src="s" readonly="">
+    <![CDATA[#應用 c01b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_srac_m        RECORD
+       srac001 LIKE srac_t.srac001, 
+   srac004 LIKE srac_t.srac004, 
+   imaal003 LIKE type_t.chr500, 
+   imaal004 LIKE type_t.chr500, 
+   srac005 LIKE srac_t.srac005, 
+   srac006 LIKE srac_t.srac006, 
+   srac008 LIKE srac_t.srac008, 
+   srac008_desc LIKE type_t.chr80, 
+   srac009 LIKE srac_t.srac009, 
+   srac002 LIKE srac_t.srac002, 
+   srac007 LIKE srac_t.srac007, 
+   sracsite LIKE srac_t.sracsite
+       END RECORD
+DEFINE g_srac_m        type_g_srac_m
+ 
+   DEFINE g_srac001_t LIKE srac_t.srac001
+DEFINE g_srac004_t LIKE srac_t.srac004
+DEFINE g_srac005_t LIKE srac_t.srac005
+DEFINE g_srac006_t LIKE srac_t.srac006
+DEFINE g_srac002_t LIKE srac_t.srac002
+DEFINE g_srac007_t LIKE srac_t.srac007
+DEFINE g_sracsite_t LIKE srac_t.sracsite
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmt500_06.input" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION apmt500_06(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmt500_06 WITH FORM cl_ap_formpath("apm","apmt500_06")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_srac_m.srac001,g_srac_m.srac004,g_srac_m.srac005,g_srac_m.srac006,g_srac_m.srac008, 
+          g_srac_m.srac009,g_srac_m.srac002,g_srac_m.srac007,g_srac_m.sracsite ATTRIBUTE(WITHOUT DEFAULTS) 
+
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD srac001
+            #add-point:BEFORE FIELD srac001
+            {<point name="input.b.srac001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD srac001
+            
+            #add-point:AFTER FIELD srac001
+            {<point name="input.a.srac001" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE srac001
+            #add-point:ON CHANGE srac001
+            {<point name="input.g.srac001" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD srac004
+            #add-point:BEFORE FIELD srac004
+            {<point name="input.b.srac004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD srac004
+            
+            #add-point:AFTER FIELD srac004
+            {<point name="input.a.srac004" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE srac004
+            #add-point:ON CHANGE srac004
+            {<point name="input.g.srac004" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD srac005
+            #add-point:BEFORE FIELD srac005
+            {<point name="input.b.srac005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD srac005
+            
+            #add-point:AFTER FIELD srac005
+            {<point name="input.a.srac005" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE srac005
+            #add-point:ON CHANGE srac005
+            {<point name="input.g.srac005" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD srac006
+            #add-point:BEFORE FIELD srac006
+            {<point name="input.b.srac006" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD srac006
+            
+            #add-point:AFTER FIELD srac006
+            {<point name="input.a.srac006" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE srac006
+            #add-point:ON CHANGE srac006
+            {<point name="input.g.srac006" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD srac008
+            
+            #add-point:AFTER FIELD srac008
+            {<point name="input.a.srac008" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD srac008
+            #add-point:BEFORE FIELD srac008
+            {<point name="input.b.srac008" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE srac008
+            #add-point:ON CHANGE srac008
+            {<point name="input.g.srac008" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD srac009
+            #add-point:BEFORE FIELD srac009
+            {<point name="input.b.srac009" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD srac009
+            
+            #add-point:AFTER FIELD srac009
+            {<point name="input.a.srac009" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE srac009
+            #add-point:ON CHANGE srac009
+            {<point name="input.g.srac009" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD srac002
+            #add-point:BEFORE FIELD srac002
+            {<point name="input.b.srac002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD srac002
+            
+            #add-point:AFTER FIELD srac002
+            {<point name="input.a.srac002" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE srac002
+            #add-point:ON CHANGE srac002
+            {<point name="input.g.srac002" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD srac007
+            #add-point:BEFORE FIELD srac007
+            {<point name="input.b.srac007" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD srac007
+            
+            #add-point:AFTER FIELD srac007
+            {<point name="input.a.srac007" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE srac007
+            #add-point:ON CHANGE srac007
+            {<point name="input.g.srac007" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sracsite
+            #add-point:BEFORE FIELD sracsite
+            {<point name="input.b.sracsite" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sracsite
+            
+            #add-point:AFTER FIELD sracsite
+            {<point name="input.a.sracsite" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sracsite
+            #add-point:ON CHANGE sracsite
+            {<point name="input.g.sracsite" />}
+            #END add-point 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.srac001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD srac001
+            #add-point:ON ACTION controlp INFIELD srac001
+            {<point name="input.c.srac001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.srac004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD srac004
+            #add-point:ON ACTION controlp INFIELD srac004
+            {<point name="input.c.srac004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.srac005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD srac005
+            #add-point:ON ACTION controlp INFIELD srac005
+            {<point name="input.c.srac005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.srac006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD srac006
+            #add-point:ON ACTION controlp INFIELD srac006
+            {<point name="input.c.srac006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.srac008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD srac008
+            #add-point:ON ACTION controlp INFIELD srac008
+            {<point name="input.c.srac008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.srac009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD srac009
+            #add-point:ON ACTION controlp INFIELD srac009
+            {<point name="input.c.srac009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.srac002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD srac002
+            #add-point:ON ACTION controlp INFIELD srac002
+            {<point name="input.c.srac002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.srac007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD srac007
+            #add-point:ON ACTION controlp INFIELD srac007
+            {<point name="input.c.srac007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sracsite
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sracsite
+            #add-point:ON ACTION controlp INFIELD sracsite
+            {<point name="input.c.sracsite" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmt500_06 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apmt500_06.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="apmt500_06.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

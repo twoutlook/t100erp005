@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrt920_01" module="axr" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01727" crtdt="2014-04-23 11:22:40" modid="02114" moddt="2014-10-28 14:50:46" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="依幣別更新重評匯率">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrebld,xrebld_desc(chr80),lbl_comb(chr500),ooai001(chr500),xreb001,xreb002,xreb100,xreb101,xreb006,xreb007,xreb005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrt920_01" method="dialog">
+    <section id="input">
+      <input id="head" field="xrebld,lbl_comb,ooai001,xreb001,xreb002,xreb100,xreb101"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xrebld">
+        <after>
+          <reference field="xrebld_desc" ref_field="xreb_t.xrebld" map_field="xrebent,xrebld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xrebld_desc"/>
+      <column id="lbl_comb"/>
+      <column id="ooai001"/>
+      <column id="xreb001"/>
+      <column id="xreb002"/>
+      <column id="xreb100"/>
+      <column id="xreb101"/>
+      <column id="xreb006"/>
+      <column id="xreb007"/>
+      <column id="xreb005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xreb_t" pk="xrebld,xreb001,xreb002,xreb003,xreb005,xreb006,xreb007">
+      <sql id="forupd_sql" type="sql" query="SELECT xrebld,&apos;&apos;,&apos;&apos;,&apos;&apos;,xreb001,xreb002,xreb100,xreb101,xreb006,xreb007,xreb005 FROM xreb_t WHERE xrebent= ? AND xrebld=? AND xreb001=? AND xreb002=? AND xreb003=? AND xreb005=? AND xreb006=? AND xreb007=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xrebld,xreb001,xreb002,xreb003,xreb005,xreb006,xreb007"/>
+    </head>
+  </dataset>
+</assembly>
+

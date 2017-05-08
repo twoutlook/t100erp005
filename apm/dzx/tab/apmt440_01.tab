@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt440_01" module="apm" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="02587" crtdt="2013-12-17 22:07:54" modid="02294" moddt="2016-12-27 17:26:19" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="核價分量計價維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmdjdocno,pmdjseq,pmdi005,pmdj002,imaal003,imaal004,pmdj031,pmdj032,pmdj003,pmdj004,pmdj006,pmdj007"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmdksite,pmdk001,pmdk002,pmdk003,pmdk004"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt440_01" method="dialog">
+    <section id="input">
+      <input id="head" field="pmdjdocno,pmdjseq,pmdi005,pmdj002,imaal003,imaal004,pmdj031,pmdj032,pmdj003,pmdj004,pmdj006,pmdj007"/>
+      <input id="body" page="1" field="pmdk001,pmdk002,pmdk003,pmdk004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmdjdocno,pmdjseq,pmdi005,pmdj002,imaal003,imaal004,pmdj031,pmdj032,pmdj003,pmdj004,pmdj006,pmdj007"/>
+      <construct id="body" page="1" field="pmdk001,pmdk002,pmdk003,pmdk004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmdjdocno,pmdjseq"/>
+      <set id="head" type="no_entry" field="pmdjdocno,pmdjseq"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmdjdocno"/>
+      <column id="pmdjseq"/>
+      <column id="pmdi005"/>
+      <column id="pmdj002"/>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="pmdj031"/>
+      <column id="pmdj032"/>
+      <column id="pmdj003"/>
+      <column id="pmdj004"/>
+      <column id="pmdj006"/>
+      <column id="pmdj007"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmdksite"/>
+      <column id="pmdk001">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmdk002"/>
+      <column id="pmdk003">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmdk004" type="S" default="0">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmdj_t" pk="pmdjdocno,pmdjseq">
+      <sql id="forupd_sql" type="sql" query="SELECT pmdjdocno,pmdjseq,&apos;&apos;,pmdj002,&apos;&apos;,&apos;&apos;,pmdj031,pmdj032,pmdj003,pmdj004,pmdj006,pmdj007 FROM pmdj_t WHERE pmdjent= ? AND pmdjdocno=? AND pmdjseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmdjdocno,pmdjseq,&apos;&apos;,pmdj002,&apos;&apos;,&apos;&apos;,pmdj031,pmdj032,pmdj003,pmdj004,pmdj006,pmdj007 FROM pmdj_t" order="pmdjdocno,pmdjseq"/>
+    </head>
+    <body id="pmdk_t" page="1" linked="" pk="pmdk001,pmdk002" fk="pmdkdocno,pmdkseq">
+      <sql id="forupd_sql_detail" query="SELECT pmdksite,pmdk001,pmdk002,pmdk003,pmdk004 FROM pmdk_t WHERE pmdkent=? AND pmdkdocno=? AND pmdkseq=? AND pmdk001=? AND pmdk002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmdksite,pmdk001,pmdk002,pmdk003,pmdk004 FROM pmdk_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

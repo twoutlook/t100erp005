@@ -1,0 +1,4738 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="apsq102.description" >}
+#應用 a00 樣板自動產生(Version:2)
+#+ Version..: T100-ERP-1.01.00(SD版次:2,PR版次:2) Build-000021
+#+ 
+#+ Filename...: apsq102
+#+ Description: APS模擬來源資料查詢
+#+ Creator....: 05599(2015-12-24 14:04:37)
+#+ Modifier...: 05599(2016-01-28 17:42:40) -SD/PR-
+
+{</section>}
+
+{<section id="apsq102.global" >}
+#應用 q01 樣板自動產生(Version:30)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" />}
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_psca_d RECORD
+       
+       sel LIKE type_t.chr10, 
+   l_xmdadocno LIKE type_t.chr100, 
+   l_xmdd001 LIKE type_t.chr100, 
+   l_xmdd006 LIKE type_t.chr100, 
+   l_xmdd011 LIKE type_t.chr100, 
+   l_xmda004 LIKE type_t.chr100, 
+   l_type LIKE type_t.chr100, 
+   l_xmdd014 LIKE type_t.chr100, 
+   l_xmdd004 LIKE type_t.chr100, 
+   l_delay LIKE type_t.chr100, 
+   l_xmdd002 LIKE type_t.chr100, 
+   l_scheduled LIKE type_t.chr100, 
+   l_consume LIKE type_t.chr100, 
+   l_priority LIKE type_t.chr100, 
+   l_transfer LIKE type_t.chr100, 
+   l_pseb007 LIKE type_t.chr100
+       END RECORD
+PRIVATE TYPE type_g_psca10_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_inab001 LIKE type_t.chr100, 
+   l_inab002 LIKE type_t.chr100, 
+   l_inab005 LIKE type_t.chr100, 
+   l_consigned LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca11_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_bmca001 LIKE type_t.chr100, 
+   l_bmca009 LIKE type_t.chr100, 
+   l_bmca005 LIKE type_t.chr100, 
+   l_bmca003 LIKE type_t.chr100, 
+   l_bmcb011 LIKE type_t.chr100, 
+   l_bmcb012 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca12_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_bmc001 LIKE type_t.chr100, 
+   l_bmcc009 LIKE type_t.chr100, 
+   l_bmcd010 LIKE type_t.chr100, 
+   l_bmcc005 LIKE type_t.chr100, 
+   l_bmcc003 LIKE type_t.chr100, 
+   l_bmcd011 LIKE type_t.chr100, 
+   l_bmcc010 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca13_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_imec001 LIKE type_t.chr100, 
+   l_imec002 LIKE type_t.chr100, 
+   l_imec003 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca14_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_bmce001 LIKE type_t.chr100, 
+   l_bmce005 LIKE type_t.chr100, 
+   l_bmce003 LIKE type_t.chr100, 
+   l_bmce009 LIKE type_t.chr100, 
+   l_bmce010 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca15_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_bmab001 LIKE type_t.chr100, 
+   l_bmab003 LIKE type_t.chr100, 
+   l_type_1 LIKE type_t.chr100, 
+   l_bmab004 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca16_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_bmea001 LIKE type_t.chr100, 
+   l_bmea003 LIKE type_t.chr100, 
+   l_bmea008 LIKE type_t.chr100, 
+   l_bmea015 LIKE type_t.chr100, 
+   l_bmea011 LIKE type_t.chr100, 
+   l_bmea009 LIKE type_t.chr100, 
+   l_bmea010 LIKE type_t.chr100, 
+   l_bmea012 LIKE type_t.chr100, 
+   l_bmea007 LIKE type_t.chr100, 
+   l_bmea017 LIKE type_t.chr100, 
+   l_bmea016 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca17_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_bmea001_1 LIKE type_t.chr100, 
+   l_bmea008_1 LIKE type_t.chr100, 
+   l_bmea015_1 LIKE type_t.chr100, 
+   l_bmea011_1 LIKE type_t.chr100, 
+   l_bmea009_1 LIKE type_t.chr100, 
+   l_bmea010_1 LIKE type_t.chr100, 
+   l_bmea012_1 LIKE type_t.chr100, 
+   l_bmea007_1 LIKE type_t.chr100, 
+   l_bmea017_1 LIKE type_t.chr100, 
+   l_bmea016_1 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca18_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_ecaa001 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca19_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_bmbb001 LIKE type_t.chr100, 
+   l_bmbb003 LIKE type_t.chr100, 
+   l_seq LIKE type_t.chr100, 
+   l_seq1 LIKE type_t.chr100, 
+   l_bmbb009 LIKE type_t.chr100, 
+   l_bmbb010 LIKE type_t.chr100, 
+   l_shrinkage_1 LIKE type_t.chr100, 
+   l_bmbb011 LIKE type_t.chr100, 
+   l_bmbb012 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca2_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_pmdodocno LIKE type_t.chr100, 
+   l_pmdo001 LIKE type_t.chr100, 
+   l_pmdb006 LIKE type_t.chr100, 
+   l_new LIKE type_t.chr100, 
+   l_pmdl004 LIKE type_t.chr100, 
+   l_pmdo004 LIKE type_t.chr100, 
+   l_pmdo019 LIKE type_t.chr100, 
+   l_state LIKE type_t.chr100, 
+   l_pmdo014 LIKE type_t.chr100, 
+   l_pmdo002 LIKE type_t.chr100, 
+   l_pmdo016 LIKE type_t.chr100, 
+   l_pmdo015 LIKE type_t.chr100, 
+   l_pmdldocdt LIKE type_t.chr100, 
+   l_pmdo012 LIKE type_t.chr100, 
+   l_pmdo013 LIKE type_t.chr100, 
+   l_pmdo017 LIKE type_t.chr100, 
+   l_pmdo015_1 LIKE type_t.chr100, 
+   l_transfer_1 LIKE type_t.chr100, 
+   l_hardpegging LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca20_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_psoa003 LIKE type_t.chr100, 
+   l_psoa004 LIKE type_t.chr100, 
+   l_psoa005 LIKE type_t.chr100, 
+   l_psoa006 LIKE type_t.chr100, 
+   l_psoa007 LIKE type_t.chr100, 
+   l_psoa008 LIKE type_t.chr100, 
+   l_psoa009 LIKE type_t.chr100, 
+   l_psoa010 LIKE type_t.chr100, 
+   l_psoa011 LIKE type_t.chr100, 
+   l_psoa012 LIKE type_t.chr100, 
+   l_psoa013 LIKE type_t.chr100, 
+   l_psoa014 LIKE type_t.chr100, 
+   l_psoa015 LIKE type_t.chr100, 
+   l_psoa016 LIKE type_t.chr100, 
+   l_psoa017 LIKE type_t.chr100, 
+   l_psoa018 LIKE type_t.chr100, 
+   l_psoa019 LIKE type_t.chr100, 
+   l_psoa020 LIKE type_t.chr100, 
+   l_psoa021 LIKE type_t.chr100, 
+   l_psoa022 LIKE type_t.chr100, 
+   l_psoa023 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca21_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_psod003 LIKE type_t.chr100, 
+   l_psod004 LIKE type_t.chr100, 
+   l_psod005 LIKE type_t.chr100, 
+   l_psod006 LIKE type_t.chr100, 
+   l_psod007 LIKE type_t.chr100, 
+   l_psod008 LIKE type_t.chr100, 
+   l_psod009 LIKE type_t.chr100, 
+   l_psod010 LIKE type_t.chr100, 
+   l_psod011 LIKE type_t.chr100, 
+   l_psod012 LIKE type_t.chr100, 
+   l_psod013 LIKE type_t.chr100, 
+   l_psod014 LIKE type_t.chr100, 
+   l_psod015 LIKE type_t.chr100, 
+   l_psod016 LIKE type_t.chr100, 
+   l_psod017 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca22_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_psoc003 LIKE type_t.chr100, 
+   l_psoc004 LIKE type_t.chr100, 
+   l_psoc005 LIKE type_t.chr100, 
+   l_psoc006 LIKE type_t.chr100, 
+   l_psoc007 LIKE type_t.chr100, 
+   l_psoc008_1 LIKE type_t.chr100, 
+   l_psoc009 LIKE type_t.chr100, 
+   l_psoc010 LIKE type_t.chr100, 
+   l_psoc011 LIKE type_t.chr100, 
+   l_psoc012 LIKE type_t.chr100, 
+   l_psoc013 LIKE type_t.chr100, 
+   l_psoc014 LIKE type_t.chr100, 
+   l_psoc015 LIKE type_t.chr100, 
+   l_psoc016 LIKE type_t.chr100, 
+   l_psoc017 LIKE type_t.chr100, 
+   l_psoc018 LIKE type_t.chr100, 
+   l_psoc019 LIKE type_t.chr100, 
+   l_psoc020 LIKE type_t.chr100, 
+   l_psoc021 LIKE type_t.chr100, 
+   l_psoc022 LIKE type_t.chr100, 
+   l_psoc023 LIKE type_t.chr100, 
+   l_psoc025 LIKE type_t.chr100, 
+   l_psoc022_1 LIKE type_t.chr100, 
+   l_psoc022_2 LIKE type_t.chr100, 
+   l_psoc022_3 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca23_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_psoa003_1 LIKE type_t.chr100, 
+   l_psoa004_1 LIKE type_t.chr100, 
+   l_psoa005_1 LIKE type_t.chr100, 
+   l_psoa006_1 LIKE type_t.chr100, 
+   l_psoa007_1 LIKE type_t.chr100, 
+   l_psoa008_1 LIKE type_t.chr100, 
+   l_psoa009_1 LIKE type_t.chr100, 
+   l_psoa010_1 LIKE type_t.chr100, 
+   l_psoa011_1 LIKE type_t.chr100, 
+   l_psoa012_1 LIKE type_t.chr100, 
+   l_psoa013_1 LIKE type_t.chr100, 
+   l_psoa014_1 LIKE type_t.chr100, 
+   l_psoa015_1 LIKE type_t.chr100, 
+   l_psoa016_1 LIKE type_t.chr100, 
+   l_psoa017_1 LIKE type_t.chr100, 
+   l_psoa018_1 LIKE type_t.chr100, 
+   l_psoa019_1 LIKE type_t.chr100, 
+   l_psoa020_1 LIKE type_t.chr100, 
+   l_psoa021_1 LIKE type_t.chr100, 
+   l_psoa023_1 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca24_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_sfbadocno_1 LIKE type_t.chr100, 
+   l_sfba006_1 LIKE type_t.chr100, 
+   l_sfbaseq_2 LIKE type_t.chr100, 
+   l_sfbaseq_1_1 LIKE type_t.chr100, 
+   l_release_2 LIKE type_t.chr100, 
+   l_sfba019_1 LIKE type_t.chr100, 
+   l_demand_1 LIKE type_t.chr100, 
+   l_sfba020_1 LIKE type_t.chr100, 
+   l_sfba028_1 LIKE type_t.chr100, 
+   l_sfba003_1 LIKE type_t.chr100, 
+   l_sfba009_1 LIKE type_t.chr100, 
+   l_sfba007_1 LIKE type_t.chr100, 
+   l_sfaa003_1 LIKE type_t.chr100, 
+   l_sfba021_1 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca25_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_psob003 LIKE type_t.chr500, 
+   l_psob004 LIKE type_t.chr500, 
+   l_psob005 LIKE type_t.chr500, 
+   l_psob006 LIKE type_t.chr500, 
+   l_psob007 LIKE type_t.chr500, 
+   l_psob008 LIKE type_t.chr500, 
+   l_psob009 LIKE type_t.chr500, 
+   l_psob010 LIKE type_t.chr500, 
+   l_psob011 LIKE type_t.chr500, 
+   l_psob012 LIKE type_t.chr500, 
+   l_psob013 LIKE type_t.chr500, 
+   l_psob016 LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca26_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_equip_type LIKE type_t.chr500, 
+   l_equip_id LIKE type_t.chr500, 
+   l_ws_id LIKE type_t.chr500, 
+   l_efficency LIKE type_t.chr500, 
+   l_capacity_type LIKE type_t.chr500, 
+   l_day_calendar_id LIKE type_t.chr500, 
+   l_week_calendar_id LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca27_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_equip_group_id LIKE type_t.chr500, 
+   l_equip_type_1 LIKE type_t.chr500, 
+   l_is_outsourcing LIKE type_t.chr500, 
+   l_equip_id_1 LIKE type_t.chr500, 
+   l_priority_1 LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca28_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_mrbh001_1 LIKE type_t.chr500, 
+   l_mrbh002 LIKE type_t.chr500, 
+   l_mrbh003 LIKE type_t.chr500, 
+   l_mrbh004 LIKE type_t.chr500, 
+   l_mrbh005 LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca29_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_week_calendar_id_1 LIKE type_t.chr500, 
+   l_mom_wm_id LIKE type_t.chr500, 
+   l_tue_wm_id LIKE type_t.chr500, 
+   l_wed_wm_id LIKE type_t.chr500, 
+   l_thu_wm_id LIKE type_t.chr500, 
+   l_fri_wm_id LIKE type_t.chr500, 
+   l_sat_wm_id LIKE type_t.chr500, 
+   l_sun_wm_id LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca3_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_sfaadocno LIKE type_t.chr100, 
+   l_sfaa012 LIKE type_t.chr100, 
+   l_sfaa020 LIKE type_t.chr100, 
+   l_sfaa019 LIKE type_t.chr100, 
+   l_sfaa010 LIKE type_t.chr100, 
+   l_sfaadocno1 LIKE type_t.chr100, 
+   l_sfaa013 LIKE type_t.chr100, 
+   l_sfaa056 LIKE type_t.chr100, 
+   l_new_1 LIKE type_t.chr100, 
+   l_produced LIKE type_t.chr100, 
+   l_sfaa022 LIKE type_t.chr100, 
+   l_sfaa021 LIKE type_t.chr100, 
+   l_feature LIKE type_t.chr100, 
+   l_firm LIKE type_t.chr100, 
+   l_exploration LIKE type_t.chr100, 
+   l_material LIKE type_t.chr100, 
+   l_hardpegging_1 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca30_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_wm_id LIKE type_t.chr500, 
+   l_start_time LIKE type_t.chr500, 
+   l_end_time LIKE type_t.chr500, 
+   l_type_2 LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca31_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_imaa001_1 LIKE type_t.chr500, 
+   l_imaf026_1 LIKE type_t.chr500, 
+   l_sizing_1 LIKE type_t.chr500, 
+   l_used_2 LIKE type_t.chr500, 
+   l_integer_1 LIKE type_t.chr500, 
+   l_imaf013_1 LIKE type_t.chr500, 
+   l_imaa006_1 LIKE type_t.chr500, 
+   l_imae022_1 LIKE type_t.chr500, 
+   l_imae018_1 LIKE type_t.chr500, 
+   l_imae017_1 LIKE type_t.chr500, 
+   l_imae080_1 LIKE type_t.chr500, 
+   l_imaa004_1 LIKE type_t.chr500, 
+   l_imae064_2 LIKE type_t.chr500, 
+   l_mfg_2 LIKE type_t.chr500, 
+   l_order_1 LIKE type_t.chr500, 
+   l_feature_1_1 LIKE type_t.chr500, 
+   l_imaf171_2 LIKE type_t.chr500, 
+   l_imaf171_3 LIKE type_t.chr500, 
+   l_consume_1_1 LIKE type_t.chr500, 
+   l_release_1_1 LIKE type_t.chr500, 
+   l_lastqty_1 LIKE type_t.chr500, 
+   l_combine_1 LIKE type_t.chr500, 
+   l_inspect_1 LIKE type_t.chr500, 
+   l_consign_1 LIKE type_t.chr500, 
+   l_imaf143_1 LIKE type_t.chr500, 
+   l_purchase_1 LIKE type_t.chr500, 
+   l_imae016_1 LIKE type_t.chr500, 
+   l_mfg_1_1 LIKE type_t.chr500, 
+   l_imaa105_1 LIKE type_t.chr500, 
+   l_sales_1 LIKE type_t.chr500, 
+   l_imae064_1_1 LIKE type_t.chr500, 
+   l_alt_2 LIKE type_t.chr500, 
+   l_break_1 LIKE type_t.chr500, 
+   l_create_2 LIKE type_t.chr500, 
+   l_supratio_1 LIKE type_t.chr500, 
+   l_imaf153_1 LIKE type_t.chr500, 
+   l_backward_1 LIKE type_t.chr500, 
+   l_batch_1 LIKE type_t.chr500, 
+   l_setup_1 LIKE type_t.chr500, 
+   l_imae052_1 LIKE type_t.chr500, 
+   l_imae077_1 LIKE type_t.chr500, 
+   l_base_1 LIKE type_t.chr500, 
+   l_max_batch_size_1 LIKE type_t.chr500, 
+   l_imae032_1 LIKE type_t.chr500, 
+   l_outsourcing_1 LIKE type_t.chr500, 
+   l_imae072_1 LIKE type_t.chr500, 
+   l_imae073_1 LIKE type_t.chr500, 
+   l_var_1 LIKE type_t.chr500, 
+   l_auto_1 LIKE type_t.chr500, 
+   l_consolidate_1 LIKE type_t.chr500, 
+   l_phase_1 LIKE type_t.chr500, 
+   l_spare_1 LIKE type_t.chr500, 
+   l_due_1 LIKE type_t.chr500, 
+   l_imae015_1 LIKE type_t.chr500, 
+   l_imaa005_1 LIKE type_t.chr500, 
+   l_imae078_1 LIKE type_t.chr500, 
+   l_imae079_1 LIKE type_t.chr500, 
+   l_imae083_1 LIKE type_t.chr500, 
+   l_imae082_1 LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca32_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_bmba001_1 LIKE type_t.chr500, 
+   l_bmba003_1 LIKE type_t.chr500, 
+   l_ecba001 LIKE type_t.chr500, 
+   l_ecbb003 LIKE type_t.chr500, 
+   l_bmba007_1 LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca33_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_part_id LIKE type_t.chr500, 
+   l_imae033 LIKE type_t.chr500, 
+   l_sequ_num LIKE type_t.chr500, 
+   l_is_alt LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca34_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_ecbb001 LIKE type_t.chr500, 
+   l_ecbb002 LIKE type_t.chr500, 
+   l_ecbb003_1 LIKE type_t.chr500, 
+   l_ecbb004 LIKE type_t.chr500, 
+   l_equip_type_2 LIKE type_t.chr500, 
+   l_ecbb037 LIKE type_t.chr500, 
+   l_is_batch LIKE type_t.chr500, 
+   l_ecbb026 LIKE type_t.chr500, 
+   l_ecbb027 LIKE type_t.chr500, 
+   l_imae077_2 LIKE type_t.chr500, 
+   l_imae077_3 LIKE type_t.chr500, 
+   l_ecbb012 LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca35_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_ecaa001_1 LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca36_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_ecbe001 LIKE type_t.chr500, 
+   l_ecbe005 LIKE type_t.chr500, 
+   l_ecbe003 LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca4_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_sfbadocno LIKE type_t.chr100, 
+   l_sfba006 LIKE type_t.chr100, 
+   l_sfbaseq LIKE type_t.chr100, 
+   l_sfbaseq_1 LIKE type_t.chr100, 
+   l_release LIKE type_t.chr100, 
+   l_sfba019 LIKE type_t.chr100, 
+   l_demand LIKE type_t.chr100, 
+   l_sfba020 LIKE type_t.chr100, 
+   l_sfba028 LIKE type_t.chr100, 
+   l_sfba003 LIKE type_t.chr100, 
+   l_sfba009 LIKE type_t.chr100, 
+   l_sfba007 LIKE type_t.chr100, 
+   l_sfaa003 LIKE type_t.chr100, 
+   l_sfba021 LIKE type_t.chr100, 
+   l_sfba001 LIKE type_t.chr100, 
+   l_sfba005 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca5_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_imaa001 LIKE type_t.chr100, 
+   l_imaf026 LIKE type_t.chr100, 
+   l_sizing LIKE type_t.chr100, 
+   l_used LIKE type_t.chr100, 
+   l_integer LIKE type_t.chr100, 
+   l_imaf013 LIKE type_t.chr100, 
+   l_imaa006 LIKE type_t.chr100, 
+   l_imae022 LIKE type_t.chr100, 
+   l_imae018 LIKE type_t.chr100, 
+   l_imae017 LIKE type_t.chr100, 
+   l_imae080 LIKE type_t.chr100, 
+   l_imaa004 LIKE type_t.chr100, 
+   l_imae064 LIKE type_t.chr100, 
+   l_mfg LIKE type_t.chr100, 
+   l_order LIKE type_t.chr100, 
+   l_feature_1 LIKE type_t.chr100, 
+   l_imaf171 LIKE type_t.chr100, 
+   l_imaf171_1 LIKE type_t.chr100, 
+   l_consume_1 LIKE type_t.chr100, 
+   l_release_1 LIKE type_t.chr100, 
+   l_lastqty LIKE type_t.chr100, 
+   l_combine LIKE type_t.chr100, 
+   l_inspect LIKE type_t.chr100, 
+   l_consign LIKE type_t.chr100, 
+   l_imaf143 LIKE type_t.chr100, 
+   l_purchase LIKE type_t.chr100, 
+   l_imae016 LIKE type_t.chr100, 
+   l_mfg_1 LIKE type_t.chr100, 
+   l_imaa105 LIKE type_t.chr100, 
+   l_sales LIKE type_t.chr100, 
+   l_imae064_1 LIKE type_t.chr100, 
+   l_alt LIKE type_t.chr100, 
+   l_break LIKE type_t.chr100, 
+   l_create LIKE type_t.chr100, 
+   l_supratio LIKE type_t.chr100, 
+   l_imaf153 LIKE type_t.chr100, 
+   l_backward LIKE type_t.chr100, 
+   l_batch LIKE type_t.chr100, 
+   l_setup LIKE type_t.chr100, 
+   l_imae052 LIKE type_t.chr100, 
+   l_imae077 LIKE type_t.chr100, 
+   l_base LIKE type_t.chr100, 
+   l_max_batch_size LIKE type_t.chr100, 
+   l_imae032 LIKE type_t.chr100, 
+   l_outsourcing LIKE type_t.chr100, 
+   l_imae072 LIKE type_t.chr100, 
+   l_imae073 LIKE type_t.chr100, 
+   l_var LIKE type_t.chr100, 
+   l_auto LIKE type_t.chr100, 
+   l_consolidate LIKE type_t.chr100, 
+   l_phase LIKE type_t.chr100, 
+   l_spare LIKE type_t.chr100, 
+   l_due LIKE type_t.chr100, 
+   l_imae015 LIKE type_t.chr100, 
+   l_imaa005 LIKE type_t.chr100, 
+   l_imae078 LIKE type_t.chr100, 
+   l_imae079 LIKE type_t.chr100, 
+   l_imae083 LIKE type_t.chr100, 
+   l_imae082 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca6_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_imeb001 LIKE type_t.chr100, 
+   l_imeb002 LIKE type_t.chr100, 
+   l_imeb004 LIKE type_t.chr100, 
+   l_imeb006 LIKE type_t.chr100, 
+   l_imeb005 LIKE type_t.chr100, 
+   l_imeb010 LIKE type_t.chr100, 
+   l_imeb011 LIKE type_t.chr100, 
+   l_imeb008 LIKE type_t.chr100, 
+   l_imeb009 LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca7_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_bmba001 LIKE type_t.chr100, 
+   l_bmba012 LIKE type_t.chr100, 
+   l_bmba003 LIKE type_t.chr100, 
+   l_bmba009 LIKE type_t.chr100, 
+   l_bmba011 LIKE type_t.chr100, 
+   l_shrinkage LIKE type_t.chr100, 
+   l_bmba013 LIKE type_t.chr100, 
+   l_bmba031 LIKE type_t.chr100, 
+   l_alt_1 LIKE type_t.chr100, 
+   l_create_1 LIKE type_t.chr100, 
+   l_ratio LIKE type_t.chr100, 
+   l_bmba007 LIKE type_t.chr100, 
+   l_bmba021 LIKE type_t.chr100, 
+   l_used_1 LIKE type_t.chr100, 
+   l_substitute LIKE type_t.chr100, 
+   l_fixed LIKE type_t.chr100, 
+   l_bmba023 LIKE type_t.chr100, 
+   l_bmba004 LIKE type_t.chr100, 
+   l_bmba008 LIKE type_t.chr100, 
+   l_quantity LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca8_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_inag001 LIKE type_t.chr100, 
+   l_inag004 LIKE type_t.chr100, 
+   l_inag005 LIKE type_t.chr100, 
+   l_inag009 LIKE type_t.chr100, 
+   l_inag002 LIKE type_t.chr100, 
+   l_hard LIKE type_t.chr100
+       END RECORD
+ 
+PRIVATE TYPE type_g_psca9_d RECORD
+       psca001 LIKE psca_t.psca001, 
+   l_inaa001 LIKE type_t.chr100, 
+   l_inaa006 LIKE type_t.chr100
+       END RECORD
+ 
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_psca_d            DYNAMIC ARRAY OF type_g_psca_d
+DEFINE g_psca_d_t          type_g_psca_d
+DEFINE g_psca10_d     DYNAMIC ARRAY OF type_g_psca10_d
+DEFINE g_psca10_d_t   type_g_psca10_d
+ 
+DEFINE g_psca11_d     DYNAMIC ARRAY OF type_g_psca11_d
+DEFINE g_psca11_d_t   type_g_psca11_d
+ 
+DEFINE g_psca12_d     DYNAMIC ARRAY OF type_g_psca12_d
+DEFINE g_psca12_d_t   type_g_psca12_d
+ 
+DEFINE g_psca13_d     DYNAMIC ARRAY OF type_g_psca13_d
+DEFINE g_psca13_d_t   type_g_psca13_d
+ 
+DEFINE g_psca14_d     DYNAMIC ARRAY OF type_g_psca14_d
+DEFINE g_psca14_d_t   type_g_psca14_d
+ 
+DEFINE g_psca15_d     DYNAMIC ARRAY OF type_g_psca15_d
+DEFINE g_psca15_d_t   type_g_psca15_d
+ 
+DEFINE g_psca16_d     DYNAMIC ARRAY OF type_g_psca16_d
+DEFINE g_psca16_d_t   type_g_psca16_d
+ 
+DEFINE g_psca17_d     DYNAMIC ARRAY OF type_g_psca17_d
+DEFINE g_psca17_d_t   type_g_psca17_d
+ 
+DEFINE g_psca18_d     DYNAMIC ARRAY OF type_g_psca18_d
+DEFINE g_psca18_d_t   type_g_psca18_d
+ 
+DEFINE g_psca19_d     DYNAMIC ARRAY OF type_g_psca19_d
+DEFINE g_psca19_d_t   type_g_psca19_d
+ 
+DEFINE g_psca2_d     DYNAMIC ARRAY OF type_g_psca2_d
+DEFINE g_psca2_d_t   type_g_psca2_d
+ 
+DEFINE g_psca20_d     DYNAMIC ARRAY OF type_g_psca20_d
+DEFINE g_psca20_d_t   type_g_psca20_d
+ 
+DEFINE g_psca21_d     DYNAMIC ARRAY OF type_g_psca21_d
+DEFINE g_psca21_d_t   type_g_psca21_d
+ 
+DEFINE g_psca22_d     DYNAMIC ARRAY OF type_g_psca22_d
+DEFINE g_psca22_d_t   type_g_psca22_d
+ 
+DEFINE g_psca23_d     DYNAMIC ARRAY OF type_g_psca23_d
+DEFINE g_psca23_d_t   type_g_psca23_d
+ 
+DEFINE g_psca24_d     DYNAMIC ARRAY OF type_g_psca24_d
+DEFINE g_psca24_d_t   type_g_psca24_d
+ 
+DEFINE g_psca25_d     DYNAMIC ARRAY OF type_g_psca25_d
+DEFINE g_psca25_d_t   type_g_psca25_d
+ 
+DEFINE g_psca26_d     DYNAMIC ARRAY OF type_g_psca26_d
+DEFINE g_psca26_d_t   type_g_psca26_d
+ 
+DEFINE g_psca27_d     DYNAMIC ARRAY OF type_g_psca27_d
+DEFINE g_psca27_d_t   type_g_psca27_d
+ 
+DEFINE g_psca28_d     DYNAMIC ARRAY OF type_g_psca28_d
+DEFINE g_psca28_d_t   type_g_psca28_d
+ 
+DEFINE g_psca29_d     DYNAMIC ARRAY OF type_g_psca29_d
+DEFINE g_psca29_d_t   type_g_psca29_d
+ 
+DEFINE g_psca3_d     DYNAMIC ARRAY OF type_g_psca3_d
+DEFINE g_psca3_d_t   type_g_psca3_d
+ 
+DEFINE g_psca30_d     DYNAMIC ARRAY OF type_g_psca30_d
+DEFINE g_psca30_d_t   type_g_psca30_d
+ 
+DEFINE g_psca31_d     DYNAMIC ARRAY OF type_g_psca31_d
+DEFINE g_psca31_d_t   type_g_psca31_d
+ 
+DEFINE g_psca32_d     DYNAMIC ARRAY OF type_g_psca32_d
+DEFINE g_psca32_d_t   type_g_psca32_d
+ 
+DEFINE g_psca33_d     DYNAMIC ARRAY OF type_g_psca33_d
+DEFINE g_psca33_d_t   type_g_psca33_d
+ 
+DEFINE g_psca34_d     DYNAMIC ARRAY OF type_g_psca34_d
+DEFINE g_psca34_d_t   type_g_psca34_d
+ 
+DEFINE g_psca35_d     DYNAMIC ARRAY OF type_g_psca35_d
+DEFINE g_psca35_d_t   type_g_psca35_d
+ 
+DEFINE g_psca36_d     DYNAMIC ARRAY OF type_g_psca36_d
+DEFINE g_psca36_d_t   type_g_psca36_d
+ 
+DEFINE g_psca4_d     DYNAMIC ARRAY OF type_g_psca4_d
+DEFINE g_psca4_d_t   type_g_psca4_d
+ 
+DEFINE g_psca5_d     DYNAMIC ARRAY OF type_g_psca5_d
+DEFINE g_psca5_d_t   type_g_psca5_d
+ 
+DEFINE g_psca6_d     DYNAMIC ARRAY OF type_g_psca6_d
+DEFINE g_psca6_d_t   type_g_psca6_d
+ 
+DEFINE g_psca7_d     DYNAMIC ARRAY OF type_g_psca7_d
+DEFINE g_psca7_d_t   type_g_psca7_d
+ 
+DEFINE g_psca8_d     DYNAMIC ARRAY OF type_g_psca8_d
+DEFINE g_psca8_d_t   type_g_psca8_d
+ 
+DEFINE g_psca9_d     DYNAMIC ARRAY OF type_g_psca9_d
+DEFINE g_psca9_d_t   type_g_psca9_d
+ 
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+#16010-00020#1 ---add (S)---
+DEFINE g_flag               STRING
+DEFINE g_wc1                STRING
+DEFINE g_wc2                STRING
+DEFINE g_wc3                STRING
+DEFINE g_wc4                STRING
+DEFINE g_wc5                STRING
+DEFINE g_wc6                STRING
+DEFINE g_wc7                STRING
+DEFINE g_wc8                STRING
+DEFINE g_wc9                STRING
+DEFINE g_wc10               STRING
+DEFINE g_wc11               STRING
+DEFINE g_wc12               STRING
+DEFINE g_wc13               STRING
+DEFINE g_wc14               STRING
+DEFINE g_wc15               STRING
+DEFINE g_wc16               STRING
+DEFINE g_wc17               STRING
+DEFINE g_wc18               STRING
+DEFINE g_wc19               STRING
+DEFINE g_wc20               STRING
+DEFINE g_wc21               STRING
+DEFINE g_wc22               STRING
+DEFINE g_wc23               STRING
+DEFINE g_wc24               STRING
+DEFINE g_wc25               STRING
+DEFINE g_wc26               STRING
+DEFINE g_wc27               STRING
+DEFINE g_wc28               STRING
+DEFINE g_wc29               STRING
+DEFINE g_wc30               STRING
+DEFINE g_wc31               STRING
+DEFINE g_wc32               STRING
+DEFINE g_wc33               STRING
+DEFINE g_wc34               STRING
+DEFINE g_wc35               STRING
+DEFINE g_wc36               STRING
+DEFINE g_wc_table1          STRING
+DEFINE g_wc_table2          STRING
+DEFINE g_wc_table3          STRING
+DEFINE g_wc_table4          STRING
+DEFINE g_wc_table5          STRING
+DEFINE g_wc_table6          STRING
+DEFINE g_wc_table7          STRING
+DEFINE g_wc_table8          STRING
+DEFINE g_wc_table9          STRING
+DEFINE g_wc_table10         STRING
+DEFINE g_wc_table11         STRING
+DEFINE g_wc_table12         STRING
+DEFINE g_wc_table13         STRING
+DEFINE g_wc_table14         STRING
+DEFINE g_wc_table15         STRING
+DEFINE g_wc_table16         STRING
+DEFINE g_wc_table17         STRING
+DEFINE g_wc_table18         STRING
+DEFINE g_wc_table19         STRING
+DEFINE g_wc_table20         STRING
+DEFINE g_wc_table21         STRING
+DEFINE g_wc_table22         STRING
+DEFINE g_wc_table23         STRING
+DEFINE g_wc_table24         STRING
+DEFINE g_wc_table25         STRING
+DEFINE g_wc_table26         STRING
+DEFINE g_wc_table27         STRING
+DEFINE g_wc_table28         STRING
+DEFINE g_wc_table29         STRING
+DEFINE g_wc_table30         STRING
+DEFINE g_wc_table31         STRING
+DEFINE g_wc_table32         STRING
+DEFINE g_wc_table33         STRING
+DEFINE g_wc_table34         STRING
+DEFINE g_wc_table35         STRING
+DEFINE g_wc_table36         STRING
+#16010-00020#1 ---add (E)---
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="apsq102.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   {<point name="main.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   {<point name="main.define"/>}
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aps","")
+ 
+   #add-point:作業初始化 name="main.init"
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apsq102_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE apsq102_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apsq102_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apsq102 WITH FORM cl_ap_formpath("aps",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apsq102_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apsq102_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_apsq102
+      
+   END IF 
+   
+   CLOSE apsq102_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="apsq102.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION apsq102_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   {<point name="init.before_function" />}
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+     
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init" />}
+   #end add-point
+ 
+   CALL apsq102_default_search()
+END FUNCTION
+
+{</section>}
+
+{<section id="apsq102.default_search" >}
+PRIVATE FUNCTION apsq102_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+{<point name="default_search.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+{<point name="default_search.define"/>}
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+{<point name="default_search.before"/>}
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " psca001 = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+{<point name="default_search.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apsq102.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apsq102_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+{<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old   STRING
+   DEFINE ls_js     STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE li_redirect     BOOLEAN  
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+{<point name="ui_dialog.define"/>}
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+{<point name="ui_dialog.before_function" />}
+   #end add-point
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 1
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+{<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   
+   #CALL apsq102_b_fill() #160107-00020#1 mark
+  
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_psca_d.clear()
+         CALL g_psca10_d.clear()
+ 
+         CALL g_psca11_d.clear()
+ 
+         CALL g_psca12_d.clear()
+ 
+         CALL g_psca13_d.clear()
+ 
+         CALL g_psca14_d.clear()
+ 
+         CALL g_psca15_d.clear()
+ 
+         CALL g_psca16_d.clear()
+ 
+         CALL g_psca17_d.clear()
+ 
+         CALL g_psca18_d.clear()
+ 
+         CALL g_psca19_d.clear()
+ 
+         CALL g_psca2_d.clear()
+ 
+         CALL g_psca20_d.clear()
+ 
+         CALL g_psca21_d.clear()
+ 
+         CALL g_psca22_d.clear()
+ 
+         CALL g_psca23_d.clear()
+ 
+         CALL g_psca24_d.clear()
+ 
+         CALL g_psca25_d.clear()
+ 
+         CALL g_psca26_d.clear()
+ 
+         CALL g_psca27_d.clear()
+ 
+         CALL g_psca28_d.clear()
+ 
+         CALL g_psca29_d.clear()
+ 
+         CALL g_psca3_d.clear()
+ 
+         CALL g_psca30_d.clear()
+ 
+         CALL g_psca31_d.clear()
+ 
+         CALL g_psca32_d.clear()
+ 
+         CALL g_psca33_d.clear()
+ 
+         CALL g_psca34_d.clear()
+ 
+         CALL g_psca35_d.clear()
+ 
+         CALL g_psca36_d.clear()
+ 
+         CALL g_psca4_d.clear()
+ 
+         CALL g_psca5_d.clear()
+ 
+         CALL g_psca6_d.clear()
+ 
+         CALL g_psca7_d.clear()
+ 
+         CALL g_psca8_d.clear()
+ 
+         CALL g_psca9_d.clear()
+ 
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 1
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL apsq102_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+{<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+{<point name="ui_dialog.construct" mark="Y"/>}
+         #end add-point
+     
+         DISPLAY ARRAY g_psca_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL apsq102_detail_action_trans()
+ 
+               LET g_master_idx = l_ac
+               #為避免按上下筆時影響執行效能，所以做一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL apsq102_b_fill2() 
+               LET g_action_choice = lc_action_choice_old
+ 
+               #add-point:input段before row name="input.body.before_row"
+{<point name="input.body.before_row" mark="Y"/>}
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+{<point name="ui_dialog.body.page1.action" mark="Y"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         #add-point:第一頁籤程式段mark結束用 name="ui_dialog.page1.mark.end"
+{<point name="ui_dialog.page1.mark.end"/>}
+         #end add-point
+ 
+         DISPLAY ARRAY g_psca10_d TO s_detail10.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 10
+  
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail10")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               #add-point:input段before row name="input.body10.before_row"
+{<point name="input.body10.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_10)
+            
+ 
+            #add-point:page2自定義行為 name="ui_dialog.body10.action"
+{<point name="ui_dialog.body10.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca11_d TO s_detail11.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 11
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail11")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body11.before_row"
+{<point name="input.body11.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_11)
+            
+ 
+            #add-point:page3自定義行為 name="ui_dialog.body11.action"
+{<point name="ui_dialog.body11.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca12_d TO s_detail12.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 12
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail12")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body12.before_row"
+{<point name="input.body12.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_12)
+            
+ 
+            #add-point:page4自定義行為 name="ui_dialog.body12.action"
+{<point name="ui_dialog.body12.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca13_d TO s_detail13.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 13
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail13")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body13.before_row"
+{<point name="input.body13.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_13)
+            
+ 
+            #add-point:page5自定義行為 name="ui_dialog.body13.action"
+{<point name="ui_dialog.body13.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca14_d TO s_detail14.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 14
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail14")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body14.before_row"
+{<point name="input.body14.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_14)
+            
+ 
+            #add-point:page6自定義行為 name="ui_dialog.body14.action"
+{<point name="ui_dialog.body14.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca15_d TO s_detail15.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 15
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail15")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body15.before_row"
+{<point name="input.body15.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_15)
+            
+ 
+            #add-point:page7自定義行為 name="ui_dialog.body15.action"
+{<point name="ui_dialog.body15.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca16_d TO s_detail16.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 16
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail16")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body16.before_row"
+{<point name="input.body16.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_16)
+            
+ 
+            #add-point:page8自定義行為 name="ui_dialog.body16.action"
+{<point name="ui_dialog.body16.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca17_d TO s_detail17.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 17
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail17")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body17.before_row"
+{<point name="input.body17.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_17)
+            
+ 
+            #add-point:page9自定義行為 name="ui_dialog.body17.action"
+{<point name="ui_dialog.body17.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca18_d TO s_detail18.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 18
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail18")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body18.before_row"
+{<point name="input.body18.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_18)
+            
+ 
+            #add-point:page10自定義行為 name="ui_dialog.body18.action"
+{<point name="ui_dialog.body18.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca19_d TO s_detail19.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 19
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail19")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body19.before_row"
+{<point name="input.body19.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_19)
+            
+ 
+            #add-point:page11自定義行為 name="ui_dialog.body19.action"
+{<point name="ui_dialog.body19.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 2
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body2.before_row"
+{<point name="input.body2.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_2)
+            
+ 
+            #add-point:page12自定義行為 name="ui_dialog.body2.action"
+{<point name="ui_dialog.body2.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca20_d TO s_detail20.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 20
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail20")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body20.before_row"
+{<point name="input.body20.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_20)
+            
+ 
+            #add-point:page13自定義行為 name="ui_dialog.body20.action"
+{<point name="ui_dialog.body20.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca21_d TO s_detail21.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 21
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca21_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail21")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body21.before_row"
+{<point name="input.body21.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_21)
+            
+ 
+            #add-point:page14自定義行為 name="ui_dialog.body21.action"
+{<point name="ui_dialog.body21.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca22_d TO s_detail22.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 22
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca22_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail22")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body22.before_row"
+{<point name="input.body22.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_22)
+            
+ 
+            #add-point:page15自定義行為 name="ui_dialog.body22.action"
+{<point name="ui_dialog.body22.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca23_d TO s_detail23.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 23
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca23_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail23")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body23.before_row"
+{<point name="input.body23.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_23)
+            
+ 
+            #add-point:page16自定義行為 name="ui_dialog.body23.action"
+{<point name="ui_dialog.body23.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca24_d TO s_detail24.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 24
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca24_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail24")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body24.before_row"
+{<point name="input.body24.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_24)
+            
+ 
+            #add-point:page17自定義行為 name="ui_dialog.body24.action"
+{<point name="ui_dialog.body24.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca25_d TO s_detail25.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 25
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca25_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail25")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body25.before_row"
+{<point name="input.body25.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_25)
+            
+ 
+            #add-point:page18自定義行為 name="ui_dialog.body25.action"
+{<point name="ui_dialog.body25.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca26_d TO s_detail26.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 26
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca26_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail26")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body26.before_row"
+{<point name="input.body26.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_26)
+            
+ 
+            #add-point:page19自定義行為 name="ui_dialog.body26.action"
+{<point name="ui_dialog.body26.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca27_d TO s_detail27.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 27
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca27_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail27")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body27.before_row"
+{<point name="input.body27.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_27)
+            
+ 
+            #add-point:page20自定義行為 name="ui_dialog.body27.action"
+{<point name="ui_dialog.body27.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca28_d TO s_detail28.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 28
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca28_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail28")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body28.before_row"
+{<point name="input.body28.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_28)
+            
+ 
+            #add-point:page21自定義行為 name="ui_dialog.body28.action"
+{<point name="ui_dialog.body28.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca29_d TO s_detail29.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 29
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca29_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail29")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body29.before_row"
+{<point name="input.body29.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_29)
+            
+ 
+            #add-point:page22自定義行為 name="ui_dialog.body29.action"
+{<point name="ui_dialog.body29.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca3_d TO s_detail3.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 3
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body3.before_row"
+{<point name="input.body3.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_3)
+            
+ 
+            #add-point:page23自定義行為 name="ui_dialog.body3.action"
+{<point name="ui_dialog.body3.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca30_d TO s_detail30.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 30
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca30_d.getLength()
+               CALL apsq102_detail_action_trans()
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail30")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body30.before_row"
+{<point name="input.body30.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_30)
+            
+ 
+            #add-point:page24自定義行為 name="ui_dialog.body30.action"
+{<point name="ui_dialog.body30.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca31_d TO s_detail31.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 31
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca31_d.getLength()
+               CALL apsq102_detail_action_trans()               
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail31")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body31.before_row"
+{<point name="input.body31.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_31)
+            
+ 
+            #add-point:page25自定義行為 name="ui_dialog.body31.action"
+{<point name="ui_dialog.body31.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca32_d TO s_detail32.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 32
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca32_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail32")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body32.before_row"
+{<point name="input.body32.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_32)
+            
+ 
+            #add-point:page26自定義行為 name="ui_dialog.body32.action"
+{<point name="ui_dialog.body32.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca33_d TO s_detail33.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 33
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca33_d.getLength()
+               CALL apsq102_detail_action_trans()               
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail33")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body33.before_row"
+{<point name="input.body33.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_33)
+            
+ 
+            #add-point:page27自定義行為 name="ui_dialog.body33.action"
+{<point name="ui_dialog.body33.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca34_d TO s_detail34.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 34
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca34_d.getLength()
+               CALL apsq102_detail_action_trans()               
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail34")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body34.before_row"
+{<point name="input.body34.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_34)
+            
+ 
+            #add-point:page28自定義行為 name="ui_dialog.body34.action"
+{<point name="ui_dialog.body34.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca35_d TO s_detail35.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 35
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca35_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail35")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body35.before_row"
+{<point name="input.body35.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_35)
+            
+ 
+            #add-point:page29自定義行為 name="ui_dialog.body35.action"
+{<point name="ui_dialog.body35.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca36_d TO s_detail36.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 36
+               LET g_detail_idx = 1
+               LET g_current_row_tot = 1
+               LET g_tot_cnt = g_psca36_d.getLength()
+               CALL apsq102_detail_action_trans()
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail36")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               CALL apsq102_detail_action_trans()
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body36.before_row"
+{<point name="input.body36.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_36)
+            
+ 
+            #add-point:page30自定義行為 name="ui_dialog.body36.action"
+{<point name="ui_dialog.body36.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca4_d TO s_detail4.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 4
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail4")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body4.before_row"
+{<point name="input.body4.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_4)
+            
+ 
+            #add-point:page31自定義行為 name="ui_dialog.body4.action"
+{<point name="ui_dialog.body4.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca5_d TO s_detail5.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 5
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail5")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body5.before_row"
+{<point name="input.body5.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_5)
+            
+ 
+            #add-point:page32自定義行為 name="ui_dialog.body5.action"
+{<point name="ui_dialog.body5.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca6_d TO s_detail6.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 6
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail6")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body6.before_row"
+{<point name="input.body6.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_6)
+            
+ 
+            #add-point:page33自定義行為 name="ui_dialog.body6.action"
+{<point name="ui_dialog.body6.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca7_d TO s_detail7.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 7
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail7")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body7.before_row"
+{<point name="input.body7.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_7)
+            
+ 
+            #add-point:page34自定義行為 name="ui_dialog.body7.action"
+{<point name="ui_dialog.body7.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca8_d TO s_detail8.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 8
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail8")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body8.before_row"
+{<point name="input.body8.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_8)
+            
+ 
+            #add-point:page35自定義行為 name="ui_dialog.body8.action"
+{<point name="ui_dialog.body8.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_psca9_d TO s_detail9.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 9
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail9")
+               LET l_ac = g_detail_idx
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body9.before_row"
+{<point name="input.body9.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_9)
+            
+ 
+            #add-point:page36自定義行為 name="ui_dialog.body9.action"
+{<point name="ui_dialog.body9.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+{<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent() 
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+           #LET g_detail_idx = DIALOG.getCurrentRow("s_detail1") #160107-00020#1 mark
+            CALL apsq102_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+{<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+            #NEXT FIELD psca001 #160107-00020#1 mark
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+{<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+         
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+ 
+ 
+            #add-point:ON ACTION accept name="ui_dialog.accept"
+{<point name="ui_dialog.accept"/>}
+            #end add-point
+ 
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            CALL apsq102_b_fill()
+ 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+{<point name="ui_dialog.agendum"/>}
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_psca_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_psca10_d)
+               LET g_export_id[2]   = "s_detail10"
+ 
+               LET g_export_node[3] = base.typeInfo.create(g_psca11_d)
+               LET g_export_id[3]   = "s_detail11"
+ 
+               LET g_export_node[4] = base.typeInfo.create(g_psca12_d)
+               LET g_export_id[4]   = "s_detail12"
+ 
+               LET g_export_node[5] = base.typeInfo.create(g_psca13_d)
+               LET g_export_id[5]   = "s_detail13"
+ 
+               LET g_export_node[6] = base.typeInfo.create(g_psca14_d)
+               LET g_export_id[6]   = "s_detail14"
+ 
+               LET g_export_node[7] = base.typeInfo.create(g_psca15_d)
+               LET g_export_id[7]   = "s_detail15"
+ 
+               LET g_export_node[8] = base.typeInfo.create(g_psca16_d)
+               LET g_export_id[8]   = "s_detail16"
+ 
+               LET g_export_node[9] = base.typeInfo.create(g_psca17_d)
+               LET g_export_id[9]   = "s_detail17"
+ 
+               LET g_export_node[10] = base.typeInfo.create(g_psca18_d)
+               LET g_export_id[10]   = "s_detail18"
+ 
+               LET g_export_node[11] = base.typeInfo.create(g_psca19_d)
+               LET g_export_id[11]   = "s_detail19"
+ 
+               LET g_export_node[12] = base.typeInfo.create(g_psca2_d)
+               LET g_export_id[12]   = "s_detail2"
+ 
+               LET g_export_node[13] = base.typeInfo.create(g_psca20_d)
+               LET g_export_id[13]   = "s_detail20"
+ 
+               LET g_export_node[14] = base.typeInfo.create(g_psca21_d)
+               LET g_export_id[14]   = "s_detail21"
+ 
+               LET g_export_node[15] = base.typeInfo.create(g_psca22_d)
+               LET g_export_id[15]   = "s_detail22"
+ 
+               LET g_export_node[16] = base.typeInfo.create(g_psca23_d)
+               LET g_export_id[16]   = "s_detail23"
+ 
+               LET g_export_node[17] = base.typeInfo.create(g_psca24_d)
+               LET g_export_id[17]   = "s_detail24"
+ 
+               LET g_export_node[18] = base.typeInfo.create(g_psca25_d)
+               LET g_export_id[18]   = "s_detail25"
+ 
+               LET g_export_node[19] = base.typeInfo.create(g_psca26_d)
+               LET g_export_id[19]   = "s_detail26"
+ 
+               LET g_export_node[20] = base.typeInfo.create(g_psca27_d)
+               LET g_export_id[20]   = "s_detail27"
+ 
+               LET g_export_node[21] = base.typeInfo.create(g_psca28_d)
+               LET g_export_id[21]   = "s_detail28"
+ 
+               LET g_export_node[22] = base.typeInfo.create(g_psca29_d)
+               LET g_export_id[22]   = "s_detail29"
+ 
+               LET g_export_node[23] = base.typeInfo.create(g_psca3_d)
+               LET g_export_id[23]   = "s_detail3"
+ 
+               LET g_export_node[24] = base.typeInfo.create(g_psca30_d)
+               LET g_export_id[24]   = "s_detail30"
+ 
+               LET g_export_node[25] = base.typeInfo.create(g_psca31_d)
+               LET g_export_id[25]   = "s_detail31"
+ 
+               LET g_export_node[26] = base.typeInfo.create(g_psca32_d)
+               LET g_export_id[26]   = "s_detail32"
+ 
+               LET g_export_node[27] = base.typeInfo.create(g_psca33_d)
+               LET g_export_id[27]   = "s_detail33"
+ 
+               LET g_export_node[28] = base.typeInfo.create(g_psca34_d)
+               LET g_export_id[28]   = "s_detail34"
+ 
+               LET g_export_node[29] = base.typeInfo.create(g_psca35_d)
+               LET g_export_id[29]   = "s_detail35"
+ 
+               LET g_export_node[30] = base.typeInfo.create(g_psca36_d)
+               LET g_export_id[30]   = "s_detail36"
+ 
+               LET g_export_node[31] = base.typeInfo.create(g_psca4_d)
+               LET g_export_id[31]   = "s_detail4"
+ 
+               LET g_export_node[32] = base.typeInfo.create(g_psca5_d)
+               LET g_export_id[32]   = "s_detail5"
+ 
+               LET g_export_node[33] = base.typeInfo.create(g_psca6_d)
+               LET g_export_id[33]   = "s_detail6"
+ 
+               LET g_export_node[34] = base.typeInfo.create(g_psca7_d)
+               LET g_export_id[34]   = "s_detail7"
+ 
+               LET g_export_node[35] = base.typeInfo.create(g_psca8_d)
+               LET g_export_id[35]   = "s_detail8"
+ 
+               LET g_export_node[36] = base.typeInfo.create(g_psca9_d)
+               LET g_export_id[36]   = "s_detail9"
+ 
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+{<point name="menu.exporttoexcel" />}
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL apsq102_b_fill()
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL apsq102_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL apsq102_b_fill()
+ 
+         ON ACTION detail_next               #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL apsq102_b_fill()
+ 
+         ON ACTION detail_last               #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL apsq102_b_fill()
+ 
+         #應用 qs19 樣板自動產生(Version:3)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_psca_d.getLength()
+               LET g_psca_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+{<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_psca_d.getLength()
+               LET g_psca_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+{<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_psca_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_psca_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+{<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_psca_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_psca_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+{<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+ 
+ 
+ 
+ 
+ 
+         #應用 qs16 樣板自動產生(Version:3)
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apsq102_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+{<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+ 
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert name="menu.insert"
+{<point name="menu.insert" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+{<point name="menu.output" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query name="menu.query"
+{<point name="menu.query" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+{<point name="menu.datainfo" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+{<point name="ui_dialog.set_qbe_action_before" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後 name="ui_dialog.qbeclear"
+{<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+{<point name="ui_dialog.set_qbe_action_after"/>}
+         #end add-point
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apsq102.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION apsq102_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+{<point name="b_fill.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+{<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+{<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+  #160107-00020#1 ---add (S)---
+   IF cl_null(g_wc1) THEN
+      LET g_wc1 = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   IF cl_null(g_wc3) THEN
+      LET g_wc3 = " 1=1"
+   END IF
+   IF cl_null(g_wc4) THEN
+      LET g_wc4 = " 1=1"
+   END IF
+   IF cl_null(g_wc5) THEN
+      LET g_wc5 = " 1=1"
+   END IF
+   IF cl_null(g_wc6) THEN
+      LET g_wc6 = " 1=1"
+   END IF
+   IF cl_null(g_wc7) THEN
+      LET g_wc7 = " 1=1"
+   END IF
+   IF cl_null(g_wc8) THEN
+      LET g_wc8 = " 1=1"
+   END IF
+   IF cl_null(g_wc9) THEN
+      LET g_wc9 = " 1=1"
+   END IF
+   IF cl_null(g_wc10) THEN
+      LET g_wc10 = " 1=1"
+   END IF
+   IF cl_null(g_wc11) THEN
+      LET g_wc11 = " 1=1"
+   END IF
+   IF cl_null(g_wc12) THEN
+      LET g_wc12 = " 1=1"
+   END IF
+   IF cl_null(g_wc13) THEN
+      LET g_wc13 = " 1=1"
+   END IF
+   IF cl_null(g_wc14) THEN
+      LET g_wc14 = " 1=1"
+   END IF
+   IF cl_null(g_wc15) THEN
+      LET g_wc15 = " 1=1"
+   END IF
+   IF cl_null(g_wc16) THEN
+      LET g_wc16 = " 1=1"
+   END IF
+   IF cl_null(g_wc17) THEN
+      LET g_wc17 = " 1=1"
+   END IF
+   IF cl_null(g_wc18) THEN
+      LET g_wc18 = " 1=1"
+   END IF
+   IF cl_null(g_wc19) THEN
+      LET g_wc19 = " 1=1"
+   END IF
+   IF cl_null(g_wc20) THEN
+      LET g_wc20 = " 1=1"
+   END IF
+   IF cl_null(g_wc21) THEN
+      LET g_wc21 = " 1=1"
+   END IF
+   IF cl_null(g_wc22) THEN
+      LET g_wc22 = " 1=1"
+   END IF
+   IF cl_null(g_wc23) THEN
+      LET g_wc23 = " 1=1"
+   END IF
+   IF cl_null(g_wc24) THEN
+      LET g_wc24 = " 1=1"
+   END IF
+   IF cl_null(g_wc25) THEN
+      LET g_wc25 = " 1=1"
+   END IF
+   IF cl_null(g_wc26) THEN
+      LET g_wc26 = " 1=1"
+   END IF
+   IF cl_null(g_wc27) THEN
+      LET g_wc27 = " 1=1"
+   END IF
+   IF cl_null(g_wc28) THEN
+      LET g_wc28 = " 1=1"
+   END IF
+   IF cl_null(g_wc29) THEN
+      LET g_wc29 = " 1=1"
+   END IF
+   IF cl_null(g_wc30) THEN
+      LET g_wc30 = " 1=1"
+   END IF
+   IF cl_null(g_wc31) THEN
+      LET g_wc31 = " 1=1"
+   END IF
+   IF cl_null(g_wc32) THEN
+      LET g_wc32 = " 1=1"
+   END IF
+   IF cl_null(g_wc32) THEN
+      LET g_wc32 = " 1=1"
+   END IF
+   IF cl_null(g_wc33) THEN
+      LET g_wc33 = " 1=1"
+   END IF
+   IF cl_null(g_wc34) THEN
+      LET g_wc34 = " 1=1"
+   END IF
+   IF cl_null(g_wc35) THEN
+      LET g_wc35 = " 1=1"
+   END IF
+   IF cl_null(g_wc36) THEN
+      LET g_wc36 = " 1=1"
+   END IF
+   #160107-00020#1 ---add (S)---
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+ 
+   CALL g_psca_d.clear()
+   CALL g_psca10_d.clear()
+ 
+   CALL g_psca11_d.clear()
+ 
+   CALL g_psca12_d.clear()
+ 
+   CALL g_psca13_d.clear()
+ 
+   CALL g_psca14_d.clear()
+ 
+   CALL g_psca15_d.clear()
+ 
+   CALL g_psca16_d.clear()
+ 
+   CALL g_psca17_d.clear()
+ 
+   CALL g_psca18_d.clear()
+ 
+   CALL g_psca19_d.clear()
+ 
+   CALL g_psca2_d.clear()
+ 
+   CALL g_psca20_d.clear()
+ 
+   CALL g_psca21_d.clear()
+ 
+   CALL g_psca22_d.clear()
+ 
+   CALL g_psca23_d.clear()
+ 
+   CALL g_psca24_d.clear()
+ 
+   CALL g_psca25_d.clear()
+ 
+   CALL g_psca26_d.clear()
+ 
+   CALL g_psca27_d.clear()
+ 
+   CALL g_psca28_d.clear()
+ 
+   CALL g_psca29_d.clear()
+ 
+   CALL g_psca3_d.clear()
+ 
+   CALL g_psca30_d.clear()
+ 
+   CALL g_psca31_d.clear()
+ 
+   CALL g_psca32_d.clear()
+ 
+   CALL g_psca33_d.clear()
+ 
+   CALL g_psca34_d.clear()
+ 
+   CALL g_psca35_d.clear()
+ 
+   CALL g_psca36_d.clear()
+ 
+   CALL g_psca4_d.clear()
+ 
+   CALL g_psca5_d.clear()
+ 
+   CALL g_psca6_d.clear()
+ 
+   CALL g_psca7_d.clear()
+ 
+   CALL g_psca8_d.clear()
+ 
+   CALL g_psca9_d.clear()
+ 
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+{<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1
+ 
+#  # b_fill段sql組成及FOREACH撰寫
+#  #應用 qs04 樣板自動產生(Version:9)
+#  #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+#  LET ls_sql_rank = "SELECT  UNIQUE '','','','','','','','','','','','','','','','',psca001,'','','', 
+#      '',psca001,'','','','','','',psca001,'','','','','','','',psca001,'','','',psca001,'','','','', 
+#      '',psca001,'','','','',psca001,'','','','','','','','','','','',psca001,'','','','','','','', 
+#      '','','',psca001,'',psca001,'','','','','','','','','',psca001,'','','','','','','','','','', 
+#      '','','','','','','','','',psca001,'','','','','','','','','','','','','','','','','','','','', 
+#      '',psca001,'','','','','','','','','','','','','','','',psca001,'','','','','','','','','','', 
+#      '','','','','','','','','','','','','','','',psca001,'','','','','','','','','','','','','','', 
+#      '','','','','','',psca001,'','','','','','','','','','','','','','',psca001,'','','','','','', 
+#      '','','','','','',psca001,'','','','','','','',psca001,'','','','','',psca001,'','','','','', 
+#      psca001,'','','','','','','','',psca001,'','','','','','','','','','','','','','','','','',psca001, 
+#      '','','','',psca001,'','','','','','','','','','','','','','','','','','','','','','','','','', 
+#      '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+#      '','','',psca001,'','','','','',psca001,'','','','',psca001,'','','','','','','','','','','', 
+#      '',psca001,'',psca001,'','','',psca001,'','','','','','','','','','','','','','','','',psca001, 
+#      '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+#      '','','','','','','','','','','','','','','','','','','','','','','','','','','','',psca001,'', 
+#      '','','','','','','','',psca001,'','','','','','','','','','','','','','','','','','','','',psca001, 
+#      '','','','','','',psca001,'',''  ,DENSE_RANK() OVER( ORDER BY psca_t.psca001) AS RANK FROM psca_t", 
+#
+#
+#
+#                    "",
+#                    " WHERE pscaent= ? AND pscasite= ? AND 1=1 AND ", ls_wc
+#  LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("psca_t"),
+#                    " ORDER BY psca_t.psca001"
+#
+#  #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+{<point name="b_fill.rank_sql_after"/>}
+#  #end add-point
+#
+#  LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+#
+#  PREPARE b_fill_cnt_pre FROM g_sql  #總筆數
+#  EXECUTE b_fill_cnt_pre USING g_enterprise, g_site INTO g_tot_cnt
+#  FREE b_fill_cnt_pre
+#
+#  #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+{<point name="b_fill.rank_sql_after_count"/>}
+#  #end add-point
+#
+#  CASE g_detail_page_action
+#     WHEN "detail_first"
+#         LET g_pagestart = 1
+#
+#     WHEN "detail_previous"
+#         LET g_pagestart = g_pagestart - g_num_in_page
+#         IF g_pagestart < 1 THEN
+#             LET g_pagestart = 1
+#         END IF
+#
+#     WHEN "detail_next"
+#        LET g_pagestart = g_pagestart + g_num_in_page
+#        IF g_pagestart > g_tot_cnt THEN
+#           LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+#           WHILE g_pagestart > g_tot_cnt
+#              LET g_pagestart = g_pagestart - g_num_in_page
+#           END WHILE
+#        END IF
+#
+#     WHEN "detail_last"
+#        LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+#        WHILE g_pagestart > g_tot_cnt
+#           LET g_pagestart = g_pagestart - g_num_in_page
+#        END WHILE
+#
+#     OTHERWISE
+#        LET g_pagestart = 1
+#
+#  END CASE
+#
+#  LET g_sql = "SELECT '','','','','','','','','','','','','','','','',psca001,'','','','',psca001,'', 
+#      '','','','','',psca001,'','','','','','','',psca001,'','','',psca001,'','','','','',psca001,'', 
+#      '','','',psca001,'','','','','','','','','','','',psca001,'','','','','','','','','','',psca001, 
+#      '',psca001,'','','','','','','','','',psca001,'','','','','','','','','','','','','','','','', 
+#      '','','',psca001,'','','','','','','','','','','','','','','','','','','','','',psca001,'','', 
+#      '','','','','','','','','','','','','',psca001,'','','','','','','','','','','','','','','','', 
+#      '','','','','','','','','',psca001,'','','','','','','','','','','','','','','','','','','','', 
+#      psca001,'','','','','','','','','','','','','','',psca001,'','','','','','','','','','','','', 
+#      psca001,'','','','','','','',psca001,'','','','','',psca001,'','','','','',psca001,'','','','', 
+#      '','','','',psca001,'','','','','','','','','','','','','','','','','',psca001,'','','','',psca001, 
+#      '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+#      '','','','','','','','','','','','','','','','','','','','','','','','','','','','',psca001,'', 
+#      '','','','',psca001,'','','','',psca001,'','','','','','','','','','','','',psca001,'',psca001, 
+#      '','','',psca001,'','','','','','','','','','','','','','','','',psca001,'','','','','','','', 
+#      '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+#      '','','','','','','','','','','','','','','','','','','','','',psca001,'','','','','','','','', 
+#      '',psca001,'','','','','','','','','','','','','','','','','','','','',psca001,'','','','','', 
+#      '',psca001,'',''",
+#              " FROM (",ls_sql_rank,")",
+#             " WHERE RANK >= ",g_pagestart,
+#               " AND RANK < ",g_pagestart + g_num_in_page
+#
+#  #add-point:b_fill段sql_after name="b_fill.sql_after"
+{<point name="b_fill.sql_after"/>}
+#  #end add-point
+#
+#  LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+#  PREPARE apsq102_pb FROM g_sql
+#  DECLARE b_fill_curs CURSOR FOR apsq102_pb
+#
+#  OPEN b_fill_curs USING g_enterprise, g_site
+#
+#  FOREACH b_fill_curs INTO g_psca_d[l_ac].sel,g_psca_d[l_ac].l_xmdadocno,g_psca_d[l_ac].l_xmdd001,g_psca_d[l_ac].l_xmdd006, 
+#      g_psca_d[l_ac].l_xmdd011,g_psca_d[l_ac].l_xmda004,g_psca_d[l_ac].l_type,g_psca_d[l_ac].l_xmdd014, 
+#      g_psca_d[l_ac].l_xmdd004,g_psca_d[l_ac].l_delay,g_psca_d[l_ac].l_xmdd002,g_psca_d[l_ac].l_scheduled, 
+#      g_psca_d[l_ac].l_consume,g_psca_d[l_ac].l_priority,g_psca_d[l_ac].l_transfer,g_psca_d[l_ac].l_pseb007, 
+#      g_psca10_d[l_ac].psca001,g_psca10_d[l_ac].l_inab001,g_psca10_d[l_ac].l_inab002,g_psca10_d[l_ac].l_inab005, 
+#      g_psca10_d[l_ac].l_consigned,g_psca11_d[l_ac].psca001,g_psca11_d[l_ac].l_bmca001,g_psca11_d[l_ac].l_bmca009, 
+#      g_psca11_d[l_ac].l_bmca005,g_psca11_d[l_ac].l_bmca003,g_psca11_d[l_ac].l_bmcb011,g_psca11_d[l_ac].l_bmcb012, 
+#      g_psca12_d[l_ac].psca001,g_psca12_d[l_ac].l_bmc001,g_psca12_d[l_ac].l_bmcc009,g_psca12_d[l_ac].l_bmcd010, 
+#      g_psca12_d[l_ac].l_bmcc005,g_psca12_d[l_ac].l_bmcc003,g_psca12_d[l_ac].l_bmcd011,g_psca12_d[l_ac].l_bmcc010, 
+#      g_psca13_d[l_ac].psca001,g_psca13_d[l_ac].l_imec001,g_psca13_d[l_ac].l_imec002,g_psca13_d[l_ac].l_imec003, 
+#      g_psca14_d[l_ac].psca001,g_psca14_d[l_ac].l_bmce001,g_psca14_d[l_ac].l_bmce005,g_psca14_d[l_ac].l_bmce003, 
+#      g_psca14_d[l_ac].l_bmce009,g_psca14_d[l_ac].l_bmce010,g_psca15_d[l_ac].psca001,g_psca15_d[l_ac].l_bmab001, 
+#      g_psca15_d[l_ac].l_bmab003,g_psca15_d[l_ac].l_type_1,g_psca15_d[l_ac].l_bmab004,g_psca16_d[l_ac].psca001, 
+#      g_psca16_d[l_ac].l_bmea001,g_psca16_d[l_ac].l_bmea003,g_psca16_d[l_ac].l_bmea008,g_psca16_d[l_ac].l_bmea015, 
+#      g_psca16_d[l_ac].l_bmea011,g_psca16_d[l_ac].l_bmea009,g_psca16_d[l_ac].l_bmea010,g_psca16_d[l_ac].l_bmea012, 
+#      g_psca16_d[l_ac].l_bmea007,g_psca16_d[l_ac].l_bmea017,g_psca16_d[l_ac].l_bmea016,g_psca17_d[l_ac].psca001, 
+#      g_psca17_d[l_ac].l_bmea001_1,g_psca17_d[l_ac].l_bmea008_1,g_psca17_d[l_ac].l_bmea015_1,g_psca17_d[l_ac].l_bmea011_1, 
+#      g_psca17_d[l_ac].l_bmea009_1,g_psca17_d[l_ac].l_bmea010_1,g_psca17_d[l_ac].l_bmea012_1,g_psca17_d[l_ac].l_bmea007_1, 
+#      g_psca17_d[l_ac].l_bmea017_1,g_psca17_d[l_ac].l_bmea016_1,g_psca18_d[l_ac].psca001,g_psca18_d[l_ac].l_ecaa001, 
+#      g_psca19_d[l_ac].psca001,g_psca19_d[l_ac].l_bmbb001,g_psca19_d[l_ac].l_bmbb003,g_psca19_d[l_ac].l_seq, 
+#      g_psca19_d[l_ac].l_seq1,g_psca19_d[l_ac].l_bmbb009,g_psca19_d[l_ac].l_bmbb010,g_psca19_d[l_ac].l_shrinkage_1, 
+#      g_psca19_d[l_ac].l_bmbb011,g_psca19_d[l_ac].l_bmbb012,g_psca2_d[l_ac].psca001,g_psca2_d[l_ac].l_pmdodocno, 
+#      g_psca2_d[l_ac].l_pmdo001,g_psca2_d[l_ac].l_pmdb006,g_psca2_d[l_ac].l_new,g_psca2_d[l_ac].l_pmdl004, 
+#      g_psca2_d[l_ac].l_pmdo004,g_psca2_d[l_ac].l_pmdo019,g_psca2_d[l_ac].l_state,g_psca2_d[l_ac].l_pmdo014, 
+#      g_psca2_d[l_ac].l_pmdo002,g_psca2_d[l_ac].l_pmdo016,g_psca2_d[l_ac].l_pmdo015,g_psca2_d[l_ac].l_pmdldocdt, 
+#      g_psca2_d[l_ac].l_pmdo012,g_psca2_d[l_ac].l_pmdo013,g_psca2_d[l_ac].l_pmdo017,g_psca2_d[l_ac].l_pmdo015_1, 
+#      g_psca2_d[l_ac].l_transfer_1,g_psca2_d[l_ac].l_hardpegging,g_psca20_d[l_ac].psca001,g_psca20_d[l_ac].l_psoa003, 
+#      g_psca20_d[l_ac].l_psoa004,g_psca20_d[l_ac].l_psoa005,g_psca20_d[l_ac].l_psoa006,g_psca20_d[l_ac].l_psoa007, 
+#      g_psca20_d[l_ac].l_psoa008,g_psca20_d[l_ac].l_psoa009,g_psca20_d[l_ac].l_psoa010,g_psca20_d[l_ac].l_psoa011, 
+#      g_psca20_d[l_ac].l_psoa012,g_psca20_d[l_ac].l_psoa013,g_psca20_d[l_ac].l_psoa014,g_psca20_d[l_ac].l_psoa015, 
+#      g_psca20_d[l_ac].l_psoa016,g_psca20_d[l_ac].l_psoa017,g_psca20_d[l_ac].l_psoa018,g_psca20_d[l_ac].l_psoa019, 
+#      g_psca20_d[l_ac].l_psoa020,g_psca20_d[l_ac].l_psoa021,g_psca20_d[l_ac].l_psoa022,g_psca20_d[l_ac].l_psoa023, 
+#      g_psca21_d[l_ac].psca001,g_psca21_d[l_ac].l_psod003,g_psca21_d[l_ac].l_psod004,g_psca21_d[l_ac].l_psod005, 
+#      g_psca21_d[l_ac].l_psod006,g_psca21_d[l_ac].l_psod007,g_psca21_d[l_ac].l_psod008,g_psca21_d[l_ac].l_psod009, 
+#      g_psca21_d[l_ac].l_psod010,g_psca21_d[l_ac].l_psod011,g_psca21_d[l_ac].l_psod012,g_psca21_d[l_ac].l_psod013, 
+#      g_psca21_d[l_ac].l_psod014,g_psca21_d[l_ac].l_psod015,g_psca21_d[l_ac].l_psod016,g_psca21_d[l_ac].l_psod017, 
+#      g_psca22_d[l_ac].psca001,g_psca22_d[l_ac].l_psoc003,g_psca22_d[l_ac].l_psoc004,g_psca22_d[l_ac].l_psoc005, 
+#      g_psca22_d[l_ac].l_psoc006,g_psca22_d[l_ac].l_psoc007,g_psca22_d[l_ac].l_psoc008_1,g_psca22_d[l_ac].l_psoc009, 
+#      g_psca22_d[l_ac].l_psoc010,g_psca22_d[l_ac].l_psoc011,g_psca22_d[l_ac].l_psoc012,g_psca22_d[l_ac].l_psoc013, 
+#      g_psca22_d[l_ac].l_psoc014,g_psca22_d[l_ac].l_psoc015,g_psca22_d[l_ac].l_psoc016,g_psca22_d[l_ac].l_psoc017, 
+#      g_psca22_d[l_ac].l_psoc018,g_psca22_d[l_ac].l_psoc019,g_psca22_d[l_ac].l_psoc020,g_psca22_d[l_ac].l_psoc021, 
+#      g_psca22_d[l_ac].l_psoc022,g_psca22_d[l_ac].l_psoc023,g_psca22_d[l_ac].l_psoc025,g_psca22_d[l_ac].l_psoc022_1, 
+#      g_psca22_d[l_ac].l_psoc022_2,g_psca22_d[l_ac].l_psoc022_3,g_psca23_d[l_ac].psca001,g_psca23_d[l_ac].l_psoa003_1, 
+#      g_psca23_d[l_ac].l_psoa004_1,g_psca23_d[l_ac].l_psoa005_1,g_psca23_d[l_ac].l_psoa006_1,g_psca23_d[l_ac].l_psoa007_1, 
+#      g_psca23_d[l_ac].l_psoa008_1,g_psca23_d[l_ac].l_psoa009_1,g_psca23_d[l_ac].l_psoa010_1,g_psca23_d[l_ac].l_psoa011_1, 
+#      g_psca23_d[l_ac].l_psoa012_1,g_psca23_d[l_ac].l_psoa013_1,g_psca23_d[l_ac].l_psoa014_1,g_psca23_d[l_ac].l_psoa015_1, 
+#      g_psca23_d[l_ac].l_psoa016_1,g_psca23_d[l_ac].l_psoa017_1,g_psca23_d[l_ac].l_psoa018_1,g_psca23_d[l_ac].l_psoa019_1, 
+#      g_psca23_d[l_ac].l_psoa020_1,g_psca23_d[l_ac].l_psoa021_1,g_psca23_d[l_ac].l_psoa023_1,g_psca24_d[l_ac].psca001, 
+#      g_psca24_d[l_ac].l_sfbadocno_1,g_psca24_d[l_ac].l_sfba006_1,g_psca24_d[l_ac].l_sfbaseq_2,g_psca24_d[l_ac].l_sfbaseq_1_1, 
+#      g_psca24_d[l_ac].l_release_2,g_psca24_d[l_ac].l_sfba019_1,g_psca24_d[l_ac].l_demand_1,g_psca24_d[l_ac].l_sfba020_1, 
+#      g_psca24_d[l_ac].l_sfba028_1,g_psca24_d[l_ac].l_sfba003_1,g_psca24_d[l_ac].l_sfba009_1,g_psca24_d[l_ac].l_sfba007_1, 
+#      g_psca24_d[l_ac].l_sfaa003_1,g_psca24_d[l_ac].l_sfba021_1,g_psca25_d[l_ac].psca001,g_psca25_d[l_ac].l_psob003, 
+#      g_psca25_d[l_ac].l_psob004,g_psca25_d[l_ac].l_psob005,g_psca25_d[l_ac].l_psob006,g_psca25_d[l_ac].l_psob007, 
+#      g_psca25_d[l_ac].l_psob008,g_psca25_d[l_ac].l_psob009,g_psca25_d[l_ac].l_psob010,g_psca25_d[l_ac].l_psob011, 
+#      g_psca25_d[l_ac].l_psob012,g_psca25_d[l_ac].l_psob013,g_psca25_d[l_ac].l_psob016,g_psca26_d[l_ac].psca001, 
+#      g_psca26_d[l_ac].l_equip_type,g_psca26_d[l_ac].l_equip_id,g_psca26_d[l_ac].l_ws_id,g_psca26_d[l_ac].l_efficency, 
+#      g_psca26_d[l_ac].l_capacity_type,g_psca26_d[l_ac].l_day_calendar_id,g_psca26_d[l_ac].l_week_calendar_id, 
+#      g_psca27_d[l_ac].psca001,g_psca27_d[l_ac].l_equip_group_id,g_psca27_d[l_ac].l_equip_type_1,g_psca27_d[l_ac].l_is_outsourcing, 
+#      g_psca27_d[l_ac].l_equip_id_1,g_psca27_d[l_ac].l_priority_1,g_psca28_d[l_ac].psca001,g_psca28_d[l_ac].l_mrbh001_1, 
+#      g_psca28_d[l_ac].l_mrbh002,g_psca28_d[l_ac].l_mrbh003,g_psca28_d[l_ac].l_mrbh004,g_psca28_d[l_ac].l_mrbh005, 
+#      g_psca29_d[l_ac].psca001,g_psca29_d[l_ac].l_week_calendar_id_1,g_psca29_d[l_ac].l_mom_wm_id,g_psca29_d[l_ac].l_tue_wm_id, 
+#      g_psca29_d[l_ac].l_wed_wm_id,g_psca29_d[l_ac].l_thu_wm_id,g_psca29_d[l_ac].l_fri_wm_id,g_psca29_d[l_ac].l_sat_wm_id, 
+#      g_psca29_d[l_ac].l_sun_wm_id,g_psca3_d[l_ac].psca001,g_psca3_d[l_ac].l_sfaadocno,g_psca3_d[l_ac].l_sfaa012, 
+#      g_psca3_d[l_ac].l_sfaa020,g_psca3_d[l_ac].l_sfaa019,g_psca3_d[l_ac].l_sfaa010,g_psca3_d[l_ac].l_sfaadocno1, 
+#      g_psca3_d[l_ac].l_sfaa013,g_psca3_d[l_ac].l_sfaa056,g_psca3_d[l_ac].l_new_1,g_psca3_d[l_ac].l_produced, 
+#      g_psca3_d[l_ac].l_sfaa022,g_psca3_d[l_ac].l_sfaa021,g_psca3_d[l_ac].l_feature,g_psca3_d[l_ac].l_firm, 
+#      g_psca3_d[l_ac].l_exploration,g_psca3_d[l_ac].l_material,g_psca3_d[l_ac].l_hardpegging_1,g_psca30_d[l_ac].psca001, 
+#      g_psca30_d[l_ac].l_wm_id,g_psca30_d[l_ac].l_start_time,g_psca30_d[l_ac].l_end_time,g_psca30_d[l_ac].l_type_2, 
+#      g_psca31_d[l_ac].psca001,g_psca31_d[l_ac].l_imaa001_1,g_psca31_d[l_ac].l_imaf026_1,g_psca31_d[l_ac].l_sizing_1, 
+#      g_psca31_d[l_ac].l_used_2,g_psca31_d[l_ac].l_integer_1,g_psca31_d[l_ac].l_imaf013_1,g_psca31_d[l_ac].l_imaa006_1, 
+#      g_psca31_d[l_ac].l_imae022_1,g_psca31_d[l_ac].l_imae018_1,g_psca31_d[l_ac].l_imae017_1,g_psca31_d[l_ac].l_imae080_1, 
+#      g_psca31_d[l_ac].l_imaa004_1,g_psca31_d[l_ac].l_imae064_2,g_psca31_d[l_ac].l_mfg_2,g_psca31_d[l_ac].l_order_1, 
+#      g_psca31_d[l_ac].l_feature_1_1,g_psca31_d[l_ac].l_imaf171_2,g_psca31_d[l_ac].l_imaf171_3,g_psca31_d[l_ac].l_consume_1_1, 
+#      g_psca31_d[l_ac].l_release_1_1,g_psca31_d[l_ac].l_lastqty_1,g_psca31_d[l_ac].l_combine_1,g_psca31_d[l_ac].l_inspect_1, 
+#      g_psca31_d[l_ac].l_consign_1,g_psca31_d[l_ac].l_imaf143_1,g_psca31_d[l_ac].l_purchase_1,g_psca31_d[l_ac].l_imae016_1, 
+#      g_psca31_d[l_ac].l_mfg_1_1,g_psca31_d[l_ac].l_imaa105_1,g_psca31_d[l_ac].l_sales_1,g_psca31_d[l_ac].l_imae064_1_1, 
+#      g_psca31_d[l_ac].l_alt_2,g_psca31_d[l_ac].l_break_1,g_psca31_d[l_ac].l_create_2,g_psca31_d[l_ac].l_supratio_1, 
+#      g_psca31_d[l_ac].l_imaf153_1,g_psca31_d[l_ac].l_backward_1,g_psca31_d[l_ac].l_batch_1,g_psca31_d[l_ac].l_setup_1, 
+#      g_psca31_d[l_ac].l_imae052_1,g_psca31_d[l_ac].l_imae077_1,g_psca31_d[l_ac].l_base_1,g_psca31_d[l_ac].l_max_batch_size_1, 
+#      g_psca31_d[l_ac].l_imae032_1,g_psca31_d[l_ac].l_outsourcing_1,g_psca31_d[l_ac].l_imae072_1,g_psca31_d[l_ac].l_imae073_1, 
+#      g_psca31_d[l_ac].l_var_1,g_psca31_d[l_ac].l_auto_1,g_psca31_d[l_ac].l_consolidate_1,g_psca31_d[l_ac].l_phase_1, 
+#      g_psca31_d[l_ac].l_spare_1,g_psca31_d[l_ac].l_due_1,g_psca31_d[l_ac].l_imae015_1,g_psca31_d[l_ac].l_imaa005_1, 
+#      g_psca31_d[l_ac].l_imae078_1,g_psca31_d[l_ac].l_imae079_1,g_psca31_d[l_ac].l_imae083_1,g_psca31_d[l_ac].l_imae082_1, 
+#      g_psca32_d[l_ac].psca001,g_psca32_d[l_ac].l_bmba001_1,g_psca32_d[l_ac].l_bmba003_1,g_psca32_d[l_ac].l_ecba001, 
+#      g_psca32_d[l_ac].l_ecbb003,g_psca32_d[l_ac].l_bmba007_1,g_psca33_d[l_ac].psca001,g_psca33_d[l_ac].l_part_id, 
+#      g_psca33_d[l_ac].l_imae033,g_psca33_d[l_ac].l_sequ_num,g_psca33_d[l_ac].l_is_alt,g_psca34_d[l_ac].psca001, 
+#      g_psca34_d[l_ac].l_ecbb001,g_psca34_d[l_ac].l_ecbb002,g_psca34_d[l_ac].l_ecbb003_1,g_psca34_d[l_ac].l_ecbb004, 
+#      g_psca34_d[l_ac].l_equip_type_2,g_psca34_d[l_ac].l_ecbb037,g_psca34_d[l_ac].l_is_batch,g_psca34_d[l_ac].l_ecbb026, 
+#      g_psca34_d[l_ac].l_ecbb027,g_psca34_d[l_ac].l_imae077_2,g_psca34_d[l_ac].l_imae077_3,g_psca34_d[l_ac].l_ecbb012, 
+#      g_psca35_d[l_ac].psca001,g_psca35_d[l_ac].l_ecaa001_1,g_psca36_d[l_ac].psca001,g_psca36_d[l_ac].l_ecbe001, 
+#      g_psca36_d[l_ac].l_ecbe005,g_psca36_d[l_ac].l_ecbe003,g_psca4_d[l_ac].psca001,g_psca4_d[l_ac].l_sfbadocno, 
+#      g_psca4_d[l_ac].l_sfba006,g_psca4_d[l_ac].l_sfbaseq,g_psca4_d[l_ac].l_sfbaseq_1,g_psca4_d[l_ac].l_release, 
+#      g_psca4_d[l_ac].l_sfba019,g_psca4_d[l_ac].l_demand,g_psca4_d[l_ac].l_sfba020,g_psca4_d[l_ac].l_sfba028, 
+#      g_psca4_d[l_ac].l_sfba003,g_psca4_d[l_ac].l_sfba009,g_psca4_d[l_ac].l_sfba007,g_psca4_d[l_ac].l_sfaa003, 
+#      g_psca4_d[l_ac].l_sfba021,g_psca4_d[l_ac].l_sfba001,g_psca4_d[l_ac].l_sfba005,g_psca5_d[l_ac].psca001, 
+#      g_psca5_d[l_ac].l_imaa001,g_psca5_d[l_ac].l_imaf026,g_psca5_d[l_ac].l_sizing,g_psca5_d[l_ac].l_used, 
+#      g_psca5_d[l_ac].l_integer,g_psca5_d[l_ac].l_imaf013,g_psca5_d[l_ac].l_imaa006,g_psca5_d[l_ac].l_imae022, 
+#      g_psca5_d[l_ac].l_imae018,g_psca5_d[l_ac].l_imae017,g_psca5_d[l_ac].l_imae080,g_psca5_d[l_ac].l_imaa004, 
+#      g_psca5_d[l_ac].l_imae064,g_psca5_d[l_ac].l_mfg,g_psca5_d[l_ac].l_order,g_psca5_d[l_ac].l_feature_1, 
+#      g_psca5_d[l_ac].l_imaf171,g_psca5_d[l_ac].l_imaf171_1,g_psca5_d[l_ac].l_consume_1,g_psca5_d[l_ac].l_release_1, 
+#      g_psca5_d[l_ac].l_lastqty,g_psca5_d[l_ac].l_combine,g_psca5_d[l_ac].l_inspect,g_psca5_d[l_ac].l_consign, 
+#      g_psca5_d[l_ac].l_imaf143,g_psca5_d[l_ac].l_purchase,g_psca5_d[l_ac].l_imae016,g_psca5_d[l_ac].l_mfg_1, 
+#      g_psca5_d[l_ac].l_imaa105,g_psca5_d[l_ac].l_sales,g_psca5_d[l_ac].l_imae064_1,g_psca5_d[l_ac].l_alt, 
+#      g_psca5_d[l_ac].l_break,g_psca5_d[l_ac].l_create,g_psca5_d[l_ac].l_supratio,g_psca5_d[l_ac].l_imaf153, 
+#      g_psca5_d[l_ac].l_backward,g_psca5_d[l_ac].l_batch,g_psca5_d[l_ac].l_setup,g_psca5_d[l_ac].l_imae052, 
+#      g_psca5_d[l_ac].l_imae077,g_psca5_d[l_ac].l_base,g_psca5_d[l_ac].l_max_batch_size,g_psca5_d[l_ac].l_imae032, 
+#      g_psca5_d[l_ac].l_outsourcing,g_psca5_d[l_ac].l_imae072,g_psca5_d[l_ac].l_imae073,g_psca5_d[l_ac].l_var, 
+#      g_psca5_d[l_ac].l_auto,g_psca5_d[l_ac].l_consolidate,g_psca5_d[l_ac].l_phase,g_psca5_d[l_ac].l_spare, 
+#      g_psca5_d[l_ac].l_due,g_psca5_d[l_ac].l_imae015,g_psca5_d[l_ac].l_imaa005,g_psca5_d[l_ac].l_imae078, 
+#      g_psca5_d[l_ac].l_imae079,g_psca5_d[l_ac].l_imae083,g_psca5_d[l_ac].l_imae082,g_psca6_d[l_ac].psca001, 
+#      g_psca6_d[l_ac].l_imeb001,g_psca6_d[l_ac].l_imeb002,g_psca6_d[l_ac].l_imeb004,g_psca6_d[l_ac].l_imeb006, 
+#      g_psca6_d[l_ac].l_imeb005,g_psca6_d[l_ac].l_imeb010,g_psca6_d[l_ac].l_imeb011,g_psca6_d[l_ac].l_imeb008, 
+#      g_psca6_d[l_ac].l_imeb009,g_psca7_d[l_ac].psca001,g_psca7_d[l_ac].l_bmba001,g_psca7_d[l_ac].l_bmba012, 
+#      g_psca7_d[l_ac].l_bmba003,g_psca7_d[l_ac].l_bmba009,g_psca7_d[l_ac].l_bmba011,g_psca7_d[l_ac].l_shrinkage, 
+#      g_psca7_d[l_ac].l_bmba013,g_psca7_d[l_ac].l_bmba031,g_psca7_d[l_ac].l_alt_1,g_psca7_d[l_ac].l_create_1, 
+#      g_psca7_d[l_ac].l_ratio,g_psca7_d[l_ac].l_bmba007,g_psca7_d[l_ac].l_bmba021,g_psca7_d[l_ac].l_used_1, 
+#      g_psca7_d[l_ac].l_substitute,g_psca7_d[l_ac].l_fixed,g_psca7_d[l_ac].l_bmba023,g_psca7_d[l_ac].l_bmba004, 
+#      g_psca7_d[l_ac].l_bmba008,g_psca7_d[l_ac].l_quantity,g_psca8_d[l_ac].psca001,g_psca8_d[l_ac].l_inag001, 
+#      g_psca8_d[l_ac].l_inag004,g_psca8_d[l_ac].l_inag005,g_psca8_d[l_ac].l_inag009,g_psca8_d[l_ac].l_inag002, 
+#      g_psca8_d[l_ac].l_hard,g_psca9_d[l_ac].psca001,g_psca9_d[l_ac].l_inaa001,g_psca9_d[l_ac].l_inaa006 
+#
+#     IF SQLCA.sqlcode THEN
+#        INITIALIZE g_errparam TO NULL 
+#        LET g_errparam.extend = "FOREACH:" 
+#        LET g_errparam.code   = SQLCA.sqlcode 
+#        LET g_errparam.popup  = TRUE 
+#        CALL cl_err()
+#
+#        EXIT FOREACH
+#     END IF
+#
+#     
+#
+#     #add-point:b_fill段資料填充 name="b_fill.fill"
+{<point name="b_fill.fill"/>}
+#     #end add-point
+#
+#     CALL apsq102_detail_show("'1'")
+#
+#     CALL apsq102_psca_t_mask()
+#
+#     IF l_ac > g_max_rec THEN
+#        IF g_error_show = 1 THEN
+#           INITIALIZE g_errparam TO NULL 
+#           LET g_errparam.extend =  "" 
+#           LET g_errparam.code   =  9035 
+#           LET g_errparam.popup  = TRUE 
+#           CALL cl_err()
+#
+#        END IF
+#        EXIT FOREACH
+#     END IF
+#     LET l_ac = l_ac + 1
+#
+#  END FOREACH
+#
+#
+#
+#
+#
+#  #應用 qs05 樣板自動產生(Version:3)
+#  #+ b_fill段其他table資料取得(包含sql組成及資料填充)
+#
+#
+#
+#
+#
+#
+#  #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+{<point name="b_fill.others.fill"/>}
+#  #end add-point
+#
+#  CALL g_psca_d.deleteElement(g_psca_d.getLength())
+#  CALL g_psca10_d.deleteElement(g_psca10_d.getLength())
+#
+#  CALL g_psca11_d.deleteElement(g_psca11_d.getLength())
+#
+#  CALL g_psca12_d.deleteElement(g_psca12_d.getLength())
+#
+#  CALL g_psca13_d.deleteElement(g_psca13_d.getLength())
+#
+#  CALL g_psca14_d.deleteElement(g_psca14_d.getLength())
+#
+#  CALL g_psca15_d.deleteElement(g_psca15_d.getLength())
+#
+#  CALL g_psca16_d.deleteElement(g_psca16_d.getLength())
+#
+#  CALL g_psca17_d.deleteElement(g_psca17_d.getLength())
+#
+#  CALL g_psca18_d.deleteElement(g_psca18_d.getLength())
+#
+#  CALL g_psca19_d.deleteElement(g_psca19_d.getLength())
+#
+#  CALL g_psca2_d.deleteElement(g_psca2_d.getLength())
+#
+#  CALL g_psca20_d.deleteElement(g_psca20_d.getLength())
+#
+#  CALL g_psca21_d.deleteElement(g_psca21_d.getLength())
+#
+#  CALL g_psca22_d.deleteElement(g_psca22_d.getLength())
+#
+#  CALL g_psca23_d.deleteElement(g_psca23_d.getLength())
+#
+#  CALL g_psca24_d.deleteElement(g_psca24_d.getLength())
+#
+#  CALL g_psca25_d.deleteElement(g_psca25_d.getLength())
+#
+#  CALL g_psca26_d.deleteElement(g_psca26_d.getLength())
+#
+#  CALL g_psca27_d.deleteElement(g_psca27_d.getLength())
+#
+#  CALL g_psca28_d.deleteElement(g_psca28_d.getLength())
+#
+#  CALL g_psca29_d.deleteElement(g_psca29_d.getLength())
+#
+#  CALL g_psca3_d.deleteElement(g_psca3_d.getLength())
+#
+#  CALL g_psca30_d.deleteElement(g_psca30_d.getLength())
+#
+#  CALL g_psca31_d.deleteElement(g_psca31_d.getLength())
+#
+#  CALL g_psca32_d.deleteElement(g_psca32_d.getLength())
+#
+#  CALL g_psca33_d.deleteElement(g_psca33_d.getLength())
+#
+#  CALL g_psca34_d.deleteElement(g_psca34_d.getLength())
+#
+#  CALL g_psca35_d.deleteElement(g_psca35_d.getLength())
+#
+#  CALL g_psca36_d.deleteElement(g_psca36_d.getLength())
+#
+#  CALL g_psca4_d.deleteElement(g_psca4_d.getLength())
+#
+#  CALL g_psca5_d.deleteElement(g_psca5_d.getLength())
+#
+#  CALL g_psca6_d.deleteElement(g_psca6_d.getLength())
+#
+#  CALL g_psca7_d.deleteElement(g_psca7_d.getLength())
+#
+#  CALL g_psca8_d.deleteElement(g_psca8_d.getLength())
+#
+#  CALL g_psca9_d.deleteElement(g_psca9_d.getLength())
+ 
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+{<point name="b_fill.array_deleteElement" />}
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_psca_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #應用 qs06 樣板自動產生(Version:3)
+   #+ b_fill段CURSOR釋放
+   #CLOSE b_fill_curs
+   #FREE apsq102_pb
+ 
+ 
+ 
+ 
+ 
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL apsq102_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   IF g_flag <> 1 THEN
+      LET g_tot_cnt = g_psca_d.getLength()
+   END IF   
+   CALL apsq102_detail_action_trans()
+ 
+   LET l_ac = 1
+
+   IF g_psca_d.getLength() > 0 THEN
+      CALL apsq102_b_fill2()
+   END IF
+
+ 
+   CALL apsq102_filter_show('psca001_9','b_psca001_9')
+   CALL apsq102_filter_show('psca001_10','b_psca001_10')
+   CALL apsq102_filter_show('psca001_11','b_psca001_11')
+   CALL apsq102_filter_show('psca001_12','b_psca001_12')
+   CALL apsq102_filter_show('psca001_13','b_psca001_13')
+   CALL apsq102_filter_show('psca001_14','b_psca001_14')
+   CALL apsq102_filter_show('psca001_15','b_psca001_15')
+   CALL apsq102_filter_show('psca001_16','b_psca001_16')
+   CALL apsq102_filter_show('psca001_17','b_psca001_17')
+   CALL apsq102_filter_show('psca001_18','b_psca001_18')
+   CALL apsq102_filter_show('psca001_1','b_psca001_1')
+   CALL apsq102_filter_show('psca001_19','b_psca001_19')
+   CALL apsq102_filter_show('psca001_20','b_psca001_20')
+   CALL apsq102_filter_show('psca001_21','b_psca001_21')
+   CALL apsq102_filter_show('psca001_22','b_psca001_22')
+   CALL apsq102_filter_show('psca001_23','b_psca001_23')
+   CALL apsq102_filter_show('psca001_24','b_psca001_24')
+   CALL apsq102_filter_show('psca001_25','b_psca001_25')
+   CALL apsq102_filter_show('psca001_26','b_psca001_26')
+   CALL apsq102_filter_show('psca001_27','b_psca001_27')
+   CALL apsq102_filter_show('psca001_28','b_psca001_28')
+   CALL apsq102_filter_show('psca001_2','b_psca001_2')
+   CALL apsq102_filter_show('psca001_29','b_psca001_29')
+   CALL apsq102_filter_show('psca001_30','b_psca001_30')
+   CALL apsq102_filter_show('psca001_31','b_psca001_31')
+   CALL apsq102_filter_show('psca001_32','b_psca001_32')
+   CALL apsq102_filter_show('psca001_33','b_psca001_33')
+   CALL apsq102_filter_show('psca001_34','b_psca001_34')
+   CALL apsq102_filter_show('psca001_35','b_psca001_35')
+   CALL apsq102_filter_show('psca001_3','b_psca001_3')
+   CALL apsq102_filter_show('psca001_4','b_psca001_4')
+   CALL apsq102_filter_show('psca001_5','b_psca001_5')
+   CALL apsq102_filter_show('psca001_6','b_psca001_6')
+   CALL apsq102_filter_show('psca001_7','b_psca001_7')
+   CALL apsq102_filter_show('psca001_8','b_psca001_8')
+ 
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apsq102.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION apsq102_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   {<point name="b_fill2.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   {<point name="b_fill2.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="b_fill2.before_function"
+   {<point name="b_fill2.before_function" />}
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #應用 qs07 樣板自動產生(Version:6)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+ 
+   #add-point:陣列清空 name="b_fill2.array_clear"
+   {<point name="b_fill2.array_clear" />}
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:陣列長度調整 name="b_fill2.array_deleteElement"
+   {<point name="b_fill2.array_deleteElement" />}
+   #end add-point
+ 
+ 
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx2 = 1
+   DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+ 
+ 
+ 
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apsq102.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION apsq102_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   {<point name="detail_show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   {<point name="detail_show.before"/>}
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+ 
+      #add-point:show段單身reference name="detail_show.body10.reference"
+      {<point name="detail_show.body10.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'3'",1) > 0 THEN
+      #帶出公用欄位reference值page3
+      
+ 
+      #add-point:show段單身reference name="detail_show.body11.reference"
+      {<point name="detail_show.body11.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'4'",1) > 0 THEN
+      #帶出公用欄位reference值page4
+      
+ 
+      #add-point:show段單身reference name="detail_show.body12.reference"
+      {<point name="detail_show.body12.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'5'",1) > 0 THEN
+      #帶出公用欄位reference值page5
+      
+ 
+      #add-point:show段單身reference name="detail_show.body13.reference"
+      {<point name="detail_show.body13.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'6'",1) > 0 THEN
+      #帶出公用欄位reference值page6
+      
+ 
+      #add-point:show段單身reference name="detail_show.body14.reference"
+      {<point name="detail_show.body14.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'7'",1) > 0 THEN
+      #帶出公用欄位reference值page7
+      
+ 
+      #add-point:show段單身reference name="detail_show.body15.reference"
+      {<point name="detail_show.body15.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'8'",1) > 0 THEN
+      #帶出公用欄位reference值page8
+      
+ 
+      #add-point:show段單身reference name="detail_show.body16.reference"
+      {<point name="detail_show.body16.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'9'",1) > 0 THEN
+      #帶出公用欄位reference值page9
+      
+ 
+      #add-point:show段單身reference name="detail_show.body17.reference"
+      {<point name="detail_show.body17.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'10'",1) > 0 THEN
+      #帶出公用欄位reference值page10
+      
+ 
+      #add-point:show段單身reference name="detail_show.body18.reference"
+      {<point name="detail_show.body18.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'11'",1) > 0 THEN
+      #帶出公用欄位reference值page11
+      
+ 
+      #add-point:show段單身reference name="detail_show.body19.reference"
+      {<point name="detail_show.body19.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'12'",1) > 0 THEN
+      #帶出公用欄位reference值page12
+      
+ 
+      #add-point:show段單身reference name="detail_show.body2.reference"
+      {<point name="detail_show.body2.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'13'",1) > 0 THEN
+      #帶出公用欄位reference值page13
+      
+ 
+      #add-point:show段單身reference name="detail_show.body20.reference"
+      {<point name="detail_show.body20.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'14'",1) > 0 THEN
+      #帶出公用欄位reference值page14
+      
+ 
+      #add-point:show段單身reference name="detail_show.body21.reference"
+      {<point name="detail_show.body21.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'15'",1) > 0 THEN
+      #帶出公用欄位reference值page15
+      
+ 
+      #add-point:show段單身reference name="detail_show.body22.reference"
+      {<point name="detail_show.body22.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'16'",1) > 0 THEN
+      #帶出公用欄位reference值page16
+      
+ 
+      #add-point:show段單身reference name="detail_show.body23.reference"
+      {<point name="detail_show.body23.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'17'",1) > 0 THEN
+      #帶出公用欄位reference值page17
+      
+ 
+      #add-point:show段單身reference name="detail_show.body24.reference"
+      {<point name="detail_show.body24.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'18'",1) > 0 THEN
+      #帶出公用欄位reference值page18
+      
+ 
+      #add-point:show段單身reference name="detail_show.body25.reference"
+      {<point name="detail_show.body25.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'19'",1) > 0 THEN
+      #帶出公用欄位reference值page19
+      
+ 
+      #add-point:show段單身reference name="detail_show.body26.reference"
+      {<point name="detail_show.body26.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'20'",1) > 0 THEN
+      #帶出公用欄位reference值page20
+      
+ 
+      #add-point:show段單身reference name="detail_show.body27.reference"
+      {<point name="detail_show.body27.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'21'",1) > 0 THEN
+      #帶出公用欄位reference值page21
+      
+ 
+      #add-point:show段單身reference name="detail_show.body28.reference"
+      {<point name="detail_show.body28.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'22'",1) > 0 THEN
+      #帶出公用欄位reference值page22
+      
+ 
+      #add-point:show段單身reference name="detail_show.body29.reference"
+      {<point name="detail_show.body29.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'23'",1) > 0 THEN
+      #帶出公用欄位reference值page23
+      
+ 
+      #add-point:show段單身reference name="detail_show.body3.reference"
+      {<point name="detail_show.body3.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'24'",1) > 0 THEN
+      #帶出公用欄位reference值page24
+      
+ 
+      #add-point:show段單身reference name="detail_show.body30.reference"
+      {<point name="detail_show.body30.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'25'",1) > 0 THEN
+      #帶出公用欄位reference值page25
+      
+ 
+      #add-point:show段單身reference name="detail_show.body31.reference"
+      {<point name="detail_show.body31.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'26'",1) > 0 THEN
+      #帶出公用欄位reference值page26
+      
+ 
+      #add-point:show段單身reference name="detail_show.body32.reference"
+      {<point name="detail_show.body32.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'27'",1) > 0 THEN
+      #帶出公用欄位reference值page27
+      
+ 
+      #add-point:show段單身reference name="detail_show.body33.reference"
+      {<point name="detail_show.body33.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'28'",1) > 0 THEN
+      #帶出公用欄位reference值page28
+      
+ 
+      #add-point:show段單身reference name="detail_show.body34.reference"
+      {<point name="detail_show.body34.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'29'",1) > 0 THEN
+      #帶出公用欄位reference值page29
+      
+ 
+      #add-point:show段單身reference name="detail_show.body35.reference"
+      {<point name="detail_show.body35.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'30'",1) > 0 THEN
+      #帶出公用欄位reference值page30
+      
+ 
+      #add-point:show段單身reference name="detail_show.body36.reference"
+      {<point name="detail_show.body36.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'31'",1) > 0 THEN
+      #帶出公用欄位reference值page31
+      
+ 
+      #add-point:show段單身reference name="detail_show.body4.reference"
+      {<point name="detail_show.body4.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'32'",1) > 0 THEN
+      #帶出公用欄位reference值page32
+      
+ 
+      #add-point:show段單身reference name="detail_show.body5.reference"
+      {<point name="detail_show.body5.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'33'",1) > 0 THEN
+      #帶出公用欄位reference值page33
+      
+ 
+      #add-point:show段單身reference name="detail_show.body6.reference"
+      {<point name="detail_show.body6.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'34'",1) > 0 THEN
+      #帶出公用欄位reference值page34
+      
+ 
+      #add-point:show段單身reference name="detail_show.body7.reference"
+      {<point name="detail_show.body7.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'35'",1) > 0 THEN
+      #帶出公用欄位reference值page35
+      
+ 
+      #add-point:show段單身reference name="detail_show.body8.reference"
+      {<point name="detail_show.body8.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'36'",1) > 0 THEN
+      #帶出公用欄位reference值page36
+      
+ 
+      #add-point:show段單身reference name="detail_show.body9.reference"
+      {<point name="detail_show.body9.reference"/>}
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apsq102.filter" >}
+#應用 qs13 樣板自動產生(Version:8)
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION apsq102_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   {<point name="filter.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   {<point name="filter.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   {<point name="filter.before_function" />}
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #應用 qs08 樣板自動產生(Version:5)
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON psca001_9,psca001_10,psca001_11,psca001_12,psca001_13,psca001_14,psca001_15, 
+          psca001_16,psca001_17,psca001_18,psca001_1,psca001_19,psca001_20,psca001_21,psca001_22,psca001_23, 
+          psca001_24,psca001_25,psca001_26,psca001_27,psca001_28,psca001_2,psca001_29,psca001_30,psca001_31, 
+          psca001_32,psca001_33,psca001_34,psca001_35,psca001_3,psca001_4,psca001_5,psca001_6,psca001_7, 
+          psca001_8
+                          FROM s_detail10[1].b_psca001_9,s_detail11[1].b_psca001_10,s_detail12[1].b_psca001_11, 
+                              s_detail13[1].b_psca001_12,s_detail14[1].b_psca001_13,s_detail15[1].b_psca001_14, 
+                              s_detail16[1].b_psca001_15,s_detail17[1].b_psca001_16,s_detail18[1].b_psca001_17, 
+                              s_detail19[1].b_psca001_18,s_detail2[1].b_psca001_1,s_detail20[1].b_psca001_19, 
+                              s_detail21[1].b_psca001_20,s_detail22[1].b_psca001_21,s_detail23[1].b_psca001_22, 
+                              s_detail24[1].b_psca001_23,s_detail25[1].b_psca001_24,s_detail26[1].b_psca001_25, 
+                              s_detail27[1].b_psca001_26,s_detail28[1].b_psca001_27,s_detail29[1].b_psca001_28, 
+                              s_detail3[1].b_psca001_2,s_detail30[1].b_psca001_29,s_detail31[1].b_psca001_30, 
+                              s_detail32[1].b_psca001_31,s_detail33[1].b_psca001_32,s_detail34[1].b_psca001_33, 
+                              s_detail35[1].b_psca001_34,s_detail36[1].b_psca001_35,s_detail4[1].b_psca001_3, 
+                              s_detail5[1].b_psca001_4,s_detail6[1].b_psca001_5,s_detail7[1].b_psca001_6, 
+                              s_detail8[1].b_psca001_7,s_detail9[1].b_psca001_8
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY apsq102_filter_parser('psca001_9') TO s_detail10[1].b_psca001_9
+            DISPLAY apsq102_filter_parser('psca001_10') TO s_detail11[1].b_psca001_10
+            DISPLAY apsq102_filter_parser('psca001_11') TO s_detail12[1].b_psca001_11
+            DISPLAY apsq102_filter_parser('psca001_12') TO s_detail13[1].b_psca001_12
+            DISPLAY apsq102_filter_parser('psca001_13') TO s_detail14[1].b_psca001_13
+            DISPLAY apsq102_filter_parser('psca001_14') TO s_detail15[1].b_psca001_14
+            DISPLAY apsq102_filter_parser('psca001_15') TO s_detail16[1].b_psca001_15
+            DISPLAY apsq102_filter_parser('psca001_16') TO s_detail17[1].b_psca001_16
+            DISPLAY apsq102_filter_parser('psca001_17') TO s_detail18[1].b_psca001_17
+            DISPLAY apsq102_filter_parser('psca001_18') TO s_detail19[1].b_psca001_18
+            DISPLAY apsq102_filter_parser('psca001_1') TO s_detail2[1].b_psca001_1
+            DISPLAY apsq102_filter_parser('psca001_19') TO s_detail20[1].b_psca001_19
+            DISPLAY apsq102_filter_parser('psca001_20') TO s_detail21[1].b_psca001_20
+            DISPLAY apsq102_filter_parser('psca001_21') TO s_detail22[1].b_psca001_21
+            DISPLAY apsq102_filter_parser('psca001_22') TO s_detail23[1].b_psca001_22
+            DISPLAY apsq102_filter_parser('psca001_23') TO s_detail24[1].b_psca001_23
+            DISPLAY apsq102_filter_parser('psca001_24') TO s_detail25[1].b_psca001_24
+            DISPLAY apsq102_filter_parser('psca001_25') TO s_detail26[1].b_psca001_25
+            DISPLAY apsq102_filter_parser('psca001_26') TO s_detail27[1].b_psca001_26
+            DISPLAY apsq102_filter_parser('psca001_27') TO s_detail28[1].b_psca001_27
+            DISPLAY apsq102_filter_parser('psca001_28') TO s_detail29[1].b_psca001_28
+            DISPLAY apsq102_filter_parser('psca001_2') TO s_detail3[1].b_psca001_2
+            DISPLAY apsq102_filter_parser('psca001_29') TO s_detail30[1].b_psca001_29
+            DISPLAY apsq102_filter_parser('psca001_30') TO s_detail31[1].b_psca001_30
+            DISPLAY apsq102_filter_parser('psca001_31') TO s_detail32[1].b_psca001_31
+            DISPLAY apsq102_filter_parser('psca001_32') TO s_detail33[1].b_psca001_32
+            DISPLAY apsq102_filter_parser('psca001_33') TO s_detail34[1].b_psca001_33
+            DISPLAY apsq102_filter_parser('psca001_34') TO s_detail35[1].b_psca001_34
+            DISPLAY apsq102_filter_parser('psca001_35') TO s_detail36[1].b_psca001_35
+            DISPLAY apsq102_filter_parser('psca001_3') TO s_detail4[1].b_psca001_3
+            DISPLAY apsq102_filter_parser('psca001_4') TO s_detail5[1].b_psca001_4
+            DISPLAY apsq102_filter_parser('psca001_5') TO s_detail6[1].b_psca001_5
+            DISPLAY apsq102_filter_parser('psca001_6') TO s_detail7[1].b_psca001_6
+            DISPLAY apsq102_filter_parser('psca001_7') TO s_detail8[1].b_psca001_7
+            DISPLAY apsq102_filter_parser('psca001_8') TO s_detail9[1].b_psca001_8
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+ 
+         #單身一般欄位開窗相關處理
+                  #----<<sel>>----
+         #----<<l_xmdadocno>>----
+         #----<<l_xmdd001>>----
+         #----<<l_xmdd006>>----
+         #----<<l_xmdd011>>----
+         #----<<l_xmda004>>----
+         #----<<l_type>>----
+         #----<<l_xmdd014>>----
+         #----<<l_xmdd004>>----
+         #----<<l_delay>>----
+         #----<<l_xmdd002>>----
+         #----<<l_scheduled>>----
+         #----<<l_consume>>----
+         #----<<l_priority>>----
+         #----<<l_transfer>>----
+         #----<<l_pseb007>>----
+         #----<<b_psca001_9>>----
+         #Ctrlp:construct.c.filter.page10.b_psca001_9
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_9
+            #add-point:ON ACTION controlp INFIELD b_psca001_9 name="construct.c.filter.page10.b_psca001_9"
+            {<point name="construct.c.filter.page10.b_psca001_9" />}
+            #END add-point
+ 
+ 
+         #----<<l_inab001>>----
+         #----<<l_inab002>>----
+         #----<<l_inab005>>----
+         #----<<l_consigned>>----
+         #----<<b_psca001_10>>----
+         #Ctrlp:construct.c.filter.page11.b_psca001_10
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_10
+            #add-point:ON ACTION controlp INFIELD b_psca001_10 name="construct.c.filter.page11.b_psca001_10"
+            {<point name="construct.c.filter.page11.b_psca001_10" />}
+            #END add-point
+ 
+ 
+         #----<<l_bmca001>>----
+         #----<<l_bmca009>>----
+         #----<<l_bmca005>>----
+         #----<<l_bmca003>>----
+         #----<<l_bmcb011>>----
+         #----<<l_bmcb012>>----
+         #----<<b_psca001_11>>----
+         #Ctrlp:construct.c.filter.page12.b_psca001_11
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_11
+            #add-point:ON ACTION controlp INFIELD b_psca001_11 name="construct.c.filter.page12.b_psca001_11"
+            {<point name="construct.c.filter.page12.b_psca001_11" />}
+            #END add-point
+ 
+ 
+         #----<<l_bmc001>>----
+         #----<<l_bmcc009>>----
+         #----<<l_bmcd010>>----
+         #----<<l_bmcc005>>----
+         #----<<l_bmcc003>>----
+         #----<<l_bmcd011>>----
+         #----<<l_bmcc010>>----
+         #----<<b_psca001_12>>----
+         #Ctrlp:construct.c.page13.b_psca001_12
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_12
+            #add-point:ON ACTION controlp INFIELD b_psca001_12 name="construct.c.filter.page13.b_psca001_12"
+            {<point name="construct.c.filter.page13.b_psca001_12" />}
+            #END add-point
+ 
+ 
+         #----<<l_imec001>>----
+         #----<<l_imec002>>----
+         #----<<l_imec003>>----
+         #----<<b_psca001_13>>----
+         #Ctrlp:construct.c.filter.page14.b_psca001_13
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_13
+            #add-point:ON ACTION controlp INFIELD b_psca001_13 name="construct.c.filter.page14.b_psca001_13"
+            {<point name="construct.c.filter.page14.b_psca001_13" />}
+            #END add-point
+ 
+ 
+         #----<<l_bmce001>>----
+         #----<<l_bmce005>>----
+         #----<<l_bmce003>>----
+         #----<<l_bmce009>>----
+         #----<<l_bmce010>>----
+         #----<<b_psca001_14>>----
+         #Ctrlp:construct.c.page15.b_psca001_14
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_14
+            #add-point:ON ACTION controlp INFIELD b_psca001_14 name="construct.c.filter.page15.b_psca001_14"
+            {<point name="construct.c.filter.page15.b_psca001_14" />}
+            #END add-point
+ 
+ 
+         #----<<l_bmab001>>----
+         #----<<l_bmab003>>----
+         #----<<l_type_1>>----
+         #----<<l_bmab004>>----
+         #----<<b_psca001_15>>----
+         #Ctrlp:construct.c.page16.b_psca001_15
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_15
+            #add-point:ON ACTION controlp INFIELD b_psca001_15 name="construct.c.filter.page16.b_psca001_15"
+            {<point name="construct.c.filter.page16.b_psca001_15" />}
+            #END add-point
+ 
+ 
+         #----<<l_bmea001>>----
+         #----<<l_bmea003>>----
+         #----<<l_bmea008>>----
+         #----<<l_bmea015>>----
+         #----<<l_bmea011>>----
+         #----<<l_bmea009>>----
+         #----<<l_bmea010>>----
+         #----<<l_bmea012>>----
+         #----<<l_bmea007>>----
+         #----<<l_bmea017>>----
+         #----<<l_bmea016>>----
+         #----<<b_psca001_16>>----
+         #Ctrlp:construct.c.filter.page17.b_psca001_16
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_16
+            #add-point:ON ACTION controlp INFIELD b_psca001_16 name="construct.c.filter.page17.b_psca001_16"
+            {<point name="construct.c.filter.page17.b_psca001_16" />}
+            #END add-point
+ 
+ 
+         #----<<l_bmea001_1>>----
+         #----<<l_bmea008_1>>----
+         #----<<l_bmea015_1>>----
+         #----<<l_bmea011_1>>----
+         #----<<l_bmea009_1>>----
+         #----<<l_bmea010_1>>----
+         #----<<l_bmea012_1>>----
+         #----<<l_bmea007_1>>----
+         #----<<l_bmea017_1>>----
+         #----<<l_bmea016_1>>----
+         #----<<b_psca001_17>>----
+         #Ctrlp:construct.c.filter.page18.b_psca001_17
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_17
+            #add-point:ON ACTION controlp INFIELD b_psca001_17 name="construct.c.filter.page18.b_psca001_17"
+            {<point name="construct.c.filter.page18.b_psca001_17" />}
+            #END add-point
+ 
+ 
+         #----<<l_ecaa001>>----
+         #----<<b_psca001_18>>----
+         #Ctrlp:construct.c.filter.page19.b_psca001_18
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_18
+            #add-point:ON ACTION controlp INFIELD b_psca001_18 name="construct.c.filter.page19.b_psca001_18"
+            {<point name="construct.c.filter.page19.b_psca001_18" />}
+            #END add-point
+ 
+ 
+         #----<<l_bmbb001>>----
+         #----<<l_bmbb003>>----
+         #----<<l_seq>>----
+         #----<<l_seq1>>----
+         #----<<l_bmbb009>>----
+         #----<<l_bmbb010>>----
+         #----<<l_shrinkage_1>>----
+         #----<<l_bmbb011>>----
+         #----<<l_bmbb012>>----
+         #----<<b_psca001_1>>----
+         #Ctrlp:construct.c.filter.page2.b_psca001_1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_1
+            #add-point:ON ACTION controlp INFIELD b_psca001_1 name="construct.c.filter.page2.b_psca001_1"
+            {<point name="construct.c.filter.page2.b_psca001_1" />}
+            #END add-point
+ 
+ 
+         #----<<l_pmdodocno>>----
+         #----<<l_pmdo001>>----
+         #----<<l_pmdb006>>----
+         #----<<l_new>>----
+         #----<<l_pmdl004>>----
+         #----<<l_pmdo004>>----
+         #----<<l_pmdo019>>----
+         #----<<l_state>>----
+         #----<<l_pmdo014>>----
+         #----<<l_pmdo002>>----
+         #----<<l_pmdo016>>----
+         #----<<l_pmdo015>>----
+         #----<<l_pmdldocdt>>----
+         #----<<l_pmdo012>>----
+         #----<<l_pmdo013>>----
+         #----<<l_pmdo017>>----
+         #----<<l_pmdo015_1>>----
+         #----<<l_transfer_1>>----
+         #----<<l_hardpegging>>----
+         #----<<b_psca001_19>>----
+         #Ctrlp:construct.c.page20.b_psca001_19
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_19
+            #add-point:ON ACTION controlp INFIELD b_psca001_19 name="construct.c.filter.page20.b_psca001_19"
+            {<point name="construct.c.filter.page20.b_psca001_19" />}
+            #END add-point
+ 
+ 
+         #----<<l_psoa003>>----
+         #----<<l_psoa004>>----
+         #----<<l_psoa005>>----
+         #----<<l_psoa006>>----
+         #----<<l_psoa007>>----
+         #----<<l_psoa008>>----
+         #----<<l_psoa009>>----
+         #----<<l_psoa010>>----
+         #----<<l_psoa011>>----
+         #----<<l_psoa012>>----
+         #----<<l_psoa013>>----
+         #----<<l_psoa014>>----
+         #----<<l_psoa015>>----
+         #----<<l_psoa016>>----
+         #----<<l_psoa017>>----
+         #----<<l_psoa018>>----
+         #----<<l_psoa019>>----
+         #----<<l_psoa020>>----
+         #----<<l_psoa021>>----
+         #----<<l_psoa022>>----
+         #----<<l_psoa023>>----
+         #----<<b_psca001_20>>----
+         #Ctrlp:construct.c.page21.b_psca001_20
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_20
+            #add-point:ON ACTION controlp INFIELD b_psca001_20 name="construct.c.filter.page21.b_psca001_20"
+            {<point name="construct.c.filter.page21.b_psca001_20" />}
+            #END add-point
+ 
+ 
+         #----<<l_psod003>>----
+         #----<<l_psod004>>----
+         #----<<l_psod005>>----
+         #----<<l_psod006>>----
+         #----<<l_psod007>>----
+         #----<<l_psod008>>----
+         #----<<l_psod009>>----
+         #----<<l_psod010>>----
+         #----<<l_psod011>>----
+         #----<<l_psod012>>----
+         #----<<l_psod013>>----
+         #----<<l_psod014>>----
+         #----<<l_psod015>>----
+         #----<<l_psod016>>----
+         #----<<l_psod017>>----
+         #----<<b_psca001_21>>----
+         #Ctrlp:construct.c.page22.b_psca001_21
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_21
+            #add-point:ON ACTION controlp INFIELD b_psca001_21 name="construct.c.filter.page22.b_psca001_21"
+            {<point name="construct.c.filter.page22.b_psca001_21" />}
+            #END add-point
+ 
+ 
+         #----<<l_psoc003>>----
+         #----<<l_psoc004>>----
+         #----<<l_psoc005>>----
+         #----<<l_psoc006>>----
+         #----<<l_psoc007>>----
+         #----<<l_psoc008_1>>----
+         #----<<l_psoc009>>----
+         #----<<l_psoc010>>----
+         #----<<l_psoc011>>----
+         #----<<l_psoc012>>----
+         #----<<l_psoc013>>----
+         #----<<l_psoc014>>----
+         #----<<l_psoc015>>----
+         #----<<l_psoc016>>----
+         #----<<l_psoc017>>----
+         #----<<l_psoc018>>----
+         #----<<l_psoc019>>----
+         #----<<l_psoc020>>----
+         #----<<l_psoc021>>----
+         #----<<l_psoc022>>----
+         #----<<l_psoc023>>----
+         #----<<l_psoc025>>----
+         #----<<l_psoc022_1>>----
+         #----<<l_psoc022_2>>----
+         #----<<l_psoc022_3>>----
+         #----<<b_psca001_22>>----
+         #Ctrlp:construct.c.page23.b_psca001_22
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_22
+            #add-point:ON ACTION controlp INFIELD b_psca001_22 name="construct.c.filter.page23.b_psca001_22"
+            {<point name="construct.c.filter.page23.b_psca001_22" />}
+            #END add-point
+ 
+ 
+         #----<<l_psoa003_1>>----
+         #----<<l_psoa004_1>>----
+         #----<<l_psoa005_1>>----
+         #----<<l_psoa006_1>>----
+         #----<<l_psoa007_1>>----
+         #----<<l_psoa008_1>>----
+         #----<<l_psoa009_1>>----
+         #----<<l_psoa010_1>>----
+         #----<<l_psoa011_1>>----
+         #----<<l_psoa012_1>>----
+         #----<<l_psoa013_1>>----
+         #----<<l_psoa014_1>>----
+         #----<<l_psoa015_1>>----
+         #----<<l_psoa016_1>>----
+         #----<<l_psoa017_1>>----
+         #----<<l_psoa018_1>>----
+         #----<<l_psoa019_1>>----
+         #----<<l_psoa020_1>>----
+         #----<<l_psoa021_1>>----
+         #----<<l_psoa023_1>>----
+         #----<<b_psca001_23>>----
+         #Ctrlp:construct.c.page24.b_psca001_23
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_23
+            #add-point:ON ACTION controlp INFIELD b_psca001_23 name="construct.c.filter.page24.b_psca001_23"
+            {<point name="construct.c.filter.page24.b_psca001_23" />}
+            #END add-point
+ 
+ 
+         #----<<l_sfbadocno_1>>----
+         #----<<l_sfba006_1>>----
+         #----<<l_sfbaseq_2>>----
+         #----<<l_sfbaseq_1_1>>----
+         #----<<l_release_2>>----
+         #----<<l_sfba019_1>>----
+         #----<<l_demand_1>>----
+         #----<<l_sfba020_1>>----
+         #----<<l_sfba028_1>>----
+         #----<<l_sfba003_1>>----
+         #----<<l_sfba009_1>>----
+         #----<<l_sfba007_1>>----
+         #----<<l_sfaa003_1>>----
+         #----<<l_sfba021_1>>----
+         #----<<b_psca001_24>>----
+         #Ctrlp:construct.c.filter.page25.b_psca001_24
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_24
+            #add-point:ON ACTION controlp INFIELD b_psca001_24 name="construct.c.filter.page25.b_psca001_24"
+            {<point name="construct.c.filter.page25.b_psca001_24" />}
+            #END add-point
+ 
+ 
+         #----<<l_psob003>>----
+         #----<<l_psob004>>----
+         #----<<l_psob005>>----
+         #----<<l_psob006>>----
+         #----<<l_psob007>>----
+         #----<<l_psob008>>----
+         #----<<l_psob009>>----
+         #----<<l_psob010>>----
+         #----<<l_psob011>>----
+         #----<<l_psob012>>----
+         #----<<l_psob013>>----
+         #----<<l_psob016>>----
+         #----<<b_psca001_25>>----
+         #Ctrlp:construct.c.filter.page26.b_psca001_25
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_25
+            #add-point:ON ACTION controlp INFIELD b_psca001_25 name="construct.c.filter.page26.b_psca001_25"
+            {<point name="construct.c.filter.page26.b_psca001_25" />}
+            #END add-point
+ 
+ 
+         #----<<l_equip_type>>----
+         #----<<l_equip_id>>----
+         #----<<l_ws_id>>----
+         #----<<l_efficency>>----
+         #----<<l_capacity_type>>----
+         #----<<l_day_calendar_id>>----
+         #----<<l_week_calendar_id>>----
+         #----<<b_psca001_26>>----
+         #Ctrlp:construct.c.filter.page27.b_psca001_26
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_26
+            #add-point:ON ACTION controlp INFIELD b_psca001_26 name="construct.c.filter.page27.b_psca001_26"
+            {<point name="construct.c.filter.page27.b_psca001_26" />}
+            #END add-point
+ 
+ 
+         #----<<l_equip_group_id>>----
+         #----<<l_equip_type_1>>----
+         #----<<l_is_outsourcing>>----
+         #----<<l_equip_id_1>>----
+         #----<<l_priority_1>>----
+         #----<<b_psca001_27>>----
+         #Ctrlp:construct.c.filter.page28.b_psca001_27
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_27
+            #add-point:ON ACTION controlp INFIELD b_psca001_27 name="construct.c.filter.page28.b_psca001_27"
+            {<point name="construct.c.filter.page28.b_psca001_27" />}
+            #END add-point
+ 
+ 
+         #----<<l_mrbh001_1>>----
+         #----<<l_mrbh002>>----
+         #----<<l_mrbh003>>----
+         #----<<l_mrbh004>>----
+         #----<<l_mrbh005>>----
+         #----<<b_psca001_28>>----
+         #Ctrlp:construct.c.filter.page29.b_psca001_28
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_28
+            #add-point:ON ACTION controlp INFIELD b_psca001_28 name="construct.c.filter.page29.b_psca001_28"
+            {<point name="construct.c.filter.page29.b_psca001_28" />}
+            #END add-point
+ 
+ 
+         #----<<l_week_calendar_id_1>>----
+         #----<<l_mom_wm_id>>----
+         #----<<l_tue_wm_id>>----
+         #----<<l_wed_wm_id>>----
+         #----<<l_thu_wm_id>>----
+         #----<<l_fri_wm_id>>----
+         #----<<l_sat_wm_id>>----
+         #----<<l_sun_wm_id>>----
+         #----<<b_psca001_2>>----
+         #Ctrlp:construct.c.filter.page3.b_psca001_2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_2
+            #add-point:ON ACTION controlp INFIELD b_psca001_2 name="construct.c.filter.page3.b_psca001_2"
+            {<point name="construct.c.filter.page3.b_psca001_2" />}
+            #END add-point
+ 
+ 
+         #----<<l_sfaadocno>>----
+         #----<<l_sfaa012>>----
+         #----<<l_sfaa020>>----
+         #----<<l_sfaa019>>----
+         #----<<l_sfaa010>>----
+         #----<<l_sfaadocno1>>----
+         #----<<l_sfaa013>>----
+         #----<<l_sfaa056>>----
+         #----<<l_new_1>>----
+         #----<<l_produced>>----
+         #----<<l_sfaa022>>----
+         #----<<l_sfaa021>>----
+         #----<<l_feature>>----
+         #----<<l_firm>>----
+         #----<<l_exploration>>----
+         #----<<l_material>>----
+         #----<<l_hardpegging_1>>----
+         #----<<b_psca001_29>>----
+         #Ctrlp:construct.c.filter.page30.b_psca001_29
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_29
+            #add-point:ON ACTION controlp INFIELD b_psca001_29 name="construct.c.filter.page30.b_psca001_29"
+            {<point name="construct.c.filter.page30.b_psca001_29" />}
+            #END add-point
+ 
+ 
+         #----<<l_wm_id>>----
+         #----<<l_start_time>>----
+         #----<<l_end_time>>----
+         #----<<l_type_2>>----
+         #----<<b_psca001_30>>----
+         #Ctrlp:construct.c.filter.page31.b_psca001_30
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_30
+            #add-point:ON ACTION controlp INFIELD b_psca001_30 name="construct.c.filter.page31.b_psca001_30"
+            {<point name="construct.c.filter.page31.b_psca001_30" />}
+            #END add-point
+ 
+ 
+         #----<<l_imaa001_1>>----
+         #----<<l_imaf026_1>>----
+         #----<<l_sizing_1>>----
+         #----<<l_used_2>>----
+         #----<<l_integer_1>>----
+         #----<<l_imaf013_1>>----
+         #----<<l_imaa006_1>>----
+         #----<<l_imae022_1>>----
+         #----<<l_imae018_1>>----
+         #----<<l_imae017_1>>----
+         #----<<l_imae080_1>>----
+         #----<<l_imaa004_1>>----
+         #----<<l_imae064_2>>----
+         #----<<l_mfg_2>>----
+         #----<<l_order_1>>----
+         #----<<l_feature_1_1>>----
+         #----<<l_imaf171_2>>----
+         #----<<l_imaf171_3>>----
+         #----<<l_consume_1_1>>----
+         #----<<l_release_1_1>>----
+         #----<<l_lastqty_1>>----
+         #----<<l_combine_1>>----
+         #----<<l_inspect_1>>----
+         #----<<l_consign_1>>----
+         #----<<l_imaf143_1>>----
+         #----<<l_purchase_1>>----
+         #----<<l_imae016_1>>----
+         #----<<l_mfg_1_1>>----
+         #----<<l_imaa105_1>>----
+         #----<<l_sales_1>>----
+         #----<<l_imae064_1_1>>----
+         #----<<l_alt_2>>----
+         #----<<l_break_1>>----
+         #----<<l_create_2>>----
+         #----<<l_supratio_1>>----
+         #----<<l_imaf153_1>>----
+         #----<<l_backward_1>>----
+         #----<<l_batch_1>>----
+         #----<<l_setup_1>>----
+         #----<<l_imae052_1>>----
+         #----<<l_imae077_1>>----
+         #----<<l_base_1>>----
+         #----<<l_max_batch_size_1>>----
+         #----<<l_imae032_1>>----
+         #----<<l_outsourcing_1>>----
+         #----<<l_imae072_1>>----
+         #----<<l_imae073_1>>----
+         #----<<l_var_1>>----
+         #----<<l_auto_1>>----
+         #----<<l_consolidate_1>>----
+         #----<<l_phase_1>>----
+         #----<<l_spare_1>>----
+         #----<<l_due_1>>----
+         #----<<l_imae015_1>>----
+         #----<<l_imaa005_1>>----
+         #----<<l_imae078_1>>----
+         #----<<l_imae079_1>>----
+         #----<<l_imae083_1>>----
+         #----<<l_imae082_1>>----
+         #----<<b_psca001_31>>----
+         #Ctrlp:construct.c.filter.page32.b_psca001_31
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_31
+            #add-point:ON ACTION controlp INFIELD b_psca001_31 name="construct.c.filter.page32.b_psca001_31"
+            {<point name="construct.c.filter.page32.b_psca001_31" />}
+            #END add-point
+ 
+ 
+         #----<<l_bmba001_1>>----
+         #----<<l_bmba003_1>>----
+         #----<<l_ecba001>>----
+         #----<<l_ecbb003>>----
+         #----<<l_bmba007_1>>----
+         #----<<b_psca001_32>>----
+         #Ctrlp:construct.c.filter.page33.b_psca001_32
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_32
+            #add-point:ON ACTION controlp INFIELD b_psca001_32 name="construct.c.filter.page33.b_psca001_32"
+            {<point name="construct.c.filter.page33.b_psca001_32" />}
+            #END add-point
+ 
+ 
+         #----<<l_part_id>>----
+         #----<<l_imae033>>----
+         #----<<l_sequ_num>>----
+         #----<<l_is_alt>>----
+         #----<<b_psca001_33>>----
+         #Ctrlp:construct.c.filter.page34.b_psca001_33
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_33
+            #add-point:ON ACTION controlp INFIELD b_psca001_33 name="construct.c.filter.page34.b_psca001_33"
+            {<point name="construct.c.filter.page34.b_psca001_33" />}
+            #END add-point
+ 
+ 
+         #----<<l_ecbb001>>----
+         #----<<l_ecbb002>>----
+         #----<<l_ecbb003_1>>----
+         #----<<l_ecbb004>>----
+         #----<<l_equip_type_2>>----
+         #----<<l_ecbb037>>----
+         #----<<l_is_batch>>----
+         #----<<l_ecbb026>>----
+         #----<<l_ecbb027>>----
+         #----<<l_imae077_2>>----
+         #----<<l_imae077_3>>----
+         #----<<l_ecbb012>>----
+         #----<<b_psca001_34>>----
+         #Ctrlp:construct.c.filter.page35.b_psca001_34
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_34
+            #add-point:ON ACTION controlp INFIELD b_psca001_34 name="construct.c.filter.page35.b_psca001_34"
+            {<point name="construct.c.filter.page35.b_psca001_34" />}
+            #END add-point
+ 
+ 
+         #----<<l_ecaa001_1>>----
+         #----<<b_psca001_35>>----
+         #Ctrlp:construct.c.filter.page36.b_psca001_35
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_35
+            #add-point:ON ACTION controlp INFIELD b_psca001_35 name="construct.c.filter.page36.b_psca001_35"
+            {<point name="construct.c.filter.page36.b_psca001_35" />}
+            #END add-point
+ 
+ 
+         #----<<l_ecbe001>>----
+         #----<<l_ecbe005>>----
+         #----<<l_ecbe003>>----
+         #----<<b_psca001_3>>----
+         #Ctrlp:construct.c.filter.page4.b_psca001_3
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_3
+            #add-point:ON ACTION controlp INFIELD b_psca001_3 name="construct.c.filter.page4.b_psca001_3"
+            {<point name="construct.c.filter.page4.b_psca001_3" />}
+            #END add-point
+ 
+ 
+         #----<<l_sfbadocno>>----
+         #----<<l_sfba006>>----
+         #----<<l_sfbaseq>>----
+         #----<<l_sfbaseq_1>>----
+         #----<<l_release>>----
+         #----<<l_sfba019>>----
+         #----<<l_demand>>----
+         #----<<l_sfba020>>----
+         #----<<l_sfba028>>----
+         #----<<l_sfba003>>----
+         #----<<l_sfba009>>----
+         #----<<l_sfba007>>----
+         #----<<l_sfaa003>>----
+         #----<<l_sfba021>>----
+         #----<<l_sfba001>>----
+         #----<<l_sfba005>>----
+         #----<<b_psca001_4>>----
+         #Ctrlp:construct.c.filter.page5.b_psca001_4
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_4
+            #add-point:ON ACTION controlp INFIELD b_psca001_4 name="construct.c.filter.page5.b_psca001_4"
+            {<point name="construct.c.filter.page5.b_psca001_4" />}
+            #END add-point
+ 
+ 
+         #----<<l_imaa001>>----
+         #----<<l_imaf026>>----
+         #----<<l_sizing>>----
+         #----<<l_used>>----
+         #----<<l_integer>>----
+         #----<<l_imaf013>>----
+         #----<<l_imaa006>>----
+         #----<<l_imae022>>----
+         #----<<l_imae018>>----
+         #----<<l_imae017>>----
+         #----<<l_imae080>>----
+         #----<<l_imaa004>>----
+         #----<<l_imae064>>----
+         #----<<l_mfg>>----
+         #----<<l_order>>----
+         #----<<l_feature_1>>----
+         #----<<l_imaf171>>----
+         #----<<l_imaf171_1>>----
+         #----<<l_consume_1>>----
+         #----<<l_release_1>>----
+         #----<<l_lastqty>>----
+         #----<<l_combine>>----
+         #----<<l_inspect>>----
+         #----<<l_consign>>----
+         #----<<l_imaf143>>----
+         #----<<l_purchase>>----
+         #----<<l_imae016>>----
+         #----<<l_mfg_1>>----
+         #----<<l_imaa105>>----
+         #----<<l_sales>>----
+         #----<<l_imae064_1>>----
+         #----<<l_alt>>----
+         #----<<l_break>>----
+         #----<<l_create>>----
+         #----<<l_supratio>>----
+         #----<<l_imaf153>>----
+         #----<<l_backward>>----
+         #----<<l_batch>>----
+         #----<<l_setup>>----
+         #----<<l_imae052>>----
+         #----<<l_imae077>>----
+         #----<<l_base>>----
+         #----<<l_max_batch_size>>----
+         #----<<l_imae032>>----
+         #----<<l_outsourcing>>----
+         #----<<l_imae072>>----
+         #----<<l_imae073>>----
+         #----<<l_var>>----
+         #----<<l_auto>>----
+         #----<<l_consolidate>>----
+         #----<<l_phase>>----
+         #----<<l_spare>>----
+         #----<<l_due>>----
+         #----<<l_imae015>>----
+         #----<<l_imaa005>>----
+         #----<<l_imae078>>----
+         #----<<l_imae079>>----
+         #----<<l_imae083>>----
+         #----<<l_imae082>>----
+         #----<<b_psca001_5>>----
+         #Ctrlp:construct.c.filter.page6.b_psca001_5
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_5
+            #add-point:ON ACTION controlp INFIELD b_psca001_5 name="construct.c.filter.page6.b_psca001_5"
+            {<point name="construct.c.filter.page6.b_psca001_5" />}
+            #END add-point
+ 
+ 
+         #----<<l_imeb001>>----
+         #----<<l_imeb002>>----
+         #----<<l_imeb004>>----
+         #----<<l_imeb006>>----
+         #----<<l_imeb005>>----
+         #----<<l_imeb010>>----
+         #----<<l_imeb011>>----
+         #----<<l_imeb008>>----
+         #----<<l_imeb009>>----
+         #----<<b_psca001_6>>----
+         #Ctrlp:construct.c.filter.page7.b_psca001_6
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_6
+            #add-point:ON ACTION controlp INFIELD b_psca001_6 name="construct.c.filter.page7.b_psca001_6"
+            {<point name="construct.c.filter.page7.b_psca001_6" />}
+            #END add-point
+ 
+ 
+         #----<<l_bmba001>>----
+         #----<<l_bmba012>>----
+         #----<<l_bmba003>>----
+         #----<<l_bmba009>>----
+         #----<<l_bmba011>>----
+         #----<<l_shrinkage>>----
+         #----<<l_bmba013>>----
+         #----<<l_bmba031>>----
+         #----<<l_alt_1>>----
+         #----<<l_create_1>>----
+         #----<<l_ratio>>----
+         #----<<l_bmba007>>----
+         #----<<l_bmba021>>----
+         #----<<l_used_1>>----
+         #----<<l_substitute>>----
+         #----<<l_fixed>>----
+         #----<<l_bmba023>>----
+         #----<<l_bmba004>>----
+         #----<<l_bmba008>>----
+         #----<<l_quantity>>----
+         #----<<b_psca001_7>>----
+         #Ctrlp:construct.c.filter.page8.b_psca001_7
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_7
+            #add-point:ON ACTION controlp INFIELD b_psca001_7 name="construct.c.filter.page8.b_psca001_7"
+            {<point name="construct.c.filter.page8.b_psca001_7" />}
+            #END add-point
+ 
+ 
+         #----<<l_inag001>>----
+         #----<<l_inag004>>----
+         #----<<l_inag005>>----
+         #----<<l_inag009>>----
+         #----<<l_inag002>>----
+         #----<<l_hard>>----
+         #----<<b_psca001_8>>----
+         #Ctrlp:construct.c.page9.b_psca001_8
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_psca001_8
+            #add-point:ON ACTION controlp INFIELD b_psca001_8 name="construct.c.filter.page9.b_psca001_8"
+            {<point name="construct.c.filter.page9.b_psca001_8" />}
+            #END add-point
+ 
+ 
+         #----<<l_inaa001>>----
+         #----<<l_inaa006>>----
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         {<point name="filter.b_dialog"/>}
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+ 
+ 
+   
+ 
+   #add-point:離開DIALOG後相關處理 name="filter.after_dialog"
+   {<point name="filter.after_dialog" />}
+   #end add-point
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL apsq102_filter_show('psca001_9','b_psca001_9')
+   CALL apsq102_filter_show('psca001_10','b_psca001_10')
+   CALL apsq102_filter_show('psca001_11','b_psca001_11')
+   CALL apsq102_filter_show('psca001_12','b_psca001_12')
+   CALL apsq102_filter_show('psca001_13','b_psca001_13')
+   CALL apsq102_filter_show('psca001_14','b_psca001_14')
+   CALL apsq102_filter_show('psca001_15','b_psca001_15')
+   CALL apsq102_filter_show('psca001_16','b_psca001_16')
+   CALL apsq102_filter_show('psca001_17','b_psca001_17')
+   CALL apsq102_filter_show('psca001_18','b_psca001_18')
+   CALL apsq102_filter_show('psca001_1','b_psca001_1')
+   CALL apsq102_filter_show('psca001_19','b_psca001_19')
+   CALL apsq102_filter_show('psca001_20','b_psca001_20')
+   CALL apsq102_filter_show('psca001_21','b_psca001_21')
+   CALL apsq102_filter_show('psca001_22','b_psca001_22')
+   CALL apsq102_filter_show('psca001_23','b_psca001_23')
+   CALL apsq102_filter_show('psca001_24','b_psca001_24')
+   CALL apsq102_filter_show('psca001_25','b_psca001_25')
+   CALL apsq102_filter_show('psca001_26','b_psca001_26')
+   CALL apsq102_filter_show('psca001_27','b_psca001_27')
+   CALL apsq102_filter_show('psca001_28','b_psca001_28')
+   CALL apsq102_filter_show('psca001_2','b_psca001_2')
+   CALL apsq102_filter_show('psca001_29','b_psca001_29')
+   CALL apsq102_filter_show('psca001_30','b_psca001_30')
+   CALL apsq102_filter_show('psca001_31','b_psca001_31')
+   CALL apsq102_filter_show('psca001_32','b_psca001_32')
+   CALL apsq102_filter_show('psca001_33','b_psca001_33')
+   CALL apsq102_filter_show('psca001_34','b_psca001_34')
+   CALL apsq102_filter_show('psca001_35','b_psca001_35')
+   CALL apsq102_filter_show('psca001_3','b_psca001_3')
+   CALL apsq102_filter_show('psca001_4','b_psca001_4')
+   CALL apsq102_filter_show('psca001_5','b_psca001_5')
+   CALL apsq102_filter_show('psca001_6','b_psca001_6')
+   CALL apsq102_filter_show('psca001_7','b_psca001_7')
+   CALL apsq102_filter_show('psca001_8','b_psca001_8')
+ 
+ 
+   CALL apsq102_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apsq102.filter_parser" >}
+#應用 qs14 樣板自動產生(Version:6)
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION apsq102_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   {<point name="filter_parser.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   {<point name="filter_parser.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   {<point name="filter_parser.before_function" />}
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+
+{</section>}
+
+{<section id="apsq102.filter_show" >}
+#應用 qs15 樣板自動產生(Version:6)
+#+ filter標題欄位顯示搜尋條件
+PRIVATE FUNCTION apsq102_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   {<point name="filter_show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   {<point name="filter_show.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   {<point name="filter_show.before_function" />}
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apsq102_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+
+{</section>}
+
+{<section id="apsq102.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION apsq102_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+{<point name="detail_action_trans.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+{<point name="detail_action_trans.define"/>}
+   #end add-point
+ 
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+{<point name="detail_action_trans.before_function" />}
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apsq102.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION apsq102_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="detail_index_setting.define_customerization"
+{<point name="detail_index_setting.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+{<point name="detail_index_setting.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+{<point name="detail_index_setting.before_function" />}
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_psca_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_psca_d.getLength() AND g_psca_d.getLength() > 0
+            LET g_detail_idx = g_psca_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_psca_d.getLength() THEN
+               LET g_detail_idx = g_psca_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apsq102.mask_functions" >}
+ &include "erp/aps/apsq102_mask.4gl"
+
+{</section>}
+
+{<section id="apsq102.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

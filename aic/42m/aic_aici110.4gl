@@ -1,0 +1,6865 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aici110.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2014-08-01 17:29:02), PR版次:0009(2016-11-17 14:12:40)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000148
+#+ Filename...: aici110
+#+ Description: 內部直接交易設定作業
+#+ Creator....: 02295(2014-04-09 09:49:31)
+#+ Modifier...: 02295 -SD/PR- 08993
+ 
+{</section>}
+ 
+{<section id="aici110.global" >}
+#應用 i01 樣板自動產生(Version:50)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00005#19  2016/03/29 by 07675     將重複內容的錯誤訊息置換為公用錯誤訊息
+#160318-00025#19  2016/04/14 BY 07900     校验代码重复错误讯息的修改
+#160902-00048#1   2016/09/05 By dorislai  修正SQL少ent的問題
+#161013-00051#1   2016/10/18 By shiun     整批調整據點組織開窗
+#161109-00085#1   2016/11/10 By lienjunqi 整批調整系統星號寫法
+#161109-00085#43  2016/11/17 By 08993     整批調整系統星號寫法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+ 
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"  
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_icaf_m RECORD
+       icaf001 LIKE icaf_t.icaf001, 
+   icaf001_desc LIKE type_t.chr80, 
+   icaf002 LIKE icaf_t.icaf002, 
+   icaf002_desc LIKE type_t.chr80, 
+   icafsite LIKE icaf_t.icafsite, 
+   icafstus LIKE icaf_t.icafstus, 
+   icaf003 LIKE icaf_t.icaf003, 
+   icaf003_desc LIKE type_t.chr80, 
+   icaf004 LIKE icaf_t.icaf004, 
+   icaf004_desc LIKE type_t.chr80, 
+   icaf005 LIKE icaf_t.icaf005, 
+   icaf005_desc LIKE type_t.chr80, 
+   icaf006 LIKE icaf_t.icaf006, 
+   icaf006_desc LIKE type_t.chr80, 
+   icaf007 LIKE icaf_t.icaf007, 
+   icaf007_desc LIKE type_t.chr80, 
+   icaf008 LIKE icaf_t.icaf008, 
+   icaf008_desc LIKE type_t.chr80, 
+   icaf009 LIKE icaf_t.icaf009, 
+   icaf009_desc LIKE type_t.chr80, 
+   icaf010 LIKE icaf_t.icaf010, 
+   icaf010_desc LIKE type_t.chr80, 
+   icaf011 LIKE icaf_t.icaf011, 
+   icaf011_desc LIKE type_t.chr80, 
+   icaf012 LIKE icaf_t.icaf012, 
+   icaf012_desc LIKE type_t.chr80, 
+   icaf013 LIKE icaf_t.icaf013, 
+   icaf013_desc LIKE type_t.chr80, 
+   icaf014 LIKE icaf_t.icaf014, 
+   icaf014_desc LIKE type_t.chr80, 
+   icaf015 LIKE icaf_t.icaf015, 
+   icaf015_desc LIKE type_t.chr80, 
+   icaf016 LIKE icaf_t.icaf016, 
+   icaf016_desc LIKE type_t.chr80, 
+   icaf026 LIKE icaf_t.icaf026, 
+   icaf026_desc LIKE type_t.chr80, 
+   icaf027 LIKE icaf_t.icaf027, 
+   icaf027_desc LIKE type_t.chr80, 
+   icaf017 LIKE icaf_t.icaf017, 
+   icaf017_desc LIKE type_t.chr80, 
+   icaf018 LIKE icaf_t.icaf018, 
+   icaf018_desc LIKE type_t.chr80, 
+   icaf019 LIKE icaf_t.icaf019, 
+   icaf019_desc LIKE type_t.chr80, 
+   icaf020 LIKE icaf_t.icaf020, 
+   icaf020_desc LIKE type_t.chr80, 
+   icaf021 LIKE icaf_t.icaf021, 
+   icaf021_desc LIKE type_t.chr80, 
+   icaf022 LIKE icaf_t.icaf022, 
+   icaf022_desc LIKE type_t.chr80, 
+   icaf023 LIKE icaf_t.icaf023, 
+   icaf023_desc LIKE type_t.chr80, 
+   icaf024 LIKE icaf_t.icaf024, 
+   icaf024_desc LIKE type_t.chr80, 
+   icaf025 LIKE icaf_t.icaf025, 
+   icafownid LIKE icaf_t.icafownid, 
+   icafownid_desc LIKE type_t.chr80, 
+   icafowndp LIKE icaf_t.icafowndp, 
+   icafowndp_desc LIKE type_t.chr80, 
+   icafcrtid LIKE icaf_t.icafcrtid, 
+   icafcrtid_desc LIKE type_t.chr80, 
+   icafcrtdp LIKE icaf_t.icafcrtdp, 
+   icafcrtdp_desc LIKE type_t.chr80, 
+   icafcrtdt LIKE icaf_t.icafcrtdt, 
+   icafmodid LIKE icaf_t.icafmodid, 
+   icafmodid_desc LIKE type_t.chr80, 
+   icafmoddt LIKE icaf_t.icafmoddt
+       END RECORD
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD  #查詢方案用陣列 
+         b_statepic     LIKE type_t.chr50,
+            b_icaf001 LIKE icaf_t.icaf001,
+   b_icaf001_desc LIKE type_t.chr80,
+      b_icaf002 LIKE icaf_t.icaf002,
+   b_icaf002_desc LIKE type_t.chr80
+      END RECORD 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_ooef001             LIKE ooef_t.ooef001
+#161109-00085#1-s
+#DEFINE g_ooef    RECORD LIKE ooef_t.*   #161109-00085#43-s mark   
+DEFINE g_ooef                RECORD   #組織基本資料檔
+       ooefent LIKE ooef_t.ooefent, #企業編號
+       ooefstus LIKE ooef_t.ooefstus, #狀態碼
+       ooef001 LIKE ooef_t.ooef001, #組織編號
+       ooef002 LIKE ooef_t.ooef002, #統一編號
+       ooef004 LIKE ooef_t.ooef004, #單據別參照表號
+       ooef005 LIKE ooef_t.ooef005, #單據據點編號
+       ooef006 LIKE ooef_t.ooef006, #所屬國家地區
+       ooef007 LIKE ooef_t.ooef007, #上市櫃公司編號
+       ooef008 LIKE ooef_t.ooef008, #行事曆參照表號
+       ooef009 LIKE ooef_t.ooef009, #製造行事曆對應類別
+       ooef010 LIKE ooef_t.ooef010, #辦公行事曆對應類別
+       ooef011 LIKE ooef_t.ooef011, #專屬國家地區功能
+       ooef012 LIKE ooef_t.ooef012, #聯絡對象識別碼
+       ooef013 LIKE ooef_t.ooef013, #日期顯示格式
+       ooefownid LIKE ooef_t.ooefownid, #資料所有者
+       ooefowndp LIKE ooef_t.ooefowndp, #資料所有部門
+       ooefcrtid LIKE ooef_t.ooefcrtid, #資料建立者
+       ooefcrtdp LIKE ooef_t.ooefcrtdp, #資料建立部門
+       ooefcrtdt LIKE ooef_t.ooefcrtdt, #資料創建日
+       ooefmodid LIKE ooef_t.ooefmodid, #資料修改者
+       ooefmoddt LIKE ooef_t.ooefmoddt, #最近修改日
+       ooef014 LIKE ooef_t.ooef014, #幣別參照表號
+       ooef015 LIKE ooef_t.ooef015, #匯率參照表號
+       ooef016 LIKE ooef_t.ooef016, #主幣別編號
+       ooef017 LIKE ooef_t.ooef017, #法人歸屬
+       ooef018 LIKE ooef_t.ooef018, #時區
+       ooef019 LIKE ooef_t.ooef019, #稅區
+       ooef020 LIKE ooef_t.ooef020, #工商登記號
+       ooef021 LIKE ooef_t.ooef021, #法人代表
+       ooef022 LIKE ooef_t.ooef022, #註冊資本
+       ooef003 LIKE ooef_t.ooef003, #法人否
+       ooef023 LIKE ooef_t.ooef023, #數字/金額顯示格式
+       ooef024 LIKE ooef_t.ooef024, #據點對應客戶/供應商編號
+       ooef025 LIKE ooef_t.ooef025, #品管參照表號
+       ooef026 LIKE ooef_t.ooef026, #預設存款銀行帳戶
+       ooef100 LIKE ooef_t.ooef100, #門店狀態
+       ooef101 LIKE ooef_t.ooef101, #層級類型
+       ooef102 LIKE ooef_t.ooef102, #業態
+       ooef103 LIKE ooef_t.ooef103, #渠道
+       ooef104 LIKE ooef_t.ooef104, #商圈
+       ooef105 LIKE ooef_t.ooef105, #可比店
+       ooef106 LIKE ooef_t.ooef106, #價格參考標準
+       ooef107 LIKE ooef_t.ooef107, #店慶會計期
+       ooef108 LIKE ooef_t.ooef108, #散客編號
+       ooef109 LIKE ooef_t.ooef109, #開業日期
+       ooef110 LIKE ooef_t.ooef110, #閉店日期
+       ooef111 LIKE ooef_t.ooef111, #測量面積
+       ooef112 LIKE ooef_t.ooef112, #建築面積
+       ooef113 LIKE ooef_t.ooef113, #經營面積
+       ooef114 LIKE ooef_t.ooef114, #合作對象總數
+       ooef115 LIKE ooef_t.ooef115, #24小時營業否
+       ooef120 LIKE ooef_t.ooef120, #本店取貨訂定比例
+       ooef121 LIKE ooef_t.ooef121, #異店取貨訂定比例
+       ooef122 LIKE ooef_t.ooef122, #總部配送訂定比例
+       ooef123 LIKE ooef_t.ooef123, #預設收貨成本倉
+       ooef124 LIKE ooef_t.ooef124, #預設出貨成本倉
+       ooef125 LIKE ooef_t.ooef125, #預設在途成本倉
+       ooef150 LIKE ooef_t.ooef150, #門店類別
+       ooef151 LIKE ooef_t.ooef151, #規模類別
+       ooef152 LIKE ooef_t.ooef152, #門店週期
+       ooef153 LIKE ooef_t.ooef153, #銷售區域
+       ooef154 LIKE ooef_t.ooef154, #銷售省區
+       ooef155 LIKE ooef_t.ooef155, #銷售地區
+       ooef156 LIKE ooef_t.ooef156, #銷售片區
+       ooef157 LIKE ooef_t.ooef157, #其他屬性1
+       ooef158 LIKE ooef_t.ooef158, #其他屬性2
+       ooef159 LIKE ooef_t.ooef159, #其他屬性3
+       ooef160 LIKE ooef_t.ooef160, #其他屬性4
+       ooef161 LIKE ooef_t.ooef161, #其他屬性5
+       ooef162 LIKE ooef_t.ooef162, #其他屬性6
+       ooef163 LIKE ooef_t.ooef163, #其他屬性7
+       ooef164 LIKE ooef_t.ooef164, #其他屬性8
+       ooef165 LIKE ooef_t.ooef165, #其他屬性9
+       ooef166 LIKE ooef_t.ooef166, #其他屬性10
+       ooef167 LIKE ooef_t.ooef167, #其他屬性11
+       ooef168 LIKE ooef_t.ooef168, #其他屬性12
+       ooef169 LIKE ooef_t.ooef169, #其他屬性13
+       ooef170 LIKE ooef_t.ooef170, #其他屬性14
+       ooef171 LIKE ooef_t.ooef171, #其他屬性15
+       ooef172 LIKE ooef_t.ooef172, #其他屬性16
+       ooef173 LIKE ooef_t.ooef173, #其他屬性17
+       ooefunit LIKE ooef_t.ooefunit, #應用組織
+       ooef200 LIKE ooef_t.ooef200, #分群編號
+       ooef201 LIKE ooef_t.ooef201, #營運據點
+       ooef202 LIKE ooef_t.ooef202, #預測組織
+       ooef203 LIKE ooef_t.ooef203, #部門組織
+       ooef204 LIKE ooef_t.ooef204, #核算組織
+       ooef205 LIKE ooef_t.ooef205, #預算組織
+       ooef206 LIKE ooef_t.ooef206, #資金組織
+       ooef207 LIKE ooef_t.ooef207, #資產組織
+       ooef208 LIKE ooef_t.ooef208, #銷售組織
+       ooef209 LIKE ooef_t.ooef209, #銷售範圍
+       ooef210 LIKE ooef_t.ooef210, #採購組織
+       ooef211 LIKE ooef_t.ooef211, #物流組織
+       ooef212 LIKE ooef_t.ooef212, #結算組織
+       ooef213 LIKE ooef_t.ooef213, #nouse
+       ooef214 LIKE ooef_t.ooef214, #nouse
+       ooef215 LIKE ooef_t.ooef215, #nouse
+       ooef216 LIKE ooef_t.ooef216, #nouse
+       ooef217 LIKE ooef_t.ooef217, #nouse
+       ooef301 LIKE ooef_t.ooef301, #營銷中心
+       ooef302 LIKE ooef_t.ooef302, #配送中心
+       ooef303 LIKE ooef_t.ooef303, #採購中心
+       ooef304 LIKE ooef_t.ooef304, #門店
+       ooef305 LIKE ooef_t.ooef305, #辦事處
+       ooef306 LIKE ooef_t.ooef306, #nouse
+       ooef307 LIKE ooef_t.ooef307, #nouse
+       ooef308 LIKE ooef_t.ooef308, #nouse
+       ooef309 LIKE ooef_t.ooef309, #nouse
+       ooef310 LIKE ooef_t.ooef310, #nouse
+       ooef126 LIKE ooef_t.ooef126, #預設收貨非成本倉
+       ooef127 LIKE ooef_t.ooef127, #預設出貨非成本倉
+       ooef128 LIKE ooef_t.ooef128, #預設在途非成本倉
+       ooef116 LIKE ooef_t.ooef116 #語言別
+               END RECORD
+#161109-00085#1-e               
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_icaf_m        type_g_icaf_m  #單頭變數宣告
+DEFINE g_icaf_m_t      type_g_icaf_m  #單頭舊值宣告(系統還原用)
+DEFINE g_icaf_m_o      type_g_icaf_m  #單頭舊值宣告(其他用途)
+DEFINE g_icaf_m_mask_o type_g_icaf_m  #轉換遮罩前資料
+DEFINE g_icaf_m_mask_n type_g_icaf_m  #轉換遮罩後資料
+ 
+   DEFINE g_icaf001_t LIKE icaf_t.icaf001
+DEFINE g_icaf002_t LIKE icaf_t.icaf002
+ 
+   
+ 
+   
+ 
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10             #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10             #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10             #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num10             #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)
+DEFINE g_row_index           LIKE type_t.num10             #階層樹狀用指標
+DEFINE g_add_browse          STRING                        #新增填充用WC
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization" 
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aici110.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aic","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT icaf001,'',icaf002,'',icafsite,icafstus,icaf003,'',icaf004,'',icaf005, 
+       '',icaf006,'',icaf007,'',icaf008,'',icaf009,'',icaf010,'',icaf011,'',icaf012,'',icaf013,'',icaf014, 
+       '',icaf015,'',icaf016,'',icaf026,'',icaf027,'',icaf017,'',icaf018,'',icaf019,'',icaf020,'',icaf021, 
+       '',icaf022,'',icaf023,'',icaf024,'',icaf025,icafownid,'',icafowndp,'',icafcrtid,'',icafcrtdp, 
+       '',icafcrtdt,icafmodid,'',icafmoddt", 
+                      " FROM icaf_t",
+                      " WHERE icafent= ? AND icaf001=? AND icaf002=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aici110_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.icaf001,t0.icaf002,t0.icafsite,t0.icafstus,t0.icaf003,t0.icaf004, 
+       t0.icaf005,t0.icaf006,t0.icaf007,t0.icaf008,t0.icaf009,t0.icaf010,t0.icaf011,t0.icaf012,t0.icaf013, 
+       t0.icaf014,t0.icaf015,t0.icaf016,t0.icaf026,t0.icaf027,t0.icaf017,t0.icaf018,t0.icaf019,t0.icaf020, 
+       t0.icaf021,t0.icaf022,t0.icaf023,t0.icaf024,t0.icaf025,t0.icafownid,t0.icafowndp,t0.icafcrtid, 
+       t0.icafcrtdp,t0.icafcrtdt,t0.icafmodid,t0.icafmoddt,t1.ooefl004 ,t2.ooefl004 ,t3.oobxl003 ,t4.oobxl003 , 
+       t5.oobxl003 ,t6.inaa002 ,t7.inab003 ,t8.oodbl004 ,t9.oobxl003 ,t10.oobxl003 ,t11.ooefl003 ,t12.oocql004 , 
+       t13.ooibl004 ,t14.oobxl003 ,t15.oobxl003 ,t16.oobxl003 ,t17.oobxl003 ,t18.oobxl003 ,t19.inaa002 , 
+       t20.inab003 ,t21.oodbl004 ,t22.oobxl003 ,t23.oobxl003 ,t24.ooefl003 ,t25.oocql004 ,t26.ooibl004 , 
+       t27.ooag011 ,t28.ooefl003 ,t29.ooag011 ,t30.ooefl003 ,t31.ooag011",
+               " FROM icaf_t t0",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.icaf001 AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent="||g_enterprise||" AND t2.ooefl001=t0.icaf002 AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t3 ON t3.oobxlent="||g_enterprise||" AND t3.oobxl001=t0.icaf003 AND t3.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t4 ON t4.oobxlent="||g_enterprise||" AND t4.oobxl001=t0.icaf004 AND t4.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t5 ON t5.oobxlent="||g_enterprise||" AND t5.oobxl001=t0.icaf005 AND t5.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN inaa_t t6 ON t6.inaaent="||g_enterprise||" AND t6.inaasite='' AND t6.inaa001=t0.icaf006  ",
+               " LEFT JOIN inab_t t7 ON t7.inabent="||g_enterprise||" AND t7.inabsite='' AND t7.inab001=t0.icaf006 AND t7.inab002=t0.icaf007  ",
+               " LEFT JOIN oodbl_t t8 ON t8.oodblent="||g_enterprise||" AND t8.oodbl001='' AND t8.oodbl002=t0.icaf008 AND t8.oodbl003='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t9 ON t9.oobxlent="||g_enterprise||" AND t9.oobxl001=t0.icaf009 AND t9.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t10 ON t10.oobxlent="||g_enterprise||" AND t10.oobxl001=t0.icaf010 AND t10.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t11 ON t11.ooeflent="||g_enterprise||" AND t11.ooefl001=t0.icaf011 AND t11.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t12 ON t12.oocqlent="||g_enterprise||" AND t12.oocql001='3211' AND t12.oocql002=t0.icaf012 AND t12.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN ooibl_t t13 ON t13.ooiblent="||g_enterprise||" AND t13.ooibl002=t0.icaf013 AND t13.ooibl003='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t14 ON t14.oobxlent="||g_enterprise||" AND t14.oobxl001=t0.icaf014 AND t14.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t15 ON t15.oobxlent="||g_enterprise||" AND t15.oobxl001=t0.icaf015 AND t15.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t16 ON t16.oobxlent="||g_enterprise||" AND t16.oobxl001=t0.icaf016 AND t16.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t17 ON t17.oobxlent="||g_enterprise||" AND t17.oobxl001=t0.icaf026 AND t17.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t18 ON t18.oobxlent="||g_enterprise||" AND t18.oobxl001=t0.icaf027 AND t18.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN inaa_t t19 ON t19.inaaent="||g_enterprise||" AND t19.inaasite='' AND t19.inaa001=t0.icaf017  ",
+               " LEFT JOIN inab_t t20 ON t20.inabent="||g_enterprise||" AND t20.inabsite='' AND t20.inab001=t0.icaf017 AND t20.inab002=t0.icaf018  ",
+               " LEFT JOIN oodbl_t t21 ON t21.oodblent="||g_enterprise||" AND t21.oodbl001='' AND t21.oodbl002=t0.icaf019 AND t21.oodbl003='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t22 ON t22.oobxlent="||g_enterprise||" AND t22.oobxl001=t0.icaf020 AND t22.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN oobxl_t t23 ON t23.oobxlent="||g_enterprise||" AND t23.oobxl001=t0.icaf021 AND t23.oobxl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t24 ON t24.ooeflent="||g_enterprise||" AND t24.ooefl001=t0.icaf022 AND t24.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t25 ON t25.oocqlent="||g_enterprise||" AND t25.oocql001='3111' AND t25.oocql002=t0.icaf023 AND t25.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN ooibl_t t26 ON t26.ooiblent="||g_enterprise||" AND t26.ooibl002=t0.icaf024 AND t26.ooibl003='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t27 ON t27.ooagent="||g_enterprise||" AND t27.ooag001=t0.icafownid  ",
+               " LEFT JOIN ooefl_t t28 ON t28.ooeflent="||g_enterprise||" AND t28.ooefl001=t0.icafowndp AND t28.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t29 ON t29.ooagent="||g_enterprise||" AND t29.ooag001=t0.icafcrtid  ",
+               " LEFT JOIN ooefl_t t30 ON t30.ooeflent="||g_enterprise||" AND t30.ooefl001=t0.icafcrtdp AND t30.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t31 ON t31.ooagent="||g_enterprise||" AND t31.ooag001=t0.icafmodid  ",
+ 
+               " WHERE t0.icafent = " ||g_enterprise|| " AND t0.icaf001 = ? AND t0.icaf002 = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE aici110_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aici110 WITH FORM cl_ap_formpath("aic",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aici110_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aici110_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aici110
+      
+   END IF 
+   
+   CLOSE aici110_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aici110.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aici110_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   #定義combobox狀態
+      CALL cl_set_combo_scc_part('icafstus','17','N,Y')
+ 
+      CALL cl_set_combo_scc('icaf025','2502') 
+ 
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化 name="init.init"
+   
+   #end add-point
+   
+   #根據外部參數進行搜尋
+   CALL aici110_default_search()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aici110_ui_dialog() 
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num10       #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10       #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 0
+ 
+   #若有外部參數查詢, 則直接顯示資料(隱藏查詢方案)
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL aici110_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_icaf_m.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL aici110_init()
+      END IF
+      
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+    
+      #確保g_current_idx位於正常區間內
+      #小於,等於0則指到第1筆
+      IF g_current_idx <= 0 THEN
+         LET g_current_idx = 1
+      END IF
+               
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+               #先填充browser資料
+               CALL aici110_browser_fill(g_wc,"")
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aici110_fetch("")   
+               END IF               
+               #add-point:ui_dialog段 before menu name="ui_dialog.before_menu"
+               
+               #end add-point
+            
+            #狀態碼切換
+            ON ACTION statechange
+               CALL aici110_statechange()
+               LET g_action_choice="statechange"
+               #根據資料狀態切換action狀態
+               CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+               CALL aici110_set_act_visible()
+               CALL aici110_set_act_no_visible()
+               IF NOT (g_icaf_m.icaf001 IS NULL
+                 OR g_icaf_m.icaf002 IS NULL
+ 
+                 ) THEN
+                  #組合條件
+                  LET g_add_browse = " icafent = " ||g_enterprise|| " AND",
+                                     " icaf001 = '", g_icaf_m.icaf001, "' "
+                                     ," AND icaf002 = '", g_icaf_m.icaf002, "' "
+ 
+                  #填到對應位置
+                  CALL aici110_browser_fill(g_wc,"")
+               END IF
+               
+            #第一筆資料
+            ON ACTION first
+               CALL aici110_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL aici110_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            #指定筆資料
+            ON ACTION jump
+               CALL aici110_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            #上一筆資料
+            ON ACTION previous
+               CALL aici110_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            #最後筆資料
+            ON ACTION last 
+               CALL aici110_fetch("L")  
+               LET g_current_row = g_current_idx
+            
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            #主頁摺疊
+            ON ACTION mainhidden   
+               LET g_action_choice = "mainhidden"            
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+            
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aici110_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aici110_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL aici110_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aici110_modify()
+               #add-point:ON ACTION modify name="menu2.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aici110_delete()
+               #add-point:ON ACTION delete name="menu2.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aici110_insert()
+               #add-point:ON ACTION insert name="menu2.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu2.output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu2.quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL aici110_reproduce()
+               #add-point:ON ACTION reproduce name="menu2.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aici110_query()
+               #add-point:ON ACTION query name="menu2.query"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+            
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aici110_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.menu.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aici110_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.menu.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aici110_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.menu.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu_exit_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL aici110_fetch("")
+ 
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+    
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+            
+            #end add-point
+ 
+            #查詢方案用
+            SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+            SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+         
+            BEFORE DIALOG
+               #先填充browser資料
+               IF g_action_choice <> "mainhidden" THEN
+                  CALL aici110_browser_fill(g_wc,"")
+               END IF
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #還原為原本指定筆數
+               IF g_current_row > 1 THEN
+                  #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+                  IF g_current_row > g_browser.getLength() THEN
+                     LET g_current_row = g_browser.getLength()
+                  END IF 
+                  LET g_current_idx = g_current_row
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aici110_fetch("")   
+               END IF          
+               CALL cl_notice()
+               
+               #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+               
+               #end add-point  
+            
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+               
+               #end add-point
+            
+            #狀態碼切換
+            ON ACTION statechange
+               CALL aici110_statechange()
+               LET g_action_choice="statechange"
+               #根據資料狀態切換action狀態
+               CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+               CALL aici110_set_act_visible()
+               CALL aici110_set_act_no_visible()
+               IF NOT (g_icaf_m.icaf001 IS NULL
+                 OR g_icaf_m.icaf002 IS NULL
+ 
+                 ) THEN
+                  #組合條件
+                  LET g_add_browse = " icafent = " ||g_enterprise|| " AND",
+                                     " icaf001 = '", g_icaf_m.icaf001, "' "
+                                     ," AND icaf002 = '", g_icaf_m.icaf002, "' "
+ 
+                  #填到對應位置
+                  CALL aici110_browser_fill(g_wc,"")
+               END IF
+         
+            #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+               
+               #end add-point
+               CALL aici110_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+            
+            #第一筆資料
+            ON ACTION first
+               CALL aici110_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL aici110_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            #指定筆資料
+            ON ACTION jump
+               CALL aici110_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            #上一筆資料
+            ON ACTION previous
+               CALL aici110_fetch("P")
+               LET g_current_row = g_current_idx
+          
+            #最後筆資料
+            ON ACTION last 
+               CALL aici110_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+    
+            #主頁摺疊
+            ON ACTION mainhidden 
+               LET g_action_choice = "mainhidden"                
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               #EXIT DIALOG
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               #EXIT DIALOG
+         
+            ON ACTION exporttoexcel
+               LET g_action_choice="exporttoexcel"
+               IF cl_auth_chk_act("exporttoexcel") THEN
+                  #browser
+                  CALL g_export_node.clear()
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               END IF
+         
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aici110_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aici110_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL aici110_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aici110_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aici110_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aici110_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL aici110_reproduce()
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aici110_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+ 
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aici110_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aici110_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aici110_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu_exit_dialog.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      
+      #(ver:50) ---start---
+      IF li_exit THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+      #(ver:50) --- end ---
+ 
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.browser_fill" >}
+#應用 a29 樣板自動產生(Version:15)
+#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION aici110_browser_fill(p_wc,ps_page_action) 
+   #add-point:browser_fill段define name="browser_fill.define_customerization"
+   
+   #end add-point
+   DEFINE p_wc              STRING
+   DEFINE ls_wc             STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="browser_fill.pre_function"
+   
+   #end add-point
+   
+   LET l_searchcol = "icaf001,icaf002"
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   #add-point:browser_fill段wc控制 name="browser_fill.wc"
+   
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(1) FROM icaf_t ",
+               "  ",
+               "  ",
+               " WHERE icafent = " ||g_enterprise|| " AND ", 
+               p_wc CLIPPED, cl_sql_add_filter("icaf_t")
+                
+   #add-point:browser_fill段cnt_sql name="browser_fill.cnt_sql"
+   
+   #end add-point
+                
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt
+      FREE header_cnt_pre 
+   END IF
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt 
+         LET g_errparam.code   = 9035
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+   END IF
+   
+   LET g_error_show = 0
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM
+      INITIALIZE g_icaf_m.* TO NULL
+      CALL g_browser.clear()
+      LET g_cnt = 1
+      LET ls_wc = p_wc
+   ELSE
+      LET ls_wc = g_add_browse
+      LET g_cnt = g_current_idx
+   END IF
+   
+   LET g_sql = " SELECT t0.icafstus,t0.icaf001,t0.icaf002,t1.ooefl004 ,t2.ooefl004",
+               " FROM icaf_t t0 ",
+               "  ",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.icaf001 AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent="||g_enterprise||" AND t2.ooefl001=t0.icaf002 AND t2.ooefl002='"||g_dlang||"' ",
+ 
+               " WHERE t0.icafent = " ||g_enterprise|| " AND ", ls_wc, cl_sql_add_filter("icaf_t")
+   #add-point:browser_fill段fill_wc name="browser_fill.fill_wc"
+   
+   #end add-point 
+   LET g_sql = g_sql, " ORDER BY ",l_searchcol," ",g_order
+   #add-point:browser_fill段before_pre name="browser_fill.before_pre"
+   
+   #end add-point                    
+ 
+   #LET g_sql = cl_sql_add_tabid(g_sql,"icaf_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_icaf001,g_browser[g_cnt].b_icaf002, 
+          g_browser[g_cnt].b_icaf001_desc,g_browser[g_cnt].b_icaf002_desc
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "foreach:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+         
+         
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+         
+         #遮罩相關處理
+         CALL aici110_browser_mask()
+         
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/inactive.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/active.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+ 
+      FREE browse_pre
+ 
+   END IF
+ 
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_icaf001) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_current_cnt = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_rec_b = g_browser.getLength()
+   LET g_cnt = 0
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aici110.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aici110_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+   
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE g_icaf_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON icaf001,icaf002,icafsite,icafstus,icaf003,icaf004,icaf005,icaf006,icaf007, 
+          icaf008,icaf009,icaf010,icaf011,icaf012,icaf013,icaf014,icaf015,icaf016,icaf026,icaf027,icaf017, 
+          icaf018,icaf019,icaf020,icaf021,icaf022,icaf023,icaf024,icaf025,icafownid,icafowndp,icafcrtid, 
+          icafcrtdp,icafcrtdt,icafmodid,icafmoddt
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct name="cs.before_construct"
+            
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<icafcrtdt>>----
+         AFTER FIELD icafcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<icafmoddt>>----
+         AFTER FIELD icafmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<icafcnfdt>>----
+         
+         #----<<icafpstdt>>----
+ 
+ 
+ 
+      
+         #一般欄位
+                  #Ctrlp:construct.c.icaf001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf001
+            #add-point:ON ACTION controlp INFIELD icaf001 name="construct.c.icaf001"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #mod--161013-00051#1 By shiun--(S)
+#            CALL q_ooef001_12()                           #呼叫開窗
+            CALL q_ooef001_1()
+            #mod--161013-00051#1 By shiun--(E)
+            DISPLAY g_qryparam.return1 TO icaf001  #顯示到畫面上
+            NEXT FIELD icaf001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf001
+            #add-point:BEFORE FIELD icaf001 name="construct.b.icaf001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf001
+            
+            #add-point:AFTER FIELD icaf001 name="construct.a.icaf001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf002
+            #add-point:ON ACTION controlp INFIELD icaf002 name="construct.c.icaf002"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #mod--161013-00051#1 By shiun--(S)
+#            CALL q_ooef001_12()                           #呼叫開窗
+            CALL q_ooef001_1()
+            #mod--161013-00051#1 By shiun--(E)
+            DISPLAY g_qryparam.return1 TO icaf002  #顯示到畫面上
+            NEXT FIELD icaf002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf002
+            #add-point:BEFORE FIELD icaf002 name="construct.b.icaf002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf002
+            
+            #add-point:AFTER FIELD icaf002 name="construct.a.icaf002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafsite
+            #add-point:BEFORE FIELD icafsite name="construct.b.icafsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icafsite
+            
+            #add-point:AFTER FIELD icafsite name="construct.a.icafsite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icafsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icafsite
+            #add-point:ON ACTION controlp INFIELD icafsite name="construct.c.icafsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafstus
+            #add-point:BEFORE FIELD icafstus name="construct.b.icafstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icafstus
+            
+            #add-point:AFTER FIELD icafstus name="construct.a.icafstus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icafstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icafstus
+            #add-point:ON ACTION controlp INFIELD icafstus name="construct.c.icafstus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.icaf003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf003
+            #add-point:ON ACTION controlp INFIELD icaf003 name="construct.c.icaf003"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf003  #顯示到畫面上
+            NEXT FIELD icaf003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf003
+            #add-point:BEFORE FIELD icaf003 name="construct.b.icaf003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf003
+            
+            #add-point:AFTER FIELD icaf003 name="construct.a.icaf003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf004
+            #add-point:ON ACTION controlp INFIELD icaf004 name="construct.c.icaf004"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf004  #顯示到畫面上
+            NEXT FIELD icaf004                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf004
+            #add-point:BEFORE FIELD icaf004 name="construct.b.icaf004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf004
+            
+            #add-point:AFTER FIELD icaf004 name="construct.a.icaf004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf005
+            #add-point:ON ACTION controlp INFIELD icaf005 name="construct.c.icaf005"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf005  #顯示到畫面上
+            NEXT FIELD icaf005                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf005
+            #add-point:BEFORE FIELD icaf005 name="construct.b.icaf005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf005
+            
+            #add-point:AFTER FIELD icaf005 name="construct.a.icaf005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf006
+            #add-point:ON ACTION controlp INFIELD icaf006 name="construct.c.icaf006"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa001_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf006  #顯示到畫面上
+            NEXT FIELD icaf006                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf006
+            #add-point:BEFORE FIELD icaf006 name="construct.b.icaf006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf006
+            
+            #add-point:AFTER FIELD icaf006 name="construct.a.icaf006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf007
+            #add-point:ON ACTION controlp INFIELD icaf007 name="construct.c.icaf007"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inab002_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf007  #顯示到畫面上
+            NEXT FIELD icaf007                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf007
+            #add-point:BEFORE FIELD icaf007 name="construct.b.icaf007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf007
+            
+            #add-point:AFTER FIELD icaf007 name="construct.a.icaf007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf008
+            #add-point:ON ACTION controlp INFIELD icaf008 name="construct.c.icaf008"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_ooef.ooef019
+            CALL q_oodb002_5()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf008  #顯示到畫面上
+            NEXT FIELD icaf008                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf008
+            #add-point:BEFORE FIELD icaf008 name="construct.b.icaf008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf008
+            
+            #add-point:AFTER FIELD icaf008 name="construct.a.icaf008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf009
+            #add-point:ON ACTION controlp INFIELD icaf009 name="construct.c.icaf009"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf009  #顯示到畫面上
+            NEXT FIELD icaf009                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf009
+            #add-point:BEFORE FIELD icaf009 name="construct.b.icaf009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf009
+            
+            #add-point:AFTER FIELD icaf009 name="construct.a.icaf009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf010
+            #add-point:ON ACTION controlp INFIELD icaf010 name="construct.c.icaf010"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf010  #顯示到畫面上
+            NEXT FIELD icaf010                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf010
+            #add-point:BEFORE FIELD icaf010 name="construct.b.icaf010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf010
+            
+            #add-point:AFTER FIELD icaf010 name="construct.a.icaf010"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf011
+            #add-point:ON ACTION controlp INFIELD icaf011 name="construct.c.icaf011"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_xrah002_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf011  #顯示到畫面上
+            NEXT FIELD icaf011                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf011
+            #add-point:BEFORE FIELD icaf011 name="construct.b.icaf011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf011
+            
+            #add-point:AFTER FIELD icaf011 name="construct.a.icaf011"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf012
+            #add-point:ON ACTION controlp INFIELD icaf012 name="construct.c.icaf012"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "3211"
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf012  #顯示到畫面上
+            NEXT FIELD icaf012                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf012
+            #add-point:BEFORE FIELD icaf012 name="construct.b.icaf012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf012
+            
+            #add-point:AFTER FIELD icaf012 name="construct.a.icaf012"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf013
+            #add-point:ON ACTION controlp INFIELD icaf013 name="construct.c.icaf013"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooib002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf013  #顯示到畫面上
+            NEXT FIELD icaf013                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf013
+            #add-point:BEFORE FIELD icaf013 name="construct.b.icaf013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf013
+            
+            #add-point:AFTER FIELD icaf013 name="construct.a.icaf013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf014
+            #add-point:ON ACTION controlp INFIELD icaf014 name="construct.c.icaf014"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf014  #顯示到畫面上
+            NEXT FIELD icaf014                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf014
+            #add-point:BEFORE FIELD icaf014 name="construct.b.icaf014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf014
+            
+            #add-point:AFTER FIELD icaf014 name="construct.a.icaf014"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf015
+            #add-point:ON ACTION controlp INFIELD icaf015 name="construct.c.icaf015"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf015  #顯示到畫面上
+            NEXT FIELD icaf015                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf015
+            #add-point:BEFORE FIELD icaf015 name="construct.b.icaf015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf015
+            
+            #add-point:AFTER FIELD icaf015 name="construct.a.icaf015"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf016
+            #add-point:ON ACTION controlp INFIELD icaf016 name="construct.c.icaf016"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf016  #顯示到畫面上
+            NEXT FIELD icaf016                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf016
+            #add-point:BEFORE FIELD icaf016 name="construct.b.icaf016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf016
+            
+            #add-point:AFTER FIELD icaf016 name="construct.a.icaf016"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf026
+            #add-point:ON ACTION controlp INFIELD icaf026 name="construct.c.icaf026"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf026  #顯示到畫面上
+            NEXT FIELD icaf026                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf026
+            #add-point:BEFORE FIELD icaf026 name="construct.b.icaf026"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf026
+            
+            #add-point:AFTER FIELD icaf026 name="construct.a.icaf026"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf027
+            #add-point:ON ACTION controlp INFIELD icaf027 name="construct.c.icaf027"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf027  #顯示到畫面上
+            NEXT FIELD icaf027                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf027
+            #add-point:BEFORE FIELD icaf027 name="construct.b.icaf027"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf027
+            
+            #add-point:AFTER FIELD icaf027 name="construct.a.icaf027"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf017
+            #add-point:ON ACTION controlp INFIELD icaf017 name="construct.c.icaf017"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa001_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf017  #顯示到畫面上
+            NEXT FIELD icaf017                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf017
+            #add-point:BEFORE FIELD icaf017 name="construct.b.icaf017"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf017
+            
+            #add-point:AFTER FIELD icaf017 name="construct.a.icaf017"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf018
+            #add-point:ON ACTION controlp INFIELD icaf018 name="construct.c.icaf018"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inab002_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf018  #顯示到畫面上
+            NEXT FIELD icaf018                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf018
+            #add-point:BEFORE FIELD icaf018 name="construct.b.icaf018"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf018
+            
+            #add-point:AFTER FIELD icaf018 name="construct.a.icaf018"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf019
+            #add-point:ON ACTION controlp INFIELD icaf019 name="construct.c.icaf019"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_ooef.ooef019
+            CALL q_oodb002_5()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf019  #顯示到畫面上
+            NEXT FIELD icaf019                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf019
+            #add-point:BEFORE FIELD icaf019 name="construct.b.icaf019"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf019
+            
+            #add-point:AFTER FIELD icaf019 name="construct.a.icaf019"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf020
+            #add-point:ON ACTION controlp INFIELD icaf020 name="construct.c.icaf020"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf020  #顯示到畫面上
+            NEXT FIELD icaf020                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf020
+            #add-point:BEFORE FIELD icaf020 name="construct.b.icaf020"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf020
+            
+            #add-point:AFTER FIELD icaf020 name="construct.a.icaf020"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf021
+            #add-point:ON ACTION controlp INFIELD icaf021 name="construct.c.icaf021"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooba002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf021  #顯示到畫面上
+            NEXT FIELD icaf021                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf021
+            #add-point:BEFORE FIELD icaf021 name="construct.b.icaf021"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf021
+            
+            #add-point:AFTER FIELD icaf021 name="construct.a.icaf021"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf022
+            #add-point:ON ACTION controlp INFIELD icaf022 name="construct.c.icaf022"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_xrah002_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf022  #顯示到畫面上
+            NEXT FIELD icaf022                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf022
+            #add-point:BEFORE FIELD icaf022 name="construct.b.icaf022"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf022
+            
+            #add-point:AFTER FIELD icaf022 name="construct.a.icaf022"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf023
+            #add-point:ON ACTION controlp INFIELD icaf023 name="construct.c.icaf023"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "3111"
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf023  #顯示到畫面上
+            NEXT FIELD icaf023                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf023
+            #add-point:BEFORE FIELD icaf023 name="construct.b.icaf023"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf023
+            
+            #add-point:AFTER FIELD icaf023 name="construct.a.icaf023"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf024
+            #add-point:ON ACTION controlp INFIELD icaf024 name="construct.c.icaf024"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooib002_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icaf024  #顯示到畫面上
+            NEXT FIELD icaf024                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf024
+            #add-point:BEFORE FIELD icaf024 name="construct.b.icaf024"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf024
+            
+            #add-point:AFTER FIELD icaf024 name="construct.a.icaf024"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf025
+            #add-point:BEFORE FIELD icaf025 name="construct.b.icaf025"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf025
+            
+            #add-point:AFTER FIELD icaf025 name="construct.a.icaf025"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icaf025
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf025
+            #add-point:ON ACTION controlp INFIELD icaf025 name="construct.c.icaf025"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.icafownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icafownid
+            #add-point:ON ACTION controlp INFIELD icafownid name="construct.c.icafownid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icafownid  #顯示到畫面上
+            NEXT FIELD icafownid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafownid
+            #add-point:BEFORE FIELD icafownid name="construct.b.icafownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icafownid
+            
+            #add-point:AFTER FIELD icafownid name="construct.a.icafownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icafowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icafowndp
+            #add-point:ON ACTION controlp INFIELD icafowndp name="construct.c.icafowndp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icafowndp  #顯示到畫面上
+            NEXT FIELD icafowndp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafowndp
+            #add-point:BEFORE FIELD icafowndp name="construct.b.icafowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icafowndp
+            
+            #add-point:AFTER FIELD icafowndp name="construct.a.icafowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icafcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icafcrtid
+            #add-point:ON ACTION controlp INFIELD icafcrtid name="construct.c.icafcrtid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icafcrtid  #顯示到畫面上
+            NEXT FIELD icafcrtid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafcrtid
+            #add-point:BEFORE FIELD icafcrtid name="construct.b.icafcrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icafcrtid
+            
+            #add-point:AFTER FIELD icafcrtid name="construct.a.icafcrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.icafcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icafcrtdp
+            #add-point:ON ACTION controlp INFIELD icafcrtdp name="construct.c.icafcrtdp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icafcrtdp  #顯示到畫面上
+            NEXT FIELD icafcrtdp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafcrtdp
+            #add-point:BEFORE FIELD icafcrtdp name="construct.b.icafcrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icafcrtdp
+            
+            #add-point:AFTER FIELD icafcrtdp name="construct.a.icafcrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafcrtdt
+            #add-point:BEFORE FIELD icafcrtdt name="construct.b.icafcrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.icafmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icafmodid
+            #add-point:ON ACTION controlp INFIELD icafmodid name="construct.c.icafmodid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO icafmodid  #顯示到畫面上
+            NEXT FIELD icafmodid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafmodid
+            #add-point:BEFORE FIELD icafmodid name="construct.b.icafmodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icafmodid
+            
+            #add-point:AFTER FIELD icafmodid name="construct.a.icafmodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafmoddt
+            #add-point:BEFORE FIELD icafmoddt name="construct.b.icafmoddt"
+            
+            #END add-point
+ 
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct name="cs.more_construct"
+      
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct name="cs.after_construct"
+   
+   #end add-point
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION aici110_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON icaf001,icaf002
+                          FROM s_browse[1].b_icaf001,s_browse[1].b_icaf002
+ 
+         BEFORE CONSTRUCT
+               DISPLAY aici110_filter_parser('icaf001') TO s_browse[1].b_icaf001
+            DISPLAY aici110_filter_parser('icaf002') TO s_browse[1].b_icaf002
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL aici110_filter_show('icaf001')
+   CALL aici110_filter_show('icaf002')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aici110_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION aici110_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aici110_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aici110_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc STRING
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL g_browser.clear() 
+ 
+   #browser panel折疊
+   IF g_worksheet_hidden THEN
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   
+   #單頭折疊
+   IF g_header_hidden THEN
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_icaf_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL aici110_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL aici110_browser_fill(g_wc,"F")
+      CALL aici110_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   #根據條件從新抓取資料
+   LET g_error_show = 1
+   CALL aici110_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL aici110_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aici110_fetch(p_fl)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   #根據傳入的條件決定抓取的資料
+   CASE p_fl
+      WHEN "F" 
+         LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         #LET g_current_idx = g_header_cnt        
+         LET g_current_idx = g_browser.getLength()    
+      WHEN "/"
+         #詢問要指定的筆數
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+ 
+   #筆數顯示
+   LET g_browser_idx = g_current_idx 
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+   END IF
+   
+   
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength() 
+   END IF
+   
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt) 
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   #根據選定的筆數給予key欄位值
+   LET g_icaf_m.icaf001 = g_browser[g_current_idx].b_icaf001
+   LET g_icaf_m.icaf002 = g_browser[g_current_idx].b_icaf002
+ 
+                       
+   #讀取單頭所有欄位資料
+   EXECUTE aici110_master_referesh USING g_icaf_m.icaf001,g_icaf_m.icaf002 INTO g_icaf_m.icaf001,g_icaf_m.icaf002, 
+       g_icaf_m.icafsite,g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf004,g_icaf_m.icaf005,g_icaf_m.icaf006, 
+       g_icaf_m.icaf007,g_icaf_m.icaf008,g_icaf_m.icaf009,g_icaf_m.icaf010,g_icaf_m.icaf011,g_icaf_m.icaf012, 
+       g_icaf_m.icaf013,g_icaf_m.icaf014,g_icaf_m.icaf015,g_icaf_m.icaf016,g_icaf_m.icaf026,g_icaf_m.icaf027, 
+       g_icaf_m.icaf017,g_icaf_m.icaf018,g_icaf_m.icaf019,g_icaf_m.icaf020,g_icaf_m.icaf021,g_icaf_m.icaf022, 
+       g_icaf_m.icaf023,g_icaf_m.icaf024,g_icaf_m.icaf025,g_icaf_m.icafownid,g_icaf_m.icafowndp,g_icaf_m.icafcrtid, 
+       g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid,g_icaf_m.icafmoddt,g_icaf_m.icaf001_desc, 
+       g_icaf_m.icaf002_desc,g_icaf_m.icaf003_desc,g_icaf_m.icaf004_desc,g_icaf_m.icaf005_desc,g_icaf_m.icaf006_desc, 
+       g_icaf_m.icaf007_desc,g_icaf_m.icaf008_desc,g_icaf_m.icaf009_desc,g_icaf_m.icaf010_desc,g_icaf_m.icaf011_desc, 
+       g_icaf_m.icaf012_desc,g_icaf_m.icaf013_desc,g_icaf_m.icaf014_desc,g_icaf_m.icaf015_desc,g_icaf_m.icaf016_desc, 
+       g_icaf_m.icaf026_desc,g_icaf_m.icaf027_desc,g_icaf_m.icaf017_desc,g_icaf_m.icaf018_desc,g_icaf_m.icaf019_desc, 
+       g_icaf_m.icaf020_desc,g_icaf_m.icaf021_desc,g_icaf_m.icaf022_desc,g_icaf_m.icaf023_desc,g_icaf_m.icaf024_desc, 
+       g_icaf_m.icafownid_desc,g_icaf_m.icafowndp_desc,g_icaf_m.icafcrtid_desc,g_icaf_m.icafcrtdp_desc, 
+       g_icaf_m.icafmodid_desc
+   
+   #遮罩相關處理
+   LET g_icaf_m_mask_o.* =  g_icaf_m.*
+   CALL aici110_icaf_t_mask()
+   LET g_icaf_m_mask_n.* =  g_icaf_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aici110_set_act_visible()
+   CALL aici110_set_act_no_visible()
+ 
+   #add-point:fetch段action控制 name="fetch.action_control"
+   CALL cl_set_act_visible("delete",TRUE)
+   IF g_icaf_m.icafstus = "N" THEN 
+      CALL cl_set_act_visible("delete",FALSE)
+   END IF
+   CALL aici110_get_site()
+   #end add-point  
+   
+   
+   
+   #保存單頭舊值
+   LET g_icaf_m_t.* = g_icaf_m.*
+   LET g_icaf_m_o.* = g_icaf_m.*
+   
+   LET g_data_owner = g_icaf_m.icafownid      
+   LET g_data_dept  = g_icaf_m.icafowndp
+   
+   #重新顯示
+   CALL aici110_show()
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION aici110_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:insert段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE g_icaf_m.* TO NULL             #DEFAULT 設定
+   LET g_icaf001_t = NULL
+   LET g_icaf002_t = NULL
+ 
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      
+      #公用欄位給值
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_icaf_m.icafownid = g_user
+      LET g_icaf_m.icafowndp = g_dept
+      LET g_icaf_m.icafcrtid = g_user
+      LET g_icaf_m.icafcrtdp = g_dept 
+      LET g_icaf_m.icafcrtdt = cl_get_current()
+      LET g_icaf_m.icafmodid = g_user
+      LET g_icaf_m.icafmoddt = cl_get_current()
+      LET g_icaf_m.icafstus = 'Y'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_icaf_m.icaf025 = "1"
+ 
+ 
+      #add-point:單頭預設值 name="insert.default"
+      LET g_icaf_m.icafsite = g_site
+      LET g_icaf_m.icafstus = 'Y'
+      LET g_icaf_m_t.* = g_icaf_m.*
+      #end add-point   
+     
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_icaf_m.icafstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+     
+      #資料輸入
+      CALL aici110_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         #取消
+         LET INT_FLAG = 0
+         DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+         INITIALIZE g_icaf_m.* TO NULL
+         CALL aici110_show()
+         CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aici110_set_act_visible()
+   CALL aici110_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_icaf001_t = g_icaf_m.icaf001
+   LET g_icaf002_t = g_icaf_m.icaf002
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " icafent = " ||g_enterprise|| " AND",
+                      " icaf001 = '", g_icaf_m.icaf001, "' "
+                      ," AND icaf002 = '", g_icaf_m.icaf002, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL aici110_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+ 
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE aici110_master_referesh USING g_icaf_m.icaf001,g_icaf_m.icaf002 INTO g_icaf_m.icaf001,g_icaf_m.icaf002, 
+       g_icaf_m.icafsite,g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf004,g_icaf_m.icaf005,g_icaf_m.icaf006, 
+       g_icaf_m.icaf007,g_icaf_m.icaf008,g_icaf_m.icaf009,g_icaf_m.icaf010,g_icaf_m.icaf011,g_icaf_m.icaf012, 
+       g_icaf_m.icaf013,g_icaf_m.icaf014,g_icaf_m.icaf015,g_icaf_m.icaf016,g_icaf_m.icaf026,g_icaf_m.icaf027, 
+       g_icaf_m.icaf017,g_icaf_m.icaf018,g_icaf_m.icaf019,g_icaf_m.icaf020,g_icaf_m.icaf021,g_icaf_m.icaf022, 
+       g_icaf_m.icaf023,g_icaf_m.icaf024,g_icaf_m.icaf025,g_icaf_m.icafownid,g_icaf_m.icafowndp,g_icaf_m.icafcrtid, 
+       g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid,g_icaf_m.icafmoddt,g_icaf_m.icaf001_desc, 
+       g_icaf_m.icaf002_desc,g_icaf_m.icaf003_desc,g_icaf_m.icaf004_desc,g_icaf_m.icaf005_desc,g_icaf_m.icaf006_desc, 
+       g_icaf_m.icaf007_desc,g_icaf_m.icaf008_desc,g_icaf_m.icaf009_desc,g_icaf_m.icaf010_desc,g_icaf_m.icaf011_desc, 
+       g_icaf_m.icaf012_desc,g_icaf_m.icaf013_desc,g_icaf_m.icaf014_desc,g_icaf_m.icaf015_desc,g_icaf_m.icaf016_desc, 
+       g_icaf_m.icaf026_desc,g_icaf_m.icaf027_desc,g_icaf_m.icaf017_desc,g_icaf_m.icaf018_desc,g_icaf_m.icaf019_desc, 
+       g_icaf_m.icaf020_desc,g_icaf_m.icaf021_desc,g_icaf_m.icaf022_desc,g_icaf_m.icaf023_desc,g_icaf_m.icaf024_desc, 
+       g_icaf_m.icafownid_desc,g_icaf_m.icafowndp_desc,g_icaf_m.icafcrtid_desc,g_icaf_m.icafcrtdp_desc, 
+       g_icaf_m.icafmodid_desc
+   
+   
+   #遮罩相關處理
+   LET g_icaf_m_mask_o.* =  g_icaf_m.*
+   CALL aici110_icaf_t_mask()
+   LET g_icaf_m_mask_n.* =  g_icaf_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_icaf_m.icaf001,g_icaf_m.icaf001_desc,g_icaf_m.icaf002,g_icaf_m.icaf002_desc,g_icaf_m.icafsite, 
+       g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf003_desc,g_icaf_m.icaf004,g_icaf_m.icaf004_desc, 
+       g_icaf_m.icaf005,g_icaf_m.icaf005_desc,g_icaf_m.icaf006,g_icaf_m.icaf006_desc,g_icaf_m.icaf007, 
+       g_icaf_m.icaf007_desc,g_icaf_m.icaf008,g_icaf_m.icaf008_desc,g_icaf_m.icaf009,g_icaf_m.icaf009_desc, 
+       g_icaf_m.icaf010,g_icaf_m.icaf010_desc,g_icaf_m.icaf011,g_icaf_m.icaf011_desc,g_icaf_m.icaf012, 
+       g_icaf_m.icaf012_desc,g_icaf_m.icaf013,g_icaf_m.icaf013_desc,g_icaf_m.icaf014,g_icaf_m.icaf014_desc, 
+       g_icaf_m.icaf015,g_icaf_m.icaf015_desc,g_icaf_m.icaf016,g_icaf_m.icaf016_desc,g_icaf_m.icaf026, 
+       g_icaf_m.icaf026_desc,g_icaf_m.icaf027,g_icaf_m.icaf027_desc,g_icaf_m.icaf017,g_icaf_m.icaf017_desc, 
+       g_icaf_m.icaf018,g_icaf_m.icaf018_desc,g_icaf_m.icaf019,g_icaf_m.icaf019_desc,g_icaf_m.icaf020, 
+       g_icaf_m.icaf020_desc,g_icaf_m.icaf021,g_icaf_m.icaf021_desc,g_icaf_m.icaf022,g_icaf_m.icaf022_desc, 
+       g_icaf_m.icaf023,g_icaf_m.icaf023_desc,g_icaf_m.icaf024,g_icaf_m.icaf024_desc,g_icaf_m.icaf025, 
+       g_icaf_m.icafownid,g_icaf_m.icafownid_desc,g_icaf_m.icafowndp,g_icaf_m.icafowndp_desc,g_icaf_m.icafcrtid, 
+       g_icaf_m.icafcrtid_desc,g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdp_desc,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid, 
+       g_icaf_m.icafmodid_desc,g_icaf_m.icafmoddt
+ 
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+ 
+   LET g_data_owner = g_icaf_m.icafownid      
+   LET g_data_dept  = g_icaf_m.icafowndp
+ 
+   #功能已完成,通報訊息中心
+   CALL aici110_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION aici110_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="modify.pre_function"
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_icaf_m.icaf001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF 
+ 
+   ERROR ""
+  
+   #備份key值
+   LET g_icaf001_t = g_icaf_m.icaf001
+   LET g_icaf002_t = g_icaf_m.icaf002
+ 
+   
+   CALL s_transaction_begin()
+   
+   #先lock資料
+   OPEN aici110_cl USING g_enterprise,g_icaf_m.icaf001,g_icaf_m.icaf002
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aici110_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE aici110_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aici110_master_referesh USING g_icaf_m.icaf001,g_icaf_m.icaf002 INTO g_icaf_m.icaf001,g_icaf_m.icaf002, 
+       g_icaf_m.icafsite,g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf004,g_icaf_m.icaf005,g_icaf_m.icaf006, 
+       g_icaf_m.icaf007,g_icaf_m.icaf008,g_icaf_m.icaf009,g_icaf_m.icaf010,g_icaf_m.icaf011,g_icaf_m.icaf012, 
+       g_icaf_m.icaf013,g_icaf_m.icaf014,g_icaf_m.icaf015,g_icaf_m.icaf016,g_icaf_m.icaf026,g_icaf_m.icaf027, 
+       g_icaf_m.icaf017,g_icaf_m.icaf018,g_icaf_m.icaf019,g_icaf_m.icaf020,g_icaf_m.icaf021,g_icaf_m.icaf022, 
+       g_icaf_m.icaf023,g_icaf_m.icaf024,g_icaf_m.icaf025,g_icaf_m.icafownid,g_icaf_m.icafowndp,g_icaf_m.icafcrtid, 
+       g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid,g_icaf_m.icafmoddt,g_icaf_m.icaf001_desc, 
+       g_icaf_m.icaf002_desc,g_icaf_m.icaf003_desc,g_icaf_m.icaf004_desc,g_icaf_m.icaf005_desc,g_icaf_m.icaf006_desc, 
+       g_icaf_m.icaf007_desc,g_icaf_m.icaf008_desc,g_icaf_m.icaf009_desc,g_icaf_m.icaf010_desc,g_icaf_m.icaf011_desc, 
+       g_icaf_m.icaf012_desc,g_icaf_m.icaf013_desc,g_icaf_m.icaf014_desc,g_icaf_m.icaf015_desc,g_icaf_m.icaf016_desc, 
+       g_icaf_m.icaf026_desc,g_icaf_m.icaf027_desc,g_icaf_m.icaf017_desc,g_icaf_m.icaf018_desc,g_icaf_m.icaf019_desc, 
+       g_icaf_m.icaf020_desc,g_icaf_m.icaf021_desc,g_icaf_m.icaf022_desc,g_icaf_m.icaf023_desc,g_icaf_m.icaf024_desc, 
+       g_icaf_m.icafownid_desc,g_icaf_m.icafowndp_desc,g_icaf_m.icafcrtid_desc,g_icaf_m.icafcrtdp_desc, 
+       g_icaf_m.icafmodid_desc
+ 
+   #檢查是否允許此動作
+   IF NOT aici110_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #遮罩相關處理
+   LET g_icaf_m_mask_o.* =  g_icaf_m.*
+   CALL aici110_icaf_t_mask()
+   LET g_icaf_m_mask_n.* =  g_icaf_m.*
+   
+   
+ 
+   #顯示資料
+   CALL aici110_show()
+   
+   WHILE TRUE
+      LET g_icaf_m.icaf001 = g_icaf001_t
+      LET g_icaf_m.icaf002 = g_icaf002_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      LET g_icaf_m.icafmodid = g_user 
+LET g_icaf_m.icafmoddt = cl_get_current()
+LET g_icaf_m.icafmodid_desc = cl_get_username(g_icaf_m.icafmodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      LET g_icaf_m_t.* = g_icaf_m.*
+      #end add-point
+ 
+      #資料輸入
+      CALL aici110_input("u")     
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         LET g_icaf_m.* = g_icaf_m_t.*
+         CALL aici110_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+      UPDATE icaf_t SET (icafmodid,icafmoddt) = (g_icaf_m.icafmodid,g_icaf_m.icafmoddt)
+       WHERE icafent = g_enterprise AND icaf001 = g_icaf001_t
+         AND icaf002 = g_icaf002_t
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aici110_set_act_visible()
+   CALL aici110_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " icafent = " ||g_enterprise|| " AND",
+                      " icaf001 = '", g_icaf_m.icaf001, "' "
+                      ," AND icaf002 = '", g_icaf_m.icaf002, "' "
+ 
+   #填到對應位置
+   CALL aici110_browser_fill(g_wc,"")
+ 
+   CLOSE aici110_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL aici110_msgcentre_notify('modify')
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+ 
+{</section>}
+ 
+{<section id="aici110.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION aici110_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num10       #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num10       #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num10
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   
+   #end add-point
+   
+   #切換至輸入畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_icaf_m.icaf001,g_icaf_m.icaf001_desc,g_icaf_m.icaf002,g_icaf_m.icaf002_desc,g_icaf_m.icafsite, 
+       g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf003_desc,g_icaf_m.icaf004,g_icaf_m.icaf004_desc, 
+       g_icaf_m.icaf005,g_icaf_m.icaf005_desc,g_icaf_m.icaf006,g_icaf_m.icaf006_desc,g_icaf_m.icaf007, 
+       g_icaf_m.icaf007_desc,g_icaf_m.icaf008,g_icaf_m.icaf008_desc,g_icaf_m.icaf009,g_icaf_m.icaf009_desc, 
+       g_icaf_m.icaf010,g_icaf_m.icaf010_desc,g_icaf_m.icaf011,g_icaf_m.icaf011_desc,g_icaf_m.icaf012, 
+       g_icaf_m.icaf012_desc,g_icaf_m.icaf013,g_icaf_m.icaf013_desc,g_icaf_m.icaf014,g_icaf_m.icaf014_desc, 
+       g_icaf_m.icaf015,g_icaf_m.icaf015_desc,g_icaf_m.icaf016,g_icaf_m.icaf016_desc,g_icaf_m.icaf026, 
+       g_icaf_m.icaf026_desc,g_icaf_m.icaf027,g_icaf_m.icaf027_desc,g_icaf_m.icaf017,g_icaf_m.icaf017_desc, 
+       g_icaf_m.icaf018,g_icaf_m.icaf018_desc,g_icaf_m.icaf019,g_icaf_m.icaf019_desc,g_icaf_m.icaf020, 
+       g_icaf_m.icaf020_desc,g_icaf_m.icaf021,g_icaf_m.icaf021_desc,g_icaf_m.icaf022,g_icaf_m.icaf022_desc, 
+       g_icaf_m.icaf023,g_icaf_m.icaf023_desc,g_icaf_m.icaf024,g_icaf_m.icaf024_desc,g_icaf_m.icaf025, 
+       g_icaf_m.icafownid,g_icaf_m.icafownid_desc,g_icaf_m.icafowndp,g_icaf_m.icafowndp_desc,g_icaf_m.icafcrtid, 
+       g_icaf_m.icafcrtid_desc,g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdp_desc,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid, 
+       g_icaf_m.icafmodid_desc,g_icaf_m.icafmoddt
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   #a-新增,r-複製,u-修改
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL aici110_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL aici110_set_no_entry(p_cmd)
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   #add-point:資料輸入前 name="input.before_input"
+   CALL aici110_get_site()
+   LET g_errshow = 1
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_icaf_m.icaf001,g_icaf_m.icaf002,g_icaf_m.icafsite,g_icaf_m.icafstus,g_icaf_m.icaf003, 
+          g_icaf_m.icaf004,g_icaf_m.icaf005,g_icaf_m.icaf006,g_icaf_m.icaf007,g_icaf_m.icaf008,g_icaf_m.icaf009, 
+          g_icaf_m.icaf010,g_icaf_m.icaf011,g_icaf_m.icaf012,g_icaf_m.icaf013,g_icaf_m.icaf014,g_icaf_m.icaf015, 
+          g_icaf_m.icaf016,g_icaf_m.icaf026,g_icaf_m.icaf027,g_icaf_m.icaf017,g_icaf_m.icaf018,g_icaf_m.icaf019, 
+          g_icaf_m.icaf020,g_icaf_m.icaf021,g_icaf_m.icaf022,g_icaf_m.icaf023,g_icaf_m.icaf024,g_icaf_m.icaf025  
+ 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前 name="input.before.input"
+            
+            #end add-point
+   
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf001
+            
+            #add-point:AFTER FIELD icaf001 name="input.a.icaf001"
+            CALL aici110_ooefl003_desc( g_icaf_m.icaf001) RETURNING  g_icaf_m.icaf001_desc
+            DISPLAY BY NAME  g_icaf_m.icaf001_desc
+            IF NOT cl_null(g_icaf_m.icaf001) AND g_icaf_m.icaf001 <> 'ALL'THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_icaf_m.icaf001
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+               #160318-00025#19  by 07900 --add-end   
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001_13") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icaf_m.icaf001 = g_icaf_m_t.icaf001
+                  NEXT FIELD CURRENT
+               END IF
+            ELSE
+               LET g_icaf_m.icaf001 = 'ALL'
+            END IF 
+
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_icaf_m.icaf001) AND NOT cl_null(g_icaf_m.icaf002) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_icaf_m.icaf001 != g_icaf001_t  OR g_icaf_m.icaf002 != g_icaf002_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM icaf_t WHERE "||"icafent = '" ||g_enterprise|| "' AND "||"icaf001 = '"||g_icaf_m.icaf001 ||"' AND "|| "icaf002 = '"||g_icaf_m.icaf002 ||"'",'std-00004',0) THEN 
+                     LET g_icaf_m.icaf001 = g_icaf_m_t.icaf001
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf001
+            #add-point:BEFORE FIELD icaf001 name="input.b.icaf001"
+            CALL aici110_ooefl003_desc( g_icaf_m.icaf001) RETURNING  g_icaf_m.icaf001_desc
+            DISPLAY BY NAME  g_icaf_m.icaf001_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf001
+            #add-point:ON CHANGE icaf001 name="input.g.icaf001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf002
+            
+            #add-point:AFTER FIELD icaf002 name="input.a.icaf002"
+            CALL aici110_ooefl003_desc( g_icaf_m.icaf002) RETURNING  g_icaf_m.icaf002_desc
+            DISPLAY BY NAME  g_icaf_m.icaf002_desc            
+            IF NOT cl_null(g_icaf_m.icaf002) AND g_icaf_m.icaf002 <>'ALL' THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_icaf_m.icaf002
+                #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+               #160318-00025#19  by 07900 --add-end  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001_13") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME
+                  IF g_icaf_m.icaf002 = g_icaf_m.icaf001 THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'aic-00015'
+                     LET g_errparam.extend = g_icaf_m.icaf002
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_icaf_m.icaf002 = g_icaf_m_t.icaf002
+                     NEXT FIELD CURRENT
+                  END IF
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icaf_m.icaf002 = g_icaf_m_t.icaf002
+                  NEXT FIELD CURRENT
+               END IF
+            ELSE
+               LET g_icaf_m.icaf002 = 'ALL'
+            END IF 
+            
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_icaf_m.icaf001) AND NOT cl_null(g_icaf_m.icaf002) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_icaf_m.icaf001 != g_icaf001_t  OR g_icaf_m.icaf002 != g_icaf002_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM icaf_t WHERE "||"icafent = '" ||g_enterprise|| "' AND "||"icaf001 = '"||g_icaf_m.icaf001 ||"' AND "|| "icaf002 = '"||g_icaf_m.icaf002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL aici110_get_site()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf002
+            #add-point:BEFORE FIELD icaf002 name="input.b.icaf002"
+            CALL aici110_ooefl003_desc( g_icaf_m.icaf002) RETURNING  g_icaf_m.icaf002_desc
+            DISPLAY BY NAME  g_icaf_m.icaf002_desc 
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf002
+            #add-point:ON CHANGE icaf002 name="input.g.icaf002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafsite
+            #add-point:BEFORE FIELD icafsite name="input.b.icafsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icafsite
+            
+            #add-point:AFTER FIELD icafsite name="input.a.icafsite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icafsite
+            #add-point:ON CHANGE icafsite name="input.g.icafsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icafstus
+            #add-point:BEFORE FIELD icafstus name="input.b.icafstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icafstus
+            
+            #add-point:AFTER FIELD icafstus name="input.a.icafstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icafstus
+            #add-point:ON CHANGE icafstus name="input.g.icafstus"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf003
+            
+            #add-point:AFTER FIELD icaf003 name="input.a.icaf003"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf003) RETURNING g_icaf_m.icaf003_desc
+            DISPLAY BY NAME g_icaf_m.icaf003_desc
+            IF NOT cl_null(g_icaf_m.icaf003) THEN 
+               IF NOT s_aooi200_chk_slip(g_ooef001,'',g_icaf_m.icaf003,'apmt500') THEN 
+
+               END IF           
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf003
+            #add-point:BEFORE FIELD icaf003 name="input.b.icaf003"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf003) RETURNING g_icaf_m.icaf003_desc
+            DISPLAY BY NAME g_icaf_m.icaf003_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf003
+            #add-point:ON CHANGE icaf003 name="input.g.icaf003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf004
+            
+            #add-point:AFTER FIELD icaf004 name="input.a.icaf004"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf004) RETURNING g_icaf_m.icaf004_desc
+            DISPLAY BY NAME g_icaf_m.icaf004_desc
+            IF NOT cl_null(g_icaf_m.icaf004) THEN 
+               IF NOT ap_chk_isExist(g_icaf_m.icaf004,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? ",'agl-00188',1) THEN 
+               ELSE
+                  IF NOT ap_chk_isExist(g_icaf_m.icaf004,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? AND oobastus = 'Y' ",'sub-01302','aooi200') THEN  #160318-00005#19 mod  #'agl-00189',1) THEN 
+                  ELSE
+                     IF NOT ap_chk_isExist(g_icaf_m.icaf004,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? AND oobastus = 'Y' AND oobx004 IN ('apmt520','apmt522')",'aic-00004',1) THEN 
+                   
+                     END IF                     
+                  END IF               
+               END IF
+  
+        
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf004
+            #add-point:BEFORE FIELD icaf004 name="input.b.icaf004"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf004) RETURNING g_icaf_m.icaf004_desc
+            DISPLAY BY NAME g_icaf_m.icaf004_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf004
+            #add-point:ON CHANGE icaf004 name="input.g.icaf004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf005
+            
+            #add-point:AFTER FIELD icaf005 name="input.a.icaf005"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf005) RETURNING g_icaf_m.icaf005_desc
+            DISPLAY BY NAME g_icaf_m.icaf005_desc
+            IF NOT cl_null(g_icaf_m.icaf005) THEN 
+               IF NOT ap_chk_isExist(g_icaf_m.icaf005,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? ",'agl-00188',1) THEN 
+               ELSE
+                  IF NOT ap_chk_isExist(g_icaf_m.icaf005,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? AND oobastus = 'Y' ",'sub-01302','aooi200') THEN  #160318-00005#19 mod  #'agl-00189',1) THEN
+                  ELSE
+                     IF NOT ap_chk_isExist(g_icaf_m.icaf005,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? AND oobastus = 'Y' AND oobx004 IN ('apmt570','apmt530','apmt532')",'aic-00005',1) THEN 
+
+                     END IF                    
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf005
+            #add-point:BEFORE FIELD icaf005 name="input.b.icaf005"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf005) RETURNING g_icaf_m.icaf005_desc
+            DISPLAY BY NAME g_icaf_m.icaf005_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf005
+            #add-point:ON CHANGE icaf005 name="input.g.icaf005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf006
+            
+            #add-point:AFTER FIELD icaf006 name="input.a.icaf006"
+            CALL aici110_inaa002_desc(g_icaf_m.icaf006) RETURNING g_icaf_m.icaf006_desc
+            DISPLAY BY NAME g_icaf_m.icaf006_desc
+            IF NOT cl_null(g_icaf_m.icaf006) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_ooef001
+               LET g_chkparam.arg2 = g_icaf_m.icaf006
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aim-00065:sub-01302|aini001|",cl_get_progname("aini001",g_lang,"2"),"|:EXEPROGaini001"
+               #160318-00025#19  by 07900 --add-end   
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_inaa001") THEN
+                  IF NOT cl_null(g_icaf_m.icaf007) THEN 
+              
+                     #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                     INITIALIZE g_chkparam.* TO NULL
+                     
+                     #設定g_chkparam.*的參數
+                     LET g_chkparam.arg1 = g_ooef001
+                     LET g_chkparam.arg2 = g_icaf_m.icaf006
+                     LET g_chkparam.arg3 = g_icaf_m.icaf007
+                     #160318-00025#19  by 07900 --add-str
+                     LET g_errshow = TRUE #是否開窗                   
+                     LET g_chkparam.err_str[1] ="aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+                    #160318-00025#19  by 07900 --add-end   
+                     #呼叫檢查存在並帶值的library
+                     IF cl_chk_exist("v_inab002") THEN
+                        #檢查成功時後續處理
+                        #LET  = g_chkparam.return1
+                        #DISPLAY BY NAME 
+                     ELSE
+                        #檢查失敗時後續處理
+                        #LET g_icaf_m.icaf006 = g_icaf_m_t.icaf006
+                        #NEXT FIELD CURRENT
+                     END IF
+                  END IF 
+               ELSE
+                  #檢查失敗時後續處理
+                  #LET g_icaf_m.icaf006 = g_icaf_m_t.icaf006
+                  #NEXT FIELD CURRENT
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf006
+            #add-point:BEFORE FIELD icaf006 name="input.b.icaf006"
+            CALL aici110_inaa002_desc(g_icaf_m.icaf006) RETURNING g_icaf_m.icaf006_desc
+            DISPLAY BY NAME g_icaf_m.icaf006_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf006
+            #add-point:ON CHANGE icaf006 name="input.g.icaf006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf007
+            
+            #add-point:AFTER FIELD icaf007 name="input.a.icaf007"
+            CALL aici110_inab003_desc(g_icaf_m.icaf006,g_icaf_m.icaf007) RETURNING g_icaf_m.icaf007_desc
+            DISPLAY BY NAME g_icaf_m.icaf007_desc
+            IF NOT cl_null(g_icaf_m.icaf007) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_ooef001
+               LET g_chkparam.arg2 = g_icaf_m.icaf006
+               LET g_chkparam.arg3 = g_icaf_m.icaf007
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+               #160318-00025#19  by 07900 --add-end    
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_inab002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  #LET g_icaf_m.icaf007 = g_icaf_m_t.icaf007
+                  #NEXT FIELD CURRENT
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf007
+            #add-point:BEFORE FIELD icaf007 name="input.b.icaf007"
+            CALL aici110_inab003_desc(g_icaf_m.icaf006,g_icaf_m.icaf007) RETURNING g_icaf_m.icaf007_desc
+            DISPLAY BY NAME g_icaf_m.icaf007_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf007
+            #add-point:ON CHANGE icaf007 name="input.g.icaf007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf008
+            
+            #add-point:AFTER FIELD icaf008 name="input.a.icaf008"
+            CALL aici110_oodbl004_desc(g_icaf_m.icaf008) RETURNING g_icaf_m.icaf008_desc
+            DISPLAY BY NAME g_icaf_m.icaf008_desc            
+            IF NOT cl_null(g_icaf_m.icaf008) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_ooef001
+               LET g_chkparam.arg2 = g_icaf_m.icaf008
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aoo-00223:sub-01302|aooi610|",cl_get_progname("aooi610",g_lang,"2"),"|:EXEPROGaooi610"
+               #160318-00025#19  by 07900 --add-end   
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_oodb002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icaf_m.icaf008 = g_icaf_m_t.icaf008
+                  NEXT FIELD CURRENT
+               END IF 
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf008
+            #add-point:BEFORE FIELD icaf008 name="input.b.icaf008"
+            CALL aici110_oodbl004_desc(g_icaf_m.icaf008) RETURNING g_icaf_m.icaf008_desc
+            DISPLAY BY NAME g_icaf_m.icaf008_desc      
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf008
+            #add-point:ON CHANGE icaf008 name="input.g.icaf008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf009
+            
+            #add-point:AFTER FIELD icaf009 name="input.a.icaf009"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf009) RETURNING g_icaf_m.icaf009_desc
+            DISPLAY BY NAME g_icaf_m.icaf009_desc
+            IF NOT cl_null(g_icaf_m.icaf009) THEN 
+               IF NOT s_aooi200_chk_slip(g_ooef001,'',g_icaf_m.icaf009,'aapt300') THEN
+
+               END IF           
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf009
+            #add-point:BEFORE FIELD icaf009 name="input.b.icaf009"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf009) RETURNING g_icaf_m.icaf009_desc
+            DISPLAY BY NAME g_icaf_m.icaf009_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf009
+            #add-point:ON CHANGE icaf009 name="input.g.icaf009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf010
+            
+            #add-point:AFTER FIELD icaf010 name="input.a.icaf010"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icaf_m.icaf010
+            CALL ap_ref_array2(g_ref_fields,"SELECT oobxl003 FROM oobxl_t WHERE oobxlent='"||g_enterprise||"' AND oobxl001=? AND oobxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_icaf_m.icaf010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icaf_m.icaf010_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf010
+            #add-point:BEFORE FIELD icaf010 name="input.b.icaf010"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf010
+            #add-point:ON CHANGE icaf010 name="input.g.icaf010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf011
+            
+            #add-point:AFTER FIELD icaf011 name="input.a.icaf011"
+            CALL aici110_ooefl003_desc(g_icaf_m.icaf011) RETURNING g_icaf_m.icaf011_desc
+            DISPLAY BY NAME g_icaf_m.icaf011_desc
+            IF NOT cl_null(g_icaf_m.icaf011) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_icaf_m.icaf011
+               LET g_chkparam.arg2 = g_ooef001  
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aap-00004:sub-01302|aapi020|",cl_get_progname("aapi020",g_lang,"2"),"|:EXEPROGaapi020"
+               #160318-00025#19  by 07900 --add-end   
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_xrah002_2") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icaf_m.icaf011 = g_icaf_m_t.icaf011
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf011
+            #add-point:BEFORE FIELD icaf011 name="input.b.icaf011"
+            CALL aici110_ooefl003_desc(g_icaf_m.icaf011) RETURNING g_icaf_m.icaf011_desc
+            DISPLAY BY NAME g_icaf_m.icaf011_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf011
+            #add-point:ON CHANGE icaf011 name="input.g.icaf011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf012
+            
+            #add-point:AFTER FIELD icaf012 name="input.a.icaf012"
+            CALL aici110_oocql004_desc('3211',g_icaf_m.icaf012) RETURNING g_icaf_m.icaf012_desc
+            DISPLAY BY NAME g_icaf_m.icaf012_desc
+            IF NOT cl_null(g_icaf_m.icaf012) THEN 
+               IF NOT s_azzi650_chk_exist('3211',g_icaf_m.icaf012) THEN
+                  LET g_icaf_m.icaf012 = g_icaf_m_t.icaf012
+                  NEXT FIELD CURRENT
+               END IF        
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf012
+            #add-point:BEFORE FIELD icaf012 name="input.b.icaf012"
+            CALL aici110_oocql004_desc('3211',g_icaf_m.icaf012) RETURNING g_icaf_m.icaf012_desc
+            DISPLAY BY NAME g_icaf_m.icaf012_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf012
+            #add-point:ON CHANGE icaf012 name="input.g.icaf012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf013
+            
+            #add-point:AFTER FIELD icaf013 name="input.a.icaf013"
+            CALL aici110_ooibl004_desc(g_icaf_m.icaf013) RETURNING g_icaf_m.icaf013_desc
+            DISPLAY BY NAME g_icaf_m.icaf013_desc             
+            IF NOT cl_null(g_icaf_m.icaf013) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_icaf_m.icaf013
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="apm-00186:sub-01302|aooi716|",cl_get_progname("aooi716",g_lang,"2"),"|:EXEPROGaooi716"
+               #160318-00025#19  by 07900 --add-end   
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooib002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icaf_m.icaf013 = g_icaf_m_t.icaf013
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf013
+            #add-point:BEFORE FIELD icaf013 name="input.b.icaf013"
+            CALL aici110_ooibl004_desc(g_icaf_m.icaf013) RETURNING g_icaf_m.icaf013_desc
+            DISPLAY BY NAME g_icaf_m.icaf013_desc 
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf013
+            #add-point:ON CHANGE icaf013 name="input.g.icaf013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf014
+            
+            #add-point:AFTER FIELD icaf014 name="input.a.icaf014"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf014) RETURNING g_icaf_m.icaf014_desc
+            DISPLAY BY NAME g_icaf_m.icaf014_desc
+            IF NOT cl_null(g_icaf_m.icaf014) THEN 
+               IF NOT s_aooi200_chk_slip(g_ooef001,'',g_icaf_m.icaf014,'axmt500') THEN
+
+               END IF           
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf014
+            #add-point:BEFORE FIELD icaf014 name="input.b.icaf014"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf014) RETURNING g_icaf_m.icaf014_desc
+            DISPLAY BY NAME g_icaf_m.icaf014_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf014
+            #add-point:ON CHANGE icaf014 name="input.g.icaf014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf015
+            
+            #add-point:AFTER FIELD icaf015 name="input.a.icaf015"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf015) RETURNING g_icaf_m.icaf015_desc
+            DISPLAY BY NAME g_icaf_m.icaf015_desc
+            IF NOT cl_null(g_icaf_m.icaf015) THEN 
+               IF NOT ap_chk_isExist(g_icaf_m.icaf015,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? ",'agl-00188',1) THEN 
+               ELSE
+                  IF NOT ap_chk_isExist(g_icaf_m.icaf015,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? AND oobastus = 'Y' ",'sub-01302','aooi200') THEN  #160318-00005#19 mod  #'agl-00189',1) THEN
+                  ELSE
+                     IF NOT ap_chk_isExist(g_icaf_m.icaf015,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? AND oobastus = 'Y' AND oobx004 IN ('axmt540','axmt541')",'aic-00003',1) THEN 
+ 
+                     END IF                  
+                  END IF               
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf015
+            #add-point:BEFORE FIELD icaf015 name="input.b.icaf015"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf015) RETURNING g_icaf_m.icaf015_desc
+            DISPLAY BY NAME g_icaf_m.icaf015_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf015
+            #add-point:ON CHANGE icaf015 name="input.g.icaf015"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf016
+            
+            #add-point:AFTER FIELD icaf016 name="input.a.icaf016"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf016) RETURNING g_icaf_m.icaf016_desc
+            DISPLAY BY NAME g_icaf_m.icaf016_desc
+            IF NOT cl_null(g_icaf_m.icaf016) THEN 
+               IF NOT s_aooi200_chk_slip(g_ooef001,'',g_icaf_m.icaf016,'axmt580') THEN 
+ 
+               END IF           
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf016
+            #add-point:BEFORE FIELD icaf016 name="input.b.icaf016"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf016) RETURNING g_icaf_m.icaf016_desc
+            DISPLAY BY NAME g_icaf_m.icaf016_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf016
+            #add-point:ON CHANGE icaf016 name="input.g.icaf016"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf026
+            
+            #add-point:AFTER FIELD icaf026 name="input.a.icaf026"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf026) RETURNING g_icaf_m.icaf026_desc
+            DISPLAY BY NAME g_icaf_m.icaf026_desc
+            IF NOT cl_null(g_icaf_m.icaf026) THEN 
+               IF NOT s_aooi200_chk_slip(g_ooef001,'',g_icaf_m.icaf026,'axmt520') THEN 
+ 
+               END IF           
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf026
+            #add-point:BEFORE FIELD icaf026 name="input.b.icaf026"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf026) RETURNING g_icaf_m.icaf026_desc
+            DISPLAY BY NAME g_icaf_m.icaf026_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf026
+            #add-point:ON CHANGE icaf026 name="input.g.icaf026"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf027
+            
+            #add-point:AFTER FIELD icaf027 name="input.a.icaf027"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf027) RETURNING g_icaf_m.icaf027_desc
+            DISPLAY BY NAME g_icaf_m.icaf027_desc
+            IF NOT cl_null(g_icaf_m.icaf027) THEN 
+               IF NOT s_aooi200_chk_slip(g_ooef001,'',g_icaf_m.icaf027,'axmt620') THEN 
+  
+               END IF           
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf027
+            #add-point:BEFORE FIELD icaf027 name="input.b.icaf027"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf027) RETURNING g_icaf_m.icaf027_desc
+            DISPLAY BY NAME g_icaf_m.icaf027_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf027
+            #add-point:ON CHANGE icaf027 name="input.g.icaf027"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf017
+            
+            #add-point:AFTER FIELD icaf017 name="input.a.icaf017"
+            CALL aici110_inaa002_desc(g_icaf_m.icaf017) RETURNING g_icaf_m.icaf017_desc
+            DISPLAY BY NAME g_icaf_m.icaf017_desc            
+            IF NOT cl_null(g_icaf_m.icaf017) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_ooef001
+               LET g_chkparam.arg2 = g_icaf_m.icaf017
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aim-00065:sub-01302|aini001|",cl_get_progname("aini001",g_lang,"2"),"|:EXEPROGaini001"
+               #160318-00025#19  by 07900 --add-end    
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_inaa001") THEN
+                  IF NOT cl_null(g_icaf_m.icaf018) THEN 
+                     #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                     INITIALIZE g_chkparam.* TO NULL
+                     
+                     #設定g_chkparam.*的參數
+                     LET g_chkparam.arg1 = g_ooef001
+                     LET g_chkparam.arg2 = g_icaf_m.icaf017
+                     LET g_chkparam.arg3 = g_icaf_m.icaf018
+                    #160318-00025#19  by 07900 --add-str
+                     LET g_errshow = TRUE #是否開窗                   
+                     LET g_chkparam.err_str[1] ="aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+                    #160318-00025#19  by 07900 --add-end     
+                     #呼叫檢查存在並帶值的library
+                     IF cl_chk_exist("v_inab002") THEN
+                        #檢查成功時後續處理
+                        #LET  = g_chkparam.return1
+                        #DISPLAY BY NAME 
+                     ELSE
+                        #檢查失敗時後續處理
+                        #LET g_icaf_m.icaf017 = g_icaf_m_t.icaf017
+                        #NEXT FIELD CURRENT
+                     END IF
+                  END IF  
+               ELSE
+                  #檢查失敗時後續處理
+                  #LET g_icaf_m.icaf017 = g_icaf_m_t.icaf017
+                  #NEXT FIELD CURRENT
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf017
+            #add-point:BEFORE FIELD icaf017 name="input.b.icaf017"
+            CALL aici110_inaa002_desc(g_icaf_m.icaf017) RETURNING g_icaf_m.icaf017_desc
+            DISPLAY BY NAME g_icaf_m.icaf017_desc 
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf017
+            #add-point:ON CHANGE icaf017 name="input.g.icaf017"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf018
+            
+            #add-point:AFTER FIELD icaf018 name="input.a.icaf018"
+            CALL aici110_inab003_desc(g_icaf_m.icaf017,g_icaf_m.icaf018) RETURNING g_icaf_m.icaf018_desc
+            DISPLAY BY NAME g_icaf_m.icaf018_desc            
+            IF NOT cl_null(g_icaf_m.icaf018) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_ooef001
+               LET g_chkparam.arg2 = g_icaf_m.icaf017
+               LET g_chkparam.arg3 = g_icaf_m.icaf018
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+                #160318-00025#19  by 07900 --add-end    
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_inab002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  #LET g_icaf_m.icaf018 = g_icaf_m_t.icaf018
+                  #NEXT FIELD CURRENT
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf018
+            #add-point:BEFORE FIELD icaf018 name="input.b.icaf018"
+            CALL aici110_inab003_desc(g_icaf_m.icaf017,g_icaf_m.icaf018) RETURNING g_icaf_m.icaf018_desc
+            DISPLAY BY NAME g_icaf_m.icaf018_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf018
+            #add-point:ON CHANGE icaf018 name="input.g.icaf018"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf019
+            
+            #add-point:AFTER FIELD icaf019 name="input.a.icaf019"
+            CALL aici110_oodbl004_desc(g_icaf_m.icaf019) RETURNING g_icaf_m.icaf019_desc
+            DISPLAY BY NAME g_icaf_m.icaf019_desc             
+            IF NOT cl_null(g_icaf_m.icaf019) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_ooef001
+               LET g_chkparam.arg2 = g_icaf_m.icaf019
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="aoo-00223:sub-01302|aooi610|",cl_get_progname("aooi610",g_lang,"2"),"|:EXEPROGaooi610"
+               #160318-00025#19  by 07900 --add-end    
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_oodb002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icaf_m.icaf019 = g_icaf_m_t.icaf019
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf019
+            #add-point:BEFORE FIELD icaf019 name="input.b.icaf019"
+            CALL aici110_oodbl004_desc(g_icaf_m.icaf019) RETURNING g_icaf_m.icaf019_desc
+            DISPLAY BY NAME g_icaf_m.icaf019_desc      
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf019
+            #add-point:ON CHANGE icaf019 name="input.g.icaf019"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf020
+            
+            #add-point:AFTER FIELD icaf020 name="input.a.icaf020"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf020) RETURNING g_icaf_m.icaf020_desc
+            DISPLAY BY NAME g_icaf_m.icaf020_desc
+            IF NOT cl_null(g_icaf_m.icaf020) THEN 
+               IF NOT ap_chk_isExist(g_icaf_m.icaf020,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? ",'agl-00188',1) THEN 
+               ELSE
+                  IF NOT ap_chk_isExist(g_icaf_m.icaf020,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? AND oobastus = 'Y' ",'sub-01302','aooi200') THEN  #160318-00005#19 mod  #'agl-00189',1) THEN
+                  ELSE
+                     IF NOT ap_chk_isExist(g_icaf_m.icaf020,"SELECT COUNT(*) FROM ooba_t,oobx_t WHERE oobaent = oobxent AND ooba002 = oobx001 AND oobaent = '" ||g_enterprise|| "' AND ooba001 = '"||g_ooef.ooef004||"' AND ooba002 =? AND oobastus = 'Y' AND oobx004 IN ('axrt300','axrt330')",'aic-00006',1) THEN 
+
+                     END IF                  
+                  END IF                
+               END IF           
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf020
+            #add-point:BEFORE FIELD icaf020 name="input.b.icaf020"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf020) RETURNING g_icaf_m.icaf020_desc
+            DISPLAY BY NAME g_icaf_m.icaf020_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf020
+            #add-point:ON CHANGE icaf020 name="input.g.icaf020"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf021
+            
+            #add-point:AFTER FIELD icaf021 name="input.a.icaf021"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf021) RETURNING g_icaf_m.icaf021_desc
+            DISPLAY BY NAME g_icaf_m.icaf021_desc
+            IF NOT cl_null(g_icaf_m.icaf021) THEN 
+               IF NOT s_aooi200_chk_slip(g_ooef001,'',g_icaf_m.icaf021,'axrt340') THEN
+
+               END IF           
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf021
+            #add-point:BEFORE FIELD icaf021 name="input.b.icaf021"
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf021) RETURNING g_icaf_m.icaf021_desc
+            DISPLAY BY NAME g_icaf_m.icaf021_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf021
+            #add-point:ON CHANGE icaf021 name="input.g.icaf021"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf022
+            
+            #add-point:AFTER FIELD icaf022 name="input.a.icaf022"
+            CALL aici110_ooefl003_desc(g_icaf_m.icaf022) RETURNING g_icaf_m.icaf022_desc
+            DISPLAY BY NAME g_icaf_m.icaf022_desc            
+            IF NOT cl_null(g_icaf_m.icaf022) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_icaf_m.icaf022
+               LET g_chkparam.arg2 = g_ooef001
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="axr-00019:sub-01302|axri020|",cl_get_progname("axri020",g_lang,"2"),"|:EXEPROGaxri020"
+               #160318-00025#19  by 07900 --add-end   
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_xrah002_1") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icaf_m.icaf022 = g_icaf_m_t.icaf022
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf022
+            #add-point:BEFORE FIELD icaf022 name="input.b.icaf022"
+            CALL aici110_ooefl003_desc(g_icaf_m.icaf022) RETURNING g_icaf_m.icaf022_desc
+            DISPLAY BY NAME g_icaf_m.icaf022_desc   
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf022
+            #add-point:ON CHANGE icaf022 name="input.g.icaf022"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf023
+            
+            #add-point:AFTER FIELD icaf023 name="input.a.icaf023"
+            CALL aici110_oocql004_desc('3111',g_icaf_m.icaf023) RETURNING g_icaf_m.icaf023_desc
+            DISPLAY BY NAME g_icaf_m.icaf023_desc
+            IF NOT cl_null(g_icaf_m.icaf023) THEN 
+               IF NOT s_azzi650_chk_exist('3111',g_icaf_m.icaf023) THEN
+                  LET g_icaf_m.icaf023 = g_icaf_m_t.icaf023
+                  NEXT FIELD CURRENT
+               END IF        
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf023
+            #add-point:BEFORE FIELD icaf023 name="input.b.icaf023"
+            CALL aici110_oocql004_desc('3111',g_icaf_m.icaf023) RETURNING g_icaf_m.icaf023_desc
+            DISPLAY BY NAME g_icaf_m.icaf023_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf023
+            #add-point:ON CHANGE icaf023 name="input.g.icaf023"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf024
+            
+            #add-point:AFTER FIELD icaf024 name="input.a.icaf024"
+            CALL aici110_ooibl004_desc(g_icaf_m.icaf024) RETURNING g_icaf_m.icaf024_desc
+            DISPLAY BY NAME g_icaf_m.icaf024_desc             
+            IF NOT cl_null(g_icaf_m.icaf024) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_icaf_m.icaf024
+               #160318-00025#19  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="axm-00062:sub-01302|aooi714|",cl_get_progname("aooi714",g_lang,"2"),"|:EXEPROGaooi714"
+               #160318-00025#19  by 07900 --add-end   
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooib002_2") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_icaf_m.icaf024 = g_icaf_m_t.icaf024
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf024
+            #add-point:BEFORE FIELD icaf024 name="input.b.icaf024"
+            CALL aici110_ooibl004_desc(g_icaf_m.icaf024) RETURNING g_icaf_m.icaf024_desc
+            DISPLAY BY NAME g_icaf_m.icaf024_desc 
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf024
+            #add-point:ON CHANGE icaf024 name="input.g.icaf024"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD icaf025
+            #add-point:BEFORE FIELD icaf025 name="input.b.icaf025"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD icaf025
+            
+            #add-point:AFTER FIELD icaf025 name="input.a.icaf025"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE icaf025
+            #add-point:ON CHANGE icaf025 name="input.g.icaf025"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.icaf001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf001
+            #add-point:ON ACTION controlp INFIELD icaf001 name="input.c.icaf001"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf001             #給予default值
+
+            #給予arg
+           
+            #mod--161013-00051#1 By shiun--(S)
+#            CALL q_ooef001_12()                                #呼叫開窗
+            CALL q_ooef001_1()
+            #mod--161013-00051#1 By shiun--(E)
+            LET g_icaf_m.icaf001 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf001 TO icaf001              #
+
+            NEXT FIELD icaf001                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf002
+            #add-point:ON ACTION controlp INFIELD icaf002 name="input.c.icaf002"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf002             #給予default值
+
+            #給予arg
+            
+            #mod--161013-00051#1 By shiun--(S)
+#            CALL q_ooef001_12()                                #呼叫開窗
+            CALL q_ooef001_1()
+            #mod--161013-00051#1 By shiun--(E)
+
+            LET g_icaf_m.icaf002 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf002 TO icaf002              #
+
+            NEXT FIELD icaf002                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icafsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icafsite
+            #add-point:ON ACTION controlp INFIELD icafsite name="input.c.icafsite"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icafstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icafstus
+            #add-point:ON ACTION controlp INFIELD icafstus name="input.c.icafstus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf003
+            #add-point:ON ACTION controlp INFIELD icaf003 name="input.c.icaf003"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef.ooef004
+            LET g_qryparam.arg2 = "apmt500" #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_icaf_m.icaf003 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf003 TO icaf003              #
+
+            NEXT FIELD icaf003                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf004
+            #add-point:ON ACTION controlp INFIELD icaf004 name="input.c.icaf004"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf004             #給予default值
+            LET g_qryparam.where =" ooba001 = '",g_ooef.ooef004,"' AND ooba002 IN (SELECT oobl001 FROM oobl_t WHERE ooblent = '",g_enterprise,"' AND oobl002 IN ('apmt520','apmt522')) " 
+            #給予arg
+           
+            CALL q_ooba002()                                #呼叫開窗
+
+            LET g_icaf_m.icaf004 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf004 TO icaf004              #
+
+            NEXT FIELD icaf004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf005
+            #add-point:ON ACTION controlp INFIELD icaf005 name="input.c.icaf005"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf005             #給予default值
+            LET g_qryparam.where =" ooba001 = '",g_ooef.ooef004,"' AND ooba002 IN (SELECT oobl001 FROM oobl_t WHERE ooblent = '",g_enterprise,"' AND oobl002 IN ('apmt570','apmt530','apmt532')) " 
+            #給予arg
+            
+            CALL q_ooba002()                                #呼叫開窗
+
+            LET g_icaf_m.icaf005 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf005 TO icaf005              #
+
+            NEXT FIELD icaf005                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf006
+            #add-point:ON ACTION controlp INFIELD icaf006 name="input.c.icaf006"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf006             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef001
+
+            
+            CALL q_inaa001_6()                                #呼叫開窗
+
+            LET g_icaf_m.icaf006 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf006 TO icaf006              #
+
+            NEXT FIELD icaf006                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf007
+            #add-point:ON ACTION controlp INFIELD icaf007 name="input.c.icaf007"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf007             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef001
+            LET g_qryparam.arg2 = g_icaf_m.icaf006
+            
+            CALL q_inab002_6()                                #呼叫開窗
+
+            LET g_icaf_m.icaf007 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf007 TO icaf007              #
+
+            NEXT FIELD icaf007                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf008
+            #add-point:ON ACTION controlp INFIELD icaf008 name="input.c.icaf008"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf008             #給予default值
+            LET g_qryparam.default2 = "" #g_icaf_m.oodb002 #稅別代碼
+            LET g_qryparam.default3 = "" #g_icaf_m.oodb005 #含稅否
+            LET g_qryparam.default4 = "" #g_icaf_m.oodb006 #稅率
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef.ooef019
+
+            
+            CALL q_oodb002_5()                                #呼叫開窗
+
+            LET g_icaf_m.icaf008 = g_qryparam.return1              
+            #LET g_icaf_m.oodb002 = g_qryparam.return2 
+            #LET g_icaf_m.oodb005 = g_qryparam.return3 
+            #LET g_icaf_m.oodb006 = g_qryparam.return4 
+            DISPLAY g_icaf_m.icaf008 TO icaf008              #
+            #DISPLAY g_icaf_m.oodb002 TO oodb002 #稅別代碼
+            #DISPLAY g_icaf_m.oodb005 TO oodb005 #含稅否
+            #DISPLAY g_icaf_m.oodb006 TO oodb006 #稅率
+            NEXT FIELD icaf008                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf009
+            #add-point:ON ACTION controlp INFIELD icaf009 name="input.c.icaf009"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf009             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef.ooef004 #
+            LET g_qryparam.arg2 = "aapt300" #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_icaf_m.icaf009 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf009 TO icaf009              #
+
+            NEXT FIELD icaf009                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf010
+            #add-point:ON ACTION controlp INFIELD icaf010 name="input.c.icaf010"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf010             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_icaf_m.icaf010 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf010 TO icaf010              #
+
+            NEXT FIELD icaf010                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf011
+            #add-point:ON ACTION controlp INFIELD icaf011 name="input.c.icaf011"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf011             #給予default值
+            LET g_qryparam.default2 = "" #g_icaf_m.xrah002 #帳務中心
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.where = "xrah004 = '",g_ooef001,"'"
+            
+            CALL q_xrah002_2()                                #呼叫開窗
+
+            LET g_icaf_m.icaf011 = g_qryparam.return1              
+            #LET g_icaf_m.xrah002 = g_qryparam.return2 
+            DISPLAY g_icaf_m.icaf011 TO icaf011              #
+            #DISPLAY g_icaf_m.xrah002 TO xrah002 #帳務中心
+            NEXT FIELD icaf011                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf012
+            #add-point:ON ACTION controlp INFIELD icaf012 name="input.c.icaf012"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf012             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "3211" #
+
+            
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_icaf_m.icaf012 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf012 TO icaf012              #
+
+            NEXT FIELD icaf012                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf013
+            #add-point:ON ACTION controlp INFIELD icaf013 name="input.c.icaf013"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf013             #給予default值
+
+            #給予arg
+
+            CALL q_ooib002_1()                                #呼叫開窗
+
+            LET g_icaf_m.icaf013 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf013 TO icaf013              #
+
+            NEXT FIELD icaf013                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf014
+            #add-point:ON ACTION controlp INFIELD icaf014 name="input.c.icaf014"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf014             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef.ooef004 #
+            LET g_qryparam.arg2 = "axmt500" #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_icaf_m.icaf014 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf014 TO icaf014              #
+
+            NEXT FIELD icaf014                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf015
+            #add-point:ON ACTION controlp INFIELD icaf015 name="input.c.icaf015"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf015             #給予default值
+            LET g_qryparam.where =" ooba001 = '",g_ooef.ooef004,"' AND ooba002 IN (SELECT oobl001 FROM oobl_t WHERE ooblent = '",g_enterprise,"' AND oobl002 IN ('axmt540','axmt541')) " 
+            #給予arg
+            
+            CALL q_ooba002()                                #呼叫開窗
+
+            LET g_icaf_m.icaf015 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf015 TO icaf015              #
+
+            NEXT FIELD icaf015                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf016
+            #add-point:ON ACTION controlp INFIELD icaf016 name="input.c.icaf016"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf016             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef.ooef004
+            LET g_qryparam.arg2 = "axmt580" #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_icaf_m.icaf016 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf016 TO icaf016              #
+
+            NEXT FIELD icaf016                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf026
+            #add-point:ON ACTION controlp INFIELD icaf026 name="input.c.icaf026"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf026             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef.ooef004
+            LET g_qryparam.arg2 = "axmt520" #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_icaf_m.icaf026 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf026 TO icaf026              #
+
+            NEXT FIELD icaf026                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf027
+            #add-point:ON ACTION controlp INFIELD icaf027 name="input.c.icaf027"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf027             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef.ooef004
+            LET g_qryparam.arg2 = "axmt620" #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_icaf_m.icaf027 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf027 TO icaf027              #
+
+            NEXT FIELD icaf027                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf017
+            #add-point:ON ACTION controlp INFIELD icaf017 name="input.c.icaf017"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf017             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef001
+
+            
+            CALL q_inaa001_6()                                #呼叫開窗
+
+            LET g_icaf_m.icaf017 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf017 TO icaf017              #
+
+            NEXT FIELD icaf017                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf018
+            #add-point:ON ACTION controlp INFIELD icaf018 name="input.c.icaf018"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf018             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef001
+            LET g_qryparam.arg2 = g_icaf_m.icaf017
+            
+            CALL q_inab002_6()                                #呼叫開窗
+
+            LET g_icaf_m.icaf018 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf018 TO icaf018              #
+
+            NEXT FIELD icaf018                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf019
+            #add-point:ON ACTION controlp INFIELD icaf019 name="input.c.icaf019"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf019             #給予default值
+            LET g_qryparam.default2 = "" #g_icaf_m.oodb002 #稅別代碼
+            LET g_qryparam.default3 = "" #g_icaf_m.oodb005 #含稅否
+            LET g_qryparam.default4 = "" #g_icaf_m.oodb006 #稅率
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef.ooef019
+
+            
+            CALL q_oodb002_5()                                #呼叫開窗
+
+            LET g_icaf_m.icaf019 = g_qryparam.return1              
+            #LET g_icaf_m.oodb002 = g_qryparam.return2 
+            #LET g_icaf_m.oodb005 = g_qryparam.return3 
+            #LET g_icaf_m.oodb006 = g_qryparam.return4 
+            DISPLAY g_icaf_m.icaf019 TO icaf019              #
+            #DISPLAY g_icaf_m.oodb002 TO oodb002 #稅別代碼
+            #DISPLAY g_icaf_m.oodb005 TO oodb005 #含稅否
+            #DISPLAY g_icaf_m.oodb006 TO oodb006 #稅率
+            NEXT FIELD icaf019                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf020
+            #add-point:ON ACTION controlp INFIELD icaf020 name="input.c.icaf020"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf020             #給予default值
+            LET g_qryparam.where =" ooba001 = '",g_ooef.ooef004,"' AND ooba002 IN (SELECT oobl001 FROM oobl_t WHERE ooblent = '",g_enterprise,"' AND oobl002 IN ('axrt300','axrt330')) " 
+            #給予arg
+            
+            CALL q_ooba002()                                #呼叫開窗
+
+            LET g_icaf_m.icaf020 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf020 TO icaf020              #
+
+            NEXT FIELD icaf020                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf021
+            #add-point:ON ACTION controlp INFIELD icaf021 name="input.c.icaf021"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf021             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef.ooef004
+            LET g_qryparam.arg2 = "axrt340" #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_icaf_m.icaf021 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf021 TO icaf021              #
+
+            NEXT FIELD icaf021                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf022
+            #add-point:ON ACTION controlp INFIELD icaf022 name="input.c.icaf022"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf022             #給予default值
+            LET g_qryparam.default2 = "" #g_icaf_m.xrah002 #帳務中心
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.where = "xrah004 = '",g_ooef001,"'"
+            
+            CALL q_xrah002_1()                                #呼叫開窗
+
+            LET g_icaf_m.icaf022 = g_qryparam.return1              
+            #LET g_icaf_m.xrah002 = g_qryparam.return2 
+            DISPLAY g_icaf_m.icaf022 TO icaf022              #
+            #DISPLAY g_icaf_m.xrah002 TO xrah002 #帳務中心
+            NEXT FIELD icaf022                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf023
+            #add-point:ON ACTION controlp INFIELD icaf023 name="input.c.icaf023"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf023             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "3111" #
+
+            
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_icaf_m.icaf023 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf023 TO icaf023              #
+
+            NEXT FIELD icaf023                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf024
+            #add-point:ON ACTION controlp INFIELD icaf024 name="input.c.icaf024"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_icaf_m.icaf024             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooib002_2()                                #呼叫開窗
+
+            LET g_icaf_m.icaf024 = g_qryparam.return1              
+
+            DISPLAY g_icaf_m.icaf024 TO icaf024              #
+
+            NEXT FIELD icaf024                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.icaf025
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD icaf025
+            #add-point:ON ACTION controlp INFIELD icaf025 name="input.c.icaf025"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #若點選cancel則離開dialog
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+  
+            IF p_cmd <> "u" THEN
+               #當p_cmd不為u代表為新增/複製
+               LET l_count = 1  
+ 
+               #確定新增的資料不存在(不重複)
+               SELECT COUNT(1) INTO l_count FROM icaf_t
+                WHERE icafent = g_enterprise AND icaf001 = g_icaf_m.icaf001
+                  AND icaf002 = g_icaf_m.icaf002
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前 name="input.head.b_insert"
+                  
+                  #end add-point
+               
+                  #將新增的單頭資料寫入資料庫
+                  INSERT INTO icaf_t (icafent,icaf001,icaf002,icafsite,icafstus,icaf003,icaf004,icaf005, 
+                      icaf006,icaf007,icaf008,icaf009,icaf010,icaf011,icaf012,icaf013,icaf014,icaf015, 
+                      icaf016,icaf026,icaf027,icaf017,icaf018,icaf019,icaf020,icaf021,icaf022,icaf023, 
+                      icaf024,icaf025,icafownid,icafowndp,icafcrtid,icafcrtdp,icafcrtdt,icafmodid,icafmoddt) 
+ 
+                  VALUES (g_enterprise,g_icaf_m.icaf001,g_icaf_m.icaf002,g_icaf_m.icafsite,g_icaf_m.icafstus, 
+                      g_icaf_m.icaf003,g_icaf_m.icaf004,g_icaf_m.icaf005,g_icaf_m.icaf006,g_icaf_m.icaf007, 
+                      g_icaf_m.icaf008,g_icaf_m.icaf009,g_icaf_m.icaf010,g_icaf_m.icaf011,g_icaf_m.icaf012, 
+                      g_icaf_m.icaf013,g_icaf_m.icaf014,g_icaf_m.icaf015,g_icaf_m.icaf016,g_icaf_m.icaf026, 
+                      g_icaf_m.icaf027,g_icaf_m.icaf017,g_icaf_m.icaf018,g_icaf_m.icaf019,g_icaf_m.icaf020, 
+                      g_icaf_m.icaf021,g_icaf_m.icaf022,g_icaf_m.icaf023,g_icaf_m.icaf024,g_icaf_m.icaf025, 
+                      g_icaf_m.icafownid,g_icaf_m.icafowndp,g_icaf_m.icafcrtid,g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdt, 
+                      g_icaf_m.icafmodid,g_icaf_m.icafmoddt) 
+                  
+                  #add-point:單頭新增中 name="input.head.m_insert"
+                  
+                  #end add-point
+                  
+                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "icaf_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後 name="input.head.a_insert"
+                  
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL s_transaction_end('N','0')
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_icaf_m.icaf001
+                  LET g_errparam.code   = "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               END IF 
+            ELSE
+               #add-point:單頭修改前 name="input.head.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL aici110_icaf_t_mask_restore('restore_mask_o')
+               
+               UPDATE icaf_t SET (icaf001,icaf002,icafsite,icafstus,icaf003,icaf004,icaf005,icaf006, 
+                   icaf007,icaf008,icaf009,icaf010,icaf011,icaf012,icaf013,icaf014,icaf015,icaf016,icaf026, 
+                   icaf027,icaf017,icaf018,icaf019,icaf020,icaf021,icaf022,icaf023,icaf024,icaf025,icafownid, 
+                   icafowndp,icafcrtid,icafcrtdp,icafcrtdt,icafmodid,icafmoddt) = (g_icaf_m.icaf001, 
+                   g_icaf_m.icaf002,g_icaf_m.icafsite,g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf004, 
+                   g_icaf_m.icaf005,g_icaf_m.icaf006,g_icaf_m.icaf007,g_icaf_m.icaf008,g_icaf_m.icaf009, 
+                   g_icaf_m.icaf010,g_icaf_m.icaf011,g_icaf_m.icaf012,g_icaf_m.icaf013,g_icaf_m.icaf014, 
+                   g_icaf_m.icaf015,g_icaf_m.icaf016,g_icaf_m.icaf026,g_icaf_m.icaf027,g_icaf_m.icaf017, 
+                   g_icaf_m.icaf018,g_icaf_m.icaf019,g_icaf_m.icaf020,g_icaf_m.icaf021,g_icaf_m.icaf022, 
+                   g_icaf_m.icaf023,g_icaf_m.icaf024,g_icaf_m.icaf025,g_icaf_m.icafownid,g_icaf_m.icafowndp, 
+                   g_icaf_m.icafcrtid,g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid,g_icaf_m.icafmoddt) 
+ 
+                WHERE icafent = g_enterprise AND icaf001 = g_icaf001_t #
+                  AND icaf002 = g_icaf002_t
+ 
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "icaf_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "icaf_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     
+                     #將遮罩欄位進行遮蔽
+                     CALL aici110_icaf_t_mask_restore('restore_mask_n')
+                     
+                     #add-point:單頭修改後 name="input.head.a_update"
+                     
+                     #end add-point
+                     #修改歷程記錄(單頭修改)
+                     LET g_log1 = util.JSON.stringify(g_icaf_m_t)
+                     LET g_log2 = util.JSON.stringify(g_icaf_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+               
+            END IF
+           #controlp
+      END INPUT
+      
+      #add-point:input段more input  name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()
+         #add-point:input段before_dialog  name="input.before_dialog"
+         
+         #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      #放棄輸入
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close 
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+    
+      #toolbar 離開
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION aici110_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point
+   DEFINE l_newno     LIKE icaf_t.icaf001 
+   DEFINE l_oldno     LIKE icaf_t.icaf001 
+   DEFINE l_newno02     LIKE icaf_t.icaf002 
+   DEFINE l_oldno02     LIKE icaf_t.icaf002 
+ 
+   DEFINE l_master    RECORD LIKE icaf_t.* #此變數樣板目前無使用
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #先確定key值無遺漏
+   IF g_icaf_m.icaf001 IS NULL
+      OR g_icaf_m.icaf002 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #備份key值
+   LET g_icaf001_t = g_icaf_m.icaf001
+   LET g_icaf002_t = g_icaf_m.icaf002
+ 
+   
+   #清空key值
+   LET g_icaf_m.icaf001 = ""
+   LET g_icaf_m.icaf002 = ""
+ 
+    
+   CALL aici110_set_entry("a")
+   CALL aici110_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_icaf_m.icafownid = g_user
+      LET g_icaf_m.icafowndp = g_dept
+      LET g_icaf_m.icafcrtid = g_user
+      LET g_icaf_m.icafcrtdp = g_dept 
+      LET g_icaf_m.icafcrtdt = cl_get_current()
+      LET g_icaf_m.icafmodid = g_user
+      LET g_icaf_m.icafmoddt = cl_get_current()
+      LET g_icaf_m.icafstus = 'Y'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   LET g_icaf_m.icaf001_desc = ""
+   LET g_icaf_m.icaf002_desc = ""
+   DISPLAY BY NAME g_icaf_m.*
+   LET g_icaf_m.icafstus = "Y"
+   LET g_icaf_m_t.* = g_icaf_m.*
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_icaf_m.icafstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+      LET g_icaf_m.icaf001_desc = ''
+   DISPLAY BY NAME g_icaf_m.icaf001_desc
+   LET g_icaf_m.icaf002_desc = ''
+   DISPLAY BY NAME g_icaf_m.icaf002_desc
+ 
+   
+   #資料輸入
+   CALL aici110_input("r")
+   
+   IF INT_FLAG THEN
+      #取消
+      INITIALIZE g_icaf_m.* TO NULL
+      CALL aici110_show()
+      CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前 name="reproduce.head.b_insert"
+   
+   #end add-point
+   
+   #add-point:單頭複製中 name="reproduce.head.m_insert"
+   
+   #end add-point
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "icaf_t:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後 name="reproduce.head.a_insert"
+   
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aici110_set_act_visible()
+   CALL aici110_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_icaf001_t = g_icaf_m.icaf001
+   LET g_icaf002_t = g_icaf_m.icaf002
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " icafent = " ||g_enterprise|| " AND",
+                      " icaf001 = '", g_icaf_m.icaf001, "' "
+                      ," AND icaf002 = '", g_icaf_m.icaf002, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL aici110_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+              
+   LET g_data_owner = g_icaf_m.icafownid      
+   LET g_data_dept  = g_icaf_m.icafowndp
+              
+   #功能已完成,通報訊息中心
+   CALL aici110_msgcentre_notify('reproduce')
+                 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.show" >}
+#+ 資料顯示 
+PRIVATE FUNCTION aici110_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   
+   #end add-point  
+   
+   #add-point:show段Function前置處理  name="show.before"
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+    
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL aici110_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+
+            CALL aici110_ooefl003_desc( g_icaf_m.icaf001) RETURNING  g_icaf_m.icaf001_desc
+            DISPLAY BY NAME  g_icaf_m.icaf001_desc
+            
+            CALL aici110_ooefl003_desc( g_icaf_m.icaf002) RETURNING  g_icaf_m.icaf002_desc
+            DISPLAY BY NAME  g_icaf_m.icaf002_desc 
+
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf003) RETURNING g_icaf_m.icaf003_desc
+            DISPLAY BY NAME g_icaf_m.icaf003_desc
+
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf004) RETURNING g_icaf_m.icaf004_desc
+            DISPLAY BY NAME g_icaf_m.icaf004_desc
+
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf005) RETURNING g_icaf_m.icaf005_desc
+            DISPLAY BY NAME g_icaf_m.icaf005_desc
+
+            CALL aici110_inaa002_desc(g_icaf_m.icaf006) RETURNING g_icaf_m.icaf006_desc
+            DISPLAY BY NAME g_icaf_m.icaf006_desc
+
+            CALL aici110_inab003_desc(g_icaf_m.icaf006,g_icaf_m.icaf007) RETURNING g_icaf_m.icaf007_desc
+            DISPLAY BY NAME g_icaf_m.icaf007_desc
+
+            CALL aici110_oodbl004_desc(g_icaf_m.icaf008) RETURNING g_icaf_m.icaf008_desc
+            DISPLAY BY NAME g_icaf_m.icaf008_desc
+
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf009) RETURNING g_icaf_m.icaf009_desc
+            DISPLAY BY NAME g_icaf_m.icaf009_desc
+
+            CALL aici110_ooefl003_desc(g_icaf_m.icaf011) RETURNING g_icaf_m.icaf011_desc
+            DISPLAY BY NAME g_icaf_m.icaf011_desc
+
+            CALL aici110_oocql004_desc('3211',g_icaf_m.icaf012) RETURNING g_icaf_m.icaf012_desc
+            DISPLAY BY NAME g_icaf_m.icaf012_desc
+
+            CALL aici110_ooibl004_desc(g_icaf_m.icaf013) RETURNING g_icaf_m.icaf013_desc
+            DISPLAY BY NAME g_icaf_m.icaf013_desc 
+
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf014) RETURNING g_icaf_m.icaf014_desc
+            DISPLAY BY NAME g_icaf_m.icaf014_desc
+
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf015) RETURNING g_icaf_m.icaf015_desc
+            DISPLAY BY NAME g_icaf_m.icaf015_desc
+
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf016) RETURNING g_icaf_m.icaf016_desc
+            DISPLAY BY NAME g_icaf_m.icaf016_desc
+
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf026) RETURNING g_icaf_m.icaf026_desc
+            DISPLAY BY NAME g_icaf_m.icaf026_desc
+            
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf027) RETURNING g_icaf_m.icaf027_desc
+            DISPLAY BY NAME g_icaf_m.icaf027_desc
+            
+            CALL aici110_inaa002_desc(g_icaf_m.icaf017) RETURNING g_icaf_m.icaf017_desc
+            DISPLAY BY NAME g_icaf_m.icaf017_desc 
+
+            CALL aici110_inab003_desc(g_icaf_m.icaf017,g_icaf_m.icaf018) RETURNING g_icaf_m.icaf018_desc
+            DISPLAY BY NAME g_icaf_m.icaf018_desc
+
+            CALL aici110_oodbl004_desc(g_icaf_m.icaf019) RETURNING g_icaf_m.icaf019_desc
+            DISPLAY BY NAME g_icaf_m.icaf019_desc 
+
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf020) RETURNING g_icaf_m.icaf020_desc
+            DISPLAY BY NAME g_icaf_m.icaf020_desc
+
+            CALL s_aooi200_get_slip_desc(g_icaf_m.icaf021) RETURNING g_icaf_m.icaf021_desc
+            DISPLAY BY NAME g_icaf_m.icaf021_desc
+
+            CALL aici110_ooefl003_desc(g_icaf_m.icaf022) RETURNING g_icaf_m.icaf022_desc
+            DISPLAY BY NAME g_icaf_m.icaf022_desc  
+
+            CALL aici110_oocql004_desc('3111',g_icaf_m.icaf023) RETURNING g_icaf_m.icaf023_desc
+            DISPLAY BY NAME g_icaf_m.icaf023_desc
+
+            CALL aici110_ooibl004_desc(g_icaf_m.icaf024) RETURNING g_icaf_m.icaf024_desc
+            DISPLAY BY NAME g_icaf_m.icaf024_desc   
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icaf_m.icafownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_icaf_m.icafownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icaf_m.icafownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icaf_m.icafowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_icaf_m.icafowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icaf_m.icafowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icaf_m.icafcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_icaf_m.icafcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icaf_m.icafcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icaf_m.icafcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_icaf_m.icafcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icaf_m.icafcrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_icaf_m.icafmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_icaf_m.icafmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_icaf_m.icafmodid_desc
+
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_icaf_m.icaf001,g_icaf_m.icaf001_desc,g_icaf_m.icaf002,g_icaf_m.icaf002_desc,g_icaf_m.icafsite, 
+       g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf003_desc,g_icaf_m.icaf004,g_icaf_m.icaf004_desc, 
+       g_icaf_m.icaf005,g_icaf_m.icaf005_desc,g_icaf_m.icaf006,g_icaf_m.icaf006_desc,g_icaf_m.icaf007, 
+       g_icaf_m.icaf007_desc,g_icaf_m.icaf008,g_icaf_m.icaf008_desc,g_icaf_m.icaf009,g_icaf_m.icaf009_desc, 
+       g_icaf_m.icaf010,g_icaf_m.icaf010_desc,g_icaf_m.icaf011,g_icaf_m.icaf011_desc,g_icaf_m.icaf012, 
+       g_icaf_m.icaf012_desc,g_icaf_m.icaf013,g_icaf_m.icaf013_desc,g_icaf_m.icaf014,g_icaf_m.icaf014_desc, 
+       g_icaf_m.icaf015,g_icaf_m.icaf015_desc,g_icaf_m.icaf016,g_icaf_m.icaf016_desc,g_icaf_m.icaf026, 
+       g_icaf_m.icaf026_desc,g_icaf_m.icaf027,g_icaf_m.icaf027_desc,g_icaf_m.icaf017,g_icaf_m.icaf017_desc, 
+       g_icaf_m.icaf018,g_icaf_m.icaf018_desc,g_icaf_m.icaf019,g_icaf_m.icaf019_desc,g_icaf_m.icaf020, 
+       g_icaf_m.icaf020_desc,g_icaf_m.icaf021,g_icaf_m.icaf021_desc,g_icaf_m.icaf022,g_icaf_m.icaf022_desc, 
+       g_icaf_m.icaf023,g_icaf_m.icaf023_desc,g_icaf_m.icaf024,g_icaf_m.icaf024_desc,g_icaf_m.icaf025, 
+       g_icaf_m.icafownid,g_icaf_m.icafownid_desc,g_icaf_m.icafowndp,g_icaf_m.icafowndp_desc,g_icaf_m.icafcrtid, 
+       g_icaf_m.icafcrtid_desc,g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdp_desc,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid, 
+       g_icaf_m.icafmodid_desc,g_icaf_m.icafmoddt
+   
+   #儲存PK
+   LET l_ac = g_current_idx
+   CALL aici110_set_pk_array()
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_icaf_m.icafstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+ 
+   #顯示有特殊格式設定的欄位或說明
+   CALL cl_show_fld_cont()
+ 
+   #add-point:show段之後 name="show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION aici110_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_icaf_m.icaf001 IS NULL
+   OR g_icaf_m.icaf002 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+    
+   LET g_icaf001_t = g_icaf_m.icaf001
+   LET g_icaf002_t = g_icaf_m.icaf002
+ 
+   
+   
+ 
+   OPEN aici110_cl USING g_enterprise,g_icaf_m.icaf001,g_icaf_m.icaf002
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aici110_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE aici110_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aici110_master_referesh USING g_icaf_m.icaf001,g_icaf_m.icaf002 INTO g_icaf_m.icaf001,g_icaf_m.icaf002, 
+       g_icaf_m.icafsite,g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf004,g_icaf_m.icaf005,g_icaf_m.icaf006, 
+       g_icaf_m.icaf007,g_icaf_m.icaf008,g_icaf_m.icaf009,g_icaf_m.icaf010,g_icaf_m.icaf011,g_icaf_m.icaf012, 
+       g_icaf_m.icaf013,g_icaf_m.icaf014,g_icaf_m.icaf015,g_icaf_m.icaf016,g_icaf_m.icaf026,g_icaf_m.icaf027, 
+       g_icaf_m.icaf017,g_icaf_m.icaf018,g_icaf_m.icaf019,g_icaf_m.icaf020,g_icaf_m.icaf021,g_icaf_m.icaf022, 
+       g_icaf_m.icaf023,g_icaf_m.icaf024,g_icaf_m.icaf025,g_icaf_m.icafownid,g_icaf_m.icafowndp,g_icaf_m.icafcrtid, 
+       g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid,g_icaf_m.icafmoddt,g_icaf_m.icaf001_desc, 
+       g_icaf_m.icaf002_desc,g_icaf_m.icaf003_desc,g_icaf_m.icaf004_desc,g_icaf_m.icaf005_desc,g_icaf_m.icaf006_desc, 
+       g_icaf_m.icaf007_desc,g_icaf_m.icaf008_desc,g_icaf_m.icaf009_desc,g_icaf_m.icaf010_desc,g_icaf_m.icaf011_desc, 
+       g_icaf_m.icaf012_desc,g_icaf_m.icaf013_desc,g_icaf_m.icaf014_desc,g_icaf_m.icaf015_desc,g_icaf_m.icaf016_desc, 
+       g_icaf_m.icaf026_desc,g_icaf_m.icaf027_desc,g_icaf_m.icaf017_desc,g_icaf_m.icaf018_desc,g_icaf_m.icaf019_desc, 
+       g_icaf_m.icaf020_desc,g_icaf_m.icaf021_desc,g_icaf_m.icaf022_desc,g_icaf_m.icaf023_desc,g_icaf_m.icaf024_desc, 
+       g_icaf_m.icafownid_desc,g_icaf_m.icafowndp_desc,g_icaf_m.icafcrtid_desc,g_icaf_m.icafcrtdp_desc, 
+       g_icaf_m.icafmodid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT aici110_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_icaf_m_mask_o.* =  g_icaf_m.*
+   CALL aici110_icaf_t_mask()
+   LET g_icaf_m_mask_n.* =  g_icaf_m.*
+   
+   #將最新資料顯示到畫面上
+   CALL aici110_show()
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point
+ 
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aici110_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+ 
+      DELETE FROM icaf_t 
+       WHERE icafent = g_enterprise AND icaf001 = g_icaf_m.icaf001 
+         AND icaf002 = g_icaf_m.icaf002 
+ 
+ 
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "icaf_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      
+      #end add-point
+      
+       
+ 
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_icaf_m)   #(ver:49)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:49)
+         CLOSE aici110_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      CLEAR FORM
+      CALL aici110_ui_browser_refresh()
+      
+      #確保畫面上保有資料
+      IF g_browser_cnt > 0 THEN
+         #CALL aici110_browser_fill(g_wc,"")
+         CALL aici110_fetch("P")
+      ELSE
+         CLEAR FORM
+      END IF
+      CALL s_transaction_end('Y','0')
+   ELSE    
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE aici110_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL aici110_msgcentre_notify('delete')
+ 
+   #add-point:單頭刪除完成後 name="delete.a_delete"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION aici110_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_icaf001 = g_icaf_m.icaf001
+         AND g_browser[l_i].b_icaf002 = g_icaf_m.icaf002
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+       END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt  TO FORMONLY.h_count     #page count
+  
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aici110_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization" 
+   
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point     
+    
+   #add-point:Function前置處理 name="set_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("icaf001,icaf002",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aici110_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("icaf001,icaf002",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION aici110_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization" 
+   
+   #end add-point  
+   #add-point:set_act_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION aici110_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point
+   #add-point:set_act_no_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION aici110_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization" 
+   
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.pre_function"
+   
+   #end add-point
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point  
+   
+   #根據外部參數(g_argv)組合wc
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " icaf001 = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " icaf002 = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      #若有外部參數則根據該參數組合
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.mask_functions" >}
+&include "erp/aic/aici110_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aici110.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION aici110_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_icaf_m.icaf001 IS NULL
+      OR g_icaf_m.icaf002 IS NULL
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN aici110_cl USING g_enterprise,g_icaf_m.icaf001,g_icaf_m.icaf002
+   IF STATUS THEN
+      CLOSE aici110_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aici110_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE aici110_master_referesh USING g_icaf_m.icaf001,g_icaf_m.icaf002 INTO g_icaf_m.icaf001,g_icaf_m.icaf002, 
+       g_icaf_m.icafsite,g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf004,g_icaf_m.icaf005,g_icaf_m.icaf006, 
+       g_icaf_m.icaf007,g_icaf_m.icaf008,g_icaf_m.icaf009,g_icaf_m.icaf010,g_icaf_m.icaf011,g_icaf_m.icaf012, 
+       g_icaf_m.icaf013,g_icaf_m.icaf014,g_icaf_m.icaf015,g_icaf_m.icaf016,g_icaf_m.icaf026,g_icaf_m.icaf027, 
+       g_icaf_m.icaf017,g_icaf_m.icaf018,g_icaf_m.icaf019,g_icaf_m.icaf020,g_icaf_m.icaf021,g_icaf_m.icaf022, 
+       g_icaf_m.icaf023,g_icaf_m.icaf024,g_icaf_m.icaf025,g_icaf_m.icafownid,g_icaf_m.icafowndp,g_icaf_m.icafcrtid, 
+       g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid,g_icaf_m.icafmoddt,g_icaf_m.icaf001_desc, 
+       g_icaf_m.icaf002_desc,g_icaf_m.icaf003_desc,g_icaf_m.icaf004_desc,g_icaf_m.icaf005_desc,g_icaf_m.icaf006_desc, 
+       g_icaf_m.icaf007_desc,g_icaf_m.icaf008_desc,g_icaf_m.icaf009_desc,g_icaf_m.icaf010_desc,g_icaf_m.icaf011_desc, 
+       g_icaf_m.icaf012_desc,g_icaf_m.icaf013_desc,g_icaf_m.icaf014_desc,g_icaf_m.icaf015_desc,g_icaf_m.icaf016_desc, 
+       g_icaf_m.icaf026_desc,g_icaf_m.icaf027_desc,g_icaf_m.icaf017_desc,g_icaf_m.icaf018_desc,g_icaf_m.icaf019_desc, 
+       g_icaf_m.icaf020_desc,g_icaf_m.icaf021_desc,g_icaf_m.icaf022_desc,g_icaf_m.icaf023_desc,g_icaf_m.icaf024_desc, 
+       g_icaf_m.icafownid_desc,g_icaf_m.icafowndp_desc,g_icaf_m.icafcrtid_desc,g_icaf_m.icafcrtdp_desc, 
+       g_icaf_m.icafmodid_desc
+   
+ 
+   #檢查是否允許此動作
+   IF NOT aici110_action_chk() THEN
+      CLOSE aici110_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_icaf_m.icaf001,g_icaf_m.icaf001_desc,g_icaf_m.icaf002,g_icaf_m.icaf002_desc,g_icaf_m.icafsite, 
+       g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf003_desc,g_icaf_m.icaf004,g_icaf_m.icaf004_desc, 
+       g_icaf_m.icaf005,g_icaf_m.icaf005_desc,g_icaf_m.icaf006,g_icaf_m.icaf006_desc,g_icaf_m.icaf007, 
+       g_icaf_m.icaf007_desc,g_icaf_m.icaf008,g_icaf_m.icaf008_desc,g_icaf_m.icaf009,g_icaf_m.icaf009_desc, 
+       g_icaf_m.icaf010,g_icaf_m.icaf010_desc,g_icaf_m.icaf011,g_icaf_m.icaf011_desc,g_icaf_m.icaf012, 
+       g_icaf_m.icaf012_desc,g_icaf_m.icaf013,g_icaf_m.icaf013_desc,g_icaf_m.icaf014,g_icaf_m.icaf014_desc, 
+       g_icaf_m.icaf015,g_icaf_m.icaf015_desc,g_icaf_m.icaf016,g_icaf_m.icaf016_desc,g_icaf_m.icaf026, 
+       g_icaf_m.icaf026_desc,g_icaf_m.icaf027,g_icaf_m.icaf027_desc,g_icaf_m.icaf017,g_icaf_m.icaf017_desc, 
+       g_icaf_m.icaf018,g_icaf_m.icaf018_desc,g_icaf_m.icaf019,g_icaf_m.icaf019_desc,g_icaf_m.icaf020, 
+       g_icaf_m.icaf020_desc,g_icaf_m.icaf021,g_icaf_m.icaf021_desc,g_icaf_m.icaf022,g_icaf_m.icaf022_desc, 
+       g_icaf_m.icaf023,g_icaf_m.icaf023_desc,g_icaf_m.icaf024,g_icaf_m.icaf024_desc,g_icaf_m.icaf025, 
+       g_icaf_m.icafownid,g_icaf_m.icafownid_desc,g_icaf_m.icafowndp,g_icaf_m.icafowndp_desc,g_icaf_m.icafcrtid, 
+       g_icaf_m.icafcrtid_desc,g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdp_desc,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid, 
+       g_icaf_m.icafmodid_desc,g_icaf_m.icafmoddt
+ 
+   CASE g_icaf_m.icafstus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_icaf_m.icafstus
+            
+            WHEN "N"
+               HIDE OPTION "inactive"
+            WHEN "Y"
+               HIDE OPTION "active"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      
+      #end add-point
+      
+      
+	  
+      ON ACTION inactive
+         IF cl_auth_chk_act("inactive") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.inactive"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION active
+         IF cl_auth_chk_act("active") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.active"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+      
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      ) OR 
+      g_icaf_m.icafstus = lc_state OR cl_null(lc_state) THEN
+      CLOSE aici110_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   
+   #end add-point
+   
+   LET g_icaf_m.icafmodid = g_user
+   LET g_icaf_m.icafmoddt = cl_get_current()
+   LET g_icaf_m.icafstus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE icaf_t 
+      SET (icafstus,icafmodid,icafmoddt) 
+        = (g_icaf_m.icafstus,g_icaf_m.icafmodid,g_icaf_m.icafmoddt)     
+    WHERE icafent = g_enterprise AND icaf001 = g_icaf_m.icaf001
+      AND icaf002 = g_icaf_m.icaf002
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE aici110_master_referesh USING g_icaf_m.icaf001,g_icaf_m.icaf002 INTO g_icaf_m.icaf001, 
+          g_icaf_m.icaf002,g_icaf_m.icafsite,g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf004,g_icaf_m.icaf005, 
+          g_icaf_m.icaf006,g_icaf_m.icaf007,g_icaf_m.icaf008,g_icaf_m.icaf009,g_icaf_m.icaf010,g_icaf_m.icaf011, 
+          g_icaf_m.icaf012,g_icaf_m.icaf013,g_icaf_m.icaf014,g_icaf_m.icaf015,g_icaf_m.icaf016,g_icaf_m.icaf026, 
+          g_icaf_m.icaf027,g_icaf_m.icaf017,g_icaf_m.icaf018,g_icaf_m.icaf019,g_icaf_m.icaf020,g_icaf_m.icaf021, 
+          g_icaf_m.icaf022,g_icaf_m.icaf023,g_icaf_m.icaf024,g_icaf_m.icaf025,g_icaf_m.icafownid,g_icaf_m.icafowndp, 
+          g_icaf_m.icafcrtid,g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdt,g_icaf_m.icafmodid,g_icaf_m.icafmoddt, 
+          g_icaf_m.icaf001_desc,g_icaf_m.icaf002_desc,g_icaf_m.icaf003_desc,g_icaf_m.icaf004_desc,g_icaf_m.icaf005_desc, 
+          g_icaf_m.icaf006_desc,g_icaf_m.icaf007_desc,g_icaf_m.icaf008_desc,g_icaf_m.icaf009_desc,g_icaf_m.icaf010_desc, 
+          g_icaf_m.icaf011_desc,g_icaf_m.icaf012_desc,g_icaf_m.icaf013_desc,g_icaf_m.icaf014_desc,g_icaf_m.icaf015_desc, 
+          g_icaf_m.icaf016_desc,g_icaf_m.icaf026_desc,g_icaf_m.icaf027_desc,g_icaf_m.icaf017_desc,g_icaf_m.icaf018_desc, 
+          g_icaf_m.icaf019_desc,g_icaf_m.icaf020_desc,g_icaf_m.icaf021_desc,g_icaf_m.icaf022_desc,g_icaf_m.icaf023_desc, 
+          g_icaf_m.icaf024_desc,g_icaf_m.icafownid_desc,g_icaf_m.icafowndp_desc,g_icaf_m.icafcrtid_desc, 
+          g_icaf_m.icafcrtdp_desc,g_icaf_m.icafmodid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_icaf_m.icaf001,g_icaf_m.icaf001_desc,g_icaf_m.icaf002,g_icaf_m.icaf002_desc, 
+          g_icaf_m.icafsite,g_icaf_m.icafstus,g_icaf_m.icaf003,g_icaf_m.icaf003_desc,g_icaf_m.icaf004, 
+          g_icaf_m.icaf004_desc,g_icaf_m.icaf005,g_icaf_m.icaf005_desc,g_icaf_m.icaf006,g_icaf_m.icaf006_desc, 
+          g_icaf_m.icaf007,g_icaf_m.icaf007_desc,g_icaf_m.icaf008,g_icaf_m.icaf008_desc,g_icaf_m.icaf009, 
+          g_icaf_m.icaf009_desc,g_icaf_m.icaf010,g_icaf_m.icaf010_desc,g_icaf_m.icaf011,g_icaf_m.icaf011_desc, 
+          g_icaf_m.icaf012,g_icaf_m.icaf012_desc,g_icaf_m.icaf013,g_icaf_m.icaf013_desc,g_icaf_m.icaf014, 
+          g_icaf_m.icaf014_desc,g_icaf_m.icaf015,g_icaf_m.icaf015_desc,g_icaf_m.icaf016,g_icaf_m.icaf016_desc, 
+          g_icaf_m.icaf026,g_icaf_m.icaf026_desc,g_icaf_m.icaf027,g_icaf_m.icaf027_desc,g_icaf_m.icaf017, 
+          g_icaf_m.icaf017_desc,g_icaf_m.icaf018,g_icaf_m.icaf018_desc,g_icaf_m.icaf019,g_icaf_m.icaf019_desc, 
+          g_icaf_m.icaf020,g_icaf_m.icaf020_desc,g_icaf_m.icaf021,g_icaf_m.icaf021_desc,g_icaf_m.icaf022, 
+          g_icaf_m.icaf022_desc,g_icaf_m.icaf023,g_icaf_m.icaf023_desc,g_icaf_m.icaf024,g_icaf_m.icaf024_desc, 
+          g_icaf_m.icaf025,g_icaf_m.icafownid,g_icaf_m.icafownid_desc,g_icaf_m.icafowndp,g_icaf_m.icafowndp_desc, 
+          g_icaf_m.icafcrtid,g_icaf_m.icafcrtid_desc,g_icaf_m.icafcrtdp,g_icaf_m.icafcrtdp_desc,g_icaf_m.icafcrtdt, 
+          g_icaf_m.icafmodid,g_icaf_m.icafmodid_desc,g_icaf_m.icafmoddt
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   CALL cl_set_act_visible("delete",TRUE)
+   IF g_icaf_m.icafstus = "N" THEN 
+      CALL cl_set_act_visible("delete",FALSE)
+   END IF
+   #end add-point  
+ 
+   CLOSE aici110_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL aici110_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aici110.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="aici110.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION aici110_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_icaf_m.icaf001
+   LET g_pk_array[1].column = 'icaf001'
+   LET g_pk_array[2].values = g_icaf_m.icaf002
+   LET g_pk_array[2].column = 'icaf002'
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aici110.other_dialog" readonly="Y" >}
+ 
+ 
+{</section>}
+ 
+{<section id="aici110.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION aici110_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL aici110_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_icaf_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aici110.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION aici110_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization" 
+   
+   #end add-point
+   #add-point:action_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aici110.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION aici110_inaa002_desc(p_inaa001)
+DEFINE p_inaa001   LIKE inaa_t.inaa001
+DEFINE r_inaa001   LIKE inaa_t.inaa002
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_ooef001
+   LET g_ref_fields[2] = p_inaa001
+   CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaasite=? AND inaa001=? ","") RETURNING g_rtn_fields
+   LET r_inaa001 = '', g_rtn_fields[1] , ''
+   RETURN r_inaa001
+END FUNCTION
+
+PRIVATE FUNCTION aici110_ooefl003_desc(p_ooefl001)
+DEFINE p_ooefl001   LIKE ooefl_t.ooefl001
+DEFINE r_ooefl004   LIKE ooefl_t.ooefl004
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_ooefl001
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl004 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_ooefl004 = '', g_rtn_fields[1] , ''
+   RETURN r_ooefl004
+END FUNCTION
+
+PRIVATE FUNCTION aici110_inab003_desc(p_inab001,p_inab002)
+DEFINE p_inab001  LIKE inab_t.inab001
+DEFINE p_inab002  LIKE inab_t.inab002
+DEFINE r_inab003  LIKE inab_t.inab003
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_ooef001
+   LET g_ref_fields[2] = p_inab001
+   LET g_ref_fields[3] = p_inab002
+   CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inabsite=? AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+   LET r_inab003 = '', g_rtn_fields[1] , ''
+   RETURN r_inab003
+END FUNCTION
+
+PRIVATE FUNCTION aici110_oodbl004_desc(p_oodbl002)
+DEFINE p_oodbl002   LIKE oodbl_t.oodbl002,
+       r_oodbl004   LIKE oodbl_t.oodbl004
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_ooef.ooef019
+   LET g_ref_fields[2] = p_oodbl002
+   #160902-00048#1-s-mod
+   #CALL ap_ref_array2(g_ref_fields,"SELECT oodbl004 FROM oodbl_t WHERE oodbl001=? AND oodbl002=? AND oodbl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   CALL ap_ref_array2(g_ref_fields,"SELECT oodbl004 FROM oodbl_t WHERE oodblent = '"||g_enterprise||"' AND oodbl001=? AND oodbl002=? AND oodbl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #160902-00048#1-e-mod
+   LET r_oodbl004 = '', g_rtn_fields[1] , ''
+   RETURN r_oodbl004
+END FUNCTION
+
+PRIVATE FUNCTION aici110_get_site()
+   IF g_icaf_m.icaf002 = 'ALL' THEN 
+      LET g_ooef001 = g_site
+   ELSE  
+      LET g_ooef001 = g_icaf_m.icaf002
+   END IF
+   #161109-00085#1-s mod
+   #SELECT * INTO g_ooef.* FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_ooef001   #161109-00085#43-s mark   
+   SELECT ooefent,ooefstus,ooef001,ooef002,ooef004,
+          ooef005,ooef006,ooef007,ooef008,ooef009,
+          ooef010,ooef011,ooef012,ooef013,ooefownid,
+          ooefowndp,ooefcrtid,ooefcrtdp,ooefcrtdt,ooefmodid,
+          ooefmoddt,ooef014,ooef015,ooef016,ooef017,ooef018,
+          ooef019,ooef020,ooef021,ooef022,ooef003,
+          ooef023,ooef024,ooef025,ooef026,ooef100,
+          ooef101,ooef102,ooef103,ooef104,ooef105,
+          ooef106,ooef107,ooef108,ooef109,ooef110,
+          ooef111,ooef112,ooef113,ooef114,ooef115,
+          ooef120,ooef121,ooef122,ooef123,ooef124,
+          ooef125,ooef150,ooef151,ooef152,ooef153,
+          ooef154,ooef155,ooef156,ooef157,ooef158,
+          ooef159,ooef160,ooef161,ooef162,ooef163,
+          ooef164,ooef165,ooef166,ooef167,ooef168,
+          ooef169,ooef170,ooef171,ooef172,ooef173,
+          ooefunit,ooef200,ooef201,ooef202,ooef203,
+          ooef204,ooef205,ooef206,ooef207,ooef208,
+          ooef209,ooef210,ooef211,ooef212,ooef213,
+          ooef214,ooef215,ooef216,ooef217,ooef301,
+          ooef302,ooef303,ooef304,ooef305,ooef306,
+          ooef307,ooef308,ooef309,ooef310,ooef126,
+          ooef127,ooef128,ooef116        
+     INTO g_ooef.ooefent,g_ooef.ooefstus,g_ooef.ooef001,g_ooef.ooef002,g_ooef.ooef004,
+          g_ooef.ooef005,g_ooef.ooef006,g_ooef.ooef007,g_ooef.ooef008,g_ooef.ooef009,
+          g_ooef.ooef010,g_ooef.ooef011,g_ooef.ooef012,g_ooef.ooef013,g_ooef.ooefownid,
+          g_ooef.ooefowndp,g_ooef.ooefcrtid,g_ooef.ooefcrtdp,g_ooef.ooefcrtdt,g_ooef.ooefmodid,
+          g_ooef.ooefmoddt,g_ooef.ooef014,g_ooef.ooef015,g_ooef.ooef016,g_ooef.ooef017,g_ooef.ooef018,
+          g_ooef.ooef019,g_ooef.ooef020,g_ooef.ooef021,g_ooef.ooef022,g_ooef.ooef003,
+          g_ooef.ooef023,g_ooef.ooef024,g_ooef.ooef025,g_ooef.ooef026,g_ooef.ooef100,
+          g_ooef.ooef101,g_ooef.ooef102,g_ooef.ooef103,g_ooef.ooef104,g_ooef.ooef105,
+          g_ooef.ooef106,g_ooef.ooef107,g_ooef.ooef108,g_ooef.ooef109,g_ooef.ooef110,
+          g_ooef.ooef111,g_ooef.ooef112,g_ooef.ooef113,g_ooef.ooef114,g_ooef.ooef115,
+          g_ooef.ooef120,g_ooef.ooef121,g_ooef.ooef122,g_ooef.ooef123,g_ooef.ooef124,
+          g_ooef.ooef125,g_ooef.ooef150,g_ooef.ooef151,g_ooef.ooef152,g_ooef.ooef153,
+          g_ooef.ooef154,g_ooef.ooef155,g_ooef.ooef156,g_ooef.ooef157,g_ooef.ooef158,
+          g_ooef.ooef159,g_ooef.ooef160,g_ooef.ooef161,g_ooef.ooef162,g_ooef.ooef163,
+          g_ooef.ooef164,g_ooef.ooef165,g_ooef.ooef166,g_ooef.ooef167,g_ooef.ooef168,
+          g_ooef.ooef169,g_ooef.ooef170,g_ooef.ooef171,g_ooef.ooef172,g_ooef.ooef173,
+          g_ooef.ooefunit,g_ooef.ooef200,g_ooef.ooef201,g_ooef.ooef202,g_ooef.ooef203,
+          g_ooef.ooef204,g_ooef.ooef205,g_ooef.ooef206,g_ooef.ooef207,g_ooef.ooef208,
+          g_ooef.ooef209,g_ooef.ooef210,g_ooef.ooef211,g_ooef.ooef212,g_ooef.ooef213,
+          g_ooef.ooef214,g_ooef.ooef215,g_ooef.ooef216,g_ooef.ooef217,g_ooef.ooef301,
+          g_ooef.ooef302,g_ooef.ooef303,g_ooef.ooef304,g_ooef.ooef305,g_ooef.ooef306,
+          g_ooef.ooef307,g_ooef.ooef308,g_ooef.ooef309,g_ooef.ooef310,g_ooef.ooef126,
+          g_ooef.ooef127,g_ooef.ooef128,g_ooef.ooef116
+      FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_ooef001
+   #161109-00085#1-e mod               
+END FUNCTION
+
+PRIVATE FUNCTION aici110_ooibl004_desc(p_ooibl002)
+DEFINE p_ooibl002  LIKE ooibl_t.ooibl002,   
+       r_ooibl004  LIKE ooibl_t.ooibl002
+       
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_ooibl002
+   #160902-00048#1-s-mod
+   #CALL ap_ref_array2(g_ref_fields,"SELECT ooibl004 FROM ooibl_t WHERE ooibl002=? AND ooibl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooibl004 FROM ooibl_t WHERE ooiblent='"||g_enterprise||"' AND ooibl002=? AND ooibl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #160902-00048#1-e-mod
+   LET r_ooibl004 = '', g_rtn_fields[1] , ''
+   RETURN r_ooibl004
+END FUNCTION
+
+PRIVATE FUNCTION aici110_oocql004_desc(p_oocql001,p_oocql002)
+DEFINE p_oocql001   LIKE oocql_t.oocql001
+DEFINE p_oocql002   LIKE oocql_t.oocql002
+DEFINE r_oocql004   LIKE oocql_t.oocql004
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_oocql001
+   LET g_ref_fields[2] = p_oocql002
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_oocql004 = '', g_rtn_fields[1] , ''
+   RETURN r_oocql004
+END FUNCTION
+
+ 
+{</section>}
+ 

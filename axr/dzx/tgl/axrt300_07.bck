@@ -1,0 +1,1895 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrt300_07.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0011(2016-05-31 12:11:29), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000070
+#+ Filename...: axrt300_07
+#+ Description: 其他訊息
+#+ Creator....: 01727(2015-03-16 09:33:39)
+#+ Modifier...: 02114 -SD/PR-
+
+{</section>}
+
+{<section id="axrt300_07.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xrcb_d        RECORD
+       xrcbdocno LIKE xrcb_t.xrcbdocno, 
+   xrcbld LIKE xrcb_t.xrcbld, 
+   xrcbseq LIKE xrcb_t.xrcbseq, 
+   xrcb047 LIKE xrcb_t.xrcb047, 
+   xrcb029 LIKE xrcb_t.xrcb029, 
+   xrcb029_desc LIKE type_t.chr500, 
+   xrcb021 LIKE xrcb_t.xrcb021, 
+   xrcb021_desc LIKE type_t.chr500, 
+   xrcb051 LIKE xrcb_t.xrcb051, 
+   xrcb051_desc LIKE type_t.chr500, 
+   xrcb010 LIKE xrcb_t.xrcb010, 
+   xrcb010_desc LIKE type_t.chr500, 
+   xrcb011 LIKE xrcb_t.xrcb011, 
+   xrcb011_desc LIKE type_t.chr500, 
+   xrcb024 LIKE xrcb_t.xrcb024, 
+   xrcb024_desc LIKE type_t.chr500, 
+   xrcb036 LIKE xrcb_t.xrcb036, 
+   xrcb036_desc LIKE type_t.chr500, 
+   xrcb012 LIKE xrcb_t.xrcb012, 
+   xrcb012_desc LIKE type_t.chr500, 
+   xrcb015 LIKE xrcb_t.xrcb015, 
+   xrcb015_desc LIKE type_t.chr500, 
+   xrcb016 LIKE xrcb_t.xrcb016, 
+   xrcb016_desc LIKE type_t.chr500, 
+   xrcb033 LIKE xrcb_t.xrcb033, 
+   xrcb034 LIKE xrcb_t.xrcb034, 
+   xrcb034_desc LIKE type_t.chr500, 
+   xrcb035 LIKE xrcb_t.xrcb035, 
+   xrcb035_desc LIKE type_t.chr500, 
+   xrcb053 LIKE xrcb_t.xrcb053, 
+   xrcb053_desc LIKE type_t.chr500, 
+   xrcb054 LIKE xrcb_t.xrcb054, 
+   xrcb054_desc LIKE type_t.chr500, 
+   xrcb037 LIKE xrcb_t.xrcb037, 
+   xrcb037_desc LIKE type_t.chr500, 
+   xrcb038 LIKE xrcb_t.xrcb038, 
+   xrcb038_desc LIKE type_t.chr500, 
+   xrcb039 LIKE xrcb_t.xrcb039, 
+   xrcb039_desc LIKE type_t.chr500, 
+   xrcb040 LIKE xrcb_t.xrcb040, 
+   xrcb040_desc LIKE type_t.chr500, 
+   xrcb041 LIKE xrcb_t.xrcb041, 
+   xrcb041_desc LIKE type_t.chr500, 
+   xrcb042 LIKE xrcb_t.xrcb042, 
+   xrcb042_desc LIKE type_t.chr500, 
+   xrcb043 LIKE xrcb_t.xrcb043, 
+   xrcb043_desc LIKE type_t.chr500, 
+   xrcb044 LIKE xrcb_t.xrcb044, 
+   xrcb044_desc LIKE type_t.chr500, 
+   xrcb045 LIKE xrcb_t.xrcb045, 
+   xrcb045_desc LIKE type_t.chr500, 
+   xrcb046 LIKE xrcb_t.xrcb046, 
+   xrcb046_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_xrcb_d          DYNAMIC ARRAY OF type_g_xrcb_d
+DEFINE g_xrcb_d_t        type_g_xrcb_d
+ 
+ 
+DEFINE g_xrcbld_t   LIKE xrcb_t.xrcbld    #Key值備份
+DEFINE g_xrcbdocno_t      LIKE xrcb_t.xrcbdocno    #Key值備份
+DEFINE g_xrcbseq_t      LIKE xrcb_t.xrcbseq    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+
+{</section>}
+
+{<section id="axrt300_07.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrt300_07(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt300_07 WITH FORM cl_ap_formpath("axr","axrt300_07")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xrcb_d FROM s_detail1_axrt300_07.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcbdocno_4
+            #add-point:BEFORE FIELD xrcbdocno_4 name="input.b.page1_axrt300_07.xrcbdocno_4"
+            {<point name="input.b.page1_axrt300_07.xrcbdocno_4" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcbdocno_4
+            
+            #add-point:AFTER FIELD xrcbdocno_4 name="input.a.page1_axrt300_07.xrcbdocno_4"
+            {<point name="input.a.page1_axrt300_07.xrcbdocno_4" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcbdocno_4
+            #add-point:ON CHANGE xrcbdocno_4 name="input.g.page1_axrt300_07.xrcbdocno_4"
+            {<point name="input.g.page1_axrt300_07.xrcbdocno_4" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcbld_4
+            #add-point:BEFORE FIELD xrcbld_4 name="input.b.page1_axrt300_07.xrcbld_4"
+            {<point name="input.b.page1_axrt300_07.xrcbld_4" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcbld_4
+            
+            #add-point:AFTER FIELD xrcbld_4 name="input.a.page1_axrt300_07.xrcbld_4"
+            {<point name="input.a.page1_axrt300_07.xrcbld_4" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcbld_4
+            #add-point:ON CHANGE xrcbld_4 name="input.g.page1_axrt300_07.xrcbld_4"
+            {<point name="input.g.page1_axrt300_07.xrcbld_4" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcbseq_4
+            #add-point:BEFORE FIELD xrcbseq_4 name="input.b.page1_axrt300_07.xrcbseq_4"
+            {<point name="input.b.page1_axrt300_07.xrcbseq_4" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcbseq_4
+            
+            #add-point:AFTER FIELD xrcbseq_4 name="input.a.page1_axrt300_07.xrcbseq_4"
+            {<point name="input.a.page1_axrt300_07.xrcbseq_4" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcbseq_4
+            #add-point:ON CHANGE xrcbseq_4 name="input.g.page1_axrt300_07.xrcbseq_4"
+            {<point name="input.g.page1_axrt300_07.xrcbseq_4" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb047
+            #add-point:BEFORE FIELD xrcb047 name="input.b.page1_axrt300_07.xrcb047"
+            {<point name="input.b.page1_axrt300_07.xrcb047" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb047
+            
+            #add-point:AFTER FIELD xrcb047 name="input.a.page1_axrt300_07.xrcb047"
+            {<point name="input.a.page1_axrt300_07.xrcb047" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb047
+            #add-point:ON CHANGE xrcb047 name="input.g.page1_axrt300_07.xrcb047"
+            {<point name="input.g.page1_axrt300_07.xrcb047" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb029
+            #add-point:BEFORE FIELD xrcb029 name="input.b.page1_axrt300_07.xrcb029"
+            {<point name="input.b.page1_axrt300_07.xrcb029" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb029
+            
+            #add-point:AFTER FIELD xrcb029 name="input.a.page1_axrt300_07.xrcb029"
+            {<point name="input.a.page1_axrt300_07.xrcb029" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb029
+            #add-point:ON CHANGE xrcb029 name="input.g.page1_axrt300_07.xrcb029"
+            {<point name="input.g.page1_axrt300_07.xrcb029" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb029_desc
+            #add-point:BEFORE FIELD xrcb029_desc name="input.b.page1_axrt300_07.xrcb029_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb029_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb029_desc
+            
+            #add-point:AFTER FIELD xrcb029_desc name="input.a.page1_axrt300_07.xrcb029_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb029_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb029_desc
+            #add-point:ON CHANGE xrcb029_desc name="input.g.page1_axrt300_07.xrcb029_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb029_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb021
+            #add-point:BEFORE FIELD xrcb021 name="input.b.page1_axrt300_07.xrcb021"
+            {<point name="input.b.page1_axrt300_07.xrcb021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb021
+            
+            #add-point:AFTER FIELD xrcb021 name="input.a.page1_axrt300_07.xrcb021"
+            {<point name="input.a.page1_axrt300_07.xrcb021" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb021
+            #add-point:ON CHANGE xrcb021 name="input.g.page1_axrt300_07.xrcb021"
+            {<point name="input.g.page1_axrt300_07.xrcb021" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb021_desc
+            #add-point:BEFORE FIELD xrcb021_desc name="input.b.page1_axrt300_07.xrcb021_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb021_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb021_desc
+            
+            #add-point:AFTER FIELD xrcb021_desc name="input.a.page1_axrt300_07.xrcb021_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb021_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb021_desc
+            #add-point:ON CHANGE xrcb021_desc name="input.g.page1_axrt300_07.xrcb021_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb021_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb051
+            #add-point:BEFORE FIELD xrcb051 name="input.b.page1_axrt300_07.xrcb051"
+            {<point name="input.b.page1_axrt300_07.xrcb051" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb051
+            
+            #add-point:AFTER FIELD xrcb051 name="input.a.page1_axrt300_07.xrcb051"
+            {<point name="input.a.page1_axrt300_07.xrcb051" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb051
+            #add-point:ON CHANGE xrcb051 name="input.g.page1_axrt300_07.xrcb051"
+            {<point name="input.g.page1_axrt300_07.xrcb051" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb051_desc
+            #add-point:BEFORE FIELD xrcb051_desc name="input.b.page1_axrt300_07.xrcb051_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb051_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb051_desc
+            
+            #add-point:AFTER FIELD xrcb051_desc name="input.a.page1_axrt300_07.xrcb051_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb051_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb051_desc
+            #add-point:ON CHANGE xrcb051_desc name="input.g.page1_axrt300_07.xrcb051_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb051_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb010
+            #add-point:BEFORE FIELD xrcb010 name="input.b.page1_axrt300_07.xrcb010"
+            {<point name="input.b.page1_axrt300_07.xrcb010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb010
+            
+            #add-point:AFTER FIELD xrcb010 name="input.a.page1_axrt300_07.xrcb010"
+            {<point name="input.a.page1_axrt300_07.xrcb010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb010
+            #add-point:ON CHANGE xrcb010 name="input.g.page1_axrt300_07.xrcb010"
+            {<point name="input.g.page1_axrt300_07.xrcb010" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb010_desc
+            #add-point:BEFORE FIELD xrcb010_desc name="input.b.page1_axrt300_07.xrcb010_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb010_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb010_desc
+            
+            #add-point:AFTER FIELD xrcb010_desc name="input.a.page1_axrt300_07.xrcb010_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb010_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb010_desc
+            #add-point:ON CHANGE xrcb010_desc name="input.g.page1_axrt300_07.xrcb010_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb010_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb011
+            #add-point:BEFORE FIELD xrcb011 name="input.b.page1_axrt300_07.xrcb011"
+            {<point name="input.b.page1_axrt300_07.xrcb011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb011
+            
+            #add-point:AFTER FIELD xrcb011 name="input.a.page1_axrt300_07.xrcb011"
+            {<point name="input.a.page1_axrt300_07.xrcb011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb011
+            #add-point:ON CHANGE xrcb011 name="input.g.page1_axrt300_07.xrcb011"
+            {<point name="input.g.page1_axrt300_07.xrcb011" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb011_desc
+            #add-point:BEFORE FIELD xrcb011_desc name="input.b.page1_axrt300_07.xrcb011_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb011_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb011_desc
+            
+            #add-point:AFTER FIELD xrcb011_desc name="input.a.page1_axrt300_07.xrcb011_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb011_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb011_desc
+            #add-point:ON CHANGE xrcb011_desc name="input.g.page1_axrt300_07.xrcb011_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb011_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb024
+            #add-point:BEFORE FIELD xrcb024 name="input.b.page1_axrt300_07.xrcb024"
+            {<point name="input.b.page1_axrt300_07.xrcb024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb024
+            
+            #add-point:AFTER FIELD xrcb024 name="input.a.page1_axrt300_07.xrcb024"
+            {<point name="input.a.page1_axrt300_07.xrcb024" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb024
+            #add-point:ON CHANGE xrcb024 name="input.g.page1_axrt300_07.xrcb024"
+            {<point name="input.g.page1_axrt300_07.xrcb024" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb024_desc
+            #add-point:BEFORE FIELD xrcb024_desc name="input.b.page1_axrt300_07.xrcb024_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb024_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb024_desc
+            
+            #add-point:AFTER FIELD xrcb024_desc name="input.a.page1_axrt300_07.xrcb024_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb024_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb024_desc
+            #add-point:ON CHANGE xrcb024_desc name="input.g.page1_axrt300_07.xrcb024_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb024_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb036
+            #add-point:BEFORE FIELD xrcb036 name="input.b.page1_axrt300_07.xrcb036"
+            {<point name="input.b.page1_axrt300_07.xrcb036" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb036
+            
+            #add-point:AFTER FIELD xrcb036 name="input.a.page1_axrt300_07.xrcb036"
+            {<point name="input.a.page1_axrt300_07.xrcb036" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb036
+            #add-point:ON CHANGE xrcb036 name="input.g.page1_axrt300_07.xrcb036"
+            {<point name="input.g.page1_axrt300_07.xrcb036" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb036_desc
+            #add-point:BEFORE FIELD xrcb036_desc name="input.b.page1_axrt300_07.xrcb036_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb036_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb036_desc
+            
+            #add-point:AFTER FIELD xrcb036_desc name="input.a.page1_axrt300_07.xrcb036_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb036_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb036_desc
+            #add-point:ON CHANGE xrcb036_desc name="input.g.page1_axrt300_07.xrcb036_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb036_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb012
+            #add-point:BEFORE FIELD xrcb012 name="input.b.page1_axrt300_07.xrcb012"
+            {<point name="input.b.page1_axrt300_07.xrcb012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb012
+            
+            #add-point:AFTER FIELD xrcb012 name="input.a.page1_axrt300_07.xrcb012"
+            {<point name="input.a.page1_axrt300_07.xrcb012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb012
+            #add-point:ON CHANGE xrcb012 name="input.g.page1_axrt300_07.xrcb012"
+            {<point name="input.g.page1_axrt300_07.xrcb012" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb012_desc
+            #add-point:BEFORE FIELD xrcb012_desc name="input.b.page1_axrt300_07.xrcb012_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb012_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb012_desc
+            
+            #add-point:AFTER FIELD xrcb012_desc name="input.a.page1_axrt300_07.xrcb012_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb012_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb012_desc
+            #add-point:ON CHANGE xrcb012_desc name="input.g.page1_axrt300_07.xrcb012_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb012_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb015
+            #add-point:BEFORE FIELD xrcb015 name="input.b.page1_axrt300_07.xrcb015"
+            {<point name="input.b.page1_axrt300_07.xrcb015" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb015
+            
+            #add-point:AFTER FIELD xrcb015 name="input.a.page1_axrt300_07.xrcb015"
+            {<point name="input.a.page1_axrt300_07.xrcb015" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb015
+            #add-point:ON CHANGE xrcb015 name="input.g.page1_axrt300_07.xrcb015"
+            {<point name="input.g.page1_axrt300_07.xrcb015" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb015_desc
+            #add-point:BEFORE FIELD xrcb015_desc name="input.b.page1_axrt300_07.xrcb015_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb015_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb015_desc
+            
+            #add-point:AFTER FIELD xrcb015_desc name="input.a.page1_axrt300_07.xrcb015_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb015_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb015_desc
+            #add-point:ON CHANGE xrcb015_desc name="input.g.page1_axrt300_07.xrcb015_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb015_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb016
+            #add-point:BEFORE FIELD xrcb016 name="input.b.page1_axrt300_07.xrcb016"
+            {<point name="input.b.page1_axrt300_07.xrcb016" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb016
+            
+            #add-point:AFTER FIELD xrcb016 name="input.a.page1_axrt300_07.xrcb016"
+            {<point name="input.a.page1_axrt300_07.xrcb016" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb016
+            #add-point:ON CHANGE xrcb016 name="input.g.page1_axrt300_07.xrcb016"
+            {<point name="input.g.page1_axrt300_07.xrcb016" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb016_desc
+            #add-point:BEFORE FIELD xrcb016_desc name="input.b.page1_axrt300_07.xrcb016_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb016_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb016_desc
+            
+            #add-point:AFTER FIELD xrcb016_desc name="input.a.page1_axrt300_07.xrcb016_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb016_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb016_desc
+            #add-point:ON CHANGE xrcb016_desc name="input.g.page1_axrt300_07.xrcb016_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb016_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb033
+            #add-point:BEFORE FIELD xrcb033 name="input.b.page1_axrt300_07.xrcb033"
+            {<point name="input.b.page1_axrt300_07.xrcb033" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb033
+            
+            #add-point:AFTER FIELD xrcb033 name="input.a.page1_axrt300_07.xrcb033"
+            {<point name="input.a.page1_axrt300_07.xrcb033" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb033
+            #add-point:ON CHANGE xrcb033 name="input.g.page1_axrt300_07.xrcb033"
+            {<point name="input.g.page1_axrt300_07.xrcb033" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb034
+            #add-point:BEFORE FIELD xrcb034 name="input.b.page1_axrt300_07.xrcb034"
+            {<point name="input.b.page1_axrt300_07.xrcb034" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb034
+            
+            #add-point:AFTER FIELD xrcb034 name="input.a.page1_axrt300_07.xrcb034"
+            {<point name="input.a.page1_axrt300_07.xrcb034" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb034
+            #add-point:ON CHANGE xrcb034 name="input.g.page1_axrt300_07.xrcb034"
+            {<point name="input.g.page1_axrt300_07.xrcb034" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb034_desc
+            #add-point:BEFORE FIELD xrcb034_desc name="input.b.page1_axrt300_07.xrcb034_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb034_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb034_desc
+            
+            #add-point:AFTER FIELD xrcb034_desc name="input.a.page1_axrt300_07.xrcb034_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb034_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb034_desc
+            #add-point:ON CHANGE xrcb034_desc name="input.g.page1_axrt300_07.xrcb034_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb034_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb035
+            #add-point:BEFORE FIELD xrcb035 name="input.b.page1_axrt300_07.xrcb035"
+            {<point name="input.b.page1_axrt300_07.xrcb035" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb035
+            
+            #add-point:AFTER FIELD xrcb035 name="input.a.page1_axrt300_07.xrcb035"
+            {<point name="input.a.page1_axrt300_07.xrcb035" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb035
+            #add-point:ON CHANGE xrcb035 name="input.g.page1_axrt300_07.xrcb035"
+            {<point name="input.g.page1_axrt300_07.xrcb035" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb035_desc
+            #add-point:BEFORE FIELD xrcb035_desc name="input.b.page1_axrt300_07.xrcb035_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb035_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb035_desc
+            
+            #add-point:AFTER FIELD xrcb035_desc name="input.a.page1_axrt300_07.xrcb035_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb035_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb035_desc
+            #add-point:ON CHANGE xrcb035_desc name="input.g.page1_axrt300_07.xrcb035_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb035_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb053
+            #add-point:BEFORE FIELD xrcb053 name="input.b.page1_axrt300_07.xrcb053"
+            {<point name="input.b.page1_axrt300_07.xrcb053" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb053
+            
+            #add-point:AFTER FIELD xrcb053 name="input.a.page1_axrt300_07.xrcb053"
+            {<point name="input.a.page1_axrt300_07.xrcb053" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb053
+            #add-point:ON CHANGE xrcb053 name="input.g.page1_axrt300_07.xrcb053"
+            {<point name="input.g.page1_axrt300_07.xrcb053" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb053_desc
+            #add-point:BEFORE FIELD xrcb053_desc name="input.b.page1_axrt300_07.xrcb053_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb053_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb053_desc
+            
+            #add-point:AFTER FIELD xrcb053_desc name="input.a.page1_axrt300_07.xrcb053_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb053_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb053_desc
+            #add-point:ON CHANGE xrcb053_desc name="input.g.page1_axrt300_07.xrcb053_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb053_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb054
+            #add-point:BEFORE FIELD xrcb054 name="input.b.page1_axrt300_07.xrcb054"
+            {<point name="input.b.page1_axrt300_07.xrcb054" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb054
+            
+            #add-point:AFTER FIELD xrcb054 name="input.a.page1_axrt300_07.xrcb054"
+            {<point name="input.a.page1_axrt300_07.xrcb054" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb054
+            #add-point:ON CHANGE xrcb054 name="input.g.page1_axrt300_07.xrcb054"
+            {<point name="input.g.page1_axrt300_07.xrcb054" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb054_desc
+            #add-point:BEFORE FIELD xrcb054_desc name="input.b.page1_axrt300_07.xrcb054_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb054_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb054_desc
+            
+            #add-point:AFTER FIELD xrcb054_desc name="input.a.page1_axrt300_07.xrcb054_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb054_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb054_desc
+            #add-point:ON CHANGE xrcb054_desc name="input.g.page1_axrt300_07.xrcb054_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb054_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb037
+            #add-point:BEFORE FIELD xrcb037 name="input.b.page1_axrt300_07.xrcb037"
+            {<point name="input.b.page1_axrt300_07.xrcb037" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb037
+            
+            #add-point:AFTER FIELD xrcb037 name="input.a.page1_axrt300_07.xrcb037"
+            {<point name="input.a.page1_axrt300_07.xrcb037" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb037
+            #add-point:ON CHANGE xrcb037 name="input.g.page1_axrt300_07.xrcb037"
+            {<point name="input.g.page1_axrt300_07.xrcb037" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb037_desc
+            #add-point:BEFORE FIELD xrcb037_desc name="input.b.page1_axrt300_07.xrcb037_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb037_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb037_desc
+            
+            #add-point:AFTER FIELD xrcb037_desc name="input.a.page1_axrt300_07.xrcb037_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb037_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb037_desc
+            #add-point:ON CHANGE xrcb037_desc name="input.g.page1_axrt300_07.xrcb037_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb037_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb038
+            #add-point:BEFORE FIELD xrcb038 name="input.b.page1_axrt300_07.xrcb038"
+            {<point name="input.b.page1_axrt300_07.xrcb038" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb038
+            
+            #add-point:AFTER FIELD xrcb038 name="input.a.page1_axrt300_07.xrcb038"
+            {<point name="input.a.page1_axrt300_07.xrcb038" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb038
+            #add-point:ON CHANGE xrcb038 name="input.g.page1_axrt300_07.xrcb038"
+            {<point name="input.g.page1_axrt300_07.xrcb038" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb038_desc
+            #add-point:BEFORE FIELD xrcb038_desc name="input.b.page1_axrt300_07.xrcb038_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb038_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb038_desc
+            
+            #add-point:AFTER FIELD xrcb038_desc name="input.a.page1_axrt300_07.xrcb038_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb038_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb038_desc
+            #add-point:ON CHANGE xrcb038_desc name="input.g.page1_axrt300_07.xrcb038_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb038_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb039
+            #add-point:BEFORE FIELD xrcb039 name="input.b.page1_axrt300_07.xrcb039"
+            {<point name="input.b.page1_axrt300_07.xrcb039" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb039
+            
+            #add-point:AFTER FIELD xrcb039 name="input.a.page1_axrt300_07.xrcb039"
+            {<point name="input.a.page1_axrt300_07.xrcb039" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb039
+            #add-point:ON CHANGE xrcb039 name="input.g.page1_axrt300_07.xrcb039"
+            {<point name="input.g.page1_axrt300_07.xrcb039" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb039_desc
+            #add-point:BEFORE FIELD xrcb039_desc name="input.b.page1_axrt300_07.xrcb039_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb039_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb039_desc
+            
+            #add-point:AFTER FIELD xrcb039_desc name="input.a.page1_axrt300_07.xrcb039_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb039_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb039_desc
+            #add-point:ON CHANGE xrcb039_desc name="input.g.page1_axrt300_07.xrcb039_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb039_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb040
+            #add-point:BEFORE FIELD xrcb040 name="input.b.page1_axrt300_07.xrcb040"
+            {<point name="input.b.page1_axrt300_07.xrcb040" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb040
+            
+            #add-point:AFTER FIELD xrcb040 name="input.a.page1_axrt300_07.xrcb040"
+            {<point name="input.a.page1_axrt300_07.xrcb040" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb040
+            #add-point:ON CHANGE xrcb040 name="input.g.page1_axrt300_07.xrcb040"
+            {<point name="input.g.page1_axrt300_07.xrcb040" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb040_desc
+            #add-point:BEFORE FIELD xrcb040_desc name="input.b.page1_axrt300_07.xrcb040_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb040_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb040_desc
+            
+            #add-point:AFTER FIELD xrcb040_desc name="input.a.page1_axrt300_07.xrcb040_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb040_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb040_desc
+            #add-point:ON CHANGE xrcb040_desc name="input.g.page1_axrt300_07.xrcb040_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb040_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb041
+            #add-point:BEFORE FIELD xrcb041 name="input.b.page1_axrt300_07.xrcb041"
+            {<point name="input.b.page1_axrt300_07.xrcb041" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb041
+            
+            #add-point:AFTER FIELD xrcb041 name="input.a.page1_axrt300_07.xrcb041"
+            {<point name="input.a.page1_axrt300_07.xrcb041" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb041
+            #add-point:ON CHANGE xrcb041 name="input.g.page1_axrt300_07.xrcb041"
+            {<point name="input.g.page1_axrt300_07.xrcb041" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb041_desc
+            #add-point:BEFORE FIELD xrcb041_desc name="input.b.page1_axrt300_07.xrcb041_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb041_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb041_desc
+            
+            #add-point:AFTER FIELD xrcb041_desc name="input.a.page1_axrt300_07.xrcb041_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb041_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb041_desc
+            #add-point:ON CHANGE xrcb041_desc name="input.g.page1_axrt300_07.xrcb041_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb041_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb042
+            #add-point:BEFORE FIELD xrcb042 name="input.b.page1_axrt300_07.xrcb042"
+            {<point name="input.b.page1_axrt300_07.xrcb042" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb042
+            
+            #add-point:AFTER FIELD xrcb042 name="input.a.page1_axrt300_07.xrcb042"
+            {<point name="input.a.page1_axrt300_07.xrcb042" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb042
+            #add-point:ON CHANGE xrcb042 name="input.g.page1_axrt300_07.xrcb042"
+            {<point name="input.g.page1_axrt300_07.xrcb042" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb042_desc
+            #add-point:BEFORE FIELD xrcb042_desc name="input.b.page1_axrt300_07.xrcb042_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb042_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb042_desc
+            
+            #add-point:AFTER FIELD xrcb042_desc name="input.a.page1_axrt300_07.xrcb042_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb042_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb042_desc
+            #add-point:ON CHANGE xrcb042_desc name="input.g.page1_axrt300_07.xrcb042_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb042_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb043
+            #add-point:BEFORE FIELD xrcb043 name="input.b.page1_axrt300_07.xrcb043"
+            {<point name="input.b.page1_axrt300_07.xrcb043" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb043
+            
+            #add-point:AFTER FIELD xrcb043 name="input.a.page1_axrt300_07.xrcb043"
+            {<point name="input.a.page1_axrt300_07.xrcb043" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb043
+            #add-point:ON CHANGE xrcb043 name="input.g.page1_axrt300_07.xrcb043"
+            {<point name="input.g.page1_axrt300_07.xrcb043" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb043_desc
+            #add-point:BEFORE FIELD xrcb043_desc name="input.b.page1_axrt300_07.xrcb043_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb043_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb043_desc
+            
+            #add-point:AFTER FIELD xrcb043_desc name="input.a.page1_axrt300_07.xrcb043_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb043_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb043_desc
+            #add-point:ON CHANGE xrcb043_desc name="input.g.page1_axrt300_07.xrcb043_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb043_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb044
+            #add-point:BEFORE FIELD xrcb044 name="input.b.page1_axrt300_07.xrcb044"
+            {<point name="input.b.page1_axrt300_07.xrcb044" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb044
+            
+            #add-point:AFTER FIELD xrcb044 name="input.a.page1_axrt300_07.xrcb044"
+            {<point name="input.a.page1_axrt300_07.xrcb044" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb044
+            #add-point:ON CHANGE xrcb044 name="input.g.page1_axrt300_07.xrcb044"
+            {<point name="input.g.page1_axrt300_07.xrcb044" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb044_desc
+            #add-point:BEFORE FIELD xrcb044_desc name="input.b.page1_axrt300_07.xrcb044_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb044_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb044_desc
+            
+            #add-point:AFTER FIELD xrcb044_desc name="input.a.page1_axrt300_07.xrcb044_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb044_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb044_desc
+            #add-point:ON CHANGE xrcb044_desc name="input.g.page1_axrt300_07.xrcb044_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb044_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb045
+            #add-point:BEFORE FIELD xrcb045 name="input.b.page1_axrt300_07.xrcb045"
+            {<point name="input.b.page1_axrt300_07.xrcb045" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb045
+            
+            #add-point:AFTER FIELD xrcb045 name="input.a.page1_axrt300_07.xrcb045"
+            {<point name="input.a.page1_axrt300_07.xrcb045" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb045
+            #add-point:ON CHANGE xrcb045 name="input.g.page1_axrt300_07.xrcb045"
+            {<point name="input.g.page1_axrt300_07.xrcb045" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb045_desc
+            #add-point:BEFORE FIELD xrcb045_desc name="input.b.page1_axrt300_07.xrcb045_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb045_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb045_desc
+            
+            #add-point:AFTER FIELD xrcb045_desc name="input.a.page1_axrt300_07.xrcb045_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb045_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb045_desc
+            #add-point:ON CHANGE xrcb045_desc name="input.g.page1_axrt300_07.xrcb045_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb045_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb046
+            #add-point:BEFORE FIELD xrcb046 name="input.b.page1_axrt300_07.xrcb046"
+            {<point name="input.b.page1_axrt300_07.xrcb046" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb046
+            
+            #add-point:AFTER FIELD xrcb046 name="input.a.page1_axrt300_07.xrcb046"
+            {<point name="input.a.page1_axrt300_07.xrcb046" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb046
+            #add-point:ON CHANGE xrcb046 name="input.g.page1_axrt300_07.xrcb046"
+            {<point name="input.g.page1_axrt300_07.xrcb046" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcb046_desc
+            #add-point:BEFORE FIELD xrcb046_desc name="input.b.page1_axrt300_07.xrcb046_desc"
+            {<point name="input.b.page1_axrt300_07.xrcb046_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcb046_desc
+            
+            #add-point:AFTER FIELD xrcb046_desc name="input.a.page1_axrt300_07.xrcb046_desc"
+            {<point name="input.a.page1_axrt300_07.xrcb046_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcb046_desc
+            #add-point:ON CHANGE xrcb046_desc name="input.g.page1_axrt300_07.xrcb046_desc"
+            {<point name="input.g.page1_axrt300_07.xrcb046_desc" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1_axrt300_07.xrcbdocno_4
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcbdocno_4
+            #add-point:ON ACTION controlp INFIELD xrcbdocno_4 name="input.c.page1_axrt300_07.xrcbdocno_4"
+            {<point name="input.c.page1_axrt300_07.xrcbdocno_4" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcbld_4
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcbld_4
+            #add-point:ON ACTION controlp INFIELD xrcbld_4 name="input.c.page1_axrt300_07.xrcbld_4"
+            {<point name="input.c.page1_axrt300_07.xrcbld_4" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcbseq_4
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcbseq_4
+            #add-point:ON ACTION controlp INFIELD xrcbseq_4 name="input.c.page1_axrt300_07.xrcbseq_4"
+            {<point name="input.c.page1_axrt300_07.xrcbseq_4" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb047
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb047
+            #add-point:ON ACTION controlp INFIELD xrcb047 name="input.c.page1_axrt300_07.xrcb047"
+            {<point name="input.c.page1_axrt300_07.xrcb047" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb029
+            #add-point:ON ACTION controlp INFIELD xrcb029 name="input.c.page1_axrt300_07.xrcb029"
+            {<point name="input.c.page1_axrt300_07.xrcb029" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb029_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb029_desc
+            #add-point:ON ACTION controlp INFIELD xrcb029_desc name="input.c.page1_axrt300_07.xrcb029_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb029_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb021
+            #add-point:ON ACTION controlp INFIELD xrcb021 name="input.c.page1_axrt300_07.xrcb021"
+            {<point name="input.c.page1_axrt300_07.xrcb021" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb021_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb021_desc
+            #add-point:ON ACTION controlp INFIELD xrcb021_desc name="input.c.page1_axrt300_07.xrcb021_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb021_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb051
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb051
+            #add-point:ON ACTION controlp INFIELD xrcb051 name="input.c.page1_axrt300_07.xrcb051"
+            {<point name="input.c.page1_axrt300_07.xrcb051" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb051_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb051_desc
+            #add-point:ON ACTION controlp INFIELD xrcb051_desc name="input.c.page1_axrt300_07.xrcb051_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb051_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb010
+            #add-point:ON ACTION controlp INFIELD xrcb010 name="input.c.page1_axrt300_07.xrcb010"
+            {<point name="input.c.page1_axrt300_07.xrcb010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb010_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb010_desc
+            #add-point:ON ACTION controlp INFIELD xrcb010_desc name="input.c.page1_axrt300_07.xrcb010_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb010_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb011
+            #add-point:ON ACTION controlp INFIELD xrcb011 name="input.c.page1_axrt300_07.xrcb011"
+            {<point name="input.c.page1_axrt300_07.xrcb011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb011_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb011_desc
+            #add-point:ON ACTION controlp INFIELD xrcb011_desc name="input.c.page1_axrt300_07.xrcb011_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb011_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb024
+            #add-point:ON ACTION controlp INFIELD xrcb024 name="input.c.page1_axrt300_07.xrcb024"
+            {<point name="input.c.page1_axrt300_07.xrcb024" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb024_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb024_desc
+            #add-point:ON ACTION controlp INFIELD xrcb024_desc name="input.c.page1_axrt300_07.xrcb024_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb024_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb036
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb036
+            #add-point:ON ACTION controlp INFIELD xrcb036 name="input.c.page1_axrt300_07.xrcb036"
+            {<point name="input.c.page1_axrt300_07.xrcb036" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb036_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb036_desc
+            #add-point:ON ACTION controlp INFIELD xrcb036_desc name="input.c.page1_axrt300_07.xrcb036_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb036_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb012
+            #add-point:ON ACTION controlp INFIELD xrcb012 name="input.c.page1_axrt300_07.xrcb012"
+            {<point name="input.c.page1_axrt300_07.xrcb012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb012_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb012_desc
+            #add-point:ON ACTION controlp INFIELD xrcb012_desc name="input.c.page1_axrt300_07.xrcb012_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb012_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb015
+            #add-point:ON ACTION controlp INFIELD xrcb015 name="input.c.page1_axrt300_07.xrcb015"
+            {<point name="input.c.page1_axrt300_07.xrcb015" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb015_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb015_desc
+            #add-point:ON ACTION controlp INFIELD xrcb015_desc name="input.c.page1_axrt300_07.xrcb015_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb015_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb016
+            #add-point:ON ACTION controlp INFIELD xrcb016 name="input.c.page1_axrt300_07.xrcb016"
+            {<point name="input.c.page1_axrt300_07.xrcb016" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb016_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb016_desc
+            #add-point:ON ACTION controlp INFIELD xrcb016_desc name="input.c.page1_axrt300_07.xrcb016_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb016_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb033
+            #add-point:ON ACTION controlp INFIELD xrcb033 name="input.c.page1_axrt300_07.xrcb033"
+            {<point name="input.c.page1_axrt300_07.xrcb033" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb034
+            #add-point:ON ACTION controlp INFIELD xrcb034 name="input.c.page1_axrt300_07.xrcb034"
+            {<point name="input.c.page1_axrt300_07.xrcb034" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb034_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb034_desc
+            #add-point:ON ACTION controlp INFIELD xrcb034_desc name="input.c.page1_axrt300_07.xrcb034_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb034_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb035
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb035
+            #add-point:ON ACTION controlp INFIELD xrcb035 name="input.c.page1_axrt300_07.xrcb035"
+            {<point name="input.c.page1_axrt300_07.xrcb035" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb035_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb035_desc
+            #add-point:ON ACTION controlp INFIELD xrcb035_desc name="input.c.page1_axrt300_07.xrcb035_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb035_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb053
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb053
+            #add-point:ON ACTION controlp INFIELD xrcb053 name="input.c.page1_axrt300_07.xrcb053"
+            {<point name="input.c.page1_axrt300_07.xrcb053" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb053_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb053_desc
+            #add-point:ON ACTION controlp INFIELD xrcb053_desc name="input.c.page1_axrt300_07.xrcb053_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb053_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb054
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb054
+            #add-point:ON ACTION controlp INFIELD xrcb054 name="input.c.page1_axrt300_07.xrcb054"
+            {<point name="input.c.page1_axrt300_07.xrcb054" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb054_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb054_desc
+            #add-point:ON ACTION controlp INFIELD xrcb054_desc name="input.c.page1_axrt300_07.xrcb054_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb054_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb037
+            #add-point:ON ACTION controlp INFIELD xrcb037 name="input.c.page1_axrt300_07.xrcb037"
+            {<point name="input.c.page1_axrt300_07.xrcb037" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb037_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb037_desc
+            #add-point:ON ACTION controlp INFIELD xrcb037_desc name="input.c.page1_axrt300_07.xrcb037_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb037_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb038
+            #add-point:ON ACTION controlp INFIELD xrcb038 name="input.c.page1_axrt300_07.xrcb038"
+            {<point name="input.c.page1_axrt300_07.xrcb038" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb038_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb038_desc
+            #add-point:ON ACTION controlp INFIELD xrcb038_desc name="input.c.page1_axrt300_07.xrcb038_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb038_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb039
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb039
+            #add-point:ON ACTION controlp INFIELD xrcb039 name="input.c.page1_axrt300_07.xrcb039"
+            {<point name="input.c.page1_axrt300_07.xrcb039" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb039_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb039_desc
+            #add-point:ON ACTION controlp INFIELD xrcb039_desc name="input.c.page1_axrt300_07.xrcb039_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb039_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb040
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb040
+            #add-point:ON ACTION controlp INFIELD xrcb040 name="input.c.page1_axrt300_07.xrcb040"
+            {<point name="input.c.page1_axrt300_07.xrcb040" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb040_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb040_desc
+            #add-point:ON ACTION controlp INFIELD xrcb040_desc name="input.c.page1_axrt300_07.xrcb040_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb040_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb041
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb041
+            #add-point:ON ACTION controlp INFIELD xrcb041 name="input.c.page1_axrt300_07.xrcb041"
+            {<point name="input.c.page1_axrt300_07.xrcb041" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb041_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb041_desc
+            #add-point:ON ACTION controlp INFIELD xrcb041_desc name="input.c.page1_axrt300_07.xrcb041_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb041_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb042
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb042
+            #add-point:ON ACTION controlp INFIELD xrcb042 name="input.c.page1_axrt300_07.xrcb042"
+            {<point name="input.c.page1_axrt300_07.xrcb042" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb042_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb042_desc
+            #add-point:ON ACTION controlp INFIELD xrcb042_desc name="input.c.page1_axrt300_07.xrcb042_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb042_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb043
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb043
+            #add-point:ON ACTION controlp INFIELD xrcb043 name="input.c.page1_axrt300_07.xrcb043"
+            {<point name="input.c.page1_axrt300_07.xrcb043" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb043_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb043_desc
+            #add-point:ON ACTION controlp INFIELD xrcb043_desc name="input.c.page1_axrt300_07.xrcb043_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb043_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb044
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb044
+            #add-point:ON ACTION controlp INFIELD xrcb044 name="input.c.page1_axrt300_07.xrcb044"
+            {<point name="input.c.page1_axrt300_07.xrcb044" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb044_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb044_desc
+            #add-point:ON ACTION controlp INFIELD xrcb044_desc name="input.c.page1_axrt300_07.xrcb044_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb044_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb045
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb045
+            #add-point:ON ACTION controlp INFIELD xrcb045 name="input.c.page1_axrt300_07.xrcb045"
+            {<point name="input.c.page1_axrt300_07.xrcb045" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb045_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb045_desc
+            #add-point:ON ACTION controlp INFIELD xrcb045_desc name="input.c.page1_axrt300_07.xrcb045_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb045_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb046
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb046
+            #add-point:ON ACTION controlp INFIELD xrcb046 name="input.c.page1_axrt300_07.xrcb046"
+            {<point name="input.c.page1_axrt300_07.xrcb046" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_axrt300_07.xrcb046_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcb046_desc
+            #add-point:ON ACTION controlp INFIELD xrcb046_desc name="input.c.page1_axrt300_07.xrcb046_desc"
+            {<point name="input.c.page1_axrt300_07.xrcb046_desc" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt300_07 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="axrt300_07.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="axrt300_07.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

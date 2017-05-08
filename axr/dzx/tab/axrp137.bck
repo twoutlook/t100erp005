@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrp137" module="axr" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="01727" crtdt="2014-11-19 09:40:58" modid="01727" moddt="2014-11-20 09:39:37" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="訂金批次立帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrcasite,xrcasite_desc(chr80),fflabel_desc1(chr80),xrcald,xrcald_desc(chr80),xrcadocno,fflabel_desc(chr80),xrca060,xrca007,xrca011,xrca011_desc(chr80),xrcadocdt,xmda049,xrca008,xmdasite,fflabel_2(chr80),xmdadocdt,xmda004,xmdb016,xmdadocno,xmda002,xmdb001,xmda003,stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axr" filename="axrp137" method="dialog">
+    <section id="input">
+      <input id="head" field="xrcasite,xrcald,xrcadocno,xrca060,xrca007,xrca011,xrcadocdt,xmda049,xrca008"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xrca011_desc,xmdasite,xmdadocdt,xmda004,xmdb016,xmdadocno,xmda002,xmdb001,xmda003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xrcasite">
+        <after>
+          <reference field="xrcasite_desc" ref_field="xrca_t.xrcasite" map_field="xrcaent,xrcasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xrah002_1" state="i"/>
+      </column>
+      <column id="xrcasite_desc"/>
+      <column id="fflabel_desc1"/>
+      <column id="xrcald">
+        <after>
+          <reference field="xrcald_desc" ref_field="xrca_t.xrcald" map_field="xrcaent,xrcald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="xrcald_desc"/>
+      <column id="xrcadocno">
+        <controlp form="q_ooba002_3" state="i"/>
+      </column>
+      <column id="fflabel_desc"/>
+      <column id="xrca060" type="S" default="1" def_scc="8321"/>
+      <column id="xrca007">
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="xrca011">
+        <after/>
+        <controlp form="q_oodb002_5" state="i"/>
+      </column>
+      <column id="xrca011_desc"/>
+      <column id="xrcadocdt"/>
+      <column id="xmda049" type="S" default="1" def_scc="2084"/>
+      <column id="xrca008">
+        <controlp form="q_ooib001_1" state="i"/>
+      </column>
+      <column id="xmdasite">
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="fflabel_2"/>
+      <column id="xmdadocdt"/>
+      <column id="xmda004">
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="xmdb016" type="S" default="2" def_scc="3015"/>
+      <column id="xmdadocno">
+        <controlp form="q_xmdadocno" state="c"/>
+      </column>
+      <column id="xmda002">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmdb001" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmda003">
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

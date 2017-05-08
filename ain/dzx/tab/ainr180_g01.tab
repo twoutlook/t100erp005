@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainr180_g01" module="ain" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2015-03-18 11:27:09" modid="08734" moddt="2016-10-31 18:01:28" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="inbkdocno,inbkocdt,inbk006,inbk001,l_inbk001_desc(ooag011|NULL),inbk002,l_inbk002_desc(ooefl004|NULL),inbk005,l_inbk005_desc(oocql004|NULL),inbkent,inbksite,inblseq,inbl001,l_imaal003(imaal003|NULL),l_imaal004(imaal004|NULL),inbl002,l_inbl002_desc(oocql004|NULL),inbl009,inbl003,inbl008,l_inbl008_desc(oocql004|NULL),inbl006,inbl007"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="inbkdocno(inbkdocno|inbkdocno),inbkocdt(inbkocdt|inbkocdt),inbk006(inbk006|inbk006),inbk001(inbk001|inbk001),l_inbk001_desc(ooag011|NULL),inbk002(inbk002|inbk002),l_inbk002_desc(ooefl004|NULL),inbk005(inbk005|inbk005),l_inbk005_desc(oocql004|NULL),inbkent(inbkent|inbkent),inbksite(inbksite|inbksite),inblseq(inblseq|inblseq),inbl001(inbl001|inbl001),l_imaal003(imaal003|NULL),l_imaal004(imaal004|NULL),inbl002(inbl002|inbl002),l_inbl002_desc(oocql004|NULL),inbl009(inbl009|inbl009),inbl003(inbl003|inbl003),inbl008(inbl008|inbl008),l_inbl008_desc(oocql004|NULL),inbl006(inbl006|inbl006),inbl007(inbl007|inbl007)"/>
+    <sql id="g_from" query="inbk_t,inbl_t"/>
+    <sql id="g_where" query="" maintable="inbk_t"/>
+    <sql id="g_order" query="inbkdocno,inblseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="inbkdocno,inblseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="inbkdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="inbkent,inbkdocno"/>
+      <rep type="inblseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="inbkent,inbkdocno,inblseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="inbkent,inbkdocno,inblseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="inbkdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="inbkent,inbkdocno"/>
+      <rep type="inblseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

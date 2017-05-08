@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt470_g01" module="aap" jobmode="N" type="g01" industry="std" crtid="08732" crtdt="2016-08-18 15:58:04" modid="08732" moddt="2016-08-19 14:58:14" sdver="1" tabver="10001" description="付款資料變更申請單">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="apdgseq,apdfent,apdfdocno,apdfdocdt,apdfld,apdfsite,l_apdfld_desc(chr80|NULL),l_apdfsite_desc(chr80|NULL),l_apde119_1(chr50|NULL),l_apde109_1(chr50|NULL),apdf001,l_apdf001_desc(chr80|NULL),apdg001,apdg002,apdg003,l_apdg003_desc(chr80|NULL),l_before(chr100|NULL),apdg004,apdg005,apdg006,apdg007,l_after(chr100|NULL),apdfcomp,apdfstus,apdg014,apdg015,apdg016,apdg017,l_apde119_2(apde119|NULL),l_apde109_2(apde109|NULL),apdg010"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="apdgseq(apdgseq|apdgseq),apdfent(apdfent|apdfent),apdfdocno(apdfdocno|apdfdocno),apdfdocdt(apdfdocdt|apdfdocdt),apdfld(apdfld|apdfld),apdfsite(apdfsite|apdfsite),l_apdfld_desc(chr80|NULL),l_apdfsite_desc(chr80|NULL),l_apde119_1(chr50|NULL),l_apde109_1(chr50|NULL),apdf001(apdf001|apdf001),l_apdf001_desc(chr80|NULL),apdg001(apdg001|apdg001),apdg002(apdg002|apdg002),apdg003(apdg003|apdg003),l_apdg003_desc(chr80|NULL),l_before(chr100|NULL),apdg004(apdg004|apdg004),apdg005(apdg005|apdg005),apdg006(apdg006|apdg006),apdg007(apdg007|apdg007),l_after(chr100|NULL),apdfcomp(apdfcomp|apdfcomp),apdfstus(apdfstus|apdfstus),apdg014(apdg014|apdg014),apdg015(apdg015|apdg015),apdg016(apdg016|apdg016),apdg017(apdg017|apdg017),l_apde119_2(apde119|NULL),l_apde109_2(apde109|NULL),apdg010(apdg010|apdg010)"/>
+    <sql id="g_from" query=" apdf_t  LEFT OUTER JOIN ( SELECT apdg_t.* FROM apdg_t  ) x  ON apdf_t.apdfent = x.apdgent AND apdf_t.apdfdocno = x.apdgdocno AND apdf_t.apdfld = x.apdgld"/>
+    <sql id="g_where" query="" maintable="apdf_t"/>
+    <sql id="g_order" query="apdfdocno,apdgseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="apdfdocno,apdgseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="apdfdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="apdfent,apdfdocno"/>
+      <rep type="apdgseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002,ooff003" where="apdfent,apdfdocno,apdgseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002,ooff003" where="apdfent,apdfdocno,apdgseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="apdfdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="apdfent,apdfdocno"/>
+      <rep type="apdgseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

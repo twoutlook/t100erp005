@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisr460_g01" module="ais" jobmode="N" type="g01" industry="std" crtid="06816" crtdt="2015-06-08 09:06:58" modid="05384" moddt="2016-10-20 14:27:49" sdver="5" tabver="10001" description="營業人申報適用零稅率銷售額清單">
+  <define arg="tm.wc(STRING|where condition),tm.a1(chr500|申報單位),tm.a2(num5|申報年份),tm.a3(num5|申報月份)">
+    <var seq="1" value="isaj001,l_seq(num20|NULL),l_typememo2(chr500|NULL),isaj002,l_type(chr500|NULL),isaj003,isaj004,isaj005,isaj006,isaj007,isaj008,isaj009,isaj010,isaj011,isaj012,isaj013,isaj014,isaj015,isaj016,isaj017,isaj018,isaj019,isaj020,isaj021,isaj022,isaj023,isaj024,isaj025,isaj026,isaj027,isaj028,isaj029,isaj030,isaj031,isaj032,isaj033,isaj034,isaj035,isaj036,isaj037,isaj103,isaj104,isaj105,isajcomp,isajdocdt,isajent,isajsite,isajstus,l_isaj105(isaj105|NULL),l_result(chr500|NULL),l_memo(chr500|NULL),l_isaj019_isaj020(chr500|NULL),l_isaa002(isaa002|NULL),l_ooefl004(ooefl004|NULL),l_ooef002(ooef002|NULL),l_typememo(chr500|NULL),l_format_isaj009(chr500|NULL),l_format_isaj022(chr500|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="isaj001,l_seq(num20|NULL),l_typememo2(chr500|NULL),isaj002,l_type(chr500|NULL),isaj003,isaj004,isaj005,isaj006,isaj007,isaj008,isaj009,isaj010,isaj011,isaj012,isaj013,isaj014,isaj015,isaj016,isaj017,isaj018,isaj019,isaj020,isaj021,isaj022,isaj023,isaj024,isaj025,isaj026,isaj027,isaj028,isaj029,isaj030,isaj031,isaj032,isaj033,isaj034,isaj035,isaj036,isaj037,isaj103,isaj104,isaj105,isajcomp,isajdocdt,isajent,isajsite,isajstus,l_isaj105(isaj105|NULL),l_result(chr500|NULL),l_memo(chr500|NULL),l_isaj019_isaj020(chr500|NULL),l_isaa002(isaa002|NULL),l_ooefl004(ooefl004|NULL),l_ooef002(ooef002|NULL),l_typememo(chr500|NULL),l_format_isaj009(chr500|NULL),l_format_isaj022(chr500|NULL)"/>
+    <sql id="g_from" query="isaj_t"/>
+    <sql id="g_where" query="" maintable="isaj_t"/>
+    <sql id="g_order" query="isaj003,isaj024"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="l_type,l_seq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_type" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="isajent,l_type"/>
+      <rep type="l_seq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002,ooff003" where="isajent,l_type,l_seq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002,ooff003" where="isajent,l_type,l_seq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_type" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="isajent,l_type"/>
+      <rep type="l_seq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

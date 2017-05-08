@@ -1,0 +1,1838 @@
+{<section id="abgt340_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-11-04 10:43:23), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000000
+#+ Filename...: abgt340_01
+#+ Description: 預算調整
+#+ Creator....: 02599(2016-11-04 10:28:27)
+#+ Modifier...: 02599 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="abgt340_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_bgcj_d        RECORD
+       bgcj001 LIKE bgcj_t.bgcj001, 
+   bgcj002 LIKE bgcj_t.bgcj002, 
+   bgcj002_desc LIKE type_t.chr500, 
+   bgcj003 LIKE bgcj_t.bgcj003, 
+   bgcj004 LIKE bgcj_t.bgcj004, 
+   bgcj004_desc LIKE type_t.chr500, 
+   bgcj005 LIKE bgcj_t.bgcj005, 
+   bgcj006 LIKE bgcj_t.bgcj006, 
+   bgcj007 LIKE bgcj_t.bgcj007, 
+   bgcj007_desc LIKE type_t.chr500, 
+   bgcj009 LIKE bgcj_t.bgcj009, 
+   bgcj010 LIKE bgcj_t.bgcj010, 
+   bgcjseq LIKE bgcj_t.bgcjseq, 
+   bgcj008 LIKE bgcj_t.bgcj008, 
+   content LIKE type_t.chr500, 
+   num1 LIKE type_t.num20_6, 
+   price1 LIKE type_t.num20_6, 
+   amt1 LIKE type_t.num20_6, 
+   num2 LIKE type_t.num20_6, 
+   price2 LIKE type_t.num20_6, 
+   amt2 LIKE type_t.num20_6, 
+   num3 LIKE type_t.num20_6, 
+   price3 LIKE type_t.num20_6, 
+   amt3 LIKE type_t.num20_6, 
+   num4 LIKE type_t.num20_6, 
+   price4 LIKE type_t.num20_6, 
+   amt4 LIKE type_t.num20_6, 
+   num5 LIKE type_t.num20_6, 
+   price5 LIKE type_t.num20_6, 
+   amt5 LIKE type_t.num20_6, 
+   num6 LIKE type_t.num20_6, 
+   price6 LIKE type_t.num20_6, 
+   amt6 LIKE type_t.num20_6, 
+   num7 LIKE type_t.num20_6, 
+   price7 LIKE type_t.num20_6, 
+   amt7 LIKE type_t.num20_6, 
+   num8 LIKE type_t.num20_6, 
+   price8 LIKE type_t.num20_6, 
+   amt8 LIKE type_t.num20_6, 
+   num9 LIKE type_t.num20_6, 
+   price9 LIKE type_t.num20_6, 
+   amt9 LIKE type_t.num20_6, 
+   num10 LIKE type_t.num20_6, 
+   price10 LIKE type_t.num20_6, 
+   amt10 LIKE type_t.num20_6, 
+   num11 LIKE type_t.num20_6, 
+   price11 LIKE type_t.num20_6, 
+   amt11 LIKE type_t.num20_6, 
+   num12 LIKE type_t.num20_6, 
+   price12 LIKE type_t.num20_6, 
+   amt12 LIKE type_t.num20_6, 
+   num13 LIKE type_t.num20_6, 
+   price13 LIKE type_t.num20_6, 
+   amt13 LIKE type_t.num20_6, 
+   sum LIKE type_t.num20_6
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_bgcj_d          DYNAMIC ARRAY OF type_g_bgcj_d
+DEFINE g_bgcj_d_t        type_g_bgcj_d
+ 
+ 
+DEFINE g_bgcj001_t   LIKE bgcj_t.bgcj001    #Key值備份
+DEFINE g_bgcj002_t      LIKE bgcj_t.bgcj002    #Key值備份
+DEFINE g_bgcj003_t      LIKE bgcj_t.bgcj003    #Key值備份
+DEFINE g_bgcj004_t      LIKE bgcj_t.bgcj004    #Key值備份
+DEFINE g_bgcj005_t      LIKE bgcj_t.bgcj005    #Key值備份
+DEFINE g_bgcj006_t      LIKE bgcj_t.bgcj006    #Key值備份
+DEFINE g_bgcj007_t      LIKE bgcj_t.bgcj007    #Key值備份
+DEFINE g_bgcj008_t      LIKE bgcj_t.bgcj008    #Key值備份
+DEFINE g_bgcj009_t      LIKE bgcj_t.bgcj009    #Key值備份
+DEFINE g_bgcj010_t      LIKE bgcj_t.bgcj010    #Key值備份
+DEFINE g_bgcjseq_t      LIKE bgcj_t.bgcjseq    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+{</section>}
+ 
+{<section id="abgt340_01.input" >}    
+#+ 資料輸入
+PUBLIC FUNCTION abgt340_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_abgt340_01 WITH FORM cl_ap_formpath("abg","abgt340_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_bgcj_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj001
+            #add-point:BEFORE FIELD bgcj001 name="input.b.page1.bgcj001"
+            {<point name="input.b.page1.bgcj001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj001
+            
+            #add-point:AFTER FIELD bgcj001 name="input.a.page1.bgcj001"
+            {<point name="input.a.page1.bgcj001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj001
+            #add-point:ON CHANGE bgcj001 name="input.g.page1.bgcj001"
+            {<point name="input.g.page1.bgcj001" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj002
+            
+            #add-point:AFTER FIELD bgcj002 name="input.a.page1.bgcj002"
+            {<point name="input.a.page1.bgcj002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj002
+            #add-point:BEFORE FIELD bgcj002 name="input.b.page1.bgcj002"
+            {<point name="input.b.page1.bgcj002" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj002
+            #add-point:ON CHANGE bgcj002 name="input.g.page1.bgcj002"
+            {<point name="input.g.page1.bgcj002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj003
+            #add-point:BEFORE FIELD bgcj003 name="input.b.page1.bgcj003"
+            {<point name="input.b.page1.bgcj003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj003
+            
+            #add-point:AFTER FIELD bgcj003 name="input.a.page1.bgcj003"
+            {<point name="input.a.page1.bgcj003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj003
+            #add-point:ON CHANGE bgcj003 name="input.g.page1.bgcj003"
+            {<point name="input.g.page1.bgcj003" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj004
+            
+            #add-point:AFTER FIELD bgcj004 name="input.a.page1.bgcj004"
+            {<point name="input.a.page1.bgcj004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj004
+            #add-point:BEFORE FIELD bgcj004 name="input.b.page1.bgcj004"
+            {<point name="input.b.page1.bgcj004" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj004
+            #add-point:ON CHANGE bgcj004 name="input.g.page1.bgcj004"
+            {<point name="input.g.page1.bgcj004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj005
+            #add-point:BEFORE FIELD bgcj005 name="input.b.page1.bgcj005"
+            {<point name="input.b.page1.bgcj005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj005
+            
+            #add-point:AFTER FIELD bgcj005 name="input.a.page1.bgcj005"
+            {<point name="input.a.page1.bgcj005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj005
+            #add-point:ON CHANGE bgcj005 name="input.g.page1.bgcj005"
+            {<point name="input.g.page1.bgcj005" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj006
+            #add-point:BEFORE FIELD bgcj006 name="input.b.page1.bgcj006"
+            {<point name="input.b.page1.bgcj006" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj006
+            
+            #add-point:AFTER FIELD bgcj006 name="input.a.page1.bgcj006"
+            {<point name="input.a.page1.bgcj006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj006
+            #add-point:ON CHANGE bgcj006 name="input.g.page1.bgcj006"
+            {<point name="input.g.page1.bgcj006" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj007
+            
+            #add-point:AFTER FIELD bgcj007 name="input.a.page1.bgcj007"
+            {<point name="input.a.page1.bgcj007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj007
+            #add-point:BEFORE FIELD bgcj007 name="input.b.page1.bgcj007"
+            {<point name="input.b.page1.bgcj007" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj007
+            #add-point:ON CHANGE bgcj007 name="input.g.page1.bgcj007"
+            {<point name="input.g.page1.bgcj007" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj009
+            #add-point:BEFORE FIELD bgcj009 name="input.b.page1.bgcj009"
+            {<point name="input.b.page1.bgcj009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj009
+            
+            #add-point:AFTER FIELD bgcj009 name="input.a.page1.bgcj009"
+            {<point name="input.a.page1.bgcj009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj009
+            #add-point:ON CHANGE bgcj009 name="input.g.page1.bgcj009"
+            {<point name="input.g.page1.bgcj009" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj010
+            #add-point:BEFORE FIELD bgcj010 name="input.b.page1.bgcj010"
+            {<point name="input.b.page1.bgcj010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj010
+            
+            #add-point:AFTER FIELD bgcj010 name="input.a.page1.bgcj010"
+            {<point name="input.a.page1.bgcj010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj010
+            #add-point:ON CHANGE bgcj010 name="input.g.page1.bgcj010"
+            {<point name="input.g.page1.bgcj010" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcjseq
+            #add-point:BEFORE FIELD bgcjseq name="input.b.page1.bgcjseq"
+            {<point name="input.b.page1.bgcjseq" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcjseq
+            
+            #add-point:AFTER FIELD bgcjseq name="input.a.page1.bgcjseq"
+            {<point name="input.a.page1.bgcjseq" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcjseq
+            #add-point:ON CHANGE bgcjseq name="input.g.page1.bgcjseq"
+            {<point name="input.g.page1.bgcjseq" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj008
+            #add-point:BEFORE FIELD bgcj008 name="input.b.page1.bgcj008"
+            {<point name="input.b.page1.bgcj008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj008
+            
+            #add-point:AFTER FIELD bgcj008 name="input.a.page1.bgcj008"
+            {<point name="input.a.page1.bgcj008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj008
+            #add-point:ON CHANGE bgcj008 name="input.g.page1.bgcj008"
+            {<point name="input.g.page1.bgcj008" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num1
+            #add-point:BEFORE FIELD num1 name="input.b.page1.num1"
+            {<point name="input.b.page1.num1" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num1
+            
+            #add-point:AFTER FIELD num1 name="input.a.page1.num1"
+            {<point name="input.a.page1.num1" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num1
+            #add-point:ON CHANGE num1 name="input.g.page1.num1"
+            {<point name="input.g.page1.num1" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price1
+            #add-point:BEFORE FIELD price1 name="input.b.page1.price1"
+            {<point name="input.b.page1.price1" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price1
+            
+            #add-point:AFTER FIELD price1 name="input.a.page1.price1"
+            {<point name="input.a.page1.price1" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price1
+            #add-point:ON CHANGE price1 name="input.g.page1.price1"
+            {<point name="input.g.page1.price1" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt1
+            #add-point:BEFORE FIELD amt1 name="input.b.page1.amt1"
+            {<point name="input.b.page1.amt1" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt1
+            
+            #add-point:AFTER FIELD amt1 name="input.a.page1.amt1"
+            {<point name="input.a.page1.amt1" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt1
+            #add-point:ON CHANGE amt1 name="input.g.page1.amt1"
+            {<point name="input.g.page1.amt1" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num2
+            #add-point:BEFORE FIELD num2 name="input.b.page1.num2"
+            {<point name="input.b.page1.num2" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num2
+            
+            #add-point:AFTER FIELD num2 name="input.a.page1.num2"
+            {<point name="input.a.page1.num2" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num2
+            #add-point:ON CHANGE num2 name="input.g.page1.num2"
+            {<point name="input.g.page1.num2" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price2
+            #add-point:BEFORE FIELD price2 name="input.b.page1.price2"
+            {<point name="input.b.page1.price2" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price2
+            
+            #add-point:AFTER FIELD price2 name="input.a.page1.price2"
+            {<point name="input.a.page1.price2" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price2
+            #add-point:ON CHANGE price2 name="input.g.page1.price2"
+            {<point name="input.g.page1.price2" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt2
+            #add-point:BEFORE FIELD amt2 name="input.b.page1.amt2"
+            {<point name="input.b.page1.amt2" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt2
+            
+            #add-point:AFTER FIELD amt2 name="input.a.page1.amt2"
+            {<point name="input.a.page1.amt2" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt2
+            #add-point:ON CHANGE amt2 name="input.g.page1.amt2"
+            {<point name="input.g.page1.amt2" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num3
+            #add-point:BEFORE FIELD num3 name="input.b.page1.num3"
+            {<point name="input.b.page1.num3" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num3
+            
+            #add-point:AFTER FIELD num3 name="input.a.page1.num3"
+            {<point name="input.a.page1.num3" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num3
+            #add-point:ON CHANGE num3 name="input.g.page1.num3"
+            {<point name="input.g.page1.num3" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price3
+            #add-point:BEFORE FIELD price3 name="input.b.page1.price3"
+            {<point name="input.b.page1.price3" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price3
+            
+            #add-point:AFTER FIELD price3 name="input.a.page1.price3"
+            {<point name="input.a.page1.price3" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price3
+            #add-point:ON CHANGE price3 name="input.g.page1.price3"
+            {<point name="input.g.page1.price3" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt3
+            #add-point:BEFORE FIELD amt3 name="input.b.page1.amt3"
+            {<point name="input.b.page1.amt3" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt3
+            
+            #add-point:AFTER FIELD amt3 name="input.a.page1.amt3"
+            {<point name="input.a.page1.amt3" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt3
+            #add-point:ON CHANGE amt3 name="input.g.page1.amt3"
+            {<point name="input.g.page1.amt3" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num4
+            #add-point:BEFORE FIELD num4 name="input.b.page1.num4"
+            {<point name="input.b.page1.num4" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num4
+            
+            #add-point:AFTER FIELD num4 name="input.a.page1.num4"
+            {<point name="input.a.page1.num4" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num4
+            #add-point:ON CHANGE num4 name="input.g.page1.num4"
+            {<point name="input.g.page1.num4" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price4
+            #add-point:BEFORE FIELD price4 name="input.b.page1.price4"
+            {<point name="input.b.page1.price4" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price4
+            
+            #add-point:AFTER FIELD price4 name="input.a.page1.price4"
+            {<point name="input.a.page1.price4" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price4
+            #add-point:ON CHANGE price4 name="input.g.page1.price4"
+            {<point name="input.g.page1.price4" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt4
+            #add-point:BEFORE FIELD amt4 name="input.b.page1.amt4"
+            {<point name="input.b.page1.amt4" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt4
+            
+            #add-point:AFTER FIELD amt4 name="input.a.page1.amt4"
+            {<point name="input.a.page1.amt4" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt4
+            #add-point:ON CHANGE amt4 name="input.g.page1.amt4"
+            {<point name="input.g.page1.amt4" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num5
+            #add-point:BEFORE FIELD num5 name="input.b.page1.num5"
+            {<point name="input.b.page1.num5" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num5
+            
+            #add-point:AFTER FIELD num5 name="input.a.page1.num5"
+            {<point name="input.a.page1.num5" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num5
+            #add-point:ON CHANGE num5 name="input.g.page1.num5"
+            {<point name="input.g.page1.num5" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price5
+            #add-point:BEFORE FIELD price5 name="input.b.page1.price5"
+            {<point name="input.b.page1.price5" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price5
+            
+            #add-point:AFTER FIELD price5 name="input.a.page1.price5"
+            {<point name="input.a.page1.price5" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price5
+            #add-point:ON CHANGE price5 name="input.g.page1.price5"
+            {<point name="input.g.page1.price5" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt5
+            #add-point:BEFORE FIELD amt5 name="input.b.page1.amt5"
+            {<point name="input.b.page1.amt5" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt5
+            
+            #add-point:AFTER FIELD amt5 name="input.a.page1.amt5"
+            {<point name="input.a.page1.amt5" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt5
+            #add-point:ON CHANGE amt5 name="input.g.page1.amt5"
+            {<point name="input.g.page1.amt5" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num6
+            #add-point:BEFORE FIELD num6 name="input.b.page1.num6"
+            {<point name="input.b.page1.num6" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num6
+            
+            #add-point:AFTER FIELD num6 name="input.a.page1.num6"
+            {<point name="input.a.page1.num6" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num6
+            #add-point:ON CHANGE num6 name="input.g.page1.num6"
+            {<point name="input.g.page1.num6" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price6
+            #add-point:BEFORE FIELD price6 name="input.b.page1.price6"
+            {<point name="input.b.page1.price6" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price6
+            
+            #add-point:AFTER FIELD price6 name="input.a.page1.price6"
+            {<point name="input.a.page1.price6" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price6
+            #add-point:ON CHANGE price6 name="input.g.page1.price6"
+            {<point name="input.g.page1.price6" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt6
+            #add-point:BEFORE FIELD amt6 name="input.b.page1.amt6"
+            {<point name="input.b.page1.amt6" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt6
+            
+            #add-point:AFTER FIELD amt6 name="input.a.page1.amt6"
+            {<point name="input.a.page1.amt6" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt6
+            #add-point:ON CHANGE amt6 name="input.g.page1.amt6"
+            {<point name="input.g.page1.amt6" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num7
+            #add-point:BEFORE FIELD num7 name="input.b.page1.num7"
+            {<point name="input.b.page1.num7" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num7
+            
+            #add-point:AFTER FIELD num7 name="input.a.page1.num7"
+            {<point name="input.a.page1.num7" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num7
+            #add-point:ON CHANGE num7 name="input.g.page1.num7"
+            {<point name="input.g.page1.num7" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price7
+            #add-point:BEFORE FIELD price7 name="input.b.page1.price7"
+            {<point name="input.b.page1.price7" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price7
+            
+            #add-point:AFTER FIELD price7 name="input.a.page1.price7"
+            {<point name="input.a.page1.price7" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price7
+            #add-point:ON CHANGE price7 name="input.g.page1.price7"
+            {<point name="input.g.page1.price7" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt7
+            #add-point:BEFORE FIELD amt7 name="input.b.page1.amt7"
+            {<point name="input.b.page1.amt7" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt7
+            
+            #add-point:AFTER FIELD amt7 name="input.a.page1.amt7"
+            {<point name="input.a.page1.amt7" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt7
+            #add-point:ON CHANGE amt7 name="input.g.page1.amt7"
+            {<point name="input.g.page1.amt7" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num8
+            #add-point:BEFORE FIELD num8 name="input.b.page1.num8"
+            {<point name="input.b.page1.num8" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num8
+            
+            #add-point:AFTER FIELD num8 name="input.a.page1.num8"
+            {<point name="input.a.page1.num8" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num8
+            #add-point:ON CHANGE num8 name="input.g.page1.num8"
+            {<point name="input.g.page1.num8" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price8
+            #add-point:BEFORE FIELD price8 name="input.b.page1.price8"
+            {<point name="input.b.page1.price8" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price8
+            
+            #add-point:AFTER FIELD price8 name="input.a.page1.price8"
+            {<point name="input.a.page1.price8" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price8
+            #add-point:ON CHANGE price8 name="input.g.page1.price8"
+            {<point name="input.g.page1.price8" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt8
+            #add-point:BEFORE FIELD amt8 name="input.b.page1.amt8"
+            {<point name="input.b.page1.amt8" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt8
+            
+            #add-point:AFTER FIELD amt8 name="input.a.page1.amt8"
+            {<point name="input.a.page1.amt8" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt8
+            #add-point:ON CHANGE amt8 name="input.g.page1.amt8"
+            {<point name="input.g.page1.amt8" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num9
+            #add-point:BEFORE FIELD num9 name="input.b.page1.num9"
+            {<point name="input.b.page1.num9" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num9
+            
+            #add-point:AFTER FIELD num9 name="input.a.page1.num9"
+            {<point name="input.a.page1.num9" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num9
+            #add-point:ON CHANGE num9 name="input.g.page1.num9"
+            {<point name="input.g.page1.num9" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price9
+            #add-point:BEFORE FIELD price9 name="input.b.page1.price9"
+            {<point name="input.b.page1.price9" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price9
+            
+            #add-point:AFTER FIELD price9 name="input.a.page1.price9"
+            {<point name="input.a.page1.price9" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price9
+            #add-point:ON CHANGE price9 name="input.g.page1.price9"
+            {<point name="input.g.page1.price9" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt9
+            #add-point:BEFORE FIELD amt9 name="input.b.page1.amt9"
+            {<point name="input.b.page1.amt9" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt9
+            
+            #add-point:AFTER FIELD amt9 name="input.a.page1.amt9"
+            {<point name="input.a.page1.amt9" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt9
+            #add-point:ON CHANGE amt9 name="input.g.page1.amt9"
+            {<point name="input.g.page1.amt9" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num10
+            #add-point:BEFORE FIELD num10 name="input.b.page1.num10"
+            {<point name="input.b.page1.num10" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num10
+            
+            #add-point:AFTER FIELD num10 name="input.a.page1.num10"
+            {<point name="input.a.page1.num10" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num10
+            #add-point:ON CHANGE num10 name="input.g.page1.num10"
+            {<point name="input.g.page1.num10" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price10
+            #add-point:BEFORE FIELD price10 name="input.b.page1.price10"
+            {<point name="input.b.page1.price10" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price10
+            
+            #add-point:AFTER FIELD price10 name="input.a.page1.price10"
+            {<point name="input.a.page1.price10" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price10
+            #add-point:ON CHANGE price10 name="input.g.page1.price10"
+            {<point name="input.g.page1.price10" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt10
+            #add-point:BEFORE FIELD amt10 name="input.b.page1.amt10"
+            {<point name="input.b.page1.amt10" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt10
+            
+            #add-point:AFTER FIELD amt10 name="input.a.page1.amt10"
+            {<point name="input.a.page1.amt10" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt10
+            #add-point:ON CHANGE amt10 name="input.g.page1.amt10"
+            {<point name="input.g.page1.amt10" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num11
+            #add-point:BEFORE FIELD num11 name="input.b.page1.num11"
+            {<point name="input.b.page1.num11" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num11
+            
+            #add-point:AFTER FIELD num11 name="input.a.page1.num11"
+            {<point name="input.a.page1.num11" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num11
+            #add-point:ON CHANGE num11 name="input.g.page1.num11"
+            {<point name="input.g.page1.num11" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price11
+            #add-point:BEFORE FIELD price11 name="input.b.page1.price11"
+            {<point name="input.b.page1.price11" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price11
+            
+            #add-point:AFTER FIELD price11 name="input.a.page1.price11"
+            {<point name="input.a.page1.price11" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price11
+            #add-point:ON CHANGE price11 name="input.g.page1.price11"
+            {<point name="input.g.page1.price11" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt11
+            #add-point:BEFORE FIELD amt11 name="input.b.page1.amt11"
+            {<point name="input.b.page1.amt11" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt11
+            
+            #add-point:AFTER FIELD amt11 name="input.a.page1.amt11"
+            {<point name="input.a.page1.amt11" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt11
+            #add-point:ON CHANGE amt11 name="input.g.page1.amt11"
+            {<point name="input.g.page1.amt11" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num12
+            #add-point:BEFORE FIELD num12 name="input.b.page1.num12"
+            {<point name="input.b.page1.num12" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num12
+            
+            #add-point:AFTER FIELD num12 name="input.a.page1.num12"
+            {<point name="input.a.page1.num12" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num12
+            #add-point:ON CHANGE num12 name="input.g.page1.num12"
+            {<point name="input.g.page1.num12" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price12
+            #add-point:BEFORE FIELD price12 name="input.b.page1.price12"
+            {<point name="input.b.page1.price12" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price12
+            
+            #add-point:AFTER FIELD price12 name="input.a.page1.price12"
+            {<point name="input.a.page1.price12" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price12
+            #add-point:ON CHANGE price12 name="input.g.page1.price12"
+            {<point name="input.g.page1.price12" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt12
+            #add-point:BEFORE FIELD amt12 name="input.b.page1.amt12"
+            {<point name="input.b.page1.amt12" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt12
+            
+            #add-point:AFTER FIELD amt12 name="input.a.page1.amt12"
+            {<point name="input.a.page1.amt12" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt12
+            #add-point:ON CHANGE amt12 name="input.g.page1.amt12"
+            {<point name="input.g.page1.amt12" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD num13
+            #add-point:BEFORE FIELD num13 name="input.b.page1.num13"
+            {<point name="input.b.page1.num13" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD num13
+            
+            #add-point:AFTER FIELD num13 name="input.a.page1.num13"
+            {<point name="input.a.page1.num13" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE num13
+            #add-point:ON CHANGE num13 name="input.g.page1.num13"
+            {<point name="input.g.page1.num13" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD price13
+            #add-point:BEFORE FIELD price13 name="input.b.page1.price13"
+            {<point name="input.b.page1.price13" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD price13
+            
+            #add-point:AFTER FIELD price13 name="input.a.page1.price13"
+            {<point name="input.a.page1.price13" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE price13
+            #add-point:ON CHANGE price13 name="input.g.page1.price13"
+            {<point name="input.g.page1.price13" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt13
+            #add-point:BEFORE FIELD amt13 name="input.b.page1.amt13"
+            {<point name="input.b.page1.amt13" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt13
+            
+            #add-point:AFTER FIELD amt13 name="input.a.page1.amt13"
+            {<point name="input.a.page1.amt13" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt13
+            #add-point:ON CHANGE amt13 name="input.g.page1.amt13"
+            {<point name="input.g.page1.amt13" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sum
+            #add-point:BEFORE FIELD sum name="input.b.page1.sum"
+            {<point name="input.b.page1.sum" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sum
+            
+            #add-point:AFTER FIELD sum name="input.a.page1.sum"
+            {<point name="input.a.page1.sum" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sum
+            #add-point:ON CHANGE sum name="input.g.page1.sum"
+            {<point name="input.g.page1.sum" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.bgcj001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj001
+            #add-point:ON ACTION controlp INFIELD bgcj001 name="input.c.page1.bgcj001"
+            {<point name="input.c.page1.bgcj001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgcj002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj002
+            #add-point:ON ACTION controlp INFIELD bgcj002 name="input.c.page1.bgcj002"
+            {<point name="input.c.page1.bgcj002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgcj003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj003
+            #add-point:ON ACTION controlp INFIELD bgcj003 name="input.c.page1.bgcj003"
+            {<point name="input.c.page1.bgcj003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgcj004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj004
+            #add-point:ON ACTION controlp INFIELD bgcj004 name="input.c.page1.bgcj004"
+            {<point name="input.c.page1.bgcj004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgcj005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj005
+            #add-point:ON ACTION controlp INFIELD bgcj005 name="input.c.page1.bgcj005"
+            {<point name="input.c.page1.bgcj005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgcj006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj006
+            #add-point:ON ACTION controlp INFIELD bgcj006 name="input.c.page1.bgcj006"
+            {<point name="input.c.page1.bgcj006" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgcj007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj007
+            #add-point:ON ACTION controlp INFIELD bgcj007 name="input.c.page1.bgcj007"
+            {<point name="input.c.page1.bgcj007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgcj009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj009
+            #add-point:ON ACTION controlp INFIELD bgcj009 name="input.c.page1.bgcj009"
+            {<point name="input.c.page1.bgcj009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgcj010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj010
+            #add-point:ON ACTION controlp INFIELD bgcj010 name="input.c.page1.bgcj010"
+            {<point name="input.c.page1.bgcj010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgcjseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcjseq
+            #add-point:ON ACTION controlp INFIELD bgcjseq name="input.c.page1.bgcjseq"
+            {<point name="input.c.page1.bgcjseq" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.bgcj008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj008
+            #add-point:ON ACTION controlp INFIELD bgcj008 name="input.c.page1.bgcj008"
+            {<point name="input.c.page1.bgcj008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num1
+            #add-point:ON ACTION controlp INFIELD num1 name="input.c.page1.num1"
+            {<point name="input.c.page1.num1" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price1
+            #add-point:ON ACTION controlp INFIELD price1 name="input.c.page1.price1"
+            {<point name="input.c.page1.price1" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt1
+            #add-point:ON ACTION controlp INFIELD amt1 name="input.c.page1.amt1"
+            {<point name="input.c.page1.amt1" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num2
+            #add-point:ON ACTION controlp INFIELD num2 name="input.c.page1.num2"
+            {<point name="input.c.page1.num2" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price2
+            #add-point:ON ACTION controlp INFIELD price2 name="input.c.page1.price2"
+            {<point name="input.c.page1.price2" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt2
+            #add-point:ON ACTION controlp INFIELD amt2 name="input.c.page1.amt2"
+            {<point name="input.c.page1.amt2" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num3
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num3
+            #add-point:ON ACTION controlp INFIELD num3 name="input.c.page1.num3"
+            {<point name="input.c.page1.num3" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price3
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price3
+            #add-point:ON ACTION controlp INFIELD price3 name="input.c.page1.price3"
+            {<point name="input.c.page1.price3" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt3
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt3
+            #add-point:ON ACTION controlp INFIELD amt3 name="input.c.page1.amt3"
+            {<point name="input.c.page1.amt3" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num4
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num4
+            #add-point:ON ACTION controlp INFIELD num4 name="input.c.page1.num4"
+            {<point name="input.c.page1.num4" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price4
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price4
+            #add-point:ON ACTION controlp INFIELD price4 name="input.c.page1.price4"
+            {<point name="input.c.page1.price4" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt4
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt4
+            #add-point:ON ACTION controlp INFIELD amt4 name="input.c.page1.amt4"
+            {<point name="input.c.page1.amt4" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num5
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num5
+            #add-point:ON ACTION controlp INFIELD num5 name="input.c.page1.num5"
+            {<point name="input.c.page1.num5" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price5
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price5
+            #add-point:ON ACTION controlp INFIELD price5 name="input.c.page1.price5"
+            {<point name="input.c.page1.price5" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt5
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt5
+            #add-point:ON ACTION controlp INFIELD amt5 name="input.c.page1.amt5"
+            {<point name="input.c.page1.amt5" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num6
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num6
+            #add-point:ON ACTION controlp INFIELD num6 name="input.c.page1.num6"
+            {<point name="input.c.page1.num6" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price6
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price6
+            #add-point:ON ACTION controlp INFIELD price6 name="input.c.page1.price6"
+            {<point name="input.c.page1.price6" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt6
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt6
+            #add-point:ON ACTION controlp INFIELD amt6 name="input.c.page1.amt6"
+            {<point name="input.c.page1.amt6" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num7
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num7
+            #add-point:ON ACTION controlp INFIELD num7 name="input.c.page1.num7"
+            {<point name="input.c.page1.num7" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price7
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price7
+            #add-point:ON ACTION controlp INFIELD price7 name="input.c.page1.price7"
+            {<point name="input.c.page1.price7" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt7
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt7
+            #add-point:ON ACTION controlp INFIELD amt7 name="input.c.page1.amt7"
+            {<point name="input.c.page1.amt7" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num8
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num8
+            #add-point:ON ACTION controlp INFIELD num8 name="input.c.page1.num8"
+            {<point name="input.c.page1.num8" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price8
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price8
+            #add-point:ON ACTION controlp INFIELD price8 name="input.c.page1.price8"
+            {<point name="input.c.page1.price8" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt8
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt8
+            #add-point:ON ACTION controlp INFIELD amt8 name="input.c.page1.amt8"
+            {<point name="input.c.page1.amt8" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num9
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num9
+            #add-point:ON ACTION controlp INFIELD num9 name="input.c.page1.num9"
+            {<point name="input.c.page1.num9" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price9
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price9
+            #add-point:ON ACTION controlp INFIELD price9 name="input.c.page1.price9"
+            {<point name="input.c.page1.price9" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt9
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt9
+            #add-point:ON ACTION controlp INFIELD amt9 name="input.c.page1.amt9"
+            {<point name="input.c.page1.amt9" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num10
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num10
+            #add-point:ON ACTION controlp INFIELD num10 name="input.c.page1.num10"
+            {<point name="input.c.page1.num10" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price10
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price10
+            #add-point:ON ACTION controlp INFIELD price10 name="input.c.page1.price10"
+            {<point name="input.c.page1.price10" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt10
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt10
+            #add-point:ON ACTION controlp INFIELD amt10 name="input.c.page1.amt10"
+            {<point name="input.c.page1.amt10" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num11
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num11
+            #add-point:ON ACTION controlp INFIELD num11 name="input.c.page1.num11"
+            {<point name="input.c.page1.num11" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price11
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price11
+            #add-point:ON ACTION controlp INFIELD price11 name="input.c.page1.price11"
+            {<point name="input.c.page1.price11" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt11
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt11
+            #add-point:ON ACTION controlp INFIELD amt11 name="input.c.page1.amt11"
+            {<point name="input.c.page1.amt11" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num12
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num12
+            #add-point:ON ACTION controlp INFIELD num12 name="input.c.page1.num12"
+            {<point name="input.c.page1.num12" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price12
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price12
+            #add-point:ON ACTION controlp INFIELD price12 name="input.c.page1.price12"
+            {<point name="input.c.page1.price12" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt12
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt12
+            #add-point:ON ACTION controlp INFIELD amt12 name="input.c.page1.amt12"
+            {<point name="input.c.page1.amt12" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.num13
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD num13
+            #add-point:ON ACTION controlp INFIELD num13 name="input.c.page1.num13"
+            {<point name="input.c.page1.num13" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.price13
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD price13
+            #add-point:ON ACTION controlp INFIELD price13 name="input.c.page1.price13"
+            {<point name="input.c.page1.price13" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.amt13
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt13
+            #add-point:ON ACTION controlp INFIELD amt13 name="input.c.page1.amt13"
+            {<point name="input.c.page1.amt13" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.sum
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sum
+            #add-point:ON ACTION controlp INFIELD sum name="input.c.page1.sum"
+            {<point name="input.c.page1.sum" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_abgt340_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="abgt340_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="abgt340_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

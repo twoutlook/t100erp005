@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrr826_g01" module="acr" jobmode="N" type="g01" industry="std" crtid="02003" crtdt="2016-02-17 15:29:53" modid="03247" moddt="2016-05-05 16:54:10" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.sel(STRING|统计类型),tm.year(crde002|年度),tm.mm(crde003|月份),tm.crde(crde002|年度),tm.week(decb003|週別)">
+    <var seq="1" value="crdeent,l_sum_8(num20_6|NULL),l_sum_7(num20_6|NULL),crde007,l_sum0(num20_6|NULL),l_sum6(num20_6|NULL),l_sum5(num20_6|NULL),l_sum4(num20_6|NULL),l_sum3(num20_6|NULL),l_sum2(num20_6|NULL),l_sum1(num20_6|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="crdeent,l_sum_8(num20_6|NULL),l_sum_7(num20_6|NULL),crde007,l_sum0(num20_6|NULL),l_sum6(num20_6|NULL),l_sum5(num20_6|NULL),l_sum4(num20_6|NULL),l_sum3(num20_6|NULL),l_sum2(num20_6|NULL),l_sum1(num20_6|NULL)"/>
+    <sql id="g_from" query="crde_t,ooga_t,decb_t,rtab_t"/>
+    <sql id="g_where" query="" maintable="crde_t"/>
+    <sql id="g_order" query="crdeent,crde007"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="crdeent,crde007"/>
+    <section id="b_group" reptype="d01">
+      <rep type="crdeent" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="crdeent,crdeent"/>
+      <rep type="crde007"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="crdeent,crdeent,crde007"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="crdeent,crdeent,crde007"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="crdeent" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="crdeent,crdeent"/>
+      <rep type="crde007"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

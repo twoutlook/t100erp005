@@ -1,0 +1,196 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abct600" module="abc" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="04543" crtdt="2016-10-28 16:53:13" modid="04543" moddt="2016-11-21 18:00:33" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="條碼資訊維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bcacsite,bcac000,bcacdocno,bcacdocno_desc(chr80),bcacdocdt,bcac013,bcac013_desc(chr80),bcac014,bcac014_desc(chr80),bcacstus,bcac002,bcac002_desc(chr500),bcac002_desc_desc(chr500),bcac008,bcac008_desc(chr80),bcac012,bcac012_desc(chr80),bcac019,bcac003,bcac018,bcac020,bcac004,bcac005,bcac006,bcac007,bcacownid,bcacownid_desc(chr80),bcacowndp,bcacowndp_desc(chr80),bcaccrtid,bcaccrtid_desc(chr80),bcaccrtdp,bcaccrtdp_desc(chr80),bcaccrtdt,bcacmodid,bcacmodid_desc(chr80),bcacmoddt,bcaccnfid,bcaccnfid_desc(chr80),bcaccnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bcadsite,bcad000,bcadseq,bcad001,bcad004,bcad010,bcad011,bcad012,bcad013,bcad014,bcad007"/>
+      <var id="bs_field" value="bcacdocno,bcacdocdt,bcac002,bcac002_desc(chr80),bcac002_desc_desc(chr80),bcac008,bcac008_desc(chr80),bcac013,bcac013_desc(chr80),bcac014,bcac014_desc(chr80)" pk="bcacdocno" order=""/>
+      <bs_reference field="bcac013_desc" ref_field="bcac013" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="bcac014_desc" ref_field="bcac014" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abc" filename="abct600" method="dialog">
+    <section id="input">
+      <input id="head" field="bcacsite,bcac000,bcacdocno,bcacdocdt,bcac013,bcac014,bcacstus,bcac002,bcac008,bcac012,bcac019,bcac003,bcac018,bcac020,bcac004,bcac005,bcac006,bcac007"/>
+      <input id="body" page="1" field="bcadsite,bcad000,bcadseq,bcad001,bcad004,bcad010,bcad011,bcad012,bcad013,bcad014,bcad007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bcacsite,bcac000,bcacdocno,bcacdocdt,bcac013,bcac014,bcacstus,bcac002,bcac008,bcac012,bcac019,bcac003,bcac018,bcac020,bcac004,bcac005,bcac006,bcac007,bcacownid,bcacowndp,bcaccrtid,bcaccrtdp,bcaccrtdt,bcacmodid,bcacmoddt,bcaccnfid,bcaccnfdt"/>
+      <construct id="body" page="1" field="bcadsite,bcad000,bcadseq,bcad001,bcad004,bcad010,bcad011,bcad012,bcad013,bcad014,bcad007"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bcacdocno"/>
+      <set id="head" type="no_entry" field="bcacdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bcacsite"/>
+      <column id="bcac000" type="S" default="0"/>
+      <column id="bcacdocno">
+        <after/>
+      </column>
+      <column id="bcacdocno_desc"/>
+      <column id="bcacdocdt"/>
+      <column id="bcac013">
+        <after>
+          <reference field="bcac013_desc" ref_field="bcac_t.bcac013" map_field="bcac013" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="bcac013_desc"/>
+      <column id="bcac014">
+        <after>
+          <reference field="bcac014_desc" ref_field="bcac_t.bcac014" map_field="bcac014" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bcac014_desc"/>
+      <column id="bcacstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="bcac002">
+        <after/>
+      </column>
+      <column id="bcac002_desc">
+        <after/>
+      </column>
+      <column id="bcac002_desc_desc"/>
+      <column id="bcac008">
+        <after/>
+      </column>
+      <column id="bcac008_desc"/>
+      <column id="bcac012">
+        <after>
+          <reference field="bcac012_desc" ref_field="bcac_t.bcac012" map_field="bcac012" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bcac012_desc"/>
+      <column id="bcac019" type="S" default="1" def_scc="16022"/>
+      <column id="bcac003"/>
+      <column id="bcac018"/>
+      <column id="bcac020" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bcac004"/>
+      <column id="bcac005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bcac006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bcac007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bcacownid">
+        <after>
+          <reference field="bcacownid_desc" ref_field="bcac_t.bcacownid" map_field="bcacownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bcacownid_desc"/>
+      <column id="bcacowndp">
+        <after>
+          <reference field="bcacowndp_desc" ref_field="bcac_t.bcacowndp" map_field="bcacowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bcacowndp_desc"/>
+      <column id="bcaccrtid">
+        <after>
+          <reference field="bcaccrtid_desc" ref_field="bcac_t.bcaccrtid" map_field="bcaccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bcaccrtid_desc"/>
+      <column id="bcaccrtdp">
+        <after>
+          <reference field="bcaccrtdp_desc" ref_field="bcac_t.bcaccrtdp" map_field="bcaccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bcaccrtdp_desc"/>
+      <column id="bcaccrtdt"/>
+      <column id="bcacmodid">
+        <after>
+          <reference field="bcacmodid_desc" ref_field="bcac_t.bcacmodid" map_field="bcacmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bcacmodid_desc"/>
+      <column id="bcacmoddt"/>
+      <column id="bcaccnfid">
+        <after>
+          <reference field="bcaccnfid_desc" ref_field="bcac_t.bcaccnfid" map_field="bcaccnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bcaccnfid_desc"/>
+      <column id="bcaccnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bcadsite"/>
+      <column id="bcad000" type="S" default="0"/>
+      <column id="bcadseq"/>
+      <column id="bcad001"/>
+      <column id="bcad004"/>
+      <column id="bcad010"/>
+      <column id="bcad011" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bcad012" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bcad013" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bcad014" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bcad007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="bcac_t" pk="bcacdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT bcacsite,bcac000,bcacdocno,&apos;&apos;,bcacdocdt,bcac013,&apos;&apos;,bcac014,&apos;&apos;,bcacstus,bcac002,&apos;&apos;,&apos;&apos;,bcac008,&apos;&apos;,bcac012,&apos;&apos;,bcac019,bcac003,bcac018,bcac020,bcac004,bcac005,bcac006,bcac007,bcacownid,&apos;&apos;,bcacowndp,&apos;&apos;,bcaccrtid,&apos;&apos;,bcaccrtdp,&apos;&apos;,bcaccrtdt,bcacmodid,&apos;&apos;,bcacmoddt,bcaccnfid,&apos;&apos;,bcaccnfdt FROM bcac_t WHERE bcacent= ? AND bcacdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bcacsite,bcac000,bcacdocno,&apos;&apos;,bcacdocdt,bcac013,&apos;&apos;,bcac014,&apos;&apos;,bcacstus,bcac002,&apos;&apos;,&apos;&apos;,bcac008,&apos;&apos;,bcac012,&apos;&apos;,bcac019,bcac003,bcac018,bcac020,bcac004,bcac005,bcac006,bcac007,bcacownid,&apos;&apos;,bcacowndp,&apos;&apos;,bcaccrtid,&apos;&apos;,bcaccrtdp,&apos;&apos;,bcaccrtdt,bcacmodid,&apos;&apos;,bcacmoddt,bcaccnfid,&apos;&apos;,bcaccnfdt FROM bcac_t" order="bcacdocno"/>
+    </head>
+    <body id="bcad_t" page="1" linked="" pk="bcadseq" fk="bcaddocno">
+      <sql id="forupd_sql_detail" query="SELECT bcadsite,bcad000,bcadseq,bcad001,bcad004,bcad010,bcad011,bcad012,bcad013,bcad014,bcad007 FROM bcad_t WHERE bcadent=? AND bcaddocno=? AND bcadseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bcadsite,bcad000,bcadseq,bcad001,bcad004,bcad010,bcad011,bcad012,bcad013,bcad014,bcad007 FROM bcad_t WHERE bcadent=? AND bcaddocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

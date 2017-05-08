@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmr035" module="afm" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="08732" crtdt="2016-09-29 11:30:19" modid="08732" moddt="2016-09-29 11:30:19" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="融資合同列印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="l_fmcjsite(chr10),l_fmcjsite_desc(chr80),l_fmcjcomp(chr10),l_fmcjcomp_desc(chr80),fmcjdocno,fmcj001,fmcjdocdt,fmcj002,fmcj003,l_fmcjstus(chr10)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="afm" filename="afmr035" method="dialog">
+    <section id="input">
+      <input id="head" field="l_fmcjsite,l_fmcjcomp,l_fmcjstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmcjdocno,fmcj001,fmcjdocdt,fmcj002,fmcj003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="l_fmcjsite">
+        <after>
+          <check chkid="v_ooef001_42" id="isExist"/>
+          <reference field="l_fmcjsite_desc" ref_field="l_fmcjsite" map_field="fmcjent,fmcjsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="l_fmcjsite_desc"/>
+      <column id="l_fmcjcomp">
+        <after>
+          <reference field="l_fmcjcomp_desc" ref_field="l_fmcjcomp" map_field="fmcjent,fmcjcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="l_fmcjcomp_desc"/>
+      <column id="fmcjdocno"/>
+      <column id="fmcj001">
+        <after>
+          <check chkid="v_fmaa001" id="isExist"/>
+        </after>
+        <controlp form="q_fmaa001_1" state="i"/>
+        <controlp form="q_fmaa001_1" state="c"/>
+      </column>
+      <column id="fmcjdocdt" type="V" default="g_today"/>
+      <column id="fmcj002">
+        <after>
+          <check chkid="v_fmac003" id="isExist"/>
+        </after>
+        <controlp form="q_nmab001" state="i"/>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="fmcj003"/>
+      <column id="l_fmcjstus" type="S" default="3"/>
+    </init>
+  </form>
+</assembly>
+

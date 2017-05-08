@@ -1,0 +1,1099 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmr510" std_prog="apmr510" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" booking="N" type="M" identity="s">
+  <other>
+    <code_template value="R" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="construct.c.pmee002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmee002  #顯示到畫面上
+            NEXT FIELD pmee002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.pmee003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmee003  #顯示到畫面上
+            NEXT FIELD pmee003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.pmee004" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmee004  #顯示到畫面上
+            NEXT FIELD pmee004                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.pmee023" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmee023  #顯示到畫面上
+            NEXT FIELD pmee023                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.pmee903" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmee903  #顯示到畫面上
+            NEXT FIELD pmee903                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.pmeedocno" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmeedocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmeedocno  #顯示到畫面上
+            NEXT FIELD pmeedocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="global.parameter" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[        pmeeradio       LIKE type_t.chr1,   #單據狀態
+        pmeechk         LIKE type_t.chr1,   #僅列印有變更的資料]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_param type_parameter
+DEFINE tm                RECORD
+         wc              STRING
+                         END RECORD]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_param.pmeeradio = '0'
+   LET g_param.pmeechk   = 'N']]>
+  </point>
+  <point name="main.servicecall" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      CALL apmr510_g01(g_param.wc,g_param.pmeechk)   ]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               IF cl_null(g_param.wc) THEN
+                  LET g_param.wc = " 1=1"
+               END IF
+               LET tm.wc = g_param.wc
+               CASE g_param.pmeeradio
+                  WHEN '1'
+                     LET tm.wc = tm.wc CLIPPED," AND pmeestus = 'N' "
+                  WHEN '2'
+                     LET tm.wc = tm.wc CLIPPED," AND pmeestus = 'Y' "
+               END CASE
+               
+               LET tm.wc = tm.wc CLIPPED," AND pmeeent =",g_enterprise," AND pmeesite='",g_site,"' "  
+                                    
+               CALL apmr510_g01(tm.wc,g_param.pmeechk)
+            
+               EXIT DIALOG
+            END IF]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[          CONSTRUCT BY NAME g_param.wc ON pmeedocno,pmeedocdt,pmee002,pmee003,pmee004,pmee023,pmee001,pmee903,pmee902
+            BEFORE CONSTRUCT
+               CALL cl_qbe_init()
+
+            #採購單號
+            ON ACTION controlp INFIELD pmeedocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmdldocno()
+               DISPLAY g_qryparam.return1 TO pmeedocno
+               NEXT FIELD pmeedocno
+     
+            #採購人員
+            ON ACTION controlp INFIELD pmee002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()    
+               DISPLAY g_qryparam.return1 TO pmee002
+               NEXT FIELD pmee002
+               
+            #採購部門 
+            ON ACTION controlp INFIELD pmee003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooeg001()
+               DISPLAY g_qryparam.return1 TO pmee003
+               NEXT FIELD pmee003
+     
+            #供應商編號
+            ON ACTION controlp INFIELD pmee004
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmaa001_3()
+               DISPLAY g_qryparam.return1 TO pmee004
+               NEXT FIELD pmee004  
+                
+            #採購通路
+            ON ACTION controlp INFIELD pmee023
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_oocq002()
+               DISPLAY g_qryparam.return1 TO pmee023
+               NEXT FIELD pmee023
+               
+            #變更理由   
+            ON ACTION controlp INFIELD pmee903
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_oocq002()
+               DISPLAY g_qryparam.return1 TO pmee903
+               NEXT FIELD pmee903               
+               
+                    
+         END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         INPUT BY NAME g_param.pmeeradio,g_param.pmeechk ATTRIBUTE(WITHOUT DEFAULTS)
+            BEFORE INPUT
+                          
+            AFTER FIELD pmeeradio
+               IF g_param.pmeeradio NOT MATCHES "[012]" THEN
+                  NEXT FIELD pmeeradio                  
+               END IF       
+            AFTER FIELD pmeechk
+               IF g_param.pmeechk NOT MATCHES "[YN]" THEN
+                  NEXT FIELD pmeechk                  
+               END IF                           
+         END INPUT]]>
+  </point>
+  <section id="apmr510.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000007
+#+ 
+#+ Filename...: apmr510
+#+ Description: 採購變更憑證列印
+#+ Creator....: 05229(2014/06/23)
+#+ Modifier...: 05229(2014/06/30)
+#+ Buildtype..: 應用 r01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="apmr510.global" ver="4" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       pmeedocno LIKE pmee_t.pmeedocno, 
+   pmeedocdt LIKE pmee_t.pmeedocdt, 
+   pmee002 LIKE pmee_t.pmee002, 
+   pmee003 LIKE pmee_t.pmee003, 
+   pmee004 LIKE pmee_t.pmee004, 
+   pmee023 LIKE pmee_t.pmee023, 
+   pmee001 LIKE pmee_t.pmee001, 
+   pmee903 LIKE pmee_t.pmee903, 
+   pmee902 LIKE pmee_t.pmee902, 
+   pmeeradio LIKE type_t.chr80, 
+   pmeechk LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmr510.init" ver="1" status="" src="s">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION apmr510_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apmr510.main" ver="2" status="" src="s">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL apmr510_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmr510 WITH FORM cl_ap_formpath("apm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL apmr510_init()
+ 
+      #進入選單 Menu (="N")
+      CALL apmr510_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apmr510
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="apmr510.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmr510.process" ver="1" status="" src="s">
+    <![CDATA[#+ 資料處理
+PRIVATE FUNCTION apmr510_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apmr510_process_cs CURSOR FROM ls_sql
+#  FOREACH apmr510_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+  </section>
+  <section id="apmr510.transfer_argv" ver="1" status="" src="s">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apmr510_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="apmr510.ui_dialog" ver="4" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apmr510_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #+ 此段落由子樣板a57產生
+         INPUT BY NAME g_master.pmeedocno,g_master.pmeedocdt,g_master.pmee002,g_master.pmee003,g_master.pmee004, 
+             g_master.pmee023,g_master.pmee001,g_master.pmee903,g_master.pmee902,g_master.pmeeradio, 
+             g_master.pmeechk 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #此段落由子樣板a01產生
+         BEFORE FIELD pmeedocno
+            #add-point:BEFORE FIELD pmeedocno
+            {<point name="input.b.pmeedocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmeedocno
+            
+            #add-point:AFTER FIELD pmeedocno
+            {<point name="input.a.pmeedocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmeedocno
+            #add-point:ON CHANGE pmeedocno
+            {<point name="input.g.pmeedocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmeedocdt
+            #add-point:BEFORE FIELD pmeedocdt
+            {<point name="input.b.pmeedocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmeedocdt
+            
+            #add-point:AFTER FIELD pmeedocdt
+            {<point name="input.a.pmeedocdt" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmeedocdt
+            #add-point:ON CHANGE pmeedocdt
+            {<point name="input.g.pmeedocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee002
+            #add-point:BEFORE FIELD pmee002
+            {<point name="input.b.pmee002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee002
+            
+            #add-point:AFTER FIELD pmee002
+            {<point name="input.a.pmee002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmee002
+            #add-point:ON CHANGE pmee002
+            {<point name="input.g.pmee002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee003
+            #add-point:BEFORE FIELD pmee003
+            {<point name="input.b.pmee003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee003
+            
+            #add-point:AFTER FIELD pmee003
+            {<point name="input.a.pmee003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmee003
+            #add-point:ON CHANGE pmee003
+            {<point name="input.g.pmee003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee004
+            #add-point:BEFORE FIELD pmee004
+            {<point name="input.b.pmee004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee004
+            
+            #add-point:AFTER FIELD pmee004
+            {<point name="input.a.pmee004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmee004
+            #add-point:ON CHANGE pmee004
+            {<point name="input.g.pmee004" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee023
+            #add-point:BEFORE FIELD pmee023
+            {<point name="input.b.pmee023" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee023
+            
+            #add-point:AFTER FIELD pmee023
+            {<point name="input.a.pmee023" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmee023
+            #add-point:ON CHANGE pmee023
+            {<point name="input.g.pmee023" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee001
+            #add-point:BEFORE FIELD pmee001
+            {<point name="input.b.pmee001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee001
+            
+            #add-point:AFTER FIELD pmee001
+            {<point name="input.a.pmee001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmee001
+            #add-point:ON CHANGE pmee001
+            {<point name="input.g.pmee001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee903
+            #add-point:BEFORE FIELD pmee903
+            {<point name="input.b.pmee903" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee903
+            
+            #add-point:AFTER FIELD pmee903
+            {<point name="input.a.pmee903" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmee903
+            #add-point:ON CHANGE pmee903
+            {<point name="input.g.pmee903" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee902
+            #add-point:BEFORE FIELD pmee902
+            {<point name="input.b.pmee902" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee902
+            
+            #add-point:AFTER FIELD pmee902
+            {<point name="input.a.pmee902" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmee902
+            #add-point:ON CHANGE pmee902
+            {<point name="input.g.pmee902" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmeeradio
+            #add-point:BEFORE FIELD pmeeradio
+            {<point name="input.b.pmeeradio" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmeeradio
+            
+            #add-point:AFTER FIELD pmeeradio
+            {<point name="input.a.pmeeradio" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmeeradio
+            #add-point:ON CHANGE pmeeradio
+            {<point name="input.g.pmeeradio" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmeechk
+            #add-point:BEFORE FIELD pmeechk
+            {<point name="input.b.pmeechk" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmeechk
+            
+            #add-point:AFTER FIELD pmeechk
+            {<point name="input.a.pmeechk" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmeechk
+            #add-point:ON CHANGE pmeechk
+            {<point name="input.g.pmeechk" />}
+            #END add-point
+ 
+ 
+                     #Ctrlp:input.c.pmeedocno
+         ON ACTION controlp INFIELD pmeedocno
+            #add-point:ON ACTION controlp INFIELD pmeedocno
+            {<point name="input.c.pmeedocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.pmeedocdt
+         ON ACTION controlp INFIELD pmeedocdt
+            #add-point:ON ACTION controlp INFIELD pmeedocdt
+            {<point name="input.c.pmeedocdt" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.pmee002
+         ON ACTION controlp INFIELD pmee002
+            #add-point:ON ACTION controlp INFIELD pmee002
+            {<point name="input.c.pmee002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.pmee003
+         ON ACTION controlp INFIELD pmee003
+            #add-point:ON ACTION controlp INFIELD pmee003
+            {<point name="input.c.pmee003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.pmee004
+         ON ACTION controlp INFIELD pmee004
+            #add-point:ON ACTION controlp INFIELD pmee004
+            {<point name="input.c.pmee004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.pmee023
+         ON ACTION controlp INFIELD pmee023
+            #add-point:ON ACTION controlp INFIELD pmee023
+            {<point name="input.c.pmee023" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.pmee001
+         ON ACTION controlp INFIELD pmee001
+            #add-point:ON ACTION controlp INFIELD pmee001
+            {<point name="input.c.pmee001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.pmee903
+         ON ACTION controlp INFIELD pmee903
+            #add-point:ON ACTION controlp INFIELD pmee903
+            {<point name="input.c.pmee903" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.pmee902
+         ON ACTION controlp INFIELD pmee902
+            #add-point:ON ACTION controlp INFIELD pmee902
+            {<point name="input.c.pmee902" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.pmeeradio
+         ON ACTION controlp INFIELD pmeeradio
+            #add-point:ON ACTION controlp INFIELD pmeeradio
+            {<point name="input.c.pmeeradio" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.pmeechk
+         ON ACTION controlp INFIELD pmeechk
+            #add-point:ON ACTION controlp INFIELD pmeechk
+            {<point name="input.c.pmeechk" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+               
+         END INPUT
+ 
+ 
+         
+         #+ 此段落由子樣板a57產生
+         CONSTRUCT BY NAME g_master.wc ON pmeedocno,pmeedocdt,pmee002,pmee003,pmee004,pmee023,pmee001, 
+             pmee903,pmee902,pmeeradio,pmeechk
+         
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.pmeedocno
+         ON ACTION controlp INFIELD pmeedocno
+            #add-point:ON ACTION controlp INFIELD pmeedocno
+            {<point name="construct.c.pmeedocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmeedocno
+            #add-point:BEFORE FIELD pmeedocno
+            {<point name="construct.b.pmeedocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmeedocno
+            
+            #add-point:AFTER FIELD pmeedocno
+            {<point name="construct.a.pmeedocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmeedocdt
+            #add-point:BEFORE FIELD pmeedocdt
+            {<point name="construct.b.pmeedocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmeedocdt
+            
+            #add-point:AFTER FIELD pmeedocdt
+            {<point name="construct.a.pmeedocdt" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.pmeedocdt
+         ON ACTION controlp INFIELD pmeedocdt
+            #add-point:ON ACTION controlp INFIELD pmeedocdt
+            {<point name="construct.c.pmeedocdt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.pmee002
+         ON ACTION controlp INFIELD pmee002
+            #add-point:ON ACTION controlp INFIELD pmee002
+            {<point name="construct.c.pmee002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee002
+            #add-point:BEFORE FIELD pmee002
+            {<point name="construct.b.pmee002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee002
+            
+            #add-point:AFTER FIELD pmee002
+            {<point name="construct.a.pmee002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.pmee003
+         ON ACTION controlp INFIELD pmee003
+            #add-point:ON ACTION controlp INFIELD pmee003
+            {<point name="construct.c.pmee003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee003
+            #add-point:BEFORE FIELD pmee003
+            {<point name="construct.b.pmee003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee003
+            
+            #add-point:AFTER FIELD pmee003
+            {<point name="construct.a.pmee003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.pmee004
+         ON ACTION controlp INFIELD pmee004
+            #add-point:ON ACTION controlp INFIELD pmee004
+            {<point name="construct.c.pmee004" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee004
+            #add-point:BEFORE FIELD pmee004
+            {<point name="construct.b.pmee004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee004
+            
+            #add-point:AFTER FIELD pmee004
+            {<point name="construct.a.pmee004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.pmee023
+         ON ACTION controlp INFIELD pmee023
+            #add-point:ON ACTION controlp INFIELD pmee023
+            {<point name="construct.c.pmee023" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee023
+            #add-point:BEFORE FIELD pmee023
+            {<point name="construct.b.pmee023" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee023
+            
+            #add-point:AFTER FIELD pmee023
+            {<point name="construct.a.pmee023" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee001
+            #add-point:BEFORE FIELD pmee001
+            {<point name="construct.b.pmee001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee001
+            
+            #add-point:AFTER FIELD pmee001
+            {<point name="construct.a.pmee001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.pmee001
+         ON ACTION controlp INFIELD pmee001
+            #add-point:ON ACTION controlp INFIELD pmee001
+            {<point name="construct.c.pmee001" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.pmee903
+         ON ACTION controlp INFIELD pmee903
+            #add-point:ON ACTION controlp INFIELD pmee903
+            {<point name="construct.c.pmee903" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee903
+            #add-point:BEFORE FIELD pmee903
+            {<point name="construct.b.pmee903" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee903
+            
+            #add-point:AFTER FIELD pmee903
+            {<point name="construct.a.pmee903" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmee902
+            #add-point:BEFORE FIELD pmee902
+            {<point name="construct.b.pmee902" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmee902
+            
+            #add-point:AFTER FIELD pmee902
+            {<point name="construct.a.pmee902" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.pmee902
+         ON ACTION controlp INFIELD pmee902
+            #add-point:ON ACTION controlp INFIELD pmee902
+            {<point name="construct.c.pmee902" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmeeradio
+            #add-point:BEFORE FIELD pmeeradio
+            {<point name="construct.b.pmeeradio" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmeeradio
+            
+            #add-point:AFTER FIELD pmeeradio
+            {<point name="construct.a.pmeeradio" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.pmeeradio
+         ON ACTION controlp INFIELD pmeeradio
+            #add-point:ON ACTION controlp INFIELD pmeeradio
+            {<point name="construct.c.pmeeradio" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmeechk
+            #add-point:BEFORE FIELD pmeechk
+            {<point name="construct.b.pmeechk" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmeechk
+            
+            #add-point:AFTER FIELD pmeechk
+            {<point name="construct.a.pmeechk" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.pmeechk
+         ON ACTION controlp INFIELD pmeechk
+            #add-point:ON ACTION controlp INFIELD pmeechk
+            {<point name="construct.c.pmeechk" />}
+            #END add-point
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION output
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL apmr510_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+                 LET ls_js = apmr510_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

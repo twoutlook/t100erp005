@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi933" module="azz" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="01101" crtdt="2014-12-17 10:06:52" modid="01101" moddt="2017-02-06 16:48:23" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="作業操作說明設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzwp001,gzwp001_desc(chr80),gzwp004,gzwp002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzwpstus,gzwp003,gzwp003_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzwp003,gzwpownid,gzwpownid_desc(chr500),gzwpowndp,gzwpowndp_desc(chr500),gzwpcrtid,gzwpcrtid_desc(chr500),gzwpcrtdp,gzwpcrtdp_desc(chr500),gzwpcrtdt,gzwpmodid,gzwpmodid_desc(chr500),gzwpmoddt"/>
+      <var id="bs_field" value="gzwp001,gzwp001_desc(chr80),gzwp004,gzwp002" pk="gzwp001,gzwp002,gzwp004" order=""/>
+      <bs_reference field="gzwp001_desc" ref_field="gzwp001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="userguidehtml_sys"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="preview" chk="N"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="act_edit"/>
+      <action id="act_933_02"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="ins_img" chk="N"/>
+      <action id="ins_hyperlink" chk="N"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi933" method="dialog">
+    <section id="input">
+      <input id="head" field="gzwp001,gzwp004"/>
+      <input id="body" page="1" field="gzwpstus,gzwp003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzwp001,gzwp004,gzwp002"/>
+      <construct id="body" page="1" field="gzwpstus,gzwp003"/>
+      <construct id="body" page="2" field="gzwpownid,gzwpowndp,gzwpcrtid,gzwpcrtdp,gzwpcrtdt,gzwpmodid,gzwpmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzwp001,gzwp002,gzwp004"/>
+      <set id="head" type="no_entry" field="gzwp001,gzwp002,gzwp004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzwp001">
+        <after>
+          <reference field="gzwp001_desc" ref_field="gzwp_t.gzwp001" map_field="gzwp001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001_1" state="c"/>
+      </column>
+      <column id="gzwp001_desc"/>
+      <column id="gzwp004"/>
+      <column id="gzwp002"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzwpstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzwp003" def_scc="146">
+        <after>
+          <reference field="gzwp003_desc" ref_field="gzwp003" map_field="gzwp003" ref_sql="SELECT gzcb012 FROM gzcb_t WHERE gzcb001=&apos;146&apos; AND gzcb002=? "/>
+        </after>
+      </column>
+      <column id="gzwp003_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzwpownid">
+        <after>
+          <reference field="gzwpownid_desc" ref_field="gzwp_t.gzwpownid" map_field="gzwpownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzwpownid_desc"/>
+      <column id="gzwpowndp">
+        <after>
+          <reference field="gzwpowndp_desc" ref_field="gzwp_t.gzwpowndp" map_field="gzwpowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzwpowndp_desc"/>
+      <column id="gzwpcrtid">
+        <after>
+          <reference field="gzwpcrtid_desc" ref_field="gzwp_t.gzwpcrtid" map_field="gzwpcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzwpcrtid_desc"/>
+      <column id="gzwpcrtdp">
+        <after>
+          <reference field="gzwpcrtdp_desc" ref_field="gzwp_t.gzwpcrtdp" map_field="gzwpcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzwpcrtdp_desc"/>
+      <column id="gzwpcrtdt"/>
+      <column id="gzwpmodid">
+        <after>
+          <reference field="gzwpmodid_desc" ref_field="gzwp_t.gzwpmodid" map_field="gzwpmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzwpmodid_desc"/>
+      <column id="gzwpmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzwp_t" pk="gzwp001,gzwp002,gzwp004">
+      <sql id="forupd_sql" type="sql" query="SELECT gzwp001,&apos;&apos;,gzwp004,gzwp002 FROM gzwp_t WHERE gzwp001=? AND gzwp002=? AND gzwp004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzwp001,&apos;&apos;,gzwp004,gzwp002 FROM gzwp_t" order="gzwp001,gzwp002,gzwp004"/>
+    </head>
+    <body id="gzwp_t" page="1,2" linked="" pk="gzwp003" fk="gzwp001,gzwp002,gzwp004">
+      <sql id="forupd_sql_detail" query="SELECT gzwpstus,gzwp003,&apos;&apos;,&apos;&apos;,gzwpownid,&apos;&apos;,gzwpowndp,&apos;&apos;,gzwpcrtid,&apos;&apos;,gzwpcrtdp,&apos;&apos;,gzwpcrtdt,gzwpmodid,&apos;&apos;,gzwpmoddt FROM gzwp_t WHERE gzwp001=? AND gzwp002=? AND gzwp004=? AND gzwp003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzwpstus,gzwp003,&apos;&apos;,&apos;&apos;,gzwpownid,&apos;&apos;,gzwpowndp,&apos;&apos;,gzwpcrtid,&apos;&apos;,gzwpcrtdp,&apos;&apos;,gzwpcrtdt,gzwpmodid,&apos;&apos;,gzwpmoddt FROM gzwp_t WHERE gzwp001=? AND gzwp002=? AND gzwp004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

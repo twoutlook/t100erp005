@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axrt400_04" std_prog="axrt400_04" erpver="1.0" ver="3" module="AXR" type="S" booking="Y" designer_ver="1.0" class="I" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="Y" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xrcb_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[一:接收參數
+      帳套別
+      帳務中心
+      核銷客戶
+      收付款客戶　:空白者,預設=核銷客戶
+      來源組織　:可空白,表不限制
+      來源類型　:可空白,表不限制
+      表單性質:０不限制　＋表立帳方單　－表立帳待抵單
+
+二:資料來源
+      多帳期明細(xrcc_t)
+      應收憑單單身(xrcb_t)
+ 　　   link條件：　帳套　AND 帳款單號xrccdocno=xrcbdocno AND　單身項次xrccseq=xrcbseq
+      應收帳款單單頭(xrca_t)
+        link條件：　帳套　AND 單號xrccdocno=xrcadocno　AND　帳款客戶.xrca004=核銷客戶
+   　    AND　已確認單　AND　單據日期<= 沖銷單日期.xrdadocdt
+
+      SCC系統應用檔案(gzcb_t) ='8302'
+       WHERE xrca001=SCC-gzcb002 and SCC-gzcb003='1' AND SCC-gzcb001='8302' 
+         GROUP 單身交易單號+多帳期期別  : xrcb002,xrcc001
+      
+三:字段屬性
+      表單性質:依單別取對應"SCC_8302應收立帳類帳款單性質"設定之gzcb004
+           單別管理參數未定案前不作業.
+      開窗挑選,回傳勾選後之KEY值資料.
+      選取時,加總金額勾選之金額,合計數下方表達.
+      傳回符合勾選之資料.
+      子作業　04、05　合併成一支子作業來寫,　差異只在於 grou方式不同(xrccseq).
+四:寫入　沖帳明細檔(xrce_t)
+      因為己依期別(xrcc001)GROUP資料,寫回沖帳檔時,須拆解回"項次(xrccseq)"明細.
+　    1.依所選資料,依"帳款單號(xrccdocno)+交易單據(xrcb002)+期別(xrcc001)" 取得對應的明細資料.
+         SELECT xrcc.., xrcbseq,未沖金額(xrcc108-xrcc109),xrcb, xrca
+           FROM xrcc_t , xrca_t, xrcb_t
+          WHERE xrccdocno=立帳單號 AND xrcc001=期別 AND xrcb002=交易單據 #符合挑選之條件
+            AND xrccdocno=xrcadocno AND xrccdocno=xrcbdocno  #關聯性串接
+            ORDER BY xrcddocno,xrcd001,xrcdseq #排列並依先進先出沖銷
+
+　    2.取得之資料,寫入沖銷檔,　但必須檢核(沖銷總金額 <= 該交易單據＋期別之可沖銷金額)]]>
+  </all>
+  <field cite_std="N" name="check" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[選取:checkbox, 選取時,未沖金額寫入合計數]]>
+  </field>
+  <field cite_std="N" name="lbl_amt1" ver="2" src="s" column="xrcc108" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_amt2" ver="2" src="s" column="xrcc118" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_amt3" ver="2" src="s" column="xrcc128" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_amt4" ver="2" src="s" column="xrcc138" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_n1" ver="2" src="s" column="xrce109" table="xrce_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_tot1" ver="2" src="s" column="xrcc108" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_tot2" ver="2" src="s" column="xrcc118" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca001" ver="1" src="s" column="xrca001" table="xrca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="8302" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[帳款單性質:下拉選項:scc = 8302 ]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca004" ver="1" src="s" column="xrca004" table="xrca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcc_t.xrcc001" ver="1" src="s" column="xrcc001" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcc_t.xrcc004" ver="1" src="s" column="xrcc004" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcc_t.xrcc009" ver="2" src="s" column="xrcc009" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcc_t.xrcc100" ver="1" src="s" column="xrcc100" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcc_t.xrcc108" ver="1" src="s" column="xrcc108" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcc_t.xrcc118" ver="1" src="s" column="xrcc118" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcc_t.xrcc128" ver="1" src="s" column="xrcc128" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[其他本位幣:
+   視該帳有無啟用其他本位幣,有啟用才顯示。
+   欄位抬頭依啟用之幣別顯示,取glaa???/glaa???；Ｅx. 名稱顯示：(USD)未沖金額、(CNY)未沖金額]]>
+  </field>
+  <field cite_std="N" name="xrcc_t.xrcc138" ver="1" src="s" column="xrcc138" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[其他本位幣:
+   視該帳有無啟用其他本位幣,有啟用才顯示。
+   欄位抬頭依啟用之幣別顯示,取glaa???/glaa???；Ｅx. 名稱顯示：(USD)未沖金額、(CNY)未沖金額]]>
+  </field>
+  <field cite_std="N" name="xrcc_t.xrccdocno" ver="1" src="s" column="xrccdocno" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[核銷客戶:
+   可開窗:
+ 　查詢核銷客戶所指定的"夥伴關係檔案()"
+　            select pmac003,pmac002，客商名稱，pmac004 from pmac_t  
+               where pmac001 = 核銷客戶 
+  　　               and status='Y']]>
+  </field>
+  <field cite_std="N" name="xrcc_t.xrccseq" ver="1" src="s" column="xrccseq" table="xrcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="check" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="lbl_amt1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="lbl_amt2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="lbl_amt3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="lbl_amt4" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="lbl_n1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="lbl_tot1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="lbl_tot2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcc_t.xrcc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcc_t.xrcc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="xrcc_t.xrcc009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcc_t.xrcc100" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcc_t.xrcc108" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcc_t.xrcc118" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcc_t.xrcc128" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcc_t.xrcc138" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcc_t.xrccdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcc_t.xrccseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="pg_first" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="pg_last" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="pg_next" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="pg_prev" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_xrcc009" text="發票號碼" lstr=""/>
+    <sfield name="lbl_xrcc001" text="期別" lstr=""/>
+    <sfield name="lbl_xrcc004" text="應到期日" lstr=""/>
+    <sfield name="lbl_xrcc100" text="交易幣別" lstr=""/>
+    <sfield name="lbl_axrt400_04_xrcc108" text="原幣未沖金額" lstr=""/>
+    <sfield name="lbl_axrt400_04_xrcc118" text="本幣未沖金額" lstr=""/>
+    <sfield name="lbl_axrt400_04_xrcc128" text="本位幣二未沖金額" lstr=""/>
+    <sfield name="lbl_axrt400_04_xrcc138" text="本位幣三未沖金額" lstr=""/>
+    <sfield name="lbl_xrca001" text="帳款單性質" lstr=""/>
+    <sfield name="lbl_xrccdocno" text="立帳帳款單號" lstr=""/>
+    <sfield name="lbl_xrccseq" text="帳款項次" lstr=""/>
+    <sfield name="lbl_xrca004" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_n1" text="預沖未確認額" lstr=""/>
+    <sfield name="lbl_group1" text="帳款未沖總金額" lstr=""/>
+    <sfield name="lbl_tot_1" text="原幣金額" lstr=""/>
+    <sfield name="lbl_tot_2" text="本幣金額" lstr=""/>
+    <sfield name="lbl_group2" text="選取沖銷金額" lstr=""/>
+    <sfield name="lbl_amt_1" text="原幣金額" lstr=""/>
+    <sfield name="lbl_amt_2" text="本幣金額" lstr=""/>
+    <sfield name="lbl_group3" text="其他本位幣選取金額" lstr=""/>
+    <sfield name="lbl_amt_3" text="本位幣二金額" lstr=""/>
+    <sfield name="lbl_amt_4" text="本位幣三金額" lstr=""/>
+    <sact name="pg_first" text="" lstr=""/>
+    <sact name="pg_last" text="" lstr=""/>
+    <sact name="pg_next" text="" lstr=""/>
+    <sact name="pg_prev" text="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

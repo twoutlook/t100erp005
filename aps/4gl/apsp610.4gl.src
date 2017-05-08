@@ -1,0 +1,1261 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="apsp610.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2016-05-10 11:11:18), PR版次:0008(2017-02-10 14:27:14)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000048
+#+ Filename...: apsp610
+#+ Description: APS產生採購單作業
+#+ Creator....: 05384(2016-01-22 11:12:54)
+#+ Modifier...: 05384 -SD/PR- 07024
+ 
+{</section>}
+ 
+{<section id="apsp610.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160601-00032#3  2016/06/13  By ming   把來源訂單(pspc018)放到庫存管理特徵pmdn053(選擇不匯總的情況)
+#160608-00013#3  2016/06/21  By ming   執行process時，先檢查有無新版本，有的話，跳出錯誤訊息「該APS版本：%1已有新一版本資料，請重新查詢後再進行處理」
+#160727-00019#15 2016/08/03 By 08742   系统中定义的临时表名称超过15码在执行时会出错,所以需要将系统中定义的临时表长度超过15码的全部改掉	 	
+#                                      Mod   p610_01_lock_b_t -->p610_tmp01
+#                                      Mod   p610_03_pmdn_rel_t -->p610_tmp02
+#                                      Mod   p610_03_pmdp_rel_t -->p610_tmp03
+#161109-00085#15 2016/11/15  By 08993  整批調整系統星號寫法
+#161109-00085#61 2016/11/29  By 08171  整批調整系統星號寫法
+#170210-00022#1  2017/02/10  By 07024  apmr500_g01多加一個''
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT util
+
+IMPORT FGL aps_apsp610_01 
+IMPORT FGL aps_apsp610_02
+IMPORT FGL aps_apsp610_03
+IMPORT FGL aps_apsp610_04 
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+#為了作業方便 共用其他程式的global  
+GLOBALS "../../aps/4gl/apsp610_01.inc" 
+GLOBALS "../../aps/4gl/apsp610_02.inc" 
+GLOBALS "../../aps/4gl/apsp610_03.inc" 
+GLOBALS "../../aps/4gl/apsp610_04.inc"
+
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE li_step              LIKE type_t.num5
+DEFINE gwin_curr            ui.Window
+DEFINE gfrm_curr            ui.Form
+DEFINE g_forupd_sql         STRING
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_wc                 STRING 
+
+DEFINE g_step1_mode         LIKE type_t.chr10     #記錄第一步的模式為何  
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp610.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aps","")
+ 
+   #add-point:作業初始化
+ 
+   #end add-point
+ 
+   #add-point:SQL_define
+
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE apsp610_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apsp610 WITH FORM cl_ap_formpath("aps",g_code)
+   
+      #程式初始化
+      CALL apsp610_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+      
+      #建立各程式的temp table 
+      CALL apsp610_01_create_temp_table() 
+      CALL apsp610_02_create_temp_table() 
+      CALL apsp610_03_create_temp_table() 
+      CALL apsp610_04_create_temp_table()
+ 
+      LET li_step = 1
+      
+      WHILE TRUE
+         CASE li_step
+            WHEN 1
+               CALL apsp610_ui_dialog_step1() RETURNING li_step
+            WHEN 2
+               CALL apsp610_ui_dialog_step2() RETURNING li_step
+            WHEN 3
+               CALL apsp610_ui_dialog_step3() RETURNING li_step 
+            WHEN 4 
+               CALL apsp610_ui_dialog_step4() RETURNING li_step 
+            WHEN 0
+               EXIT WHILE
+            OTHERWISE
+               EXIT WHILE
+         END CASE
+      END WHILE
+      
+      #程式運作完了要記得把temp table刪掉 
+      CALL apsp610_01_drop_temp_table()
+      CALL apsp610_02_drop_temp_table() 
+      CALL apsp610_03_drop_temp_table()
+      CALL apsp610_04_drop_temp_table()
+     
+      #畫面關閉
+      CLOSE WINDOW w_apsp610
+   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apsp610.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION apsp610_init()
+   #add-point:init段define
+
+   #end add-point
+
+   LET g_error_show = 1
+   LET g_errshow = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   
+   #畫面嵌入 
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aps", "apsp610_01"), "main_grid01", "Group", "master")
+   CALL apsp610_01_init()    #apsp610_01的畫面預設   
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aps", "apsp610_02"), "main_grid02", "Group", "master")
+   CALL apsp610_02_init()    #apsp610_02的畫面預設   
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aps", "apsp610_03"), "main_grid03", "Group", "master")
+   CALL apsp610_03_init()    #apsp610_03的畫面預設   
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aps", "apsp610_04"), "main_grid04", "Group", "master") 
+   CALL apsp610_04_init()
+
+   #先將嵌入的畫面都隱藏  
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL apsp610_set_vbox_visible('0')
+
+   #add-point:畫面資料初始化
+   LET  g_step1_mode = 'i'    #記錄第一步的模式為何  
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION apsp610_process(ls_js)
+   DEFINE ls_js       STRING
+   #DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+
+   #end add-point
+
+   #CALL util.JSON.parse(ls_js,lc_param)
+
+   #add-point:process段前處理
+
+   #end add-point
+
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+
+      #end add-point
+   END IF
+
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apsp610_process_cs CURSOR FROM ls_sql
+#  FOREACH apsp610_process_cs INTO
+   #add-point:process段process
+
+   #end add-point
+#  END FOREACH
+
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+
+      #end add-point
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION apsp610_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   #DEFINE la_param    type_parameter
+
+   #CALL util.JSON.parse(ls_js,la_param)
+
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+
+   #end add-point
+
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+
+PRIVATE FUNCTION apsp610_ui_dialog_step1()
+   DEFINE li_exit      LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx       LIKE type_t.num5
+   DEFINE ls_js        STRING
+   DEFINE ls_wc        STRING
+   
+   DEFINE l_msg        STRING
+   DEFINE l_cnt        LIKE type_t.num5
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_flag       LIKE type_t.num5
+                     
+   #設定左方的流程圖  
+   CALL apsp610_set_step_img('1') 
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL apsp610_set_vbox_visible('1')
+   
+   #設定下方的button的 顯示 與 隱藏  
+   CALL apsp610_set_act_visible('1') 
+
+   #設定左方流程說明 
+   CALL apsp610_set_memo('1') 
+   
+   #開啟transaction 
+   CALL s_transaction_begin()
+
+   #由g_action_choice所存的內容來決定之後會做的動作  
+   LET g_action_choice = NULL
+   
+   #設定右方的button開關 
+   CALL apsp610_01_set_act_visible(g_step1_mode)
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM) 
+         SUBDIALOG aps_apsp610_01.apsp610_01_input01 
+         SUBDIALOG aps_apsp610_01.apsp610_01_construct 
+         #SUBDIALOG aps_apsp610_01.apsp610_01_display      #單身先display 點擊進入後才可勾選 
+         #單身修改成直接可勾選 
+         SUBDIALOG aps_apsp610_01.apsp610_01_body_input
+ 
+         BEFORE DIALOG
+            DISPLAY g_imae012 TO imae012
+            DISPLAY g_pspc050 TO pspc050
+            DISPLAY g_pspc010 TO pspc010
+            DISPLAY g_pspc045 TO pspc045
+            DISPLAY g_imaa009 TO imaa009
+            DISPLAY g_imaf141 TO imaf141        
+         
+         ON ACTION Search              #搜尋  
+            IF cl_null(g_apsp610_01_input.pmdldocno) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00532'   #單別不可為空
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               
+               NEXT FIELD pmdldocno
+            END IF 
+            
+            #檢核輸入的單據別是否可以被key人員對應的控制組使用,'4' 為採購控制組類型
+            CALL s_control_chk_doc('1',g_apsp610_01_input.pmdldocno,'4',g_user,g_dept,'','')
+                 RETURNING l_success,l_flag
+            IF l_success THEN
+               IF NOT l_flag THEN
+                  NEXT FIELD pmdldocno
+               END IF
+            ELSE
+               NEXT FIELD pmdldocno
+            END IF
+            IF NOT s_aooi200_chk_slip(g_site,'',g_apsp610_01_input.pmdldocno,'apmt500') THEN
+               NEXT FIELD pmdldocno
+            END IF
+            
+            IF cl_null(g_apsp610_01_wc) THEN
+               LET g_apsp610_01_wc = ' 1=1'
+            END IF
+            IF g_apsp610_01_input.cb01 = 'Y' AND
+               cl_null(g_apsp610_01_input.imaf142) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00533'   #採購員不可為空
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+                
+               NEXT FIELD imaf142
+            END IF 
+            
+            #解決重覆搜尋請購單資料後，寫入底稿的功能失效問題 
+            LET g_step1_mode = 'i' 
+            
+            CALL apsp610_01_b_fill(g_apsp610_01_wc)
+            
+         ON ACTION sel_all             #全選 
+            CALL apsp610_01_sel_all('Y')
+
+         ON ACTION nosel_all           #全不選 
+            CALL apsp610_01_sel_all('N')
+
+         ON ACTION change_sel          #反向選取 
+            CALL apsp610_01_change_sel()
+
+         ON ACTION see_pspc_tmp
+            LET g_step1_mode = 'd'
+            #設定右方button開關
+            CALL apsp610_01_set_act_visible(g_step1_mode)
+
+            CALL apsp610_01_b_fill_tmp(' 1=1') 
+            
+         ON ACTION del_pspc_tmp
+            IF cl_ask_confirm_parm("adz-00165","") THEN   #請問是否要刪除底稿資料？ 
+               CALL apsp610_01_del_tmp()
+               CALL apsp610_01_b_fill_tmp(' 1=1')
+            END IF
+         ON ACTION sel_mode
+            LET g_step1_mode = 'i'
+            #設定右方button開關
+            CALL apsp610_01_set_act_visible(g_step1_mode)
+
+            CALL apsp610_01_b_fill(g_apsp610_01_wc)
+
+         #單身修改成可直接勾選，就不需要點擊進入了 
+         #ON ACTION apsp610_01_modify_detail
+         #   CALL apsp610_01_data_check() 
+            
+         ON ACTION save                #寫入底稿  
+            IF g_step1_mode = 'i' THEN       #需要是請購資料模式才可使用此功能  
+               CALL apsp610_01_save()
+
+               CALL apsp610_01_b_fill(g_apsp610_01_wc)
+            END IF
+
+         ON ACTION next_step           #進行分配   
+            #計算底稿的temp table筆數是否有大於0 
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p610_01_pspc_t
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'aps-00179'   #APS底稿尚未寫入資料！  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+   
+               CONTINUE DIALOG
+            END IF
+
+            LET g_imae012 = GET_FLDBUF(imae012)
+            LET g_pspc050 = GET_FLDBUF(pspc050)
+            LET g_pspc010   = GET_FLDBUF(pspc010)
+            LET g_pspc045   = GET_FLDBUF(pspc045)
+            LET g_imaa009   = GET_FLDBUF(imaa009)
+            LET g_imaf141   = GET_FLDBUF(imaf141)
+
+            LET g_action_choice = "next_step"
+            EXIT DIALOG 
+            
+         ON ACTION step01
+            #此action是為了讓button的圖片有顏色 
+            EXIT DIALOG
+
+         ON ACTION step02
+            #跟進行分配做一樣的檢查    
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p610_01_pspc_t
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'aps-00179'   #APS底稿尚未寫入資料！  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+     
+               CONTINUE DIALOG
+            END IF
+
+            LET g_action_choice = "next_step"
+            EXIT DIALOG
+            
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+   
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+   
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG
+         
+      END DIALOG
+   
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+   #
+   #   LET l_pmdsdocno_t = l_pmds.pmdsdocno
+   #   LET l_pmds002_t   = l_pmds.pmds002
+   #   
+   END WHILE 
+   
+   CALL s_transaction_end('Y','0')
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+   
+END FUNCTION
+
+PRIVATE FUNCTION apsp610_ui_dialog_step2()
+   DEFINE l_msg       STRING
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_success   LIKE type_t.chr1 
+   DEFINE l_sql       STRING
+   DEFINE l_where     STRING
+   DEFINE l_pmdbdocno LIKE pmdb_t.pmdbdocno
+   DEFINE l_pmdbseq   LIKE pmdb_t.pmdbseq
+
+   #設定左方的流程圖  
+   CALL apsp610_set_step_img('2') 
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL apsp610_set_vbox_visible('2')
+   
+   #設定下方的button的 顯示 與 隱藏  
+   CALL apsp610_set_act_visible('2') 
+   
+   #設定左方流程說明 
+   CALL apsp610_set_memo('2') 
+   
+   CALL s_transaction_begin()
+
+   #不再lock單頭，開放讓不同user使用相同的請購單 
+   #LET l_sql = "SELECT pmdadocno ",
+   #            "  FROM pmda_t ",
+   #            " WHERE pmdadocno IN (SELECT pmdadocno ",
+   #            "                       FROM p490_01_lock_h_t) ",
+   #            "   FOR UPDATE "
+   #PREPARE apsp610_02_lock_head_prep FROM l_sql
+   #DECLARE apsp610_02_lock_head_curs CURSOR FOR apsp610_02_lock_head_prep
+
+#   LET l_sql = "SELECT pmdbdocno,pmdbseq ",
+#               "  FROM p490_01_lock_b_t ",
+#               " ORDER BY pmdbdocno,pmdbseq "
+#   PREPARE apsp610_02_lock_prep FROM l_sql
+#   DECLARE apsp610_02_lock_curs CURSOR FOR apsp610_02_lock_prep
+#
+#   LET l_sql = "SELECT pmdbdocno,pmdbseq ",
+#               "  FROM pmdb_t ",
+#               " WHERE "
+#
+#   LET l_where = ''
+#   FOREACH apsp610_02_lock_curs INTO l_pmdbdocno,l_pmdbseq
+#      IF cl_null(l_where) THEN
+#         LET l_where = "(pmdbdocno = '",l_pmdbdocno,"' AND pmdbseq = '",l_pmdbseq,"')"
+#      ELSE
+#         LET l_where = l_where," OR ","(pmdbdocno = '",l_pmdbdocno,"' AND pmdbseq = '",l_pmdbseq,"')"
+#      END IF
+#   END FOREACH
+#   LET l_sql = l_sql,l_where," FOR UPDATE " 
+#   PREPARE apsp610_02_lock_body_prep FROM l_sql
+#   DECLARE apsp610_02_lock_body_curs CURSOR FOR apsp610_02_lock_body_prep
+
+   #不再lock單頭資料，讓不同user使用相同的請購單 
+   #OPEN apsp610_02_lock_head_curs
+#   OPEN apsp610_02_lock_body_curs
+
+   LET g_action_choice = NULL
+
+   #進入第二步的時候 就要產生資料了 
+   CALL apsp610_02_b_fill_01('1=1')
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG aps_apsp610_02.apsp610_02_input01
+         SUBDIALOG aps_apsp610_02.apsp610_02_display01
+         SUBDIALOG aps_apsp610_02.apsp610_02_display02
+         SUBDIALOG aps_apsp610_02.apsp610_02_display03
+         SUBDIALOG aps_apsp610_02.apsp610_02_display04
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION show_data        #產生分配資料   
+            CALL apsp610_02_b_fill_01('1=1')
+            EXIT DIALOG 
+            
+         ON ACTION del_data         #刪除第二步中所選擇的資料 
+            CALL apsp610_02_del_data()
+
+         ON ACTION apsp610_02_modify_detail
+            CALL apsp610_02_b()
+
+         ON ACTION back_step        #選擇請購資料 
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION all_delete       #全部刪除 
+#            DELETE FROM p490_02_pmdn_t;    #刪除採購底稿   
+            DELETE FROM p610_01_pspc_t;    #刪除請購底稿  
+            #將第二步的畫面清空 回到預設值 
+            CALL apsp610_02_default()
+            EXIT DIALOG
+
+         ON ACTION next_step        #採購調整 
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p610_01_pspc_t;
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'aps-00180'   #APS底稿資料已被清除！  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+    
+               CONTINUE DIALOG
+            END IF
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p610_02_pmdn_t
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00536'   #尚未產生採購底稿資料  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+     
+               CONTINUE DIALOG
+            END IF
+
+            CALL apsp610_02_basic_chk() RETURNING l_success
+            IF l_success = 'N' THEN
+               CONTINUE DIALOG
+            END IF
+
+            LET g_action_choice = "next_step"
+            CALL apsp610_02_ins_pmdl_t()
+            EXIT DIALOG
+
+         ON ACTION step01
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION step02
+            EXIT DIALOG 
+            
+         ON ACTION step03
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p610_01_pspc_t;
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'aps-00180'   #APS底稿資料已被清除！  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+    
+               CONTINUE DIALOG
+            END IF
+
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p610_02_pmdn_t
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00536'   #尚未產生採購底稿資料  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+     
+               CONTINUE DIALOG
+            END IF
+
+            LET g_action_choice = "next_step"
+            CALL apsp610_02_ins_pmdl_t()
+
+            EXIT DIALOG 
+            
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG
+         
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = TRUE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+
+   CALL s_transaction_end('Y','0')
+
+   CASE g_action_choice
+      WHEN "back_step"
+         RETURN 1
+      WHEN "next_step"
+         RETURN 3
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION apsp610_ui_dialog_step3()
+   DEFINE l_msg       STRING
+   #mod--161109-00085#15 By 08993--(s)
+#   DEFINE l_pmdl      RECORD LIKE pmdl_t.*   #mod--161109-00085#15 By 08993--(s) 
+   DEFINE l_pmdl      RECORD  #採購單頭檔
+       pmdlent LIKE pmdl_t.pmdlent, #企業編號
+       pmdlsite LIKE pmdl_t.pmdlsite, #營運據點
+       pmdlunit LIKE pmdl_t.pmdlunit, #應用組織
+       pmdldocno LIKE pmdl_t.pmdldocno, #採購單號
+       pmdldocdt LIKE pmdl_t.pmdldocdt, #採購日期
+       pmdl001 LIKE pmdl_t.pmdl001, #版次
+       pmdl002 LIKE pmdl_t.pmdl002, #採購人員
+       pmdl003 LIKE pmdl_t.pmdl003, #採購部門
+       pmdl004 LIKE pmdl_t.pmdl004, #供應商編號
+       pmdl005 LIKE pmdl_t.pmdl005, #採購性質
+       pmdl006 LIKE pmdl_t.pmdl006, #多角性質
+       pmdl007 LIKE pmdl_t.pmdl007, #資料來源類型
+       pmdl008 LIKE pmdl_t.pmdl008, #來源單號
+       pmdl009 LIKE pmdl_t.pmdl009, #付款條件
+       pmdl010 LIKE pmdl_t.pmdl010, #交易條件
+       pmdl011 LIKE pmdl_t.pmdl011, #稅別
+       pmdl012 LIKE pmdl_t.pmdl012, #稅率
+       pmdl013 LIKE pmdl_t.pmdl013, #單價含稅否
+       pmdl015 LIKE pmdl_t.pmdl015, #幣別
+       pmdl016 LIKE pmdl_t.pmdl016, #匯率
+       pmdl017 LIKE pmdl_t.pmdl017, #取價方式
+       pmdl018 LIKE pmdl_t.pmdl018, #付款優惠條件
+       pmdl019 LIKE pmdl_t.pmdl019, #納入APS計算
+       pmdl020 LIKE pmdl_t.pmdl020, #運送方式
+       pmdl021 LIKE pmdl_t.pmdl021, #付款供應商
+       pmdl022 LIKE pmdl_t.pmdl022, #送貨供應商
+       pmdl023 LIKE pmdl_t.pmdl023, #採購分類一
+       pmdl024 LIKE pmdl_t.pmdl024, #採購分類二
+       pmdl025 LIKE pmdl_t.pmdl025, #送貨地址
+       pmdl026 LIKE pmdl_t.pmdl026, #帳款地址
+       pmdl027 LIKE pmdl_t.pmdl027, #供應商連絡人
+       pmdl028 LIKE pmdl_t.pmdl028, #一次性交易對象識別碼
+       pmdl029 LIKE pmdl_t.pmdl029, #收貨部門
+       pmdl030 LIKE pmdl_t.pmdl030, #多角貿易已拋轉
+       pmdl031 LIKE pmdl_t.pmdl031, #多角序號
+       pmdl032 LIKE pmdl_t.pmdl032, #最終客戶
+       pmdl033 LIKE pmdl_t.pmdl033, #發票類型
+       pmdl040 LIKE pmdl_t.pmdl040, #採購總未稅金額
+       pmdl041 LIKE pmdl_t.pmdl041, #採購總含稅金額
+       pmdl042 LIKE pmdl_t.pmdl042, #採購總稅額
+       pmdl043 LIKE pmdl_t.pmdl043, #留置原因
+       pmdl044 LIKE pmdl_t.pmdl044, #備註
+       pmdl046 LIKE pmdl_t.pmdl046, #預付款發票開立方式
+       pmdl047 LIKE pmdl_t.pmdl047, #物流結案
+       pmdl048 LIKE pmdl_t.pmdl048, #帳流結案
+       pmdl049 LIKE pmdl_t.pmdl049, #金流結案
+       pmdl050 LIKE pmdl_t.pmdl050, #多角最終站否
+       pmdl051 LIKE pmdl_t.pmdl051, #多角流程編號
+       pmdl052 LIKE pmdl_t.pmdl052, #最終供應商
+       pmdl053 LIKE pmdl_t.pmdl053, #兩角目的據點
+       pmdl054 LIKE pmdl_t.pmdl054, #內外購
+       pmdl055 LIKE pmdl_t.pmdl055, #匯率計算基準
+       pmdl200 LIKE pmdl_t.pmdl200, #採購中心
+       pmdl201 LIKE pmdl_t.pmdl201, #聯絡電話
+       pmdl202 LIKE pmdl_t.pmdl202, #傳真號碼
+       pmdl203 LIKE pmdl_t.pmdl203, #採購方式
+       pmdl204 LIKE pmdl_t.pmdl204, #配送中心
+       pmdl900 LIKE pmdl_t.pmdl900, #保留欄位str
+       pmdl999 LIKE pmdl_t.pmdl999, #保留欄位end
+       pmdlownid LIKE pmdl_t.pmdlownid, #資料所有者
+       pmdlowndp LIKE pmdl_t.pmdlowndp, #資料所屬部門
+       pmdlcrtid LIKE pmdl_t.pmdlcrtid, #資料建立者
+       pmdlcrtdp LIKE pmdl_t.pmdlcrtdp, #資料建立部門
+       pmdlcrtdt LIKE pmdl_t.pmdlcrtdt, #資料創建日
+       pmdlmodid LIKE pmdl_t.pmdlmodid, #資料修改者
+       pmdlmoddt LIKE pmdl_t.pmdlmoddt, #最近修改日
+       pmdlcnfid LIKE pmdl_t.pmdlcnfid, #資料確認者
+       pmdlcnfdt LIKE pmdl_t.pmdlcnfdt, #資料確認日
+       pmdlpstid LIKE pmdl_t.pmdlpstid, #資料過帳者
+       pmdlpstdt LIKE pmdl_t.pmdlpstdt, #資料過帳日
+       pmdlstus LIKE pmdl_t.pmdlstus, #狀態碼
+       #161109-00085#61 --s add
+       pmdlud001 LIKE pmdl_t.pmdlud001, #自定義欄位(文字)001
+       pmdlud002 LIKE pmdl_t.pmdlud002, #自定義欄位(文字)002
+       pmdlud003 LIKE pmdl_t.pmdlud003, #自定義欄位(文字)003
+       pmdlud004 LIKE pmdl_t.pmdlud004, #自定義欄位(文字)004
+       pmdlud005 LIKE pmdl_t.pmdlud005, #自定義欄位(文字)005
+       pmdlud006 LIKE pmdl_t.pmdlud006, #自定義欄位(文字)006
+       pmdlud007 LIKE pmdl_t.pmdlud007, #自定義欄位(文字)007
+       pmdlud008 LIKE pmdl_t.pmdlud008, #自定義欄位(文字)008
+       pmdlud009 LIKE pmdl_t.pmdlud009, #自定義欄位(文字)009
+       pmdlud010 LIKE pmdl_t.pmdlud010, #自定義欄位(文字)010
+       pmdlud011 LIKE pmdl_t.pmdlud011, #自定義欄位(數字)011
+       pmdlud012 LIKE pmdl_t.pmdlud012, #自定義欄位(數字)012
+       pmdlud013 LIKE pmdl_t.pmdlud013, #自定義欄位(數字)013
+       pmdlud014 LIKE pmdl_t.pmdlud014, #自定義欄位(數字)014
+       pmdlud015 LIKE pmdl_t.pmdlud015, #自定義欄位(數字)015
+       pmdlud016 LIKE pmdl_t.pmdlud016, #自定義欄位(數字)016
+       pmdlud017 LIKE pmdl_t.pmdlud017, #自定義欄位(數字)017
+       pmdlud018 LIKE pmdl_t.pmdlud018, #自定義欄位(數字)018
+       pmdlud019 LIKE pmdl_t.pmdlud019, #自定義欄位(數字)019
+       pmdlud020 LIKE pmdl_t.pmdlud020, #自定義欄位(數字)020
+       pmdlud021 LIKE pmdl_t.pmdlud021, #自定義欄位(日期時間)021
+       pmdlud022 LIKE pmdl_t.pmdlud022, #自定義欄位(日期時間)022
+       pmdlud023 LIKE pmdl_t.pmdlud023, #自定義欄位(日期時間)023
+       pmdlud024 LIKE pmdl_t.pmdlud024, #自定義欄位(日期時間)024
+       pmdlud025 LIKE pmdl_t.pmdlud025, #自定義欄位(日期時間)025
+       pmdlud026 LIKE pmdl_t.pmdlud026, #自定義欄位(日期時間)026
+       pmdlud027 LIKE pmdl_t.pmdlud027, #自定義欄位(日期時間)027
+       pmdlud028 LIKE pmdl_t.pmdlud028, #自定義欄位(日期時間)028
+       pmdlud029 LIKE pmdl_t.pmdlud029, #自定義欄位(日期時間)029
+       pmdlud030 LIKE pmdl_t.pmdlud030, #自定義欄位(日期時間)030
+       #161109-00085#61 --e add
+       pmdl205 LIKE pmdl_t.pmdl205, #採購最終有效日
+       pmdl206 LIKE pmdl_t.pmdl206, #長效期訂單否
+       pmdl207 LIKE pmdl_t.pmdl207, #所屬品類
+       pmdl208 LIKE pmdl_t.pmdl208  #電子採購單號
+          END RECORD   
+   #mod--161109-00085#15 By 08993--(e)
+   DEFINE l_sql       STRING
+   DEFINE l_where     STRING
+   DEFINE l_pmdbdocno LIKE pmdb_t.pmdbdocno
+   DEFINE l_pmdbseq   LIKE pmdb_t.pmdbseq
+   #160608-00013#3 20160621 add by ming -----(S) 
+   DEFINE l_max_pspc002 LIKE pspc_t.pspc002 
+   #160608-00013#3 20160621 add by ming -----(E) 
+
+   #設定左方的流程圖  
+   CALL apsp610_set_step_img('3') 
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL apsp610_set_vbox_visible('3') 
+   
+   #設定下方的button的 顯示 與 隱藏  
+   CALL apsp610_set_act_visible('3')
+   
+   #設定左方流程說明 
+   CALL apsp610_set_memo('3') 
+   
+   CALL s_transaction_begin()
+
+   #不再lock請購單頭，讓不同user能使用相同的請購單 
+   #LET l_sql = "SELECT pmdadocno ",
+   #            "  FROM pmda_t ",
+   #            " WHERE pmdadocno IN (SELECT pmdadocno ",
+   #            "                       FROM p490_01_lock_h_t) ",
+   #            "   FOR UPDATE "
+   #PREPARE apsp610_03_lock_head_prep FROM l_sql
+   #DECLARE apsp610_03_lock_head_curs CURSOR FOR apsp610_03_lock_head_prep
+
+#   LET l_sql = "SELECT pmdbdocno,pmdbseq ",
+#               "  FROM p490_01_lock_b_t ",
+#               " ORDER BY pmdbdocno,pmdbseq "
+#   PREPARE apsp610_03_lock_prep FROM l_sql
+#   DECLARE apsp610_03_lock_curs CURSOR FOR apsp610_03_lock_prep
+#
+#   LET l_sql = "SELECT pmdbdocno,pmdbseq ",
+#               "  FROM pmdb_t ",
+#               " WHERE "
+#
+#   LET l_where = ''
+#   FOREACH apsp610_03_lock_curs INTO l_pmdbdocno,l_pmdbseq
+#      IF cl_null(l_where) THEN
+#         LET l_where = "(pmdbdocno = '",l_pmdbdocno,"' AND pmdbseq = '",l_pmdbseq,"')"
+#      ELSE
+#         LET l_where = l_where," OR ","(pmdbdocno = '",l_pmdbdocno,"' AND pmdbseq = '",l_pmdbseq,"')"
+#      END IF
+#   END FOREACH
+#   LET l_sql = l_sql,l_where," FOR UPDATE " 
+#   PREPARE apsp610_03_lock_body_prep FROM l_sql
+#   DECLARE apsp610_03_lock_body_curs CURSOR FOR apsp610_03_lock_body_prep
+#
+#   #不再lock請購單頭，讓不同user能使用相同的請購單 
+#   #OPEN apsp610_03_lock_head_curs
+#   OPEN apsp610_03_lock_body_curs
+
+   CALL apsp610_03_create_data() 
+   
+   CALL apsp610_03_b_fill01(' 1=1')
+
+   LET g_action_choice = NULL
+   
+
+   #依請購單拆分 
+   LET g_apsp610_03_input.p610_03_chk01 = 'N'
+   IF g_apsp610_02_input.scb02 = '3' THEN
+      #如果第二步的匯總方式設定為「3.不匯總」時，就是依請購單拆分  
+      LET g_apsp610_03_input.p610_03_chk01 = 'Y'
+   END IF
+   DISPLAY BY NAME g_apsp610_03_input.p610_03_chk01
+
+   CALL apsp610_03_set_entry()
+   CALL apsp610_03_set_no_entry()
+
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG aps_apsp610_03.apsp610_03_input01
+         SUBDIALOG aps_apsp610_03.apsp610_03_display01
+         SUBDIALOG aps_apsp610_03.apsp610_03_display02
+         SUBDIALOG aps_apsp610_03.apsp610_03_display03
+         SUBDIALOG aps_apsp610_03.apsp610_03_display04
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION back_step
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION next_step
+            #160608-00013#3 20160621 add by ming -----(S) 
+            LET l_max_pspc002 = '' 
+            SELECT MAX(pspc002) INTO l_max_pspc002
+              FROM pspc_t
+             WHERE pspcent  = g_enterprise
+               AND pspcsite = g_site
+               AND pspc001  = g_apsp610_01_input.psca001 
+            IF l_max_pspc002 <> g_p610_pspc002 THEN 
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 'aps-00189' 
+               LET g_errparam.popup  = TRUE 
+               LET g_errparam.replace[1] = g_apsp610_01_input.psca001 
+               CALL cl_err() 
+               
+               CONTINUE DIALOG 
+            END IF 
+            #160608-00013#3 20160621 add by ming -----(E) 
+            LET g_action_choice = "next_step" 
+            #為了避免transaction關掉時產生的錯誤，所以移到之後再處理 
+            #CALL apsp610_03_ins_pmdl(g_apsp610_01_input.pmdldocno)
+            EXIT DIALOG
+
+         ON ACTION step02
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION step03
+            EXIT DIALOG
+
+         ON ACTION step04
+            LET g_action_choice = "next_step"
+            #為了避免transaction關掉時產生的錯誤，所以移到之後再處理             
+            #CALL apsp610_03_ins_pmdl(g_apsp610_01_input.pmdldocno)
+            EXIT DIALOG 
+            
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG 
+         
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE 
+   
+   CALL s_transaction_end('Y','0')
+   
+   CASE g_action_choice
+      WHEN "back_step"
+         RETURN 2 
+      WHEN "next_step"
+         #在離開transaction 進入最後一步之前處理資料 
+         CALL apsp610_03_ins_pmdl(g_apsp610_01_input.pmdldocno)
+         RETURN 4
+      WHEN "menu"
+         RETURN 0
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION apsp610_ui_dialog_step4()
+   DEFINE l_msg     STRING 
+   DEFINE l_where   STRING
+
+   #設定左方的流程圖  
+   CALL apsp610_set_step_img('4') 
+
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL apsp610_set_vbox_visible('4') 
+   
+   #設定下方的button的 顯示 與 隱藏  
+   CALL apsp610_set_act_visible('4')
+
+   #設定左方流程說明 
+   CALL apsp610_set_memo('4')
+
+   LET g_action_choice = NULL
+
+   CALL apsp610_04_b_fill_01(' 1=1')
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG aps_apsp610_04.apsp610_04_display01
+         SUBDIALOG aps_apsp610_04.apsp610_04_display02
+         SUBDIALOG aps_apsp610_04.apsp610_04_display03
+         SUBDIALOG aps_apsp610_04.apsp610_04_display04
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION continue 
+            LET g_action_choice = "continue"
+            EXIT DIALOG
+
+         ON ACTION step01                    #因為是第四步了 所以可以回到第一步 
+            LET g_action_choice = "continue"
+            EXIT DIALOG
+
+         ON ACTION step04 
+            EXIT DIALOG
+
+         ON ACTION open_apmt500     #採購單維護   
+            CALL apsp610_04_open_apmt500()
+            EXIT DIALOG
+
+         ON ACTION out_apmt500      #採購單列印 
+            CALL apsp610_04_output_apmt500() RETURNING l_where
+            LET g_rep_wc = "pmdlent = "|| g_enterprise ||" AND pmdldocno IN ("||l_where||")"
+            #170210-00022#1-s-mod
+            #CALL apmr500_g01(g_rep_wc,'N')
+            CALL apmr500_g01(g_rep_wc,'N','')
+            #170210-00022#1-e-mod
+            EXIT DIALOG
+
+         ON ACTION over             #結束  
+            LET g_action_choice = "over"
+            EXIT DIALOG 
+            
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG  
+         
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+
+   CASE g_action_choice
+     #WHEN "back_step"
+     #   RETURN 2
+     #WHEN "next_step"
+     #   RETURN 4
+      WHEN "continue" 
+         #將資料都設回初始值 
+         CLEAR FORM
+         LET g_step1_mode = 'i'
+         INITIALIZE g_apsp610_01_input.* TO NULL
+         LET g_apsp610_01_wc = ''
+         CALL apsp610_01_init()
+
+         INITIALIZE g_apsp610_02_input.* TO NULL
+         CALL apsp610_02_init()
+
+         CALL apsp610_03_init()
+
+         CALL apsp610_04_init()
+      
+         DELETE FROM p610_01_pspc_t;
+         DELETE FROM p610_tmp01;             #160727-00019#15 Mod   p610_01_lock_b_t -->p610_tmp01
+         DELETE FROM p610_02_pmdn_t;
+         DELETE FROM p610_02_pspc_t;
+         DELETE FROM p610_02_tmp01_t;
+         DELETE FROM p610_03_pmdl_t;
+         DELETE FROM p610_03_pmdn_t;
+         DELETE FROM p610_03_pmdp_t;
+         DELETE FROM p610_03_pmdo_t;
+         DELETE FROM p610_03_pmdq_t;
+         DELETE FROM p610_tmp02;             #160727-00019#15 Mod   p610_03_pmdn_rel_t -->p610_tmp02
+         DELETE FROM p610_tmp03;             #160727-00019#15 Mod   p610_03_pmdp_rel_t -->p610_tmp03
+         DELETE FROM p610_04_pmdl_t;
+         DELETE FROM p610_04_pmdn_t;
+         DELETE FROM p610_04_pmdp_t;
+         DELETE FROM p610_04_pmdo_t; 
+#         DELETE FROM p490_02_pmdn_t;
+#         DELETE FROM p490_02_pmdb_t;
+#         DELETE FROM p490_03_pmdl_t;
+#         DELETE FROM p490_03_pmdn_t;
+#         DELETE FROM p490_03_pmdp_t;
+#         DELETE FROM p490_03_pmdo_t;
+#         DELETE FROM p490_03_pmdq_t;
+#         DELETE FROM p490_03_pmdn_rel_t;
+#         DELETE FROM p490_03_pmdp_rel_t;
+#         DELETE FROM p490_04_pmdl_t;
+#         DELETE FROM p490_04_pmdn_t;
+#         DELETE FROM p490_04_pmdp_t;
+#         DELETE FROM p490_04_pmdo_t;
+         RETURN 1 
+      WHEN "menu"
+         RETURN 0
+      OTHERWISE
+         RETURN 0
+   END CASE
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定左方流程圖片
+# Memo...........:
+# Usage..........: CALL apsp610_set_step_img(p_step)
+# Input parameter: p_step：第幾步驟的圖
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp610_set_step_img(p_step)
+   DEFINE p_step     LIKE type_t.num5 
+      
+   #將圖片設定為預設值 
+   CALL gfrm_curr.setElementImage("step01","32/step01.png") 
+   CALL gfrm_curr.setElementImage("step02","32/step02.png") 
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")  
+   
+   #文字顏色設定 
+   CALL gfrm_curr.setElementStyle("step01","menuitem")
+   CALL gfrm_curr.setElementStyle("step02","menuitem")
+   CALL gfrm_curr.setElementStyle("step03","menuitem")
+   CALL gfrm_curr.setElementStyle("step04","menuitem")
+   
+   #設定圖片為亮燈的
+   CASE p_step 
+      WHEN 1 
+         CALL gfrm_curr.setElementImage("step01","32/step01on.png")   #有on的是顏色不同的圖 
+         CALL gfrm_curr.setElementStyle("step01","menuitemfocus")
+      WHEN 2 
+         CALL gfrm_curr.setElementImage("step02","32/step02on.png")   #有on的是顏色不同的圖 
+         CALL gfrm_curr.setElementStyle("step02","menuitemfocus")
+      WHEN 3 
+         CALL gfrm_curr.setElementImage("step03","32/step03on.png")   #有on的是顏色不同的圖 
+         CALL gfrm_curr.setElementStyle("step03","menuitemfocus")
+      WHEN 4 
+         CALL gfrm_curr.setElementImage("step04","32/step04on.png")   #有on的是顏色不同的圖 
+         CALL gfrm_curr.setElementStyle("step04","menuitemfocus")
+   END CASE 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定每一步的畫面顯示與隱藏
+# Memo...........:
+# Usage..........: CALL apsp610_set_vbox_visible(p_step)
+# Input parameter: p_step：步驟
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp610_set_vbox_visible(p_step)
+   DEFINE p_step     LIKE type_t.num5 
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)       
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE) 
+   CALL cl_set_comp_visible("main_vbox04",FALSE) 
+   
+   CASE p_step 
+      WHEN 1  
+         CALL cl_set_comp_visible("main_vbox01",TRUE)       
+      WHEN 2 
+         CALL cl_set_comp_visible("main_vbox02",TRUE)       
+      WHEN 3 
+         CALL cl_set_comp_visible("main_vbox03",TRUE)       
+      WHEN 4 
+         CALL cl_set_comp_visible("main_vbox04",TRUE)       
+   END CASE 
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定各步驟的action顯示
+# Memo...........:
+# Usage..........: CALL apsp610_set_act_visible(p_step)
+# Input parameter: p_step：步驟
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp610_set_act_visible(p_step)
+   DEFINE p_step     LIKE type_t.num5 
+   
+   #設定下方的button的 顯示 與 隱藏  
+   CALL cl_set_comp_visible("save",FALSE)              #儲存底稿  
+   CALL cl_set_comp_visible("back_step",FALSE)         #上一步  
+   CALL cl_set_comp_visible("next_step",FALSE)         #下一步 
+   CALL cl_set_comp_visible("continue",FALSE)          #處理其他資料 
+   CALL cl_set_comp_visible("open_apmt500",FALSE)      #採購單維護 
+   CALL cl_set_comp_visible("out_apmt500",FALSE)       #採購單列印 
+   CALL cl_set_comp_visible("over",FALSE)              #結束 
+                                                       
+   CASE p_step                                         
+      WHEN 1                                           
+         CALL cl_set_comp_visible("save",TRUE)         #儲存底稿 
+         CALL cl_set_comp_visible("next_step",TRUE)    #下一步
+      WHEN 2                                           
+         CALL cl_set_comp_visible("back_step",TRUE)    #上一步 
+         CALL cl_set_comp_visible("next_step",TRUE)    #下一步
+      WHEN 3                                           
+         CALL cl_set_comp_visible("back_step",TRUE)    #上一步 
+         CALL cl_set_comp_visible("next_step",TRUE)    #下一步
+      WHEN 4 
+         CALL cl_set_comp_visible("continue",TRUE)     #處理其他資料 
+         CALL cl_set_comp_visible("open_apmt500",TRUE) #採購單維護 
+         CALL cl_set_comp_visible("out_apmt500",TRUE)  #採購單列印 
+         CALL cl_set_comp_visible("over",TRUE)         #結束 
+   END CASE 
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定各步驟提示文字
+# Memo...........:
+# Usage..........: CALL apsp610_set_memo(p_step)
+# Input parameter: p_step：步驟
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp610_set_memo(p_step)
+   DEFINE p_step     LIKE type_t.num5  
+   DEFINE l_msg      STRING
+   
+   LET l_msg = '' 
+
+   CASE p_step 
+      WHEN 1 
+         LET l_msg = cl_getmsg("aps-00181",g_lang) 
+         #選擇已確認且未完全採購之請購單資料，寫入底稿以利進行後續分配處理
+      WHEN 2 
+         LET l_msg = cl_getmsg("aps-00182",g_lang)
+         #將請購資料進行匯總，並進行採購供應商設定，與採購數量分配頁面提供歷史採購相關資料，以利參考 
+      WHEN 3 
+         LET l_msg = cl_getmsg("apm-00525",g_lang)
+         #可依不同方式產生單身資料，並進行採購單頭及單身資料調整 
+      WHEN 4 
+         LET l_msg = cl_getmsg("apm-00526",g_lang) 
+         #顯示採購單建立結果，並可直接列印或開始採購作業，進行後續動作  
+   END CASE 
+   
+   DISPLAY l_msg TO FORMONLY.main_memo
+   
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

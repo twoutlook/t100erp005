@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmq030" module="afm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="01727" crtdt="2016-03-07 09:43:00" modid="01727" moddt="2016-03-07 09:43:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="預估還本付息清單">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),fmclseq2,fmcldocno,fmclseq,fmcl005,fmcl001,fmck002,fmcl006"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),fmclseq2(b_fmclseq2),fmcldocno(b_fmcldocno),fmclseq(b_fmclseq),fmcl005(b_fmcl005),fmcl001(b_fmcl001),fmck002(b_fmck002),fmcl006(b_fmcl006)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmq030" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fmclseq2" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="fmclseq2(b_fmclseq2)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="fmclseq2" type="S" default="0"/>
+      <column id="fmcldocno"/>
+      <column id="fmclseq" type="S" default="0"/>
+      <column id="fmcl005"/>
+      <column id="fmcl001"/>
+      <column id="fmck002"/>
+      <column id="fmcl006" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="fmcl_t" page="1" linked="" pk="fmclseq,fmclseq2" fk="fmcldocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,fmclseq2,fmcldocno,fmclseq,fmcl005,fmcl001,&apos;&apos;,fmcl006 FROM fmcl_t WHERE fmclent=? AND fmcldocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

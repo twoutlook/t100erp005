@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli050" module="agl" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02295" crtdt="2013-08-13 10:40:33" modid="02599" moddt="2014-12-19 12:18:02" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="傳票摘要彈性預設作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glahld,glahld_desc(chr80),glaacomp"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glahstus,glah001,glah001_desc(chr500),glah002,glah002_desc(chr500),glah003,glah004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glah001,glah002,glah004,glahownid,glahownid_desc(chr500),glahowndp,glahowndp_desc(chr500),glahcrtid,glahcrtid_desc(chr500),glahcrtdp,glahcrtdp_desc(chr500),glahcrtdt,glahmodid,glahmodid_desc(chr500),glahmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="agli041"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli050" method="dialog">
+    <section id="input">
+      <input id="head" field="glahld,glaacomp"/>
+      <input id="body" page="1" field="glahstus,glah001,glah001_desc,glah002,glah002_desc,glah003,glah004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glahld,glaacomp"/>
+      <construct id="body" page="1" field="glahstus,glah001,glah001_desc,glah002,glah002_desc,glah003,glah004"/>
+      <construct id="body" page="2" field="glahownid,glahowndp,glahcrtid,glahcrtdp,glahcrtdt,glahmodid,glahmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glahld"/>
+      <set id="head" type="no_entry" field="glahld"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glahld">
+        <after>
+          <reference field="glahld_desc" ref_field="glah_t.glahld" map_field="glahent,glahld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="glahld_desc"/>
+      <column id="glaacomp">
+        <controlp form="q_ooea001_2" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="glahstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glah001">
+        <after/>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glah001_desc"/>
+      <column id="glah002">
+        <after/>
+        <controlp form="q_gzza001_2" state="i"/>
+        <controlp form="q_gzza001_2" state="c"/>
+      </column>
+      <column id="glah002_desc"/>
+      <column id="glah003"/>
+      <column id="glah004"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glahownid">
+        <after>
+          <reference field="glahownid_desc" ref_field="glah_t.glahownid" map_field="glahownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glahownid_desc"/>
+      <column id="glahowndp">
+        <after>
+          <reference field="glahowndp_desc" ref_field="glah_t.glahowndp" map_field="glahowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glahowndp_desc"/>
+      <column id="glahcrtid">
+        <after>
+          <reference field="glahcrtid_desc" ref_field="glah_t.glahcrtid" map_field="glahcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glahcrtid_desc"/>
+      <column id="glahcrtdp">
+        <after>
+          <reference field="glahcrtdp_desc" ref_field="glah_t.glahcrtdp" map_field="glahcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glahcrtdp_desc"/>
+      <column id="glahcrtdt"/>
+      <column id="glahmodid">
+        <after>
+          <reference field="glahmodid_desc" ref_field="glah_t.glahmodid" map_field="glahmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glahmodid_desc"/>
+      <column id="glahmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glah_t" pk="glahld">
+      <sql id="forupd_sql" type="sql" query="SELECT glahld,&apos;&apos;,&apos;&apos; FROM glah_t WHERE glahent= ? AND glahld=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glahld,&apos;&apos;,&apos;&apos; FROM glah_t" order="glahld"/>
+    </head>
+    <body id="glah_t" page="1,2" linked="" pk="glah001,glah002,glah004" fk="glahld">
+      <sql id="forupd_sql_detail" query="SELECT glahstus,glah001,&apos;&apos;,glah002,&apos;&apos;,glah003,glah004,&apos;&apos;,&apos;&apos;,&apos;&apos;,glahownid,&apos;&apos;,glahowndp,&apos;&apos;,glahcrtid,&apos;&apos;,glahcrtdp,&apos;&apos;,glahcrtdt,glahmodid,&apos;&apos;,glahmoddt FROM glah_t WHERE glahent=? AND glahld=? AND glah001=? AND glah002=? AND glah004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glahstus,glah001,&apos;&apos;,glah002,&apos;&apos;,glah003,glah004,&apos;&apos;,&apos;&apos;,&apos;&apos;,glahownid,&apos;&apos;,glahowndp,&apos;&apos;,glahcrtid,&apos;&apos;,glahcrtdp,&apos;&apos;,glahcrtdt,glahmodid,&apos;&apos;,glahmoddt FROM glah_t WHERE glahent= ? AND glahld=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq214" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06814" crtdt="2015-05-22 10:56:11" modid="06814" moddt="2015-05-25 15:40:46" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="收銀差錯統計查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),deagsite,deagsite_desc(chr500),deagdocdt,deag004,deag004_desc(chr500),pcab005,pcab005_desc(chr500),l_docdtcount(num10),l_mistakecount(num10),l_mistakeratio(chr500),deagdocno"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),deagsite(b_deagsite),deagsite_desc(b_deagsite_desc),deagdocdt(b_deagdocdt),deag004(b_deag004),deag004_desc(b_deag004_desc),pcab005(b_pcab005),pcab005_desc(b_pcab005_desc),l_docdtcount(l_docdtcount),l_mistakecount(l_mistakecount),l_mistakeratio(l_mistakeratio),deagdocno(b_deagdocno)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq214" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="deagsite,deagdocdt,deag004,pcab005,deagdocno" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="deagsite(b_deagsite),deagdocdt(b_deagdocdt),deag004(b_deag004),pcab005(b_pcab005),deagdocno(b_deagdocno)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="deagsite" type="V" default="g_site">
+        <after>
+          <reference field="deagsite_desc" ref_field="deagsite" map_field="deagent,deagsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="deagsite_desc"/>
+      <column id="deagdocdt" type="V" default="g_today"/>
+      <column id="deag004">
+        <after>
+          <reference field="deag004_desc" ref_field="deag004" map_field="deagent,deag004" ref_sql="SELECT pcab003 FROM pcab_t WHERE pcabent=$varg_enterprise$var AND pcab001=? "/>
+        </after>
+        <controlp form="q_pcab001_1" state="c"/>
+      </column>
+      <column id="deag004_desc"/>
+      <column id="pcab005">
+        <after>
+          <reference field="pcab005_desc" ref_field="pcab005" map_field="pcab005" ref_sql="SELECT itkal003 FROM itkal_t WHERE itkal001=? AND itkal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_13" state="c"/>
+      </column>
+      <column id="pcab005_desc"/>
+      <column id="l_docdtcount"/>
+      <column id="l_mistakecount"/>
+      <column id="l_mistakeratio"/>
+      <column id="deagdocno">
+        <controlp form="q_deagdocno" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="deag_t" page="1" linked="" pk="deagdocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,deagsite,&apos;&apos;,deagdocdt,deag004,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,deagdocno FROM deag_t WHERE deagent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

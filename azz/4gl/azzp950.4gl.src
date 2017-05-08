@@ -1,0 +1,1116 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzp950.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0016(1900-01-01 00:00:00), PR版次:0016(2017-02-03 14:30:48)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000096
+#+ Filename...: azzp950
+#+ Description: watchdog排程喚醒作業
+#+ Creator....: 00845(2014-03-27 09:31:09)
+#+ Modifier...: 00000 -SD/PR- 01856
+ 
+{</section>}
+ 
+{<section id="azzp950.global" >}
+#應用 i00 樣板自動產生(Version:3)
+#+ Modifier...: No.170202-00017 #1   2017/02/02  jrg542   修正 log 檔名
+
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+
+{<Module define>}
+#add-point:free_style模組變數(Module Variable)
+
+#end add-point
+{</Module define>}
+ 
+TYPE type_gzpa  RECORD
+             gzpa001 LIKE gzpa_t.gzpa001,   #排程編號
+             gzpa003 LIKE gzpa_t.gzpa003,   #執行類型 2一次 3週期
+             gzpa006 LIKE gzpa_t.gzpa006,   #指定(一次)日期
+             gzpa007 LIKE gzpa_t.gzpa007,   #指定(一次)時間
+             gzpa008 LIKE gzpa_t.gzpa008,   #執行月別種類 1:月別 0:每月
+             gzpa009 LIKE gzpa_t.gzpa009,   #執行月份
+             gzpa010 LIKE gzpa_t.gzpa010,   #執行周別種類 1:周別 0:每周
+             gzpa011 LIKE gzpa_t.gzpa011,   #執行周別
+             gzpa012 LIKE gzpa_t.gzpa012,   #執行日別種類 1:日別 0:每日 2:週間 3:任選
+             gzpa013 LIKE gzpa_t.gzpa013,   #執行週間
+             gzpa014 LIKE gzpa_t.gzpa014,   #執行日別
+             gzpa015 LIKE gzpa_t.gzpa015,   #時間時段種類
+             gzpa016 LIKE gzpa_t.gzpa016,   #指定時間
+             gzpa017 LIKE gzpa_t.gzpa017,   #時段一起始時間
+             gzpa018 LIKE gzpa_t.gzpa018,   #時段一結束時間
+             gzpa019 LIKE gzpa_t.gzpa019,   #時段一間格  1:小時 2:分鐘
+             gzpa020 LIKE gzpa_t.gzpa020,   #時段一單位
+             gzpa021 LIKE gzpa_t.gzpa021,   #時段二起始時間
+             gzpa022 LIKE gzpa_t.gzpa022,   #時段二結束時間
+             gzpa023 LIKE gzpa_t.gzpa023,   #時段二間格
+             gzpa024 LIKE gzpa_t.gzpa024,   #時段二單位
+             gzpa025 LIKE gzpa_t.gzpa025,   #時段三起始時間
+             gzpa026 LIKE gzpa_t.gzpa026,   #時段三結束時間
+             gzpa027 LIKE gzpa_t.gzpa027,   #時段三間格
+             gzpa028 LIKE gzpa_t.gzpa028,   #時段三單位
+             gzpa029 LIKE gzpa_t.gzpa029,   #執行日遇到假日
+             gzpa030 LIKE gzpa_t.gzpa030,   #處理方法
+             gzpa031 LIKE gzpa_t.gzpa031,   #前一程序未完成
+             gzpa032 LIKE gzpa_t.gzpa032,   #超過預估時間通知郵件位置
+             gzpa033 LIKE gzpa_t.gzpa033,   #預估最長執行時間(分鐘)
+             gzpaownid LIKE gzpa_t.gzpaownid
+                   END RECORD
+DEFINE gd_arr     DYNAMIC ARRAY OF  DATETIME YEAR TO SECOND
+
+DEFINE g_gzpb_d DYNAMIC ARRAY  OF RECORD 
+      gzpb001 LIKE gzpb_t.gzpb001,
+      gzpb002 LIKE gzpb_t.gzpb002,
+      gzpb003 LIKE gzpb_t.gzpb003,
+      gzpb004 LIKE gzpb_t.gzpb004,
+      gzpb005 LIKE gzpb_t.gzpb005,
+      gzpb006 LIKE gzpb_t.gzpb006,
+      gzpb007 LIKE gzpb_t.gzpb007,
+      gzpb010 LIKE gzpb_t.gzpb010
+  END RECORD 
+DEFINE g_gen_ch  base.Channel
+DEFINE gc_ent    LIKE gzpa_t.gzpaent  #enterprise code
+DEFINE gs_temp   STRING
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp950.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   DEFINE la_param   RECORD
+             sessionkey   STRING,
+             parent       STRING,
+             background   LIKE type_t.chr1,
+             prog         STRING,
+             account      STRING,
+             actionid     STRING,
+             param        DYNAMIC ARRAY OF STRING,
+             notify       STRING
+             END RECORD
+   DEFINE ls_param   STRING
+   DEFINE li_sleep   LIKE type_t.num10
+   DEFINE li_times   LIKE type_t.num10
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:作業初始化
+   LET g_bgjob = "Y"
+   LET g_prog = "azzp950" 
+   LET g_account = FGL_GETENV("LOGNAME")
+
+   #自行測試時會輸入 gzpa001 (搭配自己的TOPENT)
+   IF NOT cl_null(ARG_VAL(1)) THEN 
+      CALL util.JSON.parse(ARG_VAL(1),la_param)
+      IF NOT cl_null(la_param.param[1]) THEN
+         LET ls_param = la_param.param[1]
+         LET gc_ent = FGL_GETENV("TOPENT") 
+         DISPLAY "參數:",ls_param ," 企業編號:",gc_ent
+      END IF
+   END IF
+
+   IF g_account = "tiptop" AND cl_null(ls_param) THEN
+      
+      WHILE TRUE
+         #執行超過168次時，重新執行 (驗證此法不可行)
+#         IF li_times > 168 THEN
+#            RUN "r.r azzp950" WITHOUT WAITING
+#            EXIT PROGRAM
+#         END IF
+         
+         #連結資料庫後執行工作
+         CALL cl_db_connect("ds",FALSE)
+         IF NOT azzp950_cycle(NULL) THEN
+            EXIT WHILE    #如果參數改變成不執行批次背景，由此處離開
+         END IF
+
+         #查看參數確認休息時間:自我算出下次啟動時間
+#        LET li_sleep = cl_ap_background_job("azzp950") #每一小時啟動一次
+         LET li_sleep = cl_get_para(g_enterprise,g_site,"A-SYS-0042")  #背景排程最小檢查間隔(分鐘)        
+         CALL cl_db_disconnect_current()
+
+         LET li_times = li_times + 1
+         SLEEP li_sleep
+      END WHILE
+   ELSE
+      CALL cl_db_connect("ds",FALSE)
+      
+      IF cl_get_para(g_enterprise,g_site,"A-SYS-0005") IS NOT NULL AND
+         cl_get_para(g_enterprise,g_site,"A-SYS-0005") = "Y" THEN
+      ELSE
+         DISPLAY "INFO: 系統設置為不允許執行背景作業(azzs010/A-SYS-0005)"
+         EXIT PROGRAM
+      END IF
+      
+      IF NOT cl_null(ls_param) THEN
+         CASE 
+            WHEN ls_param = "kill"
+               CALL s_azzp950_kill_ps("azzp950")
+         END CASE  
+      END IF
+      CALL cl_db_disconnect_current()
+   END IF 
+ 
+
+ 
+
+ 
+
+END MAIN
+ 
+{</section>}
+ 
+{<section id="azzp950.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 循環執行
+################################################################################
+PRIVATE FUNCTION azzp950_cycle(ld_nextdayend)
+   DEFINE ld_chkstart   DATETIME YEAR TO FRACTION(3)
+   DEFINE ld_updgzpf    DATETIME YEAR TO FRACTION(3)
+   DEFINE ld_chkend     DATETIME YEAR TO FRACTION(3)
+   DEFINE lt_time       INTERVAL HOUR TO FRACTION(3)
+   DEFINE lt_diff       INTERVAL HOUR TO FRACTION(3)
+   DEFINE ld_jobbegin   DATETIME YEAR TO FRACTION(3)
+   DEFINE ld_jobend     DATETIME YEAR TO FRACTION(3)
+   DEFINE ld_nextdayend DATETIME YEAR TO FRACTION(3)  #如果有跨日的話
+   DEFINE ld_todayend   DATETIME YEAR TO FRACTION(3)
+   DEFINE li_cnt        LIKE type_t.num5
+   DEFINE ls_sql        STRING
+   DEFINE la_gzpa       type_gzpa
+   DEFINE li_count      LIKE type_t.num10
+   DEFINE li_rtn        LIKE type_t.num5
+   DEFINE ls_gzpc002    STRING
+   DEFINE lt_gzpc002    DATETIME YEAR TO MINUTE
+   DEFINE li_searial    LIKE type_t.num10
+   DEFINE li_mode       LIKE type_t.num5
+   DEFINE li_status     LIKE type_t.num5
+   DEFINE li_stay       LIKE type_t.num5
+
+   #取環境變數
+   CALL azzp950_channel()
+
+   #檢查參數是否繼續執行背景批次
+   IF cl_get_para(g_enterprise,g_site,"A-SYS-0005") IS NOT NULL AND
+      cl_get_para(g_enterprise,g_site,"A-SYS-0005") = "Y" THEN
+   ELSE
+      LET gs_temp = "INFO: 系統設置為不允許執行背景作業(azzs010/A-SYS-0005)"
+      CALL azzp950_output_log(gs_temp)
+      RETURN FALSE
+   END IF
+
+   #查看排程在目標時間間隔內，是否要寫入預計執行時間表
+   LET ls_sql = "SELECT gzpaent,gzpa001,gzpa003,gzpa006,gzpa007,gzpa008,gzpa009,",
+                      " gzpa010,gzpa011,gzpa012,gzpa013,gzpa014,gzpa015,",
+                      " gzpa016,gzpa017,gzpa018,gzpa019,gzpa020,gzpa021,",
+                      " gzpa022,gzpa023,gzpa024,gzpa025,gzpa026,gzpa027,",
+                      " gzpa028,gzpa029,gzpa030,gzpa031,gzpa032,gzpa033,",
+                      " gzpaownid ",
+                 " FROM gzpa_t ",
+                " WHERE gzpastus = 'Y' ORDER BY gzpaent ASC, gzpa001 ASC"   #有效的才會被勾選
+
+   #將排程作業做一次scan
+   DECLARE gzpa_cs CURSOR FROM ls_sql
+   LET li_searial = 1
+      
+   IF ld_nextdayend IS NULL THEN
+      #定義今日最後時間
+      LET ld_todayend = azzp950_today()       #因為型態問題，所以不可以合併在同一行處理
+      LET ld_todayend = ld_todayend + ( 1 UNITS DAY ) - ( 1 UNITS SECOND )
+
+      #定義本次搜尋最遠時間(lt_target)
+     #LET lt_time = "1:00:00.000"
+      LET li_stay = cl_get_para(g_enterprise,g_site,"A-SYS-0042")  #背景排程最小檢查間隔﹝分鐘﹞
+      LET lt_time = ((li_stay + 10 ) UNITS MINUTE)
+      
+      LET ld_chkstart = azzp950_current()
+  
+      #取出未來 N分鐘 到底多少可以執行
+      LET ld_chkend = ld_chkstart + lt_time
+      IF ld_chkend > ld_todayend THEN
+         LET ld_nextdayend = ld_chkend
+         LET ld_chkend = ld_todayend 
+      END IF
+      LET li_mode = 1    
+    ELSE
+       #定義開始及結束時間
+       LET ld_chkstart = azzp950_today() + (1 UNITS DAY)
+       LET ld_chkend = ld_nextdayend
+       LET ld_nextdayend = NULL
+       LET li_mode = 2   
+    END IF
+
+    LET gs_temp = "--------------開始執行:時間:",ld_chkstart," 展開範圍:",ld_chkend,"----------------"
+    CALL azzp950_output_log(gs_temp)
+  
+   #開始進行檢查
+   FOREACH gzpa_cs INTO gc_ent,la_gzpa.*
+      IF SQLCA.SQLCODE THEN
+         #如果被LOCK住的話必須回寫log並且report錯誤
+         LET gs_temp = "ERROR: 抓取gzpa_t發生錯誤:",SQLCA.SQLCODE   CALL azzp950_output_log(gs_temp)
+         LET gs_temp = "ERROR: 本段作業到此停止!"                   CALL azzp950_output_log(gs_temp)
+         EXIT FOREACH
+      END IF
+
+      CALL gd_arr.clear()
+      LET ld_jobbegin = azzp950_current()
+      CASE
+         #gzpa003=2 指定時間執行一次
+         WHEN la_gzpa.gzpa003 = "2"
+            LET gs_temp = "CHECHID:",li_searial,"   指定時間執行: 企業編號:",gc_ent," 排程號:",la_gzpa.gzpa001 ," li_mode(1:不跨日2:跨日):",li_mode
+            CALL azzp950_output_log(gs_temp)
+                
+            IF azzp950_chk_fixed_process(la_gzpa.*,ld_chkstart,ld_chkend,li_mode) THEN
+               CALL azzp950_get_gzpb(la_gzpa.gzpa001)
+
+               #時間格式 YYYY-MM-DD xx:xx:xx
+               LET ls_gzpc002 = YEAR( la_gzpa.gzpa006 ) USING "<<<<","-",MONTH(la_gzpa.gzpa006) USING "&#","-",DAY(la_gzpa.gzpa006) USING "<<<<" ," ",TIME(la_gzpa.gzpa007)
+               LET ls_gzpc002 = ls_gzpc002.subString(1,ls_gzpc002.getLength()-3)
+               LET lt_gzpc002 = ls_gzpc002
+               CALL azzp950_output_log("排程預定執行時間:" || lt_gzpc002 )
+
+               #insert gzpc_t 前檢查,如果已有資料存在,就不寫入
+               IF NOT azzp950_chk_gzpc_exists(la_gzpa.*,lt_gzpc002,li_mode) THEN
+                  CALL azzp950_insert_gzpc(la_gzpa.*,lt_gzpc002)
+                  CALL azzp950_output_log("寫入gzpc前檢查: 資料不存在，寫入")
+               ELSE
+                  CALL azzp950_output_log("寫入gzpc前檢查: 資料已存在，不寫入")
+               END IF
+            ELSE
+               #檢查未通過訊息，在檢查時有寫入            
+            END IF
+
+         #gzpa003=3 週期性執行
+         WHEN la_gzpa.gzpa003 = "3"
+            LET gs_temp = "CHECHID:",li_searial,"   週期性執行: 企業編號:",gc_ent," 排程號:",la_gzpa.gzpa001 ," li_mode(1:不跨日2:跨日):",li_mode
+            CALL azzp950_output_log(gs_temp)
+
+            #先檢查日期再檢查時間
+            IF azzp950_chk_periodic_date(la_gzpa.*,ld_chkstart,0,li_mode) THEN  #日期只檢查同一天的日期
+               #查看時段與間隔 1:指定時間 2:指定週期時段
+               IF azzp950_chk_periodic_time(la_gzpa.*,ld_chkstart,ld_chkend,li_mode) THEN
+                  CALL azzp950_get_gzpb(la_gzpa.gzpa001)
+
+                  #insert gzpc_t 前檢查
+                  IF NOT azzp950_chk_gzpc_exists(la_gzpa.*,'',li_mode) THEN
+                     FOR li_cnt = 1 TO gd_arr.getLength()
+                        CALL azzp950_insert_gzpc(la_gzpa.*,gd_arr[li_cnt])
+                     END FOR
+                     CALL azzp950_output_log("insert gzpc 資料前檢查:寫入")
+                  ELSE
+                    CALL azzp950_output_log("insert gzpc 資料前檢查:不寫入")                   
+                  END IF
+               ELSE
+                  #檢查未通過(時間)，在檢查時有寫入
+               END IF
+            ELSE
+               #檢查未通過(日期)，在檢查時有寫入
+            END IF
+
+         OTHERWISE
+      END CASE
+    
+      #寫入gzpf_t (執行紀錄)
+      LET ld_updgzpf = azzp950_current()
+      SELECT COUNT(*) INTO li_cnt FROM gzpf_t
+       WHERE gzpfent = gc_ent AND gzpf001 = "azzp950"
+
+      IF li_cnt >= 1 THEN
+         UPDATE gzpf_t SET gzpf002 = ld_updgzpf WHERE gzpfent = gc_ent AND gzpf001 = "azzp950"
+      ELSE
+         INSERT INTO gzpf_t(gzpfent,gzpf001,gzpf002) VALUES(gc_ent,"azzp950",ld_updgzpf)
+      END IF
+      LET ld_jobend = azzp950_current()
+      LET lt_diff = ld_jobend - ld_jobbegin
+      LET gs_temp = "檢驗花費時間:",lt_diff,"\n"
+      CALL azzp950_output_log(gs_temp)
+      LET li_searial = li_searial + 1
+   END FOREACH
+
+   LET ld_chkend = azzp950_current()
+   LET lt_time = ld_chkend - ld_chkstart
+   LET gs_temp = "--------------結束執行:時間:",ld_chkend," 花費:",lt_time,"----------------"
+   CALL azzp950_output_log(gs_temp)
+
+   #本段執行結束
+   CLOSE gzpa_cs
+   FREE gzpa_cs
+   CALL g_gen_ch.close()
+
+   #檢查是否有跨日部分
+   LET li_status = TRUE
+   IF ld_nextdayend IS NOT NULL THEN
+      LET li_status = azzp950_cycle(ld_nextdayend) 
+   END IF
+
+   RETURN li_status
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢核指定時間是否符合
+# Memo...........:
+# Usage..........: CALL azzp950_chk_fixed_process(la_gzpa,ld_now,ld_target)
+#                  RETURNING 回传参数
+################################################################################
+PRIVATE FUNCTION azzp950_chk_fixed_process(la_gzpa,ld_now,ld_target,li_mode)
+   DEFINE ld_now      DATETIME HOUR TO SECOND
+   DEFINE ld_target   DATETIME HOUR TO SECOND
+   DEFINE li_return   LIKE type_t.num5   #回傳狀態值
+   DEFINE li_mode     LIKE type_t.num5 
+   DEFINE la_gzpa     type_gzpa
+
+   #指定時間執行一次
+   #gzpa007 <= target time(未來一個小時) && gzpa007 > now time
+   IF la_gzpa.gzpa006 = azzp950_chk_checkdate(li_mode) AND
+      la_gzpa.gzpa007 > ld_now AND la_gzpa.gzpa007 <= ld_target THEN
+      LET li_return = TRUE
+      CALL azzp950_output_log("檢核指定時間符合!") 
+   ELSE
+      LET li_return = FALSE
+      CALL azzp950_output_log("檢核指定時間不符合!") 
+   END IF
+
+   LET gs_temp = " 日期:",la_gzpa.gzpa006," 時間:",la_gzpa.gzpa007
+   CALL azzp950_output_log(gs_temp)
+   LET gs_temp = " 現在:",azzp950_chk_checkdate(li_mode)," 目標:",ld_target 
+   CALL azzp950_output_log(gs_temp)
+   RETURN li_return
+END FUNCTION
+
+################################################################################
+# Descriptions...: #檢查 gzpa003=3 設定的日期是否正確
+# Memo...........:
+# Usage..........: CALL azzp950_chk_periodic_date(la_gzpa,ld_chkstart)
+#                  RETURNING TRUE/FALSE
+# Input parameter: la_gzpa       传入参数变量说明1
+#                : ld_chkstart   檢查開始時間
+#                  li_type       0:初次檢查, 1:執行時遇到假日回頭檢查
+# Return code....: TRUE/FALSE
+################################################################################
+PRIVATE FUNCTION azzp950_chk_periodic_date(la_gzpa,ld_chkstart,li_type,li_mode)
+   DEFINE la_gzpa       type_gzpa
+   DEFINE ld_chkstart   DATETIME YEAR TO FRACTION(3)   #檢查開始時間
+   DEFINE ld_diffday    INTERVAL HOUR TO FRACTION(3)   #日期的加減
+   DEFINE ld_chkday     DATETIME YEAR TO FRACTION(3)   #檢查時間   
+   DEFINE li_type       LIKE type_t.num5               #檢查狀態 0:初次檢查 1:回頭檢查
+   DEFINE li_return     LIKE type_t.num5               #回傳狀態值
+   DEFINE li_weekth     LIKE type_t.num5
+   DEFINE li_mode       LIKE type_t.num5
+
+   #執行日遇到假日-提前/延後/不處理  #假日的定義(周六周日)
+   IF la_gzpa.gzpa029 = "Y" THEN   #有啟動特殊處理
+      IF la_gzpa.gzpa030 = "0" OR #不處理
+        (li_type = 0 AND (la_gzpa.gzpa030 = "1" OR la_gzpa.gzpa030 = "2") ) THEN  #初次檢查遇假日提前或延後<-意旨假日不跑
+         IF azzp950_chk_day_is_holiday(ld_chkstart) THEN
+            CALL azzp950_output_log(" 設定遇到假日不執行,本日為假日")
+            RETURN FALSE
+         END IF
+      END IF
+   END IF
+
+   #查看月份
+   IF la_gzpa.gzpa008 = "0" THEN #每月
+      LET li_return = TRUE
+      CALL azzp950_output_log(" 設定每月執行")
+   ELSE
+      IF la_gzpa.gzpa008 = "1" AND azzp950_chk_token(la_gzpa.gzpa009,MONTH(ld_chkstart),'') THEN
+         LET li_return = TRUE
+         LET gs_temp = " 設定指定月份執行,目前為",MONTH(ld_chkstart),"月份,與設定相符"
+         CALL azzp950_output_log(gs_temp)
+      ELSE
+         LET li_return = FALSE
+         LET gs_temp = " 設定指定月份執行,目前為",MONTH(ld_chkstart),"月份,與設定不符"
+         CALL azzp950_output_log(gs_temp)
+      END IF
+   END IF
+   
+   #查看本月周別 (月別正確才可進入檢查)
+   IF li_return THEN
+      LET li_weekth = s_date_get_weeknum_in_month(ld_chkstart) #回傳第幾周
+      IF la_gzpa.gzpa010 = "0" THEN #每周次
+         CALL azzp950_output_log(" 設定每周執行")
+      ELSE
+         IF la_gzpa.gzpa010 = "1" AND azzp950_chk_token(la_gzpa.gzpa011,li_weekth,'') THEN
+            LET gs_temp = " 設定周別, 目前周別為",li_weekth,"周別,與設定相符"
+            CALL azzp950_output_log(gs_temp)
+         ELSE
+            LET li_return = FALSE
+            LET gs_temp = " 設定周別, 目前周別為",li_weekth,"周別,與設定不符"
+            CALL azzp950_output_log(gs_temp)
+         END IF
+      END IF
+   END IF
+   
+   #查看周間日別  (月，周別正確才可進入檢查) 0:每日 1:任選 (檢查日別、週間) 2:日別 3:週間 (星期一 ~星期天)
+   IF li_return THEN
+      IF la_gzpa.gzpa012 = "0" THEN
+          CALL azzp950_output_log(" 設定每日執行")
+      ELSE
+         CASE
+            WHEN la_gzpa.gzpa012 = "3" AND azzp950_chk_token(la_gzpa.gzpa013,WEEKDAY(ld_chkstart),'') #周間
+               LET gs_temp = " 設定的周間, 目前週間為星期",WEEKDAY(ld_chkstart),",與設定相符"
+               CALL azzp950_output_log(gs_temp)
+            WHEN la_gzpa.gzpa012 = "2" AND (azzp950_chk_token(la_gzpa.gzpa014,DAY(ld_chkstart),'') OR     #日別
+                                            azzp950_chk_token(la_gzpa.gzpa014,"den",ld_chkstart) )
+               LET gs_temp = " 設定的日別, 目前日別為",DAY(ld_chkstart),",與設定相符" 
+               CALL azzp950_output_log(gs_temp)
+            WHEN la_gzpa.gzpa012 = "1" AND (azzp950_chk_token(la_gzpa.gzpa014,DAY(ld_chkstart),'') OR
+                                            azzp950_chk_token(la_gzpa.gzpa014,"den",ld_chkstart) )
+                                       AND azzp950_chk_token(la_gzpa.gzpa013,WEEKDAY(ld_chkstart),'') #週間+日別
+               LET gs_temp = " 設定的周間日別, 目前週間為星期",WEEKDAY(ld_chkstart),"日別為",DAY(ld_chkstart),",與設定相符"
+               CALL azzp950_output_log(gs_temp)                                       
+            OTHERWISE
+               LET li_return = FALSE
+               LET gs_temp = " 設定的周間日別不符合 種類",la_gzpa.gzpa012,"週間",la_gzpa.gzpa013,"日別",la_gzpa.gzpa014
+               CALL azzp950_output_log(gs_temp)
+         END CASE
+      END IF
+   END IF
+
+   #如果正常狀況下,判定本日不須執行,則另外檢視有無符合下列設定
+   IF NOT li_return THEN
+      IF la_gzpa.gzpa029 = "Y" THEN   #有啟動特殊處理
+         IF la_gzpa.gzpa030 = "1" OR la_gzpa.gzpa030 = "2" THEN  #提前或延後
+            CASE
+               #提前 -->WHILE +N日不為假日 先檢查+N日是否為假日,若是則在另外啟動該日期的檢查寫成今天 N+1
+               WHEN la_gzpa.gzpa030 = "1" LET ld_diffday = "1 00:00:00.000"
+               #延後 -->WHILE -N日不為假日 先檢查-N日是否為假日,若是則在另外啟動該日期的檢查寫成今天 N-1
+               WHEN la_gzpa.gzpa030 = "2" LET ld_diffday = "-1 00:00:00.000"
+               OTHERWISE
+            END CASE
+            
+            LET ld_chkday = ld_chkstart 
+            WHILE TRUE
+               #檢查次日(提前的)/昨日(延後的)是否為假日
+               LET ld_chkday = ld_chkday + ld_diffday
+               IF azzp950_chk_day_is_holiday(ld_chkday) THEN
+                  LET gs_temp = "特殊操作行為:",ld_chkday,"為假日作檢查" 
+                  CALL azzp950_output_log(gs_temp)
+                  #是的話就啟動檢查該天應否要執行
+                  CALL azzp950_chk_periodic_date(la_gzpa.*,ld_chkday,1,li_mode) RETURNING li_return
+                  #次檢查日要做就可以出去作了
+                  IF li_return = TRUE THEN
+                     LET gs_temp = "檢查成立，離開WHILE" 
+                     CALL azzp950_output_log(gs_temp)
+                     EXIT WHILE
+                  END IF
+               ELSE
+                  LET gs_temp = "日期非屬假日，離開WHILE" 
+                  CALL azzp950_output_log(gs_temp)
+                  EXIT WHILE  #如果不是假日,也可以出去了,就是沒有!
+               END IF
+            END WHILE
+         END IF
+      END IF
+   END IF
+
+   RETURN li_return
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查指定日期是否為假日
+# Usage..........: azzp950_chk_day_is_holiday(ld_chkday)
+#                  RETURNING TRUE/FALSE
+# Input parameter: ld_chkday  檢查日期
+# Return code....: TRUE/FALSE
+################################################################################
+PRIVATE FUNCTION azzp950_chk_day_is_holiday(ld_chkday)
+   DEFINE ld_chkday    DATETIME YEAR TO FRACTION(3)
+   
+   #目前先只有做周六周日的檢查
+   IF WEEKDAY(ld_chkday) = "0" OR WEEKDAY(ld_chkday) = "6" THEN
+      RETURN TRUE  #假日
+   ELSE
+      RETURN FALSE #非假日
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查 gzpa003=4 設定的時間是否正確
+# Usage..........: CALL azzp950_chk_periodic_time(la_gzpa,ld_chkstart,ld_chkend)
+#                  RETURNING TRUE/FALSE
+# Input parameter: la_gzpa       传入参数变量说明1
+#                : ld_chkstart   檢查開始時間
+#                  ld_chkend     檢查結束時間
+# Return code....: TRUE/FALSE
+################################################################################
+PRIVATE FUNCTION azzp950_chk_periodic_time(la_gzpa,ld_chkstart,ld_chkend,li_mode)
+   DEFINE la_gzpa        type_gzpa
+   DEFINE ld_chkstart    DATETIME HOUR TO SECOND #FRACTION(3)  #檢查開始時間
+   DEFINE ld_gzpa016     DATETIME HOUR TO SECOND #FRACTION(3)  #檢查開始時間
+   DEFINE ld_chkend      DATETIME HOUR TO SECOND #檢查結束時間
+   DEFINE li_return      LIKE type_t.num5   #回傳狀態值
+   DEFINE ld_now_today   DATETIME YEAR TO DAY  
+   DEFINE li_cnt         LIKE type_t.num5
+   DEFINE ls_date        STRING 
+   DEFINE ls_gzpa016     STRING
+   DEFINE li_mode        LIKE type_t.num5   
+
+   #初始全部預設為不通過，採用正面表列，通過才回復成TRUE
+   LET li_return = FALSE
+   LET ld_now_today = azzp950_chk_checkdate(li_mode)
+
+   #查看時段與間隔 1:指定時間
+   IF la_gzpa.gzpa015 = "1" THEN
+      CALL azzp950_output_log("指定時間 gzpa015=1")
+      #目前時間要<=指定時間 而且  指定時間小於<=目標時間
+      IF ld_chkstart <= la_gzpa.gzpa016 AND la_gzpa.gzpa016 <= ld_chkend THEN
+         LET li_return = TRUE
+         LET ls_date = ld_now_today ," ",la_gzpa.gzpa016
+         LET li_cnt = gd_arr.getLength() + 1
+         LET gd_arr[li_cnt] = ls_date
+         LET gs_temp = " 週期類指定執行時間:",la_gzpa.gzpa016," 檢查開始時間:",ld_chkstart," 現在:",ld_now_today," 目標時間:",ld_chkend
+         CALL azzp950_output_log(gs_temp)
+         CALL azzp950_output_log(" 檢核指定時間符合")
+      ELSE
+         LET gs_temp = " 週期類指定執行時間:",la_gzpa.gzpa016," 檢查開始時間:",ld_chkstart," 現在:",ld_now_today," 目標時間:",ld_chkend
+         CALL azzp950_output_log(gs_temp)
+         CALL azzp950_output_log(" 檢核指定時間不符合")
+         LET gs_temp = "ld_gzpa016:",ld_gzpa016
+         CALL azzp950_output_log(gs_temp)
+      END IF
+   END IF
+
+   #查看時段與間隔 2:指定週期時段   #時段中任一時段有通過就算通過
+   IF la_gzpa.gzpa015 = "2" THEN
+      CALL azzp950_output_log("指定週期時段 gzpa015=2")
+
+      #時段一檢查
+      IF NOT cl_null(la_gzpa.gzpa017) AND NOT cl_null(la_gzpa.gzpa018) THEN
+         IF ld_chkend >= la_gzpa.gzpa017 AND ld_chkend <= la_gzpa.gzpa018 THEN
+            LET li_return = TRUE
+            #確認後展開時程安排
+            CALL azzp950_process_periodic_time(la_gzpa.gzpa017,la_gzpa.gzpa018,la_gzpa.gzpa019,la_gzpa.gzpa020,li_mode)
+            LET gs_temp = " 週期類指定時段一開始:",la_gzpa.gzpa017," 結束:",la_gzpa.gzpa018  CALL azzp950_output_log(gs_temp)
+            LET gs_temp = "               現在:",ld_now_today," 目標時間:",ld_chkend        CALL azzp950_output_log(gs_temp)
+            CALL azzp950_output_log(" 時段一 檢核指定週期性符合")
+         ELSE
+            LET gs_temp = " 週期類指定時段一開始:",la_gzpa.gzpa017," 結束:",la_gzpa.gzpa018  CALL azzp950_output_log(gs_temp)
+            LET gs_temp = "               現在:",ld_now_today," 目標時間:",ld_chkend        CALL azzp950_output_log(gs_temp)
+            CALL azzp950_output_log(" 時段一 檢核指定週期性不符合")           
+         END IF
+      END IF 
+
+      #時段二檢查
+      IF NOT cl_null(la_gzpa.gzpa021) AND NOT cl_null(la_gzpa.gzpa022) THEN
+         IF ld_chkend >= la_gzpa.gzpa021 AND ld_chkend <= la_gzpa.gzpa022 THEN
+            LET li_return = TRUE
+            #確認後展開時程安排
+            CALL azzp950_process_periodic_time(la_gzpa.gzpa021,la_gzpa.gzpa022,la_gzpa.gzpa023,la_gzpa.gzpa024,li_mode)
+            LET gs_temp = " 週期類指定時段二開始:",la_gzpa.gzpa021," 結束:",la_gzpa.gzpa022  CALL azzp950_output_log(gs_temp)
+            LET gs_temp = "               現在:",ld_now_today," 目標時間:",ld_chkend        CALL azzp950_output_log(gs_temp)
+            CALL azzp950_output_log(" 時段二 檢核指定週期性符合")
+         ELSE
+            LET gs_temp = " 週期類指定時段二開始:",la_gzpa.gzpa021," 結束:",la_gzpa.gzpa022  CALL azzp950_output_log(gs_temp)
+            LET gs_temp = "               現在:",ld_now_today," 目標時間:",ld_chkend        CALL azzp950_output_log(gs_temp)
+            CALL azzp950_output_log(" 時段二 檢核指定週期性不符合")
+         END IF
+      END IF
+
+      #時段三檢查
+      IF NOT cl_null(la_gzpa.gzpa025) AND NOT cl_null(la_gzpa.gzpa026) THEN
+         IF ld_chkend >= la_gzpa.gzpa025 AND ld_chkend <= la_gzpa.gzpa026 THEN
+            LET li_return = TRUE
+            CALL azzp950_process_periodic_time(la_gzpa.gzpa025,la_gzpa.gzpa026,la_gzpa.gzpa027,la_gzpa.gzpa028,li_mode) 
+            LET gs_temp = " 週期類指定時段三開始:",la_gzpa.gzpa025," 結束:",la_gzpa.gzpa026  CALL azzp950_output_log(gs_temp)
+            LET gs_temp = "               現在:",ld_now_today," 目標時間:",ld_chkend        CALL azzp950_output_log(gs_temp)
+            CALL azzp950_output_log(" 時段三 檢核指定週期性符合")
+         ELSE
+            LET gs_temp = " 週期類指定時段三開始:",la_gzpa.gzpa025," 結束:",la_gzpa.gzpa026  CALL azzp950_output_log(gs_temp)
+            LET gs_temp = "               現在:",ld_now_today," 目標時間:",ld_chkend        CALL azzp950_output_log(gs_temp)
+            CALL azzp950_output_log(" 時段三 檢核指定週期性不符合")
+         END IF
+      END IF
+   END IF
+
+   RETURN li_return 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp950_process_periodic_time(ld_begin,ld_end,li_per,lc_type)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp950_process_periodic_time(ld_begin,ld_end,li_per,lc_type,li_mode)
+   DEFINE ld_begin       LIKE gzpa_t.gzpa017
+   DEFINE ld_end         LIKE gzpa_t.gzpa018
+   DEFINE li_per         LIKE type_t.num5
+   DEFINE lc_type        LIKE type_t.chr1 #1:小時、2:分鐘
+   DEFINE lt_per_hour    INTERVAL HOUR TO HOUR 
+   DEFINE lt_per_min     INTERVAL HOUR TO MINUTE
+   DEFINE ld_hour_time   DATETIME HOUR TO SECOND
+   DEFINE ld_min_time    DATETIME HOUR TO SECOND
+   DEFINE ld_backup_time DATETIME HOUR TO SECOND  #備份時間  
+   DEFINE ld_now         DATETIME YEAR TO DAY  
+   DEFINE li_cnt         LIKE type_t.num5
+   DEFINE ls_date        STRING
+   DEFINE li_mode        LIKE type_t.num5
+
+   LET ld_now = azzp950_chk_checkdate(li_mode)
+   LET ls_date = ld_now
+
+   #先定一小時 取出未來一小時到底多少可以執行
+   IF lc_type = "1" THEN #每小時 
+      LET lt_per_hour = li_per UNITS HOUR 
+      LET ld_hour_time = ld_begin
+   ELSE  #每分鐘
+      IF li_per > 60 THEN
+         LET lt_per_min = ((li_per MOD 60) UNITS MINUTE) + 
+                         (((li_per - (li_per MOD 60)) / 60) UNITS HOUR)
+      ELSE
+         LET lt_per_min = (li_per UNITS MINUTE)
+      END IF
+      LET ld_min_time = ld_begin 
+   END IF
+
+   LET ld_backup_time = ld_begin
+   LET li_cnt = gd_arr.getLength() + 1
+
+   WHILE TRUE 
+      IF lc_type = "1" THEN 
+         IF ld_end > ld_hour_time AND ld_hour_time >= ld_backup_time THEN
+            LET ls_date = ld_now ," ",ld_hour_time
+            LET gd_arr[li_cnt] = ls_date
+            LET ld_backup_time = ld_hour_time    #備份增加之前的時間           
+            LET ld_hour_time = ld_hour_time + lt_per_hour
+         ELSE 
+            EXIT WHILE 
+         END IF
+      ELSE 
+         IF ld_end > ld_min_time AND ld_min_time >= ld_backup_time THEN 
+            LET ls_date = ld_now ," ",ld_min_time
+            LET gd_arr[li_cnt] = ls_date
+            LET ld_backup_time = ld_min_time   #備份增加之前的時間  
+            LET ld_min_time = ld_min_time + lt_per_min
+         ELSE 
+            EXIT WHILE 
+         END IF
+      END IF
+
+      LET gs_temp = " 時間區間:",gd_arr[li_cnt]
+      CALL azzp950_output_log(gs_temp)
+
+      LET li_cnt = li_cnt + 1
+   END WHILE 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取gzpb_t  排程細項關係表
+# Memo...........:
+# Usage..........: CALL azzp950_get_gzpb(lc_gzpa001)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp950_get_gzpb(lc_gzpa001)
+   DEFINE lc_gzpa001  LIKE gzpa_t.gzpa001
+   DEFINE li_cnt      LIKE type_t.num5
+   
+   CALL g_gzpb_d.clear()
+   
+   DECLARE azzp950_get_gzpb_cs CURSOR FOR
+    SELECT gzpb001,gzpb002,gzpb003,gzpb004,gzpb005,gzpb006,gzpb007,gzpb010 FROM gzpb_t 
+     WHERE gzpbent = gc_ent
+       AND gzpb001 = lc_gzpa001
+   LET li_cnt =  1
+   FOREACH azzp950_get_gzpb_cs INTO g_gzpb_d[li_cnt].gzpb001,g_gzpb_d[li_cnt].gzpb002,g_gzpb_d[li_cnt].gzpb003,
+                                    g_gzpb_d[li_cnt].gzpb004,g_gzpb_d[li_cnt].gzpb005,g_gzpb_d[li_cnt].gzpb006,
+                                    g_gzpb_d[li_cnt].gzpb007,g_gzpb_d[li_cnt].gzpb010
+      LET li_cnt = li_cnt + 1  
+   END FOREACH 
+   CALL g_gzpb_d.deleteElement(li_cnt)
+
+   CLOSE azzp950_get_gzpb_cs
+   FREE azzp950_get_gzpb_cs
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查gzpc的資料是否已經依照標準寫入 (Yes-TRUE/No-FALSE)
+# Memo...........:
+# Usage..........: CALL azzp950_chk_gzpc_exists(la_gzpa,lt_gzpc002)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp950_chk_gzpc_exists(la_gzpa,lt_gzpc002,li_mode)
+   DEFINE la_gzpa      type_gzpa
+   DEFINE lt_gzpc002   DATETIME YEAR TO MINUTE 
+   DEFINE li_cnt       LIKE type_t.num5 
+   DEFINE lc_gzpc001   LIKE gzpc_t.gzpc001      #排程編號
+   DEFINE ls_begin     LIKE type_t.chr20
+   DEFINE ls_end       LIKE type_t.chr20
+   DEFINE lc_gzpc002   DATETIME YEAR TO SECOND
+   DEFINE ldt_begin    DATETIME YEAR TO SECOND
+   DEFINE ldt_end      DATETIME YEAR TO SECOND
+   DEFINE li_chk       LIKE type_t.num5
+   DEFINE li_mode      LIKE type_t.num5 
+
+   #指定時間於背景執行
+   IF la_gzpa.gzpa003 = "2" THEN 
+      SELECT COUNT(*) INTO li_cnt FROM gzpc_t
+       WHERE gzpcent = gc_ent 
+         AND gzpc001 = la_gzpa.gzpa001 
+         AND gzpc002 = lt_gzpc002 
+      IF SQLCA.SQLCODE OR li_cnt = 0 THEN
+         LET gs_temp = "檢查gzpc的資料 排程編號:",la_gzpa.gzpa001," 排程執行時間:",lt_gzpc002,li_cnt,"(1:有資料;0:沒資料)"
+         CALL azzp950_output_log(gs_temp)
+         RETURN FALSE      #查出沒有資料,回傳FALSE
+      ELSE
+         LET gs_temp = "檢查gzpc的資料 排程編號:",la_gzpa.gzpa001," 排程執行時間:",lt_gzpc002,li_cnt,"(1:有資料;0:沒資料)" 
+         CALL azzp950_output_log(gs_temp)
+         RETURN TRUE       #查出已有資料,回傳TRUE
+      END IF
+   ELSE 
+      #週期性背景執行
+      #gzpc001 有值,取gzpc002 最大值比對gzpa 起始時間到結束時間 在這區間內就不insert 到gzpc_t
+      #gzpc001 沒有直接insert gzpc_t
+
+      DECLARE chk_gzpc_cs CURSOR FOR  
+       SELECT gzpc001,gzpc002 FROM gzpc_t
+        WHERE gzpcent = gc_ent AND gzpc001 = la_gzpa.gzpa001
+        ORDER BY gzpc002 desc 
+
+      FOREACH chk_gzpc_cs INTO lc_gzpc001,lc_gzpc002
+         IF SQLCA.SQLCODE OR cl_null(lc_gzpc001) THEN 
+            RETURN FALSE      #查出沒有資料,回傳FALSE
+         ELSE 
+            #1:指定時間 
+            IF la_gzpa.gzpa015 = "1" THEN
+               #170202-00017 #1 start
+               #LET la_gzpa.gzpa016 = la_gzpa.gzpa016[1,LENGTH(la_gzpa.gzpa016)-2],"00" #00:00:00 
+               #LET ls_begin = azzp950_chk_checkdate(li_mode) USING "yyyy-mm-dd" ," ",la_gzpa.gzpa016 
+               LET ls_begin = azzp950_chk_checkdate(li_mode) ," ",la_gzpa.gzpa016 
+               LET ldt_begin = ls_begin
+               LET gs_temp = "1:指定時間 檢查gzpc 排程編號:",la_gzpa.gzpa001," ldt_begin:",ldt_begin 
+               CALL azzp950_output_log(gs_temp) 
+               #170202-00017 #1 end               
+               #IF lc_gzpc002 = la_gzpa.gzpa016 THEN
+               IF lc_gzpc002 = ldt_begin THEN
+                  #CALL azzp950_output_log("檢核 gzpc_t insert 資料前檢查 :TRUE 排程執行時間:"lc_gzpc002||"週期類指定執行時間:"||gzpa016 )
+                  LET gs_temp = "檢查gzpc的有符合的資料 排程編號:",la_gzpa.gzpa001," 排程執行時間:",lc_gzpc002, "目前時間:",ldt_begin 
+                  CALL azzp950_output_log(gs_temp)
+                  RETURN TRUE   #有符合標準的資料
+               END IF                  
+            ELSE  
+               #2:指定週期時段
+               #時段一 
+               IF NOT cl_null(la_gzpa.gzpa017) AND NOT cl_null(la_gzpa.gzpa018) THEN
+                  #170202-00017 #1 start
+                  #LET ls_begin = azzp950_chk_checkdate(li_mode) USING "yyyy-mm-dd" ," ",la_gzpa.gzpa017
+                  #LET ls_end = azzp950_chk_checkdate(li_mode) USING "yyyy-mm-dd" ," ",la_gzpa.gzpa018                  
+                  LET ls_begin = azzp950_chk_checkdate(li_mode) ," ",la_gzpa.gzpa017 
+                  LET ls_end = azzp950_chk_checkdate(li_mode) ," ",la_gzpa.gzpa018
+                  LET ldt_begin = ls_begin
+                  LET ldt_end = ls_end
+                  LET gs_temp = "2:指定週期時段 時段一 檢查gzpc 排程編號:",la_gzpa.gzpa001," ldt_begin:",ldt_begin, " ldt_end:",ldt_end 
+                  CALL azzp950_output_log(gs_temp)
+                  #170202-00017 #1 end
+               
+                 #IF lc_gzpc002 >= la_gzpa.gzpa017 AND lc_gzpc002 <= la_gzpa.gzpa018 THEN
+                  IF lc_gzpc002 >= ldt_begin AND lc_gzpc002 <= ldt_end THEN
+                     LET gs_temp = "檢查gzpc的有資料" CALL azzp950_output_log(gs_temp)
+                     LET gs_temp = "  時段一 開始:",ldt_begin," 結束:",ldt_end  CALL azzp950_output_log(gs_temp)
+                     LET gs_temp = "  排程執行時間:",lc_gzpc002 CALL azzp950_output_log(gs_temp)                
+                     RETURN TRUE   #有符合標準的資料
+                  END IF
+               END IF 
+
+               #時段二
+               IF NOT cl_null(la_gzpa.gzpa021) AND NOT cl_null(la_gzpa.gzpa022) THEN
+                  #170202-00017 #1 start
+                  #LET ls_begin = azzp950_chk_checkdate(li_mode) USING "yyyy-mm-dd" ," ",la_gzpa.gzpa021 
+                  #LET ls_end = azzp950_chk_checkdate(li_mode) USING "yyyy-mm-dd" ," ",la_gzpa.gzpa022
+                  LET ls_begin = azzp950_chk_checkdate(li_mode) ," ",la_gzpa.gzpa021
+                  LET ls_end = azzp950_chk_checkdate(li_mode) ," ",la_gzpa.gzpa022
+                  LET ldt_begin = ls_begin
+                  LET ldt_end = ls_end
+                  LET gs_temp = "2:指定週期時段 時段二 檢查gzpc 排程編號:",la_gzpa.gzpa001," ldt_begin:",ldt_begin, " ldt_end:",ldt_end 
+                  CALL azzp950_output_log(gs_temp)
+                  #170202-00017 #1 end
+                 #IF lc_gzpc002 >= la_gzpa.gzpa021 AND lc_gzpc002 <= la_gzpa.gzpa022 THEN
+                  IF lc_gzpc002 >= ldt_begin AND lc_gzpc002 <= ldt_end THEN
+                     LET gs_temp = "檢查gzpc的有資料" CALL azzp950_output_log(gs_temp)
+                     LET gs_temp = "  時段二 開始:",ldt_begin," 結束:",ldt_end  CALL azzp950_output_log(gs_temp)
+                     LET gs_temp = "  排程執行時間:",lc_gzpc002 CALL azzp950_output_log(gs_temp)
+                     CALL azzp950_output_log(gs_temp) 
+                     RETURN TRUE   #有符合標準的資料
+                  END IF
+               END IF
+
+               #時段三
+               IF NOT cl_null(la_gzpa.gzpa025) AND NOT cl_null(la_gzpa.gzpa026) THEN
+                  #170202-00017 #1 start
+                  #LET ls_begin = azzp950_chk_checkdate(li_mode) USING "yyyy-mm-dd" ," ",la_gzpa.gzpa025
+                  #LET ls_end = azzp950_chk_checkdate(li_mode) USING "yyyy-mm-dd" ," ",la_gzpa.gzpa026                  
+                  LET ls_begin = azzp950_chk_checkdate(li_mode) ," ",la_gzpa.gzpa025
+                  LET ls_end = azzp950_chk_checkdate(li_mode) ," ",la_gzpa.gzpa026
+                  LET ldt_begin = ls_begin
+                  LET ldt_end = ls_end
+                  LET gs_temp = "2:指定週期時段 時段三 檢查gzpc 排程編號:",la_gzpa.gzpa001," ldt_begin:",ldt_begin, " ldt_end:",ldt_end 
+                  CALL azzp950_output_log(gs_temp)
+                  #170202-00017 #1 end
+                 #IF lc_gzpc002 >= la_gzpa.gzpa025 AND lc_gzpc002 <= la_gzpa.gzpa026 THEN
+                  IF lc_gzpc002 >= ldt_begin AND lc_gzpc002 <= ldt_end THEN
+                     LET gs_temp = "檢查gzpc的有資料" CALL azzp950_output_log(gs_temp)
+                     LET gs_temp = "  時段三 開始:",ldt_begin," 結束:",ldt_end  CALL azzp950_output_log(gs_temp)
+                     LET gs_temp = "  排程執行時間:",lc_gzpc002 CALL azzp950_output_log(gs_temp)
+                     RETURN TRUE   #有符合標準的資料
+                  END IF
+               END IF
+            END IF
+         END IF
+         EXIT FOREACH #取一筆就離開
+      END FOREACH
+
+      CLOSE chk_gzpc_cs
+      FREE chk_gzpc_cs      
+   END IF #end if la_gzpa.gzpa003  
+   RETURN FALSE  #查不到資料或資料雖然有,但不符合需求
+END FUNCTION
+
+################################################################################
+# Descriptions...: 寫入 gzpc
+# Memo...........:
+# Usage..........: CALL azzp950_insert_gzpc(la_gzpa,lt_gzpc002)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp950_insert_gzpc(la_gzpa,lt_gzpc002)
+   DEFINE la_gzpa    type_gzpa
+   DEFINE lt_gzpc002 DATETIME YEAR TO MINUTE
+   DEFINE la_gzpc    RECORD
+             gzpcent LIKE gzpc_t.gzpcent,
+             gzpc000 LIKE gzpc_t.gzpc000,   #背景排程作業執行序號
+             gzpc004 LIKE gzpc_t.gzpc004    #執行狀況
+                 END RECORD
+   DEFINE li_cnt     LIKE type_t.num5 
+   DEFINE ls_tmp     STRING
+   DEFINE lc_gzpd008 LIKE gzpd_t.gzpd008
+   DEFINE ls_msg     STRING 
+                   
+   #給予作業流水編號
+   LET ls_tmp = lt_gzpc002
+   LET ls_tmp = ls_tmp.subString(3,4),ls_tmp.subString(6,7),ls_tmp.subString(9,10),ls_tmp.subString(12,13),
+                ls_tmp.subString(15,16),ls_tmp.subString(18,19),ls_tmp.subString(21,21)
+   LET la_gzpc.gzpc000 = la_gzpa.gzpa001 CLIPPED,"-",ls_tmp
+   LET la_gzpc.gzpc004 = "N"      #狀態預設為N 未執行
+
+   #計算應執行的時間
+
+   #指定時間時間執行
+   #寫入排程表                  排程執行序號 排程編號 排程執行時間 排程執行模式 排程執行狀況
+   INSERT INTO gzpc_t(gzpcent,gzpc000,gzpc001,gzpc002,gzpc003,gzpc004,
+                      gzpc005,gzpc007)
+      VALUES(gc_ent,la_gzpc.gzpc000,la_gzpa.gzpa001,lt_gzpc002,'A',la_gzpc.gzpc004,
+             la_gzpa.gzpa032,la_gzpa.gzpa033)
+
+   LET ls_msg = "insert gzpc_t SQLCA.sqlcode:",SQLCA.sqlcode,"\n",
+                "gc_ent:",gc_ent,"\n",
+                "排程執行序號:",la_gzpc.gzpc000,"\n",
+                "排程編號:",la_gzpa.gzpa001,"\n",
+                "排程執行時間:",lt_gzpc002,"\n",
+                "排程執行模式:A(自動啟動)","\n",
+                "排程執行狀況:",la_gzpc.gzpc004,"(未執行)","\n",
+                "超過預估時間通知郵件位置:",la_gzpa.gzpa032,"\n",
+                "預估最長執行時間(分鐘):",la_gzpa.gzpa033
+                
+   CALL azzp950_output_log(ls_msg)  
+   
+   FOR li_cnt = 1 TO g_gzpb_d.getLength()
+
+      IF la_gzpa.gzpa003 = "2" THEN
+         LET lc_gzpd008 = lt_gzpc002
+      ELSE
+         LET lc_gzpd008 = " "
+      END IF
+
+      #gzpb001 排程編號  gzpb002 序號 gzpb003 執行作業 gzpb004 傳入參數 
+      #gzpb005 執行營運據點(多選) gzpb006 執行順序 gzpb007 執行員工編號
+      #gzpb010 任務執行主機
+      INSERT INTO gzpd_t(gzpdent,gzpd001,gzpd002,gzpd003,gzpd004,
+                         gzpd005,gzpd006,gzpd007,gzpd008,gzpd009,
+                         gzpd010,gzpd011,gzpd014)
+         VALUES(gc_ent,la_gzpc.gzpc000,la_gzpa.gzpa001,g_gzpb_d[li_cnt].gzpb002,g_gzpb_d[li_cnt].gzpb003,
+                g_gzpb_d[li_cnt].gzpb004,g_gzpb_d[li_cnt].gzpb005,la_gzpc.gzpc004,lc_gzpd008,g_gzpb_d[li_cnt].gzpb007,
+                '',g_gzpb_d[li_cnt].gzpb006,g_gzpb_d[li_cnt].gzpb010)
+
+      LET ls_msg = "insert gzpd_t SQLCA.sqlcode:",SQLCA.sqlcode,
+                   "\ngc_ent:",gc_ent,"\n",
+                   "排程執行序號:",la_gzpc.gzpc000,"\n",
+                   "排程編號:",la_gzpa.gzpa001,"\n",
+                   "序號:",g_gzpb_d[li_cnt].gzpb002,"\n",
+                   "執行作業:", g_gzpb_d[li_cnt].gzpb003,"\n",
+                   "傳入參數:", g_gzpb_d[li_cnt].gzpb004,"\n",
+                   "執行營運據點:",g_gzpb_d[li_cnt].gzpb005,"\n",
+                   "作業執行狀態:",la_gzpc.gzpc004,"\n",
+                   "作業執行時間:",lc_gzpd008,"\n",
+                   "執行使用者編號:",g_gzpb_d[li_cnt].gzpb007,"\n",
+                   "執行順序:",g_gzpb_d[li_cnt].gzpb006,"\n",
+                   "任務執行主機:",g_gzpb_d[li_cnt].gzpb010
+     CALL azzp950_output_log(ls_msg)         
+   END FOR 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 比對是否在設定區間內
+# Memo...........:
+# Usage..........: CALL azzp950_chk_token(ps_token,ps_chk,pd_date)
+#                  RETURNING 回传参数
+# Input parameter: ps_token
+#                : ps_chk
+#                : pd_date
+# Return code....: TRUE:有勾選/FALSE:沒有勾選 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp950_chk_token(ps_token,ps_chk,pd_date)
+   DEFINE ps_chk     STRING 
+   DEFINE ps_token   STRING
+   DEFINE pd_date    DATETIME YEAR TO FRACTION(3)   #檢查開始時間
+   DEFINE l_token    base.StringTokenizer
+   DEFINE ls_token   STRING
+   DEFINE li_rtn     LIKE type_t.num5
+
+   LET ps_token = ps_token.trim()
+
+   #檢查是否有勾選月底
+   IF ps_chk.getIndexOf("den",1) THEN
+      LET li_rtn = s_date_chk_lastday(pd_date)
+   ELSE
+      #針對參數組進行token
+      LET l_token = base.StringTokenizer.create(ps_token,",")
+      LET li_rtn = FALSE 
+      WHILE l_token.hasMoreTokens()
+         LET ls_token = l_token.nextToken()
+         IF ps_chk = ls_token THEN 
+            LET li_rtn = TRUE
+            EXIT WHILE  
+         END IF  
+      END WHILE
+   END IF
+
+   RETURN li_rtn  
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立channel
+# Memo...........:
+# Usage..........: CALL azzp950_channel()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 2015/05/11 By jrg542
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp950_channel()
+   DEFINE ls_log_file       STRING 
+   DEFINE ld_date           LIKE type_t.dat           #170202-00017
+   DEFINE ls_begin          STRING 
+   #DEFINE lt_time           INTERVAL HOUR TO MINUTE  #170202-00017
+
+   #170202-00017 start
+   LET ld_date = azzp950_today()
+   LET ls_begin = ld_date USING "yyyymmdd"
+   #170202-00017 end 
+
+   LET g_gen_ch = base.Channel.create()
+   LET ls_log_file = "azzp950_",ls_begin CLIPPED ,".log"
+   LET ls_log_file = os.Path.join(FGL_GETENV("LOGDIR"),ls_log_file)   
+   IF NOT os.Path.exists(ls_log_file) THEN
+      CALL g_gen_ch.openFile(ls_log_file, "w")
+   ELSE
+      #IF os.Path.delete(ls_log_file) THEN
+         CALL g_gen_ch.openFile(ls_log_file, "a")
+      #END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 把產生過程寫入到log 
+# Memo...........:
+# Usage..........: CALL azzp950_output_log(p_msg)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 2015/05/11 By jrg542
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp950_output_log(p_msg)
+   DEFINE p_msg   STRING
+   CALL g_gen_ch.writeLine(p_msg)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取指定日期
+# Memo...........:
+################################################################################
+PRIVATE FUNCTION azzp950_chk_checkdate(li_mode)
+   DEFINE li_mode LIKE type_t.num5
+   IF li_mode = 2 THEN
+      RETURN azzp950_today() + (1 UNITS DAY)
+   ELSE
+      RETURN azzp950_today()
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取今日
+################################################################################
+PRIVATE FUNCTION azzp950_today()
+   LET gs_temp = "cl_get_today:",cl_get_today() 
+   CALL azzp950_output_log(gs_temp)
+   RETURN cl_get_today()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取現在時間
+################################################################################
+PRIVATE FUNCTION azzp950_current()
+   DEFINE lc_time   DATETIME YEAR TO FRACTION(3)
+   
+#  RETURN CURRENT YEAR TO FRACTION(3)
+   LET lc_time = cl_get_timestamp()
+   RETURN lc_time
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

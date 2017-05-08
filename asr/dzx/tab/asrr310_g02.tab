@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrr310_g02" module="asr" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2015-01-12 10:51:36" modid="05423" moddt="2015-01-12 11:19:38" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.pr1(chr2|l_pr1),tm.pr2(chr2|l_pr2)">
+    <var seq="1" value="sfdadocno,sfdadocdt,sfda009,l_sfda009_desc(chr30|NULL),sfda006,l_imaal003_1(imaal003|NULL),l_imaal004_1(imaal004|NULL),sfda004,l_sfda004_desc(chr30|NULL),sfda003,l_sfda003_desc(chr50|NULL),sfda013,sfdaent,sfdcseq,sfdc004,l_imaal003(imaal003|NULL),l_imaal004(imaal004|NULL),sfdc005,l_sfdc005_show(chr2|NULL),l_sfde009(sfde009|NULL),l_imae092(imae092|NULL),sfdc007,sfdc010,sfdc006,sfdc009,sfdc012,l_sfdc012_desc(chr50|NULL),sfdc013,l_sfdc013_desc(chr50|NULL),sfdc014,l_sfdc014_show(chr2|NULL),sfdc016,l_sfdc016_show(chr2|NULL),sfdc015,l_sfdc015_desc(chr30|NULL),sfdc008,sfdc011,l_sfdc008_show(chr2|NULL),l_sfdc012_show(chr2|NULL),l_sfdc015_show(chr2|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="sfdadocno(sfdadocno|sfdadocno),sfdadocdt(sfdadocdt|sfdadocdt),sfda009(sfda009|sfda009),l_sfda009_desc(chr30|NULL),sfda006(sfda006|sfda006),l_imaal003_1(imaal003|NULL),l_imaal004_1(imaal004|NULL),sfda004(sfda004|sfda004),l_sfda004_desc(chr30|NULL),sfda003(sfda003|sfda003),l_sfda003_desc(chr50|NULL),sfda013(sfda013|sfda013),sfdaent(sfdaent|sfdaent),sfdcseq(sfdcseq|sfdcseq),sfdc004(sfdc004|sfdc004),l_imaal003(imaal003|NULL),l_imaal004(imaal004|NULL),sfdc005(sfdc005|sfdc005),l_sfdc005_show(chr2|NULL),l_sfde009(sfde009|NULL),l_imae092(imae092|NULL),sfdc007(sfdc007|sfdc007),sfdc010(sfdc010|sfdc010),sfdc006(sfdc006|sfdc006),sfdc009(sfdc009|sfdc009),sfdc012(sfdc012|sfdc012),l_sfdc012_desc(chr50|NULL),sfdc013(sfdc013|sfdc013),l_sfdc013_desc(chr50|NULL),sfdc014(sfdc014|sfdc014),l_sfdc014_show(chr2|NULL),sfdc016(sfdc016|sfdc016),l_sfdc016_show(chr2|NULL),sfdc015(sfdc015|sfdc015),l_sfdc015_desc(chr30|NULL),sfdc008(sfdc008|sfdc008),sfdc011(sfdc011|sfdc011),l_sfdc008_show(chr2|NULL),l_sfdc012_show(chr2|NULL),l_sfdc015_show(chr2|NULL)"/>
+    <sql id="g_from" query="sfda_t,sfdc_t"/>
+    <sql id="g_where" query="" maintable="sfda_t"/>
+    <sql id="g_order" query="sfdadocno,sfdcseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="sfdadocno,sfdcseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="sfdadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="sfdaent,sfdadocno"/>
+      <rep type="sfdcseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="sfdaent,sfdadocno,sfdcseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="sfdaent,sfdadocno,sfdcseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="sfdadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="sfdaent,sfdadocno"/>
+      <rep type="sfdcseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

@@ -1,0 +1,481 @@
+<add_points prog="acrm300_01" std_prog="acrm300_01" erpver="1.0" module="ACR" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="input.a.craa001" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_craa_m.craa001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_craa_m.craa001 != g_craa001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM craa_t WHERE "||"craaent = '" ||g_enterprise|| "' AND "||"craa001 = '"||g_craa_m.craa001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.craa029" cite_std="N" status="u" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            LET g_craa_m.craa029_desc = ' '
+            DISPLAY BY NAME g_craa_m.craa029_desc
+            IF NOT cl_null(g_craa_m.craa029) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_craa_m.craa029 != g_craa_m_o.craa029 OR g_craa_m_o.craa029 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_craa_m.craa029
+                  IF NOT cl_chk_exist("v_pmaa001_3") THEN
+                     LET g_craa_m.craa029 = g_craa_m_o.craa029
+                     CALL acrm300_01_craa029_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL acrm300_01_chk_pmaa003()
+                  IF NOT cl_null(g_errno) THEN
+                     CALL cl_err('',g_errno,1)
+                     LET g_craa_m.craa029 = g_craa_m_o.craa029
+                     CALL acrm300_01_craa029_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL acrm300_01_craa029_ref()
+            LET g_craa_m_o.craa029 = g_craa_m.craa029]]>
+</point>
+  <point name="input.c.craa029" cite_std="N" status="u" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_craa_m.craa029  #給予default值
+
+            #給予arg
+            CALL q_pmaa001_6()                          #呼叫開窗
+            LET g_craa_m.craa029 = g_qryparam.return1    
+            DISPLAY g_craa_m.craa029 TO craa029
+            CALL acrm300_01_craa029_ref()
+            NEXT FIELD craa029                          #返回原欄位]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_craa_m.craa029
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_craa_m.craa029_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_craa_m.craa029_desc
+]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[DEFINE g_craa_m_o        type_g_craa_m
+DEFINE g_forupd_sql      STRING                        #SELECT ... FOR UPDATE  SQL 
+DEFINE g_craa003         LIKE craa_t.craa003]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[   p_craa001]]>
+</point>
+  <point name="input.define" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[   DEFINE p_craa001       LIKE craa_t.craa001
+   DEFINE l_craa032       LIKE craa_t.craa032
+   DEFINE l_craamodid     LIKE craa_t.craamodid
+   DEFINE l_craamoddt     DATETIME YEAR TO SECOND]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[   LET g_forupd_sql = "SELECT craa001,craa032,craa033,craa029,craamodid,craamoddt",
+                      "  FROM craa_t WHERE craaent = ? AND craa001 = ? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE acrm300_01_cl CURSOR FROM g_forupd_sql  
+   INITIALIZE g_craa_m.* TO NULL
+   
+   LET g_craa003 = ''
+   SELECT craa003 INTO g_craa003
+     FROM craa_t
+    WHERE craaent = g_enterprise
+      AND craa001 = p_craa001
+      AND craastus = 'Y']]>
+</point>
+  <point name="input.action" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            LET g_craa_m.craa001 = p_craa001
+            LET g_craa_m.craa033 = g_today
+            LET g_craa_m_o.* = g_craa_m.*
+            DISPLAY BY NAME g_craa_m.craa001,g_craa_m.craa033]]>
+</point>
+  <point name="input.b.craa001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.craa001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.craa033" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.craa033" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.craa033" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.craa029" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.craa029" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.craa001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.craa033" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[            CALL s_transaction_begin()
+            OPEN acrm300_01_cl USING g_enterprise,g_craa_m.craa001
+            IF STATUS THEN
+               CALL cl_err("OPEN acrm300_01_cl:", STATUS, 1)
+               CLOSE acrm300_01_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET l_craa032   = '3'
+            LET l_craamodid = g_user
+            LET l_craamoddt = cl_get_current()
+                     
+            UPDATE craa_t
+               SET craa032 = l_craa032,
+                   craa029 = g_craa_m.craa029,
+                   craa033 = g_craa_m.craa033,
+                   craamodid = l_craamodid,
+                   craamoddt = l_craamoddt
+             WHERE craaent = g_enterprise
+               AND craa001 = g_craa_m.craa001
+            CASE
+               WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                  CALL cl_err("craa_t","std-00009",1)
+                  CALL s_transaction_end('N','0')
+               WHEN SQLCA.sqlcode #其他錯誤
+                  CALL cl_err("craa_t",SQLCA.sqlcode,1)  
+                  CALL s_transaction_end('N','0')
+               OTHERWISE
+                  CALL s_transaction_end('Y','0')
+            END CASE
+            CLOSE acrm300_01_cl]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="function.acrm300_01_craa029_ref" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="" order="1">
+<![CDATA[
+################################################################################
+# Descriptions...: 正式客戶編號帶出说明
+# Memo...........:
+# Usage..........: CALL acrm300_01_craa029_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/16 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION acrm300_01_craa029_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_craa_m.craa029
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_craa_m.craa029_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_craa_m.craa029_desc
+END FUNCTION]]>
+</point>
+  <point name="function.acrm300_01_chk_pmaa003" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="" order="2">
+<![CDATA[
+################################################################################
+# Descriptions...: 當潛客統一編號不為空白時，check客戶的稅務編號是否相同
+# Memo...........:
+# Usage..........: CALL acrm300_01_chk_pmaa003()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/17 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION acrm300_01_chk_pmaa003()
+DEFINE l_pmaa003         LIKE pmaa_t.pmaa003
+
+   LET g_errno = ''
+   LET l_pmaa003 = ''
+   IF NOT cl_null(g_craa003) THEN
+      SELECT pmaa003 INTO l_pmaa003
+        FROM pmaa_t
+       WHERE pmaaent = g_enterprise
+         AND pmaa001 = g_craa_m.craa029
+         AND pmaastus = 'Y'
+      IF cl_null(l_pmaa003) THEN
+         #潛客統一編號與客戶的稅務編號不相同！;請查詢[供應商維護作業 apmm200/apmm800]後，重新輸入！
+         LET g_errno = 'acr-00008'
+      ELSE
+         IF l_pmaa003 <> g_craa003 THEN
+            #潛客統一編號與客戶的稅務編號不相同！;請查詢[供應商維護作業 apmm200/apmm800]後，重新輸入！
+            LET g_errno = 'acr-00008'
+         END IF
+      END IF
+   END IF
+END FUNCTION]]>
+</point>
+  <section id="acrm300_01.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000000
+#+ 
+#+ Filename...: acrm300_01
+#+ Description: ...
+#+ Creator....: 04226(2014/04/16)
+#+ Modifier...: 04226(2014/04/16)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="acrm300_01.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_craa_m        RECORD
+       craa001 LIKE craa_t.craa001, 
+   craa033 LIKE craa_t.craa033, 
+   craa029 LIKE craa_t.craa029, 
+   craa029_desc LIKE type_t.chr80
+       END RECORD
+DEFINE g_craa_m        type_g_craa_m
+ 
+   DEFINE g_craa001_t LIKE craa_t.craa001
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="acrm300_01.input" ver="1" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION acrm300_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_acrm300_01 WITH FORM cl_ap_formpath("acr","acrm300_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_craa_m.craa001,g_craa_m.craa033,g_craa_m.craa029 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+         #---------------------------<  Master  >---------------------------
+         #----<<craa001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD craa001
+            #add-point:BEFORE FIELD craa001
+            {<point name="input.b.craa001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD craa001
+            
+            #add-point:AFTER FIELD craa001
+            {<point name="input.a.craa001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE craa001
+            #add-point:ON CHANGE craa001
+            {<point name="input.g.craa001" />}
+            #END add-point
+ 
+         #----<<craa033>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD craa033
+            #add-point:BEFORE FIELD craa033
+            {<point name="input.b.craa033" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD craa033
+            
+            #add-point:AFTER FIELD craa033
+            {<point name="input.a.craa033" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE craa033
+            #add-point:ON CHANGE craa033
+            {<point name="input.g.craa033" />}
+            #END add-point
+ 
+         #----<<craa029>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD craa029
+            
+            #add-point:AFTER FIELD craa029
+            {<point name="input.a.craa029" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD craa029
+            #add-point:BEFORE FIELD craa029
+            {<point name="input.b.craa029" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE craa029
+            #add-point:ON CHANGE craa029
+            {<point name="input.g.craa029" />}
+            #END add-point
+ 
+         #----<<craa029_desc>>----
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<craa001>>----
+         #Ctrlp:input.c.craa001
+         ON ACTION controlp INFIELD craa001
+            #add-point:ON ACTION controlp INFIELD craa001
+            {<point name="input.c.craa001" />}
+            #END add-point
+ 
+         #----<<craa033>>----
+         #Ctrlp:input.c.craa033
+         ON ACTION controlp INFIELD craa033
+            #add-point:ON ACTION controlp INFIELD craa033
+            {<point name="input.c.craa033" />}
+            #END add-point
+ 
+         #----<<craa029>>----
+         #Ctrlp:input.c.craa029
+         ON ACTION controlp INFIELD craa029
+            #add-point:ON ACTION controlp INFIELD craa029
+            {<point name="input.c.craa029" />}
+            #END add-point
+ 
+         #----<<craa029_desc>>----
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_acrm300_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="acrm300_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="acrm300_01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

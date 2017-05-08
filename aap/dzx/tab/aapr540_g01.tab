@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapr540_g01" module="aap" jobmode="N" type="g01" industry="std" crtid="03080" crtdt="2016-03-28 11:01:46" modid="06821" moddt="2017-01-12 13:51:42" sdver="4" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="apgk001,apgk002,apgk003,apgk004,apgk005,apgk006,apgk007,apgk008,apgk009,apgk010,apgk011,apgk012,apgk013,apgk014,apgk015,apgk100,apgk101,apgk103,apgk104,apgk113,apgk114,apgkcomp,apgkdocdt,apgkdocno,apgkent,apgkstus,l_apgk002_desc(chr100|&apos;&apos;),l_apgk004_desc(chr100|&apos;&apos;),l_apgk001_desc(chr100|&apos;&apos;),l_apga007(chr100|&apos;&apos;),l_apga007_desc(chr100|&apos;&apos;),l_apga105(num20_6|0),l_apga016(num20_6|0),l_apga018(chr100|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="apgk001,apgk002,apgk003,apgk004,apgk005,apgk006,apgk007,apgk008,apgk009,apgk010,apgk011,apgk012,apgk013,apgk014,apgk015,apgk100,apgk101,apgk103,apgk104,apgk113,apgk114,apgkcomp,apgkdocdt,apgkdocno,apgkent,apgkstus,l_apgk002_desc(chr100|&apos;&apos;),l_apgk004_desc(chr100|&apos;&apos;),l_apgk001_desc(chr100|&apos;&apos;),l_apga007(chr100|&apos;&apos;),l_apga007_desc(chr100|&apos;&apos;),l_apga105(num20_6|0),l_apga016(num20_6|0),l_apga018(chr100|&apos;&apos;)"/>
+    <sql id="g_from" query="apgk_t"/>
+    <sql id="g_where" query="" maintable="apgk_t"/>
+    <sql id="g_order" query="apgkdocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="apgkdocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="apgkdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="apgkent,apgkdocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="apgkent,apgkdocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="apgkent,apgkdocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="apgkdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="apgkent,apgkdocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

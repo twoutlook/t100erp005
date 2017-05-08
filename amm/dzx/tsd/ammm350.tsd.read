@@ -1,0 +1,838 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ammm350" std_prog="ammm350" erpver="1.0" ver="5" module="AMM" type="M" booking="N" designer_ver="1.0" class="m" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="mmbt_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mmbu_t" main="N" head="N" pk="" fk_detail="" parent="mmbt_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mmbw_t" main="N" head="N" pk="" fk_detail="" parent="mmbt_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mmbx_t" main="N" head="N" pk="" fk_detail="" parent="mmbt_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供會員積點規則設定
+標準作業功能取消：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：
+作業類型：(基本資料/交易規則編號)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：mmbt_t(卡活動規則單頭檔)
+           
+
+作業資料來源(Detail)：
+ 資料來源表：mmbu_t(卡積點一般規則單身檔)
+                        mmbv_t(卡積點除外規則單身檔)
+                        mmbw_t(卡積點進階規則單身檔)
+                        mmbx_t(卡活動規則生效營運據點檔)
+                      
+
+
+
+補充說明：1.取卡種符合生效營運中心依發佈日期排序取最優先.只取一筆（後令押前令).同時同一個營運中心+卡種只能有一筆規則,至於是否在生失效期再判斷
+          2.若有積分上再加碼送積分的設定請於原積分方案中加入進階規則即可.
+          3.若於某一積分方案時段內有另外一段的積分方案需先行實施,則請於進階規則中設定
+          4.若積分方案為不連續時則請另立積點規則再發佈
+          5.若積分方案中途有規則變換,則需調整原規則生失效,再加入新的規則
+          6.原TT 門檻型/比例型,利用卡種積分取位及進位方式設定即可達到要求.  
+          7.規則類型:ALL,會員等級,會員類型,款別類型都是以總額來計算積分再回攤至各商品,其餘均以商品各別計算積分後加總取得
+          8.先以一般規則計算後參考取位取得積分,並依金額比例回推至各商品項次(金額最大的以總積分扣除其它商品積分),不控管各商品積分位數
+            再依進階原則,若為非商品規則類型則以總積分計算,反之前以各商品分攤後積分計算
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[進階設定:只要能符合進階設定時,均以原標準積分再加上進階優惠設定取後最後積分
+並將符合計算後積分加總
+
+範例說明:
+       1.交易時先取符合卡種+生失效區間離系統日期最近的發佈資料
+       2.依此積分設定規則判斷是否符合
+
+       Step1: 先取積分條件設定取不到再取卡種預設積分設定
+       Step2: 取積分條件設定
+              -交易時先取符合卡種+生失效區間離系統日期最近的發佈資料
+              -依此積分設定規則判斷是否符合,若互斥否='YES'則有順序要求,必須依序取出符合的即不再取,非擇一的都必須視若符合要納入計算
+
+       家庭卡 效期 2013/8/1~ 2013/8/31
+
+              會員等級  A    100元  1點
+              會員等級  B    100元  5點
+
+       進階條件
+              擇一Yes 順序1  生日 當月          2013/8/1  ~2013/8/31  點數加倍送 
+              擇一Yes 順序2  週年慶             2013/8/10 ~2013/8/20  點數加送 100
+              擇一No         會員類型= 尊爵會員 2013/8/1 ~ 2013/8/31 點數加倍送   
+                       
+
+        CASE 小明持有家庭卡  會員等級 A  會員類型 一般會員  生日 1970/08/10  於  2013/8/10 消費 $2500 (卡種積點取位是到整數 ,4捨5入)
+             2500/100 =25 *1 點 = 25點
+             生日   25點 *200% (生日加倍送)
+             擇一不再取週年慶,也非尊爵會員
+             => 50
+
+        CASE 小明持有家庭卡  會員等級 A  會員類型 尊爵會員  生日 1970/07/10  於  2013/8/10 消費 $2500 (卡種積點取位是到整數 ,4捨5入)
+             2500/100 =25 *1 點 = 25點
+             生日不符合
+             週年慶 加送 100
+             尊爵會員 加倍 25點*200%  
+             => 100+25*200% =150
+              
+
+      擇一只能依優先序取其一,由優先等級高(數字小)的往下取,取到則不再取
+      非擇一的則必須都要計算
+]]>
+  </db_all>
+  <field cite_std="N" name="b_mmbt001" ver="1" src="s" column="mmbt001" table="mmbt_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_mmbt001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbt002" ver="1" src="s" column="mmbt002" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbt004" ver="1" src="s" column="mmbt004" table="mmbt_t" attribute="" type="" req="N" i_zoom="q_ooea001_4" c_zoom="q_ooea001_4" chk_ref="" items="6516" default="&apos;2&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbt005" ver="1" src="s" column="mmbt005" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbt006" ver="1" src="s" column="mmbt006" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbt007" ver="1" src="s" column="mmbt007" table="mmbt_t" attribute="" type="" req="N" i_zoom="q_mman001" c_zoom="q_mman001" chk_ref="" items="6517" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbt008" ver="1" src="s" column="mmbt008" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6517" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbt009" ver="1" src="s" column="mmbt009" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6534" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbt015" ver="1" src="s" column="mmbt015" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbt016" ver="1" src="s" column="mmbt016" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbt017" ver="1" src="s" column="mmbt017" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmbw004_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmbw004_desc_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmbw014_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmbw015_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmbw016_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmbw017_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmbw018_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmbw019_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt001" ver="1" src="s" column="mmbt001" table="mmbt_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_mmbt001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[規則編號：
+   ●欄位控管：
+     依參數設定是否自動編碼(Y/N)?
+       Y:依共用編碼設定原則產生.
+       N:自行輸入
+     校驗:程式需 check 同企業編號+營運據點+規則編號 不允許重複
+    
+   ●開窗處理：
+     1.查詢時：
+       查詢條件：活動類型='1.積點'
+       回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt002" ver="1" src="s" column="mmbt002" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[版本：
+   ●欄位控管：
+     預設值:0 
+     除新增外,異動資料均由會員卡積點變更作業回寫.]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt004" ver="1" src="s" column="mmbt004" table="mmbt_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6516" default="&apos;2&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt005" ver="1" src="s" column="mmbt005" table="mmbt_t" attribute="" type="" req="Y" i_zoom="q_mman001" c_zoom="q_mman001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[卡種編號：
+   ●欄位控管：
+     校驗:
+          1.輸入值須存在[T:卡種基本資料檔].[C:卡種編號]且為已確認有效資料
+
+
+]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt006" ver="1" src="s" column="mmbt006" table="mmbt_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[活動檔期編號：
+   ●欄位控管：
+          1.輸入值須存在[T:活動檔期資料檔].[C:活動檔期編號]且為已確認有效資料
+     輸入完畢後右方帶入對應活動檔期名稱顯示 (暂保留未处理）
+]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt007" ver="5" src="s" column="mmbt007" table="mmbt_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6517" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[活動規則類型：
+   ●欄位控管：
+     預設值:0.無,允許修改.
+     資料選項來源: 
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=6517(0-L )的資料,U.庫區類別,V.庫區品類
+　　     　　　　　[T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:1.輸入值須存在[T:系統分類碼檔].[C:系統分類碼]、[C:系統分類]=6517
+          2.當規則類型修改時,程式必須 check [T:卡積點一般規則單身檔]資料若<>0 則顯示"規則類型異動是否一併清除積點計算規則設定資料(Y/N)?"
+             Y:則清除此規則編號對應 [T:卡積點一般規則單身檔]資料
+             N:則規則類型欄位還原回異動前資料.
+#150408新增選項
+Z.單筆交易總金額區間
+]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt008" ver="5" src="s" column="mmbt008" table="mmbt_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6517" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[排除方式：
+   ●欄位控管：
+     預設值:0.無,允許修改.
+     資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=6517(0-L)的資料,U.庫區類別,V.庫區品類
+#150408新增選項
+W.促銷規則
+
+   ]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt014" ver="1" src="s" column="mmbt014" table="mmbt_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[開始日期
+●欄位控管：
+          1.當結束日期不為空白或Null時,[C:開始日期]必須小於[C:結束日期]
+]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt015" ver="1" src="s" column="mmbt015" table="mmbt_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[結束日期
+●欄位控管：
+     校驗:
+          1.[C:結束日期]必須大於[C:開始日期]
+          
+]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt016" ver="1" src="s" column="mmbt016" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[發佈日期
+●欄位控管：
+     預設值:由程式執行發佈時自動回寫                
+]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbt017" ver="1" src="s" column="mmbt017" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtcnfdt" ver="1" src="s" column="mmbtcnfdt" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtcnfid" ver="1" src="s" column="mmbtcnfid" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtcrtdp" ver="1" src="s" column="mmbtcrtdp" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtcrtdt" ver="1" src="s" column="mmbtcrtdt" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtcrtid" ver="1" src="s" column="mmbtcrtid" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtmoddt" ver="1" src="s" column="mmbtmoddt" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtmodid" ver="1" src="s" column="mmbtmodid" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtowndp" ver="1" src="s" column="mmbtowndp" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtownid" ver="1" src="s" column="mmbtownid" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtstus" ver="1" src="s" column="mmbtstus" table="mmbt_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbt_t.mmbtunit" ver="3" src="s" column="mmbtunit" table="mmbt_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbu004_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbu_t.mmbu003" ver="1" src="s" column="mmbu003" table="mmbu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbu_t.mmbu004" ver="1" src="s" column="mmbu004" table="mmbu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_mmbu004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[規則編碼
+  ●欄位控管：
+   預設值:1.當:[T:卡活動規則單頭檔].[C:規則類型]='0'無,則程式Default' ALL'(大寫).
+     校驗:輸入值須存在[T:卡活動規則單頭檔].[C:規則類型]所屬類型對應的資料中.
+              規則類型=0.無        ->必須為'ALL',且由程式自動寫入,不允許修改
+
+              規則類型=1.會員等級  ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼]WHERE[C:應用分類]=[T:會員基本資料申請檔-屬性資料].[C:對應應用分類代碼]=2024 
+                         且為有效資料
+　　　　　　　　　　　　 ●開窗處理：
+                           1.參考函式：依標準查詢視窗
+                           2.查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+                           3.過濾條件：[T:應用分類碼檔].[C:應用分類]=2024
+                           4.回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+
+              規則類型=2.會員類型  ->輸入值須存在[T.應用分類碼檔].[C.應用分類碼]WHERE[C:應用分類]=[T:會員基本資料申請檔-屬性資料].[C:對應應用分類代碼]=2025 
+                         且為有效資料
+                     　  ●開窗處理：
+                           1.參考函式：依標準查詢視窗
+                           2.查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+                           3.過濾條件：[T:應用分類碼檔].[C:應用分類]=2025
+                           4.回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+
+　            規則類型=3.款別類型  ->輸入值須存在[T:款別資料檔](???)
+                     　  ●開窗處理：
+                           1.參考函式：依標準查詢視窗
+                           2.查詢欄位：[T:款別資料檔].[C:款別編碼],[T:款別資料檔].[C:說明]
+                           3.過濾條件：(無)
+                           4.回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+
+              規則類型=4.商品編號  ->輸入值須存在[T:門店商品清單檔] WHERE[C:門店編號]=[T:卡活動規則單頭檔]].[C:制定營運據點]且為有效的商品編號.
+                         ●開窗處理：
+                           1.參考函式：依標準查詢視窗
+                           2.查詢欄位：[T:門店商品清單檔].[C:商品編號],[T門店商品清單檔].[C:商品名稱]
+                           3.過濾條件：[T:門店商品清單檔] WHERE[C:門店編號]=[T:卡活動規則單頭檔].[C:制定營運據點]且為有效的商品編號.
+                           4.回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+
+              規則類型=5.商品分類  ->輸入值須存在[T:品類基本資料檔] WHERE[T:品類基本資料檔][C:下級品類數]=0. 
+                         ●開窗處理：
+                           1.參考函式：依標準查詢視窗
+                           2.查詢欄位：[T:品類基本資料檔].[C:品類編號],[T:品類基本資料檔].[C:品類名稱]
+                           3.過濾條件：[T:品類基本資料檔] WHERE[T:品類基本資料檔][C:下級品類數]=0
+                           4.回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+
+              規則類型=6.商品屬性-產地分類->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2000 AND [C:應用分類狀態碼]='Y'
+              規則類型=7.商品屬性-價格帶  ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2001 AND [C:應用分類狀態碼]='Y'
+              規則類型=8.商品屬性-品牌    ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2002 AND [C:應用分類狀態碼]='Y'
+              規則類型=9.商品屬性-系列    ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2003 AND [C:應用分類狀態碼]='Y'
+              規則類型=A.商品屬性-型別    ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2004 AND [C:應用分類狀態碼]='Y'
+              規則類型=B.商品屬性-功能    ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2005 AND [C:應用分類狀態碼]='Y'
+              規則類型=C~L.商品屬性-其它屬性一~十->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2006 ~2015 AND [C:應用分類狀態碼]='Y'
+                                                   輸入完畢後一併帶入商品名稱顯示在畫面規則編碼說明
+
+                      ●開窗處理：
+                        參考函式：依標準查詢視窗.
+                        查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+                        過濾條件：[T:應用分類碼檔].[C:應用分類]=2000~2005,依規則類型抓取對應資料.
+                        回值類型：多重回值
+
+             
+             規則類型=U.庫區類別-功能    ->輸入值須存在[T:系統分類值檔].[C:系統分類碼]= WHERE [C:系統分類碼]=6200 庫區類別 
+             規則類型=V.庫區品類-功能    ->輸入值須存在[T:參數資料檔] WHERE[T:參數資料檔][C:品類管理層級]取對應層級品類資料.   
+                        
+ ######130911補充：規則類型 = Q.消費總金額  -> 輸入值須存在ACC 中 系統分類碼 = ‘’保留未處理#########
+             
+
+ 
+
+
+
+
+
+
+
+
+
+]]>
+  </field>
+  <field cite_std="N" name="mmbu_t.mmbu005" ver="1" src="s" column="mmbu005" table="mmbu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6503" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbu_t.mmbu006" ver="1" src="s" column="mmbu006" table="mmbu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：
+   ●欄位控管：
+     校驗: 1.輸入值必須>=0
+    ]]>
+  </field>
+  <field cite_std="N" name="mmbu_t.mmbu007" ver="1" src="s" column="mmbu007" table="mmbu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[積點基準：
+   ●欄位控管：
+     校驗:1.輸入值必須>0
+]]>
+  </field>
+  <field cite_std="N" name="mmbu_t.mmbu008" ver="1" src="s" column="mmbu008" table="mmbu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單位積點：
+   ●欄位控管：
+     校驗:1..輸入值必須>0
+]]>
+  </field>
+  <field cite_std="N" name="mmbu_t.mmbu009" ver="5" src="s" column="mmbu009" table="mmbu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbu_t.mmbu010" ver="5" src="s" column="mmbu010" table="mmbu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbu_t.mmbustus" ver="1" src="s" column="mmbustus" table="mmbu_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw004_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw004_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw004_desc_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw014_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw015_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw016_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="TimeEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw017_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="TimeEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw018_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw019_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw003" ver="5" src="s" column="mmbw003" table="mmbw_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Q&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[規則類型：
+   ●欄位控管：
+     預設值:'Q'.紀念日,允許修改.
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=6517  (1-V)的資料,
+　　     　　　　　[T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:輸入值須存在[T:系統分類碼檔].[C:系統分類碼]、[C:系統分類]=6517  (1-V)
+#150408新增選項
+Z.單筆交易總金額區間
+
+   ]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw004" ver="1" src="s" column="mmbw004" table="mmbw_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_mmbw004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[規則編碼
+  ●欄位控管：
+
+     校驗:輸入值須存在[T:卡積點進階規則單身檔].[C:進階規則類型]所屬類型對應的資料中.且輸入完畢後帶入對應的規則編碼說明顯示於畫面上.
+              規則類型=1.會員等級  ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼]WHERE[C:應用分類]=[T:會員基本資料申請檔-屬性資料].[C:對應應用分類代碼]=2024 
+                         且為有效資料
+　　　　　　　　　　　　 ●開窗處理：
+                           1.參考函式：依標準查詢視窗
+                           2.查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+                           3.過濾條件：[T:應用分類碼檔].[C:應用分類]=2024
+                           4.回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+
+              規則類型=2.會員類型  ->輸入值須存在[T.應用分類碼檔].[C.應用分類碼]WHERE[C:應用分類]=[T:會員基本資料申請檔-屬性資料].[C:對應應用分類代碼]=2025 
+                         且為有效資料
+                     　  ●開窗處理：
+                           1.參考函式：依標準查詢視窗
+                           2.查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+                           3.過濾條件：[T:應用分類碼檔].[C:應用分類]=2025
+                           4.回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+
+　            規則類型=3.款別類型  ->輸入值須存在[T:款別資料檔](???)
+                     　  ●開窗處理：
+                           1.參考函式：依標準查詢視窗
+                           2.查詢欄位：[T:款別資料檔].[C:款別編碼],[T:款別資料檔].[C:說明]
+                           3.過濾條件：(無)
+                           4.回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+
+              規則類型=4.商品編號  ->輸入值須存在[T:門店商品清單檔] WHERE[C:門店編號]=[T:卡活動規則單頭檔]].[C:制定營運據點]且為有效的商品編號.
+                         ●開窗處理：
+                           1.參考函式：依標準查詢視窗
+                           2.查詢欄位：[T:門店商品清單檔].[C:商品編號],[T門店商品清單檔].[C:商品名稱]
+                           3.過濾條件：[T:門店商品清單檔] WHERE[C:門店編號]=[T:卡活動規則單頭檔].[C:制定營運據點]且為有效的商品編號.
+                           4.回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+
+              規則類型=5.商品分類  ->輸入值須存在[T:品類基本資料檔] WHERE[T:品類基本資料檔][C:下級品類數]=0. 
+                         ●開窗處理：
+                           1.參考函式：依標準查詢視窗
+                           2.查詢欄位：[T:品類基本資料檔].[C:品類編號],[T:品類基本資料檔].[C:品類名稱]
+                           3.過濾條件：[T:品類基本資料檔] WHERE[T:品類基本資料檔][C:下級品類數]=0
+                           4.回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+
+              規則類型=6.商品屬性-產地分類->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2000 AND [C:應用分類狀態碼]='Y'
+              規則類型=7.商品屬性-價格帶  ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2001 AND [C:應用分類狀態碼]='Y'
+              規則類型=8.商品屬性-品牌    ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2002 AND [C:應用分類狀態碼]='Y'
+              規則類型=9.商品屬性-系列    ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2003 AND [C:應用分類狀態碼]='Y'
+              規則類型=A.商品屬性-型別    ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2004 AND [C:應用分類狀態碼]='Y'
+              規則類型=B.商品屬性-功能    ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2005 AND [C:應用分類狀態碼]='Y'
+              規則類型=C~L.商品屬性-其它屬性一~十->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2006 ~2015 AND [C:應用分類狀態碼]='Y'
+                                                   輸入完畢後一併帶入商品名稱顯示在畫面規則編碼說明
+                      ●開窗處理：
+                        參考函式：依標準查詢視窗.
+                        查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+                        過濾條件：[T:應用分類碼檔].[C:應用分類]=2000~2005,依規則類型抓取對應資料.
+                        回值類型：多重回值
+
+              
+              規則類型=Q.紀念日       ->輸入值須存在[T:應用分類碼檔].[C:應用分類碼] WHERE [C:應用分類]=2050 AND [C:應用分類狀態碼]='Y'
+              規則類型=R.促銷活動檔期 ->輸入值須存在[T:促銷活動檔期資料檔]
+              規則類型=S.營運據點     ->輸入值須存在[T:營運組織檔]且為有效資料
+              規則類型=T.庫位編號     ->輸入值須存在[T:庫位基本資料檔]且為有效資料
+              規則類型=U.庫區類別-功能->輸入值須存在[T:系統分類值檔].[C:系統分類碼]= WHERE [C:系統分類碼]=6200庫區類別 
+              規則類型=V.庫區品類-功能->輸入值須存在[T:參數資料檔] WHERE[T:參數資料檔][C:品類管理層級]取對應層級品類資料. 
+
+           
+]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw005" ver="1" src="s" column="mmbw005" table="mmbw_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw006" ver="1" src="s" column="mmbw006" table="mmbw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[優先序：
+   ●欄位控管：
+     校驗:1.當[C:互斥]='N',此欄位不可以輸入. 
+          2.若[C:互斥]='N'且[C:優先序]不為空白或NULL時則資料將[C:優先序]清空.
+          3.當[C:互斥]='Y'時欄位為必須欄位.且輸入的值必須>0 而且不允許同一張規則編號存在同一個序號]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw007" ver="1" src="s" column="mmbw007" table="mmbw_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6518" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw008" ver="1" src="s" column="mmbw008" table="mmbw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[紀念日前(日)：
+   ●欄位控管：
+     校驗:1.當[C:紀念日回饙條件]<>'3'紀念日前後,此欄位不可以輸入. 
+          2.若[C:紀念日回饙條件]<>'3'且[C:紀念日前(日)]不為空白或NULL時則資料將[C:紀念日前(日)]清空.
+          3.當[C:紀念日回饙條件]='3'紀念日前後,則[C:紀念日前(日)] 欄位必須>=0]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw009" ver="1" src="s" column="mmbw009" table="mmbw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[紀念日後(日)：
+   ●欄位控管：
+     校驗:1.當[C:紀念日回饙條件]<>'3'紀念日前後,此欄位不可以輸入. 
+          2.若[C:紀念日回饙條件]<>'3'且[C:紀念日後(日)]不為空白或NULL時則資料將[C:紀念日後(日)]清空.
+          3.當[C:紀念日回饙條件]='3'紀念日前後,則[C:紀念日後(日)] 欄位必須>=0
+          ]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw010" ver="1" src="s" column="mmbw010" table="mmbw_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6519" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[回饋類型：
+   ●欄位控管：
+     校驗:
+          1.當[C:回饋類型]='1'總積點加倍送時,則[C:回饋積點基準],[C:加送積點]兩個欄位必須清空
+          2.當[C:回饋類型]='2'總積點加送時,則[C:回饋積點基準],[C:加送倍數]必須清空
+          3.當[C:回饋類型]='3'單位積點加送時,則[C:加送倍數]必須清空
+
+   ]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw011" ver="1" src="s" column="mmbw011" table="mmbw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[加送倍數%：
+   ●欄位控管：
+     校驗  :1.當[C:回饋類型]=1.總積點加倍送時,不允許空白或Null
+            2.當[C:回饋類型]=1.總積點加倍送時,輸入值必須>=0]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw012" ver="1" src="s" column="mmbw012" table="mmbw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[回饙積點基準：
+   ●欄位控管：
+     校驗  :1.當[C:回饋類型]='3'單位積點加送,則不允許空白或Null
+            2.當[C:回饋類型]='3'單位積點加送,輸入值必須>0]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw013" ver="1" src="s" column="mmbw013" table="mmbw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[加送積點：
+   ●欄位控管：
+     校驗  :1.當[C:回饋類型]='2'總積點加送 or '3'單位積點加送,不允許空白或Null
+            2.當[C:回饋類型]='2'總積點加送 or '3'單位積點加送,輸入值必須>=0]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw014" ver="1" src="s" column="mmbw014" table="mmbw_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[開始日期
+●欄位控管：
+     校驗:
+          1.當結束日期不為空白或Null時,[C:開始日期]必須小於[C:結束日期]
+          2.[C:開始日期] 必須 >= [T:卡活動規則單頭檔].[C:開始日期]
+]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw015" ver="1" src="s" column="mmbw015" table="mmbw_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[結束日期
+●欄位控管：
+     校驗:
+          1.[C:結束日期]必須大於[C:開始日期]
+          2.[C:結束日期] 必須 <= [T:卡活動規則單頭檔].[C:結束日期]
+
+]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw016" ver="1" src="s" column="mmbw016" table="mmbw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TimeEdit" status="">
+    <![CDATA[每日開始時間
+●欄位控管：
+     校驗:1.[C:每日結束時間]不為空白或Null時,[C:每日開始時間]必須<=[C:每日結束時間]
+       
+]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw017" ver="1" src="s" column="mmbw017" table="mmbw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TimeEdit" status="">
+    <![CDATA[每日結束時間
+●欄位控管：
+     校驗:1.[C:每日開始時間]不為空白或Null時,[C:每日結束時間]必須>=[C:每日結束時間]
+          2.[C:每日開始時間]不為空白或Null時,[C:每日結束時間]則不允許空白或Null
+]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw018" ver="1" src="s" column="mmbw018" table="mmbw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6520" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbw019" ver="1" src="s" column="mmbw019" table="mmbw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="30" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbw_t.mmbwstus" ver="1" src="s" column="mmbwstus" table="mmbw_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbx_t.mmbx004" ver="3" src="s" column="mmbx004" table="mmbx_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[生效營運據點：
+   ●欄位控管：
+     程式需 check 同一張申請單營運據點不允許重複
+     程式依生效營運據點帶出對應營運據點名稱並顯示於畫面中
+]]>
+  </field>
+  <field cite_std="N" name="mmbx_t.mmbx005" ver="1" src="s" column="mmbx005" table="mmbx_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbx_t.mmbxstus" ver="1" src="s" column="mmbxstus" table="mmbx_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="5" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_mmbt001_desc" src="s" depend_field="" correspon_key="mmbt001" ref_table="mmbtl_t" ref_fk="mmbtl001" ref_dlang="mmbtl002" ref_rtn="mmbtl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_mmbt007_desc" src="s" depend_field="b_mmbt007" correspon_key="mmbtent,mmbt007" ref_table="mmanl_t" ref_fk="mmanlent,mmanl001" ref_dlang="mmanl002" ref_rtn="mmanl003" status=""/>
+    <rfield cite_std="N" ver="2" name="mmbt005_desc" src="s" depend_field="mmbt_t.mmbt005" correspon_key="mmbtent,mmbt005" ref_table="mmanl_t" ref_fk="mmanlent,mmanl001" ref_dlang="mmanl002" ref_rtn="mmanl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbtcnfid_desc" src="s" depend_field="mmbt_t.mmbtcnfid" correspon_key="mmbtcnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbtcrtdp_desc" src="s" depend_field="mmbt_t.mmbtcrtdp" correspon_key="mmbtcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbtcrtid_desc" src="s" depend_field="mmbt_t.mmbtcrtid" correspon_key="mmbtcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbtmodid_desc" src="s" depend_field="mmbt_t.mmbtmodid" correspon_key="mmbtmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbtowndp_desc" src="s" depend_field="mmbt_t.mmbtowndp" correspon_key="mmbtowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbtownid_desc" src="s" depend_field="mmbt_t.mmbtownid" correspon_key="mmbtownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbtunit_desc" src="s" depend_field="mmbt_t.mmbtunit" correspon_key="mmbtent,mmbtunit" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbx004_desc" src="s" depend_field="mmbx_t.mmbx004" correspon_key="mmbxent,mmbx004" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="mmbtl_t.mmbtl003" src="s" depend_field="" correspon_key="mmbtent,mmbt001" lang_table="mmbtl_t" lang_fk="mmbtlent,mmbtl001" lang_dlang="mmbtl002" lang_rtn="mmbtl003" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="mmbtl_t.mmbtl004" src="s" depend_field="" correspon_key="mmbtent,mmbt001" lang_table="mmbtl_t" lang_fk="mmbtlent,mmbtl001" lang_dlang="mmbtl002" lang_rtn="mmbtl004" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_mmbt001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbt002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbt004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbt005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbt006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbt007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbt008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbt009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbt015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbt016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbt017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="lbl_mmbw004_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mmbw004_desc_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mmbw014_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mmbw015_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mmbw016_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mmbw017_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mmbw018_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mmbw019_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbt001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbt002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbt004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbt005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbt006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="mmbt_t.mmbt007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="mmbt_t.mmbt008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbt014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbt015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbt016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbt017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbtcnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbtcnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbtcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbtcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbtcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbtmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbtmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbtowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbtownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbt_t.mmbtstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="mmbt_t.mmbtunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbu004_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbu_t.mmbu003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbu_t.mmbu004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbu_t.mmbu005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbu_t.mmbu006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbu_t.mmbu007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbu_t.mmbu008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="mmbu_t.mmbu009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="mmbu_t.mmbu010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="mmbu_t.mmbustus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw004_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw004_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw004_desc_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw014_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw015_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw016_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw017_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw018_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw019_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="mmbw_t.mmbw003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbw019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbw_t.mmbwstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="mmbx_t.mmbx004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbx_t.mmbx005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbx_t.mmbxstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="exclude" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[調用函式 CALL ammm350_01() ]]>
+  </act>
+  <act cite_std="N" id="issue" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[調用s_ammm350 里的 s_ammm350_issue_chk    s_ammm350_issue_upd]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="remarks" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_mmbt001" text="活動規則編號" lstr=""/>
+    <sfield name="lbl_mmbtl003" text="說明" lstr=""/>
+    <sfield name="lbl_mmbt002" text="版本" lstr=""/>
+    <sfield name="lbl_mmbt004" text="活動類型" lstr=""/>
+    <sfield name="lbl_mmbt005" text="卡種編號" lstr=""/>
+    <sfield name="lbl_mmbt006" text="活動檔期編號" lstr=""/>
+    <sfield name="lbl_mmbt007" text="規則類型" lstr=""/>
+    <sfield name="lbl_mmanl003" text="說明" lstr=""/>
+    <sfield name="lbl_mmbt008" text="排除方式" lstr=""/>
+    <sfield name="lbl_mmbt009" text="累計方式" lstr=""/>
+    <sfield name="lbl_mmbt015" text="結束日期" lstr=""/>
+    <sfield name="lbl_mmbt016" text="發佈日期" lstr=""/>
+    <sfield name="lbl_mmbt017" text="下級發佈" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_mmbtunit" text="制定營運組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_mmbtl004" text="助計碼" lstr=""/>
+    <sfield name="lbl_mmbt014" text="開始日期" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_ooeal003" text="營運據點名稱" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="bpage_1" text="積點一般規則設定" lstr=""/>
+    <sfield name="lbl_mmbu003" text="規則類型" lstr=""/>
+    <sfield name="lbl_mmbu004" text="規則編碼" lstr=""/>
+    <sfield name="lbl_mmbu004_desc" text="規則編碼說明" lstr=""/>
+    <sfield name="lbl_mmbu005" text="基準單位" lstr=""/>
+    <sfield name="lbl_mmbu006" text="基準額滿" lstr=""/>
+    <sfield name="lbl_mmbu007" text="積點基準" lstr=""/>
+    <sfield name="lbl_mmbu008" text="單位積點" lstr=""/>
+    <sfield name="lbl_mmbu009" text="特價積分基準" lstr=""/>
+    <sfield name="lbl_mmbu010" text="特價單位積分" lstr=""/>
+    <sfield name="lbl_mmbustus" text="有效" lstr=""/>
+    <sfield name="page_3" text="生效營運組織設定" lstr=""/>
+    <sfield name="lbl_mmbx004" text="生效營運組織" lstr=""/>
+    <sfield name="lbl_mmbx005" text="包含以下營運組織" lstr=""/>
+    <sfield name="lbl_mmbxstus" text="有效" lstr=""/>
+    <sfield name="page_4" text="積點進階規則設定" lstr=""/>
+    <sfield name="lbl_mmbw003" text="進階規則類型" lstr=""/>
+    <sfield name="lbl_mmbw004" text="進階規則編碼" lstr=""/>
+    <sfield name="lbl_mmbw004_desc" text="規則編碼說明" lstr=""/>
+    <sfield name="lbl_mmbw005" text="互斥" lstr=""/>
+    <sfield name="lbl_mmbw006" text="優先序" lstr=""/>
+    <sfield name="lbl_mmbw007" text="紀念日回饋條件" lstr=""/>
+    <sfield name="lbl_mmbw008" text="紀念日前(日)" lstr=""/>
+    <sfield name="lbl_mmbw009" text="紀念日後(日)" lstr=""/>
+    <sfield name="lbl_mmbw010" text="回饋類型" lstr=""/>
+    <sfield name="lbl_mmbw011" text="加送倍數%" lstr=""/>
+    <sfield name="lbl_mmbw012" text="回饋積點基準" lstr=""/>
+    <sfield name="lbl_mmbw013" text="加送積點" lstr=""/>
+    <sfield name="lbl_mmbw014" text="開始日期" lstr=""/>
+    <sfield name="lbl_mmbw015" text="結束日期" lstr=""/>
+    <sfield name="lbl_mmbw016" text="每日開始時間" lstr=""/>
+    <sfield name="lbl_mmbw017" text="每日結束時間" lstr=""/>
+    <sfield name="lbl_mmbw018" text="固定日期" lstr=""/>
+    <sfield name="lbl_mmbw019" text="固定星期" lstr=""/>
+    <sfield name="lbl_mmbwstus" text="有效" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_mmbv001" text="活動規則編號" lstr=""/>
+    <sfield name="lbl_mmbv003" text="規則類型" lstr=""/>
+    <sfield name="lbl_mmbv004" text="規則編碼" lstr=""/>
+    <sfield name="lbl_mmbv004_desc" text="規則說明" lstr=""/>
+    <sfield name="lbl_mmbvstus" text="有效" lstr=""/>
+    <sfield name="lbl_ooff002" text="第一KEY值" lstr=""/>
+    <sfield name="lbl_ooff007" text="第六KEY值" lstr=""/>
+    <sfield name="lbl_ooff003" text="第二KEY值" lstr=""/>
+    <sfield name="lbl_ooff008" text="第七KEY值" lstr=""/>
+    <sfield name="lbl_ooff004" text="第三KEY值" lstr=""/>
+    <sfield name="lbl_ooff009" text="第八KEY值" lstr=""/>
+    <sfield name="lbl_ooff005" text="第四KEY值" lstr=""/>
+    <sfield name="lbl_ooff010" text="第九KEY值" lstr=""/>
+    <sfield name="lbl_ooff006" text="第五KEY值" lstr=""/>
+    <sfield name="lbl_ooff011" text="第十KEY值" lstr=""/>
+    <sfield name="lbl_ooff001" text="備註類型" lstr=""/>
+    <sfield name="lbl_ooff012" text="控制類型" lstr=""/>
+    <sfield name="lbl_ooff014" text="失效日期" lstr=""/>
+    <sfield name="define" text="預設備註" lstr=""/>
+    <sfield name="comme" text="個人常用備註" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="exclude" text="規則排除" lstr=""/>
+    <sact name="issue" text="發佈" lstr=""/>
+    <sact name="remarks" text="備註" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

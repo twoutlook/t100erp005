@@ -1,0 +1,679 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="aimm201_01.description" >}
+#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000003
+#+ 
+#+ Filename...: aimm201_01
+#+ Description: 料件據點資料批次調整
+#+ Creator....: 02295(2014-12-24 14:05:29)
+#+ Modifier...: 02295(2014-12-25 15:02:39) -SD/PR- 02295
+ 
+{</section>}
+ 
+{<section id="aimm201_01.global" >}
+#應用 c02b 樣板自動產生(Version:3)
+
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_dzeb_d        RECORD
+       dzeb002 LIKE dzeb_t.dzeb002, 
+   dzeb002_desc LIKE type_t.chr500, 
+   valu LIKE type_t.chr500, 
+   cond LIKE type_t.chr500, 
+   cond_desc LIKE type_t.chr500, 
+   lim LIKE type_t.chr500, 
+   val LIKE type_t.chr500
+       END RECORD
+ 
+ 
+DEFINE g_dzeb_d          DYNAMIC ARRAY OF type_g_dzeb_d
+DEFINE g_dzeb_d_t        type_g_dzeb_d
+ 
+DEFINE g_dzeb002_t      LIKE dzeb_t.dzeb002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE g_detail_idx          LIKE type_t.num5  
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_insert              LIKE type_t.chr5 
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="aimm201_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aimm201_01(--)
+   #add-point:input段變數傳入
+   
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   DEFINE l_val  STRING
+   DEFINE l_idx  LIKE type_t.num5
+   DEFINE l_dzeb001 LIKE dzeb_t.dzeb001
+   DEFINE l_dzeb004 LIKE dzeb_t.dzeb004
+   DEFINE l_cnt     LIKE type_t.num5
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aimm201_01 WITH FORM cl_ap_formpath("aim","aimm201_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   CALL g_dzeb_d.clear()
+   
+   CALL cl_set_combo_scc('lim','199') 
+   LET g_errshow=1
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_dzeb_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_dzeb_d.getLength()+1) 
+              LET g_insert = 'N' 
+            END IF
+            
+         BEFORE ROW 
+            LET l_ac = ARR_CURR()
+            CALL aimm201_01_set_comp_visible() 
+            
+         BEFORE INSERT 
+            #LET g_dzeb_d[l_ac].lim = '1'
+            #CALL cl_set_comp_required('val',TRUE)            
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dzeb002
+            
+            #add-point:AFTER FIELD dzeb002
+            CALL aimm201_01_desc(g_dzeb_d[l_ac].dzeb002) RETURNING g_dzeb_d[l_ac].dzeb002_desc
+            DISPLAY BY NAME g_dzeb_d[l_ac].dzeb002_desc            
+            IF NOT cl_null(g_dzeb_d[l_ac].dzeb002) THEN       
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_dzeb_d[l_ac].dzeb002
+               IF NOT cl_chk_exist("v_dzeb001_1") THEN
+                  LET g_dzeb_d[l_ac].dzeb002 = ''
+                  NEXT FIELD CURRENT
+               END IF               
+    
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               IF g_prog = 'aimm201' OR g_prog = 'aimm202' OR g_prog = 'aimm203' OR g_prog = 'aimm204'
+                  OR g_prog = 'aimm211' OR g_prog = 'aimm212' OR g_prog = 'aimm213' OR g_prog = 'aimm214'               
+                  OR g_prog = 'aimm218' THEN 
+                  LET g_chkparam.arg1 = 'imaf_t'
+                  LET l_dzeb001 = 'imaf_t'
+               END IF
+               IF g_prog = 'aimm205' OR g_prog = 'aimm206' OR g_prog = 'aimm215' OR g_prog = 'aimm216' OR g_prog = 'aimm219' THEN 
+                  LET g_chkparam.arg1 = 'imae_t'
+                  LET l_dzeb001 = 'imae_t'
+               END IF
+               IF g_prog = 'aimm207' THEN 
+                  LET g_chkparam.arg1 = 'imag_t'
+                  LET l_dzeb001 = 'imag_t'
+               END IF 
+               
+               LET l_cnt= 0
+               SELECT COUNT(*) INTO l_cnt
+                 FROM dzeb_t
+                WHERE dzeb001 = l_dzeb001
+                  AND dzeb002 = g_dzeb_d[l_ac].dzeb002
+               IF l_cnt = 0 THEN 
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aim-00229'
+                  LET g_errparam.extend = g_dzeb_d[l_ac].dzeb002
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()                  
+                  LET g_dzeb_d[l_ac].dzeb002 = ''
+                  NEXT FIELD CURRENT                   
+               END IF
+
+               LET g_chkparam.arg2 = g_dzeb_d[l_ac].dzeb002
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_dzeb002_1") THEN
+                  LET g_dzeb_d[l_ac].dzeb002 = ''
+                  NEXT FIELD CURRENT
+               END IF
+               SELECT dzeb004 INTO l_dzeb004 FROM dzeb_t WHERE dzeb001 = l_dzeb001 AND dzeb002 = g_dzeb_d[l_ac].dzeb002
+               IF l_dzeb004 = 'Y' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aim-00228'
+                  LET g_errparam.extend = l_val
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()                  
+                  LET g_dzeb_d[l_ac].dzeb002 = ''
+                  NEXT FIELD CURRENT                
+               END IF  
+            END IF                  
+
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dzeb002
+            #add-point:BEFORE FIELD dzeb002
+            CALL aimm201_01_desc(g_dzeb_d[l_ac].dzeb002) RETURNING g_dzeb_d[l_ac].dzeb002_desc
+            DISPLAY BY NAME g_dzeb_d[l_ac].dzeb002_desc 
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE dzeb002
+            #add-point:ON CHANGE dzeb002
+            
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD valu
+            #add-point:BEFORE FIELD valu
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD valu
+            
+            #add-point:AFTER FIELD valu
+            
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE valu
+            #add-point:ON CHANGE valu
+            
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD cond
+            
+            #add-point:AFTER FIELD cond
+            CALL aimm201_01_desc(g_dzeb_d[l_ac].cond) RETURNING g_dzeb_d[l_ac].cond_desc
+            DISPLAY BY NAME g_dzeb_d[l_ac].cond_desc             
+            IF NOT cl_null(g_dzeb_d[l_ac].cond) THEN       
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_dzeb_d[l_ac].cond
+               IF NOT cl_chk_exist("v_dzeb001_1") THEN
+                  LET g_dzeb_d[l_ac].cond = ''
+                  NEXT FIELD CURRENT
+               END IF 
+               
+               
+#               INITIALIZE g_chkparam.* TO NULL
+   
+               #設定g_chkparam.*的參數
+               IF g_prog = 'aimm201' OR g_prog = 'aimm202' OR g_prog = 'aimm203' OR g_prog = 'aimm204' 
+                  OR g_prog = 'aimm211' OR g_prog = 'aimm212' OR g_prog = 'aimm213' OR g_prog = 'aimm214'
+                  OR g_prog = 'aimm218' THEN 
+                  LET g_chkparam.arg1 = 'imaf_t'
+                  LET l_dzeb001 = 'imaf_t'
+               END IF
+               IF g_prog = 'aimm205' OR g_prog = 'aimm206' OR g_prog = 'aimm215' OR g_prog = 'aimm216' OR g_prog = 'aimm219' THEN 
+                  LET g_chkparam.arg1 = 'imae_t'
+                  LET l_dzeb001 = 'imae_t'
+               END IF
+               IF g_prog = 'aimm207' THEN 
+                  LET g_chkparam.arg1 = 'imag_t'
+                  LET l_dzeb001 = 'imag_t'
+               END IF                  
+               
+               LET l_cnt= 0
+               SELECT COUNT(*) INTO l_cnt
+                 FROM dzeb_t
+                WHERE dzeb001 = l_dzeb001
+                  AND dzeb002 = g_dzeb_d[l_ac].cond
+               IF l_cnt = 0 THEN 
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aim-00229'
+                  LET g_errparam.extend = g_dzeb_d[l_ac].cond
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()                  
+                  LET g_dzeb_d[l_ac].cond = ''
+                  NEXT FIELD CURRENT                   
+               END IF
+
+#               LET g_chkparam.arg2 = g_dzeb_d[l_ac].cond
+#               #呼叫檢查存在並帶值的library
+#               IF NOT cl_chk_exist("v_dzeb002") THEN
+#                  LET g_dzeb_d[l_ac].cond = ''
+#                  NEXT FIELD CURRENT
+#               END IF
+            END IF
+            CALL aimm201_01_set_comp_visible() 
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD cond
+            #add-point:BEFORE FIELD cond
+            CALL aimm201_01_desc(g_dzeb_d[l_ac].cond) RETURNING g_dzeb_d[l_ac].cond_desc
+            DISPLAY BY NAME g_dzeb_d[l_ac].cond_desc  
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE cond
+            #add-point:ON CHANGE cond
+            
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD lim
+            #add-point:BEFORE FIELD lim
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD lim
+            
+            #add-point:AFTER FIELD lim
+            IF NOT cl_null(g_dzeb_d[l_ac].val) AND NOT cl_null(g_dzeb_d[l_ac].lim) THEN
+               IF g_dzeb_d[l_ac].lim = '7' THEN 
+                  LET l_val = g_dzeb_d[l_ac].val
+                  LET l_idx = l_val.getIndexOf(",",0)
+                  IF l_idx = 0 OR l_idx = 1 OR l_idx = l_val.getlength() THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'aim-00227'
+                     LET g_errparam.extend = l_val
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err() 
+                     LET g_dzeb_d[l_ac].val = ''
+                     NEXT FIELD val                  
+                  END IF
+               END IF
+            END IF
+             
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE lim
+            #add-point:ON CHANGE lim
+            CALL aimm201_01_set_comp_visible()
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD val
+            #add-point:BEFORE FIELD val
+            
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD val
+            
+            #add-point:AFTER FIELD val
+            IF NOT cl_null(g_dzeb_d[l_ac].val) AND NOT cl_null(g_dzeb_d[l_ac].lim) THEN
+               IF g_dzeb_d[l_ac].lim = '7' THEN 
+                  LET l_val = g_dzeb_d[l_ac].val
+                  LET l_idx = l_val.getIndexOf(",",1)
+                  IF l_idx = 0 OR l_idx = 1 OR l_idx = l_val.getlength() THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'aim-00227'
+                     LET g_errparam.extend = l_val
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err() 
+                     LET g_dzeb_d[l_ac].val = ''
+                     NEXT FIELD CURRENT                  
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE val
+            #add-point:ON CHANGE val
+            
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.dzeb002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dzeb002
+            #add-point:ON ACTION controlp INFIELD dzeb002
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_dzeb_d[l_ac].dzeb002             #給予default值 
+            #給予arg
+            IF g_prog = 'aimm201' OR g_prog = 'aimm202' OR g_prog = 'aimm203' OR g_prog = 'aimm204' 
+               OR g_prog = 'aimm211' OR g_prog = 'aimm212' OR g_prog = 'aimm213' OR g_prog = 'aimm214'
+               OR g_prog = 'aimm218' THEN 
+               LET g_qryparam.arg1 = "imaf_t"
+            END IF
+            IF g_prog = 'aimm205' OR g_prog = 'aimm206' OR g_prog = 'aimm215' OR g_prog = 'aimm216' OR g_prog = 'aimm219' THEN 
+               LET g_qryparam.arg1 = "imae_t"
+            END IF
+            IF g_prog = 'aimm207' THEN 
+               LET g_qryparam.arg1 = "imag_t"
+            END IF           
+            LET g_qryparam.where = " dzeb004 <> 'Y' "
+            CALL q_dzeb002_1()                                #呼叫開窗
+            LET g_dzeb_d[l_ac].dzeb002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_dzeb_d[l_ac].dzeb002 TO dzeb002              #顯示到畫面上
+            NEXT FIELD CURRENT                          #返回原欄位            
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.valu
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD valu
+            #add-point:ON ACTION controlp INFIELD valu
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.cond
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD cond
+            #add-point:ON ACTION controlp INFIELD cond
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_dzeb_d[l_ac].cond             #給予default值 
+            #給予arg
+            IF g_prog = 'aimm201' OR g_prog = 'aimm202' OR g_prog = 'aimm203' OR g_prog = 'aimm204' 
+               OR g_prog = 'aimm211' OR g_prog = 'aimm212' OR g_prog = 'aimm213' OR g_prog = 'aimm214' 
+               OR g_prog = 'aimm218' THEN 
+               LET g_qryparam.arg1 = "imaf_t"
+            END IF
+            IF g_prog = 'aimm205' OR g_prog = 'aimm206' OR g_prog = 'aimm215' OR g_prog = 'aimm216' OR g_prog = 'aimm219' THEN 
+               LET g_qryparam.arg1 = "imae_t"
+            END IF
+            IF g_prog = 'aimm207' THEN 
+               LET g_qryparam.arg1 = "imag_t"
+            END IF            
+            CALL q_dzeb002_2()                                #呼叫開窗
+            LET g_dzeb_d[l_ac].cond = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_dzeb_d[l_ac].cond TO cond              #顯示到畫面上
+            NEXT FIELD CURRENT                          #返回原欄位 
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.lim
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD lim
+            #add-point:ON ACTION controlp INFIELD lim
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.val
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD val
+            #add-point:ON ACTION controlp INFIELD val
+            
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+   ELSE  
+      CALL aimm201_01_progress()
+   END IF   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aimm201_01 
+   
+   #add-point:input段after input 
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimm201_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aimm201_01.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION aimm201_01_progress()
+DEFINE l_i    LIKE type_t.num5
+DEFINE l_sql  STRING
+DEFINE l_dzeb007 LIKE dzeb_t.dzeb007
+DEFINE l_wc   STRING
+DEFINE l_str  STRING
+
+   LET g_success = TRUE
+   FOR l_i = 1 TO g_dzeb_d.getlength()
+      IF g_dzeb_d[l_i].dzeb002 IS NULL AND l_i = 1 THEN  RETURN END IF
+      IF g_prog = 'aimm201' OR g_prog = 'aimm202' OR g_prog = 'aimm203' OR g_prog = 'aimm204' 
+         OR g_prog = 'aimm211' OR g_prog = 'aimm212' OR g_prog = 'aimm213' OR g_prog = 'aimm214'
+         OR g_prog = 'aimm218' THEN 
+         LET l_sql = " UPDATE imaf_t "
+         LET l_str = "  WHERE imafent = '",g_enterprise,"'",
+                     "    AND imafsite = '",g_site,"'"
+      END IF
+      IF g_prog = 'aimm205' OR g_prog = 'aimm206' OR g_prog = 'aimm215' OR g_prog = 'aimm216' OR g_prog = 'aimm219' THEN 
+         LET l_sql = " UPDATE imae_t "
+         LET l_str = "  WHERE imaeent = '",g_enterprise,"'",
+                     "    AND imaesite = '",g_site,"'"         
+      END IF
+      IF g_prog = 'aimm207' THEN 
+         LET l_sql = " UPDATE imag_t "
+         LET l_str = "  WHERE imagent = '",g_enterprise,"'"
+                     #"    AND imagsite = '",g_site,"'"         
+      END IF   
+      SELECT dzeb007 INTO l_dzeb007 FROM dzeb_t WHERE dzeb002 = g_dzeb_d[l_i].dzeb002
+      IF l_dzeb007 = 'number' THEN 
+         LET l_sql = l_sql," SET ",g_dzeb_d[l_i].dzeb002,"=",g_dzeb_d[l_i].valu
+      ELSE
+         LET l_sql = l_sql," SET ",g_dzeb_d[l_i].dzeb002,"='",g_dzeb_d[l_i].valu,"'"      
+      END IF
+
+      CALL aimm201_01_get_wc(l_i) RETURNING l_wc
+      LET l_sql = l_sql,l_str," AND ",l_wc
+      PREPARE upd_table FROM l_sql
+      EXECUTE upd_table
+            
+   END FOR
+   CALL cl_ask_confirm3("std-00012","")
+END FUNCTION
+
+PRIVATE FUNCTION aimm201_01_get_wc(p_i)
+DEFINE p_i LIKE type_t.num5
+DEFINE r_wc STRING
+DEFINE l_dzeb007 LIKE dzeb_t.dzeb007
+DEFINE l_i LIKE type_t.num5
+DEFINE l_b LIKE type_t.chr20
+DEFINE l_e LIKE type_t.chr20
+DEFINE l_str STRING
+
+   IF NOT cl_null(g_dzeb_d[p_i].cond) AND NOT cl_null(g_dzeb_d[p_i].val) THEN 
+      SELECT dzeb007 INTO l_dzeb007 FROM dzeb_t WHERE dzeb002 = g_dzeb_d[p_i].cond      
+      CASE g_dzeb_d[p_i].lim
+         WHEN '0'
+            LET r_wc = "",g_dzeb_d[p_i].cond," <> "
+            IF l_dzeb007 = 'number' THEN 
+               LET r_wc = r_wc,g_dzeb_d[p_i].val
+            ELSE
+               LET r_wc = r_wc,"'",g_dzeb_d[p_i].val,"'"
+            END IF
+         WHEN '1'
+            LET r_wc = "",g_dzeb_d[p_i].cond," = "
+            IF l_dzeb007 = 'number' THEN 
+               LET r_wc = r_wc,g_dzeb_d[p_i].val
+            ELSE
+               LET r_wc = r_wc,"'",g_dzeb_d[p_i].val,"'"
+            END IF
+         WHEN '2'
+            LET r_wc = "",g_dzeb_d[p_i].cond," > "
+            IF l_dzeb007 = 'number' THEN 
+               LET r_wc = r_wc,g_dzeb_d[p_i].val
+            ELSE
+               LET r_wc = r_wc,"'",g_dzeb_d[p_i].val,"'"
+            END IF            
+         WHEN '3'
+            LET r_wc = "",g_dzeb_d[p_i].cond," >= "
+            IF l_dzeb007 = 'number' THEN 
+               LET r_wc = r_wc,g_dzeb_d[p_i].val
+            ELSE
+               LET r_wc = r_wc,"'",g_dzeb_d[p_i].val,"'"
+            END IF            
+         WHEN '4'
+            LET r_wc = "",g_dzeb_d[p_i].cond," < "
+            IF l_dzeb007 = 'number' THEN 
+               LET r_wc = r_wc,g_dzeb_d[p_i].val
+            ELSE
+               LET r_wc = r_wc,"'",g_dzeb_d[p_i].val,"'"
+            END IF            
+         WHEN '5'
+            LET r_wc = "",g_dzeb_d[p_i].cond," <= "
+            IF l_dzeb007 = 'number' THEN 
+               LET r_wc = r_wc,g_dzeb_d[p_i].val
+            ELSE
+               LET r_wc = r_wc,"'",g_dzeb_d[p_i].val,"'"
+            END IF            
+         WHEN '6'
+            LET l_str = g_dzeb_d[p_i].val
+            LET l_str = cl_replace_str(l_str,'*','%')
+            LET r_wc = "",g_dzeb_d[p_i].cond," LIKE '",l_str,"'"           
+         WHEN '7'
+            LET l_str = g_dzeb_d[p_i].val CLIPPED
+            LET l_i = l_str.getIndexOf(",",1)
+            LET l_b = l_str.substring(1,l_i-1)
+            LET l_e = l_str.substring(l_i+1,l_str.getlength())
+            IF l_dzeb007 = 'number' THEN 
+               LET r_wc = "",g_dzeb_d[p_i].cond," BETWEEN ",l_b," AND ",l_e
+            ELSE
+               LET r_wc = "",g_dzeb_d[p_i].cond," BETWEEN '",l_b,"' AND '",l_e,"'"
+            END IF
+#         WHEN '8'
+#            LET r_wc = "",g_dzeb_d[p_i].cond," IS NULL"              
+         WHEN '9'
+            LET r_wc = " 1=1"
+      END CASE
+   ELSE
+      IF g_dzeb_d[p_i].lim = '8' THEN 
+         LET r_wc = "",g_dzeb_d[p_i].cond," IS NULL"  
+      ELSE      
+         LET r_wc = " 1=1"
+      END IF
+   END IF
+   RETURN r_wc
+END FUNCTION
+
+PRIVATE FUNCTION aimm201_01_desc(p_dzebl001)
+DEFINE p_dzebl001 LIKE dzebl_t.dzebl001
+DEFINE r_dzebl003 LIKE dzebl_t.dzebl003
+
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = p_dzebl001
+   CALL ap_ref_array2(g_ref_fields," SELECT dzebl003 FROM dzebl_t WHERE  dzebl001 = ? AND dzebl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET r_dzebl003 = g_rtn_fields[1] 
+   RETURN r_dzebl003
+END FUNCTION
+
+PRIVATE FUNCTION aimm201_01_set_comp_visible()
+   
+   CALL cl_set_comp_entry('val,lim',TRUE)
+   CALL cl_set_comp_required('val',FALSE)   
+   IF cl_null(g_dzeb_d[l_ac].cond) THEN 
+       CALL cl_set_comp_entry('val,lim',FALSE)       
+   END IF
+   IF g_dzeb_d[l_ac].lim MATCHES '[89]' THEN 
+      CALL cl_set_comp_entry('val',FALSE) 
+   ELSE
+      CALL cl_set_comp_required('val',TRUE)  
+   END IF
+END FUNCTION
+
+ 
+{</section>}
+ 

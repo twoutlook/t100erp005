@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi850_g01" module="azz" jobmode="N" type="g01" industry="std" crtid="00845" crtdt="2015-10-27 17:35:26" modid="08108" moddt="2016-04-08 10:03:41" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condiction)">
+    <var seq="1" value="l_fndc(chr300|trim(gzyc003)||&apos;，&apos;||trim(gzzq004)),gzyaent,l_gzyb002_01(chr100|NULL),gzya001,l_flag(chr10|NULL),l_gzyb002(chr100|NULL),gzyal_t_gzyal003(gzyal003|gzyal_t.gzyal003),gzzal_t_gzzal003(gzzal003|gzzal_t.gzzal003)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_fndc(chr300|trim(gzyc003)||&apos;，&apos;||trim(gzzq004)),gzyaent,l_gzyb002_01(chr100|NULL),gzya001,l_flag(chr10|NULL),l_gzyb002(chr100|NULL),gzyal_t_gzyal003(gzyal003|gzyal_t.gzyal003),gzzal_t_gzzal003(gzzal003|gzzal_t.gzzal003)"/>
+    <sql id="g_from" query="gzya_t,gzyb_t,gzyal_t,gzyc_t,gzzq_t,gzzal_t"/>
+    <sql id="g_where" query="" maintable="gzya_t"/>
+    <sql id="g_order" query="gzya001,gzyb002"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="gzya001,l_gzyb002"/>
+    <section id="b_group" reptype="d01">
+      <rep type="gzya001" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="gzyaent,gzya001"/>
+      <rep type="l_gzyb002"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="gzyaent,gzya001,l_gzyb002"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="gzyaent,gzya001,l_gzyb002"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="gzya001" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="gzyaent,gzya001"/>
+      <rep type="l_gzyb002"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsp611" module="aps" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="05384" crtdt="2016-03-14 14:27:05" modid="07024" moddt="2016-10-14 15:29:53" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="APS產生採購單作業[背景執行]">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imae012,imaf142,pspc010,pspc045,imaa009,imaf141,pspc050,psca001,psca001_desc(chr80),pmdldocno,pmdldocno_desc(chr80),scb01(chr10),scb02(chr10),chk3(chr1),chk1(chr1),chk2(chr1),delayday(num5),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aps" filename="apsp611" method="dialog">
+    <section id="input">
+      <input id="head" field="psca001,pmdldocno,scb01,scb02,chk3,chk1,chk2,delayday"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imae012,imaf142,pspc010,pspc045,imaa009,imaf141,pspc050"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imae012">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaf142">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pspc010"/>
+      <column id="pspc045"/>
+      <column id="imaa009">
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imaf141">
+        <controlp form="q_imce141" state="c"/>
+      </column>
+      <column id="pspc050">
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="psca001">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+          <reference field="psca001_desc" ref_field="psca_t.psca001" map_field="psca001" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+        <controlp form="q_psca001" state="c"/>
+      </column>
+      <column id="psca001_desc"/>
+      <column id="pmdldocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+      </column>
+      <column id="pmdldocno_desc"/>
+      <column id="scb01"/>
+      <column id="scb02"/>
+      <column id="chk3" type="S" default="N"/>
+      <column id="chk1" type="S" default="Y"/>
+      <column id="chk2"/>
+      <column id="delayday">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

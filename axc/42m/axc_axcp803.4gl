@@ -1,0 +1,2288 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axcp803.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2015-05-15 14:26:37), PR版次:0005(2016-12-21 15:33:19)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000033
+#+ Filename...: axcp803
+#+ Description: 在製貨齡計算作業
+#+ Creator....: 05795(2015-05-12 16:43:48)
+#+ Modifier...: 05795 -SD/PR- 02040
+ 
+{</section>}
+ 
+{<section id="axcp803.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#Memos
+#161019-00017#7   2016/10/19   By zhujing 据点组织开窗资料整批调整
+#161109-00085#25  2016/11/16   By 08993   整批調整系統星號寫法
+#161109-00085#63  2016/12/01   By 08171   整批調整系統星號寫法
+#161108-00037#1   2016/12/21   By 02040   調整貨齡改抓出庫
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       xcceld LIKE type_t.chr5, 
+   xcceld_desc LIKE type_t.chr80, 
+   xccecomp LIKE type_t.chr10, 
+   xccecomp_desc LIKE type_t.chr80, 
+   xcce004 LIKE type_t.num5, 
+   xcce005 LIKE type_t.num5, 
+   xcce003 LIKE type_t.chr10, 
+   xcce003_desc LIKE type_t.chr80, 
+   date1 LIKE type_t.chr500, 
+   date2 LIKE type_t.chr500, 
+   xcce006 LIKE type_t.chr20, 
+   xccd007 LIKE type_t.chr500, 
+   xcce002 LIKE type_t.chr30, 
+   xcce007 LIKE type_t.chr500, 
+   stagenow LIKE type_t.chr80, 
+   p1 LIKE type_t.chr500,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+
+ TYPE type_master1 RECORD
+   wc1               STRING
+       END RECORD
+DEFINE g_master1 type_master1
+                     
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+DEFINE g_xcfm                DYNAMIC ARRAY OF RECORD
+                             xcce007  LIKE   xcce_t.xcce007, 
+                             xcce008  LIKE   xcce_t.xcce008,
+                             xcce009  LIKE   xcce_t.xcce009,
+                             xcce002  LIKE   xcce_t.xcce002,
+                             inaj022  LIKE   inaj_t.inaj022,
+                             inaj011  LIKE   inaj_t.inaj011,
+                             amt02    LIKE   inaj_t.inaj011,
+                             xcce006  LIKE   xcce_t.xcce006
+                             END RECORD
+DEFINE g_msg                 STRING
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axcp803.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axc","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL axcp803_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axcp803 WITH FORM cl_ap_formpath("axc",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axcp803_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axcp803_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axcp803
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="axcp803.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION axcp803_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp803.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axcp803_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.xcceld,g_master.xccecomp,g_master.xcce004,g_master.xcce005,g_master.xcce003, 
+             g_master.date1,g_master.date2 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               CALL axcp803_default()
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcceld
+            
+            #add-point:AFTER FIELD xcceld name="input.a.xcceld"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_master.xcceld
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_master.xcceld_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_master.xcceld_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcceld
+            #add-point:BEFORE FIELD xcceld name="input.b.xcceld"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcceld
+            #add-point:ON CHANGE xcceld name="input.g.xcceld"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccecomp
+            
+            #add-point:AFTER FIELD xccecomp name="input.a.xccecomp"
+            #161019-00017#7 add-S
+            IF NOT cl_null(g_master.xccecomp) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_master.xccecomp
+               LET g_errshow = TRUE #是否開窗 
+               LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+               IF cl_chk_exist("v_ooef001_1") THEN
+               ELSE
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #161019-00017#7 add-E  
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_master.xccecomp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_master.xccecomp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_master.xccecomp_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccecomp
+            #add-point:BEFORE FIELD xccecomp name="input.b.xccecomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccecomp
+            #add-point:ON CHANGE xccecomp name="input.g.xccecomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcce004
+            #add-point:BEFORE FIELD xcce004 name="input.b.xcce004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcce004
+            
+            #add-point:AFTER FIELD xcce004 name="input.a.xcce004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcce004
+            #add-point:ON CHANGE xcce004 name="input.g.xcce004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcce005
+            #add-point:BEFORE FIELD xcce005 name="input.b.xcce005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcce005
+            
+            #add-point:AFTER FIELD xcce005 name="input.a.xcce005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcce005
+            #add-point:ON CHANGE xcce005 name="input.g.xcce005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcce003
+            
+            #add-point:AFTER FIELD xcce003 name="input.a.xcce003"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_master.xcce003
+            CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_master.xcce003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_master.xcce003_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcce003
+            #add-point:BEFORE FIELD xcce003 name="input.b.xcce003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcce003
+            #add-point:ON CHANGE xcce003 name="input.g.xcce003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD date1
+            #add-point:BEFORE FIELD date1 name="input.b.date1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD date1
+            
+            #add-point:AFTER FIELD date1 name="input.a.date1"
+            IF NOT cl_null(g_master.date1) AND cl_null(g_master.date2) THEN
+               LET g_master.date2 = s_date_get_last_date(g_master.date1)
+            END IF
+            DISPLAY BY NAME g_master.date2
+            IF NOT cl_null(g_master.date1) AND NOT cl_null(g_master.date2) THEN
+               IF g_master.date2 < g_master.date1 THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = ''
+                  LET g_errparam.code   = 'axm-00397' 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  LET g_master.date1 = NULL
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE date1
+            #add-point:ON CHANGE date1 name="input.g.date1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD date2
+            #add-point:BEFORE FIELD date2 name="input.b.date2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD date2
+            
+            #add-point:AFTER FIELD date2 name="input.a.date2"
+            IF NOT cl_null(g_master.date1) AND NOT cl_null(g_master.date2) THEN
+               IF g_master.date2 < g_master.date1 THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = ''
+                  LET g_errparam.code   = 'axm-00397' 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  LET g_master.date2 = NULL
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE date2
+            #add-point:ON CHANGE date2 name="input.g.date2"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.xcceld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcceld
+            #add-point:ON ACTION controlp INFIELD xcceld name="input.c.xcceld"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.xcceld             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_master.xcceld = g_qryparam.return1              
+
+            DISPLAY g_master.xcceld TO xcceld              #
+
+            NEXT FIELD xcceld                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xccecomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccecomp
+            #add-point:ON ACTION controlp INFIELD xccecomp name="input.c.xccecomp"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.xccecomp             #給予default值
+            LET g_qryparam.default2 = "" #g_master.ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_ooef001_2()                                #呼叫開窗
+
+            LET g_master.xccecomp = g_qryparam.return1              
+            #LET g_master.ooefl003 = g_qryparam.return2 
+            DISPLAY g_master.xccecomp TO xccecomp              #
+            #DISPLAY g_master.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD xccecomp                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcce004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcce004
+            #add-point:ON ACTION controlp INFIELD xcce004 name="input.c.xcce004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcce005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcce005
+            #add-point:ON ACTION controlp INFIELD xcce005 name="input.c.xcce005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcce003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcce003
+            #add-point:ON ACTION controlp INFIELD xcce003 name="input.c.xcce003"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.xcce003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_xcat001()                                #呼叫開窗
+
+            LET g_master.xcce003 = g_qryparam.return1              
+
+            DISPLAY g_master.xcce003 TO xcce003              #
+
+            NEXT FIELD xcce003                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.date1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD date1
+            #add-point:ON ACTION controlp INFIELD date1 name="input.c.date1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.date2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD date2
+            #add-point:ON ACTION controlp INFIELD date2 name="input.c.date2"
+            
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON xcce006,xcce002
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.xcce006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcce006
+            #add-point:ON ACTION controlp INFIELD xcce006 name="construct.c.xcce006"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_sfaadocno_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcce006  #顯示到畫面上
+            NEXT FIELD xcce006                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcce006
+            #add-point:BEFORE FIELD xcce006 name="construct.b.xcce006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcce006
+            
+            #add-point:AFTER FIELD xcce006 name="construct.a.xcce006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xcce002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcce002
+            #add-point:ON ACTION controlp INFIELD xcce002 name="construct.c.xcce002"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_xccc002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcce002  #顯示到畫面上
+            NEXT FIELD xcce002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcce002
+            #add-point:BEFORE FIELD xcce002 name="construct.b.xcce002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcce002
+            
+            #add-point:AFTER FIELD xcce002 name="construct.a.xcce002"
+            
+            #END add-point
+            
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         CONSTRUCT BY NAME g_master1.wc1 ON xccd007,xcce007
+            BEFORE CONSTRUCT
+
+            ON ACTION controlp INFIELD xccd007
+           
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaa001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xccd007  #顯示到畫面上
+               NEXT FIELD xccd007                     #返回原欄位
+  
+            BEFORE FIELD xccd007
+        
+            AFTER FIELD xccd007
+
+            ON ACTION controlp INFIELD xcce007
+               #add-point:ON ACTION controlp INFIELD xcce007
+               #應用 a08 樣板自動產生(Version:2)
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaf001_13()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xcce007  #顯示到畫面上
+               NEXT FIELD xcce007                     #返回原欄位
+    
+            BEFORE FIELD xcce007
+           
+            AFTER FIELD xcce007
+            
+         END CONSTRUCT
+ 
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL axcp803_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL axcp803_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axcp803_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = axcp803_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp803.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axcp803_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp803.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION axcp803_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      CALL cl_progress_bar_no_window(3)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axcp803_process_cs CURSOR FROM ls_sql
+#  FOREACH axcp803_process_cs INTO
+   #add-point:process段process name="process.process"
+#fengmy150720---b
+   IF NOT axcp803_create_tmp() THEN
+      RETURN 
+   END IF   
+#fengmy150720---e
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+#按INPUT的条件法人、账套、年度、账套、成本计算类型、主本位币顺序和QBE的工单号、料件、特性、成本域、批号等范围
+#从在制成本期结存档xcce_t/xccd_t中取出明细资料，取出的资料放入xcce_tmp
+
+#用以下条件先筛选出inaj资料，放入inaj_tmp
+#1.在axci801里加一个货龄计算顺序参数，然后axcp803里根据这个参数，
+#  如果是2的，那就要在inaj里先扣除相同时间/料号（画面QBE条件）条件范围内的入库数量，再进行axcp803的计算
+#  扣除入库项的顺序是先进先出
+#2.注意要扣除从非成本仓发的料。
+      CALL s_transaction_begin()
+      IF NOT axcp803_del_xcfl() THEN
+         CALL s_transaction_end('N',0)
+         CALL axcp803_drop_tmp_table()
+         RETURN
+      END IF      
+      IF NOT axcp803_creat_ins_tmp() THEN
+            CALL s_transaction_end('N',0)
+            CALL axcp803_drop_tmp_table()
+            RETURN
+      END IF
+
+#根据料件、特性、批号、成本域的条件关联xccc_tmp和inaj_tmp，找出库存扣账日期和SUM（交易数量*交易单位对成本单位换算率）
+#按日期降序从大到小排列
+#成本域按照参数取组织或仓库，做sql字串的替换
+      IF NOT axcp803_ins_xcfl() THEN
+         CALL s_transaction_end('N',0)
+         CALL axcp803_drop_tmp_table()
+         RETURN
+      END IF
+      CALL s_transaction_end('Y',0)
+      CALL axcp803_drop_tmp_table()
+
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      CALL s_transaction_begin()
+      IF NOT axcp803_creat_ins_tmp() THEN
+         CALL s_transaction_end('N',0)
+         CALL axcp803_drop_tmp_table()
+         RETURN
+      END IF
+      
+      IF NOT axcp803_ins_xcfl() THEN
+         CALL s_transaction_end('N',0)
+         CALL axcp803_drop_tmp_table()
+         RETURN
+      END IF
+      CALL s_transaction_end('Y',0)
+      CALL axcp803_drop_tmp_table()
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL axcp803_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp803.get_buffer" >}
+PRIVATE FUNCTION axcp803_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.xcceld = p_dialog.getFieldBuffer('xcceld')
+   LET g_master.xccecomp = p_dialog.getFieldBuffer('xccecomp')
+   LET g_master.xcce004 = p_dialog.getFieldBuffer('xcce004')
+   LET g_master.xcce005 = p_dialog.getFieldBuffer('xcce005')
+   LET g_master.xcce003 = p_dialog.getFieldBuffer('xcce003')
+   LET g_master.date1 = p_dialog.getFieldBuffer('date1')
+   LET g_master.date2 = p_dialog.getFieldBuffer('date2')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp803.msgcentre_notify" >}
+PRIVATE FUNCTION axcp803_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp803.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 描述说明:获得刚进画面的默认值
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者:20150513 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp803_default()
+   DEFINE l_xccecomp    LIKE xcce_t.xccecomp 
+   DEFINE l_xcceld      LIKE xcce_t.xcceld
+   DEFINE l_xcce003     LIKE xcce_t.xcce003
+   DEFINE l_xcce004     LIKE xcce_t.xcce004
+   DEFINE l_xcce005     LIKE xcce_t.xcce005
+   DEFINE l_bdate       LIKE type_t.dat
+   DEFINE l_edate       LIKE type_t.dat
+   DEFINE l_glaa003     LIKE glaa_t.glaa003
+   DEFINE l_success     LIKE type_t.num5
+
+   LET l_xccecomp = ''
+   LET l_xcceld   = ''
+   LET l_xcce003  = ''
+   LET l_xcce004  = ''
+   LET l_xcce005  = ''
+   
+#预设当前site的法人，主账套，年度期别，成本计算类型
+   CALL s_axc_set_site_default() RETURNING l_xccecomp,l_xcceld,l_xcce004,l_xcce005,l_xcce003
+   IF g_master.xccecomp IS NULL THEN LET g_master.xccecomp = l_xccecomp END IF
+   IF g_master.xcceld IS NULL THEN LET g_master.xcceld = l_xcceld END IF
+   IF g_master.xcce003 IS NULL THEN LET g_master.xcce003 = l_xcce003 END IF
+   IF g_master.xcce004 IS NULL THEN LET g_master.xcce004 = l_xcce004 END IF
+   IF g_master.xcce005 IS NULL THEN LET g_master.xcce005 = l_xcce005 END IF
+   DISPLAY BY NAME g_master.xccecomp,g_master.xcceld,g_master.xcce004,g_master.xcce005,g_master.xcce003
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xccecomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xccecomp_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_master.xccecomp_desc 
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xcceld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xcceld_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_master.xcceld_desc 
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xcce003
+   CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xcce003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_master.xcce003_desc
+
+#库存异动起始日期取账套+成本类型最早年期的第一天
+   LET l_xcce004 = NULL
+   LET l_xcce005 = NULL
+   LET l_glaa003 = NULL
+   LET l_bdate   = NULL
+   LET l_edate   = NULL
+   SELECT xcce004,xcce005 INTO l_xcce004,l_xcce005 
+     FROM xcce_t
+    WHERE xcceent = g_enterprise
+      AND xcceld  = g_master.xcceld
+      AND ROWNUM = 1
+    ORDER BY xcce004,xcce005
+ 
+   CALL s_ld_sel_glaa(g_master.xcceld,'glaa003') RETURNING l_success,l_glaa003
+   CALL s_fin_date_get_period_range(l_glaa003,l_xcce004,l_xcce005) RETURNING l_bdate,l_edate
+   LET g_master.date1 = l_bdate
+     
+#库存异动截止日期取画面年期的最后一天
+   CALL s_fin_date_get_lastday(g_master.xcceld,'',g_master.xcce004,g_master.xcce005,'') RETURNING l_success,g_master.date2
+   
+   DISPLAY BY NAME g_master.date1,g_master.date2
+ 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明:删除临时表
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者20150513 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp803_drop_tmp_table()
+#fengmy150720----b
+   DROP TABLE axcp803_xcce_tmp;   
+   DROP TABLE axcp803_inaj_tmp;
+#   DROP TABLE xcce_tmp
+#   DROP TABLE inaj_tmp
+#fengmy150720----e
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明:创建临时表，并加数据
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者:20150513 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp803_creat_ins_tmp()
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_sql           STRING
+   DEFINE l_sql_1         STRING
+   DEFINE l_sql_2         STRING
+   DEFINE l_where         STRING
+   DEFINE l_fin_6016      LIKE type_t.chr1
+   DEFINE l_xcfa014       LIKE xcfa_t.xcfa014
+   DEFINE l_xcat005       LIKE xcat_t.xcat005
+   DEFINE l_wc2           STRING
+   DEFINE l_sql_delete    STRING
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+ 
+#   DROP TABLE xcce_tmp   #fengmy150720 mark
+   LET g_msg = cl_getmsg("axc-00605",g_dlang)  #创建临时表xcce_tmp,inaj_tmp
+   CALL cl_progress_no_window_ing(g_msg)
+#fengmy150720---b
+ 
+#   LET l_sql =  " CREATE GLOBAL TEMPORARY TABLE xcce_tmp AS ",
+#                " SELECT DISTINCT xcceent,xccecomp,xcceld,xcce001,xcce002,xcce003,xcce004,xcce005,xcce006,xcce007,xcce008,xcce009,xcce901 ",
+#                " FROM xcce_t ",
+#                " WHERE 1 = 2 "
+#                
+#   PREPARE axcp803_create_xcce_tbl FROM l_sql
+#   EXECUTE axcp803_create_xcce_tbl
+#
+#   IF SQLCA.sqlcode THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.code = SQLCA.sqlcode
+#      LET g_errparam.extend = 'create xcce_tmp'
+#      LET g_errparam.popup = TRUE
+#      CALL cl_err()
+#      LET r_success = FALSE
+#      RETURN r_success
+#   END IF
+#   FREE axcp803_create_xcce_tbl
+#
+#   DROP TABLE inaj_tmp
+#
+#   LET l_sql = " CREATE GLOBAL TEMPORARY TABLE inaj_tmp AS ",
+#                " SELECT * FROM inaj_t WHERE 1 = 2 "
+#
+#   PREPARE axcp803_create_inaj_tbl FROM l_sql
+#   EXECUTE axcp803_create_inaj_tbl
+#
+#   IF SQLCA.sqlcode THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.code = SQLCA.sqlcode
+#      LET g_errparam.extend = 'create inaj_tmp'
+#      LET g_errparam.popup = TRUE
+#      CALL cl_err()
+#      LET r_success = FALSE
+#      RETURN r_success
+#   END IF
+#   FREE axcp803_create_inaj_tbl
+#fengmy150720---e   
+   LET l_sql =  #" INSERT INTO xcce_tmp ",         #fengmy150720 mark
+                " INSERT INTO axcp803_xcce_tmp ",  #fengmy150720 add
+                " SELECT DISTINCT xcceent,xccecomp,xcceld,xcce001,xcce002,xcce003,xcce004,xcce005,xcce006,xcce007,xcce008,xcce009,xcce901 ",
+                " FROM xcce_t,xccd_t ",
+                " WHERE xcceent = xccdent AND xcceld = xccdld AND xcce001 =xccd001 ",
+                "   AND xcce002 = xccd002 AND xcce003 = xccd003 AND xcce004 = xccd004 ",
+                "   AND xcce005 = xccd005 AND xcce006 = xccd006 ",
+                "   AND xcceent = '",g_enterprise,"' ",
+                "   AND xcceld = '",g_master.xcceld,"' ",
+                "   AND xccecomp = '",g_master.xccecomp,"' ",
+                "   AND xcce004 = '",g_master.xcce004,"' ",
+                "   AND xcce005 = '",g_master.xcce005,"' ",
+                "   AND xcce003 = '",g_master.xcce003,"' ",
+                "   AND ",g_master.wc,
+                "   AND ",g_master1.wc1
+   
+   
+#   LET l_sql_1 = " SELECT DISTINCT xcceent,xccecomp,xcceld,xcce001,xcce002,xcce003,xcce004,xcce005,xcce006,xcce007,xcce008,xcce009,xcce901 ",
+#                " FROM xcce_t ",
+#                " LEFT JOIN xccd_t ON xcceent = xccdent AND xcceld = xccdld AND xcce001 =xccd001 ",
+#                "                  AND xcce002 = xccd002 AND xcce003 = xccd003 AND xcce004 = xccd004 ",
+#                "                  AND xcce005 = xccd005 AND xcce006 = xccd006 ",
+#                " WHERE xcceent = '",g_enterprise,"' ",
+#                "   AND xcceld = '",g_master.xcceld,"' ",
+#                "   AND xccecomp = '",g_master.xccecomp,"' ",
+#                "   AND xcce004 = '",g_master.xcce004,"' ",
+#                "   AND xcce005 = '",g_master.xcce005,"' ",
+#                "   AND xcce003 = '",g_master.xcce003,"' ",
+#                "   AND ",g_master.wc,
+#                "   AND ",g_master1.wc1
+#
+#   LET l_sql_2 = " SELECT DISTINCT xccdent,xccdcomp,xccdld,xccd001,xccd002,xccd003,xccd004,xccd005,xccd006,xccd007,xccd008,xccd009,xccd901 ",
+#                "  FROM xccd_t ",
+#                "  LEFT JOIN xcce_t ON xcceent = xccdent AND xcceld = xccdld AND xcce001 =xccd001 ",
+#                "                   AND xcce002 = xccd002 AND xcce003 = xccd003 AND xcce004 = xccd004 ",
+#                "                   AND xcce005 = xccd005 AND xcce006 = xccd006 ",
+#                "  WHERE xccdent = '",g_enterprise,"' ",
+#                "   AND xccdld = '",g_master.xcceld,"' ",
+#                "   AND xccdcomp = '",g_master.xccecomp,"' ",
+#                "   AND xccd004 = '",g_master.xcce004,"' ",
+#                "   AND xccd005 = '",g_master.xcce005,"' ",
+#                "   AND xccd003 = '",g_master.xcce003,"' ", 
+#                "   AND ",g_master.wc,
+#                "   AND ",g_master1.wc1                
+#
+#   LET l_sql = l_sql,l_sql_1," UNION ALL ",l_sql_2             
+                
+   PREPARE axcp803_ins_xcce_tbl FROM l_sql
+   EXECUTE axcp803_ins_xcce_tbl
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'INSERT xcce_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   FREE axcp803_ins_xcce_tbl
+
+   LET l_fin_6016 = cl_get_para(g_enterprise,g_master.xccecomp,'S-FIN-6016')   #當站下線是否影響成本 Y/N
+   
+   LET l_sql = #" INSERT INTO inaj_tmp  ",  #fengmy150720 mark
+                " INSERT INTO axcp803_inaj_tmp  ",  #fengmy150720
+               #" SELECT DISTINCT inaj_t.* FROM inaj_t ", #161109-00085#63 mark
+                #161109-00085#63 --s add
+                " SELECT DISTINCT inajent,inajsite,inaj001,inaj002,inaj003, ",
+                "                 inaj004,inaj005,inaj006,inaj007,inaj008, ",
+                "                 inaj009,inaj010,inaj011,inaj012,inaj013, ",
+                "                 inaj014,inaj015,inaj016,inaj017,inaj018, ",
+                "                 inaj019,inaj020,inaj021,inaj022,inaj023, ",
+                "                 inaj024,inaj025,inaj026,inaj027,inaj028, ",
+                "                 inaj036,inaj029,inaj030,inaj031,inaj032, ",
+                "                 inaj033,inaj034,inaj035,inaj037,inaj038, ",
+                "                 inaj039,inaj040,inaj041,inaj042,inaj043, ",
+                "                 inaj044,inaj200,inaj201,inaj202,inaj203, ",
+                "                 inaj204,inaj205,inaj206,inaj207,inaj208, ",
+                "                 inaj209,inajud001,inajud002,inajud003,inajud004, ",
+                "                 inajud005,inajud006,inajud007,inajud008,inajud009, ",
+                "                 inajud010,inajud011,inajud012,inajud013,inajud014, ",
+                "                 inajud015,inajud016,inajud017,inajud018,inajud019, ",
+                "                 inajud020,inajud021,inajud022,inajud023,inajud024, ",
+                "                 inajud025,inajud026,inajud027,inajud028,inajud029, ",
+                "                 inajud030,inaj045,inaj046,inaj047,inaj048, ",
+                "                 inaj049,inaj050,inaj051,inaj210,inaj211 ",
+                "            FROM inaj_t ",
+                #161109-00085#63 --e add
+                " LEFT OUTER JOIN ",
+               #"               (SELECT sfaa_t.*,xcbb006 FROM sfaa_t,xcbb_t WHERE sfaaent = xcbbent AND sfaa010 = xcbb003 AND sfaa011 = xcbb004 ", #161109-00085#63 mark
+                #161109-00085#63 --s add
+                "               (SELECT sfaaent,sfaaownid,sfaaowndp,sfaacrtid,sfaacrtdp, ",
+                "                       sfaacrtdt,sfaamodid,sfaamoddt,sfaacnfid,sfaacnfdt, ",
+                "                       sfaapstid,sfaapstdt,sfaastus,sfaasite,sfaadocno, ",
+                "                       sfaadocdt,sfaa001,sfaa002,sfaa003,sfaa004, ",
+                "                       sfaa005,sfaa006,sfaa007,sfaa008,sfaa009, ",
+                "                       sfaa010,sfaa011,sfaa012,sfaa013,sfaa014, ",
+                "                       sfaa015,sfaa016,sfaa017,sfaa018,sfaa019, ",
+                "                       sfaa020,sfaa021,sfaa022,sfaa023,sfaa024, ",
+                "                       sfaa025,sfaa026,sfaa027,sfaa028,sfaa029, ",
+                "                       sfaa030,sfaa031,sfaa032,sfaa033,sfaa034, ",
+                "                       sfaa035,sfaa036,sfaa037,sfaa038,sfaa039, ",
+                "                       sfaa040,sfaa041,sfaa042,sfaa043,sfaa044, ",
+                "                       sfaa045,sfaa046,sfaa047,sfaa048,sfaa049, ",
+                "                       sfaa050,sfaa051,sfaa052,sfaa053,sfaa054, ",
+                "                       sfaa055,sfaa056,sfaa057,sfaa058,sfaa059, ",
+                "                       sfaa060,sfaa061,sfaa062,sfaa063,sfaa064, ",
+                "                       sfaa065,sfaa066,sfaa067,sfaa068,sfaa069, ",
+                "                       sfaa070,sfaaud001,sfaaud002,sfaaud003,sfaaud004, ",
+                "                       sfaaud005,sfaaud006,sfaaud007,sfaaud008,sfaaud009, ",
+                "                       sfaaud010,sfaaud011,sfaaud012,sfaaud013,sfaaud014, ",
+                "                       sfaaud015,sfaaud016,sfaaud017,sfaaud018,sfaaud019, ",
+                "                       sfaaud020,sfaaud021,sfaaud022,sfaaud023,sfaaud024, ",
+                "                       sfaaud025,sfaaud026,sfaaud027,sfaaud028,sfaaud029, ",
+                "                       sfaaud030,sfaa071,sfaa072,xcbb006 ",
+                "                  FROM sfaa_t,xcbb_t WHERE sfaaent = xcbbent AND sfaa010 = xcbb003 AND sfaa011 = xcbb004 ",
+                #161109-00085#63 --e add
+                "                   AND xcbbcomp = '",g_master.xccecomp,"' AND xcbb001 = '",g_master.xcce004,"' AND xcbb002 = '",g_master.xcce005,"') B ",
+                "  ON inajent = B.sfaaent AND inaj020 = B.sfaadocno ",
+                " LEFT JOIN xcbb_t A ON inajent = A.xcbbent AND inaj005 = A.xcbb003 AND inaj006 = A.xcbb004",
+                "  WHERE inajent = '",g_enterprise,"'",
+                "    AND inaj209 = '",g_master.xccecomp,"'",
+               #"    AND inaj004 = 1 " ,  #货龄只抓入库的          #161108-00037#1 mark
+                "    AND inaj004 = -1 " , #货龄只抓出庫的          #161108-00037#1 add
+                "    AND A.xcbbcomp = '",g_master.xccecomp,"' AND A.xcbb001 = '",g_master.xcce004,"' AND A.xcbb002 = '",g_master.xcce005,"'",
+                "    AND inaj022 BETWEEN '",g_master.date1,"' AND '",g_master.date2,"' ",
+                "    AND (inaj036 = '107' OR inaj036 = '113' OR (inaj036 = '114' AND B.sfaa042 = 'N') ",
+                "         OR (inaj036 = '115' AND '",l_fin_6016,"' = 'N') OR (inaj036 = '302' AND (B.sfaa042 = 'N' OR B.xcbb006 < A.xcbb006)) ",
+                "         OR (inaj036 = '303' AND (B.sfaa042 = 'N' OR B.xcbb006 < A.xcbb006))",
+                "        )   "   #异动类型为工单发料
+                
+
+   PREPARE axcp803_ins_inaj_tbl FROM l_sql
+   EXECUTE axcp803_ins_inaj_tbl
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'INSERT inaj_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   FREE axcp803_ins_inaj_tbl
+
+#在axci801里加一个货龄计算顺序参数，然后axcp803里根据这个参数，如果是2的，那就要在inaj里先扣除相同时间/料号（画面QBE条件）条件范围内的入库数量
+   SELECT xcfa014 INTO l_xcfa014
+     FROM xcfa_t
+    WHERE xcfaent = g_enterprise
+      AND xcfald =  g_master.xcceld
+      AND xcfa001 = g_master.xcce004
+      AND xcfa002 = g_master.xcce005
+   IF l_xcfa014 = 2 THEN
+      IF g_master1.wc1 IS NOT NULL THEN
+         LET l_wc2 = g_master1.wc1
+         IF l_wc2.getIndexOf("xccd007",1) THEN
+            LET l_wc2 = s_chr_replace(l_wc2,'xccd007','inaj005',0)
+         END IF
+         
+         IF l_wc2.getIndexOf("and",1) THEN
+            LET l_wc2 = s_chr_replace(l_wc2,'and','or',0)
+         END IF
+   
+         IF l_wc2.getIndexOf("xcce007",1) THEN
+            LET l_wc2 = s_chr_replace(l_wc2,'xcce007','inaj005',0)
+         END IF
+         LET l_wc2 = '(',l_wc2,')'
+  
+        LET l_sql_delete = #" DELETE FROM inaj_tmp ",   #fengmy150720 mark
+                           " DELETE FROM axcp803_inaj_tmp ",   #fengmy150720
+                        " WHERE inajent = '",g_enterprise,"' ",
+                        "  AND inaj022 BETWEEN '",g_master.date1,"' AND '",g_master.date2,"' ",
+                        "  AND inaj209 = '",g_master.xccecomp,"' ",
+                        "  AND ",l_wc2
+         PREPARE axcp803_delete_inaj_tmp FROM l_sql_delete
+         EXECUTE axcp803_delete_inaj_tmp
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'delete inaj_tmp'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+         FREE axcp803_delete_inaj_tmp
+         
+       ELSE
+       
+        #DELETE FROM inaj_tmp  #fengmy150720 mark
+        DELETE FROM axcp803_inaj_tmp  #fengmy150720 
+         WHERE inajent = g_enterprise
+           AND inaj022 >= g_master.date1 
+           AND inaj022 <= g_master.date2
+           AND inaj209 = g_master.xccecomp    
+           
+      END IF
+  
+   END IF
+   
+#把非成本仓的排除掉
+  #DELETE FROM inaj_tmp  #fengmy150720 mark
+   DELETE FROM axcp803_inaj_tmp  #fengmy150720
+    WHERE inaj008 IN
+     (SELECT inaa001 FROM inaa_t
+       WHERE inajent  = inaaent
+         AND inajsite = inaasite 
+         AND inaa010  <> 'Y')
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'delete inaj_tmp with inaa'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF 
+
+#若没有使用批次成本，则把批号改为空格 
+   LET l_xcat005 = NULL
+   SELECT xcat005 INTO l_xcat005 FROM xcat_t
+    WHERE xcatent = g_enterprise
+      AND xcat001 = g_master.xcce003
+      
+   IF l_xcat005 <> '3' THEN   #不是批次成本
+     #UPDATE inaj_tmp SET inaj010 = ' '  #fengmy150720 mark
+     UPDATE axcp803_inaj_tmp SET inaj010 = ' '  #fengmy150720
+   END IF
+   
+#把交易数量按交易单位和成本单位换算
+   #UPDATE inaj_tmp SET inaj011 = inaj011 * inaj014  #fengmy150720 mark
+    UPDATE axcp803_inaj_tmp SET inaj011 = inaj011 * inaj014  #fengmy150720
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'upd inaj011'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF 
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明:insert into xcfl_t
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者20150513 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp803_ins_xcfl()
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_sql           STRING
+   DEFINE l_xcce002       LIKE xcce_t.xcce002
+   DEFINE l_xcce006       LIKE xcce_t.xcce006
+   DEFINE l_xcce007       LIKE xcce_t.xcce007
+   DEFINE l_xcce008       LIKE xcce_t.xcce008
+   DEFINE l_xcce009       LIKE xcce_t.xcce009
+   DEFINE l_xcce901       LIKE xcce_t.xcce901
+   DEFINE l_inaj022       LIKE inaj_t.inaj022
+   DEFINE l_inaj011       LIKE inaj_t.inaj011
+   DEFINE l_xcce002_last  LIKE xcce_t.xcce002
+   DEFINE l_xcce007_last  LIKE xcce_t.xcce007
+   DEFINE l_xcce008_last  LIKE xcce_t.xcce008
+   DEFINE l_xcce009_last  LIKE xcce_t.xcce009
+   DEFINE l_amt01         LIKE xcce_t.xcce901
+   DEFINE l_amt02         LIKE xcce_t.xcce901
+   DEFINE l_amt03         LIKE xcce_t.xcce901
+   DEFINE l_flag          LIKE type_t.num5
+  
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   LET g_msg = cl_getmsg("axc-00606",g_dlang)  #关联xcce_tmp,inaj_tmp产生货龄资料（xcfl_t）
+   CALL cl_progress_no_window_ing(g_msg)
+   
+   LET l_sql = " SELECT inaj022,SUM(inaj011) ",
+               #"   FROM inaj_tmp ",   #fengmy150720 mark
+               "   FROM axcp803_inaj_tmp ",   #fengmy150720 mark
+               "  WHERE inaj005 = ? ",
+               "    AND inaj006 = ? ",
+               "    AND inaj010 = ? "
+   
+   IF cl_get_para(g_enterprise,g_site,'S-FIN-6001') = 'Y' THEN   #采用成本域
+      IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '1' THEN   #组织作为成本域
+         LET l_sql = l_sql,"  inajsite IN (SELECT DISTINCT xcbf002 FROM xcbf_t",
+                           "               WHERE xcbfent = '",g_enterprise,"'",
+                           "                 AND xcbfcomp = '",g_master.xccecomp,"'",
+                           "                 AND xcbf001 = ?"                     
+      END IF
+      IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '2' THEN   #仓库作为成本域
+         LET l_sql = l_sql,"  inaj008 IN (SELECT DISTINCT xcbf002 FROM xcbf_t",
+                           "               WHERE xcbfent = '",g_enterprise,"'",
+                           "                 AND xcbfcomp = '",g_master.xccecomp,"'",
+                           "                 AND xcbf001 = ?"                         
+      END IF
+      IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '3' THEN   #库存管理特征作为成本域
+         LET l_sql = l_sql,"  inaj006 IN (SELECT DISTINCT xcbf002 FROM xcbf_t",
+                           "               WHERE xcbfent = '",g_enterprise,"'",
+                           "                 AND xcbfcomp = '",g_master.xccecomp,"'",
+                           "                 AND xcbf001 = ?"                         
+      END IF
+   END IF
+   LET l_sql = l_sql ," GROUP BY inaj022 ",
+                      " ORDER BY inaj022 DESC"
+
+   PREPARE inaj_pb FROM l_sql   
+   DECLARE inaj_cs CURSOR FOR inaj_pb
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = ' PREPARE inaj_pb'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   LET l_sql = " SELECT DISTINCT xcce007,xcce008,xcce009,xcce002,xcce006 ",
+              #"   FROM xcce_tmp ",   #fengmy150720 mark
+               "   FROM axcp803_xcce_tmp ",   #fengmy150720
+               " ORDER BY xcce007,xcce008,xcce009,xcce002,xcce006 "
+               
+   PREPARE xcce_pb FROM l_sql   
+   DECLARE xcce_cs CURSOR FOR xcce_pb
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = ' PREPARE xcce_pb'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+      
+   LET l_xcce002 = NULL
+   LET l_xcce006 = NULL
+   LET l_xcce007 = NULL
+   LET l_xcce008 = NULL
+   LET l_xcce009 = NULL
+   LET l_xcce901 = 0
+   LET l_inaj022 = NULL
+   LET l_inaj011 = 0
+   LET l_xcce002_last = NULL
+   LET l_xcce007_last = NULL
+   LET l_xcce008_last = NULL
+   LET l_xcce009_last = NULL
+   LET l_amt01 = 0  #已计算量
+   LET l_amt02 = 0  #剩余数量
+   LET l_amt03 = 0  #本次计算量
+   CALL g_xcfm.clear()
+
+   FOREACH xcce_cs INTO l_xcce007,l_xcce008,l_xcce009,l_xcce002,l_xcce006
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = 'foreach:' 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         LET r_success = FALSE
+         RETURN r_success
+      END IF 
+      LET l_amt01 = 0  #已计算量
+      LET l_amt02 = 0  #剩余数量
+      LET l_amt03 = 0  #本次计算量
+      SELECT SUM(xcce901) INTO l_xcce901  #库存结余不放foreach的sql是因为它的group条件与inaj011不同
+     #   FROM xcce_tmp                    #fengmy150720 mark
+        FROM axcp803_xcce_tmp             #fengmy150720 
+       WHERE xcce007 = l_xcce007          #料号
+         AND xcce008 = l_xcce008          #特性码
+         AND xcce009 = l_xcce009          #批号
+         AND xcce002 = l_xcce002          #成本域
+         AND xcce004 = g_master.xcce004   #年度
+         AND xcce005 = g_master.xcce005   #期别
+         AND xcce006 = l_xcce006          #工单编号
+         
+      LET l_flag = FALSE   #初始化,FALSE表示没有进过下面第二层的FOREACH
+      DISPLAY l_xcce007 TO FORMONLY.p1
+      
+      IF cl_get_para(g_enterprise,g_site,'S-FIN-6001') = 'Y' THEN   #采用成本域
+         IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '1' THEN   #组织作为成本域
+               OPEN inaj_cs USING l_xcce007,l_xcce008,l_xcce009,l_xcce002           
+         END IF
+         IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '2' THEN   #仓库作为成本域
+            OPEN inaj_cs USING l_xcce007,l_xcce008,l_xcce009,l_xcce002                  
+         END IF
+         IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '3' THEN   #库存管理特征作为成本域
+            OPEN inaj_cs USING l_xcce007,l_xcce008,l_xcce009,l_xcce002                     
+         END IF
+      ELSE
+         OPEN inaj_cs USING l_xcce007,l_xcce008,l_xcce009
+      END IF
+      
+      FOREACH inaj_cs INTO l_inaj022,l_inaj011
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = 'foreach:' 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+      
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+
+         IF l_inaj011 IS NULL THEN LET l_inaj011 = 0 END IF
+         IF l_xcce901 IS NULL THEN LET l_xcce901 = 0 ENd IF
+   #初始时上一笔资料给当前值
+         IF l_xcce007_last IS NULL THEN LET l_xcce007_last = l_xcce007 END IF 
+         IF l_xcce008_last IS NULL THEN LET l_xcce008_last = l_xcce008 END IF
+         IF l_xcce009_last IS NULL THEN LET l_xcce009_last = l_xcce009 END IF
+         IF l_xcce002_last IS NULL THEN LET l_xcce002_last = l_xcce002 END IF   
+   #   IF 料号，特性，批号，成本域，xccc年度，xccc期别  <> 上一笔 THEN
+   #      LET 已计算量 = 0      #已计算量在本次最后累加更新
+   #      IF 剩余数量 > 0 THEN   #说明这个料，特性批号啥的inaj已经都扣完了还有剩余，要到开账档继续扣
+   #         保存进临时表，用来等会和库存账龄开账档xcfk_t继续扣数量
+   #      END IF
+   #   END IF
+         IF l_xcce007 <> l_xcce007_last OR l_xcce008 <> l_xcce008_last OR l_xcce009 <> l_xcce009_last OR l_xcce002 <> l_xcce002_last THEN
+            
+            LET l_xcce007_last = l_xcce007 
+            LET l_xcce008_last = l_xcce008
+            LET l_xcce009_last = l_xcce009
+            LET l_xcce002_last = l_xcce002
+            LET l_amt01 = 0   #已计算量   不含本次的，含本次的在最后更新
+            IF l_amt02 > 0 THEN   #如果切换料件了，剩余数量还大于0，说明扣不完，没扣完的要去开账档继续扣
+               CALL axcp803_ins_tmp2(l_xcce007,l_xcce008,l_xcce009,l_xcce002,l_inaj022,l_inaj011,l_amt02,l_xcce006)
+            END IF            
+         END IF
+   #   LET 剩余数量 = xcce库存结余数量 - 已计算量 - inaj交易数量    #注意这里的已计算量是不含本次的，inaj交易数量是换算过单位换算率的
+         LET l_amt02 = l_xcce901 - l_amt01 - l_inaj011
+   #   IF 剩余数量 > 0 THEN  #说明本次还没扣完
+   #      LET 本次计算量 = inaj交易数量
+   #   ELSE                 #全扣完了，要是按这次交易量扣，可能还倒欠，所以要按一开始的结余-已计算量
+   #      LET 本次计算量 = xcce库存结余 - 已计算量
+   #   END IF
+         IF l_amt02 > 0 THEN
+            LET l_amt03 = l_inaj011
+         ELSE
+            LET l_amt03 = l_xcce901 - l_amt01
+         END IF
+         IF l_amt03 IS NULL THEN LET l_amt03 = 0 END IF
+   #   IF 剩余数量 < 0 THEN   #扣完之后剩余的都不算了
+   #      CONTINUE FOREACH
+   #   END IF
+         IF l_amt03 < 0 THEN
+            CONTINUE FOREACH
+         END IF
+   #   计算出本次计算量之后，就开始插入xcfj了
+   #        新增LCM存货货龄计算明细档(xcfj_t)
+   #              集团(xcfjent)=集团
+   #              法人(xcfjcomp)=法人
+   #              账套(xcfjld)=账套
+   #              成本域(xcfj001)=成本域
+   #              成本计算类型(xcfj002)=成本计算类型
+   #              年度(xcfj003)=年度
+   #              期别(xcfj004)=期别
+   #              料号(xcfj005)=料号
+   #              批号(xcfj006)=特性
+   #              项目号(xcfj007)=批号
+   #              日期(xcfj008)=库存扣账日期
+   #              数量(xcfj009)=本次计算量 
+   #   END IF
+         INSERT INTO xcfl_t (xcflent,xcflcomp,xcflld,xcfl001,xcfl002,xcfl003,xcfl004,xcfl005,
+                             xcfl006,xcfl007,xcfl008,xcfl009,xcfl010)
+                     VALUES (g_enterprise,g_master.xccecomp,g_master.xcceld,l_xcce002,g_master.xcce003,g_master.xcce004,
+                             g_master.xcce005,l_xcce006,l_xcce007,l_xcce008,l_xcce009,l_inaj022,l_amt03)
+         
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'insert xcfl_t1'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+   #   LET 已计算量 = 已计算量 + 本次计算量   #更新最新的已计算量   
+         LET l_amt01 = l_amt01 + l_amt03
+         LET l_amt02 = l_xcce901 - l_amt01   #本次之后的剩余量 
+         LET l_flag = TRUE
+      END FOREACH
+#没有进以上FOREACH的,说明有xcce没有inaj,需要从货龄开账去扣
+      IF NOT l_flag THEN
+         CALL axcp803_ins_tmp2(l_xcce007,l_xcce008,l_xcce009,l_xcce002,'','',l_xcce901,l_xcce006)
+      END IF
+   END FOREACH
+#除了上面没进foreach的情况，还有进了但是没有扣完的,比如库存1000，但是inaj进项只找到一笔600的，那剩余的400就只能在这里被记录，去开账里扣
+   IF l_amt02>0 THEN
+      CALL axcp803_ins_tmp2(l_xcce007,l_xcce008,l_xcce009,l_xcce002,'','',l_amt02,l_xcce006)
+   END IF   
+#再对未扣完的资料进行处理，从期初开账资料里继续扣
+   IF NOT  axcp803_ins_xcfl_xcfm() THEN
+      LET r_success = FALSE
+      RETURN r_success   
+   END IF
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明：获得xcfm数组值
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者：20150513
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp803_ins_tmp2(p_xcce007,p_xcce008,p_xcce009,p_xcce002,p_inaj022,p_inaj011,p_amt02,p_xcce006)
+   DEFINE l_cnt      LIKE type_t.num5
+   DEFINE p_xcce007  LIKE xcce_t.xcce007 
+   DEFINE p_xcce008  LIKE xcce_t.xcce008
+   DEFINE p_xcce009  LIKE xcce_t.xcce009
+   DEFINE p_xcce002  LIKE xcce_t.xcce002
+   DEFINE p_inaj022  LIKE inaj_t.inaj022
+   DEFINE p_inaj011  LIKE inaj_t.inaj011
+   DEFINE p_amt02    LIKE inaj_t.inaj011
+   DEFINE p_xcce006  LIKE xcce_t.xcce006
+   
+   IF p_amt02 = 0 THEN RETURN END IF 
+   LET l_cnt = g_xcfm.getLength() + 1
+   IF l_cnt = 0 OR l_cnt IS NULL THEN LET l_cnt = 1 END IF
+   LET g_xcfm[l_cnt].xcce007 = p_xcce007
+   LET g_xcfm[l_cnt].xcce008 = p_xcce008
+   LET g_xcfm[l_cnt].xcce009 = p_xcce009
+   LET g_xcfm[l_cnt].xcce002 = p_xcce002
+   LET g_xcfm[l_cnt].inaj022 = p_inaj022
+   LET g_xcfm[l_cnt].inaj011 = p_inaj011
+   LET g_xcfm[l_cnt].amt02   = p_amt02
+   LET g_xcfm[l_cnt].xcce006 = p_xcce006
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明:没扣完的从期初开账里继续扣
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者:20150513 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp803_ins_xcfl_xcfm()
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_sql           STRING
+   DEFINE i,l_length      LIKE type_t.num5
+   #161109-00085#25-s mod
+#   DEFINE l_xcfm         RECORD LIKE xcfm_t.*   #161109-00085#25-s mark
+   DEFINE l_xcfm         RECORD  #在製貨齡數量期初開帳檔
+       xcfment LIKE xcfm_t.xcfment, #企業編號
+       xcfmcomp LIKE xcfm_t.xcfmcomp, #法人組織
+       xcfmsite LIKE xcfm_t.xcfmsite, #營運組織
+       xcfm001 LIKE xcfm_t.xcfm001, #工單號
+       xcfm002 LIKE xcfm_t.xcfm002, #料件
+       xcfm003 LIKE xcfm_t.xcfm003, #特性
+       xcfm004 LIKE xcfm_t.xcfm004, #倉庫
+       xcfm005 LIKE xcfm_t.xcfm005, #儲位
+       xcfm006 LIKE xcfm_t.xcfm006, #批號
+       xcfm007 LIKE xcfm_t.xcfm007, #發料日期
+       xcfm008 LIKE xcfm_t.xcfm008, #成本單位
+      #xcfm009 LIKE xcfm_t.xcfm009  #發料數量 #161109-00085#63 mark
+       #161109-00085#63 --s add
+       xcfm009 LIKE xcfm_t.xcfm009, #發料數量
+       xcfmud001 LIKE xcfm_t.xcfmud001, #自定義欄位(文字)001
+       xcfmud002 LIKE xcfm_t.xcfmud002, #自定義欄位(文字)002
+       xcfmud003 LIKE xcfm_t.xcfmud003, #自定義欄位(文字)003
+       xcfmud004 LIKE xcfm_t.xcfmud004, #自定義欄位(文字)004
+       xcfmud005 LIKE xcfm_t.xcfmud005, #自定義欄位(文字)005
+       xcfmud006 LIKE xcfm_t.xcfmud006, #自定義欄位(文字)006
+       xcfmud007 LIKE xcfm_t.xcfmud007, #自定義欄位(文字)007
+       xcfmud008 LIKE xcfm_t.xcfmud008, #自定義欄位(文字)008
+       xcfmud009 LIKE xcfm_t.xcfmud009, #自定義欄位(文字)009
+       xcfmud010 LIKE xcfm_t.xcfmud010, #自定義欄位(文字)010
+       xcfmud011 LIKE xcfm_t.xcfmud011, #自定義欄位(數字)011
+       xcfmud012 LIKE xcfm_t.xcfmud012, #自定義欄位(數字)012
+       xcfmud013 LIKE xcfm_t.xcfmud013, #自定義欄位(數字)013
+       xcfmud014 LIKE xcfm_t.xcfmud014, #自定義欄位(數字)014
+       xcfmud015 LIKE xcfm_t.xcfmud015, #自定義欄位(數字)015
+       xcfmud016 LIKE xcfm_t.xcfmud016, #自定義欄位(數字)016
+       xcfmud017 LIKE xcfm_t.xcfmud017, #自定義欄位(數字)017
+       xcfmud018 LIKE xcfm_t.xcfmud018, #自定義欄位(數字)018
+       xcfmud019 LIKE xcfm_t.xcfmud019, #自定義欄位(數字)019
+       xcfmud020 LIKE xcfm_t.xcfmud020, #自定義欄位(數字)020
+       xcfmud021 LIKE xcfm_t.xcfmud021, #自定義欄位(日期時間)021
+       xcfmud022 LIKE xcfm_t.xcfmud022, #自定義欄位(日期時間)022
+       xcfmud023 LIKE xcfm_t.xcfmud023, #自定義欄位(日期時間)023
+       xcfmud024 LIKE xcfm_t.xcfmud024, #自定義欄位(日期時間)024
+       xcfmud025 LIKE xcfm_t.xcfmud025, #自定義欄位(日期時間)025
+       xcfmud026 LIKE xcfm_t.xcfmud026, #自定義欄位(日期時間)026
+       xcfmud027 LIKE xcfm_t.xcfmud027, #自定義欄位(日期時間)027
+       xcfmud028 LIKE xcfm_t.xcfmud028, #自定義欄位(日期時間)028
+       xcfmud029 LIKE xcfm_t.xcfmud029, #自定義欄位(日期時間)029
+       xcfmud030 LIKE xcfm_t.xcfmud030  #自定義欄位(日期時間)030
+       #161109-00085#63 --e add
+          END RECORD
+   #161109-00085#25-e mod
+   
+   DEFINE l_amt01         LIKE xcce_t.xcce901
+   DEFINE l_amt02         LIKE xcce_t.xcce901
+   DEFINE l_amt03         LIKE xcce_t.xcce901
+   DEFINE l_amt03_sum     LIKE xcce_t.xcce901
+   DEFINE l_xcce006_1     LIKE xcce_t.xcce006
+   DEFINE l_cnt2      LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   LET g_msg = cl_getmsg("axc-00607",g_dlang)  #从货龄开账档中抓取资料
+   CALL cl_progress_no_window_ing(g_msg)
+   
+   IF g_xcfm.getLength() = 0 THEN
+      LET r_success = TRUE
+      RETURN r_success
+   END IF
+   
+   #161109-00085#25-s mod
+#   LET l_sql = " SELECT * FROM xcfm_t ",   #161109-00085#25-s mark
+   #161109-00085#63 --s mark
+   #LET l_sql = " SELECT xcfment,xcfmcomp,xcfmsite,xcfm001,xcfm002,xcfm003,xcfm004,xcfm005,xcfm006,xcfm007,xcfm008,xcfm009 
+   #                 FROM xcfm_t ",
+   #161109-00085#63 --e mark
+   #161109-00085#25-e mod
+   #161109-00085#63 --s add
+   LET l_sql = " SELECT xcfment,xcfmcomp,xcfmsite,xcfm001,xcfm002, ",
+               "        xcfm003,xcfm004,xcfm005,xcfm006,xcfm007, ",
+               "        xcfm008,xcfm009,xcfmud001,xcfmud002,xcfmud003, ",
+               "        xcfmud004,xcfmud005,xcfmud006,xcfmud007,xcfmud008, ",
+               "        xcfmud009,xcfmud010,xcfmud011,xcfmud012,xcfmud013, ",
+               "        xcfmud014,xcfmud015,xcfmud016,xcfmud017,xcfmud018, ",
+               "        xcfmud019,xcfmud020,xcfmud021,xcfmud022,xcfmud023, ",
+               "        xcfmud024,xcfmud025,xcfmud026,xcfmud027,xcfmud028, ",
+               "        xcfmud029,xcfmud030 ",
+               "   FROM xcfm_t ",
+   #161109-00085#63 --e add
+               "  WHERE xcfment ='",g_enterprise,"'",
+               "    AND xcfmcomp = '",g_master.xccecomp,"'",
+               "    AND xcfm002 = ?",   #料件
+               "    AND xcfm003 = ?",   #特性
+               "    AND xcfm006 = ?",    #批号
+               "    AND xcfm001 = ?"    #工单号
+ 
+   IF cl_get_para(g_enterprise,g_site,'S-FIN-6001') = 'Y' THEN   #采用成本域
+      IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '1' THEN   #组织作为成本域
+         LET l_sql = l_sql," AND xcfmsite = ? "                    
+      END IF
+      IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '2' THEN   #仓库作为成本域
+         LET l_sql = l_sql," AND xcfm004 = ? "                   
+      END IF
+      IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '3' THEN   #库存管理特征作为成本域
+         #xcfm目前还没有对应的栏位，先预留                     
+      END IF
+   END IF
+   LET l_sql = l_sql," ORDER BY xcfm007 DESC" 
+   
+   PREPARE xcfm_pb FROM l_sql   
+   DECLARE xcfm_cs CURSOR FOR xcfm_pb
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = ' PREPARE xcfm_pb'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   LET l_length = g_xcfm.getLength()
+    FOR i = 1 TO l_length
+       DISPLAY g_xcfm[i].xcce007 TO FORMONLY.p1
+       LET l_amt01 = 0  #已计算量
+       LET l_amt02 = 0  #剩余数量
+       LET l_amt03 = 0  #本次计算量
+       LET l_amt03_sum = 0 #用来总计每一类开账资料的总量，来计算第一阶段剩余库存是否继续还有剩余
+       INITIALIZE l_xcfm.* TO NULL
+
+       IF cl_get_para(g_enterprise,g_site,'S-FIN-6001') = 'Y' THEN   #采用成本域
+          IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '1' THEN   #组织作为成本域
+             OPEN xcfm_cs USING g_xcfm[i].xcce007,g_xcfm[i].xcce008,g_xcfm[i].xcce009,g_xcfm[i].xcce002,g_xcfm[i].xcce006                    
+          END IF
+          IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '2' THEN   #仓库作为成本域
+             OPEN xcfm_cs USING g_xcfm[i].xcce007,g_xcfm[i].xcce008,g_xcfm[i].xcce009,g_xcfm[i].xcce002,g_xcfm[i].xcce006                   
+          END IF
+          IF cl_get_para(g_enterprise,g_site,'S-FIN-6002') = '3' THEN   #库存管理特征作为成本域
+            #xcfm目前还没有对应的栏位，先预留                     
+          END IF
+       ELSE
+          OPEN xcfm_cs USING g_xcfm[i].xcce007,g_xcfm[i].xcce008,g_xcfm[i].xcce009,g_xcfm[i].xcce006
+       END IF
+       
+       #161109-00085#25-s mod
+#       FOREACH xcfm_cs INTO l_xcfm.*   #161109-00085#25-s mark
+       #161109-00085#63 --s mark
+       #FOREACH xcfm_cs INTO l_xcfm.xcfment,l_xcfm.xcfmcomp,l_xcfm.xcfmsite,l_xcfm.xcfm001,l_xcfm.xcfm002,l_xcfm.xcfm003,
+       #                     l_xcfm.xcfm004,l_xcfm.xcfm005,l_xcfm.xcfm006,l_xcfm.xcfm007,l_xcfm.xcfm008,l_xcfm.xcfm009
+       #161109-00085#63 --e mark
+       #161109-00085#25-e mod
+       #161109-00085#63 --s add
+       FOREACH xcfm_cs INTO l_xcfm.xcfment,l_xcfm.xcfmcomp,l_xcfm.xcfmsite,l_xcfm.xcfm001,l_xcfm.xcfm002,
+                            l_xcfm.xcfm003,l_xcfm.xcfm004,l_xcfm.xcfm005,l_xcfm.xcfm006,l_xcfm.xcfm007,
+                            l_xcfm.xcfm008,l_xcfm.xcfm009,l_xcfm.xcfmud001,l_xcfm.xcfmud002,l_xcfm.xcfmud003,
+                            l_xcfm.xcfmud004,l_xcfm.xcfmud005,l_xcfm.xcfmud006,l_xcfm.xcfmud007,l_xcfm.xcfmud008,
+                            l_xcfm.xcfmud009,l_xcfm.xcfmud010,l_xcfm.xcfmud011,l_xcfm.xcfmud012,l_xcfm.xcfmud013,
+                            l_xcfm.xcfmud014,l_xcfm.xcfmud015,l_xcfm.xcfmud016,l_xcfm.xcfmud017,l_xcfm.xcfmud018,
+                            l_xcfm.xcfmud019,l_xcfm.xcfmud020,l_xcfm.xcfmud021,l_xcfm.xcfmud022,l_xcfm.xcfmud023,
+                            l_xcfm.xcfmud024,l_xcfm.xcfmud025,l_xcfm.xcfmud026,l_xcfm.xcfmud027,l_xcfm.xcfmud028,
+                            l_xcfm.xcfmud029,l_xcfm.xcfmud030
+       #161109-00085#63 --e add
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = 'foreach:' 
+             LET g_errparam.code   = SQLCA.sqlcode 
+             LET g_errparam.popup  = TRUE 
+             CALL cl_err()
+          
+             LET r_success = FALSE
+             RETURN r_success
+          END IF  
+                    
+          IF l_xcfm.xcfm009 IS NULL THEN LET l_xcfm.xcfm009 = 0 END IF
+#             剩余量=总库存量(指在第2种的剩余量)-已计算量-本笔库存数量
+          LET l_amt02 = g_xcfm[i].amt02 - l_amt01 - l_xcfm.xcfm009
+#             如果剩余量大于0
+#                本次计算量=本笔库存数量
+#             如果剩余量小于0
+#                本次计算量=总库存量(指在第2种的剩余量)-已计算量
+          IF l_amt02 > 0 THEN
+             LET l_amt03 = l_xcfm.xcfm009
+          ELSE
+             LET l_amt03 = g_xcfm[i].amt02 - l_amt01
+          END IF
+          IF l_amt03 IS NULL THEN LET l_amt03 = 0 END IF
+          IF l_amt03 <= 0 THEN
+             CONTINUE FOREACH
+          END IF
+          LET l_amt03_sum = l_amt03_sum + l_amt03
+#             新增LCM存货货龄计算明细档(xcfj_t)
+#                集团(xcfjent)=集团
+#                法人(xcfjcomp)=法人
+#                账套(xcfjld)=账套
+#                成本域(xcfj001)=成本域
+#                成本计算类型(xcfj002)=成本计算类型
+#                年度(xcfj003)=年度
+#                期别(xcfj004)=期别
+#                料号(xcfj005)=料号
+#                批号(xcfj006)=特性
+#                项目号(xcfj007)=批号
+#                日期(xcfj008)=库存扣账日期
+#                数量(xcfj009)=本次计算量
+ 
+          INSERT INTO xcfl_t (xcflent,xcflcomp,xcflld,xcfl001,xcfl002,xcfl003,xcfl004,
+                              xcfl005,xcfl006,xcfl007,xcfl008,xcfl009,xcfl010)
+                     VALUES  (g_enterprise,g_master.xccecomp,g_master.xcceld,g_xcfm[i].xcce002,g_master.xcce003,
+                              g_master.xcce004,g_master.xcce005,l_xcfm.xcfm001,g_xcfm[i].xcce007,g_xcfm[i].xcce008,
+                              g_xcfm[i].xcce009,l_xcfm.xcfm007,l_amt03)
+         
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = SQLCA.sqlcode
+             LET g_errparam.extend = 'insert xcfl_t2'
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+          
+             LET r_success = FALSE
+             RETURN r_success
+          END IF
+          
+#             已计算量=己计算量(初始为0)+本笔库存数量
+          LET l_amt01 = l_amt01 + l_amt03
+          
+       END FOREACH
+       LET g_xcfm[i].amt02 = g_xcfm[i].amt02 - l_amt03_sum
+   END FOR
+   #fengmy150720---b---mark
+#   LET l_cnt2 = g_xcfm.getLength() - 1
+#   FOR i = 1 TO l_cnt2
+#      IF g_xcfm[i].amt02 <= 0 THEN
+#         CALL g_xcfm.deleteElement(i)   #库存扣光的删除，剩下开账也没抵扣光的，最后处理
+#      END IF
+#   END FOR
+   #fengmy150720---e---mark
+   LET l_length = g_xcfm.getLength()  #fengmy150720 
+   IF cl_null(g_xcfm[l_length].xcce007) THEN LET l_length=l_length-1 END IF #fengmy150720
+   #LET l_length = g_xcfm.getLength() - 1  #fengmy150720 mark
+   IF l_length > 0 THEN    #还有开账档里找不到或者没扣完的
+#把剩余数量归属日期设为库存异动起始日期，存入LCM存货货龄计算明细档(xcfl_t)
+      FOR i = 1 TO l_length
+          IF g_xcfm[i].amt02 <=0 THEN CONTINUE FOR END IF
+          INSERT INTO xcfl_t (xcflent,xcflcomp,xcflld,xcfl001,xcfl002,xcfl003,xcfl004,
+                              xcfl005,xcfl006,xcfl007,xcfl008,xcfl009,xcfl010)
+                     VALUES  (g_enterprise,g_master.xccecomp,g_master.xcceld,g_xcfm[i].xcce002,g_master.xcce003,
+                              g_master.xcce004,g_master.xcce005,g_xcfm[i].xcce006,g_xcfm[i].xcce007,g_xcfm[i].xcce008,
+                              g_xcfm[i].xcce009,g_master.date1,g_xcfm[i].amt02)
+          IF cl_err_sql_dup_value(SQLCA.sqlcode) THEN   #若重复插入则更新
+             UPDATE xcfl_t SET xcfl010 = xcfl010 + g_xcfm[i].amt02
+              WHERE xcflent = g_enterprise
+                AND xcflcomp = g_master.xccecomp
+                AND xcflld = g_master.xcceld
+                AND xcfl001 = g_xcfm[i].xcce002
+                AND xcfl002 = g_master.xcce003
+                AND xcfl003 = g_master.xcce004
+                AND xcfl004 = g_master.xcce005  
+                AND xcfl005 = l_xcfm.xcfm001
+                AND xcfl006 = g_xcfm[i].xcce007
+                AND xcfl007 = g_xcfm[i].xcce008
+                AND xcfl008 = g_xcfm[i].xcce009
+                AND xcfl009 = l_xcfm.xcfm007
+                
+             IF SQLCA.sqlcode THEN
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.code = SQLCA.sqlcode
+                LET g_errparam.extend = 'update xcfl_t3'
+                LET g_errparam.popup = TRUE
+                CALL cl_err()
+             
+                LET r_success = FALSE
+                RETURN r_success                
+             END IF
+          END IF
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = SQLCA.sqlcode
+             LET g_errparam.extend = 'insert xcfl_t3'
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+          
+             LET r_success = FALSE
+             RETURN r_success
+          END IF          
+      END FOR 
+   END IF   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明:删除xcfl数据
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者20150514 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp803_del_xcfl()
+   DEFINE l_cnt                LIKE type_t.num5
+   DEFINE r_success            LIKE type_t.num5
+   DEFINE l_wc                 STRING
+   DEFINE l_sql                STRING
+   DEFINE l_wc1                 STRING
+
+   LET r_success = TRUE
+   LET l_cnt = 0 
+   IF g_master.wc IS NOT NULL THEN
+      LET l_wc = g_master.wc
+      LET l_wc = s_chr_replace(l_wc,'xcce002','xcfl001',0)
+      LET l_wc = s_chr_replace(l_wc,'xcce006','xcfl005',0)
+   
+   END IF
+   IF g_master1.wc1 IS NOT NULL THEN
+      LET l_wc1 = g_master1.wc1
+      IF l_wc1.getIndexOf("xccd007",1) THEN
+         LET l_wc1 = s_chr_replace(l_wc1,'xccd007','xcfl006',0)
+      END IF
+      
+      IF l_wc1.getIndexOf("and",1) THEN
+         LET l_wc1 = s_chr_replace(l_wc1,'and','or',0)
+      END IF
+
+      IF l_wc1.getIndexOf("xcce007",1) THEN
+         LET l_wc1 = s_chr_replace(l_wc1,'xcce007','xcfl006',0)
+      END IF
+      
+   END IF
+   IF l_wc IS NULL THEN LET l_wc = ' 1=1' END IF
+   IF l_wc1 IS NULL THEN LET l_wc1 = ' 1=1' END IF
+   LET l_sql = " SELECT COUNT(*) FROM xcfl_t ",
+               "  WHERE xcflent = ? ",
+               "    AND xcflld  = ? ",
+               "    AND xcfl002 = ? ",
+               "    AND xcfl003 = ? ",
+               "    AND xcfl004 = ? ",
+               "    AND ",l_wc,
+               "    AND (",l_wc1,") "
+
+   PREPARE axcp803_xcfl_cnt_pb FROM l_sql   
+   DECLARE axcp803_xcfl_cnt_cs CURSOR FOR axcp803_xcfl_cnt_pb
+  
+   OPEN axcp803_xcfl_cnt_cs USING g_enterprise,g_master.xcceld,g_master.xcce003,g_master.xcce004,g_master.xcce005
+   FETCH axcp803_xcfl_cnt_cs INTO l_cnt
+     
+   IF l_cnt > 0  THEN  
+      IF cl_ask_confirm('axc-00722') THEN
+         LET l_sql = " DELETE FROM xcfl_t ",
+                     "  WHERE xcflent = ? ",
+                     "    AND xcflld  = ? ",
+                     "    AND xcfl002 = ? ",
+                     "    AND xcfl003 = ? ",
+                     "    AND xcfl004 = ? ",
+                     "    AND ",l_wc,
+                     "    AND (",l_wc1,") "
+         
+         PREPARE axcp803_xcfl_del_pb FROM l_sql   
+         EXECUTE axcp803_xcfl_del_pb USING g_enterprise,g_master.xcceld,g_master.xcce003,g_master.xcce004,g_master.xcce005
+
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'delete xcfl_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         
+            LET r_success = FALSE
+            RETURN r_success
+         END IF 
+      END IF
+   ELSE
+      LET r_success = TRUE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp803_create_tmp()
+   DEFINE l_sql           STRING
+   DEFINE r_success       LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = FALSE
+
+   #检查事务中
+   IF NOT s_transaction_chk('N',1) THEN
+      RETURN r_success
+   END IF
+
+   CALL axcp803_drop_tmp_table()
+
+   CREATE TEMP TABLE axcp803_xcce_tmp(
+   xcceent      SMALLINT,
+   xccecomp     VARCHAR(10),
+   xcceld       VARCHAR(5),
+   xcce001      VARCHAR(1),
+   xcce002      VARCHAR(30),
+   xcce003      VARCHAR(10),
+   xcce004      SMALLINT,
+   xcce005      SMALLINT,
+   xcce006      VARCHAR(20),
+   xcce007      VARCHAR(40),
+   xcce008      VARCHAR(256),
+   xcce009      VARCHAR(30),
+   xcce901      DECIMAL(20,6)
+   );
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create axcp803_xcce_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN r_success
+   END IF
+
+   #1.建立临时表inaj_tmp  -- 空表
+   #161109-00085#25-s mod
+#   LET l_sql = " SELECT * FROM inaj_t WHERE 1 = 2 ",   #161109-00085#25-s mark
+   #161109-00085#63 --s mark
+   #LET l_sql = " SELECT inajent,inajsite,inaj001,inaj002,inaj003,inaj004,inaj005,inaj006,inaj007,inaj008,
+   #                     inaj009,inaj010,inaj011,inaj012,inaj013,inaj014,inaj015,inaj016,inaj017,inaj018,
+   #                     inaj019,inaj020,inaj021,inaj022,inaj023,inaj024,inaj025,inaj026,inaj027,inaj028,
+   #                     inaj036,inaj029,inaj030,inaj031,inaj032,inaj033,inaj034,inaj035,inaj037,inaj038,
+   #                     inaj039,inaj040,inaj041,inaj042,inaj043,inaj044,inaj200,inaj201,inaj202,inaj203,
+   #                     inaj204,inaj205,inaj206,inaj207,inaj208,inaj209,inaj045,inaj046,inaj047,inaj048,
+   #                     inaj049,inaj050,inaj051,inaj210,inaj211 
+   #                 FROM inaj_t WHERE 1 = 2 ",
+   #161109-00085#63 --e mark
+   #161109-00085#25-e mod
+   #161109-00085#63 --s add
+    LET l_sql = " SELECT inajent,inajsite,inaj001,inaj002,inaj003, ",
+                "        inaj004,inaj005,inaj006,inaj007,inaj008, ",
+                "        inaj009,inaj010,inaj011,inaj012,inaj013, ",
+                "        inaj014,inaj015,inaj016,inaj017,inaj018, ",
+                "        inaj019,inaj020,inaj021,inaj022,inaj023, ",
+                "        inaj024,inaj025,inaj026,inaj027,inaj028, ",
+                "        inaj036,inaj029,inaj030,inaj031,inaj032, ",
+                "        inaj033,inaj034,inaj035,inaj037,inaj038, ",
+                "        inaj039,inaj040,inaj041,inaj042,inaj043, ",
+                "        inaj044,inaj200,inaj201,inaj202,inaj203, ",
+                "        inaj204,inaj205,inaj206,inaj207,inaj208, ",
+                "        inaj209,inajud001,inajud002,inajud003,inajud004, ",
+                "        inajud005,inajud006,inajud007,inajud008,inajud009, ",
+                "        inajud010,inajud011,inajud012,inajud013,inajud014, ",
+                "        inajud015,inajud016,inajud017,inajud018,inajud019, ",
+                "        inajud020,inajud021,inajud022,inajud023,inajud024, ",
+                "        inajud025,inajud026,inajud027,inajud028,inajud029, ",
+                "        inajud030,inaj045,inaj046,inaj047,inaj048, ",
+                "        inaj049,inaj050,inaj051,inaj210,inaj211 ",
+                "   FROM inaj_t WHERE 1 = 2 ",
+     #161109-00085#63 --e add
+               "   INTO TEMP axcp803_inaj_tmp "
+
+   PREPARE axcp803_create_inaj_tbl FROM l_sql
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.extend = "PREPARE axcp803_create_inaj_tbl"
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      RETURN r_success
+   END IF
+
+   EXECUTE axcp803_create_inaj_tbl
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.extend = "EXECUTE axcp803_create_inaj_tbl"
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      RETURN r_success
+   END IF
+
+   FREE axcp803_create_inaj_tbl
+
+
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

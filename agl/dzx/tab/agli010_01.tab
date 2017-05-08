@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli010_01" module="agl" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02299" crtdt="2013-10-17 12:34:18" modid="02299" moddt="2013-10-17 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="使用者設限">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glbald,glba001,glba001_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="agl" filename="agli010_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glbald,glba001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="glbald"/>
+      <column id="glba001">
+        <after>
+          <reference field="glba001_desc" ref_field="glba_t.glba001" map_field="glba001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+      </column>
+      <column id="glba001_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glba_t" page="1" linked="" pk="glbald,glba001">
+      <sql id="forupd_sql_detail" query="SELECT glbald,glba001,&apos;&apos; FROM glba_t WHERE glbaent=? AND glbald=? AND glba001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glbald,glba001,&apos;&apos; FROM glba_t WHERE glbaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

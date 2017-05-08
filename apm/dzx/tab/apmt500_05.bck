@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt500_05" module="apm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02294" crtdt="2014-05-27 11:20:16" modid="02294" moddt="2015-01-22 15:01:43" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="輸入工單來源資料">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sfcbdocno,sfcb001,sfcb003,sfcb003_desc(chr80),sfcb004,sfcb002"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt500_05" method="dialog">
+    <section id="input">
+      <input id="head" field="sfcbdocno,sfcb001,sfcb003,sfcb004,sfcb002"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="sfcbdocno">
+        <controlp form="q_sfcbdocno_3" state="i"/>
+      </column>
+      <column id="sfcb001"/>
+      <column id="sfcb003">
+        <after>
+          <reference field="sfcb003_desc" ref_field="sfcb003" map_field="sfcb003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="sfcb003_desc"/>
+      <column id="sfcb004">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfcb002"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="sfcb_t" pk="sfcbdocno,sfcb001,sfcb002">
+      <sql id="forupd_sql" type="sql" query="SELECT sfcbdocno,sfcb001,sfcb003,&apos;&apos;,sfcb004,sfcb002 FROM sfcb_t WHERE sfcbent= ? AND sfcbdocno=? AND sfcb001=? AND sfcb002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="sfcbdocno,sfcb001,sfcb002"/>
+    </head>
+  </dataset>
+</assembly>
+

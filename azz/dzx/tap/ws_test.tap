@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="ws_test" std_prog="ws_test" erpver="1.0" module="AZZ" ver="1" env="s" zone="t10dev" booking="Y">
+  <section id="ws_test.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000000
+#+ 
+#+ Filename...: ws_test
+#+ Description: ...
+#+ Creator....: (1899/12/31)
+#+ Modifier...: (1899/12/31)
+#+ Buildtype..: 應用 m00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="ws_test.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT xml
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_ws.inc"     #TIPTOP Service Gateway 使用的全域變數檔
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="ws_test.main" ver="1" status="" src="s">
+    <![CDATA[#+ 作業開始
+MAIN
+   DEFINE l_request_str  STRING
+   DEFINE l_output_str   STRING
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("wss","")
+  
+   #呼叫服務前置處理程序
+   CALL ws_test_preprocess()    
+ 
+   #呼叫服務函式，中介程式主要處理段
+   #產生方式 『CALL 服務名稱 + _process() 』
+   CALL ws_process_status_update_process()
+ 
+   #呼叫服務後置處理程序
+   CALL ws_test_postprocess()    
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")  
+ 
+END MAIN
+]]>
+  </section>
+  <section id="ws_test.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="ws_test.process" ver="1" status="" src="s">
+    <![CDATA[#+ 實際處理服務程式邏輯的FUNCTION內容
+PRIVATE FUNCTION ws_test_process()
+   #add-point: 服務邏輯主要處理段的ADP
+   {<point name="ws_test.process"/>}
+   #end add-point
+END FUNCTION
+]]>
+  </section>
+  <section id="ws_test.status_update_process" ver="1" status="" src="s">
+    <![CDATA[#+ 實際處理服務程式邏輯的FUNCTION內容
+#+ FUNCTION 名稱規則: 『FUNCTION  服務名稱 + _process() 』
+PRIVATE FUNCTION ws_process_status_update_process()
+   #add-point: 服務邏輯主要處理段的ADP
+   {<point name="status_update_process"/>}
+   #end add-point
+END FUNCTION
+]]>
+  </section>
+</add_points>

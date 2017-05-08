@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="ainp520" std_prog="ainp520" erpver="1.0" module="AIN" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="global.parameter" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[        indedocno        LIKE inde_t.indedocno,]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_doctype         LIKE rtai_t.rtai004]]>
+  </point>
+  <point name="process.count_progress" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      LET l_sql = "SELECT COUNT(*) ",
+                  "  FROM indc_t ",
+                  " WHERE indcent = '",g_enterprise,"' AND indcstus = 'P' ",
+                  "   AND indcsite = indc005 ",
+                  "   AND indc000 = '2' ",
+                  "   AND indcdocno NOT IN (SELECT inde001 FROM inde_t WHERE indeent = '",g_enterprise,"') ",
+                  "   AND ",lc_param.wc CLIPPED,
+                  "   AND indcsite IN ( ",
+                  "                    SELECT ooed004 ",
+                  "                      FROM ooed_t ",
+                  "                     WHERE ooedent = '",g_enterprise,"' AND ooed001 = '2' ",
+                  "                       AND ooed006 <= '",g_today,"' AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+                  "                       AND ooed005 = '",g_site,"' ",
+                  "                    ) "
+      PREPARE ainp520_sel_count_indc_pre FROM l_sql
+      EXECUTE ainp520_sel_count_indc_pre INTO li_count
+      CALL cl_progress_bar_no_window(li_count)]]>
+  </point>
+  <point name="process.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_indc      RECORD LIKE indc_t.*
+   DEFINE l_sql       STRING
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_flag      LIKE type_t.chr1]]>
+  </point>
+  <point name="process.process" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_sql = "SELECT COUNT(*) ",
+               "  FROM indc_t ",
+               " WHERE indcent = '",g_enterprise,"' AND indcstus = 'P' ",
+               "   AND indcsite = indc005 ",
+               "   AND indc000 = '2' ",
+               "   AND indcdocno NOT IN (SELECT inde001 FROM inde_t WHERE indeent = '",g_enterprise,"') ",
+               "   AND ",lc_param.wc CLIPPED,
+               "   AND indcsite IN ( ",
+               "                    SELECT ooed004 ",
+               "                      FROM ooed_t ",
+               "                     WHERE ooedent = '",g_enterprise,"' AND ooed001 = '2' ",
+               "                       AND ooed006 <= '",g_today,"' AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+               "                       AND ooed005 = '",g_site,"' ",
+               "                    ) "
+   PREPARE ainp520_sel_count_indc_pre2 FROM l_sql
+   EXECUTE ainp520_sel_count_indc_pre2 INTO l_cnt
+   IF l_cnt = 0 THEN
+      CALL cl_err('','sub-00491',1)
+      RETURN
+   END IF
+   CALL s_transaction_begin()
+   CALL cl_showmsg_init()
+   LET l_flag = 'Y'
+   LET l_success = TRUE
+   LET l_sql = "SELECT * ",
+               "  FROM indc_t ",
+               " WHERE indcent = '",g_enterprise,"' AND indcstus = 'P' ",
+               "   AND indcsite = indc005 ",
+               "   AND indc000 = '2' ",
+               "   AND indcdocno NOT IN (SELECT inde001 FROM inde_t WHERE indeent = '",g_enterprise,"') ",
+               "   AND ",lc_param.wc CLIPPED,
+               "   AND indcsite IN ( ",
+               "                    SELECT ooed004 ",
+               "                      FROM ooed_t ",
+               "                     WHERE ooedent = '",g_enterprise,"' AND ooed001 = '2' ",
+               "                       AND ooed006 <= '",g_today,"' AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+               "                       AND ooed005 = '",g_site,"' ",
+               "                    ) ",
+               " ORDER BY indcdocno "
+   PREPARE ainp520_sel_indc_pre FROM l_sql
+   DECLARE ainp520_sel_indc_cs CURSOR FOR ainp520_sel_indc_pre
+   FOREACH ainp520_sel_indc_cs INTO l_indc.*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('Sel indc_t',SQLCA.sqlcode,1)
+         CALL s_transaction_end("N","0")
+         RETURN
+      END IF
+      #產生差異調整單
+      CALL s_aint520_inde_pro(l_indc.indcdocno,g_doctype) RETURNING l_success
+      IF NOT l_success THEN
+         LET l_flag = 'N'
+      END IF
+   END FOREACH
+   
+   IF l_flag = 'Y' THEN
+      CALL s_transaction_end("Y","0")
+      CALL cl_err('','adz-00217',1)
+   ELSE
+      CALL cl_showmsg()
+      CALL s_transaction_end("N","0")
+      CALL cl_err('','adz-00218',1)
+   END IF]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_indedocno_desc LIKE oobal_t.oobal004
+   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_ooef004        LIKE ooef_t.ooef004]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         CONSTRUCT BY NAME lc_param.wc ON indc005,indcdocno
+         
+            ON ACTION controlp INFIELD indc005
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site #
+               LET g_qryparam.arg2 = "2" #
+               CALL q_ooed004_7()
+               DISPLAY g_qryparam.return1 TO indc005
+               NEXT FIELD indc005
+               
+            ON ACTION controlp INFIELD indcdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_indcdocno()
+               DISPLAY g_qryparam.return1 TO indcdocno
+               NEXT FIELD indcdocno
+               
+         END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         INPUT lc_param.indedocno FROM indedocno ATTRIBUTE(WITHOUT DEFAULTS)
+         
+            BEFORE INPUT
+               CALL s_arti200_get_def_doc_type(g_site,'aint520','1') RETURNING l_success,lc_param.indedocno
+               DISPLAY lc_param.indedocno TO indedocno
+               CALL s_aooi200_get_slip_desc(lc_param.indedocno) RETURNING l_indedocno_desc
+               DISPLAY l_indedocno_desc TO indedocno_desc
+            
+            ON ACTION controlp INFIELD indedocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = lc_param.indedocno
+               SELECT ooef004 INTO l_ooef004 FROM ooef_t WHERE ooef001 = g_site AND ooefent  = g_enterprise
+               LET g_qryparam.arg1 = l_ooef004
+               LET g_qryparam.arg2 = "aint520"
+               CALL q_ooba002_1()
+               LET lc_param.indedocno = g_qryparam.return1
+               DISPLAY lc_param.indedocno TO indedocno
+               CALL s_aooi200_get_slip_desc(lc_param.indedocno) RETURNING l_indedocno_desc
+               DISPLAY l_indedocno_desc TO indedocno_desc
+               NEXT FIELD indedocno
+            
+            AFTER FIELD indedocno
+               LET l_indedocno_desc = ''
+               DISPLAY l_indedocno_desc TO indedocno_desc
+               IF NOT cl_null(lc_param.indedocno) THEN
+                  IF NOT s_aooi200_chk_slip(g_site,'',lc_param.indedocno,'aint520') THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL s_aooi200_get_slip_desc(lc_param.indedocno) RETURNING l_indedocno_desc
+               DISPLAY l_indedocno_desc TO indedocno_desc
+               LET g_doctype = lc_param.indedocno
+         END INPUT]]>
+  </point>
+  <section id="ainp520.description" ver="33" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000034
+#+ 
+#+ Filename...: ainp520
+#+ Description: 調撥差異調整批量產生作業
+#+ Creator....: 01726(2014/04/11)
+#+ Modifier...: 01726(2014/04/14)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="ainp520.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="ainp520.init" ver="1" status="" src="s">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION ainp520_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainp520.main" ver="1" status="" src="s">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ain","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL ainp520_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ainp520 WITH FORM cl_ap_formpath("ain",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL ainp520_init()
+ 
+      #進入選單 Menu (="N")
+      CALL ainp520_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_ainp520
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="ainp520.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="ainp520.process" ver="2" status="" src="s">
+    <![CDATA[#+ 資料處理
+PRIVATE FUNCTION ainp520_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE ainp520_process_cs CURSOR FROM ls_sql
+#  FOREACH ainp520_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+  </section>
+  <section id="ainp520.transfer_argv" ver="1" status="" src="s">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION ainp520_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="ainp520.ui_dialog" ver="5" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION ainp520_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL ainp520_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = ainp520_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

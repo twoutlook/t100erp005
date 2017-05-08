@@ -1,0 +1,159 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amri050" module="amr" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="03079" crtdt="2014-07-22 09:46:10" modid="03079" moddt="2015-05-12 13:40:19" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資源行事曆維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mrbh006,mrbh006_desc(chr80),mrbh002,mrbhsite"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mrbh001,mrbh001_desc(chr500),mrba010(chr10),mrba010_desc(chr500),mrba021(chr10),mrba021_desc(chr500),mrbh003,mrbh004,time01(num15_3),time02(num10),mrbh005,mrbh007,mrbh007_desc(chr500),mrbh008,mrbhstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mrbhownid,mrbhownid_desc(chr500),mrbhowndp,mrbhowndp_desc(chr500),mrbhcrtid,mrbhcrtid_desc(chr500),mrbhcrtdp,mrbhcrtdp_desc(chr500),mrbhcrtdt,mrbhmodid,mrbhmodid_desc(chr500),mrbhmoddt,mrbhcnfid,mrbhcnfid_desc(chr500),mrbhcnfdt,mrbh001,mrbh003,mrbh007"/>
+      <var id="bs_field" value="mrbh006,mrbh006_desc(chr80),mrbh002,mrbhsite" pk="mrbh002,mrbh006,mrbhsite" order=""/>
+      <bs_reference field="mrbh006_desc" ref_field="mrbhsite,mrbh006" ref_sql="SELECT ecaa002 FROM ecaa_t WHERE ecaaent=$varg_enterprise$var AND ecaasite=? AND ecaa001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amr" filename="amri050" method="dialog">
+    <section id="input">
+      <input id="head" field="mrbh006,mrbh002,mrbhsite"/>
+      <input id="body" page="1" field="mrbh001,mrbh003,mrbh004,time01,time02,mrbh005,mrbh007,mrbh008,mrbhstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mrbh006,mrbh002,mrbhsite"/>
+      <construct id="body" page="1" field="mrbh001,mrbh003,mrbh004,time01,time02,mrbh005,mrbh007,mrbh008,mrbhstus"/>
+      <construct id="body" page="2" field="mrbhownid,mrbhowndp,mrbhcrtid,mrbhcrtdp,mrbhcrtdt,mrbhmodid,mrbhmoddt,mrbhcnfid,mrbhcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mrbh002,mrbh006,mrbhsite"/>
+      <set id="head" type="no_entry" field="mrbh002,mrbh006,mrbhsite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mrbh006">
+        <after>
+          <check chkid="v_ecaa001_1" id="isExist"/>
+          <reference field="mrbh006_desc" ref_field="mrbhsite,mrbh006" map_field="mrbhsite,mrbh006" ref_sql="SELECT ecaa002 FROM ecaa_t WHERE ecaaent=$varg_enterprise$var AND ecaasite=? AND ecaa001=? "/>
+        </after>
+        <controlp form="q_ecaa001" state="i"/>
+        <controlp form="q_ecaa001" state="c"/>
+      </column>
+      <column id="mrbh006_desc"/>
+      <column id="mrbh002"/>
+      <column id="mrbhsite"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mrbh001">
+        <after>
+          <check chkid="v_mrba001_8" id="isExist"/>
+          <reference field="mrbh001_desc" ref_field="mrbhsite,mrbh001" map_field="mrbhsite,mrbh001" ref_sql="SELECT mrba004 FROM mrba_t WHERE mrbaent=$varg_enterprise$var AND mrbasite=? AND mrba001=? "/>
+        </after>
+        <controlp form="q_mrba001" state="i"/>
+        <controlp form="q_mrba001" state="c"/>
+      </column>
+      <column id="mrbh001_desc"/>
+      <column id="mrba010">
+        <after>
+          <check chkid="v_oocq002_4" id="isExist"/>
+          <reference field="mrba010_desc" ref_field="mrba010" map_field="mrba010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1101&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mrba010_desc"/>
+      <column id="mrba021">
+        <after>
+          <reference field="mrba021_desc" ref_field="mrba021" map_field="mrba021" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mrba021_desc"/>
+      <column id="mrbh003"/>
+      <column id="mrbh004"/>
+      <column id="time01"/>
+      <column id="time02"/>
+      <column id="mrbh005" type="S" default="Y"/>
+      <column id="mrbh007">
+        <after>
+          <check chkid="v_oocq002_01" id="isExist"/>
+          <reference field="mrbh007_desc" ref_field="mrbh007" map_field="mrbh007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1104&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mrbh007_desc"/>
+      <column id="mrbh008"/>
+      <column id="mrbhstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="mrbhownid">
+        <after>
+          <reference field="mrbhownid_desc" ref_field="mrbh_t.mrbhownid" map_field="mrbhownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrbhownid_desc"/>
+      <column id="mrbhowndp">
+        <after>
+          <reference field="mrbhowndp_desc" ref_field="mrbh_t.mrbhowndp" map_field="mrbhowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mrbhowndp_desc"/>
+      <column id="mrbhcrtid">
+        <after>
+          <reference field="mrbhcrtid_desc" ref_field="mrbh_t.mrbhcrtid" map_field="mrbhcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrbhcrtid_desc"/>
+      <column id="mrbhcrtdp">
+        <after>
+          <reference field="mrbhcrtdp_desc" ref_field="mrbh_t.mrbhcrtdp" map_field="mrbhcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mrbhcrtdp_desc"/>
+      <column id="mrbhcrtdt"/>
+      <column id="mrbhmodid">
+        <after>
+          <reference field="mrbhmodid_desc" ref_field="mrbh_t.mrbhmodid" map_field="mrbhmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrbhmodid_desc"/>
+      <column id="mrbhmoddt"/>
+      <column id="mrbhcnfid">
+        <after>
+          <reference field="mrbhcnfid_desc" ref_field="mrbh_t.mrbhcnfid" map_field="mrbhcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrbhcnfid_desc"/>
+      <column id="mrbhcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mrbh_t" pk="mrbh002,mrbh006,mrbhsite">
+      <sql id="forupd_sql" type="sql" query="SELECT mrbh006,&apos;&apos;,mrbh002,mrbhsite FROM mrbh_t WHERE mrbhent= ? AND mrbh002=? AND mrbh006=? AND mrbhsite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mrbh006,&apos;&apos;,mrbh002,mrbhsite FROM mrbh_t" order="mrbh002,mrbh006,mrbhsite"/>
+    </head>
+    <body id="mrbh_t" page="1,2" linked="" pk="mrbh001,mrbh003,mrbh007" fk="mrbh002,mrbh006,mrbhsite">
+      <sql id="forupd_sql_detail" query="SELECT mrbh001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,mrbh003,mrbh004,&apos;&apos;,&apos;&apos;,mrbh005,mrbh007,&apos;&apos;,mrbh008,mrbhstus,mrbhownid,&apos;&apos;,mrbhowndp,&apos;&apos;,mrbhcrtid,&apos;&apos;,mrbhcrtdp,&apos;&apos;,mrbhcrtdt,mrbhmodid,&apos;&apos;,mrbhmoddt,mrbhcnfid,&apos;&apos;,mrbhcnfdt,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mrbh_t WHERE mrbhent=? AND mrbh002=? AND mrbh006=? AND mrbhsite=? AND mrbh001=? AND mrbh003=? AND mrbh007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mrbh001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,mrbh003,mrbh004,&apos;&apos;,&apos;&apos;,mrbh005,mrbh007,&apos;&apos;,mrbh008,mrbhstus,mrbhownid,&apos;&apos;,mrbhowndp,&apos;&apos;,mrbhcrtid,&apos;&apos;,mrbhcrtdp,&apos;&apos;,mrbhcrtdt,mrbhmodid,&apos;&apos;,mrbhmoddt,mrbhcnfid,&apos;&apos;,mrbhcnfdt,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mrbh_t WHERE mrbhent= ? AND mrbh002=? AND mrbh006=? AND mrbhsite=?"/>
+    </body>
+  </dataset>
+</assembly>
+

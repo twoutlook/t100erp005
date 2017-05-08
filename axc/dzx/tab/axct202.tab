@@ -1,0 +1,175 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct202" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02114" crtdt="2014-05-11 22:13:26" modid="02295" moddt="2016-08-15 10:21:32" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="工時費用統計和維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbjcomp,xcbjcomp_desc(chr80),xcbjld,xcbjld_desc(chr80),xcbj002,xcbj003,xcbj001,xcbj001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcbj004,xcbj004_desc(chr500),xcbj005,xcbj006,xcbj010,xcbj011,xcbj011_desc(chr500),xcbj021,xcbj020,xcbj101,xcbj102,xcbj103,xcbj104,xcbj105"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcbj004,xcbj005,xcbj006,xcbjownid,xcbjownid_desc(chr500),xcbjowndp,xcbjowndp_desc(chr500),xcbjcrtid,xcbjcrtid_desc(chr500),xcbjcrtdp,xcbjcrtdp_desc(chr500),xcbjcrtdt,xcbjmodid,xcbjmodid_desc(chr500),xcbjmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct202" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbjcomp,xcbjld,xcbj002,xcbj003,xcbj001"/>
+      <input id="body" page="1" field="xcbj004,xcbj005,xcbj006,xcbj010,xcbj011,xcbj021,xcbj020,xcbj101,xcbj102,xcbj103,xcbj104,xcbj105" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcbjcomp,xcbjld,xcbj002,xcbj003,xcbj001"/>
+      <construct id="body" page="1" field="xcbj004,xcbj005,xcbj006,xcbj010,xcbj011,xcbj021,xcbj020,xcbj101,xcbj102,xcbj103,xcbj104,xcbj105"/>
+      <construct id="body" page="2" field="xcbjownid,xcbjowndp,xcbjcrtid,xcbjcrtdp,xcbjcrtdt,xcbjmodid,xcbjmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcbjld,xcbj001,xcbj002,xcbj003"/>
+      <set id="head" type="no_entry" field="xcbjld,xcbj001,xcbj002,xcbj003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcbjcomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="xcbjcomp_desc" ref_field="xcbj_t.xcbjcomp" map_field="xcbjent,xcbjcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xcbjcomp_desc"/>
+      <column id="xcbjld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcbjld_desc" ref_field="xcbj_t.xcbjld" map_field="xcbjent,xcbjld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcbjld_desc"/>
+      <column id="xcbj002"/>
+      <column id="xcbj003"/>
+      <column id="xcbj001">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="xcbj001_desc" ref_field="xcbj_t.xcbj001" map_field="xcbjent,xcbj001" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcbj001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcbj004">
+        <after>
+          <check chkid="v_ooeg001_4" id="isExist"/>
+          <reference field="xcbj004_desc" ref_field="xcbj_t.xcbj004" map_field="xcbj004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="xcbj004_desc"/>
+      <column id="xcbj005"/>
+      <column id="xcbj006"/>
+      <column id="xcbj010"/>
+      <column id="xcbj011">
+        <after>
+          <reference field="xcbj011_desc" ref_field="xcbj011" map_field="xcbj011" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcbj011_desc"/>
+      <column id="xcbj021">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbj020">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbj101">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbj102">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbj103">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbj104">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbj105">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xcbjownid">
+        <after>
+          <reference field="xcbjownid_desc" ref_field="xcbj_t.xcbjownid" map_field="xcbjownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbjownid_desc"/>
+      <column id="xcbjowndp">
+        <after>
+          <reference field="xcbjowndp_desc" ref_field="xcbj_t.xcbjowndp" map_field="xcbjowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbjowndp_desc"/>
+      <column id="xcbjcrtid">
+        <after>
+          <reference field="xcbjcrtid_desc" ref_field="xcbj_t.xcbjcrtid" map_field="xcbjcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbjcrtid_desc"/>
+      <column id="xcbjcrtdp">
+        <after>
+          <reference field="xcbjcrtdp_desc" ref_field="xcbj_t.xcbjcrtdp" map_field="xcbjcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbjcrtdp_desc"/>
+      <column id="xcbjcrtdt"/>
+      <column id="xcbjmodid">
+        <after>
+          <reference field="xcbjmodid_desc" ref_field="xcbj_t.xcbjmodid" map_field="xcbjmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbjmodid_desc"/>
+      <column id="xcbjmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcbj_t" pk="xcbjld,xcbj001,xcbj002,xcbj003">
+      <sql id="forupd_sql" type="sql" query="SELECT xcbjcomp,&apos;&apos;,xcbjld,&apos;&apos;,xcbj002,xcbj003,xcbj001,&apos;&apos; FROM xcbj_t WHERE xcbjent= ? AND xcbjld=? AND xcbj001=? AND xcbj002=? AND xcbj003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcbjcomp,&apos;&apos;,xcbjld,&apos;&apos;,xcbj002,xcbj003,xcbj001,&apos;&apos; FROM xcbj_t" order="xcbjld,xcbj001,xcbj002,xcbj003"/>
+    </head>
+    <body id="xcbj_t" page="1,2" linked="" pk="xcbj004,xcbj005,xcbj006" fk="xcbjld,xcbj001,xcbj002,xcbj003">
+      <sql id="forupd_sql_detail" query="SELECT xcbj004,&apos;&apos;,xcbj005,xcbj006,xcbj010,xcbj011,&apos;&apos;,xcbj021,xcbj020,xcbj101,xcbj102,xcbj103,xcbj104,xcbj105,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcbjownid,&apos;&apos;,xcbjowndp,&apos;&apos;,xcbjcrtid,&apos;&apos;,xcbjcrtdp,&apos;&apos;,xcbjcrtdt,xcbjmodid,&apos;&apos;,xcbjmoddt FROM xcbj_t WHERE xcbjent=? AND xcbjld=? AND xcbj001=? AND xcbj002=? AND xcbj003=? AND xcbj004=? AND xcbj005=? AND xcbj006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcbj004,&apos;&apos;,xcbj005,xcbj006,xcbj010,xcbj011,&apos;&apos;,xcbj021,xcbj020,xcbj101,xcbj102,xcbj103,xcbj104,xcbj105,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcbjownid,&apos;&apos;,xcbjowndp,&apos;&apos;,xcbjcrtid,&apos;&apos;,xcbjcrtdp,&apos;&apos;,xcbjcrtdt,xcbjmodid,&apos;&apos;,xcbjmoddt FROM xcbj_t WHERE xcbjent= ? AND xcbjld=? AND xcbj001=? AND xcbj002=? AND xcbj003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

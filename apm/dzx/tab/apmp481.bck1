@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmp481" module="apm" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02295" crtdt="2015-02-26 14:46:22" modid="02295" moddt="2015-04-01 16:27:46" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="採購合約累積量計算作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmdxdocno(chr20),pmdx004(chr10),pmdy002(chr500),imaa009(chr10),imaf141(chr10),pmdx002(chr20),pmdx003(chr10),pmdx014(dat),pmdx015(dat),chk(chr500),pmeo026,pmeo027,pmeo027_desc(chr80),pmdt051,pmdt051_desc(chr80),imaf001,stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="apm" filename="apmp481" method="dialog">
+    <section id="input">
+      <input id="head" field="chk,pmeo026,pmeo027,pmdt051,imaf001"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmdxdocno,pmdx004,pmdy002,imaa009,imaf141,pmdx002,pmdx003,pmdx014,pmdx015"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmdxdocno">
+        <controlp form="q_pmdxdocno" state="c"/>
+      </column>
+      <column id="pmdx004">
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="pmdy002">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaa009">
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imaf141">
+        <controlp form="q_imce141" state="c"/>
+      </column>
+      <column id="pmdx002">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmdx003">
+        <controlp form="q_ooeg001_3" state="c"/>
+      </column>
+      <column id="pmdx014"/>
+      <column id="pmdx015"/>
+      <column id="chk" type="S" default="N"/>
+      <column id="pmeo026" type="S" default="1"/>
+      <column id="pmeo027">
+        <after>
+          <reference field="pmeo027_desc" ref_field="pmeo_t.pmeo027" map_field="pmeo027" ref_sql="SELECT oobxl003 FROM oobxl_t WHERE oobxlent=$varg_enterprise$var AND oobxl001=? AND oobxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooba002_1" state="i"/>
+      </column>
+      <column id="pmeo027_desc"/>
+      <column id="pmdt051">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="pmdt051_desc"/>
+      <column id="imaf001">
+        <controlp form="q_imaf001_2" state="i"/>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

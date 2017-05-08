@@ -1,0 +1,190 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt560" module="afm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02097" crtdt="2015-05-19 15:03:05" modid="02159" moddt="2015-12-21 14:11:03" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="計提投資收益維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmmscomp,fmmscomp_desc(chr80),fmmsdocno,fmmsdocno_desc(chr80),fmms001,fmms002,fmmsstus,fmmsownid,fmmsownid_desc(chr80),fmmsowndp,fmmsowndp_desc(chr80),fmmscrtid,fmmscrtid_desc(chr80),fmmscrtdp,fmmscrtdp_desc(chr80),fmmscrtdt,fmmsmodid,fmmsmodid_desc(chr80),fmmsmoddt,fmmscnfid,fmmscnfid_desc(chr80),fmmscnfdt,fmmspstid,fmmspstid_desc(chr80),fmmspstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmmtseq,fmmt001,fmmt001_desc(chr500),fmmt002,fmmt003,fmmt017,fmmt004,fmmt005,fmmt006,fmmt007,fmmt008,fmmt009,fmmt010,fmmt011,fmmt012,fmmt013,fmmt014,fmmt015,fmmt016,fmmt018,fmmt019"/>
+      <var id="bs_field" value="fmmsdocno,fmmscomp" pk="fmmsdocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_fmmt002" prog="fmmt002" parameter="fmmt002"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt560" method="dialog">
+    <section id="input">
+      <input id="head" field="fmmscomp,fmmsdocno,fmms001,fmms002,fmmsstus"/>
+      <input id="body" page="1" field="fmmtseq,fmmt001,fmmt002,fmmt017,fmmt010,fmmt011,fmmt012,fmmt013,fmmt014,fmmt015,fmmt016,fmmt018,fmmt019" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmmscomp,fmmsdocno,fmmsdocno_desc,fmms001,fmms002,fmmsstus,fmmsownid,fmmsowndp,fmmscrtid,fmmscrtdp,fmmscrtdt,fmmsmodid,fmmsmoddt,fmmscnfid,fmmscnfdt,fmmspstid,fmmspstdt"/>
+      <construct id="body" page="1" field="fmmtseq,fmmt001,fmmt002,fmmt003,fmmt017,fmmt004,fmmt005,fmmt006,fmmt007,fmmt008,fmmt009,fmmt010,fmmt011,fmmt012,fmmt013,fmmt014,fmmt015,fmmt016,fmmt018,fmmt019"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmmsdocno"/>
+      <set id="head" type="no_entry" field="fmmsdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmmscomp">
+        <after>
+          <reference field="fmmscomp_desc" ref_field="fmms_t.fmmscomp" map_field="fmmscomp" ref_sql="SELECT ooefl004 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmmscomp_desc"/>
+      <column id="fmmsdocno">
+        <after/>
+      </column>
+      <column id="fmmsdocno_desc"/>
+      <column id="fmms001" type="S" default="0"/>
+      <column id="fmms002" type="S" default="0"/>
+      <column id="fmmsstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+      </column>
+      <column id="fmmsownid">
+        <after>
+          <reference field="fmmsownid_desc" ref_field="fmms_t.fmmsownid" map_field="fmmsownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmsownid_desc"/>
+      <column id="fmmsowndp">
+        <after>
+          <reference field="fmmsowndp_desc" ref_field="fmms_t.fmmsowndp" map_field="fmmsowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmmsowndp_desc"/>
+      <column id="fmmscrtid">
+        <after>
+          <reference field="fmmscrtid_desc" ref_field="fmms_t.fmmscrtid" map_field="fmmscrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmscrtid_desc"/>
+      <column id="fmmscrtdp">
+        <after>
+          <reference field="fmmscrtdp_desc" ref_field="fmms_t.fmmscrtdp" map_field="fmmscrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmmscrtdp_desc"/>
+      <column id="fmmscrtdt"/>
+      <column id="fmmsmodid">
+        <after>
+          <reference field="fmmsmodid_desc" ref_field="fmms_t.fmmsmodid" map_field="fmmsmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmsmodid_desc"/>
+      <column id="fmmsmoddt"/>
+      <column id="fmmscnfid">
+        <after>
+          <reference field="fmmscnfid_desc" ref_field="fmms_t.fmmscnfid" map_field="fmmscnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmscnfid_desc"/>
+      <column id="fmmscnfdt"/>
+      <column id="fmmspstid">
+        <after>
+          <reference field="fmmspstid_desc" ref_field="fmms_t.fmmspstid" map_field="fmmspstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmspstid_desc"/>
+      <column id="fmmspstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmmtseq" type="S" default="0"/>
+      <column id="fmmt001">
+        <after>
+          <reference field="fmmt001_desc" ref_field="fmmt_t.fmmt001" map_field="fmmt001" ref_sql="SELECT ooefl004 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmmt001_desc"/>
+      <column id="fmmt002"/>
+      <column id="fmmt003">
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="fmmt017"/>
+      <column id="fmmt004" type="S" default="0"/>
+      <column id="fmmt005"/>
+      <column id="fmmt006"/>
+      <column id="fmmt007" type="S" default="0"/>
+      <column id="fmmt008" type="S" default="0"/>
+      <column id="fmmt009"/>
+      <column id="fmmt010" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmt011" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmt012" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmt013" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmt014" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmt015" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmt016" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmt018" type="S" default="0"/>
+      <column id="fmmt019" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmms_t" pk="fmmsdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fmmscomp,&apos;&apos;,fmmsdocno,&apos;&apos;,fmms001,fmms002,fmmsstus,fmmsownid,&apos;&apos;,fmmsowndp,&apos;&apos;,fmmscrtid,&apos;&apos;,fmmscrtdp,&apos;&apos;,fmmscrtdt,fmmsmodid,&apos;&apos;,fmmsmoddt,fmmscnfid,&apos;&apos;,fmmscnfdt,fmmspstid,&apos;&apos;,fmmspstdt FROM fmms_t WHERE fmmsent= ? AND fmmsdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmmscomp,&apos;&apos;,fmmsdocno,&apos;&apos;,fmms001,fmms002,fmmsstus,fmmsownid,&apos;&apos;,fmmsowndp,&apos;&apos;,fmmscrtid,&apos;&apos;,fmmscrtdp,&apos;&apos;,fmmscrtdt,fmmsmodid,&apos;&apos;,fmmsmoddt,fmmscnfid,&apos;&apos;,fmmscnfdt,fmmspstid,&apos;&apos;,fmmspstdt FROM fmms_t" order="fmmsdocno"/>
+    </head>
+    <body id="fmmt_t" page="1" linked="" pk="fmmtseq" fk="fmmtdocno">
+      <sql id="forupd_sql_detail" query="SELECT fmmtseq,fmmt001,&apos;&apos;,fmmt002,fmmt003,fmmt017,fmmt004,fmmt005,fmmt006,fmmt007,fmmt008,fmmt009,fmmt010,fmmt011,fmmt012,fmmt013,fmmt014,fmmt015,fmmt016,fmmt018,fmmt019 FROM fmmt_t WHERE fmmtent=? AND fmmtdocno=? AND fmmtseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmmtseq,fmmt001,&apos;&apos;,fmmt002,fmmt003,fmmt017,fmmt004,fmmt005,fmmt006,fmmt007,fmmt008,fmmt009,fmmt010,fmmt011,fmmt012,fmmt013,fmmt014,fmmt015,fmmt016,fmmt018,fmmt019 FROM fmmt_t WHERE fmmtent=? AND fmmtdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

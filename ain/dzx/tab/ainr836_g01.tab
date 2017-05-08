@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainr836_g01" module="ain" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2015-04-07 10:58:27" modid="08734" moddt="2016-11-01 18:24:07" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.pr(chr2|l_pr)">
+    <var seq="1" value="inpf004,inpfdocno,inpfseq,inpf001,inpgseq1,inpg002,inpg003,inpg001,l_imaal003(imaal003|NULL),l_imaal004(imaal004|NULL),inpg007,inpg012,inpg030,inpa_t_inpa024(inpa024|inpa_t.inpa024),inpa_t_inpa032(inpa032|inpa_t.inpa032),inpa_t_inpa033(inpa033|inpa_t.inpa033),inpa_t_inpa034(inpa034|inpa_t.inpa034),inpa_t_inpa035(inpa035|inpa_t.inpa035),inpa_t_inpa036(inpa036|inpa_t.inpa036),inpa_t_inpa037(inpa037|inpa_t.inpa037),inpfent,inpfsite"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="inpf004,inpfdocno,inpfseq,inpf001,inpgseq1,inpg002,inpg003,inpg001,l_imaal003(imaal003|NULL),l_imaal004(imaal004|NULL),inpg007,inpg012,inpg030,inpa_t_inpa024(inpa024|inpa_t.inpa024),inpa_t_inpa032(inpa032|inpa_t.inpa032),inpa_t_inpa033(inpa033|inpa_t.inpa033),inpa_t_inpa034(inpa034|inpa_t.inpa034),inpa_t_inpa035(inpa035|inpa_t.inpa035),inpa_t_inpa036(inpa036|inpa_t.inpa036),inpa_t_inpa037(inpa037|inpa_t.inpa037),inpfent,inpfsite"/>
+    <sql id="g_from" query="inpf_t,inpg_t,inpa_t"/>
+    <sql id="g_where" query="" maintable="inpf_t"/>
+    <sql id="g_order" query="inpf004"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="inpf004"/>
+    <section id="b_group" reptype="d01">
+      <rep type="inpf004" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="inpfent,inpf004"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="inpfent,inpf004"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="inpfent,inpf004"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="inpf004" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="inpfent,inpf004"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

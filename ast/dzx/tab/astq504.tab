@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq504" module="ast" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06815" crtdt="2015-05-08 19:12:39" modid="08742" moddt="2016-09-14 09:51:19" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="收銀小票明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="l_sdate,l_edate,stgd003,stgd015,stgdsite,stgd004,stgd005,stgd006,stfa036,stfa003,stfa050,stgd013,stgd014,stgd007,stgdseq,stgd008,stgd009"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),stgdsite,stgdsite_desc(chr500),stgd013,stgd014,stgd007,stgdseq,stgd001,stgd002,stgd003,l_imaa014(chr500),stgd003_desc(chr500),stgd015,stgd015_desc(chr500),stgd004,stgd004_desc(chr500),stgd005,stgd005_desc(chr500),stgd006,stgd006_desc(chr500),stgd008,stgd008_desc(chr500),stgd009,stgd009_desc(chr500),stgd010,stgd011,stgd012,stgd016,stgd017"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),stgdsite(b_stgdsite),stgdsite_desc(b_stgdsite_desc),stgd013(b_stgd013),stgd014(b_stgd014),stgd007(b_stgd007),stgdseq(b_stgdseq),stgd001(b_stgd001),stgd002(b_stgd002),stgd003(b_stgd003),l_imaa014(l_imaa014),stgd003_desc(b_stgd003_desc),stgd015(b_stgd015),stgd015_desc(b_stgd015_desc),stgd004(b_stgd004),stgd004_desc(b_stgd004_desc),stgd005(b_stgd005),stgd005_desc(b_stgd005_desc),stgd006(b_stgd006),stgd006_desc(b_stgd006_desc),stgd008(b_stgd008),stgd008_desc(b_stgd008_desc),stgd009(b_stgd009),stgd009_desc(b_stgd009_desc),stgd010(b_stgd010),stgd011(b_stgd011),stgd012(b_stgd012),stgd016(b_stgd016),stgd017(b_stgd017)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq504" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stgdsite,stgd013,stgd014,stgd007,stgd002,stgd003,stgd015,stgd004,stgd005,stgd006,stgd008,stgd009,stgd010,stgd011,stgd012,stgd016,stgd017" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="stgdsite(b_stgdsite),stgd013(b_stgd013),stgd014(b_stgd014),stgd007(b_stgd007),stgd002(b_stgd002),stgd003(b_stgd003),stgd015(b_stgd015),stgd004(b_stgd004),stgd005(b_stgd005),stgd006(b_stgd006),stgd008(b_stgd008),stgd009(b_stgd009),stgd010(b_stgd010),stgd011(b_stgd011),stgd012(b_stgd012),stgd016(b_stgd016),stgd017(b_stgd017)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="stgdsite">
+        <after>
+          <reference field="stgdsite_desc" ref_field="stgdsite" map_field="stgdsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="stgdsite_desc"/>
+      <column id="stgd013" def_scc="6013"/>
+      <column id="stgd014"/>
+      <column id="stgd007"/>
+      <column id="stgdseq" type="S" default="0"/>
+      <column id="stgd001" type="S" default="0"/>
+      <column id="stgd002"/>
+      <column id="stgd003">
+        <after>
+          <reference field="stgd003_desc" ref_field="stgd003" map_field="stgdent,stgd003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="l_imaa014"/>
+      <column id="stgd003_desc"/>
+      <column id="stgd015">
+        <after>
+          <reference field="stgd015_desc" ref_field="stgd015" map_field="stgd015" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stgd015_desc"/>
+      <column id="stgd004">
+        <after>
+          <reference field="stgd004_desc" ref_field="stgd004" map_field="stgd004" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001" state="c"/>
+      </column>
+      <column id="stgd004_desc"/>
+      <column id="stgd005">
+        <after>
+          <reference field="stgd005_desc" ref_field="stgd005" map_field="stgd005" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael020=? AND mhael021=? AND mhael022=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="stgd005_desc"/>
+      <column id="stgd006">
+        <after>
+          <reference field="stgd006_desc" ref_field="stgd006" map_field="stgd006" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="stgd006_desc"/>
+      <column id="stgd008">
+        <after>
+          <reference field="stgd008_desc" ref_field="stgd008" map_field="stgdent,stgd008" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001" state="c"/>
+      </column>
+      <column id="stgd008_desc"/>
+      <column id="stgd009">
+        <after>
+          <reference field="stgd009_desc" ref_field="stgd009" map_field="stgdent,stgd009" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001" state="c"/>
+      </column>
+      <column id="stgd009_desc"/>
+      <column id="stgd010"/>
+      <column id="stgd011"/>
+      <column id="stgd012" type="S" default="0"/>
+      <column id="stgd016" type="S" default="0"/>
+      <column id="stgd017" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stgd_t" page="1" linked="" pk="stgdsite,stgd001,stgd007,stgdseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stgdsite,&apos;&apos;,stgd013,stgd014,stgd007,stgdseq,stgd001,stgd002,stgd003,&apos;&apos;,&apos;&apos;,stgd015,&apos;&apos;,stgd004,&apos;&apos;,stgd005,&apos;&apos;,stgd006,&apos;&apos;,stgd008,&apos;&apos;,stgd009,&apos;&apos;,stgd010,stgd011,stgd012,stgd016,stgd017 FROM stgd_t WHERE stgdent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

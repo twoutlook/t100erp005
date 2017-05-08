@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt560_03" module="aap" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="03080" crtdt="2016-06-21 19:20:34" modid="03080" moddt="2016-06-21 19:22:02" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="信用狀作業產生帳務單">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apcald,apcasite,apcasite_desc(chr80),apcacomp,apcacomp_desc(chr80),apcadocno,apcadocdt,apca003,apca003_desc(chr80),apca016,apca018,apca064"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt560_03" method="dialog">
+    <section id="input">
+      <input id="head" field="apcald,apcasite,apcacomp,apcadocno,apcadocdt,apca003,apca016,apca018,apca064"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="apcald">
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="apcasite">
+        <after/>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="apcasite_desc"/>
+      <column id="apcacomp">
+        <after/>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="apcacomp_desc"/>
+      <column id="apcadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_apcadocno" state="c"/>
+      </column>
+      <column id="apcadocdt"/>
+      <column id="apca003">
+        <after>
+          <reference field="apca003_desc" ref_field="apca_t.apca003" map_field="apca003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apca003_desc"/>
+      <column id="apca016"/>
+      <column id="apca018"/>
+      <column id="apca064"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apca_t" pk="apcald,apcadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT apcald,apcasite,&apos;&apos;,apcacomp,&apos;&apos;,apcadocno,apcadocdt,apca003,&apos;&apos;,apca016,apca018,apca064 FROM apca_t WHERE apcaent= ? AND apcald=? AND apcadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="apcald,apcadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

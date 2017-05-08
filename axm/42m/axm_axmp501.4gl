@@ -1,0 +1,2829 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmp501.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2014-10-15 17:00:42), PR版次:0006(2017-01-24 09:43:32)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000094
+#+ Filename...: axmp501
+#+ Description: 交期拆解變更流程
+#+ Creator....: 04441(2014-08-05 11:32:08)
+#+ Modifier...: 04441 -SD/PR- 08992
+ 
+{</section>}
+ 
+{<section id="axmp501.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#160523-00018#1  160617 By 02040    1.多角單據只能抓取起站的訂單2.多角單據需一併調整
+#160713-00014#1  160817 By 02040    多角訂單交期變更後產生採購單金額有誤；調整採購單出貨日期
+#161109-00085#10  2016/11/10 By lienjunqi    整批調整系統星號寫法
+#161207-00033#3   2016/12/20   By08992   一次性交易對象顯示說明客戶/供應商欄位都應該處理
+#170123-00011#1   2017/01/23   By08992   補充SQL缺少ent條件
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+       sel               LIKE type_t.chr1,       #選擇
+       xmda004           LIKE xmda_t.xmda004,    #客戶編號
+       xmda004_desc      LIKE type_t.chr80,      #說明
+       xmdadocno         LIKE xmda_t.xmdadocno,  #訂單單號
+       xmdcseq           LIKE xmdc_t.xmdcseq,    #項次
+       xmda033           LIKE xmda_t.xmda033,    #客戶訂購單號
+       xmdc001           LIKE xmdc_t.xmdc001,    #料件編號
+       xmdc001_desc      LIKE type_t.chr80,      #品名
+       xmdc001_desc_desc LIKE type_t.chr80,      #規格
+       xmdc002           LIKE xmdc_t.xmdc002,    #產品特徵
+       xmdc002_desc      LIKE type_t.chr80,      #說明
+       xmdc007           LIKE xmdc_t.xmdc007,    #銷售數量
+       xmdc006           LIKE xmdc_t.xmdc006,    #銷售單位
+       xmdc006_desc      LIKE type_t.chr80,      #說明
+       xmdc024           LIKE xmdc_t.xmdc024,    #多交期
+       xmdc012           LIKE xmdc_t.xmdc012,    #約定交貨日
+       xmdc013           LIKE xmdc_t.xmdc013,    #預定簽收日
+       xmda002           LIKE xmda_t.xmda002,    #業務人員
+       xmda002_desc      LIKE type_t.chr80,      #說明
+       xmda003           LIKE xmda_t.xmda003,    #業務部門
+       xmda003_desc      LIKE type_t.chr80       #說明       
+                     END RECORD
+TYPE type_g_detail2_d RECORD
+       xmddseq2          LIKE xmdd_t.xmddseq2,   #分批序
+       xmdd006           LIKE xmdd_t.xmdd006,    #分批訂購數量
+       xmdd004           LIKE xmdd_t.xmdd004,    #銷售單位
+       xmdd004_desc      LIKE type_t.chr80,      #說明
+       xmdd009           LIKE xmdd_t.xmdd009,    #交期類型
+       xmdd011           LIKE xmdd_t.xmdd011,    #約定交貨日期
+       xmdd012           LIKE xmdd_t.xmdd012,    #預計簽收日期
+       xmdd014           LIKE xmdd_t.xmdd014     #已出貨量
+                     END RECORD
+DEFINE g_detail2_d          DYNAMIC ARRAY OF type_g_detail2_d
+DEFINE g_detail2_d_t        type_g_detail2_d
+DEFINE g_detail2_cnt        LIKE type_t.num5              #單身2總筆數
+DEFINE g_detail2_idx        LIKE type_t.num5
+DEFINE g_flag               LIKE type_t.chr1
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmp501.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axmp501 WITH FORM cl_ap_formpath("axm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL axmp501_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL axmp501_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axmp501
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   DROP TABLE axmp501_tmp
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="axmp501.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION axmp501_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+
+   IF cl_null(g_bgjob) THEN
+      LET g_bgjob = 'N'
+   END IF
+   
+   LET g_errshow = 1
+   LET g_flag = 0
+   
+   CALL cl_set_combo_scc('xmda005','2063')
+   CALL cl_set_combo_scc('b_xmdd009','2057')
+
+   CREATE TEMP TABLE axmp501_tmp(
+       xmddseq2           INTEGER,        #分批序
+       xmdd006            DECIMAL(20,6),         #分批訂購數量
+       xmdd004            VARCHAR(10),         #銷售單位
+       xmdd009            VARCHAR(10),         #交期類型
+       xmdd011            DATE,         #約定交貨日期
+       xmdd012            DATE,         #預計簽收日期
+       xmdd014            DECIMAL(20,6))         #已出貨量
+
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp501.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axmp501_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE l_count  LIKE type_t.num5
+   DEFINE l_xmdd006  LIKE xmdd_t.xmdd006
+   DEFINE l_cmd    LIKE type_t.chr1
+
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+ 
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL axmp501_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         CONSTRUCT BY NAME g_wc ON xmdadocno,xmdadocdt,xmda004,xmda002,xmda003,xmda005,xmda033,xmdc001,xmdc002
+	   
+            BEFORE CONSTRUCT
+
+            ON ACTION controlp INFIELD xmdadocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = "xmdastus = 'Y'"
+               CALL q_xmdadocno()
+               DISPLAY g_qryparam.return1 TO xmdadocno
+               NEXT FIELD xmdadocno
+
+            ON ACTION controlp INFIELD xmda004
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_pmaa001_6()
+               DISPLAY g_qryparam.return1 TO xmda004
+               NEXT FIELD xmda004
+
+            ON ACTION controlp INFIELD xmda002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               DISPLAY g_qryparam.return1 TO xmda002
+               NEXT FIELD xmda002
+
+            ON ACTION controlp INFIELD xmda003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooeg001()
+               DISPLAY g_qryparam.return1 TO xmda003
+               NEXT FIELD xmda003
+
+            ON ACTION controlp INFIELD xmda033
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = "xmdastus = 'Y'"
+               CALL q_xmda033()
+               DISPLAY g_qryparam.return1 TO xmda033
+               NEXT FIELD xmda033
+
+            ON ACTION controlp INFIELD xmdc001
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaf001_15()
+               DISPLAY g_qryparam.return1 TO xmdc001
+               NEXT FIELD xmdc001
+
+         END CONSTRUCT
+
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         INPUT ARRAY g_detail2_d FROM s_detail2.*
+            ATTRIBUTE(COUNT = g_detail2_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                    INSERT ROW = TRUE,
+                    DELETE ROW = TRUE,
+                    APPEND ROW = TRUE)
+            
+            BEFORE INPUT
+               IF cl_null(g_master_idx) OR g_master_idx = 0 THEN
+                  EXIT DIALOG               
+               END IF
+               CALL cl_set_act_visible("accept", FALSE)
+               LET g_detail2_cnt = g_detail2_d.getLength()
+            
+            BEFORE ROW
+               LET l_ac = ARR_CURR()
+               LET g_detail2_idx = l_ac
+               LET g_detail2_d_t.* = g_detail2_d[l_ac].*
+               LET g_detail2_cnt = g_detail2_d.getLength()
+               IF g_detail2_cnt >= l_ac THEN
+                  LET l_cmd = 'u'
+               END IF
+               DISPLAY g_detail2_idx TO FORMONLY.idx
+               
+            BEFORE INSERT
+               LET l_cmd = 'a'
+               INITIALIZE g_detail2_d[l_ac].* TO NULL 
+               INITIALIZE g_detail2_d_t.* TO NULL 
+               #分批序自動預設目前最大分批序再+1
+               SELECT MAX(xmddseq2)+1 INTO g_detail2_d[l_ac].xmddseq2 FROM axmp501_tmp
+               IF cl_null(g_detail2_d[l_ac].xmddseq2) OR g_detail2_d[l_ac].xmddseq2 = 0 THEN
+                  LET g_detail2_d[l_ac].xmddseq2 = 1
+               END IF
+               #分批數量需控管不可以小於等於0，且不可以大於原訂單數量
+               SELECT SUM(xmdd006) INTO g_detail2_d[l_ac].xmdd006 FROM axmp501_tmp
+               IF cl_null(g_detail2_d[l_ac].xmdd006) OR g_detail2_d[l_ac].xmdd006 = 0 THEN
+                  LET g_detail2_d[l_ac].xmdd006 = g_detail_d[g_master_idx].xmdc007
+               ELSE
+                  LET g_detail2_d[l_ac].xmdd006 = g_detail_d[g_master_idx].xmdc007 - g_detail2_d[l_ac].xmdd006
+               END IF
+               IF cl_null(g_detail2_d[l_ac].xmdd006) OR g_detail2_d[l_ac].xmdd006 < 0 THEN
+                  LET g_detail2_d[l_ac].xmdd006 = 0
+               END IF
+               #訂單單位預設原訂單資料的訂單單位
+               LET g_detail2_d[l_ac].xmdd004 = g_detail_d[g_master_idx].xmdc006
+               CALL s_desc_get_unit_desc(g_detail2_d[l_ac].xmdd004)
+                    RETURNING g_detail2_d[l_ac].xmdd004_desc
+               #交期類型預設為'1.約定交貨日'
+               LET g_detail2_d[l_ac].xmdd009 = "1"
+               LET g_detail2_d[l_ac].xmdd011 = g_detail_d[g_master_idx].xmdc012
+               LET g_detail2_d[l_ac].xmdd012 = g_detail_d[g_master_idx].xmdc013
+               #已出貨數量預設為0
+               LET g_detail2_d[l_ac].xmdd014 = "0"
+               LET g_detail2_d_t.* = g_detail2_d[l_ac].*
+  
+            AFTER INSERT
+               IF INT_FLAG THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = '' 
+                  LET g_errparam.code   = 9001 
+                  LET g_errparam.popup  = FALSE 
+                  CALL cl_err()
+                  LET INT_FLAG = 0
+                  CANCEL INSERT
+               END IF
+               LET l_count = 1  
+               SELECT COUNT(*) INTO l_count FROM axmp501_tmp
+                WHERE xmddseq2 = g_detail2_d[l_ac].xmddseq2
+               #資料未重複, 插入新增資料
+               IF l_count = 0 THEN
+                  #161109-00085#10-s
+                  #INSERT INTO axmp501_tmp VALUES(g_detail2_d[l_ac].xmddseq2,g_detail2_d[l_ac].xmdd006,
+#                                                 g_detail2_d[l_ac].xmdd004,g_detail2_d[l_ac].xmdd009,
+#                                                 g_detail2_d[l_ac].xmdd011,g_detail2_d[l_ac].xmdd012,
+#                                                 g_detail2_d[l_ac].xmdd014)
+                  INSERT INTO axmp501_tmp(xmddseq2,xmdd006,xmdd004,xmdd009,xmdd011,
+                                          xmdd012,xmdd014)
+                  VALUES(g_detail2_d[l_ac].xmddseq2,g_detail2_d[l_ac].xmdd006,
+                         g_detail2_d[l_ac].xmdd004,g_detail2_d[l_ac].xmdd009,
+                         g_detail2_d[l_ac].xmdd011,g_detail2_d[l_ac].xmdd012,
+                         g_detail2_d[l_ac].xmdd014) 
+                  #161109-00085#10-e                                                 
+               ELSE    
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = 'INSERT' 
+                  LET g_errparam.code   = "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  INITIALIZE g_detail2_d[l_ac].* TO NULL 
+                  CANCEL INSERT
+               END IF
+               IF SQLCA.SQLcode  THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "axmp501_tmp" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL INSERT
+               ELSE
+                  ERROR 'INSERT O.K'
+                  LET g_detail2_cnt = g_detail2_cnt + 1
+               END IF
+               LET g_flag = 1
+              
+            BEFORE DELETE
+               #刪除時須檢核若該分批序的已出貨數量已大於0時則該筆交期明細不允許做刪除
+               IF g_detail2_d[l_ac].xmdd014 > 0 THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_detail2_d[l_ac].xmdd014
+                  LET g_errparam.code   = 'axm-00426'
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE   
+               END IF
+               #分批序為1的該筆資料不允許進行刪除
+               IF g_detail2_d[l_ac].xmddseq2 = 1 THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_detail2_d[l_ac].xmddseq2
+                  LET g_errparam.code   = 'axm-00427'
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE   
+               END IF
+               #是否取消單身
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               DELETE FROM axmp501_tmp
+                WHERE xmddseq2 = g_detail2_d[l_ac].xmddseq2
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "axmp501_tmp" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail2_cnt = g_detail2_cnt-1
+               END IF 
+              
+            AFTER DELETE 
+               IF l_ac = (g_detail2_d.getLength() + 1) THEN
+                  CALL FGL_SET_ARR_CURR(l_ac-1)
+               END IF
+               LET g_flag = 1
+ 
+            AFTER FIELD b_xmdd006
+               IF g_detail2_d[l_ac].xmdd006 <> g_detail2_d_t.xmdd006 OR cl_null(g_detail2_d_t.xmdd006) THEN
+                  INITIALIZE g_errparam TO NULL 
+                  CASE
+                     WHEN g_detail2_d[l_ac].xmdd006 <= 0
+                        #數量不可小於等於0
+                        LET g_errparam.code = "ade-00016"
+                     WHEN g_detail2_d[l_ac].xmdd006 > g_detail_d[g_master_idx].xmdc007
+                        #輸入的數量不能大於原訂單數量！
+                        LET g_errparam.code = "axm-00423"
+                     WHEN (g_detail2_d[l_ac].xmdd006 < g_detail2_d[l_ac].xmdd014 AND g_detail2_d[l_ac].xmdd014 <> 0)
+                        #輸入的數量不能小於已出貨數量！
+                        LET g_errparam.code = "axm-00425"
+                     OTHERWISE EXIT CASE
+                  END CASE
+                  IF NOT cl_null(g_errparam.code) THEN
+                     LET g_errparam.extend = g_detail2_d[l_ac].xmdd006
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET g_detail2_d[l_ac].xmdd006 = g_detail2_d_t.xmdd006
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               LET g_detail2_d_t.xmdd006 = g_detail2_d[l_ac].xmdd006
+           
+            ON ROW CHANGE
+               IF INT_FLAG THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = '' 
+                  LET g_errparam.code   = 9001 
+                  LET g_errparam.popup  = FALSE 
+                  CALL cl_err()
+                  LET INT_FLAG = 0
+                  LET g_detail2_d[l_ac].* = g_detail2_d_t.*
+                  EXIT DIALOG 
+               END IF
+               INITIALIZE g_errparam TO NULL 
+               UPDATE axmp501_tmp SET xmdd006 = g_detail2_d[l_ac].xmdd006,
+                                      xmdd009 = g_detail2_d[l_ac].xmdd009,
+                                      xmdd011 = g_detail2_d[l_ac].xmdd011,
+                                      xmdd012 = g_detail2_d[l_ac].xmdd012
+                WHERE xmddseq2 = g_detail2_d[l_ac].xmddseq2
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_errparam.code   = "std-00009" 
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                  OTHERWISE EXIT CASE
+               END CASE
+               IF NOT cl_null(g_errparam.code) THEN
+                  LET g_errparam.extend = "axmp501_tmp" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  LET g_detail2_d[l_ac].* = g_detail2_d_t.*
+               END IF
+               LET g_flag = 1
+               
+            AFTER ROW
+                 
+            AFTER INPUT
+               IF g_flag = 1 THEN
+                  IF cl_ask_confirm('axm-00428') THEN
+                     LET g_flag = 0
+                  ELSE
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL cl_set_act_visible("accept", TRUE)
+         
+            ON ACTION batch_execute
+               IF cl_null(g_detail2_d[l_ac].xmdd006) THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_detail2_d[l_ac].xmdd006
+                  LET g_errparam.code   = 'apm-00590'
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  NEXT FIELD CURRENT               
+               END IF
+               IF cl_null(g_detail2_d[l_ac].xmdd009) THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_detail2_d[l_ac].xmdd009
+                  LET g_errparam.code   = 'apm-00591'
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  NEXT FIELD CURRENT               
+               END IF
+               IF cl_null(g_detail2_d[l_ac].xmdd011) THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_detail2_d[l_ac].xmdd011
+                  LET g_errparam.code   = 'adb-00283'
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  NEXT FIELD CURRENT               
+               END IF
+               CASE l_cmd  
+                  WHEN 'a' 
+                     #161109-00085#10-s
+                     #INSERT INTO axmp501_tmp VALUES(g_detail2_d[l_ac].xmddseq2,g_detail2_d[l_ac].xmdd006,
+                                                    #g_detail2_d[l_ac].xmdd004,g_detail2_d[l_ac].xmdd009,
+                                                    #g_detail2_d[l_ac].xmdd011,g_detail2_d[l_ac].xmdd012,
+                                                    #g_detail2_d[l_ac].xmdd014)
+                     INSERT INTO axmp501_tmp(xmddseq2,xmdd006,xmdd004,xmdd009,xmdd011,
+                                             xmdd012,xmdd014)
+                     VALUES(g_detail2_d[l_ac].xmddseq2,g_detail2_d[l_ac].xmdd006,
+                            g_detail2_d[l_ac].xmdd004,g_detail2_d[l_ac].xmdd009,
+                            g_detail2_d[l_ac].xmdd011,g_detail2_d[l_ac].xmdd012,
+                            g_detail2_d[l_ac].xmdd014) 
+                     #161109-00085#10-e                                                      
+                     IF SQLCA.SQLcode  THEN
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = "axmp501_tmp" 
+                        LET g_errparam.code   = SQLCA.sqlcode 
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        NEXT FIELD CURRENT
+                     ELSE
+                        LET g_detail2_cnt = g_detail2_cnt + 1
+                     END IF
+                  WHEN 'u' 
+                     INITIALIZE g_errparam TO NULL 
+                     UPDATE axmp501_tmp SET xmdd006 = g_detail2_d[l_ac].xmdd006,
+                                            xmdd009 = g_detail2_d[l_ac].xmdd009,
+                                            xmdd011 = g_detail2_d[l_ac].xmdd011,
+                                            xmdd012 = g_detail2_d[l_ac].xmdd012
+                      WHERE xmddseq2 = g_detail2_d[l_ac].xmddseq2
+                     CASE
+                        WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                           LET g_errparam.code   = "std-00009" 
+                        WHEN SQLCA.sqlcode #其他錯誤
+                           LET g_errparam.code   = SQLCA.sqlcode 
+                        OTHERWISE EXIT CASE
+                     END CASE
+                     IF NOT cl_null(g_errparam.code) THEN
+                        LET g_errparam.extend = "axmp501_tmp" 
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        NEXT FIELD CURRENT
+                     END IF
+                  OTHERWISE EXIT CASE 
+               END CASE 
+               LET l_xmdd006 = ''
+               SELECT SUM(xmdd006) INTO l_xmdd006 FROM axmp501_tmp
+               IF cl_null(l_xmdd006) THEN LET l_xmdd006 = 0 END IF
+               #維護確定後須檢核所有交期明細的數量總和需等於原訂單數量
+               IF l_xmdd006 <> g_detail_d[g_master_idx].xmdc007 THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_detail_d[g_master_idx].xmdc007
+                  LET g_errparam.code   = 'axm-00429'
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               ELSE
+                  CALL axmp501_process()
+                  CALL axmp501_b_fill()
+               END IF
+         
+         
+         END INPUT
+
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTES(COUNT=g_detail_cnt)
+         
+            BEFORE ROW
+               LET g_master_idx = DIALOG.getCurrentRow("s_detail1")
+               CALL axmp501_fetch()
+               DISPLAY g_master_idx TO FORMONLY.h_index
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_master_idx)
+               LET g_master_idx = DIALOG.getCurrentRow("s_detail1")
+               
+         END DISPLAY
+         
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+ 
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL axmp501_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL axmp501_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL axmp501_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+ 
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp501.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION axmp501_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+   
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL axmp501_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp501.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION axmp501_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   DEFINE l_pmaa004       LIKE pmaa_t.pmaa004   #法人類型            #161207-00033#3 add
+   DEFINE l_pmak003       LIKE pmak_t.pmak003   #一次性交易對象全名   #161207-00033#3 add
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   IF cl_null(g_wc) THEN
+      LET g_wc = '1=1'
+   END IF
+
+   LET g_sql = " SELECT 'N',xmda004,pmaal004,xmdadocno,xmdcseq,xmda033,xmdc001,'','',xmdc002,'', ",
+               "        xmdc007,xmdc006,'',xmdc024,xmdc012,xmdc013,xmda002,ooag011,xmda003,ooefl003 ",
+               #161207-00033#3-s add
+               "      ,(SELECT pmaa004 FROM pmaa_t WHERE pmaaent=xmdaent AND pmaa001=xmda004)",
+               #161207-00033#3-e add
+               "   FROM xmdc_t,xmda_t ",
+               "        LEFT OUTER JOIN pmaal_t ON pmaalent = '",g_enterprise,"' AND pmaal001 = xmda004 AND pmaal002 = '",g_dlang,"' ",
+               "        LEFT OUTER JOIN ooag_t ON ooagent = '",g_enterprise,"' AND ooag001 = xmda002 ",
+               "        LEFT OUTER JOIN ooefl_t ON ooeflent = '",g_enterprise,"' AND ooefl001 = xmda003 AND ooefl002 = '",g_dlang,"' ",
+               "  WHERE xmdaent = ? AND xmdasite = '",g_site,"' AND xmdastus = 'Y' AND xmdc045 = '1' ",
+               "    AND xmdaent = xmdcent AND xmdasite = xmdasite AND xmdadocno = xmdcdocno ",
+               "   AND xmda006 <> '5' ",                                 #需排除多角性質為5中間交易的單據    #160523-00018#1
+               "    AND ",g_wc CLIPPED,  
+               "  ORDER BY xmdadocno,xmdcseq "
+
+   #end add-point
+ 
+   PREPARE axmp501_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR axmp501_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+       g_detail_d[l_ac].sel,g_detail_d[l_ac].xmda004,g_detail_d[l_ac].xmda004_desc,
+       g_detail_d[l_ac].xmdadocno,g_detail_d[l_ac].xmdcseq,g_detail_d[l_ac].xmda033,
+       g_detail_d[l_ac].xmdc001,g_detail_d[l_ac].xmdc001_desc,g_detail_d[l_ac].xmdc001_desc_desc,
+       g_detail_d[l_ac].xmdc002,g_detail_d[l_ac].xmdc002_desc,g_detail_d[l_ac].xmdc007,
+       g_detail_d[l_ac].xmdc006,g_detail_d[l_ac].xmdc006_desc,g_detail_d[l_ac].xmdc024,
+       g_detail_d[l_ac].xmdc012,g_detail_d[l_ac].xmdc013,g_detail_d[l_ac].xmda002,g_detail_d[l_ac].xmda002_desc,
+       g_detail_d[l_ac].xmda003,g_detail_d[l_ac].xmda003_desc
+       ,l_pmaa004   #161207-00033#3 add
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      #161207-00033#3-s
+      IF l_pmaa004 = '2' THEN   #2.一次性交易對象
+         #一次性交易對象全名
+         CALL s_desc_axm_get_oneturn_guest_desc('1',g_detail_d[l_ac].xmdadocno)
+              RETURNING l_pmak003
+         
+         IF NOT cl_null(l_pmak003) THEN
+            LET g_detail_d[l_ac].xmda004_desc = l_pmak003
+         END IF
+      END IF
+      #161207-00033#3-e     
+      #end add-point
+      
+      CALL axmp501_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   IF (l_ac - 1) > 0 THEN
+      LET g_master_idx = 1
+   END IF
+
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE axmp501_sel
+   
+   LET l_ac = 1
+   CALL axmp501_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+ 
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp501.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION axmp501_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_xmdd  RECORD
+      xmddseq2    LIKE xmdd_t.xmddseq2,
+      xmdd006     LIKE xmdd_t.xmdd006,
+      xmdd009     LIKE xmdd_t.xmdd009,
+      xmdd011     LIKE xmdd_t.xmdd011,
+      xmdd012     LIKE xmdd_t.xmdd012,
+      xmdd014     LIKE xmdd_t.xmdd014
+              END RECORD
+
+
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+
+   IF cl_null(g_master_idx) OR g_master_idx = 0 THEN
+      RETURN
+   END IF
+
+   DELETE FROM axmp501_tmp
+
+   LET l_count = ''
+   SELECT COUNT(*) INTO l_count FROM xmdf_t
+    WHERE xmdfent = g_enterprise
+      AND xmdfdocno = g_detail_d[g_master_idx].xmdadocno
+      AND xmdfseq = g_detail_d[g_master_idx].xmdcseq
+   #該筆訂單資料原本若是單一交期時，則下面交期明細Table自動顯示一筆資料
+   IF cl_null(l_count) OR l_count = 0 THEN
+      INITIALIZE l_xmdd.* TO NULL
+      SELECT xmdd009,xmdd011,xmdd012,xmdd014
+        INTO l_xmdd.xmdd009,l_xmdd.xmdd011,l_xmdd.xmdd012,l_xmdd.xmdd014
+        FROM xmdd_t
+       WHERE xmddent = g_enterprise
+         AND xmdddocno = g_detail_d[g_master_idx].xmdadocno
+         AND xmddseq = g_detail_d[g_master_idx].xmdcseq
+         AND xmddseq1 = 1
+         AND xmddseq2 = 1
+      
+      #161109-00085#10-s
+      #INSERT INTO axmp501_tmp VALUES('1',g_detail_d[g_master_idx].xmdc007,g_detail_d[g_master_idx].xmdc006,
+                                     #l_xmdd.xmdd009,l_xmdd.xmdd011,l_xmdd.xmdd012,l_xmdd.xmdd014)
+      INSERT INTO axmp501_tmp(xmddseq2,xmdd006,xmdd004,xmdd009,xmdd011,
+                              xmdd012,xmdd014)
+      VALUES('1',g_detail_d[g_master_idx].xmdc007,g_detail_d[g_master_idx].xmdc006,
+                 l_xmdd.xmdd009,l_xmdd.xmdd011,l_xmdd.xmdd012,l_xmdd.xmdd014)
+      #161109-00085#10-e                                  
+   #多交期，顯示該筆訂單資料所對應的交期匯總明細資料(xmdf_t)
+   ELSE
+      INITIALIZE l_xmdd.* TO NULL
+      DECLARE axmp501_cur CURSOR FOR
+         SELECT xmdfseq2,xmdf002,xmdf003,xmdf004 FROM xmdf_t
+          WHERE xmdfent = g_enterprise
+            AND xmdfdocno =  g_detail_d[g_master_idx].xmdadocno
+            AND xmdfseq = g_detail_d[g_master_idx].xmdcseq
+      FOREACH axmp501_cur INTO l_xmdd.xmddseq2,l_xmdd.xmdd006,l_xmdd.xmdd011,l_xmdd.xmdd012
+         SELECT xmdd009 INTO l_xmdd.xmdd009 FROM xmdd_t
+          WHERE xmddent = g_enterprise
+            AND xmdddocno = g_detail_d[g_master_idx].xmdadocno
+            AND xmddseq = g_detail_d[g_master_idx].xmdcseq
+            AND xmddseq1 = 1
+            AND xmddseq2 = l_xmdd.xmddseq2
+         SELECT SUM(xmdd014) INTO l_xmdd.xmdd014 FROM xmdd_t
+          WHERE xmddent = g_enterprise
+            AND xmdddocno = g_detail_d[g_master_idx].xmdadocno
+            AND xmddseq = g_detail_d[g_master_idx].xmdcseq
+            AND xmddseq2 = l_xmdd.xmddseq2         
+         #161109-00085#10-s
+         #INSERT INTO axmp501_tmp VALUES(l_xmdd.xmddseq2,l_xmdd.xmdd006,g_detail_d[g_master_idx].xmdc006,
+                                        #l_xmdd.xmdd009,l_xmdd.xmdd011,l_xmdd.xmdd012,l_xmdd.xmdd014)
+         INSERT INTO axmp501_tmp(xmddseq2,xmdd006,xmdd004,xmdd009,xmdd011,
+                                 xmdd012,xmdd014)
+         VALUES(l_xmdd.xmddseq2,l_xmdd.xmdd006,g_detail_d[g_master_idx].xmdc006,
+                l_xmdd.xmdd009,l_xmdd.xmdd011,l_xmdd.xmdd012,l_xmdd.xmdd014)
+         #161109-00085#10-e                                          
+         INITIALIZE l_xmdd.* TO NULL
+      END FOREACH
+   END IF
+
+   LET g_sql = " SELECT xmddseq2,xmdd006,xmdd004,oocal003,xmdd009,xmdd011,xmdd012,xmdd014 ",
+               "   FROM axmp501_tmp ",
+               "        LEFT OUTER JOIN oocal_t ON oocalent = '",g_enterprise,"' AND oocal001 = xmdd004 AND oocal002 = '",g_dlang,"' ",
+               "  ORDER BY xmddseq2 "
+
+   PREPARE axmp501_sel2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR axmp501_sel2
+   
+   CALL g_detail2_d.clear()
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs2 INTO
+       g_detail2_d[l_ac].xmddseq2,g_detail2_d[l_ac].xmdd006,
+       g_detail2_d[l_ac].xmdd004,g_detail2_d[l_ac].xmdd004_desc,
+       g_detail2_d[l_ac].xmdd009,g_detail2_d[l_ac].xmdd011,
+       g_detail2_d[l_ac].xmdd012,g_detail2_d[l_ac].xmdd014
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   LET g_error_show = 0
+   
+   CALL g_detail2_d.deleteElement(g_detail2_d.getLength())
+    
+   LET g_detail2_cnt = l_ac - 1 
+   DISPLAY g_detail2_cnt TO FORMONLY.cnt
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs2
+   FREE axmp501_sel2
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp501.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION axmp501_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   DEFINE l_success  LIKE type_t.num5
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+
+   CALL s_desc_get_item_desc(g_detail_d[l_ac].xmdc001)
+        RETURNING g_detail_d[l_ac].xmdc001_desc,g_detail_d[l_ac].xmdc001_desc_desc
+
+   CALL s_desc_get_unit_desc(g_detail_d[l_ac].xmdc006)
+        RETURNING g_detail_d[l_ac].xmdc006_desc
+
+   CALL s_feature_description(g_detail_d[l_ac].xmdc001,g_detail_d[l_ac].xmdc002)
+        RETURNING l_success,g_detail_d[l_ac].xmdc002_desc
+
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp501.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION axmp501_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL axmp501_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp501.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION axmp501_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp501.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION axmp501_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = axmp501_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp501.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 依據目前維護新的交期明細資料重新產生訂單資料所對應xmdd_t與xmdf_t資料
+# Memo...........:
+# Usage..........: CALL axmp501_process()
+# Input parameter: no
+# Return code....: no
+# Date & Author..: 140813 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp501_process()
+DEFINE l_tot_success  LIKE type_t.num5
+DEFINE l_success      LIKE type_t.num5
+DEFINE l_count        LIKE type_t.num5
+DEFINE l_xmdd  RECORD
+    xmddseq2   LIKE xmdd_t.xmddseq2,       #分批序
+    xmdd001    LIKE xmdd_t.xmdd001,        #料件編號
+    xmdd004    LIKE xmdd_t.xmdd004,        #銷售單位
+    xmdd006    LIKE xmdd_t.xmdd006,        #分批訂購數量
+    xmdd009    LIKE xmdd_t.xmdd009,        #交期類型
+    xmdd011    LIKE xmdd_t.xmdd011,        #約定交貨日期
+    xmdd012    LIKE xmdd_t.xmdd012,        #預計簽收日期
+    xmdd014    LIKE xmdd_t.xmdd014,        #已出貨量
+    xmdd018    LIKE xmdd_t.xmdd018,        #參考價格
+    xmdd019    LIKE xmdd_t.xmdd019,        #稅別
+    xmdd024    LIKE xmdd_t.xmdd024,        #參考單位
+    xmdd025    LIKE xmdd_t.xmdd025,        #參考數量
+    xmdd026    LIKE xmdd_t.xmdd026,        #計價單位
+    xmdd027    LIKE xmdd_t.xmdd027,        #計價數量
+    xmdd028    LIKE xmdd_t.xmdd028,        #分批未稅金額
+    xmdd029    LIKE xmdd_t.xmdd029,        #分批含稅金額
+    xmdd030    LIKE xmdd_t.xmdd030         #分批金額
+           END RECORD
+DEFINE l_xmddseq2     LIKE xmdd_t.xmddseq2
+DEFINE l_xmda015      LIKE xmda_t.xmda015  #幣別
+DEFINE l_xmda016      LIKE xmda_t.xmda016  #匯率
+DEFINE l_xmda031      LIKE xmda_t.xmda031  #160523-00018#1 add
+DEFINE l_xmdd011      LIKE xmdd_t.xmdd011  #160713-00014#1 add
+DEFINE l_xmdd012      LIKE xmdd_t.xmdd012  #160713-00014#1 add
+
+
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   CALL s_azzi902_get_gzzd('axmp501',"lbl_xmdcseq")
+        RETURNING g_coll_title[1],g_coll_title[1]
+   CALL s_azzi902_get_gzzd('axmp501',"lbl_xmddseq2")
+        RETURNING g_coll_title[2],g_coll_title[2]
+        
+   LET l_tot_success = TRUE
+   LET l_ac = 1
+   LET l_count = 0
+
+   SELECT COUNT(*) INTO l_count FROM axmp501_tmp
+   #當交期明細只有一個分批序資料時，則只需將新的分批數量、交期類型、約定交貨日、預計簽收日等欄位更新回原本訂單資料所對應的xmdd_t資料
+   #只要有更新或新增到xmdd_t資料時，都須將本次的修改人員與時間回寫為xmdd022與xmdd023欄位上
+   ########################################################################
+   ##!!!!!!!!!!!!!!待訂單完成備品率SKD/CKD多交期程式段後再跟進!!!!!!!!!!!!!!##
+   ##在更新對應的xmdd_t資料時也須考慮原訂單資料是否有備品率、SKD/CKD出貨，若有也須重一並更新
+   ########################################################################
+   IF l_count = 1 THEN
+      INITIALIZE l_xmdd.* TO NULL
+      SELECT xmdd001,xmdd018,xmdd019,xmdd024,xmdd026
+        INTO l_xmdd.xmdd001,l_xmdd.xmdd018,l_xmdd.xmdd019,l_xmdd.xmdd024,l_xmdd.xmdd026
+        FROM xmdd_t
+       WHERE xmddent   = g_enterprise
+         AND xmdddocno = g_detail_d[g_master_idx].xmdadocno
+         AND xmddseq   = g_detail_d[g_master_idx].xmdcseq
+         AND xmddseq2  = 1
+      IF NOT cl_null(l_xmdd.xmdd024) THEN
+         CALL s_aooi250_convert_qty(l_xmdd.xmdd001,g_detail2_d[l_ac].xmdd004,l_xmdd.xmdd024,g_detail2_d[l_ac].xmdd006)
+              RETURNING l_success,l_xmdd.xmdd025
+      END IF
+      IF NOT cl_null(l_xmdd.xmdd026) THEN
+         CALL s_aooi250_convert_qty(l_xmdd.xmdd001,g_detail2_d[l_ac].xmdd004,l_xmdd.xmdd026,g_detail2_d[l_ac].xmdd006)
+              RETURNING l_success,l_xmdd.xmdd027
+      END IF
+
+      CALL axmp501_get_exrate(g_detail_d[g_master_idx].xmdadocno)
+           RETURNING l_xmda015,l_xmda016
+      #分批未稅、含稅、稅額計算
+      CALL s_axmt500_get_amount_2(l_xmdd.xmdd027,l_xmdd.xmdd018,l_xmdd.xmdd019,l_xmda015,l_xmda016)
+           RETURNING l_xmdd.xmdd028,l_xmdd.xmdd029,l_xmdd.xmdd030         
+
+      UPDATE xmdd_t SET xmdd006 = g_detail2_d[l_ac].xmdd006,  #分批订购数量
+                        xmdd004 = g_detail2_d[l_ac].xmdd004,  #销售单位
+                        xmdd009 = g_detail2_d[l_ac].xmdd009,  #交期类型
+                        xmdd011 = g_detail2_d[l_ac].xmdd011,  #约定交货日期
+                        xmdd012 = g_detail2_d[l_ac].xmdd012,  #预计签收日期
+                        xmdd022 = g_user,                     #最近更改人员
+                        xmdd023 = g_today,                    #最近更改时间
+                        xmdd025 = l_xmdd.xmdd025,             #分批参考单位
+                        xmdd027 = l_xmdd.xmdd027,             #分批计价数量
+                        xmdd028 = l_xmdd.xmdd028,             #分批税前金额
+                        xmdd029 = l_xmdd.xmdd029,             #分批含税金额
+                        xmdd030 = l_xmdd.xmdd030              #分批税额
+       WHERE xmddent   = g_enterprise
+         AND xmdddocno = g_detail_d[g_master_idx].xmdadocno
+         AND xmddseq   = g_detail_d[g_master_idx].xmdcseq
+         AND xmddseq2  = 1
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "upd xmdd_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         LET g_errparam.coll_vals[2] = 1
+         CALL cl_err()
+         LET l_tot_success = FALSE
+      END IF
+      #160713-00014#1-s-add
+      #更新訂單單身約定交貨日、預定簽收日
+       UPDATE xmdc_t 
+         SET xmdc012 = g_detail2_d[l_ac].xmdd011,
+             xmdc013 = g_detail2_d[l_ac].xmdd012
+       WHERE xmdcent   = g_enterprise
+         AND xmdcdocno = g_detail_d[g_master_idx].xmdadocno
+         AND xmdcseq   = g_detail_d[g_master_idx].xmdcseq    
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL 
+          LET g_errparam.extend = "upd xmdc_t" 
+          LET g_errparam.code   = SQLCA.sqlcode 
+          LET g_errparam.popup  = TRUE 
+          LET g_errparam.coll_vals[1] = g_detail_d[g_master_idx].xmdcseq
+          CALL cl_err()
+          LET l_tot_success = FALSE
+       END IF         
+      #160713-00014#1-e-add
+      
+      #若原訂單資料是有多個交期時，則需將原訂單資料的多交期(xmdn024)更新為'N'
+      #且須把對應的xmdf_t資料刪除，且須把對應的xmdd_t分批序非1的資料也一併刪除
+      IF g_detail_d[g_master_idx].xmdc024 = 'Y' THEN
+         UPDATE xmdc_t 
+            SET xmdc024 = 'N'
+          WHERE xmdcent   = g_enterprise
+            AND xmdcdocno = g_detail_d[g_master_idx].xmdadocno
+            AND xmdcseq   = g_detail_d[g_master_idx].xmdcseq
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "upd xmdc_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            LET g_errparam.coll_vals[1] = g_detail_d[g_master_idx].xmdcseq
+            CALL cl_err()
+            LET l_tot_success = FALSE
+         END IF
+         
+         DELETE FROM xmdf_t
+          WHERE xmdfent   = g_enterprise
+            AND xmdfdocno = g_detail_d[g_master_idx].xmdadocno
+            AND xmdfseq   = g_detail_d[g_master_idx].xmdcseq
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "del xmdf_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            LET g_errparam.coll_vals[1] = g_detail_d[g_master_idx].xmdcseq
+            CALL cl_err()
+            LET l_tot_success = FALSE
+         END IF
+         
+         DELETE FROM xmdd_t
+          WHERE xmddent   = g_enterprise
+            AND xmdddocno = g_detail_d[g_master_idx].xmdadocno
+            AND xmddseq   = g_detail_d[g_master_idx].xmdcseq
+            AND xmddseq2 <> 1
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "del xmdd_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            LET g_errparam.coll_vals[1] = g_detail_d[g_master_idx].xmdcseq
+            CALL cl_err()
+            LET l_tot_success = FALSE
+         END IF
+      END IF
+   #當交期明細有維護多個分批交期資料時，則須依據分批序作為key值與原訂單資料的xmdf_t資料做比對，比對出差異後進行更新
+   ELSE
+      #160713-00014#1-s-add
+      #更新訂單單身約定交貨日、預定簽收日
+       SELECT xmdd011,xmdd012 INTO l_xmdd011,l_xmdd012 
+         FROM axmp501_tmp      
+        WHERE xmddseq2 = 1
+       UPDATE xmdc_t 
+         SET xmdc012 = l_xmdd011,
+             xmdc013 = l_xmdd012
+       WHERE xmdcent   = g_enterprise
+         AND xmdcdocno = g_detail_d[g_master_idx].xmdadocno
+         AND xmdcseq   = g_detail_d[g_master_idx].xmdcseq    
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL 
+          LET g_errparam.extend = "upd xmdc_t" 
+          LET g_errparam.code   = SQLCA.sqlcode 
+          LET g_errparam.popup  = TRUE 
+          LET g_errparam.coll_vals[1] = g_detail_d[g_master_idx].xmdcseq
+          CALL cl_err()
+          LET l_tot_success = FALSE
+       END IF         
+      #160713-00014#1-e-add   
+      #若原訂單資料沒有對應的xmdf_t(代表原本是單一交期)時，則也須交原訂單資料的多交期(xmdc024)更新為'Y'
+      IF g_detail_d[g_master_idx].xmdc024 = 'N' THEN
+         UPDATE xmdc_t SET xmdc024 = 'Y'
+          WHERE xmdcent   = g_enterprise
+            AND xmdcdocno = g_detail_d[g_master_idx].xmdadocno
+            AND xmdcseq   = g_detail_d[g_master_idx].xmdcseq
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "upd xmdc_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            LET g_errparam.coll_vals[1] = g_detail_d[g_master_idx].xmdcseq
+            CALL cl_err()
+            LET l_tot_success = FALSE
+         END IF
+         
+         DELETE FROM xmdd_t
+          WHERE xmddent   = g_enterprise
+            AND xmdddocno = g_detail_d[g_master_idx].xmdadocno
+            AND xmddseq   = g_detail_d[g_master_idx].xmdcseq
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "del xmdd_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            LET g_errparam.coll_vals[1] = g_detail_d[g_master_idx].xmdcseq
+            CALL cl_err()
+            LET l_tot_success = FALSE
+         END IF
+      END IF
+      
+      INITIALIZE l_xmdd.* TO NULL
+      DECLARE axmp501_cur2 CURSOR FOR
+         SELECT xmddseq2,xmdd006,xmdd004,xmdd009,xmdd011,xmdd012,xmdd014
+           FROM axmp501_tmp
+      FOREACH axmp501_cur2 INTO l_xmdd.xmddseq2,
+                                l_xmdd.xmdd006,l_xmdd.xmdd004,l_xmdd.xmdd009,
+                                l_xmdd.xmdd011,l_xmdd.xmdd012,l_xmdd.xmdd014
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            LET l_tot_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         LET l_count = ''
+         SELECT COUNT(*) INTO l_count FROM xmdf_t
+          WHERE xmdfent   = g_enterprise
+            AND xmdfdocno = g_detail_d[g_master_idx].xmdadocno
+            AND xmdfseq   = g_detail_d[g_master_idx].xmdcseq
+            AND xmdfseq2  = l_xmdd.xmddseq2
+         #若現行交期明細的分批序不存在原本訂單資料對應的xmdf_t時
+         #代表是新增的分批序所以須將新的分批序資料新增到xmdf_t中且同時產生新的xmdd_t的資料
+         IF cl_null(l_count) OR l_count = 0 THEN
+            INSERT INTO xmdf_t (xmdfent,xmdfsite,xmdfdocno,xmdfseq,xmdfseq2,
+                                xmdf002,xmdf003,xmdf004,xmdf006,xmdf007)
+               VALUES (g_enterprise,g_site,g_detail_d[g_master_idx].xmdadocno,
+                       g_detail_d[g_master_idx].xmdcseq,l_xmdd.xmddseq2,
+                       l_xmdd.xmdd006,l_xmdd.xmdd011,l_xmdd.xmdd012,'N',l_xmdd.xmdd009)
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "ins xmdf_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               LET g_errparam.coll_vals[2] = l_xmdd.xmddseq2
+               CALL cl_err()
+               LET l_tot_success = FALSE
+            END IF
+            CALL axmp501_xmdd_ins(l_xmdd.xmddseq2,l_xmdd.xmdd006,l_xmdd.xmdd009,l_xmdd.xmdd011,l_xmdd.xmdd012,l_xmdd.xmdd014)
+                 RETURNING l_success
+            IF NOT l_success THEN
+               LET l_tot_success = FALSE
+            END IF
+         #若新的交期明細的分批序已存在原訂單資料所對應的xmdf_t中，代表是調整原分批序的資料
+         #須更新原本的xmdf_t與xmdd_t的資料，比對新的分批數量、交期類型、預計到庫日、預計到廠日、預計出貨日是否與原本不一樣
+         ELSE
+            SELECT xmdd001,xmdd018,xmdd019,xmdd024,xmdd026
+              INTO l_xmdd.xmdd001,l_xmdd.xmdd018,l_xmdd.xmdd019,l_xmdd.xmdd024,l_xmdd.xmdd026
+              FROM xmdd_t
+             WHERE xmddent   = g_enterprise
+               AND xmdddocno = g_detail_d[g_master_idx].xmdadocno
+               AND xmddseq   = g_detail_d[g_master_idx].xmdcseq
+               AND xmddseq2  = l_xmdd.xmddseq2
+            IF NOT cl_null(l_xmdd.xmdd024) THEN
+               CALL s_aooi250_convert_qty(l_xmdd.xmdd001,l_xmdd.xmdd004,l_xmdd.xmdd024,l_xmdd.xmdd006)
+                    RETURNING l_success,l_xmdd.xmdd025
+            END IF
+            IF NOT cl_null(l_xmdd.xmdd026) THEN
+               CALL s_aooi250_convert_qty(l_xmdd.xmdd001,l_xmdd.xmdd004,l_xmdd.xmdd026,l_xmdd.xmdd006)
+                    RETURNING l_success,l_xmdd.xmdd027
+            END IF
+            
+            UPDATE xmdf_t SET xmdf002 = l_xmdd.xmdd006,
+                              xmdf003 = l_xmdd.xmdd011,
+                              xmdf004 = l_xmdd.xmdd012,
+                              xmdf007 = l_xmdd.xmdd009
+             WHERE xmdfent   = g_enterprise
+               AND xmdfdocno = g_detail_d[g_master_idx].xmdadocno
+               AND xmdfseq   = g_detail_d[g_master_idx].xmdcseq
+               AND xmdfseq2  = l_xmdd.xmddseq2
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "upd xmdf_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               LET g_errparam.coll_vals[2] = l_xmdd.xmddseq2
+               CALL cl_err()
+               LET l_tot_success = FALSE
+            END IF
+
+            CALL axmp501_get_exrate(g_detail_d[g_master_idx].xmdadocno)
+                 RETURNING l_xmda015,l_xmda016
+            #分批未稅、含稅、稅額計算
+            CALL s_axmt500_get_amount_2(l_xmdd.xmdd027,l_xmdd.xmdd018,l_xmdd.xmdd019,l_xmda015,l_xmda016)
+                 RETURNING l_xmdd.xmdd028,l_xmdd.xmdd029,l_xmdd.xmdd030         
+
+            UPDATE xmdd_t SET xmdd006 = l_xmdd.xmdd006,
+                              xmdd009 = l_xmdd.xmdd009,
+                              xmdd011 = l_xmdd.xmdd011,
+                              xmdd012 = l_xmdd.xmdd012,
+                              xmdd022 = g_user,
+                              xmdd023 = g_today,
+                              xmdd025 = l_xmdd.xmdd025,
+                              xmdd027 = l_xmdd.xmdd027,
+                              xmdd028 = l_xmdd.xmdd028,
+                              xmdd029 = l_xmdd.xmdd029,
+                              xmdd030 = l_xmdd.xmdd030
+             WHERE xmddent   = g_enterprise
+               AND xmdddocno = g_detail_d[g_master_idx].xmdadocno
+               AND xmddseq   = g_detail_d[g_master_idx].xmdcseq
+               AND xmddseq2  = l_xmdd.xmddseq2
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "upd xmdd_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               LET g_errparam.coll_vals[2] = l_xmdd.xmddseq2
+               CALL cl_err()
+               LET l_tot_success = FALSE
+            END IF
+         END IF
+         INITIALIZE l_xmdd.* TO NULL
+      END FOREACH
+      
+      #若原訂單資料所對應的xmdf_t存在的分批序在目前最新的交期明細資料中不存在時
+      #但表示原分批序已取消，所以須把對應的xmdf_t與xmdd_t資料也一併刪除
+      LET l_xmddseq2 = ''
+      DECLARE axmp501_cur3 CURSOR FOR
+         SELECT xmdfseq2 FROM xmdf_t
+          WHERE xmdfent   = g_enterprise
+            AND xmdfdocno = g_detail_d[g_master_idx].xmdadocno
+            AND xmdfseq   = g_detail_d[g_master_idx].xmdcseq
+      FOREACH axmp501_cur3 INTO l_xmddseq2
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            LET l_tot_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         LET l_count = ''
+         SELECT COUNT(*) INTO l_count FROM axmp501_tmp
+          WHERE xmddseq2 = l_xmddseq2
+         IF cl_null(l_count) OR l_count = 0 THEN
+            DELETE FROM xmdf_t
+             WHERE xmdfent   = g_enterprise
+               AND xmdfdocno = g_detail_d[g_master_idx].xmdadocno
+               AND xmdfseq   = g_detail_d[g_master_idx].xmdcseq
+               AND xmdfseq2  = l_xmddseq2
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "del xmdf_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               LET g_errparam.coll_vals[2] = l_xmddseq2
+               CALL cl_err()
+               LET l_tot_success = FALSE
+            END IF
+            
+            DELETE FROM xmdd_t
+             WHERE xmddent   = g_enterprise
+               AND xmdddocno = g_detail_d[g_master_idx].xmdadocno
+               AND xmddseq   = g_detail_d[g_master_idx].xmdcseq
+               AND xmddseq2  = l_xmddseq2
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "del xmdd_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               LET g_errparam.coll_vals[2] = l_xmddseq2
+               CALL cl_err()
+               LET l_tot_success = FALSE
+            END IF
+         END IF
+         LET l_xmddseq2 = ''
+      END FOREACH
+   END IF
+   
+   #160523-00018#1-s-add
+   #判斷單據是否為多角且已拋轉，則需一併調整多角單據
+   SELECT xmda031 INTO l_xmda031
+     FROM xmda_t
+    WHERE xmdaent = g_enterprise
+      AND xmdadocno = g_detail_d[g_master_idx].xmdadocno
+   IF NOT cl_null(l_xmda031) THEN
+      IF NOT axmp501_aic_upd(l_xmda031,g_detail_d[g_master_idx].xmdadocno,g_detail_d[g_master_idx].xmdcseq) THEN
+         LET l_tot_success = FALSE
+      END IF
+   END IF   
+   #160523-00018#1-e-add
+
+   CALL cl_err_collect_show()
+   
+   IF l_tot_success THEN
+      CALL s_transaction_end('Y','0')
+      LET g_flag = 0
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      CALL cl_ask_confirm3("std-00012","")
+   END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: insert xmdd_t
+# Memo...........:
+# Usage..........: CALL axmp501_xmdd_ins(p_xmddseq2,p_xmdd006,p_xmdd009,p_xmdd011,p_xmdd012,p_xmdd014)
+# Input parameter: 
+# Return code....: TRUE OR FALSE
+# Date & Author..: 140814 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp501_xmdd_ins(p_xmddseq2,p_xmdd006,p_xmdd009,p_xmdd011,p_xmdd012,p_xmdd014)
+DEFINE p_xmddseq2   LIKE xmdd_t.xmddseq2
+DEFINE p_xmdd006    LIKE xmdd_t.xmdd006
+DEFINE p_xmdd009    LIKE xmdd_t.xmdd009
+DEFINE p_xmdd011    LIKE xmdd_t.xmdd011
+DEFINE p_xmdd012    LIKE xmdd_t.xmdd012
+DEFINE p_xmdd014    LIKE xmdd_t.xmdd014
+DEFINE r_success    LIKE type_t.num5
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_xmdd  RECORD
+    xmdddocno  LIKE xmdd_t.xmdddocno,
+    xmddseq    LIKE xmdd_t.xmddseq,
+    xmddseq1   LIKE xmdd_t.xmddseq1,
+    xmddseq2   LIKE xmdd_t.xmddseq2,
+    xmdd001    LIKE xmdd_t.xmdd001,
+    xmdd002    LIKE xmdd_t.xmdd002,
+    xmdd003    LIKE xmdd_t.xmdd003,
+    xmdd004    LIKE xmdd_t.xmdd004,
+    xmdd005    LIKE xmdd_t.xmdd005,
+    xmdd006    LIKE xmdd_t.xmdd006,
+    xmdd007    LIKE xmdd_t.xmdd007,
+    xmdd008    LIKE xmdd_t.xmdd008,
+    xmdd009    LIKE xmdd_t.xmdd009,
+    xmdd011    LIKE xmdd_t.xmdd011,
+    xmdd012    LIKE xmdd_t.xmdd012,
+    xmdd013    LIKE xmdd_t.xmdd013,
+    xmdd014    LIKE xmdd_t.xmdd014,
+    xmdd015    LIKE xmdd_t.xmdd015,
+    xmdd016    LIKE xmdd_t.xmdd016,
+    xmdd017    LIKE xmdd_t.xmdd017,
+    xmdd018    LIKE xmdd_t.xmdd018,
+    xmdd019    LIKE xmdd_t.xmdd019,
+    xmdd020    LIKE xmdd_t.xmdd020,
+    xmdd021    LIKE xmdd_t.xmdd021,
+    xmdd022    LIKE xmdd_t.xmdd022,
+    xmdd023    LIKE xmdd_t.xmdd023,
+    xmdd024    LIKE xmdd_t.xmdd024,
+    xmdd025    LIKE xmdd_t.xmdd025,
+    xmdd026    LIKE xmdd_t.xmdd026,
+    xmdd027    LIKE xmdd_t.xmdd027,
+    xmdd028    LIKE xmdd_t.xmdd028,
+    xmdd029    LIKE xmdd_t.xmdd029,
+    xmdd030    LIKE xmdd_t.xmdd030,
+    xmdd031    LIKE xmdd_t.xmdd031
+           END RECORD
+DEFINE l_xmdc  RECORD
+    xmdc001    LIKE xmdc_t.xmdc001,
+    xmdc002    LIKE xmdc_t.xmdc002,
+    xmdc006    LIKE xmdc_t.xmdc006,
+    xmdc007    LIKE xmdc_t.xmdc007,
+    xmdc008    LIKE xmdc_t.xmdc008,
+    xmdc010    LIKE xmdc_t.xmdc010,
+    xmdc011    LIKE xmdc_t.xmdc011,
+    xmdc015    LIKE xmdc_t.xmdc015,
+    xmdc016    LIKE xmdc_t.xmdc016,
+    xmdc017    LIKE xmdc_t.xmdc017,
+    xmdc019    LIKE xmdc_t.xmdc019,
+    xmdc033    LIKE xmdc_t.xmdc033
+           END RECORD
+DEFINE l_xmda015    LIKE xmda_t.xmda015  #幣別
+DEFINE l_xmda016    LIKE xmda_t.xmda016  #匯率
+
+   LET r_success = TRUE
+   
+   INITIALIZE l_xmdd.* TO NULL
+   INITIALIZE l_xmdc.* TO NULL
+   SELECT xmdc001,xmdc002,xmdc006,xmdc007,xmdc008,xmdc010,
+          xmdc015,xmdc016,xmdc017,xmdc019,xmdc033
+     INTO l_xmdc.xmdc001,l_xmdc.xmdc002,l_xmdc.xmdc006,l_xmdc.xmdc007,
+          l_xmdc.xmdc008,l_xmdc.xmdc010,l_xmdc.xmdc015,l_xmdc.xmdc016,
+          l_xmdc.xmdc017,l_xmdc.xmdc019,l_xmdc.xmdc033
+     FROM xmdc_t
+    WHERE xmdcent   = g_enterprise 
+      AND xmdcdocno = g_detail_d[g_master_idx].xmdadocno
+      AND xmdcseq   = g_detail_d[g_master_idx].xmdcseq
+      
+   CALL axmp501_get_exrate(g_detail_d[g_master_idx].xmdadocno)
+        RETURNING l_xmda015,l_xmda016
+   
+   LET l_xmdd.xmdddocno = g_detail_d[g_master_idx].xmdadocno  #單號
+   LET l_xmdd.xmddseq   = g_detail_d[g_master_idx].xmdcseq    #項次
+   LET l_xmdd.xmddseq1  = '1'             #項序
+   LET l_xmdd.xmddseq2  = p_xmddseq2      #分批序
+   LET l_xmdd.xmdd001   = l_xmdc.xmdc001  #料件編號
+   LET l_xmdd.xmdd002   = l_xmdc.xmdc002  #產品特徵
+   LET l_xmdd.xmdd003   = l_xmdc.xmdc019  #子件特性
+   LET l_xmdd.xmdd004   = l_xmdc.xmdc006  #銷售單位
+   LET l_xmdd.xmdd005   = l_xmdc.xmdc007  #訂購總數量
+   LET l_xmdd.xmdd006   = p_xmdd006       #分批採購量
+   LET l_xmdd.xmdd007   = p_xmdd006       #折核主件數量
+   LET l_xmdd.xmdd008   = '1'             #QPA
+   LET l_xmdd.xmdd009   = p_xmdd009       #交期類型
+   LET l_xmdd.xmdd011   = p_xmdd011       #出貨日期
+   LET l_xmdd.xmdd012   = p_xmdd012       #到廠日期
+   LET l_xmdd.xmdd013   = 'N'             #MRP凍結否
+   LET l_xmdd.xmdd014   = p_xmdd014       #已出貨量
+   LET l_xmdd.xmdd015   = '0'             #已銷退量
+   LET l_xmdd.xmdd016   = '0'             #銷退換貨數量
+   LET l_xmdd.xmdd017   = '2'	            #出貨狀態
+   LET l_xmdd.xmdd018   = l_xmdc.xmdc015  #參考價格
+   LET l_xmdd.xmdd019   = l_xmdc.xmdc016  #稅別
+   LET l_xmdd.xmdd020   = l_xmdc.xmdc017  #稅率
+   LET l_xmdd.xmdd021   = ''              #電子訂購單號
+   LET l_xmdd.xmdd022   = g_user          #最近修改人員
+   LET l_xmdd.xmdd023   = g_today         #最近修改時間
+   LET l_xmdd.xmdd024   = l_xmdc.xmdc008  #分批參考單位
+   LET l_xmdd.xmdd026   = l_xmdc.xmdc010  #分批計價單位
+   LET l_xmdd.xmdd028   = 0               #分批未稅金額 
+   LET l_xmdd.xmdd029   = 0               #分批含稅金額
+   LET l_xmdd.xmdd030   = 0               #分批稅金額
+   LET l_xmdd.xmdd031   = 0               #已轉出通數量
+   
+   IF NOT cl_null(l_xmdd.xmdd001) AND NOT cl_null(l_xmdd.xmdd004) AND
+      NOT cl_null(l_xmdd.xmdd026) AND NOT cl_null(l_xmdd.xmdd006) THEN 
+      #依單位做數量轉換
+      CALL s_aooi250_convert_qty(l_xmdd.xmdd001,l_xmdd.xmdd004,l_xmdd.xmdd026,l_xmdd.xmdd006)
+           RETURNING l_success,l_xmdc.xmdc011
+      IF l_success THEN
+         LET l_xmdd.xmdd027 = l_xmdc.xmdc011  #分批計價數量     
+      END IF 
+   END IF 
+   IF NOT cl_null(l_xmdd.xmdd024) THEN
+      CALL s_aooi250_convert_qty(l_xmdd.xmdd001,l_xmdd.xmdd004,l_xmdd.xmdd024,l_xmdd.xmdd006)
+           RETURNING l_success,l_xmdd.xmdd025
+   END IF
+   IF NOT cl_null(l_xmdd.xmdd026) THEN
+      CALL s_aooi250_convert_qty(l_xmdd.xmdd001,l_xmdd.xmdd004,l_xmdd.xmdd026,l_xmdd.xmdd006)
+           RETURNING l_success,l_xmdd.xmdd027
+   END IF
+   
+   #分批未稅、含稅、稅額計算
+   CALL s_axmt500_get_amount_2(l_xmdd.xmdd027,l_xmdd.xmdd018,l_xmdd.xmdd019,l_xmda015,l_xmda016)
+        RETURNING l_xmdd.xmdd028,l_xmdd.xmdd029,l_xmdd.xmdd030         
+   
+   INSERT INTO xmdd_t
+              (xmddent,xmddsite,xmdddocno,xmddseq,xmddseq1,xmddseq2,
+               xmdd001,xmdd002,xmdd003,xmdd004,xmdd005,xmdd006,xmdd007,xmdd008,xmdd009,xmdd011,
+               xmdd012,xmdd013,xmdd014,xmdd015,xmdd016,xmdd017,xmdd018,xmdd019,xmdd020,xmdd021,
+               xmdd022,xmdd023,xmdd024,xmdd025,xmdd026,xmdd027,xmdd028,xmdd029,xmdd030,xmdd031)
+       VALUES (g_enterprise,g_site,l_xmdd.xmdddocno,l_xmdd.xmddseq,l_xmdd.xmddseq1,l_xmdd.xmddseq2,
+               l_xmdd.xmdd001,l_xmdd.xmdd002,l_xmdd.xmdd003,l_xmdd.xmdd004,l_xmdd.xmdd005,
+               l_xmdd.xmdd006,l_xmdd.xmdd007,l_xmdd.xmdd008,l_xmdd.xmdd009,l_xmdd.xmdd011,
+               l_xmdd.xmdd012,l_xmdd.xmdd013,l_xmdd.xmdd014,l_xmdd.xmdd015,l_xmdd.xmdd016,
+               l_xmdd.xmdd017,l_xmdd.xmdd018,l_xmdd.xmdd019,l_xmdd.xmdd020,l_xmdd.xmdd021,
+               l_xmdd.xmdd022,l_xmdd.xmdd023,l_xmdd.xmdd024,l_xmdd.xmdd025,l_xmdd.xmdd026,
+               l_xmdd.xmdd027,l_xmdd.xmdd028,l_xmdd.xmdd029,l_xmdd.xmdd030,l_xmdd.xmdd031)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "ins xmdd_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      LET g_errparam.coll_vals[2] = p_xmddseq2
+      CALL cl_err()
+      LET r_success = FALSE
+   END IF
+   
+   #若該xmdf005明細有設置備品率時，應自動在產生筆各交期的備品明細資料
+   IF NOT cl_null(l_xmdc.xmdc033) AND l_xmdc.xmdc033 <> 0 THEN
+      SELECT MAX(xmddseq1)+1 INTO l_xmdd.xmddseq1 FROM xmdd_t
+        WHERE xmddent = g_enterprise 
+          AND xmdddocno = l_xmdd.xmdddocno 
+          AND xmddseq = l_xmdd.xmddseq
+      IF cl_null(l_xmdd.xmddseq1) OR l_xmdd.xmddseq1 = 0 THEN
+         LET l_xmdd.xmddseq1 = 1
+      END IF
+      
+      LET l_xmdd.xmdd003 = '6'  #子件特性
+      LET l_xmdd.xmdd005 = l_xmdd.xmdd005 * (l_xmdc.xmdc033/100)  #採購總量
+      LET l_xmdd.xmdd006 = l_xmdd.xmdd006 * (l_xmdc.xmdc033/100)  #分批採購量
+      LET l_xmdd.xmdd007 = l_xmdd.xmdd007 * (l_xmdc.xmdc033/100)  #折核主件數量
+      IF NOT cl_null(l_xmdd.xmdd001) AND NOT cl_null(l_xmdd.xmdd004) AND
+         NOT cl_null(l_xmdd.xmdd026) AND NOT cl_null(l_xmdd.xmdd006) THEN 
+         #依單位做數量轉換
+         CALL s_aooi250_convert_qty(l_xmdd.xmdd001,l_xmdd.xmdd004,l_xmdd.xmdd026,l_xmdd.xmdd006)
+              RETURNING l_success,l_xmdc.xmdc011
+         IF l_success THEN
+            LET l_xmdd.xmdd027 = l_xmdc.xmdc011  #分批計價數量     
+         END IF 
+      END IF
+      
+      #分批未稅、含稅、稅額計算          
+      CALL s_axmt500_get_amount_2(l_xmdd.xmdd027,l_xmdd.xmdd018,l_xmdd.xmdd019,l_xmda015,l_xmda016)
+           RETURNING l_xmdd.xmdd028,l_xmdd.xmdd029,l_xmdd.xmdd030         
+
+      INSERT INTO xmdd_t
+                 (xmddent,xmddsite,xmdddocno,xmddseq,xmddseq1,xmddseq2,
+                  xmdd001,xmdd002,xmdd003,xmdd004,xmdd005,xmdd006,xmdd007,xmdd008,xmdd009,xmdd011,
+                  xmdd012,xmdd013,xmdd014,xmdd015,xmdd016,xmdd017,xmdd018,xmdd019,xmdd020,xmdd021,
+                  xmdd022,xmdd023,xmdd024,xmdd025,xmdd026,xmdd027,xmdd028,xmdd029,xmdd030,xmdd031)
+          VALUES (g_enterprise,g_site,l_xmdd.xmdddocno,l_xmdd.xmddseq,l_xmdd.xmddseq1,l_xmdd.xmddseq2,
+                  l_xmdd.xmdd001,l_xmdd.xmdd002,l_xmdd.xmdd003,l_xmdd.xmdd004,l_xmdd.xmdd005,
+                  l_xmdd.xmdd006,l_xmdd.xmdd007,l_xmdd.xmdd008,l_xmdd.xmdd009,l_xmdd.xmdd011,
+                  l_xmdd.xmdd012,l_xmdd.xmdd013,l_xmdd.xmdd014,l_xmdd.xmdd015,l_xmdd.xmdd016,
+                  l_xmdd.xmdd017,l_xmdd.xmdd018,l_xmdd.xmdd019,l_xmdd.xmdd020,l_xmdd.xmdd021,
+                  l_xmdd.xmdd022,l_xmdd.xmdd023,l_xmdd.xmdd024,l_xmdd.xmdd025,l_xmdd.xmdd026,
+                  l_xmdd.xmdd027,l_xmdd.xmdd028,l_xmdd.xmdd029,l_xmdd.xmdd030,l_xmdd.xmdd031)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "ins xmdd_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         LET g_errparam.coll_vals[2] = p_xmddseq2
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END IF
+       
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取訂單幣別
+# Memo...........:
+# Usage..........: CALL axmp501_get_exrate(p_xmdadocno)
+#                  RETURNING r_xmda015,r_xmda016
+# Input parameter: p_xmdadocno   訂單單號
+# Return code....: r_xmda015     幣別
+#                : r_xmda016     匯率
+# Date & Author..: 141219 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp501_get_exrate(p_xmdadocno)
+DEFINE p_xmdadocno  LIKE xmda_t.xmdadocno
+DEFINE r_xmda015    LIKE xmda_t.xmda015
+DEFINE r_xmda016    LIKE xmda_t.xmda016
+      
+   #取訂單幣別匯率
+   LET r_xmda015 = ''
+   LET r_xmda016 = ''
+   SELECT xmda015,xmda016
+     INTO r_xmda015,r_xmda016
+     FROM xmda_t
+    WHERE xmdaent = g_enterprise
+      AND xmdadocno = p_xmdadocno
+
+   RETURN r_xmda015,r_xmda016
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 多角單據需一併調整
+# Memo...........:
+# Usage..........: CALL axmp501_aic_upd(p_xmda031,p_xmdcdocno,p_xmdcseq)
+#                  RETURNING r_success
+# Input parameter: p_xmda031      多角流程序號
+#                : p_xmdcdocno    訂單單號
+#                : p_xmdcseq      訂單項次
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 160523-00018#1 By 02040 By Polly
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp501_aic_upd(p_xmda031,p_xmdcdocno,p_xmdcseq)
+DEFINE p_xmda031    LIKE xmda_t.xmda031
+DEFINE p_xmdcdocno  LIKE xmdc_t.xmdcdocno
+DEFINE p_xmdcseq    LIKE xmdc_t.xmdcseq
+DEFINE l_aic_site   LIKE xmdc_t.xmdcsite
+DEFINE l_aic_docno  LIKE xmdc_t.xmdcdocno
+DEFINE l_aic_seq    LIKE xmdc_t.xmdcseq
+DEFINE l_aic_xmda015 LIKE xmda_t.xmda015   #幣別
+DEFINE l_aic_xmda016 LIKE xmda_t.xmda016   #匯率
+DEFINE l_aic_xmdc015 LIKE xmdc_t.xmdc015   #參考價格
+DEFINE l_aic_xmdc016 LIKE xmdc_t.xmdc016   #稅別
+DEFINE l_aic_xmdc017 LIKE xmdc_t.xmdc017   #稅率
+DEFINE l_xmdc024    LIKE xmdc_t.xmdc024
+DEFINE l_xmdc001    LIKE xmdc_t.xmdc001    #160713-00014#1 add
+DEFINE l_xmdc012    LIKE xmdc_t.xmdc012    #160713-00014#1 add
+DEFINE l_xmdc013    LIKE xmdc_t.xmdc013    #160713-00014#1 add
+DEFINE l_sql        STRING
+DEFINE l_cnt        LIKE type_t.num5
+DEFINE r_success    LIKE type_t.num5
+#mod--161109-00085#10-s
+#DEFINE l_xmdf  RECORD LIKE xmdf_t.*
+DEFINE l_xmdf RECORD  #訂單多交期匯總檔
+       xmdfent LIKE xmdf_t.xmdfent, #企業編號
+       xmdfsite LIKE xmdf_t.xmdfsite, #營運據點
+       xmdfdocno LIKE xmdf_t.xmdfdocno, #訂單單號
+       xmdfseq LIKE xmdf_t.xmdfseq, #訂單項次
+       xmdfseq2 LIKE xmdf_t.xmdfseq2, #分批序
+       xmdf002 LIKE xmdf_t.xmdf002, #分批數量
+       xmdf003 LIKE xmdf_t.xmdf003, #約定交貨日期
+       xmdf004 LIKE xmdf_t.xmdf004, #預計簽收日
+       xmdf005 LIKE xmdf_t.xmdf005, #出貨時段
+       xmdf006 LIKE xmdf_t.xmdf006, #MRP凍結否
+       xmdf007 LIKE xmdf_t.xmdf007, #交期類型
+       xmdf200 LIKE xmdf_t.xmdf200, #庫區/庫位
+       xmdf201 LIKE xmdf_t.xmdf201, #儲位
+       xmdf202 LIKE xmdf_t.xmdf202, #批號
+       xmdfunit LIKE xmdf_t.xmdfunit, #發貨組織
+       xmdf203 LIKE xmdf_t.xmdf203  #庫存管理特徵
+END RECORD
+#mod--161109-00085#10-e
+#mod--161109-00085#10-s
+#DEFINE l_xmdd  RECORD LIKE xmdd_t.*
+DEFINE l_xmdd RECORD  #訂單交期明細檔
+       xmddent LIKE xmdd_t.xmddent, #企業編號
+       xmddsite LIKE xmdd_t.xmddsite, #營運據點
+       xmdddocno LIKE xmdd_t.xmdddocno, #訂單單號
+       xmddseq LIKE xmdd_t.xmddseq, #項次
+       xmddseq1 LIKE xmdd_t.xmddseq1, #項序
+       xmddseq2 LIKE xmdd_t.xmddseq2, #分批序
+       xmdd001 LIKE xmdd_t.xmdd001, #料件編號
+       xmdd002 LIKE xmdd_t.xmdd002, #產品特徵
+       xmdd003 LIKE xmdd_t.xmdd003, #子件特性
+       xmdd004 LIKE xmdd_t.xmdd004, #銷售單位
+       xmdd005 LIKE xmdd_t.xmdd005, #訂購總數量
+       xmdd006 LIKE xmdd_t.xmdd006, #分批訂購數量
+       xmdd007 LIKE xmdd_t.xmdd007, #摺合主件數量
+       xmdd008 LIKE xmdd_t.xmdd008, #QPA
+       xmdd009 LIKE xmdd_t.xmdd009, #交期類型
+       xmdd010 LIKE xmdd_t.xmdd010, #出貨時段
+       xmdd011 LIKE xmdd_t.xmdd011, #約定交貨日期
+       xmdd012 LIKE xmdd_t.xmdd012, #預計簽收日期
+       xmdd013 LIKE xmdd_t.xmdd013, #MRP交期凍結
+       xmdd014 LIKE xmdd_t.xmdd014, #已出貨量
+       xmdd015 LIKE xmdd_t.xmdd015, #已銷退量
+       xmdd016 LIKE xmdd_t.xmdd016, #銷退換貨數量
+       xmdd017 LIKE xmdd_t.xmdd017, #出貨狀態
+       xmdd018 LIKE xmdd_t.xmdd018, #參考價格
+       xmdd019 LIKE xmdd_t.xmdd019, #稅別
+       xmdd020 LIKE xmdd_t.xmdd020, #稅率
+       xmdd021 LIKE xmdd_t.xmdd021, #電子訂購單號
+       xmdd022 LIKE xmdd_t.xmdd022, #最近修改人員
+       xmdd023 LIKE xmdd_t.xmdd023, #最近修改時間
+       xmdd024 LIKE xmdd_t.xmdd024, #分批參考單位
+       xmdd025 LIKE xmdd_t.xmdd025, #分批參考數量
+       xmdd026 LIKE xmdd_t.xmdd026, #分批計價單位
+       xmdd027 LIKE xmdd_t.xmdd027, #分批計價數量
+       xmdd028 LIKE xmdd_t.xmdd028, #分批未稅金額
+       xmdd029 LIKE xmdd_t.xmdd029, #分批含稅金額
+       xmdd030 LIKE xmdd_t.xmdd030, #分批稅額
+       xmdd031 LIKE xmdd_t.xmdd031, #已轉出通數量
+       xmdd032 LIKE xmdd_t.xmdd032, #備置量
+       xmdd033 LIKE xmdd_t.xmdd033, #備置原因
+       xmdd034 LIKE xmdd_t.xmdd034, #已簽退量
+       xmdd035 LIKE xmdd_t.xmdd035, #已分配量
+       xmdd200 LIKE xmdd_t.xmdd200, #促銷方案
+       xmdd201 LIKE xmdd_t.xmdd201, #分批包裝單位
+       xmdd202 LIKE xmdd_t.xmdd202, #分批包裝數量
+       xmdd203 LIKE xmdd_t.xmdd203, #標準價
+       xmdd204 LIKE xmdd_t.xmdd204, #促銷價
+       xmdd205 LIKE xmdd_t.xmdd205, #交易價
+       xmdd206 LIKE xmdd_t.xmdd206, #折價金額
+       xmddunit LIKE xmdd_t.xmddunit, #應用組織
+       xmdd207 LIKE xmdd_t.xmdd207, #收貨網點
+       xmdd208 LIKE xmdd_t.xmdd208, #送貨地址碼
+       xmdd209 LIKE xmdd_t.xmdd209, #送貨站點
+       xmdd210 LIKE xmdd_t.xmdd210, #送貨時段
+       xmdd211 LIKE xmdd_t.xmdd211, #送貨客戶
+       xmdd212 LIKE xmdd_t.xmdd212, #MRP凍結
+       xmdd213 LIKE xmdd_t.xmdd213, #庫位/庫區
+       xmdd214 LIKE xmdd_t.xmdd214, #儲位
+       xmdd215 LIKE xmdd_t.xmdd215, #批號
+       xmdd216 LIKE xmdd_t.xmdd216, #庫存鎖定等級
+       xmdd217 LIKE xmdd_t.xmdd217, #庫存餘額
+       xmdd218 LIKE xmdd_t.xmdd218, #銷售通路
+       xmdd219 LIKE xmdd_t.xmdd219, #產品組編號
+       xmdd220 LIKE xmdd_t.xmdd220, #銷售範圍編號
+       xmdd221 LIKE xmdd_t.xmdd221, #備註
+       xmdd222 LIKE xmdd_t.xmdd222, #辦事處
+       xmdd223 LIKE xmdd_t.xmdd223, #業務人員
+       xmdd224 LIKE xmdd_t.xmdd224, #業務部門
+       xmdd225 LIKE xmdd_t.xmdd225, #主合約編號
+       xmdd226 LIKE xmdd_t.xmdd226, #經營方式
+       xmdd227 LIKE xmdd_t.xmdd227, #結算類型
+       xmdd228 LIKE xmdd_t.xmdd228, #結算方式
+       xmddorga LIKE xmdd_t.xmddorga, #帳務組織
+       xmdd229 LIKE xmdd_t.xmdd229, #交易類型
+       xmdd230 LIKE xmdd_t.xmdd230, #分批包裝銷退換貨數量
+       xmdd036 LIKE xmdd_t.xmdd036, #還量數量
+       xmdd037 LIKE xmdd_t.xmdd037, #還量參考數量
+       xmdd038 LIKE xmdd_t.xmdd038, #還價數量
+       xmdd039 LIKE xmdd_t.xmdd039, #還價參考數量
+       xmdd231 LIKE xmdd_t.xmdd231, #庫存管理特徵
+       xmdd040 LIKE xmdd_t.xmdd040  #BOM特性
+END RECORD
+#mod--161109-00085#10-e
+#mod--161109-00085#10-s
+#DEFINE l_pmdo  RECORD LIKE pmdo_t.*
+DEFINE l_pmdo RECORD  #採購交期明細檔
+       pmdoent LIKE pmdo_t.pmdoent, #企業編號
+       pmdosite LIKE pmdo_t.pmdosite, #營運據點
+       pmdodocno LIKE pmdo_t.pmdodocno, #採購單號
+       pmdoseq LIKE pmdo_t.pmdoseq, #採購項次
+       pmdoseq1 LIKE pmdo_t.pmdoseq1, #項序
+       pmdoseq2 LIKE pmdo_t.pmdoseq2, #分批序
+       pmdo001 LIKE pmdo_t.pmdo001, #料件編號
+       pmdo002 LIKE pmdo_t.pmdo002, #產品特徵
+       pmdo003 LIKE pmdo_t.pmdo003, #子件特性
+       pmdo004 LIKE pmdo_t.pmdo004, #採購單位
+       pmdo005 LIKE pmdo_t.pmdo005, #採購總數量
+       pmdo006 LIKE pmdo_t.pmdo006, #分批採購數量
+       pmdo007 LIKE pmdo_t.pmdo007, #摺合主件數量
+       pmdo008 LIKE pmdo_t.pmdo008, #QPA
+       pmdo009 LIKE pmdo_t.pmdo009, #交期類型
+       pmdo010 LIKE pmdo_t.pmdo010, #收貨時段
+       pmdo011 LIKE pmdo_t.pmdo011, #出貨日期
+       pmdo012 LIKE pmdo_t.pmdo012, #到廠日期
+       pmdo013 LIKE pmdo_t.pmdo013, #到庫日期
+       pmdo014 LIKE pmdo_t.pmdo014, #MRP交期凍結
+       pmdo015 LIKE pmdo_t.pmdo015, #已收貨量
+       pmdo016 LIKE pmdo_t.pmdo016, #驗退量
+       pmdo017 LIKE pmdo_t.pmdo017, #倉退換貨量
+       pmdo019 LIKE pmdo_t.pmdo019, #已入庫量
+       pmdo020 LIKE pmdo_t.pmdo020, #VMI請款量
+       pmdo021 LIKE pmdo_t.pmdo021, #交貨狀態
+       pmdo022 LIKE pmdo_t.pmdo022, #參考價格
+       pmdo023 LIKE pmdo_t.pmdo023, #稅別
+       pmdo024 LIKE pmdo_t.pmdo024, #稅率
+       pmdo025 LIKE pmdo_t.pmdo025, #電子採購單號
+       pmdo026 LIKE pmdo_t.pmdo026, #最近修改人員
+       pmdo027 LIKE pmdo_t.pmdo027, #最近修改時間
+       pmdo028 LIKE pmdo_t.pmdo028, #分批參考單位
+       pmdo029 LIKE pmdo_t.pmdo029, #分批參考數量
+       pmdo030 LIKE pmdo_t.pmdo030, #分批計價單位
+       pmdo031 LIKE pmdo_t.pmdo031, #分批計價數量
+       pmdo032 LIKE pmdo_t.pmdo032, #分批未稅金額
+       pmdo033 LIKE pmdo_t.pmdo033, #分批含稅金額
+       pmdo034 LIKE pmdo_t.pmdo034, #分批稅額
+       pmdo035 LIKE pmdo_t.pmdo035, #初始營運據點
+       pmdo036 LIKE pmdo_t.pmdo036, #初始來源單號
+       pmdo037 LIKE pmdo_t.pmdo037, #初始來源項次
+       pmdo038 LIKE pmdo_t.pmdo038, #初始項序
+       pmdo039 LIKE pmdo_t.pmdo039, #初始分批序
+       pmdo040 LIKE pmdo_t.pmdo040, #倉退量
+       pmdo200 LIKE pmdo_t.pmdo200, #分批包裝單位
+       pmdo201 LIKE pmdo_t.pmdo201, #分批包裝數量
+       pmdo900 LIKE pmdo_t.pmdo900, #保留欄位str
+       pmdo999 LIKE pmdo_t.pmdo999, #保留欄位end
+       pmdo041 LIKE pmdo_t.pmdo041, #還料數量
+       pmdo042 LIKE pmdo_t.pmdo042, #還量參考數量
+       pmdo043 LIKE pmdo_t.pmdo043, #還價數量
+       pmdo044 LIKE pmdo_t.pmdo044  #還價參考數量
+END RECORD
+#mod--161109-00085#10-e
+#mod--161109-00085#10-s
+#DEFINE l_pmdp  RECORD LIKE pmdp_t.*
+DEFINE l_pmdp RECORD  #採購關聯單據明細檔
+       pmdpent LIKE pmdp_t.pmdpent, #企業編號
+       pmdpsite LIKE pmdp_t.pmdpsite, #營運據點
+       pmdpdocno LIKE pmdp_t.pmdpdocno, #採購單號
+       pmdpseq LIKE pmdp_t.pmdpseq, #採購項次
+       pmdpseq1 LIKE pmdp_t.pmdpseq1, #項序
+       pmdp001 LIKE pmdp_t.pmdp001, #料件編號
+       pmdp002 LIKE pmdp_t.pmdp002, #產品特徵
+       pmdp003 LIKE pmdp_t.pmdp003, #來源單號
+       pmdp004 LIKE pmdp_t.pmdp004, #來源項次
+       pmdp005 LIKE pmdp_t.pmdp005, #來源項序
+       pmdp006 LIKE pmdp_t.pmdp006, #來源分批序
+       pmdp007 LIKE pmdp_t.pmdp007, #來源料號
+       pmdp008 LIKE pmdp_t.pmdp008, #來源產品特徵
+       pmdp009 LIKE pmdp_t.pmdp009, #來源作業編號
+       pmdp010 LIKE pmdp_t.pmdp010, #來源作業序
+       pmdp011 LIKE pmdp_t.pmdp011, #來源BOM特性
+       pmdp012 LIKE pmdp_t.pmdp012, #來源生產控制組
+       pmdp021 LIKE pmdp_t.pmdp021, #沖銷順序
+       pmdp022 LIKE pmdp_t.pmdp022, #需求單位
+       pmdp023 LIKE pmdp_t.pmdp023, #需求數量
+       pmdp024 LIKE pmdp_t.pmdp024, #折合採購量
+       pmdp025 LIKE pmdp_t.pmdp025, #已收貨量
+       pmdp026 LIKE pmdp_t.pmdp026, #已入庫量
+       pmdp900 LIKE pmdp_t.pmdp900, #保留欄位str
+       pmdp999 LIKE pmdp_t.pmdp999  #保留欄位end
+END RECORD
+#mod--161109-00085#10-e
+#mod--161109-00085#10-s
+#DEFINE l_sfab  RECORD LIKE sfab_t.*
+DEFINE l_sfab RECORD  #工單來源檔
+       sfabent LIKE sfab_t.sfabent, #企業編號
+       sfabsite LIKE sfab_t.sfabsite, #營運據點
+       sfabdocno LIKE sfab_t.sfabdocno, #單號
+       sfab001 LIKE sfab_t.sfab001, #來源
+       sfab002 LIKE sfab_t.sfab002, #來源單號
+       sfab003 LIKE sfab_t.sfab003, #來源項次
+       sfab004 LIKE sfab_t.sfab004, #來源項序
+       sfab005 LIKE sfab_t.sfab005, #分批序
+       sfab006 LIKE sfab_t.sfab006, #分配優先序
+       sfab007 LIKE sfab_t.sfab007, #本次轉開工單量
+       sfabseq LIKE sfab_t.sfabseq  #項次
+END RECORD
+#mod--161109-00085#10-e
+DEFINE l_pmdn012 LIKE pmdn_t.pmdn012
+DEFINE l_pmdn013 LIKE pmdn_t.pmdn013
+DEFINE l_pmdn014 LIKE pmdn_t.pmdn014
+DEFINE l_wo_docno LIKE sfaa_t.sfaadocno
+DEFINE l_pmdl005  LIKE pmdl_t.pmdl015
+
+   LET r_success = TRUE   
+
+      
+  LET l_sql = "SELECT xmdfseq2,xmdf002,xmdf003,xmdf004,xmdf005, ",
+              "        xmdf006,xmdf007 FROM xmdf_t ",
+              " WHERE xmdfent = ",g_enterprise,
+              "   AND xmdfdocno = '",p_xmdcdocno,"'",
+              "   AND xmdfseq = '",p_xmdcseq,"'"
+  PREPARE s_axmp501_aic_pre FROM l_sql
+  DECLARE s_axmp501_aic_cs CURSOR FOR s_axmp501_aic_pre
+
+
+
+  LET l_sql = " DELETE FROM ( ",
+              "        SELECT 1 FROM xmdd_t a ",
+              "         WHERE a.xmddent = ",g_enterprise,
+              "           AND a.xmdddocno = ? AND a.xmddseq = ? ",
+              "           AND NOT EXISTS (SELECT 1 FROM xmdd_t  ",
+              "                            WHERE xmdddocno = '",p_xmdcdocno,"' ",
+              "                              AND xmddent = ",g_enterprise, #170123-00011#1 add
+              "                              AND xmddseq = '",p_xmdcseq,"' ",
+              "                              AND a.xmddseq1 = xmddseq1 ",
+              "                              AND a.xmddseq2 = xmddseq2)",
+              "              ) "  
+  PREPARE axmp501_del_pre FROM l_sql   
+  
+  LET l_sql =" SELECT xmdddocno,xmddseq,xmddseq1,xmddseq2, ",
+             "         xmdd001,xmdd002,xmdd003,xmdd004,xmdd005, ",
+             "         xmdd006,xmdd007,xmdd008,xmdd009,xmdd011, ",
+             "         xmdd012,xmdd013,xmdd014,xmdd015,xmdd016, ",
+             "         xmdd017,xmdd021, ",
+             "         xmdd022,xmdd023,xmdd024,xmdd025,xmdd026, ",
+             "         xmdd027,xmdd010 ",
+             "  FROM xmdd_t ",
+             " WHERE xmdddocno = '",p_xmdcdocno,"' ",
+             "   AND xmddent = ",g_enterprise, #170123-00011#1 add
+             "   AND xmddseq = '",p_xmdcseq,"' "           
+  PREPARE s_axmp501_aic_pre1 FROM l_sql
+  DECLARE s_axmp501_aic_cs1 CURSOR FOR s_axmp501_aic_pre1   
+
+
+  LET l_xmdc024 = ''
+  #SELECT xmdc024 INTO l_xmdc024                     #160713-00014#1 mark
+   SELECT xmdc001,xmdc012,xmdc013,xmdc024            #160713-00014#1 add
+     INTO l_xmdc001,l_xmdc012,l_xmdc013,l_xmdc024    #160713-00014#1 add
+    FROM xmdc_t
+   WHERE xmdcent = g_enterprise
+     AND xmdcdocno = p_xmdcdocno
+     AND xmdcseq = p_xmdcseq
+
+
+#==訂單調整==  
+  DECLARE axmp501_aic_cr CURSOR FOR
+   SELECT xmdcsite,xmdcdocno,xmdcseq
+    FROM xmda_t,xmdc_t
+   WHERE xmdaent= xmdcent AND xmdadocno= xmdcdocno
+      AND xmdaent = g_enterprise
+      AND xmdasite IN (SELECT icab003 FROM icab_t WHERE icabent = xmdaent AND icab001 = xmda050 AND icab002 <> 0)
+      AND xmda031 = p_xmda031
+      AND xmdcseq = p_xmdcseq
+  FOREACH axmp501_aic_cr INTO l_aic_site,l_aic_docno,l_aic_seq
+     
+     #更新多交期
+     UPDATE xmdc_t
+        SET xmdc024 = l_xmdc024,
+            xmdc012 = l_xmdc012,  #160713-00014#1 add
+            xmdc013 = l_xmdc013   #160713-00014#1 add
+      WHERE xmdcent = g_enterprise
+        AND xmdcdocno = l_aic_docno
+        AND xmdcseq = l_aic_seq
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL 
+        LET g_errparam.extend = "upd xmdc_t" 
+        LET g_errparam.code   = SQLCA.sqlcode 
+        LET g_errparam.popup  = TRUE 
+        LET g_errparam.coll_vals[1] = p_xmdcseq
+        CALL cl_err()
+        LET r_success = FALSE
+        RETURN r_success
+     END IF
+     #更新交期匯總檔xmdf_t
+     DELETE FROM xmdf_t
+      WHERE xmdfent   = g_enterprise
+        AND xmdfdocno = l_aic_docno
+        AND xmdfseq   = l_aic_seq
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL 
+        LET g_errparam.extend = "del xmdf_t" 
+        LET g_errparam.code   = SQLCA.sqlcode 
+        LET g_errparam.popup  = TRUE 
+        CALL cl_err()
+        LET r_success = FALSE
+        RETURN r_success
+     END IF           
+        
+     FOREACH s_axmp501_aic_cs INTO l_xmdf.xmdfseq2,l_xmdf.xmdf002,l_xmdf.xmdf003,l_xmdf.xmdf004,l_xmdf.xmdf005,
+                                   l_xmdf.xmdf006,l_xmdf.xmdf007       
+               
+        INSERT INTO xmdf_t (xmdfent,xmdfsite,xmdfdocno,xmdfseq,xmdfseq2, 
+                            xmdf002,xmdf003,xmdf004,xmdf005,xmdf006,xmdf007) 
+           VALUES (g_enterprise,l_aic_site,l_aic_docno,l_aic_seq,l_xmdf.xmdfseq2,
+                   l_xmdf.xmdf002,l_xmdf.xmdf003,l_xmdf.xmdf004,l_xmdf.xmdf005,l_xmdf.xmdf006,l_xmdf.xmdf007)      
+        
+        
+        IF SQLCA.sqlcode THEN
+           INITIALIZE g_errparam TO NULL 
+           LET g_errparam.extend = "ins xmdf_t" 
+           LET g_errparam.code   = SQLCA.sqlcode 
+           LET g_errparam.popup  = TRUE 
+           LET g_errparam.coll_vals[2] = l_xmdf.xmdfseq2
+           CALL cl_err()
+           LET r_success = FALSE
+           RETURN r_success
+        END IF 
+                
+     END FOREACH 
+     
+     #先刪除已不存在xmdd
+     EXECUTE axmp501_del_pre USING l_aic_docno,l_aic_seq
+     
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL 
+        LET g_errparam.extend = "del xmdd_t" 
+        LET g_errparam.code   = SQLCA.sqlcode 
+        LET g_errparam.popup  = TRUE 
+        CALL cl_err()
+        LET r_success = FALSE
+        RETURN r_success
+     END IF 
+     
+     #刪除工單的工單來源資料sfab_t
+     LET l_wo_docno = ''
+     
+     SELECT sfaadocno INTO l_wo_docno 
+       FROM sfaa_t
+      WHERE sfaaent = g_enterprise
+        AND sfaa006 = l_aic_docno 
+        AND sfaa007 = l_aic_seq 
+     IF NOT cl_null(l_wo_docno) THEN                    
+        DELETE FROM sfab_t
+         WHERE sfabent = g_enterprise
+           AND sfabdocno = l_wo_docno
+        IF SQLCA.sqlcode THEN
+           INITIALIZE g_errparam TO NULL 
+           LET g_errparam.extend = "del sfab_t" 
+           LET g_errparam.code   = SQLCA.sqlcode 
+           LET g_errparam.popup  = TRUE 
+           CALL cl_err()
+           LET r_success = FALSE
+           RETURN r_success
+        END IF           
+     END IF
+     #抓取幣別
+     SELECT xmda015,xmda016,xmdc015,xmdc016,xmdc017
+       INTO l_aic_xmda015,l_aic_xmda016,l_aic_xmdc015,l_aic_xmdc016,l_aic_xmdc017
+       FROM xmda_t,xmdc_t
+      WHERE xmdaent = xmdcent AND xmdadocno = xmdcdocno
+        AND xmdcent = g_enterprise
+        AND xmdcdocno = l_aic_docno
+        AND xmdcseq = l_aic_seq
+     INITIALIZE l_xmdd.* TO NULL  
+     #更新交期明細檔xmdd_t、工單來源檔sfab_t     
+     FOREACH s_axmp501_aic_cs1 INTO l_xmdd.xmdddocno,l_xmdd.xmddseq,l_xmdd.xmddseq1,l_xmdd.xmddseq2,
+                                    l_xmdd.xmdd001,l_xmdd.xmdd002,l_xmdd.xmdd003,l_xmdd.xmdd004,l_xmdd.xmdd005,
+                                    l_xmdd.xmdd006,l_xmdd.xmdd007,l_xmdd.xmdd008,l_xmdd.xmdd009,l_xmdd.xmdd011,
+                                    l_xmdd.xmdd012,l_xmdd.xmdd013,l_xmdd.xmdd014,l_xmdd.xmdd015,l_xmdd.xmdd016,
+                                    l_xmdd.xmdd017,l_xmdd.xmdd021, 
+                                    l_xmdd.xmdd022,l_xmdd.xmdd023,l_xmdd.xmdd024,l_xmdd.xmdd025,l_xmdd.xmdd026,
+                                    l_xmdd.xmdd027,l_xmdd.xmdd010                                    
+       
+       LET l_xmdd.xmdd018 = l_aic_xmdc015  #價格
+       LET l_xmdd.xmdd019 = l_aic_xmdc016  #稅別
+       LET l_xmdd.xmdd020 = l_aic_xmdc017  #稅別
+       
+       #分批未稅、含稅、稅額計算
+       LET l_xmdd.xmdd028 = 0
+       LET l_xmdd.xmdd029 = 0
+       LET l_xmdd.xmdd030 = 0
+       CALL s_axmt500_get_amount_2(l_xmdd.xmdd027,l_aic_xmdc015,l_aic_xmdc016,l_aic_xmda015,l_aic_xmda016)
+         RETURNING l_xmdd.xmdd028,l_xmdd.xmdd029,l_xmdd.xmdd030         
+        
+       LET l_cnt = 0
+       SELECT COUNT(*) INTO l_cnt
+         FROM xmdd_t
+        WHERE xmddent = g_enterprise
+          AND xmdddocno = l_aic_docno
+          AND xmddseq = l_aic_seq
+          AND xmddseq1 = l_xmdd.xmddseq1
+          AND xmddseq2 = l_xmdd.xmddseq2
+          
+        IF l_cnt > 0 THEN
+             
+           UPDATE xmdd_t SET xmdd006 = l_xmdd.xmdd006,             #分批订购数量
+                             xmdd009 = l_xmdd.xmdd009,             #交期类型
+                             xmdd011 = l_xmdd.xmdd011,             #约定交货日期
+                             xmdd012 = l_xmdd.xmdd012,             #预计签收日期
+                             xmdd022 = g_user,                     #最近更改人员
+                             xmdd023 = g_today,                    #最近更改时间      
+                             xmdd027 = l_xmdd.xmdd027,             #分批计价数量
+                             xmdd028 = l_xmdd.xmdd028,             #分批税前金额
+                             xmdd029 = l_xmdd.xmdd029,             #分批含税金额
+                             xmdd030 = l_xmdd.xmdd030              #分批税额
+           WHERE xmddent   = g_enterprise
+             AND xmdddocno = l_aic_docno
+             AND xmddseq   = l_aic_seq
+             AND xmddseq1  = l_xmdd.xmddseq1
+             AND xmddseq2  = l_xmdd.xmddseq2
+           IF SQLCA.sqlcode THEN
+              INITIALIZE g_errparam TO NULL 
+              LET g_errparam.extend = "upd xmdd_t" 
+              LET g_errparam.code   = SQLCA.sqlcode 
+              LET g_errparam.popup  = TRUE 
+              LET g_errparam.coll_vals[1] = l_xmdd.xmddseq1
+              LET g_errparam.coll_vals[2] = l_xmdd.xmddseq2
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+         ELSE
+           #新增
+           LET l_xmdd.xmdd031 = 0
+           INSERT INTO xmdd_t
+                      (xmddent,xmddsite,xmdddocno,xmddseq,xmddseq1,xmddseq2,
+                       xmdd001,xmdd002,xmdd003,xmdd004,xmdd005,xmdd006,xmdd007,xmdd008,xmdd009,xmdd011,
+                       xmdd012,xmdd013,xmdd014,xmdd015,xmdd016,xmdd017,xmdd018,xmdd019,xmdd020,xmdd021,
+                       xmdd022,xmdd023,xmdd024,xmdd025,xmdd026,xmdd027,xmdd028,xmdd029,xmdd030,xmdd031,
+                       xmdd010)
+               VALUES (g_enterprise,l_aic_site,l_aic_docno,l_aic_seq,l_xmdd.xmddseq1,l_xmdd.xmddseq2,
+                       l_xmdd.xmdd001,l_xmdd.xmdd002,l_xmdd.xmdd003,l_xmdd.xmdd004,l_xmdd.xmdd005,
+                       l_xmdd.xmdd006,l_xmdd.xmdd007,l_xmdd.xmdd008,l_xmdd.xmdd009,l_xmdd.xmdd011,
+                       l_xmdd.xmdd012,l_xmdd.xmdd013,l_xmdd.xmdd014,l_xmdd.xmdd015,l_xmdd.xmdd016,
+                       l_xmdd.xmdd017,l_xmdd.xmdd018,l_xmdd.xmdd019,l_xmdd.xmdd020,l_xmdd.xmdd021,
+                       l_xmdd.xmdd022,l_xmdd.xmdd023,l_xmdd.xmdd024,l_xmdd.xmdd025,l_xmdd.xmdd026,
+                       l_xmdd.xmdd027,l_xmdd.xmdd028,l_xmdd.xmdd029,l_xmdd.xmdd030,l_xmdd.xmdd031,
+                       l_xmdd.xmdd010)
+           IF SQLCA.sqlcode THEN
+              INITIALIZE g_errparam TO NULL 
+              LET g_errparam.extend = "ins xmdd_t" 
+              LET g_errparam.code   = SQLCA.sqlcode 
+              LET g_errparam.popup  = TRUE 
+              LET g_errparam.coll_vals[1] = l_xmdd.xmddseq1
+              LET g_errparam.coll_vals[2] = l_xmdd.xmddseq2
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+         END IF
+         IF NOT cl_null(l_wo_docno) THEN
+            #塞sfab_t工單來源檔
+            INITIALIZE l_sfab.* TO NULL
+            LET l_sfab.sfabsite = l_aic_site
+            LET l_sfab.sfabdocno = l_wo_docno
+            LET l_sfab.sfab001 = '2'
+            LET l_sfab.sfab002 = l_aic_docno            
+            LET l_sfab.sfab003 = l_aic_seq
+            LET l_sfab.sfab004 = l_xmdd.xmddseq1
+            LET l_sfab.sfab005 = l_xmdd.xmddseq2       
+            LET l_sfab.sfab006 = 10
+            LET l_sfab.sfab007 = l_xmdd.xmdd006
+            
+            SELECT MAX(sfabseq)+1 INTO l_sfab.sfabseq
+              FROM sfab_t
+             WHERE sfabent = g_enterprise
+               AND sfabdocno = l_wo_docno            
+            IF cl_null(l_sfab.sfabseq) THEN
+               LET l_sfab.sfabseq = 1
+            END IF
+            
+            INSERT INTO sfab_t(sfabent,sfabsite,sfabdocno,sfabseq,
+                               sfab001,sfab002,sfab003,sfab004,sfab005,
+                               sfab006,sfab007)
+            VALUES (g_enterprise,l_sfab.sfabsite,l_sfab.sfabdocno,l_sfab.sfabseq,
+                    l_sfab.sfab001,l_sfab.sfab002,l_sfab.sfab003,l_sfab.sfab004,l_sfab.sfab005,
+                    l_sfab.sfab006,l_sfab.sfab007)
+            
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "INSERT:sfab_t"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()            
+               LET r_success = FALSE
+            END IF         
+         END IF         
+     END FOREACH
+   END FOREACH
+
+#==採購單調整==
+ 
+  LET l_sql = " DELETE FROM ( ",
+              "        SELECT 1 FROM pmdo_t  ",
+              "         WHERE pmdoent = ",g_enterprise,
+              "           AND pmdodocno = ? AND pmdoseq = ? ",
+              "           AND NOT EXISTS (SELECT 1 FROM xmdd_t  ",
+              "                            WHERE xmddent = pmdoent ",
+              "                              AND xmdddocno = '",p_xmdcdocno,"' ",
+              "                              AND xmddseq = '",p_xmdcseq,"' ",
+              "                              AND pmdoseq1 = xmddseq1 ",
+              "                              AND pmdoseq2 = xmddseq2)",
+              "              ) "  
+  PREPARE axmp501_del_pre2 FROM l_sql  
+
+
+  LET l_sql = " DELETE FROM ( " ,
+              "        SELECT 1 FROM pmdp_t ",
+              "         WHERE pmdpent = ",g_enterprise,
+              "           AND pmdpdocno = ? AND pmdpseq = ? ",
+              "           AND NOT EXISTS (SELECT 1 FROM xmdd_t ",
+              "                            WHERE xmddent = pmdpent ",
+              "                              AND xmdddocno = '",p_xmdcdocno,"' ",
+              "                              AND xmddseq = '",p_xmdcseq,"' ",
+              "                              AND xmdddocno = pmdp003 ",
+              "                              AND xmddseq = pmdp004 ",
+              "                              AND xmddseq1 = pmdp005 ",
+              "                              AND xmddseq2 = pmdp006) ",
+              "              ) "
+  PREPARE axmp501_del_pre3 FROM l_sql 
+
+
+  DECLARE axmp501_aic_cr1 CURSOR FOR
+   SELECT pmdnsite,pmdndocno,pmdnseq
+    FROM pmdl_t,pmdn_t
+   WHERE pmdlent= pmdnent AND pmdldocno= pmdndocno
+      AND pmdlent = g_enterprise
+      AND pmdl031 = p_xmda031
+      AND pmdnseq = p_xmdcseq
+  FOREACH axmp501_aic_cr1 INTO l_aic_site,l_aic_docno,l_aic_seq
+  
+      #160713-00014#1-s-add
+       LET l_pmdn012 = ''
+       LET l_pmdn013 = ''
+       CALL s_aic_carry_get_time(l_aic_site,l_xmdc001,l_xmdc012)
+         RETURNING l_pmdn012,l_pmdn013           
+       #160713-00014#1-e-add 
+       
+     #更新多交期
+     UPDATE pmdn_t
+        SET pmdn024 = l_xmdc024,
+           #160713-00014#1-s-add
+            pmdn012 = l_pmdn012,
+            pmdn013 = l_pmdn013,
+            pmdn014 = l_xmdc013
+           #160713-00014#1-e-add 
+      WHERE pmdnent = g_enterprise
+        AND pmdndocno = l_aic_docno
+        AND pmdnseq = l_aic_seq
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL 
+        LET g_errparam.extend = "upd pmdn_t" 
+        LET g_errparam.code   = SQLCA.sqlcode 
+        LET g_errparam.popup  = TRUE 
+        LET g_errparam.coll_vals[1] = l_aic_seq
+        CALL cl_err()
+        LET r_success = FALSE
+        RETURN r_success
+     END IF
+     #更新交期匯總檔pmdq_t
+     DELETE FROM pmdq_t
+      WHERE pmdqent   = g_enterprise
+        AND pmdqdocno = l_aic_docno
+        AND pmdqseq   = l_aic_seq
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL 
+        LET g_errparam.extend = "del pmdq_t" 
+        LET g_errparam.code   = SQLCA.sqlcode 
+        LET g_errparam.popup  = TRUE 
+        CALL cl_err()
+        LET r_success = FALSE
+        RETURN r_success
+     END IF 
+     FOREACH s_axmp501_aic_cs INTO l_xmdf.xmdfseq2,l_xmdf.xmdf002,l_xmdf.xmdf003,l_xmdf.xmdf004,l_xmdf.xmdf005,
+                                   l_xmdf.xmdf006,l_xmdf.xmdf007       
+
+        INSERT INTO pmdq_t (pmdqent,pmdqsite,pmdqdocno,pmdqseq,pmdqseq2, 
+                            pmdq002,pmdq003,pmdq004,pmdq005,pmdq006,pmdq007,pmdq008) 
+           VALUES (g_enterprise,l_aic_site,l_aic_docno,l_aic_seq,l_xmdf.xmdfseq2,
+                   l_xmdf.xmdf002,l_xmdf.xmdf003,l_xmdf.xmdf004,l_xmdf.xmdf004,l_xmdf.xmdf005,l_xmdf.xmdf006,l_xmdf.xmdf007) 
+
+        IF SQLCA.sqlcode THEN
+           INITIALIZE g_errparam TO NULL 
+           LET g_errparam.extend = "ins xmdf_t" 
+           LET g_errparam.code   = SQLCA.sqlcode 
+           LET g_errparam.popup  = TRUE 
+           LET g_errparam.coll_vals[2] = l_xmdf.xmdfseq2
+           CALL cl_err()
+           LET r_success = FALSE
+           RETURN r_success
+        END IF       
+     END FOREACH   
+     
+     #先刪除已不存在交期明細pmdo_t
+     EXECUTE axmp501_del_pre2 USING l_aic_docno,l_aic_seq
+      
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL 
+        LET g_errparam.extend = "del pmdo_t" 
+        LET g_errparam.code   = SQLCA.sqlcode 
+        LET g_errparam.popup  = TRUE 
+        CALL cl_err()
+        LET r_success = FALSE
+        RETURN r_success
+     END IF  
+     
+     #先刪除已不存在關聯單據明細pmdp_t
+     #只需調整一般採購單，委外採購單的關聯單據來源不工單，所以不需調整
+     LET l_pmdl005 = ''
+     SELECT pmdl005 INTO l_pmdl005
+       FROM pmdl_t 
+      WHERE pmdlent = g_enterprise
+        AND pmdldocno = l_aic_docno
+     IF l_pmdl005 = '1' THEN       #一般採購
+        EXECUTE axmp501_del_pre3 USING l_aic_docno,l_aic_seq
+        
+        IF SQLCA.sqlcode THEN
+           INITIALIZE g_errparam TO NULL 
+           LET g_errparam.extend = "del pmdp_t" 
+           LET g_errparam.code   = SQLCA.sqlcode 
+           LET g_errparam.popup  = TRUE 
+           CALL cl_err()
+           LET r_success = FALSE
+           RETURN r_success
+        END IF          
+     END IF           
+     
+     #抓取幣別
+     SELECT pmdl015,pmdl016,pmdn015,pmdn016,pmdn017
+      #     pmdn012,pmdn013,pmdn014          #160713-00014#1 mark
+       INTO l_aic_xmda015,l_aic_xmda016,l_aic_xmdc015,l_aic_xmdc016,l_aic_xmdc017
+      #     l_pmdn012,l_pmdn013,l_pmdn014    #160713-00014#1 mark
+       FROM pmdl_t,pmdn_t
+      WHERE pmdlent = pmdnent AND pmdldocno = pmdndocno
+        AND pmdnent = g_enterprise
+        AND pmdndocno = l_aic_docno
+        AND pmdnseq = l_aic_seq
+        
+     FOREACH s_axmp501_aic_cs1 INTO l_xmdd.xmdddocno,l_xmdd.xmddseq,l_xmdd.xmddseq1,l_xmdd.xmddseq2,
+                                    l_xmdd.xmdd001,l_xmdd.xmdd002,l_xmdd.xmdd003,l_xmdd.xmdd004,l_xmdd.xmdd005,
+                                    l_xmdd.xmdd006,l_xmdd.xmdd007,l_xmdd.xmdd008,l_xmdd.xmdd009,l_xmdd.xmdd011,
+                                    l_xmdd.xmdd012,l_xmdd.xmdd013,l_xmdd.xmdd014,l_xmdd.xmdd015,l_xmdd.xmdd016,
+                                    l_xmdd.xmdd017,l_xmdd.xmdd021, 
+                                    l_xmdd.xmdd022,l_xmdd.xmdd023,l_xmdd.xmdd024,l_xmdd.xmdd025,l_xmdd.xmdd026,
+                                    l_xmdd.xmdd027,l_xmdd.xmdd010                                    
+       
+       #更新交期明細檔pmdo_t       
+       
+       #取得未稅金額、含稅金額、稅額
+       LET l_pmdo.pmdo032 = 0
+       LET l_pmdo.pmdo033 = 0
+       LET l_pmdo.pmdo034 = 0
+       CALL s_axmt500_get_amount_2(l_xmdd.xmdd027,l_aic_xmdc015,l_aic_xmdc016,l_aic_xmda015,l_aic_xmda016)
+         RETURNING l_pmdo.pmdo032,l_pmdo.pmdo033,l_pmdo.pmdo034       
+        
+       LET l_cnt = 0
+       SELECT COUNT(*) INTO l_cnt
+         FROM pmdo_t
+        WHERE pmdoent = g_enterprise
+          AND pmdodocno = l_aic_docno
+          AND pmdoseq = l_aic_seq
+          AND pmdoseq1 = l_xmdd.xmddseq1
+          AND pmdoseq2 = l_xmdd.xmddseq2
+      #160713-00014#1-s-add
+       LET l_pmdn012 = ''
+       LET l_pmdn013 = ''
+       CALL s_aic_carry_get_time(l_aic_site,l_xmdd.xmdd001,l_xmdd.xmdd012)
+         RETURNING l_pmdn012,l_pmdn013        
+       LET l_pmdo.pmdo011 = l_xmdd.xmdd011   
+       LET l_pmdo.pmdo012 = l_pmdn013
+       LET l_pmdo.pmdo013 = l_xmdd.xmdd012     
+       #160713-00014#1-e-add    
+       IF l_cnt > 0 THEN             
+          UPDATE pmdo_t SET pmdo006 = l_xmdd.xmdd006,             
+                            pmdo009 = l_xmdd.xmdd009,                             
+                            pmdo026 = g_user,                     
+                            pmdo027 = g_today,                         
+                            pmdo031 = l_xmdd.xmdd027,
+                           #160713-00014#1-s-mark                            
+                           #pmdo032 = l_xmdd.xmdd032,             
+                           #pmdo033 = l_xmdd.xmdd033,             
+                           #pmdo034 = l_xmdd.xmdd034   
+                           #160713-00014#1-e-mark
+                           #160713-00014#1-s-add  
+                            pmdo011 = l_pmdo.pmdo011,                          
+                            pmdo012 = l_pmdo.pmdo012,
+                            pmdo013 = l_pmdo.pmdo013,
+                            pmdo032 = l_pmdo.pmdo032,             
+                            pmdo033 = l_pmdo.pmdo033,             
+                            pmdo034 = l_pmdo.pmdo034                             
+                           #160713-00014#1-e-add 
+          WHERE pmdoent   = g_enterprise
+            AND pmdodocno = l_aic_docno
+            AND pmdoseq   = l_aic_seq
+            AND pmdoseq1  = l_xmdd.xmddseq1
+            AND pmdoseq2  = l_xmdd.xmddseq2
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "upd pmdo_t" 
+             LET g_errparam.code   = SQLCA.sqlcode 
+             LET g_errparam.popup  = TRUE 
+             LET g_errparam.coll_vals[1] = l_xmdd.xmddseq1
+             LET g_errparam.coll_vals[2] = l_xmdd.xmddseq2
+             CALL cl_err()
+             LET r_success = FALSE
+             RETURN r_success
+          END IF
+       ELSE
+          #新增
+          LET l_pmdo.pmdosite = l_aic_site
+          LET l_pmdo.pmdodocno = l_aic_docno
+          LET l_pmdo.pmdoseq = l_aic_seq
+          LET l_pmdo.pmdoseq1 = l_xmdd.xmddseq1
+          LET l_pmdo.pmdoseq2 = l_xmdd.xmddseq2
+          LET l_pmdo.pmdo001 = l_xmdd.xmdd001
+          LET l_pmdo.pmdo002 = l_xmdd.xmdd002
+          LET l_pmdo.pmdo003 = l_xmdd.xmdd003
+          LET l_pmdo.pmdo004 = l_xmdd.xmdd004
+          LET l_pmdo.pmdo005 = l_xmdd.xmdd005
+          LET l_pmdo.pmdo006 = l_xmdd.xmdd006
+          LET l_pmdo.pmdo007 = l_xmdd.xmdd007
+          LET l_pmdo.pmdo008 = l_xmdd.xmdd008
+          LET l_pmdo.pmdo009 = l_xmdd.xmdd009
+          LET l_pmdo.pmdo010 = l_xmdd.xmdd010 
+         #160713-00014#1-s-mark          
+         #LET l_pmdo.pmdo011 = l_pmdn012
+         #LET l_pmdo.pmdo012 = l_pmdn013
+         #LET l_pmdo.pmdo013 = l_pmdn014
+         #160713-00014#1-e-mark       
+          LET l_pmdo.pmdo014 = 'N'                    
+          LET l_pmdo.pmdo022 = l_aic_xmdc015
+          LET l_pmdo.pmdo023 = l_aic_xmdc016
+          LET l_pmdo.pmdo024 = l_aic_xmdc017
+          LET l_pmdo.pmdo026 = g_user
+          LET l_pmdo.pmdo027 = g_today
+          LET l_pmdo.pmdo028 = l_xmdd.xmdd024
+          LET l_pmdo.pmdo029 = l_xmdd.xmdd025
+          LET l_pmdo.pmdo030 = l_xmdd.xmdd026
+          LET l_pmdo.pmdo031 = l_xmdd.xmdd027
+          LET l_pmdo.pmdo015 = 0   #已收貨量
+          LET l_pmdo.pmdo016 = 0   #驗退量
+          LET l_pmdo.pmdo017 = 0   #倉退換貨量
+          LET l_pmdo.pmdo019 = 0   #已入庫量
+          LET l_pmdo.pmdo040 = 0   #倉退量
+                 
+          INSERT INTO pmdo_t (pmdoent,pmdosite,pmdodocno,
+                              pmdoseq,pmdoseq1,pmdoseq2,
+                              pmdo001,pmdo002,pmdo003,pmdo004,pmdo005,
+                              pmdo006,pmdo007,pmdo008,pmdo009,pmdo010,
+                              pmdo011,pmdo012,pmdo013,pmdo014,pmdo015,
+                              pmdo016,pmdo017,pmdo019,pmdo020,
+                              pmdo021,pmdo022,pmdo023,pmdo024,pmdo025,
+                              pmdo026,pmdo027,pmdo028,pmdo029,pmdo030,
+                              pmdo031,pmdo032,pmdo033,pmdo034,pmdo035,
+                              pmdo036,pmdo037,pmdo038,pmdo039,pmdo040)
+           VALUES (g_enterprise,l_pmdo.pmdosite,l_pmdo.pmdodocno,
+                   l_pmdo.pmdoseq,l_pmdo.pmdoseq1,l_pmdo.pmdoseq2,
+                   l_pmdo.pmdo001,l_pmdo.pmdo002,l_pmdo.pmdo003,l_pmdo.pmdo004,l_pmdo.pmdo005,
+                   l_pmdo.pmdo006,l_pmdo.pmdo007,l_pmdo.pmdo008,l_pmdo.pmdo009,l_pmdo.pmdo010,
+                   l_pmdo.pmdo011,l_pmdo.pmdo012,l_pmdo.pmdo013,l_pmdo.pmdo014,l_pmdo.pmdo015,
+                   l_pmdo.pmdo016,l_pmdo.pmdo017,l_pmdo.pmdo019,l_pmdo.pmdo020,
+                   l_pmdo.pmdo021,l_pmdo.pmdo022,l_pmdo.pmdo023,l_pmdo.pmdo024,l_pmdo.pmdo025,
+                   l_pmdo.pmdo026,l_pmdo.pmdo027,l_pmdo.pmdo028,l_pmdo.pmdo029,l_pmdo.pmdo030,
+                   l_pmdo.pmdo031,l_pmdo.pmdo032,l_pmdo.pmdo033,l_pmdo.pmdo034,l_pmdo.pmdo035,
+                   l_pmdo.pmdo036,l_pmdo.pmdo037,l_pmdo.pmdo038,l_pmdo.pmdo039,l_pmdo.pmdo040)           
+          IF SQLCA.sqlcode THEN    
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "ins pmdo_t" 
+             LET g_errparam.code   = SQLCA.sqlcode 
+             LET g_errparam.popup  = TRUE 
+             LET g_errparam.coll_vals[1] = l_xmdd.xmddseq1
+             LET g_errparam.coll_vals[2] = l_xmdd.xmddseq2
+             CALL cl_err()
+             LET r_success = FALSE
+             RETURN r_success
+          END IF
+       END IF
+       #更新關聯單據明細 
+       IF l_pmdl005 = '1' THEN
+          LET l_cnt = 0
+          SELECT COUNT(*) INTO l_cnt
+            FROM pmdp_t
+           WHERE pmdpent = g_enterprise
+             AND pmdpdocno = l_aic_docno
+             AND pmdpseq = l_aic_seq
+             AND pmdp003 = l_xmdd.xmdddocno
+             AND pmdp004 = l_xmdd.xmddseq
+             AND pmdp005 = l_xmdd.xmddseq1
+             AND pmdp006 = l_xmdd.xmddseq2
+             
+          IF l_cnt > 0 THEN       
+             UPDATE pmdp_t
+                SET pmdp023 = l_xmdd.xmdd006,
+                    pmdp024 = l_xmdd.xmdd006              
+              WHERE pmdpent = g_enterprise
+                AND pmdpdocno = l_aic_docno
+                AND pmdpseq = l_aic_seq
+                AND pmdp003 = l_xmdd.xmdddocno
+                AND pmdp004 = l_xmdd.xmddseq
+                 AND pmdp005 = l_xmdd.xmddseq1
+                AND pmdp006 = l_xmdd.xmddseq2 
+             IF SQLCA.sqlcode THEN
+                INITIALIZE g_errparam TO NULL 
+                LET g_errparam.extend = "upd pmdp_t" 
+                LET g_errparam.code   = SQLCA.sqlcode 
+                LET g_errparam.popup  = TRUE 
+                LET g_errparam.coll_vals[1] = l_xmdd.xmddseq1
+                LET g_errparam.coll_vals[2] = l_xmdd.xmddseq2
+                CALL cl_err()
+                LET r_success = FALSE
+                RETURN r_success
+             END IF              
+          ELSE        
+             SELECT MAX(pmdpseq1)+1 INTO l_pmdp.pmdpseq1 FROM pmdp_t  
+              WHERE pmdpent = g_enterprise 
+                AND pmdpdocno = l_aic_docno
+                AND pmdpseq = l_aic_seq
+             IF cl_null(l_pmdp.pmdpseq1) OR l_pmdp.pmdpseq1 = 0 THEN
+                LET l_pmdp.pmdpseq1 = 1
+             END IF                                
+             LET l_pmdp.pmdp001 = l_xmdd.xmdd001        
+             LET l_pmdp.pmdp002 = l_xmdd.xmdd002
+             LET l_pmdp.pmdp003 = l_xmdd.xmdddocno
+             LET l_pmdp.pmdp004 = l_xmdd.xmddseq
+             LET l_pmdp.pmdp005 = l_xmdd.xmddseq1
+             LET l_pmdp.pmdp006 = l_xmdd.xmddseq2   
+             LET l_pmdp.pmdp007 = l_xmdd.xmdd001       
+             LET l_pmdp.pmdp008 = l_xmdd.xmdd002 
+             #沖銷順序 
+             SELECT MAX(pmdp021)+1 INTO l_pmdp.pmdp021 FROM pmdp_t
+              WHERE pmdpent = g_enterprise 
+                AND pmdpdocno = l_aic.docno
+                AND pmdpseq = l_aic.seq
+             IF cl_null(l_pmdp.pmdp021) OR l_pmdp.pmdp021 = 0 THEN
+                LET l_pmdp.pmdp021 = 1
+             END IF         
+             LET l_pmdp.pmdp022 = l_xmdd.xmdd004        
+             LET l_pmdp.pmdp023 = l_xmdd.xmdd006 
+             #折合採購量
+             LET l_pmdp.pmdp024 = l_pmdp.pmdp023
+                
+             INSERT INTO pmdp_t (pmdpent,pmdpsite,pmdpdocno,pmdpseq,pmdpseq1,
+                                 pmdp001,pmdp002,pmdp003,pmdp004,pmdp005,
+                                 pmdp006,pmdp007,pmdp008,pmdp021,pmdp022,
+                                 pmdp023,pmdp024) 
+               VALUES (g_enterprise,l_aic_site,l_aic_docno,l_aic_seq,l_pmdp.pmdpseq1,
+                       l_pmdp.pmdp001,l_pmdp.pmdp002,l_pmdp.pmdp003,l_pmdp.pmdp004,l_pmdp.pmdp005,
+                       l_pmdp.pmdp006,l_pmdp.pmdp007,l_pmdp.pmdp008,l_pmdp.pmdp021,l_pmdp.pmdp022,
+                       l_pmdp.pmdp023,l_pmdp.pmdp024)
+                 
+             IF SQLCA.sqlcode THEN
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.extend = "INSERT INTO pmdp_t"
+                LET g_errparam.code   = SQLCA.sqlcode
+                LET g_errparam.popup  = TRUE
+                CALL cl_err()
+                LET r_success = FALSE
+                EXIT FOREACH 
+             END IF         
+          END IF   
+       END IF   
+     END FOREACH
+     
+   END FOREACH
+
+   FREE axmp501_del_pre
+   FREE axmp501_del_pre2
+   FREE axmp501_del_pre3   
+   RETURN r_success
+   
+
+
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

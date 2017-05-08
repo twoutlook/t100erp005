@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrr340_g02" module="asr" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2015-01-13 10:41:13" modid="05423" moddt="2015-01-13 15:06:51" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.pr(chr2|pr)">
+    <var seq="1" value="sfeadocno,sfeadocdt,l_ooff013(chr100|NULL),sfea002,l_sfea002_desc(chr30|NULL),sfea003,l_sfea003_desc(chr50|NULL),sfea006,l_sfea006_desc(chr30|NULL),sfebseq,sfeb004,imaal_t_imaal003(imaal003|imaal_t.imaal003),imaal_t_imaal004(imaal004|imaal_t.imaal004),sfeb005,l_sfeb005_show(chr2|NULL),sfeb008,sfeb011,sfeb021,l_sfeb021_show(chr2|NULL),sfeb009,sfeb012,sfeb007,sfeb010,sfeb022,l_sfeb022_show(chr2|NULL),sfeaent"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="sfeadocno,sfeadocdt,l_ooff013(chr100|NULL),sfea002,l_sfea002_desc(chr30|NULL),sfea003,l_sfea003_desc(chr50|NULL),sfea006,l_sfea006_desc(chr30|NULL),sfebseq,sfeb004,imaal_t_imaal003(imaal003|imaal_t.imaal003),imaal_t_imaal004(imaal004|imaal_t.imaal004),sfeb005,l_sfeb005_show(chr2|NULL),sfeb008,sfeb011,sfeb021,l_sfeb021_show(chr2|NULL),sfeb009,sfeb012,sfeb007,sfeb010,sfeb022,l_sfeb022_show(chr2|NULL),sfeaent"/>
+    <sql id="g_from" query="sfea_t,sfeb_t,imaal_t"/>
+    <sql id="g_where" query="" maintable="sfea_t"/>
+    <sql id="g_order" query="sfeadocno,sfebseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="sfeadocno,sfebseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="sfeadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="sfeaent,sfeadocno"/>
+      <rep type="sfebseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="sfeaent,sfeadocno,sfebseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="sfeaent,sfeadocno,sfebseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="sfeadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="sfeaent,sfeadocno"/>
+      <rep type="sfebseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

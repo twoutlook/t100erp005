@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi100" module="azz" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="00845" crtdt="2014-11-19 12:31:54" modid="02159" moddt="2016-03-11 14:27:31" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="多語言字詞更換註記作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="l_sel(chr1),gzoystus,gzoy001,gzoy002,gzoy003,gzoy008,gzoy004,gzoy007,gzoy005,gzoy006,gzoy009,image(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzoy001,gzoyownid,gzoyownid_desc(chr500),gzoyowndp,gzoyowndp_desc(chr500),gzoycrtid,gzoycrtid_desc(chr500),gzoycrtdp,gzoycrtdp_desc(chr500),gzoycrtdt,gzoymodid,gzoymodid_desc(chr500),gzoymoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="upd_gzoz"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="disselect_all"/>
+      <action id="query" type="standard"/>
+      <action id="select_click"/>
+      <action id="select_all"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi100" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="l_sel,gzoystus,gzoy001,gzoy002,gzoy003,gzoy008,gzoy004,gzoy007,gzoy005,gzoy006,gzoy009,image" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzoystus,gzoy001,gzoy002,gzoy003,gzoy008,gzoy004,gzoy007,gzoy005,gzoy006,gzoy009,image"/>
+      <construct id="body" page="2" field="gzoyownid,gzoyowndp,gzoycrtid,gzoycrtdp,gzoycrtdt,gzoymodid,gzoymoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="l_sel"/>
+      <column id="gzoystus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="gzoy001"/>
+      <column id="gzoy002"/>
+      <column id="gzoy003"/>
+      <column id="gzoy008"/>
+      <column id="gzoy004"/>
+      <column id="gzoy007"/>
+      <column id="gzoy005"/>
+      <column id="gzoy006"/>
+      <column id="gzoy009"/>
+      <column id="image"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzoyownid">
+        <after>
+          <reference field="gzoyownid_desc" ref_field="gzoy_t.gzoyownid" map_field="gzoyownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzoyownid_desc"/>
+      <column id="gzoyowndp">
+        <after>
+          <reference field="gzoyowndp_desc" ref_field="gzoy_t.gzoyowndp" map_field="gzoyowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzoyowndp_desc"/>
+      <column id="gzoycrtid">
+        <after>
+          <reference field="gzoycrtid_desc" ref_field="gzoy_t.gzoycrtid" map_field="gzoycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzoycrtid_desc"/>
+      <column id="gzoycrtdp">
+        <after>
+          <reference field="gzoycrtdp_desc" ref_field="gzoy_t.gzoycrtdp" map_field="gzoycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzoycrtdp_desc"/>
+      <column id="gzoycrtdt"/>
+      <column id="gzoymodid">
+        <after>
+          <reference field="gzoymodid_desc" ref_field="gzoy_t.gzoymodid" map_field="gzoymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzoymodid_desc"/>
+      <column id="gzoymoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzoy_t" page="1,2" linked="" pk="gzoy001">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,gzoystus,gzoy001,gzoy002,gzoy003,gzoy008,gzoy004,gzoy007,gzoy005,gzoy006,gzoy009,&apos;&apos;,&apos;&apos;,gzoyownid,&apos;&apos;,gzoyowndp,&apos;&apos;,gzoycrtid,&apos;&apos;,gzoycrtdp,&apos;&apos;,gzoycrtdt,gzoymodid,&apos;&apos;,gzoymoddt FROM gzoy_t WHERE gzoy001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,gzoystus,gzoy001,gzoy002,gzoy003,gzoy008,gzoy004,gzoy007,gzoy005,gzoy006,gzoy009,&apos;&apos;,&apos;&apos;,gzoyownid,&apos;&apos;,gzoyowndp,&apos;&apos;,gzoycrtid,&apos;&apos;,gzoycrtdp,&apos;&apos;,gzoycrtdt,gzoymodid,&apos;&apos;,gzoymoddt FROM gzoy_t WHERE 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

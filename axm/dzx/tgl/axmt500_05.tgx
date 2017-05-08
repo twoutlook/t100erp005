@@ -1,0 +1,321 @@
+{<section id="axmt500_05.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2015-02-05 17:46:35), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000227
+#+ Filename...: axmt500_05
+#+ Description: 維護訂單附屬零件明細子作業
+#+ Creator....: 02040(2014-05-12 18:32:44)
+#+ Modifier...: 02040 -SD/PR-
+{</section>}
+
+
+
+{<section id="axmt500_05.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmdq_d        RECORD
+       sel LIKE type_t.chr500, 
+   xmdqdocno LIKE xmdq_t.xmdqdocno, 
+   xmdqseq LIKE xmdq_t.xmdqseq, 
+   xmdqseq1 LIKE xmdq_t.xmdqseq1, 
+   xmdq012 LIKE xmdq_t.xmdq012, 
+   xmdq001 LIKE xmdq_t.xmdq001, 
+   xmdq001_desc LIKE type_t.chr500, 
+   imaal0041 LIKE type_t.chr500, 
+   xmdq010 LIKE xmdq_t.xmdq010, 
+   xmdq011 LIKE xmdq_t.xmdq011, 
+   xmdq006 LIKE xmdq_t.xmdq006, 
+   xmdq007 LIKE xmdq_t.xmdq007, 
+   xmdq008 LIKE xmdq_t.xmdq008, 
+   xmdq008_desc LIKE type_t.chr500, 
+   xmdq009 LIKE xmdq_t.xmdq009, 
+   xmdq002 LIKE xmdq_t.xmdq002, 
+   xmdq002_desc LIKE type_t.chr500, 
+   imaal0042 LIKE type_t.chr500, 
+   xmdq004 LIKE xmdq_t.xmdq004, 
+   xmdq005 LIKE xmdq_t.xmdq005
+       END RECORD
+
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_xmdq_d          DYNAMIC ARRAY OF type_g_xmdq_d
+DEFINE g_xmdq_d_t        type_g_xmdq_d
+
+ 
+DEFINE g_xmdqdocno_t   LIKE xmdq_t.xmdqdocno    #Key值備份
+DEFINE g_xmdqseq_t      LIKE xmdq_t.xmdqseq    #Key值備份
+DEFINE g_xmdqseq1_t      LIKE xmdq_t.xmdqseq1    #Key值備份
+
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+{</section>}
+ 
+{<section id="axmt500_05.input" >}    
+#+ 資料輸入
+PUBLIC FUNCTION axmt500_05(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axmt500_05 WITH FORM cl_ap_formpath("axm","axmt500_05")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xmdq_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sel
+            #add-point:BEFORE FIELD sel name="input.b.page1.sel"
+            {<point name="input.b.page1.sel" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sel
+            
+            #add-point:AFTER FIELD sel name="input.a.page1.sel"
+            {<point name="input.a.page1.sel" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sel
+            #add-point:ON CHANGE sel name="input.g.page1.sel"
+            {<point name="input.g.page1.sel" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdq006
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdq_d[l_ac].xmdq006,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmdq006
+            END IF 
+
+
+
+            #add-point:AFTER FIELD xmdq006 name="input.a.page1.xmdq006"
+            {<point name="input.a.page1.xmdq006" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdq006
+            #add-point:BEFORE FIELD xmdq006 name="input.b.page1.xmdq006"
+            {<point name="input.b.page1.xmdq006" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdq006
+            #add-point:ON CHANGE xmdq006 name="input.g.page1.xmdq006"
+            {<point name="input.g.page1.xmdq006" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdq007
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdq_d[l_ac].xmdq007,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmdq007
+            END IF 
+
+
+
+            #add-point:AFTER FIELD xmdq007 name="input.a.page1.xmdq007"
+            {<point name="input.a.page1.xmdq007" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdq007
+            #add-point:BEFORE FIELD xmdq007 name="input.b.page1.xmdq007"
+            {<point name="input.b.page1.xmdq007" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdq007
+            #add-point:ON CHANGE xmdq007 name="input.g.page1.xmdq007"
+            {<point name="input.g.page1.xmdq007" />}
+            #END add-point 
+
+
+ 
+                  #Ctrlp:input.c.page1.sel
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sel
+            #add-point:ON ACTION controlp INFIELD sel name="input.c.page1.sel"
+            {<point name="input.c.page1.sel" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.xmdq006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdq006
+            #add-point:ON ACTION controlp INFIELD xmdq006 name="input.c.page1.xmdq006"
+            {<point name="input.c.page1.xmdq006" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.xmdq007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdq007
+            #add-point:ON ACTION controlp INFIELD xmdq007 name="input.c.page1.xmdq007"
+            {<point name="input.c.page1.xmdq007" />}
+            #END add-point
+
+
+
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axmt500_05 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="axmt500_05.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="axmt500_05.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

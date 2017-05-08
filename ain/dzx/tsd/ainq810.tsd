@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ainq810" std_prog="ainq810" erpver="1.0" ver="5" module="AIN" type="M" booking="Y" designer_ver="1.0" class="q" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="datainfo,insert,output,query"/>
+  <table ver="1" cite_std="N">
+    <tbl name="ineg_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+    <tbl name="ineh_t" main="N" head="N" pk="" fk_detail="" parent="ineg_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail3" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail4" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：盘点结果查询，包含初盘、复盘、抽盘、漏盘资料的统计
+標準作業功能取消：新增/修改/刪除/複製
+狀態功能：无
+作業類型：(查询)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源：
+ 資料來源表：
+                        ineg_t(盘点资料）
+                        ineh_t(盘点明细资料)  
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[一、明细总览
+按照盘点资料ineg_t,ineh_t进行抓取按照商品编号、库位、储位、批号、货架进行统计   初盘、复盘、抽盘
+当初盘、复盘、抽盘中的流程未启用时，则隐藏对应的栏位
+
+账面库存数量=库存快照数量
+实盘数量=依照盘点类型：3.抽盘，2.复盘，1.初盘的 优先顺序 取到第一笔则作为实盘数量呈现
+确认数量=盘点盈亏单的数量
+如果不存在确认数量
+  则 差异数量=实盘数量-账面库存数量
+否则 差异数量=确认数量-账面数量
+成本价= 依照 4.调整盈亏，3.抽盘，2.复盘，1.初盘的 优先顺序 取第一笔的成本价格
+差异成本金额=成本价*差异数量
+售价=依照 4.调整盈亏，3.抽盘，2.复盘，1.初盘的 优先顺序 取第一笔的售价价格
+差异售价金额=售价*差异数量
+
+二、初盘复盘差异
+如果存在  无初盘或者无复盘时,此页签隐藏
+按照盘点资料ineg_t,ineh_t进行抓取按照商品编号、库区、储位、批号、货架进行统计  初盘、复盘
+条件：盘点单据类型=[12] AND 审核状态
+差异数量=复盘-初盘
+成本价=4.调整盈亏，3.抽盘，2.复盘，1.初盘的 优先顺序 取第一笔的成本价格
+差异成本金额=成本价*差异数量
+售价=4.调整盈亏，3.抽盘，2.复盘，1.初盘的 优先顺序 取第一笔的售价价格
+差异售价金额=售价*差异数量
+
+三、抽盘差异
+当不存在抽盘时,隐藏此页签
+当不存在复盘时,隐藏复盘栏位
+按照盘点资料ineg_t,ineh_t进行抓取按照商品编号、库区、储位、批号、货架进行统计  初盘、复盘 、抽盘
+条件：盘点单据类型=[123] AND 审核状态
+如果存在复盘则
+    差异数量=抽盘-复盘
+否则 
+    差异数量=抽盘-初盘
+成本价=4.调整盈亏，3.抽盘，2.复盘，1.初盘的 优先顺序 取第一笔的成本价格
+差异成本金额=成本价*差异数量
+售价=4.调整盈亏，3.抽盘，2.复盘，1.初盘的 优先顺序 取第一笔的售价价格
+差异售价金额=售价*差异数量
+
+四、漏盘商品
+资料来源:[T:库存快照] ，[T:盘点资料]
+条件：盘点单据类型=[123] 
+      存在于[T:库存快照]，且不存在 [T:盘点资料]的资料
+差异数量=库存快照数量
+成本价=4.调整盈亏，3.抽盘，2.复盘，1.初盘的 优先顺序 取第一笔的成本价格
+差异成本金额=成本价*差异数量
+售价=4.调整盈亏，3.抽盘，2.复盘，1.初盘的 优先顺序 取第一笔的售价价格
+差异售价金额=售价*差异数量
+
+]]>
+  </db_all>
+  <field cite_std="N" name="amount1" ver="1" src="s" column="ineh016" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="amount1_1" ver="1" src="s" column="ineh016" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="amount1_2" ver="1" src="s" column="ineh016" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="amount1_3" ver="1" src="s" column="ineh016" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="amount2" ver="1" src="s" column="ineh017" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="amount2_1" ver="1" src="s" column="ineh017" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="amount2_2" ver="1" src="s" column="ineh017" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="amount2_3" ver="1" src="s" column="ineh017" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inea_t.inea002" ver="1" src="s" column="inea002" table="inea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inea_t.inea003" ver="1" src="s" column="inea003" table="inea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[盘点类型：
+     資料選項來源:
+       常數型態: 1(日结盘点),2(实时盘点)
+       SCC: SCC號碼:6549
+
+]]>
+  </field>
+  <field cite_std="N" name="ineg_t.ineg002" ver="1" src="s" column="ineg002" table="ineg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ineadocno_01" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineg_t.inegdocno" ver="1" src="s" column="inegdocno" table="ineg_t" attribute="" type="" req="N" i_zoom="q_ooba002_1" c_zoom="q_inegdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineg_t.inegsite" ver="1" src="s" column="inegsite" table="ineg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooed004_3" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[
+]]>
+  </field>
+  <field cite_std="N" name="ineh001_1" ver="1" src="s" column="ineh001" table="ineh_t" attribute="" type="" req="N" i_zoom="q_rtdx001_6" c_zoom="q_rtdx001_6" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh001_2" ver="1" src="s" column="ineh001" table="ineh_t" attribute="" type="" req="N" i_zoom="q_rtdx001_6" c_zoom="q_rtdx001_6" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh001_3" ver="1" src="s" column="ineh001" table="ineh_t" attribute="" type="" req="N" i_zoom="q_rtdx001_6" c_zoom="q_rtdx001_6" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh002_1" ver="1" src="s" column="ineh002" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh002_2" ver="1" src="s" column="ineh002" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh002_3" ver="1" src="s" column="ineh002" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh004_1" ver="1" src="s" column="ineh004" table="ineh_t" attribute="" type="" req="N" i_zoom="q_inaa001_12" c_zoom="q_inaa001_12" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh004_2" ver="1" src="s" column="ineh004" table="ineh_t" attribute="" type="" req="N" i_zoom="q_inaa001_12" c_zoom="q_inaa001_12" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh004_3" ver="1" src="s" column="ineh004" table="ineh_t" attribute="" type="" req="N" i_zoom="q_inaa001_12" c_zoom="q_inaa001_12" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh005_1" ver="1" src="s" column="ineh005" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inab002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh005_2" ver="1" src="s" column="ineh005" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inab002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh005_3" ver="1" src="s" column="ineh005" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inab002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh006_1" ver="1" src="s" column="ineh006" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh006_2" ver="1" src="s" column="ineh006" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh006_3" ver="1" src="s" column="ineh006" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh007_1" ver="1" src="s" column="ineh007" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh007_2" ver="1" src="s" column="ineh007" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh007_3" ver="1" src="s" column="ineh007" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh008_1" ver="1" src="s" column="ineh008" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh008_2" ver="1" src="s" column="ineh008" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh008_3" ver="1" src="s" column="ineh008" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh010_3" ver="1" src="s" column="ineh010" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh011_1" ver="1" src="s" column="ineh011" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh011_2" ver="1" src="s" column="ineh011" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh012_1" ver="1" src="s" column="ineh012" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh012_2" ver="1" src="s" column="ineh012" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh013_2" ver="1" src="s" column="ineh013" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh015_1" ver="1" src="s" column="ineh015" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh015_2" ver="1" src="s" column="ineh015" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh015_3" ver="1" src="s" column="ineh015" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh016_1" ver="1" src="s" column="ineh016" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh016_2" ver="1" src="s" column="ineh016" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh016_3" ver="1" src="s" column="ineh016" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh017_1" ver="1" src="s" column="ineh017" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh017_2" ver="1" src="s" column="ineh017" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh017_3" ver="1" src="s" column="ineh017" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh001" ver="1" src="s" column="ineh001" table="ineh_t" attribute="" type="" req="N" i_zoom="q_rtdx001_6" c_zoom="q_rtdx001_6" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh002" ver="1" src="s" column="ineh002" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh004" ver="1" src="s" column="ineh004" table="ineh_t" attribute="" type="" req="N" i_zoom="q_inaa001_12" c_zoom="q_inaa001_12" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh005" ver="1" src="s" column="ineh005" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inab002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh006" ver="1" src="s" column="ineh006" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh007" ver="1" src="s" column="ineh007" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh008" ver="1" src="s" column="ineh008" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh009" ver="1" src="s" column="ineh009" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh010" ver="1" src="s" column="ineh010" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh011" ver="1" src="s" column="ineh011" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh012" ver="1" src="s" column="ineh012" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh013" ver="1" src="s" column="ineh013" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh014" ver="1" src="s" column="ineh014" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh015" ver="1" src="s" column="ineh015" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh016" ver="1" src="s" column="ineh016" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.ineh017" ver="1" src="s" column="ineh017" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ineh_t.inehseq" ver="1" src="s" column="inehseq" table="ineh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="ineg002_desc" src="s" depend_field="ineg_t.ineg002" correspon_key="inegent,ineg002" ref_table="inea_t" ref_fk="ineaent,ineadocno" ref_dlang="" ref_rtn="inea001" status=""/>
+    <rfield cite_std="N" ver="1" name="inegsite_desc" src="s" depend_field="ineg_t.inegsite" correspon_key="inegent,inegsite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ineh001_1_desc" src="s" depend_field="ineh001_1" correspon_key="inehent,ineh001" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="ineh001_2_desc" src="s" depend_field="ineh001_2" correspon_key="inehent,ineh001_2" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="ineh001_3_desc" src="s" depend_field="ineh001_3" correspon_key="inehent,ineh001_3" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="ineh001_desc" src="s" depend_field="ineh_t.ineh001" correspon_key="inefent,ineh001" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="5" name="ineh004_desc" src="s" depend_field="ineh_t.ineh004" correspon_key="inehsite,ineh004" ref_table="inaa_t" ref_fk="inaasite,inaa001" ref_dlang="" ref_rtn="inaa002" status="d"/>
+    <rfield cite_std="N" ver="1" name="ineh008_1_desc" src="s" depend_field="ineh008_1" correspon_key="inefent,ineh008" ref_table="oocal_t" ref_fk="oocalent,oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="ineh008_2_desc" src="s" depend_field="ineh008_2" correspon_key="inehent,ineh008_2" ref_table="oocal_t" ref_fk="oocalent,oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="ineh008_3_desc" src="s" depend_field="ineh008_3" correspon_key="inehent,ineh008_3" ref_table="oocal_t" ref_fk="oocalent,oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="ineh008_desc" src="s" depend_field="ineh_t.ineh008" correspon_key="inefent,ineh008" ref_table="oocal_t" ref_fk="oocalent,oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="amount1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="amount1_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="amount1_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="amount1_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="amount2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="amount2_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="amount2_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="amount2_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inea_t.inea002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inea_t.inea003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineg_t.ineg002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineg_t.inegdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineg_t.inegsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh001_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh001_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh001_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh002_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh002_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh002_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh004_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh004_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh004_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh005_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh005_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh005_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh006_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh006_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh006_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh007_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh007_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh007_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh008_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh008_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh008_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh010_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh011_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh011_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh012_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh012_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh013_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh015_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh015_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh015_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh016_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh016_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh016_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh017_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh017_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh017_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.ineh017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ineh_t.inehseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="datainfo" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_inegsite" text="盤點組織" lstr=""/>
+    <sfield name="lbl_ineg002" text="盤點計劃" lstr=""/>
+    <sfield name="lbl_inea002" text="盤點日期" lstr=""/>
+    <sfield name="lbl_inegdocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_inea003" text="盤點類型" lstr=""/>
+    <sfield name="bpage_1" text="明細總覽" lstr=""/>
+    <sfield name="lbl_inehseq" text="項次" lstr=""/>
+    <sfield name="lbl_ineh001" text="商品編號" lstr=""/>
+    <sfield name="lbl_ineh002" text="商品條碼" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_ineh004" text="庫位" lstr=""/>
+    <sfield name="lbl_ineh005" text="儲位" lstr=""/>
+    <sfield name="lbl_ineh006" text="批號" lstr=""/>
+    <sfield name="lbl_ineh007" text="貨架" lstr=""/>
+    <sfield name="lbl_ineh008" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="單位名稱" lstr=""/>
+    <sfield name="lbl_ineh010" text="賬面庫存數量" lstr=""/>
+    <sfield name="lbl_ineh011" text="初盤數量" lstr=""/>
+    <sfield name="lbl_ineh012" text="複盤數量" lstr=""/>
+    <sfield name="lbl_ineh013" text="抽盤數量" lstr=""/>
+    <sfield name="lbl_ineh014" text="實盤數量" lstr=""/>
+    <sfield name="lbl_ineh009" text="確認數量" lstr=""/>
+    <sfield name="lbl_ineh015" text="實盤與賬面差異數量" lstr=""/>
+    <sfield name="lbl_ineh016" text="最新進價" lstr=""/>
+    <sfield name="lbl_amount1" text="差異進價金額" lstr=""/>
+    <sfield name="lbl_ineh017" text="售價" lstr=""/>
+    <sfield name="lbl_amount2" text="差異售價金額" lstr=""/>
+    <sfield name="ainq810.page" text="初盤複盤差異" lstr=""/>
+    <sfield name="lbl_ineh001_1" text="商品編號" lstr=""/>
+    <sfield name="lbl_ineh002_1" text="商品條碼" lstr=""/>
+    <sfield name="lbl_ineh004_1" text="庫位" lstr=""/>
+    <sfield name="lbl_ineh005_1" text="儲位" lstr=""/>
+    <sfield name="lbl_ineh006_1" text="批號" lstr=""/>
+    <sfield name="lbl_ineh007_1" text="貨架編號" lstr=""/>
+    <sfield name="lbl_ineh008_1" text="庫存單位" lstr=""/>
+    <sfield name="lbl_ineh011_1" text="初盤數量" lstr=""/>
+    <sfield name="lbl_ineh012_1" text="複盤數量" lstr=""/>
+    <sfield name="lbl_ineh015_1" text="差異數量" lstr=""/>
+    <sfield name="lbl_ineh016_1" text="最新進價" lstr=""/>
+    <sfield name="lbl_amount1_1" text="差異進價金額" lstr=""/>
+    <sfield name="lbl_ineh017_1" text="售價" lstr=""/>
+    <sfield name="lbl_amount2_1" text="差異售價金額" lstr=""/>
+    <sfield name="ainq810.page_1" text="抽盤差異" lstr=""/>
+    <sfield name="lbl_ineh001_2" text="商品編號" lstr=""/>
+    <sfield name="lbl_ineh002_2" text="商品條碼" lstr=""/>
+    <sfield name="lbl_ineh004_2" text="庫區" lstr=""/>
+    <sfield name="lbl_ineh005_2" text="儲位" lstr=""/>
+    <sfield name="lbl_ineh006_2" text="批號" lstr=""/>
+    <sfield name="lbl_ineh007_2" text="貨架編號" lstr=""/>
+    <sfield name="lbl_ineh008_2" text="庫存單位" lstr=""/>
+    <sfield name="lbl_ineh011_2" text="初盤數量" lstr=""/>
+    <sfield name="lbl_ineh012_2" text="複盤數量" lstr=""/>
+    <sfield name="lbl_ineh013_2" text="抽盤數量" lstr=""/>
+    <sfield name="lbl_ineh015_2" text="差異數量" lstr=""/>
+    <sfield name="lbl_ineh016_2" text="最新進價" lstr=""/>
+    <sfield name="lbl_amount1_2" text="差異進價金額" lstr=""/>
+    <sfield name="lbl_ineh017_2" text="售價" lstr=""/>
+    <sfield name="lbl_amount2_2" text="差異售價金額" lstr=""/>
+    <sfield name="ainq810.page_2" text="漏盤商品" lstr=""/>
+    <sfield name="lbl_ineh001_3" text="商品編號" lstr=""/>
+    <sfield name="lbl_ineh002_3" text="商品條碼" lstr=""/>
+    <sfield name="lbl_ineh004_3" text="庫區" lstr=""/>
+    <sfield name="lbl_ineh005_3" text="儲位" lstr=""/>
+    <sfield name="lbl_ineh006_3" text="批號" lstr=""/>
+    <sfield name="lbl_ineh007_3" text="貨架編號" lstr=""/>
+    <sfield name="lbl_ineh008_3" text="庫存單位" lstr=""/>
+    <sfield name="lbl_ineh010_3" text="賬面庫存數量" lstr=""/>
+    <sfield name="lbl_ineh015_3" text="差異數量" lstr=""/>
+    <sfield name="lbl_ineh016_3" text="最新進價" lstr=""/>
+    <sfield name="lbl_amount1_3" text="差異進價金額" lstr=""/>
+    <sfield name="lbl_ineh017_3" text="售價" lstr=""/>
+    <sfield name="lbl_amount2_3" text="差異售價金額" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="5" cite_std="N" src="s">
+    <widget name="s_detail1" status="u"/>
+    <widget name="s_detail2" status="u"/>
+    <widget name="s_detail3" status="u"/>
+    <widget name="s_detail4" status="u"/>
+  </exclude>
+</spec>

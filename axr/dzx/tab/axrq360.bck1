@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrq360" module="axr" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="01727" crtdt="2015-02-06 16:46:00" modid="02599" moddt="2015-12-03 17:37:43" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="應收帳款清單查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xrcastus,xrcasite,xrcasite_desc(chr500),xrcacomp,xrcacomp_desc(chr500),xrcald,xrcald_desc(chr500),xrcadocno,xrcadocdt,xrca001,xrca004,xrca004_desc(chr500),xrca057,xrca057_desc(chr500),xrca035,xrca035_desc(chr500),xrca038,xrca014,xrca014_desc(chr500),xrca015,xrca015_desc(chr500),xrca058,xrca058_desc(chr500),xrca007,xrca007_desc(chr500),xrca040,xrcc100,xrcc102,xrccseq,xrcc001,xrcc003,xrcc004,xrcc009,xrcc108,xrcc109,l_calc(num20_6),xrcc118,xrcc119,l_calc2(num20_6),xrca053"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xrcastus(b_xrcastus),xrcasite(b_xrcasite),xrcasite_desc(b_xrcasite_desc),xrcacomp(b_xrcacomp),xrcacomp_desc(b_xrcacomp_desc),xrcald(b_xrcald),xrcald_desc(b_xrcald_desc),xrcadocno(b_xrcadocno),xrcadocdt(b_xrcadocdt),xrca001(b_xrca001),xrca004(b_xrca004),xrca004_desc(b_xrca004_desc),xrca057(b_xrca057),xrca057_desc(b_xrca057_desc),xrca035(b_xrca035),xrca035_desc(b_xrca035_desc),xrca038(b_xrca038),xrca014(b_xrca014),xrca014_desc(b_xrca014_desc),xrca015(b_xrca015),xrca015_desc(b_xrca015_desc),xrca058(b_xrca058),xrca058_desc(b_xrca058_desc),xrca007(b_xrca007),xrca007_desc(b_xrca007_desc),xrca040(b_xrca040),xrcc100(b_xrcc100),xrcc102(b_xrcc102),xrccseq(b_xrccseq),xrcc001(b_xrcc001),xrcc003(b_xrcc003),xrcc004(b_xrcc004),xrcc009(b_xrcc009),xrcc108(b_xrcc108),xrcc109(b_xrcc109),l_calc(l_calc),xrcc118(b_xrcc118),xrcc119(b_xrcc119),l_calc2(l_calc2),xrca053(b_xrca053)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <cluster id="prog_b_xrcadocno" qry_field="xrcadocno" prog="axrt300" parameter="xrcadocno"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_axrt300" prog="axrt300" parameter="xrcadocno"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrq360" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xrca038,xrca053" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xrcastus(b_xrcastus),xrcasite(b_xrcasite),xrcacomp(b_xrcacomp),xrcald(b_xrcald),xrcadocno(b_xrcadocno),xrcadocdt(b_xrcadocdt),xrca001(b_xrca001),xrca004(b_xrca004),xrca035(b_xrca035),xrca038(b_xrca038),xrca014(b_xrca014),xrca015(b_xrca015),xrca058(b_xrca058),xrca007(b_xrca007),xrca040(b_xrca040),xrcc100(b_xrcc100),xrcc003(b_xrcc003),xrcc004(b_xrcc004),xrcc009(b_xrcc009),xrca053(b_xrca053)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xrcastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="xrcasite">
+        <after>
+          <reference field="xrcasite_desc" ref_field="xrcasite" map_field="xrcaent,xrcasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xrah002_1" state="c"/>
+      </column>
+      <column id="xrcasite_desc"/>
+      <column id="xrcacomp">
+        <after>
+          <reference field="xrcacomp_desc" ref_field="xrcacomp" map_field="xrcaent,xrcacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrcacomp_desc"/>
+      <column id="xrcald">
+        <after>
+          <reference field="xrcald_desc" ref_field="xrcald" map_field="xrcaent,xrcald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xrcald_desc"/>
+      <column id="xrcadocno">
+        <controlp form="q_xrcadocno" state="c"/>
+      </column>
+      <column id="xrcadocdt"/>
+      <column id="xrca001" def_scc="8302"/>
+      <column id="xrca004">
+        <after>
+          <reference field="xrca004_desc" ref_field="xrca004" map_field="xrcaent,xrca004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="xrca004_desc"/>
+      <column id="xrca057">
+        <after>
+          <reference field="xrca057_desc" ref_field="xrca057" map_field="xrca057" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_xrca057" state="c"/>
+      </column>
+      <column id="xrca057_desc"/>
+      <column id="xrca035">
+        <after>
+          <reference field="xrca035_desc" ref_field="xrca035" map_field="xrca035" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="xrca035_desc"/>
+      <column id="xrca038">
+        <controlp form="q_xrca038" state="c"/>
+      </column>
+      <column id="xrca014">
+        <after>
+          <reference field="xrca014_desc" ref_field="xrca014" map_field="xrca014" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrca014_desc"/>
+      <column id="xrca015">
+        <after>
+          <reference field="xrca015_desc" ref_field="xrca015" map_field="xrca015" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_1" state="c"/>
+      </column>
+      <column id="xrca015_desc"/>
+      <column id="xrca058">
+        <after>
+          <reference field="xrca058_desc" ref_field="xrca058" map_field="xrca058" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;295&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xrca058_desc"/>
+      <column id="xrca007">
+        <after>
+          <reference field="xrca007_desc" ref_field="xrca007" map_field="xrca007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;3111&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xrca007_desc"/>
+      <column id="xrca040"/>
+      <column id="xrcc100"/>
+      <column id="xrcc102"/>
+      <column id="xrccseq"/>
+      <column id="xrcc001"/>
+      <column id="xrcc003"/>
+      <column id="xrcc004"/>
+      <column id="xrcc009"/>
+      <column id="xrcc108"/>
+      <column id="xrcc109"/>
+      <column id="l_calc"/>
+      <column id="xrcc118"/>
+      <column id="xrcc119"/>
+      <column id="l_calc2"/>
+      <column id="xrca053">
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="xrca_t" page="1" linked="" pk="xrcald,xrcadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xrcastus,xrcasite,&apos;&apos;,xrcacomp,&apos;&apos;,xrcald,&apos;&apos;,xrcadocno,xrcadocdt,xrca001,xrca004,&apos;&apos;,xrca057,&apos;&apos;,xrca035,&apos;&apos;,xrca038,xrca014,&apos;&apos;,xrca015,&apos;&apos;,xrca058,&apos;&apos;,xrca007,&apos;&apos;,xrca040,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xrca053 FROM xrca_t WHERE xrcaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

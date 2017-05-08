@@ -1,0 +1,254 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrt350" module="asr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02587" crtdt="2014-04-04 10:32:09" modid="01258" moddt="2014-06-29 10:54:22" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="重覆性生產盤點分攤維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="srbasite,srbadocno,oobxl003(chr80),srbadocdt,srba001,srba002,srba003,srba003_desc(chr80),srba004,srba005,srba005_desc(chr80),srba006,srba006_desc(chr80),srbastus,srbaownid,srbaownid_desc(chr80),srbaowndp,srbaowndp_desc(chr80),srbacrtid,srbacrtid_desc(chr80),srbacrtdp,srbacrtdp_desc(chr80),srbacrtdt,srbamodid,srbamodid_desc(chr80),srbamoddt,srbacnfid,srbacnfid_desc(chr80),srbacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="srbbseq,srbb001,srbb001_desc(chr500),srbb001_desc_1(chr500),srbb002,srbb005,srbb006,srbb007,srbb007_desc(chr500),srbb008,srbb009,l_num(num20_6),l_num1(num20_6),srbb010,srbb010_desc(chr500),srbb011,srbb012,l_num2(num20_6),l_num3(num20_6),srbbsite,srbb003,srbb004"/>
+      <var id="body" page="2" record="s_detail3" page_id="3" value="srbcseq,srbcseq1,l_srbb001(chr500),l_srbb001_desc(chr500),l_srbb001_desc_1(chr500),l_srbb002(chr500),l_srbb005(chr30),l_srbb006(chr500),srbc001,srbc001_desc(chr500),srbc001_desc_1(chr500),srbc002,srbc003,srbc007,srbc004,srbc005,srbc006,srbcsite"/>
+      <var id="bs_field" value="srbadocno,srbadocdt,srba001,srba002,srba003,srba003_desc(chr80),srba004,srba005,srba005_desc(chr80),srba006,srba006_desc(chr80),srbasite" pk="srbadocno" order=""/>
+      <bs_reference field="srba003_desc" ref_field="srbasite,srba003" ref_sql="SELECT srza002 FROM srza_t WHERE srzaent=$varg_enterprise$var AND srzasite=? AND srza001=? "/>
+      <bs_reference field="srba005_desc" ref_field="srbasite,srba005" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+      <bs_reference field="srba006_desc" ref_field="srbasite,srba005,srba006" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="gen_ft"/>
+      <action id="query" type="standard"/>
+      <action id="gen_srbc"/>
+      <action id="gen_pd"/>
+    </section>
+  </structure>
+  <form id="0" module="asr" filename="asrt350" method="dialog">
+    <section id="input">
+      <input id="head" field="srbasite,srbadocno,srbadocdt,srba001,srba002,srba003,srba004,srba005,srba006,srbastus"/>
+      <input id="body" page="1" field="srbbseq,srbb001,srbb002,srbb005,srbb006,srbb007,srbb008,srbb009,l_num,l_num1,srbb010,srbb011,srbb012,l_num2,l_num3,srbbsite,srbb003,srbb004" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="srbcseq,srbcseq1,srbc001,srbc002,srbc003,srbc007,srbc004,srbc005,srbc006,srbcsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="srbasite,srbadocno,oobxl003,srbadocdt,srba001,srba002,srba003,srba004,srba005,srba006,srbastus,srbaownid,srbaowndp,srbacrtid,srbacrtdp,srbacrtdt,srbamodid,srbamoddt,srbacnfid,srbacnfdt"/>
+      <construct id="body" page="1" field="srbbseq,srbb001,srbb002,srbb005,srbb006,srbb007,srbb008,srbb009,srbb010,srbb011,srbb012,srbbsite,srbb003,srbb004"/>
+      <construct id="body" page="2" field="srbcseq,srbcseq1,srbc001,srbc002,srbc003,srbc007,srbc004,srbc005,srbc006,srbcsite"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="srbadocno"/>
+      <set id="head" type="no_entry" field="srbadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="srbasite"/>
+      <column id="srbadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_srbadocno" state="c"/>
+      </column>
+      <column id="oobxl003"/>
+      <column id="srbadocdt"/>
+      <column id="srba001"/>
+      <column id="srba002"/>
+      <column id="srba003">
+        <after>
+          <reference field="srba003_desc" ref_field="srbasite,srba003" map_field="srbasite,srba003" ref_sql="SELECT srza002 FROM srza_t WHERE srzaent=$varg_enterprise$var AND srzasite=? AND srza001=? "/>
+        </after>
+      </column>
+      <column id="srba003_desc"/>
+      <column id="srba004" def_scc="5401"/>
+      <column id="srba005">
+        <after>
+          <check chkid="v_inaa001_2" id="isExist"/>
+          <reference field="srba005_desc" ref_field="srbbsite,srba005" map_field="srbbsite,srba005" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_2" state="i"/>
+        <controlp form="q_inaa001_2" state="c"/>
+      </column>
+      <column id="srba005_desc"/>
+      <column id="srba006">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="srba006_desc" ref_field="srbbsite,srba005,srba006" map_field="srbbsite,srba005,srba006" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_3" state="i"/>
+        <controlp form="q_inab002_3" state="c"/>
+      </column>
+      <column id="srba006_desc"/>
+      <column id="srbastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="srbaownid">
+        <after>
+          <reference field="srbaownid_desc" ref_field="srba_t.srbaownid" map_field="srbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="srbaownid_desc"/>
+      <column id="srbaowndp">
+        <after>
+          <reference field="srbaowndp_desc" ref_field="srba_t.srbaowndp" map_field="srbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="srbaowndp_desc"/>
+      <column id="srbacrtid">
+        <after>
+          <reference field="srbacrtid_desc" ref_field="srba_t.srbacrtid" map_field="srbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="srbacrtid_desc"/>
+      <column id="srbacrtdp">
+        <after>
+          <reference field="srbacrtdp_desc" ref_field="srba_t.srbacrtdp" map_field="srbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="srbacrtdp_desc"/>
+      <column id="srbacrtdt"/>
+      <column id="srbamodid">
+        <after>
+          <reference field="srbamodid_desc" ref_field="srba_t.srbamodid" map_field="srbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="srbamodid_desc"/>
+      <column id="srbamoddt"/>
+      <column id="srbacnfid">
+        <after>
+          <reference field="srbacnfid_desc" ref_field="srba_t.srbacnfid" map_field="srbacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="srbacnfid_desc"/>
+      <column id="srbacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="srbbseq">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="srbb001">
+        <after>
+          <check chkid="v_imaf001_7" id="isExist"/>
+          <reference field="srbb001_desc" ref_field="srbb_t.srbb001" map_field="srbbent,srbb001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="srbb001_desc"/>
+      <column id="srbb001_desc_1"/>
+      <column id="srbb002"/>
+      <column id="srbb005">
+        <controlp form="q_inag006" state="i"/>
+        <controlp form="q_inag006" state="c"/>
+      </column>
+      <column id="srbb006"/>
+      <column id="srbb007">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="srbb007_desc" ref_field="srbb_t.srbb007" map_field="srbbent,srbb007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="srbb007_desc"/>
+      <column id="srbb008"/>
+      <column id="srbb009">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="l_num"/>
+      <column id="l_num1"/>
+      <column id="srbb010">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="srbb010_desc" ref_field="srbb_t.srbb010" map_field="srbbent,srbb010" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="srbb010_desc"/>
+      <column id="srbb011"/>
+      <column id="srbb012">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="l_num2"/>
+      <column id="l_num3"/>
+      <column id="srbbsite"/>
+      <column id="srbb003"/>
+      <column id="srbb004"/>
+    </init>
+    <init id="body" page="2">
+      <column id="srbcseq">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="srbcseq1">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="l_srbb001">
+        <after>
+          <reference field="l_srbb001_desc" ref_field="l_srbb001" map_field="srbbent,srbb001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="l_srbb001_desc"/>
+      <column id="l_srbb001_desc_1"/>
+      <column id="l_srbb002"/>
+      <column id="l_srbb005">
+        <controlp form="q_inag006" state="c"/>
+      </column>
+      <column id="l_srbb006"/>
+      <column id="srbc001">
+        <after>
+          <reference field="srbc001_desc" ref_field="srbc_t.srbc001" map_field="srbcent,srbc001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="srbc001_desc"/>
+      <column id="srbc001_desc_1"/>
+      <column id="srbc002">
+        <controlp form="q_bmaa002" state="i"/>
+        <controlp form="q_bmaa002" state="c"/>
+      </column>
+      <column id="srbc003"/>
+      <column id="srbc007" type="S" default="0"/>
+      <column id="srbc004"/>
+      <column id="srbc005"/>
+      <column id="srbc006"/>
+      <column id="srbcsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="srba_t" pk="srbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT srbasite,srbadocno,&apos;&apos;,srbadocdt,srba001,srba002,srba003,&apos;&apos;,srba004,srba005,&apos;&apos;,srba006,&apos;&apos;,srbastus,srbaownid,&apos;&apos;,srbaowndp,&apos;&apos;,srbacrtid,&apos;&apos;,srbacrtdp,&apos;&apos;,srbacrtdt,srbamodid,&apos;&apos;,srbamoddt,srbacnfid,&apos;&apos;,srbacnfdt FROM srba_t WHERE srbaent= ? AND srbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT srbasite,srbadocno,&apos;&apos;,srbadocdt,srba001,srba002,srba003,&apos;&apos;,srba004,srba005,&apos;&apos;,srba006,&apos;&apos;,srbastus,srbaownid,&apos;&apos;,srbaowndp,&apos;&apos;,srbacrtid,&apos;&apos;,srbacrtdp,&apos;&apos;,srbacrtdt,srbamodid,&apos;&apos;,srbamoddt,srbacnfid,&apos;&apos;,srbacnfdt FROM srba_t" order="srbadocno"/>
+    </head>
+    <body id="srbb_t" page="1" linked="" pk="srbbseq" fk="srbbdocno">
+      <sql id="forupd_sql_detail" query="SELECT srbbseq,srbb001,&apos;&apos;,&apos;&apos;,srbb002,srbb005,srbb006,srbb007,&apos;&apos;,srbb008,srbb009,&apos;&apos;,&apos;&apos;,srbb010,&apos;&apos;,srbb011,srbb012,&apos;&apos;,&apos;&apos;,srbbsite,srbb003,srbb004 FROM srbb_t WHERE srbbent=? AND srbbdocno=? AND srbbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT srbbseq,srbb001,&apos;&apos;,&apos;&apos;,srbb002,srbb005,srbb006,srbb007,&apos;&apos;,srbb008,srbb009,&apos;&apos;,&apos;&apos;,srbb010,&apos;&apos;,srbb011,srbb012,&apos;&apos;,&apos;&apos;,srbbsite,srbb003,srbb004 FROM srbb_t WHERE srbbent=? AND srbbdocno=?"/>
+    </body>
+    <body id="srbc_t" page="2" linked="" pk="srbcseq,srbcseq1" fk="srbcdocno">
+      <sql id="forupd_sql_detail" query="SELECT srbcseq,srbcseq1,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,srbc001,&apos;&apos;,&apos;&apos;,srbc002,srbc003,srbc007,srbc004,srbc005,srbc006,srbcsite FROM srbc_t WHERE srbcent=? AND srbcdocno=? AND srbcseq=? AND srbcseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT srbcseq,srbcseq1,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,srbc001,&apos;&apos;,&apos;&apos;,srbc002,srbc003,srbc007,srbc004,srbc005,srbc006,srbcsite FROM srbc_t WHERE srbcent=? AND srbcdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

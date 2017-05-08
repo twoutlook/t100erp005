@@ -1,0 +1,566 @@
+#+ 程式版本......: Version..: T100-ERP-1.00.00
+#
+#+ 程式代碼......: adzp063
+#+ 設計人員......: cch
+#+ 功能名稱說明...: 程式與規格刪除工具
+#+ 修改歷程......: 2015/07/17 by madey : 調整錯誤訊息adz-00425,拆成多筆
+#                  2015/08/19 by Hiko  : 刪除後不要關閉程式.
+#                  2015/09/01 by Hiko  : 增加第6個選項:退回前一版
+#                  2015/09/18 by madey : 1.支持god mode
+#                                        2.帳號topsd不可操作此功能
+#                  2015/11/03 by madey : 修復:tiptop (god mode)可將標準程式退回上一版
+#                  2015/11/24 by Hiko  : 標準環境下要檢查程式清單是否已經出貨(開窗清單直接剃除已經出貨的程式代號),保留god mode.
+#                  2015/11/26 by Hiko  : god mode要綁訂有效期限,以免失去god mode的意義.
+#                  20160128 by Hiko  : 解決Scroll bar無法捲動的問題, 調整DISPLAY ARRAY的位置.
+#                  20160330 160330-00030 by madey :1.執行前若該程式被簽出，提示一下
+#                                                  2.bug:原本無法挑到hard code qry,修正q_adzp063_e的sql條件加上dzca_t
+#                  20160330 160407-00009 by madey :行業卡控(行業平台不能動標準程式，標準平台不能動行業程式)
+#                  20160728 160728-00031 by madey :行業程式退回上一版時關注dzaq_t
+
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+
+SCHEMA ds
+
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS
+   DEFINE g_god_mode            BOOLEAN #20150918 add
+   DEFINE gb_dzlm_t             BOOLEAN #160330-00030
+   DEFINE g_topind              STRING  #所屬平台         #160728-00031
+   DEFINE gb_ind                BOOLEAN #是否處於行業平台 #160728-00031
+END GLOBALS
+
+&include "../4gl/sadzp200_type.inc"
+&include "../4gl/sadzp000_type.inc"
+
+PRIVATE TYPE type_g_detail RECORD           #單身資料
+                     dzaf002   LIKE dzaf_t.dzaf002,
+                     dzaf003   LIKE dzaf_t.dzaf003,
+                     dzaf004   LIKE dzaf_t.dzaf004,
+                     dzaf005   LIKE dzaf_t.dzaf005,
+                     dzaf006   LIKE dzaf_t.dzaf006,
+                     dzaf010   LIKE dzaf_t.dzaf010
+                  END RECORD
+
+DEFINE g_sql        STRING                   #將此程式對應的版次資料呈現在畫面上(dzaf_t)的SQL
+DEFINE g_dgenv      LIKE dzaf_t.dzaf010      #環境變數DGENV (s:標準/ c:客
+DEFINE g_parameter  STRING                   #執行模式: 1.清除規格異常資料 / 2.清除程式異常資料 / 3.刪除程式(重新r.a) / 4.客製退回標準 / 5.還原客製合併 / 6.退回前一版
+DEFINE g_final_idx  INTEGER 
+DEFINE g_gzza001    VARCHAR(50)              #程式代號
+DEFINE g_dzaf DYNAMIC ARRAY OF type_g_detail #單身
+#DEFINE g_topind     STRING                   #所屬平台         #160407-00009 #160728-00031 mark
+#DEFINE gb_ind       BOOLEAN                  #是否處於行業平台 #160407-00009 #160728-00031 mark
+
+MAIN
+   #Begin:modify by Hiko
+   DEFINE lw_window   ui.Window,
+          lf_form     ui.Form,
+          ls_cfg_path STRING,
+          ls_4st_path STRING,
+          ls_img_path STRING
+   DEFINE ls_msg     STRING
+
+    OPTIONS FIELD ORDER FORM, INPUT WRAP    
+
+    LET g_parameter = ARG_VAL(2) CLIPPED
+    LET g_gzza001 = ARG_VAL(3)   CLIPPED
+
+    CALL cl_tool_init()
+
+    #20150918 -Begin-
+    IF UPSHIFT(g_parameter) = "DEBUG" THEN
+       #Begin:2015/11/26 by Hiko:整段god model判斷從adzp063_init()移到這邊處理.
+       IF NOT sadzp007_util_chk_eff_date(g_gzza001 CLIPPED) THEN #在DEBUG模式下,g_gzza001此時應該是傳遞生效的日期參數.
+          RETURN
+       END IF
+       #End:2015/11/26 by Hiko
+       
+       LET g_god_mode= TRUE
+       DISPLAY "God Mode:ON"
+    ELSE
+       LET g_god_mode= FALSE
+    END IF
+    #20150918 -End-
+
+    #開啟畫面
+    OPEN WINDOW w_adzp063 WITH FORM cl_ap_formpath("adz",g_code)
+
+    CLOSE WINDOW screen
+
+    CALL adzp063_init()
+
+    #Begin:modify by Hiko
+    CALL cl_ui_wintitle(1) #工具抬頭名稱
+    
+    CALL cl_load_4ad_interface(NULL)
+    
+    LET lw_window = ui.Window.getCurrent()
+    LET ls_img_path = os.Path.join(os.Path.join(FGL_GETENV("RES"), "img"), "ui")
+    CALL lw_window.setImage(os.Path.join(os.Path.join(ls_img_path, "logo"), "dsc_logo.ico"))
+
+    LET ls_cfg_path = os.Path.join(FGL_GETENV("ERP"), "cfg")
+    LET ls_4st_path = os.Path.join(os.Path.join(os.Path.join(ls_cfg_path, "4st"), g_lang), "designer.4st")
+    CALL ui.Interface.loadStyles(ls_4st_path)
+    #End
+
+    CALL adzp063_ui_dialog() 
+    
+    #畫面關閉
+    CLOSE WINDOW w_adzp063 
+    
+END MAIN
+
+################################################################################
+# Descriptions...: 初始化所有變數
+# Memo...........:
+# Usage..........: CALL adzp063_init()
+################################################################################
+PRIVATE FUNCTION adzp063_init()
+   #Begin:2015/11/27 by Hiko
+   DEFINE ls_eff_date_key STRING,
+          ls_eff_date_str STRING
+   #End:2015/11/27 by Hiko
+
+   IF cl_null(g_parameter) THEN
+      LET g_parameter = "1"
+   END IF
+   LET g_dgenv = FGL_GETENV("DGENV") CLIPPED   #環境變數DGENV (s:標準/ c:客製)
+   #Begin: 160407-00009
+   IF cl_null(g_dgenv) THEN LET g_dgenv = "s" END IF
+   LET g_topind = FGL_GETENV("TOPIND") CLIPPED   #環境變數TOPIND
+   IF cl_null(g_topind) THEN LET g_topind = "sd" END IF
+   LET gb_ind = sadzp060_ind_check_area() #是否處於行業平台
+   #End: 160407-00009
+
+   
+   # 將此程式對應的版次資料呈現在畫面上(dzaf_t)
+   LET g_sql = "SELECT dzaf002,dzaf003,dzaf004,dzaf005,dzaf006,dzaf010 ",
+               "  FROM dzaf_t ",
+               " WHERE dzaf001=? ",
+               "   AND dzaf005<>'T'",
+               " ORDER BY dzaf010 DESC,dzaf002 ASC"
+   DECLARE adzp063_read_dazf_sel_cur CURSOR FROM g_sql    
+
+
+END FUNCTION
+
+PRIVATE FUNCTION adzp063_ui_dialog()
+DEFINE ls_msg           STRING
+DEFINE l_chk            BOOLEAN                   #檢查是否存在
+DEFINE l_index          INTEGER                   #index
+DEFINE ls_ind_condition STRING                    #行業過濾sql #160407-00009
+
+    #顯示說明 NOTE: 因為訊息內容超出現行azzi920欄位限制長度，所以要拆成多項
+    CALL cl_getmsg('adz-00424', g_lang) RETURNING ls_msg
+
+    LET ls_msg = ls_msg,"\n", cl_getmsg('adz-00425', g_lang)
+    LET ls_msg = ls_msg,"\n", cl_getmsg('adz-00659', g_lang)
+    LET ls_msg = ls_msg,"\n", cl_getmsg('adz-00660', g_lang)
+    LET ls_msg = ls_msg,"\n", cl_getmsg('adz-00661', g_lang)
+
+    LET ls_msg = ls_msg,"\n", cl_getmsg('adz-00426', g_lang)
+    LET ls_msg = ls_msg,"\n", cl_getmsg('adz-00433', g_lang)
+    LET ls_msg = ls_msg,"\n", cl_getmsg('adz-00697', g_lang) #2015/09/01 by Hiko
+
+    # 如果是傳參數啟動，直接填資料
+    IF NOT g_god_mode AND NOT cl_null(g_gzza001) AND NOT cl_null(g_parameter) THEN #2015/11/26 by Hiko:非god model才跑進來.
+        DISPLAY g_parameter TO cbo_options
+        CALL adzp063_display()
+        
+        CALL adzp063_fill_array()
+        
+        #顯示單身
+        DISPLAY ARRAY g_dzaf TO s_detail1.*
+            BEFORE DISPLAY
+                CALL cl_set_act_visible("delete", TRUE)
+                CALL cl_set_act_visible("accept,cancel", FALSE)
+
+                #顯示訊息
+                DISPLAY ls_msg TO lbl_memo
+                
+            ON ACTION delete
+               CALL adzp063_delete()
+               #刪除結束自動關閉畫面.
+               EXIT DISPLAY
+
+            #離開程式
+            ON ACTION CLOSE
+                EXIT DISPLAY
+                
+        END DISPLAY
+    ELSE    
+        WHILE TRUE
+            DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM) #20160128 by Hiko
+            
+                INPUT g_parameter,g_gzza001 FROM cbo_options, gzza_t.gzza001
+                    
+                    ON CHANGE cbo_options
+                        DISPLAY "g_parameter=",g_parameter
+
+                    ON ACTION controlp
+                        LET g_qryparam.state = "i"
+                        LET g_qryparam.reqry = TRUE  #預查詢
+                        LET g_qryparam.default1 = ""
+                        LET g_qryparam.default2 = ""
+                        LET g_qryparam.arg1 = ""
+                        LET g_qryparam.arg2 = ""
+                        #Begin: 160407-00009 
+                        LET g_qryparam.where = ""
+                        LET ls_ind_condition = ""
+                        IF g_god_mode OR g_dgenv = "c" THEN 
+                           #god mode 或客戶環境，不需要卡控
+                           #do nothing
+                        ELSE
+                           IF gb_ind THEN
+                              #行業平台; 不能抓到不屬於該行業的資料
+                              LET ls_ind_condition = 
+                                "(",
+                                    "(EXISTS (SELECT 1 FROM gzzb_t WHERE gzzb001=dzaf001 AND gzzb002 ='",g_topind,"'))"," OR ",
+                                    "(EXISTS (SELECT 1 FROM dzca_t WHERE dzca001=dzaf001 AND dzca007='",g_topind,"'))",
+                                ")"
+                           ELSE 
+                              #非行業平台: 不能抓到行業的資料
+                              LET ls_ind_condition = 
+                                "(NOT EXISTS (SELECT 1 FROM gzzb_t WHERE gzzb001=dzaf001 AND gzzb002 <>'",g_topind,"'))"," AND ",
+                                "(NOT EXISTS (SELECT 1 FROM dzca_t WHERE dzca001=dzaf001 AND dzca007 <>'",g_topind,"'))"
+                           END IF
+                        END IF
+                        #End: 160407-00009
+                                       
+
+                        CASE g_parameter
+                            WHEN "1"
+                                #CALL q_adzp063_b()
+                                LET g_qryparam.where = g_qryparam.where,ls_ind_condition #160407-00009
+                                CALL q_adzp063_a() #2015/09/01 by Hiko
+
+                            WHEN "2"
+                                #CALL q_adzp063_b()
+                                LET g_qryparam.where = g_qryparam.where,ls_ind_condition #160407-00009
+                                CALL q_adzp063_a() #2015/09/01 by Hiko
+                                
+                            WHEN "3"
+                                #不分環境甚麼都可以刪除,但會提醒 #2014/12/15 by Hiko
+                                #Begin:2015/11/24 by Hiko
+                                #CALL q_adzp063_a()
+                                LET g_qryparam.where = g_qryparam.where,ls_ind_condition #160407-00009
+                                IF g_god_mode THEN 
+                                   CALL q_adzp063_a()
+                                ELSE
+                                   IF g_dgenv='s' THEN
+                                      CALL q_adzp063_e() #排除已經出貨的程式清單.
+                                   ELSE
+                                      CALL q_adzp063_a()
+                                   END IF
+                                END IF
+                                #End:2015/11/24 by Hiko
+                                
+                            WHEN "4"
+                                CALL q_adzp063_c()
+
+                            WHEN "5"
+                                CALL q_adzp063_d()
+
+                            WHEN "6" #退回前一版:標準環境只能退標準,客製環境只能退客製.
+                                LET g_qryparam.where = g_qryparam.where,ls_ind_condition #160407-00009
+                                CALL q_adzp063_a()
+
+                            OTHERWISE
+                               EXIT DIALOG
+                        END CASE
+
+                        LET g_gzza001 = g_qryparam.return1
+                        CALL adzp063_display()
+                        CALL adzp063_fill_array()
+                        CALL cl_set_act_visible("delete", NOT cl_null(g_gzza001))
+
+                        #Begin:20160128 by Hiko
+                        ##Begin:2015/09/01 by Hiko
+                        #DISPLAY ARRAY g_dzaf TO s_detail1.*
+                        #   BEFORE DISPLAY 
+                        #      EXIT DISPLAY
+                        #END DISPLAY
+                        ##End:2015/09/01 by Hiko
+                        #End:20160128 by Hiko
+                END INPUT
+
+                #Begin:20160128 by Hiko
+                DISPLAY ARRAY g_dzaf TO s_detail1.*
+                    BEFORE DISPLAY
+                        CALL cl_set_act_visible("delete", TRUE)
+                        CALL cl_set_act_visible("accept,cancel", FALSE)
+                
+                        #顯示訊息
+                        DISPLAY ls_msg TO lbl_memo
+                END DISPLAY
+                #End:20160128 by Hiko
+
+                ON ACTION delete
+                    IF NOT cl_null(g_gzza001) THEN
+                       CALL adzp063_delete()
+                    END IF
+                        
+                #離開程式
+                ON ACTION CLOSE
+                    LET g_action_choice="exit"
+                    EXIT DIALOG
+                        
+                BEFORE DIALOG                
+                    #訊息要重新顯示
+                    DISPLAY ls_msg TO lbl_memo
+            END DIALOG
+
+            IF g_action_choice = "exit" THEN
+                EXIT WHILE
+            END IF
+
+        END WHILE
+    END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 根據條件取得資料填充單身ARRAY，以備顯示
+# Memo...........:
+# Usage..........: CALL adzp063_fill_array()
+################################################################################
+PRIVATE FUNCTION adzp063_fill_array()
+DEFINE l_index          INTEGER      # 單身index
+
+    CALL g_dzaf.clear()
+    
+    OPEN adzp063_read_dazf_sel_cur USING g_gzza001
+    LET l_index = 0
+    FOREACH adzp063_read_dazf_sel_cur INTO g_dzaf[l_index+1].*
+        LET l_index = l_index + 1
+    END FOREACH
+    CALL g_dzaf.deleteElement(g_dzaf.getLength())
+    #刪除狀況1,2直接取得最後一筆dzaf_t資料
+    #刪除狀況3都可以
+    #刪除狀況4直接取得最後一筆dzaf_t資料(符合條件的話一定是客製識別)
+    LET g_final_idx = l_index
+
+    CLOSE adzp063_read_dazf_sel_cur
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 真正執行刪除資料
+# Memo...........:
+# Usage..........: CALL adzp063_delete()
+################################################################################
+PRIVATE FUNCTION adzp063_delete()
+   DEFINE lo_dzaf T_DZAF_T,
+          lb_return  BOOLEAN,
+          ls_err_msg STRING
+   DEFINE li_cnt SMALLINT #2015/08/03 by Hiko
+   #Begin:2015/09/01 by Hiko
+   DEFINE ls_err_code STRING,
+          ls_err_replace STRING,
+          lb_err_flag BOOLEAN
+   #End:2015/09/01 by Hiko
+   #Begin: 160330-00030
+   DEFINE lo_program_info DYNAMIC ARRAY OF T_PROGRAM_INFO,  #程式的動態陣列物件
+          lo_return       T_DZLM_T
+   DEFINE ls_type         STRING
+   #End: 160330-00030
+
+
+
+
+   #Begin: 160330-00030
+   #提示該程式已簽出中
+   LET gb_dzlm_t = FALSE
+   LET ls_type = sadzp060_2_chk_spec_type(g_gzza001)
+   LET lo_program_info[1].pi_NAME = g_gzza001
+   LET lo_program_info[1].pi_TYPE = ls_type
+   CALL sadzp200_alm_get_dzlm(lo_program_info[1].*,"ALL" ) RETURNING lo_return.* #此function會抓出簽出中資料,沒有的話就是null
+   IF NOT cl_null(lo_return.dzlm001) THEN
+      LET gb_dzlm_t = TRUE
+      #注意:此程式%1已簽出。(詳細簽出記錄可透過設計器的下載工具adzp050查看ALM資訊)
+      CALL cl_ask_pressanykey("adz-01002")
+     #INITIALIZE g_errparam TO NULL
+     #LET g_errparam.extend = ""
+     #LET g_errparam.type = 0
+     #LET g_errparam.code   = "adz-01002" 
+     #LET g_errparam.replace[1] = g_gzza001 
+     #LET g_errparam.popup  = TRUE
+     #CALL cl_err()
+   END IF 
+   #End: 160330-00030
+
+   #Begin:2015/09/01 by Hiko
+   LET ls_err_replace = ""
+   CASE 
+      WHEN g_parameter="1" OR g_parameter="2" OR g_parameter="3"
+         LET ls_err_code = "adz-00145"
+      WHEN g_parameter="4"
+         LET ls_err_code = "adz-00692" #再次確認是否要執行 4.客製退回標準?
+      WHEN g_parameter="5"
+         LET ls_err_code = "adz-00693" #再次確認是否要執行 5.還原客製合併?
+      WHEN g_parameter="6"
+         LET ls_err_code = "adz-00694" #再次確認建構版次是否要退回第%1版?
+         IF g_dzaf.getLength()>1 THEN #這邊只是訊息,後面才是檢查.
+            LET ls_err_replace = g_dzaf[g_final_idx-1].dzaf002
+            LET ls_err_replace = ls_err_replace.trim()
+         END IF
+   END CASE
+   #End:2015/09/01 by Hiko
+
+   IF cl_ask_confirm_parm(ls_err_code, ls_err_replace) THEN
+      DISPLAY g_parameter,g_gzza001    
+      DISPLAY "call sadzp063_1_del_design_data() start..."
+      LET lo_dzaf.dzaf001 = g_gzza001 CLIPPED
+      LET lo_dzaf.dzaf002 = g_dzaf[g_final_idx].dzaf002
+      LET lo_dzaf.dzaf003 = g_dzaf[g_final_idx].dzaf003
+      LET lo_dzaf.dzaf004 = g_dzaf[g_final_idx].dzaf004
+      LET lo_dzaf.dzaf005 = g_dzaf[g_final_idx].dzaf005 CLIPPED
+      LET lo_dzaf.dzaf006 = g_dzaf[g_final_idx].dzaf006 CLIPPED
+      LET lo_dzaf.dzaf010 = g_dzaf[g_final_idx].dzaf010 CLIPPED
+      DISPLAY "lo_dzaf.dzaf001=",lo_dzaf.dzaf001
+      DISPLAY "lo_dzaf.dzaf002=",lo_dzaf.dzaf002
+      DISPLAY "lo_dzaf.dzaf003=",lo_dzaf.dzaf003
+      DISPLAY "lo_dzaf.dzaf004=",lo_dzaf.dzaf004
+      DISPLAY "lo_dzaf.dzaf005=",lo_dzaf.dzaf005
+      DISPLAY "lo_dzaf.dzaf006=",lo_dzaf.dzaf006
+      DISPLAY "lo_dzaf.dzaf010=",lo_dzaf.dzaf010
+      
+      #Begin:2015/09/01 by Hiko
+      IF g_parameter="6" THEN #退回前一版.
+         IF g_dzaf.getLength()>1 THEN #至少有兩筆才可以做此功能
+            IF g_god_mode THEN #20151103
+               #do nothing
+            ELSE
+               IF g_dgenv='s' THEN #20150918 modify
+                  IF lo_dzaf.dzaf010="c" THEN
+                     LET lb_err_flag = TRUE
+                  END IF
+               ELSE
+                  IF g_dgenv='c' THEN
+                     IF lo_dzaf.dzaf010="s" THEN
+                        LET lb_err_flag = TRUE
+                     END IF
+                  END IF
+               END IF 
+               
+               IF lb_err_flag THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = "adz-00690" #標準環境只能退標準,客製環境只能退客製.
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  RETURN
+               END IF
+            END IF
+
+            #檢查是否為標準轉客製後的退回.
+            IF lo_dzaf.dzaf010="c" THEN #這個變數一定是最後一筆.
+               IF g_dzaf[g_final_idx-1].dzaf010 CLIPPED="s" THEN #前一筆.
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = "adz-00691" #請透過選項 4.客製退回標準 來滿足您的需求.
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  RETURN
+               END IF
+            END IF
+
+            #退回前一版就是刪除比前一版還要多的設計資料.
+            LET lo_dzaf.dzaf002 = g_dzaf[g_final_idx-1].dzaf002
+            LET lo_dzaf.dzaf003 = g_dzaf[g_final_idx-1].dzaf003
+            LET lo_dzaf.dzaf004 = g_dzaf[g_final_idx-1].dzaf004
+         ELSE
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = ""
+            LET g_errparam.code   = "adz-00695" #只剩下一個建構版次的資料,所以無法再往下退版.
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            RETURN #只有一筆或是沒有資料則不處理.
+         END IF
+      END IF
+      #End:2015/09/01 by Hiko
+
+      #刪除設計資料需要控卡tiptop權限
+      #IF g_parameter="3" OR g_parameter="4" OR g_parameter="5" OR g_parameter="6" THEN #2015/09/01 by Hiko:都卡權限就不用解釋了.
+       IF g_account = "topstd" THEN #20150918 add
+         #不讓topsd操作,因為dgenv會造成混淆
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = "adz-00602"
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         RETURN
+       ELSE
+         IF lo_dzaf.dzaf006<>"AIT" AND lo_dzaf.dzaf006<>"CIT" THEN 
+            IF g_god_mode THEN #20150918 add 
+               #do nothing #god mode不卡控帳號
+            ELSE
+               IF NOT g_account = "tiptop" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = "adz-00442"
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  RETURN
+               END IF
+            END IF
+         END IF
+      END IF
+      #END IF
+
+      CALL sadzp063_1_del_design_data(lo_dzaf.*, g_parameter) RETURNING lb_return,ls_err_msg
+      IF NOT lb_return THEN
+        DISPLAY ls_err_msg
+      END IF
+      DISPLAY "call sadzp063_1_del_design_data() finish!"
+
+      #Begin:2015/09/01 by Hiko:每次刪除後都要清空畫面
+      LET g_gzza001 = ""
+      DISPLAY g_gzza001 TO gzza_t.gzza001
+      CALL g_dzaf.clear()
+      DISPLAY ARRAY g_dzaf TO s_detail1.*
+         BEFORE DISPLAY 
+            EXIT DISPLAY
+      END DISPLAY
+      #End:2015/09/01 by Hiko
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 顯示單頭資料
+# Memo...........:
+# Usage..........: CALL adzp063_display()
+################################################################################
+PRIVATE FUNCTION adzp063_display()
+DEFINE l_gzal003        LIKE gzzal_t.gzzal003     #程式名稱多語言
+DEFINE l_gzzal003_sql   STRING                    #程式名稱多語言 SQL
+
+    DISPLAY g_gzza001 TO gzza_t.gzza001
+    #取得程式名稱
+    LET l_gzzal003_sql = "SELECT gzzal003 ",
+                        "FROM (( ",
+                        "	SELECT DISTINCT gzzal001 AS gzza001,gzzal003 ",
+                        "	FROM gzza_t ",
+                        "	LEFT JOIN gzzal_t ON gzzal001=gzza001  AND gzzal002=? AND gzzal003 IS NOT NULL) ",
+                        "	UNION ( ",
+                        "   SELECT DISTINCT gzdel001 AS gzza001,gzdel003 ",
+                        "     FROM gzde_t ",
+                        "	 LEFT JOIN gzdel_t ON gzdel001=gzde001 AND gzdel002=? AND gzdel003 IS NOT NULL) ",
+                        "	UNION ( ",
+                        "   SELECT DISTINCT gzdfl001 AS gzza001,gzdfl003 ",
+                        "     FROM gzdf_t ",
+                        "	 LEFT JOIN gzdfl_t ON gzdfl001=gzdf001 AND gzdfl002=? AND gzdfl003 IS NOT NULL) ",
+                        "   UNION ( ",
+                        "   SELECT DISTINCT gzjal001 AS gzza001,gzjal003 ",
+                        "     FROM gzja_t ",
+                        "	 LEFT JOIN gzjal_t ON gzjal001=gzja001 AND gzjal002=? AND gzjal003 IS NOT NULL",
+                        "	)) ",
+                        "where gzza001=? "
+    DISPLAY "l_gzzal003_sql=",l_gzzal003_sql
+    PREPARE adzp063_gzzal003 FROM l_gzzal003_sql
+    EXECUTE adzp063_gzzal003 USING g_lang,g_lang,g_lang,g_lang,g_gzza001 INTO l_gzal003
+    CLOSE adzp063_gzzal003
+    DISPLAY l_gzal003 TO gzzal_t.gzzal003
+    
+END FUNCTION
+

@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amri201" module="amr" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="07024" crtdt="2016-01-05 18:37:01" modid="07024" moddt="2016-01-08 09:15:04" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資源群組設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mrbi001,mrbi001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mrbi002,mrbi002_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mrbi002,mrbiownid,mrbiownid_desc(chr500),mrbiowndp,mrbiowndp_desc(chr500),mrbicrtid,mrbicrtid_desc(chr500),mrbicrtdp,mrbicrtdp_desc(chr500),mrbicrtdt,mrbimodid,mrbimodid_desc(chr500),mrbimoddt"/>
+      <var id="bs_field" value="mrbi001,mrbi001_desc(chr80)" pk="mrbi001" order=""/>
+      <bs_reference field="mrbi001_desc" ref_field="mrbi001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1103&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amr" filename="amri201" method="dialog">
+    <section id="input">
+      <input id="head" field="mrbi001"/>
+      <input id="body" page="1" field="mrbi002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mrbi001"/>
+      <construct id="body" page="1" field="mrbi002"/>
+      <construct id="body" page="2" field="mrbiownid,mrbiowndp,mrbicrtid,mrbicrtdp,mrbicrtdt,mrbimodid,mrbimoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mrbi001"/>
+      <set id="head" type="no_entry" field="mrbi001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mrbi001">
+        <after>
+          <reference field="mrbi001_desc" ref_field="mrbi001" map_field="mrbi001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1103&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mrbi001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mrbi002">
+        <after>
+          <reference field="mrbi002_desc" ref_field="mrbisite,mrbi002" map_field="mrbisite,mrbi002" ref_sql="SELECT mrba005 FROM mrba_t WHERE mrbaent=$varg_enterprise$var AND mrbasite=? AND mrba001=? "/>
+        </after>
+        <controlp form="q_mrba001_1" state="i"/>
+        <controlp form="q_mrba001_1" state="c"/>
+      </column>
+      <column id="mrbi002_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mrbiownid">
+        <after>
+          <reference field="mrbiownid_desc" ref_field="mrbi_t.mrbiownid" map_field="mrbiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrbiownid_desc"/>
+      <column id="mrbiowndp">
+        <after>
+          <reference field="mrbiowndp_desc" ref_field="mrbi_t.mrbiowndp" map_field="mrbiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mrbiowndp_desc"/>
+      <column id="mrbicrtid">
+        <after>
+          <reference field="mrbicrtid_desc" ref_field="mrbi_t.mrbicrtid" map_field="mrbicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrbicrtid_desc"/>
+      <column id="mrbicrtdp">
+        <after>
+          <reference field="mrbicrtdp_desc" ref_field="mrbi_t.mrbicrtdp" map_field="mrbicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mrbicrtdp_desc"/>
+      <column id="mrbicrtdt"/>
+      <column id="mrbimodid">
+        <after>
+          <reference field="mrbimodid_desc" ref_field="mrbi_t.mrbimodid" map_field="mrbimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrbimodid_desc"/>
+      <column id="mrbimoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mrbi_t" pk="mrbi001">
+      <sql id="forupd_sql" type="sql" query="SELECT mrbi001,&apos;&apos; FROM mrbi_t WHERE mrbient= ? AND mrbisite= ? AND mrbi001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mrbi001,&apos;&apos; FROM mrbi_t" order="mrbi001"/>
+    </head>
+    <body id="mrbi_t" page="1,2" linked="" pk="mrbi002" fk="mrbi001">
+      <sql id="forupd_sql_detail" query="SELECT mrbi002,&apos;&apos;,&apos;&apos;,mrbiownid,&apos;&apos;,mrbiowndp,&apos;&apos;,mrbicrtid,&apos;&apos;,mrbicrtdp,&apos;&apos;,mrbicrtdt,mrbimodid,&apos;&apos;,mrbimoddt FROM mrbi_t WHERE mrbient=? AND mrbisite=? AND mrbi001=? AND mrbi002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mrbi002,&apos;&apos;,&apos;&apos;,mrbiownid,&apos;&apos;,mrbiowndp,&apos;&apos;,mrbicrtid,&apos;&apos;,mrbicrtdp,&apos;&apos;,mrbicrtdt,mrbimodid,&apos;&apos;,mrbimoddt FROM mrbi_t WHERE mrbient= ? AND mrbisite= ? AND mrbi001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

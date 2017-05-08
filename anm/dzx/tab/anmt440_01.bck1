@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt440_01" module="anm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02599" crtdt="2014-06-06 16:40:46" modid="04152" moddt="2015-07-28 17:01:24" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="開票來源">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1_anmt440_01" page_id="1_anmt440_01" value="nmclseq,nmclorga,nmclorga_desc(chr200),nmcl001,nmcl002,nmcl003,nmcl003_desc(chr500),nmcl103,nmcl113,nmcl121,nmcl123,nmcl131,nmcl133"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_aapt420" prog="aapt420" parameter="nmcl001"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt440_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmclseq,nmclorga,nmclorga_desc,nmcl001,nmcl002,nmcl003,nmcl003_desc,nmcl103,nmcl113,nmcl121,nmcl123,nmcl131,nmcl133" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmclseq"/>
+      <column id="nmclorga">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmclorga_desc"/>
+      <column id="nmcl001">
+        <after>
+          <check chkid="v_apdadocno" id="isExist"/>
+        </after>
+        <controlp form="q_apceseq" state="i"/>
+        <controlp form="q_apdadocno" state="c"/>
+      </column>
+      <column id="nmcl002">
+        <after>
+          <check chkid="v_apceseq" id="isExist"/>
+        </after>
+      </column>
+      <column id="nmcl003">
+        <after/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="nmcl003_desc"/>
+      <column id="nmcl103"/>
+      <column id="nmcl113"/>
+      <column id="nmcl121"/>
+      <column id="nmcl123"/>
+      <column id="nmcl131"/>
+      <column id="nmcl133"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmcl_t" page="1" linked="" pk="nmclcomp,nmcldocno,nmclseq">
+      <sql id="forupd_sql_detail" query="SELECT nmclseq,nmclorga,&apos;&apos;,nmcl001,nmcl002,nmcl003,&apos;&apos;,nmcl103,nmcl113,nmcl121,nmcl123,nmcl131,nmcl133 FROM nmcl_t WHERE nmclent=? AND nmclcomp=? AND nmcldocno=? AND nmclseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmclseq,nmclorga,&apos;&apos;,nmcl001,nmcl002,nmcl003,&apos;&apos;,nmcl103,nmcl113,nmcl121,nmcl123,nmcl131,nmcl133 FROM nmcl_t WHERE nmclent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

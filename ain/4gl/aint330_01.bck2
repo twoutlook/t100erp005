@@ -1,0 +1,409 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aint330_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2015-08-14 14:23:00), PR版次:0001(2015-08-14 18:17:02)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000040
+#+ Filename...: aint330_01
+#+ Description: 產生QC單
+#+ Creator....: 01534(2015-08-14 14:18:35)
+#+ Modifier...: 01534 -SD/PR- 01534
+ 
+{</section>}
+ 
+{<section id="aint330_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util  #add by lixh 20150814
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_qcba_m        RECORD
+       qcbadocno LIKE qcba_t.qcbadocno, 
+   qcbadocno_desc LIKE type_t.chr80, 
+   qcbadocdt LIKE qcba_t.qcbadocdt
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_qcbadocdt_t         LIKE qcba_t.qcbadocdt
+#end add-point
+ 
+DEFINE g_qcba_m        type_g_qcba_m
+ 
+   DEFINE g_qcbadocno_t LIKE qcba_t.qcbadocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aint330_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aint330_01(--)
+   #add-point:input段變數傳入
+   p_indcdocno
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_indcdocno         LIKE indc_t.indcdocno
+   DEFINE l_site              LIKE indc_t.indcsite
+   DEFINE l_success           LIKE type_t.num5
+   DEFINE r_success           LIKE type_t.num5   
+   DEFINE l_ooef004           LIKE ooef_t.ooef004
+   DEFINE l_start_no          LIKE indc_t.indcdocno
+   DEFINE l_end_no            LIKE indc_t.indcdocno  
+   DEFINE l_str               STRING   
+   DEFINE   la_param   RECORD
+            prog       STRING,
+            actionid   STRING,
+            background LIKE type_t.chr1,
+            param      DYNAMIC ARRAY OF STRING
+            END RECORD
+   DEFINE   ls_js      STRING
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = FALSE
+   LET g_errshow = 1
+   IF cl_null(p_indcdocno) THEN
+      RETURN 
+   END IF
+   
+   IF NOT aint330_01_chk(p_indcdocno) THEN
+      RETURN
+   END IF       
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aint330_01 WITH FORM cl_ap_formpath("ain","aint330_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   SELECT indcsite INTO l_site FROM indc_t WHERE indcent = g_enterprise AND indcdocno = p_indcdocno
+   LET g_qcba_m.qcbadocdt = cl_get_today()
+   DISPLAY BY NAME g_qcba_m.qcbadocdt  
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_qcba_m.qcbadocno,g_qcba_m.qcbadocdt ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qcbadocno
+            
+            #add-point:AFTER FIELD qcbadocno name="input.a.qcbadocno"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_qcba_m.qcbadocno
+            CALL ap_ref_array2(g_ref_fields,"SELECT oobal004 FROM oobal_t WHERE oobalent='"||g_enterprise||"' AND oobal001=? AND oobal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_qcba_m.qcbadocno_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_qcba_m.qcbadocno_desc
+
+#            #應用 a05 樣板自動產生(Version:2)
+#            #確認資料無重複
+#            IF  NOT cl_null(g_qcba_m.qcbadocno) THEN 
+#               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_qcba_m.qcbadocno != g_qcbadocno_t )) THEN 
+#                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM qcba_t WHERE "||"qcbaent = '" ||g_enterprise|| "' AND "||"qcbadocno = '"||g_qcba_m.qcbadocno ||"'",'std-00004',0) THEN 
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF
+#            END IF
+
+            CALL s_aooi200_get_slip_desc(g_qcba_m.qcbadocno) RETURNING g_qcba_m.qcbadocno_desc
+            IF cl_null(g_qcba_m.qcbadocno) THEN
+               NEXT FIELD qcbadocno
+            END IF            
+            CALL s_aooi200_chk_slip(l_site,'',g_qcba_m.qcbadocno,'aqct300')
+                 RETURNING l_success
+            IF NOT l_success THEN
+               LET g_qcba_m.qcbadocno = g_qcbadocno_t
+               CALL s_aooi200_get_slip_desc(g_qcba_m.qcbadocno) RETURNING g_qcba_m.qcbadocno_desc
+               NEXT FIELD qcbadocno
+            END IF
+            CALL s_aooi200_get_slip_desc(g_qcba_m.qcbadocno) RETURNING g_qcba_m.qcbadocno_desc
+            LET g_qcbadocno_t = g_qcba_m.qcbadocno
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qcbadocno
+            #add-point:BEFORE FIELD qcbadocno name="input.b.qcbadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qcbadocno
+            #add-point:ON CHANGE qcbadocno name="input.g.qcbadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qcbadocdt
+            #add-point:BEFORE FIELD qcbadocdt name="input.b.qcbadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qcbadocdt
+            
+            #add-point:AFTER FIELD qcbadocdt name="input.a.qcbadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qcbadocdt
+            #add-point:ON CHANGE qcbadocdt name="input.g.qcbadocdt"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.qcbadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qcbadocno
+            #add-point:ON ACTION controlp INFIELD qcbadocno name="input.c.qcbadocno"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_qcba_m.qcbadocno             #給予default值
+            SELECT ooef004 INTO l_ooef004
+              FROM ooef_t
+             WHERE ooefent = g_enterprise
+               AND ooef001 = l_site
+
+            #給予arg
+            LET g_qryparam.arg1 = l_ooef004
+            LET g_qryparam.arg2 = "aqct300"
+
+            CALL q_ooba002_6()                                #呼叫開窗
+
+            LET g_qcba_m.qcbadocno = g_qryparam.return1              
+
+            DISPLAY g_qcba_m.qcbadocno TO qcbadocno              #
+
+            NEXT FIELD qcbadocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.qcbadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qcbadocdt
+            #add-point:ON ACTION controlp INFIELD qcbadocdt name="input.c.qcbadocdt"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            CALL s_aqct300_gen('7',p_indcdocno,0,g_qcba_m.qcbadocno,g_qcba_m.qcbadocdt)
+                 RETURNING l_success,l_str
+            IF l_success THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'ain-00399'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()   
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'ain-00400'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()               
+            END IF                    
+            DISPLAY "Start No:",l_start_no,"    End No:",l_end_no
+            
+            INITIALIZE la_param.* TO NULL
+            LET la_param.prog     = 'aqct300'
+            LET la_param.param[1] =  ''
+            LET la_param.param[2] = l_str
+            LET ls_js = util.JSON.stringify(la_param)
+            CALL cl_cmdrun(ls_js) 
+            
+            EXIT DIALOG 
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aint330_01 
+   
+   #add-point:input段after input 
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint330_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aint330_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aint330_01_chk(p_indcdocno)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aint330_01_chk(p_indcdocno)
+DEFINE  p_indcdocno      LIKE indc_t.indcdocno
+DEFINE  r_success         LIKE type_t.num5
+DEFINE  l_indd            RECORD LIKE indd_t.*
+DEFINE  l_qc_qty          LIKE indd_t.indd103
+DEFINE  l_flag            LIKE type_t.chr1
+
+   LET r_success = TRUE
+      
+   #3.检查是否全数FQC了
+   DECLARE aint330_01_chk CURSOR FOR
+    SELECT * FROM indd_t
+    WHERE inddent   = g_enterprise
+      AND indddocno = p_indcdocno
+
+   LET l_flag = 'N'      
+   FOREACH aint330_01_chk INTO l_indd.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach aint330_01_chk'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success         
+      END IF
+      
+      LET l_qc_qty = 0
+      
+      SELECT SUM(qcba017) INTO l_qc_qty FROM qcba_t
+       WHERE qcbaent  = g_enterprise
+         AND qcbasite = l_indd.inddsite
+         AND qcba001  = p_indcdocno
+         AND qcba002  = l_indd.inddseq
+         AND qcbastus <> 'X'         
+      IF cl_null(l_qc_qty) THEN LET l_qc_qty = 0 END IF
+      #检查是否还有剩余可FQC的量
+      IF l_qc_qty < l_indd.indd103 THEN
+         LET l_flag = 'Y'
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   IF l_flag = 'N' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'ain-00573'
+      LET g_errparam.extend = p_indcdocno
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF  
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

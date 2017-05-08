@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axmt500_02" std_prog="axmt500_02" erpver="1.0" ver="2" module="AXM" type="S" booking="Y" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xmdd_t" main="Y" head="N" pk="xmddent,xmdddocno,xmddseq,xmddseq1,xmddseq2" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="xmdr_t" main="N" head="N" pk="xmdrent,xmdrdocno,xmdrseq,xmdrseq1,xmdrseq2,xmdr001,xmdr002,xmdr003,xmdr004,xmdr005,xmdr006,xmdr007" fk_detail="" parent="xmdd_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護訂單備置明細
+標準作業功能取消：
+狀態功能：無
+作業類型：批處處理作業
+輸入模式：單檔多欄版型
+資料來源:xmdd_t
+         xmdr_t
+
+1.執行此程式需傳入1個參數，當此參數為ULL時則不可以執行
+  1-1.p_xmdadocno(訂單單號):
+2.依據傳入的訂單單號抓取訂單交期明細檔(xmdd_t)顯示在上面Table
+3.此作業下面Table則是單純顯示訂單備置明細檔(xmdr_t)資料
+4.此作業只可以維護上面Table的備置量、備置原因兩個欄位，不可以做新增刪除資料
+
+
+ 
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.此Table只顯示上面Table游標所指向訂單項次+項序+分批序所對應的xmdr_t資料
+]]>
+  </db_all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[●進入單身狀態: 
+  1.此Table只顯示訂單交期明細檔(xmdd_t)資料，並且只允許維護備置量與備置原因兩個欄位，而不
+    可以進行新增與刪除動作
+
+●修改狀態:
+  1.修改確認時若該訂單項次+項序+分批序是第一次維護備置量時，需產生對應的xmdr_t資料並且更新庫存備置統計量
+    1-1.若備置時只做軟備置(沒有只到備置哪一個庫儲批的庫存量)時，則只需產生一筆對應的xmdr_t資料，
+        產生的資料中庫存管理特徵、庫位、儲位、批號均為空白
+    1-2.若備置時是做硬備置時，則需依據axmt500_06維護回傳的資料產生多筆對應的xmdr_t資料
+    1-3.依據產生的xmdr_t資料呼叫'更新庫存備置量'應用元件更新存統計量，更新的備置量為(xmdr008-xmdr009)
+  2.修改確認時若該訂單項次+項序+分批序已經有對應的xmdr_t資料時，則需依據維護後的備置資料更新對應的xmdr_t
+    資料，且也需要重新更新庫存備置統計量
+    2-1.先將原本xmdr_t資料的其已沖銷備置量(xmdr009)=0的資料直接刪除
+    2-2.將剩下的xmdr_t資料的備置量(xmdr008)更新程已沖銷備置量(xmdr009)
+    2-3.依據新維護的備置資料新增xmdr_t或更新原有的xmdr_t資料
+    2-4.最後用最新的xmdr_t資料呼叫'更新庫存備置量'應用元件更新存統計量，更新的備置量為(xmdr008-xmdr009)
+  3.將畫面上維護的備置量與備置原因更新回對應的xmdd_t中
+]]>
+  </mi_all>
+  <field cite_std="N" name="imaal004" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd002_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd001" ver="1" src="s" column="xmdd001" table="xmdd_t" attribute="" type="" req="N" i_zoom="q_imaa001" c_zoom="q_imaa001" chk_ref="v_imaa001_5" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd002" ver="1" src="s" column="xmdd002" table="xmdd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd004" ver="1" src="s" column="xmdd004" table="xmdd_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd006" ver="1" src="s" column="xmdd006" table="xmdd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd014" ver="1" src="s" column="xmdd014" table="xmdd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd015" ver="1" src="s" column="xmdd015" table="xmdd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd032" ver="1" src="s" column="xmdd032" table="xmdd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[備置數量：
+   ●欄位控管： 預設值:0
+計算或處理:1.若料件的存貨備置策略(imaf058)設為'4:等候需求模式'時此欄位不可以維護
+                    2.當料件的存貨備置策略(imaf058)設為'3:硬備置'且當有修改備置量時
+                        應自動彈axmt500_06子作業維護要備置哪些庫存批的庫存量
+                    3.當有修改備置量時且原本已經存在對應的備置資料(xmdr_t)時，需先將現有的xmdr_t
+                      資料呼叫'更新庫存備置統計量'的應用元件將原本的備置量還原，還原的數量為(xmdr008-xmdr009)
+ ●開窗控管:
+     1.開axmt500_06維護庫存批備置資料
+     2.當料件的存貨備置策略是設'2:軟備置'時不可以進行開窗
+]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdd033" ver="1" src="s" column="xmdd033" table="xmdd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="307" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[備置原因：
+     計算或處理:1.當備置數量大於0時此欄位才可以維護
+
+
+]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmdddocno" ver="1" src="s" column="xmdddocno" table="xmdd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmddseq" ver="1" src="s" column="xmddseq" table="xmdd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmddseq1" ver="1" src="s" column="xmddseq1" table="xmdd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdd_t.xmddseq2" ver="1" src="s" column="xmddseq2" table="xmdd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr002_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr001" ver="1" src="s" column="xmdr001" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr002" ver="1" src="s" column="xmdr002" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr003" ver="1" src="s" column="xmdr003" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr004" ver="1" src="s" column="xmdr004" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr005" ver="1" src="s" column="xmdr005" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr006" ver="1" src="s" column="xmdr006" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr007" ver="1" src="s" column="xmdr007" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr008" ver="1" src="s" column="xmdr008" table="xmdr_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr009" ver="1" src="s" column="xmdr009" table="xmdr_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdrdocno" ver="1" src="s" column="xmdrdocno" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdrseq" ver="1" src="s" column="xmdrseq" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdrseq1" ver="1" src="s" column="xmdrseq1" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdrseq2" ver="1" src="s" column="xmdrseq2" table="xmdr_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xmdd001_desc" src="s" depend_field="xmdd_t.xmdd001" correspon_key="xmdd001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdd004_desc" src="s" depend_field="xmdd_t.xmdd004" correspon_key="xmdd004" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdd033_desc" src="s" depend_field="xmdd_t.xmdd033" correspon_key="&apos;307&apos;,xmdd033" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdr004_desc" src="s" depend_field="xmdr_t.xmdr004" correspon_key="xmdr004" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdr005_desc" src="s" depend_field="xmdr_t.xmdr005" correspon_key="xmdr004,xmdr005" ref_table="inab_t" ref_fk="inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdr007_desc" src="s" depend_field="xmdr_t.xmdr007" correspon_key="xmdr007" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="imaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="xmdd002_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdd033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmdddocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmddseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmddseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdd_t.xmddseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="xmdr002_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdrdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdrseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdrseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdrseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="bpage_1" text="訂單明細" lstr=""/>
+    <sfield name="lbl_xmdddocno" text="訂單單號" lstr=""/>
+    <sfield name="lbl_xmddseq" text="項次" lstr=""/>
+    <sfield name="lbl_xmddseq2" text="分批序" lstr=""/>
+    <sfield name="lbl_xmddseq1" text="項序" lstr=""/>
+    <sfield name="lbl_xmdd001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_xmdd002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_xmdd002_desc" text="特徵值說明" lstr=""/>
+    <sfield name="lbl_xmdd004" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_xmdd006" text="訂單量" lstr=""/>
+    <sfield name="lbl_xmdd014" text="已出貨量" lstr=""/>
+    <sfield name="lbl_xmdd015" text="已銷退量" lstr=""/>
+    <sfield name="lbl_xmdd032" text="備置量" lstr=""/>
+    <sfield name="lbl_xmdd033" text="備置原因" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="page_2.axmt500_02" text="庫存明細" lstr=""/>
+    <sfield name="lbl_xmdrdocno" text="訂單單號" lstr=""/>
+    <sfield name="lbl_xmdrseq" text="訂單項次" lstr=""/>
+    <sfield name="lbl_xmdrseq1" text="訂單項序" lstr=""/>
+    <sfield name="lbl_xmdrseq2" text="訂單分批序" lstr=""/>
+    <sfield name="lbl_xmdr001" text="料件編號" lstr=""/>
+    <sfield name="lbl_xmdr002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_xmdr002_desc" text="特徵值說明" lstr=""/>
+    <sfield name="lbl_xmdr004" text="庫位" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_xmdr005" text="儲位" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_xmdr003" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_xmdr006" text="批號" lstr=""/>
+    <sfield name="lbl_xmdr007" text="庫存單位" lstr=""/>
+    <sfield name="lbl_xmdr008" text="備置量" lstr=""/>
+    <sfield name="lbl_xmdr009" text="備置已沖銷量" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

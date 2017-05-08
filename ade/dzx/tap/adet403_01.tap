@@ -1,0 +1,750 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="adet403_01" std_prog="adet403_01" erpver="1.0" module="ADE" ver="1" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.adet403_01_b_fill" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 顯示符合的收銀繳款單資料
+# Memo...........: 單頭銀行存款單號為空，款別類型為現金(10)，小於存款單日期
+# Usage..........: CALL adet403_01_b_fill()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/07/01 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adet403_01_b_fill()
+DEFINE l_sql            STRING
+
+   LET l_sql = "SELECT 'N',deagdocdt ",
+               "  FROM deag_t,deaf_t ",
+               " WHERE deagent = deafent ",
+               "   AND deagdocno = deafdocno ",
+               "   AND deagent = ",g_enterprise,
+               "   AND deaf012 = '10' ",
+               "   AND deagsite = '",g_deaksite,"'",
+               "   AND deagdocdt <= '",g_deakdocdt,"'",
+               "   AND deag005 IS NULL ",
+               "   AND deagstus = 'Y' ",               
+               " GROUP BY deagdocdt ",
+               " ORDER BY deagdocdt "
+   DISPLAY 'adet403_01_b_fill = ' ,l_sql
+   PREPARE adet403_b_fill_pre FROM l_sql
+   DECLARE adet403_b_fill_cs CURSOR FOR adet403_b_fill_pre
+   LET l_ac = 1
+   FOREACH adet403_b_fill_cs
+      INTO g_deag_d[l_ac].sel,   g_deag_d[l_ac].deagdocdt
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "Foreach adet403_b_fill_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   CALL g_deag_d.deleteElement(g_deag_d.getLength())
+   LET g_rec_b = l_ac - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+END FUNCTION]]>
+  </point>
+  <point name="function.adet403_01_create_tmp" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 建立temp table
+# Memo...........:
+# Usage..........: CALL adet403_01_create_tmp()
+#                     RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success     True/False
+# Date & Author..: 2015/07/01 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adet403_01_create_tmp()
+DEFINE r_success        LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   CALL adet403_01_drop_tmp()
+   
+   CREATE TEMP TABLE adet403_01_tmp(
+      deagent   LIKE deag_t.deagent,   
+      deagsite  LIKE deag_t.deagsite,  
+      deagdocdt LIKE deag_t.deagdocdt
+   )
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Create Temp Table adet403_01_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.adet403_01_drop_tmp" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 刪除temp table
+# Memo...........:
+# Usage..........: CALL adet403_01_drop_tmp()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/07/01 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adet403_01_drop_tmp()
+    DROP TABLE adet403_01_tmp
+END FUNCTION]]>
+  </point>
+  <point name="function.adet403_01_upd_tmp" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 選取的資料先更新temp table
+# Memo...........:
+# Usage..........: CALL adet403_01_upd_tmp()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/07/01 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adet403_01_upd_tmp()
+DEFINE l_deagent      LIKE deag_t.deagent
+DEFINE l_deagsite     LIKE deag_t.deagsite
+DEFINE l_deagdocdt    LIKE deag_t.deagdocdt
+DEFINE l_i            LIKE type_t.num5
+   
+
+   
+   IF g_deag_d[l_ac].sel = 'Y' THEN
+      FOR l_i = 1 TO g_deag_d.getLength()
+         IF l_i <> l_ac THEN
+            LET g_deag_d[l_i].sel ='N'
+         END IF
+      END FOR      
+      
+      INSERT INTO adet403_01_tmp(deagent, deagsite, deagdocdt)
+         VALUES(g_enterprise, g_deaksite , g_deag_d[l_ac].deagdocdt)
+   #ELSE
+      DELETE FROM adet403_01_tmp
+       WHERE deagent   = g_enterprise
+         AND deagsite  = g_deaksite
+         AND deagdocdt != g_deag_d[l_ac].deagdocdt
+   ELSE
+      DELETE FROM adet403_01_tmp
+       WHERE deagent   = g_enterprise
+         AND deagsite  = g_deaksite
+         AND deagdocdt = g_deag_d[l_ac].deagdocdt
+   END IF
+   
+   SELECT deagent,deagsite,deagdocdt 
+     INTO l_deagent,l_deagsite,l_deagdocdt
+     FROM adet403_01_tmp
+    WHERE deagent   = g_enterprise
+      AND deagsite  = g_deaksite
+      AND deagdocdt = g_deag_d[l_ac].deagdocdt
+  DISPLAY "SQL:",l_deagent,"|",l_deagsite,"|",l_deagdocdt
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.adet403_01_gen_detail_pre" order="5" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 準備產生存款單單身所需要的SQL
+# Memo...........:
+# Usage..........: CALL adet403_01_gen_detail_pre()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/07/01 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adet403_01_gen_detail_pre()
+DEFINE l_sql     STRING
+
+   LET l_sql = "SELECT deagdocdt,deaf013,deaf012,deaf005,COALESCE(SUM(COALESCE(deaf006,0)),0) ",
+               "  FROM deag_t,deaf_t ",
+               " WHERE deagent = deafent ",
+               "   AND deagdocno = deafdocno ",               
+               "   AND deagent = ",g_enterprise,
+               "   AND deaf012 = '10' ",
+               "   AND deagsite = '",g_deaksite,"'",
+               "   AND deagdocdt <= '",g_deakdocdt,"'",
+               "   AND deag005 IS NULL ", 
+               "   AND deagstus = 'Y' ",
+               "   AND deagdocdt IN (SELECT deagdocdt FROM adet403_01_tmp) ",
+               #"   AND EXISTS(SELECT 1 FROM adet403_01_tmp t0 ",
+               #"               WHERE deagent = t0.deagent ",
+               #"                 AND deagsite = t0.deagsite ",
+               #"                 AND deagdocdt = t0.deagdocdt) ",
+               " GROUP BY deagdocdt,deaf013,deaf012,deaf005 ",
+               " ORDER BY deagdocdt,deaf013,deaf012,deaf005 "
+   PREPARE adet403_01_sel_pre FROM l_sql
+   DECLARE adet403_01_sel_cs CURSOR FOR adet403_01_sel_pre
+   
+   #項次
+   LET l_sql = "SELECT COALESCE(MAX(dealseq),0)+1",
+               "  FROM deal_t",
+               " WHERE dealent = ",g_enterprise,
+               "   AND dealdocno = '",g_deakdocno,"'"
+   PREPARE adet403_01_dealseq FROM l_sql
+END FUNCTION]]>
+  </point>
+  <point name="function.adet403_01_gen_detail" order="6" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 建立temp table
+# Memo...........:
+# Usage..........: CALL adet403_01_create_tmp()
+#                     RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success     True/False
+# Date & Author..: 2015/07/01 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adet403_01_gen_detail()
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_i              LIKE type_t.num5
+DEFINE l_deaf           RECORD
+       deagdocdt        LIKE deag_t.deagdocdt,   #單據日期
+       deaf013          LIKE deaf_t.deaf013,     #幣別
+       deaf012          LIKE deaf_t.deaf012,     #款別分類
+       deaf005          LIKE deaf_t.deaf005,     #款別編號
+       deaf006          LIKE deaf_t.deaf006      #總繳金額
+                        END RECORD
+                     
+DEFINE l_deal        RECORD
+      dealent          LIKE deal_t.dealent,
+      dealsite         LIKE deal_t.dealsite,
+      dealunit         LIKE deal_t.dealunit,
+      dealdocno        LIKE deal_t.dealdocno,
+      dealseq          LIKE deal_t.dealseq,
+      deal001          LIKE deal_t.deal001,
+      deal002          LIKE deal_t.deal002,
+      deal003          LIKE deal_t.deal003,
+      deal004          LIKE deal_t.deal004,
+      deal005          LIKE deal_t.deal005,
+      deal006          LIKE deal_t.deal006,
+      deal007          LIKE deal_t.deal007,
+      deal008          LIKE deal_t.deal008,
+      deal009          LIKE deal_t.deal009,            
+      deal010          LIKE deal_t.deal010,
+      deal011          LIKE deal_t.deal011,
+      deal012          LIKE deal_t.deal012
+                   END RECORD
+DEFINE l_deal007       LIKE deal_t.deal007
+DEFINE l_deal011       LIKE deal_t.deal011
+DEFINE l_dealdocno     LIKE deal_t.dealdocno
+
+   LET l_success = TRUE
+   
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   
+   CALL adet403_01_gen_detail_pre()
+   
+   FOREACH adet403_01_sel_cs
+      INTO l_deaf.deagdocdt, l_deaf.deaf013, l_deaf.deaf012, l_deaf.deaf005,
+           l_deaf.deaf006
+           
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "Foreach adet403_01_sel_cs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF     
+      
+      CALL adet403_01_deal_chk(g_deakdocno,l_deaf.deagdocdt) RETURNING l_success,l_dealdocno
+      IF NOT l_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "ade-00132"
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = l_deaf.deagdocdt
+         LET g_errparam.replace[2] = l_dealdocno
+         CALL cl_err()
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF     
+      
+      #取已存在存款單且未確認的存款金額+轉備用金
+       SELECT COALESCE(SUM(COALESCE(deal007,0)),0) ,COALESCE(SUM(COALESCE(deal011,0)),0) INTO l_deal007,l_deal011
+         FROM deak_t,deal_t 
+        WHERE deakent = dealent 
+          AND deakdocno = dealdocno             
+          AND deakent = g_enterprise
+          AND deaksite = g_deaksite
+          AND deal001 = l_deaf.deagdocdt 
+          #AND deal004 = l_deaf.deaf013
+          AND deal005 = l_deaf.deaf012
+          AND deal006 = l_deaf.deaf005
+          AND deakstus = 'N'     
+      
+      LET l_deal.dealent   = g_enterprise       #企業編號
+      LET l_deal.dealsite   = g_deaksite
+      LET l_deal.dealunit   = g_deakunit      
+      LET l_deal.dealdocno  = g_deakdocno        
+      EXECUTE adet403_01_dealseq INTO l_deal.dealseq  #項次
+      LET l_deal.deal001  = l_deaf.deagdocdt       
+      LET l_deal.deal002  = ''       
+      LET l_deal.deal003  = ''       
+      LET l_deal.deal004  = l_deaf.deaf013       
+      LET l_deal.deal005  = l_deaf.deaf012
+      LET l_deal.deal006  = l_deaf.deaf005     
+      LET l_deal.deal007  = l_deaf.deaf006 -(l_deal007 + l_deal011)
+      LET l_deal.deal008  = ''       
+      LET l_deal.deal009  = ''                   
+      LET l_deal.deal010  = ''       
+      LET l_deal.deal011  = ''
+      LET l_deal.deal012  = g_deak001      
+     
+      IF l_deal.deal007 > 0 THEN
+         INSERT INTO deal_t(dealent,  dealsite, dealunit, dealdocno, dealseq,
+                            deal001,  deal002,  deal003,  deal004,   deal005,
+                            deal006,  deal007,  deal008,  deal009,   deal010,
+                            deal011,  deal012)
+                VALUES(l_deal.dealent,  l_deal.dealsite, l_deal.dealunit, l_deal.dealdocno, l_deal.dealseq,
+                       l_deal.deal001,  l_deal.deal002,  l_deal.deal003,  l_deal.deal004,   l_deal.deal005,
+                       l_deal.deal006,  l_deal.deal007,  l_deal.deal008,  l_deal.deal009,   l_deal.deal010,
+                       l_deal.deal011,  l_deal.deal012)   
+         
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "Ins deal_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+            EXIT FOREACH
+         END IF
+      END IF
+      INITIALIZE l_deaf.* TO NULL
+      INITIALIZE l_deal.* TO NULL
+   END FOREACH
+   
+   IF l_success THEN
+      CALL s_transaction_end('Y',0)
+   ELSE
+      CALL s_transaction_end('N',0)
+   END IF
+   CALL cl_err_collect_show()
+END FUNCTION]]>
+  </point>
+  <point name="function.adet403_01_deal_chk" order="7" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢查營業日期是否有存在其他未確認時單據
+# Memo...........:
+# Usage..........: CALL adet403_01_deal_chk(p_deakdocno,p_deal001)
+#                  RETURNING r_success
+# Input parameter: p_deakdocno    存款單號
+#                : p_deal001      營業日期
+# Return code....: r_success      TURE/FALSE
+#                : r_dealdocno    存款單號
+# Date & Author..: 2015/07/04 By Ken #150630-00007#1
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adet403_01_deal_chk(p_deakdocno,p_deal001)
+DEFINE p_deakdocno             LIKE deak_t.deakdocno
+DEFINE p_deal001               LIKE deal_t.deal001
+DEFINE l_cnt                   LIKE type_t.num5
+DEFINE l_dealdocno             LIKE deal_t.dealdocno
+DEFINE r_success               LIKE type_t.num5
+DEFINE r_dealdocno             LIKE deal_t.dealdocno
+
+   LET l_dealdocno = ''
+   LET r_success = TRUE
+   LET r_dealdocno = ''
+   
+   SELECT DISTINCT dealdocno INTO l_dealdocno
+     FROM deak_t,deal_t
+    WHERE deakent = dealent
+      AND deakdocno = dealdocno
+      AND deakent = g_enterprise
+      AND deakstus = 'N'
+      AND deakdocno != p_deakdocno
+      AND deal001 = p_deal001
+      
+   IF NOT cl_null(l_dealdocno) THEN
+      LET r_success = FALSE
+      LET r_dealdocno = l_dealdocno
+   END IF
+   
+   RETURN r_success,r_dealdocno
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_deaksite            LIKE deak_t.deaksite      #營運組織
+DEFINE g_deakdocdt           LIKE deak_t.deakdocdt     #單據日期
+DEFINE g_deakdocno           LIKE deak_t.deakdocno     #單據編號
+DEFINE g_deakunit            LIKE deak_t.deakunit      #應用組織
+DEFINE g_deak001             LIKE deak_t.deak001       #銀行編號]]>
+  </point>
+  <point name="input.a.page1.deagdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_deag_d[g_detail_idx].deagdocno IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_deag_d[g_detail_idx].deagdocno != g_deag_d_t.deagdocno)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM deag_t WHERE "||"deagent = '" ||g_enterprise|| "' AND "||"deagdocno = '"||g_deag_d[g_detail_idx].deagdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL adet403_01_b_fill()
+            
+         BEFORE ROW
+            LET l_ac = ARR_CURR()
+            LET g_deag_d_t.* = g_deag_d[l_ac].*
+            DISPLAY l_ac TO FORMONLY.idx            ]]>
+  </point>
+  <point name="input.c.page1.deagdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_deag_d[l_ac].deagdocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_deag_d[l_ac].deagdocno = g_qryparam.return1              
+
+            DISPLAY g_deag_d[l_ac].deagdocno TO deagdocno              #
+
+            NEXT FIELD deagdocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_deaksite      LIKE deak_t.deaksite
+   DEFINE p_deakdocdt     LIKE deak_t.deakdocdt
+   DEFINE p_deakdocno     LIKE deak_t.deakdocno
+   DEFINE p_deakunit      LIKE deak_t.deakunit
+   DEFINE p_deak001       LIKE deak_t.deak001]]>
+  </point>
+  <point name="input.g.page1.sel" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL adet403_01_upd_tmp()           ]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_deaksite,
+   p_deakdocdt,
+   p_deakdocno,
+   p_deakunit,
+   p_deak001]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF INT_FLAG = FALSE THEN
+      CALL adet403_01_gen_detail()
+   END IF
+   LET INT_FLAG = FALSE]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   WHENEVER ERROR CONTINUE
+   IF NOT adet403_01_create_tmp() THEN
+      RETURN
+   END IF
+   LET g_deaksite = p_deaksite    #營業組織
+   LET g_deakdocdt = p_deakdocdt  #單據日期
+   LET g_deakdocno = p_deakdocno  #單據編號
+   LET g_deakunit = p_deakunit    #
+   LET g_deak001 = p_deak001      #銀行編號]]>
+  </point>
+  <section id="adet403_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000011
+#+ 
+#+ Filename...: adet403_01
+#+ Description: 營業款銀行存繳維護子程式
+#+ Creator....: 06137(2015-07-01 11:22:22)
+#+ Modifier...: 06137(2015-07-02 18:23:58) -SD/PR-
+]]>
+  </section>
+  <section id="adet403_01.global" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 c02b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_deag_d        RECORD
+       sel LIKE type_t.chr500, 
+   deagdocno LIKE deag_t.deagdocno, 
+   deagdocdt LIKE deag_t.deagdocdt
+       END RECORD
+ 
+ 
+DEFINE g_deag_d          DYNAMIC ARRAY OF type_g_deag_d
+DEFINE g_deag_d_t        type_g_deag_d
+ 
+ 
+DEFINE g_deagdocno_t   LIKE deag_t.deagdocno    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point    
+]]>
+  </section>
+  <section id="adet403_01.input" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION adet403_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_adet403_01 WITH FORM cl_ap_formpath("ade","adet403_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_deag_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sel
+            #add-point:BEFORE FIELD sel
+            {<point name="input.b.page1.sel" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sel
+            
+            #add-point:AFTER FIELD sel
+            {<point name="input.a.page1.sel" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sel
+            #add-point:ON CHANGE sel
+            {<point name="input.g.page1.sel" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD deagdocno
+            #add-point:BEFORE FIELD deagdocno
+            {<point name="input.b.page1.deagdocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD deagdocno
+            
+            #add-point:AFTER FIELD deagdocno
+            {<point name="input.a.page1.deagdocno" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE deagdocno
+            #add-point:ON CHANGE deagdocno
+            {<point name="input.g.page1.deagdocno" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD deagdocdt
+            #add-point:BEFORE FIELD deagdocdt
+            {<point name="input.b.page1.deagdocdt" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD deagdocdt
+            
+            #add-point:AFTER FIELD deagdocdt
+            {<point name="input.a.page1.deagdocdt" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE deagdocdt
+            #add-point:ON CHANGE deagdocdt
+            {<point name="input.g.page1.deagdocdt" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.sel
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sel
+            #add-point:ON ACTION controlp INFIELD sel
+            {<point name="input.c.page1.sel" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.deagdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD deagdocno
+            #add-point:ON ACTION controlp INFIELD deagdocno
+            {<point name="input.c.page1.deagdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.deagdocdt
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD deagdocdt
+            #add-point:ON ACTION controlp INFIELD deagdocdt
+            {<point name="input.c.page1.deagdocdt" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_adet403_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adet403_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="adet403_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

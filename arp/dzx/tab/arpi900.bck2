@@ -1,0 +1,164 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arpi900" module="arp" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01856" crtdt="2016-02-18 16:09:45" modid="01856" moddt="2016-02-18 16:09:45" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="APP整體基本資料設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rpzz001,rpzz004,rpzzl003,rpzz005,rpzz003,rpzz006,rpzz002,rpzzstus,rpzzownid,rpzzownid_desc(chr80),rpzzowndp,rpzzowndp_desc(chr80),rpzzcrtid,rpzzcrtid_desc(chr80),rpzzcrtdp,rpzzcrtdp_desc(chr80),rpzzcrtdt,rpzzmodid,rpzzmodid_desc(chr80),rpzzmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rpde002,rpdel004,rpde004,rpde003,rpdestus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rpde002,rpdeownid,rpdeownid_desc(chr500),rpdeowndp,rpdeowndp_desc(chr500),rpdecrtid,rpdecrtid_desc(chr500),rpdecrtdp,rpdecrtdp_desc(chr500),rpdecrtdt,rpdemodid,rpdemodid_desc(chr500),rpdemoddt"/>
+      <var id="bs_field" value="rpzz001,rpzz001_desc(chr80),rpzz005,rpzz005_desc(chr80)" pk="rpzz001" order=""/>
+      <bs_reference field="rpzz001_desc" ref_field="rpzz001" ref_sql="SELECT rpzzl003 FROM rpzzl_t WHERE rpzzl001=? AND rpzzl002=$varg_dlang$var"/>
+      <bs_reference field="rpzz005_desc" ref_field="rpzz005" ref_sql="SELECT gzoi002 FROM gzoi_t WHERE gzoi001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="arp" filename="arpi900" method="dialog">
+    <section id="input">
+      <input id="head" field="rpzz001,rpzz004,rpzzl003,rpzz005,rpzz003,rpzz006,rpzz002,rpzzstus"/>
+      <input id="body" page="1" field="rpde002,rpdel004,rpde004,rpde003,rpdestus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rpzz001,rpzz004,rpzzl003,rpzz005,rpzz003,rpzz006,rpzz002,rpzzstus,rpzzownid,rpzzowndp,rpzzcrtid,rpzzcrtdp,rpzzcrtdt,rpzzmodid,rpzzmoddt"/>
+      <construct id="body" page="1" field="rpde002,rpdel004,rpde004,rpde003,rpdestus"/>
+      <construct id="body" page="2" field="rpdeownid,rpdeowndp,rpdecrtid,rpdecrtdp,rpdecrtdt,rpdemodid,rpdemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rpzz001"/>
+      <set id="head" type="no_entry" field="rpzz001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rpzz001">
+        <controlp form="q_rpzz001" state="c"/>
+      </column>
+      <column id="rpzz004"/>
+      <column id="rpzzl003"/>
+      <column id="rpzz005" type="S" default="sd"/>
+      <column id="rpzz003"/>
+      <column id="rpzz006" type="S" default="2" def_scc="217"/>
+      <column id="rpzz002"/>
+      <column id="rpzzstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="rpzzownid">
+        <after>
+          <reference field="rpzzownid_desc" ref_field="rpzz_t.rpzzownid" map_field="rpzzownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rpzzownid_desc"/>
+      <column id="rpzzowndp">
+        <after>
+          <reference field="rpzzowndp_desc" ref_field="rpzz_t.rpzzowndp" map_field="rpzzowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rpzzowndp_desc"/>
+      <column id="rpzzcrtid">
+        <after>
+          <reference field="rpzzcrtid_desc" ref_field="rpzz_t.rpzzcrtid" map_field="rpzzcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rpzzcrtid_desc"/>
+      <column id="rpzzcrtdp">
+        <after>
+          <reference field="rpzzcrtdp_desc" ref_field="rpzz_t.rpzzcrtdp" map_field="rpzzcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rpzzcrtdp_desc"/>
+      <column id="rpzzcrtdt"/>
+      <column id="rpzzmodid">
+        <after>
+          <reference field="rpzzmodid_desc" ref_field="rpzz_t.rpzzmodid" map_field="rpzzmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rpzzmodid_desc"/>
+      <column id="rpzzmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rpde002"/>
+      <column id="rpdel004"/>
+      <column id="rpde004"/>
+      <column id="rpde003"/>
+      <column id="rpdestus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="rpdeownid">
+        <after>
+          <reference field="rpdeownid_desc" ref_field="rpde_t.rpdeownid" map_field="rpdeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rpdeownid_desc"/>
+      <column id="rpdeowndp">
+        <after>
+          <reference field="rpdeowndp_desc" ref_field="rpde_t.rpdeowndp" map_field="rpdeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rpdeowndp_desc"/>
+      <column id="rpdecrtid">
+        <after>
+          <reference field="rpdecrtid_desc" ref_field="rpde_t.rpdecrtid" map_field="rpdecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rpdecrtid_desc"/>
+      <column id="rpdecrtdp">
+        <after>
+          <reference field="rpdecrtdp_desc" ref_field="rpde_t.rpdecrtdp" map_field="rpdecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rpdecrtdp_desc"/>
+      <column id="rpdecrtdt"/>
+      <column id="rpdemodid">
+        <after>
+          <reference field="rpdemodid_desc" ref_field="rpde_t.rpdemodid" map_field="rpdemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rpdemodid_desc"/>
+      <column id="rpdemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rpzz_t" pk="rpzz001">
+      <sql id="forupd_sql" type="sql" query="SELECT rpzz001,rpzz004,&apos;&apos;,rpzz005,rpzz003,rpzz006,rpzz002,rpzzstus,rpzzownid,&apos;&apos;,rpzzowndp,&apos;&apos;,rpzzcrtid,&apos;&apos;,rpzzcrtdp,&apos;&apos;,rpzzcrtdt,rpzzmodid,&apos;&apos;,rpzzmoddt FROM rpzz_t WHERE rpzz001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rpzz001,rpzz004,&apos;&apos;,rpzz005,rpzz003,rpzz006,rpzz002,rpzzstus,rpzzownid,&apos;&apos;,rpzzowndp,&apos;&apos;,rpzzcrtid,&apos;&apos;,rpzzcrtdp,&apos;&apos;,rpzzcrtdt,rpzzmodid,&apos;&apos;,rpzzmoddt FROM rpzz_t" order="rpzz001"/>
+      <sql id="append" type="lang" target="rpzzl_t.rpzzl003" table="rpzzl_t" fk="rpzz001" pk="rpzzl001,rpzzl002" field="rpzzl003"/>
+    </head>
+    <body id="rpde_t" page="1,2" linked="" pk="rpde002" fk="rpde001">
+      <sql id="forupd_sql_detail" query="SELECT rpde002,&apos;&apos;,rpde004,rpde003,rpdestus,&apos;&apos;,rpdeownid,&apos;&apos;,rpdeowndp,&apos;&apos;,rpdecrtid,&apos;&apos;,rpdecrtdp,&apos;&apos;,rpdecrtdt,rpdemodid,&apos;&apos;,rpdemoddt FROM rpde_t WHERE rpde001=? AND rpde002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rpde002,&apos;&apos;,rpde004,rpde003,rpdestus,&apos;&apos;,rpdeownid,&apos;&apos;,rpdeowndp,&apos;&apos;,rpdecrtid,&apos;&apos;,rpdecrtdp,&apos;&apos;,rpdecrtdt,rpdemodid,&apos;&apos;,rpdemoddt FROM rpde_t WHERE rpde001=?"/>
+      <sql id="detail_append" type="lang" target="rpdel_t.rpdel004" table="rpdel_t" fk="rpzz001,rpde002" pk="rpdel001,rpdel002,rpdel003" field="rpdel004"/>
+    </body>
+  </dataset>
+</assembly>
+

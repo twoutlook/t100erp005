@@ -1,0 +1,171 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti500" module="art" jobmode="N" type="t02" industry="std" fix_arg="0" crtid="06189" crtdt="2015-06-16 11:51:39" modid="06540" moddt="2016-04-14 10:19:18" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="4" tabver="10001" description="標價籤模板設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtdystus,rtdy001,rtdyl003,rtdy002,rtdy003,rtdy004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtdy001,rtdyownid,rtdyownid_desc(chr500),rtdyowndp,rtdyowndp_desc(chr500),rtdycrtid,rtdycrtid_desc(chr500),rtdycrtdp,rtdycrtdp_desc(chr500),rtdycrtdt,rtdymodid,rtdymodid_desc(chr500),rtdymoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="rtdzstus(chr10),rtdz001(chr10),rtdz002(chr10),rtdz002_desc(chr500)"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="rtdz001_1(chr10),rtdz002_1(chr10),rtdzownid(chr20),rtdzownid_desc(chr500),rtdzowndp(chr10),rtdzowndp_desc(chr500),rtdzcrtid(chr20),rtdzcrtid_desc(chr500),rtdzcrtdp(chr10),rtdzcrtdp_desc(chr500),rtdzcrtdt(dat),rtdzmodid(chr20),rtdzmodid_desc(chr500),rtdzmoddt(dat)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="get_date"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="3">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="4">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti500" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtdystus,rtdy001,rtdyl003,rtdy002,rtdy003,rtdy004" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="rtdzstus,rtdz001,rtdz002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="rtdystus,rtdy001,rtdyl003,rtdy002,rtdy003,rtdy004"/>
+      <construct id="body" page="2" field="rtdyownid,rtdyowndp,rtdycrtid,rtdycrtdp,rtdycrtdt,rtdymodid,rtdymoddt"/>
+      <construct id="body" page="3" field="rtdzstus,rtdz001,rtdz002"/>
+      <construct id="body" page="4" field="rtdz001_1,rtdz002_1,rtdzownid,rtdzowndp,rtdzcrtid,rtdzcrtdp,rtdzcrtdt,rtdzmodid,rtdzmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtdystus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="rtdy001"/>
+      <column id="rtdyl003"/>
+      <column id="rtdy002"/>
+      <column id="rtdy003"/>
+      <column id="rtdy004"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtdyownid">
+        <after>
+          <reference field="rtdyownid_desc" ref_field="rtdy_t.rtdyownid" map_field="rtdyownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdyownid_desc"/>
+      <column id="rtdyowndp">
+        <after>
+          <reference field="rtdyowndp_desc" ref_field="rtdy_t.rtdyowndp" map_field="rtdyowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdyowndp_desc"/>
+      <column id="rtdycrtid">
+        <after>
+          <reference field="rtdycrtid_desc" ref_field="rtdy_t.rtdycrtid" map_field="rtdycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdycrtid_desc"/>
+      <column id="rtdycrtdp">
+        <after>
+          <reference field="rtdycrtdp_desc" ref_field="rtdy_t.rtdycrtdp" map_field="rtdycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdycrtdp_desc"/>
+      <column id="rtdycrtdt"/>
+      <column id="rtdymodid">
+        <after>
+          <reference field="rtdymodid_desc" ref_field="rtdy_t.rtdymodid" map_field="rtdymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdymodid_desc"/>
+      <column id="rtdymoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="rtdzstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="rtdz001"/>
+      <column id="rtdz002">
+        <after>
+          <check chkid="v_ooef001_11" id="isExist"/>
+          <reference field="rtdz002_desc" ref_field="rtdz002" map_field="rtdz002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtdz002_desc"/>
+    </init>
+    <init id="body" page="4">
+      <column id="rtdz001_1"/>
+      <column id="rtdz002_1"/>
+      <column id="rtdzownid">
+        <after>
+          <reference field="rtdzownid_desc" ref_field="rtdzownid" map_field="rtdzownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdzownid_desc"/>
+      <column id="rtdzowndp">
+        <after>
+          <reference field="rtdzowndp_desc" ref_field="rtdzowndp" map_field="rtdzowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdzowndp_desc"/>
+      <column id="rtdzcrtid">
+        <after>
+          <reference field="rtdzcrtid_desc" ref_field="rtdzcrtid" map_field="rtdzcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdzcrtid_desc"/>
+      <column id="rtdzcrtdp">
+        <after>
+          <reference field="rtdzcrtdp_desc" ref_field="rtdzcrtdp" map_field="rtdzcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdzcrtdp_desc"/>
+      <column id="rtdzcrtdt"/>
+      <column id="rtdzmodid">
+        <after>
+          <reference field="rtdzmodid_desc" ref_field="rtdzmodid" map_field="rtdzmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdzmodid_desc"/>
+      <column id="rtdzmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtdy_t" page="1,2" linked="" pk="rtdy001">
+      <sql id="forupd_sql_detail" query="SELECT rtdystus,rtdy001,&apos;&apos;,rtdy002,rtdy003,rtdy004,&apos;&apos;,rtdyownid,&apos;&apos;,rtdyowndp,&apos;&apos;,rtdycrtid,&apos;&apos;,rtdycrtdp,&apos;&apos;,rtdycrtdt,rtdymodid,&apos;&apos;,rtdymoddt FROM rtdy_t WHERE rtdyent=? AND rtdy001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtdystus,rtdy001,&apos;&apos;,rtdy002,rtdy003,rtdy004,&apos;&apos;,rtdyownid,&apos;&apos;,rtdyowndp,&apos;&apos;,rtdycrtid,&apos;&apos;,rtdycrtdp,&apos;&apos;,rtdycrtdt,rtdymodid,&apos;&apos;,rtdymoddt FROM rtdy_t WHERE rtdyent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="rtdyl_t.rtdyl003" table="rtdyl_t" fk="rtdy001" pk="rtdyl001,rtdyl002" field="rtdyl003"/>
+    </body>
+    <body id="rtdz_t" page="3,4" linked="" pk="rtdz002" fk="rtdz001" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtdz_t WHERE rtdzent=? AND rtdz001=? AND rtdz002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtdz_t WHERE rtdzent=? AND rtdz001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

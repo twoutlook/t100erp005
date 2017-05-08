@@ -1,0 +1,313 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aimi150_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2013-10-09 15:38:14), PR版次:0005(2016-07-28 15:28:35)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000203
+#+ Filename...: aimi150_02
+#+ Description: 料件批次產生
+#+ Creator....: 01258(2013-08-16 10:39:58)
+#+ Modifier...: 02482 -SD/PR- 06948
+ 
+{</section>}
+ 
+{<section id="aimi150_02.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+#160121-00009#1    2016/1/21 By lixiang #aimi150_02_ins() 1.merge的语法错误请调整 2.imdastus==>imdbstus
+#160728-00013#1    2016/07/28 By 06948    增加以企業據點ENT為SQL條件
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aimi150_02.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aimi150_02.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+PRIVATE type type_g_ooef_m        RECORD
+       ooef001 LIKE ooef_t.ooef001, 
+       imaa001 LIKE type_t.chr80, 
+       imdb003 LIKE type_t.chr80, 
+       imdb004 LIKE imdb_t.imdb004,
+       imdb005 LIKE imdb_t.imdb005
+       END RECORD
+DEFINE g_ooef_m        type_g_ooef_m
+DEFINE g_ooef001_t     LIKE ooef_t.ooef001    #Key值備份
+DEFINE l_wc            STRING
+DEFINE l_wc1           STRING
+DEFINE l_success       LIKE type_t.chr1
+DEFINE l_sql           STRING
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aimi150_02.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="aimi150_02.other_function" readonly="Y" >}
+#填充臨時表資料
+PRIVATE FUNCTION aimi150_02_ins_tmp()
+   
+   LET l_sql = "INSERT INTO imdb_tmp(imdbent,imdb001,imdb002)",
+               "SELECT imdbent,imdb001,imdb002 ",
+               "  FROM imdb_t ",
+               "  WHERE imdbent = '",g_enterprise,"' "
+   PREPARE ins_imdb_tmp_pre FROM l_sql
+   EXECUTE ins_imdb_tmp_pre
+   IF SQLCA.sqlcode THEN
+      LET l_success = 'N'
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aim-00102'
+      LET g_errparam.extend = 'ins imdb_tmp:'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+   
+END FUNCTION
+#整批新增
+PRIVATE FUNCTION aimi150_02_ins()
+DEFINE l_time          LIKE imdb_t.imdbcrtdt
+DEFINE l_imdb001       LIKE imdb_t.imdb001
+DEFINE l_imdb002       LIKE imdb_t.imdb002
+DEFINE l_imaal003      LIKE imaal_t.imaal003
+DEFINE l_imaal004      LIKE imaal_t.imaal004
+DEFINE g_show_msg      DYNAMIC ARRAY OF RECORD    #程式變數(Program Variables)
+       imdb001         LIKE imdb_t.imdb001,   #營運據點
+       imdb002         LIKE imdb_t.imdb002,   #料件編號
+       imaal003        LIKE imaal_t.imaal003, #品名
+       imaal004        LIKE imaal_t.imaal004, #規格
+       imdb004         LIKE imdb_t.imdb004,   #補給策略
+       imdb005         LIKE imdb_t.imdb005,   #BOM引入
+       imdb003         LIKE imdb_t.imdb003    #引入方式
+                       END RECORD
+DEFINE l_msg           STRING
+DEFINE l_msg2          STRING
+DEFINE ls_gaq03        STRING
+DEFINE g_i             LIKE type_t.num10                      
+                       
+                       
+   LET l_success = 'Y' 
+   CALL s_transaction_begin()
+   CALL aimi150_02_ins_tmp()
+   
+   LET l_time = cl_get_current()  
+   LET l_sql = "  MERGE INTO imdb_t",
+               "  USING(SELECT DISTINCT ooef001,imaa001,ooefent  ",
+               "          FROM ooef_t,imaa_t ",
+               "         WHERE imaa001 IS NOT NULL AND imaaent = ",g_enterprise," AND ooefent = ",g_enterprise," ",
+               "           AND ",l_wc CLIPPED, " AND ", l_wc1 CLIPPED,")",
+               "     ON(ooefent = imdbent AND ooef001 = imdb001 AND imaa001 = imdb002 AND imdbent = ",g_enterprise,") ",
+               "   WHEN MATCHED THEN ", #160121-00009#1 add
+               #" UPDATE SET imdastus='Y' , imdb003='",g_ooef_m.imdb003,"' , imdb004='",g_ooef_m.imdb004,"',imdb005='",g_ooef_m.imdb005,"',", #160121-00009#1 mark #imdastus==>imdbstus
+               " UPDATE SET imdbstus='Y' , imdb003='",g_ooef_m.imdb003,"' , imdb004='",g_ooef_m.imdb004,"',imdb005='",g_ooef_m.imdb005,"',", #160121-00009#1 add
+               " imdbmodid='",g_user,"',imdbmoddt=TIMESTAMP '",l_time,"' ",
+               "   WHEN NOT MATCHED THEN ",
+               " INSERT(imdbent,imdb001,imdb002,imdbstus,imdb003,imdb004,imdb005,imdbownid,imdbowndp,imdbcrtid,imdbcrtdt,imdbcrtdp,imdbmodid,imdbmoddt)",
+               " VALUES('",g_enterprise,"',ooef001,imaa001,'Y','",g_ooef_m.imdb003,"','",g_ooef_m.imdb004,"','",g_ooef_m.imdb005,"','",g_user,"','",g_dept,"','",g_user,"',TIMESTAMP '",l_time,"','",g_dept,"','",g_user,"',TIMESTAMP '",l_time,"')"
+   PREPARE ins_imdb_pre FROM l_sql
+   EXECUTE ins_imdb_pre
+   IF SQLCA.sqlcode THEN
+      LET l_success = 'N'
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aim-00102'
+      LET g_errparam.extend = 'ins imdb_t:'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+
+   LET g_i = 1
+   LET l_sql = "SELECT DISTINCT imdb001,imdb002 ",
+               "  FROM imdb_t a ",
+               " WHERE NOT EXISTS (SELECT 1 FROM imdb_tmp b ",
+               "                    WHERE a.imdbent = b.imdbent ",
+               "                      AND a.imdb001 = b.imdb001 ",
+               "                      AND a.imdb002 = b.imdb002 )"
+              ,"   AND a.imdbent = '",g_enterprise,"' "    #160728-00013#1 add
+   PREPARE aimi150_02_sel_pre FROM l_sql
+   DECLARE aimi150_02_sel_cs CURSOR FOR aimi150_02_sel_pre
+   FOREACH aimi150_02_sel_cs INTO l_imdb001,l_imdb002
+      LET g_show_msg[g_i].imdb001=l_imdb001
+      LET g_show_msg[g_i].imdb002=l_imdb002
+      SELECT imaal003,imaal004 INTO l_imaal003,l_imaal004
+        FROM imaal_t
+       WHERE imaal001 = l_imdb002
+         AND imaal002 = g_dlang
+         AND imaalent = g_enterprise
+      LET g_show_msg[g_i].imaal003=l_imaal003
+      LET g_show_msg[g_i].imaal004=l_imaal004
+      LET g_show_msg[g_i].imdb003=g_ooef_m.imdb003
+      LET g_show_msg[g_i].imdb004=g_ooef_m.imdb004
+      LET g_show_msg[g_i].imdb005=g_ooef_m.imdb005
+      LET g_i = g_i + 1
+   END FOREACH
+   
+   IF l_success = 'N' THEN
+      CALL s_transaction_end('N','0')
+   ELSE
+      LET ls_gaq03 = cl_get_feldname("imdb001",g_dlang)
+      LET l_msg2 = ls_gaq03 CLIPPED
+      
+      LET ls_gaq03 = cl_get_feldname("imdb002",g_dlang)
+      LET l_msg2 = l_msg2.trim(),"|",ls_gaq03 CLIPPED
+      
+      LET ls_gaq03 = cl_get_feldname("imaal003",g_dlang)
+      LET l_msg2 = l_msg2.trim(),"|",ls_gaq03 CLIPPED
+      
+      LET ls_gaq03 = cl_get_feldname("imaal004",g_dlang)
+      LET l_msg2 = l_msg2.trim(),"|",ls_gaq03 CLIPPED
+      
+      LET ls_gaq03 = cl_get_feldname("imdb004",g_dlang)
+      LET l_msg2 = l_msg2.trim(),"|",ls_gaq03 CLIPPED
+      
+      LET ls_gaq03 = cl_get_feldname("imdb005",g_dlang)
+      LET l_msg2 = l_msg2.trim(),"|",ls_gaq03 CLIPPED
+      
+      LET ls_gaq03 = cl_get_feldname("imdb003",g_dlang)
+      LET l_msg2 = l_msg2.trim(),"|",ls_gaq03 CLIPPED
+      
+      LET l_msg = cl_getmsg("aim-00122",g_lang)
+      CALL cl_show_array(base.TypeInfo.create(g_show_msg),l_msg,l_msg2)
+   
+      CALL s_transaction_end('Y','0')
+   END IF
+END FUNCTION
+#+ 資料輸入
+PUBLIC FUNCTION aimi150_02()
+   
+    WHENEVER ERROR CALL cl_err_msg_log
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aimi150_02 WITH FORM cl_ap_formpath("aim","aimi150_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   CLEAR FORM
+   CALL cl_set_combo_scc("imdb003",1102)
+   CALL cl_set_combo_scc("imdb004",2022)
+   CALL aimi150_02_crt_tmp()
+   LET g_ooef_m.imdb005 = 'N'
+   LET g_ooef_m.imdb003 = '1'
+   LET g_ooef_m.imdb004 = '1'
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_ooef_m.imdb003,g_ooef_m.imdb004,g_ooef_m.imdb005 ATTRIBUTE(WITHOUT DEFAULTS)
+
+         AFTER FIELD imdb003
+
+         AFTER FIELD imdb004
+            IF g_ooef_m.imdb004 = '2' OR g_ooef_m.imdb004 = '3' THEN
+               LET g_ooef_m.imdb005 = 'Y'
+            END IF
+            
+         ON CHANGE imdb004
+            IF g_ooef_m.imdb004 = '2' OR g_ooef_m.imdb004 = '3' THEN
+               LET g_ooef_m.imdb005 = 'Y'
+            END IF
+            
+         AFTER FIELD imdb005
+         
+         AFTER INPUT
+
+      END INPUT
+    
+      CONSTRUCT BY NAME l_wc ON ooef001
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+            
+         ON ACTION controlp INFIELD ooef001
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL 
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " ooefstus = 'Y' AND ooef201 = 'Y' "
+            CALL q_ooef001()                       #呼叫開窗
+            DISPLAY  g_qryparam.return1 TO ooef001  #顯示到畫面上
+            LET g_qryparam.where = ""
+            NEXT FIELD ooef001                     #返回原欄位
+            
+      END CONSTRUCT  
+
+      CONSTRUCT BY NAME l_wc1 ON imaa001
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+            
+         ON ACTION controlp INFIELD imaa001
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL 
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " imaastus = 'Y' "
+            CALL q_imaa001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa001  #顯示到畫面上
+            LET g_qryparam.where = ""
+            NEXT FIELD imaa001                     #返回原欄位
+   
+      END CONSTRUCT    
+    
+      #公用action
+      ON ACTION accept
+         LET INT_FLAG = FALSE
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+   IF NOT INT_FLAG THEN
+      CALL aimi150_02_ins()
+   END IF
+   DROP TABLE imdb_tmp
+   #畫面關閉
+   CLOSE WINDOW w_aimi150_02
+END FUNCTION
+#創建臨時表
+PRIVATE FUNCTION aimi150_02_crt_tmp()
+   CREATE TEMP TABLE imdb_tmp
+   (
+       imdbent       INT,
+       imdb001       VARCHAR(10),
+       imdb002       VARCHAR(40)
+   );
+  
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli191" module="agl" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02114" crtdt="2013-10-10 16:31:45" modid="02291" moddt="2014-06-28 15:01:13" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="依帳套設定票據類型會計科目作業(取消)">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glabld,glabld_desc(chr80),glaastus(chr10),glaacomp(chr10),glaacomp_desc(chr80),glaa004(chr5),glaa004_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glab001,glab002,glab003,glab003_desc(chr500),glab005,glab005_desc(chr500),glab006,glab006_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli191" method="dialog">
+    <section id="input">
+      <input id="head" field="glabld,glaastus,glaacomp,glaa004"/>
+      <input id="body" page="1" field="glab001,glab002,glab003,glab005,glab005_desc,glab006,glab006_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glabld"/>
+      <construct id="body" page="1" field="glab001,glab002,glab003,glab005,glab005_desc,glab006,glab006_desc"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glabld"/>
+      <set id="head" type="no_entry" field="glabld"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glabld">
+        <after>
+          <reference field="glabld_desc" ref_field="glab_t.glabld" map_field="glabent,glabld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="glabld_desc"/>
+      <column id="glaastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glaacomp">
+        <after>
+          <reference field="glaacomp_desc" ref_field="glaacomp" map_field="glabent,glaacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_2" state="i"/>
+        <controlp form="q_ooea001_2" state="c"/>
+      </column>
+      <column id="glaacomp_desc"/>
+      <column id="glaa004">
+        <after>
+          <reference field="glaa004_desc" ref_field="glaa004" map_field="glaa004" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;0&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="glaa004_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glab001" type="S" default="90"/>
+      <column id="glab002" type="S" default="30"/>
+      <column id="glab003">
+        <after>
+          <reference field="glab003_desc" ref_field="glab_t.glab003" map_field="glabent,glab003" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glab003_desc"/>
+      <column id="glab005">
+        <after/>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glab005_desc"/>
+      <column id="glab006">
+        <after/>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glab006_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glab_t" pk="glabld">
+      <sql id="forupd_sql" type="sql" query="SELECT glabld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glab_t WHERE glabent= ? AND glabld=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glabld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glab_t" order="glabld"/>
+    </head>
+    <body id="glab_t" page="1" linked="" pk="glab001,glab002,glab003" fk="glabld">
+      <sql id="forupd_sql_detail" query="SELECT glab001,glab002,glab003,&apos;&apos;,glab005,&apos;&apos;,glab006,&apos;&apos; FROM glab_t WHERE glabent=? AND glabld=? AND glab001=? AND glab002=? AND glab003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glab001,glab002,glab003,&apos;&apos;,glab005,&apos;&apos;,glab006,&apos;&apos; FROM glab_t WHERE glabent= ? AND glabld=?"/>
+    </body>
+  </dataset>
+</assembly>
+

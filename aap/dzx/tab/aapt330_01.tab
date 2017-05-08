@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt330_01" module="aap" jobmode="N" type="c01a" industry="std" fix_arg="0" crtid="03080" crtdt="2014-03-06 10:40:35" modid="03080" moddt="2014-03-06 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="請款發票輸入">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isam001,isamdocno,isamseq,isam010,isam008,isam009,isam012,isam012_desc(chr80),isam011,isam030,isam037,isam014,isam015,isam026,isam027,isam028,isam013,isam0121"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt330_01" method="dialog">
+    <section id="input">
+      <input id="head" field="isam001,isamdocno,isamseq,isam010,isam008,isam009,isam012,isam011,isam030,isam037,isam014,isam015,isam026,isam027,isam028,isam013,isam0121"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isam001,isamdocno,isamseq,isam010,isam008,isam009,isam012,isam011,isam030,isam037,isam014,isam015,isam026,isam027,isam028,isam013,isam0121"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="isamdocno,isamseq"/>
+      <set id="head" type="no_entry" field="isamdocno,isamseq"/>
+    </init>
+    <init id="head">
+      <column id="isam001"/>
+      <column id="isamdocno"/>
+      <column id="isamseq"/>
+      <column id="isam010">
+        <controlp form="q_isam010" state="i"/>
+      </column>
+      <column id="isam008">
+        <controlp form="q_isac002" state="i"/>
+        <controlp form="q_isac002" state="c"/>
+      </column>
+      <column id="isam009"/>
+      <column id="isam012">
+        <after>
+          <reference field="isam012_desc" ref_field="isam012" map_field="isam012" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl001=&apos;&apos; AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002_5" state="i"/>
+        <controlp form="q_oodb002_5" state="c"/>
+      </column>
+      <column id="isam012_desc"/>
+      <column id="isam011"/>
+      <column id="isam030"/>
+      <column id="isam037" type="S" default="1" def_scc="9719"/>
+      <column id="isam014">
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="isam015"/>
+      <column id="isam026"/>
+      <column id="isam027"/>
+      <column id="isam028"/>
+      <column id="isam013"/>
+      <column id="isam0121"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="isam_t" pk="isamdocno,isamseq">
+      <sql id="forupd_sql" type="sql" query="SELECT isam001,isamdocno,isamseq,isam010,isam008,isam009,isam012,&apos;&apos;,isam011,isam030,isam037,isam014,isam015,isam026,isam027,isam028,isam013,isam0121 FROM isam_t WHERE isament= ? AND isamdocno=? AND isamseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="isamdocno,isamseq"/>
+    </head>
+  </dataset>
+</assembly>
+

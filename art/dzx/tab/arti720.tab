@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti720" module="art" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02749" crtdt="2014-03-31 19:20:38" modid="08172" moddt="2016-05-23 13:52:57" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="自動補貨年節日設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtkc001,rtkc002,rtkc002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtkcstus,rtkc003,rtkc004,rtkc005,rtkc006,rtkc007,rtkcunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtkc003,rtkcownid,rtkcownid_desc(chr500),rtkcowndp,rtkcowndp_desc(chr500),rtkccrtid,rtkccrtid_desc(chr500),rtkccrtdp,rtkccrtdp_desc(chr500),rtkccrtdt,rtkcmodid,rtkcmodid_desc(chr500),rtkcmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti720" method="dialog">
+    <section id="input">
+      <input id="head" field="rtkc001,rtkc002"/>
+      <input id="body" page="1" field="rtkcstus,rtkc003,rtkc004,rtkc005,rtkc006,rtkc007,rtkcunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtkc001,rtkc002"/>
+      <construct id="body" page="1" field="rtkcstus,rtkc003,rtkc004,rtkc005,rtkc006,rtkc007,rtkcunit"/>
+      <construct id="body" page="2" field="rtkcownid,rtkcowndp,rtkccrtid,rtkccrtdp,rtkccrtdt,rtkcmodid,rtkcmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtkc001,rtkc002"/>
+      <set id="head" type="no_entry" field="rtkc001,rtkc002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtkc001" type="S" default="2" def_scc="6030"/>
+      <column id="rtkc002">
+        <after>
+          <reference field="rtkc002_desc" ref_field="rtkc_t.rtkc002" map_field="rtkcent,rtkc002" ref_sql="SELECT rtaal003 FROM rtaal_t WHERE rtaalent=$varg_enterprise$var AND rtaal001=? AND rtaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtkc002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtkcstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="rtkc003"/>
+      <column id="rtkc004"/>
+      <column id="rtkc005"/>
+      <column id="rtkc006">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkc007"/>
+      <column id="rtkcunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtkcownid">
+        <after>
+          <reference field="rtkcownid_desc" ref_field="rtkc_t.rtkcownid" map_field="rtkcownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkcownid_desc"/>
+      <column id="rtkcowndp">
+        <after>
+          <reference field="rtkcowndp_desc" ref_field="rtkc_t.rtkcowndp" map_field="rtkcowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkcowndp_desc"/>
+      <column id="rtkccrtid">
+        <after>
+          <reference field="rtkccrtid_desc" ref_field="rtkc_t.rtkccrtid" map_field="rtkccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkccrtid_desc"/>
+      <column id="rtkccrtdp">
+        <after>
+          <reference field="rtkccrtdp_desc" ref_field="rtkc_t.rtkccrtdp" map_field="rtkccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkccrtdp_desc"/>
+      <column id="rtkccrtdt"/>
+      <column id="rtkcmodid">
+        <after>
+          <reference field="rtkcmodid_desc" ref_field="rtkc_t.rtkcmodid" map_field="rtkcmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkcmodid_desc"/>
+      <column id="rtkcmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtkc_t" pk="rtkc001,rtkc002">
+      <sql id="forupd_sql" type="sql" query="SELECT rtkc001,rtkc002,&apos;&apos; FROM rtkc_t WHERE rtkcent= ? AND rtkc001=? AND rtkc002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtkc001,rtkc002,&apos;&apos; FROM rtkc_t" order="rtkc001,rtkc002"/>
+    </head>
+    <body id="rtkc_t" page="1,2" linked="" pk="rtkc003" fk="rtkc001,rtkc002">
+      <sql id="forupd_sql_detail" query="SELECT rtkcstus,rtkc003,rtkc004,rtkc005,rtkc006,rtkc007,rtkcunit,&apos;&apos;,rtkcownid,&apos;&apos;,rtkcowndp,&apos;&apos;,rtkccrtid,&apos;&apos;,rtkccrtdp,&apos;&apos;,rtkccrtdt,rtkcmodid,&apos;&apos;,rtkcmoddt FROM rtkc_t WHERE rtkcent=? AND rtkc001=? AND rtkc002=? AND rtkc003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtkcstus,rtkc003,rtkc004,rtkc005,rtkc006,rtkc007,rtkcunit,&apos;&apos;,rtkcownid,&apos;&apos;,rtkcowndp,&apos;&apos;,rtkccrtid,&apos;&apos;,rtkccrtdp,&apos;&apos;,rtkccrtdt,rtkcmodid,&apos;&apos;,rtkcmoddt FROM rtkc_t WHERE rtkcent= ? AND rtkc001=? AND rtkc002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

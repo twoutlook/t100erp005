@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli051" module="agl" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02599" crtdt="2015-02-10 15:04:38" modid="02599" moddt="2015-02-10 15:04:38" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="科目核算項依帳套設定默認值">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glasstus,glasld,glasld_desc(chr500),glas001,glas001_desc(chr500),glas002,glas003,glas003_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glasld,glasld_2_desc(chr500),glas001,glas002,glasownid,glasownid_desc(chr500),glasowndp,glasowndp_desc(chr500),glascrtid,glascrtid_desc(chr500),glascrtdp,glascrtdp_desc(chr500),glascrtdt,glasmodid,glasmodid_desc(chr500),glasmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli051" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glasstus,glasld,glas001,glas001_desc,glas002,glas003,glas003_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glasstus,glasld,glas001,glas001_desc,glas002,glas003,glas003_desc"/>
+      <construct id="body" page="2" field="glasownid,glasowndp,glascrtid,glascrtdp,glascrtdt,glasmodid,glasmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="glasstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glasld">
+        <after>
+          <reference field="glasld_desc" ref_field="glas_t.glasld" map_field="glasent,glasld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="glasld_desc"/>
+      <column id="glas001">
+        <after/>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glas001_desc"/>
+      <column id="glas002" type="S" default="5" def_scc="9934"/>
+      <column id="glas003">
+        <after/>
+      </column>
+      <column id="glas003_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glasld_2_desc"/>
+      <column id="glasownid">
+        <after>
+          <reference field="glasownid_desc" ref_field="glas_t.glasownid" map_field="glasownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glasownid_desc"/>
+      <column id="glasowndp">
+        <after>
+          <reference field="glasowndp_desc" ref_field="glas_t.glasowndp" map_field="glasowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glasowndp_desc"/>
+      <column id="glascrtid">
+        <after>
+          <reference field="glascrtid_desc" ref_field="glas_t.glascrtid" map_field="glascrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glascrtid_desc"/>
+      <column id="glascrtdp">
+        <after>
+          <reference field="glascrtdp_desc" ref_field="glas_t.glascrtdp" map_field="glascrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glascrtdp_desc"/>
+      <column id="glascrtdt"/>
+      <column id="glasmodid">
+        <after>
+          <reference field="glasmodid_desc" ref_field="glas_t.glasmodid" map_field="glasmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glasmodid_desc"/>
+      <column id="glasmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glas_t" page="1,2" linked="" pk="glasld,glas001,glas002">
+      <sql id="forupd_sql_detail" query="SELECT glasstus,glasld,&apos;&apos;,glas001,&apos;&apos;,glas002,glas003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glasownid,&apos;&apos;,glasowndp,&apos;&apos;,glascrtid,&apos;&apos;,glascrtdp,&apos;&apos;,glascrtdt,glasmodid,&apos;&apos;,glasmoddt FROM glas_t WHERE glasent=? AND glasld=? AND glas001=? AND glas002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glasstus,glasld,&apos;&apos;,glas001,&apos;&apos;,glas002,glas003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glasownid,&apos;&apos;,glasowndp,&apos;&apos;,glascrtid,&apos;&apos;,glascrtdp,&apos;&apos;,glascrtdt,glasmodid,&apos;&apos;,glasmoddt FROM glas_t WHERE glasent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,963 @@
+{<section id="${app_id}.global" >}
+#應用 q04 樣板自動產生(Version:32)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_${master_var_title}        RECORD
+       ${master_fields_define}
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_${detail_var_title} RECORD
+       ${detail_sel_define}
+       ${detail_fields_define}
+       END RECORD
+#pages - Start -
+PRIVATE TYPE type_${detail_var_title${page}} RECORD
+       ${detail_fields_define${page}}
+       END RECORD
+#pages -  End  -
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE ${master_var_title}            type_${master_var_title}
+DEFINE ${master_var_title}_t          type_${master_var_title}
+ 
+   ${master_key_t_define}
+ 
+DEFINE ${detail_var_title}            DYNAMIC ARRAY OF type_${detail_var_title}
+DEFINE ${detail_var_title}_t          type_${detail_var_title}
+#pages - Start -             
+DEFINE ${detail_var_title${page}}     DYNAMIC ARRAY OF type_${detail_var_title${page}}
+DEFINE ${detail_var_title${page}}_t   type_${detail_var_title${page}}
+#pages -  End  -
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_cnt_sql             STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_msg                 STRING
+DEFINE g_jump                LIKE type_t.num10
+DEFINE g_no_ask              LIKE type_t.num5
+DEFINE g_row_count           LIKE type_t.num10
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+DEFINE g_master_row_move     LIKE type_t.chr1              #是否為單頭筆數更動
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+#tables - Start -
+DEFINE g_wc_table${table}   STRING
+DEFINE g_detail_page_action${table} STRING
+DEFINE g_pagestart${table}          LIKE type_t.num10
+#tables -  End  -
+#tables_d2 - Start -
+DEFINE g_wc2_table${table}   STRING
+DEFINE g_detail2_page_action${table} STRING
+#tables -  End  -
+ 
+DEFINE g_wc_filter_table           STRING
+#tables - Start -
+DEFINE g_wc_filter_table${table}   STRING
+#tables -  End  -
+#tables_d2 - Start -
+DEFINE g_wc2_filter_table${table}   STRING
+#tables -  End  -
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="${app_id}.main" >}
+ ${general_main_function}
+{</section>}
+ 
+{<section id="${app_id}.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION ${general_prefix}_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   {<point name="init.before_function" />}
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_master_row_move = "Y"
+   ${general_define_combo_stus}
+   ${general_define_combo}  
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init" />}
+   #end add-point
+ 
+   CALL ${general_prefix}_default_search()
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.default_search" >}
+PRIVATE FUNCTION ${general_prefix}_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   {<point name="default_search.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   {<point name="default_search.define"/>}
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   {<point name="default_search.before"/>}
+   #end add-point
+ 
+   ${default_search_field}
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   {<point name="default_search.after"/>}
+   #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ${general_prefix}_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   {<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old    STRING
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   {<point name="ui_dialog.before_function" />}
+   #end add-point
+ 
+   CLEAR FORM  
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_master_row_move = "Y"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   ${detail_hyper_aft_construct}
+ 
+   IF NOT cl_null(g_wc) AND g_wc != " 1=2" THEN
+      CALL ${general_prefix}_cs()
+   END IF
+ 
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         INITIALIZE ${master_var_title}.* TO NULL
+         CALL ${detail_var_title}.clear()
+         #pages - Start -
+         CALL ${detail_var_title${page}}.clear()
+         #pages -  End  -
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_master_row_move = "Y"
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL ${general_prefix}_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+         {<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+         {<point name="ui_dialog.construct"/>}
+         #end add-point
+     
+         DISPLAY ARRAY ${detail_var_title} TO ${sr_name}.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("${sr_name}")
+               LET l_ac = g_detail_idx
+               CALL ${general_prefix}_detail_action_trans()
+               LET g_master_idx = l_ac
+               CALL ${general_prefix}_b_fill2()
+ 
+               #add-point:input段before row name="input.body.before_row"
+               {<point name="input.body.before_row"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_1)
+            ${detail_saction_choice1}
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            {<point name="ui_dialog.body.page1.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         #pages - Start -
+         DISPLAY ARRAY ${detail_var_title${page}} TO ${sr_name${page}}.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = ${page}
+ 
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("${sr_name${page}}")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body${page_id}.before_row"
+               {<point name="input.body${page_id}.before_row"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_${page})
+            ${detail_saction_choice${page}}
+ 
+            #add-point:page${page}自定義行為 name="ui_dialog.body${page_id}.action"
+            {<point name="ui_dialog.body${page_id}.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+         #pages -  End  -
+ 
+         #add-point:ui_dialog段define name="ui_dialog.more_displayarray"
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+    
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("${sr_name}", 1)
+            CALL ${general_prefix}_fetch('')
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+            NEXT FIELD ${qbe_first_field}
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+            #tables - Start -
+            IF NOT cl_null(g_wc_table${table}) AND g_wc_table${table} <> " 1=1" THEN
+               LET g_wc = g_wc , " AND ", g_wc_table${table}
+            END IF
+            #tables -  End  -
+            #tables_d2 - Start -
+            IF NOT cl_null(g_wc2_table${table}) AND g_wc2_table${table} <> " 1=1" THEN
+               LET g_wc = g_wc, " AND ", g_wc2_table${table}
+            END IF
+            #tables -  End  -
+   
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+
+            #tables_d2 - Start -
+            IF NOT cl_null(g_wc2_table${table}) AND g_wc2_table${table} <> " 1=1" THEN
+               LET g_wc2 = g_wc2, " AND ", g_wc2_table${table}
+            END IF
+            #tables -  End  -
+ 
+            #add-point:ON ACTION accept name="ui_dialog.accept"
+            {<point name="ui_dialog.accept"/>}
+            #end add-point
+ 
+            CALL ${general_prefix}_cs()
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            {<point name="ui_dialog.agendum"/>}
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(${detail_var_title})
+               LET g_export_id[1]   = "${sr_name}"
+               #pages - Start -
+               LET g_export_node[${page}] = base.typeInfo.create(${detail_var_title${page}})
+               LET g_export_id[${page}]   = "${sr_name${page}}"
+               #pages -  End  -
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               {<point name="menu.exporttoexcel" />}
+               #end add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+ 
+         ON ACTION datarefresh   # 重新整理
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL ${general_prefix}_fetch('F')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION datainfo   #串查至主維護程式
+            #add-point:ON ACTION datainfo name="ui_dialog.datainfo"
+            {<point name="ui_dialog.datainfo"/>}
+            #end add-point
+            CALL ${general_prefix}_maintain_prog()
+ 
+         ON ACTION first   # 第一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL ${general_prefix}_fetch('F')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION previous   # 上一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL ${general_prefix}_fetch('P')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION jump   # 跳至第幾筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL ${general_prefix}_fetch('/')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION next   # 下一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL ${general_prefix}_fetch('N')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION last   # 最後一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL ${general_prefix}_fetch('L')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            LET g_master_row_move = "N"
+            CALL ${general_prefix}_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            LET g_master_row_move = "N"
+            CALL ${general_prefix}_b_fill()
+ 
+         ON ACTION detail_next                #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            LET g_master_row_move = "N"
+            CALL ${general_prefix}_b_fill()
+ 
+         ON ACTION detail_last                #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            LET g_master_row_move = "N"
+            CALL ${general_prefix}_b_fill()
+ 
+         ${general_filter_on_action}
+         ${general_sel_action}
+         ${general_action_call}
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         {<point name="ui_dialog.set_qbe_action_before" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後 name="ui_dialog.qbeclear"
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point 
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         {<point name="ui_dialog.set_qbe_action_after"/>}
+         #end add-point 
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+{</section>}
+ 
+ 
+{<section id="${app_id}.cs" >}
+#+ 組單頭CURSOR
+PRIVATE FUNCTION ${general_prefix}_cs()
+   #add-point:cs段define-客製 name="cs.define_customerization"
+   {<point name="cs.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:cs段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   {<point name="cs.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="cs.before_function"
+   {<point name="cs.before_function" />}
+   #end add-point
+ 
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+ 
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   IF g_wc2 = " 1=1" THEN
+      #add-point:cs段單頭sql組成(未下單身條件) name="cs.sql_define_1"
+      {<point name="cs.sql_define_1"/>}
+      #end add-point
+   ELSE
+      #add-point:cs段單頭sql組成(有下單身條件) name="cs.sql_define_2"
+      {<point name="cs.sql_define_2"/>}
+      #end add-point
+   END IF
+ 
+   PREPARE ${general_prefix}_pre FROM g_sql
+   DECLARE ${general_prefix}_curs SCROLL CURSOR WITH HOLD FOR ${general_prefix}_pre
+   OPEN ${general_prefix}_curs
+ 
+   #add-point:cs段單頭總筆數計算 name="cs.head_total_row_count"
+   {<point name="cs.head_total_row_count"/>}
+   #end add-point
+   PREPARE ${general_prefix}_precount FROM g_cnt_sql
+   EXECUTE ${general_prefix}_precount INTO g_row_count
+ 
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = SQLCA.SQLCODE 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+   ELSE
+      CALL ${general_prefix}_fetch("F")
+   END IF
+END FUNCTION
+{</section>}
+ 
+ 
+{<section id="${app_id}.fetch" >}
+#+ 抓取單頭資料
+PRIVATE FUNCTION ${general_prefix}_fetch(p_flag)
+   #add-point:fetch段define-客製 name="fetch.define_customerization"
+   {<point name="fetch.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   {<point name="fetch.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="fetch.before_function"
+   {<point name="fetch.before_function" />}
+   #end add-point
+ 
+   MESSAGE ""
+ 
+   #FETCH段CURSOR移動
+   ${master_fetch_cursor_action}
+ 
+   IF SQLCA.sqlcode THEN
+      # 清空右側畫面欄位值，但須保留左側qbe查詢條件
+      INITIALIZE ${master_var_title}.* TO NULL
+      DISPLAY ${master_var_title}.* TO ${master_form_field_list}
+      CALL ${detail_var_title}.clear()
+      #pages - Start -
+      CALL ${detail_var_title${page}}.clear()
+      #pages -  End  -
+      #add-point:陣列清空 name="fetch.array_clear"
+      {<point name="fetch.array_clear" />}
+      #end add-point
+      DISPLAY '' TO FORMONLY.h_index
+      DISPLAY '' TO FORMONLY.h_count
+      DISPLAY '' TO FORMONLY.idx
+      DISPLAY '' TO FORMONLY.cnt
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = '-100' 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      RETURN
+   ELSE
+      CASE p_flag
+         WHEN 'F' LET g_current_idx = 1
+         WHEN 'P' LET g_current_idx = g_current_idx - 1
+         WHEN 'N' LET g_current_idx = g_current_idx + 1
+         WHEN 'L' LET g_current_idx = g_row_count
+         WHEN '/' LET g_current_idx = g_jump
+      END CASE
+      DISPLAY g_current_idx TO FORMONLY.h_index
+      DISPLAY g_row_count TO FORMONLY.h_count
+      CALL cl_navigator_setting( g_current_idx, g_row_count )
+   END IF
+ 
+   #add-point:fetch結束前 name="fetch.after"
+   {<point name="fetch.after" />}
+   #end add-point
+ 
+   LET g_master_row_move = "Y"
+   #重新顯示
+   CALL ${general_prefix}_show()
+ 
+END FUNCTION
+{</section>}
+ 
+ 
+{<section id="${app_id}.show" >}
+PRIVATE FUNCTION ${general_prefix}_show()
+   #add-point:show段define-客製 name="show.define_customerization"
+   {<point name="show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_sql    STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   {<point name="show.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="show.before_function"
+   {<point name="show.before_function" />}
+   #end add-point
+ 
+   DISPLAY ${master_var_title}.* TO ${master_form_field_list}
+ 
+   #讀入ref值
+   #add-point:show段單身reference name="show.head.reference"
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   LET g_detail_page_action = "detail_first"
+   LET g_pagestart = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   CALL ${general_prefix}_b_fill()
+ 
+END FUNCTION
+{</section>}
+ 
+ 
+{<section id="${app_id}.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION ${general_prefix}_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   {<point name="b_fill.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   {<point name="b_fill.define"/>}
+   #end add-point
+
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:32) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   CALL ${detail_var_title}.clear()
+   #pages_m - Start -
+   CALL ${detail_var_title${page}}.clear()
+   #pages -  End  -
+   #add-point:陣列清空 name="b_fill.array_clear"
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   ${detail_b_fill_data}
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   CALL ${detail_var_title}.deleteElement(${detail_var_title}.getLength())
+   #pages_m - Start -
+   CALL ${detail_var_title${page}}.deleteElement(${detail_var_title${page}}.getLength())
+   #pages -  End  -
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   #單身總筆數顯示
+   LET g_detail_cnt = ${detail_var_title}.getLength()
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL ${general_prefix}_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL ${general_prefix}_detail_action_trans()
+ 
+   CALL ${general_prefix}_b_fill2()
+ 
+   ${detail_display_condition}
+ 
+END FUNCTION
+{</section>}
+ 
+ 
+{<section id="${app_id}.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION ${general_prefix}_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   {<point name="b_fill2.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   {<point name="b_fill2.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="b_fill2.before_function"
+   {<point name="b_fill2.before_function" />}
+   #end add-point
+ 
+   LET li_ac = 1
+ 
+   #單身組成
+   ${detail_b_fill2_data}
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION ${general_prefix}_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   {<point name="detail_show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   {<point name="detail_show.before"/>}
+   #end add-point
+ 
+   ${general_display_site}
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      ${detail_commons_ref}
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+ 
+   #pages - Start -
+   IF ps_page.getIndexOf("'${page}'",1) > 0 THEN
+      #帶出公用欄位reference值page${page}
+      ${detail_commons_ref${page}}
+ 
+      #add-point:show段單身reference name="detail_show.body${page_id}.reference"
+      {<point name="detail_show.body${page_id}.reference"/>}
+      #end add-point
+   END IF
+   #pages -  End  -
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.maintain_prog" >}
+#+ 串查至主維護程式
+PRIVATE FUNCTION ${general_prefix}_maintain_prog()
+   #add-point:maintain_prog段define-客製 name="maintain_prog.define_customerization"
+   {<point name="maintain_prog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_js      STRING
+   DEFINE la_param   RECORD
+                     prog       STRING,
+                     actionid   STRING,
+                     background LIKE type_t.chr1,
+                     param      DYNAMIC ARRAY OF STRING
+                     END RECORD
+   DEFINE ls_j       LIKE type_t.num5
+   #add-point:maintain_prog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="maintain_prog.define"
+   {<point name="maintain_prog.define"/>}
+   #end add-point
+ 
+ 
+   #add-point:maintain_prog段開始前 name="maintain_prog.before"
+   {<point name="maintain_prog.before"/>}
+   #end add-point
+ 
+   LET la_param.prog = "${master_maintain_prog}"
+ 
+   #loop_times - Start -
+   LET la_param.param[${loop_no}] = ${master_maintain_prog_parameter_${loop_no}}
+   #loop_times -  End  -
+ 
+   IF NOT cl_null(la_param.prog) THEN
+      LET ls_js = util.JSON.stringify(la_param)
+      CALL cl_cmdrun_wait(ls_js)
+   END IF
+ 
+   #add-point:maintain_prog段結束前 name="maintain_prog.after"
+   {<point name="maintain_prog.after"/>}
+   #end add-point
+END FUNCTION
+{</section>}
+ 
+ 
+ ${general_filter}
+ ${general_filter_parser}
+ ${general_filter_show}
+ ${general_hyperlink_func}
+ 
+{<section id="${app_id}.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION ${general_prefix}_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   {<point name="detail_action_trans.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   {<point name="detail_action_trans.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   {<point name="detail_action_trans.before_function" />}
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.idx
+   DISPLAY g_tot_cnt TO FORMONLY.cnt
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION ${general_prefix}_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="detail_index_setting.define_customerization"
+   {<point name="detail_index_setting.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   {<point name="detail_index_setting.define"/>}
+   #end add-point
+ 
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   {<point name="detail_index_setting.before_function" />}
+   #end add-point
+ 
+   IF g_master_row_move = "Y" THEN
+      LET g_detail_idx = 1
+      LET li_redirect = TRUE
+   ELSE
+      IF g_curr_diag IS NOT NULL THEN
+         CASE
+            WHEN g_curr_diag.getCurrentRow("${sr_name}") <= "0"
+               LET g_detail_idx = 1
+               IF ${detail_var_title}.getLength() THEN
+                  LET li_redirect = TRUE
+               END IF
+            WHEN g_curr_diag.getCurrentRow("${sr_name}") > ${detail_var_title}.getLength() AND ${detail_var_title}.getLength() > 0
+               LET g_detail_idx = ${detail_var_title}.getLength()
+               LET li_redirect = TRUE
+            WHEN g_curr_diag.getCurrentRow("${sr_name}") != g_detail_idx
+               IF g_detail_idx > ${detail_var_title}.getLength() THEN
+                  LET g_detail_idx = ${detail_var_title}.getLength()
+               END IF
+               LET li_redirect = TRUE
+         END CASE
+      END IF
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("${sr_name}", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.mask_functions" >}
+ ${general_mask_funcs}
+{</section>}
+ 
+{<section id="${app_id}.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 
+

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrr710_g01" module="acr" jobmode="N" type="g01" industry="std" crtid="02159" crtdt="2016-02-04 11:00:05" modid="02159" moddt="2016-02-16 15:49:45" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="crbadocno,crbadocdt,crba004,crba006,crba008,crba001,l_crba001_ooag011(chr300|trim(crba001)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = crba_t.crba001 AND ooag_t.ooagent = crba_t.crbaent))),crba009,crba010,l_crba009_crba010(chr100|trim(crba009)||&apos;.&apos;||trim(crba010)),crba012,crba013,l_crba012_crba013(chr100|trim(crba012)||&apos;.&apos;||trim(crba013)),crba016,crba017,crba021,l_imaal014(chr100|&apos;&apos;),crbbseq,crbb001,crbb002,crba002,crba003,crba011,crba005,crba007,crba014,crba015,crba018,crba019,crba020,crba022,crba023,crba024,crba025,crba026,crbaent,crbasite,crbastus"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="crbadocno,crbadocdt,crba004,crba006,crba008,crba001,l_crba001_ooag011(chr300|trim(crba001)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = crba_t.crba001 AND ooag_t.ooagent = crba_t.crbaent))),crba009,crba010,l_crba009_crba010(chr100|trim(crba009)||&apos;.&apos;||trim(crba010)),crba012,crba013,l_crba012_crba013(chr100|trim(crba012)||&apos;.&apos;||trim(crba013)),crba016,crba017,crba021,l_imaal014(chr100|&apos;&apos;),crbbseq,crbb001,crbb002,crba002,crba003,crba011,crba005,crba007,crba014,crba015,crba018,crba019,crba020,crba022,crba023,crba024,crba025,crba026,crbaent,crbasite,crbastus"/>
+    <sql id="g_from" query="crba_t LEFT OUTER JOIN ( SELECT crbb_t.* FROM crbb_t  ) x  ON crba_t.crbaent = x.crbbent AND crba_t.crbadocno = x.crbbdocno"/>
+    <sql id="g_where" query="" maintable="crba_t"/>
+    <sql id="g_order" query="crbadocno,crbbseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="crbadocno,crbbseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="crbadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="crbaent,crbadocno"/>
+      <rep type="crbbseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="crbaent,crbadocno,crbbseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="crbaent,crbadocno,crbbseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="crbadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="crbaent,crbadocno"/>
+      <rep type="crbbseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

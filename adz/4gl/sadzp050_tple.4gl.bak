@@ -1,0 +1,628 @@
+#&define DEBUG
+
+IMPORT OS
+IMPORT UTIL
+
+SCHEMA ds
+
+&include "../4gl/sadzp050_cnst.inc" 
+
+&include "../4gl/sadzp000_type.inc" 
+&include "../4gl/sadzp050_type.inc" 
+&include "../4gl/sadzp200_type.inc" 
+
+GLOBALS "../../cfg/top_global.inc"
+
+PRIVATE TYPE T_TEMPLATE_LIST RECORD
+               tl_CHECKBOX   VARCHAR(1),
+               tl_COMPONENT  LIKE GZGD_T.GZGD001,
+               tl_NAME       LIKE GZGD_T.GZGD002,
+               tl_DESC       LIKE GZGDL_T.GZGDL002,
+               tl_CUSTOMIZE  LIKE GZGD_T.GZGD003,
+               tl_ROLE       LIKE GZGD_T.GZGD004,
+               tl_USER       LIKE GZGD_T.GZGD005
+             END RECORD 
+             
+DEFINE m_template_list  DYNAMIC ARRAY OF T_TEMPLATE_LIST
+DEFINE m_frp_list       DYNAMIC ARRAY OF T_FRP_LIST_R
+
+#用來紀錄選擇的物件
+DEFINE mo_template_list DYNAMIC ARRAY OF T_TEMPLATE_LIST_R
+
+DEFINE ms_lang         STRING
+DEFINE ms_module_name  STRING
+DEFINE ms_program_name STRING
+DEFINE ms_program_desc STRING
+DEFINE mb_result       BOOLEAN 
+
+FUNCTION sadzp050_tple_run(p_program_info,p_template_list)
+DEFINE
+  p_program_info  T_PROGRAM_INFO,
+  p_template_list DYNAMIC ARRAY OF T_TEMPLATE_LIST_R
+  
+  CALL sadzp050_tple_initialize(p_program_info.*,p_template_list)
+  CALL sadzp050_tple_initial_form()
+  CALL sadzp050_tple_start()
+  CALL sadzp050_tple_finalize()
+
+  RETURN mb_result, mo_template_list
+  
+END FUNCTION
+
+FUNCTION sadzp050_tple_initialize(p_program_info,p_template_list)
+DEFINE
+  p_program_info  T_PROGRAM_INFO,
+  p_template_list DYNAMIC ARRAY OF T_TEMPLATE_LIST_R 
+DEFINE
+  li_temp_cnt INTEGER  
+
+  LET ms_module_name   = p_program_info.pi_MODULE
+  LET ms_program_name  = p_program_info.pi_NAME
+  LET ms_program_desc  = p_program_info.pi_DESC
+  LET mo_template_list = p_template_list
+  
+  &ifndef DEBUG
+  LET ms_lang = g_lang
+  &else
+  LET ms_lang = cs_default_lang
+  &endif
+  
+END FUNCTION
+
+FUNCTION sadzp050_tple_initial_form()
+
+  &ifndef DEBUG
+    OPEN WINDOW w_sadzp050_tple WITH FORM cl_ap_formpath("ADZ","sadzp050_tple")
+  &else
+    OPEN WINDOW w_sadzp050_tple WITH FORM "sadzp050_tple"
+  &endif
+  
+  CURRENT WINDOW IS w_sadzp050_tple
+  
+END FUNCTION
+
+FUNCTION sadzp050_tple_start()
+DEFINE
+  ls_program_name    STRING,
+  ls_program_desc    STRING,
+  ls_template_name   STRING,
+  ls_lang            STRING,
+  li_template_index  INTEGER,
+  li_template_cnt    INTEGER,
+  li_template_length INTEGER,
+  li_frp_length      INTEGER,
+  lb_file_exist      BOOLEAN,
+  ls_err_code        STRING,
+  ls_err_msg         STRING,
+  li_arr_curr        INTEGER,
+  lb_get_first       BOOLEAN,
+  lo_template_list   T_TEMPLATE_LIST,
+  lo_frp_list        DYNAMIC ARRAY OF T_FRP_LIST_R
+DEFINE
+  lb_result BOOLEAN  
+
+  LET ls_program_name = ms_program_name
+  LET ls_program_desc = ms_program_desc
+  LET ls_lang         = ms_lang
+
+  LET lb_get_first = TRUE
+
+  DIALOG ATTRIBUTES(UNBUFFERED)
+    {    
+    INPUT ARRAY m_template_list FROM sr_template.* ATTRIBUTE(WITHOUT DEFAULTS)
+    
+      BEFORE INPUT
+        CALL DIALOG.setActionHidden("insert",TRUE)
+        CALL DIALOG.setActionHidden("append",TRUE)
+        CALL DIALOG.setActionHidden("delete",TRUE)
+        
+      BEFORE ROW 
+        LET li_template_index = ARR_CURR()
+        LET lo_template_list.* = m_template_list[li_template_index].*
+        CALL sadzp050_tple_fill_frp_list(lo_template_list.*)
+
+      ON CHANGE edt_select
+        LABEL _edt_select:
+        LET li_arr_curr = ARR_CURR()
+        LET lo_template_list.tl_CHECKBOX = NOT lo_template_list.tl_CHECKBOX
+
+        #檢核rdd檔是否存在
+        IF NOT sadzp050_tple_check_rdd_file_exists(m_template_list[li_template_index].tl_COMPONENT) THEN
+          LET ls_err_code = "adz-00277"
+          LET ls_err_msg  = m_template_list[li_template_index].tl_COMPONENT,"|"
+          CALL sadzp000_msg_show_error(ls_err_code, ls_err_code, ls_err_msg, 1)
+          LET m_template_list[li_template_index].tl_CHECKBOX = "0"
+          CONTINUE DIALOG 
+        END IF 
+        
+        #檢核4rp檔有沒有存在
+        LET lb_file_exist = FALSE
+        FOR li_frp_length = 1 TO m_frp_list.getLength()
+          IF m_frp_list[li_frp_length].fl_EXIST THEN
+            LET lb_file_exist = TRUE
+            EXIT FOR
+          END IF 
+        END FOR      
+
+        IF NOT lb_file_exist THEN
+          LET ls_err_code = "adz-00276"
+          LET ls_err_msg  = mo_template_list[li_arr_curr].tl_NAME,"|"
+          CALL sadzp000_msg_show_error(ls_err_code, ls_err_code, ls_err_msg, 1)
+          LET m_template_list[li_arr_curr].tl_CHECKBOX = "0"
+          CONTINUE DIALOG 
+        END IF  
+
+        IF lo_template_list.tl_CHECKBOX THEN
+          CALL mo_template_list.appendElement()
+          LET li_template_cnt = mo_template_list.getLength()
+          LET mo_template_list[li_template_cnt].tl_COMPONENT = lo_template_list.tl_COMPONENT
+          LET mo_template_list[li_template_cnt].tl_NAME      = lo_template_list.tl_NAME
+          LET mo_template_list[li_template_cnt].tl_DESC      = lo_template_list.tl_DESC
+          LET mo_template_list[li_template_cnt].tl_CUSTOMIZE = lo_template_list.tl_CUSTOMIZE
+          LET mo_template_list[li_template_cnt].tl_ROLE      = lo_template_list.tl_ROLE
+          LET mo_template_list[li_template_cnt].tl_USER      = lo_template_list.tl_USER
+          FOR li_frp_length = 1 TO m_frp_list.getLength()
+            LET mo_template_list[li_template_cnt].FRP_LIST[li_frp_length].fl_NAME   = m_frp_list[li_frp_length].fl_NAME
+            LET mo_template_list[li_template_cnt].FRP_LIST[li_frp_length].fl_DESC   = m_frp_list[li_frp_length].fl_DESC
+            LET mo_template_list[li_template_cnt].FRP_LIST[li_frp_length].fl_EXIST = m_frp_list[li_frp_length].fl_EXIST
+          END FOR      
+        ELSE
+          #先找有沒有存在 mo_template_list 的 
+          FOR li_template_cnt = 1 TO mo_template_list.getLength()
+            IF mo_template_list[li_template_cnt].tl_NAME = lo_template_list.tl_NAME AND
+               mo_template_list[li_template_cnt].tl_COMPONENT = lo_template_list.tl_COMPONENT THEN
+              CALL mo_template_list.deleteElement(li_template_cnt)
+              EXIT FOR
+            END IF           
+          END FOR
+        END IF    
+
+        #Test Display Data 
+        
+        --FOR li_template_cnt = 1 TO li_template_length
+        --  IF mo_template_list[li_template_cnt].tl_NAME = lo_template_list.tl_NAME THEN
+        --    DISPLAY "tl_NAME : ",mo_template_list[li_template_cnt].tl_NAME      
+        --    DISPLAY "tl_DESC : ",mo_template_list[li_template_cnt].tl_DESC      
+        --    DISPLAY "tl_CUSTOMIZE : ",mo_template_list[li_template_cnt].tl_CUSTOMIZE 
+        --    DISPLAY "tl_ROLE : ",mo_template_list[li_template_cnt].tl_ROLE      
+        --    DISPLAY "tl_USER : ",mo_template_list[li_template_cnt].tl_USER 
+        --    FOR li_frp_length = 1 TO mo_template_list[li_template_cnt].FRP_LIST.getLength()
+        --      DISPLAY "fl_NAME : ",mo_template_list[li_template_cnt].FRP_LIST[li_frp_length].fl_NAME
+        --      DISPLAY "fl_DESC : ",mo_template_list[li_template_cnt].FRP_LIST[li_frp_length].fl_DESC 
+        --    END FOR      
+        --  END IF           
+        --END FOR
+        
+        
+    END INPUT
+    }
+
+    DISPLAY ARRAY m_template_list TO sr_template.*
+      BEFORE ROW 
+        LET li_template_index = ARR_CURR()
+        LET lo_template_list.* = m_template_list[li_template_index].*
+        CALL sadzp050_tple_fill_frp_list(lo_template_list.*)
+    END DISPLAY
+    
+    DISPLAY ARRAY m_frp_list TO sr_4rp.*
+    END DISPLAY
+
+    BEFORE DIALOG 
+      DISPLAY ls_program_name TO ed_report_name
+      DISPLAY ls_program_desc TO lbl_report_desc
+      CALL m_frp_list.clear()
+      CALL sadzp050_tple_fill_template_list(ls_program_name,ls_lang)
+
+    ON ACTION btn_ok
+      LET lb_result = TRUE
+      EXIT DIALOG
+      
+    ON ACTION btn_cancel
+      LET lb_result = FALSE
+      EXIT DIALOG
+      
+    ON ACTION CLOSE
+      LET lb_result = FALSE
+      EXIT DIALOG
+      
+  END DIALOG
+
+  LET mb_result = lb_result
+
+END FUNCTION
+
+FUNCTION sadzp050_tple_finalize()
+  CLOSE WINDOW w_sadzp050_tple
+END FUNCTION
+
+FUNCTION sadzp050_tple_fill_template_list(p_program_name,p_lang)
+DEFINE
+  p_program_name STRING,
+  p_lang         STRING
+DEFINE
+  ls_program_name STRING,
+  ls_lang         STRING, 
+  li_count        INTEGER,
+  ls_result       STRING, 
+  ls_SQL          STRING
+
+  LET ls_program_name = p_program_name  
+  LET ls_lang         = p_lang
+
+  LET ls_SQL = " SELECT DISTINCT                                         ",
+               "        '1'           tl_CHECKBOX,                       ", 
+               "        GD.GZGD001    tl_COMPONENT,                      ",
+               "        GD.GZGD002    tl_NAME,                           ",
+               "        GDL.GZGDL002  tl_DESC,                           ",
+               "        GD.GZGD003    tl_CUSTOMIZE,                      ",
+               "        GD.GZGD004    tl_ROLE,                           ",
+               "        GD.GZGD005    tl_USER                            ",
+               "   FROM GZGD_T GD                                        ",
+               "   LEFT JOIN GZGDL_T GDL ON GD.GZGD000   = GDL.GZGDL000  ",
+               "                        AND GDL.GZGDL001 = '",ls_lang,"' ",
+               "  WHERE GD.GZGD001  = '",ls_program_name,"'              ",
+               "    AND GD.GZGDSTUS = 'Y'                                ",
+               "    AND GD.GZGD006 = (                                   ",
+               "                       SELECT MIN(GDM.GZGD006)           ",
+               "                         FROM GZGD_T GDM                 ", 
+               "                        WHERE GDM.GZGD001 = GD.GZGD001   ",
+               "                          AND GDM.GZGD002 = GD.GZGD002   ",
+               "                          AND GDM.GZGD003 = GD.GZGD003   ",
+               "                          AND GDM.GZGD004 = GD.GZGD004   ",
+               "                          AND GDM.GZGD005 = GD.GZGD005   ",
+               "                     )                                   ",
+               "  ORDER BY GD.GZGD002                                    "
+
+  PREPARE lpre_fill_template_list FROM ls_sql
+  DECLARE lcur_fill_template_list CURSOR FOR lpre_fill_template_list
+
+  #CALL m_template_list.clear()
+  
+  LET li_count = 1
+
+  FOREACH lcur_fill_template_list INTO m_template_list[li_count].*
+    IF SQLCA.sqlcode THEN
+      EXIT FOREACH
+    END IF
+
+    CALL sadzp050_tple_get_template_checked(m_template_list[li_count].*) RETURNING ls_result
+    LET m_template_list[li_count].tl_CHECKBOX = ls_result
+    
+    LET li_count = li_count + 1
+    
+  END FOREACH
+  CALL m_template_list.deleteElement(li_count)
+
+END FUNCTION 
+
+FUNCTION sadzp050_tple_get_template_checked(p_template_list)
+DEFINE
+  p_template_list T_TEMPLATE_LIST
+DEFINE
+  li_template      INTEGER,
+  li_length        INTEGER,
+  lo_template_list T_TEMPLATE_LIST
+DEFINE
+  ls_result STRING 
+  
+  LET lo_template_list.* = p_template_list.*
+
+  LET ls_result = "0"
+  LET li_length = mo_template_list.getLength()
+
+  FOR li_template = 1 TO li_length
+    IF mo_template_list[li_template].tl_COMPONENT = lo_template_list.tl_COMPONENT AND 
+       mo_template_list[li_template].tl_NAME      = lo_template_list.tl_NAME THEN
+      LET ls_result = "1"
+      EXIT FOR
+    END IF    
+  END FOR 
+
+  RETURN ls_result
+  
+END FUNCTION 
+
+FUNCTION sadzp050_tple_fill_frp_list(p_template_list)
+DEFINE
+  p_template_list T_TEMPLATE_LIST
+DEFINE
+  lo_template_list T_TEMPLATE_LIST,
+  li_count         INTEGER,
+  lb_result        BOOLEAN, 
+  ls_SQL           STRING
+
+  LET lo_template_list.* = p_template_list.*  
+
+  CALL m_frp_list.clear()
+  
+  LET ls_SQL = " SELECT '0' fl_EXIST, GD.GZGD007 fl_NAME, '' fl_DESC      ",
+               "   FROM GZGD_T GD                                         ",
+               "  WHERE GD.GZGD001  = '",lo_template_list.tl_COMPONENT,"' ",
+               "    AND GD.GZGD002  = '",lo_template_list.tl_NAME,"'      ",
+               "    AND GD.GZGD003  = '",lo_template_list.tl_CUSTOMIZE,"' ",
+               "    AND GD.GZGD004  = '",lo_template_list.tl_ROLE,"'      ",
+               "    AND GD.GZGD005  = '",lo_template_list.tl_USER,"'      ",
+               "    AND GD.GZGDSTUS = 'Y'                                 "
+
+  PREPARE lpre_fill_frp_list FROM ls_sql
+  DECLARE lcur_fill_frp_list CURSOR FOR lpre_fill_frp_list
+
+  LET li_count = 1
+
+  FOREACH lcur_fill_frp_list INTO m_frp_list[li_count].*
+    IF SQLCA.sqlcode THEN
+      EXIT FOREACH
+    END IF
+
+    CALL sadzp050_tple_check_4rp_file_exists(m_frp_list[li_count].fl_NAME) RETURNING lb_result
+    
+    LET m_frp_list[li_count].fl_EXIST = IIF(lb_result,"1","0")
+    LET li_count = li_count + 1
+    
+  END FOREACH
+  CALL m_frp_list.deleteElement(li_count)
+
+END FUNCTION 
+
+FUNCTION sadzp050_tple_check_4rp_file_exists(p_filename)
+DEFINE
+  p_filename STRING
+DEFINE
+  ls_filename  STRING,
+  ls_full_name STRING,
+  ls_separator STRING, 
+  ls_erp_path  STRING
+DEFINE
+  lb_result BOOLEAN 
+  
+  LET ls_filename = p_filename
+
+  LET lb_result = TRUE
+  
+  CALL FGL_GETENV("ERP") RETURNING ls_erp_path
+  CALL os.Path.separator() RETURNING ls_separator
+
+  LET ls_full_name = ls_erp_path,ls_separator,
+                     ms_module_name.toLowerCase(),ls_separator,
+                     "4rp",ls_separator,
+                     ms_lang,ls_separator,
+                     ls_filename,".4rp"                      
+  
+  IF os.Path.exists(ls_full_name) THEN
+    LET lb_result = TRUE
+  ELSE
+    LET lb_result = FALSE
+  END IF
+
+  RETURN lb_result
+  
+END FUNCTION 
+
+FUNCTION sadzp050_tple_check_rdd_file_exists(p_filename)
+DEFINE
+  p_filename STRING
+DEFINE
+  ls_filename  STRING,
+  ls_full_name STRING,
+  ls_separator STRING, 
+  ls_erp_path  STRING
+DEFINE
+  lb_result BOOLEAN 
+  
+  LET ls_filename = p_filename
+
+  LET lb_result = TRUE
+  
+  CALL FGL_GETENV("ERP") RETURNING ls_erp_path
+  CALL os.Path.separator() RETURNING ls_separator
+
+  LET ls_full_name = ls_erp_path,ls_separator,
+                     ms_module_name.toLowerCase(),ls_separator,
+                     "4rp",ls_separator,
+                     "rdd",ls_separator,
+                     ls_filename,".rdd"                      
+  
+  IF os.Path.exists(ls_full_name) THEN
+    LET lb_result = TRUE
+  ELSE
+    LET lb_result = FALSE
+  END IF
+
+  RETURN lb_result
+  
+END FUNCTION 
+
+################################################################################
+
+FUNCTION sadzp050_tple_get_template_records(p_lang,p_program_info,p_template_rcord)
+DEFINE
+  p_lang           STRING, 
+  p_program_info   T_PROGRAM_INFO,
+  p_template_rcord DYNAMIC ARRAY OF T_TEMPLATE_LIST_R 
+DEFINE
+  ls_lang            STRING, 
+  lo_program_info    T_PROGRAM_INFO,
+  lo_template_record DYNAMIC ARRAY OF T_TEMPLATE_LIST_R,
+  lo_template_list   DYNAMIC ARRAY OF T_TEMPLATE_LIST_O,
+  lo_frp_list        DYNAMIC ARRAY OF T_FRP_LIST_O,
+  li_template_count  INTEGER,
+  li_record_cnt      INTEGER,
+  li_frp_count       INTEGER,
+  ls_result          STRING, 
+  ls_SQL             STRING
+DEFINE
+  lb_result BOOLEAN,
+  lo_return DYNAMIC ARRAY OF T_TEMPLATE_LIST_R
+
+  LET ls_lang            = p_lang
+  LET lo_program_info.*  = p_program_info.* 
+  LET lo_template_record = p_template_rcord
+
+  LET lb_result = TRUE
+  
+  CALL sadzp050_tple_get_template_list(lo_program_info.pi_NAME,ls_lang) RETURNING lo_template_list
+  
+  FOR li_template_count = 1 TO lo_template_list.getLength()
+    CALL lo_template_record.appendElement()
+    LET li_record_cnt = lo_template_record.getLength()
+    
+    LET lo_template_record[li_record_cnt].tl_COMPONENT = lo_template_list[li_template_count].tl_COMPONENT
+    LET lo_template_record[li_record_cnt].tl_NAME      = lo_template_list[li_template_count].tl_NAME
+    LET lo_template_record[li_record_cnt].tl_DESC      = lo_template_list[li_template_count].tl_DESC
+    LET lo_template_record[li_record_cnt].tl_CUSTOMIZE = lo_template_list[li_template_count].tl_CUSTOMIZE
+    LET lo_template_record[li_record_cnt].tl_ROLE      = lo_template_list[li_template_count].tl_ROLE
+    LET lo_template_record[li_record_cnt].tl_USER      = lo_template_list[li_template_count].tl_USER
+    
+    CALL sadzp050_tple_get_frp_list(lo_template_list[li_template_count].*) RETURNING lo_frp_list
+    
+    FOR li_frp_count = 1 TO lo_frp_list.getLength()
+      LET lo_template_record[li_record_cnt].FRP_LIST[li_frp_count].fl_EXIST = "1"
+      LET lo_template_record[li_record_cnt].FRP_LIST[li_frp_count].fl_NAME  = lo_frp_list[li_frp_count].fl_NAME
+      LET lo_template_record[li_record_cnt].FRP_LIST[li_frp_count].fl_DESC  = lo_frp_list[li_frp_count].fl_DESC
+    END FOR
+          
+  END FOR 
+  
+  LET lo_return = lo_template_record
+  
+  RETURN lb_result,lo_return
+
+END FUNCTION 
+
+FUNCTION sadzp050_tple_get_template_list(p_program_name,p_lang)
+DEFINE
+  p_program_name STRING,
+  p_lang         STRING
+DEFINE
+  ls_program_name   STRING,
+  ls_lang           STRING, 
+  lo_template_list  DYNAMIC ARRAY OF T_TEMPLATE_LIST_O,
+  li_count          INTEGER,
+  ls_result         STRING, 
+  ls_SQL            STRING
+DEFINE
+  lo_return DYNAMIC ARRAY OF T_TEMPLATE_LIST_O
+
+  
+  LET ls_program_name = p_program_name  
+  LET ls_lang         = p_lang
+
+  LET ls_SQL = " SELECT DISTINCT                                         ",
+               "        GD.GZGD001    tl_COMPONENT,                      ",
+               "        GD.GZGD002    tl_NAME,                           ",
+               "        GDL.GZGDL002  tl_DESC,                           ",
+               "        GD.GZGD003    tl_CUSTOMIZE,                      ",
+               "        GD.GZGD004    tl_ROLE,                           ",
+               "        GD.GZGD005    tl_USER                            ",
+               "   FROM GZGD_T GD                                        ",
+               "   LEFT JOIN GZGDL_T GDL ON GD.GZGD000   = GDL.GZGDL000  ",
+               "                        AND GDL.GZGDL001 = '",ls_lang,"' ",
+               "  WHERE GD.GZGD001  = '",ls_program_name,"'              ",
+               "    AND GD.GZGDSTUS = 'Y'                                ",
+               "    AND GD.GZGD006 = (                                   ",
+               "                       SELECT MIN(GDM.GZGD006)           ",
+               "                         FROM GZGD_T GDM                 ", 
+               "                        WHERE GDM.GZGD001 = GD.GZGD001   ",
+               "                          AND GDM.GZGD002 = GD.GZGD002   ",
+               "                          AND GDM.GZGD003 = GD.GZGD003   ",
+               "                          AND GDM.GZGD004 = GD.GZGD004   ",
+               "                          AND GDM.GZGD005 = GD.GZGD005   ",
+               "                     )                                   ",
+               "  ORDER BY GD.GZGD002                                    "
+
+  PREPARE lpre_get_template_list FROM ls_sql
+  DECLARE lcur_get_template_list CURSOR FOR lpre_get_template_list
+
+  LET li_count = 1
+
+  FOREACH lcur_get_template_list INTO lo_template_list[li_count].*
+    IF SQLCA.sqlcode THEN
+      EXIT FOREACH
+    END IF
+
+    LET li_count = li_count + 1
+    
+  END FOREACH
+  CALL lo_template_list.deleteElement(li_count)
+
+  LET lo_return = lo_template_list
+  
+  RETURN lo_return
+
+END FUNCTION 
+
+FUNCTION sadzp050_tple_get_frp_list(p_template_list)
+DEFINE
+  p_template_list T_TEMPLATE_LIST_O
+DEFINE
+  lo_template_list T_TEMPLATE_LIST_O,
+  lo_frp_list      DYNAMIC ARRAY OF T_FRP_LIST_O,
+  li_count         INTEGER,
+  lb_result        BOOLEAN, 
+  ls_SQL           STRING
+DEFINE
+  lo_return DYNAMIC ARRAY OF T_FRP_LIST_O
+
+  
+  LET lo_template_list.* = p_template_list.*  
+
+  LET ls_SQL = " SELECT GD.GZGD007 fl_NAME, '' fl_DESC                    ",
+               "   FROM GZGD_T GD                                         ",
+               "  WHERE GD.GZGD001  = '",lo_template_list.tl_COMPONENT,"' ",
+               "    AND GD.GZGD002  = '",lo_template_list.tl_NAME,"'      ",
+               "    AND GD.GZGD003  = '",lo_template_list.tl_CUSTOMIZE,"' ",
+               "    AND GD.GZGD004  = '",lo_template_list.tl_ROLE,"'      ",
+               "    AND GD.GZGD005  = '",lo_template_list.tl_USER,"'      ",
+               "    AND GD.GZGDSTUS = 'Y'                                 "
+
+  PREPARE lpre_get_frp_list FROM ls_sql
+  DECLARE lcur_get_frp_list CURSOR FOR lpre_get_frp_list
+
+  LET li_count = 1
+
+  FOREACH lcur_get_frp_list INTO lo_frp_list[li_count].*
+    IF SQLCA.sqlcode THEN
+      EXIT FOREACH
+    END IF
+
+    CALL sadzp050_tple_check_4rp_file_exists(lo_frp_list[li_count].fl_NAME) RETURNING lb_result
+    
+    LET li_count = li_count + 1
+    
+  END FOREACH
+  CALL lo_frp_list.deleteElement(li_count)
+
+  LET lo_return = lo_frp_list
+
+  RETURN lo_return
+  
+END FUNCTION 
+
+FUNCTION sadzp050_tple_remove_template_records(p_program_info,p_template_rcord)
+DEFINE
+  p_program_info   T_PROGRAM_INFO,
+  p_template_rcord DYNAMIC ARRAY OF T_TEMPLATE_LIST_R 
+DEFINE
+  lo_program_info    T_PROGRAM_INFO,
+  lo_template_record DYNAMIC ARRAY OF T_TEMPLATE_LIST_R,
+  li_record_cnt      INTEGER
+DEFINE
+  lb_result BOOLEAN,
+  lo_return DYNAMIC ARRAY OF T_TEMPLATE_LIST_R
+
+  LET lo_program_info.*  = p_program_info.* 
+  LET lo_template_record = p_template_rcord
+
+  LET lb_result = TRUE
+
+  FOR li_record_cnt = 1 TO lo_template_record.getLength()
+    IF lo_template_record[li_record_cnt].tl_COMPONENT = lo_program_info.pi_NAME THEN
+      CALL lo_template_record.deleteElement(li_record_cnt)
+    END IF 
+  END FOR 
+  
+  LET lo_return = lo_template_record
+  
+  RETURN lb_result,lo_return
+
+END FUNCTION 

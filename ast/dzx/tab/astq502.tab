@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq502" module="ast" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06815" crtdt="2015-05-07 11:04:22" modid="08742" moddt="2016-09-14 09:52:00" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="每日銀行卡手續費明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),stgbsite,stgb001,stgb012,stgb013,stgb002,stgb002_desc(chr500),stgb003,stgb003_desc(chr500),stfa051,stfa051_desc(chr500),stgb004,stgb004_desc(chr500),stgb005,stgb006,stgb007,stgb014,stgb008,stgb009,stgb010,stgb011"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),stgbsite(b_stgbsite),stgb001(b_stgb001),stgb012(b_stgb012),stgb013(b_stgb013),stgb002(b_stgb002),stgb002_desc(b_stgb002_desc),stgb003(b_stgb003),stgb003_desc(b_stgb003_desc),stfa051(b_stfa051),stfa051_desc(b_stfa051_desc),stgb004(b_stgb004),stgb004_desc(b_stgb004_desc),stgb005(b_stgb005),stgb006(b_stgb006),stgb007(b_stgb007),stgb014(b_stgb014),stgb008(b_stgb008),stgb009(b_stgb009),stgb010(b_stgb010),stgb011(b_stgb011)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq502" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stgbsite,stgb012,stgb013,stgb014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stgbsite(b_stgbsite),stgb012(b_stgb012),stgb013(b_stgb013),stgb014(b_stgb014)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="stgbsite">
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="stgb001"/>
+      <column id="stgb012" def_scc="6013"/>
+      <column id="stgb013"/>
+      <column id="stgb002">
+        <after>
+          <reference field="stgb002_desc" ref_field="stgb002" map_field="stgb002" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="stgb002_desc"/>
+      <column id="stgb003">
+        <after>
+          <reference field="stgb003_desc" ref_field="stgb003" map_field="stgb003" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="stgb003_desc"/>
+      <column id="stfa051">
+        <after>
+          <reference field="stfa051_desc" ref_field="stfa051" map_field="stfa051" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stfa051_desc"/>
+      <column id="stgb004">
+        <after>
+          <reference field="stgb004_desc" ref_field="stgb004" map_field="stgb004" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="stgb004_desc"/>
+      <column id="stgb005" type="S" default="0"/>
+      <column id="stgb006" type="S" default="0"/>
+      <column id="stgb007" type="S" default="0"/>
+      <column id="stgb014" type="S" default="0"/>
+      <column id="stgb008" type="S" default="0"/>
+      <column id="stgb009" type="S" default="0"/>
+      <column id="stgb010" type="S" default="2" def_scc="6006"/>
+      <column id="stgb011"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stgb_t" page="1" linked="" pk="stgbsite,stgb001,stgb002,stgb004,stgb013">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stgbsite,stgb001,stgb012,stgb013,stgb002,&apos;&apos;,stgb003,&apos;&apos;,&apos;&apos;,&apos;&apos;,stgb004,&apos;&apos;,stgb005,stgb006,stgb007,stgb014,stgb008,stgb009,stgb010,stgb011 FROM stgb_t WHERE stgbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

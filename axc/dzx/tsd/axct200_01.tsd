@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axct200_01" std_prog="axct200_01" erpver="1.0" ver="1" module="AXC" booking="Y" class="I" template="F001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xcbh_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.根据QBE去生产工单相关档案抓取在单据日期(xcbh001)归属年度期别内有入库和报工的工单信息，分site及归属法人分开产生数据。
+2.产生单头(xcbh_t)资料：按工单归属的site和法人别和单据日期产生单据编号（xcbhdocno）.
+3.产生单身(xcbi_t)资料：
+   3.1成本中心(xcbi001)根据画面上选取的“交易对象/成本中心”分别抓取工单上的“交易对象/成本中心”栏位。
+   3.2入库数量(xcbi100)抓取单据日期归属年度月份的完工入库量
+   3.3期末在制数量(xcbi101)=根据投入量减去完工入库量计算，应该有一支元件。具体要问一下制造段的SA或SD。
+   3.4期末在制约当率(xcbi102)=根据工单工艺设定的标准约当率计算，应该有一支元件。具体要问一下制造段的SA或SD。
+   3.5期末在制约当量(xcbi103)=期末在制数量(xcbi101)*期末在制约当率(xcbhi102)
+   3.6报工数量(xcbi104)=入库数量(xcbi100)+期末在制约当量(xcbi103)
+   3.7实际工时(xcbi201)=0
+   3.8实际机时(xcbi202)=0
+   3.9标准工时(xcbi203)=报工数量(xcbi104)*工单生产主件的单位标准工时
+   3.10标准机时(xcbi204)=报工数量(xcbi104)*工单生产主件的单位标准机时
+
+
+]]>
+  </all>
+  <field cite_std="N" name="Outsourcing" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[委外工单撷取否：
+勾选：需撷取工单档类型为委外的工单
+不勾选：不撷取工单档类型为委外的工单]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaa010" ver="1" src="s" column="sfaa010" table="sfaa_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="q_imaa001_9" c_zoom="q_imaa001_9" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaadocdt" ver="1" src="s" column="sfaadocdt" table="sfaa_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaadocno" ver="1" src="s" column="sfaadocno" table="sfaa_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="" c_zoom="q_sfaadocno_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaasite" ver="1" src="s" column="sfaasite" table="sfaa_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbh_t.xcbh001" ver="1" src="s" column="xcbh001" table="xcbh_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbh_t.xcbhcomp" ver="1" src="s" column="xcbhcomp" table="xcbh_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooef001_2" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbh_t.xcbhdocno" ver="1" src="s" column="xcbhdocno" table="xcbh_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="q_ooba002" c_zoom="q_xcbhdocno" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbi001" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="RadioGroup" status="">
+    <![CDATA[成本中心来源：
+此选项，决定axct200成本中心的来源
+
+异动厂商/客户编号/部门编号：
+选项此项，则axct200的成本中心=库存异动档中的异动厂商/客户编号/部门编号
+
+成本中心：
+选项此项，则axct200的成本中心=工单档中的成本中心
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="Outsourcing" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaa010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbh_t.xcbh001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbh_t.xcbhcomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbh_t.xcbhdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbi001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_group" text="QBE" lstr=""/>
+    <sfield name="lbl_xcbhsite" text="營運組織" lstr=""/>
+    <sfield name="lbl_xcbhcomp" text="法人組織" lstr=""/>
+    <sfield name="lbl_sfaadocno" text="工單號碼" lstr=""/>
+    <sfield name="lbl_sfaa010" text="生產料號" lstr=""/>
+    <sfield name="lbl_sfaadocdt" text="開單日期" lstr=""/>
+    <sfield name="lbl_group_1" text="INPUT" lstr=""/>
+    <sfield name="lbl_xcbhdocno" text="單據別" lstr=""/>
+    <sfield name="lbl_xcbh001" text="單據日期" lstr=""/>
+    <sfield name="lbl_Outsourcing" text="委外工單擷取否" lstr=""/>
+    <sfield name="lbl_group_2" text="成本中心來源" lstr=""/>
+    <sfield name="lbl_a" text="交易對象" lstr=""/>
+    <sfield name="lbl_b" text="成本中心" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="Outsourcing" status=""/>
+    <widget name="sfaa_t.sfaa010" status=""/>
+    <widget name="sfaa_t.sfaadocdt" status=""/>
+    <widget name="sfaa_t.sfaadocno" status=""/>
+    <widget name="xcbh_t.xcbh001" status=""/>
+    <widget name="xcbh_t.xcbhcomp" status=""/>
+    <widget name="xcbh_t.xcbhdocno" status=""/>
+    <widget name="xcbi001" status=""/>
+  </exclude>
+</spec>

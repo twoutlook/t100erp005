@@ -1,0 +1,1672 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmp812.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-03-28 11:31:28), PR版次:0004(2016-08-03 15:07:13)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000043
+#+ Filename...: apmp812
+#+ Description: 供應商績效評核定量評分整批產生作業
+#+ Creator....: 02749(2015-06-12 03:50:05)
+#+ Modifier...: 06814 -SD/PR- 08734
+ 
+{</section>}
+ 
+{<section id="apmp812.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#Memos
+#160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01,apmp812_debs_tmp ——> apmp812_tmp02,apmp812_stbb_tmp ——> apmp812_tmp03,apmp812_pmdt_tmp ——> apmp812_tmp04,apmp812_pmdn_tmp ——> apmp812_tmp05
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       pmcc001 LIKE pmcc_t.pmcc001, 
+   pmcc002 LIKE pmcc_t.pmcc002, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmp812.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   DEFINE l_success   LIKE type_t.num5
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   #150710-00014#1 20150717 mark by beckxie---S
+   #LET g_argv[1] = cl_replace_str(g_argv[1], '\"', '')   #wc
+   #DISPLAY 'g_argv[1]-wc: ',g_argv[1]
+   #150710-00014#1 20150717 mark by beckxie---E   
+   CALL apmp812_create_tmp() RETURNING l_success
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      #150710-00014#1 20150717 mark by beckxie---S
+      #LET lc_param.wc = g_argv[1] 
+      #
+      #LET ls_js = util.JSON.stringify(lc_param)
+      #150710-00014#1 20150717 mark by beckxie---E
+      #end add-point
+      CALL apmp812_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmp812 WITH FORM cl_ap_formpath("apm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL apmp812_init()
+ 
+      #進入選單 Menu (="N")
+      CALL apmp812_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apmp812
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL apmp812_drop_tmp() RETURNING l_success
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apmp812.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION apmp812_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp812.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apmp812_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON pmcc001,pmcc002
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.pmcc001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmcc001
+            #add-point:ON ACTION controlp INFIELD pmcc001 name="construct.c.pmcc001"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmcc001()                      
+            DISPLAY g_qryparam.return1 TO pmcc001 
+            NEXT FIELD pmcc001 
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmcc001
+            #add-point:BEFORE FIELD pmcc001 name="construct.b.pmcc001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmcc001
+            
+            #add-point:AFTER FIELD pmcc001 name="construct.a.pmcc001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pmcc002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmcc002
+            #add-point:ON ACTION controlp INFIELD pmcc002 name="construct.c.pmcc002"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmcc002_1()                     
+            DISPLAY g_qryparam.return1 TO pmcc002  
+            NEXT FIELD pmcc002  
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmcc002
+            #add-point:BEFORE FIELD pmcc002 name="construct.b.pmcc002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmcc002
+            
+            #add-point:AFTER FIELD pmcc002 name="construct.a.pmcc002"
+            
+            #END add-point
+            
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL apmp812_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL apmp812_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      DISPLAY "lc_param.wc==",lc_param.wc
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL apmp812_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = apmp812_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp812.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apmp812_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp812.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION apmp812_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   DEFINE l_err_cnt         LIKE type_t.num5
+   DEFINE l_pmcc001         LIKE pmcc_t.pmcc001
+   DEFINE l_pmcc002         LIKE pmcc_t.pmcc002
+   DEFINE l_pmcc003         LIKE pmcc_t.pmcc003
+   DEFINE l_pmcc004         LIKE pmcc_t.pmcc004
+   DEFINE l_pmcc005         LIKE pmcc_t.pmcc005
+   DEFINE l_acc_rtax001     LIKE rtax_t.rtax001
+   DEFINE l_pmaa001         LIKE pmaa_t.pmaa001
+   DEFINE l_pmaa011         LIKE pmaa_t.pmaa011
+   DEFINE l_stbb002         LIKE stbb_t.stbb002
+   DEFINE l_sum_stbb009     LIKE stbb_t.stbb009
+   DEFINE l_cnt             LIKE type_t.num5
+   #160106-00002#4 160125 by lori add---(S)
+   DEFINE l_pmcj003         LIKE pmcj_t.pmcj003  #評核類別
+   DEFINE l_pmcj005         LIKE pmcj_t.pmcj005  #評核項目 
+   DEFINE l_exist_sql       STRING               #排除評核計算SQL     
+   #160106-00002#4 160125 by lori add---(E)   
+   DEFINE l_msg         STRING           #160225-00040#12 20160328 add by beckxie
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   #160225-00040#12 20160328 add by beckxie---S
+   IF g_bgjob <> "Y" THEN
+      CALL cl_progress_bar_no_window(25)   
+   END IF
+   #160225-00040#12 20160328 add by beckxie---E 
+   DISPLAY "lc_param.wc = ",lc_param.wc   #150710-00014#1 20150717 add by beckxie
+   
+   LET l_err_cnt = 0
+   CALL s_transaction_begin()
+   IF g_bgjob = "N" THEN
+      CALL cl_err_collect_init()
+   END IF
+   
+   #160106-00002#4 160125 by lori add---(S)
+   LET l_pmcj003 = '1'   #評核類別
+   LET l_exist_sql = " AND NOT EXISTS(SELECT 1 FROM pmcj_t ",
+                     "                 WHERE pmcjent = ",g_enterprise,
+                     "                   AND pmcj001 = pmcc001 ",
+                     "                   AND pmcj002 = pmcc002 ",
+                     "                   AND pmcj003 = '",l_pmcj003,"' ",
+                     "                   AND pmcj004 = pmaa001 ",
+                     "                   AND pmcj005 = ?) "
+   #160106-00002#4 160125 by lori add---(E)
+                    
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #1.取供應商評核項目
+   LET ls_sql = "SELECT pmcc001,pmcc002,pmcc003,pmcc004,pmcc005 ",   #評核期別,評核品類,評核開始日期,評核結束日期,定量評核整體權重
+                "  FROM pmcc_t ",
+                " WHERE pmccent = ",g_enterprise,
+                "   AND ",lc_param.wc,
+                "   AND pmccstus = 'Y' "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_get_pmpcc_pre FROM ls_sql
+   DECLARE apmp812_get_pmpcc_cur CURSOR FOR apmp812_get_pmpcc_pre
+  #DISPLAY "[apmp812_get_pmpcc_pre] ",ls_sql
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.取評核資料
+   #2.1.銷售額佔比,毛利額佔比,毛利率-資料來源
+   LET ls_sql = "INSERT INTO apmp812_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_debs_tmp ——> apmp812_tmp02
+                "SELECT pmaa001,pmcc001,pmcc002,pmcc005, ",
+                "       COALESCE(SUM(COALESCE(debs012,0)),0) sum_debs012, ",    #總銷售成本
+                "       COALESCE(SUM(COALESCE(debs016,0)),0) sum_debs016, ",    #應收金額
+                "       COALESCE(SUM(COALESCE(debs017,0)),0) sum_debs017 ",     #毛利額佔比
+                "  FROM pmaa_t ",
+                "       LEFT JOIN (SELECT debsent,debs002,debs005,debs007, ",   #企業編號,統計日期,品類,主供應商
+                "                         debs012,debs016,debs017, ",           #總銷售成本,應收金額,毛利額佔比
+                "                         pmcc001,pmcc002,pmcc005 ",
+                "                    FROM debs_t,apmp812_tmp01 ",       #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+                "                   WHERE debs005 = rtax001 ",
+                "                     AND debs002 BETWEEN pmcc003 AND pmcc004 ",
+                "                     AND debs035 = '4') ",                     #150728-00004#2 150901 by lori add
+                "              ON pmaaent = debsent AND pmaa001 = debs007 ",
+                " WHERE pmaaent = ",g_enterprise,
+                "   AND pmaa002 IN ('1','3') ",                                 #交易對象=1.供應商 3.交易對象
+                "   AND pmaastus = 'Y' ",
+                " GROUP BY pmaa001,pmcc001,pmcc002,pmcc005 "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_debs_tmp FROM ls_sql          
+  #DISPLAY "[apmp812_ins_debs_tmp] ",ls_sql
+
+   LET ls_sql = "SELECT COUNT(*) FROM apmp812_tmp02 "  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_debs_tmp ——> apmp812_tmp02
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_cnt_debs_tmp FROM ls_sql 
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.1.1.pmcj005=1   #評核項目:銷售額佔比
+   LET ls_sql = "INSERT INTO pmcj_t(pmcjent,pmcj001,pmcj002,pmcj003,pmcj004, ",       #企業編號,評核期別,評核品類,評核類別,供應商編號
+                "                   pmcj005,pmcj006,pmcj007 ) ",                      #評核項目,評核部門,評核分數
+                "SELECT ",g_enterprise,",pmcc001,pmcc002, ? ,pmaa001, ",              #160106-00002#4 160125 lori by mod 評核類別改用變數
+                "       '1' ,'",g_dept,"', ",                                         
+                "       (sum_debs016/(SELECT SUM(debs016) ",
+                "                       FROM debs_t,apmp812_tmp01 t2 ",    #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+                "                      WHERE debsent = ",g_enterprise,
+                "                        AND debs035 = '4' ",                         #150728-00004#2 150901 by lori add
+                "                        AND debs005 = t2.rtax001 ",
+                "                        AND t2.pmcc001 = t1.pmcc001 ",
+                "                        AND debs002 BETWEEN t2.pmcc003 AND t2.pmcc004))*(pmcc005/100) ",     
+                "  FROM apmp812_tmp02 t1 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_debs_tmp ——> apmp812_tmp02
+                " WHERE pmcc001 IS NOT NULL ",l_exist_sql                             #160106-00002#4 160125 lori by add l_exist_sql
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmcj_pre1 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmcj_pre1] ",ls_sql  
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.1.2.pmcj005=2   #毛利額佔比
+   LET ls_sql = "INSERT INTO pmcj_t(pmcjent,pmcj001,pmcj002,pmcj003,pmcj004, ",       #企業編號,評核期別,評核品類,評核類別,供應商編號
+                "                   pmcj005,pmcj006,pmcj007 ) ",                      #評核項目,評核部門,評核分數
+                "SELECT ",g_enterprise,",pmcc001,pmcc002, ? ,pmaa001, ",              #160106-00002#4 160125 lori by mod 評核類別改用變數
+                "       '2' ,'",g_dept,"', ",                                         
+                "       (sum_debs017/(SELECT SUM(debs017) ",
+                "          FROM debs_t,apmp812_tmp01 t2 ",    #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+                "         WHERE debsent = ",g_enterprise, 
+                "           AND debs005 = t2.rtax001 ",
+                "           AND debs035 = '4' ",                                      #150728-00004#2 150901 by lori add
+                "           AND t2.pmcc001 = t1.pmcc001 ",
+                "           AND debs002 BETWEEN t2.pmcc003 AND t2.pmcc004))*(pmcc005/100) ",      
+                "  FROM apmp812_tmp02 t1 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_debs_tmp ——> apmp812_tmp02
+                " WHERE pmcc001 IS NOT NULL ",l_exist_sql                             #160106-00002#4 160125 lori by add l_exist_sql
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmcj_pre2 FROM ls_sql                
+  #DISPLAY "[apmp812_ins_pmcj_pre2] ",ls_sql 
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.1.3.pmcj005=3   #毛利率 
+   LET ls_sql = "INSERT INTO pmcj_t(pmcjent,pmcj001,pmcj002,pmcj003,pmcj004, ",         #企業編號,評核期別,評核品類,評核類別,供應商編號
+                "                   pmcj005,pmcj006,pmcj007 ) ",                        #評核項目,評核部門,評核分數
+                "SELECT ",g_enterprise,",pmcc001,pmcc002, ? ,pmaa001, ",                #160106-00002#4 160125 lori by mod 評核類別改用變數
+                "       '3' ,'",g_dept,"', ",                                           
+                "       (sum_debs016-sum_debs012/(SELECT SUM(debs016-debs012) ", 
+                "                                   FROM debs_t,apmp812_tmp01 t2 ",    #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+                "                                  WHERE debsent = ",g_enterprise,
+                "                                    AND debs005 = t2.rtax001 ", 
+                "                                    AND debs035 = '4' ",               #150728-00004#2 150901 by lori add
+                "                                    AND t2.pmcc001 = t1.pmcc001 ",
+                "                                    AND debs002 BETWEEN t2.pmcc003 AND t2.pmcc004))*(pmcc005/100) ",               
+                "  FROM apmp812_tmp02 t1 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_debs_tmp ——> apmp812_tmp02
+                " WHERE pmcc001 IS NOT NULL ",l_exist_sql                               #160106-00002#4 160125 lori by add l_exist_sql
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmcj_pre3 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmcj_pre3] ",ls_sql 
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.2.採購收入佔比-資料來源
+   #需要幣別金額轉換時(待確認)
+   #LET ls_sql = "SELECT pmaa001,pmaa011,pmcc001,pmcc002,pmcc005,stbb002,sum_stbb009 ",
+   #             "  FROM ( ",
+   #             "        SELECT pmaa001,pmaa011,pmcc001,pmcc002,pmcc005,stbb002, ",    #供應商編號,統計幣別,期別,品類,評核比率,幣別
+   #             "               COALESCE(SUM(COALESCE(stbb009,0)),0) sum_stbb009, ",   #總銷售成本"
+   #             "          FROM pmaa_t ",
+   #             "               LEFT JOIN (SELECT stbaent,stba002,stbb002,stbb009, ",   #企業編號,供應商編號,幣別,費用金額
+   #             "                                 pmcc001,pmcc002,pmcc005 ",
+   #             "                            FROM stbb_t,stba_t,apmp812_acc_rtax ",
+   #             "                           WHERE stbbent = stbaent AND stbbdocno = stbadocno ",
+   #             "                             AND stbastus = 'Y' ",
+   #             "                             AND stbb011 = rtax001 ",
+   #             "                             AND stbb005 BETWEEN pmcc003 AND pmcc004 ",
+   #             "                             AND stbb006 BETWEEN pmcc003 AND pmcc004 ) ",
+   #             "                      ON pmaaent = stbaent AND pmaa001 = stba002 ",
+   #             "         WHERE pmaaent = ",g_enterprise,
+   #             "           AND pmaa002 IN ('1','3') ",                #交易對象=1.供應商 3.交易對象
+   #             "           AND pmaastus = 'Y' ",
+   #             "         GROUP BY pmaa001,pmaa011,pmcc001,pmcc002,pmcc005,stbb002 ",
+   #             "       ) ",
+   #             "ORDER BY pmaa001,pmcc001,pmcc002,pmaa011,stbb002"
+   #PREPARE apmp812_stbb_tmp_pre FROM ls_sql
+   #DECLARE apmp812_stbb_tmp_cur CURSOR FOR apmp812_stbb_tmp_pre
+   #DISPLAY "[apmp812_stbb_tmp_pre] ",ls_sql
+   
+   LET ls_sql = "INSERT INTO apmp812_tmp03 ",   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_stbb_tmp ——> apmp812_tmp03
+                "SELECT pmaa001,pmcc001,pmcc002,pmcc005, ",                      #供應商編號,期別,品類,評核比率
+                "       COALESCE(SUM(COALESCE(stbb009,0)),0) sum_stbb009 ",      #總銷售成本"
+                "  FROM pmaa_t ",
+                "       LEFT JOIN (SELECT stbaent,stba002,stbb002,stbb009, ",    #企業編號,供應商編號,幣別,費用金額
+                "                         pmcc001,pmcc002,pmcc005 ",
+                "                    FROM stbb_t,stba_t,apmp812_tmp01 ",    #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+                "                   WHERE stbbent = stbaent AND stbbdocno = stbadocno ",
+                "                     AND stbastus = 'Y' ",
+                "                     AND stbb011 = rtax001 ",
+                "                     AND stbb005 BETWEEN pmcc003 AND pmcc004 ",
+                "                     AND stbb006 BETWEEN pmcc003 AND pmcc004 ) ",
+                "              ON pmaaent = stbaent AND pmaa001 = stba002 ",
+                " WHERE pmaaent = ",g_enterprise,
+                "   AND pmaa002 IN ('1','3') ",                #交易對象=1.供應商 3.交易對象
+                "   AND pmaastus = 'Y' ",
+                " GROUP BY pmaa001,pmcc001,pmcc002,pmcc005 "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_stbb_tmp FROM ls_sql
+  #DISPLAY "[apmp812_ins_stbb_tmp] ",ls_sql
+
+   LET ls_sql = "SELECT COUNT(*) FROM apmp812_tmp03 "  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_stbb_tmp ——> apmp812_tmp03
+   PREPARE apmp812_cnt_stbb_tmp FROM ls_sql 
+   
+   #pmcj005=4   #評核項目:採購收入佔比
+   LET ls_sql = "INSERT INTO pmcj_t(pmcjent,pmcj001,pmcj002,pmcj003,pmcj004, ",        #企業編號,評核期別,評核品類,評核類別,供應商編號
+                "                   pmcj005,pmcj006,pmcj007 ) ",                       #評核項目,評核部門,評核分數
+                "SELECT ",g_enterprise,",pmcc001,pmcc002, ? ,pmaa001, ",               #160106-00002#4 160125 lori by mod 評核類別改用變數 
+                "       '4' ,'",g_dept,"', ",                                           
+                "       (sum_stbb009/(SELECT SUM(sum_stbb009) ",
+                "                       FROM apmp812_tmp03 t2 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_stbb_tmp ——> apmp812_tmp03
+                "                      WHERE t2.pmaa001 = t1.pmaa001 AND t2.pmcc001 = t1.pmcc001))*(pmcc005/100) ",     
+                "  FROM apmp812_tmp03 t1 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_stbb_tmp ——> apmp812_tmp03
+                " WHERE pmcc001 IS NOT NULL ",l_exist_sql                             #160106-00002#4 160125 lori by add l_exist_sql
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmcj_pre4 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmcj_pre4] ",ls_sql
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.3.進貨額佔比,退貨額佔比,淨進貨額佔比-資料來源
+   #需要幣別金額轉換時(待確認)
+   #LET ls_sql = "SELECT pmaa001,pmcc001,pmcc002,pmcc005,pmds037, ",
+   #             "       SUM(sum_purchase),SUM(sum_return) ",
+   #             "  FROM pmaa_t ",
+   #             "       LEFT JOIN (SELECT pmdtent,pmds007,pmds037, ", #企業編號,供應商編號,幣別
+   #             "                         COALESCE((CASE WHEN pmds000 = '3' OR pmds000 = '4' THEN pmdt039 END),0) sum_purchase, ",  #進貨額
+   #             "                         COALESCE((CASE WHEN pmds000 = '7' THEN pmdt039 END),0) sum_return ",                      #退貨額
+   #             "                         pmcc001,pmcc002,pmcc005 ",                
+   #             "                    FROM pmdt_t,pmds_t,imaa_t,apmp812_acc_rtax ",
+   #             "                   WHERE pmdtent = pmdsent AND pmdtdocno = pmdsdocno ",
+   #             "                     AND pmdtent = imaaent AND pmdt006 = imaa001 ",
+   #             "                     AND pmdsdocno = 'Y' ",
+   #             "                     AND imaa009 = rtax001 ",
+   #             "                     AND pmdsdocdt BETWEEN pmcc003 AND pmcc004 ",
+   #             "                     AND pmdsdocdt BETWEEN pmcc003 AND pmcc004 ) ",                
+   #             "         ON pmaaent = pmdtent AND pmaa001 = pmds007 ",
+   #             " WHERE pmaaent = ",g_enterprise,
+   #             "   AND pmaa002 IN ('1','3') ",                #交易對象=1.供應商 3.交易對象
+   #             "   AND pmaastus = 'Y' ",
+   #             " GROUP BY pmaa001,pmcc002,pmcc005,pmds037 "
+   #PREPARE apmp812_pmdt_tmp_pre FROM ls_sql
+   #DECLARE apmp812_pmdt_tmp_cur CURSOR FOR apmp812_pmdt_tmp_pre
+   #DISPLAY "[apmp812_pmdt_tmp_pre] ",ls_sql
+
+   LET ls_sql = "INSERT INTO apmp812_tmp04 ",     #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+                "SELECT pmaa001,pmcc001,pmcc002,pmcc005, ",
+                "       SUM(sum_purchase),SUM(sum_return) ",
+                "  FROM pmaa_t ",
+                "       LEFT JOIN (SELECT pmdtent,pmds007,pmds037, ", #企業編號,供應商編號,幣別
+                "                         COALESCE((CASE WHEN pmds000 = '3' OR pmds000 = '4' THEN pmdt039 END),0) sum_purchase, ",  #進貨額
+                "                         COALESCE((CASE WHEN pmds000 = '7' THEN pmdt039 END),0) sum_return, ",                      #退貨額
+                "                         pmcc001,pmcc002,pmcc005 ",                
+                "                    FROM pmdt_t,pmds_t,imaa_t,apmp812_tmp01 ",   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+                "                   WHERE pmdtent = pmdsent AND pmdtdocno = pmdsdocno ",
+                "                     AND pmdtent = imaaent AND pmdt006 = imaa001 ",
+                "                     AND pmdsdocno = 'Y' ",
+                "                     AND imaa009 = rtax001 ",
+                "                     AND pmdsdocdt BETWEEN pmcc003 AND pmcc004 ",
+                "                     AND pmdsdocdt BETWEEN pmcc003 AND pmcc004 ) ",                
+                "         ON pmaaent = pmdtent AND pmaa001 = pmds007 ",
+                " WHERE pmaaent = ",g_enterprise,
+                "   AND pmaa002 IN ('1','3') ",                #交易對象=1.供應商 3.交易對象
+                "   AND pmaastus = 'Y' ",
+                " GROUP BY pmaa001,pmcc001,pmcc002,pmcc005 "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmdt_tmp FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmdt_tmp] ",ls_sql
+
+   LET ls_sql = "SELECT COUNT(*) FROM apmp812_tmp04 "  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_cnt_pmdt_tmp FROM ls_sql 
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.3.1.pmcj005=5   #評核項目:進貨額佔比
+   LET ls_sql = "INSERT INTO pmcj_t(pmcjent,pmcj001,pmcj002,pmcj003,pmcj004, ",        #企業編號,評核期別,評核品類,評核類別,供應商編號
+                "                   pmcj005,pmcj006,pmcj007 ) ",                       #評核項目,評核部門,評核分數
+                "SELECT ",g_enterprise,",pmcc001,pmcc002, ? ,pmaa001, ",               #160106-00002#4 160125 lori by mod 評核類別改用變數
+                "       '5' ,'",g_dept,"', ",                                          
+                "       (sum_purchase/(SELECT SUM(sum_purchase) ",
+                "                       FROM apmp812_tmp04 t2 ",   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+                "                      WHERE t2.pmaa001 = t1.pmaa001 AND t2.pmcc001 = t1.pmcc001))*(pmcc005/100) ",     
+                "  FROM apmp812_tmp04 t1 ",   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+                " WHERE pmcc001 IS NOT NULL ",l_exist_sql                             #160106-00002#4 160125 lori by add l_exist_sql  
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmcj_pre5 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmcj_pre5] ",ls_sql   
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.3.2.pmcj005=6   #評核項目:退貨額佔比
+   LET ls_sql = "INSERT INTO pmcj_t(pmcjent,pmcj001,pmcj002,pmcj003,pmcj004, ",           #企業編號,評核期別,評核品類,評核類別,供應商編號
+                "                   pmcj005,pmcj006,pmcj007 ) ",                          #評核項目,評核部門,評核分數
+                "   SELECT ",g_enterprise,",pmcc001,pmcc002, ? ,pmaa001, ",               #160106-00002#4 160125 lori by mod 評核類別改用變數
+                "          '6' ,'",g_dept,"', ",                                          
+                "          (sum_return/(SELECT SUM(sum_return)  ",
+                "                          FROM apmp812_tmp04 t2 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+                "                         WHERE t2.pmaa001 = t1.pmaa001 AND t2.pmcc001 = t1.pmcc001))*(pmcc005/100) ",     
+                "     FROM apmp812_tmp04 t1 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+                "    WHERE pmcc001 IS NOT NULL ",l_exist_sql                              #160106-00002#4 160125 lori by add l_exist_sql 
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE   apmp812_ins_pmcj_pre6 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmcj_pre6] ",ls_sql 
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #4.3.3.pmcj005=7   #淨進貨額佔比
+   LET ls_sql = "INSERT INTO pmcj_t(pmcjent,pmcj001,pmcj002,pmcj003,pmcj004, ",           #企業編號,評核期別,評核品類,評核類別,供應商編號
+                "                   pmcj005,pmcj006,pmcj007 ) ",                          #評核項目,評核部門,評核分數
+                "   SELECT ",g_enterprise,",pmcc001,pmcc002, ? ,pmaa001, ",               #160106-00002#4 160125 lori by mod 評核類別改用變數
+                "          '7' ,'",g_dept,"', ",                                          
+                "          ((sum_return-sum_return)/(SELECT SUM(sum_return-sum_return) ",
+                "                          FROM apmp812_tmp04 t2 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+                "                         WHERE t2.pmaa001 = t1.pmaa001 AND t2.pmcc001 = t1.pmcc001))*(pmcc005/100) ",     
+                "     FROM apmp812_tmp04 t1 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+                "    WHERE pmcc001 IS NOT NULL ",l_exist_sql                              #160106-00002#4 160125 lori by add l_exist_sql 
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmcj_pre7 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmcj_pre7] ",ls_sql 
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.4.配送能力,送貨達標率,訂單滿足率-資料來源
+   LET ls_sql = "INSERT INTO apmp812_tmp05 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+                "SELECT pmaa001,pmcc001,pmcc002,pmcc005,pmdndocno,'','1',COUNT(pmdt001) cnt_doc ",
+                "  FROM pmaa_t ",
+                "       LEFT JOIN (SELECT pmdnent,pmdl004,pmdndocno,pmdnseq, ",
+                "                         (SELECT UNIQUE pmdt001 FROM pmdt_t ",
+                "                           WHERE pmdndocno = pmdt001 AND pmdnseq = pmdt002 ",
+                "                             AND pmdt020 > 0) pmdt001, ",
+                "                         pmcc001,pmcc002,pmcc005",
+                "                    FROM pmdn_t,pmdl_t,imaa_t,apmp812_tmp01 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+                "                   WHERE pmdnent = pmdlent AND pmdndocno = pmdldocno ",
+                "                     AND pmdnent = imaaent AND pmdn001 = imaa001 ",
+                "                     AND pmdlstus = 'Y' ",
+                "                     AND imaa009 = rtax001 ",
+                "                     AND pmdldocdt BETWEEN pmcc003 AND pmcc004 ",
+                "                     AND pmdldocdt BETWEEN pmcc003 AND pmcc004) ",   
+                "         ON pmaaent = pmdnent AND pmaa001 = pmdl004 ",
+                " WHERE pmaaent = ",g_enterprise,
+                "   AND pmaa002 IN ('1','3') ",                #交易對象=1.供應商 3.交易對象
+                "   AND pmaastus = 'Y' ",
+                " GROUP BY pmaa001,pmcc001,pmcc002,pmcc005,pmdndocno "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmdn_tmp1 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmdn_tmp1] ",ls_sql
+   
+   LET ls_sql = "SELECT COUNT(*) FROM apmp812_tmp05 WHERE cnt_type = '1'"  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_cnt_pmdn_tmp1 FROM ls_sql 
+   
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.4.1.pmcj005=8   #評核項目:配送能力
+   LET ls_sql = "INSERT INTO pmcj_t(pmcjent,pmcj001,pmcj002,pmcj003,pmcj004, ",            #企業編號,評核期別,評核品類,評核類別,供應商編號
+                "                   pmcj005,pmcj006,pmcj007 ) ",                           #評核項目,評核部門,評核分數
+                "   SELECT ",g_enterprise,",pmcc001,pmcc002, ? ,pmaa001, ",　　　　　　　   #160106-00002#4 160125 lori by mod 評核類別改用變數　　
+                "          '8' ,'",g_dept,"' , ",
+                "          SUM(cnt_doc)/COALESCE(COALESCE((SELECT COUNT(pmdndocno) FROM apmp812_tmp05 t2 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+                "                                           WHERE t2.pmcc001 = t1.pmcc001 AND t2.pmcc002 = t1.pmcc002 ",
+                "                                             AND t2.pmaa001 = t1.pmaa001 AND t2.pmcc005 = t1.pmcc005), ",
+                "                                         SUM(cnt_doc)),1)*(pmcc005/100) ",
+                "     FROM apmp812_tmp05 t1 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+                "    WHERE cnt_type = '1' ",
+                "      AND pmcc001 IS NOT NULL ",l_exist_sql,                              #160106-00002#4 160125 lori by add l_exist_sql
+                "     GROUP BY pmcc001,pmcc002,pmaa001,pmcc005 "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmcj_pre8 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmcj_pre8] ",ls_sql 
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.5.送貨達標率-資料來源
+   LET ls_sql = "INSERT INTO apmp812_tmp05 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+                "SELECT pmaa001,pmcc001,pmcc002,pmcc005,pmdndocno,pmdnseq,'2',COUNT(pmdt001) cnt_doc ",
+                "  FROM pmaa_t ",
+                "       LEFT JOIN (SELECT pmdnent,pmdl004,pmdndocno,pmdnseq, ",
+                "                         (SELECT UNIQUE pmdt001 FROM pmdt_t ",
+                "                           WHERE pmdndocno = pmdt001 AND pmdnseq = pmdt002 ",
+                "                             AND pmdt020 > 0) pmdt001, ",
+                "                         pmcc001,pmcc002,pmcc005 ",
+                "                    FROM pmdn_t,pmdl_t,imaa_t,apmp812_tmp01 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+                "                   WHERE pmdnent = pmdlent AND pmdndocno = pmdldocno ",
+                "                     AND pmdnent = imaaent AND pmdn001 = imaa001 ",
+                "                     AND pmdlstus = 'Y' ",
+                "                     AND imaa009 = rtax001 ",
+                "                     AND pmdldocdt BETWEEN pmcc003 AND pmcc004 ",
+                "                     AND pmdldocdt BETWEEN pmcc003 AND pmcc004) ",   
+                "         ON pmaaent = pmdnent AND pmaa001 = pmdl004 ",
+                " WHERE pmaaent = ",g_enterprise,
+                "   AND pmaa002 IN ('1','3') ",                #交易對象=1.供應商 3.交易對象
+                "   AND pmaastus = 'Y' ",
+                " GROUP BY pmaa001,pmcc001,pmcc002,pmcc005,pmdndocno,pmdnseq "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmdn_tmp2 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmdn_tmp2] ",ls_sql
+
+   LET ls_sql = "SELECT COUNT(*) FROM apmp812_tmp05 WHERE cnt_type = '2'"  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_cnt_pmdn_tmp2 FROM ls_sql
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.5.1.pmcj005=9   #評核項目:送貨達標率
+   LET ls_sql = "INSERT INTO pmcj_t(pmcjent,pmcj001,pmcj002,pmcj003,pmcj004, ",    #企業編號,評核期別,評核品類,評核類別,供應商編號
+                "                   pmcj005,pmcj006,pmcj007 ) ",                   #評核項目,評核部門,評核分數
+                "   SELECT ",g_enterprise,",pmcc001,pmcc002, ? ,pmaa001, ",        #160106-00002#4 160125 lori by mod 評核類別改用變數　
+                "          '9' ,'",g_dept,"', ",  
+                "          (SUM(cnt_doc)/COALESCE(COALESCE((SELECT COUNT(*) ",
+                "                                             FROM apmp812_tmp05 t2 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+                "                                            WHERE t2.pmaa001 = t1.pmaa001 ",
+                "                                              AND t2.pmcc001 = t1.pmcc001 ",
+                "                                              AND cnt_type = '2'), ",
+                "                                           SUM(cnt_doc)),1))*(pmcc005/100) ",     
+                "     FROM apmp812_tmp05 t1 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+                "    WHERE cnt_type = '2' ",
+                "      AND pmcc001 IS NOT NULL ",l_exist_sql,                      #160106-00002#4 160125 lori by add l_exist_sql  
+                "    GROUP BY pmcc001,pmcc002,pmaa001,pmcc005 "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmcj_pre9 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmcj_pre9] ",ls_sql 
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.6.訂單滿足率-資料來源
+   LET ls_sql = "INSERT INTO apmp812_tmp05 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+                "SELECT pmaa001,pmcc001,pmcc002,pmcc005,pmdndocno,pmdnseq,'3',SUM(cnt_pmdn007) cnt_doc ",
+                "  FROM pmaa_t ",
+                "       LEFT JOIN (SELECT pmdnent,pmdl004,pmdndocno,pmdnseq, ",
+                "                         ( ",
+                "                           CASE WHEN pmdn007 <= (SELECT SUM(pmdt020) FROM pmdt_t ",
+                "                                                  WHERE pmdt001 = pmdndocno ",
+                "                                                    AND pmdt002 = pmdnseq ",
+                "                                                    AND pmdt020 > 0) THEN 1 ",
+                "                                ELSE 0 ",
+                "                            END ",
+                "                          ) cnt_pmdn007, ",
+                "                         pmcc001,pmcc002,pmcc005 ",
+                "                    FROM pmdn_t,pmdl_t,imaa_t,apmp812_tmp01 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+                "                   WHERE pmdnent = pmdlent AND pmdndocno = pmdldocno ",
+                "                     AND pmdnent = imaaent AND pmdn001 = imaa001 ",
+                "                     AND pmdlstus = 'Y' ",
+                "                     AND imaa009 = rtax001 ",
+                "                     AND pmdldocdt BETWEEN pmcc003 AND pmcc004 ",
+                "                     AND pmdldocdt BETWEEN pmcc003 AND pmcc004) ",   
+                "         ON pmaaent = pmdnent AND pmaa001 = pmdl004 ",
+                " WHERE pmaaent = ",g_enterprise,
+                "   AND pmaa002 IN ('1','3') ",                #交易對象=1.供應商 3.交易對象
+                "   AND pmaastus = 'Y' ",
+                " GROUP BY pmaa001,pmcc001,pmcc002,pmcc005,pmdndocno,pmdnseq "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmdn_tmp3 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmdn_tmp3] ",ls_sql
+
+   LET ls_sql = "SELECT COUNT(*) FROM apmp812_tmp05 WHERE cnt_type = '3'"    #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_cnt_pmdn_tmp3 FROM ls_sql
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #2.6.1.pmcj005=10  #評核項目:訂單滿足率
+   LET ls_sql = "INSERT INTO pmcj_t(pmcjent,pmcj001,pmcj002,pmcj003,pmcj004, ",           #企業編號,評核期別,評核品類,評核類別,供應商編號
+                "                   pmcj005,pmcj006,pmcj007 ) ",                          #評核項目,評核部門,評核分數
+                "   SELECT ",g_enterprise,",pmcc001,pmcc002, ? ,pmaa001, ",               #160106-00002#4 160125 lori by mod 評核類別改用變數　
+                "          '10' ,'",g_dept,"' ,SUM(cnt_doc)/COALESCE((COALESCE(COUNT(pmdndocno), ",
+                "                                                               SUM(cnt_doc))), ",
+                "                                                    1)*(pmcc005/100) ",   
+                "     FROM apmp812_tmp05 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+                "    WHERE cnt_type = '3' ",
+                "      AND pmcc001 IS NOT NULL ",l_exist_sql,                            #160106-00002#4 160125 lori by add l_exist_sql  
+                "     GROUP BY pmcc001,pmcc002,pmaa001,pmcc005 "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_pmcj_pre10 FROM ls_sql
+  #DISPLAY "[apmp812_ins_pmcj_pre10] ",ls_sql 
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #3.取得所有要結算的品類
+   LET ls_sql = "INSERT INTO apmp812_tmp01 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+                "   SELECT UNIQUE ? , ? , ? , ? , ? , ",
+                "                 rtax001 ", 
+                "     FROM rtax_t ",
+                "    WHERE rtaxent = ",g_enterprise,
+                "    START WITH rtax001 = ? ",
+                "  CONNECT BY NOCYCLE PRIOR rtax001 = rtax003 "   #,
+                #"    UNION ",
+                #"   SELECT UNIQUE '",l_pmcc001,"', ",
+                #"                 '",l_pmcc002,"', ",
+                #"                 '",l_pmcc003,"', ",
+                #"                 '",l_pmcc004,"', ",
+                #"                 '",l_pmcc005,"', ",
+                #"                 rtax001 ", 
+                #"    FROM rtax_t ",
+                #"   WHERE rtaxent = ",g_enterprise,
+                #"     AND rtax001 = '",l_pmcc002,"' "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_ins_acc_rtax FROM ls_sql   
+  #DISPLAY "[apmp812_ins_acc_rtax]",ls_sql
+  
+   LET l_cnt = 0
+   LET l_err_cnt = 0
+   FOREACH apmp812_get_pmpcc_cur INTO l_pmcc001,l_pmcc002,l_pmcc003,l_pmcc004,l_pmcc005
+      LET l_cnt = l_cnt + 1
+      IF l_pmcc002 <> 'ALL' THEN
+         EXECUTE apmp812_ins_acc_rtax USING l_pmcc001,l_pmcc002,l_pmcc003,l_pmcc004,l_pmcc005,
+                                            l_pmcc002 
+        #DISPLAY "[apmp812_ins_acc_rtax USING]",l_pmcc001,",",l_pmcc002,",",l_pmcc003,",",l_pmcc004,",",l_pmcc005,",",l_pmcc002                                    
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'apmp812_ins_acc_rtax'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            
+            LET l_err_cnt = l_err_cnt + 1            
+         END IF
+      ELSE
+         INSERT INTO apmp812_tmp01     #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01  
+         SELECT UNIQUE l_pmcc001,rtax001,l_pmcc003,l_pmcc004,l_pmcc005,rtax001 
+          FROM rtax_t
+         WHERE rtaxent = g_enterprise
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'Insert apmp812_tmp01'   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            
+            LET l_err_cnt = l_err_cnt + 1            
+         END IF            
+      END IF      
+   END FOREACH  
+   
+   IF l_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'apm-00006'
+      LET g_errparam.extend = l_pmcc002
+      LET g_errparam.popup = TRUE
+      CALL cl_err()   
+      
+      CALL s_transaction_end('N',1) 
+      
+      IF g_bgjob = "N" THEN
+         CALL cl_err_collect_show()
+      END IF        
+      RETURN
+   END IF
+   
+   IF l_err_cnt > 0 THEN
+      IF g_bgjob = "N" THEN
+         CALL cl_err_collect_show()
+      END IF      
+      
+      CALL s_transaction_end('N',1)       
+      RETURN
+   END IF
+   
+   LET l_err_cnt = 0
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #4.計算評核分數
+   #160106-00002#4 160125 lori by add---(S)
+   #4.0.將已計算過評核項目的部分列出
+   #列出已算 銷售額佔比,毛利額佔比,毛利率 的供應商,不重複計算
+   LET ls_sql = "SELECT UNIQUE pmcc001,pmcc002,pmaa001 ",
+                "  FROM apmp812_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_debs_tmp ——> apmp812_tmp02
+                " WHERE EXISTS(SELECT 1 FROM pmcj_t ",
+                "               WHERE pmcjent = ",g_enterprise,
+                "                 AND pmcj001 = pmcc001 ",
+                "                 AND pmcj002 = pmcc002 ",
+                "                 AND pmcj003 = ? ",
+                "                 AND pmcj004 = pmaa001 ",
+                "                 AND pmcj005 = ? ) "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_exists_pmcj_pre1 FROM ls_sql   
+   DECLARE apmp812_exists_pmcj_cur1 CURSOR FOR apmp812_exists_pmcj_pre1   
+
+   #列出已算 採購收入佔 的供應商,不重複計算
+   LET ls_sql = "SELECT UNIQUE pmcc001,pmcc002,pmaa001 ",
+                "  FROM apmp812_tmp03 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_stbb_tmp ——> apmp812_tmp03
+                " WHERE EXISTS(SELECT 1 FROM pmcj_t ",
+                "               WHERE pmcjent = ",g_enterprise,
+                "                 AND pmcj001 = pmcc001 ",
+                "                 AND pmcj002 = pmcc002 ",
+                "                 AND pmcj003 = ? ",
+                "                 AND pmcj004 = pmaa001 ",
+                "                 AND pmcj005 = ? ) "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_exists_pmcj_pre2 FROM ls_sql    
+   DECLARE apmp812_exists_pmcj_cur2 CURSOR FOR apmp812_exists_pmcj_pre2 
+
+   #列出已算 進貨額佔比,退貨額佔比,淨進貨額佔比 的供應商,不重複計算
+   LET ls_sql = "SELECT UNIQUE pmcc001,pmcc002,pmaa001 ",
+                "  FROM apmp812_tmp04 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+                " WHERE EXISTS(SELECT 1 FROM pmcj_t ",
+                "               WHERE pmcjent = ",g_enterprise,
+                "                 AND pmcj001 = pmcc001 ",
+                "                 AND pmcj002 = pmcc002 ",
+                "                 AND pmcj003 = ? ",
+                "                 AND pmcj004 = pmaa001 ",
+                "                 AND pmcj005 = ? ) "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_exists_pmcj_pre3 FROM ls_sql    
+   DECLARE apmp812_exists_pmcj_cur3 CURSOR FOR apmp812_exists_pmcj_pre3 
+
+   #列出已算 配送能力,訂單滿足率 的供應商,不重複計算
+   LET ls_sql = "SELECT UNIQUE pmcc001,pmcc002,pmaa001 ",
+                "  FROM apmp812_tmp05 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+                " WHERE cnt_type = ? ",
+                "   AND EXISTS(SELECT 1 FROM pmcj_t ",
+                "               WHERE pmcjent = ",g_enterprise,
+                "                 AND pmcj001 = pmcc001 ",
+                "                 AND pmcj002 = pmcc002 ",
+                "                 AND pmcj003 = ? ",
+                "                 AND pmcj004 = pmaa001 ",
+                "                 AND pmcj005 = ? ) "
+   LET ls_sql = cl_sql_add_mask(ls_sql)
+   PREPARE apmp812_exists_pmcj_pre4 FROM ls_sql    
+   DECLARE apmp812_exists_pmcj_cur4 CURSOR FOR apmp812_exists_pmcj_pre4   
+   #160106-00002#4 160125 lori by add---(E)
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #4.1.銷售額佔比,毛利額佔比,毛利率
+   EXECUTE apmp812_ins_debs_tmp
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Insert apmp812_tmp02 Error'   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_debs_tmp ——> apmp812_tmp02
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      
+      LET l_err_cnt = l_err_cnt + 1            
+   END IF     
+
+   LET l_cnt = 0
+   EXECUTE apmp812_cnt_debs_tmp INTO l_cnt
+   IF l_cnt > 0 THEN
+      #4.1.1.銷售額佔比
+      LET l_pmcj005 = '1'                                                 #160106-00002#4 160125 lori by add 
+      EXECUTE apmp812_ins_pmcj_pre1 USING l_pmcj003, l_pmcj005            #160106-00002#4 160125 lori by mod #傳入評核類別,項目    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert pmcj_t Error-1'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET l_err_cnt = l_err_cnt + 1            
+      END IF 
+      
+      #4.1.2.毛利額佔比
+      LET l_pmcj005 = '2'                                                 #160106-00002#4 160125 lori by add
+      EXECUTE apmp812_ins_pmcj_pre2 USING l_pmcj003, l_pmcj005            #160106-00002#4 160125 lori by mod #傳入評核類別,項目
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert pmcj_t Error-2'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET l_err_cnt = l_err_cnt + 1            
+      END IF          
+      
+      #4.1.3.毛利率     
+      LET l_pmcj005 = '3'                                                 #160106-00002#4 160125 lori by add
+      EXECUTE apmp812_ins_pmcj_pre3 USING l_pmcj003, l_pmcj005            #160106-00002#4 160125 lori by mod #傳入評核類別,項目
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert pmcj_t Error-3'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET l_err_cnt = l_err_cnt + 1            
+      END IF   
+   END IF
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #4.2.採購收入佔比
+   #須幣別金額轉換處理時(待確認)
+   #FOREACH apmp812_stbb_tmp_cur INTO l_pmaa001,l_pmaa011,l_pmcc001,l_pmcc002,l_pmcc005,l_stbb002,l_sum_stbb009     
+   #   #幣別金額轉換(待確認)
+   #   #IF l_pmaa011 <> l_stbb002 THEN 
+   #   #   
+   #   #END IF
+   #
+   #   INSERT INTO apmp812_stbb_tmp(pmaa001,pmcc001,pmcc002,pmcc005,sum_stbb009)
+   #        VALUES(l_pmaa001,l_pmcc001,l_pmcc002,l_pmcc005,l_sum_stbb009)
+   #END FOREACH
+   EXECUTE apmp812_ins_stbb_tmp
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Insert apmp812_tmp03 Error'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_stbb_tmp ——> apmp812_tmp03
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      
+      LET l_err_cnt = l_err_cnt + 1            
+   END IF 
+   
+   LET l_cnt = 0 
+   EXECUTE apmp812_cnt_stbb_tmp INTO l_cnt 
+   IF l_cnt>0 THEN
+      LET l_pmcj005 = '4'                                                 #160106-00002#4 160125 lori by add 
+      EXECUTE apmp812_ins_pmcj_pre4 USING l_pmcj003, l_pmcj005            #160106-00002#4 160125 lori by mod #傳入評核類別,項目                         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert pmcj_t Error-4'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET l_err_cnt = l_err_cnt + 1            
+      END IF  
+   END IF
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #4.3.進貨額佔比,退貨額佔比,淨進貨額佔比
+   #須幣別金額轉換處理時(待確認)
+   #FOREACH apmp812_pmdt_tmp_cur
+   #END FOREACH
+   
+   EXECUTE apmp812_ins_pmdt_tmp
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Insert apmp812_tmp04 Error'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      
+      LET l_err_cnt = l_err_cnt + 1            
+   END IF   
+   
+   LET l_cnt = 0 
+   EXECUTE apmp812_cnt_pmdt_tmp INTO l_cnt
+   IF l_cnt > 0 THEN
+      #4.3.1.進貨額佔比
+      LET l_pmcj005 = '5'                                                 #160106-00002#4 160125 lori by add 
+      EXECUTE apmp812_ins_pmcj_pre5 USING l_pmcj003, l_pmcj005            #160106-00002#4 160125 lori by mod #傳入評核類別,項目  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert pmcj_t Error-5'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET l_err_cnt = l_err_cnt + 1            
+      END IF  
+      
+      #4.3.2.退貨額佔比
+      LET l_pmcj005 = '6'                                                 #160106-00002#4 160125 lori by add 
+      EXECUTE apmp812_ins_pmcj_pre6 USING l_pmcj003, l_pmcj005            #160106-00002#4 160125 lori by mod #傳入評核類別,項目
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert pmcj_t Error-6'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET l_err_cnt = l_err_cnt + 1            
+      END IF  
+      
+      #4.3.3.淨進貨額佔比
+      LET l_pmcj005 = '7'                                                 #160106-00002#4 160125 lori by add 
+      EXECUTE apmp812_ins_pmcj_pre7 USING l_pmcj003, l_pmcj005            #160106-00002#4 160125 lori by mod #傳入評核類別,項目
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert pmcj_t Error-7'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET l_err_cnt = l_err_cnt + 1            
+      END IF  
+   END IF
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #4.4.配送能力,送貨達標率,訂單滿足率
+   #4.4.1.配送能力
+   EXECUTE apmp812_ins_pmdn_tmp1
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Insert apmp812_pmdn_tmp1 Error'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      
+      LET l_err_cnt = l_err_cnt + 1            
+   END IF  
+   
+   LET l_cnt = 0 
+   EXECUTE apmp812_cnt_pmdn_tmp1 INTO l_cnt
+   IF l_cnt > 0 THEN
+      LET l_pmcj005 = '8'                                                 #160106-00002#4 160125 lori by add 
+      EXECUTE apmp812_ins_pmcj_pre8 USING l_pmcj003, l_pmcj005            #160106-00002#4 160125 lori by mod #傳入評核類別,項目
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert pmcj_t Error-8'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET l_err_cnt = l_err_cnt + 1            
+      END IF 
+   END IF
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #4.4.2.送貨達標率
+   EXECUTE apmp812_ins_pmdn_tmp2
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Insert apmp812_pmdn_tmp2 Error'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      
+      LET l_err_cnt = l_err_cnt + 1            
+   END IF 
+   
+   LET l_cnt = 0 
+   EXECUTE apmp812_cnt_pmdn_tmp2 INTO l_cnt
+   IF l_cnt > 0 THEN
+      LET l_pmcj005 = '9'                                                 #160106-00002#4 160125 lori by add 
+      EXECUTE apmp812_ins_pmcj_pre9 USING l_pmcj003, l_pmcj005            #160106-00002#4 160125 lori by mod #傳入評核類別,項目
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert pmcj_t Error-9'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET l_err_cnt = l_err_cnt + 1            
+      END IF  
+   END IF
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   #4.4.3.訂單滿足率
+   EXECUTE apmp812_ins_pmdn_tmp3
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Insert apmp812_pmdn_tmp3 Error'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      
+      LET l_err_cnt = l_err_cnt + 1            
+   END IF 
+   
+   LET l_cnt = 0 
+   EXECUTE apmp812_cnt_pmdn_tmp3 INTO l_cnt
+   IF l_cnt > 0 THEN
+      LET l_pmcj005 = '10'                                                 #160106-00002#4 160125 lori by add 
+      EXECUTE apmp812_ins_pmcj_pre10 USING l_pmcj003, l_pmcj005            #160106-00002#4 160125 lori by mod #傳入評核類別,項目
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert pmcj_t Error-10'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET l_err_cnt = l_err_cnt + 1            
+      END IF  
+   END IF
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg = cl_getmsg('std-00012',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#12 20160328 add by beckxie---E
+   IF g_bgjob = "N" THEN
+      CALL cl_err_collect_show()
+   END IF    
+   
+   IF l_err_cnt > 0 THEN
+      CALL s_transaction_end('N',1) 
+   ELSE
+      CALL s_transaction_end('Y',1)  
+   END IF  
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apmp812_process_cs CURSOR FROM ls_sql
+#  FOREACH apmp812_process_cs INTO
+   #add-point:process段process name="process.process"
+   
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL apmp812_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp812.get_buffer" >}
+PRIVATE FUNCTION apmp812_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp812.msgcentre_notify" >}
+PRIVATE FUNCTION apmp812_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp812.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 建立暫存檔
+# Memo...........:
+# Usage..........: CALL apmp812_create_tmp()
+#                  RETURNING r_success
+# Date & Author..: 2015/06/11 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp812_create_tmp()
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_err_cnt      LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   
+   LET r_success = TRUE
+   LET l_err_cnt = 0
+   
+   CALL apmp812_drop_tmp() RETURNING l_success
+  
+   CREATE TEMP TABLE apmp812_tmp01(   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+      pmcc001      VARCHAR(10),
+      pmcc002      VARCHAR(10),
+      pmcc003      DATE,
+      pmcc004      DATE,
+      pmcc005      DECIMAL(20,6),
+      rtax001      VARCHAR(10))
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Create apmp812_tmp01'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET l_err_cnt = l_err_cnt + 1
+   END IF
+
+   CREATE TEMP TABLE apmp812_tmp02(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_debs_tmp ——> apmp812_tmp02
+      pmaa001        VARCHAR(10),
+      pmcc001        VARCHAR(10),
+      pmcc002        VARCHAR(10),
+      pmcc005        DECIMAL(20,6),
+      sum_debs012    DECIMAL(20,6),
+      sum_debs016    DECIMAL(20,6),
+      sum_debs017    DECIMAL(20,6)) 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Create apmp812_tmp02'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_debs_tmp ——> apmp812_tmp02
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET l_err_cnt = l_err_cnt + 1
+   END IF
+
+   CREATE TEMP TABLE apmp812_tmp03(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_stbb_tmp ——> apmp812_tmp03
+      pmaa001       VARCHAR(10),
+      pmcc001       VARCHAR(10),
+      pmcc002       VARCHAR(10),
+      pmcc005       DECIMAL(20,6),
+      sum_stbb009   DECIMAL(20,6))
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Create apmp812_tmp03'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_stbb_tmp ——> apmp812_tmp03
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET l_err_cnt = l_err_cnt + 1
+   END IF
+
+   CREATE TEMP TABLE apmp812_tmp04(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+      pmaa001         VARCHAR(10),
+      pmcc001         VARCHAR(10),
+      pmcc002         VARCHAR(10),
+      pmcc005         DECIMAL(20,6),
+      sum_purchase    DECIMAL(20,6),
+      sum_return      DECIMAL(20,6))
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Create apmp812_tmp04'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET l_err_cnt = l_err_cnt + 1
+   END IF
+ 
+   CREATE TEMP TABLE apmp812_tmp05(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+      pmaa001         VARCHAR(10),
+      pmcc001         VARCHAR(10),
+      pmcc002         VARCHAR(10),
+      pmcc005         DECIMAL(20,6),
+      pmdndocno    VARCHAR(20),
+      pmdnseq      INTEGER,
+      cnt_type     VARCHAR(10),
+      cnt_doc      SMALLINT)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Create apmp812_tmp05'  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET l_err_cnt = l_err_cnt + 1
+   END IF
+   
+   IF l_err_cnt > 0 THEN
+      LET r_success = FALSE
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 刪除暫存檔
+# Memo...........:
+# Usage..........: CALL apmp812_drop_tmp()
+#                  RETURNING r_success
+# Date & Author..: 2015/06/11 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp812_drop_tmp()
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE l_err_cnt      LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   
+   LET r_success = TRUE
+   LET l_err_cnt = 0
+
+   DROP TABLE apmp812_tmp01   #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_acc_rtax ——> apmp812_tmp01
+   IF SQLCA.sqlcode THEN
+      #INITIALIZE g_errparam TO NULL
+      #LET g_errparam.code = SQLCA.sqlcode
+      #LET g_errparam.extend = 'Drop apmp812_acc_rtax'
+      #LET g_errparam.popup = TRUE
+      #CALL cl_err()
+
+      LET l_err_cnt = l_err_cnt + 1
+   END IF
+
+   DROP TABLE apmp812_tmp02  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_debs_tmp ——> apmp812_tmp02
+   IF SQLCA.sqlcode THEN
+      #INITIALIZE g_errparam TO NULL
+      #LET g_errparam.code = SQLCA.sqlcode
+      #LET g_errparam.extend = 'Drop apmp812_debs_tmp'
+      #LET g_errparam.popup = TRUE
+      #CALL cl_err()
+
+      LET l_err_cnt = l_err_cnt + 1
+   END IF
+
+   DROP TABLE apmp812_tmp03  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_stbb_tmp ——> apmp812_tmp03
+   IF SQLCA.sqlcode THEN
+      #INITIALIZE g_errparam TO NULL
+      #LET g_errparam.code = SQLCA.sqlcode
+      #LET g_errparam.extend = 'Drop apmp812_stbb_tmp'
+      #LET g_errparam.popup = TRUE
+      #CALL cl_err()
+
+      LET l_err_cnt = l_err_cnt + 1
+   END IF
+
+   DROP TABLE apmp812_tmp04  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdt_tmp ——> apmp812_tmp04
+   IF SQLCA.sqlcode THEN
+      #INITIALIZE g_errparam TO NULL
+      #LET g_errparam.code = SQLCA.sqlcode
+      #LET g_errparam.extend = 'Drop apmp812_pmdt_tmp'
+      #LET g_errparam.popup = TRUE
+      #CALL cl_err()
+
+      LET l_err_cnt = l_err_cnt + 1
+   END IF
+
+   DROP TABLE apmp812_tmp05  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmp812_pmdn_tmp ——> apmp812_tmp05
+   IF SQLCA.sqlcode THEN
+      #INITIALIZE g_errparam TO NULL
+      #LET g_errparam.code = SQLCA.sqlcode
+      #LET g_errparam.extend = 'Drop apmp812_pmdn_tmp'
+      #LET g_errparam.popup = TRUE
+      #CALL cl_err()
+
+      LET l_err_cnt = l_err_cnt + 1
+   END IF
+   
+   IF l_err_cnt > 0 THEN
+      LET r_success = FALSE
+   END IF
+
+   RETURN r_success   
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

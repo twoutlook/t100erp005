@@ -1,0 +1,862 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ammt320_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2016-07-22 09:32:55), PR版次:0002(2016-06-24 09:33:15)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000145
+#+ Filename...: ammt320_01
+#+ Description: 會員卡種基本資料申請維護作業-生效範圍設定
+#+ Creator....: 01752(2013-11-19 10:23:11)
+#+ Modifier...: 08172 -SD/PR- 08172
+ 
+{</section>}
+ 
+{<section id="ammt320_01.global" >}
+#應用 c02b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160604-00009#46    2016/06/20   by 08172    营运组织开窗修改
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_mmam_d        RECORD
+       mmamdocno LIKE mmam_t.mmamdocno, 
+   mmam000 LIKE mmam_t.mmam000, 
+   mmam001 LIKE mmam_t.mmam001, 
+   mmam002 LIKE mmam_t.mmam002, 
+   mmam003 LIKE mmam_t.mmam003, 
+   mmam003_desc LIKE type_t.chr500, 
+   mmam005 LIKE mmam_t.mmam005, 
+   mmam006 LIKE mmam_t.mmam006, 
+   mmam007 LIKE mmam_t.mmam007, 
+   mmam004 LIKE mmam_t.mmam004, 
+   mmamacti LIKE mmam_t.mmamacti
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+
+#end add-point
+ 
+DEFINE g_mmam_d          DYNAMIC ARRAY OF type_g_mmam_d
+DEFINE g_mmam_d_t        type_g_mmam_d
+ 
+ 
+DEFINE g_mmamdocno_t   LIKE mmam_t.mmamdocno    #Key值備份
+DEFINE g_mmam003_t      LIKE mmam_t.mmam003    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="ammt320_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION ammt320_01(--)
+   #add-point:input段變數傳入
+   p_mmakdocno,p_mmak000,p_prog,p_mmak001
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_mmakdocno     LIKE mmam_t.mmamdocno
+   DEFINE p_mmak000       LIKE mmam_t.mmam000
+   DEFINE p_prog          LIKE mmam_t.mmam001
+   DEFINE p_mmak001       LIKE mmam_t.mmam002
+   DEFINE l_mmam          RECORD LIKE mmam_t.*
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_stus          LIKE type_t.chr1
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_ammt320_01 WITH FORM cl_ap_formpath("amm","ammt320_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   WHENEVER ERROR CALL cl_err_msg_log
+   CALL ammt320_01_b_fill(p_mmakdocno)
+   
+   LET l_stus = ''
+   SELECT mmakstus INTO l_stus FROM mmak_t
+    WHERE mmakent = g_enterprise
+      AND mmakdocno = p_mmakdocno
+   IF l_stus != 'N' THEN
+      CALL ammt320_01_ui_dialog()
+      LET INT_FLAG = FALSE
+      CLOSE WINDOW w_ammt320_01 
+      RETURN
+   END IF
+   LET l_forupd_sql = " SELECT mmamdocno,mmam000,mmam001,mmam002,mmam003,'',",
+                      "          mmam005,mmam006,mmam007,mmam004,mmamacti ",
+                      "   FROM mmam_t ",
+                      "  WHERE mmament = '",g_enterprise,"' ",
+                      "    AND mmamdocno = ? AND mmam003 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)  
+   PREPARE ammt320_01_b FROM l_forupd_sql
+   DECLARE ammt320_01_cs CURSOR FOR ammt320_01_b 
+   LET INT_FLAG = FALSE
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_mmam_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            
+            IF g_rec_b >= l_ac THEN  
+               LET l_cmd='u'
+               LET g_mmam_d_t.* = g_mmam_d[l_ac].*  #BACKUP
+               OPEN ammt320_01_cs USING p_mmakdocno,g_mmam_d[l_ac].mmam003
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "ammt320_01_cs"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH ammt320_01_cs INTO g_mmam_d[l_ac].*
+                  IF SQLCA.sqlcode THEN
+                     LET l_lock_sw = "Y"
+                  END IF            
+                  CALL ammt320_01_mmam003_ref()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+         BEFORE INSERT
+            CALL s_transaction_begin()
+            LET l_cmd = 'a'
+            INITIALIZE g_mmam_d_t.* TO NULL
+            INITIALIZE g_mmam_d[l_ac].* TO NULL 
+            LET g_mmam_d[l_ac].mmamdocno = p_mmakdocno
+            LET g_mmam_d[l_ac].mmam000 = p_mmak000
+            LET g_mmam_d[l_ac].mmam001 = p_prog
+            LET g_mmam_d[l_ac].mmam002 = p_mmak001
+            LET g_mmam_d[l_ac].mmam004 = 0
+            LET g_mmam_d[l_ac].mmam005 = 'N'
+            LET g_mmam_d[l_ac].mmam006 = 'N'
+            LET g_mmam_d[l_ac].mmam007 = 'N'
+            LET g_mmam_d[l_ac].mmamacti = 'Y'
+            LET g_mmam_d_t.* = g_mmam_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()  
+            
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+
+            INITIALIZE l_mmam.* TO NULL
+            LET l_mmam.mmament = g_enterprise        
+            LET l_mmam.mmamdocno = g_mmam_d[l_ac].mmamdocno
+            LET l_mmam.mmam000 = g_mmam_d[l_ac].mmam000
+            LET l_mmam.mmam001 = g_mmam_d[l_ac].mmam001
+            LET l_mmam.mmam002 = g_mmam_d[l_ac].mmam002
+            LET l_mmam.mmam003 = g_mmam_d[l_ac].mmam003
+            LET l_mmam.mmam004 = g_mmam_d[l_ac].mmam004
+            LET l_mmam.mmam005 = g_mmam_d[l_ac].mmam005
+            LET l_mmam.mmam006 = g_mmam_d[l_ac].mmam006
+            LET l_mmam.mmam007 = g_mmam_d[l_ac].mmam007
+            LET l_mmam.mmamacti = g_mmam_d[l_ac].mmamacti
+         
+            SELECT COUNT(*) INTO l_count FROM mmam_t 
+             WHERE mmament = g_enterprise
+               AND mmamdocno = p_mmakdocno
+               AND mmam003   = g_mmam_d[l_ac].mmam003
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INSERT INTO mmam_t VALUES (l_mmam.*)
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "mmam_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CONTINUE DIALOG
+               END IF
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_mmam_d[l_ac].* TO NULL
+               CALL s_transaction_end('N',0)
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode THEN
+               INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "mmam_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+               CALL s_transaction_end('N',0)                   
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y',0)
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+ 
+        BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(p_mmakdocno) AND NOT cl_null(g_mmam_d_t.mmam003)THEN
+
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               DELETE FROM mmam_t
+                WHERE mmament = g_enterprise 
+                  AND mmamdocno = p_mmakdocno
+                  AND mmam003 = g_mmam_d_t.mmam003
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "mmam_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CALL s_transaction_end('N',0)
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  CALL s_transaction_end('Y',0)
+               END IF 
+               CLOSE ammt320_01_cs
+            END IF 
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_mmam_d[l_ac].* = g_mmam_d_t.*
+               CLOSE ammt320_01_cs
+               CALL s_transaction_end('N',0)
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = l_mmam.mmam001
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_mmam_d[l_ac].* = g_mmam_d_t.*
+            ELSE
+               UPDATE mmam_t SET (mmam003,mmam004,mmam005,mmam006,mmam007,mmamacti) = 
+                                 (g_mmam_d[l_ac].mmam003,g_mmam_d[l_ac].mmam004,g_mmam_d[l_ac].mmam005,
+                                  g_mmam_d[l_ac].mmam006,g_mmam_d[l_ac].mmam007,g_mmam_d[l_ac].mmamacti)
+                WHERE mmament = g_enterprise
+                  AND mmamdocno = p_mmakdocno
+                  AND mmam003 = g_mmam_d_t.mmam003
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "mmam_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  LET g_mmam_d[l_ac].* = g_mmam_d_t.*
+                  CALL s_transaction_end('N',0)
+               ELSE
+                  CALL s_transaction_end('Y',0)               
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE ammt320_01_cs
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmamdocno
+            #add-point:BEFORE FIELD mmamdocno name="input.b.page1.mmamdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmamdocno
+            
+            #add-point:AFTER FIELD mmamdocno name="input.a.page1.mmamdocno"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmamdocno
+            #add-point:ON CHANGE mmamdocno name="input.g.page1.mmamdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmam000
+            #add-point:BEFORE FIELD mmam000 name="input.b.page1.mmam000"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmam000
+            
+            #add-point:AFTER FIELD mmam000 name="input.a.page1.mmam000"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmam000
+            #add-point:ON CHANGE mmam000 name="input.g.page1.mmam000"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmam001
+            #add-point:BEFORE FIELD mmam001 name="input.b.page1.mmam001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmam001
+            
+            #add-point:AFTER FIELD mmam001 name="input.a.page1.mmam001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmam001
+            #add-point:ON CHANGE mmam001 name="input.g.page1.mmam001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmam002
+            #add-point:BEFORE FIELD mmam002 name="input.b.page1.mmam002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmam002
+            
+            #add-point:AFTER FIELD mmam002 name="input.a.page1.mmam002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmam002
+            #add-point:ON CHANGE mmam002 name="input.g.page1.mmam002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmam003
+            
+            #add-point:AFTER FIELD mmam003 name="input.a.page1.mmam003"
+            #此段落由子樣板a05產生
+            LET g_mmam_d[l_ac].mmam003_desc = ''            
+            IF NOT cl_null(g_mmam_d[l_ac].mmam003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmam_d[l_ac].mmam003 != g_mmam_d_t.mmam003 OR g_mmam_d_t.mmam003 IS NULL)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmam_t WHERE "||"mmament = '" ||g_enterprise|| "' AND "||"mmamdocno = '"||g_mmam_d[l_ac].mmamdocno ||"' AND "|| "mmam003 = '"||g_mmam_d[l_ac].mmam003 ||"'",'std-00004',0) THEN 
+                     LET g_mmam_d[l_ac].mmam003 = g_mmam_d_t.mmam003
+                     CALL ammt320_01_mmam003_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL ammt320_01_chk_mmam003()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_mmam_d[l_ac].mmam003
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_mmam_d[l_ac].mmam003 = g_mmam_d_t.mmam003
+                     CALL ammt320_01_mmam003_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL ammt320_01_mmam003_ref()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmam003
+            #add-point:BEFORE FIELD mmam003 name="input.b.page1.mmam003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmam003
+            #add-point:ON CHANGE mmam003 name="input.g.page1.mmam003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmam005
+            #add-point:BEFORE FIELD mmam005 name="input.b.page1.mmam005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmam005
+            
+            #add-point:AFTER FIELD mmam005 name="input.a.page1.mmam005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmam005
+            #add-point:ON CHANGE mmam005 name="input.g.page1.mmam005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmam006
+            #add-point:BEFORE FIELD mmam006 name="input.b.page1.mmam006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmam006
+            
+            #add-point:AFTER FIELD mmam006 name="input.a.page1.mmam006"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmam006
+            #add-point:ON CHANGE mmam006 name="input.g.page1.mmam006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmam007
+            #add-point:BEFORE FIELD mmam007 name="input.b.page1.mmam007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmam007
+            
+            #add-point:AFTER FIELD mmam007 name="input.a.page1.mmam007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmam007
+            #add-point:ON CHANGE mmam007 name="input.g.page1.mmam007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmam004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_mmam_d[l_ac].mmam004,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD mmam004
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD mmam004 name="input.a.page1.mmam004"
+            IF NOT cl_null(g_mmam_d[l_ac].mmam004) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmam004
+            #add-point:BEFORE FIELD mmam004 name="input.b.page1.mmam004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmam004
+            #add-point:ON CHANGE mmam004 name="input.g.page1.mmam004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmamacti
+            #add-point:BEFORE FIELD mmamacti name="input.b.page1.mmamacti"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmamacti
+            
+            #add-point:AFTER FIELD mmamacti name="input.a.page1.mmamacti"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmamacti
+            #add-point:ON CHANGE mmamacti name="input.g.page1.mmamacti"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.mmamdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmamdocno
+            #add-point:ON ACTION controlp INFIELD mmamdocno name="input.c.page1.mmamdocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmam000
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmam000
+            #add-point:ON ACTION controlp INFIELD mmam000 name="input.c.page1.mmam000"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmam001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmam001
+            #add-point:ON ACTION controlp INFIELD mmam001 name="input.c.page1.mmam001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmam002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmam002
+            #add-point:ON ACTION controlp INFIELD mmam002 name="input.c.page1.mmam002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmam003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmam003
+            #add-point:ON ACTION controlp INFIELD mmam003 name="input.c.page1.mmam003"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mmam_d[l_ac].mmam003             #給予default值
+            LET g_qryparam.where = " ooef201='Y'"      #160604-00009#46
+            CALL q_ooef001()                                             #呼叫開窗
+            LET g_mmam_d[l_ac].mmam003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_mmam_d[l_ac].mmam003 TO mmam003                    #顯示到畫面上
+            CALL ammt320_01_mmam003_ref()
+            NEXT FIELD mmam003                                           #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmam005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmam005
+            #add-point:ON ACTION controlp INFIELD mmam005 name="input.c.page1.mmam005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmam006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmam006
+            #add-point:ON ACTION controlp INFIELD mmam006 name="input.c.page1.mmam006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmam007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmam007
+            #add-point:ON ACTION controlp INFIELD mmam007 name="input.c.page1.mmam007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmam004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmam004
+            #add-point:ON ACTION controlp INFIELD mmam004 name="input.c.page1.mmam004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmamacti
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmamacti
+            #add-point:ON ACTION controlp INFIELD mmamacti name="input.c.page1.mmamacti"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            CLOSE ammt320_01_cs
+            CALL s_transaction_end('Y',0)
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_ammt320_01 
+   
+   #add-point:input段after input 
+   LET INT_FLAG = FALSE
+   CLOSE ammt320_01_cs
+   CALL s_transaction_end('Y',0)
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ammt320_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="ammt320_01.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION ammt320_01_b_fill(p_mmakdocno)
+   DEFINE p_mmakdocno     LIKE mmak_t.mmakdocno
+   DEFINE l_sql           STRING
+   DEFINE l_ac_t          LIKE type_t.num5
+
+   LET l_sql = " SELECT mmamdocno,mmam000,mmam001,mmam002,mmam003,'',",
+               "          mmam005,mmam006,mmam007,mmam004,mmamacti ",
+               "   FROM mmam_t ",
+               "  WHERE mmament   = ",g_enterprise,
+               "    AND mmamdocno = '",p_mmakdocno,"' ",
+               "  ORDER BY mmam003 " 
+   PREPARE ammt320_01_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR ammt320_01_pb 
+   
+   CALL g_mmam_d.clear()
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+   FOREACH b_fill_curs INTO g_mmam_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      CALL ammt320_01_mmam003_ref()
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH 
+   CALL g_mmam_d.deleteElement(g_mmam_d.getLength())   
+   LET g_rec_b = l_ac - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   LET l_ac = l_ac_t
+   CLOSE b_fill_curs
+   FREE ammt320_01_pb
+END FUNCTION
+
+PRIVATE FUNCTION ammt320_01_mmam003_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_mmam_d[l_ac].mmam003
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_mmam_d[l_ac].mmam003_desc = '', g_rtn_fields[1] , ''
+   #DISPLAY BY NAME g_mmam_d[l_ac].mmam003_desc
+END FUNCTION
+
+PRIVATE FUNCTION ammt320_01_chk_mmam003()
+   DEFINE l_stus    LIKE type_t.chr1
+   
+   LET g_errno = ''
+   LET l_stus = ''
+   SELECT ooefstus INTO l_stus FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_mmam_d[l_ac].mmam003
+      AND ooef201 = 'Y'      #160604-00009#46
+   CASE WHEN SQLCA.SQLCODE = 100   LET g_errno = 'aoo-00016'
+        WHEN l_stus='N'            LET g_errno = 'aoo-00012'
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION ammt320_01_ui_dialog()
+   DISPLAY ARRAY g_mmam_d TO s_detail1.* ATTRIBUTE(COUNT=g_rec_b)
+END FUNCTION
+
+ 
+{</section>}
+ 

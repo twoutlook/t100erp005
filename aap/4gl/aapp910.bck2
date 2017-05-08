@@ -1,0 +1,1726 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapp910.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0017(2015-05-28 14:56:13), PR版次:0017(2016-10-12 14:34:14)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000244
+#+ Filename...: aapp910
+#+ Description: 應付帳款月結作業
+#+ Creator....: 03538(2014-08-20 00:00:00)
+#+ Modifier...: 03080 -SD/PR- 08732
+ 
+{</section>}
+ 
+{<section id="aapp910.global" >}
+#應用 p02 樣板自動產生(Version:19)
+#add-point:填寫註解說明
+#Modify....... :15/01/13 By albireo 1.修正141215 對aapp910_clik_chk重評價要檢核的範圍
+#              :                    2.針對aapp910_clik_chk重評價錯誤訊息僅提示等UI操作調整
+#              :15/01/15 By albireo 月結程式操作風格統一的調整
+#              :15/01/22 By albireo 修正多筆執行月結其中一個無資料就讓整體執行失敗的問題
+#150127-00007#1:15/02/24 By Reanna  掃把清空&給預設值&筆數顯示異常處理
+#150306        :15/03/06 By Reanna  變更日期預帶關帳年月
+#150315        :15/03/15 By Reanna  增加扣掉本期之後的匯差
+#150303-00010#1:15/03/30 By Belle   增加工作底稿月結檔處理
+#150408        :15/04/08 By albireo SA提醒年月输入控制方式   不可输入小於关帐年月
+#                                   小於时提示错误并且把带回成关帐年月
+#150319-00006#1:15/04/08 By albireo 點選單身帳別有月結資料時,提示有月結資料是否繼續執行月結,
+#                                   若選是則單身勾選;批次執行時判斷若有月結資料 自動執行還原再執行原批次邏輯,
+#                                   若自動還原時失敗則該筆月結失敗
+#150409        :15/04/09 By albireo 處理沒設定重評價處理方式xrea113會變0的問題
+#150518-00043#4:15/05/28 By albireo 自動還原月結及是否產生月結底稿的訊息提示        UI操作順序調整
+#150812-00010#2:15/08/20 By apo     呼叫底稿月結元件時傳入模組別
+#150901-00020#4:15/09/03 By Hans    寫入xrea_t增加發票號碼,收款條件編號,apcc009,apca008
+#151223-00001#4:15/12/28 By Reanna  如果agli171設定成2:重評價傳票，次月迴轉，那 xrea113 = xrcc118- xrcc119 + xreb115
+#160106-00005#1:16/01/06 By albireo 單據性質2* 及02,04  取重評後金額加到 xrea113 前要*-1 
+#160318-00005#2:16/03/18 By Jessy   修正azzi920重複定義之錯誤訊息
+#160729-00012#1:16/07/29 By Reanna  修正撈取符合單據的SQL
+#160803-00005#1:16/08/03 By 03538   撈取月結單據sql加上key ent
+#160812-00027#3:16/08/16 By 06821   全面盤點應付程式帳套權限控管
+#160905-00002#1:16/09/05 By Reanna  SQL條件少ENT補上
+#161006-00005#3:16/10/12 By 08732   組織類型與職能開窗調整
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔
+#
+##end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD
+   sel           LIKE type_t.chr1,
+   xreald        LIKE type_t.chr80,
+   glaal002      LIKE glaal_t.glaal002,
+   glaacomp      LIKE type_t.chr80,
+   ooefl003      LIKE ooefl_t.ooefl003,
+   xrea001       LIKE type_t.chr80,
+   glav004_1     LIKE glav_t.glav004,
+   glav004_2     LIKE glav_t.glav004
+END RECORD   
+TYPE type_master RECORD
+  ooef001       LIKE ooef_t.ooef001, 
+  ooef001_desc  LIKE type_t.chr80,
+  xrea001       LIKE xrea_t.xrea001, 
+  xrea002       LIKE xrea_t.xrea002
+      END RECORD
+DEFINE g_master    type_master  
+DEFINE l_para_data LIKE type_t.chr80
+DEFINE l_xrea001   LIKE xrea_t.xrea001
+DEFINE l_xrea002   LIKE xrea_t.xrea002
+DEFINE g_flag      LIKE type_t.chr1    #條件範圍是否有資料
+DEFINE l_xrea   type_master 
+          
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapp910.main" >}
+#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   
+   #end add-point   
+   #add-point:main段define
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aap","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aapp910 WITH FORM cl_ap_formpath("aap",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aapp910_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aapp910_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aapp910
+   END IF 
+   
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aapp910.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aapp910_init()
+   #add-point:init段define
+   DEFINE l_array DYNAMIC ARRAY OF RECORD
+                  value       STRING,
+                  label_tag   STRING,
+                  label       STRING
+              END RECORD
+   DEFINE i       LIKE type_t.num5
+   DEFINE l_ooef017 LIKE ooef_t.ooef017
+   #end add-point   
+   #add-point:init段define
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   CALL s_fin_set_comp_scc('xrea001','43')   #年度
+   CALL s_fin_set_comp_scc('xrea002','111')  #期別
+   #(單頭以帳務中心角度抓其下帳別範圍,因此會對應到多個帳別,故無法依照個別會計週期設定為12或13期,因此預設下拉到13期)
+
+   #150127-00007#1 mark---
+   #為了掃把清空時給預設所以移至 aapp910_qbe_clear()裡面
+   #LET g_master.ooef001 = g_site
+   ##141215:取得帳務中心所屬法人
+   #SELECT ooef017 INTO l_ooef017
+   #  FROM ooef_t
+   # WHERE ooefent = g_enterprise
+   #   AND ooef001 = g_site
+   #CALL cl_get_para(g_enterprise,l_ooef017,'S-FIN-3007') RETURNING l_para_data
+   ##預設年度/期別
+   #LET g_master.xrea001 = YEAR(l_para_data)
+   #LET g_master.xrea002 = MONTH(l_para_data)
+   #150127-00007#1 mark end---
+   
+   #展組織下階成員所需之暫存檔
+   CALL s_fin_create_account_center_tmp()
+
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp910.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aapp910_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define
+   DEFINE l_ooef017  LIKE ooef_t.ooef017
+   DEFINE l_msg      STRING     #albireo 150113 
+   #end add-point 
+   #add-point:ui_dialog段define
+   
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   #150127-00007#1
+   CALL aapp910_qbe_clear()
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL aapp910_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+         INPUT BY NAME g_master.ooef001,g_master.xrea001,g_master.xrea002
+            ATTRIBUTE(WITHOUT DEFAULTS) 
+
+            
+            AFTER FIELD ooef001   
+
+               LET g_master.ooef001_desc = ' '
+               IF NOT cl_null(g_master.ooef001) THEN
+                  CALL s_fin_account_center_with_ld_chk(g_master.ooef001,'','','3','N','',g_today) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD ooef001
+                  END IF 
+                  #141215:取得帳務中心所屬法人
+                  SELECT ooef017 INTO l_ooef017
+                    FROM ooef_t
+                   WHERE ooefent = g_enterprise
+                     AND ooef001 = g_master.ooef001
+                 #CALL cl_get_para(g_enterprise,g_master.ooef001,'S-FIN-3007') RETURNING l_para_data
+                  CALL cl_get_para(g_enterprise,l_ooef017,'S-FIN-3007') RETURNING l_para_data
+                  LET g_master.xrea001 = YEAR(l_para_data)
+                  LET g_master.xrea002 = MONTH(l_para_data)
+                  #預設關帳之年月
+                  LET l_xrea001 = g_master.xrea001                  
+                  LET l_xrea002 = g_master.xrea002
+                  CALL aapp910_query() #141215
+               END IF           
+               LET g_master.ooef001_desc = s_desc_get_department_desc(g_master.ooef001)
+               DISPLAY BY NAME g_master.ooef001_desc
+              
+                         
+            ON CHANGE xrea001                    #albireo 150115 FALSE>TRUE
+               #150408 mark-----s
+               ##150306 add ------
+               #CALL cl_get_para(g_enterprise,l_ooef017,'S-FIN-3007') RETURNING l_para_data
+               #LET g_master.xrea001 = YEAR(l_para_data)
+               #LET g_master.xrea002 = MONTH(l_para_data)
+               ##150306 add end---
+               #150408 mark-----e
+               IF g_master.xrea001 < l_xrea001 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'anm-00248'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE    #albireo 150115 FALSE>TRUE
+                  CALL cl_err()
+                  LET g_master.xrea001 = l_xrea001
+                  NEXT FIELD CURRENT  
+               END IF      
+               
+            ON CHANGE xrea002                    #albireo 150115 FALSE>TRUE
+               #150408 mark-----s
+               ##150306 add ------
+               #CALL cl_get_para(g_enterprise,l_ooef017,'S-FIN-3007') RETURNING l_para_data
+               #LET g_master.xrea001 = YEAR(l_para_data)
+               #LET g_master.xrea002 = MONTH(l_para_data)
+               ##150306 add end---
+               #150408 mark-----e
+               IF (g_master.xrea001 *12+g_master.xrea002) < (l_xrea001*12 + l_xrea002) THEN  #150408 modify
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'anm-00249'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE    #albireo 150115 FALSE>TRUE
+                  CALL cl_err()
+                  LET g_master.xrea002 = l_xrea002
+                  LET g_master.xrea001 = l_xrea001   #albireo 150408 add
+                  NEXT FIELD CURRENT               
+               END IF                 
+               CALL aapp910_query() #141215               
+               
+            ON ACTION controlp INFIELD ooef001
+
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.ooef001       #給予default值
+               #LET g_qryparam.where = " ooef201 = 'Y' "       #160812-00027#3 mark
+               #CALL q_ooef001()     #161006-00005#3  mark
+               CALL q_ooef001_46()   #161006-00005#3  add
+               LET g_master.ooef001 = g_qryparam.return1        #將開窗取得的值回傳到變數
+               CALL s_desc_get_department_desc(g_master.ooef001) RETURNING g_master.ooef001_desc
+               DISPLAY BY NAME g_master.ooef001,g_master.ooef001_desc
+               LET g_qryparam.where = ''
+               NEXT FIELD ooef001                 
+
+         END INPUT
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+            ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                      INSERT ROW = FALSE,
+                      DELETE ROW = FALSE,
+                      APPEND ROW = FALSE)
+            
+            #150127-00007#1
+            BEFORE ROW
+              LET l_ac = ARR_CURR()
+              DISPLAY l_ac TO FORMONLY.h_index
+            
+            ON CHANGE b_sel
+               LET l_ac = ARR_CURR()
+               #150518-00043#4 MARK-----s
+#               IF g_detail_d[l_ac].sel = 'Y' THEN
+#                  CALL aapp910_clik_chk(l_ac)RETURNING g_sub_success,g_errno
+#                  IF NOT g_sub_success THEN
+#                     #150113 albireo ----------------------------------------s
+#                     #SA要求當是重評價檔的檢核時逐筆詢問是否作月結
+#                     #其他錯誤則一樣收集後卡住
+#                     #
+#                     #原因:如果剛好當月都是本幣交易時,就算有設定重評價檔也不需重評價,
+#                     #    因此是提示不是一定卡住
+#                                         
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = g_errno
+#                     LET g_errparam.extend = ''
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#                     LET g_detail_d[l_ac].sel = 'N'
+#                     DISPLAY g_detail_d[l_ac].sel TO b_sel
+#                     NEXT FIELD b_sel 
+#                    
+#                     #150113 albireo ----------------------------------------e
+#                  END IF
+#               END IF
+               #150518-00043#4 MARK-----e
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall
+            #150518-00043#4   MARK-----s
+#            CALL cl_err_collect_init() 
+#            FOR li_idx = 1 TO g_detail_d.getLength()
+#               LET g_detail_d[li_idx].sel = "Y"
+#               CALL aapp910_clik_chk(li_idx)RETURNING g_sub_success,g_errno
+#               IF NOT g_sub_success THEN 
+#                  #150113 albireo ----------------------------------------s
+#                  #SA要求當是重評價檔的檢核時逐筆詢問是否作月結
+#                  #其他錯誤則一樣收集後卡住
+#                  #
+#                  #原因:如果剛好當月都是本幣交易時,就算有設定重評價檔也不需重評價,
+#                  #    因此是提示不是一定卡住
+#                  
+#
+#                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.code = g_errno
+#                  LET g_errparam.extend = 'xreald : ',g_detail_d[li_idx].xreald
+#                  LET g_errparam.popup = TRUE
+#                  CALL cl_err()
+#                  LET g_detail_d[li_idx].sel = 'N'
+#                  DISPLAY g_detail_d[li_idx].sel TO b_sel                 
+#                  #150113 albireo ----------------------------------------e
+#               END IF
+#            END FOR
+#            CALL cl_err_collect_show() 
+            #150518-00043#4-----e
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            #150518-00043#4 MARK-----s
+#            FOR li_idx = 1 TO g_detail_d.getLength()
+#               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+#                  LET g_detail_d[li_idx].sel = "Y"
+#                  CALL aapp910_clik_chk(li_idx)RETURNING g_sub_success,g_errno
+#                  IF NOT g_sub_success THEN
+#                     #150113 albireo ----------------------------------------s
+#                     #SA要求當是重評價檔的檢核時逐筆詢問是否作月結
+#                     #其他錯誤則一樣收集後卡住
+#                     #
+#                     #原因:如果剛好當月都是本幣交易時,就算有設定重評價檔也不需重評價,
+#                     #    因此是提示不是一定卡住
+#                     
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = g_errno
+#                     LET g_errparam.extend = 'xreald : ',g_detail_d[li_idx].xreald
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#                     LET g_detail_d[li_idx].sel = 'N'
+#                     DISPLAY g_detail_d[li_idx].sel TO b_sel 
+#                 
+#                     #150113 albireo ----------------------------------------e                  
+#                  END IF
+#               END IF
+#            END FOR                  
+            #150518-00043#4 MARK-----e
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aapp910_filter()
+            #add-point:ON ACTION filter
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前
+            
+            #end add-point
+            CALL aapp910_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段
+            #150127-00007#1
+            CALL aapp910_qbe_clear()
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh
+            
+            #end add-point
+            CALL aapp910_b_fill()
+ 
+         #add-point:ui_dialog段action
+         ON ACTION batch_execute
+            IF l_xrea.ooef001 != g_master.ooef001 OR l_xrea.xrea001 != g_master.xrea001 OR
+               l_xrea.xrea002 != g_master.xrea002 THEN
+               CALL aapp910_query()
+               CONTINUE DIALOG
+            END IF
+            CALL aapp910_process()
+            #150306 add ------
+            CALL cl_get_para(g_enterprise,l_ooef017,'S-FIN-3007') RETURNING l_para_data
+            LET g_master.xrea001 = YEAR(l_para_data)
+            LET g_master.xrea002 = MONTH(l_para_data)
+            #150306 add end---
+            IF g_success ='N' THEN
+               CONTINUE DIALOG
+            END IF
+               
+            IF g_bgjob = "N" THEN            
+               CALL cl_ask_confirm3("std-00012","")
+            END IF
+            NEXT FIELD ooef001         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp910.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aapp910_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   LET l_xrea.* = g_master.*
+   #end add-point 
+   #add-point:query段define
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct
+   IF g_master.xrea001 < l_xrea001 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'anm-00248'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      LET g_master.xrea001 = l_xrea001
+      RETURN  
+   END IF 
+
+   IF g_master.xrea001 = l_xrea001 AND g_master.xrea002 < l_xrea002 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'anm-00249'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      LET g_master.xrea002 = l_xrea002
+      RETURN
+   END IF    
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aapp910_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp910.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aapp910_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   DEFINE l_glaa003       LIKE glaa_t.glaa003
+   DEFINE l_flag           LIKE type_t.chr1
+   DEFINE l_errno          LIKE type_t.chr100
+   DEFINE l_glav002        LIKE glav_t.glav002
+   DEFINE l_glav005        LIKE glav_t.glav005
+   DEFINE l_sdate_s        LIKE glav_t.glav004
+   DEFINE l_sdate_e        LIKE glav_t.glav004
+   DEFINE l_glav006        LIKE glav_t.glav006
+   DEFINE l_pdate_s        LIKE glav_t.glav004
+   DEFINE l_pdate_e        LIKE glav_t.glav004
+   DEFINE l_glav007        LIKE glav_t.glav007
+   DEFINE l_wdate_s        LIKE glav_t.glav004
+   DEFINE l_wdate_e        LIKE glav_t.glav004   
+   #end add-point
+   #add-point:b_fill段define
+   
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+
+   #取得帳務組織下所屬成員
+   CALL s_fin_account_center_sons_query('3',g_master.ooef001,g_today,'1')
+   #取得帳務組織下所屬成員之帳別   
+   CALL s_fin_account_center_ld_str() RETURNING ls_wc
+   #將取回的字串轉換為SQL條件
+   CALL s_fin_get_wc_str(ls_wc) RETURNING ls_wc
+   
+
+   LET g_sql =" SELECT 'N',glaald,'',glaacomp,'','','','' FROM glaa_t ",
+              "  WHERE glaaent = ? ",
+              "    AND glaald IN ",ls_wc,    
+              "  ORDER BY glaald,glaacomp "       
+
+
+   #end add-point
+ 
+   PREPARE aapp910_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aapp910_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+      g_detail_d[l_ac].*
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      SELECT max(xrea001 ||'/'||xrea002) INTO g_detail_d[l_ac].xrea001
+        FROM xrea_t
+       WHERE xreaent = g_enterprise
+         AND xreald = g_detail_d[l_ac].xreald
+       GROUP BY xreald,xreacomp;
+      LET l_glaa003 = ''   
+      #取得會計週期參照表
+      CALL s_ld_sel_glaa(g_detail_d[l_ac].xreald,'glaa003')
+       RETURNING  g_sub_success,l_glaa003
+
+      #依年度+期別取得會計週期起迄日
+      CALL s_get_accdate(l_glaa003,'',g_master.xrea001,g_master.xrea002)
+      RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+                l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e    
+      LET g_detail_d[l_ac].glav004_1 = l_pdate_s
+      LET g_detail_d[l_ac].glav004_2 = l_pdate_e
+      #帳套名稱
+      LET g_detail_d[l_ac].glaal002 = s_desc_get_ld_desc(g_detail_d[l_ac].xreald)
+      #法人名稱
+      LET g_detail_d[l_ac].ooefl003 = s_desc_get_department_desc(g_detail_d[l_ac].glaacomp)      
+
+      #end add-point
+      
+      CALL aapp910_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   IF g_detail_d.getLength() > 0 THEN
+      CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   END IF
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aapp910_sel
+   
+   LET l_ac = 1
+   CALL aapp910_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   DISPLAY l_ac TO FORMONLY.h_index #150127-00007#1
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp910.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aapp910_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define
+   
+   #end add-point
+   #add-point:fetch段define
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp910.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aapp910_detail_show()
+   #add-point:show段define
+   
+   #end add-point
+   #add-point:show段define
+   
+   #end add-point
+   
+   #add-point:detail_show段
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp910.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aapp910_filter()
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL aapp910_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp910.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION aapp910_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp910.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aapp910_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aapp910_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp910.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION aapp910_process()
+   DEFINE l_i         LIKE type_t.num5
+   DEFINE l_wc        STRING
+   DEFINE l_sql       STRING
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_count     LIKE type_t.num5   #150319-00006#1 add
+   #150518-00043#4-----s
+   DEFINE l_flag1     LIKE type_t.chr1       #需還原
+   DEFINE l_flag2     LIKE type_t.chr1       #需重評價
+   DEFINE l_flag3     LIKE type_t.chr1       #需重評但沒設定agli171
+   DEFINE l_msg       STRING
+   #150518-00043#4-----e
+
+   LET g_success = 'N'
+   
+   #150518-00043#4-----s
+   LET l_flag1 = 'N'
+   LET l_flag2 = 'N'
+   LET l_flag3 = 'N'
+   FOR l_i = 1 TO g_detail_cnt 
+      IF g_detail_d[l_i].sel = 'N' THEN
+         CONTINUE FOR 
+      ELSE
+         CALL aapp910_clik_chk(l_i)RETURNING g_sub_success,g_errno
+         IF NOT g_sub_success THEN
+            CASE
+               #WHEN g_errno = 'aap-00230' #160318-00005#2 mark
+               #160318-00005#2 add --s add
+               WHEN g_errno = 'sub-01328'  
+                  LET g_errparam.replace[1] = 'aapp970'
+                  LET g_errparam.replace[2] = cl_get_progname('aapp970',g_lang,"2")
+                  LET g_errparam.exeprog = 'aapp970'
+               #160318-00005#2 add --e add
+
+                  #已有月結需還原
+                  LET l_flag1 = 'Y'
+               WHEN g_errno = 'aap-00348'
+                  #需重評但沒設定agli171
+                  LET l_flag3 = 'Y'
+               WHEN g_errno = 'aap-00299'
+                  #需重評價
+                  LET l_flag2 = 'Y'
+            END CASE
+         END IF
+      END IF      
+   END FOR
+
+   IF l_flag3 = 'Y' THEN
+      #有任ㄧ帳套沒設定agli171
+      INITIALIZE g_errparam.* TO NULL
+      LET g_errparam.code = 'aap-00348'
+      LET g_errparam.extend = 'process'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN 
+   END IF
+
+   IF l_flag1 = 'Y' OR l_flag2 = 'Y' THEN
+      LET l_msg = cl_getmsg('axr-00339',g_lang) CLIPPED
+      IF NOT cl_ask_confirm2('',l_msg)THEN
+          #AR不提示錯誤
+#         INITIALIZE g_errparam.* TO NULL
+#         LET g_errparam.code = 'aap-00230'
+#         LET g_errparam.extend = 'process'
+#         LET g_errparam.popup = TRUE
+#          CALL cl_err()
+         RETURN 
+      END IF 
+   END IF
+   #150518-00043#4-----e
+   
+   
+   
+   #取得有勾選的帳套條件
+   FOR l_i = 1 TO g_detail_cnt
+      IF g_detail_d[l_i].sel = 'N' THEN
+         CONTINUE FOR 
+      ELSE
+         IF cl_null(l_wc) THEN
+            LET l_wc = g_detail_d[l_i].xreald
+         ELSE
+            LET l_wc = l_wc,"','",g_detail_d[l_i].xreald
+         END IF       
+      END IF
+   END FOR
+   #未勾選任何一筆資料
+   IF cl_null(l_wc) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axr-00159'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()       
+      LET g_success = 'N'
+      RETURN
+   ELSE
+      LET l_wc = "('",l_wc,"')"      
+   END IF    
+   
+   #先檢查是否已有存在資料
+   #    
+   
+   LET g_success = 'Y'
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   CALL s_aapp970_prepare_declare()   #150319-00006#1 add
+  #由月結還原作業處理---(S)----
+  ##先刪除舊資料
+  #LET l_sql = " DELETE FROM xrea_t ",
+  #            "  WHERE xreaent = '",g_enterprise,"' ",
+  #            "    AND xrea001 = '",g_master.xrea001,"' ",
+  #            "    AND xrea002 = '",g_master.xrea002,"' ",
+  #            "    AND xrea003 = 'AP' ",               
+  #            "    AND xreald IN ",l_wc CLIPPED
+  #PREPARE aapp910_xrea_del FROM l_sql
+  #EXECUTE aapp910_xrea_del  
+  #由月結還原作業處理---(E)----
+   
+   #一筆apcc對一筆xrea
+   #符合當期之前的apcc  用apcc108-109原幣判斷   109要把當期之後沖帳的扣回來
+   #
+   LET l_sql = " SELECT apccld,apccdocno,apccseq,apcc001,",
+               "        apcc108,apcc109,apce109, ",
+               "        apcc118,apcc119,apce119, ",
+               "        apcc128,apcc129,apce129, ",
+               "        apcc138,apcc139,apce139, ",
+               "        apcc113,apcc123,apcc133, ",                     #匯差調整金額
+               "        xrce109,xrce119,xrce129, ",
+               "        xrce139, ",
+               "        apce1091,apce1191,apce1291,apce1391,",
+               "        apcf103,apcf113,apcf123,apcf133 ",
+              #" FROM (SELECT apccld,apccdocno,apccseq,apcc001,",           #160803-00005#1 mark
+               " FROM (SELECT apccent,apccld,apccdocno,apccseq,apcc001,",   #160803-00005#1 
+               "        COALESCE(apcc108,0) apcc108,COALESCE(apcc109,0) apcc109,COALESCE(apce109,0) apce109,",
+               "        COALESCE(apcc118,0) apcc118,COALESCE(apcc119,0) apcc119,COALESCE(apce119,0) apce119, ",
+               "        COALESCE(apcc128,0) apcc128,COALESCE(apcc129,0) apcc129,COALESCE(apce129,0) apce129,",
+               "        COALESCE(apcc138,0) apcc138,COALESCE(apcc139,0) apcc139,COALESCE(apce139,0) apce139, ",
+               "        COALESCE(apcc113,0) apcc113,COALESCE(apcc123,0) apcc123,COALESCE(apcc133,0) apcc133, ",
+               "        COALESCE(xrce109,0) xrce109,COALESCE(xrce119,0) xrce119,COALESCE(xrce129,0) xrce129,",
+               "        COALESCE(xrce139,0) xrce139, ",
+               "        COALESCE(apce1091,0) apce1091,COALESCE(apce1191,0) apce1191,COALESCE(apce1291,0) apce1291,",
+               "        COALESCE(apce1391,0) apce1391, ",               
+               "        COALESCE(apcf103,0) apcf103,COALESCE(apcf113,0) apcf113,COALESCE(apcf123,0) apcf123,",
+               "        COALESCE(apcf133,0) apcf133 ",
+               "        FROM apca_t,apcc_t ",
+               "             LEFT OUTER JOIN( ",
+               "                         SELECT apdald,apce003,apce004,apce005,apce048,SUM(apce109) apce109, ",
+               "                                SUM(apce119) apce119,SUM(apce129) apce129, SUM(apce139) apce139 ",
+               "                           FROM apce_t,apda_t ",
+               "                          WHERE apdaent = ",g_enterprise," ",
+               "                            AND apceent = apdaent ",
+               "                            AND apceld  = apdald ",
+               "                            AND apcedocno = apdadocno ",
+               "                            AND apdastus = 'Y' ",
+               #-150331apo--(s)
+               #150331 carol:來源為aapt430之沖銷紀錄(apda_t+apce_t),帳款單性質1*的要排除, 2*不排除(原因為aapt430只會回寫性質為2*之apcc)
+               "                            AND NOT ( apce001='aapt430' AND EXISTS(SELECT 1 FROM apca_t ",
+               "                                                                    WHERE apcaent = apceent ",
+               "                                                                      AND apcadocno = apce003 ",
+               "                                                                      AND apcald = apceld ",
+               "                                                                      AND apca001 LIKE '1%')) ",
+               #-150331apo--(e)
+               "                            AND apdadocdt > ? ",
+               "                          GROUP BY apdald,apce003,apce004,apce005,apce048 ",
+               "                            ) ON apdald = apccld AND apce003 = apccdocno AND apce004 = apccseq ",
+              #"                                  AND apce005 = apcc001 AND apce048 = apcc009 ", #150315 mark
+               "                                  AND apce005 = apcc001  AND (apce048 = apcc009 OR (apce048 IS NULL AND apcc009 = ' ')) ", #150315
+               "             LEFT OUTER JOIN( ",
+              #"                         SELECT xrdald,xrce003,xrce004,xrce005,xrce048,SUM(xrce109) xrce109, ",  #160729-00012#1 mark
+               "                         SELECT xrdald,xrce003,xrce004,xrce005,xrce054,SUM(xrce109) xrce109, ",  #160729-00012#1
+               "                                SUM(xrce119) xrce119,SUM(xrce129) xrce129, SUM(xrce139) xrce139 ",
+               "                           FROM xrce_t,xrda_t ",
+               "                          WHERE xrdaent = ",g_enterprise," ",
+               "                            AND xrceent = xrdaent ",
+               "                            AND xrceld  = xrdald ",
+               "                            AND xrcedocno = xrdadocno ",
+               "                            AND xrdastus = 'Y' ",
+               "                            AND xrdadocdt > ? ",
+              #"                          GROUP BY xrdald,xrce003,xrce004,xrce005,xrce048 ", #160729-00012#1 mark
+               "                          GROUP BY xrdald,xrce003,xrce004,xrce005,xrce054 ", #160729-00012#1
+               "                            ) ON xrdald = apccld AND xrce003 = apccdocno AND xrce004 = apccseq ",
+              #"                                  AND xrce005 = apcc001 AND (xrce048 = apcc009 OR (xrce048 IS NULL AND apcc009 = ' '))", #160729-00012#1 mark
+               "                                  AND xrce005 = apcc001 AND (xrce054 = apcc009 OR (xrce054 IS NULL AND apcc009 = ' '))", #160729-00012#1
+               "             LEFT OUTER JOIN( ",
+               "                         SELECT apcald apcald1,apce003 apce0031,apce004 apce0041,apce005 apce0051,apce048 apce0481,SUM(apce109) apce1091, ",
+               "                                SUM(apce119) apce1191,SUM(apce129) apce1291, SUM(apce139) apce1391 ",
+               "                           FROM apce_t,apca_t ",
+               "                          WHERE apcaent = ",g_enterprise," ",
+               "                            AND apceent = apcaent ",
+               "                            AND apceld  = apcald ",
+               "                            AND apcedocno = apcadocno ",
+               "                            AND apcastus = 'Y' ",
+               "                            AND apcadocdt > ? ",
+               "                          GROUP BY apcald,apce003,apce004,apce005,apce048 ",
+               "                            ) ON apcald1 = apccld AND apce0031 = apccdocno AND apce0041 = apccseq ",
+              #"                                  AND apce0051 = apcc001 AND apce0481 = apcc009 ", #150315 mark
+               "                                  AND apce0051 = apcc001 AND (apce0481 = apcc009 OR (apce0481 IS NULL AND apcc009 = ' ')) ", #150315
+               "             LEFT OUTER JOIN( ",
+               "                         SELECT apcald apcald2,apcf008,apcf009,apcf010,SUM(apcf103) apcf103, ",
+               "                                SUM(apcf113) apcf113,SUM(apcf123) apcf123, SUM(apcf133) apcf133 ",
+               "                           FROM apcf_t,apca_t ",
+               "                          WHERE apcaent = ",g_enterprise," ",
+               "                            AND apcfent = apcaent ",
+               "                            AND apcfld  = apcald ",
+               "                            AND apcfdocno = apcadocno ",
+               "                            AND apcastus = 'Y' ",
+               "                            AND apcadocdt > ? ",
+               "                          GROUP BY apcald,apcf008,apcf009,apcf010 ",
+               "                            ) ON apcald2 = apccld AND apcf008 = apccdocno AND apcf009 = apccseq ",
+               "                                  AND apcf010 = apcc001 ",
+               "       WHERE apcaent = ",g_enterprise," ",
+               "         AND apcastus = 'Y' ",
+               "         AND apcadocdt <= ? ",
+               "         AND apccdocno = apcadocno ",
+               "         AND apccld = apcald ",
+               "         AND apccld = ? ",
+               "       ) ",
+               " WHERE (apcc108 - apcc109 + apce109 + xrce109 + apce1091 + apcf103) > 0 ",   #160803-00005#1 add,
+               "   AND apccent = ",g_enterprise                                              #160803-00005#1
+   PREPARE sel_aapp910_apccp1 FROM l_sql
+   DECLARE sel_aapp910_apccc1 CURSOR FOR sel_aapp910_apccp1
+   
+   LET g_flag = 'N'    #albireo 150122 add
+   #有勾選的帳套資料才寫入xrea
+   FOR l_i = 1 TO g_detail_cnt
+      IF g_detail_d[l_i].sel = 'N' THEN
+         CONTINUE FOR 
+      ELSE
+         #150319-00006#1-----s
+         #檢核 帳別+年度+期別+AP 有存在就要做還原
+         LET l_count = NULL
+         SELECT COUNT(*) INTO l_count FROM xrea_t
+          WHERE xreaent = g_enterprise
+            AND xreald  = g_detail_d[l_i].xreald
+            AND xrea001 = g_master.xrea001
+            AND xrea002 = g_master.xrea002
+            AND xrea003 = 'AP'
+         IF cl_null(l_count)THEN LET l_count = 0 END IF
+         IF l_count > 0 THEN
+            #自動作還原
+            CALL s_aapp970_do_process(g_detail_d[l_i].xreald,g_master.xrea001,g_master.xrea002)
+               RETURNING g_sub_success,l_count
+            IF NOT g_sub_success THEN
+               LET g_success = 'N'
+               CONTINUE FOR
+            END IF
+         END IF
+         #150319-00006#1-----e
+         CALL aapp910_ins_xrea(g_detail_d[l_i].xreald)     
+         #LET g_detail_d[l_i].sel = 'N'    #albireo 150115  必免選取的資料殘留又可直接再度執行     #150518-00043#4  MARK
+         #CALL s_aglp590_ins(g_detail_d[l_i].xreald,g_master.xrea001,g_master.xrea002,'') RETURNING g_sub_success   #150518-00043#4 MARK
+      END IF
+   END FOR
+   
+   IF g_flag = 'N' THEN    #條件範圍沒有資料
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-00491'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_success = 'N'
+   END IF
+   
+   CALL cl_err_collect_show()
+   IF g_success = 'Y' THEN
+      CALL s_transaction_end('Y','0')
+      #150518-00043#4-----s
+      IF cl_ask_confirm('axr-00304') THEN
+         CALL s_transaction_begin()
+         FOR l_i = 1 TO g_detail_cnt 
+            IF g_detail_d[l_i].sel = 'N' THEN
+            ELSE
+              #CALL s_aglp590_ins(g_detail_d[l_i].xreald,g_master.xrea001,g_master.xrea002,'') RETURNING g_sub_success     #150812-00010#2 mark
+               CALL s_aglp590_ins(g_detail_d[l_i].xreald,g_master.xrea001,g_master.xrea002,'AP') RETURNING g_sub_success   #150812-00010#2
+            END IF
+         END FOR
+         CALL s_transaction_end('Y','0')
+      END IF
+      #150518-00043#4-----e
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF    
+   
+   #150518-00043#4-----s
+   FOR l_i = 1 TO g_detail_cnt 
+      LET g_detail_d[l_i].sel = 'N' 
+   END FOR
+   #150518-00043#4-----e
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 寫入往來帳科目月結檔xrea_t
+# Memo...........:
+# Usage..........: CALL aapp910_ins_xrea(p_xreald)
+# Input parameter: p_xreald      帳套條件
+# Date & Author..: 14/09/10 By apo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapp910_ins_xrea(p_xreald)
+   DEFINE p_wc             STRING
+   DEFINE p_xreald         LIKE xrea_t.xreald
+   DEFINE l_glaa003        LIKE glaa_t.glaa003  
+   DEFINE l_flag           LIKE type_t.chr1
+   DEFINE l_errno          LIKE type_t.chr100
+   DEFINE l_glav002        LIKE glav_t.glav002
+   DEFINE l_glav005        LIKE glav_t.glav005
+   DEFINE l_sdate_s        LIKE glav_t.glav004
+   DEFINE l_sdate_e        LIKE glav_t.glav004
+   DEFINE l_glav006        LIKE glav_t.glav006
+   DEFINE l_pdate_s        LIKE glav_t.glav004   #當期起始日
+   DEFINE l_pdate_e        LIKE glav_t.glav004   #當期截止日
+   DEFINE l_glav007        LIKE glav_t.glav007
+   DEFINE l_wdate_s        LIKE glav_t.glav004
+   DEFINE l_wdate_e        LIKE glav_t.glav004
+   DEFINE l_tmp            RECORD
+                           apccld     LIKE apcc_t.apccld,
+                           apccdocno  LIKE apcc_t.apccdocno,
+                           apccseq    LIKE apcc_t.apccseq,
+                           apcc001    LIKE apcc_t.apcc001,
+                           apcc108    LIKE apcc_t.apcc108,
+                           apcc109    LIKE apcc_t.apcc109,
+                           apce109    LIKE apce_t.apce109,
+                           apcc118    LIKE apcc_t.apcc118,
+                           apcc119    LIKE apcc_t.apcc119,
+                           apce119    LIKE apce_t.apce119,
+                           apcc128    LIKE apcc_t.apcc128,
+                           apcc129    LIKE apcc_t.apcc129,
+                           apce129    LIKE apce_t.apce129,
+                           apcc138    LIKE apcc_t.apcc138,
+                           apcc139    LIKE apcc_t.apcc139,
+                           apce139    LIKE apce_t.apce139,
+                           apcc113    LIKE apcc_t.apcc113,  #匯差調整金額
+                           apcc123    LIKE apcc_t.apcc123,  #匯差調整金額
+                           apcc133    LIKE apcc_t.apcc133,  #匯差調整金額
+                           xrce109    LIKE xrce_t.xrce109,  #應收沖銷檔
+                           xrce119    LIKE xrce_t.xrce119,  #應收沖銷檔
+                           xrce129    LIKE xrce_t.xrce129,  #應收沖銷檔
+                           xrce139    LIKE xrce_t.xrce139,  #應收沖銷檔
+                           apce1091   LIKE apce_t.apce109, #應付直接沖帳
+                           apce1191   LIKE apce_t.apce119, #應付直接沖帳
+                           apce1291   LIKE apce_t.apce129, #應付直接沖帳
+                           apce1391   LIKE apce_t.apce139, #應付直接沖帳
+                           apcf103    LIKE apcf_t.apcf103,
+                           apcf113    LIKE apcf_t.apcf113,
+                           apcf123    LIKE apcf_t.apcf123,
+                           apcf133    LIKE apcf_t.apcf133
+                           END RECORD   
+   DEFINE l_xrea           RECORD LIKE xrea_t.* 
+   DEFINE l_apca           RECORD LIKE apca_t.*
+   DEFINE l_apcc           RECORD LIKE apcc_t.*   
+   DEFINE l_apcb           RECORD LIKE apcb_t.*
+   DEFINE l_s_fin_2002     LIKE type_t.chr1
+   DEFINE l_desc           LIKE type_t.chr100
+   DEFINE l_oodb005        LIKE oodb_t.oodb005
+   DEFINE l_oodb011        LIKE oodb_t.oodb011
+   DEFINE l_glaa001        LIKE glaa_t.glaa001  #150306
+   DEFINE l_success        LIKE type_t.num5     #150306
+   DEFINE l_apcc113        LIKE apcc_t.apcc113  #150314
+   DEFINE l_glca002        LIKE glca_t.glca003  #150314
+   DEFINE l_xreb115        LIKE xreb_t.xreb115  #151223-00001#4
+   
+   #LET g_flag = 'N'   #albireo 150122 mark
+   LET l_glaa003 = ''
+   #取得會計週期參照表 #150306 add glaa001
+   CALL s_ld_sel_glaa(p_xreald,'glaa003|glaa001')
+    RETURNING  g_sub_success,l_glaa003,l_glaa001
+
+   #150315 add ------
+   SELECT glca002 INTO l_glca002
+     FROM glaa_t,glca_t 
+    WHERE glaaent = g_enterprise
+      AND glaaent = glcaent
+      AND glaald = glcald 
+      AND glca001 = 'AP' 
+      AND glca002 <> '1'     #無重評不撈出           
+      AND glaald = p_xreald
+   #150315 add end---
+   
+   #依年度+期別取得會計週期起迄日
+   CALL s_get_accdate(l_glaa003,'',g_master.xrea001,g_master.xrea002)
+   RETURNING l_flag,g_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+             l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e
+             
+   FOREACH sel_aapp910_apccc1 USING l_pdate_e,l_pdate_e,l_pdate_e,l_pdate_e,l_pdate_e,p_xreald INTO l_tmp.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE l_apca.* TO NULL
+      SELECT * INTO l_apca.* 
+        FROM apca_t
+       WHERE apcaent = g_enterprise
+         AND apcald  = l_tmp.apccld
+         AND apcadocno = l_tmp.apccdocno
+         
+      INITIALIZE l_apcc.* TO NULL
+      SELECT * INTO l_apcc.*
+        FROM apcc_t
+       WHERE apccent = g_enterprise
+         AND apccld  = l_tmp.apccld
+         AND apccdocno = l_tmp.apccdocno
+         AND apccseq   = l_tmp.apccseq
+         AND apcc001   = l_tmp.apcc001
+      
+      INITIALIZE l_xrea.* TO NULL
+      LET l_xrea.xrea045  = l_apca.apca008 #150901-00020#4
+      LET l_xrea.xrea044  = l_apcc.apcc009 #150901-00020#4
+      LET l_xrea.xreaent  = g_enterprise
+      LET l_xrea.xreacomp = l_apca.apcacomp
+      LET l_xrea.xreasite = l_apca.apcasite
+      LET l_xrea.xreald   = l_apca.apcald
+      LET l_xrea.xrea001  = g_master.xrea001
+      LET l_xrea.xrea002  = g_master.xrea002
+      LET l_xrea.xrea003  = 'AP'
+      LET l_xrea.xrea004  = l_apca.apca001
+      LET l_xrea.xrea005  = l_tmp.apccdocno
+      LET l_xrea.xrea006  = l_tmp.apccseq
+      LET l_xrea.xrea007  = l_tmp.apcc001
+      LET l_xrea.xrea008  = l_apca.apcadocdt
+      LET l_xrea.xrea009  = l_apca.apca004
+      LET l_xrea.xrea010  = l_apca.apca005
+      LET l_xrea.xrea034  = l_apcc.apcc010
+      LET l_xrea.xrea035  = l_apcc.apcc011 
+      LET l_xrea.xrea036  = l_apcc.apcc013
+      LET l_xrea.xrea037  = l_apcc.apcc014
+      LET l_xrea.xrea038  = l_apcc.apcc003
+      LET l_xrea.xrea039  = NULL
+      SELECT pmab004 INTO l_xrea.xrea039 FROM pmab_t  
+       WHERE pmab001 = l_xrea.xrea009 AND pmabsite = l_apca.apcacomp 
+         AND pmabent = g_enterprise  #160905-00002#1
+      LET l_xrea.xrea100  = l_apcc.apcc100
+      LET l_xrea.xrea101  = l_apcc.apcc101
+      LET l_xrea.xrea102  = l_apcc.apcc102
+      
+      CALL cl_get_para(g_enterprise,l_apca.apcacomp,'S-FIN-2002') RETURNING l_s_fin_2002
+      CASE
+         WHEN l_s_fin_2002 = '1' OR l_s_fin_2002 = '2'
+            LET l_xrea.xrea011  = l_apca.apca015
+            CALL s_department_get_respon_center(l_xrea.xrea011,l_apca.apcadocdt)  
+               RETURNING g_sub_success,g_errno,l_xrea.xrea012,l_desc 
+            LET l_xrea.xrea013 = ''
+            LET l_xrea.xrea014 = ''
+            LET l_xrea.xrea015 = ''
+            LET l_xrea.xrea016 = l_apca.apca014
+            LET l_xrea.xrea017 = ''
+            LET l_xrea.xrea018 = ''
+            LET l_xrea.xrea019 = l_apca.apca035
+            LET l_xrea.xrea020 = ''
+            LET l_xrea.xrea021 = ''
+            LET l_xrea.xrea022 = ''
+            LET l_xrea.xrea023 = ''
+            LET l_xrea.xrea024 = ''
+            LET l_xrea.xrea025 = ''
+            LET l_xrea.xrea026 = ''
+            LET l_xrea.xrea027 = ''
+            LET l_xrea.xrea028 = ''
+            LET l_xrea.xrea029 = ''
+            LET l_xrea.xrea030 = ''
+            LET l_xrea.xrea031 = ''
+            LET l_xrea.xrea032 = ''
+            LET l_xrea.xrea033 = ''
+            LET l_xrea.xrea040 = l_apca.apca011
+            LET l_xrea.xrea041 = l_apca.apca012
+            LET l_xrea.xreaorga = l_apca.apcacomp
+         WHEN l_s_fin_2002 = '3'
+            INITIALIZE l_apcb.* TO NULL
+            SELECT * INTO l_apcb.* FROM apcb_t
+             WHERE apcbent = g_enterprise
+               AND apcbld  = l_apca.apcald
+               AND apcbdocno = l_apca.apcadocno
+               AND apcbseq   = l_apcc.apccseq
+            LET l_xrea.xrea011 = l_apcb.apcb010
+            LET l_xrea.xrea012 = l_apcb.apcb011
+            LET l_xrea.xrea013 = l_apcb.apcb024
+            LET l_xrea.xrea014 = l_apcb.apcb014
+            LET l_xrea.xrea015 = l_apcb.apcb012
+            LET l_xrea.xrea016 = l_apca.apca014
+            LET l_xrea.xrea017 = l_apcb.apcb015
+            LET l_xrea.xrea018 = l_apcb.apcb016
+            LET l_xrea.xrea019 = l_apcb.apcb029
+            LET l_xrea.xrea020 = l_apcb.apcb034
+            LET l_xrea.xrea021 = l_apcb.apcb035
+            LET l_xrea.xrea022 = l_apcb.apcb036
+            LET l_xrea.xrea023 = l_apcb.apcb037
+            LET l_xrea.xrea024 = l_apcb.apcb038
+            LET l_xrea.xrea025 = l_apcb.apcb039
+            LET l_xrea.xrea026 = l_apcb.apcb040
+            LET l_xrea.xrea027 = l_apcb.apcb041
+            LET l_xrea.xrea028 = l_apcb.apcb042
+            LET l_xrea.xrea029 = l_apcb.apcb043
+            LET l_xrea.xrea030 = l_apcb.apcb044
+            LET l_xrea.xrea031 = l_apcb.apcb045
+            LET l_xrea.xrea032 = l_apcb.apcb046
+            LET l_xrea.xrea033 = l_apcb.apcb047
+            LET l_xrea.xrea040 = l_apcb.apcb020
+            CALL s_tax_chk(l_apca.apcacomp,l_xrea.xrea040) RETURNING g_sub_success,l_desc,l_oodb005,l_xrea.xrea041,l_oodb011
+            LET l_xrea.xreaorga = l_apcb.apcborga
+         OTHERWISE
+      END CASE
+      
+      #150315 add 匯差調整-------
+      IF l_glca002 = '3' THEN
+         LET l_apcc113 = 0 
+         SELECT SUM(xreb115) INTO l_apcc113
+           FROM xreb_t
+          WHERE xrebent = g_enterprise
+            AND xrebld  = l_apca.apcald
+            AND (xreb001 = g_master.xrea001 AND xreb002 > g_master.xrea002 OR xreb001 > g_master.xrea001)
+            AND xreb003 = 'AP'
+            AND xreb005 = l_tmp.apccdocno
+            AND xreb006 = l_tmp.apccseq
+            AND xreb007 = l_tmp.apcc001
+         IF cl_null(l_apcc113) THEN LET l_apcc113 = 0 END IF
+      END IF
+      IF cl_null(l_apcc113) THEN LET l_apcc113 = 0 END IF   #150409 add
+      #150315 add 匯差調整 end---
+      
+      LET l_xrea.xrea103  = l_tmp.apcc108 - l_tmp.apcc109 + l_tmp.apce109 + l_tmp.xrce109
+                            + l_tmp.apce1091 + l_tmp.apcf103       #108-109+109
+      CALL aapp910_tax_count(l_xrea.xrea004,l_xrea.xrea041,l_xrea.xrea103)
+         RETURNING l_xrea.xrea104,l_xrea.xrea105,l_xrea.xrea106
+      
+      #151223-00001#4 add ------
+      #取得本期匯差金額
+      IF l_glca002 = '2' THEN
+         LET l_xreb115 = 0
+         SELECT SUM(xreb115) INTO l_xreb115
+           FROM xreb_t
+          WHERE xrebent = g_enterprise
+            AND xrebcomp = l_apca.apcacomp
+            AND xrebld  = l_apca.apcald
+            AND xreb001 = g_master.xrea001
+            AND xreb002 = g_master.xrea002
+            AND xreb003 = 'AP'
+            AND xreb005 = l_tmp.apccdocno
+            AND xreb006 = l_tmp.apccseq
+            AND xreb007 = l_tmp.apcc001
+      END IF
+      IF cl_null(l_xreb115) THEN LET l_xreb115 = 0 END IF
+      
+      #160106-00005#1-----s
+      IF l_apca.apca001 matches '[2]*' OR l_apca.apca001 = '02' OR l_apca.apca001 = '04' THEN
+         LET l_xreb115 = l_xreb115 * (-1)
+      END IF
+      #160106-00005#1-----e
+      
+      #151223-00001#4 add end---
+      
+      #本幣未沖含稅金額
+      LET l_xrea.xrea113  = l_tmp.apcc118 - l_tmp.apcc119 + l_tmp.apcc113 + l_tmp.apce119 + l_tmp.xrce119
+                          + l_tmp.apce1191 + l_tmp.apcf113 - l_apcc113 #150315 add l_apcc113
+                          + l_xreb115 #151223-00001#4
+     # LET l_xrea.xrea113  = l_tmp.apcc118 - l_tmp.apcc119 + l_tmp.apce119
+      CALL aapp910_tax_count(l_xrea.xrea004,l_xrea.xrea041,l_xrea.xrea113)
+         RETURNING l_xrea.xrea114,l_xrea.xrea115,l_xrea.xrea116
+         
+      LET l_xrea.xrea122  = l_apcc.apcc122
+      LET l_xrea.xrea123  = l_tmp.apcc128 - l_tmp.apcc129 + l_tmp.apcc123 + l_tmp.apce129 + l_tmp.xrce129
+                                        + l_tmp.apce1291 + l_tmp.apcf123 
+      LET l_xrea.xrea132  = l_apcc.apcc132
+      LET l_xrea.xrea133  = l_tmp.apcc138 - l_tmp.apcc139 + l_tmp.apcc133 + l_tmp.apce139 + l_tmp.xrce139
+                                        + l_tmp.apce1391 + l_tmp.apcf133 
+      IF cl_null(l_xrea.xrea103)THEN LET l_xrea.xrea103 = 0 END IF
+      IF cl_null(l_xrea.xrea104)THEN LET l_xrea.xrea104 = 0 END IF
+      IF cl_null(l_xrea.xrea105)THEN LET l_xrea.xrea105 = 0 END IF
+      IF cl_null(l_xrea.xrea106)THEN LET l_xrea.xrea106 = 0 END IF
+      IF cl_null(l_xrea.xrea113)THEN LET l_xrea.xrea113 = 0 END IF
+      IF cl_null(l_xrea.xrea114)THEN LET l_xrea.xrea114 = 0 END IF
+      IF cl_null(l_xrea.xrea115)THEN LET l_xrea.xrea115 = 0 END IF
+      IF cl_null(l_xrea.xrea116)THEN LET l_xrea.xrea116 = 0 END IF
+      IF cl_null(l_xrea.xrea122)THEN LET l_xrea.xrea122 = 0 END IF
+      IF cl_null(l_xrea.xrea123)THEN LET l_xrea.xrea123 = 0 END IF
+      IF cl_null(l_xrea.xrea132)THEN LET l_xrea.xrea132 = 0 END IF
+      IF cl_null(l_xrea.xrea133)THEN LET l_xrea.xrea133 = 0 END IF
+      
+      #150306 add ------
+     #CALL s_curr_round_ld('1',l_xrea.xreald,l_glaa001,l_xrea.xrea103,2) RETURNING l_success,g_errno,l_xrea.xrea103        #150818 mark
+      CALL s_curr_round_ld('1',l_xrea.xreald,l_xrea.xrea100,l_xrea.xrea103,2) RETURNING l_success,g_errno,l_xrea.xrea103   #150818 應以原幣幣別取位
+      CALL s_curr_round_ld('1',l_xrea.xreald,l_glaa001,l_xrea.xrea104,2) RETURNING l_success,g_errno,l_xrea.xrea104
+      CALL s_curr_round_ld('1',l_xrea.xreald,l_glaa001,l_xrea.xrea105,2) RETURNING l_success,g_errno,l_xrea.xrea105
+      CALL s_curr_round_ld('1',l_xrea.xreald,l_glaa001,l_xrea.xrea106,2) RETURNING l_success,g_errno,l_xrea.xrea106
+
+      CALL s_curr_round_ld('1',l_xrea.xreald,l_glaa001,l_xrea.xrea113,2) RETURNING l_success,g_errno,l_xrea.xrea113 
+      CALL s_curr_round_ld('1',l_xrea.xreald,l_glaa001,l_xrea.xrea114,2) RETURNING l_success,g_errno,l_xrea.xrea114
+      CALL s_curr_round_ld('1',l_xrea.xreald,l_glaa001,l_xrea.xrea115,2) RETURNING l_success,g_errno,l_xrea.xrea115
+      CALL s_curr_round_ld('1',l_xrea.xreald,l_glaa001,l_xrea.xrea116,2) RETURNING l_success,g_errno,l_xrea.xrea116
+      
+      CALL s_curr_round_ld('1',l_xrea.xreald,l_glaa001,l_xrea.xrea123,2) RETURNING l_success,g_errno,l_xrea.xrea123
+      CALL s_curr_round_ld('1',l_xrea.xreald,l_glaa001,l_xrea.xrea133,2) RETURNING l_success,g_errno,l_xrea.xrea133
+      #150306 add end---
+      
+      INSERT INTO xrea_t VALUES(l_xrea.*)      
+                  
+      IF SQLCA.SQLcode OR SQLCA.SQLERRD[3]=0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins xrea_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET g_success = 'N'
+      END IF  
+      LET g_flag = 'Y'
+   END FOREACH   
+             
+END FUNCTION
+
+################################################################################
+# Descriptions...: 勾選單身時的檢核
+# Memo...........: 因為規格變更,如果已經有產生過月結資料
+#                : 就一定要做還原,所以把檢核拉前到勾選的位置
+# Date & Author..: 141028 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapp910_clik_chk(p_ac)
+   DEFINE p_ac      LIKE type_t.num5
+   DEFINE r_success LIKE type_t.num5
+   DEFINE r_errno   LIKE gzze_t.gzze001
+   DEFINE l_count   LIKE type_t.num5
+   DEFINE l_glca002 LIKE glca_t.glca002
+   DEFINE l_msg     STRING
+   
+   LET r_success = TRUE  LET r_errno = NULL
+   IF cl_null(p_ac) OR p_ac <= 0 THEN
+      RETURN r_success,r_errno
+   END IF
+   
+   #檢核 帳別+年度+期別+AP 有存在就提示要做還原
+   LET l_count = NULL
+   SELECT COUNT(*) INTO l_count FROM xrea_t
+    WHERE xreaent = g_enterprise
+      AND xreald  = g_detail_d[p_ac].xreald
+      AND xrea001 = g_master.xrea001
+      AND xrea002 = g_master.xrea002
+      AND xrea003 = 'AP'
+   IF cl_null(l_count)THEN LET l_count = 0 END IF
+   IF l_count > 0 THEN
+      #150518-00043#4 modify-----s
+      LET r_success = FALSE
+      #LET r_errno   = 'aap-00230'  #160318-00005#2 mark
+      LET r_errno   = 'sub-01328'   #160318-00005#2 add
+      RETURN r_success,r_errno
+      
+      
+#      #150319-00006#1 modify-----s
+#      LET l_msg = cl_getmsg('aap-00152',g_lang) CLIPPED,':',g_detail_d[p_ac].xreald,
+#                                    cl_getmsg('axr-00291',g_lang) CLIPPED
+#      IF NOT cl_ask_confirm2('',l_msg)THEN
+#         LET r_success = FALSE
+#         LET r_errno   = 'aap-00230'
+#         RETURN r_success,r_errno
+#      END IF
+#      #150319-00006#1 modify-----e
+      #150518-00043#4 MARK-----e
+   END IF
+   #141215--(S)---
+   #檢查重評價檔是否計算
+   LET l_glca002 = NULL
+   SELECT glca002 INTO l_glca002
+     FROM glca_t
+    WHERE glcald = g_detail_d[p_ac].xreald AND glca001 = 'AP'
+      AND glcaent = g_enterprise     #160905-00002#1
+    
+   #150409-----s
+   #完全沒設定agli171
+   IF cl_null(l_glca002)THEN
+      LET r_success = FALSE
+      LET r_errno = 'aap-00348'
+      RETURN r_success,r_errno
+   END IF   
+   #150409-----e
+   IF l_glca002 MATCHES '[23]' THEN     #albireo 150113 modify   12> 23    1才是不檢查
+      LET l_count = NULL
+      SELECT COUNT(*) INTO l_count FROM xreb_t
+       WHERE xrebent = g_enterprise
+         AND xrebld  = g_detail_d[p_ac].xreald
+         AND xreb001 = g_master.xrea001
+         AND xreb002 = g_master.xrea002
+         AND xreb003 = 'AP'
+         
+      IF cl_null(l_count)THEN LET l_count = 0 END IF
+      IF l_count = 0 THEN               #albireo 150113 modify   檢查的是沒有重評價資料
+
+         #150518-00043#4 modify-----s
+         LET r_success = FALSE
+         LET r_errno   = 'aap-00299'
+         RETURN r_success,r_errno         
+                  
+         #150319-00006#1 modify----s
+#         LET l_msg = cl_getmsg('aap-00152',g_lang) CLIPPED,':',g_detail_d[p_ac].xreald,
+#                                    cl_getmsg('aap-00321',g_lang) CLIPPED
+#         IF NOT cl_ask_confirm2('',l_msg)THEN
+#            LET r_success = FALSE
+#            LET r_errno   = 'aap-00299'
+#            RETURN r_success,r_errno
+#         END IF
+#         #150319-00006#1 modify----e
+         #150518-00043#4 modify-----e
+      END IF
+   END IF
+   #141215--(E)---
+   RETURN r_success,r_errno
+END FUNCTION
+
+################################################################################
+# Descriptions...: 含稅額推暫估額
+# Memo...........:
+# Date & Author..: 141028 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapp910_tax_count(p_apca001,p_oodb006,p_xrea103)
+   DEFINE p_oodb006   LIKE oodb_t.oodb006
+   DEFINE p_xrea103   LIKE xrea_t.xrea103
+   DEFINE p_apca001   LIKE apca_t.apca001
+   DEFINE p_xrea100   LIKE xrea_t.xrea100
+   DEFINE r_xrea104   LIKE xrea_t.xrea104
+   DEFINE r_xrea105   LIKE xrea_t.xrea105
+   DEFINE r_xrea106   LIKE xrea_t.xrea106
+   
+   LET r_xrea104 = 0 
+   LET r_xrea105 = 0 
+   LET r_xrea106 = 0 
+   IF NOT cl_null(p_apca001) AND p_apca001[1,1] <> '0' THEN
+      RETURN r_xrea104,r_xrea105,r_xrea106
+   END IF   
+   ################################################################
+   #   用含稅金額反推
+   # if  xrea004[1,1] = '0' then # 以下暫估欄位 
+   #  含稅金額 = xrea103  
+   #  未稅金額 =  含稅金額 /(1+(稅率oodb006/100)) 
+   ## 依幣別設定小數位數四捨五入
+   # 稅額 =  未稅金額 * 稅率     # 依幣別設定小數位數四捨五入
+   #(未稅金額 +  稅額)  - 含稅金額 <> 0 表示有差額, 差額歸在未稅金額
+   #end if   
+   ################################################################
+   LET r_xrea106 = p_xrea103                                      #含稅金額
+   LET r_xrea105 = r_xrea106 / (100+(p_oodb006)) * p_oodb006    #稅額
+   #稅額幣別取位     #albireo  141028
+   LET r_xrea104 = r_xrea106 - r_xrea105                          #未稅金額
+   
+   RETURN r_xrea104,r_xrea105,r_xrea106
+END FUNCTION
+
+################################################################################
+# Descriptions...: 清空&給預設 #150127-00007#1
+# Memo...........:
+# Usage..........: CALL aapp910_qbe_clear()
+# Date & Author..: 2015/02/24 By Reanna
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapp910_qbe_clear()
+DEFINE l_ooef017 LIKE ooef_t.ooef017
+   
+   CLEAR FORM
+   INITIALIZE g_master.* TO NULL
+   CALL g_detail_d.clear()
+   
+   LET g_master.ooef001 = g_site
+   LET g_master.ooef001_desc = s_desc_get_department_desc(g_master.ooef001)
+   DISPLAY BY NAME g_master.ooef001_desc
+   
+   CALL s_fin_account_center_sons_query('3',g_master.ooef001,g_today,'1')
+   #141215:取得帳務中心所屬法人
+   SELECT ooef017 INTO l_ooef017
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_site
+   CALL cl_get_para(g_enterprise,l_ooef017,'S-FIN-3007') RETURNING l_para_data
+   #預設年度/期別
+   LET g_master.xrea001 = YEAR(l_para_data)
+   LET g_master.xrea002 = MONTH(l_para_data)   
+   
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

@@ -1,0 +1,4298 @@
+<add_points prog="aimi106" std_prog="aimi106" erpver="1.0" module="AIM" ver="3" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="F" status="" />
+    <free_style value="N" status="" />
+  </other>
+  <point name="function.aimi106_imcg111_chk" cite_std="N" status="" ver="2" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[# #檢查imcg111欄位key值是否重複
+# #檢查imcg111是否存在于ACC205中且有效
+PRIVATE FUNCTION aimi106_imcg111_chk(p_imcg111,p_imcg111_t,p_cmd)
+DEFINE p_imcg111      LIKE imcg_t.imcg111
+   DEFINE p_imcg111_t    LIKE imcg_t.imcg111
+   DEFINE p_cmd          LIKE type_t.chr1
+   DEFINE r_success      LIKE type_t.num5
+   
+#初始化返回值
+   LET r_success = TRUE
+
+#判斷入值是否為空
+   IF NOT cl_null(p_imcg111) THEN
+   
+#邏輯處理
+      DISPLAY ' ' TO imcg111_desc
+   #判斷入的p_cmd值，如果為空給a
+      IF cl_null(p_cmd) THEN LET p_cmd = 'a' END IF 
+   
+   #判斷key是否重複,重複就報錯：std-00004，資料重複性檢查未通過
+      IF NOT cl_null(p_imcg111) THEN 
+         IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (p_imcg111 != p_imcg111_t ))) THEN 
+            IF NOT ap_chk_notDup(p_imcg111,"SELECT COUNT(*) FROM imcg_t WHERE "||"imcgent = '" 
+                                ||g_enterprise|| "' AND imcgsite = '" ||g_site|| "' AND "
+                                ||"imcg111 = '"||p_imcg111 ||"'",'std-00004',0) THEN 
+               LET r_success = FALSE
+            END IF
+         END IF
+      END IF
+   
+   #判斷是否存在oocq_t中，且否有效的資料v_oocq002_205
+      IF r_success = TRUE THEN
+#         #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+#         INITIALIZE g_chkparam.* TO NULL
+#
+#         #設定g_chkparam.*的參數
+#         LET g_chkparam.arg1 = p_imcg111
+#         #呼叫檢查存在並帶值的library
+#         IF NOT cl_chk_exist("v_ooal002_3") THEN
+#            LET r_success = FALSE
+#         END IF
+         
+         CALL s_azzi650_chk_exist('205',p_imcg111)
+              RETURNING r_success
+      END IF 
+   END IF 
+   
+#返回值
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.aimi106_chk_num" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[# #判斷輸入值是否不小於0
+# #報錯：輸入值不可以小於零
+PRIVATE FUNCTION aimi106_chk_num(p_num)
+DEFINE p_num     LIKE imcg_t.imcg118
+   DEFINE r_success LIKE type_t.num5
+
+   LET r_success = TRUE
+   IF NOT cl_null(p_num) THEN
+      IF p_num < 0 THEN
+         #報錯：輸入值不可以小於零
+         CALL cl_err(p_num,'aim-00009',0)
+         LET r_success = FALSE
+      END IF 
+   END IF 
+   
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.aimi106_imcg112_ref" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[# #imcg112欄位帶出參考欄位imcg112_desc的值
+#
+PRIVATE FUNCTION aimi106_imcg112_ref(p_imcg112)
+DEFINE p_imcg112      LIKE imcg_t.imcg112
+   DEFINE r_imcg112_desc LIKE oofa_t.oofa011
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_imcg112
+   CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM ooag_t LEFT OUTER JOIN "||
+      "oofa_t ON oofaent = ooagent AND oofa001 = ooag002 WHERE ooagent='"
+      ||g_enterprise||"' AND  ooag001 = ? ","") 
+      RETURNING g_rtn_fields
+   LET r_imcg112_desc = g_rtn_fields[1]
+   RETURN r_imcg112_desc
+END FUNCTION]]>
+</point>
+  <point name="function.aimi106_imcg112_chk" cite_std="N" status="" ver="2" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[# #imcg112欄位檢查
+PRIVATE FUNCTION aimi106_imcg112_chk(p_imcg112)
+DEFINE p_imcg112 LIKE imcg_t.imcg112
+   DEFINE r_success LIKE type_t.num5
+#初始化
+   LET r_success = TRUE
+#判斷是否為空
+   IF NOT cl_null(p_imcg112) THEN 
+   #邏輯判斷
+      DISPLAY ' ' TO imcg112_desc
+   #检查v_ooag001
+      IF r_success = TRUE THEN
+         #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+         INITIALIZE g_chkparam.* TO NULL
+
+         #設定g_chkparam.*的參數
+         LET g_chkparam.arg1 = p_imcg112
+         #呼叫檢查存在並帶值的library
+         IF NOT cl_chk_exist("v_ooag001") THEN
+            LET r_success = FALSE
+         END IF
+      END IF 
+   END IF 
+#返回值
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.aimi106_imcg111_ref" cite_std="N" status="" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[# #imcg111欄位帶出參考欄位imcg111_desc的值
+PRIVATE FUNCTION aimi106_imcg111_ref(p_imcg111)
+DEFINE p_imcg111      LIKE imcg_t.imcg111
+   DEFINE r_imcg111_desc LIKE oocql_t.oocql004
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_imcg111
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"
+      ||g_enterprise||"' AND oocql001='205' AND oocql002=? AND oocql003='"||g_dlang||"'","") 
+      RETURNING g_rtn_fields
+   LET r_imcg111_desc = g_rtn_fields[1]
+   RETURN r_imcg111_desc
+END FUNCTION]]>
+</point>
+  <point name="function.aimi106_imcg113_ref" cite_std="N" status="" ver="1" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[# imcg113欄位帶出參考欄位imcg113_desc的值
+PRIVATE FUNCTION aimi106_imcg113_ref(p_imcg113)
+DEFINE p_imcg113      LIKE imcg_t.imcg113
+   DEFINE r_imcg113_desc LIKE oocal_t.oocal003
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_imcg113
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"
+      ||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","")
+      RETURNING g_rtn_fields
+   LET r_imcg113_desc = g_rtn_fields[1]
+   RETURN r_imcg113_desc
+END FUNCTION]]>
+</point>
+  <point name="function.aimi106_imcg113_chk" cite_std="N" status="" ver="2" src="s" new="Y" order="7" mark_hard="N">
+<![CDATA[# #imcg113欄位檢查
+PRIVATE FUNCTION aimi106_imcg113_chk(p_imcg113)
+DEFINE p_imcg113 LIKE imcg_t.imcg113
+   DEFINE r_success LIKE type_t.num5
+#初始化
+   LET r_success = TRUE
+#判斷是否為空
+   IF NOT cl_null(p_imcg113) THEN 
+   #邏輯判斷
+      DISPLAY ' ' TO imcg113_desc
+   #檢查v_ooca001
+      IF r_success = TRUE THEN
+         #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+         INITIALIZE g_chkparam.* TO NULL
+
+         #設定g_chkparam.*的參數
+         LET g_chkparam.arg1 = p_imcg113
+         #呼叫檢查存在並帶值的library
+         IF NOT cl_chk_exist("v_ooca001") THEN
+            LET r_success = FALSE
+         END IF
+      END IF 
+   END IF 
+#返回值
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.aimi106_imcg117_item" cite_std="N" status="" ver="2" src="s" new="Y" order="8" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 根據傳入的檢驗標準來動態變更可使用的檢驗等級
+# Memo...........:
+# Usage..........: CALL aimi106_imcg117_item(p_imcg116)
+#                  RETURNING 无
+# Input parameter: p_imcg116   檢驗標準1,2,3,4   5用于查询时候
+# Date & Author..: 2013/10/18 By xuxz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aimi106_imcg117_item(p_imcg116)
+   DEFINE p_imcg116 LIKE imcg_t.imcg116
+   DEFINE l_cnt     LIKE type_t.num5
+   DEFINE l_sql     STRING
+   DEFINE ls_gzcb002     LIKE gzcb_t.gzcb002      #系統分類值
+   DEFINE ls_gzcbl004    LIKE gzcbl_t.gzcbl004    #說明
+
+   DEFINE ls_array DYNAMIC ARRAY OF RECORD
+             value       STRING,
+             label_tag   STRING,
+             label       STRING
+                     END RECORD
+                     
+   IF NOT cl_null(p_imcg116) THEN
+      IF p_imcg116 = '1' THEN
+         CALL cl_set_combo_scc_part("imcg117",'5053','1,2,3') 
+      END IF 
+      IF p_imcg116 = '2' THEN
+         CALL cl_set_combo_scc_part("imcg117",'5053','1,2,3,4')
+      END IF 
+      IF p_imcg116 = '3'  OR p_imcg116 = '4' THEN
+         CALL cl_set_combo_scc_part("imcg117",'5053','1,2,3,4,5,6,7')
+      END IF 
+      IF p_imcg116 = '5' THEN
+         LET l_sql = " SELECT gzcb002,gzcbl004 FROM gzcb_t LEFT OUTER JOIN gzcbl_t ",
+                     " ON gzcb001 = gzcbl001 AND gzcb002 = gzcbl002 ",
+                     " AND gzcbl003 = '",g_dlang,"'",
+                     " WHERE gzcb001 IN ('5053') "
+         PREPARE imcg117_item_pre FROM l_sql
+         DECLARE imcg117_item_cs CURSOR FOR imcg117_item_pre
+         LET l_cnt = 1
+         
+         FOREACH imcg117_item_cs INTO ls_gzcb002,ls_gzcbl004
+            LET ls_array[l_cnt].value = ls_gzcb002 CLIPPED
+            LET ls_array[l_cnt].label = ls_gzcbl004 CLIPPED
+            LET ls_array[l_cnt].label_tag = ls_gzcb002 CLIPPED
+            LET l_cnt = l_cnt +1
+         END FOREACH
+         CALL cl_set_combo_detail("imcg117",ls_array)
+      END IF 
+   END IF 
+END FUNCTION]]>
+</point>
+  <point name="browser_fill.wc" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET p_wc = p_wc CLIPPED," AND imcgsite = '",g_site,"'"]]>
+</point>
+  <point name="construct.c.imcg111" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '205'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imcg111  #顯示到畫面上
+
+            NEXT FIELD imcg111                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.imcg112" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imcg112  #顯示到畫面上
+
+            NEXT FIELD imcg112                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.imcg113" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imcg113  #顯示到畫面上
+
+            NEXT FIELD imcg113                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.imcgcrtdp" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imcgcrtdp  #顯示到畫面上
+
+            NEXT FIELD imcgcrtdp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.imcgcrtid" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imcgcrtid  #顯示到畫面上
+
+            NEXT FIELD imcgcrtid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.imcgmodid" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imcgmodid  #顯示到畫面上
+
+            NEXT FIELD imcgmodid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.imcgowndp" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imcgowndp  #顯示到畫面上
+
+            NEXT FIELD imcgowndp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.imcgownid" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imcgownid  #顯示到畫面上
+
+            NEXT FIELD imcgownid                     #返回原欄位
+
+]]>
+</point>
+  <point name="cs.before_construct" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            CALL aimi106_imcg117_item("5")]]>
+</point>
+  <point name="default_search.after" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   #第一個傳入的為site參數，故需要對g_wc重新給值
+   LET ls_wc = ''
+   LET g_wc = ''
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " imcgsite = '", g_argv[1], "' AND "
+   END IF
+   
+
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+   ELSE
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF]]>
+</point>
+  <point name="fetch.action_control" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[   IF g_imcg_m.imcgstus = 'Y' THEN
+      CALL cl_set_act_visible("modify,delete,reproduce", TRUE)
+   ELSE
+      CALL cl_set_act_visible("modify,delete,reproduce", FALSE)
+   END IF]]>
+</point>
+  <point name="input.a.imcg111" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF NOT aimi106_imcg111_chk(g_imcg_m.imcg111,g_imcg_m_t.imcg111,p_cmd) THEN 
+               IF p_cmd = 'a' THEN 
+                  LET g_imcg_m.imcg111 = ''
+               ELSE
+                  LET g_imcg_m.imcg111 = g_imcg_m_t.imcg111
+               END IF 
+               DISPLAY BY NAME g_imcg_m.imcg111
+               CALL aimi106_imcg111_ref(g_imcg_m.imcg111) RETURNING g_imcg_m.imcg111_desc 
+               DISPLAY BY NAME g_imcg_m.imcg111_desc
+               NEXT FIELD imcg111
+            END IF 
+            CALL aimi106_imcg111_ref(g_imcg_m.imcg111) RETURNING g_imcg_m.imcg111_desc 
+            DISPLAY BY NAME g_imcg_m.imcg111_desc
+]]>
+</point>
+  <point name="input.a.imcg112" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF NOT aimi106_imcg112_chk(g_imcg_m.imcg112) THEN 
+               IF p_cmd = 'a' THEN 
+                  LET g_imcg_m.imcg112 = ''
+               ELSE
+                  LET g_imcg_m.imcg112 = g_imcg_m_t.imcg112
+               END IF 
+               DISPLAY BY NAME g_imcg_m.imcg112
+               CALL aimi106_imcg112_ref(g_imcg_m.imcg112) RETURNING g_imcg_m.imcg112_desc 
+               DISPLAY BY NAME g_imcg_m.imcg112_desc
+               NEXT FIELD imcg112
+            END IF 
+            CALL aimi106_imcg112_ref(g_imcg_m.imcg112) RETURNING g_imcg_m.imcg112_desc 
+            DISPLAY BY NAME g_imcg_m.imcg112_desc
+]]>
+</point>
+  <point name="input.a.imcg113" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF NOT aimi106_imcg113_chk(g_imcg_m.imcg113) THEN 
+               IF p_cmd = 'a' THEN 
+                  LET g_imcg_m.imcg113 = ''
+               ELSE
+                  LET g_imcg_m.imcg113 = g_imcg_m_t.imcg113
+               END IF 
+               DISPLAY BY NAME g_imcg_m.imcg113
+               CALL aimi106_imcg113_ref(g_imcg_m.imcg113) RETURNING g_imcg_m.imcg113_desc 
+               DISPLAY BY NAME g_imcg_m.imcg113_desc
+               NEXT FIELD imcg113
+            END IF 
+            CALL aimi106_imcg113_ref(g_imcg_m.imcg113) RETURNING g_imcg_m.imcg113_desc 
+            DISPLAY BY NAME g_imcg_m.imcg113_desc]]>
+</point>
+  <point name="input.a.imcg118" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF NOT aimi106_chk_num(g_imcg_m.imcg118) THEN
+               IF p_cmd = 'a' THEN
+                  LET g_imcg_m.imcg118 = 0
+               ELSE
+                  LET g_imcg_m.imcg118 = g_imcg_m_t.imcg118
+               END IF 
+               NEXT FIELD imcg118
+            END IF ]]>
+</point>
+  <point name="input.a.imcg119" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF NOT aimi106_chk_num(g_imcg_m.imcg119) THEN
+               IF p_cmd = 'a' THEN
+                  LET g_imcg_m.imcg119 = 0
+               ELSE
+                  LET g_imcg_m.imcg119 = g_imcg_m_t.imcg119
+               END IF 
+               NEXT FIELD imcg119
+            END IF ]]>
+</point>
+  <point name="input.a.imcgcrtdp" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imcg_m.imcgcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imcg_m.imcgcrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_imcg_m.imcgcrtdp_desc
+]]>
+</point>
+  <point name="input.a.imcgcrtid" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imcg_m.imcgcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_imcg_m.imcgcrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_imcg_m.imcgcrtid_desc
+]]>
+</point>
+  <point name="input.a.imcgmodid" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imcg_m.imcgmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_imcg_m.imcgmodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_imcg_m.imcgmodid_desc
+]]>
+</point>
+  <point name="input.a.imcgowndp" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imcg_m.imcgowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imcg_m.imcgowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_imcg_m.imcgowndp_desc
+]]>
+</point>
+  <point name="input.a.imcgownid" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imcg_m.imcgownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_imcg_m.imcgownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_imcg_m.imcgownid_desc
+]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   CALL aimi106_imcg117_item(g_imcg_m.imcg116)]]>
+</point>
+  <point name="input.c.imcg111" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imcg_m.imcg111             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "205" #應用分類
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_imcg_m.imcg111 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imcg_m.imcg111 TO imcg111              #顯示到畫面上
+            CALL aimi106_imcg111_ref(g_imcg_m.imcg111) RETURNING g_imcg_m.imcg111_desc 
+            DISPLAY BY NAME g_imcg_m.imcg111_desc
+            
+            
+            NEXT FIELD imcg111                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.imcg112" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imcg_m.imcg112             #給予default值
+            LET g_qryparam.where = "ooagstus = 'Y'"
+            #給予arg
+
+            CALL q_ooag001()                                #呼叫開窗
+            LET g_qryparam.where = ""
+            LET g_imcg_m.imcg112 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imcg_m.imcg112 TO imcg112              #顯示到畫面上
+            CALL aimi106_imcg112_ref(g_imcg_m.imcg112) RETURNING g_imcg_m.imcg112_desc 
+            DISPLAY BY NAME g_imcg_m.imcg112_desc
+            
+
+            NEXT FIELD imcg112                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.imcg113" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imcg_m.imcg113             #給予default值
+
+            #給予arg
+
+            CALL q_ooca001_1()                                #呼叫開窗
+
+            LET g_imcg_m.imcg113 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imcg_m.imcg113 TO imcg113              #顯示到畫面上
+            CALL aimi106_imcg113_ref(g_imcg_m.imcg113) RETURNING g_imcg_m.imcg113_desc 
+            DISPLAY BY NAME g_imcg_m.imcg113_desc
+            NEXT FIELD imcg113                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.g.imcg116" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            CALL aimi106_imcg117_item(g_imcg_m.imcg116)]]>
+</point>
+  <point name="insert.default" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[      LET g_imcg_m.imcgmodid = ''
+      LET g_imcg_m.imcgmoddt = ''
+      LET g_imcg_m.imcgstus = "Y"
+      LET g_imcg_m.imcg114 = "N" 
+      LET g_imcg_m.imcg115 = "N" 
+      LET g_imcg_m.imcg116 = "1" 
+      LET g_imcg_m.imcg117 = "1" 
+      LET g_imcg_m.imcg118 = 0 
+      LET g_imcg_m.imcg119 = 0 ]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   IF g_argv[1] = 'ALL' THEN 
+      LET g_site = 'ALL'
+   END IF ]]>
+</point>
+  <point name="menu.open_aimi101" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF g_site = 'ALL' THEN
+                  CALL cl_cmdrun("aimi101 ")
+               ELSE
+                  CALL cl_cmdrun("aimi111")
+               END IF ]]>
+</point>
+  <point name="menu.open_aimi102" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF g_site = 'ALL' THEN
+                  CALL cl_cmdrun("aimi102 ")
+               ELSE
+                  CALL cl_cmdrun("aimi112")
+               END IF ]]>
+</point>
+  <point name="menu.open_aimi103" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                IF g_site = 'ALL' THEN
+                  CALL cl_cmdrun("aimi103 ")
+               ELSE
+                  CALL cl_cmdrun("aimi113")
+               END IF ]]>
+</point>
+  <point name="menu.open_aimi104" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF g_site = 'ALL' THEN
+                  CALL cl_cmdrun("aimi104 ")
+               ELSE
+                  CALL cl_cmdrun("aimi114")
+               END IF ]]>
+</point>
+  <point name="menu.open_aimi105" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF g_site = 'ALL' THEN
+                  CALL cl_cmdrun("aimi105 ")
+               ELSE
+                  CALL cl_cmdrun("aimi115")
+               END IF ]]>
+</point>
+  <point name="menu.reproduce" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[ ]]>
+</point>
+  <point name="menu2.open_aimi101" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF g_site = 'ALL' THEN
+                  CALL cl_cmdrun("aimi101 ")
+               ELSE
+                  CALL cl_cmdrun("aimi111")
+               END IF ]]>
+</point>
+  <point name="menu2.open_aimi102" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF g_site = 'ALL' THEN
+                  CALL cl_cmdrun("aimi102 ")
+               ELSE
+                  CALL cl_cmdrun("aimi112")
+               END IF ]]>
+</point>
+  <point name="menu2.open_aimi103" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF g_site = 'ALL' THEN
+                  CALL cl_cmdrun("aimi103")
+               ELSE
+                  CALL cl_cmdrun("aimi113")
+               END IF ]]>
+</point>
+  <point name="menu2.open_aimi104" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF g_site = 'ALL' THEN
+                  CALL cl_cmdrun("aimi104 ")
+               ELSE
+                  CALL cl_cmdrun("aimi114")
+               END IF ]]>
+</point>
+  <point name="menu2.open_aimi105" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF g_site = 'ALL' THEN
+                  CALL cl_cmdrun("aimi105 ")
+               ELSE
+                  CALL cl_cmdrun("aimi115")
+               END IF ]]>
+</point>
+  <point name="reproduce.a.imcg111" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[         IF NOT aimi106_imcg111_chk(l_newno ,'','a') THEN 
+            LET l_newno = ''
+         END IF 
+         CALL aimi106_imcg111_ref(l_newno ) RETURNING l_newno_desc
+         DISPLAY l_newno_desc TO imcg111_desc
+]]>
+</point>
+  <point name="reproduce.action" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[      ON ACTION controlp INFIELD imcg111
+      #開窗i段
+         LET g_qryparam.state = "i"
+         LET g_qryparam.reqry = FALSE
+
+         LET g_qryparam.default1 = l_newno            #給予default值
+
+         #給予arg
+         LET g_qryparam.arg1 = "205" #應用分類
+
+         CALL q_oocq002()                                #呼叫開窗
+
+         LET l_newno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+         DISPLAY l_newno TO imcg111              #顯示到畫面上
+         CALL aimi106_imcg111_ref(l_newno ) RETURNING l_newno_desc
+         DISPLAY l_newno_desc TO imcg111_desc]]>
+</point>
+  <point name="reproduce.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE l_newno_desc LIKE oocql_t.oocql004]]>
+</point>
+  <point name="reproduce.head.b_insert" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET l_master.imcgmodid = '' 
+   LET l_master.imcgmoddt = '' 
+   LET l_master.imcgstus = "Y"]]>
+</point>
+  <point name="show.before" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   CALL aimi106_imcg117_item(g_imcg_m.imcg116)]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="statechange.a_update" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[   IF lc_state = 'Y' THEN
+      CALL cl_set_act_visible("modify,delete,reproduce", TRUE)
+   ELSE
+      CALL cl_set_act_visible("modify,delete,reproduce", FALSE)
+   END IF]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_refresh_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.default.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.action_default" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.modify" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.about_file" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.output" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.reproduce" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.query" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.menu.related_document" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.menu.agendum" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.menu.followup" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.after_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.action.filter" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.about_file" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.related_document" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.agendum" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.followup" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.cnt_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_pre" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.reference" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcg111" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcg111" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcg112" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcg112" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcg113" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcg113" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcg114" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcg114" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.imcg114" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcg115" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcg115" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.imcg115" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcg116" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcg116" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.imcg116" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcg117" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcg117" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.imcg117" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcg120" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcg120" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.imcg120" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcgstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcgstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.imcgstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcgownid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcgownid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcgowndp" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcgowndp" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcgcrtid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcgcrtid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcgcrtdp" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcgcrtdp" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcgcrtdt" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcgmodid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcgmodid" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcgmoddt" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcg118" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcg118" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.imcg118" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.imcg119" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.imcg119" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.imcg119" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.more_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.b_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.after_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.cs_ctrl" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.add_cs" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.b_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter_parser.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="insert.after_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_entry" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.before.input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcg111" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.imcg111" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcg112" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.imcg112" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcg113" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.imcg113" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcg114" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.imcg114" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.imcg114" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcg115" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.imcg115" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.imcg115" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcg116" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.imcg116" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcg117" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.imcg117" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.imcg117" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcg120" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.imcg120" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.imcg120" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcgstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.imcgstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.imcgstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcg118" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.imcg118" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.imcg119" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.imcg119" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.imcg114" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.imcg115" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.imcg116" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.imcg117" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.imcg120" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.imcgstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.imcg118" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.imcg119" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.b_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.m_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.a_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.after_reproduce" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="show.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="show.follow_pic" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="show.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.b_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.befroe.related_document_remove" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.m_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.a_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_browser_refresh.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.field_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.after_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.field_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.after_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="default_search.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.before_menu" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.inactive" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.active" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.more_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.b_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_pk_array.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_pk_array.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_pk_array.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="aimi106.browser_fill" ver="5" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION aimi106_browser_fill(p_wc,ps_page_action) 
+   DEFINE p_wc              STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_imcg_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   CALL g_browser.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET l_searchcol = "imcg111"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   
+   #add-point:browser_fill段wc控制
+   {<point name="browser_fill.wc"/>}
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(*) FROM imcg_t ",
+               "  ",
+               "  ",
+               " WHERE imcgent = '" ||g_enterprise|| "' AND imcgsite = '" ||g_site|| "' AND ", 
+               p_wc CLIPPED, cl_sql_add_filter("imcg_t")
+                
+   #add-point:browser_fill段cnt_sql
+   {<point name="browser_fill.cnt_sql"/>}
+   #end add-point
+                
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt
+   FREE header_cnt_pre 
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse AND g_error_show = 1 THEN
+      CALL cl_err(g_browser_cnt,'9035',1)
+   END IF
+   
+      LET g_error_show = 0
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   LET g_wc = p_wc
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   LET g_sql = " SELECT imcgstus,imcg111,'',t1.oocql004",
+               " FROM imcg_t ",
+               "  ",
+               "  ",
+                              " LEFT JOIN oocql_t t1 ON t1.oocqlent='"||g_enterprise||"' AND t1.oocql001='205' AND t1.oocql002=imcg111 AND t1.oocql003='"||g_lang||"' ",
+ 
+               " WHERE imcgent = '" ||g_enterprise|| "' AND imcgsite = '" ||g_site|| "' AND ", g_wc, cl_sql_add_filter("imcg_t"),
+               "  ORDER BY ",l_searchcol," ",g_order
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:browser_fill段before_pre
+   {<point name="browser_fill.before_pre"/>}
+   #end add-point                    
+ 
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_imcg111,g_browser[g_cnt].b_imcg111_desc, 
+       g_browser[g_cnt].b_imcg111_desc
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point
+      
+            #此段落由子樣板a24產生
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/inactive.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/active.png"
+         
+      END CASE
+ 
+ 
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err("Max_Row:"||g_max_rec USING "<<<<<","std-00002",0)
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser.getLength()
+   LET g_rec_b = g_cnt - 1
+   LET g_current_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   CALL aimi106_fetch("") 
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="aimi106.construct" ver="6" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION aimi106_construct()
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_imcg_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON imcg111,imcg112,imcg113,imcg114,imcg115,imcg116,imcg117,imcg120,imcgstus, 
+          imcgownid,imcgowndp,imcgcrtid,imcgcrtdp,imcgcrtdt,imcgmodid,imcgmoddt,imcg118,imcg119
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         #此段落由子樣板a11產生
+         ##----<<imcgcrtdt>>----
+         AFTER FIELD imcgcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<imcgmoddt>>----
+         AFTER FIELD imcgmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<imcgcnfdt>>----
+         
+         #----<<imcgpstdt>>----
+ 
+ 
+      
+         #一般欄位
+                  #Ctrlp:construct.c.imcg111
+         ON ACTION controlp INFIELD imcg111
+            #add-point:ON ACTION controlp INFIELD imcg111
+            {<point name="construct.c.imcg111" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg111
+            #add-point:BEFORE FIELD imcg111
+            {<point name="construct.b.imcg111" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg111
+            
+            #add-point:AFTER FIELD imcg111
+            {<point name="construct.a.imcg111" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcg112
+         ON ACTION controlp INFIELD imcg112
+            #add-point:ON ACTION controlp INFIELD imcg112
+            {<point name="construct.c.imcg112" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg112
+            #add-point:BEFORE FIELD imcg112
+            {<point name="construct.b.imcg112" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg112
+            
+            #add-point:AFTER FIELD imcg112
+            {<point name="construct.a.imcg112" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcg113
+         ON ACTION controlp INFIELD imcg113
+            #add-point:ON ACTION controlp INFIELD imcg113
+            {<point name="construct.c.imcg113" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg113
+            #add-point:BEFORE FIELD imcg113
+            {<point name="construct.b.imcg113" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg113
+            
+            #add-point:AFTER FIELD imcg113
+            {<point name="construct.a.imcg113" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg114
+            #add-point:BEFORE FIELD imcg114
+            {<point name="construct.b.imcg114" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg114
+            
+            #add-point:AFTER FIELD imcg114
+            {<point name="construct.a.imcg114" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcg114
+         ON ACTION controlp INFIELD imcg114
+            #add-point:ON ACTION controlp INFIELD imcg114
+            {<point name="construct.c.imcg114" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg115
+            #add-point:BEFORE FIELD imcg115
+            {<point name="construct.b.imcg115" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg115
+            
+            #add-point:AFTER FIELD imcg115
+            {<point name="construct.a.imcg115" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcg115
+         ON ACTION controlp INFIELD imcg115
+            #add-point:ON ACTION controlp INFIELD imcg115
+            {<point name="construct.c.imcg115" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg116
+            #add-point:BEFORE FIELD imcg116
+            {<point name="construct.b.imcg116" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg116
+            
+            #add-point:AFTER FIELD imcg116
+            {<point name="construct.a.imcg116" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcg116
+         ON ACTION controlp INFIELD imcg116
+            #add-point:ON ACTION controlp INFIELD imcg116
+            {<point name="construct.c.imcg116" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg117
+            #add-point:BEFORE FIELD imcg117
+            {<point name="construct.b.imcg117" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg117
+            
+            #add-point:AFTER FIELD imcg117
+            {<point name="construct.a.imcg117" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcg117
+         ON ACTION controlp INFIELD imcg117
+            #add-point:ON ACTION controlp INFIELD imcg117
+            {<point name="construct.c.imcg117" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg120
+            #add-point:BEFORE FIELD imcg120
+            {<point name="construct.b.imcg120" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg120
+            
+            #add-point:AFTER FIELD imcg120
+            {<point name="construct.a.imcg120" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcg120
+         ON ACTION controlp INFIELD imcg120
+            #add-point:ON ACTION controlp INFIELD imcg120
+            {<point name="construct.c.imcg120" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcgstus
+            #add-point:BEFORE FIELD imcgstus
+            {<point name="construct.b.imcgstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcgstus
+            
+            #add-point:AFTER FIELD imcgstus
+            {<point name="construct.a.imcgstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcgstus
+         ON ACTION controlp INFIELD imcgstus
+            #add-point:ON ACTION controlp INFIELD imcgstus
+            {<point name="construct.c.imcgstus" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.imcgownid
+         ON ACTION controlp INFIELD imcgownid
+            #add-point:ON ACTION controlp INFIELD imcgownid
+            {<point name="construct.c.imcgownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcgownid
+            #add-point:BEFORE FIELD imcgownid
+            {<point name="construct.b.imcgownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcgownid
+            
+            #add-point:AFTER FIELD imcgownid
+            {<point name="construct.a.imcgownid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcgowndp
+         ON ACTION controlp INFIELD imcgowndp
+            #add-point:ON ACTION controlp INFIELD imcgowndp
+            {<point name="construct.c.imcgowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcgowndp
+            #add-point:BEFORE FIELD imcgowndp
+            {<point name="construct.b.imcgowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcgowndp
+            
+            #add-point:AFTER FIELD imcgowndp
+            {<point name="construct.a.imcgowndp" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcgcrtid
+         ON ACTION controlp INFIELD imcgcrtid
+            #add-point:ON ACTION controlp INFIELD imcgcrtid
+            {<point name="construct.c.imcgcrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcgcrtid
+            #add-point:BEFORE FIELD imcgcrtid
+            {<point name="construct.b.imcgcrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcgcrtid
+            
+            #add-point:AFTER FIELD imcgcrtid
+            {<point name="construct.a.imcgcrtid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcgcrtdp
+         ON ACTION controlp INFIELD imcgcrtdp
+            #add-point:ON ACTION controlp INFIELD imcgcrtdp
+            {<point name="construct.c.imcgcrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcgcrtdp
+            #add-point:BEFORE FIELD imcgcrtdp
+            {<point name="construct.b.imcgcrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcgcrtdp
+            
+            #add-point:AFTER FIELD imcgcrtdp
+            {<point name="construct.a.imcgcrtdp" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcgcrtdt
+            #add-point:BEFORE FIELD imcgcrtdt
+            {<point name="construct.b.imcgcrtdt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.imcgmodid
+         ON ACTION controlp INFIELD imcgmodid
+            #add-point:ON ACTION controlp INFIELD imcgmodid
+            {<point name="construct.c.imcgmodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcgmodid
+            #add-point:BEFORE FIELD imcgmodid
+            {<point name="construct.b.imcgmodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcgmodid
+            
+            #add-point:AFTER FIELD imcgmodid
+            {<point name="construct.a.imcgmodid" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcgmoddt
+            #add-point:BEFORE FIELD imcgmoddt
+            {<point name="construct.b.imcgmoddt" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg118
+            #add-point:BEFORE FIELD imcg118
+            {<point name="construct.b.imcg118" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg118
+            
+            #add-point:AFTER FIELD imcg118
+            {<point name="construct.a.imcg118" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcg118
+         ON ACTION controlp INFIELD imcg118
+            #add-point:ON ACTION controlp INFIELD imcg118
+            {<point name="construct.c.imcg118" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg119
+            #add-point:BEFORE FIELD imcg119
+            {<point name="construct.b.imcg119" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg119
+            
+            #add-point:AFTER FIELD imcg119
+            {<point name="construct.a.imcg119" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imcg119
+         ON ACTION controlp INFIELD imcg119
+            #add-point:ON ACTION controlp INFIELD imcg119
+            {<point name="construct.c.imcg119" />}
+            #END add-point
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+  
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.default_search" ver="4" status="" src="s">
+<![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION aimi106_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " imcg111 = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.delete" ver="7" status="" src="s">
+<![CDATA[#+ 資料刪除 
+PRIVATE FUNCTION aimi106_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point  
+   
+   IF g_imcg_m.imcg111 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   CALL aimi106_show()
+   
+   CALL s_transaction_begin()
+    
+   LET g_imcg111_t = g_imcg_m.imcg111
+ 
+   
+   
+ 
+   OPEN aimi106_cl USING g_enterprise, g_site,
+                           g_imcg_m.imcg111
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN aimi106_cl:", STATUS, 0)
+      CLOSE aimi106_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aimi106_master_referesh USING g_imcg_m.imcg111 INTO g_imcg_m.imcg111,g_imcg_m.imcg112,g_imcg_m.imcg113, 
+       g_imcg_m.imcg114,g_imcg_m.imcg115,g_imcg_m.imcg116,g_imcg_m.imcg117,g_imcg_m.imcg120,g_imcg_m.imcgstus, 
+       g_imcg_m.imcgownid,g_imcg_m.imcgowndp,g_imcg_m.imcgcrtid,g_imcg_m.imcgcrtdp,g_imcg_m.imcgcrtdt, 
+       g_imcg_m.imcgmodid,g_imcg_m.imcgmoddt,g_imcg_m.imcg118,g_imcg_m.imcg119,g_imcg_m.imcg111_desc, 
+       g_imcg_m.imcg112_desc,g_imcg_m.imcg113_desc,g_imcg_m.imcgownid_desc,g_imcg_m.imcgowndp_desc,g_imcg_m.imcgcrtid_desc, 
+       g_imcg_m.imcgcrtdp_desc,g_imcg_m.imcgmodid_desc
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_imcg_m.imcg111,SQLCA.sqlcode,0)
+      RETURN
+   END IF
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point
+ 
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL aimi106_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+      DELETE FROM imcg_t 
+       WHERE imcgent = g_enterprise AND imcgsite = g_site AND imcg111 = g_imcg_m.imcg111 
+ 
+ 
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("imcg_t",SQLCA.sqlcode,0)
+         CALL s_transaction_end('N','0')
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+      
+          
+      CLEAR FORM
+      CALL aimi106_ui_browser_refresh()
+      IF g_browser_cnt > 0 THEN
+         CALL aimi106_browser_fill(g_wc,"")
+         CALL aimi106_fetch("P")
+      ELSE
+         CALL aimi106_browser_fill(" 1=1 ","F")
+      END IF
+      
+   END IF
+ 
+   CLOSE aimi106_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_imcg_m.imcg111,"D")
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.description" ver="14" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:3) Build-000131
+#+ 
+#+ Filename...: aimi106
+#+ Description: 集團預設料件品管分群資料維護作業
+#+ Creator....: 02299(2013/07/24)
+#+ Modifier...: 02299(2013/12/11)
+#+ Buildtype..: 應用 i01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="aimi106.fetch" ver="4" status="" src="s">
+<![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aimi106_fetch(p_fl)
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point  
+   
+   CASE p_fl
+      WHEN "F" LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         LET g_current_idx = g_header_cnt        
+      WHEN "/"
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+   
+   LET g_browser_cnt = g_browser.getLength()
+ 
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart + g_current_idx - 1
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   
+   #單頭筆數顯示
+   #DISPLAY g_browser_idx TO FORMONLY.idx            #當下筆數
+   #DISPLAY g_browser_cnt TO FORMONLY.cnt            #總筆數
+   
+   
+   
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+ 
+   CALL cl_navigator_setting(g_browser_idx, g_current_cnt) 
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   LET g_imcg_m.imcg111 = g_browser[g_current_idx].b_imcg111
+ 
+                       
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE aimi106_master_referesh USING g_imcg_m.imcg111 INTO g_imcg_m.imcg111,g_imcg_m.imcg112,g_imcg_m.imcg113, 
+       g_imcg_m.imcg114,g_imcg_m.imcg115,g_imcg_m.imcg116,g_imcg_m.imcg117,g_imcg_m.imcg120,g_imcg_m.imcgstus, 
+       g_imcg_m.imcgownid,g_imcg_m.imcgowndp,g_imcg_m.imcgcrtid,g_imcg_m.imcgcrtdp,g_imcg_m.imcgcrtdt, 
+       g_imcg_m.imcgmodid,g_imcg_m.imcgmoddt,g_imcg_m.imcg118,g_imcg_m.imcg119,g_imcg_m.imcg111_desc, 
+       g_imcg_m.imcg112_desc,g_imcg_m.imcg113_desc,g_imcg_m.imcgownid_desc,g_imcg_m.imcgowndp_desc,g_imcg_m.imcgcrtid_desc, 
+       g_imcg_m.imcgcrtdp_desc,g_imcg_m.imcgmodid_desc
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("imcg_t",SQLCA.sqlcode,0)
+      INITIALIZE g_imcg_m.* TO NULL
+      RETURN
+   END IF
+   
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #重新顯示
+   CALL aimi106_show()
+ 
+   
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.filter" ver="5" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a50產生
+#+ filter過濾功能
+PRIVATE FUNCTION aimi106_filter()
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point   
+ 
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON imcg111
+                          FROM s_browse[1].b_imcg111
+ 
+         BEFORE CONSTRUCT
+               DISPLAY aimi106_filter_parser('imcg111') TO s_browse[1].b_imcg111
+      
+         #add-point:filter段cs_ctrl
+         {<point name="filter.cs_ctrl"/>}
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL aimi106_filter_show('imcg111')
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.filter_parser" ver="2" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION aimi106_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.filter_show" ver="1" status="" src="s">
+<![CDATA[#+ 顯示過濾條件
+PRIVATE FUNCTION aimi106_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aimi106_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.global" ver="5" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_imcg_m RECORD
+       imcg111 LIKE imcg_t.imcg111, 
+   imcg111_desc LIKE type_t.chr80, 
+   imcg112 LIKE imcg_t.imcg112, 
+   imcg112_desc LIKE type_t.chr80, 
+   imcg113 LIKE imcg_t.imcg113, 
+   imcg113_desc LIKE type_t.chr80, 
+   imcg114 LIKE imcg_t.imcg114, 
+   imcg115 LIKE imcg_t.imcg115, 
+   imcg116 LIKE imcg_t.imcg116, 
+   imcg117 LIKE imcg_t.imcg117, 
+   imcg120 LIKE imcg_t.imcg120, 
+   imcgstus LIKE imcg_t.imcgstus, 
+   imcgownid LIKE imcg_t.imcgownid, 
+   imcgownid_desc LIKE type_t.chr80, 
+   imcgowndp LIKE imcg_t.imcgowndp, 
+   imcgowndp_desc LIKE type_t.chr80, 
+   imcgcrtid LIKE imcg_t.imcgcrtid, 
+   imcgcrtid_desc LIKE type_t.chr80, 
+   imcgcrtdp LIKE imcg_t.imcgcrtdp, 
+   imcgcrtdp_desc LIKE type_t.chr80, 
+   imcgcrtdt DATETIME YEAR TO SECOND, 
+   imcgmodid LIKE imcg_t.imcgmodid, 
+   imcgmodid_desc LIKE type_t.chr80, 
+   imcgmoddt DATETIME YEAR TO SECOND, 
+   imcg118 LIKE imcg_t.imcg118, 
+   imcg119 LIKE imcg_t.imcg119
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_imcg_m        type_g_imcg_m
+DEFINE g_imcg_m_t      type_g_imcg_m                #備份舊值
+   DEFINE g_imcg111_t LIKE imcg_t.imcg111
+ 
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位  
+         b_statepic     LIKE type_t.chr50,
+            b_imcg111 LIKE imcg_t.imcg111,
+   b_imcg111_desc LIKE type_t.chr80
+         #,rank           LIKE type_t.num10
+      END RECORD 
+   
+ 
+   
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+  
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num5              #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_aw                  STRING             #確定當下點擊的單身
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num5   #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num5   #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num5   #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num5   #Browser 總筆數(所有資料)
+DEFINE g_tmp_page            LIKE type_t.num5   
+DEFINE g_row_index           LIKE type_t.num5
+DEFINE g_chk                 BOOLEAN
+DEFINE g_default             BOOLEAN            #是否有外部參數查詢
+DEFINE g_log1                STRING             #log用
+DEFINE g_log2                STRING             #log用
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="aimi106.init" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aimi106_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+      CALL cl_set_combo_scc_part('imcgstus','17','N,Y')
+ 
+      CALL cl_set_combo_scc('imcg115','5051') 
+   CALL cl_set_combo_scc('imcg116','5052') 
+   CALL cl_set_combo_scc('imcg117','5053') 
+ 
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL aimi106_default_search()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.input" ver="6" status="" src="s">
+<![CDATA[#+ 資料輸入
+PRIVATE FUNCTION aimi106_input(p_cmd)
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL aimi106_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL aimi106_set_no_entry(p_cmd)
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DISPLAY BY NAME g_imcg_m.imcg111,g_imcg_m.imcg112,g_imcg_m.imcg113,g_imcg_m.imcg114,g_imcg_m.imcg115, 
+       g_imcg_m.imcg116,g_imcg_m.imcg117,g_imcg_m.imcg120,g_imcg_m.imcgstus,g_imcg_m.imcg118,g_imcg_m.imcg119 
+
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_imcg_m.imcg111,g_imcg_m.imcg112,g_imcg_m.imcg113,g_imcg_m.imcg114,g_imcg_m.imcg115, 
+          g_imcg_m.imcg116,g_imcg_m.imcg117,g_imcg_m.imcg120,g_imcg_m.imcgstus,g_imcg_m.imcg118,g_imcg_m.imcg119  
+
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前
+            {<point name="input.before.input"/>}
+            #end add-point
+   
+                  #此段落由子樣板a02產生
+         AFTER FIELD imcg111
+            
+            #add-point:AFTER FIELD imcg111
+            {<point name="input.a.imcg111" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg111
+            #add-point:BEFORE FIELD imcg111
+            {<point name="input.b.imcg111" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcg111
+            #add-point:ON CHANGE imcg111
+            {<point name="input.g.imcg111" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg112
+            
+            #add-point:AFTER FIELD imcg112
+            {<point name="input.a.imcg112" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg112
+            #add-point:BEFORE FIELD imcg112
+            {<point name="input.b.imcg112" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcg112
+            #add-point:ON CHANGE imcg112
+            {<point name="input.g.imcg112" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg113
+            
+            #add-point:AFTER FIELD imcg113
+            {<point name="input.a.imcg113" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg113
+            #add-point:BEFORE FIELD imcg113
+            {<point name="input.b.imcg113" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcg113
+            #add-point:ON CHANGE imcg113
+            {<point name="input.g.imcg113" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg114
+            #add-point:BEFORE FIELD imcg114
+            {<point name="input.b.imcg114" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg114
+            
+            #add-point:AFTER FIELD imcg114
+            {<point name="input.a.imcg114" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcg114
+            #add-point:ON CHANGE imcg114
+            {<point name="input.g.imcg114" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg115
+            #add-point:BEFORE FIELD imcg115
+            {<point name="input.b.imcg115" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg115
+            
+            #add-point:AFTER FIELD imcg115
+            {<point name="input.a.imcg115" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcg115
+            #add-point:ON CHANGE imcg115
+            {<point name="input.g.imcg115" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg116
+            #add-point:BEFORE FIELD imcg116
+            {<point name="input.b.imcg116" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg116
+            
+            #add-point:AFTER FIELD imcg116
+            {<point name="input.a.imcg116" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcg116
+            #add-point:ON CHANGE imcg116
+            {<point name="input.g.imcg116" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg117
+            #add-point:BEFORE FIELD imcg117
+            {<point name="input.b.imcg117" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg117
+            
+            #add-point:AFTER FIELD imcg117
+            {<point name="input.a.imcg117" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcg117
+            #add-point:ON CHANGE imcg117
+            {<point name="input.g.imcg117" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg120
+            #add-point:BEFORE FIELD imcg120
+            {<point name="input.b.imcg120" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg120
+            
+            #add-point:AFTER FIELD imcg120
+            {<point name="input.a.imcg120" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcg120
+            #add-point:ON CHANGE imcg120
+            {<point name="input.g.imcg120" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcgstus
+            #add-point:BEFORE FIELD imcgstus
+            {<point name="input.b.imcgstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcgstus
+            
+            #add-point:AFTER FIELD imcgstus
+            {<point name="input.a.imcgstus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcgstus
+            #add-point:ON CHANGE imcgstus
+            {<point name="input.g.imcgstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg118
+            #add-point:BEFORE FIELD imcg118
+            {<point name="input.b.imcg118" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg118
+            
+            #add-point:AFTER FIELD imcg118
+            {<point name="input.a.imcg118" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcg118
+            #add-point:ON CHANGE imcg118
+            {<point name="input.g.imcg118" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imcg119
+            #add-point:BEFORE FIELD imcg119
+            {<point name="input.b.imcg119" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imcg119
+            
+            #add-point:AFTER FIELD imcg119
+            {<point name="input.a.imcg119" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE imcg119
+            #add-point:ON CHANGE imcg119
+            {<point name="input.g.imcg119" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.imcg111
+         ON ACTION controlp INFIELD imcg111
+            #add-point:ON ACTION controlp INFIELD imcg111
+            {<point name="input.c.imcg111" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.imcg112
+         ON ACTION controlp INFIELD imcg112
+            #add-point:ON ACTION controlp INFIELD imcg112
+            {<point name="input.c.imcg112" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.imcg113
+         ON ACTION controlp INFIELD imcg113
+            #add-point:ON ACTION controlp INFIELD imcg113
+            {<point name="input.c.imcg113" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.imcg114
+         ON ACTION controlp INFIELD imcg114
+            #add-point:ON ACTION controlp INFIELD imcg114
+            {<point name="input.c.imcg114" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.imcg115
+         ON ACTION controlp INFIELD imcg115
+            #add-point:ON ACTION controlp INFIELD imcg115
+            {<point name="input.c.imcg115" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.imcg116
+         ON ACTION controlp INFIELD imcg116
+            #add-point:ON ACTION controlp INFIELD imcg116
+            {<point name="input.c.imcg116" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.imcg117
+         ON ACTION controlp INFIELD imcg117
+            #add-point:ON ACTION controlp INFIELD imcg117
+            {<point name="input.c.imcg117" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.imcg120
+         ON ACTION controlp INFIELD imcg120
+            #add-point:ON ACTION controlp INFIELD imcg120
+            {<point name="input.c.imcg120" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.imcgstus
+         ON ACTION controlp INFIELD imcgstus
+            #add-point:ON ACTION controlp INFIELD imcgstus
+            {<point name="input.c.imcgstus" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.imcg118
+         ON ACTION controlp INFIELD imcg118
+            #add-point:ON ACTION controlp INFIELD imcg118
+            {<point name="input.c.imcg118" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.imcg119
+         ON ACTION controlp INFIELD imcg119
+            #add-point:ON ACTION controlp INFIELD imcg119
+            {<point name="input.c.imcg119" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+                
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+ 
+            IF p_cmd <> "u" THEN
+               LET l_count = 1  
+ 
+               SELECT COUNT(*) INTO l_count FROM imcg_t
+                WHERE imcgent = g_enterprise AND imcgsite = g_site AND imcg111 = g_imcg_m.imcg111
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前
+                  {<point name="input.head.b_insert" mark="Y"/>}
+                  #end add-point
+               
+                  INSERT INTO imcg_t (imcgent, imcgsite,imcg111,imcg112,imcg113,imcg114,imcg115,imcg116, 
+                      imcg117,imcg120,imcgstus,imcgownid,imcgowndp,imcgcrtid,imcgcrtdp,imcgcrtdt,imcg118, 
+                      imcg119)
+                  VALUES (g_enterprise, g_site,g_imcg_m.imcg111,g_imcg_m.imcg112,g_imcg_m.imcg113,g_imcg_m.imcg114, 
+                      g_imcg_m.imcg115,g_imcg_m.imcg116,g_imcg_m.imcg117,g_imcg_m.imcg120,g_imcg_m.imcgstus, 
+                      g_imcg_m.imcgownid,g_imcg_m.imcgowndp,g_imcg_m.imcgcrtid,g_imcg_m.imcgcrtdp,g_imcg_m.imcgcrtdt, 
+                      g_imcg_m.imcg118,g_imcg_m.imcg119) 
+                  
+                  #add-point:單頭新增中
+                  {<point name="input.head.m_insert"/>}
+                  #end add-point
+                  
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err("imcg_t",SQLCA.sqlcode,1)  
+                     CONTINUE DIALOG
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後
+                  {<point name="input.head.a_insert"/>}
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL cl_err( "g_imcg_m.imcg111", "std-00006", 0 )
+                  CALL s_transaction_end('N','0')
+               END IF 
+            ELSE
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               UPDATE imcg_t SET (imcg111,imcg112,imcg113,imcg114,imcg115,imcg116,imcg117,imcg120,imcgstus, 
+                   imcgownid,imcgowndp,imcgcrtid,imcgcrtdp,imcgcrtdt,imcg118,imcg119) = (g_imcg_m.imcg111, 
+                   g_imcg_m.imcg112,g_imcg_m.imcg113,g_imcg_m.imcg114,g_imcg_m.imcg115,g_imcg_m.imcg116, 
+                   g_imcg_m.imcg117,g_imcg_m.imcg120,g_imcg_m.imcgstus,g_imcg_m.imcgownid,g_imcg_m.imcgowndp, 
+                   g_imcg_m.imcgcrtid,g_imcg_m.imcgcrtdp,g_imcg_m.imcgcrtdt,g_imcg_m.imcg118,g_imcg_m.imcg119) 
+
+                WHERE imcgent = g_enterprise AND imcgsite = g_site AND imcg111 = g_imcg111_t #
+ 
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("imcg_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("imcg_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     #add-point:單頭修改後
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     LET g_log1 = util.JSON.stringify(g_imcg_m_t)
+                     LET g_log2 = util.JSON.stringify(g_imcg_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+            END IF
+           #controlp
+      END INPUT
+          
+      #add-point:input段more input 
+      {<point name="input.more_input"/>}
+      #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input 
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.insert" ver="4" status="" src="s">
+<![CDATA[#+ 資料新增
+PRIVATE FUNCTION aimi106_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE g_imcg_m.* LIKE imcg_t.*             #DEFAULT 設定
+   LET g_imcg111_t = NULL
+ 
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      
+      #公用欄位給值
+      #此段落由子樣板a14產生    
+      LET g_imcg_m.imcgownid = g_user
+      LET g_imcg_m.imcgowndp = g_dept
+      LET g_imcg_m.imcgcrtid = g_user
+      LET g_imcg_m.imcgcrtdp = g_dept 
+      LET g_imcg_m.imcgcrtdt = cl_get_current()
+      LET g_imcg_m.imcgmodid = ""
+      LET g_imcg_m.imcgmoddt = ""
+      LET g_imcg_m.imcgstus = "N"
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_imcg_m.imcg120 = "N"
+ 
+ 
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point   
+     
+      CALL aimi106_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_imcg_m.* = g_imcg_m_t.*
+         CALL aimi106_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   LET g_imcg111_t = g_imcg_m.imcg111
+ 
+   
+   LET g_state = "Y"
+ 
+   LET g_wc = g_wc,  
+              " OR ( imcgent = '" ||g_enterprise|| "' AND imcgsite = '" ||g_site|| "' AND",
+              " imcg111 = '", g_imcg_m.imcg111 CLIPPED, "' "
+ 
+              , ") "
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.main" ver="5" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aim","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " SELECT imcg111,'',imcg112,'',imcg113,'',imcg114,imcg115,imcg116,imcg117,imcg120, 
+       imcgstus,imcgownid,'',imcgowndp,'',imcgcrtid,'',imcgcrtdp,'',imcgcrtdt,imcgmodid,'',imcgmoddt, 
+       imcg118,imcg119", 
+                      " FROM imcg_t",
+                      " WHERE imcgent= ? AND imcgsite= ? AND imcg111=? FOR UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aimi106_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE imcg111,imcg112,imcg113,imcg114,imcg115,imcg116,imcg117,imcg120,imcgstus, 
+       imcgownid,imcgowndp,imcgcrtid,imcgcrtdp,imcgcrtdt,imcgmodid,imcgmoddt,imcg118,imcg119,t1.oocql004 , 
+       t2.oofa011 ,t3.oocal003 ,t4.oofa011 ,t5.ooefl003 ,t6.oofa011 ,t7.ooefl003 ,t8.oofa011",
+               " FROM imcg_t",
+                              " LEFT JOIN oocql_t t1 ON t1.oocqlent='"||g_enterprise||"' AND t1.oocql001='205' AND t1.oocql002=imcg111 AND t1.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oofa_t t2 ON t2.oofaent='"||g_enterprise||"' AND t2.oofa002='2' AND t2.oofa003=imcg112  ",
+               " LEFT JOIN oocal_t t3 ON t3.oocalent='"||g_enterprise||"' AND t3.oocal001=imcg113 AND t3.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN oofa_t t4 ON t4.oofaent='"||g_enterprise||"' AND t4.oofa002='2' AND t4.oofa003=imcgownid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent='"||g_enterprise||"' AND t5.ooefl001=imcgowndp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oofa_t t6 ON t6.oofaent='"||g_enterprise||"' AND t6.oofa002='2' AND t6.oofa003=imcgcrtid  ",
+               " LEFT JOIN ooefl_t t7 ON t7.ooeflent='"||g_enterprise||"' AND t7.ooefl001=imcgcrtdp AND t7.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oofa_t t8 ON t8.oofaent='"||g_enterprise||"' AND t8.oofa002='2' AND t8.oofa003=imcgmodid  ",
+ 
+               " WHERE imcgent = '" ||g_enterprise|| "' AND imcgsite = '" ||g_site|| "' AND imcg111 = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE aimi106_master_referesh FROM g_sql
+ 
+ 
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aimi106 WITH FORM cl_ap_formpath("aim",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aimi106_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aimi106_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aimi106
+      
+   END IF 
+   
+   CLOSE aimi106_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+</section>
+  <section id="aimi106.modify" ver="4" status="" src="s">
+<![CDATA[#+ 資料修改
+PRIVATE FUNCTION aimi106_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   IF g_imcg_m.imcg111 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF 
+   
+   EXECUTE aimi106_master_referesh USING g_imcg_m.imcg111 INTO g_imcg_m.imcg111,g_imcg_m.imcg112,g_imcg_m.imcg113, 
+       g_imcg_m.imcg114,g_imcg_m.imcg115,g_imcg_m.imcg116,g_imcg_m.imcg117,g_imcg_m.imcg120,g_imcg_m.imcgstus, 
+       g_imcg_m.imcgownid,g_imcg_m.imcgowndp,g_imcg_m.imcgcrtid,g_imcg_m.imcgcrtdp,g_imcg_m.imcgcrtdt, 
+       g_imcg_m.imcgmodid,g_imcg_m.imcgmoddt,g_imcg_m.imcg118,g_imcg_m.imcg119,g_imcg_m.imcg111_desc, 
+       g_imcg_m.imcg112_desc,g_imcg_m.imcg113_desc,g_imcg_m.imcgownid_desc,g_imcg_m.imcgowndp_desc,g_imcg_m.imcgcrtid_desc, 
+       g_imcg_m.imcgcrtdp_desc,g_imcg_m.imcgmodid_desc
+ 
+   ERROR ""
+  
+   LET g_imcg111_t = g_imcg_m.imcg111
+ 
+   
+   CALL s_transaction_begin()
+   
+   OPEN aimi106_cl USING g_enterprise, g_site,g_imcg_m.imcg111
+   IF STATUS THEN
+      CALL cl_err("OPEN aimi106_cl:", STATUS, 1)
+      CLOSE aimi106_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aimi106_master_referesh USING g_imcg_m.imcg111 INTO g_imcg_m.imcg111,g_imcg_m.imcg112,g_imcg_m.imcg113, 
+       g_imcg_m.imcg114,g_imcg_m.imcg115,g_imcg_m.imcg116,g_imcg_m.imcg117,g_imcg_m.imcg120,g_imcg_m.imcgstus, 
+       g_imcg_m.imcgownid,g_imcg_m.imcgowndp,g_imcg_m.imcgcrtid,g_imcg_m.imcgcrtdp,g_imcg_m.imcgcrtdt, 
+       g_imcg_m.imcgmodid,g_imcg_m.imcgmoddt,g_imcg_m.imcg118,g_imcg_m.imcg119,g_imcg_m.imcg111_desc, 
+       g_imcg_m.imcg112_desc,g_imcg_m.imcg113_desc,g_imcg_m.imcgownid_desc,g_imcg_m.imcgowndp_desc,g_imcg_m.imcgcrtid_desc, 
+       g_imcg_m.imcgcrtdp_desc,g_imcg_m.imcgmodid_desc
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("imcg_t",SQLCA.sqlcode,0)
+      CLOSE aimi106_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   
+ 
+   CALL aimi106_show()
+   
+   WHILE TRUE
+      LET g_imcg_m.imcg111 = g_imcg111_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      LET g_imcg_m.imcgmodid = g_user 
+LET g_imcg_m.imcgmoddt = cl_get_current()
+ 
+      
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+ 
+      CALL aimi106_input("u")     #欄位更改
+ 
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_imcg_m.* = g_imcg_m_t.*
+         CALL aimi106_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+      UPDATE imcg_t SET (imcgmodid,imcgmoddt) = (g_imcg_m.imcgmodid,g_imcg_m.imcgmoddt)
+       WHERE imcgent = g_enterprise AND imcgsite = g_site AND imcg111 = g_imcg111_t
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #修改歷程記錄
+   #IF NOT cl_log_modified_record(g_imcg_m.imcg111,g_site) THEN 
+   #   CALL s_transaction_end('N','0')
+   #END IF
+ 
+   CLOSE aimi106_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_imcg_m.imcg111,"U")
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+]]>
+</section>
+  <section id="aimi106.other_dialog" ver="1" status="" src="s">
+<![CDATA[ 
+]]>
+</section>
+  <section id="aimi106.other_function" ver="2" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="aimi106.query" ver="4" status="" src="s">
+<![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aimi106_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL g_browser.clear() 
+ 
+   IF g_worksheet_hidden THEN  #browser panel折疊
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   IF g_header_hidden THEN    #單頭折疊
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_imcg_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL aimi106_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL aimi106_browser_fill(g_wc,"F")
+      CALL aimi106_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   LET g_error_show = 1
+   CALL aimi106_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      CALL cl_err("","-100",1)
+   ELSE
+      CALL aimi106_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.reproduce" ver="4" status="" src="s">
+<![CDATA[#+ 資料複製
+PRIVATE FUNCTION aimi106_reproduce()
+   DEFINE l_newno     LIKE imcg_t.imcg111 
+   DEFINE l_oldno     LIKE imcg_t.imcg111 
+ 
+   DEFINE l_master    RECORD LIKE imcg_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point   
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   IF g_imcg_m.imcg111 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   LET g_imcg111_t = g_imcg_m.imcg111
+ 
+   
+   LET g_imcg_m.imcg111 = ""
+ 
+    
+   CALL aimi106_set_entry("a")
+   CALL aimi106_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   #此段落由子樣板a14產生    
+      LET g_imcg_m.imcgownid = g_user
+      LET g_imcg_m.imcgowndp = g_dept
+      LET g_imcg_m.imcgcrtid = g_user
+      LET g_imcg_m.imcgcrtdp = g_dept 
+      LET g_imcg_m.imcgcrtdt = cl_get_current()
+      LET g_imcg_m.imcgmodid = ""
+      LET g_imcg_m.imcgmoddt = ""
+      LET g_imcg_m.imcgstus = "N"
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL aimi106_input("r")
+ 
+      LET g_imcg_m.imcg111_desc = ''
+   DISPLAY BY NAME g_imcg_m.imcg111_desc
+ 
+   
+   IF INT_FLAG  THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前
+   {<point name="reproduce.head.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #add-point:單頭複製中
+   {<point name="reproduce.head.m_insert"/>}
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("imcg_t",SQLCA.sqlcode,1)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後
+   {<point name="reproduce.head.a_insert"/>}
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   LET g_state = "Y"
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              " imcg111 = '", g_imcg_m.imcg111 CLIPPED, "' "
+ 
+              , ") "
+   
+   LET g_imcg111_t = g_imcg_m.imcg111
+ 
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+                   
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.set_entry" ver="2" status="" src="s">
+<![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aimi106_set_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("imcg111",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.set_no_entry" ver="3" status="" src="s">
+<![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aimi106_set_no_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("imcg111",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.set_pk_array" ver="1" status="" src="s">
+<![CDATA[   #+ 此段落由子樣板a51產生
+#+ 給予pk_array內容
+PRIVATE FUNCTION aimi106_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_imcg_m.imcg111
+   LET g_pk_array[1].column = 'imcg111'
+ 
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="aimi106.show" ver="4" status="" src="s">
+<![CDATA[#+ 單頭資料重新顯示 
+PRIVATE FUNCTION aimi106_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point  
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   LET g_imcg_m_t.* = g_imcg_m.*      #保存單頭舊值
+   
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+   
+   #帶出公用欄位reference值
+   #此段落由子樣板a12產生
+      #LET g_imcg_m.imcgownid_desc = cl_get_username(g_imcg_m.imcgownid)
+      #LET g_imcg_m.imcgowndp_desc = cl_get_deptname(g_imcg_m.imcgowndp)
+      #LET g_imcg_m.imcgcrtid_desc = cl_get_username(g_imcg_m.imcgcrtid)
+      #LET g_imcg_m.imcgcrtdp_desc = cl_get_deptname(g_imcg_m.imcgcrtdp)
+      #LET g_imcg_m.imcgmodid_desc = cl_get_username(g_imcg_m.imcgmodid)
+      
+ 
+ 
+    
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL aimi106_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_imcg_m.imcg111,g_imcg_m.imcg111_desc,g_imcg_m.imcg112,g_imcg_m.imcg112_desc,g_imcg_m.imcg113, 
+       g_imcg_m.imcg113_desc,g_imcg_m.imcg114,g_imcg_m.imcg115,g_imcg_m.imcg116,g_imcg_m.imcg117,g_imcg_m.imcg120, 
+       g_imcg_m.imcgstus,g_imcg_m.imcgownid,g_imcg_m.imcgownid_desc,g_imcg_m.imcgowndp,g_imcg_m.imcgowndp_desc, 
+       g_imcg_m.imcgcrtid,g_imcg_m.imcgcrtid_desc,g_imcg_m.imcgcrtdp,g_imcg_m.imcgcrtdp_desc,g_imcg_m.imcgcrtdt, 
+       g_imcg_m.imcgmodid,g_imcg_m.imcgmodid_desc,g_imcg_m.imcgmoddt,g_imcg_m.imcg118,g_imcg_m.imcg119 
+
+   
+   #顯示狀態(stus)圖片
+         #此段落由子樣板a21產生
+      CASE g_imcg_m.imcgstus
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.signature" ver="1" status="" src="s">
+<![CDATA[   
+]]>
+</section>
+  <section id="aimi106.state_change" ver="3" status="" src="s">
+<![CDATA[   #+ 此段落由子樣板a09產生
+#+ 確認碼變更
+PRIVATE FUNCTION aimi106_statechange()
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define
+   {<point name="statechange.define"/>}
+   #end add-point  
+   
+   #add-point:statechange段開始前
+   {<point name="statechange.before"/>}
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_imcg_m.imcg111 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_imcg_m.imcgstus
+            WHEN "N"
+               HIDE OPTION "inactive"
+            WHEN "Y"
+               HIDE OPTION "active"
+            
+         END CASE
+     
+      #add-point:menu前
+      {<point name="statechange.before_menu"/>}
+      #end add-point
+      
+      ON ACTION inactive
+         LET lc_state = "N"
+         #add-point:action控制
+         {<point name="statechange.inactive"/>}
+         #end add-point
+         EXIT MENU
+      ON ACTION active
+         LET lc_state = "Y"
+         #add-point:action控制
+         {<point name="statechange.active"/>}
+         #end add-point
+         EXIT MENU
+      
+      
+      
+      #add-point:stus控制
+      {<point name="statechange.more_control"/>}
+      #end add-point
+      
+   END MENU
+   
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      ) OR 
+      cl_null(lc_state) THEN
+      RETURN
+   END IF
+   
+   #add-point:stus修改前
+   {<point name="statechange.b_update"/>}
+   #end add-point
+      
+   UPDATE imcg_t SET imcgstus = lc_state 
+    WHERE imcgent = g_enterprise AND imcgsite = g_site AND imcg111 = g_imcg_m.imcg111
+ 
+  
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("",SQLCA.sqlcode,0)
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+      LET g_imcg_m.imcgstus = lc_state
+      DISPLAY BY NAME g_imcg_m.imcgstus
+   END IF
+ 
+   #add-point:stus修改後
+   {<point name="statechange.a_update"/>}
+   #end add-point
+ 
+   #add-point:statechange段結束前
+   {<point name="statechange.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="aimi106.ui_browser_refresh" ver="4" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION aimi106_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point     
+ 
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_imcg111 = g_imcg_m.imcg111
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+   
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+  
+END FUNCTION
+]]>
+</section>
+  <section id="aimi106.ui_dialog" ver="10" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION aimi106_ui_dialog() 
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_wc     STRING
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   CALL gfrm_curr.setElementImage("logo","logo/applogo.png") 
+   
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #+ 此段落由子樣板a42產生
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL aimi106_insert()
+            #add-point:ON ACTION insert
+            {<point name="menu.default.insert" />}
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂
+      {<point name="ui_dialog.action_default"/>}
+      #end add-point
+      OTHERWISE
+         
+   END CASE
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+      
+      CALL aimi106_browser_fill(g_wc,"")
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+      
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_imcg111 = g_imcg111_t
+ 
+               THEN
+               LET g_current_row = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+    
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+                  
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+               
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aimi106_fetch("")   
+               END IF               
+         
+            ON ACTION statechange
+               CALL aimi106_statechange()
+               LET g_action_choice="statechange"
+               
+            ON ACTION first
+               CALL aimi106_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               CALL aimi106_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION jump
+               CALL aimi106_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION previous
+               CALL aimi106_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION last 
+               CALL aimi106_fetch("L")  
+               #CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               #CALL fgl_set_arr_curr(g_current_idx)
+               LET g_current_row = g_current_idx
+            
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+            
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aimi106_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aimi106_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     CALL cl_err("","-100",1)
+                     CLEAR FORM
+                  ELSE
+                     CALL aimi106_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aimi106_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu2.modify" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aimi106_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu2.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aimi106_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu2.insert" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_aimi101
+            LET g_action_choice="open_aimi101"
+            IF cl_auth_chk_act("open_aimi101") THEN
+               
+               #add-point:ON ACTION open_aimi101
+               {<point name="menu2.open_aimi101" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_aimi105
+            LET g_action_choice="open_aimi105"
+            IF cl_auth_chk_act("open_aimi105") THEN
+               
+               #add-point:ON ACTION open_aimi105
+               {<point name="menu2.open_aimi105" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION about_file
+            LET g_action_choice="about_file"
+            IF cl_auth_chk_act("about_file") THEN
+               
+               #add-point:ON ACTION about_file
+               {<point name="menu2.about_file" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_aimi102
+            LET g_action_choice="open_aimi102"
+            IF cl_auth_chk_act("open_aimi102") THEN
+               
+               #add-point:ON ACTION open_aimi102
+               {<point name="menu2.open_aimi102" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu2.output" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL aimi106_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu2.reproduce" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aimi106_query()
+               #add-point:ON ACTION query
+               {<point name="menu2.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_aimi103
+            LET g_action_choice="open_aimi103"
+            IF cl_auth_chk_act("open_aimi103") THEN
+               
+               #add-point:ON ACTION open_aimi103
+               {<point name="menu2.open_aimi103" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_aimi104
+            LET g_action_choice="open_aimi104"
+            IF cl_auth_chk_act("open_aimi104") THEN
+               
+               #add-point:ON ACTION open_aimi104
+               {<point name="menu2.open_aimi104" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+            #
+            
+            #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL aimi106_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.menu.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aimi106_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.menu.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aimi106_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.menu.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL aimi106_fetch("")      
+                  
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array
+            {<point name="ui_dialog.more_displayarray"/>}
+            #end add-point
+ 
+            SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+            SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+         
+            BEFORE DIALOG
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #LET g_page = "first" 
+               #還原為原本指定筆數
+               IF g_current_row > 1 THEN
+                  #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+                  IF g_current_row > g_browser.getLength() THEN
+                     LET g_current_row = g_browser.getLength()
+                  END IF 
+                  LET g_current_idx = g_current_row
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aimi106_fetch("")   
+               END IF               
+               
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog
+               {<point name="ui_dialog.after_dialog"/>}
+               #end add-point
+            
+            ON ACTION statechange
+               LET g_action_choice="statechange"
+               CALL aimi106_statechange()
+               EXIT DIALOG
+         
+            #+ 此段落由子樣板a49產生
+            ON ACTION filter
+               #add-point:filter action
+               {<point name="ui_dialog.action.filter"/>}
+               #end add-point
+               CALL aimi106_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+            
+            ON ACTION first
+               CALL aimi106_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               CALL aimi106_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION jump
+               CALL aimi106_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION previous
+               CALL aimi106_fetch("P")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION last 
+               CALL aimi106_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT DIALOG
+         
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT DIALOG
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT DIALOG
+         
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            #快速搜尋
+               
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aimi106_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aimi106_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     CALL cl_err("","-100",1)
+                     CLEAR FORM
+                  ELSE
+                     CALL aimi106_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aimi106_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aimi106_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aimi106_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_aimi101
+            LET g_action_choice="open_aimi101"
+            IF cl_auth_chk_act("open_aimi101") THEN
+               
+               #add-point:ON ACTION open_aimi101
+               {<point name="menu.open_aimi101" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_aimi105
+            LET g_action_choice="open_aimi105"
+            IF cl_auth_chk_act("open_aimi105") THEN
+               
+               #add-point:ON ACTION open_aimi105
+               {<point name="menu.open_aimi105" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION about_file
+            LET g_action_choice="about_file"
+            IF cl_auth_chk_act("about_file") THEN
+               
+               #add-point:ON ACTION about_file
+               {<point name="menu.about_file" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_aimi102
+            LET g_action_choice="open_aimi102"
+            IF cl_auth_chk_act("open_aimi102") THEN
+               
+               #add-point:ON ACTION open_aimi102
+               {<point name="menu.open_aimi102" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL aimi106_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aimi106_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_aimi103
+            LET g_action_choice="open_aimi103"
+            IF cl_auth_chk_act("open_aimi103") THEN
+               
+               #add-point:ON ACTION open_aimi103
+               {<point name="menu.open_aimi103" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_aimi104
+            LET g_action_choice="open_aimi104"
+            IF cl_auth_chk_act("open_aimi104") THEN
+               
+               #add-point:ON ACTION open_aimi104
+               {<point name="menu.open_aimi104" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+            
+            
+ 
+            #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL aimi106_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aimi106_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aimi106_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

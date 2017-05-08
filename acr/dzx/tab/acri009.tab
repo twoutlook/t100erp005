@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acri009" module="acr" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01251" crtdt="2014-04-28 14:38:32" modid="01251" moddt="2014-07-25 16:57:59" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="會員價值規則設定維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="crdb001,crdb001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="crdbstus,crdb002,crdb003,crdb004,crdb005,crdb007,crdb006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="crdb002,crdb003,crdb004,crdbownid,crdbownid_desc(chr500),crdbowndp,crdbowndp_desc(chr500),crdbcrtid,crdbcrtid_desc(chr500),crdbcrtdp,crdbcrtdp_desc(chr500),crdbcrtdt,crdbmodid,crdbmodid_desc(chr500),crdbmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acri009" method="dialog">
+    <section id="input">
+      <input id="head" field="crdb001"/>
+      <input id="body" page="1" field="crdbstus,crdb002,crdb003,crdb004,crdb005,crdb007,crdb006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="crdb001"/>
+      <construct id="body" page="1" field="crdbstus,crdb002,crdb003,crdb004,crdb005,crdb007,crdb006"/>
+      <construct id="body" page="2" field="crdbownid,crdbowndp,crdbcrtid,crdbcrtdp,crdbcrtdt,crdbmodid,crdbmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="crdb001"/>
+      <set id="head" type="no_entry" field="crdb001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="crdb001">
+        <after>
+          <reference field="crdb001_desc" ref_field="crdb001" map_field="crdb001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2111&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_19" state="i"/>
+        <controlp form="q_oocq002_19" state="c"/>
+      </column>
+      <column id="crdb001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="crdbstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="crdb002"/>
+      <column id="crdb003"/>
+      <column id="crdb004"/>
+      <column id="crdb005"/>
+      <column id="crdb007"/>
+      <column id="crdb006"/>
+    </init>
+    <init id="body" page="2">
+      <column id="crdbownid">
+        <after>
+          <reference field="crdbownid_desc" ref_field="crdb_t.crdbownid" map_field="crdbownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crdbownid_desc"/>
+      <column id="crdbowndp">
+        <after>
+          <reference field="crdbowndp_desc" ref_field="crdb_t.crdbowndp" map_field="crdbowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crdbowndp_desc"/>
+      <column id="crdbcrtid">
+        <after>
+          <reference field="crdbcrtid_desc" ref_field="crdb_t.crdbcrtid" map_field="crdbcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crdbcrtid_desc"/>
+      <column id="crdbcrtdp">
+        <after>
+          <reference field="crdbcrtdp_desc" ref_field="crdb_t.crdbcrtdp" map_field="crdbcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crdbcrtdp_desc"/>
+      <column id="crdbcrtdt"/>
+      <column id="crdbmodid">
+        <after>
+          <reference field="crdbmodid_desc" ref_field="crdb_t.crdbmodid" map_field="crdbmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crdbmodid_desc"/>
+      <column id="crdbmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="crdb_t" pk="crdb001">
+      <sql id="forupd_sql" type="sql" query="SELECT crdb001,&apos;&apos; FROM crdb_t WHERE crdbent= ? AND crdb001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT crdb001,&apos;&apos; FROM crdb_t" order="crdb001"/>
+    </head>
+    <body id="crdb_t" page="1,2" linked="" pk="crdb002,crdb003,crdb004" fk="crdb001">
+      <sql id="forupd_sql_detail" query="SELECT crdbstus,crdb002,crdb003,crdb004,crdb005,crdb007,crdb006,&apos;&apos;,&apos;&apos;,&apos;&apos;,crdbownid,&apos;&apos;,crdbowndp,&apos;&apos;,crdbcrtid,&apos;&apos;,crdbcrtdp,&apos;&apos;,crdbcrtdt,crdbmodid,&apos;&apos;,crdbmoddt FROM crdb_t WHERE crdbent=? AND crdb001=? AND crdb002=? AND crdb003=? AND crdb004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT crdbstus,crdb002,crdb003,crdb004,crdb005,crdb007,crdb006,&apos;&apos;,&apos;&apos;,&apos;&apos;,crdbownid,&apos;&apos;,crdbowndp,&apos;&apos;,crdbcrtid,&apos;&apos;,crdbcrtdp,&apos;&apos;,crdbcrtdt,crdbmodid,&apos;&apos;,crdbmoddt FROM crdb_t WHERE crdbent= ? AND crdb001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

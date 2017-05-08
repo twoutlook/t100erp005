@@ -1,0 +1,510 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asli100" module="asl" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="03247" crtdt="2016-06-15 16:03:30" modid="03247" moddt="2016-06-17 11:17:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="5" tabver="10001" description="料件主分群維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imca001,imca001_desc(chr80),imca004,imca005,imca005_desc(chr80),imca006,imca006_desc(chr80),imca010,imca010_desc(chr80),imca201,imca201_desc(chr80),imca202,imca202_desc(chr80),imca203,imca203_desc(chr80),imca204,imca204_desc(chr80),imca205,imca205_desc(chr80),imca206,imca206_desc(chr80),imca207,imca207_desc(chr80),imca208,imca208_desc(chr80),imcastus,imca126,imca126_desc(chr80),imca127,imca127_desc(chr80),imca131,imca131_desc(chr80),imca128,imca128_desc(chr80),imca129,imca129_desc(chr80),imca130,imca132,imca132_desc(chr80),imca133,imca133_desc(chr80),imca134,imca134_desc(chr80),imca135,imca135_desc(chr80),imca136,imca136_desc(chr80),imca137,imca137_desc(chr80),imca138,imca138_desc(chr80),imca139,imca139_desc(chr80),imca140,imca140_desc(chr80),imca141,imca141_desc(chr80),imcaownid,imcaownid_desc(chr80),imcaowndp,imcaowndp_desc(chr80),imcacrtid,imcacrtid_desc(chr80),imcacrtdp,imcacrtdp_desc(chr80),imcacrtdt,imcamodid,imcamodid_desc(chr80),imcamoddt,imca011,imca012,imca013,imca014,imca100,imca109,imca154,imca155,imca156,imca110,imca111,imca112,imca121,imca018,imca018_desc(chr80),imca022,imca022_desc(chr80),imca024,imca026,imca027,imca029,imca029_desc(chr80),imca030,imca032,imca032_desc(chr80),imca033,imca036,imca037,imca038,imca043,imca041,imca042,imca044,imca122,imca122_desc(chr80),imca045,imca045_desc(chr80),imca123,imca003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imcj002,imcj002_desc(chr500),imcj003,imcj003_desc(chr500),imcj004,imcj005,imcj005_desc(chr500),imcj006,imcj006_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="imcn002,imcn002_desc(chr500),imcn003,imcn003_desc(chr500)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="imcl002,oocql004(chr500),oocq005(chr500)"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="imcm002,imcm005,imcm003,imcm006,imcm004"/>
+      <var id="body" page="5" record="s_detail5" page_id="5" value="imco002,imco002_desc(chr500)"/>
+      <var id="bs_field" value="imca001,oocql004(oocql_t.oocql004),imca004,imca005,imca005_desc(chr80),imca006,imca006_desc(chr80),imca010,imca010_desc(chr80)" pk="imca001" order=""/>
+      <bs_reference field="imca005_desc" ref_field="imca005" ref_sql="SELECT imeal003 FROM imeal_t WHERE imealent=$varg_enterprise$var AND imeal001=? AND imeal002=$varg_dlang$var"/>
+      <bs_reference field="imca006_desc" ref_field="imca006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+      <bs_reference field="imca010_desc" ref_field="imca010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;210&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="asl" filename="asli100" method="dialog">
+    <section id="input">
+      <input id="head" field="imca001,imca004,imca005,imca006,imca010,imca201,imca202,imca203,imca204,imca205,imca206,imca207,imca208,imcastus,imca126,imca127,imca131,imca128,imca129,imca130,imca132,imca133,imca134,imca135,imca136,imca137,imca138,imca139,imca140,imca141,imca011,imca012,imca013,imca014,imca100,imca109,imca154,imca155,imca156,imca110,imca111,imca112,imca121,imca018,imca022,imca024,imca026,imca027,imca029,imca030,imca032,imca033,imca036,imca037,imca038,imca043,imca041,imca042,imca044,imca122,imca045,imca123,imca003"/>
+      <input id="body" page="1" field="imcj002,imcj003,imcj004,imcj005,imcj006" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="imcn002,imcn003" insert="N" append="N" delete="N"/>
+      <input id="body" page="3" field="imcl002" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="4" field="imcm002,imcm005,imcm003,imcm006" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="5" field="imco002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imca001,imca004,imca005,imca006,imca010,imca201,imca202,imca203,imca204,imca205,imca206,imca207,imca208,imcastus,imca126,imca127,imca131,imca128,imca129,imca130,imca132,imca133,imca134,imca135,imca136,imca137,imca138,imca139,imca140,imca141,imcaownid,imcaowndp,imcacrtid,imcacrtdp,imcacrtdt,imcamodid,imcamoddt,imca011,imca012,imca013,imca014,imca100,imca109,imca154,imca155,imca156,imca110,imca111,imca112,imca121,imca018,imca022,imca024,imca026,imca027,imca029,imca030,imca032,imca033,imca036,imca037,imca038,imca043,imca041,imca042,imca044,imca122,imca045,imca123,imca003"/>
+      <construct id="body" page="1" field="imcj002,imcj003,imcj004,imcj005,imcj006"/>
+      <construct id="body" page="2" field="imcn002,imcn003"/>
+      <construct id="body" page="3" field="imcl002"/>
+      <construct id="body" page="4" field="imcm002,imcm005,imcm003,imcm006"/>
+      <construct id="body" page="5" field="imco002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imca001"/>
+      <set id="head" type="no_entry" field="imca001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imca001">
+        <after>
+          <reference field="imca001_desc" ref_field="imca001" map_field="imca001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca001_desc"/>
+      <column id="imca004" type="S" default="M" def_scc="1001"/>
+      <column id="imca005">
+        <after>
+          <check chkid="v_imea001" id="isExist"/>
+          <reference field="imca005_desc" ref_field="imca_t.imca005" map_field="imca005" ref_sql="SELECT imeal003 FROM imeal_t WHERE imealent=$varg_enterprise$var AND imeal001=? AND imeal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imea001" state="i"/>
+        <controlp form="q_imea001" state="c"/>
+      </column>
+      <column id="imca005_desc"/>
+      <column id="imca006">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imca006_desc" ref_field="imca_t.imca006" map_field="imca006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="imca006_desc"/>
+      <column id="imca010">
+        <after>
+          <reference field="imca010_desc" ref_field="imca010" map_field="imca010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;210&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca010_desc"/>
+      <column id="imca201">
+        <after>
+          <check chkid="v_imcc051" id="isExist"/>
+          <reference field="imca201_desc" ref_field="imca201" map_field="imca201" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;201&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imcc051_1" state="i"/>
+        <controlp form="q_imcc051_1" state="c"/>
+      </column>
+      <column id="imca201_desc"/>
+      <column id="imca202">
+        <after>
+          <check chkid="v_imcd111" id="isExist"/>
+          <reference field="imca202_desc" ref_field="imca202" map_field="imca202" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;202&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imcd111_1" state="i"/>
+        <controlp form="q_imcd111_1" state="c"/>
+      </column>
+      <column id="imca202_desc"/>
+      <column id="imca203">
+        <after>
+          <check chkid="v_imce141" id="isExist"/>
+          <reference field="imca203_desc" ref_field="imca203" map_field="imca203" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;203&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imce141_1" state="i"/>
+        <controlp form="q_imce141_1" state="c"/>
+      </column>
+      <column id="imca203_desc"/>
+      <column id="imca204">
+        <after>
+          <check chkid="v_imcf011" id="isExist"/>
+          <reference field="imca204_desc" ref_field="imca204" map_field="imca204" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;204&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imcf011_1" state="i"/>
+        <controlp form="q_imcf011_1" state="c"/>
+      </column>
+      <column id="imca204_desc"/>
+      <column id="imca205">
+        <after>
+          <check chkid="v_imcg111" id="isExist"/>
+          <reference field="imca205_desc" ref_field="imca205" map_field="imca205" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;205&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imcg111_1" state="i"/>
+        <controlp form="q_imcg111_1" state="c"/>
+      </column>
+      <column id="imca205_desc"/>
+      <column id="imca206">
+        <after>
+          <reference field="imca206_desc" ref_field="imca206" map_field="imca206" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;206&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imca206_desc"/>
+      <column id="imca207">
+        <after>
+          <reference field="imca207_desc" ref_field="imca207" map_field="imca207" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;207&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca207_desc"/>
+      <column id="imca208">
+        <after>
+          <reference field="imca208_desc" ref_field="imca208" map_field="imca208" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;229&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imca208_desc"/>
+      <column id="imcastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="imca126">
+        <after>
+          <reference field="imca126_desc" ref_field="imca126" map_field="imca126" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2002&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca126_desc"/>
+      <column id="imca127">
+        <after>
+          <reference field="imca127_desc" ref_field="imca127" map_field="imca127" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2003&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca127_desc"/>
+      <column id="imca131">
+        <after>
+          <reference field="imca131_desc" ref_field="imca131" map_field="imca131" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2001&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca131_desc"/>
+      <column id="imca128">
+        <after>
+          <reference field="imca128_desc" ref_field="imca128" map_field="imca128" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2004&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca128_desc"/>
+      <column id="imca129">
+        <after>
+          <reference field="imca129_desc" ref_field="imca129" map_field="imca129" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2005&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca129_desc"/>
+      <column id="imca130"/>
+      <column id="imca132">
+        <after>
+          <reference field="imca132_desc" ref_field="imca132" map_field="imca132" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2006&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca132_desc"/>
+      <column id="imca133">
+        <after>
+          <reference field="imca133_desc" ref_field="imca133" map_field="imca133" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2007&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca133_desc"/>
+      <column id="imca134">
+        <after>
+          <reference field="imca134_desc" ref_field="imca134" map_field="imca134" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2008&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca134_desc"/>
+      <column id="imca135">
+        <after>
+          <reference field="imca135_desc" ref_field="imca135" map_field="imca135" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2009&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca135_desc"/>
+      <column id="imca136">
+        <after>
+          <reference field="imca136_desc" ref_field="imca136" map_field="imca136" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2010&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca136_desc"/>
+      <column id="imca137">
+        <after>
+          <reference field="imca137_desc" ref_field="imca137" map_field="imca137" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2011&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca137_desc"/>
+      <column id="imca138">
+        <after>
+          <reference field="imca138_desc" ref_field="imca138" map_field="imca138" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2012&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca138_desc"/>
+      <column id="imca139">
+        <after>
+          <reference field="imca139_desc" ref_field="imca139" map_field="imca139" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2013&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca139_desc"/>
+      <column id="imca140">
+        <after>
+          <reference field="imca140_desc" ref_field="imca140" map_field="imca140" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2014&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca140_desc"/>
+      <column id="imca141">
+        <after>
+          <reference field="imca141_desc" ref_field="imca141" map_field="imca141" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2015&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca141_desc"/>
+      <column id="imcaownid">
+        <after>
+          <reference field="imcaownid_desc" ref_field="imca_t.imcaownid" map_field="imcaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imcaownid_desc"/>
+      <column id="imcaowndp">
+        <after>
+          <reference field="imcaowndp_desc" ref_field="imca_t.imcaowndp" map_field="imcaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imcaowndp_desc"/>
+      <column id="imcacrtid">
+        <after>
+          <reference field="imcacrtid_desc" ref_field="imca_t.imcacrtid" map_field="imcacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imcacrtid_desc"/>
+      <column id="imcacrtdp">
+        <after>
+          <reference field="imcacrtdp_desc" ref_field="imca_t.imcacrtdp" map_field="imcacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imcacrtdp_desc"/>
+      <column id="imcacrtdt"/>
+      <column id="imcamodid">
+        <after>
+          <reference field="imcamodid_desc" ref_field="imca_t.imcamodid" map_field="imcamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imcamodid_desc"/>
+      <column id="imcamoddt"/>
+      <column id="imca011" type="S" default="0" def_scc="1002"/>
+      <column id="imca012" type="S" default="Y"/>
+      <column id="imca013"/>
+      <column id="imca014"/>
+      <column id="imca100" type="S" default="1" def_scc="2003"/>
+      <column id="imca109" type="S" default="1" def_scc="6553"/>
+      <column id="imca154"/>
+      <column id="imca155" type="S" default="0" def_scc="6940"/>
+      <column id="imca156" type="S" default="X" def_scc="6941"/>
+      <column id="imca110" type="S" default="N"/>
+      <column id="imca111"/>
+      <column id="imca112"/>
+      <column id="imca121" type="S" default="N"/>
+      <column id="imca018">
+        <after>
+          <reference field="imca018_desc" ref_field="imca_t.imca018" map_field="imca018" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="imca018_desc"/>
+      <column id="imca022">
+        <after>
+          <reference field="imca022_desc" ref_field="imca_t.imca022" map_field="imca022" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="imca022_desc"/>
+      <column id="imca024"/>
+      <column id="imca026"/>
+      <column id="imca027" type="S" default="N"/>
+      <column id="imca029">
+        <after>
+          <reference field="imca029_desc" ref_field="imca_t.imca029" map_field="imca029" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="imca029_desc"/>
+      <column id="imca030" type="S" default="0">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="imca032">
+        <after>
+          <reference field="imca032_desc" ref_field="imca_t.imca032" map_field="imca032" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="imca032_desc"/>
+      <column id="imca033" type="S" default="0">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="imca036" type="S" default="N"/>
+      <column id="imca037" type="S" default="N"/>
+      <column id="imca038" type="S" default="N"/>
+      <column id="imca043" type="S" default="N"/>
+      <column id="imca041"/>
+      <column id="imca042"/>
+      <column id="imca044" type="S" default="3" def_scc="1004"/>
+      <column id="imca122">
+        <after>
+          <reference field="imca122_desc" ref_field="imca122" map_field="imca122" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2000&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imca122_desc"/>
+      <column id="imca045">
+        <after>
+          <check chkid="v_oocg001" id="isExist"/>
+          <reference field="imca045_desc" ref_field="imca_t.imca045" map_field="imca045" ref_sql="SELECT oocgl003 FROM oocgl_t WHERE oocglent=$varg_enterprise$var AND oocgl001=? AND oocgl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocg001" state="i"/>
+        <controlp form="q_oocg001" state="c"/>
+      </column>
+      <column id="imca045_desc"/>
+      <column id="imca123"/>
+      <column id="imca003" type="S" default="99"/>
+    </init>
+    <init id="body" page="1">
+      <column id="imcj002">
+        <after>
+          <reference field="imcj002_desc" ref_field="imcj002" map_field="imcj002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;270&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imcj002_desc"/>
+      <column id="imcj003">
+        <after>
+          <reference field="imcj003_desc" ref_field="imcj003" map_field="imcj003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;271&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imcj003_desc"/>
+      <column id="imcj004">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imcj005">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imcj005_desc" ref_field="imcj_t.imcj005" map_field="imcj005" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="imcj005_desc"/>
+      <column id="imcj006">
+        <after>
+          <reference field="imcj006_desc" ref_field="imcj006" map_field="imcj006" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;272&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imcj006_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="imcn002">
+        <after>
+          <reference field="imcn002_desc" ref_field="imcn002" map_field="imcn002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;273&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imeb004" state="i"/>
+        <controlp form="q_imeb004_1" state="c"/>
+      </column>
+      <column id="imcn002_desc"/>
+      <column id="imcn003">
+        <after/>
+        <controlp form="q_imec003" state="i"/>
+        <controlp form="q_imec003_1" state="c"/>
+      </column>
+      <column id="imcn003_desc"/>
+    </init>
+    <init id="body" page="3">
+      <column id="imcl002">
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oocql004"/>
+      <column id="oocq005"/>
+    </init>
+    <init id="body" page="4">
+      <column id="imcm002" def_scc="1006"/>
+      <column id="imcm005"/>
+      <column id="imcm003"/>
+      <column id="imcm006"/>
+      <column id="imcm004"/>
+    </init>
+    <init id="body" page="5">
+      <column id="imco002">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imco002_desc" ref_field="imco_t.imco002" map_field="imco002" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imco002_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imca_t" pk="imca001">
+      <sql id="forupd_sql" type="sql" query="SELECT imca001,&apos;&apos;,imca004,imca005,&apos;&apos;,imca006,&apos;&apos;,imca010,&apos;&apos;,imca201,&apos;&apos;,imca202,&apos;&apos;,imca203,&apos;&apos;,imca204,&apos;&apos;,imca205,&apos;&apos;,imca206,&apos;&apos;,imca207,&apos;&apos;,imca208,&apos;&apos;,imcastus,imca126,&apos;&apos;,imca127,&apos;&apos;,imca131,&apos;&apos;,imca128,&apos;&apos;,imca129,&apos;&apos;,imca130,imca132,&apos;&apos;,imca133,&apos;&apos;,imca134,&apos;&apos;,imca135,&apos;&apos;,imca136,&apos;&apos;,imca137,&apos;&apos;,imca138,&apos;&apos;,imca139,&apos;&apos;,imca140,&apos;&apos;,imca141,&apos;&apos;,imcaownid,&apos;&apos;,imcaowndp,&apos;&apos;,imcacrtid,&apos;&apos;,imcacrtdp,&apos;&apos;,imcacrtdt,imcamodid,&apos;&apos;,imcamoddt,imca011,imca012,imca013,imca014,imca100,imca109,imca154,imca155,imca156,imca110,imca111,imca112,imca121,imca018,&apos;&apos;,imca022,&apos;&apos;,imca024,imca026,imca027,imca029,&apos;&apos;,imca030,imca032,&apos;&apos;,imca033,imca036,imca037,imca038,imca043,imca041,imca042,imca044,imca122,&apos;&apos;,imca045,&apos;&apos;,imca123,imca003 FROM imca_t WHERE imcaent= ? AND imca001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imca001,&apos;&apos;,imca004,imca005,&apos;&apos;,imca006,&apos;&apos;,imca010,&apos;&apos;,imca201,&apos;&apos;,imca202,&apos;&apos;,imca203,&apos;&apos;,imca204,&apos;&apos;,imca205,&apos;&apos;,imca206,&apos;&apos;,imca207,&apos;&apos;,imca208,&apos;&apos;,imcastus,imca126,&apos;&apos;,imca127,&apos;&apos;,imca131,&apos;&apos;,imca128,&apos;&apos;,imca129,&apos;&apos;,imca130,imca132,&apos;&apos;,imca133,&apos;&apos;,imca134,&apos;&apos;,imca135,&apos;&apos;,imca136,&apos;&apos;,imca137,&apos;&apos;,imca138,&apos;&apos;,imca139,&apos;&apos;,imca140,&apos;&apos;,imca141,&apos;&apos;,imcaownid,&apos;&apos;,imcaowndp,&apos;&apos;,imcacrtid,&apos;&apos;,imcacrtdp,&apos;&apos;,imcacrtdt,imcamodid,&apos;&apos;,imcamoddt,imca011,imca012,imca013,imca014,imca100,imca109,imca154,imca155,imca156,imca110,imca111,imca112,imca121,imca018,&apos;&apos;,imca022,&apos;&apos;,imca024,imca026,imca027,imca029,&apos;&apos;,imca030,imca032,&apos;&apos;,imca033,imca036,imca037,imca038,imca043,imca041,imca042,imca044,imca122,&apos;&apos;,imca045,&apos;&apos;,imca123,imca003 FROM imca_t" order="imca001"/>
+    </head>
+    <body id="imcj_t" page="1" linked="" pk="imcj002,imcj003" fk="imcj001">
+      <sql id="forupd_sql_detail" query="SELECT imcj002,&apos;&apos;,imcj003,&apos;&apos;,imcj004,imcj005,&apos;&apos;,imcj006,&apos;&apos; FROM imcj_t WHERE imcjent=? AND imcj001=? AND imcj002=? AND imcj003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imcj002,&apos;&apos;,imcj003,&apos;&apos;,imcj004,imcj005,&apos;&apos;,imcj006,&apos;&apos; FROM imcj_t WHERE imcjent=? AND imcj001=?"/>
+    </body>
+    <body id="imcn_t" page="2" linked="" pk="imcn002" fk="imcn001">
+      <sql id="forupd_sql_detail" query="SELECT imcn002,&apos;&apos;,imcn003,&apos;&apos; FROM imcn_t WHERE imcnent=? AND imcn001=? AND imcn002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imcn002,&apos;&apos;,imcn003,&apos;&apos; FROM imcn_t WHERE imcnent=? AND imcn001=?"/>
+    </body>
+    <body id="imcl_t" page="3" linked="" pk="imcl002" fk="imcl001">
+      <sql id="forupd_sql_detail" query="SELECT imcl002,&apos;&apos;,&apos;&apos; FROM imcl_t WHERE imclent=? AND imcl001=? AND imcl002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imcl002,&apos;&apos;,&apos;&apos; FROM imcl_t WHERE imclent=? AND imcl001=?"/>
+    </body>
+    <body id="imcm_t" page="4" linked="" pk="imcm002" fk="imcm001">
+      <sql id="forupd_sql_detail" query="SELECT imcm002,imcm005,imcm003,imcm006,imcm004 FROM imcm_t WHERE imcment=? AND imcm001=? AND imcm002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imcm002,imcm005,imcm003,imcm006,imcm004 FROM imcm_t WHERE imcment=? AND imcm001=?"/>
+    </body>
+    <body id="imco_t" page="5" linked="" pk="imco002" fk="imco001">
+      <sql id="forupd_sql_detail" query="SELECT imco002,&apos;&apos; FROM imco_t WHERE imcoent=? AND imco001=? AND imco002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imco002,&apos;&apos; FROM imco_t WHERE imcoent=? AND imco001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

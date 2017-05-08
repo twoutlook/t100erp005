@@ -1,0 +1,2643 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apsp630.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0012(2016-05-31 14:38:13), PR版次:0012(2016-12-02 19:17:35)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000150
+#+ Filename...: apsp630
+#+ Description: APS工單變更整批調整作業
+#+ Creator....: 01588(2014-05-21 18:37:24)
+#+ Modifier...: 05384 -SD/PR- 08171
+ 
+{</section>}
+ 
+{<section id="apsp630.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#151209-00022#4   2015/12/18  by Sarah    增加二次篩選功能
+#160318-00005#41  2016/04/01  by pengxin  修正azzi920重复定义之错误讯息
+#160318-00025#50  2016/04/27  By 07673    將重複內容的錯誤訊息置換為公用錯誤訊息
+#160414-00020#1   2016/05/31  By shiun    工單開工日sfka019請預設psos_t.psos012 
+#160608-00013#3   2016/06/21  By ming     執行process時，先檢查有無新版本，有的話，跳出錯誤訊息「該APS版本：%1已有新一版本資料，請重新查詢後再進行處理」
+#161024-00057#16  2016/10/26  By Whitney  刪除sfae_t、sfad_t、sfke_t、sfkd_t相關程式
+#161109-00085#15  2016/11/15  By 08993    整批調整系統星號寫法
+#161109-00085#61  2016/11/29  By 08171    整批調整系統星號寫法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+        psos001          LIKE psos_t.psos001,   #APS版本
+        a1               LIKE type_t.chr1,      #顯示已發料資料
+        b1               LIKE type_t.chr1,      #顯示已完工資料
+        c1               LIKE type_t.chr1,      #顯示已變更資料
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+        sel                LIKE type_t.chr1,        #選擇
+        sfaadocno          LIKE sfaa_t.sfaadocno,   #工單單號
+        sfaa057            LIKE sfaa_t.sfaa057,     #委外型態
+        sfaastus           LIKE sfaa_t.sfaastus,    #工單狀態
+        sfaa010            LIKE sfaa_t.sfaa010,     #料件編號
+        imaal003           LIKE imaal_t.imaal003,   #品名
+        imaal004           LIKE imaal_t.imaal004,   #規格
+        imaf013            LIKE imaf_t.imaf013,     #補給策略
+        imaa009            LIKE imaa_t.imaa009,     #產品分類
+        imaa009_desc       LIKE type_t.chr80,       #產品分類說明
+        imae011            LIKE imae_t.imae011,     #生管分類
+        imae011_desc       LIKE type_t.chr80,       #生管分類說明
+        sfaa013            LIKE sfaa_t.sfaa013,     #單位
+        sfaa013_desc       LIKE type_t.chr80,       #單位說明
+        sfaa012            LIKE sfaa_t.sfaa012,     #原生產數量
+        psos036            LIKE psos_t.psos036,     #建議生產量
+        sfaa049            LIKE sfaa_t.sfaa049,     #已發料套數
+        qty1               LIKE sfaa_t.sfaa050,     #已入庫數量
+        sfaa020            LIKE sfaa_t.sfaa020,     #原完工日
+        psos011            LIKE psos_t.psos011,     #建議完工日
+        sfaa002            LIKE sfaa_t.sfaa002,     #生管員
+        sfaa002_desc       LIKE type_t.chr80,       #生管員姓名
+        imae012            LIKE imae_t.imae012,     #計畫員
+        imae012_desc       LIKE type_t.chr80,       #計畫員姓名
+        psos057            LIKE psos_t.psos057,     #已產生變更單
+        psos058            LIKE psos_t.psos058,     #產生更工單變更單
+        psos012            LIKE psos_t.psos012      #預計開工日
+                           END RECORD
+                         
+TYPE type_g_detail2_d      RECORD
+        sfacseq            LIKE sfac_t.sfacseq,     #項次
+        sfac002            LIKE sfac_t.sfac002,     #類型
+        sfac001            LIKE sfac_t.sfac001,     #料件編號
+        sfac001_desc       LIKE imaal_t.imaal003,   #品名
+        sfac001_desc_desc  LIKE imaal_t.imaal004,   #規格
+        sfac006            LIKE sfac_t.sfac006,     #產品特徵
+        sfac006_desc       LIKE type_t.chr500,      #特徵值說明
+        sfac003            LIKE sfac_t.sfac003,     #原數量
+        psox012            LIKE psox_t.psox012      #建議數量
+                           END RECORD
+   
+DEFINE g_param             type_parameter
+DEFINE g_detail_idx        LIKE type_t.num5
+DEFINE g_detail2_idx       LIKE type_t.num5
+DEFINE g_detail2_cnt       LIKE type_t.num5
+DEFINE g_detail2_d         DYNAMIC ARRAY OF type_g_detail2_d 
+DEFINE g_psos002           LIKE psos_t.psos002
+DEFINE g_sfka900           LIKE sfka_t.sfka900
+DEFINE g_change_qty        LIKE type_t.num5         #生產數量是否變更
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp630.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aps","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apsp630 WITH FORM cl_ap_formpath("aps",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apsp630_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apsp630_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apsp630
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apsp630.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION apsp630_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   LET g_param.a1 = 'N'
+   LET g_param.b1 = 'N'
+   LET g_param.c1 = 'N'
+   CALL cl_set_combo_scc_part('sfaastus','13','F,Y')
+   CALL cl_set_combo_scc('b_sfaa057','4010')
+   CALL cl_set_combo_scc_part('b_sfaastus','13','F,Y')
+   CALL cl_set_combo_scc('b_imaf013','2022')
+   CALL cl_set_combo_scc('b_sfac002','4019')
+   LET g_detail_idx = 1
+   LET g_bgjob = 'N'
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp630.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apsp630_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE ls_result  STRING
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL apsp630_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         CONSTRUCT BY NAME g_param.wc ON sfaa002,imae012,psos012,psos011,imaa009,imae011,
+                                         sfaastus,psos054
+            
+            AFTER FIELD psos012
+               CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+               IF NOT cl_null(ls_result) THEN
+                  IF NOT cl_chk_date_symbol(ls_result) THEN
+                     LET ls_result = cl_add_date_extra_cond(ls_result)
+                  END IF
+               END IF
+               CALL FGL_DIALOG_SETBUFFER(ls_result)
+            
+            AFTER FIELD psos011
+               CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+               IF NOT cl_null(ls_result) THEN
+                  IF NOT cl_chk_date_symbol(ls_result) THEN
+                     LET ls_result = cl_add_date_extra_cond(ls_result)
+                  END IF
+               END IF
+               CALL FGL_DIALOG_SETBUFFER(ls_result)
+            
+            ON ACTION controlp INFIELD sfaa002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               DISPLAY g_qryparam.return1 TO sfaa002
+               NEXT FIELD sfaa002
+            
+            ON ACTION controlp INFIELD imae012
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               DISPLAY g_qryparam.return1 TO imae012
+               NEXT FIELD imae012
+         
+            ON ACTION controlp INFIELD imaa009
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_rtax001()
+               DISPLAY g_qryparam.return1 TO imaa009
+               NEXT FIELD imaa009
+               
+            ON ACTION controlp INFIELD imae011
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imcf011()
+               DISPLAY g_qryparam.return1 TO imae011
+               NEXT FIELD imae011
+               
+            ON ACTION controlp INFIELD psos054
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaf001()
+               DISPLAY g_qryparam.return1 TO psos054
+               NEXT FIELD psos054
+         END CONSTRUCT
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         INPUT BY NAME g_param.psos001 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+            AFTER FIELD psos001
+               DISPLAY '' TO psos001_desc
+               IF NOT cl_null(g_param.psos001) THEN
+                  IF NOT apsp630_psos001_chk(g_param.psos001) THEN
+                     LET g_param.psos001 = ''
+                     DISPLAY BY NAME g_param.psos001
+                     DISPLAY '' TO psos001_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL apsp630_psos001_ref()
+         
+            ON ACTION controlp INFIELD psos001
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_param.psos001
+               LET g_qryparam.where = " pscasite = '",g_site,"'"
+               CALL q_psca001()
+               LET g_param.psos001 = g_qryparam.return1
+               DISPLAY BY NAME g_param.psos001
+               CALL apsp630_psos001_ref()
+               NEXT FIELD psos001
+         END INPUT
+         
+         INPUT BY NAME g_param.a1,g_param.b1,g_param.c1 ATTRIBUTE(WITHOUT DEFAULTS)
+            BEFORE INPUT
+            
+         END INPUT
+         
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+            ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                    INSERT ROW = FALSE,
+                    DELETE ROW = FALSE,
+                    APPEND ROW = FALSE)
+            BEFORE INPUT
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               CALL apsp630_fetch()
+               
+            ON CHANGE b_sel
+               IF g_detail_d[g_detail_idx].psos057 = 'Y' THEN
+                  IF g_detail_d[g_detail_idx].sel = 'Y' THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'aps-00103'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     LET g_detail_d[g_detail_idx].sel = 'N'
+                  END IF
+               END IF
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_detail2_d TO s_detail2.* ATTRIBUTES(COUNT=g_detail2_cnt)
+            BEFORE ROW
+               LET g_detail2_idx = DIALOG.getCurrentRow("s_detail2")
+
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail2_idx)
+               LET g_detail2_idx = DIALOG.getCurrentRow("s_detail2")
+         END DISPLAY
+         
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF g_detail_d[li_idx].psos057 = 'Y' THEN
+                   LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  IF g_detail_d[li_idx].psos057 = 'Y' THEN
+                     LET g_detail_d[li_idx].sel = "N"
+                  END IF
+               END IF
+            END FOR
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apsp630_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL apsp630_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+           #151209-00022#4 add -----(S)
+            LET g_wc_filter = '1=1'
+            CALL apsp630_b_fill()
+           #151209-00022#4 add -----(E)
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL apsp630_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         ON ACTION batch_execute
+            CALL apsp630_batch_execute()
+            CALL apsp630_query()
+            CONTINUE DIALOG
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp630.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION apsp630_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+   IF cl_null(g_param.psos001) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aps-00102'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   END IF
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL apsp630_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp630.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION apsp630_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   DEFINE l_success       LIKE type_t.num5
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   IF cl_null(g_param.wc) THEN
+      LET g_param.wc = " 1=1"
+   END IF
+  
+  #151209-00022#4 add -----(S)
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+  #151209-00022#4 add -----(E)
+   
+   LET g_psos002 = ''
+   SELECT MAX(psos002) INTO g_psos002
+     FROM psos_t
+    WHERE psosent = g_enterprise
+      AND psossite= g_site
+      AND psos001 = g_param.psos001
+      AND psos009 = '0'
+      
+   CALL apsp630_create_temptable()
+        RETURNING l_success
+   IF NOT l_success THEN
+      RETURN
+   END IF
+   
+   LET g_sql = "SELECT 'N',sfaadocno,sfaa057,sfaastus,sfaa010,imaal003,imaal004,imaf013,imaa009,'', ",
+               "       imae011,'',sfaa013,oocal003,sfaa012,psos036,sfaa049,sfaa050+sfaa051,sfaa020, ",
+               "       psos011,sfaa002,ooag011,imae012,'',psos057,psos058 ",
+               "       ,psos012 ",   #add--160414-00020#1 By shiun
+               "  FROM psos_t,sfaa_t ",
+               "       LEFT JOIN imaal_t ON imaalent = sfaaent AND imaal001 = sfaa010 AND imaal002 = '",g_dlang,"'",
+               "       LEFT JOIN imaa_t  ON imaaent = sfaaent AND imaa001 = sfaa010 ",
+               "       LEFT JOIN imaf_t  ON imafent = sfaaent AND imafsite = sfaasite AND imaf001 = sfaa010 ",
+               "       LEFT JOIN imae_t  ON imaeent = sfaaent AND imaesite = sfaasite AND imae001 = sfaa010 ",
+               "       LEFT JOIN oocal_t ON oocalent = sfaaent AND oocal001 = sfaa013 AND oocal002 = '",g_dlang,"'",
+               "       LEFT JOIN ooag_t  ON ooagent = sfaaent AND ooag001 = sfaa002 ",
+               " WHERE psosent = ? ",
+               "   AND sfaaent = psosent ",
+               "   AND psossite='",g_site,"'",
+               "   AND sfaasite= psossite ",
+               "   AND sfaadocno = psos004 ",
+               "   AND psos001 = '",g_param.psos001,"'",
+               "   AND psos002 = '",g_psos002,"'",
+               "   AND psos009 = 0 ",   #建議單據(is_new)
+               "   AND sfaastus IN ('F','Y') ",
+               "   AND ",g_param.wc CLIPPED,
+               "   AND ",g_wc_filter CLIPPED,   #151209-00022#4 add
+               "   AND (sfaa012 <> psos036 OR sfaa020 <> psos011) "   #151224-00028 by stellar add
+   IF g_param.a1 = 'N' THEN
+      LET g_sql = g_sql CLIPPED," AND sfaa045 IS NULL "
+   END IF
+   IF g_param.b1 = 'N' THEN
+      LET g_sql = g_sql CLIPPED," AND sfaa046 IS NULL "
+   END IF
+   IF g_param.c1 = 'N' THEN
+      LET g_sql = g_sql CLIPPED," AND (psos057 = 'N' OR psos057 IS NULL)"
+   END IF
+   LET g_sql = g_sql CLIPPED," ORDER BY sfaadocno "   
+   #end add-point
+ 
+   PREPARE apsp630_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apsp630_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+   CALL g_detail2_d.clear()
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+      g_detail_d[l_ac].sel,g_detail_d[l_ac].sfaadocno,g_detail_d[l_ac].sfaa057,
+      g_detail_d[l_ac].sfaastus,g_detail_d[l_ac].sfaa010,g_detail_d[l_ac].imaal003,
+      g_detail_d[l_ac].imaal004,g_detail_d[l_ac].imaf013,g_detail_d[l_ac].imaa009,
+      g_detail_d[l_ac].imaa009_desc,g_detail_d[l_ac].imae011,g_detail_d[l_ac].imae011_desc,
+      g_detail_d[l_ac].sfaa013,g_detail_d[l_ac].sfaa013_desc,g_detail_d[l_ac].sfaa012,
+      g_detail_d[l_ac].psos036,g_detail_d[l_ac].sfaa049,g_detail_d[l_ac].qty1,
+      g_detail_d[l_ac].sfaa020,g_detail_d[l_ac].psos011,g_detail_d[l_ac].sfaa002,
+      g_detail_d[l_ac].sfaa002_desc,g_detail_d[l_ac].imae012,g_detail_d[l_ac].imae012_desc,
+      g_detail_d[l_ac].psos057,g_detail_d[l_ac].psos058,g_detail_d[l_ac].psos012   #mod--160414-00020#1 By shiun  新增psos012
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      #抓取生產料號明細到temp table
+      CALL apsp630_sel_date_into_temptable()
+      #end add-point
+      
+      CALL apsp630_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE apsp630_sel
+   
+   LET l_ac = 1
+   CALL apsp630_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp630.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION apsp630_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   DEFINE l_success       LIKE type_t.num5
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   IF g_detail_idx > g_detail_cnt THEN
+      LET g_detail_idx = g_detail_cnt
+   END IF
+   
+   IF cl_null(g_detail_idx) OR g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+
+   DECLARE apsp630_fetch_cs CURSOR FOR
+    SELECT sfacseq,sfac002,sfac001,imaal003,imaal004,sfac006,sfac003,psox012
+      FROM apsp630_tmp
+           LEFT OUTER JOIN imaal_t ON imaalent = g_enterprise AND imaal001 = sfac001 AND imaal002 = g_dlang
+     WHERE sfacdocno = g_detail_d[g_detail_idx].sfaadocno
+    ORDER BY sfacseq
+     
+   LET l_ac = 1
+   CALL g_detail2_d.clear()
+   FOREACH apsp630_fetch_cs INTO g_detail2_d[l_ac].sfacseq,g_detail2_d[l_ac].sfac002,g_detail2_d[l_ac].sfac001,
+                                 g_detail2_d[l_ac].sfac001_desc,g_detail2_d[l_ac].sfac001_desc_desc,
+                                 g_detail2_d[l_ac].sfac006,g_detail2_d[l_ac].sfac003,g_detail2_d[l_ac].psox012
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH apsp630_fetch_cs:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      CALL s_feature_description(g_detail2_d[l_ac].sfac001,g_detail2_d[l_ac].sfac006)
+           RETURNING l_success,g_detail2_d[l_ac].sfac006_desc
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   LET g_detail2_cnt = l_ac - 1
+   CALL g_detail2_d.deleteElement(g_detail2_d.getLength())
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp630.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION apsp630_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   #產品分類說明
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_detail_d[l_ac].imaa009
+   CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_lang||"'",
+        "") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].imaa009_desc = '', g_rtn_fields[1] , ''
+   
+   #生管分類說明
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_detail_d[l_ac].imae011
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='204' AND oocql002=? AND oocql003='"||g_lang||"'",
+        "") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].imae011_desc = '', g_rtn_fields[1] , ''
+   
+   #計劃員全名
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_detail_d[l_ac].imae012
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ",
+        "") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].imae012_desc = '', g_rtn_fields[1] , ''
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp630.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION apsp630_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+{
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+}
+  #151209-00022#4 add -----(S)
+   CONSTRUCT g_wc_filter ON sfaadocno,sfaa057,sfaastus,sfaa010,
+                            imaf013,imaa009,imae011,sfaa013,sfaa012,
+                            psos036,sfaa049,sfaa020,psos011,sfaa002,
+                            imae012
+        FROM s_detail1[1].b_sfaadocno,s_detail1[1].b_sfaa057,s_detail1[1].b_sfaastus,s_detail1[1].b_sfaa010,
+             s_detail1[1].b_imaf013,s_detail1[1].b_imaa009,s_detail1[1].b_imae011,s_detail1[1].b_sfaa013,s_detail1[1].b_sfaa012,
+             s_detail1[1].b_psos036,s_detail1[1].b_sfaa049,s_detail1[1].b_sfaa020,s_detail1[1].b_psos011,s_detail1[1].b_sfaa002,
+             s_detail1[1].b_imae012
+
+      BEFORE CONSTRUCT      
+
+      ON ACTION controlp INFIELD b_sfaadocno        #工單單號
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.where = " sfaasite = '",g_site,"'"
+         CALL q_sfaadocno_1()                       #呼叫開窗
+         DISPLAY g_qryparam.return1 TO b_sfaadocno  #顯示到畫面上
+         NEXT FIELD b_sfaadocno                     #返回原欄位
+
+      ON ACTION controlp INFIELD b_sfaa010          #料件編號
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         CALL q_imaa001_9()                         #呼叫開窗
+         DISPLAY g_qryparam.return1 TO b_sfaa010    #顯示到畫面上
+         NEXT FIELD b_sfaa010                       #返回原欄位
+
+      ON ACTION controlp INFIELD b_imaa009          #產品分類
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         CALL q_rtax001()                           #呼叫開窗
+         DISPLAY g_qryparam.return1 TO b_imaa009    #顯示到畫面上
+         NEXT FIELD b_imaa009                       #返回原欄位
+
+      ON ACTION controlp INFIELD b_imae011          #生管分類
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         CALL q_imcf011()                           #呼叫開窗
+         DISPLAY g_qryparam.return1 TO b_imae011    #顯示到畫面上
+         NEXT FIELD b_imae011                       #返回原欄位
+
+      ON ACTION controlp INFIELD b_sfaa013          #單位
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         CALL q_ooca001_1()                         #呼叫開窗
+         DISPLAY g_qryparam.return1 TO b_sfaa013    #顯示到畫面上
+         NEXT FIELD b_sfaa013                       #返回原欄位
+
+      ON ACTION controlp INFIELD b_sfaa002          #生管員
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         CALL q_ooag001()                           #呼叫開窗
+         DISPLAY g_qryparam.return1 TO b_sfaa002    #顯示到畫面上
+         NEXT FIELD b_sfaa002                       #返回原欄位
+
+      ON ACTION controlp INFIELD b_imae012          #計畫員
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         CALL q_ooag001()                           #呼叫開窗
+         DISPLAY g_qryparam.return1 TO b_imae012    #顯示到畫面上
+         NEXT FIELD b_imae012                       #返回原欄位
+      
+   END CONSTRUCT
+  #151209-00022#4 add -----(E)
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL apsp630_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp630.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION apsp630_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp630.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION apsp630_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apsp630_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp630.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: APS校驗
+# Memo...........:
+# Usage..........: CALL apsp630_psos001_chk(p_psos001)
+#                  RETURNING r_success
+# Input parameter: p_psos001      APS版本
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/05/23 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_psos001_chk(p_psos001)
+DEFINE p_psos001         LIKE psos_t.psos001
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_psos001) THEN
+      RETURN r_success
+   END IF
+
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = p_psos001
+   LET g_errshow = TRUE   #160318-00025#50
+   LET g_chkparam.err_str[1] = "aps-00074:sub-01302|apsi002|",cl_get_progname("apsi002",g_lang,"2"),"|:EXEPROGapsi002"    #160318-00025#50
+   IF NOT cl_chk_exist("v_psca001") THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: APS版本說明
+# Memo...........:
+# Usage..........: CALL apsp630_psos001_ref()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2014/05/23 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_psos001_ref()
+DEFINE l_psos001_desc    LIKE type_t.chr80
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_param.psos001
+   CALL ap_ref_array2(g_ref_fields,"SELECT pscal003 FROM pscal_t WHERE pscalent='"||g_enterprise||"' AND pscalsite='"||g_site||"' AND pscal001=? AND pscal002='"||g_lang||"'",
+       "") RETURNING g_rtn_fields
+   LET l_psos001_desc = '', g_rtn_fields[1] , ''
+   DISPLAY l_psos001_desc TO psos001_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: Create Temp Table
+# Memo...........:
+# Usage..........: CALL apsp630_create_temptable()
+#                       RETURNING r_success
+# Input parameter: 
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/05/23 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_create_temptable()
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   DROP TABLE apsp630_tmp
+   CREATE TEMP TABLE apsp630_tmp(
+      sfacdocno      LIKE sfac_t.sfacdocno,
+      sfacseq        LIKE sfac_t.sfacseq,
+      sfac001        LIKE sfac_t.sfac001,
+      sfac002        LIKE sfac_t.sfac002,
+      sfac003        LIKE sfac_t.sfac003,
+      sfac006        LIKE sfac_t.sfac006,
+      psox012        LIKE psox_t.psox012)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create apsp630_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取psos_t及sfaa_t的所有資料
+# Memo...........:
+# Usage..........: CALL apsp630_sel_date_into_temptable()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2014/05/23 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_sel_date_into_temptable()
+DEFINE l_sfacseq         LIKE sfac_t.sfacseq
+DEFINE l_sfac001         LIKE sfac_t.sfac001
+DEFINE l_sfac002         LIKE sfac_t.sfac002
+DEFINE l_sfac003         LIKE sfac_t.sfac003
+DEFINE l_sfac006         LIKE sfac_t.sfac006
+DEFINE l_psox012         LIKE psox_t.psox012
+DEFINE l_cnt             LIKE type_t.num5
+
+                      #項次、料件編號、類型、原數量、產品特徵
+   LET g_sql = "SELECT sfacseq,sfac001,sfac002,sfac003,sfac006 ",
+               "  FROM sfac_t ",
+               " WHERE sfacent = ",g_enterprise,
+               "   AND sfacdocno = '",g_detail_d[l_ac].sfaadocno,"'",
+               " ORDER BY sfacseq "
+   
+   PREPARE apsp630_tmp_pre FROM g_sql
+   DECLARE apsp630_tmp_cs CURSOR FOR apsp630_tmp_pre
+   
+   FOREACH apsp630_tmp_cs INTO l_sfacseq,l_sfac001,l_sfac002,l_sfac003,l_sfac006
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH apsp630_tmp_cs:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      LET l_psox012 = 0
+      
+      INSERT INTO apsp630_tmp(sfacdocno,sfacseq,sfac001,sfac002,sfac003,sfac006,psox012)
+         VALUES(g_detail_d[l_ac].sfaadocno,l_sfacseq,l_sfac001,l_sfac002,l_sfac003,l_sfac006,l_psox012)
+      IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins apsp630_tmp'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+      
+                      #料號、產品特徵、類型、建議數量
+   LET g_sql = "SELECT psox004,psox005,psox006,psox012 ",
+               "  FROM psox_t ",
+               " WHERE psoxent = ",g_enterprise,
+               "   AND psox001 = '",g_param.psos001,"'",
+               "   AND psox002 = '",g_psos002,"'",
+               "   AND psox003 = '",g_detail_d[l_ac].sfaadocno,"'"
+   
+   PREPARE apsp630_tmp_pre1 FROM g_sql
+   DECLARE apsp630_tmp_cs1 CURSOR FOR apsp630_tmp_pre1
+   
+   FOREACH apsp630_tmp_cs1 INTO l_sfac001,l_sfac006,l_sfac002,l_psox012
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH apsp630_tmp_cs1:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM apsp630_tmp
+       WHERE sfacdocno = g_detail_d[l_ac].sfaadocno
+         AND sfac001 = l_sfac001
+         AND sfac006 = l_sfac006
+      IF cl_null(l_cnt) OR l_cnt <= 0 THEN
+         LET l_sfacseq = 1
+         SELECT MAX(sfacseq)+1 INTO l_sfacseq
+           FROM apsp630_tmp
+          WHERE sfacdocno = g_detail_d[l_ac].sfaadocno
+         IF cl_null(l_sfacseq) THEN
+            LET l_sfacseq = 1
+         END IF
+         
+         LET l_sfac003 = 0
+         
+         INSERT INTO apsp630_tmp(sfacdocno,sfacseq,sfac001,sfac002,sfac003,sfac006,psox012)
+            VALUES(g_detail_d[l_ac].sfaadocno,l_sfacseq,l_sfac001,l_sfac002,l_sfac003,l_sfac006,l_psox012)
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'ins apsp630_tmp'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+   
+            EXIT FOREACH
+         END IF
+      ELSE
+         UPDATE apsp630_tmp SET psox012 = l_psox012
+          WHERE sfacdocno = g_detail_d[l_ac].sfaadocno
+            AND sfac001 = l_sfac001
+            AND sfac006 = l_sfac006
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'upd apsp630_tmp'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+   
+            EXIT FOREACH
+         END IF
+      END IF
+   END FOREACH
+      
+END FUNCTION
+
+################################################################################
+# Descriptions...: 批次作業
+# Memo...........:
+# Usage..........: CALL apsp630_batch_execute()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2014/05/27 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_batch_execute()
+DEFINE l_sel_cnt         LIKE type_t.num5
+DEFINE l_tot_success     LIKE type_t.num5
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_cnt             LIKE type_t.num5
+DEFINE l_str             STRING
+DEFINE ls_js             STRING
+DEFINE lc_param          type_parameter
+DEFINE la_param          RECORD
+          prog           STRING,
+          param          DYNAMIC ARRAY OF STRING
+                         END RECORD 
+   #160608-00013#3 20160621 add by ming -----(S) 
+   DEFINE l_max_psos002  LIKE psos_t.psos002 
+   #160608-00013#3 20160621 add by ming -----(E) 
+                         
+   #160608-00013#3 20160621 add by ming -----(S) 
+   LET l_max_psos002 = '' 
+   SELECT MAX(psos002) INTO l_max_psos002 
+     FROM psos_t
+    WHERE psosent  = g_enterprise
+      AND psossite = g_site
+      AND psos001  = g_param.psos001
+      AND psos009  = '0'
+      
+   IF l_max_psos002 <> g_psos002 THEN 
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = 'aps-00189' 
+      LET g_errparam.popup  = TRUE 
+      LET g_errparam.replace[1] = g_param.psos001 
+      CALL cl_err() 
+      
+      RETURN 
+   END IF 
+   #160608-00013#3 20160621 add by ming -----(E) 
+        
+   LET l_sel_cnt = 0
+   LET l_tot_success = TRUE
+   LET l_success = TRUE
+   LET l_str = ''
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   LET g_coll_title[1] = cl_getmsg('axc-00261',g_lang)
+#   LET g_coll_title[2] = cl_getmsg('axm-00008',g_lang)      #160318-00005#41  mark
+   LET g_coll_title[2] = cl_getmsg('anm-00225',g_lang)      #160318-00005#41  add
+   
+   FOR l_ac = 1 TO g_detail_d.getLength()
+      IF g_detail_d[l_ac].sel = 'N' THEN
+         CONTINUE FOR
+      END IF
+   
+      IF NOT l_success THEN
+         LET l_tot_success = FALSE
+      END IF
+      LET l_success = TRUE
+      
+      #累計選擇'Y'的筆數
+      LET l_sel_cnt = l_sel_cnt + 1
+      
+      #針對選擇'Y'的資料做處理
+      #檢查是否已有未確認的工單變更單
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt 
+        FROM sfka_t
+       WHERE sfkaent = g_enterprise
+         AND sfkadocno = g_detail_d[l_ac].sfaadocno
+         AND sfkastus = 'N'
+      IF NOT cl_null(l_cnt) AND l_cnt > 0 THEN
+         LET l_success = FALSE
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = 'asf-00294'
+         LET g_errparam.extend = ''
+         LET g_errparam.coll_vals[1] = g_detail_d[l_ac].sfaadocno
+         CALL cl_err()
+         CONTINUE FOR
+      END IF
+      
+      #產生工單變更單
+      CALL apsp630_asft800_gen()
+           RETURNING l_success
+      IF NOT l_success THEN
+         CONTINUE FOR
+      END IF
+      
+      #更新已轉單據='Y'、產生工單單號=sfaadocno
+      UPDATE psos_t SET psos057 = 'Y',
+                        psos058 = g_detail_d[l_ac].sfaadocno
+       WHERE psosent = g_enterprise
+         AND psossite= g_site
+         AND psos001 = g_param.psos001
+         AND psos002 = g_psos002
+         AND psos004 = g_detail_d[l_ac].sfaadocno
+      IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+         LET l_success = FALSE
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'upd psos_t'
+         LET g_errparam.coll_vals[1] = g_detail_d[l_ac].sfaadocno
+         CALL cl_err()
+         CONTINUE FOR
+      END IF
+      
+      IF cl_null(l_str) THEN
+         LET l_str = " (sfkadocno = '",g_detail_d[l_ac].sfaadocno,"' AND sfka900 = ",g_sfka900,") "
+      ELSE
+         LET l_str = l_str," OR (sfkadocno = '",g_detail_d[l_ac].sfaadocno,"' AND sfka900 = ",g_sfka900,") "
+      END IF
+   END FOR
+   
+   IF cl_null(l_sel_cnt) OR l_sel_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'afa-00063'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   CALL cl_err_collect_show()
+   LET l_success = l_tot_success
+   
+   IF l_success THEN
+      CALL s_transaction_end('Y','0')
+      IF NOT cl_null(l_str) THEN
+         LET la_param.prog = 'asft800'
+         LET la_param.param[1] = ''
+         LET la_param.param[2] = ''
+         LET la_param.param[3] = l_str
+         LET ls_js = util.JSON.stringify(la_param )
+         CALL cl_cmdrun_wait(ls_js)
+      END IF
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+   
+   IF g_bgjob = 'N' THEN
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生工單變更單
+# Memo...........:
+# Usage..........: CALL apsp630_asft800_gen()
+#                  RETURNING r_success
+# Input parameter: 
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/05/27 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_asft800_gen()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_sfka012         LIKE sfka_t.sfka012
+DEFINE l_sfka013         LIKE sfka_t.sfka013
+
+   LET r_success = TRUE
+   LET g_change_qty = FALSE
+ 
+   #產生工單變更單單頭資料
+   CALL apsp630_asft800_gen_sfka()
+        RETURNING r_success
+   IF NOT r_success THEN 
+      RETURN r_success
+   END IF
+   
+   #產生工單變更單工單來源資料
+   CALL apsp630_asft800_gen_sfkb()
+        RETURNING r_success
+   IF NOT r_success THEN
+      RETURN r_success
+   END IF
+   
+   #產生工單變更單聯產品資料
+   CALL apsp630_asft800_gen_sfkc()
+        RETURNING r_success
+   IF NOT r_success THEN
+      RETURN r_success
+   END IF
+   
+   #產生工單變更單商品序號資料
+   CALL apsp630_asft800_gen_sfkf()
+        RETURNING r_success
+   IF NOT r_success THEN
+      RETURN r_success
+   END IF
+   
+   #產生工單變更單備料檔資料
+   CALL apsp630_asft800_gen_sfkg()
+        RETURNING r_success
+   IF NOT r_success THEN
+      RETURN r_success
+   END IF
+   
+   #因生產數量改變，呼叫應用元件重新產生備料檔
+   IF g_change_qty THEN
+      LET l_sfka012 = 0
+      SELECT sfka012,sfka013 INTO l_sfka012,l_sfka013
+        FROM sfka_t
+       WHERE sfkaent = g_enterprise
+         AND sfkadocno = g_detail_d[l_ac].sfaadocno
+         AND sfka900 = g_sfka900
+      CALL s_asft800_upd_qty(g_detail_d[l_ac].sfaadocno,g_sfka900,l_sfka012,l_sfka013)
+           RETURNING r_success
+      IF NOT r_success THEN
+         RETURN r_success
+      END IF
+   END IF
+     
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生工單變更單單頭資料
+# Memo...........:
+# Usage..........: CALL apsp630_asft800_gen_sfka()
+#                  RETURNING r_success
+# Input parameter: 
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/05/27 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_asft800_gen_sfka()
+DEFINE r_success         LIKE type_t.num5
+#mod--161109-00085#15 By 08993--(s)
+#DEFINE l_sfaa            RECORD LIKE sfaa_t.*   #mark--161109-00085#15 By 08993--(s)
+DEFINE l_sfaa RECORD  #工單單頭檔
+       sfaaent LIKE sfaa_t.sfaaent, #企業編號
+       sfaaownid LIKE sfaa_t.sfaaownid, #資料所有者
+       sfaaowndp LIKE sfaa_t.sfaaowndp, #資料所有部門
+       sfaacrtid LIKE sfaa_t.sfaacrtid, #資料建立者
+       sfaacrtdp LIKE sfaa_t.sfaacrtdp, #資料建立部門
+       sfaacrtdt LIKE sfaa_t.sfaacrtdt, #資料創建日
+       sfaamodid LIKE sfaa_t.sfaamodid, #資料修改者
+       sfaamoddt LIKE sfaa_t.sfaamoddt, #最近修改日
+       sfaacnfid LIKE sfaa_t.sfaacnfid, #資料確認者
+       sfaacnfdt LIKE sfaa_t.sfaacnfdt, #資料確認日
+       sfaapstid LIKE sfaa_t.sfaapstid, #資料過帳者
+       sfaapstdt LIKE sfaa_t.sfaapstdt, #資料過帳日
+       sfaastus LIKE sfaa_t.sfaastus, #狀態碼
+       sfaasite LIKE sfaa_t.sfaasite, #營運據點
+       sfaadocno LIKE sfaa_t.sfaadocno, #單號
+       sfaadocdt LIKE sfaa_t.sfaadocdt, #單據日期
+       sfaa001 LIKE sfaa_t.sfaa001, #變更版本
+       sfaa002 LIKE sfaa_t.sfaa002, #生管人員
+       sfaa003 LIKE sfaa_t.sfaa003, #工單類型
+       sfaa004 LIKE sfaa_t.sfaa004, #發料制度
+       sfaa005 LIKE sfaa_t.sfaa005, #工單來源
+       sfaa006 LIKE sfaa_t.sfaa006, #來源單號
+       sfaa007 LIKE sfaa_t.sfaa007, #來源項次
+       sfaa008 LIKE sfaa_t.sfaa008, #來源項序
+       sfaa009 LIKE sfaa_t.sfaa009, #參考客戶
+       sfaa010 LIKE sfaa_t.sfaa010, #生產料號
+       sfaa011 LIKE sfaa_t.sfaa011, #特性
+       sfaa012 LIKE sfaa_t.sfaa012, #生產數量
+       sfaa013 LIKE sfaa_t.sfaa013, #生產單位
+       sfaa014 LIKE sfaa_t.sfaa014, #BOM版本
+       sfaa015 LIKE sfaa_t.sfaa015, #BOM有效日期
+       sfaa016 LIKE sfaa_t.sfaa016, #製程編號
+       sfaa017 LIKE sfaa_t.sfaa017, #部門供應商
+       sfaa018 LIKE sfaa_t.sfaa018, #協作據點
+       sfaa019 LIKE sfaa_t.sfaa019, #預計開工日
+       sfaa020 LIKE sfaa_t.sfaa020, #預計完工日
+       sfaa021 LIKE sfaa_t.sfaa021, #母工單單號
+       sfaa022 LIKE sfaa_t.sfaa022, #參考原始單號
+       sfaa023 LIKE sfaa_t.sfaa023, #參考原始項次
+       sfaa024 LIKE sfaa_t.sfaa024, #參考原始項序
+       sfaa025 LIKE sfaa_t.sfaa025, #前工單單號
+       sfaa026 LIKE sfaa_t.sfaa026, #料表批號(PBI)
+       sfaa027 LIKE sfaa_t.sfaa027, #No Use
+       sfaa028 LIKE sfaa_t.sfaa028, #專案編號
+       sfaa029 LIKE sfaa_t.sfaa029, #WBS
+       sfaa030 LIKE sfaa_t.sfaa030, #活動
+       sfaa031 LIKE sfaa_t.sfaa031, #理由碼
+       sfaa032 LIKE sfaa_t.sfaa032, #緊急比率
+       sfaa033 LIKE sfaa_t.sfaa033, #優先順序
+       sfaa034 LIKE sfaa_t.sfaa034, #預計入庫庫位
+       sfaa035 LIKE sfaa_t.sfaa035, #預計入庫儲位
+       sfaa036 LIKE sfaa_t.sfaa036, #手冊編號
+       sfaa037 LIKE sfaa_t.sfaa037, #保稅核准文號
+       sfaa038 LIKE sfaa_t.sfaa038, #保稅核銷
+       sfaa039 LIKE sfaa_t.sfaa039, #備料已產生
+       sfaa040 LIKE sfaa_t.sfaa040, #生產途程已確認
+       sfaa041 LIKE sfaa_t.sfaa041, #凍結
+       sfaa042 LIKE sfaa_t.sfaa042, #重工
+       sfaa043 LIKE sfaa_t.sfaa043, #備置
+       sfaa044 LIKE sfaa_t.sfaa044, #FQC
+       sfaa045 LIKE sfaa_t.sfaa045, #實際開始發料日
+       sfaa046 LIKE sfaa_t.sfaa046, #最後入庫日
+       sfaa047 LIKE sfaa_t.sfaa047, #生管結案日
+       sfaa048 LIKE sfaa_t.sfaa048, #成本結案日
+       sfaa049 LIKE sfaa_t.sfaa049, #已發料套數
+       sfaa050 LIKE sfaa_t.sfaa050, #已入庫合格量
+       sfaa051 LIKE sfaa_t.sfaa051, #已入庫不合格量
+       sfaa052 LIKE sfaa_t.sfaa052, #Bouns
+       sfaa053 LIKE sfaa_t.sfaa053, #工單轉入數量
+       sfaa054 LIKE sfaa_t.sfaa054, #工單轉出數量
+       sfaa055 LIKE sfaa_t.sfaa055, #下線數量
+       sfaa056 LIKE sfaa_t.sfaa056, #報廢數量
+       sfaa057 LIKE sfaa_t.sfaa057, #委外類型
+       sfaa058 LIKE sfaa_t.sfaa058, #參考數量
+       sfaa059 LIKE sfaa_t.sfaa059, #預計入庫批號
+       sfaa060 LIKE sfaa_t.sfaa060, #參考單位
+       sfaa061 LIKE sfaa_t.sfaa061, #製程
+       sfaa062 LIKE sfaa_t.sfaa062, #納入APS計算
+       sfaa063 LIKE sfaa_t.sfaa063, #來源分批序
+       sfaa064 LIKE sfaa_t.sfaa064, #參考原始分批序
+       sfaa065 LIKE sfaa_t.sfaa065, #生管結案狀態
+       sfaa066 LIKE sfaa_t.sfaa066, #多角流程編號
+       sfaa067 LIKE sfaa_t.sfaa067, #多角流程式號
+       sfaa068 LIKE sfaa_t.sfaa068, #成本中心
+       sfaa069 LIKE sfaa_t.sfaa069, #可供給量
+       sfaa070 LIKE sfaa_t.sfaa070, #原始預計完工日期
+       sfaa071 LIKE sfaa_t.sfaa071, #齊料套數
+       sfaa072 LIKE sfaa_t.sfaa072  #保稅否
+END RECORD
+#mod--161109-00085#15 By 08993--(e)
+#mod--161109-00085#15 By 08993--(s)
+#DEFINE l_sfka            RECORD LIKE sfka_t.*   #mark--161109-00085#15 By 08993--(s)
+DEFINE l_sfka RECORD  #工單變更單單頭檔
+       sfkaent LIKE sfka_t.sfkaent, #企業編號
+       sfkasite LIKE sfka_t.sfkasite, #營運據點
+       sfkadocno LIKE sfka_t.sfkadocno, #工單單號
+       sfkadocdt LIKE sfka_t.sfkadocdt, #開單日期
+       sfka001 LIKE sfka_t.sfka001, #變更版本
+       sfka002 LIKE sfka_t.sfka002, #生管人員
+       sfka003 LIKE sfka_t.sfka003, #工單類型
+       sfka004 LIKE sfka_t.sfka004, #發料制度
+       sfka005 LIKE sfka_t.sfka005, #工單來源
+       sfka006 LIKE sfka_t.sfka006, #來源單號
+       sfka007 LIKE sfka_t.sfka007, #來源項次
+       sfka008 LIKE sfka_t.sfka008, #來源項序
+       sfka009 LIKE sfka_t.sfka009, #參考客戶
+       sfka010 LIKE sfka_t.sfka010, #生產料號
+       sfka011 LIKE sfka_t.sfka011, #特性
+       sfka012 LIKE sfka_t.sfka012, #生產數量
+       sfka013 LIKE sfka_t.sfka013, #生產單位
+       sfka014 LIKE sfka_t.sfka014, #BOM版本
+       sfka015 LIKE sfka_t.sfka015, #BOM有效日期
+       sfka016 LIKE sfka_t.sfka016, #製程編號
+       sfka017 LIKE sfka_t.sfka017, #部門供應商
+       sfka018 LIKE sfka_t.sfka018, #協作據點
+       sfka019 LIKE sfka_t.sfka019, #預計開工日
+       sfka020 LIKE sfka_t.sfka020, #預計完工日
+       sfka021 LIKE sfka_t.sfka021, #母工單單號
+       sfka022 LIKE sfka_t.sfka022, #參考原始單號
+       sfka023 LIKE sfka_t.sfka023, #參考原始項次
+       sfka024 LIKE sfka_t.sfka024, #參考原始項序
+       sfka025 LIKE sfka_t.sfka025, #前工單單號
+       sfka026 LIKE sfka_t.sfka026, #料表批號(PBI)
+       sfka027 LIKE sfka_t.sfka027, #No Use
+       sfka028 LIKE sfka_t.sfka028, #專案編號
+       sfka029 LIKE sfka_t.sfka029, #WBS
+       sfka030 LIKE sfka_t.sfka030, #活動
+       sfka031 LIKE sfka_t.sfka031, #理由碼
+       sfka032 LIKE sfka_t.sfka032, #緊急比率
+       sfka033 LIKE sfka_t.sfka033, #優先順序
+       sfka034 LIKE sfka_t.sfka034, #預計入庫庫位
+       sfka035 LIKE sfka_t.sfka035, #預計入庫儲位
+       sfka036 LIKE sfka_t.sfka036, #手冊編號
+       sfka037 LIKE sfka_t.sfka037, #保稅核准文號
+       sfka038 LIKE sfka_t.sfka038, #保稅核銷
+       sfka039 LIKE sfka_t.sfka039, #備料已產生
+       sfka040 LIKE sfka_t.sfka040, #生產途程已確認
+       sfka041 LIKE sfka_t.sfka041, #凍結
+       sfka042 LIKE sfka_t.sfka042, #重工
+       sfka043 LIKE sfka_t.sfka043, #備置
+       sfka044 LIKE sfka_t.sfka044, #FQC
+       sfka045 LIKE sfka_t.sfka045, #實際開始發料日
+       sfka046 LIKE sfka_t.sfka046, #最後入庫日
+       sfka047 LIKE sfka_t.sfka047, #生管結案日
+       sfka048 LIKE sfka_t.sfka048, #成本結案日
+       sfka049 LIKE sfka_t.sfka049, #已發料套數
+       sfka050 LIKE sfka_t.sfka050, #已入庫合格量
+       sfka051 LIKE sfka_t.sfka051, #已入庫不合格量
+       sfka052 LIKE sfka_t.sfka052, #Bouns
+       sfka053 LIKE sfka_t.sfka053, #工單轉入數量
+       sfka054 LIKE sfka_t.sfka054, #工單轉出數量
+       sfka055 LIKE sfka_t.sfka055, #下線數量
+       sfka056 LIKE sfka_t.sfka056, #報廢數量
+       sfka057 LIKE sfka_t.sfka057, #委外類型
+       sfka058 LIKE sfka_t.sfka058, #參考數量
+       sfka059 LIKE sfka_t.sfka059, #預計入庫批號
+       sfka060 LIKE sfka_t.sfka060, #參考單位
+       sfka061 LIKE sfka_t.sfka061, #製程
+       sfka062 LIKE sfka_t.sfka062, #納入MRP/MPS計算
+       sfka900 LIKE sfka_t.sfka900, #變更序
+       sfka901 LIKE sfka_t.sfka901, #變更類型
+       sfka902 LIKE sfka_t.sfka902, #變更日期
+       sfka905 LIKE sfka_t.sfka905, #變更理由
+       sfka906 LIKE sfka_t.sfka906, #變更備註
+       sfkaownid LIKE sfka_t.sfkaownid, #資料所有者
+       sfkaowndp LIKE sfka_t.sfkaowndp, #資料所屬部門
+       sfkacrtid LIKE sfka_t.sfkacrtid, #資料建立者
+       sfkacrtdp LIKE sfka_t.sfkacrtdp, #資料建立部門
+       sfkacrtdt LIKE sfka_t.sfkacrtdt, #資料創建日
+       sfkamodid LIKE sfka_t.sfkamodid, #資料修改者
+       sfkamoddt LIKE sfka_t.sfkamoddt, #最近修改日
+       sfkacnfid LIKE sfka_t.sfkacnfid, #資料確認者
+       sfkacnfdt LIKE sfka_t.sfkacnfdt, #資料確認日
+       sfkapstid LIKE sfka_t.sfkapstid, #資料過帳者
+       sfkapstdt LIKE sfka_t.sfkapstdt, #資料過帳日
+       sfkastus LIKE sfka_t.sfkastus, #狀態碼
+       sfkaacti LIKE sfka_t.sfkaacti, #工單結案
+       sfka063 LIKE sfka_t.sfka063, #來源分批序
+       sfka064 LIKE sfka_t.sfka064, #參考來源分批序
+       sfka065 LIKE sfka_t.sfka065, #生管結案狀態
+       #161109-00085#61 --s add
+       sfkaud001 LIKE sfka_t.sfkaud001, #自定義欄位(文字)001
+       sfkaud002 LIKE sfka_t.sfkaud002, #自定義欄位(文字)002
+       sfkaud003 LIKE sfka_t.sfkaud003, #自定義欄位(文字)003
+       sfkaud004 LIKE sfka_t.sfkaud004, #自定義欄位(文字)004
+       sfkaud005 LIKE sfka_t.sfkaud005, #自定義欄位(文字)005
+       sfkaud006 LIKE sfka_t.sfkaud006, #自定義欄位(文字)006
+       sfkaud007 LIKE sfka_t.sfkaud007, #自定義欄位(文字)007
+       sfkaud008 LIKE sfka_t.sfkaud008, #自定義欄位(文字)008
+       sfkaud009 LIKE sfka_t.sfkaud009, #自定義欄位(文字)009
+       sfkaud010 LIKE sfka_t.sfkaud010, #自定義欄位(文字)010
+       sfkaud011 LIKE sfka_t.sfkaud011, #自定義欄位(數字)011
+       sfkaud012 LIKE sfka_t.sfkaud012, #自定義欄位(數字)012
+       sfkaud013 LIKE sfka_t.sfkaud013, #自定義欄位(數字)013
+       sfkaud014 LIKE sfka_t.sfkaud014, #自定義欄位(數字)014
+       sfkaud015 LIKE sfka_t.sfkaud015, #自定義欄位(數字)015
+       sfkaud016 LIKE sfka_t.sfkaud016, #自定義欄位(數字)016
+       sfkaud017 LIKE sfka_t.sfkaud017, #自定義欄位(數字)017
+       sfkaud018 LIKE sfka_t.sfkaud018, #自定義欄位(數字)018
+       sfkaud019 LIKE sfka_t.sfkaud019, #自定義欄位(數字)019
+       sfkaud020 LIKE sfka_t.sfkaud020, #自定義欄位(數字)020
+       sfkaud021 LIKE sfka_t.sfkaud021, #自定義欄位(日期時間)021
+       sfkaud022 LIKE sfka_t.sfkaud022, #自定義欄位(日期時間)022
+       sfkaud023 LIKE sfka_t.sfkaud023, #自定義欄位(日期時間)023
+       sfkaud024 LIKE sfka_t.sfkaud024, #自定義欄位(日期時間)024
+       sfkaud025 LIKE sfka_t.sfkaud025, #自定義欄位(日期時間)025
+       sfkaud026 LIKE sfka_t.sfkaud026, #自定義欄位(日期時間)026
+       sfkaud027 LIKE sfka_t.sfkaud027, #自定義欄位(日期時間)027
+       sfkaud028 LIKE sfka_t.sfkaud028, #自定義欄位(日期時間)028
+       sfkaud029 LIKE sfka_t.sfkaud029, #自定義欄位(日期時間)029
+       sfkaud030 LIKE sfka_t.sfkaud030, #自定義欄位(日期時間)030
+       #161109-00085#61 --e add
+       sfka066 LIKE sfka_t.sfka066, #多角流程編號
+       sfka067 LIKE sfka_t.sfka067, #多角流程式號
+       sfka068 LIKE sfka_t.sfka068, #成本中心
+       sfka069 LIKE sfka_t.sfka069, #可供給量
+       sfka070 LIKE sfka_t.sfka070, #原始預計完工日期
+       sfka071 LIKE sfka_t.sfka071, #齊料套數
+       sfka072 LIKE sfka_t.sfka072  #保稅否
+END RECORD
+#mod--161109-00085#15 By 08993--(e)
+DEFINE l_current         DATETIME YEAR TO SECOND  #日期時間
+
+   LET r_success = TRUE
+   #mod--161109-00085#15 By 08993--(s)
+#   SELECT * INTO l_sfaa.* FROM sfaa_t   #mark--161109-00085#15 By 08993--(s) 
+   SELECT sfaaent,sfaaownid,sfaaowndp,sfaacrtid,sfaacrtdp,sfaacrtdt,sfaamodid,sfaamoddt,sfaacnfid,sfaacnfdt,sfaapstid,
+          sfaapstdt,sfaastus,sfaasite,sfaadocno,sfaadocdt,sfaa001,sfaa002,sfaa003,sfaa004,sfaa005,sfaa006,sfaa007,sfaa008,
+          sfaa009,sfaa010,sfaa011,sfaa012,sfaa013,sfaa014,sfaa015,sfaa016,sfaa017,sfaa018,sfaa019,sfaa020,sfaa021,sfaa022,
+          sfaa023,sfaa024,sfaa025,sfaa026,sfaa027,sfaa028,sfaa029,sfaa030,sfaa031,sfaa032,sfaa033,sfaa034,sfaa035,sfaa036,
+          sfaa037,sfaa038,sfaa039,sfaa040,sfaa041,sfaa042,sfaa043,sfaa044,sfaa045,sfaa046,sfaa047,sfaa048,sfaa049,sfaa050,
+          sfaa051,sfaa052,sfaa053,sfaa054,sfaa055,sfaa056,sfaa057,sfaa058,sfaa059,sfaa060,sfaa061,sfaa062,sfaa063,sfaa064,
+          sfaa065,sfaa066,sfaa067,sfaa068,sfaa069,sfaa070,sfaa071,sfaa072 
+      INTO l_sfaa.sfaaent,l_sfaa.sfaaownid,l_sfaa.sfaaowndp,l_sfaa.sfaacrtid,l_sfaa.sfaacrtdp,l_sfaa.sfaacrtdt,l_sfaa.sfaamodid,l_sfaa.sfaamoddt,l_sfaa.sfaacnfid,l_sfaa.sfaacnfdt,l_sfaa.sfaapstid,
+           l_sfaa.sfaapstdt,l_sfaa.sfaastus,l_sfaa.sfaasite,l_sfaa.sfaadocno,l_sfaa.sfaadocdt,l_sfaa.sfaa001,l_sfaa.sfaa002,l_sfaa.sfaa003,l_sfaa.sfaa004,l_sfaa.sfaa005,l_sfaa.sfaa006,l_sfaa.sfaa007,l_sfaa.sfaa008,
+           l_sfaa.sfaa009,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa012,l_sfaa.sfaa013,l_sfaa.sfaa014,l_sfaa.sfaa015,l_sfaa.sfaa016,l_sfaa.sfaa017,l_sfaa.sfaa018,l_sfaa.sfaa019,l_sfaa.sfaa020,l_sfaa.sfaa021,l_sfaa.sfaa022,
+           l_sfaa.sfaa023,l_sfaa.sfaa024,l_sfaa.sfaa025,l_sfaa.sfaa026,l_sfaa.sfaa027,l_sfaa.sfaa028,l_sfaa.sfaa029,l_sfaa.sfaa030,l_sfaa.sfaa031,l_sfaa.sfaa032,l_sfaa.sfaa033,l_sfaa.sfaa034,l_sfaa.sfaa035,l_sfaa.sfaa036,
+           l_sfaa.sfaa037,l_sfaa.sfaa038,l_sfaa.sfaa039,l_sfaa.sfaa040,l_sfaa.sfaa041,l_sfaa.sfaa042,l_sfaa.sfaa043,l_sfaa.sfaa044,l_sfaa.sfaa045,l_sfaa.sfaa046,l_sfaa.sfaa047,l_sfaa.sfaa048,l_sfaa.sfaa049,l_sfaa.sfaa050,
+           l_sfaa.sfaa051,l_sfaa.sfaa052,l_sfaa.sfaa053,l_sfaa.sfaa054,l_sfaa.sfaa055,l_sfaa.sfaa056,l_sfaa.sfaa057,l_sfaa.sfaa058,l_sfaa.sfaa059,l_sfaa.sfaa060,l_sfaa.sfaa061,l_sfaa.sfaa062,l_sfaa.sfaa063,l_sfaa.sfaa064,
+           l_sfaa.sfaa065,l_sfaa.sfaa066,l_sfaa.sfaa067,l_sfaa.sfaa068,l_sfaa.sfaa069,l_sfaa.sfaa070,l_sfaa.sfaa071,l_sfaa.sfaa072 
+      FROM sfaa_t
+   #mod--161109-00085#15 By 08993--(e)
+    WHERE sfaaent = g_enterprise
+      AND sfaadocno = g_detail_d[l_ac].sfaadocno
+   
+   LET l_sfka.sfkaent = g_enterprise
+   LET l_sfka.sfkasite = g_site
+   LET l_sfka.sfkadocno = l_sfaa.sfaadocno
+   LET l_sfka.sfkadocdt = l_sfaa.sfaadocdt
+   LET l_sfka.sfka001 = l_sfaa.sfaa001 + 1   #版本 = 目前[T:工單單頭檔].[C:版本]加1
+   SELECT MAX(sfka900)+1 INTO l_sfka.sfka900 
+     FROM sfka_t
+    WHERE sfkaent = g_enterprise
+      AND sfkadocno = l_sfka.sfkadocno
+   IF cl_null(l_sfka.sfka900) THEN
+      LET l_sfka.sfka900 = 1
+   END IF
+   LET g_sfka900 = l_sfka.sfka900
+   LET l_sfka.sfka901 = 'N'
+   LET l_sfka.sfka002 = l_sfaa.sfaa002
+   LET l_sfka.sfka003 = l_sfaa.sfaa003
+   LET l_sfka.sfka004 = l_sfaa.sfaa004
+   LET l_sfka.sfka005 = l_sfaa.sfaa005
+   LET l_sfka.sfka006 = l_sfaa.sfaa006
+   LET l_sfka.sfka007 = l_sfaa.sfaa007
+   LET l_sfka.sfka008 = l_sfaa.sfaa008
+   LET l_sfka.sfka009 = l_sfaa.sfaa009
+   LET l_sfka.sfka010 = l_sfaa.sfaa010
+   LET l_sfka.sfka011 = l_sfaa.sfaa011
+   #生產數量=畫面上的建議生產數量
+   LET l_sfka.sfka012 = g_detail_d[l_ac].psos036
+   IF l_sfaa.sfaa012 <> l_sfka.sfka012 THEN
+      LET l_sfka.sfka901 = 'Y'
+      
+      CALL s_asft800_ins_sfkh(l_sfka.sfkadocno,0,0,g_sfka900,'sfaa012','1',l_sfaa.sfaa012,l_sfka.sfka012,'')
+           RETURNING r_success
+      IF NOT r_success THEN
+         RETURN r_success
+      END IF
+      
+      LET g_change_qty = TRUE
+   END IF
+   
+   LET l_sfka.sfka013 = l_sfaa.sfaa013
+   LET l_sfka.sfka014 = l_sfaa.sfaa014
+   LET l_sfka.sfka015 = l_sfaa.sfaa015
+   LET l_sfka.sfka016 = l_sfaa.sfaa016
+   LET l_sfka.sfka017 = l_sfaa.sfaa017
+   LET l_sfka.sfka018 = l_sfaa.sfaa018
+   #mod--160414-00020#1 By shiun--(S)
+#   LET l_sfka.sfka019 = l_sfaa.sfaa019
+   LET l_sfka.sfka019 = g_detail_d[l_ac].psos012
+   IF l_sfaa.sfaa019 <> l_sfka.sfka019 THEN
+      LET l_sfka.sfka901 = 'Y'
+      
+      CALL s_asft800_ins_sfkh(l_sfka.sfkadocno,0,0,g_sfka900,'sfaa019','1',l_sfaa.sfaa019,l_sfka.sfka019,'')
+           RETURNING r_success
+      IF NOT r_success THEN
+         RETURN r_success
+      END IF
+      
+      LET g_change_qty = TRUE
+   END IF
+   #mod--160414-00020#1 By shiun--(E)
+   #預計完工日=畫面上的建議完工日
+   LET l_sfka.sfka020 = g_detail_d[l_ac].psos011
+   IF l_sfaa.sfaa020 <> l_sfka.sfka020 THEN
+      LET l_sfka.sfka901 = 'Y'
+      CALL s_asft800_ins_sfkh(l_sfka.sfkadocno,0,0,g_sfka900,'sfaa020','1',l_sfaa.sfaa020,l_sfka.sfka020,'')
+           RETURNING r_success
+      IF NOT r_success THEN
+         RETURN r_success
+      END IF
+   END IF
+   
+   LET l_sfka.sfka021 = l_sfaa.sfaa021
+   LET l_sfka.sfka022 = l_sfaa.sfaa022
+   LET l_sfka.sfka023 = l_sfaa.sfaa023
+   LET l_sfka.sfka024 = l_sfaa.sfaa024
+   LET l_sfka.sfka025 = l_sfaa.sfaa025
+   LET l_sfka.sfka026 = l_sfaa.sfaa026
+   LET l_sfka.sfka027 = l_sfaa.sfaa027
+   LET l_sfka.sfka028 = l_sfaa.sfaa028
+   LET l_sfka.sfka029 = l_sfaa.sfaa029
+   LET l_sfka.sfka030 = l_sfaa.sfaa030
+   LET l_sfka.sfka031 = l_sfaa.sfaa031
+   LET l_sfka.sfka032 = l_sfaa.sfaa032
+   LET l_sfka.sfka033 = l_sfaa.sfaa033
+   LET l_sfka.sfka034 = l_sfaa.sfaa034
+   LET l_sfka.sfka035 = l_sfaa.sfaa035
+   LET l_sfka.sfka036 = l_sfaa.sfaa036
+   LET l_sfka.sfka037 = l_sfaa.sfaa037
+   LET l_sfka.sfka038 = l_sfaa.sfaa038
+   LET l_sfka.sfka039 = l_sfaa.sfaa039
+   LET l_sfka.sfka040 = l_sfaa.sfaa040
+   LET l_sfka.sfka041 = l_sfaa.sfaa041
+   LET l_sfka.sfka042 = l_sfaa.sfaa042
+   LET l_sfka.sfka043 = l_sfaa.sfaa043
+   LET l_sfka.sfka044 = l_sfaa.sfaa044
+   LET l_sfka.sfka045 = l_sfaa.sfaa045
+   LET l_sfka.sfka046 = l_sfaa.sfaa046
+   LET l_sfka.sfka047 = l_sfaa.sfaa047
+   LET l_sfka.sfka048 = l_sfaa.sfaa048
+   LET l_sfka.sfka049 = l_sfaa.sfaa049
+   LET l_sfka.sfka050 = l_sfaa.sfaa050
+   LET l_sfka.sfka051 = l_sfaa.sfaa051
+   LET l_sfka.sfka052 = l_sfaa.sfaa052
+   LET l_sfka.sfka053 = l_sfaa.sfaa053
+   LET l_sfka.sfka054 = l_sfaa.sfaa054
+   LET l_sfka.sfka055 = l_sfaa.sfaa055
+   LET l_sfka.sfka056 = l_sfaa.sfaa056
+   LET l_sfka.sfka057 = l_sfaa.sfaa057
+   LET l_sfka.sfka058 = l_sfaa.sfaa058
+   LET l_sfka.sfka059 = l_sfaa.sfaa059
+   LET l_sfka.sfka060 = l_sfaa.sfaa060
+   LET l_sfka.sfka061 = l_sfaa.sfaa061
+   LET l_sfka.sfka062 = l_sfaa.sfaa062
+   LET l_sfka.sfka063 = l_sfaa.sfaa063
+   LET l_sfka.sfka064 = l_sfaa.sfaa064
+   LET l_sfka.sfka065 = l_sfaa.sfaa065
+   LET l_sfka.sfka902 = g_today
+   LET l_sfka.sfkaownid =  g_user
+   LET l_sfka.sfkaowndp =  g_dept
+   LET l_sfka.sfkacrtid =  g_user
+   LET l_sfka.sfkacrtdp =  g_dept 
+   LET l_sfka.sfkacrtdt =  ""
+   LET l_sfka.sfkamodid =  g_user
+   LET l_sfka.sfkamoddt =  ""
+   LET l_sfka.sfkacnfid =  ""
+   LET l_sfka.sfkacnfdt =  ""
+   LET l_sfka.sfkapstid =  ""
+   LET l_sfka.sfkapstdt =  ""
+   LET l_sfka.sfkastus  =  "N"
+   LET l_sfka.sfkaacti  =  "N"
+   
+   LET l_current = cl_get_current()
+
+   INSERT INTO sfka_t
+      (sfkaent,sfkasite,sfkadocno,sfka900,sfka901,sfka902,
+       sfka001,sfka002,sfka003,sfka004,sfka005,sfka006,sfka007,sfka008,sfka009,sfka010,
+       sfka011,sfka012,sfka013,sfka014,sfka015,sfka016,sfka017,sfka018,sfka019,sfka020,
+       sfka021,sfka022,sfka023,sfka024,sfka025,sfka026,sfka027,sfka028,sfka029,sfka030,
+       sfka031,sfka032,sfka033,sfka034,sfka035,sfka036,sfka037,sfka038,sfka039,sfka040,
+       sfka041,sfka042,sfka043,sfka044,sfka045,sfka046,sfka047,sfka048,sfka049,sfka050,
+       sfka051,sfka052,sfka053,sfka054,sfka055,sfka056,sfka057,sfka058,sfka059,sfka060,
+       sfka061,sfka062,sfka063,sfka064,sfka065,
+       sfkadocdt,sfkastus,sfkaacti,
+       sfkaownid,sfkaowndp,sfkacrtid,sfkacrtdp,sfkacrtdt,sfkamodid,sfkamoddt,
+       sfkacnfid,sfkacnfdt,sfkapstid,sfkapstdt)
+      VALUES
+      (l_sfka.sfkaent,l_sfka.sfkasite,l_sfka.sfkadocno,l_sfka.sfka900,l_sfka.sfka901,l_sfka.sfka902,
+       l_sfka.sfka001,l_sfka.sfka002,l_sfka.sfka003,l_sfka.sfka004,l_sfka.sfka005,
+       l_sfka.sfka006,l_sfka.sfka007,l_sfka.sfka008,l_sfka.sfka009,l_sfka.sfka010,
+       l_sfka.sfka011,l_sfka.sfka012,l_sfka.sfka013,l_sfka.sfka014,l_sfka.sfka015,
+       l_sfka.sfka016,l_sfka.sfka017,l_sfka.sfka018,l_sfka.sfka019,l_sfka.sfka020,
+       l_sfka.sfka021,l_sfka.sfka022,l_sfka.sfka023,l_sfka.sfka024,l_sfka.sfka025,
+       l_sfka.sfka026,l_sfka.sfka027,l_sfka.sfka028,l_sfka.sfka029,l_sfka.sfka030,
+       l_sfka.sfka031,l_sfka.sfka032,l_sfka.sfka033,l_sfka.sfka034,l_sfka.sfka035,
+       l_sfka.sfka036,l_sfka.sfka037,l_sfka.sfka038,l_sfka.sfka039,l_sfka.sfka040,
+       l_sfka.sfka041,l_sfka.sfka042,l_sfka.sfka043,l_sfka.sfka044,l_sfka.sfka045,
+       l_sfka.sfka046,l_sfka.sfka047,l_sfka.sfka048,l_sfka.sfka049,l_sfka.sfka050,
+       l_sfka.sfka051,l_sfka.sfka052,l_sfka.sfka053,l_sfka.sfka054,l_sfka.sfka055,
+       l_sfka.sfka056,l_sfka.sfka057,l_sfka.sfka058,l_sfka.sfka059,l_sfka.sfka060,
+       l_sfka.sfka061,l_sfka.sfka062,l_sfka.sfka063,l_sfka.sfka064,l_sfka.sfka065,
+       l_sfka.sfkadocdt,l_sfka.sfkastus,l_sfka.sfkaacti,
+       l_sfka.sfkaownid,l_sfka.sfkaowndp,l_sfka.sfkacrtid,l_sfka.sfkacrtdp,l_current,
+       l_sfka.sfkamodid,l_current,
+       l_sfka.sfkacnfid,l_sfka.sfkacnfdt,l_sfka.sfkapstid,l_sfka.sfkapstdt)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam.* TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'ins sfka_t'
+      LET g_errparam.coll_vals[1] = l_sfka.sfkadocno
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生工單變更單工單來源資料
+# Memo...........:
+# Usage..........: CALL apsp630_asft800_gen_sfkb()
+#                  RETURNING r_success
+# Input parameter: 
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/05/27 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_asft800_gen_sfkb()
+DEFINE r_success              LIKE type_t.num5
+#mod--161109-00085#15 By 08993--(s)
+#DEFINE l_sfab                 RECORD LIKE sfab_t.*   #mark--161109-00085#15 By 08993--(s)
+DEFINE l_sfab                 RECORD  #工單來源檔
+       sfabent LIKE sfab_t.sfabent, #企業編號
+       sfabsite LIKE sfab_t.sfabsite, #營運據點
+       sfabdocno LIKE sfab_t.sfabdocno, #單號
+       sfab001 LIKE sfab_t.sfab001, #來源
+       sfab002 LIKE sfab_t.sfab002, #來源單號
+       sfab003 LIKE sfab_t.sfab003, #來源項次
+       sfab004 LIKE sfab_t.sfab004, #來源項序
+       sfab005 LIKE sfab_t.sfab005, #分批序
+       sfab006 LIKE sfab_t.sfab006, #分配優先序
+       sfab007 LIKE sfab_t.sfab007, #本次轉開工單量
+       sfabseq LIKE sfab_t.sfabseq  #項次 
+          END RECORD
+#mod--161109-00085#15 By 08993--(e)
+
+#mod--161109-00085#15 By 08993--(s)
+#DEFINE l_sfkb                 RECORD LIKE sfkb_t.*   #mark--161109-00085#15 By 08993--(s)
+DEFINE l_sfkb                 RECORD  #工單變更單來源檔
+       sfkbent LIKE sfkb_t.sfkbent, #企業編號
+       sfkbsite LIKE sfkb_t.sfkbsite, #營運據點
+       sfkbdocno LIKE sfkb_t.sfkbdocno, #工單單號
+       sfkbseq LIKE sfkb_t.sfkbseq, #項次
+       sfkb001 LIKE sfkb_t.sfkb001, #來源
+       sfkb002 LIKE sfkb_t.sfkb002, #來源單號
+       sfkb003 LIKE sfkb_t.sfkb003, #來源項次
+       sfkb004 LIKE sfkb_t.sfkb004, #來源項序
+       sfkb005 LIKE sfkb_t.sfkb005, #分批序
+       sfkb006 LIKE sfkb_t.sfkb006, #分配優先序
+       sfkb007 LIKE sfkb_t.sfkb007, #本次轉開工單量
+       sfkb900 LIKE sfkb_t.sfkb900, #變更序
+       sfkb901 LIKE sfkb_t.sfkb901, #變更類型
+       sfkb902 LIKE sfkb_t.sfkb902, #變更日期
+       sfkb905 LIKE sfkb_t.sfkb905, #變更理由
+       sfkb906 LIKE sfkb_t.sfkb906  #變更備註 #161109-00085#61 mark  
+          END RECORD
+#mod--161109-00085#15 By 08993--(e)
+DEFINE l_msg                  LIKE type_t.chr100
+
+   LET r_success = TRUE
+   
+   DECLARE asft800_gen_sfkb_cs CURSOR FOR
+    #mod--161109-00085#15 By 08993--(s)   
+#    SELECT * FROM sfab_t   #mark--161109-00085#15 By 08993--(s)
+    SELECT sfabent,sfabsite,sfabdocno,sfab001,sfab002,sfab003,sfab004,sfab005,sfab006,sfab007,sfabseq 
+     FROM sfab_t
+    #mod--161109-00085#15 By 08993--(e)
+     WHERE sfabent = g_enterprise 
+       AND sfabdocno = g_detail_d[l_ac].sfaadocno
+   
+   #mod--161109-00085#15 By 08993--(s)   
+#   FOREACH asft800_gen_sfkb_cs INTO l_sfab.*   #mark--161109-00085#15 By 08993--(s)
+   FOREACH asft800_gen_sfkb_cs INTO l_sfab.sfabent,l_sfab.sfabsite,l_sfab.sfabdocno,l_sfab.sfab001,l_sfab.sfab002,
+                                    l_sfab.sfab003,l_sfab.sfab004,l_sfab.sfab005,l_sfab.sfab006,l_sfab.sfab007,l_sfab.sfabseq
+   #mod--161109-00085#15 By 08993--(e)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      LET l_sfkb.sfkbent = g_enterprise 
+      LET l_sfkb.sfkbsite = g_site
+      LET l_sfkb.sfkbdocno = l_sfab.sfabdocno
+      LET l_sfkb.sfkbseq = l_sfab.sfabseq
+      LET l_sfkb.sfkb001 = l_sfab.sfab001
+      LET l_sfkb.sfkb002 = l_sfab.sfab002
+      LET l_sfkb.sfkb003 = l_sfab.sfab003
+      LET l_sfkb.sfkb004 = l_sfab.sfab004
+      LET l_sfkb.sfkb005 = l_sfab.sfab005
+      LET l_sfkb.sfkb006 = l_sfab.sfab006
+      LET l_sfkb.sfkb007 = l_sfab.sfab007
+      LET l_sfkb.sfkb900 = g_sfka900
+      LET l_sfkb.sfkb901 = '1'
+      
+      INSERT INTO sfkb_t 
+         (sfkbent,sfkbsite,sfkbdocno,sfkb900,sfkb901,sfkbseq,
+          sfkb001,sfkb002,sfkb003,sfkb004,sfkb005,sfkb006,sfkb007)
+         VALUES
+         (l_sfkb.sfkbent,l_sfkb.sfkbsite,l_sfkb.sfkbdocno,l_sfkb.sfkb900,l_sfkb.sfkb901,
+          l_sfkb.sfkbseq,
+          l_sfkb.sfkb001,l_sfkb.sfkb002,l_sfkb.sfkb003,l_sfkb.sfkb004,l_sfkb.sfkb005,
+          l_sfkb.sfkb006,l_sfkb.sfkb007)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfkb_t'
+         LET g_errparam.coll_vals[1] = l_sfkb.sfkbdocno
+         LET g_errparam.coll_vals[2] = l_sfkb.sfkbseq
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE l_sfab.* TO NULL   
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生工單變更單生產料號明細資料
+# Memo...........:
+# Usage..........: CALL apsp630_asft800_gen_sfkc()
+#                  RETURNING r_success
+# Input parameter: 
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/05/27 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_asft800_gen_sfkc()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_tmp             type_g_detail2_d
+#mod--161109-00085#15 By 08993--(s)
+#DEFINE l_sfac            RECORD LIKE sfac_t.*   #mark--161109-00085#15 By 08993--(s)
+DEFINE l_sfac            RECORD  #工單聯產品檔
+       sfacent LIKE sfac_t.sfacent, #企業編號
+       sfacsite LIKE sfac_t.sfacsite, #營運據點
+       sfacdocno LIKE sfac_t.sfacdocno, #單號
+       sfac001 LIKE sfac_t.sfac001, #料件編號
+       sfac002 LIKE sfac_t.sfac002, #類型
+       sfac003 LIKE sfac_t.sfac003, #預計產出量
+       sfac004 LIKE sfac_t.sfac004, #單位
+       sfac005 LIKE sfac_t.sfac005, #實際產出數量
+       sfacseq LIKE sfac_t.sfacseq, #項次
+       sfac006 LIKE sfac_t.sfac006, #產品特徵
+       #161109-00085#61 --s add
+       sfacud001 LIKE sfac_t.sfacud001, #自定義欄位(文字)001
+       sfacud002 LIKE sfac_t.sfacud002, #自定義欄位(文字)002
+       sfacud003 LIKE sfac_t.sfacud003, #自定義欄位(文字)003
+       sfacud004 LIKE sfac_t.sfacud004, #自定義欄位(文字)004
+       sfacud005 LIKE sfac_t.sfacud005, #自定義欄位(文字)005
+       sfacud006 LIKE sfac_t.sfacud006, #自定義欄位(文字)006
+       sfacud007 LIKE sfac_t.sfacud007, #自定義欄位(文字)007
+       sfacud008 LIKE sfac_t.sfacud008, #自定義欄位(文字)008
+       sfacud009 LIKE sfac_t.sfacud009, #自定義欄位(文字)009
+       sfacud010 LIKE sfac_t.sfacud010, #自定義欄位(文字)010
+       sfacud011 LIKE sfac_t.sfacud011, #自定義欄位(數字)011
+       sfacud012 LIKE sfac_t.sfacud012, #自定義欄位(數字)012
+       sfacud013 LIKE sfac_t.sfacud013, #自定義欄位(數字)013
+       sfacud014 LIKE sfac_t.sfacud014, #自定義欄位(數字)014
+       sfacud015 LIKE sfac_t.sfacud015, #自定義欄位(數字)015
+       sfacud016 LIKE sfac_t.sfacud016, #自定義欄位(數字)016
+       sfacud017 LIKE sfac_t.sfacud017, #自定義欄位(數字)017
+       sfacud018 LIKE sfac_t.sfacud018, #自定義欄位(數字)018
+       sfacud019 LIKE sfac_t.sfacud019, #自定義欄位(數字)019
+       sfacud020 LIKE sfac_t.sfacud020, #自定義欄位(數字)020
+       sfacud021 LIKE sfac_t.sfacud021, #自定義欄位(日期時間)021
+       sfacud022 LIKE sfac_t.sfacud022, #自定義欄位(日期時間)022
+       sfacud023 LIKE sfac_t.sfacud023, #自定義欄位(日期時間)023
+       sfacud024 LIKE sfac_t.sfacud024, #自定義欄位(日期時間)024
+       sfacud025 LIKE sfac_t.sfacud025, #自定義欄位(日期時間)025
+       sfacud026 LIKE sfac_t.sfacud026, #自定義欄位(日期時間)026
+       sfacud027 LIKE sfac_t.sfacud027, #自定義欄位(日期時間)027
+       sfacud028 LIKE sfac_t.sfacud028, #自定義欄位(日期時間)028
+       sfacud029 LIKE sfac_t.sfacud029, #自定義欄位(日期時間)029
+       sfacud030 LIKE sfac_t.sfacud030, #自定義欄位(日期時間)030
+       #161109-00085#61 --e add
+       sfac007 LIKE sfac_t.sfac007  #保稅否
+          END RECORD
+#mod--161109-00085#15 By 08993--(e)
+
+#mod--161109-00085#15 By 08993--(s)
+#DEFINE l_sfkc            RECORD LIKE sfkc_t.*   #mark--161109-00085#15 By 08993--(s)
+DEFINE l_sfkc            RECORD  #工單變更單聯產品檔
+       sfkcent LIKE sfkc_t.sfkcent, #企業編號
+       sfkcsite LIKE sfkc_t.sfkcsite, #營運據點
+       sfkcdocno LIKE sfkc_t.sfkcdocno, #工單單號
+       sfkcseq LIKE sfkc_t.sfkcseq, #項次
+       sfkc001 LIKE sfkc_t.sfkc001, #料件編號
+       sfkc002 LIKE sfkc_t.sfkc002, #類型
+       sfkc003 LIKE sfkc_t.sfkc003, #預計產出量
+       sfkc004 LIKE sfkc_t.sfkc004, #單位
+       sfkc005 LIKE sfkc_t.sfkc005, #實際產出數量
+       sfkc900 LIKE sfkc_t.sfkc900, #變更序
+       sfkc901 LIKE sfkc_t.sfkc901, #變更類型
+       sfkc902 LIKE sfkc_t.sfkc902, #變更日期
+       sfkc006 LIKE sfkc_t.sfkc006, #產品特征
+       sfkc904 LIKE sfkc_t.sfkc904, #變更理由
+       sfkc905 LIKE sfkc_t.sfkc905, #變更備註
+       #161109-00085#61 --s add
+       sfkcud001 LIKE sfkc_t.sfkcud001, #自定義欄位(文字)001
+       sfkcud002 LIKE sfkc_t.sfkcud002, #自定義欄位(文字)002
+       sfkcud003 LIKE sfkc_t.sfkcud003, #自定義欄位(文字)003
+       sfkcud004 LIKE sfkc_t.sfkcud004, #自定義欄位(文字)004
+       sfkcud005 LIKE sfkc_t.sfkcud005, #自定義欄位(文字)005
+       sfkcud006 LIKE sfkc_t.sfkcud006, #自定義欄位(文字)006
+       sfkcud007 LIKE sfkc_t.sfkcud007, #自定義欄位(文字)007
+       sfkcud008 LIKE sfkc_t.sfkcud008, #自定義欄位(文字)008
+       sfkcud009 LIKE sfkc_t.sfkcud009, #自定義欄位(文字)009
+       sfkcud010 LIKE sfkc_t.sfkcud010, #自定義欄位(文字)010
+       sfkcud011 LIKE sfkc_t.sfkcud011, #自定義欄位(數字)011
+       sfkcud012 LIKE sfkc_t.sfkcud012, #自定義欄位(數字)012
+       sfkcud013 LIKE sfkc_t.sfkcud013, #自定義欄位(數字)013
+       sfkcud014 LIKE sfkc_t.sfkcud014, #自定義欄位(數字)014
+       sfkcud015 LIKE sfkc_t.sfkcud015, #自定義欄位(數字)015
+       sfkcud016 LIKE sfkc_t.sfkcud016, #自定義欄位(數字)016
+       sfkcud017 LIKE sfkc_t.sfkcud017, #自定義欄位(數字)017
+       sfkcud018 LIKE sfkc_t.sfkcud018, #自定義欄位(數字)018
+       sfkcud019 LIKE sfkc_t.sfkcud019, #自定義欄位(數字)019
+       sfkcud020 LIKE sfkc_t.sfkcud020, #自定義欄位(數字)020
+       sfkcud021 LIKE sfkc_t.sfkcud021, #自定義欄位(日期時間)021
+       sfkcud022 LIKE sfkc_t.sfkcud022, #自定義欄位(日期時間)022
+       sfkcud023 LIKE sfkc_t.sfkcud023, #自定義欄位(日期時間)023
+       sfkcud024 LIKE sfkc_t.sfkcud024, #自定義欄位(日期時間)024
+       sfkcud025 LIKE sfkc_t.sfkcud025, #自定義欄位(日期時間)025
+       sfkcud026 LIKE sfkc_t.sfkcud026, #自定義欄位(日期時間)026
+       sfkcud027 LIKE sfkc_t.sfkcud027, #自定義欄位(日期時間)027
+       sfkcud028 LIKE sfkc_t.sfkcud028, #自定義欄位(日期時間)028
+       sfkcud029 LIKE sfkc_t.sfkcud029, #自定義欄位(日期時間)029
+       sfkcud030 LIKE sfkc_t.sfkcud030, #自定義欄位(日期時間)030
+       #161109-00085#61 --e add
+       sfkc007 LIKE sfkc_t.sfkc007  #保稅否
+          END RECORD
+#mod--161109-00085#15 By 08993--(e)
+DEFINE l_msg             LIKE type_t.chr100
+
+   LET r_success = TRUE
+
+   DECLARE asft800_gen_sfkc_cs CURSOR FOR 
+    SELECT sfacseq,sfac001,sfac002,sfac003,sfac006,psox012
+      FROM apsp630_tmp
+     WHERE sfacdocno = g_detail_d[l_ac].sfaadocno
+       
+   FOREACH asft800_gen_sfkc_cs INTO l_tmp.sfacseq,l_tmp.sfac001,l_tmp.sfac002,l_tmp.sfac003,
+                                    l_tmp.sfac006,l_tmp.psox012
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH asft800_gen_sfkc_cs:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE l_sfkc.* TO NULL
+      LET l_sfkc.sfkcent = g_enterprise 
+      LET l_sfkc.sfkcsite = g_site
+      LET l_sfkc.sfkcdocno = g_detail_d[l_ac].sfaadocno
+      LET l_sfkc.sfkcseq = l_tmp.sfacseq
+      LET l_sfkc.sfkc001 = l_tmp.sfac001
+      LET l_sfkc.sfkc002 = l_tmp.sfac002
+      LET l_sfkc.sfkc003 = l_tmp.psox012
+      LET l_sfkc.sfkc006 = l_tmp.sfac006
+      
+      INITIALIZE l_sfac.* TO NULL
+      SELECT sfac004,sfac005 
+        INTO l_sfac.sfac004,l_sfac.sfac005
+        FROM sfac_t
+       WHERE sfacent = g_enterprise
+         AND sfacdocno = g_detail_d[l_ac].sfaadocno
+         AND sfacseq = l_tmp.sfacseq
+      IF STATUS = 100 THEN
+         LET l_sfkc.sfkc901 = '3'
+         
+         CALL s_asft800_ins_sfkh(l_sfkc.sfkcdocno,l_sfkc.sfkcseq,0,g_sfka900,'sfac003','5',l_tmp.sfac003,l_sfkc.sfkc003,'')
+              RETURNING r_success
+         IF NOT r_success THEN
+            RETURN r_success
+         END IF
+         
+         SELECT imae081 INTO l_sfac.sfac004 FROM imae_t
+          WHERE imaeent = g_enterprise
+            AND imaesite= g_site
+            AND imae001 = l_tmp.sfac001
+         IF cl_null(l_sfac.sfac004) THEN
+            SELECT imaa006 INTO l_sfac.sfac004 FROM imaa_t
+             WHERE imaaent = g_enterprise
+               AND imaa001 = l_tmp.sfac001
+         END IF
+         
+         LET l_sfac.sfac005 = 0
+      ELSE
+         IF l_tmp.sfac003 = l_tmp.psox012 THEN
+            LET l_sfkc.sfkc901 = '1'
+         ELSE
+            LET l_sfkc.sfkc901 = '2'
+            
+            CALL s_asft800_ins_sfkh(l_sfkc.sfkcdocno,l_sfkc.sfkcseq,0,g_sfka900,'sfac003','4',l_tmp.sfac003,l_sfkc.sfkc003,'')
+                 RETURNING r_success
+            IF NOT r_success THEN
+               RETURN r_success
+            END IF
+         END IF
+      END IF
+      
+      LET l_sfkc.sfkc004 = l_sfac.sfac004
+      LET l_sfkc.sfkc005 = l_sfac.sfac005
+      
+      LET l_sfkc.sfkc900 = g_sfka900
+      
+      INSERT INTO sfkc_t
+         (sfkcent,sfkcsite,sfkcdocno,sfkc900,sfkc901,sfkcseq,
+          sfkc001,sfkc002,sfkc003,sfkc004,sfkc005,sfkc006)
+         VALUES
+         (l_sfkc.sfkcent,l_sfkc.sfkcsite,l_sfkc.sfkcdocno,l_sfkc.sfkc900,l_sfkc.sfkc901,
+          l_sfkc.sfkcseq,
+          l_sfkc.sfkc001,l_sfkc.sfkc002,l_sfkc.sfkc003,l_sfkc.sfkc004,l_sfkc.sfkc005,
+          l_sfkc.sfkc006)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfkc_t'
+         LET g_errparam.coll_vals[1] = l_sfkc.sfkcdocno
+         LET g_errparam.coll_vals[2] = l_sfkc.sfkcseq
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE l_sfac.* TO NULL 
+   END FOREACH
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生工單變更單商品序號資料
+# Memo...........:
+# Usage..........: CALL apsp630_asft800_gen_sfkf()
+#                  RETURNING r_success
+# Input parameter: 
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/05/28 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_asft800_gen_sfkf()
+DEFINE r_success         LIKE type_t.num5
+#mod--161109-00085#15 By 08993--(s)
+#DEFINE l_sfaf            RECORD LIKE sfaf_t.*   #mark--161109-00085#15 By 08993--(s)
+
+DEFINE l_sfaf            RECORD  #工單產品序號檔
+       sfafent LIKE sfaf_t.sfafent, #企業編號
+       sfafsite LIKE sfaf_t.sfafsite, #營運據點
+       sfafdocno LIKE sfaf_t.sfafdocno, #單號
+       sfaf001 LIKE sfaf_t.sfaf001, #產品序號
+      #sfafseq LIKE sfaf_t.sfafseq   #項次 #161109-00085#61 mark
+       #161109-00085#61 --s add
+       sfafseq LIKE sfaf_t.sfafseq,  #項次
+       sfafud001 LIKE sfaf_t.sfafud001, #自定義欄位(文字)001
+       sfafud002 LIKE sfaf_t.sfafud002, #自定義欄位(文字)002
+       sfafud003 LIKE sfaf_t.sfafud003, #自定義欄位(文字)003
+       sfafud004 LIKE sfaf_t.sfafud004, #自定義欄位(文字)004
+       sfafud005 LIKE sfaf_t.sfafud005, #自定義欄位(文字)005
+       sfafud006 LIKE sfaf_t.sfafud006, #自定義欄位(文字)006
+       sfafud007 LIKE sfaf_t.sfafud007, #自定義欄位(文字)007
+       sfafud008 LIKE sfaf_t.sfafud008, #自定義欄位(文字)008
+       sfafud009 LIKE sfaf_t.sfafud009, #自定義欄位(文字)009
+       sfafud010 LIKE sfaf_t.sfafud010, #自定義欄位(文字)010
+       sfafud011 LIKE sfaf_t.sfafud011, #自定義欄位(數字)011
+       sfafud012 LIKE sfaf_t.sfafud012, #自定義欄位(數字)012
+       sfafud013 LIKE sfaf_t.sfafud013, #自定義欄位(數字)013
+       sfafud014 LIKE sfaf_t.sfafud014, #自定義欄位(數字)014
+       sfafud015 LIKE sfaf_t.sfafud015, #自定義欄位(數字)015
+       sfafud016 LIKE sfaf_t.sfafud016, #自定義欄位(數字)016
+       sfafud017 LIKE sfaf_t.sfafud017, #自定義欄位(數字)017
+       sfafud018 LIKE sfaf_t.sfafud018, #自定義欄位(數字)018
+       sfafud019 LIKE sfaf_t.sfafud019, #自定義欄位(數字)019
+       sfafud020 LIKE sfaf_t.sfafud020, #自定義欄位(數字)020
+       sfafud021 LIKE sfaf_t.sfafud021, #自定義欄位(日期時間)021
+       sfafud022 LIKE sfaf_t.sfafud022, #自定義欄位(日期時間)022
+       sfafud023 LIKE sfaf_t.sfafud023, #自定義欄位(日期時間)023
+       sfafud024 LIKE sfaf_t.sfafud024, #自定義欄位(日期時間)024
+       sfafud025 LIKE sfaf_t.sfafud025, #自定義欄位(日期時間)025
+       sfafud026 LIKE sfaf_t.sfafud026, #自定義欄位(日期時間)026
+       sfafud027 LIKE sfaf_t.sfafud027, #自定義欄位(日期時間)027
+       sfafud028 LIKE sfaf_t.sfafud028, #自定義欄位(日期時間)028
+       sfafud029 LIKE sfaf_t.sfafud029, #自定義欄位(日期時間)029
+       sfafud030 LIKE sfaf_t.sfafud030  #自定義欄位(日期時間)030
+       #161109-00085#61 --e add
+          END RECORD
+          
+#mod--161109-00085#15 By 08993--(e)
+#mod--161109-00085#15 By 08993--(s)
+#DEFINE l_sfkf            RECORD LIKE sfkf_t.*   #mark--161109-00085#15 By 08993--(s)
+DEFINE l_sfkf            RECORD  #工單變更單產品序號檔
+       sfkfent LIKE sfkf_t.sfkfent, #企業編號
+       sfkfsite LIKE sfkf_t.sfkfsite, #營運據點
+       sfkfdocno LIKE sfkf_t.sfkfdocno, #工單單號
+       sfkfseq LIKE sfkf_t.sfkfseq, #項次
+       sfkf001 LIKE sfkf_t.sfkf001, #產品序號
+       sfkf900 LIKE sfkf_t.sfkf900, #變更序
+       sfkf901 LIKE sfkf_t.sfkf901, #變更類型
+       sfkf902 LIKE sfkf_t.sfkf902, #變更日期
+       sfkf905 LIKE sfkf_t.sfkf905, #變更理由
+       sfkf906 LIKE sfkf_t.sfkf906  #變更備註
+          END RECORD 
+#mod--161109-00085#15 By 08993--(e)
+
+DEFINE l_msg             LIKE type_t.chr100
+
+   LET r_success = TRUE
+
+   DECLARE asft800_gen_sfkf_cs CURSOR FOR 
+    #mod--161109-00085#15 By 08993--(s)
+#    SELECT * FROM sfaf_t   #mark--161109-00085#15 By 08993--(s) 
+    SELECT sfafent,sfafsite,sfafdocno,sfaf001,sfafseq 
+     FROM sfaf_t
+    #mod--161109-00085#15 By 08993--(e)
+     WHERE sfafent = g_enterprise 
+       AND sfafdocno = g_detail_d[l_ac].sfaadocno
+   #mod--161109-00085#15 By 08993--(s)    
+#   FOREACH asft800_gen_sfkf_cs INTO l_sfaf.*   #mark--161109-00085#15 By 08993--(s)
+   FOREACH asft800_gen_sfkf_cs INTO l_sfaf.sfafent,l_sfaf.sfafsite,l_sfaf.sfafdocno,l_sfaf.sfaf001,l_sfaf.sfafseq
+   #mod--161109-00085#15 By 08993--(e)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      LET l_sfkf.sfkfent = g_enterprise 
+      LET l_sfkf.sfkfsite = g_site
+      LET l_sfkf.sfkfdocno = l_sfaf.sfafdocno
+      LET l_sfkf.sfkfseq = l_sfaf.sfafseq
+      LET l_sfkf.sfkf001 = l_sfaf.sfaf001
+      LET l_sfkf.sfkf900 = g_sfka900
+      LET l_sfkf.sfkf901 = '1'
+      
+      INSERT INTO sfkf_t 
+         (sfkfent,sfkfsite,sfkfdocno,sfkf900,sfkf901,sfkfseq,
+          sfkf001)
+         VALUES
+         (l_sfkf.sfkfent,l_sfkf.sfkfsite,l_sfkf.sfkfdocno,l_sfkf.sfkf900,l_sfkf.sfkf901,
+          l_sfkf.sfkfseq,
+          l_sfkf.sfkf001)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfkf_t'
+         LET g_errparam.coll_vals[1] = l_sfkf.sfkfdocno
+         LET g_errparam.coll_vals[2] = l_sfkf.sfkfseq
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE l_sfaf.* TO NULL   #清空数组
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生工單變更單備料檔資料
+# Memo...........:
+# Usage..........: CALL apsp630_asft800_gen_sfkg()
+#                  RETURNING r_success
+# Input parameter: 
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/05/28 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp630_asft800_gen_sfkg()
+DEFINE r_success         LIKE type_t.num5
+#mod--161109-00085#15 By 08993--(s)
+#DEFINE l_sfba            RECORD LIKE sfba_t.*   #mark--161109-00085#15 By 08993--(s)
+DEFINE l_sfba RECORD  #工單備料單身檔
+       sfbaent LIKE sfba_t.sfbaent, #企業編號
+       sfbasite LIKE sfba_t.sfbasite, #營運據點
+       sfbadocno LIKE sfba_t.sfbadocno, #單號
+       sfbaseq LIKE sfba_t.sfbaseq, #項次
+       sfbaseq1 LIKE sfba_t.sfbaseq1, #項序
+       sfba001 LIKE sfba_t.sfba001, #上階料號
+       sfba002 LIKE sfba_t.sfba002, #部位
+       sfba003 LIKE sfba_t.sfba003, #作業編號
+       sfba004 LIKE sfba_t.sfba004, #作業序
+       sfba005 LIKE sfba_t.sfba005, #BOM料號
+       sfba006 LIKE sfba_t.sfba006, #發料料號
+       sfba007 LIKE sfba_t.sfba007, #投料時距
+       sfba008 LIKE sfba_t.sfba008, #必要特性
+       sfba009 LIKE sfba_t.sfba009, #倒扣料
+       sfba010 LIKE sfba_t.sfba010, #標準QPA分子
+       sfba011 LIKE sfba_t.sfba011, #標準QPA分母
+       sfba012 LIKE sfba_t.sfba012, #允許誤差率
+       sfba013 LIKE sfba_t.sfba013, #應發數量
+       sfba014 LIKE sfba_t.sfba014, #單位
+       sfba015 LIKE sfba_t.sfba015, #委外代買數量
+       sfba016 LIKE sfba_t.sfba016, #已發數量
+       sfba017 LIKE sfba_t.sfba017, #報廢數量
+       sfba018 LIKE sfba_t.sfba018, #盤虧數量
+       sfba019 LIKE sfba_t.sfba019, #指定發料倉庫
+       sfba020 LIKE sfba_t.sfba020, #指定發料儲位
+       sfba021 LIKE sfba_t.sfba021, #產品特徵
+       sfba022 LIKE sfba_t.sfba022, #替代率
+       sfba023 LIKE sfba_t.sfba023, #標準應發數量
+       sfba024 LIKE sfba_t.sfba024, #調整應發數量
+       sfba025 LIKE sfba_t.sfba025, #超領數量
+       sfba026 LIKE sfba_t.sfba026, #SET替代狀態
+       sfba027 LIKE sfba_t.sfba027, #SET替代群組
+       sfba028 LIKE sfba_t.sfba028, #客供料
+       sfba029 LIKE sfba_t.sfba029, #指定發料批號
+       sfba030 LIKE sfba_t.sfba030, #指定庫存管理特徵
+       #161109-00085#61 --s add
+       sfbaud001 LIKE sfba_t.sfbaud001, #自定義欄位(文字)001
+       sfbaud002 LIKE sfba_t.sfbaud002, #自定義欄位(文字)002
+       sfbaud003 LIKE sfba_t.sfbaud003, #自定義欄位(文字)003
+       sfbaud004 LIKE sfba_t.sfbaud004, #自定義欄位(文字)004
+       sfbaud005 LIKE sfba_t.sfbaud005, #自定義欄位(文字)005
+       sfbaud006 LIKE sfba_t.sfbaud006, #自定義欄位(文字)006
+       sfbaud007 LIKE sfba_t.sfbaud007, #自定義欄位(文字)007
+       sfbaud008 LIKE sfba_t.sfbaud008, #自定義欄位(文字)008
+       sfbaud009 LIKE sfba_t.sfbaud009, #自定義欄位(文字)009
+       sfbaud010 LIKE sfba_t.sfbaud010, #自定義欄位(文字)010
+       sfbaud011 LIKE sfba_t.sfbaud011, #自定義欄位(數字)011
+       sfbaud012 LIKE sfba_t.sfbaud012, #自定義欄位(數字)012
+       sfbaud013 LIKE sfba_t.sfbaud013, #自定義欄位(數字)013
+       sfbaud014 LIKE sfba_t.sfbaud014, #自定義欄位(數字)014
+       sfbaud015 LIKE sfba_t.sfbaud015, #自定義欄位(數字)015
+       sfbaud016 LIKE sfba_t.sfbaud016, #自定義欄位(數字)016
+       sfbaud017 LIKE sfba_t.sfbaud017, #自定義欄位(數字)017
+       sfbaud018 LIKE sfba_t.sfbaud018, #自定義欄位(數字)018
+       sfbaud019 LIKE sfba_t.sfbaud019, #自定義欄位(數字)019
+       sfbaud020 LIKE sfba_t.sfbaud020, #自定義欄位(數字)020
+       sfbaud021 LIKE sfba_t.sfbaud021, #自定義欄位(日期時間)021
+       sfbaud022 LIKE sfba_t.sfbaud022, #自定義欄位(日期時間)022
+       sfbaud023 LIKE sfba_t.sfbaud023, #自定義欄位(日期時間)023
+       sfbaud024 LIKE sfba_t.sfbaud024, #自定義欄位(日期時間)024
+       sfbaud025 LIKE sfba_t.sfbaud025, #自定義欄位(日期時間)025
+       sfbaud026 LIKE sfba_t.sfbaud026, #自定義欄位(日期時間)026
+       sfbaud027 LIKE sfba_t.sfbaud027, #自定義欄位(日期時間)027
+       sfbaud028 LIKE sfba_t.sfbaud028, #自定義欄位(日期時間)028
+       sfbaud029 LIKE sfba_t.sfbaud029, #自定義欄位(日期時間)029
+       sfbaud030 LIKE sfba_t.sfbaud030, #自定義欄位(日期時間)030
+       #161109-00085#61 --e add
+       sfba031 LIKE sfba_t.sfba031, #備置量
+       sfba032 LIKE sfba_t.sfba032, #備置理由碼
+       sfba033 LIKE sfba_t.sfba033, #保稅否
+       sfba034 LIKE sfba_t.sfba034, #SET被替代群組
+       sfba035 LIKE sfba_t.sfba035  #SET替代套數
+END RECORD
+#mod--161109-00085#15 By 08993--(e)
+#mod--161109-00085#15 By 08993--(s)
+#DEFINE l_sfkg            RECORD LIKE sfkg_t.*   #mark--161109-00085#15 By 08993--(s)
+DEFINE l_sfkg RECORD  #工單變更單備料單身
+       sfkgent LIKE sfkg_t.sfkgent, #企業編號
+       sfkgsite LIKE sfkg_t.sfkgsite, #營運據點
+       sfkgdocno LIKE sfkg_t.sfkgdocno, #工單單號
+       sfkgseq LIKE sfkg_t.sfkgseq, #項次
+       sfkgseq1 LIKE sfkg_t.sfkgseq1, #項序
+       sfkg001 LIKE sfkg_t.sfkg001, #上階料號
+       sfkg002 LIKE sfkg_t.sfkg002, #部位
+       sfkg003 LIKE sfkg_t.sfkg003, #作業編號
+       sfkg004 LIKE sfkg_t.sfkg004, #製程式
+       sfkg005 LIKE sfkg_t.sfkg005, #BOM料號
+       sfkg006 LIKE sfkg_t.sfkg006, #發料料號
+       sfkg007 LIKE sfkg_t.sfkg007, #投料時距
+       sfkg008 LIKE sfkg_t.sfkg008, #必要特性
+       sfkg009 LIKE sfkg_t.sfkg009, #倒扣料
+       sfkg010 LIKE sfkg_t.sfkg010, #標準QPA
+       sfkg011 LIKE sfkg_t.sfkg011, #實際QPA
+       sfkg012 LIKE sfkg_t.sfkg012, #允許誤差率
+       sfkg013 LIKE sfkg_t.sfkg013, #應發數量
+       sfkg014 LIKE sfkg_t.sfkg014, #單位
+       sfkg015 LIKE sfkg_t.sfkg015, #委外代買數量
+       sfkg016 LIKE sfkg_t.sfkg016, #已發數量
+       sfkg017 LIKE sfkg_t.sfkg017, #報廢數量
+       sfkg018 LIKE sfkg_t.sfkg018, #盤虧數量
+       sfkg019 LIKE sfkg_t.sfkg019, #指定發料倉庫
+       sfkg020 LIKE sfkg_t.sfkg020, #指定發料儲位
+       sfkg021 LIKE sfkg_t.sfkg021, #產品特徵
+       sfkg022 LIKE sfkg_t.sfkg022, #替代率
+       sfkg023 LIKE sfkg_t.sfkg023, #標準應發數量
+       sfkg024 LIKE sfkg_t.sfkg024, #調整應發數量
+       sfkg025 LIKE sfkg_t.sfkg025, #超領數量
+       sfkg026 LIKE sfkg_t.sfkg026, #SET替代狀態
+       sfkg027 LIKE sfkg_t.sfkg027, #SET替代群組
+       sfkg028 LIKE sfkg_t.sfkg028, #客供料
+       sfkg900 LIKE sfkg_t.sfkg900, #變更序
+       sfkg901 LIKE sfkg_t.sfkg901, #變更類型
+       sfkg902 LIKE sfkg_t.sfkg902, #變更日期
+       sfkg904 LIKE sfkg_t.sfkg904, #變更理由
+       sfkg905 LIKE sfkg_t.sfkg905, #變更備註
+       sfkg029 LIKE sfkg_t.sfkg029, #指定發料批號
+       sfkg030 LIKE sfkg_t.sfkg030, #指定庫存管理特征
+       sfkg031 LIKE sfkg_t.sfkg031, #備置量
+       sfkg032 LIKE sfkg_t.sfkg032, #備置理由碼
+       sfkg033 LIKE sfkg_t.sfkg033  #保稅否
+END RECORD
+#mod--161109-00085#15 By 08993--(e)
+DEFINE l_msg             LIKE type_t.chr100
+
+   LET r_success = TRUE
+
+   DECLARE asft800_gen_sfkg_cs CURSOR FOR 
+    #mod--161109-00085#15 By 08993--(s)
+#    SELECT * FROM sfba_t   #mark--161109-00085#15 By 08993--(s)
+    SELECT sfbaent,sfbasite,sfbadocno,sfbaseq,sfbaseq1,sfba001,sfba002,sfba003,sfba004,sfba005,sfba006,sfba007,sfba008,
+           sfba009,sfba010,sfba011,sfba012,sfba013,sfba014,sfba015,sfba016,sfba017,sfba018,sfba019,sfba020,sfba021,sfba022,
+           sfba023,sfba024,sfba025,sfba026,sfba027,sfba028,sfba029,sfba030,sfba031,sfba032,sfba033,sfba034,sfba035 
+     FROM sfba_t
+    #mod--161109-00085#15 By 08993--(e)
+     WHERE sfbaent = g_enterprise 
+       AND sfbadocno = g_detail_d[l_ac].sfaadocno
+   #mod--161109-00085#15 By 08993--(s)    
+#   FOREACH asft800_gen_sfkg_cs INTO l_sfba.*   #mark--161109-00085#15 By 08993--(s)
+   FOREACH asft800_gen_sfkg_cs INTO l_sfba.sfbaent,l_sfba.sfbasite,l_sfba.sfbadocno,l_sfba.sfbaseq,l_sfba.sfbaseq1,
+                                    l_sfba.sfba001,l_sfba.sfba002,l_sfba.sfba003,l_sfba.sfba004,l_sfba.sfba005,
+                                    l_sfba.sfba006,l_sfba.sfba007,l_sfba.sfba008,l_sfba.sfba009,l_sfba.sfba010,
+                                    l_sfba.sfba011,l_sfba.sfba012,l_sfba.sfba013,l_sfba.sfba014,l_sfba.sfba015,
+                                    l_sfba.sfba016,l_sfba.sfba017,l_sfba.sfba018,l_sfba.sfba019,l_sfba.sfba020,
+                                    l_sfba.sfba021,l_sfba.sfba022,l_sfba.sfba023,l_sfba.sfba024,l_sfba.sfba025,
+                                    l_sfba.sfba026,l_sfba.sfba027,l_sfba.sfba028,l_sfba.sfba029,l_sfba.sfba030,
+                                    l_sfba.sfba031,l_sfba.sfba032,l_sfba.sfba033,l_sfba.sfba034,l_sfba.sfba035 
+   #mod--161109-00085#15 By 08993--(e)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      LET l_sfkg.sfkgent = g_enterprise 
+      LET l_sfkg.sfkgsite = g_site
+      LET l_sfkg.sfkgdocno = l_sfba.sfbadocno
+      LET l_sfkg.sfkgseq = l_sfba.sfbaseq
+      LET l_sfkg.sfkgseq1 = l_sfba.sfbaseq1
+      LET l_sfkg.sfkg001 = l_sfba.sfba001
+      LET l_sfkg.sfkg002 = l_sfba.sfba002
+      LET l_sfkg.sfkg003 = l_sfba.sfba003
+      LET l_sfkg.sfkg004 = l_sfba.sfba004
+      LET l_sfkg.sfkg005 = l_sfba.sfba005
+      LET l_sfkg.sfkg006 = l_sfba.sfba006
+      LET l_sfkg.sfkg007 = l_sfba.sfba007
+      LET l_sfkg.sfkg008 = l_sfba.sfba008
+      LET l_sfkg.sfkg009 = l_sfba.sfba009
+      LET l_sfkg.sfkg010 = l_sfba.sfba010
+      LET l_sfkg.sfkg011 = l_sfba.sfba011
+      LET l_sfkg.sfkg012 = l_sfba.sfba012
+      LET l_sfkg.sfkg013 = l_sfba.sfba013
+      LET l_sfkg.sfkg014 = l_sfba.sfba014
+      LET l_sfkg.sfkg015 = l_sfba.sfba015
+      LET l_sfkg.sfkg016 = l_sfba.sfba016
+      LET l_sfkg.sfkg017 = l_sfba.sfba017
+      LET l_sfkg.sfkg018 = l_sfba.sfba018
+      LET l_sfkg.sfkg019 = l_sfba.sfba019
+      LET l_sfkg.sfkg020 = l_sfba.sfba020
+      LET l_sfkg.sfkg021 = l_sfba.sfba021
+      LET l_sfkg.sfkg022 = l_sfba.sfba022
+      LET l_sfkg.sfkg023 = l_sfba.sfba023
+      LET l_sfkg.sfkg024 = l_sfba.sfba024
+      LET l_sfkg.sfkg025 = l_sfba.sfba025
+      LET l_sfkg.sfkg026 = l_sfba.sfba026
+      LET l_sfkg.sfkg027 = l_sfba.sfba027
+      LET l_sfkg.sfkg028 = l_sfba.sfba028
+      LET l_sfkg.sfkg900 = g_sfka900
+      LET l_sfkg.sfkg901 = '1'
+      
+      INSERT INTO sfkg_t
+         (sfkgent,sfkgsite,sfkgdocno,sfkg900,sfkg901,sfkgseq,sfkgseq1,
+          sfkg001,sfkg002,sfkg003,sfkg004,sfkg005,sfkg006,sfkg007,sfkg008,sfkg009,sfkg010,
+          sfkg011,sfkg012,sfkg013,sfkg014,sfkg015,sfkg016,sfkg017,sfkg018,sfkg019,sfkg020,
+          sfkg021,sfkg022,sfkg023,sfkg024,sfkg025,sfkg026,sfkg027,sfkg028)
+         VALUES
+         (l_sfkg.sfkgent,l_sfkg.sfkgsite,l_sfkg.sfkgdocno,l_sfkg.sfkg900,l_sfkg.sfkg901,
+          l_sfkg.sfkgseq,l_sfkg.sfkgseq1,
+          l_sfkg.sfkg001,l_sfkg.sfkg002,l_sfkg.sfkg003,l_sfkg.sfkg004,l_sfkg.sfkg005,
+          l_sfkg.sfkg006,l_sfkg.sfkg007,l_sfkg.sfkg008,l_sfkg.sfkg009,l_sfkg.sfkg010,
+          l_sfkg.sfkg011,l_sfkg.sfkg012,l_sfkg.sfkg013,l_sfkg.sfkg014,l_sfkg.sfkg015,
+          l_sfkg.sfkg016,l_sfkg.sfkg017,l_sfkg.sfkg018,l_sfkg.sfkg019,l_sfkg.sfkg020,
+          l_sfkg.sfkg021,l_sfkg.sfkg022,l_sfkg.sfkg023,l_sfkg.sfkg024,l_sfkg.sfkg025,
+          l_sfkg.sfkg026,l_sfkg.sfkg027,l_sfkg.sfkg028)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfkg_t'
+         LET g_errparam.coll_vals[1] = l_sfkg.sfkgdocno
+         LET g_errparam.coll_vals[2] = l_sfkg.sfkgseq
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE l_sfba.* TO NULL   #清空数组
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

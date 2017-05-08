@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainr705_g03" module="ain" jobmode="N" type="g01" industry="std" crtid="06137" crtdt="2016-12-05 14:52:25" modid="06814" moddt="2016-12-31 11:02:22" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.type(chr1|列印對象類型)">
+    <var seq="1" value="indient,indisite,indidocno,indidocdt,indistus,indi000,indi001,indi003,indi004,indi007,indiunit,indj001,indj004,indj020,l_indj020_desc(pmaal003|&apos;&apos;),l_inam012(inam012|&apos;&apos;),l_inam014(inam014|&apos;&apos;),l_inam018(inam018|&apos;&apos;),indj008,l_indj0101(indj010|0),l_indj0102(indj010|0),l_indj0103(indj010|0),l_indj0104(indj010|0),l_indj0105(indj010|0),l_indj0106(indj010|0),l_indj0107(indj010|0),l_indj0108(indj010|0),l_indj0109(indj010|0),l_indj01010(indj010|0),l_pageno(chr30|0),l_order(chr30|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="indient(indient|indient),indisite(indisite|indisite),indidocno(indidocno|indidocno),indidocdt(indidocdt|indidocdt),indistus(indistus|indistus),indi000(indi000|indi000),indi001(indi001|indi001),indi003(indi003|indi003),indi004(indi004|indi004),indi007(indi007|indi007),indiunit(indiunit|indiunit),indj001(indj001|indj001),indj004(indj004|indj004),indj020(indj020|indj020),l_indj020_desc(pmaal003|&apos;&apos;),l_inam012(inam012|&apos;&apos;),l_inam014(inam014|&apos;&apos;),l_inam018(inam018|&apos;&apos;),indj008(indj008|indj008),l_indj0101(indj010|0),l_indj0102(indj010|0),l_indj0103(indj010|0),l_indj0104(indj010|0),l_indj0105(indj010|0),l_indj0106(indj010|0),l_indj0107(indj010|0),l_indj0108(indj010|0),l_indj0109(indj010|0),l_indj01010(indj010|0),l_pageno(chr30|0),l_order(chr30|&apos;&apos;)"/>
+    <sql id="g_from" query=" indi_t  LEFT OUTER JOIN ( SELECT indj_t.* FROM indj_t  ) x  ON indi_t.indient = x.indjent AND indi_t.indidocno = x.indjdocno"/>
+    <sql id="g_where" query="indi_t.indi000 = &apos;1&apos; AND " maintable="indi_t"/>
+    <sql id="g_order" query="indidocno,indj004"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="l_order,indj004,l_inam012,indj001,indj020"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="indient,l_order"/>
+      <rep type="indj004"/>
+      <rep type="l_inam012"/>
+      <rep type="indj001"/>
+      <rep type="indj020"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="indient,l_order,indj004,l_inam012,indj001,indj020"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="indient,l_order,indj004,l_inam012,indj001,indj020"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="indient,l_order"/>
+      <rep type="indj004"/>
+      <rep type="l_inam012"/>
+      <rep type="indj001"/>
+      <rep type="indj020"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

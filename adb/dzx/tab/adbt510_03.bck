@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbt510_03" module="adb" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02748" crtdt="2014-06-24 10:35:07" modid="06137" moddt="2015-03-09 10:39:01" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="分銷訂單變更多交期明細維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmejdocno,xmejseq,xmejseq2,xmej900,xmej901,xmej002,xmej003,xmej004,xmej005,xmej005_desc(chr500),xmejsite,xmejunit,xmejunit_desc(chr500),xmej006,xmej200,xmej200_desc(chr500),xmej201,xmej201_desc(chr500),xmej202"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="adb" filename="adbt510_03" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xmej901,xmej002,xmej003,xmej004,xmej005,xmejsite,xmejunit,xmej200,xmej201,xmej202" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xmejdocno"/>
+      <column id="xmejseq"/>
+      <column id="xmejseq2"/>
+      <column id="xmej900"/>
+      <column id="xmej901" type="S" default="N"/>
+      <column id="xmej002">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmej003"/>
+      <column id="xmej004"/>
+      <column id="xmej005">
+        <after>
+          <check chkid="v_oocq002_274" id="isExist"/>
+          <reference field="xmej005_desc" ref_field="xmej005" map_field="xmej005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;274&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="xmej005_desc"/>
+      <column id="xmejsite"/>
+      <column id="xmejunit">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="xmejunit_desc" ref_field="xmej_t.xmejunit" map_field="xmejent,xmejunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="i"/>
+      </column>
+      <column id="xmejunit_desc"/>
+      <column id="xmej006"/>
+      <column id="xmej200">
+        <after>
+          <check chkid="v_inaa001_16" id="isExist"/>
+          <reference field="xmej200_desc" ref_field="xmej_t.xmej200" map_field="xmej200" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_24" state="i"/>
+      </column>
+      <column id="xmej200_desc"/>
+      <column id="xmej201">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="xmej201_desc" ref_field="xmejunit,xmej200,xmej201" map_field="xmejunit,xmej200,xmej201" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_6" state="i"/>
+      </column>
+      <column id="xmej201_desc"/>
+      <column id="xmej202"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xmej_t" page="1" linked="" pk="xmejdocno,xmejseq,xmejseq2,xmej900">
+      <sql id="forupd_sql_detail" query="SELECT xmejdocno,xmejseq,xmejseq2,xmej900,xmej901,xmej002,xmej003,xmej004,xmej005,&apos;&apos;,xmejsite,xmejunit,&apos;&apos;,xmej006,xmej200,&apos;&apos;,xmej201,&apos;&apos;,xmej202 FROM xmej_t WHERE xmejent=? AND xmejdocno=? AND xmejseq=? AND xmejseq2=? AND xmej900=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmejdocno,xmejseq,xmejseq2,xmej900,xmej901,xmej002,xmej003,xmej004,xmej005,&apos;&apos;,xmejsite,xmejunit,&apos;&apos;,xmej006,xmej200,&apos;&apos;,xmej201,&apos;&apos;,xmej202 FROM xmej_t WHERE xmejent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

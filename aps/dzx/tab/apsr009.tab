@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr009" module="aps" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05384" crtdt="2016-03-28 17:08:43" modid="00593" moddt="2016-06-13 19:56:12" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="資源稼動率報表">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mrba001,mrba027,psoe004,mrba022,mrba103,psca001(chr500),psca001_desc(chr80),timepath(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aps" filename="apsr009" method="dialog">
+    <section id="input">
+      <input id="head" field="psca001,timepath"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mrba001,mrba027,psoe004,mrba022,mrba103"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mrba001">
+        <controlp form="q_mrba001_1" state="c"/>
+      </column>
+      <column id="mrba027">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="psoe004"/>
+      <column id="mrba022">
+        <controlp form="q_ecaa001" state="c"/>
+      </column>
+      <column id="mrba103">
+        <controlp form="q_oogd001_01" state="c"/>
+      </column>
+      <column id="psca001">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+          <reference field="psca001_desc" ref_field="pscasite,psca001" map_field="pscasite,psca001" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscalsite=? AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+      </column>
+      <column id="psca001_desc"/>
+      <column id="timepath"/>
+    </init>
+  </form>
+</assembly>
+

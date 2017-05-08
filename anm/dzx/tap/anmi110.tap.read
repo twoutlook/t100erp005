@@ -1,0 +1,4054 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="anmi110" std_prog="anmi110" erpver="1.0" module="ANM" ver="2" env="s" zone="t10dev" booking="N" type="M" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="construct.c.page1_info.nmaccrtdp" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmaccrtdp  #顯示到畫面上
+
+            NEXT FIELD nmaccrtdp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1_info.nmaccrtid" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmaccrtid  #顯示到畫面上
+
+            NEXT FIELD nmaccrtid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1_info.nmacmodid" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmacmodid  #顯示到畫面上
+
+            NEXT FIELD nmacmodid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1_info.nmacowndp" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmacowndp  #顯示到畫面上
+
+            NEXT FIELD nmacowndp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1_info.nmacownid" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmacownid  #顯示到畫面上
+
+            NEXT FIELD nmacownid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="input.a.page1_info.nmac002_2" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_nmac_m.nmac001 IS NOT NULL AND g_nmac_m.nmac005 IS NOT NULL AND g_nmac1_info_d[g_detail_idx].nmac002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmac_m.nmac001 != g_nmac001_t OR g_nmac_m.nmac005 != g_nmac005_t OR g_nmac1_info_d[g_detail_idx].nmac002 != g_nmac1_info_d_t.nmac002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmac_t WHERE "||"nmacent = '" ||g_enterprise|| "' AND "||"nmac001 = '"||g_nmac_m.nmac001 ||"' AND "|| "nmac005 = '"||g_nmac_m.nmac005 ||"' AND "|| "nmac002 = '"||g_nmac1_info_d[g_detail_idx].nmac002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="function.anmi110_nmac002_desc" order="1" ver="2" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+星期
+PRIVATE FUNCTION anmi110_nmac002_desc(p_nmac002)
+   DEFINE p_nmac002    LIKE nmac_t.nmac002
+   DEFINE l_week       LIKE ooga_t.ooga002
+   
+   LET l_week = ''
+   SELECT gzcbl004 INTO l_week FROM gzcbl_t
+    WHERE gzcbl001 = 30
+      AND gzcbl002 = (SELECT ooga002 FROM ooga_t 
+                      WHERE oogaent = g_enterprise
+                        AND ooga001 = p_nmac002)
+      AND gzcbl003 = g_dlang                     
+    RETURN l_week  
+END FUNCTION]]>
+  </point>
+  <point name="function.anmi110_nmac003_chk" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#休假类型说明
+PRIVATE FUNCTION anmi110_nmac003_chk(p_nmac003)
+   DEFINE  p_nmac003    LIKE nmac_t.nmac003
+   DEFINE  l_oocqstus   LIKE oocq_t.oocqstus
+   
+   LET g_errno = ''
+   SELECT oocqstus INTO l_oocqstus FROM oocq_t
+    WHERE oocqent = g_enterprise
+      AND oocq001 = 6
+      AND oocq002 = p_nmac003
+      
+   CASE
+      WHEN SQLCA.SQLCODE = 100    LET g_errno = 'aoo-00126'
+      WHEN l_oocqstus = 'N'       LET g_errno = 'aoo-00127'
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.anmi110_nmac001_chk" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#参照表号检查
+PRIVATE FUNCTION anmi110_nmac001_chk(p_nmac001)
+   DEFINE p_nmac001    LIKE nmac_t.nmac001
+   DEFINE l_ooalstus   LIKE ooal_t.ooalstus
+   
+   LET g_errno = ''
+   SELECT ooalstus  INTO l_ooalstus  FROM ooal_t
+    WHERE ooalent = g_enterprise
+      AND ooal001 = 4
+      AND ooal002 = p_nmac001
+   CASE
+      WHEN SQLCA.SQLCODE = 100    LET g_errno = 'aoo-00076'
+      WHEN l_ooalstus = 'N'       LET g_errno = 'aoo-00128'
+   END CASE
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.anmi110_nmac001_desc" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 参照表号说明
+PRIVATE FUNCTION anmi110_nmac001_desc(p_nmac001)
+DEFINE p_nmac001      LIKE nmac_t.nmac001
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_nmac001
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='4' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   RETURN g_rtn_fields[1]
+   
+
+END FUNCTION]]>
+  </point>
+  <point name="function.anmi110_nmac003_desc" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+休假类型说明
+PRIVATE FUNCTION anmi110_nmac003_desc(p_nmac003)
+   DEFINE p_nmac003    LIKE nmac_t.nmac003
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_nmac003
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='6' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   RETURN g_rtn_fields[1]
+             
+END FUNCTION]]>
+  </point>
+  <point name="function.anmi110_set_combo_scc" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#年度下拉框
+PRIVATE FUNCTION anmi110_set_combo_scc(p_field,p_scc)
+  DEFINE p_field        LIKE type_t.chr80
+  DEFINE p_scc          LIKE type_t.num5
+  DEFINE l_gzcb002      LIKE gzcb_t.gzcb002
+  DEFINE l_gzcbl004     LIKE gzcbl_t.gzcbl004
+  DEFINE comb_value     STRING
+  DEFINE comb_item      LIKE type_t.chr1000     
+ 
+    DECLARE gzcb_cs CURSOR FOR
+     SELECT gzcb002,gzcbl004 FROM gzcb_t LEFT OUTER join gzcbl_t ON gzcbl001 = gzcb001
+                                                                AND gzcbl002 = gzcb002
+                                                                AND gzcbl003 = g_dlang                      
+      WHERE gzcb001 = p_scc
+    FOREACH gzcb_cs INTO l_gzcb002,l_gzcbl004
+        LET comb_value = comb_value CLIPPED,',',l_gzcb002
+        LET comb_item  = comb_item  CLIPPED,',',l_gzcb002
+                                                
+    END FOREACH
+    CALL cl_set_combo_items(p_field,comb_value,comb_item)
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_wc        STRING 
+]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      CALL anmi110_nmac002_desc(g_nmac_d[l_ac].nmac002) RETURNING g_nmac_d[l_ac].nmac002_desc
+      DISPLAY BY NAME g_nmac_d[l_ac].nmac002_desc]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+  ]]>
+  </point>
+  <point name="bfill.foreach" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="browser_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[ ]]>
+  </point>
+  <point name="construct.c.nmac001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "ooal001 = 4"
+            CALL q_ooal002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmac001  #顯示到畫面上
+            LET g_qryparam.where = ''
+            NEXT FIELD nmac001                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1.nmac003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmac003  #顯示到畫面上
+
+            NEXT FIELD nmac003                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.nmaccrtdp" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmaccrtdp  #顯示到畫面上
+
+            NEXT FIELD nmaccrtdp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.nmaccrtid" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmaccrtid  #顯示到畫面上
+
+            NEXT FIELD nmaccrtid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.nmacmodid" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmacmodid  #顯示到畫面上
+
+            NEXT FIELD nmacmodid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.nmacowndp" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmacowndp  #顯示到畫面上
+
+            NEXT FIELD nmacowndp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.nmacownid" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmacownid  #顯示到畫面上
+
+            NEXT FIELD nmacownid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="cs.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="cs.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[     ]]>
+  </point>
+  <point name="default_search.after" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_order = ",nmac005"]]>
+  </point>
+  <point name="fetch.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[  ]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_year   LIKE nmac_t.nmac005
+DEFINE g_wc3    STRING]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL anmi110_set_combo_scc('nmac005',43)]]>
+  </point>
+  <point name="input.a.nmac001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            DISPLAY '' TO nmac001_desc
+            IF NOT cl_null(g_nmac_m.nmac001) THEN
+               CALL anmi110_nmac001_chk(g_nmac_m.nmac001)
+               IF  NOT cl_null (g_errno)  THEN
+                   IF g_errno = 'aoo-00076' THEN
+                      IF NOT cl_ask_confirm('aoo-00076') THEN
+                         LET g_nmac_m.nmac001 = ''
+                         DISPLAY BY NAME g_nmac_m.nmac001
+                         NEXT FIELD nmac001
+                      ELSE
+                         CALL s_transaction_begin()
+                         LET l_success = 0
+                         CALL s_aooi070_ins(1,g_nmac_m.nmac001) RETURNING l_success
+                         IF l_success = 1 THEN
+                            CALL s_transaction_end('Y','1')
+                         ELSE
+                            CALL s_transaction_end('N','1')
+                         END IF
+                      END IF
+                   ELSE
+                      CALL cl_err(g_nmac_m.nmac001,g_errno,1)
+                      LET g_nmac_m.nmac001= g_nmac001_t
+                      CALL anmi110_nmac001_desc(g_nmac_m.nmac001) RETURNING g_nmac_m.nmac001_desc
+                      DISPLAY  BY NAME g_nmac_m.nmac001_desc
+                      NEXT FIELD nmac001
+                   END IF
+               END IF
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_nmac_m.nmac001 != g_nmac001_t OR g_nmac_m.nmac005 != g_nmac005_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_nmac_m.nmac001,"SELECT COUNT(*) FROM nmac_t WHERE "||"nmacent = '" ||g_enterprise|| "' AND "||"nmac001 = '"||g_nmac_m.nmac001 ||"' AND "||"nmac005 = '"||g_nmac_m.nmac005 ||"'",'std-00004',0) THEN 
+                     LET g_nmac_m.nmac001 = g_nmac001_t 
+                     CALL anmi110_nmac001_desc(g_nmac_m.nmac001) RETURNING g_nmac_m.nmac001_desc
+                     DISPLAY BY NAME g_nmac_m.nmac001_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            ELSE
+               DISPLAY '' TO nmac001_desc                               
+            END IF
+
+            CALL anmi110_nmac001_desc(g_nmac_m.nmac001) RETURNING g_nmac_m.nmac001_desc
+            DISPLAY BY NAME g_nmac_m.nmac001_desc
+            
+            ]]>
+  </point>
+  <point name="input.a.nmac005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_nmac_m.nmac005) THEN
+               IF g_nmac_m.nmac005 > 2100 OR g_nmac_m.nmac005 <2000 THEN
+                  CALL cl_err(g_nmac_m.nmac005,'anm-00018',1)
+                  LET g_nmac_m.nmac005 = g_nmac_m_t.nmac005
+                  NEXT FIELD nmac005
+               END IF  
+            END IF 
+            IF NOT cl_null(g_nmac_m.nmac001) AND NOT cl_null(g_nmac_m.nmac005) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_nmac_m.nmac001 != g_nmac001_t  OR g_nmac_m.nmac005 != g_nmac005_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_nmac_m.nmac005,"SELECT COUNT(*) FROM nmac_t WHERE "||"nmacent = '" ||g_enterprise|| "' AND "||"nmac001 = '"||g_nmac_m.nmac001 ||"' AND "|| "nmac005 = '"||g_nmac_m.nmac005 ||"'",'std-00004',0) THEN 
+                     LET g_nmac_m.nmac005 = g_nmac_m_t.nmac005
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF             
+            END IF
+            
+           ]]>
+  </point>
+  <point name="input.a.page1.nmac002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            DISPLAY '' TO s_detail1[l_ac].nmac002_desc
+            IF NOT cl_null(g_nmac_m.nmac001) AND NOT cl_null(g_nmac_d[l_ac].nmac002) THEN
+               #检查是否与单头档的年度相同
+               IF YEAR(g_nmac_d[l_ac].nmac002) != g_nmac_m.nmac005 THEN
+                  CALL cl_err(g_nmac_d[l_ac].nmac002,'aoo-00164',1)
+                  LET g_nmac_d[l_ac].nmac002 = g_nmac_d_t.nmac002
+                  CALL anmi110_nmac002_desc(g_nmac_d[l_ac].nmac002) RETURNING g_nmac_d[l_ac].nmac002_desc
+                  DISPLAY BY NAME g_nmac_d[l_ac].nmac002_desc
+                  NEXT FIELD CURRENT
+               END IF            
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_nmac_m.nmac001 != g_nmac001_t OR g_nmac_d[l_ac].nmac002 != g_nmac_d_t.nmac002))) THEN 
+                  IF NOT ap_chk_notDup(g_nmac_d[l_ac].nmac002,"SELECT COUNT(*) FROM nmac_t WHERE "||"nmacent = '" ||g_enterprise|| "' AND "||"nmac001 = '"||g_nmac_m.nmac001 ||"' AND "|| "nmac002 = '"||g_nmac_d[l_ac].nmac002 ||"'",'std-00004',0) THEN 
+                     LET g_nmac_d[l_ac].nmac002 = g_nmac_d_t.nmac002
+                     CALL anmi110_nmac002_desc(g_nmac_d[l_ac].nmac002) RETURNING g_nmac_d[l_ac].nmac002_desc
+                     DISPLAY BY NAME g_nmac_d[l_ac].nmac002_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+             CALL anmi110_nmac002_desc(g_nmac_d[l_ac].nmac002) RETURNING g_nmac_d[l_ac].nmac002_desc
+             DISPLAY BY NAME g_nmac_d[l_ac].nmac002_desc]]>
+  </point>
+  <point name="input.a.page1.nmac003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO s_detail1[l_ac].nmac003_desc
+            IF NOT cl_null(g_nmac_d[l_ac].nmac003) THEN
+               CALL anmi110_nmac003_chk(g_nmac_d[l_ac].nmac003)
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_nmac_d[l_ac].nmac003,g_errno,1)
+                  LET g_nmac_d[l_ac].nmac003 = g_nmac_d_t.nmac003
+                  CALL anmi110_nmac003_desc(g_nmac_d[l_ac].nmac003) RETURNING g_nmac_d[l_ac].nmac003_desc
+                  DISPLAY BY NAME g_nmac_d[l_ac].nmac003_desc
+                  NEXT FIELD nmac003
+               END IF 
+            END IF 
+            CALL anmi110_nmac003_desc(g_nmac_d[l_ac].nmac003) RETURNING g_nmac_d[l_ac].nmac003_desc
+            DISPLAY BY NAME g_nmac_d[l_ac].nmac003_desc
+]]>
+  </point>
+  <point name="input.a.page2.nmac002_2" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_nmac_m.nmac001) AND NOT cl_null(g_nmac2_d[l_ac].nmac002) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_nmac_m.nmac001 != g_nmac001_t OR g_nmac2_d[l_ac].nmac002 != g_nmac2_d_t.nmac002))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmac_t WHERE "||"nmacent = '" ||g_enterprise|| "' AND "||"nmac001 = '"||g_nmac_m.nmac001 ||"' AND "|| "nmac002 = '"||g_nmac2_d[l_ac].nmac002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.nmaccrtdp" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac2_d[l_ac].nmaccrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmac2_d[l_ac].nmaccrtdp_desc = '(', g_rtn_fields[1] , ')'
+            DISPLAY BY NAME g_nmac2_d[l_ac].nmaccrtdp_desc
+]]>
+  </point>
+  <point name="input.a.page2.nmaccrtid" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac2_d[l_ac].nmaccrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmac2_d[l_ac].nmaccrtid_desc = '(', g_rtn_fields[1] , ')'
+            DISPLAY BY NAME g_nmac2_d[l_ac].nmaccrtid_desc
+]]>
+  </point>
+  <point name="input.a.page2.nmacmodid" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac2_d[l_ac].nmacmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmac2_d[l_ac].nmacmodid_desc = '(', g_rtn_fields[1] , ')'
+            DISPLAY BY NAME g_nmac2_d[l_ac].nmacmodid_desc
+]]>
+  </point>
+  <point name="input.a.page2.nmacowndp" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac2_d[l_ac].nmacowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmac2_d[l_ac].nmacowndp_desc = '(', g_rtn_fields[1] , ')'
+            DISPLAY BY NAME g_nmac2_d[l_ac].nmacowndp_desc
+]]>
+  </point>
+  <point name="input.a.page2.nmacownid" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac2_d[l_ac].nmacownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmac2_d[l_ac].nmacownid_desc = '(', g_rtn_fields[1] , ')'
+            DISPLAY BY NAME g_nmac2_d[l_ac].nmacownid_desc
+]]>
+  </point>
+  <point name="input.a.year" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[     ]]>
+  </point>
+  <point name="input.b.page1.nmac002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.b.year" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="input.body.a_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[             ]]>
+  </point>
+  <point name="input.body.a_update" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[              ]]>
+  </point>
+  <point name="input.body.b_update" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               LET g_nmac1_info_d[l_ac].nmacmodid = g_user
+               LET g_nmac1_info_d[l_ac].nmacmoddt = cl_get_current()]]>
+  </point>
+  <point name="input.body.before_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_nmac_d[l_ac].nmacstus = "Y"]]>
+  </point>
+  <point name="input.c.nmac001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmac_m.nmac001             #給予default值
+
+            #給予arg
+            LET g_qryparam.where = "ooal001 = 4 "
+            CALL q_ooal002()                                #呼叫開窗
+
+            LET g_nmac_m.nmac001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL anmi110_nmac001_desc(g_nmac_m.nmac001) RETURNING g_nmac_m.nmac001_desc
+            DISPLAY g_nmac_m.nmac001_desc TO nmac001_desc
+            DISPLAY g_nmac_m.nmac001 TO nmac001              #顯示到畫面上
+            LET g_qryparam.where =''
+            NEXT FIELD nmac001                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.nmac003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmac_d[l_ac].nmac003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "6" #應用分類
+            CALL q_oocq002()                                #呼叫開窗
+            LET g_nmac_d[l_ac].nmac003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL anmi110_nmac003_desc(g_nmac_d[l_ac].nmac003) RETURNING g_nmac_d[l_ac].nmac003_desc
+            DISPLAY BY NAME g_nmac_d[l_ac].nmac003_desc
+            DISPLAY g_nmac_d[l_ac].nmac003 TO nmac003              #顯示到畫面上
+            NEXT FIELD nmac003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_nmac005        LIKE nmac_t.nmac005]]>
+  </point>
+  <point name="input.g.year" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF p_cmd = 'u' THEN
+               IF g_nmac_m.year <> g_year THEN 
+                 LET l_count = 0
+                 SELECT count(*) INTO l_count FROM nmac_t
+                  WHERE nmacent = g_enterprise
+                    AND nmac001 = g_nmac_m.nmac001
+                    AND nmac005 = g_year 
+              
+                 IF l_count >0 THEN 
+                    CALL cl_err(g_nmac_m.year,'aoo-00164',1)
+                    LET  g_nmac_m.year = g_year
+                    NEXT FIELD year
+                 END IF 
+              END IF   
+           ELSE
+              LET g_year = g_nmac_m.year
+           END  IF             ]]>
+  </point>
+  <point name="insert.after_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[ ]]>
+  </point>
+  <point name="insert.default" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      LET g_nmac_m.nmac005 = YEAR(g_today)]]>
+  </point>
+  <point name="menu.holiday_gen" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               CALL s_transaction_begin()
+               CALL anmi110_01() returning  l_success
+               IF NOT cl_null(l_success) THEN                
+                  IF l_success = '1' THEN 
+                     CALL s_transaction_end('Y','0')
+                     CALL cl_err('','aoo-00147',1)
+                  ELSE
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err('','aoo-00146',1)
+                  END IF 
+               END IF    ]]>
+  </point>
+  <point name="menu.next1" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               LET g_year = g_year +1
+               DISPLAY g_year TO year
+               ]]>
+  </point>
+  <point name="menu.nxt" order="" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[               LET g_nmac_m.nmac005 = g_nmac_m.nmac005+1
+               SELECT count(*) INTO l_count FROM nmac_t
+                WHERE nmacent = g_enterprise
+                  AND nmac001 = g_nmac_m.nmac001
+                  AND nmac005 = g_nmac_m.nmac005
+               IF l_count > 0  THEN
+                  LET g_current_idx = g_current_idx +1
+                  LET g_current_row = g_current_idx   
+               END IF ]]>
+  </point>
+  <point name="menu.pre" order="" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[               LET g_nmac_m.nmac005 = g_nmac_m.nmac005-1
+               SELECT count(*) INTO l_count FROM nmac_t
+                WHERE nmacent = g_enterprise
+                  AND nmac001 = g_nmac_m.nmac001
+                  AND nmac005 = g_nmac_m.nmac005
+               IF l_count > 0  THEN
+                  LET g_current_idx = g_current_idx -1
+                  LET g_current_row = g_current_idx   
+               END IF 
+               ]]>
+  </point>
+  <point name="modify.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ref_show.body.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL anmi110_nmac002_desc(g_nmac_d[l_ac].nmac002) RETURNING g_nmac_d[l_ac].nmac002_desc
+            DISPLAY BY NAME g_nmac_d[l_ac].nmac002_desc
+            
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac_d[l_ac].nmac003
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='6' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmac_d[l_ac].nmac003_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmac_d[l_ac].nmac003_desc
+]]>
+  </point>
+  <point name="ref_show.body1_info.reference" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac1_info_d[l_ac].nmacmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_nmac1_info_d[l_ac].nmacmodid_desc =g_rtn_fields[1]
+            DISPLAY BY NAME g_nmac1_info_d[l_ac].nmacmodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac1_info_d[l_ac].nmacownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_nmac1_info_d[l_ac].nmacownid_desc =g_rtn_fields[1]
+            DISPLAY BY NAME g_nmac1_info_d[l_ac].nmacownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac1_info_d[l_ac].nmacowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmac1_info_d[l_ac].nmacowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmac1_info_d[l_ac].nmacowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac1_info_d[l_ac].nmaccrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_nmac1_info_d[l_ac].nmaccrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmac1_info_d[l_ac].nmaccrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac1_info_d[l_ac].nmaccrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmac1_info_d[l_ac].nmaccrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmac1_info_d[l_ac].nmaccrtdp_desc
+]]>
+  </point>
+  <point name="ref_show.head.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[           
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmac_m.nmac001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='4' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmac_m.nmac001_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmac_m.nmac001_desc
+]]>
+  </point>
+  <point name="reproduce.action" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      ON ACTION controlp INFIELD nmac001
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmac_m.nmac001             #給予default值
+
+            #給予arg
+            LET g_qryparam.where = "ooal001 = 4 "
+            CALL q_ooal002()                                #呼叫開窗
+
+            LET g_nmac_m.nmac001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_nmac_m.nmac001 TO nmac001              #顯示到畫面上
+            LET g_qryparam.where =''
+            NEXT FIELD nmac001                          #返回原欄位]]>
+  </point>
+  <point name="reproduce.body.b_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      LET l_month = MONTH(l_detail.nmac002)
+      LET l_day = DAY(l_detail.nmac002)
+      LET l_detail.nmac002 = MDY(l_month,l_day,l_newno02)]]>
+  </point>
+  <point name="reproduce.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[    DEFINE l_success        LIKE type_t.num5
+    DEFINE l_month          LIKE type_t.num5
+    DEFINE l_day            LIKE type_t.num5 ]]>
+  </point>
+  <point name="reproduce.nmac001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO nmac001_desc
+            IF NOT cl_null(l_newno) THEN
+               CALL anmi110_nmac001_chk(l_newno)
+               IF  NOT cl_null (g_errno)  THEN
+                   IF g_errno = 'aoo-00076' THEN
+                      IF NOT cl_ask_confirm('aoo-00076') THEN
+                         LET l_newno = ''
+                         DISPLAY BY NAME l_newno
+                         NEXT FIELD nmac001
+                      ELSE
+                         CALL s_transaction_begin()
+                         LET l_success = 0
+                         CALL s_aooi070_ins(4,l_newno) RETURNING l_success
+                         IF l_success = 1 THEN
+                            CALL s_transaction_end('Y','1')
+                         ELSE
+                            CALL s_transaction_end('N','1')
+                         END IF
+                      END IF
+                   ELSE
+                      CALL cl_err(l_newno,g_errno,1)
+                      LET l_newno= ''
+                      LET g_nmac_m.nmac001_desc = ''
+                      DISPLAY  BY NAME g_nmac_m.nmac001_desc
+                      NEXT FIELD nmac001
+                   END IF
+               END IF
+               LET l_cnt = 0
+               SELECT COUNT(*) INTO l_cnt FROM nmac_t 
+                WHERE nmacent = g_enterprise AND nmac001 = l_newno
+
+               IF l_cnt > 0 THEN
+                  CALL cl_err("Reproduce","std-00006",1)
+                  LET l_newno= ''
+                  LET g_nmac_m.nmac001_desc = ''
+                  DISPLAY  BY NAME g_nmac_m.nmac001_desc
+                  NEXT FIELD nmac001 
+               END IF
+            ELSE
+               DISPLAY '' TO nmac001_desc                               
+            END IF
+
+            CALL anmi110_nmac001_desc(l_newno) RETURNING g_nmac_m.nmac001_desc
+            DISPLAY BY NAME g_nmac_m.nmac001_desc
+]]>
+  </point>
+  <point name="show.before" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.before_dialog2" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[        ]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_success   LIKE type_t.chr1
+   DEFINE l_year      LIKE nmac_t.nmac005
+   DEFINE l_count     LIKE type_t.num5]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <section id="anmi110.b_fill" ver="4" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION anmi110_b_fill(p_wc2)
+   DEFINE p_wc2      STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point     
+ 
+   #先清空單身變數內容
+   CALL g_nmac_d.clear()
+   CALL g_nmac1_info_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   LET g_sql = "SELECT  UNIQUE nmacstus,nmac002,nmac003,nmac004,nmac002,nmacmodid,nmacmoddt,nmacownid, 
+       nmacowndp,nmaccrtid,nmaccrtdp,nmaccrtdt,t1.oocql004 ,t2.ooag011 ,t3.ooag011 ,t4.ooefl003 ,t5.ooag011 , 
+       t6.ooefl003 FROM nmac_t",   
+               "",
+               
+                              " LEFT JOIN oocql_t t1 ON t1.oocqlent='"||g_enterprise||"' AND t1.oocql001='6' AND t1.oocql002=nmac003 AND t1.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t2 ON t2.ooagent='"||g_enterprise||"' AND t2.ooag001=nmacmodid  ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent='"||g_enterprise||"' AND t3.ooag001=nmacownid  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent='"||g_enterprise||"' AND t4.ooefl001=nmacowndp AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t5 ON t5.ooagent='"||g_enterprise||"' AND t5.ooag001=nmaccrtid  ",
+               " LEFT JOIN ooefl_t t6 ON t6.ooeflent='"||g_enterprise||"' AND t6.ooefl001=nmaccrtdp AND t6.ooefl002='"||g_dlang||"' ",
+ 
+               " WHERE nmacent= ? AND nmac001=? AND nmac005=?"  
+ 
+   IF NOT cl_null(g_wc2_table1) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2_table1 CLIPPED, cl_sql_add_filter("nmac_t")
+   END IF
+   
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+   
+   #子單身的WC
+   
+   
+   #判斷是否填充
+   IF anmi110_fill_chk(1) THEN
+      LET g_sql = g_sql, " ORDER BY nmac_t.nmac002"
+      
+      #add-point:b_fill段fill_before
+      {<point name="b_fill.fill_before"/>}
+      #end add-point
+      
+      LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+      PREPARE anmi110_pb FROM g_sql
+      DECLARE b_fill_cs CURSOR FOR anmi110_pb
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs USING g_enterprise,g_nmac_m.nmac001,g_nmac_m.nmac005
+                                               
+      FOREACH b_fill_cs INTO g_nmac_d[l_ac].nmacstus,g_nmac_d[l_ac].nmac002,g_nmac_d[l_ac].nmac003,g_nmac_d[l_ac].nmac004, 
+          g_nmac1_info_d[l_ac].nmac002,g_nmac1_info_d[l_ac].nmacmodid,g_nmac1_info_d[l_ac].nmacmoddt, 
+          g_nmac1_info_d[l_ac].nmacownid,g_nmac1_info_d[l_ac].nmacowndp,g_nmac1_info_d[l_ac].nmaccrtid, 
+          g_nmac1_info_d[l_ac].nmaccrtdp,g_nmac1_info_d[l_ac].nmaccrtdt,g_nmac_d[l_ac].nmac003_desc, 
+          g_nmac1_info_d[l_ac].nmacmodid_desc,g_nmac1_info_d[l_ac].nmacownid_desc,g_nmac1_info_d[l_ac].nmacowndp_desc, 
+          g_nmac1_info_d[l_ac].nmaccrtid_desc,g_nmac1_info_d[l_ac].nmaccrtdp_desc
+                             
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+                           
+         #add-point:b_fill段資料填充
+         {<point name="b_fill.fill"/>}
+         #end add-point
+      
+         #帶出公用欄位reference值
+         
+         
+         #此段落由子樣板a12產生
+      #LET g_nmac1_info_d[l_ac].nmacownid_desc = cl_get_username(g_nmac1_info_d[l_ac].nmacownid)
+      #LET g_nmac1_info_d[l_ac].nmacowndp_desc = cl_get_deptname(g_nmac1_info_d[l_ac].nmacowndp)
+      #LET g_nmac1_info_d[l_ac].nmaccrtid_desc = cl_get_username(g_nmac1_info_d[l_ac].nmaccrtid)
+      #LET g_nmac1_info_d[l_ac].nmaccrtdp_desc = cl_get_deptname(g_nmac1_info_d[l_ac].nmaccrtdp)
+      #LET g_nmac1_info_d[l_ac].nmacmodid_desc = cl_get_username(g_nmac1_info_d[l_ac].nmacmodid)
+      
+ 
+ 
+ 
+        
+         #add-point:單身資料抓取
+         {<point name="bfill.foreach"/>}
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      
+            CALL g_nmac_d.deleteElement(g_nmac_d.getLength())
+      CALL g_nmac1_info_d.deleteElement(g_nmac1_info_d.getLength())
+ 
+   END IF
+   
+   #add-point:b_fill段more
+   {<point name="b_fill.more"/>}
+   #end add-point
+   
+   LET g_rec_b=l_ac-1
+   DISPLAY g_rec_b TO FORMONLY.cnt  
+   LET l_ac = g_cnt
+   LET g_cnt = 0 
+ 
+   FREE anmi110_pb   
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.b_fill2" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION anmi110_b_fill2(pi_idx)
+   DEFINE pi_idx          LIKE type_t.num5
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+      
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.before_delete" ver="1" status="" src="s">
+    <![CDATA[#+ 單身db資料刪除
+PRIVATE FUNCTION anmi110_before_delete()
+   #add-point:before_delete段define
+   {<point name="before_delete.define"/>}
+   #end add-point 
+   
+   #add-point:單筆刪除前
+   {<point name="delete.body.b_single_delete" mark="Y"/>}
+   #end add-point
+   
+   DELETE FROM nmac_t
+    WHERE nmacent = g_enterprise AND nmac001 = g_nmac_m.nmac001 AND
+                              nmac005 = g_nmac_m.nmac005 AND
+ 
+          nmac002 = g_nmac_d_t.nmac002
+ 
+      
+   #add-point:單筆刪除中
+   {<point name="delete.body.m_single_delete"/>}
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("nmac_t",SQLCA.sqlcode,1)
+      RETURN FALSE 
+   END IF
+   
+   #add-point:單筆刪除後
+   {<point name="delete.body.a_single_delete"/>}
+   #end add-point
+ 
+   LET g_rec_b = g_rec_b-1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+ 
+   RETURN TRUE
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.browser_fill" ver="4" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION anmi110_browser_fill(ps_page_action)
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   DEFINE l_searchcol       STRING
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point    
+   
+   #add-point:browser_fill段動作開始前
+   {<point name="browser_fill.before_browser_fill"/>}
+   #end add-point    
+   
+   CALL g_browser.clear()
+ 
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = '0' THEN
+      LET l_searchcol = "nmac001"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+   
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+   IF cl_null(l_wc) THEN  #p_wc 查詢條件
+      LET l_wc = " 1=1"
+   END IF
+   IF cl_null(l_wc2) THEN  #p_wc 查詢條件
+      LET l_wc2 = " 1=1"
+   END IF
+   
+   IF l_wc2 <> " 1=1" OR NOT cl_null(l_wc2) THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE nmac001 ",
+                      ", nmac005 ",
+ 
+                      " FROM nmac_t ",
+                      " ",
+                      " ",
+ 
+                      " WHERE nmacent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("nmac_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE nmac001 ",
+                      ", nmac005 ",
+ 
+                      " FROM nmac_t ",
+                      " ",
+                      " ",
+                      " WHERE nmacent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED, cl_sql_add_filter("nmac_t")
+   END IF 
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+ 
+   #add-point:browser_fill,count前
+   {<point name="browser_fill.before_count"/>}
+   #end add-point
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+   
+   #若超過最大顯示筆數
+   LET g_error_show = 0
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #依照nmac001,nmac005 Browser欄位定義(取代原本bs_sql功能)
+   LET g_sql  = "SELECT DISTINCT nmac001,nmac005",
+                " FROM nmac_t ",
+ 
+                
+                " WHERE nmacent = '" ||g_enterprise|| "' AND ", l_wc," AND ",l_wc2, cl_sql_add_filter("nmac_t")
+ 
+   #add-point:browser_fill,sql_rank前
+   {<point name="browser_fill.before_sql_rank"/>}
+   #end add-point
+    
+   #定義browser_fill sql
+   LET g_sql= g_sql, " ORDER BY ",l_searchcol, " ", g_order
+                
+   #add-point:browser_fill,pre前
+   {<point name="browser_fill.before_pre"/>}
+   #end add-point
+    
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料    
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_nmac001,g_browser[g_cnt].b_nmac005 
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point    
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   IF g_browser.getLength() = 0 AND l_wc THEN
+      INITIALIZE g_nmac_m.* TO NULL
+      CALL g_nmac_d.clear()
+      CALL g_nmac1_info_d.clear()
+ 
+      #add-point:browser_fill段after_clear
+      {<point name="browser_fill.after_clear"/>}
+      #end add-point 
+      CLEAR FORM
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.browser_search" ver="2" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料搜尋
+PRIVATE FUNCTION anmi110_browser_search(p_type)
+   DEFINE p_type LIKE type_t.chr10
+   #add-point:browser_search段define
+   {<point name="browser_search.define"/>}
+   #end add-point    
+   
+   #若無輸入關鍵字則查找出所有資料
+   IF NOT cl_null(g_searchstr) AND g_searchcol='0' THEN
+      CALL cl_err("searchcol","std-00005",0)
+      RETURN FALSE 
+   END IF 
+   
+   IF NOT cl_null(g_searchstr) THEN
+      LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+      LET g_wc = g_wc.toLowerCase()
+   ELSE
+      LET g_wc = " 1=1"
+   END IF         
+   
+   #若為排序搜尋則添加以下條件
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET g_wc = g_wc, " ORDER BY nmac001"
+   ELSE
+      LET g_wc = g_wc, " ORDER BY ", g_searchcol
+   END IF 
+ 
+   CALL anmi110_browser_fill("F")
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.construct" ver="4" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION anmi110_construct()
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point    
+ 
+   #清除畫面上相關資料
+   CLEAR FORM                 
+   INITIALIZE g_nmac_m.* TO NULL
+   CALL g_nmac_d.clear()
+   CALL g_nmac1_info_d.clear()
+ 
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   LET g_action_choice = ""
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段construct外
+   {<point name="cs.head.before"/>}
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON nmac001,nmac005
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+                 #Ctrlp:construct.c.nmac001
+         ON ACTION controlp INFIELD nmac001
+            #add-point:ON ACTION controlp INFIELD nmac001
+            {<point name="construct.c.nmac001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmac001
+            #add-point:BEFORE FIELD nmac001
+            {<point name="construct.b.nmac001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmac001
+            
+            #add-point:AFTER FIELD nmac001
+            {<point name="construct.a.nmac001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmac005
+            #add-point:BEFORE FIELD nmac005
+            {<point name="construct.b.nmac005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmac005
+            
+            #add-point:AFTER FIELD nmac005
+            {<point name="construct.a.nmac005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.nmac005
+         ON ACTION controlp INFIELD nmac005
+            #add-point:ON ACTION controlp INFIELD nmac005
+            {<point name="construct.c.nmac005" />}
+            #END add-point
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      CONSTRUCT g_wc2_table1 ON nmacstus,nmac002,nmac003,nmac004,nmacmodid,nmacmoddt,nmacownid,nmacowndp, 
+          nmaccrtid,nmaccrtdp,nmaccrtdt
+           FROM s_detail1[1].nmacstus,s_detail1[1].nmac002,s_detail1[1].nmac003,s_detail1[1].nmac004, 
+               s_detail1_info[1].nmacmodid,s_detail1_info[1].nmacmoddt,s_detail1_info[1].nmacownid,s_detail1_info[1].nmacowndp, 
+               s_detail1_info[1].nmaccrtid,s_detail1_info[1].nmaccrtdp,s_detail1_info[1].nmaccrtdt
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.body.before_construct"/>}
+            #end add-point 
+            
+         #單身公用欄位開窗相關處理
+         #此段落由子樣板a11產生
+         ##----<<nmaccrtdt>>----
+         AFTER FIELD nmaccrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<nmacmoddt>>----
+         AFTER FIELD nmacmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<nmaccnfdt>>----
+         
+         #----<<nmacpstdt>>----
+ 
+ 
+           
+         #單身一般欄位開窗相關處理
+                  #此段落由子樣板a01產生
+         BEFORE FIELD nmacstus
+            #add-point:BEFORE FIELD nmacstus
+            {<point name="construct.b.page1.nmacstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmacstus
+            
+            #add-point:AFTER FIELD nmacstus
+            {<point name="construct.a.page1.nmacstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmacstus
+         ON ACTION controlp INFIELD nmacstus
+            #add-point:ON ACTION controlp INFIELD nmacstus
+            {<point name="construct.c.page1.nmacstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmac002
+            #add-point:BEFORE FIELD nmac002
+            {<point name="construct.b.page1.nmac002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmac002
+            
+            #add-point:AFTER FIELD nmac002
+            {<point name="construct.a.page1.nmac002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmac002
+         ON ACTION controlp INFIELD nmac002
+            #add-point:ON ACTION controlp INFIELD nmac002
+            {<point name="construct.c.page1.nmac002" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1.nmac003
+         ON ACTION controlp INFIELD nmac003
+            #add-point:ON ACTION controlp INFIELD nmac003
+            {<point name="construct.c.page1.nmac003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmac003
+            #add-point:BEFORE FIELD nmac003
+            {<point name="construct.b.page1.nmac003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmac003
+            
+            #add-point:AFTER FIELD nmac003
+            {<point name="construct.a.page1.nmac003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmac004
+            #add-point:BEFORE FIELD nmac004
+            {<point name="construct.b.page1.nmac004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmac004
+            
+            #add-point:AFTER FIELD nmac004
+            {<point name="construct.a.page1.nmac004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmac004
+         ON ACTION controlp INFIELD nmac004
+            #add-point:ON ACTION controlp INFIELD nmac004
+            {<point name="construct.c.page1.nmac004" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1_info.nmacmodid
+         ON ACTION controlp INFIELD nmacmodid
+            #add-point:ON ACTION controlp INFIELD nmacmodid
+            {<point name="construct.c.page1_info.nmacmodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmacmodid
+            #add-point:BEFORE FIELD nmacmodid
+            {<point name="construct.b.page1_info.nmacmodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmacmodid
+            
+            #add-point:AFTER FIELD nmacmodid
+            {<point name="construct.a.page1_info.nmacmodid" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmacmoddt
+            #add-point:BEFORE FIELD nmacmoddt
+            {<point name="construct.b.page1_info.nmacmoddt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1_info.nmacownid
+         ON ACTION controlp INFIELD nmacownid
+            #add-point:ON ACTION controlp INFIELD nmacownid
+            {<point name="construct.c.page1_info.nmacownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmacownid
+            #add-point:BEFORE FIELD nmacownid
+            {<point name="construct.b.page1_info.nmacownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmacownid
+            
+            #add-point:AFTER FIELD nmacownid
+            {<point name="construct.a.page1_info.nmacownid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1_info.nmacowndp
+         ON ACTION controlp INFIELD nmacowndp
+            #add-point:ON ACTION controlp INFIELD nmacowndp
+            {<point name="construct.c.page1_info.nmacowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmacowndp
+            #add-point:BEFORE FIELD nmacowndp
+            {<point name="construct.b.page1_info.nmacowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmacowndp
+            
+            #add-point:AFTER FIELD nmacowndp
+            {<point name="construct.a.page1_info.nmacowndp" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1_info.nmaccrtid
+         ON ACTION controlp INFIELD nmaccrtid
+            #add-point:ON ACTION controlp INFIELD nmaccrtid
+            {<point name="construct.c.page1_info.nmaccrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmaccrtid
+            #add-point:BEFORE FIELD nmaccrtid
+            {<point name="construct.b.page1_info.nmaccrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmaccrtid
+            
+            #add-point:AFTER FIELD nmaccrtid
+            {<point name="construct.a.page1_info.nmaccrtid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1_info.nmaccrtdp
+         ON ACTION controlp INFIELD nmaccrtdp
+            #add-point:ON ACTION controlp INFIELD nmaccrtdp
+            {<point name="construct.c.page1_info.nmaccrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmaccrtdp
+            #add-point:BEFORE FIELD nmaccrtdp
+            {<point name="construct.b.page1_info.nmaccrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmaccrtdp
+            
+            #add-point:AFTER FIELD nmaccrtdp
+            {<point name="construct.a.page1_info.nmaccrtdp" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmaccrtdt
+            #add-point:BEFORE FIELD nmaccrtdt
+            {<point name="construct.b.page1_info.nmaccrtdt" />}
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+  
+ 
+  
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:ui_dialog段b_dialog
+         {<point name="cs.before_dialog"/>}
+         #end add-point
+      
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+ 
+   
+   LET g_current_row = 1
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+   
+   LET g_wc_filter = ""
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.default_search" ver="2" status="" src="s">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION anmi110_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " nmac001 = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " nmac005 = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.delete" ver="3" status="" src="s">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION anmi110_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point     
+   
+   IF g_nmac_m.nmac001 IS NULL
+   OR g_nmac_m.nmac005 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   EXECUTE anmi110_master_referesh USING g_nmac_m.nmac001,g_nmac_m.nmac005 INTO g_nmac_m.nmac001,g_nmac_m.nmac005, 
+       g_nmac_m.nmac001_desc
+   
+   CALL anmi110_show()
+   
+   CALL s_transaction_begin()
+   
+   
+ 
+   OPEN anmi110_cl USING g_enterprise,g_nmac_m.nmac001
+                                                       ,g_nmac_m.nmac005
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN anmi110_cl:", STATUS, 1)
+      CLOSE anmi110_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH anmi110_cl INTO g_nmac_m.nmac001,g_nmac_m.nmac001_desc,g_nmac_m.nmac005
+   
+   #若資料已被他人LOCK
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_nmac_m.nmac001,SQLCA.sqlcode,0)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #IF NOT cl_ask_delete() THEN             #確認一下
+   IF cl_ask_del_master() THEN              #確認一下
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL anmi110_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+  
+ 
+      #add-point:單身刪除前
+      {<point name="delete.body.b_delete" mark="Y"/>}
+      #end add-point
+      
+      DELETE FROM nmac_t WHERE nmacent = g_enterprise AND nmac001 = g_nmac_m.nmac001
+                                                               AND nmac005 = g_nmac_m.nmac005
+ 
+                                                               
+      #add-point:單身刪除中
+      {<point name="delete.body.m_delete"/>}
+      #end add-point
+      
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("nmac_t",SQLCA.sqlcode,0)
+         CALL s_transaction_end('N','0')
+      END IF
+ 
+      
+  
+      #add-point:單身刪除後 
+      {<point name="delete.body.a_delete"/>}
+      #end add-point
+      
+ 
+      
+      CLEAR FORM
+      CALL g_nmac_d.clear() 
+      CALL g_nmac1_info_d.clear()       
+ 
+     
+      CALL anmi110_ui_browser_refresh()  
+      CALL anmi110_ui_headershow()  
+      CALL anmi110_ui_detailshow()
+       
+      IF g_browser_cnt > 0 THEN 
+         CALL anmi110_fetch('P')
+      ELSE
+         LET g_wc = " 1=1"
+         LET g_wc2 = " 1=1"
+         CALL anmi110_browser_fill("F")
+      END IF
+       
+   END IF
+ 
+   CLOSE anmi110_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_nmac_m.nmac001,'D')
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.delete_b" ver="1" status="" src="s">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION anmi110_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.description" ver="5" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000464
+#+ 
+#+ Filename...: anmi110
+#+ Description: 銀行節假日表設定作業
+#+ Creator....: 02298(2013/07/01)
+#+ Modifier...: 02599(2014/07/09)
+#+ Buildtype..: 應用 i07 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="anmi110.detail_reproduce" ver="1" status="" src="s">
+    <![CDATA[#+ 單身自動複製
+PRIVATE FUNCTION anmi110_detail_reproduce()
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE nmac_t.*
+ 
+ 
+   #add-point:delete段define
+   {<point name="detail_reproduce.define"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE anmi110_detail
+   
+   #add-point:單身複製前1
+   {<point name="detail_reproduce.body.table1.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = "CREATE GLOBAL TEMPORARY TABLE anmi110_detail AS ",
+                "SELECT * FROM nmac_t "
+   PREPARE repro_tbl FROM ls_sql
+   EXECUTE repro_tbl
+   FREE repro_tbl
+                
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO anmi110_detail SELECT * FROM nmac_t 
+                                         WHERE nmacent = g_enterprise AND nmac001 = g_nmac001_t
+                                         AND nmac005 = g_nmac005_t
+ 
+   
+   #將key修正為調整後   
+   UPDATE anmi110_detail 
+      #更新key欄位
+      SET nmac001 = g_nmac_m.nmac001
+          , nmac005 = g_nmac_m.nmac005
+ 
+      #更新共用欄位
+      #此段落由子樣板a13產生
+       , nmacownid = g_user
+       , nmacowndp = g_dept
+       , nmaccrtid = g_user
+       , nmaccrtdp = g_dept 
+       , nmaccrtdt = ld_date
+       , nmacmodid = "" 
+       , nmacmoddt = "" 
+      #, nmacstus = "Y"
+ 
+ 
+                                       
+  
+   #將資料塞回原table   
+   INSERT INTO nmac_t SELECT * FROM anmi110_detail
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("reproduce",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1
+   {<point name="detail_reproduce.body.table1.m_insert"/>}
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE anmi110_detail
+   
+   #add-point:單身複製後1
+   {<point name="detail_reproduce.body.table1.a_insert"/>}
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_nmac001_t = g_nmac_m.nmac001
+   LET g_nmac005_t = g_nmac_m.nmac005
+ 
+   
+   DROP TABLE anmi110_detail
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.fetch" ver="4" status="" src="s">
+    <![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION anmi110_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point    
+   
+   #add-point:fetch段動作開始前
+   {<point name="fetch.before_fetch"/>}
+   #end add-point    
+ 
+   CASE p_flag
+      WHEN 'F' LET g_current_idx = 1
+      WHEN 'L' LET g_current_idx = g_header_cnt        
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,': ' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF
+            
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+            LET g_current_idx = g_jump
+         END IF
+ 
+         LET g_no_ask = FALSE  
+   END CASE    
+   
+   #若無資料則離開
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+   
+   CALL anmi110_browser_fill(p_flag)
+   
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身筆數顯示
+   DISPLAY g_detail_cnt TO FORMONLY.cnt                      #設定page 總筆數 
+   #LET g_detail_idx = 1
+   IF g_detail_cnt > 0 THEN
+      #LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index   #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_nmac_m.nmac001 = g_browser[g_current_idx].b_nmac001
+   LET g_nmac_m.nmac005 = g_browser[g_current_idx].b_nmac005
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE anmi110_master_referesh USING g_nmac_m.nmac001,g_nmac_m.nmac005 INTO g_nmac_m.nmac001,g_nmac_m.nmac005, 
+       g_nmac_m.nmac001_desc
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("nmac_t",SQLCA.sqlcode,1)
+      INITIALIZE g_nmac_m.* TO NULL
+      RETURN
+   END IF
+   
+   #LET g_data_owner =       
+   #LET g_data_group =   
+   
+   #保存單頭舊值
+   LET g_nmac_m_t.* = g_nmac_m.*
+   LET g_nmac_m_o.* = g_nmac_m.*
+   
+   #重新顯示   
+   CALL anmi110_show()
+ 
+   
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.fill_chk" ver="1" status="" src="s">
+    <![CDATA[#+ 單身填充確認
+PRIVATE FUNCTION anmi110_fill_chk(ps_idx)
+   DEFINE ps_idx        LIKE type_t.chr10
+   DEFINE lst_token     base.StringTokenizer
+   DEFINE ls_token      STRING
+   #add-point:fill_chk段define
+   {<point name="fill_chk.define"/>}
+   #end add-point
+   
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1') THEN
+      RETURN TRUE
+   END IF
+   
+   #第一單身
+   IF ps_idx = 1 AND
+      ((NOT cl_null(g_wc2_table1) AND g_wc2_table1.trim() <> '1=1')) THEN
+      RETURN TRUE
+   END IF
+   
+   #根據wc判定是否需要填充
+ 
+ 
+   
+   #add-point:fill_chk段other
+   {<point name="fill_chk.other"/>}
+   #end add-point
+   
+   RETURN FALSE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.filter" ver="1" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION anmi110_filter()
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+                            #add-point:filter段cs_ctrl
+                            {<point name="filter.cs_ctrl"/>}
+                            #end add-point
+                         
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+ 
+ 
+   
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION anmi110_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.global" ver="3" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_nmac_m        RECORD
+       nmac001 LIKE nmac_t.nmac001, 
+   nmac001_desc LIKE type_t.chr80, 
+   nmac005 LIKE nmac_t.nmac005
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_nmac_d        RECORD
+       nmacstus LIKE nmac_t.nmacstus, 
+   nmac002 LIKE nmac_t.nmac002, 
+   nmac002_desc LIKE type_t.chr500, 
+   nmac003 LIKE nmac_t.nmac003, 
+   nmac003_desc LIKE type_t.chr500, 
+   nmac004 LIKE nmac_t.nmac004
+       END RECORD
+PRIVATE TYPE type_g_nmac1_info_d RECORD
+       nmac002 LIKE nmac_t.nmac002, 
+   nmacmodid LIKE nmac_t.nmacmodid, 
+   nmacmodid_desc LIKE type_t.chr500, 
+   nmacmoddt DATETIME YEAR TO SECOND, 
+   nmacownid LIKE nmac_t.nmacownid, 
+   nmacownid_desc LIKE type_t.chr500, 
+   nmacowndp LIKE nmac_t.nmacowndp, 
+   nmacowndp_desc LIKE type_t.chr500, 
+   nmaccrtid LIKE nmac_t.nmaccrtid, 
+   nmaccrtid_desc LIKE type_t.chr500, 
+   nmaccrtdp LIKE nmac_t.nmaccrtdp, 
+   nmaccrtdp_desc LIKE type_t.chr500, 
+   nmaccrtdt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_nmac_m          type_g_nmac_m
+DEFINE g_nmac_m_t        type_g_nmac_m
+DEFINE g_nmac_m_o        type_g_nmac_m
+ 
+   DEFINE g_nmac001_t LIKE nmac_t.nmac001
+DEFINE g_nmac005_t LIKE nmac_t.nmac005
+ 
+ 
+DEFINE g_nmac_d          DYNAMIC ARRAY OF type_g_nmac_d
+DEFINE g_nmac_d_t        type_g_nmac_d
+DEFINE g_nmac_d_o        type_g_nmac_d
+DEFINE g_nmac1_info_d   DYNAMIC ARRAY OF type_g_nmac1_info_d
+DEFINE g_nmac1_info_d_t type_g_nmac1_info_d
+DEFINE g_nmac1_info_d_o type_g_nmac1_info_d
+ 
+ 
+DEFINE g_browser      DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位  
+       b_statepic     LIKE type_t.chr50,
+          b_nmac001 LIKE nmac_t.nmac001,
+      b_nmac005 LIKE nmac_t.nmac005
+       #,rank           LIKE type_t.num10
+      END RECORD 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+ 
+ 
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num5           
+DEFINE l_ac                  LIKE type_t.num5    
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+ 
+DEFINE g_pagestart           LIKE type_t.num5           
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+ 
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num5              #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num5              #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num5              #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num5              #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num5              #Browser目前所在筆數(暫存用)
+ 
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序欄位
+DEFINE g_state               STRING                        
+DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page                    
+DEFINE g_current_row         LIKE type_t.num5              #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="anmi110.init" ver="1" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION anmi110_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point    
+  
+   LET g_bfill = "Y"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   
+   
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init"/>}
+   #end add-point
+   
+   CALL anmi110_default_search()
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.input" ver="4" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PRIVATE FUNCTION anmi110_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_ac_t                LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                   LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num5
+   DEFINE  l_i                   LIKE type_t.num5
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num5
+   DEFINE  li_reproduce_target   LIKE type_t.num5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point    
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF  
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql
+   {<point name="input.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT nmacstus,nmac002,nmac003,nmac004,nmac002,nmacmodid,nmacmoddt,nmacownid, 
+       nmacowndp,nmaccrtid,nmaccrtdp,nmaccrtdt FROM nmac_t WHERE nmacent=? AND nmac001=? AND nmac005=?  
+       AND nmac002=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE anmi110_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+ 
+ 
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL anmi110_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL anmi110_set_no_entry(p_cmd)
+   #add-point:set_no_entry後
+   {<point name="input.after_set_no_entry"/>}
+   #end add-point
+ 
+   DISPLAY BY NAME g_nmac_m.nmac001,g_nmac_m.nmac005
+   
+   LET lb_reproduce = FALSE
+   
+   #add-point:進入修改段前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+]]>
+  </section>
+  <section id="anmi110.input.body" ver="6" status="" src="s">
+    <![CDATA[      #Page1 預設值產生於此處
+      INPUT ARRAY g_nmac_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂單身ACTION
+         
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION holiday_gen
+            LET g_action_choice="holiday_gen"
+            IF cl_auth_chk_act("holiday_gen") THEN
+               
+               #add-point:ON ACTION holiday_gen
+               {<point name="input.detail_input.page1.holiday_gen" />}
+               #END add-point
+            END IF
+ 
+ 
+ 
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_nmac_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL anmi110_b_fill(g_wc2) 
+            IF g_rec_b != 0 THEN
+               CALL fgl_set_arr_curr(l_ac)
+            END IF
+            #add-point:資料輸入前
+            {<point name="input.body.before_input"/>}
+            #end add-point
+         
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            
+         
+            CALL s_transaction_begin()
+            
+            #判定新增或修改
+            IF l_cmd = 'u' THEN
+               OPEN anmi110_cl USING g_enterprise,
+                                               g_nmac_m.nmac001
+                                               ,g_nmac_m.nmac005
+ 
+                                               
+               IF STATUS THEN
+                  CALL cl_err("OPEN anmi110_cl:", STATUS, 1)
+                  CLOSE anmi110_cl
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+            END IF
+            
+            LET l_cmd = ''
+            
+            IF g_rec_b >= l_ac 
+               AND g_nmac_d[l_ac].nmac002 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_nmac_d_t.* = g_nmac_d[l_ac].*  #BACKUP
+               LET g_nmac_d_o.* = g_nmac_d[l_ac].*  #BACKUP
+               CALL anmi110_set_entry_b(l_cmd)
+               #add-point:set_entry_b後
+               {<point name="input.body.before_row.set_entry_b"/>}
+               #end add-point
+               CALL anmi110_set_no_entry_b(l_cmd)
+               OPEN anmi110_bcl USING g_enterprise,g_nmac_m.nmac001,
+                                                g_nmac_m.nmac005,
+ 
+                                                g_nmac_d_t.nmac002
+ 
+               IF STATUS THEN
+                  CALL cl_err("OPEN anmi110_bcl:", STATUS, 1)
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH anmi110_bcl INTO g_nmac_d[l_ac].nmacstus,g_nmac_d[l_ac].nmac002,g_nmac_d[l_ac].nmac003, 
+                      g_nmac_d[l_ac].nmac004,g_nmac1_info_d[l_ac].nmac002,g_nmac1_info_d[l_ac].nmacmodid, 
+                      g_nmac1_info_d[l_ac].nmacmoddt,g_nmac1_info_d[l_ac].nmacownid,g_nmac1_info_d[l_ac].nmacowndp, 
+                      g_nmac1_info_d[l_ac].nmaccrtid,g_nmac1_info_d[l_ac].nmaccrtdp,g_nmac1_info_d[l_ac].nmaccrtdt 
+
+                  IF SQLCA.sqlcode THEN
+                      CALL cl_err(g_nmac_d_t.nmac002,SQLCA.sqlcode,1)
+                      LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL anmi110_ref_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            
+        
+         BEFORE INSERT
+            
+            INITIALIZE g_nmac_d_t.* TO NULL
+            INITIALIZE g_nmac_d_o.* TO NULL
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_nmac_d[l_ac].* TO NULL
+            
+            #公用欄位預設值
+            #此段落由子樣板a14產生    
+      LET g_nmac1_info_d[l_ac].nmacownid = g_user
+      LET g_nmac1_info_d[l_ac].nmacowndp = g_dept
+      LET g_nmac1_info_d[l_ac].nmaccrtid = g_user
+      LET g_nmac1_info_d[l_ac].nmaccrtdp = g_dept 
+      LET g_nmac1_info_d[l_ac].nmaccrtdt = cl_get_current()
+      LET g_nmac1_info_d[l_ac].nmacmodid = ""
+      LET g_nmac1_info_d[l_ac].nmacmoddt = ""
+      LET g_nmac_d[l_ac].nmacstus = ""
+ 
+  
+            
+            #一般欄位預設值
+            
+            
+            
+            LET g_nmac_d_t.* = g_nmac_d[l_ac].*     #新輸入資料
+            LET g_nmac_d_o.* = g_nmac_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL anmi110_set_entry_b(l_cmd)
+            #add-point:set_entry_b後
+            {<point name="input.body.before_insert.set_entry_b"/>}
+            #end add-point
+            CALL anmi110_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_nmac_d[li_reproduce_target].* = g_nmac_d[li_reproduce].*
+               LET g_nmac1_info_d[li_reproduce_target].* = g_nmac1_info_d[li_reproduce].*
+ 
+               LET g_nmac_d[g_nmac_d.getLength()].nmac002 = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+ 
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM nmac_t 
+             WHERE nmacent = g_enterprise AND nmac001 = g_nmac_m.nmac001
+               AND nmac005 = g_nmac_m.nmac005
+ 
+               AND nmac002 = g_nmac_d[l_ac].nmac002
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               CALL s_transaction_begin()
+               #add-point:單身新增前
+               {<point name="input.body.b_insert" mark="Y"/>}
+               #end add-point
+               INSERT INTO nmac_t
+                           (nmacent,
+                            nmac001,nmac005,
+                            nmac002
+                            ,nmacstus,nmac003,nmac004,nmacmodid,nmacmoddt,nmacownid,nmacowndp,nmaccrtid,nmaccrtdp,nmaccrtdt) 
+                     VALUES(g_enterprise,
+                            g_nmac_m.nmac001,g_nmac_m.nmac005,
+                            g_nmac_d[l_ac].nmac002
+                            ,g_nmac_d[l_ac].nmacstus,g_nmac_d[l_ac].nmac003,g_nmac_d[l_ac].nmac004,g_nmac1_info_d[l_ac].nmacmodid, 
+                                g_nmac1_info_d[l_ac].nmacmoddt,g_nmac1_info_d[l_ac].nmacownid,g_nmac1_info_d[l_ac].nmacowndp, 
+                                g_nmac1_info_d[l_ac].nmaccrtid,g_nmac1_info_d[l_ac].nmaccrtdp,g_nmac1_info_d[l_ac].nmaccrtdt) 
+
+               #add-point:單身新增中
+               {<point name="input.body.m_insert"/>}
+               #end add-point
+               LET p_cmd = 'u'
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_nmac_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("nmac_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR "INSERT O.K"
+               LET g_rec_b=g_rec_b+1
+               DISPLAY g_rec_b TO FORMONLY.cnt
+            END IF
+            
+            #add-point:單身新增後
+            {<point name="input.body.after_insert"/>}
+            #end add-point
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_nmac_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_nmac_d.deleteElement(l_ac)
+               NEXT FIELD nmac002
+            END IF
+            IF g_nmac_d_t.nmac002 IS NOT NULL
+ 
+               THEN
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete"/>}
+               #end add-point
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               IF anmi110_before_delete() THEN 
+                  CALL s_transaction_end('Y','0')
+               ELSE 
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               END IF 
+               CLOSE anmi110_bcl
+               LET l_count = g_nmac_d.getLength()
+            END IF 
+            
+            #add-point:單身刪除後
+            {<point name="input.body.a_delete"/>}
+            #end add-point
+              
+         AFTER DELETE 
+            #add-point:單身AFTER DELETE 
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+ 
+                  #此段落由子樣板a01產生
+         BEFORE FIELD nmacstus
+            #add-point:BEFORE FIELD nmacstus
+            {<point name="input.b.page1.nmacstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmacstus
+            
+            #add-point:AFTER FIELD nmacstus
+            {<point name="input.a.page1.nmacstus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmacstus
+            #add-point:ON CHANGE nmacstus
+            {<point name="input.g.page1.nmacstus" />}
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page1.nmacstus
+         ON ACTION controlp INFIELD nmacstus
+            #add-point:ON ACTION controlp INFIELD nmacstus
+            {<point name="input.c.page1.nmacstus" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_nmac_d[l_ac].* = g_nmac_d_t.*
+               CLOSE anmi110_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_nmac_d[l_ac].nmac002,-263,1)
+               LET g_nmac_d[l_ac].* = g_nmac_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊
+               LET g_nmac1_info_d[l_ac].nmacmodid = g_user 
+LET g_nmac1_info_d[l_ac].nmacmoddt = cl_get_current()
+ 
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+         
+               UPDATE nmac_t SET (nmac001,nmac005,nmacstus,nmac002,nmac003,nmac004,nmacmodid,nmacmoddt, 
+                   nmacownid,nmacowndp,nmaccrtid,nmaccrtdp,nmaccrtdt) = (g_nmac_m.nmac001,g_nmac_m.nmac005, 
+                   g_nmac_d[l_ac].nmacstus,g_nmac_d[l_ac].nmac002,g_nmac_d[l_ac].nmac003,g_nmac_d[l_ac].nmac004, 
+                   g_nmac1_info_d[l_ac].nmacmodid,g_nmac1_info_d[l_ac].nmacmoddt,g_nmac1_info_d[l_ac].nmacownid, 
+                   g_nmac1_info_d[l_ac].nmacowndp,g_nmac1_info_d[l_ac].nmaccrtid,g_nmac1_info_d[l_ac].nmaccrtdp, 
+                   g_nmac1_info_d[l_ac].nmaccrtdt)
+                WHERE nmacent = g_enterprise AND nmac001 = g_nmac_m.nmac001 
+                 AND nmac005 = g_nmac_m.nmac005 
+ 
+                 AND nmac002 = g_nmac_d_t.nmac002 #項次   
+ 
+                 
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+               
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("nmac_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  #WHEN SQLCA.sqlcode #其他錯誤
+                  #   CALL cl_err("nmac_t",SQLCA.sqlcode,1)  
+                  #   CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmac_m.nmac001
+               LET gs_keys_bak[1] = g_nmac001_t
+               LET gs_keys[2] = g_nmac_m.nmac005
+               LET gs_keys_bak[2] = g_nmac005_t
+               LET gs_keys[3] = g_nmac_d[g_detail_idx].nmac002
+               LET gs_keys_bak[3] = g_nmac_d_t.nmac002
+               CALL anmi110_update_b('nmac_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+                     LET g_log1 = util.JSON.stringify(g_nmac_m),util.JSON.stringify(g_nmac_d_t)
+                     LET g_log2 = util.JSON.stringify(g_nmac_m),util.JSON.stringify(g_nmac_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+            END IF
+ 
+         AFTER INPUT
+            #若單身還沒有輸入資料, 強制切換至單身
+            IF g_nmac_d.getLength() = 0 THEN
+               NEXT FIELD nmac002
+            END IF
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point    
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_nmac_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_nmac_d.getLength()+1
+            
+      END INPUT
+ 
+ 
+      
+      DISPLAY ARRAY g_nmac1_info_d TO s_detail1_info.* ATTRIBUTES(COUNT=g_rec_b)  
+      
+         BEFORE ROW
+            CALL anmi110_b_fill(g_wc2) 
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1_info")
+            LET l_ac = g_detail_idx
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            CALL anmi110_ui_detailshow()
+        
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(g_detail_idx)      
+         
+         #add-point:page2自定義行為
+         {<point name="input.body1_info.action"/>}
+         #end add-point
+         
+      END DISPLAY
+ 
+      
+ 
+      
+      #add-point:input段more_input
+      {<point name="input.more_inputarray"/>}
+      #end add-point    
+      
+      BEFORE DIALOG
+         #add-point:input段before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            NEXT FIELD nmac001
+        ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD nmacstus
+               WHEN "s_detail1_info"
+                  NEXT FIELD nmac002_2
+ 
+            END CASE
+         END IF
+   
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+   
+   #add-point:input段after_input
+   {<point name="input.after_input"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.input.head" ver="5" status="" src="s">
+    <![CDATA[   
+      #單頭段
+      INPUT BY NAME g_nmac_m.nmac001,g_nmac_m.nmac005 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂單頭ACTION
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION holiday_gen
+            LET g_action_choice="holiday_gen"
+            IF cl_auth_chk_act("holiday_gen") THEN
+               
+               #add-point:ON ACTION holiday_gen
+               {<point name="input.master_input.holiday_gen" />}
+               #END add-point
+            END IF
+ 
+ 
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #add-point:單頭input前
+            {<point name="input.head.b_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD nmac001
+            
+            #add-point:AFTER FIELD nmac001
+            {<point name="input.a.nmac001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmac001
+            #add-point:BEFORE FIELD nmac001
+            {<point name="input.b.nmac001" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmac001
+            #add-point:ON CHANGE nmac001
+            {<point name="input.g.nmac001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmac005
+            #add-point:BEFORE FIELD nmac005
+            {<point name="input.b.nmac005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmac005
+            
+            #add-point:AFTER FIELD nmac005
+            {<point name="input.a.nmac005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmac005
+            #add-point:ON CHANGE nmac005
+            {<point name="input.g.nmac005" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.nmac001
+         ON ACTION controlp INFIELD nmac001
+            #add-point:ON ACTION controlp INFIELD nmac001
+            {<point name="input.c.nmac001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.nmac005
+         ON ACTION controlp INFIELD nmac005
+            #add-point:ON ACTION controlp INFIELD nmac005
+            {<point name="input.c.nmac005" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            IF s_transaction_chk("N",0) THEN
+                CALL s_transaction_begin()
+            END IF
+ 
+            #多語言處理
+            
+                
+            CALL cl_showmsg()
+            DISPLAY BY NAME g_nmac_m.nmac001             
+                            ,g_nmac_m.nmac005   
+ 
+ 
+            IF p_cmd = 'u' THEN
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+            
+               UPDATE nmac_t SET (nmac001,nmac005) = (g_nmac_m.nmac001,g_nmac_m.nmac005)
+                WHERE nmacent = g_enterprise AND nmac001 = g_nmac001_t
+                  AND nmac005 = g_nmac005_t
+ 
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("nmac_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("nmac_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     #資料多語言用-增/改
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmac_m.nmac001
+               LET gs_keys_bak[1] = g_nmac001_t
+               LET gs_keys[2] = g_nmac_m.nmac005
+               LET gs_keys_bak[2] = g_nmac005_t
+               LET gs_keys[3] = g_nmac_d[g_detail_idx].nmac002
+               LET gs_keys_bak[3] = g_nmac_d_t.nmac002
+               CALL anmi110_update_b('nmac_t',gs_keys,gs_keys_bak,"'1'")
+                     
+                     LET g_nmac001_t = g_nmac_m.nmac001
+                     LET g_nmac005_t = g_nmac_m.nmac005
+ 
+                     #add-point:單頭修改後
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     
+                     LET g_log1 = util.JSON.stringify(g_nmac_m_t)
+                     LET g_log2 = util.JSON.stringify(g_nmac_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+            
+            ELSE    
+               #add-point:單頭新增
+               {<point name="input.head.a_insert"/>}
+               #end add-point
+                                 
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL anmi110_detail_reproduce()
+               END IF
+            END IF
+           #controlp
+                     
+           LET g_nmac001_t = g_nmac_m.nmac001
+           LET g_nmac005_t = g_nmac_m.nmac005
+ 
+           
+           #若單身還沒有輸入資料, 強制切換至單身
+           #IF cl_null(g_nmac_d[1].nmac002) THEN
+           #   CALL g_nmac_d.deleteElement(1)
+           #   NEXT FIELD nmac002
+           #END IF
+           
+           IF g_nmac_d.getLength() = 0 THEN
+              NEXT FIELD nmac002
+           END IF
+ 
+      END INPUT
+]]>
+  </section>
+  <section id="anmi110.insert" ver="4" status="" src="s">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION anmi110_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   #add-point:insert段before
+   {<point name="insert.before"/>}
+   #end add-point    
+   
+   #清除相關資料
+   CLEAR FORM                    
+   CALL g_nmac_d.clear()
+   CALL g_nmac1_info_d.clear()
+ 
+ 
+   INITIALIZE g_nmac_m.* LIKE nmac_t.*             #DEFAULT 設定
+   LET g_nmac001_t = NULL
+   LET g_nmac005_t = NULL
+ 
+   CALL s_transaction_begin()
+   WHILE TRUE
+     
+      #單頭預設值
+      
+     
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point 
+ 
+      CALL anmi110_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_nmac_m.* = g_nmac_m_t.*
+         CALL anmi110_show()
+         CALL cl_err('',9001,0)
+         EXIT WHILE
+      END IF
+      
+      CALL g_nmac_d.clear()
+      CALL g_nmac1_info_d.clear()
+ 
+      
+      #add-point:單頭輸入後2
+      {<point name="insert.after_insert2"/>}
+      #end add-point
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+      
+   END WHILE
+   
+   #將新增的資料併入搜尋條件中
+   LET g_state = "Y"
+   LET g_current_idx = 1 
+   
+   LET g_nmac001_t = g_nmac_m.nmac001
+   LET g_nmac005_t = g_nmac_m.nmac005
+ 
+   
+   LET g_wc = "(",g_wc,  
+              " OR ( nmacent = '" ||g_enterprise|| "' AND ",
+              " nmac001 = '", g_nmac_m.nmac001 CLIPPED, "' "
+              ," AND nmac005 = '", g_nmac_m.nmac005 CLIPPED, "' "
+ 
+              , ")) "
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.insert_b" ver="1" status="" src="s">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION anmi110_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point     
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.lock_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION anmi110_lock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL anmi110_b_fill()
+   
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.main" ver="4" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("anm","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " SELECT nmac001,'',nmac005", 
+                      " FROM nmac_t",
+                      " WHERE nmacent= ? AND nmac001=? AND nmac005=? FOR UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE anmi110_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE nmac001,nmac005,t1.ooall004",
+               " FROM nmac_t",
+                              " LEFT JOIN ooall_t t1 ON t1.ooallent='"||g_enterprise||"' AND t1.ooall001='4' AND t1.ooall002=nmac001 AND t1.ooall003='"||g_dlang||"' ",
+ 
+               " WHERE nmacent = '" ||g_enterprise|| "' AND nmac001 = ? AND nmac005 = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE anmi110_master_referesh FROM g_sql
+ 
+ 
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_anmi110 WITH FORM cl_ap_formpath("anm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL anmi110_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL anmi110_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_anmi110
+      
+   END IF 
+   
+   CLOSE anmi110_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="anmi110.modify" ver="3" status="" src="s">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION anmi110_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point    
+   
+   IF g_nmac_m.nmac001 IS NULL
+   OR g_nmac_m.nmac005 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   EXECUTE anmi110_master_referesh USING g_nmac_m.nmac001,g_nmac_m.nmac005 INTO g_nmac_m.nmac001,g_nmac_m.nmac005, 
+       g_nmac_m.nmac001_desc
+ 
+   ERROR ""
+  
+   LET g_nmac001_t = g_nmac_m.nmac001
+   LET g_nmac005_t = g_nmac_m.nmac005
+ 
+   CALL s_transaction_begin()
+   
+   OPEN anmi110_cl USING g_enterprise,g_nmac_m.nmac001
+                                                       ,g_nmac_m.nmac005
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN anmi110_cl:", STATUS, 1)
+      CLOSE anmi110_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH anmi110_cl INTO g_nmac_m.nmac001,g_nmac_m.nmac001_desc,g_nmac_m.nmac005
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_nmac_m.nmac001,SQLCA.sqlcode,0)
+      CLOSE anmi110_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   CALL s_transaction_end('Y','0')
+ 
+   CALL anmi110_show()
+   WHILE TRUE
+      LET g_nmac001_t = g_nmac_m.nmac001
+      LET g_nmac005_t = g_nmac_m.nmac005
+ 
+ 
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+      
+      CALL anmi110_input("u")     #欄位更改
+      
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_nmac_m.* = g_nmac_m_t.*
+         CALL anmi110_show()
+         CALL cl_err('',9001,0)
+         EXIT WHILE
+      END IF
+      
+      #若單頭key欄位有變更
+      IF g_nmac_m.nmac001 != g_nmac001_t 
+      OR g_nmac_m.nmac005 != g_nmac005_t 
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單頭(偽)修改前
+         {<point name="modify.b_key_update" mark="Y"/>}
+         #end add-point
+         
+         #更新單頭key值
+         UPDATE nmac_t SET nmac001 = g_nmac_m.nmac001
+                                       , nmac005 = g_nmac_m.nmac005
+ 
+          WHERE nmacent = g_enterprise AND nmac001 = g_nmac001_t
+            AND nmac005 = g_nmac005_t
+ 
+         #add-point:單頭(偽)修改中
+         {<point name="modify.m_key_update"/>}
+         #end add-point
+         
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               CALL cl_err("nmac_t","std-00009",1)
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               CALL cl_err("nmac_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+ 
+ 
+         
+         #add-point:單頭(偽)修改後
+         {<point name="modify.a_key_update"/>}
+         #end add-point
+         
+      END IF
+      
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #修改歷程記錄
+   #IF NOT cl_log_modified_record(g_nmac_m.nmac001,g_site) THEN 
+   #   CALL s_transaction_end('N','0')
+   #END IF
+ 
+   CLOSE anmi110_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_nmac_m.nmac001,'U')
+ 
+   CALL anmi110_b_fill("1=1")
+   
+END FUNCTION   
+]]>
+  </section>
+  <section id="anmi110.modify_detail_chk" ver="1" status="" src="s">
+    <![CDATA[#+ 單身輸入判定
+PRIVATE FUNCTION anmi110_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "nmacstus"
+      WHEN "s_detail1_info"
+         LET ls_return = "nmac002_2"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="anmi110.query" ver="2" status="" src="s">
+    <![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION anmi110_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point   
+ 
+   #add-point:query開始前
+   {<point name="query.befroe_query"/>}
+   #end add-point 
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF     
+   
+   LET ls_wc = g_wc
+ 
+   LET INT_FLAG = 0    
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_nmac_d.clear()
+   CALL g_nmac1_info_d.clear()
+ 
+   DISPLAY ' ' TO FORMONLY.idx
+   DISPLAY ' ' TO FORMONLY.cnt
+   DISPLAY ' ' TO FORMONLY.b_index
+   DISPLAY ' ' TO FORMONLY.b_count
+   DISPLAY ' ' TO FORMONLY.h_index
+   DISPLAY ' ' TO FORMONLY.h_count
+   
+   CALL anmi110_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL anmi110_browser_fill(g_wc)
+      CALL anmi110_fetch("")
+      RETURN
+   END IF
+   
+   LET l_ac = 1
+   LET g_detail_cnt = 0
+   LET g_current_idx = 0
+   LET g_current_row = 0
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   
+   LET g_error_show = 1
+   CALL anmi110_browser_fill("F")
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code = "-100"
+      LET g_errparam.popup = TRUE
+      CALL cl_err("","-100",1)
+   ELSE
+      CALL anmi110_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.ref_show" ver="3" status="" src="s">
+    <![CDATA[#+ 帶出reference資料
+PRIVATE FUNCTION anmi110_ref_show()
+   DEFINE l_ac_t LIKE type_t.num10 #l_ac暫存用
+   #add-point:ref_show段define
+   {<point name="ref_show.define"/>}
+   #end add-point
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:ref_show段m_reference
+   {<point name="ref_show.head.reference"/>}
+   #end add-point
+ 
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_nmac_d.getLength()
+      #add-point:ref_show段d_reference
+      {<point name="ref_show.body.reference"/>}
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_nmac1_info_d.getLength()
+      #add-point:ref_show段d2_reference
+      {<point name="ref_show.body1_info.reference"/>}
+      #end add-point
+   END FOR
+ 
+   
+   #add-point:ref_show段自訂
+   {<point name="ref_show.other_reference"/>}
+   #end add-point
+   
+   LET l_ac = l_ac_t
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.reproduce" ver="4" status="" src="s">
+    <![CDATA[#+ 資料複製
+PRIVATE FUNCTION anmi110_reproduce()
+   DEFINE l_newno     LIKE nmac_t.nmac001 
+   DEFINE l_oldno     LIKE nmac_t.nmac001 
+   DEFINE l_newno02     LIKE nmac_t.nmac005 
+   DEFINE l_oldno02     LIKE nmac_t.nmac005 
+ 
+   DEFINE l_master    RECORD LIKE nmac_t.*
+   DEFINE l_detail    RECORD LIKE nmac_t.*
+ 
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF     
+ 
+   IF g_nmac_m.nmac001 IS NULL
+      OR g_nmac_m.nmac005 IS NULL
+ 
+      THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   LET g_nmac001_t = g_nmac_m.nmac001
+   LET g_nmac005_t = g_nmac_m.nmac005
+ 
+   
+   LET g_nmac_m.nmac001 = ""
+   LET g_nmac_m.nmac005 = ""
+ 
+    
+   CALL anmi110_set_entry('a')
+   CALL anmi110_set_no_entry('a')
+   
+   CALL cl_set_head_visible("","YES")
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL anmi110_input("r")
+   
+      LET g_nmac_m.nmac001_desc = ''
+   DISPLAY BY NAME g_nmac_m.nmac001_desc
+ 
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   #將新增的資料併入搜尋條件中
+   LET g_state = "Y"
+   LET g_current_idx = 1 
+   
+   LET g_wc = "(", g_wc,  
+              " OR (",
+              " nmac001 = '", l_newno CLIPPED, "' "
+              ," AND nmac005 = '", l_newno02 CLIPPED, "' "
+ 
+              , ")) "
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.set_entry" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION anmi110_set_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point       
+ 
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("nmac001,nmac005",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.set_entry_b" ver="1" status="" src="s">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION anmi110_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point     
+   
+   #add-point:set_entry_b段
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.set_no_entry" ver="2" status="" src="s">
+    <![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION anmi110_set_no_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("nmac001,nmac005",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.set_no_entry_b" ver="1" status="" src="s">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION anmi110_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point    
+   
+   #add-point:set_no_entry_b段
+   {<point name="set_no_entry_b.set_no_entry_b段"/>}
+   #end add-point 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.set_pk_array" ver="1" status="" src="s">
+    <![CDATA[   #+ 此段落由子樣板a51產生
+#+ 給予pk_array內容
+PRIVATE FUNCTION anmi110_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_nmac_m.nmac001
+   LET g_pk_array[1].column = 'nmac001'
+   LET g_pk_array[2].values = g_nmac_m.nmac005
+   LET g_pk_array[2].column = 'nmac005'
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="anmi110.show" ver="3" status="" src="s">
+    <![CDATA[#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION anmi110_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   IF g_bfill = "Y" THEN
+      CALL anmi110_b_fill(g_wc2) #單身填充
+      CALL anmi110_b_fill2('0') #單身填充
+   END IF
+   
+   
+ 
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL anmi110_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+   
+   DISPLAY BY NAME g_nmac_m.nmac001,g_nmac_m.nmac001_desc,g_nmac_m.nmac005
+   CALL anmi110_b_fill(g_wc2_table1)                 #單身
+   CALL anmi110_b_fill2('0') #單身填充
+ 
+   CALL anmi110_ref_show()
+ 
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()  
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point   
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.state_change" ver="1" status="" src="s">
+    <![CDATA[    
+]]>
+  </section>
+  <section id="anmi110.ui_browser_refresh" ver="1" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION anmi110_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point    
+   
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_nmac001 = g_nmac_m.nmac001 
+         AND g_browser[l_i].b_nmac005 = g_nmac_m.nmac005 
+ 
+         THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+      END IF
+   END FOR
+ 
+   LET g_browser_cnt = g_browser_cnt - 1
+   IF g_current_row > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_row = g_browser_cnt
+   END IF
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count    #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數的顯示
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.ui_detailshow" ver="1" status="" src="s">
+    <![CDATA[#+ 單身資料重新顯示
+PRIVATE FUNCTION anmi110_ui_detailshow()
+   #add-point:ui_detailshow段define
+   {<point name="ui_detailshow.define"/>}
+   #end add-point    
+   
+   #add-point:ui_detailshow段before
+   {<point name="ui_detailshow.before"/>}
+   #end add-point  
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail1_info",g_detail_idx)
+ 
+      #add-point:ui_detailshow段more
+      {<point name="ui_detailshow.more"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:ui_detailshow段after
+   {<point name="ui_detailshow.after"/>}
+   #end add-point 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.ui_dialog" ver="6" status="" src="s">
+    <![CDATA[#+ 功能選單
+PRIVATE FUNCTION anmi110_ui_dialog()
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_wc     STRING
+   DEFINE lb_first  BOOLEAN
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point  
+   
+   LET lb_first = TRUE
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      CALL anmi110_browser_fill("")
+ 
+      
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_nmac001 = g_nmac001_t
+               AND g_browser[li_idx].b_nmac005 = g_nmac005_t
+ 
+               THEN
+               LET g_current_row = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+      
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+        
+         DISPLAY ARRAY g_nmac_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+         
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL anmi110_ui_detailshow()
+               
+               #add-point:page1自定義行為
+               {<point name="ui_dialog.body.before_row"/>}
+               #end add-point
+            
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               
+               #控制stus哪個按鈕可以按
+               
+               
+            
+ 
+            #add-point:page1自定義行為
+            {<point name="ui_dialog.page1.action"/>}
+            #end add-point
+               
+         END DISPLAY
+        
+         DISPLAY ARRAY g_nmac1_info_d TO s_detail1_info.* ATTRIBUTES(COUNT=g_rec_b)  
+         
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail1_info")
+               LET g_detail_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL anmi110_ui_detailshow()
+               
+               #add-point:page1自定義行為
+               {<point name="ui_dialog.body1_info.before_row"/>}
+               #end add-point
+            
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx)      
+            
+            
+         
+            #add-point:page2自定義行為
+            {<point name="ui_dialog.body1_info.action"/>}
+            #end add-point
+         
+         END DISPLAY
+ 
+         
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         
+         BEFORE DIALOG
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL g_curr_diag.setSelectionMode("s_detail1",1)         
+            LET g_page = "first"
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+               LET g_current_idx = g_current_row
+            END IF
+            LET g_current_row = g_current_idx #目前指標
+            LET g_current_sw = TRUE
+            
+            IF g_current_idx > g_browser.getLength() THEN
+               LET g_current_idx = g_browser.getLength()
+            END IF 
+            
+            IF g_current_idx = 0 AND g_browser.getLength() > 0 THEN
+               LET g_current_idx = 1 
+            END IF
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL anmi110_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL anmi110_ui_detailshow() #Setting the current row 
+            
+            #add-point:ui_dialog段before dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         
+         
+         ON ACTION first
+            CALL anmi110_fetch('F')
+            LET g_current_row = g_current_idx         
+          
+         ON ACTION previous
+            CALL anmi110_fetch('P')
+            LET g_current_row = g_current_idx
+          
+         ON ACTION jump
+            CALL anmi110_fetch('/')
+            LET g_current_row = g_current_idx
+        
+         ON ACTION next
+            CALL anmi110_fetch('N')
+            LET g_current_row = g_current_idx
+         
+         ON ACTION last
+            CALL anmi110_fetch('L')
+            LET g_current_row = g_current_idx
+          
+         ON ACTION close
+            LET INT_FLAG=FALSE        
+            LET g_action_choice = "exit"
+            EXIT DIALOG     
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+            
+         ON ACTION worksheethidden   #瀏覽頁折疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+                CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD nmac002
+            END IF
+       
+         ON ACTION controls      #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+            
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               CALL anmi110_browser_fill("F")   #browser_fill()會將notice區塊清空
+               CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            END IF
+         
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+               CALL anmi110_browser_fill("F")
+               IF g_browser_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code = "-100"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err("","-100",1)
+                  CLEAR FORM
+               ELSE
+                  CALL anmi110_fetch("F")
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            CALL cl_notice()
+               
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL anmi110_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL anmi110_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL anmi110_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL anmi110_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION holiday_gen
+            LET g_action_choice="holiday_gen"
+            IF cl_auth_chk_act("holiday_gen") THEN
+               
+               #add-point:ON ACTION holiday_gen
+               {<point name="menu.holiday_gen" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL anmi110_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         
+         
+         
+         #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL anmi110_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL anmi110_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL anmi110_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+            
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+   
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.ui_headershow" ver="3" status="" src="s">
+    <![CDATA[#+ 單頭資料重新顯示
+PRIVATE FUNCTION anmi110_ui_headershow()
+   #add-point:ui_headershow段define
+   {<point name="ui_headershow.define"/>}
+   #end add-point    
+   
+   LET g_nmac_m.nmac001 = g_browser[g_current_idx].b_nmac001   
+   LET g_nmac_m.nmac005 = g_browser[g_current_idx].b_nmac005   
+ 
+   EXECUTE anmi110_master_referesh USING g_nmac_m.nmac001,g_nmac_m.nmac005 INTO g_nmac_m.nmac001,g_nmac_m.nmac005, 
+       g_nmac_m.nmac001_desc
+   CALL anmi110_show()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.unlock_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION anmi110_unlock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmi110.update_b" ver="1" status="" src="s">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION anmi110_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+ 
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

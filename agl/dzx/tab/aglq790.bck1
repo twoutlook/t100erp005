@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq790" module="agl" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02599" crtdt="2014-03-27 16:34:40" modid="02599" moddt="2015-01-29 23:00:11" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="傳票細項立帳明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),glaydocdt,glaydocno,glayseq,glay010,glay003,glay052,glay054,glay008,glapcrtid,glapcrtid_desc(chr500),glapstus,glay001"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),glaydocdt(b_glaydocdt),glaydocno(b_glaydocno),glayseq(b_glayseq),glay010(b_glay010),glay003(b_glay003),glay052(b_glay052),glay054(b_glay054),glay008(b_glay008),glapcrtid(b_glapcrtid),glapcrtid_desc(b_glapcrtid_desc),glapstus(b_glapstus),glay001(b_glay001)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+      <action id="exchange_ld"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq790" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glaydocdt,glaydocno,glayseq,glay010,glay003,glay052,glay054,glay008,glapstus,glay001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glaydocdt(b_glaydocdt),glaydocno(b_glaydocno),glayseq(b_glayseq),glay010(b_glay010),glay003(b_glay003),glay052(b_glay052),glay054(b_glay054),glay008(b_glay008),glapcrtid(b_glapcrtid),glapstus(b_glapstus),glay001(b_glay001)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="glaydocdt"/>
+      <column id="glaydocno"/>
+      <column id="glayseq"/>
+      <column id="glay010"/>
+      <column id="glay003"/>
+      <column id="glay052"/>
+      <column id="glay054"/>
+      <column id="glay008"/>
+      <column id="glapcrtid">
+        <after>
+          <reference field="glapcrtid_desc" ref_field="glapcrtid" map_field="glapcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glapcrtid_desc"/>
+      <column id="glapstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="glay001"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glay_t" page="1" linked="" pk="glayld,glaydocno,glayseq,glayseq1">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,glaydocdt,glaydocno,glayseq,glay010,glay003,glay052,glay054,glay008,&apos;&apos;,&apos;&apos;,&apos;&apos;,glay001 FROM glay_t WHERE glayent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

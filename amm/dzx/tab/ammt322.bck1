@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammt322" module="amm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01533" crtdt="2013-12-26 14:11:32" modid="01533" moddt="2015-05-14 08:45:01" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員卡資料重計更新維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmdasite,mmdasite_desc(chr80),mmda001,mmdadocdt,mmda002,mmda002_desc(chr80),mmdadocno,mmdaunit,mmdastus,mmdaownid,mmdaownid_desc(chr80),mmdaowndp,mmdaowndp_desc(chr80),mmdacrtid,mmdacrtid_desc(chr80),mmdacrtdp,mmdacrtdp_desc(chr80),mmdacrtdt,mmdamodid,mmdamodid_desc(chr80),mmdamoddt,mmdacnfid,mmdacnfid_desc(chr80),mmdacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmdbseq,mmdbsite,mmdbsite_desc(chr500),mmdb001,mmdb002,mmdb004,mmdb006,mmdb008,mmdb010,mmdb012,mmdb014,mmdb016,mmdb018,mmdb020,mmdb022,mmdbunit,mmdb003,mmdb005,mmdb007,mmdb009,mmdb011,mmdb013,mmdb015,mmdb017,mmdb019,mmdb021,mmdb023"/>
+      <var id="bs_field" value="mmdadocno,mmdadocdt,mmda001,mmda002,mmdasite,mmdaunit" pk="mmdadocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammt322" method="dialog">
+    <section id="input">
+      <input id="head" field="mmdasite,mmda001,mmdadocdt,mmda002,mmdadocno,mmdaunit,mmdastus"/>
+      <input id="body" page="1" field="mmdbseq,mmdbsite,mmdb001,mmdb002,mmdb004,mmdb006,mmdb008,mmdb010,mmdb012,mmdb014,mmdb016,mmdb018,mmdb020,mmdb022,mmdbunit,mmdb003,mmdb005,mmdb007,mmdb009,mmdb011,mmdb013,mmdb015,mmdb017,mmdb019,mmdb021,mmdb023" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmdasite,mmda001,mmdadocdt,mmda002,mmdadocno,mmdaunit,mmdastus,mmdaownid,mmdaowndp,mmdacrtid,mmdacrtdp,mmdacrtdt,mmdamodid,mmdamoddt,mmdacnfid,mmdacnfdt"/>
+      <construct id="body" page="1" field="mmdbseq,mmdbsite,mmdb001,mmdb002,mmdb004,mmdb006,mmdb008,mmdb010,mmdb012,mmdb014,mmdb016,mmdb018,mmdb020,mmdb022,mmdbunit,mmdb003,mmdb005,mmdb007,mmdb009,mmdb011,mmdb013,mmdb015,mmdb017,mmdb019,mmdb021,mmdb023"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mmdadocno"/>
+      <set id="head" type="no_entry" field="mmdadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmdasite">
+        <after>
+          <reference field="mmdasite_desc" ref_field="mmda_t.mmdasite" map_field="mmdaent,mmdasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmdasite_desc"/>
+      <column id="mmda001" def_scc="6539"/>
+      <column id="mmdadocdt"/>
+      <column id="mmda002">
+        <after>
+          <reference field="mmda002_desc" ref_field="mmda002" map_field="mmda002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2055&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmda002_desc"/>
+      <column id="mmdadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_mmdadocno" state="c"/>
+      </column>
+      <column id="mmdaunit"/>
+      <column id="mmdastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="mmdaownid">
+        <after>
+          <reference field="mmdaownid_desc" ref_field="mmda_t.mmdaownid" map_field="mmdaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmdaownid_desc"/>
+      <column id="mmdaowndp">
+        <after>
+          <reference field="mmdaowndp_desc" ref_field="mmda_t.mmdaowndp" map_field="mmdaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmdaowndp_desc"/>
+      <column id="mmdacrtid">
+        <after>
+          <reference field="mmdacrtid_desc" ref_field="mmda_t.mmdacrtid" map_field="mmdacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmdacrtid_desc"/>
+      <column id="mmdacrtdp">
+        <after>
+          <reference field="mmdacrtdp_desc" ref_field="mmda_t.mmdacrtdp" map_field="mmdacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmdacrtdp_desc"/>
+      <column id="mmdacrtdt"/>
+      <column id="mmdamodid">
+        <after>
+          <reference field="mmdamodid_desc" ref_field="mmda_t.mmdamodid" map_field="mmdamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmdamodid_desc"/>
+      <column id="mmdamoddt"/>
+      <column id="mmdacnfid">
+        <after>
+          <reference field="mmdacnfid_desc" ref_field="mmda_t.mmdacnfid" map_field="mmdacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmdacnfid_desc"/>
+      <column id="mmdacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmdbseq"/>
+      <column id="mmdbsite">
+        <after/>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooef001_4" state="c"/>
+      </column>
+      <column id="mmdbsite_desc"/>
+      <column id="mmdb001">
+        <controlp form="q_mmaq001" state="i"/>
+        <controlp form="q_mmaq001" state="c"/>
+      </column>
+      <column id="mmdb002"/>
+      <column id="mmdb004"/>
+      <column id="mmdb006" type="S" default="0"/>
+      <column id="mmdb008"/>
+      <column id="mmdb010"/>
+      <column id="mmdb012"/>
+      <column id="mmdb014" type="S" default="0"/>
+      <column id="mmdb016" type="S" default="0"/>
+      <column id="mmdb018" type="S" default="0"/>
+      <column id="mmdb020" type="S" default="0"/>
+      <column id="mmdb022" type="S" default="0"/>
+      <column id="mmdbunit"/>
+      <column id="mmdb003"/>
+      <column id="mmdb005"/>
+      <column id="mmdb007" type="S" default="0"/>
+      <column id="mmdb009"/>
+      <column id="mmdb011"/>
+      <column id="mmdb013"/>
+      <column id="mmdb015" type="S" default="0"/>
+      <column id="mmdb017" type="S" default="0"/>
+      <column id="mmdb019" type="S" default="0"/>
+      <column id="mmdb021" type="S" default="0"/>
+      <column id="mmdb023" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmda_t" pk="mmdadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT mmdasite,&apos;&apos;,mmda001,mmdadocdt,mmda002,&apos;&apos;,mmdadocno,mmdaunit,mmdastus,mmdaownid,&apos;&apos;,mmdaowndp,&apos;&apos;,mmdacrtid,&apos;&apos;,mmdacrtdp,&apos;&apos;,mmdacrtdt,mmdamodid,&apos;&apos;,mmdamoddt,mmdacnfid,&apos;&apos;,mmdacnfdt FROM mmda_t WHERE mmdaent= ? AND mmdadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mmdasite,&apos;&apos;,mmda001,mmdadocdt,mmda002,&apos;&apos;,mmdadocno,mmdaunit,mmdastus,mmdaownid,&apos;&apos;,mmdaowndp,&apos;&apos;,mmdacrtid,&apos;&apos;,mmdacrtdp,&apos;&apos;,mmdacrtdt,mmdamodid,&apos;&apos;,mmdamoddt,mmdacnfid,&apos;&apos;,mmdacnfdt FROM mmda_t" order="mmdadocno"/>
+    </head>
+    <body id="mmdb_t" page="1" linked="" pk="mmdbseq" fk="mmdbdocno">
+      <sql id="forupd_sql_detail" query="SELECT mmdbseq,mmdbsite,&apos;&apos;,mmdb001,mmdb002,mmdb004,mmdb006,mmdb008,mmdb010,mmdb012,mmdb014,mmdb016,mmdb018,mmdb020,mmdb022,mmdbunit,mmdb003,mmdb005,mmdb007,mmdb009,mmdb011,mmdb013,mmdb015,mmdb017,mmdb019,mmdb021,mmdb023 FROM mmdb_t WHERE mmdbent=? AND mmdbdocno=? AND mmdbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmdbseq,mmdbsite,&apos;&apos;,mmdb001,mmdb002,mmdb004,mmdb006,mmdb008,mmdb010,mmdb012,mmdb014,mmdb016,mmdb018,mmdb020,mmdb022,mmdbunit,mmdb003,mmdb005,mmdb007,mmdb009,mmdb011,mmdb013,mmdb015,mmdb017,mmdb019,mmdb021,mmdb023 FROM mmdb_t WHERE mmdbent=? AND mmdbdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aist200" module="ais" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02599" crtdt="2015-05-06 17:13:27" modid="01727" moddt="2015-06-24 15:12:13" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="發票認證維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isbdsite,isbdsite_desc(chr80),isbd001,isbd001_desc(chr80),isbdcomp,isbdcomp_desc(chr80),isbddocno,isbddocdt,isbdstus,isbdownid,isbdownid_desc(chr80),isbdowndp,isbdowndp_desc(chr80),isbdcrtid,isbdcrtid_desc(chr80),isbdcrtdp,isbdcrtdp_desc(chr80),isbdcrtdt,isbdmodid,isbdmodid_desc(chr80),isbdmoddt,isbdcnfid,isbdcnfid_desc(chr80),isbdcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isbeseq,isbesite,isbesite_desc(chr500),isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007,isbe008"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="excel_load"/>
+      <action id="excel_example"/>
+      <action id="prog_isbd001" prog="cl_user_contact(&quot;aooi130&quot;," parameter="&quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aist200" method="dialog">
+    <section id="input">
+      <input id="head" field="isbdsite,isbd001,isbdcomp,isbddocno,isbddocdt,isbdstus"/>
+      <input id="body" page="1" field="isbeseq,isbesite,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007,isbe008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isbdsite,isbd001,isbd001_desc,isbdcomp,isbddocno,isbddocdt,isbdstus,isbdownid,isbdowndp,isbdcrtid,isbdcrtdp,isbdcrtdt,isbdmodid,isbdmoddt,isbdcnfid,isbdcnfdt"/>
+      <construct id="body" page="1" field="isbeseq,isbesite,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007,isbe008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="isbdcomp,isbddocno"/>
+      <set id="head" type="no_entry" field="isbdcomp,isbddocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isbdsite">
+        <after>
+          <reference field="isbdsite_desc" ref_field="isbd_t.isbdsite" map_field="isbdent,isbdsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="isbdsite_desc"/>
+      <column id="isbd001">
+        <after/>
+        <controlp form="q_ooag001_8" state="i"/>
+        <controlp form="q_ooag001_8" state="c"/>
+      </column>
+      <column id="isbd001_desc"/>
+      <column id="isbdcomp">
+        <after>
+          <reference field="isbdcomp_desc" ref_field="isbd_t.isbdcomp" map_field="isbdent,isbdcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="isbdcomp_desc"/>
+      <column id="isbddocno">
+        <controlp form="q_isbddocno" state="c"/>
+      </column>
+      <column id="isbddocdt"/>
+      <column id="isbdstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="isbdownid">
+        <after>
+          <reference field="isbdownid_desc" ref_field="isbd_t.isbdownid" map_field="isbdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isbdownid_desc"/>
+      <column id="isbdowndp">
+        <after>
+          <reference field="isbdowndp_desc" ref_field="isbd_t.isbdowndp" map_field="isbdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isbdowndp_desc"/>
+      <column id="isbdcrtid">
+        <after>
+          <reference field="isbdcrtid_desc" ref_field="isbd_t.isbdcrtid" map_field="isbdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isbdcrtid_desc"/>
+      <column id="isbdcrtdp">
+        <after>
+          <reference field="isbdcrtdp_desc" ref_field="isbd_t.isbdcrtdp" map_field="isbdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isbdcrtdp_desc"/>
+      <column id="isbdcrtdt"/>
+      <column id="isbdmodid">
+        <after>
+          <reference field="isbdmodid_desc" ref_field="isbd_t.isbdmodid" map_field="isbdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isbdmodid_desc"/>
+      <column id="isbdmoddt"/>
+      <column id="isbdcnfid">
+        <after>
+          <reference field="isbdcnfid_desc" ref_field="isbd_t.isbdcnfid" map_field="isbdcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isbdcnfid_desc"/>
+      <column id="isbdcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="isbeseq"/>
+      <column id="isbesite">
+        <after>
+          <reference field="isbesite_desc" ref_field="isbe_t.isbesite" map_field="isbeent,isbesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="isbesite_desc"/>
+      <column id="isbe001">
+        <controlp form="q_stbf001" state="i"/>
+        <controlp form="q_stbf001" state="c"/>
+      </column>
+      <column id="isbe002">
+        <controlp form="q_stbf002" state="i"/>
+        <controlp form="q_stbf002" state="c"/>
+      </column>
+      <column id="isbe003"/>
+      <column id="isbe004"/>
+      <column id="isbe005" type="S" default="0"/>
+      <column id="isbe006" type="S" default="0"/>
+      <column id="isbe007"/>
+      <column id="isbe008"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="isbd_t" pk="isbdcomp,isbddocno">
+      <sql id="forupd_sql" type="sql" query="SELECT isbdsite,&apos;&apos;,isbd001,&apos;&apos;,isbdcomp,&apos;&apos;,isbddocno,isbddocdt,isbdstus,isbdownid,&apos;&apos;,isbdowndp,&apos;&apos;,isbdcrtid,&apos;&apos;,isbdcrtdp,&apos;&apos;,isbdcrtdt,isbdmodid,&apos;&apos;,isbdmoddt,isbdcnfid,&apos;&apos;,isbdcnfdt FROM isbd_t WHERE isbdent= ? AND isbdcomp=? AND isbddocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT isbdsite,&apos;&apos;,isbd001,&apos;&apos;,isbdcomp,&apos;&apos;,isbddocno,isbddocdt,isbdstus,isbdownid,&apos;&apos;,isbdowndp,&apos;&apos;,isbdcrtid,&apos;&apos;,isbdcrtdp,&apos;&apos;,isbdcrtdt,isbdmodid,&apos;&apos;,isbdmoddt,isbdcnfid,&apos;&apos;,isbdcnfdt FROM isbd_t" order="isbdcomp,isbddocno"/>
+    </head>
+    <body id="isbe_t" page="1" linked="" pk="isbeseq" fk="isbecomp,isbedocno">
+      <sql id="forupd_sql_detail" query="SELECT isbeseq,isbesite,&apos;&apos;,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007,isbe008 FROM isbe_t WHERE isbeent=? AND isbecomp=? AND isbedocno=? AND isbeseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isbeseq,isbesite,&apos;&apos;,isbe001,isbe002,isbe003,isbe004,isbe005,isbe006,isbe007,isbe008 FROM isbe_t WHERE isbeent=? AND isbecomp=? AND isbedocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

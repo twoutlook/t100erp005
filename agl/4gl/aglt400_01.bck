@@ -1,0 +1,471 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglt400_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2014-01-08 15:54:28), PR版次:0003(2016-03-30 10:18:47)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000151
+#+ Filename...: aglt400_01
+#+ Description: 細項立沖業務資訊維護
+#+ Creator....: 02298(2014-01-08 15:28:58)
+#+ Modifier...: 02298 -SD/PR- 07675
+ 
+{</section>}
+ 
+{<section id="aglt400_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160318-00005#19  2016/03/29 by 07675   將重複內容的錯誤訊息置換為公用錯誤訊息
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glax_m        RECORD
+       glax011 LIKE glax_t.glax011, 
+   glax012 LIKE glax_t.glax012, 
+   glax013 LIKE glax_t.glax013, 
+   glax013_desc LIKE type_t.chr80, 
+   glax014 LIKE glax_t.glax014, 
+   glax015 LIKE glax_t.glax015, 
+   glax016 LIKE glax_t.glax016
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_glax_m_t       type_g_glax_m
+#end add-point
+ 
+DEFINE g_glax_m        type_g_glax_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglt400_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aglt400_01(--)
+   #add-point:input段變數傳入
+    p_flag,p_glaxld,p_glaxdocno,p_glaxdocdt,p_glaq002,p_seq
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_flag          LIKE type_t.chr5       #资料状态
+   DEFINE p_glaxld        LIKE glax_t.glaxld     #帳別
+   DEFINE p_glaxdocno     LIKE glax_t.glaxdocno  #傳票编号
+   DEFINE p_glaxdocdt     LIKE glax_t.glaxdocdt  #傳票日期
+   DEFINE p_glaq002       LIKE glax_t.glax002    #科目     
+   DEFINE p_seq           LIKE glax_t.glaxseq    #项次
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglt400_01 WITH FORM cl_ap_formpath("agl","aglt400_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   INITIALIZE g_glax_m.* TO NULL
+   INITIALIZE g_glax_m_t.* TO NULL
+   #結算方式下拉
+   CALL cl_set_combo_scc('glax015','8310')   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glax_m.glax011,g_glax_m.glax012,g_glax_m.glax013,g_glax_m.glax014,g_glax_m.glax015, 
+          g_glax_m.glax016 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            IF p_flag = 'a' THEN
+               LET g_glax_m.glax013 = g_user
+               LET g_glax_m.glax012 = g_today
+               LET g_glax_m.glax015 = '10'
+            ELSE
+               SELECT glax011,glax012,glax013,glax014,glax015,glax016
+                 INTO g_glax_m.glax011,g_glax_m.glax012,g_glax_m.glax013,g_glax_m.glax014,g_glax_m.glax015,g_glax_m.glax016
+                 FROM glax_t
+                WHERE glaxent = g_enterprise
+                  AND glaxld = p_glaxld
+                  AND glaxdocno = p_glaxdocno
+                  AND glaxseq = p_seq                
+            END IF 
+         
+          #旧值备份            
+            LET g_glax_m_t.* = g_glax_m.* 
+            CALL aglt400_01_glax013_desc(g_glax_m.glax013) RETURNING g_glax_m.glax013_desc            
+            DISPLAY BY NAME 
+            g_glax_m.glax011,g_glax_m.glax012,g_glax_m.glax013,g_glax_m.glax013_desc,g_glax_m.glax014,g_glax_m.glax015,g_glax_m.glax016
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glax011
+            #add-point:BEFORE FIELD glax011 name="input.b.glax011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glax011
+            
+            #add-point:AFTER FIELD glax011 name="input.a.glax011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glax011
+            #add-point:ON CHANGE glax011 name="input.g.glax011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glax012
+            #add-point:BEFORE FIELD glax012 name="input.b.glax012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glax012
+            
+            #add-point:AFTER FIELD glax012 name="input.a.glax012"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glax012
+            #add-point:ON CHANGE glax012 name="input.g.glax012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glax013
+            
+            #add-point:AFTER FIELD glax013 name="input.a.glax013"
+            IF NOT cl_null(g_glax_m.glax013) THEN
+               CALL aglt400_01_glax013_chk(g_glax_m.glax013) 
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_glax_m.glax013
+                  #160318-00005#19  --add--str
+                  LET g_errparam.replace[1] ='aooi130'
+                  LET g_errparam.replace[2] = cl_get_progname('aooi130',g_lang,"2")
+                  LET g_errparam.exeprog    ='aooi130'
+                  #160318-00005#19 --add--end
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  LET g_glax_m.glax013 = g_glax_m.glax013_desc
+                  CALL aglt400_01_glax013_desc(g_glax_m.glax013) RETURNING g_glax_m.glax013_desc
+                  DISPLAY BY NAME g_glax_m.glax013_desc
+                  NEXT FIELD glax013
+               END IF 
+            END IF 
+            CALL aglt400_01_glax013_desc(g_glax_m.glax013) RETURNING g_glax_m.glax013_desc
+            DISPLAY BY NAME g_glax_m.glax013_desc         
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glax013
+            #add-point:BEFORE FIELD glax013 name="input.b.glax013"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glax013
+            #add-point:ON CHANGE glax013 name="input.g.glax013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glax014
+            #add-point:BEFORE FIELD glax014 name="input.b.glax014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glax014
+            
+            #add-point:AFTER FIELD glax014 name="input.a.glax014"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glax014
+            #add-point:ON CHANGE glax014 name="input.g.glax014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glax015
+            #add-point:BEFORE FIELD glax015 name="input.b.glax015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glax015
+            
+            #add-point:AFTER FIELD glax015 name="input.a.glax015"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glax015
+            #add-point:ON CHANGE glax015 name="input.g.glax015"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glax016
+            #add-point:BEFORE FIELD glax016 name="input.b.glax016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glax016
+            
+            #add-point:AFTER FIELD glax016 name="input.a.glax016"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glax016
+            #add-point:ON CHANGE glax016 name="input.g.glax016"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glax011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glax011
+            #add-point:ON ACTION controlp INFIELD glax011 name="input.c.glax011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glax012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glax012
+            #add-point:ON ACTION controlp INFIELD glax012 name="input.c.glax012"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glax013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glax013
+            #add-point:ON ACTION controlp INFIELD glax013 name="input.c.glax013"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glax_m.glax013             #給予default值
+            LET g_qryparam.default2 = "" #g_glax_m.oofa011 #全名
+
+            #給予arg
+
+            CALL q_ooag001_2()                                     #呼叫開窗
+
+            LET g_glax_m.glax013 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET g_glax_m.glax013_desc = g_qryparam.return2 #全名
+
+            DISPLAY g_glax_m.glax013 TO glax013                    #顯示到畫面上
+            #DISPLAY g_glax_m.glax013_desc TO glax013_desc         #全名
+
+            NEXT FIELD glax013                                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glax014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glax014
+            #add-point:ON ACTION controlp INFIELD glax014 name="input.c.glax014"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glax015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glax015
+            #add-point:ON ACTION controlp INFIELD glax015 name="input.c.glax015"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glax016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glax016
+            #add-point:ON ACTION controlp INFIELD glax016 name="input.c.glax016"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglt400_01 
+   
+   #add-point:input段after input 
+    IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      IF p_flag = 'a' THEN
+         RETURN '','','','','',''
+      ELSE
+         RETURN g_glax_m_t.glax011,g_glax_m_t.glax012,g_glax_m_t.glax013,g_glax_m_t.glax014,g_glax_m_t.glax015,g_glax_m_t.glax016
+      END IF 
+   END IF
+ 
+   RETURN g_glax_m.glax011,g_glax_m.glax012,g_glax_m.glax013,g_glax_m.glax014,g_glax_m.glax015,g_glax_m.glax016
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglt400_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aglt400_01.other_function" readonly="Y" >}
+#人员姓名
+PRIVATE FUNCTION aglt400_01_glax013_desc(p_glax013)
+   DEFINE l_ooag011        LIKE ooag_t.ooag011
+   DEFINE p_glax013        LIKE glax_t.glax013
+
+   LET  l_ooag011 = ''
+   SELECT ooag011 INTO l_ooag011 FROM ooag_t
+    WHERE ooagent = g_enterprise AND ooag001 = p_glax013
+   RETURN l_ooag011
+END FUNCTION
+#人员检查
+PRIVATE FUNCTION aglt400_01_glax013_chk(p_glax013)
+   DEFINE p_glax013    LIKE glax_t.glax013 
+   DEFINE  l_ooagstus  LIKE ooag_t.ooagstus
+
+
+   LET g_errno=''
+   SELECT ooagstus INTO l_ooagstus FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = p_glax013
+
+   CASE
+      WHEN SQLCA.SQLCODE=100   LET g_errno = 'aoo-00074'
+      WHEN l_ooagstus ='N'     LET g_errno = 'sub-01302'  #160318-00005#19 mod #'aoo-00071'
+   END CASE
+END FUNCTION
+
+ 
+{</section>}
+ 

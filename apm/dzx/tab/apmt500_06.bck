@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt500_06" module="apm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02294" crtdt="2014-06-04 14:24:35" modid="02294" moddt="2015-01-22 09:36:55" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="重覆性生產計畫來源">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="srac001,srac004,imaal003(chr500),imaal004(chr500),srac005,srac006,srac008,srac008_desc(chr80),srac009,srac002,srac007,sracsite"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt500_06" method="dialog">
+    <section id="input">
+      <input id="head" field="srac001,srac004,srac005,srac006,srac008,srac009,srac002,srac007,sracsite"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="srac001">
+        <controlp form="q_sraa001" state="i"/>
+      </column>
+      <column id="srac004">
+        <controlp form="q_srab004" state="i"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="srac005">
+        <controlp form="q_srab005_1" state="i"/>
+      </column>
+      <column id="srac006">
+        <controlp form="q_srab006_1" state="i"/>
+      </column>
+      <column id="srac008">
+        <after>
+          <reference field="srac008_desc" ref_field="srac008" map_field="srac008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_srac008" state="i"/>
+      </column>
+      <column id="srac008_desc"/>
+      <column id="srac009">
+        <controlp form="q_srac008_2" state="i"/>
+      </column>
+      <column id="srac002"/>
+      <column id="srac007"/>
+      <column id="sracsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="srac_t" pk="sracsite,srac001,srac002,srac004,srac005,srac006,srac007">
+      <sql id="forupd_sql" type="sql" query="SELECT srac001,srac004,&apos;&apos;,&apos;&apos;,srac005,srac006,srac008,&apos;&apos;,srac009,srac002,srac007,sracsite FROM srac_t WHERE sracent= ? AND sracsite=? AND srac001=? AND srac002=? AND srac004=? AND srac005=? AND srac006=? AND srac007=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="sracsite,srac001,srac002,srac004,srac005,srac006,srac007"/>
+    </head>
+  </dataset>
+</assembly>
+

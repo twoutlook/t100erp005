@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglr500" module="agl" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="02159" crtdt="2015-12-30 14:37:49" modid="02159" moddt="2015-12-30 18:31:54" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="合併報表沖銷調整傳票列印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gldpld,glaacomp,gldpld_desc(chr80),glaacomp_desc(chr80),gldpcrtid,gldpcrtid_e(chr500),stus(chr500),gldp005,gldpdocno,gldpdocdt,gldpcrtdt,gldp006"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="agl" filename="aglr500" method="dialog">
+    <section id="input">
+      <input id="head" field="gldpld,glaacomp,gldpcrtid,gldpcrtid_e,stus,gldp005"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gldpdocno,gldpdocdt,gldpcrtdt,gldp006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gldpld">
+        <after>
+          <reference field="gldpld_desc" ref_field="gldp_t.gldpld" map_field="gldpld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="glaacomp">
+        <after>
+          <reference field="glaacomp_desc" ref_field="glaa_t.glaacomp" map_field="glaacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="gldpld_desc"/>
+      <column id="glaacomp_desc"/>
+      <column id="gldpcrtid">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldpcrtid_e">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stus" type="S" default="N"/>
+      <column id="gldp005"/>
+      <column id="gldpdocno"/>
+      <column id="gldpdocdt"/>
+      <column id="gldpcrtdt"/>
+      <column id="gldp006"/>
+    </init>
+  </form>
+</assembly>
+

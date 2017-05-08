@@ -1,0 +1,614 @@
+<add_points prog="aint170_02" std_prog="aint170_02" erpver="1.0" module="AIN" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.aint170_02" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION aint170_02(--)
+   #add-point:input段變數傳入
+p_inbgdocno,p_inbg
+   #end add-point
+   )
+
+   #add-point:input段define
+DEFINE p_inbg    type_g_inbg_d 
+DEFINE p_inbgdocno LIKE inbg_t.inbgdocno
+   #end add-point
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aint170_02 WITH FORM cl_ap_formpath("ain","aint170_02")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+
+   LET g_inbgdocno = p_inbgdocno
+   LET g_inbg.* = p_inbg.*
+
+
+   CALL g_inao_d.clear()
+   CALL aint170_02_b_fill()
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #輸入開始
+      INPUT ARRAY g_inao_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+
+         #自訂ACTION
+         #add-point:單身前置處理
+
+         #end add-point
+
+         #自訂ACTION(detail_input)
+         BEFORE ROW
+             LET l_ac = ARR_CURR()
+
+         BEFORE INPUT
+            LET g_rec_b = g_inao_d.getLength()
+          AFTER FIELD change_num 
+             IF NOT cl_ap_chk_Range(g_inao_d[l_ac].change_num,"0","0","","","azz-00079",1) THEN
+                NEXT FIELD CURRENT
+             END IF
+             IF g_inao_d[l_ac].change_num > g_inao_d[l_ac].inao012 THEN
+                CALL cl_err('','ain-00174',1)
+                NEXT FIELD CURRENT 
+             END IF
+
+
+
+         AFTER INPUT
+            #add-point:單身輸入後處理
+
+            #end add-point
+
+      END INPUT
+
+
+
+      #add-point:自定義input
+
+      #end add-point
+
+      #公用action
+      ON ACTION accept
+         CALL aint170_02_accept()
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         
+         EXIT DIALOG
+
+      ON ACTION close
+         
+         EXIT DIALOG
+
+      ON ACTION exit
+         
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #add-point:畫面關閉前
+
+   #end add-point
+
+   #畫面關閉
+   CLOSE WINDOW w_aint170_02
+
+   #add-point:input段after input
+
+   #end add-point
+
+END FUNCTION]]>
+</point>
+  <point name="function.aint170_02_b_fill" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION aint170_02_b_fill()
+DEFINE l_n    LIKE type_t.num5
+DEFINE l_sql  STRING
+DEFINE l_inbg RECORD LIKE inbg_t.*
+
+   LET l_n = 0 
+   SELECT COUNT(*) INTO l_n FROM inao_t
+     WHERE inaoent = g_enterprise AND inaodocno = g_inbgdocno
+       AND inaosite = g_inbg.inbgsite AND inaoseq = g_inbg.inbgseq
+   IF l_n > 0 THEN
+      LET l_sql = "SELECT 'Y',inao012,inai010,inao002,inao003,inao005,inaa002,inao006,inab003,inao007,inao008,inao009 FROM inao_t ",
+                  "  LEFT JOIN inai_t ON inaient = inaoent AND inaisite = inaosite AND inai001 = inao001 AND inai002 = inao002 ",
+                  "                  AND inai003 = inao003 AND inai004 = inao005 AND inai005 = inao006 AND inai006 = inao007 ",
+                  "                  AND inai007 = inao008 AND inai008 = inao009 ",
+                  "  LEFT OUTER JOIN inaa_t ON inaaent = inaoent AND inaasite = inaosite AND inaa001 = inao005", 
+                  "  LEFT OUTER JOIN inab_t ON inabent = inaoent AND inabsite = inaosite AND inab001 = inao005 AND inab002 = inao006",
+                  " WHERE inaoent = ",g_enterprise," AND inaosite = '",g_site,"' AND inaodocno = '",g_inbgdocno,"' AND inaoseq = ",g_inbg.inbgseq,
+                  " AND inao013 = -1  AND inao001 = '",g_inbg.inbg002,"'"
+      IF g_inbg.inbg005 IS NOT NULL THEN
+         LET l_sql = l_sql," AND inao002 = '",g_inbg.inbg005,"'"
+      END IF
+      IF g_inbg.inbg006 IS NOT NULL THEN
+         LET l_sql = l_sql," AND inao003 = '",g_inbg.inbg006,"'"
+      END IF
+      IF g_inbg.inbg003 IS NOT NULL THEN
+         LET l_sql = l_sql," AND inao005 = '",g_inbg.inbg003,"'"
+      END IF
+      IF g_inbg.inbg004 IS NOT NULL THEN
+         LET l_sql = l_sql," AND inao006 = '",g_inbg.inbg004,"'"
+      END IF
+      IF g_inbg.inbg007 IS NOT NULL THEN
+         LET l_sql = l_sql," AND inao007 = '",g_inbg.inbg007,"'"
+      END IF
+      PREPARE sel_inao_prep FROM l_sql
+      DECLARE sel_inao_curs CURSOR FOR sel_inao_prep 
+      LET l_ac = 1
+      FOREACH sel_inao_curs  INTO g_inao_d[l_ac].*
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec AND g_error_show = 1 THEN
+            CALL cl_err( '', 9035, 1)
+            EXIT FOREACH
+         END IF
+      END FOREACH
+   ELSE
+      LET l_sql = "SELECT 'Y',inai010,inai010,inai002,inai003,inai004,inaa002,inai005,inab003,inai006,inai007,inai008", 
+                  " FROM inai_t LEFT OUTER JOIN inaa_t ON inaaent = inaient AND inaasite = inaisite AND inaa001 = inai004", 
+                  "             LEFT OUTER JOIN inab_t ON inabent = inaient AND inabsite = inaisite AND inab001 = inai004 AND inab002 = inai005",
+                  " WHERE inaient = ",g_enterprise," AND inaisite = '",g_site,"'",
+                  "   AND inai001 = '",g_inbg.inbg002,"' AND inai010 > 0 "
+      IF g_inbg.inbg005 IS NOT NULL THEN
+         LET l_sql = l_sql," AND inai002 = '",g_inbg.inbg005,"'"
+      END IF
+      IF g_inbg.inbg006 IS NOT NULL THEN
+         LET l_sql = l_sql," AND inai003 = '",g_inbg.inbg006,"'"
+      END IF
+      IF g_inbg.inbg003 IS NOT NULL THEN
+         LET l_sql = l_sql," AND inai004 = '",g_inbg.inbg003,"'"
+      END IF
+      IF g_inbg.inbg004 IS NOT NULL THEN
+         LET l_sql = l_sql," AND inai005 = '",g_inbg.inbg004,"'"
+      END IF
+      IF g_inbg.inbg007 IS NOT NULL THEN
+         LET l_sql = l_sql," AND inai006 = '",g_inbg.inbg007,"'"
+      END IF
+      
+      PREPARE sel_inai_prep FROM l_sql
+      DECLARE sel_inai_curs CURSOR FOR sel_inai_prep 
+      LET l_ac = 1
+      FOREACH sel_inai_curs  INTO g_inao_d[l_ac].*
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec AND g_error_show = 1 THEN
+            CALL cl_err( '', 9035, 1)
+            EXIT FOREACH
+         END IF
+      END FOREACH                  
+   END IF
+   CALL g_inao_d.deleteElement(g_inao_d.getLength())
+
+   DISPLAY ARRAY g_inao_d TO s_detail1.*
+      BEFORE DISPLAY
+         EXIT DISPLAY
+   END DISPLAY 
+
+   FREE sel_inai_curs
+   FREE sel_inao_curs
+END FUNCTION]]>
+</point>
+  <point name="function.aint170_02_accept" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION aint170_02_accept()
+   IF NOT INT_FLAG THEN
+      CALL s_transaction_begin()
+      DELETE FROM inao_t WHERE inaoent = g_enterprise AND inaodocno = g_inbgdocno AND inaoseq = g_inbg.inbgseq
+      IF SQLCA.SQLCODE THEN
+         CALL cl_err('',sqlca.sqlcode,1)
+         CALL s_transaction_end('N','1')
+         RETURN
+      END IF
+      
+      IF NOT aint170_02_inao_ins() THEN
+         CALL s_transaction_end('N','1')
+         RETURN 
+      END IF
+      CALL s_transaction_end('Y','0')
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.aint170_02_inao_ins" cite_std="N" status="u" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION aint170_02_inao_ins()
+DEFINE l_i   LIKE type_t.num5
+
+DEFINE l_inao RECORD LIKE inao_t.*
+DEFINE l_cnt LIKE type_t.num5
+
+  LET l_cnt = 1  
+  FOR l_i = 1 TO g_inao_d.getLength()
+     IF g_inao_d[l_i].sel = 'Y' THEN
+        LET l_inao.inaoent = g_enterprise
+        LET l_inao.inaosite = g_site
+        LET l_inao.inaodocno = g_inbgdocno
+        LET l_inao.inaoseq = g_inbg.inbgseq
+        LET l_inao.inaoseq1 = l_cnt
+        LET l_inao.inaoseq2 = 1
+        LET l_inao.inao000 = '2'
+        LET l_inao.inao001 = g_inbg.inbg002
+        LET l_inao.inao002 = g_inao_d[l_ac].inao002
+        LET l_inao.inao003 = g_inao_d[l_ac].inao003
+        LET l_inao.inao005 = g_inao_d[l_ac].inao005
+        LET l_inao.inao006 = g_inao_d[l_ac].inao006
+        LET l_inao.inao007 = g_inao_d[l_ac].inao007
+        LET l_inao.inao008 = g_inao_d[l_i].inao008
+        LET l_inao.inao009 = g_inao_d[l_i].inao009
+        LET l_inao.inao012 = g_inao_d[l_i].change_num
+        LET l_inao.inao013 = -1
+        #新增变更前
+        INSERT INTO inao_t VALUES(l_inao.*)
+        IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] = 0 THEN
+           CALL cl_err('',SQLCA.SQLCODE,1)
+           RETURN FALSE
+        END IF
+        
+        #新增变更后
+        
+        LET l_inao.inaoseq2 = 2
+        LET l_inao.inao013 = 1
+        CASE WHEN g_inbg.inbg001 ='5'
+                LET l_inao.inao002 = g_inao_d[l_ac].inao002
+                LET l_inao.inao003 = g_inao_d[l_ac].inao003
+                LET l_inao.inao007 = g_inao_d[l_ac].inao007
+                LET l_inao.inao008 = g_inbg.inbg011
+                LET l_inao.inao009 = g_inao_d[l_i].inao009
+             WHEN g_inbg.inbg001 ='6'
+                LET l_inao.inao002 = g_inao_d[l_ac].inao002
+                LET l_inao.inao003 = g_inao_d[l_ac].inao003
+                LET l_inao.inao007 = g_inao_d[l_ac].inao007
+                LET l_inao.inao008 = g_inao_d[l_i].inao008
+                LET l_inao.inao009 = g_inbg.inbg011
+        END CASE
+        INSERT INTO inao_t VALUES(l_inao.*)
+        IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] = 0 THEN
+           CALL cl_err('',SQLCA.SQLCODE,1)
+           RETURN FALSE
+        END IF
+        LET l_cnt = l_cnt + 1
+     END IF
+  END FOR
+  RETURN TRUE
+END FUNCTION]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[TYPE type_g_inao_d        RECORD
+       sel          LIKE type_t.chr1,
+       change_num   LIKE inai_t.inai010,
+       inao012      LIKE inao_t.inao012,
+       inao002      LIKE inao_t.inao002,
+       inao003      LIKE inao_t.inao003,
+       inao005      LIKE inao_t.inao005,
+       inao005_desc LIKE inaa_t.inaa002,
+       inao006      LIKE inao_t.inao006,
+       inao006_desc LIKE inab_t.inab003,
+       inao007      LIKE inao_t.inao007,
+       inao008      LIKE inao_t.inao008,
+       inao009      LIKE inao_t.inao009
+       END RECORD
+DEFINE g_inao_d     DYNAMIC ARRAY OF type_g_inao_d
+DEFINE g_inbgdocno  LIKE inbg_t.inbgdocno
+DEFINE g_rec_b               LIKE type_t.num5
+DEFINE l_ac                  LIKE type_t.num5
+TYPE type_g_inbg_d        RECORD
+       inbgseq LIKE inbg_t.inbgseq, 
+       inbg001 LIKE inbg_t.inbg001, 
+       inbg002 LIKE inbg_t.inbg002, 
+       inbg002_desc LIKE type_t.chr500, 
+       inbg002_desc_1 LIKE type_t.chr500, 
+       inbg003 LIKE inbg_t.inbg003, 
+       inbg003_desc LIKE type_t.chr500, 
+       inbg004 LIKE inbg_t.inbg004, 
+       inbg004_desc LIKE type_t.chr500, 
+       inbg005 LIKE inbg_t.inbg005, 
+       inbg006 LIKE inbg_t.inbg006, 
+       inbg008 LIKE inbg_t.inbg008, 
+       inbg007 LIKE inbg_t.inbg007, 
+       inbg009 LIKE inbg_t.inbg009, 
+       inbg010 LIKE inbg_t.inbg010, 
+       inbg011 LIKE inbg_t.inbg011, 
+       inbg031 LIKE inbg_t.inbg031, 
+       inbg031_desc LIKE type_t.chr500, 
+       inbg012 LIKE inbg_t.inbg012, 
+       inbg032 LIKE inbg_t.inbg032, 
+       inbgsite LIKE inbg_t.inbgsite
+       END RECORD
+DEFINE g_inbg    type_g_inbg_d
+DEFINE g_error_show          LIKE type_t.num5]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.inao000" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_inao_d[g_detail_idx].inaodocno IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq1 IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq2 IS NOT NULL AND g_inao_d[g_detail_idx].inao000 IS NOT NULL AND g_inao_d[g_detail_idx].inao013 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inao_d[g_detail_idx].inaodocno != g_inao_d_t.inaodocno OR g_inao_d[g_detail_idx].inaoseq != g_inao_d_t.inaoseq OR g_inao_d[g_detail_idx].inaoseq1 != g_inao_d_t.inaoseq1 OR g_inao_d[g_detail_idx].inaoseq2 != g_inao_d_t.inaoseq2 OR g_inao_d[g_detail_idx].inao000 != g_inao_d_t.inao000 OR g_inao_d[g_detail_idx].inao013 != g_inao_d_t.inao013)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inao_t WHERE "||"inaoent = '" ||g_enterprise|| "' AND "||"inaodocno = '"||g_inao_d[g_detail_idx].inaodocno ||"' AND "|| "inaoseq = '"||g_inao_d[g_detail_idx].inaoseq ||"' AND "|| "inaoseq1 = '"||g_inao_d[g_detail_idx].inaoseq1 ||"' AND "|| "inaoseq2 = '"||g_inao_d[g_detail_idx].inaoseq2 ||"' AND "|| "inao000 = '"||g_inao_d[g_detail_idx].inao000 ||"' AND "|| "inao013 = '"||g_inao_d[g_detail_idx].inao013 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.inao013" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_inao_d[g_detail_idx].inaodocno IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq1 IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq2 IS NOT NULL AND g_inao_d[g_detail_idx].inao000 IS NOT NULL AND g_inao_d[g_detail_idx].inao013 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inao_d[g_detail_idx].inaodocno != g_inao_d_t.inaodocno OR g_inao_d[g_detail_idx].inaoseq != g_inao_d_t.inaoseq OR g_inao_d[g_detail_idx].inaoseq1 != g_inao_d_t.inaoseq1 OR g_inao_d[g_detail_idx].inaoseq2 != g_inao_d_t.inaoseq2 OR g_inao_d[g_detail_idx].inao000 != g_inao_d_t.inao000 OR g_inao_d[g_detail_idx].inao013 != g_inao_d_t.inao013)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inao_t WHERE "||"inaoent = '" ||g_enterprise|| "' AND "||"inaodocno = '"||g_inao_d[g_detail_idx].inaodocno ||"' AND "|| "inaoseq = '"||g_inao_d[g_detail_idx].inaoseq ||"' AND "|| "inaoseq1 = '"||g_inao_d[g_detail_idx].inaoseq1 ||"' AND "|| "inaoseq2 = '"||g_inao_d[g_detail_idx].inaoseq2 ||"' AND "|| "inao000 = '"||g_inao_d[g_detail_idx].inao000 ||"' AND "|| "inao013 = '"||g_inao_d[g_detail_idx].inao013 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.inaodocno" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_inao_d[g_detail_idx].inaodocno IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq1 IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq2 IS NOT NULL AND g_inao_d[g_detail_idx].inao000 IS NOT NULL AND g_inao_d[g_detail_idx].inao013 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inao_d[g_detail_idx].inaodocno != g_inao_d_t.inaodocno OR g_inao_d[g_detail_idx].inaoseq != g_inao_d_t.inaoseq OR g_inao_d[g_detail_idx].inaoseq1 != g_inao_d_t.inaoseq1 OR g_inao_d[g_detail_idx].inaoseq2 != g_inao_d_t.inaoseq2 OR g_inao_d[g_detail_idx].inao000 != g_inao_d_t.inao000 OR g_inao_d[g_detail_idx].inao013 != g_inao_d_t.inao013)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inao_t WHERE "||"inaoent = '" ||g_enterprise|| "' AND "||"inaodocno = '"||g_inao_d[g_detail_idx].inaodocno ||"' AND "|| "inaoseq = '"||g_inao_d[g_detail_idx].inaoseq ||"' AND "|| "inaoseq1 = '"||g_inao_d[g_detail_idx].inaoseq1 ||"' AND "|| "inaoseq2 = '"||g_inao_d[g_detail_idx].inaoseq2 ||"' AND "|| "inao000 = '"||g_inao_d[g_detail_idx].inao000 ||"' AND "|| "inao013 = '"||g_inao_d[g_detail_idx].inao013 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.inaoseq" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_inao_d[g_detail_idx].inaodocno IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq1 IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq2 IS NOT NULL AND g_inao_d[g_detail_idx].inao000 IS NOT NULL AND g_inao_d[g_detail_idx].inao013 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inao_d[g_detail_idx].inaodocno != g_inao_d_t.inaodocno OR g_inao_d[g_detail_idx].inaoseq != g_inao_d_t.inaoseq OR g_inao_d[g_detail_idx].inaoseq1 != g_inao_d_t.inaoseq1 OR g_inao_d[g_detail_idx].inaoseq2 != g_inao_d_t.inaoseq2 OR g_inao_d[g_detail_idx].inao000 != g_inao_d_t.inao000 OR g_inao_d[g_detail_idx].inao013 != g_inao_d_t.inao013)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inao_t WHERE "||"inaoent = '" ||g_enterprise|| "' AND "||"inaodocno = '"||g_inao_d[g_detail_idx].inaodocno ||"' AND "|| "inaoseq = '"||g_inao_d[g_detail_idx].inaoseq ||"' AND "|| "inaoseq1 = '"||g_inao_d[g_detail_idx].inaoseq1 ||"' AND "|| "inaoseq2 = '"||g_inao_d[g_detail_idx].inaoseq2 ||"' AND "|| "inao000 = '"||g_inao_d[g_detail_idx].inao000 ||"' AND "|| "inao013 = '"||g_inao_d[g_detail_idx].inao013 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.inaoseq1" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_inao_d[g_detail_idx].inaodocno IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq1 IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq2 IS NOT NULL AND g_inao_d[g_detail_idx].inao000 IS NOT NULL AND g_inao_d[g_detail_idx].inao013 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inao_d[g_detail_idx].inaodocno != g_inao_d_t.inaodocno OR g_inao_d[g_detail_idx].inaoseq != g_inao_d_t.inaoseq OR g_inao_d[g_detail_idx].inaoseq1 != g_inao_d_t.inaoseq1 OR g_inao_d[g_detail_idx].inaoseq2 != g_inao_d_t.inaoseq2 OR g_inao_d[g_detail_idx].inao000 != g_inao_d_t.inao000 OR g_inao_d[g_detail_idx].inao013 != g_inao_d_t.inao013)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inao_t WHERE "||"inaoent = '" ||g_enterprise|| "' AND "||"inaodocno = '"||g_inao_d[g_detail_idx].inaodocno ||"' AND "|| "inaoseq = '"||g_inao_d[g_detail_idx].inaoseq ||"' AND "|| "inaoseq1 = '"||g_inao_d[g_detail_idx].inaoseq1 ||"' AND "|| "inaoseq2 = '"||g_inao_d[g_detail_idx].inaoseq2 ||"' AND "|| "inao000 = '"||g_inao_d[g_detail_idx].inao000 ||"' AND "|| "inao013 = '"||g_inao_d[g_detail_idx].inao013 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.inaoseq2" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_inao_d[g_detail_idx].inaodocno IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq1 IS NOT NULL AND g_inao_d[g_detail_idx].inaoseq2 IS NOT NULL AND g_inao_d[g_detail_idx].inao000 IS NOT NULL AND g_inao_d[g_detail_idx].inao013 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inao_d[g_detail_idx].inaodocno != g_inao_d_t.inaodocno OR g_inao_d[g_detail_idx].inaoseq != g_inao_d_t.inaoseq OR g_inao_d[g_detail_idx].inaoseq1 != g_inao_d_t.inaoseq1 OR g_inao_d[g_detail_idx].inaoseq2 != g_inao_d_t.inaoseq2 OR g_inao_d[g_detail_idx].inao000 != g_inao_d_t.inao000 OR g_inao_d[g_detail_idx].inao013 != g_inao_d_t.inao013)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inao_t WHERE "||"inaoent = '" ||g_enterprise|| "' AND "||"inaodocno = '"||g_inao_d[g_detail_idx].inaodocno ||"' AND "|| "inaoseq = '"||g_inao_d[g_detail_idx].inaoseq ||"' AND "|| "inaoseq1 = '"||g_inao_d[g_detail_idx].inaoseq1 ||"' AND "|| "inaoseq2 = '"||g_inao_d[g_detail_idx].inaoseq2 ||"' AND "|| "inao000 = '"||g_inao_d[g_detail_idx].inao000 ||"' AND "|| "inao013 = '"||g_inao_d[g_detail_idx].inao013 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="show.body.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inao_d[l_ac].inao005
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+            LET g_inao_d[l_ac].inao005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inao_d[l_ac].inao005_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inao_d[l_ac].inao005
+            LET g_ref_fields[2] = g_inao_d[l_ac].inao006
+            CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+            LET g_inao_d[l_ac].inao006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inao_d[l_ac].inao006_desc
+]]>
+</point>
+  <point name="main.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="aint170_02.description" ver="25" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000024
+#+ 
+#+ Filename...: aint170_02
+#+ Description: ...
+#+ Creator....: 01996(2014/04/23)
+#+ Modifier...: 01996(2014/04/23)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="aint170_02.free_style_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="aint170_02.global" ver="2" status="" src="s">
+<![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+</section>
+  <section id="aint170_02.global_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="aint170_02.input" ver="1" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aint170_02(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aint170_02 WITH FORM cl_ap_formpath("ain","aint170_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_inao_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = ,
+                  DELETE ROW = ,
+                  APPEND ROW = )
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+         #---------------------<  Detail: page1  >---------------------
+         #----<<sel>>----
+         #----<<change_num>>----
+         #----<<inao012>>----
+         #----<<inao002>>----
+         #----<<inao003>>----
+         #----<<inao005>>----
+         #----<<inao005_desc>>----
+         #----<<inao006>>----
+         #----<<inao006_desc>>----
+         #----<<inao007>>----
+         #----<<inao008>>----
+         #----<<inao009>>----
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<sel>>----
+         #----<<change_num>>----
+         #----<<inao012>>----
+         #----<<inao002>>----
+         #----<<inao003>>----
+         #----<<inao005>>----
+         #----<<inao005_desc>>----
+         #----<<inao006>>----
+         #----<<inao006_desc>>----
+         #----<<inao007>>----
+         #----<<inao008>>----
+         #----<<inao009>>----
+ 
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aint170_02 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aint170_02.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="aint170_02.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

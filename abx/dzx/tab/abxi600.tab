@@ -1,0 +1,132 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abxi600" module="abx" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="06137" crtdt="2016-07-06 09:44:00" modid="06137" moddt="2016-07-06 15:39:53" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="保稅料件月統計檔維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bxfa001,bxfa001_desc(chr80),bxfa001_desc_1(chr80),bxfasite,bxfa002,bxfa002_desc(chr80),bxfa003,bxfa004,bxfastus,bxfa005,bxfa006,bxfa007,bxfa008,bxfa009,bxfa010,bxfa011,bxfa012,bxfa021,bxfa022,bxfa023,bxfa024,bxfa025,bxfa026,bxfa027,bxfa028,bxfa029,bxfa030,bxfa031,bxfaownid,bxfaownid_desc(chr80),bxfaowndp,bxfaowndp_desc(chr80),bxfacrtid,bxfacrtid_desc(chr80),bxfacrtdp,bxfacrtdp_desc(chr80),bxfacrtdt,bxfamodid,bxfamodid_desc(chr80),bxfamoddt"/>
+      <var id="bs_field" value="bxfasite,bxfa001,bxfa001_desc(chr80),bxfa001_desc_1(chr80),bxfa002,bxfa002_desc(chr80),bxfa003,bxfa004" pk="bxfasite,bxfa001,bxfa002,bxfa003,bxfa004" order=""/>
+      <bs_reference field="bxfa001_desc" ref_field="bxfa001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="bxfa001_desc_1" ref_field="bxfa001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="bxfa002_desc" ref_field="bxfa002" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abx" filename="abxi600" method="dialog">
+    <section id="input">
+      <input id="head" field="bxfa001,bxfasite,bxfa002,bxfa003,bxfa004,bxfastus,bxfa005,bxfa006,bxfa007,bxfa008,bxfa009,bxfa010,bxfa011,bxfa012,bxfa021,bxfa022,bxfa023,bxfa024,bxfa025,bxfa026,bxfa027,bxfa028,bxfa029,bxfa030,bxfa031"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bxfa001,bxfasite,bxfa002,bxfa003,bxfa004,bxfastus,bxfa005,bxfa006,bxfa007,bxfa008,bxfa009,bxfa010,bxfa011,bxfa012,bxfa021,bxfa022,bxfa023,bxfa024,bxfa025,bxfa026,bxfa027,bxfa028,bxfa029,bxfa030,bxfa031,bxfaownid,bxfaowndp,bxfacrtid,bxfacrtdp,bxfacrtdt,bxfamodid,bxfamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bxfasite,bxfa001,bxfa002,bxfa003,bxfa004"/>
+      <set id="head" type="no_entry" field="bxfasite,bxfa001,bxfa002,bxfa003,bxfa004"/>
+    </init>
+    <init id="head">
+      <column id="bxfa001">
+        <after>
+          <check chkid="v_imaf001" id="isExist"/>
+          <reference field="bxfa001_desc" ref_field="bxfa_t.bxfa001" map_field="bxfaent,bxfa001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="bxfa001_desc"/>
+      <column id="bxfa001_desc_1"/>
+      <column id="bxfasite"/>
+      <column id="bxfa002">
+        <after>
+          <check chkid="v_inaa001_1" id="isExist"/>
+          <reference field="bxfa002_desc" ref_field="bxfa_t.bxfa002" map_field="bxfa002" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_2" state="i"/>
+        <controlp form="q_inaa001_2" state="c"/>
+      </column>
+      <column id="bxfa002_desc"/>
+      <column id="bxfa003" type="S" default="0">
+        <after>
+          <check id="range" st="3000" st_type="1" errno="azz-00087" bt="1911" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="bxfa004" type="S" default="0">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxfastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="bxfa005" type="S" default="0"/>
+      <column id="bxfa006" type="S" default="0"/>
+      <column id="bxfa007" type="S" default="0"/>
+      <column id="bxfa008" type="S" default="0"/>
+      <column id="bxfa009" type="S" default="0"/>
+      <column id="bxfa010" type="S" default="0"/>
+      <column id="bxfa011" type="S" default="0"/>
+      <column id="bxfa012" type="S" default="0"/>
+      <column id="bxfa021" type="S" default="0"/>
+      <column id="bxfa022" type="S" default="0"/>
+      <column id="bxfa023" type="S" default="0"/>
+      <column id="bxfa024" type="S" default="0"/>
+      <column id="bxfa025" type="S" default="0"/>
+      <column id="bxfa026" type="S" default="0"/>
+      <column id="bxfa027" type="S" default="0"/>
+      <column id="bxfa028" type="S" default="0"/>
+      <column id="bxfa029" type="S" default="0"/>
+      <column id="bxfa030" type="S" default="0"/>
+      <column id="bxfa031" type="S" default="0"/>
+      <column id="bxfaownid">
+        <after>
+          <reference field="bxfaownid_desc" ref_field="bxfa_t.bxfaownid" map_field="bxfaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxfaownid_desc"/>
+      <column id="bxfaowndp">
+        <after>
+          <reference field="bxfaowndp_desc" ref_field="bxfa_t.bxfaowndp" map_field="bxfaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxfaowndp_desc"/>
+      <column id="bxfacrtid">
+        <after>
+          <reference field="bxfacrtid_desc" ref_field="bxfa_t.bxfacrtid" map_field="bxfacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxfacrtid_desc"/>
+      <column id="bxfacrtdp">
+        <after>
+          <reference field="bxfacrtdp_desc" ref_field="bxfa_t.bxfacrtdp" map_field="bxfacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxfacrtdp_desc"/>
+      <column id="bxfacrtdt"/>
+      <column id="bxfamodid">
+        <after>
+          <reference field="bxfamodid_desc" ref_field="bxfa_t.bxfamodid" map_field="bxfamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxfamodid_desc"/>
+      <column id="bxfamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bxfa_t" pk="bxfasite,bxfa001,bxfa002,bxfa003,bxfa004">
+      <sql id="forupd_sql" type="sql" query="SELECT bxfa001,&apos;&apos;,&apos;&apos;,bxfasite,bxfa002,&apos;&apos;,bxfa003,bxfa004,bxfastus,bxfa005,bxfa006,bxfa007,bxfa008,bxfa009,bxfa010,bxfa011,bxfa012,bxfa021,bxfa022,bxfa023,bxfa024,bxfa025,bxfa026,bxfa027,bxfa028,bxfa029,bxfa030,bxfa031,bxfaownid,&apos;&apos;,bxfaowndp,&apos;&apos;,bxfacrtid,&apos;&apos;,bxfacrtdp,&apos;&apos;,bxfacrtdt,bxfamodid,&apos;&apos;,bxfamoddt FROM bxfa_t WHERE bxfaent= ? AND bxfasite=? AND bxfa001=? AND bxfa002=? AND bxfa003=? AND bxfa004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bxfasite,bxfa001,bxfa002,bxfa003,bxfa004 FROM bxfa_t" order="bxfasite,bxfa001,bxfa002,bxfa003,bxfa004"/>
+    </head>
+  </dataset>
+</assembly>
+

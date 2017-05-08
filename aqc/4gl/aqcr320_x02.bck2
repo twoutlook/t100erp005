@@ -1,0 +1,552 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aqcr320_x02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:2(2016-09-05 21:15:20), PR版次:0002(2016-09-05 21:20:51)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000086
+#+ Filename...: aqcr320_x02
+#+ Description: 缺點原因分析表
+#+ Creator....: 05423(2014-08-29 10:37:03)
+#+ Modifier...: 06189 -SD/PR- 06189
+ 
+{</section>}
+ 
+{<section id="aqcr320_x02.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:7)
+#add-point:填寫註解說明
+
+#end add-point
+#add-point:填寫註解說明
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       bdate STRING,                  #begin date 
+       edate STRING,                  #end date 
+       date STRING,                  #date type 
+       l_d_2 STRING,                  #l_d_2 
+       l_d_3 STRING,                  #l_d_3 
+       l_d_4 STRING                   #l_d_4
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE l_reason RECORD
+   reason   LIKE type_t.chr30,
+   count    LIKE type_t.num10
+END RECORD  
+
+TYPE type_re RECORD
+   reason   LIKE type_t.chr30,
+   count    LIKE type_t.num10
+END RECORD    
+
+DEFINE re     DYNAMIC ARRAY OF type_re
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aqcr320_x02.main" readonly="Y" >}
+PUBLIC FUNCTION aqcr320_x02(p_arg1,p_arg2,p_arg3,p_arg4,p_arg5,p_arg6,p_arg7)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 STRING                  #tm.bdate  begin date 
+DEFINE  p_arg3 STRING                  #tm.edate  end date 
+DEFINE  p_arg4 STRING                  #tm.date  date type 
+DEFINE  p_arg5 STRING                  #tm.l_d_2  l_d_2 
+DEFINE  p_arg6 STRING                  #tm.l_d_3  l_d_3 
+DEFINE  p_arg7 STRING                  #tm.l_d_4  l_d_4
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.bdate = p_arg2
+   LET tm.edate = p_arg3
+   LET tm.date = p_arg4
+   LET tm.l_d_2 = p_arg5
+   LET tm.l_d_3 = p_arg6
+   LET tm.l_d_4 = p_arg7
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "aqcr320_x02"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL aqcr320_x02_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL aqcr320_x02_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL aqcr320_x02_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL aqcr320_x02_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL aqcr320_x02_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcr320_x02.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION aqcr320_x02_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "qcba010.qcba_t.qcba010,qcba006.qcba_t.qcba006,qcba012.qcba_t.qcba012,qcba017.qcba_t.qcba017,l_qcba017.type_t.num10,l_reason1.type_t.chr30,l_reason1_desc.type_t.chr30,l_reason2.type_t.num10,l_qcba006_desc.type_t.chr30,l_flag01.type_t.chr30,l_flag02.type_t.chr30,qcbadocno.qcba_t.qcbadocno,qcba005.qcba_t.qcba005,l_qcba005_desc.type_t.chr30,imaal_t_imaal003.imaal_t.imaal003,imaal_t_imaal004.imaal_t.imaal004" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcr320_x02.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION aqcr320_x02_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcr320_x02.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aqcr320_x02_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   LET g_select = " SELECT UNIQUE qcba010,qcba006,qcba012,qcba017,NULL,NULL,NULL,NULL,gzzal003,NULL,NULL,qcbadocno,qcba005,pmaal003,imaal_t.imaal003,imaal_t.imaal004"
+#   #end add-point
+#   LET g_select = " SELECT qcba010,qcba006,qcba012,qcba017,NULL,NULL,NULL,NULL,NULL,NULL,NULL,qcbadocno, 
+#       qcba005,NULL,imaal_t.imaal003,imaal_t.imaal004"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+    LET g_from = " FROM qcba_t LEFT OUTER JOIN pmaal_t ON qcba005 = pmaal001 AND qcbaent = pmaalent AND pmaal002 = '",g_dlang,"'
+                               LEFT OUTER JOIN gzzal_t ON qcba006 = gzzal001 AND gzzal002 = '",g_dlang,"'
+                               LEFT OUTER JOIN pmds_t ON pmdsdocno = qcba001 AND pmdsent = qcbaent
+                               LEFT OUTER JOIN qcbe_t ON qcbeent = qcbaent AND qcbedocno = qcbadocno
+                               LEFT OUTER JOIN pmaa_t ON pmaa001 = qcba005 AND pmaaent =qcbaent
+                               LEFT OUTER JOIN sfaa_t ON sfaadocno = qcbadocno AND sfaaent = qcbaent
+                               LEFT OUTER JOIN imaa_t ON imaaent = qcbaent AND imaa001 = qcba010 
+                               LEFT OUTER JOIN imaal_t ON qcba010 = imaal001 AND qcbaent = imaalent AND imaal002 = '",g_dlang,"' "
+#   #end add-point
+#    LET g_from = " FROM qcba_t,qcbe_t,oocql_t,imaal_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   CASE 
+      WHEN tm.date = '1'  
+         LET g_where = " WHERE qcbastus = 'Y' AND qcbadocno IN (SELECT qcbedocno FROM qcbe_t) AND " ,tm.wc CLIPPED
+      WHEN tm.date = '2'
+         LET g_where = " WHERE pmdsdocno IN (SELECT qcba001 FROM qcba_t WHERE qcbastus = 'Y') AND pmdsstus = 'Y' AND qcbadocno IN (SELECT qcbedocno FROM qcbe_t) AND " ,tm.wc CLIPPED
+   END CASE
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("qcba_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE aqcr320_x02_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE aqcr320_x02_curs CURSOR FOR aqcr320_x02_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcr320_x02.ins_data" readonly="Y" >}
+PRIVATE FUNCTION aqcr320_x02_ins_data()
+DEFINE sr RECORD 
+   qcba010 LIKE qcba_t.qcba010, 
+   qcba006 LIKE qcba_t.qcba006, 
+   qcba012 LIKE qcba_t.qcba012, 
+   qcba017 LIKE qcba_t.qcba017, 
+   l_qcba017 LIKE type_t.num10, 
+   l_reason1 LIKE type_t.chr30, 
+   l_reason1_desc LIKE type_t.chr30, 
+   l_reason2 LIKE type_t.num10, 
+   l_qcba006_desc LIKE type_t.chr30, 
+   l_flag01 LIKE type_t.chr30, 
+   l_flag02 LIKE type_t.chr30, 
+   qcbadocno LIKE qcba_t.qcbadocno, 
+   qcba005 LIKE qcba_t.qcba005, 
+   l_qcba005_desc LIKE type_t.chr30, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_sql STRING
+DEFINE l_cnt1 LIKE type_t.num5
+DEFINE l_cnt2 LIKE type_t.num5
+DEFINE l_success LIKE type_t.chr2
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH aqcr320_x02_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       IF NOT cl_null(sr.qcba012) THEN
+         CALL s_feature_description(sr.qcba010,sr.qcba012) RETURNING l_success,sr.l_flag01
+         LET sr.l_flag01 = sr.qcba012 CLIPPED,'.',sr.l_flag01 CLIPPED       
+       END IF
+
+       CASE
+         WHEN tm.date = '1'
+            SELECT SUM(qcba017),COUNT(qcba017) INTO sr.qcba017,sr.l_qcba017
+	         FROM qcba_t
+  	         WHERE qcbadocno = sr.qcbadocno AND qcbastus = 'Y'
+         WHEN tm.date = '2'
+            SELECT SUM(qcba017),COUNT(qcba017) INTO sr.qcba017,sr.l_qcba017
+	         FROM qcba_t LEFT OUTER JOIN  pmds_t ON pmdsdocno = qcba001 AND pmdsent = qcbaent
+  	         WHERE qcbadocno = sr.qcbadocno AND pmdsdocno IN (SELECT qcba001 FROM qcba_t WHERE qcbastus = 'Y') AND pmdsstus = 'Y' 
+       END CASE
+       LET l_sql = "SELECT UNIQUE qcbe001,SUM(qcbe002)
+                    FROM qcbe_t LEFT OUTER JOIN qcba_t ON qcbaent = qcbeent AND qcbadocno = qcbedocno
+                    WHERE qcbadocno = '",sr.qcbadocno ,"' 
+                    GROUP BY qcbe001"
+       
+       PREPARE aqcr320_x01_prepare1 FROM l_sql
+       IF STATUS THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.extend = 'prepare:'
+       LET g_errparam.code   = STATUS
+       LET g_errparam.popup  = TRUE
+       CALL cl_err()
+       LET g_rep_success = 'N' 
+       END IF
+       DECLARE aqcr320_x01_curs1 CURSOR FOR aqcr320_x01_prepare1
+       LET l_cnt2 = 1
+       FOREACH aqcr320_x01_curs1 INTO l_reason.*
+         LET re[l_cnt2].reason = l_reason.reason
+         LET re[l_cnt2].count = l_reason.count
+         LET l_cnt2 = l_cnt2+1
+       END FOREACH
+       IF NOT cl_null(sr.qcba006) THEN
+         LET sr.l_qcba006_desc = sr.qcba006 ,".", sr.l_qcba006_desc
+       END IF
+       IF sr.l_qcba017 = '.' THEN
+         LET sr.l_qcba017 = NULL
+       END IF
+       LET l_cnt1 = 1
+       LET l_cnt2 = l_cnt2 - 1
+       FOR l_cnt1 = 1 TO l_cnt2
+         LET sr.l_reason1 = re[l_cnt1].reason
+         IF NOT cl_null(sr.l_reason1) THEN
+            CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+            LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+            LET sr.l_reason2 = re[l_cnt1].count
+#
+#            CASE sr.l_reason1
+#               WHEN '0001'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '0002'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '0003'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '0004'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '0005'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '0006'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '111101'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '111201'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '111301'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '111401'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112101'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112201'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112301'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112401'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112501'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112502'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112601'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112602'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112701'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112801'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '112802'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '113101'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '113201'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#               WHEN '113301'
+#                  CALL aqcr320_x02_desc('1053',sr.l_reason1) RETURNING sr.l_reason1_desc
+#                  LET sr.l_reason1 = sr.l_reason1,".",sr.l_reason1_desc
+#                  LET sr.l_reason2 = re[l_cnt1].count
+#            END CASE
+
+#       LET sr.l_flag01 = tm.l_d_2
+#       LET sr.l_flag02 = tm.l_d_4
+       
+
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.qcba010,sr.qcba006,sr.qcba012,sr.qcba017,sr.l_qcba017,sr.l_reason1,sr.l_reason1_desc,sr.l_reason2,sr.l_qcba006_desc,sr.l_flag01,sr.l_flag02,sr.qcbadocno,sr.qcba005,sr.l_qcba005_desc,sr.imaal_t_imaal003,sr.imaal_t_imaal004
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "aqcr320_x02_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+         END IF
+       END FOR
+       CALL re.clear()
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcr320_x02.rep_data" readonly="Y" >}
+PRIVATE FUNCTION aqcr320_x02_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcr320_x02.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION aqcr320_x02_desc(p_num,p_target)
+DEFINE p_num    LIKE type_t.num5
+DEFINE p_target LIKE type_t.chr10
+DEFINE r_desc   LIKE type_t.chr500
+   
+SELECT oocql004 INTO r_desc
+  FROM oocql_t
+ WHERE oocql001 = p_num
+   AND oocql002 = p_target
+   AND oocql003 = g_dlang
+   AND oocqlent = g_enterprise #add by geza 20160905 #160905-00007#13  
+RETURN r_desc
+END FUNCTION
+
+ 
+{</section>}
+ 

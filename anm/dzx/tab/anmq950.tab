@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmq950" module="anm" jobmode="N" type="q04" industry="std" fix_arg="0" crtid="02114" crtdt="2016-03-07 17:36:27" modid="02114" moddt="2016-03-07 17:36:27" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="資金模擬明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="nmfd001"/>
+      <var id="head" value="nmfd001(chr20),nmfa005(chr10),nmfa006(dat),nmfa007(dat),nmfa004(chr10),nmfa003(chr10),nmfd003(chr10),nmfd003_desc(chr80),a(chr500),nmfd002(chr10)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),nmfdseq,nmfd002,nmfd003,nmfd003_desc(chr500),nmfd004,nmfd005,nmfd006,nmfd007,nmfd008,nmfd009"/>
+    </section>
+    <section id="form_field">
+      <var id="head" value="nmfd001(nmfd001),nmfa005(nmfa005),nmfa006(nmfa006),nmfa007(nmfa007),nmfa004(nmfa004),nmfa003(nmfa003),nmfd003(nmfd003),nmfd003_desc(nmfd003_desc),a(a),nmfd002(nmfd002)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),nmfdseq(b_nmfdseq),nmfd002(b_nmfd002),nmfd003(b_nmfd003),nmfd003_desc(b_nmfd003_desc),nmfd004(b_nmfd004),nmfd005(b_nmfd005),nmfd006(b_nmfd006),nmfd007(b_nmfd007),nmfd008(b_nmfd008),nmfd009(b_nmfd009)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmq950" method="dialog">
+    <section id="construct">
+      <construct id="head" field="nmfd001,nmfd003,nmfd002"/>
+      <construct id="body" page="1" field="nmfdseq(b_nmfdseq),nmfd002(b_nmfd002),nmfd003(b_nmfd003),nmfd004(b_nmfd004),nmfd005(b_nmfd005),nmfd006(b_nmfd006),nmfd007(b_nmfd007),nmfd008(b_nmfd008),nmfd009(b_nmfd009)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="nmfdseq"/>
+      <column id="nmfd002"/>
+      <column id="nmfd003">
+        <after>
+          <reference field="nmfd003_desc" ref_field="nmfd003" map_field="nmbd003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmfd003_desc"/>
+      <column id="nmfd004"/>
+      <column id="nmfd005" type="S" default="0"/>
+      <column id="nmfd006"/>
+      <column id="nmfd007" type="S" default="0"/>
+      <column id="nmfd008"/>
+      <column id="nmfd009" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset/>
+</assembly>
+

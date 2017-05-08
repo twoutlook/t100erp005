@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr311_x01" module="aps" jobmode="N" type="x01" industry="std" crtid="07024" crtdt="2016-02-18 14:04:26" modid="07024" moddt="2016-02-18 14:32:25" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|condition)">
+    <var seq="1" value="psacdocno,psacdocdt,psac001,ooag_t_ooag011(ooag011|ooag_t.ooag011),psac002,ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),psac003,l_psacstus_desc(gzcbl004|NULL),psadseq,psad001,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),psad002,l_psad002_desc(chr1000|NULL),psad003,psad004,psad005,psad006,l_qty(num20_6|trim(psad005)||&apos;-&apos;||trim(psad006)),psad007,psad008,psad009"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="psacent,psacsite,psacdocno,psacdocdt,psac001,ooag_t_ooag011(ooag011|( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psac_t.psac001 AND ooag_t.ooagent = psac_t.psacent)),psac002,ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = psac_t.psac002 AND ooefl_t.ooeflent = psac_t.psacent AND ooefl_t.ooefl002 = g_dlang)),psac003,l_psacstus_desc(gzcbl004|NULL),psadseq,psad001,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),psad002,l_psad002_desc(chr1000|NULL),psad003,psad004,psad005,psad006,l_qty(num20_6|trim(psad005)||&apos;-&apos;||trim(psad006)),psad007,psad008,psad009,psadsite"/>
+    <sql id="g_from" query="psac_t LEFT OUTER JOIN ( SELECT psad_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = psad_t.psad001 AND imaal_t.imaalent = psad_t.psadent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = psad_t.psad001 AND imaal_t.imaalent = psad_t.psadent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal004 FROM psad_t ) x  ON psac_t.psacent = x.psadent AND psac_t.psacdocno = x.psaddocno"/>
+    <sql id="g_where" query="" maintable="psac_t"/>
+  </selprep>
+</assembly>
+

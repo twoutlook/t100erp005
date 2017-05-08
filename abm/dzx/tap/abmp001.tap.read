@@ -1,0 +1,2856 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="abmp001" std_prog="abmp001" erpver="1.0" module="ABM" ver="2" env="s" zone="t10dev" booking="N" type="M" identity="s">
+  <other>
+    <code_template value="W" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="construct.c.page1.ooef001" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooef001  #顯示到畫面上
+
+            NEXT FIELD ooef001                     #返回原欄位
+
+]]>
+  </point>
+  <point name="input.a.ooef003" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooef_m.ooef003
+            CALL ap_ref_array2(g_ref_fields,"SELECT glab003 FROM glab_t WHERE glabent='"||g_enterprise||"' AND glab001=? AND glab002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooef_m.ooef003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooef_m.ooef003_desc
+]]>
+  </point>
+  <point name="input.a.page1.ooef001" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooef_d[l_ac].ooef001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooef_d[l_ac].ooef001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooef_d[l_ac].ooef001_desc
+
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooef_d[g_detail_idx].ooef001) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_ooef_d[g_detail_idx].ooef001 != g_ooef_d_t.ooef001))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ooef_t WHERE "||"ooefent = '" ||g_enterprise|| "' AND "||"ooef001 = '"||g_ooef_d[g_detail_idx].ooef001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="ref_show.body.reference" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooef_d[l_ac].ooef001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooef_d[l_ac].ooef001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooef_d[l_ac].ooef001_desc
+]]>
+  </point>
+  <point name="ref_show.head.reference" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooef_m.ooef003
+            CALL ap_ref_array2(g_ref_fields,"SELECT glab003 FROM glab_t WHERE glabent='"||g_enterprise||"' AND glab001=? AND glab002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooef_m.ooef003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooef_m.ooef003_desc
+]]>
+  </point>
+  <point name="function.abmp001_carry" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION abmp001_carry()
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_cnt      LIKE type_t.num5
+   DEFINE l_count    LIKE type_t.num5   #执行笔数
+   DEFINE l_idx      LIKE type_t.num5
+   
+   LET g_detail_cnt = g_detail_d.getLength()
+   IF g_detail_cnt = 0 THEN
+      #请先选取资料
+      CALL cl_err('','abm-00098',1)
+      RETURN
+   END IF
+   
+   IF NOT cl_ask_confirm('abm-00096') THEN
+      RETURN
+   END IF
+   
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      CALL cl_progress_bar_no_window(g_detail_cnt)
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   LET l_count = 0
+   FOR l_idx=1 TO g_detail_cnt
+      IF g_bgjob <> "Y" THEN
+         CALL cl_progress_no_window_ing(g_detail_d[l_idx].bmaasite||'/'||g_detail_d[l_idx].bmaa001||'/'||g_detail_d[l_idx].bmaa002)
+      END IF
+      
+      IF g_detail_d[l_idx].sel = 'N' THEN
+         CONTINUE FOR
+      END IF
+      
+      #检查目的营运中心是否已存在bom
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM bmaa_t
+       WHERE bmaaent = g_enterprise
+         AND bmaasite= g_detail_d[l_idx].bmaasite
+         AND bmaa001 = g_detail_d[l_idx].bmaa001
+         AND bmaa002 = g_detail_d[l_idx].bmaa002
+      IF l_cnt > 0 THEN
+         CONTINUE FOR
+      END IF
+      
+      #检查料号是否已拋转，未拋转的需先拋转料
+      CALL s_abmm200_carry_chk_item(g_detail_d[l_idx].bmaa001,g_detail_d[l_idx].bmaasite)
+           RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         #执行失败
+         CALL cl_err('','adz-00218',1)
+         RETURN
+      END IF
+      
+      #复制资料到目的营运中心
+      CALL s_abmm200_carry_copy(g_detail_d[l_idx].bmaa001,g_detail_d[l_idx].bmaa002,g_detail_d[l_idx].bmaasite) RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         #执行失败
+         CALL cl_err('','adz-00218',1)
+         RETURN
+      END IF
+      
+      LET l_count = l_count + 1
+      
+   END FOR
+
+   CALL s_transaction_end('Y','0') 
+   #执行成功
+   #CALL cl_err('','adz-00217',1)
+   #资料拋转成功！（拋转笔数：%1笔）
+   CALL cl_err_msg('','abm-00097',l_count,1)
+
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.clear" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_ooef001   LIKE ooef_t.ooef001   #营运据点
+   DEFINE l_ooefl003  LIKE ooefl_t.ooefl003
+   DEFINE l_bmaa001   LIKE bmaa_t.bmaa001   #主件料号
+   DEFINE l_bmaa002   LIKE bmaa_t.bmaa002   #版本
+   DEFINE l_imaal003  LIKE imaal_t.imaal003
+   DEFINE l_imaal004  LIKE imaal_t.imaal004
+   DEFINE l_imaa009   LIKE imaa_t.imaa009   #产品分类
+   DEFINE l_rtaxl003  LIKE rtaxl_t.rtaxl003
+   DEFINE l_imaa003   LIKE imaa_t.imaa003   #主分群码
+   DEFINE l_cnt       LIKE type_t.num5]]>
+  </point>
+  <point name="b_fill.foreach_into" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   #先抓取欲拋转的资料
+   l_bmaa001,l_bmaa002,l_imaal003,l_imaal004,l_imaa009,l_rtaxl003,l_imaa003]]>
+  </point>
+  <point name="b_fill.foreach_iside" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      #再抓取可拋转的营运据点
+      OPEN s_abmp001_b_fill_c1 USING l_imaa009,l_bmaa001
+      FOREACH s_abmp001_b_fill_c1 INTO l_ooef001,l_ooefl003
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH s_abmp001_b_fill_c1:",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+
+         IF l_ooef001 = 'ALL' THEN
+            CONTINUE FOREACH
+         END IF
+         
+         #检查目的营运中心是否已存在bom
+         LET l_cnt = 0
+         SELECT COUNT(*) INTO l_cnt FROM bmaa_t
+          WHERE bmaaent = g_enterprise
+            AND bmaasite= l_ooef001
+            AND bmaa001 = l_bmaa001
+            AND bmaa002 = l_bmaa002
+         IF l_cnt > 0 THEN
+            CONTINUE FOREACH
+         END IF
+         
+         LET g_detail_d[l_ac].sel          = 'Y'
+         LET g_detail_d[l_ac].bmaasite     = l_ooef001
+         LET g_detail_d[l_ac].bmaasite_desc= l_ooefl003
+         LET g_detail_d[l_ac].bmaa001      = l_bmaa001
+         LET g_detail_d[l_ac].bmaa001_desc1= l_imaal003
+         LET g_detail_d[l_ac].bmaa001_desc2= l_imaal004
+         LET g_detail_d[l_ac].bmaa002      = l_bmaa002
+         LET g_detail_d[l_ac].imaa009      = l_imaa009
+         LET g_detail_d[l_ac].imaa009_desc = l_rtaxl003
+
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+      LET l_ac = l_ac - 1   #不需要下面的l_ac = l_ac + 1 所以这边减回来]]>
+  </point>
+  <point name="b_fill.other_table" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_detail_d.deleteElement(l_ac)
+
+   FREE s_abmp001_b_fill_c1]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+   #--检查aimi150中的产品分类页签
+   #先抓出aimi150单头所有据点，及据点对应的产品分类设置信息
+   #如目的据点主件料号的产品分类，判断这个分类设置为bom打勾，而且引入方式为自动的，则在这个据点中拋转bom资料  #abmm200拋转是需要自动引入，abmp001都可以
+   #如不是，则这个据点不拋转，继续判断其他的据点是否需要抛转
+   #--检查aimi150中的料件页签
+   #先抓出aimi150单头所有据点，及据点对应的料件设置信息
+   #如目的据点的料件设置为bom引入，而且引入方式为自动的，则在这个据点中拋转bom资料  #abmm200拋转是需要自动引入，abmp001都可以
+   #如不是，则这个据点不拋转，继续判断其他的据点是否需要抛
+   #以上两者，只要一个满足就可以拋转
+   
+   #可拋转的营运据点
+   LET g_sql = " SELECT unique ooef001,ooefl003 ",
+               "   FROM ooef_t LEFT OUTER JOIN ooefl_t ON ooeflent=ooefent and ooefl001=ooef001 and ooefl002='",g_lang,"' ",
+               "  WHERE ooefent = ",g_enterprise,
+                         #满足aimi150中的产品分类页签
+               "    AND (ooef001 IN (select unique imda001 from imda_t ",
+               "                      where imdaent = ",g_enterprise,
+               "                        and imdastus= 'Y' ", #有效的
+               "                        and imda005 = 'Y' ", #BOM引入
+               #"                        and imda003 = '1' ", #自动引入  #abmm200拋转是需要自动引入，abmp001都可以
+               "                        and imda002 = ? ) ", #产品分类
+               "         OR ",
+                         #满足aimi150中的料件页签
+               "         ooef001 IN (select unique imdb001 from imdb_t ",
+               "                      where imdbent = ",g_enterprise,
+               "                        and imdbstus= 'Y' ", #有效的
+               "                        and imdb005 = 'Y' ", #BOM引入
+               #"                        and imdb003 = '1' ", #自动引入 #abmm200拋转是需要自动引入，abmp001都可以
+               "                        and imdb002 = ? ) ",  #料件编号
+               "         )"
+   #IF NOT cl_null(p_tm_site) THEN
+   #   #追加where条件
+   #   LET g_sql = g_sql CLIPPED," AND ooef001 IN(",l_tm_site CLIPPED,")"
+   #END IF
+   PREPARE s_abmp001_b_fill_p1 FROM g_sql
+   DECLARE s_abmp001_b_fill_c1 CURSOR FOR s_abmp001_b_fill_p1
+
+   #欲拋转的资料
+   LET g_sql = " SELECT unique bmaa001,bmaa002,imaal003,imaal004,imaa009,rtaxl003,imaa003 ",
+               "   FROM bmaa_t LEFT OUTER JOIN imaal_t ON imaalent=bmaaent AND imaal001=bmaa001 AND imaal002='",g_lang,"', ",
+               "        imaa_t LEFT OUTER JOIN rtaxl_t ON rtaxlent=imaaent AND imaa009=rtaxl001 AND rtaxl002='",g_lang,"' ",
+               "  WHERE bmaa001 = imaa001 ",
+               "    AND bmaaent = imaaent ",
+               "    AND bmaaent = ? ",
+               "    AND bmaasite= 'ALL' ",
+               "    AND bmaastus= 'Y'  ",  #已审核
+               "    AND ",g_wc CLIPPED]]>
+  </point>
+  <point name="global.argv" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#DEFINE g_execute    LIKR]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                     sel            LIKE type_t.chr1,
+                     bmaasite       LIKE bmaa_t.bmaasite,
+                     bmaasite_desc  LIKE type_t.chr80,
+                     bmaa001        LIKE bmaa_t.bmaa001,
+                     bmaa001_desc1  LIKE type_t.chr80,
+                     bmaa001_desc2  LIKE type_t.chr80,
+                     bmaa002        LIKE bmaa_t.bmaa002,
+                     imaa009        LIKE imaa_t.imaa009,
+                     imaa009_desc   LIKE type_t.chr80
+                     END RECORD]]>
+  </point>
+  <point name="query.after_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_master_idx = l_ac]]>
+  </point>
+  <point name="ui_dialog.before_dialog2" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+         ON ACTION batch_execute
+            CALL abmp001_carry()]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         CONSTRUCT BY NAME g_wc ON bmaa001,bmaa002,imaa009
+	   
+            BEFORE CONSTRUCT
+
+            ON ACTION controlp INFIELD bmaa001 #主件料号
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaa001_2()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO bmaa001  #顯示到畫面上
+               NEXT FIELD bmaa001                     #返回原欄位
+
+            ON ACTION controlp INFIELD imaa009   #产品分类
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_rtax001()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+               NEXT FIELD imaa009                    #返回原欄位
+
+            ON ACTION accept
+               #ACCEPT DIALOG
+               CALL abmp001_b_fill()
+
+            #ON ACTION cancel
+            #   LET INT_FLAG = 1
+            #   EXIT DIALOG
+         END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         INPUT ARRAY g_detail_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+            BEFORE INPUT
+               #CALL asfp310_b_fill_sfaa()
+               LET g_detail_cnt = g_detail_d.getLength()
+         
+            BEFORE ROW
+               #LET l_cmd = ''
+               LET l_ac = ARR_CURR()
+            
+               LET g_detail_cnt = g_detail_d.getLength()
+               #LET l_cmd='u'
+               #LET g_detail_d_t.* = g_detail_d[l_ac].*  #BACKUP
+         
+            BEFORE FIELD sel
+               LET l_ac = ARR_CURR()
+               LET g_detail_cnt = g_detail_d.getLength()
+            
+            AFTER FIELD sel
+               IF NOT cl_null(g_detail_d[l_ac].sel) THEN
+                  IF g_detail_d[l_ac].sel NOT MATCHES '[YN]' THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+            ON ROW CHANGE
+               IF INT_FLAG THEN
+                  CALL cl_err('',9001,0)
+                  LET INT_FLAG = 0
+                  #LET g_detail_d[l_ac].* = g_detail_d_t.*
+                  NEXT FIELD sel
+               END IF
+         
+         
+            AFTER ROW
+         
+         
+            AFTER INPUT
+    
+            #ON ACTION accept
+            #   CALL abmp001_carry()
+         END INPUT]]>
+  </point>
+  <section id="abmp001.b_fill" ver="5" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION abmp001_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   PREPARE abmp001_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR abmp001_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   {<point name="b_fill.clear"/>}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   {<point name="b_fill.foreach_into"/>}
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.foreach_iside"/>}
+      #end add-point
+      
+      CALL abmp001_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.other_table"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE abmp001_sel
+   
+   LET l_ac = 1
+   CALL abmp001_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.after_b_fill"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.b_fill2" ver="2" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION abmp001_b_fill2(pi_idx)
+   DEFINE pi_idx          LIKE type_t.num5
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+      
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.before_delete" ver="1" status="" src="s">
+    <![CDATA[#+ 單身db資料刪除
+PRIVATE FUNCTION abmp001_before_delete()
+   #add-point:before_delete段define
+   {<point name="before_delete.define"/>}
+   #end add-point 
+   
+   #add-point:單筆刪除前
+   {<point name="delete.body.b_single_delete" mark="Y"/>}
+   #end add-point
+   
+   DELETE FROM ooef_t
+    WHERE ooefent = g_enterprise AND  =  AND
+ 
+          ooef001 = g_ooef_d_t.ooef001
+ 
+      
+   #add-point:單筆刪除中
+   {<point name="delete.body.m_single_delete"/>}
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("ooef_t",SQLCA.sqlcode,1)
+      RETURN FALSE 
+   END IF
+   
+   #add-point:單筆刪除後
+   {<point name="delete.body.a_single_delete"/>}
+   #end add-point
+ 
+   LET g_rec_b = g_rec_b-1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+ 
+   RETURN TRUE
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.browser_fill" ver="6" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION abmp001_browser_fill(ps_page_action)
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   DEFINE l_searchcol       STRING
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point    
+   
+   #add-point:browser_fill段動作開始前
+   {<point name="browser_fill.before_browser_fill"/>}
+   #end add-point    
+   
+   CALL g_browser.clear()
+ 
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = '0' THEN
+      LET l_searchcol = ""
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+   
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+   IF cl_null(l_wc) THEN  #p_wc 查詢條件
+      RETURN
+   END IF
+   
+   IF g_wc2 <> " 1=1" OR NOT cl_null(g_wc2) THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE  ",
+ 
+                      " FROM ooef_t ",
+                      " ",
+                      " ",
+ 
+                      " WHERE ooefent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("ooef_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE  ",
+ 
+                      " FROM ooef_t ",
+                      " ",
+                      " ",
+                      " WHERE ooefent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED, cl_sql_add_filter("ooef_t")
+   END IF 
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+ 
+   #add-point:browser_fill,count前
+   {<point name="browser_fill.before_count"/>}
+   #end add-point
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+   
+   #若超過最大顯示筆數
+   LET g_error_show = 0
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #LET g_page_action = ps_page_action          # Keep Action
+   IF ps_page_action = "first" OR              
+      ps_page_action = "prev"  OR
+      ps_page_action = "next"  OR
+      ps_page_action = "last"  THEN
+      LET g_page_action = ps_page_action        #g_page_action 這個會影響 browser 下面四個button 的判斷 
+   END IF
+   
+   CASE ps_page_action
+      WHEN "F" 
+         LET g_pagestart = 1
+          
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+             LET g_pagestart = 1
+         END IF
+          
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+         
+   END CASE
+   
+   #單身有輸入查詢條件且非null
+   IF g_wc2 <> " 1=1" AND NOT cl_null(g_wc2) THEN 
+ 
+      #依照 Browser欄位定義(取代原本bs_sql功能)
+      LET l_sub_sql  = "SELECT DISTINCT  ",
+                       " FROM ooef_t ",
+ 
+                       " ",
+                       " WHERE ooefent = '" ||g_enterprise|| "' AND ", g_wc," AND ",g_wc2, cl_sql_add_filter("ooef_t")
+ 
+   ELSE
+      #單身無輸入資料
+      LET l_sub_sql  = "SELECT DISTINCT  ",
+                       " FROM ooef_t ",
+                       " WHERE ooefent = '" ||g_enterprise|| "' AND ", g_wc, cl_sql_add_filter("ooef_t")
+                 
+   END IF
+   
+   #add-point:browser_fill,sql_rank前
+   {<point name="browser_fill.before_sql_rank"/>}
+   #end add-point
+   
+   LET l_sql_rank = "SELECT ,DENSE_RANK() OVER(ORDER BY  ",g_order,") AS RANK ",
+                    " FROM (",l_sub_sql,") "
+                       
+   #定義翻頁CURSOR
+   LET g_sql= " SELECT  FROM (",l_sql_rank,") WHERE RANK>=",g_pagestart,
+              " AND RANK < ", g_pagestart + g_max_browse,
+              " ORDER BY ",l_searchcol, " ", g_order
+                
+   #add-point:browser_fill,pre前
+   {<point name="browser_fill.before_pre"/>}
+   #end add-point
+                
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO     
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point    
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   IF g_browser.getLength() = 0 AND g_wc THEN
+      INITIALIZE g_ooef_m.* TO NULL
+      CALL g_ooef_d.clear()
+ 
+      #add-point:browser_fill段after_clear
+      {<point name="browser_fill.after_clear"/>}
+      #end add-point 
+      CLEAR FORM
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.browser_search" ver="2" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料搜尋
+PRIVATE FUNCTION abmp001_browser_search(p_type)
+   DEFINE p_type LIKE type_t.chr10
+   #add-point:browser_search段define
+   {<point name="browser_search.define"/>}
+   #end add-point    
+   
+   #若無輸入關鍵字則查找出所有資料
+   IF NOT cl_null(g_searchstr) AND g_searchcol='0' THEN
+      CALL cl_err("searchcol","std-00005",0)
+      RETURN FALSE 
+   END IF 
+   
+   IF NOT cl_null(g_searchstr) THEN
+      LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+      LET g_wc = g_wc.toLowerCase()
+   ELSE
+      LET g_wc = " 1=1"
+   END IF         
+   
+   #若為排序搜尋則添加以下條件
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET g_wc = g_wc, " ORDER BY "
+   ELSE
+      LET g_wc = g_wc, " ORDER BY ", g_searchcol
+   END IF 
+ 
+   CALL abmp001_browser_fill("F")
+   CALL ui.Interface.refresh()
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.construct" ver="3" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION abmp001_construct()
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point    
+ 
+   #清除畫面上相關資料
+   CLEAR FORM                 
+   INITIALIZE g_ooef_m.* TO NULL
+   CALL g_ooef_d.clear()
+ 
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   LET g_action_choice = ""
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段construct外
+   {<point name="cs.head.before"/>}
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON ooef003
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+        #---------------------------<  Master  >---------------------------
+         #----<<ooef003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooef003
+            #add-point:BEFORE FIELD ooef003
+            {<point name="construct.b.ooef003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooef003
+            
+            #add-point:AFTER FIELD ooef003
+            {<point name="construct.a.ooef003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.ooef003
+         ON ACTION controlp INFIELD ooef003
+            #add-point:ON ACTION controlp INFIELD ooef003
+            {<point name="construct.c.ooef003" />}
+            #END add-point
+ 
+         #----<<ooef003_desc>>----
+ 
+         
+      END CONSTRUCT
+ 
+      CONSTRUCT g_wc2_table1 ON ooef001
+           FROM s_detail1[1].ooef001
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.body.before_construct"/>}
+            #end add-point 
+            
+         #單身公用欄位開窗相關處理
+         
+           
+         #單身一般欄位開窗相關處理
+         #---------------------<  Detail: page1  >---------------------
+         #----<<ooef001>>----
+         #Ctrlp:construct.c.page1.ooef001
+         ON ACTION controlp INFIELD ooef001
+            #add-point:ON ACTION controlp INFIELD ooef001
+            {<point name="construct.c.page1.ooef001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooef001
+            #add-point:BEFORE FIELD ooef001
+            {<point name="construct.b.page1.ooef001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooef001
+            
+            #add-point:AFTER FIELD ooef001
+            {<point name="construct.a.page1.ooef001" />}
+            #END add-point
+            
+ 
+         #----<<ooef001_desc>>----
+   
+       
+      END CONSTRUCT
+  
+ 
+  
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:ui_dialog段b_dialog
+         {<point name="cs.before_dialog"/>}
+         #end add-point
+      
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+ 
+   
+   LET g_current_row = 1
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+   
+   LET g_wc_filter = ""
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.default_search" ver="2" status="" src="s">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION abmp001_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, "  = '", g_argv[1], "' AND "
+   END IF
+   
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.delete" ver="4" status="" src="s">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION abmp001_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point     
+   
+   IF  IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   EXECUTE abmp001_master_referesh USING  INTO g_ooef_m.ooef003
+   
+   CALL abmp001_show()
+   
+   CALL s_transaction_begin()
+   
+   
+ 
+   OPEN abmp001_cl USING g_enterprise,
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN abmp001_cl:", STATUS, 1)
+      CLOSE abmp001_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH abmp001_cl INTO g_ooef_m.ooef003,g_ooef_m.ooef003_desc
+   
+   #若資料已被他人LOCK
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(,SQLCA.sqlcode,0)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #IF NOT cl_ask_delete() THEN             #確認一下
+   IF cl_ask_del_master() THEN              #確認一下
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL abmp001_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+  
+ 
+      #add-point:單身刪除前
+      {<point name="delete.body.b_delete" mark="Y"/>}
+      #end add-point
+      
+      DELETE FROM ooef_t WHERE ooefent = g_enterprise AND  = 
+ 
+                                                               
+      #add-point:單身刪除中
+      {<point name="delete.body.m_delete"/>}
+      #end add-point
+      
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("ooef_t",SQLCA.sqlcode,0)
+         CALL s_transaction_end('N','0')
+      END IF
+ 
+      
+  
+      #add-point:單身刪除後 
+      {<point name="delete.body.a_delete"/>}
+      #end add-point
+      
+ 
+      
+      CLEAR FORM
+      CALL g_ooef_d.clear() 
+ 
+     
+      CALL abmp001_ui_browser_refresh()  
+      CALL abmp001_ui_headershow()  
+      CALL abmp001_ui_detailshow()
+       
+      IF g_browser_cnt > 0 THEN 
+         CALL abmp001_fetch('P')
+      ELSE
+         LET g_wc = " 1=1"
+         LET g_wc2 = " 1=1"
+         CALL abmp001_browser_fill("F")
+      END IF
+       
+   END IF
+ 
+   CLOSE abmp001_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(,'D')
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.delete_b" ver="2" status="" src="s">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION abmp001_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.description" ver="12" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000068
+#+ 
+#+ Filename...: abmp001
+#+ Description: 產品結構引入營運據點批次作業
+#+ Creator....: 00768(2014/05/29)
+#+ Modifier...: 00768(2014/06/30)
+#+ Buildtype..: 應用 p02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="abmp001.detail_reproduce" ver="2" status="" src="s">
+    <![CDATA[#+ 單身自動複製
+PRIVATE FUNCTION abmp001_detail_reproduce()
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE ooef_t.*
+ 
+ 
+   #add-point:delete段define
+   {<point name="detail_reproduce.define"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE abmp001_detail
+   
+   #add-point:單身複製前1
+   {<point name="detail_reproduce.body.table1.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = "CREATE GLOBAL TEMPORARY TABLE abmp001_detail AS ",
+                "SELECT * FROM ooef_t "
+   PREPARE repro_tbl FROM ls_sql
+   EXECUTE repro_tbl
+   FREE repro_tbl
+                
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO abmp001_detail SELECT * FROM ooef_t 
+                                         WHERE ooefent = g_enterprise AND  = g__t
+ 
+   
+   #將key修正為調整後   
+   UPDATE abmp001_detail 
+      #更新key欄位
+      SET  = 
+ 
+      #更新共用欄位
+      
+                                       
+  
+   #將資料塞回原table   
+   INSERT INTO ooef_t SELECT * FROM abmp001_detail
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("reproduce",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1
+   {<point name="detail_reproduce.body.table1.m_insert"/>}
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE abmp001_detail
+   
+   #add-point:單身複製後1
+   {<point name="detail_reproduce.body.table1.a_insert"/>}
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g__t = 
+ 
+   
+   DROP TABLE abmp001_detail
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.detail_show" ver="1" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION abmp001_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段
+   {<point name="detail_show.detail_show"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.fetch" ver="4" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION abmp001_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.fill_chk" ver="2" status="" src="s">
+    <![CDATA[#+ 單身填充確認
+PRIVATE FUNCTION abmp001_fill_chk(ps_idx)
+   DEFINE ps_idx        LIKE type_t.chr10
+   DEFINE lst_token     base.StringTokenizer
+   DEFINE ls_token      STRING
+   #add-point:fill_chk段define
+   {<point name="fill_chk.define"/>}
+   #end add-point
+   
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1') THEN
+      RETURN TRUE
+   END IF
+   
+   #第一單身
+   IF ps_idx = 1 AND
+      ((NOT cl_null(g_wc2_table1) AND g_wc2_table1.trim() <> '1=1')) THEN
+      RETURN TRUE
+   END IF
+   
+   #根據wc判定是否需要填充
+ 
+ 
+   
+   #add-point:fill_chk段other
+   {<point name="fill_chk.other"/>}
+   #end add-point
+   
+   RETURN FALSE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.filter" ver="4" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION abmp001_filter()
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+ 
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   {<point name="filter.detail_cnt"/>}
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL abmp001_b_fill()
+   CALL abmp001_fetch()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.filter_parser" ver="3" status="" src="s">
+    <![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION abmp001_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.filter_show" ver="1" status="" src="s">
+    <![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION abmp001_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = abmp001_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.global" ver="3" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="abmp001.init" ver="2" status="" src="s">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION abmp001_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.input" ver="2" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PRIVATE FUNCTION abmp001_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_ac_t                LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                   LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num5
+   DEFINE  l_i                   LIKE type_t.num5
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num5
+   DEFINE  li_reproduce_target   LIKE type_t.num5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point    
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF  
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql
+   {<point name="input.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT ooef001,'' FROM ooef_t WHERE ooefent=? AND ooef001=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE abmp001_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+ 
+ 
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL abmp001_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL abmp001_set_no_entry(p_cmd)
+   #add-point:set_no_entry後
+   {<point name="input.after_set_no_entry"/>}
+   #end add-point
+ 
+   DISPLAY BY NAME g_ooef_m.ooef003
+   
+   LET lb_reproduce = FALSE
+   
+   #add-point:進入修改段前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+]]>
+  </section>
+  <section id="abmp001.input.body" ver="4" status="" src="s">
+    <![CDATA[      #Page1 預設值產生於此處
+      INPUT ARRAY g_ooef_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂單身ACTION
+         
+ 
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_ooef_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL abmp001_b_fill(g_wc2) 
+            IF g_rec_b != 0 THEN
+               CALL fgl_set_arr_curr(l_ac)
+            END IF
+            #add-point:資料輸入前
+            {<point name="input.body.before_input"/>}
+            #end add-point
+         
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            
+         
+            CALL s_transaction_begin()
+            
+            #判定新增或修改
+            IF l_cmd = 'u' THEN
+               OPEN abmp001_cl USING g_enterprise,
+                                               
+ 
+                                               
+               IF STATUS THEN
+                  CALL cl_err("OPEN abmp001_cl:", STATUS, 1)
+                  CLOSE abmp001_cl
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+            END IF
+            
+            LET l_cmd = ''
+            
+            IF g_rec_b >= l_ac 
+               AND g_ooef_d[l_ac].ooef001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_ooef_d_t.* = g_ooef_d[l_ac].*  #BACKUP
+               CALL abmp001_set_entry_b(l_cmd)
+               #add-point:set_entry_b後
+               {<point name="input.body.before_row.set_entry_b"/>}
+               #end add-point
+               CALL abmp001_set_no_entry_b(l_cmd)
+               OPEN abmp001_bcl USING g_enterprise,,
+ 
+                                                g_ooef_d_t.ooef001
+ 
+               IF STATUS THEN
+                  CALL cl_err("OPEN abmp001_bcl:", STATUS, 1)
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH abmp001_bcl INTO g_ooef_d[l_ac].ooef001,g_ooef_d[l_ac].ooef001_desc
+                  IF SQLCA.sqlcode THEN
+                      CALL cl_err(g_ooef_d_t.ooef001,SQLCA.sqlcode,1)
+                      LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL abmp001_ref_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            
+        
+         BEFORE INSERT
+            
+            INITIALIZE g_ooef_d_t.* TO NULL
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_ooef_d[l_ac].* TO NULL
+            
+            #公用欄位預設值
+              
+            
+            #一般欄位預設值
+            
+            
+            
+            LET g_ooef_d_t.* = g_ooef_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL abmp001_set_entry_b(l_cmd)
+            #add-point:set_entry_b後
+            {<point name="input.body.before_insert.set_entry_b"/>}
+            #end add-point
+            CALL abmp001_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_ooef_d[li_reproduce_target].* = g_ooef_d[li_reproduce].*
+ 
+               LET g_ooef_d[g_ooef_d.getLength()].ooef001 = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+ 
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM ooef_t 
+             WHERE ooefent = g_enterprise AND  = 
+ 
+               AND ooef001 = g_ooef_d[l_ac].ooef001
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               CALL s_transaction_begin()
+               #add-point:單身新增前
+               {<point name="input.body.b_insert" mark="Y"/>}
+               #end add-point
+               INSERT INTO ooef_t
+                           (ooefent,
+                            ooef003,
+                            ooef001
+                            ) 
+                     VALUES(g_enterprise,
+                            g_ooef_m.ooef003,
+                            g_ooef_d[l_ac].ooef001
+                            )
+               #add-point:單身新增中
+               {<point name="input.body.m_insert"/>}
+               #end add-point
+               LET p_cmd = 'u'
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_ooef_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("ooef_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR "INSERT O.K"
+               LET g_rec_b=g_rec_b+1
+               DISPLAY g_rec_b TO FORMONLY.cnt
+            END IF
+            
+            #add-point:單身新增後
+            {<point name="input.body.after_insert"/>}
+            #end add-point
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_ooef_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_ooef_d.deleteElement(l_ac)
+               NEXT FIELD ooef001
+            END IF
+            IF g_ooef_d_t.ooef001 IS NOT NULL
+ 
+               THEN
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete"/>}
+               #end add-point
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               IF abmp001_before_delete() THEN 
+                  CALL s_transaction_end('Y','0')
+               ELSE 
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               END IF 
+               CLOSE abmp001_bcl
+               LET l_count = g_ooef_d.getLength()
+            END IF 
+            
+            #add-point:單身刪除後
+            {<point name="input.body.a_delete"/>}
+            #end add-point
+              
+         AFTER DELETE 
+            #add-point:單身AFTER DELETE 
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<ooef001>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD ooef001
+            
+            #add-point:AFTER FIELD ooef001
+            {<point name="input.a.page1.ooef001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooef001
+            #add-point:BEFORE FIELD ooef001
+            {<point name="input.b.page1.ooef001" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ooef001
+            #add-point:ON CHANGE ooef001
+            {<point name="input.g.page1.ooef001" />}
+            #END add-point
+ 
+         #----<<ooef001_desc>>----
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<ooef001>>----
+         #Ctrlp:input.c.page1.ooef001
+         ON ACTION controlp INFIELD ooef001
+            #add-point:ON ACTION controlp INFIELD ooef001
+            {<point name="input.c.page1.ooef001" />}
+            #END add-point
+ 
+         #----<<ooef001_desc>>----
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_ooef_d[l_ac].* = g_ooef_d_t.*
+               CLOSE abmp001_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_ooef_d[l_ac].ooef001,-263,1)
+               LET g_ooef_d[l_ac].* = g_ooef_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊
+               
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+         
+               UPDATE ooef_t SET (ooef001) = (g_ooef_d[l_ac].ooef001)
+                WHERE ooefent = g_enterprise AND  =  
+ 
+                 AND ooef001 = g_ooef_d_t.ooef001 #項次   
+ 
+                 
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+               
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("ooef_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  #WHEN SQLCA.sqlcode #其他錯誤
+                  #   CALL cl_err("ooef_t",SQLCA.sqlcode,1)  
+                  #   CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_ooef_d[g_detail_idx].ooef001
+               LET gs_keys_bak[1] = g_ooef_d_t.ooef001
+               CALL abmp001_update_b('ooef_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+            END IF
+ 
+         AFTER INPUT
+            #若單身還沒有輸入資料, 強制切換至單身
+            IF cl_null(g_ooef_d[1].ooef001) THEN
+               CALL g_ooef_d.deleteElement(1)
+               NEXT FIELD ooef001
+            END IF
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point    
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_ooef_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_ooef_d.getLength()+1
+            
+      END INPUT
+ 
+ 
+      
+ 
+      
+ 
+      
+      #add-point:input段more_input
+      {<point name="input.more_inputarray"/>}
+      #end add-point    
+      
+      BEFORE DIALOG
+         #add-point:input段before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            NEXT FIELD 
+        ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD ooef001
+ 
+            END CASE
+         END IF
+   
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+   
+   #add-point:input段after_input
+   {<point name="input.after_input"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.input.head" ver="2" status="" src="s">
+    <![CDATA[   
+      #單頭段
+      INPUT BY NAME g_ooef_m.ooef003 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂單頭ACTION
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #add-point:單頭input前
+            {<point name="input.head.b_input"/>}
+            #end add-point
+          
+         #---------------------------<  Master  >---------------------------
+         #----<<ooef003>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD ooef003
+            
+            #add-point:AFTER FIELD ooef003
+            {<point name="input.a.ooef003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooef003
+            #add-point:BEFORE FIELD ooef003
+            {<point name="input.b.ooef003" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ooef003
+            #add-point:ON CHANGE ooef003
+            {<point name="input.g.ooef003" />}
+            #END add-point
+ 
+         #----<<ooef003_desc>>----
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<ooef003>>----
+         #Ctrlp:input.c.ooef003
+         ON ACTION controlp INFIELD ooef003
+            #add-point:ON ACTION controlp INFIELD ooef003
+            {<point name="input.c.ooef003" />}
+            #END add-point
+ 
+         #----<<ooef003_desc>>----
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            IF s_transaction_chk("N",0) THEN
+                CALL s_transaction_begin()
+            END IF
+ 
+            #多語言處理
+            
+                
+            CALL cl_showmsg()
+            DISPLAY BY NAME              
+ 
+ 
+            IF p_cmd = 'u' THEN
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+            
+               UPDATE ooef_t SET (ooef003) = (g_ooef_m.ooef003)
+                WHERE ooefent = g_enterprise AND  = g__t
+ 
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("ooef_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("ooef_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     #資料多語言用-增/改
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_ooef_d[g_detail_idx].ooef001
+               LET gs_keys_bak[1] = g_ooef_d_t.ooef001
+               CALL abmp001_update_b('ooef_t',gs_keys,gs_keys_bak,"'1'")
+                     
+                     LET g__t = 
+ 
+                     #add-point:單頭修改後
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+               END CASE
+            
+            ELSE    
+               #add-point:單頭新增
+               {<point name="input.head.a_insert"/>}
+               #end add-point
+                                 
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL abmp001_detail_reproduce()
+               END IF
+            END IF
+           #controlp
+                     
+           LET g__t = 
+ 
+           
+           #若單身還沒有輸入資料, 強制切換至單身
+           IF cl_null(g_ooef_d[1].ooef001) THEN
+              CALL g_ooef_d.deleteElement(1)
+              NEXT FIELD ooef001
+           END IF
+ 
+      END INPUT
+]]>
+  </section>
+  <section id="abmp001.insert" ver="2" status="" src="s">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION abmp001_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   #add-point:insert段before
+   {<point name="insert.before"/>}
+   #end add-point    
+   
+   #清除相關資料
+   CLEAR FORM                    
+   CALL g_ooef_d.clear()
+ 
+ 
+   INITIALIZE g_ooef_m.* LIKE ooef_t.*             #DEFAULT 設定
+   LET g__t = NULL
+ 
+   CALL s_transaction_begin()
+   WHILE TRUE
+     
+      #單頭預設值
+      
+     
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point 
+ 
+      CALL abmp001_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_ooef_m.* = g_ooef_m_t.*
+         CALL abmp001_show()
+         CALL cl_err('',9001,0)
+         EXIT WHILE
+      END IF
+      
+      CALL g_ooef_d.clear()
+ 
+      
+      #add-point:單頭輸入後2
+      {<point name="insert.after_insert2"/>}
+      #end add-point
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+      
+   END WHILE
+   
+   LET g_state = "Y"
+   LET g_current_idx = 1    
+ 
+   LET g__t = 
+ 
+   
+   LET g_wc = g_wc,  
+              " OR ( ooefent = '" ||g_enterprise|| "' AND ",
+              "  = '",  CLIPPED, "' "
+ 
+              , ") "
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.insert_b" ver="2" status="" src="s">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION abmp001_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point     
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.lock_b" ver="2" status="" src="s">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION abmp001_lock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL abmp001_b_fill()
+   
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.main" ver="4" status="" src="s">
+    <![CDATA[#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("abm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_abmp001 WITH FORM cl_ap_formpath("abm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL abmp001_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL abmp001_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_abmp001
+   END IF 
+   
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="abmp001.modify" ver="2" status="" src="s">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION abmp001_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point    
+   
+   IF  IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   EXECUTE abmp001_master_referesh USING  INTO g_ooef_m.ooef003
+ 
+   ERROR ""
+  
+   LET g__t = 
+ 
+   CALL s_transaction_begin()
+   
+   OPEN abmp001_cl USING g_enterprise,
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN abmp001_cl:", STATUS, 1)
+      CLOSE abmp001_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH abmp001_cl INTO g_ooef_m.ooef003,g_ooef_m.ooef003_desc
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(,SQLCA.sqlcode,0)
+      CLOSE abmp001_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   CALL s_transaction_end('Y','0')
+ 
+   CALL abmp001_show()
+   WHILE TRUE
+      LET g__t = 
+ 
+ 
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+      
+      CALL abmp001_input("u")     #欄位更改
+      
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_ooef_m.* = g_ooef_m_t.*
+         CALL abmp001_show()
+         CALL cl_err('',9001,0)
+         EXIT WHILE
+      END IF
+      
+      #若單頭key欄位有變更
+      IF  != g__t 
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單頭(偽)修改前
+         {<point name="modify.b_key_update" mark="Y"/>}
+         #end add-point
+         
+         #更新單頭key值
+         UPDATE ooef_t SET  = 
+ 
+          WHERE ooefent = g_enterprise AND  = g__t
+ 
+         #add-point:單頭(偽)修改中
+         {<point name="modify.m_key_update"/>}
+         #end add-point
+         
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               CALL cl_err("ooef_t","std-00009",1)
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               CALL cl_err("ooef_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+ 
+ 
+         
+         #add-point:單頭(偽)修改後
+         {<point name="modify.a_key_update"/>}
+         #end add-point
+         
+      END IF
+      
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE abmp001_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(,'U')
+ 
+   CALL abmp001_b_fill("1=1")
+   
+END FUNCTION   
+]]>
+  </section>
+  <section id="abmp001.modify_detail_chk" ver="2" status="" src="s">
+    <![CDATA[#+ 單身輸入判定
+PRIVATE FUNCTION abmp001_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "ooef001"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.other_function" ver="2" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="abmp001.query" ver="3" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION abmp001_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" />}
+   #end add-point 
+   
+   #add-point:cs段after_construct
+   {<point name="query.after_construct" />}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL abmp001_b_fill()
+   LET l_ac = g_master_idx
+   CALL abmp001_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.ref_show" ver="3" status="" src="s">
+    <![CDATA[#+ 帶出reference資料
+PRIVATE FUNCTION abmp001_ref_show()
+   DEFINE l_ac_t LIKE type_t.num10 #l_ac暫存用
+   #add-point:ref_show段define
+   {<point name="ref_show.define"/>}
+   #end add-point
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:ref_show段m_reference
+   {<point name="ref_show.head.reference"/>}
+   #end add-point
+ 
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_ooef_d.getLength()
+      #add-point:ref_show段d_reference
+      {<point name="ref_show.body.reference"/>}
+      #end add-point
+   END FOR
+   
+ 
+ 
+   #add-point:ref_show段自訂
+   {<point name="ref_show.other_reference"/>}
+   #end add-point
+   
+   LET l_ac = l_ac_t
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.reproduce" ver="3" status="" src="s">
+    <![CDATA[#+ 資料複製
+PRIVATE FUNCTION abmp001_reproduce()
+   DEFINE l_newno     LIKE ooef_t. 
+   DEFINE l_oldno     LIKE ooef_t. 
+ 
+   DEFINE l_master    RECORD LIKE ooef_t.*
+   DEFINE l_detail    RECORD LIKE ooef_t.*
+ 
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF     
+ 
+   IF  IS NULL
+ 
+      THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   LET g__t = 
+ 
+   
+   LET  = ""
+ 
+   CALL abmp001_set_entry('a')
+   CALL abmp001_set_no_entry('a')
+   
+   CALL cl_set_head_visible("","YES")
+   
+   CALL s_transaction_begin()
+ 
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL abmp001_input("r")
+   
+   
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   LET g_state = "Y"
+   LET g_current_idx = 1   
+ 
+   LET g_wc = g_wc,  
+              " OR (",
+              "  = '", l_newno CLIPPED, "' "
+ 
+              , ") "
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.set_entry" ver="2" status="" src="s">
+    <![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION abmp001_set_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point       
+ 
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.set_entry_b" ver="2" status="" src="s">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION abmp001_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point     
+   
+   #add-point:set_entry_b段
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.set_no_entry" ver="3" status="" src="s">
+    <![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION abmp001_set_no_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.set_no_entry_b" ver="2" status="" src="s">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION abmp001_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point    
+   
+   #add-point:set_no_entry_b段
+   {<point name="set_no_entry_b.set_no_entry_b段"/>}
+   #end add-point 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.set_pk_array" ver="1" status="" src="s">
+    <![CDATA[   #+ 此段落由子樣板a51產生
+#+ 給予pk_array內容
+PRIVATE FUNCTION abmp001_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = 
+   LET g_pk_array[1].column = ''
+ 
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="abmp001.show" ver="3" status="" src="s">
+    <![CDATA[#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION abmp001_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   IF g_bfill = "Y" THEN
+      CALL abmp001_b_fill(g_wc2) #單身填充
+      CALL abmp001_b_fill2('0') #單身填充
+   END IF
+   
+   
+ 
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL abmp001_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+ 
+   LET g_ooef_m_t.* = g_ooef_m.*      #保存單頭舊值
+   
+   DISPLAY BY NAME g_ooef_m.ooef003,g_ooef_m.ooef003_desc
+   CALL abmp001_b_fill(g_wc2_table1)                 #單身
+   CALL abmp001_b_fill2('0') #單身填充
+ 
+   CALL abmp001_ref_show()
+ 
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()  
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point   
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.state_change" ver="1" status="" src="s">
+    <![CDATA[    
+]]>
+  </section>
+  <section id="abmp001.ui_browser_refresh" ver="2" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION abmp001_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point    
+   
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_ =  
+ 
+         THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+      END IF
+   END FOR
+ 
+   LET g_browser_cnt = g_browser_cnt - 1
+   IF g_current_row > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_row = g_browser_cnt
+   END IF
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count    #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數的顯示
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.ui_detailshow" ver="1" status="" src="s">
+    <![CDATA[#+ 單身資料重新顯示
+PRIVATE FUNCTION abmp001_ui_detailshow()
+   #add-point:ui_detailshow段define
+   {<point name="ui_detailshow.define"/>}
+   #end add-point    
+   
+   #add-point:ui_detailshow段before
+   {<point name="ui_detailshow.before"/>}
+   #end add-point  
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+ 
+      #add-point:ui_detailshow段more
+      {<point name="ui_detailshow.more"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:ui_detailshow段after
+   {<point name="ui_detailshow.after"/>}
+   #end add-point 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.ui_dialog" ver="7" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION abmp001_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+ 
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+            END FOR
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL abmp001_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            CALL abmp001_query()
+ 
+         # 條件清除
+         ON ACTION qbeclear
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL abmp001_b_fill()
+            CALL abmp001_fetch()
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.ui_headershow" ver="2" status="" src="s">
+    <![CDATA[#+ 單頭資料重新顯示
+PRIVATE FUNCTION abmp001_ui_headershow()
+   #add-point:ui_headershow段define
+   {<point name="ui_headershow.define"/>}
+   #end add-point    
+   
+   LET  = g_browser[g_current_idx].b_   
+ 
+   EXECUTE abmp001_master_referesh USING  INTO g_ooef_m.ooef003
+   CALL abmp001_show()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.unlock_b" ver="2" status="" src="s">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION abmp001_unlock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmp001.update_b" ver="2" status="" src="s">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION abmp001_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+ 
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

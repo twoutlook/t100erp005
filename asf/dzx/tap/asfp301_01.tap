@@ -1,0 +1,1052 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="asfp301_01" std_prog="asfp301_01" erpver="1.0" module="ASF" ver="5" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="Y" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="dialog.asfp301_01_input" order="1" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#逾期資料的INPUT
+DIALOG asfp301_01_input()
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_qty         LIKE xmdd_t.xmdd006
+   
+   INPUT ARRAY g_xmdd_d FROM s_detail1_asfp301_01.*
+       ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+               INSERT ROW = FALSE,DELETE ROW = FALSE,APPEND ROW = FALSE)
+               
+       BEFORE INPUT
+       
+       BEFORE ROW
+          LET l_ac = ARR_CURR()
+          LET g_xmdd_d_t.* = g_xmdd_d[l_ac].*
+          CALL asfp301_01_set_entry_b()
+          CALL asfp301_01_set_no_entry_b()
+       
+       BEFORE FIELD sel_d1_01
+          LET l_ac = ARR_CURR()
+          LET g_xmdd_d_t.* = g_xmdd_d[l_ac].*
+          CALL asfp301_01_set_entry_b()
+          CALL asfp301_01_set_no_entry_b()       
+          CALL cl_set_comp_required('qty',FALSE)
+          CALL asfp301_01_set_entry_b()
+         
+       ON CHANGE sel_d1_01
+          IF g_xmdd_d[l_ac].sel = 'Y' THEN
+             CALL asfp301_01_get_qty('1',g_xmdd_d[l_ac].xmdddocno,g_xmdd_d[l_ac].xmddseq,
+                                     g_xmdd_d[l_ac].xmddseq1,g_xmdd_d[l_ac].xmddseq2,
+                                     g_xmdd_d[l_ac].xmdd001,g_xmdd_d[l_ac].xmdd004)    
+                  RETURNING l_qty                                     
+             IF cl_null(g_xmdd_d[l_ac].qty) OR g_xmdd_d[l_ac].qty > l_qty THEN
+                LET g_xmdd_d[l_ac].qty = l_qty
+             END IF
+          END IF
+               
+       AFTER FIELD sel_d1_01
+          IF g_xmdd_d[l_ac].sel NOT MATCHES '[YN]' THEN
+             NEXT FIELD sel_d1_01
+          END IF
+          
+          IF g_xmdd_d[l_ac].sel = 'Y' THEN
+             CALL cl_set_comp_required('qty',TRUE)
+          END IF
+          CALL asfp301_01_set_no_entry_b()
+
+       AFTER FIELD qty_d1_01
+          IF NOT cl_null(g_xmdd_d[l_ac].qty) THEN
+             CALL asfp301_01_get_qty('2',g_xmdd_d[l_ac].xmdddocno,g_xmdd_d[l_ac].xmddseq,
+                                     g_xmdd_d[l_ac].xmddseq1,g_xmdd_d[l_ac].xmddseq2,
+                                     g_xmdd_d[l_ac].xmdd001,g_xmdd_d[l_ac].xmdd004)    
+                  RETURNING l_qty      
+             IF g_xmdd_d[l_ac].qty > l_qty THEN
+                #数量 %1 超过此项订单项序的可转工单数量 %2
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.code = 'asf-00357'
+                LET g_errparam.extend = ''
+                LET g_errparam.popup = TRUE
+                LET g_errparam.replace[1] = g_xmdd_d[l_ac].qty 
+                LET g_errparam.replace[2] =  l_qty
+                CALL cl_err()
+                NEXT FIELD qty_d1_01
+             END IF
+          END IF
+               
+#       ON ACTION selall
+#          CALL asfp301_01_sel_all("Y")
+#
+#       ON ACTION selnone
+#          CALL asfp301_01_sel_all("N")
+               
+   END INPUT
+
+END DIALOG]]>
+  </point>
+  <point name="function.asfp301_01" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION asfp301_01()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_create_temp_table" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION asfp301_01_create_temp_table()
+   DEFINE r_success         LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   IF NOT asfp301_01_drop_temp_table() THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CREATE TEMP TABLE asfp301_01_temp(
+      xmdddocno            LIKE xmdd_t.xmdddocno,
+      xmddseq              LIKE xmdd_t.xmddseq,
+      xmddseq1             LIKE xmdd_t.xmddseq1,
+      xmddseq2             LIKE xmdd_t.xmddseq2,
+      xmda004              LIKE xmda_t.xmda004,
+      xmdd001              LIKE xmdd_t.xmdd001,
+      xmdd002              LIKE xmdd_t.xmdd002,
+      qty                  LIKE xmdd_t.xmdd006,
+      xmdd004              LIKE xmdd_t.xmdd004,
+      xmdd011              LIKE xmdd_t.xmdd011
+      )
+
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create asfp301_01_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_drop_temp_table" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION asfp301_01_drop_temp_table()
+   DEFINE r_success          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   DROP TABLE asfp301_01_temp
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop asfp301_01_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_init" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[# 畫面資料初始化
+PUBLIC FUNCTION asfp301_01_init()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_b_fill" order="5" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#顯示對採購資料查詢的結果
+PUBLIC FUNCTION asfp301_01_b_fill()
+   DEFINE l_sql        STRING
+   DEFINE l_i          LIKE type_t.num5   
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_where      STRING
+   DEFINE l_wc         STRING
+   DEFINE l_xmdd       type_xmdd
+   DEFINE l_qty1       LIKE xmdd_t.xmdd006
+   DEFINE l_qty2       LIKE xmdd_t.xmdd006
+   DEFINE l_qty3       LIKE xmdd_t.xmdd006
+   DEFINE l_qty4       LIKE xmdd_t.xmdd006
+   DEFINE l_qty5       LIKE xmdd_t.xmdd006
+   DEFINE l_qty6       LIKE xmdd_t.xmdd006
+   DEFINE l_qty        LIKE xmdd_t.xmdd006
+   
+   IF cl_null(g_wc) THEN LET g_wc = ' 1=1' END IF
+   LET l_wc = g_wc
+
+   #用控制组相关信息过滤料件的WHERE子句
+   CALL s_control_get_item_sql('6',g_site,g_user,g_dept,g_sfaadocno)
+        RETURNING l_success,l_where
+   IF l_success THEN
+      LET l_wc = l_wc CLIPPED," AND ",l_where
+   END IF
+
+   LET l_sql = "SELECT UNIQUE 'N'    ,xmdddocno,xmddseq,0       ,0  ,",
+               "              xmda004,''       ,xmdd001,''      ,'' ,",
+               "              xmdd002,''       ,0        ,imae016,'',",
+               "              ''  ",
+               "  FROM xmda_t,xmdd_t,imaf_t,imaa_t,imae_t",
+               " WHERE xmdaent   = xmddent  AND xmdaent  = imafent  ",
+               "   AND xmdaent   = imaaent  AND xmdaent  = imaeent  ",
+               "   AND xmdaent = ",g_enterprise,      
+               "   AND xmdasite  = xmddsite AND xmdasite = imafsite ",
+               "   AND xmdasite  = imaesite AND xmdasite = '",g_site,"'",
+               "   AND xmdadocno = xmdddocno ",
+               "   AND xmdd001   = imaf001 AND xmdd001 = imaa001 AND xmdd001 = imae001",
+               "   AND (imaf012 = '1' OR imaf012 = '5') ",
+               "   AND (imaf013 = '2' OR imaf013 = '3') ",
+               "   AND ",l_wc CLIPPED,
+               "   AND xmdastus = 'Y'",
+               " ORDER BY xmdd001,xmda004,xmdd002,xmdddocno,xmddseq"      
+   
+   PREPARE asfp301_01_sel_d1 FROM l_sql
+   DECLARE asfp301_01_b_fill_curs_d1 CURSOR FOR asfp301_01_sel_d1
+   
+   
+   LET l_sql = " SELECT xmddseq1,xmddseq2,xmdd011 ",
+               "   FROM xmdd_t ",
+               "  WHERE xmddent = ",g_enterprise,
+               "    AND xmdddocno = ? ",
+               "    AND xmddseq   = ? ",
+               "    AND xmdd001   = ? ",
+               "  ORDER BY xmdd011 DESC,xmddseq1 DESC ,xmddseq2 DESC"
+               
+   PREPARE asfp301_01_sel_d2 FROM l_sql
+   DECLARE asfp301_01_b_fill_curs_d2 CURSOR FOR asfp301_01_sel_d2   
+   
+   CALL g_xmdd_d.clear()
+   LET l_i = 1  
+   ERROR "Searching!"
+
+   FOREACH asfp301_01_b_fill_curs_d1 INTO l_xmdd.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp301_01_b_fill_curs_d1"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      #BY 订单+项次+料件的 总订单量 总已转工单量 总剩余数量
+      CALL asfp301_01_get_wo_qty('1',l_xmdd.xmdddocno,l_xmdd.xmddseq,
+                                 l_xmdd.xmdd001,l_xmdd.xmdd004)
+           RETURNING l_success,l_qty1,l_qty2,l_qty3
+      IF NOT l_success THEN
+         CONTINUE FOREACH
+      END IF
+
+      #总订单量(BY生产单位) = 0
+      IF l_qty1 <= 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      #剩余量
+      IF l_qty3 <= 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      CALL s_feature_description(l_xmdd.xmdd001,l_xmdd.xmdd002)
+           RETURNING l_success,l_xmdd.xmdd002_desc
+
+      FOREACH asfp301_01_b_fill_curs_d2 USING l_xmdd.xmdddocno,l_xmdd.xmddseq,l_xmdd.xmdd001
+                                         INTO l_xmdd.xmddseq1,l_xmdd.xmddseq2,l_xmdd.xmdd011
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH asfp301_01_b_fill_curs_d2"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            EXIT FOREACH
+         END IF  
+         
+         #BY分项序的剩余量
+         CALL asfp301_01_get_wo_qty1('1',l_xmdd.xmdddocno,l_xmdd.xmddseq,
+                                    l_xmdd.xmddseq1,l_xmdd.xmddseq2,l_xmdd.xmdd004)
+              RETURNING l_success,l_qty4,l_qty5,l_qty6
+         IF NOT l_success THEN
+            CONTINUE FOREACH
+         END IF
+         
+         #当前项序还有剩余可转量
+         IF l_qty6 > 0 THEN
+            #总已转量+本次待转量
+            LET l_qty = l_qty2 + l_qty6
+            #大于总订单量
+            IF l_qty > l_qty1 THEN
+               LET l_qty = l_qty1 - l_qty2   #订单剩余量
+            ELSE
+               LET l_qty = l_qty6            #项序的剩余量
+            END IF   
+            LET l_qty2 = l_qty2 + l_qty      #最新的已转工单量
+         ELSE
+            CONTINUE FOREACH         
+         END IF
+         
+         LET l_xmdd.qty = l_qty              #本次转工单量
+         LET g_xmdd_d[l_i].* = l_xmdd.*
+         
+         CALL asfp301_01_detail_show(l_i)
+         
+         LET l_i = l_i + 1
+         IF l_i > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+
+         #已转工单数量大于订单量时,此订单+项次+料件不再处理
+         IF l_qty2 >= l_qty1 THEN
+            EXIT FOREACH
+         END IF                  
+      END FOREACH
+
+   END FOREACH
+   
+   LET g_rec_b = l_i - 1
+   CALL g_xmdd_d.deleteElement(l_i)
+   CLOSE asfp301_01_b_fill_curs_d1
+   FREE asfp301_01_sel_d1
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_b_fill2" order="6" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#顯示收貨底稿資料
+PUBLIC FUNCTION asfp301_01_b_fill2()
+   DEFINE l_sql        STRING
+   DEFINE l_i          LIKE type_t.num5
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_where      STRING
+   DEFINE l_wc         STRING
+      
+   LET l_wc = " 1=1"
+   #用控制组相关信息过滤料件的WHERE子句
+   CALL s_control_get_item_sql('6',g_site,g_user,g_dept,g_sfaadocno)
+        RETURNING l_success,l_where
+   IF l_success THEN
+      LET l_wc = l_where
+   END IF
+
+   LET l_sql = "SELECT 'N'     ,xmdddocno,xmddseq,xmddseq1,xmddseq2,",
+               "        xmda004,''       ,xmdd001,''      ,''      ,",
+               "        xmdd002,''       ,0      ,xmdd004 ,''      ,",
+               "        xmdd011  ",
+               "  FROM asfp301_01_temp,imaa_t",
+               " WHERE xmdd001 = imaa001 ",
+               "   AND imaaent = ",g_enterprise,
+               "   AND ",l_wc CLIPPED,
+               " ORDER BY xmdd001,xmdd011,xmda004,xmdd002,xmdddocno,xmddseq,xmddseq1,xmddseq2"      
+              
+   PREPARE asfp301_01_temp_sel_d1 FROM l_sql
+   DECLARE asfp301_01_temp_b_fill_curs_d1 CURSOR FOR asfp301_01_temp_sel_d1
+   
+   CALL g_xmdd_d.clear()
+   
+   LET l_i = 1
+   ERROR "Searching!"
+
+   FOREACH asfp301_01_temp_b_fill_curs_d1 INTO g_xmdd_d[l_i].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp301_01_temp_b_fill_curs_d1"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      CALL asfp301_01_detail_show(l_i)
+      
+      LET l_i = l_i + 1
+      IF l_i > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b = l_i - 1
+   CALL g_xmdd_d.deleteElement(l_i)
+   
+   CLOSE asfp301_01_temp_b_fill_curs_d1
+   FREE asfp301_01_temp_sel_d1
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_detail_show" order="7" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION asfp301_01_detail_show(p_i)
+   DEFINE p_i           LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+
+   CALL s_desc_get_trading_partner_abbr_desc(g_xmdd_d[p_i].xmda004)
+        RETURNING g_xmdd_d[p_i].xmda004_desc
+    
+   CALL s_desc_get_item_desc(g_xmdd_d[p_i].xmdd001)
+        RETURNING g_xmdd_d[p_i].xmdd001_desc,g_xmdd_d[p_i].xmdd001_desc_desc
+   
+   CALL s_desc_get_unit_desc(g_xmdd_d[p_i].xmdd004)
+        RETURNING g_xmdd_d[p_i].xmdd004_desc
+   
+   CALL s_feature_description(g_xmdd_d[p_i].xmdd001,g_xmdd_d[p_i].xmdd002)
+        RETURNING l_success,g_xmdd_d[p_i].xmdd002_desc
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_chk_temp_data" order="8" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION asfp301_01_chk_temp_data(p_xmdddocno,p_xmddseq,p_xmddseq1,p_xmddseq2)
+   DEFINE p_xmdddocno      LIKE xmdd_t.xmdddocno
+   DEFINE p_xmddseq        LIKE xmdd_t.xmddseq
+   DEFINE p_xmddseq1       LIKE xmdd_t.xmddseq1
+   DEFINE p_xmddseq2       LIKE xmdd_t.xmddseq2
+   DEFINE r_success        LIKE type_t.num5
+   DEFINE l_cnt            LIKE type_t.num5
+   
+   LET r_success = TRUE
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt FROM asfp301_01_temp
+    WHERE xmdddocno = p_xmdddocno
+      AND xmddseq   = p_xmddseq
+      AND xmddseq1  = p_xmddseq1
+      AND xmddseq2  = p_xmddseq2
+   IF l_cnt > 0 THEN
+      LET r_success = FALSE
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_set_entry_b" order="9" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION asfp301_01_set_entry_b()
+   CALL cl_set_comp_entry("qty_d1_01",TRUE)
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_set_no_entry_b" order="10" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION asfp301_01_set_no_entry_b()
+   IF g_xmdd_d[l_ac].sel = 'N' THEN
+      CALL cl_set_comp_entry("qty_d1_01",FALSE)
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_delete_temp_table" order="11" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION asfp301_01_delete_temp_table()
+   DELETE FROM asfp301_01_temp
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_get_wo_qty" order="12" ver="5" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得订单可转工单数量
+# Memo...........:
+# Usage..........: CALL asfp301_01_get_wo_qty(p_type,p_xmdddocno,p_xmddseq,p_xmdd001,p_sfaa013)
+#                       RETURNING r_qty
+# Input parameter: p_type         类型 '1' 预设  '2' 检查
+#                : p_xmdddocno    订单单号
+#                : p_xmddseq      项次
+#                : p_xmdd001      生产料件
+#                : p_sfaa013      生产单位
+# Return code....: r_success      成功否标识符
+#                : r_qty1         订单总数量
+#                : r_qty2         已转工单数量
+#                : r_qty3         可转工单数量
+# Date & Author..: 2014/07/09 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp301_01_get_wo_qty(p_type,p_xmdddocno,p_xmddseq,p_xmdd001,p_sfaa013)
+   DEFINE p_type            LIKE type_t.chr1
+   DEFINE p_xmdddocno       LIKE xmdd_t.xmdddocno
+   DEFINE p_xmddseq         LIKE xmdd_t.xmddseq
+   DEFINE p_xmdd001         LIKE xmdd_t.xmdd001
+   DEFINE p_sfaa013         LIKE sfaa_t.sfaa013
+   DEFINE r_success         LIKE type_t.num5
+   DEFINE r_qty1            LIKE xmdd_t.xmdd006
+   DEFINE r_qty2            LIKE xmdd_t.xmdd006
+   DEFINE r_qty3            LIKE xmdd_t.xmdd006
+   #ming 20150710 modify ----------------------------(S) 
+   #bug修正 
+   #DEFINE l_imae020         LIKE imae_t.imae020
+   DEFINE l_imae015         LIKE imae_t.imae015 
+   #ming 20150710 modify ----------------------------(S) 
+   DEFINE l_sfaa012         LIKE sfaa_t.sfaa012
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_rate            LIKE inaj_t.inaj014
+   DEFINE l_xmdd004         LIKE xmdd_t.xmdd004
+   DEFINE l_xmdd006         LIKE xmdd_t.xmdd006
+   DEFINE l_qty             LIKE xmdd_t.xmdd006
+   
+   LET r_qty1 = 0
+   LET r_qty2 = 0
+   LET r_qty3 = 0
+   LET r_success = FALSE
+   
+   #取订单单位及订单数量
+   SELECT xmdd004,SUM(xmdd006) INTO l_xmdd004,l_xmdd006 
+     FROM xmdd_t
+    WHERE xmddent   = g_enterprise
+      AND xmdddocno = p_xmdddocno
+      AND xmddseq   = p_xmddseq
+      AND xmdd001   = p_xmdd001
+    GROUP BY xmdd004
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'sel xmdd_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN r_success,r_qty1,r_qty2,r_qty3
+   END IF
+   
+   IF cl_null(l_xmdd006) THEN LET l_xmdd006 = 0 END IF
+   IF l_xmdd006 = 0 THEN
+      LET r_success = TRUE
+      RETURN r_success,r_qty1,r_qty2,r_qty3
+   END IF
+   
+   #取订单的已转工单数量
+   SELECT SUM(sfab007) INTO l_sfaa012 FROM sfaa_t,sfab_t
+    WHERE sfaaent   = sfabent AND sfaaent = g_enterprise
+      AND sfaadocno = sfabdocno
+      AND sfaastus <> 'X'
+      AND sfab001   = '2'   #订单
+      AND sfab002   = p_xmdddocno
+      AND sfab003   = p_xmddseq
+      AND sfaa010   = p_xmdd001
+    
+    IF cl_null(l_sfaa012) THEN LET l_sfaa012 = 0 END IF
+    
+    #总数量
+    LET l_qty = l_xmdd006
+    
+    #订单单位与生产单位不一致时,数量转到生产单位
+    LET l_rate = 1
+    IF p_sfaa013 <> l_xmdd004 THEN
+#       CALL s_aimi190_get_convert(p_xmdd001,l_xmdd004,p_sfaa013)
+#            RETURNING l_success,l_rate
+#       IF NOT l_success THEN
+#          RETURN r_success,r_qty1,r_qty2,r_qty3
+#       END IF
+       CALL s_aooi250_convert_qty(p_xmdd001,l_xmdd004,p_sfaa013,l_xmdd006)
+            RETURNING l_success,l_qty
+       IF NOT l_success THEN
+          RETURN r_success,r_qty1,r_qty2,r_qty3
+       END IF       
+    END IF
+    
+#    #总数量
+#    LET l_qty = l_xmdd006 * l_rate
+    
+    #取工单的损耗率
+    #ming 20150710 modify ------------------(S) 
+    #bug修正 
+    #LET l_imae020 = 0 
+    LET l_imae015 = 0 
+    #ming 20150710 modify ------------------(E) 
+    IF p_type = '2' THEN
+       #ming 20150710 modify ----------------------(S) 
+       #SELECT imae020 INTO l_imae020 FROM imae_t
+       # WHERE imaeent  = g_enterprise
+       #   AND imaesite = g_site
+       #   AND imae001  = p_xmdd001
+       
+       SELECT imae015 INTO l_imae015 FROM imae_t
+        WHERE imaeent  = g_enterprise
+          AND imaesite = g_site
+          AND imae001  = p_xmdd001
+       #ming 20150710 modify ----------------------(E) 
+       #ming 20150710 modify -----------------------(S) 
+       #IF cl_null(l_imae020) THEN LET l_imae020 = 0 END IF
+       IF cl_null(l_imae015) THEN LET l_imae015 = 0 END IF
+       #ming 20150710 modify -----------------------(E) 
+    END IF
+    
+    #纳入损耗率的总数量
+    #ming 20150710 modify -------------------(S) 
+    #LET l_qty = l_qty * (1 + l_imae020 / 100)
+    LET l_qty = l_qty * (1 + l_imae015 / 100)
+    #ming 20150710 modify -------------------(E) 
+    
+    LET r_qty1 = l_qty        #总订单数量(BY 生产单位) 
+    LET r_qty2 = l_sfaa012    #已转工单数量
+    #订单可转工单数量 = 总订单数量(BY生产单位) - 已转工单数量(BY生产单位)
+    IF l_sfaa012 > l_qty THEN
+       LET r_qty3 = 0
+    ELSE
+       LET r_qty3 = l_qty - l_sfaa012
+    END IF
+    
+    LET r_success = TRUE
+    RETURN r_success,r_qty1,r_qty2,r_qty3
+
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_get_wo_qty1" order="13" ver="5" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 按订单的分项序 取 订单量,已转工单量,剩余可转量
+# Memo...........:
+# Usage..........: CALL asfp301_01_get_wo_qty1(p_type,p_xmdddocno,p_xmddseq,p_xmddseq1,p_xmddseq2,p_sfaa013)
+#                       RETURNING r_qty
+# Input parameter: p_type         类型 '1' 预设  '2' 检查
+#                : p_xmdddocno    订单单号
+#                : p_xmddseq      项次
+#                : p_xmddseq1     项序
+#                : p_xmddseq2     分项序
+#                : p_sfaa013      生产单位
+# Return code....: r_success      成功否标识符
+#                : r_qty1         总订单量
+#                : r_qty2         已转工单量
+#                : r_qty3         剩余可转量
+# Date & Author..: 2014/07/09 By Carrier
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asfp301_01_get_wo_qty1(p_type,p_xmdddocno,p_xmddseq,p_xmddseq1,p_xmddseq2,p_sfaa013)
+   DEFINE p_type            LIKE type_t.chr1
+   DEFINE p_xmdddocno       LIKE xmdd_t.xmdddocno
+   DEFINE p_xmddseq         LIKE xmdd_t.xmddseq
+   DEFINE p_xmddseq1        LIKE xmdd_t.xmddseq1
+   DEFINE p_xmddseq2        LIKE xmdd_t.xmddseq2
+   DEFINE p_sfaa013         LIKE sfaa_t.sfaa013
+   DEFINE r_success         LIKE type_t.num5
+   DEFINE r_qty1            LIKE xmdd_t.xmdd006
+   DEFINE r_qty2            LIKE xmdd_t.xmdd006
+   DEFINE r_qty3            LIKE xmdd_t.xmdd006
+   #ming 20150710 modify -----------------------(S) 
+   #DEFINE l_imae020         LIKE imae_t.imae020
+   DEFINE l_imae015         LIKE imae_t.imae015
+   #ming 20150710 modify -----------------------(E) 
+   DEFINE l_sfaa012         LIKE sfaa_t.sfaa012
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_rate            LIKE inaj_t.inaj014
+   DEFINE l_xmdd001         LIKE xmdd_t.xmdd001
+   DEFINE l_xmdd004         LIKE xmdd_t.xmdd004
+   DEFINE l_xmdd006         LIKE xmdd_t.xmdd006
+   DEFINE l_qty             LIKE xmdd_t.xmdd006
+
+   LET r_qty1 = 0
+   LET r_qty2 = 0
+   LET r_qty3 = 0
+   LET r_success = FALSE
+
+   #取订单单位及订单数量
+   SELECT xmdd001,xmdd004,xmdd006 INTO l_xmdd001,l_xmdd004,l_xmdd006
+     FROM xmdd_t
+    WHERE xmddent   = g_enterprise
+      AND xmdddocno = p_xmdddocno
+      AND xmddseq   = p_xmddseq
+      AND xmddseq1  = p_xmddseq1
+      AND xmddseq2  = p_xmddseq2
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'sel xmdd_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN r_success,r_qty1,r_qty2,r_qty3
+   END IF
+
+   IF cl_null(l_xmdd006) THEN LET l_xmdd006 = 0 END IF
+   IF l_xmdd006 = 0 THEN
+      LET r_success = TRUE
+      RETURN r_success,r_qty1,r_qty2,r_qty3
+   END IF
+
+   #取订单的已转工单数量
+   SELECT SUM(sfab007) INTO l_sfaa012 FROM sfaa_t,sfab_t
+    WHERE sfaaent   = sfabent AND sfaaent = g_enterprise
+      AND sfaadocno = sfabdocno
+      AND sfaastus <> 'X'
+      AND sfab001   = '2'   #订单
+      AND sfab002   = p_xmdddocno
+      AND sfab003   = p_xmddseq
+      AND sfab004   = p_xmddseq1
+      AND sfab005   = p_xmddseq2
+
+    IF cl_null(l_sfaa012) THEN LET l_sfaa012 = 0 END IF
+
+    #总数量
+    LET l_qty = l_xmdd006
+    
+    #订单单位与生产单位不一致时,数量转到生产单位
+    LET l_rate = 1
+    IF p_sfaa013 <> l_xmdd004 THEN
+#       CALL s_aimi190_get_convert(l_xmdd001,l_xmdd004,p_sfaa013)
+#            RETURNING l_success,l_rate
+#       IF NOT l_success THEN
+#          RETURN r_success,r_qty1,r_qty2,r_qty3
+#       END IF
+       CALL s_aooi250_convert_qty(l_xmdd001,l_xmdd004,p_sfaa013,l_xmdd006)
+            RETURNING l_success,l_qty
+       IF NOT l_success THEN
+          RETURN r_success,r_qty1,r_qty2,r_qty3
+       END IF       
+    END IF
+
+#    #总数量
+#    LET l_qty = l_xmdd006 * l_rate
+
+    #取工单的损耗率
+    #ming 20150710 modify ----------------------(S) 
+    #LET l_imae020 = 0
+    LET l_imae015 = 0
+    #ming 20150710 modify ----------------------(E) 
+    IF p_type = '2' THEN
+       #ming 20150710 modify ----------------------------(S) 
+       #SELECT imae020 INTO l_imae020 FROM imae_t
+       # WHERE imaeent  = g_enterprise
+       #   AND imaesite = g_site
+       #   AND imae001  = l_xmdd001
+          
+       SELECT imae015 INTO l_imae015 FROM imae_t
+        WHERE imaeent  = g_enterprise
+          AND imaesite = g_site
+          AND imae001  = l_xmdd001
+       #ming 20150710 modify ----------------------------(E) 
+       #ming 20150710 modify ----------------------------(S) 
+       #IF cl_null(l_imae020) THEN LET l_imae020 = 0 END IF
+       IF cl_null(l_imae015) THEN LET l_imae015 = 0 END IF
+       #ming 20150710 modify ----------------------------(E) 
+    END IF
+
+    #纳入损耗率的总数量
+    #ming 20150710 modify -----------------------------(S) 
+    #LET l_qty = l_qty * (1 + l_imae020 / 100)
+    LET l_qty = l_qty * (1 + l_imae015 / 100)
+    #ming 20150710 modify -----------------------------(E) 
+    
+    LET r_qty1 = l_qty
+    LET r_qty2 = l_sfaa012
+    
+    #订单可转工单数量 = 总订单数量(BY生产单位) - 已转工单数量(BY生产单位)
+    IF l_sfaa012 > l_qty THEN
+       LET r_qty3 = 0
+    ELSE
+       LET r_qty3 = l_qty - l_sfaa012
+    END IF
+
+    LET r_success = TRUE
+    RETURN r_success,r_qty1,r_qty2,r_qty3
+
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_sel_all" order="14" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 全选
+# Memo...........:
+# Usage..........: CALL asfp301_01_sel_all(p_flag)
+#                       RETURNING NULL
+# Input parameter: p_flag         Y/N
+# Return code....: NULL
+# Date & Author..: 2014-07-09 By Carrier
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asfp301_01_sel_all(p_flag)
+   DEFINE p_flag         LIKE type_t.chr1
+   DEFINE l_i            LIKE type_t.num5
+   DEFINE l_qty          LIKE xmdd_t.xmdd006
+   DEFINE l_success      LIKE type_t.num5
+
+   FOR l_i = 1 TO g_xmdd_d.getLength()
+       LET g_xmdd_d[l_i].sel = p_flag
+       IF p_flag = 'Y' THEN
+          CALL asfp301_01_get_qty('1',g_xmdd_d[l_i].xmdddocno,g_xmdd_d[l_i].xmddseq,
+                                  g_xmdd_d[l_i].xmddseq1,g_xmdd_d[l_i].xmddseq2,
+                                  g_xmdd_d[l_i].xmdd001,g_xmdd_d[l_i].xmdd004)    
+               RETURNING l_qty  
+          LET g_xmdd_d[l_i].qty = l_qty            
+       ELSE
+          LET g_xmdd_d[l_i].qty = NULL
+       END IF
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_get_qty" order="15" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION asfp301_01_get_qty(p_type,p_xmdddocno,p_xmddseq,p_xmddseq1,p_xmddseq2,p_xmdd001,p_xmdd004)
+   DEFINE p_type           LIKE type_t.chr1
+   DEFINE p_xmdddocno      LIKE xmdd_t.xmdddocno
+   DEFINE p_xmddseq        LIKE xmdd_t.xmddseq
+   DEFINE p_xmddseq1       LIKE xmdd_t.xmddseq1
+   DEFINE p_xmddseq2       LIKE xmdd_t.xmddseq2
+   DEFINE p_xmdd001        LIKE xmdd_t.xmdd001
+   DEFINE p_xmdd004        LIKE xmdd_t.xmdd004
+   DEFINE r_qty            LIKE xmdd_t.xmdd006
+   DEFINE l_qty1           LIKE xmdd_t.xmdd006
+   DEFINE l_qty2           LIKE xmdd_t.xmdd006
+   DEFINE l_qty3           LIKE xmdd_t.xmdd006
+   DEFINE l_qty4           LIKE xmdd_t.xmdd006
+   DEFINE l_qty5           LIKE xmdd_t.xmdd006
+   DEFINE l_qty6           LIKE xmdd_t.xmdd006
+   DEFINE l_qty            LIKE xmdd_t.xmdd006   
+   DEFINE l_tot            LIKE xmdd_t.xmdd006
+   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_i              LIKE type_t.num5
+
+   LET r_qty = 0
+   #BY 订单+项次+料件的 总订单量 总已转工单量 总剩余数量
+   CALL asfp301_01_get_wo_qty(p_type,p_xmdddocno,p_xmddseq,
+                              p_xmdd001,p_xmdd004)
+        RETURNING l_success,l_qty1,l_qty2,l_qty3
+   IF NOT l_success THEN
+      RETURN r_qty
+   END IF
+
+   #总订单量(BY生产单位) = 0
+   IF l_qty1 <= 0 THEN
+      RETURN r_qty
+   END IF
+   
+   #剩余量
+   IF l_qty3 <= 0 THEN
+      RETURN r_qty
+   END IF
+   
+   #BY分项序的剩余量
+   CALL asfp301_01_get_wo_qty1(p_type,p_xmdddocno,p_xmddseq,
+                              p_xmddseq1,p_xmddseq2,p_xmdd004)
+        RETURNING l_success,l_qty4,l_qty5,l_qty6
+   IF NOT l_success THEN
+      RETURN r_qty
+   END IF   
+   
+   LET l_tot = 0
+   FOR l_i = 1 TO g_xmdd_d.getLength()
+      IF g_xmdd_d[l_i].sel = 'Y' THEN
+         IF g_xmdd_d[l_i].xmdddocno = p_xmdddocno AND g_xmdd_d[l_i].xmddseq = p_xmddseq AND
+            g_xmdd_d[l_i].xmdd001   = p_xmdd001   AND (g_xmdd_d[l_i].xmddseq1 <> p_xmddseq1 OR
+            g_xmdd_d[l_i].xmddseq2 <> p_xmddseq2) THEN
+            LET l_tot = l_tot + g_xmdd_d[l_i].qty
+         END IF
+      END IF   
+   END FOR
+   #工单上的数量+其他项次的数量
+   LET l_qty2 = l_qty2 + l_tot
+   
+   #当前项序还有剩余可转量
+   IF l_qty6 > 0 THEN
+      #总已转量+本次待转量
+      LET l_qty = l_qty2 + l_qty6
+      #大于总订单量
+      IF l_qty > l_qty1 THEN
+         LET l_qty = l_qty1 - l_qty2   #订单剩余量
+      ELSE
+         LET l_qty = l_qty6            #项序的剩余量
+      END IF   
+   ELSE
+      LET l_qty = 0
+   END IF
+
+   RETURN l_qty
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp301_01_save_data" order="16" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION asfp301_01_save_data()
+   DEFINE l_i     LIKE type_t.num5
+   DEFINE l_msg   STRING
+
+   CALL cl_showmsg_init()
+   CALL asfp301_01_delete_temp_table()
+
+   FOR l_i = 1 TO g_xmdd_d.getLength()
+      IF g_xmdd_d[l_i].sel = 'Y' THEN
+         IF g_xmdd_d[l_i].qty > 0 THEN
+            INSERT INTO asfp301_01_temp (xmdddocno,xmddseq,xmddseq1,xmddseq2,xmda004,
+                                         xmdd001,  xmdd002,qty,     xmdd004, xmdd011)
+            VALUES(g_xmdd_d[l_i].xmdddocno,g_xmdd_d[l_i].xmddseq, g_xmdd_d[l_i].xmddseq1,
+                   g_xmdd_d[l_i].xmddseq2, g_xmdd_d[l_i].xmda004, g_xmdd_d[l_i].xmdd001,
+                   g_xmdd_d[l_i].xmdd002,  g_xmdd_d[l_i].qty,     g_xmdd_d[l_i].xmdd004,
+                   g_xmdd_d[l_i].xmdd011)
+         ELSE
+            CALL cl_getmsg_parm('axm-00219',g_dlang,g_xmdd_d[l_i].xmdddocno ||'|'|| g_xmdd_d[l_i].xmddseq ||'|'||
+                                g_xmdd_d[l_i].xmddseq1 ||'|'|| g_xmdd_d[l_i].xmddseq2 )
+                 RETURNING l_msg
+            #待转数量 不可 小于等于零,不进行处理
+            CALL cl_errmsg('xmdddocno',g_xmdd_d[l_i].xmdddocno,l_msg,'asf-00360',1)
+         END IF
+      END IF
+   END FOR
+
+   CALL cl_showmsg()
+
+END FUNCTION]]>
+  </point>
+  <point name="free_style.variable" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[ TYPE type_xmdd    RECORD
+                          sel                  LIKE type_t.chr1,
+                          xmdddocno            LIKE xmdd_t.xmdddocno,
+                          xmddseq              LIKE xmdd_t.xmddseq,
+                          xmddseq1             LIKE xmdd_t.xmddseq1,
+                          xmddseq2             LIKE xmdd_t.xmddseq2,
+                          xmda004              LIKE xmda_t.xmda004,
+                          xmda004_desc         LIKE pmaal_t.pmaal004,
+                          xmdd001              LIKE xmdd_t.xmdd001,
+                          xmdd001_desc         LIKE imaal_t.imaal003,
+                          xmdd001_desc_desc    LIKE imaal_t.imaal004,
+                          xmdd002              LIKE xmdd_t.xmdd002,
+                          xmdd002_desc         LIKE imefl_t.imefl005,
+                          qty                  LIKE xmdd_t.xmdd006,
+                          xmdd004              LIKE xmdd_t.xmdd004,
+                          xmdd004_desc         LIKE oocal_t.oocal003,
+                          xmdd011              LIKE xmdd_t.xmdd011                  
+                          END RECORD
+DEFINE g_xmdd_d           DYNAMIC ARRAY OF type_xmdd
+DEFINE g_xmdd_d_t         type_xmdd
+DEFINE l_ac               LIKE type_t.num5
+DEFINE g_idx              LIKE type_t.num5
+DEFINE g_rec_b            LIKE type_t.num5
+DEFINE g_qty              LIKE xmdd_t.xmdd006
+]]>
+  </point>
+  <point name="global.inc" order="" ver="4" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[GLOBALS "../../asf/4gl/asfp301.inc"]]>
+  </point>
+  <point name="input.a.page1.xmdd001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdd_d[l_ac].xmdd_t.xmdd001
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xmdd_d[l_ac].xmdd001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdd_d[l_ac].xmdd001_desc
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdd004" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdd_d[l_ac].xmdd_t.xmdd004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xmdd_d[l_ac].xmdd004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdd_d[l_ac].xmdd004_desc
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdddocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdd_d[g_detail_idx].xmdddocno IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq1 IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq2 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdd_d[g_detail_idx].xmdddocno != g_xmdd_d_t.xmdddocno OR g_xmdd_d[g_detail_idx].xmddseq != g_xmdd_d_t.xmddseq OR g_xmdd_d[g_detail_idx].xmddseq1 != g_xmdd_d_t.xmddseq1 OR g_xmdd_d[g_detail_idx].xmddseq2 != g_xmdd_d_t.xmddseq2)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdd_t WHERE "||"xmddent = '" ||g_enterprise|| "' AND "||"xmdddocno = '"||g_xmdd_d[g_detail_idx].xmdddocno ||"' AND "|| "xmddseq = '"||g_xmdd_d[g_detail_idx].xmddseq ||"' AND "|| "xmddseq1 = '"||g_xmdd_d[g_detail_idx].xmddseq1 ||"' AND "|| "xmddseq2 = '"||g_xmdd_d[g_detail_idx].xmddseq2 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmddseq" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdd_d[g_detail_idx].xmdddocno IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq1 IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq2 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdd_d[g_detail_idx].xmdddocno != g_xmdd_d_t.xmdddocno OR g_xmdd_d[g_detail_idx].xmddseq != g_xmdd_d_t.xmddseq OR g_xmdd_d[g_detail_idx].xmddseq1 != g_xmdd_d_t.xmddseq1 OR g_xmdd_d[g_detail_idx].xmddseq2 != g_xmdd_d_t.xmddseq2)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdd_t WHERE "||"xmddent = '" ||g_enterprise|| "' AND "||"xmdddocno = '"||g_xmdd_d[g_detail_idx].xmdddocno ||"' AND "|| "xmddseq = '"||g_xmdd_d[g_detail_idx].xmddseq ||"' AND "|| "xmddseq1 = '"||g_xmdd_d[g_detail_idx].xmddseq1 ||"' AND "|| "xmddseq2 = '"||g_xmdd_d[g_detail_idx].xmddseq2 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmddseq1" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdd_d[g_detail_idx].xmdddocno IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq1 IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq2 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdd_d[g_detail_idx].xmdddocno != g_xmdd_d_t.xmdddocno OR g_xmdd_d[g_detail_idx].xmddseq != g_xmdd_d_t.xmddseq OR g_xmdd_d[g_detail_idx].xmddseq1 != g_xmdd_d_t.xmddseq1 OR g_xmdd_d[g_detail_idx].xmddseq2 != g_xmdd_d_t.xmddseq2)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdd_t WHERE "||"xmddent = '" ||g_enterprise|| "' AND "||"xmdddocno = '"||g_xmdd_d[g_detail_idx].xmdddocno ||"' AND "|| "xmddseq = '"||g_xmdd_d[g_detail_idx].xmddseq ||"' AND "|| "xmddseq1 = '"||g_xmdd_d[g_detail_idx].xmddseq1 ||"' AND "|| "xmddseq2 = '"||g_xmdd_d[g_detail_idx].xmddseq2 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmddseq2" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdd_d[g_detail_idx].xmdddocno IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq1 IS NOT NULL AND g_xmdd_d[g_detail_idx].xmddseq2 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdd_d[g_detail_idx].xmdddocno != g_xmdd_d_t.xmdddocno OR g_xmdd_d[g_detail_idx].xmddseq != g_xmdd_d_t.xmddseq OR g_xmdd_d[g_detail_idx].xmddseq1 != g_xmdd_d_t.xmddseq1 OR g_xmdd_d[g_detail_idx].xmddseq2 != g_xmdd_d_t.xmddseq2)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdd_t WHERE "||"xmddent = '" ||g_enterprise|| "' AND "||"xmdddocno = '"||g_xmdd_d[g_detail_idx].xmdddocno ||"' AND "|| "xmddseq = '"||g_xmdd_d[g_detail_idx].xmddseq ||"' AND "|| "xmddseq1 = '"||g_xmdd_d[g_detail_idx].xmddseq1 ||"' AND "|| "xmddseq2 = '"||g_xmdd_d[g_detail_idx].xmddseq2 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="show.body.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdd_d[l_ac].xmdd_t.xmdd001
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xmdd_d[l_ac].xmdd001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdd_d[l_ac].xmdd001_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdd_d[l_ac].xmdd_t.xmdd004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xmdd_d[l_ac].xmdd004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdd_d[l_ac].xmdd004_desc
+]]>
+  </point>
+  <section id="asfp301_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:5,PR版次:5) Build-000054
+#+ 
+#+ Filename...: asfp301_01
+#+ Description: 訂單轉工單作業 – 待轉訂單資料
+#+ Creator....: 00378(2014-07-08 14:07:03)
+#+ Modifier...: 00378(2014-11-25 10:45:14) -SD/PR-
+]]>
+  </section>
+  <section id="asfp301_01.free_style_variable" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asfp301_01.global" ver="3" status="" src="s" readonly="">
+    <![CDATA[#應用 p00 樣板自動產生(Version:2)
+#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="asfp301_01.global_variable" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asfp301_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="asfp301_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

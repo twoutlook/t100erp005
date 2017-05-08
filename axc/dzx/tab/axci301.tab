@@ -1,0 +1,184 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci301" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02599" crtdt="2014-04-23 13:52:38" modid="02291" moddt="2014-07-17 16:30:07" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件轉撥計價維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbn001,xcbn002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcbn005,xcbn006,xcbn005_desc(chr500),xcbn005_desc_desc(chr500),xcbn003,xcbn003_desc(chr500),xcbn004,xcbn004_desc(chr500),xcbn010,xcbn102,xcbn102a,xcbn102b,xcbn102c,xcbn102d,xcbn102e,xcbn102f,xcbn102g,xcbn102h"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcbn005,xcbn003,xcbn004,xcbnownid,xcbnownid_desc(chr500),xcbnowndp,xcbnowndp_desc(chr500),xcbncrtid,xcbncrtid_desc(chr500),xcbncrtdp,xcbncrtdp_desc(chr500),xcbncrtdt,xcbnmodid,xcbnmodid_desc(chr500),xcbnmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_axci301_s01"/>
+      <action id="open_axci301_01"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci301" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbn001,xcbn002"/>
+      <input id="body" page="1" field="xcbn005,xcbn006,xcbn003,xcbn004,xcbn010,xcbn102,xcbn102a,xcbn102b,xcbn102c,xcbn102d,xcbn102e,xcbn102f,xcbn102g,xcbn102h" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcbn001,xcbn002"/>
+      <construct id="body" page="1" field="xcbn005,xcbn006,xcbn003,xcbn004,xcbn010,xcbn102,xcbn102a,xcbn102b,xcbn102c,xcbn102d,xcbn102e,xcbn102f,xcbn102g,xcbn102h"/>
+      <construct id="body" page="2" field="xcbnownid,xcbnowndp,xcbncrtid,xcbncrtdp,xcbncrtdt,xcbnmodid,xcbnmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcbn001,xcbn002"/>
+      <set id="head" type="no_entry" field="xcbn001,xcbn002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcbn001"/>
+      <column id="xcbn002"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcbn005">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="xcbn005_desc" ref_field="xcbn_t.xcbn005" map_field="xcbnent,xcbn005" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="xcbn006">
+        <controlp form="q_xcbn006" state="c"/>
+      </column>
+      <column id="xcbn005_desc">
+        <after>
+          <reference field="xcbn005_desc_desc" ref_field="xcbn_t.xcbn005" map_field="xcbnent,xcbn005" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcbn005_desc_desc"/>
+      <column id="xcbn003">
+        <after>
+          <check chkid="v_ooef001_11" id="isExist"/>
+          <reference field="xcbn003_desc" ref_field="xcbn_t.xcbn003" map_field="xcbnent,xcbn003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_10" state="i"/>
+        <controlp form="q_ooef001_10" state="c"/>
+      </column>
+      <column id="xcbn003_desc"/>
+      <column id="xcbn004">
+        <after>
+          <check chkid="v_ooef001_11" id="isExist"/>
+          <reference field="xcbn004_desc" ref_field="xcbn_t.xcbn004" map_field="xcbnent,xcbn004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_10" state="i"/>
+        <controlp form="q_ooef001_10" state="c"/>
+      </column>
+      <column id="xcbn004_desc"/>
+      <column id="xcbn010">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="xcbn102" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbn102a" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbn102b" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbn102c" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbn102d" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbn102e" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbn102f" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbn102g" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbn102h" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xcbnownid">
+        <after>
+          <reference field="xcbnownid_desc" ref_field="xcbn_t.xcbnownid" map_field="xcbnownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbnownid_desc"/>
+      <column id="xcbnowndp">
+        <after>
+          <reference field="xcbnowndp_desc" ref_field="xcbn_t.xcbnowndp" map_field="xcbnowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbnowndp_desc"/>
+      <column id="xcbncrtid">
+        <after>
+          <reference field="xcbncrtid_desc" ref_field="xcbn_t.xcbncrtid" map_field="xcbncrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbncrtid_desc"/>
+      <column id="xcbncrtdp">
+        <after>
+          <reference field="xcbncrtdp_desc" ref_field="xcbn_t.xcbncrtdp" map_field="xcbncrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbncrtdp_desc"/>
+      <column id="xcbncrtdt"/>
+      <column id="xcbnmodid">
+        <after>
+          <reference field="xcbnmodid_desc" ref_field="xcbn_t.xcbnmodid" map_field="xcbnmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbnmodid_desc"/>
+      <column id="xcbnmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcbn_t" pk="xcbn001,xcbn002">
+      <sql id="forupd_sql" type="sql" query="SELECT xcbn001,xcbn002 FROM xcbn_t WHERE xcbnent= ? AND xcbn001=? AND xcbn002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcbn001,xcbn002 FROM xcbn_t" order="xcbn001,xcbn002"/>
+    </head>
+    <body id="xcbn_t" page="1,2" linked="" pk="xcbn003,xcbn004,xcbn005,xcbn006" fk="xcbn001,xcbn002">
+      <sql id="forupd_sql_detail" query="SELECT xcbn005,xcbn006,&apos;&apos;,&apos;&apos;,xcbn003,&apos;&apos;,xcbn004,&apos;&apos;,xcbn010,xcbn102,xcbn102a,xcbn102b,xcbn102c,xcbn102d,xcbn102e,xcbn102f,xcbn102g,xcbn102h,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcbnownid,&apos;&apos;,xcbnowndp,&apos;&apos;,xcbncrtid,&apos;&apos;,xcbncrtdp,&apos;&apos;,xcbncrtdt,xcbnmodid,&apos;&apos;,xcbnmoddt FROM xcbn_t WHERE xcbnent=? AND xcbn001=? AND xcbn002=? AND xcbn003=? AND xcbn004=? AND xcbn005=? AND xcbn006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcbn005,xcbn006,&apos;&apos;,&apos;&apos;,xcbn003,&apos;&apos;,xcbn004,&apos;&apos;,xcbn010,xcbn102,xcbn102a,xcbn102b,xcbn102c,xcbn102d,xcbn102e,xcbn102f,xcbn102g,xcbn102h,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcbnownid,&apos;&apos;,xcbnowndp,&apos;&apos;,xcbncrtid,&apos;&apos;,xcbncrtdp,&apos;&apos;,xcbncrtdt,xcbnmodid,&apos;&apos;,xcbnmoddt FROM xcbn_t WHERE xcbnent= ? AND xcbn001=? AND xcbn002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

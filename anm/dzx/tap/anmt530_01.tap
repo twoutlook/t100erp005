@@ -1,0 +1,2117 @@
+<add_points prog="anmt530_01" std_prog="anmt530_01" erpver="1.0" module="ANM" ver="2" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status="" />
+    <free_style value="N" status="" />
+  </other>
+  <point name="function.anmt530_01_nmbsld_desc" cite_std="N" status="" ver="2" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[# 帳套名稱
+PRIVATE FUNCTION anmt530_01_nmbsld_desc(p_nmbsld)
+   DEFINE p_nmbsld    LIKE nmbs_t.nmbsld
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_nmbsld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_nmbs_m.nmbsld_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_nmbs_m.nmbsld_desc
+
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_nmbscomp_desc" cite_std="N" status="" ver="2" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[# 法人名稱帶值
+PRIVATE FUNCTION anmt530_01_nmbscomp_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_nmbs_m.nmbscomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_nmbs_m.nmbscomp_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_nmbs_m.nmbscomp_desc
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_ins_nmbs" cite_std="N" status="u" ver="2" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[# 插入單頭檔nmbs_t
+PRIVATE FUNCTION anmt530_01_ins_nmbs()
+   DEFINE l_nmbs          RECORD  LIKE nmbs_t.*  
+   DEFINE l_date          DATETIME YEAR TO SECOND
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_glaald        LIKE glaa_t.glaald
+   
+   CALL s_transaction_begin()
+   CALL cl_showmsg_init()
+   LET g_success = 'Y'
+   
+   LET l_nmbs.nmbsent = g_enterprise
+   LET l_nmbs.nmbscomp = g_nmbs_m.nmbscomp
+   CALL s_aooi200_gen_docno(g_nmbs_m.nmbscomp,g_nmbs_m.nmbsdocno,g_today,"anmt530")
+   RETURNING l_success,l_nmbs.nmbsdocno
+   IF l_success  = 0  THEN
+      CALL cl_err(l_nmbs.nmbsdocno,'apm-00003',1)
+      RETURN
+   END IF
+
+   LET l_nmbs.nmbsdocdt = g_today
+   LET l_nmbs.nmbs001 = 'anmt530'
+   LET l_nmbs.nmbsownid = g_user
+   LET l_nmbs.nmbsowndp = g_dept
+   LET l_nmbs.nmbscrtid = g_user
+   LET l_nmbs.nmbscrtdp = g_dept 
+   LET l_date = cl_get_current()    #nmbscrtdt
+   LET l_nmbs.nmbsmodid = ""
+   LET l_nmbs.nmbsmoddt = ""
+   LET l_nmbs.nmbscnfid = ""
+   LET l_nmbs.nmbscnfdt = ""
+   LET l_nmbs.nmbsstus = 'N'
+   
+   IF g_nmbs_m.c = 'N' THEN 
+      LET l_nmbs.nmbsld = g_nmbs_m.nmbsld
+      
+      #插入單頭檔
+      INSERT INTO nmbs_t(nmbsent,nmbscomp,nmbsld,nmbsdocno,nmbsdocdt,nmbs001,nmbsownid,nmbsowndp,nmbscrtid,
+                         nmbscrtdp,nmbscrtdt,nmbsmodid,nmbsmoddt,nmbscnfid,nmbscnfdt,nmbsstus)
+                  VALUES(l_nmbs.nmbsent,l_nmbs.nmbscomp,l_nmbs.nmbsld,l_nmbs.nmbsdocno,l_nmbs.nmbsdocdt,
+                         l_nmbs.nmbs001,l_nmbs.nmbsownid,l_nmbs.nmbsowndp,l_nmbs.nmbscrtid,l_nmbs.nmbscrtdp,
+                         l_date,l_nmbs.nmbsmodid,l_nmbs.nmbsmoddt,l_nmbs.nmbscnfid,l_nmbs.nmbscnfdt,
+                         l_nmbs.nmbsstus)
+      IF SQLCA.SQLcode  THEN
+         CALL cl_err("ins nmbs",SQLCA.sqlcode,1)  
+         LET g_success = 'N'                        
+      END IF
+      
+      #插入單身檔
+      IF g_nmbs_m.a = 'Y' THEN 
+         CALL anmt530_01_ins_nmbt_1(l_nmbs.nmbsdocno,l_nmbs.nmbsld)
+      END IF
+      IF g_nmbs_m.b = 'Y' THEN
+         CALL anmt530_01_ins_nmbt_2(l_nmbs.nmbsdocno,l_nmbs.nmbsld)
+      END IF
+   END IF
+   
+   IF g_nmbs_m.c = 'Y' THEN 
+       LET g_sql = "SELECT glaald FROM glaa_t ",
+                   " WHERE glaaent = '",g_enterprise,"'",
+                   "   AND glaacomp = '",g_nmbs_m.nmbscomp,"'",
+                   "   AND (glaa014 = 'Y' OR glaa008 = 'Y') "
+       PREPARE anmt530_01_pre1 FROM g_sql
+       DECLARE anmt530_01_cur1 CURSOR FOR anmt530_01_pre1
+       FOREACH anmt530_01_cur1 INTO l_glaald
+          LET l_nmbs.nmbsld = l_glaald
+          #插入單頭檔
+          INSERT INTO nmbs_t(nmbsent,nmbscomp,nmbsld,nmbsdocno,nmbsdocdt,nmbs001,nmbsownid,nmbsowndp,nmbscrtid,
+                             nmbscrtdp,nmbscrtdt,nmbsmodid,nmbsmoddt,nmbscnfid,nmbscnfdt,nmbsstus)
+                      VALUES(l_nmbs.nmbsent,l_nmbs.nmbscomp,l_nmbs.nmbsld,l_nmbs.nmbsdocno,l_nmbs.nmbsdocdt,
+                             l_nmbs.nmbs001,l_nmbs.nmbsownid,l_nmbs.nmbsowndp,l_nmbs.nmbscrtid,l_nmbs.nmbscrtdp,
+                             l_date,l_nmbs.nmbsmodid,l_nmbs.nmbsmoddt,l_nmbs.nmbscnfid,l_nmbs.nmbscnfdt,
+                             l_nmbs.nmbsstus)
+          IF SQLCA.SQLcode  THEN
+             CALL cl_err("ins nmbs",SQLCA.sqlcode,1)  
+             LET g_success = 'N'                        
+          END IF
+          #插入單身檔
+          IF g_nmbs_m.a = 'Y' THEN 
+             CALL anmt530_01_ins_nmbt_1(l_nmbs.nmbsdocno,l_nmbs.nmbsld)
+          END IF
+          IF g_nmbs_m.b = 'Y' THEN
+             CALL anmt530_01_ins_nmbt_2(l_nmbs.nmbsdocno,l_nmbs.nmbsld)
+          END IF 
+       END FOREACH 
+   END IF
+   
+   IF g_success = 'N' THEN
+      CALL cl_err_showmsg() 
+      CALL s_transaction_end('N','1') 
+   ELSE
+      CALL s_transaction_end('Y','1')
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_ins_nmbt_1" cite_std="N" status="" ver="2" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[# 插入單身檔nmbt_t
+PRIVATE FUNCTION anmt530_01_ins_nmbt_1(p_nmbtdocno,p_nmbtld)
+   DEFINE p_nmbtdocno     LIKE nmbt_t.nmbtdocno
+   DEFINE p_nmbtld        LIKE nmbt_t.nmbtld
+   DEFINE l_nmbt          RECORD  LIKE nmbt_t.* 
+   DEFINE l_nmbt002       LIKE nmbt_t.nmbt002
+   DEFINE l_nmbadocdt     LIKE nmba_t.nmbadocdt
+   DEFINE l_glaa014       LIKE glaa_t.glaa014
+   DEFINE l_glaa001       LIKE glaa_t.glaa001
+   DEFINE l_glaa008       LIKE glaa_t.glaa008
+   DEFINE l_glaa015       LIKE glaa_t.glaa015
+   DEFINE l_glaa016       LIKE glaa_t.glaa016
+   DEFINE l_glaa017       LIKE glaa_t.glaa017
+   DEFINE l_glaa018       LIKE glaa_t.glaa018
+   DEFINE l_glaa019       LIKE glaa_t.glaa019
+   DEFINE l_glaa020       LIKE glaa_t.glaa020
+   DEFINE l_glaa021       LIKE glaa_t.glaa021
+   DEFINE l_glaa022       LIKE glaa_t.glaa022
+   DEFINE l_success       LIKE type_t.num5
+   
+   CALL s_ld_sel_glaa(p_nmbtld,'glaa008|glaa014|glaa001|glaa015|glaa016|glaa017|glaa018|glaa019|glaa020|glaa021|glaa022')
+   RETURNING l_success,l_glaa008,l_glaa014,l_glaa001,l_glaa015,l_glaa016,l_glaa017,l_glaa018,l_glaa019,l_glaa020,l_glaa021,l_glaa022
+
+   LET g_wc1 = cl_replace_str(g_wc1,"nmcqdocdt","nmbadocdt")
+   LET g_wc2 = cl_replace_str(g_wc2,"nmcqdocno","nmbadocno")
+   LET g_sql = "SELECT nmbadocno",
+               "  FROM nmba_t,nmbb_t",
+               " WHERE nmbaent = nmbbent ",
+               "   AND nmbacomp = nmbbcomp ",
+               "   AND nmbadocno = nmbbdocno ",
+               "   AND nmbaent = '",g_enterprise,"'",
+               "   AND nmbacomp = '",g_nmbs_m.nmbscomp,"'",
+               "   AND nmba003 = 'anmt510' ",
+               "   AND nmbb042 IN (",
+               "SELECT gzcb002 FROM gzcb_t ",
+               " WHERE gzcb001 = '8714' ",
+               "   AND gzcb005 = 'Y' )",    
+               "   AND ",g_wc1,
+               "   AND ",g_wc2 
+
+   PREPARE anmt530_01_pre2 FROM g_sql
+   DECLARE anmt530_01_cur2 CURSOR FOR anmt530_01_pre2
+   
+   FOREACH anmt530_01_cur2 INTO l_nmbt002
+      LET l_nmbt.nmbtent = g_enterprise
+      LET l_nmbt.nmbtcomp = g_nmbs_m.nmbscomp
+      LET l_nmbt.nmbtld = p_nmbtld
+      LET l_nmbt.nmbtdocno = p_nmbtdocno
+      SELECT MAX(nmbtseq) + 1 INTO l_nmbt.nmbtseq
+        FROM nmbt_t
+       WHERE nmbtent = g_enterprise
+         AND nmbtld = l_nmbt.nmbtld
+         AND nmbtdocno = l_nmbt.nmbtdocno
+      IF cl_null(l_nmbt.nmbtseq) THEN 
+         LET l_nmbt.nmbtseq = 1
+      END IF
+      LET l_nmbt.nmbt001 = '1'
+      LET l_nmbt.nmbt002 = l_nmbt002
+      LET l_nmbt.nmbt003 = 1
+      LET l_nmbt.nmbt013 = g_user
+
+      SELECT nmbb030,nmbb004,nmbb005,nmbb006,nmbb007,nmbb031,
+             nmbb003,nmbacomp,nmba001,nmba004,nmba008,nmbadocdt
+        INTO l_nmbt.nmbt011,l_nmbt.nmbt100,
+             l_nmbt.nmbt101,l_nmbt.nmbt103,
+             l_nmbt.nmbt113,l_nmbt.nmbt012,
+             l_nmbt.nmbt014,l_nmbt.nmbt017,
+             l_nmbt.nmbt018,l_nmbt.nmbt021,
+             l_nmbt.nmbt025,l_nmbadocdt
+        FROM nmba_t,nmbb_t
+       WHERE nmbaent = nmbbent
+         AND nmbacomp = nmbbcomp
+         AND nmbadocno = nmbbdocno
+         AND nmbaent = g_enterprise
+         AND nmbacomp = g_nmbs_m.nmbscomp
+         AND nmbadocno = l_nmbt.nmbt002        
+         
+     LET l_nmbt.nmbt022 = l_nmbt.nmbt021
+     SELECT ooeg004 INTO l_nmbt.nmbt019
+       FROM ooeg_t
+      WHERE ooegent = g_enterprise
+        AND ooeg001 = l_nmbt.nmbt018
+        
+     IF l_glaa014 = 'Y' THEN 
+        IF l_glaa015 = 'Y' THEN                         
+            #主帳套本位幣二匯率
+                                       #日期;       來源幣別   目的幣別; 匯類類型
+            CALL anmt530_01_get_exrate(l_nmbadocdt,l_glaa001,l_glaa016,l_glaa018)                      
+            RETURNING l_nmbt.nmbt121   
+            LET l_nmbt.nmbt123 = l_nmbt.nmbt113 * l_nmbt.nmbt121   
+        END IF
+         
+        IF l_glaa019 = 'Y' THEN                         
+           #主帳套本位幣二匯率
+                                      #日期;       來源幣別   目的幣別; 匯類類型
+           CALL anmt530_01_get_exrate(l_nmbadocdt,l_glaa001,l_glaa020,l_glaa022)
+           RETURNING l_nmbt.nmbt131   
+           LET l_nmbt.nmbt133 = l_nmbt.nmbt113 * l_nmbt.nmbt131   
+        END IF
+     END IF
+      
+     #平行賬套,金額匯率重新計算
+     IF l_glaa014 <> 'Y' AND l_glaa008 = 'Y' THEN 
+        LET l_nmbt.nmbt101 = 0
+        LET l_nmbt.nmbt113 = 0
+ 
+        CALL cl_get_para(g_enterprise,l_nmbt.nmbtcomp,'S-FIN-4004') RETURNING g_para_data  #資金模組匯率來源
+        #平行賬套匯率
+                                   #日期;       來源幣別        目的幣別; 匯類類型
+        CALL anmt530_01_get_exrate(l_nmbadocdt,l_nmbt.nmbt100,l_glaa001,g_para_data)                      
+        RETURNING l_nmbt.nmbt101    
+        LET l_nmbt.nmbt113 = l_nmbt.nmbt103 * l_nmbt.nmbt101
+        
+        IF l_glaa015 = 'Y' THEN                         
+            #主帳套本位幣二匯率
+                                       #日期;       來源幣別   目的幣別; 匯類類型
+            CALL anmt530_01_get_exrate(l_nmbadocdt,l_glaa001,l_glaa016,l_glaa018)                      
+            RETURNING l_nmbt.nmbt121   
+            LET l_nmbt.nmbt123 = l_nmbt.nmbt113 * l_nmbt.nmbt121   
+        END IF
+         
+        IF l_glaa019 = 'Y' THEN                         
+           #主帳套本位幣二匯率
+                                      #日期;       來源幣別   目的幣別; 匯類類型
+           CALL anmt530_01_get_exrate(l_nmbadocdt,l_glaa001,l_glaa020,l_glaa022)
+           RETURNING l_nmbt.nmbt131   
+           LET l_nmbt.nmbt133 = l_nmbt.nmbt113 * l_nmbt.nmbt131   
+        END IF
+     END IF
+     
+     INSERT INTO nmbt_t VALUES(l_nmbt.*)    
+     IF SQLCA.SQLcode  THEN
+        CALL cl_err("g_xrcb",SQLCA.sqlcode,1)  
+        LET g_success = 'N'                        
+     END IF    
+     
+     CALL anmt530_01_nmbv_ins(p_nmbtld,l_nmbt.nmbtdocno,l_nmbt.nmbtseq,'1',l_nmbt.nmbt002,'','',l_nmbt.nmbt103,l_nmbt.nmbt113,'',l_nmbt.nmbt123,'',l_nmbt.nmbt133)
+   END FOREACH 
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_ins_nmbt_2" cite_std="N" status="" ver="2" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[# 插入單身檔nmbt_t
+PRIVATE FUNCTION anmt530_01_ins_nmbt_2(p_nmbtdocno,p_nmbtld)
+   DEFINE p_nmbtdocno     LIKE nmbt_t.nmbtdocno
+   DEFINE p_nmbtld        LIKE nmbt_t.nmbtld
+   DEFINE l_nmbt          RECORD  LIKE nmbt_t.* 
+   DEFINE l_nmbt002       LIKE nmbt_t.nmbt002
+   DEFINE l_nmbt003       LIKE nmbt_t.nmbt003
+   DEFINE l_nmcqdocdt     LIKE nmcq_t.nmcqdocdt
+   DEFINE l_nmcq001       LIKE nmcq_t.nmcq001
+   DEFINE l_glaa014       LIKE glaa_t.glaa014
+   DEFINE l_glaa001       LIKE glaa_t.glaa001
+   DEFINE l_glaa008       LIKE glaa_t.glaa008
+   DEFINE l_glaa015       LIKE glaa_t.glaa015
+   DEFINE l_glaa016       LIKE glaa_t.glaa016
+   DEFINE l_glaa017       LIKE glaa_t.glaa017
+   DEFINE l_glaa018       LIKE glaa_t.glaa018
+   DEFINE l_glaa019       LIKE glaa_t.glaa019
+   DEFINE l_glaa020       LIKE glaa_t.glaa020
+   DEFINE l_glaa021       LIKE glaa_t.glaa021
+   DEFINE l_glaa022       LIKE glaa_t.glaa022
+   DEFINE l_success       LIKE type_t.num5
+   
+   CALL s_ld_sel_glaa(p_nmbtld,'glaa008|glaa014|glaa001|glaa015|glaa016|glaa017|glaa018|glaa019|glaa020|glaa021|glaa022')
+   RETURNING l_success,l_glaa008,l_glaa014,l_glaa001,l_glaa015,l_glaa016,l_glaa017,l_glaa018,l_glaa019,l_glaa020,l_glaa021,l_glaa022
+   
+   LET g_sql = "SELECT nmcqdocno,nmcrseq",
+               "  FROM nmcq_t,nmcr_t",
+               " WHERE nmcqent = nmcrent ",
+               "   AND nmcqcomp = nmcrcomp ",
+               "   AND nmcqdocno = nmcrdocno ",
+               "   AND nmcqent = '",g_enterprise,"'",
+               "   AND nmcqcomp = '",g_nmbs_m.nmbscomp,"'",
+               "   AND (nmcqstus = 'Y' OR nmcqstus = 'S') ",
+               "   AND nmcq001 IN (",
+               "SELECT gzcb002 FROM gzcb_t ",
+               " WHERE gzcb001 = '8714' ",
+               "   AND gzcb005 = 'Y' )",
+               "   AND ",g_wc1,
+               "   AND ",g_wc2 
+   PREPARE anmt530_01_pre3 FROM g_sql
+   DECLARE anmt530_01_cur3 CURSOR FOR anmt530_01_pre3
+   
+   FOREACH anmt530_01_cur3 INTO l_nmbt002,l_nmbt003
+      LET l_nmbt.nmbtent = g_enterprise
+      LET l_nmbt.nmbtcomp = g_nmbs_m.nmbscomp
+      LET l_nmbt.nmbtld = p_nmbtld
+      LET l_nmbt.nmbtdocno = p_nmbtdocno
+      SELECT MAX(nmbtseq) + 1 INTO l_nmbt.nmbtseq
+        FROM nmbt_t
+       WHERE nmbtent = g_enterprise
+         AND nmbtld = l_nmbt.nmbtld
+         AND nmbtdocno = l_nmbt.nmbtdocno
+      IF cl_null(l_nmbt.nmbtseq) THEN 
+         LET l_nmbt.nmbtseq = 1
+      END IF
+      LET l_nmbt.nmbt001 = '2'
+      LET l_nmbt.nmbt002 = l_nmbt002
+      LET l_nmbt.nmbt003 = l_nmbt003
+      LET l_nmbt.nmbt013 = g_user
+      
+      SELECT nmcr001,nmbb004,nmbb005,nmcr103,nmcr113,nmbb031,
+             nmbb003,nmcrcomp,nmba001,nmba004,nmba008
+        INTO l_nmbt.nmbt011,l_nmbt.nmbt100,
+             l_nmbt.nmbt101,l_nmbt.nmbt103,
+             l_nmbt.nmbt113,l_nmbt.nmbt012,
+             l_nmbt.nmbt014,l_nmbt.nmbt017,
+             l_nmbt.nmbt018,l_nmbt.nmbt021,
+             l_nmbt.nmbt025
+        FROM nmcr_t,nmba_t,nmbb_t
+       WHERE nmbaent = nmbbent
+         AND nmbacomp = nmbbcomp
+         AND nmbadocno = nmbbdocno
+         AND nmcr001 = nmbb030
+         AND nmcrent = g_enterprise
+         AND nmcrcomp = g_nmbs_m.nmbscomp
+         AND nmcrdocno = l_nmbt002 
+         
+      SELECT nmcq001,nmcqdocdt INTO l_nmcq001,l_nmcqdocdt    
+        FROM nmcq_t
+       WHERE nmcqent = g_enterprise
+         AND nmcqcomp = g_nmbs_m.nmbscomp
+         AND nmcqdocno = l_nmbt.nmbt002
+         
+      LET l_nmbt.nmbt022 = l_nmbt.nmbt021
+      SELECT ooeg004 INTO l_nmbt.nmbt019
+        FROM ooeg_t
+       WHERE ooegent = g_enterprise
+         AND ooeg001 = l_nmbt.nmbt018
+         
+      IF l_glaa014 = 'Y' THEN 
+         IF l_glaa015 = 'Y' THEN                         
+             #主帳套本位幣二匯率
+                                        #日期;       來源幣別   目的幣別; 匯類類型
+             CALL anmt530_01_get_exrate(l_nmcqdocdt,l_glaa001,l_glaa016,l_glaa018)                      
+             RETURNING l_nmbt.nmbt121   
+             LET l_nmbt.nmbt123 = l_nmbt.nmbt113 * l_nmbt.nmbt121   
+         END IF
+          
+         IF l_glaa019 = 'Y' THEN                         
+            #主帳套本位幣二匯率
+                                       #日期;       來源幣別   目的幣別; 匯類類型
+            CALL anmt530_01_get_exrate(l_nmcqdocdt,l_glaa001,l_glaa020,l_glaa022)
+            RETURNING l_nmbt.nmbt131   
+            LET l_nmbt.nmbt133 = l_nmbt.nmbt113 * l_nmbt.nmbt131   
+         END IF
+      END IF
+       
+      #平行賬套,金額匯率重新計算
+      IF l_glaa014 <> 'Y' AND l_glaa008 = 'Y' THEN 
+         LET l_nmbt.nmbt101 = 0
+         LET l_nmbt.nmbt113 = 0
+      
+         CALL cl_get_para(g_enterprise,l_nmbt.nmbtcomp,'S-FIN-4004') RETURNING g_para_data  #資金模組匯率來源
+         #平行賬套匯率
+                                    #日期;       來源幣別        目的幣別; 匯類類型
+         CALL anmt530_01_get_exrate(l_nmcqdocdt,l_nmbt.nmbt100,l_glaa001,g_para_data)                      
+         RETURNING l_nmbt.nmbt101    
+         LET l_nmbt.nmbt113 = l_nmbt.nmbt103 * l_nmbt.nmbt101
+         
+         IF l_glaa015 = 'Y' THEN                         
+             #主帳套本位幣二匯率
+                                        #日期;       來源幣別   目的幣別; 匯類類型
+             CALL anmt530_01_get_exrate(l_nmcqdocdt,l_glaa001,l_glaa016,l_glaa018)                      
+             RETURNING l_nmbt.nmbt121   
+             LET l_nmbt.nmbt123 = l_nmbt.nmbt113 * l_nmbt.nmbt121   
+         END IF
+          
+         IF l_glaa019 = 'Y' THEN                         
+            #主帳套本位幣二匯率
+                                       #日期;       來源幣別   目的幣別; 匯類類型
+            CALL anmt530_01_get_exrate(l_nmcqdocdt,l_glaa001,l_glaa020,l_glaa022)
+            RETURNING l_nmbt.nmbt131   
+            LET l_nmbt.nmbt133 = l_nmbt.nmbt113 * l_nmbt.nmbt131   
+         END IF
+      END IF
+      
+      INSERT INTO nmbt_t VALUES(l_nmbt.*)    
+      IF SQLCA.SQLcode  THEN
+         CALL cl_err("g_xrcb",SQLCA.sqlcode,1)  
+         LET g_success = 'N'                        
+      END IF   
+
+      CALL anmt530_01_nmbv_ins(p_nmbtld,l_nmbt.nmbtdocno,l_nmbt.nmbtseq,'2',l_nmbt.nmbt002,
+                               l_nmcq001,l_nmbt003,l_nmbt.nmbt103,l_nmbt.nmbt113,l_nmbt.nmbt121,
+                               l_nmbt.nmbt123,l_nmbt.nmbt131,l_nmbt.nmbt133)
+      
+      
+   END FOREACH 
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_get_exrate" cite_std="N" status="" ver="2" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[# 抓取匯率
+PRIVATE FUNCTION anmt530_01_get_exrate(p_date,p_ooam003,p_ooan002,p_type)
+   DEFINE p_date       LIKE nmbs_t.nmbsdocdt
+   DEFINE p_ooam003    LIKE ooam_t.ooam003
+   DEFINE p_ooan002    LIKE ooan_t.ooan002
+   DEFINE p_type       LIKE glaa_t.glaa018
+   DEFINE r_exrate     LIKE nmbt_t.nmbt121
+   
+                          #匯率參照表;帳套;         日期;  來源幣別
+   CALL s_aooi160_get_exrate('2',g_nmbs_m.nmbsld,p_date,p_ooam003,
+                             #目的幣別; 交易金額; 匯類類型
+                             p_ooan002,0,p_type)
+   RETURNING r_exrate  
+   
+   RETURN r_exrate   
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_nmbv_ins" cite_std="N" status="" ver="2" src="s" new="Y" order="7" mark_hard="N">
+<![CDATA[# 插入nmbt_t
+PRIVATE FUNCTION anmt530_01_nmbv_ins(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt001,p_nmbt002,p_nmcq001,p_nmcrseq,p_nmbt103,p_nmbt113,p_nmbt121,p_nmbt123,p_nmbt131,p_nmbt133)
+   DEFINE p_nmbtld        LIKE nmbt_t.nmbtld
+   DEFINE p_nmbtdocno     LIKE nmbt_t.nmbtdocno
+   DEFINE p_nmbtseq       LIKE nmbt_t.nmbtseq
+   DEFINE p_nmbt001       LIKE nmbt_t.nmbt001
+   DEFINE p_nmbt002       LIKE nmbt_t.nmbt002
+   DEFINE p_nmcq001       LIKE nmcq_t.nmcq001
+   DEFINE p_nmcrseq       LIKE nmcr_t.nmcrseq
+   DEFINE p_nmbt103       LIKE nmbt_t.nmbt103
+   DEFINE p_nmbt113       LIKE nmbt_t.nmbt113
+   DEFINE p_nmbt121       LIKE nmbt_t.nmbt121
+   DEFINE p_nmbt123       LIKE nmbt_t.nmbt123
+   DEFINE p_nmbt131       LIKE nmbt_t.nmbt131
+   DEFINE p_nmbt133       LIKE nmbt_t.nmbt133
+   DEFINE l_success       LIKE type_t.num5
+
+   IF p_nmbt001 = '1' THEN   #收票
+      CALL anmt530_01_ins_nmbv_1(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt002,p_nmbt103,p_nmbt113,p_nmbt123,p_nmbt133) RETURNING l_success
+   END IF
+   
+   IF p_nmbt001 = '2' THEN 
+      IF p_nmcq001 = '4'  THEN    #票貼
+         CALL anmt530_01_nmbv_ins_4(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt002,p_nmcrseq,p_nmbt121,p_nmbt123,p_nmbt131,p_nmbt133) RETURNING l_success
+      END IF
+      
+      IF p_nmcq001 = '6'  THEN    #撤票
+         CALL anmt530_01_nmbv_ins_6(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt002,p_nmcrseq,p_nmbt123,p_nmbt133) RETURNING l_success
+      END IF
+      
+      IF p_nmcq001 = '7'  THEN    #跳票
+         CALL anmt530_01_nmbv_ins_7(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt002,p_nmcrseq,p_nmbt123,p_nmbt133) RETURNING l_success
+      END IF
+      
+      IF p_nmcq001 = '8'  THEN    #兌現
+         CALL anmt530_01_nmbv_ins_8(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt002,p_nmcrseq,p_nmbt121,p_nmbt123,p_nmbt131,p_nmbt133) RETURNING l_success
+      END IF
+   END IF
+   
+   IF l_success = FALSE THEN 
+      LET g_success = 'N'
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_ins_nmbv_1" cite_std="N" status="" ver="2" src="s" new="Y" order="8" mark_hard="N">
+<![CDATA[# 收票
+PRIVATE FUNCTION anmt530_01_ins_nmbv_1(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt002,p_nmbt103,p_nmbt113,p_nmbt123,p_nmbt133)
+   DEFINE p_nmbtld        LIKE nmbt_t.nmbtld
+   DEFINE p_nmbtdocno     LIKE nmbt_t.nmbtdocno
+   DEFINE p_nmbtseq       LIKE nmbt_t.nmbtseq
+   DEFINE p_nmbt002       LIKE nmbt_t.nmbt002
+   DEFINE p_nmbt103       LIKE nmbt_t.nmbt103
+   DEFINE p_nmbt113       LIKE nmbt_t.nmbt113
+   DEFINE p_nmbt123       LIKE nmbt_t.nmbt123
+   DEFINE p_nmbt133       LIKE nmbt_t.nmbt133
+   DEFINE l_nmbv          RECORD  LIKE nmbv_t.*
+   DEFINE l_nmbb028       LIKE nmbb_t.nmbb028
+   DEFINE r_success       LIKE type_t.num5
+   
+   LET r_success = FALSE
+   
+   DELETE FROM nmbv_t 
+    WHERE nmbvent = g_enterprise 
+      AND nmbvld = g_nmbs_m.nmbsld 
+      AND nmbvdocno = p_nmbtdocno
+      AND nmbvseq = p_nmbtseq
+   
+   LET l_nmbv.nmbvent = g_enterprise
+   LET l_nmbv.nmbvcomp = g_nmbs_m.nmbscomp
+   LET l_nmbv.nmbvld = p_nmbtld
+   LET l_nmbv.nmbvdocno = p_nmbtdocno
+   LET l_nmbv.nmbvseq = p_nmbtseq
+   
+   #借：應收票據    
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+   
+   #借方科目: 依 agli191 設定 
+   SELECT nmbb028 INTO l_nmbb028 
+     FROM nmbb_t
+    WHERE nmbbent = g_enterprise 
+      AND nmbbcomp = g_nmbs_m.nmbscomp
+      AND nmbbdocno = p_nmbt002
+   
+   SELECT glab005 INTO l_nmbv.nmbv001 
+     FROM glab_t,nmbb_t 
+    WHERE glabent = g_enterprise
+      AND glab003 = nmbb028
+      AND glabld  = g_nmbs_m.nmbsld
+      AND glab001 = '42' 
+      AND glab002 = '30'
+      AND glab003 = l_nmbb028
+      
+   LET l_nmbv.nmbv103 = p_nmbt103                 #借方原幣金額
+   LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+   LET l_nmbv.nmbv113 = p_nmbt113                 #借方本幣金額
+   LET l_nmbv.nmbv114 = 0                         #貸方本幣金額
+   LET l_nmbv.nmbv123 = p_nmbt123                 #本位幣二借方金額
+   LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+   LET l_nmbv.nmbv133 = p_nmbt133                 #本位幣三借方金額
+   LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success     
+   END IF
+
+   #貸：暫收款
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+   
+   #貸方科目: 依 anmi152 設定
+   SELECT glab005 INTO l_nmbv.nmbv001 
+     FROM glab_t 
+    WHERE glabent = g_enterprise
+      AND glabld  = g_nmbs_m.nmbsld
+      AND glab001 = '41'
+      AND glab002 = '8714'  # 應收票據 異動項 
+      AND glab003 = '1'     # 應收票據收票
+      
+   LET l_nmbv.nmbv103 = 0                         #借方原幣金額
+   LET l_nmbv.nmbv104 = p_nmbt103                 #貸方原幣金額
+   LET l_nmbv.nmbv113 = 0                         #借方本幣金額
+   LET l_nmbv.nmbv114 = p_nmbt113                 #貸方本幣金額
+   LET l_nmbv.nmbv123 = 0                         #本位幣二借方金額
+   LET l_nmbv.nmbv124 = p_nmbt123                 #本位幣二貸方金額
+   LET l_nmbv.nmbv133 = 0                         #本位幣三借方金額
+   LET l_nmbv.nmbv134 = p_nmbt133                 #本位幣三貸方金額
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success       
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_nmbv_ins_4" cite_std="N" status="" ver="2" src="s" new="Y" order="9" mark_hard="N">
+<![CDATA[# 票貼
+PRIVATE FUNCTION anmt530_01_nmbv_ins_4(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt002,p_nmcrseq,p_nmbt121,p_nmbt123,p_nmbt131,p_nmbt133)
+   DEFINE p_nmbtld        LIKE nmbt_t.nmbtld
+   DEFINE p_nmbtdocno     LIKE nmbt_t.nmbtdocno
+   DEFINE p_nmbtseq       LIKE nmbt_t.nmbtseq
+   DEFINE p_nmbt002       LIKE nmbt_t.nmbt002
+   DEFINE p_nmcrseq       LIKE nmcr_t.nmcrseq
+   DEFINE p_nmbt121       LIKE nmbt_t.nmbt121
+   DEFINE p_nmbt123       LIKE nmbt_t.nmbt123
+   DEFINE p_nmbt131       LIKE nmbt_t.nmbt131
+   DEFINE p_nmbt133       LIKE nmbt_t.nmbt133
+   DEFINE l_nmbv          RECORD  LIKE nmbv_t.*
+   DEFINE l_nmcr103       LIKE nmcr_t.nmcr103
+   DEFINE l_nmcr113       LIKE nmcr_t.nmcr113
+   DEFINE l_nmcr104       LIKE nmcr_t.nmcr104
+   DEFINE l_nmcr114       LIKE nmcr_t.nmcr114
+   DEFINE l_nmcr105       LIKE nmcr_t.nmcr105
+   DEFINE l_nmcr115       LIKE nmcr_t.nmcr115
+   DEFINE l_nmcr106       LIKE nmcr_t.nmcr106
+   DEFINE l_nmcr116       LIKE nmcr_t.nmcr116
+   DEFINE l_nmcr118       LIKE nmcr_t.nmcr118
+   DEFINE l_nmcq101       LIKE nmcq_t.nmcq101
+   DEFINE l_nmbb003       LIKE nmbb_t.nmbb003
+   DEFINE l_nmbb028       LIKE nmbb_t.nmbb028
+   DEFINE l_glaa014       LIKE glaa_t.glaa014
+   DEFINE l_glaa017       LIKE glaa_t.glaa017
+   DEFINE l_glaa021       LIKE glaa_t.glaa021
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE r_success       LIKE type_t.num5
+   
+   LET r_success = FALSE
+   
+   CALL s_ld_sel_glaa(p_nmbtld,'glaa014|glaa017|glaa021')
+   RETURNING l_success,l_glaa014,l_glaa017,l_glaa021
+   
+   DELETE FROM nmbv_t 
+    WHERE nmbvent = g_enterprise 
+      AND nmbvld = g_nmbs_m.nmbsld 
+      AND nmbvdocno = p_nmbtdocno
+      AND nmbvseq = p_nmbtseq
+   
+   SELECT nmbb003,nmcr103,nmcr113,nmcr104,nmcr114,nmcr105,nmcr115,
+          nmcr106,nmcr116,nmcr118,nmcq101
+     INTO l_nmbb003,l_nmcr103,l_nmcr113,l_nmcr104,l_nmcr114,l_nmcr105,l_nmcr115,
+          l_nmcr106,l_nmcr116,l_nmcr118,l_nmcq101
+     FROM nmcr_t,nmcq_t,nmba_t,nmbb_t
+    WHERE nmbaent = nmbbent
+      AND nmbacomp = nmbbcomp
+      AND nmbadocno = nmbbdocno
+      AND nmcrent = nmcqent
+      AND nmcrcomp = nmcqcomp
+      AND nmcrdocno = nmcqdocno
+      AND nmcr001 = nmbb030
+      AND nmcrent = g_enterprise
+      AND nmcrcomp = g_nmbs_m.nmbscomp
+      AND nmcrdocno = p_nmbt002 
+      AND nmcrseq = p_nmcrseq
+   
+   LET l_nmbv.nmbvent = g_enterprise
+   LET l_nmbv.nmbvcomp = g_nmbs_m.nmbscomp
+   LET l_nmbv.nmbvld = p_nmbtld
+   LET l_nmbv.nmbvdocno = p_nmbtdocno
+   LET l_nmbv.nmbvseq = p_nmbtseq
+   
+   #借方
+   #借：銀行存款
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+   
+   #借方科目: 帳戶對應會科
+   SELECT glab005 INTO l_nmbv.nmbv001 
+     FROM glab_t,nmbb_t 
+    WHERE glabent = g_enterprise 
+      AND glabld  = g_nmbs_m.nmbsld
+      AND glab001 = '40'
+      AND glab002 = '40'  
+      AND glab003 = nmbb003  #託貼帳戶
+      AND glab003 = l_nmbb003
+      
+   LET l_nmbv.nmbv103 = l_nmcr106                 #借方原幣金額
+   LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+   IF l_glaa014 = 'Y' THEN 
+      LET l_nmbv.nmbv113 = l_nmcr116              #借方本幣金額
+   ELSE
+      LET l_nmbv.nmbv113 = l_nmcr106 * l_nmcq101  #借方本幣金額
+   END IF
+   LET l_nmbv.nmbv114 = 0                         #貸方本幣金額
+   IF l_glaa017 = '1' THEN 
+      LET l_nmbv.nmbv123 = l_nmcr106 * p_nmbt121  #本位幣二借方金額
+   ELSE
+      LET l_nmbv.nmbv123 = l_nmcr116 * p_nmbt121  #本位幣二借方金額
+   END IF   
+   LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+   
+   IF l_glaa021 = '1' THEN 
+      LET l_nmbv.nmbv133 = l_nmcr106 * p_nmbt131  #本位幣三借方金額
+   ELSE
+      LET l_nmbv.nmbv133 = l_nmcr116 * p_nmbt131  #本位幣三借方金額
+   END IF
+   LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+      
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success     
+   END IF
+   
+   #借:利息支出
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+   
+   #借方科目: anmi152資金常用會科
+   SELECT glab005 INTO l_nmbv.nmbv001
+     FROM glab_t 
+    WHERE glabent = g_enterprise  
+      AND glabld  = g_nmbs_m.nmbsld
+      AND glab001 = '41'
+      AND glab002 = '8714'   # 應收票據 異動項 
+      AND glab003 = 'C'      # 應收票據貼現利息支出
+   
+   LET l_nmbv.nmbv103 = l_nmcr105                 #借方原幣金額
+   LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+   IF l_glaa014 = 'Y' THEN 
+      LET l_nmbv.nmbv113 = l_nmcr115              #借方本幣金額
+   ELSE
+      LET l_nmbv.nmbv113 = l_nmcr105 * l_nmcq101  #借方本幣金額
+   END IF
+   LET l_nmbv.nmbv114 = 0                         #貸方本幣金額
+   IF l_glaa017 = '1' THEN 
+      LET l_nmbv.nmbv123 = l_nmcr105 * p_nmbt121  #本位幣二借方金額
+   ELSE
+      LET l_nmbv.nmbv123 = l_nmcr115 * p_nmbt121  #本位幣二借方金額
+   END IF   
+   LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+   
+   IF l_glaa021 = '1' THEN 
+      LET l_nmbv.nmbv133 = l_nmcr105 * p_nmbt131  #本位幣三借方金額
+   ELSE
+      LET l_nmbv.nmbv133 = l_nmcr115 * p_nmbt131  #本位幣三借方金額
+   END IF
+   LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+      
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success     
+   END IF
+   
+   #匯兌科目
+   IF l_nmcr118 < 0 THEN   #表示匯兌支出 , 在借方
+      SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+        FROM nmbv_t
+       WHERE nmbvent = g_enterprise
+         AND nmbvld = l_nmbv.nmbvld
+         AND nmbvdocno = l_nmbv.nmbvdocno
+         AND nmbvseq = l_nmbv.nmbvseq
+      IF cl_null(l_nmbv.nmbvseq2) THEN 
+         LET l_nmbv.nmbvseq2 = 1
+      END IF
+      
+      SELECT glab005 INTO l_nmbv.nmbv001 
+        FROM glab_t 
+       WHERE glabent = g_enterprise
+        AND  glabld  = g_nmbs_m.nmbsld
+        AND  glab001 = '41'
+        AND  glab002 = '8714'   # 應收票據 異動項 
+        AND  glab003 = 'E '     # 匯兌損失
+        
+      LET l_nmbv.nmbv103 = 0                         #借方原幣金額
+      LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+      LET l_nmbv.nmbv113 = l_nmcr118                 #借方本幣金額
+      LET l_nmbv.nmbv114 = 0                         #貸方本幣金額
+      LET l_nmbv.nmbv123 = 0                         #本位幣二借方金額
+      LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+      LET l_nmbv.nmbv133 = 0                         #本位幣三借方金額
+      LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+      
+      INSERT INTO nmbv_t VALUES(l_nmbv.*)
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+         RETURN r_success       
+      END IF
+   END IF
+   
+   
+   #貸方
+   #貸：應收票據
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+   
+   #貸方科目: agli191依款別設定
+   SELECT nmbb028 INTO l_nmbb028 
+     FROM nmbb_t
+    WHERE nmbbent = g_enterprise 
+      AND nmbbcomp = g_nmbs_m.nmbscomp
+      AND nmbbdocno = p_nmbt002
+   
+   SELECT glab005 INTO l_nmbv.nmbv001 
+     FROM glab_t,nmbb_t 
+    WHERE glabent = g_enterprise
+      AND glab003 = nmbb028
+      AND glabld  = g_nmbs_m.nmbsld
+      AND glab001 = '42' 
+      AND glab002 = '30'
+      AND glab003 = l_nmbb028
+      
+   LET l_nmbv.nmbv103 = 0                         #借方原幣金額
+   LET l_nmbv.nmbv104 = l_nmcr103                 #貸方原幣金額
+   LET l_nmbv.nmbv113 = 0                         #借方本幣金額
+   LET l_nmbv.nmbv114 = l_nmcr113                 #貸方本幣金額
+   LET l_nmbv.nmbv123 = 0                         #本位幣二借方金額
+   LET l_nmbv.nmbv124 = p_nmbt123                 #本位幣二貸方金額
+   LET l_nmbv.nmbv133 = 0                         #本位幣三借方金額
+   LET l_nmbv.nmbv134 = p_nmbt133                 #本位幣三貸方金額
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success       
+   END IF
+   
+   #貸：利息收入  
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+   
+   #貸方科目: anmi152資金常用會科
+   SELECT glab005 INTO l_nmbv.nmbv001 
+     FROM glab_t 
+    WHERE glabent = g_enterprise
+      AND glabld  = g_nmbs_m.nmbsld
+      AND glab001 = '41'
+      AND glab002 = '8714'        # 應收票據 異動項 
+      AND glab003 = 'B'           # 應收票據利息收入 
+   
+   LET l_nmbv.nmbv103 = 0                         #借方原幣金額
+   LET l_nmbv.nmbv104 = l_nmcr104                 #貸方原幣金額
+   LET l_nmbv.nmbv113 = 0                         #借方本幣金額
+   IF l_glaa014 = 'Y' THEN 
+      LET l_nmbv.nmbv114 = l_nmcr114              #貸方本幣金額
+   ELSE
+      LET l_nmbv.nmbv114 = l_nmcr104 * l_nmcq101  #貸方本幣金額
+   END IF
+   
+   LET l_nmbv.nmbv123 = 0                         #本位幣二借方金額
+   IF l_glaa017 = '1' THEN 
+      LET l_nmbv.nmbv124 = l_nmcr104 * p_nmbt121  #本位幣二貸方金額
+   ELSE
+      LET l_nmbv.nmbv124 = l_nmcr114 * p_nmbt121  #本位幣二貸方金額
+   END IF   
+   
+   LET l_nmbv.nmbv133 = 0                         #本位幣三借方金額
+   IF l_glaa021 = '1' THEN 
+      LET l_nmbv.nmbv134 = l_nmcr104 * p_nmbt131  #本位幣三貸方金額
+   ELSE
+      LET l_nmbv.nmbv134 = l_nmcr114 * p_nmbt131  #本位幣三貸方金額
+   END IF
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success       
+   END IF
+   
+   #匯兌科目
+   IF l_nmcr118 > 0 THEN   #表示匯兌收入 , 在貸方   
+      SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+        FROM nmbv_t
+       WHERE nmbvent = g_enterprise
+         AND nmbvld = l_nmbv.nmbvld
+         AND nmbvdocno = l_nmbv.nmbvdocno
+         AND nmbvseq = l_nmbv.nmbvseq
+      IF cl_null(l_nmbv.nmbvseq2) THEN 
+         LET l_nmbv.nmbvseq2 = 1
+      END IF
+      
+      SELECT glab005 INTO l_nmbv.nmbv001 
+        FROM glab_t 
+       WHERE glabent = g_enterprise
+        AND  glabld  = g_nmbs_m.nmbsld
+        AND  glab001 = '41'
+        AND  glab002 = '8714'   # 應收票據 異動項 
+        AND  glab003 = 'D '     # 匯兌收入 
+        
+      LET l_nmbv.nmbv103 = 0                         #借方原幣金額
+      LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+      LET l_nmbv.nmbv113 = 0                         #借方本幣金額
+      LET l_nmbv.nmbv114 = l_nmcr118                 #貸方本幣金額
+      LET l_nmbv.nmbv123 = 0                         #本位幣二借方金額
+      LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+      LET l_nmbv.nmbv133 = 0                         #本位幣三借方金額
+      LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+      
+      INSERT INTO nmbv_t VALUES(l_nmbv.*)
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+         RETURN r_success       
+      END IF
+   END IF
+   
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_nmbv_ins_6" cite_std="N" status="" ver="2" src="s" new="Y" order="10" mark_hard="N">
+<![CDATA[# 撤票
+PRIVATE FUNCTION anmt530_01_nmbv_ins_6(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt002,p_nmcrseq,p_nmbt123,p_nmbt133)
+   DEFINE p_nmbtld        LIKE nmbt_t.nmbtld
+   DEFINE p_nmbtdocno     LIKE nmbt_t.nmbtdocno
+   DEFINE p_nmbtseq       LIKE nmbt_t.nmbtseq
+   DEFINE p_nmbt002       LIKE nmbt_t.nmbt002
+   DEFINE p_nmcrseq       LIKE nmcr_t.nmcrseq
+   DEFINE p_nmbt123       LIKE nmbt_t.nmbt123
+   DEFINE p_nmbt133       LIKE nmbt_t.nmbt133
+   DEFINE l_nmcr103       LIKE nmcr_t.nmcr103
+   DEFINE l_nmcr113       LIKE nmcr_t.nmcr113
+   DEFINE l_nmbv          RECORD  LIKE nmbv_t.*
+   DEFINE l_nmbb028       LIKE nmbb_t.nmbb028
+   DEFINE r_success       LIKE type_t.num5
+   
+   LET r_success = FALSE
+   
+   DELETE FROM nmbv_t 
+    WHERE nmbvent = g_enterprise 
+      AND nmbvld = g_nmbs_m.nmbsld 
+      AND nmbvdocno = p_nmbtdocno
+      AND nmbvseq = p_nmbtseq
+   
+   SELECT nmcr103,nmcr113
+     INTO l_nmcr103,l_nmcr113
+     FROM nmcr_t,nmcq_t,nmba_t,nmbb_t
+    WHERE nmbaent = nmbbent
+      AND nmbacomp = nmbbcomp
+      AND nmbadocno = nmbbdocno
+      AND nmcrent = nmcqent
+      AND nmcrcomp = nmcqcomp
+      AND nmcrdocno = nmcqdocno
+      AND nmcr001 = nmbb030
+      AND nmcrent = g_enterprise
+      AND nmcrcomp = g_nmbs_m.nmbscomp
+      AND nmcrdocno = p_nmbt002 
+      AND nmcrseq = p_nmcrseq
+   
+   LET l_nmbv.nmbvent = g_enterprise
+   LET l_nmbv.nmbvcomp = g_nmbs_m.nmbscomp
+   LET l_nmbv.nmbvld = p_nmbtld
+   LET l_nmbv.nmbvdocno = p_nmbtdocno
+   LET l_nmbv.nmbvseq = p_nmbtseq
+   
+   #借方:
+   #借：銀行存款
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+    
+   #借方科目:anmi152資金常用會科           
+   SELECT glab005 INTO l_nmbv.nmbv001 
+       FROM glab_t 
+      WHERE glabent = g_enterprise
+       AND  glabld  = g_nmbs_m.nmbsld
+       AND  glab001 = '41'
+       AND  glab002 = '8714'   # 應收票據 異動項
+       AND  glab003 = '5 '     # 應收票據收票 
+       
+   LET l_nmbv.nmbv103 = l_nmcr103                 #借方原幣金額
+   LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+   LET l_nmbv.nmbv113 = l_nmcr113                 #借方本幣金額
+   LET l_nmbv.nmbv114 = 0                         #貸方本幣金額
+   LET l_nmbv.nmbv123 = p_nmbt123                 #本位幣二借方金額
+   LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+   LET l_nmbv.nmbv133 = p_nmbt133                 #本位幣三借方金額
+   LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success       
+   END IF
+   
+   #貸方:
+   #貸：應收票據
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+    
+   #貸方科目:agli191依款別設定
+   SELECT nmbb028 INTO l_nmbb028 
+     FROM nmbb_t
+    WHERE nmbbent = g_enterprise 
+      AND nmbbcomp = g_nmbs_m.nmbscomp
+      AND nmbbdocno = p_nmbt002
+   
+   SELECT glab005 INTO l_nmbv.nmbv001 
+     FROM glab_t,nmbb_t 
+    WHERE glabent = g_enterprise
+      AND glab003 = nmbb028
+      AND glabld  = g_nmbs_m.nmbsld
+      AND glab001 = '42' 
+      AND glab002 = '30'
+      AND glab003 = l_nmbb028 
+      
+   LET l_nmbv.nmbv103 = 0                         #借方原幣金額
+   LET l_nmbv.nmbv104 = l_nmcr103                 #貸方原幣金額
+   LET l_nmbv.nmbv113 = 0                         #借方本幣金額
+   LET l_nmbv.nmbv114 = l_nmcr113                 #貸方本幣金額
+   LET l_nmbv.nmbv123 = 0                         #本位幣二借方金額
+   LET l_nmbv.nmbv124 = p_nmbt123                 #本位幣二貸方金額
+   LET l_nmbv.nmbv133 = 0                         #本位幣三借方金額
+   LET l_nmbv.nmbv134 = p_nmbt133                 #本位幣三貸方金額
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success       
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success   
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_nmbv_ins_7" cite_std="N" status="" ver="2" src="s" new="Y" order="11" mark_hard="N">
+<![CDATA[# 跳票
+PRIVATE FUNCTION anmt530_01_nmbv_ins_7(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt002,p_nmcrseq,p_nmbt123,p_nmbt133)
+   DEFINE p_nmbtld        LIKE nmbt_t.nmbtld
+   DEFINE p_nmbtdocno     LIKE nmbt_t.nmbtdocno
+   DEFINE p_nmbtseq       LIKE nmbt_t.nmbtseq
+   DEFINE p_nmbt002       LIKE nmbt_t.nmbt002
+   DEFINE p_nmcrseq       LIKE nmcr_t.nmcrseq
+   DEFINE p_nmbt123       LIKE nmbt_t.nmbt123
+   DEFINE p_nmbt133       LIKE nmbt_t.nmbt133
+   DEFINE l_nmcr103       LIKE nmcr_t.nmcr103
+   DEFINE l_nmcr113       LIKE nmcr_t.nmcr113
+   DEFINE l_nmbv          RECORD  LIKE nmbv_t.*
+   DEFINE l_nmbb028       LIKE nmbb_t.nmbb028
+   DEFINE r_success       LIKE type_t.num5
+   
+   LET r_success = FALSE
+   
+   DELETE FROM nmbv_t 
+    WHERE nmbvent = g_enterprise 
+      AND nmbvld = g_nmbs_m.nmbsld 
+      AND nmbvdocno = p_nmbtdocno
+      AND nmbvseq = p_nmbtseq
+   
+   SELECT nmcr103,nmcr113
+     INTO l_nmcr103,l_nmcr113
+     FROM nmcr_t,nmcq_t,nmba_t,nmbb_t
+    WHERE nmbaent = nmbbent
+      AND nmbacomp = nmbbcomp
+      AND nmbadocno = nmbbdocno
+      AND nmcrent = nmcqent
+      AND nmcrcomp = nmcqcomp
+      AND nmcrdocno = nmcqdocno
+      AND nmcr001 = nmbb030
+      AND nmcrent = g_enterprise
+      AND nmcrcomp = g_nmbs_m.nmbscomp
+      AND nmcrdocno = p_nmbt002 
+      AND nmcrseq = p_nmcrseq
+   
+   LET l_nmbv.nmbvent = g_enterprise
+   LET l_nmbv.nmbvcomp = g_nmbs_m.nmbscomp
+   LET l_nmbv.nmbvld = p_nmbtld
+   LET l_nmbv.nmbvdocno = p_nmbtdocno
+   LET l_nmbv.nmbvseq = p_nmbtseq
+   
+   #借方:
+   #借：銀行存款
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+    
+   #借方科目:anmi152資金常用會科           
+   SELECT glab005 INTO l_nmbv.nmbv001 
+       FROM glab_t 
+      WHERE glabent = g_enterprise
+       AND  glabld  = g_nmbs_m.nmbsld
+       AND  glab001 = '41'
+       AND  glab002 = '8714'   # 應收票據 異動項
+       AND  glab003 = '7 '     # 應收票據跳票 
+       
+   LET l_nmbv.nmbv103 = l_nmcr103                 #借方原幣金額
+   LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+   LET l_nmbv.nmbv113 = l_nmcr113                 #借方本幣金額
+   LET l_nmbv.nmbv114 = 0                         #貸方本幣金額
+   LET l_nmbv.nmbv123 = p_nmbt123                 #本位幣二借方金額
+   LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+   LET l_nmbv.nmbv133 = p_nmbt133                 #本位幣三借方金額
+   LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success       
+   END IF
+   
+   #貸方:
+   #貸：應收票據
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+    
+   #貸方科目:agli191依款別設定
+   SELECT nmbb028 INTO l_nmbb028 
+     FROM nmbb_t
+    WHERE nmbbent = g_enterprise 
+      AND nmbbcomp = g_nmbs_m.nmbscomp
+      AND nmbbdocno = p_nmbt002
+   
+   SELECT glab005 INTO l_nmbv.nmbv001 
+     FROM glab_t,nmbb_t 
+    WHERE glabent = g_enterprise
+      AND glab003 = nmbb028
+      AND glabld  = g_nmbs_m.nmbsld
+      AND glab001 = '42' 
+      AND glab002 = '30'
+      AND glab003 = l_nmbb028 
+      
+   LET l_nmbv.nmbv103 = 0                         #借方原幣金額
+   LET l_nmbv.nmbv104 = l_nmcr103                 #貸方原幣金額
+   LET l_nmbv.nmbv113 = 0                         #借方本幣金額
+   LET l_nmbv.nmbv114 = l_nmcr113                 #貸方本幣金額
+   LET l_nmbv.nmbv123 = 0                         #本位幣二借方金額
+   LET l_nmbv.nmbv124 = p_nmbt123                 #本位幣二貸方金額
+   LET l_nmbv.nmbv133 = 0                         #本位幣三借方金額
+   LET l_nmbv.nmbv134 = p_nmbt133                 #本位幣三貸方金額
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success       
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success 
+END FUNCTION]]>
+</point>
+  <point name="function.anmt530_01_nmbv_ins_8" cite_std="N" status="" ver="2" src="s" new="Y" order="12" mark_hard="N">
+<![CDATA[# 兌現
+PRIVATE FUNCTION anmt530_01_nmbv_ins_8(p_nmbtld,p_nmbtdocno,p_nmbtseq,p_nmbt002,p_nmcrseq,p_nmbt121,p_nmbt123,p_nmbt131,p_nmbt133)
+   DEFINE p_nmbtld        LIKE nmbt_t.nmbtld
+   DEFINE p_nmbtdocno     LIKE nmbt_t.nmbtdocno
+   DEFINE p_nmbtseq       LIKE nmbt_t.nmbtseq
+   DEFINE p_nmbt002       LIKE nmbt_t.nmbt002
+   DEFINE p_nmcrseq       LIKE nmcr_t.nmcrseq
+   DEFINE p_nmbt121       LIKE nmbt_t.nmbt121
+   DEFINE p_nmbt123       LIKE nmbt_t.nmbt123
+   DEFINE p_nmbt131       LIKE nmbt_t.nmbt131
+   DEFINE p_nmbt133       LIKE nmbt_t.nmbt133
+   DEFINE l_nmbv          RECORD  LIKE nmbv_t.*
+   DEFINE l_nmcr103       LIKE nmcr_t.nmcr103
+   DEFINE l_nmcr113       LIKE nmcr_t.nmcr113
+   DEFINE l_nmcr104       LIKE nmcr_t.nmcr104
+   DEFINE l_nmcr114       LIKE nmcr_t.nmcr114
+   DEFINE l_nmcr105       LIKE nmcr_t.nmcr105
+   DEFINE l_nmcr115       LIKE nmcr_t.nmcr115
+   DEFINE l_nmcr106       LIKE nmcr_t.nmcr106
+   DEFINE l_nmcr116       LIKE nmcr_t.nmcr116
+   DEFINE l_nmcr118       LIKE nmcr_t.nmcr118
+   DEFINE l_nmcq101       LIKE nmcq_t.nmcq101
+   DEFINE l_nmbb003       LIKE nmbb_t.nmbb003
+   DEFINE l_nmbb028       LIKE nmbb_t.nmbb028
+   DEFINE l_glaa014       LIKE glaa_t.glaa014
+   DEFINE l_glaa017       LIKE glaa_t.glaa017
+   DEFINE l_glaa021       LIKE glaa_t.glaa021
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE r_success       LIKE type_t.num5
+   
+   LET r_success = FALSE
+   
+   CALL s_ld_sel_glaa(p_nmbtld,'glaa014|glaa017|glaa021')
+   RETURNING l_success,l_glaa014,l_glaa017,l_glaa021
+   
+   DELETE FROM nmbv_t 
+    WHERE nmbvent = g_enterprise 
+      AND nmbvld = g_nmbs_m.nmbsld 
+      AND nmbvdocno = p_nmbtdocno
+      AND nmbvseq = p_nmbtseq
+   
+   SELECT nmbb003,nmcr103,nmcr113,nmcr104,nmcr114,nmcr105,nmcr115,
+          nmcr106,nmcr116,nmcr118,nmcq101
+     INTO l_nmbb003,l_nmcr103,l_nmcr113,l_nmcr104,l_nmcr114,l_nmcr105,l_nmcr115,
+          l_nmcr106,l_nmcr116,l_nmcr118,l_nmcq101
+     FROM nmcr_t,nmcq_t,nmba_t,nmbb_t
+    WHERE nmbaent = nmbbent
+      AND nmbacomp = nmbbcomp
+      AND nmbadocno = nmbbdocno
+      AND nmcrent = nmcqent
+      AND nmcrcomp = nmcqcomp
+      AND nmcrdocno = nmcqdocno
+      AND nmcr001 = nmbb030
+      AND nmcrent = g_enterprise
+      AND nmcrcomp = g_nmbs_m.nmbscomp
+      AND nmcrdocno = p_nmbt002 
+      AND nmcrseq = p_nmcrseq
+   
+   LET l_nmbv.nmbvent = g_enterprise
+   LET l_nmbv.nmbvcomp = g_nmbs_m.nmbscomp
+   LET l_nmbv.nmbvld = p_nmbtld
+   LET l_nmbv.nmbvdocno = p_nmbtdocno
+   LET l_nmbv.nmbvseq = p_nmbtseq
+   
+   #借方
+   #借：銀行存款  
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+   
+   #借方科目: anmi121帳戶會科
+   SELECT glab005 INTO l_nmbv.nmbv001 
+     FROM glab_t,nmbb_t 
+    WHERE glabent = g_enterprise 
+      AND glabld  = g_nmbs_m.nmbsld
+      AND glab001 = '40'
+      AND glab002 = '40'  
+      AND glab003 = nmbb003  #託貼帳戶
+      AND glab003 = l_nmbb003
+   
+   LET l_nmbv.nmbv103 = l_nmcr103 + l_nmcr104     #借方原幣金額
+   LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+   IF l_glaa014 = 'Y' THEN 
+      LET l_nmbv.nmbv113 = l_nmcr113 + l_nmcr114  #借方本幣金額
+   ELSE
+      LET l_nmbv.nmbv113 = (l_nmcr103 + l_nmcr104) * l_nmcq101  #借方本幣金額
+   END IF
+   LET l_nmbv.nmbv114 = 0                         #貸方本幣金額
+   IF l_glaa017 = '1' THEN 
+      LET l_nmbv.nmbv123 = (l_nmcr103 + l_nmcr104) * p_nmbt121  #本位幣二借方金額
+   ELSE
+      LET l_nmbv.nmbv123 = (l_nmcr113 + l_nmcr114) * p_nmbt121  #本位幣二借方金額
+   END IF   
+   LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+   
+   IF l_glaa021 = '1' THEN 
+      LET l_nmbv.nmbv133 = (l_nmcr103 + l_nmcr104) * p_nmbt131  #本位幣三借方金額
+   ELSE
+      LET l_nmbv.nmbv133 = (l_nmcr113 + l_nmcr114) * p_nmbt131  #本位幣三借方金額
+   END IF
+   LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+      
+   
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success     
+   END IF
+   
+   #匯兌科目
+   IF l_nmcr118 < 0 THEN   #表示匯兌支出 , 在借方   
+      SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+        FROM nmbv_t
+       WHERE nmbvent = g_enterprise
+         AND nmbvld = l_nmbv.nmbvld
+         AND nmbvdocno = l_nmbv.nmbvdocno
+         AND nmbvseq = l_nmbv.nmbvseq
+      IF cl_null(l_nmbv.nmbvseq2) THEN 
+         LET l_nmbv.nmbvseq2 = 1
+      END IF
+      
+      SELECT glab005 INTO l_nmbv.nmbv001 
+        FROM glab_t 
+       WHERE glabent = g_enterprise
+        AND  glabld  = g_nmbs_m.nmbsld
+        AND  glab001 = '41'
+        AND  glab002 = '8714'   # 應收票據 異動項 
+        AND  glab003 = 'E '     # 匯兌損失
+        
+      LET l_nmbv.nmbv103 = 0                         #借方原幣金額
+      LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+      LET l_nmbv.nmbv113 = l_nmcr118                 #借方本幣金額
+      LET l_nmbv.nmbv114 = 0                         #貸方本幣金額
+      LET l_nmbv.nmbv123 = 0                         #本位幣二借方金額
+      LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+      LET l_nmbv.nmbv133 = 0                         #本位幣三借方金額
+      LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+      
+      INSERT INTO nmbv_t VALUES(l_nmbv.*)
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+         RETURN r_success       
+      END IF
+   END IF
+   
+   #貸方:
+   #貸：應收票據 
+   SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+     FROM nmbv_t
+    WHERE nmbvent = g_enterprise
+      AND nmbvld = l_nmbv.nmbvld
+      AND nmbvdocno = l_nmbv.nmbvdocno
+      AND nmbvseq = l_nmbv.nmbvseq
+    IF cl_null(l_nmbv.nmbvseq2) THEN 
+       LET l_nmbv.nmbvseq2 = 1
+    END IF
+ 
+   #貸方科目: agli191依款別設定
+   SELECT nmbb028 INTO l_nmbb028 
+     FROM nmbb_t
+    WHERE nmbbent = g_enterprise 
+      AND nmbbcomp = g_nmbs_m.nmbscomp
+      AND nmbbdocno = p_nmbt002
+   
+   SELECT glab005 INTO l_nmbv.nmbv001 
+     FROM glab_t,nmbb_t 
+    WHERE glabent = g_enterprise
+      AND glab003 = nmbb028
+      AND glabld  = g_nmbs_m.nmbsld
+      AND glab001 = '42' 
+      AND glab002 = '30'
+      AND glab003 = l_nmbb028
+   
+   LET l_nmbv.nmbv103 = l_nmcr103                 #借方原幣金額
+   LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+   LET l_nmbv.nmbv113 = l_nmcr113                 #借方本幣金額
+   LET l_nmbv.nmbv114 = 0                         #貸方本幣金額
+   LET l_nmbv.nmbv123 = p_nmbt123                 #本位幣二借方金額
+   LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+   LET l_nmbv.nmbv133 = p_nmbt133                 #本位幣三借方金額
+   LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+  
+   INSERT INTO nmbv_t VALUES(l_nmbv.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+      RETURN r_success     
+   END IF
+
+   IF l_nmcr104 > 0 THEN  #表示有利息收入  
+      SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+        FROM nmbv_t
+       WHERE nmbvent = g_enterprise
+         AND nmbvld = l_nmbv.nmbvld
+         AND nmbvdocno = l_nmbv.nmbvdocno
+         AND nmbvseq = l_nmbv.nmbvseq
+      IF cl_null(l_nmbv.nmbvseq2) THEN 
+         LET l_nmbv.nmbvseq2 = 1
+      END IF
+      
+      SELECT glab005 INTO l_nmbv.nmbv001 
+        FROM glab_t 
+       WHERE glabent = g_enterprise
+        AND  glabld  = g_nmbs_m.nmbsld
+        AND  glab001 = '41'
+        AND  glab002 = '8714'   # 應收票據 異動項 
+        AND  glab003 = 'E '     # 匯兌損失
+        
+      LET l_nmbv.nmbv103 = 0                         #借方原幣金額
+      LET l_nmbv.nmbv104 = l_nmcr103                 #貸方原幣金額
+      LET l_nmbv.nmbv113 = 0                         #借方本幣金額
+      LET l_nmbv.nmbv114 = l_nmcr113                 #貸方本幣金額
+      LET l_nmbv.nmbv123 = 0                         #本位幣二借方金額
+      LET l_nmbv.nmbv124 = p_nmbt123                 #本位幣二貸方金額
+      LET l_nmbv.nmbv133 = 0                         #本位幣三借方金額
+      LET l_nmbv.nmbv134 = p_nmbt133                 #本位幣三貸方金額
+      
+      INSERT INTO nmbv_t VALUES(l_nmbv.*)
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+         RETURN r_success       
+      END IF
+   END IF
+   
+   #匯兌科目
+   IF l_nmcr118 > 0 THEN   #表示匯兌收入 , 在貸方
+      SELECT MAX(nmbvseq2) + 1 INTO l_nmbv.nmbvseq2
+        FROM nmbv_t
+       WHERE nmbvent = g_enterprise
+         AND nmbvld = l_nmbv.nmbvld
+         AND nmbvdocno = l_nmbv.nmbvdocno
+         AND nmbvseq = l_nmbv.nmbvseq
+      IF cl_null(l_nmbv.nmbvseq2) THEN 
+         LET l_nmbv.nmbvseq2 = 1
+      END IF
+      
+      SELECT glab005 INTO l_nmbv.nmbv001 
+        FROM glab_t 
+       WHERE glabent = g_enterprise
+        AND  glabld  = g_nmbs_m.nmbsld
+        AND  glab001 = '41'
+        AND  glab002 = '8714'   # 應收票據 異動項 
+        AND  glab003 = 'D '     # 匯兌收入 
+        
+      LET l_nmbv.nmbv103 = 0                         #借方原幣金額
+      LET l_nmbv.nmbv104 = 0                         #貸方原幣金額
+      LET l_nmbv.nmbv113 = 0                         #借方本幣金額
+      LET l_nmbv.nmbv114 = l_nmcr118                 #貸方本幣金額
+      LET l_nmbv.nmbv123 = 0                         #本位幣二借方金額
+      LET l_nmbv.nmbv124 = 0                         #本位幣二貸方金額
+      LET l_nmbv.nmbv133 = 0                         #本位幣三借方金額
+      LET l_nmbv.nmbv134 = 0                         #本位幣三貸方金額
+      
+      INSERT INTO nmbv_t VALUES(l_nmbv.*)
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('ins nmbv',SQLCA.sqlcode,1)
+         RETURN r_success       
+      END IF
+   END IF   
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[DEFINE g_wc1             STRING
+DEFINE g_wc2             STRING
+DEFINE g_sql             STRING
+DEFINE g_para_data       LIKE type_t.chr80     #資金模組匯率來源]]>
+</point>
+  <point name="input.a.a" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="input.a.b" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            
+]]>
+</point>
+  <point name="input.a.c" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+]]>
+</point>
+  <point name="input.a.nmbscomp" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            CALL anmt530_01_nmbscomp_desc()
+            IF NOT cl_null(g_nmbs_m.nmbscomp) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_nmbs_m.nmbscomp
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001_1") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_nmbs_m.nmbscomp = ''
+                  CALL anmt530_01_nmbscomp_desc()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+]]>
+</point>
+  <point name="input.a.nmbsdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_nmbs_m.nmbsdocno) THEN 
+               LET l_ooef004 = ''
+               SELECT ooef004
+                 INTO l_ooef004
+                 FROM ooef_t
+                WHERE ooefent = g_enterprise
+                  AND ooef001 = g_nmbs_m.nmbscomp
+               IF NOT cl_null(g_nmbs_m.nmbsdocno) THEN 
+                  CALL s_aooi200_chk_slip(g_nmbs_m.nmbscomp,l_ooef004,g_nmbs_m.nmbsdocno,'anmt530') RETURNING l_success
+                  IF l_success = FALSE THEN 
+                     LET g_nmbs_m.nmbsdocno = ''
+                     NEXT FIELD nmbsdocno
+                  END IF
+               END IF
+            END IF 
+            
+            
+
+
+]]>
+</point>
+  <point name="input.a.nmbsld" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[            CALL anmt530_01_nmbsld_desc(g_nmbs_m.nmbsld)
+            IF NOT cl_null(g_nmbs_m.nmbsld) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_nmbs_m.nmbsld
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_glaald_1") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_nmbs_m.nmbsld = ''
+                  CALL anmt530_01_nmbsld_desc(g_nmbs_m.nmbsld)
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+ ]]>
+</point>
+  <point name="input.action" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[         ]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG = TRUE 
+   ELSE
+      CALL anmt530_01_ins_nmbs()
+   END IF]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[            IF cl_null(p_b) THEN
+               LET g_nmbs_m.a = 'Y'
+               LET g_nmbs_m.b = 'N'
+            ELSE
+               LET g_nmbs_m.a = 'N'
+               LET g_nmbs_m.b = p_b
+            END IF
+            IF cl_null(p_c) THEN
+               LET g_nmbs_m.c = 'N'
+            ELSE
+               LET g_nmbs_m.c = p_c
+            END IF
+            LET g_nmbs_m.nmbscomp = l_isaecomp
+            CALL anmt530_01_nmbscomp_desc()]]>
+</point>
+  <point name="input.c.nmbscomp" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbs_m.nmbscomp             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooef001_2()                                #呼叫開窗
+
+            LET g_nmbs_m.nmbscomp = g_qryparam.return1              
+            CALL anmt530_01_nmbscomp_desc()
+            DISPLAY g_nmbs_m.nmbscomp TO nmbscomp              #
+
+            NEXT FIELD nmbscomp                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.nmbsdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbs_m.nmbsdocno             #給予default值
+            LET l_ooef004 = ''
+            SELECT ooef004
+              INTO l_ooef004
+              FROM ooef_t
+             WHERE ooefent = g_enterprise
+               AND ooef001 = g_nmbs_m.nmbscomp
+            LET g_qryparam.where = " ooba001 = '",l_ooef004,"' AND oobx003 = 'anmt530'"
+            #給予arg
+
+            
+            CALL q_ooba002()                                #呼叫開窗
+
+            LET g_nmbs_m.nmbsdocno = g_qryparam.return1              
+
+            DISPLAY g_nmbs_m.nmbsdocno TO nmbsdocno              #
+
+            NEXT FIELD nmbsdocno                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.nmbsld" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbs_m.nmbsld             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_nmbs_m.nmbsld = g_qryparam.return1              
+            CALL anmt530_01_nmbsld_desc(g_nmbs_m.nmbsld)
+            DISPLAY g_nmbs_m.nmbsld TO nmbsld              #
+
+            NEXT FIELD nmbsld                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE l_ooef004       LIKE ooef_t.ooef004
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_lsaeld        LIKE glaa_t.glaald
+   DEFINE l_isaecomp      LIKE isae_t.isaecomp
+   DEFINE l_errno         LIKE type_t.num5
+   DEFINE p_nmbscomp      LIKE nmbs_t.nmbscomp
+   DEFINE p_b             LIKE type_t.chr1
+   DEFINE p_c             LIKE type_t.chr1
+   DEFINE p_nmbsld        LIKE nmbs_t.nmbsld
+   DEFINE p_nmbsdocno     LIKE nmbs_t.nmbsdocno
+   DEFINE p_nmcqdocno     LIKE nmcq_t.nmcqdocno]]>
+</point>
+  <point name="input.g.a" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF g_nmbs_m.a = 'Y' THEN 
+               LET g_nmbs_m.b = 'N'
+               DISPLAY '' TO nmcqdocno
+            END IF]]>
+</point>
+  <point name="input.g.b" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF g_nmbs_m.b = 'Y' THEN 
+               LET g_nmbs_m.a = 'N'
+               DISPLAY '' TO nmcqdocno
+            END IF]]>
+</point>
+  <point name="input.g.c" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF g_nmbs_m.c = 'Y' THEN 
+               CALL cl_set_comp_entry("nmbsld",FALSE)
+               LET g_nmbs_m.nmbsld = ''
+               LET g_nmbs_m.nmbsld_desc = ''
+               DISPLAY g_nmbs_m.nmbsld_desc TO nmbsld_desc
+            ELSE
+               CALL cl_set_comp_entry("nmbsld",TRUE)
+            END IF]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[   p_nmbscomp,p_b,p_c,p_nmbsld,p_nmbsdocno,p_nmcqdocno]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[      CONSTRUCT BY NAME g_wc1 ON nmcqdocdt
+         BEFORE CONSTRUCT
+
+      END CONSTRUCT
+      
+      CONSTRUCT BY NAME g_wc2 ON nmcqdocno
+         BEFORE CONSTRUCT
+         
+         ON ACTION controlp INFIELD nmcqdocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            IF g_nmbs_m.a = 'Y' THEN 
+               LET g_qryparam.where = " nmba003 = 'anmt510' AND nmbacomp = '",g_nmbs_m.nmbscomp,"'",
+                                      "   AND nmbb042 IN (",
+                                      "SELECT gzcb002 FROM gzcb_t ",
+                                      " WHERE gzcb001 = '8714' ",
+                                      "   AND gzcb005 = 'Y' )"               
+               CALL q_nmbadocno()                           #呼叫開窗
+            END IF
+            
+            IF g_nmbs_m.b = 'Y' THEN 
+               LET g_qryparam.where = " nmcqcomp = '",g_nmbs_m.nmbscomp,"'",
+                                      " AND (nmcqstus = 'Y' OR nmcqstus = 'S') ",
+                                      "   AND nmcq001 IN (",
+                                      "SELECT gzcb002 FROM gzcb_t ",
+                                      " WHERE gzcb001 = '8714' ",
+                                      "   AND gzcb005 = 'Y' )"
+               CALL q_nmcqdocno()                           #呼叫開窗
+            END IF
+            
+            DISPLAY g_qryparam.return1 TO nmcqdocno      #顯示到畫面上
+            NEXT FIELD nmcqdocno                         #返回原欄位
+ 
+      END CONSTRUCT
+     
+      BEFORE DIALOG
+         IF NOT cl_null(p_nmcqdocno) THEN
+            CALL cl_set_comp_entry('nmcqdocno',FALSE)
+            DISPLAY p_nmcqdocno TO nmcqdocno
+            LET g_wc2=" nmcqdocno='",p_nmcqdocno,"'"
+         END IF]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[   LET g_errshow = 1
+   IF cl_null(p_nmbscomp) THEN
+      CALL s_fin_ld_carry('',g_user) RETURNING l_success,l_lsaeld,l_isaecomp,l_errno
+   ELSE
+      LET l_isaecomp=p_nmbscomp
+      IF NOT cl_null(p_nmbsld) THEN
+         LET l_lsaeld=p_nmbsld
+         CALL anmt530_01_nmbsld_desc(l_lsaeld)
+         CALL cl_set_comp_entry('nmbsld',FALSE)
+      END IF
+   END IF
+#   DISPLAY l_isaecomp,l_lsaeld TO nmbscomp,nmbsld
+   IF NOT cl_null(p_nmbsdocno) THEN
+      LET g_nmbs_m.nmbsdocno=p_nmbsdocno
+#      DISPLAY g_nmbs_m.nmbsdocno TO nmbsdocno
+   END IF
+   ]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.nmbscomp" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.nmbscomp" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.a" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.b" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.c" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.nmbsld" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.nmbsld" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.nmbsdocno" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.nmbsdocno" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.a" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.b" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.c" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="anmt530_01.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000068
+#+ 
+#+ Filename...: anmt530_01
+#+ Description: ...
+#+ Creator....: 02114(2014/07/02)
+#+ Modifier...: 02114(2014/07/07)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="anmt530_01.global" ver="5" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_nmbs_m        RECORD
+       nmbscomp LIKE nmbs_t.nmbscomp, 
+   nmbscomp_desc LIKE type_t.chr80, 
+   a LIKE type_t.chr80, 
+   b LIKE type_t.chr80, 
+   c LIKE type_t.chr80, 
+   nmbsld LIKE nmbs_t.nmbsld, 
+   nmbsld_desc LIKE type_t.chr80, 
+   nmbsdocno LIKE nmbs_t.nmbsdocno
+       END RECORD
+DEFINE g_nmbs_m        type_g_nmbs_m
+ 
+   DEFINE g_nmbsld_t LIKE nmbs_t.nmbsld
+DEFINE g_nmbsdocno_t LIKE nmbs_t.nmbsdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="anmt530_01.input" ver="4" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION anmt530_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_anmt530_01 WITH FORM cl_ap_formpath("anm","anmt530_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_nmbs_m.nmbscomp,g_nmbs_m.a,g_nmbs_m.b,g_nmbs_m.c,g_nmbs_m.nmbsld,g_nmbs_m.nmbsdocno  
+          ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD nmbscomp
+            
+            #add-point:AFTER FIELD nmbscomp
+            {<point name="input.a.nmbscomp" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmbscomp
+            #add-point:BEFORE FIELD nmbscomp
+            {<point name="input.b.nmbscomp" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmbscomp
+            #add-point:ON CHANGE nmbscomp
+            {<point name="input.g.nmbscomp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD a
+            #add-point:BEFORE FIELD a
+            {<point name="input.b.a" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD a
+            
+            #add-point:AFTER FIELD a
+            {<point name="input.a.a" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE a
+            #add-point:ON CHANGE a
+            {<point name="input.g.a" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b
+            #add-point:BEFORE FIELD b
+            {<point name="input.b.b" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b
+            
+            #add-point:AFTER FIELD b
+            {<point name="input.a.b" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE b
+            #add-point:ON CHANGE b
+            {<point name="input.g.b" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD c
+            #add-point:BEFORE FIELD c
+            {<point name="input.b.c" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD c
+            
+            #add-point:AFTER FIELD c
+            {<point name="input.a.c" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE c
+            #add-point:ON CHANGE c
+            {<point name="input.g.c" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmbsld
+            
+            #add-point:AFTER FIELD nmbsld
+            {<point name="input.a.nmbsld" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmbsld
+            #add-point:BEFORE FIELD nmbsld
+            {<point name="input.b.nmbsld" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmbsld
+            #add-point:ON CHANGE nmbsld
+            {<point name="input.g.nmbsld" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmbsdocno
+            
+            #add-point:AFTER FIELD nmbsdocno
+            {<point name="input.a.nmbsdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmbsdocno
+            #add-point:BEFORE FIELD nmbsdocno
+            {<point name="input.b.nmbsdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmbsdocno
+            #add-point:ON CHANGE nmbsdocno
+            {<point name="input.g.nmbsdocno" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.nmbscomp
+         ON ACTION controlp INFIELD nmbscomp
+            #add-point:ON ACTION controlp INFIELD nmbscomp
+            {<point name="input.c.nmbscomp" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.a
+         ON ACTION controlp INFIELD a
+            #add-point:ON ACTION controlp INFIELD a
+            {<point name="input.c.a" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.b
+         ON ACTION controlp INFIELD b
+            #add-point:ON ACTION controlp INFIELD b
+            {<point name="input.c.b" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.c
+         ON ACTION controlp INFIELD c
+            #add-point:ON ACTION controlp INFIELD c
+            {<point name="input.c.c" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.nmbsld
+         ON ACTION controlp INFIELD nmbsld
+            #add-point:ON ACTION controlp INFIELD nmbsld
+            {<point name="input.c.nmbsld" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.nmbsdocno
+         ON ACTION controlp INFIELD nmbsdocno
+            #add-point:ON ACTION controlp INFIELD nmbsdocno
+            {<point name="input.c.nmbsdocno" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_anmt530_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="anmt530_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="anmt530_01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

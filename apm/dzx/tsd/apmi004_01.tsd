@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmi004_01" std_prog="apmi004_01" erpver="1.0" ver="1" module="APM" booking="Y" class="i" template="F001_00" normal_style="Y" env="s" zone="t10dev">
+  <toolbar items="insert,modify,delete,reproduce,output,query"/>
+  <table ver="1">
+    <tbl name="pmak_t" parent="" main="Y" src="s" status=""/>
+  </table>
+  <all src="s" ver="1" cite_std="" cite_ver="" status="">
+    <![CDATA[程式說明及目的： 提供訂單/採購單再做庶務性交易時，維護一次性交易對象基本資料
+標準作業功能取消：新增/修改/相關文件/說明/離開
+狀態功能：無
+作業類型：基本資料維護作業
+輸入模式：單檔無搭配查詢方案模式F001_sc
+作業資料來源(Master)：
+ 資料來源表：pmak_t(資料檔)
+
+補充說明：1.此作業單純只能做新增、修改
+.執行此程式需傳入四個參數，傳入參數p_type ='1'時,當四個參數有一個維為ULL時則不可以執行
+  1-1.p_type(交易對象類型):'1:一次性交易對象'、'2:內部員工'
+  1-2.p_pmak001(識別碼):
+  1-3.p_pmak002(交易對象編號):
+  1-4.p_pmak006(來源單號):
+
+2.此子程式只允許新增or修改，其餘標準功能均不能執行
+              
+3.依據傳入的參數p_pmak001(識別碼)的值，從[T:一次性交易對象資料檔]抓取出對應的資料顯示在畫面上，
+  並直接進入修改狀態。
+
+4.若傳入的參數p_pmak001(識別碼)的值不存在從[T:一次性交易對象資料檔]時，則直接進入新增狀態，
+  新增時部分欄位的預設值如下:
+   4-1.若傳入參數p_type ='1'時，欄位預設值如下 
+       [C:交易對象識別碼] = 呼叫應用元件取得識別碼
+       [C:交易對象編號]   = p_pmak002
+       [C:來源單號]       = p_pmak006
+       [C:建檔日期]       = g_today
+   4-2.若傳入參數p_type ='2'時，欄位預設值如下 
+       [C:交易對象編號]   = p_pmak002
+       [C:來源單號]       = 
+       [C:建檔日期]       = g_today
+
+
+5.若傳入參數p_type='1'時，則畫面上[C:交易對象識別碼]欄位必須隱藏不可維護，反之若p_type='2'時則
+  [C:交易對象識別碼]需顯示在畫面上供維護
+
+6.結束子程式時需回傳pmak001的值]]>
+  </all>
+  <field column="pmak001" name="pmak_t.pmak001" ver="1" table="pmak_t" attribute="C819" type="varchar2(20)" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[當傳入類型為 '1' 識別碼時，欄位隱藏  
+當傳入類型為 '2' 內部員工時，欄位說明顯示為員工編號
+    校驗:1.輸入值須存在[T:員工檔].[C:員工編號]且為有效資料
+     帶值:1.到[T:員工檔]抓取[C:聯絡對象識別碼],再以[C:聯絡對象識別碼]到[T:聯絡對象檔]中抓取[C:全名]值
+            顯示在pmak003欄位上
+          2.抓取[T:員工檔]設定的主要聯絡地址資料顯示在pmak005欄位上
+          3.到[T:員工檔]抓取[C:銀行帳戶]的值顯示在pak009欄位上]]>
+  </field>
+  <field column="pmak003" name="pmak_t.pmak003" ver="1" table="pmak_t" attribute="C817" type="varchar2(500)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmak004" name="pmak_t.pmak004" ver="1" table="pmak_t" attribute="C011" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmak005" name="pmak_t.pmak005" ver="1" table="pmak_t" attribute="C152" type="varchar2(4000)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmak007" name="pmak_t.pmak007" ver="1" table="pmak_t" attribute="C105" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmak008" name="pmak_t.pmak008" ver="1" table="pmak_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[預設值:g_today]]>
+  </field>
+  <field column="pmak009" name="pmak_t.pmak009" ver="1" table="pmak_t" attribute="C504" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code/>
+  <act src="s" id="modify" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" comment="" lstr=""/>
+    <sfield name="lbl_pmak001" text="交易對象識別碼" comment="" lstr=""/>
+    <sfield name="lbl_pmak001" text="交易對象識別碼" comment="" lstr=""/>
+    <sfield name="lbl_pmak003" text="全名" comment="" lstr=""/>
+    <sfield name="lbl_pmak003" text="全名" comment="" lstr=""/>
+    <sfield name="lbl_pmak004" text="稅籍編號" comment="" lstr=""/>
+    <sfield name="lbl_pmak009" text="銀行帳戶" comment="" lstr=""/>
+    <sfield name="lbl_pmak009" text="銀行帳戶" comment="" lstr=""/>
+    <sfield name="lbl_pmak005" text="聯絡地址" comment="" lstr=""/>
+    <sfield name="lbl_pmak007" text="簡要說明" comment="" lstr=""/>
+    <sfield name="lbl_pmak008" text="建檔日期" comment="" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" comment="" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1"/>
+</spec>

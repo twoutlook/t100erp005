@@ -1,0 +1,201 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammq300" module="amm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02296" crtdt="2014-02-14 09:56:00" modid="06814" moddt="2016-09-12 11:27:57" sdver="0010" cusdt="1900-01-01 00:00:00" cusver="0000" page="4" tabver="10001" description="會員資料查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmaf001,mmaf002,mmaf008,mmaf009,mmaf003,mmaf004,mmaf015,mmaf013,mmaf014,mmaf020(chr10),mmaf020_desc(chr80),mmaf021(chr10),mmaf021_desc(chr80),mmaf022(chr10),mmaf016,mmaf016_desc(chr80),mmaf017,mmaf017_desc(chr80),mmaf023,mmaf010,mmaf024,mmaf025,mmaf026,mmaf027,mmaf028,mmaf011,mmaf012,mmafunit,mmafunit_desc(chr80),mmaf019,mmaf019_desc(chr80),mmaf018,mmaf018_desc(chr80),mmafud001,mmafud002,mmafud003,mmafud004,mmafud005,mmafud011,mmafud012,mmafud013,mmafud014,mmafud015,mmafud021,mmafud022,mmafud023,mmafud024,mmafud025"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmag002,mmag002_desc(chr500),mmag003,mmag004,mmag004_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mmah002,mmah002_desc(chr500),mmah003,mmah004,mmah005,mmah006"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="mmai002,mmai002_desc(chr500)"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="mmaj002,mmaj002_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="open_query"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammq300" method="dialog">
+    <section id="input">
+      <input id="head" field="mmaf001,mmaf002,mmaf008,mmaf009,mmaf003,mmaf004,mmaf015,mmaf013,mmaf014,mmaf020,mmaf021,mmaf022,mmaf016,mmaf017,mmaf023,mmaf010,mmaf011,mmaf012,mmafunit,mmaf019,mmaf018,mmafud001,mmafud002,mmafud003,mmafud004,mmafud005,mmafud011,mmafud012,mmafud013,mmafud014,mmafud015,mmafud021,mmafud022,mmafud023,mmafud024,mmafud025"/>
+      <input id="body" page="1" field="mmag002,mmag003,mmag004" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="mmah002,mmah003,mmah004,mmah005,mmah006" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="mmai002" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="4" field="mmaj002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmaf001,mmaf002,mmaf008,mmaf009,mmaf003,mmaf004,mmaf015,mmaf013,mmaf014,mmaf020,mmaf021,mmaf022,mmaf016,mmaf017,mmaf023,mmaf010,mmaf024,mmaf025,mmaf026,mmaf027,mmaf028,mmaf011,mmaf012,mmafunit,mmaf019,mmaf018,mmafud001,mmafud002,mmafud003,mmafud004,mmafud005,mmafud011,mmafud012,mmafud013,mmafud014,mmafud015,mmafud021,mmafud022,mmafud023,mmafud024,mmafud025"/>
+      <construct id="body" page="1" field="mmag002,mmag003,mmag004"/>
+      <construct id="body" page="2" field="mmah002,mmah003,mmah004,mmah005,mmah006"/>
+      <construct id="body" page="3" field="mmai002"/>
+      <construct id="body" page="4" field="mmaj002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mmaf001"/>
+      <set id="head" type="no_entry" field="mmaf001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmaf001"/>
+      <column id="mmaf002"/>
+      <column id="mmaf008"/>
+      <column id="mmaf009"/>
+      <column id="mmaf003" def_scc="6501"/>
+      <column id="mmaf004">
+        <controlp form="q_mmaf004" state="c"/>
+      </column>
+      <column id="mmaf015"/>
+      <column id="mmaf013"/>
+      <column id="mmaf014"/>
+      <column id="mmaf020">
+        <after>
+          <reference field="mmaf020_desc" ref_field="mmaf020" map_field="mmaf020" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2111&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaf020_desc"/>
+      <column id="mmaf021">
+        <after>
+          <reference field="mmaf021_desc" ref_field="mmaf021" map_field="mmaf021" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2112&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaf021_desc"/>
+      <column id="mmaf022"/>
+      <column id="mmaf016">
+        <after>
+          <reference field="mmaf016_desc" ref_field="mmaf_t.mmaf016" map_field="mmaf016" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="mmaf016_desc"/>
+      <column id="mmaf017">
+        <after>
+          <reference field="mmaf017_desc" ref_field="mmaf_t.mmaf017" map_field="mmaf017" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="mmaf017_desc"/>
+      <column id="mmaf023" type="S" default="0" def_scc="6896"/>
+      <column id="mmaf010"/>
+      <column id="mmaf024"/>
+      <column id="mmaf025"/>
+      <column id="mmaf026"/>
+      <column id="mmaf027"/>
+      <column id="mmaf028"/>
+      <column id="mmaf011"/>
+      <column id="mmaf012"/>
+      <column id="mmafunit">
+        <after>
+          <reference field="mmafunit_desc" ref_field="mmaf_t.mmafunit" map_field="mmafunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmafunit_desc"/>
+      <column id="mmaf019">
+        <after>
+          <reference field="mmaf019_desc" ref_field="mmaf_t.mmaf019" map_field="mmaf019" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmaf019_desc"/>
+      <column id="mmaf018">
+        <after>
+          <reference field="mmaf018_desc" ref_field="mmaf_t.mmaf018" map_field="mmaf018" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmaf018_desc"/>
+      <column id="mmafud001"/>
+      <column id="mmafud002"/>
+      <column id="mmafud003"/>
+      <column id="mmafud004"/>
+      <column id="mmafud005"/>
+      <column id="mmafud011" type="S" default="0"/>
+      <column id="mmafud012" type="S" default="0"/>
+      <column id="mmafud013" type="S" default="0"/>
+      <column id="mmafud014" type="S" default="0"/>
+      <column id="mmafud015" type="S" default="0"/>
+      <column id="mmafud021"/>
+      <column id="mmafud022"/>
+      <column id="mmafud023"/>
+      <column id="mmafud024"/>
+      <column id="mmafud025"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmag002">
+        <after>
+          <reference field="mmag002_desc" ref_field="mmag002" map_field="mmag002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2049&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmag002_desc"/>
+      <column id="mmag003"/>
+      <column id="mmag004">
+        <after>
+          <reference field="mmag004_desc" ref_field="mmag004" map_field="mmag004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2016&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_16" state="c"/>
+      </column>
+      <column id="mmag004_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mmah002">
+        <after>
+          <reference field="mmah002_desc" ref_field="mmah002" map_field="mmah002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2050&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmah002_desc"/>
+      <column id="mmah003"/>
+      <column id="mmah004"/>
+      <column id="mmah005"/>
+      <column id="mmah006"/>
+    </init>
+    <init id="body" page="3">
+      <column id="mmai002">
+        <after>
+          <reference field="mmai002_desc" ref_field="mmai002" map_field="mmai002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2051&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmai002_desc"/>
+    </init>
+    <init id="body" page="4">
+      <column id="mmaj002">
+        <after>
+          <reference field="mmaj002_desc" ref_field="mmaj002" map_field="mmaj002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2057&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaj002_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmaf_t" pk="mmaf001">
+      <sql id="forupd_sql" type="sql" query="SELECT mmaf001,mmaf002,mmaf008,mmaf009,mmaf003,mmaf004,mmaf015,mmaf013,mmaf014,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,mmaf016,&apos;&apos;,mmaf017,&apos;&apos;,mmaf023,mmaf010,mmaf024,mmaf025,mmaf026,mmaf027,mmaf028,mmaf011,mmaf012,mmafunit,&apos;&apos;,mmaf019,&apos;&apos;,mmaf018,&apos;&apos;,mmafud001,mmafud002,mmafud003,mmafud004,mmafud005,mmafud011,mmafud012,mmafud013,mmafud014,mmafud015,mmafud021,mmafud022,mmafud023,mmafud024,mmafud025 FROM mmaf_t WHERE mmafent= ? AND mmaf001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mmaf001,mmaf002,mmaf008,mmaf009,mmaf003,mmaf004,mmaf015,mmaf013,mmaf014,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,mmaf016,&apos;&apos;,mmaf017,&apos;&apos;,mmaf023,mmaf010,mmaf024,mmaf025,mmaf026,mmaf027,mmaf028,mmaf011,mmaf012,mmafunit,&apos;&apos;,mmaf019,&apos;&apos;,mmaf018,&apos;&apos;,mmafud001,mmafud002,mmafud003,mmafud004,mmafud005,mmafud011,mmafud012,mmafud013,mmafud014,mmafud015,mmafud021,mmafud022,mmafud023,mmafud024,mmafud025 FROM mmaf_t" order="mmaf001"/>
+    </head>
+    <body id="mmag_t" page="1" linked="" pk="mmag002,mmag003" fk="mmag001">
+      <sql id="forupd_sql_detail" query="SELECT mmag002,&apos;&apos;,mmag003,mmag004,&apos;&apos; FROM mmag_t WHERE mmagent=? AND mmag001=? AND mmag002=? AND mmag003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmag002,&apos;&apos;,mmag003,mmag004,&apos;&apos; FROM mmag_t WHERE mmagent=? AND mmag001=?"/>
+    </body>
+    <body id="mmah_t" page="2" linked="" pk="mmah002" fk="mmah001">
+      <sql id="forupd_sql_detail" query="SELECT mmah002,&apos;&apos;,mmah003,mmah004,mmah005,mmah006 FROM mmah_t WHERE mmahent=? AND mmah001=? AND mmah002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmah002,&apos;&apos;,mmah003,mmah004,mmah005,mmah006 FROM mmah_t WHERE mmahent=? AND mmah001=?"/>
+    </body>
+    <body id="mmai_t" page="3" linked="" pk="mmai002" fk="mmai001">
+      <sql id="forupd_sql_detail" query="SELECT mmai002,&apos;&apos; FROM mmai_t WHERE mmaient=? AND mmai001=? AND mmai002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmai002,&apos;&apos; FROM mmai_t WHERE mmaient=? AND mmai001=?"/>
+    </body>
+    <body id="mmaj_t" page="4" linked="" pk="mmaj002" fk="mmaj001">
+      <sql id="forupd_sql_detail" query="SELECT mmaj002,&apos;&apos; FROM mmaj_t WHERE mmajent=? AND mmaj001=? AND mmaj002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmaj002,&apos;&apos; FROM mmaj_t WHERE mmajent=? AND mmaj001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

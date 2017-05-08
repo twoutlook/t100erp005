@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq803" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="05795" crtdt="2015-03-30 09:46:20" modid="05384" moddt="2016-11-21 14:12:31" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="存貨LCM評價查詢">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xccccomp,xccccomp_desc(chr80),b_date_str(chr500),b_date_end(chr500),xcccld,xcccld_desc(chr80),xccc001,xccc001_desc(chr80),xccc003,xccc003_desc(chr80),xccc002,xccc002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imaa003(chr10),imaa003_desc(chr500),xccc006,xccc006_desc(chr500),xccc006_desc_1(chr500),xccc007,xccc007_desc(chr500),imaa104(chr10),imaa104_desc(chr500),xccc901,xccc902,xccc280,rebcost(chr500),xcff005(num20_6),upcost(chr500),downcost(chr500),xcff006(num20_6),price(chr500),tot(chr500),xrcb008(chr20),xrcb009(num10),xrcadocdt(dat),lcm(chr500),lcm2(chr500),xccc008,xccc004,xccc005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq803" method="dialog">
+    <section id="input">
+      <input id="head" field="xccccomp,b_date_str,b_date_end,xcccld,xccc001,xccc003,xccc002"/>
+      <input id="body" page="1" field="imaa003,rebcost,lcm2,xccc004,xccc005" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xccccomp,xcccld,xccc001,xccc003,xccc002"/>
+      <construct id="body" page="1" field="xccc006,xccc007,xccc901,xccc902,xccc280,rebcost,lcm2,xccc004,xccc005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcccld,xccc001,xccc002,xccc003"/>
+      <set id="head" type="no_entry" field="xcccld,xccc001,xccc002,xccc003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xccccomp">
+        <after>
+          <reference field="xccccomp_desc" ref_field="xccc_t.xccccomp" map_field="xccccomp,xcccent" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccccomp_desc"/>
+      <column id="b_date_str"/>
+      <column id="b_date_end"/>
+      <column id="xcccld">
+        <after>
+          <reference field="xcccld_desc" ref_field="xccc_t.xcccld" map_field="xcccent,xcccld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcccld_desc"/>
+      <column id="xccc001">
+        <after>
+          <reference field="xccc001_desc" ref_field="xccc_t.xccc001" map_field="xccc001" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccc001_desc"/>
+      <column id="xccc003">
+        <after>
+          <reference field="xccc003_desc" ref_field="xccc_t.xccc003" map_field="xcccent,xccc003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccc003_desc"/>
+      <column id="xccc002">
+        <after>
+          <reference field="xccc002_desc" ref_field="xccc_t.xccc002" map_field="xccc002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccc002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="imaa003">
+        <after>
+          <reference field="imaa003_desc" ref_field="imaa003" map_field="imaa003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imck001" state="c"/>
+      </column>
+      <column id="imaa003_desc"/>
+      <column id="xccc006">
+        <after>
+          <reference field="xccc006_desc" ref_field="xccc_t.xccc006" map_field="xccc006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccc006_desc"/>
+      <column id="xccc006_desc_1"/>
+      <column id="xccc007">
+        <after/>
+      </column>
+      <column id="xccc007_desc"/>
+      <column id="imaa104">
+        <after>
+          <reference field="imaa104_desc" ref_field="imaa104" map_field="imaa104" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imaa104_desc"/>
+      <column id="xccc901" type="S" default="0"/>
+      <column id="xccc902" type="S" default="0"/>
+      <column id="xccc280" type="S" default="0"/>
+      <column id="rebcost"/>
+      <column id="xcff005" type="S" default="0"/>
+      <column id="upcost"/>
+      <column id="downcost"/>
+      <column id="xcff006" type="S" default="0"/>
+      <column id="price"/>
+      <column id="tot"/>
+      <column id="xrcb008"/>
+      <column id="xrcb009"/>
+      <column id="xrcadocdt"/>
+      <column id="lcm"/>
+      <column id="lcm2"/>
+      <column id="xccc008"/>
+      <column id="xccc004"/>
+      <column id="xccc005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xccc_t" pk="xcccld,xccc001,xccc002,xccc003">
+      <sql id="forupd_sql" type="sql" query="SELECT xccccomp,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcccld,&apos;&apos;,xccc001,&apos;&apos;,xccc003,&apos;&apos;,xccc002,&apos;&apos; FROM xccc_t WHERE xcccent= ? AND xcccld=? AND xccc001=? AND xccc002=? AND xccc003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xccccomp,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcccld,&apos;&apos;,xccc001,&apos;&apos;,xccc003,&apos;&apos;,xccc002,&apos;&apos; FROM xccc_t" order="xcccld,xccc001,xccc002,xccc003"/>
+    </head>
+    <body id="xccc_t" page="1" linked="" pk="xccc004,xccc005,xccc006,xccc007,xccc008" fk="xcccld,xccc001,xccc002,xccc003">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,xccc006,&apos;&apos;,&apos;&apos;,xccc007,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccc901,xccc902,xccc280,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccc008,xccc004,xccc005 FROM xccc_t WHERE xcccent=? AND xcccld=? AND xccc001=? AND xccc002=? AND xccc003=? AND xccc004=? AND xccc005=? AND xccc006=? AND xccc007=? AND xccc008=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,xccc006,&apos;&apos;,&apos;&apos;,xccc007,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccc901,xccc902,xccc280,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccc008,xccc004,xccc005 FROM xccc_t WHERE xcccent= ? AND xcccld=? AND xccc001=? AND xccc002=? AND xccc003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

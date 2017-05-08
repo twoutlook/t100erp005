@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcp200" module="axc" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="00768" crtdt="2015-09-16 17:22:19" modid="02295" moddt="2016-06-13 17:17:39" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="發出商品整批生產作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmaa001(chr500),imaa001(chr500),glaald(chr500),glaald_desc(chr80),yy(num5),pp(num5),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcp200" method="dialog">
+    <section id="input">
+      <input id="head" field="glaald,yy,pp"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmaa001,imaa001"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmaa001"/>
+      <column id="imaa001"/>
+      <column id="glaald">
+        <after>
+          <reference field="glaald_desc" ref_field="glaald" map_field="xcbkent,xcbkld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glaald_desc"/>
+      <column id="yy"/>
+      <column id="pp"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

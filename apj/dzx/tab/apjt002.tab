@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apjt002" module="apj" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02295" crtdt="2016-04-28 10:59:31" modid="02295" moddt="2016-04-28 18:28:26" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="專案成本調整作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pjcbcomp,pjcbcomp_desc(chr80),pjcbld,pjcbld_desc(chr80),pjcb004,pjcb005,pjcb003,pjcb003_desc(chr80),pjcb001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pjcb002,pjcb002_desc(chr500),pjcb006,pjcb007,pjcb008,pjcb009,pjcb010,pjcb011,pjcb012,pjcb013"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apj" filename="apjt002" method="dialog">
+    <section id="input">
+      <input id="head" field="pjcbcomp,pjcbld,pjcb004,pjcb005,pjcb003,pjcb001"/>
+      <input id="body" page="1" field="pjcb002,pjcb006,pjcb007,pjcb008,pjcb009,pjcb010,pjcb011,pjcb012,pjcb013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pjcbcomp,pjcbld,pjcb004,pjcb005,pjcb003,pjcb001"/>
+      <construct id="body" page="1" field="pjcb002,pjcb006,pjcb007,pjcb008,pjcb009,pjcb010,pjcb011,pjcb012,pjcb013"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pjcbld,pjcb001,pjcb003,pjcb004,pjcb005"/>
+      <set id="head" type="no_entry" field="pjcbld,pjcb001,pjcb003,pjcb004,pjcb005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pjcbcomp">
+        <after>
+          <check chkid="v_glaald_5" id="isExist"/>
+          <reference field="pjcbcomp_desc" ref_field="pjcb_t.pjcbcomp" map_field="pjcbcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="pjcbcomp_desc"/>
+      <column id="pjcbld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="pjcbld_desc" ref_field="pjcb_t.pjcbld" map_field="pjcbld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaal001=? "/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="pjcbld_desc"/>
+      <column id="pjcb004"/>
+      <column id="pjcb005"/>
+      <column id="pjcb003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="pjcb003_desc" ref_field="pjcb_t.pjcb003" map_field="pjcb003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="pjcb003_desc"/>
+      <column id="pjcb001" type="S" default="1" def_scc="8914"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pjcb002">
+        <after>
+          <check chkid="v_pjba001" id="isExist"/>
+          <reference field="pjcb002_desc" ref_field="pjcb_t.pjcb002" map_field="pjcb002" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="pjcb002_desc"/>
+      <column id="pjcb006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjcb007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjcb008"/>
+      <column id="pjcb009" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjcb010" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjcb011" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjcb012" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjcb013" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="pjcb_t" pk="pjcbld,pjcb001,pjcb003,pjcb004,pjcb005">
+      <sql id="forupd_sql" type="sql" query="SELECT pjcbcomp,&apos;&apos;,pjcbld,&apos;&apos;,pjcb004,pjcb005,pjcb003,&apos;&apos;,pjcb001 FROM pjcb_t WHERE pjcbent= ? AND pjcbld=? AND pjcb001=? AND pjcb003=? AND pjcb004=? AND pjcb005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pjcbcomp,&apos;&apos;,pjcbld,&apos;&apos;,pjcb004,pjcb005,pjcb003,&apos;&apos;,pjcb001 FROM pjcb_t" order="pjcbld,pjcb001,pjcb003,pjcb004,pjcb005"/>
+    </head>
+    <body id="pjcb_t" page="1" linked="" pk="pjcb002" fk="pjcbld,pjcb001,pjcb003,pjcb004,pjcb005">
+      <sql id="forupd_sql_detail" query="SELECT pjcb002,&apos;&apos;,pjcb006,pjcb007,pjcb008,pjcb009,pjcb010,pjcb011,pjcb012,pjcb013 FROM pjcb_t WHERE pjcbent=? AND pjcbld=? AND pjcb001=? AND pjcb003=? AND pjcb004=? AND pjcb005=? AND pjcb002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pjcb002,&apos;&apos;,pjcb006,pjcb007,pjcb008,pjcb009,pjcb010,pjcb011,pjcb012,pjcb013 FROM pjcb_t WHERE pjcbent= ? AND pjcbld=? AND pjcb001=? AND pjcb003=? AND pjcb004=? AND pjcb005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

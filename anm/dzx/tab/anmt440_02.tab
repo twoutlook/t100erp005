@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt440_02" module="anm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01531" crtdt="2016-06-28 22:08:09" modid="01531" moddt="2016-08-11 10:57:17" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="設定票據訊息">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmckcomp,nmckcomp_desc(chr80),nmckdocno,nmck011,nmck024,nmck027,nmck025,nmck005,nmck005_desc(chr80),nmck006,nmck006_desc(chr80),nmck015"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt440_02" method="dialog">
+    <section id="input">
+      <input id="head" field="nmckcomp,nmckdocno,nmck011,nmck024,nmck027,nmck025,nmck005,nmck006,nmck015"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="nmckcomp">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="nmckcomp_desc" ref_field="nmck_t.nmckcomp" map_field="nmckent,nmckcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmckcomp_desc"/>
+      <column id="nmckdocno">
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_nmckdocno" state="c"/>
+      </column>
+      <column id="nmck011"/>
+      <column id="nmck024">
+        <controlp form="q_nmaf004" state="i"/>
+        <controlp form="q_nmaf004" state="c"/>
+      </column>
+      <column id="nmck027"/>
+      <column id="nmck025"/>
+      <column id="nmck005">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+          <reference field="nmck005_desc" ref_field="nmck_t.nmck005" map_field="nmckent,nmck005" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_10" state="i"/>
+      </column>
+      <column id="nmck005_desc"/>
+      <column id="nmck006">
+        <after>
+          <reference field="nmck006_desc" ref_field="nmck_t.nmck006" map_field="nmck006" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+      </column>
+      <column id="nmck006_desc"/>
+      <column id="nmck015"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmck_t" pk="nmckcomp,nmckdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmckcomp,&apos;&apos;,nmckdocno,nmck011,nmck024,nmck027,nmck025,nmck005,&apos;&apos;,nmck006,&apos;&apos;,nmck015 FROM nmck_t WHERE nmckent= ? AND nmckcomp=? AND nmckdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="nmckcomp,nmckdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

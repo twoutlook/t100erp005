@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammt450_01" module="amm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="04226" crtdt="2014-03-17 19:53:46" modid="02749" moddt="2016-10-04 10:35:56" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="兌換商品選擇維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),mmfeseq,mmfe011,mmfe001,mmfe001_desc(chr500),mmfe003,mmfe003_desc(chr500),mmfe006,mmfe004,mmfe005,mmfe007,mmfe010,mmfe010_desc(chr500),mmfe012,mmfe013,mmfe013_desc(chr500),mmcj011(chr500),mmcj012(chr500),mmcj007(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammt450_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,mmfe004,mmfe005,mmfe007,mmfe010" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="mmfeseq"/>
+      <column id="mmfe011"/>
+      <column id="mmfe001">
+        <after>
+          <reference field="mmfe001_desc" ref_field="mmfe_t.mmfe001" map_field="mmfe001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmfe001_desc"/>
+      <column id="mmfe003">
+        <after>
+          <reference field="mmfe003_desc" ref_field="mmfe003" map_field="mmfe003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2071&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmfe003_desc"/>
+      <column id="mmfe006">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmfe004"/>
+      <column id="mmfe005"/>
+      <column id="mmfe007">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmfe010">
+        <after>
+          <reference field="mmfe010_desc" ref_field="mmfe_t.mmfe010" map_field="mmfe010" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_6" state="i"/>
+      </column>
+      <column id="mmfe010_desc"/>
+      <column id="mmfe012" def_scc="6517"/>
+      <column id="mmfe013">
+        <after/>
+      </column>
+      <column id="mmfe013_desc"/>
+      <column id="mmcj011"/>
+      <column id="mmcj012" type="S" default="1"/>
+      <column id="mmcj007" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="mmfe_t" page="1" linked="" pk="mmfedocno,mmfeseq">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,mmfeseq,mmfe011,mmfe001,&apos;&apos;,mmfe003,&apos;&apos;,mmfe006,mmfe004,mmfe005,mmfe007,mmfe010,&apos;&apos;,mmfe012,mmfe013,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mmfe_t WHERE mmfeent=? AND mmfedocno=? AND mmfeseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,mmfeseq,mmfe011,mmfe001,&apos;&apos;,mmfe003,&apos;&apos;,mmfe006,mmfe004,mmfe005,mmfe007,mmfe010,&apos;&apos;,mmfe012,mmfe013,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mmfe_t WHERE mmfeent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

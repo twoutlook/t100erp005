@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmt500_06" std_prog="apmt500_06" erpver="1.0" ver="2" module="APM" type="S" booking="N" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="srac_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[當重覆性生產委外採購單自行新增單身時，先開啟此畫面輸入計畫來源資料]]>
+  </all>
+  <field cite_std="N" name="imaal003" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal004" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac001" ver="1" src="s" column="srac001" table="srac_t" attribute="" type="" req="Y" i_zoom="q_sraa001" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[需存在asri001，
+如果作業人員所屬的控制組在asri001只有對到一個，自動帶出
+輸入的計畫編號需受控制組控制]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac002" ver="1" src="s" column="srac002" table="srac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac004" ver="1" src="s" column="srac004" table="srac_t" attribute="" type="" req="Y" i_zoom="q_srab004" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.生產計畫+生產料號+BOM特性+特徵需存在單據日期的年月的asrt300內
+帶值:品名、規格
+         如果asrt300內只有一筆該料號資料，自動帶出BOM特性、特徵
+開窗條件：
+LET g_qryparam.where = " srab001 = '",g_srac_m.srac001,"' "
+]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac005" ver="1" src="s" column="srac005" table="srac_t" attribute="" type="" req="N" i_zoom="q_srab005_1" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:若asrt300內的生產料號只有一個BOM特性則自動帶出(可能會是一個空白)
+校驗:1.生產料號+BOM特性存在存同年月的asrt300內
+開窗條件：
+LET g_qryparam.where = " srab001 = '",g_srac_m.srac001,"' AND srab004 = '",g_srac_m.srac004,"' "]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac006" ver="1" src="s" column="srac006" table="srac_t" attribute="" type="" req="N" i_zoom="q_srab006_1" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:若asrt300內的生產料號只有一個產品特徵則自動帶出(可能會是一個空白)
+校驗:1.生產料號+BOM特性+產品特徵需存在存同年月的asrt300內
+開窗條件：
+LET g_qryparam.where = " srab001 = '",g_srac_m.srac001,"' AND srab004 = '",g_srac_m.srac004,"' AND srab005 = '",g_srac_m.srac005,"' "
+
+]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac007" ver="1" src="s" column="srac007" table="srac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac008" ver="1" src="s" column="srac008" table="srac_t" attribute="" type="" req="N" i_zoom="q_srac008" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[    預設值:如果生產計畫對應的製程資料只有一個作業自動帶出
+     校驗:1.如果計畫為不使用制程的計畫，則空白不允許輸入
+            2.如果是用製程的計畫，作業編號+製程序須存在計畫對應的製程資料內
+開窗條件：
+LET g_qryparam.where = " srac001 = '",g_srac_m.srac001,"' AND srac004 = '",g_srac_m.srac004,"' AND srac005 = '",g_srac_m.srac005,"' AND srac006 = '",g_srac_m.srac006,"' "
+]]>
+  </field>
+  <field cite_std="N" name="srac_t.srac009" ver="1" src="s" column="srac009" table="srac_t" attribute="" type="" req="N" i_zoom="q_srac008_2" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[     預設值:如果生產計畫對應的製序資料作業只有一個製程序自動帶出
+     校驗:1.如果計畫為不使用制程的計畫，則空白不允許輸入
+          2.如果是用製程的計畫，作業編號+製程序須存在計畫對應的製程資料內
+開窗條件：
+LET g_qryparam.where = " srac001 = '",g_srac_m.srac001,"' AND srac004 = '",g_srac_m.srac004,"' AND srac005 = '",g_srac_m.srac005,"' AND srac006 = '",g_srac_m.srac006,"' AND srac008 = '",g_srac_m.srac008,"' "
+
+]]>
+  </field>
+  <field cite_std="N" name="srac_t.sracsite" ver="1" src="s" column="sracsite" table="srac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="srac008_desc" src="s" depend_field="srac_t.srac008" correspon_key="&apos;221&apos;,srac008" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="imaal003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.srac009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="srac_t.sracsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_srac001" text="計畫編號" lstr=""/>
+    <sfield name="lbl_srac004_2" text="生產料號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_srac005" text="BOM特性" lstr=""/>
+    <sfield name="lbl_srac006" text="產品特徵" lstr=""/>
+    <sfield name="lbl_srac008" text="作業編號" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_srac009_2" text="作業序" lstr=""/>
+    <sfield name="lbl_srac002" text="製程編號" lstr=""/>
+    <sfield name="lbl_srac007" text="項次" lstr=""/>
+    <sfield name="lbl_sracsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

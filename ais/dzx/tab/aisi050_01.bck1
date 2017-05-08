@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisi050_01" module="ais" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="05016" crtdt="2014-06-17 11:39:11" modid="05016" moddt="2014-07-17 19:32:07" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="發票簿調撥">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isasstus,isascomp,isassite,isassite_desc(chr500),isas001,isas002,isas003,isas004,isas004_desc(chr500),isas005,isas006,isas007,isas008,isas009,isas010,isas011,isas011_desc(chr500),isas012,isas013,isas014"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisi050_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isasstus,isascomp,isas004_desc,isas010,isas011,isas012,isas014" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isasstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="isascomp"/>
+      <column id="isassite">
+        <after>
+          <reference field="isassite_desc" ref_field="isas_t.isassite" map_field="isasent,isassite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="isassite_desc"/>
+      <column id="isas001"/>
+      <column id="isas002"/>
+      <column id="isas003"/>
+      <column id="isas004">
+        <after/>
+      </column>
+      <column id="isas004_desc"/>
+      <column id="isas005"/>
+      <column id="isas006"/>
+      <column id="isas007"/>
+      <column id="isas008"/>
+      <column id="isas009"/>
+      <column id="isas010"/>
+      <column id="isas011">
+        <after>
+          <reference field="isas011_desc" ref_field="isas_t.isas011" map_field="isasent,isas011" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_14" state="i"/>
+      </column>
+      <column id="isas011_desc"/>
+      <column id="isas012"/>
+      <column id="isas013"/>
+      <column id="isas014"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isas_t" page="1" linked="" pk="isascomp,isassite,isas001,isas002,isas003,isas011,isas014">
+      <sql id="forupd_sql_detail" query="SELECT isasstus,isascomp,isassite,&apos;&apos;,isas001,isas002,isas003,isas004,&apos;&apos;,isas005,isas006,isas007,isas008,isas009,isas010,isas011,&apos;&apos;,isas012,isas013,isas014 FROM isas_t WHERE isasent=? AND isascomp=? AND isas001=? AND isas002=? AND isas003=? AND isas011=? AND isas014=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isasstus,isascomp,isassite,&apos;&apos;,isas001,isas002,isas003,isas004,&apos;&apos;,isas005,isas006,isas007,isas008,isas009,isas010,isas011,&apos;&apos;,isas012,isas013,isas014 FROM isas_t WHERE isasent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

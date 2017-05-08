@@ -1,0 +1,210 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmi121" module="apm" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02294" crtdt="2013-11-05 15:26:05" modid="02295" moddt="2015-05-19 17:53:33" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="供應商料件預設條件維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmap001,pmaal004,pmap002,oohal003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmapstus,pmap003,pmap003_desc(chr500),imaal004(chr500),pmap004,pmap004_desc(chr500),pmap005,pmap005_desc(chr500),pmap006,pmap006_desc(chr500),pmap007,pmap007_desc(chr500),pmap008,pmap008_desc(chr500),pmap009,pmap009_desc(chr500),pmap010,pmap010_desc(chr500),pmap011,pmap011_desc(chr500),pmap012,pmap012_desc(chr500),pmap013,pmap014,pmap014_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmap003,pmap004,pmapownid,pmapownid_desc(chr500),pmapowndp,pmapowndp_desc(chr500),pmapcrtid,pmapcrtid_desc(chr500),pmapcrtdp,pmapcrtdp_desc(chr500),pmapcrtdt,pmapmodid,pmapmodid_desc(chr500),pmapmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmi121" method="dialog">
+    <section id="input">
+      <input id="head" field="pmap001,pmap002"/>
+      <input id="body" page="1" field="pmapstus,pmap003,pmap004,pmap005,pmap006,pmap007,pmap008,pmap009,pmap010,pmap011,pmap012,pmap012_desc,pmap013,pmap014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmap001,pmap002"/>
+      <construct id="body" page="1" field="pmapstus,pmap003,pmap004,pmap005,pmap006,pmap007,pmap008,pmap009,pmap010,pmap011,pmap012,pmap012_desc,pmap013,pmap014"/>
+      <construct id="body" page="2" field="pmapownid,pmapowndp,pmapcrtid,pmapcrtdp,pmapcrtdt,pmapmodid,pmapmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmap001,pmap002"/>
+      <set id="head" type="no_entry" field="pmap001,pmap002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmap001">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001_3" state="i"/>
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="pmaal004"/>
+      <column id="pmap002">
+        <after>
+          <check chkid="v_ooha001_4" id="isExist"/>
+        </after>
+        <controlp form="q_ooha001_4" state="i"/>
+        <controlp form="q_pmap002" state="c"/>
+      </column>
+      <column id="oohal003"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmapstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmap003">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="pmap003_desc" ref_field="pmap_t.pmap003" map_field="pmap003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="pmap003_desc"/>
+      <column id="imaal004"/>
+      <column id="pmap004">
+        <after/>
+      </column>
+      <column id="pmap004_desc"/>
+      <column id="pmap005">
+        <after>
+          <check chkid="v_imaf001_2" id="isExist"/>
+          <reference field="pmap005_desc" ref_field="pmap_t.pmap005" map_field="pmap005" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_5" state="i"/>
+        <controlp form="q_imaf001_5" state="c"/>
+      </column>
+      <column id="pmap005_desc"/>
+      <column id="pmap006">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="pmap006_desc" ref_field="pmap_t.pmap006" map_field="pmap006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmap006_desc"/>
+      <column id="pmap007">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="pmap007_desc" ref_field="pmap_t.pmap007" map_field="pmap007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmap007_desc"/>
+      <column id="pmap008">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="pmap008_desc" ref_field="pmap_t.pmap008" map_field="pmap008" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmap008_desc"/>
+      <column id="pmap009">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="pmap009_desc" ref_field="pmap_t.pmap009" map_field="pmap009" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="pmap009_desc"/>
+      <column id="pmap010">
+        <after>
+          <check chkid="v_inaa001_1" id="isExist"/>
+          <reference field="pmap010_desc" ref_field="pmap_t.pmap010" map_field="pmap010" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_6" state="i"/>
+        <controlp form="q_inaa001_6" state="c"/>
+      </column>
+      <column id="pmap010_desc"/>
+      <column id="pmap011">
+        <after>
+          <check chkid="v_inab002_1" id="isExist"/>
+          <reference field="pmap011_desc" ref_field="pmap010,pmap011" map_field="pmap010,pmap011" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_6" state="i"/>
+        <controlp form="q_inab002_6" state="c"/>
+      </column>
+      <column id="pmap011_desc"/>
+      <column id="pmap012">
+        <after/>
+        <controlp form="q_oofb019" state="i"/>
+        <controlp form="q_oofb019" state="c"/>
+      </column>
+      <column id="pmap012_desc"/>
+      <column id="pmap013">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmap014">
+        <after>
+          <check chkid="v_oocq002_263" id="isExist"/>
+          <reference field="pmap014_desc" ref_field="pmap014" map_field="pmap014" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;263&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmap014_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pmapownid">
+        <after>
+          <reference field="pmapownid_desc" ref_field="pmap_t.pmapownid" map_field="pmapownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmapownid_desc"/>
+      <column id="pmapowndp">
+        <after>
+          <reference field="pmapowndp_desc" ref_field="pmap_t.pmapowndp" map_field="pmapowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmapowndp_desc"/>
+      <column id="pmapcrtid">
+        <after>
+          <reference field="pmapcrtid_desc" ref_field="pmap_t.pmapcrtid" map_field="pmapcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmapcrtid_desc"/>
+      <column id="pmapcrtdp">
+        <after>
+          <reference field="pmapcrtdp_desc" ref_field="pmap_t.pmapcrtdp" map_field="pmapcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmapcrtdp_desc"/>
+      <column id="pmapcrtdt"/>
+      <column id="pmapmodid">
+        <after>
+          <reference field="pmapmodid_desc" ref_field="pmap_t.pmapmodid" map_field="pmapmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmapmodid_desc"/>
+      <column id="pmapmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmap_t" pk="pmap001,pmap002">
+      <sql id="forupd_sql" type="sql" query="SELECT pmap001,&apos;&apos;,pmap002,&apos;&apos; FROM pmap_t WHERE pmapent= ? AND pmapsite= ? AND pmap001=? AND pmap002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmap001,&apos;&apos;,pmap002,&apos;&apos; FROM pmap_t" order="pmap001,pmap002"/>
+    </head>
+    <body id="pmap_t" page="1,2" linked="" pk="pmap003,pmap004" fk="pmap001,pmap002">
+      <sql id="forupd_sql_detail" query="SELECT pmapstus,pmap003,&apos;&apos;,&apos;&apos;,pmap004,&apos;&apos;,pmap005,&apos;&apos;,pmap006,&apos;&apos;,pmap007,&apos;&apos;,pmap008,&apos;&apos;,pmap009,&apos;&apos;,pmap010,&apos;&apos;,pmap011,&apos;&apos;,pmap012,&apos;&apos;,pmap013,pmap014,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmapownid,&apos;&apos;,pmapowndp,&apos;&apos;,pmapcrtid,&apos;&apos;,pmapcrtdp,&apos;&apos;,pmapcrtdt,pmapmodid,&apos;&apos;,pmapmoddt FROM pmap_t WHERE pmapent=? AND pmapsite=? AND pmap001=? AND pmap002=? AND pmap003=? AND pmap004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmapstus,pmap003,&apos;&apos;,&apos;&apos;,pmap004,&apos;&apos;,pmap005,&apos;&apos;,pmap006,&apos;&apos;,pmap007,&apos;&apos;,pmap008,&apos;&apos;,pmap009,&apos;&apos;,pmap010,&apos;&apos;,pmap011,&apos;&apos;,pmap012,&apos;&apos;,pmap013,pmap014,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmapownid,&apos;&apos;,pmapowndp,&apos;&apos;,pmapcrtid,&apos;&apos;,pmapcrtdp,&apos;&apos;,pmapcrtdt,pmapmodid,&apos;&apos;,pmapmoddt FROM pmap_t WHERE pmapent= ? AND pmapsite= ? AND pmap001=? AND pmap002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

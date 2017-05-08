@@ -1,0 +1,330 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="aimm201_01.description" >}
+#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000003
+#+ 
+#+ Filename...: aimm201_01
+#+ Description: 料件據點資料批次調整
+#+ Creator....: 02295(2014-12-24 14:05:29)
+#+ Modifier...: 02295(2014-12-25 15:02:39) -SD/PR-
+
+{</section>}
+
+{<section id="aimm201_01.global" >}
+#應用 c02b 樣板自動產生(Version:3)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_dzeb_d        RECORD
+       dzeb002 LIKE dzeb_t.dzeb002, 
+   dzeb002_desc LIKE type_t.chr500, 
+   valu LIKE type_t.chr500, 
+   cond LIKE type_t.chr500, 
+   cond_desc LIKE type_t.chr500, 
+   lim LIKE type_t.chr500, 
+   val LIKE type_t.chr500
+       END RECORD
+ 
+ 
+DEFINE g_dzeb_d          DYNAMIC ARRAY OF type_g_dzeb_d
+DEFINE g_dzeb_d_t        type_g_dzeb_d
+ 
+DEFINE g_dzeb002_t      LIKE dzeb_t.dzeb002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE g_detail_idx          LIKE type_t.num5  
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point    
+
+{</section>}
+
+{<section id="aimm201_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aimm201_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aimm201_01 WITH FORM cl_ap_formpath("aim","aimm201_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_dzeb_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD dzeb002
+            
+            #add-point:AFTER FIELD dzeb002
+            {<point name="input.a.page1.dzeb002" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD dzeb002
+            #add-point:BEFORE FIELD dzeb002
+            {<point name="input.b.page1.dzeb002" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE dzeb002
+            #add-point:ON CHANGE dzeb002
+            {<point name="input.g.page1.dzeb002" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD valu
+            #add-point:BEFORE FIELD valu
+            {<point name="input.b.page1.valu" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD valu
+            
+            #add-point:AFTER FIELD valu
+            {<point name="input.a.page1.valu" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE valu
+            #add-point:ON CHANGE valu
+            {<point name="input.g.page1.valu" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD cond
+            
+            #add-point:AFTER FIELD cond
+            {<point name="input.a.page1.cond" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD cond
+            #add-point:BEFORE FIELD cond
+            {<point name="input.b.page1.cond" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE cond
+            #add-point:ON CHANGE cond
+            {<point name="input.g.page1.cond" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD lim
+            #add-point:BEFORE FIELD lim
+            {<point name="input.b.page1.lim" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD lim
+            
+            #add-point:AFTER FIELD lim
+            {<point name="input.a.page1.lim" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE lim
+            #add-point:ON CHANGE lim
+            {<point name="input.g.page1.lim" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD val
+            #add-point:BEFORE FIELD val
+            {<point name="input.b.page1.val" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD val
+            
+            #add-point:AFTER FIELD val
+            {<point name="input.a.page1.val" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE val
+            #add-point:ON CHANGE val
+            {<point name="input.g.page1.val" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.dzeb002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD dzeb002
+            #add-point:ON ACTION controlp INFIELD dzeb002
+            {<point name="input.c.page1.dzeb002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.valu
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD valu
+            #add-point:ON ACTION controlp INFIELD valu
+            {<point name="input.c.page1.valu" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.cond
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD cond
+            #add-point:ON ACTION controlp INFIELD cond
+            {<point name="input.c.page1.cond" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.lim
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD lim
+            #add-point:ON ACTION controlp INFIELD lim
+            {<point name="input.c.page1.lim" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.val
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD val
+            #add-point:ON ACTION controlp INFIELD val
+            {<point name="input.c.page1.val" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aimm201_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aimm201_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="aimm201_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

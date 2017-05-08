@@ -1,0 +1,583 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apcr110_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:2(2016-12-26 14:40:07), PR版次:0002(2016-12-26 15:16:38)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000000
+#+ Filename...: apcr110_x01
+#+ Description: ...
+#+ Creator....: 06189(2016-12-14 17:07:14)
+#+ Modifier...: 06189 -SD/PR- 06189
+ 
+{</section>}
+ 
+{<section id="apcr110_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+#161226-00038#1  20161226  by geza    apcr110增加返回xml,调拨门店两个显示栏位，同时修改ws
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #condiction 
+       date1 LIKE type_t.dat,         #firstdate 
+       date2 LIKE type_t.dat,         #enddate 
+       type LIKE type_t.chr10          #type
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+PRIVATE TYPE type_detail1  RECORD    #传入单身数组1
+                  get_date  LIKE type_t.chr100 #時間
+                          END RECORD
+PRIVATE TYPE type_detail2  RECORD    #传入单身数组2
+                  shop_no   LIKE stba_t.stbasite #時間
+                          END RECORD
+PRIVATE TYPE type_detail3  RECORD    #传入单身数组3
+                  doc_type  LIKE type_t.chr10  #類型
+                          END RECORD 
+PRIVATE TYPE type_master  RECORD    #传入數組
+                      dates          DYNAMIC ARRAY OF type_detail1,
+                      shops          DYNAMIC ARRAY OF type_detail2,
+                      doc_types      DYNAMIC ARRAY OF type_detail3                                           
+                          END RECORD                          
+PRIVATE TYPE return_detail  RECORD         #返回值
+            shop_no            LIKE stba_t.stbasite  ,           #门店 	
+            doc_type           LIKE type_t.chr10     ,           #单据类型	
+            doc_date           LIKE type_t.chr20     ,           #单据日期	
+            doc_no             LIKE stba_t.stbadocno ,           #单号	
+            first_up_date      LIKE type_t.chr20     ,           #首次上传日期	
+            first_up_time      LIKE type_t.chr10     ,           #首次上传时间	
+            last_up_date       LIKE type_t.chr20     ,           #最近上传日期	
+            last_up_time       LIKE type_t.chr10     ,           #最近上传时间	
+            #service_type       LIKE type_t.chr10     ,          #服务类型	
+            service_name       LIKE type_t.chr300    ,           #服务名称	
+            response_xml       LIKE type_t.chr1000   ,           #返回xml #add by geza 20161226 #161226-00038#1
+            transfer_shop      LIKE type_t.chr20     ,           #调拨门店 #add by geza 20161226 #161226-00038#1
+            error_code         LIKE type_t.chr20     ,           #错误代码	
+            error_msg          LIKE type_t.chr300    ,           #错误描述	
+            creator            LIKE type_t.chr10     ,           #单据创建人	
+            create_date        LIKE type_t.chr20 ,               #创建日期	
+            create_time        LIKE type_t.chr10     ,           #创建时间	
+            seq                LIKE stbb_t.stbbseq   ,           #项次
+            source_seq         LIKE stbb_t.stbbseq   ,           #来源项次	
+            item_no            LIKE imaa_t.imaa001   ,           #商品编号	
+            item_feature_no    LIKE pmdb_t.pmdb005   ,           #产品特征	
+            inventory_unit     LIKE imaa_t.imaa104   ,           #库存单位	
+            unit_no            LIKE imaa_t.imaa104   ,           #包装单位	
+            p_qty              LIKE pmdb_t.pmdb202   ,           #件数
+            qty                LIKE pmdb_t.pmdb202   ,           #数量	
+            price              LIKE pmdb_t.pmdb202   ,           #单价
+            amount             LIKE pmdb_t.pmdb202               #金额	
+                          END RECORD
+TYPE type_service          RECORD
+                prod           STRING,
+                name           STRING,
+                ip             STRING,
+                id             STRING
+                           END RECORD 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apcr110_x01.main" readonly="Y" >}
+PUBLIC FUNCTION apcr110_x01(p_arg1,p_arg2,p_arg3,p_arg4)
+DEFINE  p_arg1 STRING                  #tm.wc  condiction 
+DEFINE  p_arg2 LIKE type_t.dat         #tm.date1  firstdate 
+DEFINE  p_arg3 LIKE type_t.dat         #tm.date2  enddate 
+DEFINE  p_arg4 LIKE type_t.chr10         #tm.type  type
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.date1 = p_arg2
+   LET tm.date2 = p_arg3
+   LET tm.type = p_arg4
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "apcr110_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL apcr110_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL apcr110_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL apcr110_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL apcr110_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL apcr110_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apcr110_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION apcr110_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "inagsite.inag_t.inagsite,ooefl003.ooefl_t.ooefl003,l_inax001.type_t.chr200,stba_t_stbadocdt.stba_t.stbadocdt,stba_t_stbadocno.stba_t.stbadocno,l_first_date.type_t.dat,l_first_time.type_t.chr10,l_last_date.type_t.dat,l_last_time.type_t.chr10,l_service_type.type_t.chr10,l_service_name.type_t.chr300,l_response_xml.type_t.chr1000,l_transfer_shop.type_t.chr20,l_shop_name.type_t.chr30,l_error_code.type_t.chr30,l_error_msg.type_t.chr500,l_creator.type_t.chr30,l_name.type_t.chr30,l_create_date.type_t.dat,l_create_time.type_t.chr10,l_seq.type_t.num10,l_source_seq.type_t.num10,l_item_no.type_t.chr50,l_imaal003.type_t.chr300,l_imaal004.type_t.chr300,l_item_feature_no.type_t.chr200,l_inaml004.type_t.chr200,l_inventory_unit.type_t.chr30,l_oocal003.type_t.chr300,l_unit_no.type_t.chr10,l_oocal003_1.type_t.chr300,l_p_qty.type_t.num26_10,l_qty.type_t.num10,l_price.type_t.num20_6,l_amount.type_t.num20_6" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apcr110_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION apcr110_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apcr110_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apcr110_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT inagsite,ooefl003,NULL,stba_t.stbadocdt,stba_t.stbadocno,'','','','','',NULL, 
+       '','','','','',NULL,'',NULL,'',0,0,'','','','','','','','','',NULL,NULL,0,0"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   LET g_select = " SELECT distinct inagsite,'','','','','','','','','',NULL, 
+       '','',NULL,'',NULL,'',0,0,'','','','','','','','','',NULL,NULL,0,0"
+   #end add-point
+    LET g_from = " FROM inag_t,ooefl_t,stba_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   LET g_from = " FROM inag_t"
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   LET g_where = " WHERE 1=2 AND " ,tm.wc CLIPPED
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("inag_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE apcr110_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE apcr110_x01_curs CURSOR FOR apcr110_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apcr110_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION apcr110_x01_ins_data()
+DEFINE sr RECORD 
+   inagsite LIKE inag_t.inagsite, 
+   ooefl003 LIKE ooefl_t.ooefl003, 
+   l_inax001 LIKE type_t.chr200, 
+   stba_t_stbadocdt LIKE stba_t.stbadocdt, 
+   stba_t_stbadocno LIKE stba_t.stbadocno, 
+   l_first_date LIKE type_t.dat, 
+   l_first_time LIKE type_t.chr10, 
+   l_last_date LIKE type_t.dat, 
+   l_last_time LIKE type_t.chr10, 
+   l_service_type LIKE type_t.chr10, 
+   l_service_name LIKE type_t.chr300, 
+   l_response_xml LIKE type_t.chr1000, 
+   l_transfer_shop LIKE type_t.chr20, 
+   l_shop_name LIKE type_t.chr30, 
+   l_error_code LIKE type_t.chr30, 
+   l_error_msg LIKE type_t.chr500, 
+   l_creator LIKE type_t.chr30, 
+   l_name LIKE type_t.chr30, 
+   l_create_date LIKE type_t.dat, 
+   l_create_time LIKE type_t.chr10, 
+   l_seq LIKE type_t.num10, 
+   l_source_seq LIKE type_t.num10, 
+   l_item_no LIKE type_t.chr50, 
+   l_imaal003 LIKE type_t.chr300, 
+   l_imaal004 LIKE type_t.chr300, 
+   l_item_feature_no LIKE type_t.chr200, 
+   l_inaml004 LIKE type_t.chr200, 
+   l_inventory_unit LIKE type_t.chr30, 
+   l_oocal003 LIKE type_t.chr300, 
+   l_unit_no LIKE type_t.chr10, 
+   l_oocal003_1 LIKE type_t.chr300, 
+   l_p_qty LIKE type_t.num26_10, 
+   l_qty LIKE type_t.num10, 
+   l_price LIKE type_t.num20_6, 
+   l_amount LIKE type_t.num20_6
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_master      RECORD
+                        get_condition   DYNAMIC ARRAY OF type_master
+                       END RECORD
+DEFINE l_return       RECORD         
+                         up_error_log   DYNAMIC ARRAY OF return_detail
+                        END RECORD     
+DEFINE l_i              LIKE type_t.num5
+DEFINE l_j              LIKE type_t.num5  
+DEFINE l_k              LIKE type_t.num10  
+DEFINE l_service        type_service
+DEFINE ls_msg           STRING            #回傳的response
+DEFINE l_status         STRING            #回傳的status code
+DEFINE l_errmsg         STRING            #回傳的錯誤description
+DEFINE l_sql            STRING
+DEFINE l_parameter      util.JSONObject
+DEFINE l_detail_cnt     LIKE type_t.num5
+DEFINE l_feature_desc   LIKE inaml_t.inaml004       
+DEFINE l_oocal003       LIKE oocal_t.oocal003  
+DEFINE l_oocal003_1     LIKE oocal_t.oocal003  
+DEFINE l_ooefl003       LIKE ooefl_t.ooefl003  
+DEFINE l_pcab002        LIKE pcab_t.pcab002  
+DEFINE l_pcab002_desc   LIKE ooag_t.ooag011
+DEFINE l_imaal003       LIKE imaal_t.imaal003
+DEFINE l_imaal004       LIKE imaal_t.imaal004
+DEFINE r_success        LIKE type_t.num5
+DEFINE l_create_date    LIKE stba_t.stbadocdt
+DEFINE l_first_up_date  LIKE stba_t.stbadocdt
+DEFINE l_last_up_date   LIKE stba_t.stbadocdt
+DEFINE l_doc_type       LIKE type_t.chr300
+DEFINE l_shop_name      LIKE ooefl_t.ooefl003     #add by geza 20161226 #161226-00038#1 
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH apcr110_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.inagsite,sr.ooefl003,sr.l_inax001,sr.stba_t_stbadocdt,sr.stba_t_stbadocno,sr.l_first_date,sr.l_first_time,sr.l_last_date,sr.l_last_time,sr.l_service_type,sr.l_service_name,sr.l_response_xml,sr.l_transfer_shop,sr.l_shop_name,sr.l_error_code,sr.l_error_msg,sr.l_creator,sr.l_name,sr.l_create_date,sr.l_create_time,sr.l_seq,sr.l_source_seq,sr.l_item_no,sr.l_imaal003,sr.l_imaal004,sr.l_item_feature_no,sr.l_inaml004,sr.l_inventory_unit,sr.l_oocal003,sr.l_unit_no,sr.l_oocal003_1,sr.l_p_qty,sr.l_qty,sr.l_price,sr.l_amount
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "apcr110_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    #WHENEVER ERROR CONTINUE
+    #進行JSON初始化設定
+    LET l_sql = "SELECT to_date(?,'YYYYMMDD'), 
+                        to_date(?,'YYYYMMDD'), 
+                        to_date(?,'YYYYMMDD') 
+                   FROM dual "    
+    
+    PREPARE s_date_pre FROM l_sql
+    
+    CALL cl_rest_json_init()
+    
+    LET l_service.prod = "POS"                 
+    LET l_service.name = "pos.up.error.log.get"
+    LET l_service.ip =  cl_get_para(g_enterprise,"","E-SYS-0725")
+    LET l_service.id =  cl_get_para(g_enterprise,"","E-SYS-0726") 
+    
+    #日期單身
+    LET l_sql = "SELECT to_char(ooga001,'YYYYMMDD') FROM ooga_t WHERE oogaent =  '",g_enterprise,"' AND ooga001 >='",tm.date1,"' AND ooga001 <= '",tm.date2,"' ORDER BY ooga001 "    
+  
+    PREPARE s_body_pre1 FROM l_sql
+    DECLARE s_body_cur1 CURSOR FOR s_body_pre1
+    
+    LET l_i = 1
+    
+    #填入單身欄位       
+    FOREACH s_body_cur1 INTO l_master.get_condition[1].dates[l_i].get_date     
+            
+       LET l_i = l_i + 1
+    END FOREACH
+    
+    CALL l_master.get_condition[1].dates.deleteElement(l_i)
+    LET l_i = l_i - 1
+    
+    #門店單身的SQL語句
+    IF tm.wc IS NOT NULL AND tm.wc <> " 1=1 "   THEN
+       LET l_sql = "SELECT DISTINCT ooef001 FROM ooef_t WHERE ooefent = '",g_enterprise,"' AND ",tm.wc 
+       
+       
+       PREPARE s_body_pre2 FROM l_sql
+       DECLARE s_body_cur2 CURSOR FOR s_body_pre2
+       
+       LET l_j = 1
+       
+       #填入單身欄位       
+       FOREACH s_body_cur2 INTO l_master.get_condition[1].shops[l_j].shop_no
+       
+          LET l_j = l_j + 1
+       END FOREACH
+       
+       CALL l_master.get_condition[1].shops.deleteElement(l_j)
+       LET l_j = l_j - 1
+    END IF
+#    #類型單身的SQL語句
+#    LET l_sql = " SELECT DISTINCT inee002,imaa116 ",
+#                "   FROM inee_t,imaa_t ",
+#                "  WHERE ineeent = '",g_enterprise,"' ",
+#                "    AND inee001 = '",p_ineadocno,"'  ",
+#                "    AND imaaent = ineeent AND imaa001 = inee002 "
+#    PREPARE s_body_pre3 FROM l_sql
+#    DECLARE s_body_cur3 CURSOR FOR s_body_pre3
+#    
+#    LET l_k = 1
+#    
+#    #填入單身欄位       
+#    FOREACH s_body_cur3 INTO l_master.counting[1].counting_detail[l_k].item_no,l_master.counting[1].counting_detail[l_k].price   
+#            
+#       LET l_k = l_k + 1
+#    END FOREACH
+#    
+#    CALL l_master.counting[1].counting_detail.deleteElement(l_k)
+#    LET l_k = l_k - 1
+    
+    IF tm.type IS NOT NULL THEN
+       LET l_master.get_condition[1].doc_types[1].doc_type = tm.type
+    END IF
+    
+    #將傳入的參數新增至JSON的Parameter
+    CALL cl_rest_json_addParam(util.JSONObject.fromFGL(l_master))
+
+    #將服務相關資訊加入至JSON並送出request並取得response狀態以及錯誤
+    CALL cl_rest_json_invokeSrv(util.JSONObject.fromFGL(l_service))RETURNING l_status,ls_msg,l_errmsg
+    DISPLAY "ls_msg= ",ls_msg
+    IF l_status = "0" THEN
+        #request呼叫成功，會取回對應的Parameter
+       CALL cl_rest_json_getParam() RETURNING l_parameter
+       CALL l_parameter.toFGL(l_return)
+       LET l_detail_cnt = l_return.up_error_log.getLength()  #获取返回的总笔数
+       FOR l_k = 1 TO l_detail_cnt  
+           #抓取ooefl003
+           CALL s_desc_get_department_desc(l_return.up_error_log[l_k].shop_no) RETURNING l_ooefl003
+           SELECT pcab002 INTO l_pcab002
+             FROM pcab_t
+            WHERE pcabent = g_enterprise
+              AND pcab001 = l_return.up_error_log[l_k].creator
+           CALL s_desc_get_person_desc(l_pcab002) RETURNING l_pcab002_desc 
+           CALL s_desc_get_item_desc(l_return.up_error_log[l_k].item_no) RETURNING l_imaal003,l_imaal004
+           CALL s_feature_description(l_return.up_error_log[l_k].item_no,l_return.up_error_log[l_k].item_feature_no) RETURNING r_success,l_feature_desc
+           CALL s_desc_get_unit_desc(l_return.up_error_log[l_k].inventory_unit) RETURNING l_oocal003
+           CALL s_desc_get_unit_desc(l_return.up_error_log[l_k].unit_no) RETURNING l_oocal003_1
+           
+           OPEN s_date_pre USING l_return.up_error_log[l_k].first_up_date,l_return.up_error_log[l_k].last_up_date,l_return.up_error_log[l_k].create_date
+  
+           EXECUTE s_date_pre INTO l_first_up_date,l_last_up_date,l_create_date
+           
+           SELECT gzcbl004 INTO l_doc_type
+             FROM gzcbl_t
+            WHERE gzcbl001 = '6983'
+              AND gzcbl002 = l_return.up_error_log[l_k].doc_type
+              AND gzcbl003 = g_dlang
+           
+           
+           #查出调拨门店
+           CALL s_desc_get_department_desc(l_return.up_error_log[l_k].transfer_shop) RETURNING l_shop_name
+           
+           EXECUTE insert_prep USING l_return.up_error_log[l_k].shop_no,          l_ooefl003,
+                                     l_doc_type                        ,          l_return.up_error_log[l_k].doc_date,
+                                     l_return.up_error_log[l_k].doc_no,           l_first_up_date,
+                                     l_return.up_error_log[l_k].first_up_time,    l_last_up_date,
+                                     l_return.up_error_log[l_k].last_up_time,     '',
+                                     l_return.up_error_log[l_k].service_name,     l_return.up_error_log[l_k].response_xml, #add by geza 20161226 #161226-00038#1 l_response_xml
+                                     l_return.up_error_log[l_k].transfer_shop , l_shop_name ,                             #add by geza 20161226 #161226-00038#1 
+                                     l_return.up_error_log[l_k].error_code,
+                                     l_return.up_error_log[l_k].error_msg,        l_pcab002,
+                                     l_pcab002_desc               ,               l_create_date,
+                                     l_return.up_error_log[l_k].create_time  ,    l_return.up_error_log[l_k].seq,
+                                     l_return.up_error_log[l_k].source_seq,       l_return.up_error_log[l_k].item_no,
+                                     l_imaal003,l_imaal004,
+                                     l_return.up_error_log[l_k].item_feature_no , l_feature_desc,
+                                     l_return.up_error_log[l_k].inventory_unit,   l_oocal003,
+                                     l_return.up_error_log[l_k].unit_no,          l_oocal003_1,
+                                     l_return.up_error_log[l_k].p_qty,            l_return.up_error_log[l_k].qty,
+                                     l_return.up_error_log[l_k].price,            l_return.up_error_log[l_k].amount
+       END FOR
+    ELSE   
+       #response回傳錯誤訊息
+       DISPLAY "l_errmsg = ",l_errmsg
+    END IF
+
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apcr110_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION apcr110_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apcr110_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmq920" module="anm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02291" crtdt="2014-08-12 16:13:06" modid="02291" moddt="2014-08-13 17:00:14" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="帳戶各期資金狀況查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),nmbx003,nmbx003_desc(chr500),nmbx100,ocbb(num20_6),ccbb(num20_6),nmbx103,nmbx113,nmbx104,nmbx114,ocbt(num20_6),ccbt(num20_6)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbx003,nmbx100,ocbb2(num20_6),ccbb2(num20_6),nmbx103,nmbx123,nmbx104,nmbx124,ocbt2(num20_6),ccbt2(num20_6)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="nmbx003,nmbx100,ocbb3(num20_6),ccbb3(num20_6),nmbx103,nmbx133,nmbx104,nmbx134,ocbt3(num20_6),ccbt3(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),nmbx003(b_nmbx003),nmbx003_desc(b_nmbx003_desc),nmbx100(b_nmbx100),ocbb(ocbb),ccbb(ccbb),nmbx103(b_nmbx103),nmbx113(b_nmbx113),nmbx104(b_nmbx104),nmbx114(b_nmbx114),ocbt(ocbt),ccbt(ccbt)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbx003_2(nmbx003_2),nmbx100_2(nmbx100_2),ocbb2(ocbb2),ccbb2(ccbb2),nmbx103_2(nmbx103_2),nmbx123(b_nmbx123),nmbx104_2(nmbx104_2),nmbx124(b_nmbx124),ocbt2(ocbt2),ccbt2(ccbt2)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="nmbx003_3(nmbx003_3),nmbx100_3(nmbx100_3),ocbb3(ocbb3),ccbb3(ccbb3),nmbx103_3(nmbx103_3),nmbx133(b_nmbx133),nmbx104_3(nmbx104_3),nmbx134(b_nmbx134),ocbt3(ocbt3),ccbt3(ccbt3)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmq920" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmbx003,nmbx100,nmbx103,nmbx113,nmbx104,nmbx114" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="nmbx123,nmbx124" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="nmbx133,nmbx134" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmbx003(b_nmbx003),nmbx100(b_nmbx100),nmbx103(b_nmbx103),nmbx113(b_nmbx113),nmbx104(b_nmbx104),nmbx114(b_nmbx114)"/>
+      <construct id="body" page="2" field="nmbx123(b_nmbx123),nmbx124(b_nmbx124)"/>
+      <construct id="body" page="3" field="nmbx133(b_nmbx133),nmbx134(b_nmbx134)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="nmbx003">
+        <after>
+          <reference field="nmbx003_desc" ref_field="nmbx003" map_field="nmbxent,nmbx001" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="nmbx003_desc"/>
+      <column id="nmbx100"/>
+      <column id="ocbb"/>
+      <column id="ccbb"/>
+      <column id="nmbx103"/>
+      <column id="nmbx113"/>
+      <column id="nmbx104"/>
+      <column id="nmbx114"/>
+      <column id="ocbt"/>
+      <column id="ccbt"/>
+    </init>
+    <init id="body" page="2">
+      <column id="ocbb2"/>
+      <column id="ccbb2"/>
+      <column id="nmbx123"/>
+      <column id="nmbx124"/>
+      <column id="ocbt2"/>
+      <column id="ccbt2"/>
+    </init>
+    <init id="body" page="3">
+      <column id="ocbb3"/>
+      <column id="ccbb3"/>
+      <column id="nmbx133"/>
+      <column id="nmbx134"/>
+      <column id="ocbt3"/>
+      <column id="ccbt3"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmbx_t" page="1,2,3" linked="" pk="nmbxcomp,nmbx001,nmbx002,nmbx003,nmbxorga">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,nmbx003,&apos;&apos;,nmbx100,&apos;&apos;,&apos;&apos;,nmbx103,nmbx113,nmbx104,nmbx114,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmbx123,&apos;&apos;,nmbx124,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmbx133,&apos;&apos;,nmbx134,&apos;&apos;,&apos;&apos; FROM nmbx_t WHERE nmbxent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

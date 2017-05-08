@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainp890" module="ain" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="01534" crtdt="2014-07-17 18:44:55" modid="01534" moddt="2014-07-18 10:14:17" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="盤點存貨凍結解除作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inpadocno,inpa002,inpa002_desc(chr80),inpadocno_desc(chr80),inpa005,freeze(chr500),inpa006,stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="ain" filename="ainp890" method="dialog">
+    <section id="input">
+      <input id="head" field="inpadocno,freeze"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="inpadocno">
+        <after>
+          <check chkid="v_inpadocno" id="isExist"/>
+        </after>
+        <controlp form="q_inpadocno_3" state="i"/>
+      </column>
+      <column id="inpa002">
+        <after>
+          <reference field="inpa002_desc" ref_field="inpa_t.inpa002" map_field="inpa002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="inpa002_desc"/>
+      <column id="inpadocno_desc"/>
+      <column id="inpa005"/>
+      <column id="freeze" type="S" default="Y"/>
+      <column id="inpa006"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi210" module="abg" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02298" crtdt="2013-09-11 09:59:48" modid="03080" moddt="2016-06-28 15:01:46" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="預算樣表設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgaw001,bgawl003,l_bgawstus(chr10)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgaw002,bgaw003,bgaw004,bgaw004_desc(chr500),bgaw005,bgaw006,bgawstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bgaw002,bgawmodid,bgawmodid_desc(chr500),bgawmoddt,bgawownid,bgawownid_desc(chr500),bgawowndp,bgawowndp_desc(chr500),bgawcrtid,bgawcrtid_desc(chr500),bgawcrtdp,bgawcrtdp_desc(chr500),bgawcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="lbl_vaild"/>
+      <action id="reproduce" type="standard"/>
+      <action id="preview"/>
+      <action id="query" type="standard"/>
+      <action id="statechange"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi210" method="dialog">
+    <section id="input">
+      <input id="head" field="bgaw001,bgawl003,l_bgawstus"/>
+      <input id="body" page="1" field="bgaw002,bgaw003,bgaw004,bgaw004_desc,bgaw005,bgaw006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bgaw001,bgawl003,l_bgawstus"/>
+      <construct id="body" page="1" field="bgaw002,bgaw003,bgaw004,bgaw004_desc,bgaw005,bgaw006"/>
+      <construct id="body" page="2" field="bgawmodid,bgawmoddt,bgawownid,bgawowndp,bgawcrtid,bgawcrtdp,bgawcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bgaw001"/>
+      <set id="head" type="no_entry" field="bgaw001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bgaw001">
+        <controlp form="q_bgaw001" state="c"/>
+      </column>
+      <column id="bgawl003"/>
+      <column id="l_bgawstus"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgaw002">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bgaw003" type="S" default="1" def_scc="9410"/>
+      <column id="bgaw004"/>
+      <column id="bgaw004_desc"/>
+      <column id="bgaw005" type="S" default="N" def_scc="9411"/>
+      <column id="bgaw006" def_scc="9413"/>
+      <column id="bgawstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bgawmodid">
+        <after>
+          <reference field="bgawmodid_desc" ref_field="bgaw_t.bgawmodid" map_field="bgawmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgawmodid_desc"/>
+      <column id="bgawmoddt"/>
+      <column id="bgawownid">
+        <after>
+          <reference field="bgawownid_desc" ref_field="bgaw_t.bgawownid" map_field="bgawownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgawownid_desc"/>
+      <column id="bgawowndp">
+        <after>
+          <reference field="bgawowndp_desc" ref_field="bgaw_t.bgawowndp" map_field="bgawowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgawowndp_desc"/>
+      <column id="bgawcrtid">
+        <after>
+          <reference field="bgawcrtid_desc" ref_field="bgaw_t.bgawcrtid" map_field="bgawcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgawcrtid_desc"/>
+      <column id="bgawcrtdp">
+        <after>
+          <reference field="bgawcrtdp_desc" ref_field="bgaw_t.bgawcrtdp" map_field="bgawcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgawcrtdp_desc"/>
+      <column id="bgawcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgaw_t" pk="bgaw001">
+      <sql id="forupd_sql" type="sql" query="SELECT bgaw001,&apos;&apos;,&apos;&apos; FROM bgaw_t WHERE bgawent= ? AND bgaw001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bgaw001,&apos;&apos;,&apos;&apos; FROM bgaw_t" order="bgaw001"/>
+      <sql id="append" type="lang" target="bgawl_t.bgawl003" table="bgawl_t" fk="bgaw001" pk="bgawl001,bgawl002" field="bgawl003"/>
+    </head>
+    <body id="bgaw_t" page="1,2" linked="" pk="bgaw002" fk="bgaw001">
+      <sql id="forupd_sql_detail" query="SELECT bgaw002,bgaw003,bgaw004,&apos;&apos;,bgaw005,bgaw006,bgawstus,&apos;&apos;,bgawmodid,&apos;&apos;,bgawmoddt,bgawownid,&apos;&apos;,bgawowndp,&apos;&apos;,bgawcrtid,&apos;&apos;,bgawcrtdp,&apos;&apos;,bgawcrtdt FROM bgaw_t WHERE bgawent=? AND bgaw001=? AND bgaw002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgaw002,bgaw003,bgaw004,&apos;&apos;,bgaw005,bgaw006,bgawstus,&apos;&apos;,bgawmodid,&apos;&apos;,bgawmoddt,bgawownid,&apos;&apos;,bgawowndp,&apos;&apos;,bgawcrtid,&apos;&apos;,bgawcrtdp,&apos;&apos;,bgawcrtdt FROM bgaw_t WHERE bgawent= ? AND bgaw001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

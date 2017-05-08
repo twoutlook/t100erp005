@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agcq500" module="agc" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="01251" crtdt="2015-12-29 16:18:00" modid="01251" moddt="2016-02-17 15:46:41" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="券異動單據綜合查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="gcao014,gcao020,gcao029,gcao002,gcao001,gcao003,s_date1,e_date1,s_date2,e_date2,s_date3,e_date3,gcam002,gcao005"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),gcao002,gcao002_desc(chr500),oocq009,gcaf025,l_num1(num10),l_sumprice1(num20_6),l_num2(num10),l_sumprice2(num20_6),l_num3(num10),l_sumprice3(num20_6),l_num4(num10),l_sumprice4(num20_6),l_num5(num10),l_sumprice5(num20_6),l_num6(num10),l_sumprice6(num20_6),l_num7(num10),l_sumprice7(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),gcao002(b_gcao002),gcao002_desc(b_gcao002_desc),oocq009(b_oocq009),gcaf025(b_gcaf025),l_num1(l_num1),l_sumprice1(l_sumprice1),l_num2(l_num2),l_sumprice2(l_sumprice2),l_num3(l_num3),l_sumprice3(l_sumprice3),l_num4(l_num4),l_sumprice4(l_sumprice4),l_num5(l_num5),l_sumprice5(l_sumprice5),l_num6(l_num6),l_sumprice6(l_sumprice6),l_num7(l_num7),l_sumprice7(l_sumprice7)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agc" filename="agcq500" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gcao002,oocq009,gcaf025" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="gcao002(b_gcao002),oocq009(b_oocq009),gcaf025(b_gcaf025)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="gcao002">
+        <after>
+          <reference field="gcao002_desc" ref_field="gcao002" map_field="gcao002" ref_sql="SELECT gcafl003 FROM gcafl_t WHERE gcaflent=$varg_enterprise$var AND gcafl001=? AND gcafl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_gcaf001" state="c"/>
+      </column>
+      <column id="gcao002_desc"/>
+      <column id="oocq009"/>
+      <column id="gcaf025" type="S" default="1" def_scc="6528"/>
+      <column id="l_num1"/>
+      <column id="l_sumprice1"/>
+      <column id="l_num2"/>
+      <column id="l_sumprice2"/>
+      <column id="l_num3"/>
+      <column id="l_sumprice3"/>
+      <column id="l_num4"/>
+      <column id="l_sumprice4"/>
+      <column id="l_num5"/>
+      <column id="l_sumprice5"/>
+      <column id="l_num6"/>
+      <column id="l_sumprice6"/>
+      <column id="l_num7"/>
+      <column id="l_sumprice7"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gcao_t" page="1" linked="" pk="gcao001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,gcao002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM gcao_t WHERE gcaoent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

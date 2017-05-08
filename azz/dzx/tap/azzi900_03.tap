@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="azzi900_03" std_prog="azzi900_03" erpver="1.0" module="AZZ" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.azzi900_03" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi900_03(pc_prog)
+   DEFINE pc_prog LIKE gzza_t.gzza001
+
+   LET g_program = pc_prog
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_azzi900_03 WITH FORM cl_ap_formpath("azz","azzi900_03")
+   CALL cl_ui_init()
+
+   #進入選單 Menu (="N")
+   CALL azzi900_03_ui_dialog()
+
+   CLOSE WINDOW w_azzi900_03
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi900_03_ui_dialog" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi900_03_ui_dialog()
+   DEFINE ls_wc    STRING
+   DEFINE ls_sql   STRING
+   DEFINE li_cnt   LIKE type_t.num5
+   DEFINE la_gzzl  DYNAMIC ARRAY OF RECORD
+             gzzo001 LIKE gzzo_t.gzzo001,
+             gzzl002 LIKE gzzl_t.gzzl002
+                     END RECORD
+   DEFINE ls_path  STRING
+   DEFINE ls_cmd   STRING
+   DEFINE lch_pipe       base.channel
+   DEFINE ls_result STRING
+
+   INPUT ls_wc FROM gzwb002
+
+   LET ls_sql = "SELECT gzzl002 FROM gzzl_t WHERE gzzl001 = '",g_program CLIPPED,"'",
+                " ORDER BY gzzl002 "
+
+   LET li_cnt = 1
+   LET lch_pipe = base.Channel.create()
+   DECLARE azzi900_03_cs CURSOR FROM ls_sql
+   FOREACH azzi900_03_cs INTO la_gzzl[li_cnt].gzzl002
+      IF SQLCA.SQLCODE THEN
+         EXIT FOREACH
+      END IF
+      LET la_gzzl[li_cnt].gzzo001 = cl_get_module_by_4gl(la_gzzl[li_cnt].gzzl002,"S")
+      LET ls_path = os.PAth.join(FGL_GETENV(la_gzzl[li_cnt].gzzo001),"4gl")
+      LET ls_cmd = "cd ",ls_path.trim(),"; grep '",ls_wc.trim(),"' ",la_gzzl[li_cnt].gzzl002 CLIPPED,".4gl"
+      CALL lch_pipe.openPipe(ls_cmd,"r")
+      LET ls_result = ""
+      WHILE lch_pipe.read(ls_result)
+         EXIT WHILE
+      END WHILE
+      IF ls_result.getLength() > 0 THEN
+         LET li_cnt = li_cnt + 1
+      ELSE
+         CALL la_gzzl.deleteElement(li_cnt)
+      END IF
+      CALL lch_pipe.close()
+   END FOREACH
+
+   DISPLAY ARRAY la_gzzl TO s_azzi900_03.*
+      ON ACTION exit
+         EXIT DISPLAY
+   END DISPLAY
+END FUNCTION]]>
+  </point>
+  <point name="free_style.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_program  LIKE gzza_t.gzza001]]>
+  </point>
+  <section id="azzi900_03.description" ver="7" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000007
+#+ 
+#+ Filename...: azzi900_03
+#+ Description: ...
+#+ Creator....: 00845(2014/03/24)
+#+ Modifier...: 00845(2014/03/24)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="azzi900_03.free_style_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style
+{<point name="free_style.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzi900_03.free_style_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzi900_03.global" ver="1" status="" src="s">
+    <![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="azzi900_03.global_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzi900_03.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="azzi900_03.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

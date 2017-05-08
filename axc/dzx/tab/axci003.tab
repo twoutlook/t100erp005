@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci003" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02114" crtdt="2013-09-11 18:04:58" modid="02114" moddt="2014-07-11 12:02:00" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資源標準費率維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcac001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcac002,xcac002_desc(chr500),unit(chr500),xcac003,xcac004,xcac004_desc(chr500),xcac005,xcac006,xcacsite,xcacsite_desc(chr500),xcacstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcac002,xcacownid,xcacownid_desc(chr500),xcacowndp,xcacowndp_desc(chr500),xcaccrtid,xcaccrtid_desc(chr500),xcaccrtdp,xcaccrtdp_desc(chr500),xcaccrtdt,xcacmodid,xcacmodid_desc(chr500),xcacmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_axci003_01"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_confirm"/>
+      <action id="open_unconfirm"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci003" method="dialog">
+    <section id="input">
+      <input id="head" field="xcac001"/>
+      <input id="body" page="1" field="xcac002,xcac002_desc,xcac003,xcac004,xcac005,xcac006,xcacsite,xcacstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcac001"/>
+      <construct id="body" page="1" field="xcac002,xcac002_desc,xcac003,xcac004,xcac005,xcac006,xcacsite,xcacstus"/>
+      <construct id="body" page="2" field="xcacownid,xcacowndp,xcaccrtid,xcaccrtdp,xcaccrtdt,xcacmodid,xcacmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcac001"/>
+      <set id="head" type="no_entry" field="xcac001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcac001">
+        <controlp form="q_xcac001" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="xcac002">
+        <after/>
+        <controlp form="q_mrba001_3" state="i"/>
+        <controlp form="q_mrba001_3" state="c"/>
+      </column>
+      <column id="xcac002_desc"/>
+      <column id="unit"/>
+      <column id="xcac003" def_scc="8901"/>
+      <column id="xcac004">
+        <after>
+          <reference field="xcac004_desc" ref_field="xcac_t.xcac004" map_field="xcacent,xcac004" ref_sql="SELECT xcaul003 FROM xcaul_t WHERE xcaulent=$varg_enterprise$var AND xcaul001=? AND xcaul002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcau001" state="i"/>
+        <controlp form="q_xcau001" state="c"/>
+      </column>
+      <column id="xcac004_desc"/>
+      <column id="xcac005">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="xcac006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcacsite">
+        <after>
+          <reference field="xcacsite_desc" ref_field="xcac_t.xcacsite" map_field="xcacsite,xcacent" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001" state="i"/>
+        <controlp form="q_ooea001" state="c"/>
+      </column>
+      <column id="xcacsite_desc"/>
+      <column id="xcacstus" scc="17" type="S" default="N">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xcacownid">
+        <after>
+          <reference field="xcacownid_desc" ref_field="xcac_t.xcacownid" map_field="xcacownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcacownid_desc"/>
+      <column id="xcacowndp">
+        <after>
+          <reference field="xcacowndp_desc" ref_field="xcac_t.xcacowndp" map_field="xcacowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcacowndp_desc"/>
+      <column id="xcaccrtid">
+        <after>
+          <reference field="xcaccrtid_desc" ref_field="xcac_t.xcaccrtid" map_field="xcaccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcaccrtid_desc"/>
+      <column id="xcaccrtdp">
+        <after>
+          <reference field="xcaccrtdp_desc" ref_field="xcac_t.xcaccrtdp" map_field="xcaccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcaccrtdp_desc"/>
+      <column id="xcaccrtdt"/>
+      <column id="xcacmodid">
+        <after>
+          <reference field="xcacmodid_desc" ref_field="xcac_t.xcacmodid" map_field="xcacmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcacmodid_desc"/>
+      <column id="xcacmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcac_t" pk="xcac001">
+      <sql id="forupd_sql" type="sql" query="SELECT xcac001 FROM xcac_t WHERE xcacent= ? AND xcac001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcac001 FROM xcac_t" order="xcac001"/>
+    </head>
+    <body id="xcac_t" page="1,2" linked="" pk="xcac002" fk="xcac001">
+      <sql id="forupd_sql_detail" query="SELECT xcac002,&apos;&apos;,&apos;&apos;,xcac003,xcac004,&apos;&apos;,xcac005,xcac006,xcacsite,&apos;&apos;,xcacstus,&apos;&apos;,xcacownid,&apos;&apos;,xcacowndp,&apos;&apos;,xcaccrtid,&apos;&apos;,xcaccrtdp,&apos;&apos;,xcaccrtdt,xcacmodid,&apos;&apos;,xcacmoddt FROM xcac_t WHERE xcacent=? AND xcac001=? AND xcac002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcac002,&apos;&apos;,&apos;&apos;,xcac003,xcac004,&apos;&apos;,xcac005,xcac006,xcacsite,&apos;&apos;,xcacstus,&apos;&apos;,xcacownid,&apos;&apos;,xcacowndp,&apos;&apos;,xcaccrtid,&apos;&apos;,xcaccrtdp,&apos;&apos;,xcaccrtdt,xcacmodid,&apos;&apos;,xcacmoddt FROM xcac_t WHERE xcacent= ? AND xcac001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

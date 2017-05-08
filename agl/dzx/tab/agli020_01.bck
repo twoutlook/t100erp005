@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli020_01" module="agl" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02299" crtdt="2013-08-27 15:18:55" modid="02599" moddt="2014-10-11 11:10:51" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glac001,glac001_desc(chr80),glac002,glacl004,glacl005,glacstus,glac003,glac004,glac005,glac011,glac016,glac007,glac006,glac008,glac010,glac009,glac017,glac028(chr1),glac018,glac029(chr1),glac019,glac030(chr1),glac020,glac023,glac027,glac025,glac021,glac026,glac022,glac012,glac013,glac014,glac015"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli020_01" method="dialog">
+    <section id="input">
+      <input id="head" field="glac001,glac002,glacl004,glacl005,glacstus,glac003,glac004,glac005,glac011,glac016,glac007,glac006,glac008,glac010,glac009,glac017,glac028,glac018,glac029,glac019,glac030,glac020,glac023,glac027,glac025,glac021,glac026,glac022,glac012,glac013,glac014,glac015"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="glac001">
+        <after>
+          <reference field="glac001_desc" ref_field="glac001" map_field="glac001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;0&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_1" state="i"/>
+        <controlp form="q_ooal002_1" state="c"/>
+      </column>
+      <column id="glac001_desc"/>
+      <column id="glac002">
+        <controlp form="q_glac" state="c"/>
+      </column>
+      <column id="glacl004"/>
+      <column id="glacl005"/>
+      <column id="glacstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glac003" type="S" default="3" def_scc="8011"/>
+      <column id="glac004">
+        <controlp form="q_glac" state="i"/>
+        <controlp form="q_glac" state="c"/>
+      </column>
+      <column id="glac005">
+        <after>
+          <check id="range" st="99" st_type="1" errno="azz-00087" bt="1" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="glac011" type="S" default="30" def_scc="8015"/>
+      <column id="glac016"/>
+      <column id="glac007" def_scc="8002"/>
+      <column id="glac006" def_scc="8012"/>
+      <column id="glac008" def_scc="8013"/>
+      <column id="glac010" type="S" default="F" def_scc="8014"/>
+      <column id="glac009" type="S" default="N"/>
+      <column id="glac017" type="S" default="N"/>
+      <column id="glac028" type="S" default="N"/>
+      <column id="glac018" type="S" default="N"/>
+      <column id="glac029" type="S" default="N"/>
+      <column id="glac019" type="S" default="N"/>
+      <column id="glac030" type="S" default="N"/>
+      <column id="glac020" type="S" default="N"/>
+      <column id="glac023" type="S" default="N"/>
+      <column id="glac027" type="S" default="N"/>
+      <column id="glac025" type="S" default="N"/>
+      <column id="glac021" type="S" default="N"/>
+      <column id="glac026" type="S" default="N"/>
+      <column id="glac022" type="S" default="N"/>
+      <column id="glac012">
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="glac013">
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="glac014">
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="glac015">
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="glac_t" pk="glac001,glac002">
+      <sql id="forupd_sql" type="sql" query="SELECT glac001,&apos;&apos;,glac002,&apos;&apos;,&apos;&apos;,glacstus,glac003,glac004,glac005,glac011,glac016,glac007,glac006,glac008,glac010,glac009,glac017,&apos;&apos;,glac018,&apos;&apos;,glac019,&apos;&apos;,glac020,glac023,glac027,glac025,glac021,glac026,glac022,glac012,glac013,glac014,glac015 FROM glac_t WHERE glacent= ? AND glac001=? AND glac002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="glac001,glac002"/>
+      <sql id="append" type="lang" target="glacl_t.glacl004,glacl_t.glacl005" table="glacl_t" fk="glac001,glac002" pk="glacl001,glacl002,glacl003" field="glacl004,glacl005"/>
+    </head>
+  </dataset>
+</assembly>
+

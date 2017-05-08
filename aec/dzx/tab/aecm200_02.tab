@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aecm200_02" module="aec" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="02482" crtdt="" modid="02482" moddt="2013-11-13 14:16:50" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="Check in/Check out專案">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ecbb001,ecbb002,ecbf004_1(chr500),ecbb003,ecbb004,ecbb004_desc(chr80),ecbb005"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ecbfseq,ecbf004,ecbf005,ecbf005_desc(chr500),ecbf006,ecbf007,ecbf008,ecbf009,ecbf010"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="insert" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aec" filename="aecm200_02" method="dialog">
+    <section id="input">
+      <input id="head" field="ecbb001,ecbb002,ecbf004_1,ecbb003,ecbb004,ecbb005"/>
+      <input id="body" page="1" field="ecbfseq,ecbf004,ecbf005,ecbf006,ecbf007,ecbf008,ecbf009,ecbf010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ecbb001,ecbb002,ecbf004_1,ecbb003,ecbb004,ecbb005"/>
+      <construct id="body" page="1" field="ecbfseq,ecbf004,ecbf005,ecbf006,ecbf007,ecbf008,ecbf009,ecbf010"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ecbb001,ecbb002,ecbb003"/>
+      <set id="head" type="no_entry" field="ecbb001,ecbb002,ecbb003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ecbb001">
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="ecbb002"/>
+      <column id="ecbf004_1"/>
+      <column id="ecbb003"/>
+      <column id="ecbb004">
+        <after>
+          <reference field="ecbb004_desc" ref_field="ecbb_t.ecbb004" map_field="ecbbent,ecbb004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ecbb004_desc"/>
+      <column id="ecbb005"/>
+    </init>
+    <init id="body" page="1">
+      <column id="ecbfseq"/>
+      <column id="ecbf004"/>
+      <column id="ecbf005">
+        <after>
+          <reference field="ecbf005_desc" ref_field="ecbf_t.ecbf005" map_field="ecbfent,ecbf005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="ecbf005_desc"/>
+      <column id="ecbf006" type="S" default="1" def_scc="1201"/>
+      <column id="ecbf007"/>
+      <column id="ecbf008"/>
+      <column id="ecbf009"/>
+      <column id="ecbf010" type="S" default="Y"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ecbb_t" pk="ecbb001,ecbb002,ecbb003">
+      <sql id="forupd_sql" type="sql" query="SELECT ecbb001,ecbb002,&apos;&apos;,ecbb003,ecbb004,&apos;&apos;,ecbb005 FROM ecbb_t WHERE ecbbent= ? AND ecbbsite= ? AND ecbb001=? AND ecbb002=? AND ecbb003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ecbb001,ecbb002,&apos;&apos;,ecbb003,ecbb004,&apos;&apos;,ecbb005 FROM ecbb_t" order="ecbb001,ecbb002,ecbb003"/>
+    </head>
+    <body id="ecbf_t" page="1" linked="" pk="ecbfseq" fk="ecbf001,ecbf002,ecbf003">
+      <sql id="forupd_sql_detail" query="SELECT ecbfseq,ecbf004,ecbf005,&apos;&apos;,ecbf006,ecbf007,ecbf008,ecbf009,ecbf010 FROM ecbf_t WHERE ecbfent=? AND ecbfsite=? AND ecbf001=? AND ecbf002=? AND ecbf003=? AND ecbfseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ecbfseq,ecbf004,ecbf005,&apos;&apos;,ecbf006,ecbf007,ecbf008,ecbf009,ecbf010 FROM ecbf_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

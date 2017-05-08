@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci111" module="axc" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02295" crtdt="2013-12-10 14:52:37" modid="02295" moddt="2014-06-28 10:28:03" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="成本次要素設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcaustus,xcau001,xcaul003,xcau002,xcau002_desc(chr500),xcau003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcau001,xcauownid,xcauownid_desc(chr500),xcauowndp,xcauowndp_desc(chr500),xcaucrtid,xcaucrtid_desc(chr500),xcaucrtdp,xcaucrtdp_desc(chr500),xcaucrtdt,xcaumodid,xcaumodid_desc(chr500),xcaumoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci111" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xcaustus,xcau001,xcaul003,xcau002,xcau003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xcaustus,xcau001,xcaul003,xcau002,xcau003"/>
+      <construct id="body" page="2" field="xcauownid,xcauowndp,xcaucrtid,xcaucrtdp,xcaucrtdt,xcaumodid,xcaumoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcaustus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xcau001">
+        <controlp form="q_xcau001" state="c"/>
+      </column>
+      <column id="xcaul003"/>
+      <column id="xcau002">
+        <after>
+          <check chkid="v_xcav001" id="isExist"/>
+          <reference field="xcau002_desc" ref_field="xcau_t.xcau002" map_field="xcauent,xcau002" ref_sql="SELECT xcavl003 FROM xcavl_t WHERE xcavlent=$varg_enterprise$var AND xcavl001=? AND xcavl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcav001" state="i"/>
+        <controlp form="q_xcav001" state="c"/>
+      </column>
+      <column id="xcau002_desc"/>
+      <column id="xcau003" type="S" default="1" def_scc="8901"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcauownid">
+        <after>
+          <reference field="xcauownid_desc" ref_field="xcau_t.xcauownid" map_field="xcauownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcauownid_desc"/>
+      <column id="xcauowndp">
+        <after>
+          <reference field="xcauowndp_desc" ref_field="xcau_t.xcauowndp" map_field="xcauowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcauowndp_desc"/>
+      <column id="xcaucrtid">
+        <after>
+          <reference field="xcaucrtid_desc" ref_field="xcau_t.xcaucrtid" map_field="xcaucrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcaucrtid_desc"/>
+      <column id="xcaucrtdp">
+        <after>
+          <reference field="xcaucrtdp_desc" ref_field="xcau_t.xcaucrtdp" map_field="xcaucrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcaucrtdp_desc"/>
+      <column id="xcaucrtdt"/>
+      <column id="xcaumodid">
+        <after>
+          <reference field="xcaumodid_desc" ref_field="xcau_t.xcaumodid" map_field="xcaumodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcaumodid_desc"/>
+      <column id="xcaumoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xcau_t" page="1,2" linked="" pk="xcau001">
+      <sql id="forupd_sql_detail" query="SELECT xcaustus,xcau001,&apos;&apos;,xcau002,&apos;&apos;,xcau003,&apos;&apos;,xcauownid,&apos;&apos;,xcauowndp,&apos;&apos;,xcaucrtid,&apos;&apos;,xcaucrtdp,&apos;&apos;,xcaucrtdt,xcaumodid,&apos;&apos;,xcaumoddt FROM xcau_t WHERE xcauent=? AND xcau001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcaustus,xcau001,&apos;&apos;,xcau002,&apos;&apos;,xcau003,&apos;&apos;,xcauownid,&apos;&apos;,xcauowndp,&apos;&apos;,xcaucrtid,&apos;&apos;,xcaucrtdp,&apos;&apos;,xcaucrtdt,xcaumodid,&apos;&apos;,xcaumoddt FROM xcau_t WHERE xcauent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="xcaul_t.xcaul003" table="xcaul_t" fk="xcau001" pk="xcaul001,xcaul002" field="xcaul003"/>
+    </body>
+  </dataset>
+</assembly>
+

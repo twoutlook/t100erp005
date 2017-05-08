@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aslr201_g01" module="asl" jobmode="N" type="g01" industry="std" crtid="02346" crtdt="2016-08-14 10:21:52" modid="02346" moddt="2016-08-23 16:25:29" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where)">
+    <var seq="1" value="l_xmjd002_desc(chr1000|NULL),xmjd001,xmjd002,xmjd003,xmjd004,xmjd005,xmjd006,xmjd007,xmjd008,xmjd009,xmjd010,xmjd011,xmjd012,xmjd013,xmjd014,xmjd015,xmjd016,xmjd017,xmjdcrtdp,xmjdcrtdt,xmjdcrtid,xmjdent,xmjdmoddt,xmjdmodid,xmjdowndp,xmjdownid,xmjdsite,xmjdstus"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_xmjd002_desc(chr1000|NULL),xmjd001,xmjd002,xmjd003,xmjd004,xmjd005,xmjd006,xmjd007,xmjd008,xmjd009,xmjd010,xmjd011,xmjd012,xmjd013,xmjd014,xmjd015,xmjd016,xmjd017,xmjdcrtdp,xmjdcrtdt,xmjdcrtid,xmjdent,xmjdmoddt,xmjdmodid,xmjdowndp,xmjdownid,xmjdsite,xmjdstus"/>
+    <sql id="g_from" query="xmjd_t"/>
+    <sql id="g_where" query="" maintable="xmjd_t"/>
+    <sql id="g_order" query="xmjd001,xmjd002"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="xmjd001,xmjd002"/>
+    <section id="b_group" reptype="d01">
+      <rep type="xmjd001" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="xmjdent,xmjd001"/>
+      <rep type="xmjd002"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="xmjdent,xmjd001,xmjd002"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="xmjdent,xmjd001,xmjd002"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="xmjd001" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="xmjdent,xmjd001"/>
+      <rep type="xmjd002"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

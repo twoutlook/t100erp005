@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq522" module="axc" jobmode="N" type="q04" industry="std" fix_arg="0" crtid="02040" crtdt="2016-04-25 15:41:48" modid="02040" moddt="2016-04-25 15:41:48" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="在製調整成本查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="xccpcomp,xccpcomp_desc(chr80),xccpld,xccpld_desc(chr80),xccp004,xccp005,xccp004_1,xccp005_1,xccp001,xccp001_desc(chr80),xccp003,xccp003_desc(chr80)"/>
+      <var id="head" value="xccpld,l_xccp004(num5),l_xccp005(num5),xccp001,xccpcomp_desc(chr80),xccpcomp,l_xccp004_1(num5),l_xccp005_1(num5),xccp003,xccpld_desc(chr80),xccp003_desc(chr80),xccp001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xccp004,xccp005,xccp002,xccp002_desc(chr500),sfaa068,sfaa068_desc(chr500),xccp007,sfaa010(chr500),sfaa010_desc(chr500),sfaa010_desc_1(chr500),imag011,imag011_desc(chr500),xccp006,xccp008,xccp009,xccp101,xccp102a,xccp102b,xccp102c,xccp102d,xccp102e,xccp102f,xccp102g,xccp102h,xccp102"/>
+    </section>
+    <section id="form_field">
+      <var id="head" value="xccpld(b_xccpld),l_xccp004(l_xccp004),l_xccp005(l_xccp005),xccp001(b_xccp001),xccpcomp_desc(b_xccpcomp_desc),xccpcomp(b_xccpcomp),l_xccp004_1(l_xccp004_1),l_xccp005_1(l_xccp005_1),xccp003(b_xccp003),xccpld_desc(b_xccpld_desc),xccp003_desc(b_xccp003_desc),xccp001_desc(b_xccp001_desc)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xccp004(b_xccp004),xccp005(b_xccp005),xccp002(b_xccp002),xccp002_desc(b_xccp002_desc),sfaa068(b_sfaa068),sfaa068_desc(b_sfaa068_desc),xccp007(b_xccp007),sfaa010(b_sfaa010),sfaa010_desc(b_sfaa010_desc),sfaa010_desc_1(b_sfaa010_desc_1),imag011(b_imag011),imag011_desc(b_imag011_desc),xccp006(b_xccp006),xccp008(b_xccp008),xccp009(b_xccp009),xccp101(b_xccp101),xccp102a(b_xccp102a),xccp102b(b_xccp102b),xccp102c(b_xccp102c),xccp102d(b_xccp102d),xccp102e(b_xccp102e),xccp102f(b_xccp102f),xccp102g(b_xccp102g),xccp102h(b_xccp102h),xccp102(b_xccp102)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq522" method="dialog">
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="xccp002(b_xccp002),xccp007(b_xccp007),imag011(b_imag011)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xccp004"/>
+      <column id="xccp005"/>
+      <column id="xccp002">
+        <after>
+          <reference field="xccp002_desc" ref_field="xccp002" map_field="xccp002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccp002_desc"/>
+      <column id="sfaa068">
+        <after>
+          <reference field="sfaa068_desc" ref_field="sfaa068" map_field="sfaa068" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfaa068_desc"/>
+      <column id="xccp007">
+        <controlp form="q_sfaadocno" state="c"/>
+      </column>
+      <column id="sfaa010">
+        <after>
+          <reference field="sfaa010_desc" ref_field="sfaa010" map_field="sfaa010" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfaa010_desc"/>
+      <column id="sfaa010_desc_1"/>
+      <column id="imag011">
+        <after>
+          <reference field="imag011_desc" ref_field="imag011" map_field="imag011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;206&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag011" state="c"/>
+      </column>
+      <column id="imag011_desc"/>
+      <column id="xccp006">
+        <controlp form="q_ooba002_1" state="c"/>
+      </column>
+      <column id="xccp008"/>
+      <column id="xccp009"/>
+      <column id="xccp101" type="S" default="0"/>
+      <column id="xccp102a" type="S" default="0"/>
+      <column id="xccp102b" type="S" default="0"/>
+      <column id="xccp102c" type="S" default="0"/>
+      <column id="xccp102d" type="S" default="0"/>
+      <column id="xccp102e" type="S" default="0"/>
+      <column id="xccp102f" type="S" default="0"/>
+      <column id="xccp102g" type="S" default="0"/>
+      <column id="xccp102h" type="S" default="0"/>
+      <column id="xccp102" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset/>
+</assembly>
+

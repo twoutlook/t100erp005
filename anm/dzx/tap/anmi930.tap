@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="anmi930" std_prog="anmi930" erpver="1.0" module="ANM" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="construct.c.page2.nmbdcrtdp" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbdcrtdp  #顯示到畫面上
+
+            NEXT FIELD nmbdcrtdp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.nmbdcrtid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbdcrtid  #顯示到畫面上
+
+            NEXT FIELD nmbdcrtid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.nmbdmodid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbdmodid  #顯示到畫面上
+
+            NEXT FIELD nmbdmodid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.nmbdowndp" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbdowndp  #顯示到畫面上
+
+            NEXT FIELD nmbdowndp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.nmbdownid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbdownid  #顯示到畫面上
+
+            NEXT FIELD nmbdownid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="delete.body.a_delete" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      DELETE FROM nmbe_t WHERE nmbeent = g_enterprise AND nmbe001 = g_nmbd_m.nmbd001
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("nmbe_t",SQLCA.sqlcode,0)
+         CALL s_transaction_end('N','0')
+      END IF]]>
+  </point>
+  <point name="delete.body.a_single_delete" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DELETE FROM nmbe_t
+    WHERE nmbeent = g_enterprise AND nmbe001 = g_nmbd_m.nmbd001 AND
+
+          nmbe003 = g_nmbd_d_t.nmbd002
+
+          
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("nmbe_t",SQLCA.sqlcode,1)
+      RETURN FALSE 
+   END IF]]>
+  </point>
+  <point name="function.anmi930_act_upd_nmbd005" order="" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#act:現行版本
+PRIVATE FUNCTION anmi930_act_upd_nmbd005(p_nmbd001)
+   DEFINE p_nmbd001 LIKE nmbd_t.nmbd001
+   DEFINE l_success LIKE type_t.chr1
+   
+   LET l_success = 'Y'
+   
+   IF NOT cl_null(p_nmbd001) THEN
+      CALL s_transaction_begin()
+      #更新所有資料的nmbd005 = ‘N’
+      UPDATE nmbd_t SET nmbd005 = 'N' WHERE nmbd005 = 'Y'
+      IF SQLCA.sqlcode THEN
+         CALL cl_err(p_nmbd001,SQLCA.sqlcode,0)
+         LET l_success = 'N'
+      END IF
+      #更新p_nmbd001的資料的nmbd005 = ‘Y’
+      UPDATE nmbd_t SET nmbd005 = 'Y' WHERE nmbd001 = p_nmbd001
+      IF SQLCA.sqlcode THEN
+         CALL cl_err(p_nmbd001,SQLCA.sqlcode,0)
+         LET l_success = 'N'
+      END IF
+      CALL s_transaction_end(l_success,'1')
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.anmi930_nmbd001_chk" order="" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#nmbd001重复性检查
+PRIVATE FUNCTION anmi930_nmbd001_chk(p_nmbd001,p_nmbd001_t,p_cmd)
+   DEFINE p_nmbd001 LIKE nmbd_t.nmbd001
+   DEFINE p_nmbd001_t LIKE nmbd_t.nmbd001
+   DEFINE p_cmd     LIKE type_t.chr1
+   DEFINE r_success LIKE type_t.num5
+
+   LET r_success = TRUE
+   IF NOT cl_null(p_nmbd001) THEN 
+      IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND 
+         (p_nmbd001 != p_nmbd001_t ))) THEN 
+         IF NOT ap_chk_notDup(p_nmbd001,"SELECT COUNT(*) FROM nmbd_t WHERE "
+                ||"nmbdent = '" ||g_enterprise|| "' AND "||"nmbd001 = '"
+                ||p_nmbd001 ||"'",'std-00004',0) THEN 
+            LET r_success = FALSE
+         END IF
+      END IF
+   END IF 
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.anmi930_nmbd002_chk" order="" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#nmbd002重複性檢查
+PRIVATE FUNCTION anmi930_nmbd002_chk(p_nmbd001,p_nmbd002,p_nmbd002_t,p_cmd)
+   DEFINE p_nmbd001   LIKE nmbd_t.nmbd001
+   DEFINE p_nmbd002   LIKE nmbd_t.nmbd002
+   DEFINE p_nmbd002_t LIKE nmbd_t.nmbd002
+   DEFINE p_cmd       LIKE type_t.chr1
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE l_cmd       LIKE type_t.chr1
+
+   LET r_success = TRUE
+   LET l_cmd = p_cmd 
+   IF NOT cl_null(p_nmbd002) THEN 
+      IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND p_nmbd002 != p_nmbd002_t)) THEN 
+         IF NOT ap_chk_notDup(p_nmbd002,"SELECT COUNT(*) FROM nmbd_t WHERE "||
+                         "nmbdent = '" ||g_enterprise|| "' AND "||"nmbd001 = '"
+                         ||p_nmbd001 ||"' AND "|| "nmbd002 = '"||p_nmbd002 ||"'",'std-00004',0) THEN 
+            LET r_success = FALSE
+         END IF
+      END IF
+   END IF 
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="input.a.nmbd001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT anmi930_nmbd001_chk(g_nmbd_m.nmbd001,g_nmbd_m_t.nmbd001,p_cmd) THEN 
+               IF p_cmd = 'a' THEN
+                  LET g_nmbd_m.nmbd001 = ''
+               ELSE
+                  LET g_nmbd_m.nmbd001 = g_nmbd_m_t.nmbd001
+               END IF 
+               DISPLAY BY NAME g_nmbd_m.nmbd001
+               NEXT FIELD nmbd001
+            END IF 
+
+
+]]>
+  </point>
+  <point name="input.a.page1.nmbd002" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT anmi930_nmbd002_chk(g_nmbd_m.nmbd001,g_nmbd_d[l_ac].nmbd002,g_nmbd_d_t.nmbd002,l_cmd) THEN
+               IF p_cmd = 'a' THEN
+                  LET g_nmbd_d[l_ac].nmbd002 = ''
+               ELSE
+                  LET g_nmbd_d[l_ac].nmbd002 = g_nmbd_d_t.nmbd002
+               END IF  
+               NEXT FIELD nmbd002
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page2.nmbd002_2" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_nmbd_m.nmbd001) AND NOT cl_null(g_nmbd2_d[l_ac].nmbd002) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_nmbd_m.nmbd001 != g_nmbd001_t OR g_nmbd2_d[l_ac].nmbd002 != g_nmbd2_d_t.nmbd002))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmbd_t WHERE "||"nmbdent = '" ||g_enterprise|| "' AND "||"nmbd001 = '"||g_nmbd_m.nmbd001 ||"' AND "|| "nmbd002 = '"||g_nmbd2_d[l_ac].nmbd002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.nmbdcrtdp" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbd2_d[l_ac].nmbdcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmbd2_d[l_ac].nmbdcrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmbd2_d[l_ac].nmbdcrtdp_desc
+]]>
+  </point>
+  <point name="input.a.page2.nmbdcrtid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbd2_d[l_ac].nmbdcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmbd2_d[l_ac].nmbdcrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmbd2_d[l_ac].nmbdcrtid_desc
+]]>
+  </point>
+  <point name="input.a.page2.nmbdmodid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbd2_d[l_ac].nmbdmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmbd2_d[l_ac].nmbdmodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmbd2_d[l_ac].nmbdmodid_desc
+]]>
+  </point>
+  <point name="input.a.page2.nmbdowndp" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbd2_d[l_ac].nmbdowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmbd2_d[l_ac].nmbdowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmbd2_d[l_ac].nmbdowndp_desc
+]]>
+  </point>
+  <point name="input.a.page2.nmbdownid" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbd2_d[l_ac].nmbdownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmbd2_d[l_ac].nmbdownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmbd2_d[l_ac].nmbdownid_desc
+]]>
+  </point>
+  <point name="input.detail_input.page1.update_item" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               IF NOT cl_null(g_nmbd_m.nmbd001) AND NOT cl_null(g_nmbd_d[l_ac].nmbd002) THEN
+                  CALL n_nmbdl(g_nmbd_m.nmbd001,g_nmbd_d[l_ac].nmbd002)
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_nmbd_m.nmbd001
+                  LET g_ref_fields[2] = g_nmbd_d[l_ac].nmbd002
+                  CALL ap_ref_array2(g_ref_fields," SELECT nmbdl004 FROM nmbdl_t WHERE nmbdlent = '"
+                      ||g_enterprise||"' AND nmbdl001 = ? AND nmbdl002 = ? AND nmbdl003 = '"||g_dlang||"'","") 
+                      RETURNING g_rtn_fields
+                  LET g_nmbd_d[l_ac].nmbdl004 = g_rtn_fields[1]
+
+                  DISPLAY BY NAME g_nmbd_d[l_ac].nmbdl004
+               END IF]]>
+  </point>
+  <point name="menu.act_upd_nmbd005" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               CALL anmi930_act_upd_nmbd005(g_nmbd_m.nmbd001)]]>
+  </point>
+  <point name="menu.open_anmi931" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               CALL cl_cmdrun("anmi931 '"||g_nmbd_m.nmbd001||"'")]]>
+  </point>
+  <point name="ref_show.body.reference" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_nmbd_m.nmbd001
+   LET g_ref_fields[2] = g_nmbd_d[l_ac].nmbd002
+   CALL ap_ref_array2(g_ref_fields," SELECT nmbdl004 FROM nmbdl_t WHERE nmbdlent = '"||g_enterprise||"' AND nmbdl001 = ? AND nmbdl002 = ? AND nmbdl003 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_nmbd_d[l_ac].nmbdl004 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_nmbd_d[l_ac].nmbdl004]]>
+  </point>
+  <point name="ref_show.body.reference2" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbd2_d[l_ac].nmbdmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmbd2_d[l_ac].nmbdmodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmbd2_d[l_ac].nmbdmodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbd2_d[l_ac].nmbdownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmbd2_d[l_ac].nmbdownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmbd2_d[l_ac].nmbdownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbd2_d[l_ac].nmbdowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmbd2_d[l_ac].nmbdowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmbd2_d[l_ac].nmbdowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbd2_d[l_ac].nmbdcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmbd2_d[l_ac].nmbdcrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmbd2_d[l_ac].nmbdcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbd2_d[l_ac].nmbdcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmbd2_d[l_ac].nmbdcrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmbd2_d[l_ac].nmbdcrtdp_desc
+]]>
+  </point>
+  <point name="reproduce.body.a_insert" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      LET l_nmbdl.nmbdl001 = l_newno
+      INSERT INTO nmbdl_t VALUES (l_nmbdl.*) #複製單身多語言
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('Insert error!',SQLCA.sqlcode,1)
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF]]>
+  </point>
+  <point name="reproduce.body.b_insert" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      SELECT * INTO l_nmbdl.* FROM nmbdl_t
+       WHERE nmbdl001 = g_nmbd_m.nmbd001 AND nmbdl002 = l_detail.nmbd002]]>
+  </point>
+  <point name="reproduce.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_nmbdl     RECORD LIKE nmbdl_t.*]]>
+  </point>
+  <point name="reproduce.nmbd001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT anmi930_nmbd001_chk(l_newno,'','a') THEN
+               LET l_newno = ''
+               DISPLAY l_newno TO nmbd001
+               NEXT FIELD nmbd001
+            END IF ]]>
+  </point>
+</add_points>

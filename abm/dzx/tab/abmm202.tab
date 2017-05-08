@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmm202" module="abm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02587" crtdt="2013-09-10 09:47:46" modid="02295" moddt="2016-03-29 14:22:20" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="集團產品結構插件位置維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bmba001,imaal003,imaal004,bmaa004,bmba002,bmba003,l_imaal003(chr500),l_imaal004(chr500),bmba011,bmba012,bmba010,bmba004,bmba004_desc(chr80),bmba007,bmba007_desc(chr80),bmba008,bmba005(dat)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmbc009,bmbc010,bmbc011"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmm202" method="dialog">
+    <section id="input">
+      <input id="head" field="bmba001,bmaa004,bmba002,bmba003,bmba011,bmba012,bmba010,bmba004,bmba007,bmba008,bmba005"/>
+      <input id="body" page="1" field="bmbc009,bmbc010,bmbc011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bmba001,bmaa004,bmba002,bmba003,bmba011,bmba012,bmba010,bmba004,bmba007,bmba008,bmba005"/>
+      <construct id="body" page="1" field="bmbc009,bmbc010,bmbc011"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008"/>
+      <set id="head" type="no_entry" field="bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bmba001">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="bmaa004">
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="bmba002"/>
+      <column id="bmba003">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="l_imaal003"/>
+      <column id="l_imaal004"/>
+      <column id="bmba011"/>
+      <column id="bmba012"/>
+      <column id="bmba010">
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="bmba004">
+        <after>
+          <reference field="bmba004_desc" ref_field="bmba004" map_field="bmba004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;215&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmba004_desc"/>
+      <column id="bmba007">
+        <after>
+          <reference field="bmba007_desc" ref_field="bmba007" map_field="bmba007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmba007_desc"/>
+      <column id="bmba008"/>
+      <column id="bmba005"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bmbc009">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmbc010"/>
+      <column id="bmbc011">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="bmba_t" pk="bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008">
+      <sql id="forupd_sql" type="sql" query="SELECT bmba001,&apos;&apos;,&apos;&apos;,&apos;&apos;,bmba002,bmba003,&apos;&apos;,&apos;&apos;,bmba011,bmba012,bmba010,bmba004,&apos;&apos;,bmba007,&apos;&apos;,bmba008,&apos;&apos; FROM bmba_t WHERE bmbaent= ? AND bmbasite= ? AND bmba001=? AND bmba002=? AND bmba003=? AND bmba004=? AND bmba005=? AND bmba007=? AND bmba008=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bmba001,&apos;&apos;,&apos;&apos;,&apos;&apos;,bmba002,bmba003,&apos;&apos;,&apos;&apos;,bmba011,bmba012,bmba010,bmba004,&apos;&apos;,bmba007,&apos;&apos;,bmba008,&apos;&apos; FROM bmba_t" order="bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008"/>
+    </head>
+    <body id="bmbc_t" page="1" linked="" pk="bmbc009" fk="bmbc001,bmbc002,bmbc003,bmbc004,bmbc005,bmbc007,bmbc008">
+      <sql id="forupd_sql_detail" query="SELECT bmbc009,bmbc010,bmbc011 FROM bmbc_t WHERE bmbcent=? AND bmbcsite=? AND bmbc001=? AND bmbc002=? AND bmbc003=? AND bmbc004=? AND bmbc005=? AND bmbc007=? AND bmbc008=? AND bmbc009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmbc009,bmbc010,bmbc011 FROM bmbc_t WHERE bmbcent=? AND bmbcsite=? AND bmbc001=? AND bmbc002=? AND bmbc003=? AND bmbc004=? AND bmbc005=? AND bmbc007=? AND bmbc008=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmr570_g01" module="afm" jobmode="N" type="g01" industry="std" crtid="06821" crtdt="2015-12-21 10:34:14" modid="06821" moddt="2016-05-04 09:47:18" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="fmnbent,fmnb103,fmnb113,fmnb114,fmnb115,fmnb116,l_fmna004_desc(chr500|&apos;&apos;),l_fmna006_desc(chr500|&apos;&apos;),l_fmnacomp_desc(chr500|&apos;&apos;),l_fmna001_desc(chr500|&apos;&apos;),l_fmnasite_desc(chr500|&apos;&apos;),fmnb102,fmnb101,fmnb029,l_fmnb029_desc(chr500|&apos;&apos;),fmnb100,l_fmmj002_desc(chr500|&apos;&apos;),l_fmmj027(fmmj027|NULL),fmnb033,fmnb002,fmnb032,fmnbseq,fmnbdocno,fmna001,fmna002,fmna003,fmna004,fmna005,fmna006,fmnacomp,fmnadocno,fmnaent,fmnadocdt,fmnasite"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="fmnbent(fmnbent|fmnbent),fmnb103(fmnb103|fmnb103),fmnb113(fmnb113|fmnb113),fmnb114(fmnb114|fmnb114),fmnb115(fmnb115|fmnb115),fmnb116(fmnb116|fmnb116),l_fmna004_desc(chr500|&apos;&apos;),l_fmna006_desc(chr500|&apos;&apos;),l_fmnacomp_desc(chr500|&apos;&apos;),l_fmna001_desc(chr500|&apos;&apos;),l_fmnasite_desc(chr500|&apos;&apos;),fmnb102(fmnb102|fmnb102),fmnb101(fmnb101|fmnb101),fmnb029(fmnb029|fmnb029),l_fmnb029_desc(chr500|&apos;&apos;),fmnb100(fmnb100|fmnb100),l_fmmj002_desc(chr500|&apos;&apos;),l_fmmj027(fmmj027|NULL),fmnb033(fmnb033|fmnb033),fmnb002(fmnb002|fmnb002),fmnb032(fmnb032|fmnb032),fmnbseq(fmnbseq|fmnbseq),fmnbdocno(fmnbdocno|fmnbdocno),fmna001(fmna001|fmna001),fmna002(fmna002|fmna002),fmna003(fmna003|fmna003),fmna004(fmna004|fmna004),fmna005(fmna005|fmna005),fmna006(fmna006|fmna006),fmnacomp(fmnacomp|fmnacomp),fmnadocno(fmnadocno|fmnadocno),fmnaent(fmnaent|fmnaent),fmnadocdt(fmnadocdt|fmnadocdt),fmnasite(fmnasite|fmnasite)"/>
+    <sql id="g_from" query="fmna_t,fmnb_t"/>
+    <sql id="g_where" query="" maintable="fmna_t"/>
+    <sql id="g_order" query="fmnadocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="fmnadocno,fmnbseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="fmnadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fmnaent,fmnadocno"/>
+      <rep type="fmnbseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="fmnaent,fmnadocno,fmnbseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="fmnaent,fmnadocno,fmnbseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="fmnadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fmnaent,fmnadocno"/>
+      <rep type="fmnbseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

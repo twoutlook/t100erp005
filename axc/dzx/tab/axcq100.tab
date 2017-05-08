@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq100" module="axc" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="01531" crtdt="2014-03-10 09:16:03" modid="03297" moddt="2015-02-13 14:57:08" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="料件成本資訊查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),imagsite,imagsite_desc(chr500),imag001,imag001_desc(chr500),imag011,imag013,imag013_desc(chr500),imag014,imag015"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),imagsite(b_imagsite),imagsite_desc(b_imagsite_desc),imag001(b_imag001),imag001_desc(b_imag001_desc),imag011(b_imag011),imag013(b_imag013),imag013_desc(b_imag013_desc),imag014(b_imag014),imag015(b_imag015)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq100" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="imagsite,imag001,imag011,imag013,imag014,imag015" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="imagsite(b_imagsite),imag001(b_imag001),imag011(b_imag011),imag013(b_imag013),imag014(b_imag014),imag015(b_imag015)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="imagsite">
+        <after>
+          <reference field="imagsite_desc" ref_field="imagsite" map_field="imagent,imagsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="imagsite_desc"/>
+      <column id="imag001">
+        <after>
+          <reference field="imag001_desc" ref_field="imag001" map_field="imagent,imag001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaa001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag001" state="c"/>
+      </column>
+      <column id="imag001_desc"/>
+      <column id="imag011">
+        <controlp form="q_imag011_1" state="c"/>
+      </column>
+      <column id="imag013">
+        <after>
+          <reference field="imag013_desc" ref_field="imag013" map_field="imagent,imag013" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag013" state="c"/>
+      </column>
+      <column id="imag013_desc"/>
+      <column id="imag014">
+        <controlp form="q_imag014" state="c"/>
+      </column>
+      <column id="imag015" type="S" default="1" def_scc="8907"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="imag_t" page="1" linked="" pk="imagsite,imag001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,imagsite,&apos;&apos;,imag001,&apos;&apos;,imag011,imag013,&apos;&apos;,imag014,imag015 FROM imag_t WHERE imagent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

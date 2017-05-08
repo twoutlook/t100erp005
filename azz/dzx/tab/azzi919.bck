@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi919" module="azz" jobmode="N" type="i10" industry="std" fix_arg="0" crtid="01856" crtdt="2016-01-14 14:15:55" modid="01856" moddt="2016-12-14 17:21:15" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="AD主機註冊作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzxl004,gzxl001,gzxl002,gzxl003,gzxlownid,gzxlownid_desc(chr80),gzxlowndp,gzxlowndp_desc(chr80),gzxlcrtid,gzxlcrtid_desc(chr80),gzxlcrtdp,gzxlcrtdp_desc(chr80),gzxlcrtdt,gzxlmodid,gzxlmodid_desc(chr80),gzxlmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi919" method="dialog">
+    <section id="input">
+      <input id="head" field="gzxl004,gzxl001,gzxl002,gzxl003"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzxl004,gzxl001,gzxl002,gzxl003,gzxlownid,gzxlowndp,gzxlcrtid,gzxlcrtdp,gzxlcrtdt,gzxlmodid,gzxlmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzxl001"/>
+      <set id="head" type="no_entry" field="gzxl001"/>
+    </init>
+    <init id="head">
+      <column id="gzxl004"/>
+      <column id="gzxl001"/>
+      <column id="gzxl002"/>
+      <column id="gzxl003"/>
+      <column id="gzxlownid">
+        <after>
+          <reference field="gzxlownid_desc" ref_field="gzxl_t.gzxlownid" map_field="gzxlownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzxlownid_desc"/>
+      <column id="gzxlowndp">
+        <after>
+          <reference field="gzxlowndp_desc" ref_field="gzxl_t.gzxlowndp" map_field="gzxlowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzxlowndp_desc"/>
+      <column id="gzxlcrtid">
+        <after>
+          <reference field="gzxlcrtid_desc" ref_field="gzxl_t.gzxlcrtid" map_field="gzxlcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzxlcrtid_desc"/>
+      <column id="gzxlcrtdp">
+        <after>
+          <reference field="gzxlcrtdp_desc" ref_field="gzxl_t.gzxlcrtdp" map_field="gzxlcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzxlcrtdp_desc"/>
+      <column id="gzxlcrtdt"/>
+      <column id="gzxlmodid">
+        <after>
+          <reference field="gzxlmodid_desc" ref_field="gzxl_t.gzxlmodid" map_field="gzxlmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzxlmodid_desc"/>
+      <column id="gzxlmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzxl_t" pk="gzxl001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzxl004,gzxl001,gzxl002,gzxl003,gzxlownid,&apos;&apos;,gzxlowndp,&apos;&apos;,gzxlcrtid,&apos;&apos;,gzxlcrtdp,&apos;&apos;,gzxlcrtdt,gzxlmodid,&apos;&apos;,gzxlmoddt FROM gzxl_t WHERE gzxl001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzxl001 FROM gzxl_t" order="gzxl001"/>
+    </head>
+  </dataset>
+</assembly>
+

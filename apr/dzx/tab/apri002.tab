@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apri002" module="apr" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="03247" crtdt="2015-05-11 17:38:18" modid="03247" moddt="2015-05-11 17:38:18" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="生鮮品類配置維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="prbsstus,prbs001,prbs001_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="prbs001,prbs001_2_desc(chr500),prbsownid,prbsownid_desc(chr500),prbsowndp,prbsowndp_desc(chr500),prbscrtid,prbscrtid_desc(chr500),prbscrtdp,prbscrtdp_desc(chr500),prbscrtdt,prbsmodid,prbsmodid_desc(chr500),prbsmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="apri002" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="prbsstus,prbs001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="prbsstus,prbs001"/>
+      <construct id="body" page="2" field="prbsownid,prbsowndp,prbscrtid,prbscrtdp,prbscrtdt,prbsmodid,prbsmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="prbsstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="prbs001">
+        <after>
+          <check chkid="v_rtax001_5" id="isExist"/>
+          <reference field="prbs001_desc" ref_field="prbs_t.prbs001" map_field="prbs001" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_1" state="i"/>
+        <controlp form="q_rtax001_1" state="c"/>
+      </column>
+      <column id="prbs001_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="prbs001_2_desc"/>
+      <column id="prbsownid">
+        <after>
+          <reference field="prbsownid_desc" ref_field="prbs_t.prbsownid" map_field="prbsownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prbsownid_desc"/>
+      <column id="prbsowndp">
+        <after>
+          <reference field="prbsowndp_desc" ref_field="prbs_t.prbsowndp" map_field="prbsowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="prbsowndp_desc"/>
+      <column id="prbscrtid">
+        <after>
+          <reference field="prbscrtid_desc" ref_field="prbs_t.prbscrtid" map_field="prbscrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prbscrtid_desc"/>
+      <column id="prbscrtdp">
+        <after>
+          <reference field="prbscrtdp_desc" ref_field="prbs_t.prbscrtdp" map_field="prbscrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="prbscrtdp_desc"/>
+      <column id="prbscrtdt"/>
+      <column id="prbsmodid">
+        <after>
+          <reference field="prbsmodid_desc" ref_field="prbs_t.prbsmodid" map_field="prbsmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prbsmodid_desc"/>
+      <column id="prbsmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="prbs_t" page="1,2" linked="" pk="prbs001">
+      <sql id="forupd_sql_detail" query="SELECT prbsstus,prbs001,&apos;&apos;,&apos;&apos;,&apos;&apos;,prbsownid,&apos;&apos;,prbsowndp,&apos;&apos;,prbscrtid,&apos;&apos;,prbscrtdp,&apos;&apos;,prbscrtdt,prbsmodid,&apos;&apos;,prbsmoddt FROM prbs_t WHERE prbsent=? AND prbs001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT prbsstus,prbs001,&apos;&apos;,&apos;&apos;,&apos;&apos;,prbsownid,&apos;&apos;,prbsowndp,&apos;&apos;,prbscrtid,&apos;&apos;,prbscrtdp,&apos;&apos;,prbscrtdt,prbsmodid,&apos;&apos;,prbsmoddt FROM prbs_t WHERE prbsent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

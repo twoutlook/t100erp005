@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmm203" module="abm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02587" crtdt="2013-09-11 13:41:34" modid="02295" moddt="2016-03-29 14:26:44" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="集團產品結構特徵資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bmba001,l_imaal003_1(chr500),l_imaal004_1(chr500),bmba002,bmaa004,bmba003,l_imaal003_2(chr500),l_imaal004_2(chr500),bmba011,bmba012,bmba010,bmba004,bmba004_desc(chr80),bmba007,bmba007_desc(chr80),bmba008,bmba005(dat)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmca009,bmca009_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bmcc009,bmcc009_desc(chr500),bmcc010"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="bmce009,bmce009_desc(chr500),bmce010,bmce010_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmm203" method="dialog">
+    <section id="input">
+      <input id="head" field="bmba001,l_imaal003_1,l_imaal004_1,bmba002,bmaa004,bmba003,l_imaal003_2,l_imaal004_2,bmba011,bmba012,bmba010,bmba004,bmba007,bmba008,bmba005"/>
+      <input id="body" page="1" field="bmca009" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="bmcc009,bmcc010" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="bmce009,bmce010,bmce010_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bmba001,l_imaal003_1,l_imaal004_1,bmba002,bmaa004,bmba003,l_imaal003_2,l_imaal004_2,bmba011,bmba012,bmba010,bmba004,bmba007,bmba008,bmba005"/>
+      <construct id="body" page="1" field="bmca009"/>
+      <construct id="body" page="2" field="bmcc009,bmcc010"/>
+      <construct id="body" page="3" field="bmce009,bmce010,bmce010_desc"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008"/>
+      <set id="head" type="no_entry" field="bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bmba001">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="l_imaal003_1"/>
+      <column id="l_imaal004_1"/>
+      <column id="bmba002"/>
+      <column id="bmaa004">
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="bmba003">
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="l_imaal003_2"/>
+      <column id="l_imaal004_2"/>
+      <column id="bmba011"/>
+      <column id="bmba012"/>
+      <column id="bmba010">
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="bmba004">
+        <after>
+          <reference field="bmba004_desc" ref_field="bmba004" map_field="bmba004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;215&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmba004_desc"/>
+      <column id="bmba007">
+        <after>
+          <reference field="bmba007_desc" ref_field="bmba007" map_field="bmba007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmba007_desc"/>
+      <column id="bmba008"/>
+      <column id="bmba005"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bmca009">
+        <after>
+          <reference field="bmca009_desc" ref_field="bmca009" map_field="bmca009" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;273&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imeb004_2" state="i"/>
+        <controlp form="q_imeb004_1" state="c"/>
+      </column>
+      <column id="bmca009_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="bmcc009">
+        <after>
+          <reference field="bmcc009_desc" ref_field="bmcc009" map_field="bmcc009" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;273&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imeb004_2" state="i"/>
+        <controlp form="q_imeb004_1" state="c"/>
+      </column>
+      <column id="bmcc009_desc"/>
+      <column id="bmcc010" type="S" default="1" def_scc="1106"/>
+    </init>
+    <init id="body" page="3">
+      <column id="bmce009">
+        <after>
+          <reference field="bmce009_desc" ref_field="bmce009" map_field="bmce009" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;273&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imeb004_2" state="i"/>
+        <controlp form="q_imeb004_1" state="c"/>
+      </column>
+      <column id="bmce009_desc"/>
+      <column id="bmce010">
+        <after/>
+        <controlp form="q_imec003" state="i"/>
+        <controlp form="q_imec003" state="c"/>
+      </column>
+      <column id="bmce010_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bmba_t" pk="bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008">
+      <sql id="forupd_sql" type="sql" query="SELECT bmba001,&apos;&apos;,&apos;&apos;,bmba002,&apos;&apos;,bmba003,&apos;&apos;,&apos;&apos;,bmba011,bmba012,bmba010,bmba004,&apos;&apos;,bmba007,&apos;&apos;,bmba008,&apos;&apos; FROM bmba_t WHERE bmbaent= ? AND bmbasite= ? AND bmba001=? AND bmba002=? AND bmba003=? AND bmba004=? AND bmba005=? AND bmba007=? AND bmba008=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bmba001,&apos;&apos;,&apos;&apos;,bmba002,&apos;&apos;,bmba003,&apos;&apos;,&apos;&apos;,bmba011,bmba012,bmba010,bmba004,&apos;&apos;,bmba007,&apos;&apos;,bmba008,&apos;&apos; FROM bmba_t" order="bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008"/>
+    </head>
+    <body id="bmca_t" page="1" linked="" pk="bmca009" fk="bmca001,bmca002,bmca003,bmca004,bmca005,bmca007,bmca008">
+      <sql id="forupd_sql_detail" query="SELECT bmca009,&apos;&apos; FROM bmca_t WHERE bmcaent=? AND bmcasite=? AND bmca001=? AND bmca002=? AND bmca003=? AND bmca004=? AND bmca005=? AND bmca007=? AND bmca008=? AND bmca009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmca009,&apos;&apos; FROM bmca_t WHERE bmcaent=? AND bmcasite=? AND bmca001=? AND bmca002=? AND bmca003=? AND bmca004=? AND bmca005=? AND bmca007=? AND bmca008=?"/>
+    </body>
+    <body id="bmcc_t" page="2" linked="" pk="bmcc009" fk="bmcc001,bmcc002,bmcc003,bmcc004,bmcc005,bmcc007,bmcc008">
+      <sql id="forupd_sql_detail" query="SELECT bmcc009,&apos;&apos;,bmcc010 FROM bmcc_t WHERE bmccent=? AND bmccsite=? AND bmcc001=? AND bmcc002=? AND bmcc003=? AND bmcc004=? AND bmcc005=? AND bmcc007=? AND bmcc008=? AND bmcc009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmcc009,&apos;&apos;,bmcc010 FROM bmcc_t WHERE bmccent=? AND bmccsite=? AND bmcc001=? AND bmcc002=? AND bmcc003=? AND bmcc004=? AND bmcc005=? AND bmcc007=? AND bmcc008=?"/>
+    </body>
+    <body id="bmce_t" page="3" linked="" pk="bmce009" fk="bmce001,bmce002,bmce003,bmce004,bmce005,bmce007,bmce008">
+      <sql id="forupd_sql_detail" query="SELECT bmce009,&apos;&apos;,bmce010,&apos;&apos; FROM bmce_t WHERE bmceent=? AND bmcesite=? AND bmce001=? AND bmce002=? AND bmce003=? AND bmce004=? AND bmce005=? AND bmce007=? AND bmce008=? AND bmce009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmce009,&apos;&apos;,bmce010,&apos;&apos; FROM bmce_t WHERE bmceent=? AND bmcesite=? AND bmce001=? AND bmce002=? AND bmce003=? AND bmce004=? AND bmce005=? AND bmce007=? AND bmce008=?"/>
+    </body>
+  </dataset>
+</assembly>
+

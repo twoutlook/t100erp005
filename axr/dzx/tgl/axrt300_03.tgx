@@ -1,0 +1,748 @@
+{<section id="axrt300_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2013-12-03 16:48:40), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000254
+#+ Filename...: axrt300_03
+#+ Description: 發票資訊
+#+ Creator....: 02295(2013-10-22 00:00:00)
+#+ Modifier...: 02295 -SD/PR-
+{</section>}
+
+
+
+{<section id="axrt300_03.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xrca_m        RECORD
+       xrcadocno LIKE xrca_t.xrcadocno, 
+   xrcald LIKE xrca_t.xrcald, 
+   xrca023 LIKE xrca_t.xrca023, 
+   pmaa003 LIKE type_t.chr20, 
+   xrca025 LIKE xrca_t.xrca025, 
+   xrca011 LIKE xrca_t.xrca011, 
+   xrca011_desc LIKE type_t.chr80, 
+   xrca013 LIKE xrca_t.xrca013, 
+   xrca012 LIKE xrca_t.xrca012, 
+   xrca028 LIKE xrca_t.xrca028, 
+   xrca028_desc LIKE type_t.chr80, 
+   xrca060 LIKE xrca_t.xrca060, 
+   xrca029 LIKE xrca_t.xrca029, 
+   xrca061 LIKE xrca_t.xrca061, 
+   xrca030 LIKE xrca_t.xrca030, 
+   xrca031 LIKE xrca_t.xrca031, 
+   xrca032 LIKE xrca_t.xrca032, 
+   xrca030_2 LIKE type_t.num20_6, 
+   xrca031_2 LIKE type_t.num20_6, 
+   xrca032_2 LIKE type_t.num20_6
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_xrca_m        type_g_xrca_m
+ 
+   DEFINE g_xrcadocno_t LIKE xrca_t.xrcadocno
+DEFINE g_xrcald_t LIKE xrca_t.xrcald
+
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="axrt300_03.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrt300_03(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt300_03 WITH FORM cl_ap_formpath("axr","axrt300_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xrca_m.xrcadocno,g_xrca_m.xrcald,g_xrca_m.xrca023,g_xrca_m.pmaa003,g_xrca_m.xrca025,g_xrca_m.xrca011,g_xrca_m.xrca013,g_xrca_m.xrca012,g_xrca_m.xrca028,g_xrca_m.xrca060,g_xrca_m.xrca029,g_xrca_m.xrca061,g_xrca_m.xrca030,g_xrca_m.xrca031,g_xrca_m.xrca032,g_xrca_m.xrca030_2,g_xrca_m.xrca031_2,g_xrca_m.xrca032_2 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcadocno
+            #add-point:BEFORE FIELD xrcadocno name="input.b.xrcadocno"
+            {<point name="input.b.xrcadocno" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcadocno
+            
+            #add-point:AFTER FIELD xrcadocno name="input.a.xrcadocno"
+            {<point name="input.a.xrcadocno" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcadocno
+            #add-point:ON CHANGE xrcadocno name="input.g.xrcadocno"
+            {<point name="input.g.xrcadocno" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcald
+            #add-point:BEFORE FIELD xrcald name="input.b.xrcald"
+            {<point name="input.b.xrcald" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcald
+            
+            #add-point:AFTER FIELD xrcald name="input.a.xrcald"
+            {<point name="input.a.xrcald" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcald
+            #add-point:ON CHANGE xrcald name="input.g.xrcald"
+            {<point name="input.g.xrcald" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca023
+            #add-point:BEFORE FIELD xrca023 name="input.b.xrca023"
+            {<point name="input.b.xrca023" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca023
+            
+            #add-point:AFTER FIELD xrca023 name="input.a.xrca023"
+            {<point name="input.a.xrca023" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca023
+            #add-point:ON CHANGE xrca023 name="input.g.xrca023"
+            {<point name="input.g.xrca023" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmaa003
+            #add-point:BEFORE FIELD pmaa003 name="input.b.pmaa003"
+            {<point name="input.b.pmaa003" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmaa003
+            
+            #add-point:AFTER FIELD pmaa003 name="input.a.pmaa003"
+            {<point name="input.a.pmaa003" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmaa003
+            #add-point:ON CHANGE pmaa003 name="input.g.pmaa003"
+            {<point name="input.g.pmaa003" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca025
+            #add-point:BEFORE FIELD xrca025 name="input.b.xrca025"
+            {<point name="input.b.xrca025" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca025
+            
+            #add-point:AFTER FIELD xrca025 name="input.a.xrca025"
+            {<point name="input.a.xrca025" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca025
+            #add-point:ON CHANGE xrca025 name="input.g.xrca025"
+            {<point name="input.g.xrca025" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca011
+            
+            #add-point:AFTER FIELD xrca011 name="input.a.xrca011"
+            {<point name="input.a.xrca011" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca011
+            #add-point:BEFORE FIELD xrca011 name="input.b.xrca011"
+            {<point name="input.b.xrca011" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca011
+            #add-point:ON CHANGE xrca011 name="input.g.xrca011"
+            {<point name="input.g.xrca011" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca013
+            #add-point:BEFORE FIELD xrca013 name="input.b.xrca013"
+            {<point name="input.b.xrca013" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca013
+            
+            #add-point:AFTER FIELD xrca013 name="input.a.xrca013"
+            {<point name="input.a.xrca013" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca013
+            #add-point:ON CHANGE xrca013 name="input.g.xrca013"
+            {<point name="input.g.xrca013" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca012
+            #add-point:BEFORE FIELD xrca012 name="input.b.xrca012"
+            {<point name="input.b.xrca012" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca012
+            
+            #add-point:AFTER FIELD xrca012 name="input.a.xrca012"
+            {<point name="input.a.xrca012" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca012
+            #add-point:ON CHANGE xrca012 name="input.g.xrca012"
+            {<point name="input.g.xrca012" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca028
+            
+            #add-point:AFTER FIELD xrca028 name="input.a.xrca028"
+            {<point name="input.a.xrca028" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca028
+            #add-point:BEFORE FIELD xrca028 name="input.b.xrca028"
+            {<point name="input.b.xrca028" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca028
+            #add-point:ON CHANGE xrca028 name="input.g.xrca028"
+            {<point name="input.g.xrca028" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca060
+            #add-point:BEFORE FIELD xrca060 name="input.b.xrca060"
+            {<point name="input.b.xrca060" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca060
+            
+            #add-point:AFTER FIELD xrca060 name="input.a.xrca060"
+            {<point name="input.a.xrca060" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca060
+            #add-point:ON CHANGE xrca060 name="input.g.xrca060"
+            {<point name="input.g.xrca060" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca029
+            #add-point:BEFORE FIELD xrca029 name="input.b.xrca029"
+            {<point name="input.b.xrca029" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca029
+            
+            #add-point:AFTER FIELD xrca029 name="input.a.xrca029"
+            {<point name="input.a.xrca029" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca029
+            #add-point:ON CHANGE xrca029 name="input.g.xrca029"
+            {<point name="input.g.xrca029" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca061
+            #add-point:BEFORE FIELD xrca061 name="input.b.xrca061"
+            {<point name="input.b.xrca061" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca061
+            
+            #add-point:AFTER FIELD xrca061 name="input.a.xrca061"
+            {<point name="input.a.xrca061" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca061
+            #add-point:ON CHANGE xrca061 name="input.g.xrca061"
+            {<point name="input.g.xrca061" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca030
+            #add-point:BEFORE FIELD xrca030 name="input.b.xrca030"
+            {<point name="input.b.xrca030" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca030
+            
+            #add-point:AFTER FIELD xrca030 name="input.a.xrca030"
+            {<point name="input.a.xrca030" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca030
+            #add-point:ON CHANGE xrca030 name="input.g.xrca030"
+            {<point name="input.g.xrca030" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca031
+            #add-point:BEFORE FIELD xrca031 name="input.b.xrca031"
+            {<point name="input.b.xrca031" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca031
+            
+            #add-point:AFTER FIELD xrca031 name="input.a.xrca031"
+            {<point name="input.a.xrca031" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca031
+            #add-point:ON CHANGE xrca031 name="input.g.xrca031"
+            {<point name="input.g.xrca031" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca032
+            #add-point:BEFORE FIELD xrca032 name="input.b.xrca032"
+            {<point name="input.b.xrca032" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca032
+            
+            #add-point:AFTER FIELD xrca032 name="input.a.xrca032"
+            {<point name="input.a.xrca032" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca032
+            #add-point:ON CHANGE xrca032 name="input.g.xrca032"
+            {<point name="input.g.xrca032" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca030_2
+            #add-point:BEFORE FIELD xrca030_2 name="input.b.xrca030_2"
+            {<point name="input.b.xrca030_2" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca030_2
+            
+            #add-point:AFTER FIELD xrca030_2 name="input.a.xrca030_2"
+            {<point name="input.a.xrca030_2" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca030_2
+            #add-point:ON CHANGE xrca030_2 name="input.g.xrca030_2"
+            {<point name="input.g.xrca030_2" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca031_2
+            #add-point:BEFORE FIELD xrca031_2 name="input.b.xrca031_2"
+            {<point name="input.b.xrca031_2" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca031_2
+            
+            #add-point:AFTER FIELD xrca031_2 name="input.a.xrca031_2"
+            {<point name="input.a.xrca031_2" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca031_2
+            #add-point:ON CHANGE xrca031_2 name="input.g.xrca031_2"
+            {<point name="input.g.xrca031_2" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca032_2
+            #add-point:BEFORE FIELD xrca032_2 name="input.b.xrca032_2"
+            {<point name="input.b.xrca032_2" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca032_2
+            
+            #add-point:AFTER FIELD xrca032_2 name="input.a.xrca032_2"
+            {<point name="input.a.xrca032_2" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca032_2
+            #add-point:ON CHANGE xrca032_2 name="input.g.xrca032_2"
+            {<point name="input.g.xrca032_2" />}
+            #END add-point 
+
+
+ #欄位檢查
+                  #Ctrlp:input.c.xrcadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcadocno
+            #add-point:ON ACTION controlp INFIELD xrcadocno name="input.c.xrcadocno"
+            {<point name="input.c.xrcadocno" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrcald
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcald
+            #add-point:ON ACTION controlp INFIELD xrcald name="input.c.xrcald"
+            {<point name="input.c.xrcald" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca023
+            #add-point:ON ACTION controlp INFIELD xrca023 name="input.c.xrca023"
+            {<point name="input.c.xrca023" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.pmaa003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmaa003
+            #add-point:ON ACTION controlp INFIELD pmaa003 name="input.c.pmaa003"
+            {<point name="input.c.pmaa003" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca025
+            #add-point:ON ACTION controlp INFIELD xrca025 name="input.c.xrca025"
+            {<point name="input.c.xrca025" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca011
+            #add-point:ON ACTION controlp INFIELD xrca011 name="input.c.xrca011"
+            {<point name="input.c.xrca011" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca013
+            #add-point:ON ACTION controlp INFIELD xrca013 name="input.c.xrca013"
+            {<point name="input.c.xrca013" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca012
+            #add-point:ON ACTION controlp INFIELD xrca012 name="input.c.xrca012"
+            {<point name="input.c.xrca012" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca028
+            #add-point:ON ACTION controlp INFIELD xrca028 name="input.c.xrca028"
+            {<point name="input.c.xrca028" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca060
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca060
+            #add-point:ON ACTION controlp INFIELD xrca060 name="input.c.xrca060"
+            {<point name="input.c.xrca060" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca029
+            #add-point:ON ACTION controlp INFIELD xrca029 name="input.c.xrca029"
+            {<point name="input.c.xrca029" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca061
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca061
+            #add-point:ON ACTION controlp INFIELD xrca061 name="input.c.xrca061"
+            {<point name="input.c.xrca061" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca030
+            #add-point:ON ACTION controlp INFIELD xrca030 name="input.c.xrca030"
+            {<point name="input.c.xrca030" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca031
+            #add-point:ON ACTION controlp INFIELD xrca031 name="input.c.xrca031"
+            {<point name="input.c.xrca031" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca032
+            #add-point:ON ACTION controlp INFIELD xrca032 name="input.c.xrca032"
+            {<point name="input.c.xrca032" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca030_2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca030_2
+            #add-point:ON ACTION controlp INFIELD xrca030_2 name="input.c.xrca030_2"
+            {<point name="input.c.xrca030_2" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca031_2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca031_2
+            #add-point:ON ACTION controlp INFIELD xrca031_2 name="input.c.xrca031_2"
+            {<point name="input.c.xrca031_2" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.xrca032_2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca032_2
+            #add-point:ON ACTION controlp INFIELD xrca032_2 name="input.c.xrca032_2"
+            {<point name="input.c.xrca032_2" />}
+            #END add-point
+
+
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt300_03 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="axrt300_03.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="axrt300_03.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli075_02" module="agl" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02599" crtdt="2016-04-13 10:05:49" modid="02599" moddt="2016-04-13 11:09:18" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="頁首頁尾設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glff001,glff002,glff003,glff004,glffl004,glffstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glff001,glff002,glffownid,glffownid_desc(chr500),glffowndp,glffowndp_desc(chr500),glffcrtid,glffcrtid_desc(chr500),glffcrtdp,glffcrtdp_desc(chr500),glffcrtdt,glffmodid,glffmodid_desc(chr500),glffmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli075_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glff001,glff002,glff003,glff004,glffl004,glffstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glff001,glff002,glff003,glff004,glffl004,glffstus"/>
+      <construct id="body" page="2" field="glffownid,glffowndp,glffcrtid,glffcrtdp,glffcrtdt,glffmodid,glffmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="glff001"/>
+      <column id="glff002" type="S" default="0"/>
+      <column id="glff003" type="S" default="1" def_scc="8049"/>
+      <column id="glff004" type="S" default="1" def_scc="8050"/>
+      <column id="glffl004"/>
+      <column id="glffstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="glffownid">
+        <after>
+          <reference field="glffownid_desc" ref_field="glff_t.glffownid" map_field="glffownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glffownid_desc"/>
+      <column id="glffowndp">
+        <after>
+          <reference field="glffowndp_desc" ref_field="glff_t.glffowndp" map_field="glffowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glffowndp_desc"/>
+      <column id="glffcrtid">
+        <after>
+          <reference field="glffcrtid_desc" ref_field="glff_t.glffcrtid" map_field="glffcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glffcrtid_desc"/>
+      <column id="glffcrtdp">
+        <after>
+          <reference field="glffcrtdp_desc" ref_field="glff_t.glffcrtdp" map_field="glffcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glffcrtdp_desc"/>
+      <column id="glffcrtdt"/>
+      <column id="glffmodid">
+        <after>
+          <reference field="glffmodid_desc" ref_field="glff_t.glffmodid" map_field="glffmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glffmodid_desc"/>
+      <column id="glffmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glff_t" page="1,2" linked="" pk="glff001,glff002">
+      <sql id="forupd_sql_detail" query="SELECT glff001,glff002,glff003,glff004,&apos;&apos;,glffstus,&apos;&apos;,&apos;&apos;,glffownid,&apos;&apos;,glffowndp,&apos;&apos;,glffcrtid,&apos;&apos;,glffcrtdp,&apos;&apos;,glffcrtdt,glffmodid,&apos;&apos;,glffmoddt FROM glff_t WHERE glffent=? AND glff001=? AND glff002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glff001,glff002,glff003,glff004,&apos;&apos;,glffstus,&apos;&apos;,&apos;&apos;,glffownid,&apos;&apos;,glffowndp,&apos;&apos;,glffcrtid,&apos;&apos;,glffcrtdp,&apos;&apos;,glffcrtdt,glffmodid,&apos;&apos;,glffmoddt FROM glff_t WHERE glffent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="glffl_t.glffl004" table="glffl_t" fk="glff001,glff002" pk="glffl001,glffl002,glffl003" field="glffl004"/>
+    </body>
+  </dataset>
+</assembly>
+

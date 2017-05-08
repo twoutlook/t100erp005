@@ -1,0 +1,99 @@
+{<section id="${app_id}.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+
+SCHEMA ds
+
+GLOBALS "../../cfg/top_global.inc"
+
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+{<point name="free_style.variable" mark="Y"/>}
+#end add-point
+
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+{<point name="global.variable" />}
+#end add-point
+
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+{</section>}
+
+{<section id="${app_id}.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define name="main.define"
+   {<point name="main.define" />}
+   #end add-point    
+   #add-point:main段define(客製用) name="main.define_customerization"
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point
+
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   #add-point:初始化前定義 name="main.before_ap_init"
+   {<point name="main.before_ap_init"/>}
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("${general_module}","${jobmode}")
+
+   #add-point:作業初始化 name="main.init"
+   {<point name="main.init"/>}
+   #end add-point
+
+   #add-point:SQL_define name="main.define_sql"
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE ${general_prefix}_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+
+      #add-point:Service Call name="main.servicecall"
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_${general_prefix} WITH FORM cl_ap_formpath("${general_module}",g_code)
+
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+
+      #程式初始化
+      CALL ${general_prefix}_init()
+
+      #進入選單 Menu (${general_bgjob}='N')
+      CALL ${general_prefix}_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_${general_prefix}
+   END IF
+
+   #add-point:作業離開前 name="main.exit"
+   {<point name="main.exit" />}
+   #end add-point
+
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+
+END MAIN
+{</section>}
+
+{<section id="${app_id}.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+{<point name="other.function"/>}
+#end add-point
+{</section>}
+

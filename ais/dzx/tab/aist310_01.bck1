@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aist310_01" module="ais" jobmode="N" type="c01c" industry="std" fix_arg="0" crtid="02114" crtdt="2015-01-13 16:29:32" modid="03080" moddt="2016-10-26 12:05:51" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="批次產生對帳資料">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xmdksite,xmdkdocno,xmdk006,xmdkdocdt,xmdk001,xmdk055"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aist310_01" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field="xmdksite,xmdkdocno,xmdk006,xmdkdocdt,xmdk001,xmdk055"/>
+    </section>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xmdksite">
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xmdkdocno">
+        <controlp form="q_xmdkdocno" state="c"/>
+      </column>
+      <column id="xmdk006">
+        <controlp form="q_xmdadocno_2" state="c"/>
+      </column>
+      <column id="xmdkdocdt"/>
+      <column id="xmdk001"/>
+      <column id="xmdk055"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xmdk_t" pk="xmdkdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xmdksite,xmdkdocno,xmdk006,xmdkdocdt,xmdk001,xmdk055 FROM xmdk_t WHERE xmdkent= ? AND xmdkdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xmdkdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

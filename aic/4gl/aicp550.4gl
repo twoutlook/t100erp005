@@ -1,0 +1,1666 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aicp550.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2014-11-05 15:19:32), PR版次:0001(2014-12-19 16:52:40)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000056
+#+ Filename...: aicp550
+#+ Description: 多角銷售應收付拋轉作業
+#+ Creator....: 05384(2014-10-30 16:50:50)
+#+ Modifier...: 05384 -SD/PR- 05384
+ 
+{</section>}
+ 
+{<section id="aicp550.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+   sel               LIKE type_t.chr1,
+   xmdkdocno         LIKE xmdk_t.xmdkdocno,  #出貨/銷退單號
+   xmdkdocdt         LIKE xmdk_t.xmdkdocdt,  #單據日期
+   xmdk007           LIKE xmdk_t.xmdk007,    #客戶編號
+   xmdk007_desc      LIKE type_t.chr500,
+   xmdk009           LIKE xmdk_t.xmdk009,  #收貨客戶
+   xmdk009_desc      LIKE type_t.chr500,
+   xmdk008           LIKE xmdk_t.xmdk008,  #收款客戶
+   xmdk008_desc      LIKE type_t.chr500,
+   xmdk003           LIKE xmdk_t.xmdk003,  #業務人員
+   xmdk003_desc      LIKE type_t.chr500,
+   xmdk004           LIKE xmdk_t.xmdk004,  #業務部門
+   xmdk004_desc      LIKE type_t.chr500,
+   xmdk002           LIKE xmdk_t.xmdk002,  #訂單類型
+   xmdk035           LIKE xmdk_t.xmdk035,  #多角流程序號
+   xmdkownid         LIKE xmdk_t.xmdkownid,  #資料所有者
+   xmdkownid_desc    LIKE type_t.chr500,
+   xmdkcrtid         LIKE xmdk_t.xmdkcrtid,  #資料建立者
+   xmdkcrtid_desc    LIKE type_t.chr500
+                     END RECORD
+DEFINE g_detail_d_t      type_g_detail_d
+
+TYPE type_g_detail2_d RECORD
+   xmdlseq            LIKE xmdl_t.xmdlseq,
+   xmdl003            LIKE xmdl_t.xmdl003,
+   xmdl004            LIKE xmdl_t.xmdl004,
+   xmdl008            LIKE xmdl_t.xmdl008,
+   xmdl008_desc       LIKE type_t.chr500,
+   xmdl008_desc_1     LIKE type_t.chr500,
+   xmdl017            LIKE xmdl_t.xmdl017,
+   xmdl018            LIKE xmdl_t.xmdl018,
+   xmdl021            LIKE xmdl_t.xmdl021,
+   xmdl022            LIKE xmdl_t.xmdl022,
+   xmdl024            LIKE xmdl_t.xmdl024,
+   xmdl027            LIKE xmdl_t.xmdl027,
+   xmdl028            LIKE xmdl_t.xmdl028
+                         END RECORD
+DEFINE g_detail2_d       DYNAMIC ARRAY OF type_g_detail2_d
+DEFINE g_detail2_cnt     LIKE type_t.num5
+DEFINE g_rec_b           LIKE type_t.num5
+
+TYPE type_g_detail3_d RECORD
+   xmdkdocno1         LIKE xmdk_t.xmdkdocno,  #出貨/銷退單號
+   xmdkdocdt1         LIKE xmdk_t.xmdkdocdt,  #單據日期
+   xmdk0071           LIKE xmdk_t.xmdk007,    #客戶編號
+   xmdk0071_desc      LIKE type_t.chr500,
+   xmdk0091           LIKE xmdk_t.xmdk009,  #收貨客戶
+   xmdk0091_desc      LIKE type_t.chr500,
+   xmdk0081           LIKE xmdk_t.xmdk008,  #收款客戶
+   xmdk0081_desc      LIKE type_t.chr500,
+   xmdk0031           LIKE xmdk_t.xmdk003,  #業務人員
+   xmdk0031_desc      LIKE type_t.chr500,
+   xmdk0041           LIKE xmdk_t.xmdk004,  #業務部門
+   xmdk0041_desc      LIKE type_t.chr500,
+   xmdk0021           LIKE xmdk_t.xmdk002,  #訂單類型
+   xmdkownid1         LIKE xmdk_t.xmdkownid,  #資料所有者
+   xmdkownid1_desc    LIKE type_t.chr500,
+   xmdkcrtid1         LIKE xmdk_t.xmdkcrtid,  #資料建立者
+   xmdkcrtid1_desc    LIKE type_t.chr500,
+   xmdk0351           LIKE xmdk_t.xmdk035,  #多角流程序號
+   xrcadocno          LIKE xrca_t.xrcadocno
+                      END RECORD
+DEFINE g_detail3_d       DYNAMIC ARRAY OF type_g_detail3_d
+DEFINE g_detail3_cnt     LIKE type_t.num5
+
+TYPE type_g_detail4_d RECORD
+   xmdkdocno2         LIKE xmdk_t.xmdkdocno,  #出貨/銷退單號
+   xmdkdocdt2         LIKE xmdk_t.xmdkdocdt,  #單據日期
+   xmdk0072           LIKE xmdk_t.xmdk007,    #客戶編號
+   xmdk0072_desc      LIKE type_t.chr500,
+   xmdk0092           LIKE xmdk_t.xmdk009,  #收貨客戶
+   xmdk0092_desc      LIKE type_t.chr500,
+   xmdk0082           LIKE xmdk_t.xmdk008,  #收款客戶
+   xmdk0082_desc      LIKE type_t.chr500,
+   xmdk0032           LIKE xmdk_t.xmdk003,  #業務人員
+   xmdk0032_desc      LIKE type_t.chr500,
+   xmdk0042           LIKE xmdk_t.xmdk004,  #業務部門
+   xmdk0042_desc      LIKE type_t.chr500,
+   xmdk0022           LIKE xmdk_t.xmdk002,  #訂單類型
+   xmdkownid2         LIKE xmdk_t.xmdkownid,  #資料所有者
+   xmdkownid2_desc    LIKE type_t.chr500,
+   xmdkcrtid2         LIKE xmdk_t.xmdkcrtid,  #資料建立者
+   xmdkcrtid2_desc    LIKE type_t.chr500,
+   xmdk0352           LIKE xmdk_t.xmdk035,  #多角流程序號
+   xrcadocno1         LIKE xrca_t.xrcadocno,
+   reason             LIKE type_t.chr80
+                      END RECORD
+DEFINE g_detail4_d    DYNAMIC ARRAY OF type_g_detail4_d
+DEFINE g_detail4_cnt  LIKE type_t.num5
+DEFINE g_icab003      LIKE icab_t.icab003   #多角流程代碼最終站的營運據點 
+DEFINE g_success_cnt  LIKE type_t.num5
+DEFINE g_fail_cnt     LIKE type_t.num5        
+TYPE type_input   RECORD
+     xmdkdocdt_chk    LIKE type_t.chr1,
+     chkdate          LIKE type_t.dat,
+     sum_date         LIKE type_t.dat
+                  END RECORD
+DEFINE g_input   type_input
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aicp550.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aic","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   CALL aicp550_create_temp_table()
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET g_bgjob = 'Y'
+   END IF
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      IF NOT cl_null(g_argv[1]) THEN
+         LET g_wc = " pmdldocno = '",g_argv[1],"' "
+         CALL aicp550_query()
+         UPDATE aicp550_tmp 
+            SET sel = 'Y'
+         CALL aicp550_process()
+      END IF
+      #end add-p
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aicp550 WITH FORM cl_ap_formpath("aic",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aicp550_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aicp550_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aicp550
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   DROP TABLE aicp550_tmp;
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aicp550.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aicp550_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc_part('xmdk000','2077','1,2,6')
+   CALL cl_set_combo_scc('xmdk002','2063')
+   CALL cl_set_combo_scc('b_xmdk002','2063')
+   CALL cl_set_combo_scc('b_xmdk0021','2063')
+   CALL cl_set_combo_scc('b_xmdk0022','2063')
+   LET g_errshow = 1
+   IF cl_null(g_bgjob) THEN
+      LET g_bgjob = 'N'
+   END IF
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicp550.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aicp550_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE l_cnt       LIKE type_t.num5
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   LET g_wc = " 1=1"
+   LET g_input.xmdkdocdt_chk = 'Y'
+   LET g_input.chkdate = ''
+   LET g_input.sum_date = ''
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL aicp550_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         INPUT BY NAME g_input.xmdkdocdt_chk,g_input.chkdate,g_input.sum_date 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            BEFORE INPUT
+               CALL aicp550_set_no_required_b()
+               CALL aicp550_set_required_b()
+            ON CHANGE xmdkdocdt_chk
+               CALL aicp550_set_no_required_b()
+               CALL aicp550_set_required_b()
+#            AFTER FIELD chkdate
+#               IF g_input.xmdkdocdt_chk = 'N' THEN
+#                  IF cl_null(g_input.chkdate) THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = 'aic-00092'
+#                     LET g_errparam.extend = ''
+#                     LET g_errparam.popup = TRUE
+#                     LET g_input.xmdkdocdt_chk = 'Y'
+#                     CALL cl_err()
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF
+                       
+         END INPUT
+         CONSTRUCT BY NAME g_wc ON xmdk000,xmdkdocno,xmdkdocdt,xmdk007,xmdk009,
+                                   xmdk008,xmdk003,xmdk004,xmdk002,xmdk035,xmdkownid,xmdkcrtid
+
+            BEFORE CONSTRUCT
+            
+            ON ACTION controlp INFIELD xmdkdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = "('1','2','6')"
+               LET g_qryparam.where = " xmdkstus = 'S' AND xmdk044 IS NOT NULL ",
+                                    #因目前多角尚未完善 多角序號幾乎為空，若加入下行mark掉的條件會完全沒有資料，所以先行mark以確認其他條件是否正確
+                                    " AND xmdk035 IS NOT NULL ",
+                                    " AND (EXISTS (SELECT icaa001 FROM icaa_t,icab_t ",
+                                    "               WHERE icabent = icaaent ",
+                                    "                 AND icab001 = icaa001 ",
+                                    "                 AND icaa001 = xmdk044 ",
+                                    "                 AND icaa003 = 1 ",
+                                    "                 AND icab002 = 0 ",
+                                    "                 AND icab003 = '",g_site,"')",
+                                    "   OR EXISTS (SELECT xmdadocno FROM xmda_t ",
+                                    "               WHERE xmdaent = xmdkent ",
+                                    "                 AND xmdadocno = xmdl003 ",
+                                    "                 AND xmda006 = '3' ))"
+               CALL q_xmdkdocno_9()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdkdocno  #顯示到畫面上
+               NEXT FIELD xmdkdocno                     #返回原欄位    
+               
+            ON ACTION controlp INFIELD xmdk007
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_pmaa001_6()
+               DISPLAY g_qryparam.return1 TO xmdk007
+               NEXT FIELD xmdk007
+               
+            ON ACTION controlp INFIELD xmdk009
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_pmaa001_6()
+               DISPLAY g_qryparam.return1 TO xmdk009
+               NEXT FIELD xmdk009                     #返回原欄位
+   
+            ON ACTION controlp INFIELD xmdk008
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_pmaa001_6()
+               DISPLAY g_qryparam.return1 TO xmdk008
+               NEXT FIELD xmdk008                     #返回原欄位
+               
+            ON ACTION controlp INFIELD xmdk003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdk003  #顯示到畫面上
+               NEXT FIELD xmdk003                     #返回原欄位
+               
+            ON ACTION controlp INFIELD xmdk004
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooeg001()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdk004  #顯示到畫面上
+               NEXT FIELD xmdk004                     #返回原欄位
+               
+            ON ACTION controlp INFIELD xmdk035
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_icaa001()
+               DISPLAY g_qryparam.return1 TO xmdk035
+               NEXT FIELD xmdk035
+               
+            ON ACTION controlp INFIELD xmdkownid
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdkownid  #顯示到畫面上
+               NEXT FIELD xmdkownid
+               
+            ON ACTION controlp INFIELD xmdkcrtid
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdkcrtid  #顯示到畫面上
+               NEXT FIELD xmdkcrtid                     #返回原欄位
+
+         END CONSTRUCT
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         INPUT ARRAY g_detail_d FROM s_detail1.* 
+              ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                        INSERT ROW = FALSE,
+                        DELETE ROW = FALSE,
+                        APPEND ROW = FALSE)
+            BEFORE INPUT
+               IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+                 CALL FGL_SET_ARR_CURR(g_detail_d.getLength()+1) 
+                 LET g_insert = 'N' 
+               END IF 
+             
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_master_idx = l_ac
+               DISPLAY l_ac TO FORMONLY.h_index
+               CALL aicp550_fetch()       
+               LET g_detail_d_t.* = g_detail_d[l_ac].*
+               
+            ON ROW CHANGE
+               UPDATE aicp550_tmp
+                  SET sel = g_detail_d[l_ac].sel
+                WHERE xmdkdocno = g_detail_d[l_ac].xmdkdocno
+         END INPUT   
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_detail2_d TO s_detail2.* ATTRIBUTE(COUNT=g_detail2_cnt)
+            BEFORE DISPLAY
+              
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               DISPLAY l_ac TO FORMONLY.idx
+              
+         END DISPLAY
+
+         DISPLAY ARRAY g_detail3_d TO s_detail3.* ATTRIBUTE(COUNT=g_detail3_cnt)
+            BEFORE DISPLAY
+
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               DISPLAY l_ac TO FORMONLY.idx
+
+         END DISPLAY
+
+         DISPLAY ARRAY g_detail4_d TO s_detail4.* ATTRIBUTE(COUNT=g_detail4_cnt)
+            BEFORE DISPLAY
+
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail4")
+               DISPLAY l_ac TO FORMONLY.idx
+
+         END DISPLAY
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+            CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            UPDATE aicp550_tmp 
+               SET sel = 'Y'
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            UPDATE aicp550_tmp 
+               SET sel = 'N'
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  UPDATE aicp550_tmp 
+                     SET sel = 'Y' 
+                    WHERE xmdkdocno = g_detail_d[li_idx].xmdkdocno
+               END IF
+            END FOR 
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  UPDATE aicp550_tmp 
+                     SET sel = 'N' 
+                    WHERE xmdkdocno = g_detail_d[li_idx].xmdkdocno
+               END IF
+            END FOR 
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aicp550_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL aicp550_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL aicp550_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         ON ACTION batch_execute
+            #變更此筆資料後，直接按執行
+            UPDATE aicp550_tmp
+               SET sel = g_detail_d[l_ac].sel
+             WHERE xmdkdocno = g_detail_d[l_ac].xmdkdocno
+            
+            LET l_cnt = ''
+            SELECT COUNT(*) INTO l_cnt
+              FROM aicp550_tmp
+             WHERE sel = 'Y'
+            IF cl_null(l_cnt) OR l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = '-400'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            ELSE
+               CALL aicp550_process()
+               CALL aicp550_query()
+            END IF
+            ACCEPT DIALOG
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicp550.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aicp550_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+DELETE FROM aicp550_tmp;
+
+   LET g_sql = "SELECT DISTINCT xmdkent,'N',xmdkdocno,xmdkdocdt,xmdk007,xmdk009, ",
+               "       xmdk008,xmdk003,xmdk004,xmdk002,xmdk035,xmdkownid,xmdkcrtid,xmdk044 ",
+               "  FROM xmdk_t,xmdl_t ",
+               " WHERE xmdkent = xmdlent ",
+               "   AND xmdkdocno = xmdldocno ",
+               "   AND COALESCE(xmdl038,0) = 0",
+               "   AND xmdkent = '",g_enterprise,"' ",
+               "   AND xmdksite = '",g_site,"' ",
+               "   AND ",g_wc,
+               "   AND xmdk000 IN ('1','2','6') ",
+               "   AND xmdkstus = 'S' ",
+               #因目前多角尚未完善 多角序號幾乎為空，若加入下行mark掉的條件會完全沒有資料，所以先行mark以確認其他條件是否正確
+               "   AND xmdk035 IS NOT NULL ",
+               "   AND xmdk044 IS NOT NULL ",
+               "   AND (EXISTS (SELECT icaa001 FROM icaa_t,icab_t WHERE icabent = icaaent AND icab001 = icaa001 AND icaa001 = xmdk044 AND icaa003 = 1 AND icab002 = 0 AND icab003 = '",g_site,"') ",
+               "    OR  EXISTS (SELECT xmdadocno FROM xmda_t WHERE xmdaent = xmdkent AND xmdadocno = xmdl003 AND xmda006 = '3' )) "
+   LET g_sql = "INSERT INTO aicp550_tmp ",
+               "   (xmdkent,sel,xmdkdocno,xmdkdocdt,xmdk007,xmdk009, ",
+               "    xmdk008,xmdk003,xmdk004,xmdk002,xmdk035,xmdkownid,xmdkcrtid,xmdk044) ",g_sql
+   PREPARE tmp_ins_pre FROM g_sql
+   EXECUTE tmp_ins_pre
+   LET g_wc_filter = " 1=1"
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aicp550_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicp550.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aicp550_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   LET g_sql = "SELECT DISTINCT 'N',xmdkdocno,xmdkdocdt,xmdk007,a1.pmaal004,xmdk009,a2.pmaal004, ",
+               "       xmdk008,a3.pmaal004,xmdk003,b1.ooag011,xmdk004,ooefl003,",
+               "       xmdk002,xmdk035,xmdkownid,b2.ooag011,xmdkcrtid,b3.ooag011 ",
+               "  FROM aicp550_tmp ",
+               "       LEFT OUTER JOIN pmaal_t a1 ON a1.pmaalent = '",g_enterprise,"' AND a1.pmaal001 = xmdk007 AND a1.pmaal002 = '",g_dlang,"' ",
+               "       LEFT OUTER JOIN pmaal_t a2 ON a2.pmaalent = '",g_enterprise,"' AND a2.pmaal001 = xmdk009 AND a2.pmaal002 = '",g_dlang,"' ",
+               "       LEFT OUTER JOIN pmaal_t a3 ON a3.pmaalent = '",g_enterprise,"' AND a3.pmaal001 = xmdk008 AND a3.pmaal002 = '",g_dlang,"' ",
+               "       LEFT OUTER JOIN ooag_t  b1 ON b1.ooagent  = '",g_enterprise,"' AND b1.ooag001 = xmdk003 ",
+               "       LEFT OUTER JOIN ooag_t  b2 ON b2.ooagent  = '",g_enterprise,"' AND b2.ooag001 = xmdkownid ",
+               "       LEFT OUTER JOIN ooag_t  b3 ON b3.ooagent  = '",g_enterprise,"' AND b3.ooag001 = xmdkcrtid ",
+               "       LEFT OUTER JOIN ooefl_t ON ooeflent = '",g_enterprise,"' AND ooefl001 = xmdk004 AND ooefl002 = '",g_dlang,"' ",
+               " WHERE xmdkent = ? AND ",g_wc_filter,
+               " ORDER BY xmdkdocno "
+   #end add-point
+ 
+   PREPARE aicp550_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aicp550_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+ 
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+   g_detail_d[l_ac].sel,g_detail_d[l_ac].xmdkdocno,g_detail_d[l_ac].xmdkdocdt,
+   g_detail_d[l_ac].xmdk007,g_detail_d[l_ac].xmdk007_desc,g_detail_d[l_ac].xmdk009,
+   g_detail_d[l_ac].xmdk009_desc,g_detail_d[l_ac].xmdk008,g_detail_d[l_ac].xmdk008_desc,
+   g_detail_d[l_ac].xmdk003,g_detail_d[l_ac].xmdk003_desc,g_detail_d[l_ac].xmdk004,
+   g_detail_d[l_ac].xmdk004_desc,g_detail_d[l_ac].xmdk002,g_detail_d[l_ac].xmdk035,
+   g_detail_d[l_ac].xmdkownid,g_detail_d[l_ac].xmdkownid_desc,g_detail_d[l_ac].xmdkcrtid,
+   g_detail_d[l_ac].xmdkcrtid_desc
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      
+      #end add-point
+      
+      CALL aicp550_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aicp550_sel
+   
+   LET l_ac = 1
+   CALL aicp550_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicp550.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aicp550_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   DEFINE l_xmdldocno     LIKE xmdl_t.xmdldocno
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_icaa003       LIKE icaa_t.icaa003
+   DEFINE l_site          LIKE icab_t.icab003
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   CALL g_detail2_d.clear()
+   IF cl_null(g_master_idx) OR g_master_idx <=0 THEN
+      RETURN
+   END IF
+   
+   LET l_ac = 1
+   LET g_sql = "SELECT xmdlseq,xmdl003,xmdl004,xmdl008,imaal003,imaal004, ",
+               "       xmdl017,xmdl018,xmdl021,xmdl022,xmdl024,xmdl027,xmdl028,xmdldocno ",
+               "  FROM xmdl_t ",
+               "       LEFT OUTER JOIN imaal_t ON imaalent = xmdlent AND imaal001 = xmdl008 AND imaal002 = '",g_dlang,"' ",
+               " WHERE xmdlent = '",g_enterprise,"'",
+               "   AND xmdldocno = '",g_detail_d[g_master_idx].xmdkdocno,"' ",
+               " ORDER BY xmdlseq "
+   PREPARE xmdl_fill_pre FROM g_sql
+   DECLARE xmdl_fill_cur CURSOR FOR xmdl_fill_pre
+   
+   FOREACH xmdl_fill_cur INTO 
+      g_detail2_d[l_ac].xmdlseq,g_detail2_d[l_ac].xmdl003,g_detail2_d[l_ac].xmdl004,
+      g_detail2_d[l_ac].xmdl008,g_detail2_d[l_ac].xmdl008_desc,g_detail2_d[l_ac].xmdl008_desc_1,
+      g_detail2_d[l_ac].xmdl017,g_detail2_d[l_ac].xmdl018,g_detail2_d[l_ac].xmdl021,
+      g_detail2_d[l_ac].xmdl022,g_detail2_d[l_ac].xmdl024,g_detail2_d[l_ac].xmdl027,
+      g_detail2_d[l_ac].xmdl028,l_xmdldocno
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+#      LET l_count = 0
+#      SELECT COUNT(*) INTO l_count
+#        FROM xrcb_t
+#       WHERE xrcbent = g_enterprise
+#         AND xrcb002 = l_xmdldocno
+#         AND xrcb003 = g_detail2_d[l_ac].xmdlseq
+#      IF l_count THEN
+#         DISPLAY '存在於xrcb'
+#         DISPLAY l_xmdldocno
+#         CONTINUE FOREACH
+#      END IF
+#      
+##      SELECT icaa003 INTO l_icaa003
+##        FROM icaa_t
+##       WHERE icaaent = g_enterprise
+##         AND icaa001 = l_xmdl088
+##      SELECT icab003 INTO l_site
+##        FROM icab_t
+##       WHERE icabent = g_enterprise
+##         AND icab001 = l_xmdl088
+##         AND icab002 = '0'
+##      IF NOT (l_icaa003 = 1 AND l_site = g_site) THEN
+##         IF l_xmdl086 != 3 THEN
+##            CONTINUE FOREACH
+##         END IF
+##      END IF
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         END IF
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   CALL g_detail2_d.deleteElement(g_detail2_d.getLength())
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.cnt   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicp550.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aicp550_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicp550.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aicp550_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+   CLEAR FORM 
+   CALL g_detail_d.clear()
+   CALL g_detail2_d.clear()
+   #shiun a
+   CONSTRUCT g_wc_filter ON xmdkdocno,xmdkdocdt,xmdk007,xmdk009,xmdk008,
+                            xmdk003,xmdk004,xmdk002,xmdk035,xmdkownid,xmdkcrtid
+        FROM s_detail1[1].b_xmdkdocno,s_detail1[1].b_xmdkdocdt,s_detail1[1].b_xmdk007,
+             s_detail1[1].b_xmdk009,s_detail1[1].b_xmdk008,s_detail1[1].b_xmdk003,
+             s_detail1[1].b_xmdk004,s_detail1[1].b_xmdk002,s_detail1[1].b_xmdk035,
+             s_detail1[1].b_xmdkownid,s_detail1[1].b_xmdkcrtid
+           
+      BEFORE CONSTRUCT
+      
+      ON ACTION controlp INFIELD b_xmdkdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = "('1','2','6')"
+               LET g_qryparam.where = " xmdkstus = 'S' AND xmdk044 IS NOT NULL ",
+                                    #因目前多角尚未完善 多角序號幾乎為空，若加入下行mark掉的條件會完全沒有資料，所以先行mark以確認其他條件是否正確
+                                    " AND xmdk035 IS NOT NULL ",
+                                    " AND (EXISTS (SELECT icaa001 FROM icaa_t,icab_t ",
+                                    "               WHERE icabent = icaaent ",
+                                    "                 AND icab001 = icaa001 ",
+                                    "                 AND icaa001 = xmdk044 ",
+                                    "                 AND icaa003 = 1 ",
+                                    "                 AND icab002 = 0 ",
+                                    "                 AND icab003 = '",g_site,"')",
+                                    "   OR EXISTS (SELECT xmdadocno FROM xmda_t ",
+                                    "               WHERE xmdaent = xmdkent ",
+                                    "                 AND xmdadocno = xmdl003 ",
+                                    "                 AND xmda006 = '3' ))"
+                                  
+               CALL q_xmdkdocno_9()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdkdocno  #顯示到畫面上
+               NEXT FIELD b_xmdkdocno                   #返回原欄位    
+               
+            ON ACTION controlp INFIELD b_xmdk007
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_pmaa001_6()                     #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdk007  #顯示到畫面上
+               NEXT FIELD b_xmdk007                   #返回原欄位
+   
+            ON ACTION controlp INFIELD b_xmdk009
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_pmaa001_6()                     #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdk009  #顯示到畫面上
+               NEXT FIELD b_xmdk009 
+             
+             ON ACTION controlp INFIELD b_xmdk008
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_pmaa001_6()                     #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdk008  #顯示到畫面上
+               NEXT FIELD b_xmdk008 
+               
+            ON ACTION controlp INFIELD b_xmdk003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdk003  #顯示到畫面上
+               NEXT FIELD b_xmdk003                   #返回原欄位
+               
+            ON ACTION controlp INFIELD b_xmdk004
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooeg001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdk004  #顯示到畫面上
+               NEXT FIELD b_xmdk004                   #返回原欄位
+               
+            ON ACTION controlp INFIELD b_xmdkownid
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdkownid  #顯示到畫面上
+               NEXT FIELD b_xmdkownid                   #返回原欄位
+   
+            ON ACTION controlp INFIELD b_xmdkcrtid
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmdkcrtid   #顯示到畫面上
+               NEXT FIELD b_xmdkcrtid                    #返回原欄位
+
+   END CONSTRUCT
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL aicp550_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicp550.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION aicp550_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicp550.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aicp550_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aicp550_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aicp550.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: create_temp_table
+# Memo...........:
+# Usage..........:
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/11/04 By Shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aicp550_create_temp_table()
+   DROP TABLE aicp550_tmp;
+   CREATE TEMP TABLE aicp550_tmp(
+       xmdkent        LIKE xmdk_t.xmdkent,   
+       sel            LIKE type_t.chr1,
+       xmdkdocno      LIKE xmdk_t.xmdkdocno,
+       xmdkdocdt      LIKE xmdk_t.xmdkdocdt,
+       xmdk007        LIKE xmdk_t.xmdk007,
+       xmdk009        LIKE xmdk_t.xmdk009,
+       xmdk008        LIKE xmdk_t.xmdk008,
+       xmdk003        LIKE xmdk_t.xmdk003,
+       xmdk004        LIKE xmdk_t.xmdk004,
+       xmdk002        LIKE xmdk_t.xmdk002,
+       xmdk035        LIKE xmdk_t.xmdk035,
+       xmdkownid      LIKE xmdk_t.xmdkownid,
+       xmdkcrtid      LIKE xmdk_t.xmdkcrtid,
+       xmdk044        LIKE xmdk_t.xmdk044
+       );
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aicp550_process()
+#                  RETURNING 回传参数
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/11/06 By Shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aicp550_process()
+DEFINE l_xmdkdocno       LIKE xmdk_t.xmdkdocno
+DEFINE l_xmdkdocdt       LIKE xmdk_t.xmdkdocdt
+DEFINE l_xmdk007         LIKE xmdk_t.xmdk007
+DEFINE l_xmdk009         LIKE xmdk_t.xmdk009
+DEFINE l_xmdk008         LIKE xmdk_t.xmdk008
+DEFINE l_xmdk003         LIKE xmdk_t.xmdk003
+DEFINE l_xmdk004         LIKE xmdk_t.xmdk004
+DEFINE l_xmdk002         LIKE xmdk_t.xmdk002
+DEFINE l_xmdk035         LIKE xmdk_t.xmdk035   #多角序號
+DEFINE l_xmdk044         LIKE xmdk_t.xmdk044   #多角代碼
+DEFINE l_xmdkownid       LIKE xmdk_t.xmdkownid
+DEFINE l_xmdkcrtid       LIKE xmdk_t.xmdkcrtid
+DEFINE l_icaa012         LIKE icaa_t.icaa012
+DEFINE l_icab002_now     LIKE icab_t.icab002   #當站站別
+DEFINE l_icab003_now     LIKE icab_t.icab003   #當站營運據點
+DEFINE l_icab004_now     LIKE icab_t.icab004   #當站委外工單開立點否
+DEFINE l_icab002_next    LIKE icab_t.icab002   #下站站別
+DEFINE l_icab003_next    LIKE icab_t.icab003   #下站營運據點 
+DEFINE l_returndocno     LIKE xmdk_t.xmdkdocno #回傳產生之單號
+DEFINE l_success         LIKE type_t.num5      #回傳執行結果
+DEFINE l_success1        LIKE type_t.num5
+DEFINE l_date            LIKE type_t.dat
+DEFINE l_trino           LIKE xrca_t.xrca047
+DEFINE l_site            LIKE icab_t.icab003
+DEFINE l_xmdkdocdt_1     LIKE xmdk_t.xmdkdocdt
+   #有選擇的出貨/銷退單
+   LET g_sql = "SELECT xmdkdocno,xmdkdocdt,xmdk007,xmdk009,xmdk008,xmdk003,xmdk004,xmdk002,xmdk035,xmdk044 ",
+               "  FROM aicp550_tmp ",
+               " WHERE sel = 'Y' ",
+               " ORDER BY xmdkdocno "
+   PREPARE aicp550_process_pre FROM g_sql
+   DECLARE aicp550_process_cur CURSOR WITH HOLD FOR aicp550_process_pre
+   
+   #當站多角貿易營運據點
+   LET g_sql = "SELECT icab002,icab003,icab004",
+               "  FROM icab_t",
+               " WHERE icabent = '",g_enterprise,"'",
+               "   AND icab001 = ?",
+               " ORDER BY icab002"
+   PREPARE aicp550_process_icab_pre FROM g_sql
+   DECLARE aicp550_process_icab_cur CURSOR FOR aicp550_process_icab_pre
+   
+   #下站多角貿易營運據點
+   LET g_sql = "SELECT icab002,icab003",
+               "  FROM icab_t",
+               " WHERE icabent = '",g_enterprise,"'",
+               "   AND icab001 = ?",
+               "   AND icab002 > ?",
+               " ORDER BY icab002"
+   PREPARE aicp550_process_icab_next_pre FROM g_sql
+   DECLARE aicp550_process_icab_next_cur CURSOR FOR aicp550_process_icab_next_pre
+   
+   LET l_success = TRUE
+   CALL s_aic_carry_create_temp_table_xmd()
+        RETURNING l_success
+   IF NOT l_success THEN
+      RETURN
+   END IF
+   CALL s_aic_carry_create_temp_table_order()
+        RETURNING l_success
+   IF NOT l_success THEN
+      RETURN
+   END IF
+
+   LET g_success_cnt = 1
+   LET g_fail_cnt = 0
+   CALL g_detail3_d.clear()
+   CALL g_detail4_d.clear()
+   CALL cl_err_collect_init()   #匯總訊息-初始化
+   
+   FOREACH aicp550_process_cur INTO l_xmdkdocno,l_xmdkdocdt,l_xmdk007,l_xmdk009,l_xmdk008,
+                                    l_xmdk003,l_xmdk004,l_xmdk002,l_xmdk035,l_xmdk044
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'process_cur'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      CALL s_transaction_begin()
+      LET g_fail_cnt = g_errcollect.getLength()  #先取得錯誤訊息的長度，大於此長度的表示是這張單子的錯誤訊息
+      LET l_success = TRUE
+      LET l_xmdk035 = ''
+      
+      IF cl_null(l_xmdk044) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'aic-00026'
+         LET g_errparam.extend = l_xmdkdocno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET l_success = FALSE
+         CALL s_transaction_end('N',0)
+         #失敗記錄
+         CALL aicp550_fail(l_xmdkdocno,l_xmdkdocdt,l_xmdk007,l_xmdk009,l_xmdk008,l_xmdk003,l_xmdk004,l_xmdk002,l_xmdkownid,l_xmdkcrtid,l_xmdk035,'')
+         CONTINUE FOREACH
+      END IF
+      
+#      IF l_pmdl006 = '3' AND cl_null(l_pmdl052) THEN
+#         #當多角性質為3.代採購指定供應商時，最終供應商不可為空
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.code = 'aic-00086'
+#         LET g_errparam.extend = l_xmdkdocno
+#         LET g_errparam.popup = TRUE
+#         CALL cl_err()
+#         LET l_success = FALSE
+#         CALL s_transaction_end('N',0)
+#         #失敗記錄
+#         CALL aicp5500_fail(l_pmdldocno,l_pmdldocdt,l_pmdl004,l_pmdl002,l_pmdl003,l_trino,l_pmdl052)
+#         CONTINUE FOREACH
+#      END IF
+      
+      #呼叫產生多角序號元件取得多角流程序號，並回寫採購單單頭xmdk035
+      SELECT icaa012 INTO l_icaa012
+        FROM icaa_t
+       WHERE icaanet = g_enterprise
+         AND icaa001 = l_xmdk044
+      IF l_icaa012 = '1' THEN
+         IF g_input.xmdkdocdt_chk = 'Y' THEN
+            LET l_date = l_xmdkdocdt
+         ELSE
+            LET l_date = g_input.chkdate
+         END IF
+      ELSE
+         LET l_date = g_input.sum_date
+      END IF
+      CALL s_aic_carry_gettrino(l_xmdk044,'5',l_date,g_site)
+           RETURNING l_success1,l_trino
+      IF NOT l_success1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'amm-00001'
+         LET g_errparam.extend = l_xmdkdocno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET l_success = FALSE
+         CALL s_transaction_end('N',0)
+         #失敗記錄
+         CALL aicp550_fail(l_xmdkdocno,l_xmdkdocdt,l_xmdk007,l_xmdk009,l_xmdk008,l_xmdk003,l_xmdk004,l_xmdk002,l_xmdkownid,l_xmdkcrtid,l_xmdk035,'')
+         CONTINUE FOREACH
+      END IF
+      
+#      #回寫採購單頭多角流程序號、多角流程代碼、最終供應商
+#      UPDATE xrca_t SET xrca047 = l_trino
+#       WHERE pmdlent = g_enterprise
+#         AND pmdldocno = l_pmdldocno
+#      IF SQLCA.sqlcode THEN
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.code = SQLCA.sqlcode
+#         LET g_errparam.extend = l_xmdkdocno
+#         LET g_errparam.popup = TRUE
+#         CALL cl_err()
+#         LET l_success = FALSE
+#         CALL s_transaction_end('N',0)
+#         #失敗記錄
+#         CALL aicp200_fail(l_pmdldocno,l_pmdldocdt,l_pmdl004,l_pmdl002,l_pmdl003,l_trino,l_pmdl052)
+#         CONTINUE FOREACH
+#      END IF
+      
+      LET l_site = g_site
+      
+      #跑站(當站)
+      OPEN aicp550_process_icab_cur USING l_xmdk044
+      FOREACH aicp550_process_icab_cur INTO l_icab002_now,l_icab003_now,l_icab004_now
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = l_xmdkdocno
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         #若站別為第0站，不做處理
+         IF l_icab002_now = 0 THEN
+#            LET l_returndocno = l_xmdkdocno
+            CONTINUE FOREACH
+         END IF
+         
+         #取下站
+         LET l_icab002_next = ''
+         LET l_icab003_next = ''
+         OPEN aicp550_process_icab_next_cur USING l_xmdk044,l_icab002_now
+         FOREACH aicp550_process_icab_next_cur INTO l_icab002_next,l_icab003_next
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = l_xmdkdocno
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET l_success = FALSE
+               EXIT FOREACH
+            END IF            
+            EXIT FOREACH
+         END FOREACH
+         
+         IF NOT l_success THEN
+            EXIT FOREACH
+         END IF
+         
+#  2.1 依出貨單單頭之"多角流程序號",取出各站符合"多角流程序號"之多角出貨單,
+#      將各站之多角出貨單依axrp130邏輯產生多角應收帳款
+#  2.2 依出貨單單頭之"多角流程序號",取出各站符合"多角流程序號"之多角入庫單,
+#      將各站之多角入庫單依aapp130邏輯產生多角應收帳款
+#　2.3 若"多角流程代碼"於aici100 "多角應收/應付開立方式"欄位(icaa012)='1',
+#      則依出貨單/入庫單號一對一產生應付/應收帳款;
+#      若"多角流程代碼"於aici100 "多角應收/應付開立方式"欄位(icaa012)='2',
+#      則將此次選擇之多角出貨單,將相同多角流程代碼之多張出貨單/入庫單號彙總產生一張應收/應付帳款
+#  2.4 應將上述1.呼叫多角序號元件產生多角序號帶入至各站多角應付憑單"交易序號"(apca047)及應收憑單"交易序號"(xrca047)
+#  2.5 應付帳款之"帳務中心"、"發票開立方式"、"帳款類別"來源為aici100 [財務資訊]頁籤"帳務中心"、"發票開立方式"、
+#      "帳款類別"欄位且站別為下一站
+#  2.6 應收帳款之"帳務中心"、"發票開立方式"、"帳款類別"來源為aici100 [財務資訊]頁籤"帳務中心"、"發票開立方式"、
+#      "帳款類別"欄位且站別為當站
+#  2.7 應收付帳款日期:****************************************************
+#       2.7.1 若"多角流程代碼"於aici100 "多角應收/應付開立方式"欄位(icaa012)='1'且查詢條件"依出貨日期立帳"有勾選，
+#　　　　　　 則為各站入庫/出貨單單據日期;若件"依出貨日期立帳"未勾選,則為查詢條件一對一產生帳款"帳款日期"輸入值
+#       2.7.2 若"多角流程代碼"於aici100 "多角應收/應付開立方式"欄位(icaa012)='2',
+#             則為查詢條件彙總產生帳款"帳款日期"輸入值
+#         
+#         #若站別為中間站(即不是第0站也不是最終站)，呼叫 s_aic_carry_gen_tri_so,產生中間站之多角訂單
+#         IF NOT cl_null(l_icab002_next) THEN
+#                        
+#            LET l_site = l_icab003_now
+#            #取出各站符合"多角流程序號"之出貨單
+#            LET g_sql = "SELECT xmdkdocno ",
+#                        "  FROM xmdk_t ",
+#                        " WHERE xmdkent = ",g_enterprise,
+#                        "   AND xmdksite = '",l_site,"'",
+#                        "   AND xmdk044 = '",l_xmdk035,"'"
+#            DECLARE aicp550_xmdkdocno CURSOR FROM g_sql
+#            FOREACH aicp550_xmdkdocno INTO l_returndocno
+#            
+#            END FOREACH
+#            #取出各站符合"多角流程序號"之入庫單
+#            LET g_sql = "SELECT pmdsdocno ",
+#                        "  FROM pmds_t ",
+#                        " WHERE pmdsent = ",g_enterprise,
+#                        "   AND pmdssite = '",l_site,"'",
+#                        "   AND pmds044 = '",l_xmdk035,"'"
+#            DECLARE aicp550_pmdsdocno CURSOR FROM g_sql
+#            FOREACH aicp550_pmdsdocno INTO l_returndocno
+#            
+#            END FOREACH
+#         ELSE   #若為最終站
+#            LET l_pmdldocdt = NULL
+#            SELECT pmdldocdt INTO l_pmdldocdt_1
+#              FROM pmdl_t
+#             WHERE pmdlent = g_enterprise
+#               AND pmdldocno = l_returndocno
+#            
+#            #產生最終站之多角訂單
+#            CALL s_aic_carry_gen_tri_so(l_site,l_returndocno,'Y',l_pmdldocdt_1,l_pmdl051,l_icab002_now,'')
+#                 RETURNING l_success,l_returndocno
+#               
+#            #若"多角性質"=3.代採購指定供應商，呼叫 s_aic_carry_gen_last_po 產生最終供應商之一般採購單
+#            IF l_success AND l_pmdl006 = '3' THEN
+#               LET l_xmdadocdt = NULL
+#               SELECT xmdadocdt INTO l_xmdadocdt 
+#                 FROM xmda_t
+#                WHERE xmdaent = g_enterprise
+#                  AND xmdadocno = l_returndocno
+#                  
+#               CALL s_aic_carry_gen_last_po(l_returndocno,l_pmdl052,l_xmdadocdt,l_pmdl051,l_icab002_now)
+#                    RETURNING l_success,l_returndocno
+#            END IF
+#         END IF
+#         
+#         IF NOT l_success THEN
+#            EXIT FOREACH
+#         END IF
+      END FOREACH
+      CALL cl_err_collect_init()
+      CALL cl_err_collect_show()
+      IF l_success THEN
+         CALL s_transaction_end('Y',0)
+         #成功記錄
+         CALL aicp550_success(l_xmdkdocno,l_xmdkdocdt,l_xmdk007,l_xmdk009,l_xmdk008,l_xmdk003,l_xmdk004,l_xmdk002,l_xmdkownid,l_xmdkcrtid,l_xmdk035,'')
+      ELSE
+         CALL s_transaction_end('N',0)
+         #失敗記錄
+         CALL aicp550_fail(l_xmdkdocno,l_xmdkdocdt,l_xmdk007,l_xmdk009,l_xmdk008,l_xmdk003,l_xmdk004,l_xmdk002,l_xmdkownid,l_xmdkcrtid,l_xmdk035,'')
+      END IF
+   END FOREACH
+   
+   IF g_bgjob = 'N' THEN
+      CALL cl_ask_pressanykey("std-00012")
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位可不必輸入
+# Memo...........:
+# Usage..........: CALL aicp550_set_no_required_b()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/11/06 By shiun
+
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aicp550_set_no_required_b()
+   
+   CALL cl_set_comp_required("chkdate",FALSE)
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位必輸
+# Memo...........:
+# Usage..........: CALL CALL aicp550_set_required_b()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/11/06 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aicp550_set_required_b()
+   
+   IF g_input.xmdkdocdt_chk = 'N' THEN
+      CALL cl_set_comp_required("chkdate",TRUE)
+   END IF
+   
+END FUNCTION
+################################################################################
+# Descriptions...: 成功紀錄
+# Memo...........:
+# Usage..........: aicp550_success(p_xmdkdocno,p_xmdkdocdt,p_xmdk007,p_xmdk009,p_xmdk008,p_xmdk003,p_xmdk004,p_xmdk002,p_xmdkownid,p_xmdkcrtid,p_xmdk035,p_xrcadocno)
+#                  RETURNING 回传参数
+# Input parameter: p_xmdkdocno   出貨/銷退單號
+#                : p_xmdkdocdt   單據日期
+#                : p_xmdk007     客戶編號
+#                : p_xmdk009     收貨客戶
+#                : p_xmdk008     收款客戶
+#                : p_xmdk003     業務人員
+#                : p_xmdk004     業務部門
+#                : p_xmdk002     訂單類型
+#                : p_xmdkownid   資料所有者
+#                : p_xmdkcrtid   資料建立者
+#                : p_xmdk035     多角流程序號
+#                : p_xrcadocno   應收帳款單號碼
+# Return code....: 
+# Date & Author..: 2014/11/10 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aicp550_success(p_xmdkdocno,p_xmdkdocdt,p_xmdk007,p_xmdk009,p_xmdk008,p_xmdk003,p_xmdk004,p_xmdk002,p_xmdkownid,p_xmdkcrtid,p_xmdk035,p_xrcadocno)
+DEFINE p_xmdkdocno     LIKE xmdk_t.xmdkdocno
+DEFINE p_xmdkdocdt     LIKE xmdk_t.xmdkdocdt
+DEFINE p_xmdk007       LIKE xmdk_t.xmdk007
+DEFINE p_xmdk009       LIKE xmdk_t.xmdk009
+DEFINE p_xmdk008       LIKE xmdk_t.xmdk008
+DEFINE p_xmdk003       LIKE xmdk_t.xmdk003
+DEFINE p_xmdk004       LIKE xmdk_t.xmdk004
+DEFINE p_xmdk002       LIKE xmdk_t.xmdk002
+DEFINE p_xmdkownid     LIKE xmdk_t.xmdkownid
+DEFINE p_xmdkcrtid     LIKE xmdk_t.xmdkcrtid
+DEFINE p_xmdk035       LIKE xmdk_t.xmdk035
+DEFINE p_xrcadocno     LIKE xrca_t.xrcadocno
+
+   IF cl_null(g_success_cnt) THEN
+      LET g_success_cnt = 1
+   END IF
+   
+   LET g_detail3_d[g_success_cnt].xmdkdocno1 = p_xmdkdocno
+   LET g_detail3_d[g_success_cnt].xmdkdocdt1 = p_xmdkdocdt
+   LET g_detail3_d[g_success_cnt].xmdk0071 = p_xmdk007  
+   LET g_detail3_d[g_success_cnt].xmdk0091 = p_xmdk009  
+   LET g_detail3_d[g_success_cnt].xmdk0081 = p_xmdk008  
+   LET g_detail3_d[g_success_cnt].xmdk0031 = p_xmdk003  
+   LET g_detail3_d[g_success_cnt].xmdk0041 = p_xmdk004  
+   LET g_detail3_d[g_success_cnt].xmdk0021 = p_xmdk002  
+   LET g_detail3_d[g_success_cnt].xmdkownid1 = p_xmdkownid
+   LET g_detail3_d[g_success_cnt].xmdkcrtid1 = p_xmdkcrtid
+   LET g_detail3_d[g_success_cnt].xmdk0351 = p_xmdk035  
+   LET g_detail3_d[g_success_cnt].xrcadocno = p_xrcadocno
+   
+   CALL s_desc_get_trading_partner_abbr_desc(g_detail3_d[g_success_cnt].xmdk0071) 
+        RETURNING g_detail3_d[g_success_cnt].xmdk0071_desc
+   CALL s_desc_get_trading_partner_abbr_desc(g_detail3_d[g_success_cnt].xmdk0091) 
+        RETURNING g_detail3_d[g_success_cnt].xmdk0091_desc
+   CALL s_desc_get_trading_partner_abbr_desc(g_detail3_d[g_success_cnt].xmdk0081) 
+        RETURNING g_detail3_d[g_success_cnt].xmdk0081_desc
+   CALL s_desc_get_person_desc(g_detail3_d[g_success_cnt].xmdk0031)
+        RETURNING g_detail3_d[g_success_cnt].xmdk0031_desc
+   CALL s_desc_get_person_desc(g_detail3_d[g_success_cnt].xmdkownid1)
+        RETURNING g_detail3_d[g_success_cnt].xmdkownid1_desc
+   CALL s_desc_get_person_desc(g_detail3_d[g_success_cnt].xmdkcrtid1)
+        RETURNING g_detail3_d[g_success_cnt].xmdkcrtid1_desc
+   CALL s_desc_get_department_desc(g_detail3_d[g_success_cnt].xmdk0041)
+        RETURNING g_detail3_d[g_success_cnt].xmdk0041_desc
+        
+   LET g_success_cnt = g_success_cnt +  1
+END FUNCTION
+################################################################################
+# Descriptions...: 失敗紀錄
+# Memo...........:
+# Usage..........: aicp550_success(p_xmdkdocno,p_xmdkdocdt,p_xmdk007,p_xmdk009,p_xmdk008,p_xmdk003,p_xmdk004,p_xmdk002,p_xmdkownid,p_xmdkcrtid,p_xmdk035,p_xrcadocno)
+#                  RETURNING 回传参数
+# Input parameter: p_xmdkdocno   出貨/銷退單號
+#                : p_xmdkdocdt   單據日期
+#                : p_xmdk007     客戶編號
+#                : p_xmdk009     收貨客戶
+#                : p_xmdk008     收款客戶
+#                : p_xmdk003     業務人員
+#                : p_xmdk004     業務部門
+#                : p_xmdk002     訂單類型
+#                : p_xmdkownid   資料所有者
+#                : p_xmdkcrtid   資料建立者
+#                : p_xmdk035     多角流程序號
+#                : p_xrcadocno   應收帳款單號碼
+# Return code....: 
+# Date & Author..: 2014/11/10 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aicp550_fail(p_xmdkdocno,p_xmdkdocdt,p_xmdk007,p_xmdk009,p_xmdk008,p_xmdk003,p_xmdk004,p_xmdk002,p_xmdkownid,p_xmdkcrtid,p_xmdk035,p_xrcadocno)
+DEFINE p_xmdkdocno     LIKE xmdk_t.xmdkdocno
+DEFINE p_xmdkdocdt     LIKE xmdk_t.xmdkdocdt
+DEFINE p_xmdk007       LIKE xmdk_t.xmdk007
+DEFINE p_xmdk009       LIKE xmdk_t.xmdk009
+DEFINE p_xmdk008       LIKE xmdk_t.xmdk008
+DEFINE p_xmdk003       LIKE xmdk_t.xmdk003
+DEFINE p_xmdk004       LIKE xmdk_t.xmdk004
+DEFINE p_xmdk002       LIKE xmdk_t.xmdk002
+DEFINE p_xmdkownid     LIKE xmdk_t.xmdkownid
+DEFINE p_xmdkcrtid     LIKE xmdk_t.xmdkcrtid
+DEFINE p_xmdk035       LIKE xmdk_t.xmdk035
+DEFINE p_xrcadocno     LIKE xrca_t.xrcadocno
+DEFINE l_errcode       LIKE gzze_t.gzze001
+DEFINE l_i             LIKE type_t.num5
+
+   IF cl_null(g_fail_cnt) THEN
+      LET g_fail_cnt = 0
+   END IF
+   
+   FOR l_i = g_fail_cnt+1 TO g_errcollect.getLength()
+      LET g_detail4_d[l_i].xmdkdocno2 = p_xmdkdocno
+      LET g_detail4_d[l_i].xmdkdocdt2 = p_xmdkdocdt
+      LET g_detail4_d[l_i].xmdk0072 = p_xmdk007  
+      LET g_detail4_d[l_i].xmdk0092 = p_xmdk009  
+      LET g_detail4_d[l_i].xmdk0082 = p_xmdk008  
+      LET g_detail4_d[l_i].xmdk0032 = p_xmdk003  
+      LET g_detail4_d[l_i].xmdk0042 = p_xmdk004  
+      LET g_detail4_d[l_i].xmdk0022 = p_xmdk002  
+      LET g_detail4_d[l_i].xmdkownid2 = p_xmdkownid
+      LET g_detail4_d[l_i].xmdkcrtid2 = p_xmdkcrtid
+      LET g_detail4_d[l_i].xmdk0352 = p_xmdk035  
+      LET g_detail4_d[l_i].xrcadocno1 = p_xrcadocno
+      
+      #錯誤訊息
+      LET l_errcode = g_errcollect[l_i].code
+      LET g_detail4_d[l_i].reason = g_errcollect[l_i].message
+      
+      CALL s_desc_get_trading_partner_abbr_desc(g_detail4_d[l_i].xmdk0072)
+           RETURNING g_detail4_d[l_i].xmdk0072_desc
+      CALL s_desc_get_trading_partner_abbr_desc(g_detail4_d[l_i].xmdk0092)
+           RETURNING g_detail4_d[l_i].xmdk0092_desc
+      CALL s_desc_get_trading_partner_abbr_desc(g_detail4_d[l_i].xmdk0082)
+           RETURNING g_detail4_d[l_i].xmdk0082_desc
+      CALL s_desc_get_person_desc(g_detail4_d[l_i].xmdk0032)
+           RETURNING g_detail4_d[l_i].xmdk0032_desc
+      CALL s_desc_get_person_desc(g_detail4_d[l_i].xmdkownid2)
+           RETURNING g_detail4_d[l_i].xmdkownid2_desc
+      CALL s_desc_get_person_desc(g_detail4_d[l_i].xmdkcrtid2)
+           RETURNING g_detail4_d[l_i].xmdkcrtid2_desc
+      CALL s_desc_get_department_desc(g_detail4_d[l_i].xmdk0042)
+           RETURNING g_detail4_d[l_i].xmdk0042_desc
+   END FOR
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

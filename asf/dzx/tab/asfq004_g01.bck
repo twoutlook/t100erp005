@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfq004_g01" module="asf" jobmode="N" type="g01" industry="std" crtid="03297" crtdt="2014-11-24 16:15:04" modid="08992" moddt="2016-11-09 14:30:23" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.a1(STRING|暫存檔1),tm.a2(STRING|暫存檔2)">
+    <var seq="1" value="bmba001,bmba002,l_xmdc006(xmdc006|&apos;&apos;),l_xmdc007(num20_6|&apos;&apos;),bmba003,bmba010,l_xmdc_imaal003(chr500|&apos;&apos;),l_xmdc_imaal004(chr500|&apos;&apos;),l_xmdc002_desc(chr500|&apos;&apos;),l_xmdc_oocal003(chr500|&apos;&apos;),l_bmba_imaal003(chr500|&apos;&apos;),l_bmba_imaal004(chr500|&apos;&apos;),l_bmba_oocal003(chr500|&apos;&apos;),l_qty1(num20_6|&apos;&apos;),l_qty2(num20_6|&apos;&apos;),l_qty3(num20_6|&apos;&apos;),l_qty4(num20_6|&apos;&apos;),l_qty5(num20_6|&apos;&apos;),l_qty6(num20_6|&apos;&apos;),l_qty8(num20_6|&apos;&apos;),l_qty9(num20_6|&apos;&apos;),l_qty10(num20_6|&apos;&apos;),l_qty11(num20_6|&apos;&apos;),l_stus(chr1|&apos;&apos;),bmbaent,l_qty1_s(chr200|&apos;&apos;),l_qty2_s(chr200|&apos;&apos;),l_qty3_s(chr200|&apos;&apos;),l_qty4_s(chr200|&apos;&apos;),l_qty5_s(chr200|&apos;&apos;),l_qty6_s(chr200|&apos;&apos;),l_qty7_s(chr200|&apos;&apos;),l_qty8_s(chr200|&apos;&apos;),l_qty9_s(chr200|&apos;&apos;),l_qty10_s(chr200|&apos;&apos;),l_qty11_s(chr200|&apos;&apos;),l_qty12(num20_6|&apos;&apos;),l_qty7(num20_6|&apos;&apos;),l_qty13(num20_6|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="bmba001,bmba002,l_xmdc006(xmdc006|&apos;&apos;),l_xmdc007(num20_6|&apos;&apos;),bmba003,bmba010,l_xmdc_imaal003(chr500|&apos;&apos;),l_xmdc_imaal004(chr500|&apos;&apos;),l_xmdc002_desc(chr500|&apos;&apos;),l_xmdc_oocal003(chr500|&apos;&apos;),l_bmba_imaal003(chr500|&apos;&apos;),l_bmba_imaal004(chr500|&apos;&apos;),l_bmba_oocal003(chr500|&apos;&apos;),l_qty1(num20_6|&apos;&apos;),l_qty2(num20_6|&apos;&apos;),l_qty3(num20_6|&apos;&apos;),l_qty4(num20_6|&apos;&apos;),l_qty5(num20_6|&apos;&apos;),l_qty6(num20_6|&apos;&apos;),l_qty8(num20_6|&apos;&apos;),l_qty9(num20_6|&apos;&apos;),l_qty10(num20_6|&apos;&apos;),l_qty11(num20_6|&apos;&apos;),l_stus(chr1|&apos;&apos;),bmbaent,l_qty1_s(chr200|&apos;&apos;),l_qty2_s(chr200|&apos;&apos;),l_qty3_s(chr200|&apos;&apos;),l_qty4_s(chr200|&apos;&apos;),l_qty5_s(chr200|&apos;&apos;),l_qty6_s(chr200|&apos;&apos;),l_qty7_s(chr200|&apos;&apos;),l_qty8_s(chr200|&apos;&apos;),l_qty9_s(chr200|&apos;&apos;),l_qty10_s(chr200|&apos;&apos;),l_qty11_s(chr200|&apos;&apos;),l_qty12(num20_6|&apos;&apos;),l_qty7(num20_6|&apos;&apos;),l_qty13(num20_6|NULL)"/>
+    <sql id="g_from" query="bmba_t"/>
+    <sql id="g_where" query="" maintable="bmba_t"/>
+    <sql id="g_order" query="bmba001,bmba003"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="bmba001,bmba003"/>
+    <section id="b_group" reptype="d01">
+      <rep type="bmba001" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="bmbaent,bmba001"/>
+      <rep type="bmba003"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="bmbaent,bmba001,bmba003"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="bmbaent,bmba001,bmba003"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="bmba001" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="bmbaent,bmba001"/>
+      <rep type="bmba003"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

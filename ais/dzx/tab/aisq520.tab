@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq520" module="ais" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="04226" crtdt="2014-09-30 11:40:06" modid="04152" moddt="2015-02-26 16:35:47" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="交易明細稅查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="xrcdcomp,xrcdcomp_desc(chr80),xrcd001,condition,xrcdsite,xrcddocno,qdocdt,xrcd002,xrcd003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xrcdld,xrcdsite,xrcdsite_desc(chr500),xrcddocno,prog_b_xrcddocno(chr500),xrcdseq,imaa001(chr500),imaa001_desc(chr500),docdt(chr500),cust(chr500),cust_desc(chr500),xrcd002,xrcd002_desc(chr500),xrcd003,xrcd004,xrcd103,xrcd104,xrcd105,xrcd009,xrcd009_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xrcdld(b_xrcdld),xrcdsite(b_xrcdsite),xrcdsite_desc(b_xrcdsite_desc),xrcddocno(b_xrcddocno),prog_b_xrcddocno(prog_b_xrcddocno),xrcdseq(b_xrcdseq),imaa001(b_imaa001),imaa001_desc(b_imaa001_desc),docdt(b_docdt),cust(b_cust),cust_desc(b_cust_desc),xrcd002(b_xrcd002),xrcd002_desc(b_xrcd002_desc),xrcd003(b_xrcd003),xrcd004(b_xrcd004),xrcd103(b_xrcd103),xrcd104(b_xrcd104),xrcd105(b_xrcd105),xrcd009(b_xrcd009),xrcd009_desc(b_xrcd009_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <cluster id="prog_b_xrcddocno" qry_field="xrcddocno" prog="axrt300" parameter="xrcddocno"/>
+      <cluster id="prog_b_xrcddocno" qry_field="xrcddocno" prog="aapt300" parameter="xrcddocno"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_axrt300" prog="axrt300" parameter="xrcddocno"/>
+        <action id="prog_aapt300" prog="aapt300" parameter="xrcddocno"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq520" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xrcdld,xrcdsite,xrcdsite_desc,xrcddocno,xrcdseq,imaa001,docdt,cust,xrcd002,xrcd002_desc,xrcd003,xrcd004,xrcd103,xrcd104,xrcd105,xrcd009,xrcd009_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="xrcdld(b_xrcdld),xrcdsite(b_xrcdsite),xrcddocno(b_xrcddocno),xrcdseq(b_xrcdseq),xrcd002(b_xrcd002),xrcd003(b_xrcd003),xrcd004(b_xrcd004),xrcd103(b_xrcd103),xrcd104(b_xrcd104),xrcd105(b_xrcd105),xrcd009(b_xrcd009)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xrcdld"/>
+      <column id="xrcdsite">
+        <after/>
+      </column>
+      <column id="xrcdsite_desc"/>
+      <column id="xrcddocno"/>
+      <column id="prog_b_xrcddocno"/>
+      <column id="xrcdseq"/>
+      <column id="imaa001">
+        <after>
+          <reference field="imaa001_desc" ref_field="imaa001" map_field="imaa001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imaa001_desc"/>
+      <column id="docdt"/>
+      <column id="cust">
+        <after>
+          <reference field="cust_desc" ref_field="cust" map_field="cust" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="cust_desc"/>
+      <column id="xrcd002">
+        <after/>
+        <controlp form="q_xrcd002" state="c"/>
+      </column>
+      <column id="xrcd002_desc"/>
+      <column id="xrcd003"/>
+      <column id="xrcd004"/>
+      <column id="xrcd103"/>
+      <column id="xrcd104"/>
+      <column id="xrcd105"/>
+      <column id="xrcd009">
+        <after/>
+        <controlp form="q_glac002" state="c"/>
+      </column>
+      <column id="xrcd009_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xrcd_t" page="1" linked="" pk="xrcdld,xrcddocno,xrcdseq,xrcdseq2,xrcd007">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xrcdld,xrcdsite,&apos;&apos;,xrcddocno,&apos;&apos;,xrcdseq,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xrcd002,&apos;&apos;,xrcd003,xrcd004,xrcd103,xrcd104,xrcd105,xrcd009,&apos;&apos; FROM xrcd_t WHERE xrcdent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

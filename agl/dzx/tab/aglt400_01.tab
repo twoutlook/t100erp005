@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglt400_01" module="agl" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02298" crtdt="2014-01-08 15:28:58" modid="02298" moddt="2014-01-08 15:54:28" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="細項立沖業務資訊維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glax011,glax012,glax013,glax013_desc(chr80),glax014,glax015,glax016"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglt400_01" method="dialog">
+    <section id="input">
+      <input id="head" field="glax011,glax012,glax013,glax014,glax015,glax016"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="glax011"/>
+      <column id="glax012"/>
+      <column id="glax013">
+        <after>
+          <reference field="glax013_desc" ref_field="glax_t.glax013" map_field="glax013" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="glax013_desc"/>
+      <column id="glax014"/>
+      <column id="glax015" def_scc="8310"/>
+      <column id="glax016"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glax_t" pk="glaxld,glaxdocno,glaxseq">
+      <sql id="forupd_sql" type="sql" query="SELECT glax011,glax012,glax013,&apos;&apos;,glax014,glax015,glax016 FROM glax_t WHERE glaxent= ? AND glaxld=? AND glaxdocno=? AND glaxseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="glaxld,glaxdocno,glaxseq"/>
+    </head>
+  </dataset>
+</assembly>
+

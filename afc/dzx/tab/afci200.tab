@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afci200" module="afc" jobmode="N" type="i10" industry="std" fix_arg="0" crtid="04226" crtdt="2014-04-11 15:07:59" modid="02159" moddt="2015-01-27 11:33:33" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="日均銷量DMS公式設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fcaa001,fcaa002,fcaa021,fcaa022,fcaa023,fcaa011,fcaa012,fcaa031,fcaaent,fcaaownid,fcaaownid_desc(chr80),fcaaowndp,fcaaowndp_desc(chr80),fcaacrtid,fcaacrtid_desc(chr80),fcaacrtdp,fcaacrtdp_desc(chr80),fcaacrtdt,fcaamodid,fcaamodid_desc(chr80),fcaamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afc" filename="afci200" method="dialog">
+    <section id="input">
+      <input id="head" field="fcaa001,fcaa002,fcaa021,fcaa022,fcaa023,fcaa011,fcaa012,fcaa031,fcaaent"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fcaa001,fcaa002,fcaa021,fcaa022,fcaa023,fcaa011,fcaa012,fcaa031,fcaaent,fcaaownid,fcaaowndp,fcaacrtid,fcaacrtdp,fcaacrtdt,fcaamodid,fcaamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fcaa001"/>
+      <set id="head" type="no_entry" field="fcaa001"/>
+    </init>
+    <init id="head">
+      <column id="fcaa001" type="S" default="1" def_scc="6302"/>
+      <column id="fcaa002" type="S" default="100">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fcaa021" type="S" default="1" def_scc="6302"/>
+      <column id="fcaa022">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fcaa023"/>
+      <column id="fcaa011" type="S" default="1" def_scc="6302"/>
+      <column id="fcaa012" type="S" default="7">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fcaa031" type="S" default="0.9">
+        <after>
+          <check id="range" st="1.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="fcaaent"/>
+      <column id="fcaaownid">
+        <after>
+          <reference field="fcaaownid_desc" ref_field="fcaa_t.fcaaownid" map_field="fcaaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fcaaownid_desc"/>
+      <column id="fcaaowndp">
+        <after>
+          <reference field="fcaaowndp_desc" ref_field="fcaa_t.fcaaowndp" map_field="fcaaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fcaaowndp_desc"/>
+      <column id="fcaacrtid">
+        <after>
+          <reference field="fcaacrtid_desc" ref_field="fcaa_t.fcaacrtid" map_field="fcaacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fcaacrtid_desc"/>
+      <column id="fcaacrtdp">
+        <after>
+          <reference field="fcaacrtdp_desc" ref_field="fcaa_t.fcaacrtdp" map_field="fcaacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fcaacrtdp_desc"/>
+      <column id="fcaacrtdt"/>
+      <column id="fcaamodid">
+        <after>
+          <reference field="fcaamodid_desc" ref_field="fcaa_t.fcaamodid" map_field="fcaamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fcaamodid_desc"/>
+      <column id="fcaamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fcaa_t" pk="fcaa001">
+      <sql id="forupd_sql" type="sql" query="SELECT fcaa001,fcaa002,fcaa021,fcaa022,fcaa023,fcaa011,fcaa012,fcaa031,fcaaent,fcaaownid,&apos;&apos;,fcaaowndp,&apos;&apos;,fcaacrtid,&apos;&apos;,fcaacrtdp,&apos;&apos;,fcaacrtdt,fcaamodid,&apos;&apos;,fcaamoddt FROM fcaa_t WHERE fcaaent= ? AND fcaa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fcaa001 FROM fcaa_t" order="fcaa001"/>
+    </head>
+  </dataset>
+</assembly>
+

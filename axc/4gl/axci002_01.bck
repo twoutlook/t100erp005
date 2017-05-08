@@ -1,0 +1,1529 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axci002_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2016-06-22 17:51:55), PR版次:0006(2016-12-16 09:16:58)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000421
+#+ Filename...: axci002_01
+#+ Description: 材料成本引入作業
+#+ Creator....: 02114(2013-09-26 09:21:20)
+#+ Modifier...: 02295 -SD/PR- 08734
+ 
+{</section>}
+ 
+{<section id="axci002_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00005#45  2016/03/26  By pengxin    修正azzi920重复定义之错误讯息
+#160318-00025#8   2016/04/21  By 07675      將重複內容的錯誤訊息置換為公用錯誤訊息(r.v）
+#160621-00005#1   2016/06/22  By xianghui   判断是否为零成本物料时的字段错误
+#160902-00048#1   2016/09/05  By dorislai   修正SQL少ent的問題
+#161124-00048#16  2016/12/16  By 08734      星号整批调整
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xcab_m        RECORD
+       xcab001 LIKE xcab_t.xcab001, 
+   iszero LIKE type_t.chr500, 
+   xcccld_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_sql           STRING   
+DEFINE g_wc            STRING 
+DEFINE g_wc1           STRING 
+ type type_g_xcab1_m        RECORD
+   price LIKE type_t.chr80, 
+   xcabsite1 LIKE type_t.chr80, 
+   xcabsite1_desc LIKE type_t.chr80, 
+   excel LIKE type_t.chr80, 
+   way LIKE type_t.chr80, 
+   real LIKE type_t.chr80, 
+   xcccld LIKE xccc_t.xcccld, 
+   xcccld_desc LIKE type_t.chr80, 
+   year LIKE type_t.num5, 
+   month LIKE type_t.num5, 
+   xccc003 LIKE xccc_t.xccc003,
+   standard LIKE type_t.chr80, 
+   xcab001_1 LIKE type_t.chr80
+       END RECORD
+DEFINE g_xcab1_m        type_g_xcab1_m
+#end add-point
+ 
+DEFINE g_xcab_m        type_g_xcab_m
+ 
+   DEFINE g_xcab001_t LIKE xcab_t.xcab001
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axci002_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axci002_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_xcab001
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_xcab001       LIKE xcab_t.xcab001
+   DEFINE l_excel         STRING 
+   DEFINE ls_str          STRING
+   DEFINE l_chr           LIKE type_t.chr1   
+   DEFINE l_chr1          LIKE type_t.chr1   
+   DEFINE l_num           LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_n             LIKE type_t.num5
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axci002_01 WITH FORM cl_ap_formpath("axc","axci002_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   CALL cl_set_combo_scc("imaa004",1001)
+   CALL cl_set_combo_scc_part('xccc003','8907','5')
+   LET g_xcab_m.iszero = 'N'
+   LET g_xcab_m.xcab001  = p_xcab001
+   LET g_xcab1_m.price = '1'
+   LET g_xcab1_m.excel = ''
+   LET g_xcab1_m.real = ''
+   LET g_xcab1_m.standard = ''
+   CALL axci002_01_set_entry()
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xcab_m.xcab001,g_xcab_m.iszero ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+ 
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcab001
+            #add-point:BEFORE FIELD xcab001 name="input.b.xcab001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcab001
+            
+            #add-point:AFTER FIELD xcab001 name="input.a.xcab001"
+            #此段落由子樣板a05產生
+            #IF  NOT cl_null(g_xcab_m.xcab001) AND NOT cl_null(g_xcab_m.xcab002) THEN 
+            #   IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_xcab_m.xcab001 != g_xcab001_t  OR g_xcab_m.xcab002 != g_xcab002_t ))) THEN 
+            #      IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcab_t WHERE "||"xcabent = '" ||g_enterprise|| "' AND "||"xcab001 = '"||g_xcab_m.xcab001 ||"' AND "|| "xcab002 = '"||g_xcab_m.xcab002 ||"'",'std-00004',0) THEN 
+            #         NEXT FIELD CURRENT
+            #      END IF
+            #   END IF
+            #END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcab001
+            #add-point:ON CHANGE xcab001 name="input.g.xcab001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD iszero
+            #add-point:BEFORE FIELD iszero name="input.b.iszero"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD iszero
+            
+            #add-point:AFTER FIELD iszero name="input.a.iszero"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE iszero
+            #add-point:ON CHANGE iszero name="input.g.iszero"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xcab001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcab001
+            #add-point:ON ACTION controlp INFIELD xcab001 name="input.c.xcab001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.iszero
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD iszero
+            #add-point:ON ACTION controlp INFIELD iszero name="input.c.iszero"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      CONSTRUCT BY NAME g_wc ON xcab002_1,imaa003
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+         
+         ON ACTION controlp INFIELD xcab002_1
+            #add-point:ON ACTION controlp INFIELD xrab002_1
+            #此段落由子樣板a08產生
+            #開窗c段
+                        INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " imaa004 = 'M' AND imaastus = 'Y'"
+            CALL q_imaa001_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcab002_1  #顯示到畫面上
+            LET g_qryparam.where = NULL
+
+            NEXT FIELD xcab002_1                      #返回原欄位
+         
+         ON ACTION controlp INFIELD imaa003
+            #add-point:ON ACTION controlp INFIELD imaa003
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            
+            CALL q_imaa003()                                #呼叫開窗            
+
+            DISPLAY g_qryparam.return1 TO imaa003              #
+
+            NEXT FIELD imaa003                          #返回原欄位
+      END CONSTRUCT
+      
+      #輸入開始
+      INPUT BY NAME g_xcab1_m.price,g_xcab1_m.xcabsite1, 
+          g_xcab1_m.excel,g_xcab1_m.way,g_xcab1_m.real,g_xcab1_m.xcccld,g_xcab1_m.year,g_xcab1_m.month,g_xcab1_m.xccc003, 
+          g_xcab1_m.standard,g_xcab1_m.xcab001_1 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            LET g_xcab1_m.price = '1'
+            LET g_xcab1_m.excel = ''
+            LET g_xcab1_m.way = ''
+            LET g_xcab1_m.real = ''
+            LET g_xcab1_m.standard = ''
+            CALL axci002_01_set_entry()
+            #end add-point
+ 
+         #----<<price>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD price
+            #add-point:BEFORE FIELD price
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD price
+            
+            #add-point:AFTER FIELD price
+            IF g_xcab1_m.price = 1 THEN
+               LET g_xcab1_m.excel = NULL
+               LET g_xcab1_m.real = NULL
+               LET g_xcab1_m.standard = NULL
+            END IF
+            CALL axci002_01_set_entry()
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE price
+            #add-point:ON CHANGE price
+            IF g_xcab1_m.price = 1 THEN
+               LET g_xcab1_m.excel = NULL
+               LET g_xcab1_m.real = NULL
+               LET g_xcab1_m.standard = NULL
+            END IF
+            CALL axci002_01_set_entry()
+            #END add-point
+ 
+         #----<<xcabsite1>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD xcabsite1
+            
+            #add-point:AFTER FIELD xcabsite1
+            IF NOT cl_null(g_xcab1_m.xcabsite1) THEN 
+               CALL axci002_01_xcabsite_chk(g_xcab1_m.xcabsite1)
+               IF NOT cl_null(g_errno) THEN 
+                  LET g_xcab1_m.xcabsite1_desc = ''
+                  DISPLAY g_xcab1_m.xcabsite1_desc TO xcabsite1_desc
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_xcab1_m.xcabsite1
+                  #160318-00005#45 --s add
+                  CASE g_errno
+                     WHEN 'sub-01333'
+                        LET g_errparam.replace[1] = 'axci002'
+                        LET g_errparam.replace[2] = cl_get_progname('axci002',g_lang,"2")
+                        LET g_errparam.exeprog = 'axci002'
+                  END CASE
+                  #160318-00005#45 --e add
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_xcab1_m.xcabsite1 = ''
+                  NEXT FIELD xcabsite1
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcabsite1
+            #add-point:BEFORE FIELD xcabsite1
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcabsite1
+            #add-point:ON CHANGE xcabsite1
+
+            #END add-point
+ 
+         #----<<excel>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD excel
+            #add-point:BEFORE FIELD excel
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD excel
+            
+            #add-point:AFTER FIELD excel
+            IF g_xcab1_m.excel = 1 THEN
+               LET g_xcab1_m.price = NULL
+               LET g_xcab1_m.real = NULL
+               LET g_xcab1_m.standard = NULL
+            END IF
+            CALL axci002_01_set_entry()
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE excel
+            #add-point:ON CHANGE excel
+            IF g_xcab1_m.excel = 1 THEN
+               LET g_xcab1_m.price = NULL
+               LET g_xcab1_m.real = NULL
+               LET g_xcab1_m.standard = NULL
+            END IF
+            CALL axci002_01_set_entry()
+            #END add-point
+ 
+         #----<<way>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD way
+            #add-point:BEFORE FIELD way
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD way
+            
+            #add-point:AFTER FIELD way
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE way
+            #add-point:ON CHANGE way
+
+            #END add-point
+ 
+         #----<<real>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD real
+            #add-point:BEFORE FIELD real
+            IF g_xcab1_m.real = 1 THEN
+               LET g_xcab1_m.excel = NULL
+               LET g_xcab1_m.price = NULL
+               LET g_xcab1_m.standard = NULL
+            END IF
+            CALL axci002_01_set_entry()
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD real
+            
+            #add-point:AFTER FIELD real
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE real
+            #add-point:ON CHANGE real
+            IF g_xcab1_m.real = 1 THEN
+               LET g_xcab1_m.excel = NULL
+               LET g_xcab1_m.price = NULL
+               LET g_xcab1_m.standard = NULL
+            END IF
+            CALL axci002_01_set_entry()
+            #END add-point
+ 
+         #----<<xcccld>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD xcccld
+            
+            #add-point:AFTER FIELD xcccld
+            IF NOT cl_null(g_xcab1_m.xcccld) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.where = " 1=1"
+               LET g_chkparam.arg1 = g_xcab1_m.xcccld
+               #160318-00025#8--add--str
+               LET g_errshow = TRUE 
+               LET g_chkparam.err_str[1] = "agl-00051:sub-01302|agli010|",cl_get_progname("agli010",g_lang,"2"),"|:EXEPROGagli010"
+               #160318-00025#8--add--end
+               IF NOT cl_chk_exist("v_glaald_1") THEN
+                  LET g_xcab1_m.xcccld = ''
+                  LET g_xcab1_m.xcccld_desc = ''
+                  DISPLAY g_xcab1_m.xcccld_desc TO xcccld_desc
+                  NEXT FIELD xcccld
+               END IF
+               CALL axci002_01_xcccld_desc()
+            END IF 
+            #END add-point
+            
+ 
+         #----<<year>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD year
+            #add-point:BEFORE FIELD year
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD year
+            
+            #add-point:AFTER FIELD year
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE year
+            #add-point:ON CHANGE year
+
+            #END add-point
+ 
+         #----<<month>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD month
+            #add-point:BEFORE FIELD month
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD month
+            
+            #add-point:AFTER FIELD month
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE month
+            #add-point:ON CHANGE month
+
+            #END add-point
+ 
+         #----<<standard>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD standard
+            #add-point:BEFORE FIELD standard
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD standard
+            
+            #add-point:AFTER FIELD standard
+            IF g_xcab1_m.standard = 1 THEN
+               LET g_xcab1_m.excel = NULL
+               LET g_xcab1_m.real = NULL
+               LET g_xcab1_m.price = NULL
+            END IF
+            CALL axci002_01_set_entry()
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE standard
+            #add-point:ON CHANGE standard
+            IF g_xcab1_m.standard = 1 THEN
+               LET g_xcab1_m.excel = NULL
+               LET g_xcab1_m.real = NULL
+               LET g_xcab1_m.price = NULL
+            END IF
+            CALL axci002_01_set_entry()
+            #END add-point
+ 
+         #----<<xcab001_1>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcab001_1
+            #add-point:BEFORE FIELD xcab001_1
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcab001_1
+            
+            #add-point:AFTER FIELD xcab001_1
+            IF NOT cl_null(g_xcab1_m.xcab001_1) THEN
+               LET l_n = 0
+               SELECT COUNT(*) INTO l_n FROM xcab_t 
+                WHERE xcabent = g_enterprise AND xcab001 = g_xcab1_m.xcab001_1
+               IF l_n = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.code = 'axc-00076'   #160318-00005#45  mark
+                  LET g_errparam.code = 'sub-01308'   #160318-00005#45  add
+                  LET g_errparam.extend = ''
+                  #160318-00005#45 --s add
+                  LET g_errparam.replace[1] = 'axci002'
+                  LET g_errparam.replace[2] = cl_get_progname('axci002',g_lang,"2")
+                  LET g_errparam.exeprog = 'axci002'
+                  #160318-00005#45 --e add
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD xcab001_1
+               END IF
+               LET l_n=0
+               SELECT COUNT(*) INTO l_n FROM xcab_t 
+                WHERE xcabent = g_enterprise AND xcab001 = g_xcab1_m.xcab001_1 AND xcabstus = 'Y'
+               IF l_n = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.code = 'axc-00075'   #160318-00005#45  mark
+                  LET g_errparam.code = 'sub-01302'   #160318-00005#45  add
+                  LET g_errparam.extend = ''
+                  #160318-00005#45 --s add
+                  LET g_errparam.replace[1] = 'axci002'
+                  LET g_errparam.replace[2] = cl_get_progname('axci002',g_lang,"2")
+                  LET g_errparam.exeprog = 'axci002'
+                  #160318-00005#45 --e add
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD xcab001_1
+               END IF
+            END IF
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcab001_1
+            #add-point:ON CHANGE xcab001_1
+
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<xcab001>>----
+         #Ctrlp:input.c.xcab001
+         ON ACTION controlp INFIELD xcab001
+            #add-point:ON ACTION controlp INFIELD xcab001
+
+            #END add-point
+ 
+         #----<<imaa003>>----
+         #Ctrlp:input.c.imaa003
+         ON ACTION controlp INFIELD imaa003
+            #add-point:ON ACTION controlp INFIELD imaa003
+
+            #END add-point
+ 
+         #----<<iszero>>----
+         #Ctrlp:input.c.iszero
+         ON ACTION controlp INFIELD iszero
+            #add-point:ON ACTION controlp INFIELD iszero
+
+            #END add-point
+ 
+         #----<<price>>----
+         #Ctrlp:input.c.price
+         ON ACTION controlp INFIELD price
+            #add-point:ON ACTION controlp INFIELD price
+
+            #END add-point
+ 
+         #----<<xcabsite1>>----
+         #Ctrlp:input.c.xcabsite1
+         ON ACTION controlp INFIELD xcabsite1
+            #add-point:ON ACTION controlp INFIELD xcabsite1
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcab1_m.xcabsite1             #給予default值
+            LET g_qryparam.where = " (ooef003 = 'Y' OR ooef201 = 'Y' OR ooef202 = 'Y')"
+            #給予arg
+
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_xcab1_m.xcabsite1 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            SELECT ooefl003 INTO g_xcab1_m.xcabsite1_desc FROM ooefl_t WHERE ooefl001 = g_xcab1_m.xcabsite1 AND ooeflent = g_enterprise AND ooefl002 = g_dlang
+            DISPLAY g_xcab1_m.xcabsite1 TO xcabsite1              #顯示到畫面上
+            DISPLAY g_xcab1_m.xcabsite1_desc TO xcabsite1_desc   
+            LET g_qryparam.where = NULL
+            NEXT FIELD xcabsite1                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<excel>>----
+         #Ctrlp:input.c.excel
+         ON ACTION controlp INFIELD excel
+            #add-point:ON ACTION controlp INFIELD excel
+
+            #END add-point
+ 
+         #----<<way>>----
+         #Ctrlp:input.c.way
+         ON ACTION controlp INFIELD way
+            #add-point:ON ACTION controlp INFIELD way
+
+            #END add-point
+ 
+         #----<<real>>----
+         #Ctrlp:input.c.real
+         ON ACTION controlp INFIELD real
+            #add-point:ON ACTION controlp INFIELD real
+
+            #END add-point
+ 
+         #----<<xcccld>>----
+         #Ctrlp:input.c.xcccld   
+         ON ACTION controlp INFIELD xcccld   
+            #add-point:ON ACTION controlp INFIELD xcccld   
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcab1_m.xcccld           #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            CALL q_authorised_ld() #呼叫開窗
+
+            LET g_xcab1_m.xcccld = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL axci002_01_xcccld_desc()
+            DISPLAY g_xcab1_m.xcccld TO xcccld              #顯示到畫面上
+            DISPLAY g_xcab1_m.xcccld_desc TO xcccld_desc 
+            LET g_qryparam.where = NULL
+            NEXT FIELD xcccld                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<year>>----
+         #Ctrlp:input.c.year
+         ON ACTION controlp INFIELD year
+            #add-point:ON ACTION controlp INFIELD year
+
+            #END add-point
+ 
+         #----<<month>>----
+         #Ctrlp:input.c.month
+         ON ACTION controlp INFIELD month
+            #add-point:ON ACTION controlp INFIELD month
+
+            #END add-point
+ 
+         #----<<standard>>----
+         #Ctrlp:input.c.standard
+         ON ACTION controlp INFIELD standard
+            #add-point:ON ACTION controlp INFIELD standard
+
+            #END add-point
+ 
+         #----<<xcab001_1>>----
+         #Ctrlp:input.c.xcab001_1
+         ON ACTION controlp INFIELD xcab001_1
+            #add-point:ON ACTION controlp INFIELD xcab001_1
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcab1_m.xcab001_1             #給予default值
+            LET g_qryparam.where = " xcabstus = 'Y'"
+
+            #給予arg
+
+            CALL q_xcab001()                                #呼叫開窗
+
+            LET g_xcab1_m.xcab001_1 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xcab1_m.xcab001_1 TO xcab001_1              #顯示到畫面上
+            LET g_qryparam.where = null
+
+            NEXT FIELD xcab001_1                          #返回原欄位
+
+
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+
+            #end add-point
+            
+      END INPUT
+      
+      ON ACTION browser
+         CALL cl_client_browse_dir() RETURNING g_xcab1_m.way
+         LET ls_str = g_xcab1_m.way
+         #抓取目录斜杆
+         LET l_num =ls_str.getIndexOf(':',1)                                    #抓取：后的字符位置
+         LET l_chr = ls_str.substring(l_num+1,l_num+1)                        #截取冒号后的字符 
+         LET l_chr1 = ls_str.substring(ls_str.getLength(),ls_str.getLength())    #判断是否为根目录
+         IF l_chr <> l_chr1  THEN         
+            LET g_xcab1_m.way = g_xcab1_m.way||l_chr||"axci002_01.xlsx"
+         ELSE
+            LET g_xcab1_m.way = g_xcab1_m.way||"axci002_01.xlsx"
+         END IF 
+         DISPLAY BY NAME g_xcab1_m.way
+         
+      ON ACTION download
+          IF g_xcab1_m.excel = 1 THEN         
+             LET g_bgjob = 'Y'                  #add-mpp      
+             LET status =  cl_client_download_file("$RES/std/axci002_01.xlsx",g_xcab1_m.way) 
+             IF status THEN
+                ERROR "Download OK!!"
+             ELSE
+                ERROR "Download fail!!"
+             END IF
+          ELSE
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = 'aoo-00192'
+             LET g_errparam.extend = ''
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+             NEXT FIELD way            
+          END IF    
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axci002_01 
+   
+   #add-point:input段after input name="input.post_input"
+   LET l_success = FALSE
+   IF INT_FLAG = TRUE THEN
+   ELSE
+      IF g_xcab1_m.excel = '1' THEN
+         CALL axci002_01_ins_excel(g_xcab1_m.way) RETURNING l_success
+      ELSE
+         CALL axci002_01_ins_xcab() RETURNING l_success
+      END IF
+   END IF
+   LET INT_FLAG = FALSE
+   RETURN l_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axci002_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axci002_01.other_function" readonly="Y" >}
+#+ 批量插入資料
+PRIVATE FUNCTION axci002_01_ins_xcab()
+DEFINE l_imaa001      LIKE imaa_t.imaa001   
+DEFINE l_xcabcrtdt    DATETIME YEAR TO SECOND
+DEFINE l_imai021      LIKE imai_t.imai021
+DEFINE l_n            LIKE type_t.num5
+DEFINE l_n1           LIKE type_t.num5
+DEFINE l_ooef016      LIKE ooef_t.ooef016
+DEFINE r_success      LIKE type_t.num5
+DEFINE l_n2           LIKE type_t.num5
+DEFINE l_xcabsite     LIKE xcab_t.xcabsite
+DEFINE l_xcabsite1    LIKE xcab_t.xcabsite
+DEFINE l_stus         LIKE xcab_t.xcabstus
+
+   LET r_success = TRUE
+   SELECT UNIQUE xcabstus INTO l_stus FROM xcab_t
+    WHERE xcabent = g_enterprise AND xcab001 = g_xcab_m.xcab001
+   IF l_stus = 'Y' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axc-00082'
+      LET g_errparam.extend = g_xcab_m.xcab001
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success      
+   END IF
+   LET l_n2 = 0 
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1 "
+   ELSE
+      LET g_wc = cl_replace_str(g_wc,'xcab002_1','imaa001')
+   END IF
+
+   LET g_sql = " SELECT unique imaa001 FROM imaa_t ",
+               " WHERE imaaent = '",g_enterprise,"' AND imaastus='Y'",
+               "   AND imaa004 = 'M' AND ",g_wc
+   PREPARE imaa001_prep FROM g_sql
+   DECLARE imaa001_curs CURSOR FOR imaa001_prep
+   LET l_xcabcrtdt = cl_get_current()
+   CALL s_transaction_begin()
+   FOREACH imaa001_curs INTO  l_imaa001
+      #若零成本物料為Y，去掉非零資料
+      IF g_xcab_m.iszero = 'Y' THEN
+         #160902-00048#1-s-mod
+         ##SELECT COUNT(*) INTO l_n1 FROM xcag_t WHERE xcag001 = l_xcabsite AND xcag005 = l_imaa001 AND xcag008 = 0   #160621-00005#1  mark
+         #SELECT COUNT(*) INTO l_n1 FROM xcag_t WHERE xcag001 = l_xcabsite AND xcag004 = l_imaa001 AND xcag102 = 0   #160621-00005#1  add
+         SELECT COUNT(*) INTO l_n1 FROM xcag_t WHERE xcagent = g_enterprise AND xcagsite = g_site AND xcag001 = l_xcabsite AND xcag004 = l_imaa001 AND xcag102 = 0
+         #160902-00048#1-e-mod
+         IF l_n1 = 0 THEN
+            CONTINUE FOREACH
+         END IF
+      END IF
+      #檢查xcab_t裏面是否已存在需插入料件
+      LET l_n1 = 0
+      SELECT COUNT(*) INTO l_n1 FROM xcab_t 
+       WHERE xcab001 = g_xcab_m.xcab001
+         AND xcab002 = l_imaa001 
+         AND xcabent = g_enterprise  #160902-00048#1-add
+      IF l_n1 > 0 THEN
+         CONTINUE FOREACH
+      END IF
+      LET l_n2 = 1   #判斷是否有數據
+      #引入來源，取最新採購單價
+      IF g_xcab1_m.price = 1 THEN
+         LET l_imai021 = 0
+         SELECT imai021,imaisite INTO l_imai021,l_xcabsite FROM imai_t 
+          WHERE imaient = g_enterprise AND imaisite = g_xcab1_m.xcabsite1
+            AND imai001 = l_imaa001 AND imaistus='Y'
+      END IF
+      #實際成本
+      IF g_xcab1_m.real = 1 THEN
+         LET l_imai021 = 0
+         #抓取账套主本位币、成本计算类型为＂月加权＂且成本域、批号、特性的值为空的成本数据　
+         SELECT xccc010,xccc280,xccccomp INTO l_ooef016,l_imai021,l_xcabsite FROM xccc_t
+          WHERE xcccent = g_enterprise AND xcccld = g_xcab1_m.xcccld
+            AND xccc004 = g_xcab1_m.year AND xccc005 = g_xcab1_m.month
+            AND xccc003 = g_xcab1_m.xccc003 
+            AND xccc001 = '1' AND trim(xccc002) IS NULL
+            AND trim(xccc007) IS NULL AND trim(xccc008) IS NULL
+            AND xccc006 = l_imaa001
+      END IF
+      #引入來源，取标准成本基础数据單價
+      IF g_xcab1_m.standard = 1 THEN
+         LET l_imai021 = 0
+         SELECT xcab003,xcab004,xcabsite INTO l_ooef016,l_imai021,l_xcabsite FROM xcab_t 
+          WHERE xcabent = g_enterprise 
+            AND xcab001 = g_xcab1_m.xcab001_1 AND xcab002 = l_imaa001
+            AND xcabstus = 'Y'
+      END IF
+      IF cl_null(l_imai021) THEN LET l_imai021 = 0 END IF
+      IF cl_null(l_ooef016) THEN
+         SELECT glaa001 INTO l_ooef016 FROM glaa_t WHERE glaaent = g_enterprise AND glaacomp = g_site AND glaa014 = 'Y'
+      END IF
+#      IF cl_null(l_xcabsite) THEN
+#         LET l_xcabsite1 = g_site
+#      END IF      
+      INSERT INTO xcab_t (xcabent,
+                          xcab001,xcabsite,
+                          xcab002,xcab003,xcab004,xcabstus,
+                          xcabownid,xcabowndp,xcabcrtid,xcabcrtdp,xcabcrtdt) 
+                   VALUES(g_enterprise,
+                          g_xcab_m.xcab001,l_xcabsite,
+                          l_imaa001,l_ooef016,l_imai021,'N',
+                          g_user,g_dept,g_user,g_dept,l_xcabcrtdt)
+   END FOREACH
+   
+   IF SQLCA.SQLCODE  THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'xcab_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE                  
+   END IF
+   IF l_n2 = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axc-00098'
+      LET g_errparam.extend = 'xcab_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+   END IF
+   RETURN r_success
+END FUNCTION
+#+ 營運據點欄位檢查
+PRIVATE FUNCTION axci002_01_xcabsite_chk(p_xcabsite)
+DEFINE l_n          LIKE type_t.num5 
+DEFINE p_xcabsite   LIKE xcab_t.xcabsite
+
+   LET g_errno = ''
+   #輸入值須存在[T:组织档]
+   LET l_n = 0 
+   SELECT count(*) INTO l_n 
+     FROM ooef_t
+    WHERE ooef001 = p_xcabsite
+      AND ooefent = g_enterprise
+   IF l_n = 0 THEN 
+      LET g_errno = 'axc-00005'
+      RETURN                        
+   END IF
+   #輸入值須在[T:组织档]里有效
+   LET l_n = 0 
+   SELECT count(*) INTO l_n 
+     FROM ooef_t
+    WHERE ooef001 = p_xcabsite
+      AND ooefent = g_enterprise
+      AND ooefstus = 'Y'
+   IF l_n = 0 THEN 
+      LET g_errno = 'axc-00006'
+      RETURN   
+   END IF 
+   #輸入值須在[T:组织档]里為"法人組織"or"营运組織否"or"核算組織否"
+   LET l_n = 0 
+   SELECT count(*) INTO l_n 
+     FROM ooef_t
+    WHERE ooef001 = p_xcabsite
+      AND ooefent = g_enterprise
+      AND (ooef003 = 'Y' OR ooef201 = 'Y' OR ooef202 = 'Y')
+   IF l_n = 0 THEN 
+      LET g_errno = 'axc-00058'
+      RETURN   
+   END IF 
+   #輸入的營運據點不存在于該版本下
+   LET l_n = 0 
+   IF g_xcab1_m.standard = '1' THEN
+      SELECT COUNT(*) INTO l_n 
+        FROM xcab_t
+       WHERE xcabsite = p_xcabsite AND xcab001 = g_xcab1_m.xcab001_1
+         AND xcabent = g_enterprise
+         AND xcabstus = 'Y'
+      IF l_n = 0 THEN 
+#         LET g_errno = 'axc-00081'     #160318-00005#45  mark
+         LET g_errno = 'sub-01333'     #160318-00005#45  add
+         RETURN     
+      END IF         
+   END IF
+END FUNCTION
+#+ xcab002欄位檢查
+PRIVATE FUNCTION axci002_01_xcab002_chk(p_xcab002)
+DEFINE l_n          LIKE type_t.num5 
+DEFINE p_xcab002    LIKE xcab_t.xcab002
+DEFINE l_status     LIKE imaa_t.imaastus
+   
+   #輸入值需存在于[T:物料主档]中
+   LET l_n = 0 
+   SELECT count(*) INTO l_n
+     FROM imaf_t
+    WHERE imaf001 = p_xcab002
+      AND imafent = g_enterprise
+                   
+   IF l_n = 0 THEN 
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axc-00007'
+      LET g_errparam.extend = p_xcab002
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF 
+                  
+   #輸入值需在[T:物料主档]中已確認
+   LET l_status = ''
+   SELECT imaastus INTO l_status
+     FROM imaa_t
+    WHERE imaa001 = p_xcab002
+      AND imaaent = g_enterprise
+                     
+   IF l_status <> 'Y' THEN 
+      IF l_status = 'N' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'axc-00040'
+         LET g_errparam.extend = p_xcab002
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+      ELSE
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'axc-00008'
+         LET g_errparam.extend = p_xcab002
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+      END IF
+      RETURN FALSE
+   END IF 
+
+   #輸入值需在[T:物料主档]中採購件
+   LET l_n = 0 
+   SELECT count(*) INTO l_n
+     FROM imaa_t
+    WHERE imaa001 = p_xcab002
+      AND imaa004 = 'M'
+      AND imaastus = 'Y'
+      AND imaaent = g_enterprise  #160902-00048#1-add
+                     
+   IF l_n = 0 THEN 
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axc-00053'
+      LET g_errparam.extend = p_xcab002
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF 
+   RETURN TRUE
+END FUNCTION
+#+
+PRIVATE FUNCTION axci002_01_set_entry()
+  #CALL cl_set_comp_entry("xcabsite",FALSE)
+#   CALL cl_set_comp_entry("xcabsite1,download,way,browser,xcccld,year,month,xcab001_1,xcabsite3",FALSE)
+#   
+#   IF g_xcab_m.price = '1' THEN 
+#      CALL cl_set_comp_entry("xcabsite1",TRUE)
+#   ELSE
+#      CALL cl_set_comp_entry("xcabsite1",FALSE)
+#   END IF 
+#   
+#   IF g_xcab_m.excel = '1' THEN 
+#      CALL cl_set_comp_entry("download,way,browser",TRUE)
+#   ELSE
+#      CALL cl_set_comp_entry("download,way,browser",FALSE)
+#   END IF 
+#   
+#   IF g_xcab_m.real = '1' THEN 
+#      CALL cl_set_comp_entry("xcccld,year,month",TRUE)
+#   ELSE
+#      CALL cl_set_comp_entry("xcccld,year,month",FALSE)
+#   END IF 
+#   
+#   IF g_xcab_m.standard = '1' THEN 
+#      CALL cl_set_comp_entry("xcab001_1,xcabsite3",TRUE)
+#   ELSE
+#      CALL cl_set_comp_entry("xcab001_1,xcabsite3",FALSE)
+#   END IF 
+
+  #CALL axci002_01_set_comp_entry("xcabsite1,download,way,browser,xcccld,year,month,xcab001_1,",FALSE)
+   CALL axci002_01_set_comp_entry("xcabsite1,way,xcccld,year,month,xccc003,xcab001_1,",FALSE)
+   CALL cl_set_act_visible("download,browser", FALSE)
+   
+   IF g_xcab1_m.price = '1' THEN 
+      CALL axci002_01_set_comp_entry("xcabsite1",TRUE)
+      LET g_xcab1_m.excel = ''
+      LET g_xcab1_m.real = ''
+      LET g_xcab1_m.standard = ''
+     #LET g_xcab1_m.xcabsite1 = ''
+      LET g_xcab1_m.way = ''
+      LET g_xcab1_m.xcccld = ''
+      LET g_xcab1_m.xccc003 = ''
+      LET g_xcab1_m.year = ''
+      LET g_xcab1_m.month = ''
+      LET g_xcab1_m.xcab001_1 = ''
+#      LET g_xcab1_m.xcabsite1_desc = ''
+      LET g_xcab1_m.xcccld_desc = ''
+   ELSE
+      CALL axci002_01_set_comp_entry("xcabsite1",FALSE)
+   END IF 
+   
+   IF g_xcab1_m.excel = '1' THEN 
+      CALL axci002_01_set_comp_entry("way",TRUE)
+      CALL cl_set_act_visible("download,browser", TRUE)
+      LET g_xcab1_m.xcabsite1 = ''
+      LET g_xcab1_m.xcccld = ''
+      LET g_xcab1_m.year = ''
+      LET g_xcab1_m.month = ''
+      LET g_xcab1_m.xcab001_1 = ''
+      LET g_xcab1_m.xcabsite1_desc = ''
+      LET g_xcab1_m.xcccld_desc = ''
+      LET g_xcab1_m.xccc003 = ''
+   ELSE
+      CALL axci002_01_set_comp_entry("way",FALSE)
+      CALL cl_set_act_visible("download,browser", FALSE)
+   END IF 
+   
+   IF g_xcab1_m.real = '1' THEN 
+      CALL axci002_01_set_comp_entry("xcccld,year,month,xccc003",TRUE)
+      LET g_xcab1_m.xcabsite1 = ''
+      LET g_xcab1_m.way = ''
+#      LET g_xcab1_m.year = ''
+#      LET g_xcab1_m.month = ''
+      LET g_xcab1_m.xcab001_1 = ''
+      LET g_xcab1_m.xcabsite1_desc = ''
+   ELSE
+      CALL axci002_01_set_comp_entry("xcccld,year,month,xcccld,xccc003",FALSE)
+   END IF 
+   
+   IF g_xcab1_m.standard = '1' THEN 
+      CALL axci002_01_set_comp_entry("xcab001_1",TRUE)
+      LET g_xcab1_m.xcabsite1 = ''
+      LET g_xcab1_m.way = ''
+      LET g_xcab1_m.xcccld = ''
+      LET g_xcab1_m.year = ''
+      LET g_xcab1_m.month = ''
+#      LET g_xcab1_m.xcab001_1 = ''
+      LET g_xcab1_m.xcabsite1_desc = ''
+      LET g_xcab1_m.xcccld_desc = ''
+      LET g_xcab1_m.xccc003 = ''
+   ELSE
+      CALL axci002_01_set_comp_entry("xcab001_1",FALSE)
+   END IF
+
+   
+   DISPLAY BY NAME g_xcab1_m.price,g_xcab1_m.excel,g_xcab1_m.standard,g_xcab1_m.xcabsite1_desc,g_xcab1_m.xcccld_desc,g_xcab1_m.xccc003
+END FUNCTION
+#從EXCEL匯入
+PRIVATE FUNCTION axci002_01_ins_excel(p_excelname)
+DEFINE p_excelname LIKE type_t.chr1000  #excel档名
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_excelname STRING               #excel档名
+DEFINE l_count     LIKE type_t.num10
+DEFINE li_i        LIKE type_t.num10
+DEFINE li_j        LIKE type_t.num10
+DEFINE xlapp,iRes,iRow    LIKE type_t.num5
+#DEFINE l_xcab      RECORD LIKE xcab_t.*  #161124-00048#16 2016/12/16 By 08734 mark
+#161124-00048#16 2016/12/16 By 08734 add(S)
+DEFINE l_xcab RECORD  #材料標準成本主檔
+       xcabent LIKE xcab_t.xcabent, #企业编号
+       xcabownid LIKE xcab_t.xcabownid, #资料所有者
+       xcabowndp LIKE xcab_t.xcabowndp, #资料所有部门
+       xcabcrtid LIKE xcab_t.xcabcrtid, #资料录入者
+       xcabcrtdp LIKE xcab_t.xcabcrtdp, #资料录入部门
+       xcabcrtdt LIKE xcab_t.xcabcrtdt, #资料创建日
+       xcabmodid LIKE xcab_t.xcabmodid, #资料更改者
+       xcabmoddt LIKE xcab_t.xcabmoddt, #最近更改日
+       xcabstus LIKE xcab_t.xcabstus, #状态码
+       xcabsite LIKE xcab_t.xcabsite, #营运据点
+       xcab001 LIKE xcab_t.xcab001, #版本
+       xcab002 LIKE xcab_t.xcab002, #物料编码
+       xcab003 LIKE xcab_t.xcab003, #币种
+       xcab004 LIKE xcab_t.xcab004 #材料标准单价
+END RECORD
+#161124-00048#16 2016/12/16 By 08734 add(E)
+DEFINE l_today     LIKE type_t.dat       #zll g_today 没有了
+DEFINE l_n         LIKE type_t.num5
+DEFINE l_status    LIKE imaa_t.imaastus
+DEFINE l_xcabstus  LIKE xcab_t.xcabstus
+DEFINE l_xcabcrtdt    DATETIME YEAR TO SECOND
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   LET l_xcabstus = ''
+   SELECT unique xcabstus INTO l_xcabstus FROM xcab_t WHERE xcabent = g_enterprise AND xcab001 = g_xcab_m.xcab001
+   IF l_xcabstus = 'Y' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axc-00010'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   LET l_today= cl_get_current()
+   LET l_count = LENGTH(p_excelname CLIPPED)
+   #转换路径分隔符
+   FOR li_i = 1 TO l_count
+       IF p_excelname[li_i,li_i] ="/" THEN
+          LET l_excelname = l_excelname CLIPPED,'\\'
+       ELSE
+          LET l_excelname = l_excelname CLIPPED,p_excelname[li_i,li_i]
+       END IF
+   END FOR
+
+   CALL ui.interface.frontCall('WinCOM','CreateInstance',
+                               ['Excel.Application'],[xlApp])
+   IF xlApp <> -1 THEN
+      CALL ui.interface.frontCall('WinCOM','CallMethod',
+                                  [xlApp,'WorkBooks.Open',l_excelname],[iRes])
+      IF iRes <> -1 THEN
+         CALL ui.interface.frontCall('WinCOM','GetProperty',
+              [xlApp,'ActiveSheet.UsedRange.Rows.Count'],[iRow])
+         IF iRow > 1 THEN
+            FOR li_i = 2 TO iRow
+                INITIALIZE l_xcab.* TO NULL
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',1).Value'],[l_xcab.xcab002])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',2).Value'],[l_xcab.xcab003])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',3).Value'],[l_xcab.xcab004])
+
+                LET l_xcab.xcabent = g_enterprise
+                LET l_xcab.xcab001 = g_xcab_m.xcab001
+#                IF NOT cl_null(l_xcab.xcabent) THEN
+#                   #zll 以后需修改成遇到错误整体汇总的方式最后一起显示，失败继续执行 用CONTINUE FOE
+#                   #zll 暂时是遇挫就失败跳出 用EXIT FOR
+#
+                   #关键字检查
+                   IF cl_null(l_xcab.xcab001) OR cl_null(l_xcab.xcab002) THEN
+                      #数据缺失，请检查excel中是否有漏维护
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = 'sub-00059'
+                      LET g_errparam.extend = ''
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+
+                      LET r_success = FALSE
+                      EXIT FOR
+                   END IF
+
+#                   #企业编号检查
+#                   IF l_xcab.xcabent != g_enterprise THEN
+#                      #企业编号错误，请检查是否在正确的运行环境或excel中是否正确
+#                      CALL cl_err('','sub-00060',1)
+#                      LET r_success = FALSE
+#                      EXIT FOR
+#                   END IF
+
+
+#                   #币别检查
+#                   IF cl_null(l_xcab.xcab003) THEN
+#                      SELECT glaa001 INTO l_xcab.xcab003 FROM glaa_t WHERE glaaent = g_enterprise AND glaacomp = g_site AND glaa004 = 'Y'
+#                   END IF
+#                   SELECT COUNT(*) INTO l_count FROM ooai_t
+#                    WHERE ooaient = g_enterprise
+#                      AND ooai001 = l_xcab.xcab003
+#                      AND ooaistus='Y'
+#                   IF l_count < 1 THEN
+#                      #excel中有不合法币别，请检查币别档是否有缺失或excel中是否正确
+#                      CALL cl_err('','sub-00062',1)
+#                      LET r_success = FALSE
+#                      EXIT FOR
+#                   END IF
+                   
+                   #營運據點檢查
+#                   LET g_errno = ''
+#                   #輸入值須存在[T:组织档]
+#                   LET l_n = 0 
+#                   SELECT count(*) INTO l_n 
+#                     FROM ooea_t
+#                    WHERE ooea001 = l_xcab.xcabsite
+#                      AND ooeaent = g_enterprise
+#                      AND (ooea003 = 'Y' OR ooea004 = 'Y' OR ooea005 = 'Y')
+#                   IF l_n = 0 THEN 
+#                      #excel中有不存在的營運據點，请检查營運據點档是否有缺失或excel中是否正确
+#                      CALL cl_err('','axc-00005',1)
+#                      LET r_success = FALSE
+#                      EXIT FOR                      
+#                   END IF
+#                   #輸入值須在[T:组织档]里有效
+#                   LET l_n = 0 
+#                   SELECT count(*) INTO l_n 
+#                     FROM ooea_t
+#                    WHERE ooea001 = l_xcab.xcabsite
+#                      AND ooeaent = g_enterprise
+#                      AND (ooea003 = 'Y' OR ooea004 = 'Y' OR ooea005 = 'Y')
+#                      AND ooeastus = 'Y'
+#                   IF l_n = 0 THEN 
+#                      #excel中有不存在的營運據點，请检查營運據點档是否有缺失或excel中是否正确
+#                      CALL cl_err('','axc-00006',1)
+#                      LET r_success = FALSE
+#                      EXIT FOR       
+#                   END IF 
+                   
+#                   #輸入值需存在于[T:物料主档]中
+#                   LET l_n = 0 
+#                   SELECT count(*) INTO l_n
+#                     FROM imaa_t
+#                    WHERE imaa001 = l_xcab.xcab002 
+#                      AND imaaent = g_enterprise
+#                                   
+#                   IF l_n = 0 THEN 
+#                      CALL cl_err(l_xcab.xcab002,'axc-00007',1)
+#                      LET r_success = FALSE
+#                      EXIT FOR
+#                   END IF 
+#                                  
+#                   #輸入值需在[T:物料主档]中已確認
+#                   LET l_status = ''
+#                   SELECT imaastus INTO l_status
+#                     FROM imaa_t
+#                    WHERE imaa001 = l_xcab.xcab002
+#                      AND imaaent = g_enterprise
+#                                     
+#                   IF l_status <> 'Y' THEN 
+#                      IF l_status = 'N' THEN
+#                         CALL cl_err(l_xcab.xcab002,'axc-00040',1)
+#                      ELSE
+#                         CALL cl_err(l_xcab.xcab002,'axc-00008',1)
+#                      END IF
+#                      RETURN FALSE
+#                   END IF 
+#                   
+#                   #輸入值需在[T:物料主档]中採購件
+#                   LET l_n = 0 
+#                   SELECT count(*) INTO l_n
+#                     FROM imaa_t
+#                    WHERE imaa001 = l_xcab.xcab002
+#                      AND imaa004 = 'M'
+#                      AND imaastus = 'Y'
+#                      AND imaaent = g_enterprise
+#                                     
+#                   IF l_n = 0 THEN 
+#                      CALL cl_err(l_xcab.xcab002,'axc-00053',1)
+#                      LET r_success = FALSE
+#                      EXIT FOR
+#                   END IF 
+#                   
+#                   IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcab_t WHERE "||"xcabent = '" ||g_enterprise|| "' AND "||"xcab001 = '"||l_xcab.xcab001 ||"' AND "|| "xcab002 = '"||l_xcab.xcab002 ||"'",'std-00004',1) THEN 
+#                      LET r_success = FALSE
+#                      EXIT FOR
+#                   END IF
+
+                   #赋默认值
+                   LET l_xcab.xcabownid = g_user
+                   LET l_xcab.xcabowndp = g_dept
+                   LET l_xcab.xcabcrtid = g_user
+                   LET l_xcab.xcabcrtdp = g_dept 
+                   LET l_xcabcrtdt = cl_get_current()
+                   LET l_xcab.xcabstus = 'N'
+
+                   
+                   INSERT INTO xcab_t (xcabent,
+                          xcab001,xcabsite,
+                          xcab002,xcab003,xcab004,xcabstus,
+                          xcabownid,xcabowndp,xcabcrtid,xcabcrtdp,xcabcrtdt) 
+                   VALUES(g_enterprise,
+                          l_xcab.xcab001,l_xcab.xcabsite,
+                          l_xcab.xcab002,l_xcab.xcab003,l_xcab.xcab004,'N',
+                          g_user,g_dept,g_user,g_dept,l_xcabcrtdt)
+                   IF SQLCA.sqlcode THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = SQLCA.sqlcode
+                      LET g_errparam.extend = 'ins xcac'
+                      LET g_errparam.popup = FALSE
+                      CALL cl_err()
+
+                      LET r_success = FALSE
+                      EXIT FOR
+                   END IF
+               #END IF
+            END FOR
+         END IF
+      ELSE
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = ''
+         LET g_errparam.extend = 'NO FILE'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+      END IF
+   ELSE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = ''
+      LET g_errparam.extend = 'NO EXCEL'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+   END IF
+
+   CALL ui.interface.frontCall('WinCOM','CallMethod',[xlApp,'Quit'],[iRes])
+   CALL ui.interface.frontCall('WinCOM','ReleaseInstance',[xlApp],[iRes])
+
+   RETURN r_success
+END FUNCTION
+#動態設定元件是否可輸入
+PRIVATE FUNCTION axci002_01_set_comp_entry(ps_fields,pi_entry)
+  DEFINE ps_fields STRING,
+         pi_entry  LIKE type_t.num5           
+  DEFINE lst_fields base.StringTokenizer,
+         ls_field_name STRING
+  DEFINE lwin_curr     ui.Window
+  DEFINE lnode_win     om.DomNode,
+         llst_items    om.NodeList,
+         li_i          LIKE type_t.num5,        
+         lnode_item    om.DomNode,
+         ls_item_name  STRING
+
+  IF g_bgjob = 'Y' AND g_gui_type NOT MATCHES "[13]"  THEN  
+     RETURN
+  END IF
+
+  IF (ps_fields IS NULL) THEN
+     RETURN
+  END IF
+
+  LET ps_fields = ps_fields.toLowerCase()
+
+  LET lst_fields = base.StringTokenizer.create(ps_fields, ",")
+
+  LET lwin_curr = ui.Window.getCurrent()
+  LET lnode_win = lwin_curr.getNode()
+
+  LET llst_items = lnode_win.selectByPath("//Form//*")
+
+  WHILE lst_fields.hasMoreTokens()
+    LET ls_field_name = lst_fields.nextToken()
+    LET ls_field_name = ls_field_name.trim()
+
+    IF (ls_field_name.getLength() > 0) THEN
+       FOR li_i = 1 TO llst_items.getLength()
+           LET lnode_item = llst_items.item(li_i)
+           LET ls_item_name = lnode_item.getAttribute("colName")
+
+           IF (ls_item_name IS NULL) THEN
+              LET ls_item_name = lnode_item.getAttribute("name")
+
+              IF (ls_item_name IS NULL) THEN
+                 CONTINUE FOR
+              END IF
+           END IF
+
+           LET ls_item_name = ls_item_name.trim()
+
+           IF (ls_item_name.equals(ls_field_name)) THEN
+              IF (pi_entry) THEN
+                 CALL lnode_item.setAttribute("noEntry", "0")
+                 CALL lnode_item.setAttribute("active", "1")
+              ELSE
+                 CALL lnode_item.setAttribute("noEntry", "1")
+                 CALL lnode_item.setAttribute("active", "0")
+              END IF
+
+              EXIT FOR
+           END IF
+       END FOR
+    END IF
+  END WHILE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axci002_01_xcccld_desc()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axci002_01_xcccld_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xcab1_m.xcccld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xcab1_m.xcccld_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xcab1_m.xcccld_desc
+END FUNCTION
+
+ 
+{</section>}
+ 

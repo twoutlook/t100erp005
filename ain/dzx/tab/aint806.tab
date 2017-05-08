@@ -1,0 +1,244 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint806" module="ain" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01251" crtdt="2014-03-24 00:00:00" modid="06189" moddt="2016-03-17 16:13:22" sdver="0009" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="盤點單維護作業-複盤">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inegsite,inegsite_desc(chr80),inegdocdt,inegdocno,ineg002,ineg002_desc(chr80),ineg004,ineg004_desc(chr80),ineg005,ineg005_desc(chr80),ineg003,ineg006,ineg006_desc(chr80),ineg007,ineg007_desc(chr80),ineg008,ineg008_desc(chr80),ineg001,inegunit,inegstus,inegownid,inegownid_desc(chr80),inegcrtdp,inegcrtdp_desc(chr80),inegowndp,inegowndp_desc(chr80),inegcrtdt,inegcrtid,inegcrtid_desc(chr80),inegmodid,inegmodid_desc(chr80),inegcnfdt,inegmoddt,inegpstid,inegpstid_desc(chr80),inegcnfid,inegcnfid_desc(chr80),inegpstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inehseq,ineh001,ineh002,ineh001_desc(chr500),ineh001_desc_desc(chr500),ineh003,ineh004,ineh004_desc(chr500),ineh005,ineh006,ineh007,ineh008,ineh008_desc(chr500),ineh010,ineh011,ineh012,ineh013,ineh014,amount(num20_6),ineh009,ineh015,ineh016,amount1(num20_6),ineh017,amount2(num20_6),ineh018,ineh019,inehunit"/>
+      <var id="bs_field" value="inegsite,inegsite_desc(chr80),inegdocdt,inegdocno,ineg002,ineg002_desc(chr80),ineg003,ineg004,ineg004_desc(chr80),ineg005,ineg005_desc(chr80)" pk="inegsite,inegdocno" order=""/>
+      <bs_reference field="inegsite_desc" ref_field="inegsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="ineg002_desc" ref_field="ineg002" ref_sql="SELECT inea001 FROM inea_t WHERE ineaent=$varg_enterprise$var AND ineadocno=? "/>
+      <bs_reference field="ineg004_desc" ref_field="ineg004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="ineg005_desc" ref_field="ineg005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="ined_upd"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="prog_aint800" prog="aint800" parameter="ineg002"/>
+      <action id="prog_ineg004" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_ineg_m.ineg004"/>
+      <action id="prog_ineg006" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_ineg_m.ineg006"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="preood_into"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint806" method="dialog">
+    <section id="input">
+      <input id="head" field="inegsite,inegdocdt,inegdocno,ineg002,ineg004,ineg005,ineg006,ineg007,ineg008,ineg001,inegunit,inegstus"/>
+      <input id="body" page="1" field="inehseq,ineh001,ineh002,ineh004,ineh005,ineh006,amount,ineh009,ineh019" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="inegsite,inegdocdt,inegdocno,ineg002,ineg004,ineg005,ineg006,ineg007,ineg008,ineg001,inegunit,inegstus,inegownid,inegcrtdp,inegowndp,inegcrtdt,inegcrtid,inegmodid,inegcnfdt,inegmoddt,inegpstid,inegcnfid,inegpstdt"/>
+      <construct id="body" page="1" field="inehseq,ineh001,ineh002,ineh004,ineh005,ineh006,ineh008,amount,ineh009,ineh016,ineh017,ineh019"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="inegsite,inegdocno"/>
+      <set id="head" type="no_entry" field="inegsite,inegdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="inegsite">
+        <after>
+          <reference field="inegsite_desc" ref_field="ineg_t.inegsite" map_field="inegent,inegsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="inegsite_desc"/>
+      <column id="inegdocdt"/>
+      <column id="inegdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_inegdocno" state="c"/>
+      </column>
+      <column id="ineg002">
+        <after>
+          <reference field="ineg002_desc" ref_field="ineg_t.ineg002" map_field="inegent,ineg002" ref_sql="SELECT inea001 FROM inea_t WHERE ineaent=$varg_enterprise$var AND ineadocno=? "/>
+        </after>
+        <controlp form="q_ineadocno" state="i"/>
+        <controlp form="q_ineadocno" state="c"/>
+      </column>
+      <column id="ineg002_desc"/>
+      <column id="ineg004">
+        <after>
+          <reference field="ineg004_desc" ref_field="ineg_t.ineg004" map_field="ineg004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ineg004_desc"/>
+      <column id="ineg005">
+        <after>
+          <reference field="ineg005_desc" ref_field="ineg_t.ineg005" map_field="inegent,ineg005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="ineg005_desc"/>
+      <column id="ineg003"/>
+      <column id="ineg006">
+        <after>
+          <reference field="ineg006_desc" ref_field="ineg_t.ineg006" map_field="ineg006" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ineg006_desc"/>
+      <column id="ineg007">
+        <after>
+          <reference field="ineg007_desc" ref_field="ineg_t.ineg007" map_field="inegent,ineg007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="ineg007_desc"/>
+      <column id="ineg008">
+        <after>
+          <reference field="ineg008_desc" ref_field="ineg_t.ineg008" map_field="inegent,ineg008" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_12" state="i"/>
+        <controlp form="q_inaa001_12" state="c"/>
+      </column>
+      <column id="ineg008_desc"/>
+      <column id="ineg001"/>
+      <column id="inegunit"/>
+      <column id="inegstus" scc="13">
+        <stus id="Y" pic="confirmed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="inegownid">
+        <after>
+          <reference field="inegownid_desc" ref_field="ineg_t.inegownid" map_field="inegownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inegownid_desc"/>
+      <column id="inegcrtdp">
+        <after>
+          <reference field="inegcrtdp_desc" ref_field="ineg_t.inegcrtdp" map_field="inegcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inegcrtdp_desc"/>
+      <column id="inegowndp">
+        <after>
+          <reference field="inegowndp_desc" ref_field="ineg_t.inegowndp" map_field="inegowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inegowndp_desc"/>
+      <column id="inegcrtdt"/>
+      <column id="inegcrtid">
+        <after>
+          <reference field="inegcrtid_desc" ref_field="ineg_t.inegcrtid" map_field="inegcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inegcrtid_desc"/>
+      <column id="inegmodid">
+        <after>
+          <reference field="inegmodid_desc" ref_field="ineg_t.inegmodid" map_field="inegmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inegmodid_desc"/>
+      <column id="inegcnfdt"/>
+      <column id="inegmoddt"/>
+      <column id="inegpstid">
+        <after>
+          <reference field="inegpstid_desc" ref_field="ineg_t.inegpstid" map_field="inegpstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inegpstid_desc"/>
+      <column id="inegcnfid">
+        <after>
+          <reference field="inegcnfid_desc" ref_field="ineg_t.inegcnfid" map_field="inegcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inegcnfid_desc"/>
+      <column id="inegpstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="inehseq"/>
+      <column id="ineh001">
+        <after>
+          <reference field="ineh001_desc" ref_field="ineh_t.ineh001" map_field="inefent,ineh001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inee002" state="i"/>
+        <controlp form="q_rtdx001_6" state="c"/>
+      </column>
+      <column id="ineh002"/>
+      <column id="ineh001_desc">
+        <after>
+          <reference field="ineh001_desc_desc" ref_field="ineh_t.ineh001" map_field="inefent,ineh001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ineh001_desc_desc"/>
+      <column id="ineh003"/>
+      <column id="ineh004">
+        <after>
+          <reference field="ineh004_desc" ref_field="inehsite,ineh004" map_field="inehsite,ineh004" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_12" state="i"/>
+        <controlp form="q_inaa001_12" state="c"/>
+      </column>
+      <column id="ineh004_desc"/>
+      <column id="ineh005">
+        <controlp form="q_inab002" state="c"/>
+      </column>
+      <column id="ineh006"/>
+      <column id="ineh007"/>
+      <column id="ineh008">
+        <after>
+          <reference field="ineh008_desc" ref_field="ineh_t.ineh008" map_field="inefent,ineh008" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="ineh008_desc"/>
+      <column id="ineh010" type="S" default="0"/>
+      <column id="ineh011" type="S" default="0"/>
+      <column id="ineh012" type="S" default="0"/>
+      <column id="ineh013" type="S" default="0"/>
+      <column id="ineh014" type="S" default="0"/>
+      <column id="amount" type="S" default="0"/>
+      <column id="ineh009" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ineh015" type="S" default="0"/>
+      <column id="ineh016" type="S" default="0"/>
+      <column id="amount1" type="S" default="0"/>
+      <column id="ineh017" type="S" default="0"/>
+      <column id="amount2" type="S" default="0"/>
+      <column id="ineh018"/>
+      <column id="ineh019"/>
+      <column id="inehunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ineg_t" pk="inegsite,inegdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT inegsite,&apos;&apos;,inegdocdt,inegdocno,ineg002,&apos;&apos;,ineg004,&apos;&apos;,ineg005,&apos;&apos;,ineg003,ineg006,&apos;&apos;,ineg007,&apos;&apos;,ineg008,&apos;&apos;,ineg001,inegunit,inegstus,inegownid,&apos;&apos;,inegcrtdp,&apos;&apos;,inegowndp,&apos;&apos;,inegcrtdt,inegcrtid,&apos;&apos;,inegmodid,&apos;&apos;,inegcnfdt,inegmoddt,inegpstid,&apos;&apos;,inegcnfid,&apos;&apos;,inegpstdt FROM ineg_t WHERE inegent= ? AND inegsite=? AND inegdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT inegsite,&apos;&apos;,inegdocdt,inegdocno,ineg002,&apos;&apos;,ineg004,&apos;&apos;,ineg005,&apos;&apos;,ineg003,ineg006,&apos;&apos;,ineg007,&apos;&apos;,ineg008,&apos;&apos;,ineg001,inegunit,inegstus,inegownid,&apos;&apos;,inegcrtdp,&apos;&apos;,inegowndp,&apos;&apos;,inegcrtdt,inegcrtid,&apos;&apos;,inegmodid,&apos;&apos;,inegcnfdt,inegmoddt,inegpstid,&apos;&apos;,inegcnfid,&apos;&apos;,inegpstdt FROM ineg_t" order="inegsite,inegdocno"/>
+    </head>
+    <body id="ineh_t" page="1" linked="" pk="inehseq" fk="inehsite,inehdocno">
+      <sql id="forupd_sql_detail" query="SELECT inehseq,ineh001,ineh002,&apos;&apos;,&apos;&apos;,ineh003,ineh004,&apos;&apos;,ineh005,ineh006,ineh007,ineh008,&apos;&apos;,ineh010,ineh011,ineh012,ineh013,ineh014,&apos;&apos;,ineh009,ineh015,ineh016,&apos;&apos;,ineh017,&apos;&apos;,ineh018,ineh019,inehunit FROM ineh_t WHERE inehent=? AND inehsite=? AND inehdocno=? AND inehseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inehseq,ineh001,ineh002,&apos;&apos;,&apos;&apos;,ineh003,ineh004,&apos;&apos;,ineh005,ineh006,ineh007,ineh008,&apos;&apos;,ineh010,ineh011,ineh012,ineh013,ineh014,&apos;&apos;,ineh009,ineh015,ineh016,&apos;&apos;,ineh017,&apos;&apos;,ineh018,ineh019,inehunit FROM ineh_t WHERE inehent=? AND inehsite=? AND inehdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

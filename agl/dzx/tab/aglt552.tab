@@ -1,0 +1,138 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglt552" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06821" crtdt="2016-04-21 16:25:45" modid="06821" moddt="2016-04-21 17:50:53" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併現金流量表直接法項目調整作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glehld,glehld_desc(chr80),gleh001,gleh001_desc(chr80),gleh003,gleh004,gleh008,gleh010,gleh012,glehstus(chr10)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gleh002,gleh002_desc(chr500),l_gleh002_ld(chr500),gleh005,gleh005_desc(chr500),gleh006,gleh007,gleh009,gleh011,gleh013"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gleh002,gleh005,gleh006,gleh007,glehownid,glehownid_desc(chr500),glehowndp,glehowndp_desc(chr500),glehcrtid,glehcrtid_desc(chr500),glehcrtdp,glehcrtdp_desc(chr500),glehcrtdt,glehmodid,glehmodid_desc(chr500),glehmoddt,glehcnfid,glehcnfid_desc(chr500),glehcnfdt"/>
+      <var id="bs_field" value="glehld,gleh001,gleh003,gleh004" pk="glehld,gleh001,gleh003,gleh004" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="statechange"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglt552" method="dialog">
+    <section id="input">
+      <input id="head" field="glehld,gleh001,gleh003,gleh004,glehstus"/>
+      <input id="body" page="1" field="gleh002,gleh005,gleh006,gleh007,gleh009,gleh011,gleh013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glehld,gleh001,gleh003,gleh004,gleh008,gleh010,gleh012,glehstus"/>
+      <construct id="body" page="1" field="gleh002,gleh005,gleh006,gleh007,gleh009,gleh011,gleh013"/>
+      <construct id="body" page="2" field="glehownid,glehowndp,glehcrtid,glehcrtdp,glehcrtdt,glehmodid,glehmoddt,glehcnfid,glehcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glehld,gleh001,gleh003,gleh004"/>
+      <set id="head" type="no_entry" field="glehld,gleh001,gleh003,gleh004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glehld">
+        <after>
+          <reference field="glehld_desc" ref_field="gleh_t.glehld" map_field="glehent,glehld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glehld_desc"/>
+      <column id="gleh001">
+        <after>
+          <reference field="gleh001_desc" ref_field="gleh_t.gleh001" map_field="glehent,gleh001" ref_sql="SELECT gldal003 FROM gldal_t WHERE gldalent=$varg_enterprise$var AND gldal001=? AND gldal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gleh001_desc"/>
+      <column id="gleh003"/>
+      <column id="gleh004"/>
+      <column id="gleh008"/>
+      <column id="gleh010"/>
+      <column id="gleh012"/>
+      <column id="glehstus" scc="13" type="S" default="N">
+        <stus id="Y" pic="confirmed"/>
+        <stus id="N" pic="unconfirmed"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="gleh002">
+        <after>
+          <reference field="gleh002_desc" ref_field="gleh_t.gleh002" map_field="glehent,gleh002" ref_sql="SELECT gldal003 FROM gldal_t WHERE gldalent=$varg_enterprise$var AND gldal001=? AND gldal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gleh002_desc"/>
+      <column id="l_gleh002_ld"/>
+      <column id="gleh005">
+        <after/>
+      </column>
+      <column id="gleh005_desc"/>
+      <column id="gleh006"/>
+      <column id="gleh007" type="S" default="+"/>
+      <column id="gleh009" type="S" default="0"/>
+      <column id="gleh011" type="S" default="0"/>
+      <column id="gleh013" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glehownid">
+        <after>
+          <reference field="glehownid_desc" ref_field="gleh_t.glehownid" map_field="glehownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glehownid_desc"/>
+      <column id="glehowndp">
+        <after>
+          <reference field="glehowndp_desc" ref_field="gleh_t.glehowndp" map_field="glehowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glehowndp_desc"/>
+      <column id="glehcrtid">
+        <after>
+          <reference field="glehcrtid_desc" ref_field="gleh_t.glehcrtid" map_field="glehcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glehcrtid_desc"/>
+      <column id="glehcrtdp">
+        <after>
+          <reference field="glehcrtdp_desc" ref_field="gleh_t.glehcrtdp" map_field="glehcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glehcrtdp_desc"/>
+      <column id="glehcrtdt"/>
+      <column id="glehmodid">
+        <after>
+          <reference field="glehmodid_desc" ref_field="gleh_t.glehmodid" map_field="glehmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glehmodid_desc"/>
+      <column id="glehmoddt"/>
+      <column id="glehcnfid">
+        <after>
+          <reference field="glehcnfid_desc" ref_field="gleh_t.glehcnfid" map_field="glehcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glehcnfid_desc"/>
+      <column id="glehcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gleh_t" pk="glehld,gleh001,gleh003,gleh004">
+      <sql id="forupd_sql" type="sql" query="SELECT glehld,&apos;&apos;,gleh001,&apos;&apos;,gleh003,gleh004,gleh008,gleh010,gleh012,&apos;&apos; FROM gleh_t WHERE glehent= ? AND glehld=? AND gleh001=? AND gleh003=? AND gleh004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glehld,&apos;&apos;,gleh001,&apos;&apos;,gleh003,gleh004,gleh008,gleh010,gleh012,&apos;&apos; FROM gleh_t" order="glehld,gleh001,gleh003,gleh004"/>
+    </head>
+    <body id="gleh_t" page="1,2" linked="" pk="gleh002,gleh005,gleh006,gleh007" fk="glehld,gleh001,gleh003,gleh004">
+      <sql id="forupd_sql_detail" query="SELECT gleh002,&apos;&apos;,&apos;&apos;,gleh005,&apos;&apos;,gleh006,gleh007,gleh009,gleh011,gleh013,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glehownid,&apos;&apos;,glehowndp,&apos;&apos;,glehcrtid,&apos;&apos;,glehcrtdp,&apos;&apos;,glehcrtdt,glehmodid,&apos;&apos;,glehmoddt,glehcnfid,&apos;&apos;,glehcnfdt FROM gleh_t WHERE glehent=? AND glehld=? AND gleh001=? AND gleh003=? AND gleh004=? AND gleh002=? AND gleh005=? AND gleh006=? AND gleh007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gleh002,&apos;&apos;,&apos;&apos;,gleh005,&apos;&apos;,gleh006,gleh007,gleh009,gleh011,gleh013,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glehownid,&apos;&apos;,glehowndp,&apos;&apos;,glehcrtid,&apos;&apos;,glehcrtdp,&apos;&apos;,glehcrtdt,glehmodid,&apos;&apos;,glehmoddt,glehcnfid,&apos;&apos;,glehcnfdt FROM gleh_t WHERE glehent= ? AND glehld=? AND gleh001=? AND gleh003=? AND gleh004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

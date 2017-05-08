@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmi005" module="apm" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02294" crtdt="2013-08-27 10:00:45" modid="02294" moddt="2014-12-19 10:32:37" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="交易對象聯絡人維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmaj001,pmaal004(chr500),pmaa002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmajstus,pmaj002,pmaj003,pmaj003_desc(chr500),pmaj009,pmaj010,pmaj011,pmaj012,pmaj013,pmaj014,pmaj004,pmaj005,pmaj006,pmaj007,pmaj008"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="aooi350_01"/>
+      <action id="aooi350_02"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmi005" method="dialog">
+    <section id="input">
+      <input id="head" field="pmaj001,pmaal004,pmaa002"/>
+      <input id="body" page="1" field="pmajstus,pmaj002,pmaj003,pmaj009,pmaj010,pmaj011,pmaj012,pmaj013,pmaj014,pmaj004,pmaj005,pmaj006,pmaj007,pmaj008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmaj001"/>
+      <construct id="body" page="1" field="pmajstus,pmaj002,pmaj003,pmaj009,pmaj010,pmaj011,pmaj012,pmaj013,pmaj014,pmaj004,pmaj005,pmaj006,pmaj007,pmaj008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmaj001"/>
+      <set id="head" type="no_entry" field="pmaj001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmaj001">
+        <controlp form="q_pmaa001_4" state="i"/>
+        <controlp form="q_pmaa001_4" state="c"/>
+      </column>
+      <column id="pmaal004"/>
+      <column id="pmaa002" def_scc="2014"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmajstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmaj002"/>
+      <column id="pmaj003">
+        <after>
+          <reference field="pmaj003_desc" ref_field="pmaj003" map_field="pmaj003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;259&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmaj003_desc"/>
+      <column id="pmaj009"/>
+      <column id="pmaj010"/>
+      <column id="pmaj011"/>
+      <column id="pmaj012"/>
+      <column id="pmaj013"/>
+      <column id="pmaj014"/>
+      <column id="pmaj004" type="S" default="N"/>
+      <column id="pmaj005" type="S" default="N"/>
+      <column id="pmaj006"/>
+      <column id="pmaj007"/>
+      <column id="pmaj008"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmaj_t" pk="pmaj001">
+      <sql id="forupd_sql" type="sql" query="SELECT pmaj001,&apos;&apos;,&apos;&apos; FROM pmaj_t WHERE pmajent= ? AND pmaj001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmaj001,&apos;&apos;,&apos;&apos; FROM pmaj_t" order="pmaj001"/>
+    </head>
+    <body id="pmaj_t" page="1" linked="" pk="pmaj002" fk="pmaj001">
+      <sql id="forupd_sql_detail" query="SELECT pmajstus,pmaj002,pmaj003,&apos;&apos;,pmaj009,pmaj010,pmaj011,pmaj012,pmaj013,pmaj014,pmaj004,pmaj005,pmaj006,pmaj007,pmaj008 FROM pmaj_t WHERE pmajent=? AND pmaj001=? AND pmaj002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmajstus,pmaj002,pmaj003,&apos;&apos;,pmaj009,pmaj010,pmaj011,pmaj012,pmaj013,pmaj014,pmaj004,pmaj005,pmaj006,pmaj007,pmaj008 FROM pmaj_t WHERE pmajent= ? AND pmaj001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

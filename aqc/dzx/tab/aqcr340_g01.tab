@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aqcr340_g01" module="aqc" jobmode="N" type="g01" industry="std" crtid="01996" crtdt="2015-01-22 09:46:12" modid="05423" moddt="2016-09-09 17:07:50" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where codition),tm.typea(STRING|报表类型)">
+    <var seq="1" value="qcbk000,qcbk001,qcbk002,qcbk003,qcbk004,qcbk005,qcbk006,qcbk007,qcbk008,qcbk010,qcbk011,qcbk012,qcbk013,qcbk014,qcbk015,qcbk016,qcbk017,qcbk018,qcbk019,qcbk020,qcbk021,qcbk022,qcbk023,qcbkent,qcbksite,qcbkstus,qcbl003,qcbl004,qcbl007,qcbl008,qcbl009,qcblseq,imaal_t_imaal003(imaal003|imaal_t.imaal003),oocql_t_oocql004(oocql004|oocql_t.oocql004),imaal_t_imaal004(imaal004|imaal_t.imaal004),l_qcbk000_desc(chr500|&apos;&apos;),l_qcbk010_desc(chr500|&apos;&apos;),l_qcbk001_qcbk002(chr500|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="qcbk000,qcbk001,qcbk002,qcbk003,qcbk004,qcbk005,qcbk006,qcbk007,qcbk008,qcbk010,qcbk011,qcbk012,qcbk013,qcbk014,qcbk015,qcbk016,qcbk017,qcbk018,qcbk019,qcbk020,qcbk021,qcbk022,qcbk023,qcbkent,qcbksite,qcbkstus,qcbl003,qcbl004,qcbl007,qcbl008,qcbl009,qcblseq,imaal_t_imaal003(imaal003|( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = qcbk_t.qcbk008 AND imaal_t.imaalent = qcbk_t.qcbkent AND imaal_t.imaal002 = g_dlang)),oocql_t_oocql004(oocql004|( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = &apos;1051&apos; AND oocql_t.oocql002 = qcbk_t.qcbk011 AND oocql_t.oocqlent = qcbk_t.qcbkent AND oocql_t.oocql003 = g_dlang)),imaal_t_imaal004(imaal004|( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = qcbk_t.qcbk008 AND imaal_t.imaalent = qcbk_t.qcbkent AND imaal_t.imaal002 = g_dlang)),l_qcbk000_desc(chr500|&apos;&apos;),l_qcbk010_desc(chr500|&apos;&apos;),l_qcbk001_qcbk002(chr500|&apos;&apos;)"/>
+    <sql id="g_from" query="qcbk_t LEFT OUTER JOIN ( SELECT qcbl_t.* FROM qcbl_t  ) x  ON qcbk_t.qcbkent = x.qcblent AND qcbk_t.qcbksite = x.qcblsite AND qcbk_t.qcbk001 = x.qcbl001 AND qcbk_t.qcbk002 = x.qcbl002"/>
+    <sql id="g_where" query="" maintable="qcbk_t"/>
+    <sql id="g_order" query="qcblseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="l_qcbk001_qcbk002"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_qcbk001_qcbk002" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="qcbkent,l_qcbk001_qcbk002"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="qcbkent,l_qcbk001_qcbk002"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="qcbkent,l_qcbk001_qcbk002"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_qcbk001_qcbk002" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="qcbkent,l_qcbk001_qcbk002"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

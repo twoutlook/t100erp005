@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi030" module="azz" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="01101" crtdt="2014-03-28 09:52:18" modid="01101" moddt="2014-09-05 18:01:05" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="GWC佈景設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzha001,gzhal003,gzhastus,gzhaownid,gzhaownid_desc(chr80),gzhaowndp,gzhaowndp_desc(chr80),gzhacrtid,gzhacrtid_desc(chr80),gzhacrtdp,gzhacrtdp_desc(chr80),gzhacrtdt,gzhamodid,gzhamodid_desc(chr80),gzhamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzhc002"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzhb002,gzhb003,gzhb004,gzhb005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="createxcf_sys"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi030" method="dialog">
+    <section id="input">
+      <input id="head" field="gzha001,gzhal003,gzhastus"/>
+      <input id="body" page="1" field="gzhc002" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="gzhb002,gzhb003,gzhb004,gzhb005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzha001,gzhal003,gzhastus,gzhaownid,gzhaowndp,gzhacrtid,gzhacrtdp,gzhacrtdt,gzhamodid,gzhamoddt"/>
+      <construct id="body" page="1" field="gzhc002"/>
+      <construct id="body" page="2" field="gzhb002,gzhb003,gzhb004,gzhb005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzha001"/>
+      <set id="head" type="no_entry" field="gzha001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzha001">
+        <controlp form="q_gzha001" state="i"/>
+        <controlp form="q_gzha001" state="c"/>
+      </column>
+      <column id="gzhal003"/>
+      <column id="gzhastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzhaownid">
+        <after>
+          <reference field="gzhaownid_desc" ref_field="gzha_t.gzhaownid" map_field="gzhaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzhaownid_desc"/>
+      <column id="gzhaowndp">
+        <after>
+          <reference field="gzhaowndp_desc" ref_field="gzha_t.gzhaowndp" map_field="gzhaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzhaowndp_desc"/>
+      <column id="gzhacrtid">
+        <after>
+          <reference field="gzhacrtid_desc" ref_field="gzha_t.gzhacrtid" map_field="gzhacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzhacrtid_desc"/>
+      <column id="gzhacrtdp">
+        <after>
+          <reference field="gzhacrtdp_desc" ref_field="gzha_t.gzhacrtdp" map_field="gzhacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzhacrtdp_desc"/>
+      <column id="gzhacrtdt"/>
+      <column id="gzhamodid">
+        <after>
+          <reference field="gzhamodid_desc" ref_field="gzha_t.gzhamodid" map_field="gzhamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzhamodid_desc"/>
+      <column id="gzhamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzhc002"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzhb002" def_scc="112"/>
+      <column id="gzhb003" def_scc="113"/>
+      <column id="gzhb004"/>
+      <column id="gzhb005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzha_t" pk="gzha001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzha001,&apos;&apos;,gzhastus,gzhaownid,&apos;&apos;,gzhaowndp,&apos;&apos;,gzhacrtid,&apos;&apos;,gzhacrtdp,&apos;&apos;,gzhacrtdt,gzhamodid,&apos;&apos;,gzhamoddt FROM gzha_t WHERE gzha001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzha001,&apos;&apos;,gzhastus,gzhaownid,&apos;&apos;,gzhaowndp,&apos;&apos;,gzhacrtid,&apos;&apos;,gzhacrtdp,&apos;&apos;,gzhacrtdt,gzhamodid,&apos;&apos;,gzhamoddt FROM gzha_t" order="gzha001"/>
+      <sql id="append" type="lang" target="gzhal_t.gzhal003" table="gzhal_t" fk="gzha001" pk="gzhal001,gzhal002" field="gzhal003"/>
+    </head>
+    <body id="gzhc_t" page="1" linked="" pk="gzhc002" fk="gzhc001">
+      <sql id="forupd_sql_detail" query="SELECT gzhc002 FROM gzhc_t WHERE gzhc001=? AND gzhc002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzhc002 FROM gzhc_t WHERE gzhc001=?"/>
+    </body>
+    <body id="gzhb_t" page="2" linked="" pk="gzhb002,gzhb003,gzhb004" fk="gzhb001">
+      <sql id="forupd_sql_detail" query="SELECT gzhb002,gzhb003,gzhb004,gzhb005 FROM gzhb_t WHERE gzhb001=? AND gzhb002=? AND gzhb003=? AND gzhb004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzhb002,gzhb003,gzhb004,gzhb005 FROM gzhb_t WHERE gzhb001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi916" module="azz" jobmode="N" type="i13" industry="std" fix_arg="0" crtid="00413" crtdt="2014-03-10 17:26:11" modid="00413" moddt="2015-04-15 18:27:12" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="系統與作業公告設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzzvsite,gzzvsite_desc(chr80),gzzv003,gzzv002,gzzv001,gzzv001_desc(chr80),gzzv005,gzzv005_desc(chr80),gzzv006,gzzv006_time(chr500),gzzv007,gzzv007_time(chr500),te_preview(chr500),gzzvstus"/>
+      <var id="bs_field" value="b_gzzv004(STRING),gzzv006,gzzv007,gzzv001,gzzv002,gzzv003,gzzvsite" pk="gzzv001,gzzv002,gzzvsite" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="preview" chk="N"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_gzzv001" prog="azzi910" parameter="gzzv001"/>
+    </section>
+    <section id="master_input">
+      <action id="preview" chk="N"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi916" method="dialog">
+    <section id="input">
+      <input id="head" field="gzzvsite,gzzv003,gzzv001,gzzv005,gzzv006,gzzv006_time,gzzv007,gzzv007_time,gzzvstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzzvsite,gzzv003,gzzv002,gzzv001,gzzv005,gzzv006,gzzv006_time,gzzv007,gzzv007_time,gzzvstus"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzzv001,gzzv002,gzzvsite"/>
+      <set id="head" type="no_entry" field="gzzv001,gzzv002,gzzvsite"/>
+    </init>
+    <init id="head">
+      <column id="gzzvsite">
+        <after>
+          <reference field="gzzvsite_desc" ref_field="gzzv_t.gzzvsite" map_field="gzzvsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzzvsite_desc"/>
+      <column id="gzzv003" def_scc="74"/>
+      <column id="gzzv002"/>
+      <column id="gzzv001">
+        <after>
+          <check chkid="v_gzzz001" id="isExist"/>
+          <reference field="gzzv001_desc" ref_field="gzzv_t.gzzv001" map_field="gzzv001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001_1" state="i"/>
+        <controlp form="q_gzzz001_1" state="c"/>
+      </column>
+      <column id="gzzv001_desc"/>
+      <column id="gzzv005">
+        <after>
+          <check chkid="v_ooag001_3" id="chkandReturn"/>
+          <reference field="gzzv005_desc" ref_field="gzzv_t.gzzv005" map_field="gzzv005" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzzv005_desc"/>
+      <column id="gzzv006"/>
+      <column id="gzzv006_time"/>
+      <column id="gzzv007"/>
+      <column id="gzzv007_time"/>
+      <column id="te_preview"/>
+      <column id="gzzvstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzzv_t" lid="gzzv002" type="gzzv001" type2="" type3="" type4="" type5="" type6="" desc="gzzv003" pk="gzzv001,gzzv002,gzzvsite">
+      <sql id="forupd_sql" type="sql" query="SELECT gzzvsite,&apos;&apos;,gzzv003,gzzv002,gzzv001,&apos;&apos;,gzzv005,&apos;&apos;,gzzv006,&apos;&apos;,gzzv007,&apos;&apos;,&apos;&apos;,gzzvstus FROM gzzv_t WHERE gzzvent= ? AND gzzv001=? AND gzzv002=? AND gzzvsite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzzv001,gzzv002,gzzvsite FROM gzzv_t" order="gzzv001,gzzv002,gzzvsite"/>
+    </head>
+  </dataset>
+</assembly>
+

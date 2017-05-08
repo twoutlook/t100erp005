@@ -1,0 +1,310 @@
+<add_points prog="asfp401" std_prog="asfp401" erpver="1.0" module="ASF" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="free_style.variable" cite_std="N" status="" ver="1" src="s" new="N" order="0" mark_hard="N">
+<![CDATA[{<Module define>}
+
+#單身 type 宣告
+ TYPE type_g_sfaa_d RECORD
+       sfaadocno LIKE sfaa_t.sfaadocno,
+   sfaadocdt LIKE sfaa_t.sfaadocdt
+       END RECORD
+
+
+#無單身append欄位定義
+
+#模組變數(Module Variables)
+DEFINE g_sfaa_d          DYNAMIC ARRAY OF type_g_sfaa_d
+DEFINE g_sfaa_d_t        type_g_sfaa_d
+
+
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10
+DEFINE l_ac                 LIKE type_t.num5              #目前處理的ARRAY CNT
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num5              #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+
+#多table用wc
+DEFINE g_wc_table           STRING
+
+
+{</Module define>}          {#ADP版次:1#}]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="1" src="s" new="N" order="0" mark_hard="N">
+<![CDATA[      
+   #LET g_forupd_sql = ""          {#ADP版次:1#}]]>
+</point>
+  <point name="function.asfp401_ui_dialog" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp401_ui_dialog()
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp401_init" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp401_init()
+
+END FUNCTION]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[{</Module define>} ]]>
+</point>
+  <point name="b_fill.fill" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="b_fill.sql_after" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   #依模組進行系統初始化設定(系統設定)]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="cs.before_construct" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   #end add-point]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[#end add-point]]>
+</point>
+  <point name="delete.b_delete" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[ ]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="delete.m_delete" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[#add-point:free_style]]>
+</point>
+  <point name="delete_b.b_delete" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[END MAIN]]>
+</point>
+  <point name="delete_b.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[ ]]>
+</point>
+  <point name="detail_show.before" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[END MAIN]]>
+</point>
+  <point name="detail_show.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[ ]]>
+</point>
+  <point name="detail_show.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[#add-point:自定義元件(Function)]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[END MAIN]]>
+</point>
+  <point name="input.before_dialog" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   WHENEVER ERROR CALL cl_err_msg_log]]>
+</point>
+  <point name="input.body.a_row" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   #add-point:main段define]]>
+</point>
+  <point name="input.body.a_update" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[{</Module define>} ]]>
+</point>
+  <point name="input.body.m_update" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE gfrm_curr            ui.Form                       #Current Form]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   IF g_bgjob = "Y" THEN]]>
+</point>
+  <point name="insert.before_insert" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   #end add-point]]>
+</point>
+  <point name="insert_b.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   #end add-point]]>
+</point>
+  <point name="lock_b.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[END MAIN]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      DEFINE l_success     LIKE type_t.num5
+   DEFINE l_num         LIKE type_t.num5]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      ]]>
+</point>
+  <point name="main.init" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[
+   CALL s_asfp401('','','') RETURNING l_success,l_num
+   RETURN ]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[#add-point:自定義元件(Function)]]>
+</point>
+  <point name="modify_detail_chk.before" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[#add-point:自定義元件(Function)]]>
+</point>
+  <point name="query.a.page1.sfaadocdt" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   #add-point:main段define]]>
+</point>
+  <point name="query.after_construct" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   #end add-point]]>
+</point>
+  <point name="query.b.page1.sfaadocdt" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[#end add-point]]>
+</point>
+  <point name="query.b.page1.sfaadocno" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page]]>
+</point>
+  <point name="query.c.page1.sfaadocdt" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   #依模組進行系統初始化設定(系統設定)]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[ ]]>
+</point>
+  <point name="query.more_construct" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="ui_dialog.b_dialog" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE g_error_show         LIKE type_t.num5]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE g_curr_diag          ui.Dialog                     #Current Dialog]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   CALL cl_ap_init("asf","")]]>
+</point>
+  <point name="update_b.b_update" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[ ]]>
+</point>
+  <point name="update_b.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      #end add-point]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="asfp401.description" ver="17" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000031
+#+ 
+#+ Filename...: asfp401
+#+ Description: 整批子工單產生作業
+#+ Creator....: 01258(2014/03/05)
+#+ Modifier...: 01258(2014/03/05)
+#+ Buildtype..: 應用 i00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="asfp401.free_style_function" ver="1" status="" src="s">
+<![CDATA[#add-point:free_style
+{<point name="free_style.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp401.global" ver="3" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp401.main" ver="2" status="" src="s">
+<![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE asfp401_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asfp401 WITH FORM cl_ap_formpath("asf",g_code)
+   
+      #程式初始化
+      CALL asfp401_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #進入選單 Menu (='N')
+      CALL asfp401_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_asfp401
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+</section>
+  <section id="asfp401.other_function" ver="2" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+</add_points>

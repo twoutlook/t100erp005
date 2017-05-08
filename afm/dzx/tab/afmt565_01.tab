@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt565_01" module="afm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="04152" crtdt="2015-05-25 21:45:36" modid="04152" moddt="2015-05-27 10:43:22" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產生帳務資料">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmmusite,fmmu001,fmmudocno,fmmudocdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt565_01" method="dialog">
+    <section id="input">
+      <input id="head" field="fmmusite,fmmu001,fmmudocno,fmmudocdt"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="fmmusite">
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="fmmu001">
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="fmmudocno">
+        <controlp form="q_ooba002_1" state="i"/>
+      </column>
+      <column id="fmmudocdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmmu_t" pk="fmmudocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fmmusite,fmmu001,fmmudocno,fmmudocdt FROM fmmu_t WHERE fmmuent= ? AND fmmudocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="fmmudocno"/>
+    </head>
+  </dataset>
+</assembly>
+

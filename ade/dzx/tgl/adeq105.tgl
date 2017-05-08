@@ -1,0 +1,3277 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="adeq105.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:3(2015-11-05 14:13:33), PR版次:
+#+ Customerized Version.: SD版次:(), PR版次:
+#+ Build......: 000142
+#+ Filename...: adeq105
+#+ Description: 門店銷售品類日結查詢作業
+#+ Creator....: 06814(2015-08-31 17:18:39)
+#+ Modifier...: 06815 -SD/PR-
+
+{</section>}
+
+{<section id="adeq105.global" >}
+#應用 q02 樣板自動產生(Version:42)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_debs_d RECORD
+       #statepic       LIKE type_t.chr1,
+       
+       sel LIKE type_t.chr1, 
+   debssite LIKE debs_t.debssite, 
+   debssite_desc LIKE type_t.chr500, 
+   debs001 LIKE debs_t.debs001, 
+   debs002 LIKE debs_t.debs002, 
+   debs003 LIKE debs_t.debs003, 
+   debs004 LIKE debs_t.debs004, 
+   debs005 LIKE debs_t.debs005, 
+   debs005_desc LIKE type_t.chr500, 
+   debs008 LIKE debs_t.debs008, 
+   debs008_desc LIKE type_t.chr500, 
+   debs035 LIKE debs_t.debs035, 
+   debs009 LIKE debs_t.debs009, 
+   debs009_desc LIKE type_t.chr500, 
+   debs010 LIKE debs_t.debs010, 
+   debs011 LIKE debs_t.debs011, 
+   debs012 LIKE debs_t.debs012, 
+   debs013 LIKE debs_t.debs013, 
+   debs014 LIKE debs_t.debs014, 
+   debs015 LIKE debs_t.debs015, 
+   debs016 LIKE debs_t.debs016, 
+   debs031 LIKE debs_t.debs031, 
+   debs032 LIKE debs_t.debs032, 
+   debs033 LIKE debs_t.debs033, 
+   debs017 LIKE debs_t.debs017, 
+   debs018 LIKE debs_t.debs018, 
+   debs019 LIKE debs_t.debs019, 
+   debs034 LIKE debs_t.debs034, 
+   debs020 LIKE debs_t.debs020, 
+   debs021 LIKE debs_t.debs021, 
+   debs022 LIKE debs_t.debs022, 
+   debs023 LIKE debs_t.debs023, 
+   debs024 LIKE debs_t.debs024, 
+   debs025 LIKE debs_t.debs025, 
+   debs026 LIKE debs_t.debs026, 
+   debs027 LIKE debs_t.debs027, 
+   debs028 LIKE debs_t.debs028, 
+   debs029 LIKE debs_t.debs029, 
+   debs030 LIKE debs_t.debs030 
+       END RECORD
+PRIVATE TYPE type_g_debs2_d RECORD
+       debt010 LIKE debt_t.debt010, 
+   debt010_desc LIKE type_t.chr500, 
+   debt011 LIKE debt_t.debt011, 
+   debt011_desc LIKE type_t.chr500, 
+   debt012 LIKE debt_t.debt012, 
+   debt013 LIKE debt_t.debt013, 
+   debt017 LIKE debt_t.debt017, 
+   debt022 LIKE debt_t.debt022, 
+   debt023 LIKE debt_t.debt023, 
+   debt024 LIKE debt_t.debt024, 
+   debt018 LIKE debt_t.debt018, 
+   debt019 LIKE debt_t.debt019, 
+   debt020 LIKE debt_t.debt020, 
+   debt021 LIKE debt_t.debt021, 
+   debt025 LIKE debt_t.debt025
+       END RECORD
+ 
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_debs_d
+DEFINE g_master_t                   type_g_debs_d
+DEFINE g_debs_d          DYNAMIC ARRAY OF type_g_debs_d
+DEFINE g_debs_d_t        type_g_debs_d
+DEFINE g_debs2_d   DYNAMIC ARRAY OF type_g_debs2_d
+DEFINE g_debs2_d_t type_g_debs2_d
+ 
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_detail_cnt2        LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+DEFINE g_detail_idx         LIKE type_t.num10
+DEFINE g_detail_idx2        LIKE type_t.num10
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+DEFINE g_tot_cnt            LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page        LIKE type_t.num10             #每頁筆數
+DEFINE g_current_row_tot    LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_act_list      STRING                        #分頁ACTION清單
+DEFINE g_page_start_num     LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num       LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_wc_filter_table    STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+DEFINE g_wc2_table2   STRING
+DEFINE g_wc2_filter_table2    STRING
+DEFINE g_detail2_page_action2 STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+##end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="adeq105.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   {<point name="main.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   {<point name="main.define"/>}
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ade","")
+ 
+   #add-point:作業初始化 name="main.init"
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE adeq105_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE adeq105_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE adeq105_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adeq105 WITH FORM cl_ap_formpath("ade",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL adeq105_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL adeq105_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_adeq105
+      
+   END IF 
+   
+   CLOSE adeq105_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="adeq105.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION adeq105_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   {<point name="init.define"/>}
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   {<point name="init.before_function" />}
+   #end add-point
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   
+      CALL cl_set_combo_scc('b_debs001','6540') 
+   CALL cl_set_combo_scc('b_debs035','6839') 
+ 
+   
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init" />}
+   #end add-point
+ 
+   CALL adeq105_default_search()  
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.default_search" >}
+PRIVATE FUNCTION adeq105_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   {<point name="default_search.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   {<point name="default_search.define"/>}
+   #end add-point
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   {<point name="default_search.before"/>}
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " debssite = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " debs002 = '", g_argv[02], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET g_wc = g_wc, " debs005 = '", g_argv[03], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[04]) THEN
+      LET g_wc = g_wc, " debs008 = '", g_argv[04], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[05]) THEN
+      LET g_wc = g_wc, " debs009 = '", g_argv[05], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[06]) THEN
+      LET g_wc = g_wc, " debs035 = '", g_argv[06], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段開始後 name="default_search.after"
+   {<point name="default_search.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION adeq105_ui_dialog()
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   {<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE lc_action_choice_old     STRING
+   DEFINE lc_current_row           LIKE type_t.num10
+   DEFINE ls_js      STRING
+   DEFINE la_param   RECORD
+                     prog       STRING,
+                     actionid   STRING,
+                     background LIKE type_t.chr1,
+                     param      DYNAMIC ARRAY OF STRING
+                     END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   {<point name="ui_dialog.before_function" />}
+   #end add-point
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+         
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   LET g_detail_page_action = "detail_first"
+   LET g_pagestart = 1
+   LET g_current_row_tot = 1
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   IF NOT cl_null(g_wc) AND g_wc != " 1=2" THEN
+      LET g_detail_idx = 1
+      LET g_detail_idx2 = 1
+      CALL adeq105_b_fill()
+   ELSE
+      CALL adeq105_query()
+   END IF
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_debs_d.clear()
+         CALL g_debs2_d.clear()
+ 
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 1
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL adeq105_init()
+      END IF
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_debs_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+ 
+               #為避免按上下筆影響執行效能，所以有作一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL adeq105_fetch()
+               LET g_action_choice = lc_action_choice_old
+               LET g_master_idx = l_ac
+               CALL adeq105_detail_action_trans()
+               #add-point:input段before row name="input.body.before_row"
+               {<point name="input.body.before_row"/>}
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            {<point name="ui_dialog.body.page1.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+      
+ 
+         
+         DISPLAY ARRAY g_debs2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 2
+            
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               DISPLAY g_debs2_d.getLength() TO FORMONLY.cnt
+               #add-point:input段before row name="input.body2.before_row"
+               {<point name="input.body2.before_row"/>}
+               #end add-point 
+ 
+            #自訂ACTION(detail_show,page_2)
+            
+ 
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+            {<point name="ui_dialog.body2.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+ 
+      
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL adeq105_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL adeq105_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               {<point name="menu.insert" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               {<point name="menu.output" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               {<point name="menu.quickprint" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL adeq105_query()
+               #add-point:ON ACTION query name="menu.query"
+               {<point name="menu.query" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               {<point name="menu.datainfo" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL adeq105_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            {<point name="menu.filter" />}
+            #END add-point
+ 
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+ 
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION datarefresh   # 重新整理
+            LET g_error_show = 1
+            CALL adeq105_b_fill()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_debs_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_debs2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               {<point name="menu.exporttoexcel" />}
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            {<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL adeq105_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL adeq105_b_fill()
+ 
+         ON ACTION detail_next                #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL adeq105_b_fill()
+ 
+         ON ACTION detail_last                #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL adeq105_b_fill()
+ 
+         #應用 qs19 樣板自動產生(Version:3)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_debs_d.getLength()
+               LET g_debs_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_debs_d.getLength()
+               LET g_debs_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_debs_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_debs_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_debs_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_debs_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+ 
+ 
+ 
+ 
+ 
+         
+ 
+         #add-point:ui_dialog段自定義action name="ui_dialog.more_action"
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         {<point name="ui_dialog.set_qbe_action_before" mark="Y"/>}
+         #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         {<point name="ui_dialog.set_qbe_action_after"/>}
+         #end add-point
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION adeq105_query()
+   #add-point:query段define-客製 name="query.define_customerization"
+   {<point name="query.define_customerization" edit="c" mark="Y"/>}
+   #end add-point 
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_wc2     LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   #add-point:FUNCTION前置處理 name="query.before_function"
+   {<point name="query.before_function" />}
+   #end add-point
+ 
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_debs_d.clear()
+   CALL g_debs2_d.clear()
+ 
+ 
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_wc_filter = " 1=1"
+   LET g_detail_page_action = ""
+   LET g_pagestart = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET ls_wc2 = g_wc2
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON debssite,debs001,debs002,debs003,debs004,debs005,debs008,debs035,debs009, 
+          debs010,debs011,debs012,debs013,debs014,debs015,debs016,debs031,debs032,debs033,debs017,debs018, 
+          debs019,debs034,debs020,debs021,debs022,debs023,debs024,debs025,debs026,debs027,debs028,debs029, 
+          debs030
+           FROM s_detail1[1].b_debssite,s_detail1[1].b_debs001,s_detail1[1].b_debs002,s_detail1[1].b_debs003, 
+               s_detail1[1].b_debs004,s_detail1[1].b_debs005,s_detail1[1].b_debs008,s_detail1[1].b_debs035, 
+               s_detail1[1].b_debs009,s_detail1[1].b_debs010,s_detail1[1].b_debs011,s_detail1[1].b_debs012, 
+               s_detail1[1].b_debs013,s_detail1[1].b_debs014,s_detail1[1].b_debs015,s_detail1[1].b_debs016, 
+               s_detail1[1].b_debs031,s_detail1[1].b_debs032,s_detail1[1].b_debs033,s_detail1[1].b_debs017, 
+               s_detail1[1].b_debs018,s_detail1[1].b_debs019,s_detail1[1].b_debs034,s_detail1[1].b_debs020, 
+               s_detail1[1].b_debs021,s_detail1[1].b_debs022,s_detail1[1].b_debs023,s_detail1[1].b_debs024, 
+               s_detail1[1].b_debs025,s_detail1[1].b_debs026,s_detail1[1].b_debs027,s_detail1[1].b_debs028, 
+               s_detail1[1].b_debs029,s_detail1[1].b_debs030
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.head.before_construct"
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #----<<sel>>----
+         #----<<b_debssite>>----
+         #Ctrlp:construct.c.page1.b_debssite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debssite
+            #add-point:ON ACTION controlp INFIELD b_debssite name="construct.c.page1.b_debssite"
+            {<point name="construct.c.page1.b_debssite" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debssite
+            #add-point:BEFORE FIELD b_debssite name="construct.b.page1.b_debssite"
+            {<point name="construct.b.page1.b_debssite" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debssite
+            
+            #add-point:AFTER FIELD b_debssite name="construct.a.page1.b_debssite"
+            {<point name="construct.a.page1.b_debssite" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_debssite_desc>>----
+         #----<<b_debs001>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs001
+            #add-point:BEFORE FIELD b_debs001 name="construct.b.page1.b_debs001"
+            {<point name="construct.b.page1.b_debs001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs001
+            
+            #add-point:AFTER FIELD b_debs001 name="construct.a.page1.b_debs001"
+            {<point name="construct.a.page1.b_debs001" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs001
+            #add-point:ON ACTION controlp INFIELD b_debs001 name="construct.c.page1.b_debs001"
+            {<point name="construct.c.page1.b_debs001" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs002>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs002
+            #add-point:BEFORE FIELD b_debs002 name="construct.b.page1.b_debs002"
+            {<point name="construct.b.page1.b_debs002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs002
+            
+            #add-point:AFTER FIELD b_debs002 name="construct.a.page1.b_debs002"
+            {<point name="construct.a.page1.b_debs002" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs002
+            #add-point:ON ACTION controlp INFIELD b_debs002 name="construct.c.page1.b_debs002"
+            {<point name="construct.c.page1.b_debs002" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs003>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs003
+            #add-point:BEFORE FIELD b_debs003 name="construct.b.page1.b_debs003"
+            {<point name="construct.b.page1.b_debs003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs003
+            
+            #add-point:AFTER FIELD b_debs003 name="construct.a.page1.b_debs003"
+            {<point name="construct.a.page1.b_debs003" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs003
+            #add-point:ON ACTION controlp INFIELD b_debs003 name="construct.c.page1.b_debs003"
+            {<point name="construct.c.page1.b_debs003" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs004>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs004
+            #add-point:BEFORE FIELD b_debs004 name="construct.b.page1.b_debs004"
+            {<point name="construct.b.page1.b_debs004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs004
+            
+            #add-point:AFTER FIELD b_debs004 name="construct.a.page1.b_debs004"
+            {<point name="construct.a.page1.b_debs004" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs004
+            #add-point:ON ACTION controlp INFIELD b_debs004 name="construct.c.page1.b_debs004"
+            {<point name="construct.c.page1.b_debs004" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs005>>----
+         #Ctrlp:construct.c.page1.b_debs005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs005
+            #add-point:ON ACTION controlp INFIELD b_debs005 name="construct.c.page1.b_debs005"
+            {<point name="construct.c.page1.b_debs005" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs005
+            #add-point:BEFORE FIELD b_debs005 name="construct.b.page1.b_debs005"
+            {<point name="construct.b.page1.b_debs005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs005
+            
+            #add-point:AFTER FIELD b_debs005 name="construct.a.page1.b_debs005"
+            {<point name="construct.a.page1.b_debs005" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_debs005_desc>>----
+         #----<<b_debs008>>----
+         #Ctrlp:construct.c.page1.b_debs008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs008
+            #add-point:ON ACTION controlp INFIELD b_debs008 name="construct.c.page1.b_debs008"
+            {<point name="construct.c.page1.b_debs008" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs008
+            #add-point:BEFORE FIELD b_debs008 name="construct.b.page1.b_debs008"
+            {<point name="construct.b.page1.b_debs008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs008
+            
+            #add-point:AFTER FIELD b_debs008 name="construct.a.page1.b_debs008"
+            {<point name="construct.a.page1.b_debs008" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_debs008_desc>>----
+         #----<<b_debs035>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs035
+            #add-point:BEFORE FIELD b_debs035 name="construct.b.page1.b_debs035"
+            {<point name="construct.b.page1.b_debs035" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs035
+            
+            #add-point:AFTER FIELD b_debs035 name="construct.a.page1.b_debs035"
+            {<point name="construct.a.page1.b_debs035" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs035
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs035
+            #add-point:ON ACTION controlp INFIELD b_debs035 name="construct.c.page1.b_debs035"
+            {<point name="construct.c.page1.b_debs035" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs009>>----
+         #Ctrlp:construct.c.page1.b_debs009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs009
+            #add-point:ON ACTION controlp INFIELD b_debs009 name="construct.c.page1.b_debs009"
+            {<point name="construct.c.page1.b_debs009" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs009
+            #add-point:BEFORE FIELD b_debs009 name="construct.b.page1.b_debs009"
+            {<point name="construct.b.page1.b_debs009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs009
+            
+            #add-point:AFTER FIELD b_debs009 name="construct.a.page1.b_debs009"
+            {<point name="construct.a.page1.b_debs009" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_debs009_desc>>----
+         #----<<b_debs010>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs010
+            #add-point:BEFORE FIELD b_debs010 name="construct.b.page1.b_debs010"
+            {<point name="construct.b.page1.b_debs010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs010
+            
+            #add-point:AFTER FIELD b_debs010 name="construct.a.page1.b_debs010"
+            {<point name="construct.a.page1.b_debs010" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs010
+            #add-point:ON ACTION controlp INFIELD b_debs010 name="construct.c.page1.b_debs010"
+            {<point name="construct.c.page1.b_debs010" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs011>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs011
+            #add-point:BEFORE FIELD b_debs011 name="construct.b.page1.b_debs011"
+            {<point name="construct.b.page1.b_debs011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs011
+            
+            #add-point:AFTER FIELD b_debs011 name="construct.a.page1.b_debs011"
+            {<point name="construct.a.page1.b_debs011" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs011
+            #add-point:ON ACTION controlp INFIELD b_debs011 name="construct.c.page1.b_debs011"
+            {<point name="construct.c.page1.b_debs011" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs012>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs012
+            #add-point:BEFORE FIELD b_debs012 name="construct.b.page1.b_debs012"
+            {<point name="construct.b.page1.b_debs012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs012
+            
+            #add-point:AFTER FIELD b_debs012 name="construct.a.page1.b_debs012"
+            {<point name="construct.a.page1.b_debs012" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs012
+            #add-point:ON ACTION controlp INFIELD b_debs012 name="construct.c.page1.b_debs012"
+            {<point name="construct.c.page1.b_debs012" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs013>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs013
+            #add-point:BEFORE FIELD b_debs013 name="construct.b.page1.b_debs013"
+            {<point name="construct.b.page1.b_debs013" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs013
+            
+            #add-point:AFTER FIELD b_debs013 name="construct.a.page1.b_debs013"
+            {<point name="construct.a.page1.b_debs013" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs013
+            #add-point:ON ACTION controlp INFIELD b_debs013 name="construct.c.page1.b_debs013"
+            {<point name="construct.c.page1.b_debs013" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs014>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs014
+            #add-point:BEFORE FIELD b_debs014 name="construct.b.page1.b_debs014"
+            {<point name="construct.b.page1.b_debs014" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs014
+            
+            #add-point:AFTER FIELD b_debs014 name="construct.a.page1.b_debs014"
+            {<point name="construct.a.page1.b_debs014" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs014
+            #add-point:ON ACTION controlp INFIELD b_debs014 name="construct.c.page1.b_debs014"
+            {<point name="construct.c.page1.b_debs014" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs015>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs015
+            #add-point:BEFORE FIELD b_debs015 name="construct.b.page1.b_debs015"
+            {<point name="construct.b.page1.b_debs015" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs015
+            
+            #add-point:AFTER FIELD b_debs015 name="construct.a.page1.b_debs015"
+            {<point name="construct.a.page1.b_debs015" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs015
+            #add-point:ON ACTION controlp INFIELD b_debs015 name="construct.c.page1.b_debs015"
+            {<point name="construct.c.page1.b_debs015" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs016>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs016
+            #add-point:BEFORE FIELD b_debs016 name="construct.b.page1.b_debs016"
+            {<point name="construct.b.page1.b_debs016" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs016
+            
+            #add-point:AFTER FIELD b_debs016 name="construct.a.page1.b_debs016"
+            {<point name="construct.a.page1.b_debs016" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs016
+            #add-point:ON ACTION controlp INFIELD b_debs016 name="construct.c.page1.b_debs016"
+            {<point name="construct.c.page1.b_debs016" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs031>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs031
+            #add-point:BEFORE FIELD b_debs031 name="construct.b.page1.b_debs031"
+            {<point name="construct.b.page1.b_debs031" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs031
+            
+            #add-point:AFTER FIELD b_debs031 name="construct.a.page1.b_debs031"
+            {<point name="construct.a.page1.b_debs031" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs031
+            #add-point:ON ACTION controlp INFIELD b_debs031 name="construct.c.page1.b_debs031"
+            {<point name="construct.c.page1.b_debs031" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs032>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs032
+            #add-point:BEFORE FIELD b_debs032 name="construct.b.page1.b_debs032"
+            {<point name="construct.b.page1.b_debs032" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs032
+            
+            #add-point:AFTER FIELD b_debs032 name="construct.a.page1.b_debs032"
+            {<point name="construct.a.page1.b_debs032" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs032
+            #add-point:ON ACTION controlp INFIELD b_debs032 name="construct.c.page1.b_debs032"
+            {<point name="construct.c.page1.b_debs032" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs033>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs033
+            #add-point:BEFORE FIELD b_debs033 name="construct.b.page1.b_debs033"
+            {<point name="construct.b.page1.b_debs033" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs033
+            
+            #add-point:AFTER FIELD b_debs033 name="construct.a.page1.b_debs033"
+            {<point name="construct.a.page1.b_debs033" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs033
+            #add-point:ON ACTION controlp INFIELD b_debs033 name="construct.c.page1.b_debs033"
+            {<point name="construct.c.page1.b_debs033" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs017>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs017
+            #add-point:BEFORE FIELD b_debs017 name="construct.b.page1.b_debs017"
+            {<point name="construct.b.page1.b_debs017" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs017
+            
+            #add-point:AFTER FIELD b_debs017 name="construct.a.page1.b_debs017"
+            {<point name="construct.a.page1.b_debs017" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs017
+            #add-point:ON ACTION controlp INFIELD b_debs017 name="construct.c.page1.b_debs017"
+            {<point name="construct.c.page1.b_debs017" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs018>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs018
+            #add-point:BEFORE FIELD b_debs018 name="construct.b.page1.b_debs018"
+            {<point name="construct.b.page1.b_debs018" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs018
+            
+            #add-point:AFTER FIELD b_debs018 name="construct.a.page1.b_debs018"
+            {<point name="construct.a.page1.b_debs018" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs018
+            #add-point:ON ACTION controlp INFIELD b_debs018 name="construct.c.page1.b_debs018"
+            {<point name="construct.c.page1.b_debs018" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs019>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs019
+            #add-point:BEFORE FIELD b_debs019 name="construct.b.page1.b_debs019"
+            {<point name="construct.b.page1.b_debs019" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs019
+            
+            #add-point:AFTER FIELD b_debs019 name="construct.a.page1.b_debs019"
+            {<point name="construct.a.page1.b_debs019" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs019
+            #add-point:ON ACTION controlp INFIELD b_debs019 name="construct.c.page1.b_debs019"
+            {<point name="construct.c.page1.b_debs019" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs034>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs034
+            #add-point:BEFORE FIELD b_debs034 name="construct.b.page1.b_debs034"
+            {<point name="construct.b.page1.b_debs034" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs034
+            
+            #add-point:AFTER FIELD b_debs034 name="construct.a.page1.b_debs034"
+            {<point name="construct.a.page1.b_debs034" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs034
+            #add-point:ON ACTION controlp INFIELD b_debs034 name="construct.c.page1.b_debs034"
+            {<point name="construct.c.page1.b_debs034" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs020>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs020
+            #add-point:BEFORE FIELD b_debs020 name="construct.b.page1.b_debs020"
+            {<point name="construct.b.page1.b_debs020" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs020
+            
+            #add-point:AFTER FIELD b_debs020 name="construct.a.page1.b_debs020"
+            {<point name="construct.a.page1.b_debs020" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs020
+            #add-point:ON ACTION controlp INFIELD b_debs020 name="construct.c.page1.b_debs020"
+            {<point name="construct.c.page1.b_debs020" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs021>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs021
+            #add-point:BEFORE FIELD b_debs021 name="construct.b.page1.b_debs021"
+            {<point name="construct.b.page1.b_debs021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs021
+            
+            #add-point:AFTER FIELD b_debs021 name="construct.a.page1.b_debs021"
+            {<point name="construct.a.page1.b_debs021" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs021
+            #add-point:ON ACTION controlp INFIELD b_debs021 name="construct.c.page1.b_debs021"
+            {<point name="construct.c.page1.b_debs021" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs022>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs022
+            #add-point:BEFORE FIELD b_debs022 name="construct.b.page1.b_debs022"
+            {<point name="construct.b.page1.b_debs022" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs022
+            
+            #add-point:AFTER FIELD b_debs022 name="construct.a.page1.b_debs022"
+            {<point name="construct.a.page1.b_debs022" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs022
+            #add-point:ON ACTION controlp INFIELD b_debs022 name="construct.c.page1.b_debs022"
+            {<point name="construct.c.page1.b_debs022" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs023>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs023
+            #add-point:BEFORE FIELD b_debs023 name="construct.b.page1.b_debs023"
+            {<point name="construct.b.page1.b_debs023" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs023
+            
+            #add-point:AFTER FIELD b_debs023 name="construct.a.page1.b_debs023"
+            {<point name="construct.a.page1.b_debs023" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs023
+            #add-point:ON ACTION controlp INFIELD b_debs023 name="construct.c.page1.b_debs023"
+            {<point name="construct.c.page1.b_debs023" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs024>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs024
+            #add-point:BEFORE FIELD b_debs024 name="construct.b.page1.b_debs024"
+            {<point name="construct.b.page1.b_debs024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs024
+            
+            #add-point:AFTER FIELD b_debs024 name="construct.a.page1.b_debs024"
+            {<point name="construct.a.page1.b_debs024" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs024
+            #add-point:ON ACTION controlp INFIELD b_debs024 name="construct.c.page1.b_debs024"
+            {<point name="construct.c.page1.b_debs024" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs025>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs025
+            #add-point:BEFORE FIELD b_debs025 name="construct.b.page1.b_debs025"
+            {<point name="construct.b.page1.b_debs025" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs025
+            
+            #add-point:AFTER FIELD b_debs025 name="construct.a.page1.b_debs025"
+            {<point name="construct.a.page1.b_debs025" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs025
+            #add-point:ON ACTION controlp INFIELD b_debs025 name="construct.c.page1.b_debs025"
+            {<point name="construct.c.page1.b_debs025" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs026>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs026
+            #add-point:BEFORE FIELD b_debs026 name="construct.b.page1.b_debs026"
+            {<point name="construct.b.page1.b_debs026" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs026
+            
+            #add-point:AFTER FIELD b_debs026 name="construct.a.page1.b_debs026"
+            {<point name="construct.a.page1.b_debs026" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs026
+            #add-point:ON ACTION controlp INFIELD b_debs026 name="construct.c.page1.b_debs026"
+            {<point name="construct.c.page1.b_debs026" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs027>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs027
+            #add-point:BEFORE FIELD b_debs027 name="construct.b.page1.b_debs027"
+            {<point name="construct.b.page1.b_debs027" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs027
+            
+            #add-point:AFTER FIELD b_debs027 name="construct.a.page1.b_debs027"
+            {<point name="construct.a.page1.b_debs027" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs027
+            #add-point:ON ACTION controlp INFIELD b_debs027 name="construct.c.page1.b_debs027"
+            {<point name="construct.c.page1.b_debs027" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs028>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs028
+            #add-point:BEFORE FIELD b_debs028 name="construct.b.page1.b_debs028"
+            {<point name="construct.b.page1.b_debs028" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs028
+            
+            #add-point:AFTER FIELD b_debs028 name="construct.a.page1.b_debs028"
+            {<point name="construct.a.page1.b_debs028" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs028
+            #add-point:ON ACTION controlp INFIELD b_debs028 name="construct.c.page1.b_debs028"
+            {<point name="construct.c.page1.b_debs028" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs029>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs029
+            #add-point:BEFORE FIELD b_debs029 name="construct.b.page1.b_debs029"
+            {<point name="construct.b.page1.b_debs029" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs029
+            
+            #add-point:AFTER FIELD b_debs029 name="construct.a.page1.b_debs029"
+            {<point name="construct.a.page1.b_debs029" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs029
+            #add-point:ON ACTION controlp INFIELD b_debs029 name="construct.c.page1.b_debs029"
+            {<point name="construct.c.page1.b_debs029" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs030>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debs030
+            #add-point:BEFORE FIELD b_debs030 name="construct.b.page1.b_debs030"
+            {<point name="construct.b.page1.b_debs030" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debs030
+            
+            #add-point:AFTER FIELD b_debs030 name="construct.a.page1.b_debs030"
+            {<point name="construct.a.page1.b_debs030" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debs030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs030
+            #add-point:ON ACTION controlp INFIELD b_debs030 name="construct.c.page1.b_debs030"
+            {<point name="construct.c.page1.b_debs030" />}
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+      CONSTRUCT g_wc2_table2 ON debt010,debt011,debt012,debt013,debt017,debt022,debt023,debt024,debt018, 
+          debt019,debt020,debt021,debt025
+           FROM s_detail2[1].b_debt010,s_detail2[1].b_debt011,s_detail2[1].b_debt012,s_detail2[1].b_debt013, 
+               s_detail2[1].b_debt017,s_detail2[1].b_debt022,s_detail2[1].b_debt023,s_detail2[1].b_debt024, 
+               s_detail2[1].b_debt018,s_detail2[1].b_debt019,s_detail2[1].b_debt020,s_detail2[1].b_debt021, 
+               s_detail2[1].b_debt025
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.body2.before_construct"
+            {<point name="cs.body2.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+                #----<<b_debt010>>----
+         #Ctrlp:construct.c.page2.b_debt010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt010
+            #add-point:ON ACTION controlp INFIELD b_debt010 name="construct.c.page2.b_debt010"
+            {<point name="construct.c.page2.b_debt010" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt010
+            #add-point:BEFORE FIELD b_debt010 name="construct.b.page2.b_debt010"
+            {<point name="construct.b.page2.b_debt010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt010
+            
+            #add-point:AFTER FIELD b_debt010 name="construct.a.page2.b_debt010"
+            {<point name="construct.a.page2.b_debt010" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_debt010_desc>>----
+         #----<<b_debt011>>----
+         #Ctrlp:construct.c.page2.b_debt011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt011
+            #add-point:ON ACTION controlp INFIELD b_debt011 name="construct.c.page2.b_debt011"
+            {<point name="construct.c.page2.b_debt011" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt011
+            #add-point:BEFORE FIELD b_debt011 name="construct.b.page2.b_debt011"
+            {<point name="construct.b.page2.b_debt011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt011
+            
+            #add-point:AFTER FIELD b_debt011 name="construct.a.page2.b_debt011"
+            {<point name="construct.a.page2.b_debt011" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_debt011_desc>>----
+         #----<<b_debt012>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt012
+            #add-point:BEFORE FIELD b_debt012 name="construct.b.page2.b_debt012"
+            {<point name="construct.b.page2.b_debt012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt012
+            
+            #add-point:AFTER FIELD b_debt012 name="construct.a.page2.b_debt012"
+            {<point name="construct.a.page2.b_debt012" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt012
+            #add-point:ON ACTION controlp INFIELD b_debt012 name="construct.c.page2.b_debt012"
+            {<point name="construct.c.page2.b_debt012" />}
+            #END add-point
+ 
+ 
+         #----<<b_debt013>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt013
+            #add-point:BEFORE FIELD b_debt013 name="construct.b.page2.b_debt013"
+            {<point name="construct.b.page2.b_debt013" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt013
+            
+            #add-point:AFTER FIELD b_debt013 name="construct.a.page2.b_debt013"
+            {<point name="construct.a.page2.b_debt013" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt013
+            #add-point:ON ACTION controlp INFIELD b_debt013 name="construct.c.page2.b_debt013"
+            {<point name="construct.c.page2.b_debt013" />}
+            #END add-point
+ 
+ 
+         #----<<b_debt017>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt017
+            #add-point:BEFORE FIELD b_debt017 name="construct.b.page2.b_debt017"
+            {<point name="construct.b.page2.b_debt017" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt017
+            
+            #add-point:AFTER FIELD b_debt017 name="construct.a.page2.b_debt017"
+            {<point name="construct.a.page2.b_debt017" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt017
+            #add-point:ON ACTION controlp INFIELD b_debt017 name="construct.c.page2.b_debt017"
+            {<point name="construct.c.page2.b_debt017" />}
+            #END add-point
+ 
+ 
+         #----<<b_debt022>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt022
+            #add-point:BEFORE FIELD b_debt022 name="construct.b.page2.b_debt022"
+            {<point name="construct.b.page2.b_debt022" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt022
+            
+            #add-point:AFTER FIELD b_debt022 name="construct.a.page2.b_debt022"
+            {<point name="construct.a.page2.b_debt022" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt022
+            #add-point:ON ACTION controlp INFIELD b_debt022 name="construct.c.page2.b_debt022"
+            {<point name="construct.c.page2.b_debt022" />}
+            #END add-point
+ 
+ 
+         #----<<b_debt023>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt023
+            #add-point:BEFORE FIELD b_debt023 name="construct.b.page2.b_debt023"
+            {<point name="construct.b.page2.b_debt023" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt023
+            
+            #add-point:AFTER FIELD b_debt023 name="construct.a.page2.b_debt023"
+            {<point name="construct.a.page2.b_debt023" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt023
+            #add-point:ON ACTION controlp INFIELD b_debt023 name="construct.c.page2.b_debt023"
+            {<point name="construct.c.page2.b_debt023" />}
+            #END add-point
+ 
+ 
+         #----<<b_debt024>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt024
+            #add-point:BEFORE FIELD b_debt024 name="construct.b.page2.b_debt024"
+            {<point name="construct.b.page2.b_debt024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt024
+            
+            #add-point:AFTER FIELD b_debt024 name="construct.a.page2.b_debt024"
+            {<point name="construct.a.page2.b_debt024" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt024
+            #add-point:ON ACTION controlp INFIELD b_debt024 name="construct.c.page2.b_debt024"
+            {<point name="construct.c.page2.b_debt024" />}
+            #END add-point
+ 
+ 
+         #----<<b_debt018>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt018
+            #add-point:BEFORE FIELD b_debt018 name="construct.b.page2.b_debt018"
+            {<point name="construct.b.page2.b_debt018" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt018
+            
+            #add-point:AFTER FIELD b_debt018 name="construct.a.page2.b_debt018"
+            {<point name="construct.a.page2.b_debt018" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt018
+            #add-point:ON ACTION controlp INFIELD b_debt018 name="construct.c.page2.b_debt018"
+            {<point name="construct.c.page2.b_debt018" />}
+            #END add-point
+ 
+ 
+         #----<<b_debt019>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt019
+            #add-point:BEFORE FIELD b_debt019 name="construct.b.page2.b_debt019"
+            {<point name="construct.b.page2.b_debt019" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt019
+            
+            #add-point:AFTER FIELD b_debt019 name="construct.a.page2.b_debt019"
+            {<point name="construct.a.page2.b_debt019" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt019
+            #add-point:ON ACTION controlp INFIELD b_debt019 name="construct.c.page2.b_debt019"
+            {<point name="construct.c.page2.b_debt019" />}
+            #END add-point
+ 
+ 
+         #----<<b_debt020>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt020
+            #add-point:BEFORE FIELD b_debt020 name="construct.b.page2.b_debt020"
+            {<point name="construct.b.page2.b_debt020" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt020
+            
+            #add-point:AFTER FIELD b_debt020 name="construct.a.page2.b_debt020"
+            {<point name="construct.a.page2.b_debt020" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt020
+            #add-point:ON ACTION controlp INFIELD b_debt020 name="construct.c.page2.b_debt020"
+            {<point name="construct.c.page2.b_debt020" />}
+            #END add-point
+ 
+ 
+         #----<<b_debt021>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt021
+            #add-point:BEFORE FIELD b_debt021 name="construct.b.page2.b_debt021"
+            {<point name="construct.b.page2.b_debt021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt021
+            
+            #add-point:AFTER FIELD b_debt021 name="construct.a.page2.b_debt021"
+            {<point name="construct.a.page2.b_debt021" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt021
+            #add-point:ON ACTION controlp INFIELD b_debt021 name="construct.c.page2.b_debt021"
+            {<point name="construct.c.page2.b_debt021" />}
+            #END add-point
+ 
+ 
+         #----<<b_debt025>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debt025
+            #add-point:BEFORE FIELD b_debt025 name="construct.b.page2.b_debt025"
+            {<point name="construct.b.page2.b_debt025" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debt025
+            
+            #add-point:AFTER FIELD b_debt025 name="construct.a.page2.b_debt025"
+            {<point name="construct.a.page2.b_debt025" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_debt025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debt025
+            #add-point:ON ACTION controlp INFIELD b_debt025 name="construct.c.page2.b_debt025"
+            {<point name="construct.c.page2.b_debt025" />}
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+  
+      #add-point:query段more_construct name="query.more_construct"
+      {<point name="query.more_construct"/>}
+      #end add-point 
+ 
+      ON ACTION accept
+         #add-point:ON ACTION accept name="query.accept"
+         {<point name="query.accept"/>}
+         #end add-point
+ 
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+ 
+      #add-point:query段查詢方案相關ACTION設定前 name="query.set_qbe_action_before"
+      {<point name="query.set_qbe_action_before" mark="Y"/>}
+      #end add-point 
+ 
+      ON ACTION qbeclear   # 條件清除
+         CLEAR FORM
+         #add-point:條件清除後 name="query.qbeclear"
+         {<point name="query.qbeclear"/>}
+         #end add-point 
+ 
+      #add-point:query段查詢方案相關ACTION設定後 name="query.set_qbe_action_after"
+      {<point name="query.set_qbe_action_after"/>}
+      #end add-point 
+ 
+   END DIALOG
+ 
+   
+ 
+   LET g_wc = g_wc_table 
+ 
+   IF NOT cl_null(g_wc2_table2) AND g_wc2_table2 <> " 1=1" THEN
+      LET g_wc = g_wc, " AND ", g_wc2_table2
+   END IF
+ 
+ 
+   
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   IF NOT cl_null(g_wc2_table2) AND g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2, " AND ", g_wc2_table2
+   END IF
+ 
+ 
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = " 1=2"
+      LET g_wc2 = " 1=1"
+      LET g_wc_filter = g_wc_filter_t
+      RETURN
+   ELSE
+      LET g_master_idx = 1
+   END IF
+        
+   #add-point:cs段after_construct name="cs.after_construct"
+   {<point name="cs.after_construct"/>}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL adeq105_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = -100 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION adeq105_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   {<point name="b_fill.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE ls_wc2          STRING
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:40) add cl_sql_auth_filter()
+ 
+   LET ls_sql_rank = "SELECT  UNIQUE '',debssite,'',debs001,debs002,debs003,debs004,debs005,'',debs008, 
+       '',debs035,debs009,'',debs010,debs011,debs012,debs013,debs014,debs015,debs016,debs031,debs032, 
+       debs033,debs017,debs018,debs019,debs034,debs020,debs021,debs022,debs023,debs024,debs025,debs026, 
+       debs027,debs028,debs029,debs030  ,DENSE_RANK() OVER( ORDER BY debs_t.debssite,debs_t.debs002, 
+       debs_t.debs005,debs_t.debs008,debs_t.debs009,debs_t.debs035) AS RANK FROM debs_t",
+ 
+                     " LEFT JOIN debt_t ON debtent = debsent AND debssite = debtsite AND debs002 = debt002 AND debs005 = debt005 AND debs008 = debt008 AND debs009 = debt009 AND debs035 = debt026",
+ 
+ 
+                     "",
+                     " WHERE debsent= ? AND 1=1 AND ", ls_wc
+    
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("debs_t"),
+                     " ORDER BY debs_t.debssite,debs_t.debs002,debs_t.debs005,debs_t.debs008,debs_t.debs009,debs_t.debs035"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+   {<point name="b_fill.rank_sql_after"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   {<point name="b_fill.rank_sql_after_count"/>}
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '',debssite,'',debs001,debs002,debs003,debs004,debs005,'',debs008,'',debs035, 
+       debs009,'',debs010,debs011,debs012,debs013,debs014,debs015,debs016,debs031,debs032,debs033,debs017, 
+       debs018,debs019,debs034,debs020,debs021,debs022,debs023,debs024,debs025,debs026,debs027,debs028, 
+       debs029,debs030",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE adeq105_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR adeq105_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_debs_d.clear()
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+ 
+   FOREACH b_fill_curs INTO g_debs_d[l_ac].sel,g_debs_d[l_ac].debssite,g_debs_d[l_ac].debssite_desc, 
+       g_debs_d[l_ac].debs001,g_debs_d[l_ac].debs002,g_debs_d[l_ac].debs003,g_debs_d[l_ac].debs004,g_debs_d[l_ac].debs005, 
+       g_debs_d[l_ac].debs005_desc,g_debs_d[l_ac].debs008,g_debs_d[l_ac].debs008_desc,g_debs_d[l_ac].debs035, 
+       g_debs_d[l_ac].debs009,g_debs_d[l_ac].debs009_desc,g_debs_d[l_ac].debs010,g_debs_d[l_ac].debs011, 
+       g_debs_d[l_ac].debs012,g_debs_d[l_ac].debs013,g_debs_d[l_ac].debs014,g_debs_d[l_ac].debs015,g_debs_d[l_ac].debs016, 
+       g_debs_d[l_ac].debs031,g_debs_d[l_ac].debs032,g_debs_d[l_ac].debs033,g_debs_d[l_ac].debs017,g_debs_d[l_ac].debs018, 
+       g_debs_d[l_ac].debs019,g_debs_d[l_ac].debs034,g_debs_d[l_ac].debs020,g_debs_d[l_ac].debs021,g_debs_d[l_ac].debs022, 
+       g_debs_d[l_ac].debs023,g_debs_d[l_ac].debs024,g_debs_d[l_ac].debs025,g_debs_d[l_ac].debs026,g_debs_d[l_ac].debs027, 
+       g_debs_d[l_ac].debs028,g_debs_d[l_ac].debs029,g_debs_d[l_ac].debs030
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #LET g_debs_d[l_ac].statepic = cl_get_actipic(g_debs_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+      CALL adeq105_detail_show("'1'")      
+ 
+      CALL adeq105_debs_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code = 9035 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_debs_d.deleteElement(g_debs_d.getLength())   
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   LET g_detail_cnt = g_debs_d.getLength()
+#  DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE adeq105_pb
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL adeq105_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL adeq105_detail_action_trans()
+ 
+   IF g_debs_d.getLength() > 0 THEN
+      LET l_ac = 1
+      CALL adeq105_fetch()
+   END IF
+   
+      CALL adeq105_filter_show('debssite','b_debssite')
+   CALL adeq105_filter_show('debs001','b_debs001')
+   CALL adeq105_filter_show('debs002','b_debs002')
+   CALL adeq105_filter_show('debs003','b_debs003')
+   CALL adeq105_filter_show('debs004','b_debs004')
+   CALL adeq105_filter_show('debs005','b_debs005')
+   CALL adeq105_filter_show('debs008','b_debs008')
+   CALL adeq105_filter_show('debs035','b_debs035')
+   CALL adeq105_filter_show('debs009','b_debs009')
+   CALL adeq105_filter_show('debs010','b_debs010')
+   CALL adeq105_filter_show('debs011','b_debs011')
+   CALL adeq105_filter_show('debs012','b_debs012')
+   CALL adeq105_filter_show('debs013','b_debs013')
+   CALL adeq105_filter_show('debs014','b_debs014')
+   CALL adeq105_filter_show('debs015','b_debs015')
+   CALL adeq105_filter_show('debs016','b_debs016')
+   CALL adeq105_filter_show('debs031','b_debs031')
+   CALL adeq105_filter_show('debs032','b_debs032')
+   CALL adeq105_filter_show('debs033','b_debs033')
+   CALL adeq105_filter_show('debs017','b_debs017')
+   CALL adeq105_filter_show('debs018','b_debs018')
+   CALL adeq105_filter_show('debs019','b_debs019')
+   CALL adeq105_filter_show('debs034','b_debs034')
+   CALL adeq105_filter_show('debs020','b_debs020')
+   CALL adeq105_filter_show('debs021','b_debs021')
+   CALL adeq105_filter_show('debs022','b_debs022')
+   CALL adeq105_filter_show('debs023','b_debs023')
+   CALL adeq105_filter_show('debs024','b_debs024')
+   CALL adeq105_filter_show('debs025','b_debs025')
+   CALL adeq105_filter_show('debs026','b_debs026')
+   CALL adeq105_filter_show('debs027','b_debs027')
+   CALL adeq105_filter_show('debs028','b_debs028')
+   CALL adeq105_filter_show('debs029','b_debs029')
+   CALL adeq105_filter_show('debs030','b_debs030')
+   CALL adeq105_filter_show('debt010','b_debt010')
+   CALL adeq105_filter_show('debt011','b_debt011')
+   CALL adeq105_filter_show('debt012','b_debt012')
+   CALL adeq105_filter_show('debt013','b_debt013')
+   CALL adeq105_filter_show('debt017','b_debt017')
+   CALL adeq105_filter_show('debt022','b_debt022')
+   CALL adeq105_filter_show('debt023','b_debt023')
+   CALL adeq105_filter_show('debt024','b_debt024')
+   CALL adeq105_filter_show('debt018','b_debt018')
+   CALL adeq105_filter_show('debt019','b_debt019')
+   CALL adeq105_filter_show('debt020','b_debt020')
+   CALL adeq105_filter_show('debt021','b_debt021')
+   CALL adeq105_filter_show('debt025','b_debt025')
+ 
+ 
+   #add-point:b_fill段結束前 name="b_fill.after"
+   {<point name="b_fill.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION adeq105_fetch()
+   #add-point:fetch段define-客製 name="fetch.define_customerization"
+   {<point name="fetch.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   #add-point:FUNCTION前置處理 name="fetch.before_function"
+   {<point name="fetch.before_function" />}
+   #end add-point
+ 
+   CALL g_debs2_d.clear()
+ 
+ 
+   #add-point:陣列清空 name="fetch.array_clear"
+   {<point name="fetch.array_clear" />}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #為避免影響執行效能，若是按上下筆就不重組SQL
+   IF g_action_choice <> "fetch" OR cl_null(g_action_choice) THEN
+      LET g_sql = "SELECT  UNIQUE debt010,'',debt011,'',debt012,debt013,debt017,debt022,debt023,debt024, 
+          debt018,debt019,debt020,debt021,debt025 FROM debt_t",    
+                  "",
+                  " WHERE debtent=? AND debtsite=? AND debt002=? AND debt005=? AND debt008=? AND debt009=? AND debt026=?"
+  
+      IF NOT cl_null(g_wc2_table2) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+      END IF
+  
+      LET g_sql = g_sql, " ORDER BY debt_t.debt010,debt_t.debt011" 
+                         
+      #add-point:單身填充前 name="fetch.before_fill2"
+      {<point name="fetch.before_fill2" />}
+      #end add-point
+ 
+      LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料   
+      PREPARE adeq105_pb2 FROM g_sql
+      DECLARE b_fill_curs2 CURSOR FOR adeq105_pb2
+   END IF
+ 
+#(ver:42) mark ---start---
+#  OPEN b_fill_curs2 USING g_enterprise,g_debs_d[g_detail_idx].debssite
+#                                 ,g_debs_d[g_detail_idx].debs002
+ 
+#                                 ,g_debs_d[g_detail_idx].debs005
+ 
+#                                 ,g_debs_d[g_detail_idx].debs008
+ 
+#                                 ,g_debs_d[g_detail_idx].debs009
+ 
+#                                 ,g_debs_d[g_detail_idx].debs035
+ 
+ 
+#(ver:42) mark --- end ---
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs2 USING g_enterprise,g_debs_d[g_detail_idx].debssite   #(ver:42)
+                                     ,g_debs_d[g_detail_idx].debs002   #(ver:42)
+ 
+                                     ,g_debs_d[g_detail_idx].debs005   #(ver:42)
+ 
+                                     ,g_debs_d[g_detail_idx].debs008   #(ver:42)
+ 
+                                     ,g_debs_d[g_detail_idx].debs009   #(ver:42)
+ 
+                                     ,g_debs_d[g_detail_idx].debs035   #(ver:42)
+ 
+ 
+        INTO g_debs2_d[l_ac].debt010,g_debs2_d[l_ac].debt010_desc,g_debs2_d[l_ac].debt011,g_debs2_d[l_ac].debt011_desc, 
+            g_debs2_d[l_ac].debt012,g_debs2_d[l_ac].debt013,g_debs2_d[l_ac].debt017,g_debs2_d[l_ac].debt022, 
+            g_debs2_d[l_ac].debt023,g_debs2_d[l_ac].debt024,g_debs2_d[l_ac].debt018,g_debs2_d[l_ac].debt019, 
+            g_debs2_d[l_ac].debt020,g_debs2_d[l_ac].debt021,g_debs2_d[l_ac].debt025   #(ver:42)
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      
+ 
+      #add-point:b_fill段資料填充 name="fetch.fill2"
+      {<point name="fetch.fill2"/>}
+      #end add-point
+      
+      CALL adeq105_detail_show("'2'")      
+ 
+      CALL adeq105_debt_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code = 9035 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+ 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   CALL g_debs2_d.deleteElement(g_debs2_d.getLength())   
+ 
+   #單身總筆數顯示
+   LET g_detail_cnt2 = g_debs2_d.getLength()
+   DISPLAY g_detail_cnt2 TO FORMONLY.cnt
+   IF g_detail_cnt2 > 0 THEN
+      LET g_detail_idx2 = 1
+      DISPLAY g_detail_idx2 TO FORMONLY.idx
+   ELSE
+      LET g_detail_idx2 = 0
+      DISPLAY ' ' TO FORMONLY.idx
+   END IF
+ 
+ 
+   #add-point:陣列筆數調整 name="fetch.array_deleteElement"
+   {<point name="fetch.array_deleteElement" />}
+   #end add-point
+ 
+   LET l_ac = li_ac
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION adeq105_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   {<point name="detail_show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+   
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+ 
+      #add-point:show段單身reference name="detail_show.body2.reference"
+      {<point name="detail_show.body2.reference"/>}
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION adeq105_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   {<point name="filter.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   {<point name="filter.define"/>}
+   #end add-point
+   
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   {<point name="filter.before_function" />}
+   #end add-point
+ 
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON debssite,debs001,debs002,debs003,debs004,debs005,debs008,debs035,debs009, 
+          debs010,debs011,debs012,debs013,debs014,debs015,debs016,debs031,debs032,debs033,debs017,debs018, 
+          debs019,debs034,debs020,debs021,debs022,debs023,debs024,debs025,debs026,debs027,debs028,debs029, 
+          debs030
+                          FROM s_detail1[1].b_debssite,s_detail1[1].b_debs001,s_detail1[1].b_debs002, 
+                              s_detail1[1].b_debs003,s_detail1[1].b_debs004,s_detail1[1].b_debs005,s_detail1[1].b_debs008, 
+                              s_detail1[1].b_debs035,s_detail1[1].b_debs009,s_detail1[1].b_debs010,s_detail1[1].b_debs011, 
+                              s_detail1[1].b_debs012,s_detail1[1].b_debs013,s_detail1[1].b_debs014,s_detail1[1].b_debs015, 
+                              s_detail1[1].b_debs016,s_detail1[1].b_debs031,s_detail1[1].b_debs032,s_detail1[1].b_debs033, 
+                              s_detail1[1].b_debs017,s_detail1[1].b_debs018,s_detail1[1].b_debs019,s_detail1[1].b_debs034, 
+                              s_detail1[1].b_debs020,s_detail1[1].b_debs021,s_detail1[1].b_debs022,s_detail1[1].b_debs023, 
+                              s_detail1[1].b_debs024,s_detail1[1].b_debs025,s_detail1[1].b_debs026,s_detail1[1].b_debs027, 
+                              s_detail1[1].b_debs028,s_detail1[1].b_debs029,s_detail1[1].b_debs030
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY adeq105_filter_parser('debssite') TO s_detail1[1].b_debssite
+            DISPLAY adeq105_filter_parser('debs001') TO s_detail1[1].b_debs001
+            DISPLAY adeq105_filter_parser('debs002') TO s_detail1[1].b_debs002
+            DISPLAY adeq105_filter_parser('debs003') TO s_detail1[1].b_debs003
+            DISPLAY adeq105_filter_parser('debs004') TO s_detail1[1].b_debs004
+            DISPLAY adeq105_filter_parser('debs005') TO s_detail1[1].b_debs005
+            DISPLAY adeq105_filter_parser('debs008') TO s_detail1[1].b_debs008
+            DISPLAY adeq105_filter_parser('debs035') TO s_detail1[1].b_debs035
+            DISPLAY adeq105_filter_parser('debs009') TO s_detail1[1].b_debs009
+            DISPLAY adeq105_filter_parser('debs010') TO s_detail1[1].b_debs010
+            DISPLAY adeq105_filter_parser('debs011') TO s_detail1[1].b_debs011
+            DISPLAY adeq105_filter_parser('debs012') TO s_detail1[1].b_debs012
+            DISPLAY adeq105_filter_parser('debs013') TO s_detail1[1].b_debs013
+            DISPLAY adeq105_filter_parser('debs014') TO s_detail1[1].b_debs014
+            DISPLAY adeq105_filter_parser('debs015') TO s_detail1[1].b_debs015
+            DISPLAY adeq105_filter_parser('debs016') TO s_detail1[1].b_debs016
+            DISPLAY adeq105_filter_parser('debs031') TO s_detail1[1].b_debs031
+            DISPLAY adeq105_filter_parser('debs032') TO s_detail1[1].b_debs032
+            DISPLAY adeq105_filter_parser('debs033') TO s_detail1[1].b_debs033
+            DISPLAY adeq105_filter_parser('debs017') TO s_detail1[1].b_debs017
+            DISPLAY adeq105_filter_parser('debs018') TO s_detail1[1].b_debs018
+            DISPLAY adeq105_filter_parser('debs019') TO s_detail1[1].b_debs019
+            DISPLAY adeq105_filter_parser('debs034') TO s_detail1[1].b_debs034
+            DISPLAY adeq105_filter_parser('debs020') TO s_detail1[1].b_debs020
+            DISPLAY adeq105_filter_parser('debs021') TO s_detail1[1].b_debs021
+            DISPLAY adeq105_filter_parser('debs022') TO s_detail1[1].b_debs022
+            DISPLAY adeq105_filter_parser('debs023') TO s_detail1[1].b_debs023
+            DISPLAY adeq105_filter_parser('debs024') TO s_detail1[1].b_debs024
+            DISPLAY adeq105_filter_parser('debs025') TO s_detail1[1].b_debs025
+            DISPLAY adeq105_filter_parser('debs026') TO s_detail1[1].b_debs026
+            DISPLAY adeq105_filter_parser('debs027') TO s_detail1[1].b_debs027
+            DISPLAY adeq105_filter_parser('debs028') TO s_detail1[1].b_debs028
+            DISPLAY adeq105_filter_parser('debs029') TO s_detail1[1].b_debs029
+            DISPLAY adeq105_filter_parser('debs030') TO s_detail1[1].b_debs030
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+           
+         #單身一般欄位開窗相關處理
+                  #----<<sel>>----
+         #----<<b_debssite>>----
+         #Ctrlp:construct.c.page1.b_debssite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debssite
+            #add-point:ON ACTION controlp INFIELD b_debssite name="construct.c.filter.page1.b_debssite"
+            {<point name="construct.c.filter.page1.b_debssite" />}
+            #END add-point
+ 
+ 
+         #----<<b_debssite_desc>>----
+         #----<<b_debs001>>----
+         #Ctrlp:construct.c.filter.page1.b_debs001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs001
+            #add-point:ON ACTION controlp INFIELD b_debs001 name="construct.c.filter.page1.b_debs001"
+            {<point name="construct.c.filter.page1.b_debs001" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs002>>----
+         #Ctrlp:construct.c.filter.page1.b_debs002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs002
+            #add-point:ON ACTION controlp INFIELD b_debs002 name="construct.c.filter.page1.b_debs002"
+            {<point name="construct.c.filter.page1.b_debs002" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs003>>----
+         #Ctrlp:construct.c.filter.page1.b_debs003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs003
+            #add-point:ON ACTION controlp INFIELD b_debs003 name="construct.c.filter.page1.b_debs003"
+            {<point name="construct.c.filter.page1.b_debs003" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs004>>----
+         #Ctrlp:construct.c.filter.page1.b_debs004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs004
+            #add-point:ON ACTION controlp INFIELD b_debs004 name="construct.c.filter.page1.b_debs004"
+            {<point name="construct.c.filter.page1.b_debs004" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs005>>----
+         #Ctrlp:construct.c.page1.b_debs005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs005
+            #add-point:ON ACTION controlp INFIELD b_debs005 name="construct.c.filter.page1.b_debs005"
+            {<point name="construct.c.filter.page1.b_debs005" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs005_desc>>----
+         #----<<b_debs008>>----
+         #Ctrlp:construct.c.page1.b_debs008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs008
+            #add-point:ON ACTION controlp INFIELD b_debs008 name="construct.c.filter.page1.b_debs008"
+            {<point name="construct.c.filter.page1.b_debs008" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs008_desc>>----
+         #----<<b_debs035>>----
+         #Ctrlp:construct.c.filter.page1.b_debs035
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs035
+            #add-point:ON ACTION controlp INFIELD b_debs035 name="construct.c.filter.page1.b_debs035"
+            {<point name="construct.c.filter.page1.b_debs035" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs009>>----
+         #Ctrlp:construct.c.page1.b_debs009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs009
+            #add-point:ON ACTION controlp INFIELD b_debs009 name="construct.c.filter.page1.b_debs009"
+            {<point name="construct.c.filter.page1.b_debs009" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs009_desc>>----
+         #----<<b_debs010>>----
+         #Ctrlp:construct.c.filter.page1.b_debs010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs010
+            #add-point:ON ACTION controlp INFIELD b_debs010 name="construct.c.filter.page1.b_debs010"
+            {<point name="construct.c.filter.page1.b_debs010" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs011>>----
+         #Ctrlp:construct.c.filter.page1.b_debs011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs011
+            #add-point:ON ACTION controlp INFIELD b_debs011 name="construct.c.filter.page1.b_debs011"
+            {<point name="construct.c.filter.page1.b_debs011" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs012>>----
+         #Ctrlp:construct.c.filter.page1.b_debs012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs012
+            #add-point:ON ACTION controlp INFIELD b_debs012 name="construct.c.filter.page1.b_debs012"
+            {<point name="construct.c.filter.page1.b_debs012" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs013>>----
+         #Ctrlp:construct.c.filter.page1.b_debs013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs013
+            #add-point:ON ACTION controlp INFIELD b_debs013 name="construct.c.filter.page1.b_debs013"
+            {<point name="construct.c.filter.page1.b_debs013" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs014>>----
+         #Ctrlp:construct.c.filter.page1.b_debs014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs014
+            #add-point:ON ACTION controlp INFIELD b_debs014 name="construct.c.filter.page1.b_debs014"
+            {<point name="construct.c.filter.page1.b_debs014" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs015>>----
+         #Ctrlp:construct.c.filter.page1.b_debs015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs015
+            #add-point:ON ACTION controlp INFIELD b_debs015 name="construct.c.filter.page1.b_debs015"
+            {<point name="construct.c.filter.page1.b_debs015" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs016>>----
+         #Ctrlp:construct.c.filter.page1.b_debs016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs016
+            #add-point:ON ACTION controlp INFIELD b_debs016 name="construct.c.filter.page1.b_debs016"
+            {<point name="construct.c.filter.page1.b_debs016" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs031>>----
+         #Ctrlp:construct.c.filter.page1.b_debs031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs031
+            #add-point:ON ACTION controlp INFIELD b_debs031 name="construct.c.filter.page1.b_debs031"
+            {<point name="construct.c.filter.page1.b_debs031" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs032>>----
+         #Ctrlp:construct.c.filter.page1.b_debs032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs032
+            #add-point:ON ACTION controlp INFIELD b_debs032 name="construct.c.filter.page1.b_debs032"
+            {<point name="construct.c.filter.page1.b_debs032" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs033>>----
+         #Ctrlp:construct.c.filter.page1.b_debs033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs033
+            #add-point:ON ACTION controlp INFIELD b_debs033 name="construct.c.filter.page1.b_debs033"
+            {<point name="construct.c.filter.page1.b_debs033" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs017>>----
+         #Ctrlp:construct.c.filter.page1.b_debs017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs017
+            #add-point:ON ACTION controlp INFIELD b_debs017 name="construct.c.filter.page1.b_debs017"
+            {<point name="construct.c.filter.page1.b_debs017" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs018>>----
+         #Ctrlp:construct.c.filter.page1.b_debs018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs018
+            #add-point:ON ACTION controlp INFIELD b_debs018 name="construct.c.filter.page1.b_debs018"
+            {<point name="construct.c.filter.page1.b_debs018" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs019>>----
+         #Ctrlp:construct.c.filter.page1.b_debs019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs019
+            #add-point:ON ACTION controlp INFIELD b_debs019 name="construct.c.filter.page1.b_debs019"
+            {<point name="construct.c.filter.page1.b_debs019" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs034>>----
+         #Ctrlp:construct.c.filter.page1.b_debs034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs034
+            #add-point:ON ACTION controlp INFIELD b_debs034 name="construct.c.filter.page1.b_debs034"
+            {<point name="construct.c.filter.page1.b_debs034" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs020>>----
+         #Ctrlp:construct.c.filter.page1.b_debs020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs020
+            #add-point:ON ACTION controlp INFIELD b_debs020 name="construct.c.filter.page1.b_debs020"
+            {<point name="construct.c.filter.page1.b_debs020" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs021>>----
+         #Ctrlp:construct.c.filter.page1.b_debs021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs021
+            #add-point:ON ACTION controlp INFIELD b_debs021 name="construct.c.filter.page1.b_debs021"
+            {<point name="construct.c.filter.page1.b_debs021" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs022>>----
+         #Ctrlp:construct.c.filter.page1.b_debs022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs022
+            #add-point:ON ACTION controlp INFIELD b_debs022 name="construct.c.filter.page1.b_debs022"
+            {<point name="construct.c.filter.page1.b_debs022" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs023>>----
+         #Ctrlp:construct.c.filter.page1.b_debs023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs023
+            #add-point:ON ACTION controlp INFIELD b_debs023 name="construct.c.filter.page1.b_debs023"
+            {<point name="construct.c.filter.page1.b_debs023" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs024>>----
+         #Ctrlp:construct.c.filter.page1.b_debs024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs024
+            #add-point:ON ACTION controlp INFIELD b_debs024 name="construct.c.filter.page1.b_debs024"
+            {<point name="construct.c.filter.page1.b_debs024" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs025>>----
+         #Ctrlp:construct.c.filter.page1.b_debs025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs025
+            #add-point:ON ACTION controlp INFIELD b_debs025 name="construct.c.filter.page1.b_debs025"
+            {<point name="construct.c.filter.page1.b_debs025" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs026>>----
+         #Ctrlp:construct.c.filter.page1.b_debs026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs026
+            #add-point:ON ACTION controlp INFIELD b_debs026 name="construct.c.filter.page1.b_debs026"
+            {<point name="construct.c.filter.page1.b_debs026" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs027>>----
+         #Ctrlp:construct.c.filter.page1.b_debs027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs027
+            #add-point:ON ACTION controlp INFIELD b_debs027 name="construct.c.filter.page1.b_debs027"
+            {<point name="construct.c.filter.page1.b_debs027" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs028>>----
+         #Ctrlp:construct.c.filter.page1.b_debs028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs028
+            #add-point:ON ACTION controlp INFIELD b_debs028 name="construct.c.filter.page1.b_debs028"
+            {<point name="construct.c.filter.page1.b_debs028" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs029>>----
+         #Ctrlp:construct.c.filter.page1.b_debs029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs029
+            #add-point:ON ACTION controlp INFIELD b_debs029 name="construct.c.filter.page1.b_debs029"
+            {<point name="construct.c.filter.page1.b_debs029" />}
+            #END add-point
+ 
+ 
+         #----<<b_debs030>>----
+         #Ctrlp:construct.c.filter.page1.b_debs030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debs030
+            #add-point:ON ACTION controlp INFIELD b_debs030 name="construct.c.filter.page1.b_debs030"
+            {<point name="construct.c.filter.page1.b_debs030" />}
+            #END add-point
+ 
+ 
+   
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+      LET g_wc_filter_t = g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL adeq105_filter_show('debssite','b_debssite')
+   CALL adeq105_filter_show('debs001','b_debs001')
+   CALL adeq105_filter_show('debs002','b_debs002')
+   CALL adeq105_filter_show('debs003','b_debs003')
+   CALL adeq105_filter_show('debs004','b_debs004')
+   CALL adeq105_filter_show('debs005','b_debs005')
+   CALL adeq105_filter_show('debs008','b_debs008')
+   CALL adeq105_filter_show('debs035','b_debs035')
+   CALL adeq105_filter_show('debs009','b_debs009')
+   CALL adeq105_filter_show('debs010','b_debs010')
+   CALL adeq105_filter_show('debs011','b_debs011')
+   CALL adeq105_filter_show('debs012','b_debs012')
+   CALL adeq105_filter_show('debs013','b_debs013')
+   CALL adeq105_filter_show('debs014','b_debs014')
+   CALL adeq105_filter_show('debs015','b_debs015')
+   CALL adeq105_filter_show('debs016','b_debs016')
+   CALL adeq105_filter_show('debs031','b_debs031')
+   CALL adeq105_filter_show('debs032','b_debs032')
+   CALL adeq105_filter_show('debs033','b_debs033')
+   CALL adeq105_filter_show('debs017','b_debs017')
+   CALL adeq105_filter_show('debs018','b_debs018')
+   CALL adeq105_filter_show('debs019','b_debs019')
+   CALL adeq105_filter_show('debs034','b_debs034')
+   CALL adeq105_filter_show('debs020','b_debs020')
+   CALL adeq105_filter_show('debs021','b_debs021')
+   CALL adeq105_filter_show('debs022','b_debs022')
+   CALL adeq105_filter_show('debs023','b_debs023')
+   CALL adeq105_filter_show('debs024','b_debs024')
+   CALL adeq105_filter_show('debs025','b_debs025')
+   CALL adeq105_filter_show('debs026','b_debs026')
+   CALL adeq105_filter_show('debs027','b_debs027')
+   CALL adeq105_filter_show('debs028','b_debs028')
+   CALL adeq105_filter_show('debs029','b_debs029')
+   CALL adeq105_filter_show('debs030','b_debs030')
+   CALL adeq105_filter_show('debt010','b_debt010')
+   CALL adeq105_filter_show('debt011','b_debt011')
+   CALL adeq105_filter_show('debt012','b_debt012')
+   CALL adeq105_filter_show('debt013','b_debt013')
+   CALL adeq105_filter_show('debt017','b_debt017')
+   CALL adeq105_filter_show('debt022','b_debt022')
+   CALL adeq105_filter_show('debt023','b_debt023')
+   CALL adeq105_filter_show('debt024','b_debt024')
+   CALL adeq105_filter_show('debt018','b_debt018')
+   CALL adeq105_filter_show('debt019','b_debt019')
+   CALL adeq105_filter_show('debt020','b_debt020')
+   CALL adeq105_filter_show('debt021','b_debt021')
+   CALL adeq105_filter_show('debt025','b_debt025')
+ 
+    
+   CALL adeq105_b_fill()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION adeq105_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   {<point name="filter_parser.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   {<point name="filter_parser.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   {<point name="filter_parser.before_function" />}
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION adeq105_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   {<point name="filter_show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   {<point name="filter_show.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   {<point name="filter_show.before_function" />}
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = adeq105_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.insert" >}
+#+ insert
+PRIVATE FUNCTION adeq105_insert()
+   #add-point:insert段define-客製 name="insert.define_customerization"
+   {<point name="insert.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:insert段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   {<point name="insert.define"/>}
+   #end add-point
+ 
+   #add-point:insert段control name="insert.control"
+   {<point name="insert.control"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.modify" >}
+#+ modify
+PRIVATE FUNCTION adeq105_modify()
+   #add-point:modify段define-客製 name="modify.define_customerization"
+   {<point name="modify.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:modify段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   {<point name="modify.define"/>}
+   #end add-point
+ 
+   #add-point:modify段control name="modify.control"
+   {<point name="modify.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.reproduce" >}
+#+ reproduce
+PRIVATE FUNCTION adeq105_reproduce()
+   #add-point:reproduce段define-客製 name="reproduce.define_customerization"
+   {<point name="reproduce.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:reproduce段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #add-point:reproduce段control name="reproduce.control"
+   {<point name="reproduce.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.delete" >}
+#+ delete
+PRIVATE FUNCTION adeq105_delete()
+   #add-point:delete段define-客製 name="delete.define_customerization"
+   {<point name="delete.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:delete段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   {<point name="delete.define"/>}
+   #end add-point
+ 
+   #add-point:delete段control name="delete.control"
+   {<point name="delete.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION adeq105_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   {<point name="detail_action_trans.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   {<point name="detail_action_trans.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   {<point name="detail_action_trans.before_function" />}
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION adeq105_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="deatil_index_setting.define_customerization"
+   {<point name="deatil_index_setting.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   {<point name="detail_index_setting.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   {<point name="detail_index_setting.before_function" />}
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_debs_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_debs_d.getLength() AND g_debs_d.getLength() > 0
+            LET g_detail_idx = g_debs_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_debs_d.getLength() THEN
+               LET g_detail_idx = g_debs_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="adeq105.mask_functions" >}
+ &include "erp/ade/adeq105_mask.4gl"
+
+{</section>}
+
+{<section id="adeq105.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

@@ -1,0 +1,3401 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axrp200" std_prog="axrp200" erpver="1.0" module="AXR" ver="2" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.axrp200_def" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 給帳務中心、帳套賦默認值
+# Memo...........:
+# Usage..........: CALL axrp200_def()
+#                  RETURNING ---
+# Input parameter: ---
+# Return code....: ---
+# Date & Author..: 2014/10/09 By zhangweib
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp200_def()
+   DEFINE l_sql         STRING
+   DEFINE l_xrcasite    LIKE xrca_t.xrcasite
+   DEFINE l_xrcacomp    LIKE xrca_t.xrcacomp
+   DEFINE l_success     LIKE type_t.chr1
+   DEFINE l_cnt         LIKE type_t.num5
+   DEFINE l_ooefl003    LIKE ooefl_t.ooefl003
+   DEFINE l_flag        LIKE type_t.chr1
+   DEFINE l_errno       LIKE type_t.chr100
+   DEFINE l_glaa003     LIKE glaa_t.glaa003
+   DEFINE l_glav002     LIKE glav_t.glav002
+   DEFINE l_glav005     LIKE glav_t.glav005
+   DEFINE l_sdate_s     LIKE glav_t.glav004
+   DEFINE l_sdate_e     LIKE glav_t.glav004
+   DEFINE l_glav006     LIKE glav_t.glav006
+   DEFINE l_glav007     LIKE glav_t.glav007
+   DEFINE l_wdate_s     LIKE glav_t.glav004
+   DEFINE l_wdate_e     LIKE glav_t.glav004
+
+   IF cl_null(g_master.xrcasite) OR cl_null(g_master.xrcald) THEN
+      #帳務中心
+      #取得預設的帳務中心,因新增階段的時候,並不會知道site,所以以登入人員做為依據
+      CALL s_fin_get_account_center('',g_user,'3',g_today) RETURNING l_success,g_master.xrcasite,g_errno
+      #該帳務中心與帳別無法勾稽到,以登入人員g_user取得預設帳別/法人
+      CALL s_fin_orga_get_comp_ld(g_master.xrcasite) RETURNING l_success,g_errno,l_xrcacomp,g_master.xrcald   
+
+      #若取不出資料,則不預設帳別
+      IF NOT l_success THEN
+         LET g_master.xrcald   = ''
+      END IF
+
+      CALL s_axrt300_xrca_ref('xrcald',g_master.xrcald,'','') RETURNING l_success,g_master.xrcald_desc
+      CALL s_axrt300_xrca_ref('xrcasite',g_master.xrcasite,'','') RETURNING l_success,g_master.xrcasite_desc
+      DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc,g_master.xrcald,g_master.xrcald_desc
+   END IF
+
+   IF cl_null(g_master.xrcadocdt) THEN LET g_master.xrcadocdt = g_today END IF
+   SELECT glaa003 INTO l_glaa003 FROM glaa_t WHERE glaaent = g_enterprise
+      AND glaald = g_master.xrcald
+   IF NOT cl_null(l_glaa003) THEN
+      #依年度+期別取得會計週期起迄日
+      CALL s_get_accdate(l_glaa003,g_today,'','')
+      RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+                l_glav006,g_pdate_s,g_pdate_e,l_glav007,l_wdate_s,l_wdate_e
+   END IF
+
+   LET g_master.glav002 = l_glav002
+   LET g_master.glav006 = l_glav006
+
+   LET g_master.xrca003 = g_user
+
+   IF cl_null(g_master.b_comb1)  THEN LET g_master.b_comb1 = '2'  END IF
+   IF cl_null(g_master.b_check1) THEN LET g_master.b_check1 = 'N' END IF
+   IF cl_null(g_master.b_check2) THEN LET g_master.b_check2 = 'N' END IF
+   IF cl_null(g_master.b_check3) THEN LET g_master.b_check3 = 'N' END IF
+   IF cl_null(g_master.b_check4) THEN LET g_master.b_check4 = 'N' END IF
+   IF cl_null(g_master.b_check5) THEN LET g_master.b_check5 = 'Y' END IF
+   DISPLAY BY NAME g_master.xrcadocdt,g_master.glav002,g_master.glav006,g_master.b_comb1,
+                   g_master.b_check1,g_master.b_check2,g_master.b_check3,
+                   g_master.b_check4,g_master.b_check5
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp200_get_ar" order="2" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 產生應收單據
+# Memo...........:
+# Usage..........: CALL axrp200_get_ar()
+#                  RETURNING ---
+# Input parameter: ---
+# Return code....: ---
+# Date & Author..: 2014/10/09 By zhangweib
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp200_get_ar()
+   DEFINE l_sql         STRING
+   DEFINE l_origin_str  STRING
+   DEFINE l_xrca        RECORD
+          xrca005       LIKE xrca_t.xrca005,
+          xrca006       LIKE xrca_t.xrca006,
+          xrca007       LIKE xrca_t.xrca007,
+          xrca008       LIKE xrca_t.xrca008,
+          xrca009       LIKE xrca_t.xrca009,
+          xrca010       LIKE xrca_t.xrca010,
+          xrca011       LIKE xrca_t.xrca011,
+          xrca014       LIKE xrca_t.xrca014,
+          xrca015       LIKE xrca_t.xrca015,
+          xrca046       LIKE xrca_t.xrca046,
+          xrca058       LIKE xrca_t.xrca058,
+          xrca061       LIKE xrca_t.xrca061,
+          xrca100       LIKE xrca_t.xrca100,
+          xrca101       LIKE xrca_t.xrca101,
+          xrca121       LIKE xrca_t.xrca121,
+          xrca131       LIKE xrca_t.xrca131
+                        END RECORD
+   DEFINE l_stbd        DYNAMIC ARRAY OF RECORD
+             stbddocno  LIKE stbd_t.stbddocno,
+             stbdsite   LIKE stbd_t.stbdsite,
+             stbd001    LIKE stbd_t.stbd001,
+             stbd002    LIKE stbd_t.stbd002,
+             stbd021    LIKE stbd_t.stbd021,
+             stbd022    LIKE stbd_t.stbd022,
+             stbd038    LIKE stbd_t.stbd038
+                        END RECORD
+   DEFINE l_stbe        RECORD
+             stbedocno  LIKE stbe_t.stbedocno,
+             stbeseq    LIKE stbe_t.stbeseq,
+             stbesite   LIKE stbe_t.stbesite,
+             stbecomp   LIKE stbe_t.stbecomp,
+             stbe002    LIKE stbe_t.stbe002,
+             stbe003    LIKE stbe_t.stbe003,
+             stbe005    LIKE stbe_t.stbe005,
+             stbe009    LIKE stbe_t.stbe009,
+             stbe011    LIKE stbe_t.stbe011,
+             stbe016    LIKE stbe_t.stbe016,
+             stbe019    LIKE stbe_t.stbe019,
+             stbe020    LIKE stbe_t.stbe020
+                        END RECORD
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_tot_success LIKE type_t.num5
+   DEFINE l_ac          LIKE type_t.num5
+   DEFINE l_glaa001     LIKE glaa_t.glaa001
+   DEFINE l_glaa002     LIKE glaa_t.glaa002
+   DEFINE l_glaa003     LIKE glaa_t.glaa003
+   DEFINE l_glaa016     LIKE glaa_t.glaa016
+   DEFINE l_glaa020     LIKE glaa_t.glaa020
+   DEFINE l_glaa024     LIKE glaa_t.glaa024
+   DEFINE l_glaa025     LIKE glaa_t.glaa025
+   DEFINE l_glaacomp    LIKE glaa_t.glaacomp
+   DEFINE l_glaa121     LIKE glaa_t.glaa121
+   DEFINE l_glab005     LIKE glab_t.glab005
+   DEFINE l_xrca035     LIKE xrca_t.xrca035
+   DEFINE l_xrca036     LIKE xrca_t.xrca036
+   DEFINE l_stbddocno   LIKE stbd_t.stbddocno
+   DEFINE l_xrcadocno   LIKE xrca_t.xrcadocno
+   DEFINE l_oodbl004    LIKE oodbl_t.oodbl004
+   DEFINE l_oodb011     LIKE oodb_t.oodb011
+   DEFINE l_sfin2017    LIKE xrca_t.xrca007
+   DEFINE l_dfin0030    LIKE type_t.chr1
+   DEFINE l_start_no    LIKE xrca_t.xrcadocno
+   DEFINE l_end_no      LIKE xrca_t.xrcadocno
+   DEFINE l_stan006     LIKE stan_t.stan006
+   DEFINE l_stan007     LIKE stan_t.stan007
+   DEFINE l_stan008     LIKE stan_t.stan008
+   DEFINE l_ooefl003    LIKE ooefl_t.ooefl003
+   DEFINE l_oodb005     LIKE oodb_t.oodb005
+   DEFINE l_oodb006     LIKE oodb_t.oodb006
+   DEFINE l_diff        LIKE xrcb_t.xrcb103
+   DEFINE l_diff1       LIKE xrcb_t.xrcb103
+   DEFINE l_xrcd009       LIKE xrcd_t.xrcd009
+
+   CALL s_fin_account_center_sons_query('3',g_master.xrcasite,g_master.xrcadocdt,'')
+   CALL s_fin_account_center_sons_str()RETURNING l_origin_str
+   IF cl_null(l_origin_str) THEN LET l_origin_str = g_master.xrcasite END IF
+   CALL axrp200_get_ooef001_wc(l_origin_str)RETURNING l_origin_str
+
+   #根據astt340單號進行拆單
+   LET l_sql = "SELECT DISTINCT stbddocno,stbdsite,stbd001,stbd002,stbd021,stbd022,stbd038 ",
+               "  FROM stbd_t,stbe_t WHERE stbdent = '",g_enterprise,"' ",
+               "   AND stbddocno = stbedocno ",
+               "   AND stbeent = stbdent",
+               "   AND stbe001 = '3'",
+               "   AND stbe024 = 'Y'",
+               "   AND stbe025 = 'N'",
+               "   AND (stbe016 - stbe021 > 0 OR stbe021 IS NULL)",
+               "   AND TO_CHAR(stbddocdt,'YYYY') = ",g_master.glav002,
+               "   AND TO_CHAR(stbddocdt,'MM') = ",g_master.glav006,
+               "   AND stbesite IN ",l_origin_str CLIPPED,
+               "   AND ",g_master.wc CLIPPED
+   PREPARE axrp200_stbd_prep FROM l_sql
+   DECLARE axrp200_stbd_curs CURSOR FOR axrp200_stbd_prep
+
+   LET l_ac = 1
+   FOREACH axrp200_stbd_curs INTO l_stbd[l_ac].*  
+      LET l_ac = l_ac + 1
+   END FOREACH
+   CALL l_stbd.deleteElement(l_ac)
+   IF l_stbd.getLength() < 1 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ''
+      LET g_errparam.code   = 'agl-00167'
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   LET l_sql = "SELECT stbedocno,stbeseq,stbesite,stbecomp,stbe002,stbe003,stbe005,stbe009,stbe011,stbe016,stbe019,stbe020",
+               "  FROM stbe_t,stae_t",
+               " WHERE stbeent = '",g_enterprise,"'",
+               "   AND staeent = stbeent",
+               "   AND staestus = 'Y'",
+               "   AND stae001 = stbe005",
+               "   AND stbe001 = '3'",
+               "   AND stbe024 = 'Y'",
+               "   AND stbe025 = 'N'",
+               "   AND (stbe016 - stbe021 > 0 OR stbe021 IS NULL)",
+               "   AND stbedocno = ? "
+   PREPARE axrp200_stbe_prep FROM l_sql
+   DECLARE axrp200_stbe_curs CURSOR FOR axrp200_stbe_prep
+
+   #錯誤訊息匯總初始化
+   CALL cl_err_collect_init()
+   LET l_tot_success = TRUE
+   CALL s_transaction_begin()
+
+   SELECT glaa001,glaa002,glaa003,glaa016,glaa020,glaa024,glaa025,glaacomp,glaa121
+     INTO l_glaa001,l_glaa002,l_glaa003,l_glaa016,l_glaa020,l_glaa024,l_glaa025,l_glaacomp,l_glaa121
+     FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+
+   CALL cl_get_para(g_enterprise,l_glaacomp,'S-FIN-2017') RETURNING l_sfin2017
+   CALL s_fin_get_doc_para(g_master.xrcald,l_glaacomp,g_master.xrcadocno,'D-FIN-0030') RETURNING l_dfin0030
+
+   FOR l_ac = 1 TO l_stbd.getLength()
+      INITIALIZE g_xrca TO NULL
+      INITIALIZE g_xrcb TO NULL
+
+      CALL s_aooi200_fin_gen_docno(g_master.xrcald,l_glaa024,l_glaa003,g_master.xrcadocno,g_master.xrcadocdt,'axrt210')
+         RETURNING l_success,l_xrcadocno
+      IF NOT l_success THEN
+         LET l_tot_success = l_success
+      END IF
+      IF cl_null(l_start_no) THEN
+         LET l_start_no = l_xrcadocno
+      END IF
+      LET l_end_no = l_xrcadocno
+
+      SELECT stan006,stan007,stan008 INTO l_stan006,l_stan007,l_stan008
+        FROM stan_t WHERE stanent = g_enterprise
+         AND stan001 = l_stbd[l_ac].stbd001
+
+      LET g_xrca.xrcaent = g_enterprise
+      LET g_xrca.xrcastus = 'N'
+      LET g_xrca.xrcacomp = l_glaacomp
+      LET g_xrca.xrcald = g_master.xrcald
+      LET g_xrca.xrcadocno = l_xrcadocno
+      IF cl_null(g_master.xrcadocdt) THEN
+         LET g_xrca.xrcadocdt = g_today
+      ELSE
+         LET g_xrca.xrcadocdt = g_master.xrcadocdt
+      END IF
+      LET g_xrca.xrcasite = g_master.xrcasite
+      LET g_xrca.xrca001 = '18'
+      IF cl_null(g_master.xrca003) THEN
+         LET g_xrca.xrca003 = g_user
+      ELSE
+         LET g_xrca.xrca003 = g_master.xrca003
+      END IF
+      LET g_xrca.xrca004 = l_stbd[l_ac].stbd002
+      CALL axrp200_xrca004_ref() RETURNING l_xrca.*
+      LET g_xrca.xrca005 = l_xrca.xrca005
+      LET g_xrca.xrca006 = l_xrca.xrca006
+      IF cl_null(g_master.xrca007) THEN
+         LET g_xrca.xrca007 = l_xrca.xrca007
+      ELSE
+         LET g_xrca.xrca007 = g_master.xrca007
+      END IF
+      IF cl_null(g_master.xrca008) THEN
+         LET g_xrca.xrca008 = l_xrca.xrca008
+      ELSE
+         LET g_xrca.xrca008 = g_master.xrca008
+      END IF
+      LET g_xrca.xrca009 = l_stbd[l_ac].stbd038
+      LET g_xrca.xrca010 = l_stbd[l_ac].stbd038
+      IF cl_null(l_stan007) THEN
+         IF cl_null(g_master.xrca011) THEN
+            LET g_xrca.xrca011 = l_xrca.xrca011
+         ELSE
+            LET g_xrca.xrca011 = g_master.xrca011
+         END IF
+      ELSE
+      LET g_xrca.xrca011 = l_stan007
+      END IF
+      CALL s_tax_chk(l_glaacomp,g_xrca.xrca011)
+         RETURNING l_success,l_oodbl004,g_xrca.xrca013,g_xrca.xrca012,l_oodb011
+   
+      LET g_xrca.xrca014 = l_stbd[l_ac].stbd021
+      LET g_xrca.xrca015 = l_stbd[l_ac].stbd022
+      LET g_xrca.xrca016 = '18'
+      LET g_xrca.xrca017 = '0'
+      LET g_xrca.xrca018 = l_stbd[l_ac].stbddocno
+      LET g_xrca.xrca019 = ''
+      LET g_xrca.xrca020 = 'N'
+      LET g_xrca.xrca021 = ''
+      LET g_xrca.xrca022 = l_stbd[l_ac].stbd001
+      LET g_xrca.xrca023 = ''
+      LET g_xrca.xrca024 = ''
+      LET g_xrca.xrca025 = ''
+      LET g_xrca.xrca026 = ''
+      LET g_xrca.xrca028 = ''
+      LET g_xrca.xrca029 = 1
+      LET g_xrca.xrca030 = 0
+      LET g_xrca.xrca031 = 0
+      LET g_xrca.xrca032 = 0
+      LET g_xrca.xrca033 = ''
+      CALL s_department_get_respon_center(g_xrca.xrca015,g_xrca.xrcadocdt)
+         RETURNING l_success,g_errno,g_xrca.xrca034,l_ooefl003
+
+      SELECT glab005 INTO l_xrca035 FROM glab_t 
+       WHERE glabld = g_master.xrcald 
+         AND glabent = g_enterprise
+         AND glab002 = g_xrca.xrca007   # 帳款類別
+         AND glab001 = '13'             # 應收帳務類型科目設定
+         AND glab003 = '8304_01'
+
+      SELECT glab005 INTO l_xrca036 FROM glab_t 
+       WHERE glabld = g_master.xrcald 
+         AND glabent = g_enterprise
+         AND glab002 = g_xrca.xrca007   # 帳款類別
+         AND glab001 = '13'             # 應收帳務類型科目設定
+         AND glab003 = '8304_21'
+
+      LET g_xrca.xrca035 = l_xrca035
+      LET g_xrca.xrca036 = l_xrca036
+      LET g_xrca.xrca037 = l_dfin0030
+      LET g_xrca.xrca038 = ''
+      LET g_xrca.xrca039 = 0
+      LET g_xrca.xrca040 = 'N'
+      LET g_xrca.xrca041 = ''
+      LET g_xrca.xrca042 = ''
+      LET g_xrca.xrca043 = ''
+      LET g_xrca.xrca044 = 0
+      LET g_xrca.xrca045 = ''
+      LET g_xrca.xrca046 = l_xrca.xrca046
+      LET g_xrca.xrca047 = ''
+      LET g_xrca.xrca048 = ''
+      LET g_xrca.xrca049 = l_stbd[l_ac].stbdsite
+      LET g_xrca.xrca050 = 1
+      LET g_xrca.xrca051 = ''
+      LET g_xrca.xrca052 = 0
+      LET g_xrca.xrca053 = ''
+      LET g_xrca.xrca054 = ''
+      LET g_xrca.xrca055 = ''
+      LET g_xrca.xrca056 = 0
+      LET g_xrca.xrca057 = g_xrca.xrca004
+      LET g_xrca.xrca058 = ''
+      LET g_xrca.xrca059 = ''
+      LET g_xrca.xrca060 = '3'
+      LET g_xrca.xrca061 = ''
+      LET g_xrca.xrca062 = ''
+      LET g_xrca.xrca063 = ''
+      LET g_xrca.xrca064 = 0
+      LET g_xrca.xrca065 = ''
+      LET g_xrca.xrca066 = ''
+      LET g_xrca.xrca100 = l_stan006
+      IF l_stan006 = l_glaa001 THEN
+         LET g_xrca.xrca101 = 1
+      ELSE
+         CASE g_master.b_comb1
+            WHEN '1'  #依立帳日匯率(aooi160)
+                CALL s_aooi160_get_exrate('2',g_master.xrcald,g_xrca.xrcadocdt,
+                                          g_xrca.xrca100,l_glaa001,0,l_glaa025)
+                     RETURNING g_xrca.xrca101
+            WHEN '2'  #依立帳日匯率(aooi160)
+                CALL s_aooi160_get_exrate('2',g_master.xrcald,g_xrca.xrcadocdt,
+                                          g_xrca.xrca100,l_glaa001,0,l_glaa025)
+                     RETURNING g_xrca.xrca101
+            WHEN '3'  #依立帳日月平均匯率(aooi170)
+                CALL s_aooi160_get_exrate_avg('2',g_master.xrcald,g_xrca.xrcadocdt,
+                                              g_xrca.xrca100,l_glaa001,0,l_glaa025)
+                     RETURNING g_sub_success,g_errno,g_xrca.xrca101
+         END CASE
+      END IF
+      LET g_xrca.xrca103 = 0
+      LET g_xrca.xrca104 = 0
+      LET g_xrca.xrca106 = 0
+      LET g_xrca.xrca107 = 0
+      LET g_xrca.xrca108 = 0
+      LET g_xrca.xrca113 = 0
+      LET g_xrca.xrca114 = 0
+      LET g_xrca.xrca116 = 0
+      LET g_xrca.xrca117 = 0
+      LET g_xrca.xrca118 = 0
+      LET g_xrca.xrca120 = l_glaa016
+      LET g_xrca.xrca121 = 0
+      LET g_xrca.xrca123 = 0
+      LET g_xrca.xrca124 = 0
+      LET g_xrca.xrca126 = 0
+      LET g_xrca.xrca127 = 0
+      LET g_xrca.xrca128 = 0
+      LET g_xrca.xrca130 = l_glaa020
+      LET g_xrca.xrca131 = 0
+      LET g_xrca.xrca133 = 0
+      LET g_xrca.xrca134 = 0
+      LET g_xrca.xrca136 = 0
+      LET g_xrca.xrca137 = 0
+      LET g_xrca.xrca138 = 0
+      LET g_xrca.xrcaownid = g_user
+      LET g_xrca.xrcaowndp = g_dept
+      LET g_xrca.xrcacrtid = g_user
+      LET g_xrca.xrcacrtdp = g_dept 
+      LET g_xrca.xrcacrtdt = cl_get_current()
+      LET g_xrca.xrcamodid = g_user
+      LET g_xrca.xrcamoddt = cl_get_current()
+      LET g_xrca.xrcacnfid = ''
+      LET g_xrca.xrcacnfdt = ''
+      LET g_xrca.xrcapstid = ''
+      LET g_xrca.xrcapstdt = ''
+
+      INSERT INTO xrca_t(xrcaent,xrcastus,xrcacomp,xrcald,xrcadocno,xrcadocdt,xrcasite,
+                         xrca001,xrca003,xrca004,xrca005,xrca006,xrca007,
+                         xrca008,xrca009,xrca010,xrca011,xrca012,xrca013,
+                         xrca014,xrca015,xrca016,xrca017,xrca018,xrca019,
+                         xrca020,xrca021,xrca022,xrca023,xrca024,xrca025,
+                         xrca026,xrca028,xrca029,xrca030,xrca031,xrca032,
+                         xrca033,xrca034,xrca035,xrca036,xrca037,xrca038,
+                         xrca039,xrca040,xrca041,xrca042,xrca043,xrca044,
+                         xrca045,xrca046,xrca047,xrca048,xrca049,xrca050,
+                         xrca051,xrca052,xrca053,xrca054,xrca055,xrca056,
+                         xrca057,xrca058,xrca059,xrca060,xrca061,xrca062,
+                         xrca063,xrca064,xrca065,xrca066,xrca100,xrca101,
+                         xrca103,xrca104,xrca106,xrca107,xrca108,xrca113,
+                         xrca114,xrca116,xrca117,xrca118,xrca120,xrca121,
+                         xrca123,xrca124,xrca126,xrca127,xrca128,xrca130,
+                         xrca131,xrca133,xrca134,xrca136,xrca137,xrca138,
+                         xrcaownid,xrcaowndp,xrcacrtid,xrcacrtdp,
+                         xrcacrtdt,xrcamodid,xrcamoddt,xrcacnfid,
+                         xrcacnfdt,xrcapstid,xrcapstdt)
+                  VALUES(g_xrca.xrcaent,g_xrca.xrcastus,g_xrca.xrcacomp,g_xrca.xrcald,g_xrca.xrcadocno,g_xrca.xrcadocdt,g_xrca.xrcasite,
+                         g_xrca.xrca001,g_xrca.xrca003,g_xrca.xrca004,g_xrca.xrca005,g_xrca.xrca006,g_xrca.xrca007,
+                         g_xrca.xrca008,g_xrca.xrca009,g_xrca.xrca010,g_xrca.xrca011,g_xrca.xrca012,g_xrca.xrca013,
+                         g_xrca.xrca014,g_xrca.xrca015,g_xrca.xrca016,g_xrca.xrca017,g_xrca.xrca018,g_xrca.xrca019,
+                         g_xrca.xrca020,g_xrca.xrca021,g_xrca.xrca022,g_xrca.xrca023,g_xrca.xrca024,g_xrca.xrca025,
+                         g_xrca.xrca026,g_xrca.xrca028,g_xrca.xrca029,g_xrca.xrca030,g_xrca.xrca031,g_xrca.xrca032,
+                         g_xrca.xrca033,g_xrca.xrca034,g_xrca.xrca035,g_xrca.xrca036,g_xrca.xrca037,g_xrca.xrca038,
+                         g_xrca.xrca039,g_xrca.xrca040,g_xrca.xrca041,g_xrca.xrca042,g_xrca.xrca043,g_xrca.xrca044,
+                         g_xrca.xrca045,g_xrca.xrca046,g_xrca.xrca047,g_xrca.xrca048,g_xrca.xrca049,g_xrca.xrca050,
+                         g_xrca.xrca051,g_xrca.xrca052,g_xrca.xrca053,g_xrca.xrca054,g_xrca.xrca055,g_xrca.xrca056,
+                         g_xrca.xrca057,g_xrca.xrca058,g_xrca.xrca059,g_xrca.xrca060,g_xrca.xrca061,g_xrca.xrca062,
+                         g_xrca.xrca063,g_xrca.xrca064,g_xrca.xrca065,g_xrca.xrca066,g_xrca.xrca100,g_xrca.xrca101,
+                         g_xrca.xrca103,g_xrca.xrca104,g_xrca.xrca106,g_xrca.xrca107,g_xrca.xrca108,g_xrca.xrca113,
+                         g_xrca.xrca114,g_xrca.xrca116,g_xrca.xrca117,g_xrca.xrca118,g_xrca.xrca120,g_xrca.xrca121,
+                         g_xrca.xrca123,g_xrca.xrca124,g_xrca.xrca126,g_xrca.xrca127,g_xrca.xrca128,g_xrca.xrca130,
+                         g_xrca.xrca131,g_xrca.xrca133,g_xrca.xrca134,g_xrca.xrca136,g_xrca.xrca137,g_xrca.xrca138,
+                         g_xrca.xrcaownid,g_xrca.xrcaowndp,g_xrca.xrcacrtid,g_xrca.xrcacrtdp,
+                         g_xrca.xrcacrtdt,g_xrca.xrcamodid,g_xrca.xrcamoddt,g_xrca.xrcacnfid,
+                         g_xrca.xrcacnfdt,g_xrca.xrcapstid,g_xrca.xrcapstdt)
+      IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = g_xrca.xrcadocno
+         LET g_errparam.code   = SQLCA.SQLCODE
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET l_tot_success = FALSE
+      END IF
+
+      LET g_xrcb.xrcbseq = 0
+      FOREACH axrp200_stbe_curs USING l_stbd[l_ac].stbddocno INTO l_stbe.*
+
+         LET g_xrcb.xrcbdocno = g_xrca.xrcadocno
+         LET g_xrcb.xrcbseq   = g_xrcb.xrcbseq + 1
+         LET g_xrcb.xrcbent   = g_enterprise
+         LET g_xrcb.xrcbld    = g_xrca.xrcald
+         LET g_xrcb.xrcbsite  = g_xrca.xrcasite
+         LET g_xrcb.xrcborga  = l_stbe.stbesite
+         LET g_xrcb.xrcblegl  = l_stbe.stbecomp
+         LET g_xrcb.xrcb001 = '3'
+         LET g_xrcb.xrcb002 = l_stbe.stbedocno
+         LET g_xrcb.xrcb003 = l_stbe.stbeseq
+         LET g_xrcb.xrcb004 = l_stbe.stbe019
+         LET g_xrcb.xrcb005 = ''
+         LET g_xrcb.xrcb006 = ''
+         LET g_xrcb.xrcb007 = 1
+         LET g_xrcb.xrcb008 = l_stbe.stbe002
+         LET g_xrcb.xrcb009 = l_stbe.stbe003
+         LET g_xrcb.xrcb010 = l_stbe.stbe020
+         SELECT ooeg004 INTO g_xrcb.xrcb011 FROM ooeg_t WHERE ooegent = g_enterprise
+            AND ooeg001 = g_xrcb.xrcb010
+         LET g_xrcb.xrcb012 = l_stbe.stbe019
+         LET g_xrcb.xrcb013 = 'N'
+         LET g_xrcb.xrcb014 = l_stbe.stbe005
+         LET g_xrcb.xrcb015 = ''
+         LET g_xrcb.xrcb016 = ''
+         LET g_xrcb.xrcb017 = ''
+         LET g_xrcb.xrcb018 = ''
+         LET g_xrcb.xrcb019 = '1'
+         LET g_xrcb.xrcb020 = l_stbe.stbe009
+         SELECT glab006 INTO g_xrcb.xrcb021 FROM glab_t WHERE glabent = g_enterprise
+            AND glabld = g_xrcb.xrcbld
+            AND glab001 = 'AR'
+            AND glab003 = l_stbe.stbe005
+         IF cl_null(g_xrcb.xrcb021) THEN
+            LET g_xrcb.xrcb021 = g_xrca.xrca036
+         END IF
+         SELECT glab005 INTO g_xrcb.xrcb029 FROM glab_t WHERE glabent = g_enterprise
+            AND glabld = g_xrcb.xrcbld
+            AND glab001 = 'AR'
+            AND glab003 = l_stbe.stbe005
+         IF cl_null(g_xrcb.xrcb029) THEN
+            LET g_xrcb.xrcb029 = g_xrca.xrca035
+         END IF
+         LET g_xrcb.xrcb022 = l_stbe.stbe011
+         LET g_xrcb.xrcb024 = ''
+         LET g_xrcb.xrcb025 = ''
+         LET g_xrcb.xrcb026 = 0
+         LET g_xrcb.xrcb027 = ''
+         LET g_xrcb.xrcb028 = ''
+        #LET g_xrcb.xrcb029 = g_xrca.xrca035
+         LET g_xrcb.xrcb030 = 0
+         LET g_xrcb.xrcb031 = g_xrca.xrca008
+         LET g_xrcb.xrcb032 = ''
+         LET g_xrcb.xrcb033 = ''
+         LET g_xrcb.xrcb034 = ''
+         LET g_xrcb.xrcb035 = ''
+         LET g_xrcb.xrcb036 = ''
+         LET g_xrcb.xrcb037 = ''
+         LET g_xrcb.xrcb038 = ''
+         LET g_xrcb.xrcb039 = ''
+         LET g_xrcb.xrcb040 = ''
+         LET g_xrcb.xrcb041 = ''
+         LET g_xrcb.xrcb042 = ''
+         LET g_xrcb.xrcb043 = ''
+         LET g_xrcb.xrcb044 = ''
+         LET g_xrcb.xrcb045 = ''
+         LET g_xrcb.xrcb046 = ''
+         LET g_xrcb.xrcb047 = ''
+         LET g_xrcb.xrcb048 = ''
+         LET g_xrcb.xrcb049 = ''
+         LET g_xrcb.xrcb050 = ''
+         LET g_xrcb.xrcb051 = g_xrca.xrca014
+         LET g_xrcb.xrcb100 = g_xrca.xrca100
+         LET g_xrcb.xrcb101 = l_stbe.stbe016
+         LET g_xrcb.xrcb102 = g_xrca.xrca101
+         LET g_xrcb.xrcb106 = 0
+         LET g_xrcb.xrcb116 = 0
+         LET g_xrcb.xrcb117 = 0
+         LET g_xrcb.xrcb118 = 0
+         LET g_xrcb.xrcb119 = 0
+         LET g_xrcb.xrcb121 = 0
+         LET g_xrcb.xrcb126 = 0
+         LET g_xrcb.xrcb131 = 0
+         LET g_xrcb.xrcb136 = 0
+         CALL s_axrt300_exrate(l_glaa002,g_xrca.xrcadocdt,g_xrca.xrca100,l_glaa001,
+                               g_xrcb.xrcb101,g_xrca.xrca101,l_glaacomp)
+            RETURNING l_success,g_xrcb.xrcb111
+         CALL s_tax_ins(g_xrca.xrcadocno,g_xrcb.xrcbseq,0,l_glaacomp,
+                        g_xrcb.xrcb007*g_xrcb.xrcb101,g_xrcb.xrcb020,
+                        g_xrcb.xrcb007,g_xrca.xrca100,g_xrca.xrca101,g_xrca.xrcald,g_xrca.xrca121,g_xrca.xrca131)
+            RETURNING g_xrcb.xrcb103,g_xrcb.xrcb104,g_xrcb.xrcb105,
+                      g_xrcb.xrcb113,g_xrcb.xrcb114,g_xrcb.xrcb115,
+                      g_xrcb.xrcb123,g_xrcb.xrcb124,g_xrcb.xrcb125,
+                      g_xrcb.xrcb133,g_xrcb.xrcb134,g_xrcb.xrcb135
+         #因需求,這裡需要把前端金額和產生交易稅明細後的金額做對比,以前端金額為准,將差異放入交易稅明細中
+         CALL s_tax_chk(l_glaacomp,g_xrca.xrca011)
+            RETURNING l_success,l_oodbl004,l_oodb005,l_oodb006,l_oodb011
+         IF l_oodb005 = 'Y' THEN
+            LET g_xrcb.xrcb105 = g_xrcb.xrcb007*g_xrcb.xrcb101
+            LET l_diff = g_xrcb.xrcb105 - g_xrcb.xrcb104 - g_xrcb.xrcb103
+            LET g_xrcb.xrcb103 = g_xrcb.xrcb105 - g_xrcb.xrcb104
+         
+            LET g_xrcb.xrcb115 = g_xrcb.xrcb007*g_xrcb.xrcb111
+            LET l_diff1 = g_xrcb.xrcb115 - g_xrcb.xrcb114 - g_xrcb.xrcb113
+            LET g_xrcb.xrcb113 = g_xrcb.xrcb115 - g_xrcb.xrcb114
+         ELSE
+            LET g_xrcb.xrcb103 = g_xrcb.xrcb007*g_xrcb.xrcb101
+            LET l_diff = g_xrcb.xrcb105 - g_xrcb.xrcb104 - g_xrcb.xrcb103
+            LET g_xrcb.xrcb105 = g_xrcb.xrcb103 + g_xrcb.xrcb104
+         
+            LET g_xrcb.xrcb113 = g_xrcb.xrcb007*g_xrcb.xrcb111
+            LET l_diff1 = g_xrcb.xrcb115 - g_xrcb.xrcb114 - g_xrcb.xrcb113
+            LET g_xrcb.xrcb115 = g_xrcb.xrcb113 + g_xrcb.xrcb114
+         END IF
+         UPDATE  xrcd_t SET xrcd103 = xrcd103 + l_diff,
+                            xrcd105 = xrcd105 + l_diff,
+                            xrcd113 = xrcd113 + l_diff1,
+                            xrcd115 = xrcd115 + l_diff1
+          WHERE xrcdent = g_enterprise
+            AND xrcddocno = g_xrca.xrcadocno
+            AND xrcdld = g_xrca.xrcald
+            AND xrcdseq = g_xrcb.xrcbseq
+         SELECT glab005 INTO l_xrcd009 FROM glab_t 
+          WHERE glabld = g_xrca.xrcald 
+            AND glabent = g_enterprise
+            AND glab002 = g_xrca.xrca007   # 帳款類別
+            AND glab001 = '13'             # 應收帳務類型科目設定
+            AND glab003 = '8304_29'
+         UPDATE xrcd_t SET xrcd009 = l_xrcd009
+          WHERE xrcd009 IS NULL
+            AND xrcdent = g_enterprise
+            AND xrcddocno = g_xrca.xrcadocno
+            AND xrcdld = g_xrca.xrcald
+         INSERT INTO xrcb_t(xrcbent,xrcbld,xrcbdocno,xrcbseq,xrcbsite,xrcborga,xrcblegl,
+                            xrcb001,xrcb002,xrcb003,xrcb004,xrcb005,xrcb006,
+                            xrcb007,xrcb008,xrcb009,xrcb010,xrcb011,xrcb012,
+                            xrcb013,xrcb014,xrcb015,xrcb016,xrcb017,xrcb018,
+                            xrcb019,xrcb020,xrcb021,xrcb022,xrcb023,xrcb024,
+                            xrcb025,xrcb026,xrcb027,xrcb028,xrcb029,xrcb030,
+                            xrcb031,xrcb032,xrcb033,xrcb034,xrcb035,xrcb036,
+                            xrcb037,xrcb038,xrcb039,xrcb040,xrcb041,xrcb042,
+                            xrcb043,xrcb044,xrcb045,xrcb046,xrcb047,xrcb048,
+                            xrcb049,xrcb050,xrcb051,xrcb100,xrcb101,xrcb102,
+                            xrcb103,xrcb104,xrcb105,xrcb106,xrcb111,xrcb113,
+                            xrcb114,xrcb115,xrcb116,xrcb117,xrcb118,xrcb119,
+                            xrcb121,xrcb123,xrcb124,xrcb125,xrcb126,xrcb131,
+                            xrcb133,xrcb134,xrcb135,xrcb136)
+                     VALUES(g_xrcb.xrcbent,g_xrcb.xrcbld,g_xrcb.xrcbdocno,g_xrcb.xrcbseq,g_xrcb.xrcbsite,g_xrcb.xrcborga,g_xrcb.xrcblegl,
+                            g_xrcb.xrcb001,g_xrcb.xrcb002,g_xrcb.xrcb003,g_xrcb.xrcb004,g_xrcb.xrcb005,g_xrcb.xrcb006,
+                            g_xrcb.xrcb007,g_xrcb.xrcb008,g_xrcb.xrcb009,g_xrcb.xrcb010,g_xrcb.xrcb011,g_xrcb.xrcb012,
+                            g_xrcb.xrcb013,g_xrcb.xrcb014,g_xrcb.xrcb015,g_xrcb.xrcb016,g_xrcb.xrcb017,g_xrcb.xrcb018,
+                            g_xrcb.xrcb019,g_xrcb.xrcb020,g_xrcb.xrcb021,g_xrcb.xrcb022,g_xrcb.xrcb023,g_xrcb.xrcb024,
+                            g_xrcb.xrcb025,g_xrcb.xrcb026,g_xrcb.xrcb027,g_xrcb.xrcb028,g_xrcb.xrcb029,g_xrcb.xrcb030,
+                            g_xrcb.xrcb031,g_xrcb.xrcb032,g_xrcb.xrcb033,g_xrcb.xrcb034,g_xrcb.xrcb035,g_xrcb.xrcb036,
+                            g_xrcb.xrcb037,g_xrcb.xrcb038,g_xrcb.xrcb039,g_xrcb.xrcb040,g_xrcb.xrcb041,g_xrcb.xrcb042,
+                            g_xrcb.xrcb043,g_xrcb.xrcb044,g_xrcb.xrcb045,g_xrcb.xrcb046,g_xrcb.xrcb047,g_xrcb.xrcb048,
+                            g_xrcb.xrcb049,g_xrcb.xrcb050,g_xrcb.xrcb051,g_xrcb.xrcb100,g_xrcb.xrcb101,g_xrcb.xrcb102,
+                            g_xrcb.xrcb103,g_xrcb.xrcb104,g_xrcb.xrcb105,g_xrcb.xrcb106,g_xrcb.xrcb111,g_xrcb.xrcb113,
+                            g_xrcb.xrcb114,g_xrcb.xrcb115,g_xrcb.xrcb116,g_xrcb.xrcb117,g_xrcb.xrcb118,g_xrcb.xrcb119,
+                            g_xrcb.xrcb121,g_xrcb.xrcb123,g_xrcb.xrcb124,g_xrcb.xrcb125,g_xrcb.xrcb126,g_xrcb.xrcb131,
+                            g_xrcb.xrcb133,g_xrcb.xrcb134,g_xrcb.xrcb135,g_xrcb.xrcb136)
+         IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = g_xrca.xrcadocno
+            LET g_errparam.code   = SQLCA.SQLCODE
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+         END IF
+         DELETE FROM xrcf_t WHERE xrcfent = g_enterprise
+            AND xrcfld = g_xrca.xrcald
+            AND xrcfdocno = g_xrca.xrcadocno
+            AND xrcfseq = g_xrcb_t.xrcbseq
+         CALL s_axrp130_ins_xrcf(g_xrcb.xrcbld,g_xrcb.xrcbdocno,g_xrcb.xrcbseq,'Y') RETURNING g_xrcb.xrcb023
+         UPDATE xrcb_t SET xrcb023 = g_xrcb.xrcb023
+          WHERE xrcbent = g_enterprise
+            AND xrcbld = g_xrcb.xrcbld
+            AND xrcbdocno = g_xrcb.xrcbdocno
+            AND xrcbseq = g_xrcb.xrcbseq
+
+         UPDATE stbe_t SET stbe021 = stbe016
+          WHERE stbeent = g_enterprise
+            AND stbedocno = l_stbe.stbedocno
+            AND stbeseq = l_stbe.stbeseq
+
+      END FOREACH 
+
+      CALL s_axrt300_installments(g_xrca.xrcald,g_xrca.xrcadocno) RETURNING l_success
+      CALL s_axrt300_xrca_upd(g_xrca.xrcald,g_xrca.xrcadocno) RETURNING l_success
+
+      IF l_glaa121 = 'Y' AND l_dfin0030 = 'Y' THEN
+         CALL s_pre_voucher_ins('AR','R10',g_xrca.xrcald,g_xrca.xrcadocno,g_xrca.xrcadocdt,'1') RETURNING l_success
+         IF NOT l_success THEN
+            LET l_tot_success = FALSE
+         END IF
+      END IF
+   END FOR
+
+   IF l_tot_success THEN
+      CALL s_transaction_end('Y','0')
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00251'
+      LET g_errparam.replace[1] = l_start_no
+      LET g_errparam.replace[2] = l_end_no
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+   CALL cl_err_collect_show()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp200_get_ooef001_wc" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: sub產生的數據集轉換
+# Memo...........: DSCNJ,DSCTP,DSCTC --> ('DSCNJ','DSCTP','DSCTC')
+# Usage..........: CALL axrp200_get_ooef001_wc(p_wc)
+#                  RETURNING r_wc
+# Input parameter: p_wc           sub产生的数据集
+# Return code....: r_wc           SQ可用的数据集
+# Date & Author..: 2014/10/17 By zhangweib
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp200_get_ooef001_wc(p_wc)
+   DEFINE p_wc       STRING
+   DEFINE r_wc       STRING
+   DEFINE tok        base.StringTokenizer
+   DEFINE l_str      STRING
+
+   LET tok = base.StringTokenizer.create(p_wc,",")
+   WHILE tok.hasMoreTokens()
+      IF cl_null(l_str) THEN
+         LET l_str = tok.nextToken()
+      ELSE
+         LET l_str = l_str,"','",tok.nextToken()
+      END IF      
+   END WHILE   
+   LET r_wc = "('",l_str,"')"
+   
+   RETURN r_wc
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp200_ins_xrce" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 產生直接沖帳資料
+# Memo...........:
+# Usage..........: CALL axrp200_ins_xrce()
+#                  RETURNING ---
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/10/17 By zhangweib
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp200_ins_xrce()
+   DEFINE l_count             LIKE type_t.num5
+   DEFINE l_seq               LIKE type_t.num5
+   DEFINE l_xrccdocno         LIKE xrcc_t.xrccdocno
+   DEFINE l_xrccseq           LIKE xrcc_t.xrccseq
+   DEFINE l_xrcc001           LIKE xrcc_t.xrcc001
+   DEFINE l_xrca060           LIKE xrca_t.xrca060
+   DEFINE l_xrca103           LIKE xrca_t.xrca103
+   DEFINE l_xrca113           LIKE xrca_t.xrca113
+   DEFINE l_xrca              RECORD LIKE xrca_t.*
+   DEFINE g_xrcb              RECORD LIKE xrcb_t.*
+   DEFINE l_xrcc              RECORD LIKE xrcc_t.*
+   DEFINE l_xrce              RECORD LIKE xrce_t.*
+   DEFINE l_sql               STRING
+   DEFINE ls_wc               STRING
+   DEFINE l_wc1               STRING
+   DEFINE l_ooef014           LIKE ooef_t.ooef014
+   DEFINE l_ooaj004           LIKE ooaj_t.ooaj004
+   DEFINE l_xrca100           LIKE xrca_t.xrca100
+   DEFINE l_success           LIKE type_t.num5
+   DEFINE l_errno             LIKE type_t.chr10
+   DEFINE l_glaa001           LIKE glaa_t.glaa001
+   DEFINE l_glaa015           LIKE glaa_t.glaa015
+   DEFINE l_glaa017           LIKE glaa_t.glaa017
+   DEFINE l_glaa019           LIKE glaa_t.glaa019
+   DEFINE l_glaa021           LIKE glaa_t.glaa021
+   DEFINE l_glaacomp          LIKE glaa_t.glaacomp
+   DEFINE l_sfin1002          LIKE type_t.chr1
+   DEFINE l_xrce109           LIKE xrce_t.xrce109
+   DEFINE l_xrce119           LIKE xrce_t.xrce119
+   DEFINE l_xrce129           LIKE xrce_t.xrce129
+   DEFINE l_xrce139           LIKE xrce_t.xrce139
+      
+   SELECT ooef014 INTO l_ooef014 FROM ooef_t
+    WHERE ooefent = g_enterprise AND ooef001 = l_glaacomp
+
+   SELECT glaa001,glaa015,glaa017,glaa019,glaa021
+     INTO l_glaa001,l_glaa015,l_glaa017,l_glaa019,l_glaa021
+     FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_xrca.xrcald
+
+   #1.取基础币种的金额精度--若有传入p_amount时,返回的是金额,非汇率
+   CALL s_curr_sel_ooaj004(l_ooef014,l_glaa001)
+        RETURNING l_ooaj004
+
+   #STEP1:若發票單身有"27:其他待抵單"則先沖銷其他待抵單
+   #STEP2:依據"自動沖銷"的勾選項,彙整待抵單
+
+   #勾選訂金待抵:自動沖同一帳款客戶,同一收款客戶 帳款單性質=21 之訂金待抵
+   #勾選銷退待抵:自動沖同一帳款客戶,同一收款客戶 帳款單性質=22 之銷退待抵
+   #勾選預收待抵:自動沖同一帳款客戶,同一收款客戶 帳款單性質=23 之预收待抵
+   #勾選其他待抵:自動沖同一帳款客戶,同一收款客戶 帳款單性質=29 之其他扣抵
+   #勾選溢收待抵:自動沖同一帳款客戶,同一收款客戶 帳款單性質=24 之溢收待抵
+   #勾選押金待抵:自動沖同一帳款客戶,同一收款客戶 帳款單性質=25 之押金待抵
+
+   IF 'axrt210' = 'axrt340' THEN RETURN END IF
+
+   #150316-00013#1 By 01727 Add  ---(S)---
+   SELECT glaacomp INTO l_glaacomp FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+   CALL cl_get_para(g_enterprise,l_glaacomp,'S-FIN-1002') RETURNING l_sfin1002
+   #150316-00013#1 By 01727 Add  ---(E)---
+
+   LET ls_wc = " xrca004 = '",g_xrca.xrca004,"' AND xrca005 = '",g_xrca.xrca005,"' "
+   LET l_count = 0
+   IF g_master.b_check1 = 'Y' THEN
+      IF NOT cl_null(l_wc1) THEN LET l_wc1 = l_wc1,"','" END IF
+      LET l_wc1 = l_wc1,"'21'"
+   ELSE
+      LET l_count = l_count + 1
+   END IF
+
+   IF g_master.b_check2 = 'Y' THEN
+      IF NOT cl_null(l_wc1) THEN LET l_wc1 = l_wc1,"','" END IF
+      LET l_wc1 = l_wc1,"'23'"
+   ELSE
+      LET l_count = l_count + 1
+   END IF
+   IF g_master.b_check3 = 'Y' THEN
+      IF NOT cl_null(l_wc1) THEN LET l_wc1 = l_wc1,"','" END IF
+      LET l_wc1 = l_wc1,"'29'"
+   ELSE
+      LET l_count = l_count + 1
+   END IF
+   IF g_master.b_check4 = 'Y' THEN
+      IF NOT cl_null(l_wc1) THEN LET l_wc1 = l_wc1,"','" END IF
+      LET l_wc1 = l_wc1,"'25'"
+   ELSE
+      LET l_count = l_count + 1
+   END IF
+   IF g_master.b_check5 = 'Y' THEN
+      IF NOT cl_null(l_wc1) THEN LET l_wc1 = l_wc1,"','" END IF
+      LET l_wc1 = l_wc1,"'27'"
+   ELSE
+      LET l_count = l_count + 1
+   END IF
+   IF l_count > 0 THEN LET ls_wc = ls_wc," AND xrca001 IN (",l_wc1,")" ELSE RETURN END IF
+
+   LET l_sql = "(SELECT xrccdocno,xrccseq,xrcc001,1 flag,xrcadocdt,CASE WHEN xrca100 = '",g_xrca.xrca100,"' THEN 1 ELSE 2 END flag1 FROM xrcc_t,xrca_t       ",
+               " WHERE xrccld = '",g_master.xrcald,"'                                               ",
+               "   AND xrcc108 - xrcc109 > 0                                                        ",
+               "   AND xrccent = xrcaent AND xrccdocno = xrcadocno AND xrccld = xrcald              ",
+               "   AND EXISTS (SELECT 1 FROM isag_t WHERE isagent = '",g_enterprise,"'              ",
+               "                  AND isag001 = '26' AND isagcomp = '",g_xrca.xrcacomp,"'           ",
+               "                  AND isag002 = xrccdocno AND isag003 = xrccseq                     ",
+               "                  AND isagdocno IN ( SELECT DISTINCT xrcb002 FROM xrcb_t            ",
+               "                                      WHERE xrcbent = '",g_enterprise,"'            ",
+               "                                        AND xrcbdocno = '",g_xrca.xrcadocno,"'      ",
+               "                                        AND xrcbld = '",g_xrca.xrcald,"'          ))"
+
+   LET l_sql = l_sql," UNION "
+
+   LET l_sql = l_sql,"SELECT xrccdocno,xrccseq,xrcc001,2 flag,xrcadocdt,CASE WHEN xrca100 = '",g_xrca.xrca100,"' THEN 1 ELSE 2 END flag1 FROM xrcc_t,xrca_t  ",
+               " WHERE xrccent = xrcaent AND xrccdocno = xrcadocno AND xrccld = xrcald              ",
+               "   AND xrccld = '",g_master.xrcald,"'                                               ",
+               "   AND xrcc108 - xrcc109 > 0                                                        ",
+               "   AND xrcadocdt <= '",g_master.xrcadocdt,"'                                        ",
+               "   AND ",ls_wc,") ORDER BY flag ASC,flag1 ASC,xrcadocdt"
+   PREPARE axrp132_xrce_prep FROM l_sql
+   DECLARE axrp132_xrce_curs CURSOR FOR axrp132_xrce_prep
+
+   LET l_xrce.xrceseq = 0
+   LET l_xrca103 = g_xrca.xrca103 + g_xrca.xrca104
+   LET l_xrca113 = g_xrca.xrca113 + g_xrca.xrca114
+
+   FOREACH axrp132_xrce_curs INTO l_xrccdocno,l_xrccseq,l_xrcc001
+      IF l_xrca103 = 0 THEN EXIT FOREACH END IF
+      SELECT * INTO l_xrca.* FROM xrca_t WHERE xrcaent = g_enterprise
+         AND xrcadocno = l_xrccdocno AND xrcald = g_master.xrcald
+      SELECT * INTO g_xrcb.* FROM xrcb_t WHERE xrcbent = g_enterprise
+         AND xrcbdocno = l_xrccdocno AND xrcbseq = l_xrccseq AND xrcbld = g_master.xrcald
+      SELECT * INTO l_xrcc.* FROM xrcc_t WHERE xrccent = g_enterprise
+         AND xrccdocno = l_xrccdocno AND xrccseq = l_xrccseq AND xrcc001 = l_xrcc001 AND xrccld = g_master.xrcald
+
+      #150316-00013#1 By 01727 Add  ---(S)---
+      #待抵單的可用餘額=xrcc108 - xrcc109 - 已沖帳但未確認金額
+      #即等同於 xrcc108 - SUM(xrce109)
+      LET l_xrce109 = 0    LET l_xrce119 = 0   LET l_xrce129 = 0   LET l_xrce139 = 0
+      IF l_sfin1002 = '1' THEN
+         SELECT SUM(xrce109),SUM(xrce119),SUM(xrce129),SUM(xrce139)
+           INTO l_xrce109,l_xrce119,l_xrce129,l_xrce139
+           FROM xrce_t
+          WHERE xrceent = g_enterprise       AND xrceld  = g_master.xrcald
+            AND xrce003 = l_xrcc.xrccdocno   AND xrce004 = l_xrcc.xrccseq
+      ELSE
+         SELECT SUM(xrce109),SUM(xrce119),SUM(xrce129),SUM(xrce139)
+           INTO l_xrce109,l_xrce119,l_xrce129,l_xrce139
+           FROM xrce_t
+          WHERE xrceent = g_enterprise       AND xrceld  = g_master.xrcald
+            AND xrce003 = l_xrcc.xrccdocno   AND xrce004 = l_xrcc.xrccseq
+            AND xrce005 = l_xrcc.xrcc001
+      END IF
+      IF cl_null(l_xrce109) THEN LET l_xrce109 = 0 END IF
+      IF cl_null(l_xrce119) THEN LET l_xrce119 = 0 END IF
+      IF cl_null(l_xrce129) THEN LET l_xrce129 = 0 END IF
+      IF cl_null(l_xrce139) THEN LET l_xrce139 = 0 END IF
+      LET l_xrcc.xrcc109 = l_xrce109
+      LET l_xrcc.xrcc119 = l_xrce119
+      LET l_xrcc.xrcc129 = l_xrce129
+      LET l_xrcc.xrcc139 = l_xrce139
+      #150316-00013#1 By 01727 Add  ---(E)---
+      LET l_xrce.xrceent = g_enterprise
+      LET l_xrce.xrcecomp= l_glaacomp
+      LET l_xrce.xrceld  = g_master.xrcald
+      LET l_xrce.xrcedocno=g_xrca.xrcadocno
+      LET l_xrce.xrceseq = l_xrce.xrceseq + 1
+      LET l_xrce.xrcelegl= l_xrcc.xrcclegl
+      LET l_xrce.xrcesite= l_xrcc.xrccsite
+      LET l_xrce.xrceorga= l_xrcc.xrccsite
+      LET l_xrce.xrce001 = 'axrt340'
+      LET l_xrce.xrce002 = '31'
+      LET l_xrce.xrce003 = l_xrcc.xrccdocno
+      LET l_xrce.xrce004 = l_xrccseq
+      LET l_xrce.xrce005 = l_xrcc.xrcc001
+      LET l_xrce.xrce006 = ''
+      LET l_xrce.xrce008 = ''
+      LET l_xrce.xrce009 = ''
+      LET l_xrce.xrce010 = ''
+      LET l_xrce.xrce011 = ''
+      LET l_xrce.xrce012 = ''
+      LET l_xrce.xrce013 = ''
+      LET l_xrce.xrce014 = ''
+      LET l_xrce.xrce015 = 'D'
+      LET l_xrce.xrce016 = l_xrca.xrca035
+      LET l_xrce.xrce017 = l_xrca.xrca014
+      LET l_xrce.xrce018 = g_xrcb.xrcb010
+      LET l_xrce.xrce019 = g_xrcb.xrcb011
+      LET l_xrce.xrce020 = g_xrcb.xrcb012
+      LET l_xrce.xrce021 = g_xrcb.xrcb017
+      LET l_xrce.xrce022 = g_xrcb.xrcb015
+      LET l_xrce.xrce023 = g_xrcb.xrcb016
+      LET l_xrce.xrce024 = g_xrcb.xrcb002
+      LET l_xrce.xrce025 = g_xrcb.xrcb003
+      LET l_xrce.xrce026 = ''
+     #150316-00013#1 By 01727 Mark ---(S)---
+     #SELECT xrca060 INTO l_xrca060 FROM xrca_t
+     # WHERE xrcald = g_master.xrcald
+     #   AND xrca019 = l_xrce.xrce003
+     #150316-00013#1 By 01727 Mark ---(S)---
+     #150316-00013#1 By 01727 Add  ---(S)---
+      SELECT xrca060 INTO l_xrca060 FROM xrca_t
+       WHERE xrcald = g_master.xrcald
+         AND xrcadocno = l_xrce.xrce003
+         AND xrcaent = g_enterprise
+     #150316-00013#1 By 01727 Add  ---(S)---
+      IF l_xrca060 = '2' THEN
+         LET l_xrce.xrce027 = 'Y'
+      ELSE
+         LET l_xrce.xrce027 = 'N'
+      END IF
+      LET l_xrce.xrce028 = ''
+      LET l_xrce.xrce029 = ''
+      LET l_xrce.xrce030 = ''
+      LET l_xrce.xrce035 = ''
+      LET l_xrce.xrce036 = ''
+      LET l_xrce.xrce037 = ''
+      LET l_xrce.xrce038 = ''
+      LET l_xrce.xrce104 = 0
+      LET l_xrce.xrce114 = 0
+      LET l_xrce.xrce124 = 0
+      LET l_xrce.xrce134 = 0
+      LET l_xrce.xrce100 = l_xrcc.xrcc100
+      LET l_xrce.xrce101 = l_xrcc.xrcc102
+      LET l_xrce.xrce120 = l_xrcc.xrcc120
+      LET l_xrce.xrce121 = l_xrcc.xrcc122
+      LET l_xrce.xrce130 = l_xrcc.xrcc130
+      LET l_xrce.xrce131 = l_xrcc.xrcc132
+
+      IF g_xrca.xrca100 = l_xrca.xrca100 THEN
+         IF l_xrca103 > l_xrcc.xrcc108 - l_xrcc.xrcc109 THEN
+            LET l_xrce.xrce007 = l_xrcc.xrcc108 - l_xrcc.xrcc109
+            LET l_xrce.xrce109 = l_xrcc.xrcc108 - l_xrcc.xrcc109
+            LET l_xrce.xrce119 = l_xrcc.xrcc118 - l_xrcc.xrcc119
+            LET l_xrce.xrce129 = l_xrcc.xrcc128 - l_xrcc.xrcc129
+            LET l_xrce.xrce139 = l_xrcc.xrcc138 - l_xrcc.xrcc139
+            LET l_xrca103 = l_xrca103 - l_xrcc.xrcc108 - l_xrcc.xrcc109
+            LET l_xrca113 = l_xrca113 - l_xrcc.xrcc118 - l_xrcc.xrcc119
+         ELSE
+            LET l_xrce.xrce007 = l_xrca103
+            LET l_xrce.xrce109 = l_xrca103
+            LET l_xrce.xrce119 = l_xrca103 * l_xrcc.xrcc101
+            LET l_xrce.xrce129 = l_xrca103 * l_xrcc.xrcc121
+            LET l_xrce.xrce139 = l_xrca103 * l_xrcc.xrcc131
+            LET l_xrca103 = 0
+            LET l_xrca113 = l_xrca113 - l_xrca103 * l_xrcc.xrcc101
+            IF l_xrca113 < 0 THEN LET l_xrca113 = 0 END IF
+         END IF
+      ELSE
+         IF l_xrca113 > l_xrcc.xrcc118 - l_xrcc.xrcc119 THEN
+            LET l_xrce.xrce007 = l_xrcc.xrcc108 - l_xrcc.xrcc109
+            LET l_xrce.xrce109 = l_xrcc.xrcc108 - l_xrcc.xrcc109
+            LET l_xrce.xrce119 = l_xrcc.xrcc118 - l_xrcc.xrcc119
+            LET l_xrce.xrce129 = l_xrcc.xrcc128 - l_xrcc.xrcc129
+            LET l_xrce.xrce139 = l_xrcc.xrcc138 - l_xrcc.xrcc139
+            LET l_xrca113 = l_xrca113 - l_xrcc.xrcc118 - l_xrcc.xrcc119
+            LET l_xrca103 = l_xrca113 / g_xrca.xrca101
+         ELSE
+            LET l_xrce.xrce007 = l_xrca113 / l_xrcc.xrcc101
+            LET l_xrce.xrce007 = s_num_round('1',l_xrce.xrce007,l_ooaj004)
+            LET l_xrce.xrce109 = l_xrce.xrce007
+            LET l_xrce.xrce119 = l_xrca113
+            LET l_xrce.xrce129 = l_xrce.xrce109 * l_xrcc.xrcc121
+            LET l_xrce.xrce139 = l_xrce.xrce109 * l_xrcc.xrcc131
+            LET l_xrca113 = 0
+            LET l_xrca103 = 0
+         END IF
+      END IF
+
+      INSERT INTO xrce_t VALUES (l_xrce.*)
+      IF SQLCA.sqlcode THEN
+         LET g_success = 'N' RETURN
+      END IF
+
+   END FOREACH
+
+   LET l_xrce.xrce109 = 0
+   LET l_xrce.xrce119 = 0
+   LET l_xrce.xrce129 = 0
+   LET l_xrce.xrce139 = 0
+
+  #非應稅折抵存入xrca107
+   SELECT SUM(xrce119 * CASE WHEN xrce015 = 'D' THEN 1 ELSE -1 END)
+     INTO l_xrce.xrce119 FROM xrce_t WHERE xrceent = g_enterprise
+      AND xrcedocno = g_xrca.xrcadocno AND xrceld = g_xrca.xrcald
+      AND xrce027 = 'N'
+   IF cl_null(l_xrce.xrce119) THEN LET l_xrce.xrce119 = 0 END IF
+   CALL s_curr_round_ld('1',g_xrca.xrcald,g_xrca.xrca100,l_xrce.xrce119 / g_xrca.xrca101,2)
+      RETURNING l_success,l_errno,l_xrce.xrce109
+   
+   IF l_glaa015 = 'Y' THEN
+      IF l_glaa017 = '1' THEN
+         LET l_xrce.xrce129 = l_xrce.xrce109 * g_xrca.xrca121
+      ELSE
+         LET l_xrce.xrce129 = l_xrce.xrce119 * g_xrca.xrca121
+      END IF
+   END IF
+   IF l_glaa019 = 'Y' THEN
+      IF l_glaa021 = '1' THEN
+         LET l_xrce.xrce139 = l_xrce.xrce109 * g_xrca.xrca131
+      ELSE
+         LET l_xrce.xrce139 = l_xrce.xrce119 * g_xrca.xrca131
+      END IF
+   END IF
+   UPDATE xrca_t SET xrca107 = l_xrce.xrce109,
+                     xrca117 = l_xrce.xrce119,
+                     xrca127 = l_xrce.xrce129,
+                     xrca137 = l_xrce.xrce139
+    WHERE xrcaent = g_enterprise
+      AND xrcadocno = g_xrca.xrcadocno
+      AND xrcald = g_xrca.xrcald
+  #應稅折抵存入xrca106
+   LET l_xrce.xrce109 = 0
+   LET l_xrce.xrce119 = 0
+   LET l_xrce.xrce129 = 0
+   LET l_xrce.xrce139 = 0
+   SELECT SUM(xrce119 * CASE WHEN xrce015 = 'D' THEN 1 ELSE -1 END)
+     INTO l_xrce.xrce119 FROM xrce_t WHERE xrceent = g_enterprise
+      AND xrcedocno = g_xrca.xrcadocno AND xrceld = g_xrca.xrcald
+      AND xrce027 = 'Y'
+   IF cl_null(l_xrce.xrce119) THEN LET l_xrce.xrce119 = 0 END IF
+   CALL s_curr_round_ld('1',g_xrca.xrcald,g_xrca.xrca100,l_xrce.xrce119 / g_xrca.xrca101,2)
+      RETURNING l_success,l_errno,l_xrce.xrce109
+   
+   IF l_glaa015 = 'Y' THEN
+      IF l_glaa017 = '1' THEN
+         LET l_xrce.xrce129 = l_xrce.xrce109 * g_xrca.xrca121
+      ELSE
+         LET l_xrce.xrce129 = l_xrce.xrce119 * g_xrca.xrca121
+      END IF
+   END IF
+   IF l_glaa019 = 'Y' THEN
+      IF l_glaa021 = '1' THEN
+         LET l_xrce.xrce139 = l_xrce.xrce109 * g_xrca.xrca131
+      ELSE
+         LET l_xrce.xrce139 = l_xrce.xrce119 * g_xrca.xrca131
+      END IF
+   END IF
+   UPDATE xrca_t SET xrca106 = l_xrce.xrce109,
+                     xrca116 = l_xrce.xrce119,
+                     xrca126 = l_xrce.xrce129,
+                     xrca136 = l_xrce.xrce139
+    WHERE xrcaent = g_enterprise
+      AND xrcadocno = g_xrca.xrcadocno
+      AND xrcald = g_xrca.xrcald
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axrp200_xrca004_ref" order="5" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 依據客戶編號獲取默認值
+# Memo...........:
+# Usage..........: CALL axrp200_xrca004_ref()
+#                  RETURNING r_xrca.*
+# Input parameter: 
+# Return code....: r_xrca         返回默认值
+# Date & Author..: 2014/10/17 By zhangweib
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp200_xrca004_ref()
+DEFINE l_ooba002      LIKE ooba_t.ooba002
+DEFINE l_success      LIKE type_t.num5
+DEFINE l_pmab085      LIKE pmab_t.pmab085
+DEFINE l_ooib         RECORD LIKE ooib_t.*
+DEFINE l_glaa001      LIKE glaa_t.glaa001
+DEFINE l_glaa025      LIKE glaa_t.glaa025
+DEFINE r_xrca         RECORD
+          xrca005     LIKE xrca_t.xrca005,
+          xrca006     LIKE xrca_t.xrca006,
+          xrca007     LIKE xrca_t.xrca007,
+          xrca008     LIKE xrca_t.xrca008,
+          xrca009     LIKE xrca_t.xrca009,
+          xrca010     LIKE xrca_t.xrca010,
+          xrca011     LIKE xrca_t.xrca011,
+          xrca014     LIKE xrca_t.xrca014,
+          xrca015     LIKE xrca_t.xrca015,
+          xrca046     LIKE xrca_t.xrca046,
+          xrca058     LIKE xrca_t.xrca058,
+          xrca061     LIKE xrca_t.xrca061,
+          xrca100     LIKE xrca_t.xrca100,
+          xrca101     LIKE xrca_t.xrca101,
+          xrca121     LIKE xrca_t.xrca121,
+          xrca131     LIKE xrca_t.xrca131
+                      END RECORD
+
+   #新增/修改帳款對象後,依帳款對象更新客戶慣用資料
+   
+   ################################################
+   #      STEP1-7 欄位取用原則:
+   #      取 xrcacomp =pmabsite  為條件取  
+   ################################################  
+
+   SELECT glaa001,glaa025 INTO l_glaa001,l_glaa025 FROM glaa_t WHERE glaaent = g_enterprise
+      AND glaald = g_xrca.xrcald
+
+   #STEP1.獲取交易對象簡稱
+   
+   #STEP2.帶出主要應收條件
+   SELECT pmab087 INTO r_xrca.xrca008 FROM pmab_t
+    WHERE pmabent = g_enterprise AND pmabsite = g_xrca.xrcacomp AND pmab001 = g_xrca.xrca004
+   
+   #應收日期/票據到期日
+  #SELECT * INTO l_ooib.* FROM ooib_t WHERE ooibent = g_enterprise AND ooib001 = '2' AND ooib002 = r_xrca.xrca008
+  #CALL s_fin_date_ar_receivable(g_xrca.xrcasite,g_xrca.xrca004,r_xrca.xrca008,g_xrca.xrcadocdt,
+  #  g_xrca.xrcadocdt,g_xrca.xrcadocdt,'') RETURNING l_success,r_xrca.xrca009,r_xrca.xrca010
+   
+   #STEP3.帳款類別
+   SELECT pmab105 INTO r_xrca.xrca007 FROM pmab_t
+    WHERE pmabent = g_enterprise AND pmabsite = g_xrca.xrcacomp AND pmab001 = g_xrca.xrca004
+   
+   #STEP4.業務人員/業務部門
+   SELECT pmab081 INTO r_xrca.xrca014 FROM pmab_t
+    WHERE pmabent = g_enterprise AND pmabsite = g_xrca.xrcacomp AND pmab001 = g_xrca.xrca004
+   SELECT ooag003 INTO r_xrca.xrca015 FROM ooag_t
+    WHERE ooagent = g_enterprise AND ooag001 = r_xrca.xrca014
+   
+   #STEP5.稅別/含稅否/稅率
+   SELECT pmab084 INTO r_xrca.xrca011 FROM pmab_t
+    WHERE pmabent = g_enterprise AND pmabsite = g_xrca.xrcacomp AND pmab001 = g_xrca.xrca004
+   
+   #STEP6.慣用幣別/匯率
+   LET r_xrca.xrca100 = l_glaa001
+   #計算各個本位筆匯率
+   CASE g_master.b_comb1
+      WHEN '2'  #依立帳日匯率(aooi160)
+          CALL s_aooi160_get_exrate('2',g_master.xrcald,g_xrca.xrcadocdt,r_xrca.xrca100,l_glaa001,0,l_glaa025)
+               RETURNING r_xrca.xrca101
+      WHEN '3'  #依立帳日月平均匯率(aooi170)
+          CALL s_aooi160_get_exrate_avg('2',g_master.xrcald,g_xrca.xrcadocdt,r_xrca.xrca100,l_glaa001,0,l_glaa025)
+               RETURNING g_sub_success,g_errno,r_xrca.xrca101
+   END CASE
+
+  #CALL s_axrt300_get_exrate(g_xrca.xrcadocdt,g_xrca.xrcald,g_xrca.xrcacomp,r_xrca.xrca100)
+  #   RETURNING l_success,r_xrca.xrca101,r_xrca.xrca121,r_xrca.xrca131
+   
+   #STEP7.預開發票日
+   SELECT pmab083 INTO l_pmab085 FROM pmab_t
+    WHERE pmabent = g_enterprise AND pmabsite = g_xrca.xrcacomp AND pmab001 = g_xrca.xrca004
+
+   IF NOT cl_null(l_pmab085) THEN
+      IF l_pmab085 = '30' THEN
+         #月結彙總開立發票
+         IF MONTH(g_xrca.xrcadocdt) = 12 THEN
+            #立帳日期為12月份,則依照條件開立發票日為12月31號
+            LET r_xrca.xrca061 = MDY(12,31,YEAR(g_xrca.xrcadocdt))
+         ELSE
+            #立帳日期的下一個月減一天
+            LET r_xrca.xrca061 = MDY(MONTH(g_xrca.xrcadocdt) + 1,1,YEAR(g_xrca.xrcadocdt)) - 1
+         END IF
+      ELSE
+         LET r_xrca.xrca061 = g_xrca.xrcadocdt
+      END IF
+   END IF
+
+   #SETP8.收款客戶   
+   SELECT pmac002 INTO r_xrca.xrca005 FROM pmac_t
+    WHERE pmacent = g_enterprise AND pmac001 = g_xrca.xrca004 
+      AND pmac003 = '1' AND pmac004 = 'Y' AND pmacstus = 'Y'
+   IF SQLCA.sqlcode = 100 THEN
+      LET r_xrca.xrca005 = g_xrca.xrca004
+   END IF
+      
+   #SETP9.關係人   
+   SELECT pmaa047 INTO r_xrca.xrca046 FROM pmaa_t
+    WHERE pmaaent = g_enterprise AND pmaa001 = g_xrca.xrca004     
+
+   #SETP10.慣用銷售分類取
+   SELECT pmab089 INTO r_xrca.xrca058 FROM pmab_t
+    WHERE pmabent = g_enterprise AND pmabsite = g_xrca.xrcacomp AND pmab001 = g_xrca.xrca004 
+   
+   #SETP11.客戶分類
+   SELECT pmaa090 INTO r_xrca.xrca006 FROM pmaa_t
+    WHERE pmaaent = g_enterprise AND pmaa001 = g_xrca.xrca004 
+
+   RETURN r_xrca.*
+
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.isaf002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isaf002  #顯示到畫面上
+            NEXT FIELD isaf002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.isaf003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isaf003  #顯示到畫面上
+            NEXT FIELD isaf003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.isaf004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isaf004  #顯示到畫面上
+            NEXT FIELD isaf004                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.isaf016" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oodb002_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isaf016  #顯示到畫面上
+            NEXT FIELD isaf016                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.isafdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_isafdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isafdocno  #顯示到畫面上
+            NEXT FIELD isafdocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.stbd001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_stan001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO stbd001  #顯示到畫面上
+            NEXT FIELD stbd001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.stbd002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_10()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO stbd002  #顯示到畫面上
+            NEXT FIELD stbd002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.stbd021" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO stbd021  #顯示到畫面上
+            NEXT FIELD stbd021                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.stbd022" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO stbd022  #顯示到畫面上
+            NEXT FIELD stbd022                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.stbedocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL s_fin_account_center_sons_query('12',g_master.xrcasite,g_today,'')
+            CALL s_fin_account_center_comp_str()RETURNING l_origin_str
+            IF cl_null(l_origin_str) THEN
+               LET l_origin_str = g_master.xrcasite
+            END IF
+            CALL s_fin_get_wc_str(l_origin_str)RETURNING l_origin_str
+            LET g_qryparam.where    = " stbesite IN ",l_origin_str CLIPPED,"",
+                                      " AND stbe024 = 'Y'",
+                                      " AND stbe025 = 'N'",
+                                      " AND (stbe021 IS NULL OR stbe021 < stbe016)",
+                                      " AND TO_CHAR(stbddocdt,'YYYY') = ",g_master.glav002,
+                                      " AND TO_CHAR(stbddocdt,'MM') = ",g_master.glav006
+            CALL q_stbddocno_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO stbedocno  #顯示到畫面上
+            NEXT FIELD stbedocno                     #返回原欄位]]>
+  </point>
+  <point name="construct.c.stbesite" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL s_fin_account_center_sons_query('12',g_master.xrcasite,g_today,'')
+            CALL s_fin_account_center_comp_str()RETURNING l_origin_str
+            CALL s_fin_get_wc_str(l_origin_str)RETURNING l_origin_str
+            LET g_qryparam.where    = "ooef212 = 'Y' AND ooef001 IN ",l_origin_str CLIPPED,""
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO stbesite  #顯示到畫面上
+            NEXT FIELD stbesite                     #返回原欄位
+]]>
+  </point>
+  <point name="construct.c.xmdk003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdk003  #顯示到畫面上
+            NEXT FIELD xmdk003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xmdk004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001_13()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdk004  #顯示到畫面上
+            NEXT FIELD xmdk004                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xmdk007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdk007  #顯示到畫面上
+            NEXT FIELD xmdk007                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xmdkdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL s_fin_account_center_sons_query('3',g_master.xrcasite,g_master.xrcadocdt,'1')
+            CALL s_fin_account_center_sons_str()RETURNING ls_wc
+            IF cl_null(ls_wc) THEN LET ls_wc = g_master.xrcasite END IF
+            CALL axrp200_get_ooef001_wc(ls_wc)RETURNING ls_wc
+
+            #14/12/23
+            CALL s_axrt300_sel_ld(g_master.xrcald) RETURNING l_success,l_s
+
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1  = l_s
+            LET g_qryparam.arg2  = ls_wc
+            #150210-00011(1)--20150330--add--
+            IF NOT cl_null(g_master.xrcadocdt) THEN 
+               LET g_qryparam.WHERE = " xmdk001 BETWEEN '",g_pdate_s,"' AND '",g_pdate_e,"'" 
+            END IF               
+            #150210-00011(1)--20150330--add--
+            CALL q_xmdl_10()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdkdocno  #顯示到畫面上
+            NEXT FIELD xmdkdocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xrca003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrca003  #顯示到畫面上
+            NEXT FIELD xrca003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xrca007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrca007  #顯示到畫面上
+            NEXT FIELD xrca007                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xrcadocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_xrcadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrcadocno  #顯示到畫面上
+            NEXT FIELD xrcadocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.memo" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[ TYPE type_xrca RECORD
+         xrcaent        LIKE xrca_t.xrcaent,
+         xrcastus       LIKE xrca_t.xrcastus,
+         xrcacomp       LIKE xrca_t.xrcacomp,
+         xrcald         LIKE xrca_t.xrcald,
+         xrcadocno      LIKE xrca_t.xrcadocno,
+         xrcadocdt      LIKE xrca_t.xrcadocdt,
+         xrcasite       LIKE xrca_t.xrcasite,
+         xrca001        LIKE xrca_t.xrca001,
+         xrca003        LIKE xrca_t.xrca003,
+         xrca004        LIKE xrca_t.xrca004,
+         xrca005        LIKE xrca_t.xrca005,
+         xrca006        LIKE xrca_t.xrca006,
+         xrca007        LIKE xrca_t.xrca007,
+         xrca008        LIKE xrca_t.xrca008,
+         xrca009        LIKE xrca_t.xrca009,
+         xrca010        LIKE xrca_t.xrca010,
+         xrca011        LIKE xrca_t.xrca011,
+         xrca012        LIKE xrca_t.xrca012,
+         xrca013        LIKE xrca_t.xrca013,
+         xrca014        LIKE xrca_t.xrca014,
+         xrca015        LIKE xrca_t.xrca015,
+         xrca016        LIKE xrca_t.xrca016,
+         xrca017        LIKE xrca_t.xrca017,
+         xrca018        LIKE xrca_t.xrca018,
+         xrca019        LIKE xrca_t.xrca019,
+         xrca020        LIKE xrca_t.xrca020,
+         xrca021        LIKE xrca_t.xrca021,
+         xrca022        LIKE xrca_t.xrca022,
+         xrca023        LIKE xrca_t.xrca023,
+         xrca024        LIKE xrca_t.xrca024,
+         xrca025        LIKE xrca_t.xrca025,
+         xrca026        LIKE xrca_t.xrca026,
+         xrca028        LIKE xrca_t.xrca028,
+         xrca029        LIKE xrca_t.xrca029,
+         xrca030        LIKE xrca_t.xrca030,
+         xrca031        LIKE xrca_t.xrca031,
+         xrca032        LIKE xrca_t.xrca032,
+         xrca033        LIKE xrca_t.xrca033,
+         xrca034        LIKE xrca_t.xrca034,
+         xrca035        LIKE xrca_t.xrca035,
+         xrca036        LIKE xrca_t.xrca036,
+         xrca037        LIKE xrca_t.xrca037,
+         xrca038        LIKE xrca_t.xrca038,
+         xrca039        LIKE xrca_t.xrca039,
+         xrca040        LIKE xrca_t.xrca040,
+         xrca041        LIKE xrca_t.xrca041,
+         xrca042        LIKE xrca_t.xrca042,
+         xrca043        LIKE xrca_t.xrca043,
+         xrca044        LIKE xrca_t.xrca044,
+         xrca045        LIKE xrca_t.xrca045,
+         xrca046        LIKE xrca_t.xrca046,
+         xrca047        LIKE xrca_t.xrca047,
+         xrca048        LIKE xrca_t.xrca048,
+         xrca049        LIKE xrca_t.xrca049,
+         xrca050        LIKE xrca_t.xrca050,
+         xrca051        LIKE xrca_t.xrca051,
+         xrca052        LIKE xrca_t.xrca052,
+         xrca053        LIKE xrca_t.xrca053,
+         xrca054        LIKE xrca_t.xrca054,
+         xrca055        LIKE xrca_t.xrca055,
+         xrca056        LIKE xrca_t.xrca056,
+         xrca057        LIKE xrca_t.xrca057,
+         xrca058        LIKE xrca_t.xrca058,
+         xrca059        LIKE xrca_t.xrca059,
+         xrca060        LIKE xrca_t.xrca060,
+         xrca061        LIKE xrca_t.xrca061,
+         xrca062        LIKE xrca_t.xrca062,
+         xrca063        LIKE xrca_t.xrca063,
+         xrca064        LIKE xrca_t.xrca064,
+         xrca065        LIKE xrca_t.xrca065,
+         xrca066        LIKE xrca_t.xrca066,
+         xrca100        LIKE xrca_t.xrca100,
+         xrca101        LIKE xrca_t.xrca101,
+         xrca103        LIKE xrca_t.xrca103,
+         xrca104        LIKE xrca_t.xrca104,
+         xrca106        LIKE xrca_t.xrca106,
+         xrca107        LIKE xrca_t.xrca107,
+         xrca108        LIKE xrca_t.xrca108,
+         xrca113        LIKE xrca_t.xrca113,
+         xrca114        LIKE xrca_t.xrca114,
+         xrca116        LIKE xrca_t.xrca116,
+         xrca117        LIKE xrca_t.xrca117,
+         xrca118        LIKE xrca_t.xrca118,
+         xrca120        LIKE xrca_t.xrca120,
+         xrca121        LIKE xrca_t.xrca121,
+         xrca123        LIKE xrca_t.xrca123,
+         xrca124        LIKE xrca_t.xrca124,
+         xrca126        LIKE xrca_t.xrca126,
+         xrca127        LIKE xrca_t.xrca127,
+         xrca128        LIKE xrca_t.xrca128,
+         xrca130        LIKE xrca_t.xrca130,
+         xrca131        LIKE xrca_t.xrca131,
+         xrca133        LIKE xrca_t.xrca133,
+         xrca134        LIKE xrca_t.xrca134,
+         xrca136        LIKE xrca_t.xrca136,
+         xrca137        LIKE xrca_t.xrca137,
+         xrca138        LIKE xrca_t.xrca138,
+         xrcaownid      LIKE xrca_t.xrcaownid,
+         xrcaowndp      LIKE xrca_t.xrcaowndp,
+         xrcacrtid      LIKE xrca_t.xrcacrtid,
+         xrcacrtdp      LIKE xrca_t.xrcacrtdp,
+         xrcacrtdt      LIKE xrca_t.xrcacrtdt,
+         xrcamodid      LIKE xrca_t.xrcamodid,
+         xrcamoddt      LIKE xrca_t.xrcamoddt,
+         xrcacnfid      LIKE xrca_t.xrcacnfid,
+         xrcacnfdt      LIKE xrca_t.xrcacnfdt,
+         xrcapstid      LIKE xrca_t.xrcapstid,
+         xrcapstdt      LIKE xrca_t.xrcapstdt
+END RECORD
+
+ TYPE type_xrcb RECORD
+         xrcbent        LIKE xrcb_t.xrcbent,
+         xrcbld         LIKE xrcb_t.xrcbld, 
+         xrcbdocno      LIKE xrcb_t.xrcbdocno,
+         xrcbseq        LIKE xrcb_t.xrcbseq,
+         xrcbsite       LIKE xrcb_t.xrcbsite,
+         xrcborga       LIKE xrcb_t.xrcborga,
+         xrcblegl       LIKE xrcb_t.xrcblegl,
+         xrcb001        LIKE xrcb_t.xrcb001,
+         xrcb002        LIKE xrcb_t.xrcb002,
+         xrcb003        LIKE xrcb_t.xrcb003,
+         xrcb004        LIKE xrcb_t.xrcb004,
+         xrcb005        LIKE xrcb_t.xrcb005,
+         xrcb006        LIKE xrcb_t.xrcb006,
+         xrcb007        LIKE xrcb_t.xrcb007,
+         xrcb008        LIKE xrcb_t.xrcb008,
+         xrcb009        LIKE xrcb_t.xrcb009,
+         xrcb010        LIKE xrcb_t.xrcb010,
+         xrcb011        LIKE xrcb_t.xrcb011,
+         xrcb012        LIKE xrcb_t.xrcb012,
+         xrcb013        LIKE xrcb_t.xrcb013,
+         xrcb014        LIKE xrcb_t.xrcb014,
+         xrcb015        LIKE xrcb_t.xrcb015,
+         xrcb016        LIKE xrcb_t.xrcb016,
+         xrcb017        LIKE xrcb_t.xrcb017,
+         xrcb018        LIKE xrcb_t.xrcb018,
+         xrcb019        LIKE xrcb_t.xrcb019,
+         xrcb020        LIKE xrcb_t.xrcb020,
+         xrcb021        LIKE xrcb_t.xrcb021,
+         xrcb022        LIKE xrcb_t.xrcb022,
+         xrcb023        LIKE xrcb_t.xrcb023,
+         xrcb024        LIKE xrcb_t.xrcb024,
+         xrcb025        LIKE xrcb_t.xrcb025,
+         xrcb026        LIKE xrcb_t.xrcb026,
+         xrcb027        LIKE xrcb_t.xrcb027,
+         xrcb028        LIKE xrcb_t.xrcb028,
+         xrcb029        LIKE xrcb_t.xrcb029,
+         xrcb030        LIKE xrcb_t.xrcb030,
+         xrcb031        LIKE xrcb_t.xrcb031,
+         xrcb032        LIKE xrcb_t.xrcb032,
+         xrcb033        LIKE xrcb_t.xrcb033,
+         xrcb034        LIKE xrcb_t.xrcb034,
+         xrcb035        LIKE xrcb_t.xrcb035,
+         xrcb036        LIKE xrcb_t.xrcb036,
+         xrcb037        LIKE xrcb_t.xrcb037,
+         xrcb038        LIKE xrcb_t.xrcb038,
+         xrcb039        LIKE xrcb_t.xrcb039,
+         xrcb040        LIKE xrcb_t.xrcb040,
+         xrcb041        LIKE xrcb_t.xrcb041,
+         xrcb042        LIKE xrcb_t.xrcb042,
+         xrcb043        LIKE xrcb_t.xrcb043,
+         xrcb044        LIKE xrcb_t.xrcb044,
+         xrcb045        LIKE xrcb_t.xrcb045,
+         xrcb046        LIKE xrcb_t.xrcb046,
+         xrcb047        LIKE xrcb_t.xrcb047,
+         xrcb048        LIKE xrcb_t.xrcb048,
+         xrcb049        LIKE xrcb_t.xrcb049,
+         xrcb050        LIKE xrcb_t.xrcb050,
+         xrcb051        LIKE xrcb_t.xrcb051,
+         xrcb100        LIKE xrcb_t.xrcb100,
+         xrcb101        LIKE xrcb_t.xrcb101,
+         xrcb102        LIKE xrcb_t.xrcb102,
+         xrcb103        LIKE xrcb_t.xrcb103,
+         xrcb104        LIKE xrcb_t.xrcb104,
+         xrcb105        LIKE xrcb_t.xrcb105,
+         xrcb106        LIKE xrcb_t.xrcb106,
+         xrcb111        LIKE xrcb_t.xrcb111,
+         xrcb113        LIKE xrcb_t.xrcb113,
+         xrcb114        LIKE xrcb_t.xrcb114,
+         xrcb115        LIKE xrcb_t.xrcb115,
+         xrcb116        LIKE xrcb_t.xrcb116,
+         xrcb117        LIKE xrcb_t.xrcb117,
+         xrcb118        LIKE xrcb_t.xrcb118,
+         xrcb119        LIKE xrcb_t.xrcb119,
+         xrcb121        LIKE xrcb_t.xrcb121,
+         xrcb123        LIKE xrcb_t.xrcb123,
+         xrcb124        LIKE xrcb_t.xrcb124,
+         xrcb125        LIKE xrcb_t.xrcb125,
+         xrcb126        LIKE xrcb_t.xrcb126,
+         xrcb131        LIKE xrcb_t.xrcb131,
+         xrcb133        LIKE xrcb_t.xrcb133,
+         xrcb134        LIKE xrcb_t.xrcb134,
+         xrcb135        LIKE xrcb_t.xrcb135,
+         xrcb136        LIKE xrcb_t.xrcb136
+END RECORD
+DEFINE g_xrca           type_xrca
+DEFINE g_xrcb           type_xrcb
+
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+
+DEFINE g_glav002        LIKE glav_t.glav002
+DEFINE g_glav005        LIKE glav_t.glav005
+DEFINE g_sdate_s        LIKE glav_t.glav004
+DEFINE g_sdate_e        LIKE glav_t.glav004
+DEFINE g_glav006        LIKE glav_t.glav006
+DEFINE g_glav007        LIKE glav_t.glav007
+DEFINE g_pdate_s        LIKE glav_t.glav004
+DEFINE g_pdate_e        LIKE glav_t.glav004
+DEFINE g_wdate_s        LIKE glav_t.glav004
+DEFINE g_wdate_e        LIKE glav_t.glav004]]>
+  </point>
+  <point name="init.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success         LIKE type_t.num5]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc_part('xmdk000','2077','1,2,3,6')
+   CALL s_fin_create_account_center_tmp()
+   CALL s_voucher_cre_ar_tmp_table() RETURNING l_success
+   CALL s_axrt300_create_tmp()]]>
+  </point>
+  <point name="input.a.xrca003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.xrca007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xrca007) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_master.xrca007
+               IF NOT cl_chk_exist("v_oocq002_3111") THEN
+                  LET g_master.xrca007 = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+]]>
+  </point>
+  <point name="input.a.xrca008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xrca008) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_master.xrca008
+               LET g_chkparam.arg2 = ' '
+               IF NOT cl_chk_exist("v_ooib002_1") THEN
+                  LET g_master.xrca008 = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.xrca011" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xrca011) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = l_glaacomp
+               LET g_chkparam.arg2 = g_master.xrca011
+               IF NOT cl_chk_exist("v_oodb002") THEN
+                  LET g_master.xrca011 = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+]]>
+  </point>
+  <point name="input.a.xrcadocdt" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xrcadocdt) THEN
+               CALL s_axrt300_date_chk(g_master.xrcasite,g_master.xrcadocdt) RETURNING l_success
+               IF NOT l_success THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = "axr-00299"
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err() 
+                  NEXT FIELD CURRENT
+               END IF
+               #150210-00011(1)--20150330--add--
+               CALL s_get_accdate(l_glaa003,g_master.xrcadocdt,'','') 
+               RETURNING l_flag1,l_errno,g_glav002,g_glav005,g_sdate_s,g_sdate_e,
+                         g_glav006,g_pdate_s,g_pdate_e,g_glav007,g_wdate_s,g_wdate_e
+               #150210-00011(1)--20150330--add--
+            END IF]]>
+  </point>
+  <point name="input.a.xrcadocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xrcadocno) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = l_glaa024
+               LET g_chkparam.arg2 = g_master.xrcadocno
+               IF NOT s_aooi200_fin_chk_slip(g_master.xrcald,l_glaa024,g_master.xrcadocno,'axrt210') THEN
+                  LET g_master.xrcadocno = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.xrcald" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xrcald) THEN 
+               CALL s_axrt300_site_geared_ld(g_master.xrcasite,g_master.xrcald,g_user,g_today,'ld')
+                  RETURNING l_success,g_master.xrcasite,g_master.xrcasite_desc,g_master.xrcald,g_master.xrcald_desc
+               DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+               DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+               IF NOT l_success THEN
+                  SELECT * INTO g_glaa.* FROM FROM glaa_t WHERE glaaent = g_enterprise AND glaald  = g_master.xrcald
+                  NEXT FIELD CURRENT
+               END IF
+            ELSE
+               LET g_master.xrcald_desc = ''
+            END IF
+            SELECT * INTO g_glaa.* FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+            DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+            DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+]]>
+  </point>
+  <point name="input.a.xrcasite" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xrcasite) THEN
+               CALL s_axrt300_site_geared_ld(g_master.xrcasite,g_master.xrcald,g_user,g_today,'site')
+                  RETURNING l_success,g_master.xrcasite,g_master.xrcasite_desc,g_master.xrcald,g_master.xrcald_desc
+               DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+               DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+               IF NOT l_success THEN NEXT FIELD CURRENT END IF
+               CALL s_axrt300_date_chk(g_master.xrcasite,g_master.xrcadocdt) RETURNING l_success
+               IF NOT l_success THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = "axr-00299"
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err() 
+                  NEXT FIELD CURRENT
+               END IF
+            ELSE
+               LET g_master.xrcasite_desc = ''
+            END IF
+            SELECT * INTO g_glaa.* FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+            DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+            DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+]]>
+  </point>
+  <point name="input.c.xrca003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.xrca003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_master.xrca003 = g_qryparam.return1              
+
+            DISPLAY g_master.xrca003 TO xrca003              #
+
+            NEXT FIELD xrca003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xrca007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.xrca007             #給予default值
+            LET g_qryparam.default2 = "" #g_master.oocq002 #應用分類碼
+            #給予arg
+            LET g_qryparam.arg1 = "3111" #
+
+            
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_master.xrca007 = g_qryparam.return1              
+            #LET g_master.oocq002 = g_qryparam.return2 
+            DISPLAY g_master.xrca007 TO xrca007              #
+            #DISPLAY g_master.oocq002 TO oocq002 #應用分類碼
+            NEXT FIELD xrca007                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xrca008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.xrca008             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            CALL q_ooib001_1()                                #呼叫開窗
+
+            LET g_master.xrca008 = g_qryparam.return1              
+
+            DISPLAY g_master.xrca008 TO xrca008              #
+
+            NEXT FIELD xrca008                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xrca011" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.xrca011             #給予default值
+            LET g_qryparam.default2 = "" #g_master.oodb002 #稅別代碼
+            LET g_qryparam.default3 = "" #g_master.oodb005 #含稅否
+            LET g_qryparam.default4 = "" #g_master.oodb006 #稅率
+
+            LET g_qryparam.where = " oodb004 ='1' " 
+
+            #給予arg
+            SELECT ooef019 INTO l_ooef019 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = l_glaacomp
+            LET g_qryparam.arg1 = l_ooef019
+
+            CALL q_oodb002_5()                                #呼叫開窗
+
+            LET g_master.xrca011 = g_qryparam.return1              
+            #LET g_master.oodb002 = g_qryparam.return2 
+            #LET g_master.oodb005 = g_qryparam.return3 
+            #LET g_master.oodb006 = g_qryparam.return4 
+            DISPLAY g_master.xrca011 TO xrca011              #
+            #DISPLAY g_master.oodb002 TO oodb002 #稅別代碼
+            #DISPLAY g_master.oodb005 TO oodb005 #含稅否
+            #DISPLAY g_master.oodb006 TO oodb006 #稅率
+            NEXT FIELD xrca011                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xrcadocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.xrcadocno             #給予default值
+
+            #給予arg
+            SELECT ooef004 INTO l_ooef004 from ooef_t where ooefent = g_enterprise AND ooef001 = l_glaacomp
+            SELECT glaa024 INTO l_glaa024 FROM glaa_t WHERE glaaent = g_enterprise
+               AND glaald = g_master.xrcald
+            LET g_qryparam.arg1 = l_glaa024
+            LET g_qryparam.arg2 = 'axrt210'
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+
+            LET g_master.xrcadocno = g_qryparam.return1              
+
+            DISPLAY g_master.xrcadocno TO xrcadocno              #
+
+            NEXT FIELD xrcadocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xrcald" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL s_fin_create_account_center_tmp()   
+            #取得帳務組織下所屬成員
+            CALL s_fin_account_center_sons_query('3',g_master.xrcasite,g_today,'1')
+            #取得帳務組織下所屬成員之帳別   
+            CALL s_fin_account_center_comp_str() RETURNING ls_wc
+            #將取回的字串轉換為SQL條件
+            CALL axrp200_get_ooef001_wc(ls_wc) RETURNING ls_wc  
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.xrcald             #給予default值
+            IF NOT cl_null(ls_wc) AND ls_wc <> '(\'\')' THEN
+               LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') AND glaacomp IN ",ls_wc,""
+            ELSE
+               LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y')"
+            END IF
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            CALL  q_authorised_ld()                                  #呼叫開窗
+            LET g_master.xrcald = g_qryparam.return1       #將開窗取得的值回傳到變數
+            IF NOT cl_null(g_master.xrcald) THEN
+               CALL s_axrt300_site_geared_ld(g_master.xrcasite,g_master.xrcald,g_user,g_today,'ld')
+                  RETURNING l_success,g_master.xrcasite,g_master.xrcasite_desc,g_master.xrcald,g_master.xrcald_desc
+               SELECT * INTO g_glaa.* FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+            END IF
+            DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+            NEXT FIELD xrcald                              #返回原欄位  
+]]>
+  </point>
+  <point name="input.c.xrcasite" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.xrcasite             #給予default值
+            LET g_qryparam.where = " ooef201 = 'Y' "
+
+            #給予arg
+
+            CALL q_ooef001()                                        #呼叫開窗
+            LET g_master.xrcasite = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL s_axrt300_xrca_ref('xrcasite',g_master.xrcasite,'','') RETURNING l_success,g_master.xrcasite_desc
+            IF NOT cl_null(g_master.xrcasite) THEN
+               CALL s_axrt300_site_geared_ld(g_master.xrcasite,g_master.xrcald,g_user,g_today,'site')
+                  RETURNING l_success,g_master.xrcasite,g_master.xrcasite_desc,g_master.xrcald,g_master.xrcald_desc
+               SELECT * INTO g_glaa.* FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+            END IF
+            DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+            DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+            DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+            NEXT FIELD xrcasite
+]]>
+  </point>
+  <point name="input.g.b_comb2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.b_comb2) THEN  #2015/01/23
+               IF g_master.b_comb2 = '1' THEN
+                  CALL cl_set_comp_required('xrcadocdt',FALSE)
+               ELSE
+                  CALL cl_set_comp_required('xrcadocdt',TRUE)
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.g.b_style" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.b_style) THEN
+               IF g_master.b_style = 'axrt340' THEN
+                  LET g_master.b_check1 = 'N'
+                  LET g_master.b_check2 = 'N'
+                  LET g_master.b_check3 = 'N'
+                  LET g_master.b_check4 = 'N'
+                  LET g_master.b_check5 = 'N'
+                  LET g_master.b_check6 = 'N'
+                  CALL cl_set_comp_entry('b_check1,b_check2,b_check3,b_check4,b_check5,b_check6',FALSE)
+               ELSE
+                  LET g_master.b_check1 = 'Y'
+                  CALL cl_set_comp_entry('b_check1,b_check2,b_check3,b_check4,b_check5,b_check6',TRUE)
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.g.xrcasite" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF 1=2 THEN
+               DISPLAY 'test'
+            END IF]]>
+  </point>
+  <point name="input.m.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="main.background" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL axrp200_def()   
+   CALL s_fin_create_account_center_tmp()
+   CALL s_voucher_cre_ar_tmp_table() RETURNING l_success    #2014/12/4
+   CALL s_axrt300_create_tmp()]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success         LIKE type_t.num5   #20150422 add lujh]]>
+  </point>
+  <point name="main.servicecall" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      ]]>
+  </point>
+  <point name="process.background_finish" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      #20150422--add--str--lujh
+      #錯誤訊息匯總初始化
+      CALL cl_err_collect_init()
+      LET g_success    = 'Y'
+      LET g_totsuccess = 'Y'
+
+     #CALL axrp200_get_data()
+     #
+     #IF g_success = 'N' THEN
+     #   CALL cl_err_collect_show()
+     #   DROP TABLE axrp200_xmdk_tmp
+     #   #清空進度條
+     #   DISPLAY '' ,0 TO stagenow,stagecomplete
+     #   DROP TABLE axrp131_xmdk_tmp
+     #   RETURN
+     #   RETURN
+     #END IF
+
+      CALL s_axrt300_create_tmp()
+
+      CALL s_transaction_begin()
+
+      SELECT gzzd005 INTO l_gzzd005 FROM gzzd_t
+       WHERE gzzd001 = 'axrp200' AND gzzd002 = g_lang AND gzzdstus = 'Y' AND gzzd003 = 'step2'
+      CALL cl_progress_no_window_ing(l_gzzd005)
+      CALL axrp200_get_ar()
+
+      DROP TABLE axrp200_xmdk_tmp
+
+      IF g_success = 'N' THEN
+         #清空進度條
+         DISPLAY '' ,0 TO stagenow,stagecomplete
+      END IF
+
+      RETURN
+      #20150422--add--end--lujh]]>
+  </point>
+  <point name="process.count_progress" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      CALL cl_progress_bar_no_window(li_count)]]>
+  </point>
+  <point name="process.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_gzzd005         LIKE gzzd_t.gzzd005
+   #20150422--add--str--lujh
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_tot_success     LIKE type_t.num5
+   DEFINE l_start_no        LIKE xrca_t.xrcadocno
+   DEFINE l_end_no          LIKE xrca_t.xrcadocno
+   #20150422--add--end--lujh]]>
+  </point>
+  <point name="process.foreground_finish" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+      CALL axrp200_get_ar()
+      RETURN]]>
+  </point>
+  <point name="process.pre_process" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[  ##執行步驟:
+  ##STEP1.取得符合條件的出貨單據
+  ##STEP2.產生應收單據
+  #LET li_count = 2]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   INITIALIZE g_master.* TO NULL]]>
+  </point>
+  <point name="ui_dialog.before_dialog3" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL axrp200_def()]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success         LIKE type_t.chr1
+   DEFINE l_s               LIKE type_t.num5
+   DEFINE l_ooef004         LIKE ooef_t.ooef004
+   DEFINE l_ooef019         LIKE ooef_t.ooef019
+   DEFINE l_flag1           LIKE type_t.chr1       
+   DEFINE l_errno           LIKE type_t.chr100
+   DEFINE l_glaa024         LIKE glaa_t.glaa024
+   DEFINE l_glaa003         LIKE glaa_t.glaa003
+   DEFINE l_glaacomp        LIKE glaa_t.glaacomp
+   DEFINE l_origin_str  STRING]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         INPUT BY NAME g_master.xrcasite,g_master.xrcald,g_master.glav002,g_master.glav006
+            ATTRIBUTE(WITHOUT DEFAULTS)
+
+            AFTER FIELD xrcasit
+               IF NOT cl_null(g_master.xrcasite) THEN
+                  CALL s_axrt300_site_geared_ld(g_master.xrcasite,g_master.xrcald,g_user,g_today,'site')
+                     RETURNING l_success,g_master.xrcasite,g_master.xrcasite_desc,g_master.xrcald,g_master.xrcald_desc
+                  DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+                  DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+                  IF NOT l_success THEN NEXT FIELD CURRENT END IF
+                  CALL s_axrt300_date_chk(g_master.xrcasite,g_master.xrcadocdt) RETURNING l_success
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "axr-00299"
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err() 
+                     NEXT FIELD CURRENT
+                  END IF
+               ELSE
+                  LET g_master.xrcasite_desc = ''
+               END IF
+               SELECT glaa024,glaa003,glaacomp INTO l_glaa024,l_glaa003,l_glaacomp FROM glaa_t
+                WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+               DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+               DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+
+            AFTER FIELD xrcald
+               IF NOT cl_null(g_master.xrcald) THEN 
+                  CALL s_axrt300_site_geared_ld(g_master.xrcasite,g_master.xrcald,g_user,g_today,'ld')
+                     RETURNING l_success,g_master.xrcasite,g_master.xrcasite_desc,g_master.xrcald,g_master.xrcald_desc
+                  DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+                  DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+                  IF NOT l_success THEN
+                     SELECT glaa024,glaa003,glaacomp INTO l_glaa024,l_glaa003,l_glaacomp FROM glaa_t
+                      WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+                     NEXT FIELD CURRENT
+                  END IF
+               ELSE
+                  LET g_master.xrcald_desc = ''
+               END IF
+               SELECT glaa024,glaa003,glaacomp INTO l_glaa024,l_glaa003,l_glaacomp FROM glaa_t
+                WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+               DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+               DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+
+            ON ACTION controlp INFIELD xrcasite
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.xrcasite             #給予default值
+               LET g_qryparam.where = " ooef201 = 'Y' "
+
+               #給予arg
+
+               CALL q_ooef001()                                        #呼叫開窗
+               LET g_master.xrcasite = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL s_axrt300_xrca_ref('xrcasite',g_master.xrcasite,'','') RETURNING l_success,g_master.xrcasite_desc
+               IF NOT cl_null(g_master.xrcasite) THEN
+                  CALL s_axrt300_site_geared_ld(g_master.xrcasite,g_master.xrcald,g_user,g_today,'site')
+                     RETURNING l_success,g_master.xrcasite,g_master.xrcasite_desc,g_master.xrcald,g_master.xrcald_desc
+                  SELECT glaa024,glaa003,glaacomp INTO l_glaa024,l_glaa003,l_glaacomp FROM glaa_t
+                   WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+               END IF
+               DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+               DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+               DISPLAY BY NAME g_master.xrcasite,g_master.xrcasite_desc
+               NEXT FIELD xrcasite
+
+            ON ACTION controlp INFIELD xrcald
+               CALL s_fin_create_account_center_tmp()   
+               #取得帳務組織下所屬成員
+               CALL s_fin_account_center_sons_query('3',g_master.xrcasite,g_today,'1')
+               #取得帳務組織下所屬成員之帳別   
+               CALL s_fin_account_center_comp_str() RETURNING ls_wc
+               #將取回的字串轉換為SQL條件
+               CALL axrp200_get_ooef001_wc(ls_wc) RETURNING ls_wc  
+               #開窗i段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+			      LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.xrcald             #給予default值
+               IF NOT cl_null(ls_wc) AND ls_wc <> '(\'\')' THEN
+                  LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') AND glaacomp IN ",ls_wc,""
+               ELSE
+                  LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y')"
+               END IF
+               LET g_qryparam.arg1 = g_user
+               LET g_qryparam.arg2 = g_dept
+               CALL  q_authorised_ld()                                  #呼叫開窗
+               LET g_master.xrcald = g_qryparam.return1       #將開窗取得的值回傳到變數
+               IF NOT cl_null(g_master.xrcald) THEN
+                  CALL s_axrt300_site_geared_ld(g_master.xrcasite,g_master.xrcald,g_user,g_today,'ld')
+                     RETURNING l_success,g_master.xrcasite,g_master.xrcasite_desc,g_master.xrcald,g_master.xrcald_desc
+                  SELECT glaa024,glaa003,glaacomp INTO l_glaa024,l_glaa003,l_glaacomp FROM glaa_t
+                   WHERE glaaent = g_enterprise AND glaald = g_master.xrcald
+               END IF
+               DISPLAY BY NAME g_master.xrcald,g_master.xrcald_desc
+               NEXT FIELD xrcald                              #返回原欄位  
+
+         END INPUT]]>
+  </point>
+  <point name="ui_dialog.qbeclear" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_master.* TO NULL
+            CALL axrp200_def()]]>
+  </point>
+  <section id="axrp200.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000011
+#+ 
+#+ Filename...: axrp200
+#+ Description: 結算應收帳款批次產生作業
+#+ Creator....: 01727(2015-05-12 14:55:35)
+#+ Modifier...: 01727(2015-05-17 09:51:42) -SD/PR-
+]]>
+  </section>
+  <section id="axrp200.get_buffer" ver="6" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axrp200_get_buffer(p_dialog)
+   DEFINE p_dialog   ui.DIALOG
+   
+   LET g_master.b_check5 = p_dialog.getFieldBuffer('b_check5')
+   LET g_master.b_check1 = p_dialog.getFieldBuffer('b_check1')
+   LET g_master.b_check3 = p_dialog.getFieldBuffer('b_check3')
+   LET g_master.b_check2 = p_dialog.getFieldBuffer('b_check2')
+   LET g_master.b_check4 = p_dialog.getFieldBuffer('b_check4')
+   LET g_master.xrcadocno = p_dialog.getFieldBuffer('xrcadocno')
+   LET g_master.xrcadocdt = p_dialog.getFieldBuffer('xrcadocdt')
+   LET g_master.xrca003 = p_dialog.getFieldBuffer('xrca003')
+   LET g_master.xrca007 = p_dialog.getFieldBuffer('xrca007')
+   LET g_master.b_comb1 = p_dialog.getFieldBuffer('b_comb1')
+   LET g_master.xrca011 = p_dialog.getFieldBuffer('xrca011')
+   LET g_master.xrca008 = p_dialog.getFieldBuffer('xrca008')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   {<point name="get_buffer.others"/>}
+   #end add-point
+END FUNCTION
+]]>
+  </section>
+  <section id="axrp200.global" ver="24" status="" src="s" readonly="">
+    <![CDATA[#應用 p01 樣板自動產生(Version:10)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       xrcasite LIKE xrca_t.xrcasite, 
+   xrcasite_desc LIKE type_t.chr80, 
+   xrcald LIKE xrca_t.xrcald, 
+   xrcald_desc LIKE type_t.chr80, 
+   glav002 LIKE glav_t.glav002, 
+   glav006 LIKE glav_t.glav006, 
+   b_check5 LIKE type_t.chr500, 
+   b_check1 LIKE type_t.chr500, 
+   b_check3 LIKE type_t.chr500, 
+   b_check2 LIKE type_t.chr500, 
+   b_check4 LIKE type_t.chr500, 
+   xrcadocno LIKE xrca_t.xrcadocno, 
+   xrcadocno_desc LIKE type_t.chr80, 
+   xrcadocdt LIKE xrca_t.xrcadocdt, 
+   xrca003 LIKE xrca_t.xrca003, 
+   xrca003_desc LIKE type_t.chr80, 
+   xrca007 LIKE xrca_t.xrca007, 
+   xrca007_desc LIKE type_t.chr80, 
+   b_comb1 LIKE type_t.chr500, 
+   xrca011 LIKE xrca_t.xrca011, 
+   xrca011_desc LIKE type_t.chr80, 
+   xrca008 LIKE xrca_t.xrca008, 
+   xrca008_desc LIKE type_t.chr80, 
+   stbesite LIKE stbe_t.stbesite, 
+   stbd001 LIKE stbd_t.stbd001, 
+   stbedocno LIKE stbe_t.stbedocno, 
+   stbd021 LIKE stbd_t.stbd021, 
+   stbd002 LIKE stbd_t.stbd002, 
+   stbd022 LIKE stbd_t.stbd022, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrp200.init" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION axrp200_init()
+   #add-point:init段define 
+   {<point name="init.define" edit="s"/>}
+   #end add-point
+   #add-point:init段define (客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axrp200.main" ver="4" status="" src="s" readonly="">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   {<point name="main.define" edit="s"/>}
+   #end add-point 
+   #add-point:main段define (客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axr","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL axrp200_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axrp200 WITH FORM cl_ap_formpath("axr",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axrp200_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axrp200_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axrp200
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="axrp200.msgcentre_notify" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axrp200_msgcentre_notify()
+ 
+   DEFINE lc_state LIKE type_t.chr5
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知
+   {<point name="msg_centre.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="axrp200.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrp200.process" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION axrp200_process(ls_js)
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define 
+   {<point name="process.define" edit="s"/>}
+   #end add-point
+   #add-point:process段define (客製用)
+   {<point name="process.define_customerization" edit="c"/>}
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axrp200_process_cs CURSOR FROM ls_sql
+#  FOREACH axrp200_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL axrp200_msgcentre_notify()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="axrp200.transfer_argv" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axrp200_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   {<point name="transfer_agrv.define" edit="s"/>}
+   #end add-point
+   #add-point:transfer_agrv段define (客製用)
+   {<point name="transfer_agrv.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="axrp200.ui_dialog" ver="20" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION axrp200_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point
+   #add-point:ui_dialog段define (客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      {<point name="ui_dialog.before_dialog2"/>}
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:2)
+         INPUT BY NAME g_master.b_check5,g_master.b_check1,g_master.b_check3,g_master.b_check2,g_master.b_check4, 
+             g_master.xrcadocno,g_master.xrcadocdt,g_master.xrca003,g_master.xrca007,g_master.b_comb1, 
+             g_master.xrca011,g_master.xrca008 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD b_check5
+            #add-point:BEFORE FIELD b_check5
+            {<point name="input.b.b_check5" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD b_check5
+            
+            #add-point:AFTER FIELD b_check5
+            {<point name="input.a.b_check5" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE b_check5
+            #add-point:ON CHANGE b_check5
+            {<point name="input.g.b_check5" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD b_check1
+            #add-point:BEFORE FIELD b_check1
+            {<point name="input.b.b_check1" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD b_check1
+            
+            #add-point:AFTER FIELD b_check1
+            {<point name="input.a.b_check1" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE b_check1
+            #add-point:ON CHANGE b_check1
+            {<point name="input.g.b_check1" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD b_check3
+            #add-point:BEFORE FIELD b_check3
+            {<point name="input.b.b_check3" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD b_check3
+            
+            #add-point:AFTER FIELD b_check3
+            {<point name="input.a.b_check3" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE b_check3
+            #add-point:ON CHANGE b_check3
+            {<point name="input.g.b_check3" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD b_check2
+            #add-point:BEFORE FIELD b_check2
+            {<point name="input.b.b_check2" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD b_check2
+            
+            #add-point:AFTER FIELD b_check2
+            {<point name="input.a.b_check2" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE b_check2
+            #add-point:ON CHANGE b_check2
+            {<point name="input.g.b_check2" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD b_check4
+            #add-point:BEFORE FIELD b_check4
+            {<point name="input.b.b_check4" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD b_check4
+            
+            #add-point:AFTER FIELD b_check4
+            {<point name="input.a.b_check4" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE b_check4
+            #add-point:ON CHANGE b_check4
+            {<point name="input.g.b_check4" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrcadocno
+            
+            #add-point:AFTER FIELD xrcadocno
+            {<point name="input.a.xrcadocno" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrcadocno
+            #add-point:BEFORE FIELD xrcadocno
+            {<point name="input.b.xrcadocno" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xrcadocno
+            #add-point:ON CHANGE xrcadocno
+            {<point name="input.g.xrcadocno" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrcadocdt
+            #add-point:BEFORE FIELD xrcadocdt
+            {<point name="input.b.xrcadocdt" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrcadocdt
+            
+            #add-point:AFTER FIELD xrcadocdt
+            {<point name="input.a.xrcadocdt" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xrcadocdt
+            #add-point:ON CHANGE xrcadocdt
+            {<point name="input.g.xrcadocdt" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca003
+            
+            #add-point:AFTER FIELD xrca003
+            {<point name="input.a.xrca003" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca003
+            #add-point:BEFORE FIELD xrca003
+            {<point name="input.b.xrca003" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xrca003
+            #add-point:ON CHANGE xrca003
+            {<point name="input.g.xrca003" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca007
+            
+            #add-point:AFTER FIELD xrca007
+            {<point name="input.a.xrca007" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca007
+            #add-point:BEFORE FIELD xrca007
+            {<point name="input.b.xrca007" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xrca007
+            #add-point:ON CHANGE xrca007
+            {<point name="input.g.xrca007" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD b_comb1
+            #add-point:BEFORE FIELD b_comb1
+            {<point name="input.b.b_comb1" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD b_comb1
+            
+            #add-point:AFTER FIELD b_comb1
+            {<point name="input.a.b_comb1" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE b_comb1
+            #add-point:ON CHANGE b_comb1
+            {<point name="input.g.b_comb1" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca011
+            
+            #add-point:AFTER FIELD xrca011
+            {<point name="input.a.xrca011" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca011
+            #add-point:BEFORE FIELD xrca011
+            {<point name="input.b.xrca011" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xrca011
+            #add-point:ON CHANGE xrca011
+            {<point name="input.g.xrca011" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca008
+            
+            #add-point:AFTER FIELD xrca008
+            {<point name="input.a.xrca008" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca008
+            #add-point:BEFORE FIELD xrca008
+            {<point name="input.b.xrca008" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xrca008
+            #add-point:ON CHANGE xrca008
+            {<point name="input.g.xrca008" />}
+            #END add-point 
+ 
+ 
+                     #Ctrlp:input.c.b_check5
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_check5
+            #add-point:ON ACTION controlp INFIELD b_check5
+            {<point name="input.c.b_check5" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.b_check1
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_check1
+            #add-point:ON ACTION controlp INFIELD b_check1
+            {<point name="input.c.b_check1" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.b_check3
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_check3
+            #add-point:ON ACTION controlp INFIELD b_check3
+            {<point name="input.c.b_check3" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.b_check2
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_check2
+            #add-point:ON ACTION controlp INFIELD b_check2
+            {<point name="input.c.b_check2" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.b_check4
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_check4
+            #add-point:ON ACTION controlp INFIELD b_check4
+            {<point name="input.c.b_check4" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xrcadocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrcadocno
+            #add-point:ON ACTION controlp INFIELD xrcadocno
+            {<point name="input.c.xrcadocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xrcadocdt
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrcadocdt
+            #add-point:ON ACTION controlp INFIELD xrcadocdt
+            {<point name="input.c.xrcadocdt" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xrca003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca003
+            #add-point:ON ACTION controlp INFIELD xrca003
+            {<point name="input.c.xrca003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xrca007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca007
+            #add-point:ON ACTION controlp INFIELD xrca007
+            {<point name="input.c.xrca007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.b_comb1
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD b_comb1
+            #add-point:ON ACTION controlp INFIELD b_comb1
+            {<point name="input.c.b_comb1" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xrca011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca011
+            #add-point:ON ACTION controlp INFIELD xrca011
+            {<point name="input.c.xrca011" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xrca008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca008
+            #add-point:ON ACTION controlp INFIELD xrca008
+            {<point name="input.c.xrca008" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+         END INPUT
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:2)
+         CONSTRUCT BY NAME g_master.wc ON xrcadocno_desc,xrca003_desc,xrca007_desc,xrca011_desc,xrca008_desc, 
+             stbesite,stbd001,stbedocno,stbd021,stbd002,stbd022
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrcadocno
+            #add-point:BEFORE FIELD xrcadocno
+            {<point name="construct.b.xrcadocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrcadocno
+            
+            #add-point:AFTER FIELD xrcadocno
+            {<point name="construct.a.xrcadocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xrcadocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrcadocno
+            #add-point:ON ACTION controlp INFIELD xrcadocno
+            {<point name="construct.c.xrcadocno" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrcadocno_desc
+            #add-point:BEFORE FIELD xrcadocno_desc
+            {<point name="construct.b.xrcadocno_desc" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrcadocno_desc
+            
+            #add-point:AFTER FIELD xrcadocno_desc
+            {<point name="construct.a.xrcadocno_desc" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xrcadocno_desc
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrcadocno_desc
+            #add-point:ON ACTION controlp INFIELD xrcadocno_desc
+            {<point name="construct.c.xrcadocno_desc" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca003
+            #add-point:BEFORE FIELD xrca003
+            {<point name="construct.b.xrca003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca003
+            
+            #add-point:AFTER FIELD xrca003
+            {<point name="construct.a.xrca003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xrca003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca003
+            #add-point:ON ACTION controlp INFIELD xrca003
+            {<point name="construct.c.xrca003" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca003_desc
+            #add-point:BEFORE FIELD xrca003_desc
+            {<point name="construct.b.xrca003_desc" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca003_desc
+            
+            #add-point:AFTER FIELD xrca003_desc
+            {<point name="construct.a.xrca003_desc" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xrca003_desc
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca003_desc
+            #add-point:ON ACTION controlp INFIELD xrca003_desc
+            {<point name="construct.c.xrca003_desc" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca007
+            #add-point:BEFORE FIELD xrca007
+            {<point name="construct.b.xrca007" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca007
+            
+            #add-point:AFTER FIELD xrca007
+            {<point name="construct.a.xrca007" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xrca007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca007
+            #add-point:ON ACTION controlp INFIELD xrca007
+            {<point name="construct.c.xrca007" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca007_desc
+            #add-point:BEFORE FIELD xrca007_desc
+            {<point name="construct.b.xrca007_desc" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca007_desc
+            
+            #add-point:AFTER FIELD xrca007_desc
+            {<point name="construct.a.xrca007_desc" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xrca007_desc
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca007_desc
+            #add-point:ON ACTION controlp INFIELD xrca007_desc
+            {<point name="construct.c.xrca007_desc" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca011
+            #add-point:BEFORE FIELD xrca011
+            {<point name="construct.b.xrca011" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca011
+            
+            #add-point:AFTER FIELD xrca011
+            {<point name="construct.a.xrca011" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xrca011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca011
+            #add-point:ON ACTION controlp INFIELD xrca011
+            {<point name="construct.c.xrca011" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca011_desc
+            #add-point:BEFORE FIELD xrca011_desc
+            {<point name="construct.b.xrca011_desc" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca011_desc
+            
+            #add-point:AFTER FIELD xrca011_desc
+            {<point name="construct.a.xrca011_desc" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xrca011_desc
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca011_desc
+            #add-point:ON ACTION controlp INFIELD xrca011_desc
+            {<point name="construct.c.xrca011_desc" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca008
+            #add-point:BEFORE FIELD xrca008
+            {<point name="construct.b.xrca008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca008
+            
+            #add-point:AFTER FIELD xrca008
+            {<point name="construct.a.xrca008" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xrca008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca008
+            #add-point:ON ACTION controlp INFIELD xrca008
+            {<point name="construct.c.xrca008" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xrca008_desc
+            #add-point:BEFORE FIELD xrca008_desc
+            {<point name="construct.b.xrca008_desc" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xrca008_desc
+            
+            #add-point:AFTER FIELD xrca008_desc
+            {<point name="construct.a.xrca008_desc" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.xrca008_desc
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xrca008_desc
+            #add-point:ON ACTION controlp INFIELD xrca008_desc
+            {<point name="construct.c.xrca008_desc" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.stbesite
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD stbesite
+            #add-point:ON ACTION controlp INFIELD stbesite
+            {<point name="construct.c.stbesite" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD stbesite
+            #add-point:BEFORE FIELD stbesite
+            {<point name="construct.b.stbesite" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD stbesite
+            
+            #add-point:AFTER FIELD stbesite
+            {<point name="construct.a.stbesite" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.stbd001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD stbd001
+            #add-point:ON ACTION controlp INFIELD stbd001
+            {<point name="construct.c.stbd001" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD stbd001
+            #add-point:BEFORE FIELD stbd001
+            {<point name="construct.b.stbd001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD stbd001
+            
+            #add-point:AFTER FIELD stbd001
+            {<point name="construct.a.stbd001" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD stbedocno
+            #add-point:BEFORE FIELD stbedocno
+            {<point name="construct.b.stbedocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD stbedocno
+            
+            #add-point:AFTER FIELD stbedocno
+            {<point name="construct.a.stbedocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.stbedocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD stbedocno
+            #add-point:ON ACTION controlp INFIELD stbedocno
+            {<point name="construct.c.stbedocno" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.stbd021
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD stbd021
+            #add-point:ON ACTION controlp INFIELD stbd021
+            {<point name="construct.c.stbd021" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD stbd021
+            #add-point:BEFORE FIELD stbd021
+            {<point name="construct.b.stbd021" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD stbd021
+            
+            #add-point:AFTER FIELD stbd021
+            {<point name="construct.a.stbd021" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.stbd002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD stbd002
+            #add-point:ON ACTION controlp INFIELD stbd002
+            {<point name="construct.c.stbd002" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD stbd002
+            #add-point:BEFORE FIELD stbd002
+            {<point name="construct.b.stbd002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD stbd002
+            
+            #add-point:AFTER FIELD stbd002
+            {<point name="construct.a.stbd002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.stbd022
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD stbd022
+            #add-point:ON ACTION controlp INFIELD stbd022
+            {<point name="construct.c.stbd022" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD stbd022
+            #add-point:BEFORE FIELD stbd022
+            {<point name="construct.b.stbd022" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD stbd022
+            
+            #add-point:AFTER FIELD stbd022
+            {<point name="construct.a.stbd022" />}
+            #END add-point
+            
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL axrp200_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.before_dialog3"/>}
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear
+         {<point name="ui_dialog.before_qbeclear" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL axrp200_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axrp200_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = axrp200_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         {<point name="process.after_schedule"/>}
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

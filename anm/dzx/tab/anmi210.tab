@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi210" module="anm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02481" crtdt="2014-09-01 14:11:57" modid="00810" moddt="2014-09-17 17:40:37" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="銀行名稱維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nman001,nmanl003,nmanstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nman001,nmanownid,nmanownid_desc(chr500),nmanowndp,nmanowndp_desc(chr500),nmancrtid,nmancrtid_desc(chr500),nmancrtdp,nmancrtdp_desc(chr500),nmancrtdt,nmanmodid,nmanmodid_desc(chr500),nmanmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi210" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nman001,nmanl003,nmanstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nman001,nmanl003,nmanstus"/>
+      <construct id="body" page="2" field="nmanownid,nmanowndp,nmancrtid,nmancrtdp,nmancrtdt,nmanmodid,nmanmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nman001">
+        <controlp form="q_nman001" state="c"/>
+      </column>
+      <column id="nmanl003"/>
+      <column id="nmanstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmanownid">
+        <after>
+          <reference field="nmanownid_desc" ref_field="nman_t.nmanownid" map_field="nmanownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmanownid_desc"/>
+      <column id="nmanowndp">
+        <after>
+          <reference field="nmanowndp_desc" ref_field="nman_t.nmanowndp" map_field="nmanowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmanowndp_desc"/>
+      <column id="nmancrtid">
+        <after>
+          <reference field="nmancrtid_desc" ref_field="nman_t.nmancrtid" map_field="nmancrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmancrtid_desc"/>
+      <column id="nmancrtdp">
+        <after>
+          <reference field="nmancrtdp_desc" ref_field="nman_t.nmancrtdp" map_field="nmancrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmancrtdp_desc"/>
+      <column id="nmancrtdt"/>
+      <column id="nmanmodid">
+        <after>
+          <reference field="nmanmodid_desc" ref_field="nman_t.nmanmodid" map_field="nmanmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmanmodid_desc"/>
+      <column id="nmanmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nman_t" page="1,2" linked="" pk="nman001">
+      <sql id="forupd_sql_detail" query="SELECT nman001,&apos;&apos;,nmanstus,&apos;&apos;,nmanownid,&apos;&apos;,nmanowndp,&apos;&apos;,nmancrtid,&apos;&apos;,nmancrtdp,&apos;&apos;,nmancrtdt,nmanmodid,&apos;&apos;,nmanmoddt FROM nman_t WHERE nmanent=? AND nman001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nman001,&apos;&apos;,nmanstus,&apos;&apos;,nmanownid,&apos;&apos;,nmanowndp,&apos;&apos;,nmancrtid,&apos;&apos;,nmancrtdp,&apos;&apos;,nmancrtdt,nmanmodid,&apos;&apos;,nmanmoddt FROM nman_t WHERE nmanent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="nmanl_t.nmanl003" table="nmanl_t" fk="nman001" pk="nmanl001,nmanl002" field="nmanl003"/>
+    </body>
+  </dataset>
+</assembly>
+

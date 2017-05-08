@@ -1,0 +1,165 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asft303" module="asf" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01258" crtdt="2014-12-26 10:21:07" modid="01258" moddt="2014-12-26 14:45:07" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="PBI維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sfqadocno,oobxl003(chr80),sfqadocdt,sfqa001,sfqasite,sfqastus,sfqaownid,sfqaownid_desc(chr80),sfqaowndp,sfqaowndp_desc(chr80),sfqacrtid,sfqacrtid_desc(chr80),sfqacrtdp,sfqacrtdp_desc(chr80),sfqacrtdt,sfqamodid,sfqamodid_desc(chr80),sfqamoddt,sfqacnfid,sfqacnfid_desc(chr80),sfqacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sfqb001,sfaa010(chr500),sfaa010_desc(chr500),sfaa010_desc_1(chr500),sfaa012(num20_6),sfaa013(chr10),sfaa013_desc(chr500),sfaadocdt(dat),sfaa019(dat),sfaa020(dat),sfaa002(chr20),sfaa002_desc(chr500),sfaastus(chr10),sfaa049(num20_6),sfaa050(num20_6),sfaa051(num20_6),sfaa055(num20_6),sfaa056(num20_6)"/>
+      <var id="bs_field" value="sfqadocno,oobxl003(chr80),sfqadocdt,sfqa001" pk="sfqadocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asft303" method="dialog">
+    <section id="input">
+      <input id="head" field="sfqadocno,sfqadocdt,sfqa001,sfqasite,sfqastus"/>
+      <input id="body" page="1" field="sfqb001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="sfqadocno,oobxl003,sfqadocdt,sfqa001,sfqasite,sfqastus,sfqaownid,sfqaowndp,sfqacrtid,sfqacrtdp,sfqacrtdt,sfqamodid,sfqamoddt,sfqacnfid,sfqacnfdt"/>
+      <construct id="body" page="1" field="sfqb001,sfaa010,sfaa012,sfaa013,sfaadocdt,sfaa019,sfaa020,sfaa002,sfaastus,sfaa049,sfaa050,sfaa051,sfaa055,sfaa056"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="sfqadocno"/>
+      <set id="head" type="no_entry" field="sfqadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="sfqadocno"/>
+      <column id="oobxl003"/>
+      <column id="sfqadocdt"/>
+      <column id="sfqa001"/>
+      <column id="sfqasite"/>
+      <column id="sfqastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="sfqaownid">
+        <after>
+          <reference field="sfqaownid_desc" ref_field="sfqa_t.sfqaownid" map_field="sfqaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfqaownid_desc"/>
+      <column id="sfqaowndp">
+        <after>
+          <reference field="sfqaowndp_desc" ref_field="sfqa_t.sfqaowndp" map_field="sfqaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="sfqaowndp_desc"/>
+      <column id="sfqacrtid">
+        <after>
+          <reference field="sfqacrtid_desc" ref_field="sfqa_t.sfqacrtid" map_field="sfqacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfqacrtid_desc"/>
+      <column id="sfqacrtdp">
+        <after>
+          <reference field="sfqacrtdp_desc" ref_field="sfqa_t.sfqacrtdp" map_field="sfqacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="sfqacrtdp_desc"/>
+      <column id="sfqacrtdt"/>
+      <column id="sfqamodid">
+        <after>
+          <reference field="sfqamodid_desc" ref_field="sfqa_t.sfqamodid" map_field="sfqamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfqamodid_desc"/>
+      <column id="sfqamoddt"/>
+      <column id="sfqacnfid">
+        <after>
+          <reference field="sfqacnfid_desc" ref_field="sfqa_t.sfqacnfid" map_field="sfqacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfqacnfid_desc"/>
+      <column id="sfqacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="sfqb001">
+        <controlp form="q_sfaadocno_1" state="i"/>
+        <controlp form="q_sfaadocno_1" state="c"/>
+      </column>
+      <column id="sfaa010">
+        <after>
+          <reference field="sfaa010_desc" ref_field="sfaa_t.sfaa010" map_field="sfaa010" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_9" state="i"/>
+        <controlp form="q_imaa001_9" state="c"/>
+      </column>
+      <column id="sfaa010_desc"/>
+      <column id="sfaa010_desc_1"/>
+      <column id="sfaa012">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfaa013">
+        <after>
+          <reference field="sfaa013_desc" ref_field="sfaa_t.sfaa013" map_field="sfaa013" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="sfaa013_desc"/>
+      <column id="sfaadocdt"/>
+      <column id="sfaa019"/>
+      <column id="sfaa020"/>
+      <column id="sfaa002">
+        <after>
+          <reference field="sfaa002_desc" ref_field="sfaa_t.sfaa002" map_field="sfaa002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="sfaa002_desc"/>
+      <column id="sfaastus" scc="13">
+        <stus id="C" pic="closed"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="F" pic="released"/>
+        <stus id="M" pic="costing_closed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="sfaa049"/>
+      <column id="sfaa050"/>
+      <column id="sfaa051"/>
+      <column id="sfaa055"/>
+      <column id="sfaa056"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="sfqa_t" pk="sfqadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT sfqadocno,&apos;&apos;,sfqadocdt,sfqa001,sfqasite,sfqastus,sfqaownid,&apos;&apos;,sfqaowndp,&apos;&apos;,sfqacrtid,&apos;&apos;,sfqacrtdp,&apos;&apos;,sfqacrtdt,sfqamodid,&apos;&apos;,sfqamoddt,sfqacnfid,&apos;&apos;,sfqacnfdt FROM sfqa_t WHERE sfqaent= ? AND sfqadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT sfqadocno,&apos;&apos;,sfqadocdt,sfqa001,sfqasite,sfqastus,sfqaownid,&apos;&apos;,sfqaowndp,&apos;&apos;,sfqacrtid,&apos;&apos;,sfqacrtdp,&apos;&apos;,sfqacrtdt,sfqamodid,&apos;&apos;,sfqamoddt,sfqacnfid,&apos;&apos;,sfqacnfdt FROM sfqa_t" order="sfqadocno"/>
+    </head>
+    <body id="sfqb_t" page="1" linked="" pk="sfqb001" fk="sfqbdocno">
+      <sql id="forupd_sql_detail" query="SELECT sfqb001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfqb_t WHERE sfqbent=? AND sfqbdocno=? AND sfqb001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sfqb001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfqb_t WHERE sfqbent=? AND sfqbdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsq101" module="aps" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="07024" crtdt="2016-01-22 11:12:59" modid="07024" moddt="2016-01-27 12:14:44" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="APS執行log查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="psea001,psea001_desc(chr80),psea002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="psea001,l_Mlog_data(chr500),l_Mlog_msg(chr500),l_Mlog_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="psea001_01(chr10),l_Clog_data(chr500),l_Clog_msg(chr500),l_Clog_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="psea001(b_psea001),l_Mlog_data(l_Mlog_data),l_Mlog_msg(l_Mlog_msg),l_Mlog_desc(l_Mlog_desc)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="psea001_01(b_psea001_01),l_Clog_data(l_Clog_data),l_Clog_msg(l_Clog_msg),l_Clog_desc(l_Clog_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aps" filename="apsq101" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="psea001" insert="N" append="N" delete="N"/>
+      <input id="body" page="2" field="psea001_01" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="psea001(b_psea001)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="psea001">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+        <controlp form="q_psca001" state="c"/>
+      </column>
+      <column id="l_Mlog_data"/>
+      <column id="l_Mlog_msg"/>
+      <column id="l_Mlog_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="psea001_01">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+        <controlp form="q_psca001" state="c"/>
+      </column>
+      <column id="l_Clog_data"/>
+      <column id="l_Clog_msg"/>
+      <column id="l_Clog_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="psea_t" page="1,2" linked="" pk="psea001,psea002">
+      <sql id="b_fill_sql" query="SELECT psea001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM psea_t WHERE pseaent= ? AND pseasite= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

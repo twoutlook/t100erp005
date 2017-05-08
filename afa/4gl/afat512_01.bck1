@@ -1,0 +1,5299 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="afat512_01.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000023
+#+ 
+#+ Filename...: afat512_01
+#+ Description: 資產標籤維護
+#+ Creator....: 02481(2014/09/04)
+#+ Modifier...: 02481(2014/09/05) -SD/PR- 02749
+#+ Buildtype..: 應用 i01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+ 
+{<section id="afat512_01.global" >}
+#160318-00025#28    2016/04/05  By pengxin   修正azzi920重复定义之错误讯息
+#161024-00008#5     2016/10/27  By Hans      AFA組織類型與職能開窗清單調整。
+#161108-00019#1     2016/11/08  By 07900     g_browser_cnt 改为num10
+#161111-00028#8     2016/11/28  by 02481     标准程式定义采用宣告模式,弃用.*写法
+#160824-00007#249   2016/12/08  by lori      修正舊值備份寫法
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_fabt_m RECORD
+       fabt000 LIKE fabt_t.fabt000, 
+   fabt001 LIKE fabt_t.fabt001, 
+   fabt002 LIKE fabt_t.fabt002, 
+   fabt032 LIKE fabt_t.fabt032, 
+   fabt033 LIKE fabt_t.fabt033, 
+   fabt031 LIKE fabt_t.fabt031, 
+   fabtcomp LIKE fabt_t.fabtcomp, 
+   fabt003 LIKE fabt_t.fabt003, 
+   fabt004 LIKE fabt_t.fabt004, 
+   fabt005 LIKE fabt_t.fabt005, 
+   fabt006 LIKE fabt_t.fabt006, 
+   fabt007 LIKE fabt_t.fabt007, 
+   fabt007_desc LIKE type_t.chr80, 
+   fabt008 LIKE fabt_t.fabt008, 
+   fabt009 LIKE fabt_t.fabt009, 
+   fabt011 LIKE fabt_t.fabt011, 
+   fabt011_desc LIKE type_t.chr80, 
+   fabt010 LIKE fabt_t.fabt010, 
+   fabt010_desc LIKE type_t.chr80, 
+   fabt012 LIKE fabt_t.fabt012, 
+   fabt012_desc LIKE type_t.chr80, 
+   fabt015 LIKE fabt_t.fabt015, 
+   fabt015_desc LIKE type_t.chr80, 
+   fabt013 LIKE fabt_t.fabt013, 
+   fabt013_desc LIKE type_t.chr80, 
+   fabt014 LIKE fabt_t.fabt014, 
+   fabt014_desc LIKE type_t.chr80, 
+   fabt016 LIKE fabt_t.fabt016, 
+   fabt016_desc LIKE type_t.chr80, 
+   fabt017 LIKE fabt_t.fabt017, 
+   fabt017_desc LIKE type_t.chr80, 
+   fabt029 LIKE fabt_t.fabt029, 
+   fabt030 LIKE fabt_t.fabt030, 
+   fabt030_desc LIKE type_t.chr80, 
+   fabt020 LIKE fabt_t.fabt020, 
+   fabt020_desc LIKE type_t.chr80, 
+   fabt021 LIKE fabt_t.fabt021, 
+   fabt023 LIKE fabt_t.fabt023, 
+   fabt023_desc LIKE type_t.chr80, 
+   fabt022 LIKE fabt_t.fabt022, 
+   fabt022_desc LIKE type_t.chr80, 
+   fabt024 LIKE fabt_t.fabt024, 
+   fabt024_desc LIKE type_t.chr80, 
+   fabt026 LIKE fabt_t.fabt026, 
+   fabt026_desc LIKE type_t.chr80, 
+   fabt034 LIKE fabt_t.fabt034, 
+   fabt034_desc LIKE type_t.chr80, 
+   fabt025 LIKE fabt_t.fabt025, 
+   fabt025_desc LIKE type_t.chr80, 
+   fabt027 LIKE fabt_t.fabt027, 
+   fabt027_desc LIKE type_t.chr80, 
+   fabt028 LIKE fabt_t.fabt028, 
+   fabt028_desc LIKE type_t.chr80
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_fabt_m        type_g_fabt_m  #單頭變數宣告
+DEFINE g_fabt_m_t      type_g_fabt_m  #單頭舊值宣告(系統還原用)
+DEFINE g_fabt_m_o      type_g_fabt_m  #單頭舊值宣告(其他用途)
+ 
+   DEFINE g_fabt002_t LIKE fabt_t.fabt002
+DEFINE g_fabt003_t LIKE fabt_t.fabt003
+DEFINE g_fabt004_t LIKE fabt_t.fabt004
+ 
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD  #查詢方案用陣列 
+         b_statepic     LIKE type_t.chr50,
+            b_fabt002 LIKE fabt_t.fabt002,
+      b_fabt003 LIKE fabt_t.fabt003,
+      b_fabt004 LIKE fabt_t.fabt004
+      END RECORD 
+   
+ 
+   
+ 
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10              #單身筆數            #161108-00019#1 type_t.num5 -> type_t.num10                      
+DEFINE l_ac                  LIKE type_t.num10              #目前處理的ARRAY CNT #161108-00019#1 type_t.num5 -> type_t.num10
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10              #Browser 所在筆數(當下page)   #161108-00019#1 type_t.num5 -> type_t.num10
+DEFINE g_current_row         LIKE type_t.num10              #Browser 所在筆數(暫存用)     #161108-00019#1 type_t.num5 -> type_t.num10
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10              #Browser 所在筆數(所有資料)   #161108-00019#1 type_t.num5 -> type_t.num10 
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)     #161108-00019#1 type_t.num5 -> type_t.num10
+DEFINE g_row_index           LIKE type_t.num5              #階層樹狀用指標
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_fabt002            LIKE fabt_t.fabt002  #盤點編號
+DEFINE g_fabt003            LIKE fabt_t.fabt003  #盤點序號
+DEFINE g_flag               LIKE type_t.chr1
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="afat512_01.main" >}
+#+ 此段落由子樣板a27產生
+#+ 資料輸入
+PUBLIC FUNCTION afat512_01(--)
+   #add-point:main段變數傳入
+    p_fabt002,p_fabt003,p_flag         
+   #end add-point
+   )
+   #add-point:main段define
+   DEFINE p_fabt002 LIKE fabt_t.fabt002
+   DEFINE p_fabt003 LIKE fabt_t.fabt003
+   DEFINE p_flag    LIKE type_t.chr1
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:作業初始化
+   LET g_fabt002 = p_fabt002   #盤點編號
+   LET g_fabt003 = p_fabt003   #盤點序號
+   LET g_flag = p_flag         #判斷程式狀態
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_forupd_sql = "SELECT fabt000,fabt001,fabt002,fabt032,fabt033,fabt031,fabtcomp,fabt003,fabt004, 
+       fabt005,fabt006,fabt007,'',fabt008,fabt009,fabt011,'',fabt010,'',fabt012,'',fabt015,'',fabt013, 
+       '',fabt014,'',fabt016,'',fabt017,'',fabt029,fabt030,'',fabt020,'',fabt021,fabt023,'',fabt022, 
+       '',fabt024,'',fabt026,'',fabt034,'',fabt025,'',fabt027,'',fabt028,'' FROM fabt_t WHERE fabtent=  
+       ? AND fabt002=? AND fabt003=? AND fabt004=? FOR UPDATE"
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)   #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE afat512_01_cl CURSOR FROM g_forupd_sql     # LOCK CURSOR
+ 
+   LET g_sql = " SELECT t0.fabt000,t0.fabt001,t0.fabt002,t0.fabt032,t0.fabt033,t0.fabt031,t0.fabtcomp, 
+       t0.fabt003,t0.fabt004,t0.fabt005,t0.fabt006,t0.fabt007,t0.fabt008,t0.fabt009,t0.fabt011,t0.fabt010, 
+       t0.fabt012,t0.fabt015,t0.fabt013,t0.fabt014,t0.fabt016,t0.fabt017,t0.fabt029,t0.fabt030,t0.fabt020, 
+       t0.fabt021,t0.fabt023,t0.fabt022,t0.fabt024,t0.fabt026,t0.fabt034,t0.fabt025,t0.fabt027,t0.fabt028", 
+ 
+               " FROM fabt_t t0",
+               " WHERE fabtent = '" ||g_enterprise|| "' AND t0.fabt002 = ? AND t0.fabt003 = ? AND t0.fabt004 = ?"
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE afat512_01_master_referesh FROM g_sql
+   
+ 
+ 
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_afat512_01 WITH FORM cl_ap_formpath("afa","afat512_01")
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   CALL afat512_01_init()   
+ 
+   #進入選單 Menu (="N")
+   CALL afat512_01_ui_dialog() 
+ 
+   #畫面關閉
+   CLOSE WINDOW w_afat512_01
+ 
+   CLOSE afat512_01_cl
+   
+   
+ 
+   #add-point:離開前
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="afat512_01.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION afat512_01_init()
+   #add-point:init段define
+   
+   #end add-point
+ 
+   #定義combobox狀態
+   
+   
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化
+   
+   #end add-point
+   
+   #根據外部參數進行搜尋
+   CALL afat512_01_default_search()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION afat512_01_ui_dialog() 
+   DEFINE li_exit   LIKE type_t.num5        #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5        #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+             prog   STRING,                 #串查程式名稱
+             param  DYNAMIC ARRAY OF STRING #傳遞變數
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   #add-point:ui_dialog段define
+
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   
+   
+   
+   #action default動作
+   #+ 此段落由子樣板a42產生
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL afat512_01_insert()
+            #add-point:ON ACTION insert
+
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂
+
+      #end add-point
+      OTHERWISE
+         
+   END CASE
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog 
+     
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+      
+      CALL afat512_01_browser_fill(g_wc,"")
+      
+      #判斷前一個動作是否為新增或複製, 若是的話切換到新增的筆數
+      #IF g_state = "Y" THEN
+      #   FOR li_idx = 1 TO g_browser.getLength()
+      #      IF g_browser[li_idx].b_fabt002 = g_fabt002_t
+      #         AND g_browser[li_idx].b_fabt003 = g_fabt003_t
+      #         AND g_browser[li_idx].b_fabt004 = g_fabt004_t
+ 
+      #         THEN
+      #         LET g_current_row = li_idx
+      #         EXIT FOR
+      #      END IF
+      #   END FOR
+      #   LET g_state = ""
+      #END IF
+    
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+               IF g_flag = 'I' THEN  
+                  LET g_action_choice="modify"   #直接進入單身
+                  LET g_flag = 'N'
+                  CALL afat512_01_insert()
+               END IF      
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+               
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL afat512_01_fetch("")   
+               END IF               
+               #add-point:ui_dialog段 before menu
+
+               #end add-point
+			
+               
+            #第一筆資料
+            ON ACTION first
+               CALL afat512_01_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL afat512_01_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            #指定筆資料
+            ON ACTION jump
+               CALL afat512_01_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            #上一筆資料
+            ON ACTION previous
+               CALL afat512_01_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            #最後筆資料
+            ON ACTION last 
+               CALL afat512_01_fetch("L")  
+               LET g_current_row = g_current_idx
+            
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            #主頁摺疊
+            ON ACTION mainhidden       
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+            
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL afat512_01_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL afat512_01_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+ 
+                     CLEAR FORM
+                  ELSE
+                     CALL afat512_01_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL afat512_01_modify()
+               #add-point:ON ACTION modify
+
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL afat512_01_delete()
+               #add-point:ON ACTION delete
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL afat512_01_insert()
+               #add-point:ON ACTION insert
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL afat512_01_reproduce()
+               #add-point:ON ACTION reproduce
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL afat512_01_query()
+               #add-point:ON ACTION query
+
+               #END add-point
+               
+            END IF
+ 
+ 
+            
+            
+            
+            #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL afat512_01_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL afat512_01_set_pk_array()
+            #add-point:ON ACTION agendum
+
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL afat512_01_set_pk_array()
+            #add-point:ON ACTION followup
+
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL afat512_01_fetch("")      
+                  
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array
+
+            #end add-point
+ 
+         
+            BEFORE DIALOG
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL afat512_01_fetch("")   
+               END IF               
+               
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog
+
+               #end add-point
+            
+         
+            
+            
+            #第一筆資料
+            ON ACTION first
+               CALL afat512_01_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL afat512_01_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            #指定筆資料
+            ON ACTION jump
+               CALL afat512_01_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            #上一筆資料
+            ON ACTION previous
+               CALL afat512_01_fetch("P")
+               LET g_current_row = g_current_idx
+          
+            #最後筆資料
+            ON ACTION last 
+               CALL afat512_01_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #主頁摺疊
+            ON ACTION mainhidden       
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT DIALOG
+               
+         
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL afat512_01_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL afat512_01_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+ 
+                     CLEAR FORM
+                  ELSE
+                     CALL afat512_01_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL afat512_01_modify()
+               #add-point:ON ACTION modify
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL afat512_01_delete()
+               #add-point:ON ACTION delete
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL afat512_01_insert()
+               #add-point:ON ACTION insert
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL afat512_01_reproduce()
+               #add-point:ON ACTION reproduce
+
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL afat512_01_query()
+               #add-point:ON ACTION query
+
+               #END add-point
+               
+            END IF
+ 
+ 
+            
+            
+ 
+            #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL afat512_01_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL afat512_01_set_pk_array()
+            #add-point:ON ACTION agendum
+
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL afat512_01_set_pk_array()
+            #add-point:ON ACTION followup
+
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+      #add-point:ui_dialog段 after dialog
+
+      #end add-point
+      
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.browser_fill" >}
+#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION afat512_01_browser_fill(p_wc,ps_page_action) 
+   DEFINE p_wc              STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define
+   
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_fabt_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   CALL g_browser.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET l_searchcol = "fabt002,fabt003,fabt004"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   
+   #add-point:browser_fill段wc控制
+   LET p_wc = p_wc," AND fabt002 = '",g_fabt002,"' AND fabt003 = '",g_fabt003,"' "
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(*) FROM fabt_t ",
+               "  ",
+               "  ",
+               " WHERE fabtent = '" ||g_enterprise|| "' AND ", 
+               p_wc CLIPPED, cl_sql_add_filter("fabt_t")
+                
+   #add-point:browser_fill段cnt_sql
+   
+   #end add-point
+                
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt
+   FREE header_cnt_pre 
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse AND g_error_show = 1 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = g_browser_cnt 
+      LET g_errparam.code   = 9035
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   LET g_wc = p_wc
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   LET g_sql = " SELECT '',t0.fabt002,t0.fabt003,t0.fabt004",
+               " FROM fabt_t t0 ",
+               "  ",
+               
+               " WHERE t0.fabtent = '" ||g_enterprise|| "' AND ", g_wc, cl_sql_add_filter("fabt_t")
+   #add-point:browser_fill段fill_wc
+   
+   #end add-point 
+   LET g_sql = g_sql, " ORDER BY ",l_searchcol," ",g_order
+   #add-point:browser_fill段before_pre
+   
+   #end add-point                    
+ 
+   #LET g_sql = cl_sql_add_tabid(g_sql,"fabt_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_fabt002,g_browser[g_cnt].b_fabt003, 
+       g_browser[g_cnt].b_fabt004
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "foreach:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+      
+      #end add-point
+      
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser_cnt
+   LET g_rec_b = g_cnt - 1
+   LET g_current_cnt = g_browser_cnt
+   LET g_cnt = 0
+   
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="afat512_01.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION afat512_01_construct()
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define
+   
+   #end add-point
+   
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE g_fabt_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON fabt000,fabt001,fabt002,fabt032,fabt033,fabt031,fabtcomp,fabt003,fabt004, 
+          fabt005,fabt006,fabt007,fabt008,fabt009,fabt011,fabt010,fabt012,fabt015,fabt013,fabt014,fabt016, 
+          fabt017,fabt029,fabt030,fabt020,fabt021,fabt023,fabt022,fabt024,fabt026,fabt034,fabt025,fabt027, 
+          fabt028
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct
+            
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         
+      
+         #一般欄位
+                  #此段落由子樣板a01產生
+         BEFORE FIELD fabt000
+            #add-point:BEFORE FIELD fabt000
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt000
+            
+            #add-point:AFTER FIELD fabt000
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt000
+         ON ACTION controlp INFIELD fabt000
+            #add-point:ON ACTION controlp INFIELD fabt000
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt001
+            #add-point:BEFORE FIELD fabt001
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt001
+            
+            #add-point:AFTER FIELD fabt001
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt001
+         ON ACTION controlp INFIELD fabt001
+            #add-point:ON ACTION controlp INFIELD fabt001
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt002
+            #add-point:BEFORE FIELD fabt002
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt002
+            
+            #add-point:AFTER FIELD fabt002
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt002
+         ON ACTION controlp INFIELD fabt002
+            #add-point:ON ACTION controlp INFIELD fabt002
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt032
+            #add-point:BEFORE FIELD fabt032
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt032
+            
+            #add-point:AFTER FIELD fabt032
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt032
+         ON ACTION controlp INFIELD fabt032
+            #add-point:ON ACTION controlp INFIELD fabt032
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt033
+            #add-point:BEFORE FIELD fabt033
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt033
+            
+            #add-point:AFTER FIELD fabt033
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt033
+         ON ACTION controlp INFIELD fabt033
+            #add-point:ON ACTION controlp INFIELD fabt033
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt031
+            #add-point:BEFORE FIELD fabt031
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt031
+            
+            #add-point:AFTER FIELD fabt031
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt031
+         ON ACTION controlp INFIELD fabt031
+            #add-point:ON ACTION controlp INFIELD fabt031
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabtcomp
+            #add-point:BEFORE FIELD fabtcomp
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabtcomp
+            
+            #add-point:AFTER FIELD fabtcomp
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabtcomp
+         ON ACTION controlp INFIELD fabtcomp
+            #add-point:ON ACTION controlp INFIELD fabtcomp
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt003
+            #add-point:BEFORE FIELD fabt003
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt003
+            
+            #add-point:AFTER FIELD fabt003
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt003
+         ON ACTION controlp INFIELD fabt003
+            #add-point:ON ACTION controlp INFIELD fabt003
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt004
+            #add-point:BEFORE FIELD fabt004
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt004
+            
+            #add-point:AFTER FIELD fabt004
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt004
+         ON ACTION controlp INFIELD fabt004
+            #add-point:ON ACTION controlp INFIELD fabt004
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt005
+            #add-point:BEFORE FIELD fabt005
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt005
+            
+            #add-point:AFTER FIELD fabt005
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt005
+         ON ACTION controlp INFIELD fabt005
+            #add-point:ON ACTION controlp INFIELD fabt005
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt006
+            #add-point:BEFORE FIELD fabt006
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt006
+            
+            #add-point:AFTER FIELD fabt006
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt006
+         ON ACTION controlp INFIELD fabt006
+            #add-point:ON ACTION controlp INFIELD fabt006
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.fabt007
+         ON ACTION controlp INFIELD fabt007
+            #add-point:ON ACTION controlp INFIELD fabt007
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt007  #顯示到畫面上
+            NEXT FIELD fabt007                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt007
+            #add-point:BEFORE FIELD fabt007
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt007
+            
+            #add-point:AFTER FIELD fabt007
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt008
+            #add-point:BEFORE FIELD fabt008
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt008
+            
+            #add-point:AFTER FIELD fabt008
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt008
+         ON ACTION controlp INFIELD fabt008
+            #add-point:ON ACTION controlp INFIELD fabt008
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt009
+            #add-point:BEFORE FIELD fabt009
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt009
+            
+            #add-point:AFTER FIELD fabt009
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt009
+         ON ACTION controlp INFIELD fabt009
+            #add-point:ON ACTION controlp INFIELD fabt009
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.fabt011
+         ON ACTION controlp INFIELD fabt011
+            #add-point:ON ACTION controlp INFIELD fabt011
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt011  #顯示到畫面上
+            NEXT FIELD fabt011                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt011
+            #add-point:BEFORE FIELD fabt011
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt011
+            
+            #add-point:AFTER FIELD fabt011
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt010
+         ON ACTION controlp INFIELD fabt010
+            #add-point:ON ACTION controlp INFIELD fabt010
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt010  #顯示到畫面上
+            NEXT FIELD fabt010                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt010
+            #add-point:BEFORE FIELD fabt010
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt010
+            
+            #add-point:AFTER FIELD fabt010
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt012
+         ON ACTION controlp INFIELD fabt012
+            #add-point:ON ACTION controlp INFIELD fabt012
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt012  #顯示到畫面上
+            NEXT FIELD fabt012                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt012
+            #add-point:BEFORE FIELD fabt012
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt012
+            
+            #add-point:AFTER FIELD fabt012
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt015
+         ON ACTION controlp INFIELD fabt015
+            #add-point:ON ACTION controlp INFIELD fabt015
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_faab001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt015  #顯示到畫面上
+            NEXT FIELD fabt015                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt015
+            #add-point:BEFORE FIELD fabt015
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt015
+            
+            #add-point:AFTER FIELD fabt015
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt013
+         ON ACTION controlp INFIELD fabt013
+            #add-point:ON ACTION controlp INFIELD fabt013
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt013  #顯示到畫面上
+            NEXT FIELD fabt013                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt013
+            #add-point:BEFORE FIELD fabt013
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt013
+            
+            #add-point:AFTER FIELD fabt013
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt014
+         ON ACTION controlp INFIELD fabt014
+            #add-point:ON ACTION controlp INFIELD fabt014
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #CALL q_ooef001()                           #呼叫開窗   #161024-00008#5  
+            CALL q_ooef001_47()                           #呼叫開窗   #161024-00008#5  
+            DISPLAY g_qryparam.return1 TO fabt014  #顯示到畫面上
+            NEXT FIELD fabt014                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt014
+            #add-point:BEFORE FIELD fabt014
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt014
+            
+            #add-point:AFTER FIELD fabt014
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt016
+         ON ACTION controlp INFIELD fabt016
+            #add-point:ON ACTION controlp INFIELD fabt016
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001_04()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt016  #顯示到畫面上
+            NEXT FIELD fabt016                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt016
+            #add-point:BEFORE FIELD fabt016
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt016
+            
+            #add-point:AFTER FIELD fabt016
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt017
+         ON ACTION controlp INFIELD fabt017
+            #add-point:ON ACTION controlp INFIELD fabt017
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt017  #顯示到畫面上
+            NEXT FIELD fabt017                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt017
+            #add-point:BEFORE FIELD fabt017
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt017
+            
+            #add-point:AFTER FIELD fabt017
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt029
+            #add-point:BEFORE FIELD fabt029
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt029
+            
+            #add-point:AFTER FIELD fabt029
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt029
+         ON ACTION controlp INFIELD fabt029
+            #add-point:ON ACTION controlp INFIELD fabt029
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.fabt030
+         ON ACTION controlp INFIELD fabt030
+            #add-point:ON ACTION controlp INFIELD fabt030
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt030  #顯示到畫面上
+            NEXT FIELD fabt030                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt030
+            #add-point:BEFORE FIELD fabt030
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt030
+            
+            #add-point:AFTER FIELD fabt030
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt020
+         ON ACTION controlp INFIELD fabt020
+            #add-point:ON ACTION controlp INFIELD fabt020
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt020  #顯示到畫面上
+            NEXT FIELD fabt020                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt020
+            #add-point:BEFORE FIELD fabt020
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt020
+            
+            #add-point:AFTER FIELD fabt020
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt021
+            #add-point:BEFORE FIELD fabt021
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt021
+            
+            #add-point:AFTER FIELD fabt021
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt021
+         ON ACTION controlp INFIELD fabt021
+            #add-point:ON ACTION controlp INFIELD fabt021
+            
+            #END add-point
+ 
+         #Ctrlp:construct.c.fabt023
+         ON ACTION controlp INFIELD fabt023
+            #add-point:ON ACTION controlp INFIELD fabt023
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt023  #顯示到畫面上
+            NEXT FIELD fabt023                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt023
+            #add-point:BEFORE FIELD fabt023
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt023
+            
+            #add-point:AFTER FIELD fabt023
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt022
+         ON ACTION controlp INFIELD fabt022
+            #add-point:ON ACTION controlp INFIELD fabt022
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt022  #顯示到畫面上
+            NEXT FIELD fabt022                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt022
+            #add-point:BEFORE FIELD fabt022
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt022
+            
+            #add-point:AFTER FIELD fabt022
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt024
+         ON ACTION controlp INFIELD fabt024
+            #add-point:ON ACTION controlp INFIELD fabt024
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt024  #顯示到畫面上
+            NEXT FIELD fabt024                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt024
+            #add-point:BEFORE FIELD fabt024
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt024
+            
+            #add-point:AFTER FIELD fabt024
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt026
+         ON ACTION controlp INFIELD fabt026
+            #add-point:ON ACTION controlp INFIELD fabt026
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_faab001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt026  #顯示到畫面上
+            NEXT FIELD fabt026                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt026
+            #add-point:BEFORE FIELD fabt026
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt026
+            
+            #add-point:AFTER FIELD fabt026
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt034
+         ON ACTION controlp INFIELD fabt034
+            #add-point:ON ACTION controlp INFIELD fabt034
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt034  #顯示到畫面上
+            NEXT FIELD fabt034                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt034
+            #add-point:BEFORE FIELD fabt034
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt034
+            
+            #add-point:AFTER FIELD fabt034
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt025
+         ON ACTION controlp INFIELD fabt025
+            #add-point:ON ACTION controlp INFIELD fabt025
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #CALL q_ooef001()                           #呼叫開窗 #161024-00008#5  
+            CALL q_ooef001_47()                                   #161024-00008#5  
+            DISPLAY g_qryparam.return1 TO fabt025  #顯示到畫面上
+            NEXT FIELD fabt025                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt025
+            #add-point:BEFORE FIELD fabt025
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt025
+            
+            #add-point:AFTER FIELD fabt025
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt027
+         ON ACTION controlp INFIELD fabt027
+            #add-point:ON ACTION controlp INFIELD fabt027
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001_04()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt027  #顯示到畫面上
+            NEXT FIELD fabt027                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt027
+            #add-point:BEFORE FIELD fabt027
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt027
+            
+            #add-point:AFTER FIELD fabt027
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.fabt028
+         ON ACTION controlp INFIELD fabt028
+            #add-point:ON ACTION controlp INFIELD fabt028
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fabt028  #顯示到畫面上
+            NEXT FIELD fabt028                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt028
+            #add-point:BEFORE FIELD fabt028
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt028
+            
+            #add-point:AFTER FIELD fabt028
+            
+            #END add-point
+            
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct
+      
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct
+   
+   #end add-point
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION afat512_01_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+ 
+   CALL g_browser.clear() 
+ 
+   #browser panel折疊
+   IF g_worksheet_hidden THEN
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   
+   #單頭折疊
+   IF g_header_hidden THEN
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_fabt_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL afat512_01_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL afat512_01_browser_fill(g_wc,"F")
+      CALL afat512_01_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   #根據條件從新抓取資料
+   LET g_error_show = 1
+   CALL afat512_01_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   ELSE
+      CALL afat512_01_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION afat512_01_fetch(p_fl)
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   
+   #end add-point  
+   
+   #根據傳入的條件決定抓取的資料
+   CASE p_fl
+      WHEN "F" 
+         LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         #LET g_current_idx = g_header_cnt        
+         LET g_current_idx = g_browser.getLength()    
+      WHEN "/"
+         #詢問要指定的筆數
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+   
+   LET g_browser_cnt = g_browser.getLength()
+ 
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_current_idx 
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   
+   #單頭筆數顯示
+   #DISPLAY g_browser_idx TO FORMONLY.idx            #當下筆數
+   #DISPLAY g_browser_cnt TO FORMONLY.cnt            #總筆數
+   
+   
+   CALL afat512_01_browser_fill(g_wc,p_fl)
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   # 設定browse索引
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   #根據選定的筆數給予key欄位值
+   LET g_fabt_m.fabt002 = g_browser[g_current_idx].b_fabt002
+   LET g_fabt_m.fabt003 = g_browser[g_current_idx].b_fabt003
+   LET g_fabt_m.fabt004 = g_browser[g_current_idx].b_fabt004
+ 
+                       
+   #讀取單頭所有欄位資料
+   EXECUTE afat512_01_master_referesh USING g_fabt_m.fabt002,g_fabt_m.fabt003,g_fabt_m.fabt004 INTO g_fabt_m.fabt000, 
+       g_fabt_m.fabt001,g_fabt_m.fabt002,g_fabt_m.fabt032,g_fabt_m.fabt033,g_fabt_m.fabt031,g_fabt_m.fabtcomp, 
+       g_fabt_m.fabt003,g_fabt_m.fabt004,g_fabt_m.fabt005,g_fabt_m.fabt006,g_fabt_m.fabt007,g_fabt_m.fabt008, 
+       g_fabt_m.fabt009,g_fabt_m.fabt011,g_fabt_m.fabt010,g_fabt_m.fabt012,g_fabt_m.fabt015,g_fabt_m.fabt013, 
+       g_fabt_m.fabt014,g_fabt_m.fabt016,g_fabt_m.fabt017,g_fabt_m.fabt029,g_fabt_m.fabt030,g_fabt_m.fabt020, 
+       g_fabt_m.fabt021,g_fabt_m.fabt023,g_fabt_m.fabt022,g_fabt_m.fabt024,g_fabt_m.fabt026,g_fabt_m.fabt034, 
+       g_fabt_m.fabt025,g_fabt_m.fabt027,g_fabt_m.fabt028,g_fabt_m.fabt007_desc,g_fabt_m.fabt011_desc, 
+       g_fabt_m.fabt010_desc,g_fabt_m.fabt012_desc,g_fabt_m.fabt015_desc,g_fabt_m.fabt013_desc,g_fabt_m.fabt014_desc, 
+       g_fabt_m.fabt016_desc,g_fabt_m.fabt017_desc,g_fabt_m.fabt030_desc,g_fabt_m.fabt020_desc,g_fabt_m.fabt023_desc, 
+       g_fabt_m.fabt022_desc,g_fabt_m.fabt024_desc,g_fabt_m.fabt026_desc,g_fabt_m.fabt034_desc,g_fabt_m.fabt025_desc, 
+       g_fabt_m.fabt027_desc,g_fabt_m.fabt028_desc
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "fabt_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      INITIALIZE g_fabt_m.* TO NULL
+      RETURN
+   END IF
+   
+   #add-point:fetch段action控制
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   #end add-point  
+   
+   
+   
+   #保存單頭舊值
+   LET g_fabt_m_t.* = g_fabt_m.*
+   LET g_fabt_m_o.* = g_fabt_m.*
+   
+   
+   #重新顯示
+   CALL afat512_01_show()
+ 
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION afat512_01_insert()
+   #add-point:insert段define
+   #161111-00028#8----modify----begin---------
+   #DEFINE l_fabr RECORD LIKE fabr_t.*
+   DEFINE l_fabr RECORD  #固定資產盤點資料檔
+       fabrent LIKE fabr_t.fabrent, #企業編號
+       fabrcomp LIKE fabr_t.fabrcomp, #法人
+       fabr001 LIKE fabr_t.fabr001, #資產中心
+       fabr002 LIKE fabr_t.fabr002, #財務人員
+       fabr003 LIKE fabr_t.fabr003, #盤點編號
+       fabr004 LIKE fabr_t.fabr004, #盤點序號
+       fabr005 LIKE fabr_t.fabr005, #財產編號
+       fabr006 LIKE fabr_t.fabr006, #附號
+       fabr007 LIKE fabr_t.fabr007, #卡片編號
+       fabr008 LIKE fabr_t.fabr008, #資產性質
+       fabr009 LIKE fabr_t.fabr009, #資產狀態
+       fabr010 LIKE fabr_t.fabr010, #資產組
+       fabr011 LIKE fabr_t.fabr011, #單位
+       fabr012 LIKE fabr_t.fabr012, #數量
+       fabr013 LIKE fabr_t.fabr013, #在外數量
+       fabr014 LIKE fabr_t.fabr014, #保管部門
+       fabr015 LIKE fabr_t.fabr015, #保管人員
+       fabr016 LIKE fabr_t.fabr016, #存放位置
+       fabr017 LIKE fabr_t.fabr017, #負責人員
+       fabr018 LIKE fabr_t.fabr018, #管理組織
+       fabr019 LIKE fabr_t.fabr019, #所有組織
+       fabr020 LIKE fabr_t.fabr020, #核算組織
+       fabr021 LIKE fabr_t.fabr021, #歸屬法人
+       fabr022 LIKE fabr_t.fabr022, #單位
+       fabr023 LIKE fabr_t.fabr023, #數量
+       fabr024 LIKE fabr_t.fabr024, #實際保管部門
+       fabr025 LIKE fabr_t.fabr025, #實際保管人員
+       fabr026 LIKE fabr_t.fabr026, #實際存放位置
+       fabr027 LIKE fabr_t.fabr027, #實際管理組織
+       fabr028 LIKE fabr_t.fabr028, #實際所有組織
+       fabr029 LIKE fabr_t.fabr029, #實際核算組織
+       fabr030 LIKE fabr_t.fabr030, #實際歸屬法人
+       fabr031 LIKE fabr_t.fabr031, #盤點日期
+       fabr032 LIKE fabr_t.fabr032, #盤點人員
+       fabr033 LIKE fabr_t.fabr033, #產生日期
+       fabr034 LIKE fabr_t.fabr034, #產生人員
+       fabr035 LIKE fabr_t.fabr035, #過帳碼
+       fabrownid LIKE fabr_t.fabrownid, #資料所有者
+       fabrowndp LIKE fabr_t.fabrowndp, #資料所屬部門
+       fabrcrtid LIKE fabr_t.fabrcrtid, #資料建立者
+       fabrcrtdp LIKE fabr_t.fabrcrtdp, #資料建立部門
+       fabrcrtdt LIKE fabr_t.fabrcrtdt, #資料創建日
+       fabrmodid LIKE fabr_t.fabrmodid, #資料修改者
+       fabrmoddt LIKE fabr_t.fabrmoddt, #最近修改日
+       fabrcnfid LIKE fabr_t.fabrcnfid, #資料確認者
+       fabrcnfdt LIKE fabr_t.fabrcnfdt, #資料確認日
+       fabrpstid LIKE fabr_t.fabrpstid, #資料過帳者
+       fabrpstdt LIKE fabr_t.fabrpstdt, #資料過帳日
+       fabrstus LIKE fabr_t.fabrstus, #狀態碼
+       fabr036 LIKE fabr_t.fabr036, #實際負責人員
+       fabr037 LIKE fabr_t.fabr037, #資產主要類型
+       fabr038 LIKE fabr_t.fabr038, #資產次要類型
+       fabr039 LIKE fabr_t.fabr039, #幣別
+       fabr040 LIKE fabr_t.fabr040, #原幣單價
+       fabr041 LIKE fabr_t.fabr041, #原幣金額
+       fabr042 LIKE fabr_t.fabr042, #本幣單價
+       fabr043 LIKE fabr_t.fabr043, #本幣金額
+       fabr044 LIKE fabr_t.fabr044, #列帳/列管
+       fabr045 LIKE fabr_t.fabr045, #名稱
+       fabr046 LIKE fabr_t.fabr046  #規格型號
+       END RECORD
+   #161111-00028#8----modify----end---------
+   DEFINE l_fabt008 LIKE fabt_t.fabt008
+   DEFINE l_fabt009 LIKE fabt_t.fabt009
+   DEFINE l_fabt021 LIKE fabt_t.fabt021
+   #end add-point    
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE g_fabt_m.* LIKE fabt_t.*             #DEFAULT 設定
+   LET g_fabt002_t = NULL
+   LET g_fabt003_t = NULL
+   LET g_fabt004_t = NULL
+ 
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      
+      #公用欄位給值
+      
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+ 
+      #add-point:單頭預設值
+      INITIALIZE l_fabr.* TO NULL
+      #161111-00028#8----modify----begin---------
+      #SELECT * INTO l_fabr.* 
+      SELECT fabrent,fabrcomp,fabr001,fabr002,fabr003,fabr004,fabr005,fabr006,fabr007,fabr008,
+             fabr009,fabr010,fabr011,fabr012,fabr013,fabr014,fabr015,fabr016,fabr017,fabr018,
+             fabr019,fabr020,fabr021,fabr022,fabr023,fabr024,fabr025,fabr026,fabr027,fabr028,
+             fabr029,fabr030,fabr031,fabr032,fabr033,fabr034,fabr035,fabrownid,fabrowndp,fabrcrtid,
+             fabrcrtdp,fabrcrtdt,fabrmodid,fabrmoddt,fabrcnfid,fabrcnfdt,fabrpstid,fabrpstdt,fabrstus,
+             fabr036,fabr037,fabr038,fabr039,fabr040,fabr041,fabr042,fabr043,fabr044,fabr045,fabr046 INTO l_fabr.* 
+      #161111-00028#8----modify----end---------
+      FROM fabr_t WHERE fabrent = g_enterprise AND fabr003 = g_fabt002 AND fabr004 = g_fabt003 
+      LET g_fabt_m.fabt000 = l_fabr.fabr001     #資產中心
+      LET g_fabt_m.fabtcomp = l_fabr.fabrcomp   #法人
+      LET g_fabt_m.fabt001 =   l_fabr.fabr002   #帳務人員    
+      LET g_fabt_m.fabt002 = g_fabt002
+      LET g_fabt_m.fabt003 = g_fabt003
+      SELECT MAX(fabt004) + 1 INTO g_fabt_m.fabt004 FROM fabt_t WHERE fabtent = g_enterprise AND fabt002= g_fabt002 AND fabt003 = g_fabt003
+      IF cl_null(g_fabt_m.fabt004) THEN
+         LET g_fabt_m.fabt004 = 1
+         LET  g_fabt_m.fabt008 = l_fabr.fabr012  #數量
+         LET  g_fabt_m.fabt009 = l_fabr.fabr013  #在外數量
+         LET  g_fabt_m.fabt021 = l_fabr.fabr023  #盤點數量
+      ELSE
+        SELECT SUM(fabt008),SUM(fabt009),SUM(fabt021) INTO l_fabt008,l_fabt009,l_fabt021 FROM fabt_t WHERE fabtent = g_enterprise AND fabt002 = g_fabt002 AND fabt003 = g_fabt003 
+        LET   g_fabt_m.fabt008 = l_fabr.fabr012 - l_fabt008  #數量  
+        LET  g_fabt_m.fabt009 = l_fabr.fabr013 - l_fabt009  #在外數量
+        LET  g_fabt_m.fabt021 = l_fabr.fabr023 - l_fabt021  #盤點數量        
+      END IF  
+      LET  g_fabt_m.fabt007 = l_fabr.fabr011  #單位
+      LET  g_fabt_m.fabt010 = l_fabr.fabr014     
+      LET  g_fabt_m.fabt011 = l_fabr.fabr015     
+      LET  g_fabt_m.fabt012 = l_fabr.fabr016     
+      LET  g_fabt_m.fabt013 = l_fabr.fabr017     
+      LET  g_fabt_m.fabt014 = l_fabr.fabr018     
+      LET  g_fabt_m.fabt015 = l_fabr.fabr019     
+      LET  g_fabt_m.fabt016 = l_fabr.fabr020    
+      LET  g_fabt_m.fabt017 = l_fabr.fabr021  
+      LET  g_fabt_m.fabt020 = l_fabr.fabr022        
+      LET  g_fabt_m.fabt022 = l_fabr.fabr024  
+      LET  g_fabt_m.fabt023 = l_fabr.fabr025  
+      LET  g_fabt_m.fabt024 = l_fabr.fabr026  
+      LET  g_fabt_m.fabt025 = l_fabr.fabr027  
+      LET  g_fabt_m.fabt026 = l_fabr.fabr028  
+      LET  g_fabt_m.fabt027 = l_fabr.fabr029  
+      LET  g_fabt_m.fabt028 = l_fabr.fabr030  
+      LET  g_fabt_m.fabt029 = l_fabr.fabr031  
+      LET  g_fabt_m.fabt030 = l_fabr.fabr032  
+      LET  g_fabt_m.fabt031 = l_fabr.fabr033  
+      LET  g_fabt_m.fabt032 = l_fabr.fabr034   
+      LET  g_fabt_m.fabt033 = l_fabr.fabr035 
+      LET  g_fabt_m.fabt034 = l_fabr.fabr036 
+      DISPLAY BY NAME g_fabt_m.fabt003
+      DISPLAY BY NAME g_fabt_m.fabt004
+      DISPLAY BY NAME g_fabt_m.fabt015
+      DISPLAY BY NAME g_fabt_m.fabt017
+      DISPLAY BY NAME g_fabt_m.fabt026
+      DISPLAY BY NAME g_fabt_m.fabt028       
+      CALL afat512_01_ref_show()
+
+      #end add-point   
+     
+      #顯示狀態(stus)圖片
+      
+     
+      #資料輸入
+      CALL afat512_01_input("a")
+      
+      #add-point:單頭輸入後
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         #取消
+         LET INT_FLAG = 0
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+         INITIALIZE g_fabt_m.* TO NULL
+         CALL afat512_01_show()
+         RETURN
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #將新增的資料併入搜尋條件中
+   #LET g_state = "Y"
+ 
+   LET g_fabt002_t = g_fabt_m.fabt002
+   LET g_fabt003_t = g_fabt_m.fabt003
+   LET g_fabt004_t = g_fabt_m.fabt004
+ 
+   
+   LET g_current_idx = g_browser.getLength() + 1
+   LET g_browser[g_current_idx].b_fabt002 = g_fabt_m.fabt002
+   LET g_browser[g_current_idx].b_fabt003 = g_fabt_m.fabt003
+   LET g_browser[g_current_idx].b_fabt004 = g_fabt_m.fabt004
+ 
+   
+   LET g_current_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+   
+   #LET g_wc = "(",g_wc,  
+   #           " OR ( fabtent = '" ||g_enterprise|| "' AND",
+   #           " fabt002 = '", g_fabt_m.fabt002 CLIPPED, "' "
+   #           ," AND fabt003 = '", g_fabt_m.fabt003 CLIPPED, "' "
+   #           ," AND fabt004 = '", g_fabt_m.fabt004 CLIPPED, "' "
+ 
+   #           , ")) "
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION afat512_01_modify()
+   #add-point:modify段define
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_fabt_m.fabt002 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      RETURN
+   END IF 
+ 
+   ERROR ""
+  
+   #備份key值
+   LET g_fabt002_t = g_fabt_m.fabt002
+   LET g_fabt003_t = g_fabt_m.fabt003
+   LET g_fabt004_t = g_fabt_m.fabt004
+ 
+   
+   CALL s_transaction_begin()
+   
+   #先lock資料
+   OPEN afat512_01_cl USING g_enterprise,g_fabt_m.fabt002,g_fabt_m.fabt003,g_fabt_m.fabt004
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN afat512_01_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      CLOSE afat512_01_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE afat512_01_master_referesh USING g_fabt_m.fabt002,g_fabt_m.fabt003,g_fabt_m.fabt004 INTO g_fabt_m.fabt000, 
+       g_fabt_m.fabt001,g_fabt_m.fabt002,g_fabt_m.fabt032,g_fabt_m.fabt033,g_fabt_m.fabt031,g_fabt_m.fabtcomp, 
+       g_fabt_m.fabt003,g_fabt_m.fabt004,g_fabt_m.fabt005,g_fabt_m.fabt006,g_fabt_m.fabt007,g_fabt_m.fabt008, 
+       g_fabt_m.fabt009,g_fabt_m.fabt011,g_fabt_m.fabt010,g_fabt_m.fabt012,g_fabt_m.fabt015,g_fabt_m.fabt013, 
+       g_fabt_m.fabt014,g_fabt_m.fabt016,g_fabt_m.fabt017,g_fabt_m.fabt029,g_fabt_m.fabt030,g_fabt_m.fabt020, 
+       g_fabt_m.fabt021,g_fabt_m.fabt023,g_fabt_m.fabt022,g_fabt_m.fabt024,g_fabt_m.fabt026,g_fabt_m.fabt034, 
+       g_fabt_m.fabt025,g_fabt_m.fabt027,g_fabt_m.fabt028,g_fabt_m.fabt007_desc,g_fabt_m.fabt011_desc, 
+       g_fabt_m.fabt010_desc,g_fabt_m.fabt012_desc,g_fabt_m.fabt015_desc,g_fabt_m.fabt013_desc,g_fabt_m.fabt014_desc, 
+       g_fabt_m.fabt016_desc,g_fabt_m.fabt017_desc,g_fabt_m.fabt030_desc,g_fabt_m.fabt020_desc,g_fabt_m.fabt023_desc, 
+       g_fabt_m.fabt022_desc,g_fabt_m.fabt024_desc,g_fabt_m.fabt026_desc,g_fabt_m.fabt034_desc,g_fabt_m.fabt025_desc, 
+       g_fabt_m.fabt027_desc,g_fabt_m.fabt028_desc
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "fabt_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      CLOSE afat512_01_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   
+ 
+   #顯示資料
+   CALL afat512_01_show()
+   
+   WHILE TRUE
+      LET g_fabt_m.fabt002 = g_fabt002_t
+      LET g_fabt_m.fabt003 = g_fabt003_t
+      LET g_fabt_m.fabt004 = g_fabt004_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      
+      
+      #add-point:modify段修改前
+      
+      #end add-point
+ 
+      #資料輸入
+      CALL afat512_01_input("u")     
+ 
+      #add-point:modify段修改後
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_fabt_m.* = g_fabt_m_t.*
+         CALL afat512_01_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+   
+   CLOSE afat512_01_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U(暫時無用)
+   #CALL cl_flow_notify(g_fabt_m.fabt002,"U")
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+ 
+{</section>}
+ 
+{<section id="afat512_01.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION afat512_01_input(p_cmd)
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define
+   DEFINE l_ooef204       LIKE ooef_t.ooef204
+    DEFINE l_origin_str    STRING
+   LET l_ooef204 = ''
+   
+   
+   #end add-point
+ 
+   #切換至輸入畫面
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   #a-新增,r-複製,u-修改
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL afat512_01_set_entry(p_cmd)
+   #add-point:set_entry後
+   
+   #end add-point
+   CALL afat512_01_set_no_entry(p_cmd)
+   #add-point:資料輸入前
+   
+   #end add-point
+   
+   DISPLAY BY NAME g_fabt_m.fabt000,g_fabt_m.fabt001,g_fabt_m.fabt002,g_fabt_m.fabt032,g_fabt_m.fabt033, 
+       g_fabt_m.fabt031,g_fabt_m.fabtcomp,g_fabt_m.fabt005,g_fabt_m.fabt006,g_fabt_m.fabt007,g_fabt_m.fabt008, 
+       g_fabt_m.fabt009,g_fabt_m.fabt011,g_fabt_m.fabt010,g_fabt_m.fabt012,g_fabt_m.fabt015,g_fabt_m.fabt013, 
+       g_fabt_m.fabt014,g_fabt_m.fabt016,g_fabt_m.fabt017,g_fabt_m.fabt029,g_fabt_m.fabt030,g_fabt_m.fabt020, 
+       g_fabt_m.fabt021,g_fabt_m.fabt023,g_fabt_m.fabt022,g_fabt_m.fabt024,g_fabt_m.fabt026,g_fabt_m.fabt034, 
+       g_fabt_m.fabt025,g_fabt_m.fabt027,g_fabt_m.fabt028
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_fabt_m.fabt000,g_fabt_m.fabt001,g_fabt_m.fabt002,g_fabt_m.fabt032,g_fabt_m.fabt033, 
+          g_fabt_m.fabt031,g_fabt_m.fabtcomp,g_fabt_m.fabt005,g_fabt_m.fabt006,g_fabt_m.fabt007,g_fabt_m.fabt008, 
+          g_fabt_m.fabt009,g_fabt_m.fabt011,g_fabt_m.fabt010,g_fabt_m.fabt012,g_fabt_m.fabt015,g_fabt_m.fabt013, 
+          g_fabt_m.fabt014,g_fabt_m.fabt016,g_fabt_m.fabt017,g_fabt_m.fabt029,g_fabt_m.fabt030,g_fabt_m.fabt020, 
+          g_fabt_m.fabt021,g_fabt_m.fabt023,g_fabt_m.fabt022,g_fabt_m.fabt024,g_fabt_m.fabt026,g_fabt_m.fabt034, 
+          g_fabt_m.fabt025,g_fabt_m.fabt027,g_fabt_m.fabt028 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前
+            IF p_cmd = 'u' THEN
+               CALL cl_set_comp_entry("fabt007,fabt008,fabt009,fabt010,fabt011,fabt012,fabt013,fabt014,fabt015,fabt016,fabt017",FALSE)
+            ELSE
+              CALL cl_set_comp_entry("fabt007,fabt008,fabt009,fabt010,fabt011,faabt012,fabt013,fabt014,fabt016",TRUE)
+              CALL cl_set_comp_entry("fabt015,fabt017",FALSE)
+            END IF
+            #end add-point
+   
+                  #此段落由子樣板a01產生
+         BEFORE FIELD fabt000
+            #add-point:BEFORE FIELD fabt000
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt000
+            
+            #add-point:AFTER FIELD fabt000
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt000
+            #add-point:ON CHANGE fabt000
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt001
+            #add-point:BEFORE FIELD fabt001
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt001
+            
+            #add-point:AFTER FIELD fabt001
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt001
+            #add-point:ON CHANGE fabt001
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt002
+            #add-point:BEFORE FIELD fabt002
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt002
+            
+            #add-point:AFTER FIELD fabt002
+            #此段落由子樣板a05產生
+            #確認資料無重複
+            IF  NOT cl_null(g_fabt_m.fabt002) AND NOT cl_null(g_fabt_m.fabt003) AND NOT cl_null(g_fabt_m.fabt004) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_fabt_m.fabt002 != g_fabt002_t  OR g_fabt_m.fabt003 != g_fabt003_t  OR g_fabt_m.fabt004 != g_fabt004_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM fabt_t WHERE "||"fabtent = '" ||g_enterprise|| "' AND "||"fabt002 = '"||g_fabt_m.fabt002 ||"' AND "|| "fabt003 = '"||g_fabt_m.fabt003 ||"' AND "|| "fabt004 = '"||g_fabt_m.fabt004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt002
+            #add-point:ON CHANGE fabt002
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt032
+            #add-point:BEFORE FIELD fabt032
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt032
+            
+            #add-point:AFTER FIELD fabt032
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt032
+            #add-point:ON CHANGE fabt032
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt033
+            #add-point:BEFORE FIELD fabt033
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt033
+            
+            #add-point:AFTER FIELD fabt033
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt033
+            #add-point:ON CHANGE fabt033
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt031
+            #add-point:BEFORE FIELD fabt031
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt031
+            
+            #add-point:AFTER FIELD fabt031
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt031
+            #add-point:ON CHANGE fabt031
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabtcomp
+            #add-point:BEFORE FIELD fabtcomp
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabtcomp
+            
+            #add-point:AFTER FIELD fabtcomp
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabtcomp
+            #add-point:ON CHANGE fabtcomp
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt005
+            #add-point:BEFORE FIELD fabt005
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt005
+            
+            #add-point:AFTER FIELD fabt005
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt005
+            #add-point:ON CHANGE fabt005
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt006
+            #add-point:BEFORE FIELD fabt006
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt006
+            
+            #add-point:AFTER FIELD fabt006
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt006
+            #add-point:ON CHANGE fabt006
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt007
+            
+            #add-point:AFTER FIELD fabt007
+            IF NOT cl_null(g_fabt_m.fabt007) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               LET g_chkparam.arg1 = g_fabt_m.fabt007
+               LET g_chkparam.err_str[1] = "aim-00005:sub-01302|aooi250|",cl_get_progname("aooi250",g_lang,"2"),"|:EXEPROGaooi250"#要執行的建議程式待補 #160318-00025#28  add
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooca001") THEN
+                  
+               ELSE
+                  LET g_fabt_m.fabt007 = g_fabt_m_t.fabt007
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               IF p_cmd = 'a' THEN  #給盤點單位賦初始值
+                  LET g_fabt_m.fabt020 = g_fabt_m.fabt007 
+               END IF 
+               CALL afat512_01_ref_show()
+
+            END IF 
+            
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt007
+            #add-point:BEFORE FIELD fabt007
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt007
+            #add-point:ON CHANGE fabt007
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt008
+            #此段落由子樣板a15產生
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fabt_m.fabt008,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD fabt008
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD fabt008
+            IF NOT cl_null(g_fabt_m.fabt008) THEN 
+              #IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_fabt_m.fabt008 != g_fabt_m_t.fabt008)) THEN   #160824-00007#249 161208 by lori mark
+               IF g_fabt_m.fabt008 != g_fabt_m_o.fabt008 OR cl_null(g_fabt_m_o.fabt008) THEN        #160824-00007#249 161208 by lori add
+                   IF NOT afat512_01_fabt008_chk() THEN  #檢查數量是否大於 fabt009
+                       #160824-00007#249 161208 by lori add---(S)
+                       LET g_fabt_m.fabt008 = g_fabt_m_o.fabt008    
+                       LET g_fabt_m.fabt021 = g_fabt_m_o.fabt021    
+                       DISPLAY BY NAME g_fabt_m.fabt008,g_fabt_m.fabt021   
+                       #160824-00007#249 161208 by lori add---(E)
+                       NEXT FIELD fabt008
+                   END IF
+               END IF
+            END IF 
+            IF p_cmd = 'a' THEN  #給盤點單位賦初始值
+               IF cl_null(g_fabt_m.fabt021) OR g_fabt_m.fabt021 = 0 THEN
+                  LET g_fabt_m.fabt021 = g_fabt_m.fabt008
+                  DISPLAY BY NAME g_fabt_m.fabt021   #160824-00007#249 161208 by lori add
+               END IF  
+            END IF  
+            
+            LET g_fabt_m_o.fabt008 = g_fabt_m.fabt008    #160824-00007#249 161208 by lori add
+            LET g_fabt_m_o.fabt021 = g_fabt_m.fabt021    #160824-00007#249 161208 by lori add
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt008
+            #add-point:BEFORE FIELD fabt008
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt008
+            #add-point:ON CHANGE fabt008
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt009
+            #此段落由子樣板a15產生
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fabt_m.fabt009,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD fabt009
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD fabt009
+             IF NOT cl_null(g_fabt_m.fabt009) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_fabt_m.fabt009 != g_fabt_m_t.fabt009)) THEN
+                   IF NOT afat512_01_fabt008_chk() THEN  #檢查數量是否大於 fabt012
+                       NEXT FIELD CURRENT
+                   END IF
+               END IF
+               
+            END IF 
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt009
+            #add-point:BEFORE FIELD fabt009
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt009
+            #add-point:ON CHANGE fabt009
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt011
+            
+            #add-point:AFTER FIELD fabt011
+            IF NOT cl_null(g_fabt_m.fabt011) THEN 
+#此段落由子樣板a19產生
+               #校驗代值
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt011
+               LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"#要執行的建議程式待補 #160318-00025#28  add
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooag001") THEN
+                 SELECT ooag003 INTO g_fabt_m.fabt010
+                    FROM ooag_t
+                   WHERE ooagent = g_enterprise
+                     AND ooag001 = g_fabt_m.fabt011
+                  CALL afat512_01_ref_show()
+               ELSE
+                  LET g_fabt_m.fabt011 = g_fabt_m_t.fabt011
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               IF p_cmd = 'a' THEN  #給盤點單位賦初始值
+                  IF cl_null(g_fabt_m.fabt023) THEN
+                     LET g_fabt_m.fabt023 = g_fabt_m.fabt010
+                     DISPLAY BY NAME g_fabt_m.fabt023
+                   END IF  
+               END IF
+ 
+            END IF 
+           
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt011
+            #add-point:BEFORE FIELD fabt011
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt011
+            #add-point:ON CHANGE fabt011
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt010
+            
+            #add-point:AFTER FIELD fabt010
+            
+            
+
+           IF NOT cl_null(g_fabt_m.fabt010) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗    #160318-00025#28  add
+               LET g_chkparam.arg1 = g_fabt_m.fabt010
+               LET g_chkparam.arg2 = g_today
+			      LET g_chkparam.err_str[1] = "aoo-00029:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#28  add
+               IF cl_chk_exist("v_ooeg001_3") THEN
+			         CALL afat512_01_ref_show()
+               ELSE
+                  LET g_fabt_m.fabt010 = g_fabt_m_t.fabt010
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               IF p_cmd = 'a' THEN  #給盤點單位賦初始值
+                  IF cl_null(g_fabt_m.fabt022) THEN
+                     LET g_fabt_m.fabt022 = g_fabt_m.fabt010
+                     DISPLAY BY NAME g_fabt_m.fabt022
+                   END IF  
+               END IF
+
+            END IF   
+           
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt010
+            #add-point:BEFORE FIELD fabt010
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt010
+            #add-point:ON CHANGE fabt010
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt012
+            
+            #add-point:AFTER FIELD fabt012
+            IF NOT cl_null(g_fabt_m.fabt012) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt012
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_oocq002_3900") THEN
+                  CALL afat512_01_ref_show()
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt012 = g_fabt_m_t.fabt012
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               IF p_cmd = 'a' THEN  #給盤點單位賦初始值
+                  IF cl_null(g_fabt_m.fabt024) THEN
+                     LET g_fabt_m.fabt024 = g_fabt_m.fabt012
+                     DISPLAY BY NAME g_fabt_m.fabt024
+                   END IF  
+               END IF
+
+            END IF  
+            
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt012
+            #add-point:BEFORE FIELD fabt012
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt012
+            #add-point:ON CHANGE fabt012
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt015
+            
+            #add-point:AFTER FIELD fabt015
+             IF NOT cl_null(g_fabt_m.fabt015) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt015
+               LET g_chkparam.arg2 = g_site
+               LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#28  add
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001") THEN
+                  CALL afat512_01_ref_show()
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt015 = g_fabt_m_t.fabt015
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               IF p_cmd = 'a' THEN  #給盤點單位賦初始值
+                  LET g_fabt_m.fabt026 = g_fabt_m.fabt015
+                  DISPLAY BY NAME g_fabt_m.fabt026
+               END IF
+
+            END IF   
+            
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt015
+            #add-point:BEFORE FIELD fabt015
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt015
+            #add-point:ON CHANGE fabt015
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt013
+            
+            #add-point:AFTER FIELD fabt013
+             IF NOT cl_null(g_fabt_m.fabt013) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt013
+               LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"#要執行的建議程式待補 #160318-00025#28  add
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooag001") THEN
+                  CALL afat512_01_ref_show()
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt013 = g_fabt_m_t.fabt013
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               IF p_cmd = 'a' THEN  #給盤點單位賦初始值
+                  IF cl_null(g_fabt_m.fabt034) THEN
+                     LET g_fabt_m.fabt034 = g_fabt_m.fabt013
+                     DISPLAY BY NAME g_fabt_m.fabt034
+                   END IF  
+               END IF
+
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt013
+            #add-point:BEFORE FIELD fabt013
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt013
+            #add-point:ON CHANGE fabt013
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt014
+            
+            #add-point:AFTER FIELD fabt014
+          IF NOT cl_null(g_fabt_m.fabt014) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt014
+               LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#28  add
+               #呼叫檢查存在並帶值的library
+               #IF cl_chk_exist("v_ooef001") THEN #161024-00008#5  
+                IF cl_chk_exist("v_ooef001_26") THEN #161024-00008#5  
+                  CALL afat512_01_ref_show()
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt014 = g_fabt_m_t.fabt014
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               IF p_cmd = 'a' THEN  #給盤點單位賦初始值
+                  IF cl_null(g_fabt_m.fabt025) THEN
+                     LET g_fabt_m.fabt025 = g_fabt_m.fabt014
+                     DISPLAY BY NAME g_fabt_m.fabt025
+                   END IF  
+               END IF
+
+            END IF 
+            
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt014
+            #add-point:BEFORE FIELD fabt014
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt014
+            #add-point:ON CHANGE fabt014
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt016
+            
+            #add-point:AFTER FIELD fabt016
+            IF NOT cl_null(g_fabt_m.fabt016) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt016
+               LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#28  add
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001") THEN
+                  SELECT ooef204 INTO l_ooef204
+                    FROM ooef_t
+                   WHERE ooefent = g_enterprise
+                     AND ooef001 = g_fabt_m.fabt016
+
+                  IF l_ooef204 = 'N' THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ""
+                     LET g_errparam.code   = "art-00218"
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     LET g_fabt_m.fabt016 = g_fabt_m_t.fabt016
+                     CALL afat512_01_ref_show()
+                     NEXT FIELD CURRENT
+                   ELSE
+                      
+                      CALL afat512_01_ref_show()
+                   END IF   
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt016 = g_fabt_m_t.fabt016
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+              IF p_cmd = 'a' THEN  #給盤點單位賦初始值
+                  IF cl_null(g_fabt_m.fabt027) THEN
+                     LET g_fabt_m.fabt027 = g_fabt_m.fabt016
+                     DISPLAY BY NAME g_fabt_m.fabt027
+                   END IF  
+               END IF
+
+            END IF 
+            
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt016
+            #add-point:BEFORE FIELD fabt016
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt016
+            #add-point:ON CHANGE fabt016
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt017
+            
+            #add-point:AFTER FIELD fabt017
+            IF NOT cl_null(g_fabt_m.fabt017) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt017
+               LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#28  add
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001") THEN
+                  CALL afat512_01_ref_show()
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt017 = g_fabt_m_t.fabt017
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               IF p_cmd = 'a' THEN  #給盤點單位賦初始值
+                  LET g_fabt_m.fabt028 = g_fabt_m.fabt017
+                  DISPLAY BY NAME g_fabt_m.fabt028
+               END IF
+
+            END IF 
+            
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt017
+            #add-point:BEFORE FIELD fabt017
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt017
+            #add-point:ON CHANGE fabt017
+            
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt029
+            #add-point:BEFORE FIELD fabt029
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt029
+            
+            #add-point:AFTER FIELD fabt029
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt029
+            #add-point:ON CHANGE fabt029
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt030
+            
+            #add-point:AFTER FIELD fabt030
+             IF NOT cl_null(g_fabt_m.fabt030) THEN 
+#此段落由子樣板a19產生
+               #校驗代值
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt030
+               LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"#要執行的建議程式待補 #160318-00025#28  add
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooag001") THEN
+                  CALL afat512_01_ref_show()
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt030 = g_fabt_m_t.fabt030
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt030
+            #add-point:BEFORE FIELD fabt030
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt030
+            #add-point:ON CHANGE fabt030
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt020
+            
+            #add-point:AFTER FIELD fabt020
+           IF NOT cl_null(g_fabt_m.fabt020) THEN 
+#此段落由子樣板a19產生
+               #校驗代值
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt020
+               LET g_chkparam.err_str[1] = "aim-00005:sub-01302|aooi250|",cl_get_progname("aooi250",g_lang,"2"),"|:EXEPROGaooi250"#要執行的建議程式待補 #160318-00025#28  add
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooca001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  CALL afat512_01_ref_show()
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt020 = g_fabt_m_t.fabt020
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF    
+           
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt020
+            #add-point:BEFORE FIELD fabt020
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt020
+            #add-point:ON CHANGE fabt020
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt021
+            #此段落由子樣板a15產生
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fabt_m.fabt021,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD fabt021
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD fabt021
+            IF NOT cl_null(g_fabt_m.fabt021) THEN 
+               IF g_fabt_m.fabt021 <> g_fabt_m_o.fabt021 OR cl_null(g_fabt_m_o.fabt021) THEN   #160824-00007#249 161208 by lori add
+                  IF NOT afat512_01_fabt008_chk() THEN  #檢查數量是否大於 盤點數量
+                     LET g_fabt_m.fabt021 = g_fabt_m_o.fabt021   #160824-00007#249 161208 by lori add
+                     DISPLAY BY NAME g_fabt_m.fabt021            #160824-00007#249 161208 by lori add
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF   #160824-00007#249 161208 by lori add
+            END IF 
+
+            LET g_fabt_m_o.fabt021 = g_fabt_m.fabt021   #160824-00007#249 161208 by lori add
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt021
+            #add-point:BEFORE FIELD fabt021
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt021
+            #add-point:ON CHANGE fabt021
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt023
+            
+            #add-point:AFTER FIELD fabt023
+           IF NOT cl_null(g_fabt_m.fabt023) THEN
+              INITIALIZE g_chkparam.* TO NULL
+              LET g_errshow = TRUE #是否開窗  #160318-00025#28  add
+              LET g_chkparam.arg1 = g_fabt_m.fabt023
+              LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"#要執行的建議程式待補 #160318-00025#28  add
+              IF cl_chk_exist("v_ooag001") THEN
+                  SELECT ooag003 INTO g_fabt_m.fabt024
+                    FROM ooag_t
+                   WHERE ooagent = g_enterprise
+                     AND ooag001 = g_fabt_m.fabt023
+                  CALL afat512_01_ref_show()
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt023 = g_fabt_m_t.fabt023
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF  
+            END IF            
+            
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt023
+            #add-point:BEFORE FIELD fabt023
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt023
+            #add-point:ON CHANGE fabt023
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt022
+            
+            #add-point:AFTER FIELD fabt022
+           IF NOT cl_null(g_fabt_m.fabt022) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               LET g_chkparam.arg1 = g_fabt_m.fabt022
+               LET g_chkparam.arg2 = g_today
+			      LET g_chkparam.err_str[1] = "aoo-00029:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#28  add
+               IF cl_chk_exist("v_ooeg001_3") THEN
+			         CALL afat512_01_ref_show()
+               ELSE
+                  LET g_fabt_m.fabt022 = g_fabt_m_t.fabt022
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+         
+
+            END IF    
+            
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt022
+            #add-point:BEFORE FIELD fabt022
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt022
+            #add-point:ON CHANGE fabt022
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt024
+            
+            #add-point:AFTER FIELD fabt024
+           IF NOT cl_null(g_fabt_m.fabt024) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt024
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_oocq002_3900") THEN
+                  CALL afat512_01_ref_show()
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt024 = g_fabt_m_t.fabt024
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt024
+            #add-point:BEFORE FIELD fabt024
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt024
+            #add-point:ON CHANGE fabt024
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt026
+            
+            #add-point:AFTER FIELD fabt026
+            IF NOT cl_null(g_fabt_m.fabt026) THEN 
+#此段落由子樣板a19產生
+               #校驗代值
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt026
+               LET g_chkparam.arg2 = '參數2'
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_faab002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_fabt_m.fabt026
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_fabt_m.fabt026_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_fabt_m.fabt026_desc
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt026
+            #add-point:BEFORE FIELD fabt026
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt026
+            #add-point:ON CHANGE fabt026
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt034
+            
+            #add-point:AFTER FIELD fabt034
+            IF NOT cl_null(g_fabt_m.fabt034) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt034
+               LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"#要執行的建議程式待補 #160318-00025#28  add
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooag001") THEN
+                  CALL afat512_01_ref_show()
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt034 = g_fabt_m_t.fabt034
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF
+            
+
+
+
+     
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt034
+            #add-point:BEFORE FIELD fabt034
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt034
+            #add-point:ON CHANGE fabt034
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt025
+            
+            #add-point:AFTER FIELD fabt025
+           IF NOT cl_null(g_fabt_m.fabt025) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt025
+              LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#28  add 
+               #呼叫檢查存在並帶值的library
+               #IF cl_chk_exist("v_ooef001") THEN            #161024-00008#5
+               IF cl_chk_exist("v_ooef001_26") THEN          #161024-00008#5      
+                  CALL afat512_01_ref_show()
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt025 = g_fabt_m_t.fabt025
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+   
+            
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt025
+            #add-point:BEFORE FIELD fabt025
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt025
+            #add-point:ON CHANGE fabt025
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt027
+            
+            #add-point:AFTER FIELD fabt027
+            IF NOT cl_null(g_fabt_m.fabt027) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt027
+               LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#28  add
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001") THEN
+                   SELECT ooef204 INTO l_ooef204
+                    FROM ooef_t
+                   WHERE ooefent = g_enterprise
+                     AND ooef001 = g_fabt_m.fabt027
+
+                  IF l_ooef204 = 'N' THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ""
+                     LET g_errparam.code   = "art-00218"
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                      LET g_fabt_m.fabt027 = g_fabt_m_t.fabt027
+                     CALL afat512_01_ref_show()
+                     NEXT FIELD CURRENT
+                   ELSE
+                      
+                      CALL afat512_01_ref_show()
+                   END IF   
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fabt_m.fabt027 = g_fabt_m_t.fabt027
+                  CALL afat512_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+           
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt027
+            #add-point:BEFORE FIELD fabt027
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt027
+            #add-point:ON CHANGE fabt027
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD fabt028
+            
+            #add-point:AFTER FIELD fabt028
+            IF NOT cl_null(g_fabt_m.fabt028) THEN 
+#此段落由子樣板a19產生
+               #校驗代值
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fabt_m.fabt028
+               LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#28  add
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_ooef001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_fabt_m.fabt028
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_fabt_m.fabt028_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_fabt_m.fabt028_desc
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD fabt028
+            #add-point:BEFORE FIELD fabt028
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE fabt028
+            #add-point:ON CHANGE fabt028
+            
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.fabt000
+         ON ACTION controlp INFIELD fabt000
+            #add-point:ON ACTION controlp INFIELD fabt000
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt001
+         ON ACTION controlp INFIELD fabt001
+            #add-point:ON ACTION controlp INFIELD fabt001
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt002
+         ON ACTION controlp INFIELD fabt002
+            #add-point:ON ACTION controlp INFIELD fabt002
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt032
+         ON ACTION controlp INFIELD fabt032
+            #add-point:ON ACTION controlp INFIELD fabt032
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt033
+         ON ACTION controlp INFIELD fabt033
+            #add-point:ON ACTION controlp INFIELD fabt033
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt031
+         ON ACTION controlp INFIELD fabt031
+            #add-point:ON ACTION controlp INFIELD fabt031
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabtcomp
+         ON ACTION controlp INFIELD fabtcomp
+            #add-point:ON ACTION controlp INFIELD fabtcomp
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt005
+         ON ACTION controlp INFIELD fabt005
+            #add-point:ON ACTION controlp INFIELD fabt005
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt006
+         ON ACTION controlp INFIELD fabt006
+            #add-point:ON ACTION controlp INFIELD fabt006
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt007
+         ON ACTION controlp INFIELD fabt007
+            #add-point:ON ACTION controlp INFIELD fabt007
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt007             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooca001_1()                                #呼叫開窗
+            
+            LET g_fabt_m.fabt007 = g_qryparam.return1              
+            CALL afat512_01_ref_show()
+            DISPLAY g_fabt_m.fabt007 TO fabt007              #
+
+            NEXT FIELD fabt007                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt008
+         ON ACTION controlp INFIELD fabt008
+            #add-point:ON ACTION controlp INFIELD fabt008
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt009
+         ON ACTION controlp INFIELD fabt009
+            #add-point:ON ACTION controlp INFIELD fabt009
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt011
+         ON ACTION controlp INFIELD fabt011
+            #add-point:ON ACTION controlp INFIELD fabt011
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt011             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_fabt_m.fabt011 = g_qryparam.return1                
+            SELECT ooag003 INTO g_fabt_m.fabt010
+                    FROM ooag_t
+                   WHERE ooagent = g_enterprise
+                     AND ooag001 = g_fabt_m.fabt011            
+            CALL afat512_01_ref_show() 
+            DISPLAY g_fabt_m.fabt011 TO fabt011              #
+            DISPLAY g_fabt_m.fabt010 TO fabt010
+            NEXT FIELD fabt011                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt010
+         ON ACTION controlp INFIELD fabt010
+            #add-point:ON ACTION controlp INFIELD fabt010
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt010             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_today
+
+            
+            CALL q_ooeg001_4()                                #呼叫開窗
+
+            LET g_fabt_m.fabt010 = g_qryparam.return1              
+            CALL afat512_01_ref_show() 
+            DISPLAY g_fabt_m.fabt010 TO fabt010              #
+
+            NEXT FIELD fabt010                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt012
+         ON ACTION controlp INFIELD fabt012
+            #add-point:ON ACTION controlp INFIELD fabt012
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt012             #給予default值
+            LET g_qryparam.default2 = "" #g_fabt_m.oocq002 #應用分類碼
+            #給予arg
+           LET g_qryparam.arg1 = '3900'
+
+            
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_fabt_m.fabt012 = g_qryparam.return1  
+            CALL afat512_01_ref_show()             
+            #LET g_fabt_m.oocq002 = g_qryparam.return2 
+            DISPLAY g_fabt_m.fabt012 TO fabt012              #
+            #DISPLAY g_fabt_m.oocq002 TO oocq002 #應用分類碼
+            NEXT FIELD fabt012                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt015
+         ON ACTION controlp INFIELD fabt015
+            #add-point:ON ACTION controlp INFIELD fabt015
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt015             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            #CALL q_faab001()
+            CALL q_ooef001()                             #呼叫開窗
+            
+            LET g_fabt_m.fabt015 = g_qryparam.return1              
+            CALL afat512_01_ref_show() 
+            DISPLAY g_fabt_m.fabt015 TO fabt015              #
+
+            NEXT FIELD fabt015                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt013
+         ON ACTION controlp INFIELD fabt013
+            #add-point:ON ACTION controlp INFIELD fabt013
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt013             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_fabt_m.fabt013 = g_qryparam.return1              
+            CALL afat512_01_ref_show() 
+            DISPLAY g_fabt_m.fabt013 TO fabt013              #
+
+            NEXT FIELD fabt013                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt014
+         ON ACTION controlp INFIELD fabt014
+            #add-point:ON ACTION controlp INFIELD fabt014
+           CALL s_fin_account_center_sons_query('5',g_fabt_m.fabt000,g_today,'')
+            CALL s_fin_account_center_sons_str()RETURNING l_origin_str
+            IF cl_null(l_origin_str) THEN LET l_origin_str = g_fabt_m.fabt000 END IF
+            CALL afat512_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+            #此段落由子樣板a07產生
+            #開窗i段
+                           INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+                           LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt014            #給予default值
+
+            LET g_qryparam.where = " ooef001 IN (",l_origin_str CLIPPED,") AND ooef017 ='",g_fabt_m.fabtcomp,"' "
+            
+           # CALL q_faab001()                                #呼叫開窗
+            # CALL q_ooef001()     
+            CALL q_ooef001_47()                           #呼叫開窗   #161024-00008#5  
+            LET g_fabt_m.fabt014 = g_qryparam.return1 
+            CALL afat512_01_ref_show()             
+            #LET g_fabt_m.ooefl003 = g_qryparam.return2 
+            DISPLAY g_fabt_m.fabt014 TO fabt014              #
+            #DISPLAY g_fabt_m.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD fabt014                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt016
+         ON ACTION controlp INFIELD fabt016
+            #add-point:ON ACTION controlp INFIELD fabt016
+             CALL s_fin_account_center_sons_query('5',g_fabt_m.fabt000,g_today,'')
+            CALL s_fin_account_center_sons_str()RETURNING l_origin_str
+            IF cl_null(l_origin_str) THEN LET l_origin_str = g_fabt_m.fabt000 END IF
+            CALL afat512_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+            #此段落由子樣板a07產生
+            #開窗i段
+                           INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+                           LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt016            #給予default值
+
+            LET g_qryparam.where = " ooef001 IN (",l_origin_str CLIPPED,") AND ooef017 ='",g_fabt_m.fabtcomp,"' AND ooef204 = 'Y' "
+            
+           # CALL q_faab001()                                #呼叫開窗
+             CALL q_ooef001()   
+            LET g_fabt_m.fabt016 = g_qryparam.return1              
+            CALL afat512_01_ref_show()      
+            DISPLAY g_fabt_m.fabt016 TO fabt016              #
+
+            NEXT FIELD fabt016                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt017
+         ON ACTION controlp INFIELD fabt017
+            #add-point:ON ACTION controlp INFIELD fabt017
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt017             #給予default值
+            LET g_qryparam.default2 = "" #g_fabt_m.ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_fabt_m.fabt017 = g_qryparam.return1   
+            CALL afat512_01_ref_show()                  
+            #LET g_fabt_m.ooefl003 = g_qryparam.return2 
+            DISPLAY g_fabt_m.fabt017 TO fabt017              #
+            #DISPLAY g_fabt_m.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD fabt017                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt029
+         ON ACTION controlp INFIELD fabt029
+            #add-point:ON ACTION controlp INFIELD fabt029
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt030
+         ON ACTION controlp INFIELD fabt030
+            #add-point:ON ACTION controlp INFIELD fabt030
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt030             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_fabt_m.fabt030 = g_qryparam.return1              
+            CALL afat512_01_ref_show()      
+            DISPLAY g_fabt_m.fabt030 TO fabt030              #
+
+            NEXT FIELD fabt030                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt020
+         ON ACTION controlp INFIELD fabt020
+            #add-point:ON ACTION controlp INFIELD fabt020
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt020             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooca001_1()                                #呼叫開窗
+
+            LET g_fabt_m.fabt020 = g_qryparam.return1              
+            CALL afat512_01_ref_show()      
+            DISPLAY g_fabt_m.fabt020 TO fabt020              #
+
+            NEXT FIELD fabt020                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt021
+         ON ACTION controlp INFIELD fabt021
+            #add-point:ON ACTION controlp INFIELD fabt021
+            
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt023
+         ON ACTION controlp INFIELD fabt023
+            #add-point:ON ACTION controlp INFIELD fabt023
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt023             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_fabt_m.fabt023 = g_qryparam.return1                             
+            SELECT ooag003 INTO g_fabt_m.fabt022
+                    FROM ooag_t
+                   WHERE ooagent = g_enterprise
+                     AND ooag001 = g_fabt_m.fabt023     
+            CALL afat512_01_ref_show()       
+            DISPLAY g_fabt_m.fabt023 TO fabt023              #
+            DISPLAY g_fabt_m.fabt022 TO fabt022
+
+            NEXT FIELD fabt023                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt022
+         ON ACTION controlp INFIELD fabt022
+            #add-point:ON ACTION controlp INFIELD fabt022
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt022             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            LET g_qryparam.arg1 = g_today
+            CALL q_ooeg001_4()                                #呼叫開窗
+
+            LET g_fabt_m.fabt022 = g_qryparam.return1              
+            CALL afat512_01_ref_show()   
+            DISPLAY g_fabt_m.fabt022 TO fabt022              #
+
+            NEXT FIELD fabt022                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt024
+         ON ACTION controlp INFIELD fabt024
+            #add-point:ON ACTION controlp INFIELD fabt024
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt024             #給予default值
+            LET g_qryparam.default2 = "" #g_fabt_m.oocq002 #應用分類碼
+            #給予arg
+            LET g_qryparam.arg1 = '3900'
+            
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_fabt_m.fabt024 = g_qryparam.return1  
+            CALL afat512_01_ref_show()               
+            #LET g_fabt_m.oocq002 = g_qryparam.return2 
+            DISPLAY g_fabt_m.fabt024 TO fabt024              #
+            #DISPLAY g_fabt_m.oocq002 TO oocq002 #應用分類碼
+            NEXT FIELD fabt024                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt026
+         ON ACTION controlp INFIELD fabt026
+            #add-point:ON ACTION controlp INFIELD fabt026
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt026             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_faab001()                                #呼叫開窗
+
+            LET g_fabt_m.fabt026 = g_qryparam.return1              
+
+            DISPLAY g_fabt_m.fabt026 TO fabt026              #
+
+            NEXT FIELD fabt026                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt034
+         ON ACTION controlp INFIELD fabt034
+            #add-point:ON ACTION controlp INFIELD fabt034
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt034             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_fabt_m.fabt034 = g_qryparam.return1              
+            CALL afat512_01_ref_show()   
+            DISPLAY g_fabt_m.fabt034 TO fabt034              #
+
+            NEXT FIELD fabt034                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt025
+         ON ACTION controlp INFIELD fabt025
+            #add-point:ON ACTION controlp INFIELD fabt025
+            #此段落由子樣板a07產生            
+            #開窗i段
+             CALL s_fin_account_center_sons_query('5',g_fabt_m.fabt000,g_today,'')
+            CALL s_fin_account_center_sons_str()RETURNING l_origin_str
+            IF cl_null(l_origin_str) THEN LET l_origin_str = g_fabt_m.fabt000 END IF
+            CALL afat512_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+            #此段落由子樣板a07產生
+            #開窗i段
+                           INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+                           LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt025            #給予default值
+
+            LET g_qryparam.where = " ooef001 IN (",l_origin_str CLIPPED,") AND ooef017 ='",g_fabt_m.fabtcomp,"' "
+            
+           # CALL q_faab001()                                #呼叫開窗
+           # CALL q_ooef001()                                     #161024-00008#5 
+            CALL q_ooef001_47()                                   #161024-00008#5  
+            LET g_fabt_m.fabt025 = g_qryparam.return1  
+            CALL afat512_01_ref_show()               
+            #LET g_fabt_m.ooefl003 = g_qryparam.return2 
+            DISPLAY g_fabt_m.fabt025 TO fabt025              #
+            #DISPLAY g_fabt_m.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD fabt025                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt027
+         ON ACTION controlp INFIELD fabt027
+            #add-point:ON ACTION controlp INFIELD fabt027
+            #此段落由子樣板a07產生            
+           CALL s_fin_account_center_sons_query('5',g_fabt_m.fabt000,g_today,'')
+            CALL s_fin_account_center_sons_str()RETURNING l_origin_str
+            IF cl_null(l_origin_str) THEN LET l_origin_str = g_fabt_m.fabt000 END IF
+            CALL afat512_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+            #此段落由子樣板a07產生
+            #開窗i段
+                           INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+                           LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt027            #給予default值
+
+            LET g_qryparam.where = " ooef001 IN (",l_origin_str CLIPPED,") AND ooef017 ='",g_fabt_m.fabtcomp,"' AND ooef204 = 'Y' "
+            
+           # CALL q_faab001()                                #呼叫開窗
+             CALL q_ooef001()     
+            LET g_fabt_m.fabt027 = g_qryparam.return1              
+            CALL afat512_01_ref_show() 
+            DISPLAY g_fabt_m.fabt027 TO fabt027              #
+
+            NEXT FIELD fabt027                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.fabt028
+         ON ACTION controlp INFIELD fabt028
+            #add-point:ON ACTION controlp INFIELD fabt028
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_fabt_m.fabt028             #給予default值
+            LET g_qryparam.default2 = "" #g_fabt_m.ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_fabt_m.fabt028 = g_qryparam.return1              
+            #LET g_fabt_m.ooefl003 = g_qryparam.return2 
+            DISPLAY g_fabt_m.fabt028 TO fabt028              #
+            #DISPLAY g_fabt_m.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD fabt028                          #返回原欄位
+
+
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #若點選cancel則離開dialog
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+  
+            IF p_cmd <> "u" THEN
+               #當p_cmd不為u代表為新增/複製
+               LET l_count = 1  
+ 
+               #確定新增的資料不存在(不重複)
+               SELECT COUNT(*) INTO l_count FROM fabt_t
+                WHERE fabtent = g_enterprise AND fabt002 = g_fabt_m.fabt002
+                  AND fabt003 = g_fabt_m.fabt003
+                  AND fabt004 = g_fabt_m.fabt004
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前
+                  
+                  #end add-point
+               
+                  #將新增的單頭資料寫入資料庫
+                  INSERT INTO fabt_t (fabtent,fabt000,fabt001,fabt002,fabt032,fabt033,fabt031,fabtcomp, 
+                      fabt003,fabt004,fabt005,fabt006,fabt007,fabt008,fabt009,fabt011,fabt010,fabt012, 
+                      fabt015,fabt013,fabt014,fabt016,fabt017,fabt029,fabt030,fabt020,fabt021,fabt023, 
+                      fabt022,fabt024,fabt026,fabt034,fabt025,fabt027,fabt028)
+                  VALUES (g_enterprise,g_fabt_m.fabt000,g_fabt_m.fabt001,g_fabt_m.fabt002,g_fabt_m.fabt032, 
+                      g_fabt_m.fabt033,g_fabt_m.fabt031,g_fabt_m.fabtcomp,g_fabt_m.fabt003,g_fabt_m.fabt004, 
+                      g_fabt_m.fabt005,g_fabt_m.fabt006,g_fabt_m.fabt007,g_fabt_m.fabt008,g_fabt_m.fabt009, 
+                      g_fabt_m.fabt011,g_fabt_m.fabt010,g_fabt_m.fabt012,g_fabt_m.fabt015,g_fabt_m.fabt013, 
+                      g_fabt_m.fabt014,g_fabt_m.fabt016,g_fabt_m.fabt017,g_fabt_m.fabt029,g_fabt_m.fabt030, 
+                      g_fabt_m.fabt020,g_fabt_m.fabt021,g_fabt_m.fabt023,g_fabt_m.fabt022,g_fabt_m.fabt024, 
+                      g_fabt_m.fabt026,g_fabt_m.fabt034,g_fabt_m.fabt025,g_fabt_m.fabt027,g_fabt_m.fabt028)  
+ 
+                  
+                  #add-point:單頭新增中
+                  
+                  #end add-point
+                  
+                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "fabt_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+ 
+                     CONTINUE DIALOG
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後
+                  
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend =  "g_fabt_m.fabt002" 
+                  LET g_errparam.code   = "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+               END IF 
+            ELSE
+               #add-point:單頭修改前
+               
+               #end add-point
+               UPDATE fabt_t SET (fabt000,fabt001,fabt002,fabt032,fabt033,fabt031,fabtcomp,fabt003,fabt004, 
+                   fabt005,fabt006,fabt007,fabt008,fabt009,fabt011,fabt010,fabt012,fabt015,fabt013,fabt014, 
+                   fabt016,fabt017,fabt029,fabt030,fabt020,fabt021,fabt023,fabt022,fabt024,fabt026,fabt034, 
+                   fabt025,fabt027,fabt028) = (g_fabt_m.fabt000,g_fabt_m.fabt001,g_fabt_m.fabt002,g_fabt_m.fabt032, 
+                   g_fabt_m.fabt033,g_fabt_m.fabt031,g_fabt_m.fabtcomp,g_fabt_m.fabt003,g_fabt_m.fabt004, 
+                   g_fabt_m.fabt005,g_fabt_m.fabt006,g_fabt_m.fabt007,g_fabt_m.fabt008,g_fabt_m.fabt009, 
+                   g_fabt_m.fabt011,g_fabt_m.fabt010,g_fabt_m.fabt012,g_fabt_m.fabt015,g_fabt_m.fabt013, 
+                   g_fabt_m.fabt014,g_fabt_m.fabt016,g_fabt_m.fabt017,g_fabt_m.fabt029,g_fabt_m.fabt030, 
+                   g_fabt_m.fabt020,g_fabt_m.fabt021,g_fabt_m.fabt023,g_fabt_m.fabt022,g_fabt_m.fabt024, 
+                   g_fabt_m.fabt026,g_fabt_m.fabt034,g_fabt_m.fabt025,g_fabt_m.fabt027,g_fabt_m.fabt028) 
+ 
+                WHERE fabtent = g_enterprise AND fabt002 = g_fabt002_t #
+                  AND fabt003 = g_fabt003_t
+                  AND fabt004 = g_fabt004_t
+ 
+               #add-point:單頭修改中
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "fabt_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+ 
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "fabt_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+ 
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     #add-point:單頭修改後
+                     
+                     #end add-point
+                     #紀錄資料更動
+                     LET g_log1 = util.JSON.stringify(g_fabt_m_t)
+                     LET g_log2 = util.JSON.stringify(g_fabt_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+            END IF
+           #controlp
+      END INPUT
+      
+      #add-point:input段more input 
+      
+      #end add-point
+    
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()
+         #add-point:input段before_dialog 
+         
+         #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      #放棄輸入
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close 
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+    
+      #toolbar 離開
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input 
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION afat512_01_reproduce()
+   DEFINE l_newno     LIKE fabt_t.fabt002 
+   DEFINE l_oldno     LIKE fabt_t.fabt002 
+   DEFINE l_newno02     LIKE fabt_t.fabt003 
+   DEFINE l_oldno02     LIKE fabt_t.fabt003 
+   DEFINE l_newno03     LIKE fabt_t.fabt004 
+   DEFINE l_oldno03     LIKE fabt_t.fabt004 
+ 
+   DEFINE l_master    RECORD LIKE fabt_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   
+   #end add-point   
+   
+   #切換畫面
+   
+   #先確定key值無遺漏
+   IF g_fabt_m.fabt002 IS NULL
+      OR g_fabt_m.fabt003 IS NULL
+      OR g_fabt_m.fabt004 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+   
+   #備份key值
+   LET g_fabt002_t = g_fabt_m.fabt002
+   LET g_fabt003_t = g_fabt_m.fabt003
+   LET g_fabt004_t = g_fabt_m.fabt004
+ 
+   
+   #清空key值
+   LET g_fabt_m.fabt002 = ""
+   LET g_fabt_m.fabt003 = ""
+   LET g_fabt_m.fabt004 = ""
+ 
+    
+   CALL afat512_01_set_entry("a")
+   CALL afat512_01_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前
+   
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+   
+   
+   #資料輸入
+   CALL afat512_01_input("r")
+ 
+   #清空key欄位的desc
+   
+   
+   IF INT_FLAG THEN
+      #取消
+      LET INT_FLAG = 0
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      INITIALIZE g_fabt_m.* TO NULL
+      CALL afat512_01_show()
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前
+   
+   #end add-point
+   
+   #add-point:單頭複製中
+   
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "fabt_t" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後
+   
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   #將新增的資料併入搜尋條件中
+   #LET g_state = "Y"
+   
+   LET g_fabt002_t = g_fabt_m.fabt002
+   LET g_fabt003_t = g_fabt_m.fabt003
+   LET g_fabt004_t = g_fabt_m.fabt004
+ 
+   
+   LET g_current_idx = g_browser.getLength() + 1
+   LET g_browser[g_current_idx].b_fabt002 = g_fabt_m.fabt002
+   LET g_browser[g_current_idx].b_fabt003 = g_fabt_m.fabt003
+   LET g_browser[g_current_idx].b_fabt004 = g_fabt_m.fabt004
+ 
+   
+   LET g_current_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+   
+   #LET g_wc = "(",g_wc,  
+   #           " OR (",
+   #           " fabt002 = '", g_fabt_m.fabt002 CLIPPED, "' "
+   #           ," AND fabt003 = '", g_fabt_m.fabt003 CLIPPED, "' "
+   #           ," AND fabt004 = '", g_fabt_m.fabt004 CLIPPED, "' "
+ 
+   #           , ")) "
+   
+   #add-point:完成複製段落後
+   
+   #end add-point
+                   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.show" >}
+#+ 資料顯示 
+PRIVATE FUNCTION afat512_01_show()
+   #add-point:show段define
+   DEFINE l_stus LIKE type_t.chr1   
+   #end add-point  
+   
+   #add-point:show段之前
+   SELECT fabrstus INTO l_stus FROM fabr_t WHERE fabrent = g_enterprise AND fabr003 = g_fabt002 AND fabr004 = g_fabt003
+   IF l_stus = 'N' THEN
+      CALL cl_set_act_visible("insert,modify,delete", TRUE)
+   ELSE
+      CALL cl_set_act_visible("insert,modify,delete", FALSE)
+   END IF
+   #end add-point
+   
+   
+   
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+   
+   #帶出公用欄位reference值
+   
+    
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL afat512_01_set_pk_array()
+   #add-point:ON ACTION agendum
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_fabt_m.fabt000,g_fabt_m.fabt001,g_fabt_m.fabt002,g_fabt_m.fabt032,g_fabt_m.fabt033, 
+       g_fabt_m.fabt031,g_fabt_m.fabtcomp,g_fabt_m.fabt003,g_fabt_m.fabt004,g_fabt_m.fabt005,g_fabt_m.fabt006, 
+       g_fabt_m.fabt007,g_fabt_m.fabt007_desc,g_fabt_m.fabt008,g_fabt_m.fabt009,g_fabt_m.fabt011,g_fabt_m.fabt011_desc, 
+       g_fabt_m.fabt010,g_fabt_m.fabt010_desc,g_fabt_m.fabt012,g_fabt_m.fabt012_desc,g_fabt_m.fabt015, 
+       g_fabt_m.fabt015_desc,g_fabt_m.fabt013,g_fabt_m.fabt013_desc,g_fabt_m.fabt014,g_fabt_m.fabt014_desc, 
+       g_fabt_m.fabt016,g_fabt_m.fabt016_desc,g_fabt_m.fabt017,g_fabt_m.fabt017_desc,g_fabt_m.fabt029, 
+       g_fabt_m.fabt030,g_fabt_m.fabt030_desc,g_fabt_m.fabt020,g_fabt_m.fabt020_desc,g_fabt_m.fabt021, 
+       g_fabt_m.fabt023,g_fabt_m.fabt023_desc,g_fabt_m.fabt022,g_fabt_m.fabt022_desc,g_fabt_m.fabt024, 
+       g_fabt_m.fabt024_desc,g_fabt_m.fabt026,g_fabt_m.fabt026_desc,g_fabt_m.fabt034,g_fabt_m.fabt034_desc, 
+       g_fabt_m.fabt025,g_fabt_m.fabt025_desc,g_fabt_m.fabt027,g_fabt_m.fabt027_desc,g_fabt_m.fabt028, 
+       g_fabt_m.fabt028_desc
+   
+   #顯示狀態(stus)圖片
+   
+ 
+   #add-point:show段之後
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION afat512_01_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   
+   #end add-point  
+   
+   #先確定key值無遺漏
+   IF g_fabt_m.fabt002 IS NULL
+   OR g_fabt_m.fabt003 IS NULL
+   OR g_fabt_m.fabt004 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+    
+   LET g_fabt002_t = g_fabt_m.fabt002
+   LET g_fabt003_t = g_fabt_m.fabt003
+   LET g_fabt004_t = g_fabt_m.fabt004
+ 
+   
+   
+ 
+   OPEN afat512_01_cl USING g_enterprise,g_fabt_m.fabt002,g_fabt_m.fabt003,g_fabt_m.fabt004
+ 
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN afat512_01_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      CLOSE afat512_01_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE afat512_01_master_referesh USING g_fabt_m.fabt002,g_fabt_m.fabt003,g_fabt_m.fabt004 INTO g_fabt_m.fabt000, 
+       g_fabt_m.fabt001,g_fabt_m.fabt002,g_fabt_m.fabt032,g_fabt_m.fabt033,g_fabt_m.fabt031,g_fabt_m.fabtcomp, 
+       g_fabt_m.fabt003,g_fabt_m.fabt004,g_fabt_m.fabt005,g_fabt_m.fabt006,g_fabt_m.fabt007,g_fabt_m.fabt008, 
+       g_fabt_m.fabt009,g_fabt_m.fabt011,g_fabt_m.fabt010,g_fabt_m.fabt012,g_fabt_m.fabt015,g_fabt_m.fabt013, 
+       g_fabt_m.fabt014,g_fabt_m.fabt016,g_fabt_m.fabt017,g_fabt_m.fabt029,g_fabt_m.fabt030,g_fabt_m.fabt020, 
+       g_fabt_m.fabt021,g_fabt_m.fabt023,g_fabt_m.fabt022,g_fabt_m.fabt024,g_fabt_m.fabt026,g_fabt_m.fabt034, 
+       g_fabt_m.fabt025,g_fabt_m.fabt027,g_fabt_m.fabt028,g_fabt_m.fabt007_desc,g_fabt_m.fabt011_desc, 
+       g_fabt_m.fabt010_desc,g_fabt_m.fabt012_desc,g_fabt_m.fabt015_desc,g_fabt_m.fabt013_desc,g_fabt_m.fabt014_desc, 
+       g_fabt_m.fabt016_desc,g_fabt_m.fabt017_desc,g_fabt_m.fabt030_desc,g_fabt_m.fabt020_desc,g_fabt_m.fabt023_desc, 
+       g_fabt_m.fabt022_desc,g_fabt_m.fabt024_desc,g_fabt_m.fabt026_desc,g_fabt_m.fabt034_desc,g_fabt_m.fabt025_desc, 
+       g_fabt_m.fabt027_desc,g_fabt_m.fabt028_desc
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = g_fabt_m.fabt002 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+   
+   #將最新資料顯示到畫面上
+   CALL afat512_01_show()
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前
+      
+      #end add-point
+ 
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL afat512_01_set_pk_array()
+      #add-point:相關文件刪除前
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+      DELETE FROM fabt_t 
+       WHERE fabtent = g_enterprise AND fabt002 = g_fabt_m.fabt002 
+         AND fabt003 = g_fabt_m.fabt003 
+         AND fabt004 = g_fabt_m.fabt004 
+ 
+ 
+      #add-point:單頭刪除中
+      
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "fabt_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後
+      
+      #end add-point
+      
+          
+      CLEAR FORM
+      #ALL afat512_01_ui_browser_refresh()
+      
+      #確保畫面上保有資料
+      IF g_browser_cnt > 0 THEN
+         CALL afat512_01_browser_fill(g_wc,"")
+         CALL afat512_01_fetch("P")
+      ELSE
+         CALL afat512_01_browser_fill(" 1=1 ","F")
+      END IF
+      
+   END IF
+ 
+   CLOSE afat512_01_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_fabt_m.fabt002,"D")
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION afat512_01_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   
+   #end add-point     
+ 
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_fabt002 = g_fabt_m.fabt002
+         AND g_browser[l_i].b_fabt003 = g_fabt_m.fabt003
+         AND g_browser[l_i].b_fabt004 = g_fabt_m.fabt004
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+   
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION afat512_01_set_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define
+   
+   #end add-point     
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("fabt002,fabt003,fabt004",TRUE)
+      #add-point:set_entry段欄位控制
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION afat512_01_set_no_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define
+   
+   #end add-point     
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("fabt002,fabt003,fabt004",FALSE)
+      #add-point:set_no_entry段欄位控制
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   CALL cl_set_comp_entry("fabt002",FALSE)
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION afat512_01_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   
+   #end add-point  
+ 
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   #根據外部參數(g_argv)組合wc
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " fabt002 = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " fabt003 = '", g_argv[02], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " fabt004 = '", g_argv[03], "' AND "
+   END IF
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      #若有外部參數則根據該參數組合
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=1
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat512_01.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="afat512_01.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="afat512_01.set_pk_array" >}
+   #+ 此段落由子樣板a51產生
+#+ 給予pk_array內容
+PRIVATE FUNCTION afat512_01_set_pk_array()
+   #add-point:set_pk_array段define
+   
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_fabt_m.fabt002
+   LET g_pk_array[1].column = 'fabt002'
+   LET g_pk_array[2].values = g_fabt_m.fabt003
+   LET g_pk_array[2].column = 'fabt003'
+   LET g_pk_array[3].values = g_fabt_m.fabt004
+   LET g_pk_array[3].column = 'fabt004'
+   
+   #add-point:set_pk_array段之後
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="afat512_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="afat512_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL afat512_01_ref_show()
+#                  
+
+# Date & Author..: 日期 By 作者 02481
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afat512_01_ref_show()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_fabt_m.fabt007
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_fabt_m.fabt007_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_fabt_m.fabt007_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_fabt_m.fabt011
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_fabt_m.fabt011_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_fabt_m.fabt011_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_fabt_m.fabt010
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_fabt_m.fabt010_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_fabt_m.fabt010_desc
+   
+   
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt012
+    CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3900' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt012_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt012_desc
+
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt015
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt015_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt015_desc
+
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt013
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt013_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt013_desc
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt014
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt014_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt014_desc
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt014
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt014_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt014_desc
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt016
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt016_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt016_desc
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt017
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt017_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt017_desc
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt030
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooga011 FROM ooga_t WHERE oogaent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt030_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt030_desc 
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt020
+    CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt020_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt020_desc
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt023
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooga011 FROM ooga_t WHERE oogaent='"||g_enterprise||"' AND ooga001=? ","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt023_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt023_desc
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt022
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt022_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt022_desc
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt012
+    CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3900' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt024_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt024_desc
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt034
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt034_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt034_desc
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_fabt_m.fabt025
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_fabt_m.fabt025_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_fabt_m.fabt025_desc
+    
+    
+     INITIALIZE g_ref_fields TO NULL
+     LET g_ref_fields[1] = g_fabt_m.fabt027
+     CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+     LET g_fabt_m.fabt027_desc = '', g_rtn_fields[1] , ''
+     DISPLAY BY NAME g_fabt_m.fabt027_desc
+     
+     
+     
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL afat512_01_fabt008_chk()
+#                  RETURNING TRUE/FALSE
+
+# Date & Author..: 日期 By 作者 02481
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afat512_01_fabt008_chk()
+DEFINE l_fabt008 LIKE fabt_t.fabt008
+DEFINE l_fabt009 LIKE fabt_t.fabt009
+DEFINE l_fabt021 LIKE fabt_t.fabt021
+DEFINE l_fabr012 LIKE fabr_t.fabr012  #數量
+DEFINE l_fabr013 LIKE fabr_t.fabr013  #在外數量
+DEFINE l_fabr023 LIKE fabr_t.fabr023  #盤點數量
+
+IF g_fabt_m.fabt009 >=0 AND g_fabt_m.fabt008 >= 0 THEN
+
+   IF g_fabt_m.fabt008  < g_fabt_m.fabt009   THEN #帳面不可小於在外數量
+      INITIALIZE g_errparam TO NULL
+       LET g_errparam.extend = ""
+       LET g_errparam.code   = "afa-00204"
+       LET g_errparam.popup  = FALSE
+       CALL cl_err()
+       RETURN FALSE 
+   END IF
+   
+   SELECT fabr012,fabr013,fabr023 INTO l_fabr012,l_fabr013,l_fabr023 FROM fabr_t WHERE fabrent = g_enterprise
+                                                                                  AND fabr003 = g_fabt002
+                                                                                  AND fabr004 = g_fabt003                                                                                  
+   SELECT SUM(fabt008),SUM(fabt009),SUM(fabt021) INTO l_fabt008,l_fabt009,l_fabt021 FROM fabt_t WHERE fabtent = g_enterprise AND fabt002 = g_fabt002 AND fabt003 = g_fabt003 AND fabt004 <> g_fabt_m.fabt004
+   IF cl_null(l_fabt008)  THEN LET l_fabt008 = 0 END IF
+   IF cl_null(l_fabt009)  THEN LET l_fabt009 = 0 END IF
+   IF cl_null(l_fabt021)  THEN LET l_fabt021 = 0 END IF
+   IF l_fabt008 + g_fabt_m.fabt008 > l_fabr012 THEN    #帳面數量檢查
+      INITIALIZE g_errparam TO NULL
+       LET g_errparam.extend = ""
+       LET g_errparam.code   = "afa-00232"
+       LET g_errparam.popup  = FALSE
+       CALL cl_err()
+       RETURN FALSE  
+   END IF
+   
+   IF l_fabt009+ g_fabt_m.fabt009 > l_fabr013 THEN    #在外數量檢查
+      INITIALIZE g_errparam TO NULL
+       LET g_errparam.extend = ""
+       LET g_errparam.code   = "afa-00233"
+       LET g_errparam.popup  = FALSE
+       CALL cl_err()
+       RETURN FALSE  
+   END IF
+   
+   IF l_fabt021+ g_fabt_m.fabt021 > l_fabr023 THEN    #盤點數量檢查
+      INITIALIZE g_errparam TO NULL
+       LET g_errparam.extend = ""
+       LET g_errparam.code   = "afa-00234"
+       LET g_errparam.popup  = FALSE
+       CALL cl_err()
+       RETURN FALSE  
+   END IF
+END IF
+RETURN TRUE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afat512_01_change_to_sql(p_wc)
+   DEFINE p_wc       STRING
+   DEFINE r_wc       STRING
+   DEFINE tok        base.StringTokenizer
+   DEFINE l_str      STRING
+
+   LET tok = base.StringTokenizer.create(p_wc,",")
+   WHILE tok.hasMoreTokens()
+      IF cl_null(l_str) THEN
+         LET l_str = tok.nextToken()
+      ELSE
+         LET l_str = l_str,"','",tok.nextToken()
+      END IF
+   END WHILE
+   LET r_wc = "'",l_str,"'"
+
+   RETURN r_wc
+END FUNCTION
+
+ 
+{</section>}
+ 

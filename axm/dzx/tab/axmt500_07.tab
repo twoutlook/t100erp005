@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmt500_07" module="axm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02040" crtdt="2016-11-03 13:53:44" modid="02040" moddt="2016-11-03 13:55:52" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="維護訂單軟備置子作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmdr004,xmdr004_desc(chr500),xmdr005,xmdr005_desc(chr500),xmdr006,xmdr003,xmdr010,xmdr010_desc(chr500),xmdr008,xmdr009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="inag004(chr10),inag004_desc(chr500),inag005(chr10),inag005_desc(chr500),inag006(chr30),inag003(chr30),inad011(dat),inag007(chr10),inag007_desc(chr500),inag008(num20_6)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmt500_07" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xmdr004,xmdr005,xmdr006,xmdr003,xmdr008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xmdr004">
+        <after>
+          <reference field="xmdr004_desc" ref_field="xmdr_t.xmdr004" map_field="xmdr004" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaa001=? "/>
+        </after>
+        <controlp form="q_inag004_13" state="i"/>
+      </column>
+      <column id="xmdr004_desc"/>
+      <column id="xmdr005">
+        <after>
+          <reference field="xmdr005_desc" ref_field="xmdr004,xmdr005" map_field="xmdr004,xmdr005" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inag004_13" state="i"/>
+      </column>
+      <column id="xmdr005_desc"/>
+      <column id="xmdr006">
+        <controlp form="q_inag004_13" state="i"/>
+      </column>
+      <column id="xmdr003">
+        <controlp form="q_inag004_13" state="i"/>
+      </column>
+      <column id="xmdr010">
+        <after>
+          <reference field="xmdr010_desc" ref_field="xmdr_t.xmdr010" map_field="xmdr010" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdr010_desc"/>
+      <column id="xmdr008">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdr009"/>
+    </init>
+    <init id="body" page="2">
+      <column id="inag004">
+        <after>
+          <reference field="inag004_desc" ref_field="inag004" map_field="inag004" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaa001=? "/>
+        </after>
+      </column>
+      <column id="inag004_desc"/>
+      <column id="inag005">
+        <after>
+          <reference field="inag005_desc" ref_field="inag004,inag005" map_field="inag004,inag005" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="inag005_desc"/>
+      <column id="inag006"/>
+      <column id="inag003"/>
+      <column id="inad011"/>
+      <column id="inag007">
+        <after>
+          <reference field="inag007_desc" ref_field="inag007" map_field="inag007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inag007_desc"/>
+      <column id="inag008"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xmdr_t" page="1" linked="" pk="xmdrdocno,xmdrseq,xmdrseq1,xmdrseq2,xmdr001,xmdr002,xmdr003,xmdr004,xmdr005,xmdr006,xmdr007">
+      <sql id="forupd_sql_detail" query="SELECT xmdr004,&apos;&apos;,xmdr005,&apos;&apos;,xmdr006,xmdr003,xmdr010,&apos;&apos;,xmdr008,xmdr009 FROM xmdr_t WHERE xmdrent=? AND xmdrdocno=? AND xmdrseq=? AND xmdrseq1=? AND xmdrseq2=? AND xmdr001=? AND xmdr002=? AND xmdr003=? AND xmdr004=? AND xmdr005=? AND xmdr006=? AND xmdr007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmdr004,&apos;&apos;,xmdr005,&apos;&apos;,xmdr006,xmdr003,xmdr010,&apos;&apos;,xmdr008,xmdr009 FROM xmdr_t WHERE xmdrent= ? AND 1=1 "/>
+    </body>
+    <body id="inag_t" page="2" linked="" pk="xmdrdocno,xmdrseq,xmdrseq1,xmdrseq2,xmdr001,xmdr002,xmdr003,xmdr004,xmdr005,xmdr006,xmdr007">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inag_t WHERE inagent=? AND inagsite=? AND inag001=? AND inag002=? AND inag003=? AND inag004=? AND inag005=? AND inag006=? AND inag007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inag_t WHERE inagent= ? AND inagsite= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapi050" module="aap" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02299" crtdt="2014-01-20 22:08:53" modid="04152" moddt="2015-12-04 11:25:38" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="交易對象付款方式設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apaasite,apaasite_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="apaastus,apaa001,apaa001_desc(chr500),apaa002,apaa003,apaa004,apaa005,apaa006,apaa007,apaa008,apaa009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="apaa001,apaa001_2_desc(chr500),apaa002,apaaownid,apaaownid_desc(chr500),apaaowndp,apaaowndp_desc(chr500),apaacrtid,apaacrtid_desc(chr500),apaacrtdp,apaacrtdp_desc(chr500),apaacrtdt,apaamodid,apaamodid_desc(chr500),apaamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_aapi050_01"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="open_apmm100_02"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapi050" method="dialog">
+    <section id="input">
+      <input id="head" field="apaasite"/>
+      <input id="body" page="1" field="apaastus,apaa001,apaa002,apaa003,apaa004,apaa005,apaa006,apaa007,apaa008,apaa009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="apaasite"/>
+      <construct id="body" page="1" field="apaastus,apaa001,apaa002,apaa003,apaa004,apaa005,apaa006,apaa007,apaa008,apaa009"/>
+      <construct id="body" page="2" field="apaaownid,apaaowndp,apaacrtid,apaacrtdp,apaacrtdt,apaamodid,apaamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="apaasite"/>
+      <set id="head" type="no_entry" field="apaasite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="apaasite">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="apaasite_desc" ref_field="apaa_t.apaasite" map_field="apaaent,apaasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="apaasite_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="apaastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="apaa001">
+        <after>
+          <check chkid="v_apaa001" id="isExist"/>
+          <reference field="apaa001_desc" ref_field="apaa_t.apaa001" map_field="pmaalent,apaa001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="apaa001_desc"/>
+      <column id="apaa002" type="S" default="1"/>
+      <column id="apaa003" type="S" default="Y"/>
+      <column id="apaa004" type="S" default="1" def_scc="8712"/>
+      <column id="apaa005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apaa006" type="S" default="0" def_scc="8508"/>
+      <column id="apaa007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apaa008" type="S" default="0" def_scc="8508"/>
+      <column id="apaa009" type="S" default="1" def_scc="6"/>
+    </init>
+    <init id="body" page="2">
+      <column id="apaa001_2_desc"/>
+      <column id="apaaownid">
+        <after>
+          <reference field="apaaownid_desc" ref_field="apaa_t.apaaownid" map_field="apaaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apaaownid_desc"/>
+      <column id="apaaowndp">
+        <after>
+          <reference field="apaaowndp_desc" ref_field="apaa_t.apaaowndp" map_field="apaaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="apaaowndp_desc"/>
+      <column id="apaacrtid">
+        <after>
+          <reference field="apaacrtid_desc" ref_field="apaa_t.apaacrtid" map_field="apaacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apaacrtid_desc"/>
+      <column id="apaacrtdp">
+        <after>
+          <reference field="apaacrtdp_desc" ref_field="apaa_t.apaacrtdp" map_field="apaacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="apaacrtdp_desc"/>
+      <column id="apaacrtdt"/>
+      <column id="apaamodid">
+        <after>
+          <reference field="apaamodid_desc" ref_field="apaa_t.apaamodid" map_field="apaamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apaamodid_desc"/>
+      <column id="apaamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apaa_t" pk="apaasite">
+      <sql id="forupd_sql" type="sql" query="SELECT apaasite,&apos;&apos; FROM apaa_t WHERE apaaent= ? AND apaasite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT apaasite,&apos;&apos; FROM apaa_t" order="apaasite"/>
+    </head>
+    <body id="apaa_t" page="1,2" linked="" pk="apaa001,apaa002" fk="apaasite">
+      <sql id="forupd_sql_detail" query="SELECT apaastus,apaa001,&apos;&apos;,apaa002,apaa003,apaa004,apaa005,apaa006,apaa007,apaa008,apaa009,&apos;&apos;,&apos;&apos;,&apos;&apos;,apaaownid,&apos;&apos;,apaaowndp,&apos;&apos;,apaacrtid,&apos;&apos;,apaacrtdp,&apos;&apos;,apaacrtdt,apaamodid,&apos;&apos;,apaamoddt FROM apaa_t WHERE apaaent=? AND apaasite=? AND apaa001=? AND apaa002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT apaastus,apaa001,&apos;&apos;,apaa002,apaa003,apaa004,apaa005,apaa006,apaa007,apaa008,apaa009,&apos;&apos;,&apos;&apos;,&apos;&apos;,apaaownid,&apos;&apos;,apaaowndp,&apos;&apos;,apaacrtid,&apos;&apos;,apaacrtdp,&apos;&apos;,apaacrtdt,apaamodid,&apos;&apos;,apaamoddt FROM apaa_t WHERE apaaent= ? AND apaasite=?"/>
+    </body>
+  </dataset>
+</assembly>
+

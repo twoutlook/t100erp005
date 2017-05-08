@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi620" module="aoo" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02298" crtdt="2013-10-20 11:15:09" modid="02295" moddt="2016-03-09 14:24:57" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="複合稅稅別設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="oodc001,oodc001_desc(chr80),oodc002,oodbl004(chr500),oodb005"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oodc003,oodc003_desc(chr500),oodb003(chr10),lc_oodb005(chr1),oodb006(num26_10),oodcstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="oodc003,oodcmodid,oodcmodid_desc(chr500),oodcmoddt,oodcownid,oodcownid_desc(chr500),oodcowndp,oodcowndp_desc(chr500),oodccrtid,oodccrtid_desc(chr500),oodccrtdp,oodccrtdp_desc(chr500),oodccrtdt"/>
+      <var id="bs_field" value="oodc001,oodc001_desc(chr80),oodc002,oodc002_desc(chr80)" pk="oodc001,oodc002" order=""/>
+      <bs_reference field="oodc001_desc" ref_field="oodc001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;2&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+      <bs_reference field="oodc002_desc" ref_field="oodc001,oodc002" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl001=? AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi620" method="dialog">
+    <section id="input">
+      <input id="head" field="oodc001,oodc002,oodbl004,oodb005"/>
+      <input id="body" page="1" field="oodc003,oodb006,oodcstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="oodc001,oodc002,oodbl004,oodb005"/>
+      <construct id="body" page="1" field="oodc003,oodb006,oodcstus"/>
+      <construct id="body" page="2" field="oodcmodid,oodcmoddt,oodcownid,oodcowndp,oodccrtid,oodccrtdp,oodccrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="oodc001,oodc002"/>
+      <set id="head" type="no_entry" field="oodc001,oodc002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="oodc001">
+        <after>
+          <reference field="oodc001_desc" ref_field="oodc001" map_field="oodc001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;2&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_11" state="i"/>
+        <controlp form="q_oodc001" state="c"/>
+      </column>
+      <column id="oodc001_desc"/>
+      <column id="oodc002">
+        <controlp form="q_oodc002_1" state="i"/>
+        <controlp form="q_oodc002" state="c"/>
+      </column>
+      <column id="oodbl004"/>
+      <column id="oodb005" type="S" default="Y"/>
+    </init>
+    <init id="body" page="1">
+      <column id="oodc003">
+        <after>
+          <reference field="oodc003_desc" ref_field="oodc001,oodc002" map_field="oodc001,oodc002" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl001=? AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002_4" state="i"/>
+      </column>
+      <column id="oodc003_desc"/>
+      <column id="oodb003"/>
+      <column id="lc_oodb005" type="S" default="Y"/>
+      <column id="oodb006"/>
+      <column id="oodcstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="oodcmodid">
+        <after>
+          <reference field="oodcmodid_desc" ref_field="oodc_t.oodcmodid" map_field="oodcmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oodcmodid_desc"/>
+      <column id="oodcmoddt"/>
+      <column id="oodcownid">
+        <after>
+          <reference field="oodcownid_desc" ref_field="oodc_t.oodcownid" map_field="oodcownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oodcownid_desc"/>
+      <column id="oodcowndp">
+        <after>
+          <reference field="oodcowndp_desc" ref_field="oodc_t.oodcowndp" map_field="oodcowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oodcowndp_desc"/>
+      <column id="oodccrtid">
+        <after>
+          <reference field="oodccrtid_desc" ref_field="oodc_t.oodccrtid" map_field="oodccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oodccrtid_desc"/>
+      <column id="oodccrtdp">
+        <after>
+          <reference field="oodccrtdp_desc" ref_field="oodc_t.oodccrtdp" map_field="oodccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oodccrtdp_desc"/>
+      <column id="oodccrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="oodc_t" pk="oodc001,oodc002">
+      <sql id="forupd_sql" type="sql" query="SELECT oodc001,&apos;&apos;,oodc002,&apos;&apos;,&apos;&apos; FROM oodc_t WHERE oodcent= ? AND oodc001=? AND oodc002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT oodc001,&apos;&apos;,oodc002,&apos;&apos;,&apos;&apos; FROM oodc_t" order="oodc001,oodc002"/>
+      <sql id="append" type="lang" target="oodbl004" table="oodbl_t" fk="oodc001,oodc002" pk="oodbl001,oodbl002,oodbl003" field="oodbl004"/>
+    </head>
+    <body id="oodc_t" page="1,2" linked="" pk="oodc003" fk="oodc001,oodc002">
+      <sql id="forupd_sql_detail" query="SELECT oodc003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,oodcstus,&apos;&apos;,oodcmodid,&apos;&apos;,oodcmoddt,oodcownid,&apos;&apos;,oodcowndp,&apos;&apos;,oodccrtid,&apos;&apos;,oodccrtdp,&apos;&apos;,oodccrtdt FROM oodc_t WHERE oodcent=? AND oodc001=? AND oodc002=? AND oodc003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oodc003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,oodcstus,&apos;&apos;,oodcmodid,&apos;&apos;,oodcmoddt,oodcownid,&apos;&apos;,oodcowndp,&apos;&apos;,oodccrtid,&apos;&apos;,oodccrtdp,&apos;&apos;,oodccrtdt FROM oodc_t WHERE oodcent= ? AND oodc001=? AND oodc002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,476 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ammt410_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2013-09-26 00:00:00), PR版次:0003(2016-11-11 17:02:43)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000160
+#+ Filename...: ammt410_01
+#+ Description: 會員卡開卡資料批次產生作業
+#+ Creator....: 01996(2013-09-26 14:09:21)
+#+ Modifier...: 02114 -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="ammt410_01.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#160318-00005#24  2016/03/30 by 07675   將重複內容的錯誤訊息置換為公用錯誤訊息
+#161111-00028#1   2016/11/11 BY 02481   标准程式定义采用宣告模式,弃用.*写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammt410_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+{<Module define>}
+#單頭 type 宣告
+ type type_g_mmbe_m        RECORD
+       mmbedocno LIKE mmbe_t.mmbedocno,
+   mmbeseq LIKE mmbe_t.mmbeseq,
+   mmaq001 LIKE mmaq_t.mmaq001,
+   mmbesite LIKE mmbe_t.mmbesite,
+   mmbesite_desc LIKE type_t.chr80
+       END RECORD
+DEFINE g_mmbe_m        type_g_mmbe_m
+DEFINE g_wc           STRING
+DEFINE g_errmsg       STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+{</Module define>}
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammt410_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_mmbesite_t   LIKE mmbe_t.mmbesite
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammt410_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="ammt410_01.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION ammt410_01(--)
+   #add-point:construct段變數傳入
+p_mmbddocno,p_mmbdsite
+   #end add-point
+   )
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_mmbdsite       LIKE mmbd_t.mmbdsite
+   DEFINE p_mmbddocno     LIKE mmbd_t.mmbddocno
+   DEFINE l_sql           STRING
+  #DEFINE l_mmbe          RECORD LIKE mmbe_t.*  #161111-00028#1--mark
+  #161111-00028#1----add---begin-----------
+   DEFINE l_mmbe RECORD  #會員卡狀態異動單身檔
+       mmbeent LIKE mmbe_t.mmbeent, #企業編號
+       mmbesite LIKE mmbe_t.mmbesite, #營運據點
+       mmbedocno LIKE mmbe_t.mmbedocno, #單據編號
+       mmbeseq LIKE mmbe_t.mmbeseq, #項次
+       mmbe001 LIKE mmbe_t.mmbe001, #會員卡號
+       mmbe002 LIKE mmbe_t.mmbe002, #卡種編號
+       mmbe003 LIKE mmbe_t.mmbe003, #會員編號
+       mmbe004 LIKE mmbe_t.mmbe004, #數量
+       mmbe005 LIKE mmbe_t.mmbe005, #異動前卡狀態
+       mmbe006 LIKE mmbe_t.mmbe006, #有效期至
+       mmbeunit LIKE mmbe_t.mmbeunit #應用組織
+       END RECORD
+   #161111-00028#1---add---end-------------
+   DEFINE l_success       LIKE type_t.chr1
+   DEFINE l_msg           STRING
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_mmaq001       LIKE mmaq_t.mmaq001
+   {</Local define>}
+   #add-point:construct段define
+   {<point name="construct.define"/>}
+   #end add-point
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_ammt410_01 WITH FORM cl_ap_formpath("amm","ammt410_01")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+
+   
+
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="construct.pre_construct"/>}
+   #end add-point
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON mmbedocno,mmbeseq,mmaq001
+
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            {<point name="construct.before_construct"/>}
+            #end add-point
+
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            {<point name="construct.after_construct"/>}
+            #end add-point
+
+         ON ACTION controlp INFIELD mmaq001
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmbe001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaq001  #顯示到畫面上
+
+            NEXT FIELD mmaq001 
+
+         #---------------------------<  Master  >---------------------------
+
+
+      END CONSTRUCT
+      INPUT BY NAME g_mmbe_m.mmbesite ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT 
+            LET g_mmbe_m.mmbesite = p_mmbdsite
+            CALL ammt410_01_mmbesite_desc()
+            LET g_mmbesite_t = g_mmbe_m.mmbesite
+            
+         AFTER FIELD mmbesite
+            INITIALIZE g_mmbe_m.mmbesite_desc TO NULL
+            DISPLAY BY NAME g_mmbe_m.mmbesite_desc
+            IF NOT cl_null(g_mmbe_m.mmbesite) THEN
+               IF NOT ap_chk_isExist(g_mmbe_m.mmbesite,"SELECT COUNT(*) FROM ooea_t WHERE ooeaent = '"||g_enterprise||"' AND ooea001 = ? AND ooea004 = 'Y'",'aim-00060',1) THEN
+                  LET g_mmbe_m.mmbesite =  g_mmbesite_t           
+                  NEXT FIELD CURRENT
+               END IF
+               
+               IF NOT ap_chk_isExist(g_mmbe_m.mmbesite,"SELECT COUNT(*) FROM ooea_t WHERE ooeaent = '"||g_enterprise||"' AND ooea001 = ? AND ooea004 = 'Y' AND ooeastus = 'Y'",'sub-01302','aooi100') THEN  #160318-00005#24 mod#'aim-00061',1) THEN
+                  LET g_mmbe_m.mmbesite =  g_mmbesite_t
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            CALL ammt410_01_mmbesite_desc()
+            #END add-point
+           
+         ON ACTION controlp INFIELD mmbesite
+            #add-point:ON ACTION controlp INFIELD mmbesite
+            #開窗i段
+            LET g_qryparam.state = "i"
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_mmbe_m.mmbesite             #給予default值
+
+            #給予arg
+
+            CALL q_ooea001_4()                                #呼叫開窗
+
+            LET g_mmbe_m.mmbesite  = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_mmbe_m.mmbesite  TO mmbesite             #顯示到畫面上
+            
+            CALL ammt410_01_mmbesite_desc()
+
+            NEXT FIELD mmbesite                         #返回原欄位
+
+
+      END INPUT 
+      #add-point:自定義construct
+      {<point name="construct.more_construct"/>}
+      #end add-point
+	
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+
+   END DIALOG
+
+   #畫面關閉
+   CLOSE WINDOW w_ammt410_01
+
+   IF NOT INT_FLAG THEN
+      LET l_success = 'Y'
+      CALL s_transaction_begin()
+      LET INT_FLAG = FALSE
+      LET l_n = 0
+      LET l_sql = "SELECT mmaq001 FROM mmaq_t WHERE mmaq006 = '2' AND mmaqent='",g_enterprise,
+                  "' AND ",g_wc
+      SELECT COUNT(*) INTO l_n FROM mmbe_t WHERE mmbeent = g_enterprise
+          AND mmbedocno = p_mmbddocno
+      IF l_n > 0 THEN
+         IF cl_ask_confirm('amm-00070') THEN
+            DELETE FROM mmbe_t WHERE mmbeent = g_enterprise
+                AND mmbedocno = p_mmbddocno
+         ELSE
+            LET l_sql = l_sql," AND NOT EXISTS (SELECT 1 FROM mmbe_t WHERE  mmbeent = mmaqent ",
+                            "   AND mmbe001 = mmaq001 AND mmbedocno = '",p_mmbddocno,"')"
+         END IF
+      END IF 
+      
+      PREPARE mmaq_pre_1 FROM l_sql
+      DECLARE mmaq_cur_1 CURSOR FOR mmaq_pre_1
+      
+      FOREACH mmaq_cur_1 INTO l_mmaq001
+         IF SQLCA.SQLCODE THEN
+            LET l_success = 'N'
+            CALL ammt410_01_batch_err(SQLCA.SQLCODE,'mmbe_t') RETURNING l_msg
+            LET g_errmsg = g_errmsg CLIPPED,l_msg
+            EXIT FOREACH
+         END IF
+         IF NOT ammt410_01_mmbe001_insert(l_mmaq001,p_mmbddocno,p_mmbdsite) THEN
+            LET l_success = 'N'
+         END IF
+      END FOREACH
+      IF l_success = 'N' THEN
+         LET g_errmsg = "錯誤訊息:",g_errmsg
+         CALL FGL_WINMESSAGE("Info",g_errmsg,"information")
+      END IF
+      CALL s_transaction_end(l_success,0)
+   END IF
+   
+END FUNCTION
+#+
+PRIVATE FUNCTION ammt410_01_mmbe001_insert(p_mmaq001,p_mmbddocno,p_mmbdsite)
+DEFINE p_mmaq001   LIKE mmaq_t.mmaq001  
+#DEFINE l_mmbe      RECORD LIKE mmbe_t.*  #161111-00028#1--mark
+#DEFINE l_mman      RECORD LIKE mman_t.*  #161111-00028#1--mark
+#161111-00028#1----add---begin-----------
+DEFINE l_mmbe RECORD  #會員卡狀態異動單身檔
+       mmbeent LIKE mmbe_t.mmbeent, #企業編號
+       mmbesite LIKE mmbe_t.mmbesite, #營運據點
+       mmbedocno LIKE mmbe_t.mmbedocno, #單據編號
+       mmbeseq LIKE mmbe_t.mmbeseq, #項次
+       mmbe001 LIKE mmbe_t.mmbe001, #會員卡號
+       mmbe002 LIKE mmbe_t.mmbe002, #卡種編號
+       mmbe003 LIKE mmbe_t.mmbe003, #會員編號
+       mmbe004 LIKE mmbe_t.mmbe004, #數量
+       mmbe005 LIKE mmbe_t.mmbe005, #異動前卡狀態
+       mmbe006 LIKE mmbe_t.mmbe006, #有效期至
+       mmbeunit LIKE mmbe_t.mmbeunit #應用組織
+       END RECORD
+DEFINE l_mman RECORD  #會員卡種資料檔
+       mmanent LIKE mman_t.mmanent, #企業編號
+       mmanunit LIKE mman_t.mmanunit, #應用組織
+       mman001 LIKE mman_t.mman001, #卡種編號
+       mman002 LIKE mman_t.mman002, #版本
+       mman003 LIKE mman_t.mman003, #外社卡
+       mman004 LIKE mman_t.mman004, #no use
+       mman005 LIKE mman_t.mman005, #卡號總碼長
+       mman006 LIKE mman_t.mman006, #卡號固定編號長度
+       mman007 LIKE mman_t.mman007, #卡號固定編號
+       mman008 LIKE mman_t.mman008, #卡號流水碼長度
+       mman009 LIKE mman_t.mman009, #發卡方式
+       mman010 LIKE mman_t.mman010, #消費附贈最低消費金額
+       mman011 LIKE mman_t.mman011, #購卡金額
+       mman012 LIKE mman_t.mman012, #發卡贈品商品編號
+       mman013 LIKE mman_t.mman013, #換卡工本費
+       mman014 LIKE mman_t.mman014, #補卡工本費
+       mman015 LIKE mman_t.mman015, #卡記名
+       mman016 LIKE mman_t.mman016, #使用時需開卡
+       mman017 LIKE mman_t.mman017, #卡需設定密碼
+       mman018 LIKE mman_t.mman018, #卡效期控管
+       mman019 LIKE mman_t.mman019, #效期規則起算基準
+       mman020 LIKE mman_t.mman020, #有效期至
+       mman021 LIKE mman_t.mman021, #效期指定日期
+       mman022 LIKE mman_t.mman022, #效期指定月份長度
+       mman023 LIKE mman_t.mman023, #卡效期延長
+       mman024 LIKE mman_t.mman024, #效期延長月份長度
+       mman025 LIKE mman_t.mman025, #效期延長次數
+       mman026 LIKE mman_t.mman026, #會員折扣
+       mman027 LIKE mman_t.mman027, #積點
+       mman028 LIKE mman_t.mman028, #預設積點基準單位
+       mman029 LIKE mman_t.mman029, #預設積點基準
+       mman030 LIKE mman_t.mman030, #預設單位積點
+       mman031 LIKE mman_t.mman031, #積點清零規則
+       mman032 LIKE mman_t.mman032, #積點月後清零
+       mman033 LIKE mman_t.mman033, #積點日後清零
+       mman034 LIKE mman_t.mman034, #積點指定清零日期-月
+       mman035 LIKE mman_t.mman035, #積點指定清零日期-日
+       mman036 LIKE mman_t.mman036, #積點取位
+       mman037 LIKE mman_t.mman037, #取位方法
+       mman038 LIKE mman_t.mman038, #積點抵現
+       mman039 LIKE mman_t.mman039, #預設最低抵現消費額
+       mman040 LIKE mman_t.mman040, #預設抵現積點基準
+       mman041 LIKE mman_t.mman041, #預設抵現單位金額
+       mman042 LIKE mman_t.mman042, #可儲值
+       mman043 LIKE mman_t.mman043, #可重複儲值
+       mman044 LIKE mman_t.mman044, #每次儲值金額上限
+       mman045 LIKE mman_t.mman045, #每次儲值金額下限
+       mman046 LIKE mman_t.mman046, #最高總儲值金額
+       mman047 LIKE mman_t.mman047, #儲值折扣
+       mman048 LIKE mman_t.mman048, #預設儲值折扣率
+       mman049 LIKE mman_t.mman049, #儲值加值
+       mman050 LIKE mman_t.mman050, #預設加值最低金額條件
+       mman051 LIKE mman_t.mman051, #預設加值儲值金額基準
+       mman052 LIKE mman_t.mman052, #預設單位加值金額
+       mman053 LIKE mman_t.mman053, #卡種對應商品編號
+       mman054 LIKE mman_t.mman054, #儲值金額對應商品編號
+       mman055 LIKE mman_t.mman055, #預設抵現上限比例
+       mman056 LIKE mman_t.mman056, #預設抵現上限金額
+       mman057 LIKE mman_t.mman057, #積點抵現對應款別編號
+       mman058 LIKE mman_t.mman058, #儲值對應款別編號
+       mman059 LIKE mman_t.mman059, #卡異動明細產生方式
+       mman060 LIKE mman_t.mman060, #積分對應商品編號
+       mmanstus LIKE mman_t.mmanstus, #狀態碼
+       mmanownid LIKE mman_t.mmanownid, #資料所有者
+       mmanowndp LIKE mman_t.mmanowndp, #資料所有部門
+       mmancrtid LIKE mman_t.mmancrtid, #資料建立者
+       mmancrtdp LIKE mman_t.mmancrtdp, #資料建立部門
+       mmancrtdt LIKE mman_t.mmancrtdt, #資料創建日
+       mmanmodid LIKE mman_t.mmanmodid, #資料修改者
+       mmanmoddt LIKE mman_t.mmanmoddt, #最近修改日
+       mmancnfid LIKE mman_t.mmancnfid, #資料確認者
+       mmancnfdt LIKE mman_t.mmancnfdt, #資料確認日
+       mman061 LIKE mman_t.mman061, #銷售認列方式
+       mman062 LIKE mman_t.mman062, #會員價
+       mman063 LIKE mman_t.mman063, #會員價選擇
+       mman064 LIKE mman_t.mman064, #預設折扣率
+       mman065 LIKE mman_t.mman065, #儲值付款單次使用否
+       mman066 LIKE mman_t.mman066, #卡類型
+       mman067 LIKE mman_t.mman067, #特價積點基準
+       mman068 LIKE mman_t.mman068, #特價單位積點
+       mman069 LIKE mman_t.mman069, #記名累計金額
+       mman070 LIKE mman_t.mman070, #用卡支付積分否
+       mman071 LIKE mman_t.mman071, #加值類型
+       mman072 LIKE mman_t.mman072, #與其他卡種同時使用否
+       mman073 LIKE mman_t.mman073 #參加促銷金額否
+       END RECORD
+   #161111-00028#1---add---end-------------
+DEFINE l_mmaq021   LIKE mmaq_t.mmaq021
+DEFINE l_mmaq023   LIKE mmaq_t.mmaq023
+DEFINE l_mmaq025   LIKE mmaq_t.mmaq025
+DEFINE p_mmbddocno LIKE mmbd_t.mmbddocno
+DEFINE p_mmbdsite  LIKE mmbd_t.mmbdsite
+DEFINE l_msg       STRING
+   SELECT mmaq002,mmaq003,mmaq005,mmaq006,mmaq021,mmaq023,mmaq025
+     INTO l_mmbe.mmbe002,l_mmbe.mmbe003,l_mmbe.mmbe006,
+          l_mmbe.mmbe005,l_mmaq021,l_mmaq023,l_mmaq025
+     FROM mmaq_t LEFT OUTER JOIN mman_t  ON  mmanent = g_enterprise AND mman001 = mmaq002 
+    WHERE mmaqent = g_enterprise AND mmaq001 = p_mmaq001
+    
+     # SELECT * INTO l_mman.* FROM mman_t   #161111-00028#1--MARK
+      #161111-00028#1---ADD---BEGIN----------------
+       SELECT  mmanent,mmanunit,mman001,mman002,mman003,mman004,mman005,mman006,mman007,mman008,mman009,
+               mman010,mman011,mman012,mman013,mman014,mman015,mman016,mman017,mman018,mman019,mman020,mman021,
+               mman022,mman023,mman024,mman025,mman026,mman027,mman028,mman029,mman030,mman031,mman032,mman033,
+               mman034,mman035,mman036,mman037,mman038,mman039,mman040,mman041,mman042,mman043,mman044,mman045,
+               mman046,mman047,mman048,mman049,mman050,mman051,mman052,mman053,mman054,mman055,mman056,mman057,
+               mman058,mman059,mman060,mmanstus,mmanownid,mmanowndp,mmancrtid,mmancrtdp,mmancrtdt,mmanmodid,
+               mmanmoddt,mmancnfid,mmancnfdt,mman061,mman062,mman063,mman064,mman065,mman066,mman067,mman068,
+               mman069,mman070,mman071,mman072,mman073
+        INTO l_mman.mmanent,l_mman.mmanunit,l_mman.mman001,l_mman.mman002,l_mman.mman003,l_mman.mman004,l_mman.mman005,
+             l_mman.mman006,l_mman.mman007,l_mman.mman008,l_mman.mman009,l_mman.mman010,l_mman.mman011,l_mman.mman012,
+             l_mman.mman013,l_mman.mman014,l_mman.mman015,l_mman.mman016,l_mman.mman017,l_mman.mman018,l_mman.mman019,
+             l_mman.mman020,l_mman.mman021,l_mman.mman022,l_mman.mman023,l_mman.mman024,l_mman.mman025,l_mman.mman026,
+             l_mman.mman027,l_mman.mman028,l_mman.mman029,l_mman.mman030,l_mman.mman031,l_mman.mman032,l_mman.mman033,
+             l_mman.mman034,l_mman.mman035,l_mman.mman036,l_mman.mman037,l_mman.mman038,l_mman.mman039,l_mman.mman040,
+             l_mman.mman041,l_mman.mman042,l_mman.mman043,l_mman.mman044,l_mman.mman045,l_mman.mman046,l_mman.mman047,
+             l_mman.mman048,l_mman.mman049,l_mman.mman050,l_mman.mman051,l_mman.mman052,l_mman.mman053,l_mman.mman054,
+             l_mman.mman055,l_mman.mman056,l_mman.mman057,l_mman.mman058,l_mman.mman059,l_mman.mman060,l_mman.mmanstus,
+             l_mman.mmanownid,l_mman.mmanowndp,l_mman.mmancrtid,l_mman.mmancrtdp,l_mman.mmancrtdt,l_mman.mmanmodid,
+             l_mman.mmanmoddt,l_mman.mmancnfid,l_mman.mmancnfdt,l_mman.mman061,l_mman.mman062,l_mman.mman063,
+             l_mman.mman064,l_mman.mman065,l_mman.mman066,l_mman.mman067,l_mman.mman068,l_mman.mman069,l_mman.mman070,
+             l_mman.mman071,l_mman.mman072,l_mman.mman073
+
+        FROM mman_t 
+        #161111-00028#1---ADD---END----------------
+        WHERE mmanent = g_enterprise
+          AND mman001 = l_mmbe.mmbe002
+   IF l_mman.mman018 = 'N' THEN            #當[C:卡效期控管]='N'時表示不控管效期
+      LET l_mmbe.mmbe006 = ''
+   ELSE                              
+      IF l_mman.mman019 MATCHES '[123]' THEN
+         IF l_mman.mman020 = '1' THEN      #有效期至='1.指定日期'
+            LET l_mmbe.mmbe006 = l_mman.mman021
+         ELSE                              #有效期至='2.指定月份長度'
+            SELECT ADD_MONTHS(l_mmaq021,l_mman.mman022),ADD_MONTHS(l_mmaq023,l_mman.mman022),
+                   ADD_MONTHS(l_mmaq025,l_mman.mman022) FROM mmaq_t 
+             WHERE mmaqent = g_enterprise AND mmaq001 = l_mmbe.mmbe001
+            CASE l_mman.mman019
+               WHEN '1'   #制卡
+                 SELECT ADD_MONTHS(l_mmaq021,l_mman.mman022) INTO  l_mmbe.mmbe006
+                   FROM mmaq_t WHERE mmaqent = g_enterprise AND mmaq001 = l_mmbe.mmbe001  
+               WHEN '2'   #發卡
+                 SELECT ADD_MONTHS(l_mmaq023,l_mman.mman022) INTO  l_mmbe.mmbe006
+                   FROM mmaq_t WHERE mmaqent = g_enterprise AND mmaq001 = l_mmbe.mmbe001   
+               WHEN '3'   #開卡
+                 SELECT ADD_MONTHS(l_mmaq025,l_mman.mman022) INTO  l_mmbe.mmbe006
+                   FROM mmaq_t WHERE mmaqent = g_enterprise AND mmaq001 = l_mmbe.mmbe001                    
+            END CASE
+         END IF
+      END IF
+   END IF
+   SELECT MAX(mmbeseq) + 1 INTO l_mmbe.mmbeseq FROM mmbe_t WHERE mmbeent = g_enterprise
+       AND mmbedocno = p_mmbddocno 
+   IF cl_null(l_mmbe.mmbeseq) THEN LET l_mmbe.mmbeseq = 1 END IF
+   INSERT INTO mmbe_t(mmbeent,mmbesite,mmbedocno,mmbeseq,mmbe001,mmbe002,mmbe003,mmbe004,mmbe005,mmbe006,mmbeunit)
+              VALUES(g_enterprise,g_mmbe_m.mmbesite,p_mmbddocno,l_mmbe.mmbeseq,p_mmaq001,l_mmbe.mmbe002,l_mmbe.mmbe003,0,l_mmbe.mmbe005,l_mmbe.mmbe006,l_mmbe.mmbeunit)
+   IF SQLCA.SQLCODE THEN
+      CALL ammt410_01_batch_err(SQLCA.SQLCODE,'mmbe_t') RETURNING l_msg
+      LET g_errmsg = g_errmsg CLIPPED,l_msg
+      RETURN FALSE
+   END IF
+   RETURN TRUE
+END FUNCTION
+#+ 匯總報錯
+PRIVATE FUNCTION ammt410_01_batch_err(p_err,p_msg)
+DEFINE p_err LIKE type_t.chr20
+DEFINE p_msg STRING
+DEFINE l_msg STRING
+   LET g_errmsg = g_errmsg, ASCII 10
+   IF NOT cl_null(p_msg) THEN
+      LET l_msg = p_msg CLIPPED,cl_getmsg(p_err,g_lang)
+   ELSE
+      LET l_msg = 12 SPACE,cl_getmsg(p_err,g_lang)
+   END IF
+   RETURN l_msg
+END FUNCTION
+#+
+PRIVATE FUNCTION ammt410_01_mmbesite_desc()
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = g_mmbe_m.mmbesite
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_mmbe_m.mmbesite_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_mmbe_m.mmbesite_desc
+END FUNCTION
+
+ 
+{</section>}
+ 

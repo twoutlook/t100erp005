@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq360" module="ais" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="03080" crtdt="2015-01-22 17:47:39" modid="03080" moddt="2015-01-22 20:38:09" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="對帳單發票開立明細查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isahcomp,isaf003(chr100),isaf100,isahdocno,isahseq,isah011,isaf022,isah003,isah004,isah013,isah005,isah006,isah101,isah103,isah105,isah010,l_isah1032(num20_6),isah106,isah012,isba001(chr500),isat004(chr500),isaf017"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isahcomp(b_isahcomp),isaf003(b_isaf003),isaf100(b_isaf100),isahdocno(b_isahdocno),isahseq(b_isahseq),isah011(b_isah011),isaf022(b_isaf022),isah003(b_isah003),isah004(b_isah004),isah013(b_isah013),isah005(b_isah005),isah006(b_isah006),isah101(b_isah101),isah103(b_isah103),isah105(b_isah105),isah010(b_isah010),l_isah1032(l_isah1032),isah106(b_isah106),isah012(b_isah012),isba001(b_isba001),isat004(b_isat004),isaf017(b_isaf017)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="open_aisq360_01"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq360" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isahcomp,isaf003,isaf100,isahdocno,isahseq,isah011,isaf022,isah003,isah004,isah013,isah005,isah006,isah101,isah103,isah105,isah010,isah106,isah012,isba001,isat004,isaf017" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isahcomp(b_isahcomp),isaf100(b_isaf100),isahdocno(b_isahdocno),isahseq(b_isahseq),isah011(b_isah011),isaf022(b_isaf022),isah003(b_isah003),isah004(b_isah004),isah013(b_isah013),isah005(b_isah005),isah006(b_isah006),isah101(b_isah101),isah103(b_isah103),isah105(b_isah105),isah010(b_isah010),isah106(b_isah106),isah012(b_isah012),isaf017(b_isaf017)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isahcomp"/>
+      <column id="isaf003"/>
+      <column id="isaf100">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_aooi001_1" state="i"/>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="isahdocno"/>
+      <column id="isahseq"/>
+      <column id="isah011" type="S" default="0"/>
+      <column id="isaf022"/>
+      <column id="isah003">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="isah004"/>
+      <column id="isah013"/>
+      <column id="isah005"/>
+      <column id="isah006" type="S" default="0"/>
+      <column id="isah101" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isah103" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isah105" type="S" default="0"/>
+      <column id="isah010"/>
+      <column id="l_isah1032"/>
+      <column id="isah106" type="S" default="0"/>
+      <column id="isah012"/>
+      <column id="isba001"/>
+      <column id="isat004"/>
+      <column id="isaf017"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isah_t" page="1" linked="" pk="isahcomp,isahdocno,isahseq">
+      <sql id="b_fill_sql" query="SELECT isahcomp,&apos;&apos;,&apos;&apos;,isahdocno,isahseq,isah011,&apos;&apos;,isah003,isah004,isah013,isah005,isah006,isah101,isah103,isah105,isah010,&apos;&apos;,isah106,isah012,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM isah_t WHERE isahent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

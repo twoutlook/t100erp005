@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmq562" module="anm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02599" crtdt="2015-04-27 15:49:55" modid="01727" moddt="2016-01-26 14:57:14" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="待結算卡追蹤查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),nmea018,nmeasite,nmeasite_desc(chr500),nmea017,nmbadocdt,nmea001,nmea009,nmea013,nmea008,nmeadocno,nmeaseq,nmeacomp"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),nmea018(b_nmea018),nmeasite(b_nmeasite),nmeasite_desc(b_nmeasite_desc),nmea017(b_nmea017),nmbadocdt(b_nmbadocdt),nmea001(b_nmea001),nmea009(b_nmea009),nmea013(b_nmea013),nmea008(b_nmea008),nmeadocno(b_nmeadocno),nmeaseq(b_nmeaseq),nmeacomp(b_nmeacomp)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="act2"/>
+      <action id="exi"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+      <action id="apt"/>
+      <action id="act1"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmq562" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmea018,nmeasite,nmea017,nmbadocdt,nmea001,nmea009,nmea013,nmea008,nmeadocno,nmeaseq,nmeacomp" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmeadocno(b_nmeadocno),nmeaseq(b_nmeaseq),nmeacomp(b_nmeacomp)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="nmea018"/>
+      <column id="nmeasite">
+        <after>
+          <reference field="nmeasite_desc" ref_field="nmeasite" map_field="nmeaent,nmeasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmeasite_desc"/>
+      <column id="nmea017"/>
+      <column id="nmbadocdt"/>
+      <column id="nmea001"/>
+      <column id="nmea009" type="S" default="0"/>
+      <column id="nmea013"/>
+      <column id="nmea008"/>
+      <column id="nmeadocno"/>
+      <column id="nmeaseq"/>
+      <column id="nmeacomp"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmea_t" page="1" linked="" pk="nmeacomp,nmeadocno,nmeaseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,nmea018,nmeasite,&apos;&apos;,nmea017,&apos;&apos;,nmea001,nmea009,nmea013,nmea008,nmeadocno,nmeaseq,nmeacomp FROM nmea_t WHERE nmeaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

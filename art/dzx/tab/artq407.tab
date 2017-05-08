@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artq407" module="art" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06814" crtdt="2015-04-20 15:12:17" modid="02003" moddt="2016-03-24 16:37:24" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="庫區商品對應關係查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtei005,rteiacti,rteisite,rteiunit,rtei001,rtei001_desc(chr500),rtei002,rtei003,rtei002_desc(chr500),rtei002_desc_desc(chr500),rtei004,l_rtei004_desc(chr500),rteistamp(timestamp)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtei001,rtei002,rteiownid,rteiownid_desc(chr500),rteiowndp,rteiowndp_desc(chr500),rteicrtid,rteicrtid_desc(chr500),rteicrtdp,rteicrtdp_desc(chr500),rteicrtdt,rteimodid,rteimodid_desc(chr500),rteimoddt"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtei005(b_rtei005),rteiacti(b_rteiacti),rteisite(b_rteisite),rteiunit(b_rteiunit),rtei001(b_rtei001),rtei001_desc(b_rtei001_desc),rtei002(b_rtei002),rtei003(b_rtei003),rtei002_desc(rtei002_desc),rtei002_desc_desc(rtei002_desc_desc),rtei004(b_rtei004),l_rtei004_desc(l_rtei004_desc),rteistamp(b_rteistamp)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtei001_2(rtei001_2),rtei002_2(rtei002_2),rteiownid(b_rteiownid),rteiownid_desc(b_rteiownid_desc),rteiowndp(b_rteiowndp),rteiowndp_desc(b_rteiowndp_desc),rteicrtid(b_rteicrtid),rteicrtid_desc(b_rteicrtid_desc),rteicrtdp(b_rteicrtdp),rteicrtdp_desc(b_rteicrtdp_desc),rteicrtdt(b_rteicrtdt),rteimodid(b_rteimodid),rteimodid_desc(b_rteimodid_desc),rteimoddt(b_rteimoddt)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="upd_rtei005"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artq407" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtei005,rteiacti,rteisite,rteiunit,rtei001,rtei002,rtei003,rtei004,rteistamp" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="rtei005(b_rtei005),rteiacti(b_rteiacti),rteisite(b_rteisite),rteiunit(b_rteiunit),rtei001(b_rtei001),rtei002(b_rtei002),rtei003(b_rtei003),rtei004(b_rtei004),rteistamp(b_rteistamp)"/>
+      <construct id="body" page="2" field="rteiownid(b_rteiownid),rteiowndp(b_rteiowndp),rteicrtid(b_rteicrtid),rteicrtdp(b_rteicrtdp),rteicrtdt(b_rteicrtdt),rteimodid(b_rteimodid),rteimoddt(b_rteimoddt)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtei005"/>
+      <column id="rteiacti"/>
+      <column id="rteisite"/>
+      <column id="rteiunit"/>
+      <column id="rtei001">
+        <after>
+          <reference field="rtei001_desc" ref_field="rtei001" map_field="rtei001" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? "/>
+        </after>
+        <controlp form="q_inaa001" state="c"/>
+      </column>
+      <column id="rtei001_desc"/>
+      <column id="rtei002">
+        <after/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="rtei003">
+        <controlp form="q_imay003_7" state="c"/>
+      </column>
+      <column id="rtei002_desc">
+        <after/>
+      </column>
+      <column id="rtei002_desc_desc"/>
+      <column id="rtei004">
+        <after/>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="l_rtei004_desc"/>
+      <column id="rteistamp"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rteiownid">
+        <after>
+          <reference field="rteiownid_desc" ref_field="rteiownid" map_field="rteiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rteiownid_desc"/>
+      <column id="rteiowndp">
+        <after>
+          <reference field="rteiowndp_desc" ref_field="rteiowndp" map_field="rteiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rteiowndp_desc"/>
+      <column id="rteicrtid">
+        <after>
+          <reference field="rteicrtid_desc" ref_field="rteicrtid" map_field="rteicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rteicrtid_desc"/>
+      <column id="rteicrtdp">
+        <after>
+          <reference field="rteicrtdp_desc" ref_field="rteicrtdp" map_field="rteicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rteicrtdp_desc"/>
+      <column id="rteicrtdt"/>
+      <column id="rteimodid">
+        <after>
+          <reference field="rteimodid_desc" ref_field="rteimodid" map_field="rteimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rteimodid_desc"/>
+      <column id="rteimoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtei_t" page="1,2" linked="" pk="rtei001,rtei002">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,rtei005,rteiacti,rteisite,rteiunit,rtei001,&apos;&apos;,rtei002,rtei003,&apos;&apos;,&apos;&apos;,rtei004,&apos;&apos;,rteistamp,&apos;&apos;,&apos;&apos;,rteiownid,&apos;&apos;,rteiowndp,&apos;&apos;,rteicrtid,&apos;&apos;,rteicrtdp,&apos;&apos;,rteicrtdt,rteimodid,&apos;&apos;,rteimoddt FROM rtei_t WHERE rteient= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

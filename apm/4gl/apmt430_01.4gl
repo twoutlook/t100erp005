@@ -1,0 +1,1167 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmt430_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2015-07-17 10:17:04), PR版次:0001(2015-07-16 14:35:23)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000037
+#+ Filename...: apmt430_01
+#+ Description: 折扣合約分段計價維護作業
+#+ Creator....: 02295(2015-06-25 17:06:20)
+#+ Modifier...: 02295 -SD/PR- 02295
+ 
+{</section>}
+ 
+{<section id="apmt430_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pmey_d        RECORD
+       pmeydocno LIKE pmey_t.pmeydocno, 
+   pmeysite LIKE pmey_t.pmeysite, 
+   pmeyseq LIKE pmey_t.pmeyseq, 
+   pmey001 LIKE pmey_t.pmey001, 
+   pmey002 LIKE pmey_t.pmey002, 
+   pmey003 LIKE pmey_t.pmey003, 
+   pmey004 LIKE pmey_t.pmey004
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_forupd_sql          STRING
+DEFINE g_pmey_d_o            type_g_pmey_d
+#end add-point
+ 
+DEFINE g_pmey_d          DYNAMIC ARRAY OF type_g_pmey_d
+DEFINE g_pmey_d_t        type_g_pmey_d
+ 
+ 
+DEFINE g_pmeydocno_t   LIKE pmey_t.pmeydocno    #Key值備份
+DEFINE g_pmeyseq_t      LIKE pmey_t.pmeyseq    #Key值備份
+DEFINE g_pmey001_t      LIKE pmey_t.pmey001    #Key值備份
+DEFINE g_pmey002_t      LIKE pmey_t.pmey002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="apmt430_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION apmt430_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_pmexdocno,p_pmexseq,p_pmex001,p_pmex002,p_pmex005,p_pmex006
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_pmexdocno     LIKE pmex_t.pmexdocno   #合約單號
+   DEFINE p_pmexseq       LIKE pmex_t.pmexseq     #項次
+   DEFINE p_pmex001       LIKE pmex_t.pmex001     #資料類型
+   DEFINE p_pmex002       LIKE pmex_t.pmex002     #資料編號
+   DEFINE p_pmex005       LIKE pmex_t.pmex005     #折扣方式
+   DEFINE p_pmex006       LIKE pmex_t.pmex006     #計價單位
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否 
+   DEFINE l_pmev004       LIKE pmev_t.pmev004     #幣別
+   DEFINE l_success       LIKE type_t.num5
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmt430_01 WITH FORM cl_ap_formpath("apm","apmt430_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   WHENEVER ERROR CONTINUE
+   
+   #檢查是否有是transaction內
+   #检查是否在事务中
+   IF NOT s_transaction_chk('Y',1) THEN
+      CLOSE WINDOW w_apmt430_01 
+      RETURN 
+   END IF
+   
+   CALL apmt430_01_init()
+   
+   #顯示單頭資料
+   DISPLAY p_pmexdocno,p_pmexseq,p_pmex001,p_pmex002,p_pmex005 
+        TO pmexdocno,pmexseq,pmex001,pmex002,pmex005
+        
+   #資料編號說明
+   CALL apmt430_01_pmex002_desc(p_pmex001,p_pmex002)
+   
+   #抓取合約單頭幣別
+   LET l_pmev004 = ''
+   SELECT pmev004 INTO l_pmev004 
+     FROM pmev_t
+    WHERE pmevent = g_enterprise
+      AND pmevdocno = p_pmexdocno
+   
+   #抓取單身資料
+   CALL apmt430_01_b_fill(p_pmexdocno,p_pmexseq)
+   
+   LET g_forupd_sql = "SELECT pmeydocno,pmeysite,pmeyseq,pmey001,pmey002,pmey003,pmey004 ",
+                      "  FROM pmey_t ",
+                      " WHERE pmeyent = ",g_enterprise,
+                      "   AND pmeydocno = '",p_pmexdocno,"'",
+                      "   AND pmeyseq = ",p_pmexseq,
+                      "   AND pmey001 = ? ",
+                      "   AND pmey002 = ? ",
+                      "   FOR UPDATE "
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apmt430_01_bcl CURSOR FROM g_forupd_sql
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_pmey_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            DISPLAY l_ac TO FORMONLY.idx
+            LET g_detail_idx = l_ac
+
+            IF g_rec_b >= l_ac THEN
+               LET l_cmd = 'u'
+               LET g_pmey_d_t.* = g_pmey_d[l_ac].*  #BACKUP
+               LET g_pmey_d_o.* = g_pmey_d[l_ac].*
+               
+               OPEN apmt430_01_bcl USING g_pmey_d[l_ac].pmey001,g_pmey_d[l_ac].pmey002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = "apmt430_01_bcl"
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  EXIT DIALOG
+               END IF
+               
+               FETCH apmt430_01_bcl INTO g_pmey_d[l_ac].pmeydocno,g_pmey_d[l_ac].pmeysite,
+                                         g_pmey_d[l_ac].pmeyseq,
+                                         g_pmey_d[l_ac].pmey001,g_pmey_d[l_ac].pmey002,
+                                         g_pmey_d[l_ac].pmey003,g_pmey_d[l_ac].pmey004
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = g_pmey_d_t.pmeyseq
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET l_lock_sw = 'Y'
+               END IF
+               
+               LET g_pmey_d_t.* = g_pmey_d[l_ac].*
+               LET g_pmey_d_o.* = g_pmey_d[l_ac].*
+               
+               CALL cl_show_fld_cont()
+            ELSE
+               LET l_cmd = 'a'
+            END IF
+            CALL apmt430_01_set_entry_b(l_cmd)
+            CALL apmt430_01_set_no_entry_b(l_cmd,p_pmex005)
+            
+         BEFORE INSERT
+            LET l_cmd = 'a'
+            INITIALIZE g_pmey_d[l_ac].* TO NULL
+               
+            LET g_pmey_d[l_ac].pmeydocno = p_pmexdocno
+            LET g_pmey_d[l_ac].pmeysite = g_site
+            LET g_pmey_d[l_ac].pmeyseq = p_pmexseq
+            #起始數量預設
+            CALL apmt430_01_pmey001_init(g_pmey_d[l_ac].pmeydocno,g_pmey_d[l_ac].pmeyseq,l_pmev004,p_pmex005,p_pmex006)
+                 RETURNING g_pmey_d[l_ac].pmey001
+               
+            LET g_pmey_d_t.* = g_pmey_d[l_ac].*
+            LET g_pmey_d_o.* = g_pmey_d[l_ac].*
+            CALL cl_show_fld_cont()
+            CALL apmt430_01_set_entry_b(l_cmd)
+            CALL apmt430_01_set_no_entry_b(l_cmd,p_pmex005)
+               
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code = 9001
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1
+            SELECT COUNT(*) INTO l_count 
+              FROM pmey_t
+             WHERE pmeyent = g_enterprise
+               AND pmeydocno = g_pmey_d[l_ac].pmeydocno
+               AND pmeyseq = g_pmey_d[l_ac].pmeyseq
+               AND pmey001 = g_pmey_d[l_ac].pmey001
+               AND pmey002 = g_pmey_d[l_ac].pmey002
+            IF l_count = 0 THEN
+               INSERT INTO pmey_t(pmeyent,pmeydocno,pmeysite,pmeyseq,pmey001,pmey002,
+                                  pmey003,pmey004)
+                  VALUES (g_enterprise,g_pmey_d[l_ac].pmeydocno,g_pmey_d[l_ac].pmeysite,
+                          g_pmey_d[l_ac].pmeyseq,g_pmey_d[l_ac].pmey001,g_pmey_d[l_ac].pmey002,
+                          g_pmey_d[l_ac].pmey003,g_pmey_d[l_ac].pmey004)
+            ELSE
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_pmey_d[l_ac].* TO NULL
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "pmey_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()                  
+               CANCEL INSERT
+            ELSE
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         BEFORE DELETE
+            IF NOT cl_null(g_pmey_d[l_ac].pmeydocno) AND
+               NOT cl_null(g_pmey_d[l_ac].pmeyseq) AND
+               NOT cl_null(g_pmey_d[l_ac].pmey001) AND
+               NOT cl_null(g_pmey_d[l_ac].pmey002) THEN
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               
+               DELETE FROM pmey_t
+                WHERE pmeyent = g_enterprise
+                  AND pmeydocno = g_pmey_d_t.pmeydocno
+                  AND pmeyseq = g_pmey_d_t.pmeyseq
+                  AND pmey001 = g_pmey_d_t.pmey001
+                  AND pmey002 = g_pmey_d_t.pmey002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = 'DELETE pmey_t'
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  
+                  CANCEL DELETE
+               ELSE
+                  CLOSE apmt430_01_bcl
+                  LET g_rec_b = g_rec_b - 1
+               END IF
+            END IF
+         
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_pmey_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_pmey_d[l_ac].* = g_pmey_d_t.*
+               EXIT DIALOG
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_pmey_d[l_ac].pmey001,',',g_pmey_d[l_ac].pmey002 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_pmey_d[l_ac].* = g_pmey_d_t.*
+            ELSE
+               UPDATE pmey_t SET pmey001 = g_pmey_d[l_ac].pmey001,
+                                 pmey002 = g_pmey_d[l_ac].pmey002,
+                                 pmey003 = g_pmey_d[l_ac].pmey003,
+                                 pmey004 = g_pmey_d[l_ac].pmey004
+                WHERE pmeyent = g_enterprise
+                  AND pmeydocno = g_pmey_d_t.pmeydocno
+                  AND pmeyseq = g_pmey_d_t.pmeyseq
+                  AND pmey001 = g_pmey_d_t.pmey001
+                  AND pmey002 = g_pmey_d_t.pmey002
+                     
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "UPDATE pmey_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+            
+                  LET g_pmey_d[l_ac].* = g_pmey_d_t.*
+               END IF
+            END IF
+
+         AFTER ROW
+            CLOSE apmt430_01_bcl
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmeydocno
+            #add-point:BEFORE FIELD pmeydocno name="input.b.page1.pmeydocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmeydocno
+            
+            #add-point:AFTER FIELD pmeydocno name="input.a.page1.pmeydocno"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmey_d[g_detail_idx].pmeydocno IS NOT NULL AND g_pmey_d[g_detail_idx].pmeyseq IS NOT NULL AND g_pmey_d[g_detail_idx].pmey001 IS NOT NULL AND g_pmey_d[g_detail_idx].pmey002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmey_d[g_detail_idx].pmeydocno != g_pmey_d_t.pmeydocno OR g_pmey_d[g_detail_idx].pmeyseq != g_pmey_d_t.pmeyseq OR g_pmey_d[g_detail_idx].pmey001 != g_pmey_d_t.pmey001 OR g_pmey_d[g_detail_idx].pmey002 != g_pmey_d_t.pmey002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmey_t WHERE "||"pmeyent = '" ||g_enterprise|| "' AND "||"pmeydocno = '"||g_pmey_d[g_detail_idx].pmeydocno ||"' AND "|| "pmeyseq = '"||g_pmey_d[g_detail_idx].pmeyseq ||"' AND "|| "pmey001 = '"||g_pmey_d[g_detail_idx].pmey001 ||"' AND "|| "pmey002 = '"||g_pmey_d[g_detail_idx].pmey002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmeydocno
+            #add-point:ON CHANGE pmeydocno name="input.g.page1.pmeydocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmeysite
+            #add-point:BEFORE FIELD pmeysite name="input.b.page1.pmeysite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmeysite
+            
+            #add-point:AFTER FIELD pmeysite name="input.a.page1.pmeysite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmeysite
+            #add-point:ON CHANGE pmeysite name="input.g.page1.pmeysite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmeyseq
+            #add-point:BEFORE FIELD pmeyseq name="input.b.page1.pmeyseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmeyseq
+            
+            #add-point:AFTER FIELD pmeyseq name="input.a.page1.pmeyseq"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmey_d[g_detail_idx].pmeydocno IS NOT NULL AND g_pmey_d[g_detail_idx].pmeyseq IS NOT NULL AND g_pmey_d[g_detail_idx].pmey001 IS NOT NULL AND g_pmey_d[g_detail_idx].pmey002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmey_d[g_detail_idx].pmeydocno != g_pmey_d_t.pmeydocno OR g_pmey_d[g_detail_idx].pmeyseq != g_pmey_d_t.pmeyseq OR g_pmey_d[g_detail_idx].pmey001 != g_pmey_d_t.pmey001 OR g_pmey_d[g_detail_idx].pmey002 != g_pmey_d_t.pmey002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmey_t WHERE "||"pmeyent = '" ||g_enterprise|| "' AND "||"pmeydocno = '"||g_pmey_d[g_detail_idx].pmeydocno ||"' AND "|| "pmeyseq = '"||g_pmey_d[g_detail_idx].pmeyseq ||"' AND "|| "pmey001 = '"||g_pmey_d[g_detail_idx].pmey001 ||"' AND "|| "pmey002 = '"||g_pmey_d[g_detail_idx].pmey002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmeyseq
+            #add-point:ON CHANGE pmeyseq name="input.g.page1.pmeyseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmey001
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmey_d[l_ac].pmey001,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD pmey001
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmey001 name="input.a.page1.pmey001"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmey_d[g_detail_idx].pmeydocno IS NOT NULL AND g_pmey_d[g_detail_idx].pmeyseq IS NOT NULL AND g_pmey_d[g_detail_idx].pmey001 IS NOT NULL AND g_pmey_d[g_detail_idx].pmey002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmey_d[g_detail_idx].pmeydocno != g_pmey_d_t.pmeydocno OR g_pmey_d[g_detail_idx].pmeyseq != g_pmey_d_t.pmeyseq OR g_pmey_d[g_detail_idx].pmey001 != g_pmey_d_t.pmey001 OR g_pmey_d[g_detail_idx].pmey002 != g_pmey_d_t.pmey002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmey_t WHERE "||"pmeyent = '" ||g_enterprise|| "' AND "||"pmeydocno = '"||g_pmey_d[g_detail_idx].pmeydocno ||"' AND "|| "pmeyseq = '"||g_pmey_d[g_detail_idx].pmeyseq ||"' AND "|| "pmey001 = '"||g_pmey_d[g_detail_idx].pmey001 ||"' AND "|| "pmey002 = '"||g_pmey_d[g_detail_idx].pmey002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF 
+            
+            IF NOT cl_null(g_pmey_d[l_ac].pmey001) THEN 
+               #數量取位
+               CALL apmt430_01_take_decimals(l_pmev004,p_pmex005,p_pmex006,g_pmey_d[l_ac].pmey001)
+                    RETURNING l_success,g_pmey_d[l_ac].pmey001
+               IF NOT l_success THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #數量檢查
+               IF NOT apmt430_01_num_chk(l_cmd,'1',g_pmey_d[l_ac].pmey001,g_pmey_d[l_ac].pmey002) THEN
+                  LET g_pmey_d[l_ac].pmey001 = g_pmey_d_t.pmey001
+                  DISPLAY BY NAME g_pmey_d[l_ac].pmey001
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmey001
+            #add-point:BEFORE FIELD pmey001 name="input.b.page1.pmey001"
+            IF cl_null(g_pmey_d[l_ac].pmey001) THEN
+               CALL apmt430_01_pmey001_init(g_pmey_d[l_ac].pmeydocno,g_pmey_d[l_ac].pmeyseq,l_pmev004,p_pmex005,p_pmex006)
+                    RETURNING g_pmey_d[l_ac].pmey001
+            END IF
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmey001
+            #add-point:ON CHANGE pmey001 name="input.g.page1.pmey001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmey002
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmey_d[l_ac].pmey002,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD pmey002
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmey002 name="input.a.page1.pmey002"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmey_d[g_detail_idx].pmeydocno IS NOT NULL AND g_pmey_d[g_detail_idx].pmeyseq IS NOT NULL AND g_pmey_d[g_detail_idx].pmey001 IS NOT NULL AND g_pmey_d[g_detail_idx].pmey002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmey_d[g_detail_idx].pmeydocno != g_pmey_d_t.pmeydocno OR g_pmey_d[g_detail_idx].pmeyseq != g_pmey_d_t.pmeyseq OR g_pmey_d[g_detail_idx].pmey001 != g_pmey_d_t.pmey001 OR g_pmey_d[g_detail_idx].pmey002 != g_pmey_d_t.pmey002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmey_t WHERE "||"pmeyent = '" ||g_enterprise|| "' AND "||"pmeydocno = '"||g_pmey_d[g_detail_idx].pmeydocno ||"' AND "|| "pmeyseq = '"||g_pmey_d[g_detail_idx].pmeyseq ||"' AND "|| "pmey001 = '"||g_pmey_d[g_detail_idx].pmey001 ||"' AND "|| "pmey002 = '"||g_pmey_d[g_detail_idx].pmey002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            IF NOT cl_null(g_pmey_d[l_ac].pmey002) THEN 
+               #數量取位
+               CALL apmt430_01_take_decimals(l_pmev004,p_pmex005,p_pmex006,g_pmey_d[l_ac].pmey002)
+                    RETURNING l_success,g_pmey_d[l_ac].pmey002
+               IF NOT l_success THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #數量檢查
+               IF NOT apmt430_01_num_chk(l_cmd,'2',g_pmey_d[l_ac].pmey001,g_pmey_d[l_ac].pmey002) THEN
+                  LET g_pmey_d[l_ac].pmey002 = g_pmey_d_t.pmey002
+                  DISPLAY BY NAME g_pmey_d[l_ac].pmey001
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmey002
+            #add-point:BEFORE FIELD pmey002 name="input.b.page1.pmey002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmey002
+            #add-point:ON CHANGE pmey002 name="input.g.page1.pmey002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmey003
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmey_d[l_ac].pmey003,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD pmey003
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmey003 name="input.a.page1.pmey003"
+            IF NOT cl_null(g_pmey_d[l_ac].pmey003) THEN 
+               CALL s_curr_round(g_site,l_pmev004,g_pmey_d[l_ac].pmey003,'1')
+                    RETURNING g_pmey_d[l_ac].pmey003
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmey003
+            #add-point:BEFORE FIELD pmey003 name="input.b.page1.pmey003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmey003
+            #add-point:ON CHANGE pmey003 name="input.g.page1.pmey003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmey004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmey_d[l_ac].pmey004,"0.000","1","100.000","1","azz-00087",1) THEN 
+ 
+               NEXT FIELD pmey004
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmey004 name="input.a.page1.pmey004"
+            IF NOT cl_null(g_pmey_d[l_ac].pmey004) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmey004
+            #add-point:BEFORE FIELD pmey004 name="input.b.page1.pmey004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmey004
+            #add-point:ON CHANGE pmey004 name="input.g.page1.pmey004"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.pmeydocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmeydocno
+            #add-point:ON ACTION controlp INFIELD pmeydocno name="input.c.page1.pmeydocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmeysite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmeysite
+            #add-point:ON ACTION controlp INFIELD pmeysite name="input.c.page1.pmeysite"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmeyseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmeyseq
+            #add-point:ON ACTION controlp INFIELD pmeyseq name="input.c.page1.pmeyseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmey001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmey001
+            #add-point:ON ACTION controlp INFIELD pmey001 name="input.c.page1.pmey001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmey002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmey002
+            #add-point:ON ACTION controlp INFIELD pmey002 name="input.c.page1.pmey002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmey003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmey003
+            #add-point:ON ACTION controlp INFIELD pmey003 name="input.c.page1.pmey003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmey004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmey004
+            #add-point:ON ACTION controlp INFIELD pmey004 name="input.c.page1.pmey004"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmt430_01 
+   
+   #add-point:input段after input name="input.post_input"
+   LET INT_FLAG = FALSE
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmt430_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="apmt430_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: apmt430_01的初始化
+# Memo...........:
+# Usage..........: CALL apmt430_01_init()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/08 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt430_01_init()
+   
+   CALL cl_set_combo_scc('pmex001','2104') 
+   CALL cl_set_combo_scc('pmex005','2105')
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 資料編號說明
+# Memo...........:
+# Usage..........: CALL apmt430_01_pmex002_desc(p_pmex001,p_pmex002)
+#                  
+# Input parameter: p_pmex001      資料類型
+#                : p_pmex002      資料編號
+# Return code....: 
+# Date & Author..: 2015/06/25 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt430_01_pmex002_desc(p_pmex001,p_pmex002)
+DEFINE p_pmex001         LIKE pmex_t.pmex001
+DEFINE p_pmex002         LIKE pmex_t.pmex002
+DEFINE l_pmex002_desc    LIKE type_t.chr80
+DEFINE l_pmex002_desc1   LIKE type_t.chr80
+
+   LET l_pmex002_desc = ''
+   LET l_pmex002_desc1= ''
+   
+   IF cl_null(p_pmex001) OR cl_null(p_pmex002) THEN
+      RETURN 
+   END IF
+   
+   CASE p_pmex001
+      WHEN '1'   #料件
+           CALL s_desc_get_item_desc(p_pmex002) RETURNING l_pmex002_desc,l_pmex002_desc1
+      WHEN '2'   #產品分類
+           CALL s_desc_get_rtaxl003_desc(p_pmex002) RETURNING l_pmex002_desc
+      WHEN '3'   #系列號
+           CALL s_desc_get_acc_desc('2003',p_pmex002) RETURNING l_pmex002_desc
+   END CASE
+   
+   DISPLAY l_pmex002_desc,l_pmex002_desc1 TO pmex002_desc,pmex002_desc1
+END FUNCTION
+
+################################################################################
+# Descriptions...: 分段計價單身填充
+# Memo...........:
+# Usage..........: CALL apmt430_01_b_fill(p_pmexdocno,p_pmexseq)
+#                  
+# Input parameter: p_pmexdocno    合約單號
+#                : p_pmexseq      項次
+# Return code....: 
+# Date & Author..: 2015/06/25 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt430_01_b_fill(p_pmexdocno,p_pmexseq)
+DEFINE p_pmexdocno       LIKE pmex_t.pmexdocno
+DEFINE p_pmexseq         LIKE pmex_t.pmexseq
+DEFINE l_sql             STRING
+
+   IF cl_null(p_pmexdocno) OR cl_null(p_pmexseq) THEN
+      RETURN
+   END IF
+   CALL g_pmey_d.clear()
+   
+   LET l_sql = "SELECT pmeydocno,pmeysite,pmeyseq,pmey001,pmey002,pmey003,pmey004 ",
+               "  FROM pmey_t ",
+               " WHERE pmeyent = ",g_enterprise,
+               "   AND pmeydocno = '",p_pmexdocno,"'",
+               "   AND pmeyseq = ",p_pmexseq,
+               " ORDER BY pmey001 "
+   PREPARE apmt430_01_b_fill_pre FROM l_sql
+   DECLARE apmt430_01_b_fill_cs CURSOR FOR apmt430_01_b_fill_pre
+   
+   LET l_ac = 1
+   FOREACH apmt430_01_b_fill_cs INTO g_pmey_d[l_ac].pmeydocno,g_pmey_d[l_ac].pmeysite,
+                                     g_pmey_d[l_ac].pmeyseq,
+                                     g_pmey_d[l_ac].pmey001,g_pmey_d[l_ac].pmey002,
+                                     g_pmey_d[l_ac].pmey003,g_pmey_d[l_ac].pmey004
+   
+      IF l_ac > g_max_rec THEN
+         IF g_errshow = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+
+      LET l_ac = l_ac + 1
+   END FOREACH
+   
+   LET l_ac = l_ac - 1
+   CALL g_pmey_d.deleteElement(g_pmey_d.getLength())
+   LET g_rec_b = l_ac
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   CLOSE apmt430_01_b_fill_cs
+   FREE apmt430_01_b_fill_cs
+END FUNCTION
+
+################################################################################
+# Descriptions...: 預設起始數量/金額
+# Memo...........:
+# Usage..........: CALL apmt430_01_pmey001_init(p_pmeydocno,p_pmeyseq,p_pmev004,p_pmex005,p_pmex006)
+#                  RETURNING r_pmey001
+# Input parameter: p_pmeydocno    合約單號
+#                : p_pmeyseq      項次
+#                : p_pmev004      幣別
+#                : p_pmex005      折扣方式
+#                : p_pmex006      計價單位
+# Return code....: r_pmey001      起始數量/金額
+# Date & Author..: 2015/06/25 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt430_01_pmey001_init(p_pmeydocno,p_pmeyseq,p_pmev004,p_pmex005,p_pmex006)
+DEFINE p_pmeydocno       LIKE pmey_t.pmeydocno
+DEFINE p_pmeyseq         LIKE pmey_t.pmeyseq
+DEFINE p_pmev004         LIKE pmev_t.pmev004
+DEFINE p_pmex005         LIKE pmex_t.pmex005
+DEFINE p_pmex006         LIKE pmex_t.pmex006
+DEFINE r_pmey001         LIKE pmey_t.pmey001
+DEFINE l_max_pmey002     LIKE pmey_t.pmey002
+DEFINE l_ooca002         LIKE ooca_t.ooca002
+DEFINE l_ooca004         LIKE ooca_t.ooca004
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_round           LIKE xmdv_t.xmdv001
+DEFINE l_num             LIKE xmdv_t.xmdv001
+DEFINE l_ooef014         LIKE ooef_t.ooef014
+
+   INITIALIZE r_pmey001 TO NULL
+   
+   IF cl_null(p_pmeydocno) OR cl_null(p_pmeyseq) THEN
+      RETURN r_pmey001
+   END IF
+   
+   #折扣方式為單價時，計價單位要有值
+   IF p_pmex005 <> '2' AND cl_null(p_pmex006) THEN
+      RETURN r_pmey001
+   END IF
+   
+   LET l_max_pmey002 = 0
+   SELECT MAX(pmey002) INTO l_max_pmey002
+     FROM pmey_t
+    WHERE pmeyent = g_enterprise
+      AND pmeydocno = p_pmeydocno
+      AND pmeyseq = p_pmeyseq
+   IF cl_null(l_max_pmey002) THEN
+      LET l_max_pmey002 = 0
+   END IF
+   
+   #取得小數位數
+   LET l_ooca002 = 0
+   LET l_ooca004 = NULL
+   IF p_pmex005 = '2' THEN
+      #金額
+      LET l_ooef014 = ''
+      SELECT ooef014 INTO l_ooef014 
+        FROM ooef_t 
+       WHERE ooefent = g_enterprise
+         AND ooef001 = g_site
+      IF cl_null(l_ooef014) THEN
+         RETURN r_pmey001
+      END IF
+      
+      CALL s_curr_sel_ooaj004(l_ooef014,p_pmev004) RETURNING l_ooca002
+      LET l_ooca004 = '1'   #四捨五入
+   ELSE
+      #數量
+      CALL s_aooi250_get_msg(p_pmex006) RETURNING l_success,l_ooca002,l_ooca004
+      IF NOT l_success THEN
+         RETURN r_pmey001
+      END IF
+   END IF
+   
+   #計算起始數量/金額
+   LET l_round = 0
+   LET l_num = 0
+   LET l_round = util.Math.pow(10,l_ooca002)
+   LET l_num = 1/l_round
+   LET r_pmey001 = l_max_pmey002 + l_num
+   
+   RETURN r_pmey001
+END FUNCTION
+
+################################################################################
+# Descriptions...: 數量/金額檢查
+# Memo...........:
+# Usage..........: CALL apmt430_01_num_chk(p_cmd,p_type,p_pmey001,p_pmey002)
+#                  RETURNING r_success
+# Input parameter: p_cmd          a.新增 u.修改
+#                : p_type         1.起始數量/金額 2.截止數量/金額
+#                : p_pmey001      起始數量/金額
+#                : p_pmey002      截止數量/金額
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/25 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt430_01_num_chk(p_cmd,p_type,p_pmey001,p_pmey002)
+DEFINE p_cmd             LIKE type_t.chr1
+DEFINE p_type            LIKE type_t.chr1
+DEFINE p_pmey001         LIKE pmey_t.pmey001
+DEFINE p_pmey002         LIKE pmey_t.pmey002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_num             LIKE pmey_t.pmey001
+DEFINE l_cnt             LIKE type_t.num5
+DEFINE l_sql             STRING
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_type) OR (cl_null(p_pmey001) AND cl_null(p_pmey002)) THEN
+      RETURN r_success
+   END IF
+   
+   IF p_type = 1 THEN
+      LET l_num = p_pmey001
+   ELSE
+      LET l_num = p_pmey002
+   END IF
+   
+   #檢查數量/金額是否在其他筆的起始數量/金額和截止數量/金額之間
+   LET l_cnt = 0
+   LET l_sql = "SELECT COUNT(*) ",
+               "  FROM pmey_t ",
+               " WHERE pmeyent = ",g_enterprise,
+               "   AND pmeydocno = '",g_pmey_d[l_ac].pmeydocno,"'",
+               "   AND pmeyseq = ",g_pmey_d[l_ac].pmeyseq,
+               "   AND ",l_num," BETWEEN pmey001 AND pmey002 "
+   IF p_cmd = 'u' THEN
+      LET l_sql = l_sql CLIPPED,
+                  " AND (pmey001 <> ",g_pmey_d_t.pmey001," AND pmey002 <> ",g_pmey_d_t.pmey002,")"
+   END IF
+   PREPARE apmt430_01_num_chk_pre FROM l_sql
+   EXECUTE apmt430_01_num_chk_pre INTO l_cnt
+   IF NOT cl_null(l_cnt) AND l_cnt > 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = l_num
+      LET g_errparam.code = 'apm-00227'
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   IF cl_null(p_pmey001) OR cl_null(p_pmey002) THEN
+      RETURN r_success
+   END IF
+   
+   #起始數量/金額不可大於等於截止數量/金額
+   IF p_pmey001 > p_pmey002 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = p_pmey001,">",p_pmey002
+      LET g_errparam.code = 'axm-00659'
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #檢查此筆資料有無含蓋其他筆數量/金額
+   LET l_cnt = 0
+   LET l_sql = "SELECT COUNT(*) ",
+               "  FROM pmey_t ",
+               " WHERE pmeyent = ",g_enterprise,
+               "   AND pmeydocno = '",g_pmey_d[l_ac].pmeydocno,"' ",
+               "   AND pmeyseq = ",g_pmey_d[l_ac].pmeyseq,
+               "   AND (pmey001 BETWEEN ",p_pmey001," AND ",p_pmey002,
+               "    OR pmey002 BETWEEN ",p_pmey001," AND ",p_pmey002,")"
+   IF p_cmd = 'u' THEN
+      LET l_sql = l_sql CLIPPED,
+                  " AND (pmey001 <> ",g_pmey_d_t.pmey001," AND pmey002 <> ",g_pmey_d_t.pmey002,")"
+   END IF
+   PREPARE apmt430_01_num_chk_pre1 FROM l_sql
+   EXECUTE apmt430_01_num_chk_pre1 INTO l_cnt
+   IF NOT cl_null(l_cnt) AND l_cnt > 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = l_num
+      LET g_errparam.code = 'apm-00227'
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 數量/金額取位
+# Memo...........:
+# Usage..........: CALL apmt430_01_take_decimals(p_pmev004,p_pmex005,p_pmex006,p_num)
+#                  RETURNING r_success,r_num
+# Input parameter: p_pmev004      幣別
+#                : p_pmex005      折扣方式
+#                : p_pmex006      計價單位
+#                : p_num          數量/金額
+# Return code....: r_success      TRUE/FALSE
+#                : r_num          取位後的數量/金額
+# Date & Author..: 2015/06/25 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt430_01_take_decimals(p_pmev004,p_pmex005,p_pmex006,p_num)
+DEFINE p_pmev004         LIKE pmev_t.pmev004
+DEFINE p_pmex005         LIKE pmex_t.pmex005
+DEFINE p_pmex006         LIKE pmex_t.pmex006
+DEFINE p_num             LIKE pmey_t.pmey001
+DEFINE r_success         LIKE type_t.num5
+DEFINE r_num             LIKE pmey_t.pmey001
+DEFINE l_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   LET r_num = p_num
+   
+   IF cl_null(p_pmex005) OR cl_null(p_num) THEN
+      RETURN r_success,r_num
+   END IF
+   
+   IF p_pmex005 = '2' THEN
+      #金額取位
+      IF cl_null(p_pmev004) THEN
+         RETURN r_success,r_num
+      END IF
+      
+      CALL s_curr_round(g_site,p_pmev004,p_num,'2')
+           RETURNING r_num
+   ELSE
+      #數量取位
+      IF cl_null(p_pmex006) THEN
+         RETURN r_success,r_num
+      END IF
+      
+      CALL s_aooi250_take_decimals(p_pmex006,p_num)
+           RETURNING l_success,p_num
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success,r_num
+      END IF
+      
+      LET r_num = p_num
+   END IF
+   
+   RETURN r_success,r_num
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位開放
+# Memo...........:
+# Usage..........: CALL apmt430_01_set_entry_b(p_cmd)
+#                  
+# Input parameter: p_cmd          a.新增 u.修改
+# Return code....: 
+# Date & Author..: 2015/06/25 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt430_01_set_entry_b(p_cmd)
+DEFINE p_cmd             LIKE type_t.chr1
+
+   CALL cl_set_comp_entry("pmey003,pmey004",TRUE)
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位關閉
+# Memo...........:
+# Usage..........: CALL apmt430_01_set_no_entry_b(p_cmd,p_pmex005)
+#                  
+# Input parameter: p_cmd          a.新增 u.修改
+#                : p_pmex005      折扣方式
+# Return code....: 
+# Date & Author..: 2015/06/09 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt430_01_set_no_entry_b(p_cmd,p_pmex005)
+DEFINE p_cmd             LIKE type_t.chr1
+DEFINE p_pmex005         LIKE pmex_t.pmex005
+
+   CASE p_pmex005
+      WHEN '1'   #單價折扣
+           CALL cl_set_comp_entry("pmey004",FALSE)
+      WHEN '2'   #金額百分比折扣
+           CALL cl_set_comp_entry("pmey003",FALSE)
+      WHEN '3'   #單價百分比折扣
+           CALL cl_set_comp_entry("pmey003",FALSE)
+   END CASE
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

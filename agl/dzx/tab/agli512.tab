@@ -1,0 +1,118 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli512" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06821" crtdt="2015-11-11 17:33:38" modid="06821" moddt="2015-11-12 15:42:25" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併報表幣別轉換設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glfh001,glfh001_desc(chr80),glfh002,glfh002_desc(chr80),glfh003,l_glaa001(chr10)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glfh004,glfh004_desc(chr500),glfh005,glfh005_desc(chr500),glfh006,l_glaa001_2(chr10)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glfh004,glfhownid,glfhownid_desc(chr500),glfhowndp,glfhowndp_desc(chr500),glfhcrtid,glfhcrtid_desc(chr500),glfhcrtdp,glfhcrtdp_desc(chr500),glfhcrtdt,glfhmodid,glfhmodid_desc(chr500),glfhmoddt"/>
+      <var id="bs_field" value="glfh001,glfh002,glfh003" pk="glfh001,glfh002,glfh003" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli512" method="dialog">
+    <section id="input">
+      <input id="head" field="glfh001,glfh002,glfh003"/>
+      <input id="body" page="1" field="glfh004,glfh005,glfh006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glfh001,glfh002,glfh003,l_glaa001"/>
+      <construct id="body" page="1" field="glfh004,glfh005,glfh006,l_glaa001_2"/>
+      <construct id="body" page="2" field="glfhownid,glfhowndp,glfhcrtid,glfhcrtdp,glfhcrtdt,glfhmodid,glfhmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glfh001,glfh002,glfh003"/>
+      <set id="head" type="no_entry" field="glfh001,glfh002,glfh003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glfh001">
+        <after/>
+      </column>
+      <column id="glfh001_desc"/>
+      <column id="glfh002">
+        <after/>
+      </column>
+      <column id="glfh002_desc"/>
+      <column id="glfh003" type="S" default="1"/>
+      <column id="l_glaa001">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="glfh004">
+        <after/>
+      </column>
+      <column id="glfh004_desc"/>
+      <column id="glfh005">
+        <after/>
+      </column>
+      <column id="glfh005_desc"/>
+      <column id="glfh006" type="S" default="1"/>
+      <column id="l_glaa001_2">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="glfhownid">
+        <after>
+          <reference field="glfhownid_desc" ref_field="glfh_t.glfhownid" map_field="glfhownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfhownid_desc"/>
+      <column id="glfhowndp">
+        <after>
+          <reference field="glfhowndp_desc" ref_field="glfh_t.glfhowndp" map_field="glfhowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glfhowndp_desc"/>
+      <column id="glfhcrtid">
+        <after>
+          <reference field="glfhcrtid_desc" ref_field="glfh_t.glfhcrtid" map_field="glfhcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfhcrtid_desc"/>
+      <column id="glfhcrtdp">
+        <after>
+          <reference field="glfhcrtdp_desc" ref_field="glfh_t.glfhcrtdp" map_field="glfhcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glfhcrtdp_desc"/>
+      <column id="glfhcrtdt"/>
+      <column id="glfhmodid">
+        <after>
+          <reference field="glfhmodid_desc" ref_field="glfh_t.glfhmodid" map_field="glfhmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfhmodid_desc"/>
+      <column id="glfhmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glfh_t" pk="glfh001,glfh002,glfh003">
+      <sql id="forupd_sql" type="sql" query="SELECT glfh001,&apos;&apos;,glfh002,&apos;&apos;,glfh003,&apos;&apos; FROM glfh_t WHERE glfhent= ? AND glfh001=? AND glfh002=? AND glfh003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glfh001,&apos;&apos;,glfh002,&apos;&apos;,glfh003,&apos;&apos; FROM glfh_t" order="glfh001,glfh002,glfh003"/>
+    </head>
+    <body id="glfh_t" page="1,2" linked="" pk="glfh004" fk="glfh001,glfh002,glfh003">
+      <sql id="forupd_sql_detail" query="SELECT glfh004,&apos;&apos;,glfh005,&apos;&apos;,glfh006,&apos;&apos;,&apos;&apos;,glfhownid,&apos;&apos;,glfhowndp,&apos;&apos;,glfhcrtid,&apos;&apos;,glfhcrtdp,&apos;&apos;,glfhcrtdt,glfhmodid,&apos;&apos;,glfhmoddt FROM glfh_t WHERE glfhent=? AND glfh001=? AND glfh002=? AND glfh003=? AND glfh004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glfh004,&apos;&apos;,glfh005,&apos;&apos;,glfh006,&apos;&apos;,&apos;&apos;,glfhownid,&apos;&apos;,glfhowndp,&apos;&apos;,glfhcrtid,&apos;&apos;,glfhcrtdp,&apos;&apos;,glfhcrtdt,glfhmodid,&apos;&apos;,glfhmoddt FROM glfh_t WHERE glfhent= ? AND glfh001=? AND glfh002=? AND glfh003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

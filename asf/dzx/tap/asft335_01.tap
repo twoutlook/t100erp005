@@ -1,0 +1,1737 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="asft335_01" std_prog="asft335_01" erpver="1.0" module="ASF" ver="3" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="input.a.sffb001" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb001) THEN 
+               IF p_cmd = 'a'  THEN
+                  IF NOT s_asft335_chk_sffb0078(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) THEN
+                     LET g_sffb_m.sffb001 = NULL
+                     NEXT FIELD CURRENT
+                  END IF                  
+               END IF
+               
+            END IF ]]>
+  </point>
+  <point name="input.a.sffb002" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb002) THEN 
+               IF p_cmd = 'a' THEN
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sffb_m.sffb002
+   
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_ooag001") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+   
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_sffb_m.sffb002 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            
+
+            END IF 
+            LET g_sffb_m.sffb002_desc = s_desc_get_person_desc(g_sffb_m.sffb002)
+            DISPLAY BY NAME g_sffb_m.sffb002_desc
+            CALL s_aooi200_get_slip(g_sffb_m.sffbdocno) RETURNING l_success,l_slip
+            IF cl_get_doc_para(g_enterprise,g_site,l_slip,'D-MFG-0068') ='Y' THEN 
+               IF p_cmd ='a'  THEN
+                  SELECT TOP oogf001 INTO g_sffb_m.sffb024
+                    FROM oogf_t 
+                   WHERE oogfent  = g_enterprise
+                     AND oogfsite = g_site
+                     AND oogf002  = g_sffb_m.sffb002
+                     AND oogfstus = 'Y'
+                     AND oogf003 <= g_sffb_m.sffbdocdt
+ 
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_site
+                  LET g_ref_fields[2] = g_sffb_m.sffb024
+                  CALL ap_ref_array2(g_ref_fields,"SELECT ooge002 FROM ooge_t WHERE oogeent='"||g_enterprise||"' AND oogesite=? AND ooge001=? ","") RETURNING g_rtn_fields
+                  LET g_sffb_m.sffb024_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_sffb_m.sffb024_desc 
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.sffb003" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.sffb004" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb004) THEN 
+               IF p_cmd = 'a'  THEN
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_site
+                  LET g_chkparam.arg2 = g_sffb_m.sffb004
+                  
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_oogd001") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_sffb_m.sffb004 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_site
+            LET g_ref_fields[2] = g_sffb_m.sffb004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oogd002 FROM oogd_t WHERE oogdent='"||g_enterprise||"' AND oogdsite=? AND oogd001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb004_desc
+]]>
+  </point>
+  <point name="input.a.sffb005" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#当工单栏位是新增或者修改后，如果对应的run card是唯一的，则预设到run card栏位
+#预设工单对应的其他资料
+            IF NOT cl_null(g_sffb_m.sffb005) THEN 
+               IF p_cmd = 'a'  THEN 
+                  IF NOT s_asft335_chk_sffb0078(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) THEN
+                     LET g_sffb_m.sffb005 = NULL
+                     #檢查失敗時後續處理
+                     NEXT FIELD CURRENT
+                  END IF
+                           
+                  CALL s_asft335_default_sffb056(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008)
+                  RETURNING l_sfaa010,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb009
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_sffb_m.sffb007
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_sffb_m.sffb007_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_sffb_m.sffb007_desc                    
+                  DISPLAY BY NAME g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb009,g_sffb_m.sffb017
+               END IF            
+            END IF]]>
+  </point>
+  <point name="input.a.sffb006" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb006) THEN 
+               IF p_cmd = 'a'  THEN
+                  IF NOT s_asft335_chk_sffb0078(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) THEN
+                     LET g_sffb_m.sffb006 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_asft335_default_sffb056(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008)
+                  RETURNING l_sfaa010,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb009
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_sffb_m.sffb007
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_sffb_m.sffb007_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_sffb_m.sffb007_desc 
+               END IF
+            END IF ]]>
+  </point>
+  <point name="input.a.sffb007" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            IF NOT cl_null(g_sffb_m.sffb007) THEN 
+               IF p_cmd = 'a'  THEN
+#共用检查逻辑搬到同一个function内
+                  IF NOT s_asft335_chk_sffb0078(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) THEN
+                     LET g_sffb_m.sffb007 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_asft335_default_sffb056(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008)
+                  RETURNING l_sfaa010,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb009
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_sffb_m.sffb007
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_sffb_m.sffb007_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_sffb_m.sffb007_desc 
+               END IF
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffb007
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb007_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb007_desc           
+
+]]>
+  </point>
+  <point name="input.a.sffb008" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb008) THEN 
+               IF p_cmd = 'a'  THEN
+#共用检查逻辑搬到同一个function内
+                  IF NOT s_asft335_chk_sffb0078(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) THEN
+                     LET g_sffb_m.sffb008 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_asft335_default_sffb056(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008)
+                  RETURNING l_sfaa010,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb009
+               END IF
+ #预设待处理数量
+               CALL s_asft335_set_qty(g_sffb_m.sffbdocno,g_sffb_m.sffbseq,g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) RETURNING g_sffb_m.sffb017,g_sffb_m.sffb016
+               DISPLAY BY NAME g_sffb_m.sffb017,g_sffb_m.sffb016            
+
+            END IF]]>
+  </point>
+  <point name="input.a.sffb009" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.sffb010" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb010) THEN 
+               IF p_cmd ='a'  THEN
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sffb_m.sffb010
+			      
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_mrba001") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+			      
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_sffb_m.sffb010 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffb010
+            CALL ap_ref_array2(g_ref_fields,"SELECT mrba004 FROM mrba_t WHERE mrbaent='"||g_enterprise||"' AND mrbasite = '"||g_site||"' AND mrba001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb010_desc
+]]>
+  </point>
+  <point name="input.a.sffb011" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb011) THEN 
+            END IF 
+]]>
+  </point>
+  <point name="input.a.sffb017" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb017) THEN 
+            END IF 
+]]>
+  </point>
+  <point name="input.a.sffb018" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb018) THEN 
+            END IF 
+]]>
+  </point>
+  <point name="input.a.sffb019" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb019) THEN 
+            END IF 
+]]>
+  </point>
+  <point name="input.a.sffb020" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sffb_m.sffb020) THEN 
+            END IF 
+]]>
+  </point>
+  <point name="input.a.sffb021" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.sffb024" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.sffbdocno" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.sffbseq" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[ 
+]]>
+  </point>
+  <point name="input.c.sffb002" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb002             #給予default值
+
+            #給予arg
+
+            CALL q_ooag001_4()                                #呼叫開窗
+
+            LET g_sffb_m.sffb002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb002 TO sffb002              #顯示到畫面上
+
+            NEXT FIELD sffb002                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffb003" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            CALL q_ooeg001()                                #呼叫開窗
+
+            LET g_sffb_m.sffb003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb003 TO sffb003              #顯示到畫面上
+
+            NEXT FIELD sffb003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffb004" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb004             #給予default值
+
+            #給予arg
+
+            CALL q_oogd001_01()                                #呼叫開窗
+
+            LET g_sffb_m.sffb004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb004 TO sffb004              #顯示到畫面上
+
+            NEXT FIELD sffb004                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffb005" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = 'F'
+            CALL q_sfaadocno_1()
+
+            LET g_sffb_m.sffb005 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb005 TO sffb005              #顯示到畫面上
+
+            NEXT FIELD sffb005                          #返回原欄位
+]]>
+  </point>
+  <point name="input.c.sffb006" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb006             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sffb_m.sffb005
+
+            CALL q_sfca001()                                #呼叫開窗
+
+            LET g_sffb_m.sffb006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb006 TO sffb006              #顯示到畫面上
+
+            NEXT FIELD sffb006                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffb007" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                   #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb007             #給予default值
+            LET g_qryparam.default2 = g_sffb_m.sffb008             #製程序
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sffb_m.sffb005
+            LET g_qryparam.arg3 = g_sffb_m.sffb006
+
+            CALL q_sfcb003()                                #呼叫開窗
+
+            LET g_sffb_m.sffb007 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET g_sffb_m.sffb008 = g_qryparam.return2 #製程序
+
+            DISPLAY g_sffb_m.sffb007 TO sffb007              #顯示到畫面上
+            DISPLAY g_sffb_m.sffb008 TO sffb008 #製程序
+
+            NEXT FIELD sffb007                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffb008" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb007             #給予default值
+            LET g_qryparam.default2 = g_sffb_m.sffb008             #製程序
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sffb_m.sffb005
+            LET g_qryparam.arg3 = g_sffb_m.sffb006
+
+            CALL q_sfcb003()                                #呼叫開窗
+
+            LET g_sffb_m.sffb007 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET g_sffb_m.sffb008 = g_qryparam.return2 #製程序
+
+            DISPLAY g_sffb_m.sffb007 TO sffb007              #顯示到畫面上
+            DISPLAY g_sffb_m.sffb008 TO sffb008 #製程序
+
+            NEXT FIELD sffb008                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffb009" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb009             #給予default值
+
+            #給予arg
+
+            CALL q_ecaa001_1()                                #呼叫開窗
+
+            LET g_sffb_m.sffb009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb009 TO sffb009              #顯示到畫面上
+
+            NEXT FIELD sffb009                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffb010" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb010             #給予default值
+            LET g_qryparam.where = " mrbasite ='",g_site,"' "
+            #給予arg
+
+            CALL q_mrba001()                                #呼叫開窗
+
+            LET g_sffb_m.sffb010 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb010 TO sffb010              #顯示到畫面上
+
+            NEXT FIELD sffb010                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffb021" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb021             #給予default值
+            LET g_qryparam.default2 = "" #g_sffb_m.sfcb004 #製程序
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            LET g_qryparam.arg3 = "" #
+
+            CALL q_sfcb003()                                #呼叫開窗
+
+            LET g_sffb_m.sffb021 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_sffb_m.sfcb004 = g_qryparam.return2 #製程序
+
+            DISPLAY g_sffb_m.sffb021 TO sffb021              #顯示到畫面上
+            #DISPLAY g_sffb_m.sfcb004 TO sfcb004 #製程序
+
+            NEXT FIELD sffb021                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffb022" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb022             #給予default值
+            LET g_qryparam.default2 = "" #g_sffb_m.sfcb004 #製程序
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            LET g_qryparam.arg3 = "" #
+
+            CALL q_sfcb003()                                #呼叫開窗
+
+            LET g_sffb_m.sffb022 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_sffb_m.sfcb004 = g_qryparam.return2 #製程序
+
+            DISPLAY g_sffb_m.sffb022 TO sffb022              #顯示到畫面上
+            #DISPLAY g_sffb_m.sfcb004 TO sfcb004 #製程序
+
+            NEXT FIELD sffb022                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffb024" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb024             #給予default值
+
+            #給予arg
+
+            CALL q_ooge001()                                #呼叫開窗
+
+            LET g_sffb_m.sffb024 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb024 TO sffb024              #顯示到畫面上
+
+            NEXT FIELD sffb024                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sffbdocno" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="show.head.reference" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbdocno
+            CALL ap_ref_array2(g_ref_fields,"SELECT oobal004 FROM oobal_t WHERE oobalent='"||g_enterprise||"' AND oobal002=? AND oobal003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffbdocno_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffbdocno_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffb007
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb007_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb007_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffb002
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb002_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbsite
+            LET g_ref_fields[2] = g_sffb_m.sffb004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oogd002 FROM oogd_t WHERE oogdent='"||g_enterprise||"' AND oogdsite=? AND oogd001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb004_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffb010
+            CALL ap_ref_array2(g_ref_fields,"SELECT mrbal003 FROM mrbal_t WHERE mrbal001=? AND mrbal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb010_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbsite
+            LET g_ref_fields[2] = g_sffb_m.sffb009
+            CALL ap_ref_array2(g_ref_fields,"SELECT ecaa002 FROM ecaa_t WHERE ecaaent='"||g_enterprise||"' AND ecaasite=? AND ecaa001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb009_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffb003
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb003_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffb021
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb021_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb021_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbsite
+            LET g_ref_fields[2] = g_sffb_m.sffb024
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooge002 FROM ooge_t WHERE oogeent='"||g_enterprise||"' AND oogesite=? AND ooge001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb024_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb024_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffbownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffbownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffbowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffbowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffbcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffbcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffbcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffbcrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffbmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffbmodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbcnfid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffbcnfid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffbcnfid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffbpstid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffbpstid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffbpstid_desc
+]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+               
+             CALL s_asft335_set_qty(g_sffb_m.sffbdocno,g_sffb_m.sffbseq,g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) 
+                       RETURNING g_sffb_m.sffb017,g_sffb_m.sffb016         
+
+            LET g_sffb_m.sffb014 = s_asft335_get_working_time(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb012,g_sffb_m.sffb013) * g_sffb_m.sffb011
+            LET g_sffb_m.sffb015 = s_asft335_get_working_time(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb012,g_sffb_m.sffb013)
+            IF g_sffb_m.sffb007 IS NULL THEN LET g_sffb_m.sffb007 = ' ' END IF
+            IF g_sffb_m.sffb008 IS NULL THEN LET g_sffb_m.sffb008 = ' ' END IF
+
+            INSERT INTO sffb_t (sffbent,sffbsite,sffbdocno,sffbseq,sffb001,sffb005,sffb006,sffb007,sffb008,sffb002,
+                                sffb004,sffb010,sffb009,sffb011,sffb003,sffb012,sffb013,sffb014,sffb015,sffb016,
+                                sffb017,sffb018,sffb019,sffb020,sffb021,sffb022,sffb023,sffb024,sffbdocdt,
+                                sffbstus,sffbownid,sffbowndp,sffbcrtid,sffbcrtdp,sffbcrtdt,sffbmodid,sffbmoddt,sffbcnfid,sffbcnfdt)
+            VALUES (g_enterprise,g_site,g_sffb_m.sffbdocno,g_sffb_m.sffbseq,g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb002,
+                    g_sffb_m.sffb004,g_sffb_m.sffb010,g_sffb_m.sffb009,g_sffb_m.sffb011,g_sffb_m.sffb003,g_sffb_m.sffb012,g_sffb_m.sffb013,g_sffb_m.sffb014,g_sffb_m.sffb015,g_sffb_m.sffb016,
+                    g_sffb_m.sffb017,g_sffb_m.sffb018,g_sffb_m.sffb019,g_sffb_m.sffb020,g_sffb_m.sffb021,g_sffb_m.sffb022,g_sffb_m.sffb023,g_sffb_m.sffb024,g_sffb_m.sffbdocdt,
+                    g_sffb_m.sffbstus,g_sffb_m.sffbownid,g_sffb_m.sffbowndp,g_sffb_m.sffbcrtid,g_sffb_m.sffbcrtdp,g_sffb_m.sffbcrtdt,g_sffb_m.sffbmodid,g_sffb_m.sffbmoddt,g_sffb_m.sffbcnfid,g_sffb_m.sffbcnfdt)
+            
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("asft335_01 ins sffb",SQLCA.sqlcode,1) 
+               LET g_sffb_m.sffbdocno = NULL               
+               CALL s_transaction_end('N','0')
+            ELSE
+               IF NOT s_asft335_ins_sffc(g_sffb_m.sffbdocno,g_sffb_m.sffbseq) THEN
+                  CALL s_transaction_end('N','0')
+                  LET g_sffb_m.sffbdocno = NULL 
+               END IF
+               CALL s_transaction_end('Y','0')
+            END IF
+]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL s_transaction_begin() 
+            LET g_sffb_m.sffb001 = "3"
+            LET g_sffb_m.sffb002 = g_user
+            LET g_sffb_m.sffb002_desc = s_desc_get_person_desc(g_sffb_m.sffb002)
+            LET g_sffb_m.sffb003 = g_dept
+            LET g_sffb_m.sffb006 = NULL
+            LET g_sffb_m.sffbdocno = cl_get_para(g_enterprise,g_site,'S-MFG-0035')
+            LET g_sffb_m.sffbdocdt = cl_get_today()
+            CALL s_aooi200_gen_docno(g_site,g_sffb_m.sffbdocno,g_sffb_m.sffbdocdt,g_prog) RETURNING l_success,g_sffb_m.sffbdocno
+            IF NOT l_success THEN
+               CALL cl_err(g_sffb_m.sffbdocno,'apm-00003',1)
+               LET g_sffb_m.sffbdocno = NULL
+               RETURN g_sffb_m.sffbdocno
+            END IF
+            LET g_sffb_m.sffbseq   = 0
+            LET g_sffb_m.sffb011   = 1
+            LET g_sffb_m.sffb012   = cl_get_today()
+            LET g_sffb_m.sffb013   = cl_get_time()
+            LET g_sffb_m.sffb013   = g_sffb_m.sffb013[1,5]
+            LET g_sffb_m.sffb014 = s_asft335_get_working_time(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb012,g_sffb_m.sffb013) * g_sffb_m.sffb011
+            LET g_sffb_m.sffb015 = s_asft335_get_working_time(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb012,g_sffb_m.sffb013)
+            LET g_sffb_m.sffb018 = 0
+            LET g_sffb_m.sffb019 = 0
+            LET g_sffb_m.sffb020 = 0
+            LET g_sffb_m.sffbownid = g_user
+            LET g_sffb_m.sffbowndp = g_dept
+            LET g_sffb_m.sffbcrtid = g_user
+            LET g_sffb_m.sffbcrtdp = g_dept 
+            LET g_sffb_m.sffbcrtdt = cl_get_current()
+            LET g_sffb_m.sffbmodid = ""
+            LET g_sffb_m.sffbmoddt = ""
+            LET g_sffb_m.sffbstus = "N"            
+            DISPLAY BY NAME g_sffb_m.*]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_sfaa010       LIKE sfaa_t.sfaa010
+   DEFINE l_slip          LIKE sffb_t.sffbdocno]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF s_transaction_chk('Y',0) THEN
+      CALL s_transaction_end('Y','0')
+   END IF
+   IF INT_FLAG THEN
+      LET g_sffb_m.sffbdocno = NULL
+   END IF
+                  
+   RETURN g_sffb_m.sffbdocno]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   CALL cl_set_combo_scc('sffb001','4020')]]>
+  </point>
+  <section id="asft335_01.description" ver="26" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000078
+#+ 
+#+ Filename...: asft335_01
+#+ Description: ...
+#+ Creator....: 00537(2013/12/25)
+#+ Modifier...: 00537(2014/07/04)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="asft335_01.global" ver="4" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_sffb_m        RECORD
+       sffbdocno LIKE sffb_t.sffbdocno, 
+   sffbdocno_desc LIKE type_t.chr80, 
+   sffbseq LIKE sffb_t.sffbseq, 
+   sffb001 LIKE sffb_t.sffb001, 
+   sffb005 LIKE sffb_t.sffb005, 
+   sffb006 LIKE sffb_t.sffb006, 
+   sffb007 LIKE sffb_t.sffb007, 
+   sffb007_desc LIKE type_t.chr80, 
+   sffb008 LIKE sffb_t.sffb008, 
+   sffb002 LIKE sffb_t.sffb002, 
+   sffb002_desc LIKE type_t.chr80, 
+   sffb004 LIKE sffb_t.sffb004, 
+   sffb004_desc LIKE type_t.chr80, 
+   sffb010 LIKE sffb_t.sffb010, 
+   sffb010_desc LIKE type_t.chr80, 
+   sffb009 LIKE sffb_t.sffb009, 
+   sffb009_desc LIKE type_t.chr80, 
+   sffb011 LIKE sffb_t.sffb011, 
+   sffb003 LIKE sffb_t.sffb003, 
+   sffb003_desc LIKE type_t.chr80, 
+   sffb012 LIKE sffb_t.sffb012, 
+   sffb013 LIKE sffb_t.sffb013, 
+   sffb014 LIKE sffb_t.sffb014, 
+   sffb015 LIKE sffb_t.sffb015, 
+   sffb016 LIKE sffb_t.sffb016, 
+   sffb017 LIKE sffb_t.sffb017, 
+   sffb018 LIKE sffb_t.sffb018, 
+   sffb019 LIKE sffb_t.sffb019, 
+   sffb020 LIKE sffb_t.sffb020, 
+   sffb021 LIKE sffb_t.sffb021, 
+   sffb021_desc LIKE type_t.chr80, 
+   sffb022 LIKE sffb_t.sffb022, 
+   sffb023 LIKE sffb_t.sffb023, 
+   sffb024 LIKE sffb_t.sffb024, 
+   sffb024_desc LIKE type_t.chr80, 
+   sffbdocdt LIKE sffb_t.sffbdocdt, 
+   sffbsite LIKE sffb_t.sffbsite, 
+   sffbstus LIKE sffb_t.sffbstus, 
+   sffbownid LIKE sffb_t.sffbownid, 
+   sffbownid_desc LIKE type_t.chr80, 
+   sffbowndp LIKE sffb_t.sffbowndp, 
+   sffbowndp_desc LIKE type_t.chr80, 
+   sffbcrtid LIKE sffb_t.sffbcrtid, 
+   sffbcrtid_desc LIKE type_t.chr80, 
+   sffbcrtdp LIKE sffb_t.sffbcrtdp, 
+   sffbcrtdp_desc LIKE type_t.chr80, 
+   sffbcrtdt DATETIME YEAR TO SECOND, 
+   sffbmodid LIKE sffb_t.sffbmodid, 
+   sffbmodid_desc LIKE type_t.chr80, 
+   sffbmoddt DATETIME YEAR TO SECOND, 
+   sffbcnfid LIKE sffb_t.sffbcnfid, 
+   sffbcnfid_desc LIKE type_t.chr80, 
+   sffbcnfdt DATETIME YEAR TO SECOND
+       END RECORD
+DEFINE g_sffb_m        type_g_sffb_m
+ 
+   DEFINE g_sffbdocno_t LIKE sffb_t.sffbdocno
+DEFINE g_sffbseq_t LIKE sffb_t.sffbseq
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asft335_01.input" ver="5" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION asft335_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asft335_01 WITH FORM cl_ap_formpath("asf","asft335_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_sffb_m.sffbdocno,g_sffb_m.sffbseq,g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006, 
+          g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb002,g_sffb_m.sffb004,g_sffb_m.sffb010,g_sffb_m.sffb009, 
+          g_sffb_m.sffb011,g_sffb_m.sffb003,g_sffb_m.sffb012,g_sffb_m.sffb013,g_sffb_m.sffb014,g_sffb_m.sffb015, 
+          g_sffb_m.sffb016,g_sffb_m.sffb017,g_sffb_m.sffb018,g_sffb_m.sffb019,g_sffb_m.sffb020,g_sffb_m.sffb021, 
+          g_sffb_m.sffb022,g_sffb_m.sffb023,g_sffb_m.sffb024,g_sffb_m.sffbdocdt,g_sffb_m.sffbsite,g_sffb_m.sffbstus  
+          ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD sffbdocno
+            
+            #add-point:AFTER FIELD sffbdocno
+            {<point name="input.a.sffbdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffbdocno
+            #add-point:BEFORE FIELD sffbdocno
+            {<point name="input.b.sffbdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffbdocno
+            #add-point:ON CHANGE sffbdocno
+            {<point name="input.g.sffbdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffbseq
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_sffb_m.sffbseq,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD sffbseq
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD sffbseq
+            {<point name="input.a.sffbseq" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffbseq
+            #add-point:BEFORE FIELD sffbseq
+            {<point name="input.b.sffbseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffbseq
+            #add-point:ON CHANGE sffbseq
+            {<point name="input.g.sffbseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb001
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_sffb_m.sffb001,"1.000","1","5.000","1","azz-00087",1) THEN
+               NEXT FIELD sffb001
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD sffb001
+            {<point name="input.a.sffb001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb001
+            #add-point:BEFORE FIELD sffb001
+            {<point name="input.b.sffb001" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb001
+            #add-point:ON CHANGE sffb001
+            {<point name="input.g.sffb001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb005
+            
+            #add-point:AFTER FIELD sffb005
+            {<point name="input.a.sffb005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb005
+            #add-point:BEFORE FIELD sffb005
+            {<point name="input.b.sffb005" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb005
+            #add-point:ON CHANGE sffb005
+            {<point name="input.g.sffb005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb006
+            
+            #add-point:AFTER FIELD sffb006
+            {<point name="input.a.sffb006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb006
+            #add-point:BEFORE FIELD sffb006
+            {<point name="input.b.sffb006" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb006
+            #add-point:ON CHANGE sffb006
+            {<point name="input.g.sffb006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb007
+            
+            #add-point:AFTER FIELD sffb007
+            {<point name="input.a.sffb007" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb007
+            #add-point:BEFORE FIELD sffb007
+            {<point name="input.b.sffb007" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb007
+            #add-point:ON CHANGE sffb007
+            {<point name="input.g.sffb007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb008
+            
+            #add-point:AFTER FIELD sffb008
+            {<point name="input.a.sffb008" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb008
+            #add-point:BEFORE FIELD sffb008
+            {<point name="input.b.sffb008" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb008
+            #add-point:ON CHANGE sffb008
+            {<point name="input.g.sffb008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb002
+            
+            #add-point:AFTER FIELD sffb002
+            {<point name="input.a.sffb002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb002
+            #add-point:BEFORE FIELD sffb002
+            {<point name="input.b.sffb002" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb002
+            #add-point:ON CHANGE sffb002
+            {<point name="input.g.sffb002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb004
+            
+            #add-point:AFTER FIELD sffb004
+            {<point name="input.a.sffb004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb004
+            #add-point:BEFORE FIELD sffb004
+            {<point name="input.b.sffb004" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb004
+            #add-point:ON CHANGE sffb004
+            {<point name="input.g.sffb004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb010
+            
+            #add-point:AFTER FIELD sffb010
+            {<point name="input.a.sffb010" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb010
+            #add-point:BEFORE FIELD sffb010
+            {<point name="input.b.sffb010" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb010
+            #add-point:ON CHANGE sffb010
+            {<point name="input.g.sffb010" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb009
+            
+            #add-point:AFTER FIELD sffb009
+            {<point name="input.a.sffb009" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb009
+            #add-point:BEFORE FIELD sffb009
+            {<point name="input.b.sffb009" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb009
+            #add-point:ON CHANGE sffb009
+            {<point name="input.g.sffb009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb011
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_sffb_m.sffb011,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffb011
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD sffb011
+            {<point name="input.a.sffb011" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb011
+            #add-point:BEFORE FIELD sffb011
+            {<point name="input.b.sffb011" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb011
+            #add-point:ON CHANGE sffb011
+            {<point name="input.g.sffb011" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb003
+            
+            #add-point:AFTER FIELD sffb003
+            {<point name="input.a.sffb003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb003
+            #add-point:BEFORE FIELD sffb003
+            {<point name="input.b.sffb003" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb003
+            #add-point:ON CHANGE sffb003
+            {<point name="input.g.sffb003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb012
+            #add-point:BEFORE FIELD sffb012
+            {<point name="input.b.sffb012" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb012
+            
+            #add-point:AFTER FIELD sffb012
+            {<point name="input.a.sffb012" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb012
+            #add-point:ON CHANGE sffb012
+            {<point name="input.g.sffb012" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb013
+            #add-point:BEFORE FIELD sffb013
+            {<point name="input.b.sffb013" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb013
+            
+            #add-point:AFTER FIELD sffb013
+            {<point name="input.a.sffb013" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb013
+            #add-point:ON CHANGE sffb013
+            {<point name="input.g.sffb013" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb014
+            #add-point:BEFORE FIELD sffb014
+            {<point name="input.b.sffb014" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb014
+            
+            #add-point:AFTER FIELD sffb014
+            {<point name="input.a.sffb014" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb014
+            #add-point:ON CHANGE sffb014
+            {<point name="input.g.sffb014" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb015
+            #add-point:BEFORE FIELD sffb015
+            {<point name="input.b.sffb015" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb015
+            
+            #add-point:AFTER FIELD sffb015
+            {<point name="input.a.sffb015" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb015
+            #add-point:ON CHANGE sffb015
+            {<point name="input.g.sffb015" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb016
+            #add-point:BEFORE FIELD sffb016
+            {<point name="input.b.sffb016" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb016
+            
+            #add-point:AFTER FIELD sffb016
+            {<point name="input.a.sffb016" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb016
+            #add-point:ON CHANGE sffb016
+            {<point name="input.g.sffb016" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb017
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_sffb_m.sffb017,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffb017
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD sffb017
+            {<point name="input.a.sffb017" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb017
+            #add-point:BEFORE FIELD sffb017
+            {<point name="input.b.sffb017" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb017
+            #add-point:ON CHANGE sffb017
+            {<point name="input.g.sffb017" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb018
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_sffb_m.sffb018,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffb018
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD sffb018
+            {<point name="input.a.sffb018" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb018
+            #add-point:BEFORE FIELD sffb018
+            {<point name="input.b.sffb018" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb018
+            #add-point:ON CHANGE sffb018
+            {<point name="input.g.sffb018" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb019
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_sffb_m.sffb019,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffb019
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD sffb019
+            {<point name="input.a.sffb019" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb019
+            #add-point:BEFORE FIELD sffb019
+            {<point name="input.b.sffb019" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb019
+            #add-point:ON CHANGE sffb019
+            {<point name="input.g.sffb019" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb020
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_sffb_m.sffb020,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffb020
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD sffb020
+            {<point name="input.a.sffb020" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb020
+            #add-point:BEFORE FIELD sffb020
+            {<point name="input.b.sffb020" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb020
+            #add-point:ON CHANGE sffb020
+            {<point name="input.g.sffb020" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb021
+            
+            #add-point:AFTER FIELD sffb021
+            {<point name="input.a.sffb021" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb021
+            #add-point:BEFORE FIELD sffb021
+            {<point name="input.b.sffb021" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb021
+            #add-point:ON CHANGE sffb021
+            {<point name="input.g.sffb021" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb022
+            #add-point:BEFORE FIELD sffb022
+            {<point name="input.b.sffb022" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb022
+            
+            #add-point:AFTER FIELD sffb022
+            {<point name="input.a.sffb022" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb022
+            #add-point:ON CHANGE sffb022
+            {<point name="input.g.sffb022" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb023
+            #add-point:BEFORE FIELD sffb023
+            {<point name="input.b.sffb023" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb023
+            
+            #add-point:AFTER FIELD sffb023
+            {<point name="input.a.sffb023" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb023
+            #add-point:ON CHANGE sffb023
+            {<point name="input.g.sffb023" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffb024
+            
+            #add-point:AFTER FIELD sffb024
+            {<point name="input.a.sffb024" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffb024
+            #add-point:BEFORE FIELD sffb024
+            {<point name="input.b.sffb024" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffb024
+            #add-point:ON CHANGE sffb024
+            {<point name="input.g.sffb024" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffbdocdt
+            #add-point:BEFORE FIELD sffbdocdt
+            {<point name="input.b.sffbdocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffbdocdt
+            
+            #add-point:AFTER FIELD sffbdocdt
+            {<point name="input.a.sffbdocdt" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffbdocdt
+            #add-point:ON CHANGE sffbdocdt
+            {<point name="input.g.sffbdocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffbsite
+            #add-point:BEFORE FIELD sffbsite
+            {<point name="input.b.sffbsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffbsite
+            
+            #add-point:AFTER FIELD sffbsite
+            {<point name="input.a.sffbsite" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffbsite
+            #add-point:ON CHANGE sffbsite
+            {<point name="input.g.sffbsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sffbstus
+            #add-point:BEFORE FIELD sffbstus
+            {<point name="input.b.sffbstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sffbstus
+            
+            #add-point:AFTER FIELD sffbstus
+            {<point name="input.a.sffbstus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sffbstus
+            #add-point:ON CHANGE sffbstus
+            {<point name="input.g.sffbstus" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.sffbdocno
+         ON ACTION controlp INFIELD sffbdocno
+            #add-point:ON ACTION controlp INFIELD sffbdocno
+            {<point name="input.c.sffbdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffbseq
+         ON ACTION controlp INFIELD sffbseq
+            #add-point:ON ACTION controlp INFIELD sffbseq
+            {<point name="input.c.sffbseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb001
+         ON ACTION controlp INFIELD sffb001
+            #add-point:ON ACTION controlp INFIELD sffb001
+            {<point name="input.c.sffb001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb005
+         ON ACTION controlp INFIELD sffb005
+            #add-point:ON ACTION controlp INFIELD sffb005
+            {<point name="input.c.sffb005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb006
+         ON ACTION controlp INFIELD sffb006
+            #add-point:ON ACTION controlp INFIELD sffb006
+            {<point name="input.c.sffb006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb007
+         ON ACTION controlp INFIELD sffb007
+            #add-point:ON ACTION controlp INFIELD sffb007
+            {<point name="input.c.sffb007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb008
+         ON ACTION controlp INFIELD sffb008
+            #add-point:ON ACTION controlp INFIELD sffb008
+            {<point name="input.c.sffb008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb002
+         ON ACTION controlp INFIELD sffb002
+            #add-point:ON ACTION controlp INFIELD sffb002
+            {<point name="input.c.sffb002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb004
+         ON ACTION controlp INFIELD sffb004
+            #add-point:ON ACTION controlp INFIELD sffb004
+            {<point name="input.c.sffb004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb010
+         ON ACTION controlp INFIELD sffb010
+            #add-point:ON ACTION controlp INFIELD sffb010
+            {<point name="input.c.sffb010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb009
+         ON ACTION controlp INFIELD sffb009
+            #add-point:ON ACTION controlp INFIELD sffb009
+            {<point name="input.c.sffb009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb011
+         ON ACTION controlp INFIELD sffb011
+            #add-point:ON ACTION controlp INFIELD sffb011
+            {<point name="input.c.sffb011" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb003
+         ON ACTION controlp INFIELD sffb003
+            #add-point:ON ACTION controlp INFIELD sffb003
+            {<point name="input.c.sffb003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb012
+         ON ACTION controlp INFIELD sffb012
+            #add-point:ON ACTION controlp INFIELD sffb012
+            {<point name="input.c.sffb012" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb013
+         ON ACTION controlp INFIELD sffb013
+            #add-point:ON ACTION controlp INFIELD sffb013
+            {<point name="input.c.sffb013" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb014
+         ON ACTION controlp INFIELD sffb014
+            #add-point:ON ACTION controlp INFIELD sffb014
+            {<point name="input.c.sffb014" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb015
+         ON ACTION controlp INFIELD sffb015
+            #add-point:ON ACTION controlp INFIELD sffb015
+            {<point name="input.c.sffb015" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb016
+         ON ACTION controlp INFIELD sffb016
+            #add-point:ON ACTION controlp INFIELD sffb016
+            {<point name="input.c.sffb016" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb017
+         ON ACTION controlp INFIELD sffb017
+            #add-point:ON ACTION controlp INFIELD sffb017
+            {<point name="input.c.sffb017" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb018
+         ON ACTION controlp INFIELD sffb018
+            #add-point:ON ACTION controlp INFIELD sffb018
+            {<point name="input.c.sffb018" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb019
+         ON ACTION controlp INFIELD sffb019
+            #add-point:ON ACTION controlp INFIELD sffb019
+            {<point name="input.c.sffb019" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb020
+         ON ACTION controlp INFIELD sffb020
+            #add-point:ON ACTION controlp INFIELD sffb020
+            {<point name="input.c.sffb020" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb021
+         ON ACTION controlp INFIELD sffb021
+            #add-point:ON ACTION controlp INFIELD sffb021
+            {<point name="input.c.sffb021" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb022
+         ON ACTION controlp INFIELD sffb022
+            #add-point:ON ACTION controlp INFIELD sffb022
+            {<point name="input.c.sffb022" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb023
+         ON ACTION controlp INFIELD sffb023
+            #add-point:ON ACTION controlp INFIELD sffb023
+            {<point name="input.c.sffb023" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffb024
+         ON ACTION controlp INFIELD sffb024
+            #add-point:ON ACTION controlp INFIELD sffb024
+            {<point name="input.c.sffb024" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffbdocdt
+         ON ACTION controlp INFIELD sffbdocdt
+            #add-point:ON ACTION controlp INFIELD sffbdocdt
+            {<point name="input.c.sffbdocdt" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffbsite
+         ON ACTION controlp INFIELD sffbsite
+            #add-point:ON ACTION controlp INFIELD sffbsite
+            {<point name="input.c.sffbsite" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sffbstus
+         ON ACTION controlp INFIELD sffbstus
+            #add-point:ON ACTION controlp INFIELD sffbstus
+            {<point name="input.c.sffbstus" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asft335_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asft335_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="asft335_01.other_function" ver="2" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

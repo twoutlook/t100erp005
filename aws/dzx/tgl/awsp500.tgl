@@ -1,0 +1,159 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="awsp500.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2015-10-15 12:02:12), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000028
+#+ Filename...: awsp500
+#+ Description: 回傳ERP批次處理結果
+#+ Creator....: 05775(2015-10-15 09:31:25)
+#+ Modifier...: 05775 -SD/PR-
+
+{</section>}
+
+{<section id="awsp500.global" >}
+#應用 p01 樣板自動產生(Version:10)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+{<point name="global.parameter"/>}
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="awsp500.main" >}
+MAIN
+   DEFINE ls_js           STRING
+   #add-point:main段define 
+{<point name="main.define" edit="s"/>}
+   #end add-point 
+   #add-point:main段define (客製用)
+{<point name="main.define_customerization" edit="c"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   LET g_prog = "awsp500"
+   LET g_bgjob = "Y"
+   CALL cl_db_connect("ds",FALSE) 
+   CALL cl_ap_init("aws","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+{<point name="main.background"/>}
+
+{<point name="main.servicecall" />}
+
+{<point name="main.before_close" />}
+
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+
+{</section>}
+
+{<section id="awsp500.init" >}
+{<point name="init.define" edit="s"/>}
+
+{<point name="init.define_customerization" edit="c"/>}
+
+{<point name="init.init" />}
+
+{</section>}
+
+{<section id="awsp500.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+
+{<section id="awsp500.ui_dialog" >}
+#+ 選單功能實際執行處
+{<point name="ui_dialog.define" edit="s"/>}
+
+{<point name="ui_dialog.define_customerization" edit="c"/>}
+
+{<point name="ui_dialog.before_dialog"/>}
+
+{<point name="ui_dialog.before_dialog2"/>}
+
+{<point name="ui_dialog.more_construct"/>}
+
+{<point name="ui_dialog.more_input"/>}
+
+{<point name="ui_dialog.more_displayarray"/>}
+
+{<point name="ui_dialog.before_dialog3"/>}
+
+{<point name="ui_dialog.before_qbeclear" mark="Y"/>}
+
+{<point name="ui_dialog.qbeclear"/>}
+
+{<point name="ui_dialog.more_action"/>}
+
+{<point name="process.exit_dialog"/>}
+
+{<point name="process.after_schedule"/>}
+
+{</section>}
+
+{<section id="awsp500.transfer_argv" >}
+{<point name="transfer_agrv.define" edit="s"/>}
+
+{<point name="transfer_agrv.define_customerization" edit="c"/>}
+
+{<point name="transfer.argv.define"/>}
+
+{</section>}
+
+{<section id="awsp500.process" >}
+{<point name="process.define" edit="s"/>}
+
+{<point name="process.define_customerization" edit="c"/>}
+
+{<point name="process.pre_process"/>}
+
+{<point name="process.count_progress"/>}
+
+{<point name="process.process"/>}
+
+{<point name="process.foreground_finish"/>}
+
+{<point name="process.background_finish"/>}
+
+{</section>}
+
+{<section id="awsp500.get_buffer" >}
+{<point name="get_buffer.others"/>}
+
+{</section>}
+
+{<section id="awsp500.msgcentre_notify" >}
+{<point name="msg_centre.process"/>}
+
+{</section>}
+

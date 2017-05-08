@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmq560" module="afm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02159" crtdt="2016-01-27 16:10:37" modid="02159" moddt="2016-01-27 18:31:29" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="各期利息收入查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="fmmt001,fmmt001_desc(chr80),l_show,fmmj002,fmmt002,l_date,fmmj003,fmmj006"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmmj002,fmmj002_desc(chr500),fmmj006,fmmj003,fmmj003_desc(chr500),fmmt002,fmmsdocno,fmmj027(chr500),fmms001,fmms002,fmmj017,fmmj031,fmmjdocdt,fmmt005,fmmt006,fmmt007,fmmt010,fmmt014,fmmn003,fmmn005,fmmn006,l_fmmt010_sum(num20_6),l_fmmt014_sum(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmmj002(b_fmmj002),fmmj002_desc(b_fmmj002_desc),fmmj006(b_fmmj006),fmmj003(b_fmmj003),fmmj003_desc(b_fmmj003_desc),fmmt002(b_fmmt002),fmmsdocno(b_fmmsdocno),fmmj027(fmmj027),fmms001(b_fmms001),fmms002(b_fmms002),fmmj017(b_fmmj017),fmmj031(b_fmmj031),fmmjdocdt(b_fmmjdocdt),fmmt005(b_fmmt005),fmmt006(b_fmmt006),fmmt007(b_fmmt007),fmmt010(b_fmmt010),fmmt014(b_fmmt014),fmmn003(b_fmmn003),fmmn005(b_fmmn005),fmmn006(b_fmmn006),l_fmmt010_sum(l_fmmt010_sum),l_fmmt014_sum(l_fmmt014_sum)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmq560" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fmmj002,fmmj006,fmmj003,fmmt002,fmmsdocno,fmms002,fmmj017,fmmj031,fmmjdocdt,fmmt005,fmmt006,fmmt007,fmmt010,fmmt014,fmmn003,fmmn005,fmmn006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="fmmj002(b_fmmj002),fmmj006(b_fmmj006),fmmj003(b_fmmj003),fmmt002(b_fmmt002),fmmsdocno(b_fmmsdocno),fmms001(b_fmms001),fmms002(b_fmms002),fmmj017(b_fmmj017),fmmj031(b_fmmj031),fmmjdocdt(b_fmmjdocdt),fmmt005(b_fmmt005),fmmt006(b_fmmt006),fmmt007(b_fmmt007),fmmt010(b_fmmt010),fmmt014(b_fmmt014),fmmn003(b_fmmn003),fmmn005(b_fmmn005),fmmn006(b_fmmn006)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="fmmj002">
+        <after>
+          <reference field="fmmj002_desc" ref_field="fmmj002" map_field="fmmj002" ref_sql="SELECT fmmel003 FROM fmmel_t WHERE fmmelent=$varg_enterprise$var AND fmmel001=? AND fmmel002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_fmme001" state="c"/>
+      </column>
+      <column id="fmmj002_desc"/>
+      <column id="fmmj006">
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="fmmj003">
+        <after>
+          <reference field="fmmj003_desc" ref_field="fmmj003" map_field="fmmj003" ref_sql="SELECT fmmal003 FROM fmmal_t WHERE fmmalent=$varg_enterprise$var AND fmmal001=? AND fmmal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_fmma001" state="c"/>
+      </column>
+      <column id="fmmj003_desc"/>
+      <column id="fmmt002">
+        <controlp form="q_fmmjdocno" state="c"/>
+      </column>
+      <column id="fmmsdocno">
+        <controlp form="q_fmmsdocno" state="c"/>
+      </column>
+      <column id="fmmj027"/>
+      <column id="fmms001" type="S" default="0"/>
+      <column id="fmms002" type="S" default="0"/>
+      <column id="fmmj017" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmj031" type="S" default="0"/>
+      <column id="fmmjdocdt"/>
+      <column id="fmmt005"/>
+      <column id="fmmt006"/>
+      <column id="fmmt007" type="S" default="0"/>
+      <column id="fmmt010" type="S" default="0"/>
+      <column id="fmmt014" type="S" default="0"/>
+      <column id="fmmn003"/>
+      <column id="fmmn005" type="S" default="0"/>
+      <column id="fmmn006" type="S" default="0"/>
+      <column id="l_fmmt010_sum"/>
+      <column id="l_fmmt014_sum"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="fmmj_t" page="1" linked="" pk="fmmjdocno">
+      <sql id="b_fill_sql" query="SELECT fmmj002,&apos;&apos;,fmmj006,fmmj003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmmj017,fmmj031,fmmjdocdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM fmmj_t WHERE fmmjent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

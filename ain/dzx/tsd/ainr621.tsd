@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ainr621" std_prog="ainr621" erpver="1.0" ver="1" module="AIN" type="M" booking="Y" designer_ver="1.0" class="r" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="R" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 门店商品异常报表
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：報表
+輸入模式：報表（子作業）R001_00
+作業資料來源(Master)：
+ 資料來源表：
+
+1、查询条件不可为空
+
+QBE条件
+       抓取符合门店信息
+       大区 =  组织资料  并且  应用组织=aooi500中的设定，并且  门店层级类型=大区
+       门店 = 组织资料中 并且  应用组织=aooi500中的设定， 职能=门店的资料  
+       大区  对应的所有销售组织 (组织树中)   并且职能勾选门店信息
+------------根据上面三个资料抓取,获得所有大区 以及门店信息 进行资料统计
+                如果QBE 存在大区 则通过组织树抓取符合的门店
+                如果QBE存在门店 则 通过门店 与组织树资料 抓取最近一笔的大区资料
+                按照大区、门店、品类排序，遍历统计
+
+栏位资料统计   按照门店+品类进行统计
+       1.总品项数=  门店清单中  品类对应的商品个数
+       2.库存总额  = 总品项数对应的 SUM(xccu102)
+                               条件：glaa_t 主账套（glaa014='Y' )  AND 法人（ooef017= glaacomp)  确认出栏位：账套、账套本位币顺序、成本计算类型
+                                           xcaz_t 成本参数     确认出成本域：1.门店，2.仓库 （门店则 值对应为 门店，否则 无需考量成本域栏位)
+                               根据上面内容    
+                                          关联xccu_t 抓取 实时成本（目前流通暂定都是实时成本) ，SUM(xccu102)
+                                备注：报表抓取库存金额都依照上面的方式处理  (方法A）
+       3.有效品项数 =  统计 商品生命周期中状态=正常的商品的个数
+       4.异常商品品项数 = 统计 商品生命周期中状态=异常的商品的个数   
+       5.负库存品项数=  当前账面库存数量<0的商品个数
+       6.负毛利率品项数=  昨天单品日结档中 毛利率<0的商品个数
+       7.无销售品项数 = (单品日结中最近销售日期 + aini620设定天数零销售天数 <= g_today)的商品数  
+       8.高库存品项数 = (考核周期日均库存数量/当前日均销量(DMS)=库存周转天数)>aini610高库存标准设定        的商品数
+                                       日均库存量=(门店商品统计日结档.考核周期SUM(成本仓库存数量)/考核周期天数)
+                                       日均销量=最近一次日均销量
+       9.缺货品项数=(考核周期日均库存数量/当前日均销量(DMS)=库存周转天数)<aini610缺货标准设定          的商品数
+                                   日均库存量=(门店商品统计日结档.考核周期SUM(成本仓库存数量)/考核周期天数)
+                                   日均销量=最近一次日均销量                 
+ --------------------------------------------------------------------------------------------------------------------------------------------------7/8/9可参考ainq620的逻辑
+       10.异常状态库存金额 = 异常的状态商品对应的SUM(xccu102)(方法A）
+       11.异常状态库存金额占比=( 异常库存金额/库存总额)*100%
+       12.无销售库存金额= 无销售的商品  对应SUM(xccu102)(方法A）
+       13.无销售库存占比=(无销售金额/库存总额)*100%
+       14.高库存库存金额 =高库存商品范围对应的SUM(xccu102)(方法A）
+       15.高库存库存金额占比=(高库存金额/库存总额)*100%
+       16.缺货率 = （缺货商品个数/对应品类的商品个数)*100% 
+                       
+小计：依照门店的角度
+            数量部分直接求和
+            金额部分直接求和
+            百分比部分品类数求平均方式，例如  A品类 80%  B 品类 70%  那么 小计 (80%+70%)/2
+ 合计：汇总全部
+             算法参考小计        
+                                        
+]]>
+  </all>
+  <field cite_std="N" name="ooef_t.ooef001" ver="1" src="s" column="ooef001" table="ooef_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtdx_t.rtdxsite" ver="1" src="s" column="rtdxsite" table="rtdx_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="buttonedit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="buttonedit_2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_ooef0011" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooef0011" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="buttonedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="buttonedit_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="lbl_ooef0011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="ooef0011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="ooef_t.ooef001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtdx_t.rtdxsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_rtdxsite" text="營運據點" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_oojk001" text="簽核代號" lstr=""/>
+    <sfield name="lbl_oojk004_str" text="簽核關卡" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

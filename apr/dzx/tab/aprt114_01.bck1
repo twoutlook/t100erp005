@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aprt114_01" module="apr" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="01251" crtdt="2015-07-07 17:54:35" modid="01251" moddt="2015-07-08 17:54:19" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr500),prbgdocno,prbgseq,prbgseq1,prbg003,prbj004(chr10),prbg002,prbg002_desc(chr500),prbg002_desc_desc(chr10),rtaxl003(chr500),rtdx034(chr500),prbg007,prbg014,prbg015,prbg0091(num20_6),prbg009,prbg010,prbg011,prbg012,prbg016,prbg017"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="selok"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="aprt114_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,prbgdocno,prbgseq,prbgseq1,prbg003,prbj004,prbg002,rtaxl003,rtdx034,prbg007,prbg014,prbg015,prbg0091,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="sel,prbgdocno,prbgseq,prbgseq1,prbg003,prbj004,prbg002,rtaxl003,rtdx034,prbg007,prbg014,prbg015,prbg0091,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="prbgdocno"/>
+      <column id="prbgseq"/>
+      <column id="prbgseq1" def_scc="6032"/>
+      <column id="prbg003">
+        <after>
+          <check chkid="v_imay003_2" id="isExist"/>
+        </after>
+        <controlp form="q_rtdx001_7" state="i"/>
+        <controlp form="q_rtdx001_7" state="c"/>
+      </column>
+      <column id="prbj004">
+        <after>
+          <check chkid="v_prbj004" id="isExist"/>
+        </after>
+        <controlp form="q_prbj001" state="i"/>
+        <controlp form="q_prbj001" state="c"/>
+      </column>
+      <column id="prbg002">
+        <after>
+          <check chkid="v_rtdx001_2" id="isExist"/>
+          <reference field="prbg002_desc" ref_field="prbg_t.prbg002" map_field="prbgent,prbg002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_7" state="i"/>
+        <controlp form="q_rtdx001_7" state="c"/>
+      </column>
+      <column id="prbg002_desc">
+        <after>
+          <reference field="prbg002_desc_desc" ref_field="prbg_t.prbg002" map_field="prbgent,prbg002" ref_sql="SELECT imaa009 FROM imaa_t WHERE imaaent=$varg_enterprise$var AND imaa001=? "/>
+        </after>
+      </column>
+      <column id="prbg002_desc_desc"/>
+      <column id="rtaxl003"/>
+      <column id="rtdx034"/>
+      <column id="prbg007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prbg014"/>
+      <column id="prbg015"/>
+      <column id="prbg0091" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prbg009" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prbg010" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prbg011" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prbg012" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prbg016"/>
+      <column id="prbg017"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="prbg_t" page="1" linked="" pk="prbgdocno,prbgseq,prbgseq1">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,prbgdocno,prbgseq,prbgseq1,prbg003,&apos;&apos;,prbg002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,prbg007,prbg014,prbg015,&apos;&apos;,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017 FROM prbg_t WHERE prbgent=? AND prbgdocno=? AND prbgseq=? AND prbgseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,prbgdocno,prbgseq,prbgseq1,prbg003,&apos;&apos;,prbg002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,prbg007,prbg014,prbg015,&apos;&apos;,prbg009,prbg010,prbg011,prbg012,prbg016,prbg017 FROM prbg_t WHERE prbgent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

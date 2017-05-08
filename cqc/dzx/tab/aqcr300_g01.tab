@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aqcr300_g01" module="cqc" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2014-07-23 10:48:41" modid="" moddt="" sdver="2" tabver="10001" description="质量检验报告">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="l_usemachine(chr30|NULL),qcbadocno,qcbadocdt,l_qcba010_qcba011(chr30|trim(qcba010)||&apos;/&apos;||trim(qcba011)),imaal_t_imaal003(imaal003|imaal_t.imaal003),imaal_t_imaal004(imaal004|imaal_t.imaal004),qcba000,l_qcba000_desc(chr30|NULL),qcba005,l_qcba005_pmaal004(chr30|NULL),qcba012,qcba006,l_qcba006_desc(chr30|NULL),qcba007,qcba022,l_qcba022_desc(chr30|NULL),qcba024,qcba014,l_qcba024_ooag011(chr30|NULL),l_qcba017_qcba009(chr30|trim(qcba017)||&apos; &apos;||trim(qcba009)),l_qcba001_qcba002(chr30|trim(qcba001)||&apos;-&apos;||trim(qcba002)),qcba002,l_imae120(chr30|NULL),qcba023,qcba027,qcbdseq,l_qcbd001_qcbd002(chr30|trim(qcbd001)||&apos;.&apos;||trim(qcbd002)),qcbd003,l_qcbd003_desc(chr30|NULL),qcbd020,l_qcbd020_desc(chr30|NULL),qcbd004,qcbd018,l_qcbd018_desc(chr100|NULL),qcbd005,qcbd006,qcbd009,qcbd010,qcbd021,qcbd011,l_qcbd011_desc(chr30|NULL),qcbd019,qcbaent,qcbd013,qcbd014,qcbd015,qcbd017,l_qcba023(chr30|NULL),l_qcba027(chr30|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_usemachine(chr30|NULL),qcbadocno,qcbadocdt,l_qcba010_qcba011(chr30|trim(qcba010)||&apos;/&apos;||trim(qcba011)),imaal_t_imaal003(imaal003|imaal_t.imaal003),imaal_t_imaal004(imaal004|imaal_t.imaal004),qcba000,l_qcba000_desc(chr30|NULL),qcba005,l_qcba005_pmaal004(chr30|NULL),qcba012,qcba006,l_qcba006_desc(chr30|NULL),qcba007,qcba022,l_qcba022_desc(chr30|NULL),qcba024,qcba014,l_qcba024_ooag011(chr30|NULL),l_qcba017_qcba009(chr30|trim(qcba017)||&apos; &apos;||trim(qcba009)),l_qcba001_qcba002(chr30|trim(qcba001)||&apos;-&apos;||trim(qcba002)),qcba002,l_imae120(chr30|NULL),qcba023,qcba027,qcbdseq,l_qcbd001_qcbd002(chr30|trim(qcbd001)||&apos;.&apos;||trim(qcbd002)),qcbd003,l_qcbd003_desc(chr30|NULL),qcbd020,l_qcbd020_desc(chr30|NULL),qcbd004,qcbd018,l_qcbd018_desc(chr100|NULL),qcbd005,qcbd006,qcbd009,qcbd010,qcbd021,qcbd011,l_qcbd011_desc(chr30|NULL),qcbd019,qcbaent,qcbd013,qcbd014,qcbd015,qcbd017,l_qcba023(chr30|NULL),l_qcba027(chr30|NULL)"/>
+    <sql id="g_from" query="qcba_t,qcbd_t,imaal_t"/>
+    <sql id="g_where" query="" maintable="qcba_t"/>
+    <sql id="g_order" query="qcbadocno,qcbdseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="qcbadocno,qcbdseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="qcbadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="qcbaent,qcbadocno"/>
+      <rep type="qcbdseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="qcbaent,qcbadocno,qcbdseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="qcbaent,qcbadocno,qcbdseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="qcbadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="qcbaent,qcbadocno"/>
+      <rep type="qcbdseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

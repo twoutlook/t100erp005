@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi020" module="aoo" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="01258" crtdt="2013-07-01 00:00:00" modid="02294" moddt="2014-06-28 15:21:10" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="國家地區維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oocgstus,oocg001,oocgl003,oocgl004,oocg002,oocg002_desc(chr500),oocg003,oocg004,oocg006,oocg007,oocg008,oocg009,oocg005,oocg010,oocg010_desc(chr10),gzot003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="oocg001_s_detail1_info(chr500),oocgmodid,oocgmodid_desc(chr500),oocgmoddt,oocgownid,oocgownid_desc(chr500),oocgowndp,oocgowndp_desc(chr500),oocgcrtid,oocgcrtid_desc(chr500),oocgcrtdp,oocgcrtdp_desc(chr500),oocgcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi020" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="oocg001,oocgl003,oocgl004,oocg002,oocg003,oocg004,oocg006,oocg007,oocg008,oocg009,oocg005,oocg010,gzot003" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="oocg001_s_detail1_info,oocgmodid,oocgmoddt,oocgownid,oocgowndp,oocgcrtid,oocgcrtdp,oocgcrtdt" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="oocg001,oocgl003,oocgl004,oocg002,oocg003,oocg004,oocg006,oocg007,oocg008,oocg009,oocg005,oocg010,gzot003"/>
+      <construct id="body" page="2" field="oocg001_s_detail1_info,oocgmodid,oocgmoddt,oocgownid,oocgowndp,oocgcrtid,oocgcrtdp,oocgcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="oocgstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oocg001">
+        <controlp form="q_oocg001" state="c"/>
+      </column>
+      <column id="oocgl003"/>
+      <column id="oocgl004"/>
+      <column id="oocg002">
+        <after>
+          <check chkid="v_ooce001" id="isExist"/>
+          <reference field="oocg002_desc" ref_field="oocg_t.oocg002" map_field="oocg002" ref_sql="SELECT oocel003 FROM oocel_t WHERE oocelent=$varg_enterprise$var AND oocel001=? AND oocel002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooce001" state="i"/>
+        <controlp form="q_oocg002" state="c"/>
+      </column>
+      <column id="oocg002_desc"/>
+      <column id="oocg003"/>
+      <column id="oocg004"/>
+      <column id="oocg006"/>
+      <column id="oocg007" def_scc="7"/>
+      <column id="oocg008" def_scc="2"/>
+      <column id="oocg009" def_scc="8"/>
+      <column id="oocg005"/>
+      <column id="oocg010">
+        <after>
+          <check chkid="v_gzot001" id="isExist"/>
+          <reference field="oocg010_desc" ref_field="oocg_t.oocg010" map_field="oocg010" ref_sql="SELECT gzot002 FROM gzot_t WHERE gzot001=? "/>
+        </after>
+        <controlp form="q_gzot001" state="i"/>
+        <controlp form="q_gzot001" state="c"/>
+      </column>
+      <column id="oocg010_desc"/>
+      <column id="gzot003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="oocg001_s_detail1_info"/>
+      <column id="oocgmodid">
+        <after>
+          <reference field="oocgmodid_desc" ref_field="oocg_t.oocgmodid" map_field="oocgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocgmodid_desc"/>
+      <column id="oocgmoddt"/>
+      <column id="oocgownid">
+        <after>
+          <reference field="oocgownid_desc" ref_field="oocg_t.oocgownid" map_field="oocgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocgownid_desc"/>
+      <column id="oocgowndp">
+        <after>
+          <reference field="oocgowndp_desc" ref_field="oocg_t.oocgowndp" map_field="oocgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oocgowndp_desc"/>
+      <column id="oocgcrtid">
+        <after>
+          <reference field="oocgcrtid_desc" ref_field="oocg_t.oocgcrtid" map_field="oocgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocgcrtid_desc"/>
+      <column id="oocgcrtdp">
+        <after>
+          <reference field="oocgcrtdp_desc" ref_field="oocg_t.oocgcrtdp" map_field="oocgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oocgcrtdp_desc"/>
+      <column id="oocgcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="oocg_t" page="1,2" linked="" pk="oocg001">
+      <sql id="forupd_sql_detail" query="SELECT oocgstus,oocg001,&apos;&apos;,&apos;&apos;,oocg002,&apos;&apos;,oocg003,oocg004,oocg006,oocg007,oocg008,oocg009,oocg005,oocg010,&apos;&apos;,&apos;&apos;,&apos;&apos;,oocgmodid,&apos;&apos;,oocgmoddt,oocgownid,&apos;&apos;,oocgowndp,&apos;&apos;,oocgcrtid,&apos;&apos;,oocgcrtdp,&apos;&apos;,oocgcrtdt FROM oocg_t WHERE oocgent=? AND oocg001=? FOR UPDATE"/>
+      <sql id="detail_append" type="single" table="gzot_t" pk="gzot001" field="gzot003"/>
+      <sql id="b_fill_sql" query="SELECT oocgstus,oocg001,&apos;&apos;,&apos;&apos;,oocg002,&apos;&apos;,oocg003,oocg004,oocg006,oocg007,oocg008,oocg009,oocg005,oocg010,&apos;&apos;,&apos;&apos;,&apos;&apos;,oocgmodid,&apos;&apos;,oocgmoddt,oocgownid,&apos;&apos;,oocgowndp,&apos;&apos;,oocgcrtid,&apos;&apos;,oocgcrtdp,&apos;&apos;,oocgcrtdt FROM oocg_t WHERE oocgent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="oocgl_t.oocgl003,oocgl_t.oocgl004" table="oocgl_t" fk="oocg001" pk="oocgl001,oocgl002" field="oocgl003,oocgl004"/>
+    </body>
+  </dataset>
+</assembly>
+

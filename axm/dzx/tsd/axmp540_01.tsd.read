@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axmp540_01" std_prog="axmp540_01" erpver="1.0" ver="3" module="AXM" type="S" booking="N" designer_ver="1.0" class="P" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="3" src="s" status="u">
+    <![CDATA[程式說明及目的： (大略描述一下)
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：批次處理作業
+輸入模式：批次 P003_00
+作業資料來源(Master)：
+ 資料來源表：xmda_t(訂單單頭檔)
+                        xmdd_t(訂單交期明細檔)
+                        xmdg_t(出通單單頭檔)
+                        xmdh_t(出通單單身明細檔)
+                        xmdi_t(出通單多庫儲批出貨明細檔)
+                        xmdk_t(出貨/簽收/銷退單單身明細檔)
+                        xmdm_t(出貨/簽收/銷退單多庫儲批出貨明細檔)]]>
+  </all>
+  <mi_all cite_std="N" ver="3" src="s" status="u">
+    <![CDATA[待出貨資料：
+1.此單身除選擇、本次出貨量、庫位、儲位、批號欄位可維護外，其餘僅顯示不可維護
+2.資料抓取
+  2-1.抓取[T.訂單交期明細檔]中符合選擇條件 AND 單別限定條件 AND 訂單單別參數"訂單需走出通單(D-BAS-0077)='N'"
+      AND [T.訂單單頭檔].[C.狀態碼]="Y" AND [T.訂單單身明細檔].[C.狀態碼]='1'
+      AND [T.訂單交期明細檔].[C.分批訂購數量] > [T.訂單交期明細檔].[C.已出貨量] - [T.訂單交期明細檔].[C.銷退換貨數量] + 已登打出貨未確認的出貨量
+      AND [T.訂單交期明細檔].[C.約定交貨日期] <= 今天 
+      的相關資料顯示
+      2-1-1.來源單據 = '1.訂單'
+  2-2.抓取[T.出通單單身明細檔]中符合選擇條件 AND 單別限定條件 AND [T.出通單單頭檔].[C.狀態碼]="Y"
+      AND [T.出通單單身明細檔].[C.申請出通數量] > [T.出通單單身明細檔].[C.已轉出貨數量] + 已登打出貨未確認的出貨量
+      AND [T.出通單單頭檔].[C.預計出貨日期] <= 今天 
+      的相關資料顯示
+      2-2-1.來源單據 = '2.出貨通知單'
+
+未來出貨資料：
+1.此單身除選擇、本次出貨量、庫位、儲位、批號欄位可維護外，其餘僅顯示不可維護
+2.資料抓取
+  2-1.抓取[T.訂單交期明細檔]中符合選擇條件 AND 單別限定條件 AND 訂單單別參數"訂單需走出通單(D-BAS-0077)='N'"
+      AND [T.訂單單頭檔].[C.狀態碼]="Y" AND [T.訂單單身明細檔].[C.狀態碼]='1'
+      AND [T.訂單交期明細檔].[C.分批訂購數量] > [T.訂單交期明細檔].[C.已出貨量] - [T.訂單交期明細檔].[C.銷退換貨數量] + 已登打出貨未確認的出貨量
+      AND [T.訂單交期明細檔].[C.約定交貨日期] > 今天 
+      的相關資料顯示
+      2-1-1.來源單據 = '1.訂單'
+  2-2.抓取[T.出通單單身明細檔]中符合選擇條件 AND 單別限定條件 AND [T.出通單單頭檔].[C.狀態碼]="Y"
+      AND [T.出通單單身明細檔].[C.申請出通數量] > [T.出通單單身明細檔].[C.已轉出貨數量] + 已登打出貨未確認的出貨量
+      AND [T.出通單單頭檔].[C.預計出貨日期] > 今天 
+      的相關資料顯示
+      2-2-1.來源單據 = '2.出貨通知單'
+]]>
+  </mi_all>
+  <field cite_std="N" name="days_01" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="days_02" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal003_01" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal003_02" ver="3" src="s" column="imaal003" table="imaal_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal004_01" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal004_02" ver="3" src="s" column="imaal004" table="imaal_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sel_01" ver="3" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="u">
+    <![CDATA[選擇="Y"時，預設本次出貨量=待出貨數量，反之，本次出貨量=0]]>
+  </field>
+  <field cite_std="N" name="sel_02" ver="3" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="u">
+    <![CDATA[選擇="Y"時，預設本次出貨量=待出貨數量，反之，本次出貨量=0]]>
+  </field>
+  <field cite_std="N" name="source_01" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="source_02" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmda002_01" ver="3" src="s" column="xmda002" table="xmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmda002_02" ver="3" src="s" column="xmda002" table="xmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmda004_01" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmda004_02" ver="3" src="s" column="xmda004" table="xmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmda033_01" ver="3" src="s" column="xmda033" table="xmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmda033_02" ver="3" src="s" column="xmda033" table="xmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdadocdt_01" ver="3" src="s" column="xmdadocdt" table="xmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdadocdt_02" ver="3" src="s" column="xmdadocdt" table="xmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdc012_01" ver="3" src="s" column="xmdc012" table="xmdc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdc012_02" ver="3" src="s" column="xmdc012" table="xmdc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh001_01" ver="3" src="s" column="xmdh001" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh001_02" ver="3" src="s" column="xmdh001" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh002_01" ver="3" src="s" column="xmdh002" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh002_02" ver="3" src="s" column="xmdh002" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh003_01" ver="3" src="s" column="xmdh003" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh003_02" ver="3" src="s" column="xmdh003" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh004_01" ver="3" src="s" column="xmdh004" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh004_02" ver="3" src="s" column="xmdh004" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh005_01" ver="3" src="s" column="xmdh005" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="2055" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh005_02" ver="3" src="s" column="xmdh005" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="2055" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh006_01" ver="3" src="s" column="xmdh006" table="xmdh_t" attribute="" type="" req="N" i_zoom="q_imaa001" c_zoom="q_imaa001" chk_ref="v_imaa001_5" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh006_02" ver="3" src="s" column="xmdh006" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh007_01" ver="3" src="s" column="xmdh007" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh007_01_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh007_02" ver="3" src="s" column="xmdh007" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh007_02_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh009_01" ver="3" src="s" column="xmdh009" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh009_02" ver="3" src="s" column="xmdh009" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh010_01" ver="3" src="s" column="xmdh010" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh010_02" ver="3" src="s" column="xmdh010" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh012_01" ver="3" src="s" column="xmdh012" table="xmdh_t" attribute="" type="" req="N" i_zoom="q_inaa001_4" c_zoom="" chk_ref="v_inaa001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[庫位：
+1.輸入的庫儲批需存在[T:庫存明細檔(inag_t)]中
+2.若單據別參數設定需檢核在揀量時，則帳面庫存量-已在揀量小於出貨數量時，則不允許輸入此庫位(應用元件檢核)
+3.若來源單據 = "1.訂單"時，若訂單有限定庫位則在出貨單的出貨庫位必須與訂單一樣不可修改
+4.若來源單據 = "2.出貨通知單"時，若出通單有限定庫位則在出貨單的出貨庫位必須與出通單一樣不可修改  ]]>
+  </field>
+  <field cite_std="N" name="xmdh012_02" ver="3" src="s" column="xmdh012" table="xmdh_t" attribute="" type="" req="N" i_zoom="q_inaa001_4" c_zoom="" chk_ref="v_inaa001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[庫位：
+1.輸入的庫儲批需存在[T:庫存明細檔(inag_t)]中
+2.若單據別參數設定需檢核在揀量時，則帳面庫存量-已在揀量小於出貨數量時，則不允許輸入此庫位(應用元件檢核)
+3.若來源單據 = "1.訂單"時，若訂單有限定庫位則在出貨單的出貨庫位必須與訂單一樣不可修改
+4.若來源單據 = "2.出貨通知單"時，若出通單有限定庫位則在出貨單的出貨庫位必須與出通單一樣不可修改
+ 
+               
+]]>
+  </field>
+  <field cite_std="N" name="xmdh013_01" ver="3" src="s" column="xmdh013" table="xmdh_t" attribute="" type="" req="N" i_zoom="q_inab002_8" c_zoom="" chk_ref="v_inab002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[儲位：
+1.輸入的庫儲批需存在[T:庫存明細檔(inag_t)]中
+2.若單據別參數設定需檢核在揀量時，則帳面庫存量-已在揀量小於出貨數量時，則不允許輸入此儲位(應用元件檢核)
+3.若來源單據 = "1.訂單"時，若訂單有限定儲位則在出貨單的出貨儲位必須與訂單一樣不可修改
+4.若來源單據 = "2.出貨通知單"時，若出通單有限定儲位則在出貨單的出貨儲位必須與出通單一樣不可修改
+ 
+               
+]]>
+  </field>
+  <field cite_std="N" name="xmdh013_02" ver="3" src="s" column="xmdh013" table="xmdh_t" attribute="" type="" req="N" i_zoom="q_inab002_8" c_zoom="" chk_ref="v_inab002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[儲位：
+1.輸入的庫儲批需存在[T:庫存明細檔(inag_t)]中
+2.若單據別參數設定需檢核在揀量時，則帳面庫存量-已在揀量小於出貨數量時，則不允許輸入此儲位(應用元件檢核)
+3.若來源單據 = "1.訂單"時，若訂單有限定儲位則在出貨單的出貨儲位必須與訂單一樣不可修改
+4.若來源單據 = "2.出貨通知單"時，若出通單有限定儲位則在出貨單的出貨儲位必須與出通單一樣不可修改
+ 
+               
+]]>
+  </field>
+  <field cite_std="N" name="xmdh014_01" ver="3" src="s" column="xmdh014" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="v_inag006_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="u">
+    <![CDATA[批號：
+1.輸入的庫儲批需存在[T:庫存明細檔(inag_t)]中
+2.若單據別參數設定需檢核在揀量時，則帳面庫存量-已在揀量小於出貨數量時，則不允許輸入此批號(應用元件檢核)
+3.[T:料件據點進銷存檔].[C:批號控管]=1或2時才可輸入
+4.若來源單據 = "1.訂單"時，若訂單有限定批號則在出貨單的出貨批號必須與訂單一樣不可修改
+5.若來源單據 = "2.出貨通知單"時，若出通單有限定批號則在出貨單的出貨批號必須與出通單一樣不可修改
+ 
+               
+]]>
+  </field>
+  <field cite_std="N" name="xmdh014_02" ver="3" src="s" column="xmdh014" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="v_inag006_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="u">
+    <![CDATA[批號：
+1.輸入的庫儲批需存在[T:庫存明細檔(inag_t)]中
+2.若單據別參數設定需檢核在揀量時，則帳面庫存量-已在揀量小於出貨數量時，則不允許輸入此批號(應用元件檢核)
+3.[T:料件據點進銷存檔].[C:批號控管]=1或2時才可輸入
+4.若來源單據 = "1.訂單"時，若訂單有限定批號則在出貨單的出貨批號必須與訂單一樣不可修改
+5.若來源單據 = "2.出貨通知單"時，若出通單有限定批號則在出貨單的出貨批號必須與出通單一樣不可修改
+ 
+               
+]]>
+  </field>
+  <field cite_std="N" name="xmdh015_01" ver="3" src="s" column="xmdh015" table="xmdh_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh015_02" ver="3" src="s" column="xmdh015" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh016_01" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[1.如來源單據 = "1.訂單"
+    CALL 元件：s_axmt540_get_max_ship_qty算出可出貨數量
+2.如來源單據 = "2.出貨通知單"
+    CALL 元件：s_axmt540_get_max_ship_qty 算出可出貨數量
+
+]]>
+  </field>
+  <field cite_std="N" name="xmdh016_02" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[1.如來源單據 = "1.訂單"
+    CALL 元件：s_axmt540_get_max_ship_qty算出可出貨數量
+2.如來源單據 = "2.出貨通知單"
+    CALL 元件：s_axmt540_get_max_ship_qty 算出可出貨數量
+
+]]>
+  </field>
+  <field cite_std="N" name="xmdh017_01" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="u">
+    <![CDATA[本次出貨量：
+1.本次出貨量不可大於待出貨數量
+2.若[C.來源單據] = "1.訂單"且訂單設置不允許分批出貨時，則本次出貨量不可修改
+3.若[C.來源單據] = "2.出貨通知單"且出通單別參數設置出通轉出貨單為"一對一"時，則本次出貨不可以修改]]>
+  </field>
+  <field cite_std="N" name="xmdh017_02" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="u">
+    <![CDATA[本次出貨量：
+1.本次出貨量不可大於待出貨數量
+2.若[C.來源單據] = "1.訂單"且訂單設置不允許分批出貨時，則本次出貨量不可修改
+3.若[C.來源單據] = "2.出貨通知單"且出通單別參數設置出通轉出貨單為"一對一"時，則本次出貨不可以修改]]>
+  </field>
+  <field cite_std="N" name="xmdh029_01" ver="3" src="s" column="xmdh029" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdh029_02" ver="3" src="s" column="xmdh029" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdhdocno_01" ver="3" src="s" column="xmdhdocno" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdhdocno_02" ver="3" src="s" column="xmdhdocno" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdhseq_01" ver="3" src="s" column="xmdhseq" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdhseq_02" ver="3" src="s" column="xmdhseq" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="docno_01" ver="3" src="s" column="xmdhdocno" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="docno_02" ver="3" src="s" column="xmdhdocno" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="3" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="seq1_01" ver="3" src="s" column="xmdh003" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="seq1_02" ver="3" src="s" column="xmdh003" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="seq2_01" ver="3" src="s" column="xmdh004" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="seq2_02" ver="3" src="s" column="xmdh004" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="seq_01" ver="3" src="s" column="xmdh002" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="seq_02" ver="3" src="s" column="xmdh002" table="xmdh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdadocno_01" ver="3" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdhdocno_1" ver="3" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdhseq_1" ver="3" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="3" name="xmda002_01_desc" src="s" depend_field="xmda002_01" correspon_key="xmda002_01" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmda002_02_desc" src="s" depend_field="xmda002_02" correspon_key="xmda002_02" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmda004_01_desc" src="s" depend_field="xmda004_01" correspon_key="xmda004" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal003" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmdc012_01_desc" src="s" depend_field="xmdc012_01" correspon_key="xmdc012_01" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmdh004_02_desc" src="s" depend_field="xmdh004_02" correspon_key="xmdh004_02" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal003" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmdh009_01_desc" src="s" depend_field="xmdh009_01" correspon_key="&apos;221&apos;,xmdh009_01" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmdh009_02_desc" src="s" depend_field="xmdh009_02" correspon_key="&apos;221&apos;,xmdh009_02" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmdh012_02_desc" src="s" depend_field="xmdh012_02" correspon_key="xmdh012_02" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmdh013_01_desc" src="s" depend_field="xmdh013_01" correspon_key="xmdh012_01,xmdh013_01" ref_table="inab_t" ref_fk="inab001,inab002" ref_dlang="" ref_rtn="inab003" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmdh013_02_desc" src="s" depend_field="xmdh013_02" correspon_key="xmdh012_02,xmdh013_02" ref_table="inab_t" ref_fk="inab001,inab02" ref_dlang="" ref_rtn="inab003" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmdh015_01_desc" src="s" depend_field="xmdh015_01" correspon_key="xmdh015_01" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status="u"/>
+    <rfield cite_std="N" ver="3" name="xmdh015_02_desc" src="s" depend_field="xmdh015_02" correspon_key="xmdh015_02" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status="u"/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="3" name="days_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="days_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="docno_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="docno_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="imaal003_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="imaal003_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="imaal004_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="imaal004_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="sel_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="sel_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="seq1_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="seq1_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="seq2_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="seq2_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="seq_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="seq_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="source_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="source_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmda002_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmda002_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmda004_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmda004_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmda033_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmda033_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdadocdt_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdadocdt_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdadocno_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="xmdc012_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdc012_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh001_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh001_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh002_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh002_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh003_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh003_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh004_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh004_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh005_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh005_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh006_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh006_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh007_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh007_01_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh007_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh007_02_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh009_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh009_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh010_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh010_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh012_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh012_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh013_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh013_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh014_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh014_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh015_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh015_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh016_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh016_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh017_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh017_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh029_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdh029_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdhdocno_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdhdocno_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdhdocno_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="xmdhseq_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdhseq_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xmdhseq_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+  </help_code>
+  <strings>
+    <sfield name="axmp540_01_page01" text="待出貨資料" lstr=""/>
+    <sfield name="lbl_sel" text="選擇" lstr=""/>
+    <sfield name="lbl_xmda004_02_01" text="客戶" lstr=""/>
+    <sfield name="lbl_pmaal003" text="客戶名稱" lstr=""/>
+    <sfield name="lbl_source" text="來源單據" lstr=""/>
+    <sfield name="lbl_xmdhdocno" text="出通單單號" lstr=""/>
+    <sfield name="lbl_xmdhseq" text="出通單項次" lstr=""/>
+    <sfield name="lbl_xmdh001" text="訂單單號" lstr=""/>
+    <sfield name="lbl_xmdadocdt" text="訂單日期" lstr=""/>
+    <sfield name="lbl_xmda002" text="業務人員" lstr=""/>
+    <sfield name="lbl_ooag011" text="全名" lstr=""/>
+    <sfield name="lbl_xmdh002" text="項次" lstr=""/>
+    <sfield name="lbl_xmdh003" text="項序" lstr=""/>
+    <sfield name="lbl_xmdh004" text="分批序" lstr=""/>
+    <sfield name="lbl_xmda033" text="客戶訂購單號" lstr=""/>
+    <sfield name="lbl_xmdh005" text="子件特性" lstr=""/>
+    <sfield name="lbl_xmdh006" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_xmdh007" text="產品特徵" lstr=""/>
+    <sfield name="lbl_xmdh007_01_desc" text="說明" lstr=""/>
+    <sfield name="lbl_xmdh009" text="作業編號" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_xmdh010" text="作業序" lstr=""/>
+    <sfield name="lbl_xmdh015" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_xmdc012" text="約定交貨日" lstr=""/>
+    <sfield name="lbl_days01" text="逾期天數" lstr=""/>
+    <sfield name="lbl_xmdh016" text="待出貨數量" lstr=""/>
+    <sfield name="lbl_xmdh017" text="本次出貨數" lstr=""/>
+    <sfield name="lbl_xmdh012" text="庫位" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_xmdh013" text="儲位" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_xmdh014" text="批號" lstr=""/>
+    <sfield name="lbl_xmdh029" text="庫存管理特徵" lstr=""/>
+    <sfield name="axmp540_01_page02" text="未來出貨資料" lstr=""/>
+    <sfield name="lbl_xmda004" text="客戶" lstr=""/>
+    <sfield name="lbl_xmdh007_02_desc" text="說明" lstr=""/>
+    <sfield name="lbl_days02" text="提前天數" lstr=""/>
+    <sfield name="lbl_all_c_sel" text="客戶全選" lstr=""/>
+    <sfield name="lbl_all_o_sel" text="訂單全選" lstr=""/>
+    <sfield name="lbl_all_un_sel" text="取消全選" lstr=""/>
+    <sfield name="lbl_see_tmp" text="檢視底稿" lstr=""/>
+    <sfield name="lbl_del_tmp" text="刪除底稿" lstr=""/>
+    <sfield name="lbl_sel_mode" text="出貨資料" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

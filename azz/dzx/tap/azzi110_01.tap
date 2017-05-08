@@ -1,0 +1,309 @@
+<add_points prog="azzi110_01" std_prog="azzi110_01" erpver="1.0" module="AZZ" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.azzi110_01" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzi110_01(ps_type)
+#                  RETURNING 
+# Input parameter: ps_type 項目 STRING
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi110_01(ps_type)
+   DEFINE ps_type STRING 
+
+   WHENEVER ERROR CALL cl_err_msg_log 
+
+  #畫面開啟 (identifier)
+   OPEN WINDOW w_azzi110_01 WITH FORM cl_ap_formpath("azz","azzi110_01")
+  
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   LET gs_type = ps_type
+   #程式起始資料初始化
+   CALL azzi110_01_init()
+
+      INPUT BY NAME  g_set_up_m.dzeal_set_up,
+                     g_set_up_m.dzebl_set_up,g_set_up_m.gzzal_set_up,g_set_up_m.gzzd_set_up,
+                     g_set_up_m.gzdfl_set_up,g_set_up_m.gzzq_set_up,g_set_up_m.gzswl_set_up,g_set_up_m.gzsxl_set_up,
+                     g_set_up_m.gzszl_set_up,g_set_up_m.gzwel_set_up,g_set_up_m.gzcal_set_up,g_set_up_m.gzcbl_set_up,
+                     g_set_up_m.gzgdl_set_up,g_set_up_m.gzge_set_up                     
+                        ATTRIBUTE(WITHOUT DEFAULTS,UNBUFFERED,FIELD ORDER FORM)
+                   
+         BEFORE INPUT
+
+         AFTER FIELD dzeal_set_up
+
+         AFTER FIELD dzebl_set_up
+
+         AFTER INPUT 
+            CALL azzi110_01_chk_item()
+
+         ON ACTION select_all
+            CALL azzi110_01_checkbox('Y')
+
+         ON ACTION disselect_all
+            CALL azzi110_01_checkbox('N')
+
+         ON ACTION CANCEL   # (放棄)
+            LET INT_FLAG = TRUE
+            EXIT INPUT 
+            
+         ON ACTION CLOSE    #右上角 (X)
+            LET INT_FLAG = TRUE
+            EXIT INPUT 
+
+         ON ACTION EXIT     #toolbar 離開
+            LET INT_FLAG = TRUE   
+            EXIT INPUT 
+         #交談指令共用ACTION
+         &include "common_action.4gl"         
+
+   END INPUT 
+
+   IF INT_FLAG THEN 
+      LET INT_FLAG = FALSE   
+   ELSE  
+      CALL azzi110_01_item_process()
+   END IF 
+   #畫面關閉
+   CLOSE WINDOW w_azzi110_01
+END FUNCTION]]>
+</point>
+  <point name="function.azzi110_01_init" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzi110_01_init()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi110_01_init()
+  
+   CALL azzi110_01_checkbox('N') 
+END FUNCTION]]>
+</point>
+  <point name="function.azzi110_01_checkbox" cite_std="N" status="u" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 畫面check box 設定
+# Memo...........:
+# Usage..........: CALL azzi110_01_checkbox(ps_chk)
+#                  RETURNING 回传参数
+# Input parameter: ps_chk N/Y CHAR(1) 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi110_01_checkbox(ps_chk)
+   DEFINE ps_chk LIKE type_t.chr1
+
+   LET g_set_up_m.dzeal_set_up = ps_chk
+   LET g_set_up_m.dzebl_set_up = ps_chk
+   LET g_set_up_m.gzzal_set_up = ps_chk
+   LET g_set_up_m.gzzd_set_up = ps_chk
+   LET g_set_up_m.gzdfl_set_up = ps_chk
+   LET g_set_up_m.gzzq_set_up = ps_chk
+   LET g_set_up_m.gzswl_set_up = ps_chk
+   LET g_set_up_m.gzsxl_set_up = ps_chk
+   LET g_set_up_m.gzszl_set_up = ps_chk
+   LET g_set_up_m.gzwel_set_up = ps_chk
+   LET g_set_up_m.gzcal_set_up = ps_chk
+   LET g_set_up_m.gzcbl_set_up = ps_chk
+   LET g_set_up_m.gzgdl_set_up = ps_chk
+   LET g_set_up_m.gzge_set_up = ps_chk
+   
+END FUNCTION]]>
+</point>
+  <point name="function.azzi110_01_item_process" cite_std="N" status="" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 執行所選定的項目
+# Memo...........:
+# Usage..........: CALL azzi110_01_item_process()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi110_01_item_process()
+   DEFINE li_cnt  LIKE type_t.num5 
+      
+   FOR li_cnt = 1 TO g_arr_table_name.getLength()
+       display "r.r azzp110 ",g_arr_table_name[li_cnt] 
+       RUN "r.r azzp110 "||g_arr_table_name[li_cnt] 
+   END FOR 
+END FUNCTION]]>
+</point>
+  <point name="function.azzi110_01_chk_item" cite_std="N" status="u" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 項目檢核是否有被勾選
+# Memo...........: 把要執行的項目組合起來
+# Usage..........: CALL azzi110_01_chk_item()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi110_01_chk_item()
+   DEFINE ls_cmd STRING 
+   DEFINE ls_str STRING 
+
+   CALL g_arr_table_name.clear()
+   CASE 
+     WHEN gs_type = "imp"  #匯入指定表內中文資料 
+          LET ls_cmd = "import_fr_"  #import_fr_dzeal_tw
+          LET ls_str = "_tw"
+     WHEN gs_type = "exp"  #匯出指定表所有語言資料
+          LET ls_cmd = "exp_"        #exp_dzeal
+     WHEN gs_type = "chk"  #檢查指定表內簡繁正確性
+          LET ls_cmd = "chk_"        #chk_dzeal_twcn
+          LET ls_str = "_twcn"
+   END CASE 
+   
+   IF g_set_up_m.dzeal_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"dzeal",ls_str
+   END IF 
+   IF g_set_up_m.dzebl_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"dzebl",ls_str
+   END IF
+   IF g_set_up_m.gzzal_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzzal",ls_str
+   END IF
+   IF g_set_up_m.gzzd_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzzd",ls_str
+   END IF
+   IF g_set_up_m.gzdfl_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzdfl",ls_str
+   END IF
+   IF g_set_up_m.gzzq_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzzq",ls_str
+   END IF
+   IF g_set_up_m.gzswl_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzswl",ls_str
+   END IF
+   IF g_set_up_m.gzsxl_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzsxl",ls_str
+   END IF
+   IF g_set_up_m.gzszl_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzszl",ls_str
+   END IF
+   IF g_set_up_m.gzwel_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzwel",ls_str
+   END IF
+   IF g_set_up_m.gzcal_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzcal",ls_str
+   END IF
+   IF g_set_up_m.gzcbl_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzcbl",ls_str
+   END IF
+   IF g_set_up_m.gzgdl_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzgdl",ls_str
+   END IF
+    IF g_set_up_m.gzge_set_up = 'Y' THEN 
+      LET g_arr_table_name[g_arr_table_name.getLength()+1] = ls_cmd,"gzge",ls_str
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE g_set_up_m RECORD 
+   dzeal_set_up LIKE type_t.chr1,
+   dzebl_set_up LIKE type_t.chr1,
+   gzzal_set_up LIKE type_t.chr1,
+   gzzd_set_up  LIKE type_t.chr1,
+   gzdfl_set_up LIKE type_t.chr1,
+   gzzq_set_up  LIKE type_t.chr1,
+   gzswl_set_up LIKE type_t.chr1,
+   gzsxl_set_up LIKE type_t.chr1,
+   gzszl_set_up LIKE type_t.chr1,
+   gzwel_set_up LIKE type_t.chr1,
+   gzcal_set_up LIKE type_t.chr1,
+   gzcbl_set_up LIKE type_t.chr1,
+   gzgdl_set_up LIKE type_t.chr1,
+   gzge_set_up LIKE type_t.chr1
+   
+  END RECORD 
+DEFINE g_arr_table_name DYNAMIC ARRAY OF STRING
+DEFINE gs_type  STRING ]]>
+</point>
+  <point name="main.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="azzi110_01.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000010
+#+ 
+#+ Filename...: azzi110_01
+#+ Description: ...
+#+ Creator....: 01856(2014/06/03)
+#+ Modifier...: 01856(2014/06/04)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="azzi110_01.free_style_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="azzi110_01.global" ver="1" status="" src="s">
+<![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+</section>
+  <section id="azzi110_01.global_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="azzi110_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="azzi110_01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

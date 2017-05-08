@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aqci004" module="aqc" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02296" crtdt="2013-07-01 00:00:00" modid="02296" moddt="2014-01-15 11:01:32" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="1916檢驗水準樣本編號維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="qcadstus,qcad001,qcad002,qcad003,qcad004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="qcad001_s_detail1_info(chr500),qcad002_s_detail1_info(chr500),qcad003_s_detail1_info(chr500),qcadmodid,qcadmodid_desc(chr500),qcadmoddt,qcadownid,qcadownid_desc(chr500),qcadowndp,qcadowndp_desc(chr500),qcadcrtid,qcadcrtid_desc(chr500),qcadcrtdp,qcadcrtdp_desc(chr500),qcadcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aqc" filename="aqci004" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="qcadstus,qcad001,qcad002,qcad003,qcad004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="qcadstus,qcad001,qcad002,qcad003,qcad004"/>
+      <construct id="body" page="2" field="qcadmodid,qcadmoddt,qcadownid,qcadowndp,qcadcrtid,qcadcrtdp,qcadcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="qcadstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="qcad001"/>
+      <column id="qcad002"/>
+      <column id="qcad003"/>
+      <column id="qcad004"/>
+    </init>
+    <init id="body" page="2">
+      <column id="qcad001_s_detail1_info"/>
+      <column id="qcad002_s_detail1_info"/>
+      <column id="qcad003_s_detail1_info"/>
+      <column id="qcadmodid">
+        <after>
+          <reference field="qcadmodid_desc" ref_field="qcad_t.qcadmodid" map_field="qcadmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcadmodid_desc"/>
+      <column id="qcadmoddt"/>
+      <column id="qcadownid">
+        <after>
+          <reference field="qcadownid_desc" ref_field="qcad_t.qcadownid" map_field="qcadownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcadownid_desc"/>
+      <column id="qcadowndp">
+        <after>
+          <reference field="qcadowndp_desc" ref_field="qcad_t.qcadowndp" map_field="qcadowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="qcadowndp_desc"/>
+      <column id="qcadcrtid">
+        <after>
+          <reference field="qcadcrtid_desc" ref_field="qcad_t.qcadcrtid" map_field="qcadcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcadcrtid_desc"/>
+      <column id="qcadcrtdp">
+        <after>
+          <reference field="qcadcrtdp_desc" ref_field="qcad_t.qcadcrtdp" map_field="qcadcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="qcadcrtdp_desc"/>
+      <column id="qcadcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="qcad_t" page="1,2" linked="" pk="qcad001,qcad002,qcad003">
+      <sql id="forupd_sql_detail" query="SELECT qcadstus,qcad001,qcad002,qcad003,qcad004,&apos;&apos;,&apos;&apos;,&apos;&apos;,qcadmodid,&apos;&apos;,qcadmoddt,qcadownid,&apos;&apos;,qcadowndp,&apos;&apos;,qcadcrtid,&apos;&apos;,qcadcrtdp,&apos;&apos;,qcadcrtdt FROM qcad_t WHERE qcadent=? AND qcad001=? AND qcad002=? AND qcad003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT qcadstus,qcad001,qcad002,qcad003,qcad004,&apos;&apos;,&apos;&apos;,&apos;&apos;,qcadmodid,&apos;&apos;,qcadmoddt,qcadownid,&apos;&apos;,qcadowndp,&apos;&apos;,qcadcrtid,&apos;&apos;,qcadcrtdp,&apos;&apos;,qcadcrtdt FROM qcad_t WHERE qcadent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

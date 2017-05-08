@@ -1,0 +1,867 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axci005_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2013-12-05 17:11:27), PR版次:0003(2016-03-26 20:09:50)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000249
+#+ Filename...: axci005_01
+#+ Description: 成本製程路線引入作業
+#+ Creator....: 02291(2013-12-05 16:12:03)
+#+ Modifier...: 02291 -SD/PR- 07959
+ 
+{</section>}
+ 
+{<section id="axci005_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160318-00005#45  2016/03/26  By pengxin    修正azzi920重复定义之错误讯息
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xcae_m        RECORD
+       xcae001 LIKE xcae_t.xcae001
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_wc          STRING
+ type type_g_xcae2_m        RECORD
+       xcae001 LIKE xcae_t.xcae001, 
+   product LIKE type_t.chr80, 
+   xcaesite1 LIKE type_t.chr80, 
+   xcaesite1_desc LIKE type_t.chr80, 
+   xcae002 LIKE xcae_t.xcae002,
+   ecba002 LIKE ecba_t.ecba002, 
+   standard LIKE type_t.chr80, 
+   xcae001_1 LIKE type_t.chr80,
+   xcae002_1 LIKE xcae_t.xcae002
+       END RECORD
+DEFINE g_xcae2_m        type_g_xcae2_m
+#end add-point
+ 
+DEFINE g_xcae_m        type_g_xcae_m
+ 
+   DEFINE g_xcae001_t LIKE xcae_t.xcae001
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axci005_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axci005_01(--)
+   #add-point:input段變數傳入
+   p_xcae001
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_xcae001       LIKE xcae_t.xcae001   
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axci005_01 WITH FORM cl_ap_formpath("axc","axci005_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   CALL cl_set_combo_scc("imaa004",1001)
+   LET g_xcae_m.xcae001  = p_xcae001
+   LET g_xcae2_m.xcae001_1 = ''
+   LET g_xcae2_m.ecba002 = ''
+   LET g_xcae2_m.xcaesite1  = ''
+   LET g_xcae2_m.xcaesite1_desc = ''
+   DISPLAY BY NAME g_xcae2_m.ecba002,g_xcae2_m.xcae001_1,g_xcae2_m.xcaesite1,g_xcae2_m.xcaesite1_desc 
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xcae_m.xcae001 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            LET g_xcae2_m.product = '1'
+            LET g_xcae2_m.standard = ''
+            CALL axci005_01_set_entry()
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcae001
+            #add-point:BEFORE FIELD xcae001 name="input.b.xcae001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcae001
+            
+            #add-point:AFTER FIELD xcae001 name="input.a.xcae001"
+            #此段落由子樣板a05產生
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcae001
+            #add-point:ON CHANGE xcae001 name="input.g.xcae001"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xcae001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcae001
+            #add-point:ON ACTION controlp INFIELD xcae001 name="input.c.xcae001"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      #輸入開始
+      INPUT BY NAME g_xcae2_m.product,g_xcae2_m.xcaesite1,
+          g_xcae2_m.standard,g_xcae2_m.xcae001_1 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            LET g_xcae2_m.product = '1'
+            LET g_xcae2_m.standard = ''
+            CALL axci005_01_set_entry()
+            #end add-point
+ 
+         #----<<product>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD product
+            #add-point:BEFORE FIELD product
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD product
+            
+            #add-point:AFTER FIELD product
+            IF g_xcae2_m.product = 1 THEN
+               LET g_xcae2_m.standard = NULL
+               LET g_wc = NULL
+            END IF
+            CALL axci005_01_set_entry()
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE product
+            #add-point:ON CHANGE product
+            IF g_xcae2_m.product = 1 THEN
+               LET g_xcae2_m.standard = NULL
+               LET g_wc = NULL
+            END IF
+            CALL axci005_01_set_entry()
+            #END add-point
+ 
+         #----<<xcaesite1>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD xcaesite1
+            
+            #add-point:AFTER FIELD xcaesite1
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xcae2_m.xcaesite1
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xcae2_m.xcaesite1_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xcae2_m.xcaesite1_desc
+
+            IF NOT cl_null(g_xcae2_m.xcaesite1) THEN 
+               CALL axci005_01_xcaesite_chk(g_xcae2_m.xcaesite1)
+               IF NOT cl_null(g_errno) THEN 
+                  LET g_xcae2_m.xcaesite1_desc = ''
+                  DISPLAY g_xcae2_m.xcaesite1_desc TO xcaesite1_desc
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_xcae2_m.xcaesite1
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_xcae2_m.xcaesite1 = ''
+                  NEXT FIELD xcaesite1
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcaesite1
+            #add-point:BEFORE FIELD xcaesite1
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcaesite1
+            #add-point:ON CHANGE xcaesite1
+
+            #END add-point
+ 
+         #----<<standard>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD standard
+            #add-point:BEFORE FIELD standard
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD standard
+            
+            #add-point:AFTER FIELD standard
+            IF g_xcae2_m.standard = 1 THEN
+               LET g_xcae2_m.product = NULL
+               LET g_wc = NULL
+            END IF
+            CALL axci005_01_set_entry()
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE standard
+            #add-point:ON CHANGE standard
+            IF g_xcae2_m.standard = 1 THEN
+               LET g_xcae2_m.product = NULL
+               LET g_wc = NULL
+            END IF
+            CALL axci005_01_set_entry()
+            #END add-point
+ 
+         #----<<xcae001_1>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD xcae001_1
+            #add-point:BEFORE FIELD xcae001_1
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xcae001_1
+            
+            #add-point:AFTER FIELD xcae001_1
+            IF NOT cl_null(g_xcae2_m.xcae001_1) THEN
+               LET l_n = 0
+               SELECT COUNT(*) INTO l_n FROM xcae_t 
+                WHERE xcaeent = g_enterprise AND xcae001 = g_xcae2_m.xcae001_1
+               IF l_n = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.code = 'axc-00050'   #160318-00005#45  mark
+                  LET g_errparam.code = 'sub-01308'   #160318-00005#45  add
+                  LET g_errparam.extend = ''
+                  #160318-00005#45 --s add
+                  LET g_errparam.replace[1] = 'axci005'
+                  LET g_errparam.replace[2] = cl_get_progname('axci005',g_lang,"2")
+                  LET g_errparam.exeprog = 'axci005'
+                  #160318-00005#45 --e add
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD xcae001_1
+               END IF
+               LET l_n=0
+               SELECT COUNT(*) INTO l_n FROM xcae_t 
+                WHERE xcaeent = g_enterprise AND xcae001 = g_xcae2_m.xcae001_1 AND xcaestus = 'Y'
+               IF l_n = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.code = 'axc-00049'   #160318-00005#45  mark
+                  LET g_errparam.code = 'sub-01302'   #160318-00005#45  add
+                  LET g_errparam.extend = ''
+                  #160318-00005#45 --s add
+                  LET g_errparam.replace[1] = 'axci005'
+                  LET g_errparam.replace[2] = cl_get_progname('axci005',g_lang,"2")
+                  LET g_errparam.exeprog = 'axci005'
+                  #160318-00005#45 --e add
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD xcae001_1
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xcae001_1
+            #add-point:ON CHANGE xcae001_1
+
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<xcae001>>----
+         #Ctrlp:input.c.xcae001
+         ON ACTION controlp INFIELD xcae001
+            #add-point:ON ACTION controlp INFIELD xcae001
+
+            #END add-point
+ 
+         #----<<product>>----
+         #Ctrlp:input.c.product
+         ON ACTION controlp INFIELD product
+            #add-point:ON ACTION controlp INFIELD product
+
+            #END add-point
+ 
+         #----<<xcaesite1>>----
+         #Ctrlp:input.c.xcaesite1
+         ON ACTION controlp INFIELD xcaesite1
+            #add-point:ON ACTION controlp INFIELD xcaesite1
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcae2_m.xcaesite1             #給予default值
+             LET g_qryparam.where = " (ooef003 = 'Y' OR ooef201 = 'Y' OR ooef202 = 'Y')"
+
+            #給予arg
+
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_xcae2_m.xcaesite1 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xcae2_m.xcaesite1
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xcae2_m.xcaesite1_desc = '', g_rtn_fields[1] , ''
+             LET g_qryparam.where = ""
+            DISPLAY BY NAME g_xcae2_m.xcaesite1_desc
+
+            DISPLAY g_xcae2_m.xcaesite1 TO xcaesite1              #顯示到畫面上
+
+            NEXT FIELD xcaesite1                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<standard>>----
+         #Ctrlp:input.c.standard
+         ON ACTION controlp INFIELD standard
+            #add-point:ON ACTION controlp INFIELD standard
+
+            #END add-point
+ 
+         #----<<xcae001_1>>----
+         #Ctrlp:input.c.xcae001_1
+         ON ACTION controlp INFIELD xcae001_1
+            #add-point:ON ACTION controlp INFIELD xcae001_1
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcae2_m.xcae001_1             #給予default值
+            LET g_qryparam.where = " xcaestus = 'Y' "
+
+            #給予arg
+
+            CALL q_xcae001()                                #呼叫開窗
+
+            LET g_xcae2_m.xcae001_1 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xcae2_m.xcae001_1 TO xcae001_1              #顯示到畫面上
+
+            NEXT FIELD xcae001_1                          #返回原欄位
+
+
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+
+            #end add-point
+            
+      END INPUT
+      
+      CONSTRUCT BY NAME g_wc ON xcae002,ecba002,xcae002_1
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+         
+         ON ACTION controlp INFIELD xcae002
+            #add-point:ON ACTION controlp INFIELD xrae002
+            #此段落由子樣板a08產生
+            #開窗c段
+                        INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " imaa004 = 'A' AND imaastus = 'Y'"
+            CALL q_imaa001_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcae002      #顯示到畫面上
+            LET g_qryparam.where = NULL
+
+            NEXT FIELD xcae002                        #返回原欄位
+            
+         
+         ON ACTION controlp INFIELD ecba002
+            #add-point:ON ACTION controlp INFIELD ecba002
+            #此段落由子樣板a08產生
+            #開窗c段
+                        INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " ecbastus = 'Y'"
+            CALL q_ecba002_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ecba002      #顯示到畫面上
+            LET g_qryparam.where = NULL
+
+            NEXT FIELD ecba002                        #返回原欄位
+            #END add-point
+            
+         ON ACTION controlp INFIELD xcae002_1
+            #add-point:ON ACTION controlp INFIELD xrae002_1
+            #此段落由子樣板a08產生
+            #開窗c段
+                        INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " imaa004 = 'A' AND imaastus = 'Y'"
+            CALL q_imaa001_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcae002_1      #顯示到畫面上
+            LET g_qryparam.where = NULL
+
+            NEXT FIELD xcae002_1                        #返回原欄位
+      END CONSTRUCT
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axci005_01 
+   
+   #add-point:input段after input 
+   LET l_success = FALSE
+   IF INT_FLAG THEN
+      LET l_success = FALSE
+   ELSE
+      CALL axci005_01_ins_xcae() RETURNING l_success
+   END IF
+   LET INT_FLAG = FALSE
+   RETURN l_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axci005_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axci005_01.other_function" readonly="Y" >}
+#營運據點欄位檢查
+PRIVATE FUNCTION axci005_01_xcaesite_chk(p_xcaesite)
+DEFINE l_n          LIKE type_t.num5 
+DEFINE p_xcaesite   LIKE xcae_t.xcaesite
+
+   LET g_errno = ''
+   #輸入值須存在[T:组织档]
+   LET l_n = 0 
+   SELECT count(*) INTO l_n 
+     FROM ooef_t
+    WHERE ooef001 = p_xcaesite
+      AND ooefent = g_enterprise
+   IF l_n = 0 THEN 
+      LET g_errno = 'axc-00005'
+      RETURN                        
+   END IF
+   #輸入值須在[T:组织档]里有效
+   LET l_n = 0 
+   SELECT count(*) INTO l_n 
+     FROM ooef_t
+    WHERE ooef001 = p_xcaesite
+      AND ooefent = g_enterprise
+      AND ooefstus = 'Y'
+   IF l_n = 0 THEN 
+      LET g_errno = 'axc-00006'
+      RETURN   
+   END IF 
+   #輸入值須存在[T:组织档]里為"法人組織"or"营运組織否"or"核算組織否"
+   LET l_n = 0 
+   SELECT count(*) INTO l_n 
+     FROM ooef_t
+    WHERE ooef001 = p_xcaesite
+      AND ooefent = g_enterprise
+      AND (ooef003 = 'Y' OR ooef201 = 'Y' OR ooef202 = 'Y')
+   IF l_n = 0 THEN 
+      LET g_errno = 'axc-00058'
+      RETURN                        
+   END IF
+END FUNCTION
+#動態設定元件是否可輸入
+PRIVATE FUNCTION axci005_01_set_comp_entry(ps_fields,pi_entry)
+  DEFINE ps_fields STRING,
+         pi_entry  LIKE type_t.num5           
+  DEFINE lst_fields base.StringTokenizer,
+         ls_field_name STRING
+  DEFINE lwin_curr     ui.Window
+  DEFINE lnode_win     om.DomNode,
+         llst_items    om.NodeList,
+         li_i          LIKE type_t.num5,        
+         lnode_item    om.DomNode,
+         ls_item_name  STRING
+
+  IF g_bgjob = 'Y' AND g_gui_type NOT MATCHES "[13]"  THEN  
+     RETURN
+  END IF
+
+  IF (ps_fields IS NULL) THEN
+     RETURN
+  END IF
+
+  LET ps_fields = ps_fields.toLowerCase()
+
+  LET lst_fields = base.StringTokenizer.create(ps_fields, ",")
+
+  LET lwin_curr = ui.Window.getCurrent()
+  LET lnode_win = lwin_curr.getNode()
+
+  LET llst_items = lnode_win.selectByPath("//Form//*")
+
+  WHILE lst_fields.hasMoreTokens()
+    LET ls_field_name = lst_fields.nextToken()
+    LET ls_field_name = ls_field_name.trim()
+
+    IF (ls_field_name.getLength() > 0) THEN
+       FOR li_i = 1 TO llst_items.getLength()
+           LET lnode_item = llst_items.item(li_i)
+           LET ls_item_name = lnode_item.getAttribute("colName")
+
+           IF (ls_item_name IS NULL) THEN
+              LET ls_item_name = lnode_item.getAttribute("name")
+
+              IF (ls_item_name IS NULL) THEN
+                 CONTINUE FOR
+              END IF
+           END IF
+
+           LET ls_item_name = ls_item_name.trim()
+
+           IF (ls_item_name.equals(ls_field_name)) THEN
+              IF (pi_entry) THEN
+                 CALL lnode_item.setAttribute("noEntry", "0")
+                 CALL lnode_item.setAttribute("active", "1")
+              ELSE
+                 CALL lnode_item.setAttribute("noEntry", "1")
+                 CALL lnode_item.setAttribute("active", "0")
+              END IF
+
+              EXIT FOR
+           END IF
+       END FOR
+    END IF
+  END WHILE
+END FUNCTION
+#
+PRIVATE FUNCTION axci005_01_set_entry()
+   IF g_xcae2_m.product= '1' THEN 
+      CALL axci005_01_set_comp_entry("xcaesite1,ecba002,xcae002",TRUE)
+      LET g_xcae2_m.xcae001_1 = ''
+      LET g_xcae2_m.xcae002_1 = ''
+   ELSE
+      CALL axci005_01_set_comp_entry("xcaesite1,pecba002,xcae002",FALSE)
+   END IF 
+   
+   IF g_xcae2_m.standard = '1' THEN 
+      CALL axci005_01_set_comp_entry("xcae001_1,xcae002_1",TRUE)
+      LET g_xcae2_m.xcaesite1 = ''
+      LET g_xcae2_m.ecba002 = ''
+      LET g_xcae2_m.xcae002 = ''
+      LET g_xcae2_m.xcaesite1_desc = ''
+   ELSE
+      CALL axci005_01_set_comp_entry("xcae001_1,xcae002_1",FALSE)
+   END IF 
+   DISPLAY BY NAME g_xcae2_m.xcaesite1_desc
+   DISPLAY g_xcae2_m.xcae002 TO xcae002
+   DISPLAY g_xcae2_m.xcae002_1 TO xcae002_1
+END FUNCTION
+#批量錄入數據
+PRIVATE FUNCTION axci005_01_ins_xcae()
+DEFINE r_success       LIKE type_t.num5
+DEFINE l_sql           STRING
+DEFINE l_xcaecrtdt     DATETIME YEAR TO SECOND
+DEFINE l_xcae          RECORD LIKE xcae_t.*
+DEFINE l_xcaf          RECORD LIKE xcaf_t.*
+DEFINE l_n1            LIKE type_t.num5
+DEFINE l_n2            LIKE type_t.num5
+DEFINE l_stus          LIKE xcae_t.xcaestus
+DEFINE l_xcae002_t     LIKE xcae_t.xcae002
+DEFINE l_xcae008_t     LIKE xcae_t.xcae008
+DEFINE l_xcae002_1     LIKE xcae_t.xcae002
+DEFINE l_msg           STRING
+   
+   LET r_success = TRUE
+
+   LET l_n1 = 0
+   LET l_sql = " SELECT COUNT(*) FROM xcae_t ",
+               "  WHERE xcaeent = '",g_enterprise,"' AND xcae001 = '",g_xcae_m.xcae001,"'",
+               "    AND xcaestus = 'N' AND xcae002 in "
+   IF g_xcae2_m.product = 1 THEN
+      LET l_sql = l_sql CLIPPED," (SELECT UNIQUE ecba001 FROM ecba_t,ecbb_t ",
+                  "  WHERE ecbaent = ecbbent AND ecba001 = ecbb001 ",
+                  "    AND ecba002 = ecbb002 AND ecbasite = ecbbsite ",
+                  "    AND ecbaent = '",g_enterprise,"'",
+                  "    AND ecbasite = '",g_xcae2_m.xcaesite1,"'",
+                  "    AND ",g_wc ,")"              
+   ELSE  
+      LET l_sql = l_sql CLIPPED," (SELECT UNIQUE xcae002 FROM xcae_t,imaa_t ",
+                  "  WHERE xcaeent = imaaent AND xcae002 = imaa001 ",
+                  "    AND xcaeent = '",g_enterprise,"'",
+                  "    AND xcae001 = '",g_xcae2_m.xcae001_1,"' ",
+                  "    AND imaa004 = 'A' AND ",g_wc,")" 
+   END IF
+   PREPARE xcae_chk_prep FROM l_sql
+   EXECUTE xcae_chk_prep INTO l_n1
+   FREE xcae_chk_prep
+   IF l_n1 > 0 THEN
+      IF cl_ask_confirm('axc-00210') THEN
+         DELETE FROM xcae_t 
+          WHERE xcaeent = g_enterprise AND xcae001 = g_xcae_m.xcae001
+            AND xcaestus = 'N'
+         DELETE FROM xcaf_t
+          WHERE xcafent = g_enterprise AND xcaf001 = g_xcae_m.xcae001 
+            AND (xcafstus = 'N' OR xcafstus IS NULL)
+      ELSE
+         LET r_success = FALSE
+         RETURN r_success      
+      END IF
+   END IF
+   IF g_xcae2_m.product = 1 THEN
+      LET g_wc = cl_replace_str(g_wc,'xcae002','ecba001')
+   ELSE
+      LET g_wc = cl_replace_str(g_wc,'xcae002_1','xcae002')
+   END IF
+   
+   
+   LET l_xcaecrtdt = cl_get_current()
+   IF g_xcae2_m.product = 1 THEN
+      LET l_sql = " SELECT UNIQUE ecba001 FROM ecba_t,ecbb_t ",
+                  "  WHERE ecbaent = ecbbent AND ecba001 = ecbb001 ",
+                  "    AND ecba002 = ecbb002 AND ecbasite = ecbbsite ",
+                  "    AND ecbaent = '",g_enterprise,"'",
+                  "    AND ecbasite = '",g_xcae2_m.xcaesite1,"'",
+                  "    AND ",g_wc,
+                  "   ORDER BY ecba001 "                  
+   ELSE  
+      LET l_sql = " SELECT UNIQUE xcae002 FROM xcae_t,imaa_t ",
+                  "  WHERE xcaeent = imaaent AND xcae002 = imaa001 ",
+                  "    AND xcaeent = '",g_enterprise,"'",
+                  "    AND xcae001 = '",g_xcae2_m.xcae001_1,"' ",
+                  "    AND imaa004 = 'A' AND ",g_wc ,
+                  "  ORDER BY xcae002 "
+   END IF
+   PREPARE xcae_prep1 FROM l_sql
+   DECLARE xcae_curs1 CURSOR FOR xcae_prep1
+   IF g_xcae2_m.product = 1 THEN
+      LET l_sql = " SELECT ecba001,ecbb003,ecbb005,ecbb004,ecbb012,ecbb013,ecba002,ecbbsite FROM ecba_t,ecbb_t ",
+                  "  WHERE ecbaent = ecbbent AND ecba001 = ecbb001 ",
+                  "    AND ecba002 = ecbb002 AND ecbasite = ecbbsite ",
+                  "    AND ecbaent = '",g_enterprise,"'",
+                  "    AND ecbasite = '",g_xcae2_m.xcaesite1,"' AND ecba001 = ?",
+                  "    AND ",g_wc,
+                  "   ORDER BY ecba001,ecba002 "                  
+   ELSE  
+      LET l_sql = " SELECT xcae002,xcaeseq,xcae003,xcae004,xcae005,xcae006,xcae008,xcaesite FROM xcae_t,imaa_t ",
+                  "  WHERE xcaeent = imaaent AND xcae002 = imaa001 ",
+                  "    AND xcaeent = '",g_enterprise,"'",
+                  "    AND xcae001 = '",g_xcae2_m.xcae001_1,"' AND xcae002 = ? ",
+                  "    AND imaa004 = 'A' AND ",g_wc 
+   END IF
+   PREPARE xcae_prep FROM l_sql
+   DECLARE xcae_curs CURSOR FOR xcae_prep
+   CALL cl_showmsg_init()
+   LET l_xcae002_t = ''
+   FOREACH xcae_curs1 INTO l_xcae002_1
+      LET l_stus = 'N'
+      SELECT UNIQUE xcaestus INTO l_stus FROM xcae_t
+       WHERE xcaeent = g_enterprise AND xcae001 = g_xcae_m.xcae001
+         AND xcae002 = l_xcae002_1
+      IF l_stus = 'Y' THEN
+         CALL cl_errmsg('xcae002',l_xcae002_1,'','axc-00082',1)
+         CONTINUE FOREACH      
+      END IF
+      
+      LET l_xcae002_t = ''         
+      FOREACH xcae_curs USING l_xcae002_1 INTO l_xcae.xcae002,l_xcae.xcaeseq,l_xcae.xcae003,l_xcae.xcae004,l_xcae.xcae005,l_xcae.xcae006,l_xcae.xcae008,l_xcae.xcaesite    
+         
+         IF g_xcae2_m.product = 1 THEN
+            #若同一料号，有不同工艺编号，去第一个工艺编号
+            SELECT unique xcae008 INTO l_xcae008_t FROM xcae_t  
+             WHERE xcaeent = g_enterprise AND xcae001 = g_xcae_m.xcae001
+               AND xcae002 = l_xcae.xcae002
+            
+            IF l_xcae.xcae002 = l_xcae002_t AND l_xcae.xcae008 <> l_xcae008_t THEN
+               CONTINUE FOREACH
+            END IF
+            LET l_xcae002_t = l_xcae.xcae002
+         END IF
+         #檢查xcad_t裏面是否已存在需插入料件
+         LET l_n1 = 0
+         SELECT COUNT(*) INTO l_n1 FROM xcae_t 
+          WHERE xcaeent = g_enterprise 
+            AND xcae001 = g_xcae_m.xcae001 AND xcae002 = l_xcae.xcae002
+            AND xcaeseq = l_xcae.xcaeseq
+         IF l_n1 > 0 THEN
+            CONTINUE FOREACH
+         END IF
+         
+         LET l_n2 = 1   #判斷是否有數據
+      
+         INSERT INTO xcae_t (xcaeent,
+                             xcae001,xcaesite,
+                             xcae002,xcaeseq,xcae003,xcae004,xcae005,xcae006,xcae008,xcaestus,
+                             xcaeownid,xcaeowndp,xcaecrtid,xcaecrtdp,xcaecrtdt) 
+                      VALUES(g_enterprise,
+                             g_xcae_m.xcae001,l_xcae.xcaesite,
+                             l_xcae.xcae002,l_xcae.xcaeseq,l_xcae.xcae003,
+                             l_xcae.xcae004,l_xcae.xcae005,l_xcae.xcae006,l_xcae.xcae008,'N',
+                             g_user,g_dept,g_user,g_dept,l_xcaecrtdt)
+                             
+         LET l_sql = " SELECT xcafseq2,xcaf003,xcaf004,xcaf005,xcaf006,xcaf007,xcafsite FROM xcaf_t ",
+                     "  WHERE xcafent = '",g_enterprise,"'",
+                     "    AND xcaf001 = '",g_xcae2_m.xcae001_1,"' ",
+                     "    AND xcaf002 = '",l_xcae.xcae002,"'",
+                     "    AND xcafseq1 = ",l_xcae.xcaeseq
+         PREPARE xcaf_prep1 FROM l_sql
+         DECLARE xcaf_curs1 CURSOR FOR xcaf_prep1  
+         FOREACH xcaf_curs1 INTO l_xcaf.xcafseq2,l_xcaf.xcaf003,l_xcaf.xcaf004,l_xcaf.xcaf005,l_xcaf.xcaf006,l_xcaf.xcaf007,l_xcaf.xcafsite
+            #檢查xcad_t裏面是否已存在需插入料件
+            LET l_n1 = 0
+            SELECT COUNT(*) INTO l_n1 FROM xcaf_t 
+             WHERE xcafent = g_enterprise 
+               AND xcaf001 = g_xcae_m.xcae001 AND xcaf002 = l_xcae.xcae002
+               AND xcafseq1 = l_xcae.xcaeseq AND xcafseq2 = l_xcaf.xcafseq2
+            IF l_n1 > 0 THEN
+               CONTINUE FOREACH
+            END IF
+	        
+            INSERT INTO xcaf_t (xcafent,
+                                xcaf001,xcafsite,
+                                xcaf002,xcafseq1,xcafseq2,xcaf003,xcaf004,xcaf005,xcaf006,xcaf007,xcafstus,
+                                xcafownid,xcafowndp,xcafcrtid,xcafcrtdp,xcafcrtdt) 
+                         VALUES(g_enterprise,
+                                g_xcae_m.xcae001,l_xcaf.xcafsite,
+                                l_xcae.xcae002,l_xcae.xcaeseq,l_xcaf.xcafseq2,l_xcaf.xcaf003,
+                                l_xcaf.xcaf004,l_xcaf.xcaf005,l_xcaf.xcaf006,l_xcaf.xcaf007,'N',
+                                g_user,g_dept,g_user,g_dept,l_xcaecrtdt)
+         END FOREACH       
+         
+      END FOREACH
+      
+   END FOREACH
+   CALL cl_err_showmsg()
+   
+#   IF SQLCA.SQLCODE THEN
+#      CALL cl_err("xcae_t",SQLCA.sqlcode,1)  
+#      LET r_success = FALSE                   
+#   END IF
+   IF l_n2 = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axc-00098'
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+ 
+      LET r_success = FALSE
+   END IF
+   RETURN r_success
+
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,174 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmi030" module="afm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="05426" crtdt="2014-08-04 17:56:21" modid="02291" moddt="2016-03-24 14:02:32" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="銀行融資合約維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmac001,fmac003,fmac003_desc(chr80),fmac011,fmac002,fmac002_desc(chr80),fmac004,fmac005,fmac008,ooef017(chr500),ooef017_desc(chr80),fmac006,fmac006_desc(chr80),fmac007,fmac009,fmac010,fmacstus,fmacownid,fmacownid_desc(chr80),fmacowndp,fmacowndp_desc(chr80),fmaccrtid,fmaccrtid_desc(chr80),fmaccrtdp,fmaccrtdp_desc(chr80),fmaccrtdt,fmacmodid,fmacmodid_desc(chr80),fmacmoddt,fmaccnfid,fmaccnfid_desc(chr80),fmaccnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmad002,fmad003,fmad003_desc(chr500),fmad004,fmad005,fmad006,fmad007,fmad009,fmad008"/>
+      <var id="body" page="2" record="s_detail3" page_id="3" value="amt(chr500),amt1(num20_6),amt2(num20_6),amt3(num20_6),amt4(num20_6)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmi030" method="dialog">
+    <section id="input">
+      <input id="head" field="fmac001,fmac003,fmac011,fmac002,fmac004,fmac005,fmac008,fmac006,fmac007,fmac009,fmac010,fmacstus"/>
+      <input id="body" page="1" field="fmad002,fmad003,fmad004,fmad005,fmad006,fmad007,fmad009,fmad008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmac001,fmac003,fmac011,fmac002,fmac004,fmac005,fmac008,ooef017,fmac006,fmac007,fmac009,fmac010,fmacstus,fmacownid,fmacowndp,fmaccrtid,fmaccrtdp,fmaccrtdt,fmacmodid,fmacmoddt,fmaccnfid,fmaccnfdt"/>
+      <construct id="body" page="1" field="fmad002,fmad003,fmad004,fmad005,fmad006,fmad007,fmad009,fmad008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmac001"/>
+      <set id="head" type="no_entry" field="fmac001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmac001">
+        <controlp form="q_fmac001" state="c"/>
+      </column>
+      <column id="fmac003">
+        <after>
+          <check chkid="v_fmac003" id="isExist"/>
+          <reference field="fmac003_desc" ref_field="fmac_t.fmac003" map_field="fmacent,fmac003" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmab001" state="i"/>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="fmac003_desc"/>
+      <column id="fmac011"/>
+      <column id="fmac002">
+        <after>
+          <check chkid="v_fmac002" id="chkandReturn"/>
+          <reference field="fmac002_desc" ref_field="fmac_t.fmac002" map_field="fmacent,fmac002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_33" state="i"/>
+        <controlp form="q_ooef001_33" state="c"/>
+      </column>
+      <column id="fmac002_desc"/>
+      <column id="fmac004"/>
+      <column id="fmac005"/>
+      <column id="fmac008" type="S" default="N"/>
+      <column id="ooef017">
+        <after>
+          <reference field="ooef017_desc" ref_field="ooef017" map_field="ooefent,ooefl017" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ooef017_desc"/>
+      <column id="fmac006">
+        <after>
+          <check chkid="v_fmac006" id="chkandReturn"/>
+          <reference field="fmac006_desc" ref_field="fmac_t.fmac006" map_field="fmacent,fmac006" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002" state="i"/>
+        <controlp form="q_ooaj002" state="c"/>
+      </column>
+      <column id="fmac006_desc"/>
+      <column id="fmac007" type="S" default="0"/>
+      <column id="fmac009" type="S" default="N"/>
+      <column id="fmac010" def_scc="8856"/>
+      <column id="fmacstus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="X" pic="void"/>
+        <stus id="Y" pic="valid"/>
+      </column>
+      <column id="fmacownid">
+        <after>
+          <reference field="fmacownid_desc" ref_field="fmac_t.fmacownid" map_field="fmacownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmacownid_desc"/>
+      <column id="fmacowndp">
+        <after>
+          <reference field="fmacowndp_desc" ref_field="fmac_t.fmacowndp" map_field="fmacowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmacowndp_desc"/>
+      <column id="fmaccrtid">
+        <after>
+          <reference field="fmaccrtid_desc" ref_field="fmac_t.fmaccrtid" map_field="fmaccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmaccrtid_desc"/>
+      <column id="fmaccrtdp">
+        <after>
+          <reference field="fmaccrtdp_desc" ref_field="fmac_t.fmaccrtdp" map_field="fmaccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmaccrtdp_desc"/>
+      <column id="fmaccrtdt"/>
+      <column id="fmacmodid">
+        <after>
+          <reference field="fmacmodid_desc" ref_field="fmac_t.fmacmodid" map_field="fmacmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmacmodid_desc"/>
+      <column id="fmacmoddt"/>
+      <column id="fmaccnfid">
+        <after>
+          <reference field="fmaccnfid_desc" ref_field="fmac_t.fmaccnfid" map_field="fmaccnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmaccnfid_desc"/>
+      <column id="fmaccnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmad002"/>
+      <column id="fmad003">
+        <after>
+          <check chkid="v_fmac006" id="chkandReturn"/>
+        </after>
+        <controlp form="q_ooaj002" state="i"/>
+        <controlp form="q_ooaj002" state="c"/>
+      </column>
+      <column id="fmad003_desc"/>
+      <column id="fmad004">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmad005" def_scc="8854"/>
+      <column id="fmad006" def_scc="8855"/>
+      <column id="fmad007"/>
+      <column id="fmad009" type="S" default="N"/>
+      <column id="fmad008" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="amt"/>
+      <column id="amt1"/>
+      <column id="amt2"/>
+      <column id="amt3"/>
+      <column id="amt4"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmac_t" pk="fmac001">
+      <sql id="forupd_sql" type="sql" query="SELECT fmac001,fmac003,&apos;&apos;,fmac011,fmac002,&apos;&apos;,fmac004,fmac005,fmac008,&apos;&apos;,&apos;&apos;,fmac006,&apos;&apos;,fmac007,fmac009,fmac010,fmacstus,fmacownid,&apos;&apos;,fmacowndp,&apos;&apos;,fmaccrtid,&apos;&apos;,fmaccrtdp,&apos;&apos;,fmaccrtdt,fmacmodid,&apos;&apos;,fmacmoddt,fmaccnfid,&apos;&apos;,fmaccnfdt FROM fmac_t WHERE fmacent= ? AND fmac001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmac001,fmac003,&apos;&apos;,fmac011,fmac002,&apos;&apos;,fmac004,fmac005,fmac008,&apos;&apos;,&apos;&apos;,fmac006,&apos;&apos;,fmac007,fmac009,fmac010,fmacstus,fmacownid,&apos;&apos;,fmacowndp,&apos;&apos;,fmaccrtid,&apos;&apos;,fmaccrtdp,&apos;&apos;,fmaccrtdt,fmacmodid,&apos;&apos;,fmacmoddt,fmaccnfid,&apos;&apos;,fmaccnfdt FROM fmac_t" order="fmac001"/>
+    </head>
+    <body id="fmad_t" page="1,2" linked="" pk="fmad002" fk="fmad001">
+      <sql id="forupd_sql_detail" query="SELECT fmad002,fmad003,&apos;&apos;,fmad004,fmad005,fmad006,fmad007,fmad009,fmad008,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM fmad_t WHERE fmadent=? AND fmad001=? AND fmad002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmad002,fmad003,&apos;&apos;,fmad004,fmad005,fmad006,fmad007,fmad009,fmad008,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM fmad_t WHERE fmadent=? AND fmad001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

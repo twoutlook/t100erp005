@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ FOURJS_START_COPYRIGHT(D,2011)
+ Property of Four Js*
+ (c) Copyright Four Js 2011, 2014. All Rights Reserved.
+ * Trademark of Four Js Development Tools Europe Ltd
+   in the United States and elsewhere
+ 
+ This file can be modified by licensees according to the
+ product manual.
+ FOURJS_END_COPYRIGHT
+ -->
+<html
+	xmlns='http://www.w3.org/1999/xhtml'
+	xmlns:gwc='http://www.4js.com/GWC'
+>
+	<head>
+		<meta
+			content='text/html; charset=utf-8'
+			http-equiv='Content-Type'
+		/>
+	</head>
+
+	<body>
+
+<gwc:snippet-root>
+    <div data-g-allow-web-selection='{style["allowWebSelection"] == "true" || null}'>
+        <div
+            gwc:define='
+                isModal (!isTopMostNormalWindow &amp;&amp; style["windowType"] == "modal");
+                actiontextalign switch(true, [style["actionPanelButtonTextAlign"] == "right", style["actionPanelButtonTextAlign"] == "left", style["actionPanelButtonTextAlign"] == "center"], ["AlignRight", "AlignLeft", "AlignCenter"], "");
+                ringmenutextalign switch(true, [style["ringMenuButtonTextAlign"] == "right", style["ringMenuButtonTextAlign"] == "left", style["ringmenuButtonTextAlign"] == "center"], ["AlignRight", "AlignLeft", "AlignCenter"], "");
+                actiontexthidden style["actionPanelButtonTextHidden"] == "yes" ? "TextHidden" : "";
+                ringmenutexthidden style["ringMenuButtonTextHidden"] == "yes" ? "TextHidden" : "";
+                hasToolBar style["toolBarPosition"] != "none" &amp;&amp; (application/ui/toolbar || (form &amp;&amp; form/toolbar));
+                hasRingMenu (menu &amp;&amp; style["ringMenuPosition"] != "none" &amp;&amp; menu/class != "dialog" &amp;&amp; menu/class != "winmsg" &amp;&amp; menu/class != "popup") || false;
+                hasDialog (dialog &amp;&amp; style["actionPanelPosition"] != "none") || false;
+                hasMenuActionPanel (hasRingMenu || hasDialog);
+                toolBarPositionClass (hasToolBar ? switch(style["toolBarPosition"], ["left", "right", "bottom"], ["gToolBarLeft", "gToolBarRight", "gToolBarBottom"], "gToolBarTop") : "");
+                menuActionPanelPositionClass (switch(hasDialog ? style["actionPanelPosition"] : style["ringMenuPosition"], ["left", "top", "bottom", "right"], ["gMenuActionPanelLeft", "gMenuActionPanelTop", "gMenuActionPanelBottom", "gMenuActionPanelRight"]));
+                hasBothAPHAtTheSamePosition (hasToolBar &amp;&amp; ((hasDialog &amp;&amp; (style["actionPanelPosition"] == style["toolBarPosition"])) || (hasRingMenu &amp;&amp; (style["ringMenuPosition"] == style["toolBarPosition"]))));
+                formLayoutPosition (hasBothAPHAtTheSamePosition ? switch(style["toolBarPosition"], ["top", "right", "left", "bottom"], ["\"row\": 3, \"column\": 1", "\"row\": 1, \"column\": 1", "\"row\": 1, \"column\": 3", "\"row\": 1, \"column\": 1"]) : "\"row\": 2, \"column\": 2");
+                tbLayoutPosition (hasBothAPHAtTheSamePosition ? switch(style["toolBarPosition"], ["top", "right", "left", "bottom"], ["\"row\": 1, \"columnSpan\": 3, \"column\": 1", "\"row\": 1, \"rowSpan\": 3, \"column\": 2", "\"row\": 1, \"rowSpan\": 3, \"column\": 2", "\"row\": 3, \"columnSpan\": 3, \"column\": 1"]) : null);
+                apLayoutPosition (hasBothAPHAtTheSamePosition ? switch(style["toolBarPosition"], ["top", "right", "left", "bottom"], ["\"row\": 2, \"columnSpan\": 3, \"column\": 1", "\"row\": 1, \"rowSpan\": 3, \"column\": 3", "\"row\": 1, \"rowSpan\": 3, \"column\": 1", "\"row\": 2, \"columnSpan\": 3, \"column\": 1"]) : null);
+                isTabbedContainer ((application/id == 0) &amp;&amp; application/ui/startmenu &amp;&amp; style["tabbedContainer"] == "yes");
+            '
+            gwc:condition='!traditionalWindow'
+            gwc:omit-tag='true'
+        >
+            <div
+                gwc:define='
+                    hasRingMenu (menu &amp;&amp; style["ringMenuPosition"] != "none" &amp;&amp; menu/class != "dialog" &amp;&amp; menu/class != "winmsg" &amp;&amp; menu/class != "popup") || false;
+                    hasDialog (dialog &amp;&amp; style["actionPanelPosition"] != "none") || false;
+                    hasMenuActionPanel (hasRingMenu || hasDialog);
+                    toolbarPosClass (hasToolBar ? switch(style["toolBarPosition"], ["left", "right", "bottom"], ["gToolBarLeft", "gToolBarRight", "gToolBarBottom"], "gToolBarTop") : "");
+                    menuActionPanelPositionClass (switch(hasDialog ? style["actionPanelPosition"] : style["ringMenuPosition"], ["left", "top", "bottom", "right"], ["gMenuActionPanelLeft", "gMenuActionPanelTop", "gMenuActionPanelBottom", "gMenuActionPanelRight"]));
+                '
+                gwc:condition='isModal'
+                gwc:omit-tag='true'
+            >
+                <div
+                        data-g-qa-idRef='{xpath("@idRef")}'
+                    data-g-layout-container=''
+                >
+                    <div
+                        data-g-layout-item='"row": 1, "isXSpacer": true, "isEmpty": true'
+                    />
+
+                    <div
+                        data-g-layout-item='"column": 1, "isEmpty": true, "isYSpacer": true'
+                    />
+
+                    <div
+                        data-g-layout-item='"row": 1, "column": 1'
+                    >
+                        <div data-g-id="ModalWindowFieldPositionWrapper"
+                             gwc:omit-tag='style["position"] == "field" ? false : true'
+                        >
+                            <div
+                                data-g-id='MovableElement'
+                            >
+                                <div
+                                    class='gModalWindow g{type} gSStar gS{type} {prefix("gc", class)} container-style modal-style'
+
+                                    data-g-id='ModalWindow'
+                                    data-g-layout-container='"horizontalBubbling": 0, "verticalBubbling": 0'
+                                >
+                                    <div 
+                                        gwc:condition='contains("azzi001 azzi000_s02 Login",application/ui/window/text) == false'
+                                        class='gMovableElementHandle gModalWindowTitleLine modal-window-title-line-style'
+
+                                        data-g-layout-container=''
+                                        data-g-layout-item='"columnSpan": 5'
+                                    >
+                                        <div
+                                            data-g-layout-item='"isXSpacer":true, "isEmpty":true'
+                                        />
+
+                                        <div
+                                            class='gModalWindowTitle modal-window-title-style'
+
+                                            data-g-layout-item='"column": 1'
+                                        >{application/ui/window/text || "&#xA0;"}</div>
+
+                                        <div
+                                            data-g-layout-item='"column": 2, "isXSpacer":true, "isEmpty":true'
+                                        />
+
+                                        <a
+                                            gwc:define='
+                                                a d/action["close"];
+                                            '
+                                            gwc:condition='a/isActive &amp;&amp; window/style["windowOptionClose"] != "no"'
+
+                                            class='gModalCloseButton'
+                                            href='#'
+
+                                            data-g-id='ModalCloseButton,{a/IDID}'
+                                            data-g-layout-item='"column": 3'
+                                        />
+                                    </div>
+
+                                    <div
+                                        gwc:condition='hasToolBar'
+
+                                        data-g-layout-item='{switch(style["toolBarPosition"], ["left", "top", "bottom", "right"], ["\"row\": 1, \"rowSpan\": 4", "\"row\": 1, \"columnSpan\": 4", "\"row\": 5, \"columnSpan\": 4", "\"row\": 1, \"column\": 4, \"rowSpan\": 4"])}'
+                                    >
+                                        <gwc:dummy
+                                            gwc:replace='includeSnippet("ToolBarHelper")'
+                                        />
+                                    </div>
+
+                                    <div
+                                        gwc:condition='hasMenuActionPanel'
+
+                                        data-g-layout-item='{switch(hasDialog ? style["actionPanelPosition"] : style["ringMenuPosition"], ["left", "top", "bottom", "right"], ["\"row\": 3, \"column\": 1", "\"row\": 2, \"column\": 2", "\"row\": 4, \"column\": 2", "\"row\": 3, \"column\": 3"])}'
+                                    >
+                                        <div
+                                            class='gMenuActionPanel {menuActionPanelPositionClass}'
+                                        >
+                                            <gwc:dummy
+                                                gwc:condition='hasDialog'
+                                                gwc:replace='dialog'
+                                            />
+
+                                            <gwc:dummy
+                                                gwc:condition='hasRingMenu'
+                                                gwc:replace='menu'
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        data-g-layout-item='"row": 3, "column": 2, "isXSpacer": true, "isYSpacer": true'
+                                    >
+                                        <div
+                                            gwc:condition='form'
+                                            gwc:replace='form'
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        data-g-layout-item='"row": 1, "column": 2, "isXSpacer": true, "isEmpty": true'
+                    />
+
+                    <div
+                        data-g-layout-item='"row": 2, "column": 1, "isYSpacer": true, "isEmpty": true'
+                    />
+                </div>
+            </div>
+
+            <div
+                gwc:condition='!isModal'
+
+                class='g{type} gSStar gS{type} {prefix("gc", class)}'
+
+                data-g-id='LayoutSettingsContainer,applications/{application/ui/name}/windows/{name}/layoutContainers/window'
+                data-g-layout-container=''
+            >
+                <div
+                    gwc:condition='hasToolBar'
+
+                    data-g-layout-item='{!hasBothAPHAtTheSamePosition ? switch(style["toolBarPosition"], ["left", "top", "bottom", "right"], ["\"row\": 2", "\"row\": 1, \"columnSpan\": 5", "\"row\": 3, \"columnSpan\": 5", "\"row\": 2, \"column\": 2"]) : tbLayoutPosition}'
+                >
+                    <gwc:dummy
+                        gwc:replace='includeSnippet("ToolBarHelper")'
+                    />
+                </div>
+
+                <div
+                    gwc:condition='hasMenuActionPanel'
+
+                    data-g-layout-item='{!hasBothAPHAtTheSamePosition ? switch(hasDialog ? style["actionPanelPosition"] : style["ringMenuPosition"], ["left", "top", "bottom", "right"], ["\"row\": 2", "\"row\": 1, \"columnSpan\": 5", "\"row\": 3, \"columnSpan\": 5", "\"row\": 2, \"column\": 4"]) : apLayoutPosition}'
+                >
+                    <div
+                        class='gMenuActionPanel {menuActionPanelPositionClass}'
+                    >
+                        <gwc:dummy
+                            gwc:condition='hasDialog'
+                            gwc:replace='dialog'
+                        />
+
+                        <gwc:dummy
+                            gwc:condition='hasRingMenu'
+                            gwc:replace='menu'
+                        />
+                    </div>
+                </div>
+
+                <div
+                    gwc:define='
+                        actionPanelPosition hasDialog ? style["actionPanelPosition"] : style["ringMenuPosition"];
+                        splitterPos switch(true, [!hasMenuActionPanel || !!hasBothAPHAtTheSamePosition, actionPanelPosition == "left", actionPanelPosition == "right"], [0, 1, 2], 0);
+                    '
+                    gwc:condition='splitterPos'
+                    gwc:content='includeSnippet("GridLayoutSplitter")'
+
+                    class='gMovableElementHandle gHorizontalSplitter'
+
+                    data-g-id='MovableElement,1,horizontal'
+                    data-g-layout-item='"row": 2, "column": {splitterPos == 1 ? 1 : 3}'
+                />
+
+                <div
+                    gwc:condition='isTabbedContainer'
+
+                    class='gTabbedContainer'
+
+                    data-g-layout-item='{formLayoutPosition}, "isXSpacer": true, "isYSpacer": true'
+                >
+                    <div
+                        data-g-id='TabbedContainer'
+                        data-g-layout-container=''
+                    >
+                        <ul
+                            class='gPreloadedApplications'
+
+                            data-g-layout-item='"row": 0, "isEmpty": true'
+                        >
+                            <li
+                                gwc:repeat='app server/applications'
+
+                                data-g-application-url='/wa/sua/{app/sessionId}/{app/id}'
+                            />
+                        </ul>
+
+                        <ul
+                            class='gTabContainer'
+
+                            data-g-layout-item='"row": 0'
+                            data-g-layout-policy='"minWidth": 0'
+                        />
+
+                        <ul
+                            class='gViewContainer'
+
+                            data-g-layout-item='"row": 1, "isXSpacer": true, "isYSpacer": true'
+                            data-g-layout-policy='"minWidth": 10, "minHeight": 0'
+                        />
+                    </div>
+                </div>
+
+                <div
+                    gwc:condition='!isTabbedContainer'
+
+                    data-g-layout-item='{formLayoutPosition}, "isXSpacer": true, "isYSpacer": true'
+                >
+                    <div
+                        gwc:condition='form'
+                        gwc:replace='form'
+                     />
+                </div>
+            </div>
+        </div>
+
+        <gwc:dummy
+            gwc:condition='traditionalWindow'
+            gwc:omit-tag='true'
+        >
+            <!-- form: don't use form line, all posY inside the form have already original posY + formLine !-->
+            <div
+                gwc:condition='form'
+                gwc:content='form'
+
+                style='
+                    position: absolute;
+                    left: 0em;
+                    top: 0em;
+                    width: {form/width * ew}em;
+                    height: {form/height * eh}em;
+                '
+
+                data-g-id='form'
+            />
+
+            <!-- current field comment !-->
+            <div
+                gwc:condition='hasDialog &amp;&amp; commenttext'
+                gwc:content='commenttext'
+
+                style='
+                    position: absolute;
+                    left: 0em;
+                    top: {commentLine * eh}em;
+                    width: {width * ew}em;
+                    height: {1 * eh}em;
+                    {ttycolor ? "color: " + ttycolor + ";" : null}     {ttybackgroundcolor ? "background-color: " + ttybackgroundcolor + ";" : null}     {ttyfontfamily ? "font-family: " + ttyfontfamily + ";" : null}     {ttytextdecoration ? "text-decoration: " + ttytextdecoration + ";" : null}     {ttyfontweight ? "font-weight: " + ttyfontweight + ";" : null}
+                '
+            />
+
+            <!-- current message !-->
+            <div
+                gwc:condition='message'
+                gwc:content='message'
+
+                style='
+                    position: absolute;
+                    left: 0em;
+                    top: {message/line * eh}em;
+                    width: {width * ew}em;
+                    height: {1 * eh}em;
+                    background-color: {ttybackgroundcolor || "white"};
+                '
+            />
+
+            <!-- the menu eraser -->
+            <div
+                gwc:condition='menu'
+
+                style='
+                    position: absolute;
+                    left: 0em;
+                    top: {menuLine * eh}em;
+                    width: {width * ew}em;
+                    height: {1 * eh}em;
+                    background-color: {ttybackgroundcolor || "white"};
+                '
+            />
+
+            <!-- the menu comment -->
+            <div
+                gwc:condition='menu &amp;&amp; commenttext'
+                gwc:content='commenttext'
+
+                style='
+                    position: absolute;
+                    left: 0em;
+                    top: {(menuLine + 1) * eh}em;
+                    width: {width * ew}em;
+                    height: {1 * eh}em;
+                    background-color: {ttybackgroundcolor || "white"};
+                '
+            />
+        </gwc:dummy>
+    </div>
+</gwc:snippet-root>
+
+	</body>
+</html>

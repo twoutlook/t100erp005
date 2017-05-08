@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="adbt500_03" std_prog="adbt500_03" erpver="1.0" ver="2" module="ADB" type="S" booking="N" class="T" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xmdf_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：提供維護訂單多交期資料
+作業類型：批處處理作業
+輸入模式：單檔多欄版型
+資料來源:xmdf_t
+資料處理：
+1.執行此程式需傳入2個參數，當此參數為NULL時則不可以執行
+  1-1.p_xmdcdocno(訂購單號):
+  1-2.p_xmdcseq(訂購項次):
+2.傳入的訂購項次資料需有勾選多交期時才可以維護此子作業
+   未勾多交期只可維護單筆資料
+
+]]>
+  </all>
+  <field cite_std="N" name="xmdf_t.xmdf002" ver="1" src="s" column="xmdf002" table="xmdf_t" attribute="N101" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[ 校驗:1.不可空白
+          2.不可小於等於0
+          3.以登打的分批數量總合+本分批數量不可以大於採購數量]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdf003" ver="1" src="s" column="xmdf003" table="xmdf_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdf004" ver="1" src="s" column="xmdf004" table="xmdf_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdf005" ver="1" src="s" column="xmdf005" table="xmdf_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_274" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[[T:應用分類碼多語言檔].[C:應用分類]=274
+校驗：傳入參數 arg1 = xmdf005
+
+]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdf006" ver="1" src="s" column="xmdf006" table="xmdf_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdf200" ver="1" src="s" column="xmdf200" table="xmdf_t" attribute="C303" type="varchar2(10)" req="N" i_zoom="q_inaa001_4" c_zoom="" chk_ref="v_inaa001_1" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[如單頭代送商不為空白，則此欄位預設[T:發貨組織境外預設倉庫資料檔].[C:預設成本倉庫](dbag004)
+對應條件:發貨組織xmdfsite=dbagsite AND 客戶編號=單頭訂單客戶 AND 送貨客戶=單身送貨客戶 AND 倉庫類別dbag001 =1.代送商倉庫
+如代送商不為空白，則此欄位不可空白]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdf201" ver="1" src="s" column="xmdf201" table="xmdf_t" attribute="C303" type="varchar2(10)" req="N" i_zoom="q_inab002_8" c_zoom="" chk_ref="v_inab002_1" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[如單頭代送商不為空白，則此欄位預設[T:發貨組織境外預設倉庫資料檔].[C:預設成本儲位](dbag005)
+對應條件:發貨組織xmdfsite=dbagsite AND 客戶編號=單頭訂單客戶 AND 送貨客戶=單身送貨客戶 AND 倉庫類別dbag001 =1.代送商倉庫
+如代送商不為空白，則此欄位不可空白]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdf202" ver="1" src="s" column="xmdf202" table="xmdf_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdfdocno" ver="1" src="s" column="xmdfdocno" table="xmdf_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdfseq" ver="1" src="s" column="xmdfseq" table="xmdf_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdfseq2" ver="1" src="s" column="xmdfseq2" table="xmdf_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdfsite" ver="1" src="s" column="xmdfsite" table="xmdf_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooed004_3" c_zoom="q_ooed004_3" chk_ref="v_ooed004" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:Default xmjasite]]>
+  </field>
+  <field cite_std="N" name="xmdf_t.xmdfunit" ver="1" src="s" column="xmdfunit" table="xmdf_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="q_ooed004_3" c_zoom="q_ooed004_3" chk_ref="v_ooed004" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xmdf005_desc" src="s" depend_field="xmdf_t.xmdf005" correspon_key="&apos;274&apos;,xmdf005" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdf200_desc" src="s" depend_field="xmdf_t.xmdf200" correspon_key="xmdfent,xmdf200" ref_table="inaa_t" ref_fk="inaaent,inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdf201_desc" src="s" depend_field="xmdf_t.xmdf201" correspon_key="xmdfent,xmdf200,xmdf201" ref_table="inab_t" ref_fk="inabent,inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdfunit_desc" src="s" depend_field="xmdf_t.xmdfunit" correspon_key="xmdfent,xmdfunit" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdf002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdf003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdf004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdf005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdf006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdf200" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdf201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdf202" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdfdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdfseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdfseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdfsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdf_t.xmdfunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_xmdfdocno" text="訂單單號" lstr=""/>
+    <sfield name="lbl_xmdfseq" text="訂單項次" lstr=""/>
+    <sfield name="lbl_xmdfseq2" text="分批序" lstr=""/>
+    <sfield name="lbl_xmdf002" text="分批數量" lstr=""/>
+    <sfield name="lbl_xmdf003" text="約定交貨日期" lstr=""/>
+    <sfield name="lbl_xmdf004" text="預計簽收日期" lstr=""/>
+    <sfield name="lbl_xmdf005" text="交貨時段" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_xmdfsite" text="銷售組織" lstr=""/>
+    <sfield name="lbl_xmdfunit" text="發貨組織" lstr=""/>
+    <sfield name="lbl_xmdfunit_desc" text="組織說明" lstr=""/>
+    <sfield name="lbl_xmdf006" text="MRP凍結否" lstr=""/>
+    <sfield name="lbl_xmdf200" text="庫區\庫位" lstr=""/>
+    <sfield name="lbl_xmdf200_desc" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_xmdf201" text="儲位" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_xmdf202" text="批號" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

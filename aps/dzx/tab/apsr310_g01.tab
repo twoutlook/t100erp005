@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr310_g01" module="aps" jobmode="N" type="g01" industry="std" crtid="07024" crtdt="2016-02-17 14:59:07" modid="07024" moddt="2016-02-17 17:59:39" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|condition)">
+    <var seq="1" value="psac001,psac002,psac003,psacdocdt,psacdocno,psacent,psacsite,psacstus,psad001,psad002,psad003,psad004,psad005,psad006,l_qty(psad005|0),psad007,psad008,psad009,psadsite,psadseq,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),x_oocal_t_oocal003(oocal003|x.oocal_t_oocal003),l_psac002_ooefl003(chr1000|trim(psac002)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = psac_t.psac002 AND ooefl_t.ooeflent = psac_t.psacent AND ooefl_t.ooefl002 = g_dlang))),l_psac001_ooag011(chr300|trim(psac001)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psac_t.psac001 AND ooag_t.ooagent = psac_t.psacent)))"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="psac001,psac002,psac003,psacdocdt,psacdocno,psacent,psacsite,psacstus,psad001,psad002,psad003,psad004,psad005,psad006,l_qty(psad005|0),psad007,psad008,psad009,psadsite,psadseq,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),x_oocal_t_oocal003(oocal003|x.oocal_t_oocal003),l_psac002_ooefl003(chr1000|trim(psac002)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = psac_t.psac002 AND ooefl_t.ooeflent = psac_t.psacent AND ooefl_t.ooefl002 = g_dlang))),l_psac001_ooag011(chr300|trim(psac001)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psac_t.psac001 AND ooag_t.ooagent = psac_t.psacent)))"/>
+    <sql id="g_from" query="psac_t LEFT OUTER JOIN ( SELECT psad_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = psad_t.psad001 AND imaal_t.imaalent = psad_t.psadent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = psad_t.psad001 AND imaal_t.imaalent = psad_t.psadent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal004,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = psad_t.psad004 AND oocal_t.oocalent = psad_t.psadent AND oocal_t.oocal002 = g_dlang) oocal_t_oocal003 FROM psad_t ) x  ON psac_t.psacent = x.psadent AND psac_t.psacdocno = x.psaddocno"/>
+    <sql id="g_where" query="" maintable="psac_t"/>
+    <sql id="g_order" query="psacdocno,psadseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="psacdocno,psadseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="psacdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="psacent,psacdocno"/>
+      <rep type="psadseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="psacent,psacdocno,psadseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="psacent,psacdocno,psadseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="psacdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="psacent,psacdocno"/>
+      <rep type="psadseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

@@ -1,0 +1,1727 @@
+#+ 程式版本......: T6 Version 1.00.00 Build-0001 at 12/10/12
+#
+#+ 程式代碼......: sadzp210
+#+ 設計人員......: Jay
+# Prog. Version..: 'T6-12.01.21(00000)'     #
+#
+# Program name   : sadzp210_4fd.4gl 
+# Description    : 開窗4fd畫面產生
+# Memo           :
+# Modify.........: No.000001 2012/11/07 By henry 因應兆家要修改表格，mark掉共用欄位的部分
+# Modify.........: No.000002 2012/12/18 By henry 修改表格容器的計算方式和增加修改的判斷
+# Modify.........: No.000003 2014/07/10 By madey 1.adzp210_define_table_name()停用,搬到新建立的sadzp210_define_table_name()
+#                                                2.adzi210_generate_qry()停用,搬到新建立的sadzp210_generate_qry()
+#                            2014/07/29 By madey field找不到table name時報錯
+#                            2014/08/06 By madey 1.adzp210僅編譯不連結,連結由後續呼叫產生q_total(s_azzi070_gen_qry)一併做
+#                                                2.sadzp210_generate_qry()參數1原本為dzca001,改為可吃多組dzca001,用pipe隔開
+#                            2014/09/03 by madey 透過g_gen42s_flag決定要不要做42s關聯
+#                            2014/10/07 by madey 增加PK:客製否欄位dzca002,dzcb004,dzcc009
+#                            2014/12/30 by madey 視g_qry_gen_qtotal決定要不要重新連結,並增加progress bar
+#                            2015/01/16 by madey 增加function:adzp210_get_industry_data()取得行業別清單
+#                            2015/01/29 by madey sadzp210_generate_qry()擋下hardcode qry
+#                            2015/03/25 by madey g_qry_gen_qtotal若不存在，預設給N
+#                            2015/06/16 by Hiko  資料大小寫:從adzi150(dzep023)預設到r.q(dzcc006),再由開發人員調整.
+#                            2015/07/01 by madey 因應支持qry透過設計器開發內容(hardcode)而增修function
+#                            2015/08/04 by madey 1.拿掉q_total,僅作r.l qry
+#                                                2.error handle
+#                            2015/08/17 by madey 1.開窗停用g_gen42s_flag
+#                                                2.hard code qry在標準轉客製及客製還原標準時,自動做r.l qry
+#                                                3.顯示元件為date edit者，4fd file_type設為column_like
+#                            2015/10/05 by madey 1.顯示格式(dzcc010):從adzi150(dzep021)預設到r.q,再由開發人員調整 (廢除原本用途:是否為RANK欄位)
+#                                                2.增加欄位:不共用主程式多語言
+#                            20160223 160223-00028 by madey :patch優化專案
+#                                                  1.新增一個functon處理gzzn_t的更新
+#                                                  2.調整r.l qry cqry的時機點
+#                            20160414 160328-00023 by madey :數字欄位的format要以azzi090設定為主
+#                            20160517 160517-00007 by madey :訊息補強:當從r.t找不到欄位資訊時，多顯示qry_id
+#                            20160726 160726-00037 by madey :切換目錄由cl_change_dir()改用os.Path.chdir()
+#                            20161227 161227-00021 by madey :開窗轉為hard code qry時，要insert 一筆規格描述ALL的dzaa_t跟dzab_t
+
+IMPORT os
+SCHEMA ds
+
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../4gl/adzi888_global.inc"   #20140903:用g_gen42s_flag
+GLOBALS
+     DEFINE g_qry_gen_qtotal STRING   #20141230
+     DEFINE g_qry_gen_errmsg    STRING   #20150804
+END GLOBALS
+
+#定義本程式所使用到的常數 
+#CONSTANT g_module = "qry"                       #qry開窗程式所在路徑 #20141007 mark
+CONSTANT g_template_file = "qry_template.4fd"   #qry的4gl程式樣版檔
+CONSTANT g_std_module = "qry"                   #標準qry開窗程式所在路徑 #20141007
+CONSTANT g_cust_module = "cqry"                 #客製qry開窗程式所在路徑 #20141007
+
+GLOBALS
+   TYPE type_g_dzca_m RECORD 
+                dzca001   LIKE dzca_t.dzca001,
+                dzca002   LIKE dzca_t.dzca002, 
+                dzca003   LIKE dzca_t.dzca003,
+                dzca008   LIKE dzca_t.dzca008 #不共用主程式多語言 #20151005
+             END RECORD
+            
+   TYPE type_g_dzcc_d RECORD
+                dzcc001   LIKE dzcc_t.dzcc001,
+                dzcc002   LIKE dzcc_t.dzcc002,
+                dzcc003   LIKE dzcc_t.dzcc003,
+                dzcc004   LIKE dzcc_t.dzcc004,
+                dzcc005   LIKE dzcc_t.dzcc005, 
+                dzcc006   LIKE dzcc_t.dzcc006, 
+                dzcc007   LIKE dzcc_t.dzcc007,
+                dzcc010   LIKE dzcc_t.dzcc010,#20151005
+                dzcc008   LIKE dzcc_t.dzcc008,
+                dzcc009   LIKE dzcc_t.dzcc009 
+             END RECORD
+
+   DEFINE g_dzca_m        type_g_dzca_m                     #qry_id開窗基本資料表
+   DEFINE g_dzcc_d        DYNAMIC ARRAY OF type_g_dzcc_d    #qry_id開窗畫面顯示設定
+   DEFINE g_module        LIKE gzde_t.gzde002               #qry開窗程式所在路徑 #20141007
+   DEFINE gb_auto_reset_int_format BOOLEAN                  #開關 #160328-00023
+END GLOBALS
+
+
+
+DEFINE gnode_4fd        om.DomNode
+DEFINE g_fieldId_max    LIKE type_t.num10       #4fd上 fieldid 最大值
+DEFINE g_tabIndex_max   LIKE type_t.num10       #4fd上 tabIndex 最大值 
+DEFINE g_dzca001        LIKE dzca_t.dzca001     #此次處理之qry_id
+DEFINE g_posX           LIKE type_t.num10       #目前元件X軸位置
+DEFINE g_posY           LIKE type_t.num10       #目前元件Y軸位置
+DEFINE g_grid_width     LIKE type_t.num10       #目前table內元件已使用寬度
+
+DEFINE g_field_num      LIKE type_t.num5        #目前table內元件的個數 #No.000002
+
+PUBLIC FUNCTION sadzp210_gen_4fd()
+   DEFINE lddoc_all      om.DomDocument
+   DEFINE ls_4fd_file    STRING
+   DEFINE l_sr_node      om.DomNode
+   DEFINE l_sr_child     om.DomNode
+   DEFINE l_table_node   om.DomNode
+   DEFINE ls_err_msg     STRING, #20140729
+          lb_result      BOOLEAN
+   DEFINE l_form_node    om.DomNode #20150701
+   
+   LET g_dzca001 = g_dzca_m.dzca001
+   DISPLAY "dzca001:", g_dzca001   #qry程式代碼
+
+   IF cl_null(g_dzca001) THEN
+      DISPLAY "THE qry_id is null."
+      RETURN
+   END IF
+
+   LET gb_auto_reset_int_format = FALSE #160328-00023 預設先關，有需要再打開
+   
+   #初始開窗4fd檔中table元件要加入欄位的位置
+   #因開窗4fd中table中已預設加入CheckBox元件提供使用者勾選的欄位
+   #目前qry_template.4fd中此CheckBox的寬度預設為1
+   #因此預設 posX=1, posY=0
+   LET g_posX = 1
+   LET g_posY = 0
+   
+   #已使用CheckBox的寬度為1
+   LET g_grid_width = 1
+   #<CheckBox gridHeight="1" gridWidth="1" name="check" posX="0" posY="0" />
+   #<Edit gridHeight="1" gridWidth="14" name="oea_file.oea01" posX="1" posY="0" />
+   #<ComboBox gridHeight="1" gridWidth="10" name="oea_file.oea00" posX="15" posY="0" />
+   #<DateEdit gridHeight="1" gridWidth="10" name="oea_file.oea02" posX="25" posY="0" />
+   #<Edit gridHeight="1" gridWidth="10" name="oea_file.oea032" posX="35" posY="0" />
+   #<ButtonEdit gridHeight="1" gridWidth="10" image="zoom" posX="45" posY="0" />
+   #<Edit gridHeight="1" gridWidth="10" name="oea_file.oea10" posX="55" posY="0" />
+   
+   #取得q_xxx的UI畫面樣版檔:qry_template.4fd檔
+  #LET ls_4fd_file = os.Path.join(FGL_GETENV("COM"), g_module)
+   LET ls_4fd_file = os.Path.join(FGL_GETENV("COM"), g_std_module) #20141007
+   LET ls_4fd_file = os.Path.join(ls_4fd_file, "mdl")
+   LET ls_4fd_file = os.Path.join(ls_4fd_file, g_template_file)
+   DISPLAY "qry--畫面樣板檔位置:", ls_4fd_file
+   
+   IF NOT os.Path.exists(ls_4fd_file) THEN
+      DISPLAY "Error:qry--畫面樣板檔:", ls_4fd_file.trim(), " 不存在!"
+      RETURN
+   END IF
+   
+   #Load q_xxx的UI畫面樣版檔:qry_template.4fd檔至om.DomNode為XML格式文件
+   LET gnode_4fd = sadzp210_load_xml_to_dom(ls_4fd_file)
+   
+   #取得q_xxx的UI畫面樣版檔目前所使用的fieldId和tabIndex最大值
+   CALL sadzp210_search_fieldId_tabIndex_max(gnode_4fd)
+
+   #20150701 -Bebin-
+   #設定<Form> tag的屬性name=qry_id 
+   LET l_form_node = sadzp210_get_domNode(gnode_4fd, "Form", "name", "Form") 
+   CALL l_form_node.setAttribute("name", g_dzca001)   
+   #20150701 -End-
+       
+   #取得開窗4fd檔上的screen record節點
+   #以利在節點內建立開窗欄位的子節點
+   LET l_sr_node = sadzp210_get_domNode(gnode_4fd, "Record", "name", "s_qry") 
+
+   
+   #取得開窗4fd檔上的table(表格陣列)節點
+   #以利在節點內建立開窗欄位的子節點
+   LET l_table_node = sadzp210_get_domNode(gnode_4fd, "Table", "name", "s_qry") 
+   
+   IF l_sr_node IS NULL OR l_table_node IS NULL THEN
+      DISPLAY "The qry_template.4fd is error."
+      RETURN
+   END IF
+   
+   #開始在q_xxx 4fd畫面檔中加入開窗設定需要顯示的欄位
+  #CALL sadzp210_add_field(l_sr_node, l_table_node)  
+  #20140729
+   CALL sadzp210_add_field(l_sr_node, l_table_node)  RETURNING lb_result,ls_err_msg
+   IF NOT lb_result THEN
+      DISPLAY ls_err_msg
+      RETURN
+   END IF
+   
+   #實際生成q_xxx 4fd畫面檔
+   CALL sadzp210_gen_4fd_file()
+END FUNCTION
+
+#+ 將xml檔載入Dom
+PRIVATE FUNCTION sadzp210_load_xml_to_dom(p_xmlFile)
+   DEFINE p_xmlFile STRING
+   DEFINE l_domDoc  om.DomDocument
+   DEFINE r_domRoot om.DomNode
+
+   LET l_domDoc = om.DomDocument.createFromXmlFile(p_xmlFile)
+   LET r_domRoot = l_domDoc.getDocumentElement()
+
+   RETURN r_domRoot
+END FUNCTION
+
+#+ 取得4fd目前所使用的 fieldid 和 tabIndex 最大值
+FUNCTION sadzp210_search_fieldId_tabIndex_max(p_domNode) #
+   DEFINE p_domNode   om.DomNode
+   DEFINE l_tmpStr    STRING
+
+   #取得此節點"fieldId"的屬性值
+   LET l_tmpStr = p_domNode.getAttribute("fieldId")
+   
+   #DISPLAY "Tag Name: ", p_domNode.getTagName()
+   #DISPLAY "Tag ID: ", p_domNode.getId()
+   #DISPLAY "fieldId:", l_tmpStr, "; getAttribute(fieldId)", p_domNode.getAttribute("fieldId")
+   
+   IF l_tmpStr.getLength() > 0 THEN
+      IF p_domNode.getAttribute("fieldId") > g_fieldId_max THEN
+         LET g_fieldId_max = p_domNode.getAttribute("fieldId")
+      END IF
+   END IF
+
+   #取得此節點"tabIndex"的屬性值
+   LET l_tmpStr = p_domNode.getAttribute("tabIndex")
+   #DISPLAY "tabIndex:", l_tmpStr, "; getAttribute(tabIndex)", p_domNode.getAttribute("tabIndex")
+   #DISPLAY ""
+   
+   IF l_tmpStr.getLength() > 0 THEN
+      IF p_domNode.getAttribute("tabIndex") > g_tabIndex_max THEN
+         LET g_tabIndex_max = p_domNode.getAttribute("tabIndex")
+      END IF
+   END IF
+
+   #控制權移到其第一個子節點
+   LET p_domNode = p_domNode.getFirstChild()
+
+   #若節點為空則不再進行遞迴
+   WHILE p_domNode IS NOT NULL   
+      CALL sadzp210_search_fieldId_tabIndex_max(p_domNode)
+      
+      #控制權移到下一個同層的節點
+      LET p_domNode = p_domNode.getNext()   
+   END WHILE
+END FUNCTION
+
+#+ 取得符合條件的節點(domNode)
+PRIVATE FUNCTION sadzp210_get_domNode(p_domNode, p_tag, p_att_name, p_value) 
+   DEFINE p_domNode         om.DomNode     #XML Root Node
+   DEFINE p_tag             STRING         #要尋找的Tag Name
+   DEFINE p_att_name        STRING         #要尋找的Attribute Name
+   DEFINE p_value           STRING         #要尋找的Attribute Value
+   DEFINE l_i               LIKE type_t.num10
+   DEFINE l_node_list       om.NodeList
+   DEFINE l_node            om.DomNode
+   
+   INITIALIZE l_node TO NULL
+   
+   #尋找符合的tag name節點
+   LET l_node_list = p_domNode.selectByTagName(p_tag.trim())
+
+   FOR l_i = 1 to l_node_list.getLength()
+      LET l_node = l_node_list.item(l_i)
+      DISPLAY p_att_name.trim(), "--value:", l_node.getAttribute(p_att_name)
+      
+      IF l_node.getAttribute(p_att_name) = p_value.trim() THEN
+         RETURN l_node
+         EXIT FOR
+      END IF
+   END FOR
+  
+   RETURN l_node
+END FUNCTION
+
+#+ 在q_xxx開窗中加入相關開窗欄位設定
+PRIVATE FUNCTION sadzp210_add_field(p_sr_child, p_table_node)  
+   DEFINE p_sr_child          om.DomNode         #screen record的節點domNode
+   DEFINE p_table_node        om.DomNode         #table的節點domNode
+   DEFINE l_i                 LIKE type_t.num5
+   DEFINE l_cnt               LIKE type_t.num5
+   DEFINE l_table             STRING             #欄位所屬資料表名稱
+   DEFINE l_datatype          STRING             #欄位資料型態
+   DEFINE ls_msg              STRING
+   
+   LET l_cnt = g_dzcc_d.getLength()
+
+   #取得construct欄位組合
+   FOR l_i = 1 TO l_cnt
+      #因為要新增加開窗欄位,所以fieldId和tabIndex都要依續加1,都要是畫面的唯一值
+      LET g_fieldId_max = g_fieldId_max + 1
+      LET g_tabIndex_max = g_tabIndex_max + 1
+      
+      #取得欄位所屬資料表名稱
+      #DISPLAY "4fd dzcc003:",g_dzcc_d[l_i].dzcc003
+     #LET l_table = adzp210_define_table_name(g_dzcc_d[l_i].dzcc003)  #20140710:madey
+      LET l_table = sadzp210_define_table_name(g_dzcc_d[l_i].dzcc003) #20140710:madey
+      IF cl_null(l_table) THEN #20151005
+        #LET ls_msg = "ERROR: field(",g_dzcc_d[l_i].dzcc003,") fetch data in r.t fail. Please check r.t"
+         LET ls_msg = "ERROR:",g_dzca_m.dzca001," field(",g_dzcc_d[l_i].dzcc003,") not found in dzeb_t. Please check r.t" #160517-00007
+         RETURN FALSE,ls_msg
+      END IF
+      #取得欄位資料型態,設定4fd檔欄位sqltype屬性用
+      LET l_datatype = sadzp210_get_field_datatype(l_table, g_dzcc_d[l_i].dzcc003)
+      IF l_datatype IS NULL THEN
+         DISPLAY "The data type of ", g_dzcc_d[l_i].dzcc003 CLIPPED, " is null."
+         LET l_datatype = "CHAR"
+      END IF
+      
+      #在q_xxx開窗screen record中加入相關開窗欄位設定
+      CALL sadzp210_add_sr_field(p_sr_child, l_table, l_i, l_datatype)
+      
+      #在q_xxx開窗table中加入相關開窗欄位設定
+      CALL sadzp210_add_table_field(p_table_node, l_table, l_i, l_datatype)
+      
+      #因為在table增加了開窗所需的欄位,而4fd限制容器寬度必須大於table的總寬度
+      #所以重新調整Table和VBox等相關容器的寬度,避免編譯失敗
+      CALL sadzp210_container_resize(p_table_node)
+   END FOR
+
+   RETURN TRUE ,NULL#20140729
+   
+END FUNCTION
+
+#+ 在q_xxx開窗screen record中加入相關開窗欄位設定
+PRIVATE FUNCTION sadzp210_add_sr_field(p_sr_node, p_table, p_index, p_sqlype)  
+   DEFINE p_sr_node      om.DomNode          #screen record的節點domNode
+   DEFINE p_table        STRING              #欄位隸屬資料表名稱
+   DEFINE p_index        LIKE type_t.num10   #目前新增欄位的index
+   DEFINE p_index_str    STRING
+   DEFINE p_sqlype       STRING              #欄位資料型態
+   DEFINE l_name         STRING              #欄位tag name
+   DEFINE l_sr_child     om.DomNode
+   
+   #開窗4fd檔上的screen record欄位範例
+   #<RecordField colName="oea01" fieldIdRef="2" fieldType="TABLE_COLUMN" name="oea_file.oea01" sqlTabName="oea_file" sqlType="VARCHAR" table_alias_name="" uid="{165d4744-49f6-4d17-880a-1b30394b0c3c}"/>
+
+   LET p_index_str = p_index
+   LET p_index_str = p_index_str.trim()
+   #欄位tag name命名(4fd上的object name)
+   LET l_name = g_dzcc_d[p_index].dzcc003 CLIPPED,"_",p_index_str
+   
+   LET l_sr_child = p_sr_node.createChild("RecordField")
+   #CALL l_sr_child.setAttribute("colName", g_dzcc_d[p_index].dzcc003 CLIPPED)
+   CALL l_sr_child.setAttribute("fieldIdRef", g_fieldId_max) 
+   #CALL l_sr_child.setAttribute("fieldType", "TABLE_COLUMN") 
+  #CALL l_sr_child.setAttribute("fieldType", "NON_DATABASE") #20150911 mark
+   CALL l_sr_child.setAttribute("name", l_name)
+   #CALL l_sr_child.setAttribute("sqlTabName", p_table.trim())
+   CALL l_sr_child.setAttribute("sqlType", p_sqlype)
+   CALL l_sr_child.setAttribute("table_alias_name", "")
+
+   #20150911 -Begin-
+   CASE g_dzcc_d[p_index].dzcc004
+      WHEN "05"   #Edit
+         CALL l_sr_child.setAttribute("fieldType", "NON_DATABASE") #20150911
+
+      WHEN "02"   #CheckBox
+         CALL l_sr_child.setAttribute("fieldType", "NON_DATABASE") #20150911
+         
+      WHEN "04"   #DateEdit
+         #20150911 -Begin-
+         CALL l_sr_child.setAttribute("fieldType", "COLUMN_LIKE")
+         CALL l_sr_child.setAttribute("colName",g_dzcc_d[p_index].dzcc003 CLIPPED )
+         CALL l_sr_child.setAttribute("sqlTabName",p_table.trim())
+         #20150911 -End-
+         
+      WHEN "03"   #ComboBox
+         CALL l_sr_child.setAttribute("fieldType", "NON_DATABASE") #20150911
+
+   END CASE
+   #20150911 -End-
+
+END FUNCTION
+
+#+ 在q_xxx開窗table中加入相關開窗欄位設定
+PRIVATE FUNCTION sadzp210_add_table_field(p_table_node, p_table, p_index, p_sqlype)  
+   DEFINE p_table_node   om.DomNode          #table的節點domNode
+   DEFINE p_table        STRING              #欄位隸屬資料表名稱
+   DEFINE p_index        LIKE type_t.num10   #目前新增欄位的index
+   DEFINE p_index_str    STRING
+   DEFINE p_sqlype       STRING              #欄位資料型態
+   DEFINE l_name         STRING              #欄位tag name
+   DEFINE p_table_child  om.DomNode
+   DEFINE l_grid_height  LIKE type_t.num10
+   DEFINE l_grid_width   LIKE type_t.num10
+   DEFINE l_table_id     LIKE dzep_t.dzep009
+   DEFINE l_case         LIKE dzcc_t.dzcc006 #2015/06/16 by Hiko
+   DEFINE l_format       LIKE dzcc_t.dzcc010 #20151005
+   DEFINE l_dzeb001      LIKE dzeb_t.dzeb001 #160328-00023
+   DEFINE l_dzeb002      LIKE dzeb_t.dzeb002 #160328-00023
+   DEFINE l_dzeb006      LIKE dzeb_t.dzeb006 #160328-00023
+   DEFINE l_gztd001      LIKE gztd_t.gztd001 #160328-00023
+   DEFINE l_gztd007      LIKE gztd_t.gztd007 #160328-00023
+   DEFINE ls_azzi090_type   STRING           #160328-00023
+   DEFINE ls_azzi090_format STRING           #160328-00023
+
+   #Begin: 160328-00023取得欄位型態
+   IF gb_auto_reset_int_format THEN
+      LET l_dzeb006 = NULL
+      LET l_dzeb001 = p_table.trim()
+      LET l_dzeb002 = g_dzcc_d[p_index].dzcc003
+      SELECT dzeb006 INTO l_dzeb006 FROM dzeb_t WHERE dzeb001=l_dzeb001 AND dzeb002=l_dzeb002
+      LET ls_azzi090_type = l_dzeb006
+      LET ls_azzi090_type = ls_azzi090_type.trim()
+      IF NOT cl_null(ls_azzi090_type) THEN 
+         #取得azzi090設定的format
+         LET l_gztd007 = NULL
+         LET l_gztd001 = ls_azzi090_type
+         SELECT gztd007 INTO l_gztd007 FROM gztd_t WHERE gztd001=l_gztd001
+         LET ls_azzi090_format = l_gztd007
+         LET ls_azzi090_format = ls_azzi090_format.trim()
+      END IF
+   END IF
+   #End: 160328-00023
+   
+   #預設table元件內的長,寬
+   #這部份以後應該是要由開窗設計器新增width欄位的設計屬性
+   LET l_grid_height = 1
+   #LET l_grid_width = 10
+
+   #欄位的寬度改參照dzep009
+   LET l_table_id = p_table.trim()   
+   SELECT dzep009 INTO l_grid_width FROM dzep_t WHERE dzep001=l_table_id AND dzep002=g_dzcc_d[p_index].dzcc003
+
+   #若無dzep009設計資料,或顯示寬度<1,則預設顯示寬度為10
+   IF cl_null(l_grid_width) OR l_grid_width < 1 THEN
+      LET l_grid_width = 10
+   END IF
+   
+  #DISPLAY "l_grid_width = ",l_grid_width
+   DISPLAY "l_grid_width = ",l_grid_width,":",g_dzcc_d[p_index].dzcc003 #160328-00023
+
+   LET p_index_str = p_index
+   LET p_index_str = p_index_str.trim()
+   #欄位tag name命名(4fd上的object name)
+   LET l_name = g_dzcc_d[p_index].dzcc003 CLIPPED,"_",p_index_str
+
+   #開窗4fd檔上的table欄位範例
+   #<CheckBox aggregateColName="" aggregateName="" aggregateTableAliasName="" aggregateTableName="" colName="azc02" columnCount="" fieldId="8" fieldType="TABLE_COLUMN" gridHeight="1" gridWidth="9"  name="azc_file.azc02" notNull="true" posX="0" posY="0" rowCount="" sqlTabName="azc_file" sqlType="CHAR" stepX="" stepY="" tabIndex="14" table_alias_name="" text="azc_file.azc02" title="Sequence" widget="CheckBox" lstrcomment="false" lstrtitle="false"/>
+   #<Edit     aggregateColName="" aggregateName="" aggregateTableAliasName="" aggregateTableName="" colName="oea01" columnCount="" fieldId="2" fieldType="TABLE_COLUMN" gridHeight="1" gridWidth="14" name="oea_file.oea01" noEntry="true" posX="1" posY="0" rowCount="" sqlTabName="oea_file" sqlType="CHAR" stepX="" stepY="" tabIndex="2" table_alias_name="" title="Order No." widget="Edit"/>
+   #<ComboBox aggregateColName="" aggregateName="" aggregateTableAliasName="" aggregateTableName="" colName="oea00" columnCount="" fieldId="5" fieldType="TABLE_COLUMN" gridHeight="1" gridWidth="10" name="oea_file.oea00" noEntry="true" posX="15" posY="0" rowCount="" sqlTabName="oea_file" sqlType="CHAR" stepX="" stepY="" tabIndex="7" table_alias_name="" title="Order Type" widget="ComboBox" items="Contract, General" queryEditable="true" >
+   #<DateEdit aggregateColName="" aggregateName="" aggregateTableAliasName="" aggregateTableName="" colName="oea02" columnCount="" fieldId="6" fieldType="TABLE_COLUMN" gridHeight="1" gridWidth="10" name="oea_file.oea02" noEntry="true" posX="25" posY="0" rowCount="" sqlTabName="oea_file" sqlType="CHAR" stepX="" stepY="" tabIndex="8" table_alias_name="" title="Order Date" widget="DateEdit"/>
+   
+   
+   #因為q_xxx開窗table中的顯示元件有05.Edit, 02.CheckBox, 04.DateEdit, 03:ComboBox四種
+   #各元件所需set的Attribute不同,因此分開處理
+   
+   CASE g_dzcc_d[p_index].dzcc004
+      WHEN "05"   #Edit
+         LET p_table_child = p_table_node.createChild("Edit")
+         CALL p_table_child.setAttribute("scroll", "true") #避免出現的字串被截斷
+      WHEN "02"   #CheckBox
+         LET p_table_child = p_table_node.createChild("CheckBox")
+      WHEN "04"   #DateEdit
+         LET p_table_child = p_table_node.createChild("DateEdit")
+      WHEN "03"   #ComboBox
+         LET p_table_child = p_table_node.createChild("ComboBox")
+         CALL p_table_child.setAttribute("scroll", "true") #避免出現的字串被截斷
+   END CASE
+   
+   CALL p_table_child.setAttribute("aggregateColName", "")
+   CALL p_table_child.setAttribute("aggregateName", "")
+   CALL p_table_child.setAttribute("aggregateTableAliasName", "")
+   CALL p_table_child.setAttribute("aggregateTableName", "")
+   #CALL p_table_child.setAttribute("colName", g_dzcc_d[p_index].dzcc003 CLIPPED)
+   CALL p_table_child.setAttribute("columnCount", "")
+   CALL p_table_child.setAttribute("fieldId", g_fieldId_max) 
+   #CALL p_table_child.setAttribute("fieldType", "TABLE_COLUMN") 
+  #CALL p_table_child.setAttribute("fieldType", "NON_DATABASE") #20150911 mark
+   CALL p_table_child.setAttribute("gridHeight", l_grid_height)  
+   CALL p_table_child.setAttribute("gridWidth", l_grid_width)
+   CALL p_table_child.setAttribute("name", l_name)
+   CALL p_table_child.setAttribute("noEntry", "true")
+   CALL p_table_child.setAttribute("posX", g_posX)
+   CALL p_table_child.setAttribute("posY", g_posY)
+   CALL p_table_child.setAttribute("rowCount", "")
+   #CALL p_table_child.setAttribute("sqlTabName", p_table.trim())
+   CALL p_table_child.setAttribute("sqlType", p_sqlype)
+   CALL p_table_child.setAttribute("stepX", "")
+   CALL p_table_child.setAttribute("stepY", "")
+   CALL p_table_child.setAttribute("tabIndex", g_tabIndex_max)
+   CALL p_table_child.setAttribute("table_alias_name", "")
+   CALL p_table_child.setAttribute("title", "lbl_" || g_dzcc_d[p_index].dzcc003 CLIPPED)
+   CALL p_table_child.setAttribute("hidden", "")
+   CALL p_table_child.setAttribute("style", "")
+
+   LET l_case = g_dzcc_d[p_index].dzcc006 CLIPPED #2015/06/16 by Hiko
+   LET l_format = g_dzcc_d[p_index].dzcc010 CLIPPED #20151005
+   CASE g_dzcc_d[p_index].dzcc004
+      WHEN "05"   #Edit
+         CALL p_table_child.setAttribute("widget", "Edit")
+         CALL p_table_child.setAttribute("scroll", "true")
+         #Begin:2015/06/16 by Hiko
+         IF NOT cl_null(l_case) AND l_case<>"none" THEN
+            CALL p_table_child.setAttribute("case", l_case) 
+         END IF
+         #End:2015/06/16 by Hiko
+
+         #Begin: 160328-00023
+         IF gb_auto_reset_int_format THEN
+            IF ls_azzi090_type MATCHES "N*" AND (NOT cl_null(ls_azzi090_format)) THEN #數值型態且有設定format
+               DISPLAY "Info:auto reset field format:",g_dzcc_d[p_index].dzcc003," old(",l_format,") new(",ls_azzi090_format,")"
+               LET l_format = ls_azzi090_format
+               
+               #強制更新設計資料
+               UPDATE dzcc_t SET dzcc010 = l_format
+                  WHERE dzcc001 = g_dzcc_d[p_index].dzcc001 AND dzcc002 = g_dzcc_d[p_index].dzcc002 AND dzcc009 = g_dzcc_d[p_index].dzcc009
+
+               IF ls_azzi090_format.getLength() > l_grid_width THEN
+                  LET l_grid_width = ls_azzi090_format.getLength()
+                  DISPLAY "l_grid_width(resut) = ",l_grid_width,":",g_dzcc_d[p_index].dzcc003
+               END IF
+            END IF
+         END IF
+         #End: 160328-00023
+
+         #20151005 -Begin-
+         IF NOT cl_null(l_format) THEN 
+            CALL p_table_child.setAttribute("format", l_format)
+         END IF
+         #20151005 -End-
+      WHEN "02"   #CheckBox
+         CALL p_table_child.setAttribute("widget", "CheckBox")
+         CALL p_table_child.setAttribute("valueChecked", "Y")
+         CALL p_table_child.setAttribute("valueUnchecked", "N")
+         CALL p_table_child.setAttribute("sizePolicy", "dynamic")
+         #CALL p_table_child.setAttribute("lstrcomment", "false")
+         #CALL p_table_child.setAttribute("lstrtitle", "false")
+         CALL p_table_child.setAttribute("fieldType", "NON_DATABASE") #20150911
+         
+      WHEN "04"   #DateEdit
+         CALL p_table_child.setAttribute("widget", "DateEdit")
+         #20150911 -Begin-
+         CALL p_table_child.setAttribute("fieldType", "COLUMN_LIKE")
+         CALL p_table_child.setAttribute("colName",g_dzcc_d[p_index].dzcc003 CLIPPED )
+         CALL p_table_child.setAttribute("sqlTabName",p_table.trim())
+         #20150911 -End-
+
+         #Begin: 160328-00023
+         IF gb_auto_reset_int_format THEN
+            IF ls_azzi090_type MATCHES "N*" AND (NOT cl_null(ls_azzi090_format)) THEN #數值型態且有設定format
+               DISPLAY "Info:auto reset field format:",g_dzcc_d[p_index].dzcc003," old(",l_format,") new(",ls_azzi090_format,")"
+               LET l_format = ls_azzi090_format
+
+               #強制更新設計資料
+               UPDATE dzcc_t SET dzcc010 = l_format
+                  WHERE dzcc001 = g_dzcc_d[p_index].dzcc001 AND dzcc002 = g_dzcc_d[p_index].dzcc002 AND dzcc009 = g_dzcc_d[p_index].dzcc009
+ 
+               IF ls_azzi090_format.getLength() > l_grid_width THEN
+                  LET l_grid_width = ls_azzi090_format.getLength()
+                  DISPLAY "l_grid_width(reset) = ",l_grid_width
+               END IF
+            END IF
+         END IF
+         #End: 160328-00023
+
+         #20151005 -Begin-
+         IF NOT cl_null(l_format) THEN 
+            CALL p_table_child.setAttribute("format", l_format)
+         END IF
+         #20151005 -End-
+         
+      WHEN "03"   #ComboBox
+         CALL p_table_child.setAttribute("widget", "ComboBox")
+         CALL p_table_child.setAttribute("sizePolicy", "dynamic")
+         CALL p_table_child.setAttribute("queryEditable", "true")
+         #Begin:2015/06/16 by Hiko
+         IF NOT cl_null(l_case) AND l_case<>"none" THEN
+            CALL p_table_child.setAttribute("case", l_case) 
+         END IF
+         #End:2015/06/16 by Hiko
+         CALL p_table_child.setAttribute("fieldType", "NON_DATABASE") #20150911
+   END CASE
+  
+   #20151005 -Begin-
+   #不共用主程式多語言時,set lstrtitle=false
+   IF g_dzca_m.dzca008 = 'Y' THEN
+      CALL p_table_child.setAttribute("lstrtitle", "false")
+   ELSE
+      CALL p_table_child.setAttribute("lstrtitle", "true")
+   END IF
+   #20151005 -End-
+   
+   #後續加入的元件 posX 位置,將隨此元件的寬度增加
+   LET g_posX = g_posX + l_grid_width
+   LET g_posY = 0
+   LET g_field_num = g_field_num + 1 #計算表格內欄位的個數-->No.000002
+   DISPLAY "###########g_field_num = ",g_field_num   
+   LET g_grid_width = g_grid_width + l_grid_width
+END FUNCTION
+
+#+ 取得欄位資料型態
+FUNCTION sadzp210_get_field_datatype(p_gztz001, p_gztz002)
+   DEFINE l_datatype    STRING                 #欄位型態名稱
+   DEFINE p_gztz001     LIKE gztz_t.gztz001    #資料表代碼
+   DEFINE p_gztz002     LIKE gztz_t.gztz002    #欄位代碼
+   DEFINE l_gztz003     LIKE gztz_t.gztz003    #欄位型態代碼
+
+   LET l_datatype = ""
+   
+   #取得欄位datatype的代碼,方便下面轉換正確的datatype類型
+   SELECT gztz003 INTO l_gztz003 FROM gztz_t 
+     WHERE gztz001 = p_gztz001 AND gztz002 = p_gztz002
+
+   IF cl_null(l_gztz003) THEN
+      RETURN l_datatype
+   END IF
+   
+   #4fd檔上欄位的sqltype屬性,目前看起來是參照.sch來設置的
+   #gztz_t的資料來源就是.sch
+   #而欄位如果不為NULL,gztz003的值會加上256,所以這裡取餘數判斷
+   LET l_gztz003 = l_gztz003 MOD 256
+
+   #以下參照資料來源:
+   #http://10.40.40.30/genero/2.40/doc/fgl/User/DatabaseSchema.html
+   #http://publib.boulder.ibm.com/infocenter/idshelp/v117/index.jsp?topic=%2Fcom.ibm.gen_busug.doc%2Fc_fgl_DatabaseSchema_018.htm
+   CASE
+      WHEN l_gztz003 = 0 
+           LET l_datatype = "CHAR"
+      WHEN l_gztz003 = 1 
+           LET l_datatype = "SMALLINT"
+      WHEN l_gztz003 = 2 
+           LET l_datatype = "INTEGER"
+      WHEN l_gztz003 = 3
+           LET l_datatype = "FLOAT"
+      WHEN l_gztz003 = 4
+           LET l_datatype = "SMALLFLOAT"
+      WHEN l_gztz003 = 5
+           LET l_datatype = "DECIMAL"
+      WHEN l_gztz003 = 7 
+           LET l_datatype = "DATE"
+      WHEN l_gztz003 = 8 
+           LET l_datatype = "MONEY"     
+      WHEN l_gztz003 = 10 
+           LET l_datatype = "DATETIME" 
+      WHEN l_gztz003 = 11 
+           LET l_datatype = "BYTE"
+      WHEN l_gztz003 = 12 
+           LET l_datatype = "TEXT"     
+      WHEN l_gztz003 = 13 OR l_gztz003 = 201 OR l_gztz003 = 202
+           LET l_datatype = "VARCHAR"     
+      WHEN l_gztz003 = 14 
+           LET l_datatype = "INTERVAL"          
+      WHEN l_gztz003 = 45 
+           LET l_datatype = "BOOLEAN"            
+      WHEN l_gztz003 = 52 
+           LET l_datatype = "BIGINT"     
+      OTHERWISE
+           LET l_datatype = ""
+   END CASE
+
+   RETURN l_datatype
+END FUNCTION
+
+#+ 調整Table和VBox、Grid、Form的寬度
+PRIVATE FUNCTION sadzp210_container_resize(p_table_node)
+   DEFINE p_table_node   om.DomNode          #table的節點domNode
+   DEFINE l_vbox_node    om.DomNode          #VBox的節點domNode
+   DEFINE l_grid_node    om.DomNode          #Grid的節點domNode
+   DEFINE l_form_node    om.DomNode          #Form的節點domNode
+   DEFINE l_grid_width   LIKE type_t.num10   #目前要resize的寬度大小
+
+   #以下各tag節點的尋找皆以qry_template目前的命名為主
+   #如果有更動到template的各相關的元件命名,則這裡也需要再更新
+
+   #如果畫面樣板中表格的寬度尺寸<(表格欄位的寬度和+表格欄位個數+2)再調整容器處吋-->No.000002
+   IF p_table_node.getAttribute("gridWidth") < g_grid_width + 3 + g_field_num + 1 + 2 THEN 
+   
+      #先放大table元件的寬度,依目前已使用的寬度再加上10為table寬度
+      #LET l_grid_width = g_grid_width + 10
+
+      #表格容器尺寸=表格欄位的寬度和+選擇欄位寬度+表格欄位個數+選擇欄位個數+2 -->No.000002
+      LET l_grid_width = g_grid_width + 3 + g_field_num + 1 + 2 
+      
+      CALL p_table_node.setAttribute("gridWidth", l_grid_width)
+      
+      #找出VBox的節點位置domNode
+      LET l_vbox_node = sadzp210_get_domNode(gnode_4fd, "VBox", "name", "VBox1") 
+      CALL l_vbox_node.setAttribute("gridWidth", l_grid_width)
+      
+      #找出Grid的節點位置domNode,這個元件和table寬度應該沒有直接關係
+      #這裡單純是為了4fd檔開起來寬度大小一致,好看
+      LET l_grid_node = sadzp210_get_domNode(gnode_4fd, "Grid", "name", "Grid5") 
+      CALL l_grid_node.setAttribute("gridWidth", l_grid_width)
+      
+      #找出Form的節點位置domNode
+      LET l_grid_width = l_grid_width + 2
+      LET l_form_node = sadzp210_get_domNode(gnode_4fd, "Form", "name", "Form") 
+      CALL l_form_node.setAttribute("gridWidth", l_grid_width)
+   END IF
+END FUNCTION
+
+#+ 實際生成q_xxx 4fd畫面檔
+PRIVATE FUNCTION sadzp210_gen_4fd_file() 
+   DEFINE ls_code_filename        STRING
+   
+   #產出程式路徑
+   LET ls_code_filename = os.Path.join(FGL_GETENV("COM"), g_module)
+   LET ls_code_filename = os.Path.join(ls_code_filename, "4fd")
+   LET ls_code_filename = os.Path.join(ls_code_filename, g_dzca001 || ".4fd")
+   DISPLAY "產生檔位置:", ls_code_filename
+
+   #如果開窗4fd先前已經存在,則先將4fd更名
+   IF os.Path.exists(ls_code_filename) THEN
+      IF NOT os.Path.rename(ls_code_filename, ls_code_filename||".bak") THEN
+         DISPLAY "開窗4fd檔先前已經存在,但無法更名！"
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  "adz-00174"
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] =  "rename"
+         LET g_errparam.replace[2] = ls_code_filename
+         CALL cl_err()
+      END IF
+   END IF
+   
+   #實際在路徑下產出.4fd檔
+   CALL gnode_4fd.writeXml(ls_code_filename)
+   
+   IF NOT os.Path.exists(ls_code_filename) THEN
+      DISPLAY "The ", ls_code_filename, " is not exist."
+   END IF
+
+   #修改產生的開窗4fd檔權限
+   IF NOT os.Path.chrwx(ls_code_filename, 511) THEN
+      DISPLAY "產生的開窗4fd檔無法修改權限為511"
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "adz-00174"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] =  "chmod"
+      LET g_errparam.replace[2] = ls_code_filename
+      CALL cl_err()
+   END IF
+END FUNCTION
+
+##20140806:整個function重寫,for 可處理多筆qry
+###+ 進行q_xxx開窗程式的4gl和4fd檔
+##PUBLIC FUNCTION sadzp210_generate_qry_old(p_dzca001)
+##   DEFINE p_dzca001      LIKE dzca_t.dzca001
+##   DEFINE l_cmd          STRING   #130201 By benson 
+##   DEFINE l_msg          STRING
+##   DEFINE l_chk          LIKE type_t.num5
+##   DEFINE l_cnt          LIKE type_t.num5
+##
+##
+##   LET p_dzca001 = p_dzca001 CLIPPED
+##  
+##   LET l_cnt = 1
+##   
+##   #維護azzi070單身資料(模組內子作業設定)
+##   SELECT COUNT(*) INTO l_cnt FROM gzzn_t 
+##    WHERE gzzn001 = "QRY" AND gzzn002 = p_dzca001
+##  
+##   IF l_cnt = 0 THEN
+##      INSERT INTO gzzn_t(gzzn001,gzzn002,gzzn003,gzzn004)
+##         VALUES("QRY",p_dzca001,"Y","N")
+##   END IF
+##   
+##   LET l_cmd = "r.r adzp210 " || p_dzca001
+##   DISPLAY l_cmd 
+##   CALL cl_cmdrun_openpipe('r.r',l_cmd,FALSE) RETURNING l_chk,l_msg
+##
+##   DISPLAY "CALL s_azzi070_gen_qry()"
+##   CALL s_azzi070_gen_qry() #產生q_total
+##
+##   IF NOT l_chk THEN #有錯
+##      DISPLAY l_cmd || " " || "fail:",l_msg
+##      RETURN FALSE
+##   ELSE 
+##      DISPLAY l_cmd || " " || "ok"
+##      RETURN TRUE
+##   END IF
+##
+##  #130201 By benson --- E
+##END FUNCTION
+ 
+
+#+ 進行q_xxx開窗程式的4gl和4fd檔 #20141007 重寫版
+PUBLIC FUNCTION sadzp210_generate_qry(p_dzca001)
+   DEFINE l_str          STRING,
+          l_tok          base.StringTokenizer,
+          sbuf_msg       base.StringBuffer, #收集錯誤訊息
+          li_idx         LIKE type_t.num5
+   DEFINE p_dzca001      LIKE dzca_t.dzca001
+   DEFINE l_cmd          STRING   #130201 By benson 
+   DEFINE l_msg          STRING
+   DEFINE l_chk          LIKE type_t.num5
+   DEFINE l_cnt          LIKE type_t.num5
+   #20141007 -Begin-
+   DEFINE l_dzca002      LIKE dzca_t.dzca002
+   DEFINE l_gzzn001      LIKE gzzn_t.gzzn001
+   DEFINE ls_sql         STRING
+   DEFINE lb_have_cust   BOOLEAN
+   #20141007 -End-
+   DEFINE li_dzca_cnt    SMALLINT       #有幾筆dzca資料
+
+   LET sbuf_msg = base.StringBuffer.CREATE()
+   LET g_qry_gen_errmsg=NULL
+
+  
+ TRY
+ 
+	  
+   #若有客製資料,則模組指定為cqry,否則為qry
+   CALL sadzp210_check_qry_have_cust(p_dzca001) RETURNING li_dzca_cnt ,lb_have_cust
+   IF lb_have_cust THEN
+      LET l_str = UPSHIFT(g_cust_module)
+      LET l_dzca002 = 'c'
+   ELSE
+      LET l_str = UPSHIFT(g_std_module)
+      LET l_dzca002 = 's'
+   END IF
+   LET l_gzzn001 = l_str
+
+   IF sadzp210_check_qry_hardcode(p_dzca001,l_dzca002) THEN
+      DISPLAY 'Warning: this qry(',p_dzca001,') is hardcode qry, skip generate'
+      RETURN TRUE
+   END IF
+ 
+   #維護azzi070單身資料
+   IF sadzp210_maintain_gzzn_t(p_dzca001,l_gzzn001,"insert") THEN #160223-00028
+     #do nothing,暫時by pass
+   END IF
+
+  #LET l_cmd = "r.r adzp210 " , p_dzca001 , " " , g_gen42s_flag CLIPPED #20140903
+   LET l_cmd = "r.r adzp210 " , p_dzca001 CLIPPED
+
+   DISPLAY l_cmd 
+   CALL cl_cmdrun_openpipe('r.r',l_cmd,FALSE) RETURNING l_chk,l_msg
+   IF NOT l_chk THEN  #有錯誤                                                                               
+      CALL sbuf_msg.APPEND(l_msg) 
+   END IF
+
+ #IF g_bgjob = "Y" THEN #20140808:背景呼叫時先不呼叫s_azzi070_gen_qry,改由patch工具自行在最後呼叫一次即可
+  IF cl_null(g_qry_gen_qtotal) THEN LET g_qry_gen_qtotal = "N" END IF #20150325
+  IF g_bgjob = "Y" OR (g_qry_gen_qtotal = "N")  THEN #20141230
+    #DISPLAY "skip call s_azzi070_gen_qry()"
+    #do nothing
+  ELSE
+    #Begin: 160223-00028
+    IF lb_have_cust THEN #客製
+      RUN 'r.l cqry'
+    ELSE                 #標準
+      RUN 'r.l qry'   
+    END IF
+    #End: 160223-00028
+  END IF
+
+  IF sbuf_msg.getLength()>0 THEN #表示有錯誤
+     DISPLAY "sadzp210_generate_qry fail:",sbuf_msg.toString()
+     LET g_qry_gen_errmsg = sbuf_msg.toString()
+     RETURN FALSE
+  ELSE 
+     DISPLAY "sadzp210_generate_qry ok:"
+     RETURN TRUE
+  END IF
+
+ CATCH
+    DISPLAY "CATCH ERROR:","SQLCA.sqlcode=",SQLCA.sqlcode
+    RETURN FALSE
+
+ END TRY
+
+END FUNCTION
+
+#+ 判斷該欄位參照的table名稱 #20140710:madey add
+PUBLIC FUNCTION sadzp210_define_table_name(ps_field)
+   DEFINE ps_field     LIKE dzeb_t.dzeb002
+   DEFINE ls_table     LIKE dzeb_t.dzeb001
+   DEFINE li_cnt       LIKE type_t.num5
+   
+  TRY
+
+
+   LET ls_table = NULL #20140729
+
+   #20151005 確認筆數,正常是只有1筆
+   #dzeb_t:資料表欄位資料檔,找出這個欄位隸屬的資料表代碼
+   LET li_cnt = 0
+   SELECT COUNT(*) INTO li_cnt FROM dzeb_t
+     WHERE dzeb002 = ps_field
+
+   CASE 
+      WHEN li_cnt = 0
+        #DISPLAY "ERROR: field(",ps_field, ") not found in dzeb_t. Please check r.t"
+         DISPLAY "ERROR:",g_dzca_m.dzca001," field(",ps_field, ") not found in dzeb_t. Please check r.t" #160517-00007
+      WHEN li_cnt = 1
+         SELECT dzeb001 INTO ls_table FROM dzeb_t
+           WHERE dzeb002 = ps_field
+      WHEN li_cnt > 1
+         SELECT dzeb001 INTO ls_table FROM dzeb_t
+           WHERE dzeb002 = ps_field 
+             AND ROWNUM=1
+        #DISPLAY "Warning: field(",ps_field, ") data in dzeb_t >1. Please check r.t"
+         DISPLAY "Warning:",g_dzca_m.dzca001," field(",ps_field, ") data in dzeb_t >1. Please check r.t" #160517-00007
+   END CASE
+     
+
+   #DISPLAY "ls_table:",ls_table
+   RETURN ls_table
+
+  CATCH
+     DISPLAY "ERROR: call sadzp210_define_table_name(",ps_field,") fail,errmsg=",cl_getmsg(SQLCA.sqlcode,g_lang)
+     RETURN NULL
+
+  END TRY
+
+END FUNCTION
+
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 檢查qry是否有存在且是否被客製過
+# Input parameter : qry_id
+# Return code     : COUNT      0:根本沒有qry設計資料
+#                              1:1筆設計資料
+#                              2:2筆設計資料
+# Return code     : BOOLEAN    TRUE:有被客製 FALSE:沒有 
+# Date & Author   : #20141007
+##########################################################################
+#+檢查qry是否有存在且是否被客製過
+PUBLIC FUNCTION sadzp210_check_qry_have_cust(p_dzca001)
+   DEFINE p_dzca001    LIKE dzca_t.dzca001
+   DEFINE li_cnt       LIKE type_t.num5
+   DEFINE li_cnt_cust  LIKE type_t.num5
+   DEFINE lb_result    BOOLEAN
+
+
+ TRY
+
+   #確認qry是否存在
+   LET li_cnt = 0
+   SELECT COUNT(1) INTO li_cnt FROM dzca_t 
+    WHERE dzca001=p_dzca001
+   IF li_cnt > 0 THEN
+      LET li_cnt_cust = 0
+      SELECT COUNT(1) INTO li_cnt_cust FROM dzca_t 
+       WHERE dzca001=p_dzca001 AND dzca002='c'
+      IF li_cnt_cust > 0 THEN
+         LET lb_result = TRUE
+      ELSE
+         LET lb_result = FALSE
+      END IF
+   ELSE
+      LET lb_result = FALSE
+   END IF
+   
+   RETURN li_cnt,lb_result
+ 
+
+ CATCH
+    DISPLAY "ERROR:sadzp210_check_qry_have_cust(",p_dzca001,"),SQLCA.sqlcode=",SQLCA.sqlcode
+    RETURN FALSE
+ END TRY
+
+END FUNCTION
+
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 取出行業別資料
+# Input parameter : NONE
+# Return code     : dymamic arrar ,行業別清單
+# Date & Author   : #20150114 by madey
+##########################################################################
+PUBLIC FUNCTION sadzp210_get_industry_data()
+   DEFINE ld_industry_data   DYNAMIC ARRAY OF RECORD 
+       gzoi001  LIKE gzoi_t.gzoi001,
+       gzoi002  LIKE gzoi_t.gzoi002,
+       gzoistus LIKE gzoi_t.gzoistus
+   END RECORD  
+   DEFINE li_cnt LIKE type_t.num5
+
+
+   LET li_cnt = 1
+   DECLARE industry_data_cs CURSOR FOR 
+      SELECT gzoi001,gzoi002,gzoistus
+         FROM gzoi_t
+
+   FOREACH industry_data_cs INTO ld_industry_data[li_cnt].*
+      LET li_cnt = li_cnt + 1 
+   END FOREACH 
+   CALL ld_industry_data.deleteElement(li_cnt)
+
+   RETURN ld_industry_data
+
+END FUNCTION
+
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 檢查qry是否為hard code
+# Input parameter : qry_id
+#                 : cust flag (s/c/NULL)
+# Return code     : BOOLEAN    TRUE:是  FALSE:否
+# Date & Author   : #20150129 by madey
+##########################################################################
+#+檢查qry是否為hard code
+PUBLIC FUNCTION sadzp210_check_qry_hardcode(p_dzca001,p_dzca002)
+   DEFINE p_dzca001    LIKE dzca_t.dzca001
+   DEFINE p_dzca002    LIKE dzca_t.dzca002
+   DEFINE l_dzca006    LIKE dzca_t.dzca006 #是否hardcode
+   DEFINE lb_hardcode  BOOLEAN
+
+
+ TRY
+   LET l_dzca006 = NULL
+
+   IF NOT cl_null(p_dzca002) THEN
+      SELECT dzca006 INTO l_dzca006 FROM dzca_t 
+       WHERE dzca001=p_dzca001 AND dzca002=p_dzca002
+   ELSE
+      #若dzca002沒有指定時,先抓看看客製,若沒有資料則抓標準
+      SELECT dzca006 INTO l_dzca006 FROM dzca_t 
+         WHERE dzca001=p_dzca001 AND dzca002='c'
+      IF SQLCA.SQLCODE THEN
+         SELECT dzca006 INTO l_dzca006 FROM dzca_t 
+          WHERE dzca001=p_dzca001 AND dzca002='s'
+      END IF
+   END IF
+
+   CASE l_dzca006
+     WHEN 'Y'
+         LET lb_hardcode = TRUE
+     OTHERWISE
+         LET lb_hardcode = FALSE
+   END CASE
+   
+   RETURN lb_hardcode
+ 
+
+ CATCH
+    DISPLAY "ERROR:sadzp210_check_qry_hardcode(",p_dzca001,"),SQLCA.sqlcode=",SQLCA.sqlcode
+    RETURN FALSE
+ END TRY
+
+END FUNCTION
+
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 刪除qry設計資料
+# Input parameter : qry_id
+#                 : cust flag  s:標準 c:客製 null:all
+# Return code     : BOOLEAN    TRUE:正常  FALSE:異常
+#                 : err_msg    錯誤訊息
+# Date & Author   : #20150701 by madey
+##########################################################################
+#+刪除qry設計資料
+PUBLIC FUNCTION sadzp210_del_qry_design_data(p_dzca001,p_dzca002)
+   DEFINE p_dzca001      LIKE dzca_t.dzca001
+   DEFINE p_dzca002      LIKE dzca_t.dzca002
+ 
+   DEFINE lb_result      BOOLEAN
+   DEFINE ls_err_msg     STRING
+
+   DEFINE ls_sql         STRING
+   DEFINE ls_where_cond_dzca  STRING
+   DEFINE ls_where_cond_dzcb  STRING
+   DEFINE ls_where_cond_dzcc  STRING
+
+   DEFINE li_dzca_cnt      LIKE type_t.num5,
+          lb_have_cust     BOOLEAN,
+          lb_std_to_cust   BOOLEAN
+
+   CALL sadzp210_check_qry_have_cust(p_dzca001) RETURNING li_dzca_cnt ,lb_have_cust
+   IF li_dzca_cnt = 0 THEN
+      DISPLAY "Warning: no r.q design data!"
+      RETURN TRUE,NULL
+   END IF
+   IF lb_have_cust AND li_dzca_cnt > 1 THEN
+      LET lb_std_to_cust = TRUE 
+   ELSE
+      LET lb_std_to_cust = FALSE 
+   END IF
+
+   #p_dzca002為空表示 不管s,c都做
+   IF NOT cl_null(p_dzca002) THEN
+     LET ls_where_cond_dzca = " AND dzca002='",p_dzca002,"'"
+     LET ls_where_cond_dzcb = " AND dzcb004='",p_dzca002,"'"
+     LET ls_where_cond_dzcc = " AND dzcc009='",p_dzca002,"'"
+   ELSE
+     LET ls_where_cond_dzca = NULL
+     LET ls_where_cond_dzcb = NULL
+     LET ls_where_cond_dzcc = NULL
+   END IF
+
+   TRY
+
+       #刪除dzca_t, dzcb_t, dzcc_t
+       LET ls_sql = "DELETE FROM dzca_t  WHERE dzca001 = '",p_dzca001,"'"
+       LET ls_sql = ls_sql , ls_where_cond_dzca
+       PREPARE sadzp210_del_dzca_pre FROM ls_sql
+       
+       LET ls_sql = "DELETE FROM dzcb_t  WHERE dzcb001 = '",p_dzca001,"'"
+       LET ls_sql = ls_sql , ls_where_cond_dzcb
+       PREPARE sadzp210_del_dzcb_pre FROM ls_sql
+       
+       LET ls_sql = "DELETE FROM dzcc_t  WHERE dzcc001 = '",p_dzca001,"'"
+       LET ls_sql = ls_sql , ls_where_cond_dzcc
+       PREPARE sadzp210_del_dzcc_pre FROM ls_sql
+       
+       EXECUTE sadzp210_del_dzca_pre
+       EXECUTE sadzp210_del_dzcb_pre
+       EXECUTE sadzp210_del_dzcc_pre
+
+       #刪除多語言檔
+       IF p_dzca002 = 'c' AND lb_std_to_cust THEN
+          #表示屬於標準轉客製的開窗,且現在是要做還原標準的動作，因為多語言是標準及客製共用的,此情境下不可刪除
+       ELSE
+          LET ls_sql = "DELETE FROM dzcal_t  WHERE dzcal001 = '",p_dzca001,"'"
+          PREPARE sadzp210_del_dzcal_pre FROM ls_sql
+          
+          LET ls_sql = "DELETE FROM dzcbl_t  WHERE dzcbl001 = '",p_dzca001,"'"
+          PREPARE sadzp210_del_dzcbl_pre FROM ls_sql
+          
+          EXECUTE sadzp210_del_dzcal_pre
+          EXECUTE sadzp210_del_dzcbl_pre
+       END IF
+
+       RETURN TRUE,NULL
+   
+
+   CATCH
+     
+       LET ls_err_msg = "Error: delete r.q design data fail,SQLCA.sqlcode=",SQLCA.sqlcode
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code =  "adz-00023"
+       LET g_errparam.extend = ""
+       LET g_errparam.popup = TRUE
+       LET g_errparam.replace[1] =  ls_err_msg
+       CALL cl_err()
+       RETURN FALSE,ls_err_msg
+   
+   END TRY
+    
+END FUNCTION
+
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 刪除qry實體檔案
+# Input parameter : qry_id
+#                 : cust flag  s:標準 c:客製 null:all
+# Date & Author   : #20150701 by madey
+##########################################################################
+#+刪除qry實體檔案
+PUBLIC FUNCTION sadzp210_del_qry_file(p_dzca001,p_dzca002)
+   DEFINE p_dzca001      LIKE dzca_t.dzca001
+   DEFINE p_dzca002      LIKE dzca_t.dzca002
+   DEFINE ls_cmd         STRING
+   DEFINE ls_path        STRING
+   
+
+   #刪除實體檔案
+   LET ls_cmd = "rm -f ","*/",p_dzca001,".* ",
+                         "*/*/",p_dzca001,".* ",
+                         "*/*/*/",p_dzca001,".* ",
+                         "42m/*_",p_dzca001,".* ",
+                         " >/dev/null 2>&1"
+
+   #標準目錄
+   IF p_dzca002='s' OR cl_null(p_dzca002) THEN
+      LET ls_path = FGL_GETENV(UPSHIFT(g_std_module)) 
+      DISPLAY "change_dir:",ls_path , ASCII 10 ,ls_cmd
+     #IF cl_change_dir(ls_path) THEN
+      IF os.Path.chdir(ls_path) THEN #160726-00037
+         RUN ls_cmd  
+      END IF
+   END IF
+
+   #客製目錄
+   IF p_dzca002='c' OR cl_null(p_dzca002) THEN
+      LET ls_path = FGL_GETENV(UPSHIFT(g_cust_module)) 
+      DISPLAY "change_dir:",ls_path , ASCII 10 ,ls_cmd
+     #IF cl_change_dir(ls_path) THEN
+      IF os.Path.chdir(ls_path) THEN #160726-00037
+         RUN ls_cmd  
+      END IF
+   END IF
+
+END FUNCTION
+
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 同步r.q設計資料(僅for hardcode qry),由adzp063刪除工具呼叫,可適用adzp063的"刪除"及"客製還原標準"選項
+# Input parameter : qry_id
+#                 : type      delete:刪除模式   cust_to_std:客製還原標準模式
+# Return code     : BOOLEAN   TRUE:正常  FALSE:異常
+#                   INTEGER   重產模式  0:不用重產  1:透過r.q重產  2:透過r.c3重產
+#                   STRING    錯誤訊息
+# Date & Author   : #20150701 by madey
+##########################################################################
+#+同步r.q設計資料
+#讓刪除工具(adzp063)在還原成非hardcode或客製退回標準時呼叫
+PUBLIC FUNCTION sadzp210_sync_qry(p_dzca001,p_type)
+   DEFINE p_dzca001        LIKE dzca_t.dzca001,
+          p_type           STRING    
+   DEFINE rs_err_msg       STRING,
+          rb_result        BOOLEAN,
+          ri_regen         LIKE type_t.num5
+   DEFINE li_dzca_cnt      LIKE type_t.num5,
+          lb_have_cust     BOOLEAN,
+          lb_std_to_cust   BOOLEAN
+   DEFINE lb_result        BOOLEAN
+   DEFINE ls_err_msg       STRING
+   DEFINE l_dzca002        LIKE dzca_t.dzca002,
+          l_dzca006        LIKE dzca_t.dzca006
+   DEFINE l_cnt            LIKE type_t.num5
+   
+   CALL sadzp210_check_qry_have_cust(p_dzca001) RETURNING li_dzca_cnt ,lb_have_cust
+   IF li_dzca_cnt = 0 THEN
+      LET rs_err_msg = "Warning: no r.q design data!"
+      LET rb_result  = TRUE
+      LET ri_regen   = 0
+      GOTO _return
+   END IF
+   IF lb_have_cust AND li_dzca_cnt > 1 THEN
+      LET lb_std_to_cust = TRUE 
+   ELSE
+      LET lb_std_to_cust = FALSE 
+   END IF
+
+   #不管是純標準or純客製or標準轉客製,至少要有一筆hard code=y的,才可往下操作
+   IF sadzp210_check_qry_hardcode(p_dzca001,"s") OR
+      sadzp210_check_qry_hardcode(p_dzca001,"c") 
+   THEN
+      #do nothing, 有就好
+   ELSE
+      #只有hard code qry才能操作這個功能
+      LET rs_err_msg = cl_getmsg('adz-00578',g_lang)
+      LET rb_result  = FALSE
+      LET ri_regen   = 0
+      GOTO _return
+   END IF
+
+   CASE p_type
+      WHEN "delete"
+        #透過adzp063刪除dza*_t的設計資料時被呼叫,此處要配合是將hardcode還原為N,並透過r.q樣版重產qry/4gl 
+
+        #1.將目前這個qry的hardcode設為N
+         IF lb_have_cust THEN
+            LET l_dzca002='c' 
+         ELSE
+            LET l_dzca002='s'
+         END IF
+         LET l_dzca006='N' 
+
+         DISPLAY "sadzp210_sync_qry", " update dzca006=N"
+         UPDATE dzca_t SET dzca006=l_dzca006 WHERE dzca001=p_dzca001 AND dzca002=l_dzca002
+         IF SQLCA.SQLCODE THEN
+            LET rs_err_msg = "Error:update dzca006 fail ",cl_getmsg(SQLCA.SQLCODE,g_lang)
+            LET rb_result=FALSE
+            GOTO _return
+         END IF
+      
+         #2 透過r.q樣版重產這個qry
+         DISPLAY "sadzp210_sync_qry", " call sadzp210_generate_qry"
+         IF NOT sadzp210_generate_qry(p_dzca001) THEN 
+            LET rs_err_msg = "Error:",p_dzca001," ",cl_getmsg('adz-00125',g_lang)
+            LET rb_result=FALSE
+            GOTO _return
+         END IF
+
+         #正常結束
+         LET rs_err_msg = NULL
+         LET rb_result  = TRUE
+         LET ri_regen   = 0
+         GOTO _return
+
+      WHEN "cust_to_std"
+         #檢查是否是 標準轉客製
+         IF NOT lb_std_to_cust THEN 
+            LET rs_err_msg = cl_getmsg('adz-00546',g_lang) #只有標準轉客製的開窗才可執行此功能
+            LET rb_result  = FALSE
+            LET ri_regen   = 0
+            GOTO _return
+         END IF
+
+         #刪除r.q設計資料(只刪客製)
+         DISPLAY "sadzp210_sync_qry", " delete qry design data (c)"
+         CALL sadzp210_del_qry_design_data(p_dzca001,'c') RETURNING lb_result,ls_err_msg
+         IF NOT lb_result THEN
+            LET rs_err_msg = ls_err_msg
+            LET rb_result  = FALSE
+            LET ri_regen   = 0
+            GOTO _return
+         END IF
+
+       ##由刪除工具處理刪除 -Begin-
+        #刪除實體檔案 (只刪客製)
+        #CALL sadzp210_del_qry_file(g_dzca_m.dzca001,'c')
+       ##由刪除工具處理刪除 -End-
+
+         #要重新產生qry 4gl/4fd檔案,因為當初在標準轉客製時,標準的42m在r.c時會被刪除
+         #確認標準那筆qry是否為hard code
+         IF sadzp210_check_qry_hardcode(p_dzca001,"s") THEN
+            #標準是hard code, 
+            #透過adzp063自行r.c3產生
+            
+            #更新gzzn_t資料 , 並重新r.l 
+            DISPLAY "sadzp210_sync_qry", " update gzzn_t"
+            IF sadzp210_maintain_gzzn_t(p_dzca001,UPSHIFT(g_std_module),"insert") THEN #160223-00028
+              #do nothing,暫時by pass
+            END IF
+
+            #補充說明
+            #c --> s ,應該要重作qry.42x及cqry.42x, 
+            #但adzp063還原標準的流程中,會做r.c3 --> 會觸發r.l qry
+            #及r.l xxxx ALL                     --> 會再觸發r.l qry
+            #此處需要特別做r.l qry,但是由於transaction還沒commit,所以改寫到sadzp063內
+            #RUN "r.l cqry"
+
+            LET rs_err_msg = NULL
+            LET rb_result  = TRUE
+            LET ri_regen   = 2
+            GOTO _return
+         ELSE
+            #標準非hard code, 
+            #透過rqy產生
+            LET g_qry_gen_qtotal = "N" #由刪除工具處理g_qtotla及r.l
+            DISPLAY "sadzp210_sync_qry", " call sadzp210_generate_qry"
+            IF NOT sadzp210_generate_qry(p_dzca001) THEN 
+               DISPLAY 'call sadzp210_generate_qry() Fail!'
+               LET rs_err_msg = 'r.q regen 4gl/4fd fail!'
+               LET rb_result  = FALSE
+               LET ri_regen   = 1
+            ELSE
+               DISPLAY 'call sadzp210_generate_qry() Success!'
+               LET rs_err_msg = NULL
+               LET rb_result  = TRUE
+               LET ri_regen   = 1
+            END IF
+           #CALL cl_progress_ing("[Message] gen q_total、link qry")  
+            GOTO _return
+         END IF
+   END CASE
+   
+
+   LABEL _return: 
+      DISPLAY rs_err_msg
+      RETURN rb_result,ri_regen,rs_err_msg
+   
+END FUNCTION
+
+
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 複製r.q設計資料 (由標準 -> 客製)
+# Input parameter : qry_id
+# Return code     : BOOLEAN   TRUE:正常  FALSE:異常
+#                   STRING    錯誤訊息
+# Date & Author   : #20150701 by madey
+##########################################################################
+#+ 複製r.q設計資料 (由標準 -> 客製)
+#讓sadzp060_2.sadzp060_2_after_check_out_for_download在標準轉客製時呼叫
+PUBLIC FUNCTION sadzp210_copy_qry_from_std_to_cust(p_dzca001)
+   DEFINE p_dzca001   LIKE dzca_t.dzca001 
+   DEFINE l_newno     LIKE dzca_t.dzca001 
+   DEFINE l_oldno     LIKE dzca_t.dzca001 
+   
+   DEFINE l_old_cust_flag LIKE dzca_t.dzca002 #20141007 
+   DEFINE l_new_cust_flag LIKE dzca_t.dzca002 #20141007
+   
+   DEFINE l_master    RECORD LIKE dzca_t.*
+   DEFINE l_detail    RECORD LIKE dzcc_t.*
+   DEFINE l_detail2   RECORD LIKE dzcb_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_n         LIKE type_t.num5    
+   DEFINE ls_sql      STRING
+
+   DEFINE l_new_hardcode   LIKE dzca_t.dzca006  #20150701
+  
+   DEFINE rb_result   BOOLEAN
+   DEFINE rs_err_msg  STRING
+
+   LET rb_result = TRUE
+   LET l_new_cust_flag = "c"
+   LET l_newno = p_dzca001
+                
+   IF sadzp210_check_qry_hardcode(p_dzca001,"s") THEN
+      LET l_new_hardcode = "Y"
+   ELSE
+      LET l_new_hardcode = "N"
+   END IF
+
+   SELECT COUNT(*) INTO l_n FROM dzca_t WHERE dzca001 = l_newno
+                                          AND dzca002 = l_new_cust_flag
+   IF l_n > 0 THEN
+       GOTO _return
+   END IF
+
+   DISPLAY "sadzp210_copy_qry_from_std_to_cust"," copy dzca_t,dzcb_t,dzcc_t"
+
+   SELECT * INTO l_master.* FROM dzca_t 
+      WHERE dzca001 = p_dzca001
+        AND dzca002 = "s"
+ 
+   LET l_master.dzca001  = l_newno
+   LET l_master.dzca002  = l_new_cust_flag
+   LET l_master.dzcacrtid = g_user
+   LET l_master.dzcacrtdp = g_dept
+   LET l_master.dzcacrtdt = cl_get_current()
+   LET l_master.dzcaownid = g_user 
+   LET l_master.dzcaowndp = g_dept 
+   LET l_master.dzcamodid = g_user
+   LET l_master.dzcamoddt = cl_get_current()
+   #LET l_master.dzcastus = 'Y'#忽略狀態碼 
+   LET l_master.dzca006  = l_new_hardcode #20150701
+   
+   INSERT INTO dzca_t VALUES (l_master.*) #複製單頭
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Insert error! dzca_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET rb_result = FALSE
+      LET rs_err_msg = g_errparam.EXTEND ,",SQLCA.sqlcode=",SQLCA.sqlcode
+      GOTO _return
+   END IF
+
+   #注意: 標準及客製的多語言資料是共用的,此處不需要額外進行拷貝
+  
+   DELETE FROM dzcc_t WHERE dzcc001 = l_master.dzca001
+                        AND dzcc009 = l_master.dzca002
+   LET ls_sql = "SELECT * FROM dzcc_t WHERE  ",
+               " dzcc001 = '",p_dzca001,"'",
+   	       " AND dzcc009 ='s'"
+ 
+   DECLARE adzi210_copy_std CURSOR FROM ls_sql
+ 
+   FOREACH adzi210_copy_std INTO l_detail.*
+      LET l_detail.dzcc001 = l_newno
+      LET l_detail.dzcc009 = l_new_cust_flag
+      
+      INSERT INTO dzcc_t VALUES (l_detail.*) #複製單身
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert error!dzcc_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET rb_result = FALSE
+         LET rs_err_msg = g_errparam.EXTEND ,",SQLCA.sqlcode=",SQLCA.sqlcode
+         GOTO _return
+      END IF
+      
+   END FOREACH
+
+   DELETE FROM dzcb_t WHERE dzcb001 = l_master.dzca001
+                        AND dzcb004 = l_master.dzca002 
+   LET ls_sql = "SELECT * FROM dzcb_t WHERE  ",
+               " dzcb001 = '",p_dzca001,"'",
+	       " AND dzcb004 ='s'"
+ 
+   DECLARE adzi210_copy_std2 CURSOR FROM ls_sql
+ 
+   FOREACH adzi210_copy_std2 INTO l_detail2.*
+      LET l_detail2.dzcb001 = l_newno
+      LET l_detail2.dzcb004 = l_new_cust_flag
+      
+      INSERT INTO dzcb_t VALUES (l_detail2.*) #複製單身
+      IF SQLCA.sqlcode THEN
+         
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert error!dzcb_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET rb_result = FALSE
+         LET rs_err_msg = g_errparam.EXTEND ,",SQLCA.sqlcode=",SQLCA.sqlcode
+         GOTO _return
+      END IF
+      
+   END FOREACH
+ 
+   DISPLAY "sadzp210_copy_qry_from_std_to_cust"," update gzzn_t & r.l qry"
+
+   #更新gzzn_t資料 , 並重新r.l 
+   IF sadzp210_maintain_gzzn_t(p_dzca001,UPSHIFT(g_cust_module),"insert") THEN #160223-00028
+     #do nothing,暫時by pass
+   END IF
+ 
+   #20150817 -Begin-
+   #補充說明
+   #s --> c ,應該要重作qry.42x及cqry.42x, 
+   #但簽出流程中,會做r.c3 --> 會觸發r.l cqry
+   #及r.l xxxx ALL        --> 會觸發r.l qry
+   #所以此處不需要特別做r.l qry cqry
+   #         -End-
+   #RUN "r.l qry"  
+   #RUN "r.l cqry"
+
+   LABEL _return: 
+     RETURN rb_result,rs_err_msg
+   
+END FUNCTION
+
+
+#+ 將qry轉成free style #20150701
+#讓下載程式(adzp050)在首次簽出hardcode qry時呼叫
+PUBLIC FUNCTION sadzp210_gen_hardcode_to_freestyle(p_dzca001)
+   DEFINE p_dzca001     LIKE dzca_t.dzca001
+   DEFINE l_str         STRING
+   DEFINE ls_trigger    STRING
+   DEFINE ls_cmd        STRING
+   DEFINE ls_err_msg    STRING
+   DEFINE l_dzca002     LIKE dzca_t.dzca002                                                                   
+   DEFINE l_gzzn001     LIKE gzzn_t.gzzn001
+   DEFINE lb_return     BOOLEAN
+   DEFINE lb_result     BOOLEAN
+   DEFINE li_cnt        LIKE type_t.num5
+   DEFINE lb_have_cust  BOOLEAN
+   #Begin: 161227-00021
+   DEFINE l_dzaa           RECORD LIKE dzaa_t.*
+   DEFINE l_dzab           RECORD LIKE dzab_t.*
+   DEFINE l_dgenv          STRING
+   DEFINE l_erpver         STRING
+   DEFINE l_cust           STRING
+   DEFINE l_sysdate        DATETIME YEAR TO SECOND 
+   DEFINE ls_sql           STRING
+   DEFINE ls_SQLERRMESSAGE STRING
+   #End: 161227-00021
+
+
+
+      #qry有客製以客製為主,否則當做標準
+      #若有客製資料,則模組指定為cqry,否則為qry
+      CALL sadzp210_check_qry_have_cust(p_dzca001) RETURNING li_cnt ,lb_have_cust
+      IF lb_have_cust THEN
+         LET l_str = UPSHIFT(g_cust_module)
+         LET l_dzca002 = 'c'
+      ELSE
+         LET l_str = UPSHIFT(g_std_module)
+         LET l_dzca002 = 's'
+      END IF
+      LET l_gzzn001 = l_str
+ 
+ ##   #確認hardcode打勾才能執行
+ ##   IF sadzp210_check_qry_hardcode(p_dzca001,l_dzca002) THEN
+ ##      #do nothing
+ ##   ELSE
+ ##      CALL cl_ask_pressanykey("adz-00598") 
+ ##      GOTO _RETURN_FLAG 
+ ##   END IF
+      
+ ##   #確認已同時簽出規格及程式
+ ##   LET ls_err_msg=''
+ ##   CALL sadzp060_2_have_checked_out(g_dzca_m.dzca001,"Q","ALL",'1') RETURNING ls_err_msg
+ ##   IF NOT cl_null(ls_err_msg) THEN
+ ##      GOTO _RETURN_FLAG 
+ ##   END IF
+
+      #Begin: 161227-00021
+      #建立一筆規格設計資料(整體規格描述) dzaa_t & dzab_t
+      LET l_dgenv = FGL_GETENV("DGENV")     #"s":標準; "c"客製
+      LET l_erpver = FGL_GETENV("ERPVER")   #產品版本
+      LET l_cust = FGL_GETENV("CUST")       #客戶代號
+      LET l_sysdate = cl_get_current()      #系統時間
+
+      LET ls_sql = "INSERT INTO dzaa_t(dzaa001,dzaa002,dzaa003,dzaa004,dzaa005,",
+                                      "dzaa006,dzaa007,dzaa008,dzaa009,dzaa010,",
+                                      "dzaacrtdt,dzaacrtdp,dzaaowndp,dzaaownid,dzaastus,dzaacrtid)",
+                              " VALUES('",p_dzca001,"',1,'ALL',1,'3',",                  
+                                      "'",l_dgenv,"','N','",l_erpver,"','",l_dzca002,"','",l_cust,"',",
+                                      "?,'",g_dept,"','",g_dept,"','",g_user,"','Y','",g_user,"')"
+      DISPLAY "insert into dzaa_t"
+      PREPARE dzaa_prep1 FROM ls_sql
+      EXECUTE dzaa_prep1 USING l_sysdate
+      IF SQLCA.SQLCODE THEN
+         LET ls_SQLERRMESSAGE = SQLERRMESSAGE
+         LET ls_err_msg = 'Error:',ls_sql,",",ASCII 10,cl_getmsg(SQLCA.SQLCODE,g_lang)," :",ls_SQLERRMESSAGE 
+         LET lb_result = FALSE
+         FREE dzaa_prep1
+         GOTO _RETURN_FLAG 
+      ELSE
+         FREE dzaa_prep1
+      END IF
+
+      LET ls_sql = "INSERT INTO dzab_t(dzab001,dzab002,dzab003,dzab004,dzab005,dzab006,",
+                                      "dzabcrtdt,dzabcrtdp,dzabowndp,dzabownid,dzabstus,dzabcrtid)",
+                              " VALUES('",p_dzca001,"',1,'",l_dgenv,"','ALL','",l_cust,"','',",
+                                      "?,'",g_dept,"','",g_dept,"','",g_user,"','Y','",g_user,"')"
+      DISPLAY "insert into dzab_t"
+      PREPARE dzab_prep1 FROM ls_sql
+      EXECUTE dzab_prep1 USING l_sysdate
+      IF SQLCA.SQLCODE THEN
+         LET ls_SQLERRMESSAGE = SQLERRMESSAGE
+         LET ls_err_msg = 'Error:',ls_sql,",",ASCII 10,cl_getmsg(SQLCA.SQLCODE,g_lang)," :",ls_SQLERRMESSAGE 
+         LET lb_result = FALSE
+         FREE dzab_prep1
+         GOTO _RETURN_FLAG 
+      ELSE
+         FREE dzab_prep1
+      END IF
+      #End: 161227-00021
+      
+      
+      #建立一筆dzax_t資料
+      LET lb_result = ''
+      LET ls_err_msg = ''
+      LET ls_trigger= "call sadzp060_2_ins_dzax(",p_dzca001,",","Q",",",l_dzca002,",'')"
+      DISPLAY ls_trigger
+      CALL sadzp060_2_ins_dzax(p_dzca001, 'Q', l_dzca002, '') RETURNING lb_result,ls_err_msg
+      IF NOT lb_result THEN
+         GOTO _RETURN_FLAG 
+      END IF
+      
+      
+      #建立UI樹
+      LET lb_result = ''
+      LET ls_err_msg= ''
+      DISPLAY "call sadzp168_3(",DOWNSHIFT(l_gzzn001),",",p_dzca001,",",1,",",l_dzca002,")"
+      CALL sadzp168_3(DOWNSHIFT(l_gzzn001), p_dzca001, 1, l_dzca002) RETURNING lb_result,ls_err_msg #解析4fd畫面成設計資料
+      IF NOT lb_result THEN 
+         GOTO _RETURN_FLAG 
+      END IF
+      
+      
+      #產生畫面欄位資訊
+      LET lb_result = ''
+      DISPLAY "call sadzp168_4(",p_dzca001,",1,",l_dzca002,")"
+      CALL sadzp168_4(p_dzca001, 1, l_dzca002) RETURNING lb_result,ls_err_msg #失敗沒關係
+      IF NOT lb_result THEN
+         DISPLAY "WARNING : ",ls_err_msg
+      END IF
+      
+      
+      #產生tab
+      LET lb_result = ''
+      LET ls_trigger=  "call sadzp030_tab_gen(",p_dzca001,",1,'',",l_dzca002,")"
+      DISPLAY ls_trigger
+      CALL sadzp030_tab_gen(p_dzca001,1, "", l_dzca002) RETURNING lb_result
+      IF NOT lb_result THEN
+         LET ls_err_msg = 'Error:',ls_trigger
+         GOTO _RETURN_FLAG 
+      END IF
+      
+      
+      #轉成free style並產生4gl: 呼叫r.c3 (僅重產,不編譯及連結)
+      LET ls_cmd = "r.c3 ",p_dzca001," ","''"," ","1"," ","1"," ",l_dzca002
+      LET ls_trigger = "run r.c3: ",ls_cmd
+      DISPLAY ls_trigger
+      CALL cl_cmdrun_openpipe("r.c3", ls_cmd, FALSE) RETURNING lb_result,ls_err_msg
+      IF NOT lb_result THEN
+         GOTO _RETURN_FLAG 
+      END IF 
+      
+ ##   CALL cl_ask_pressanykey('lib-026') #作業結束,請按任何鍵繼續
+      
+     LABEL _RETURN_FLAG :
+ ##   CALL cl_progress_ing("[Message] analyze 4fd, gen tab, translate free style ,gen 4gl")
+      RETURN lb_result,ls_err_msg
+
+
+END FUNCTION
+
+#160223-00028 add
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 維護gzzn_t(azzi070單身資料)
+# Input parameter : qry_id
+#                 : module  QRY or CQRY
+#                 : adction insert/delete
+# Date & Author   :
+##########################################################################
+#+維護gzzn_t(azzi070單身資料)
+PUBLIC FUNCTION sadzp210_maintain_gzzn_t(p_gzzn002,p_gzzn001,p_action)
+   DEFINE p_gzzn002     LIKE gzzn_t.gzzn002
+   DEFINE p_gzzn001     LIKE gzzn_t.gzzn001
+   DEFINE p_action      STRING
+   DEFINE ls_trigger    STRING
+   DEFINE li_cnt        LIKE type_t.num5
+
+   LET p_gzzn001 = UPSHIFT(p_gzzn001)
+
+   TRY
+      CASE p_action
+         WHEN "insert"
+            LET ls_trigger="sadzp210_maintain_gzzn_t: insert gzzn_t ,gzzn001=",p_gzzn001," ,gzzn002=",p_gzzn002
+ 
+            #若存在資料先砍，然後再新增
+            SELECT COUNT(*) INTO li_cnt FROM gzzn_t WHERE gzzn002 = p_gzzn002
+            IF li_cnt > 0 THEN
+              DELETE FROM gzzn_t WHERE gzzn002 = p_gzzn002
+            END IF
+            INSERT INTO gzzn_t(gzzn001,gzzn002,gzzn003) VALUES(p_gzzn001,p_gzzn002,"Y")
+               
+         WHEN "delete"
+            LET ls_trigger="sadzp210_maintain_gzzn_t: delete gzzn_t ,gzzn002=",p_gzzn002
+            DELETE FROM gzzn_t WHERE gzzn002 = p_gzzn002
+      
+         OTHERWISE 
+            DISPLAY "Warning: parameter not be defined.",p_action
+
+      END CASE
+      RETURN TRUE
+
+   CATCH
+      DISPLAY "Error:",ls_trigger,"errmsg=",cl_getmsg(sqlca.sqlcode,g_lang)
+      RETURN FALSE
+
+   END TRY
+     
+END FUNCTION
+
+
+#160223-00028 add
+##########################################################################
+# Access Modifier : PUBLIC
+# Descriptions    : 確認gzzn_t筆數(azzi070單身資料)
+# Input parameter : qry_id
+# Date & Author   : 
+##########################################################################
+#+確認gzzn_t筆數(azzi070單身資料)
+PUBLIC FUNCTION sadzp210_chk_cnt_gzzn_t(p_gzzn002)
+   DEFINE p_gzzn002     LIKE gzzn_t.gzzn002
+   DEFINE ls_trigger    STRING
+   DEFINE li_cnt        LIKE type_t.num5
+
+
+   TRY
+      LET li_cnt=0
+      SELECT COUNT(*) INTO li_cnt FROM gzzn_t WHERE gzzn002 = p_gzzn002
+               
+      RETURN li_cnt
+
+   CATCH
+      DISPLAY "Error:",ls_trigger,"errmsg=",cl_getmsg(sqlca.sqlcode,g_lang)
+      RETURN li_cnt
+
+   END TRY
+
+END FUNCTION
+

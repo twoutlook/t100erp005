@@ -1,0 +1,194 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq508" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01258" crtdt="2014-09-03 00:00:00" modid="02295" moddt="2016-07-22 09:49:14" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="委外工單生產入庫成本查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcckcomp,xcckcomp_desc(chr80),xcck004(num5),xcck005(num5),xcck003,xcck003_desc(chr80),xcckld,xcckld_desc(chr80),xcck004_1(num5),xcck005_1(num5),xcck001,xcck001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcck002,xcck002_desc(chr500),xcck022,xcck022_desc(chr500),xcck047,xcck006,xcck007,xcck008,pmdt001(chr500),pmdt027(chr500),apcb028(chr500),xcck009,xcck013,xcck010,xcck010_desc(chr500),xcck010_desc_1(chr500),imag011(chr500),imag011_desc(chr500),xcck011,xcck015,xcck015_desc(chr500),xcck017,xcck044,xcck044_desc(chr500),xcck201,xcck040,xcck040_desc(chr500),xcck042,xcck282,xcck282a,xcck282b,xcck282c,xcck282d,xcck282e,xcck282f,xcck282g,xcck282h,xcck202,xcck202a,xcck202b,xcck202c,xcck202d,xcck202e,xcck202f,xcck202g,xcck202h,xcck025,xcck025_desc(chr500),apcb103(num20_6),apcb113(num20_6),apcbdocno(chr500),imaa009(chr500),imaa009_desc(chr500),apca007(chr500),apca007_desc(chr500),apca008(chr500),apca008_desc(chr500),apca011(chr500),apca011_desc(chr500),apcb021(chr500),apcb021_desc(chr500),xcck021,xcck021_desc(chr500),apca038(chr20)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="According"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq508" method="dialog">
+    <section id="input">
+      <input id="head" field="xcckcomp,xcck004,xcck005,xcck003,xcckld,xcck004_1,xcck005_1,xcck001"/>
+      <input id="body" page="1" field="xcck002,xcck022,xcck047,xcck006,xcck007,xcck008,xcck009,xcck013,xcck010,xcck011,xcck015,xcck015_desc,xcck017,xcck044,xcck201,xcck040,xcck042,xcck282,xcck282a,xcck282b,xcck282c,xcck282d,xcck282e,xcck282f,xcck282g,xcck282h,xcck202,xcck202a,xcck202b,xcck202c,xcck202d,xcck202e,xcck202f,xcck202g,xcck202h,xcck025,apcb113,xcck021,xcck021_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcckcomp,xcck003,xcckld,xcck001"/>
+      <construct id="body" page="1" field="xcck002,xcck022,xcck047,xcck006,xcck007,xcck008,xcck009,xcck013,xcck010,xcck011,xcck015,xcck015_desc,xcck017,xcck044,xcck201,xcck040,xcck042,xcck282,xcck282a,xcck282b,xcck282c,xcck282d,xcck282e,xcck282f,xcck282g,xcck282h,xcck202,xcck202a,xcck202b,xcck202c,xcck202d,xcck202e,xcck202f,xcck202g,xcck202h,xcck025,apcb113,xcck021,xcck021_desc"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcckld,xcck001,xcck003,xcck004,xcck005"/>
+      <set id="head" type="no_entry" field="xcckld,xcck001,xcck003,xcck004,xcck005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcckcomp">
+        <after>
+          <reference field="xcckcomp_desc" ref_field="xcck_t.xcckcomp" map_field="xcckent,xcckcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xcckcomp_desc"/>
+      <column id="xcck004"/>
+      <column id="xcck005"/>
+      <column id="xcck003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="xcck003_desc" ref_field="xcck_t.xcck003" map_field="xcckent,xcck003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcck003_desc"/>
+      <column id="xcckld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcckld_desc" ref_field="xcck_t.xcckld" map_field="xcckent,xcckld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcckld_desc"/>
+      <column id="xcck004_1"/>
+      <column id="xcck005_1"/>
+      <column id="xcck001">
+        <after>
+          <reference field="xcck001_desc" ref_field="xcck_t.xcck001" map_field="xcck001" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcck001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcck002">
+        <after>
+          <reference field="xcck002_desc" ref_field="xcck_t.xcck002" map_field="xcck002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcck002_desc"/>
+      <column id="xcck022">
+        <after>
+          <reference field="xcck022_desc" ref_field="xcck_t.xcck022" map_field="xcck022" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_4" state="c"/>
+      </column>
+      <column id="xcck022_desc"/>
+      <column id="xcck047"/>
+      <column id="xcck006"/>
+      <column id="xcck007"/>
+      <column id="xcck008"/>
+      <column id="pmdt001"/>
+      <column id="pmdt027"/>
+      <column id="apcb028"/>
+      <column id="xcck009"/>
+      <column id="xcck013"/>
+      <column id="xcck010">
+        <after>
+          <reference field="xcck010_desc" ref_field="xcck_t.xcck010" map_field="xcck010" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcck010_desc"/>
+      <column id="xcck010_desc_1"/>
+      <column id="imag011">
+        <after/>
+      </column>
+      <column id="imag011_desc"/>
+      <column id="xcck011">
+        <controlp form="q_xcck011" state="c"/>
+      </column>
+      <column id="xcck015">
+        <after/>
+      </column>
+      <column id="xcck015_desc"/>
+      <column id="xcck017"/>
+      <column id="xcck044">
+        <after>
+          <reference field="xcck044_desc" ref_field="xcck_t.xcck044" map_field="xcck044" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="xcck044_desc"/>
+      <column id="xcck201"/>
+      <column id="xcck040">
+        <after>
+          <reference field="xcck040_desc" ref_field="xcck_t.xcck040" map_field="xcck040" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcck040_desc"/>
+      <column id="xcck042"/>
+      <column id="xcck282"/>
+      <column id="xcck282a"/>
+      <column id="xcck282b"/>
+      <column id="xcck282c"/>
+      <column id="xcck282d"/>
+      <column id="xcck282e"/>
+      <column id="xcck282f"/>
+      <column id="xcck282g"/>
+      <column id="xcck282h"/>
+      <column id="xcck202"/>
+      <column id="xcck202a"/>
+      <column id="xcck202b"/>
+      <column id="xcck202c"/>
+      <column id="xcck202d"/>
+      <column id="xcck202e"/>
+      <column id="xcck202f"/>
+      <column id="xcck202g"/>
+      <column id="xcck202h"/>
+      <column id="xcck025">
+        <after>
+          <reference field="xcck025_desc" ref_field="xcck_t.xcck025" map_field="xcck025" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="xcck025_desc"/>
+      <column id="apcb103" type="S" default="0"/>
+      <column id="apcb113" type="S" default="0"/>
+      <column id="apcbdocno"/>
+      <column id="imaa009">
+        <after/>
+      </column>
+      <column id="imaa009_desc"/>
+      <column id="apca007">
+        <after/>
+      </column>
+      <column id="apca007_desc"/>
+      <column id="apca008">
+        <after/>
+      </column>
+      <column id="apca008_desc"/>
+      <column id="apca011">
+        <after/>
+      </column>
+      <column id="apca011_desc"/>
+      <column id="apcb021">
+        <after/>
+      </column>
+      <column id="apcb021_desc"/>
+      <column id="xcck021">
+        <after/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xcck021_desc"/>
+      <column id="apca038">
+        <controlp form="q_apca038" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcck_t" pk="xcckld,xcck001,xcck003,xcck004,xcck005">
+      <sql id="forupd_sql" type="sql" query="SELECT xcckcomp,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck003,&apos;&apos;,xcckld,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck001,&apos;&apos; FROM xcck_t WHERE xcckent= ? AND xcckld=? AND xcck001=? AND xcck003=? AND xcck004=? AND xcck005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcckcomp,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck003,&apos;&apos;,xcckld,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck001,&apos;&apos; FROM xcck_t" order="xcckld,xcck001,xcck003,xcck004,xcck005"/>
+    </head>
+    <body id="xcck_t" page="1" linked="" pk="xcck002,xcck006,xcck007,xcck008,xcck009" fk="xcckld,xcck001,xcck003,xcck004,xcck005">
+      <sql id="forupd_sql_detail" query="SELECT xcck002,&apos;&apos;,xcck022,&apos;&apos;,xcck047,xcck006,xcck007,xcck008,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck009,xcck013,xcck010,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck011,xcck015,&apos;&apos;,xcck017,xcck044,&apos;&apos;,xcck201,xcck040,&apos;&apos;,xcck042,xcck282,xcck282a,xcck282b,xcck282c,xcck282d,xcck282e,xcck282f,xcck282g,xcck282h,xcck202,xcck202a,xcck202b,xcck202c,xcck202d,xcck202e,xcck202f,xcck202g,xcck202h,xcck025,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck021,&apos;&apos;,&apos;&apos; FROM xcck_t WHERE xcckent=? AND xcckld=? AND xcck001=? AND xcck003=? AND xcck004=? AND xcck005=? AND xcck002=? AND xcck006=? AND xcck007=? AND xcck008=? AND xcck009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcck002,&apos;&apos;,xcck022,&apos;&apos;,xcck047,xcck006,xcck007,xcck008,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck009,xcck013,xcck010,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck011,xcck015,&apos;&apos;,xcck017,xcck044,&apos;&apos;,xcck201,xcck040,&apos;&apos;,xcck042,xcck282,xcck282a,xcck282b,xcck282c,xcck282d,xcck282e,xcck282f,xcck282g,xcck282h,xcck202,xcck202a,xcck202b,xcck202c,xcck202d,xcck202e,xcck202f,xcck202g,xcck202h,xcck025,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcck021,&apos;&apos;,&apos;&apos; FROM xcck_t WHERE xcckent= ? AND xcckld=? AND xcck001=? AND xcck003=? AND xcck004=? AND xcck005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

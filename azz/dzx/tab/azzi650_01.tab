@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi650_01" module="azz" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="00593" crtdt="2014-05-23 16:02:27" modid="00593" moddt="2014-05-23 16:27:56" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="應用分類碼開窗">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="check(chr500),oocq001,oocq002,oocql004"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="cmd"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi650_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="check,oocq001,oocq002,oocql004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="check,oocq001,oocq002,oocql004"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="check" type="S" default="N"/>
+      <column id="oocq001" type="S" default="3114">
+        <after>
+          <check id="range" st="30000.000" st_type="0" errno="azz-00087" bt="1.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="oocq002">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oocql004"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="oocq_t" page="1" linked="" pk="oocq001,oocq002">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,oocq001,oocq002,&apos;&apos; FROM oocq_t WHERE oocqent=? AND oocq001=? AND oocq002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,oocq001,oocq002,&apos;&apos; FROM oocq_t WHERE oocqent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="oocql_t.oocql004" table="oocql_t" fk="oocq001,oocq002" pk="oocql001,oocql002,oocql003" field="oocql004"/>
+    </body>
+  </dataset>
+</assembly>
+

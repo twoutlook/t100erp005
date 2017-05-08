@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi060" module="azz" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="01856" crtdt="2013-12-11 00:00:00" modid="01856" moddt="2013-12-11 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="多語言語系設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzzystus,gzzy001,gzzy002,gzzy003"/>
+      <var id="body" page="2" record="s_detail1_info" page_id="1_info" value="gzzy001_s_detail1_info(chr500),gzzymodid,gzzymodid_desc(chr500),gzzymoddt,gzzyownid,gzzyownid_desc(chr500),gzzyowndp,gzzyowndp_desc(chr500),gzzycrtid,gzzycrtid_desc(chr500),gzzycrtdp,gzzycrtdp_desc(chr500),gzzycrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi060" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzzystus,gzzy001,gzzy002,gzzy003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzzystus,gzzy001,gzzy002,gzzy003"/>
+      <construct id="body" page="2" field="gzzymodid,gzzymoddt,gzzyownid,gzzyowndp,gzzycrtid,gzzycrtdp,gzzycrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzzystus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzzy001"/>
+      <column id="gzzy002"/>
+      <column id="gzzy003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzzy001_s_detail1_info"/>
+      <column id="gzzymodid">
+        <after>
+          <reference field="gzzymodid_desc" ref_field="gzzy_t.gzzymodid" map_field="gzzymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzzymodid_desc"/>
+      <column id="gzzymoddt"/>
+      <column id="gzzyownid">
+        <after>
+          <reference field="gzzyownid_desc" ref_field="gzzy_t.gzzyownid" map_field="gzzyownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzzyownid_desc"/>
+      <column id="gzzyowndp">
+        <after>
+          <reference field="gzzyowndp_desc" ref_field="gzzy_t.gzzyowndp" map_field="gzzyowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzzyowndp_desc"/>
+      <column id="gzzycrtid">
+        <after/>
+      </column>
+      <column id="gzzycrtid_desc"/>
+      <column id="gzzycrtdp">
+        <after>
+          <reference field="gzzycrtdp_desc" ref_field="gzzy_t.gzzycrtdp" map_field="gzzycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzzycrtdp_desc"/>
+      <column id="gzzycrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzzy_t" page="1,2" linked="" pk="gzzy001">
+      <sql id="forupd_sql_detail" query="SELECT gzzystus,gzzy001,gzzy002,gzzy003,&apos;&apos;,gzzymodid,&apos;&apos;,gzzymoddt,gzzyownid,&apos;&apos;,gzzyowndp,&apos;&apos;,gzzycrtid,&apos;&apos;,gzzycrtdp,&apos;&apos;,gzzycrtdt FROM gzzy_t WHERE gzzy001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzzystus,gzzy001,gzzy002,gzzy003,&apos;&apos;,gzzymodid,&apos;&apos;,gzzymoddt,gzzyownid,&apos;&apos;,gzzyowndp,&apos;&apos;,gzzycrtid,&apos;&apos;,gzzycrtdp,&apos;&apos;,gzzycrtdt FROM gzzy_t WHERE 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

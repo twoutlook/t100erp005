@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammm363" module="amm" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="03247" crtdt="2014-04-08 18:22:02" modid="06137" moddt="2016-06-16 08:37:44" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="生效營運組織會員卡折扣規則設定維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmbyunit,mmbyunit_desc(chr80),mmbysite,mmbysite_desc(chr80),mmby004,mmby001,mmby002,mmbyl004,mmbyl005,mmby019,mmby005,mmby005_desc(chr80),mmby006,mmby006_desc(chr80),mmby003,mmby007,mmby008,mmby014,mmby015,mmby016,mmby017,mmbystus,mmbyownid,mmbyownid_desc(chr80),mmbyowndp,mmbyowndp_desc(chr80),mmbycrtid,mmbycrtid_desc(chr80),mmbycrtdp,mmbycrtdp_desc(chr80),mmbycrtdt,mmbymodid,mmbymodid_desc(chr80),mmbymoddt,mmbycnfid,mmbycnfid_desc(chr80),mmbycnfdt,mmcp004_1(chr500),mmcp011_1(chr500),mmcp013_1(chr500),mmcp015_1(chr500),mmcp004_1_desc(chr500),mmcp012_1(chr500),mmcp014_1(chr500),mmcp016_1(chr500)"/>
+      <var id="bs_field" value="mmbysite,mmbysite_desc(chr80),mmbyunit,mmbyunit_desc(chr80),mmby004,mmby001,mmby002,mmby003,mmby005,mmby005_desc(chr80),mmby006,mmby006_desc(chr80),mmby007,mmby008,mmby014,mmby015,mmby016,mmby017" pk="mmbysite,mmby001,mmby002" order=""/>
+      <bs_reference field="mmbysite_desc" ref_field="mmbysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmbyunit_desc" ref_field="mmbyunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmby005_desc" ref_field="mmby005" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+      <bs_reference field="mmby006_desc" ref_field="mmby006" ref_sql="SELECT mmbol003 FROM mmbol_t WHERE mmbolent=$varg_enterprise$var AND mmbol001=? AND mmbol002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="issue"/>
+      <action id="query" type="standard"/>
+      <action id="exclude"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammm363" method="dialog">
+    <section id="input">
+      <input id="head" field="mmbyunit,mmbysite,mmby004,mmby001,mmby002,mmbyl004,mmbyl005,mmby019,mmby005,mmby006,mmby003,mmby007,mmby008,mmby014,mmby015,mmby016,mmby017,mmbystus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmbyunit,mmbysite,mmby001,mmby002,mmbyl004,mmbyl005,mmby019,mmby005,mmby006,mmby003,mmby007,mmby008,mmby014,mmby015,mmby016,mmby017,mmbystus,mmbyownid,mmbyowndp,mmbycrtid,mmbycrtdp,mmbycrtdt,mmbymodid,mmbymoddt,mmbycnfid,mmbycnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mmbysite,mmby001,mmby002"/>
+      <set id="head" type="no_entry" field="mmbysite,mmby001,mmby002"/>
+    </init>
+    <init id="head">
+      <column id="mmbyunit">
+        <after>
+          <reference field="mmbyunit_desc" ref_field="mmby_t.mmbyunit" map_field="mmbyent,mmbyunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmbyunit_desc"/>
+      <column id="mmbysite">
+        <after>
+          <reference field="mmbysite_desc" ref_field="mmby_t.mmbysite" map_field="mmbyent,mmbysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmbysite_desc"/>
+      <column id="mmby004" type="S" default="2" def_scc="6516"/>
+      <column id="mmby001">
+        <controlp form="q_mmby001" state="c"/>
+      </column>
+      <column id="mmby002" type="S" default="1"/>
+      <column id="mmbyl004"/>
+      <column id="mmbyl005"/>
+      <column id="mmby019" type="S" default="0" def_scc="6856"/>
+      <column id="mmby005">
+        <after>
+          <reference field="mmby005_desc" ref_field="mmby_t.mmby005" map_field="mmbyent,mmby005" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="i"/>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmby005_desc"/>
+      <column id="mmby006">
+        <after>
+          <reference field="mmby006_desc" ref_field="mmby_t.mmby006" map_field="mmby006" ref_sql="SELECT mmbol003 FROM mmbol_t WHERE mmbolent=$varg_enterprise$var AND mmbol001=? AND mmbol002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmby006_desc"/>
+      <column id="mmby003"/>
+      <column id="mmby007" type="S" default="0" def_scc="6517"/>
+      <column id="mmby008" type="S" default="0" def_scc="6517"/>
+      <column id="mmby014"/>
+      <column id="mmby015"/>
+      <column id="mmby016"/>
+      <column id="mmby017"/>
+      <column id="mmbystus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="mmbyownid">
+        <after>
+          <reference field="mmbyownid_desc" ref_field="mmby_t.mmbyownid" map_field="mmbyownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbyownid_desc"/>
+      <column id="mmbyowndp">
+        <after>
+          <reference field="mmbyowndp_desc" ref_field="mmby_t.mmbyowndp" map_field="mmbyowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmbyowndp_desc"/>
+      <column id="mmbycrtid">
+        <after>
+          <reference field="mmbycrtid_desc" ref_field="mmby_t.mmbycrtid" map_field="mmbycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbycrtid_desc"/>
+      <column id="mmbycrtdp">
+        <after>
+          <reference field="mmbycrtdp_desc" ref_field="mmby_t.mmbycrtdp" map_field="mmbycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmbycrtdp_desc"/>
+      <column id="mmbycrtdt"/>
+      <column id="mmbymodid">
+        <after>
+          <reference field="mmbymodid_desc" ref_field="mmby_t.mmbymodid" map_field="mmbymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbymodid_desc"/>
+      <column id="mmbymoddt"/>
+      <column id="mmbycnfid">
+        <after>
+          <reference field="mmbycnfid_desc" ref_field="mmby_t.mmbycnfid" map_field="mmbycnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbycnfid_desc"/>
+      <column id="mmbycnfdt"/>
+      <column id="mmcp004_1">
+        <after/>
+      </column>
+      <column id="mmcp011_1"/>
+      <column id="mmcp013_1"/>
+      <column id="mmcp015_1"/>
+      <column id="mmcp004_1_desc"/>
+      <column id="mmcp012_1"/>
+      <column id="mmcp014_1"/>
+      <column id="mmcp016_1"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmby_t" pk="mmbysite,mmby001,mmby002">
+      <sql id="forupd_sql" type="sql" query="SELECT mmbyunit,&apos;&apos;,mmbysite,&apos;&apos;,mmby004,mmby001,mmby002,&apos;&apos;,&apos;&apos;,mmby019,mmby005,&apos;&apos;,mmby006,&apos;&apos;,mmby003,mmby007,mmby008,mmby014,mmby015,mmby016,mmby017,mmbystus,mmbyownid,&apos;&apos;,mmbyowndp,&apos;&apos;,mmbycrtid,&apos;&apos;,mmbycrtdp,&apos;&apos;,mmbycrtdt,mmbymodid,&apos;&apos;,mmbymoddt,mmbycnfid,&apos;&apos;,mmbycnfdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mmby_t WHERE mmbyent= ? AND mmbysite=? AND mmby001=? AND mmby002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mmbysite,mmby001,mmby002 FROM mmby_t" order="mmbysite,mmby001,mmby002"/>
+      <sql id="append" type="lang" target="mmbyl_t.mmbyl004,mmbyl_t.mmbyl005" table="mmbyl_t" fk="mmby001,mmby002" pk="mmbyl001,mmbyl002,mmbyl003" field="mmbyl004,mmbyl005"/>
+    </head>
+  </dataset>
+</assembly>
+

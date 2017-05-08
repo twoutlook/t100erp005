@@ -1,0 +1,2074 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmp400" std_prog="apmp400" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="construct.c.pmda002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmda002  #顯示到畫面上
+
+            NEXT FIELD pmda002                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.pmda003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmda003  #顯示到畫面上
+
+            NEXT FIELD pmda003                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.pmdadocno" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_pmdadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmdadocno  #顯示到畫面上
+
+            NEXT FIELD pmdadocno                     #返回原欄位
+
+]]>
+  </point>
+  <point name="global.parameter" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_pmdb DYNAMIC ARRAY OF RECORD
+       pmdbdocno LIKE pmdb_t.pmdbdocno,
+       pmdbseq LIKE pmdb_t.pmdbseq
+    END RECORD 
+]]>
+  </point>
+  <point name="init.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ]]>
+  </point>
+  <point name="input.a.pmda002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            IF NOT cl_null(g_pmda_m.pmda002) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_pmda_m.pmda002
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_ooag001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+]]>
+  </point>
+  <point name="input.a.pmda003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            IF NOT cl_null(g_pmda_m.pmda003) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_pmda_m.pmda003
+               LET g_chkparam.arg2 = '參數2'
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_ooeg001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmda_m.pmda003
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl002 FROM ooefl_t WHERE ooefl001=? AND ooefl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmda_m.pmda003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmda_m.pmda003_desc
+]]>
+  </point>
+  <point name="input.a.pmdadocno" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_pmda_m.pmdadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_pmda_m.pmdadocno != g_pmdadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmda_t WHERE "||"pmdaent = '" ||g_enterprise|| "' AND "||"pmdadocno = '"||g_pmda_m.pmdadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.c.pmda002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmda_m.pmda002             #給予default值
+
+            #給予arg
+
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_pmda_m.pmda002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_pmda_m.pmda002 TO pmda002              #顯示到畫面上
+
+            NEXT FIELD pmda002                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.pmda003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmda_m.pmda003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            CALL q_ooeg001()                                #呼叫開窗
+
+            LET g_pmda_m.pmda003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_pmda_m.pmda003 TO pmda003              #顯示到畫面上
+
+            NEXT FIELD pmda003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.pmdadocno" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmda_m.pmdadocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_pmda_m.pmdadocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_pmda_m.pmdadocno TO pmdadocno              #顯示到畫面上
+
+            NEXT FIELD pmdadocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="main.background" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   display "g_argv[1]",g_argv[1]
+   LET lc_param.wc = DOWNSHIFT(g_argv[1])
+   LET ls_js = util.JSON.stringify(lc_param)  ]]>
+  </point>
+  <point name="main.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                  ]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ]]>
+  </point>
+  <point name="main.servicecall" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                  ]]>
+  </point>
+  <point name="process.background_finish" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      IF cl_chk_process_exists(g_parentsession,g_account) THEN
+            CALL cl_ask_confirm("std-00012") RETURNING li_stus
+      END IF
+      DISPLAY "!!!!程序已完成!!!"                 ]]>
+  </point>
+  <point name="process.count_progress" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      LET li_count = l_cnt2   
+      CALL cl_progress_bar_no_window(li_count)      ]]>
+  </point>
+  <point name="process.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_sql       STRING
+   DEFINE l_cnt		  LIKE type_t.num5
+   DEFINE l_cnt2	  LIKE type_t.num5   
+   DEFINE l_sum		  LIKE type_t.num5   
+   DEFINE l_pmdb006   LIKE pmdb_t.pmdb006     #需求量
+   DEFINE l_pmdb032   LIKE pmdb_t.pmdb032     #行狀態
+   DEFINE l_pmdb049   LIKE pmdb_t.pmdb049     #已轉採購量 
+   DEFINE i           LIKE type_t.num5]]>
+  </point>
+  <point name="process.exit_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[     
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF      
+      IF lc_param.wc = ' 1=1' THEN
+         CALL cl_err('','apm-00379',0)
+         CONTINUE WHILE
+      ELSE
+         LET g_bgjob = "N"      
+      END IF]]>
+  </point>
+  <point name="process.foreground_finish" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                  ]]>
+  </point>
+  <point name="process.pre_process" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_cnt2 = 1   
+   LET ls_sql = "SELECT pmdbdocno,pmdbseq FROM pmdb_t,pmda_t ",
+                 " WHERE pmdbdocno = pmdadocno ",
+                 "   AND pmdbent = '",g_enterprise,"'",
+                 "   AND pmdastus = 'Y' ",
+                 "   AND pmdb032 = '1' ",
+                 "   AND pmdb006 <= pmdb049 ",               
+                 "   AND ",lc_param.wc   
+   PREPARE apmp400_process_pr FROM ls_sql
+   DECLARE apmp400_process_cs CURSOR FOR apmp400_process_pr  
+   
+   FOREACH apmp400_process_cs INTO g_pmdb[l_cnt2].*
+     IF SQLCA.sqlcode THEN
+        EXIT FOREACH
+     ELSE
+        LET l_cnt2 = l_cnt2 + 1
+     END IF
+   END FOREACH   
+   CALL g_pmdb.deleteelement(l_cnt2)
+   LET l_cnt2 = l_cnt2 - 1         ]]>
+  </point>
+  <point name="process.process" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF l_cnt2 > 0 THEN
+      FOR i = 1 TO l_cnt2
+          IF g_bgjob <> "Y" THEN
+             CALL cl_progress_no_window_ing("讀取"||g_pmdb[i].pmdbdocno||"基本資料")
+          END IF      
+          CALL s_transaction_begin()
+          LET l_sum = 0
+          SELECT pmdb006,pmdb049,pmdb032 
+            INTO l_pmdb006,l_pmdb049,l_pmdb032
+            FROM pmdb_t 
+           WHERE pmdbdocno = g_pmdb[i].pmdbdocno 
+             AND pmdbseq = g_pmdb[i].pmdbseq
+          LET l_sum = l_pmdb006 - l_pmdb049
+          IF l_sum > 0 THEN
+          ELSE
+             IF l_sum = 0 THEN                     #需求量 = 已轉採購量
+                UPDATE pmdb_t
+                   SET pmdb032 = '2'               #正常結案
+                 WHERE pmdbdocno = g_pmdb[i].pmdbdocno
+                   AND pmdbseq = g_pmdb[i].pmdbseq       
+             ELSE
+                IF l_sum < 0 THEN
+              　　  UPDATE pmdb_t
+                  　　 SET pmdb032 = '3'               #長結
+                　　 WHERE pmdbdocno = g_pmdb[i].pmdbdocno
+                   　　AND pmdbseq = g_pmdb[i].pmdbseq    
+                END IF
+             END IF
+             
+             IF SQLCA.sqlcode THEN                          
+                CALL cl_err("update pmdb032",SQLCA.sqlcode,1)
+                CALL s_transaction_end('N','0')
+                CONTINUE FOR
+             ELSE
+                CALL s_transaction_end('Y','0')
+             END IF   
+             LET l_cnt = 0
+             SELECT COUNT(*) INTO l_cnt FROM pmdb_t     
+              WHERE pmdbdocno = g_pmdb[i].pmdbdocno
+                AND pmdb032 = '1' 
+             IF l_cnt = 0 THEN                       #請購單之所有單身皆已結案，則更新[T.請購單單頭].[C.狀態]='C'
+                UPDATE pmda_t
+                   SET pmdastus = 'C'
+                 WHERE pmdadocno = g_pmdb[i].pmdbdocno
+                IF SQLCA.sqlcode THEN                          
+                   CALL cl_err("update pmdastus",SQLCA.sqlcode,1)
+                   CALL s_transaction_end('N','0')
+                ELSE
+                   CALL s_transaction_end('Y','0')
+                END IF
+             END IF                                               
+             
+          END IF
+          
+      END FOR
+   ELSE
+      CALL cl_err('','apm-00294',1)          #無合呼條件
+      CALL s_transaction_end("N","0")
+   END IF
+   CLEAR FORM                ]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmda_m.pmda003
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl002 FROM ooefl_t WHERE ooefl001=? AND ooefl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmda_m.pmda003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmda_m.pmda003_desc
+]]>
+  </point>
+  <point name="transfer.argv.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      LET la_cmdrun.param[1] = la_param.wc   ]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                           CONSTRUCT BY NAME lc_param.wc ON pmdadocno,pmdadocdt,pmda002,pmda003,pmdb004
+            BEFORE CONSTRUCT
+               CALL cl_qbe_init()
+
+               
+            ON ACTION controlp INFIELD pmdadocno
+               #開窗c段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'c'
+                LET g_qryparam.reqry = FALSE
+                LET g_qryparam.where = " pmdastus = 'Y' "  
+                CALL q_pmdadocno()                           #呼叫開窗
+                DISPLAY g_qryparam.return1 TO pmdadocno      #顯示到畫面上
+                NEXT FIELD pmdadocno                         #返回原欄位
+
+            ON ACTION controlp INFIELD pmda002
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmda002      #顯示到畫面上
+               NEXT FIELD pmda002                         #返回原欄位 
+ 
+            ON ACTION controlp INFIELD pmda003
+               #開窗c段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'c'
+                LET g_qryparam.reqry = FALSE
+                CALL q_ooeg001()                           #呼叫開窗
+                DISPLAY g_qryparam.return1 TO pmda003      #顯示到畫面上
+                NEXT FIELD pmda003                         #返回原欄位              
+
+            ON ACTION controlp INFIELD pmdb004
+               #開窗c段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'c'
+                LET g_qryparam.reqry = FALSE
+                CALL q_imaa001()                           #呼叫開窗
+                DISPLAY g_qryparam.return1 TO pmdb004      #顯示到畫面上
+                NEXT FIELD pmdb004                         #返回原欄位 
+                
+         END CONSTRUCT             ]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                           ]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                           ]]>
+  </point>
+  <section id="apmp400.browser_fill" ver="1" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION apmp400_browser_fill(p_wc,ps_page_action) 
+   {<Local define>}
+   DEFINE p_wc              STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   {</Local define>}
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_pmda_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   CALL g_browser.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET l_searchcol = "pmdadocno"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   
+   #add-point:browser_fill段wc控制
+   {<point name="browser_fill.wc"/>}
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(*) FROM pmda_t ",
+               "  ",
+               "  ",
+               " WHERE pmdaent = '" ||g_enterprise|| "' AND ", 
+               p_wc CLIPPED
+                
+   #add-point:browser_fill段cnt_sql
+   {<point name="browser_fill.cnt_sql"/>}
+   #end add-point
+				
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt
+   FREE header_cnt_pre 
+   
+   #若超過最大顯示筆數
+   
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   LET g_wc = p_wc
+   #LET g_page_action = ps_page_action          # Keep Action
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+ 
+   CASE ps_page_action
+      
+      WHEN "F" 
+         LET g_pagestart = 1
+      
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+            LET g_pagestart = 1
+         END IF
+      
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+         
+      WHEN '/'
+         LET g_pagestart = g_jump
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = 1
+            CALL cl_err(g_jump,'azz-998',0)
+         END IF
+         
+      OTHERWISE
+         
+   END CASE
+   
+   LET l_sql_rank = "SELECT pmdastus,pmdadocno,RANK() OVER(ORDER BY pmdadocno ",
+ 
+                    g_order,
+                    ") AS RANK ",
+                    " FROM pmda_t ",
+                    "  ",
+                    "  ",
+                    " WHERE pmdaent = '" ||g_enterprise|| "' AND ", g_wc
+ 
+   #add-point:browser_fill段before_pre
+   {<point name="browser_fill.before_pre"/>}
+   #end add-point					
+					
+   #定義翻頁CURSOR
+   LET g_sql= " SELECT pmdastus,pmdadocno FROM (",l_sql_rank,") ",
+              "  WHERE RANK >= ", g_pagestart,
+              "    AND RANK <  ", (g_pagestart + g_max_browse) , 
+              "  ORDER BY ",l_searchcol," ",g_order
+ 
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_pmdadocno
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point
+      
+      LET g_browser[g_cnt].b_statepic = cl_get_actipic(g_browser[g_cnt].b_statepic)
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err("Max_Row:"||g_max_rec USING "<<<<<","std-00002",0)
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser_cnt
+   LET g_rec_b = g_cnt - 1
+   LET g_current_cnt = g_browser_cnt
+   LET g_cnt = 0
+   
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="apmp400.construct" ver="1" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION apmp400_construct()
+   {<Local define>}
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   {</Local define>}
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_pmda_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON pmdadocno,pmdadocdt,pmda002,pmda003
+      
+         BEFORE CONSTRUCT                                    
+#saki       CALL cl_qbe_init()    
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         
+      
+         #一般欄位
+         #---------------------------<  Master  >---------------------------
+         #----<<pmdadocno>>----
+         #Ctrlp:construct.c.pmdadocno
+         ON ACTION controlp INFIELD pmdadocno
+            #add-point:ON ACTION controlp INFIELD pmdadocno
+            {<point name="construct.c.pmdadocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmdadocno
+            #add-point:BEFORE FIELD pmdadocno
+            {<point name="construct.b.pmdadocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmdadocno
+            
+            #add-point:AFTER FIELD pmdadocno
+            {<point name="construct.a.pmdadocno" />}
+            #END add-point
+            
+ 
+         #----<<pmdadocdt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmdadocdt
+            #add-point:BEFORE FIELD pmdadocdt
+            {<point name="construct.b.pmdadocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmdadocdt
+            
+            #add-point:AFTER FIELD pmdadocdt
+            {<point name="construct.a.pmdadocdt" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.pmdadocdt
+         ON ACTION controlp INFIELD pmdadocdt
+            #add-point:ON ACTION controlp INFIELD pmdadocdt
+            {<point name="construct.c.pmdadocdt" />}
+            #END add-point
+ 
+         #----<<pmda002>>----
+         #Ctrlp:construct.c.pmda002
+         ON ACTION controlp INFIELD pmda002
+            #add-point:ON ACTION controlp INFIELD pmda002
+            {<point name="construct.c.pmda002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmda002
+            #add-point:BEFORE FIELD pmda002
+            {<point name="construct.b.pmda002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmda002
+            
+            #add-point:AFTER FIELD pmda002
+            {<point name="construct.a.pmda002" />}
+            #END add-point
+            
+ 
+         #----<<pmda003>>----
+         #Ctrlp:construct.c.pmda003
+         ON ACTION controlp INFIELD pmda003
+            #add-point:ON ACTION controlp INFIELD pmda003
+            {<point name="construct.c.pmda003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmda003
+            #add-point:BEFORE FIELD pmda003
+            {<point name="construct.b.pmda003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmda003
+            
+            #add-point:AFTER FIELD pmda003
+            {<point name="construct.a.pmda003" />}
+            #END add-point
+            
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point   
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢CONSTRUCT共用ACTION
+      &include "construct_action.4gl"
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+  
+   #LET g_wc = g_wc CLIPPED,cl_get_extra_cond("", "")
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.default_search" ver="1" status="" src="s">
+    <![CDATA[#+ 外部參數搜尋, 施工中
+PRIVATE FUNCTION apmp400_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " pmdadocno = '", g_argv[1], "' AND "
+   END IF
+   
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+   ELSE
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.delete" ver="1" status="" src="s">
+    <![CDATA[#+ 資料刪除 
+PRIVATE FUNCTION apmp400_delete()
+   {<Local define>}
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point  
+   
+   IF g_pmda_m.pmdadocno IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   CALL apmp400_show()
+   
+   CALL s_transaction_begin()
+    
+   LET g_pmdadocno_t = g_pmda_m.pmdadocno
+ 
+   
+   
+ 
+   OPEN apmp400_cl USING g_enterprise,
+                           g_pmda_m.pmdadocno
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN apmp400_cl:", STATUS, 0)
+      CLOSE apmp400_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   FETCH apmp400_cl INTO g_pmda_m.pmdadocno,g_pmda_m.pmdadocdt,g_pmda_m.pmda002,g_pmda_m.pmda003,g_pmda_m.pmda003_desc, 
+       g_pmda_m.pmdb004
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_pmda_m.pmdadocno,SQLCA.sqlcode,0)
+      RETURN
+   END IF
+   
+   IF cl_ask_delete() THEN
+      INITIALIZE g_doc.* TO NULL
+      LET g_doc.column1 = "pmdadocno"
+      LET g_doc.value1 = g_pmda_m.pmdadocno
+      CALL cl_del_doc()
+ 
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point
+ 
+      DELETE FROM pmda_t 
+       WHERE pmdaent = g_enterprise AND pmdadocno = g_pmda_m.pmdadocno 
+ 
+ 
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("pmda_t",SQLCA.sqlcode,0)
+         CALL s_transaction_end('N','0')
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+      
+          
+      
+      CLEAR FORM
+      CALL apmp400_ui_browser_refresh()
+      IF g_browser_cnt > 0 THEN
+         CALL apmp400_fetch("P")
+      ELSE
+         CALL apmp400_browser_fill(" 1=1 ","F")
+      END IF
+      
+   END IF
+ 
+   CLOSE apmp400_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_pmda_m.pmdadocno,"D")
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.description" ver="96" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000096
+#+ 
+#+ Filename...: apmp400
+#+ Description: 請購單自動結案作業
+#+ Creator....: 02040(2014/03/05)
+#+ Modifier...: 02040(2014/03/05)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="apmp400.fetch" ver="1" status="" src="s">
+    <![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION apmp400_fetch(p_fl)
+ 
+   {<Local define>}
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   {</Local define>}
+ 
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point  
+   
+   CASE p_fl
+      WHEN "F" LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         LET g_current_idx = g_header_cnt        
+      WHEN "/"
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+   
+   LET g_browser_cnt = g_browser.getLength()
+ 
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+   CALL ui.Interface.refresh()
+   
+   #單頭筆數顯示
+   #DISPLAY g_browser_idx TO FORMONLY.idx            #當下筆數
+   #DISPLAY g_browser_cnt TO FORMONLY.cnt            #總筆數
+   
+   
+   
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   # 設定browse索引
+ 
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   LET g_pmda_m.pmdadocno = g_browser[g_current_idx].b_pmdadocno
+ 
+                       
+   #重讀DB,因TEMP有不被更新特性
+    SELECT UNIQUE pmdadocno,pmdadocdt,pmda002,pmda003
+ INTO g_pmda_m.pmdadocno,g_pmda_m.pmdadocdt,g_pmda_m.pmda002,g_pmda_m.pmda003
+ FROM pmda_t
+ WHERE pmdaent = g_enterprise AND pmdadocno = g_pmda_m.pmdadocno
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("pmda_t",SQLCA.sqlcode,0)
+      INITIALIZE g_pmda_m.* TO NULL
+      RETURN
+   END IF
+   
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #重新顯示
+   CALL apmp400_show()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.filter" ver="1" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION apmp400_filter()
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION apmp400_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.global" ver="9" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmp400.init" ver="5" status="" src="s">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION apmp400_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.input" ver="1" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PRIVATE FUNCTION apmp400_input(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #切換畫面
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL apmp400_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL apmp400_set_no_entry(p_cmd)
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DISPLAY BY NAME g_pmda_m.pmdadocno,g_pmda_m.pmdadocdt,g_pmda_m.pmda002,g_pmda_m.pmda003
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_pmda_m.pmdadocno,g_pmda_m.pmdadocdt,g_pmda_m.pmda002,g_pmda_m.pmda003 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前
+            {<point name="input.before.input"/>}
+            #end add-point
+   
+         #---------------------------<  Master  >---------------------------
+         #----<<pmdadocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmdadocno
+            #add-point:BEFORE FIELD pmdadocno
+            {<point name="input.b.pmdadocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmdadocno
+            
+            #add-point:AFTER FIELD pmdadocno
+            {<point name="input.a.pmdadocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmdadocno
+            #add-point:ON CHANGE pmdadocno
+            {<point name="input.g.pmdadocno" />}
+            #END add-point
+ 
+         #----<<pmdadocdt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmdadocdt
+            #add-point:BEFORE FIELD pmdadocdt
+            {<point name="input.b.pmdadocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmdadocdt
+            
+            #add-point:AFTER FIELD pmdadocdt
+            {<point name="input.a.pmdadocdt" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmdadocdt
+            #add-point:ON CHANGE pmdadocdt
+            {<point name="input.g.pmdadocdt" />}
+            #END add-point
+ 
+         #----<<pmda002>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD pmda002
+            
+            #add-point:AFTER FIELD pmda002
+            {<point name="input.a.pmda002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmda002
+            #add-point:BEFORE FIELD pmda002
+            {<point name="input.b.pmda002" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmda002
+            #add-point:ON CHANGE pmda002
+            {<point name="input.g.pmda002" />}
+            #END add-point
+ 
+         #----<<pmda003>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD pmda003
+            
+            #add-point:AFTER FIELD pmda003
+            {<point name="input.a.pmda003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmda003
+            #add-point:BEFORE FIELD pmda003
+            {<point name="input.b.pmda003" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmda003
+            #add-point:ON CHANGE pmda003
+            {<point name="input.g.pmda003" />}
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<pmdadocno>>----
+         #Ctrlp:input.c.pmdadocno
+         ON ACTION controlp INFIELD pmdadocno
+            #add-point:ON ACTION controlp INFIELD pmdadocno
+            {<point name="input.c.pmdadocno" />}
+            #END add-point
+ 
+         #----<<pmdadocdt>>----
+         #Ctrlp:input.c.pmdadocdt
+         ON ACTION controlp INFIELD pmdadocdt
+            #add-point:ON ACTION controlp INFIELD pmdadocdt
+            {<point name="input.c.pmdadocdt" />}
+            #END add-point
+ 
+         #----<<pmda002>>----
+         #Ctrlp:input.c.pmda002
+         ON ACTION controlp INFIELD pmda002
+            #add-point:ON ACTION controlp INFIELD pmda002
+            {<point name="input.c.pmda002" />}
+            #END add-point
+ 
+         #----<<pmda003>>----
+         #Ctrlp:input.c.pmda003
+         ON ACTION controlp INFIELD pmda003
+            #add-point:ON ACTION controlp INFIELD pmda003
+            {<point name="input.c.pmda003" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+                
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+ 
+            IF p_cmd <> "u" THEN
+               LET l_count = 1  
+ 
+               SELECT COUNT(*) INTO l_count FROM pmda_t
+                WHERE pmdaent = g_enterprise AND pmdadocno = g_pmda_m.pmdadocno
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前
+                  {<point name="input.head.b_insert" mark="Y"/>}
+                  #end add-point
+               
+                  INSERT INTO pmda_t (pmdaent,pmdadocno,pmdadocdt,pmda002,pmda003)
+                  VALUES (g_enterprise,g_pmda_m.pmdadocno,g_pmda_m.pmdadocdt,g_pmda_m.pmda002,g_pmda_m.pmda003)  
+
+                  
+                  #add-point:單頭新增中
+                  {<point name="input.head.m_insert"/>}
+                  #end add-point
+                  
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err("pmda_t",SQLCA.sqlcode,1)  
+                     CONTINUE DIALOG
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後
+                  {<point name="input.head.a_insert"/>}
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL cl_err( "g_pmda_m.pmdadocno", "std-00006", 0 )
+                  CALL s_transaction_end('N','0')
+               END IF 
+            ELSE
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               UPDATE pmda_t SET (pmdadocno,pmdadocdt,pmda002,pmda003) = (g_pmda_m.pmdadocno,g_pmda_m.pmdadocdt, 
+                   g_pmda_m.pmda002,g_pmda_m.pmda003)
+                WHERE pmdaent = g_enterprise AND pmdadocno = g_pmdadocno_t #
+ 
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("pmda_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("pmda_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     #add-point:單頭修改後
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+               END CASE
+            END IF
+           #controlp
+      END INPUT
+          
+      #add-point:input段more input 
+      {<point name="input.more_input"/>}
+      #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input 
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.insert" ver="1" status="" src="s">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION apmp400_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   CLEAR FORM                    #清畫面欄位內容
+ 
+   INITIALIZE g_pmda_m.* LIKE pmda_t.*             #DEFAULT 設定
+   LET g_pmdadocno_t = NULL
+ 
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      #六階樹狀給值
+ 
+      
+      #公用欄位給值
+      
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+ 
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point   
+     
+      CALL apmp400_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_pmda_m.* = g_pmda_m_t.*
+         CALL apmp400_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   LET g_pmdadocno_t = g_pmda_m.pmdadocno
+ 
+   
+   LET g_state = "Y"
+ 
+   LET g_wc = g_wc,  
+              " OR ( pmdaent = '" ||g_enterprise|| "' AND",
+              " pmdadocno = '", g_pmda_m.pmdadocno CLIPPED, "' "
+ 
+              , ") "
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.main" ver="7" status="" src="s">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL apmp400_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmp400 WITH FORM cl_ap_formpath("apm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL apmp400_init()
+ 
+      #進入選單 Menu (="N")
+      CALL apmp400_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apmp400
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="apmp400.modify" ver="1" status="" src="s">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION apmp400_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   IF g_pmda_m.pmdadocno IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF 
+   
+    SELECT UNIQUE pmdadocno,pmdadocdt,pmda002,pmda003
+ INTO g_pmda_m.pmdadocno,g_pmda_m.pmdadocdt,g_pmda_m.pmda002,g_pmda_m.pmda003
+ FROM pmda_t
+ WHERE pmdaent = g_enterprise AND pmdadocno = g_pmda_m.pmdadocno
+ 
+   ERROR ""
+  
+   LET g_pmdadocno_t = g_pmda_m.pmdadocno
+ 
+   
+   CALL s_transaction_begin()
+   
+   OPEN apmp400_cl USING g_enterprise,g_pmda_m.pmdadocno
+   IF STATUS THEN
+      CALL cl_err("OPEN apmp400_cl:", STATUS, 1)
+      CLOSE apmp400_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH apmp400_cl INTO g_pmda_m.pmdadocno,g_pmda_m.pmdadocdt,g_pmda_m.pmda002,g_pmda_m.pmda003,g_pmda_m.pmda003_desc, 
+       g_pmda_m.pmdb004
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("pmda_t",SQLCA.sqlcode,0)
+      CLOSE apmp400_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   
+ 
+   CALL apmp400_show()
+   
+   WHILE TRUE
+      LET g_pmda_m.pmdadocno = g_pmdadocno_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      
+      
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+ 
+      CALL apmp400_input("u")     #欄位更改
+ 
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_pmda_m.* = g_pmda_m_t.*
+         CALL apmp400_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_pmda_m.pmdadocno,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE apmp400_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_pmda_m.pmdadocno,"U")
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+]]>
+  </section>
+  <section id="apmp400.other_function" ver="2" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmp400.process" ver="2" status="" src="s">
+    <![CDATA[#+ 資料處理
+PRIVATE FUNCTION apmp400_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apmp400_process_cs CURSOR FROM ls_sql
+#  FOREACH apmp400_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.query" ver="1" status="" src="s">
+    <![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION apmp400_query()
+   {<Local define>}
+   DEFINE ls_wc STRING
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+ 
+   CALL g_browser.clear() 
+ 
+   IF g_worksheet_hidden THEN  #browser panel 單身折疊
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   IF g_header_hidden THEN    #單頭折疊
+      CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_pmda_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL apmp400_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL apmp400_browser_fill(g_wc,"F")
+      CALL apmp400_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   LET g_error_show = 1
+   CALL apmp400_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   #第一層模糊搜尋
+   IF g_browser.getLength() = 0 THEN
+      LET g_wc = cl_wc_parser(ls_wc)
+      LET g_error_show = 1
+      CALL apmp400_browser_fill(g_wc,"F")
+   END IF
+   
+   #第二層助記碼搜尋
+   IF g_browser.getLength() = 0 THEN
+ 
+      
+      
+      IF NOT cl_null(g_wc) THEN
+         LET g_error_show = 1
+         CALL apmp400_browser_fill(g_wc,"F")
+      END IF
+      
+   END IF
+    
+   IF g_browser.getLength() = 0 THEN
+      CALL cl_err("","-100",1)
+   ELSE
+      CALL apmp400_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.reproduce" ver="1" status="" src="s">
+    <![CDATA[#+ 資料複製
+PRIVATE FUNCTION apmp400_reproduce()
+   {<Local define>}
+   DEFINE l_newno     LIKE pmda_t.pmdadocno 
+   DEFINE l_oldno     LIKE pmda_t.pmdadocno 
+ 
+   DEFINE l_master    RECORD LIKE pmda_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   {</Local define>}
+ 
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point   
+   
+   #切換畫面
+   
+   IF g_pmda_m.pmdadocno IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   LET g_pmdadocno_t = g_pmda_m.pmdadocno
+ 
+   
+   LET g_pmda_m.pmdadocno = ""
+ 
+    
+   CALL apmp400_set_entry("a")
+   CALL apmp400_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL apmp400_input("r")
+ 
+   
+   
+   IF INT_FLAG  THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前
+   {<point name="reproduce.head.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #add-point:單頭複製中
+   {<point name="reproduce.head.m_insert"/>}
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("pmda_t",SQLCA.sqlcode,1)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後
+   {<point name="reproduce.head.a_insert"/>}
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   LET g_state = "Y"
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              " pmdadocno = '", g_pmda_m.pmdadocno CLIPPED, "' "
+ 
+              , ") "
+   
+   LET g_pmdadocno_t = g_pmda_m.pmdadocno
+ 
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+                   
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.set_entry" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION apmp400_set_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd LIKE type_t.chr1
+   {</Local define>}
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("pmdadocno",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.set_no_entry" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION apmp400_set_no_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd LIKE type_t.chr1
+   {</Local define>}
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = "u" THEN
+      CALL cl_set_comp_entry("pmdadocno",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.show" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭資料重新顯示 
+PRIVATE FUNCTION apmp400_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point  
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   LET g_pmda_m_t.* = g_pmda_m.*      #保存單頭舊值
+   
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+   
+   #帶出公用欄位reference值
+   
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_pmda_m.pmdadocno,g_pmda_m.pmdadocdt,g_pmda_m.pmda002,g_pmda_m.pmda003,g_pmda_m.pmda003_desc, 
+       g_pmda_m.pmdb004
+   
+   #顯示狀態(stus)圖片
+   
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.state_change" ver="1" status="" src="s">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="apmp400.transfer_argv" ver="1" status="" src="s">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apmp400_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.ui_browser_refresh" ver="1" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION apmp400_ui_browser_refresh()
+   {<Local define>}
+   DEFINE l_i  LIKE type_t.num10
+   {</Local define>}
+ 
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point     
+ 
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_pmdadocno = g_pmda_m.pmdadocno THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+   
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+  
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp400.ui_dialog" ver="9" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apmp400_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL apmp400_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = apmp400_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="azzi900_01" std_prog="azzi900_01" erpver="1.0" module="AZZ" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.azzi900_01_init" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION azzi900_01_init()
+   LET g_rec_b = 0
+   CALL azzi900_01_tree_create()
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi900_01_ui_dialog" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION azzi900_01_ui_dialog()
+    DEFINE li LIKE type_t.num5
+
+    #左側瀏覽頁簽
+    DISPLAY ARRAY g_structure_tree TO s_tree.* ATTRIBUTE(UNBUFFERED, COUNT=g_rec_b)
+            
+       BEFORE ROW
+       #回歸舊筆數位置 (回到當時異動的筆數)
+          #LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+          #IF g_current_row > 1 AND g_current_sw = FALSE THEN
+          #   CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+          #   LET g_current_idx = g_current_row
+          #END IF
+          #LET g_current_row = g_current_idx #目前指標
+          #LET g_current_sw = TRUE
+    #     CALL cl_show_fld_cont() 
+    #      CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                   
+    #      CALL azzi903_fetch('')  #當每次點任一筆資料都會需要用到
+             
+       ON EXPAND (g_row_index)
+           #樹展開
+           CALL azzi900_01_expand(g_row_index)
+           LET g_structure_tree[g_row_index].g_isExp = 1
+               
+       ON COLLAPSE (g_row_index)
+          #樹關閉
+        
+       ON ACTION accept
+         #ACCEPT DIALOG
+          EXIT DISPLAY 
+       ON ACTION CLOSE 
+          LET INT_FLAG = TRUE 
+          EXIT DISPLAY 
+
+       ON ACTION CANCEL 
+         LET INT_FLAG = TRUE
+         EXIT DISPLAY
+
+       ON ACTION recompile_all
+          CALL azzi900_01_recompile_all()
+
+       ON ACTION search_func
+         #CALL azzi900_02()
+
+    END DISPLAY
+        
+    IF INT_FLAG THEN 
+       LET INT_FLAG =  FALSE 
+    END IF  
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi900_01_tree_create" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 建立tree
+PRIVATE FUNCTION azzi900_01_tree_create()
+   DEFINE l_pid    LIKE type_t.chr50
+
+   CALL g_structure_tree.clear()
+   
+   LET g_sql = " SELECT UNIQUE gzzl001 FROM gzzl_t WHERE gzzl001 = '",g_program,"'"
+   PREPARE master_type FROM g_sql
+   DECLARE master_typecur CURSOR FOR master_type
+   LET l_ac = 1
+   FOREACH master_typecur INTO g_structure_tree[l_ac].g_gzzl001
+      #確定root節點所在
+      LET g_root[g_root.getLength()+1] = l_ac
+      #此處為帳別部分(LV-1)
+      LET g_structure_tree[l_ac].g_gzzl001  = g_structure_tree[l_ac].g_gzzl001
+      LET g_structure_tree[l_ac].g_gzzl002 = g_structure_tree[l_ac].g_gzzl001
+      LET g_structure_tree[l_ac].g_pid = '0' CLIPPED
+      LET g_structure_tree[l_ac].g_id = l_ac USING "<<<"
+      LET g_structure_tree[l_ac].g_exp = TRUE
+      LET g_structure_tree[l_ac].g_hasC = TRUE
+      LET l_pid = g_structure_tree[l_ac].g_id CLIPPED
+      LET l_ac = l_ac + 1
+
+      #此處為(LV-2)
+      #lib
+      LET g_structure_tree[l_ac].g_gzzl001 = g_program  # pid 
+      LET g_structure_tree[l_ac].g_gzzl002 = "lib"      # id
+      LET g_structure_tree[l_ac].g_pid = l_pid
+      LET g_structure_tree[l_ac].g_id = l_pid,".",l_ac USING "<<<"
+      LET g_structure_tree[l_ac].g_exp = FALSE
+      LET g_structure_tree[l_ac].g_hasC = TRUE
+      LET g_structure_tree[l_ac].g_expcode = 2
+
+      #sub
+      LET l_ac = l_ac + 1
+      LET g_structure_tree[l_ac].g_gzzl001 = g_program
+      LET g_structure_tree[l_ac].g_gzzl002 = "sub"
+      LET g_structure_tree[l_ac].g_pid = l_pid
+      LET g_structure_tree[l_ac].g_id = l_pid,".",l_ac USING "<<<"
+      LET g_structure_tree[l_ac].g_exp = FALSE
+      LET g_structure_tree[l_ac].g_hasC = TRUE
+      LET g_structure_tree[l_ac].g_expcode = 2
+
+      #qry
+      LET l_ac = l_ac + 1
+      LET g_structure_tree[l_ac].g_gzzl001 = g_program
+      LET g_structure_tree[l_ac].g_gzzl002 = "qry"
+      LET g_structure_tree[l_ac].g_pid = l_pid
+      LET g_structure_tree[l_ac].g_id = l_pid,".",l_ac USING "<<<"
+      LET g_structure_tree[l_ac].g_exp = FALSE
+      LET g_structure_tree[l_ac].g_hasC = TRUE
+      LET g_structure_tree[l_ac].g_expcode = 2
+
+      #child prog 
+      LET l_ac = l_ac + 1
+      LET g_structure_tree[l_ac].g_gzzl001 = g_program
+      LET g_structure_tree[l_ac].g_gzzl002 = "child prog"
+      LET g_structure_tree[l_ac].g_pid = l_pid
+      LET g_structure_tree[l_ac].g_id = l_pid,".",l_ac USING "<<<"
+      LET g_structure_tree[l_ac].g_exp = FALSE
+      LET g_structure_tree[l_ac].g_hasC = TRUE
+      LET g_structure_tree[l_ac].g_expcode = 2
+
+      #lng
+      LET l_ac = l_ac + 1 
+      LET g_structure_tree[l_ac].g_gzzl001 = g_program
+      LET g_structure_tree[l_ac].g_gzzl002 = "lng"
+      LET g_structure_tree[l_ac].g_pid = l_pid
+      LET g_structure_tree[l_ac].g_id = l_pid,".",l_ac USING "<<<"
+      LET g_structure_tree[l_ac].g_exp = FALSE
+      LET g_structure_tree[l_ac].g_hasC = TRUE
+      LET g_structure_tree[l_ac].g_expcode = 2
+      
+      LET l_ac = l_ac + 1
+   END FOREACH 
+   CALL g_structure_tree.deleteElement(l_ac)
+
+   #組合描述欄位 
+   FOR l_ac = 1 TO g_structure_tree.getLength()
+      CALL azzi900_01_desc_show(l_ac)
+   END FOR
+   
+   FREE master_type
+   CLOSE master_typecur
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi900_01_desc_show" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 顯示名稱
+PRIVATE FUNCTION azzi900_01_desc_show(p_ac)
+   DEFINE p_ac    LIKE type_t.num5
+   DEFINE lc_name LIKE type_t.chr100 
+
+   LET g_structure_tree[p_ac].g_show =  g_structure_tree[p_ac].g_gzzl002 
+   LET lc_name = ""
+   #先抓gzzal_t 
+   LET lc_name = cl_get_progname(g_structure_tree[p_ac].g_gzzl002,g_lang,1) 
+   IF cl_null(lc_name) THEN 
+       #抓gzzol_t
+       LET lc_name = UPSHIFT(g_structure_tree[p_ac].g_gzzl002)  
+       SELECT gzzol003 INTO lc_name 
+        FROM gzzol_t 
+         WHERE gzzol001 = lc_name
+         AND gzzol002 = g_lang
+ 
+       IF SQLCA.SQLCODE THEN 
+          LET lc_name = ""
+       END IF   
+   END IF 
+   #子程式
+   IF cl_null(lc_name) AND g_structure_tree[p_ac].g_gzzl002 = "child prog" THEN 
+      #抓子程式 child prog 的說明 
+      SELECT gzcbl004 INTO lc_name FROM gzcbl_t
+       WHERE gzcbl001 = '91' AND gzcbl002 = 'S' 
+       AND  gzcbl003 = g_lang  
+
+       IF SQLCA.SQLCODE THEN 
+          LET lc_name = ""
+       END IF 
+   END IF
+
+   #抓gzdel_t
+   IF cl_null(lc_name) THEN  
+      SELECT gzdel003 INTO lc_name FROM  gzdel_t
+       WHERE gzdel001 = g_structure_tree[p_ac].g_gzzl002
+        AND  gzdel002 = g_lang 
+      IF SQLCA.SQLCODE THEN 
+          LET lc_name = ""
+      END IF 
+   END IF 
+
+   IF cl_null(lc_name) THEN  
+      SELECT  dzcal003 INTO lc_name FROM  dzcal_t
+       WHERE dzcal001 = g_structure_tree[p_ac].g_gzzl002
+        AND dzcal002 = g_lang
+        
+      IF SQLCA.SQLCODE THEN 
+          LET lc_name = ""
+      END IF 
+   END IF 
+   
+   IF NOT cl_null(lc_name) THEN 
+      LET g_structure_tree[p_ac].g_show_desc = lc_name
+   END IF  
+   
+   LET g_structure_tree[p_ac].g_show = g_structure_tree[p_ac].g_gzzl002
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi900_01_expand" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 展開
+PRIVATE FUNCTION azzi900_01_expand(p_id)
+   DEFINE p_id          LIKE type_t.num10
+   DEFINE ls_keyvalue   LIKE type_t.chr50
+   DEFINE ls_typevalue  LIKE type_t.chr50
+   DEFINE l_sql         STRING
+   DEFINE l_sql_where   LIKE type_t.chr500
+   DEFINE l_cnt         LIKE type_t.num10
+   DEFINE l_id          LIKE type_t.num10
+   DEFINE l_return      LIKE type_t.num5
+   DEFINE li            LIKE type_t.num10
+   
+   LET ls_keyvalue = g_structure_tree[p_id].g_gzzl002    #g_gzzp002
+   LET ls_typevalue = g_structure_tree[p_id].g_gzzl001   #
+
+   LET l_sql = "SELECT gzzl002 FROM gzzl_t " ,
+               " WHERE gzzl001 = '",g_program,"'"
+   CASE 
+      WHEN ls_keyvalue = "lib"
+         LET l_sql_where = " AND gzzl002 LIKE 'cl_%' "
+      WHEN ls_keyvalue = "sub"
+         LET l_sql_where = " AND gzzl002 LIKE 's_%' "
+      WHEN ls_keyvalue = "qry"   
+         LET l_sql_where = " AND gzzl002 LIKE 'q_%' "
+      WHEN ls_keyvalue = "lng"
+         LET l_sql_where = " AND gzzl002 LIKE 'n_%' "
+      WHEN ls_keyvalue = "child prog"
+         LET l_sql_where = " AND NOT gzzl002 LIKE 'cl_%' AND NOT gzzl002 LIKE 's_%' ",
+                           " AND NOT gzzl002 LIKE 'q_%'  AND NOT gzzl002 LIKE 'n_%' "
+      OTHERWISE        
+         #全部樹關閉 然後展開時重新建tree
+         CALL azzi900_01_tree_create()
+         RETURN 
+   END CASE 
+
+   LET l_sql = l_sql ,l_sql_where
+
+   #若已經展開
+   IF g_structure_tree[p_id].g_isExp = 1 THEN
+      RETURN
+   END IF
+             
+   PREPARE tree_expand FROM l_sql
+   DECLARE tree_ex_cur CURSOR FOR tree_expand
+   LET l_id = p_id + 1
+   CALL g_structure_tree.insertElement(l_id)
+   LET l_cnt = 1 
+   FOREACH tree_ex_cur INTO g_structure_tree[l_id].g_gzzl002
+      LET g_structure_tree[l_id].g_gzzl001 = g_structure_tree[p_id].g_gzzl001  # pid 
+
+      #pid=父節點id
+      LET g_structure_tree[l_id].g_pid = g_structure_tree[p_id].g_id
+      #id=本身節點id(採流水號遞增)
+      LET g_structure_tree[l_id].g_id  = g_structure_tree[p_id].g_id||"."||l_cnt
+
+      CALL azzi900_01_desc_show(l_id)
+      #hasC=確認該節點是否有子孫
+      LET g_structure_tree[l_id].g_hasC = FALSE
+      LET l_id = l_id + 1
+      CALL g_structure_tree.insertElement(l_id)
+      LET l_cnt = l_cnt + 1
+   
+   END FOREACH
+   #刪除空資料
+   CALL g_structure_tree.deleteElement(l_id)
+
+   FREE tree_expand
+   CLOSE tree_ex_cur
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi900_01" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION azzi900_01(pc_grog)
+   DEFINE pc_grog LIKE gzza_t.gzza001
+
+   LET g_program = pc_grog
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_azzi900_01 WITH FORM cl_ap_formpath("azz","azzi900_01")
+   CALL cl_ui_init()
+   
+   CALL azzi900_01_init()
+
+   #進入選單 Menu (="N")
+   CALL azzi900_01_ui_dialog()
+
+   CLOSE WINDOW w_azzi900_01
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi900_01_recompile_all" order="7" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi900_01_recompile_all()
+   DEFINE lc_gzzl002   LIKE gzzl_t.gzzl002
+   DEFINE ls_path      STRING
+   DEFINE l_sql        STRING
+   DEFINE ls_cmd       STRING
+
+   LET l_sql = "SELECT gzzl002 FROM gzzl_t " ,
+               " WHERE gzzl001 = '",g_program,"'"
+   DECLARE azzi900_01_recompile_cs CURSOR FROM l_sql
+   FOREACH azzi900_01_recompile_cs INTO lc_gzzl002
+      LET ls_path = os.PAth.join(FGL_GETENV(cl_get_module_by_4gl(lc_gzzl002,"S")),"4gl")
+      LET ls_cmd = "cd ",ls_path.trim(),"; r.c ",lc_gzzl002 CLIPPED
+      RUN ls_cmd
+   END FOREACH
+
+END FUNCTION]]>
+  </point>
+  <point name="free_style.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_structure_tree    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位  
+       #外顯欄位
+       g_show          LIKE type_t.chr100,    
+       g_show_desc     LIKE type_t.chr100,
+       #父節點id
+       g_pid           LIKE type_t.chr100,
+       #本身節點id
+       g_id            LIKE type_t.chr100,
+       #是否展開
+       g_exp           LIKE type_t.chr100,
+       #是否有子節點
+       g_hasC          LIKE type_t.num5,
+       #是否已展開
+       g_isExp         LIKE type_t.num5,
+       #展開值
+       g_expcode       LIKE type_t.num5,
+       #tree自定義欄位
+       g_gzzl001 LIKE gzzl_t.gzzl001,
+       g_gzzl002 LIKE gzzl_t.gzzl002
+       END RECORD
+
+DEFINE g_sql                 STRING 
+
+DEFINE l_ac                  LIKE type_t.num5 
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_root    DYNAMIC ARRAY OF INTEGER    #root資料所在
+
+DEFINE g_program        STRING   
+DEFINE g_row_index      LIKE type_t.num5  
+DEFINE g_rec_b          LIKE type_t.num5 
+]]>
+  </point>
+  <section id="azzi900_01.description" ver="15" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000084
+#+ 
+#+ Filename...: azzi900_01
+#+ Description: ...
+#+ Creator....: (1899/12/31)
+#+ Modifier...: 01856(2013/10/07)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="azzi900_01.free_style_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style
+{<point name="free_style.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzi900_01.free_style_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzi900_01.global" ver="1" status="" src="s">
+    <![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="azzi900_01.global_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzi900_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="azzi900_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

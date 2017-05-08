@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="abgi080" std_prog="abgi080" erpver="1.0" module="ABG" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.abgi080_bgae006_chk" order="1" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 項目組別檢查
+# Memo...........:
+# Usage..........: CALL abgi080_bgae006_chk(p_bgae006)
+#                  RETURNING 回传参数
+# Input parameter: p_bgae006
+# Return code....: null
+# Date & Author..: 14/02/12 By yuhuabao 
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi080_bgae006_chk(p_bgae006)
+DEFINE p_bgae006   LIKE bgae_t.bgae006
+    DEFINE l_cnt   LIKE type_t.num5
+
+    LET g_errno = ''
+    LET l_cnt = 0
+    SELECT count(*) INTO l_cnt FROM bgae_t
+     WHERE bgaeent = g_enterprise
+       AND bgae006 = p_bgae006
+       AND bgae007 = '1'
+     IF l_cnt = 0 THEN 
+        LET g_errno = 'abg-00005'
+        RETURN
+     END IF 
+
+     SELECT count(*) INTO l_cnt FROM bgae_t
+     WHERE bgaeent = g_enterprise
+       AND bgae006 = p_bgae006
+       AND bgaestus = 'Y'  
+       AND bgae007  = '1'       
+     IF l_cnt = 0 THEN 
+        LET g_errno = 'abg-00006'
+        RETURN
+     END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.abgi080_bgae001_chk" order="2" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 項目編號檢查
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: p_bgae006
+#                : p_bgae001
+# Return code....: 無
+# Date & Author..: 14/02/12 By yuhuabao
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi080_bgae001_chk(p_bgae006,p_bgae001)
+DEFINE   p_bgae006   LIKE bgae_t.bgae006
+DEFINE   p_bgae001   LIKE bgae_t.bgae001
+DEFINE   l_cnt       LIKE type_t.num5
+DEFINE  l_res LIKE type_t.chr1
+DEFINE  l_bgae001 STRING 
+   LET g_errno = ''
+   SELECT COUNT(bgae001) INTO l_cnt 
+     FROM bgae_t
+    WHERE bgaeent = g_enterprise
+      AND bgae001 = p_bgae001
+      AND bgae006 = p_bgae006
+      AND bgae007 = '1'
+    IF l_cnt <> 0  THEN 
+       LET g_errno = 'abg-00009'
+    END IF 
+
+    LET l_bgae001 = g_bgae_d[l_ac].bgae001
+    IF l_bgae001.getIndexOf('+',1) > 0 OR
+       l_bgae001.getIndexOf('-',1) > 0 OR
+       l_bgae001.getIndexOf('*',1) > 0 OR
+       l_bgae001.getIndexOf('/',1) > 0 OR
+       l_bgae001.getIndexOf('=',1) > 0 OR 
+       l_bgae001.getIndexOf('(',1) > 0 OR
+       l_bgae001.getIndexOf(')',1) > 0 THEN 
+       LET g_errno = 'abg-00050'
+     END IF
+  
+END FUNCTION]]>
+  </point>
+  <point name="function.abgi080_bgae001_desc" order="3" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+#項目編號說明
+################################################################################
+PRIVATE FUNCTION abgi080_bgae001_desc()
+           INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgae_d[l_ac].bgae001
+            LET g_ref_fields[2] = g_bgae_m.bgae006
+            CALL ap_ref_array2(g_ref_fields,"SELECT bgael003 FROM bgael_t WHERE bgaelent='"||g_enterprise||"' AND bgael001=? AND bgael006=? AND bgael002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgae_d[l_ac].bgael003 = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgae_d[l_ac].bgael003
+END FUNCTION]]>
+  </point>
+  <point name="function.abgi080_bgae006_desc" order="4" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+################################################################################
+PRIVATE FUNCTION abgi080_bgae006_desc()
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgae_m.bgae006
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='11' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgae_m.bgae006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgae_m.bgae006_desc
+
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF cl_null(g_wc2_table1) THEN
+      LET g_wc2_table1 =  " bgae007='3' "
+   ELSE
+      LET g_wc2_table1 = g_wc2_table1 CLIPPED," AND bgae007 = '3' "
+   END IF]]>
+  </point>
+  <point name="bfill.foreach" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         LET g_bgae2_d[l_ac].bgae001 = g_bgae_d[l_ac].bgae001          ]]>
+  </point>
+  <point name="construct.c.bgae006" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.where = " bgae007 = '3'"
+            CALL q_bgae006()                           #呼叫開窗
+            
+            DISPLAY g_qryparam.return1 TO bgae006  #顯示到畫面上
+
+            NEXT FIELD bgae006                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1.bgae001" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.where = " bgae007 = '3'"
+            CALL q_bgae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bgae001  #顯示到畫面上
+
+            NEXT FIELD bgae001                     #返回原欄位
+
+]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('bgae014','9420') ]]>
+  </point>
+  <point name="input.a.bgae006" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bgae_m.bgae006) THEN 
+               CALL abgi080_bgae006_chk(g_bgae_m.bgae006)
+               IF NOT cl_null(g_errno) THEN 
+                  CALL cl_err(g_bgae_m.bgae006,g_errno,1)
+                  LET g_bgae_m.bgae006 = g_bgae006_t 
+                  CALL abgi080_bgae006_desc()
+                  NEXT FIELD bgae006
+               END IF            
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_bgae_m.bgae006 != g_bgae006_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgae_t WHERE "||"bgaeent = '" ||g_enterprise|| "' AND "||"bgae006 = '"||g_bgae_m.bgae006 ||"' AND bgae007='3' ",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL abgi080_bgae006_desc()
+
+]]>
+  </point>
+  <point name="input.a.page1.bgae001" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_bgae_m.bgae006) AND NOT cl_null(g_bgae_d[l_ac].bgae001) THEN
+               CALL abgi080_bgae001_chk(g_bgae_m.bgae006,g_bgae_d[l_ac].bgae001)
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err('',g_errno,0)
+                  LET g_bgae_d[l_ac].bgae001 = g_bgae_d_t.bgae001
+                  CALL abgi080_bgae001_desc()
+                  NEXT FIELD bgae001
+               END IF
+            END IF
+            #此段落由子樣板a05產生
+            IF  g_bgae_m.bgae006 IS NOT NULL AND g_bgae_d[g_detail_idx].bgae001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_bgae_m.bgae006 != g_bgae006_t OR g_bgae_d[g_detail_idx].bgae001 != g_bgae_d_t.bgae001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgae_t WHERE "||"bgaeent = '" ||g_enterprise|| "' AND "||"bgae006 = '"||g_bgae_m.bgae006 ||"' AND "|| "bgae001 = '"||g_bgae_d[g_detail_idx].bgae001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+           CALL abgi080_bgae001_desc()]]>
+  </point>
+  <point name="input.a.page2.bgae001_2" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_bgae_m.bgae006 IS NOT NULL AND g_bgae2_d[g_detail_idx].bgae001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_bgae_m.bgae006 != g_bgae006_t OR g_bgae2_d[g_detail_idx].bgae001 != g_bgae2_d_t.bgae001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgae_t WHERE "||"bgaeent = '" ||g_enterprise|| "' AND "||"bgae006 = '"||g_bgae_m.bgae006 ||"' AND "|| "bgae001 = '"||g_bgae2_d[g_detail_idx].bgae001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.body.before_insert" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_bgae_d[l_ac].bgae007 = '3']]>
+  </point>
+  <point name="input.c.bgae006" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bgae_m.bgae006             #給予default值
+			LET g_qryparam.where = " bgae007 = '1'"
+            #給予arg
+
+            CALL q_bgae006()                                #呼叫開窗
+
+            LET g_bgae_m.bgae006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_bgae_m.bgae006 TO bgae006              #顯示到畫面上
+
+            NEXT FIELD bgae006                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE  l_bgae013             LIKE bgae_t.bgae013]]>
+  </point>
+  <point name="input.detail_input.page1.open_abgi080_01" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                  CALL abgi080_01(g_bgae_d[l_ac].bgae001,g_bgae_m.bgae006,g_bgae_d[l_ac].bgae013) 
+                     RETURNING l_bgae013
+                  IF NOT cl_null(l_bgae013) THEN
+                     LET g_bgae_d[l_ac].bgae013 = l_bgae013
+                     DISPLAY BY NAME g_bgae_d[l_ac].bgae013
+                  END IF]]>
+  </point>
+  <point name="input.detail_input.page1.update_item" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               IF NOT cl_null(g_bgae_d[l_ac].bgae001)  THEN
+                  CALL n_bgael(g_bgae_d[l_ac].bgae001,g_bgae_m.bgae006)
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_bgae_d[l_ac].bgae001
+                  LET g_ref_fields[2] = g_bgae_m.bgae006
+                  CALL ap_ref_array2(g_ref_fields," SELECT bgael003 FROM bgael_t WHERE bgaelent = '"
+                      ||g_enterprise||"' AND bgael001 = ? AND bgael006 = ? AND bgael002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_bgae_d[l_ac].bgael003 = g_rtn_fields[1]
+                  DISPLAY BY NAME g_bgae_d[l_ac].bgael003
+               END IF ]]>
+  </point>
+  <point name="menu.open_abgi080_01" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               IF l_ac > 0 THEN
+                  CALL abgi080_01(g_bgae_d[l_ac].bgae001,g_bgae_m.bgae006,g_bgae_d[l_ac].bgae013) 
+                     RETURNING g_bgae_d[l_ac].bgae013                     
+                     UPDATE bgae_t SET bgae013 = g_bgae_d[l_ac].bgae013
+                      WHERE bgaeent = g_enterprise
+                        AND bgae001 = g_bgae_d[l_ac].bgae001
+                        AND bgae006 = g_bgae_m.bgae006
+                     CALL abgi080_b_fill(g_wc2_table1)
+                     CALL abgi080_ref_show()
+                  
+               END IF]]>
+  </point>
+  <point name="ref_show.body.reference" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_bgae_m.bgae006
+   LET g_ref_fields[2] = g_bgae_d[l_ac].bgae001
+   CALL ap_ref_array2(g_ref_fields," SELECT bgael003 FROM bgael_t WHERE bgaelent = '"||g_enterprise||"' AND bgael006 = ? AND bgael001 = ? AND bgael002 =  '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_bgae_d[l_ac].bgael003 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_bgae_d[l_ac].bgael003]]>
+  </point>
+  <point name="ref_show.body2.reference" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgae2_d[l_ac].bgaemodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bgae2_d[l_ac].bgaemodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bgae2_d[l_ac].bgaemodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgae2_d[l_ac].bgaeownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bgae2_d[l_ac].bgaeownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bgae2_d[l_ac].bgaeownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgae2_d[l_ac].bgaeowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgae2_d[l_ac].bgaeowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bgae2_d[l_ac].bgaeowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgae2_d[l_ac].bgaecrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bgae2_d[l_ac].bgaecrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bgae2_d[l_ac].bgaecrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgae2_d[l_ac].bgaecrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgae2_d[l_ac].bgaecrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bgae2_d[l_ac].bgaecrtdp_desc]]>
+  </point>
+  <point name="ref_show.head.reference" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgae_m.bgae006
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='11' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgae_m.bgae006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgae_m.bgae006_desc
+]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_cnt  LIKE type_t.num5]]>
+  </point>
+</add_points>

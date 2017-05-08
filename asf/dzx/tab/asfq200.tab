@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfq200" module="asf" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="01534" crtdt="2014-12-16 10:35:04" modid="05426" moddt="2015-04-24 11:13:52" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="工單派工看板">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),sfpb002,sfpb003,sfpb004,sfpb005,stus(chr10),sfpb001,sfpb006,prog_asft300(string),sfpb007,prog_asft301(string),sfaa010(chr500),sfaa010_desc(chr500),sfaa010_desc_desc(chr500),sfpb008,sfpb008_desc(chr500),sfpb009,sfpb010,sffb017(num20_6),sfba016(num20_6),sfba017(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),sfpb002(b_sfpb002),sfpb003(b_sfpb003),sfpb004(b_sfpb004),sfpb005(b_sfpb005),stus(stus),sfpb001(b_sfpb001),sfpb006(b_sfpb006),prog_asft300(prog_asft300),sfpb007(b_sfpb007),prog_asft301(prog_asft301),sfaa010(sfaa010),sfaa010_desc(sfaa010_desc),sfaa010_desc_desc(sfaa010_desc_desc),sfpb008(b_sfpb008),sfpb008_desc(b_sfpb008_desc),sfpb009(b_sfpb009),sfpb010(b_sfpb010),sffb017(sffb017),sfba016(sfba016),sfba017(sfba017)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <cluster id="prog_asft300" qry_field="sfpb006" prog="asft300" parameter="sfpb006"/>
+      <cluster id="prog_asft301" qry_field="sfpb007" prog="asft301" parameter="sfpb007"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_asft300" prog="asft300" parameter="sfpb006"/>
+        <action id="prog_asft301" prog="asft301" parameter="sfpb007"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asfq200" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sfpb002,sfpb003,sfpb004,sfpb005,sfpb001,sfpb006,sfpb007,sfpb008,sfpb009,sfpb010" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="sfpb002(b_sfpb002),sfpb003(b_sfpb003),sfpb004(b_sfpb004),sfpb005(b_sfpb005),sfpb001(b_sfpb001),sfpb006(b_sfpb006),sfpb007(b_sfpb007),sfpb008(b_sfpb008),sfpb009(b_sfpb009),sfpb010(b_sfpb010)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="sfpb002"/>
+      <column id="sfpb003"/>
+      <column id="sfpb004">
+        <controlp form="q_oogd001" state="c"/>
+      </column>
+      <column id="sfpb005">
+        <controlp form="q_ooge001" state="c"/>
+      </column>
+      <column id="stus"/>
+      <column id="sfpb001"/>
+      <column id="sfpb006">
+        <controlp form="q_sfaadocno" state="c"/>
+      </column>
+      <column id="prog_asft300"/>
+      <column id="sfpb007" type="S" default="0">
+        <controlp form="q_sfca001_1" state="c"/>
+      </column>
+      <column id="prog_asft301"/>
+      <column id="sfaa010">
+        <after/>
+      </column>
+      <column id="sfaa010_desc">
+        <after/>
+      </column>
+      <column id="sfaa010_desc_desc"/>
+      <column id="sfpb008">
+        <after>
+          <reference field="sfpb008_desc" ref_field="sfpb008" map_field="sfpb008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="sfpb008_desc"/>
+      <column id="sfpb009">
+        <controlp form="q_sfcb004" state="c"/>
+      </column>
+      <column id="sfpb010" type="S" default="0"/>
+      <column id="sffb017"/>
+      <column id="sfba016"/>
+      <column id="sfba017"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="sfpb_t" page="1" linked="" pk="sfpb001,sfpb002,sfpb003,sfpb004,sfpb005,sfpb006,sfpb007,sfpb008,sfpb009">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,sfpb002,sfpb003,sfpb004,sfpb005,&apos;&apos;,sfpb001,sfpb006,sfpb007,&apos;&apos;,&apos;&apos;,&apos;&apos;,sfpb008,&apos;&apos;,sfpb009,sfpb010,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfpb_t WHERE sfpbent= ? AND sfpbsite= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

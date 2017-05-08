@@ -1,0 +1,2258 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmt850" std_prog="apmt850" erpver="1.0" ver="4" module="APM" type="M" booking="N" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="pmee_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pmef_t" main="N" head="N" pk="" fk_detail="" parent="pmee_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail6" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pmeg_t" main="N" head="N" pk="" fk_detail="" parent="pmee_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail3" src="s" insert="N" delete="N" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pmeh_t" main="N" head="N" pk="" fk_detail="" parent="pmee_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail4" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pmei_t" main="N" head="N" pk="" fk_detail="" parent="pmee_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+    <tbl name="xrcd_t" main="N" head="N" pk="xrcdent,xrcdld,xrcddocno,xrcdseq,xrcdseq2,xrcd007" fk_detail="xrcdent,xrcddocno" parent="pmee_t" fk_master="pmeeent,pmeedocno" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail5" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護採購變更單相關資訊
+標準作業功能取消：複製
+狀態功能：[確認/取消確認/作廢]+簽核狀態
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)： pmee_t(採購單單頭檔)
+                                             pmef_t(採購多期付款檔)  
+  作業資料來源(Detail)：pmeg_t(採購單明細檔)
+                                            pmeh_t(採購交期明細檔)
+                                            pmei_t(採購關聯單據明細檔)
+
+●顯示狀態：透過[T:變更歷程檔]判斷單頭與單身哪些欄位有變更過，將變更過欄位內容值用紅色顯示
+●查詢狀態： pmee005 全部 default '1' 
+●新增狀態：1.單頭新增確認時，應自動將畫面上單頭與單身的值分別新增到[T:採購變更單單頭檔]與[T:採購變更明細檔]
+                        2.單頭新增確認時，判斷單頭是否有欄位與[T:採購單單頭檔]對應欄位的值不一樣，若有的話需將pmee901(單頭變更否)=Y
+                        3.單頭新增確認時且 pmee901=Y 時，針對有變更的欄位需同步新增[T:採購變更歷程檔]
+                           3-1.刪除採購單號+變更序+變更欄位所對應的[T:採購變更歷程檔]資料
+                           3-2.針對有變更的欄位需同步新增[T:採購變更歷程檔]，新增時欄位預設值：
+                                  [C:採購單號]   = pmeedocno
+                                  [C:採購項次]   = 0
+                                  [C:項序]           = 0
+                                  [C:分批序]       = 0
+                                  [C:變更序]       = pmee900
+                                  [C:變更類型]   = 1(單頭修改)
+                                  [C:變更欄位]   = 變更的採購單欄位編號(例如:採購人員從001變成002，則此欄位紀錄的是pmdl002)
+                                  [C:變更前內容] = 原始採購單上的內容(例如:採購人員從001變成002，則此欄位紀錄的是001)
+                                  [C:變更後內容] = 採購變更單上變更後的內容(例如:採購人員從001變成002，則此欄位紀錄的是002)
+                                  [C:最後變更時間] = DATETIME
+                                  [C:欄位說明SQL]  = 變更前內容抓取說明之SQL
+                        4.呼叫"產生採購交期明細資料"的Function產生交期明細資料(待確認)
+●修改狀態：1.單頭修改確認時，判斷單頭是否有欄位與[T:採購單單頭檔]對應欄位的值不一樣，若有的話需將pmee901(單頭變更否)=Y
+                        2.單頭修改確認時且pmee901=Y時，針對有變更的欄位需同步新增[T:採購變更歷程檔]
+                            2-1.刪除採購單號+變更序+變更欄位所對應的[T:採購變更歷程檔]資料
+                            2-2.針對有變更的欄位需同步新增[T:採購變更歷程檔]，新增時欄位預設值同  新增狀態描述之3-2
+                        3.有來源單據時，商品編號不可變更且數量欄位皆不可變更
+                           3-1.當有關性單據資料的時候
+                                 3-1-1.單頭以下欄位不可修改
+                                             CALL cl_set_comp_entry("pmee200",FALSE)   #採購中心
+                                             CALL cl_set_comp_entry("pmee204",FALSE)   #配送中心
+                                             CALL cl_set_comp_entry("pmeeunit",FALSE)  #收貨組織
+                                             CALL cl_set_comp_entry("pmee029",FALSE)   #收貨部門
+                                             CALL cl_set_comp_entry("pmee004",FALSE)   #供應商
+                                             CALL cl_set_comp_entry("pmee203",FALSE)   #採購方式
+                                             CALL cl_set_comp_entry("pmee025",FALSE)   #送貨地址
+                                             CALL cl_set_comp_entry("pmee023",FALSE)   #採購渠道
+                                             CALl cl_set_comp_entry("pmee022",FALSE)   #代送商
+                                             CALL cl_set_comp_entry("pmee054",FALSE)   #內外購
+                                             CALL cl_set_comp_entry("pmee009",FALSE)   #付款條件
+                                             CALL cl_set_comp_entry("pmee010",FALSE)   #交易條件
+                                             CALL cl_set_comp_entry("pmee011",FALSE)   #稅別
+                                             CALL cl_set_comp_entry("pmee015",FALSE)   #幣別
+                                 3-1-2. 不可以新增、刪除單身資料；單身以下欄位才可以修改
+　                                         收貨部門(pmeg203)
+　                                         收貨地址碼(pmeg025)
+　                                         收貨庫位(pmeg028)：原單據有限定庫位(pmdb038)，不可以修改
+　                                         收貨儲位(pmeg029)
+　                                         收貨批號(pmeg030)
+　                                         帳款地址碼(pmeg026)
+　                                         多交期(pmeg024)
+　                                         到庫日期(pmeg014)
+　                                         部分交貨(pmeg022)
+　                                         代送商(pmeg023)
+　                                         理由碼(pmeg049)
+　　　　　　4.無來源單據時，且無收貨單才可修改商品編號；其他欄位有收貨單時也不可變更
+
+●刪除狀態：1.刪除時必須同步將pmef_t、pmeg_t、pmeh_t、pmei_t、pmej_t一併刪除
+                        2.需同部刪除採購單號+變更序所對應的[T:採購變更歷程檔(pmek_t)]所有資料
+                        3.若單身該筆項次對應的pmeg901(單身變更類型)不等於"3:單身新增"時，則不允許做刪除動作(待確認)
+●離開單身狀態：離開單身時需計算單身所有項次的未/含稅金額做加總，並更新單頭的總未/含稅金額欄位
+
+●狀態=Y.確認：1.當狀態變更為確認時，資料更新至採購單，稅別明細需重新計算，同步更新
+
+TopMenu :
+  1.整單操作：維護一次性交易對象資料
+                         維護多帳期預付款
+　　　　　　 關聯單據明細
+                          (1) 共用子畫面 apmt840_s01
+                          (2) 顯示螢幕當前採購變更單的所有關聯單據明細
+  2.明細操作：單身關聯單據明細
+                         (1) 共用子畫面 apmt840_s01
+                         (2) 顯示螢幕當前單身指標所在的採購變更單的項次的關聯單據明細      ]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[交期明細與交易稅明細僅供瀏覽，不可編輯]]>
+  </db_all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[採購明細：
+●顯示狀態：在單身最後一筆用genero提供功能對未稅金額、含稅金額、稅額加總顯示，可參考aglt310做法
+●新增狀態：1.新增時[C:送貨供應商]、[C:運輸方式]、[C:送貨地址]、[C:帳款地址]、[C:收貨組織]、[C:帳務組織]預設單頭相關欄位的值
+                        2.新增時若[C:收貨組織]為空白且單頭採購組織對應的組織類型='物流組織'則Default 收貨組織=採購組織,否則空白
+                        3.呼叫"產生採購交期明細資料"的Function產生交期明細資料
+                        4.新增採購項次確認時，需針對該項次所有單身欄位同步新增[T:採購變更歷程檔]
+                           4-1.刪除採購單號+變更序+採購項次+項序+分批序+變更欄位所對應的[T:採購變更歷程檔]資料
+                           4-2.針對單身所有的欄位需同步新增[T:採購變更歷程檔]，欄位預設值：
+                                  [C:採購單號]   = pmeedocno
+                                  [C:採購項次]   = pmegseq
+                                  [C:項序]           = 0
+                                  [C:分批序]       = 0
+                                  [C:變更序]       = pmee900
+                                  [C:變更類型]   = 3(單身新增)
+                                  [C:變更欄位]   = 變更的採購單欄位編號(例如:採購人員從001變成002，則此欄位紀錄的是pmdl002)
+                                  [C:變更前內容] = null
+                                  [C:變更後內容] = 採購變更單上變更後的內容(例如:採購人員從001變成002，則此欄位紀錄的是002)
+                                  [C:最後變更時間] = DATETIME
+                                  [C:欄位說明SQL]  = null
+●修改狀態：1.若有修改到商品編號或產品特徵則需將對應的"交期明細"與"關聯單據明細"資料中的商品編號或產品特徵也同步更新
+                        2.修改料號、產品特徵、採購單位時需要開窗詢問是否重新取價，並重新計算[C:含稅金額]與[C:未稅金額]及同步新增[T:採購變更歷程檔]
+                        3.修改確認時，若該筆項次是採購原有的項次，且是否有欄位與[T:採購單明細檔]對應欄位的值不一樣，
+                           若有的話需將pmeg901(單身變更類型)更新成"2:單身修改"，且須同步新增[T:採購變更歷程檔]
+                           3-1.刪除採購單號+變更序+採購項次+項序+分批序+變更欄位所對應的[T:採購變更歷程檔]資料
+                           3-2.針對有變更的單身欄位需同步新增[T:採購變更歷程檔]，欄位預設值同 新增狀態之4-2.
+                       4.修改確認時，若該筆項次是新增的採購項次時，則需同步更新[T:採購變更歷程檔]
+                           4-1.刪除採購單號+變更序+採購項次+項序+分批序+變更欄位所對應的[T:採購變更歷程檔]資料
+                           4-2.針對單身所有的欄位需同步新增[T:採購變更歷程檔]，欄位預設值:
+                                  [C:採購單號]   = pmeedocno
+                                  [C:採購項次]   = pmegseq
+                                  [C:項序]           = 0
+                                  [C:分批序]       = 0
+                                  [C:變更序]       = pmee900
+                                  [C:變更類型]   = 2(單身修改) 
+                                  [C:變更欄位]   = 變更的採購單欄位編號(例如:採購人員從001變成002，則此欄位紀錄的是pmdl002)
+                                  [C:變更前內容] = 原始採購單上的內容(例如:採購人員從001變成002，則此欄位紀錄的是001)
+                                  [C:變更後內容] = 採購變更單上變更後的內容(例如:採購人員從001變成002，則此欄位紀錄的是002)
+                                  [C:最後變更時間] = DATETIME
+                                  [C:欄位說明SQL]  = 變更前內容抓取說明之SQL
+●刪除狀態：1.刪除時需把對應的交期明細資料與關聯單據明細資料與交期匯總資料一併刪除
+                        2.若單身該筆項次對應的pmeg901(單身變更類型)不等於"3:單身新增"時，則不允許做刪除動作
+                        3.需同步刪除採購單號+變更序+採購變更項次所對應的[T:採購變更歷程檔]所有資料
+●離開單身狀態：1.離開單身時需計算單身所有項次的未/含稅金額做加總，併更新單頭的總未/含稅金額欄位
+
+●當有關性單據資料的時候
+1.不可以新增、刪除單身資料
+2. 以下欄位才可以修改
+　收貨部門(pmeg203)
+　收貨地址碼(pmeg025)
+　收貨庫位(pmeg028)：原單據有限定庫位(pmdb038)，不可以修改
+　收貨儲位(pmeg029)
+　收貨批號(pmeg030)
+　帳款地址碼(pmeg026)
+　多交期(pmeg024)
+　到庫日期(pmeg014)
+　部分交貨(pmeg022)
+　代送商(pmeg023)
+　理由碼(pmeg049)
+
+●單身不可修改欄位
+包裝單位(pmeg201)
+採購單位(pmeg006)
+計價單位(pmeg010)
+計價數量(pmeg011)
+取出價格(pmeg043)
+未稅(pmeg046)
+稅額(pmeg048)
+含稅(pmeg047)
+最終收貨組織(pmeg225)
+帳務組織(pmegorga)
+行狀態(pmeg045)
+採購在途量(pmeg207)
+前日銷售量(pmeg208)
+月銷量(pmeg209)
+第一週銷量(pmeg210)
+第二週銷量(pmeg211)
+第三週銷量(pmeg212)
+第四週銷量(pmeg213)
+子件特性(pmeg019)
+緊急度(pmeg020)
+採購失效日(pmeg224)
+檢驗(pmeg052)
+理由碼(pmeg049)
+採購渠道(pmeg214)
+渠道性質(pmeg215)
+經營方式(pmeg216)
+合約編號(pmeg218)
+協議編號(pmeg219)
+採購人員(pmeg220)
+採購部門(pmeg221)
+
+]]>
+  </di_all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[多期預付款：
+●進入table狀態：此頁籤資料必需執行"維護多帳期預付款"action時才可以進行維護
+●修改狀態：已經有應付帳款與已付金額的資料不可以進行修改
+●刪除狀態：已經有應付帳款與已付金額的資料不可以進行刪除
+●離開table狀態：離開維護時需檢核維護的多帳期預付款金額加總不可超過整張採購單總採購金額(含未金額均不能超過)]]>
+  </mi_all>
+  <field cite_std="N" name="b_pmee001" ver="1" src="s" column="pmee001" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pmee002" ver="1" src="s" column="pmee002" table="pmee_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pmee003" ver="1" src="s" column="pmee003" table="pmee_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pmee004" ver="1" src="s" column="pmee004" table="pmee_t" attribute="" type="" req="N" i_zoom="q_pmaa001_3" c_zoom="q_pmaa001_3" chk_ref="v_pmaa001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pmee900" ver="1" src="s" column="pmee900" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pmee902" ver="1" src="s" column="pmee902" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pmeedocno" ver="1" src="s" column="pmeedocno" table="pmee_t" attribute="" type="" req="N" i_zoom="q_ooba002_1" c_zoom="q_pmdldocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal0042" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_pmeg025_addr" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_pmeg025_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_pmeg026_addr" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_pmeg026_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofb017" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee011_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee025_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee033_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee903_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee001" ver="1" src="s" column="pmee001" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[版本：pmee001
+新增時：輸入採購單號後，取該單號最大版次＋１]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee002" ver="1" src="s" column="pmee002" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購人員：pmee002
+帶值：依據pmee002的值到[T:員工檔]抓取[C:歸屬部門]的值，並預設到pmee003(採購部門)欄位上
+  
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee003" ver="1" src="s" column="pmee003" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購部門：pmee003
+預設：g_dept
+校驗：v_ooeg001, arg1=pmee003, arg2=pmeedocdt
+開窗：q_ooeg001,arg1 = pmeedocdt
+
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee004" ver="1" src="s" column="pmee004" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_pmaa001_3" c_zoom="q_pmaa001_3" chk_ref="v_pmaa001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[供應商編號：pmee004
+校驗：修改供應商時需判斷該採購單是否已有收貨單，若有則不允許修改供應商
+            有來源單據時，不允許修改供應商
+帶值：1.供應商據點預設條件(apmm202,pmabsite='ALL')資料default到採購單上，預設欄位如下:           
+              pmee009[C:付款條件] = pmab037
+              pmee010[C:交易條件] = pmab053
+              pmee011[C:稅別] = pmab034
+              pmee012[C:稅率] = 稅務規則所設定的稅率
+              pmee013[C:單價含稅否] = 稅務規則所設定的含稅否
+              pmee015[C:幣別] = pmab033
+              pmee016[C:匯率] = 呼叫應用元件取採購幣別與本國幣的匯率
+              pmee017[C:取價方式] = pmab054
+              pmee020[C:運送方式] = pmab040
+              pmee023[C:採購通路] = pmab038
+              pmee024[C:採購分類] = pmab039
+              pmee033[C:發票類型] = pmab056   
+              pmee054[C:內外購]     = pmab057   
+          2.抓取交易對象夥伴關係檔且交易類型為"1:收/付款對象"的且勾選主要的交易對象顯示在採購單上的
+            [C:帳款供應商]，若沒有設交易對象夥伴關係檔且交易類型為"1:收/付款對象"的交易對象時，
+            則[C:帳款供應商]預設採購供應商
+          3.抓取交易對象夥伴關係檔且交易類型為"2:出貨對象"的且勾選主要的送貨對象顯示在採購單上的[C:送貨供應商]，
+            若沒有設交易對象夥伴關係檔且交易類型為"2:出貨對象"的交易對象時，則[C:送貨供應商]預設採購供應商
+          4.抓取交易對象聯絡人明細檔且有勾選主要聯絡人的聯絡對像識別碼顯示在採購單上的[C:供應商連絡人]
+             再依交易對象聯絡人抓取通訊方式檔(oofc_t),
+             DEFAULT LET [C:聯絡電話]=通訊內容(oofc012) WHERE 通訊類型= 1.一般電話 
+                               LET [C:傳真號碼]=通訊內容(oofc012) WHERE 通訊類型= 3.傳真
+          5.稅別有變更時，需重新計算金額欄位
+計算或處理：新增時，若輸入供應商的法人類型為'2:一次性交易'或是'4:內部員工'時，則自動串apmi004_01
+                        維護一次性交易對象基本資料，維護完基本資料後會回傳一個一次性交易對象識別碼，
+                        將識別碼值預設給pmee028欄位
+
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee005" ver="1" src="s" column="pmee005" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2052" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee006" ver="1" src="s" column="pmee006" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2053" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee007" ver="1" src="s" column="pmee007" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2054" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[資料來源類型：pmee007
+計算或處理：SCC = 6740, 不顯示6,7,8]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee008" ver="1" src="s" column="pmee008" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pmdl008" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee009" ver="1" src="s" column="pmee009" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_pmad002_2" c_zoom="q_pmad002_2" chk_ref="v_pmad002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[付款條件：pmee009
+校驗：v_pmad002_1, arg1 = pmee004, arg2 = pmee009
+開窗：q_pmad002_2, arg1 = pmee004 
+
+     
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee010" ver="1" src="s" column="pmee010" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[交易條件：pmee010
+校驗：s_azzi650_chk_exist('238',g_pmee_m.pmee010)
+開窗處理： q_oocq002, arg1 = '238'
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee011" ver="1" src="s" column="pmee011" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_oodb002_11" c_zoom="q_oodb002_11" chk_ref="v_oodb002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[稅別：pmee011
+校驗：v_oodb002, arg1 = g_pmee_m.pmeesite, arg2 = g_pmdl_m.pmee011
+帶值：呼叫稅別應用元件取的該稅別的說明、單價含稅否、稅率等值顯示在[C:稅別]、[C:單價含稅否]、[C:稅率]欄位上
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee012" ver="1" src="s" column="pmee012" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee013" ver="1" src="s" column="pmee013" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee015" ver="1" src="s" column="pmee015" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_ooaj002_1" c_zoom="q_ooaj002_1" chk_ref="v_ooaj002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[幣別：pmee015
+校驗：v_ooaj002, arg1 = g_pmee_m.pmeesite  arg2 = g_pmee_m.pmee015
+帶值：呼叫取匯率應用元件抓取出匯率後顯示在{C:匯率]欄位
+開窗：q_ooaj002_1, arg1 = g_pmee_m.pmeesite
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee016" ver="1" src="s" column="pmee016" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee017" ver="1" src="s" column="pmee017" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_pmam001" c_zoom="q_pmam001" chk_ref="v_pmam001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[     校驗: arg1 = pmee017
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee018" ver="1" src="s" column="pmee018" table="pmee_t" attribute="" type="" req="N" i_zoom="q_ooid001_2" c_zoom="q_ooid001_2" chk_ref="v_ooid001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[     校驗: arg1 = pmee018
+   
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee019" ver="1" src="s" column="pmee019" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee020" ver="1" src="s" column="pmee020" table="pmee_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[運送方式：pmee020
+校驗： s_azzi650_chk_exist('263',g_pmee_m.pmee020) 
+開窗：q_oocq002, arg1 = "263"]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee021" ver="1" src="s" column="pmee021" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_pmac002_2" c_zoom="q_pmac002_2" chk_ref="v_pmac002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳款供應商：pmee201
+預設值：1.由輸入採購供應商後自動帶入交易伙伴檔中的預設"1.收付款對象"
+                2.若為空白時則 Default 採購供應商
+校驗：v_pmac002, arg1 = pmee004, arg2 = pmee022, arg3 = 'ALL'
+開窗：q_pmac002_2, arg1 = pmee004, LET g_qryparam.where =" pmac003 ='1'"]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee022" ver="1" src="s" column="pmee022" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_pmac002_2" c_zoom="q_pmac002_2" chk_ref="v_pmac002_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[代送商：pmee202
+預設值：1.由輸入採購供應商後自動帶入交易伙伴檔中的預設"2.送貨對象"
+                2.若為空白時則 Default 採購供應商
+校驗：v_pmac002_2, arg1 = pmee004, arg2 = pmee022, arg3 = 'ALL'
+開窗：q_pmac002_2, arg1 = pmee004, LET g_qryparam.where =" pmac003 ='2'"
+     
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee023" ver="1" src="s" column="pmee023" table="pmee_t" attribute="" type="" req="N" i_zoom="q_oojd001_1" c_zoom="q_oojd001_1" chk_ref="v_oojd001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購渠道：pmee203
+校驗：v_oojd001, arg1 = g_pmdl_m.pmdl023, arg2 = '2'
+開窗：q_oojd001_1, arg1 = '2']]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee024" ver="1" src="s" column="pmee024" table="pmee_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購分類：pmee024
+校驗：s_azzi650_chk_exist('264',pmee024) 
+開窗處理：q_oocq002, arg1 = '264' 
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee025" ver="1" src="s" column="pmee025" table="pmee_t" attribute="" type="" req="N" i_zoom="q_oofb019_1" c_zoom="q_oofb019_1" chk_ref="v_oofb019_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[送貨地址：pmee025
+校驗：1.當採購方式<>'3.統採越庫'時，輸入值須存在收貨組織(pmdlunit)所設置的聯絡地址資料的簡要代碼，且為有效的"送貨地址"資料
+　　　2.當採購方式 = '3.統採越庫'時，輸入值須存在"配送中心(pmdl204)"所設置的聯絡地址資料的簡要代碼，且為有效的"送貨地址"資料
+　　　arg1 = 收貨組織(pmeeunit)　或　配送中心(pmee204)的聯絡對象識別碼　arg2 = pmee025
+帶值：1.顯示時將[T:連絡地址檔].[C:簡要說明]帶回pmee025
+　　　2.呼叫地址組合應用元件，將組合好的聯絡地址顯示在下方
+開窗處理： q_oofb019_1,arg1 = ooef012, LET g_qryparam.where = " oofb008 = '3' " 
+                     ooef012：收貨組織(pmeeunit)　或　配送中心(pmee204)的聯絡對象識別碼　且　地址類型為'3'出貨地址
+計算或處理：當採購方式為統採越庫時，收貨地址<>收貨組織的地址，應等於配送中心的送貨地址
+
+
+
+
+     校驗: arg1 = 稅區編號（根據當前營運據點編號，到aooi100抓取ooef019的所屬稅區欄位）
+               arg2 = pmee025
+     帶值: 呼叫地址組合應用元件，將組合好的聯絡地址顯示在下方
+   ●開窗處理：
+       新增狀態：arg1 = 稅區編號（根據當前營運據點編號，到aooi100抓取ooef019的所屬稅區欄位）
+                           且地址類型為'3':出貨地址
+       查詢狀態：地址類型為'3':出貨地址
+
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee027" ver="1" src="s" column="pmee027" table="pmee_t" attribute="" type="" req="N" i_zoom="q_pmaj002" c_zoom="" chk_ref="v_pmaj002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[供應商聯絡人：pmee027
+校驗：v_pmaj002, arg1 = pmee004, arg2 = pmee027
+開窗處理：q_pmaj002, arg1 = pmee004
+         
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee028" ver="1" src="s" column="pmee028" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee029" ver="1" src="s" column="pmee029" table="pmee_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收貨部門：pmee029
+校驗：v_ooeg001, arg1=pmee029, arg2=pmeedocdt
+開窗處理：q_ooeg001, arg1 = pmeedocdt
+
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee030" ver="1" src="s" column="pmee030" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee031" ver="1" src="s" column="pmee031" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[   查詢狀態:1.開窗查詢採購單頭的多角來源單號資料
+       
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee032" ver="1" src="s" column="pmee032" table="pmee_t" attribute="" type="" req="N" i_zoom="q_pmaa001_6" c_zoom="q_pmaa001_6" chk_ref="v_pmaa001_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[     預設值: 訂單客戶
+     校驗: arg1 = pmee032
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee033" ver="1" src="s" column="pmee033" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_isac002_2" c_zoom="q_isac002_2" chk_ref="v_isac002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[發票類型：pmee033
+開窗：q_isac002_2, arg1 = s_tax_get_ooef019(g_pmee_m.pmeesite)
+　　　                        arg2 = '1'
+校驗：v_isac002_1, arg1 = s_tax_get_ooef019(g_pmee_m.pmeesite)
+　　　                        arg2 = g_pmee_m.pmee033]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee040" ver="1" src="s" column="pmee040" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee041" ver="1" src="s" column="pmee041" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee042" ver="1" src="s" column="pmee042" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee043" ver="1" src="s" column="pmee043" table="pmee_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[留置原因：pmee043
+欄位控制：採購單狀態為留置時才開放修改
+校驗： s_azzi650_chk_exist('298',g_pmee_m.pmee043) 
+開窗：q_oocq002, arg1 = "298"
+    ]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee044" ver="1" src="s" column="pmee044" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee046" ver="1" src="s" column="pmee046" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="8321" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee047" ver="1" src="s" column="pmee047" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee048" ver="1" src="s" column="pmee048" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee049" ver="1" src="s" column="pmee049" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee051" ver="1" src="s" column="pmee051" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[ 計算或處理:1.僅單頭"多角性質"([T:採購單頭檔].[C:多角性質])=2.代採購或3.代採購指定供應商時,此欄位才允許輸入
+
+   ●開窗處理：
+     查詢欄位：[T:多角貿易流程代碼檔].[C:流程代碼],[T:多角流程代碼多語言檔].[C:說明]
+     過濾條件：若單頭"多角性質"([T:採購單頭檔].[C:多角性質])=2.代採購時,為[T:多角貿易流程代碼檔].[C:流程類型]=2.代採購 
+               AND [T:多角貿易營運據檔].[C:營運據點]=g_site AND [T:多角貿易營運據檔].[C:站別]=0
+               若單頭"多角性質"([T:採購單頭檔].[C:多角性質])=3.代採購指定供應商時,為[T:多角貿易流程代碼檔].[C:流程類型]=
+               3.代採購指定供應商 AND [T:多角貿易營運據檔].[C:營運據點]=g_site AND [T:多角貿易營運據檔].[C:站別]=0]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee052" ver="1" src="s" column="pmee052" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_pmaa001_3" c_zoom="q_pmaa001_3" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[ 校驗:1.輸入的值必須存在指定之多角流程代碼[T:多角流程營運據點檔]最終站之[T:交易對象主檔].[C:交易對象編號]，
+　　　　　　且[C:狀態] =確認，且[C:交易對象類型] ='1' OR '3'   
+ 計算或處理:單頭"多角性質"=3.代採購指定供應商時,此欄才開放輸入,否則由系統清為空白.]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee053" ver="1" src="s" column="pmee053" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[計算或處理:1.若單頭"多角性質"='7'點對點時,此欄位才可維護
+●開窗處理：  
+   查詢欄位：[T:交易對象主檔].[C:制定組織],[T:組織多語言檔].[C:簡稱]]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee054" ver="1" src="s" column="pmee054" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2087" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[內外購：pmee054
+計算或處理：修改時需重新依據據點參數內外購匯率來源重新取匯率更新回pmdl016]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee055" ver="1" src="s" column="pmee055" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2086" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee200" ver="1" src="s" column="pmee200" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購中心：pmee200
+備註：aooi500標準設定, 欄位類型:自訂欄位,設定類型:組織職能,對應設定值:採購中心
+IF aooi500有設定，s_aooi500_setpoint(g_prog,'pmee200') THEN
+    校驗：s_aooi500_chk(g_prog,'pmee200',g_pmee_m.pmee200,g_pmee_m.pmeesite)
+    開窗：1.編輯，q_ooef001_24，LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmee200',g_pmee_m.pmeesite,'i')   [150308-00001#4]
+                2.查詢，q_ooef001_24，LET  g_qryparam.where =s_aooi500_q_where(g_prog,'pmee200',g_site,'c')   [150308-00001#4 lori]
+ELSE
+    校驗：v_ooef001_34，arg1 = g_pmee_pmee200
+    開窗：q_ooef001，LET g_qryparam.where =where = " ooef303 = 'Y'"
+END IF]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee201" ver="1" src="s" column="pmee201" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[聯絡電話：pmee201
+預設值：由輸入供應商後自動依對應供應商主要連絡人的聯絡電話]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee202" ver="1" src="s" column="pmee202" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[傳真地址：pmee202
+預設值：由輸入供應商後自動依對應供應商主要連絡人的傳真地址]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee203" ver="1" src="s" column="pmee203" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6014" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[採購方式：pmee203
+計算與處理：1.本作業不顯示2.統採配送選項
+                        2.本欄位不可修改
+                        3.當=3.統採越庫時，配送中心(pmee204) 必要輸入，且送貨地址為配送中心有效的"3.送貨地址"的主要出貨地址；
+　　　　　　   否則不可以輸入配送中心(pmee204)，送貨地址為收貨組織有效的"3.送貨地址"的主要出貨地址]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee204" ver="1" src="s" column="pmee204" table="pmee_t" attribute="" type="" req="N" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[配送中心：pmee204
+校驗,開窗前檢查有無設定 aooi500，若有設定則依aooi500 控制
+IF s_aooi500_setpoint(g_prog,'pmee204') THEN
+   校驗：s_aooi500_chk(g_prog,'pmee204',g_pmee_m.pmee204,g_pmee_m.pmeesite)
+   開窗：q_ooef001_24, LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmee204',g_pmee_m.pmeesite)
+ELSE
+   校驗：v_ooef001_33, arg1 = pmee204
+   開窗：q_ooef001, LET g_qryparam.where = " ooef302 = 'Y'"
+END IF
+帶值：當採購方式 = '3.統採越庫'時，輸入值須存在"配送中心(pmee204)"所設置主要的聯絡地址資料的簡要代碼，且為有效的"3.送貨地址"資料]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee205" ver="3" src="s" column="pmee205" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[採購日期+ arti701 設定的訂單效期 = 失效日
+#150608修改  #150604-00026#2
+開放欄位修改
+當長效期訂單 = 'N' 且 單身有資料，為必要輸入欄位
+　　　　　　 = 'Y'  且 採購失效日為空，不處理
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee206" ver="3" src="s" column="pmee206" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[當長效期訂單 = 'Y'，採購失效日清空]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee900" ver="1" src="s" column="pmee900" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[變更序：pmee900(代表採購單登打變更單的次數)
+計算或處理：新增時, 輸入單號後, 依單號計算變更單總數量後+1]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee901" ver="1" src="s" column="pmee901" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[變更類型：pmee901
+預設值：N
+計算或處理：單頭有欄位變更與原單不同時，在存檔時寫入Ｙ]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee902" ver="1" src="s" column="pmee902" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[變更日期：pmee902
+預設值：g_today]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee903" ver="1" src="s" column="pmee903" table="pmee_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[變更理由：pmee903
+校驗： s_azzi650_chk_exist('258',g_pmee_m.pmee020) 
+開窗：q_oocq002, arg1 = "258"
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmee904" ver="1" src="s" column="pmee904" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeeacti" ver="1" src="s" column="pmeeacti" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[採購單結案否：pmeeacti
+計算或處理：當pmeeacti = Y，代表要對整張採購單進行結案，在採購變更單發出時，需要將[T:採購單單頭檔].[C:狀態]欄位，更新成結案
+備註：此欄位對應到[T:採購單單頭檔]的pmdlstus，當此欄位勾選時，代表要對採購單結案]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeecnfdt" ver="1" src="s" column="pmeecnfdt" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeecnfid" ver="1" src="s" column="pmeecnfid" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeecrtdp" ver="1" src="s" column="pmeecrtdp" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeecrtdt" ver="1" src="s" column="pmeecrtdt" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeecrtid" ver="1" src="s" column="pmeecrtid" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeedocdt" ver="1" src="s" column="pmeedocdt" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[採購日期：pmeedocdt (原採購單的採購日期)]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeedocno" ver="1" src="s" column="pmeedocno" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_pmdldocno" c_zoom="q_pmdldocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[變更單號：pmeedocno
+開窗：q_pmdldocno
+校驗：檢查使否已存在未確認變更單，若存在則不可新增
+計算或處理：
+1.修改時此欄位為NoEntry
+2.新增時，輸入單號後，將原採購單資料複製到變更檔
+    2-1.單頭 pmdl_t  -> pmee_t
+        2-1-1.變更序：pmee901，計算該單號已填寫變更單的次數加總後+1
+        2-1-2.版本：pmee001，取改單號最大版次+1
+    2-2.單身 pmdn_t -> pmeg_t
+    2-3.交期 pmdo_t -> pmeh_t
+    2-4.關聯單據 pmdp_t -> pmei_t
+    2-5.交期匯總 pmdq_t -> pmej_t
+3.檢查有無來源單據或已有收貨，各別控制其他欄位的輸入否
+4.檢查變更歷程，已變更的欄位字體顏色要用紅色顯示
+5.刪除時要同變更單相關Table的資料都做刪除：pmeg_t,pmeh_t,pmei_t,pmej_t,pmef_t
+   因除了刪除當前螢幕資料外,尚有兩種行為也需要刪除資料,故Key值用備份的record值(g_pmee_m_t)
+   5-1.新增->輸入單號A->放棄, 此時需要刪除單號A的資料
+   5-2.新增->輸入單號A->AFTER FIELD 單號->更該單號B , 此時需要刪除單號A的資料
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeemoddt" ver="1" src="s" column="pmeemoddt" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeemodid" ver="1" src="s" column="pmeemodid" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeeowndp" ver="1" src="s" column="pmeeowndp" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeeownid" ver="1" src="s" column="pmeeownid" table="pmee_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeesite" ver="1" src="s" column="pmeesite" table="pmee_t" attribute="" type="" req="Y" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購組織：pmeesite
+預設值：依aooi500 設定(aooi500標準設定, 欄位類型:營運組織,設定類型:組織職能,對應設定值:採購組織,組織結構下展='Y')
+                若沒有設定則預設為 g_site
+                 s_aooi500_default(g_prog,'pmeesite',g_pmee_m.pmeesite) RETURNING g_insert,g_pmee_m.pmeesite
+開窗：q_ooef001_24, 查詢, s_aooi500_q_where(g_prog,'pmeesite',g_site,'c')   [150308-00001#4]
+                                        編輯, s_aooi500_q_where(g_prog,'pmeesite','','i')   [150308-00001#4]
+校驗：依aooi500 設定, s_aooi500_chk(g_prog,'pmeesite',g_pmee_m.pmeesite,g_pmee_m.pmeesite)
+欄位輸入否控卡：依aooi500設定進行管控]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeestus" ver="1" src="s" column="pmeestus" table="pmee_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[下拉選項來自 SCC13(單據狀態碼) / SCC17(基本資料狀態碼) / SCC50(主檔狀態碼)
+●確認功能:
+●作廢功能:
+ 
+]]>
+  </field>
+  <field cite_std="N" name="pmee_t.pmeeunit" ver="1" src="s" column="pmeeunit" table="pmee_t" attribute="" type="" req="N" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收貨組織：pmeeunit
+開窗：q_ooef001_34, 查詢時：s_aooi500_q_where(g_prog,'pmeeunit',g_site,'c')   [150308-00001#4]
+                                        編輯時：s_aooi500_q_where(g_prog,'pmeeunit',g_pmee_m.pmeesite,'i')   [150308-00001#4] 
+校驗：s_aooi500_chk(g_prog,'pmeeunit',g_pmee_m.pmeeunit,g_pmee_m.pmeesite
+欄位輸入否控卡：依aooi500設定進行管控
+帶值：當採購方式<>'3.統採越庫'時，輸入值須存在收貨組織(pmeeunit)所設置主要的聯絡地址資料的簡要代碼，且為有效的"3.送貨地址"資料]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef001" ver="1" src="s" column="pmef001" table="pmef_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[期別：pmef001
+預設值：最大值加1
+校驗：不可以小於0]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef002" ver="1" src="s" column="pmef002" table="pmef_t" attribute="" type="" req="Y" i_zoom="q_pmad002_2" c_zoom="q_pmad002_2" chk_ref="v_pmad002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[付款條件：pmef002
+校驗：v_pmad002_1, arg1 = pmee004, arg2 = pmef002
+開窗：q_pmad002_2, arg1 = pmee004 ]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef003" ver="1" src="s" column="pmef003" table="pmef_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef004" ver="1" src="s" column="pmef004" table="pmef_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[預計票據到期：pmef004
+預設值：g_today]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef005" ver="1" src="s" column="pmef005" table="pmef_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[未稅金額：pmef005
+校驗：不可以大於pmee040(採購總未稅金額)
+計算或處理：依據pmee011(稅別)稅率是依單頭還是依單身，若是依單頭時則必須自動推算含稅金額]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef006" ver="1" src="s" column="pmef006" table="pmef_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[含稅金額：pmef006
+校驗：不可以大於pmee041(採購總含稅金額)
+計算或處理：依據pmee11(稅別)稅率是依單頭還是依單身，若是依單頭時則必須自動推算未稅金額]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef007" ver="1" src="s" column="pmef007" table="pmef_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[應付帳款單號：pmef007
+備註：此欄位由應付帳款作業回寫]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef008" ver="1" src="s" column="pmef008" table="pmef_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[已付未稅金額：pmef008
+備註：此欄位由應付帳款作業回寫]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef009" ver="1" src="s" column="pmef009" table="pmef_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[已付含稅金額：pmef009
+備註：此欄位由應付帳款作業回寫]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef014" ver="1" src="s" column="pmef014" table="pmef_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="3015" default="&apos;2&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef901" ver="1" src="s" column="pmef901" table="pmef_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef902" ver="1" src="s" column="pmef902" table="pmef_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[變更理由：pmef902
+校驗： s_azzi650_chk_exist('267',g_pmee_m.pmee020) 
+開窗：q_oocq002, arg1 = "267"]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmef903" ver="1" src="s" column="pmef903" table="pmef_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmef_t.pmefsite" ver="1" src="s" column="pmefsite" table="pmef_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg002_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg012_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[備註: 直接抓取該採購項次所對應的交貨日期顯示
+   
+   
+
+]]>
+  </field>
+  <field cite_std="N" name="pmeg013_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[備註: 直接抓取該採購項次所對應的到廠日期顯示
+   
+   
+
+]]>
+  </field>
+  <field cite_std="N" name="pmeg014_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[備註: 直接抓取該採購項次所對應的到庫日期顯示
+   
+   
+
+]]>
+  </field>
+  <field cite_std="N" name="pmeg016_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg049_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg051_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg902_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg001" ver="1" src="s" column="pmeg001" table="pmeg_t" attribute="" type="" req="Y" i_zoom="q_imaf001_18" c_zoom="q_imaf001_18" chk_ref="v_imaf001_15" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[商品編號：pmeg001
+校驗：1.修改商品編號時需判斷該採購單項次是否已有收貨單或有來源單據，若有則不允許修改
+            2.輸入商品條碼或商品編號後，抓取到的協議幣別如和採購單單頭的幣別不同，則應擋掉不可輸入          
+            v_imaf001_15, arg1 = g_pmeg_d[l_ac].pmeg001, arg2 = 'ALL'
+　　　v_rtdx001, arg1 = g_pmeg_d[l_ac].pmeg001, arg2 = g_pmeg_d[l_ac].pmegsite
+帶值：1.若商品條碼空白則依商品編號抓取[T:門店清單檔][C:商品主條碼]做為商品條碼 Default 值
+            2.依商品編號抓取[T:料件基本資料多語言檔][C:品名],[C:規格]
+            3.再依採購中心+幣別+供應商+生失效日+商品抓取合同及協議對應預設欄位如下:
+               [C:稅別],[C:稅率],[C:訂貨單位],[C:計價單位],[C:單價],[C:帳務組織],[C:經營方式],[C:結算方式],[C:採購人員],[C:採購部門]     
+            4.若採購料件有設置'交易對象對應料號'(apmi070)有供應商料號時，需將對應的料號抓出顯示在
+               [C:供應商料號]欄位上，若有設置多筆對應料號時以有勾選主要對應料那一筆為預設值 
+　　　5.抓取協議單頭挖簽定法人/幣別/採購中心  
+計算或處理：修改商品編號時需要開窗詢問是否重新取價，若選擇要時則需呼叫取價應用元件重新取價，
+                        並重新呼叫'計算金額'應用元件計算[C:含稅金額]、[C:未稅金額]、[C:稅額]
+開窗：q_imaf001_18, arg1 = 'ALL', arg2 = pmeesite
+            依門店清單檔取對應採購組織開窗]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg002" ver="1" src="s" column="pmeg002" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品特徵：pmeg002
+校驗：1.若料件有使用產品特徵時，則此欄位不允許空白
+            2.s_feature_check(g_pmeg_d[l_ac].pmeg001,g_pmeg_d[l_ac].pmeg002)，檢核輸入的產品特徵值是否合理
+帶值：產品特徵書名使用原件取得，s_feature_description
+計算或處理：當料件有使用產品特徵功能時此欄位才可輸入
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg006" ver="1" src="s" column="pmeg006" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購單位：pmeg006
+預設值：由輸入商品條碼或商品編號後依商品編號對應門店清單檔中的商品編號+門店編號，Default[T:門店清單檔][C:採購單位].
+計算或處理：修改單位時需呼叫單位數量取位應用元件對需求數量進行取位]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg007" ver="1" src="s" column="pmeg007" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[採購數量：pmeg007
+計算或處理：1.已有收貨單時，數量不可小於已收貨數
+                        2.新增或修改需求量時需呼叫單位數量取位應用元件對需求數量進行取位
+                        3.若參數有使用計價單位時，則輸入[C:採購數量]時則應自動推算計價數量，[C:計價數量]=[C:採購量]*[C:採購單位]與[C:計價單位]換算率
+                        4.若採購單位與參考單位有設置換算率時時，則輸入[C:採購數量]時則應自動推算參考數量，[C:參考數量]=[C:採購量]*[C:採購單位]與[C:參考單位]換算率
+                        6.當修改訂單數量時需呼叫計算金額應用元件重新計算[C:未稅金額]、[C:含稅金額]、[稅額]
+                        7.當多交期 = 'Y'，計算原收貨組織的送貨天數是否與新輸入的收貨組織的送貨天數是否相等
+                           7-1.當相等的時候，才可以給使用者更改
+                           7-2.當不想等的時候，跳出詢問視窗
+　                              (1)當回答 = 'Y'，清空多交期資料，多交期 = 'N'，緊急度 = '1'
+　                              (2)當回答 = 'N'，回復舊值]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg008" ver="1" src="s" column="pmeg008" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[參考單位：pmeg008
+預設值：由輸入商品條碼或商品編號後依商品編號對應門店清單檔中的商品編號+門店編號，Default[T:門店清單檔][C:參考單位]]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg009" ver="1" src="s" column="pmeg009" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[參考數量：pmeg009
+校驗：當料件主檔設置要做參考單位管理時，則不允許空白 
+計算或處理：新增或修改需求量時需呼叫單位數量取位應用元件對需求數量進行取位
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg010" ver="1" src="s" column="pmeg010" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[計價單位：pmeg010
+預設值：由輸入商品條碼或商品編號後依商品編號對應門店清單檔中的商品編號+門店編號，Default[T:門店清單檔][C:採購計價單位]
+計算或處理：當料件主檔設置要做採購計價單位管理時，則不允許空白
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg011" ver="1" src="s" column="pmeg011" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[校驗：當料件主檔設置要做採購計價單位管理時，則不允許空白
+計算或處理：1.新增或修改計價數量時需呼叫單位數量取位應用元件對計價數量進行取位
+　　　　　　2.當修改計價數量時需需呼叫計算金額應用元件重新計算[C:未稅金額]、[C:含稅金額]、[稅額]
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg012" ver="1" src="s" column="pmeg012" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[出貨日期：pmeg012
+預設值：等於原始到庫日
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg013" ver="1" src="s" column="pmeg013" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[到廠日期：pmeg013
+預設值：等於到庫日期
+
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg014" ver="1" src="s" column="pmeg014" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[到庫日期：pmeg014
+預設值：依單頭採購日期+送貨天數(arti701，以收貨組織先取門店再取店群)，再往後依apmm800的送貨週期推算到庫日期
+　　　　例如：採購日期 11/11，arti701中送貨天數 5天， 供應商送貨週期(日)為每月 01、11、21日
+                　　    則以 11/11+5天 = 11/16，但已過了 每月11日的送貨日，所以送貨日期為下一個送貨日(21)： 11/21
+計算或處理：1.依供應商設定送貨週期計算入庫日期
+　　　　　　　送貨週期='按日',則抓取離所輸入的到庫日期 往前推最近一筆的日期做為到庫日期
+　　　　　　　送貨週期='按週',則抓取離所輸入的到庫日期 往前推最近一筆的日期做為到庫日期
+　　　　　　　如推出的到庫日期<>USER輸入的到庫日期：
+　　　　　　　IF 推出的到庫日期<系統日，則警告提示USER供應商的送貨日=yyyy/mm/dd(推出的日期) 小於系統日，Then Default 系統日
+　　　　　　　IF 推出的到庫日期>系統日，則詢問推出的供應商送貨日=yyyy/mm/dd(推出的日期)，是否更新為此日期？
+
+　　　　　　2.LET　到廠日期,交貨日期 =入庫日期
+　　　　　　3.Default  緊急度  1.　一般/ 2.緊急(IF原始推算出來的日期小於系統日)
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg015" ver="3" src="s" column="pmeg015" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單價：pmeg015
+預設值：單身新增時，由採購協議帶出
+
+150506-00032#6 by sakura add
+單價(pmdt036)依對應的合約取可否修改
+收貨價格允許人工修改='N':單價不能修改
+修改規則:CALL s_apm_price_get_stan025_chk()
+IF 收貨價格允許人工修改='Y'  THEN
+    IF 修改後單價 > 取出價 THEN 
+        修改後單價高於取出價,不允許修改
+    ELSE
+         IF  ((修改後單價 -取出價)/取出價*-1)*100 > 容差率 THEN 
+               依超出方式處理是顯示警告或拒絕,若為"拒絕"則 enter 後欄位恢復為未更新前單價
+         END IF
+    END IF
+END IF]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg016" ver="1" src="s" column="pmeg016" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_oodb002_11" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[稅別：pmeg016
+由協議帶出
+帶值：呼叫稅別應用元件取的該稅別的說明、單價含稅否、稅率等值顯示在[C:稅別]、[C:單價含稅否]、[C:稅率]欄位上]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg017" ver="1" src="s" column="pmeg017" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[稅率：pmeg017
+預設值：單頭[C:稅率]]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg019" ver="1" src="s" column="pmeg019" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2055" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[子件特性：pmeg019
+校驗：只能輸入1、2、3、8等選項
+顯示：只能顯示1、2、3、8等選項
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg020" ver="1" src="s" column="pmeg020" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2036" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg021" ver="1" src="s" column="pmeg021" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg022" ver="1" src="s" column="pmeg022" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg023" ver="1" src="s" column="pmeg023" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_pmac002_2" c_zoom="q_pmac002_2" chk_ref="v_pmac002_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[代送商：pmeg023
+校驗：v_pmac002_2, arg1 = g_pmee_m.pmee004, arg2 = g_pmeg_d[l_ac].pmeg023, arg3 = 'ALL'
+開窗：q_pmac002_2, arg1 = g_pmee_m.pmee004, LET g_qryparam.where =" pmac002 ='2'"]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg024" ver="1" src="s" column="pmeg024" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[多交期：pmeg024
+計算或處理：1.當為勾選時呼叫apmt850_01多交期維護子作業維護多交期資料，
+                           並將回傳的交貨日期、到廠日期、到庫日期顯示到pmeg012、pmeg013、pmeg014等欄位上
+                        2.原本多交期=Y, 修改為N時, pmeh_t/pmej_t都要刪除重新寫入]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg025" ver="1" src="s" column="pmeg025" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_oofb019_1" c_zoom="q_oofb019_1" chk_ref="v_oofb019_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收貨地址代碼：pemg025
+校驗：1.當採購方式<>'3.統採越庫'時，輸入值須存在收貨組織(pmegunit)所設置的聯絡地址資料的簡要代碼，且為有效的"送貨地址"資料
+　　　2.當採購方式 = '3.統採越庫'時，輸入值須存在"配送中心(pmeg223)"所設置的聯絡地址資料的簡要代碼，且為有效的"送貨地址"資料
+　　　v_oofb019_1, arg1 = 收貨組織(pmegunit)　或　配送中心(pmeg223)的聯絡對象識別碼　arg2 = pmee025
+帶值：1.顯示時將[T:連絡地址檔].[C:簡要說明]帶回pmee025_desc
+　　　2.呼叫地址組合應用元件，將組合好的聯絡地址顯示在l_pmeg025_addr
+開窗：q_oofb019_1, 收貨組織(pmegunit)　或　配送中心(pmeg223)的聯絡對象識別碼　且　地址類型為'3':出貨地址
+計算或處理：當採購方式為3.統採越庫時，收貨地址<>收貨組織的地址，應等於配送中心(pmeg223)的送貨地址]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg026" ver="1" src="s" column="pmeg026" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_oofb019_1" c_zoom="q_oofb019_1" chk_ref="v_oofb019_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳款地址代碼：pmeg026
+校驗：v_oofb019_2, 輸入值須存在帳務組織(pmegorga)所設定的聯絡地址的簡要代碼且地址類型=5.帳款地址 AND 有效否='Y'
+帶值：1.顯示時將[T:連絡地址檔].[C:簡要說明]帶回pmeg026_desc
+　　　2.呼叫地址組合應用元件，將組合好的聯絡地址顯示在l_pmeg026_addr
+開窗：q_oofb019_1, arg1 = 帳務組織(pmdlorga)的聯絡對象識別碼
+            LET g_qryparam.where = " oofb008 = '5' "
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg028" ver="1" src="s" column="pmeg028" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_inaa001_27" c_zoom="q_inaa001_5" chk_ref="v_inaa001_17" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收貨庫位：pmeg028
+預設值：s_apmi830_inv_scope_def (g_pmeg_d[l_ac].pmegunit,g_pmeg_d[l_ac].pmeg001,g_pmee_m.pmee203,
+                                                                  當採購方式 = 3.統採越庫時，配送中心(pmeg223)
+　　　　　　                                          當採購方式 <> 3.統採越庫時，採購中心(pmeg222))
+開窗：編輯時：q_inaa001_27, arg1 = g_pmeg_d[l_ac].pmeg001　
+                            　                       arg2 = g_pmee_m.pmee203
+　　　                                           arg3 = 當採購方式 = 3.統採越庫時，配送中心(pmeg223)
+　　　　　　                                            當採購方式 <> 3.統採越庫時，採購中心(pmeg222)
+                                                       arg4 = pmegunit
+            查詢時：q_inaa001_5
+校驗：arg1 = g_pmeg_d[l_ac].pmegsite　
+            arg2 = g_pmeg_d[l_ac].pmeg028　
+            arg3 = g_pmeg_d[l_ac].pmeg001　
+            arg4 = g_pmee_m.pmee203
+　　　arg5 = 當採購方式 = 3.統採越庫時，配送中心(pmeg223)
+　　　　　　  當採購方式 <> 3.統採越庫時，採購中心(pmeg222)
+            arg6 = pmegunit
+計算或處理：當有來源單據且有限定收貨庫位時，則不可修改]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg029" ver="1" src="s" column="pmeg029" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_inab002_6" c_zoom="q_inab002_6" chk_ref="v_inab002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收貨儲位：pmeg029
+開窗：q_inab002_6, arg1 = g_pmeg_d[l_ac].pmegunit　arg2 = g_pmeg_d[l_ac].pmeg028
+校驗：v_inab002_1, arg1 = g_pmeg_d[l_ac].pmegunit　arg2 = g_pmeg_d[l_ac].pmeg028　arg3 = g_pmeg_d[l_ac].pmeg029]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg030" ver="1" src="s" column="pmeg030" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg043" ver="1" src="s" column="pmeg043" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[[20150131 新增欄位]
+取出價格：pmeg043
+計算或處理：由原採購單帶出]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg045" ver="1" src="s" column="pmeg045" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2035" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg046" ver="1" src="s" column="pmeg046" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[未稅金額：pmeg046
+計算與處理：單頭：稅別, 單身：包裝數量/採購數量, 有變更時, 使用元件重新計算並顯示於畫面上；在變更單確認時，才正式更改xrcd_t(稅別明細檔)
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg047" ver="1" src="s" column="pmeg047" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[含稅金額：pmeg047
+計算與處理：單頭：稅別, 單身：包裝數量/採購數量, 有變更時, 使用元件重新計算並顯示於畫面上；在變更單確認時，才正式更改xrcd_t(稅別明細檔)]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg048" ver="1" src="s" column="pmeg048" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[稅額：pmeg048
+計算與處理：單頭：稅別, 單身：包裝數量/採購數量, 有變更時, 使用元件重新計算並顯示於畫面上；在變更單確認時，才正式更改xrcd_t(稅別明細檔)]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg049" ver="1" src="s" column="pmeg049" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[理由碼：pmeg049
+校驗： s_azzi650_chk_exist(採購單單據性質設定(系統應用欄位二),g_pmee_m.pmeg049) 
+開窗：q_oocq002, arg1 = 採購單單據性質設定(系統應用欄位二)
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg050" ver="1" src="s" column="pmeg050" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg051" ver="1" src="s" column="pmeg051" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[結案理由碼：pmeg051
+開窗：q_oocq002, arg1 = 採購單單據性質設定(系統應用欄位二)]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg052" ver="1" src="s" column="pmeg052" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg053" ver="1" src="s" column="pmeg053" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[庫存管理特徵：pmeg053]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg200" ver="1" src="s" column="pmeg200" table="pmeg_t" attribute="" type="" req="Y" i_zoom="q_imay003_6" c_zoom="q_imay003_6" chk_ref="v_imay003_1" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[商品條碼：pmeg200
+校驗：1.v_imay003_1, arg1 = pmeg200
+            2.需判別對應的商品編號是否存在此採購組織對應的門店清單檔中且[T:料任主檔][C:狀態碼]='Y' ,[C:資料狀態]為確認
+            3.修改商品編號時需判斷該採購單項次是否已有收貨單或有來源單據，若有則不允許修改
+            4.輸入商品條碼或商品編號後，抓取到的協議幣別如和採購單單頭的幣別不同，則應擋掉不可輸入           
+帶值：1.依商品條碼抓取[T:商品條碼檔][C:包裝單位],[T:商品條碼檔][C:商品編號] 做為預設值 
+            2.依商品編號抓取[T:料件基本資料多語言檔][C:品名],[C:規格]
+            3.再依採購中心+幣別+供應商+生失效日+商品抓取合同及協議對應預設欄位如下：
+               [C:稅別],[C:稅率],[C:訂貨單位],[C:計價單位],[C:單價],[C:帳務組織],[C:經營方式],[C:結算方式],[C:採購人員],[C:採購部門]  
+            4.若採購料件有設置'交易對象對應料號'(apmi070)有供應商料號時，需將對應的料號抓出顯示在
+               [C:供應商料號]欄位上，若有設置多筆對應料號時以有勾選主要對應料那一筆為預設值
+計算或處理：修改商品編號時需要開窗詢問是否重新取價，若選擇要時則需呼叫取價應用元件重新取價，
+                        並重新呼叫'計算金額'應用元件計算[C:含稅金額]、[C:未稅金額]、[C:稅額]
+開窗處理：門店清單檔取對應採購組織開窗]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg201" ver="1" src="s" column="pmeg201" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[包裝單位：pmeg021
+計算或處理：輸入商品條碼或商品編號後，根據商品條碼預設包裝單位，不允許修改]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg202" ver="1" src="s" column="pmeg202" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[包裝數量：pmeg202
+校驗：1.不可小於等於0，錯誤訊息「包裝數量不可以小於等於0，請重新輸入」
+計算或處理：1.已有收貨單時，數量不可小於已收貨包裝數
+                        2.新增或修改需求量時需呼叫單位數量取位應用元件對需求數量進行取位
+                　　3.當採購數量有值時，則此欄位不可輸入；採購數量為空時，自動換算採購數量
+                        4.當多交期 = 'Y'，計算原收貨組織的送貨天數是否與新輸入的收貨組織的送貨天數是否相等
+                           4-1.當相等的時候，才可以給使用者更改
+                           4-2.當不想等的時候，跳出詢問視窗
+　                              (1)當回答 = 'Y'，清空多交期資料，多交期 = 'N'，緊急度 = '1'
+　                              (2)當回答 = 'N'，回復舊值]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg203" ver="1" src="s" column="pmeg203" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收貨部門：pmeg203
+校驗：v_ooeg001, arg1 = pmeg203　arg2 = g_pmee_m.pmeedocdt
+開窗：q_ooeg001, 編輯時：arg1 =  g_pmee_m.pmeedocdt
+計算或處理：當單頭收貨部門不為空，直接帶入，不可以修改
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg205" ver="1" src="s" column="pmeg205" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[要貨組織：pmeg205
+預設值：Default 單頭採購組織
+校驗/開窗：IF s_aooi500_setpoint(g_prog,'pmeg205') THEN
+                          校驗：s_aooi500_chk(g_prog,'pmeg205',g_pmeg_d[l_ac].pmeg205,g_pmee_m.pmeesite)
+                          開窗：編輯- q_ooef001_24  LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmeg205',g_pmee_m.pmeesite)
+                                      查詢- q_ooef001_24  LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmeg205',g_site)
+                     ELSE                  
+                          校驗：v_ooef001_29　arg1 = g_pmee_m.pmee204
+                          開窗：q_ooef001　　  LET g_qryparam.where = " ooef210 = 'Y'"
+                     END IF]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg206" ver="1" src="s" column="pmeg206" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[庫存量：pmeg206
+計算或處理：依收貨組織+商品條碼 抓取目前庫存量(inag008) where inag010 = 'Y']]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg207" ver="1" src="s" column="pmeg207" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[採購在途量：pmeg207
+計算或處理：依收貨組織抓取目前已確認採購單訂貨量-收貨數量]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg208" ver="1" src="s" column="pmeg208" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[前日銷售量：pmeg208
+計算或處理：依要貨組織抓取日結檔採購日期前一天銷售數量-銷退數量
+                        s_daily_sale(g_pmeg_d[l_ac].pmegunit,g_pmee_m.pmeedocdt,1,1,g_pmeg_d[l_ac].pmeg001,g_pmeg_d[l_ac].pmeg002)]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg209" ver="1" src="s" column="pmeg209" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[上月銷量：pmeg209
+計算或處理：依要貨組織抓取採購日期對應用份前一個月加總(銷售數量-銷退數量)
+                        s_monthly_sale(g_pmeg_d[l_ac].pmegunit,g_pmee_m.pmeedocdt,1,1,g_pmeg_d[l_ac].pmeg001,g_pmeg_d[l_ac].pmeg002)]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg210" ver="1" src="s" column="pmeg210" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[第一週銷量：pmeg210
+計算或處理：依要貨組織抓取採購日期起往前推算的週銷量(銷售數量-銷退數量)
+                        s_daily_sale(g_pmeg_d[l_ac].pmegunit,g_pmee_m.pmeedocdt,1,7,g_pmeg_d[l_ac].pmeg001,g_pmeg_d[l_ac].pmeg002)]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg211" ver="1" src="s" column="pmeg211" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[第二週銷量：pmeg211
+計算或處理：依要貨組織抓取採購日期起往前推算的週銷量(銷售數量-銷退數量)
+                        s_daily_sale(g_pmeg_d[l_ac].pmegunit,g_pmee_m.pmeedocdt,8,14,g_pmeg_d[l_ac].pmeg001,g_pmeg_d[l_ac].pmeg002)]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg212" ver="1" src="s" column="pmeg212" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[第三週銷量：pmeg212
+計算或處理：依要貨組織抓取採購日期起往前推算的週銷量(銷售數量-銷退數量)
+                        s_daily_sale(g_pmeg_d[l_ac].pmegunit,g_pmee_m.pmeedocdt,15,21,g_pmeg_d[l_ac].pmeg001,g_pmeg_d[l_ac].pmeg002)]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg213" ver="1" src="s" column="pmeg213" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[第四周銷量：pmeg213
+計算或處理：依要貨組織抓取採購日期起往前推算的週銷量(銷售數量-銷退數量)
+                        s_daily_sale(g_pmeg_d[l_ac].pmegunit,g_pmee_m.pmeedocdt,22,28,g_pmeg_d[l_ac].pmeg001,g_pmeg_d[l_ac].pmeg002)]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg214" ver="1" src="s" column="pmeg214" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_oojd001_1" c_zoom="q_oojd001_1" chk_ref="v_oojd001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購渠道：pmeg214
+校驗：q_oojd001_1, arg1 = g_pmdl_m.pmdl023, arg2 = '2'
+開窗：v_oojd001, arg1 = '2']]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg215" ver="1" src="s" column="pmeg215" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6739" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg216" ver="1" src="s" column="pmeg216" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6013" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg217" ver="1" src="s" column="pmeg217" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_staa001" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg218" ver="1" src="s" column="pmeg218" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pmdxdocno_1" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg219" ver="1" src="s" column="pmeg219" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_star001" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg220" ver="1" src="s" column="pmeg220" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購人員：pmeg220
+預設：g_user
+校驗：arg1 = g_pmeg_d[l_ac].pmeg220
+帶值：依據pmeg220的值到[T:員工檔]抓取[C:歸屬部門]的值，並預設到pmee221(請購部門)欄位上]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg221" ver="1" src="s" column="pmeg221" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購部門：pmeg221
+預設：g_dept
+校驗：q_ooeg001, arg1 = g_pmeg_d[l_ac].pmeg221, arg2 = g_pmee_m.pmeedocdt
+開窗：v_ooeg001,arg1 = g_pmeg_d[l_ac].pmeg221, arg2 = g_pmee_m.pmeedocdt]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg222" ver="1" src="s" column="pmeg222" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg223" ver="1" src="s" column="pmeg223" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg224" ver="3" src="s" column="pmeg224" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[採購失效日：pmeg204
+計算與處理：到庫日期+ arti701 設定的訂單效期 = 失效日，不可修改
+##150512-00029#3 150529 by sakura 隱藏]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg225" ver="1" src="s" column="pmeg225" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001_24" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[最終收貨組織：pmeg225
+開窗：
+IF aooi500有設定,s_aooi500_setpoint(g_prog,'pmeg225') THEN
+    LET l_qryparam.where = s_aooi500_q_where(g_prog,'pmeg225',g_site,'c')
+    CALL q_ooef001_24()
+ELSE
+    LET l_qryparam.where = " ooef211 = 'Y'"
+    CALL q_ooef001()
+END IF]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg226" ver="3" src="s" column="pmeg226" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[當單頭長效期訂單 = 'N'，清空，不可輸入]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg227" ver="4" src="s" column="pmeg227" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[#150710-00016#5 150713 by sakura add]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg901" ver="1" src="s" column="pmeg901" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg902" ver="1" src="s" column="pmeg902" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[變更理由碼：pmeg902
+校驗：s_azzi650_chk_exist(採購單單據性質設定(系統應用欄位六),g_pmeg_d[l_ac].pmeg902) 檢驗是否存在
+開窗：q_oocq002, arg1 = 採購單單據性質設定(系統應用欄位六)]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmeg903" ver="1" src="s" column="pmeg903" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmegorga" ver="1" src="s" column="pmegorga" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳務組織：pmegorga
+預設值：由輸入商品後依採購合約 Default 
+開窗：q_ooef001, LET g_qryparam.where  = " ooef003 = 'Y'"
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmegseq" ver="1" src="s" column="pmegseq" table="pmeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次：pmegseq
+預設值：最大值+1]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmegsite" ver="1" src="s" column="pmegsite" table="pmeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購組織：pmegsite
+預設值：新增採購項次時，預設  g_pmee_m.pmdlsite　不可以修改
+
+]]>
+  </field>
+  <field cite_std="N" name="pmeg_t.pmegunit" ver="1" src="s" column="pmegunit" table="pmeg_t" attribute="" type="" req="N" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收貨組織：pmegunit
+預設值：若採購單頭收貨組織不為空白則 Default 收貨組織=採購單單頭收貨組織
+                若採購單單頭收貨組織為空白且單頭採購組織對應的組織類型='物流組織'則 Default 收貨組織=採購組織,否則空白
+開窗 ：q_ooef001_24, LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmegunit',g_pmee_m.pmlsite)
+校驗：s_aooi500_chk(g_prog,'pmegunit',g_pmee_m.pmlsite) RETURNING l_success,l_errno
+輸入控制：s_aooi500_comp_entry(g_prog,'pmegunit')
+計算或處理：1.採購方式<>3.時，輸入值送貨據點後自動帶出所設置的主要聯絡地址資料的簡要代碼到送貨地址碼欄位並帶出送貨地址
+                        2.當多交期 = 'Y'，計算原收貨組織的送貨天數是否與新輸入的收貨組織的送貨天數是否相等
+                           2-1.當相等的時候，才可以給使用者更改
+                           2-2.當不想等的時候，跳出詢問視窗
+　                              (1)當回答 = 'Y'，清空多交期資料，多交期 = 'N'，緊急度 = '1'
+　                              (2)當回答 = 'N'，回復舊值]]>
+  </field>
+  <field cite_std="N" name="pmeh002_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh023_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh001" ver="1" src="s" column="pmeh001" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imaf001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh002" ver="1" src="s" column="pmeh002" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh003" ver="1" src="s" column="pmeh003" table="pmeh_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2055" default="1" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh004" ver="1" src="s" column="pmeh004" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh005" ver="1" src="s" column="pmeh005" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh006" ver="1" src="s" column="pmeh006" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh009" ver="1" src="s" column="pmeh009" table="pmeh_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2057" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh010" ver="1" src="s" column="pmeh010" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh011" ver="1" src="s" column="pmeh011" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh012" ver="1" src="s" column="pmeh012" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh013" ver="1" src="s" column="pmeh013" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh015" ver="1" src="s" column="pmeh015" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[備註:此欄位是由收貨單確認後回寫            
+      
+   
+
+]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh016" ver="1" src="s" column="pmeh016" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[備註:此欄位是由驗退單確認後回寫            
+      
+   
+]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh017" ver="1" src="s" column="pmeh017" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[備註:此欄位是由倉退單確認後回寫            
+      
+   
+   
+
+]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh019" ver="1" src="s" column="pmeh019" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[備註:此欄位是由入庫單確認後回寫            
+      
+   
+   
+
+]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh021" ver="1" src="s" column="pmeh021" table="pmeh_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2058" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh022" ver="1" src="s" column="pmeh022" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh023" ver="1" src="s" column="pmeh023" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oodb002_11" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh024" ver="1" src="s" column="pmeh024" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh025" ver="1" src="s" column="pmeh025" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh026" ver="1" src="s" column="pmeh026" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh027" ver="1" src="s" column="pmeh027" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh028" ver="1" src="s" column="pmeh028" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh029" ver="1" src="s" column="pmeh029" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh030" ver="1" src="s" column="pmeh030" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh031" ver="1" src="s" column="pmeh031" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh032" ver="1" src="s" column="pmeh032" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh033" ver="1" src="s" column="pmeh033" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh034" ver="1" src="s" column="pmeh034" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh040" ver="1" src="s" column="pmeh040" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh200" ver="1" src="s" column="pmeh200" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh201" ver="1" src="s" column="pmeh201" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmeh901" ver="1" src="s" column="pmeh901" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmehseq" ver="1" src="s" column="pmehseq" table="pmeh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmehseq1" ver="1" src="s" column="pmehseq1" table="pmeh_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmehseq2" ver="1" src="s" column="pmehseq2" table="pmeh_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmeh_t.pmehsite" ver="1" src="s" column="pmehsite" table="pmeh_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="4" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_pmee027" depend_field="pmee_t.pmee027" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;apmi004&quot;, &quot;pmaj_t&quot;, &quot;pmaj002&quot;, &quot;pmaj001&quot;)"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="pmeg_t.pmeg001" depend_field="pmeg_t.pmeg001" src="s" status="">
+      <program order="1" type="1" name="aimm200"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_pmee002_desc" src="s" depend_field="b_pmee002" correspon_key="pmee002" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_pmee003_desc" src="s" depend_field="b_pmee003" correspon_key="pmee003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_pmee004_desc" src="s" depend_field="b_pmee004" correspon_key="pmee004" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee002_desc" src="s" depend_field="pmee_t.pmee002" correspon_key="pmee002" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee003_desc" src="s" depend_field="pmee_t.pmee003" correspon_key="pmee003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee004_desc" src="s" depend_field="pmee_t.pmee004" correspon_key="pmee004" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee009_desc" src="s" depend_field="pmee_t.pmee009" correspon_key="pmee009" ref_table="ooibl_t" ref_fk="ooibl002" ref_dlang="ooibl003" ref_rtn="ooibl004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee010_desc" src="s" depend_field="pmee_t.pmee010" correspon_key="&apos;238&apos;,pmee010" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee015_desc" src="s" depend_field="pmee_t.pmee015" correspon_key="pmee015" ref_table="ooail_t" ref_fk="ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee017_desc" src="s" depend_field="pmee_t.pmee017" correspon_key="pmee017" ref_table="pmaml_t" ref_fk="pmaml001" ref_dlang="pmaml002" ref_rtn="pmaml003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee018_desc" src="s" depend_field="pmee_t.pmee018" correspon_key="pmee018" ref_table="ooidl_t" ref_fk="ooidl001" ref_dlang="ooidl002" ref_rtn="ooidl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee020_desc" src="s" depend_field="pmee_t.pmee020" correspon_key="&apos;263&apos;,pmee020" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee021_desc" src="s" depend_field="pmee_t.pmee021" correspon_key="pmee021" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee022_desc" src="s" depend_field="pmee_t.pmee022" correspon_key="pmee022" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee023_desc" src="s" depend_field="pmee_t.pmee023" correspon_key="&apos;264&apos;,pmee023" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee024_desc" src="s" depend_field="pmee_t.pmee024" correspon_key="&apos;264&apos;,pmee024" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee027_desc" src="s" depend_field="pmee_t.pmee027" correspon_key="pmee027" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee029_desc" src="s" depend_field="pmee_t.pmee029" correspon_key="pmee029" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee032_desc" src="s" depend_field="pmee_t.pmee032" correspon_key="pmee032" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee043_desc" src="s" depend_field="pmee_t.pmee043" correspon_key="&apos;298&apos;,pmee043" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee052_desc" src="s" depend_field="pmee_t.pmee052" correspon_key="pmee052" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee200_desc" src="s" depend_field="pmee_t.pmee200" correspon_key="pmee200" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmee204_desc" src="s" depend_field="pmee_t.pmee204" correspon_key="pmee204" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeecnfid_desc" src="s" depend_field="pmee_t.pmeecnfid" correspon_key="pmeecnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeecrtdp_desc" src="s" depend_field="pmee_t.pmeecrtdp" correspon_key="pmeecrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeecrtid_desc" src="s" depend_field="pmee_t.pmeecrtid" correspon_key="pmeecrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeemodid_desc" src="s" depend_field="pmee_t.pmeemodid" correspon_key="pmeemodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeeowndp_desc" src="s" depend_field="pmee_t.pmeeowndp" correspon_key="pmeeowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeeownid_desc" src="s" depend_field="pmee_t.pmeeownid" correspon_key="pmeeownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeesite_desc" src="s" depend_field="pmee_t.pmeesite" correspon_key="pmeesite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeeunit_desc" src="s" depend_field="pmee_t.pmeeunit" correspon_key="pmeeunit" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmef002_desc" src="s" depend_field="pmef_t.pmef002" correspon_key="pmef002" ref_table="ooibl_t" ref_fk="ooibl002" ref_dlang="ooibl003" ref_rtn="ooibl004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmef902_desc" src="s" depend_field="pmef_t.pmef902" correspon_key="&apos;267&apos;,pmef902" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg001_desc" src="s" depend_field="pmeg_t.pmeg001" correspon_key="pmeg001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg001_desc_desc" src="s" depend_field="pmeg001_desc" correspon_key="pmeg001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg006_desc" src="s" depend_field="pmeg_t.pmeg006" correspon_key="pmeg006" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg008_desc" src="s" depend_field="pmeg_t.pmeg008" correspon_key="pmeg008" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg010_desc" src="s" depend_field="pmeg_t.pmeg010" correspon_key="pmeg010" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg023_desc" src="s" depend_field="pmeg_t.pmeg023" correspon_key="pmeg023" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg028_desc" src="s" depend_field="pmeg_t.pmeg028" correspon_key="pmeg028" ref_table="inayl_t" ref_fk="inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg029_desc" src="s" depend_field="pmeg_t.pmeg029" correspon_key="pmeg028,pmeg029" ref_table="inab_t" ref_fk="inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg201_desc" src="s" depend_field="pmeg_t.pmeg201" correspon_key="pmeg201" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg203_desc" src="s" depend_field="pmeg_t.pmeg203" correspon_key="pmeg203" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg205_desc" src="s" depend_field="pmeg_t.pmeg205" correspon_key="pmeg205" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg214_desc" src="s" depend_field="pmeg_t.pmeg214" correspon_key="pmeg214" ref_table="oojdl_t" ref_fk="oojdl001" ref_dlang="oojdl002" ref_rtn="oojdl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg217_desc" src="s" depend_field="pmeg_t.pmeg217" correspon_key="pmeg217" ref_table="staal_t" ref_fk="staal001" ref_dlang="staal002" ref_rtn="staal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg220_desc" src="s" depend_field="pmeg_t.pmeg220" correspon_key="pmeg220" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg221_desc" src="s" depend_field="pmeg_t.pmeg221" correspon_key="pmeg221" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeg225_desc" src="s" depend_field="pmeg_t.pmeg225" correspon_key="pmeg225" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmegorga_desc" src="s" depend_field="pmeg_t.pmegorga" correspon_key="pmegorga" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmegunit_desc" src="s" depend_field="pmeg_t.pmegunit" correspon_key="pmegunit" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeh001_desc" src="s" depend_field="pmeh_t.pmeh001" correspon_key="pmeh001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeh004_desc" src="s" depend_field="pmeh_t.pmeh004" correspon_key="pmeh004" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeh010_desc" src="s" depend_field="pmeh_t.pmeh010" correspon_key="&apos;274&apos;,pmeh010" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeh026_desc" src="s" depend_field="pmeh_t.pmeh026" correspon_key="pmeh026" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeh028_desc" src="s" depend_field="pmeh_t.pmeh028" correspon_key="pmeh028" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeh030_desc" src="s" depend_field="pmeh_t.pmeh030" correspon_key="pmeh030" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmeh200_desc" src="s" depend_field="pmeh_t.pmeh200" correspon_key="pmeh200" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_pmee001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pmee002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pmee003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pmee004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pmee900" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pmee902" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pmeedocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="imaal0042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_pmeg025_addr" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_pmeg025_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_pmeg026_addr" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_pmeg026_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofb017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee011_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee025_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee033_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee903_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee040" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee043" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee044" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee046" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee047" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee049" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee052" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee053" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee054" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee055" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee200" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee202" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee203" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee204" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="pmee_t.pmee205" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="pmee_t.pmee206" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee900" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee901" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee902" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee903" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmee904" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeeacti" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeecnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeecnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeecrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeecrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeecrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeedocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeedocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeemoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeemodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeeowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeeownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeesite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeestus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmee_t.pmeeunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef901" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef902" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmef903" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmef_t.pmefsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg002_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg012_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg013_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg014_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg016_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg049_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg051_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg902_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="pmeg_t.pmeg015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg043" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg045" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg046" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg047" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg049" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg050" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg052" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg053" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg200" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg202" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg203" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg205" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg206" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg207" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg208" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg209" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg210" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg211" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg212" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg213" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg214" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg215" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg216" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg217" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg218" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg219" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg220" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg221" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg222" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg223" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="pmeg_t.pmeg224" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg225" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="pmeg_t.pmeg226" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="pmeg_t.pmeg227" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg901" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg902" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmeg903" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmegorga" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmegseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmegsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeg_t.pmegunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh002_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh023_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh040" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh200" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmeh901" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmehseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmehseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmehseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmeh_t.pmehsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_apmi004_01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_apmt840_s01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_apmt840_s01_d" ver="1" src="s" type="di2,db2" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_apmt850_01" ver="1" src="s" type="db2,di2" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_pmef" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_pmdpdocno" text="採購單號" lstr=""/>
+    <sfield name="lbl_pmdpseq" text="項次" lstr=""/>
+    <sfield name="lbl_pmdpseq1" text="項序" lstr=""/>
+    <sfield name="lbl_pmdp001" text="商品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_pmdp002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_pmdp003" text="來源單號" lstr=""/>
+    <sfield name="lbl_pmdp004" text="來源項次" lstr=""/>
+    <sfield name="lbl_pmdp005" text="來源項序" lstr=""/>
+    <sfield name="lbl_pmdp006" text="來源分批序" lstr=""/>
+    <sfield name="lbl_pmdp007" text="來源料號" lstr=""/>
+    <sfield name="lbl_pmdp008" text="來源產品特徵" lstr=""/>
+    <sfield name="lbl_pmdp009" text="來源作業編號" lstr=""/>
+    <sfield name="lbl_pmdp010" text="來源作業序" lstr=""/>
+    <sfield name="lbl_pmdp011" text="來源BOM特性" lstr=""/>
+    <sfield name="lbl_pmdp012" text="來源生產控制組" lstr=""/>
+    <sfield name="lbl_pmdp021" text="沖銷順序" lstr=""/>
+    <sfield name="lbl_pmdp022" text="需求單位" lstr=""/>
+    <sfield name="lbl_pmdp022_desc" text="需求單位說明" lstr=""/>
+    <sfield name="lbl_pmdp023" text="需求數量" lstr=""/>
+    <sfield name="lbl_pmdp024" text="折合採購量" lstr=""/>
+    <sfield name="lbl_pmdp025" text="已收貨量" lstr=""/>
+    <sfield name="lbl_pmdp026" text="已入庫量" lstr=""/>
+    <sfield name="lbl_pmdpsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_pmeedocno" text="採購單號" lstr=""/>
+    <sfield name="lbl_pmee902" text="變更日期" lstr=""/>
+    <sfield name="lbl_pmee900" text="變更序" lstr=""/>
+    <sfield name="lbl_pmee001" text="版次" lstr=""/>
+    <sfield name="lbl_pmee002" text="採購人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="修改人員姓名" lstr=""/>
+    <sfield name="lbl_pmee003" text="採購部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="最終收貨組織" lstr=""/>
+    <sfield name="lbl_pmee004" text="供應商" lstr=""/>
+    <sfield name="lbl_pmaal004" text="代送商說明" lstr=""/>
+    <sfield name="lbl_pmeesite" text="採購組織" lstr=""/>
+    <sfield name="lbl_pmee901" text="變更類型" lstr=""/>
+    <sfield name="lbl_pmee005" text="採購性質" lstr=""/>
+    <sfield name="lbl_pmee200" text="採購中心" lstr=""/>
+    <sfield name="lbl_pmee203" text="採購方式" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_pmee007" text="資料來源類型" lstr=""/>
+    <sfield name="lbl_pmee008" text="來源單號" lstr=""/>
+    <sfield name="lbl_pmeedocdt" text="採購日期" lstr=""/>
+    <sfield name="lbl_pmee027" text="供應商連絡人" lstr=""/>
+    <sfield name="lbl_pmee201" text="聯絡電話" lstr=""/>
+    <sfield name="lbl_pmee202" text="傳真號碼" lstr=""/>
+    <sfield name="lbl_pmee204" text="配送中心" lstr=""/>
+    <sfield name="lbl_pmeeunit" text="收貨組織" lstr=""/>
+    <sfield name="lbl_pmee029" text="收貨部門" lstr=""/>
+    <sfield name="lbl_pmee025" text="收貨地址" lstr=""/>
+    <sfield name="lbl_pmeeacti" text="採購單結案" lstr=""/>
+    <sfield name="lbl_pmee206" text="長效期訂單否" lstr=""/>
+    <sfield name="lbl_pmee205" text="採購失效日" lstr=""/>
+    <sfield name="lbl_pmee023" text="採購渠道" lstr=""/>
+    <sfield name="lbl_oocql004" text="收貨時段說明" lstr=""/>
+    <sfield name="lbl_pmee022" text="代送商" lstr=""/>
+    <sfield name="lbl_pmee021" text="帳款供應商" lstr=""/>
+    <sfield name="lbl_pmee903" text="變更理由" lstr=""/>
+    <sfield name="lbl_pmee047" text="物流結案" lstr=""/>
+    <sfield name="lbl_pmee904" text="變更備註" lstr=""/>
+    <sfield name="page_2" text="帳務資訊" lstr=""/>
+    <sfield name="lbl_pmee054" text="內外購" lstr=""/>
+    <sfield name="lbl_pmee055" text="匯率計算基準" lstr=""/>
+    <sfield name="lbl_pmee009" text="付款條件" lstr=""/>
+    <sfield name="lbl_ooibl004" text="說明" lstr=""/>
+    <sfield name="lbl_pmee015" text="幣別/匯率" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_pmee016" text="/" lstr=""/>
+    <sfield name="lbl_pmee010" text="交易條件" lstr=""/>
+    <sfield name="lbl_pmee011" text="稅別/稅率" lstr=""/>
+    <sfield name="lbl_pmee012_1" text="/" lstr=""/>
+    <sfield name="lbl_pmee013" text="單價含稅" lstr=""/>
+    <sfield name="lbl_pmee033" text="發票類型" lstr=""/>
+    <sfield name="lbl_pmee024" text="採購分類" lstr=""/>
+    <sfield name="page_3" text="其他資訊" lstr=""/>
+    <sfield name="lbl_pmee043" text="留置原因" lstr=""/>
+    <sfield name="lbl_pmee020" text="運送方式" lstr=""/>
+    <sfield name="lbl_pmee044" text="備註" lstr=""/>
+    <sfield name="lbl_pmee030" text="多角貿易已拋轉" lstr=""/>
+    <sfield name="lbl_pmee031" text="多角來源單號" lstr=""/>
+    <sfield name="lbl_pmee028" text="一次性交易對象識別碼" lstr=""/>
+    <sfield name="lbl_pmee032" text="最終客戶" lstr=""/>
+    <sfield name="lbl_pmee042" text="採購總稅額" lstr=""/>
+    <sfield name="lbl_pmee048" text="帳流結案" lstr=""/>
+    <sfield name="lbl_pmee049" text="金流結案" lstr=""/>
+    <sfield name="lbl_pmee017" text="取價方式" lstr=""/>
+    <sfield name="lbl_pmaml003" text="說明" lstr=""/>
+    <sfield name="lbl_pmee018" text="付款優惠條件" lstr=""/>
+    <sfield name="lbl_ooidl003" text="說明" lstr=""/>
+    <sfield name="lbl_pmee006" text="多角性質" lstr=""/>
+    <sfield name="lbl_pmee052" text="最終供應商" lstr=""/>
+    <sfield name="lbl_pmee053" text="兩角目的據點" lstr=""/>
+    <sfield name="lbl_pmee051" text="多角流程代碼" lstr=""/>
+    <sfield name="lbl_pmee019" text="納入 MPS/MRP計算" lstr=""/>
+    <sfield name="bpage_1" text="多期帳款" lstr=""/>
+    <sfield name="lbl_pmee046" text="預付款發票開立方式" lstr=""/>
+    <sfield name="lbl_pmee040" text="採購總未稅金額" lstr=""/>
+    <sfield name="lbl_pmee041" text="採購總含稅金額" lstr=""/>
+    <sfield name="lbl_pmefsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_pmef001" text="期別" lstr=""/>
+    <sfield name="lbl_pmef014" text="帳款類型" lstr=""/>
+    <sfield name="lbl_pmef002" text="付款條件" lstr=""/>
+    <sfield name="lbl_pmef003" text="預計應付款日" lstr=""/>
+    <sfield name="lbl_pmef004" text="預計票據到期日" lstr=""/>
+    <sfield name="lbl_pmef005" text="未稅金額" lstr=""/>
+    <sfield name="lbl_pmef006" text="含稅金額" lstr=""/>
+    <sfield name="lbl_pmef007" text="應付帳款單號" lstr=""/>
+    <sfield name="lbl_pmef008" text="主帳套立帳未稅金額" lstr=""/>
+    <sfield name="lbl_pmef009" text="主帳套立帳含稅金額" lstr=""/>
+    <sfield name="lbl_pmef901" text="變更類型" lstr=""/>
+    <sfield name="lbl_pmef902" text="變更理由" lstr=""/>
+    <sfield name="lbl_pmef903" text="變更備註" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="page_4" text="採購明細" lstr=""/>
+    <sfield name="lbl_pmegseq" text="項次" lstr=""/>
+    <sfield name="lbl_pmegsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_pmeg200" text="商品條碼" lstr=""/>
+    <sfield name="lbl_pmeg001" text="商品編號" lstr=""/>
+    <sfield name="lbl_pmeg002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_pmeg002_desc" text="產品特徵說明" lstr=""/>
+    <sfield name="lbl_pmeg016" text="稅別" lstr=""/>
+    <sfield name="lbl_pmeg016_desc" text="稅別說明" lstr=""/>
+    <sfield name="lbl_pmeg017" text="稅率" lstr=""/>
+    <sfield name="lbl_pmeg227" text="補貨規格說明" lstr=""/>
+    <sfield name="lbl_pmeg201" text="包裝單位" lstr=""/>
+    <sfield name="lbl_pmeg201_desc" text="包裝單位說明" lstr=""/>
+    <sfield name="lbl_pmeg202" text="包裝數量" lstr=""/>
+    <sfield name="lbl_pmeg006" text="採購單位" lstr=""/>
+    <sfield name="lbl_pmeg006_desc" text="採購單位說明" lstr=""/>
+    <sfield name="lbl_pmeg007" text="採購數量" lstr=""/>
+    <sfield name="lbl_pmeg226" text="長效期每次送貨量" lstr=""/>
+    <sfield name="lbl_pmeg008" text="參考單位" lstr=""/>
+    <sfield name="lbl_pmeg008_desc" text="參考單位說明" lstr=""/>
+    <sfield name="lbl_pmeg009" text="參考數量" lstr=""/>
+    <sfield name="lbl_pmeg010" text="計價單位" lstr=""/>
+    <sfield name="lbl_pmeg010_desc" text="計價單位說明" lstr=""/>
+    <sfield name="lbl_pmeg011" text="計價數量" lstr=""/>
+    <sfield name="lbl_pmeg015" text="單價" lstr=""/>
+    <sfield name="lbl_pmeg043" text="取出價格" lstr=""/>
+    <sfield name="lbl_pmeg046" text="未稅金額" lstr=""/>
+    <sfield name="lbl_pmeg048" text="稅額" lstr=""/>
+    <sfield name="lbl_pmeg047" text="含稅金額" lstr=""/>
+    <sfield name="lbl_pmegunit" text="收貨組織" lstr=""/>
+    <sfield name="lbl_pmegunit_desc" text="收貨組織說明" lstr=""/>
+    <sfield name="lbl_pmeg225" text="最終收貨組織" lstr=""/>
+    <sfield name="lbl_pmeg203" text="收貨部門" lstr=""/>
+    <sfield name="lbl_pmeg203_desc" text="部門說明" lstr=""/>
+    <sfield name="lbl_pmeg025" text="收貨地址代碼" lstr=""/>
+    <sfield name="lbl_pmeg025_desc" text="收貨地址代碼說明" lstr=""/>
+    <sfield name="lbl_pmeg025_addr" text="收貨地址" lstr=""/>
+    <sfield name="lbl_pmeg028" text="限定庫位" lstr=""/>
+    <sfield name="lbl_inayl003" text="庫位說明" lstr=""/>
+    <sfield name="lbl_pmeg029" text="限定儲位" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_pmeg030" text="限定批號" lstr=""/>
+    <sfield name="lbl_pmeg053" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_pmegorga" text="帳務組織" lstr=""/>
+    <sfield name="lbl_pmegorga_desc" text="帳務組織說明" lstr=""/>
+    <sfield name="lbl_pmeg026" text="帳款地址代碼" lstr=""/>
+    <sfield name="lbl_pmeg026_desc" text="帳款地址代碼說明" lstr=""/>
+    <sfield name="lbl_pmeg026_addr" text="帳款地址" lstr=""/>
+    <sfield name="lbl_pmeg024" text="多交期" lstr=""/>
+    <sfield name="lbl_pmeg014" text="到庫日期" lstr=""/>
+    <sfield name="lbl_pmeg012" text="出貨日期" lstr=""/>
+    <sfield name="lbl_pmeg013" text="到廠日期" lstr=""/>
+    <sfield name="lbl_pmeg022" text="部分交貨" lstr=""/>
+    <sfield name="lbl_pmeg023" text="代送商" lstr=""/>
+    <sfield name="lbl_pmeg045" text="行狀態" lstr=""/>
+    <sfield name="lbl_pmeg206" text="庫存量" lstr=""/>
+    <sfield name="lbl_pmeg207" text="採購在途量" lstr=""/>
+    <sfield name="lbl_pmeg208" text="前日銷售量" lstr=""/>
+    <sfield name="lbl_pmeg209" text="月銷量" lstr=""/>
+    <sfield name="lbl_pmeg210" text="第一週銷量" lstr=""/>
+    <sfield name="lbl_pmeg211" text="第二週銷量" lstr=""/>
+    <sfield name="lbl_pmeg212" text="第三週銷量" lstr=""/>
+    <sfield name="lbl_pmeg213" text="第四週銷量" lstr=""/>
+    <sfield name="lbl_pmeg019" text="子件特性" lstr=""/>
+    <sfield name="lbl_pmeg020" text="緊急度" lstr=""/>
+    <sfield name="lbl_pmeg224" text="採購失效日" lstr=""/>
+    <sfield name="lbl_pmeg052" text="檢驗" lstr=""/>
+    <sfield name="lbl_pmeg049" text="理由碼" lstr=""/>
+    <sfield name="lbl_pmeg049_desc" text="理由碼說明" lstr=""/>
+    <sfield name="lbl_pmeg051" text="結案理由碼" lstr=""/>
+    <sfield name="lbl_pmeg051_desc" text="結案理由碼說明" lstr=""/>
+    <sfield name="lbl_pmeg205" text="要貨組織" lstr=""/>
+    <sfield name="lbl_pmeg205_desc" text="要貨組織說明" lstr=""/>
+    <sfield name="lbl_pmeg214" text="採購渠道" lstr=""/>
+    <sfield name="lbl_oojdl003" text="採購渠道說明" lstr=""/>
+    <sfield name="lbl_pmeg215" text="渠道性質" lstr=""/>
+    <sfield name="lbl_pmeg216" text="經營方式" lstr=""/>
+    <sfield name="lbl_pmeg217" text="結算方式" lstr=""/>
+    <sfield name="lbl_staal003" text="結算方式說明" lstr=""/>
+    <sfield name="lbl_pmeg218" text="合約編號" lstr=""/>
+    <sfield name="lbl_pmeg219" text="協議編號" lstr=""/>
+    <sfield name="lbl_pmeg220" text="採購人員" lstr=""/>
+    <sfield name="lbl_ooag011" text="採購人員全名" lstr=""/>
+    <sfield name="lbl_pmeg221" text="採購部門" lstr=""/>
+    <sfield name="lbl_pmeg221_desc" text="部門名稱" lstr=""/>
+    <sfield name="lbl_pmeg222" text="採購中心" lstr=""/>
+    <sfield name="lbl_pmeg223" text="配送中心" lstr=""/>
+    <sfield name="lbl_pmeg050" text="備註" lstr=""/>
+    <sfield name="lbl_pmeg901" text="變更類型" lstr=""/>
+    <sfield name="lbl_pmeg902" text="變更理由" lstr=""/>
+    <sfield name="lbl_pmeg902_desc" text="變更理由碼說明" lstr=""/>
+    <sfield name="lbl_pmeg903" text="變更備註" lstr=""/>
+    <sfield name="lbl_pmeg021" text="保稅" lstr=""/>
+    <sfield name="page_5" text="交期明細" lstr=""/>
+    <sfield name="lbl_pmehsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_pmehseq" text="採購項次" lstr=""/>
+    <sfield name="lbl_pmehseq1" text="項序" lstr=""/>
+    <sfield name="lbl_pmehseq2" text="分批序" lstr=""/>
+    <sfield name="lbl_pmeh003" text="子件特性" lstr=""/>
+    <sfield name="lbl_pmeh001" text="商品編號" lstr=""/>
+    <sfield name="lbl_pmeh002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_pmeh002_desc" text="產品特徵說明" lstr=""/>
+    <sfield name="lbl_pmeh005" text="採購總數量" lstr=""/>
+    <sfield name="lbl_pmeh200" text="分批包裝單位" lstr=""/>
+    <sfield name="lbl_pmeh200_desc" text="包裝單位說明" lstr=""/>
+    <sfield name="lbl_pmeh201" text="分批包裝數量" lstr=""/>
+    <sfield name="lbl_pmeh004" text="採購單位" lstr=""/>
+    <sfield name="lbl_pmeh004_desc" text="採購單位說明" lstr=""/>
+    <sfield name="lbl_pmeh006" text="分批採購數量" lstr=""/>
+    <sfield name="lbl_pmeh028" text="分批參考單位" lstr=""/>
+    <sfield name="lbl_pmeh028_desc" text="參考單位說明" lstr=""/>
+    <sfield name="lbl_pmeh029" text="分批參考數量" lstr=""/>
+    <sfield name="lbl_pmeh011" text="出貨日期" lstr=""/>
+    <sfield name="lbl_pmeh012" text="到廠日期" lstr=""/>
+    <sfield name="lbl_pmeh013" text="到庫日期" lstr=""/>
+    <sfield name="lbl_pmeh010" text="收貨時段" lstr=""/>
+    <sfield name="lbl_pmeh009" text="交期類型" lstr=""/>
+    <sfield name="lbl_pmeh015" text="已收貨量" lstr=""/>
+    <sfield name="lbl_pmeh016" text="驗退量" lstr=""/>
+    <sfield name="lbl_pmeh017" text="倉退換貨量" lstr=""/>
+    <sfield name="lbl_pmeh040" text="倉退量" lstr=""/>
+    <sfield name="lbl_pmeh019" text="已入庫量" lstr=""/>
+    <sfield name="lbl_pmeh021" text="交貨狀態" lstr=""/>
+    <sfield name="lbl_pmeh030" text="分批計價單位" lstr=""/>
+    <sfield name="lbl_pmeh030_desc" text="計價單位說明" lstr=""/>
+    <sfield name="lbl_pmeh031" text="分批計價數量" lstr=""/>
+    <sfield name="lbl_pmeh022" text="參考價格" lstr=""/>
+    <sfield name="lbl_pmeh023" text="稅別" lstr=""/>
+    <sfield name="lbl_pmeh023_desc" text="稅別說明" lstr=""/>
+    <sfield name="lbl_pmeh024" text="稅率" lstr=""/>
+    <sfield name="lbl_pmeh032" text="分批未稅金額" lstr=""/>
+    <sfield name="lbl_pmeh033" text="分批含稅金額" lstr=""/>
+    <sfield name="lbl_pmeh034" text="分批稅額" lstr=""/>
+    <sfield name="lbl_pmeh025" text="電子採購單號" lstr=""/>
+    <sfield name="lbl_pmeh026" text="修改人員" lstr=""/>
+    <sfield name="lbl_pmeh027" text="修改時間" lstr=""/>
+    <sfield name="lbl_pmeh901" text="變更類型" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_master" text="拋轉傳票條件" lstr=""/>
+    <sfield name="lbl_glapdocno" text="傳票憑證單別" lstr=""/>
+    <sfield name="lbl_glapdocdt" text="傳票憑證日期" lstr=""/>
+    <sfield name="lbl_flag" text="補傳票空號" lstr=""/>
+    <sfield name="lbl_glap010" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_docno_e" text="~" lstr=""/>
+    <sfield name="lbl_accept" text="執行" lstr=""/>
+    <sfield name="lbl_cancel" text="取消" lstr=""/>
+    <sfield name="accept" text="確認" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="lbl_docno" text="應收單號" lstr=""/>
+    <sfield name="lbl_seq" text="項次" lstr=""/>
+    <sfield name="lbl_glaq002" text="會計科目" lstr=""/>
+    <sfield name="lbl_glaq002_desc" text="科目編號" lstr=""/>
+    <sfield name="lbl_glaq017" text="營運據點" lstr=""/>
+    <sfield name="lbl_glaq017_desc" text="營運據點" lstr=""/>
+    <sfield name="lbl_glaq018" text="部門編號" lstr=""/>
+    <sfield name="lbl_glaq018_desc" text="部門" lstr=""/>
+    <sfield name="lbl_glaq019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq019_desc" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq020" text="區域" lstr=""/>
+    <sfield name="lbl_glaq020_desc" text="區域" lstr=""/>
+    <sfield name="lbl_glaq021" text="交易客商" lstr=""/>
+    <sfield name="lbl_glaq021_desc" text="交易客商" lstr=""/>
+    <sfield name="lbl_glaq022" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq022_desc" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq023" text="客群" lstr=""/>
+    <sfield name="lbl_glaq023_desc" text="客群" lstr=""/>
+    <sfield name="lbl_glaq024" text="產品類別" lstr=""/>
+    <sfield name="lbl_glaq024_desc" text="產品類別" lstr=""/>
+    <sfield name="lbl_glaq025" text="人員" lstr=""/>
+    <sfield name="lbl_glaq025_desc" text="人員" lstr=""/>
+    <sfield name="lbl_glaq027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glaq028" text="WBS" lstr=""/>
+    <sfield name="lbl_glaq029" text="核算項(一)" lstr=""/>
+    <sfield name="lbl_glaq029_desc" text="核算項(一)" lstr=""/>
+    <sfield name="lbl_glaq030" text="核算項(二)" lstr=""/>
+    <sfield name="lbl_glaq030_desc" text="核算項(二)" lstr=""/>
+    <sfield name="lbl_glaq031" text="核算項(三)" lstr=""/>
+    <sfield name="lbl_glaq031_desc" text="核算項(三)" lstr=""/>
+    <sfield name="lbl_glaq032" text="核算項(四)" lstr=""/>
+    <sfield name="lbl_glaq032_desc" text="核算項(四)" lstr=""/>
+    <sfield name="lbl_glaq033" text="核算項(五)" lstr=""/>
+    <sfield name="lbl_glaq033_desc" text="核算項(五)" lstr=""/>
+    <sfield name="lbl_glaq034" text="核算項(六)" lstr=""/>
+    <sfield name="lbl_glaq034_desc" text="核算項(六)" lstr=""/>
+    <sfield name="lbl_glaq035" text="核算項(七)" lstr=""/>
+    <sfield name="lbl_glaq035_desc" text="核算項(七)" lstr=""/>
+    <sfield name="lbl_glaq036" text="核算項(八)" lstr=""/>
+    <sfield name="lbl_glaq036_desc" text="核算項(八)" lstr=""/>
+    <sfield name="lbl_glaq037" text="核算項(九)" lstr=""/>
+    <sfield name="lbl_glaq037_desc" text="核算項(九)" lstr=""/>
+    <sfield name="lbl_glaq038" text="核算項(十)" lstr=""/>
+    <sfield name="lbl_glaq038_desc" text="核算項(十)" lstr=""/>
+    <sfield name="lbl_source" text="科目來源" lstr=""/>
+    <sfield name="lbl_sw" text="借/貸" lstr=""/>
+    <sfield name="lbl_glaq001" text="摘要" lstr=""/>
+    <sfield name="lbl_docdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_glaqseq" text="項次" lstr=""/>
+    <sfield name="lbl_lc_subject" text="會計科目" lstr=""/>
+    <sfield name="lbl_glaq003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glaq004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glaq040" text="借方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glaq041" text="貸方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glaq043" text="借方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glaq044" text="貸方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_glbc004" text="現金變動碼" lstr=""/>
+    <sfield name="lbl_glaq051" text="經營方式" lstr=""/>
+    <sfield name="lbl_glaq026" text="預算編號" lstr=""/>
+    <sfield name="lbl_glaq052" text="渠道" lstr=""/>
+    <sfield name="lbl_glaq053" text="品牌" lstr=""/>
+    <sfield name="lbl_page_1" text="資產類" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_glac002" text="會計科目編號" lstr=""/>
+    <sfield name="lbl_glacl004" text="說明" lstr=""/>
+    <sfield name="lbl_glac003" text="統制/明細別" lstr=""/>
+    <sfield name="lbl_glac009" text="內部管理科目" lstr=""/>
+    <sfield name="lbl_page_2" text="負債類" lstr=""/>
+    <sfield name="lbl_page_3" text="公用類" lstr=""/>
+    <sfield name="lbl_page_4" text="股東權益類" lstr=""/>
+    <sfield name="lbl_page_5" text="成本類" lstr=""/>
+    <sfield name="lbl_page_6" text="損益類" lstr=""/>
+    <sfield name="lbl_pmak001" text="交易對象識別碼" lstr=""/>
+    <sfield name="lbl_pmak003" text="全名" lstr=""/>
+    <sfield name="lbl_pmak004" text="稅籍編號" lstr=""/>
+    <sfield name="lbl_pmak009" text="銀行帳戶" lstr=""/>
+    <sfield name="lbl_pmak005" text="聯絡地址" lstr=""/>
+    <sfield name="lbl_pmak007" text="簡要說明" lstr=""/>
+    <sfield name="lbl_pmak008" text="建檔日期" lstr=""/>
+    <sfield name="lbl_pmeg900" text="變更序" lstr=""/>
+    <sfield name="lbl_pmegdocno" text="採購變更單號" lstr=""/>
+    <sfield name="lbl_pmeg027" text="供應商料號" lstr=""/>
+    <sfield name="lbl_pmeg031" text="運輸方式" lstr=""/>
+    <sfield name="lbl_pmeg032" text="取貨模式" lstr=""/>
+    <sfield name="lbl_pmeg003" text="包裝容器" lstr=""/>
+    <sfield name="lbl_pmeg033" text="備品率" lstr=""/>
+    <sfield name="lbl_pmeg036" text="專案編號" lstr=""/>
+    <sfield name="lbl_pmeg037" text="WBS編號" lstr=""/>
+    <sfield name="lbl_pmeg038" text="活動編號" lstr=""/>
+    <sfield name="lbl_pmeg039" text="費用原因" lstr=""/>
+    <sfield name="lbl_pmejsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_pmejdocno" text="採購變更單號" lstr=""/>
+    <sfield name="lbl_pmej900" text="變更序" lstr=""/>
+    <sfield name="lbl_pmej901" text="變更類型" lstr=""/>
+    <sfield name="lbl_pmejseq" text="採購項次" lstr=""/>
+    <sfield name="lbl_pmej001" text="分批序" lstr=""/>
+    <sfield name="lbl_pmej008" text="交期類型" lstr=""/>
+    <sfield name="lbl_pmej002" text="分批數量" lstr=""/>
+    <sfield name="lbl_pmej003" text="交貨日期" lstr=""/>
+    <sfield name="lbl_pmej004" text="到廠日期" lstr=""/>
+    <sfield name="lbl_pmej005" text="到庫日期" lstr=""/>
+    <sfield name="lbl_pmej006" text="收貨時段" lstr=""/>
+    <sfield name="lbl_pmej007" text="MRP凍結否" lstr=""/>
+    <sfield name="lbl_glaqdocno" text="單號" lstr=""/>
+    <sfield name="lbl_glaqld" text="帳別" lstr=""/>
+    <sfield name="lbl_glaq005" text="幣別" lstr=""/>
+    <sfield name="lbl_glaq006" text="匯率" lstr=""/>
+    <sfield name="lbl_glaq010" text="原幣金額" lstr=""/>
+    <sfield name="lbl_page1" text="固定核算項" lstr=""/>
+    <sfield name="lbl_page2" text="自由核算項" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_oobn003" text="單別編號" lstr=""/>
+    <sfield name="lbl_ooff001" text="備註類型" lstr=""/>
+    <sfield name="lbl_ooff002" text="第一KEY值" lstr=""/>
+    <sfield name="lbl_ooff003" text="第二KEY值" lstr=""/>
+    <sfield name="lbl_ooff004" text="第三KEY值" lstr=""/>
+    <sfield name="lbl_ooff005" text="第四KEY值" lstr=""/>
+    <sfield name="lbl_ooff006" text="第五KEY值" lstr=""/>
+    <sfield name="lbl_ooff007" text="第六KEY值" lstr=""/>
+    <sfield name="lbl_ooff008" text="第七KEY值" lstr=""/>
+    <sfield name="lbl_ooff009" text="第八KEY值" lstr=""/>
+    <sfield name="lbl_ooff010" text="第九KEY值" lstr=""/>
+    <sfield name="lbl_ooff011" text="第十KEY值" lstr=""/>
+    <sfield name="lbl_ooff012" text="控制類型" lstr=""/>
+    <sfield name="lbl_ooff013" text="備註說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_1" text="QBE條件" lstr=""/>
+    <sfield name="lbl_oofg001" text="編碼分類" lstr=""/>
+    <sfield name="lbl_oofg002" text="編碼性質" lstr=""/>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_oofg005" text="節點編號" lstr=""/>
+    <sfield name="lbl_oofg006" text="前段節點編號" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_2" text="基本資料" lstr=""/>
+    <sfield name="lbl_n0" text="編碼分類" lstr=""/>
+    <sfield name="lbl_n1" text="編碼總長度" lstr=""/>
+    <sfield name="lbl_n2" text="編碼總段數" lstr=""/>
+    <sfield name="lbl_n3" text="自動編號" lstr=""/>
+    <sfield name="page_s_aooi390_s01_3" text="明細資料" lstr=""/>
+    <sfield name="lbl_oofg007" text="段次" lstr=""/>
+    <sfield name="lbl_oofgl004" text="節點名稱" lstr=""/>
+    <sfield name="lbl_oofg009" text="長度" lstr=""/>
+    <sfield name="lbl_oofg016" text="使用轉換表" lstr=""/>
+    <sfield name="lbl_oofg008" text="節點型態" lstr=""/>
+    <sfield name="lbl_value" text="輸入值" lstr=""/>
+    <sfield name="lbl_value_desc" text="說明" lstr=""/>
+    <sfield name="lbl_tbegin" text="第" lstr=""/>
+    <sfield name="lbl_tend" text="組" lstr=""/>
+    <sfield name="lbl_axrt300_07_xrcbdocno" text="單號_隱藏" lstr=""/>
+    <sfield name="lbl_axrt300_07_xrcbld" text="帳別_隱藏" lstr=""/>
+    <sfield name="lbl_xrcbseq" text="項次" lstr=""/>
+    <sfield name="lbl_xrcb047" text="摘要" lstr=""/>
+    <sfield name="lbl_xrcb029" text="應收帳款科目" lstr=""/>
+    <sfield name="lbl_xrcb021" text="收入會計科目" lstr=""/>
+    <sfield name="lbl_xrcb051" text="業務人員" lstr=""/>
+    <sfield name="lbl_xrcb010" text="業務部門" lstr=""/>
+    <sfield name="lbl_xrcb011" text="責任中心" lstr=""/>
+    <sfield name="lbl_xrcb024" text="區域" lstr=""/>
+    <sfield name="lbl_xrcb036" text="客群" lstr=""/>
+    <sfield name="lbl_xrcb012" text="產品類別" lstr=""/>
+    <sfield name="lbl_xrcb015" text="專案代號" lstr=""/>
+    <sfield name="lbl_xrcb016" text="WBS編號" lstr=""/>
+    <sfield name="lbl_xrcb033" text="經營方式" lstr=""/>
+    <sfield name="lbl_xrcb034" text="渠道" lstr=""/>
+    <sfield name="lbl_xrcb035" text="品牌" lstr=""/>
+    <sfield name="lbl_xrcb037" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_xrcb038" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_xrcb039" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_xrcb040" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_xrcb041" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_xrcb042" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_xrcb043" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_xrcb044" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_xrcb045" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_xrcb046" text="自由核算項十" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sfield name="lbl_bcaa005" text="項次" lstr=""/>
+    <sfield name="lbl_bcaa006" text="項序" lstr=""/>
+    <sfield name="lbl_bcaa007" text="分批序" lstr=""/>
+    <sfield name="lbl_bcaa002" text="料件編號" lstr=""/>
+    <sfield name="lbl_bcaa008" text="產品特徵" lstr=""/>
+    <sfield name="lbl_bcaa012" text="發料單位" lstr=""/>
+    <sfield name="lbl_total" text="單據數量" lstr=""/>
+    <sfield name="lbl_imaf178" text="條碼編碼方式" lstr=""/>
+    <sfield name="lbl_imaf179" text="條碼包裝數量" lstr=""/>
+    <sfield name="lbl_qua" text="條碼組數" lstr=""/>
+    <sfield name="s_feature_s01.page1" text="基本資料" lstr=""/>
+    <sfield name="lbl_inam012" text="特徵一值" lstr=""/>
+    <sfield name="lbl_inam014" text="特徵二值" lstr=""/>
+    <sfield name="lbl_inam016" text="特徵三值" lstr=""/>
+    <sfield name="lbl_inam018" text="特徵四值" lstr=""/>
+    <sfield name="lbl_inam020" text="特徵五值" lstr=""/>
+    <sfield name="lbl_inam022" text="特徵六值" lstr=""/>
+    <sfield name="lbl_inam024" text="特徵七值" lstr=""/>
+    <sfield name="lbl_inam026" text="特徵八值" lstr=""/>
+    <sfield name="lbl_inam028" text="特徵九值" lstr=""/>
+    <sfield name="lbl_inam030" text="特徵十值" lstr=""/>
+    <sfield name="lbl_inam032" text="特徵十一值" lstr=""/>
+    <sfield name="lbl_inam034" text="特徵十二值" lstr=""/>
+    <sfield name="lbl_inam036" text="特徵十三值" lstr=""/>
+    <sfield name="lbl_inam038" text="特徵十四值" lstr=""/>
+    <sfield name="lbl_inam040" text="特徵十五值" lstr=""/>
+    <sfield name="lbl_inam042" text="特徵十六值" lstr=""/>
+    <sfield name="lbl_inam044" text="特徵十七值" lstr=""/>
+    <sfield name="lbl_inam046" text="特徵十八值" lstr=""/>
+    <sfield name="lbl_inam048" text="特徵十九值" lstr=""/>
+    <sfield name="lbl_inam050" text="特徵二十值" lstr=""/>
+    <sfield name="lbl_imak001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imeb003" text="歸屬層級" lstr=""/>
+    <sfield name="lbl_imak002" text="特徵類型" lstr=""/>
+    <sfield name="lbl_imak003" text="特徵值" lstr=""/>
+    <sfield name="lbl_imecl005" text="說明" lstr=""/>
+    <sfield name="lbl_glapld" text="帳別" lstr=""/>
+    <sfield name="lbl_glgald" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glgacomp" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_glaa001" text="帳簿幣別" lstr=""/>
+    <sfield name="lbl_glgadocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_glgadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_glga100" text="系統/類別" lstr=""/>
+    <sfield name="lbl_glga007" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_glga008" text="傳票日期" lstr=""/>
+    <sfield name="lbl_glga006" text="附件張數" lstr=""/>
+    <sfield name="lbl_glgbseq" text="項次" lstr=""/>
+    <sfield name="lbl_glgb001" text="摘要" lstr=""/>
+    <sfield name="lbl_glgb002" text="科目編號" lstr=""/>
+    <sfield name="lbl_glgb005" text="幣別" lstr=""/>
+    <sfield name="lbl_glgb006" text="匯率" lstr=""/>
+    <sfield name="lbl_glgb010" text="原幣金額" lstr=""/>
+    <sfield name="lbl_glgb003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glgb004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glgb039" text="匯率(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb040" text="借方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb041" text="貸方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_amt2" text="金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb042" text="匯率(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb043" text="借方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb044" text="貸方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_amt3" text="金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb017" text="營運據點" lstr=""/>
+    <sfield name="lbl_glgb018" text="部門編號" lstr=""/>
+    <sfield name="lbl_glgb019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glgb020" text="區域" lstr=""/>
+    <sfield name="lbl_glgb021" text="交易客商" lstr=""/>
+    <sfield name="lbl_glgb022" text="帳款客商" lstr=""/>
+    <sfield name="lbl_glgb023" text="客群" lstr=""/>
+    <sfield name="lbl_glgb024" text="產品類別" lstr=""/>
+    <sfield name="lbl_glgb051" text="經營方式" lstr=""/>
+    <sfield name="lbl_glgb052" text="渠道" lstr=""/>
+    <sfield name="lbl_glgb053" text="品牌" lstr=""/>
+    <sfield name="lbl_glgb025" text="人員" lstr=""/>
+    <sfield name="lbl_glgb027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glgb028" text="WBS" lstr=""/>
+    <sfield name="lbl_glgb055" text="現金變動碼" lstr=""/>
+    <sfield name="lbl_glgb029" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_glgb030" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_glgb031" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_glgb032" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_glgb033" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_glgb034" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_glgb035" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_glgb036" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_glgb037" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_glgb038" text="自由核算項十" lstr=""/>
+    <sact name="open_apmi004_01" text="維護一次性交易對象資料" lstr=""/>
+    <sact name="open_apmt840_s01" text="關聯單據明細" lstr=""/>
+    <sact name="open_apmt840_s01_d" text="單身關聯單據明細" lstr=""/>
+    <sact name="open_apmt850_01" text="維護多交期資料" lstr=""/>
+    <sact name="open_pmef" text="維護多帳期預付款" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="3" cite_std="N" src="s">
+    <widget name="l_pmeg025_addr" status=""/>
+    <widget name="l_pmeg025_desc" status=""/>
+    <widget name="l_pmeg026_addr" status=""/>
+    <widget name="l_pmeg026_desc" status=""/>
+    <widget name="pmeg214_desc" status=""/>
+    <widget name="pmeg902_desc" status=""/>
+    <widget name="pmeg_t.pmeg025" status=""/>
+    <widget name="pmeg_t.pmeg026" status=""/>
+    <widget name="pmeg_t.pmeg028" status=""/>
+    <widget name="pmeg_t.pmeg029" status=""/>
+    <widget name="pmeg_t.pmeg030" status=""/>
+    <widget name="pmeg_t.pmeg200" status=""/>
+    <widget name="pmeg_t.pmeg201" status=""/>
+    <widget name="pmeg_t.pmeg202" status=""/>
+    <widget name="pmeg_t.pmeg203" status=""/>
+    <widget name="pmeg_t.pmeg205" status=""/>
+    <widget name="pmeg_t.pmeg206" status=""/>
+    <widget name="pmeg_t.pmeg207" status=""/>
+    <widget name="pmeg_t.pmeg208" status=""/>
+    <widget name="pmeg_t.pmeg209" status=""/>
+    <widget name="pmeg_t.pmeg210" status=""/>
+    <widget name="pmeg_t.pmeg211" status=""/>
+    <widget name="pmeg_t.pmeg212" status=""/>
+    <widget name="pmeg_t.pmeg213" status=""/>
+    <widget name="pmeg_t.pmeg214" status=""/>
+    <widget name="pmeg_t.pmeg215" status=""/>
+    <widget name="pmeg_t.pmeg216" status=""/>
+    <widget name="pmeg_t.pmeg217" status=""/>
+    <widget name="pmeg_t.pmeg218" status=""/>
+    <widget name="pmeg_t.pmeg219" status=""/>
+    <widget name="pmeg_t.pmeg220" status=""/>
+    <widget name="pmeg_t.pmeg221" status=""/>
+    <widget name="pmeg_t.pmeg222" status=""/>
+    <widget name="pmeg_t.pmeg223" status=""/>
+    <widget name="pmeg_t.pmeg224" status=""/>
+    <widget name="pmeh_t.pmeh200" status=""/>
+    <widget name="pmeh_t.pmeh201" status=""/>
+  </exclude>
+</spec>

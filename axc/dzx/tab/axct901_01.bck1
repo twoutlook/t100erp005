@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct901_01" module="axc" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02114" crtdt="2016-01-26 14:18:47" modid="02114" moddt="2016-01-26 17:16:52" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="資料批次產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xceald,xceald_desc(chr80),xceacomp,xceacomp_desc(chr80),xcea003,xcea003_desc(chr80),xceasite,xceasite_desc(chr80),l_sdate(dat),l_edate(dat),xceadocno,xcea001,xcea006,xcea006_desc(chr80),xcea007,xcea007_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct901_01" method="dialog">
+    <section id="input">
+      <input id="head" field="xceald,xceacomp,xcea003,xceasite,l_sdate,l_edate,xceadocno,xcea001,xcea006,xcea007"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xceald">
+        <after>
+          <reference field="xceald_desc" ref_field="xcea_t.xceald" map_field="xceaent,xceald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xceald_desc"/>
+      <column id="xceacomp">
+        <after>
+          <reference field="xceacomp_desc" ref_field="xcea_t.xceacomp" map_field="xceaent,xceacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_8" state="i"/>
+        <controlp form="q_ooef001_8" state="c"/>
+      </column>
+      <column id="xceacomp_desc"/>
+      <column id="xcea003">
+        <after>
+          <reference field="xcea003_desc" ref_field="xcea_t.xcea003" map_field="xceaent,xcea003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcea003_desc"/>
+      <column id="xceasite">
+        <after>
+          <reference field="xceasite_desc" ref_field="xceasite" map_field="xceasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xceasite_desc"/>
+      <column id="l_sdate"/>
+      <column id="l_edate"/>
+      <column id="xceadocno"/>
+      <column id="xcea001"/>
+      <column id="xcea006">
+        <after>
+          <reference field="xcea006_desc" ref_field="xcea_t.xcea006" map_field="xcea006" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcea006_desc"/>
+      <column id="xcea007">
+        <after>
+          <reference field="xcea007_desc" ref_field="xcea_t.xcea007" map_field="xceaent,xcea007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="xcea007_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcea_t" pk="xceald,xceadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xceald,&apos;&apos;,xceacomp,&apos;&apos;,xcea003,&apos;&apos;,xceasite,&apos;&apos;,&apos;&apos;,&apos;&apos;,xceadocno,xcea001,xcea006,&apos;&apos;,xcea007,&apos;&apos; FROM xcea_t WHERE xceaent= ? AND xceald=? AND xceadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xceald,xceadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

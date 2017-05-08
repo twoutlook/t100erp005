@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglp030" module="agl" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="01251" crtdt="2015-02-10 14:07:33" modid="01251" moddt="2015-03-06 17:14:42" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="批次產生帳套核算項數據">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glac001,glac001_desc(chr80),glac002,glac007,glac012,glac013,glac014,glac015,glaald,glaacomp,stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="agl" filename="aglp030" method="dialog">
+    <section id="input">
+      <input id="head" field="glac001"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glac002,glac007,glac012,glac013,glac014,glac015,glaald,glaacomp"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glac001">
+        <after>
+          <check chkid="v_glaa004" id="isExist"/>
+          <reference field="glac001_desc" ref_field="glac001" map_field="glac001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;0&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_glaa004_01" state="i"/>
+      </column>
+      <column id="glac001_desc"/>
+      <column id="glac002">
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glac007" def_scc="8002"/>
+      <column id="glac012">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glac013">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glac014">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glac015">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glaald">
+        <controlp form="q_glaa" state="c"/>
+      </column>
+      <column id="glaacomp">
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

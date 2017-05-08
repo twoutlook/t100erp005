@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="asft335_01" std_prog="asft335_01" erpver="1.0" ver="3" module="ASF" type="S" booking="N" class="I" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="sffb_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[刷完條碼後，按下確定，自動產生報工單單頭：
+sffbdocno報工單號:依生管參數設定的預設報工單別自動取號
+sffbdocdt日期:目前日期
+sffbseq:0
+sffb001作業類別:畫面輸入的作業類別
+sffb002報工人員:畫面輸入的報工人員，如果沒輸入則預設輸入人員
+sffb003部門:報工人員的部門
+sffb004報工班別:畫面輸入的報工班別
+sffb005工單單號:畫面輸入的工單單號
+sffb006Run Card:畫面輸入的Run Card
+sffb007作業:畫面輸入的作業
+sffb008製程序:畫面輸入的製程序
+sffb009工作站:工單製程檔中的工作站
+sffb010機器編號:畫面輸入的機器編號
+sffb011作業人數:1
+sffb012完成日期:目前日期
+sffb013完成時間:目前時間(hh:mm)
+sffb014工時:預設(完成日期時間-上一段動作的最後完成日期時間)*作業人數
+sffb015機時:預設(完成日期時間-上一段動作的最後完成日期時間)
+例如目前正在做報工，上一動作是同一站需要Check in，即找到Check in最後的時間當做起時的時間，
+與目前的完成日時間計算出工時
+如果沒有上一動作，則預設0
+sffb016單位:用工單+run card+作業+製程序找到工單製程檔中的單位
+sffb017良品數量:1.Move in:sfcb046
+            2.Check in:sfcb047
+            3.報工:sfcb050
+            4.Check out:sfcb048
+            5.Move out:sfcb049
+sffb018報廢數量:0
+sffb019當站下線數量:0
+sffb020重工轉出數量:0
+sffb021重工轉入作業:null
+sffb022重工轉入製程序:null
+]]>
+  </all>
+  <field cite_std="N" name="sffb_t.sffb001" ver="1" src="s" column="sffb001" table="sffb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="4020" default="3" max="&lt;=,5.000" min="&gt;=,1.000" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[報工類別：
+   ●欄位控管：
+     資料欄位:Input only，不可空白
+     允許空白:No
+     預設值:3.報工
+     資料選項來源: SCC=4020
+     常數型態: 1.Move in、2.Check in、3.報工、4.Check out、5.Move out
+]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb002" ver="1" src="s" column="sffb002" table="sffb_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="q_ooag001_4" c_zoom="q_ooag001_4" chk_ref="v_ooag001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[報工人員：
+   ●欄位控管：
+     資料欄位:Input only
+     預設值:無
+     校驗:1.允許空白
+          2.輸入值須存在員工資料
+     帶值:說明
+
+   ●開窗處理：依標準查詢視窗
+]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb003" ver="1" src="s" column="sffb003" table="sffb_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001_2" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb004" ver="1" src="s" column="sffb004" table="sffb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oogd001" c_zoom="q_oogd001" chk_ref="v_oogd001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb005" ver="1" src="s" column="sffb005" table="sffb_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="q_sfaadocno" c_zoom="q_sfaadocno" chk_ref="v_sfaadocno" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[工單單號：
+   ●欄位控管：
+     資料欄位:Input only
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值須存在已確認工單
+
+   ●開窗處理：依標準查詢視窗
+]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb006" ver="1" src="s" column="sffb006" table="sffb_t" attribute="N004" type="number(10,0)" req="N" i_zoom="q_sfca001" c_zoom="q_sfca001_1" chk_ref="v_sfca001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[Run Card：
+   ●欄位控管：
+     資料欄位:Input only
+     預設值:如果工單只有一筆Run Card，自動帶出
+     校驗:1.不允許空白
+          2.輸入值需存在工單的Run Card中
+
+   ●開窗處理：依標準查詢視窗
+]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb007" ver="1" src="s" column="sffb007" table="sffb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_sfcb003" c_zoom="" chk_ref="v_sfcb003" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[作業：
+   ●欄位控管：
+     資料欄位:Input only
+     預設值:1.如果工單製程中只有一個作業自動帶出
+            2.依報工類別找到對應的作業，例如目前正在執行3.報工，則找到此工單+Run Card內在製數量>0的作業，如果只有一個則自動帶出
+     校驗:1.如果工單不使用製程，則允許空白，且不允許輸入
+          2.如果工單使用製程，則不允許空白，且需存在工單製程檔中入
+     帶值:說明
+
+   ●開窗處理：依標準查詢視窗
+]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb008" ver="1" src="s" column="sffb008" table="sffb_t" attribute="C404" type="varchar2(10)" req="N" i_zoom="q_sfcb003" c_zoom="" chk_ref="v_sfcb004" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[製程序：
+   ●欄位控管：
+     資料欄位:Input only
+     預設值:如果工單製程作業只有一個製程序，自動帶出
+     校驗:1.如果工單不使用製程，則允許空白，且不允許輸入
+          2.如果工單使用製程，則不允許空白，且需存在工單製程檔中入
+          3.作業+製程序需存在工單的製程資料中
+          4.依作業類別檢查允許不允輸入
+            1.Move in，工單製程的sfcb014需等於Y
+            2.Check in，工單製程的sfcb015需等於Y
+            3.報工，工單製程的sfcb016需等於Y
+            4.Check out,工單製程的sfcb018需等於Y
+            5.Move out,工單製程的sfcb019需等於Y
+
+   ●開窗處理：依標準查詢視窗
+]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb009" ver="1" src="s" column="sffb009" table="sffb_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_ecaa001_1" c_zoom="q_ecaa001_1" chk_ref="v_ecaa001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb010" ver="1" src="s" column="sffb010" table="sffb_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_mrba001" c_zoom="q_mrba001" chk_ref="v_mrba001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[報工機器：
+   ●欄位控管：
+     資料欄位:Input Only
+     預設值:無
+     校驗:1.允許空白
+          2.輸入值須存在機器基本資料
+
+   ●開窗處理：依標準查詢視窗
+]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb011" ver="1" src="s" column="sffb011" table="sffb_t" attribute="N002" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb012" ver="1" src="s" column="sffb012" table="sffb_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb013" ver="1" src="s" column="sffb013" table="sffb_t" attribute="C109" type="varchar2(8)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TimeEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb014" ver="1" src="s" column="sffb014" table="sffb_t" attribute="N002" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb015" ver="1" src="s" column="sffb015" table="sffb_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb016" ver="1" src="s" column="sffb016" table="sffb_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooca001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb017" ver="1" src="s" column="sffb017" table="sffb_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb018" ver="1" src="s" column="sffb018" table="sffb_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb019" ver="1" src="s" column="sffb019" table="sffb_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb020" ver="1" src="s" column="sffb020" table="sffb_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb021" ver="1" src="s" column="sffb021" table="sffb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_sfcb003" c_zoom="v_sfcb003" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb022" ver="1" src="s" column="sffb022" table="sffb_t" attribute="C404" type="varchar2(10)" req="N" i_zoom="q_sfcb003" c_zoom="v_sfcb004" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb023" ver="1" src="s" column="sffb023" table="sffb_t" attribute="C105" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffb024" ver="1" src="s" column="sffb024" table="sffb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_ooge001" c_zoom="q_ooge001" chk_ref="v_ooge001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbcnfdt" ver="1" src="s" column="sffbcnfdt" table="sffb_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbcnfid" ver="1" src="s" column="sffbcnfid" table="sffb_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbcrtdp" ver="1" src="s" column="sffbcrtdp" table="sffb_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbcrtdt" ver="1" src="s" column="sffbcrtdt" table="sffb_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbcrtid" ver="1" src="s" column="sffbcrtid" table="sffb_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbdocdt" ver="1" src="s" column="sffbdocdt" table="sffb_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbdocno" ver="1" src="s" column="sffbdocno" table="sffb_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="q_ooba002_1" c_zoom="q_sffbdocno" chk_ref="v_ooba002" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbmoddt" ver="1" src="s" column="sffbmoddt" table="sffb_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbmodid" ver="1" src="s" column="sffbmodid" table="sffb_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbowndp" ver="1" src="s" column="sffbowndp" table="sffb_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbownid" ver="1" src="s" column="sffbownid" table="sffb_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbseq" ver="1" src="s" column="sffbseq" table="sffb_t" attribute="N004" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbsite" ver="1" src="s" column="sffbsite" table="sffb_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sffb_t.sffbstus" ver="1" src="s" column="sffbstus" table="sffb_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="sffb002_desc" src="s" depend_field="sffb_t.sffb002" correspon_key="sffb002" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="sffb003_desc" src="s" depend_field="sffb_t.sffb003" correspon_key="sffb003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="sffb004_desc" src="s" depend_field="sffb_t.sffb004" correspon_key="sffbsite,sffb004" ref_table="oogd_t" ref_fk="oogdsite,oogd001" ref_dlang="" ref_rtn="oogd002" status=""/>
+    <rfield cite_std="N" ver="1" name="sffb007_desc" src="s" depend_field="sffb_t.sffb007" correspon_key="&apos;221&apos;,sffb007" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="sffb009_desc" src="s" depend_field="sffb_t.sffb009" correspon_key="sffbsite,sffb009" ref_table="ecaa_t" ref_fk="ecaasite,ecaa001" ref_dlang="" ref_rtn="ecaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="sffb010_desc" src="s" depend_field="sffb_t.sffb010" correspon_key="sffb010" ref_table="mrbal_t" ref_fk="mrbal001" ref_dlang="mrbal002" ref_rtn="mrbal003" status=""/>
+    <rfield cite_std="N" ver="1" name="sffb021_desc" src="s" depend_field="sffb_t.sffb021" correspon_key="&apos;221&apos;,sffb021" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="sffb024_desc" src="s" depend_field="sffb_t.sffb024" correspon_key="sffbsite,sffb024" ref_table="ooge_t" ref_fk="oogeent,oogesite,ooge001" ref_dlang="" ref_rtn="ooge002" status=""/>
+    <rfield cite_std="N" ver="1" name="sffbcnfid_desc" src="s" depend_field="sffb_t.sffbcnfid" correspon_key="sffbcnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="sffbcrtdp_desc" src="s" depend_field="sffb_t.sffbcrtdp" correspon_key="sffbcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="sffbcrtid_desc" src="s" depend_field="sffb_t.sffbcrtid" correspon_key="sffbcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="sffbdocno_desc" src="s" depend_field="sffb_t.sffbdocno" correspon_key="sffbdocno" ref_table="oobal_t" ref_fk="oobal002" ref_dlang="oobal003" ref_rtn="oobal004" status=""/>
+    <rfield cite_std="N" ver="1" name="sffbmodid_desc" src="s" depend_field="sffb_t.sffbmodid" correspon_key="sffbmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="sffbowndp_desc" src="s" depend_field="sffb_t.sffbowndp" correspon_key="sffbowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="sffbownid_desc" src="s" depend_field="sffb_t.sffbownid" correspon_key="sffbownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffb024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbcnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbcnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sffb_t.sffbstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_sffbdocno" text="報工單號" lstr=""/>
+    <sfield name="lbl_sffbseq" text="项次" lstr=""/>
+    <sfield name="lbl_sffb001" text="報工類別" lstr=""/>
+    <sfield name="lbl_sffb005" text="工單單號" lstr=""/>
+    <sfield name="lbl_sffb006" text="Run Card" lstr=""/>
+    <sfield name="lbl_sffb007" text="作業編號" lstr=""/>
+    <sfield name="lbl_sffb008" text="作業序" lstr=""/>
+    <sfield name="lbl_sffb002" text="報工人員" lstr=""/>
+    <sfield name="lbl_sffb004" text="報工班別" lstr=""/>
+    <sfield name="lbl_sffb010" text="機器編號" lstr=""/>
+    <sfield name="lbl_sffb009" text="工作站" lstr=""/>
+    <sfield name="lbl_sffb011" text="作業人數" lstr=""/>
+    <sfield name="lbl_sffb003" text="部門" lstr=""/>
+    <sfield name="lbl_sffb012" text="完成日期" lstr=""/>
+    <sfield name="lbl_sffb013" text="完成時間" lstr=""/>
+    <sfield name="lbl_sffb014" text="工時" lstr=""/>
+    <sfield name="lbl_sffb015" text="機時" lstr=""/>
+    <sfield name="lbl_sffb016" text="單位" lstr=""/>
+    <sfield name="lbl_sffb017" text="良品數量" lstr=""/>
+    <sfield name="lbl_sffb018" text="報廢數量" lstr=""/>
+    <sfield name="lbl_sffb019" text="當站下線數量" lstr=""/>
+    <sfield name="lbl_sffb020" text="回收數量" lstr=""/>
+    <sfield name="lbl_sffb021" text="no use" lstr=""/>
+    <sfield name="lbl_sffb022" text="no use" lstr=""/>
+    <sfield name="lbl_sffb023" text="備註" lstr=""/>
+    <sfield name="lbl_sffb024" text="報工組別" lstr=""/>
+    <sfield name="lbl_sffbdocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_sffbsite" text="營運據點" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmr430_g01" module="apm" jobmode="N" type="g01" industry="std" crtid="01996" crtdt="2015-07-30 15:33:29" modid="08734" moddt="2016-10-08 15:43:24" sdver="5" tabver="10001" description="採購折扣合約">
+  <define arg="tm.wc(STRING|where codition)">
+    <var seq="1" value="l_pmex003(pmex003|&apos;&apos;),l_pmex002_desc2(chr1000|&apos;&apos;),l_pmex002_desc(chr1000|&apos;&apos;),pmev012,pmev011,pmevdocdt,l_pmev005_desc(chr1000|&apos;&apos;),l_pmex006(pmex006|&apos;&apos;),l_pmex008(pmex008|&apos;&apos;),l_pmex007(pmex007|&apos;&apos;),l_pmex005(chr1000|&apos;&apos;),l_pmex002(pmex002|&apos;&apos;),l_pmex001(chr1000|&apos;&apos;),l_pmexseq(pmexseq|&apos;&apos;),l_pmev019_desc(chr1000|&apos;&apos;),l_pmev002_desc(chr1000|&apos;&apos;),l_pmev001_desc(chr1000|&apos;&apos;),l_pmev010_desc(chr1000|&apos;&apos;),l_pmev008_desc(chr1000|&apos;&apos;),l_pmev009_desc(chr1000|&apos;&apos;),pmev006,pmev004,l_pmev003_desc(chr1000|&apos;&apos;),pmevdocno,pmevent,pmev005"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_pmex003(pmex003|&apos;&apos;),l_pmex002_desc2(chr1000|&apos;&apos;),l_pmex002_desc(chr1000|&apos;&apos;),pmev012,pmev011,pmevdocdt,l_pmev005_desc(chr1000|&apos;&apos;),l_pmex006(pmex006|&apos;&apos;),l_pmex008(pmex008|&apos;&apos;),l_pmex007(pmex007|&apos;&apos;),l_pmex005(chr1000|&apos;&apos;),l_pmex002(pmex002|&apos;&apos;),l_pmex001(chr1000|&apos;&apos;),l_pmexseq(pmexseq|&apos;&apos;),l_pmev019_desc(chr1000|&apos;&apos;),l_pmev002_desc(chr1000|&apos;&apos;),l_pmev001_desc(chr1000|&apos;&apos;),l_pmev010_desc(chr1000|&apos;&apos;),l_pmev008_desc(chr1000|&apos;&apos;),l_pmev009_desc(chr1000|&apos;&apos;),pmev006,pmev004,l_pmev003_desc(chr1000|&apos;&apos;),pmevdocno,pmevent,pmev005"/>
+    <sql id="g_from" query="pmev_t"/>
+    <sql id="g_where" query="" maintable="pmev_t"/>
+    <sql id="g_order" query="pmevdocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="pmevdocno,l_pmexseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="pmevdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="pmevent,pmevdocno"/>
+      <rep type="l_pmexseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002,ooff003" where="pmevent,pmevdocno,l_pmexseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002,ooff003" where="pmevent,pmevdocno,l_pmexseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="pmevdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="pmevent,pmevdocno"/>
+      <rep type="l_pmexseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

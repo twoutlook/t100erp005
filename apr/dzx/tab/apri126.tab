@@ -1,0 +1,146 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apri126" module="apr" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="03247" crtdt="2014-03-24 21:55:47" modid="08172" moddt="2016-05-04 13:27:50" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="傳電子秤文件格式定義">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="prbl001,prbl002,prblunit,prbl003,prbl004,prbl005,prbl006,prblstus,prblownid,prblownid_desc(chr80),prblowndp,prblowndp_desc(chr80),prblcrtid,prblcrtid_desc(chr80),prblcrtdp,prblcrtdp_desc(chr80),prblcrtdt,prblmodid,prblmodid_desc(chr80),prblmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="prbmstus,prbm002,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008,prbm008_desc(chr500),prbm009,prbm011,prbm010,prbmunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="prbu003(num10),prbu004(chr100),prbu005(chr100)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="apri126" method="dialog">
+    <section id="input">
+      <input id="head" field="prbl001,prbl002,prblunit,prbl003,prbl004,prbl005,prbl006,prblstus"/>
+      <input id="body" page="1" field="prbmstus,prbm002,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008,prbm009,prbm011,prbm010,prbmunit" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="prbu003,prbu004,prbu005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="prbl001,prbl002,prblunit,prbl003,prbl004,prbl005,prbl006,prblstus,prblownid,prblowndp,prblcrtid,prblcrtdp,prblcrtdt,prblmodid,prblmoddt"/>
+      <construct id="body" page="1" field="prbmstus,prbm002,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008,prbm009,prbm011,prbm010,prbmunit"/>
+      <construct id="body" page="2" field="prbu003,prbu004,prbu005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="prbl001"/>
+      <set id="head" type="no_entry" field="prbl001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="prbl001">
+        <controlp form="q_prbl001" state="c"/>
+      </column>
+      <column id="prbl002"/>
+      <column id="prblunit"/>
+      <column id="prbl003" type="S" default="1" def_scc="6036"/>
+      <column id="prbl004"/>
+      <column id="prbl005" type="S" default="1" def_scc="6037"/>
+      <column id="prbl006" type="S" default="1" def_scc="6038"/>
+      <column id="prblstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="prblownid">
+        <after>
+          <reference field="prblownid_desc" ref_field="prbl_t.prblownid" map_field="prblownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prblownid_desc"/>
+      <column id="prblowndp">
+        <after>
+          <reference field="prblowndp_desc" ref_field="prbl_t.prblowndp" map_field="prblowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="prblowndp_desc"/>
+      <column id="prblcrtid">
+        <after>
+          <reference field="prblcrtid_desc" ref_field="prbl_t.prblcrtid" map_field="prblcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prblcrtid_desc"/>
+      <column id="prblcrtdp">
+        <after>
+          <reference field="prblcrtdp_desc" ref_field="prbl_t.prblcrtdp" map_field="prblcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="prblcrtdp_desc"/>
+      <column id="prblcrtdt"/>
+      <column id="prblmodid">
+        <after>
+          <reference field="prblmodid_desc" ref_field="prbl_t.prblmodid" map_field="prblmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prblmodid_desc"/>
+      <column id="prblmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="prbmstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="prbm002">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prbm003"/>
+      <column id="prbm004">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prbm005" type="S" default="1" def_scc="6039"/>
+      <column id="prbm006" type="S" default="1" def_scc="6040"/>
+      <column id="prbm007" type="S" default="prbh_t" def_scc="6041"/>
+      <column id="prbm008">
+        <after>
+          <check chkid="v_dzeb001_1" id="isExist"/>
+          <reference field="prbm008_desc" ref_field="prbm_t.prbm008" map_field="prbm008" ref_sql="SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_dzeb001" state="i"/>
+        <controlp form="q_dzeb001" state="c"/>
+      </column>
+      <column id="prbm008_desc"/>
+      <column id="prbm009"/>
+      <column id="prbm011" type="S" default="0"/>
+      <column id="prbm010"/>
+      <column id="prbmunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="prbu003" type="S" default="0"/>
+      <column id="prbu004"/>
+      <column id="prbu005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="prbl_t" pk="prbl001">
+      <sql id="forupd_sql" type="sql" query="SELECT prbl001,prbl002,prblunit,prbl003,prbl004,prbl005,prbl006,prblstus,prblownid,&apos;&apos;,prblowndp,&apos;&apos;,prblcrtid,&apos;&apos;,prblcrtdp,&apos;&apos;,prblcrtdt,prblmodid,&apos;&apos;,prblmoddt FROM prbl_t WHERE prblent= ? AND prbl001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT prbl001,prbl002,prblunit,prbl003,prbl004,prbl005,prbl006,prblstus,prblownid,&apos;&apos;,prblowndp,&apos;&apos;,prblcrtid,&apos;&apos;,prblcrtdp,&apos;&apos;,prblcrtdt,prblmodid,&apos;&apos;,prblmoddt FROM prbl_t" order="prbl001"/>
+    </head>
+    <body id="prbm_t" page="1" linked="" pk="prbm002" fk="prbm001">
+      <sql id="forupd_sql_detail" query="SELECT prbmstus,prbm002,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008,&apos;&apos;,prbm009,prbm011,prbm010,prbmunit FROM prbm_t WHERE prbment=? AND prbm001=? AND prbm002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT prbmstus,prbm002,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008,&apos;&apos;,prbm009,prbm011,prbm010,prbmunit FROM prbm_t WHERE prbment=? AND prbm001=?"/>
+    </body>
+    <body id="prbu_t" page="2" linked="" detail="Y" master="prbm_t" default_site="N" pk="prbu003" fk="prbu001,prbu002">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos; FROM prbu_t WHERE prbuent=? AND prbu001=? AND prbu002=? AND prbu003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos; FROM prbu_t WHERE prbuent=? AND prbu001=? AND prbu002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

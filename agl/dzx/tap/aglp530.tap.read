@@ -1,0 +1,2671 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aglp530" std_prog="aglp530" erpver="1.0" module="AGL" ver="1" env="s" zone="t10dev" booking="N" type="M" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.aglp530_glapld_desc" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 獲取帳別說明
+# Memo...........:
+# Usage..........: CALL aglp530_glapld_desc()
+# Input parameter:  
+# Return code....:  
+# Date & Author..: 2014/7/3 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp530_glapld_desc()
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_master.glapld
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_master.glapld_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_master.glapld_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.aglp530_glapld_chk" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 帳別檢查
+# Memo...........:
+# Usage..........: CALL aglp530_glapld_chk(p_glapld)
+# Input parameter:  
+# Return code....:  
+# Date & Author..: 2014/7/3 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp530_glapld_chk(p_glapld)
+   DEFINE p_glapld    LIKE glap_t.glapld
+   DEFINE l_glaastus  LIKE glaa_t.glaastus
+   
+   LET g_errno = ''
+   SELECT glaastus INTO l_glaastus FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = p_glapld
+   CASE
+      WHEN SQLCA.SQLCODE = 100   LET g_errno = 'agl-00016'
+      WHEN l_glaastus = 'N'      LET g_errno = 'agl-00051'
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.aglp530_glaa006_1" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 表结法
+# Memo...........:
+# Usage..........: CALL aglp530_glaa006_1()
+# Input parameter:  
+# Return code....:  
+# Date & Author..:  
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp530_glaa006_1()
+
+   #期末结转科目
+   DEFINE l_glab              DYNAMIC ARRAY OF RECORD 
+          glab005             LIKE glab_t.glab005
+          END RECORD
+   DEFINE l_glaq              DYNAMIC ARRAY OF RECORD 
+          glaq010             LIKE glaq_t.glaq010,
+          glaq002             LIKE glaq_t.glaq002,
+          glaq003             LIKE glaq_t.glaq003,
+          glaq004             LIKE glaq_t.glaq004,
+          glaq040             LIKE glaq_t.glaq040,
+          glaq041             LIKE glaq_t.glaq041,
+          glaq043             LIKE glaq_t.glaq043,
+          glaq044             LIKE glaq_t.glaq044,
+          glaq017             LIKE glaq_t.glaq017,
+          glaq018             LIKE glaq_t.glaq018,
+          glaq019             LIKE glaq_t.glaq019,
+          glaq020             LIKE glaq_t.glaq020,
+          glaq021             LIKE glaq_t.glaq021,
+          glaq022             LIKE glaq_t.glaq022,
+          glaq023             LIKE glaq_t.glaq023,
+          glaq024             LIKE glaq_t.glaq024,
+          glaq025             LIKE glaq_t.glaq025,
+          glaq026             LIKE glaq_t.glaq026,
+          glaq027             LIKE glaq_t.glaq027,
+          glaq028             LIKE glaq_t.glaq028
+          END RECORD
+   DEFINE l_sql               STRING
+   DEFINE l_i,l_cnt           LIKE type_t.num5
+   DEFINE l_sum               LIKE glaq_t.glaq003
+   DEFINE l_sum1              LIKE glaq_t.glaq003   #差异(本位幣一)
+   DEFINE l_sum2              LIKE glaq_t.glaq003   #差异(本位幣二)
+   DEFINE l_sum3              LIKE glaq_t.glaq003   #差异(本位幣三)
+   DEFINE l_success           LIKE type_t.num5
+   DEFINE ld_date             DATETIME YEAR TO SECOND
+   DEFINE l_flag              LIKE type_t.chr1
+   DEFINE l_errno             LIKE type_t.chr100
+   DEFINE l_glav002           LIKE glav_t.glav002
+   DEFINE l_glav005           LIKE glav_t.glav005
+   DEFINE l_sdate_s           LIKE glav_t.glav004
+   DEFINE l_sdate_e           LIKE glav_t.glav004
+   DEFINE l_glav006           LIKE glav_t.glav006
+   DEFINE l_pdate_s           LIKE glav_t.glav004
+   DEFINE l_pdate_e           LIKE glav_t.glav004
+   DEFINE l_glav007           LIKE glav_t.glav007
+   DEFINE l_wdate_s           LIKE glav_t.glav004
+   DEFINE l_wdate_e           LIKE glav_t.glav004
+   DEFINE l_sql1,l_sql2       STRING
+   DEFINE l_red           LIKE type_t.chr10
+   
+   #初始化  
+   CALL l_glaq.clear()
+   #========单头glap_t======================
+      LET g_glap.glapent = g_enterprise
+      LET g_glap.glapcomp = g_glaacomp 
+      LET g_glap.glapld = g_master.glapld 
+      LET g_glap.glap001 = '1'      
+      LET g_glap.glap002 = g_master.glap002
+      LET g_glap.glap004 = g_master.glap004
+      LET g_glap.glapdocno = g_glaa112
+
+      CALL s_get_accdate(g_glaa003,'',g_master.glap002,g_master.glap004)
+      RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+                l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e
+      IF l_flag='N' THEN
+         CALL cl_err('','l_errno',1)
+         LET g_success = 'N'
+         RETURN
+      END IF         
+      LET g_glap.glapdocdt=l_pdate_e
+      CALL s_aooi200_gen_docno(g_site,g_glap.glapdocno,g_glap.glapdocdt,'aglt310') RETURNING l_success,g_glap.glapdocno
+      IF l_success = FALSE THEN
+         LET g_success = 'N'      
+         RETURN
+      END IF 
+      #獲取單據別對應參數：紅字傳票否
+      CALL cl_get_doc_para(g_enterprise,g_glaacomp,g_glaa112,'D-FIN-1002') RETURNING l_red
+      
+      LET g_glap.glap007 = 'CE'
+      LET g_glap.glap009 = 0
+      LET g_glap.glap009 = 0
+      LET g_glap.glap013 = 0
+      LET g_glap.glap014 = 'N'
+      LET g_glap.glapstus = 'Y'
+      LET g_glap.glapcrtid = g_user
+      LET g_glap.glapcrtdt = cl_get_current()
+      LET g_glap.glapownid = g_user
+      LET g_glap.glapowndp = g_dept
+      LET g_glap.glapcrtid = g_user
+      LET g_glap.glapcrtdp = g_dept 
+      LET g_glap.glapcrtdt = cl_get_current()
+      LET g_glap.glapcnfid = g_user
+      LET g_glap.glapcnfdt = cl_get_current()
+      LET ld_date = cl_get_current()
+      #=================单身glaq_t================================
+      LET g_glaq.glaqent = g_glap.glapent
+      LET g_glaq.glaqld = g_glap.glapld
+      LET g_glaq.glaqdocno = g_glap.glapdocno
+      LET g_glaq.glaqcomp = g_glap.glapcomp
+      LET g_glaq.glaq005 = g_glaa001
+      LET g_glaq.glaq006 = 1  #匯率(本位幣一)
+      #匯率(本位幣二)
+      IF g_glaa015='Y' THEN
+         CALL s_aooi160_get_exrate('2',g_glap.glapld,g_glap.glapdocdt,g_glaq.glaq005,g_glaa016,0,g_glaa018)
+         RETURNING  g_glaq.glaq039
+      ELSE
+         LET g_glaq.glaq039 = 0  
+      END IF
+      #匯率(本位幣三)
+      IF g_glaa019='Y' THEN
+         CALL s_aooi160_get_exrate('2',g_glap.glapld,g_glap.glapdocdt,g_glaq.glaq005,g_glaa020,0,g_glaa022)
+         RETURNING  g_glaq.glaq042
+      ELSE
+         LET g_glaq.glaq042 = 0  
+      END IF
+
+      #抓取科目
+      LET l_i = 1
+      LET l_sql = " SELECT glab005 FROM glab_t ",
+                  "  WHERE glabent = '",g_enterprise,"'",
+                  "    AND glabld = '",g_master.glapld,"'",
+                  "    AND glab003 IN ('9711_01','9711_02')",
+                  "    ORDER BY glab003 "
+      PREPARE aglp530_glab005_pre FROM l_sql
+      DECLARE aglp530_glab005_cs  CURSOR FOR  aglp530_glab005_pre
+      CALL l_glab.clear()
+      FOREACH aglp530_glab005_cs INTO l_glab[l_i].glab005 
+         IF SQLCA.sqlcode THEN
+            CALL cl_errmsg('',l_glab[l_i].glab005,'',SQLCA.SQLCODE,1)
+            LET g_success = 'N' 
+            EXIT FOREACH
+         END IF
+         IF cl_null(l_glab[l_i].glab005) THEN
+            CALL cl_errmsg('','','','agl-00230',1)
+            LET g_success = 'N'
+         END IF
+         LET l_i = l_i + 1
+      END FOREACH
+      IF g_success = 'N' THEN
+         RETURN
+      END IF
+      #传票金额（贷-借）
+      SELECT SUM(glar006)-SUM(glar005)#,SUM(glar035)-SUM(glar034),SUM(glar037)-SUM(glar036)
+        INTO l_sum#,l_sum2,l_sum3
+        FROM glar_t
+       WHERE glarent = g_enterprise
+         AND glarld = g_glaq.glaqld
+         AND glar001 IN (SELECT glar001 FROM glac_t,glar_t 
+                          WHERE glarent = glacent
+                            AND glar001 = glac002
+                            AND glarent = g_enterprise
+                            AND glarld = g_glaq.glaqld
+                            AND glar002 = g_master.glap002
+                            AND glar003 = g_master.glap004
+                            AND glac001 = g_glaa004        #会计科目参照表号
+                            AND glac003 IN ('2','3')       #獨立或明細科目
+                            AND glac006 = '1'              #账户科目
+                            AND glac007 = '6')             #损益类科目
+         AND glar002 = g_master.glap002
+         AND glar003 = g_master.glap004
+         IF cl_null(l_sum) THEN  LET l_sum = 0 END IF
+#         IF cl_null(l_sum2) THEN  LET l_sum2 = 0 END IF
+#         IF cl_null(l_sum3) THEN  LET l_sum3 = 0 END IF
+         IF l_sum = 0  THEN
+            CALL cl_errmsg('','','','agl-00145',1)
+            LET g_success = 'N'
+            RETURN
+         END IF 
+         IF l_sum > 0  THEN
+            LET g_glap.glap010 = l_sum  
+            LET g_glap.glap011 = l_sum
+#            LET g_glaq.glaq010 = l_sum1  
+#            LET l_glaq[1].glaq002 = l_glaq[1].glab005    #损益类
+#            LET l_glaq[1].glaq003 = l_sum1               #借方金額(本位幣一)
+#            LET l_glaq[1].glaq004 = 0
+#            LET l_glaq[2].glaq002 = l_glaq[2].glab005    #资产类
+#            LET l_glaq[2].glaq003 = 0
+#            LET l_glaq[2].glaq004 = l_sum1               #貸方金額(本位幣一)
+#            IF g_glaa015='Y' THEN
+#               LET l_glaq[1].glaq040 = l_sum2     #借方金額(本位幣二)
+#               LET l_glaq[1].glaq041 = 0
+#               LET l_glaq[2].glaq040 = 0
+#               LET l_glaq[2].glaq041 = l_sum2     #貸方金額(本位幣二)
+#            ELSE
+#               LET l_glaq[1].glaq040 = 0
+#               LET l_glaq[1].glaq041 = 0
+#               LET l_glaq[2].glaq040 = 0
+#               LET l_glaq[2].glaq041 = 0
+#            END IF
+#            IF g_glaa019='Y' THEN
+#               LET l_glaq[1].glaq043 = l_sum3     #借方金額(本位幣三)
+#               LET l_glaq[1].glaq044 = 0
+#               LET l_glaq[2].glaq043 = 0
+#               LET l_glaq[2].glaq044 = l_sum3     #貸方金額(本位幣三)
+#            ELSE
+#               LET l_glaq[1].glaq043 = 0
+#               LET l_glaq[1].glaq044 = 0
+#               LET l_glaq[2].glaq043 = 0
+#               LET l_glaq[2].glaq044 = 0
+#            END IF
+         ELSE
+#            LET l_sum = l_sum * 
+#            LET l_sum2 = l_sum2 * -1
+#            LET l_sum3 = l_sum3 * -1
+            LET g_glap.glap010 = l_sum*(-1)
+            LET g_glap.glap011 = l_sum*(-1)
+#            LET g_glaq.glaq010 = l_sum1
+#            LET l_glaq[1].glaq002 = l_glaq[2].glab005    #资产类
+#            LET l_glaq[1].glaq003 = l_sum1               #借方金額(本位幣一)
+#            LET l_glaq[1].glaq004 = 0
+#            LET l_glaq[2].glaq002 = l_glaq[1].glab005    #损益类
+#            LET l_glaq[2].glaq003 = 0
+#            LET l_glaq[2].glaq004 = l_sum1               #貸方金額(本位幣一)
+#            
+#            IF g_glaa015='Y' THEN
+#               LET l_glaq[1].glaq040 = l_sum2     #借方金額(本位幣二)
+#               LET l_glaq[1].glaq041 = 0
+#               LET l_glaq[2].glaq040 = 0
+#               LET l_glaq[2].glaq041 = l_sum2     #貸方金額(本位幣二)
+#            ELSE
+#               LET l_glaq[1].glaq040 = 0
+#               LET l_glaq[1].glaq041 = 0
+#               LET l_glaq[2].glaq040 = 0
+#               LET l_glaq[2].glaq041 = 0
+#            END IF
+#            
+#            IF g_glaa019='Y' THEN
+#               LET l_glaq[1].glaq043 = l_sum3     #借方金額(本位幣三)
+#               LET l_glaq[1].glaq044 = 0
+#               LET l_glaq[2].glaq043 = 0
+#               LET l_glaq[2].glaq044 = l_sum3     #貸方金額(本位幣三) 
+#            ELSE
+#               LET l_glaq[1].glaq043 = 0
+#               LET l_glaq[1].glaq044 = 0
+#               LET l_glaq[2].glaq043 = 0
+#               LET l_glaq[2].glaq044 = 0
+#            END IF
+         END IF 
+        
+        #获取该科目是否设置核算项
+        CALL aglp530_fix_acc_sql(l_glab[1].glab005 ) RETURNING l_sql1,l_sql2
+        #損益類
+        LET l_sql="SELECT SUM(glar006)-SUM(glar005),SUM(glar035)-SUM(glar034),SUM(glar037)-SUM(glar036),",l_sql2,      
+                  "  FROM glar_t ",
+                  " WHERE glarent = ",g_enterprise,
+                  "   AND glarld = '",g_glaq.glaqld,"'",
+                  "   AND glar001 IN (SELECT glar001 FROM glac_t,glar_t",
+                  "                    WHERE glarent = glacent AND glar001 = glac002",
+                  "                      AND glarent = ",g_enterprise,
+                  "                      AND glarld = '",g_glaq.glaqld,"'",
+                  "                      AND glar002 = ",g_master.glap002,
+                  "                      AND glar003 = ",g_master.glap004,
+                  "                      AND glac001 = '",g_glaa004,"'", #会计科目参照表号
+                  "                      AND glac003 IN ('2','3')",      #獨立或明細科目
+                  "                      AND glac006 = '1'",             #账户科目
+                  "                      AND glac007 = '6')",            #损益类科目
+                  "   AND glar002 =", g_master.glap002,
+                  "   AND glar003 =", g_master.glap004,
+                  " GROUP BY ",l_sql2," ORDER BY ",l_sql2
+                  
+        PREPARE aglp530_glar_pr1 FROM l_sql
+        DECLARE aglp530_glar_cs1  CURSOR FOR  aglp530_glar_pr1
+        
+        #获取该科目是否设置核算项
+        CALL aglp530_fix_acc_sql(l_glab[2].glab005 ) RETURNING l_sql1,l_sql2
+        #資產類
+        LET l_sql="SELECT SUM(glar006)-SUM(glar005),SUM(glar035)-SUM(glar034),SUM(glar037)-SUM(glar036),",l_sql2,      
+                  "  FROM glar_t ",
+                  " WHERE glarent = ",g_enterprise,
+                  "   AND glarld = '",g_glaq.glaqld,"'",
+                  "   AND glar001 IN (SELECT glar001 FROM glac_t,glar_t",
+                  "                    WHERE glarent = glacent AND glar001 = glac002",
+                  "                      AND glarent = ",g_enterprise,
+                  "                      AND glarld = '",g_glaq.glaqld,"'",
+                  "                      AND glar002 = ",g_master.glap002,
+                  "                      AND glar003 = ",g_master.glap004,
+                  "                      AND glac001 = '",g_glaa004,"'", #会计科目参照表号
+                  "                      AND glac003 IN ('2','3')",      #獨立或明細科目
+                  "                      AND glac006 = '1'",             #账户科目
+                  "                      AND glac007 = '6')",            #损益类科目
+                  "   AND glar002 =", g_master.glap002,
+                  "   AND glar003 =", g_master.glap004,
+                  " GROUP BY ",l_sql2," ORDER BY ",l_sql2
+                  
+        PREPARE aglp530_glar_pr2 FROM l_sql
+        DECLARE aglp530_glar_cs2  CURSOR FOR  aglp530_glar_pr2
+        
+        LET l_i=1
+        FOREACH aglp530_glar_cs1 INTO l_sum1,l_sum2,l_sum3,l_glaq[l_i].glaq017,l_glaq[l_i].glaq018,l_glaq[l_i].glaq019,
+                                      l_glaq[l_i].glaq020,l_glaq[l_i].glaq021,l_glaq[l_i].glaq022,l_glaq[l_i].glaq023,
+                                      l_glaq[l_i].glaq024,l_glaq[l_i].glaq025,l_glaq[l_i].glaq026,l_glaq[l_i].glaq027,
+                                      l_glaq[l_i].glaq028
+           IF SQLCA.sqlcode THEN
+              CALL cl_errmsg('FOREACH','','',SQLCA.SQLCODE,1)
+              LET g_success = 'N' 
+              EXIT FOREACH
+           END IF
+           IF l_sum1=0 THEN
+              CONTINUE FOREACH
+           END IF
+           LET l_glaq[l_i].glaq003 = 0
+           LET l_glaq[l_i].glaq004 = 0
+           LET l_glaq[l_i].glaq040 = 0
+           LET l_glaq[l_i].glaq041 = 0
+           LET l_glaq[l_i].glaq043 = 0
+           LET l_glaq[l_i].glaq044 = 0
+           IF l_sum>0 THEN
+              IF l_sum1>0 OR l_red='Y' THEN
+                 LET l_glaq[l_i].glaq010 = l_sum1
+                 LET l_glaq[l_i].glaq002 = l_glab[1].glab005    #损益类
+                 LET l_glaq[l_i].glaq003 = l_sum1               #借方金額(本位幣一)
+                 IF g_glaa015='Y' THEN
+                    LET l_glaq[l_i].glaq040 = l_sum2     #借方金額(本位幣二)
+                 END IF
+                 IF g_glaa019='Y' THEN
+                    LET l_glaq[l_i].glaq043 = l_sum3     #借方金額(本位幣三)
+                 END IF
+              ELSE
+                 #當非紅字傳票時且金額小於零，借貸相反，金額*(-1)
+                 LET l_sum1 = l_sum1 * -1
+                 LET l_sum2 = l_sum2 * -1
+                 LET l_sum3 = l_sum3 * -1
+                 LET l_glaq[l_i].glaq010 = l_sum1
+                 LET l_glaq[l_i].glaq002 = l_glab[1].glab005    #损益类
+                 LET l_glaq[l_i].glaq004 = l_sum1               #貸方金額(本位幣一)
+                 IF g_glaa015='Y' THEN
+                    LET l_glaq[l_i].glaq041 = l_sum2     #貸方金額(本位幣二)
+                 END IF
+                 IF g_glaa019='Y' THEN
+                    LET l_glaq[l_i].glaq044 = l_sum3     #貸方金額(本位幣三)
+                 END IF 
+              END IF   
+           ELSE
+              IF l_sum1>0 OR l_red='Y' THEN
+                 LET l_glaq[l_i].glaq010 = l_sum1
+                 LET l_glaq[l_i].glaq002 = l_glab[1].glab005    #损益类
+                 LET l_glaq[l_i].glaq004 = l_sum1               #貸方金額(本位幣一)
+                 IF g_glaa015='Y' THEN
+                    LET l_glaq[l_i].glaq041 = l_sum2     #貸方金額(本位幣二)
+                 END IF
+                 IF g_glaa019='Y' THEN
+                    LET l_glaq[l_i].glaq044 = l_sum3     #貸方金額(本位幣三)
+                 END IF
+              ELSE
+                 LET l_sum1 = l_sum1 * -1
+                 LET l_sum2 = l_sum2 * -1
+                 LET l_sum3 = l_sum3 * -1
+                 LET l_glaq[l_i].glaq010 = l_sum1
+                 LET l_glaq[l_i].glaq002 = l_glab[1].glab005    #损益类
+                 LET l_glaq[l_i].glaq003 = l_sum1               #借方金額(本位幣一)
+                 IF g_glaa015='Y' THEN
+                    LET l_glaq[l_i].glaq040 = l_sum2     #借方金額(本位幣二)
+                 END IF
+                 IF g_glaa019='Y' THEN
+                    LET l_glaq[l_i].glaq043 = l_sum3     #借方金額(本位幣三)
+                 END IF 
+              END IF
+           END IF
+           LET l_i = l_i + 1
+        END FOREACH
+        
+        FOREACH aglp530_glar_cs2 INTO l_sum1,l_sum2,l_sum3,l_glaq[l_i].glaq017,l_glaq[l_i].glaq018,l_glaq[l_i].glaq019,
+                                      l_glaq[l_i].glaq020,l_glaq[l_i].glaq021,l_glaq[l_i].glaq022,l_glaq[l_i].glaq023,
+                                      l_glaq[l_i].glaq024,l_glaq[l_i].glaq025,l_glaq[l_i].glaq026,l_glaq[l_i].glaq027,
+                                      l_glaq[l_i].glaq028
+           IF SQLCA.sqlcode THEN
+              CALL cl_errmsg('FOREACH','','',SQLCA.SQLCODE,1)
+              LET g_success = 'N' 
+              EXIT FOREACH
+           END IF
+           IF l_sum1=0 THEN
+              CONTINUE FOREACH
+           END IF
+           LET l_glaq[l_i].glaq003 = 0
+           LET l_glaq[l_i].glaq004 = 0
+           LET l_glaq[l_i].glaq040 = 0
+           LET l_glaq[l_i].glaq041 = 0
+           LET l_glaq[l_i].glaq043 = 0
+           LET l_glaq[l_i].glaq044 = 0
+           IF l_sum>0 THEN
+              IF l_sum1>0 OR l_red='Y' THEN
+                 LET l_glaq[l_i].glaq010 = l_sum1
+                 LET l_glaq[l_i].glaq002 = l_glab[2].glab005    #資產类
+                 LET l_glaq[l_i].glaq004 = l_sum1               #貸方金額(本位幣一)
+                 IF g_glaa015='Y' THEN
+                    LET l_glaq[l_i].glaq041 = l_sum2     #貸方金額(本位幣二)
+                 END IF
+                 IF g_glaa019='Y' THEN
+                    LET l_glaq[l_i].glaq044 = l_sum3     #貸方金額(本位幣三)
+                 END IF
+              ELSE
+                 #當非紅字傳票時且金額小於零，借貸相反，金額*(-1)
+                 LET l_sum1 = l_sum1 * -1
+                 LET l_sum2 = l_sum2 * -1
+                 LET l_sum3 = l_sum3 * -1
+                 LET l_glaq[l_i].glaq010 = l_sum1
+                 LET l_glaq[l_i].glaq002 = l_glab[2].glab005    #資產类
+                 LET l_glaq[l_i].glaq003 = l_sum1               #借方金額(本位幣一)
+                 IF g_glaa015='Y' THEN
+                    LET l_glaq[l_i].glaq040 = l_sum2     #借方金額(本位幣二)
+                 END IF
+                 IF g_glaa019='Y' THEN
+                    LET l_glaq[l_i].glaq043 = l_sum3     #借方金額(本位幣三)
+                 END IF 
+              END IF   
+           ELSE
+              IF l_sum1>0 OR l_red='Y' THEN
+                 LET l_glaq[l_i].glaq010 = l_sum1
+                 LET l_glaq[l_i].glaq002 = l_glab[2].glab005    #資產类
+                 LET l_glaq[l_i].glaq003 = l_sum1               #借方金額(本位幣一)
+                 IF g_glaa015='Y' THEN
+                    LET l_glaq[l_i].glaq040 = l_sum2     #借方金額(本位幣二)
+                 END IF
+                 IF g_glaa019='Y' THEN
+                    LET l_glaq[l_i].glaq043 = l_sum3     #借方金額(本位幣三)
+                 END IF
+              ELSE
+                 LET l_sum1 = l_sum1 * -1
+                 LET l_sum2 = l_sum2 * -1
+                 LET l_sum3 = l_sum3 * -1
+                 LET l_glaq[l_i].glaq010 = l_sum1
+                 LET l_glaq[l_i].glaq002 = l_glab[2].glab005    #資產类
+                 LET l_glaq[l_i].glaq004 = l_sum1               #貸方金額(本位幣一)
+                 IF g_glaa015='Y' THEN
+                    LET l_glaq[l_i].glaq041 = l_sum2     #貸方金額(本位幣二)
+                 END IF
+                 IF g_glaa019='Y' THEN
+                    LET l_glaq[l_i].glaq044 = l_sum3     #貸方金額(本位幣三)
+                 END IF 
+              END IF
+           END IF
+           LET l_i = l_i + 1
+        END FOREACH
+        
+        #INS--glap_t,glaq_t,glar_t
+        INSERT INTO glap_t VALUES (g_glap.*) 
+        IF SQLCA.SQLCODE THEN
+           CALL cl_errmsg('INSERT glap_t',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+           LET g_success = 'N' 
+        END IF
+        UPDATE glap_t SET glapcrtdt = ld_date,
+                          glapcnfdt = ld_date
+         WHERE glapent = g_enterprise
+           AND glapld = g_glap.glapld
+           AND glapdocno = g_glap.glapdocno
+        IF SQLCA.SQLCODE THEN
+           CALL cl_errmsg('UPD date',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+           LET g_success = 'N' 
+        END IF 
+        
+        IF g_success = 'Y' THEN
+           #l_cnt=1：借，l_cnt = 2：贷
+           LET l_i=l_i-1
+           FOR l_cnt =1 TO l_i
+               #INS---glaq_t
+               LET g_glaq.glaqseq = l_cnt 
+               LET g_glaq.glaq010 = l_glaq[l_cnt].glaq010
+               LET g_glaq.glaq002 = l_glaq[l_cnt].glaq002
+               LET g_glaq.glaq003 = l_glaq[l_cnt].glaq003
+               LET g_glaq.glaq004 = l_glaq[l_cnt].glaq004
+               LET g_glaq.glaq040 = l_glaq[l_cnt].glaq040
+               LET g_glaq.glaq041 = l_glaq[l_cnt].glaq041
+               LET g_glaq.glaq043 = l_glaq[l_cnt].glaq043
+               LET g_glaq.glaq044 = l_glaq[l_cnt].glaq044
+               LET g_glaq.glaq017 = l_glaq[l_cnt].glaq017
+               LET g_glaq.glaq018 = l_glaq[l_cnt].glaq018
+               LET g_glaq.glaq019 = l_glaq[l_cnt].glaq019
+               LET g_glaq.glaq020 = l_glaq[l_cnt].glaq020
+               LET g_glaq.glaq021 = l_glaq[l_cnt].glaq021
+               LET g_glaq.glaq022 = l_glaq[l_cnt].glaq022
+               LET g_glaq.glaq023 = l_glaq[l_cnt].glaq023
+               LET g_glaq.glaq024 = l_glaq[l_cnt].glaq024
+               LET g_glaq.glaq025 = l_glaq[l_cnt].glaq025
+               LET g_glaq.glaq026 = l_glaq[l_cnt].glaq026
+               LET g_glaq.glaq027 = l_glaq[l_cnt].glaq027
+               LET g_glaq.glaq028 = l_glaq[l_cnt].glaq028
+               INSERT INTO glaq_t VALUES(g_glaq.*)
+               IF SQLCA.SQLCODE THEN
+                  CALL cl_errmsg('INSERT glaq_t',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+                  LET g_success = 'N' 
+               END IF 
+           END FOR
+        END IF
+        #CE凭证过账
+        CALL s_voucher_post_chk(g_glap.glapld,g_glap.glapdocno) RETURNING l_success
+        IF l_success = TRUE THEN
+           CALL s_voucher_post_upd(g_glap.glapld,g_glap.glapdocno) RETURNING l_success
+        END IF 
+        IF l_success = FALSE THEN
+           LET g_success = 'N'
+        END IF 
+       
+END FUNCTION]]>
+  </point>
+  <point name="function.aglp530_glaa006_2" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 當該帳別選擇的期末結帳方式='帳結法'
+# Memo...........:
+# Usage..........: CALL aglp530_glaa006_2()
+# Input parameter:  
+# Return code....:  
+# Date & Author..:   
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp530_glaa006_2()
+ 
+   DEFINE l_success        LIKE type_t.num5 
+   DEFINE l_sum1_d         LIKE glaq_t.glaq003  #借方金額(本位幣一)
+   DEFINE l_sum2_d         LIKE glaq_t.glaq003  #借方金額(本位幣二)
+   DEFINE l_sum3_d         LIKE glaq_t.glaq003  #借方金額(本位幣三)
+   DEFINE l_sum1_c         LIKE glaq_t.glaq003  #貸方金額(本位幣一)
+   DEFINE l_sum2_c         LIKE glaq_t.glaq003  #貸方金額(本位幣二)
+   DEFINE l_sum3_c         LIKE glaq_t.glaq003  #貸方金額(本位幣三)
+   DEFINE l_profit1        LIKE glaq_t.glaq003
+   DEFINE l_profit2        LIKE glaq_t.glaq003
+   DEFINE ld_date          DATETIME YEAR TO SECOND
+   DEFINE l_sql            STRING
+   DEFINE l_sql1           STRING 
+   DEFINE l_sql2           STRING   
+   DEFINE l_glab005        LIKE glab_t.glab005
+   DEFINE l_cnt            LIKE type_t.num5
+   DEFINE l_count          LIKE type_t.num5
+   DEFINE l_flag           LIKE type_t.chr1
+   DEFINE l_errno          LIKE type_t.chr100
+   DEFINE l_glav002        LIKE glav_t.glav002
+   DEFINE l_glav005        LIKE glav_t.glav005
+   DEFINE l_sdate_s        LIKE glav_t.glav004
+   DEFINE l_sdate_e        LIKE glav_t.glav004
+   DEFINE l_glav006        LIKE glav_t.glav006
+   DEFINE l_pdate_s        LIKE glav_t.glav004
+   DEFINE l_pdate_e        LIKE glav_t.glav004
+   DEFINE l_glav007        LIKE glav_t.glav007
+   DEFINE l_wdate_s        LIKE glav_t.glav004
+   DEFINE l_wdate_e        LIKE glav_t.glav004
+   
+   #A.產生兩張期末結轉傳票(CE)
+   ####################### A-1.費用科目結轉本年利潤 ###########################
+   #  傳票單別=總帳參數設定檔.結轉用單別
+   #  傳票日期=執行年期的當期最末一日
+   #  來源類型='CE'的傳票單頭單身資料(glap_t,glaq_t)且傳票狀態='已過帳'
+   #  科目編號=當期傳票有費用類科目的傳票憑證單身資料(glaq_t).科目編號(費用科目的判斷=損益類科目且餘額型態為借方)
+   #  傳票金額=原當期傳票費用科目的傳票單身金額但借貸相反
+   #  上述費用類科目逐一產生對應的傳票單身資料後, 其金額總和另增一筆傳票單身,借:總帳參數設定檔.本年利潤
+   CALL aglp530_creat_tmp()
+   LET l_count=0
+   SELECT glab005 INTO l_glab005 FROM glab_t
+    WHERE glabent=g_enterprise AND glabld=g_master.glapld
+      AND glab001='12' AND glab002='9711' AND glab003='9711_04'
+   IF cl_null(l_glab005) THEN
+      CALL cl_errmsg('','','','agl-00210',1)
+      LET g_success = 'N'
+      RETURN
+   END IF
+   #获取该科目是否设置核算项
+   CALL aglp530_fix_acc_sql(l_glab005) RETURNING l_sql1,l_sql2
+   #=============单头glap_t====================
+   LET g_glap.glapent = g_enterprise
+   LET g_glap.glapcomp = g_glaacomp
+   LET g_glap.glapld = g_master.glapld 
+   LET g_glap.glap001 = '1'      
+   LET g_glap.glap002 = g_master.glap002
+   LET g_glap.glap004 = g_master.glap004
+   LET g_glap.glapdocno = g_glaa112
+   CALL s_get_accdate(g_glaa003,'',g_master.glap002,g_master.glap004)
+   RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+             l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e
+   IF l_flag='N' THEN
+      CALL cl_err('','l_errno',1)
+      LET g_success = 'N'
+      RETURN
+   END IF         
+   LET g_glap.glapdocdt=l_pdate_e
+   LET l_success = TRUE
+   CALL s_aooi200_gen_docno(g_site,g_glap.glapdocno,g_glap.glapdocdt,'aglt310') RETURNING l_success,g_glap.glapdocno
+   IF l_success = FALSE THEN 
+      LET g_success = 'N'
+      RETURN
+   END IF       
+   LET g_glap.glap007 = 'CE'
+   LET g_glap.glap009 = 0
+   LET g_glap.glap009 = 0
+   LET g_glap.glap013 = 0
+   LET g_glap.glap014 = 'N'
+   LET g_glap.glapstus = 'Y'
+   LET g_glap.glapcrtid = g_user
+   LET g_glap.glapcrtdt = cl_get_current()
+   LET g_glap.glapownid = g_user
+   LET g_glap.glapowndp = g_dept
+   LET g_glap.glapcrtid = g_user
+   LET g_glap.glapcrtdp = g_dept 
+   LET g_glap.glapcrtdt = cl_get_current()
+   LET g_glap.glapcnfid = g_user
+   LET g_glap.glapcnfdt = cl_get_current()
+   LET ld_date = cl_get_current()
+   #==============单身glaq_t======================
+   LET g_glaq.glaqent = g_glap.glapent
+   LET g_glaq.glaqld = g_glap.glapld
+   LET g_glaq.glaqdocno = g_glap.glapdocno
+   LET g_glaq.glaqcomp = g_glap.glapcomp
+   LET g_glaq.glaq005 = g_glaa001
+   LET g_glaq.glaq006 = 1
+   #匯率(本位幣二)
+   IF g_glaa015='Y' THEN
+      CALL s_aooi160_get_exrate('2',g_glap.glapld,g_glap.glapdocdt,g_glaq.glaq005,g_glaa016,0,g_glaa018)
+      RETURNING  g_glaq.glaq039
+   ELSE
+      LET g_glaq.glaq039 = 0  
+   END IF
+   #匯率(本位幣三)
+   IF g_glaa019='Y' THEN
+      CALL s_aooi160_get_exrate('2',g_glap.glapld,g_glap.glapdocdt,g_glaq.glaq005,g_glaa020,0,g_glaa022)
+      RETURNING  g_glaq.glaq042
+   ELSE
+      LET g_glaq.glaq042 = 0  
+   END IF
+   LET g_glaq.glaqseq = 1
+   LET l_sql = " SELECT glaq002,glaq003,glaq004,glaq010,glaq011,glaq012,glaq013,glaq014,",
+               "        glaq015,glaq016,glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,",
+               "        glaq023,glaq024,glaq025,glaq026,glaq027,glaq028,glaq029,glaq030,",
+               "        glaq031,glaq032,glaq033,glaq034,glaq035,glaq036,glaq037,glaq038,",
+               "        glaq040,glaq041,glaq043,glaq044",
+               "   FROM glaq_t,glap_t ",
+               "  WHERE glaqent = glapent ",
+               "    AND glaqld = glapld ",
+               "    AND glaqdocno = glapdocno ",                  
+               "    AND glaqent = ",g_enterprise,"",
+               "    AND glaqld = '",g_master.glapld,"'"  ,                
+               "    AND glaq002 IN ( SELECT glaq002 FROM glaq_t,glac_t ",
+               "                     WHERE glaqent = glacent",
+               "                       AND glaq002 = glac002",
+               "                       AND glac001 = '",g_glaa004,"'",
+               "                       AND glac007 = '6'",
+               "                       AND glac008 = '1') ",
+               "    AND glap002 = ",g_master.glap002,
+               "    AND glap004 = ",g_master.glap004, 
+               "    AND glapstus = 'S'",                  
+               "    ORDER BY glaq002 "
+   PREPARE aglp530_glaq_pre   FROM l_sql
+   DECLARE aglp530_glaq_cs  CURSOR FOR  aglp530_glaq_pre
+   FOREACH aglp530_glaq_cs INTO g_glaq.glaq002,g_glaq.glaq003,g_glaq.glaq004,g_glaq.glaq010,
+                                g_glaq.glaq011,g_glaq.glaq012,g_glaq.glaq013,g_glaq.glaq014,
+                                g_glaq.glaq015,g_glaq.glaq016,g_glaq.glaq017,g_glaq.glaq018,
+                                g_glaq.glaq019,g_glaq.glaq020,g_glaq.glaq021,g_glaq.glaq022,
+                                g_glaq.glaq023,g_glaq.glaq024,g_glaq.glaq025,g_glaq.glaq026,
+                                g_glaq.glaq027,g_glaq.glaq028,g_glaq.glaq029,g_glaq.glaq030,
+                                g_glaq.glaq031,g_glaq.glaq032,g_glaq.glaq033,g_glaq.glaq034,
+                                g_glaq.glaq035,g_glaq.glaq036,g_glaq.glaq037,g_glaq.glaq038,
+                                g_glaq.glaq040,g_glaq.glaq041,g_glaq.glaq043,g_glaq.glaq044
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('',g_glaq.glaq002,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+         EXIT FOREACH
+      END IF
+          
+      #借贷相反
+      IF cl_null(g_glaq.glaq003) THEN LET g_glaq.glaq003 = 0  END IF
+      IF cl_null(g_glaq.glaq004) THEN LET g_glaq.glaq004 = 0  END IF
+      IF cl_null(g_glaq.glaq040) THEN LET g_glaq.glaq040 = 0  END IF
+      IF cl_null(g_glaq.glaq041) THEN LET g_glaq.glaq041 = 0  END IF
+      IF cl_null(g_glaq.glaq043) THEN LET g_glaq.glaq043 = 0  END IF
+      IF cl_null(g_glaq.glaq044) THEN LET g_glaq.glaq044 = 0  END IF
+      LET l_sum1_d = g_glaq.glaq003
+      LET g_glaq.glaq003 = g_glaq.glaq004
+      LET g_glaq.glaq004 = l_sum1_d
+      LET l_sum2_d = g_glaq.glaq040
+      LET g_glaq.glaq040 = g_glaq.glaq041
+      LET g_glaq.glaq041 = l_sum2_d
+      LET l_sum3_d = g_glaq.glaq043
+      LET g_glaq.glaq043 = g_glaq.glaq044
+      LET g_glaq.glaq044 = l_sum2_d      
+      
+      INSERT INTO p530_tmp (glaqent,glaqcomp,glaqld,glaqdocno,glaqseq,glaq002,glaq003,glaq004,
+                            glaq005,glaq006,glaq010,glaq011,glaq012,glaq013,glaq014,glaq015,
+                            glaq016,glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,glaq023,
+                            glaq024,glaq025,glaq026,glaq027,glaq028,glaq029,glaq030,glaq031,
+                            glaq032,glaq033,glaq034,glaq035,glaq036,glaq037,glaq038,glaq039,
+                            glaq040,glaq041,glaq042,glaq043,glaq044)
+      VALUES (g_glaq.glaqent,g_glaq.glaqcomp,g_glaq.glaqld,g_glaq.glaqdocno,g_glaq.glaqseq,
+              g_glaq.glaq002,g_glaq.glaq003,g_glaq.glaq004,g_glaq.glaq005,g_glaq.glaq006,g_glaq.glaq010,
+              g_glaq.glaq011,g_glaq.glaq012,g_glaq.glaq013,g_glaq.glaq014,g_glaq.glaq015,g_glaq.glaq016,
+              g_glaq.glaq017,g_glaq.glaq018,g_glaq.glaq019,g_glaq.glaq020,g_glaq.glaq021,g_glaq.glaq022,
+              g_glaq.glaq023,g_glaq.glaq024,g_glaq.glaq025,g_glaq.glaq026,g_glaq.glaq027,g_glaq.glaq028,
+              g_glaq.glaq029,g_glaq.glaq030,g_glaq.glaq031,g_glaq.glaq032,g_glaq.glaq033,g_glaq.glaq034,
+              g_glaq.glaq035,g_glaq.glaq036,g_glaq.glaq037,g_glaq.glaq038,g_glaq.glaq039,g_glaq.glaq040,
+              g_glaq.glaq041,g_glaq.glaq042,g_glaq.glaq043,g_glaq.glaq044)
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('ins_tmp_1',g_glaq.glaq002,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+      END IF
+      LET g_glaq.glaqseq = g_glaq.glaqseq +1           
+   END FOREACH
+   #其金額總和另增一筆傳票單身,如果贷-借>0,则产生借方金额，否则反之。科目：本年利润，
+   #按照科目设置的固定核算项分别产生传票单身资料
+#   LET g_glaq.glaq002 = '2298'    #本年利润
+   LET g_glaq.glaq002 = l_glab005  #本年利润
+   
+   LET l_sql="SELECT SUM(glaq003),SUM(glaq004),SUM(glaq040),SUM(glaq041),SUM(glaq043),SUM(glaq044),",l_sql1,
+             "  FROM p530_tmp ",
+             " GROUP BY ",l_sql1," ORDER BY ",l_sql1
+   PREPARE aglp530_tmp_pr1 FROM l_sql
+   DECLARE aglp530_tmp_cs1 CURSOR FOR aglp530_tmp_pr1
+   #获取项次
+   SELECT MAX(glaqseq)+1 INTO g_glaq.glaqseq FROM p530_tmp
+   IF cl_null(g_glaq.glaqseq) OR g_glaq.glaqseq=0 THEN 
+      LET g_glaq.glaqseq=1
+   END IF
+   
+   FOREACH aglp530_tmp_cs1 INTO l_sum1_d,l_sum1_c,l_sum2_d,l_sum2_c,l_sum3_d,l_sum3_c,
+                                g_glaq.glaq017,g_glaq.glaq018,g_glaq.glaq019,g_glaq.glaq020,
+                                g_glaq.glaq021,g_glaq.glaq022,g_glaq.glaq023,g_glaq.glaq024,
+                                g_glaq.glaq025,g_glaq.glaq026,g_glaq.glaq027,g_glaq.glaq028                
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('',g_glaq.glaq002,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+         EXIT FOREACH
+      END IF
+      LET l_profit1 = 0
+      IF cl_null(l_sum1_d) THEN LET l_sum1_d = 0  END IF
+      IF cl_null(l_sum1_c) THEN LET l_sum1_c = 0  END IF
+      IF cl_null(l_sum2_d) THEN LET l_sum2_d = 0  END IF
+      IF cl_null(l_sum2_c) THEN LET l_sum2_c = 0  END IF
+      IF cl_null(l_sum3_d) THEN LET l_sum3_d = 0  END IF
+      IF cl_null(l_sum3_c) THEN LET l_sum3_c = 0  END IF
+        
+      #贷 - 借>0,产生借方资料，否则产生在贷方             
+      LET l_profit1 = l_sum1_c - l_sum1_d 
+      #差额为0，则不需进行在产生一笔资料来平借贷
+      IF l_profit1 <>0 THEN
+         IF l_profit1 > 0 THEN
+            LET g_glaq.glaq003 = l_profit1
+            LET g_glaq.glaq004 = 0
+            #本位幣二
+            IF g_glaa015='Y' THEN
+               LET g_glaq.glaq040 = l_sum2_c - l_sum2_d
+               LET g_glaq.glaq041 = 0
+            ELSE
+               LET g_glaq.glaq040 = 0
+               LET g_glaq.glaq041 = 0
+            END IF
+            #本位幣三
+            IF g_glaa019 THEN
+               LET g_glaq.glaq043 = l_sum3_c - l_sum3_d
+               LET g_glaq.glaq044 = 0
+            ELSE
+               LET g_glaq.glaq043 = 0
+               LET g_glaq.glaq044 = 0
+            END IF
+            LET g_glaq.glaq010 = g_glaq.glaq003
+         ELSE
+            LET l_profit1 = l_profit1 * (-1)
+            LET g_glaq.glaq003 = 0
+            LET g_glaq.glaq004 = l_profit1
+            #本位幣二
+            IF g_glaa015='Y' THEN
+               LET g_glaq.glaq040 = 0
+               LET g_glaq.glaq041 = (l_sum2_c - l_sum2_d)*-1
+            ELSE
+               LET g_glaq.glaq040 = 0
+               LET g_glaq.glaq041 = 0
+            END IF
+            #本位幣三
+            IF g_glaa019 THEN
+               LET g_glaq.glaq043 = 0
+               LET g_glaq.glaq044 = (l_sum3_c - l_sum3_d)*-1
+            ELSE
+               LET g_glaq.glaq043 = 0
+               LET g_glaq.glaq044 = 0
+            END IF
+            LET g_glaq.glaq010 = g_glaq.glaq004              
+         END IF
+         
+         INSERT INTO p530_tmp (glaqent,glaqcomp,glaqld,glaqdocno,glaqseq,glaq002,
+                               glaq003,glaq004,glaq005,glaq006,glaq010,
+                               glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,
+                               glaq023,glaq024,glaq025,glaq026,glaq027,glaq028,
+                               glaq039,glaq040,glaq041,glaq042,glaq043,glaq044)
+         VALUES (g_glaq.glaqent,g_glaq.glaqcomp,g_glaq.glaqld,g_glaq.glaqdocno,g_glaq.glaqseq,
+                 g_glaq.glaq002,g_glaq.glaq003,g_glaq.glaq004,g_glaq.glaq005,g_glaq.glaq006,g_glaq.glaq010,
+                 g_glaq.glaq017,g_glaq.glaq018,g_glaq.glaq019,g_glaq.glaq020,g_glaq.glaq021,g_glaq.glaq022,
+                 g_glaq.glaq023,g_glaq.glaq024,g_glaq.glaq025,g_glaq.glaq026,g_glaq.glaq027,g_glaq.glaq028,
+                 g_glaq.glaq039,g_glaq.glaq040,g_glaq.glaq041,g_glaq.glaq042,g_glaq.glaq043,g_glaq.glaq044)
+         IF SQLCA.sqlcode THEN
+            CALL cl_errmsg('ins_tmp_2',g_glaq.glaq002,'',SQLCA.SQLCODE,1)
+            LET g_success = 'N' 
+         END IF 
+         LET g_glaq.glaqseq = g_glaq.glaqseq +1  
+      END IF
+   END FOREACH      
+   #==============INS_glap_t==========
+   SELECT COUNT(*) INTO l_cnt FROM p530_tmp 
+    WHERE glaqdocno=g_glaq.glaqdocno
+   IF l_cnt>0 THEN
+      #借方金额为单身借贷金额之和
+      SELECT SUM(glaq003),SUM(glaq004) INTO g_glap.glap010,g_glap.glap011
+        FROM p530_tmp 
+      INSERT INTO glap_t VALUES (g_glap.*)
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('INS_glap_a1',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+      END IF
+      UPDATE glap_t SET glapcrtdt = ld_date,
+                        glapcnfdt = ld_date
+       WHERE glapent = g_enterprise
+         AND glapld = g_glap.glapld
+         AND glapdocno = g_glap.glapdocno
+      IF SQLCA.SQLCODE THEN
+         CALL cl_errmsg('UPD date',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+      END IF         
+      #==============INS_glaq_t==========
+      LET l_sql = " INSERT INTO glaq_t(glaqent,glaqcomp,glaqld,glaqdocno,glaqseq,glaq002,
+                                       glaq003,glaq004,glaq005,glaq006,glaq010,
+                                       glaq011,glaq012,glaq013,glaq014,glaq015,
+                                       glaq016,glaq017,glaq018,glaq019,glaq020,
+                                       glaq021,glaq022,glaq023,glaq024,glaq025,
+                                       glaq026,glaq027,glaq028,glaq029,glaq030,
+                                       glaq031,glaq032,glaq033,glaq034,glaq035,
+                                       glaq036,glaq037,glaq038,glaq039,glaq040,
+                                       glaq041,glaq042,glaq043,glaq044) ",
+                  " SELECT * FROM p530_tmp "
+      PREPARE aglp530_ins_glaq_pre   FROM l_sql
+      EXECUTE aglp530_ins_glaq_pre
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('INS_glaq_a1',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+      END IF 
+      
+      #CE傳票的過帳動作
+      LET l_success = TRUE
+      CALL s_voucher_post_chk(g_glap.glapld,g_glap.glapdocno) RETURNING l_success
+      IF l_success = TRUE THEN
+         CALL s_voucher_post_upd(g_glap.glapld,g_glap.glapdocno) RETURNING l_success
+      END IF 
+      IF l_success = FALSE THEN
+         LET g_success = 'N'
+      END IF
+   ELSE
+      LET l_count=l_count+1
+   END IF
+   ###################### A-2.收入科目結轉本年利潤#######################
+   # 傳票單別=總帳參數設定檔.結轉用單別
+   # 傳票日期=執行年期的當期最末一日
+   # 來源類型='CE'的傳票單頭單身資料(glap_t,glaq_t)且傳票狀態='已過帳'
+   # 科目編號=當期傳票有收入類科目的傳票憑證單身資料(glar_t).科目編號(收入科目的判斷=損益類科目且餘額型態為貸方)
+   # 傳票金額=原當期傳票收入科目的傳票單身金額但借貸相反
+   # 上述收入類科目逐一產生對應的傳票單身資料後, 其金額總和另增一筆傳票單身,貸:總帳參數設定檔.本年利潤
+   INITIALIZE g_glap.* TO NULL
+   INITIALIZE g_glaq.* TO NULL
+   INITIALIZE g_glar.* TO NULL
+   #清空临时表
+   DELETE FROM p530_tmp 
+      
+   LET g_glap.glapent = g_enterprise
+   LET g_glap.glapcomp = g_glaacomp
+   LET g_glap.glapld = g_master.glapld 
+   LET g_glap.glap001 = '1'      
+   LET g_glap.glap002 = g_master.glap002
+   LET g_glap.glap004 = g_master.glap004
+   LET g_glap.glapdocno = g_glaa112
+
+   CALL s_get_accdate(g_glaa003,'',g_master.glap002,g_master.glap004)
+   RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+             l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e
+   IF l_flag='N' THEN
+      CALL cl_err('','l_errno',1)
+      LET g_success = 'N'
+      RETURN
+   END IF         
+   LET g_glap.glapdocdt=l_pdate_e
+   LET l_success = TRUE
+   CALL s_aooi200_gen_docno(g_site,g_glap.glapdocno,g_glap.glapdocdt,'aglt310') RETURNING l_success,g_glap.glapdocno
+   IF l_success = FALSE THEN 
+      LET g_success = 'N'
+      RETURN
+   END IF       
+   LET g_glap.glap007 = 'CE'
+   LET g_glap.glap009 = 0
+   LET g_glap.glap009 = 0
+   LET g_glap.glap013 = 0
+   LET g_glap.glap014 = 'N'
+   LET g_glap.glapstus = 'Y'
+   LET g_glap.glapcrtid = g_user
+   LET g_glap.glapcrtdt = cl_get_current()
+   LET g_glap.glapownid = g_user
+   LET g_glap.glapowndp = g_dept
+   LET g_glap.glapcrtid = g_user
+   LET g_glap.glapcrtdp = g_dept 
+   LET g_glap.glapcrtdt = cl_get_current()
+   LET g_glap.glapcnfid = g_user
+   LET g_glap.glapcnfdt = cl_get_current() 
+   LET ld_date = cl_get_current()       
+   #==============单身glaq_t======================
+   LET g_glaq.glaqent = g_glap.glapent
+   LET g_glaq.glaqld = g_glap.glapld
+   LET g_glaq.glaqdocno = g_glap.glapdocno
+   LET g_glaq.glaqcomp = g_glap.glapcomp
+   LET g_glaq.glaq005 = g_glaa001
+   LET g_glaq.glaq006 = 1
+   #匯率(本位幣二)
+   IF g_glaa015='Y' THEN
+      CALL s_aooi160_get_exrate('2',g_glap.glapld,g_glap.glapdocdt,g_glaq.glaq005,g_glaa016,0,g_glaa018)
+      RETURNING  g_glaq.glaq039
+   ELSE
+      LET g_glaq.glaq039 = 0  
+   END IF
+   #匯率(本位幣三)
+   IF g_glaa019='Y' THEN
+      CALL s_aooi160_get_exrate('2',g_glap.glapld,g_glap.glapdocdt,g_glaq.glaq005,g_glaa020,0,g_glaa022)
+      RETURNING  g_glaq.glaq042
+   ELSE
+      LET g_glaq.glaq042 = 0  
+   END IF
+   LET g_glaq.glaqseq = 1
+   LET l_sql = " SELECT glaq002,glaq003,glaq004,glaq010,glaq011,glaq012,glaq013,glaq014,",
+               "        glaq015,glaq016,glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,",
+               "        glaq023,glaq024,glaq025,glaq026,glaq027,glaq028,glaq029,glaq030,",
+               "        glaq031,glaq032,glaq033,glaq034,glaq035,glaq036,glaq037,glaq038,",
+               "        glaq040,glaq041,glaq043,glaq044",
+               "   FROM glaq_t,glap_t ",
+               "  WHERE glaqent = glapent ",
+               "    AND glaqld = glapld ",
+               "    AND glaqdocno = glapdocno ",                  
+               "    AND glaqent = ",g_enterprise,"",
+               "    AND glaqld = '",g_master.glapld,"'" ,                 
+               "    AND glaq002 IN (SELECT glaq002 FROM glaq_t,glac_t",
+               "                     WHERE glaqent = glacent",
+               "                       AND glaq002 = glac002",
+               "                       AND glac001 = '",g_glaa004,"'",
+               "                       AND glac007 = '6'",
+               "                       AND glac008 = '2') ",
+               "    AND glap002 = ",g_master.glap002,
+               "    AND glap004 = ",g_master.glap004,
+               "    AND glapstus = 'S'",                  
+               "    ORDER BY glaq002 "
+   PREPARE aglp530_glaq_pre2 FROM l_sql
+   DECLARE aglp530_glaq_cs2  CURSOR FOR  aglp530_glaq_pre2
+   FOREACH aglp530_glaq_cs2 INTO g_glaq.glaq002,g_glaq.glaq003,g_glaq.glaq004,g_glaq.glaq010,
+                                 g_glaq.glaq011,g_glaq.glaq012,g_glaq.glaq013,g_glaq.glaq014,
+                                 g_glaq.glaq015,g_glaq.glaq016,g_glaq.glaq017,g_glaq.glaq018,
+                                 g_glaq.glaq019,g_glaq.glaq020,g_glaq.glaq021,g_glaq.glaq022,
+                                 g_glaq.glaq023,g_glaq.glaq024,g_glaq.glaq025,g_glaq.glaq026,
+                                 g_glaq.glaq027,g_glaq.glaq028,g_glaq.glaq029,g_glaq.glaq030,
+                                 g_glaq.glaq031,g_glaq.glaq032,g_glaq.glaq033,g_glaq.glaq034,
+                                 g_glaq.glaq035,g_glaq.glaq036,g_glaq.glaq037,g_glaq.glaq038,
+                                 g_glaq.glaq040,g_glaq.glaq041,g_glaq.glaq043,g_glaq.glaq044
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('',g_glaq.glaq002,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+         EXIT FOREACH
+      END IF
+         
+      #借贷相反
+      IF cl_null(g_glaq.glaq003) THEN LET g_glaq.glaq003 = 0  END IF
+      IF cl_null(g_glaq.glaq004) THEN LET g_glaq.glaq004 = 0  END IF
+      IF cl_null(g_glaq.glaq040) THEN LET g_glaq.glaq040 = 0  END IF
+      IF cl_null(g_glaq.glaq041) THEN LET g_glaq.glaq041 = 0  END IF
+      IF cl_null(g_glaq.glaq043) THEN LET g_glaq.glaq043 = 0  END IF
+      IF cl_null(g_glaq.glaq044) THEN LET g_glaq.glaq044 = 0  END IF
+      LET l_sum1_d = g_glaq.glaq003
+      LET g_glaq.glaq003 = g_glaq.glaq004
+      LET g_glaq.glaq004 = l_sum1_d
+      LET l_sum2_d = g_glaq.glaq040
+      LET g_glaq.glaq040 = g_glaq.glaq041
+      LET g_glaq.glaq041 = l_sum2_d
+      LET l_sum3_d = g_glaq.glaq043
+      LET g_glaq.glaq043 = g_glaq.glaq044
+      LET g_glaq.glaq044 = l_sum3_d
+      
+      INSERT INTO p530_tmp (glaqent,glaqcomp,glaqld,glaqdocno,glaqseq,glaq002,glaq003,glaq004,
+                            glaq005,glaq006,glaq010,glaq011,glaq012,glaq013,glaq014,glaq015,
+                            glaq016,glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,glaq023,
+                            glaq024,glaq025,glaq026,glaq027,glaq028,glaq029,glaq030,glaq031,
+                            glaq032,glaq033,glaq034,glaq035,glaq036,glaq037,glaq038,glaq039,
+                            glaq040,glaq041,glaq042,glaq043,glaq044)
+      VALUES (g_glaq.glaqent,g_glaq.glaqcomp,g_glaq.glaqld,g_glaq.glaqdocno,g_glaq.glaqseq,
+              g_glaq.glaq002,g_glaq.glaq003,g_glaq.glaq004,g_glaq.glaq005,g_glaq.glaq006,g_glaq.glaq010,
+              g_glaq.glaq011,g_glaq.glaq012,g_glaq.glaq013,g_glaq.glaq014,g_glaq.glaq015,g_glaq.glaq016,
+              g_glaq.glaq017,g_glaq.glaq018,g_glaq.glaq019,g_glaq.glaq020,g_glaq.glaq021,g_glaq.glaq022,
+              g_glaq.glaq023,g_glaq.glaq024,g_glaq.glaq025,g_glaq.glaq026,g_glaq.glaq027,g_glaq.glaq028,
+              g_glaq.glaq029,g_glaq.glaq030,g_glaq.glaq031,g_glaq.glaq032,g_glaq.glaq033,g_glaq.glaq034,
+              g_glaq.glaq035,g_glaq.glaq036,g_glaq.glaq037,g_glaq.glaq038,g_glaq.glaq039,g_glaq.glaq040,
+              g_glaq.glaq041,g_glaq.glaq042,g_glaq.glaq043,g_glaq.glaq044)
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('ins_tmp_3',g_glaq.glaq002,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+      END IF
+      LET g_glaq.glaqseq = g_glaq.glaqseq +1            
+   END FOREACH
+   #其金額總和另增一筆傳票單身,如果借-贷>0,则产生借方金额，否则反之。科目：本年利润，
+   #按照科目设置的固定核算项分别产生传票单身资料
+#   LET g_glaq.glaq002 = '2298'    #本年利润
+   LET g_glaq.glaq002 = l_glab005  #本年利润
+   
+   LET l_sql="SELECT SUM(glaq003),SUM(glaq004),SUM(glaq040),SUM(glaq041),SUM(glaq043),SUM(glaq044),",l_sql1,
+             "  FROM p530_tmp ",
+             " GROUP BY ",l_sql1," ORDER BY ",l_sql1
+   PREPARE aglp530_tmp_pr2 FROM l_sql
+   DECLARE aglp530_tmp_cs2 CURSOR FOR aglp530_tmp_pr2
+   
+   #获取项次
+   SELECT MAX(glaqseq)+1 INTO g_glaq.glaqseq FROM p530_tmp
+   IF cl_null(g_glaq.glaqseq) OR g_glaq.glaqseq=0 THEN 
+      LET g_glaq.glaqseq=1
+   END IF
+   
+   FOREACH aglp530_tmp_cs2 INTO l_sum1_d,l_sum1_c,l_sum2_d,l_sum2_c,l_sum3_d,l_sum3_c,
+                                g_glaq.glaq017,g_glaq.glaq018,g_glaq.glaq019,g_glaq.glaq020,
+                                g_glaq.glaq021,g_glaq.glaq022,g_glaq.glaq023,g_glaq.glaq024,
+                                g_glaq.glaq025,g_glaq.glaq026,g_glaq.glaq027,g_glaq.glaq028     
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('',g_glaq.glaq002,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+         EXIT FOREACH
+      END IF
+      LET l_profit2 = 0
+      IF cl_null(l_sum1_d) THEN LET l_sum1_d = 0  END IF
+      IF cl_null(l_sum1_c) THEN LET l_sum1_c = 0  END IF
+      IF cl_null(l_sum2_d) THEN LET l_sum2_d = 0  END IF
+      IF cl_null(l_sum2_c) THEN LET l_sum2_c = 0  END IF
+      IF cl_null(l_sum3_d) THEN LET l_sum3_d = 0  END IF
+      IF cl_null(l_sum3_c) THEN LET l_sum3_c = 0  END IF
+      #借 - 贷>0,产生贷方资料，否则产生在借方             
+      LET l_profit2 = l_sum1_d - l_sum1_c
+      IF l_profit2 <> 0 THEN      
+         IF l_profit2 > 0 THEN
+            LET g_glaq.glaq004 = l_profit2
+            LET g_glaq.glaq003 = 0
+            #本位幣二
+            IF g_glaa015='Y' THEN
+               LET g_glaq.glaq040 = 0
+               LET g_glaq.glaq041 = l_sum2_d-l_sum2_c
+            ELSE
+               LET g_glaq.glaq040 = 0
+               LET g_glaq.glaq041 = 0
+            END IF
+            #本位幣三
+            IF g_glaa019='Y' THEN
+               LET g_glaq.glaq043 = 0
+               LET g_glaq.glaq044 = l_sum3_d-l_sum3_c
+            ELSE
+               LET g_glaq.glaq043 = 0
+               LET g_glaq.glaq044 = 0
+            END IF
+            LET g_glaq.glaq010 = g_glaq.glaq003
+         ELSE
+            LET l_profit2 = l_profit2 * (-1)
+            LET g_glaq.glaq004 = 0
+            LET g_glaq.glaq003 = l_profit2 
+            #本位幣二
+            IF g_glaa015='Y' THEN
+               LET g_glaq.glaq040 = (l_sum2_d-l_sum2_c)*-1
+               LET g_glaq.glaq041 = 0
+            ELSE
+               LET g_glaq.glaq040 = 0
+               LET g_glaq.glaq041 = 0
+            END IF
+            #本位幣三
+            IF g_glaa019='Y' THEN
+               LET g_glaq.glaq043 = (l_sum3_d-l_sum3_c)*-1
+               LET g_glaq.glaq044 = 0
+            ELSE
+               LET g_glaq.glaq043 = 0
+               LET g_glaq.glaq044 = 0
+            END IF
+            LET g_glaq.glaq010 = g_glaq.glaq004            
+         END IF
+         
+         INSERT INTO p530_tmp (glaqent,glaqcomp,glaqld,glaqdocno,glaqseq,glaq002,
+                               glaq003,glaq004,glaq005,glaq006,glaq010,
+                               glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,
+                               glaq023,glaq024,glaq025,glaq026,glaq027,glaq028,
+                               glaq039,glaq040,glaq041,glaq042,glaq043,glaq044)
+         VALUES (g_glaq.glaqent,g_glaq.glaqcomp,g_glaq.glaqld,g_glaq.glaqdocno,g_glaq.glaqseq,
+                 g_glaq.glaq002,g_glaq.glaq003,g_glaq.glaq004,g_glaq.glaq005,g_glaq.glaq006,g_glaq.glaq010,
+                 g_glaq.glaq017,g_glaq.glaq018,g_glaq.glaq019,g_glaq.glaq020,g_glaq.glaq021,g_glaq.glaq022,
+                 g_glaq.glaq023,g_glaq.glaq024,g_glaq.glaq025,g_glaq.glaq026,g_glaq.glaq027,g_glaq.glaq028,
+                 g_glaq.glaq039,g_glaq.glaq040,g_glaq.glaq041,g_glaq.glaq042,g_glaq.glaq043,g_glaq.glaq044)
+         IF SQLCA.sqlcode THEN
+            CALL cl_errmsg('ins_tmp_4',g_glaq.glaq002,'',SQLCA.SQLCODE,1)
+            LET g_success = 'N' 
+         END IF
+         LET g_glaq.glaqseq=g_glaq.glaqseq+1
+      END IF 
+   END FOREACH      
+   #==============INS_glap_t==========
+   SELECT COUNT(*) INTO l_cnt FROM p530_tmp 
+    WHERE glaqdocno=g_glaq.glaqdocno
+   IF l_cnt>0 THEN
+       #借方金额为单身借贷金额之和
+       SELECT SUM(glaq003),SUM(glaq004) INTO g_glap.glap010,g_glap.glap011
+         FROM p530_tmp 
+       INSERT INTO glap_t VALUES (g_glap.*)
+       IF SQLCA.sqlcode THEN
+          CALL cl_errmsg('INS_glap_a2',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+          LET g_success = 'N' 
+       END IF 
+       UPDATE glap_t SET glapcrtdt = ld_date,
+                           glapcnfdt = ld_date
+          WHERE glapent = g_enterprise
+            AND glapld = g_glap.glapld
+            AND glapdocno = g_glap.glapdocno
+         IF SQLCA.SQLCODE THEN
+            CALL cl_errmsg('UPD date',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+            LET g_success = 'N' 
+         END IF 
+       #==============INS_glaq_t==========
+       LET l_sql = " INSERT INTO glaq_t(glaqent,glaqcomp,glaqld,glaqdocno,glaqseq,glaq002,
+                                        glaq003,glaq004,glaq005,glaq006,glaq010,
+                                        glaq011,glaq012,glaq013,glaq014,glaq015,
+                                        glaq016,glaq017,glaq018,glaq019,glaq020,
+                                        glaq021,glaq022,glaq023,glaq024,glaq025,
+                                        glaq026,glaq027,glaq028,glaq029,glaq030,
+                                        glaq031,glaq032,glaq033,glaq034,glaq035,
+                                        glaq036,glaq037,glaq038,glaq039,glaq040,
+                                        glaq041,glaq042,glaq043,glaq044) ",
+                     " SELECT * FROM p530_tmp "
+       PREPARE aglp530_ins_glaq_pre2   FROM l_sql
+       EXECUTE aglp530_ins_glaq_pre2
+       IF SQLCA.sqlcode THEN
+          CALL cl_errmsg('INS_glaq_a2',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+          LET g_success = 'N' 
+       END IF
+       
+       #CE傳票的過帳動作
+       LET l_success = TRUE
+       CALL s_voucher_post_chk(g_glap.glapld,g_glap.glapdocno) RETURNING l_success
+       IF l_success = TRUE THEN
+          CALL s_voucher_post_upd(g_glap.glapld,g_glap.glapdocno) RETURNING l_success
+       END IF
+          
+       IF l_success = FALSE THEN
+          LET g_success = 'N'
+       END IF
+   ELSE
+      LET l_count=l_count+1
+   END IF       
+   DROP TABLE p530_tmp   
+   IF l_count>0 THEN
+      CALL cl_errmsg('','','','agl-00145',1)
+      LET g_success = 'N'
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.aglp530_creat_tmp" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 建立临时表
+# Memo...........:
+# Usage..........: CALL aglp530_creat_tmp()
+# Input parameter:  
+# Return code....:  
+# Date & Author..:  
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp530_creat_tmp()
+   #建临时表
+   DROP TABLE p530_tmp;
+   
+   CREATE TEMP TABLE p530_tmp (
+   glaqent   INT,
+   glaqcomp  VARCHAR(10),
+   glaqld    VARCHAR(5),
+   glaqdocno VARCHAR(20),
+   glaqseq   DECIMAL(20,6),
+   glaq002   VARCHAR(20),
+   glaq003   DECIMAL(20,6),
+   glaq004   DECIMAL(20,6),
+   glaq005   VARCHAR(10),
+   glaq006   DECIMAL(20,10),
+   glaq010   DECIMAL(20,6),
+   glaq011   VARCHAR(20),
+   glaq012   DATE,
+   glaq013   VARCHAR(10),
+   glaq014   VARCHAR(30),
+   glaq015   VARCHAR(10),
+   glaq016   VARCHAR(1),
+   glaq017   VARCHAR(10),
+   glaq018   VARCHAR(10),
+   glaq019   VARCHAR(10),
+   glaq020   VARCHAR(10),
+   glaq021   VARCHAR(10),
+   glaq022   VARCHAR(10),
+   glaq023   VARCHAR(10),
+   glaq024   VARCHAR(10),
+   glaq025   VARCHAR(10),
+   glaq026   VARCHAR(10),
+   glaq027   VARCHAR(10),
+   glaq028   VARCHAR(30),
+   glaq029   VARCHAR(30),
+   glaq030   VARCHAR(30),
+   glaq031   VARCHAR(30),
+   glaq032   VARCHAR(30),
+   glaq033   VARCHAR(30),
+   glaq034   VARCHAR(30),
+   glaq035   VARCHAR(30),
+   glaq036   VARCHAR(30),
+   glaq037   VARCHAR(30),
+   glaq038   VARCHAR(30),
+   glaq039   DECIMAL(20,10),
+   glaq040   DECIMAL(20,6),
+   glaq041   DECIMAL(20,6),
+   glaq042   DECIMAL(20,10),
+   glaq043   DECIMAL(20,6),
+   glaq044   DECIMAL(20,6))
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.aglp530_ra_gen" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 产生次期应计调整传票
+# Memo...........:
+# Usage..........: CALL aglp530_ra_gen()
+# Input parameter:   
+# Return code....: 
+# Date & Author..: 
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp530_ra_gen()
+
+   DEFINE l_sum         LIKE glaq_t.glaq003
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_glapdocno   LIKE glap_t.glapdocno
+   DEFINE ld_date       DATETIME YEAR TO SECOND
+   DEFINE l_slip        LIKE ooba_t.ooba002
+   DEFINE l_red         LIKE type_t.chr80
+   DEFINE l_flag        LIKE type_t.chr1
+   DEFINE l_errno       LIKE type_t.chr100
+   DEFINE l_glav002     LIKE glav_t.glav002
+   DEFINE l_glav005     LIKE glav_t.glav005
+   DEFINE l_sdate_s     LIKE glav_t.glav004
+   DEFINE l_sdate_e     LIKE glav_t.glav004
+   DEFINE l_glav006     LIKE glav_t.glav006
+   DEFINE l_pdate_s     LIKE glav_t.glav004
+   DEFINE l_pdate_e     LIKE glav_t.glav004
+   DEFINE l_glav007     LIKE glav_t.glav007
+   DEFINE l_wdate_s     LIKE glav_t.glav004
+   DEFINE l_wdate_e     LIKE glav_t.glav004
+   
+#A.先將次期已產生過的'RA'傳票刪除(已經過帳的需先過帳還原後再進行刪除動作),再重新產生次期'RA'傳票)
+#    每張當期應計傳票(AC)同步產生一張次期且傳票狀態='已過帳'的RA傳票
+#    
+#    傳票單別=總帳參數設定檔.應計調整用單別  
+#    傳票日期=執行年期的次期起始日(執行年期:2013/06,則RA傳票日=2013/07/01)
+#    來源類型='RA'
+#    科目編號=同AC傳票單身
+#    傳票金額=同AC傳票單身但借貸相反
+#    若總帳單據別參數.紅字傳票否='Y',則產生的RA傳票借貸按原AC傳票,僅借貸金額均為原金額*(-1),即依參數設定決定是否產生負數傳票
+#    IF 紅字傳票否='Y' THEN
+#       LET 借方金额 = 借方金额 * -1
+#       LET 贷方金额 = 贷方金额 * -1
+#    ELSE
+#       傳票金額=同AC傳票單身但借貸相反
+#    END IF 
+#  B.累計當期科目期餘額檔資料(即步驟A.RA傳票的過帳動作)
+#       
+#→更新指定帳別的帳別基本資料檔(glaa_t).現行會計期別(累加一期)
+
+     INITIALIZE g_glap.* TO NULL
+     INITIALIZE g_glaq.* TO NULL
+     INITIALIZE g_glar.* TO NULL
+     
+     LET l_sql = " SELECT * FROM glap_t ",
+                 "  WHERE glapent = '",g_enterprise,"'",
+                 "    AND glapld = '",g_master.glapld,"'",
+                 "    AND glap002 = '",g_master.glap002,"'",
+                 "    AND glap004 = '",g_master.glap004,"'",
+                 "    AND glap007 = 'AC'",
+                 "    AND glapstus = 'S'", 
+                 "  ORDER BY glapdocdt  " 
+     PREPARE aglp530_ac_glap_pre  FROM l_sql
+      IF SQLCA.SQLCODE THEN
+        CALL cl_errmsg('l_sql','ra_gen_glap','',SQLCA.SQLCODE,1) 
+        LET g_success = 'N'
+     END IF 
+     DECLARE aglp530_ac_glap_cs CURSOR FOR aglp530_ac_glap_pre
+     
+     
+     LET l_sql = " SELECT * FROM glaq_t ",
+                 "  WHERE glaqent = '",g_enterprise,"'",
+                 "    AND glaqld = '",g_master.glapld,"'",
+                 "    AND glaqdocno =? ",
+                 " ORDER BY glaqdocno,glaqseq "
+     PREPARE aglp530_ac_glaq_pre  FROM l_sql
+     IF SQLCA.SQLCODE THEN
+        CALL cl_errmsg('l_sql','ra_gen_glaq','',SQLCA.SQLCODE,1) 
+        LET g_success = 'N'
+     END IF 
+     DECLARE aglp530_ac_glaq_cs CURSOR FOR aglp530_ac_glaq_pre 
+     #获取下一期别第一天
+     CALL s_get_accdate(g_glaa003,'',g_master.glap002,g_master.glap004+1)
+     RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+               l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e
+     IF l_flag='N' THEN
+        CALL cl_err('','l_errno',1)
+        LET g_success = 'N'
+        RETURN
+     END IF 
+     
+     FOREACH aglp530_ac_glap_cs INTO g_glap.*
+        IF SQLCA.SQLCODE THEN
+           CALL cl_errmsg('FOREACH',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+           LET g_success = 'N'
+           EXIT FOREACH
+        END IF 
+        LET l_glapdocno = g_glap.glapdocno
+        LET g_glap.glapdocno = g_glaa111
+#        LET g_glap.glapdocdt = MDY(g_master.glap004+1,1,g_master.glap002)
+        LET g_glap.glapdocdt = l_pdate_s
+        LET l_success = TRUE
+        CALL s_aooi200_gen_docno(g_site,g_glap.glapdocno,g_glap.glapdocdt,'aglt310') RETURNING l_success,g_glap.glapdocno
+        IF l_success = FALSE THEN
+           LET g_success = 'N'
+           RETURN
+        END IF
+        LET g_glap.glap001='1'
+        LET g_glap.glap004 = g_master.glap004+1        
+        LET g_glap.glap007='RA'
+        LET g_glap.glapstus = 'Y'
+        LET g_glap.glapcrtid = g_user
+        LET g_glap.glapcrtdt = cl_get_current()
+        LET g_glap.glapownid = g_user
+        LET g_glap.glapowndp = g_dept
+        LET g_glap.glapcrtid = g_user
+        LET g_glap.glapcrtdp = g_dept 
+        LET g_glap.glapcrtdt = cl_get_current()
+        LET g_glap.glapcnfid = g_user
+        LET g_glap.glapcnfdt = cl_get_current()
+        LET ld_date = cl_get_current()
+        #INS_glap_t==========
+        INSERT INTO glap_t VALUES(g_glap.*)
+        IF SQLCA.SQLCODE THEN
+           CALL cl_errmsg('RA_gen_glap','g_glap.glapdocno','',SQLCA.SQLCODE,1)
+           LET g_success = 'N'
+        END IF 
+        UPDATE glap_t SET glapcrtdt = ld_date,
+                          glapcnfdt = ld_date
+         WHERE glapent = g_enterprise
+           AND glapld = g_glap.glapld
+           AND glapdocno = g_glap.glapdocno
+        IF SQLCA.SQLCODE THEN
+           CALL cl_errmsg('UPD date',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+           LET g_success = 'N' 
+        END IF 
+        OPEN aglp530_ac_glaq_cs USING l_glapdocno
+        FOREACH aglp530_ac_glaq_cs INTO g_glaq.*
+           IF SQLCA.SQLCODE THEN
+              CALL cl_errmsg('RA_gen_glaq','g_glap.glapdocno','',SQLCA.SQLCODE,1)
+              LET g_success = 'N'
+           END IF
+           #傳票金額=同AC傳票單身但借貸相反
+           #若總帳單據別參數.紅字傳票否='Y',則產生的RA傳票借貸按原AC傳票,僅借貸金額均為原金額*(-1),即依參數設定決定是否產生負數傳票
+           #IF 紅字傳票否='Y' THEN
+           #   LET 借方金额 = 借方金额 * -1
+           #   LET 贷方金额 = 贷方金额 * -1
+           #ELSE
+           #   傳票金額=同AC傳票單身但借貸相反  
+           #END IF
+           LET g_glaq.glaqdocno = g_glap.glapdocno
+           IF cl_null(g_glaq.glaq003) THEN LET g_glaq.glaq003 = 0  END IF
+           IF cl_null(g_glaq.glaq004) THEN LET g_glaq.glaq004 = 0  END IF
+           IF cl_null(g_glaq.glaq040) THEN LET g_glaq.glaq040 = 0  END IF
+           IF cl_null(g_glaq.glaq041) THEN LET g_glaq.glaq041 = 0  END IF
+           IF cl_null(g_glaq.glaq043) THEN LET g_glaq.glaq043 = 0  END IF
+           IF cl_null(g_glaq.glaq044) THEN LET g_glaq.glaq044 = 0  END IF
+           #獲取單據別
+           CALL s_aooi200_get_slip(g_glap.glapdocno) RETURNING l_success,l_slip
+           IF l_success = FALSE THEN
+              LET g_success = 'N'
+              RETURN
+           END IF 
+           #獲取單據別對應參數：紅字傳票否
+           CALL cl_get_doc_para(g_enterprise,g_glaacomp,l_slip,'D-FIN-1002') RETURNING l_red
+           IF l_red = 'Y' THEN
+              LET g_glaq.glaq003 = g_glaq.glaq003 * (-1)
+              LET g_glaq.glaq004 = g_glaq.glaq004 * (-1)
+              LET g_glaq.glaq040 = g_glaq.glaq040 * (-1)
+              LET g_glaq.glaq041 = g_glaq.glaq041 * (-1)
+              LET g_glaq.glaq043 = g_glaq.glaq043 * (-1)
+              LET g_glaq.glaq044 = g_glaq.glaq044 * (-1)
+           ELSE
+              LET l_sum = g_glaq.glaq003
+              LET g_glaq.glaq003 = g_glaq.glaq004
+              LET g_glaq.glaq004 = l_sum
+              LET l_sum = g_glaq.glaq040
+              LET g_glaq.glaq040 = g_glaq.glaq041
+              LET g_glaq.glaq041 = l_sum
+              LET l_sum = g_glaq.glaq043
+              LET g_glaq.glaq043 = g_glaq.glaq044
+              LET g_glaq.glaq044 = l_sum
+           END IF 
+           #INS_glaq_t==================
+           INSERT INTO glaq_t VALUES(g_glaq.*)
+           IF SQLCA.SQLCODE THEN
+              CALL cl_errmsg('RA_gen_glaq','g_glap.glapdocno','',SQLCA.SQLCODE,1)
+              LET g_success = 'N'
+           END IF 
+       END FOREACH
+       #RA传票过账
+       LET l_success = TRUE
+       CALL s_voucher_post_chk(g_glap.glapld,g_glap.glapdocno) RETURNING l_success
+       IF l_success = TRUE THEN
+          CALL s_voucher_post_upd(g_glap.glapld,g_glap.glapdocno) RETURNING l_success 
+       END IF 
+       IF l_success = FALSE THEN
+          LET g_success = 'N'
+       END IF 
+    END FOREACH
+END FUNCTION]]>
+  </point>
+  <point name="function.aglp530_chk" order="7" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 判断是否已经做月结
+# Memo...........:
+# Usage..........: CALL aglp530_chk()
+# Input parameter:  
+# Return code....:  
+# Date & Author..:  
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp530_chk()
+#判断是否已经做月结
+#如果已经产生CE累的凭证则需先过账还原再删除
+#如果已经产生RA累的凭证则需先过账还原再删除
+  DEFINE l_sql             STRING 
+  DEFINE l_glapdocno       LIKE glap_t.glapdocno
+  DEFINE l_glapstus        LIKE glap_t.glapstus
+  DEFINE l_next            LIKE glap_t.glap004
+  DEFINE l_success         LIKE type_t.num5
+  
+  LET l_success = TRUE
+  #查询CE类的传票
+  LET l_sql = " SELECT glapdocno,glapstus ",  
+              " FROM glap_t ", 
+              " WHERE glapent = '",g_enterprise,"'",
+              "   AND glapld = '",g_master.glapld,"'",
+              "   AND glap002 = ",g_master.glap002,"",
+              "   AND glap004 = ",g_master.glap004,"",
+              "   AND glap007 = 'CE'"
+  PREPARE aglp530_chk_pr  FROM l_sql
+  DECLARE aglp530_chk_cs  CURSOR FOR aglp530_chk_pr
+  FOREACH aglp530_chk_cs INTO l_glapdocno,l_glapstus
+     IF SQLCA.SQLCODE THEN
+        CALL cl_errmsg('FOREACH',l_glapdocno,'',SQLCA.SQLCODE,1)
+        LET g_success = 'N'
+        EXIT FOREACH
+     END IF
+     IF NOT cl_null(l_glapstus) THEN
+        IF l_glapstus = 'S' THEN
+           LET l_success = TRUE
+           CALL s_voucher_unpost_chk(g_master.glapld,l_glapdocno) RETURNING l_success
+           IF l_success = TRUE THEN
+              CALL s_voucher_unpost_upd(g_master.glapld,l_glapdocno) RETURNING l_success
+           END IF
+           IF l_success = FALSE THEN
+              LET g_success = 'N'  
+           END IF 
+        END IF 
+        #删除单身
+        DELETE FROM glaq_t WHERE glaqent = g_enterprise
+                             AND glaqld = g_master.glapld
+                             AND glaqdocno = l_glapdocno
+        IF SQLCA.SQLCODE THEN
+           CALL cl_errmsg('DEL_glap',l_glapdocno,'',SQLCA.SQLCODE,1)
+           LET g_success = 'N'
+        END IF 
+        #删除单头
+        DELETE FROM glap_t WHERE glapent = g_enterprise
+                             AND glapld = g_master.glapld
+                             AND glapdocno = l_glapdocno
+                             AND glap002 = g_master.glap002
+                             AND glap004 = g_master.glap004
+                             AND glap007 = 'CE'
+        IF SQLCA.SQLCODE THEN
+           CALL cl_errmsg('DEL_glaq',l_glapdocno,'',SQLCA.SQLCODE,1)
+           LET g_success = 'N'
+        END IF                        
+     END IF
+  END FOREACH
+  LET l_next = g_master.glap004+1
+  #查询RA类的传票，如果已经存在并且已经过账，则需先过账还原在删除
+  LET l_sql = " SELECT glapdocno,glapstus FROM glap_t ",
+              "  WHERE glapld = '",g_master.glapld,"'",
+              "    AND glap002 = ",g_master.glap002,"",
+              "    AND glap004 = ",l_next,"",
+              "    AND glap007 = 'RA'",
+              "    AND glapstus = 'S'",
+              "  ORDER BY glapdocdt "
+  PREPARE p530_ra_chk_pre   FROM l_sql
+  DECLARE p530_ra_chk_cs CURSOR FOR p530_ra_chk_pre
+  FOREACH p530_ra_chk_cs INTO l_glapdocno
+     IF SQLCA.SQLCODE THEN
+        CALL cl_errmsg('FOREACH',l_glapdocno,'',SQLCA.SQLCODE,1)
+        LET g_success = 'N'
+        EXIT FOREACH
+     END IF
+     CALL s_voucher_unpost_chk(g_master.glapld,l_glapdocno) RETURNING l_success
+     IF l_success = TRUE THEN
+        CALL s_voucher_unpost_upd(g_master.glapld,l_glapdocno) RETURNING l_success
+     END IF
+     IF l_success = FALSE THEN
+        LET g_success = 'N'
+     END IF 
+  END FOREACH
+ 
+  DELETE FROM glaq_t WHERE glaqent = g_enterprise
+                       AND glaqld = g_master.glapld
+                       AND glaqdocno IN (SELECT glapdocno FROM glap_t 
+                                          WHERE glapent = g_enterprise
+                                            AND glapld = g_master.glapld
+                                            AND glap002 = g_master.glap002
+                                            AND glap004 = l_next
+                                            AND glap007 = 'RA')
+  IF SQLCA.SQLCODE THEN
+     CALL cl_errmsg('DEL_glaq',l_glapdocno,'',SQLCA.SQLCODE,1)
+     LET g_success = 'N'
+  END IF
+  
+  DELETE FROM glap_t WHERE glapent = g_enterprise
+                       AND glapld = g_master.glapld
+                       AND glap002 = g_master.glap002
+                       AND glap004 = l_next
+                       AND glap007 = 'RA'
+  IF SQLCA.SQLCODE THEN
+     CALL cl_errmsg('DEL_glaq',l_glapdocno,'',SQLCA.SQLCODE,1)
+     LET g_success = 'N'
+  END IF 
+END FUNCTION]]>
+  </point>
+  <point name="function.aglp530_glaz" order="8" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 結轉細項立沖帳資料
+# Memo...........:
+# Usage..........: CALL aglp530_glaz()
+# Input parameter:  
+# Return code....:  
+# Date & Author..: 14/02/11 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp530_glaz()
+   DEFINE l_glaz          RECORD LIKE glaz_t.*
+   DEFINE l_glax          RECORD LIKE glax_t.*
+   DEFINE l_sql           STRING
+   DEFINE l_yy            LIKE glap_t.glap002
+   DEFINE l_mm            LIKE glap_t.glap004
+   DEFINE l_glay003_s     LIKE glay_t.glay003
+   DEFINE l_glay008_s     LIKE glay_t.glay008
+   DEFINE l_glay010_s     LIKE glay_t.glay010
+   DEFINE l_glay052_s     LIKE glay_t.glay052
+   DEFINE l_glay054_s     LIKE glay_t.glay054
+   
+   #刪除當期期末結轉資料
+   DELETE FROM glaz_t
+   WHERE glazent=g_enterprise AND glazld=g_master.glapld
+     AND glaz001=g_master.glap002    AND glaz002=g_master.glap004
+   
+   #上一年度期別
+   IF g_master.glap004=1 THEN
+      LET l_yy=g_master.glap002-1
+      LET l_mm=12
+   ELSE
+      LET l_yy=g_master.glap002
+      LET l_mm=g_master.glap004-1
+   END IF
+   
+   LET l_sql="SELECT glazent,glazld,glazcomp,glazdocno,glazseq,glazdocdt,",
+             "       glaz001,glaz002,glaz003,glaz004,glaz005,glaz006,glaz007,glaz008,glaz009,glaz010,",
+             "       glaz011,glaz012,glaz013,glaz014,glaz015,glaz016,glaz017,glaz018,glaz019,glaz020,",
+             "       glaz021,glaz022,glaz023,glaz024,glaz025,glaz026,glaz027,glaz028,glaz029,glaz030,",
+             "       glaz031,glaz032,glaz033,glaz034,glaz035,glaz036,glaz037 ",
+             "  FROM glaz_t",
+             " WHERE glazent='",g_enterprise,"' AND glazld='",g_master.glapld,"' ",
+             "   AND glaz001= ",l_yy," AND glaz002= ",l_mm,
+             "   AND glaz004-glaz005>0 ",
+             " ORDER BY glaz_t.glazdocno,glaz_t.glazseq,glaz_t.glaz003"
+   PREPARE aglp530_glaz_pr1 FROM l_sql
+   DECLARE aglp530_glaz_cs1 CURSOR FOR aglp530_glaz_pr1
+   
+   #結轉上期沒有沖抵完的細項立沖資料
+   FOREACH aglp530_glaz_cs1 INTO l_glaz.glazent,l_glaz.glazld,l_glaz.glazcomp,l_glaz.glazdocno,l_glaz.glazseq,l_glaz.glazdocdt,
+                                 l_glaz.glaz001,l_glaz.glaz002,l_glaz.glaz003,l_glaz.glaz004,l_glaz.glaz005,
+                                 l_glaz.glaz006,l_glaz.glaz007,l_glaz.glaz008,l_glaz.glaz009,l_glaz.glaz010,
+                                 l_glaz.glaz011,l_glaz.glaz012,l_glaz.glaz013,l_glaz.glaz014,l_glaz.glaz015,
+                                 l_glaz.glaz016,l_glaz.glaz017,l_glaz.glaz018,l_glaz.glaz019,l_glaz.glaz020,
+                                 l_glaz.glaz021,l_glaz.glaz022,l_glaz.glaz023,l_glaz.glaz024,l_glaz.glaz025,
+                                 l_glaz.glaz026,l_glaz.glaz027,l_glaz.glaz028,l_glaz.glaz029,l_glaz.glaz030,
+                                 l_glaz.glaz031,l_glaz.glaz032,l_glaz.glaz033,l_glaz.glaz034,l_glaz.glaz035,
+                                 l_glaz.glaz036,l_glaz.glaz037
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('','FOREACH','',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+         EXIT FOREACH
+      END IF
+      LET l_glaz.glaz004=l_glaz.glaz004-l_glaz.glaz005   #本幣立帳金額(本位幣一)
+      LET l_glaz.glaz007=l_glaz.glaz007-l_glaz.glaz008   #立帳數量
+      LET l_glaz.glaz010=l_glaz.glaz010-l_glaz.glaz011   #原幣立帳金額
+      LET l_glaz.glaz034=l_glaz.glaz034-l_glaz.glaz035   #本幣立帳金額(本位幣二)
+      LET l_glaz.glaz036=l_glaz.glaz036-l_glaz.glaz037   #本幣立帳金額(本位幣三)
+      
+      #匯總本期細項沖帳金額
+      LET l_glay003_s=0
+      LET l_glay008_s=0
+      LET l_glay010_s=0
+      LET l_glay052_s=0
+      LET l_glay054_s=0
+      SELECT SUM(glay003),SUM(glay008),SUM(glay010),SUM(glay052),SUM(glay054) 
+        INTO l_glay003_s,l_glay008_s,l_glay010_s,l_glay052_s,l_glay054_s
+        FROM glay_t
+       WHERE glayent=g_enterprise AND glayld=g_master.glapld
+         AND glay002=l_glaz.glaz002
+         AND glay041=l_glaz.glazdocno
+         AND glay042=l_glaz.glazseq
+         AND glay049=g_master.glap002
+         AND glay050=g_master.glap004
+      IF cl_null(l_glay003_s)  THEN LET l_glay003_s=0 END IF
+      IF cl_null(l_glay008_s)  THEN LET l_glay008_s=0 END IF
+      IF cl_null(l_glay010_s)  THEN LET l_glay010_s=0 END IF 
+      IF cl_null(l_glay052_s)  THEN LET l_glay052_s=0 END IF 
+      IF cl_null(l_glay054_s)  THEN LET l_glay054_s=0 END IF 
+      LET l_glaz.glaz005=l_glay003_s    #本幣沖帳金額(本位幣一)
+      LET l_glaz.glaz008=l_glay008_s    #沖帳數量
+      LET l_glaz.glaz011=l_glay010_s    #原幣沖帳金額
+      LET l_glaz.glaz035=l_glay052_s    #本幣沖帳金額(本位幣二)
+      LET l_glaz.glaz037=l_glay054_s    #本幣沖帳金額(本位幣三)
+      
+      LET l_glaz.glaz001=g_master.glap002      #年度
+      LET l_glaz.glaz002=g_master.glap004      #期別
+      
+      INSERT INTO glaz_t(
+      glazent,glazld,glazcomp,glazdocno,glazseq,glazdocdt,
+      glaz001,glaz002,glaz003,glaz004,glaz005,glaz006,glaz007,glaz008,glaz009,glaz010,
+      glaz011,glaz012,glaz013,glaz014,glaz015,glaz016,glaz017,glaz018,glaz019,glaz020,
+      glaz021,glaz022,glaz023,glaz024,glaz025,glaz026,glaz027,glaz028,glaz029,glaz030,
+      glaz031,glaz032,glaz033,glaz034,glaz035,glaz036,glaz037
+      )
+      VALUES(
+      l_glaz.glazent,l_glaz.glazld,l_glaz.glazcomp,l_glaz.glazdocno,l_glaz.glazseq,l_glaz.glazdocdt,
+      l_glaz.glaz001,l_glaz.glaz002,l_glaz.glaz003,l_glaz.glaz004,l_glaz.glaz005,
+      l_glaz.glaz006,l_glaz.glaz007,l_glaz.glaz008,l_glaz.glaz009,l_glaz.glaz010,
+      l_glaz.glaz011,l_glaz.glaz012,l_glaz.glaz013,l_glaz.glaz014,l_glaz.glaz015,
+      l_glaz.glaz016,l_glaz.glaz017,l_glaz.glaz018,l_glaz.glaz019,l_glaz.glaz020,
+      l_glaz.glaz021,l_glaz.glaz022,l_glaz.glaz023,l_glaz.glaz024,l_glaz.glaz025,
+      l_glaz.glaz026,l_glaz.glaz027,l_glaz.glaz028,l_glaz.glaz029,l_glaz.glaz030,
+      l_glaz.glaz031,l_glaz.glaz032,l_glaz.glaz033,l_glaz.glaz034,l_glaz.glaz035,
+      l_glaz.glaz036,l_glaz.glaz037
+      )
+      IF SQLCA.SQLCODE THEN
+         CALL cl_errmsg('INSERT glaz_t',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+      END IF
+         
+   END FOREACH
+   
+   #本期立賬
+   LET l_sql="SELECT glaxcomp,glaxdocno,glaxseq,glaxdocdt,",
+             "       glax002,glax003,glax005,glax007,glax008,glax010,glax017,glax018,glax019,glax020,",
+             "       glax021,glax022,glax023,glax024,glax025,glax026,glax027,glax028,",
+             "       glax029,glax030,glax031,glax032,glax033,glax034,glax035,glax036,glax037,glax038, ",
+             "       glax052,glax056",
+             "  FROM glax_t",
+             " WHERE glaxent='",g_enterprise,"' AND glaxld='",g_master.glapld,"' ",
+             "   AND glax049= ",g_master.glap002," AND glax050= ",g_master.glap004,
+             " ORDER BY glax_t.glaxdocno,glax_t.glaxseq,glax_t.glax002"
+   PREPARE aglp530_glax_pr1 FROM l_sql
+   DECLARE aglp530_glax_cs1 CURSOR FOR aglp530_glax_pr1
+   FOREACH aglp530_glax_cs1 INTO l_glax.glaxcomp,l_glax.glaxdocno,l_glax.glaxseq,l_glax.glaxdocdt,l_glax.glax002,
+                                 l_glax.glax003,l_glax.glax005,l_glax.glax007,l_glax.glax008,l_glax.glax010,
+                                 l_glax.glax017,l_glax.glax018,l_glax.glax019,l_glax.glax020,
+                                 l_glax.glax021,l_glax.glax022,l_glax.glax023,l_glax.glax024,
+                                 l_glax.glax025,l_glax.glax026,l_glax.glax027,l_glax.glax028,
+                                 l_glax.glax029,l_glax.glax030,l_glax.glax031,l_glax.glax032,l_glax.glax033,
+                                 l_glax.glax034,l_glax.glax035,l_glax.glax036,l_glax.glax037,l_glax.glax038,
+                                 l_glax.glax052,l_glax.glax056
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('','FOREACH','',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+         EXIT FOREACH
+      END IF
+      INITIALIZE l_glaz.* TO NULL
+      LET l_glaz.glazent=g_enterprise
+      LET l_glaz.glazld =g_master.glapld
+      LET l_glaz.glazcomp=l_glax.glaxcomp
+      LET l_glaz.glazdocno=l_glax.glaxdocno
+      LET l_glaz.glazseq=l_glax.glaxseq
+      LET l_glaz.glazdocdt=l_glax.glaxdocdt
+      LET l_glaz.glaz001=g_master.glap002
+      LET l_glaz.glaz002=g_master.glap004
+      LET l_glaz.glaz003=l_glax.glax002
+      
+      LET l_glaz.glaz004=l_glax.glax003 #本幣立帳金額(本位幣一)
+      LET l_glaz.glaz006=l_glax.glax007 #計價單位
+      LET l_glaz.glaz007=l_glax.glax008 #立帳數量
+      LET l_glaz.glaz009=l_glax.glax005 #交易幣別
+      LET l_glaz.glaz010=l_glax.glax010 #原幣立帳金額
+      LET l_glaz.glaz034=l_glax.glax052 #本幣立帳金額(本位幣二)
+      LET l_glaz.glaz036=l_glax.glax056 #本幣立帳金額(本位幣三)
+      #匯總本期細項沖帳金額
+      LET l_glay003_s=0
+      LET l_glay008_s=0
+      LET l_glay010_s=0
+      LET l_glay052_s=0
+      LET l_glay054_s=0
+      SELECT SUM(glay003),SUM(glay008),SUM(glay010),SUM(glay052),SUM(glay054)  
+        INTO l_glay003_s,l_glay008_s,l_glay010_s,l_glay052_s,l_glay054_s
+        FROM glay_t
+       WHERE glayent=g_enterprise AND glayld=g_master.glapld
+         AND glay002=l_glax.glax002
+         AND glay041=l_glax.glaxdocno
+         AND glay042=l_glax.glaxseq
+         AND glay049=g_master.glap002
+         AND glay050=g_master.glap004
+      IF cl_null(l_glay003_s)  THEN LET l_glay003_s=0 END IF
+      IF cl_null(l_glay008_s)  THEN LET l_glay008_s=0 END IF
+      IF cl_null(l_glay010_s)  THEN LET l_glay010_s=0 END IF 
+      IF cl_null(l_glay052_s)  THEN LET l_glay052_s=0 END IF 
+      IF cl_null(l_glay054_s)  THEN LET l_glay054_s=0 END IF 
+      LET l_glaz.glaz005=l_glay003_s    #本幣沖帳金額(本位幣一)
+      LET l_glaz.glaz008=l_glay008_s    #沖帳數量
+      LET l_glaz.glaz011=l_glay010_s    #原幣沖帳金額
+      LET l_glaz.glaz035=l_glay052_s    #本幣沖帳金額(本位幣二)
+      LET l_glaz.glaz037=l_glay054_s    #本幣沖帳金額(本位幣三)
+      
+      LET l_glaz.glaz012=l_glax.glax017
+      LET l_glaz.glaz013=l_glax.glax018
+      LET l_glaz.glaz014=l_glax.glax019
+      LET l_glaz.glaz015=l_glax.glax020
+      LET l_glaz.glaz016=l_glax.glax021
+      LET l_glaz.glaz017=l_glax.glax022
+      LET l_glaz.glaz018=l_glax.glax023
+      LET l_glaz.glaz019=l_glax.glax024
+      LET l_glaz.glaz020=l_glax.glax025
+      LET l_glaz.glaz021=l_glax.glax026
+      LET l_glaz.glaz022=l_glax.glax027
+      LET l_glaz.glaz023=l_glax.glax028
+      LET l_glaz.glaz024=l_glax.glax029
+      LET l_glaz.glaz025=l_glax.glax030
+      LET l_glaz.glaz026=l_glax.glax031
+      LET l_glaz.glaz027=l_glax.glax032
+      LET l_glaz.glaz028=l_glax.glax033
+      LET l_glaz.glaz029=l_glax.glax034
+      LET l_glaz.glaz030=l_glax.glax035
+      LET l_glaz.glaz031=l_glax.glax036
+      LET l_glaz.glaz032=l_glax.glax037
+      LET l_glaz.glaz033=l_glax.glax038
+      
+      INSERT INTO glaz_t(
+      glazent,glazld,glazcomp,glazdocno,glazseq,glazdocdt,
+      glaz001,glaz002,glaz003,glaz004,glaz005,glaz006,glaz007,glaz008,glaz009,glaz010,
+      glaz011,glaz012,glaz013,glaz014,glaz015,glaz016,glaz017,glaz018,glaz019,glaz020,
+      glaz021,glaz022,glaz023,glaz024,glaz025,glaz026,glaz027,glaz028,glaz029,glaz030,
+      glaz031,glaz032,glaz033,glaz034,glaz035,glaz036,glaz037
+      )
+      VALUES(
+      l_glaz.glazent,l_glaz.glazld,l_glaz.glazcomp,l_glaz.glazdocno,l_glaz.glazseq,l_glaz.glazdocdt,
+      l_glaz.glaz001,l_glaz.glaz002,l_glaz.glaz003,l_glaz.glaz004,l_glaz.glaz005,
+      l_glaz.glaz006,l_glaz.glaz007,l_glaz.glaz008,l_glaz.glaz009,l_glaz.glaz010,
+      l_glaz.glaz011,l_glaz.glaz012,l_glaz.glaz013,l_glaz.glaz014,l_glaz.glaz015,
+      l_glaz.glaz016,l_glaz.glaz017,l_glaz.glaz018,l_glaz.glaz019,l_glaz.glaz020,
+      l_glaz.glaz021,l_glaz.glaz022,l_glaz.glaz023,l_glaz.glaz024,l_glaz.glaz025,
+      l_glaz.glaz026,l_glaz.glaz027,l_glaz.glaz028,l_glaz.glaz029,l_glaz.glaz030,
+      l_glaz.glaz031,l_glaz.glaz032,l_glaz.glaz033,l_glaz.glaz034,l_glaz.glaz035,
+      l_glaz.glaz036,l_glaz.glaz037
+      )
+      IF SQLCA.SQLCODE THEN
+         CALL cl_errmsg('INSERT glaz_t',g_glap.glapdocno,'',SQLCA.SQLCODE,1)
+         LET g_success = 'N' 
+      END IF
+      
+   END FOREACH
+END FUNCTION]]>
+  </point>
+  <point name="function.aglp530_fix_acc_sql" order="9" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 判读是否设置固定核算项，组成SQL语句
+# Memo...........:
+# Usage..........: CALL aglp530_fix_acc_sql(p_glaq002)
+# Input parameter: p_glaq002    科目编号
+# Return code....: r_sql        SQL语句 
+# Date & Author..: 2013/03/20 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp530_fix_acc_sql(p_glaq002)
+   DEFINE p_glaq002       LIKE glaq_t.glaq002
+   DEFINE r_sql           STRING
+   DEFINE r_sql1          STRING
+   #科目核算项
+   DEFINE l_glad007       LIKE glad_t.glad007
+   DEFINE l_glad008       LIKE glad_t.glad008
+   DEFINE l_glad009       LIKE glad_t.glad009
+   DEFINE l_glad010       LIKE glad_t.glad010
+   DEFINE l_glad027       LIKE glad_t.glad027
+   DEFINE l_glad011       LIKE glad_t.glad011
+   DEFINE l_glad012       LIKE glad_t.glad012
+   DEFINE l_glad013       LIKE glad_t.glad013
+   DEFINE l_glad014       LIKE glad_t.glad014
+   DEFINE l_glad015       LIKE glad_t.glad015
+   DEFINE l_glad016       LIKE glad_t.glad016
+   
+   CALL s_voucher_fix_acc_open_chk(g_master.glapld,p_glaq002,g_glaa004)
+   RETURNING l_glad007,l_glad008,l_glad009,l_glad010,l_glad027,l_glad011,l_glad012,l_glad013,l_glad014,l_glad015,l_glad016
+   
+   LET r_sql="glaq017"
+   LET r_sql1="glar012"
+   
+   IF l_glad007='Y' THEN
+      LET r_sql=r_sql,",glaq018"
+      LET r_sql1=r_sql1,",glar013"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+   
+   IF l_glad008='Y' THEN
+      LET r_sql=r_sql,",glaq019"
+      LET r_sql1=r_sql1,",glar014"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+   
+   IF l_glad009='Y' THEN
+      LET r_sql=r_sql,",glaq020"
+      LET r_sql1=r_sql1,",glar015"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+   
+   IF l_glad010='Y' THEN
+      LET r_sql=r_sql,",glaq021"
+      LET r_sql1=r_sql1,",glar016"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+
+   IF l_glad027='Y' THEN
+      LET r_sql=r_sql,",glaq022"
+      LET r_sql1=r_sql1,",glar017"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+
+   IF l_glad011='Y' THEN
+      LET r_sql=r_sql,",glaq023"
+      LET r_sql1=r_sql1,",glar018"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+
+   IF l_glad012='Y' THEN
+      LET r_sql=r_sql,",glaq024"
+      LET r_sql1=r_sql1,",glar019"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+
+   IF l_glad013='Y' THEN
+      LET r_sql=r_sql,",glaq025"
+      LET r_sql1=r_sql1,",glar020"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+
+   IF l_glad014='Y' THEN
+      LET r_sql=r_sql,",glaq026"
+      LET r_sql1=r_sql1,",glar021"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+
+   IF l_glad015='Y' THEN
+      LET r_sql=r_sql,",glaq027"
+      LET r_sql1=r_sql1,",glar022"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+   
+   IF l_glad016='Y' THEN
+      LET r_sql=r_sql,",glaq028"
+      LET r_sql1=r_sql1,",glar023"
+   ELSE
+      LET r_sql=r_sql,",''"
+      LET r_sql1=r_sql1,",''"
+   END IF
+   
+   RETURN r_sql,r_sql1
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_glap      RECORD LIKE glap_t.*
+DEFINE g_glaq      RECORD LIKE glaq_t.*
+DEFINE g_glar      RECORD LIKE glar_t.*
+DEFINE g_ref_fields     DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields     DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_glaa001                LIKE glaa_t.glaa001    #账簿币别
+DEFINE g_glaa004                LIKE glaa_t.glaa004    #会计科目参照表号
+DEFINE g_glaacomp               LIKE glaa_t.glaacomp   #归属法人
+DEFINE g_glaa003                LIKE glaa_t.glaa003    #會計週期參照表號
+DEFINE g_glaa010                LIKE glaa_t.glaa010    #现行年度
+DEFINE g_glaa011                LIKE glaa_t.glaa011    #期别
+DEFINE g_glaa013                LIKE glaa_t.glaa013    #关账日期
+DEFINE g_glaa111                LIKE glaa_t.glaa111    #应计调整单别
+DEFINE g_glaa112                LIKE glaa_t.glaa112    #期末结转单别
+DEFINE g_ooef008                LIKE ooef_t.ooef008    #單別參照表號
+DEFINE g_glaa015                LIKE glaa_t.glaa015
+DEFINE g_glaa016                LIKE glaa_t.glaa016
+DEFINE g_glaa018                LIKE glaa_t.glaa018
+DEFINE g_glaa019                LIKE glaa_t.glaa019
+DEFINE g_glaa020                LIKE glaa_t.glaa020
+DEFINE g_glaa022                LIKE glaa_t.glaa022]]>
+  </point>
+  <point name="init.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_pass        LIKE type_t.num5]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   #單據別參照表號   
+   SELECT ooef008 INTO g_ooef008 FROM ooef_t WHERE ooefent = g_enterprise
+                                               AND ooef001 = g_site       
+   #获取预设主帐别
+   CALL s_ld_bookno()  RETURNING l_success,g_master.glapld
+   IF l_success = FALSE THEN
+      RETURN 
+   END IF 
+
+   #權限檢查
+   CALL s_ld_chk_authorization(g_user,g_master.glapld) RETURNING l_pass
+   IF l_pass = FALSE THEN
+      CALL cl_err(g_master.glapld,'agl-00164',1)
+      RETURN
+   END IF
+   #依据帐别抓取会计周期，现行年度，现行期别，关账日期
+   LET g_glaa003 = ''
+   LET g_glaa010 = ''
+   LET g_glaa011 = ''
+   LET g_glaa013 = ''
+   LET g_glaa112 = ''
+   SELECT glaa003,glaa010,glaa011,glaa013,glaa111,glaa112 
+     INTO g_glaa003,g_glaa010,g_glaa011,g_glaa013,g_glaa111,g_glaa112 
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = g_master.glapld]]>
+  </point>
+  <point name="input.a.glap002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.glap002) THEN
+               IF g_master.glap002 <1000 OR g_master.glap002 >9999 THEN
+                  CALL cl_err(g_master.glap002,'aoo-00113',0)
+                  LET g_master.glap002 =''
+                  NEXT FIELD glap002
+               END IF
+               IF g_master.glap002 < YEAR(g_glaa013) THEN
+                  CALL cl_err(g_master.glap002,'agl-00163',0)
+                  LET g_master.glap002 =''
+                  NEXT FIELD glap002
+               END IF 
+            END IF ]]>
+  </point>
+  <point name="input.a.glap004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[             IF NOT cl_null(g_master.glap004) THEN
+                #资料检查,期别依据agli100对应年度设置不同，分12期和13期
+                SELECT glav003 INTO l_glav003 FROM glav_t
+                 WHERE glavent = g_enterprise
+                   AND glav001 = g_glaa003
+                   AND glav002 = g_master.glap002
+                #1.月，2.周，3.445式   
+                IF cl_null(l_glav003) OR l_glav003 = '1' OR l_glav003 = '3' THEN
+                   IF (g_master.glap004 < 1) OR (g_master.glap004 > 12) THEN
+                      CALL cl_err(g_master.glap004,'agl-00127',0)
+                      LET g_master.glap004 = ''
+                      NEXT FIELD glap004
+                   END IF 
+                ELSE
+                   IF g_master.glap004 <1 OR g_master.glap004 >13 THEN
+                      CALL cl_err(g_master.glap004,'agl-00143',0)
+                      LET g_master.glap004 = ''
+                      NEXT FIELD glap004
+                   END IF 
+                END IF 
+              
+                IF g_master.glap002 = YEAR(g_glaa013) AND  g_master.glap004 < MONTH(g_glaa013) THEN
+                   CALL cl_err(g_master.glap004,'agl-00163',0)
+                   LET g_master.glap004 = ''
+                   NEXT FIELD glap004
+                END IF 
+             END IF ]]>
+  </point>
+  <point name="input.a.glapld" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.glapld) THEN
+               CALL aglp530_glapld_chk(g_master.glapld)
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_master.glapld,g_errno,0)
+                  LET g_master.glapld = ''
+                  DISPLAY '' TO glapld_desc
+                  NEXT FIELD glapld
+               END IF 
+               #检查使用者是否有权限使用当前账别
+               CALL s_ld_chk_authorization(g_user,g_master.glapld) RETURNING l_pass
+               IF l_pass = FALSE THEN
+                  CALL cl_err(g_master.glapld,'axr-00022',0)
+                  LET g_master.glapld = ''
+                  DISPLAY '' TO glapld_desc
+                  NEXT FIELD glapld
+               END IF 
+               #依据帐别抓取会计周期，现行年度，现行期别，关账日期
+               LET g_glaa003 = ''
+               LET g_glaa010 = ''
+               LET g_glaa011 = ''
+               LET g_glaa013 = ''
+               LET g_glaa112 = ''
+               SELECT glaa003,glaa010,glaa011,glaa013,glaa112 
+                 INTO g_glaa003,g_glaa010,g_glaa011,g_glaa013,g_glaa112 
+                 FROM glaa_t
+                WHERE glaaent = g_enterprise
+                  AND glaald = g_master.glapld
+               LET g_master.glap002 = g_glaa010
+               LET g_master.glap004 = g_glaa011
+               DISPLAY g_master.glap002 TO glap002
+               DISPLAY g_master.glap004 TO glap004              
+            END IF 
+            CALL aglp530_glapld_desc() 
+]]>
+  </point>
+  <point name="input.b.glap004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF cl_null(g_master.glap002) THEN
+               CALL cl_err('','agl-00183',0)
+               NEXT FIELD glap002
+            END IF ]]>
+  </point>
+  <point name="input.c.glapld" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.glapld       #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            CALL q_authorised_ld()
+            LET g_master.glapld = g_qryparam.return1        #將開窗取得的值回傳到變數
+            CALL aglp530_glapld_desc()
+            DISPLAY g_master.glapld_desc TO glapld_desc
+            DISPLAY g_master.glapld TO glapld               #顯示到畫面上
+            NEXT FIELD glapld                               #返回原欄位
+
+]]>
+  </point>
+  <point name="input.m.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               #预设值
+               LET g_master.glapld =  g_master.glapld
+               CALL aglp530_glapld_desc() 
+               LET g_master.glap002 = g_glaa010
+               LET g_master.glap004 = g_glaa011]]>
+  </point>
+  <point name="process.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_glaa006    LIKE glaa_t.glaa006]]>
+  </point>
+  <point name="process.pre_process" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   INITIALIZE g_glap.* TO NULL
+   INITIALIZE g_glaq.* TO NULL
+   INITIALIZE g_glar.* TO NULL
+   #开启事务
+   CALL s_transaction_begin()
+   #错误信息汇总初始化
+   CALL cl_showmsg_init()
+   #帳套相關資料抓取
+   SELECT glaa003,glaa010,glaa011,glaa013,glaa111,glaa112 
+     INTO g_glaa003,g_glaa010,g_glaa011,g_glaa013,g_glaa111,g_glaa112 
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = g_master.glapld
+   #判断结转年度期别是否小于关账日期
+   IF (g_master.glap002 < YEAR(g_glaa013)) OR (g_master.glap002 = YEAR(g_glaa013) AND
+      (NOT cl_null(g_master.glap004) AND g_master.glap004 < MONTH(g_glaa013))) THEN
+      CALL cl_errmsg('glaa013',g_glaa013,'','agl-00163',1)
+      LET g_success = 'N' 
+      CALL s_transaction_end('N','0')
+      CALL cl_err_showmsg() 
+      RETURN    
+   END IF 
+   #判斷是否設置拋轉月結傳票單據別
+   IF cl_null(g_glaa112) THEN
+      CALL cl_errmsg('glaa112',g_glaa112,'','agl-00223',1)
+      LET g_success = 'N' 
+      CALL s_transaction_end('N','0')
+      CALL cl_err_showmsg() 
+      RETURN  
+   END IF 
+   
+   #先判断是否已经做月结
+   CALL aglp530_chk()
+   #产生两张CE类的传票+產生次期應計調整傳票(RA)
+   #依据帐别抓取对应法人,币别,会计参照表号,结账方式1:表结法，2：账结法
+   SELECT glaacomp,glaa001,glaa004,glaa006,glaa015,glaa016,glaa018,glaa019,glaa020,glaa022
+     INTO g_glaacomp,g_glaa001,g_glaa004,l_glaa006,g_glaa015,g_glaa016,g_glaa018,g_glaa019,
+          g_glaa020,g_glaa022
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = g_master.glapld
+
+   IF l_glaa006 = '1' THEN
+      CALL aglp530_glaa006_1()
+   ELSE
+      CALL aglp530_glaa006_2()
+   END IF 
+   #→產生次期應計調整傳票(RA)
+   IF g_master.glap004 < 12 THEN
+      #判斷是否設置應計調整傳票單據別
+      IF cl_null(g_glaa111) THEN
+         CALL cl_errmsg('glaa111',g_glaa111,'','agl-00231',1)
+         LET g_success = 'N' 
+         CALL s_transaction_end('N','0')
+         CALL cl_err_showmsg() 
+         RETURN  
+      END IF
+      CALL aglp530_ra_gen()
+      #更新对应帐别的会计年度，期别，期别 = 期别+1
+      UPDATE glaa_t SET glaa010 = g_master.glap002,
+                        glaa011 = g_master.glap004+1
+       WHERE glaaent = g_enterprise
+         AND glaald = g_master.glapld
+   ELSE
+   #→當執行期別為當年度最末一期,則系統呼叫年度結轉作業(aglp540)並傳入年度訊息自動執行之.
+      CALL cl_cmdrun(" aglp540 '"||g_master.glap002||"' ") 
+      #更新对应帐别的会计年度，期别，
+      #年度=年度+1， 期别 =1
+      UPDATE glaa_t SET glaa010 = g_master.glap002+1, 
+                        glaa011 = 1
+       WHERE glaaent = g_enterprise
+         AND glaald = g_master.glapld
+   END IF 
+   IF SQLCA.SQLCODE THEN
+      CALL cl_errmsg('UPD_glaa',g_master.glapld,'',SQLCA.SQLCODE,1)
+      LET g_success = 'N'
+      CALL s_transaction_end('N','0')
+      CALL cl_err_showmsg() 
+      RETURN  
+   END IF 
+   
+   #產生細項立沖各期餘額當
+   CALL aglp530_glaz()
+   
+
+   IF g_success = 'Y' THEN 
+      CALL s_transaction_end('Y','0')
+      CALL cl_err_showmsg() 
+   END IF
+   ]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_cnt        LIKE type_t.num5
+   DEFINE l_pass       LIKE type_t.num5
+   DEFINE l_glav003    LIKE glav_t.glav003]]>
+  </point>
+  <section id="aglp530.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000278
+#+ 
+#+ Filename...: aglp530
+#+ Description: 期末結轉作業
+#+ Creator....: 01531(2014/07/03)
+#+ Modifier...: 01531(2014/07/03)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="aglp530.global" ver="2" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       glapld LIKE glap_t.glapld, 
+   glapld_desc LIKE type_t.chr80, 
+   glap002 LIKE glap_t.glap002, 
+   glap004 LIKE glap_t.glap004, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aglp530.init" ver="1" status="" src="s">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION aglp530_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aglp530.main" ver="1" status="" src="s">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("agl","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL aglp530_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aglp530 WITH FORM cl_ap_formpath("agl",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL aglp530_init()
+ 
+      #進入選單 Menu (="N")
+      CALL aglp530_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aglp530
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="aglp530.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aglp530.process" ver="1" status="" src="s">
+    <![CDATA[#+ 資料處理
+PRIVATE FUNCTION aglp530_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE aglp530_process_cs CURSOR FROM ls_sql
+#  FOREACH aglp530_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+  </section>
+  <section id="aglp530.transfer_argv" ver="1" status="" src="s">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION aglp530_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="aglp530.ui_dialog" ver="2" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION aglp530_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #+ 此段落由子樣板a57產生
+         INPUT BY NAME g_master.glapld,g_master.glap002,g_master.glap004 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #此段落由子樣板a02產生
+         AFTER FIELD glapld
+            
+            #add-point:AFTER FIELD glapld
+            {<point name="input.a.glapld" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glapld
+            #add-point:BEFORE FIELD glapld
+            {<point name="input.b.glapld" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glapld
+            #add-point:ON CHANGE glapld
+            {<point name="input.g.glapld" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glap002
+            #add-point:BEFORE FIELD glap002
+            {<point name="input.b.glap002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glap002
+            
+            #add-point:AFTER FIELD glap002
+            {<point name="input.a.glap002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glap002
+            #add-point:ON CHANGE glap002
+            {<point name="input.g.glap002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glap004
+            #add-point:BEFORE FIELD glap004
+            {<point name="input.b.glap004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glap004
+            
+            #add-point:AFTER FIELD glap004
+            {<point name="input.a.glap004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glap004
+            #add-point:ON CHANGE glap004
+            {<point name="input.g.glap004" />}
+            #END add-point
+ 
+ 
+                     #Ctrlp:input.c.glapld
+         ON ACTION controlp INFIELD glapld
+            #add-point:ON ACTION controlp INFIELD glapld
+            {<point name="input.c.glapld" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glap002
+         ON ACTION controlp INFIELD glap002
+            #add-point:ON ACTION controlp INFIELD glap002
+            {<point name="input.c.glap002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glap004
+         ON ACTION controlp INFIELD glap004
+            #add-point:ON ACTION controlp INFIELD glap004
+            {<point name="input.c.glap004" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+               
+         END INPUT
+ 
+ 
+         
+         
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL aglp530_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+                 LET ls_js = aglp530_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

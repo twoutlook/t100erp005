@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci802" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03297" crtdt="2014-09-18 16:49:38" modid="03297" moddt="2014-09-24 10:17:22" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="LCM料件市價分類設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcfecomp,xcfecomp_desc(chr80),xcfe001,xcfe003,xcfe002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcfe004,xcfe004_desc(chr500),xcfe005,xcfe006"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci802" method="dialog">
+    <section id="input">
+      <input id="head" field="xcfecomp,xcfe001,xcfe003,xcfe002"/>
+      <input id="body" page="1" field="xcfe004,xcfe005,xcfe006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcfecomp,xcfe001,xcfe003,xcfe002"/>
+      <construct id="body" page="1" field="xcfe004,xcfe005,xcfe006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcfecomp,xcfe001,xcfe002,xcfe003"/>
+      <set id="head" type="no_entry" field="xcfecomp,xcfe001,xcfe002,xcfe003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcfecomp">
+        <after>
+          <reference field="xcfecomp_desc" ref_field="xcfe_t.xcfecomp" map_field="xcfeent,xcfecomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xcfecomp_desc"/>
+      <column id="xcfe001"/>
+      <column id="xcfe003" type="S" default="1" def_scc="8038"/>
+      <column id="xcfe002"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcfe004">
+        <after>
+          <check chkid="v_oocq002_1" id="isExist"/>
+        </after>
+        <controlp form="q_oocq002_02" state="i"/>
+        <controlp form="q_oocq002_02" state="c"/>
+      </column>
+      <column id="xcfe004_desc"/>
+      <column id="xcfe005">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_ooai001_1" state="i"/>
+        <controlp form="q_ooai001_1" state="c"/>
+      </column>
+      <column id="xcfe006"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcfe_t" pk="xcfecomp,xcfe001,xcfe002,xcfe003">
+      <sql id="forupd_sql" type="sql" query="SELECT xcfecomp,&apos;&apos;,xcfe001,xcfe003,xcfe002 FROM xcfe_t WHERE xcfeent= ? AND xcfecomp=? AND xcfe001=? AND xcfe002=? AND xcfe003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcfecomp,&apos;&apos;,xcfe001,xcfe003,xcfe002 FROM xcfe_t" order="xcfecomp,xcfe001,xcfe002,xcfe003"/>
+    </head>
+    <body id="xcfe_t" page="1" linked="" pk="xcfe004" fk="xcfecomp,xcfe001,xcfe002,xcfe003">
+      <sql id="forupd_sql_detail" query="SELECT xcfe004,&apos;&apos;,xcfe005,xcfe006 FROM xcfe_t WHERE xcfeent=? AND xcfecomp=? AND xcfe001=? AND xcfe002=? AND xcfe003=? AND xcfe004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcfe004,&apos;&apos;,xcfe005,xcfe006 FROM xcfe_t WHERE xcfeent= ? AND xcfecomp=? AND xcfe001=? AND xcfe002=? AND xcfe003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

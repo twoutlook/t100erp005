@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglt420_01" module="agl" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02599" crtdt="2014-12-07 22:04:04" modid="02599" moddt="2015-04-09 09:40:39" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="傳票拋轉">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glapdocno_01(chr20),glapdocdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="cont_no"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglt420_01" method="dialog">
+    <section id="input">
+      <input id="head" field="glapdocno_01,glapdocdt"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="glapdocno_01">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_glapdocno" state="c"/>
+      </column>
+      <column id="glapdocdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glap_t" pk="glapld,glapdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,glapdocdt FROM glap_t WHERE glapent= ? AND glapld=? AND glapdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="glapld,glapdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,212 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammt402" module="amm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02296" crtdt="2013-08-13 17:30:19" modid="01533" moddt="2015-05-27 14:13:11" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員卡領用申請維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmaysite,mmaysite_desc(chr80),mmaydocdt,mmaydocno,mmayunit,mmay001,mmay001_desc(chr80),mmay002,mmay002_desc(chr80),mmay003,mmay003_desc(chr80),mmay000,mmaystus,mmayownid,mmayownid_desc(chr80),mmayowndp,mmayowndp_desc(chr80),mmaycrtid,mmaycrtid_desc(chr80),mmaycrtdp,mmaycrtdp_desc(chr80),mmaycrtdt,mmaymodid,mmaymodid_desc(chr80),mmaymoddt,mmaycnfid,mmaycnfid_desc(chr80),mmaycnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmazseq,mmazsite,mmazsite_desc(chr500),mmaz000,mmaz002,mmaz003,mmaz003_desc(chr500),mmaz004,mmaz004_desc(chr500),mmaz005,mmaz005_desc(chr500),mmaz001,mmaz001_desc(chr500),mmaz006,mmaz007,mmaz008,mmaz009,mmazunit"/>
+      <var id="bs_field" value="mmaydocno,mmaydocdt,mmaysite,mmaysite_desc(chr80),mmay001,mmay001_desc(chr80),mmay002,mmay002_desc(chr80),mmay003,mmay003_desc(chr80)" pk="mmaydocno" order=""/>
+      <bs_reference field="mmaysite_desc" ref_field="mmaysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmay001_desc" ref_field="mmay001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmay002_desc" ref_field="mmay002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmay003_desc" ref_field="mmay003" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammt402" method="dialog">
+    <section id="input">
+      <input id="head" field="mmaysite,mmaydocdt,mmaydocno,mmayunit,mmay001,mmay002,mmay003,mmay000,mmaystus"/>
+      <input id="body" page="1" field="mmazseq,mmazsite,mmaz000,mmaz002,mmaz003,mmaz004,mmaz005,mmaz001,mmaz006,mmaz007,mmaz008,mmaz009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmaysite,mmaydocdt,mmaydocno,mmayunit,mmay001,mmay002,mmay003,mmay000,mmaystus,mmayownid,mmayowndp,mmaycrtid,mmaycrtdp,mmaycrtdt,mmaymodid,mmaymoddt,mmaycnfid,mmaycnfdt"/>
+      <construct id="body" page="1" field="mmazseq,mmazsite,mmaz000,mmaz002,mmaz003,mmaz004,mmaz005,mmaz001,mmaz006,mmaz007,mmaz008,mmaz009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mmaydocno"/>
+      <set id="head" type="no_entry" field="mmaydocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmaysite">
+        <after>
+          <reference field="mmaysite_desc" ref_field="mmay_t.mmaysite" map_field="mmaysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mmaysite_desc"/>
+      <column id="mmaydocdt"/>
+      <column id="mmaydocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_mmaydocno" state="c"/>
+      </column>
+      <column id="mmayunit">
+        <controlp form="q_ooea001_4" state="i"/>
+        <controlp form="q_ooea001_4" state="c"/>
+      </column>
+      <column id="mmay001">
+        <after>
+          <reference field="mmay001_desc" ref_field="mmay_t.mmay001" map_field="mmay001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmay001_desc"/>
+      <column id="mmay002">
+        <after>
+          <reference field="mmay002_desc" ref_field="mmay_t.mmay002" map_field="mmay002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmay002_desc"/>
+      <column id="mmay003">
+        <after>
+          <reference field="mmay003_desc" ref_field="mmay_t.mmay003" map_field="mmay003" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_3" state="i"/>
+        <controlp form="q_inaa001_3" state="c"/>
+      </column>
+      <column id="mmay003_desc"/>
+      <column id="mmay000"/>
+      <column id="mmaystus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="mmayownid">
+        <after>
+          <reference field="mmayownid_desc" ref_field="mmay_t.mmayownid" map_field="mmayownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmayownid_desc"/>
+      <column id="mmayowndp">
+        <after>
+          <reference field="mmayowndp_desc" ref_field="mmay_t.mmayowndp" map_field="mmayowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmayowndp_desc"/>
+      <column id="mmaycrtid">
+        <after>
+          <reference field="mmaycrtid_desc" ref_field="mmay_t.mmaycrtid" map_field="mmaycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmaycrtid_desc"/>
+      <column id="mmaycrtdp">
+        <after>
+          <reference field="mmaycrtdp_desc" ref_field="mmay_t.mmaycrtdp" map_field="mmaycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmaycrtdp_desc"/>
+      <column id="mmaycrtdt"/>
+      <column id="mmaymodid">
+        <after>
+          <reference field="mmaymodid_desc" ref_field="mmay_t.mmaymodid" map_field="mmaymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmaymodid_desc"/>
+      <column id="mmaymoddt"/>
+      <column id="mmaycnfid">
+        <after>
+          <reference field="mmaycnfid_desc" ref_field="mmay_t.mmaycnfid" map_field="mmaycnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmaycnfid_desc"/>
+      <column id="mmaycnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmazseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmazsite">
+        <after>
+          <reference field="mmazsite_desc" ref_field="mmaz_t.mmazsite" map_field="mmazsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmazsite_desc"/>
+      <column id="mmaz000"/>
+      <column id="mmaz002">
+        <controlp form="q_ooea001_4" state="i"/>
+        <controlp form="q_ooea001_4" state="c"/>
+      </column>
+      <column id="mmaz003">
+        <after>
+          <reference field="mmaz003_desc" ref_field="mmaz_t.mmaz003" map_field="mmaz003" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_2" state="i"/>
+        <controlp form="q_inaa001_2" state="c"/>
+      </column>
+      <column id="mmaz003_desc"/>
+      <column id="mmaz004">
+        <after>
+          <reference field="mmaz004_desc" ref_field="mmaz_t.mmaz004" map_field="mmaz004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mmaz004_desc"/>
+      <column id="mmaz005">
+        <after>
+          <reference field="mmaz005_desc" ref_field="mmaz_t.mmaz005" map_field="mmaz005" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_3" state="i"/>
+        <controlp form="q_inaa001_3" state="c"/>
+      </column>
+      <column id="mmaz005_desc"/>
+      <column id="mmaz001">
+        <after>
+          <reference field="mmaz001_desc" ref_field="mmaz_t.mmaz001" map_field="mmaz001" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="i"/>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmaz001_desc"/>
+      <column id="mmaz006">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmaz007"/>
+      <column id="mmaz008"/>
+      <column id="mmaz009"/>
+      <column id="mmazunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmay_t" pk="mmaydocno">
+      <sql id="forupd_sql" type="sql" query="SELECT mmaysite,&apos;&apos;,mmaydocdt,mmaydocno,mmayunit,mmay001,&apos;&apos;,mmay002,&apos;&apos;,mmay003,&apos;&apos;,mmay000,mmaystus,mmayownid,&apos;&apos;,mmayowndp,&apos;&apos;,mmaycrtid,&apos;&apos;,mmaycrtdp,&apos;&apos;,mmaycrtdt,mmaymodid,&apos;&apos;,mmaymoddt,mmaycnfid,&apos;&apos;,mmaycnfdt FROM mmay_t WHERE mmayent= ? AND mmaydocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mmaysite,&apos;&apos;,mmaydocdt,mmaydocno,mmayunit,mmay001,&apos;&apos;,mmay002,&apos;&apos;,mmay003,&apos;&apos;,mmay000,mmaystus,mmayownid,&apos;&apos;,mmayowndp,&apos;&apos;,mmaycrtid,&apos;&apos;,mmaycrtdp,&apos;&apos;,mmaycrtdt,mmaymodid,&apos;&apos;,mmaymoddt,mmaycnfid,&apos;&apos;,mmaycnfdt FROM mmay_t" order="mmaydocno"/>
+    </head>
+    <body id="mmaz_t" page="1" linked="" pk="mmazseq" fk="mmazdocno">
+      <sql id="forupd_sql_detail" query="SELECT mmazseq,mmazsite,&apos;&apos;,mmaz000,mmaz002,mmaz003,&apos;&apos;,mmaz004,&apos;&apos;,mmaz005,&apos;&apos;,mmaz001,&apos;&apos;,mmaz006,mmaz007,mmaz008,mmaz009,mmazunit FROM mmaz_t WHERE mmazent=? AND mmazdocno=? AND mmazseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmazseq,mmazsite,&apos;&apos;,mmaz000,mmaz002,mmaz003,&apos;&apos;,mmaz004,&apos;&apos;,mmaz005,&apos;&apos;,mmaz001,&apos;&apos;,mmaz006,mmaz007,mmaz008,mmaz009,mmazunit FROM mmaz_t WHERE mmazent=? AND mmazdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

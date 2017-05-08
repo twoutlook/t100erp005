@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci140_01" module="axc" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02114" crtdt="2014-02-26 23:14:44" modid="02114" moddt="2014-06-29 23:39:14" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="整批複製">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbesite,xcbesite_desc(chr80),xcbe001,xcbe002,xcbesite_2(chr10),xcbesite_2_desc(chr80),xcbe001_2(num5),xcbe002_2(num5)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci140_01" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbesite,xcbe001,xcbe002,xcbesite_2,xcbe001_2,xcbe002_2"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xcbesite">
+        <after>
+          <check chkid="v_ooef001_11" id="isExist"/>
+          <reference field="xcbesite_desc" ref_field="xcbe_t.xcbesite" map_field="xcbeent,xcbesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcbesite" state="i"/>
+      </column>
+      <column id="xcbesite_desc"/>
+      <column id="xcbe001"/>
+      <column id="xcbe002"/>
+      <column id="xcbesite_2">
+        <after>
+          <check chkid="v_ooef001_11" id="isExist"/>
+          <reference field="xcbesite_2_desc" ref_field="xcbesite_2" map_field="xcbeent,xcbesite_2" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_10" state="i"/>
+      </column>
+      <column id="xcbesite_2_desc"/>
+      <column id="xcbe001_2"/>
+      <column id="xcbe002_2"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcbe_t" pk="xcbesite,xcbe001,xcbe002,xcbe003,xcbe004,xcbe005,xcbe006">
+      <sql id="forupd_sql" type="sql" query="SELECT xcbesite,&apos;&apos;,xcbe001,xcbe002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcbe_t WHERE xcbeent= ? AND xcbesite=? AND xcbe001=? AND xcbe002=? AND xcbe003=? AND xcbe004=? AND xcbe005=? AND xcbe006=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xcbesite,xcbe001,xcbe002,xcbe003,xcbe004,xcbe005,xcbe006"/>
+    </head>
+  </dataset>
+</assembly>
+

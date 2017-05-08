@@ -1,0 +1,295 @@
+{<section id="asft300_05.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0010(2014-12-18 17:24:36), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000053
+#+ Filename...: asft300_05
+#+ Description: 工單備置子作業
+#+ Creator....: 05384(2014-12-16 17:15:16)
+#+ Modifier...: 05384 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="asft300_05.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_sfba_d        RECORD
+       sfbadocno LIKE sfba_t.sfbadocno, 
+   sfbaseq LIKE sfba_t.sfbaseq, 
+   sfbaseq1 LIKE sfba_t.sfbaseq1, 
+   sfba002 LIKE sfba_t.sfba002, 
+   sfba002_desc LIKE type_t.chr500, 
+   sfba003 LIKE sfba_t.sfba003, 
+   sfba003_desc LIKE type_t.chr500, 
+   sfba006 LIKE sfba_t.sfba006, 
+   sfba006_desc LIKE type_t.chr500, 
+   sfba006_desc_2 LIKE type_t.chr500, 
+   sfba021 LIKE sfba_t.sfba021, 
+   sfba021_desc LIKE type_t.chr500, 
+   sfba014 LIKE sfba_t.sfba014, 
+   sfba014_desc LIKE type_t.chr500, 
+   sfba013 LIKE sfba_t.sfba013, 
+   sfba016 LIKE sfba_t.sfba016, 
+   sfba031 LIKE sfba_t.sfba031, 
+   sfba032 LIKE sfba_t.sfba032, 
+   sfba032_desc LIKE type_t.chr500
+       END RECORD
+PRIVATE TYPE type_g_sfba2_d RECORD
+       sfbbdocno LIKE sfbb_t.sfbbdocno, 
+   sfbbseq LIKE sfbb_t.sfbbseq, 
+   sfbbseq1 LIKE sfbb_t.sfbbseq1, 
+   sfbb001 LIKE sfbb_t.sfbb001, 
+   sfbb002 LIKE sfbb_t.sfbb002, 
+   sfbb002_desc LIKE type_t.chr500, 
+   sfbb004 LIKE sfbb_t.sfbb004, 
+   sfbb004_desc LIKE type_t.chr500, 
+   sfbb005 LIKE sfbb_t.sfbb005, 
+   sfbb005_desc LIKE type_t.chr500, 
+   sfbb003 LIKE sfbb_t.sfbb003, 
+   sfbb006 LIKE sfbb_t.sfbb006, 
+   sfbb007 LIKE sfbb_t.sfbb007, 
+   sfbb007_desc LIKE type_t.chr500, 
+   sfbb008 LIKE sfbb_t.sfbb008, 
+   sfbb009 LIKE sfbb_t.sfbb009
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_sfba_d          DYNAMIC ARRAY OF type_g_sfba_d
+DEFINE g_sfba_d_t        type_g_sfba_d
+DEFINE g_sfba2_d   DYNAMIC ARRAY OF type_g_sfba2_d
+DEFINE g_sfba2_d_t type_g_sfba2_d
+ 
+ 
+DEFINE g_sfbadocno_t   LIKE sfba_t.sfbadocno    #Key值備份
+DEFINE g_sfbaseq_t      LIKE sfba_t.sfbaseq    #Key值備份
+DEFINE g_sfbaseq1_t      LIKE sfba_t.sfbaseq1    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+{</section>}
+ 
+{<section id="asft300_05.input" >}    
+#+ 資料輸入
+PUBLIC FUNCTION asft300_05(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asft300_05 WITH FORM cl_ap_formpath("asf","asft300_05")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_sfba_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfba031
+            #add-point:BEFORE FIELD sfba031 name="input.b.page1.sfba031"
+            {<point name="input.b.page1.sfba031" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfba031
+            
+            #add-point:AFTER FIELD sfba031 name="input.a.page1.sfba031"
+            {<point name="input.a.page1.sfba031" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfba031
+            #add-point:ON CHANGE sfba031 name="input.g.page1.sfba031"
+            {<point name="input.g.page1.sfba031" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfba032
+            
+            #add-point:AFTER FIELD sfba032 name="input.a.page1.sfba032"
+            {<point name="input.a.page1.sfba032" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfba032
+            #add-point:BEFORE FIELD sfba032 name="input.b.page1.sfba032"
+            {<point name="input.b.page1.sfba032" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfba032
+            #add-point:ON CHANGE sfba032 name="input.g.page1.sfba032"
+            {<point name="input.g.page1.sfba032" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.sfba031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfba031
+            #add-point:ON ACTION controlp INFIELD sfba031 name="input.c.page1.sfba031"
+            {<point name="input.c.page1.sfba031" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.sfba032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfba032
+            #add-point:ON ACTION controlp INFIELD sfba032 name="input.c.page1.sfba032"
+            {<point name="input.c.page1.sfba032" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asft300_05 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="asft300_05.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="asft300_05.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

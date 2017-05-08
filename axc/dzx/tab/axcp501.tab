@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcp501" module="axc" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="00378" crtdt="2015-01-30 17:40:14" modid="00378" moddt="2015-01-30 17:40:14" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="成本次要素計算作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imaa001(chr500),imaa009(chr10),imaa003(chr10),glaald(chr5),xcat001(chr10),xcat001_desc(chr80),field_flag(chr1),yy(num5),pp(num5),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcp501" method="dialog">
+    <section id="input">
+      <input id="head" field="glaald,xcat001,field_flag,yy,pp"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imaa001,imaa009,imaa003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imaa001">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaa009">
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imaa003">
+        <controlp form="q_imck001" state="i"/>
+        <controlp form="q_imck001" state="c"/>
+      </column>
+      <column id="glaald">
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_glaa" state="c"/>
+      </column>
+      <column id="xcat001">
+        <after>
+          <reference field="xcat001_desc" ref_field="xcat001" map_field="xcat001" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcat001_desc"/>
+      <column id="field_flag"/>
+      <column id="yy"/>
+      <column id="pp"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

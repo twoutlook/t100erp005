@@ -1,0 +1,2226 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axct312_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0019(2017-01-19 16:59:35), PR版次:0019(2016-10-10 15:03:12)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000164
+#+ Filename...: axct312_03
+#+ Description: 資料批次產生
+#+ Creator....: 03297(2014-09-03 17:40:04)
+#+ Modifier...: 05599 -SD/PR- 01534
+ 
+{</section>}
+ 
+{<section id="axct312_03.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00005#47   16/03/28 by pengxin     修正azzi920重复定义之错误讯息
+#160318-00025#12   16/04/26 By 07675       將重複內容的錯誤訊息置換為公用錯誤訊息(r.v）
+#160727-00039#1    16/07/29 By 02040       理由碼欄位隱藏需以併也將說明做隱藏
+#160809-00045#1    16/08/09 By 02040       有使用成本域時，需依撥出庫位所屬的成本域，抓取單價成本
+#160825-00023#1    16/08/30 By 02040       成本單位xccw044改料件的基礎單位imaa006
+#160829-00005#1    16/08/31 By whitney     效能優化
+#160912-00021#3    16/10/10 By lixh        axct316截取成本时，若单据上调拨数量为负，应改抓拨入方指定年月成本
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_inba_m        RECORD
+       xccwld LIKE xccw_t.xccwld, 
+   xccwld_desc LIKE type_t.chr80, 
+   xccwcomp LIKE xccw_t.xccwcomp, 
+   xccwcomp_desc LIKE type_t.chr80, 
+   xccw003 LIKE xccw_t.xccw003, 
+   xccw003_desc LIKE type_t.chr80, 
+   xcat003 LIKE xcat_t.xcat003, 
+   xccw004 LIKE xccw_t.xccw004, 
+   xccw005 LIKE xccw_t.xccw005
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_wc            STRING
+DEFINE g_sql           STRING
+ type type_g_xccw_m    RECORD
+   comp                LIKE type_t.chr80, 
+   comp_desc           LIKE type_t.chr80, 
+   ld                  LIKE type_t.chr80, 
+   ld_desc             LIKE type_t.chr80, 
+   type                LIKE type_t.chr80, 
+   type_desc           LIKE type_t.chr80, 
+  #order               LIKE type_t.chr80, 
+   yy                  LIKE type_t.chr80, 
+   mm                  LIKE type_t.chr80
+                   END RECORD
+DEFINE g_xccw_m        type_g_xccw_m
+DEFINE g_xccw_m_o      type_g_xccw_m  #160829-00005#1
+DEFINE g_inba_m_o      type_g_inba_m  #160829-00005#1
+#160829-00005#1-s
+PRIVATE type type_ooaj  RECORD
+    ooaj003    LIKE ooaj_t.ooaj003,
+    ooaj004    LIKE ooaj_t.ooaj004,
+    ooaj005    LIKE ooaj_t.ooaj005,
+    ooaj006    LIKE ooaj_t.ooaj006,
+    ooaj007    LIKE ooaj_t.ooaj007
+           END RECORD
+DEFINE g_round_type    LIKE ooaa_t.ooaa002
+#160829-00005#1-e
+
+#end add-point
+ 
+DEFINE g_inba_m        type_g_inba_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axct312_03.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axct312_03(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_xccw012
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_xccw012       LIKE xccw_t.xccw012
+   DEFINE l_year          LIKE type_t.num5
+   DEFINE l_month         LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_ooef003       LIKE ooef_t.ooef003
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axct312_03 WITH FORM cl_ap_formpath("axc","axct312_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   #出现传参为空----fengmy150709---b
+   IF cl_null(p_xccw012) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'xccw012'
+      LET g_errparam.code   = 'axc-00721'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   #出现传参为空----fengmy150709---e
+   CALL cl_set_combo_scc('xcat003','8904')
+   #CALL cl_set_combo_scc('order','8914')
+   #CALL cl_set_comp_required('comp,ld,type,yy,mm',FALSE)  #dorislai-20150917-mark-改為必輸
+   LET g_errshow = 1
+   #dorislai-21051026-modify----(S)
+   #CALL cl_get_para(g_enterprise,g_site,'S-FIN-6010') RETURNING l_year
+   #CALL cl_get_para(g_enterprise,g_site,'S-FIN-6011') RETURNING l_month
+   #LET g_inba_m.xccw004 = l_year
+   #LET g_inba_m.xccw005 = l_month
+   CALL axct312_03_head_default()
+   #dorislai-21051026-modify----(E)
+   IF p_xccw012 = '3' THEN
+      #CALL cl_set_comp_visible('inba007',FALSE)
+      CALL cl_set_comp_visible('inaj016',FALSE)
+      CALL cl_set_comp_visible('lbl_inba007',FALSE)  #160727-00039#1 add
+   ELSE
+      #CALL cl_set_comp_visible('inba007',TRUE)
+      CALL cl_set_comp_visible('inaj016',TRUE)
+      CALL cl_set_comp_visible('lbl_inba007',TRUE)  #160727-00039#1 add
+   END IF
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_inba_m.xccwld,g_inba_m.xccwcomp,g_inba_m.xccw003,g_inba_m.xcat003,g_inba_m.xccw004, 
+          g_inba_m.xccw005 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            #dorislai-20151026-mark----(S)
+            #已移入axct312_03_head_default()裡
+            #IF l_month = 1 THEN
+            #   LET g_xccw_m.yy = l_year - 1
+            #   LET g_xccw_m.mm = 12
+            #ELSE
+            #   LET g_xccw_m.yy = l_year
+            #   LET g_xccw_m.mm = l_month - 1
+            #END IF
+            #DISPLAY g_xccw_m.yy TO yy
+            #DISPLAY g_xccw_m.mm TO mm
+            #dorislai-20151026-mark----(E)
+            LET g_inba_m_o.* = g_inba_m.*  #160829-00005#1
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccwld
+            
+            #add-point:AFTER FIELD xccwld name="input.a.xccwld"
+            LET g_inba_m.xccwld_desc = ''
+            IF NOT cl_null(g_inba_m.xccwld) THEN
+               IF g_inba_m.xccwld != g_inba_m_o.xccwld OR cl_null(g_inba_m_o.xccwld) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_inba_m.xccwld
+                  #160318-00025#12--add--str
+                  LET g_errshow = TRUE
+                  LET g_chkparam.err_str[1] = "agl-00051:sub-01302|agli010|",cl_get_progname("agli010",g_lang,"2"),"|:EXEPROGagli010"
+                  #160318-00025#12--add--end
+                  IF cl_chk_exist("v_glaald") THEN
+                     #檢查成功時後續處理
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_inba_m.xccwld = g_inba_m_o.xccwld
+                     CALL axct312_03_get_glaal002(g_inba_m.xccwld) RETURNING g_inba_m.xccwld_desc
+                     DISPLAY BY NAME g_inba_m.xccwld,g_inba_m.xccwld_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL axct312_03_xccwld_default()
+               END IF
+            END IF
+            LET g_inba_m_o.xccwld = g_inba_m.xccwld
+            CALL axct312_03_get_glaal002(g_inba_m.xccwld) RETURNING g_inba_m.xccwld_desc
+            DISPLAY BY NAME g_inba_m.xccwld_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccwld
+            #add-point:BEFORE FIELD xccwld name="input.b.xccwld"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccwld
+            #add-point:ON CHANGE xccwld name="input.g.xccwld"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccwcomp
+            
+            #add-point:AFTER FIELD xccwcomp name="input.a.xccwcomp"
+            LET g_inba_m.xccwcomp_desc = ''
+            IF NOT cl_null(g_inba_m.xccwcomp) THEN
+               IF g_inba_m.xccwcomp != g_inba_m_o.xccwcomp OR cl_null(g_inba_m_o.xccwcomp) THEN
+                  CALL axct312_03_xccwcomp_default()
+               END IF
+            END IF
+            LET g_inba_m_o.xccwcomp = g_inba_m.xccwcomp
+            CALL axct312_03_get_ooefl003(g_inba_m.xccwcomp) RETURNING g_inba_m.xccwcomp_desc
+            DISPLAY BY NAME g_inba_m.xccwcomp_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccwcomp
+            #add-point:BEFORE FIELD xccwcomp name="input.b.xccwcomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccwcomp
+            #add-point:ON CHANGE xccwcomp name="input.g.xccwcomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccw003
+            
+            #add-point:AFTER FIELD xccw003 name="input.a.xccw003"
+            LET g_inba_m.xccw003_desc = ''
+            IF NOT cl_null(g_inba_m.xccw003) THEN
+               IF g_inba_m.xccw003 != g_inba_m_o.xccw003 OR cl_null(g_inba_m_o.xccw003) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_inba_m.xccw003
+                  #160318-00025#12--add--str
+                  LET g_errshow = TRUE
+                  LET g_chkparam.err_str[1] = "agl-00195:sub-01302|axci100|",cl_get_progname("axci100",g_lang,"2"),"|:EXEPROGaxci100"
+                  #160318-00025#12--add--end
+                  IF cl_chk_exist("v_xcat001") THEN
+                     #檢查成功時後續處理
+                     IF g_inba_m.xcat003 = '2' THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'axc-00229'
+                        LET g_errparam.extend = g_inba_m.xccw003
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_inba_m.xccw003 = g_inba_m_o.xccw003
+                        CALL axct312_03_get_xcatl003(g_inba_m.xccw003) RETURNING g_inba_m.xccw003_desc
+                        DISPLAY BY NAME g_inba_m.xccw003,g_inba_m.xccw003_desc
+                        NEXT FIELD CURRENT
+                    END IF
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_inba_m.xccw003 = g_inba_m_o.xccw003
+                     CALL axct312_03_get_xcatl003(g_inba_m.xccw003) RETURNING g_inba_m.xccw003_desc
+                     DISPLAY BY NAME g_inba_m.xccw003,g_inba_m.xccw003_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL axct312_03_xccw003_default()
+               END IF
+            END IF
+            LET g_inba_m_o.xccw003 = g_inba_m.xccw003
+            CALL axct312_03_get_xcatl003(g_inba_m.xccw003) RETURNING g_inba_m.xccw003_desc
+            DISPLAY BY NAME g_inba_m.xccw003_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccw003
+            #add-point:BEFORE FIELD xccw003 name="input.b.xccw003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccw003
+            #add-point:ON CHANGE xccw003 name="input.g.xccw003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcat003
+            #add-point:BEFORE FIELD xcat003 name="input.b.xcat003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcat003
+            
+            #add-point:AFTER FIELD xcat003 name="input.a.xcat003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcat003
+            #add-point:ON CHANGE xcat003 name="input.g.xcat003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccw004
+            #add-point:BEFORE FIELD xccw004 name="input.b.xccw004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccw004
+            
+            #add-point:AFTER FIELD xccw004 name="input.a.xccw004"
+            IF NOT cl_null(g_inba_m.xccw004) THEN
+               IF g_inba_m.xccw004 != g_inba_m_o.xccw004 OR cl_null(g_inba_m_o.xccw004) THEN
+                  CALL axct312_03_xccw005_default()
+               END IF
+            END IF
+            LET g_inba_m_o.xccw004 = g_inba_m.xccw004
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccw004
+            #add-point:ON CHANGE xccw004 name="input.g.xccw004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccw005
+            #add-point:BEFORE FIELD xccw005 name="input.b.xccw005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccw005
+            
+            #add-point:AFTER FIELD xccw005 name="input.a.xccw005"
+            IF NOT cl_null(g_inba_m.xccw005) THEN
+               IF g_inba_m.xccw005 != g_inba_m_o.xccw005 OR cl_null(g_inba_m_o.xccw005) THEN
+                  CALL axct312_03_xccw005_default()
+               END IF
+            END IF
+            LET g_inba_m_o.xccw005 = g_inba_m.xccw005
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccw005
+            #add-point:ON CHANGE xccw005 name="input.g.xccw005"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xccwld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccwld
+            #add-point:ON ACTION controlp INFIELD xccwld name="input.c.xccwld"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_inba_m.xccwld  #給予default值
+            LET g_qryparam.arg1 = g_user               #給予arg
+            LET g_qryparam.arg2 = g_dept
+            CALL q_authorised_ld()                     #呼叫開窗
+            LET g_inba_m.xccwld = g_qryparam.return1              
+            DISPLAY g_inba_m.xccwld TO xccwld          #
+            CALL axct312_03_get_glaal002(g_inba_m.xccwld) RETURNING g_inba_m.xccwld_desc
+            DISPLAY BY NAME g_inba_m.xccwld_desc
+            NEXT FIELD xccwld                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xccwcomp
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccwcomp
+            #add-point:ON ACTION controlp INFIELD xccwcomp name="input.c.xccwcomp"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xccw003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccw003
+            #add-point:ON ACTION controlp INFIELD xccw003 name="input.c.xccw003"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_inba_m.xccw003  #給予default值
+            CALL q_xcat001()                            #呼叫開窗
+            LET g_inba_m.xccw003 = g_qryparam.return1              
+            DISPLAY g_inba_m.xccw003 TO xccw003         #
+            CALL axct312_03_get_xcatl003(g_inba_m.xccw003) RETURNING g_inba_m.xccw003_desc
+            DISPLAY BY NAME g_inba_m.xccw003_desc
+            NEXT FIELD xccw003                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcat003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcat003
+            #add-point:ON ACTION controlp INFIELD xcat003 name="input.c.xcat003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xccw004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccw004
+            #add-point:ON ACTION controlp INFIELD xccw004 name="input.c.xccw004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xccw005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccw005
+            #add-point:ON ACTION controlp INFIELD xccw005 name="input.c.xccw005"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            #dorislai-20151026-modify----(S)
+            #LET l_year =g_inba_m.xccw004
+            #LET l_month=g_inba_m.xccw005
+            #IF l_month = 1 THEN
+            #   LET g_xccw_m.yy = l_year - 1
+            #   LET g_xccw_m.mm = 12
+            #ELSE
+            #   LET g_xccw_m.yy = l_year
+            #   LET g_xccw_m.mm = l_month - 1
+            #END IF
+            #DISPLAY g_xccw_m.yy TO yy
+            #DISPLAY g_xccw_m.mm TO mm
+            #LET g_xccw_m.ld = g_inba_m.xccwld
+            #LET g_xccw_m.comp = g_inba_m.xccwcomp
+            #dorislai-20151026-modify----(E)
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      CONSTRUCT BY NAME g_wc ON inaj001,inaj005,inaj016,inaj017  #dorislai-20151012-add ,inaj017
+         BEFORE CONSTRUCT
+         
+         ON ACTION controlp INFIELD inaj001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #140912
+            IF p_xccw012 = '1' OR p_xccw012 = '2' OR p_xccw012 = '3' THEN 
+               LET g_qryparam.where = "       TO_CHAR(inaj022,'YYYY') = ",g_inba_m.xccw004,
+                                      "   AND TO_CHAR(inaj022,'MM') = ",g_inba_m.xccw005,
+                                      "   AND inajsite IN (SELECT ooef001 FROM ooef_t ",
+                                      " WHERE ooefent = ",g_enterprise,
+                                      "   AND ooef017 = '",g_inba_m.xccwcomp,"')"
+            END IF
+            CASE p_xccw012
+               WHEN '1'
+                  LET g_qryparam.arg1 = '101'
+               WHEN '2'
+                  LET g_qryparam.arg1 = '301'
+               WHEN '3'
+                  LET g_qryparam.arg1 = '115'
+               WHEN '5'
+                  LET g_qryparam.arg1 = '401'
+            END CASE
+            LET g_qryparam.arg2 = g_inba_m.xccwcomp
+            CALL q_inaj001_1()
+            DISPLAY g_qryparam.return1 TO inaj001  #顯示到畫面上
+            NEXT FIELD inaj001                     #返回原欄位
+         
+         ON ACTION controlp INFIELD inaj005
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj005  #顯示到畫面上
+            NEXT FIELD inaj005                     #返回原欄位
+         
+         ON ACTION controlp INFIELD inaj016
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '216'
+            CALL q_oocq002()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj016
+            NEXT FIELD inaj016                     #返回原欄位
+         
+         #dorislai-20151012-add---(S)
+         ON ACTION controlp INFIELD inaj017
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_today
+            CALL q_ooeg001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj017
+            NEXT FIELD inaj017                     #返回原欄位
+         #dorislai-20151012-add---(E)
+         
+      END CONSTRUCT
+      
+     #INPUT BY NAME g_xccw_m.comp,g_xccw_m.ld,g_xccw_m.type,g_xccw_m.order,g_xccw_m.yy,g_xccw_m.mm
+      INPUT BY NAME g_xccw_m.comp,g_xccw_m.ld,g_xccw_m.type,g_xccw_m.yy,g_xccw_m.mm
+                    ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            LET g_xccw_m_o.* = g_xccw_m.*  #160829-00005#1
+         
+         #----<<comp>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD comp
+            
+            #add-point:AFTER FIELD comp
+            LET g_xccw_m.comp_desc = ''
+            IF NOT cl_null(g_xccw_m.comp) THEN
+               IF g_xccw_m.comp != g_xccw_m_o.comp OR cl_null(g_xccw_m_o.comp) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xccw_m.comp
+                  #160318-00025#12--add--str
+                  LET g_errshow = TRUE
+                  LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+                  #160318-00025#12--add--end
+                  IF cl_chk_exist("v_ooef001") THEN
+                     #檢查成功時後續處理
+                     LET l_ooef003 = ''
+                     SELECT ooef003 INTO l_ooef003
+                       FROM ooef_t
+                      WHERE ooefent = g_enterprise
+                        AND ooef001 = g_xccw_m.comp
+                     IF l_ooef003 = 'N' THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'anm-00037'
+                        LET g_errparam.extend = g_xccw_m.comp
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_xccw_m.comp = g_xccw_m_o.comp
+                        CALL axct312_03_get_ooefl003(g_xccw_m.comp) RETURNING g_xccw_m.comp_desc
+                        DISPLAY BY NAME g_xccw_m.comp,g_xccw_m.comp_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_xccw_m.comp = g_xccw_m_o.comp
+                     CALL axct312_03_get_ooefl003(g_xccw_m.comp) RETURNING g_xccw_m.comp_desc
+                     DISPLAY BY NAME g_xccw_m.comp,g_xccw_m.comp_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_xccw_m_o.comp = g_xccw_m.comp
+            CALL axct312_03_get_ooefl003(g_xccw_m.comp) RETURNING g_xccw_m.comp_desc
+            DISPLAY BY NAME g_xccw_m.comp_desc
+            #END add-point
+            
+         #----<<ld>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD ld
+            
+            #add-point:AFTER FIELD ld
+            LET g_xccw_m.ld_desc = ''
+            IF NOT cl_null(g_xccw_m.ld) THEN
+               IF g_xccw_m.ld != g_xccw_m_o.ld OR cl_null(g_xccw_m_o.ld) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xccw_m.ld
+                  #160318-00025#12--add--str
+                  LET g_errshow = TRUE
+                  LET g_chkparam.err_str[1] = "agl-00051:sub-01302|agli010|",cl_get_progname("agli010",g_lang,"2"),"|:EXEPROGagli010"
+                  #160318-00025#12--add--end
+                  IF cl_chk_exist("v_glaald") THEN
+                     #檢查成功時後續處理
+                     CALL s_ld_chk_authorization(g_user,g_xccw_m.ld) RETURNING l_success
+                     IF l_success = FALSE THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'axr-00022'
+                        LET g_errparam.extend = g_xccw_m.ld
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_xccw_m.ld = g_xccw_m_o.ld
+                        CALL axct312_03_get_glaal002(g_xccw_m.ld) RETURNING g_xccw_m.ld_desc
+                        DISPLAY BY NAME g_xccw_m.ld,g_xccw_m.ld_desc
+                        NEXT FIELD CURRENT
+                     END IF 
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_xccw_m.ld = g_xccw_m_o.ld
+                     CALL axct312_03_get_glaal002(g_xccw_m.ld) RETURNING g_xccw_m.ld_desc
+                     DISPLAY BY NAME g_xccw_m.ld,g_xccw_m.ld_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_xccw_m_o.ld = g_xccw_m.ld
+            CALL axct312_03_get_glaal002(g_xccw_m.ld) RETURNING g_xccw_m.ld_desc
+            DISPLAY BY NAME g_xccw_m.ld_desc
+            #END add-point
+            
+         #----<<type>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD type
+            
+            #add-point:AFTER FIELD type
+            LET g_xccw_m.type_desc = ''
+            IF NOT cl_null(g_xccw_m.type) THEN 
+               IF g_xccw_m.type != g_xccw_m_o.type OR cl_null(g_xccw_m_o.type) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xccw_m.type
+                  #160318-00025#12--add--str
+                  LET g_errshow = TRUE
+                  LET g_chkparam.err_str[1] = "agl-00195:sub-01302|axci100|",cl_get_progname("axci100",g_lang,"2"),"|:EXEPROGaxci100"
+                  #160318-00025#12--add--end   
+                  IF cl_chk_exist("v_xcat001") THEN
+                     #檢查成功時後續處理
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_xccw_m.type = g_xccw_m_o.type
+                     CALL axct312_03_get_xcatl003(g_xccw_m.type) RETURNING g_xccw_m.type_desc
+                     DISPLAY BY NAME g_xccw_m.type,g_xccw_m.type_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_xccw_m_o.type = g_xccw_m.type
+            CALL axct312_03_get_xcatl003(g_xccw_m.type) RETURNING g_xccw_m.type_desc
+            DISPLAY BY NAME g_xccw_m.type_desc
+            #END add-point
+            
+         #----<<comp>>----
+         #Ctrlp:input.c.comp
+         ON ACTION controlp INFIELD comp
+            #add-point:ON ACTION controlp INFIELD comp
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xccw_m.comp       #給予default值
+            LET g_qryparam.default2 = g_xccw_m.comp_desc  #說明(簡稱)
+            LET g_qryparam.where = " ooef003 = 'Y' "
+            CALL q_ooef001()                              #呼叫開窗
+            LET g_xccw_m.comp = g_qryparam.return1
+            LET g_xccw_m.comp_desc = g_qryparam.return2
+            DISPLAY g_xccw_m.comp TO comp                 #
+            DISPLAY g_xccw_m.comp_desc TO comp_desc       #說明(簡稱)
+            NEXT FIELD comp                               #返回原欄位
+            #END add-point
+            
+         #----<<ld>>----
+         #Ctrlp:input.c.ld
+         ON ACTION controlp INFIELD ld
+            #add-point:ON ACTION controlp INFIELD ld
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xccw_m.ld         #給予default值
+            LET g_qryparam.arg1 = g_user                  #給予arg
+            LET g_qryparam.arg2 = g_dept
+            CALL q_authorised_ld()                        #呼叫開窗
+            LET g_xccw_m.ld = g_qryparam.return1
+            DISPLAY g_xccw_m.ld TO ld
+            CALL axct312_03_get_glaal002(g_xccw_m.ld) RETURNING g_xccw_m.ld_desc
+            DISPLAY BY NAME g_xccw_m.ld_desc
+            NEXT FIELD ld                                 #返回原欄位
+            #END add-point
+            
+         #----<<type>>----
+         #Ctrlp:input.c.type
+         ON ACTION controlp INFIELD type
+            #add-point:ON ACTION controlp INFIELD type
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xccw_m.type       #給予default值
+            CALL q_xcat001()                              #呼叫開窗
+            LET g_xccw_m.type = g_qryparam.return1
+            DISPLAY g_xccw_m.type TO type
+            CALL axct312_03_get_xcatl003(g_xccw_m.type) RETURNING g_xccw_m.type_desc
+            DISPLAY BY NAME g_xccw_m.type_desc
+            NEXT FIELD type                               #返回原欄位
+            #END add-point
+         
+      END INPUT
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   IF INT_FLAG THEN
+      LET INT_FLAG = TRUE 
+   ELSE
+      CALL axct312_03_xccw_ins(p_xccw012)
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axct312_03 
+   
+   #add-point:input段after input name="input.post_input"
+     
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axct312_03.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axct312_03.other_function" readonly="Y" >}
+# 插入xcck_t
+PRIVATE FUNCTION axct312_03_xccw_ins(p_xccw012)
+DEFINE p_xccw012     LIKE xccw_t.xccw012
+DEFINE l_n           LIKE type_t.num5
+#dorislai-20151012-add----(S)
+DEFINE l_wc1         STRING
+DEFINE l_wc2         STRING
+DEFINE l_n1          LIKE type_t.num5
+DEFINE l_n2          LIKE type_t.num5
+#dorislai-20151012-add----(E)
+DEFINE l_tot_success LIKE type_t.num5
+DEFINE l_count       LIKE type_t.num5
+DEFINE l_glaa  RECORD
+    glaa001    LIKE glaa_t.glaa001,
+    glaa003    LIKE glaa_t.glaa003,
+    glaa015    LIKE glaa_t.glaa015,
+    glaa016    LIKE glaa_t.glaa016,
+    glaa017    LIKE glaa_t.glaa017,
+    glaa018    LIKE glaa_t.glaa018,
+    glaa019    LIKE glaa_t.glaa019,
+    glaa020    LIKE glaa_t.glaa020,
+    glaa021    LIKE glaa_t.glaa021,
+    glaa022    LIKE glaa_t.glaa022,
+    glaa025    LIKE glaa_t.glaa025,
+    glaa026    LIKE glaa_t.glaa026
+           END RECORD
+DEFINE l_para_1      LIKE type_t.chr1     #采用成本域否
+DEFINE l_para_2      LIKE type_t.chr1     #成本域类型
+DEFINE l_inaj  RECORD
+    inajsite   LIKE inaj_t.inajsite,
+    inaj001    LIKE inaj_t.inaj001,
+    inaj002    LIKE inaj_t.inaj002,
+    inaj003    LIKE inaj_t.inaj003,
+    inaj004    LIKE inaj_t.inaj004,
+    inaj005    LIKE inaj_t.inaj005,
+    inaj006    LIKE inaj_t.inaj006,
+    inaj007    LIKE inaj_t.inaj007,
+    inaj008    LIKE inaj_t.inaj008,
+    inaj009    LIKE inaj_t.inaj009,
+    inaj010    LIKE inaj_t.inaj010,
+    inaj011    LIKE inaj_t.inaj011,
+    inaj012    LIKE inaj_t.inaj012,
+    inaj014    LIKE inaj_t.inaj014,
+    inaj015    LIKE inaj_t.inaj015,
+    inaj016    LIKE inaj_t.inaj016,
+    inaj017    LIKE inaj_t.inaj017,
+    inaj018    LIKE inaj_t.inaj018,
+    inaj020    LIKE inaj_t.inaj020,
+    inaj022    LIKE inaj_t.inaj022,
+    inaj024    LIKE inaj_t.inaj024,
+    inaj036    LIKE inaj_t.inaj036,
+    inaj037    LIKE inaj_t.inaj037,
+    inaj038    LIKE inaj_t.inaj038,
+    inaj039    LIKE inaj_t.inaj039,
+    inaj040    LIKE inaj_t.inaj040,
+    inaj041    LIKE inaj_t.inaj041,
+    inaj042    LIKE inaj_t.inaj042,
+    inaj043    LIKE inaj_t.inaj043,
+    inaj044    LIKE inaj_t.inaj044,
+    inaj203    LIKE inaj_t.inaj203
+           END RECORD
+DEFINE l_pmaa  RECORD
+    pmaa090    LIKE pmaa_t.pmaa090,
+    pmaa092    LIKE pmaa_t.pmaa092,
+    pmaa231    LIKE pmaa_t.pmaa231,
+    pmaa241    LIKE pmaa_t.pmaa241
+           END RECORD
+DEFINE l_imaa  RECORD
+    imaa006    LIKE imaa_t.imaa006,
+    imaa108    LIKE imaa_t.imaa108,
+    imaa126    LIKE imaa_t.imaa126
+           END RECORD
+DEFINE l_xccw  RECORD
+    xccwent    LIKE xccw_t.xccwent,
+    xccwsite   LIKE xccw_t.xccwsite,
+    xccwcomp   LIKE xccw_t.xccwcomp,
+    xccwld     LIKE xccw_t.xccwld,
+    xccw001    LIKE xccw_t.xccw001,
+    xccw002    LIKE xccw_t.xccw002,
+    xccw003    LIKE xccw_t.xccw003,
+    xccw004    LIKE xccw_t.xccw004,
+    xccw005    LIKE xccw_t.xccw005,
+    xccw006    LIKE xccw_t.xccw006,
+    xccw007    LIKE xccw_t.xccw007,
+    xccw008    LIKE xccw_t.xccw008,
+    xccw009    LIKE xccw_t.xccw009,
+    xccw010    LIKE xccw_t.xccw010,
+    xccw011    LIKE xccw_t.xccw011,
+    xccw012    LIKE xccw_t.xccw012,
+    xccw013    LIKE xccw_t.xccw013,
+    xccw014    LIKE xccw_t.xccw014,
+    xccw015    LIKE xccw_t.xccw015,
+    xccw016    LIKE xccw_t.xccw016,
+    xccw017    LIKE xccw_t.xccw017,
+    xccw020    LIKE xccw_t.xccw020,
+    xccw021    LIKE xccw_t.xccw021,
+    xccw022    LIKE xccw_t.xccw022,
+    xccw023    LIKE xccw_t.xccw023,
+    xccw024    LIKE xccw_t.xccw024,
+    xccw025    LIKE xccw_t.xccw025,
+    xccw026    LIKE xccw_t.xccw026,
+    xccw027    LIKE xccw_t.xccw027,
+    xccw028    LIKE xccw_t.xccw028,
+    xccw029    LIKE xccw_t.xccw029,
+    xccw030    LIKE xccw_t.xccw030,
+    xccw031    LIKE xccw_t.xccw031,
+    xccw032    LIKE xccw_t.xccw032,
+    xccw033    LIKE xccw_t.xccw033,
+    xccw034    LIKE xccw_t.xccw034,
+    xccw040    LIKE xccw_t.xccw040,
+    xccw041    LIKE xccw_t.xccw041,
+    xccw042    LIKE xccw_t.xccw042,
+    xccw043    LIKE xccw_t.xccw043,
+    xccw044    LIKE xccw_t.xccw044,
+    xccw045    LIKE xccw_t.xccw045,
+    xccw046    LIKE xccw_t.xccw046,
+    xccw047    LIKE xccw_t.xccw047,
+    xccw048    LIKE xccw_t.xccw048,
+    xccw049    LIKE xccw_t.xccw049,
+    xccw050    LIKE xccw_t.xccw050,
+    xccw051    LIKE xccw_t.xccw051,
+    xccw201    LIKE xccw_t.xccw201,
+    xccw202    LIKE xccw_t.xccw202,
+    xccw202a   LIKE xccw_t.xccw202a,
+    xccw202b   LIKE xccw_t.xccw202b,
+    xccw202c   LIKE xccw_t.xccw202c,
+    xccw202d   LIKE xccw_t.xccw202d,
+    xccw202e   LIKE xccw_t.xccw202e,
+    xccw202f   LIKE xccw_t.xccw202f,
+    xccw202g   LIKE xccw_t.xccw202g,
+    xccw202h   LIKE xccw_t.xccw202h,
+    xccw282    LIKE xccw_t.xccw282,
+    xccw282a   LIKE xccw_t.xccw282a,
+    xccw282b   LIKE xccw_t.xccw282b,
+    xccw282c   LIKE xccw_t.xccw282c,
+    xccw282d   LIKE xccw_t.xccw282d,
+    xccw282e   LIKE xccw_t.xccw282e,
+    xccw282f   LIKE xccw_t.xccw282f,
+    xccw282g   LIKE xccw_t.xccw282g,
+    xccw282h   LIKE xccw_t.xccw282h
+           END RECORD
+DEFINE l_inaj008     LIKE inaj_t.inaj008
+DEFINE l_xccw002     LIKE xccw_t.xccw002  #160823-00028#1
+DEFINE l_success     LIKE type_t.num5
+DEFINE l_dpt         LIKE inaj_t.inaj017  #fengmy150512
+DEFINE l_acc         LIKE gzcb_t.gzcb004  #fengmy150512
+DEFINE l_flag        LIKE type_t.chr1     #檢核狀態
+DEFINE l_errno       LIKE type_t.chr100   #錯誤訊息
+DEFINE l_glav002     LIKE glav_t.glav002  #會計年度
+DEFINE l_glav005     LIKE glav_t.glav005  #歸屬季別
+DEFINE l_sdate_s     LIKE glav_t.glav004  #當季起始日
+DEFINE l_sdate_e     LIKE glav_t.glav004  #當季截止日
+DEFINE l_glav006     LIKE glav_t.glav006  #歸屬期別
+DEFINE l_pdate_s     LIKE glav_t.glav004  #當期起始日
+DEFINE l_pdate_e     LIKE glav_t.glav004  #當期截止日
+DEFINE l_glav007     LIKE glav_t.glav007  #歸屬週別
+DEFINE l_wdate_s     LIKE glav_t.glav004  #當週起始日
+DEFINE l_wdate_e     LIKE glav_t.glav004  #當週截止日
+DEFINE l_xccc280     LIKE xccc_t.xccc280
+DEFINE l_xccc280a    LIKE xccc_t.xccc280a
+DEFINE l_xccc280b    LIKE xccc_t.xccc280b
+DEFINE l_xccc280c    LIKE xccc_t.xccc280c
+DEFINE l_xccc280d    LIKE xccc_t.xccc280d
+DEFINE l_xccc280e    LIKE xccc_t.xccc280e
+DEFINE l_xccc280f    LIKE xccc_t.xccc280f
+DEFINE l_xccc280g    LIKE xccc_t.xccc280g
+DEFINE l_xccc280h    LIKE xccc_t.xccc280h
+DEFINE l_xccc010     LIKE xccc_t.xccc010
+DEFINE l_exrate      LIKE xccw_t.xccw042
+DEFINE l_xccw_1  RECORD
+    xccw202    LIKE xccw_t.xccw202,
+    xccw202a   LIKE xccw_t.xccw202a,
+    xccw202b   LIKE xccw_t.xccw202b,
+    xccw202c   LIKE xccw_t.xccw202c,
+    xccw202d   LIKE xccw_t.xccw202d,
+    xccw202e   LIKE xccw_t.xccw202e,
+    xccw202f   LIKE xccw_t.xccw202f,
+    xccw202g   LIKE xccw_t.xccw202g,
+    xccw202h   LIKE xccw_t.xccw202h,
+    xccw282    LIKE xccw_t.xccw282,
+    xccw282a   LIKE xccw_t.xccw282a,
+    xccw282b   LIKE xccw_t.xccw282b,
+    xccw282c   LIKE xccw_t.xccw282c,
+    xccw282d   LIKE xccw_t.xccw282d,
+    xccw282e   LIKE xccw_t.xccw282e,
+    xccw282f   LIKE xccw_t.xccw282f,
+    xccw282g   LIKE xccw_t.xccw282g,
+    xccw282h   LIKE xccw_t.xccw282h
+           END RECORD
+DEFINE l_ooef014     LIKE ooef_t.ooef014  #160829-00005#1
+DEFINE l_str         STRING               #160829-00005#1
+#160829-00005#1-s
+DEFINE l_ooaj_1      type_ooaj
+DEFINE l_ooaj_2      type_ooaj
+DEFINE l_ooaj_3      type_ooaj
+#160829-00005#1-e
+
+#160912-00021#3-s
+DEFINE l_indd032     LIKE indd_t.indd032
+DEFINE l_indc006     LIKE indc_t.indc006
+#160912-00021#3-e
+
+   WHENEVER ERROR CONTINUE
+   
+   #庫存交易明細檔
+   LET g_sql = " SELECT inajsite,inaj001,inaj002,inaj003,inaj004,inaj005,inaj006,inaj007,inaj008,inaj009, ",
+               "        inaj010,inaj011,inaj012,inaj014,inaj015,inaj016,inaj017,inaj018,inaj020,inaj022, ",
+               "        inaj024,inaj036,inaj037,inaj038,inaj039,inaj040,inaj041,inaj042,inaj043,inaj044, ",
+               "        inaj203,pmaa090,pmaa092,pmaa231,pmaa241,imaa006,imaa108,imaa126 ",
+               "   FROM inaj_t ",
+               "   LEFT JOIN pmaa_t ON pmaaent=inajent AND pmaa001=inaj018 ",
+               "   LEFT JOIN imaa_t ON imaaent=inajent AND imaa001=inaj005 ",
+               "  WHERE inajent = ",g_enterprise,
+               "    AND TO_CHAR(inaj022,'YYYY') = ",g_inba_m.xccw004,
+               "    AND TO_CHAR(inaj022,'MM') = ",g_inba_m.xccw005,
+               "    AND EXISTS (SELECT 1 FROM ooef_t ",
+               "  WHERE ooefent = inajent ",
+               "    AND ooef001 = inajsite ",
+               "    AND ooef017 = '",g_inba_m.xccwcomp,"')",
+               "    AND ",g_wc
+   CASE p_xccw012
+      WHEN '1'  #雜收入庫
+         LET g_sql = g_sql," AND inaj036 = '101' "
+      WHEN '2'  #雜發出庫
+         LET g_sql = g_sql," AND inaj036 = '301' "
+      WHEN '3'  #當站下線
+         LET g_sql = g_sql," AND inaj036 = '115 "
+      WHEN '5'  #調撥
+         LET g_sql = g_sql," AND inaj036 = '401' "
+   END CASE
+   PREPARE xccw_pre FROM g_sql
+   DECLARE xccw_cur CURSOR FOR xccw_pre  
+   
+   LET g_wc = cl_replace_str(g_wc,"inaj001","xccw006")
+   LET g_wc = cl_replace_str(g_wc,"inaj005","xccw010")
+   LET g_wc = cl_replace_str(g_wc,"inaj016","xccw021")
+   LET g_sql = " SELECT COUNT(1) FROM xccw_t ",
+               #dorislai-20151012-add-(S)
+               "  INNER JOIN inaj_t ON inajent=xccwent AND inajsite=xccwsite",
+               "    AND inaj001=xccw006 AND inaj002=xccw007",
+               "    AND inaj003=xccw008 AND inaj004=xccw009",
+               #dorislai-20151012-add-(E)
+               "  WHERE xccwent = ",g_enterprise,
+               "    AND xccw004 = ",g_inba_m.xccw004,
+               "    AND xccw005 = ",g_inba_m.xccw005,
+               "    AND xccw003 = '",g_inba_m.xccw003,"' ",
+               "    AND EXISTS (SELECT 1 FROM ooef_t ",
+               "  WHERE ooefent = xccwent ",
+               "    AND ooef001 = xccwsite ",
+               "    AND ooef017 = '",g_inba_m.xccwcomp,"')",
+               "    AND ",g_wc
+   CASE p_xccw012
+      WHEN '1'  #雜收入庫
+         LET g_sql = g_sql," AND xccw012 = '1' "
+      WHEN '2'  #雜發出庫
+         LET g_sql = g_sql," AND xccw012 = '2' "
+      WHEN '3'  #當站下線
+         LET g_sql = g_sql," AND xccw012 = '3' "
+      WHEN '5'  #調撥
+         LET g_sql = g_sql," AND xccw012 = '5' "
+   END CASE
+   PREPARE xccw_count_pre FROM g_sql
+   DECLARE xccw_count_cur CURSOR FOR xccw_count_pre
+   LET l_n = 0
+   EXECUTE xccw_count_cur INTO l_n
+   
+   #已存在對應的xccw_t（本期料件明細進出），是否刪除後重新產生？ 
+   IF l_n > 0 THEN
+      IF cl_ask_confirm('axc-00389') THEN
+         #dorislai-20151012-add----(S)
+         #若有抓到inaj017，表示QBE有輸入值
+         LET l_n1 = g_wc.getIndexof("inaj017",1)
+         IF l_n1 <> 0 THEN
+            LET l_n2 = g_wc.getLength()
+            #EX:inaj001='a' AND inaj017='010'
+            #抓inaj017條件  EX:inaj017='010'
+            LET l_wc1 = g_wc.subString(l_n1,l_n2)
+            #抓inaj017前面的那些條件  EX:inaj001='a'
+            IF l_n1 <> 1 THEN
+               LET l_wc2 = g_wc.subString(1,l_n1-5)
+            END IF
+         END IF
+         #dorislai-20151012-add----(E)
+         LET g_sql = " DELETE FROM xccw_t ",
+                     "  WHERE xccwent = ",g_enterprise,
+                     "    AND xccw004 = ",g_inba_m.xccw004,
+                     "    AND xccw005 = ",g_inba_m.xccw005,
+                     "    AND xccw003 = '",g_inba_m.xccw003,"' ",
+                     "    AND EXISTS (SELECT 1 FROM ooef_t ",
+                     "  WHERE ooefent = xccwent ",
+                     "    AND ooef001 = xccwsite ",
+                     "    AND ooef017 = '",g_inba_m.xccwcomp,"')"
+         #dorislai-20151012-modify----(S)
+                    #"    AND ",g_wc
+         #沒下QBE、或下申請部門以外的條件，直接將條件串進去
+         IF cl_null(l_wc1) THEN
+            LET g_sql = g_sql,"    AND ",g_wc
+         ELSE
+            #QBE有下申請部門(inaj017)條件，以部門比對出ainq130，部門相符的單號
+            LET g_sql = g_sql,"    AND EXISTS (SELECT 1 FROM inaj_t ",
+                              "  WHERE inajent=xccwent AND inaj001=xccw006 ",
+                              "    AND inaj002=xccw007 AND inaj003=xccw008 ",
+                              "    AND inaj004=xccw009 AND ",l_wc1,")"
+            #QBE有下申請條件部門以外的條件，串入sql中
+            IF NOT cl_null(l_wc2) THEN
+               LET g_sql = g_sql," AND ",l_wc2
+            END IF
+         END IF
+         #dorislai-20151012-modify----(E)
+         CASE p_xccw012
+            WHEN '1'  #雜收入庫
+               LET g_sql = g_sql," AND xccw012 = '1' "
+            WHEN '2'  #雜發出庫
+               LET g_sql = g_sql," AND xccw012 = '2' "
+            WHEN '3'  #當站下線
+               LET g_sql = g_sql," AND xccw012 = '3' "
+            WHEN '5'  #調撥
+               LET g_sql = g_sql," AND xccw012 = '5' "
+         END CASE
+         PREPARE delete_xccw_pre FROM g_sql
+         EXECUTE delete_xccw_pre
+      ELSE
+         RETURN
+      END IF
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   CALL cl_err_collect_init()
+   LET g_coll_title[1]  = cl_getmsg('axc-00590',g_dlang)  #杂收单号
+  #LET g_coll_title[2]  = cl_getmsg('axm-00008',g_dlang)  #项次  #160318-00005#47 mark
+   LET g_coll_title[2]  = cl_getmsg('anm-00225',g_dlang)  #项次  #160318-00005#47 add
+   LET g_coll_title[3]  = cl_getmsg('axc-00550',g_dlang)  #项序
+  #LET g_coll_title[4]  = cl_getmsg('axc-00260',g_dlang)  #料件编号  #160318-00005#47 mark
+   LET g_coll_title[4]  = cl_getmsg('apm-00939',g_dlang)  #料件编号  #160318-00005#47 add
+   LET g_coll_title[5]  = cl_getmsg('adb-00384',g_dlang)  #品名
+   LET g_coll_title[6]  = cl_getmsg('adb-00385',g_dlang)  #规格
+  #LET g_coll_title[7]  = cl_getmsg('axc-00366',g_dlang)  #数量  #160318-00005#47 mark
+   LET g_coll_title[7]  = cl_getmsg('asf-00086',g_dlang)  #数量  #160318-00005#47 add
+   LET g_coll_title[8]  = cl_getmsg('axc-00663',g_dlang)  #单位
+   LET g_coll_title[9]  = cl_getmsg('axc-00680',g_dlang)  #仓库编号
+   LET g_coll_title[10] = cl_getmsg('axc-00681',g_dlang)  #仓库名称
+   LET g_coll_title[11] = cl_getmsg('axc-00728',g_dlang)  #原因碼  #150812-00010#3
+   
+   LET l_tot_success = TRUE
+   LET l_count = 0
+   
+   #帳套資料檔
+   INITIALIZE l_glaa.* TO NULL
+   SELECT glaa001,glaa003,glaa015,glaa016,glaa017,glaa018,glaa019,glaa020,glaa021,glaa022,glaa025,glaa026
+     INTO l_glaa.glaa001,l_glaa.glaa003,l_glaa.glaa015,l_glaa.glaa016,l_glaa.glaa017,l_glaa.glaa018,
+          l_glaa.glaa019,l_glaa.glaa020,l_glaa.glaa021,l_glaa.glaa022,l_glaa.glaa025,l_glaa.glaa026
+     FROM glaa_t 
+    WHERE glaaent = g_enterprise 
+      AND glaald = g_inba_m.xccwld
+   #160829-00005#1-s
+   #2.取币种设定档
+   LET g_sql = " SELECT ooaj003,ooaj004,ooaj005,ooaj006,ooaj007 ",
+               "  FROM ooaj_t ",
+               "    WHERE ooajent = ",g_enterprise,
+               "    AND ooaj001 = '",l_glaa.glaa026,"' ",
+               "    AND ooaj002 = ? "
+   PREPARE ooaj_pre FROM g_sql
+   DECLARE ooaj_cur CURSOR FOR ooaj_pre
+   INITIALIZE l_ooaj_1.* TO NULL
+   EXECUTE ooaj_cur USING l_glaa.glaa001
+      INTO l_ooaj_1.ooaj003,l_ooaj_1.ooaj004,l_ooaj_1.ooaj005,l_ooaj_1.ooaj006,l_ooaj_1.ooaj007
+   INITIALIZE l_ooaj_2.* TO NULL
+   EXECUTE ooaj_cur USING l_glaa.glaa016
+      INTO l_ooaj_2.ooaj003,l_ooaj_2.ooaj004,l_ooaj_2.ooaj005,l_ooaj_2.ooaj006,l_ooaj_2.ooaj007
+   INITIALIZE l_ooaj_3.* TO NULL
+   EXECUTE ooaj_cur USING l_glaa.glaa020
+      INTO l_ooaj_3.ooaj003,l_ooaj_3.ooaj004,l_ooaj_3.ooaj005,l_ooaj_3.ooaj006,l_ooaj_3.ooaj007
+    #3.取企业参数设置-金额舍入类型
+    LET g_round_type = cl_get_para(g_enterprise,'','E-COM-0006')
+    LET l_str = g_round_type
+    LET g_round_type = l_str.trim()
+   CALL s_get_accdate(l_glaa.glaa003,'',g_inba_m.xccw004,g_inba_m.xccw005)
+        RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e
+   #160829-00005#1-e
+   
+   LET l_para_1 = cl_get_para(g_enterprise,g_inba_m.xccwcomp,'S-FIN-6001')  #采用成本域否
+   LET l_para_2 = cl_get_para(g_enterprise,g_inba_m.xccwcomp,'S-FIN-6002')  #成本域类型
+   
+   #成本域編號
+   LET g_sql = " SELECT xcbf001 FROM xcbf_t ",
+               "  WHERE xcbfent = ",g_enterprise,
+               "    AND xcbfcomp = '",g_inba_m.xccwcomp,"' ",
+               "    AND xcbf002 = ? ",
+               "    AND xcbf003 = ? "
+   PREPARE xcbf001_pre FROM g_sql
+   DECLARE xcbf001_cur CURSOR FOR xcbf001_pre
+   
+   #庫位編號
+   LET g_sql = " SELECT inaj008 FROM inaj_t ",
+               "  WHERE inajent = ",g_enterprise,
+               "    AND inaj001 = ? ",
+               "    AND inaj002 = ? ",
+               "    AND inaj003 = ? ",
+               "    AND inaj004 = '-1' "
+   PREPARE inaj008_pre FROM g_sql
+   DECLARE inaj008_cur CURSOR FOR inaj008_pre
+   
+   LET g_sql = " INSERT INTO xccw_t ",
+               " (xccwent,xccwsite,xccwcomp,xccwld,xccw001,xccw002,xccw003,xccw004,xccw005,xccw006, ",
+               "  xccw007,xccw008,xccw009,xccw010,xccw011,xccw012,xccw013,xccw014,xccw015,xccw016, ",
+               "  xccw017,xccw020,xccw021,xccw022,xccw023,xccw024,xccw025,xccw026,xccw027,xccw028, ",
+               "  xccw029,xccw030,xccw031,xccw032,xccw033,xccw034,xccw040,xccw041,xccw042,xccw043, ",
+               "  xccw044,xccw045,xccw046,xccw047,xccw048,xccw049,xccw050,xccw051,xccw201,xccw202, ",
+               "  xccw202a,xccw202b,xccw202c,xccw202d,xccw202e,xccw202f,xccw202g,xccw202h,xccw282,xccw282a, ",
+               "  xccw282b,xccw282c,xccw282d,xccw282e,xccw282f,xccw282g,xccw282h) ",
+               " VALUES (?,?,?,?,?,?,?,?,?,?,  ?,?,?,?,?,?,?,?,?,?, ",
+                       " ?,?,?,?,?,?,?,?,?,?,  ?,?,?,?,?,?,?,?,?,?, ",
+                       " ?,?,?,?,?,?,?,?,?,?,  ?,?,?,?,?,?,?,?,?,?, ",
+                       " ?,?,?,?,?,?,?) "
+   PREPARE ins_xccw_pre FROM g_sql
+   
+   INITIALIZE l_inaj.* TO NULL
+   INITIALIZE l_pmaa.* TO NULL
+   INITIALIZE l_imaa.* TO NULL
+   FOREACH xccw_cur INTO l_inaj.inajsite,l_inaj.inaj001,l_inaj.inaj002,l_inaj.inaj003,l_inaj.inaj004,
+                         l_inaj.inaj005,l_inaj.inaj006,l_inaj.inaj007,l_inaj.inaj008,l_inaj.inaj009,
+                         l_inaj.inaj010,l_inaj.inaj011,l_inaj.inaj012,l_inaj.inaj014,l_inaj.inaj015,
+                         l_inaj.inaj016,l_inaj.inaj017,l_inaj.inaj018,l_inaj.inaj020,l_inaj.inaj022,
+                         l_inaj.inaj024,l_inaj.inaj036,l_inaj.inaj037,l_inaj.inaj038,l_inaj.inaj039,
+                         l_inaj.inaj040,l_inaj.inaj041,l_inaj.inaj042,l_inaj.inaj043,l_inaj.inaj044,
+                         l_inaj.inaj203,l_pmaa.pmaa090,l_pmaa.pmaa092,l_pmaa.pmaa231,l_pmaa.pmaa241,
+                         l_imaa.imaa006,l_imaa.imaa108,l_imaa.imaa126
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH xccw_cur:",SQLERRMESSAGE
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE l_xccw.* TO NULL
+      LET l_xccw.xccwent  = g_enterprise       #企業編號
+      LET l_xccw.xccwsite = l_inaj.inajsite    #site組織
+      LET l_xccw.xccwcomp = g_inba_m.xccwcomp  #法人組織
+      LET l_xccw.xccwld   = g_inba_m.xccwld    #帳套
+      LET l_xccw.xccw001  = '1'                #帳套本位幣順序
+      LET l_xccw.xccw003  = g_inba_m.xccw003   #成本計算類型
+      LET l_xccw.xccw004  = g_inba_m.xccw004   #年度
+      LET l_xccw.xccw005  = g_inba_m.xccw005   #期別
+      LET l_xccw.xccw006  = l_inaj.inaj001     #參考單號
+      LET l_xccw.xccw007  = l_inaj.inaj002     #項次
+      LET l_xccw.xccw008  = l_inaj.inaj003     #項序
+      LET l_xccw.xccw009  = l_inaj.inaj004     #出入庫碼
+      LET l_xccw.xccw010  = l_inaj.inaj005     #料號
+      LET l_xccw.xccw011  = l_inaj.inaj006     #特性
+      LET l_xccw.xccw012  = p_xccw012          #單據類型
+      LET l_xccw.xccw013  = l_inaj.inaj022     #單據日期
+      LET l_xccw.xccw014  = l_inaj.inaj024     #時間
+      LET l_xccw.xccw015  = l_inaj.inaj008     #倉庫編號
+      LET l_xccw.xccw016  = l_inaj.inaj009     #儲位編號
+      LET l_xccw.xccw017  = l_inaj.inaj010     #批號
+      LET l_xccw.xccw020  = l_inaj.inaj036     #異動類型
+      LET l_xccw.xccw021  = l_inaj.inaj016     #原因碼
+      LET l_xccw.xccw022  = l_inaj.inaj018     #交易對象
+      LET l_xccw.xccw023  = l_pmaa.pmaa090     #客群
+      LET l_xccw.xccw024  = l_pmaa.pmaa241     #區域
+      LET l_xccw.xccw025  = l_inaj.inaj037     #成本中心
+      LET l_xccw.xccw026  = l_pmaa.pmaa092     #經營類別
+      LET l_xccw.xccw027  = l_pmaa.pmaa231     #通路
+      LET l_xccw.xccw028  = l_imaa.imaa108     #品類
+      LET l_xccw.xccw029  = l_imaa.imaa126     #品牌
+      LET l_xccw.xccw030  = l_inaj.inaj038     #專案號
+      LET l_xccw.xccw031  = l_inaj.inaj039     #WBS
+      LET l_xccw.xccw032  = ' '                #存貨科目
+      LET l_xccw.xccw033  = ' '                #費用成本科目
+      LET l_xccw.xccw034  = ' '                #收入科目
+      LET l_xccw.xccw040  = l_inaj.inaj203     #交易幣別
+      LET l_xccw.xccw041  = l_glaa.glaa001     #本位幣別
+      LET l_xccw.xccw042  = 1                  #匯率
+      LET l_xccw.xccw043  = l_inaj.inaj012     #交易單位
+      LET l_xccw.xccw044  = l_imaa.imaa006     #成本單位  #160825-00023#1取料件的基礎單位
+      LET l_xccw.xccw045  = l_inaj.inaj014     #換算率  #fengmy150512 inaj029 -->inaj014
+      LET l_xccw.xccw046  = l_inaj.inaj011     #交易數量
+      LET l_xccw.xccw047  = l_inaj.inaj020     #在製單號(工單號/重複性編號)
+      #fengmy add 141219-----begin  table alter
+      LET l_xccw.xccw048  = l_inaj.inaj040     #重複性生產-計畫編號
+      LET l_xccw.xccw049  = l_inaj.inaj041     #重複性生產-生產料號
+      LET l_xccw.xccw050  = l_inaj.inaj042     #重複性生產-生產料號BOM特性
+      LET l_xccw.xccw051  = l_inaj.inaj043     #重複性生產-生產料號產品特徵
+      #fengmy add 141219-----end    table alter
+      LET l_xccw.xccw201  = l_xccw.xccw045 * l_xccw.xccw046  #本期異動數量
+      LET l_xccw.xccw202  = 0                  #本期異動金額
+      LET l_xccw.xccw202a = 0                  #本期異動金額-材料
+      LET l_xccw.xccw202b = 0                  #本期異動金額-人工
+      LET l_xccw.xccw202c = 0                  #本期異動金額-加工費
+      LET l_xccw.xccw202d = 0                  #本期異動金額-制費一
+      LET l_xccw.xccw202e = 0                  #本期異動金額-制費二
+      LET l_xccw.xccw202f = 0                  #本期異動金額-制費三
+      LET l_xccw.xccw202g = 0                  #本期異動金額-制費四
+      LET l_xccw.xccw202h = 0                  #本期異動金額-制費五
+      LET l_xccw.xccw282  = 0                  #本期異動單價
+      LET l_xccw.xccw282a = 0                  #本期異動單價-材料
+      LET l_xccw.xccw282b = 0                  #本期異動單價-人工
+      LET l_xccw.xccw282c = 0                  #本期異動單價-加工
+      LET l_xccw.xccw282d = 0                  #本期異動單價-制費一
+      LET l_xccw.xccw282e = 0                  #本期異動單價-制費二
+      LET l_xccw.xccw282f = 0                  #本期異動單價-制費三
+      LET l_xccw.xccw282g = 0                  #本期異動單價-制費四
+      LET l_xccw.xccw282h = 0                  #本期異動單價-制費五
+      #成本域
+      #160809-00045#1-s
+      #20160903 DSC.liquor add----------
+      IF l_inaj.inaj015 = 'aint350' THEN
+         SELECT indc001 INTO l_inaj.inaj044
+           FROM indc_t
+          WHERE indcdocno = l_inaj.inaj001
+            AND indcent = g_enterprise
+      END IF
+      #20160903 add end------------------
+      IF l_para_1 = 'Y' THEN  #采用成本域否
+         CASE l_para_2        #成本域类型
+            WHEN '1'  #組織型
+               #160912-00021#3-s
+               IF l_inaj.inaj011 < 0 AND l_inaj.inaj015 = 'aint330' THEN
+                  SELECT indc006 INTO l_indc006 FROM indc_t  #撥入據點
+                   WHERE indcent = g_enterprise
+                     AND indcdocno = l_inaj.inaj001
+                  EXECUTE xcbf001_cur USING l_indc006,'1' INTO l_xccw.xccw002
+               ELSE  
+               #160912-00021#3-e               
+                  EXECUTE xcbf001_cur USING l_inaj.inajsite,'1' INTO l_xccw.xccw002
+               END IF  #160912-00021#3  
+            WHEN '2'  #倉庫型
+               #160912-00021#3-s
+               IF l_inaj.inaj011 < 0 AND l_inaj.inaj015 = 'aint330' THEN
+                  SELECT indd032 INTO l_indd032 FROM indd_t
+                   WHERE inddent = g_enterprise
+                     AND indddocno = l_inaj.inaj001
+                     AND inddseq = l_inaj.inaj002
+                  EXECUTE xcbf001_cur USING l_indd032,'2' INTO l_xccw.xccw002   
+               ELSE  
+               #160912-00021#3-e                 
+                  EXECUTE xcbf001_cur USING l_inaj.inaj008,'2' INTO l_xccw.xccw002  #20160903 DSC.liquor
+               END IF #160912-00021#3 
+               #20160903 DSC.liquor mark 
+               #IF l_inaj.inaj015 = 'aint350' AND NOT cl_null(l_inaj.inaj044) THEN
+               #   LET l_inaj008 = ''
+               #   EXECUTE inaj008_cur USING l_inaj.inaj044,l_inaj.inaj002,l_inaj.inaj003 INTO l_inaj008
+               #   EXECUTE xcbf001_cur USING l_inaj008,'2' INTO l_xccw.xccw002
+               #ELSE
+               #   EXECUTE xcbf001_cur USING l_inaj.inaj008,'2' INTO l_xccw.xccw002
+               #END IF
+               #20160903 mark end
+            WHEN '3'  #庫存管理特徵
+               LET l_xccw.xccw002 = l_inaj.inaj007
+         END CASE
+      END IF
+      IF l_xccw.xccw002 IS NULL THEN
+         LET l_xccw.xccw002  = ' '
+      END IF
+      #160809-00045#1-e
+
+      #160823-00028#1-s
+      LET l_xccw002 = l_xccw.xccw002
+      LET l_inaj008 = ''
+      IF l_inaj.inaj015 = 'aint350' AND NOT cl_null(l_inaj.inaj044) THEN
+         EXECUTE inaj008_cur USING l_inaj.inaj044,l_inaj.inaj002,l_inaj.inaj003 INTO l_inaj008
+      END IF
+      IF l_inaj.inaj015 = 'aint330' AND l_inaj.inaj014 = '1' THEN
+         EXECUTE inaj008_cur USING l_inaj.inaj001,l_inaj.inaj002,l_inaj.inaj003 INTO l_inaj008
+      END IF
+      EXECUTE xcbf001_cur USING l_inaj008,'2' INTO l_xccw002
+      #160823-00028#1-e
+
+      #待分析#################################
+      #存貨科目(agli161)[140907 可能有些对应值为*]
+      CALL s_get_item_acc(g_inba_m.xccwld,'1',l_inaj.inaj005,'','',l_inaj.inajsite,l_inaj.inaj008)
+           RETURNING l_success,l_xccw.xccw032
+      #去site
+      IF cl_null(l_xccw.xccw032) THEN
+         CALL s_get_item_acc(g_inba_m.xccwld,'1',l_inaj.inaj005,'','','',l_inaj.inaj008)
+              RETURNING l_success,l_xccw.xccw032
+      END IF 
+      #去仓库
+      IF cl_null(l_xccw.xccw032) THEN
+         CALL s_get_item_acc(g_inba_m.xccwld,'1',l_inaj.inaj005,'','',l_inaj.inajsite,'')
+              RETURNING l_success,l_xccw.xccw032
+      END IF
+      #去料件
+      IF cl_null(l_xccw.xccw032) THEN
+         CALL s_get_item_acc(g_inba_m.xccwld,'1','','','',l_inaj.inajsite,l_inaj.inaj008)
+              RETURNING l_success,l_xccw.xccw032
+      END IF
+      #去site，去仓库
+      IF cl_null(l_xccw.xccw032) THEN
+         CALL s_get_item_acc(g_inba_m.xccwld,'1',l_inaj.inaj005,'','','','')
+              RETURNING l_success,l_xccw.xccw032
+      END IF
+      #去site，去料件
+      IF cl_null(l_xccw.xccw032) THEN
+         CALL s_get_item_acc(g_inba_m.xccwld,'1','','','','',l_inaj.inaj008)
+              RETURNING l_success,l_xccw.xccw032
+      END IF
+      #去仓库，去料件
+      IF cl_null(l_xccw.xccw032) THEN
+         CALL s_get_item_acc(g_inba_m.xccwld,'1','','','',l_inaj.inajsite,'')
+              RETURNING l_success,l_xccw.xccw032
+      END IF
+      #去料件，去site，去仓库         
+      #IF cl_null(l_xccw.xccw032) THEN
+      #   CALL s_get_item_acc(g_xccw_m.xccwld,'1','','','','','')
+      #        RETURNING l_success,l_xccw.xccw032
+      #END IF
+      #LET g_sql = " SELECT glcc002 ",
+      #            "   FROM glcc_t ",
+      #            "  WHERE glccent = ",g_enterprise,
+      #            "    AND glcc001 = '1' ",
+      #            "    AND (glcc016='",l_inaj.inaj005,"' OR glcc016 = '*' ) ",
+      #            "    AND (glcc014='",l_inaj.inajsite,"' OR glcc014 = '*') ",
+      #            "    AND (glcc015='",l_inaj.inaj008,"' OR glcc015 = '*') "
+      #PREPARE axct312_glcc002_pre FROM g_sql
+      #EXECUTE axct312_glcc002_pre INTO l_xccw.xccw032
+      ##費用科目（agli180
+      #CALL s_fin_get_account(g_inba_m.xccwld,'11','216',l_xccw.xccw021)  #fengmy150512
+      #     RETURNING l_success,l_xccw.xccw033,l_errno                    #fengmy150512
+      #fengmy150512----b
+      LET l_dpt = l_inaj.inaj017
+      CASE p_xccw012
+        #WHEN '1'  #雜收入庫
+        #WHEN '2'  #雜發出庫
+         WHEN '3'  #當站下線
+            LET l_acc = '1125'
+            IF cl_null(l_dpt) THEN
+               SELECT sfha003 INTO l_dpt FROM sfha_t 
+                WHERE sfhaent = g_enterprise AND sfhadocno = l_xccw.xccw006
+            END IF
+         WHEN '5'  #調撥
+            LET l_acc = '306'
+            IF cl_null(l_dpt) THEN
+               SELECT indc101 INTO l_dpt FROM indc_t 
+                WHERE indcent = g_enterprise AND indcdocno = l_xccw.xccw006
+               IF cl_null(l_dpt) THEN
+                SELECT inde101 INTO l_dpt FROM inde_t 
+                 WHERE indeent = g_enterprise AND indedocno = l_xccw.xccw006
+               END IF
+            END IF
+         OTHERWISE #p_xccw012 = '1' OR p_xccw012 = '2'
+            LET l_acc = '216'
+            IF cl_null(l_dpt) THEN
+               SELECT inba004 INTO l_dpt FROM inba_t 
+                WHERE inbaent = g_enterprise AND inbadocno = l_xccw.xccw006
+            END IF
+      END CASE
+      CALL s_fin_dept_reasons_with_ld_get_account(l_dpt,l_acc,l_xccw.xccw021,l_xccw.xccwld,'11',l_xccw.xccw013)
+           RETURNING l_success,l_xccw.xccw033,l_errno 
+      #fengmy150512----e
+
+      #160825-00023#1-s-mark  
+      ##成本單位取axci120
+      #SELECT xcbb005 INTO l_xccw.xccw044 FROM xcbb_t
+      # WHERE xcbbent  = g_enterprise
+      #   AND xcbbcomp = g_inba_m.xccwcomp
+      #   AND xcbb001  = g_inba_m.xccw004
+      #   AND xcbb002  = g_inba_m.xccw005
+      #   AND xcbb003  = l_xccw.xccw010
+      #160825-00023#1-e-mark
+      #根据料号和第三区指定的账套(tm.ld)、成本计算类型(tm.type)、本位币顺序(tm.order)和成本年度(tm.yy)、
+      #期别(tm.mm)到料件成本期统计档xccc_t中抓出该料号
+      #的成本单价(xccc281,xccc281a~xccc281h)和成本核算币别(xccc010)。根据本次核算的成本币别(xccw041)、
+      #年度(xccw004)、期别(xccw005)和取到的成本核算
+      #币别(xccc010)进行汇率换算，抓到转换汇率。按取到的成本单价(xccc281,xccc281a~xccc281h)*转换汇率得到所
+      #需的成本单价（xccw282，xccw282a~xccw282h       
+      LET l_xccc280  = 0
+      LET l_xccc280a = 0
+      LET l_xccc280b = 0
+      LET l_xccc280c = 0
+      LET l_xccc280d = 0
+      LET l_xccc280e = 0
+      LET l_xccc280f = 0
+      LET l_xccc280g = 0
+      LET l_xccc280h = 0
+      #20160907 DSC.liquor mod----------
+      IF p_xccw012 = '5' THEN
+         SELECT 
+         round((xccc102+xccc202+xccc204+xccc206+xccc208+xccc210+xccc212+xccc214+xccc216)/(xccc101+xccc201+xccc203+xccc205+xccc207+xccc209+xccc211+xccc213+xccc215),6) xccc280,
+         round( (xccc102a+xccc202a+xccc204a+xccc206a+xccc208a+xccc210a+xccc212a+xccc214a+xccc216a)/(xccc101+xccc201+xccc203+xccc205+xccc207+xccc209+xccc211+xccc213+xccc215),6) xccc280a,
+         round((xccc102b+xccc202b+xccc204b+xccc206b+xccc208b+xccc210b+xccc212b+xccc214b+xccc216b)/(xccc101+xccc201+xccc203+xccc205+xccc207+xccc209+xccc211+xccc213+xccc215),6) xccc280b,
+         round((xccc102c+xccc202c+xccc204c+xccc206c+xccc208c+xccc210c+xccc212c+xccc214c+xccc216c)/(xccc101+xccc201+xccc203+xccc205+xccc207+xccc209+xccc211+xccc213+xccc215),6) xccc280c,
+         round((xccc102d+xccc202d+xccc204d+xccc206d+xccc208d+xccc210d+xccc212d+xccc214d+xccc216d)/(xccc101+xccc201+xccc203+xccc205+xccc207+xccc209+xccc211+xccc213+xccc215),6) xccc280d,
+         round((xccc102e+xccc202e+xccc204e+xccc206e+xccc208e+xccc210e+xccc212e+xccc214e+xccc216e)/(xccc101+xccc201+xccc203+xccc205+xccc207+xccc209+xccc211+xccc213+xccc215),6) xccc280e,
+         round((xccc102f+xccc202f+xccc204f+xccc206f+xccc208f+xccc210f+xccc212f+xccc214f+xccc216f)/(xccc101+xccc201+xccc203+xccc205+xccc207+xccc209+xccc211+xccc213+xccc215),6) xccc280f,
+         round((xccc102g+xccc202g+xccc204g+xccc206g+xccc208g+xccc210g+xccc212g+xccc214g+xccc216g)/(xccc101+xccc201+xccc203+xccc205+xccc207+xccc209+xccc211+xccc213+xccc215),6) xccc280g,
+         round((xccc102h+xccc202h+xccc204h+xccc206h+xccc208h+xccc210h+xccc212h+xccc214h+xccc216h)/(xccc101+xccc201+xccc203+xccc205+xccc207+xccc209+xccc211+xccc213+xccc215),6) xccc280h,
+         xccc010
+           INTO l_xccc280,l_xccc280a,l_xccc280b,l_xccc280c,l_xccc280d,  l_xccc280e,l_xccc280f,l_xccc280g,l_xccc280h,l_xccc010
+           FROM xccc_t
+          WHERE xcccent = g_enterprise
+            AND xcccld = g_xccw_m.ld
+            AND xccc003 = g_xccw_m.type
+            AND xccc001 = '1'
+            AND xccc002 = l_xccw002 
+            AND xccc004 = g_xccw_m.yy
+            AND xccc005 = g_xccw_m.mm
+            AND xccc006 = l_inaj.inaj005  
+            AND xccc007 = l_inaj.inaj006   #fengmy150803 add   
+      IF l_xccc280 = 0 THEN
+         SELECT xccc280,xccc280a,xccc280b,xccc280c,xccc280d,xccc280e,xccc280f,xccc280g,xccc280h,xccc010
+           INTO l_xccc280,l_xccc280a,l_xccc280b,l_xccc280c,l_xccc280d,
+                l_xccc280e,l_xccc280f,l_xccc280g,l_xccc280h,l_xccc010
+           FROM xccc_t
+          WHERE xcccent = g_enterprise
+            AND xcccld  = g_xccw_m.ld
+            AND xccc001 = '1'
+            AND xccc002 = l_xccw002
+            AND xccc003 = g_xccw_m.type
+            AND xccc004 = g_xccw_m.yy
+            AND xccc005 = g_xccw_m.mm
+            AND xccc006 = l_inaj.inaj005
+            AND xccc007 = l_inaj.inaj006  
+            AND xccc008 = l_inaj.inaj010 
+       END IF
+     ELSE
+     #20160903 DSC.liquor add end----
+      SELECT xccc280,xccc280a,xccc280b,xccc280c,xccc280d,xccc280e,xccc280f,xccc280g,xccc280h,xccc010
+        INTO l_xccc280,l_xccc280a,l_xccc280b,l_xccc280c,l_xccc280d,
+             l_xccc280e,l_xccc280f,l_xccc280g,l_xccc280h,l_xccc010
+        FROM xccc_t
+       WHERE xcccent = g_enterprise
+         AND xcccld  = g_xccw_m.ld
+         AND xccc001 = '1'
+        #160823-00028#1-s
+        #AND xccc002 = l_xccw.xccw002  #160809-00045#1 add
+         AND xccc002 = l_xccw002
+        #160823-00028#1-e
+         AND xccc003 = g_xccw_m.type
+         AND xccc004 = g_xccw_m.yy
+         AND xccc005 = g_xccw_m.mm
+         AND xccc006 = l_inaj.inaj005
+         AND xccc007 = l_inaj.inaj006  #fengmy150803 add
+         AND xccc008 = l_inaj.inaj010  #160829-00005#1
+     END IF  #20160907 DSC.liquor add
+      #wujie 150806 --begin   #最优先抓杂收发单价
+      #系统参数[S-FIN-6004]:雜項發料的取價方式=2:人工 &杂发 or >杂收
+      IF (cl_get_para(g_enterprise,l_inaj.inajsite,'S-FIN-6004') = '2' AND l_inaj.inaj036 = '301') OR l_inaj.inaj036 = '101' THEN
+         SELECT inbc206,inbc206,0,0,0,0,0,0,0,
+                inbc207,inbc207,0,0,0,0,0,0,0
+           INTO l_xccw.xccw282,l_xccw.xccw282a,l_xccw.xccw282b,l_xccw.xccw282c,l_xccw.xccw282d,l_xccw.xccw282e,l_xccw.xccw282f,l_xccw.xccw282g,l_xccw.xccw282h,
+                l_xccw.xccw202,l_xccw.xccw202a,l_xccw.xccw202b,l_xccw.xccw202c,l_xccw.xccw202d,l_xccw.xccw202e,l_xccw.xccw202f,l_xccw.xccw202g,l_xccw.xccw202h
+           FROM inbc_t
+          WHERE inbcent   = g_enterprise
+            AND inbcdocno = l_inaj.inaj001
+            AND inbcseq   = l_inaj.inaj002
+            AND inbcseq1  = l_inaj.inaj003
+         IF l_xccc280 = 0 THEN
+            SELECT inbb207,inbb207,0,0,0,0,0,0,0,
+                   inbb208,inbb208,0,0,0,0,0,0,0
+              INTO l_xccw.xccw282,l_xccw.xccw282a,l_xccw.xccw282b,l_xccw.xccw282c,l_xccw.xccw282d,l_xccw.xccw282e,l_xccw.xccw282f,l_xccw.xccw282g,l_xccw.xccw282h,
+                   l_xccw.xccw202,l_xccw.xccw202a,l_xccw.xccw202b,l_xccw.xccw202c,l_xccw.xccw202d,l_xccw.xccw202e,l_xccw.xccw202f,l_xccw.xccw202g,l_xccw.xccw202h
+              FROM inbb_t
+             WHERE inbbent   = g_enterprise
+               AND inbbdocno = l_inaj.inaj001
+               AND inbbseq   = l_inaj.inaj002
+         END IF
+      END IF
+      #wujie 150806 --end
+      IF l_xccc280 <> 0 THEN
+         LET l_exrate = s_aooi160_get_exrate('2',g_inba_m.xccwld,l_pdate_s,l_xccc010,l_glaa.glaa001,0,l_glaa.glaa025)
+         LET l_xccw.xccw282a = l_xccc280a * l_exrate
+         LET l_xccw.xccw282b = l_xccc280b * l_exrate
+         LET l_xccw.xccw282c = l_xccc280c * l_exrate
+         LET l_xccw.xccw282d = l_xccc280d * l_exrate
+         LET l_xccw.xccw282e = l_xccc280e * l_exrate
+         LET l_xccw.xccw282f = l_xccc280f * l_exrate
+         LET l_xccw.xccw282g = l_xccc280g * l_exrate
+         LET l_xccw.xccw282h = l_xccc280h * l_exrate
+         LET l_xccw.xccw282  = l_xccw.xccw282a+l_xccw.xccw282b+l_xccw.xccw282c+l_xccw.xccw282d
+                              +l_xccw.xccw282e+l_xccw.xccw282f+l_xccw.xccw282g+l_xccw.xccw282h
+         LET l_xccw.xccw202a = l_xccw.xccw282a * l_xccw.xccw201
+         LET l_xccw.xccw202b = l_xccw.xccw282b * l_xccw.xccw201
+         LET l_xccw.xccw202c = l_xccw.xccw282c * l_xccw.xccw201
+         LET l_xccw.xccw202d = l_xccw.xccw282d * l_xccw.xccw201
+         LET l_xccw.xccw202e = l_xccw.xccw282e * l_xccw.xccw201
+         LET l_xccw.xccw202f = l_xccw.xccw282f * l_xccw.xccw201
+         LET l_xccw.xccw202g = l_xccw.xccw282g * l_xccw.xccw201
+         LET l_xccw.xccw202h = l_xccw.xccw282h * l_xccw.xccw201
+         LET l_xccw.xccw202  = l_xccw.xccw202a+l_xccw.xccw202b+l_xccw.xccw202c+l_xccw.xccw202d
+                              +l_xccw.xccw202e+l_xccw.xccw202f+l_xccw.xccw202g+l_xccw.xccw202h
+      ELSE  #add 150213 xccc抓不到抓xcca
+         SELECT xcca110,xcca110a,xcca110b,xcca110c,xcca110d,xcca110e,xcca110f,xcca110g,xcca110h
+           INTO l_xccc280,l_xccc280a,l_xccc280b,l_xccc280c,l_xccc280d,
+                l_xccc280e,l_xccc280f,l_xccc280g,l_xccc280h
+           FROM xcca_t
+          WHERE xccaent = g_enterprise
+            AND xccald  = g_xccw_m.ld     #账套
+            AND xcca003 = g_xccw_m.type   #成本计算类型
+            AND xcca001 = '1'             #账套本位币顺序
+            AND xcca004 = g_xccw_m.yy     #年度
+            AND xcca005 = g_xccw_m.mm     #期别
+            AND xcca006 = l_inaj.inaj005  #料号
+            AND xcca007 = l_inaj.inaj006  #特性  #fengmy150803 add
+            AND xcca002 = l_xccw002       #成本域  #160829-00005#1
+            AND xcca008 = l_inaj.inaj010  #批号    #160829-00005#1
+         LET l_xccw.xccw282a = l_xccc280a
+         LET l_xccw.xccw282b = l_xccc280b
+         LET l_xccw.xccw282c = l_xccc280c
+         LET l_xccw.xccw282d = l_xccc280d
+         LET l_xccw.xccw282e = l_xccc280e
+         LET l_xccw.xccw282f = l_xccc280f
+         LET l_xccw.xccw282g = l_xccc280g
+         LET l_xccw.xccw282h = l_xccc280h
+         LET l_xccw.xccw282  = l_xccw.xccw282a+l_xccw.xccw282b+l_xccw.xccw282c+l_xccw.xccw282d
+                              +l_xccw.xccw282e+l_xccw.xccw282f+l_xccw.xccw282g+l_xccw.xccw282h
+         LET l_xccw.xccw202a = l_xccw.xccw282a * l_xccw.xccw201
+         LET l_xccw.xccw202b = l_xccw.xccw282b * l_xccw.xccw201
+         LET l_xccw.xccw202c = l_xccw.xccw282c * l_xccw.xccw201
+         LET l_xccw.xccw202d = l_xccw.xccw282d * l_xccw.xccw201
+         LET l_xccw.xccw202e = l_xccw.xccw282e * l_xccw.xccw201
+         LET l_xccw.xccw202f = l_xccw.xccw282f * l_xccw.xccw201
+         LET l_xccw.xccw202g = l_xccw.xccw282g * l_xccw.xccw201
+         LET l_xccw.xccw202h = l_xccw.xccw282h * l_xccw.xccw201
+         LET l_xccw.xccw202  = l_xccw.xccw202a+l_xccw.xccw202b+l_xccw.xccw202c+l_xccw.xccw202d
+                              +l_xccw.xccw202e+l_xccw.xccw202f+l_xccw.xccw202g+l_xccw.xccw202h
+      #add 150213 end
+      END IF
+      #截位
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw282a,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282a
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw282b,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282b
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw282c,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282c
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw282d,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282d
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw282e,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282e
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw282f,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282f
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw282g,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282g
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw282h,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282h
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw282,4)  RETURNING g_sub_success,g_errno,l_xccw.xccw282
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw202a,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202a
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw202b,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202b
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw202c,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202c
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw202d,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202d
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw202e,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202e
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw202f,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202f
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw202g,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202g
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw202h,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202h
+      CALL axct312_03_s_curr_round_ld(l_ooaj_1.*,l_xccw.xccw202,5)  RETURNING g_sub_success,g_errno,l_xccw.xccw202
+      IF cl_null(l_xccw.xccw002)  THEN LET l_xccw.xccw002  = ' ' END IF
+      IF cl_null(l_xccw.xccw201)  THEN LET l_xccw.xccw201  = 0 END IF
+      IF cl_null(l_xccw.xccw282a) THEN LET l_xccw.xccw282a = 0 END IF
+      IF cl_null(l_xccw.xccw282b) THEN LET l_xccw.xccw282b = 0 END IF
+      IF cl_null(l_xccw.xccw282c) THEN LET l_xccw.xccw282c = 0 END IF
+      IF cl_null(l_xccw.xccw282d) THEN LET l_xccw.xccw282d = 0 END IF
+      IF cl_null(l_xccw.xccw282e) THEN LET l_xccw.xccw282e = 0 END IF
+      IF cl_null(l_xccw.xccw282f) THEN LET l_xccw.xccw282f = 0 END IF
+      IF cl_null(l_xccw.xccw282g) THEN LET l_xccw.xccw282g = 0 END IF
+      IF cl_null(l_xccw.xccw282h) THEN LET l_xccw.xccw282h = 0 END IF
+      IF cl_null(l_xccw.xccw282)  THEN LET l_xccw.xccw282  = 0 END IF
+      IF cl_null(l_xccw.xccw202a) THEN LET l_xccw.xccw202a = 0 END IF
+      IF cl_null(l_xccw.xccw202b) THEN LET l_xccw.xccw202b = 0 END IF
+      IF cl_null(l_xccw.xccw202c) THEN LET l_xccw.xccw202c = 0 END IF
+      IF cl_null(l_xccw.xccw202d) THEN LET l_xccw.xccw202d = 0 END IF
+      IF cl_null(l_xccw.xccw202e) THEN LET l_xccw.xccw202e = 0 END IF
+      IF cl_null(l_xccw.xccw202f) THEN LET l_xccw.xccw202f = 0 END IF
+      IF cl_null(l_xccw.xccw202g) THEN LET l_xccw.xccw202g = 0 END IF
+      IF cl_null(l_xccw.xccw202h) THEN LET l_xccw.xccw202h = 0 END IF
+      IF cl_null(l_xccw.xccw202)  THEN LET l_xccw.xccw202  = 0 END IF
+      #存值
+      LET l_xccw_1.xccw282a = l_xccw.xccw282a
+      LET l_xccw_1.xccw282b = l_xccw.xccw282b
+      LET l_xccw_1.xccw282c = l_xccw.xccw282c
+      LET l_xccw_1.xccw282d = l_xccw.xccw282d
+      LET l_xccw_1.xccw282e = l_xccw.xccw282e
+      LET l_xccw_1.xccw282f = l_xccw.xccw282f
+      LET l_xccw_1.xccw282g = l_xccw.xccw282g
+      LET l_xccw_1.xccw282h = l_xccw.xccw282h
+      LET l_xccw_1.xccw282 =  l_xccw.xccw282
+      LET l_xccw_1.xccw202a = l_xccw.xccw202a
+      LET l_xccw_1.xccw202b = l_xccw.xccw202b
+      LET l_xccw_1.xccw202c = l_xccw.xccw202c
+      LET l_xccw_1.xccw202d = l_xccw.xccw202d
+      LET l_xccw_1.xccw202e = l_xccw.xccw202e
+      LET l_xccw_1.xccw202f = l_xccw.xccw202f
+      LET l_xccw_1.xccw202g = l_xccw.xccw202g
+      LET l_xccw_1.xccw202h = l_xccw.xccw202h
+      LET l_xccw_1.xccw202 =  l_xccw.xccw202
+
+      #记录单价取不到的资料  来源单号、项次、项序、料号、品名、规格、数量、单位
+      IF l_xccw_1.xccw282 = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'axc-00662'
+         LET g_errparam.coll_vals[1] = l_xccw.xccw006    #杂收单号
+         LET g_errparam.coll_vals[2] = l_xccw.xccw007    #项次
+         LET g_errparam.coll_vals[3] = l_xccw.xccw008    #项序
+         LET g_errparam.coll_vals[4] = l_xccw.xccw010    #料件编号
+         CALL s_desc_get_item_desc(l_xccw.xccw010) RETURNING g_errparam.coll_vals[5],g_errparam.coll_vals[6]  #品名规格
+         LET g_errparam.coll_vals[7] = l_xccw.xccw201    #数量
+         LET g_errparam.coll_vals[8] = l_xccw.xccw044    #单位
+         LET g_errparam.coll_vals[9] = l_xccw.xccw015    #仓库
+         CALL s_desc_get_stock_desc(g_inba_m.xccwcomp,l_xccw.xccw015) RETURNING g_errparam.coll_vals[10]  #仓库名称
+         LET g_errparam.coll_vals[11] = l_xccw.xccw021   #原因碼  #150812-00010#3
+         CALL cl_err()
+      END IF
+      
+      EXECUTE ins_xccw_pre
+        USING l_xccw.xccwent,l_xccw.xccwsite,l_xccw.xccwcomp,l_xccw.xccwld,l_xccw.xccw001,
+              l_xccw.xccw002,l_xccw.xccw003,l_xccw.xccw004,l_xccw.xccw005,l_xccw.xccw006,
+              l_xccw.xccw007,l_xccw.xccw008,l_xccw.xccw009,l_xccw.xccw010,l_xccw.xccw011,
+              l_xccw.xccw012,l_xccw.xccw013,l_xccw.xccw014,l_xccw.xccw015,l_xccw.xccw016,
+              l_xccw.xccw017,l_xccw.xccw020,l_xccw.xccw021,l_xccw.xccw022,l_xccw.xccw023,
+              l_xccw.xccw024,l_xccw.xccw025,l_xccw.xccw026,l_xccw.xccw027,l_xccw.xccw028,
+              l_xccw.xccw029,l_xccw.xccw030,l_xccw.xccw031,l_xccw.xccw032,l_xccw.xccw033,
+              l_xccw.xccw034,l_xccw.xccw040,l_xccw.xccw041,l_xccw.xccw042,l_xccw.xccw043,
+              l_xccw.xccw044,l_xccw.xccw045,l_xccw.xccw046,l_xccw.xccw047,l_xccw.xccw048,
+              l_xccw.xccw049,l_xccw.xccw050,l_xccw.xccw051,l_xccw.xccw201,l_xccw.xccw202,
+              l_xccw.xccw202a,l_xccw.xccw202b,l_xccw.xccw202c,l_xccw.xccw202d,l_xccw.xccw202e,
+              l_xccw.xccw202f,l_xccw.xccw202g,l_xccw.xccw202h,l_xccw.xccw282,l_xccw.xccw282a,
+              l_xccw.xccw282b,l_xccw.xccw282c,l_xccw.xccw282d,l_xccw.xccw282e,l_xccw.xccw282f,
+              l_xccw.xccw282g,l_xccw.xccw282h
+      IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] =0 THEN
+         INITIALIZE g_errparam TO NULL
+         IF SQLCA.sqlerrd[3] = 0 THEN  #更新不到的處理
+            LET g_errparam.code = "std-00009"
+         END IF
+         LET g_errparam.extend = "INSERT xccw_t",SQLERRMESSAGE
+         LET g_errparam.popup = TRUE
+         LET g_errparam.coll_vals[1] = l_xccw.xccw006
+         LET g_errparam.coll_vals[2] = l_xccw.xccw001
+         LET g_errparam.coll_vals[3] = l_xccw.xccw007
+         LET g_errparam.coll_vals[4] = l_xccw.xccw008
+         LET g_errparam.coll_vals[5] = l_xccw.xccw010
+         LET g_errparam.coll_vals[6] = l_xccw.xccw011                      
+         LET g_errparam.sqlerr = SQLCA.sqlcode
+         CALL cl_err()                   
+         LET l_tot_success = FALSE
+      ELSE
+         LET l_count = l_count + 1
+      END IF
+      
+      IF l_glaa.glaa015 = 'Y' THEN
+         LET l_xccw.xccw001  = '2'
+         LET l_xccw.xccw041  = l_glaa.glaa016
+         LET l_xccw.xccw042  = s_aooi160_get_exrate('2',g_inba_m.xccwld,l_pdate_s,l_glaa.glaa001,l_xccw.xccw041,0,l_glaa.glaa018)
+         LET l_xccw.xccw282a = l_xccw.xccw282a * l_xccw.xccw042
+         LET l_xccw.xccw282b = l_xccw.xccw282b * l_xccw.xccw042
+         LET l_xccw.xccw282c = l_xccw.xccw282c * l_xccw.xccw042
+         LET l_xccw.xccw282d = l_xccw.xccw282d * l_xccw.xccw042
+         LET l_xccw.xccw282e = l_xccw.xccw282e * l_xccw.xccw042
+         LET l_xccw.xccw282f = l_xccw.xccw282f * l_xccw.xccw042
+         LET l_xccw.xccw282g = l_xccw.xccw282g * l_xccw.xccw042
+         LET l_xccw.xccw282h = l_xccw.xccw282h * l_xccw.xccw042
+         LET l_xccw.xccw282  = l_xccw.xccw282a+l_xccw.xccw282b+l_xccw.xccw282c+l_xccw.xccw282d
+                              +l_xccw.xccw282e+l_xccw.xccw282f+l_xccw.xccw282g+l_xccw.xccw282h
+         LET l_xccw.xccw202a = l_xccw.xccw282a * l_xccw.xccw201
+         LET l_xccw.xccw202b = l_xccw.xccw282b * l_xccw.xccw201
+         LET l_xccw.xccw202c = l_xccw.xccw282c * l_xccw.xccw201
+         LET l_xccw.xccw202d = l_xccw.xccw282d * l_xccw.xccw201
+         LET l_xccw.xccw202e = l_xccw.xccw282e * l_xccw.xccw201
+         LET l_xccw.xccw202f = l_xccw.xccw282f * l_xccw.xccw201
+         LET l_xccw.xccw202g = l_xccw.xccw282g * l_xccw.xccw201
+         LET l_xccw.xccw202h = l_xccw.xccw282h * l_xccw.xccw201
+         LET l_xccw.xccw202  = l_xccw.xccw202a+l_xccw.xccw202b+l_xccw.xccw202c+l_xccw.xccw202d
+                              +l_xccw.xccw202e+l_xccw.xccw202f+l_xccw.xccw202g+l_xccw.xccw202h
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw282a,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282a
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw282b,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282b
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw282c,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282c
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw282d,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282d
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw282e,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282e
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw282f,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282f
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw282g,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282g
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw282h,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282h
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw282,4)  RETURNING g_sub_success,g_errno,l_xccw.xccw282
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw202a,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202a
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw202b,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202b
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw202c,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202c
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw202d,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202d
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw202e,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202e
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw202f,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202f
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw202g,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202g
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw202h,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202h
+         CALL axct312_03_s_curr_round_ld(l_ooaj_2.*,l_xccw.xccw202,5)  RETURNING g_sub_success,g_errno,l_xccw.xccw202
+         IF cl_null(l_xccw.xccw002)  THEN LET l_xccw.xccw002 = ' ' END IF
+         IF cl_null(l_xccw.xccw201)  THEN LET l_xccw.xccw201 = 0 END IF
+         IF cl_null(l_xccw.xccw282a) THEN LET l_xccw.xccw282a= 0 END IF
+         IF cl_null(l_xccw.xccw282b) THEN LET l_xccw.xccw282b= 0 END IF
+         IF cl_null(l_xccw.xccw282c) THEN LET l_xccw.xccw282c= 0 END IF
+         IF cl_null(l_xccw.xccw282d) THEN LET l_xccw.xccw282d= 0 END IF
+         IF cl_null(l_xccw.xccw282e) THEN LET l_xccw.xccw282e= 0 END IF
+         IF cl_null(l_xccw.xccw282f) THEN LET l_xccw.xccw282f= 0 END IF
+         IF cl_null(l_xccw.xccw282g) THEN LET l_xccw.xccw282g= 0 END IF
+         IF cl_null(l_xccw.xccw282h) THEN LET l_xccw.xccw282h= 0 END IF
+         IF cl_null(l_xccw.xccw282)  THEN LET l_xccw.xccw282 = 0 END IF
+         IF cl_null(l_xccw.xccw202a) THEN LET l_xccw.xccw202a= 0 END IF
+         IF cl_null(l_xccw.xccw202b) THEN LET l_xccw.xccw202b= 0 END IF
+         IF cl_null(l_xccw.xccw202c) THEN LET l_xccw.xccw202c= 0 END IF
+         IF cl_null(l_xccw.xccw202d) THEN LET l_xccw.xccw202d= 0 END IF
+         IF cl_null(l_xccw.xccw202e) THEN LET l_xccw.xccw202e= 0 END IF
+         IF cl_null(l_xccw.xccw202f) THEN LET l_xccw.xccw202f= 0 END IF
+         IF cl_null(l_xccw.xccw202g) THEN LET l_xccw.xccw202g= 0 END IF
+         IF cl_null(l_xccw.xccw202h) THEN LET l_xccw.xccw202h= 0 END IF
+         IF cl_null(l_xccw.xccw202)  THEN LET l_xccw.xccw202 = 0 END IF
+
+         EXECUTE ins_xccw_pre
+           USING l_xccw.xccwent,l_xccw.xccwsite,l_xccw.xccwcomp,l_xccw.xccwld,l_xccw.xccw001,
+                 l_xccw.xccw002,l_xccw.xccw003,l_xccw.xccw004,l_xccw.xccw005,l_xccw.xccw006,
+                 l_xccw.xccw007,l_xccw.xccw008,l_xccw.xccw009,l_xccw.xccw010,l_xccw.xccw011,
+                 l_xccw.xccw012,l_xccw.xccw013,l_xccw.xccw014,l_xccw.xccw015,l_xccw.xccw016,
+                 l_xccw.xccw017,l_xccw.xccw020,l_xccw.xccw021,l_xccw.xccw022,l_xccw.xccw023,
+                 l_xccw.xccw024,l_xccw.xccw025,l_xccw.xccw026,l_xccw.xccw027,l_xccw.xccw028,
+                 l_xccw.xccw029,l_xccw.xccw030,l_xccw.xccw031,l_xccw.xccw032,l_xccw.xccw033,
+                 l_xccw.xccw034,l_xccw.xccw040,l_xccw.xccw041,l_xccw.xccw042,l_xccw.xccw043,
+                 l_xccw.xccw044,l_xccw.xccw045,l_xccw.xccw046,l_xccw.xccw047,l_xccw.xccw048,
+                 l_xccw.xccw049,l_xccw.xccw050,l_xccw.xccw051,l_xccw.xccw201,l_xccw.xccw202,
+                 l_xccw.xccw202a,l_xccw.xccw202b,l_xccw.xccw202c,l_xccw.xccw202d,l_xccw.xccw202e,
+                 l_xccw.xccw202f,l_xccw.xccw202g,l_xccw.xccw202h,l_xccw.xccw282,l_xccw.xccw282a,
+                 l_xccw.xccw282b,l_xccw.xccw282c,l_xccw.xccw282d,l_xccw.xccw282e,l_xccw.xccw282f,
+                 l_xccw.xccw282g,l_xccw.xccw282h
+         IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] =0 THEN
+            INITIALIZE g_errparam TO NULL
+            IF SQLCA.sqlerrd[3] = 0 THEN  #更新不到的處理
+               LET g_errparam.code = "std-00009"
+            END IF
+            LET g_errparam.extend = "INSERT xccw_t",SQLERRMESSAGE
+            LET g_errparam.popup = TRUE
+            LET g_errparam.coll_vals[1] = l_xccw.xccw006
+            LET g_errparam.coll_vals[2] = l_xccw.xccw001
+            LET g_errparam.coll_vals[3] = l_xccw.xccw007
+            LET g_errparam.coll_vals[4] = l_xccw.xccw008
+            LET g_errparam.coll_vals[5] = l_xccw.xccw010
+            LET g_errparam.coll_vals[6] = l_xccw.xccw011                      
+            LET g_errparam.sqlerr = SQLCA.sqlcode
+            CALL cl_err()                   
+            LET l_tot_success = FALSE
+         ELSE
+            LET l_count = l_count + 1
+         END IF
+      END IF
+      
+      IF l_glaa.glaa019 = 'Y' THEN
+         LET l_xccw.xccw001 = '3'
+         LET l_xccw.xccw041 = l_glaa.glaa020
+         LET l_xccw.xccw042 = s_aooi160_get_exrate('2',g_inba_m.xccwld,l_pdate_s,l_glaa.glaa001,l_xccw.xccw041,0,l_glaa.glaa022)
+         LET l_xccw.xccw282a = l_xccw_1.xccw282a * l_xccw.xccw042
+         LET l_xccw.xccw282b = l_xccw_1.xccw282b * l_xccw.xccw042
+         LET l_xccw.xccw282c = l_xccw_1.xccw282c * l_xccw.xccw042
+         LET l_xccw.xccw282d = l_xccw_1.xccw282d * l_xccw.xccw042
+         LET l_xccw.xccw282e = l_xccw_1.xccw282e * l_xccw.xccw042
+         LET l_xccw.xccw282f = l_xccw_1.xccw282f * l_xccw.xccw042
+         LET l_xccw.xccw282g = l_xccw_1.xccw282g * l_xccw.xccw042
+         LET l_xccw.xccw282h = l_xccw_1.xccw282h * l_xccw.xccw042
+         LET l_xccw.xccw282  = l_xccw.xccw282a+l_xccw.xccw282b+l_xccw.xccw282c+l_xccw.xccw282d
+                              +l_xccw.xccw282e+l_xccw.xccw282f+l_xccw.xccw282g+l_xccw.xccw282h
+         LET l_xccw.xccw202a = l_xccw.xccw282a * l_xccw.xccw201
+         LET l_xccw.xccw202b = l_xccw.xccw282b * l_xccw.xccw201
+         LET l_xccw.xccw202c = l_xccw.xccw282c * l_xccw.xccw201
+         LET l_xccw.xccw202d = l_xccw.xccw282d * l_xccw.xccw201
+         LET l_xccw.xccw202e = l_xccw.xccw282e * l_xccw.xccw201
+         LET l_xccw.xccw202f = l_xccw.xccw282f * l_xccw.xccw201
+         LET l_xccw.xccw202g = l_xccw.xccw282g * l_xccw.xccw201
+         LET l_xccw.xccw202h = l_xccw.xccw282h * l_xccw.xccw201
+         LET l_xccw.xccw202  = l_xccw.xccw202a+l_xccw.xccw202b+l_xccw.xccw202c+l_xccw.xccw202d
+                              +l_xccw.xccw202e+l_xccw.xccw202f+l_xccw.xccw202g+l_xccw.xccw202h
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw282a,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282a
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw282b,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282b
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw282c,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282c
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw282d,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282d
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw282e,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282e
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw282f,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282f
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw282g,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282g
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw282h,4) RETURNING g_sub_success,g_errno,l_xccw.xccw282h
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw282,4)  RETURNING g_sub_success,g_errno,l_xccw.xccw282
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw202a,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202a
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw202b,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202b
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw202c,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202c
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw202d,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202d
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw202e,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202e
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw202f,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202f
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw202g,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202g
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw202h,5) RETURNING g_sub_success,g_errno,l_xccw.xccw202h
+         CALL axct312_03_s_curr_round_ld(l_ooaj_3.*,l_xccw.xccw202,5)  RETURNING g_sub_success,g_errno,l_xccw.xccw202
+         IF cl_null(l_xccw.xccw002)  THEN LET l_xccw.xccw002 = ' ' END IF
+         IF cl_null(l_xccw.xccw201)  THEN LET l_xccw.xccw201 = 0 END IF
+         IF cl_null(l_xccw.xccw282a) THEN LET l_xccw.xccw282a= 0 END IF
+         IF cl_null(l_xccw.xccw282b) THEN LET l_xccw.xccw282b= 0 END IF
+         IF cl_null(l_xccw.xccw282c) THEN LET l_xccw.xccw282c= 0 END IF
+         IF cl_null(l_xccw.xccw282d) THEN LET l_xccw.xccw282d= 0 END IF
+         IF cl_null(l_xccw.xccw282e) THEN LET l_xccw.xccw282e= 0 END IF
+         IF cl_null(l_xccw.xccw282f) THEN LET l_xccw.xccw282f= 0 END IF
+         IF cl_null(l_xccw.xccw282g) THEN LET l_xccw.xccw282g= 0 END IF
+         IF cl_null(l_xccw.xccw282h) THEN LET l_xccw.xccw282h= 0 END IF
+         IF cl_null(l_xccw.xccw282)  THEN LET l_xccw.xccw282 = 0 END IF
+         IF cl_null(l_xccw.xccw202a) THEN LET l_xccw.xccw202a= 0 END IF
+         IF cl_null(l_xccw.xccw202b) THEN LET l_xccw.xccw202b= 0 END IF
+         IF cl_null(l_xccw.xccw202c) THEN LET l_xccw.xccw202c= 0 END IF
+         IF cl_null(l_xccw.xccw202d) THEN LET l_xccw.xccw202d= 0 END IF
+         IF cl_null(l_xccw.xccw202e) THEN LET l_xccw.xccw202e= 0 END IF
+         IF cl_null(l_xccw.xccw202f) THEN LET l_xccw.xccw202f= 0 END IF
+         IF cl_null(l_xccw.xccw202g) THEN LET l_xccw.xccw202g= 0 END IF
+         IF cl_null(l_xccw.xccw202h) THEN LET l_xccw.xccw202h= 0 END IF
+         IF cl_null(l_xccw.xccw202)  THEN LET l_xccw.xccw202 = 0 END IF
+
+         EXECUTE ins_xccw_pre
+           USING l_xccw.xccwent,l_xccw.xccwsite,l_xccw.xccwcomp,l_xccw.xccwld,l_xccw.xccw001,
+                 l_xccw.xccw002,l_xccw.xccw003,l_xccw.xccw004,l_xccw.xccw005,l_xccw.xccw006,
+                 l_xccw.xccw007,l_xccw.xccw008,l_xccw.xccw009,l_xccw.xccw010,l_xccw.xccw011,
+                 l_xccw.xccw012,l_xccw.xccw013,l_xccw.xccw014,l_xccw.xccw015,l_xccw.xccw016,
+                 l_xccw.xccw017,l_xccw.xccw020,l_xccw.xccw021,l_xccw.xccw022,l_xccw.xccw023,
+                 l_xccw.xccw024,l_xccw.xccw025,l_xccw.xccw026,l_xccw.xccw027,l_xccw.xccw028,
+                 l_xccw.xccw029,l_xccw.xccw030,l_xccw.xccw031,l_xccw.xccw032,l_xccw.xccw033,
+                 l_xccw.xccw034,l_xccw.xccw040,l_xccw.xccw041,l_xccw.xccw042,l_xccw.xccw043,
+                 l_xccw.xccw044,l_xccw.xccw045,l_xccw.xccw046,l_xccw.xccw047,l_xccw.xccw048,
+                 l_xccw.xccw049,l_xccw.xccw050,l_xccw.xccw051,l_xccw.xccw201,l_xccw.xccw202,
+                 l_xccw.xccw202a,l_xccw.xccw202b,l_xccw.xccw202c,l_xccw.xccw202d,l_xccw.xccw202e,
+                 l_xccw.xccw202f,l_xccw.xccw202g,l_xccw.xccw202h,l_xccw.xccw282,l_xccw.xccw282a,
+                 l_xccw.xccw282b,l_xccw.xccw282c,l_xccw.xccw282d,l_xccw.xccw282e,l_xccw.xccw282f,
+                 l_xccw.xccw282g,l_xccw.xccw282h
+         IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] =0 THEN
+            INITIALIZE g_errparam TO NULL
+            IF SQLCA.sqlerrd[3] = 0 THEN  #更新不到的處理
+               LET g_errparam.code = "std-00009"
+            END IF
+            LET g_errparam.extend = "INSERT xccw_t",SQLERRMESSAGE
+            LET g_errparam.popup = TRUE
+            LET g_errparam.coll_vals[1] = l_xccw.xccw006
+            LET g_errparam.coll_vals[2] = l_xccw.xccw001
+            LET g_errparam.coll_vals[3] = l_xccw.xccw007
+            LET g_errparam.coll_vals[4] = l_xccw.xccw008
+            LET g_errparam.coll_vals[5] = l_xccw.xccw010
+            LET g_errparam.coll_vals[6] = l_xccw.xccw011                      
+            LET g_errparam.sqlerr = SQLCA.sqlcode
+            CALL cl_err()                   
+            LET l_tot_success = FALSE
+         ELSE
+            LET l_count = l_count + 1
+         END IF
+      END IF
+   END FOREACH
+   
+   IF NOT l_tot_success THEN
+      CALL s_transaction_end('N','1') 
+   ELSE
+      #無資料產生！
+      IF l_count = 0 THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = 'axc-00530' 
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')  
+      ELSE
+         CALL s_transaction_end('Y','1')
+      END IF
+   END IF
+   CALL cl_err_collect_show()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增/查詢時，預帶欄位
+# Memo...........:
+# Usage..........: CALL axct312_03_head_default()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20151026 By dorislai
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct312_03_head_default()
+DEFINE l_comp       LIKE xccc_t.xccccomp
+DEFINE l_ld         LIKE xccc_t.xcccld
+DEFINE l_year       LIKE xccc_t.xccc004
+DEFINE l_period     LIKE xccc_t.xccc005
+DEFINE l_calc_type  LIKE xccc_t.xccc003
+
+   CALL s_axc_set_site_default() RETURNING l_comp,l_ld,l_year,l_period,l_calc_type
+   
+   IF cl_null(g_inba_m.xccwld) THEN
+      LET g_inba_m.xccwld = l_ld
+   END IF
+   CALL axct312_03_get_glaal002(g_inba_m.xccwld) RETURNING g_inba_m.xccwld_desc
+   DISPLAY BY NAME g_inba_m.xccwld,g_inba_m.xccwld_desc
+   
+   CALL axct312_03_xccwld_default()
+   
+   IF cl_null(g_inba_m.xccwcomp) THEN
+      LET g_inba_m.xccwcomp = l_comp
+      CALL axct312_03_get_ooefl003(g_inba_m.xccwcomp) RETURNING g_inba_m.xccwcomp_desc
+      DISPLAY BY NAME g_inba_m.xccwcomp,g_inba_m.xccwcomp_desc
+      CALL axct312_03_xccwcomp_default()
+   END IF
+   
+   IF cl_null(g_inba_m.xccw003) THEN
+      LET g_inba_m.xccw003 = l_calc_type
+   END IF
+   CALL axct312_03_get_xcatl003(g_inba_m.xccw003) RETURNING g_inba_m.xccw003_desc
+   DISPLAY BY NAME g_inba_m.xccw003,g_inba_m.xccw003_desc
+   
+   CALL axct312_03_xccw003_default()
+   
+   IF cl_null(g_inba_m.xccw004) OR g_inba_m.xccw004 = 0 THEN
+      LET g_inba_m.xccw004 = l_year
+   END IF
+   IF cl_null(g_inba_m.xccw005) OR g_inba_m.xccw005 = 0 THEN
+      LET g_inba_m.xccw005 = l_period
+   END IF
+   DISPLAY BY NAME g_inba_m.xccw004,g_inba_m.xccw005
+   
+   CALL axct312_03_xccw005_default()
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 成本類型說明
+# Memo...........:
+# Usage..........: CALL axct312_03_get_xcatl003(p_xcatl001)
+#                  RETURNING r_xcatl003
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160829-00005#1 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct312_03_get_xcatl003(p_xcatl001)
+DEFINE p_xcatl001   LIKE xcatl_t.xcatl001
+DEFINE r_xcatl003   LIKE xcatl_t.xcatl003
+
+   LET r_xcatl003 = ''
+   
+   IF NOT cl_null(p_xcatl001) THEN
+      SELECT xcatl003 INTO r_xcatl003
+        FROM xcatl_t
+       WHERE xcatlent=g_enterprise
+         AND xcatl001=p_xcatl001
+         AND xcatl002=g_dlang
+   END IF
+
+   RETURN r_xcatl003
+END FUNCTION
+
+################################################################################
+# Descriptions...: 組織編號說明
+# Memo...........:
+# Usage..........: CALL axct312_03_get_ooefl003(p_ooefl001)
+#                  RETURNING r_ooefl003
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160829-00005#1 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct312_03_get_ooefl003(p_ooefl001)
+DEFINE p_ooefl001   LIKE ooefl_t.ooefl001
+DEFINE r_ooefl003   LIKE ooefl_t.ooefl003
+
+   LET r_ooefl003 = ''
+   IF NOT cl_null(p_ooefl001) THEN
+      SELECT ooefl003 INTO r_ooefl003
+        FROM ooefl_t
+       WHERE ooeflent=g_enterprise
+         AND ooefl001=p_ooefl001
+         AND ooefl002=g_dlang
+   END IF
+
+   RETURN r_ooefl003
+END FUNCTION
+
+################################################################################
+# Descriptions...: 帳套編號說明
+# Memo...........:
+# Usage..........: CALL axct312_03_get_glaal002(p_glaalld)
+#                  RETURNING r_glaal002
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160829-00005#1 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct312_03_get_glaal002(p_glaalld)
+DEFINE p_glaalld    LIKE glaal_t.glaalld
+DEFINE r_glaal002   LIKE glaal_t.glaal002
+
+   LET r_glaal002 = ''
+   IF NOT cl_null(p_glaalld) THEN
+      SELECT glaal002 INTO r_glaal002
+        FROM glaal_t
+       WHERE glaalent=g_enterprise
+         AND glaalld=p_glaalld
+         AND glaal001=g_dlang
+   END IF
+
+   RETURN r_glaal002
+END FUNCTION
+
+################################################################################
+# Descriptions...: 
+# Memo...........:
+# Usage..........: CALL axct312_03_xccwld_default()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160829-00005#1 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct312_03_xccwld_default()
+
+   LET g_inba_m.xccwcomp = ''
+   SELECT glaacomp INTO g_inba_m.xccwcomp
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = g_inba_m.xccwld
+   CALL axct312_03_get_ooefl003(g_inba_m.xccwcomp) RETURNING g_inba_m.xccwcomp_desc
+   DISPLAY BY NAME g_inba_m.xccwcomp,g_inba_m.xccwcomp_desc
+   LET g_inba_m_o.xccwcomp = g_inba_m.xccwcomp
+   
+   LET g_xccw_m.ld = g_inba_m.xccwld
+   CALL axct312_03_get_glaal002(g_xccw_m.ld) RETURNING g_xccw_m.ld_desc
+   DISPLAY BY NAME g_inba_m.xccwld,g_xccw_m.ld_desc
+   LET g_xccw_m_o.ld = g_xccw_m.ld
+
+   CALL axct312_03_xccwcomp_default()
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 
+# Memo...........:
+# Usage..........: CALL axct312_03_xccw003_default()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160829-00005#1 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct312_03_xccw003_default()
+
+   LET g_inba_m.xcat003 = ''
+   SELECT xcat003 INTO g_inba_m.xcat003
+     FROM xcat_t
+    WHERE xcatent = g_enterprise
+      AND xcat001 = g_inba_m.xccw003
+   DISPLAY BY NAME g_inba_m.xcat003
+   LET g_inba_m_o.xcat003 = g_inba_m.xcat003
+   
+   LET g_xccw_m.type = g_inba_m.xccw003
+   CALL axct312_03_get_xcatl003(g_xccw_m.type) RETURNING g_xccw_m.type_desc
+   DISPLAY BY NAME g_xccw_m.type_desc
+   LET g_xccw_m_o.type = g_xccw_m.type
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 
+# Memo...........:
+# Usage..........: CALL axct312_03_xccw005_default()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160829-00005#1 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct312_03_xccw005_default()
+
+   IF g_inba_m.xccw005 = 1 THEN
+      LET g_xccw_m.yy = g_inba_m.xccw004 - 1
+      LET g_xccw_m.mm = 12
+   ELSE
+      LET g_xccw_m.yy = g_inba_m.xccw004
+      LET g_xccw_m.mm = g_inba_m.xccw005 - 1
+   END IF
+   DISPLAY BY NAME g_xccw_m.yy,g_xccw_m.mm
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 
+# Memo...........:
+# Usage..........: CALL axct312_03_xccwcomp_default()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160829-00005#1 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct312_03_xccwcomp_default()
+
+   LET g_xccw_m.comp = g_inba_m.xccwcomp
+   CALL axct312_03_get_ooefl003(g_xccw_m.comp) RETURNING g_xccw_m.comp_desc
+   DISPLAY BY NAME g_xccw_m.comp_desc
+   LET g_xccw_m_o.comp = g_xccw_m.comp
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 使用取位(帳別)
+# Memo...........:
+# Usage..........: CALL s_curr_round_ld(p_ooaj,p_amount,p_type)
+#                  RETURNING r_amount
+# Input parameter: p_site         营运据点
+#                : p_curr         币种
+#                : p_amount       金额
+#                : p_type         取位类型  1.按单价设定 2.按金额设定 3.按汇率设定
+#                                          4.成本單價 5.成本金額
+# Return code....: r_amount       取位后的金额值
+# Date & Author..: 14/10/08 By Belle
+# Modify.........: 151202-00028 by whitney add p_type 4&5
+################################################################################
+PRIVATE FUNCTION axct312_03_s_curr_round_ld(p_ooaj,p_amount,p_type)
+DEFINE p_ooaj           type_ooaj
+DEFINE p_flag           LIKE type_t.chr1
+DEFINE p_ld             LIKE ooef_t.ooef001
+DEFINE p_curr           LIKE ooai_t.ooai001
+DEFINE p_amount         LIKE type_t.num26_10
+DEFINE p_type           LIKE type_t.chr1
+DEFINE r_success        LIKE type_t.num10
+DEFINE r_amount         LIKE type_t.num26_10
+DEFINE r_errno          LIKE gzze_t.gzze001
+DEFINE l_digit          LIKE type_t.num5
+   
+    LET r_amount = p_amount
+    #以下情况下,直接返回,不处理
+    IF  cl_null(p_ld) OR cl_null(p_curr) OR cl_null(p_amount) OR cl_null(p_type) THEN
+       RETURN r_success,r_errno,r_amount
+    END IF
+    IF p_amount = 0 THEN
+       RETURN r_success,r_errno,r_amount
+    END IF
+ 
+    CASE p_type
+         WHEN '1'   LET l_digit = p_ooaj.ooaj003
+         WHEN '2'   LET l_digit = p_ooaj.ooaj004
+         WHEN '3'   LET l_digit = p_ooaj.ooaj005
+         WHEN '4'   LET l_digit = p_ooaj.ooaj006  #151202-00028 add
+         WHEN '5'   LET l_digit = p_ooaj.ooaj007  #151202-00028 add
+    END CASE
+    IF cl_null(l_digit) THEN LET l_digit = 0 END IF
+    
+    #4.金额取位
+    CALL s_num_round(g_round_type,p_amount,l_digit)
+         RETURNING r_amount
+    IF cl_null(r_amount) THEN LET r_amount = 0 END IF
+    
+    #5.返回
+   RETURN r_success,r_errno,r_amount
+END FUNCTION
+
+ 
+{</section>}
+ 

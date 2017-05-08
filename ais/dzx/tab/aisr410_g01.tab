@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisr410_g01" module="ais" jobmode="N" type="g01" industry="std" crtid="06816" crtdt="2015-05-29 17:16:51" modid="06821" moddt="2016-09-05 16:01:34" sdver="4" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.a1(chr500|申報單位),tm.a2(num5|資料所屬年份),tm.a3(num5|資料所屬月份),tm.a4(chr1|彙總報繳)">
+    <var seq="1" value="isajent,isajcomp,isajsite,isaj001,isaj003,isaj005,isaj006,isaj007,l_ooefl003(chr500|NULL),l_isaa028(isaa028|NULL),l_isaa005(isaa005|NULL),l_isaa028_isaa005(chr500|NULL),l_date(isajdocdt|NULL),l_isaj019_isaj020(chr500|NULL),l_ooef002(chr500|NULL),isaj018,isaj019,isaj020,t1_ooefl004(ooefl004|t1.ooefl004),ooefl_t_ooefl004(ooefl004|ooefl_t.ooefl004),pmaal_t_pmaal003(pmaal003|pmaal_t.pmaal003),l_isaj103(isaj103|&apos;&apos;),l_isaj104(isaj104|&apos;&apos;),l_isaj103_1(isaj103|&apos;&apos;),l_isaj103_2(isaj103|&apos;&apos;),l_isaj103_3(isaj103|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="isajent,isajcomp,isajsite,isaj001,isaj003,isaj005,isaj006,isaj007,l_ooefl003(chr500|NULL),l_isaa028(isaa028|NULL),l_isaa005(isaa005|NULL),l_isaa028_isaa005(chr500|NULL),l_date(isajdocdt|NULL),l_isaj019_isaj020(chr500|NULL),l_ooef002(chr500|NULL),isaj018,isaj019,isaj020,t1_ooefl004(ooefl004|( SELECT ooefl004 FROM ooefl_t t1 WHERE t1.ooeflent = isaj_t.isajent AND t1.ooefl001 = isaj_t.isaj003 AND t1.ooefl002 = g_dlang)),ooefl_t_ooefl004(ooefl004|( SELECT ooefl004 FROM ooefl_t WHERE ooefl_t.ooeflent = isaj_t.isajent AND ooefl_t.ooefl001 = isaj_t.isajsite AND ooefl_t.ooefl002 = g_dlang)),pmaal_t_pmaal003(pmaal003|( SELECT pmaal003 FROM pmaal_t WHERE pmaal_t.pmaalent = isaj_t.isajent AND pmaal_t.pmaal001 = isaj_t.isaj021 AND pmaal_t.pmaal002 = g_dlang)),l_isaj103(isaj103|&apos;&apos;),l_isaj104(isaj104|&apos;&apos;),l_isaj103_1(isaj103|&apos;&apos;),l_isaj103_2(isaj103|&apos;&apos;),l_isaj103_3(isaj103|&apos;&apos;)"/>
+    <sql id="g_from" query="isaj_t"/>
+    <sql id="g_where" query="" maintable="isaj_t"/>
+    <sql id="g_order" query="isaj003,isaj018"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="isaj003,isaj018"/>
+    <section id="b_group" reptype="d01">
+      <rep type="isaj003" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="isajent,isaj003"/>
+      <rep type="isaj018"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="isajent,isaj003,isaj018"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="isajent,isaj003,isaj018"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="isaj003" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="isajent,isaj003"/>
+      <rep type="isaj018"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

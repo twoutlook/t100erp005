@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aprt211_01" std_prog="aprt211_01" erpver="1.0" ver="3" module="APR" type="S" booking="N" class="I" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="prdb_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="prdc_t" main="N" head="N" pk="" fk_detail="" parent="prdb_t" fk_master="" src="s" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[第一個table處理邏輯：
+资料删除处理:
+若存在对应的换赠设定，则提示 “此项删除则将要删除对象的明细和对象的换赠设定"
+否则提示”此项删除将要删除对象的明细资料“
+1.删除对应的明细资料
+2.删除对象组别的换赠设定
+3.删除换赠对应的商品资料(当换赠设定资料无其它对象的换赠组设定，才可删除)
+资料新增处理：
+如果存在换赠设定资料，且换赠设定模式为 2：产品高级设定时
+则新增对应的对象组别资料
+]]>
+  </all>
+  <field cite_std="N" name="prdb_t.prdb001" ver="1" src="s" column="prdb001" table="prdb_t" attribute="C092" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdb_t.prdb002" ver="1" src="s" column="prdb002" table="prdb_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdb_t.prdb003" ver="1" src="s" column="prdb003" table="prdb_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6567" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[处理逻辑：如果存在换赠设定资料，且换赠设定模式为 2：产品高级设定时
+                 则不允许更改 
+                 否则如果明细设定有资料，提示是否删除明细资料
+                 相同对象组别，对象类型需要相同]]>
+  </field>
+  <field cite_std="N" name="prdb_t.prdb004" ver="1" src="s" column="prdb004" table="prdb_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="q_prdh002" c_zoom="" chk_ref="v_prdh002" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdb_t.prdb005" ver="1" src="s" column="prdb005" table="prdb_t" attribute="N202" type="number(20,6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[特价/折扣/折让
+校驗:1.不允許空白
+           特价>0 
+           折扣率 0~100之间
+           折让>0 ]]>
+  </field>
+  <field cite_std="N" name="prdb_t.prdbacti" ver="1" src="s" column="prdbacti" table="prdb_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdb_t.prdbdocno" ver="1" src="s" column="prdbdocno" table="prdb_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdb_t.prdbsite" ver="1" src="s" column="prdbsite" table="prdb_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdb_t.prdbunit" ver="1" src="s" column="prdbunit" table="prdb_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdc_t.prdc001" ver="1" src="s" column="prdc001" table="prdc_t" attribute="C092" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdc_t.prdc002" ver="1" src="s" column="prdc002" table="prdc_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="q_prdb002" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;0.000" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdc_t.prdc003" ver="1" src="s" column="prdc003" table="prdc_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[当对象类别=2.会员时:
+        常數值:1.會員等級,2.會員類型
+当对象类别=3.客户时:
+        常态值:SCC 6035
+校驗:1.修改時，清空属性代号]]>
+  </field>
+  <field cite_std="N" name="prdc_t.prdc004" ver="1" src="s" column="prdc004" table="prdc_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="q_oocq002" c_zoom="q_prdc004" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入值須存在对象属性资料中且為有效資料
+帶值:属性名称显示]]>
+  </field>
+  <field cite_std="N" name="prdc_t.prdcacti" ver="1" src="s" column="prdcacti" table="prdc_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdc_t.prdcsite" ver="1" src="s" column="prdcsite" table="prdc_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prdc_t.prdcunit" ver="1" src="s" column="prdcunit" table="prdc_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_prdb004" depend_field="prdb_t.prdb004" src="s" status="">
+      <program order="1" type="1" name="v_prdi002"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="prdc004_desc" src="s" depend_field="prdc_t.prdc004" correspon_key="prdc004" ref_table="oocql_t" ref_fk="oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="prdb_t.prdb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdb_t.prdb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdb_t.prdb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdb_t.prdb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdb_t.prdb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdb_t.prdbacti" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdb_t.prdbdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdb_t.prdbsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdb_t.prdbunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdc_t.prdc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdc_t.prdc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdc_t.prdc003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdc_t.prdc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdc_t.prdcacti" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdc_t.prdcsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prdc_t.prdcunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="bpage04" text="參與對象設定" lstr=""/>
+    <sfield name="lbl_prdbacti" text="有效否" lstr=""/>
+    <sfield name="lbl_prdb004" text="條件組別" lstr=""/>
+    <sfield name="lbl_prdb002_1" text="對象組別" lstr=""/>
+    <sfield name="lbl_prdb003" text="對象類別" lstr=""/>
+    <sfield name="lbl_prdb005_01" text="折扣率(%)" lstr=""/>
+    <sfield name="lbl_prdbdocno" text="促銷申請單號" lstr=""/>
+    <sfield name="lbl_prdb001" text="規則編號" lstr=""/>
+    <sfield name="lbl_prdbsite" text="營運組織" lstr=""/>
+    <sfield name="lbl_prdbunit" text="制定組織" lstr=""/>
+    <sfield name="bpage05" text="對象明細設定" lstr=""/>
+    <sfield name="lbl_prdcacti" text="有效否" lstr=""/>
+    <sfield name="lbl_prdc003" text="對象屬性" lstr=""/>
+    <sfield name="lbl_prdc004" text="屬性代碼" lstr=""/>
+    <sfield name="lbl_prdc004_desc" text="代碼名稱" lstr=""/>
+    <sfield name="lbl_prdc001" text="規則編號" lstr=""/>
+    <sfield name="lbl_prdcsite" text="營運組織" lstr=""/>
+    <sfield name="lbl_prdcunit" text="制定組織" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

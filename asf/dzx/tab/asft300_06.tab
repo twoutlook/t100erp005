@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asft300_06" module="asf" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="05384" crtdt="2014-12-18 14:46:50" modid="05384" moddt="2014-12-19 14:53:03" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="維護工單硬備置子作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sfbbdocno,sfbbseq,sfbbseq1,sfbb001,sfbb002,sfbb002_desc(chr500),sel(chr500),sfbb008,sfbb009,ysfbb008(chr500),sfbb010,sfbb010_desc(chr500),sfbb004,sfbb004_desc(chr500),sfbb005,sfbb005_desc(chr500),sfbb003,sfbb006,inag008(chr500),sfbb007,sfbb007_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asft300_06" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sfbbdocno,sfbbseq,sfbbseq1,sfbb002_desc,sel,sfbb008" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sfbbdocno"/>
+      <column id="sfbbseq"/>
+      <column id="sfbbseq1"/>
+      <column id="sfbb001"/>
+      <column id="sfbb002">
+        <after/>
+      </column>
+      <column id="sfbb002_desc"/>
+      <column id="sel" type="S" default="N"/>
+      <column id="sfbb008">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfbb009"/>
+      <column id="ysfbb008"/>
+      <column id="sfbb010">
+        <after>
+          <reference field="sfbb010_desc" ref_field="sfbb_t.sfbb010" map_field="sfbb010" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfbb010_desc"/>
+      <column id="sfbb004">
+        <after>
+          <reference field="sfbb004_desc" ref_field="sfbb_t.sfbb004" map_field="sfbb004" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaa001=? "/>
+        </after>
+      </column>
+      <column id="sfbb004_desc"/>
+      <column id="sfbb005">
+        <after>
+          <reference field="sfbb005_desc" ref_field="sfbb004,sfbb005" map_field="sfbb004,sfbb005" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="sfbb005_desc"/>
+      <column id="sfbb003"/>
+      <column id="sfbb006"/>
+      <column id="inag008"/>
+      <column id="sfbb007">
+        <after>
+          <reference field="sfbb007_desc" ref_field="sfbb_t.sfbb007" map_field="sfbb007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfbb007_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="sfbb_t" page="1" linked="" pk="sfbbdocno,sfbbseq,sfbbseq1,sfbb001,sfbb002,sfbb003,sfbb004,sfbb005,sfbb006,sfbb007">
+      <sql id="forupd_sql_detail" query="SELECT sfbbdocno,sfbbseq,sfbbseq1,sfbb001,sfbb002,&apos;&apos;,&apos;&apos;,sfbb008,sfbb009,&apos;&apos;,sfbb010,&apos;&apos;,sfbb004,&apos;&apos;,sfbb005,&apos;&apos;,sfbb003,sfbb006,&apos;&apos;,sfbb007,&apos;&apos; FROM sfbb_t WHERE sfbbent=? AND sfbbdocno=? AND sfbbseq=? AND sfbbseq1=? AND sfbb001=? AND sfbb002=? AND sfbb003=? AND sfbb004=? AND sfbb005=? AND sfbb006=? AND sfbb007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sfbbdocno,sfbbseq,sfbbseq1,sfbb001,sfbb002,&apos;&apos;,&apos;&apos;,sfbb008,sfbb009,&apos;&apos;,sfbb010,&apos;&apos;,sfbb004,&apos;&apos;,sfbb005,&apos;&apos;,sfbb003,sfbb006,&apos;&apos;,sfbb007,&apos;&apos; FROM sfbb_t WHERE sfbbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apjm200_01" module="apj" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01996" crtdt="2014-01-09 16:39:34" modid="01996" moddt="2014-01-09 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="WBS計畫日推算條件">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pjba005,pjba007,pjba008,pjba008_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apj" filename="apjm200_01" method="dialog">
+    <section id="input">
+      <input id="head" field="pjba005,pjba007,pjba008"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="pjba005"/>
+      <column id="pjba007" type="S" default="1" def_scc="16008"/>
+      <column id="pjba008">
+        <after>
+          <reference field="pjba008_desc" ref_field="pjba008" map_field="pjba008" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;4&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_0" state="i"/>
+        <controlp form="q_ooal002_0" state="c"/>
+      </column>
+      <column id="pjba008_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pjba_t" pk="pjba001">
+      <sql id="forupd_sql" type="sql" query="SELECT pjba005,pjba007,pjba008,&apos;&apos; FROM pjba_t WHERE pjbaent= ? AND pjba001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="pjba001"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,925 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aimi100" std_prog="aimi100" erpver="1.0" ver="8" module="AIM" type="M" booking="N" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="2" cite_std="N">
+    <tbl name="imca_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="imcj_t" main="N" head="N" pk="" fk_detail="" parent="imca_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="imcl_t" main="N" head="N" pk="" fk_detail="" parent="imca_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="imcm_t" main="N" head="N" pk="" fk_detail="" parent="imca_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail4" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="imcn_t" main="N" head="N" pk="" fk_detail="" parent="imca_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="imco_t" main="N" head="N" pk="" fk_detail="" parent="imca_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail5" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="4" src="s" status="">
+    <![CDATA[程式說明及目的：可透過本作業維護料件的主分群資料，將來料件可透過主分群碼預設一些資料。
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：imca_t(料件主分群檔)
+                      imcj_t(主分群成份與物質檔)
+                      imcn_t(主分群特徵檔)
+                      imcl_t(主分群標籤檔)
+                      imcm_t(主分群國際認證編號檔)
+查詢方案設定：
+ (1)系統預設查詢方案：
+    無效料件主分群 stus='N'
+    有效料件主分群 stus='Y'
+ (2)系統預設相關作業：
+    aimi101料件產品分群資料維護作業
+    aimi102料件庫存分群資料維護作業
+    aimi103料件銷售分群資料維護作業
+    aimi104料件採購分群資料維護作業
+    aimi105料件生管分群資料維護作業
+    aimi106料件品管分群資料維護作業
+ (3)瀏覽Browse顯示欄位及型態：
+    imca001(主分群碼)：ButtonEdit
+    oocql004(說明)：Edit
+    imca004(料件類別)：Combobox
+    imca005(特徵組別)：ButtonEdit -> 顯示說明(?)
+    imca006(基礎單位)：ButtonEdit -> 顯示說明(oocal003)
+    imca010(生命週期)：ButtonEdit -> 顯示說明(oocql004)
+TOPMENU：
+                  相關作業：執行產品分群資料維護作業，aimi101
+                                   執行庫存分群資料維護作業，aimi102
+                                   執行銷售分群資料維護作業，aimi103
+                                   執行採購分群資料維護作業，aimi104
+                                   執行生管分群資料維護作業，aimi105
+                                   執行品管分群資料維護作業，aimi106
+                                   執行財務分群資料維護作業，aimi107
+                                   執行WMS分群資料維護作業，aimi108
+特別說明：
+1.當新增完單頭資料後，
+  自動新增一筆資料到料件使用單位檔(imco_t)
+  imcoent = g_enterprise
+  imco001 = imca001
+  imco002 = imca006]]>
+  </all>
+  <di_all cite_std="N" ver="2" src="s" status="">
+    <![CDATA[產品特徵值頁籤的單身只可修改，不可新增、刪除
+]]>
+  </di_all>
+  <field cite_std="N" name="b_imca001" ver="1" src="s" column="imca001" table="imca_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imca004" ver="1" src="s" column="imca004" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="1001" default="&apos;M&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imca005" ver="1" src="s" column="imca005" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imca006" ver="1" src="s" column="imca006" table="imca_t" attribute="" type="" req="N" i_zoom="q_ooca001" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imca010" ver="1" src="s" column="imca010" table="imca_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oocql004" ver="1" src="s" column="oocql004" table="oocql_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca001" ver="2" src="s" column="imca001" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.CALL s_azzi650_chk_exist('200',imca001) RETURNING l_success检查输入值是否為有效資料
+帶值:顯示時將[T:應用分類碼多語言檔].[C:說明]帶出
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔(ACC)].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔(ACC)].[C:應用分類]=200
+     查詢或新增/修改時過濾條件：有效資料
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca003" ver="2" src="s" column="imca003" table="imca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="99" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca004" ver="2" src="s" column="imca004" table="imca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="1001" default="&apos;M&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca005" ver="2" src="s" column="imca005" table="imca_t" attribute="" type="" req="N" i_zoom="q_imea001" c_zoom="q_imea001" chk_ref="v_imea001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.传入参数arg1 = imca005
+帶值:顯示時將[T:應用分類碼多語言檔].[C:說明]帶出([T:應用分類碼多語言檔].[C:應用分類]=211)
+計算或處理:新增時，用[C:特徵組別]到[T:料件特徵群組單身檔]抓取[C:歸屬層級]=1.料號的資料，
+                新增到[T:料件主分群特徵檔]
+                [C:企業編號]=g_enterprise
+                [C:主分群碼]=畫面上的主分群碼
+                [C:特徵類型]=[T:料件特徵群組單身檔].[C:類型](若多筆資料的類型重複，只取一筆)
+                [C:特徵值]=[T:料件特徵群組單身檔].[C.預設值]
+                修改時要重新刪除資料重新新增
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_imea001
+     查詢欄位：[T:料件特徵群組檔].[C:特徵群組編號],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼多語言檔].[C:應用分類]=211
+     新增/修改時過濾條件：有效資料
+     回值類型：查詢時多重回值,新增/修改時單一回值
+
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca006" ver="2" src="s" column="imca006" table="imca_t" attribute="" type="" req="" i_zoom="q_ooca001" c_zoom="q_ooca001" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.传入参数arg1 = imca006
+帶值：1.帶出單位的多語言說明]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca010" ver="2" src="s" column="imca010" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.CALL s_azzi650_chk_exist('210',imca010) RETURNING l_success检查输入值是否為有效資料
+帶值:顯示時將[T:應用分類碼多語言檔].[C:說明]帶出
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔(ACC)].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔(ACC)].[C:應用分類]=210 
+     查詢或新增/修改時過濾條件：有效資料
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca011" ver="2" src="s" column="imca011" table="imca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="1002" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca012" ver="2" src="s" column="imca012" table="imca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca013" ver="1" src="s" column="imca013" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca014" ver="1" src="s" column="imca014" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca018" ver="2" src="s" column="imca018" table="imca_t" attribute="" type="" req="" i_zoom="q_ooca001" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入值須存在[T:單位檔].[C:單位編號]且為有效資料且单位类型为重量]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca022" ver="2" src="s" column="imca022" table="imca_t" attribute="" type="" req="" i_zoom="q_ooca001" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入值須存在[T:單位檔].[C:單位編號]且為有效資料且单位类型为长度
+帶值:1.若此單位有在[T:單位檔]設定[C:面積單位]與[C:體積單位],則帶入imca024與imca026
+             2.帶出單位的多語言說明]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca024" ver="2" src="s" column="imca024" table="imca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[校驗:1.輸入值須存在[T:單位檔].[C:單位編號]且為有效資料且单位类型为面积]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca026" ver="2" src="s" column="imca026" table="imca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[校驗:1.輸入值須存在[T:單位檔].[C:單位編號]且為有效資料且单位类型为体积]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca027" ver="2" src="s" column="imca027" table="imca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="CheckBox" status="">
+    <![CDATA[計算或處理:當本欄位值='Y'時,才可維護底下的imca028~imca033等欄位,否則底下幾個欄位都設為NoEntry
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca029" ver="2" src="s" column="imca029" table="imca_t" attribute="" type="" req="" i_zoom="q_ooca001" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入值須存在[T:單位檔].[C:單位編號]且為有效資料且单位类型为体积]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca030" ver="2" src="s" column="imca030" table="imca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="&lt;=" max="100.000" min_compare="&gt;=" min="0.000" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca032" ver="2" src="s" column="imca032" table="imca_t" attribute="" type="" req="" i_zoom="q_ooca001" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入值須存在[T:單位檔].[C:單位編號]且為有效資料且单位类型为重量]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca033" ver="2" src="s" column="imca033" table="imca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="&lt;=" max="100.000" min_compare="&gt;=" min="0.000" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca036" ver="1" src="s" column="imca036" table="imca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca037" ver="1" src="s" column="imca037" table="imca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca038" ver="1" src="s" column="imca038" table="imca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[工程料件未來禁止在試產工單、一般工單中開立，只允許在樣品工單開立。
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca041" ver="1" src="s" column="imca041" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca042" ver="1" src="s" column="imca042" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca043" ver="2" src="s" column="imca043" table="imca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca044" ver="2" src="s" column="imca044" table="imca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="1004" default="&apos;3&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca045" ver="2" src="s" column="imca045" table="imca_t" attribute="" type="" req="" i_zoom="q_oocg001" c_zoom="q_oocg001" chk_ref="v_oocg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:传入参数arg1=imca045
+帶值:顯示時將[T:國家地區多語言檔].[C:說明]帶出]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca122" ver="2" src="s" column="imca122" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.CALL s_azzi650_chk_exist('2000',imca122) RETURNING l_success检查输入值是否為有效資料
+帶值:顯示時將[T:國家地區多語言檔].[C:說明]帶出
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔(ACC)].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔(ACC)].[C:應用分類]=2000
+     查詢或新增/修改時過濾條件：有效資料
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca123" ver="1" src="s" column="imca123" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca126" ver="2" src="s" column="imca126" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗: CALL s_azzi650_chk_exist('2002',imca126) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002	
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2002
+     回值類型：查詢時多重回值,新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca127" ver="2" src="s" column="imca127" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2003',imca127) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2003
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca128" ver="2" src="s" column="imca128" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2004',imca128) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2004
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca129" ver="2" src="s" column="imca129" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2005',imca129) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2005
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca130" ver="1" src="s" column="imca130" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca131" ver="2" src="s" column="imca131" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2001',imca131) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002	
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2001
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca132" ver="2" src="s" column="imca132" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2006',imca132) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2006
+     回值類型：查詢時多重回值,新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca133" ver="2" src="s" column="imca133" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2007',imca133) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2007
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca134" ver="2" src="s" column="imca134" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2008',imca134) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2008
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca135" ver="2" src="s" column="imca135" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2009',imca135) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2009
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca136" ver="2" src="s" column="imca136" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2010',imca136) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2010
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca137" ver="2" src="s" column="imca137" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2011',imca137) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2011
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca138" ver="2" src="s" column="imca138" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗CALL s_azzi650_chk_exist('2012',imca138) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2012
+     回值類型：查詢時多重回值,新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca139" ver="2" src="s" column="imca139" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2013',imca139) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2013
+     回值類型：查詢時多重回值,新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca140" ver="2" src="s" column="imca140" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2014',imca140) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2014
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca141" ver="2" src="s" column="imca141" table="imca_t" attribute="" type="" req="" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[校驗:CALL s_azzi650_chk_exist('2015',imca141) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=2015
+     回值類型：查詢時多重回值,新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca201" ver="2" src="s" column="imca201" table="imca_t" attribute="" type="" req="N" i_zoom="q_imcc051_1" c_zoom="q_imcc051_1" chk_ref="v_imcc051" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.传入参数arg1 = imca201
+帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+             WHERE [T:應用分類碼多語言檔].[C:應用分類]=201
+                  AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:庫存分群]
+             到本欄位後面顯示
+開窗處理：
+     參考函式：q_imcc051_1
+     查詢欄位：[T:料件據點庫存分群檔].[C:庫存分群],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：1.[T:應用分類碼多語言檔(ACC)].[C:應用分類]=201
+                      2.[T:料件據點庫存分群檔].[C:營運據點]='ALL'
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca202" ver="2" src="s" column="imca202" table="imca_t" attribute="" type="" req="N" i_zoom="q_imcd111_1" c_zoom="q_imcd111_1" chk_ref="v_imcd111" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.传入参数arg1 = imca202
+帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+             WHERE [T:應用分類碼多語言檔].[C:應用分類]=202
+                 AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:銷售分群]
+             到本欄位後面顯示
+開窗處理：
+     參考函式：q_imcd111_1
+     查詢欄位：[T:料件據點銷售分群檔].[C:銷售分群],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：1.[T:應用分類碼多語言檔(ACC)].[C:應用分類]=202
+                      2.[T:料件據點庫存分群檔].[C:營運據點]='ALL'
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca203" ver="2" src="s" column="imca203" table="imca_t" attribute="" type="" req="N" i_zoom="q_imce141_1" c_zoom="q_imce141_1" chk_ref="v_imce141" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1传入参数arg1 = imca203
+帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+             WHERE [T:應用分類碼多語言檔].[C:應用分類]=203
+                 AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:採購分群]
+             到本欄位後面顯示
+開窗處理：
+     參考函式：q_imce141_1
+     查詢欄位：[T:料件據點採購分群檔].[C:採購分群],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：1.[T:應用分類碼多語言檔(ACC)].[C:應用分類]=203
+                      2.[T:料件據點庫存分群檔].[C:營運據點]='ALL'
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca204" ver="2" src="s" column="imca204" table="imca_t" attribute="" type="" req="N" i_zoom="q_imcf011_1" c_zoom="q_imcf011_1" chk_ref="v_imcf011" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.传入参数arg1 = imca204
+帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+             WHERE [T:應用分類碼多語言檔].[C:應用分類]=204
+                 AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:生管分群]
+             到本欄位後面顯示
+開窗處理：
+     參考函式：q_imcf011_1
+     查詢欄位：[T:料件據點生管分群檔].[C:生管分群],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：1.[T:應用分類碼多語言檔(ACC)].[C:應用分類]=204
+                      2.[T:料件據點庫存分群檔].[C:營運據點]='ALL'
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca205" ver="2" src="s" column="imca205" table="imca_t" attribute="" type="" req="N" i_zoom="q_imcg111_1" c_zoom="q_imcg111_1" chk_ref="v_imcg111" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.传入参数arg1 = imca205
+帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+             WHERE [T:應用分類碼多語言檔].[C:應用分類]=205
+                 AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:品管分群]
+             到本欄位後面顯示
+開窗處理：
+     參考函式：q_imcg111_1
+     查詢欄位：[T:料件據點品管分群檔].[C:品管分群],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：1.[T:應用分類碼多語言檔(ACC)].[C:應用分類]=205
+                      2.[T:料件據點庫存分群檔].[C:營運據點]='ALL'
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca206" ver="4" src="s" column="imca206" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入值須存在[T:料件據點成本分群檔].[C:成本分群]且為有效資料
+帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+             WHERE [T:應用分類碼多語言檔].[C:應用分類]=206
+                 AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:成本分群]
+             到本欄位後面顯示
+開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:料件據點財務分群檔].[C:成本分群],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：1.[T:應用分類碼多語言檔(ACC)].[C:應用分類]=206
+                      2.[T:料件據點庫存分群檔].[C:營運據點]='ALL'
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca207" ver="2" src="s" column="imca207" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入值須存在[T:料件據點WMS分群檔].[C:WMS分群]且為有效資料
+帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+             WHERE [T:應用分類碼多語言檔].[C:應用分類]=207
+                 AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:WMS分群]
+             到本欄位後面顯示
+開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:料件據點WMS分群檔].[C:WMS分群],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：1.[T:應用分類碼多語言檔(ACC)].[C:應用分類]=207 
+                      2.[T:料件據點庫存分群檔].[C:營運據點]='ALL'
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imca_t.imca208" ver="8" src="s" column="imca208" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[校驗:輸入值須存在[T:料件據點關務分群檔].[C:關務分群]，營運據點='ALL'且為有效資料
+帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+       WHERE [T:應用分類碼多語言檔].[C:應用分類]=229
+         AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:關務分群]
+     到本欄位後面顯示
+計算或處理:無     
+開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:料件據點WMS分群檔].[C:關務分群],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：1.[T:應用分類碼多語言檔(ACC)].[C:應用分類]=229
+               2.[T:料件據點關務分群檔].[C:營運據點]='ALL'
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imca_t.imcacrtdp" ver="1" src="s" column="imcacrtdp" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imcacrtdt" ver="1" src="s" column="imcacrtdt" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imcacrtid" ver="1" src="s" column="imcacrtid" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imcamoddt" ver="1" src="s" column="imcamoddt" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imcamodid" ver="1" src="s" column="imcamodid" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imcaowndp" ver="1" src="s" column="imcaowndp" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imcaownid" ver="1" src="s" column="imcaownid" table="imca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca_t.imcastus" ver="1" src="s" column="imcastus" table="imca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="17" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[資料狀態碼：
+   ●欄位控管：
+     資料欄位:[T:料件主分群檔].[C:資料狀態碼]/可Display可Input
+     允許空白:No
+     預設值:Y(有效)
+     資料選項來源:
+       資料庫: SCC17
+               N.無效
+               Y.有效
+     校驗:1.不允許空白
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imcj_t.imcj002" ver="2" src="s" column="imcj002" table="imcj_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.CALL s_azzi650_chk_exist('270',imcj002) RETURNING l_success检查输入值是否為有效資料
+帶值:[T:應用分類碼多語言檔].[C:說明]
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=270 且為有效資料
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imcj_t.imcj003" ver="2" src="s" column="imcj003" table="imcj_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.CALL s_azzi650_chk_exist('271',imcj003) RETURNING l_success检查输入值是否為有效資料
+帶值:[T:應用分類碼多語言檔].[C:說明]
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=271 且為有效資料
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imcj_t.imcj004" ver="2" src="s" column="imcj004" table="imcj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcj_t.imcj005" ver="2" src="s" column="imcj005" table="imcj_t" attribute="" type="" req="N" i_zoom="q_ooca001" c_zoom="q_ooca001" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.传入参数arg1 =imcj005
+帶值:帶出單位的多語言說明
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_ooca001
+     查詢欄位：[T:單位檔].[C:單位編號],[T:單位多語言檔].[C:說明]
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imcj_t.imcj006" ver="2" src="s" column="imcj006" table="imcj_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.CALL s_azzi650_chk_exist('272',imcj006) RETURNING l_success检查输入值是否為有效資料
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=272 且為有效資料
+     回值類型：查詢時多重回值,新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imcl_t.imcl002" ver="2" src="s" column="imcl002" table="imcl_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.CALL s_azzi650_chk_exist('213',imcl002) RETURNING l_success检查输入值是否為有效資料
+帶值:抓取[T:應用分類碼多語言檔].[C:說明]到[C:標籤名稱]顯示,
+            抓取[T:應用分類碼檔].[C:參考欄位二]到[C:標籤群組]顯示
+開窗處理：
+     查詢或新增/修改時：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔].[C:參考欄位二],[T:應用分類碼檔].[C:應用分類碼],
+                      [T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔].[C:應用分類]=213 且為有效資料
+     回值類型：查詢時多重回值,新增/修改時單一回值 (回傳第二個欄位值)]]>
+  </field>
+  <field cite_std="N" name="imcm_t.imcm002" ver="2" src="s" column="imcm002" table="imcm_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1006" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[
+]]>
+  </field>
+  <field cite_std="N" name="imcm_t.imcm003" ver="2" src="s" column="imcm003" table="imcm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcm_t.imcm004" ver="2" src="s" column="imcm004" table="imcm_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcm_t.imcm005" ver="2" src="s" column="imcm005" table="imcm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcm_t.imcm006" ver="2" src="s" column="imcm006" table="imcm_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcn003_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcn_t.imcn002" ver="2" src="s" column="imcn002" table="imcn_t" attribute="" type="" req="Y" i_zoom="q_imeb004" c_zoom="q_imeb004_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcn_t.imcn003" ver="2" src="s" column="imcn003" table="imcn_t" attribute="" type="" req="Y" i_zoom="q_imec003" c_zoom="q_imec003_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:[T:料件特徵群組單身檔].[C:預設值]
+校驗:1.呼叫應用元件s_aimi092檢查輸入值
+帶值:1.抓取[T:料件特徵群組特徵值多語言檔].[C:說明]到[C:特徵值說明]
+計算或處理:在此欄位時，若該特徵類型的賦值方式=1.動態指定時，於左下角顯示「碼長：imeb007，小數位數：imeb008」
+                       若該特徵類型的賦值方式=3.限定範圍時，於左下角顯示「輸入範圍：imeb010 ~ imeb011」
+開窗處理：
+     查詢或新增/修改時：用單頭的特徵群組+單身的特徵類型抓取[T:料件特徵群組單身檔].[C:賦值方式]，
+                        若[C:賦值方式]=2.預定列表，新增/修改才可開窗
+     參考函式：q_imec003
+     查詢欄位：[T:料件特徵群組特徵值檔].[C:特徵群組代碼],[T:應用分類碼多語言檔].[C:說明],
+                      [T:料件特徵群組單身檔].[C:類型],[T:應用分類碼多語言檔].[C:說明],
+                      [T:料件特徵群組特徵值檔].[C:特徵值],[T:料件特徵群組特徵值多語言檔].[C:說明]
+     過濾條件：有效資料
+     新增/修改時過濾條件：[T:料件特徵群組特徵值檔].[C:特徵類型]=[T:料號特徵檔].[C:特徵]
+     回值類型：查詢時多重回值,新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imco_t.imco002" ver="2" src="s" column="imco002" table="imco_t" attribute="" type="" req="Y" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imca003" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oocq005" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oocql004" ver="2" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imca208" ver="8" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imca030_desc" ver="8" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imca033_desc" ver="8" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="6" name="b_imca005_desc" src="s" depend_field="b_imca005" correspon_key="imca005" ref_table="imeal_t" ref_fk="imeal001" ref_dlang="imeal002" ref_rtn="imeal003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_imca006_desc" src="s" depend_field="b_imca006" correspon_key="imcaent,imca006" ref_table="oocal_t" ref_fk="oocalent,oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="4" name="b_imca010_desc" src="s" depend_field="b_imca010" correspon_key="&apos;210&apos;,imca010" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imca001_desc" src="s" depend_field="imca_t.imca001" correspon_key="&apos;200&apos;,imca001" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="5" name="imca005_desc" src="s" depend_field="imca_t.imca005" correspon_key="imca005" ref_table="imeal_t" ref_fk="imeal001" ref_dlang="imeal002" ref_rtn="imeal003" status=""/>
+    <rfield cite_std="N" ver="3" name="imca006_desc" src="s" depend_field="imca_t.imca006" correspon_key="imca006" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="3" name="imca010_desc" src="s" depend_field="imca_t.imca010" correspon_key="&apos;210&apos;,imca010" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imca018_desc" src="s" depend_field="imca_t.imca018" correspon_key="imca018" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="3" name="imca022_desc" src="s" depend_field="imca_t.imca022" correspon_key="imca022" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="3" name="imca029_desc" src="s" depend_field="imca_t.imca029" correspon_key="imca029" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="3" name="imca032_desc" src="s" depend_field="imca_t.imca032" correspon_key="imca032" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="3" name="imca045_desc" src="s" depend_field="imca_t.imca045" correspon_key="imca045" ref_table="oocgl_t" ref_fk="oocgl001" ref_dlang="oocgl002" ref_rtn="oocgl003" status=""/>
+    <rfield cite_std="N" ver="3" name="imca122_desc" src="s" depend_field="imca_t.imca122" correspon_key="&apos;2000&apos;,imca122" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca126_desc" src="s" depend_field="imca_t.imca126" correspon_key="&apos;2002&apos;,imca126" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca127_desc" src="s" depend_field="imca_t.imca127" correspon_key="&apos;2003&apos;,imca127" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca128_desc" src="s" depend_field="imca_t.imca128" correspon_key="&apos;2004&apos;,imca128" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca129_desc" src="s" depend_field="imca_t.imca129" correspon_key="&apos;2005&apos;,imca129" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca131_desc" src="s" depend_field="imca_t.imca131" correspon_key="&apos;2001&apos;,imca131" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca132_desc" src="s" depend_field="imca_t.imca132" correspon_key="&apos;2006&apos;,imca132" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca133_desc" src="s" depend_field="imca_t.imca133" correspon_key="&apos;2007&apos;,imca133" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca134_desc" src="s" depend_field="imca_t.imca134" correspon_key="&apos;2008&apos;,imca134" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca135_desc" src="s" depend_field="imca_t.imca135" correspon_key="&apos;2009&apos;,imca135" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca136_desc" src="s" depend_field="imca_t.imca136" correspon_key="&apos;2010&apos;,imca136" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca137_desc" src="s" depend_field="imca_t.imca137" correspon_key="&apos;2011&apos;,imca137" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca138_desc" src="s" depend_field="imca_t.imca138" correspon_key="&apos;2012&apos;,imca138" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca139_desc" src="s" depend_field="imca_t.imca139" correspon_key="&apos;2013&apos;,imca139" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca140_desc" src="s" depend_field="imca_t.imca140" correspon_key="&apos;2014&apos;,imca140" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="7" name="imca141_desc" src="s" depend_field="imca_t.imca141" correspon_key="&apos;2015&apos;,imca141" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imca201_desc" src="s" depend_field="imca_t.imca201" correspon_key="&apos;201&apos;,imca201" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imca202_desc" src="s" depend_field="imca_t.imca202" correspon_key="&apos;202&apos;,imca202" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imca203_desc" src="s" depend_field="imca_t.imca203" correspon_key="&apos;203&apos;,imca203" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imca204_desc" src="s" depend_field="imca_t.imca204" correspon_key="&apos;204&apos;,imca204" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imca205_desc" src="s" depend_field="imca_t.imca205" correspon_key="&apos;205&apos;,imca205" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imca206_desc" src="s" depend_field="imca_t.imca206" correspon_key="&apos;206&apos;,imca206" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imca207_desc" src="s" depend_field="imca_t.imca207" correspon_key="&apos;207&apos;,imca207" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="8" name="imca208_desc" src="s" depend_field="imca_t.imca208" correspon_key="&apos;229&apos;,imca208" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status="u"/>
+    <rfield cite_std="N" ver="3" name="imcacrtdp_desc" src="s" depend_field="imca_t.imcacrtdp" correspon_key="imcacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="3" name="imcacrtid_desc" src="s" depend_field="imca_t.imcacrtid" correspon_key="imcacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="3" name="imcamodid_desc" src="s" depend_field="imca_t.imcamodid" correspon_key="imcamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="3" name="imcaowndp_desc" src="s" depend_field="imca_t.imcaowndp" correspon_key="imcaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="3" name="imcaownid_desc" src="s" depend_field="imca_t.imcaownid" correspon_key="imcaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="3" name="imcj002_desc" src="s" depend_field="imcj_t.imcj002" correspon_key="&apos;270&apos;,imcj002" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imcj003_desc" src="s" depend_field="imcj_t.imcj003" correspon_key="&apos;271&apos;,imcj003" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imcj005_desc" src="s" depend_field="imcj_t.imcj005" correspon_key="imcj005" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="3" name="imcj006_desc" src="s" depend_field="imcj_t.imcj006" correspon_key="&apos;272&apos;,imcj006" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="imcn002_desc" src="s" depend_field="imcn_t.imcn002" correspon_key="&apos;273&apos;,imcn002" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="imco002_desc" src="s" depend_field="imco_t.imco002" correspon_key="imco002" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_imca001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imca004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imca005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imca006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imca010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_oocql004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="8" name="imca208" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imca013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imca014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imca036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imca037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imca038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imca041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imca042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca043" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca044" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca045" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca122" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imca123" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca126" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca127" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca128" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca129" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imca130" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca131" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca132" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca133" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca134" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca135" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca136" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca137" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca138" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca139" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca140" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca141" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca202" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca203" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca204" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca205" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="imca_t.imca206" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imca_t.imca207" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="8" name="imca_t.imca208" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="imca_t.imcacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imcacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imcacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imcamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imcamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imcaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imcaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imca_t.imcastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcj_t.imcj002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcj_t.imcj003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcj_t.imcj004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcj_t.imcj005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcj_t.imcj006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcl_t.imcl002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcm_t.imcm002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcm_t.imcm003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcm_t.imcm004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcm_t.imcm005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcm_t.imcm006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="imcn003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcn_t.imcn002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imcn_t.imcn003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imco_t.imco002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imca003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="8" name="lbl_imca030_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="8" name="lbl_imca033_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="oocq005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="oocql004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_imca001" text="主分群碼" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_imca004" text="料件類別" lstr=""/>
+    <sfield name="lbl_imca005" text="產品特徵組別" lstr=""/>
+    <sfield name="lbl_imeal003" text="說明" lstr=""/>
+    <sfield name="lbl_imca006" text="基礎單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_imca010" text="生命週期" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_imca201" text="庫存分群" lstr=""/>
+    <sfield name="lbl_imca202" text="銷售分群" lstr=""/>
+    <sfield name="lbl_imca203" text="採購分群" lstr=""/>
+    <sfield name="lbl_imca204" text="生管分群" lstr=""/>
+    <sfield name="lbl_imca205" text="品管分群" lstr=""/>
+    <sfield name="lbl_imca206" text="財務分群" lstr=""/>
+    <sfield name="lbl_imca207" text="WMS分群" lstr=""/>
+    <sfield name="lbl_imca208" text="關務分群" lstr=""/>
+    <sfield name="lbl_imcastus" text="狀態碼" lstr=""/>
+    <sfield name="page_3" text="統計分類" lstr=""/>
+    <sfield name="lbl_imca126" text="品牌" lstr=""/>
+    <sfield name="lbl_imca127" text="系列" lstr=""/>
+    <sfield name="lbl_imca131" text="價格等級" lstr=""/>
+    <sfield name="lbl_imca128" text="型別" lstr=""/>
+    <sfield name="lbl_imca129" text="功能" lstr=""/>
+    <sfield name="lbl_imca130" text="成份" lstr=""/>
+    <sfield name="lbl_imca132" text="其它分類一" lstr=""/>
+    <sfield name="lbl_imca133" text="其它分類二" lstr=""/>
+    <sfield name="lbl_imca134" text="其它分類三" lstr=""/>
+    <sfield name="lbl_imca135" text="其它分類四" lstr=""/>
+    <sfield name="lbl_imca136" text="其它分類五" lstr=""/>
+    <sfield name="lbl_imca137" text="其它分類六" lstr=""/>
+    <sfield name="lbl_imca138" text="其它分類七" lstr=""/>
+    <sfield name="lbl_imca139" text="其它分類八" lstr=""/>
+    <sfield name="lbl_imca140" text="其它分類九" lstr=""/>
+    <sfield name="lbl_imca141" text="其它分類十" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="page_7" text="相關資料" lstr=""/>
+    <sfield name="lbl_imca011" text="產出類型" lstr=""/>
+    <sfield name="lbl_imca012" text="允許副產品產出" lstr=""/>
+    <sfield name="lbl_imca013" text="目錄編號" lstr=""/>
+    <sfield name="lbl_imca014" text="產品條碼編號" lstr=""/>
+    <sfield name="page_8" text="體積重量資訊" lstr=""/>
+    <sfield name="group_1" text="重量" lstr=""/>
+    <sfield name="lbl_imca018" text="重量單位" lstr=""/>
+    <sfield name="group_2" text="長度面積體積" lstr=""/>
+    <sfield name="lbl_imca022" text="長度單位" lstr=""/>
+    <sfield name="lbl_imca024" text="面積單位" lstr=""/>
+    <sfield name="lbl_imca026" text="體積單位" lstr=""/>
+    <sfield name="group_3" text="容積載重量" lstr=""/>
+    <sfield name="lbl_imca027" text="為包裝容器" lstr=""/>
+    <sfield name="lbl_imca029" text="容量單位" lstr=""/>
+    <sfield name="lbl_imca030" text="超量容差" lstr=""/>
+    <sfield name="lbl_imca032" text="載重量單位" lstr=""/>
+    <sfield name="lbl_imca033" text="超重容差" lstr=""/>
+    <sfield name="page_9" text="研發資訊" lstr=""/>
+    <sfield name="lbl_imca036" text="記錄組裝位置(插件)" lstr=""/>
+    <sfield name="lbl_imca037" text="組裝位置須勾稽" lstr=""/>
+    <sfield name="lbl_imca038" text="工程料件" lstr=""/>
+    <sfield name="lbl_imca043" text="據點研發可調整元件" lstr=""/>
+    <sfield name="lbl_imca041" text="工程圖號" lstr=""/>
+    <sfield name="lbl_imca042" text="主要模具編號" lstr=""/>
+    <sfield name="lbl_imca044" text="AVL控管點" lstr=""/>
+    <sfield name="page_11" text="允許使用單位" lstr=""/>
+    <sfield name="lbl_imco002" text="可使用交易單位編號" lstr=""/>
+    <sfield name="lbl_oocal003_1" text="單位說明" lstr=""/>
+    <sfield name="bpage_1" text="成份與物質" lstr=""/>
+    <sfield name="lbl_imcj002" text="類型" lstr=""/>
+    <sfield name="lbl_imcj003" text="成份/物質" lstr=""/>
+    <sfield name="lbl_imcj004" text="含量" lstr=""/>
+    <sfield name="lbl_imcj005" text="單位" lstr=""/>
+    <sfield name="lbl_imcj006" text="管制類型" lstr=""/>
+    <sfield name="page_4" text="產品特徵值" lstr=""/>
+    <sfield name="lbl_imcn002" text="特徵類型" lstr=""/>
+    <sfield name="lbl_imcn003" text="特徵值" lstr=""/>
+    <sfield name="imcn003_desc" text="特徵值說明" lstr=""/>
+    <sfield name="page_5" text="產品標籤" lstr=""/>
+    <sfield name="lbl_imcl002" text="產品標籤" lstr=""/>
+    <sfield name="lbl_oocql004_1" text="標籤名稱" lstr=""/>
+    <sfield name="lbl_oocq005" text="標籤群組" lstr=""/>
+    <sfield name="page_6" text="國際認證" lstr=""/>
+    <sfield name="lbl_imcm002" text="認證類型" lstr=""/>
+    <sfield name="lbl_imcm005" text="認證單位" lstr=""/>
+    <sfield name="lbl_imcm003" text="認證編號" lstr=""/>
+    <sfield name="lbl_imcm006" text="認證日期" lstr=""/>
+    <sfield name="lbl_imcm004" text="補充說明" lstr=""/>
+    <sfield name="page_10" text="相關資訊" lstr=""/>
+    <sfield name="group_4" text="產地資訊" lstr=""/>
+    <sfield name="lbl_imca122" text="產地分類" lstr=""/>
+    <sfield name="lbl_imca045" text="生產國家地區" lstr=""/>
+    <sfield name="lbl_oocgl003" text="說明" lstr=""/>
+    <sfield name="lbl_imca123" text="產地說明" lstr=""/>
+    <sfield name="group_5" text="資訊" lstr=""/>
+    <sfield name="lbl_imca003" text="低階碼" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

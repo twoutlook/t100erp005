@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi160_01" std_prog="aooi160_01" erpver="1.0" ver="1" module="AOO" booking="Y" class="I" template="F001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="ooam_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：透過抓取台銀、關稅網站匯率資料，或是讀取Excel資料來匯入匯率資料。
+作業功能：新增/離開
+作業類型：子作業
+輸入模式：單檔(子作業)F001_00
+作業資料來源(Master)：
+ 資料來源表：ooam_t(匯率單頭檔)
+             ooall_t(參照表多語言檔)
+资料处理：
+确认：
+確定：
+  1.呼叫s_aooi160_ins
+    判斷的變數：l_ooam001(匯率參照表號)、l_ooam005(交易貨幣批量)、
+                l_ooam006(幣別參照表號)、l_ooam007(自動預設交叉匯率)、
+                l_imptype(匯入選項)、l_ratetype(匯率種類)、l_excelname(Excel檔名)
+放棄：
+不做任何處理,直接離開
+]]>
+  </all>
+  <field cite_std="N" name="ooam_t.ooam004" ver="1" src="s" column="ooam004" table="ooam_t" attribute="D001" type="date()" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[日期：
+   1.預設值: g_today
+   2.only input
+   3.不允許空白
+]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooam007" ver="1" src="s" column="ooam007" table="ooam_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[自動預設交叉匯率：
+   1.預設值：N
+   2.不可空白
+   3.only input
+]]>
+  </field>
+  <field cite_std="N" name="lbl_type" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="type" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[匯入選項：scc ：31
+   1.不可空白
+   2.only input
+   3.SCC31
+   4.匯入選項=null時，將匯率種類及匯入檔名 這兩個gorup隱藏；
+     當選擇A時，將匯率種類的這個group整個顯示；
+     當選擇B時，將匯入檔名的這個group整個顯示
+     call cl_set_comp_visible('控件代號',FALSE)可以將整個隱藏掉
+
+(1)自動匯入選項有二：
+   A.自動匯入台灣銀行牌告匯率(台灣)
+   B.以Excel匯入匯率(中國)
+   這兩者二選一，一定要選擇其中一個。
+(2)當勾選了「A.自動匯入台灣銀行牌告匯率(台灣)」後,
+   才能維護匯率種類,匯率種類選項有二：
+   1.即期
+   2.現金
+   這兩者二選一，一定要選擇其中一個。
+(3)當勾選了「B.以Excel匯入匯率(中國)」後,
+   才能維護Excel檔名、執行"瀏覽"、"下載標準匯入模版"。
+   Excel檔名一定要有值，才可執行確定。
+]]>
+  </field>
+  <field cite_std="N" name="ratetype" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="" can_edit="Y" can_query="Y" widget="RadioGroup" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_excel" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="excel" ver="1" src="s" column="chr500" table="type_t" attribute="" type="VARCHAR2" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[Excel檔名：
+   1.only input
+   2.不可空白
+]]>
+  </field>
+  <field cite_std="N" name="lbl_ooam001" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooam001" ver="1" src="s" column="ooam001" table="ooam_t" attribute="C812" type="varchar2(5)" req="Y" i_zoom="q_ooal002_3" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[匯率參照表號：
+   1.不允許空白
+   2.only input
+   3.輸入值須存在[T:參照表檔].[C:參照表號]、ooal001='1'且有效資料；
+     若資料不存在則詢問「輸入的參照表號不存在參照表檔,請問是否要新增此參照表號?」，
+     若選擇是則呼叫應用元件s_aooi070_ins()做參照表號的新增；否則停留在本欄位
+ ]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooam003" ver="1" src="s" column="ooam003" table="ooam_t" attribute="C008" type="varchar2(10)" req="Y" i_zoom="q_ooai001" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[基礎幣別：
+   1.only input
+   2.不允許空白
+   3.輸入值須存在aooi140的ooai001
+     (不用檢查是否有效，因aooi140應用層面上無狀態碼)
+   4.開窗代號:q_ooai001
+]]>
+  </field>
+  <field cite_std="N" name="ooam003_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooam_t.ooam005" ver="1" src="s" column="ooam005" table="ooam_t" attribute="N202" type="number(20,6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[交易貨幣批量：
+   1.預設值:1
+   2.only input
+   3.不允許空白
+   4.輸入值不可小於等於0
+]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_ooam001" depend_field="ooam_t.ooam001" src="s" status="">
+      <program order="1" type="1" name="aooi071"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="ooam001_desc" src="s" depend_field="ooam_t.ooam001" correspon_key="ooament,&apos;1&apos;,ooam001" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooam004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooam007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_type" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="type" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ratetype" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_excel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="excel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_ooam001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooam001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooam003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooam_t.ooam005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="browser" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[瀏覽：
+   呼叫cl_browse_dir()開啟file browser讓USER搜尋要匯入的Excel檔,
+   再將選擇的Excel檔名回傳回畫面上
+]]>
+  </act>
+  <act cite_std="N" id="download" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[下載標準匯入模板：
+1.當自動匯入選項選擇B.以Excel匯入匯率(中國),才可使用此ACTION
+2.按下此ACTION後  
+  (1)呼叫cl_download_file("$RES/std/exrate.xls", "Client目錄/exrate.xls"),
+     將主機上的$RES/std/exrate.xls檔案下載到前一步驟選擇的目錄下存成exrate.xls
+     client目錄沿用excel當名]]>
+  </act>
+  <strings>
+    <sfield name="lbl_ooam001" text="匯率參照表號" lstr=""/>
+    <sfield name="lbl_download" text="下載標準匯入模板" lstr=""/>
+    <sfield name="lbl_ooam003" text="基礎幣別" lstr=""/>
+    <sfield name="lbl_ooam005" text="交易貨幣批量" lstr=""/>
+    <sfield name="lbl_ooam004" text="日期" lstr=""/>
+    <sfield name="lbl_ooam007" text="自動預設交叉匯率" lstr=""/>
+    <sfield name="lbl_type" text="匯入選項" lstr=""/>
+    <sfield name="lbl_group1" text="匯率種類" lstr=""/>
+    <sfield name="lbl_current" text="即期" lstr=""/>
+    <sfield name="lbl_cash" text="现金" lstr=""/>
+    <sfield name="lbl_group2" text="匯入檔名" lstr=""/>
+    <sfield name="lbl_excel" text="Excel檔名" lstr=""/>
+    <sfield name="lbl_browser" text="瀏覽" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sact name="browser" text="瀏覽" lstr=""/>
+    <sact name="download" text="下載標準匯入模板" lstr=""/>
+  </strings>
+  <sa_spec>
+    <sa_field name="accept">
+      <![CDATA[確定：
+  1.呼叫s_aooi160_ins
+    判斷的變數：l_ooam001(匯率參照表號)、l_ooam005(交易貨幣批量)、l_ooam007(自動預設交叉匯率)、
+                l_imptype(匯入選項)、l_ratetype(匯率種類)、l_excelname(Excel檔名)
+]]>
+    </sa_field>
+    <sa_field name="browser">
+      <![CDATA[瀏覽：
+   呼叫cl_browse_dir()開啟file browser讓USER搜尋要匯入的Excel檔,
+   再將選擇的Excel檔名回傳回畫面上
+]]>
+    </sa_field>
+    <sa_field name="cancel">
+      <![CDATA[放棄：
+不做任何處理,直接離開
+]]>
+    </sa_field>
+    <sa_field name="download">
+      <![CDATA[下載標準匯入模板：
+1.當自動匯入選項選擇B.以Excel匯入匯率(中國),才可使用此ACTION
+2.按下此ACTION後
+  (1)呼叫應用元件cl_download_path(),
+     供USER選擇要把標準匯入模版下載到Client端的哪一個目錄下
+  (2)呼叫cl_download_file("$RES/std/exrate.xls", "Client目錄/exrate.xls"),
+     將主機上的$RES/std/exrate.xls檔案下載到前一步驟選擇的目錄下存成exrate.xls
+]]>
+    </sa_field>
+    <sa_field name="excelname">
+      <![CDATA[Excel檔名：
+   1.only input
+   2.不可空白
+]]>
+    </sa_field>
+    <sa_field name="imptype">
+      <![CDATA[(1)自動匯入選項有二：
+   A.自動匯入台灣銀行牌告匯率(台灣)
+   B.以Excel匯入匯率(中國)
+   這兩者二選一，一定要選擇其中一個。
+(2)當勾選了「A.自動匯入台灣銀行牌告匯率(台灣)」後,
+   才能維護匯率種類,匯率種類選項有二：
+   1.即期
+   2.現金
+   這兩者二選一，一定要選擇其中一個。
+(3)當勾選了「B.以Excel匯入匯率(中國)」後,
+   才能維護Excel檔名、執行"瀏覽"、"下載標準匯入模版"。
+   Excel檔名一定要有值，才可執行確定。
+]]>
+    </sa_field>
+    <sa_field name="l_imptype">
+      <![CDATA[匯入選項：
+   1.不可空白
+   2.only input
+   3.SCC31
+   4.匯入選項=null時，將匯率種類及匯入檔名 這兩個gorup隱藏；
+     當選擇A時，將匯率種類的這個group整個顯示；
+     當選擇B時，將匯入檔名的這個group整個顯示
+     call cl_set_comp_visible('控件代號',FALSE)可以將整個隱藏掉
+]]>
+    </sa_field>
+    <sa_field name="ooam001">
+      <![CDATA[匯率參照表號：
+   1.不允許空白
+   2.only input
+   3.輸入值須存在[T:參照表檔].[C:參照表號]、ooal001='1'且有效資料；
+     若資料不存在則詢問「輸入的參照表號不存在參照表檔,請問是否要新增此參照表號?」，
+     若選擇是則呼叫應用元件s_aooi070_ins()做參照表號的新增；否則停留在本欄位
+   4.開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:參照表檔].[C:參照表號],[T:參照表多語言檔].[C:說明]
+     過濾條件：ooal001='1'
+     新增/修改時過濾條件：有效資料
+     回值類型：查詢時多重回值、新增/修改單一回值
+]]>
+    </sa_field>
+    <sa_field name="ooam005">
+      <![CDATA[交易貨幣批量：
+   1.預設值:1
+   2.only input
+   3.不允許空白
+   4.輸入值不可小於等於0
+]]>
+    </sa_field>
+    <sa_field name="ooam007">
+      <![CDATA[自動預設交叉匯率：
+   1.預設值：N
+   2.不可空白
+   3.only input
+]]>
+    </sa_field>
+    <sa_field name="ratetype">
+      <![CDATA[匯率種類：
+   1.此選項影響的是匯入銀行買入、銀行賣出匯率時，
+     是要抓取台灣銀行(rate.bot.com.tw/Pages/Static/UIP003.zh-TW.htm)的本日銀行匯率
+     裡的即期匯率還是現金匯率來做匯入
+   2.only input
+   3.不可空白
+]]>
+    </sa_field>
+    <sa_field name="主視窗">
+      <![CDATA[程式說明及目的：透過抓取台銀、關稅網站匯率資料，或是讀取Excel資料來匯入匯率資料。
+作業功能：新增/離開
+作業類型：子作業
+輸入模式：單檔(子作業)F001_00
+作業資料來源(Master)：
+	資料來源表：ooam_t(匯率單頭檔)
+	            ooall_t(參照表多語言檔)
+]]>
+    </sa_field>
+  </sa_spec>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

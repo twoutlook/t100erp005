@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asti203" module="ast" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="01726" crtdt="2013-09-27 02:49:31" modid="06189" moddt="2016-06-22 14:10:13" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="費用編號維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="staestus,stae001,stael003,stael004,stae002,stae012,stae003,stae003_desc(chr500),stae004,stae005,stae006,stae011,stae007,stae008,stae008_desc(chr500),stae009,stae010,stae010_desc(chr500),stae013,stae014,stae014_desc(chr500),stae015,stae016"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="stae001,staeownid,staeownid_desc(chr500),staeowndp,staeowndp_desc(chr500),staecrtid,staecrtid_desc(chr500),staecrtdp,staecrtdp_desc(chr500),staecrtdt,staemodid,staemodid_desc(chr500),staemoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="asti203" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="staestus,stae001,stael003,stael004,stae002,stae012,stae003,stae003_desc,stae004,stae005,stae006,stae011,stae007,stae008,stae009,stae010,stae010_desc,stae013,stae014,stae015,stae016" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="staestus,stae001,stael003,stael004,stae002,stae012,stae003,stae003_desc,stae004,stae005,stae006,stae011,stae007,stae008,stae009,stae010,stae010_desc,stae013,stae014,stae015,stae016"/>
+      <construct id="body" page="2" field="staeownid,staeowndp,staecrtid,staecrtdp,staecrtdt,staemodid,staemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="staestus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="stae001">
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="stael003"/>
+      <column id="stael004"/>
+      <column id="stae002" def_scc="6003"/>
+      <column id="stae012" def_scc="6820"/>
+      <column id="stae003">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="stae003_desc"/>
+      <column id="stae004" def_scc="6004"/>
+      <column id="stae005" def_scc="6005"/>
+      <column id="stae006" def_scc="6006"/>
+      <column id="stae011" type="S" default="Y"/>
+      <column id="stae007" type="S" default="N"/>
+      <column id="stae008">
+        <after>
+          <reference field="stae008_desc" ref_field="stae_t.stae008" map_field="staeent,stae008" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="i"/>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="stae008_desc"/>
+      <column id="stae009" type="S" default="Y"/>
+      <column id="stae010">
+        <after/>
+        <controlp form="q_oodb002_1" state="i"/>
+        <controlp form="q_oodb002_1" state="c"/>
+      </column>
+      <column id="stae010_desc"/>
+      <column id="stae013" def_scc="6932"/>
+      <column id="stae014">
+        <after>
+          <check chkid="v_ooea001_4" id="isExist"/>
+          <reference field="stae014_desc" ref_field="stae_t.stae014" map_field="staeent,stae014" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_8" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="stae014_desc"/>
+      <column id="stae015" type="S" default="0"/>
+      <column id="stae016" type="S" default="N"/>
+    </init>
+    <init id="body" page="2">
+      <column id="staeownid">
+        <after>
+          <reference field="staeownid_desc" ref_field="stae_t.staeownid" map_field="staeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="staeownid_desc"/>
+      <column id="staeowndp">
+        <after>
+          <reference field="staeowndp_desc" ref_field="stae_t.staeowndp" map_field="staeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="staeowndp_desc"/>
+      <column id="staecrtid">
+        <after>
+          <reference field="staecrtid_desc" ref_field="stae_t.staecrtid" map_field="staecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="staecrtid_desc"/>
+      <column id="staecrtdp">
+        <after>
+          <reference field="staecrtdp_desc" ref_field="stae_t.staecrtdp" map_field="staecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="staecrtdp_desc"/>
+      <column id="staecrtdt"/>
+      <column id="staemodid">
+        <after>
+          <reference field="staemodid_desc" ref_field="stae_t.staemodid" map_field="staemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="staemodid_desc"/>
+      <column id="staemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stae_t" page="1,2" linked="" pk="stae001">
+      <sql id="forupd_sql_detail" query="SELECT staestus,stae001,&apos;&apos;,&apos;&apos;,stae002,stae012,stae003,&apos;&apos;,stae004,stae005,stae006,stae011,stae007,stae008,&apos;&apos;,stae009,stae010,&apos;&apos;,stae013,stae014,&apos;&apos;,stae015,stae016,&apos;&apos;,staeownid,&apos;&apos;,staeowndp,&apos;&apos;,staecrtid,&apos;&apos;,staecrtdp,&apos;&apos;,staecrtdt,staemodid,&apos;&apos;,staemoddt FROM stae_t WHERE staeent=? AND stae001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT staestus,stae001,&apos;&apos;,&apos;&apos;,stae002,stae012,stae003,&apos;&apos;,stae004,stae005,stae006,stae011,stae007,stae008,&apos;&apos;,stae009,stae010,&apos;&apos;,stae013,stae014,&apos;&apos;,stae015,stae016,&apos;&apos;,staeownid,&apos;&apos;,staeowndp,&apos;&apos;,staecrtid,&apos;&apos;,staecrtdp,&apos;&apos;,staecrtdt,staemodid,&apos;&apos;,staemoddt FROM stae_t WHERE staeent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="stael_t.stael003,stael_t.stael004" table="stael_t" fk="stae001" pk="stael001,stael002" field="stael003,stael004"/>
+    </body>
+  </dataset>
+</assembly>
+

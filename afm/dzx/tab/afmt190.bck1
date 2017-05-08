@@ -1,0 +1,245 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt190" module="afm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="01727" crtdt="2016-02-22 17:11:55" modid="01727" moddt="2016-02-23 10:54:54" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="融資重評價維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmdfsite,fmdfsite_desc(chr80),fmdfld,fmdfld_desc(chr80),fmdfcomp,fmdfcomp_desc(chr80),fmdfdocno,fmdfdocdt,fmdf001,fmdf002,fmdf003,fmdfstus,fmdfownid,fmdfownid_desc(chr80),fmdfowndp,fmdfowndp_desc(chr80),fmdfcrtid,fmdfcrtid_desc(chr80),fmdfcrtdp,fmdfcrtdp_desc(chr80),fmdfcrtdt,fmdfmodid,fmdfmodid_desc(chr80),fmdfmoddt,fmdfcnfid,fmdfcnfid_desc(chr80),fmdfcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmdgseq,fmdg003,fmdg004,fmdg005,fmdg006,fmdg007,fmdg008,fmdg009,fmdg100,fmdg103,fmdg113,fmdg101,fmdg114,fmdg115,fmdg035,fmdg034,fmdg034_desc(chr500),fmdg033,fmdg033_desc(chr500),fmdg123,fmdg121,fmdg124,fmdg125,fmdg133,fmdg131,fmdg134,fmdg135"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="fmdgseq,fmdg010,fmdg010_desc(chr500),fmdg011,fmdg011_desc(chr500),fmdg012,fmdg012_desc(chr500),fmdg013,fmdg013_desc(chr500),fmdg014,fmdg014_desc(chr500),fmdg015,fmdg015_desc(chr500),fmdg016,fmdg016_desc(chr500),fmdg017,fmdg017_desc(chr500),fmdg018,fmdg018_desc(chr500),fmdg019,fmdg020,fmdg021,fmdg021_desc(chr500),fmdg022,fmdg022_desc(chr500),fmdg023,fmdg024,fmdg025,fmdg026,fmdg027,fmdg028,fmdg029,fmdg030,fmdg031,fmdg032"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_pre"/>
+      <action id="delete" type="standard"/>
+      <action id="open_axrp330"/>
+      <action id="open_reback"/>
+      <action id="output"/>
+      <action id="open_afmt190_01"/>
+      <action id="query" type="standard"/>
+      <action id="open_axrt300_13"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt190" method="dialog">
+    <section id="input">
+      <input id="head" field="fmdfsite,fmdfld,fmdfcomp,fmdfdocno,fmdfdocdt,fmdf001,fmdf002,fmdf003,fmdfstus"/>
+      <input id="body" page="1" field="fmdgseq,fmdg003,fmdg004,fmdg005,fmdg006,fmdg007,fmdg008,fmdg009,fmdg100,fmdg103,fmdg113,fmdg101,fmdg114,fmdg115,fmdg035,fmdg034,fmdg033,fmdg123,fmdg121,fmdg124,fmdg125,fmdg133,fmdg131,fmdg134,fmdg135" insert="N" append="N" delete="N"/>
+      <input id="body" page="2" field="fmdg010,fmdg011,fmdg012,fmdg013,fmdg014,fmdg015,fmdg016,fmdg017,fmdg018,fmdg019,fmdg020,fmdg021,fmdg022,fmdg023,fmdg024,fmdg025,fmdg026,fmdg027,fmdg028,fmdg029,fmdg030,fmdg031,fmdg032" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmdfsite,fmdfld,fmdfcomp,fmdfdocno,fmdfdocdt,fmdf001,fmdf002,fmdf003,fmdfstus,fmdfownid,fmdfowndp,fmdfcrtid,fmdfcrtdp,fmdfcrtdt,fmdfmodid,fmdfmoddt,fmdfcnfid,fmdfcnfdt"/>
+      <construct id="body" page="1" field="fmdgseq,fmdg003,fmdg004,fmdg005,fmdg006,fmdg007,fmdg008,fmdg009,fmdg100,fmdg103,fmdg113,fmdg101,fmdg114,fmdg115,fmdg035,fmdg034,fmdg034_desc,fmdg033,fmdg033_desc,fmdg123,fmdg121,fmdg124,fmdg125,fmdg133,fmdg131,fmdg134,fmdg135"/>
+      <construct id="body" page="2" field="fmdg010,fmdg011,fmdg012,fmdg013,fmdg014,fmdg015,fmdg016,fmdg017,fmdg018,fmdg019,fmdg020,fmdg021,fmdg022,fmdg023,fmdg024,fmdg025,fmdg026,fmdg027,fmdg028,fmdg029,fmdg030,fmdg031,fmdg032"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmdfld,fmdfdocno,fmdf001,fmdf002"/>
+      <set id="head" type="no_entry" field="fmdfld,fmdfdocno,fmdf001,fmdf002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmdfsite">
+        <after>
+          <reference field="fmdfsite_desc" ref_field="fmdf_t.fmdfsite" map_field="fmdfsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdfsite_desc"/>
+      <column id="fmdfld">
+        <after>
+          <reference field="fmdfld_desc" ref_field="fmdf_t.fmdfld" map_field="fmdfld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdfld_desc"/>
+      <column id="fmdfcomp">
+        <after>
+          <reference field="fmdfcomp_desc" ref_field="fmdf_t.fmdfcomp" map_field="fmdfcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdfcomp_desc"/>
+      <column id="fmdfdocno"/>
+      <column id="fmdfdocdt"/>
+      <column id="fmdf001"/>
+      <column id="fmdf002"/>
+      <column id="fmdf003"/>
+      <column id="fmdfstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+      </column>
+      <column id="fmdfownid">
+        <after>
+          <reference field="fmdfownid_desc" ref_field="fmdf_t.fmdfownid" map_field="fmdfownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmdfownid_desc"/>
+      <column id="fmdfowndp">
+        <after>
+          <reference field="fmdfowndp_desc" ref_field="fmdf_t.fmdfowndp" map_field="fmdfowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmdfowndp_desc"/>
+      <column id="fmdfcrtid">
+        <after>
+          <reference field="fmdfcrtid_desc" ref_field="fmdf_t.fmdfcrtid" map_field="fmdfcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmdfcrtid_desc"/>
+      <column id="fmdfcrtdp">
+        <after>
+          <reference field="fmdfcrtdp_desc" ref_field="fmdf_t.fmdfcrtdp" map_field="fmdfcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmdfcrtdp_desc"/>
+      <column id="fmdfcrtdt"/>
+      <column id="fmdfmodid">
+        <after>
+          <reference field="fmdfmodid_desc" ref_field="fmdf_t.fmdfmodid" map_field="fmdfmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmdfmodid_desc"/>
+      <column id="fmdfmoddt"/>
+      <column id="fmdfcnfid">
+        <after>
+          <reference field="fmdfcnfid_desc" ref_field="fmdf_t.fmdfcnfid" map_field="fmdfcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmdfcnfid_desc"/>
+      <column id="fmdfcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmdgseq"/>
+      <column id="fmdg003"/>
+      <column id="fmdg004" def_scc="8873"/>
+      <column id="fmdg005"/>
+      <column id="fmdg006"/>
+      <column id="fmdg007"/>
+      <column id="fmdg008"/>
+      <column id="fmdg009"/>
+      <column id="fmdg100"/>
+      <column id="fmdg103" type="S" default="0"/>
+      <column id="fmdg113" type="S" default="0"/>
+      <column id="fmdg101"/>
+      <column id="fmdg114" type="S" default="0"/>
+      <column id="fmdg115" type="S" default="0"/>
+      <column id="fmdg035"/>
+      <column id="fmdg034">
+        <after/>
+      </column>
+      <column id="fmdg034_desc"/>
+      <column id="fmdg033">
+        <after/>
+      </column>
+      <column id="fmdg033_desc"/>
+      <column id="fmdg123" type="S" default="0"/>
+      <column id="fmdg121"/>
+      <column id="fmdg124" type="S" default="0"/>
+      <column id="fmdg125" type="S" default="0"/>
+      <column id="fmdg133" type="S" default="0"/>
+      <column id="fmdg131"/>
+      <column id="fmdg134" type="S" default="0"/>
+      <column id="fmdg135" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="fmdg010">
+        <after>
+          <reference field="fmdg010_desc" ref_field="fmdg_t.fmdg010" map_field="fmdg010" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdg010_desc"/>
+      <column id="fmdg011">
+        <after>
+          <reference field="fmdg011_desc" ref_field="fmdg_t.fmdg011" map_field="fmdg011" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdg011_desc"/>
+      <column id="fmdg012">
+        <after>
+          <reference field="fmdg012_desc" ref_field="fmdg_t.fmdg012" map_field="fmdg012" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdg012_desc"/>
+      <column id="fmdg013">
+        <after>
+          <reference field="fmdg013_desc" ref_field="fmdg_t.fmdg013" map_field="fmdg013" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdg013_desc"/>
+      <column id="fmdg014">
+        <after>
+          <reference field="fmdg014_desc" ref_field="fmdg014" map_field="fmdg014" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;287&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdg014_desc"/>
+      <column id="fmdg015">
+        <after>
+          <reference field="fmdg015_desc" ref_field="fmdg015" map_field="fmdg015" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;281&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdg015_desc"/>
+      <column id="fmdg016">
+        <after>
+          <reference field="fmdg016_desc" ref_field="fmdg_t.fmdg016" map_field="fmdg016" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdg016_desc"/>
+      <column id="fmdg017">
+        <after>
+          <reference field="fmdg017_desc" ref_field="fmdg_t.fmdg017" map_field="fmdg017" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="fmdg017_desc"/>
+      <column id="fmdg018">
+        <after>
+          <reference field="fmdg018_desc" ref_field="fmdg_t.fmdg018" map_field="fmdg018" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdg018_desc"/>
+      <column id="fmdg019"/>
+      <column id="fmdg020"/>
+      <column id="fmdg021">
+        <after>
+          <reference field="fmdg021_desc" ref_field="fmdg_t.fmdg021" map_field="fmdg021" ref_sql="SELECT oojdl003 FROM oojdl_t WHERE oojdlent=$varg_enterprise$var AND oojdl001=? AND oojdl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdg021_desc"/>
+      <column id="fmdg022">
+        <after>
+          <reference field="fmdg022_desc" ref_field="fmdg022" map_field="fmdg022" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2002&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmdg022_desc"/>
+      <column id="fmdg023"/>
+      <column id="fmdg024"/>
+      <column id="fmdg025"/>
+      <column id="fmdg026"/>
+      <column id="fmdg027"/>
+      <column id="fmdg028"/>
+      <column id="fmdg029"/>
+      <column id="fmdg030"/>
+      <column id="fmdg031"/>
+      <column id="fmdg032"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmdf_t" pk="fmdfld,fmdfdocno,fmdf001,fmdf002">
+      <sql id="forupd_sql" type="sql" query="SELECT fmdfsite,&apos;&apos;,fmdfld,&apos;&apos;,fmdfcomp,&apos;&apos;,fmdfdocno,fmdfdocdt,fmdf001,fmdf002,fmdf003,fmdfstus,fmdfownid,&apos;&apos;,fmdfowndp,&apos;&apos;,fmdfcrtid,&apos;&apos;,fmdfcrtdp,&apos;&apos;,fmdfcrtdt,fmdfmodid,&apos;&apos;,fmdfmoddt,fmdfcnfid,&apos;&apos;,fmdfcnfdt FROM fmdf_t WHERE fmdfent= ? AND fmdfld=? AND fmdfdocno=? AND fmdf001=? AND fmdf002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmdfsite,&apos;&apos;,fmdfld,&apos;&apos;,fmdfcomp,&apos;&apos;,fmdfdocno,fmdfdocdt,fmdf001,fmdf002,fmdf003,fmdfstus,fmdfownid,&apos;&apos;,fmdfowndp,&apos;&apos;,fmdfcrtid,&apos;&apos;,fmdfcrtdp,&apos;&apos;,fmdfcrtdt,fmdfmodid,&apos;&apos;,fmdfmoddt,fmdfcnfid,&apos;&apos;,fmdfcnfdt FROM fmdf_t" order="fmdfld,fmdfdocno,fmdf001,fmdf002"/>
+    </head>
+    <body id="fmdg_t" page="1,2" linked="" pk="fmdgseq" fk="fmdgld,fmdgdocno,fmdg001,fmdg002">
+      <sql id="forupd_sql_detail" query="SELECT fmdgseq,fmdg003,fmdg004,fmdg005,fmdg006,fmdg007,fmdg008,fmdg009,fmdg100,fmdg103,fmdg113,fmdg101,fmdg114,fmdg115,fmdg035,fmdg034,&apos;&apos;,fmdg033,&apos;&apos;,fmdg123,fmdg121,fmdg124,fmdg125,fmdg133,fmdg131,fmdg134,fmdg135,&apos;&apos;,fmdg010,&apos;&apos;,fmdg011,&apos;&apos;,fmdg012,&apos;&apos;,fmdg013,&apos;&apos;,fmdg014,&apos;&apos;,fmdg015,&apos;&apos;,fmdg016,&apos;&apos;,fmdg017,&apos;&apos;,fmdg018,&apos;&apos;,fmdg019,fmdg020,fmdg021,&apos;&apos;,fmdg022,&apos;&apos;,fmdg023,fmdg024,fmdg025,fmdg026,fmdg027,fmdg028,fmdg029,fmdg030,fmdg031,fmdg032 FROM fmdg_t WHERE fmdgent=? AND fmdgld=? AND fmdgdocno=? AND fmdg001=? AND fmdg002=? AND fmdgseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmdgseq,fmdg003,fmdg004,fmdg005,fmdg006,fmdg007,fmdg008,fmdg009,fmdg100,fmdg103,fmdg113,fmdg101,fmdg114,fmdg115,fmdg035,fmdg034,&apos;&apos;,fmdg033,&apos;&apos;,fmdg123,fmdg121,fmdg124,fmdg125,fmdg133,fmdg131,fmdg134,fmdg135,&apos;&apos;,fmdg010,&apos;&apos;,fmdg011,&apos;&apos;,fmdg012,&apos;&apos;,fmdg013,&apos;&apos;,fmdg014,&apos;&apos;,fmdg015,&apos;&apos;,fmdg016,&apos;&apos;,fmdg017,&apos;&apos;,fmdg018,&apos;&apos;,fmdg019,fmdg020,fmdg021,&apos;&apos;,fmdg022,&apos;&apos;,fmdg023,fmdg024,fmdg025,fmdg026,fmdg027,fmdg028,fmdg029,fmdg030,fmdg031,fmdg032 FROM fmdg_t WHERE fmdgent=? AND fmdgld=? AND fmdgdocno=? AND fmdg001=? AND fmdg002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimm201_01" module="aim" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02295" crtdt="2014-12-24 14:05:29" modid="02295" moddt="2015-02-25 10:25:49" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="料件據點資料批次調整">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="dzeb002,dzeb002_desc(chr500),valu(chr500),cond(chr500),cond_desc(chr500),lim(chr500),val(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimm201_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="dzeb002,valu,cond,cond_desc,lim,val" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="dzeb002">
+        <after>
+          <reference field="dzeb002_desc" ref_field="dzeb_t.dzeb002" map_field="dzeb002" ref_sql="SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="dzeb002_desc"/>
+      <column id="valu"/>
+      <column id="cond">
+        <after/>
+      </column>
+      <column id="cond_desc"/>
+      <column id="lim"/>
+      <column id="val"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="dzeb_t" page="1" linked="" pk="dzeb001,dzeb002">
+      <sql id="forupd_sql_detail" query="SELECT dzeb002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM dzeb_t WHERE dzeb001=? AND dzeb002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT dzeb002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM dzeb_t WHERE 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

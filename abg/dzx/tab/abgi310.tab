@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi310" module="abg" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="08729" crtdt="2016-08-04 10:31:59" modid="08729" moddt="2016-08-04 10:31:59" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="採購/銷售影響因子設置">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgca001,bgcal003,bgca002,bgca003,bgcastus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bgca001,bgcaownid,bgcaownid_desc(chr500),bgcaowndp,bgcaowndp_desc(chr500),bgcacrtid,bgcacrtid_desc(chr500),bgcacrtdp,bgcacrtdp_desc(chr500),bgcacrtdt,bgcamodid,bgcamodid_desc(chr500),bgcamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi310" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="bgca001,bgcal003,bgca002,bgca003,bgcastus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="bgca001,bgcal003,bgca002,bgca003,bgcastus"/>
+      <construct id="body" page="2" field="bgcaownid,bgcaowndp,bgcacrtid,bgcacrtdp,bgcacrtdt,bgcamodid,bgcamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgca001">
+        <controlp form="q_bgca001" state="c"/>
+      </column>
+      <column id="bgcal003"/>
+      <column id="bgca002" type="S" default="1" def_scc="8950"/>
+      <column id="bgca003" type="S" default="1" def_scc="8951"/>
+      <column id="bgcastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bgcaownid">
+        <after>
+          <reference field="bgcaownid_desc" ref_field="bgca_t.bgcaownid" map_field="bgcaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgcaownid_desc"/>
+      <column id="bgcaowndp">
+        <after>
+          <reference field="bgcaowndp_desc" ref_field="bgca_t.bgcaowndp" map_field="bgcaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgcaowndp_desc"/>
+      <column id="bgcacrtid">
+        <after>
+          <reference field="bgcacrtid_desc" ref_field="bgca_t.bgcacrtid" map_field="bgcacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgcacrtid_desc"/>
+      <column id="bgcacrtdp">
+        <after>
+          <reference field="bgcacrtdp_desc" ref_field="bgca_t.bgcacrtdp" map_field="bgcacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgcacrtdp_desc"/>
+      <column id="bgcacrtdt"/>
+      <column id="bgcamodid">
+        <after>
+          <reference field="bgcamodid_desc" ref_field="bgca_t.bgcamodid" map_field="bgcamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgcamodid_desc"/>
+      <column id="bgcamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="bgca_t" page="1,2" linked="" pk="bgca001">
+      <sql id="forupd_sql_detail" query="SELECT bgca001,&apos;&apos;,bgca002,bgca003,bgcastus,&apos;&apos;,bgcaownid,&apos;&apos;,bgcaowndp,&apos;&apos;,bgcacrtid,&apos;&apos;,bgcacrtdp,&apos;&apos;,bgcacrtdt,bgcamodid,&apos;&apos;,bgcamoddt FROM bgca_t WHERE bgcaent=? AND bgca001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgca001,&apos;&apos;,bgca002,bgca003,bgcastus,&apos;&apos;,bgcaownid,&apos;&apos;,bgcaowndp,&apos;&apos;,bgcacrtid,&apos;&apos;,bgcacrtdp,&apos;&apos;,bgcacrtdt,bgcamodid,&apos;&apos;,bgcamoddt FROM bgca_t WHERE bgcaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="bgcal_t.bgcal003" table="bgcal_t" fk="bgca001" pk="bgcal001,bgcal002" field="bgcal003"/>
+    </body>
+  </dataset>
+</assembly>
+

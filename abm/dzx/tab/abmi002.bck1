@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmi002" module="abm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02294" crtdt="2013-07-29 14:06:50" modid="01996" moddt="2016-02-22 14:47:46" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="產品結構用量公式設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bmze001,bmze002,bmzestus,bmzeownid,bmzeownid_desc(chr80),bmzeowndp,bmzeowndp_desc(chr80),bmzecrtid,bmzecrtid_desc(chr80),bmzecrtdp,bmzecrtdp_desc(chr80),bmzecrtdt,bmzemodid,bmzemodid_desc(chr80),bmzemoddt,bmze003,bmze003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmzf002,bmzf003,bmzf004,bmzf005,bmzf006,bmzf006_desc(chr500),bmzf007,bmzf007_desc(chr500),bmzf008"/>
+      <var id="bs_field" value="bmze001,bmze002" pk="bmze001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_yzgs"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmi002" method="dialog">
+    <section id="input">
+      <input id="head" field="bmze001,bmze002,bmzestus,bmze003"/>
+      <input id="body" page="1" field="bmzf002,bmzf003,bmzf004,bmzf005,bmzf006,bmzf007,bmzf008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bmze001,bmze002,bmzestus,bmzeownid,bmzeowndp,bmzecrtid,bmzecrtdp,bmzecrtdt,bmzemodid,bmzemoddt,bmze003,bmze003_desc"/>
+      <construct id="body" page="1" field="bmzf002,bmzf003,bmzf004,bmzf005,bmzf006,bmzf007,bmzf008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bmze001"/>
+      <set id="head" type="no_entry" field="bmze001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bmze001">
+        <controlp form="q_bmze001" state="c"/>
+      </column>
+      <column id="bmze002"/>
+      <column id="bmzestus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="bmzeownid">
+        <after>
+          <reference field="bmzeownid_desc" ref_field="bmze_t.bmzeownid" map_field="bmzeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmzeownid_desc"/>
+      <column id="bmzeowndp">
+        <after>
+          <reference field="bmzeowndp_desc" ref_field="bmze_t.bmzeowndp" map_field="bmzeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bmzeowndp_desc"/>
+      <column id="bmzecrtid">
+        <after>
+          <reference field="bmzecrtid_desc" ref_field="bmze_t.bmzecrtid" map_field="bmzecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmzecrtid_desc"/>
+      <column id="bmzecrtdp">
+        <after>
+          <reference field="bmzecrtdp_desc" ref_field="bmze_t.bmzecrtdp" map_field="bmzecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bmzecrtdp_desc"/>
+      <column id="bmzecrtdt"/>
+      <column id="bmzemodid">
+        <after>
+          <reference field="bmzemodid_desc" ref_field="bmze_t.bmzemodid" map_field="bmzemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmzemodid_desc"/>
+      <column id="bmzemoddt"/>
+      <column id="bmze003">
+        <after/>
+      </column>
+      <column id="bmze003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bmzf002">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmzf003"/>
+      <column id="bmzf004" type="S" default="1" def_scc="1112"/>
+      <column id="bmzf005" def_scc="1113"/>
+      <column id="bmzf006">
+        <after>
+          <reference field="bmzf006_desc" ref_field="bmzf005,bmzf006" map_field="bmzf005,bmzf006" ref_sql="SELECT dzeb003 FROM dzeb_t WHERE dzeb001=? AND dzeb002=? "/>
+        </after>
+        <controlp form="q_dzeb002_2" state="i"/>
+      </column>
+      <column id="bmzf006_desc"/>
+      <column id="bmzf007">
+        <after>
+          <reference field="bmzf007_desc" ref_field="bmzf007" map_field="bmzf007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;273&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmzf007_desc"/>
+      <column id="bmzf008"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bmze_t" pk="bmze001">
+      <sql id="forupd_sql" type="sql" query="SELECT bmze001,bmze002,bmzestus,bmzeownid,&apos;&apos;,bmzeowndp,&apos;&apos;,bmzecrtid,&apos;&apos;,bmzecrtdp,&apos;&apos;,bmzecrtdt,bmzemodid,&apos;&apos;,bmzemoddt,bmze003,&apos;&apos; FROM bmze_t WHERE bmzeent= ? AND bmze001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bmze001,bmze002,bmzestus,bmzeownid,&apos;&apos;,bmzeowndp,&apos;&apos;,bmzecrtid,&apos;&apos;,bmzecrtdp,&apos;&apos;,bmzecrtdt,bmzemodid,&apos;&apos;,bmzemoddt,bmze003,&apos;&apos; FROM bmze_t" order="bmze001"/>
+    </head>
+    <body id="bmzf_t" page="1" linked="" pk="bmzf002" fk="bmzf001">
+      <sql id="forupd_sql_detail" query="SELECT bmzf002,bmzf003,bmzf004,bmzf005,bmzf006,&apos;&apos;,bmzf007,&apos;&apos;,bmzf008 FROM bmzf_t WHERE bmzfent=? AND bmzf001=? AND bmzf002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmzf002,bmzf003,bmzf004,bmzf005,bmzf006,&apos;&apos;,bmzf007,&apos;&apos;,bmzf008 FROM bmzf_t WHERE bmzfent=? AND bmzf001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

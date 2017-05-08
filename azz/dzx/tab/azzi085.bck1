@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi085" module="azz" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="00845" crtdt="2013-06-01 00:00:00" modid="00845" moddt="2015-08-07 11:37:35" sdver="0011" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="資料庫連線設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzda001,gzda003,gzda004,gzda005,gzda006,gzda007,gzda009,gzda002,gzda008,gzdastus,gzdaownid,gzdaownid_desc(chr80),gzdaowndp,gzdaowndp_desc(chr80),gzdacrtid,gzdacrtid_desc(chr80),gzdacrtdp,gzdacrtdp_desc(chr80),gzdacrtdt,gzdamodid,gzdamodid_desc(chr80),gzdamoddt"/>
+      <var id="bs_field" value="gzda001,gzda008" pk="gzda001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi085" method="dialog">
+    <section id="input">
+      <input id="head" field="gzda001,gzda003,gzda004,gzda005,gzda006,gzda007,gzda009,gzda002,gzda008,gzdastus,gzdaownid,gzdaowndp,gzdacrtid,gzdacrtdp,gzdacrtdt,gzdamodid,gzdamoddt"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzda001,gzda003,gzda004,gzda005,gzda006,gzda007,gzda009,gzda002,gzda008,gzdastus,gzdaownid,gzdaowndp,gzdacrtid,gzdacrtdp,gzdacrtdt,gzdamodid,gzdamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzda001"/>
+      <set id="head" type="no_entry" field="gzda001"/>
+    </init>
+    <init id="head">
+      <column id="gzda001"/>
+      <column id="gzda003"/>
+      <column id="gzda004"/>
+      <column id="gzda005" def_scc="193"/>
+      <column id="gzda006"/>
+      <column id="gzda007"/>
+      <column id="gzda009" type="S" default="(default)"/>
+      <column id="gzda002"/>
+      <column id="gzda008"/>
+      <column id="gzdastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzdaownid">
+        <after>
+          <reference field="gzdaownid_desc" ref_field="gzda_t.gzdaownid" map_field="gzdaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzdaownid_desc"/>
+      <column id="gzdaowndp">
+        <after>
+          <reference field="gzdaowndp_desc" ref_field="gzda_t.gzdaowndp" map_field="gzdaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzdaowndp_desc"/>
+      <column id="gzdacrtid">
+        <after>
+          <reference field="gzdacrtid_desc" ref_field="gzda_t.gzdacrtid" map_field="gzdacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzdacrtid_desc"/>
+      <column id="gzdacrtdp">
+        <after>
+          <reference field="gzdacrtdp_desc" ref_field="gzda_t.gzdacrtdp" map_field="gzdacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzdacrtdp_desc"/>
+      <column id="gzdacrtdt"/>
+      <column id="gzdamodid">
+        <after>
+          <reference field="gzdamodid_desc" ref_field="gzda_t.gzdamodid" map_field="gzdamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzdamodid_desc"/>
+      <column id="gzdamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzda_t" pk="gzda001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzda001,gzda003,gzda004,gzda005,gzda006,gzda007,gzda009,gzda002,gzda008,gzdastus,gzdaownid,&apos;&apos;,gzdaowndp,&apos;&apos;,gzdacrtid,&apos;&apos;,gzdacrtdp,&apos;&apos;,gzdacrtdt,gzdamodid,&apos;&apos;,gzdamoddt FROM gzda_t WHERE gzda001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzda001 FROM gzda_t" order="gzda001"/>
+    </head>
+  </dataset>
+</assembly>
+

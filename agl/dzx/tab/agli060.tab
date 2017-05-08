@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli060" module="agl" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02295" crtdt="2013-08-22 09:48:55" modid="02599" moddt="2016-09-12 16:53:43" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="會計科目設限維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glakld,glakld_desc(chr80),glaacomp,glak001,glak002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glakstus,glak003,glak003_desc(chr500),glak004,glak004_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glak003,glak004,glakmodid,glakmodid_desc(chr500),glakmoddt,glakownid,glakownid_desc(chr500),glakowndp,glakowndp_desc(chr500),glakcrtid,glakcrtid_desc(chr500),glakcrtdp,glakcrtdp_desc(chr500),glakcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="agli060_01"/>
+      <action id="agli060_02"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="agli060_01"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli060" method="dialog">
+    <section id="input">
+      <input id="head" field="glakld,glaacomp,glak001,glak002"/>
+      <input id="body" page="1" field="glakstus,glak003,glak003_desc,glak004,glak004_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glakld,glak001,glak002"/>
+      <construct id="body" page="1" field="glakstus,glak003,glak003_desc,glak004,glak004_desc"/>
+      <construct id="body" page="2" field="glakmodid,glakmoddt,glakownid,glakowndp,glakcrtid,glakcrtdp,glakcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glakld,glak001"/>
+      <set id="head" type="no_entry" field="glakld,glak001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glakld">
+        <after>
+          <reference field="glakld_desc" ref_field="glak_t.glakld" map_field="glakent,glakld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_glaa" state="i"/>
+        <controlp form="q_glaa" state="c"/>
+      </column>
+      <column id="glakld_desc"/>
+      <column id="glaacomp">
+        <controlp form="q_ooea001_2" state="c"/>
+      </column>
+      <column id="glak001" def_scc="8017"/>
+      <column id="glak002" type="S" default="1" def_scc="8018"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glakstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glak003">
+        <after/>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glak003_desc"/>
+      <column id="glak004">
+        <after/>
+        <controlp form="q_ooea001_1" state="i"/>
+        <controlp form="q_ooea001_1" state="c"/>
+      </column>
+      <column id="glak004_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glakmodid">
+        <after>
+          <reference field="glakmodid_desc" ref_field="glak_t.glakmodid" map_field="glakmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glakmodid_desc"/>
+      <column id="glakmoddt"/>
+      <column id="glakownid">
+        <after>
+          <reference field="glakownid_desc" ref_field="glak_t.glakownid" map_field="glakownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glakownid_desc"/>
+      <column id="glakowndp">
+        <after>
+          <reference field="glakowndp_desc" ref_field="glak_t.glakowndp" map_field="glakowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glakowndp_desc"/>
+      <column id="glakcrtid">
+        <after>
+          <reference field="glakcrtid_desc" ref_field="glak_t.glakcrtid" map_field="glakcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glakcrtid_desc"/>
+      <column id="glakcrtdp">
+        <after>
+          <reference field="glakcrtdp_desc" ref_field="glak_t.glakcrtdp" map_field="glakcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glakcrtdp_desc"/>
+      <column id="glakcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glak_t" pk="glakld,glak001">
+      <sql id="forupd_sql" type="sql" query="SELECT glakld,&apos;&apos;,&apos;&apos;,glak001,glak002 FROM glak_t WHERE glakent= ? AND glakld=? AND glak001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glakld,&apos;&apos;,&apos;&apos;,glak001,glak002 FROM glak_t" order="glakld,glak001"/>
+    </head>
+    <body id="glak_t" page="1,2" linked="" pk="glak003,glak004" fk="glakld,glak001">
+      <sql id="forupd_sql_detail" query="SELECT glakstus,glak003,&apos;&apos;,glak004,&apos;&apos;,&apos;&apos;,&apos;&apos;,glakmodid,&apos;&apos;,glakmoddt,glakownid,&apos;&apos;,glakowndp,&apos;&apos;,glakcrtid,&apos;&apos;,glakcrtdp,&apos;&apos;,glakcrtdt FROM glak_t WHERE glakent=? AND glakld=? AND glak001=? AND glak003=? AND glak004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glakstus,glak003,&apos;&apos;,glak004,&apos;&apos;,&apos;&apos;,&apos;&apos;,glakmodid,&apos;&apos;,glakmoddt,glakownid,&apos;&apos;,glakowndp,&apos;&apos;,glakcrtid,&apos;&apos;,glakcrtdp,&apos;&apos;,glakcrtdt FROM glak_t WHERE glakent= ? AND glakld=? AND glak001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

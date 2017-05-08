@@ -1,0 +1,1641 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aglt310_02" std_prog="aglt310_02" erpver="1.0" module="AGL" ver="2" env="s" zone="t10dev" booking="N" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.aglt310_02_glaq024_desc" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#產品分類說明
+PRIVATE FUNCTION aglt310_02_glaq024_desc(p_glaq024)
+    DEFINE p_glaq024   LIKE glaq_t.glaq024
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = p_glaq024
+    CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+     RETURN  g_rtn_fields[1] 
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq024_chk" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 產品分類資料檢查
+PRIVATE FUNCTION aglt310_02_glaq024_chk(p_glaq024)
+  DEFINE p_glaq024   LIKE glaq_t.glaq024
+  DEFINE l_rtaxstus  LIKE rtax_t.rtaxstus
+
+  LET g_errno = ''
+  SELECT rtaxstus INTO l_rtaxstus FROM rtax_t
+   WHERE rtaxent = g_enterprise
+     AND rtax001 = p_glaq024
+
+  CASE
+     WHEN SQLCA.SQLCODE = 100   LET g_errno = 'aoo-00137'
+     WHEN l_rtaxstus = 'N'      LET g_errno = 'aoo-00138'
+  END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq021_desc" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#客商說明
+PRIVATE FUNCTION aglt310_02_glaq021_desc(p_pmaa001)
+   DEFINE p_pmaa001    LIKE pmaa_t.pmaa001
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_pmaa001
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   RETURN g_rtn_fields[1]
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_ooea001_desc" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#營運據點/部門/成本利潤中心說明
+PRIVATE FUNCTION aglt310_02_ooea001_desc(p_ooea001)
+   DEFINE p_ooea001     LIKE ooea_t.ooea001
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] =p_ooea001
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   RETURN  g_rtn_fields[1] 
+           
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq026_desc" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#预算编号说明
+PRIVATE FUNCTION aglt310_02_glaq026_desc(p_glaq026)
+   DEFINE p_glaq026      LIKE glaq_t.glaq026
+   
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = p_glaq026
+    CALL ap_ref_array2(g_ref_fields,"SELECT bgaal003 FROM bgaal_t WHERE bgaalent='"||g_enterprise||"' AND bgaal001=? AND bgaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   RETURN  g_rtn_fields[1] 
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq026_chk" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#預算編號資料檢查
+PRIVATE FUNCTION aglt310_02_glaq026_chk(p_glaq026)
+    DEFINE p_glaq026     LIKE glaq_t.glaq026
+    DEFINE l_bgaastus    LIKE bgaa_t.bgaastus
+    
+    LET g_errno = ''
+     SELECT bgaastus INTO l_bgaastus FROM bgaa_t
+   WHERE bgaaent = g_enterprise
+     AND bgaa001 = p_glaq026
+
+  CASE
+     WHEN SQLCA.SQLCODE = 100   LET g_errno = 'abg-00007'
+     WHEN l_bgaastus = 'N'      LET g_errno = 'abg-00008'
+  END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq021_chk" order="7" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#客商資料檢查
+PRIVATE FUNCTION aglt310_02_glaq021_chk(p_pmaa001)
+   DEFINE p_pmaa002     LIKE pmaa_t.pmaa002
+   DEFINE p_pmaa001     LIKE pmaa_t.pmaa001
+   DEFINE l_pmaastus    LIKE pmaa_t.pmaastus
+
+   LET g_errno = ''
+   SELECT pmaastus INTO l_pmaastus FROM pmaa_t
+    WHERE pmaaent = g_enterprise
+      AND pmaa001 = p_pmaa001
+
+   CASE
+      WHEN SQLCA.SQLCODE = 100   LET g_errno = 'apm-00028'
+      WHEN l_pmaastus = 'N'      LET g_errno = 'apm-00029'
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq013_chk" order="8" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#人員資料檢查
+PRIVATE FUNCTION aglt310_02_glaq013_chk(p_glaq013)
+   DEFINE p_glaq013    LIKE glaq_t.glaq013 
+   DEFINE  l_ooagstus  LIKE ooag_t.ooagstus
+
+
+   LET g_errno=''
+   SELECT ooagstus INTO l_ooagstus FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = p_glaq013
+
+   CASE
+      WHEN SQLCA.SQLCODE=100   LET g_errno = 'aoo-00074'
+      WHEN l_ooagstus ='N'     LET g_errno = 'aoo-00071'
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq007_chk" order="9" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+計價單位檢查
+PRIVATE FUNCTION aglt310_02_glaq007_chk(p_glaq007)
+   DEFINE p_glaq007     LIKE glaq_t.glaq007
+   DEFINE l_oocastus    LIKE ooca_t.oocastus
+   
+   LET g_errno = ''
+   SELECT oocastus INTO l_oocastus FROM ooca_t
+    WHERE oocaent = g_enterprise
+      AND ooca001 = p_glaq007
+    
+    CASE  
+        WHEN SQLCA.sqlcode = 100   LET g_errno = 'aim-00004'
+        WHEN l_oocastus = 'N'      LET g_errno = 'aim-00005'
+     END CASE
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq018_chk" order="10" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#部門/利潤成本中心檢查
+PRIVATE FUNCTION aglt310_02_glaq018_chk(p_glaq018,p_glapdocdt)
+   DEFINE l_ooegstus     LIKE ooeg_t.ooegstus
+   DEFINE p_glaq018      LIKE glaq_t.glaq018
+   DEFINE p_glapdocdt    LIKE glap_t.glapdocdt    #传票日期
+   LET g_errno = ''
+   
+   SELECT ooegstus INTO l_ooegstus FROM ooeg_t
+    WHERE ooegent = g_enterprise
+      AND ooeg001 = p_glaq018
+      AND ooeg006 <= p_glapdocdt
+      AND (ooeg007 IS NULL OR ooeg007 >= p_glapdocdt ) 
+   CASE
+      WHEN SQLCA.SQLCODE = 100    LET g_errno = 'abm-00006'
+      WHEN l_ooegstus = 'N'       LET g_errno = 'abm-00007'
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq017_chk" order="11" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#營運據點資料檢查
+PRIVATE FUNCTION aglt310_02_glaq017_chk(p_glaq017)
+   DEFINE p_glaq017      LIKE glaq_t.glaq017
+   DEFINE l_ooefstus     LIKE ooea_t.ooeastus
+   
+   LET g_errno = ''
+   
+   SELECT ooefstus INTO l_ooefstus FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = p_glaq017
+      
+   CASE
+      WHEN SQLCA.SQLCODE = 100    LET g_errno = 'aoo-00088'
+      WHEN l_ooefstus = 'N'       LET g_errno = 'aoo-00089'
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq013_desc" order="12" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#人員全稱
+PRIVATE FUNCTION aglt310_02_glaq013_desc(p_glaq013)
+   DEFINE l_oogf002_desc        LIKE oofa_t.oofa011
+    DEFINE p_glaq013             LIKE glaq_t.glaq013
+
+    LET  l_oogf002_desc = ''
+    SELECT oofa011 INTO l_oogf002_desc FROM oofa_t
+     WHERE oofaent = g_enterprise
+       AND oofa001 IN (SELECT ooag002 FROM ooag_t
+                        WHERE ooagent = g_enterprise
+                          AND ooag001 = p_glaq013)
+     RETURN l_oogf002_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_show_ref" order="13" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+说明
+PRIVATE FUNCTION aglt310_02_show_ref()
+    CALL aglt310_02_ooea001_desc(g_glaq_m.glaq017) RETURNING g_glaq_m.glaq017_desc
+    DISPLAY BY NAME g_glaq_m.glaq017_desc
+    
+    CALL aglt310_02_ooea001_desc(g_glaq_m.glaq018) RETURNING g_glaq_m.glaq018_desc
+    DISPLAY BY NAME g_glaq_m.glaq018_desc
+    
+    CALL aglt310_02_ooea001_desc(g_glaq_m.glaq019) RETURNING g_glaq_m.glaq019_desc
+    DISPLAY BY NAME g_glaq_m.glaq019_desc 
+    
+    CALL aglt310_02_glaq020_desc('287',g_glaq_m.glaq020) RETURNING g_glaq_m.glaq020_desc
+    DISPLAY BY NAME g_glaq_m.glaq020_desc 
+    
+    CALL aglt310_02_glaq021_desc(g_glaq_m.glaq021) RETURNING g_glaq_m.glaq021_desc
+    DISPLAY BY NAME g_glaq_m.glaq021_desc 
+    
+    CALL aglt310_02_glaq021_desc(g_glaq_m.glaq022) RETURNING g_glaq_m.glaq022_desc
+    DISPLAY BY NAME g_glaq_m.glaq022_desc 
+    
+    CALL aglt310_02_glaq020_desc('281',g_glaq_m.glaq023) RETURNING g_glaq_m.glaq023_desc
+    DISPLAY BY NAME g_glaq_m.glaq023_desc 
+    
+    CALL aglt310_02_glaq024_desc(g_glaq_m.glaq024) RETURNING g_glaq_m.glaq024_desc
+    DISPLAY BY NAME g_glaq_m.glaq024_desc 
+    
+    CALL aglt310_02_glaq013_desc(g_glaq_m.glaq025) RETURNING g_glaq_m.glaq025_desc
+    DISPLAY BY NAME g_glaq_m.glaq025_desc 
+    
+    CALL aglt310_02_glaq026_desc(g_glaq_m.glaq026) RETURNING g_glaq_m.glaq026_desc
+    DISPLAY BY NAME g_glaq_m.glaq026_desc 
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq020_desc" order="14" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+区域客群说明
+PRIVATE FUNCTION aglt310_02_glaq020_desc(p_oocql001,p_oocql002)
+    DEFINE p_oocql001     LIKE oocql_t.oocql001
+    DEFINE p_oocql002     LIKE oocql_t.oocql002
+    
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = p_oocql001
+    LET g_ref_fields[2] = p_oocql002
+    CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+    RETURN g_rtn_fields[1]
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_02_glaq020_chk" order="15" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#区域客群检查
+PRIVATE FUNCTION aglt310_02_glaq020_chk(p_oocq001,p_oocq002)
+   DEFINE p_oocq001     LIKE oocq_t.oocq001
+   DEFINE p_oocq002     LIKE oocq_t.oocq002
+   DEFINE l_oocqstus     LIKE oocq_t.oocqstus
+   
+   LET g_errno = ''
+   SELECT oocqstus INTO l_oocqstus FROM oocq_t
+    WHERE oocqent = g_enterprise
+      AND oocq001 = p_oocq001
+      AND oocq002 = p_oocq002
+   CASE
+     WHEN SQLCA.SQLCODE = 100 
+        IF p_oocq001 = '287' THEN      
+           LET g_errno = 'apm-00092'
+        ELSE
+           LET g_errno = 'axm-00003'  
+        END IF 
+     
+     WHEN l_oocqstus = 'N'
+        IF p_oocq001 = '287' THEN    
+           LET g_errno = 'apm-00093' 
+        ELSE
+           LET g_errno = 'axm-00004' 
+        END IF       
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_glaq_m_t       type_g_glaq_m]]>
+  </point>
+  <point name="input.a.glaq005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_glaq_m.glaq005) THEN
+               CALL aglt310_02_glaq005_chk(g_glaq_m.glaq005) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq005,g_errno,1)
+                  LET g_glaq_m.glaq005 = g_glaq_m_t.glaq005
+                  NEXT FIELD glaq005
+               ELSE
+                  #錄入幣別與當前預設的幣別相同，匯率就是1
+                  IF g_glaq_m.glaq005 = g_glaa001 THEN
+                     LET g_glaq_m.glaq006 = 1
+                  ELSE 
+                     #抓取對應最近的銀行中價匯率
+                     SELECT ooan007 INTO g_glaq_m.glaq006 FROM ooan_t
+                      WHERE ooanent = g_enterprise
+                        AND ooan001 = g_glaa002   
+                        AND ooan002 = g_glaq_m.glaq005 #來源幣別
+                        AND ooan003 = g_glaa001        #目的幣別 
+                        AND ooan004 =(SELECT max(ooan004) FROM ooan_t
+                                        WHERE ooanent = g_enterprise
+                                          AND ooan001 = g_glaa002   
+                                          AND ooan002 = g_glaq_m.glaq005 #來源幣別
+                                          AND ooan003 = g_glaa001        #目的幣別 
+                                          AND ooan004 <= p_glapdocdt)
+                  END IF                                          
+               END IF 
+            END IF ]]>
+  </point>
+  <point name="input.a.glaq006" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_glaq_m.glaq006) THEN  
+            IF g_glaq_m.glaq006 < 0 THEN
+               CALL cl_err(g_glaq_m.glaq006,'aim-00009',1)
+               LET g_glaq_m.glaq006 = 0
+               NEXT FIELD glaq006
+            END IF   
+         END IF  ]]>
+  </point>
+  <point name="input.a.glaq007" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_glaq_m.glaq007) THEN
+               CALL aglt310_02_glaq007_chk(g_glaq_m.glaq007) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq007,g_errno,1)
+                  LET g_glaq_m.glaq007 = g_glaq_m_t.glaq007
+                  NEXT FIELD glaq007
+               END IF 
+            END IF 
+]]>
+  </point>
+  <point name="input.a.glaq008" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_glaq_m.glaq008) AND NOT cl_null(g_glaq_m.glaq009) THEN
+               IF g_glaq_m.glaq008 < 0 THEN
+                  CALL cl_err(g_glaq_m.glaq008,'aim-00009',1)
+                  IF cl_null(g_glaq_m_t.glaq008) THEN
+                     LET g_glaq_m.glaq008 = 0
+                  ELSE
+                     LET g_glaq_m.glaq008=g_glaq_m_t.glaq008 
+                  END IF 
+                  NEXT FIELD glaq008
+               END IF    
+                             
+            END IF 
+            ]]>
+  </point>
+  <point name="input.a.glaq009" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_glaq_m.glaq008) AND NOT cl_null(g_glaq_m.glaq009) THEN
+               IF g_glaq_m.glaq009 < 0 THEN
+                  CALL cl_err(g_glaq_m.glaq009,'aim-00009',1)
+                  IF cl_null(g_glaq_m_t.glaq009) THEN
+                     LET g_glaq_m.glaq009 = 0
+                  ELSE
+                     LET g_glaq_m.glaq009 = g_glaq_m_t.glaq009
+                  END IF 
+                  NEXT FIELD glaq009
+               END IF    
+               
+            END IF 
+            ]]>
+  </point>
+  <point name="input.a.glaq010" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT cl_null(g_glaq_m.glaq010) THEN  
+            IF g_glaq_m.glaq010 < 0 THEN
+               CALL cl_err(g_glaq_m.glaq010,'aim-00009',1)
+               LET g_glaq_m.glaq010 = 0
+               NEXT FIELD glaq010
+            END IF   
+         END IF    ]]>
+  </point>
+  <point name="input.a.glaq013" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO glaq013_desc
+            IF NOT cl_null(g_glaq_m.glaq013) THEN
+               CALL aglt310_02_glaq013_chk(g_glaq_m.glaq013) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq013,g_errno,1)
+                  LET g_glaq_m.glaq013 = g_glaq_m.glaq013_desc
+                  CALL aglt310_02_glaq013_desc(g_glaq_m.glaq013) RETURNING g_glaq_m.glaq013_desc
+                  DISPLAY BY NAME g_glaq_m.glaq013_desc
+                  NEXT FIELD glaq013
+               END IF 
+            END IF 
+            CALL aglt310_02_glaq013_desc(g_glaq_m.glaq013) RETURNING g_glaq_m.glaq013_desc
+            DISPLAY BY NAME g_glaq_m.glaq013_desc]]>
+  </point>
+  <point name="input.a.glaq017" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO glaq017_desc
+            IF NOT cl_null(g_glaq_m.glaq017) THEN
+              CALL s_get_orga('2',g_glaq_m.glaq017,p_glapdocdt) 
+              RETURNING l_success,g_glaq_m.glaq017,g_glaq_m.glaq017_desc,l_errno
+              IF l_success = FALSE THEN
+                 CALL cl_err(g_glaq_m.glaq017,l_errno,1)
+                 LET g_glaq_m.glaq017 = g_glaq_m_t.glaq017
+                 NEXT FIELD glaq017
+              END IF 
+            END IF 
+            CALL aglt310_02_ooea001_desc(g_glaq_m.glaq017) RETURNING g_glaq_m.glaq017_desc
+            DISPLAY g_glaq_m.glaq017_desc TO glaq017_desc
+]]>
+  </point>
+  <point name="input.a.glaq018" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO glaq018_desc
+            IF NOT cl_null(g_glaq_m.glaq018) THEN
+#               CALL s_get_orga('6',g_glaq_m.glaq018,p_glapdocdt) 
+#               RETURNING l_success,g_glaq_m.glaq018,g_glaq_m.glaq018_desc,l_errno
+#               IF l_success = FALSE THEN
+#                  CALL cl_err(g_glaq_m.glaq018,l_errno,1)
+#                  LET g_glaq_m.glaq018 = g_glaq_m_t.glaq018
+#                  NEXT FIELD glaq018
+#               END IF 
+               CALL aglt310_02_glaq018_chk(g_glaq_m.glaq018,p_glapdocdt) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq018,g_errno,1)
+                  LET g_glaq_m.glaq018 = g_glaq_m_t.glaq018
+                  CALL aglt310_02_ooea001_desc(g_glaq_m.glaq018) RETURNING g_glaq_m.glaq018_desc
+                  DISPLAY BY NAME g_glaq_m.glaq018_desc
+                  NEXT FIELD glaq018
+               END IF
+               IF cl_null(g_glaq_m.glaq019) AND l_glad008 = 'Y' THEN 
+                  SELECT ooeg004 INTO g_glaq_m.glaq019 FROM ooeg_t 
+                   WHERE ooegent = g_enterprise AND ooeg001 = g_glaq_m.glaq018
+                  CALL aglt310_02_ooea001_desc(g_glaq_m.glaq019) RETURNING g_glaq_m.glaq019_desc
+                  DISPLAY BY NAME g_glaq_m.glaq019_desc
+               END IF
+            END IF 
+            CALL aglt310_02_ooea001_desc(g_glaq_m.glaq018) RETURNING g_glaq_m.glaq018_desc
+            DISPLAY BY NAME g_glaq_m.glaq018_desc
+            ]]>
+  </point>
+  <point name="input.a.glaq019" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO glaq019_desc
+            IF NOT cl_null(g_glaq_m.glaq019) THEN
+               #CALL aglt310_02_glaq018_chk(g_glaq_m.glaq019,p_glapdocdt) 
+               #IF NOT cl_null(g_errno) THEN
+               #   CALL cl_err(g_glaq_m.glaq019,g_errno,1)
+               #   LET g_glaq_m.glaq019 = g_glaq_m_t.glaq019
+               #   CALL aglt310_02_ooea001_desc(g_glaq_m.glaq019) RETURNING g_glaq_m.glaq019_desc
+               #   DISPLAY BY NAME g_glaq_m.glaq019_desc
+               #   NEXT FIELD glaq019
+               #END IF 
+               CALL s_get_orga('6',g_glaq_m.glaq019,p_glapdocdt) 
+               RETURNING l_success,g_glaq_m.glaq019,g_glaq_m.glaq019_desc,l_errno
+               IF l_success = FALSE THEN
+                  CALL cl_err(g_glaq_m.glaq019,l_errno,1)
+                  LET g_glaq_m.glaq019 = g_glaq_m_t.glaq019
+                  NEXT FIELD glaq019
+               END IF
+            END IF 
+            CALL aglt310_02_ooea001_desc(g_glaq_m.glaq019) RETURNING g_glaq_m.glaq019_desc
+            DISPLAY BY NAME g_glaq_m.glaq019_desc
+]]>
+  </point>
+  <point name="input.a.glaq020" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO glaq020_desc
+            IF NOT cl_null(g_glaq_m.glaq020) THEN
+                CALL aglt310_02_glaq020_chk('287',g_glaq_m.glaq020) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq020,g_errno,1)
+                  LET g_glaq_m.glaq020 = g_glaq_m_t.glaq020
+                  CALL aglt310_02_glaq020_desc('287',g_glaq_m.glaq020) RETURNING g_glaq_m.glaq020_desc
+                  DISPLAY BY NAME g_glaq_m.glaq020_desc
+                  NEXT FIELD glaq020
+               END IF 
+            END IF 
+            CALL aglt310_02_glaq020_desc('287',g_glaq_m.glaq020) RETURNING g_glaq_m.glaq020_desc
+            DISPLAY BY NAME g_glaq_m.glaq020_desc]]>
+  </point>
+  <point name="input.a.glaq021" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO glaq021_desc
+            IF NOT cl_null(g_glaq_m.glaq021) THEN
+               CALL aglt310_02_glaq021_chk(g_glaq_m.glaq021) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq021,g_errno,1)
+                  LET g_glaq_m.glaq021 = g_glaq_m_t.glaq021
+                   CALL aglt310_02_glaq021_desc(g_glaq_m.glaq021) RETURNING g_glaq_m.glaq021_desc
+                  DISPLAY BY NAME g_glaq_m.glaq021_desc
+                  NEXT FIELD glaq021
+               END IF 
+            END IF 
+            CALL aglt310_02_glaq021_desc(g_glaq_m.glaq021) RETURNING g_glaq_m.glaq021_desc
+            DISPLAY BY NAME g_glaq_m.glaq021_desc
+]]>
+  </point>
+  <point name="input.a.glaq022" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO glaq022_desc
+            IF NOT cl_null(g_glaq_m.glaq022) THEN
+               CALL aglt310_02_glaq021_chk(g_glaq_m.glaq022) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq022,g_errno,1)
+                  LET g_glaq_m.glaq022 = g_glaq_m_t.glaq022
+                  CALL aglt310_02_glaq021_desc(g_glaq_m.glaq022) RETURNING g_glaq_m.glaq022_desc
+                  DISPLAY BY NAME g_glaq_m.glaq022_desc
+                  NEXT FIELD glaq022
+               END IF 
+            END IF 
+            CALL aglt310_02_glaq021_desc(g_glaq_m.glaq022) RETURNING g_glaq_m.glaq022_desc
+            DISPLAY BY NAME g_glaq_m.glaq022_desc
+]]>
+  </point>
+  <point name="input.a.glaq023" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[             DISPLAY '' TO glaq023_desc
+            IF NOT cl_null(g_glaq_m.glaq023) THEN
+                CALL aglt310_02_glaq020_chk('281',g_glaq_m.glaq023) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq023,g_errno,1)
+                  LET g_glaq_m.glaq023 = g_glaq_m_t.glaq023
+                  CALL aglt310_02_glaq020_desc('281',g_glaq_m.glaq023) RETURNING g_glaq_m.glaq023_desc
+                  DISPLAY BY NAME g_glaq_m.glaq023_desc
+                  NEXT FIELD glaq023
+               END IF 
+            END IF 
+            CALL aglt310_02_glaq020_desc('281',g_glaq_m.glaq023) RETURNING g_glaq_m.glaq023_desc
+            DISPLAY BY NAME g_glaq_m.glaq023_desc]]>
+  </point>
+  <point name="input.a.glaq024" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO glaq024_desc
+            IF NOT cl_null(g_glaq_m.glaq024) THEN
+               CALL aglt310_02_glaq024_chk(g_glaq_m.glaq024) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq024,g_errno,1)
+                  LET g_glaq_m.glaq024 = g_glaq_m_t.glaq024
+                  CALL aglt310_02_glaq024_desc(g_glaq_m.glaq024) RETURNING g_glaq_m.glaq024_desc
+                  DISPLAY BY NAME g_glaq_m.glaq024_desc
+                  NEXT FIELD glaq024
+               END IF 
+            END IF 
+            CALL aglt310_02_glaq024_desc(g_glaq_m.glaq024) RETURNING g_glaq_m.glaq024_desc
+            DISPLAY BY NAME g_glaq_m.glaq024_desc
+            ]]>
+  </point>
+  <point name="input.a.glaq025" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO glaq025_desc
+            IF NOT cl_null(g_glaq_m.glaq025) THEN
+               CALL aglt310_02_glaq013_chk(g_glaq_m.glaq025) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq025,g_errno,1)
+                  LET g_glaq_m.glaq025 = g_glaq_m_t.glaq025
+                  CALL aglt310_02_glaq013_desc(g_glaq_m.glaq025) RETURNING g_glaq_m.glaq025_desc
+                  DISPLAY BY NAME g_glaq_m.glaq025_desc
+                  NEXT FIELD glaq025
+               END IF 
+            END IF 
+            CALL aglt310_02_glaq013_desc(g_glaq_m.glaq025) RETURNING g_glaq_m.glaq025_desc
+            DISPLAY BY NAME g_glaq_m.glaq025_desc
+]]>
+  </point>
+  <point name="input.a.glaq026" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY '' TO glaq026_desc
+            IF NOT cl_null(g_glaq_m.glaq026) THEN
+               CALL aglt310_02_glaq026_chk(g_glaq_m.glaq026) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glaq_m.glaq026,g_errno,1)
+                  LET g_glaq_m.glaq026 = g_glaq_m_t.glaq026
+                  CALL aglt310_02_glaq026_desc(g_glaq_m.glaq026) RETURNING g_glaq_m.glaq026_desc
+                  DISPLAY BY NAME g_glaq_m.glaq026_desc
+                  NEXT FIELD glaq026
+               END IF 
+            END IF 
+            CALL aglt310_02_glaq026_desc(g_glaq_m.glaq026) RETURNING g_glaq_m.glaq026_desc
+            DISPLAY BY NAME g_glaq_m.glaq026_desc
+            
+           ]]>
+  </point>
+  <point name="input.a.glaq027" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.glaq028" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.glaqdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glaq_m.glaqdocno) AND NOT cl_null(g_glaq_m.glaqld) AND NOT cl_null(g_glaq_m.glaqseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_glaq_m.glaqdocno != g_glaqdocno_t  OR g_glaq_m.glaqld != g_glaqld_t  OR g_glaq_m.glaqseq != g_glaqseq_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glaq_t WHERE "||"glaqent = '" ||g_enterprise|| "' AND "||"glaqdocno = '"||g_glaq_m.glaqdocno ||"' AND "|| "glaqld = '"||g_glaq_m.glaqld ||"' AND "|| "glaqseq = '"||g_glaq_m.glaqseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.glaqld" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glaq_m.glaqdocno) AND NOT cl_null(g_glaq_m.glaqld) AND NOT cl_null(g_glaq_m.glaqseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_glaq_m.glaqdocno != g_glaqdocno_t  OR g_glaq_m.glaqld != g_glaqld_t  OR g_glaq_m.glaqseq != g_glaqseq_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glaq_t WHERE "||"glaqent = '" ||g_enterprise|| "' AND "||"glaqdocno = '"||g_glaq_m.glaqdocno ||"' AND "|| "glaqld = '"||g_glaq_m.glaqld ||"' AND "|| "glaqseq = '"||g_glaq_m.glaqseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.glaqseq" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glaq_m.glaqdocno) AND NOT cl_null(g_glaq_m.glaqld) AND NOT cl_null(g_glaq_m.glaqseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_glaq_m.glaqdocno != g_glaqdocno_t  OR g_glaq_m.glaqld != g_glaqld_t  OR g_glaq_m.glaqseq != g_glaqseq_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glaq_t WHERE "||"glaqent = '" ||g_enterprise|| "' AND "||"glaqdocno = '"||g_glaq_m.glaqdocno ||"' AND "|| "glaqld = '"||g_glaq_m.glaqld ||"' AND "|| "glaqseq = '"||g_glaq_m.glaqseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF p_flag = 'a' THEN
+               LET g_glaq_m.glaq017 = g_site     #营运据点
+            ELSE
+               #抓取原值顯示
+               IF p_prog = 'aglt310' THEN             
+                  SELECT glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,
+                         glaq023,glaq024,glaq025,glaq026,glaq027,glaq028
+                    INTO g_glaq_m.glaq017,g_glaq_m.glaq018,g_glaq_m.glaq019,g_glaq_m.glaq020,g_glaq_m.glaq021,g_glaq_m.glaq022,
+                         g_glaq_m.glaq023,g_glaq_m.glaq024,g_glaq_m.glaq025,g_glaq_m.glaq026,g_glaq_m.glaq027,g_glaq_m.glaq028             
+                    FROM glaq_t
+                   WHERE glaqent = g_enterprise
+                     AND glaqld = p_glapld
+                     AND glaqdocno = p_glapdocno
+                     AND glaqseq = p_seq
+                END IF 
+                IF p_prog = 'aglt400' THEN
+                    SELECT glax017,glax018,glax019,glax020,glax021,glax022,
+                           glax023,glax024,glax025,glax026,glax027,glax028
+                      INTO g_glaq_m.glaq017,g_glaq_m.glaq018,g_glaq_m.glaq019,g_glaq_m.glaq020,g_glaq_m.glaq021,g_glaq_m.glaq022,
+                           g_glaq_m.glaq023,g_glaq_m.glaq024,g_glaq_m.glaq025,g_glaq_m.glaq026,g_glaq_m.glaq027,g_glaq_m.glaq028             
+                      FROM glax_t
+                     WHERE glaxent = g_enterprise
+                       AND glaxld = p_glapld
+                       AND glaxdocno = p_glapdocno
+                       AND glaxseq = p_seq
+                END IF 
+            END IF
+            #单身科目若有启用 '部门'核算项, 请预设login人员的归属部门, 若有启用利润/成本中心核算项,请预设login人员归属部门对应的所属责任中心(ooeg004)            
+            #營運據點
+            IF cl_null(g_glaq_m.glaq017) THEN
+               LET g_glaq_m.glaq017 = g_site
+            END IF  
+            #部門
+            IF cl_null(g_glaq_m.glaq018) THEN 
+               IF l_glad007 = 'Y' THEN
+                  LET g_glaq_m.glaq018 = g_ooag003
+               END IF 
+            END IF 
+            #營運中心
+            IF cl_null(g_glaq_m.glaq019) THEN 
+               IF l_glad008 = 'Y' THEN
+                  IF NOT cl_null(g_glaq_m.glaq018) THEN
+                     SELECT ooeg004 INTO g_glaq_m.glaq019 FROM ooeg_t WHERE ooegent = g_enterprise AND ooeg001 = g_glaq_m.glaq018
+                  ELSE
+                     SELECT ooeg004 INTO g_glaq_m.glaq019 FROM ooeg_t WHERE ooegent = g_enterprise AND ooeg001 = g_ooag003
+                  END IF
+               END IF 
+            END IF  
+            #人員
+            IF cl_null(g_glaq_m.glaq025) THEN
+               IF l_glad013='Y' THEN
+                  LET g_glaq_m.glaq025=g_user
+               END IF
+            END IF            
+            #旧值备份               
+            LET g_glaq_m_t.* = g_glaq_m.*    
+            DISPLAY BY NAME 
+            g_glaq_m.glaq017,g_glaq_m.glaq018,g_glaq_m.glaq019,g_glaq_m.glaq020,g_glaq_m.glaq021,g_glaq_m.glaq022,
+            g_glaq_m.glaq023,g_glaq_m.glaq024,g_glaq_m.glaq025,g_glaq_m.glaq026,g_glaq_m.glaq027,g_glaq_m.glaq028  
+                          
+            CALL aglt310_02_show_ref()            ]]>
+  </point>
+  <point name="input.c.glaq005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[             #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glaq_m.glaq005             #給予default值
+
+            #給予arg
+
+            CALL q_ooai001()                                #呼叫開窗
+
+            LET g_glaq_m.glaq005 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glaq_m.glaq005 TO glaq005              #顯示到畫面上
+
+            NEXT FIELD glaq005                          #返回原欄位]]>
+  </point>
+  <point name="input.c.glaq007" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glaq_m.glaq007             #給予default值
+
+            #給予arg
+
+            CALL q_ooca001_1()                                #呼叫開窗
+
+            LET g_glaq_m.glaq007 = g_qryparam.return1              #將開窗取得的值回傳到變數
+           
+            DISPLAY g_glaq_m.glaq007 TO glaq007              #顯示到畫面上
+
+            NEXT FIELD glaq007                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.glaq013" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glaq_m.glaq013             #給予default值
+            LET g_qryparam.default2 = "" #g_glaq_m.oofa011 #全名
+
+            #給予arg
+
+            CALL q_ooag001_2()                                #呼叫開窗
+
+            LET g_glaq_m.glaq013 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL aglt310_02_glaq013_desc(g_glaq_m.glaq013) RETURNING g_glaq_m.glaq013_desc
+            DISPLAY BY NAME g_glaq_m.glaq013_desc
+            DISPLAY g_glaq_m.glaq013 TO glaq013              #顯示到畫面上
+            
+
+            NEXT FIELD glaq013                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.glaq017" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.default1 = g_glaq_m.glaq017             #給予default值
+
+            #給予arg
+            LET g_qryparam.where ="ooed001 = '2' AND ooed006<='",p_glapdocdt,"' AND (ooed007 IS NULL OR ooed007 >='",p_glapdocdt,"')"
+            CALL q_ooed004_1()                                      #呼叫開窗
+
+            LET g_glaq_m.glaq017 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL aglt310_02_ooea001_desc(g_glaq_m.glaq017) RETURNING g_glaq_m.glaq017_desc
+            DISPLAY BY NAME g_glaq_m.glaq017_desc
+            DISPLAY g_glaq_m.glaq017 TO glaq017              #顯示到畫面上
+
+            NEXT FIELD glaq017                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.glaq018" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+
+            LET g_qryparam.default1 = g_glaq_m.glaq018             #給予default值
+
+            #給予arg
+#            LET g_qryparam.where ="ooed001 = '6' AND ooed006<='",p_glapdocdt,"' AND (ooed007 IS NULL OR ooed007 >='",p_glapdocdt,"')"
+#            CALL q_ooed004_1()                                #呼叫開窗
+            LET g_qryparam.arg1=p_glapdocdt
+            CALL q_ooeg001()
+            LET g_glaq_m.glaq018 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL aglt310_02_ooea001_desc(g_glaq_m.glaq018) RETURNING g_glaq_m.glaq018_desc
+            DISPLAY BY NAME g_glaq_m.glaq018_desc
+            DISPLAY g_glaq_m.glaq018 TO glaq018              #顯示到畫面上
+            NEXT FIELD glaq018                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.glaq019" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+
+            LET g_qryparam.default1 = g_glaq_m.glaq019             #給予default值
+
+            #給予arg
+            LET g_qryparam.where ="ooed001 = '6' AND ooed006<='",p_glapdocdt,"' AND (ooed007 IS NULL OR ooed007 >='",p_glapdocdt,"')"
+            CALL q_ooed004_1()                                 #呼叫開窗
+    
+            LET g_glaq_m.glaq019 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL aglt310_02_ooea001_desc(g_glaq_m.glaq019) RETURNING g_glaq_m.glaq019_desc
+            DISPLAY BY NAME g_glaq_m.glaq019_desc
+            DISPLAY g_glaq_m.glaq019 TO glaq019              #顯示到畫面上
+            LET g_qryparam.arg1 = ""
+            NEXT FIELD glaq019                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.glaq020" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[             #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+
+            LET g_qryparam.default1 = g_glaq_m.glaq020             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = '287'
+            CALL q_oocq002()                                #呼叫開窗
+            LET g_glaq_m.glaq020 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL aglt310_02_glaq020_desc('287',g_glaq_m.glaq020) RETURNING g_glaq_m.glaq020_desc
+            DISPLAY BY NAME g_glaq_m.glaq020_desc
+            DISPLAY g_glaq_m.glaq020 TO glaq020              #顯示到畫面上
+            LET g_qryparam.arg1 = ""
+            NEXT FIELD glaq020                 ]]>
+  </point>
+  <point name="input.c.glaq021" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+
+            LET g_qryparam.default1 = g_glaq_m.glaq021             #給予default值
+
+            #給予arg
+
+            CALL q_pmaa001()                                #呼叫開窗
+
+            LET g_glaq_m.glaq021 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL aglt310_02_glaq021_desc(g_glaq_m.glaq021) RETURNING g_glaq_m.glaq021_desc
+            DISPLAY BY NAME g_glaq_m.glaq021_desc
+            DISPLAY g_glaq_m.glaq021 TO glaq021              #顯示到畫面上
+
+            NEXT FIELD glaq021                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.glaq022" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+
+            LET g_qryparam.default1 = g_glaq_m.glaq022             #給予default值
+
+            #給予arg
+
+            CALL q_pmaa001()                                #呼叫開窗
+
+            LET g_glaq_m.glaq022 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL aglt310_02_glaq021_desc(g_glaq_m.glaq022) RETURNING g_glaq_m.glaq022_desc
+            DISPLAY BY NAME g_glaq_m.glaq022_desc
+            DISPLAY g_glaq_m.glaq022 TO glaq022              #顯示到畫面上
+
+            NEXT FIELD glaq022                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.glaq023" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[             #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+
+            LET g_qryparam.default1 = g_glaq_m.glaq023             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = '281'
+            CALL q_oocq002()                                #呼叫開窗
+            LET g_glaq_m.glaq023 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL aglt310_02_glaq020_desc('281',g_glaq_m.glaq023) RETURNING g_glaq_m.glaq023_desc
+            DISPLAY BY NAME g_glaq_m.glaq023_desc
+            DISPLAY g_glaq_m.glaq023 TO glaq023              #顯示到畫面上
+            LET g_qryparam.arg1 = ""
+            NEXT FIELD glaq023           ]]>
+  </point>
+  <point name="input.c.glaq024" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+
+            LET g_qryparam.default1 = g_glaq_m.glaq024             #給予default值
+
+            #給予arg
+
+            CALL q_rtax001_1()                                #呼叫開窗
+
+            LET g_glaq_m.glaq024 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL aglt310_02_glaq024_desc(g_glaq_m.glaq024) RETURNING g_glaq_m.glaq024_desc
+            DISPLAY BY NAME g_glaq_m.glaq024_desc
+            DISPLAY g_glaq_m.glaq024 TO glaq024              #顯示到畫面上
+
+            NEXT FIELD glaq024                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.glaq025" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+
+            LET g_qryparam.default1 = g_glaq_m.glaq025             #給予default值
+            LET g_qryparam.default2 = "" #g_glaq_m.oofa011 #全名
+
+            #給予arg
+
+            CALL q_ooag001_2()                                #呼叫開窗
+
+            LET g_glaq_m.glaq025 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_glaq_m.oofa011 = g_qryparam.return2 #全名
+            CALL aglt310_02_glaq013_desc(g_glaq_m.glaq025) RETURNING g_glaq_m.glaq025_desc
+            DISPLAY BY NAME g_glaq_m.glaq025_desc
+            DISPLAY g_glaq_m.glaq025 TO glaq025              #顯示到畫面上
+            #DISPLAY g_glaq_m.oofa011 TO oofa011 #全名
+
+            NEXT FIELD glaq025                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.glaq026" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+
+            LET g_qryparam.default1 = g_glaq_m.glaq026             #給予default值
+
+            #給予arg
+
+            CALL q_bgaa001()                                #呼叫開窗
+
+            LET g_glaq_m.glaq026 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL aglt310_02_glaq026_desc(g_glaq_m.glaq026) RETURNING g_glaq_m.glaq026_desc
+            DISPLAY BY NAME g_glaq_m.glaq026_desc
+            DISPLAY g_glaq_m.glaq026 TO glaq026              #顯示到畫面上
+
+            NEXT FIELD glaq026                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_flag          LIKE type_t.chr5     #资料状态
+   DEFINE p_glapld        LIKE glap_t.glapld   #帳別
+   DEFINE p_glapdocno     LIKE glap_t.glapdocno #傳票编号
+   DEFINE p_glapdocdt     LIKE glap_t.glapdocdt #傳票日期
+   DEFINE p_glaq002       LIKE glaq_t.glaq002  #科目     
+   DEFINE p_seq           LIKE glaq_t.glaqseq  #项次
+   DEFINE p_prog          LIKE type_t.chr80    #程式编号
+   DEFINE g_glaa001       LIKE glaa_t.glaa001  #幣別  
+   DEFINE g_glaa002       LIKE glaa_t.glaa002  #匯率參照表號
+   DEFINE g_glaa004       LIKE glaa_t.glaa004  #会计科目参照表号
+   DEFINE g_ooag003       LIKE ooag_t.ooag003  #部門
+   DEFINE g_ooag004       LIKE ooag_t.ooag004  #營運據點
+   #科目核算项
+   DEFINE l_glad005       LIKE glad_t.glad005
+   DEFINE l_glad007       LIKE glad_t.glad007
+   DEFINE l_glad008       LIKE glad_t.glad008
+   DEFINE l_glad009       LIKE glad_t.glad009
+   DEFINE l_glad010       LIKE glad_t.glad010
+   DEFINE l_glad027       LIKE glad_t.glad027
+   DEFINE l_glad011       LIKE glad_t.glad011
+   DEFINE l_glad012       LIKE glad_t.glad012
+   DEFINE l_glad013       LIKE glad_t.glad013
+   DEFINE l_glad014       LIKE glad_t.glad014
+   DEFINE l_glad015       LIKE glad_t.glad015
+   DEFINE l_glad016       LIKE glad_t.glad016
+
+   #记录隐藏栏位标示
+   DEFINE l_flag1         LIKE type_t.num5
+   DEFINE l_flag2         LIKE type_t.num5
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5 
+   DEFINE l_errno         LIKE type_t.chr80   ]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_flag,p_glapld,p_glapdocno,p_glapdocdt,p_glaq002,p_seq,p_prog]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      IF p_flag = 'a' THEN
+         RETURN '','','','','','','','','','','',''
+      ELSE
+         RETURN 
+           g_glaq_m_t.glaq017,g_glaq_m_t.glaq018,g_glaq_m_t.glaq019,g_glaq_m_t.glaq020,g_glaq_m_t.glaq021,g_glaq_m_t.glaq022,
+           g_glaq_m_t.glaq023,g_glaq_m_t.glaq024,g_glaq_m_t.glaq025,g_glaq_m_t.glaq026,g_glaq_m_t.glaq027,g_glaq_m_t.glaq028 
+      END IF 
+   END IF
+ 
+   RETURN  g_glaq_m.glaq017,g_glaq_m.glaq018,g_glaq_m.glaq019,g_glaq_m.glaq020,g_glaq_m.glaq021,g_glaq_m.glaq022,
+           g_glaq_m.glaq023,g_glaq_m.glaq024,g_glaq_m.glaq025,g_glaq_m.glaq026,g_glaq_m.glaq027,g_glaq_m.glaq028            ]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[  #初始化
+  INITIALIZE g_glaq_m.* TO NULL
+  INITIALIZE g_glaq_m_t.* TO NULL   
+  LET l_flag1 = 0
+  LET l_flag2 = 0  
+
+   ##依据对应的主账套编码，抓取币别，汇率参照编号，会计科目参照表号
+   SELECT glaa001,glaa002,glaa004 INTO g_glaa001,g_glaa002,g_glaa004
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = p_glapld 
+   #依據登入用戶抓取所在部門
+   SELECT ooag003 INTO g_ooag003 FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = g_user
+     
+   CALL s_voucher_fix_acc_open_chk(p_glapld,p_glaq002,g_glaa004)
+   RETURNING l_glad007,l_glad008,l_glad009,l_glad010,l_glad027,l_glad011,l_glad012,l_glad013,l_glad014,l_glad015,l_glad016  
+   
+   #該科目做部門管理時，部門不可空白,否则隐藏  
+   IF l_glad007 = 'Y' THEN     
+      CALL cl_set_comp_visible('glaq018,glaq018_desc',TRUE) 
+   ELSE
+      CALL cl_set_comp_visible('glaq018,glaq018_desc',FALSE) 
+      LET l_flag1 = l_flag1+1      
+   END IF 
+   #該科目做利潤成本管理時，利潤成本不可空白,否则隐藏  
+   IF l_glad008 = 'Y' THEN      
+      CALL cl_set_comp_visible('glaq019,glaq019_desc',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('glaq019,glaq019_desc',FALSE) 
+      LET l_flag1 = l_flag1+1      
+   END IF 
+   #該科目做區域管理時，區域不可空白 ,否则隐藏 
+   IF l_glad009 = 'Y' THEN    
+      CALL cl_set_comp_visible('glaq020,glaq020_desc',TRUE)       
+   ELSE
+      CALL cl_set_comp_visible('glaq020,glaq020_desc',FALSE) 
+      LET l_flag1 = l_flag1+1      
+   END IF 
+   #該科目做交易客商管理時，客商不可空白 ,否则隐藏 
+   IF l_glad010 = 'Y' THEN 
+      CALL cl_set_comp_visible('glaq021,glaq021_desc',TRUE)
+   ELSE
+       CALL cl_set_comp_visible('glaq021,glaq021_desc',FALSE)
+       LET l_flag1 = l_flag1+1
+   END IF 
+   #該科目做账款客商管理時，客商不可空白 ,否则隐藏 
+   IF l_glad027 = 'Y' THEN 
+      CALL cl_set_comp_visible('glaq022,glaq022_desc',TRUE)
+   ELSE
+       CALL cl_set_comp_visible('glaq022,glaq022_desc',FALSE)
+       LET l_flag1 = l_flag1+1
+       IF l_flag1 = '6' THEN
+          CALL cl_set_comp_visible('grid5',FALSE)
+       ELSE
+          CALL cl_set_comp_visible('grid5',TRUE)       
+       END IF 
+   END IF 
+   #該科目做客群管理時，客群不可空白,否则隐藏  
+   IF l_glad011 = 'Y' THEN
+      CALL cl_set_comp_visible('glaq023,glaq023_desc',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('glaq023,glaq023_desc',FALSE)
+      LET l_flag2 = l_flag2+1      
+   END IF 
+   #該科目做產品分類管理時，部門不可空白,否则隐藏  
+   IF l_glad012 = 'Y' THEN       
+      CALL cl_set_comp_visible('glaq024,glaq024_desc',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('glaq024,glaq024_desc',FALSE)
+      LET l_flag2 = l_flag2+1      
+   END IF 
+   #該科目做人員管理時，部門不可空白,否则隐藏  
+   IF l_glad013 = 'Y' THEN       
+      CALL cl_set_comp_visible('glaq025,glaq025_desc',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('glaq025,glaq025_desc',FALSE) 
+      LET l_flag2 = l_flag2+1      
+   END IF 
+   #該科目做預算管理時，部門不可空白,否则隐藏  
+   IF l_glad014 = 'Y' THEN      
+      CALL cl_set_comp_required('glaq026',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('glaq026,glaq026_desc',FALSE)
+      LET l_flag2 = l_flag2+1      
+   END IF 
+   #該科目做專案管理時，部門不可空白,否则隐藏  
+   IF l_glad015 = 'Y' THEN 
+      CALL cl_set_comp_visible('glaq027,glaq027_desc',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('glaq027,glaq027_desc',FALSE)
+      LET l_flag2 = l_flag2+1      
+   END IF 
+   #該科目做WBS管理時，部門不可空白,否则隐藏  
+   IF l_glad016 = 'Y' THEN
+      CALL cl_set_comp_visible('glaq028,glaq028_desc',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('glaq028,glaq028_desc',FALSE)
+      LET l_flag2 = l_flag2+1
+      #如果该页签上的栏位都已隐藏，则隐藏该gird
+      IF l_flag2 = '6' THEN
+         CALL cl_set_comp_visible('grid6',FALSE)
+      ELSE
+         CALL cl_set_comp_visible('grid6',TRUE)      
+      END IF 
+   END IF]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glaq_m.glaq005
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooail003 FROM ooail_t WHERE ooailent='"||g_enterprise||"' AND ooail001=? AND ooail002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glaq_m.glaq005_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_glaq_m.glaq005_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glaq_m.glaq007
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glaq_m.glaq007_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_glaq_m.glaq007_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glaq_m.glaq017
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glaq_m.glaq017_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_glaq_m.glaq017_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glaq_m.glaq018
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glaq_m.glaq018_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_glaq_m.glaq018_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glaq_m.glaq019
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glaq_m.glaq019_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_glaq_m.glaq019_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glaq_m.glaq021
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glaq_m.glaq021_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_glaq_m.glaq021_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glaq_m.glaq022
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glaq_m.glaq022_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_glaq_m.glaq022_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glaq_m.glaq024
+            CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glaq_m.glaq024_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_glaq_m.glaq024_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glaq_m.glaq026
+            CALL ap_ref_array2(g_ref_fields,"SELECT bgaal003 FROM bgaal_t WHERE bgaalent='"||g_enterprise||"' AND bgaal001=? AND bgaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glaq_m.glaq026_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_glaq_m.glaq026_desc
+]]>
+  </point>
+  <section id="aglt310_02.description" ver="19" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000272
+#+ 
+#+ Filename...: aglt310_02
+#+ Description: ...
+#+ Creator....: 02298(2013/08/15)
+#+ Modifier...: 02599(2014/06/30)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="aglt310_02.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glaq_m        RECORD
+       glaq017 LIKE glaq_t.glaq017, 
+   glaq017_desc LIKE type_t.chr80, 
+   glaq018 LIKE glaq_t.glaq018, 
+   glaq018_desc LIKE type_t.chr80, 
+   glaq019 LIKE glaq_t.glaq019, 
+   glaq019_desc LIKE type_t.chr80, 
+   glaq020 LIKE glaq_t.glaq020, 
+   glaq020_desc LIKE type_t.chr80, 
+   glaq021 LIKE glaq_t.glaq021, 
+   glaq021_desc LIKE type_t.chr80, 
+   glaq022 LIKE glaq_t.glaq022, 
+   glaq022_desc LIKE type_t.chr80, 
+   glaq023 LIKE glaq_t.glaq023, 
+   glaq023_desc LIKE type_t.chr80, 
+   glaq024 LIKE glaq_t.glaq024, 
+   glaq024_desc LIKE type_t.chr80, 
+   glaq025 LIKE glaq_t.glaq025, 
+   glaq025_desc LIKE type_t.chr80, 
+   glaq026 LIKE glaq_t.glaq026, 
+   glaq026_desc LIKE type_t.chr80, 
+   glaq027 LIKE glaq_t.glaq027, 
+   glaq027_desc LIKE type_t.chr80, 
+   glaq028 LIKE glaq_t.glaq028, 
+   glaq028_desc LIKE type_t.chr80
+       END RECORD
+DEFINE g_glaq_m        type_g_glaq_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aglt310_02.input" ver="4" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aglt310_02(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglt310_02 WITH FORM cl_ap_formpath("agl","aglt310_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glaq_m.glaq017,g_glaq_m.glaq018,g_glaq_m.glaq019,g_glaq_m.glaq020,g_glaq_m.glaq021, 
+          g_glaq_m.glaq022,g_glaq_m.glaq023,g_glaq_m.glaq024,g_glaq_m.glaq025,g_glaq_m.glaq026,g_glaq_m.glaq027, 
+          g_glaq_m.glaq028 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD glaq017
+            
+            #add-point:AFTER FIELD glaq017
+            {<point name="input.a.glaq017" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq017
+            #add-point:BEFORE FIELD glaq017
+            {<point name="input.b.glaq017" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq017
+            #add-point:ON CHANGE glaq017
+            {<point name="input.g.glaq017" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq018
+            
+            #add-point:AFTER FIELD glaq018
+            {<point name="input.a.glaq018" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq018
+            #add-point:BEFORE FIELD glaq018
+            {<point name="input.b.glaq018" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq018
+            #add-point:ON CHANGE glaq018
+            {<point name="input.g.glaq018" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq019
+            
+            #add-point:AFTER FIELD glaq019
+            {<point name="input.a.glaq019" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq019
+            #add-point:BEFORE FIELD glaq019
+            {<point name="input.b.glaq019" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq019
+            #add-point:ON CHANGE glaq019
+            {<point name="input.g.glaq019" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq020
+            
+            #add-point:AFTER FIELD glaq020
+            {<point name="input.a.glaq020" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq020
+            #add-point:BEFORE FIELD glaq020
+            {<point name="input.b.glaq020" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq020
+            #add-point:ON CHANGE glaq020
+            {<point name="input.g.glaq020" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq021
+            
+            #add-point:AFTER FIELD glaq021
+            {<point name="input.a.glaq021" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq021
+            #add-point:BEFORE FIELD glaq021
+            {<point name="input.b.glaq021" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq021
+            #add-point:ON CHANGE glaq021
+            {<point name="input.g.glaq021" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq022
+            
+            #add-point:AFTER FIELD glaq022
+            {<point name="input.a.glaq022" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq022
+            #add-point:BEFORE FIELD glaq022
+            {<point name="input.b.glaq022" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq022
+            #add-point:ON CHANGE glaq022
+            {<point name="input.g.glaq022" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq023
+            
+            #add-point:AFTER FIELD glaq023
+            {<point name="input.a.glaq023" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq023
+            #add-point:BEFORE FIELD glaq023
+            {<point name="input.b.glaq023" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq023
+            #add-point:ON CHANGE glaq023
+            {<point name="input.g.glaq023" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq024
+            
+            #add-point:AFTER FIELD glaq024
+            {<point name="input.a.glaq024" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq024
+            #add-point:BEFORE FIELD glaq024
+            {<point name="input.b.glaq024" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq024
+            #add-point:ON CHANGE glaq024
+            {<point name="input.g.glaq024" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq025
+            
+            #add-point:AFTER FIELD glaq025
+            {<point name="input.a.glaq025" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq025
+            #add-point:BEFORE FIELD glaq025
+            {<point name="input.b.glaq025" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq025
+            #add-point:ON CHANGE glaq025
+            {<point name="input.g.glaq025" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq026
+            
+            #add-point:AFTER FIELD glaq026
+            {<point name="input.a.glaq026" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq026
+            #add-point:BEFORE FIELD glaq026
+            {<point name="input.b.glaq026" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq026
+            #add-point:ON CHANGE glaq026
+            {<point name="input.g.glaq026" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq027
+            
+            #add-point:AFTER FIELD glaq027
+            {<point name="input.a.glaq027" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq027
+            #add-point:BEFORE FIELD glaq027
+            {<point name="input.b.glaq027" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq027
+            #add-point:ON CHANGE glaq027
+            {<point name="input.g.glaq027" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq028
+            
+            #add-point:AFTER FIELD glaq028
+            {<point name="input.a.glaq028" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq028
+            #add-point:BEFORE FIELD glaq028
+            {<point name="input.b.glaq028" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq028
+            #add-point:ON CHANGE glaq028
+            {<point name="input.g.glaq028" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glaq017
+         ON ACTION controlp INFIELD glaq017
+            #add-point:ON ACTION controlp INFIELD glaq017
+            {<point name="input.c.glaq017" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq018
+         ON ACTION controlp INFIELD glaq018
+            #add-point:ON ACTION controlp INFIELD glaq018
+            {<point name="input.c.glaq018" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq019
+         ON ACTION controlp INFIELD glaq019
+            #add-point:ON ACTION controlp INFIELD glaq019
+            {<point name="input.c.glaq019" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq020
+         ON ACTION controlp INFIELD glaq020
+            #add-point:ON ACTION controlp INFIELD glaq020
+            {<point name="input.c.glaq020" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq021
+         ON ACTION controlp INFIELD glaq021
+            #add-point:ON ACTION controlp INFIELD glaq021
+            {<point name="input.c.glaq021" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq022
+         ON ACTION controlp INFIELD glaq022
+            #add-point:ON ACTION controlp INFIELD glaq022
+            {<point name="input.c.glaq022" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq023
+         ON ACTION controlp INFIELD glaq023
+            #add-point:ON ACTION controlp INFIELD glaq023
+            {<point name="input.c.glaq023" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq024
+         ON ACTION controlp INFIELD glaq024
+            #add-point:ON ACTION controlp INFIELD glaq024
+            {<point name="input.c.glaq024" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq025
+         ON ACTION controlp INFIELD glaq025
+            #add-point:ON ACTION controlp INFIELD glaq025
+            {<point name="input.c.glaq025" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq026
+         ON ACTION controlp INFIELD glaq026
+            #add-point:ON ACTION controlp INFIELD glaq026
+            {<point name="input.c.glaq026" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq027
+         ON ACTION controlp INFIELD glaq027
+            #add-point:ON ACTION controlp INFIELD glaq027
+            {<point name="input.c.glaq027" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.glaq028
+         ON ACTION controlp INFIELD glaq028
+            #add-point:ON ACTION controlp INFIELD glaq028
+            {<point name="input.c.glaq028" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglt310_02 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aglt310_02.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aglt310_02.other_function" ver="2" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

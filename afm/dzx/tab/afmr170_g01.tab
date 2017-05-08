@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmr170_g01" module="afm" jobmode="N" type="g01" industry="std" crtid="08729" crtdt="2016-09-26 14:44:23" modid="08729" moddt="2016-10-03 18:30:21" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where.comdition)">
+    <var seq="1" value="fmcvcomp,fmcvdocdt,fmcvdocno,fmcvent,fmcvsite,fmcvstus,fmcw001,fmcw002,fmcw003,fmcw004,fmcw005,fmcw006,fmcw007,fmcw008,fmcw009,fmcw010,fmcw011,fmcw012,fmcw013,fmcw014,fmcw015,fmcw016,fmcw017,fmcw018,fmcw019,fmcw020,fmcw021,fmcw022,fmcw023,fmcw024,fmcw025,fmcw026,fmcwseq,x_fmcj_t_fmcj002(fmcj002|x.fmcj_t_fmcj002),x_fmck_t_fmck003(fmck003|x.fmck_t_fmck003),x_ooail_t_ooail003(ooail003|x.ooail_t_ooail003),l_fmcw002_fmcj002(chr37|trim(fmcw002)||&apos;.&apos;||trim(x.fmcj_t_fmcj002)),l_fmcvsite_ooefl003(chr100|&apos;&apos;),l_fmcvcomp_ooefl003(chr100|&apos;&apos;),l_fmcw004_desc(chr100|&apos;&apos;),l_fmcw001_desc(chr100|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="fmcvcomp,fmcvdocdt,fmcvdocno,fmcvent,fmcvsite,fmcvstus,fmcw001,fmcw002,fmcw003,fmcw004,fmcw005,fmcw006,fmcw007,fmcw008,fmcw009,fmcw010,fmcw011,fmcw012,fmcw013,fmcw014,fmcw015,fmcw016,fmcw017,fmcw018,fmcw019,fmcw020,fmcw021,fmcw022,fmcw023,fmcw024,fmcw025,fmcw026,fmcwseq,x_fmcj_t_fmcj002(fmcj002|x.fmcj_t_fmcj002),x_fmck_t_fmck003(fmck003|x.fmck_t_fmck003),x_ooail_t_ooail003(ooail003|x.ooail_t_ooail003),l_fmcw002_fmcj002(chr37|trim(fmcw002)||&apos;.&apos;||trim(x.fmcj_t_fmcj002)),l_fmcvsite_ooefl003(chr100|&apos;&apos;),l_fmcvcomp_ooefl003(chr100|&apos;&apos;),l_fmcw004_desc(chr100|&apos;&apos;),l_fmcw001_desc(chr100|&apos;&apos;)"/>
+    <sql id="g_from" query=" fmcv_t  LEFT OUTER JOIN ( SELECT fmcw_t.*,( SELECT fmcj002 FROM fmcj_t WHERE fmcj_t.fmcjent = fmcw_t.fmcwent AND fmcj_t.fmcjdocno = fmcw_t.fmcw002) fmcj_t_fmcj002,( SELECT fmck003 FROM fmck_t WHERE fmck_t.fmckent = fmcw_t.fmcwent AND fmck_t.fmckdocno = fmcw_t.fmcw002 AND fmck_t.fmckseq = fmcw_t.fmcw003) fmck_t_fmck003,( SELECT ooail003 FROM ooail_t WHERE ooail_t.ooailent = fmcw_t.fmcwent AND ooail_t.ooail001 = fmcw_t.fmcw005 AND ooail_t.ooail002 = g_dlang) ooail_t_ooail003 FROM fmcw_t ) x  ON fmcv_t.fmcvent = x.fmcwent AND fmcv_t.fmcvdocno = x.fmcwdocno"/>
+    <sql id="g_where" query="" maintable="fmcv_t"/>
+    <sql id="g_order" query="fmcvdocno,fmcwseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="fmcvdocno,fmcwseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="fmcvdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fmcvent,fmcvdocno"/>
+      <rep type="fmcwseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="fmcvent,fmcvdocno,fmcwseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="fmcvent,fmcvdocno,fmcwseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="fmcvdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fmcvent,fmcvdocno"/>
+      <rep type="fmcwseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

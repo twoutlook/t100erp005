@@ -1,0 +1,337 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgi410_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-11-12 21:02:01), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000011
+#+ Filename...: abgi410_01
+#+ Description: 預算料件BOM批次產生
+#+ Creator....: 02114(2016-11-12 20:58:15)
+#+ Modifier...: 02114 -SD/PR-
+
+{</section>}
+
+{<section id="abgi410_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_bgda_m        RECORD
+       source LIKE type_t.chr500, 
+   bgcj002 LIKE bgcj_t.bgcj002, 
+   bgcj003 LIKE bgcj_t.bgcj003, 
+   bgda001 LIKE bgda_t.bgda001, 
+   bgda001_desc LIKE type_t.chr80, 
+   bgda003 LIKE bgda_t.bgda003
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_bgda_m        type_g_bgda_m
+ 
+   DEFINE g_bgda001_t LIKE bgda_t.bgda001
+DEFINE g_bgda003_t LIKE bgda_t.bgda003
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="abgi410_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION abgi410_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_abgi410_01 WITH FORM cl_ap_formpath("abg","abgi410_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_bgda_m.source,g_bgda_m.bgcj002,g_bgda_m.bgcj003,g_bgda_m.bgda001,g_bgda_m.bgda003  
+          ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD source
+            #add-point:BEFORE FIELD source name="input.b.source"
+            {<point name="input.b.source" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD source
+            
+            #add-point:AFTER FIELD source name="input.a.source"
+            {<point name="input.a.source" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE source
+            #add-point:ON CHANGE source name="input.g.source"
+            {<point name="input.g.source" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj002
+            
+            #add-point:AFTER FIELD bgcj002 name="input.a.bgcj002"
+            {<point name="input.a.bgcj002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj002
+            #add-point:BEFORE FIELD bgcj002 name="input.b.bgcj002"
+            {<point name="input.b.bgcj002" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj002
+            #add-point:ON CHANGE bgcj002 name="input.g.bgcj002"
+            {<point name="input.g.bgcj002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj003
+            #add-point:BEFORE FIELD bgcj003 name="input.b.bgcj003"
+            {<point name="input.b.bgcj003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj003
+            
+            #add-point:AFTER FIELD bgcj003 name="input.a.bgcj003"
+            {<point name="input.a.bgcj003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj003
+            #add-point:ON CHANGE bgcj003 name="input.g.bgcj003"
+            {<point name="input.g.bgcj003" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgda001
+            
+            #add-point:AFTER FIELD bgda001 name="input.a.bgda001"
+            {<point name="input.a.bgda001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgda001
+            #add-point:BEFORE FIELD bgda001 name="input.b.bgda001"
+            {<point name="input.b.bgda001" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgda001
+            #add-point:ON CHANGE bgda001 name="input.g.bgda001"
+            {<point name="input.g.bgda001" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgda003
+            #add-point:BEFORE FIELD bgda003 name="input.b.bgda003"
+            {<point name="input.b.bgda003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgda003
+            
+            #add-point:AFTER FIELD bgda003 name="input.a.bgda003"
+            {<point name="input.a.bgda003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgda003
+            #add-point:ON CHANGE bgda003 name="input.g.bgda003"
+            {<point name="input.g.bgda003" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.source
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD source
+            #add-point:ON ACTION controlp INFIELD source name="input.c.source"
+            {<point name="input.c.source" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bgcj002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj002
+            #add-point:ON ACTION controlp INFIELD bgcj002 name="input.c.bgcj002"
+            {<point name="input.c.bgcj002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bgcj003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj003
+            #add-point:ON ACTION controlp INFIELD bgcj003 name="input.c.bgcj003"
+            {<point name="input.c.bgcj003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bgda001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgda001
+            #add-point:ON ACTION controlp INFIELD bgda001 name="input.c.bgda001"
+            {<point name="input.c.bgda001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bgda003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgda003
+            #add-point:ON ACTION controlp INFIELD bgda003 name="input.c.bgda003"
+            {<point name="input.c.bgda003" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_abgi410_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="abgi410_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="abgi410_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

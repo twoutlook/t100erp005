@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aini007" module="ain" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="06189" crtdt="2016-10-27 20:46:36" modid="06189" moddt="2016-10-27 20:46:36" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="集團可用庫存條件設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inbq001,inbq002,inbq003"/>
+      <var id="body" page="2" record="s_detail3" page_id="3" value="inbq002,inbqownid,inbqownid_desc(chr500),inbqowndp,inbqowndp_desc(chr500),inbqcrtid,inbqcrtid_desc(chr500),inbqcrtdp,inbqcrtdp_desc(chr500),inbqcrtdt,inbqmodid,inbqmodid_desc(chr500),inbqmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aini007" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="inbq001,inbq002,inbq003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="inbq001,inbq002,inbq003"/>
+      <construct id="body" page="2" field="inbqownid,inbqowndp,inbqcrtid,inbqcrtdp,inbqcrtdt,inbqmodid,inbqmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="inbq001" type="S" default="0"/>
+      <column id="inbq002"/>
+      <column id="inbq003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="inbqownid">
+        <after>
+          <reference field="inbqownid_desc" ref_field="inbq_t.inbqownid" map_field="inbqownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inbqownid_desc"/>
+      <column id="inbqowndp">
+        <after>
+          <reference field="inbqowndp_desc" ref_field="inbq_t.inbqowndp" map_field="inbqowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inbqowndp_desc"/>
+      <column id="inbqcrtid">
+        <after>
+          <reference field="inbqcrtid_desc" ref_field="inbq_t.inbqcrtid" map_field="inbqcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inbqcrtid_desc"/>
+      <column id="inbqcrtdp">
+        <after>
+          <reference field="inbqcrtdp_desc" ref_field="inbq_t.inbqcrtdp" map_field="inbqcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inbqcrtdp_desc"/>
+      <column id="inbqcrtdt"/>
+      <column id="inbqmodid">
+        <after>
+          <reference field="inbqmodid_desc" ref_field="inbq_t.inbqmodid" map_field="inbqmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inbqmodid_desc"/>
+      <column id="inbqmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="inbq_t" page="1,2" linked="" pk="inbq002">
+      <sql id="forupd_sql_detail" query="SELECT inbq001,inbq002,inbq003,&apos;&apos;,inbqownid,&apos;&apos;,inbqowndp,&apos;&apos;,inbqcrtid,&apos;&apos;,inbqcrtdp,&apos;&apos;,inbqcrtdt,inbqmodid,&apos;&apos;,inbqmoddt FROM inbq_t WHERE inbqent=? AND inbq002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inbq001,inbq002,inbq003,&apos;&apos;,inbqownid,&apos;&apos;,inbqowndp,&apos;&apos;,inbqcrtid,&apos;&apos;,inbqcrtdp,&apos;&apos;,inbqcrtdt,inbqmodid,&apos;&apos;,inbqmoddt FROM inbq_t WHERE inbqent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

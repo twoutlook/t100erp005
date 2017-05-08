@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli042" module="agl" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02295" crtdt="2013-08-08 11:18:41" modid="02295" moddt="2013-09-06 15:27:24" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="自由核算項資料維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glaf001,glaf001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glafstus,glaf002,glafl004,glafl005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glaf002,glafmodid,glafmodid_desc(chr500),glafmoddt,glafownid,glafownid_desc(chr500),glafowndp,glafowndp_desc(chr500),glafcrtid,glafcrtid_desc(chr500),glafcrtdp,glafcrtdp_desc(chr500),glafcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="agli041"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli042" method="dialog">
+    <section id="input">
+      <input id="head" field="glaf001"/>
+      <input id="body" page="1" field="glafstus,glaf002,glafl004,glafl005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glaf001"/>
+      <construct id="body" page="1" field="glafstus,glaf002,glafl004,glafl005"/>
+      <construct id="body" page="2" field="glafmodid,glafmoddt,glafownid,glafowndp,glafcrtid,glafcrtdp,glafcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glaf001"/>
+      <set id="head" type="no_entry" field="glaf001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glaf001">
+        <after>
+          <reference field="glaf001_desc" ref_field="glaf_t.glaf001" map_field="glafent,glaf001" ref_sql="SELECT glael003 FROM glael_t WHERE glaelent=$varg_enterprise$var AND glael001=? AND glael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_glae001" state="i"/>
+        <controlp form="q_glae001" state="c"/>
+      </column>
+      <column id="glaf001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glafstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glaf002"/>
+      <column id="glafl004"/>
+      <column id="glafl005"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glafmodid">
+        <after>
+          <reference field="glafmodid_desc" ref_field="glaf_t.glafmodid" map_field="glafmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glafmodid_desc"/>
+      <column id="glafmoddt"/>
+      <column id="glafownid">
+        <after>
+          <reference field="glafownid_desc" ref_field="glaf_t.glafownid" map_field="glafownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glafownid_desc"/>
+      <column id="glafowndp">
+        <after>
+          <reference field="glafowndp_desc" ref_field="glaf_t.glafowndp" map_field="glafowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glafowndp_desc"/>
+      <column id="glafcrtid">
+        <after>
+          <reference field="glafcrtid_desc" ref_field="glaf_t.glafcrtid" map_field="glafcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glafcrtid_desc"/>
+      <column id="glafcrtdp">
+        <after>
+          <reference field="glafcrtdp_desc" ref_field="glaf_t.glafcrtdp" map_field="glafcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glafcrtdp_desc"/>
+      <column id="glafcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glaf_t" pk="glaf001">
+      <sql id="forupd_sql" type="sql" query="SELECT glaf001,&apos;&apos; FROM glaf_t WHERE glafent= ? AND glaf001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glaf001,&apos;&apos; FROM glaf_t" order="glaf001"/>
+    </head>
+    <body id="glaf_t" page="1,2" linked="" pk="glaf002" fk="glaf001">
+      <sql id="forupd_sql_detail" query="SELECT glafstus,glaf002,&apos;&apos;,&apos;&apos;,&apos;&apos;,glafmodid,&apos;&apos;,glafmoddt,glafownid,&apos;&apos;,glafowndp,&apos;&apos;,glafcrtid,&apos;&apos;,glafcrtdp,&apos;&apos;,glafcrtdt FROM glaf_t WHERE glafent=? AND glaf001=? AND glaf002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glafstus,glaf002,&apos;&apos;,&apos;&apos;,&apos;&apos;,glafmodid,&apos;&apos;,glafmoddt,glafownid,&apos;&apos;,glafowndp,&apos;&apos;,glafcrtid,&apos;&apos;,glafcrtdp,&apos;&apos;,glafcrtdt FROM glaf_t WHERE glafent= ? AND glaf001=?"/>
+      <sql id="detail_append" type="lang" target="glafl_t.glafl004,glafl_t.glafl005" table="glafl_t" fk="glaf001,glaf002" pk="glafl001,glafl002,glafl003" field="glafl004,glafl005"/>
+    </body>
+  </dataset>
+</assembly>
+

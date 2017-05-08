@@ -1,0 +1,173 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammt401" module="amm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02296" crtdt="2013-08-02 18:30:41" modid="06814" moddt="2016-03-07 13:45:02" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員卡發行維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmawsite,mmawsite_desc(chr80),mmawdocdt,mmawdocno,mmaw001,mmawunit,mmawstus,mmawownid,mmawownid_desc(chr80),mmawowndp,mmawowndp_desc(chr80),mmawcrtid,mmawcrtid_desc(chr80),mmawcrtdp,mmawcrtdp_desc(chr80),mmawcrtdt,mmawmodid,mmawmodid_desc(chr80),mmawmoddt,mmawcnfid,mmawcnfid_desc(chr80),mmawcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmaxseq,mmax001,mmax001_desc(chr500),mman066(chr10),mmax002,mmax003,mmax004,mmax005,mmax006,mmax007,mmax008,mmax009,mmax009_desc(chr500),mmax010,mmax010_desc(chr500),mmaxsite,mmaxunit"/>
+      <var id="bs_field" value="mmawdocno,mmawdocdt,mmawsite,mmawsite_desc(chr80),mmaw001" pk="mmawdocno" order=""/>
+      <bs_reference field="mmawsite_desc" ref_field="mmawsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="demo2"/>
+      <action id="modify" type="standard"/>
+      <action id="demo"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_aint911" prog="aint911" parameter="mmaw001"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammt401" method="dialog">
+    <section id="input">
+      <input id="head" field="mmawsite,mmawdocdt,mmawdocno,mmaw001,mmawunit,mmawstus"/>
+      <input id="body" page="1" field="mmaxseq,mmax001,mmax002,mmax003,mmax004,mmax005,mmax006,mmax007,mmax008,mmax009,mmax010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmawsite,mmawdocdt,mmawdocno,mmaw001,mmawunit,mmawstus,mmawownid,mmawowndp,mmawcrtid,mmawcrtdp,mmawcrtdt,mmawmodid,mmawmoddt,mmawcnfid,mmawcnfdt"/>
+      <construct id="body" page="1" field="mmaxseq,mmax001,mmax002,mmax003,mmax004,mmax005,mmax006,mmax007,mmax008,mmax009,mmax010"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mmawdocno"/>
+      <set id="head" type="no_entry" field="mmawdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmawsite">
+        <after>
+          <reference field="mmawsite_desc" ref_field="mmaw_t.mmawsite" map_field="mmawsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmawsite_desc"/>
+      <column id="mmawdocdt"/>
+      <column id="mmawdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_mmawdocno_1" state="c"/>
+      </column>
+      <column id="mmaw001">
+        <controlp form="q_inbadocno" state="c"/>
+      </column>
+      <column id="mmawunit"/>
+      <column id="mmawstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="mmawownid">
+        <after>
+          <reference field="mmawownid_desc" ref_field="mmaw_t.mmawownid" map_field="mmawownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmawownid_desc"/>
+      <column id="mmawowndp">
+        <after>
+          <reference field="mmawowndp_desc" ref_field="mmaw_t.mmawowndp" map_field="mmawowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmawowndp_desc"/>
+      <column id="mmawcrtid">
+        <after>
+          <reference field="mmawcrtid_desc" ref_field="mmaw_t.mmawcrtid" map_field="mmawcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmawcrtid_desc"/>
+      <column id="mmawcrtdp">
+        <after>
+          <reference field="mmawcrtdp_desc" ref_field="mmaw_t.mmawcrtdp" map_field="mmawcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmawcrtdp_desc"/>
+      <column id="mmawcrtdt"/>
+      <column id="mmawmodid">
+        <after>
+          <reference field="mmawmodid_desc" ref_field="mmaw_t.mmawmodid" map_field="mmawmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmawmodid_desc"/>
+      <column id="mmawmoddt"/>
+      <column id="mmawcnfid">
+        <after>
+          <reference field="mmawcnfid_desc" ref_field="mmaw_t.mmawcnfid" map_field="mmawcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmawcnfid_desc"/>
+      <column id="mmawcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmaxseq">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmax001">
+        <after>
+          <reference field="mmax001_desc" ref_field="mmax_t.mmax001" map_field="mmax001" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="i"/>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmax001_desc"/>
+      <column id="mman066"/>
+      <column id="mmax002"/>
+      <column id="mmax003"/>
+      <column id="mmax004"/>
+      <column id="mmax005"/>
+      <column id="mmax006">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmax007"/>
+      <column id="mmax008"/>
+      <column id="mmax009">
+        <after>
+          <check chkid="v_inaa001_4" id="isExist"/>
+          <reference field="mmax009_desc" ref_field="mmax_t.mmax009" map_field="mmax009" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_6" state="i"/>
+        <controlp form="q_inaa001_6" state="c"/>
+      </column>
+      <column id="mmax009_desc"/>
+      <column id="mmax010">
+        <after>
+          <check chkid="v_inaa001_4" id="isExist"/>
+          <reference field="mmax010_desc" ref_field="mmax_t.mmax010" map_field="mmax010" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_6" state="i"/>
+        <controlp form="q_inaa001_6" state="c"/>
+      </column>
+      <column id="mmax010_desc"/>
+      <column id="mmaxsite"/>
+      <column id="mmaxunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmaw_t" pk="mmawdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT mmawsite,&apos;&apos;,mmawdocdt,mmawdocno,mmaw001,mmawunit,mmawstus,mmawownid,&apos;&apos;,mmawowndp,&apos;&apos;,mmawcrtid,&apos;&apos;,mmawcrtdp,&apos;&apos;,mmawcrtdt,mmawmodid,&apos;&apos;,mmawmoddt,mmawcnfid,&apos;&apos;,mmawcnfdt FROM mmaw_t WHERE mmawent= ? AND mmawdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mmawsite,&apos;&apos;,mmawdocdt,mmawdocno,mmaw001,mmawunit,mmawstus,mmawownid,&apos;&apos;,mmawowndp,&apos;&apos;,mmawcrtid,&apos;&apos;,mmawcrtdp,&apos;&apos;,mmawcrtdt,mmawmodid,&apos;&apos;,mmawmoddt,mmawcnfid,&apos;&apos;,mmawcnfdt FROM mmaw_t" order="mmawdocno"/>
+    </head>
+    <body id="mmax_t" page="1" linked="" pk="mmaxseq" fk="mmaxdocno">
+      <sql id="forupd_sql_detail" query="SELECT mmaxseq,mmax001,&apos;&apos;,&apos;&apos;,mmax002,mmax003,mmax004,mmax005,mmax006,mmax007,mmax008,mmax009,&apos;&apos;,mmax010,&apos;&apos;,mmaxsite,mmaxunit FROM mmax_t WHERE mmaxent=? AND mmaxdocno=? AND mmaxseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmaxseq,mmax001,&apos;&apos;,&apos;&apos;,mmax002,mmax003,mmax004,mmax005,mmax006,mmax007,mmax008,mmax009,&apos;&apos;,mmax010,&apos;&apos;,mmaxsite,mmaxunit FROM mmax_t WHERE mmaxent=? AND mmaxdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

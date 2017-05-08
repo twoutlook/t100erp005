@@ -1,0 +1,1762 @@
+{<section id="afat511_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2015-04-30 09:32:32), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000043
+#+ Filename...: afat511_01
+#+ Description: 科目與核算項明細
+#+ Creator....: 02003(2015-04-29 10:36:03)
+#+ Modifier...: 02003 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="afat511_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_fabp_d        RECORD
+       fabpld LIKE type_t.chr5, 
+   fabpdocno LIKE type_t.chr20, 
+   fabpseq LIKE fabp_t.fabpseq, 
+   fabp037 LIKE fabp_t.fabp037, 
+   fabp027 LIKE fabp_t.fabp027, 
+   fabp027_desc LIKE type_t.chr500, 
+   fabp028 LIKE fabp_t.fabp028, 
+   fabp028_desc LIKE type_t.chr500, 
+   fabp029 LIKE fabp_t.fabp029, 
+   fabp029_desc LIKE type_t.chr500, 
+   fabp030 LIKE fabp_t.fabp030, 
+   fabp030_desc LIKE type_t.chr500, 
+   fabp031 LIKE fabp_t.fabp031, 
+   fabp031_desc LIKE type_t.chr500, 
+   fabp032 LIKE fabp_t.fabp032, 
+   fabp032_desc LIKE type_t.chr500, 
+   fabp033 LIKE fabp_t.fabp033, 
+   fabp033_desc LIKE type_t.chr500, 
+   fabp034 LIKE fabp_t.fabp034, 
+   fabp034_desc LIKE type_t.chr500, 
+   fabp035 LIKE fabp_t.fabp035, 
+   fabp035_desc LIKE type_t.chr500, 
+   fabp036 LIKE fabp_t.fabp036, 
+   fabp036_desc LIKE type_t.chr500, 
+   fabp038 LIKE fabp_t.fabp038, 
+   fabp039 LIKE fabp_t.fabp039, 
+   fabp039_desc LIKE type_t.chr500, 
+   fabp040 LIKE fabp_t.fabp040, 
+   fabp040_desc LIKE type_t.chr500, 
+   fabp041 LIKE fabp_t.fabp041, 
+   fabp041_desc LIKE type_t.chr500, 
+   fabp042 LIKE fabp_t.fabp042, 
+   fabp042_desc LIKE type_t.chr500, 
+   fabp043 LIKE fabp_t.fabp043, 
+   fabp043_desc LIKE type_t.chr500, 
+   fabp044 LIKE fabp_t.fabp044, 
+   fabp044_desc LIKE type_t.chr500, 
+   fabp045 LIKE fabp_t.fabp045, 
+   fabp045_desc LIKE type_t.chr500, 
+   fabp046 LIKE fabp_t.fabp046, 
+   fabp046_desc LIKE type_t.chr500, 
+   fabp047 LIKE fabp_t.fabp047, 
+   fabp047_desc LIKE type_t.chr500, 
+   fabp048 LIKE fabp_t.fabp048, 
+   fabp048_desc LIKE type_t.chr500, 
+   fabp049 LIKE fabp_t.fabp049, 
+   fabp049_desc LIKE type_t.chr500, 
+   fabp050 LIKE fabp_t.fabp050, 
+   fabp050_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_fabp_d          DYNAMIC ARRAY OF type_g_fabp_d
+DEFINE g_fabp_d_t        type_g_fabp_d
+ 
+ 
+DEFINE g_fabpld_t   LIKE fabp_t.fabpld    #Key值備份
+DEFINE g_fabpdocno_t      LIKE fabp_t.fabpdocno    #Key值備份
+DEFINE g_fabpseq_t      LIKE fabp_t.fabpseq    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+{</section>}
+ 
+{<section id="afat511_01.input" >}    
+#+ 資料輸入
+PUBLIC FUNCTION afat511_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_afat511_01 WITH FORM cl_ap_formpath("afa","afat511_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_fabp_d FROM s_detail1_afat511_01.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabpld
+            #add-point:BEFORE FIELD fabpld name="input.b.page1_afat511_01.fabpld"
+            {<point name="input.b.page1_afat511_01.fabpld" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabpld
+            
+            #add-point:AFTER FIELD fabpld name="input.a.page1_afat511_01.fabpld"
+            {<point name="input.a.page1_afat511_01.fabpld" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabpld
+            #add-point:ON CHANGE fabpld name="input.g.page1_afat511_01.fabpld"
+            {<point name="input.g.page1_afat511_01.fabpld" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabpdocno
+            #add-point:BEFORE FIELD fabpdocno name="input.b.page1_afat511_01.fabpdocno"
+            {<point name="input.b.page1_afat511_01.fabpdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabpdocno
+            
+            #add-point:AFTER FIELD fabpdocno name="input.a.page1_afat511_01.fabpdocno"
+            {<point name="input.a.page1_afat511_01.fabpdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabpdocno
+            #add-point:ON CHANGE fabpdocno name="input.g.page1_afat511_01.fabpdocno"
+            {<point name="input.g.page1_afat511_01.fabpdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabpseq_2
+            #add-point:BEFORE FIELD fabpseq_2 name="input.b.page1_afat511_01.fabpseq_2"
+            {<point name="input.b.page1_afat511_01.fabpseq_2" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabpseq_2
+            
+            #add-point:AFTER FIELD fabpseq_2 name="input.a.page1_afat511_01.fabpseq_2"
+            {<point name="input.a.page1_afat511_01.fabpseq_2" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabpseq_2
+            #add-point:ON CHANGE fabpseq_2 name="input.g.page1_afat511_01.fabpseq_2"
+            {<point name="input.g.page1_afat511_01.fabpseq_2" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp037
+            #add-point:BEFORE FIELD fabp037 name="input.b.page1_afat511_01.fabp037"
+            {<point name="input.b.page1_afat511_01.fabp037" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp037
+            
+            #add-point:AFTER FIELD fabp037 name="input.a.page1_afat511_01.fabp037"
+            {<point name="input.a.page1_afat511_01.fabp037" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp037
+            #add-point:ON CHANGE fabp037 name="input.g.page1_afat511_01.fabp037"
+            {<point name="input.g.page1_afat511_01.fabp037" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp027
+            #add-point:BEFORE FIELD fabp027 name="input.b.page1_afat511_01.fabp027"
+            {<point name="input.b.page1_afat511_01.fabp027" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp027
+            
+            #add-point:AFTER FIELD fabp027 name="input.a.page1_afat511_01.fabp027"
+            {<point name="input.a.page1_afat511_01.fabp027" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp027
+            #add-point:ON CHANGE fabp027 name="input.g.page1_afat511_01.fabp027"
+            {<point name="input.g.page1_afat511_01.fabp027" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp027_desc
+            #add-point:BEFORE FIELD fabp027_desc name="input.b.page1_afat511_01.fabp027_desc"
+            {<point name="input.b.page1_afat511_01.fabp027_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp027_desc
+            
+            #add-point:AFTER FIELD fabp027_desc name="input.a.page1_afat511_01.fabp027_desc"
+            {<point name="input.a.page1_afat511_01.fabp027_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp027_desc
+            #add-point:ON CHANGE fabp027_desc name="input.g.page1_afat511_01.fabp027_desc"
+            {<point name="input.g.page1_afat511_01.fabp027_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp028
+            #add-point:BEFORE FIELD fabp028 name="input.b.page1_afat511_01.fabp028"
+            {<point name="input.b.page1_afat511_01.fabp028" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp028
+            
+            #add-point:AFTER FIELD fabp028 name="input.a.page1_afat511_01.fabp028"
+            {<point name="input.a.page1_afat511_01.fabp028" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp028
+            #add-point:ON CHANGE fabp028 name="input.g.page1_afat511_01.fabp028"
+            {<point name="input.g.page1_afat511_01.fabp028" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp028_desc
+            #add-point:BEFORE FIELD fabp028_desc name="input.b.page1_afat511_01.fabp028_desc"
+            {<point name="input.b.page1_afat511_01.fabp028_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp028_desc
+            
+            #add-point:AFTER FIELD fabp028_desc name="input.a.page1_afat511_01.fabp028_desc"
+            {<point name="input.a.page1_afat511_01.fabp028_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp028_desc
+            #add-point:ON CHANGE fabp028_desc name="input.g.page1_afat511_01.fabp028_desc"
+            {<point name="input.g.page1_afat511_01.fabp028_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp029
+            #add-point:BEFORE FIELD fabp029 name="input.b.page1_afat511_01.fabp029"
+            {<point name="input.b.page1_afat511_01.fabp029" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp029
+            
+            #add-point:AFTER FIELD fabp029 name="input.a.page1_afat511_01.fabp029"
+            {<point name="input.a.page1_afat511_01.fabp029" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp029
+            #add-point:ON CHANGE fabp029 name="input.g.page1_afat511_01.fabp029"
+            {<point name="input.g.page1_afat511_01.fabp029" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp029_desc
+            #add-point:BEFORE FIELD fabp029_desc name="input.b.page1_afat511_01.fabp029_desc"
+            {<point name="input.b.page1_afat511_01.fabp029_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp029_desc
+            
+            #add-point:AFTER FIELD fabp029_desc name="input.a.page1_afat511_01.fabp029_desc"
+            {<point name="input.a.page1_afat511_01.fabp029_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp029_desc
+            #add-point:ON CHANGE fabp029_desc name="input.g.page1_afat511_01.fabp029_desc"
+            {<point name="input.g.page1_afat511_01.fabp029_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp030
+            #add-point:BEFORE FIELD fabp030 name="input.b.page1_afat511_01.fabp030"
+            {<point name="input.b.page1_afat511_01.fabp030" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp030
+            
+            #add-point:AFTER FIELD fabp030 name="input.a.page1_afat511_01.fabp030"
+            {<point name="input.a.page1_afat511_01.fabp030" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp030
+            #add-point:ON CHANGE fabp030 name="input.g.page1_afat511_01.fabp030"
+            {<point name="input.g.page1_afat511_01.fabp030" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp030_desc
+            #add-point:BEFORE FIELD fabp030_desc name="input.b.page1_afat511_01.fabp030_desc"
+            {<point name="input.b.page1_afat511_01.fabp030_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp030_desc
+            
+            #add-point:AFTER FIELD fabp030_desc name="input.a.page1_afat511_01.fabp030_desc"
+            {<point name="input.a.page1_afat511_01.fabp030_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp030_desc
+            #add-point:ON CHANGE fabp030_desc name="input.g.page1_afat511_01.fabp030_desc"
+            {<point name="input.g.page1_afat511_01.fabp030_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp031
+            #add-point:BEFORE FIELD fabp031 name="input.b.page1_afat511_01.fabp031"
+            {<point name="input.b.page1_afat511_01.fabp031" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp031
+            
+            #add-point:AFTER FIELD fabp031 name="input.a.page1_afat511_01.fabp031"
+            {<point name="input.a.page1_afat511_01.fabp031" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp031
+            #add-point:ON CHANGE fabp031 name="input.g.page1_afat511_01.fabp031"
+            {<point name="input.g.page1_afat511_01.fabp031" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp031_desc
+            #add-point:BEFORE FIELD fabp031_desc name="input.b.page1_afat511_01.fabp031_desc"
+            {<point name="input.b.page1_afat511_01.fabp031_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp031_desc
+            
+            #add-point:AFTER FIELD fabp031_desc name="input.a.page1_afat511_01.fabp031_desc"
+            {<point name="input.a.page1_afat511_01.fabp031_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp031_desc
+            #add-point:ON CHANGE fabp031_desc name="input.g.page1_afat511_01.fabp031_desc"
+            {<point name="input.g.page1_afat511_01.fabp031_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp032
+            #add-point:BEFORE FIELD fabp032 name="input.b.page1_afat511_01.fabp032"
+            {<point name="input.b.page1_afat511_01.fabp032" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp032
+            
+            #add-point:AFTER FIELD fabp032 name="input.a.page1_afat511_01.fabp032"
+            {<point name="input.a.page1_afat511_01.fabp032" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp032
+            #add-point:ON CHANGE fabp032 name="input.g.page1_afat511_01.fabp032"
+            {<point name="input.g.page1_afat511_01.fabp032" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp032_desc
+            #add-point:BEFORE FIELD fabp032_desc name="input.b.page1_afat511_01.fabp032_desc"
+            {<point name="input.b.page1_afat511_01.fabp032_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp032_desc
+            
+            #add-point:AFTER FIELD fabp032_desc name="input.a.page1_afat511_01.fabp032_desc"
+            {<point name="input.a.page1_afat511_01.fabp032_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp032_desc
+            #add-point:ON CHANGE fabp032_desc name="input.g.page1_afat511_01.fabp032_desc"
+            {<point name="input.g.page1_afat511_01.fabp032_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp033
+            #add-point:BEFORE FIELD fabp033 name="input.b.page1_afat511_01.fabp033"
+            {<point name="input.b.page1_afat511_01.fabp033" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp033
+            
+            #add-point:AFTER FIELD fabp033 name="input.a.page1_afat511_01.fabp033"
+            {<point name="input.a.page1_afat511_01.fabp033" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp033
+            #add-point:ON CHANGE fabp033 name="input.g.page1_afat511_01.fabp033"
+            {<point name="input.g.page1_afat511_01.fabp033" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp033_desc
+            #add-point:BEFORE FIELD fabp033_desc name="input.b.page1_afat511_01.fabp033_desc"
+            {<point name="input.b.page1_afat511_01.fabp033_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp033_desc
+            
+            #add-point:AFTER FIELD fabp033_desc name="input.a.page1_afat511_01.fabp033_desc"
+            {<point name="input.a.page1_afat511_01.fabp033_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp033_desc
+            #add-point:ON CHANGE fabp033_desc name="input.g.page1_afat511_01.fabp033_desc"
+            {<point name="input.g.page1_afat511_01.fabp033_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp034
+            #add-point:BEFORE FIELD fabp034 name="input.b.page1_afat511_01.fabp034"
+            {<point name="input.b.page1_afat511_01.fabp034" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp034
+            
+            #add-point:AFTER FIELD fabp034 name="input.a.page1_afat511_01.fabp034"
+            {<point name="input.a.page1_afat511_01.fabp034" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp034
+            #add-point:ON CHANGE fabp034 name="input.g.page1_afat511_01.fabp034"
+            {<point name="input.g.page1_afat511_01.fabp034" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp034_desc
+            #add-point:BEFORE FIELD fabp034_desc name="input.b.page1_afat511_01.fabp034_desc"
+            {<point name="input.b.page1_afat511_01.fabp034_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp034_desc
+            
+            #add-point:AFTER FIELD fabp034_desc name="input.a.page1_afat511_01.fabp034_desc"
+            {<point name="input.a.page1_afat511_01.fabp034_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp034_desc
+            #add-point:ON CHANGE fabp034_desc name="input.g.page1_afat511_01.fabp034_desc"
+            {<point name="input.g.page1_afat511_01.fabp034_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp035
+            #add-point:BEFORE FIELD fabp035 name="input.b.page1_afat511_01.fabp035"
+            {<point name="input.b.page1_afat511_01.fabp035" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp035
+            
+            #add-point:AFTER FIELD fabp035 name="input.a.page1_afat511_01.fabp035"
+            {<point name="input.a.page1_afat511_01.fabp035" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp035
+            #add-point:ON CHANGE fabp035 name="input.g.page1_afat511_01.fabp035"
+            {<point name="input.g.page1_afat511_01.fabp035" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp035_desc
+            #add-point:BEFORE FIELD fabp035_desc name="input.b.page1_afat511_01.fabp035_desc"
+            {<point name="input.b.page1_afat511_01.fabp035_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp035_desc
+            
+            #add-point:AFTER FIELD fabp035_desc name="input.a.page1_afat511_01.fabp035_desc"
+            {<point name="input.a.page1_afat511_01.fabp035_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp035_desc
+            #add-point:ON CHANGE fabp035_desc name="input.g.page1_afat511_01.fabp035_desc"
+            {<point name="input.g.page1_afat511_01.fabp035_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp036
+            #add-point:BEFORE FIELD fabp036 name="input.b.page1_afat511_01.fabp036"
+            {<point name="input.b.page1_afat511_01.fabp036" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp036
+            
+            #add-point:AFTER FIELD fabp036 name="input.a.page1_afat511_01.fabp036"
+            {<point name="input.a.page1_afat511_01.fabp036" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp036
+            #add-point:ON CHANGE fabp036 name="input.g.page1_afat511_01.fabp036"
+            {<point name="input.g.page1_afat511_01.fabp036" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp036_desc
+            #add-point:BEFORE FIELD fabp036_desc name="input.b.page1_afat511_01.fabp036_desc"
+            {<point name="input.b.page1_afat511_01.fabp036_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp036_desc
+            
+            #add-point:AFTER FIELD fabp036_desc name="input.a.page1_afat511_01.fabp036_desc"
+            {<point name="input.a.page1_afat511_01.fabp036_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp036_desc
+            #add-point:ON CHANGE fabp036_desc name="input.g.page1_afat511_01.fabp036_desc"
+            {<point name="input.g.page1_afat511_01.fabp036_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp038
+            #add-point:BEFORE FIELD fabp038 name="input.b.page1_afat511_01.fabp038"
+            {<point name="input.b.page1_afat511_01.fabp038" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp038
+            
+            #add-point:AFTER FIELD fabp038 name="input.a.page1_afat511_01.fabp038"
+            {<point name="input.a.page1_afat511_01.fabp038" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp038
+            #add-point:ON CHANGE fabp038 name="input.g.page1_afat511_01.fabp038"
+            {<point name="input.g.page1_afat511_01.fabp038" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp039
+            #add-point:BEFORE FIELD fabp039 name="input.b.page1_afat511_01.fabp039"
+            {<point name="input.b.page1_afat511_01.fabp039" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp039
+            
+            #add-point:AFTER FIELD fabp039 name="input.a.page1_afat511_01.fabp039"
+            {<point name="input.a.page1_afat511_01.fabp039" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp039
+            #add-point:ON CHANGE fabp039 name="input.g.page1_afat511_01.fabp039"
+            {<point name="input.g.page1_afat511_01.fabp039" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp039_desc
+            #add-point:BEFORE FIELD fabp039_desc name="input.b.page1_afat511_01.fabp039_desc"
+            {<point name="input.b.page1_afat511_01.fabp039_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp039_desc
+            
+            #add-point:AFTER FIELD fabp039_desc name="input.a.page1_afat511_01.fabp039_desc"
+            {<point name="input.a.page1_afat511_01.fabp039_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp039_desc
+            #add-point:ON CHANGE fabp039_desc name="input.g.page1_afat511_01.fabp039_desc"
+            {<point name="input.g.page1_afat511_01.fabp039_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp040
+            #add-point:BEFORE FIELD fabp040 name="input.b.page1_afat511_01.fabp040"
+            {<point name="input.b.page1_afat511_01.fabp040" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp040
+            
+            #add-point:AFTER FIELD fabp040 name="input.a.page1_afat511_01.fabp040"
+            {<point name="input.a.page1_afat511_01.fabp040" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp040
+            #add-point:ON CHANGE fabp040 name="input.g.page1_afat511_01.fabp040"
+            {<point name="input.g.page1_afat511_01.fabp040" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp040_desc
+            #add-point:BEFORE FIELD fabp040_desc name="input.b.page1_afat511_01.fabp040_desc"
+            {<point name="input.b.page1_afat511_01.fabp040_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp040_desc
+            
+            #add-point:AFTER FIELD fabp040_desc name="input.a.page1_afat511_01.fabp040_desc"
+            {<point name="input.a.page1_afat511_01.fabp040_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp040_desc
+            #add-point:ON CHANGE fabp040_desc name="input.g.page1_afat511_01.fabp040_desc"
+            {<point name="input.g.page1_afat511_01.fabp040_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp041
+            #add-point:BEFORE FIELD fabp041 name="input.b.page1_afat511_01.fabp041"
+            {<point name="input.b.page1_afat511_01.fabp041" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp041
+            
+            #add-point:AFTER FIELD fabp041 name="input.a.page1_afat511_01.fabp041"
+            {<point name="input.a.page1_afat511_01.fabp041" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp041
+            #add-point:ON CHANGE fabp041 name="input.g.page1_afat511_01.fabp041"
+            {<point name="input.g.page1_afat511_01.fabp041" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp041_desc
+            #add-point:BEFORE FIELD fabp041_desc name="input.b.page1_afat511_01.fabp041_desc"
+            {<point name="input.b.page1_afat511_01.fabp041_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp041_desc
+            
+            #add-point:AFTER FIELD fabp041_desc name="input.a.page1_afat511_01.fabp041_desc"
+            {<point name="input.a.page1_afat511_01.fabp041_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp041_desc
+            #add-point:ON CHANGE fabp041_desc name="input.g.page1_afat511_01.fabp041_desc"
+            {<point name="input.g.page1_afat511_01.fabp041_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp042
+            #add-point:BEFORE FIELD fabp042 name="input.b.page1_afat511_01.fabp042"
+            {<point name="input.b.page1_afat511_01.fabp042" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp042
+            
+            #add-point:AFTER FIELD fabp042 name="input.a.page1_afat511_01.fabp042"
+            {<point name="input.a.page1_afat511_01.fabp042" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp042
+            #add-point:ON CHANGE fabp042 name="input.g.page1_afat511_01.fabp042"
+            {<point name="input.g.page1_afat511_01.fabp042" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp042_desc
+            #add-point:BEFORE FIELD fabp042_desc name="input.b.page1_afat511_01.fabp042_desc"
+            {<point name="input.b.page1_afat511_01.fabp042_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp042_desc
+            
+            #add-point:AFTER FIELD fabp042_desc name="input.a.page1_afat511_01.fabp042_desc"
+            {<point name="input.a.page1_afat511_01.fabp042_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp042_desc
+            #add-point:ON CHANGE fabp042_desc name="input.g.page1_afat511_01.fabp042_desc"
+            {<point name="input.g.page1_afat511_01.fabp042_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp043
+            #add-point:BEFORE FIELD fabp043 name="input.b.page1_afat511_01.fabp043"
+            {<point name="input.b.page1_afat511_01.fabp043" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp043
+            
+            #add-point:AFTER FIELD fabp043 name="input.a.page1_afat511_01.fabp043"
+            {<point name="input.a.page1_afat511_01.fabp043" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp043
+            #add-point:ON CHANGE fabp043 name="input.g.page1_afat511_01.fabp043"
+            {<point name="input.g.page1_afat511_01.fabp043" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp043_desc
+            #add-point:BEFORE FIELD fabp043_desc name="input.b.page1_afat511_01.fabp043_desc"
+            {<point name="input.b.page1_afat511_01.fabp043_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp043_desc
+            
+            #add-point:AFTER FIELD fabp043_desc name="input.a.page1_afat511_01.fabp043_desc"
+            {<point name="input.a.page1_afat511_01.fabp043_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp043_desc
+            #add-point:ON CHANGE fabp043_desc name="input.g.page1_afat511_01.fabp043_desc"
+            {<point name="input.g.page1_afat511_01.fabp043_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp044
+            #add-point:BEFORE FIELD fabp044 name="input.b.page1_afat511_01.fabp044"
+            {<point name="input.b.page1_afat511_01.fabp044" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp044
+            
+            #add-point:AFTER FIELD fabp044 name="input.a.page1_afat511_01.fabp044"
+            {<point name="input.a.page1_afat511_01.fabp044" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp044
+            #add-point:ON CHANGE fabp044 name="input.g.page1_afat511_01.fabp044"
+            {<point name="input.g.page1_afat511_01.fabp044" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp044_desc
+            #add-point:BEFORE FIELD fabp044_desc name="input.b.page1_afat511_01.fabp044_desc"
+            {<point name="input.b.page1_afat511_01.fabp044_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp044_desc
+            
+            #add-point:AFTER FIELD fabp044_desc name="input.a.page1_afat511_01.fabp044_desc"
+            {<point name="input.a.page1_afat511_01.fabp044_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp044_desc
+            #add-point:ON CHANGE fabp044_desc name="input.g.page1_afat511_01.fabp044_desc"
+            {<point name="input.g.page1_afat511_01.fabp044_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp045
+            #add-point:BEFORE FIELD fabp045 name="input.b.page1_afat511_01.fabp045"
+            {<point name="input.b.page1_afat511_01.fabp045" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp045
+            
+            #add-point:AFTER FIELD fabp045 name="input.a.page1_afat511_01.fabp045"
+            {<point name="input.a.page1_afat511_01.fabp045" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp045
+            #add-point:ON CHANGE fabp045 name="input.g.page1_afat511_01.fabp045"
+            {<point name="input.g.page1_afat511_01.fabp045" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp045_desc
+            #add-point:BEFORE FIELD fabp045_desc name="input.b.page1_afat511_01.fabp045_desc"
+            {<point name="input.b.page1_afat511_01.fabp045_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp045_desc
+            
+            #add-point:AFTER FIELD fabp045_desc name="input.a.page1_afat511_01.fabp045_desc"
+            {<point name="input.a.page1_afat511_01.fabp045_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp045_desc
+            #add-point:ON CHANGE fabp045_desc name="input.g.page1_afat511_01.fabp045_desc"
+            {<point name="input.g.page1_afat511_01.fabp045_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp046
+            #add-point:BEFORE FIELD fabp046 name="input.b.page1_afat511_01.fabp046"
+            {<point name="input.b.page1_afat511_01.fabp046" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp046
+            
+            #add-point:AFTER FIELD fabp046 name="input.a.page1_afat511_01.fabp046"
+            {<point name="input.a.page1_afat511_01.fabp046" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp046
+            #add-point:ON CHANGE fabp046 name="input.g.page1_afat511_01.fabp046"
+            {<point name="input.g.page1_afat511_01.fabp046" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp046_desc
+            #add-point:BEFORE FIELD fabp046_desc name="input.b.page1_afat511_01.fabp046_desc"
+            {<point name="input.b.page1_afat511_01.fabp046_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp046_desc
+            
+            #add-point:AFTER FIELD fabp046_desc name="input.a.page1_afat511_01.fabp046_desc"
+            {<point name="input.a.page1_afat511_01.fabp046_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp046_desc
+            #add-point:ON CHANGE fabp046_desc name="input.g.page1_afat511_01.fabp046_desc"
+            {<point name="input.g.page1_afat511_01.fabp046_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp047
+            #add-point:BEFORE FIELD fabp047 name="input.b.page1_afat511_01.fabp047"
+            {<point name="input.b.page1_afat511_01.fabp047" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp047
+            
+            #add-point:AFTER FIELD fabp047 name="input.a.page1_afat511_01.fabp047"
+            {<point name="input.a.page1_afat511_01.fabp047" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp047
+            #add-point:ON CHANGE fabp047 name="input.g.page1_afat511_01.fabp047"
+            {<point name="input.g.page1_afat511_01.fabp047" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp047_desc
+            #add-point:BEFORE FIELD fabp047_desc name="input.b.page1_afat511_01.fabp047_desc"
+            {<point name="input.b.page1_afat511_01.fabp047_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp047_desc
+            
+            #add-point:AFTER FIELD fabp047_desc name="input.a.page1_afat511_01.fabp047_desc"
+            {<point name="input.a.page1_afat511_01.fabp047_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp047_desc
+            #add-point:ON CHANGE fabp047_desc name="input.g.page1_afat511_01.fabp047_desc"
+            {<point name="input.g.page1_afat511_01.fabp047_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp048
+            #add-point:BEFORE FIELD fabp048 name="input.b.page1_afat511_01.fabp048"
+            {<point name="input.b.page1_afat511_01.fabp048" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp048
+            
+            #add-point:AFTER FIELD fabp048 name="input.a.page1_afat511_01.fabp048"
+            {<point name="input.a.page1_afat511_01.fabp048" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp048
+            #add-point:ON CHANGE fabp048 name="input.g.page1_afat511_01.fabp048"
+            {<point name="input.g.page1_afat511_01.fabp048" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp048_desc
+            #add-point:BEFORE FIELD fabp048_desc name="input.b.page1_afat511_01.fabp048_desc"
+            {<point name="input.b.page1_afat511_01.fabp048_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp048_desc
+            
+            #add-point:AFTER FIELD fabp048_desc name="input.a.page1_afat511_01.fabp048_desc"
+            {<point name="input.a.page1_afat511_01.fabp048_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp048_desc
+            #add-point:ON CHANGE fabp048_desc name="input.g.page1_afat511_01.fabp048_desc"
+            {<point name="input.g.page1_afat511_01.fabp048_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp049
+            #add-point:BEFORE FIELD fabp049 name="input.b.page1_afat511_01.fabp049"
+            {<point name="input.b.page1_afat511_01.fabp049" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp049
+            
+            #add-point:AFTER FIELD fabp049 name="input.a.page1_afat511_01.fabp049"
+            {<point name="input.a.page1_afat511_01.fabp049" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp049
+            #add-point:ON CHANGE fabp049 name="input.g.page1_afat511_01.fabp049"
+            {<point name="input.g.page1_afat511_01.fabp049" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp049_desc
+            #add-point:BEFORE FIELD fabp049_desc name="input.b.page1_afat511_01.fabp049_desc"
+            {<point name="input.b.page1_afat511_01.fabp049_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp049_desc
+            
+            #add-point:AFTER FIELD fabp049_desc name="input.a.page1_afat511_01.fabp049_desc"
+            {<point name="input.a.page1_afat511_01.fabp049_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp049_desc
+            #add-point:ON CHANGE fabp049_desc name="input.g.page1_afat511_01.fabp049_desc"
+            {<point name="input.g.page1_afat511_01.fabp049_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp050
+            #add-point:BEFORE FIELD fabp050 name="input.b.page1_afat511_01.fabp050"
+            {<point name="input.b.page1_afat511_01.fabp050" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp050
+            
+            #add-point:AFTER FIELD fabp050 name="input.a.page1_afat511_01.fabp050"
+            {<point name="input.a.page1_afat511_01.fabp050" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp050
+            #add-point:ON CHANGE fabp050 name="input.g.page1_afat511_01.fabp050"
+            {<point name="input.g.page1_afat511_01.fabp050" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabp050_desc
+            #add-point:BEFORE FIELD fabp050_desc name="input.b.page1_afat511_01.fabp050_desc"
+            {<point name="input.b.page1_afat511_01.fabp050_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabp050_desc
+            
+            #add-point:AFTER FIELD fabp050_desc name="input.a.page1_afat511_01.fabp050_desc"
+            {<point name="input.a.page1_afat511_01.fabp050_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabp050_desc
+            #add-point:ON CHANGE fabp050_desc name="input.g.page1_afat511_01.fabp050_desc"
+            {<point name="input.g.page1_afat511_01.fabp050_desc" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1_afat511_01.fabpld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabpld
+            #add-point:ON ACTION controlp INFIELD fabpld name="input.c.page1_afat511_01.fabpld"
+            {<point name="input.c.page1_afat511_01.fabpld" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabpdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabpdocno
+            #add-point:ON ACTION controlp INFIELD fabpdocno name="input.c.page1_afat511_01.fabpdocno"
+            {<point name="input.c.page1_afat511_01.fabpdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabpseq_2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabpseq_2
+            #add-point:ON ACTION controlp INFIELD fabpseq_2 name="input.c.page1_afat511_01.fabpseq_2"
+            {<point name="input.c.page1_afat511_01.fabpseq_2" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp037
+            #add-point:ON ACTION controlp INFIELD fabp037 name="input.c.page1_afat511_01.fabp037"
+            {<point name="input.c.page1_afat511_01.fabp037" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp027
+            #add-point:ON ACTION controlp INFIELD fabp027 name="input.c.page1_afat511_01.fabp027"
+            {<point name="input.c.page1_afat511_01.fabp027" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp027_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp027_desc
+            #add-point:ON ACTION controlp INFIELD fabp027_desc name="input.c.page1_afat511_01.fabp027_desc"
+            {<point name="input.c.page1_afat511_01.fabp027_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp028
+            #add-point:ON ACTION controlp INFIELD fabp028 name="input.c.page1_afat511_01.fabp028"
+            {<point name="input.c.page1_afat511_01.fabp028" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp028_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp028_desc
+            #add-point:ON ACTION controlp INFIELD fabp028_desc name="input.c.page1_afat511_01.fabp028_desc"
+            {<point name="input.c.page1_afat511_01.fabp028_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp029
+            #add-point:ON ACTION controlp INFIELD fabp029 name="input.c.page1_afat511_01.fabp029"
+            {<point name="input.c.page1_afat511_01.fabp029" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp029_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp029_desc
+            #add-point:ON ACTION controlp INFIELD fabp029_desc name="input.c.page1_afat511_01.fabp029_desc"
+            {<point name="input.c.page1_afat511_01.fabp029_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp030
+            #add-point:ON ACTION controlp INFIELD fabp030 name="input.c.page1_afat511_01.fabp030"
+            {<point name="input.c.page1_afat511_01.fabp030" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp030_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp030_desc
+            #add-point:ON ACTION controlp INFIELD fabp030_desc name="input.c.page1_afat511_01.fabp030_desc"
+            {<point name="input.c.page1_afat511_01.fabp030_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp031
+            #add-point:ON ACTION controlp INFIELD fabp031 name="input.c.page1_afat511_01.fabp031"
+            {<point name="input.c.page1_afat511_01.fabp031" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp031_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp031_desc
+            #add-point:ON ACTION controlp INFIELD fabp031_desc name="input.c.page1_afat511_01.fabp031_desc"
+            {<point name="input.c.page1_afat511_01.fabp031_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp032
+            #add-point:ON ACTION controlp INFIELD fabp032 name="input.c.page1_afat511_01.fabp032"
+            {<point name="input.c.page1_afat511_01.fabp032" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp032_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp032_desc
+            #add-point:ON ACTION controlp INFIELD fabp032_desc name="input.c.page1_afat511_01.fabp032_desc"
+            {<point name="input.c.page1_afat511_01.fabp032_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp033
+            #add-point:ON ACTION controlp INFIELD fabp033 name="input.c.page1_afat511_01.fabp033"
+            {<point name="input.c.page1_afat511_01.fabp033" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp033_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp033_desc
+            #add-point:ON ACTION controlp INFIELD fabp033_desc name="input.c.page1_afat511_01.fabp033_desc"
+            {<point name="input.c.page1_afat511_01.fabp033_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp034
+            #add-point:ON ACTION controlp INFIELD fabp034 name="input.c.page1_afat511_01.fabp034"
+            {<point name="input.c.page1_afat511_01.fabp034" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp034_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp034_desc
+            #add-point:ON ACTION controlp INFIELD fabp034_desc name="input.c.page1_afat511_01.fabp034_desc"
+            {<point name="input.c.page1_afat511_01.fabp034_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp035
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp035
+            #add-point:ON ACTION controlp INFIELD fabp035 name="input.c.page1_afat511_01.fabp035"
+            {<point name="input.c.page1_afat511_01.fabp035" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp035_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp035_desc
+            #add-point:ON ACTION controlp INFIELD fabp035_desc name="input.c.page1_afat511_01.fabp035_desc"
+            {<point name="input.c.page1_afat511_01.fabp035_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp036
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp036
+            #add-point:ON ACTION controlp INFIELD fabp036 name="input.c.page1_afat511_01.fabp036"
+            {<point name="input.c.page1_afat511_01.fabp036" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp036_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp036_desc
+            #add-point:ON ACTION controlp INFIELD fabp036_desc name="input.c.page1_afat511_01.fabp036_desc"
+            {<point name="input.c.page1_afat511_01.fabp036_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp038
+            #add-point:ON ACTION controlp INFIELD fabp038 name="input.c.page1_afat511_01.fabp038"
+            {<point name="input.c.page1_afat511_01.fabp038" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp039
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp039
+            #add-point:ON ACTION controlp INFIELD fabp039 name="input.c.page1_afat511_01.fabp039"
+            {<point name="input.c.page1_afat511_01.fabp039" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp039_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp039_desc
+            #add-point:ON ACTION controlp INFIELD fabp039_desc name="input.c.page1_afat511_01.fabp039_desc"
+            {<point name="input.c.page1_afat511_01.fabp039_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp040
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp040
+            #add-point:ON ACTION controlp INFIELD fabp040 name="input.c.page1_afat511_01.fabp040"
+            {<point name="input.c.page1_afat511_01.fabp040" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp040_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp040_desc
+            #add-point:ON ACTION controlp INFIELD fabp040_desc name="input.c.page1_afat511_01.fabp040_desc"
+            {<point name="input.c.page1_afat511_01.fabp040_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp041
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp041
+            #add-point:ON ACTION controlp INFIELD fabp041 name="input.c.page1_afat511_01.fabp041"
+            {<point name="input.c.page1_afat511_01.fabp041" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp041_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp041_desc
+            #add-point:ON ACTION controlp INFIELD fabp041_desc name="input.c.page1_afat511_01.fabp041_desc"
+            {<point name="input.c.page1_afat511_01.fabp041_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp042
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp042
+            #add-point:ON ACTION controlp INFIELD fabp042 name="input.c.page1_afat511_01.fabp042"
+            {<point name="input.c.page1_afat511_01.fabp042" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp042_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp042_desc
+            #add-point:ON ACTION controlp INFIELD fabp042_desc name="input.c.page1_afat511_01.fabp042_desc"
+            {<point name="input.c.page1_afat511_01.fabp042_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp043
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp043
+            #add-point:ON ACTION controlp INFIELD fabp043 name="input.c.page1_afat511_01.fabp043"
+            {<point name="input.c.page1_afat511_01.fabp043" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp043_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp043_desc
+            #add-point:ON ACTION controlp INFIELD fabp043_desc name="input.c.page1_afat511_01.fabp043_desc"
+            {<point name="input.c.page1_afat511_01.fabp043_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp044
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp044
+            #add-point:ON ACTION controlp INFIELD fabp044 name="input.c.page1_afat511_01.fabp044"
+            {<point name="input.c.page1_afat511_01.fabp044" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp044_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp044_desc
+            #add-point:ON ACTION controlp INFIELD fabp044_desc name="input.c.page1_afat511_01.fabp044_desc"
+            {<point name="input.c.page1_afat511_01.fabp044_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp045
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp045
+            #add-point:ON ACTION controlp INFIELD fabp045 name="input.c.page1_afat511_01.fabp045"
+            {<point name="input.c.page1_afat511_01.fabp045" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp045_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp045_desc
+            #add-point:ON ACTION controlp INFIELD fabp045_desc name="input.c.page1_afat511_01.fabp045_desc"
+            {<point name="input.c.page1_afat511_01.fabp045_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp046
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp046
+            #add-point:ON ACTION controlp INFIELD fabp046 name="input.c.page1_afat511_01.fabp046"
+            {<point name="input.c.page1_afat511_01.fabp046" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp046_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp046_desc
+            #add-point:ON ACTION controlp INFIELD fabp046_desc name="input.c.page1_afat511_01.fabp046_desc"
+            {<point name="input.c.page1_afat511_01.fabp046_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp047
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp047
+            #add-point:ON ACTION controlp INFIELD fabp047 name="input.c.page1_afat511_01.fabp047"
+            {<point name="input.c.page1_afat511_01.fabp047" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp047_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp047_desc
+            #add-point:ON ACTION controlp INFIELD fabp047_desc name="input.c.page1_afat511_01.fabp047_desc"
+            {<point name="input.c.page1_afat511_01.fabp047_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp048
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp048
+            #add-point:ON ACTION controlp INFIELD fabp048 name="input.c.page1_afat511_01.fabp048"
+            {<point name="input.c.page1_afat511_01.fabp048" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp048_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp048_desc
+            #add-point:ON ACTION controlp INFIELD fabp048_desc name="input.c.page1_afat511_01.fabp048_desc"
+            {<point name="input.c.page1_afat511_01.fabp048_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp049
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp049
+            #add-point:ON ACTION controlp INFIELD fabp049 name="input.c.page1_afat511_01.fabp049"
+            {<point name="input.c.page1_afat511_01.fabp049" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp049_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp049_desc
+            #add-point:ON ACTION controlp INFIELD fabp049_desc name="input.c.page1_afat511_01.fabp049_desc"
+            {<point name="input.c.page1_afat511_01.fabp049_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp050
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp050
+            #add-point:ON ACTION controlp INFIELD fabp050 name="input.c.page1_afat511_01.fabp050"
+            {<point name="input.c.page1_afat511_01.fabp050" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_afat511_01.fabp050_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabp050_desc
+            #add-point:ON ACTION controlp INFIELD fabp050_desc name="input.c.page1_afat511_01.fabp050_desc"
+            {<point name="input.c.page1_afat511_01.fabp050_desc" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_afat511_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="afat511_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="afat511_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

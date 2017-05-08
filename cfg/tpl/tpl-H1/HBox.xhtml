@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ FOURJS_START_COPYRIGHT(D,2011)
+ Property of Four Js*
+ (c) Copyright Four Js 2011, 2014. All Rights Reserved.
+ * Trademark of Four Js Development Tools Europe Ltd
+   in the United States and elsewhere
+ 
+ This file can be modified by licensees according to the
+ product manual.
+ FOURJS_END_COPYRIGHT
+ -->
+<!-- 
+Modify.........: No:FUN-T100 2014/03/14 by tsai_yen 
+-->
+<html
+	xmlns='http://www.w3.org/1999/xhtml'
+	xmlns:gwc='http://www.4js.com/GWC'
+>
+	<head>
+		<meta
+			content='text/html; charset=utf-8'
+			http-equiv='Content-Type'
+		/>
+	</head>
+
+	<body>
+
+<gwc:snippet-root>
+	<div
+		gwc:condition='!hidden'
+		gwc:omit-tag='!ttyfontfamily'
+
+		style='{ttyfontfamily ? "font-family: " + ttyfontfamily + ";" : null}'
+	>
+		<div
+			class='g{type} gSStar gS{type} {prefix("gc", class)}'
+		
+			data-g-id='LayoutSettingsContainer,forms/{form/name}/layoutContainers/{pathName}'
+			data-g-qa-idRef='{xpath("@idRef")}'
+            data-g-layout-container='"horizontalSpacing": {!splitter &amp;&amp; (indexOf(class, "h_spacing_no") == -1 ) ? formSpacing : 0}'
+		><!-- FUN-T100 h_spacing_no -->
+			<div
+				gwc:repeat='i items'
+				gwc:omit-tag='true'
+			>
+				<div
+					gwc:define='
+						isSpacerItem i/type == "SpacerItem";
+						isEmpty isSpacerItem || i/hidden != undefined &amp;&amp; i/hidden != 0;
+					'
+					gwc:omit-tag='true'
+				>
+					<div
+						gwc:condition='!isEmpty'
+						gwc:omit-tag='true'
+					>
+						<div
+							gwc:content='i'
+
+							data-g-layout-item='"column": {repeat/i/index * (splitter ? 2 : 1)}'
+						/>
+						<div
+							gwc:condition="splitter &amp;&amp; !repeat/i/last"
+							gwc:content='includeSnippet("GridLayoutSplitter")'
+
+							class="gMovableElementHandle gHorizontalSplitter"
+
+							data-g-id='MovableElement,0,horizontal'
+							data-g-layout-item='"column": {repeat/i/index * 2 + 1}'
+						/>
+					</div>
+
+					<div
+						gwc:condition='isSpacerItem'
+
+						data-g-layout-item='"column": {repeat/i/index * (splitter ? 2 : 1)}, "isEmpty": true, "isXSpacer": true'
+					/>
+				</div>
+			</div>
+		</div>
+	</div>
+</gwc:snippet-root>
+
+	</body>
+</html>

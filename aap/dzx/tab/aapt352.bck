@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt352" module="aap" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="08729" crtdt="2016-09-12 09:03:26" modid="08729" moddt="2016-09-12 09:03:26" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="零用支撥補申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apag001,apag001_desc(chr80),apag002,apagsite,apagsite_desc(chr80),apacsite,apagdocno,apagdocno_desc(chr80),apagdocdt,apagcomp,apagcomp_desc(chr80),glaa005,apag003,apagstus,apagownid,apagownid_desc(chr80),apagowndp,apagowndp_desc(chr80),apagcrtid,apagcrtid_desc(chr80),apagcrtdp,apagcrtdp_desc(chr80),apagcrtdt,apagmodid,apagmodid_desc(chr80),apagmoddt,apagcnfid,apagcnfid_desc(chr80),apagcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="apahseq,apah001,apah100,l_nmbc1031(num20_6),apah103,apah004,apah002,apah003,apah104,apah005,apah006,apad003_desc(chr500)"/>
+      <var id="bs_field" value="apagcomp,apagdocno" pk="apagcomp,apagdocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="aapt352_close"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt352" method="dialog">
+    <section id="input">
+      <input id="head" field="apag001,apag002,apagsite,apacsite,apagdocno,apagdocdt,apagcomp,glaa005,apag003,apagstus,apagcnfdt"/>
+      <input id="body" page="1" field="apahseq,apah001,apah100,apah103,apah004,apah002,apah003,apah104,apah005,apah006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="apag001,apag002,apacsite,apagdocno,apagdocno_desc,apagdocdt,apagcomp,apagcomp_desc,glaa005,apag003,apagstus,apagownid,apagowndp,apagcrtid,apagcrtdp,apagcrtdt,apagmodid,apagmoddt,apagcnfid,apagcnfdt"/>
+      <construct id="body" page="1" field="apahseq,apah001,apah103,apah004,apah002,apah003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="apagcomp,apagdocno"/>
+      <set id="head" type="no_entry" field="apagcomp,apagdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="apag001">
+        <after/>
+        <controlp form="q_apac001" state="i"/>
+        <controlp form="q_apac001" state="c"/>
+      </column>
+      <column id="apag001_desc"/>
+      <column id="apag002">
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apagsite">
+        <after/>
+        <controlp form="q_xrah002_2" state="c"/>
+      </column>
+      <column id="apagsite_desc"/>
+      <column id="apacsite"/>
+      <column id="apagdocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_ooba002_1" state="c"/>
+      </column>
+      <column id="apagdocno_desc"/>
+      <column id="apagdocdt" type="V" default="g_today"/>
+      <column id="apagcomp">
+        <after/>
+      </column>
+      <column id="apagcomp_desc"/>
+      <column id="glaa005"/>
+      <column id="apag003" type="S" default="N"/>
+      <column id="apagstus" scc="13">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="apagownid">
+        <after>
+          <reference field="apagownid_desc" ref_field="apag_t.apagownid" map_field="apagownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apagownid_desc"/>
+      <column id="apagowndp">
+        <after>
+          <reference field="apagowndp_desc" ref_field="apag_t.apagowndp" map_field="apagowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="apagowndp_desc"/>
+      <column id="apagcrtid">
+        <after>
+          <reference field="apagcrtid_desc" ref_field="apag_t.apagcrtid" map_field="apagcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apagcrtid_desc"/>
+      <column id="apagcrtdp">
+        <after>
+          <reference field="apagcrtdp_desc" ref_field="apag_t.apagcrtdp" map_field="apagcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="apagcrtdp_desc"/>
+      <column id="apagcrtdt"/>
+      <column id="apagmodid">
+        <after>
+          <reference field="apagmodid_desc" ref_field="apag_t.apagmodid" map_field="apagmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apagmodid_desc"/>
+      <column id="apagmoddt"/>
+      <column id="apagcnfid">
+        <after>
+          <reference field="apagcnfid_desc" ref_field="apag_t.apagcnfid" map_field="apagcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apagcnfid_desc"/>
+      <column id="apagcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="apahseq"/>
+      <column id="apah001">
+        <controlp form="q_nmas002_2" state="i"/>
+        <controlp form="q_nmas002_2" state="c"/>
+      </column>
+      <column id="apah100"/>
+      <column id="l_nmbc1031"/>
+      <column id="apah103">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apah004"/>
+      <column id="apah002">
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="apah003"/>
+      <column id="apah104" type="S" default="0"/>
+      <column id="apah005"/>
+      <column id="apah006"/>
+      <column id="apad003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apag_t" pk="apagcomp,apagdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT apag001,&apos;&apos;,apag002,apagsite,&apos;&apos;,&apos;&apos;,apagdocno,&apos;&apos;,apagdocdt,apagcomp,&apos;&apos;,&apos;&apos;,apag003,apagstus,apagownid,&apos;&apos;,apagowndp,&apos;&apos;,apagcrtid,&apos;&apos;,apagcrtdp,&apos;&apos;,apagcrtdt,apagmodid,&apos;&apos;,apagmoddt,apagcnfid,&apos;&apos;,apagcnfdt FROM apag_t WHERE apagent= ? AND apagcomp=? AND apagdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT apag001,&apos;&apos;,apag002,apagsite,&apos;&apos;,&apos;&apos;,apagdocno,&apos;&apos;,apagdocdt,apagcomp,&apos;&apos;,&apos;&apos;,apag003,apagstus,apagownid,&apos;&apos;,apagowndp,&apos;&apos;,apagcrtid,&apos;&apos;,apagcrtdp,&apos;&apos;,apagcrtdt,apagmodid,&apos;&apos;,apagmoddt,apagcnfid,&apos;&apos;,apagcnfdt FROM apag_t" order="apagcomp,apagdocno"/>
+    </head>
+    <body id="apah_t" page="1" linked="" pk="apahseq" fk="apahcomp,apahdocno">
+      <sql id="forupd_sql_detail" query="SELECT apahseq,apah001,apah100,&apos;&apos;,apah103,apah004,apah002,apah003,apah104,apah005,apah006,&apos;&apos; FROM apah_t WHERE apahent=? AND apahcomp=? AND apahdocno=? AND apahseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT apahseq,apah001,apah100,&apos;&apos;,apah103,apah004,apah002,apah003,apah104,apah005,apah006,&apos;&apos; FROM apah_t WHERE apahent=? AND apahcomp=? AND apahdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="adbt500_06" std_prog="adbt500_06" erpver="1.0" ver="1" module="ADB" type="S" booking="N" class="T" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xmdr_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：提供維護訂單硬備置資料
+標準作業功能取消：
+狀態功能：無
+作業類型：批處處理作業
+輸入模式：單檔多欄版型
+資料來源:xmdr_t
+         inag_t
+
+
+1.執行此程式需傳入4個參數，當傳入參數為ULL時則不可以執行
+  1-1.p_xmdadocno(訂單單號):
+  1-2.p_xmddseq(訂單項次):
+  1-3.p_xmddseq1(訂單項序):
+  1-4:p_xmddseq2(訂單分批序):
+  1-5:p_qty(備置量)
+2.先依據傳入的參數先抓取對應的xmdr_t資料，若已經有存在則將資料顯示畫面上並將選擇欄位預設為'Y'選擇
+  2-1.顯示在畫面上的預設欄位如下:
+      [C:選擇] = 'Y'
+      [C:備置量] = xmdr008
+      [C:備置已沖銷量] = xmdr009
+      [C:備置單位] = xmdr010
+      [C:可備置量] = 抓取對應inag_t資料的庫存量(inag008)-已在揀量inan010(inan000='1') -
+                     已備置量inan010(inan000='2')，算完的量需轉換成備置單位的數量
+      [C:庫位] = xmdr004
+      [C:儲位] = xmdr005
+      [C:庫存管理特徵] = xmdr003
+      [C:批號] = xmdr006
+      [C:庫存量] = 抓取對應inag_t資料的庫存量(inag008)
+      [C:庫存單位] = xmdr007
+3.依據傳入參數取得料件編號與產品特徵資料後抓取對應的inag_t資料(需排除料料+產品特徵+庫存管理特徵+
+  庫位+儲位+批號+庫存單位已經存在xmdr_t的資料)資料顯示在畫面上接在步驟2抓出的資料下面顯示，若
+  可備置量(庫存量-已在揀量-已備置量)小於等於0的資料也需排除
+  3-1.欄位預設如下:
+      [C:選擇] = 'N'
+      [C:備置量] = 0
+      [C:備置已沖銷量] = 0
+      [C:備置單位] = xmdd004
+      [C:可備置量] = 庫存量(inag008)-已在揀量inan010(inan000='1') -已備置量inan010(inan000='2')，
+                     算完的量需轉換成備置單位的數量
+      [C:庫位] = inag004
+      [C:儲位] = inag005
+      [C:庫存管理特徵] = inag003
+      [C:批號] = inag006
+      [C:庫存量] = inag008
+      [C:庫存單位] = inag007
+4.離開此子作業時需將畫面上有選擇的資料回傳，
+  4-1.回傳時需檢核備置總量是否等於p_qty，若不等於則不允許離開
+  4-2.回傳欄位如下
+      [C:備置量] 
+      [C:備置已沖銷量] 
+      [C:備置單位] 
+      [C:庫位] 
+      [C:儲位] 
+      [C:庫存管理特徵] 
+      [C:批號] 
+      [C:庫存量] 
+      [C:庫存單位]
+
+ 
+]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.此Table只可以維護'選擇'與'備置量'兩個欄位]]>
+  </mi_all>
+  <field cite_std="N" name="inag008" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[抓取對應inag_t資料的庫存量(inag008)]]>
+  </field>
+  <field cite_std="N" name="sel" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.當備置已沖銷量不等於0時，則不可以取消選擇]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr001" ver="1" src="s" column="xmdr001" table="xmdr_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr002" ver="1" src="s" column="xmdr002" table="xmdr_t" attribute="C508" type="varchar2(256)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr003" ver="1" src="s" column="xmdr003" table="xmdr_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr004" ver="1" src="s" column="xmdr004" table="xmdr_t" attribute="C303" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr005" ver="1" src="s" column="xmdr005" table="xmdr_t" attribute="C303" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr006" ver="1" src="s" column="xmdr006" table="xmdr_t" attribute="C304" type="varchar2(30)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr007" ver="1" src="s" column="xmdr007" table="xmdr_t" attribute="C009" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr008" ver="1" src="s" column="xmdr008" table="xmdr_t" attribute="N101" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[1.有勾選擇的資料此欄位才可以維護
+2不可小於等於0
+3.不可小於備置已沖銷量
+4.不可大於可備置量
+5.不可以大於p_qty(備置量)
+]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr009" ver="1" src="s" column="xmdr009" table="xmdr_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdr_t.xmdr010" ver="1" src="s" column="xmdr010" table="xmdr_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="yxmdr008" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[抓取mdr_t
+[C:可備置量] = 抓取對應inag_t資料的庫存量(inag008)-已在揀量inan010(inan000='1') -
+                           已備置量inan010(inan000='2')，算完的量需轉換成備置單位的數量
+抓取inag_t
+ [C:可備置量] = 庫存量(inag008)-已在揀量inan010(inan000='1') -已備置量inan010(inan000='2')，
+                     算完的量需轉換成備置單位的數量]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_glabld" depend_field="glab_t.glabld" src="s" status="">
+      <program order="1" type="1" name="agli010"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="nmci_t.nmci003" depend_field="nmci_t.nmci003" src="s" status="">
+      <program order="1" type="1" name="anmt440"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xmdr004_desc" src="s" depend_field="xmdr_t.xmdr004" correspon_key="xmdr004" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdr005_desc" src="s" depend_field="xmdr_t.xmdr005" correspon_key="xmdr004,xmdr005" ref_table="inab_t" ref_fk="inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdr007_desc" src="s" depend_field="xmdr_t.xmdr007" correspon_key="xmdr007" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdr010_desc" src="s" depend_field="xmdr_t.xmdr010" correspon_key="xmdr010" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="inag008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdr_t.xmdr010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="yxmdr008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="bpage_1" text="庫存明細" lstr=""/>
+    <sfield name="lbl_xmdr001" text="料件編號" lstr=""/>
+    <sfield name="lbl_xmdr002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_sel" text="選擇" lstr=""/>
+    <sfield name="lbl_xmdr008" text="備置量" lstr=""/>
+    <sfield name="lbl_xmdr009" text="備置已沖銷量" lstr=""/>
+    <sfield name="lbl_yxmdr008" text="可備置量" lstr=""/>
+    <sfield name="lbl_xmdr010" text="備置單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_xmdr004" text="庫位" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_xmdr005" text="儲位" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_xmdr003" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_xmdr006" text="批號" lstr=""/>
+    <sfield name="lbl_inag008" text="庫存量" lstr=""/>
+    <sfield name="lbl_xmdr007" text="庫存單位" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,161 @@
+<spec prog="axcp161" std_prog="axcp161" erpver="1.0" ver="1" module="AXC" booking="Y" class="p" template="P001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="P" status="" />
+    <free_style value="N" status="" />
+  </other>
+  <toolbar items="output" />
+  <prog_rel>
+    <pfield src="s" ver="1" name="closed" depend_field="closed" program="" type="1" cite_std="N" status="d" />
+  </prog_rel>
+  <ref_field>
+    <rfield src="s" ver="1" name="glaacomp_desc" depend_field="glaacomp" correspon_key="glaaent,glaacomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" cite_std="N" status="u" />
+  </ref_field>
+  <multi_lang />
+  <help_code>
+    <hfield src="s" ver="1" name="month" help_table="" help_find="" help_dlang="" help_field="" mapping_widget="" help_wc="" cite_std="N" status="d" />
+    <hfield src="s" ver="1" name="year" help_table="" help_find="" help_dlang="" help_field="" mapping_widget="" help_wc="" cite_std="N" status="d" />
+    <hfield src="s" ver="1" name="sfaadocno" help_table="" help_find="" help_dlang="" help_field="" mapping_widget="" help_wc="" cite_std="N" status="d" />
+    <hfield src="s" ver="1" name="glaacomp" help_table="" help_find="" help_dlang="" help_field="" mapping_widget="" help_wc="" cite_std="N" status="d" />
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr="" />
+    <sfield name="group_qbe" text="QBE條件" lstr="" />
+    <sfield name="group_progress" text="處理進度" lstr="" />
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr="" />
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr="" />
+    <sfield name="scheduling_page" text="排程設定" lstr="" />
+    <sfield name="history_page" text="執行歷程" lstr="" />
+    <sfield name="cmt_glaacomp" text="cmt_glaacomp" comment="" lstr="d" />
+    <sfield name="cmt_sfaadocno" text="cmt_sfaadocno" comment="" lstr="d" />
+    <sfield name="lbl_sfaadocno" text="工單編號" comment="" lstr="u" />
+    <sfield name="lbl_glaacomp" text="法人組織" comment="" lstr="u" />
+    <sfield name="lbl_ooeflent" text="企業代碼" comment="" lstr="u" />
+    <sfield name="lbl_ooefl001" text="組織編號" comment="" lstr="u" />
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" comment="" lstr="u" />
+    <sfield name="axcp161.group" text="axcp161.group" comment="" lstr="d" />
+    <sfield name="agroup_input" text="條件選項" comment="" lstr="u" />
+    <sfield name="lbl_year" text="現行成本年度/期別" comment="" lstr="u" />
+    <sfield name="cmt_year" text="cmt_year" comment="" lstr="d" />
+    <sfield name="cmt_month" text="cmt_month" comment="" lstr="d" />
+    <sfield name="cmt_date_close" text="cmt_date_close" comment="" lstr="d" />
+    <sfield name="lbl_date_close" text="成本關賬日期" comment="" lstr="u" />
+    <sfield name="lbl_sw_1" text="將已完工(預計產量=已入庫量)的工單自動結案" comment="" lstr="u" />
+    <sfield name="cmt_sw_1" text="cmt_sw_1" comment="" lstr="d" />
+    <sfield name="lbl_sw_2" text="將已結案的工單自動設置結案日" comment="" lstr="u" />
+    <sfield name="cmt_sw_2" text="cmt_sw_2" comment="" lstr="d" />
+    <sfield name="lbl_note" text="注意:" comment="" lstr="u" />
+    <sfield name="cmt_note" text="cmt_note" comment="" lstr="d" />
+    <sfield name="lbl_note1" text="1.運行成本計算前，最好先將已完工的工單結案之,避免已結案工單" comment="" lstr="u" />
+    <sfield name="lbl_note2" text="  避免已結案工單在次月持續投入領退成本" comment="" lstr="u" />
+    <sfield name="lbl_note3" text="2.本作業將針對已結案的工單更新其成本會計結案日" comment="" lstr="u" />
+  </strings>
+  <sa_spec />
+  <table ver="" cite_std="N" />
+  <all src="s" ver="1" cite_std="N" status="u">
+<![CDATA[程式說明及目的：1.按法人按期计算该法人下的料件的成本阶
+                2.成本阶是用于成本计算先后顺序的主要依据．
+               
+作業功能：按法人计算料件的成本阶
+作業類型：批次作業
+輸入模式： 
+資料來源：料件据点财务资料檔(imag_t)
+          料件资讯档(imac_t)
+          成本分群成本阶范围设定档(xcbc_t)
+
+處理邏輯：
+设置工单结案的逻辑：
+按法人组织找出符合条件的工单进行设置。
+在每个法人组织下进行如下处理
+1.IF“将已完工工单自动结案”='Y' THEN 检查是否有未过完账的单据，若有则产出报表，不予结案。
+    1.1根据QBE条件找出符合条件且未结案、非无效且未做成本结案的工单日期小于等于成本关账日期的工单
+       FOREACH
+         1.1.1根据工单号去工单发退料主档和明细档找出发退料类型为“发料”（成套发料、超领、欠料补料、领料、RUNCARD领料）且未过账的发料单号和COUNT（发料单号）
+              FOREACH
+                 IF COUNT（发料单号）>0 THEN
+                    把“工单单号”、“发料单号”、“1.入库单”INSERT到临时表中（后续出报表用）
+                 END IF
+              END FOREACH
+         1.1.2根据工单号去工单发退料主档和明细档找出发退料类型为“退料”（成套退料、超领退料、一般退料、RUNCARD退料）且未过账的退料单号和COUNT（退料单号）
+              FOREACH
+                 IF COUNT（退料单号）>0 THEN
+                    把“工单单号”、“退料单号”、“2.退料单”INSERT到临时表中（后续出报表用）
+                 END IF
+              END FOREACH
+         1.1.3根据工单号去工单入库主档和明细档找出未过账的工单入库单号和COUNT（工单入库单号）
+              FOREACH
+                 IF COUNT（工单入库单号）>0 THEN
+                    把“工单单号”、“工单入库单号”、“3.入库单”INSERT到临时表中（后续出报表用）
+                 END IF
+              END FOREACH  
+       END FOREACH
+    1.2计算临时表中是否有资料，有资料的话产出分类产出报表
+  END IF
+2.IF“将已完工工单自动结案”='Y' THEN 对已完工工单做自动结案
+     2.1根据QBE条件找出符合条件且未结案、非无效且未做成本结案的工单日期小于等于成本关账日期、生产数量小于等于入库数量、入库数量大于0且工单号不存在第1步中的临时表中的工单。
+        FOREACH
+           2.1.1从库存进出明细档(TLF)找出该工单最大的库存进出异动日期，如果该日期大于成本关账日期则CONTINUE FOREACH
+           2.1.2从工单报工主档和明细档找出该工单最大的工单报工日期，如果该日期大于成本关账日期则CONTINUE FOREACH
+           2.1.3如果该工单的结案状态是“报工结案”且“工单发料及工时结束日”大于成本关账日期则CONTINUE FOREACH
+           2.1.4从工单下阶料报废主档和明细档找出该工单最大的报废日期，如果该日期大于成本关账日期则CONTINUE FOREACH
+           2.1.5从工单工艺报工档找出该工单最大的报工日期，如果该日期大于成本关账日期则CONTINUE FOREACH
+           2.1.6从委外加工采购入库主档和明细档找出该工单最近的入库日期，如果该日期大于成本关账日期则CONTINUE FOREACH
+           2.1.7更新该工单的结案状态为“结案”
+           2.1.8如果该工单是委外采购工单则更新委外采购单的结案状态为“结案”，同时更新该委外采购单的单身结案状态为"结案"。
+           2.1.9从工单备置统计档找出该工单备置量是否大于0，如果是把工单备置数据存到工单备置主档和工单备置明细档中。
+           
+        END FOREACH
+  END IF
+3.IF“将已结案的工单自动设置结案日”='Y' THEN 对已结案工单做成本结案和给成本结案日期
+     3.1根据现行成本年度、期别找出该年期的起始日期和截止日期
+     3.2根据QBE的工单范围、工单结案状态已经是“结案”的、成本结案日期是NULL、发料结束日期小于等于截止日期或是NULL的所有工单且该工单不在第1步中的临时表中的工单进行结案日期设置。
+        FOREACH 
+           3.2.1锁住该工单
+           3.2.2再次检查工单结案状态是否是“结案”，如果不是则CONTINUE FOREACH
+           3.2.3从库存进出明细档(TLF)找出该工单的最大异动日期，如果该日期是NULL，则等于该工单录入日期，如果还是NULL，则等于该工单的预计起始生产日期。如果该日期大于截止日期，则CONTINUE FOREACH
+           3.2.4从工单成本报工主档和明细档找出该工单的最后报工日期，如果该日期大于截止日期，则CONTINUE FOREACH
+           3.2.5从工单下阶料报废档找出该工单最后的报废日期，如果该日期大于截止日期则CONTINUE FOREACH
+           3.2.6工单结案状态如果不是“结案”则CONTINUE FOREACH
+           3.2.7从工单工艺档找出该工单最后的报工日期，如果该日期大于截止日期则CONTINUE FOREACH
+           3.2.8从工单生产报工主档和明细档找出该工单的最后报工日期，如果该日期大于截止日期则CONTINUE FOREACH
+           3.2.9从委外采购入库主档和明细档找出该工单的最近入库日期，如果该日期大于截止日期则CONTINUE FOREACH
+           3.2.10把工单成会结案日期=截止日期并更新到工单主档上的成会结案日期
+        END FOREACH
+  END IF
+
+          ]]>
+</all>
+  <field src="s" ver="1" column="" name="closed" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" status="d">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="" name="sw_2" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" status="u">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="" name="sw_1" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" status="u">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="" name="date_close" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" status="u">
+<![CDATA[根据法人组织去成本参数档得到其成本关账日期]]>
+</field>
+  <field src="s" ver="1" column="" name="sfaadocno" table="" attribute="" type="" req="" i_zoom="" c_zoom="q_sfaadocno_3" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" status="u">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="" name="glaacomp" table="" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" status="u">
+<![CDATA[ ●欄位控管：
+     資料欄位:[T.法人帳務設定檔ooidsite]
+              可Display可Input
+     預設值:無 
+     校驗:1.不允許空白
+]]>
+</field>
+  <field src="s" ver="1" column="" name="month" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" status="u">
+<![CDATA[根据法人组织到成本参数中抓出现行成本计算期别，显示在画面上。
+可以修改]]>
+</field>
+  <field src="s" ver="1" column="" name="year" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" status="u">
+<![CDATA[根据法人组织到成本参数中抓出现行成本计算年度，显示在画面上。
+可以修改]]>
+</field>
+  <exclude ver="" cite_std="N" src="">
+    <widget name="lbl_edit_1" src="" status="d" />
+  </exclude>
+</spec>

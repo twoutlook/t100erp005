@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aloq002" module="alo" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="00824" crtdt="2014-01-16 15:09:09" modid="00824" moddt="2014-05-20 16:40:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="使用者觸發動作時間記錄查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),logb007,logb009,logb002,logb002_desc(chr500),logb005,logb006,logb008,logb001,logb003,logb004"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),logb007(b_logb007),logb009(b_logb009),logb002(b_logb002),logb002_desc(b_logb002_desc),logb005(b_logb005),logb006(b_logb006),logb008(b_logb008),logb001(b_logb001),logb003(b_logb003),logb004(b_logb004)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="alo" filename="aloq002" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="logb007,logb009,logb002,logb005,logb006,logb008,logb001,logb003,logb004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="logb007(b_logb007),logb009(b_logb009),logb002(b_logb002),logb005(b_logb005),logb006(b_logb006),logb008(b_logb008),logb001(b_logb001),logb003(b_logb003),logb004(b_logb004)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="logb007"/>
+      <column id="logb009"/>
+      <column id="logb002">
+        <after>
+          <reference field="logb002_desc" ref_field="logb002" map_field="logb002" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="logb002_desc"/>
+      <column id="logb005"/>
+      <column id="logb006"/>
+      <column id="logb008"/>
+      <column id="logb001"/>
+      <column id="logb003"/>
+      <column id="logb004"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="logb_t" page="1" linked="" pk="logb001,logb002,logb003,logb004,logb005,logb007,logb009">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,logb007,logb009,logb002,&apos;&apos;,logb005,logb006,logb008,logb001,logb003,logb004 FROM logb_t WHERE logbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

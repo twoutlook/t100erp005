@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq515" module="ast" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06529" crtdt="2015-09-07 12:06:34" modid="08742" moddt="2016-09-14 13:48:24" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="專櫃合約特殊條款查詢清單">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="l_stfhsite(chr20),stfhsite,stfhsite_desc(chr500),stfhseq,stfa005,stfa005_desc(chr500),stfa001,stfa002,stfa010,stfa010_desc(chr500),stfh002,stfh003"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="l_stfhsite(l_stfhsite),stfhsite(b_stfhsite),stfhsite_desc(b_stfhsite_desc),stfhseq(b_stfhseq),stfa005(b_stfa005),stfa005_desc(b_stfa005_desc),stfa001(b_stfa001),stfa002(b_stfa002),stfa010(b_stfa010),stfa010_desc(b_stfa010_desc),stfh002(b_stfh002),stfh003(b_stfh003)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq515" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stfhsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stfhsite(b_stfhsite)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="l_stfhsite"/>
+      <column id="stfhsite">
+        <after>
+          <reference field="stfhsite_desc" ref_field="stfhsite" map_field="stfhsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stfhsite_desc"/>
+      <column id="stfhseq"/>
+      <column id="stfa005">
+        <after>
+          <reference field="stfa005_desc" ref_field="stfa005" map_field="stfa005" ref_sql="SELECT stfal004 FROM stfal_t WHERE stfalent=$varg_enterprise$var AND stfal001=? "/>
+        </after>
+      </column>
+      <column id="stfa005_desc"/>
+      <column id="stfa001"/>
+      <column id="stfa002"/>
+      <column id="stfa010">
+        <after>
+          <reference field="stfa010_desc" ref_field="stfa010" map_field="stfa010" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stfa010_desc"/>
+      <column id="stfh002"/>
+      <column id="stfh003"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stfa_t" page="1" linked="" pk="stfa001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,stfa005,&apos;&apos;,stfa001,stfa002,stfa010,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM stfa_t WHERE stfaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

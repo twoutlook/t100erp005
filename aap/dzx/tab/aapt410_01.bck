@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt410_01" module="aap" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="03538" crtdt="2014-10-13 11:26:38" modid="03538" moddt="2014-10-13 16:37:06" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="請款單產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apcc001,apccdocno,apccld,apccseq,apccsite,order01(chr1),order02(chr1),order03(chr1),apeasite(chr10),apeasite_desc(chr80),apeadocno(chr20),apeadocno_desc(chr80),apeadocdt(dat),apea009(chr10),withouttips(chr1),nmad002(chr10),nmad002_desc(chr80),apee012(chr10),apee012_desc(chr80),apea018(chr10),apea018_desc(chr80),apea017(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aap" filename="aapt410_01" method="dialog">
+    <section id="input">
+      <input id="head" field="apcc001,apccdocno,apccld,apccseq,apccsite"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="apcc001"/>
+      <column id="apccdocno"/>
+      <column id="apccld"/>
+      <column id="apccseq"/>
+      <column id="apccsite"/>
+      <column id="order01" type="S" default="N"/>
+      <column id="order02" type="S" default="Y"/>
+      <column id="order03" type="S" default="N"/>
+      <column id="apeasite">
+        <after>
+          <check chkid="v_xrah002" id="isExist"/>
+          <reference field="apeasite_desc" ref_field="apeasite" map_field="apeasite" ref_sql="SELECT ooefl004 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=&apos;99&apos; AND ooefl002=? AND ooefl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xrah002_2" state="i"/>
+        <controlp form="q_xrah002_2" state="c"/>
+      </column>
+      <column id="apeasite_desc"/>
+      <column id="apeadocno">
+        <after/>
+      </column>
+      <column id="apeadocno_desc"/>
+      <column id="apeadocdt"/>
+      <column id="apea009"/>
+      <column id="withouttips" type="S" default="Y"/>
+      <column id="nmad002">
+        <after>
+          <check chkid="v_nmaj001" id="isExist"/>
+        </after>
+        <controlp form="q_nmad003" state="i"/>
+      </column>
+      <column id="nmad002_desc"/>
+      <column id="apee012">
+        <after>
+          <check chkid="v_nmai002" id="isExist"/>
+        </after>
+        <controlp form="q_nmad003" state="i"/>
+      </column>
+      <column id="apee012_desc"/>
+      <column id="apea018">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="apea018_desc"/>
+      <column id="apea017"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apcc_t" pk="apccld,apccdocno,apccseq,apcc001,apcc009">
+      <sql id="forupd_sql" type="sql" query="SELECT apcc001,apccdocno,apccld,apccseq,apccsite,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM apcc_t WHERE apccent= ? AND apccld=? AND apccdocno=? AND apccseq=? AND apcc001=? AND apcc009=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="apccld,apccdocno,apccseq,apcc001,apcc009"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,2872 @@
+#+ Version..: T100-ERP-1.00.00(版次:1) Build-000005
+#+ 
+#+ Filename...: adzi452
+#+ Description: 應用元件改名批量處理作業
+#+ Creator....: 00537(2013/10/12)
+#+ Modifier...: 00537(2013/10/12)
+#+ Buildtype..: 應用 i07 樣板自動產生
+#+ 以上段落由子樣板a00產生
+
+
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+ 
+#單頭 type 宣告
+PRIVATE type type_g_dzdk_m        RECORD
+       dzdk001 LIKE dzdk_t.dzdk001, 
+   dzdk002 LIKE dzdk_t.dzdk002, 
+   dzdk003 LIKE dzdk_t.dzdk003
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_dzdk_d        RECORD
+       dzdk004 LIKE dzdk_t.dzdk004, 
+   dzdk005 LIKE dzdk_t.dzdk005, 
+   dzdk006 LIKE dzdk_t.dzdk006, 
+   dzdk007 DATETIME YEAR TO SECOND
+       END RECORD
+PRIVATE TYPE type_g_dzdk2_d RECORD
+       dzdk004 LIKE dzdk_t.dzdk004
+       END RECORD
+
+
+ 
+#無單頭append欄位定義
+#無單身append欄位定義
+ 
+#模組變數(Module Variables)
+DEFINE g_dzdk_m          type_g_dzdk_m
+DEFINE g_dzdk_m_t        type_g_dzdk_m
+ 
+DEFINE g_dzdk001_t     LIKE dzdk_t.dzdk001
+DEFINE g_dzdk002_t     LIKE dzdk_t.dzdk002
+
+
+ 
+DEFINE g_dzdk_d          DYNAMIC ARRAY OF type_g_dzdk_d
+DEFINE g_dzdk_d_t        type_g_dzdk_d
+DEFINE g_dzdk2_d   DYNAMIC ARRAY OF type_g_dzdk2_d
+DEFINE g_dzdk2_d_t type_g_dzdk2_d
+
+
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位  
+       b_statepic     LIKE type_t.chr50,
+          b_dzdk001 LIKE dzdk_t.dzdk001,
+      b_dzdk002 LIKE dzdk_t.dzdk002
+       #,rank           LIKE type_t.num10
+      END RECORD 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num5           
+DEFINE l_ac                  LIKE type_t.num5    
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+ 
+DEFINE g_pagestart           LIKE type_t.num5           
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+ 
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num5              #單身目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num5              #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num5              #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num5              #Browser目前所在筆數(暫存用)
+ 
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序欄位
+DEFINE g_state               STRING                        
+DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page                    
+DEFINE g_current_row         LIKE type_t.num5              #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+ 
+{</Module define>}
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#+ 此段落由子樣板a26產生
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("adz","")
+
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" mark="Y"/>}
+   #end add-point
+   LET g_forupd_sql = "SELECT dzdk001,dzdk002,dzdk003 FROM dzdk_t WHERE dzdk001=? AND dzdk002=? FOR UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE adzi452_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+
+   IF g_bgjob = "Y" THEN
+
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+
+   ELSE
+   
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adzi452 WITH FORM cl_ap_formpath("adz",g_code)
+
+      #程式初始化
+      CALL adzi452_init()   
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #進入選單 Menu (="N")
+      CALL adzi452_ui_dialog() 
+
+      #畫面關閉
+      CLOSE WINDOW w_adzi452
+      
+   END IF 
+   
+   CLOSE adzi452_cl
+   
+   
+
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+
+
+    
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION adzi452_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point    
+  
+   LET g_bfill = "Y"
+   
+   
+   LET g_error_show = 1
+   #add-point:畫面資料初始化
+   {<point name="init.init"/>}
+   #end add-point
+   
+   CALL adzi452_default_search()
+    
+END FUNCTION
+ 
+ 
+#+ 功能選單
+PRIVATE FUNCTION adzi452_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point  
+   
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   #該樣板不需此段落CALL gfrm_curr.setElementImage("logo","logo/applogo.png") 
+   #該樣板不需此段落CALL gfrm_curr.setElementHidden("mainlayout",1)
+   #該樣板不需此段落CALL gfrm_curr.setElementHidden("worksheet",0)
+   #該樣板不需此段落LET g_main_hidden = 1
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      CALL adzi452_browser_fill("")
+ 
+      #該樣板不需此段落CALL lib_cl_dlg.cl_dlg_before_display()
+      #該樣板不需此段落CALL cl_notice()
+      
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_dzdk001 = g_dzdk001_t
+               AND g_browser[li_idx].b_dzdk002 = g_dzdk002_t
+
+
+               THEN
+               LET g_current_row = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+      
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+         #該樣板不需此段落#左側瀏覽頁簽
+         #該樣板不需此段落DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTES(COUNT=g_header_cnt)
+         #該樣板不需此段落
+         #該樣板不需此段落   BEFORE ROW
+         #該樣板不需此段落      #回歸舊筆數位置 (回到當時異動的筆數)
+         #該樣板不需此段落      LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+         #該樣板不需此段落      IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+         #該樣板不需此段落         CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+         #該樣板不需此段落         LET g_current_idx = g_current_row
+         #該樣板不需此段落      END IF
+         #該樣板不需此段落      LET g_current_row = g_current_idx #目前指標
+         #該樣板不需此段落      LET g_current_sw = TRUE
+         #該樣板不需此段落      
+         #該樣板不需此段落      IF g_current_idx > g_browser.getLength() THEN
+         #該樣板不需此段落         LET g_current_idx = g_browser.getLength()
+         #該樣板不需此段落      END IF 
+         #該樣板不需此段落      
+         #該樣板不需此段落      CALL adzi452_fetch('') # reload data
+         #該樣板不需此段落      LET g_detail_idx = 1
+         #該樣板不需此段落      CALL adzi452_ui_detailshow() #Setting the current row 
+         #該樣板不需此段落
+         #該樣板不需此段落END DISPLAY
+        
+         DISPLAY ARRAY g_dzdk_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+         
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL adzi452_ui_detailshow()
+               
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               
+               #控制stus哪個按鈕可以按
+               
+               
+            
+ 
+               
+         END DISPLAY
+        
+         DISPLAY ARRAY g_dzdk2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+         
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL adzi452_ui_detailshow()
+            
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx)      
+            
+            
+         
+         END DISPLAY
+
+
+         
+         #add-point:ui_dialog段define
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         #該樣板不需此段落SUBDIALOG lib_cl_dlg.dlg_qryplan
+         #該樣板不需此段落SUBDIALOG lib_cl_dlg.dlg_relateapps 
+         
+         BEFORE DIALOG
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL g_curr_diag.setSelectionMode("s_detail1",1)         
+            LET g_page = "first"
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            #該樣板不需此段落LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+            IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+            #該樣板不需此段落   CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               LET g_current_idx = g_current_row
+            END IF
+            LET g_current_row = g_current_idx #目前指標
+            LET g_current_sw = TRUE
+            
+            IF g_current_idx > g_browser.getLength() THEN
+               LET g_current_idx = g_browser.getLength()
+            END IF 
+            
+            IF g_current_idx = 0 AND g_browser.getLength() > 0 THEN
+               LET g_current_idx = 1 
+            END IF
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL adzi452_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL adzi452_ui_detailshow() #Setting the current row 
+            
+            #若無資料則關閉相關功能
+            IF g_browser_cnt = 0 THEN
+               CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+            ELSE
+               CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+            END IF
+            
+            #add-point:ui_dialog段before dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #ACTION表單列
+         #該樣板不需此段落ON ACTION filter
+         #該樣板不需此段落   CALL adzi452_filter()
+         #該樣板不需此段落   EXIT DIALOG
+         
+         ON ACTION first
+            CALL adzi452_fetch('F')
+            LET g_current_row = g_current_idx         
+          
+         ON ACTION previous
+            CALL adzi452_fetch('P')
+            LET g_current_row = g_current_idx
+          
+         ON ACTION jump
+            CALL adzi452_fetch('/')
+            LET g_current_row = g_current_idx
+        
+         ON ACTION next
+            CALL adzi452_fetch('N')
+            LET g_current_row = g_current_idx
+         
+         ON ACTION last
+            CALL adzi452_fetch('L')
+            LET g_current_row = g_current_idx
+          
+         ON ACTION close
+            LET INT_FLAG=FALSE        
+            LET g_action_choice = "exit"
+            EXIT DIALOG     
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         #該樣板不需此段落ON ACTION mainhidden       #主頁摺疊
+         #該樣板不需此段落   IF g_main_hidden THEN
+         #該樣板不需此段落      CALL gfrm_curr.setElementHidden("mainlayout",0)
+         #該樣板不需此段落      CALL gfrm_curr.setElementHidden("worksheet",1)
+         #該樣板不需此段落      LET g_main_hidden = 0
+         #該樣板不需此段落   ELSE
+         #該樣板不需此段落      CALL gfrm_curr.setElementHidden("mainlayout",1)
+         #該樣板不需此段落      CALL gfrm_curr.setElementHidden("worksheet",0)
+         #該樣板不需此段落      LET g_main_hidden = 1
+         #該樣板不需此段落   END IF
+            
+         ON ACTION worksheethidden   #瀏覽頁折疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+                CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+       
+         ON ACTION controls      #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+            
+         
+
+         ON ACTION delete
+
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN 
+               CALL adzi452_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+            END IF
+
+
+         ON ACTION insert
+
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL adzi452_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+
+         ON ACTION modify
+
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL adzi452_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+
+         ON ACTION output
+
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+
+         ON ACTION query
+
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL adzi452_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+            END IF
+
+
+         ON ACTION reproduce
+
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN 
+               CALL adzi452_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+            
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+   
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+   
+END FUNCTION
+ 
+#+ 瀏覽頁簽資料搜尋
+PRIVATE FUNCTION adzi452_browser_search(p_type)
+   {<Local define>}
+   DEFINE p_type LIKE type_t.chr10
+   {</Local define>}
+   #add-point:browser_search段define
+   {<point name="browser_search.define"/>}
+   #end add-point    
+   
+   #若無輸入關鍵字則查找出所有資料
+   IF NOT cl_null(g_searchstr) AND g_searchcol='0' THEN
+      CALL cl_err("searchcol","std-00005",0)
+      RETURN FALSE 
+   END IF 
+   
+   IF NOT cl_null(g_searchstr) THEN
+      LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+      LET g_wc = g_wc.toLowerCase()
+   ELSE
+      LET g_wc = " 1=1"
+   END IF         
+   
+   #若為排序搜尋則添加以下條件
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET g_wc = g_wc, " ORDER BY dzdk001"
+   ELSE
+      LET g_wc = g_wc, " ORDER BY ", g_searchcol
+   END IF 
+ 
+   CALL adzi452_browser_fill("F")
+   CALL ui.Interface.refresh()
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+ 
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION adzi452_browser_fill(ps_page_action)
+   {<Local define>}
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   DEFINE l_searchcol       STRING
+   {</Local define>}
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point    
+   
+   #add-point:browser_fill段動作開始前
+   {<point name="browser_fill.before_browser_fill"/>}
+   #end add-point    
+   
+   CALL g_browser.clear()
+ 
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = '0' THEN
+      LET l_searchcol = "dzdk001"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+   
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+   IF cl_null(l_wc) THEN  #p_wc 查詢條件
+      RETURN
+   END IF
+   
+   IF g_wc2 <> " 1=1" OR NOT cl_null(g_wc2) THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE dzdk001 ",
+                      ", dzdk002 ",
+
+
+                      " FROM dzdk_t ",
+                      " ",
+                      " ",
+                      " WHERE  ",l_wc, " AND ", l_wc2 
+ 
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE dzdk001 ",
+                      ", dzdk002 ",
+
+
+                      " FROM dzdk_t ",
+                      " ",
+                      " ",
+                      " WHERE  ",l_wc CLIPPED
+ 
+   END IF 
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse AND g_error_show = 1THEN
+      CALL cl_err(g_browser_cnt,'9035',1)
+   END IF
+   LET g_error_show = 0
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #LET g_page_action = ps_page_action          # Keep Action
+   IF ps_page_action = "first" OR              
+      ps_page_action = "prev"  OR
+      ps_page_action = "next"  OR
+      ps_page_action = "last"  THEN
+      LET g_page_action = ps_page_action        #g_page_action 這個會影響 browser 下面四個button 的判斷 
+   END IF
+   
+   CASE ps_page_action
+      WHEN "F" 
+         LET g_pagestart = 1
+          
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+             LET g_pagestart = 1
+         END IF
+          
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+         
+   END CASE
+   
+   #單身有輸入查詢條件且非null
+   IF g_wc2 <> " 1=1" AND NOT cl_null(g_wc2) THEN 
+ 
+      #依照dzdk001,dzdk002 Browser欄位定義(取代原本bs_sql功能)
+      LET l_sub_sql  = "SELECT DISTINCT dzdk001,dzdk002 ",
+                       " FROM dzdk_t ",
+                       " ",
+                       " WHERE  ", g_wc," AND ",g_wc2
+ 
+   ELSE
+      #單身無輸入資料
+      LET l_sub_sql  = "SELECT DISTINCT dzdk001,dzdk002 ",
+                       " FROM dzdk_t ",
+                       " WHERE  ", g_wc
+                 
+   END IF
+   
+   LET l_sql_rank = "SELECT dzdk001,dzdk002,DENSE_RANK() OVER(ORDER BY dzdk001 ",g_order,") AS RANK ",
+                    " FROM (",l_sub_sql,") "
+                       
+   #定義翻頁CURSOR
+   LET g_sql= " SELECT dzdk001,dzdk002 FROM (",l_sql_rank,") WHERE RANK>=",g_pagestart,
+              " AND RANK<",g_pagestart+g_max_browse,
+              " ORDER BY ",l_searchcol," ",g_order
+                
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_dzdk001,g_browser[g_cnt].b_dzdk002    
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point    
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   IF g_browser.getLength() = 0 AND g_wc THEN
+      INITIALIZE g_dzdk_m.* TO NULL
+      CALL g_dzdk_d.clear()
+      CALL g_dzdk2_d.clear()
+
+
+      CLEAR FORM
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   #該樣板不需此段落CALL adzi452_fetch('')
+   
+   FREE browse_pre
+   
+END FUNCTION
+ 
+ 
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION adzi452_ui_headershow()
+   #add-point:ui_headershow段define
+   {<point name="ui_headershow.define"/>}
+   #end add-point    
+   
+   LET g_dzdk_m.dzdk001 = g_browser[g_current_idx].b_dzdk001   
+   LET g_dzdk_m.dzdk002 = g_browser[g_current_idx].b_dzdk002   
+
+
+    SELECT UNIQUE dzdk001,dzdk002,dzdk003
+ INTO g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003
+ FROM dzdk_t
+ WHERE dzdk001 = g_dzdk_m.dzdk001 AND dzdk002 = g_dzdk_m.dzdk002
+   CALL adzi452_show()
+   
+END FUNCTION
+ 
+ 
+#+ 單身資料重新顯示
+PRIVATE FUNCTION adzi452_ui_detailshow()
+   #add-point:ui_detailshow段define
+   {<point name="ui_detailshow.define"/>}
+   #end add-point    
+   
+   #add-point:ui_detailshow段before
+   {<point name="ui_detailshow.before"/>}
+   #end add-point  
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+
+
+   END IF
+   
+   #add-point:ui_detailshow段after
+   {<point name="ui_detailshow.after"/>}
+   #end add-point 
+   
+END FUNCTION
+ 
+ 
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION adzi452_ui_browser_refresh()
+   {<Local define>}
+   DEFINE l_i  LIKE type_t.num10
+   {</Local define>}
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point    
+   
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_dzdk001 = g_dzdk_m.dzdk001 
+         AND g_browser[l_i].b_dzdk002 = g_dzdk_m.dzdk002 
+
+
+         THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+      END IF
+   END FOR
+ 
+   LET g_browser_cnt = g_browser_cnt - 1
+   IF g_current_row > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_row = g_browser_cnt
+   END IF
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count    #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數的顯示
+   
+END FUNCTION
+ 
+ 
+#+ QBE資料查詢
+PRIVATE FUNCTION adzi452_construct()
+ 
+   {<Local define>}
+   DEFINE lc_qbe_sn   LIKE type_t.num10
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   {</Local define>}
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point    
+ 
+   #清除畫面上相關資料
+   CLEAR FORM                 
+   INITIALIZE g_dzdk_m.* TO NULL
+   CALL g_dzdk_d.clear()
+   CALL g_dzdk2_d.clear()
+
+
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   LET g_action_choice = ""
+    
+   LET g_qryparam.state = 'c'
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON dzdk001,dzdk002,dzdk003
+ 
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+        #---------------------------<  Master  >---------------------------
+         #----<<dzdk001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk001
+            #add-point:BEFORE FIELD dzdk001
+            {<point name="construct.b.dzdk001" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk001
+            
+            #add-point:AFTER FIELD dzdk001
+            {<point name="construct.a.dzdk001" />}
+            #END add-point
+            
+
+         #Ctrlp:construct.c.dzdk001
+         ON ACTION controlp INFIELD dzdk001
+            #add-point:ON ACTION controlp INFIELD dzdk001
+            {<point name="construct.c.dzdk001" />}
+            #END add-point
+
+         #----<<dzdk002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk002
+            #add-point:BEFORE FIELD dzdk002
+            {<point name="construct.b.dzdk002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk002
+            
+            #add-point:AFTER FIELD dzdk002
+            {<point name="construct.a.dzdk002" />}
+            #END add-point
+            
+
+         #Ctrlp:construct.c.dzdk002
+         ON ACTION controlp INFIELD dzdk002
+            #add-point:ON ACTION controlp INFIELD dzdk002
+            {<point name="construct.c.dzdk002" />}
+            #END add-point
+
+         #----<<dzdk003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk003
+            #add-point:BEFORE FIELD dzdk003
+            {<point name="construct.b.dzdk003" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk003
+            
+            #add-point:AFTER FIELD dzdk003
+            {<point name="construct.a.dzdk003" />}
+            #END add-point
+            
+
+         #Ctrlp:construct.c.dzdk003
+         ON ACTION controlp INFIELD dzdk003
+            #add-point:ON ACTION controlp INFIELD dzdk003
+            {<point name="construct.c.dzdk003" />}
+            #END add-point
+
+
+         
+      END CONSTRUCT
+ 
+      #單身可以混搭多頁簽
+      CONSTRUCT g_wc2 ON dzdk004,dzdk005,dzdk006,dzdk007
+                         ,
+
+
+         FROM s_detail1[1].dzdk004,s_detail1[1].dzdk005,s_detail1[1].dzdk006,s_detail1[1].dzdk007
+              ,
+
+
+                      
+         BEFORE CONSTRUCT
+            CALL cl_qbe_display_condition(lc_qbe_sn)
+            #add-point:cs段more_construct
+            {<point name="cs.body.before_construct"/>}
+            #end add-point 
+            
+            #公用欄位開窗相關處理
+            
+          
+            #---------------------<  Detail: page1  >---------------------
+         #----<<dzdk004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk004
+            #add-point:BEFORE FIELD dzdk004
+            {<point name="construct.b.page1.dzdk004" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk004
+            
+            #add-point:AFTER FIELD dzdk004
+            {<point name="construct.a.page1.dzdk004" />}
+            #END add-point
+            
+
+         #Ctrlp:construct.c.page1.dzdk004
+         ON ACTION controlp INFIELD dzdk004
+            #add-point:ON ACTION controlp INFIELD dzdk004
+            {<point name="construct.c.page1.dzdk004" />}
+            #END add-point
+
+         #----<<dzdk005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk005
+            #add-point:BEFORE FIELD dzdk005
+            {<point name="construct.b.page1.dzdk005" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk005
+            
+            #add-point:AFTER FIELD dzdk005
+            {<point name="construct.a.page1.dzdk005" />}
+            #END add-point
+            
+
+         #Ctrlp:construct.c.page1.dzdk005
+         ON ACTION controlp INFIELD dzdk005
+            #add-point:ON ACTION controlp INFIELD dzdk005
+            {<point name="construct.c.page1.dzdk005" />}
+            #END add-point
+
+         #----<<dzdk006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk006
+            #add-point:BEFORE FIELD dzdk006
+            {<point name="construct.b.page1.dzdk006" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk006
+            
+            #add-point:AFTER FIELD dzdk006
+            {<point name="construct.a.page1.dzdk006" />}
+            #END add-point
+            
+
+         #Ctrlp:construct.c.page1.dzdk006
+         ON ACTION controlp INFIELD dzdk006
+            #add-point:ON ACTION controlp INFIELD dzdk006
+            {<point name="construct.c.page1.dzdk006" />}
+            #END add-point
+
+         #----<<dzdk007>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk007
+            #add-point:BEFORE FIELD dzdk007
+            {<point name="construct.b.page1.dzdk007" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk007
+            
+            #add-point:AFTER FIELD dzdk007
+            {<point name="construct.a.page1.dzdk007" />}
+            #END add-point
+            
+
+         #Ctrlp:construct.c.page1.dzdk007
+         ON ACTION controlp INFIELD dzdk007
+            #add-point:ON ACTION controlp INFIELD dzdk007
+            {<point name="construct.c.page1.dzdk007" />}
+            #END add-point
+
+   
+            #---------------------<  Detail: page2  >---------------------
+   
+
+
+          
+      END CONSTRUCT
+  
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:ui_dialog段b_dialog
+         {<point name="cs.before_dialog"/>}
+         #end add-point
+      
+      ON ACTION qbe_select     #條件查詢
+         CALL cl_qbe_list() RETURNING lc_qbe_sn
+         CALL cl_qbe_display_condition(lc_qbe_sn)
+ 
+      ON ACTION qbe_save       #條件儲存
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+   
+   LET g_current_row = 1
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+   
+   LET g_wc_filter = ""
+ 
+END FUNCTION
+ 
+ 
+#+ filter過濾功能
+PRIVATE FUNCTION adzi452_filter()
+#該樣板不需此段落   {<Local define>}
+#該樣板不需此段落   {</Local define>}
+#該樣板不需此段落   #add-point:filter段define
+#該樣板不需此段落   {<point name="filter.define"/>}
+#該樣板不需此段落   #end add-point    
+ 
+#該樣板不需此段落   LET INT_FLAG = 0
+ 
+#該樣板不需此段落   LET g_qryparam.state = 'c'
+ 
+#該樣板不需此段落   LET g_wc_filter_t = g_wc_filter
+#該樣板不需此段落   LET g_wc_t = g_wc
+ 
+#該樣板不需此段落   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+#該樣板不需此段落   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+#該樣板不需此段落   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+#該樣板不需此段落      #單頭
+#該樣板不需此段落      CONSTRUCT g_wc_filter ON 
+#該樣板不需此段落                          FROM 
+ 
+#該樣板不需此段落         BEFORE CONSTRUCT
+#該樣板不需此段落            CALL cl_qbe_init()
+#該樣板不需此段落   
+ 
+#該樣板不需此段落      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+#該樣板不需此段落      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+#該樣板不需此段落      ON ACTION accept
+#該樣板不需此段落         ACCEPT DIALOG
+ 
+#該樣板不需此段落      ON ACTION cancel
+#該樣板不需此段落         LET INT_FLAG = 1
+#該樣板不需此段落         EXIT DIALOG 
+ 
+#該樣板不需此段落      #交談指令共用ACTION
+#該樣板不需此段落      &include "common_action.4gl" 
+#該樣板不需此段落         CONTINUE DIALOG
+   
+#該樣板不需此段落   END DIALOG
+ 
+#該樣板不需此段落   IF NOT INT_FLAG THEN
+#該樣板不需此段落      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+#該樣板不需此段落      LET g_wc = g_wc , g_wc_filter
+#該樣板不需此段落   ELSE
+#該樣板不需此段落      LET g_wc_filter = g_wc_filter_t
+#該樣板不需此段落      LET g_wc = g_wc_t
+#該樣板不需此段落   END IF
+ 
+END FUNCTION
+ 
+#+ filter過濾功能
+PRIVATE FUNCTION adzi452_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+#該樣板不需此段落   #add-point:filter段define
+#該樣板不需此段落   {<point name="filter_parser.define"/>}
+#該樣板不需此段落   #end add-point    
+ 
+#該樣板不需此段落   #一般條件解析
+#該樣板不需此段落   LET ls_tmp = ps_field, "='"
+#該樣板不需此段落   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+#該樣板不需此段落   IF li_tmp > 0 THEN
+#該樣板不需此段落      LET li_tmp = ls_tmp.getLength() + li_tmp
+#該樣板不需此段落      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+#該樣板不需此段落      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+#該樣板不需此段落   END IF
+ 
+#該樣板不需此段落   #模糊條件解析
+#該樣板不需此段落   LET ls_tmp = ps_field, " like '"
+#該樣板不需此段落   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+#該樣板不需此段落   IF li_tmp > 0 THEN
+#該樣板不需此段落      LET li_tmp = ls_tmp.getLength() + li_tmp
+#該樣板不需此段落      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+#該樣板不需此段落      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+#該樣板不需此段落      LET ls_var = cl_replace_str(ls_var,'%','*')
+#該樣板不需此段落   END IF
+ 
+#該樣板不需此段落   RETURN ls_var
+ 
+END FUNCTION
+ 
+ 
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION adzi452_query()
+   {<Local define>}
+   DEFINE ls_wc STRING
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point   
+ 
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF     
+   
+   LET ls_wc = g_wc
+ 
+   LET INT_FLAG = 0    
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_dzdk_d.clear()
+   CALL g_dzdk2_d.clear()
+
+
+   DISPLAY ' ' TO FORMONLY.idx
+   DISPLAY ' ' TO FORMONLY.cnt
+   DISPLAY ' ' TO FORMONLY.b_index
+   DISPLAY ' ' TO FORMONLY.b_count
+   DISPLAY ' ' TO FORMONLY.h_index
+   DISPLAY ' ' TO FORMONLY.h_count
+   
+   CALL adzi452_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL adzi452_browser_fill(g_wc)
+      CALL adzi452_fetch("")
+      RETURN
+   END IF
+   
+   LET g_detail_cnt = 0
+   LET g_current_idx = 0
+   LET g_current_row = 0
+ 
+   LET g_error_show = 1
+   CALL adzi452_browser_fill("F")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   #第一層模糊搜尋
+   IF g_browser_cnt = 0 THEN
+      LET g_wc = cl_wc_parser(ls_wc)
+      LET g_error_show = 1
+      CALL adzi452_browser_fill("F")
+   END IF
+   
+   #第二層助記碼搜尋
+   IF g_browser_cnt = 0 THEN
+ 
+      
+      
+      IF NOT cl_null(g_wc) THEN
+         LET g_error_show = 1
+         CALL adzi452_browser_fill("F")
+      END IF
+      
+   END IF
+   
+   IF g_browser_cnt = 0 THEN
+      CALL cl_err("","-100",1)
+      CLEAR FORM
+   ELSE
+      CALL adzi452_fetch("F") 
+   END IF
+   
+END FUNCTION
+ 
+ 
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION adzi452_fetch(p_flag)
+   {<Local define>}
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   {</Local define>}
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point    
+   
+   #add-point:fetch段動作開始前
+   {<point name="fetch.before_fetch"/>}
+   #end add-point    
+ 
+   CASE p_flag
+      WHEN 'F' LET g_current_idx = 1
+      WHEN 'L' LET g_current_idx = g_header_cnt        
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,': ' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF
+            
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+            LET g_current_idx = g_jump
+         END IF
+ 
+         LET g_no_ask = FALSE  
+   END CASE    
+   
+   #若無資料則離開
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+   
+   CALL adzi452_browser_fill(p_flag)
+   
+   #該樣板不需此段落CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx) #設定browse 索引
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身筆數顯示
+   DISPLAY g_detail_cnt TO FORMONLY.cnt                      #設定page 總筆數 
+   #LET g_detail_idx = 1
+   IF g_detail_cnt > 0 THEN
+      #LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index   #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_dzdk_m.dzdk001 = g_browser[g_current_idx].b_dzdk001
+   LET g_dzdk_m.dzdk002 = g_browser[g_current_idx].b_dzdk002
+
+
+   
+   #重讀DB,因TEMP有不被更新特性
+    SELECT UNIQUE dzdk001,dzdk002,dzdk003
+ INTO g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003
+ FROM dzdk_t
+ WHERE dzdk001 = g_dzdk_m.dzdk001 AND dzdk002 = g_dzdk_m.dzdk002
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("dzdk_t",SQLCA.sqlcode,1)
+      INITIALIZE g_dzdk_m.* TO NULL
+      RETURN
+   END IF
+   
+   #LET g_data_owner =       
+   #LET g_data_group =   
+   
+   #重新顯示   
+   CALL adzi452_show()
+ 
+END FUNCTION
+ 
+ 
+#+ 資料新增
+PRIVATE FUNCTION adzi452_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   #清除相關資料
+   CLEAR FORM                    
+   CALL g_dzdk_d.clear()
+   CALL g_dzdk2_d.clear()
+
+
+ 
+   INITIALIZE g_dzdk_m.* LIKE dzdk_t.*             #DEFAULT 設定
+   LET g_dzdk001_t = NULL
+   LET g_dzdk002_t = NULL
+
+
+   CALL s_transaction_begin()
+   WHILE TRUE
+     
+      #單頭預設值
+      
+     
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point 
+ 
+      CALL adzi452_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_dzdk_m.* = g_dzdk_m_t.*
+         CALL adzi452_show()
+         CALL cl_err('',9001,0)
+         EXIT WHILE
+      END IF
+      
+      CALL g_dzdk_d.clear()
+      CALL g_dzdk2_d.clear()
+
+
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+      
+   END WHILE
+   
+   LET g_state = "Y"
+   
+   LET g_dzdk001_t = g_dzdk_m.dzdk001
+   LET g_dzdk002_t = g_dzdk_m.dzdk002
+
+
+   
+   LET g_wc = g_wc,  
+              " OR (  ",
+              " dzdk001 = '", g_dzdk_m.dzdk001 CLIPPED, "' "
+              ," AND dzdk002 = '", g_dzdk_m.dzdk002 CLIPPED, "' "
+
+
+              , ") "
+   
+END FUNCTION
+ 
+ 
+#+ 資料修改
+PRIVATE FUNCTION adzi452_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point    
+   
+   IF g_dzdk_m.dzdk001 IS NULL
+   OR g_dzdk_m.dzdk002 IS NULL
+
+
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+    SELECT UNIQUE dzdk001,dzdk002,dzdk003
+ INTO g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003
+ FROM dzdk_t
+ WHERE dzdk001 = g_dzdk_m.dzdk001 AND dzdk002 = g_dzdk_m.dzdk002
+ 
+   ERROR ""
+  
+   LET g_dzdk001_t = g_dzdk_m.dzdk001
+   LET g_dzdk002_t = g_dzdk_m.dzdk002
+
+
+   CALL s_transaction_begin()
+   
+   OPEN adzi452_cl USING g_dzdk_m.dzdk001
+                                                       ,g_dzdk_m.dzdk002
+
+
+   IF STATUS THEN
+      CALL cl_err("OPEN adzi452_cl:", STATUS, 1)
+      CLOSE adzi452_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH adzi452_cl INTO g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_dzdk_m.dzdk001,SQLCA.sqlcode,0)
+      CLOSE adzi452_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   CALL s_transaction_end('Y','0')
+ 
+   CALL adzi452_show()
+   WHILE TRUE
+      LET g_dzdk001_t = g_dzdk_m.dzdk001
+      LET g_dzdk002_t = g_dzdk_m.dzdk002
+
+
+ 
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+      
+      CALL adzi452_input("u")     #欄位更改
+      
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_dzdk_m.* = g_dzdk_m_t.*
+         CALL adzi452_show()
+         CALL cl_err('',9001,0)
+         EXIT WHILE
+      END IF
+      
+      #若單頭key欄位有變更
+      IF g_dzdk_m.dzdk001 != g_dzdk001_t 
+      OR g_dzdk_m.dzdk002 != g_dzdk002_t 
+
+
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單頭(偽)修改前
+         {<point name="modify.b_key_update" mark="Y"/>}
+         #end add-point
+         
+         #更新單頭key值
+         UPDATE dzdk_t SET dzdk001 = g_dzdk_m.dzdk001
+                                       , dzdk002 = g_dzdk_m.dzdk002
+
+
+          WHERE  dzdk001 = g_dzdk001_t
+            AND dzdk002 = g_dzdk002_t
+
+
+         #add-point:單頭(偽)修改中
+         {<point name="modify.m_key_update"/>}
+         #end add-point
+          IF SQLCA.sqlcode THEN
+             CALL cl_err("dzdk_t",SQLCA.sqlcode,1) 
+             CALL s_transaction_end('N','0')
+             CONTINUE WHILE
+         END IF
+         
+         #add-point:單頭(偽)修改後
+         {<point name="modify.a_key_update"/>}
+         #end add-point
+         
+      END IF
+      
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_used_modified_record(g_dzdk_m.dzdk001,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE adzi452_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_dzdk_m.dzdk001,'U')
+ 
+   CALL adzi452_b_fill("1=1")
+   
+END FUNCTION   
+ 
+ 
+#+ 資料輸入
+PRIVATE FUNCTION adzi452_input(p_cmd)
+   {<Local define>}
+   DEFINE  p_cmd           LIKE type_t.chr1
+   DEFINE  l_cmd           LIKE type_t.chr1
+   DEFINE  l_ac_t          LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n             LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt           LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw       LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert  LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete  LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count         LIKE type_t.num5
+   DEFINE  l_i             LIKE type_t.num5
+   DEFINE  l_insert        BOOLEAN
+   DEFINE  ls_return       STRING
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point    
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF  
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql
+   {<point name="input.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT dzdk004,dzdk005,dzdk006,dzdk007,'' FROM dzdk_t WHERE dzdk001=? AND dzdk002=? AND dzdk004=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE adzi452_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL adzi452_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL adzi452_set_no_entry(p_cmd)
+   #add-point:set_no_entry後
+   {<point name="input.after_set_no_entry"/>}
+   #end add-point
+ 
+   DISPLAY BY NAME g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003
+   
+   #add-point:進入修改段前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂單頭ACTION
+         
+         
+         BEFORE INPUT
+            
+            
+          
+         #---------------------------<  Master  >---------------------------
+         #----<<dzdk001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk001
+            #add-point:BEFORE FIELD dzdk001
+            {<point name="input.b.dzdk001" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk001
+            
+            #add-point:AFTER FIELD dzdk001
+            {<point name="input.a.dzdk001" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdk001
+            #add-point:ON CHANGE dzdk001
+            {<point name="input.g.dzdk001" />}
+            #END add-point
+
+         #----<<dzdk002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk002
+            #add-point:BEFORE FIELD dzdk002
+            {<point name="input.b.dzdk002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk002
+            
+            #add-point:AFTER FIELD dzdk002
+            {<point name="input.a.dzdk002" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdk002
+            #add-point:ON CHANGE dzdk002
+            {<point name="input.g.dzdk002" />}
+            #END add-point
+
+         #----<<dzdk003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk003
+            #add-point:BEFORE FIELD dzdk003
+            {<point name="input.b.dzdk003" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk003
+            
+            #add-point:AFTER FIELD dzdk003
+            {<point name="input.a.dzdk003" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdk003
+            #add-point:ON CHANGE dzdk003
+            {<point name="input.g.dzdk003" />}
+            #END add-point
+
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<dzdk001>>----
+         #Ctrlp:input.c.dzdk001
+         ON ACTION controlp INFIELD dzdk001
+            #add-point:ON ACTION controlp INFIELD dzdk001
+            {<point name="input.c.dzdk001" />}
+            #END add-point
+
+         #----<<dzdk002>>----
+         #Ctrlp:input.c.dzdk002
+         ON ACTION controlp INFIELD dzdk002
+            #add-point:ON ACTION controlp INFIELD dzdk002
+            {<point name="input.c.dzdk002" />}
+            #END add-point
+
+         #----<<dzdk003>>----
+         #Ctrlp:input.c.dzdk003
+         ON ACTION controlp INFIELD dzdk003
+            #add-point:ON ACTION controlp INFIELD dzdk003
+            {<point name="input.c.dzdk003" />}
+            #END add-point
+
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            IF s_transaction_chk("N",0) THEN
+                CALL s_transaction_begin()
+            END IF
+ 
+            #多語言處理
+            
+                
+            CALL cl_showmsg()
+            DISPLAY BY NAME g_dzdk_m.dzdk001             
+                            ,g_dzdk_m.dzdk002   
+
+
+ 
+            IF p_cmd = 'u' THEN
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+            
+               UPDATE dzdk_t SET (dzdk001,dzdk002,dzdk003) = (g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003)
+                WHERE  dzdk001 = g_dzdk001_t
+                  AND dzdk002 = g_dzdk002_t
+
+
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("g_dzdk_m",SQLCA.sqlcode,1)  
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  #資料多語言用-增/改
+                  
+                  LET g_dzdk001_t = g_dzdk_m.dzdk001
+                  LET g_dzdk002_t = g_dzdk_m.dzdk002
+
+
+                  #add-point:單頭修改後
+                  {<point name="input.head.a_update"/>}
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF
+            
+            
+            ELSE    
+               #add-point:單頭新增
+               {<point name="input.head.a_insert"/>}
+               #end add-point
+            END IF
+           #controlp
+           
+           #若單身還沒有輸入資料, 強制切換至單身
+           IF cl_null(g_dzdk_d[1].dzdk004) THEN
+              NEXT FIELD dzdk004
+           END IF
+ 
+      END INPUT
+    
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_dzdk_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂單身ACTION
+         
+ 
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_dzdk_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+
+            CALL adzi452_b_fill(g_wc2) 
+            IF g_rec_b != 0 THEN
+               CALL fgl_set_arr_curr(l_ac)
+            END IF
+         
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            
+            #判定新增或修改
+            IF l_cmd = 'u' THEN
+               OPEN adzi452_cl USING 
+                                               g_dzdk_m.dzdk001
+                                               ,g_dzdk_m.dzdk002
+
+
+                                               
+               IF STATUS THEN
+                  CALL cl_err("OPEN adzi452_cl:", STATUS, 1)
+                  CLOSE adzi452_cl
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+            END IF
+            
+            LET l_cmd = ''
+            
+            IF g_rec_b >= l_ac 
+               AND NOT cl_null(g_dzdk_d[l_ac].dzdk004) 
+
+            THEN
+               LET l_cmd='u'
+               LET g_dzdk_d_t.* = g_dzdk_d[l_ac].*  #BACKUP
+               CALL adzi452_set_entry_b(l_cmd)
+               CALL adzi452_set_no_entry_b(l_cmd)
+               OPEN adzi452_bcl USING g_dzdk_m.dzdk001,
+                                                g_dzdk_m.dzdk002,
+
+
+                                                g_dzdk_d_t.dzdk004
+
+               IF STATUS THEN
+                  CALL cl_err("OPEN adzi452_bcl:", STATUS, 1)
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH adzi452_bcl INTO g_dzdk_d[l_ac].dzdk004,g_dzdk_d[l_ac].dzdk005,g_dzdk_d[l_ac].dzdk006,g_dzdk_d[l_ac].dzdk007,g_dzdk2_d[l_ac].dzdk004
+                  IF SQLCA.sqlcode THEN
+                      CALL cl_err(g_dzdk_d_t.dzdk004,SQLCA.sqlcode,1)
+                      LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL adzi452_ref_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            
+        
+         BEFORE INSERT
+            
+            INITIALIZE g_dzdk_d_t.* TO NULL
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_dzdk_d[l_ac].* TO NULL
+            
+            #公用欄位預設值
+              
+            
+            #一般欄位預設值
+            
+            
+            
+            LET g_dzdk_d_t.* = g_dzdk_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL adzi452_set_entry_b(l_cmd)
+            CALL adzi452_set_no_entry_b(l_cmd)
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+ 
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM dzdk_t 
+             WHERE  dzdk001 = g_dzdk_m.dzdk001
+               AND dzdk002 = g_dzdk_m.dzdk002
+
+
+               AND dzdk004 = g_dzdk_d[l_ac].dzdk004
+
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               
+               CALL s_transaction_begin()
+            
+               #add-point:單身新增前
+               {<point name="input.body.b_insert" mark="Y"/>}
+               #end add-point
+               
+               INSERT INTO dzdk_t
+                           (
+                            dzdk001,dzdk002,dzdk003,
+                            dzdk004
+                            ,dzdk005,dzdk006,dzdk007) 
+                     VALUES(
+                            g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003,
+                            g_dzdk_d[l_ac].dzdk004
+                            ,g_dzdk_d[l_ac].dzdk005,g_dzdk_d[l_ac].dzdk006,g_dzdk_d[l_ac].dzdk007)
+               #add-point:單身新增中
+               {<point name="input.body.m_insert"/>}
+               #end add-point
+               LET p_cmd = 'u'
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_dzdk_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("dzdk_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR "INSERT O.K"
+               LET g_rec_b=g_rec_b+1
+               DISPLAY g_rec_b TO FORMONLY.cnt
+            END IF
+            
+            #add-point:單身新增後
+            {<point name="input.body.after_insert"/>}
+            #end add-point
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_dzdk_d_t.dzdk004) 
+
+               THEN
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete"/>}
+               #end add-point
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               IF adzi452_before_delete() THEN 
+                  CALL s_transaction_end('Y','0')
+               ELSE 
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               END IF 
+               CLOSE adzi452_bcl
+               LET l_count = g_dzdk_d.getLength()
+            END IF 
+            
+            #add-point:單身刪除後
+            {<point name="input.body.a_delete"/>}
+            #end add-point
+              
+         AFTER DELETE 
+            #add-point:單身AFTER DELETE 
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+            CALL adzi452_delete_b(l_count) 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<dzdk004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk004
+            #add-point:BEFORE FIELD dzdk004
+            {<point name="input.b.page1.dzdk004" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk004
+            
+            #add-point:AFTER FIELD dzdk004
+            {<point name="input.a.page1.dzdk004" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdk004
+            #add-point:ON CHANGE dzdk004
+            {<point name="input.g.page1.dzdk004" />}
+            #END add-point
+
+         #----<<dzdk005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk005
+            #add-point:BEFORE FIELD dzdk005
+            {<point name="input.b.page1.dzdk005" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk005
+            
+            #add-point:AFTER FIELD dzdk005
+            {<point name="input.a.page1.dzdk005" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdk005
+            #add-point:ON CHANGE dzdk005
+            {<point name="input.g.page1.dzdk005" />}
+            #END add-point
+
+         #----<<dzdk006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk006
+            #add-point:BEFORE FIELD dzdk006
+            {<point name="input.b.page1.dzdk006" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk006
+            
+            #add-point:AFTER FIELD dzdk006
+            {<point name="input.a.page1.dzdk006" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdk006
+            #add-point:ON CHANGE dzdk006
+            {<point name="input.g.page1.dzdk006" />}
+            #END add-point
+
+         #----<<dzdk007>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdk007
+            #add-point:BEFORE FIELD dzdk007
+            {<point name="input.b.page1.dzdk007" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdk007
+            
+            #add-point:AFTER FIELD dzdk007
+            {<point name="input.a.page1.dzdk007" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdk007
+            #add-point:ON CHANGE dzdk007
+            {<point name="input.g.page1.dzdk007" />}
+            #END add-point
+
+
+         #---------------------<  Detail: page1  >---------------------
+         #----<<dzdk004>>----
+         #Ctrlp:input.c.page1.dzdk004
+         ON ACTION controlp INFIELD dzdk004
+            #add-point:ON ACTION controlp INFIELD dzdk004
+            {<point name="input.c.page1.dzdk004" />}
+            #END add-point
+
+         #----<<dzdk005>>----
+         #Ctrlp:input.c.page1.dzdk005
+         ON ACTION controlp INFIELD dzdk005
+            #add-point:ON ACTION controlp INFIELD dzdk005
+            {<point name="input.c.page1.dzdk005" />}
+            #END add-point
+
+         #----<<dzdk006>>----
+         #Ctrlp:input.c.page1.dzdk006
+         ON ACTION controlp INFIELD dzdk006
+            #add-point:ON ACTION controlp INFIELD dzdk006
+            {<point name="input.c.page1.dzdk006" />}
+            #END add-point
+
+         #----<<dzdk007>>----
+         #Ctrlp:input.c.page1.dzdk007
+         ON ACTION controlp INFIELD dzdk007
+            #add-point:ON ACTION controlp INFIELD dzdk007
+            {<point name="input.c.page1.dzdk007" />}
+            #END add-point
+
+
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_dzdk_d[l_ac].* = g_dzdk_d_t.*
+               CLOSE adzi452_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_dzdk_d[l_ac].dzdk004,-263,1)
+               LET g_dzdk_d[l_ac].* = g_dzdk_d_t.*
+            ELSE
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+         
+               UPDATE dzdk_t SET (dzdk001,dzdk002,dzdk004,dzdk005,dzdk006,dzdk007) = (g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_d[l_ac].dzdk004,g_dzdk_d[l_ac].dzdk005,g_dzdk_d[l_ac].dzdk006,g_dzdk_d[l_ac].dzdk007)
+                WHERE  dzdk001 = g_dzdk_m.dzdk001 
+                 AND dzdk002 = g_dzdk_m.dzdk002 
+
+
+                 AND dzdk004 = g_dzdk_d_t.dzdk004 #項次   
+
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point      
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("dzdk_t",SQLCA.sqlcode,1)   
+                  LET g_dzdk_d[l_ac].* = g_dzdk_d_t.*
+               ELSE
+                  #資料多語言用-增/改
+                  
+               END IF
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+            END IF
+ 
+         AFTER INPUT
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point    
+      END INPUT
+ 
+
+      
+      DISPLAY ARRAY g_dzdk2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+      
+         BEFORE ROW
+		    CALL adzi452_b_fill(g_wc2) 
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+            LET l_ac = g_detail_idx
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            CALL adzi452_ui_detailshow()
+        
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(g_detail_idx)      
+         
+         
+      
+      END DISPLAY
+
+
+      
+      #add-point:input段more_input
+      {<point name="input.more_inputarray"/>}
+      #end add-point    
+      
+      BEFORE DIALOG
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            NEXT FIELD dzdk001
+         END IF
+   
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+   
+END FUNCTION
+ 
+ 
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION adzi452_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+ 
+   LET g_dzdk_m_t.* = g_dzdk_m.*      #保存單頭舊值
+   
+   DISPLAY BY NAME g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003
+   CALL adzi452_b_fill(g_wc2)                 #單身
+ 
+   CALL adzi452_ref_show()
+ 
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()  
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point   
+   
+END FUNCTION
+ 
+ 
+#+ 帶出reference資料
+PRIVATE FUNCTION adzi452_ref_show()
+   {<Local define>}
+   DEFINE l_ac_t LIKE type_t.num10 #l_ac暫存用
+   {</Local define>}
+   #add-point:ref_show段define
+   {<point name="ref_show.define"/>}
+   #end add-point
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:ref_show段m_reference
+   {<point name="ref_show.head.reference"/>}
+   #end add-point
+ 
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_dzdk_d.getLength()
+      #add-point:ref_show段d_reference
+      {<point name="ref_show.body.reference"/>}
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_dzdk2_d.getLength()
+      #add-point:ref_show段d2_reference
+      {<point name="ref_show.body.reference2"/>}
+      #end add-point
+   END FOR
+
+
+   
+   LET l_ac = l_ac_t
+ 
+END FUNCTION
+ 
+ 
+#+ 資料複製
+PRIVATE FUNCTION adzi452_reproduce()
+   {<Local define>}
+   DEFINE l_newno     LIKE dzdk_t.dzdk001 
+   DEFINE l_oldno     LIKE dzdk_t.dzdk001 
+   DEFINE l_newno02     LIKE dzdk_t.dzdk002 
+   DEFINE l_oldno02     LIKE dzdk_t.dzdk002 
+
+
+   DEFINE l_master    RECORD LIKE dzdk_t.*
+   DEFINE l_detail    RECORD LIKE dzdk_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   {</Local define>}
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF     
+ 
+   IF g_dzdk_m.dzdk001 IS NULL
+      OR g_dzdk_m.dzdk002 IS NULL
+
+
+      THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   LET g_dzdk001_t = g_dzdk_m.dzdk001
+   LET g_dzdk002_t = g_dzdk_m.dzdk002
+
+
+    
+   CALL adzi452_set_entry('a')
+   CALL adzi452_set_no_entry('a')
+   
+   CALL cl_set_head_visible("","YES")
+   
+   
+ 
+   INPUT l_newno #FROM 
+         ,l_newno02
+
+
+    FROM dzdk001 
+         ,dzdk002 
+
+
+         ATTRIBUTE(FIELD ORDER FORM)
+         
+         AFTER FIELD dzdk001 
+            #add-point:AFTER FIELD dzdk001
+            {<point name="reproduce.dzdk001" />}
+            #END add-point
+         
+         AFTER FIELD dzdk002 
+            #add-point:AFTER FIELD dzdk002
+            {<point name="reproduce.dzdk002" />}
+            #END add-point
+
+
+         
+      #add-point:複製段落開窗/欄位控管/自定義action
+      {<point name="reproduce.action" />}
+      #end add-point
+         
+      BEFORE INPUT
+         #add-point:複製段落Before input
+         {<point name="reproduce.before_input" />}
+         #end add-point
+            
+      AFTER INPUT
+         #若取消則直接結束
+         IF INT_FLAG = 1 THEN
+            LET INT_FLAG = 0
+            RETURN
+         END IF
+         IF l_newno IS NULL 
+            OR l_newno02 IS NULL
+
+
+            THEN
+         CALL cl_err("Reproduce","std-00006",1) 
+         NEXT FIELD dzdk001 
+         END IF
+         #確定該key值是否有重複定義
+         LET l_cnt = 0
+         SELECT COUNT(*) INTO l_cnt FROM dzdk_t 
+          WHERE  dzdk001 = l_newno
+            AND dzdk002 = l_newno02
+
+
+         IF l_cnt > 0 THEN
+            CALL cl_err("Reproduce","std-00006",1)
+            #NEXT FIELD dzdk001 
+         END IF
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE INPUT
+   END INPUT
+   
+   IF INT_FLAG OR l_newno IS NULL THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   LET g_sql = "SELECT * FROM dzdk_t WHERE  ",
+               " dzdk001 = '",g_dzdk_m.dzdk001,"'"
+              ," AND dzdk002 = '",g_dzdk_m.dzdk002,"'"
+
+
+   DECLARE adzi452_reproduce CURSOR FROM g_sql
+ 
+   FOREACH adzi452_reproduce INTO l_detail.*
+ 
+      LET l_detail.dzdk001 = l_newno
+      LET l_detail.dzdk002 = l_newno02
+
+
+      
+      #公用欄位給予預設值
+      
+ 
+      #add-point:單身複製前
+      {<point name="reproduce.body.b_insert" mark="Y"/>}
+      #end add-point
+      INSERT INTO dzdk_t VALUES (l_detail.*) #複製單身
+      #add-point:單身複製中
+      {<point name="reproduce.body.m_insert"/>}
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('Insert error!',SQLCA.sqlcode,1)
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+  
+      #add-point:單身複製後
+      {<point name="reproduce.body.a_insert"/>}
+      #end add-point
+   END FOREACH
+ 
+   CALL s_transaction_end('Y','0')
+   ERROR 'ROW(',l_newno,') O.K'
+   CLOSE adzi452_reproduce
+   
+   LET g_state = "Y"
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              " dzdk001 = '", l_newno CLIPPED, "' "
+              ," AND dzdk002 = '", l_newno02 CLIPPED, "' "
+
+
+              , ") "
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+   
+END FUNCTION
+ 
+#+ 資料刪除
+PRIVATE FUNCTION adzi452_delete()
+   {<Local define>}
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point     
+   
+   IF g_dzdk_m.dzdk001 IS NULL
+   OR g_dzdk_m.dzdk002 IS NULL
+
+
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+    SELECT UNIQUE dzdk001,dzdk002,dzdk003
+ INTO g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003
+ FROM dzdk_t
+ WHERE dzdk001 = g_dzdk_m.dzdk001 AND dzdk002 = g_dzdk_m.dzdk002
+   CALL s_transaction_begin()
+   
+   
+ 
+   OPEN adzi452_cl USING g_dzdk_m.dzdk001
+                                                       ,g_dzdk_m.dzdk002
+
+
+   IF STATUS THEN
+      CALL cl_err("OPEN adzi452_cl:", STATUS, 1)
+      CLOSE adzi452_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH adzi452_cl INTO g_dzdk_m.dzdk001,g_dzdk_m.dzdk002,g_dzdk_m.dzdk003
+   
+   #若資料已被他人LOCK
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_dzdk_m.dzdk001,SQLCA.sqlcode,0)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   CALL adzi452_show()
+ 
+   #IF NOT cl_ask_delete() THEN             #確認一下
+   IF cl_ask_del_master() THEN              #確認一下
+      INITIALIZE g_doc.* TO NULL         
+      LET g_doc.column1 = "dzdk001"       
+      LET g_doc.value1 = g_dzdk_m.dzdk001     
+      CALL cl_del_doc()    
+ 
+      #add-point:單身刪除前
+      {<point name="delete.body.b_delete" mark="Y"/>}
+      #end add-point
+      
+      DELETE FROM dzdk_t WHERE  dzdk001 = g_dzdk_m.dzdk001
+                                                               AND dzdk002 = g_dzdk_m.dzdk002
+
+
+                                                               
+      #add-point:單身刪除中
+      {<point name="delete.body.m_delete"/>}
+      #end add-point
+      
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("dzdk_t",SQLCA.sqlcode,0)
+         CALL s_transaction_end('N','0')
+      END IF
+ 
+      
+  
+      #add-point:單身刪除後 
+      {<point name="delete.body.a_delete"/>}
+      #end add-point
+      
+      CLEAR FORM
+      CALL g_dzdk_d.clear() 
+      CALL g_dzdk2_d.clear()       
+
+
+     
+      CALL adzi452_ui_browser_refresh()  
+      CALL adzi452_ui_headershow()  
+      CALL adzi452_ui_detailshow()
+       
+      IF g_browser_cnt > 0 THEN 
+         CALL adzi452_fetch('P')
+      ELSE
+         LET g_wc = " 1=1"
+         LET g_wc2 = " 1=1"
+         CALL adzi452_browser_fill("F")
+      END IF
+       
+   END IF
+ 
+   CLOSE adzi452_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_dzdk_m.dzdk001,'D')
+    
+END FUNCTION
+ 
+ 
+#+ 單身陣列填充
+PRIVATE FUNCTION adzi452_b_fill(p_wc2)
+   {<Local define>}
+   DEFINE p_wc2      STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point     
+ 
+   #先清空單身變數內容
+   CALL g_dzdk_d.clear()
+   CALL g_dzdk2_d.clear()
+
+
+ 
+   #add-point:b_fill段define
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   LET g_sql = "SELECT dzdk004,dzdk005,dzdk006,dzdk007,'' FROM dzdk_t WHERE dzdk001=? AND dzdk002=?"   
+ 
+   IF NOT cl_null(p_wc2) THEN
+      LET g_sql=g_sql CLIPPED," AND ",p_wc2 CLIPPED
+   END IF
+   
+   LET g_sql = g_sql, " ORDER BY dzdk_t.dzdk001,dzdk_t.dzdk002,dzdk_t.dzdk004"
+ 
+   PREPARE adzi452_pb FROM g_sql
+   DECLARE b_fill_cs CURSOR FOR adzi452_pb
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1
+ 
+   OPEN b_fill_cs USING g_dzdk_m.dzdk001
+                                            ,g_dzdk_m.dzdk002
+
+
+                                            
+   FOREACH b_fill_cs INTO g_dzdk_d[l_ac].dzdk004,g_dzdk_d[l_ac].dzdk005,g_dzdk_d[l_ac].dzdk006,g_dzdk_d[l_ac].dzdk007,g_dzdk2_d[l_ac].dzdk004
+                          ,g_dzdk_d[l_ac].dzdk004,g_dzdk_d[l_ac].dzdk005,g_dzdk_d[l_ac].dzdk006,g_dzdk_d[l_ac].dzdk007,g_dzdk2_d[l_ac].dzdk004
+
+
+                          
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+                        
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+      #帶出公用欄位reference值
+      
+      
+      
+
+
+   
+      LET g_dzdk2_d[l_ac].dzdk004 = g_dzdk_d[l_ac].dzdk004 #序號
+
+
+     
+      #add-point:單身資料抓取
+      {<point name="bfill.foreach"/>}
+      #end add-point
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   CALL g_dzdk_d.deleteElement(l_ac)
+   CALL g_dzdk2_d.deleteElement(l_ac)
+
+
+ 
+   LET g_rec_b=l_ac-1
+   DISPLAY g_rec_b TO FORMONLY.cnt  
+   LET l_ac = g_cnt
+   LET g_cnt = 0 
+ 
+   FREE adzi452_pb   
+   
+END FUNCTION
+ 
+ 
+#+ 單身db資料刪除
+PRIVATE FUNCTION adzi452_before_delete()
+   #add-point:before_delete段define
+   {<point name="before_delete.define"/>}
+   #end add-point 
+   
+   #add-point:單筆刪除前
+   {<point name="delete.body.b_single_delete" mark="Y"/>}
+   #end add-point
+   
+   DELETE FROM dzdk_t
+    WHERE  dzdk001 = g_dzdk_m.dzdk001 AND
+                              dzdk002 = g_dzdk_m.dzdk002 AND
+
+
+          dzdk004 = g_dzdk_d_t.dzdk004
+
+      
+   #add-point:單筆刪除中
+   {<point name="delete.body.m_single_delete"/>}
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("dzdk_t",SQLCA.sqlcode,1)
+      RETURN FALSE 
+   END IF
+   
+   #add-point:單筆刪除後
+   {<point name="delete.body.a_single_delete"/>}
+   #end add-point
+ 
+   LET g_rec_b = g_rec_b-1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+ 
+   RETURN TRUE
+    
+END FUNCTION
+ 
+ 
+#+ 刪除單身db資料後畫面頁簽連動
+PRIVATE FUNCTION adzi452_delete_b(p_total)
+   {<Local define>}
+   DEFINE p_total LIKE type_t.num5
+   {</Local define>}
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+   IF p_total = g_dzdk2_d.getLength() THEN
+      CALL g_dzdk2_d.deleteElement(l_ac)
+   END IF
+
+
+ 
+   IF p_total = g_dzdk_d.getLength() THEN
+      CALL g_dzdk_d.deleteElement(l_ac)
+   END IF 
+   
+END FUNCTION
+ 
+ 
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION adzi452_set_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1  
+   {</Local define>}
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point       
+ 
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("dzdk001,dzdk002",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+ 
+ 
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION adzi452_set_no_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1   
+   {</Local define>}
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = 'u' THEN
+      CALL cl_set_comp_entry("dzdk001,dzdk002",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+ 
+ 
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION adzi452_set_entry_b(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1   
+   {</Local define>}
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point     
+   
+   #add-point:set_entry_b段
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION adzi452_set_no_entry_b(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1   
+   {</Local define>}
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point    
+   
+   #add-point:set_no_entry_b段
+   {<point name="set_no_entry_b.set_no_entry_b段"/>}
+   #end add-point 
+   
+END FUNCTION
+ 
+ 
+#+ 外部參數搜尋, 施工中
+PRIVATE FUNCTION adzi452_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " dzdk001 = '", g_argv[1], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " dzdk002 = ", g_argv[02], " AND "
+   END IF
+
+
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+   ELSE
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+ 
+    
+ 
+{<point name="other.function"/>}
+ 
+

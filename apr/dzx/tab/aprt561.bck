@@ -1,0 +1,255 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aprt561" module="apr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02296" crtdt="2014-04-30 15:46:48" modid="03247" moddt="2014-08-08 17:42:16" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="促銷任務量申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="prcgsite,prcgsite_desc(chr80),prcgdocdt,prcgdocno,prcgdocno_desc(chr80),prcg001,prcg001_desc(chr80),prcg002,prcg002_desc(chr80),prcg005,prcg003,prcg003_desc(chr80),prcg004,prcg004_desc(chr80),prcgunit,prcgstus,prcf005(chr10),prcf006(chr10),prcf007(chr10),prcf007_desc(chr80),prcf008(chr10),prcf008_desc(chr80),prcf009(dat),prcf010(dat),prcgownid,prcgownid_desc(chr80),prcgowndp,prcgowndp_desc(chr80),prcgcrtid,prcgcrtid_desc(chr80),prcgcrtdp,prcgcrtdp_desc(chr80),prcgcrtdt,prcgmodid,prcgmodid_desc(chr80),prcgmoddt,prcgcnfid,prcgcnfid_desc(chr80),prcgcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="prchseq,prch001,prch002,prch002_desc(chr500),prch003,prch003_desc(chr500),prch004,prch004_desc(chr500),prch005,prch005_desc(chr500),prch006,prch006_desc(chr500),prch007,prch007_desc(chr500),prch008,prch009,prch010,prch011,prch012,prch013,prchsite,prchunit"/>
+      <var id="bs_field" value="prcgsite,prcgsite_desc(chr80),prcgdocdt,prcgdocno,prcg001,prcg001_desc(chr80),prcg002,prcg002_desc(chr80),prcg003,prcg003_desc(chr80),prcg004,prcg004_desc(chr80),prcg005" pk="prcgdocno" order=""/>
+      <bs_reference field="prcgsite_desc" ref_field="prcgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="prcg001_desc" ref_field="prcg001" ref_sql="SELECT prcfl003 FROM prcfl_t WHERE prcflent=$varg_enterprise$var AND prcfl001=? AND prcfl002=$varg_dlang$var"/>
+      <bs_reference field="prcg002_desc" ref_field="prcg002" ref_sql="SELECT prcdl003 FROM prcdl_t WHERE prcdlent=$varg_enterprise$var AND prcdl001=? AND prcdl002=$varg_dlang$var"/>
+      <bs_reference field="prcg003_desc" ref_field="prcg003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="prcg004_desc" ref_field="prcg004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="aprt561" method="dialog">
+    <section id="input">
+      <input id="head" field="prcgsite,prcgdocdt,prcgdocno,prcg001,prcg002,prcg005,prcg003,prcg004,prcgunit,prcgstus"/>
+      <input id="body" page="1" field="prchseq,prch001,prch002,prch003,prch004,prch005,prch006,prch007,prch008,prch009,prch010,prch011,prch012,prch013,prchsite,prchunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="prcgsite,prcgdocdt,prcgdocno,prcg001,prcg002,prcg005,prcg003,prcg004,prcgunit,prcgstus,prcgownid,prcgowndp,prcgcrtid,prcgcrtdp,prcgcrtdt,prcgmodid,prcgmoddt,prcgcnfid,prcgcnfdt"/>
+      <construct id="body" page="1" field="prchseq,prch001,prch002,prch003,prch004,prch005,prch006,prch007,prch008,prch009,prch010,prch011,prch012,prch013,prchsite,prchunit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="prcgdocno"/>
+      <set id="head" type="no_entry" field="prcgdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="prcgsite">
+        <after>
+          <reference field="prcgsite_desc" ref_field="prcg_t.prcgsite" map_field="prcgent,prcgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="prcgsite_desc"/>
+      <column id="prcgdocdt"/>
+      <column id="prcgdocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_prcgdocno" state="c"/>
+      </column>
+      <column id="prcgdocno_desc"/>
+      <column id="prcg001">
+        <after>
+          <check chkid="v_prcf001" id="isExist"/>
+          <reference field="prcg001_desc" ref_field="prcg_t.prcg001" map_field="prcg001" ref_sql="SELECT prcfl003 FROM prcfl_t WHERE prcflent=$varg_enterprise$var AND prcfl001=? AND prcfl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_prcf001" state="i"/>
+        <controlp form="q_prcf001" state="c"/>
+      </column>
+      <column id="prcg001_desc"/>
+      <column id="prcg002">
+        <after>
+          <check chkid="v_prcd001" id="isExist"/>
+          <reference field="prcg002_desc" ref_field="prcg_t.prcg002" map_field="prcg002" ref_sql="SELECT prcdl003 FROM prcdl_t WHERE prcdlent=$varg_enterprise$var AND prcdl001=? AND prcdl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_prcd001_1" state="i"/>
+        <controlp form="q_prcd001_1" state="c"/>
+      </column>
+      <column id="prcg002_desc"/>
+      <column id="prcg005"/>
+      <column id="prcg003">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="prcg003_desc" ref_field="prcg_t.prcg003" map_field="prcg003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_4" state="i"/>
+        <controlp form="q_ooag001_4" state="c"/>
+      </column>
+      <column id="prcg003_desc"/>
+      <column id="prcg004">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="prcg004_desc" ref_field="prcg_t.prcg004" map_field="prcg004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="prcg004_desc"/>
+      <column id="prcgunit">
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="prcgstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="prcf005" type="S" default="1"/>
+      <column id="prcf006" type="S" default="1"/>
+      <column id="prcf007">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="prcf007_desc"/>
+      <column id="prcf008">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="prcf008_desc"/>
+      <column id="prcf009"/>
+      <column id="prcf010"/>
+      <column id="prcgownid">
+        <after>
+          <reference field="prcgownid_desc" ref_field="prcg_t.prcgownid" map_field="prcgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prcgownid_desc"/>
+      <column id="prcgowndp">
+        <after>
+          <reference field="prcgowndp_desc" ref_field="prcg_t.prcgowndp" map_field="prcgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="prcgowndp_desc"/>
+      <column id="prcgcrtid">
+        <after>
+          <reference field="prcgcrtid_desc" ref_field="prcg_t.prcgcrtid" map_field="prcgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prcgcrtid_desc"/>
+      <column id="prcgcrtdp">
+        <after>
+          <reference field="prcgcrtdp_desc" ref_field="prcg_t.prcgcrtdp" map_field="prcgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="prcgcrtdp_desc"/>
+      <column id="prcgcrtdt"/>
+      <column id="prcgmodid">
+        <after>
+          <reference field="prcgmodid_desc" ref_field="prcg_t.prcgmodid" map_field="prcgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prcgmodid_desc"/>
+      <column id="prcgmoddt"/>
+      <column id="prcgcnfid">
+        <after>
+          <reference field="prcgcnfid_desc" ref_field="prcg_t.prcgcnfid" map_field="prcgcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prcgcnfid_desc"/>
+      <column id="prcgcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="prchseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prch001"/>
+      <column id="prch002">
+        <after>
+          <check chkid="v_pmaa001_17" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001_12" state="i"/>
+        <controlp form="q_pmaa001_12" state="c"/>
+      </column>
+      <column id="prch002_desc"/>
+      <column id="prch003">
+        <after>
+          <check chkid="v_pmaa001_14" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001_18" state="i"/>
+        <controlp form="q_pmaa001_18" state="c"/>
+      </column>
+      <column id="prch003_desc"/>
+      <column id="prch004">
+        <after>
+          <check chkid="v_dbbc001_1" id="isExist"/>
+        </after>
+        <controlp form="q_dbbc001" state="i"/>
+        <controlp form="q_dbbc001" state="c"/>
+      </column>
+      <column id="prch004_desc"/>
+      <column id="prch005">
+        <after/>
+        <controlp form="q_oojd001" state="i"/>
+        <controlp form="q_oojd001" state="c"/>
+      </column>
+      <column id="prch005_desc"/>
+      <column id="prch006">
+        <after/>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="prch006_desc"/>
+      <column id="prch007">
+        <after/>
+        <controlp form="q_dbba001" state="i"/>
+        <controlp form="q_dbba001" state="c"/>
+      </column>
+      <column id="prch007_desc"/>
+      <column id="prch008" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prch009" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prch010">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="prch011">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="prch012">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="prch013" type="S" default="1" def_scc="6063"/>
+      <column id="prchsite"/>
+      <column id="prchunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="prcg_t" pk="prcgdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT prcgsite,&apos;&apos;,prcgdocdt,prcgdocno,&apos;&apos;,prcg001,&apos;&apos;,prcg002,&apos;&apos;,prcg005,prcg003,&apos;&apos;,prcg004,&apos;&apos;,prcgunit,prcgstus,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,prcgownid,&apos;&apos;,prcgowndp,&apos;&apos;,prcgcrtid,&apos;&apos;,prcgcrtdp,&apos;&apos;,prcgcrtdt,prcgmodid,&apos;&apos;,prcgmoddt,prcgcnfid,&apos;&apos;,prcgcnfdt FROM prcg_t WHERE prcgent= ? AND prcgdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT prcgsite,&apos;&apos;,prcgdocdt,prcgdocno,&apos;&apos;,prcg001,&apos;&apos;,prcg002,&apos;&apos;,prcg005,prcg003,&apos;&apos;,prcg004,&apos;&apos;,prcgunit,prcgstus,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,prcgownid,&apos;&apos;,prcgowndp,&apos;&apos;,prcgcrtid,&apos;&apos;,prcgcrtdp,&apos;&apos;,prcgcrtdt,prcgmodid,&apos;&apos;,prcgmoddt,prcgcnfid,&apos;&apos;,prcgcnfdt FROM prcg_t" order="prcgdocno"/>
+    </head>
+    <body id="prch_t" page="1" linked="" pk="prchseq" fk="prchdocno">
+      <sql id="forupd_sql_detail" query="SELECT prchseq,prch001,prch002,&apos;&apos;,prch003,&apos;&apos;,prch004,&apos;&apos;,prch005,&apos;&apos;,prch006,&apos;&apos;,prch007,&apos;&apos;,prch008,prch009,prch010,prch011,prch012,prch013,prchsite,prchunit FROM prch_t WHERE prchent=? AND prchdocno=? AND prchseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT prchseq,prch001,prch002,&apos;&apos;,prch003,&apos;&apos;,prch004,&apos;&apos;,prch005,&apos;&apos;,prch006,&apos;&apos;,prch007,&apos;&apos;,prch008,prch009,prch010,prch011,prch012,prch013,prchsite,prchunit FROM prch_t WHERE prchent=? AND prchdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

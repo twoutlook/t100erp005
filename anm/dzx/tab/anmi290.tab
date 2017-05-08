@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi290" module="anm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="00810" crtdt="2014-09-24 16:26:03" modid="00810" moddt="2014-09-25 11:45:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="網銀人員帳號權限設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmaw001,nmaw001_desc(chr500),nmaw002,nmaw003,nmaw002_desc(chr500),nmaw002_desc_1(chr500),nmaw003_desc(chr10),nmawstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmaw001,nmaw002,nmaw003,nmawownid,nmawownid_desc(chr500),nmawowndp,nmawowndp_desc(chr500),nmawcrtid,nmawcrtid_desc(chr500),nmawcrtdp,nmawcrtdp_desc(chr500),nmawcrtdt,nmawmodid,nmawmodid_desc(chr500),nmawmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi290" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmaw001,nmaw002,nmaw003,nmawstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmaw001,nmaw002,nmaw003,nmawstus"/>
+      <construct id="body" page="2" field="nmawownid,nmawowndp,nmawcrtid,nmawcrtdp,nmawcrtdt,nmawmodid,nmawmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmaw001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="nmaw001_desc" ref_field="nmaw_t.nmaw001" map_field="nmawent,nmaw001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaw001_desc"/>
+      <column id="nmaw002">
+        <after>
+          <check chkid="v_nmaa001" id="isExist"/>
+          <reference field="nmaw002_desc" ref_field="nmaw_t.nmaw002" map_field="nmawent,nmaw002" ref_sql="SELECT nmaal003 FROM nmaal_t WHERE nmaalent=$varg_enterprise$var AND nmaal001=? AND nmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmaa001_02" state="i"/>
+        <controlp form="q_nmaa001_02" state="c"/>
+      </column>
+      <column id="nmaw003">
+        <after>
+          <check chkid="v_nmas002_7" id="isExist"/>
+          <reference field="nmaw003_desc" ref_field="nmaw002,nmaw003" map_field="nmaw002,nmaw003" ref_sql="SELECT nmas003 FROM nmas_t WHERE nmasent=$varg_enterprise$var AND nmas001=? AND nmas002=? "/>
+        </after>
+        <controlp form="q_nmas002_7" state="i"/>
+        <controlp form="q_nmas002_8" state="c"/>
+      </column>
+      <column id="nmaw002_desc"/>
+      <column id="nmaw002_desc_1"/>
+      <column id="nmaw003_desc"/>
+      <column id="nmawstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmawownid">
+        <after>
+          <reference field="nmawownid_desc" ref_field="nmaw_t.nmawownid" map_field="nmawownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmawownid_desc"/>
+      <column id="nmawowndp">
+        <after>
+          <reference field="nmawowndp_desc" ref_field="nmaw_t.nmawowndp" map_field="nmawowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmawowndp_desc"/>
+      <column id="nmawcrtid">
+        <after>
+          <reference field="nmawcrtid_desc" ref_field="nmaw_t.nmawcrtid" map_field="nmawcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmawcrtid_desc"/>
+      <column id="nmawcrtdp">
+        <after>
+          <reference field="nmawcrtdp_desc" ref_field="nmaw_t.nmawcrtdp" map_field="nmawcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmawcrtdp_desc"/>
+      <column id="nmawcrtdt"/>
+      <column id="nmawmodid">
+        <after>
+          <reference field="nmawmodid_desc" ref_field="nmaw_t.nmawmodid" map_field="nmawmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmawmodid_desc"/>
+      <column id="nmawmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmaw_t" page="1,2" linked="" pk="nmaw001,nmaw002,nmaw003">
+      <sql id="forupd_sql_detail" query="SELECT nmaw001,&apos;&apos;,nmaw002,nmaw003,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmawstus,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmawownid,&apos;&apos;,nmawowndp,&apos;&apos;,nmawcrtid,&apos;&apos;,nmawcrtdp,&apos;&apos;,nmawcrtdt,nmawmodid,&apos;&apos;,nmawmoddt FROM nmaw_t WHERE nmawent=? AND nmaw001=? AND nmaw002=? AND nmaw003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmaw001,&apos;&apos;,nmaw002,nmaw003,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmawstus,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmawownid,&apos;&apos;,nmawowndp,&apos;&apos;,nmawcrtid,&apos;&apos;,nmawcrtdp,&apos;&apos;,nmawcrtdt,nmawmodid,&apos;&apos;,nmawmoddt FROM nmaw_t WHERE nmawent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

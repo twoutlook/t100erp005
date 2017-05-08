@@ -1,0 +1,644 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aist410_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2016-03-11 16:23:54), PR版次:0003(2016-03-23 14:53:42)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000124
+#+ Filename...: aist410_01
+#+ Description: 批次修改申報格式
+#+ Creator....: 02114(2014-04-29 10:03:20)
+#+ Modifier...: 04152 -SD/PR- 04152
+ 
+{</section>}
+ 
+{<section id="aist410_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160223-00002#5  2016/03/11 By Reanna 增加批次修改格式功能
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_isaj_m        RECORD
+       isaj003 LIKE isaj_t.isaj003, 
+   isaj003_desc LIKE type_t.chr80, 
+   start_date LIKE type_t.dat, 
+   end_date LIKE type_t.dat, 
+   start_amt LIKE type_t.chr500, 
+   end_amt LIKE type_t.chr500, 
+   isaj018 LIKE isaj_t.isaj018, 
+   isaj018_1 LIKE type_t.chr10, 
+   isaj017 LIKE type_t.chr1
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_ooef019             LIKE ooef_t.ooef019
+DEFINE g_idx                 LIKE type_t.num5
+#160223-00002#5 add ------
+DEFINE g_comp          LIKE isaj_t.isajcomp
+DEFINE g_isaj033       LIKE isaj_t.isaj033     #進銷項類型
+#160223-00002#5 add end---
+#end add-point
+ 
+DEFINE g_isaj_m        type_g_isaj_m
+ 
+   DEFINE g_isaj003_t LIKE isaj_t.isaj003
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aist410_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aist410_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_comp,p_isaj003,p_isaj033
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   #160223-00002#5 add ------
+   DEFINE p_comp          LIKE isaj_t.isajcomp
+   DEFINE p_isaj003       LIKE isaj_t.isaj003     #申報單位
+   DEFINE p_isaj033       LIKE isaj_t.isaj033     #進銷項類型
+   #160223-00002#5 add end---
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aist410_01 WITH FORM cl_ap_formpath("ais","aist410_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   LET g_errshow = 1
+   LET g_comp = p_comp
+   LET g_isaj033 = p_isaj033
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_isaj_m.isaj003,g_isaj_m.start_date,g_isaj_m.end_date,g_isaj_m.start_amt,g_isaj_m.end_amt, 
+          g_isaj_m.isaj018,g_isaj_m.isaj018_1,g_isaj_m.isaj017 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            LET g_isaj_m.isaj003 = p_isaj003    #160223-00002#5
+            #LET g_isaj_m.start_date = g_today  #160223-00002#5 mark
+            #LET g_isaj_m.end_date = g_today    #160223-00002#5 mark
+            CALL s_date_get_first_date(g_today)  RETURNING g_isaj_m.start_date        #160223-00002#5
+            CALL s_date_get_date(g_isaj_m.start_date,1,0) RETURNING g_isaj_m.end_date #160223-00002#5
+            CALL s_date_get_last_date(g_isaj_m.end_date) RETURNING g_isaj_m.end_date  #160223-00002#5
+            LET g_isaj_m.start_amt = 0
+            LET g_isaj_m.end_amt = 0
+            LET g_isaj_m.isaj017 = 'Y'
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isaj003
+            
+            #add-point:AFTER FIELD isaj003 name="input.a.isaj003"
+            CALL aist410_01_ref_show()
+            IF NOT cl_null(g_isaj_m.isaj003) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_isaj_m.isaj003
+               IF cl_chk_exist("v_isaa001") THEN
+                  SELECT ooef019 INTO g_ooef019
+                    FROM ooef_t
+                   WHERE ooefent = g_enterprise
+                     AND ooef001 = g_isaj_m.isaj003
+               ELSE
+                  LET g_isaj_m.isaj003 = ''
+                  CALL aist410_01_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               IF cl_null(g_comp) THEN LET g_comp = g_isaj_m.isaj003 END IF  #160223-00002#5
+            END IF
+            CALL aist410_01_get_count()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isaj003
+            #add-point:BEFORE FIELD isaj003 name="input.b.isaj003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isaj003
+            #add-point:ON CHANGE isaj003 name="input.g.isaj003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD start_date
+            #add-point:BEFORE FIELD start_date name="input.b.start_date"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD start_date
+            
+            #add-point:AFTER FIELD start_date name="input.a.start_date"
+            CALL aist410_01_get_count()
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE start_date
+            #add-point:ON CHANGE start_date name="input.g.start_date"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD end_date
+            #add-point:BEFORE FIELD end_date name="input.b.end_date"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD end_date
+            
+            #add-point:AFTER FIELD end_date name="input.a.end_date"
+            CALL aist410_01_get_count()
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE end_date
+            #add-point:ON CHANGE end_date name="input.g.end_date"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD start_amt
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_isaj_m.start_amt,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD start_amt
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD start_amt name="input.a.start_amt"
+            CALL aist410_01_get_count()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD start_amt
+            #add-point:BEFORE FIELD start_amt name="input.b.start_amt"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE start_amt
+            #add-point:ON CHANGE start_amt name="input.g.start_amt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD end_amt
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_isaj_m.end_amt,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD end_amt
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD end_amt name="input.a.end_amt"
+            CALL aist410_01_get_count()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD end_amt
+            #add-point:BEFORE FIELD end_amt name="input.b.end_amt"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE end_amt
+            #add-point:ON CHANGE end_amt name="input.g.end_amt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isaj018
+            
+            #add-point:AFTER FIELD isaj018 name="input.a.isaj018"
+            IF NOT cl_null(g_isaj_m.isaj018) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_ooef019
+               LET g_chkparam.arg2 = g_isaj_m.isaj018
+               IF cl_chk_exist("v_isap002") THEN
+               ELSE
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL aist410_01_get_count()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isaj018
+            #add-point:BEFORE FIELD isaj018 name="input.b.isaj018"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isaj018
+            #add-point:ON CHANGE isaj018 name="input.g.isaj018"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isaj018_1
+            
+            #add-point:AFTER FIELD isaj018_1 name="input.a.isaj018_1"
+            IF NOT cl_null(g_isaj_m.isaj018_1) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_ooef019
+               LET g_chkparam.arg2 = g_isaj_m.isaj018_1
+               IF cl_chk_exist("v_isap002") THEN
+               ELSE
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isaj018_1
+            #add-point:BEFORE FIELD isaj018_1 name="input.b.isaj018_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isaj018_1
+            #add-point:ON CHANGE isaj018_1 name="input.g.isaj018_1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isaj017
+            #add-point:BEFORE FIELD isaj017 name="input.b.isaj017"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isaj017
+            
+            #add-point:AFTER FIELD isaj017 name="input.a.isaj017"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isaj017
+            #add-point:ON CHANGE isaj017 name="input.g.isaj017"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.isaj003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isaj003
+            #add-point:ON ACTION controlp INFIELD isaj003 name="input.c.isaj003"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isaj_m.isaj003
+            LET g_qryparam.default2 = "" #g_isaj_m.isaa001 #申報單位代碼
+            CALL q_isaa001()
+            LET g_isaj_m.isaj003 = g_qryparam.return1
+            CALL aist410_01_ref_show()
+            DISPLAY g_isaj_m.isaj003 TO isaj003
+            NEXT FIELD isaj003
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.start_date
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD start_date
+            #add-point:ON ACTION controlp INFIELD start_date name="input.c.start_date"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.end_date
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD end_date
+            #add-point:ON ACTION controlp INFIELD end_date name="input.c.end_date"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.start_amt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD start_amt
+            #add-point:ON ACTION controlp INFIELD start_amt name="input.c.start_amt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.end_amt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD end_amt
+            #add-point:ON ACTION controlp INFIELD end_amt name="input.c.end_amt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isaj018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isaj018
+            #add-point:ON ACTION controlp INFIELD isaj018 name="input.c.isaj018"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isaj_m.isaj018
+            LET g_qryparam.arg1 = g_ooef019
+            CALL q_isap002()
+            LET g_isaj_m.isaj018 = g_qryparam.return1
+            DISPLAY g_isaj_m.isaj018 TO isaj018
+            NEXT FIELD isaj018
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isaj018_1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isaj018_1
+            #add-point:ON ACTION controlp INFIELD isaj018_1 name="input.c.isaj018_1"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isaj_m.isaj018_1
+            LET g_qryparam.arg1 = g_ooef019
+            CALL q_isap002()
+            LET g_isaj_m.isaj018_1 = g_qryparam.return1
+            DISPLAY g_isaj_m.isaj018_1 TO isaj018_1
+            NEXT FIELD isaj018_1
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isaj017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isaj017
+            #add-point:ON ACTION controlp INFIELD isaj017 name="input.c.isaj017"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   IF INT_FLAG THEN
+      LET INT_FLAG = TRUE 
+   ELSE
+      CALL aist410_01_update()
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aist410_01 
+   
+   #add-point:input段after input name="input.post_input"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist410_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aist410_01.other_function" readonly="Y" >}
+# 獲取符合條件筆數
+PRIVATE FUNCTION aist410_01_get_count()
+   SELECT COUNT(*) INTO g_idx
+     FROM isaj_t
+    WHERE isajent = g_enterprise
+      AND isaj003 = g_isaj_m.isaj003
+      AND isaj009 >= g_isaj_m.start_date
+      AND isaj009 <= g_isaj_m.end_date
+      AND isaj104 >= g_isaj_m.start_amt
+      AND isaj104 <= g_isaj_m.end_amt
+      AND isaj018 = g_isaj_m.isaj018
+      AND isajcomp = g_comp           #160223-00002#5 add
+      AND isaj033 = g_isaj033         #160223-00002#5 add
+     #AND isaj019 IS NULL             #160223-00002#5 mark
+     #AND isaj020 IS NULL             #160223-00002#5 mark
+      
+   DISPLAY g_idx TO FORMONLY.idx
+END FUNCTION
+# 參考欄位帶值
+PRIVATE FUNCTION aist410_01_ref_show()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_isaj_m.isaj003
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl004 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_isaj_m.isaj003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_isaj_m.isaj003_desc
+END FUNCTION
+# 修改申報格式
+PRIVATE FUNCTION aist410_01_update()
+DEFINE l_success        LIKE type_t.num5
+#160223-00002#5 add ------
+DEFINE l_sql            STRING
+DEFINE l_date           LIKE type_t.dat
+DEFINE l_date_aisi010   LIKE type_t.dat
+DEFINE l_isaa012        LIKE isaa_t.isaa012
+DEFINE l_isaa013        LIKE isaa_t.isaa013
+DEFINE l_isaj006        LIKE isaj_t.isaj006
+DEFINE l_isaj007        LIKE isaj_t.isaj007
+DEFINE l_isaj019        LIKE isaj_t.isaj019
+DEFINE l_isaj020        LIKE isaj_t.isaj020
+#160223-00002#5 add end---
+   
+   CALL s_transaction_begin()
+   LET l_success = 'Y'
+   
+   #160223-00002#5 add ------
+   IF g_isaj_m.isaj017 = 'Y' THEN
+      LET g_isaj_m.isaj017 = 'A'
+   ELSE
+      LET g_isaj_m.isaj017 = ''
+   END IF
+   #取得申報單位的申報年月
+   SELECT isaa012,isaa013 INTO l_isaa012,l_isaa013
+     FROM isaa_t
+    WHERE isaaent = g_enterprise AND isaa001 = g_isaj_m.isaj003
+   LET l_date_aisi010 = MDY(l_isaa013,1,l_isaa012)
+   
+   LET l_sql = "SELECT isaj006,isaj007,isaj019,isaj020",
+               "  FROM isaj_t",
+               " WHERE isajent  = ",g_enterprise,
+               "   AND isajcomp = '",g_comp,"'",
+               "   AND isaj033 = '",g_isaj033,"'",
+               "   AND isaj003 = '",g_isaj_m.isaj003,"'",
+               "   AND isaj009 >= '",g_isaj_m.start_date,"'",
+               "   AND isaj009 <= '",g_isaj_m.end_date,"'",
+               "   AND isaj104 >= ",g_isaj_m.start_amt,
+               "   AND isaj104 <= ",g_isaj_m.end_amt,
+               "   AND isaj018 = '",g_isaj_m.isaj018,"'"
+   PREPARE aist410_sel_p FROM l_sql
+   DECLARE aist410_sel_c CURSOR FOR aist410_sel_p
+   FOREACH aist410_sel_c INTO l_isaj006,l_isaj007,l_isaj019,l_isaj020
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach aist410_sel_c'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET l_success = 'N'
+      END IF
+      LET l_date = MDY(l_isaj020,1,l_isaj019)
+      #aisi010申報單位的申報年月 > 該申報資訊的申報年月，表示已經申報過所以不可更新
+      IF l_date_aisi010 > l_date THEN
+         CONTINUE FOREACH
+      ELSE
+   #160223-00002#5 add end---
+         UPDATE isaj_t SET isaj018 = g_isaj_m.isaj018_1,
+                           isaj017 = g_isaj_m.isaj017
+          WHERE isajent = g_enterprise
+            AND isaj003 = g_isaj_m.isaj003
+            AND isaj009 >= g_isaj_m.start_date
+            AND isaj009 <= g_isaj_m.end_date
+            AND isaj104 >= g_isaj_m.start_amt
+            AND isaj104 <= g_isaj_m.end_amt
+            AND isaj018 = g_isaj_m.isaj018
+            AND isaj006 = l_isaj006  #160223-00002#5
+            AND isaj007 = l_isaj007  #160223-00002#5
+           #AND isaj019 IS NULL      #160223-00002#5 mark
+           #AND isaj020 IS NULL      #160223-00002#5 mark
+         IF SQLCA.SQLcode  THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "g_xrcb"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = 'N'
+         END IF
+   
+   #160223-00002#5 add ------
+      END IF
+   END FOREACH
+   #160223-00002#5 add end---
+   
+   IF l_success = 'N' THEN
+      CALL s_transaction_end('N','1') 
+   ELSE
+      CALL s_transaction_end('Y','1')
+   END IF
+END FUNCTION
+
+ 
+{</section>}
+ 

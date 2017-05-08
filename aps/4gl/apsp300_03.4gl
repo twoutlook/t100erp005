@@ -1,0 +1,1319 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apsp300_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2016-05-24 14:06:21), PR版次:0009(2017-02-14 11:03:16)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000036
+#+ Filename...: apsp300_03
+#+ Description: 獨立需求轉工單作業 – 拼單調整
+#+ Creator....: 03079(2015-07-07 11:25:17)
+#+ Modifier...: 03079 -SD/PR- 07024
+ 
+{</section>}
+ 
+{<section id="apsp300_03.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#160214-00005#5  2016/03/17  By  dorislai  增加BOM特性合併 
+#160512-00016#1  2016/05/24  By  ming      增加欄位 保稅否 
+#160727-00019#14 2016/08/02 By 08742   系统中定义的临时表名称超过15码在执行时会出错,所以需要将系统中定义的临时表长度超过15码的全部改掉	 	
+#                                      Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+#                                      Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+#161109-00085#13 2016/11/10 By 08993   整批調整系統星號寫法
+#170104-00066#1  2017/01/04 By Rainy   筆數相關變數由num5放大至num10
+#170103-00052#1  2017/01/17 By 07024   修正步驟3-訂單調整的生產數量以及單位抓取
+#170214-00009#1  2017/02/14 By 07024   因link問題，將apsp300.inc的type_g_sfaa_d、g_sfaa_d、g_sfaa_t移到apsp300_03裡面
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+GLOBALS "../../aps/4gl/apsp300.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp300_03.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+#單身 type 宣告
+#170104-00066#1 (B)  17/01/05 modify by rainy 
+#DEFINE l_ac              LIKE type_t.num5
+#DEFINE l_ac2             LIKE type_t.num5
+#DEFINE g_master_idx      LIKE type_t.num5
+
+#DEFINE g_rec_b           LIKE type_t.num5
+#DEFINE g_rec_b2          LIKE type_t.num5
+
+DEFINE l_ac              LIKE type_t.num10
+DEFINE l_ac2             LIKE type_t.num10
+DEFINE g_master_idx      LIKE type_t.num10
+
+DEFINE g_rec_b           LIKE type_t.num10
+DEFINE g_rec_b2          LIKE type_t.num10
+#170104-00066#1 (E)  17/01/05 modify by rainy
+DEFINE g_success         LIKE type_t.chr1
+DEFINE g_result_str      LIKE type_t.chr1000
+TYPE type_sfaa           RECORD                                         
+                         keyno              LIKE type_t.num5,
+                         sfaa005            LIKE sfaa_t.sfaa005, 
+                         sfaa006            LIKE sfaa_t.sfaa006, 
+                         sfaa007            LIKE sfaa_t.sfaa007, 
+                         sfaa010            LIKE sfaa_t.sfaa010, 
+                         sfaa011            LIKE sfaa_t.sfaa011, #160214-00005#5-add
+                         sfac006            LIKE sfac_t.sfac006,
+                         #160512-00016#1 20160524 add by ming -----(S) 
+                         sfaa072            LIKE sfaa_t.sfaa072, #保稅否 
+                         #160512-00016#1 20160524 add by ming -----(E) 
+                         sfaa012            LIKE sfaa_t.sfaa012, 
+                         sfaa013            LIKE sfaa_t.sfaa013, 
+                         sfaa019            LIKE sfaa_t.sfaa019, 
+                         sfaa020            LIKE sfaa_t.sfaa020
+                         END RECORD
+TYPE type_psab           RECORD
+                            keyno          LIKE type_t.num5,
+                            psabdocno      LIKE psab_t.psabdocno,
+                            psabseq        LIKE psab_t.psabseq,
+                            psab001        LIKE psab_t.psab001,
+                            psab012        LIKE psab_t.psab012, #160214-00005#5-add
+                            psab002        LIKE psab_t.psab002, 
+                            #160512-00016#1 20160524 add by ming -----(S) 
+                            psab013        LIKE psab_t.psab013, #保稅否 
+                            #160512-00016#1 20160524 add by ming -----(E) 
+                            psab005        LIKE psab_t.psab005,
+                            psab004        LIKE psab_t.psab004,
+                            qty            LIKE psab_t.psab005,
+                            psab003        LIKE psab_t.psab003
+                         END RECORD       
+#170214-00009#1-s-add
+#從apsp300.inc裡面移過來的
+TYPE type_g_sfaa_d          RECORD
+                               keyno              LIKE type_t.num5,
+                               sfaa005            LIKE sfaa_t.sfaa005,
+                               sfaa006            LIKE sfaa_t.sfaa006,
+                               sfaa007            LIKE sfaa_t.sfaa007,
+                               sfaa010            LIKE sfaa_t.sfaa010,
+                               sfaa011            LIKE sfaa_t.sfaa011,
+                               sfaa010_desc       LIKE type_t.chr500,
+                               sfaa010_desc_desc  LIKE type_t.chr500,
+                               sfac006            LIKE sfac_t.sfac006,
+                               sfac006_desc       LIKE imefl_t.imefl005, 
+                               sfaa072            LIKE sfaa_t.sfaa072,   #160512-00016#1 20160524 add by ming 
+                               sfaa012            LIKE sfaa_t.sfaa012,
+                               sfaa013            LIKE sfaa_t.sfaa013,
+                               sfaa013_desc       LIKE type_t.chr500,
+                               sfaa019            LIKE sfaa_t.sfaa019,
+                               sfaa020            LIKE sfaa_t.sfaa020
+                               END RECORD
+DEFINE g_sfaa_d             DYNAMIC ARRAY OF type_g_sfaa_d
+DEFINE g_sfaa_d_t           type_g_sfaa_d
+#170214-00009#1-e-add
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp300_03.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp300_03.other_dialog" >}
+
+DIALOG apsp300_03_display()
+   DEFINE l_success        LIKE type_t.num5
+   
+   DISPLAY ARRAY g_sfaa_d TO s_detail1_apsp300_03.* ATTRIBUTE(COUNT = g_rec_b)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(l_ac)
+
+      BEFORE ROW
+        LET l_ac = DIALOG.getCurrentRow("s_detail1_apsp300_03")
+        LET g_master_idx = l_ac
+        CALL apsp300_03_fetch()
+        
+      ON DRAG_START(go_dnd)
+        LET drag_source = "s_detail1"
+        LET drag_index  = arr_curr()
+
+      ON DRAG_FINISHED(go_dnd)
+        INITIALIZE drag_source TO NULL
+
+      ON DRAG_ENTER(go_dnd)
+        IF drag_source IS NULL THEN
+          CALL go_dnd.setOperation(NULL)
+        END IF
+
+      ON DROP(go_dnd)
+          LET drop_index = go_dnd.getLocationRow()      
+          CALL apsp300_03_drag()
+               RETURNING l_success
+          IF NOT l_success THEN
+             CONTINUE DIALOG
+          ELSE
+             CALL FGL_SET_ARR_CURR(drop_index)
+#             CALL ui.Interface.refresh()
+          END IF
+        
+   END DISPLAY
+END DIALOG
+
+DIALOG apsp300_03_display2()
+   DEFINE l_success        LIKE type_t.num5
+   
+   DISPLAY ARRAY g_psab_d TO s_detail2_apsp300_03.* ATTRIBUTE(COUNT = g_rec_b2)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(l_ac2)
+
+      BEFORE ROW
+        LET l_ac2 = DIALOG.getCurrentRow("s_detail2_apsp300_03")
+
+      ON DRAG_START(go_dnd)
+        LET drag_source = "s_detail2"
+        LET drag_index  = arr_curr()
+
+      ON DRAG_FINISHED(go_dnd)
+        INITIALIZE drag_source TO NULL
+
+      ON DRAG_ENTER(go_dnd)
+        IF drag_source IS NULL THEN
+          CALL go_dnd.setOperation(NULL)
+        END IF
+
+   END DISPLAY
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="apsp300_03.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION apsp300_03(--)
+   #add-point:input段變數傳入
+
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   #end add-point
+
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_03_init()
+   CALL cl_set_combo_scc('sfaa005_d1_03','4009')
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_03_create_temp_table()
+   DEFINE r_success         LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   IF NOT apsp300_03_drop_temp_table() THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CREATE TEMP TABLE apsp300_tmp01(        #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+          keyno              LIKE type_t.num5,
+          sfaa005            LIKE sfaa_t.sfaa005,
+          sfaa006            LIKE sfaa_t.sfaa006,
+          sfaa007            LIKE sfaa_t.sfaa007,
+          sfaa010            LIKE sfaa_t.sfaa010,
+          sfaa011            LIKE sfaa_t.sfaa011, #160214-00005#5-add
+          sfac006            LIKE sfac_t.sfac006, 
+          sfaa072            LIKE sfaa_t.sfaa072, #160512-00016#1 20160524 add by ming 保稅否 
+          sfaa012            LIKE sfaa_t.sfaa012,
+          sfaa013            LIKE sfaa_t.sfaa013,
+          sfaa019            LIKE sfaa_t.sfaa019,
+          sfaa020            LIKE sfaa_t.sfaa020
+   )
+
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create apsp300_tmp01'    #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CREATE TEMP TABLE apsp300_tmp02(          #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+          keyno               LIKE type_t.num5,
+          psabdocno           LIKE psab_t.psabdocno,
+          psabseq             LIKE psab_t.psabseq,
+          psab001             LIKE psab_t.psab001,
+          psab012             LIKE psab_t.psab012, #160214-00005#5-add
+          psab002             LIKE psab_t.psab002, 
+          psab013             LIKE psab_t.psab013, #160512-00016#1 20160524 add by ming 保稅否 
+          psab005             LIKE psab_t.psab005,
+          psab004             LIKE psab_t.psab004,
+          qty                 LIKE psab_t.psab005,
+          psab003             LIKE psab_t.psab003
+   )
+
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create apsp300_tmp02'      #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_03_drop_temp_table()
+   DEFINE r_success          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   DROP TABLE apsp300_tmp01         #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop apsp300_tmp01'        #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   DROP TABLE apsp300_tmp02      #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop apsp300_tmp02'         #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_03_fetch()
+   DEFINE l_i         LIKE type_t.num5
+   DEFINE l_sql       STRING
+
+   CALL g_psab_d.clear()
+
+   IF g_master_idx <=0 THEN
+      LET g_rec_b2 = 0
+      RETURN
+   END IF
+   
+   LET l_sql = " SELECT keyno   , psabdocno, psabseq, ",
+               "        psab001 , psab012, ''       , ''       ,", #160214-00005#5-add-'psab012'
+               #160512-00016#1 20160524 modify by ming -----(S) 
+               #"        psab002, ''      ,psab005 ,", 
+               "        psab002, ''        ,psab013 ,psab005 ,",
+               #160512-00016#1 20160524 modify by ming -----(E) 
+               "        psab004 , ''       , qty    , psab003  ",
+               "  FROM apsp300_tmp02",        #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+               " WHERE keyno = ",g_sfaa_d[g_master_idx].keyno CLIPPED
+
+   PREPARE apsp300_03_temp_d2_sel FROM l_sql
+   DECLARE apsp300_03_temp_d2_b_fill_curs CURSOR FOR apsp300_03_temp_d2_sel
+
+   LET l_i = 1
+   
+   #161109-00085#13-s mod
+#   FOREACH apsp300_03_temp_d2_b_fill_curs INTO g_psab_d[l_i].*   #161109-00085#13-s mark
+   FOREACH apsp300_03_temp_d2_b_fill_curs
+      INTO g_psab_d[l_i].keyno,g_psab_d[l_i].psabdocno,g_psab_d[l_i].psabseq,g_psab_d[l_i].psab001,
+           g_psab_d[l_i].psab012,g_psab_d[l_i].psab001_desc,g_psab_d[l_i].psab001_desc_desc,
+           g_psab_d[l_i].psab002,g_psab_d[l_i].psab002_desc,g_psab_d[l_i].psab013,g_psab_d[l_i].psab005,
+           g_psab_d[l_i].psab004,g_psab_d[l_i].psab004_desc,g_psab_d[l_i].qty,g_psab_d[l_i].psab003  
+   #161109-00085#13-e mod
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:apsp300_03_temp_d2_b_fill_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      CALL apsp300_03_detail_show(2,l_i)
+
+      LET l_i = l_i + 1
+      IF l_i > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b2 = l_i - 1
+   CALL g_psab_d.deleteElement(l_i)
+   CLOSE apsp300_03_temp_d2_b_fill_curs
+   FREE apsp300_03_temp_d2_sel
+
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_03_b_fill()
+   DEFINE l_sql        STRING
+   DEFINE l_i          LIKE type_t.num10   #170104-00066#1 num5->num10  17/01/05 mod by rainy 
+
+   LET l_sql = " SELECT keyno  , sfaa005, sfaa006, sfaa007,", 
+               #160512-00016#1 20160524 modify by ming -----(S) 
+               #"        sfaa010, sfaa011, ''     , ''     , sfac006,'',sfaa012,", #160214-00005#5-add-'sfaa011  
+               "        sfaa010, sfaa011, ''     , ''     , sfac006,'', ", 
+               "        sfaa072, sfaa012,", 
+               #160512-00016#1 20160524 modify by ming -----(E) 
+               "        sfaa013, ''     , sfaa019, sfaa020 ",
+               "  FROM apsp300_tmp01"            #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+              
+   PREPARE apsp300_03_temp_d1_sel FROM l_sql
+   DECLARE apsp300_03_temp_d1_b_fill_curs CURSOR FOR apsp300_03_temp_d1_sel
+   
+   CALL g_sfaa_d.clear()
+   LET l_i = 1
+   ERROR "Searching!"
+   #161109-00085#13-s mod
+#   FOREACH apsp300_03_temp_d1_b_fill_curs INTO g_sfaa_d[l_i].*   #161109-00085#13-s mark
+   FOREACH apsp300_03_temp_d1_b_fill_curs
+      INTO g_sfaa_d[l_i].keyno,g_sfaa_d[l_i].sfaa005,g_sfaa_d[l_i].sfaa006,g_sfaa_d[l_i].sfaa007,
+           g_sfaa_d[l_i].sfaa010,g_sfaa_d[l_i].sfaa011,g_sfaa_d[l_i].sfaa010_desc,g_sfaa_d[l_i].sfaa010_desc_desc,
+           g_sfaa_d[l_i].sfac006,g_sfaa_d[l_i].sfac006_desc,g_sfaa_d[l_i].sfaa072,g_sfaa_d[l_i].sfaa012,
+           g_sfaa_d[l_i].sfaa013,g_sfaa_d[l_i].sfaa013_desc,g_sfaa_d[l_i].sfaa019,g_sfaa_d[l_i].sfaa020
+   #161109-00085#13-e mod
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:apsp300_03_temp_d1_b_fill_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      CALL apsp300_03_detail_show(1,l_i)
+      
+      LET l_i = l_i + 1
+      IF l_i > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b = l_i - 1
+   CALL g_sfaa_d.deleteElement(l_i)
+   CLOSE apsp300_03_temp_d1_b_fill_curs
+   FREE apsp300_03_temp_d1_sel
+   
+   LET g_master_idx = 1
+  
+   CALL apsp300_03_fetch()
+
+END FUNCTION
+
+PRIVATE FUNCTION apsp300_03_detail_show(p_i,p_idx)
+   DEFINE p_i            LIKE type_t.num5
+   DEFINE p_idx          LIKE type_t.num10  #170104-00066#1 num5->num10  17/01/05 mod by rainy 
+   DEFINE l_success      LIKE type_t.num5
+   
+   IF p_i = 1 THEN
+      CALL s_desc_get_item_desc(g_sfaa_d[p_idx].sfaa010)
+           RETURNING g_sfaa_d[p_idx].sfaa010_desc,g_sfaa_d[p_idx].sfaa010_desc_desc
+
+      CALL s_desc_get_unit_desc(g_sfaa_d[p_idx].sfaa013)
+           RETURNING g_sfaa_d[p_idx].sfaa013_desc
+
+      CALL s_feature_description(g_sfaa_d[p_idx].sfaa010,g_sfaa_d[p_idx].sfac006)
+           RETURNING l_success,g_sfaa_d[p_idx].sfac006_desc       
+   END IF
+   
+
+   IF p_i = 2 THEN         
+      CALL s_desc_get_item_desc(g_psab_d[p_idx].psab001)
+           RETURNING g_psab_d[p_idx].psab001_desc,g_psab_d[p_idx].psab001_desc_desc
+
+      CALL s_desc_get_unit_desc(g_psab_d[p_idx].psab004)
+           RETURNING g_psab_d[p_idx].psab004_desc
+
+      CALL s_feature_description(g_psab_d[p_idx].psab001,g_psab_d[p_idx].psab002)
+           RETURNING l_success,g_psab_d[p_idx].psab002_desc
+   END IF
+   
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_03_delete_temp_table()
+   DELETE FROM apsp300_tmp01;            #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+   DELETE FROM apsp300_tmp02;             #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apsp300_03_gen_data()
+#                       RETURNING r_success
+# Input parameter: NULL
+# Return code....: r_success
+# Date & Author..: 2014-07-11 By Carrier
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp300_03_gen_data()
+   DEFINE r_success        LIKE type_t.num5
+   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_sql            STRING
+   TYPE type_tmp           RECORD
+                              psabdocno        LIKE psab_t.psabdocno,
+                              psabseq          LIKE psab_t.psabseq,
+                              psab001          LIKE psab_t.psab001,
+                              psab012          LIKE psab_t.psab012, #160214-00005#5-add
+                              psab002          LIKE psab_t.psab002, 
+                              #160512-00016#1 20160524 add by ming -----(S) 
+                              psab013          LIKE psab_t.psab013, 
+                              #160512-00016#1 20160524 add by ming -----(E) 
+                              psab004          LIKE psab_t.psab004,
+                              qty              LIKE psab_t.psab005,
+                              psab003          LIKE psab_t.psab003,
+                              psab005          LIKE psab_t.psab005,
+                              psab006          LIKE psab_t.psab006
+                           END RECORD
+   DEFINE l_tmp            type_tmp
+   DEFINE l_sfaa           type_sfaa
+   DEFINE l_sfaa_tmp       type_sfaa   
+   DEFINE l_psab           type_psab           
+   DEFINE l_where          STRING
+   DEFINE l_i              LIKE type_t.num10      
+   DEFINE l_cmd            LIKE type_t.chr1 
+   DEFINE l_flag           LIKE type_t.chr1   
+   DEFINE l_psab004        LIKE psab_t.psab004
+   DEFINE l_rate           LIKE inaj_t.inaj014
+   DEFINE l_imae016        LIKE imae_t.imae016  #170103-00052#1-add
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = FALSE
+   
+   #将临时表清除
+   CALL apsp300_03_delete_temp_table()
+
+   #取STEP-1的订单信息
+   LET l_sql = "SELECT psabdocno, psabseq, ",
+               "       psab001, psab012, psab002 ,     ", #160214-00005#5-add-'psab012' 
+               #160512-00016#1 20160524 add by ming -----(S) 
+               "       psab013, ", 
+               #160512-00016#1 20160524 add by ming -----(E) 
+               "       (SELECT imae016 FROM imae_t WHERE imaeent='",g_enterprise,"' AND imaesite='",g_site,"' AND imae001=psab001) imae016,", #170103-00052#1-s-add
+               "       psab004  ,qty, psab003,psab005,psab006  ",
+               "  FROM apsp300_01_temp ",
+               " ORDER BY psab001,psab004 "
+               
+   PREPARE apsp300_03_gen_data_p1 FROM l_sql
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'prepare apsp300_03_gen_data_p1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   DECLARE apsp300_03_gen_data_cs1 CURSOR FOR apsp300_03_gen_data_p1
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'declare apsp300_03_gen_data_cs1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+      
+   LET l_i = 1
+   #170103-00052#1-s-mod
+   #161109-00085#13-s mod
+   ##FOREACH apsp300_03_gen_data_cs1 INTO l_tmp.*   #161109-00085#13-s mark
+   #FOREACH apsp300_03_gen_data_cs1 INTO l_tmp.psabdocno,l_tmp.psabseq,l_tmp.psab001,l_tmp.psab012,l_tmp.psab002,l_tmp.psab013,
+   #                                     l_tmp.psab004,l_tmp.qty,l_tmp.psab003,l_tmp.psab005,l_tmp.psab006
+   ##161109-00085#13-e mod
+   FOREACH apsp300_03_gen_data_cs1 INTO l_tmp.psabdocno,l_tmp.psabseq,l_tmp.psab001,l_tmp.psab012,l_tmp.psab002,l_tmp.psab013,
+                                        l_imae016,l_tmp.psab004,l_tmp.qty,l_tmp.psab003,l_tmp.psab005,l_tmp.psab006
+   #170103-00052#1-e-mod
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach apsp300_03_gen_data_cs1'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN r_success
+      END IF
+      #170103-00052#1-s-add
+      #先預給獨力需求單的資料，避免後面程式段落，將值變成工單的資料
+      LET l_psab004     = l_tmp.psab004
+      LET l_psab.psab005 = l_tmp.qty
+      IF l_imae016 <> l_tmp.psab004 THEN
+         CALL s_aooi250_convert_qty(l_tmp.psab001,l_tmp.psab004,l_imae016,l_tmp.qty)
+            RETURNING l_success,l_tmp.qty
+         LET l_tmp.psab004 = l_imae016
+      END IF
+      #170103-00052#1-e-add
+      #拼单
+      IF g_setting.choice1 = '1' THEN    
+         LET l_cmd = 'a'
+      ELSE
+         LET l_sql = "SELECT * FROM apsp300_tmp01",    #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+                     " WHERE sfaa010 = '",l_tmp.psab001,"'",
+                     #"   AND sfaa013 = '",l_tmp.psab004,"'"  #170103-00052#1-s-mod
+                     "   AND sfaa013 = '",l_imae016,"'"       #170103-00052#1-e-mod
+         #160214-00005#5-add-(S)
+         IF cl_null(l_tmp.psab012) THEN
+            LET l_sql = l_sql CLIPPED," AND (sfaa011 = ' ' OR sfaa011 IS NULL)"
+         ELSE
+            LET l_sql = l_sql CLIPPED,"  AND sfaa011 = '",l_tmp.psab012,"'"  
+         END IF
+         #160214-00005#5-add-(E)
+         LET l_where = ' 1= 1'
+         #依需求日期併單 
+         IF g_setting.choice2 = 'Y' THEN
+            LET l_where = l_where CLIPPED," AND sfaa020 = '",l_tmp.psab003,"' "
+         END IF
+
+         #依產品特徵併單 
+         IF g_setting.choice3 = 'Y' THEN
+            LET l_where = l_where CLIPPED," AND sfac006 = '",l_tmp.psab002,"' "
+         END IF
+
+         #依需求單號併單 
+         IF g_setting.choice4 = 'Y' THEN
+            LET l_where = l_where CLIPPED," AND sfaa006 = '",l_tmp.psabdocno,"' "
+         END IF
+         
+         #160512-00016#1 20160524 add by ming -----(S) 
+         #依保稅否併單 
+         IF g_setting.choice8 = 'Y' THEN 
+            LET l_where = l_where CLIPPED," AND sfaa072 = '",l_tmp.psab013,"' "  
+         END IF 
+         #160512-00016#1 20160524 add by ming -----(E) 
+         
+         LET l_sql = l_sql CLIPPED," AND ",l_where
+         PREPARE apsp300_03_gen_data_p2 FROM l_sql
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'prepare apsp300_03_gen_data_p2'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            RETURN r_success
+         END IF
+         EXECUTE apsp300_03_gen_data_p2 INTO l_sfaa.*
+         IF SQLCA.sqlcode AND SQLCA.sqlcode <> 100 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'execute apsp300_03_gen_data_p2'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            RETURN r_success   
+         ELSE
+            IF SQLCA.sqlcode = 100 THEN
+               LET l_cmd = 'a'
+            ELSE
+               LET l_cmd = 'u'
+            END IF
+         END IF       
+      END IF
+      
+      IF l_cmd = 'a' THEN
+         SELECT MAX(keyno) + 1 INTO l_i FROM apsp300_tmp01    #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+         IF cl_null(l_i) THEN LET l_i = 1 END IF
+    
+         LET l_sfaa.keyno   = l_i                 #项次 
+         LET l_sfaa.sfaa005 = '6'                 #來源-獨立需求  
+
+         LET l_sfaa.sfaa006 = l_tmp.psabdocno     #需求單號  
+         IF l_sfaa.sfaa006 IS NULL THEN
+            LET l_sfaa.sfaa006 = ' '
+         END IF
+         LET l_sfaa.sfaa007 = l_tmp.psabseq       #项次
+                  
+         LET l_sfaa.sfaa010 = l_tmp.psab001       #料号
+         LET l_sfaa.sfaa011 = l_tmp.psab012       #BOM特性 #160214-00005#5-add
+         LET l_sfaa.sfac006 = l_tmp.psab002       #特征
+         IF l_sfaa.sfac006 IS NULL THEN
+            LET l_sfaa.sfac006 = ' '
+         END IF
+         
+         #160512-00016#1 20160524 add by ming -----(S) 
+         LET l_sfaa.sfaa072 = l_tmp.psab013       #保稅否 
+         #160512-00016#1 20160524 add by ming -----(E) 
+    
+         LET l_sfaa.sfaa012 = l_tmp.qty           #数量
+         LET l_sfaa.sfaa013 = l_tmp.psab004       #单位
+         LET l_sfaa.sfaa020 = l_tmp.psab003       #预计完工日
+         IF l_sfaa.sfaa020 IS NULL THEN
+            LET l_sfaa.sfaa020 = cl_get_today()
+         END IF
+         
+         IF NOT cl_null(l_sfaa.sfaa020) THEN
+            #预计开工日
+            CALL s_asft300_06('2',l_sfaa.sfaa010,l_sfaa.sfaa012,l_sfaa.sfaa020)
+                 RETURNING l_success,l_sfaa.sfaa019
+         END IF
+         
+         
+         #161109-00085#13-mod-s
+         #INSERT INTO apsp300_tmp01 VALUES(l_sfaa.*)          #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01     #161109-00085#13 mark   
+         INSERT INTO apsp300_tmp01(keyno,sfaa005,sfaa006,sfaa007,sfaa010,sfaa011,sfac006,sfaa072,sfaa012,sfaa013,sfaa019,sfaa020) 
+                            VALUES(l_sfaa.keyno,l_sfaa.sfaa005,l_sfaa.sfaa006,l_sfaa.sfaa007,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfac006,
+                                   l_sfaa.sfaa072,l_sfaa.sfaa012,l_sfaa.sfaa013,l_sfaa.sfaa019,l_sfaa.sfaa020 )
+         #161109-00085#13-mod-e
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'insert apsp300_tmp01'    #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            RETURN r_success
+         END IF           
+      ELSE
+         LET l_flag = 'Y'  #和原资料一样吗?
+         LET l_sfaa_tmp.* = l_sfaa.*
+         #订单单号
+         IF l_sfaa.sfaa006 <> l_tmp.psabdocno THEN
+            LET l_sfaa.sfaa006 = ' '      #订单单号
+            LET l_flag = 'N'            
+         END IF
+         LET l_sfaa.sfaa007 = ''       #项次
+                  
+         #特征
+         IF l_sfaa.sfac006 <> l_tmp.psab002 THEN
+            LET l_sfaa.sfac006 = ' '
+            LET l_flag = 'N'
+         END IF
+         #预计完工日
+         IF l_sfaa.sfaa020 < l_tmp.psab003 THEN
+            LET l_sfaa.sfaa020 = l_tmp.psab003
+            #预计开工日
+            CALL s_asft300_06('2',l_sfaa.sfaa010,l_sfaa.sfaa012,l_sfaa.sfaa020)
+                 RETURNING l_success,l_sfaa.sfaa019
+         END IF
+         
+         LET l_sfaa.sfaa005 = '1'            #来源-1.Multi  
+         
+         #数量
+         LET l_sfaa.sfaa012 = l_sfaa.sfaa012 + l_tmp.qty 
+         UPDATE apsp300_tmp01 SET keyno   = l_sfaa.keyno   ,         #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+                                       sfaa005 = l_sfaa.sfaa005 ,      
+                                       sfaa006 = l_sfaa.sfaa006 ,      
+                                       sfaa007 = l_sfaa.sfaa007 ,           
+                                       sfaa010 = l_sfaa.sfaa010 , 
+                                       sfaa011 = l_sfaa.sfaa011 , #160214-00005#5-add                                       
+                                       sfac006 = l_sfaa.sfac006 ,      
+                                       sfaa072 = l_sfaa.sfaa072 , #160512-00016#1 20160524 add by ming 
+                                       sfaa012 = l_sfaa.sfaa012 ,      
+                                       sfaa013 = l_sfaa.sfaa013 ,      
+                                       sfaa019 = l_sfaa.sfaa019 ,      
+                                       sfaa020 = l_sfaa.sfaa020    
+          WHERE keyno = l_sfaa_tmp.keyno                                       
+
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 OR SQLCA.sqlerrd[3] > 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'update apsp300_tmp01'             #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            RETURN r_success
+         END IF
+      
+      END IF
+      
+      LET l_psab.keyno      = l_sfaa.keyno
+      LET l_psab.psabdocno  = l_tmp.psabdocno
+      LET l_psab.psabseq    = l_tmp.psabseq
+      LET l_psab.psab001    = l_tmp.psab001
+      LET l_psab.psab012    = l_tmp.psab012 #160214-00005#5-add
+      LET l_psab.psab002    = l_tmp.psab002 
+      #160512-00016#1 20160524 add by ming -----(S) 
+      LET l_psab.psab013    = l_tmp.psab013 
+      #160512-00016#1 20160524 add by ming -----(E) 
+      LET l_psab.psab004    = l_tmp.psab004
+      LET l_psab.qty        = l_tmp.qty
+      LET l_psab.psab003    = l_tmp.psab003
+      
+      #170103-00052#1-s-mark
+      ##取獨立需求單位 
+      #SELECT psab004 INTO l_psab004
+      #  FROM psab_t
+      # WHERE psabent   = g_enterprise
+      #   AND psabdocno = l_psab.psabdocno
+      #   AND psabseq   = l_psab.psabseq
+      #IF SQLCA.sqlcode THEN
+      #   INITIALIZE g_errparam TO NULL
+      #   LET g_errparam.code = SQLCA.sqlcode
+      #   LET g_errparam.extend = 'sel xmdd_t'
+      #   LET g_errparam.popup = TRUE
+      #   CALL cl_err()
+      #
+      #   RETURN r_success
+      #END IF
+      
+      #LET l_psab.psab005 = l_psab.qty
+      #170103-00052#1-s-mark
+      #IF l_psab.psab004 <> l_psab004 THEN
+      #   CALL s_aooi250_convert_qty(l_psab.psab001,l_psab.psab004,l_psab004,l_psab.qty)
+      #        RETURNING l_success,l_psab.psab005
+      #   IF NOT l_success THEN
+      #   END IF
+      #END IF 
+      #170103-00052#1-e-mark
+      
+      #170103-00052#1-s-mod
+      ##161109-00085#13-mod-s
+      ##INSERT INTO apsp300_tmp02 VALUES(l_psab.*)         #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02   #161109-00085#13-mark
+      #INSERT INTO apsp300_tmp02(keyno,psabdocno,psabseq,psab001,psab012,psab002,psab013,psab005,psab004,qty,psab003  ) 
+      #                    VALUES(l_psab.keyno,l_psab.psabdocno,l_psab.psabseq,l_psab.psab001,l_psab.psab012,
+      #                           l_psab.psab002,l_psab.psab013,l_psab.psab005,l_psab.psab004,l_psab.qty,l_psab.psab003  )
+      ##161109-00085#13-mod-e
+      INSERT INTO apsp300_tmp02(keyno,psabdocno,psabseq,psab001,psab012,psab002,psab013,psab005,psab004,qty,psab003  ) 
+                          VALUES(l_psab.keyno,l_psab.psabdocno,l_psab.psabseq,l_psab.psab001,l_psab.psab012,
+                                 l_psab.psab002,l_psab.psab013,l_psab.psab005,l_psab004,l_psab.qty,l_psab.psab003  )
+      #170103-00052#1-e-mod
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'insert apsp300_tmp02'    #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN r_success
+      END IF
+
+   END FOREACH
+   
+   LET r_success = TRUE
+   RETURN r_success
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: MOUSE拖动处理
+# Memo...........:
+# Usage..........: CALL apsp300_03_drag()
+#                       RETURNING r_success
+# Input parameter: NULL
+# Return code....: r_success
+# Date & Author..: 2014-07-11 By Carrier
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp300_03_drag()
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_sfaa         type_g_sfaa_d
+   DEFINE l_cnt          LIKE type_t.num10    #170104-00066#1 num5->num10  17/01/05 mod by rainy 
+   DEFINE l_sfaa_idx     LIKE type_t.num10    #170104-00066#1 num5->num10  17/01/05 mod by rainy 
+   DEFINE l_i            LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   
+   LET r_success = FALSE
+   IF cl_null(drag_source) OR cl_null(drag_index) OR cl_null(drop_index) OR
+      drag_index = 0 OR drop_index = 0 THEN
+      RETURN r_success
+   END IF 
+   
+
+   #工单合并
+   IF drag_source = 's_detail1' THEN
+      IF drop_index > g_rec_b THEN
+         RETURN r_success      
+      END IF
+      
+      IF g_sfaa_d[drag_index].sfaa010 <> g_sfaa_d[drop_index].sfaa010 THEN
+         #料件编号不相同,不可合并!
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'asf-00367'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN r_success
+      END IF
+      
+      #160214-00005#5-add-(S)
+      #兩筆特性相比，若兩筆的特性都是NULL，就不用進去跑第二段IF的比對
+      #             若兩筆的特性其中有一筆有資料，表示兩筆資料有可能不同，需比對看看
+      IF NOT cl_null(g_sfaa_d[drag_index].sfaa011) OR NOT cl_null(g_sfaa_d[drop_index].sfaa011) THEN
+         IF g_sfaa_d[drag_index].sfaa011 <> g_sfaa_d[drop_index].sfaa011 OR cl_null(g_sfaa_d[drag_index].sfaa011) 
+                                                                         OR cl_null(g_sfaa_d[drop_index].sfaa011)THEN
+            #BOM特性不相同，不可合併！
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00723'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN r_success
+         END IF
+      END IF
+      #160214-00005#5-add-(E)
+      
+      #更新xmdd
+      UPDATE apsp300_tmp02 SET keyno = g_sfaa_d[drop_index].keyno       #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+       WHERE keyno = g_sfaa_d[drag_index].keyno
+      IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'update apsp300_tmp02'             #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN r_success
+      END IF 
+      
+      #TO工单重置
+      CALL apsp300_03_set_sfaa(g_sfaa_d[drop_index].keyno) RETURNING l_sfaa.*   
+      CALL apsp300_03_upd_sfaa(l_sfaa.*)
+           RETURNING l_success
+      IF NOT l_success THEN
+         RETURN r_success
+      END IF
+      
+      #FROM工单DELETE
+      DELETE FROM apsp300_tmp01 WHERE keyno = g_sfaa_d[drag_index].keyno          #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+      IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] <> 1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'delete apsp300_tmp01'                           #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN r_success
+      END IF
+      
+      #ARRAY更新
+      LET g_sfaa_d[drop_index].* = l_sfaa.*
+      DISPLAY BY NAME g_sfaa_d[drop_index].*
+      CALL apsp300_03_detail_show(1,drop_index)       
+      LET g_master_idx = drop_index
+      CALL apsp300_03_fetch()
+      
+      #FROM行在ARRAY中清除
+      CALL g_sfaa_d.deleteElement(drag_index)
+      LET g_rec_b = g_rec_b - 1
+   ELSE
+   #订单拖到此工单上
+      #取FROM的sfaa的idx
+      FOR l_i = 1 TO g_rec_b
+          IF g_sfaa_d[l_i].keyno = g_psab_d[drag_index].keyno THEN
+             LET l_sfaa_idx = l_i
+             EXIT FOR
+          END IF
+      END FOR
+      #订单资料拆分出来变成一笔新的工单
+      IF drop_index > g_rec_b THEN
+         #1.订单的KEYNO修改
+         UPDATE apsp300_tmp02 SET keyno = 0             #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+          WHERE keyno     = g_psab_d[drag_index].keyno
+            AND psabdocno = g_psab_d[drag_index].psabdocno
+            AND psabseq   = g_psab_d[drag_index].psabseq
+            
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] <> 1 THEN
+            INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'update apsp300_tmp02'         #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+            RETURN r_success
+         END IF 
+
+         #2.TO工单的重置
+         CALL apsp300_03_set_sfaa(0) RETURNING l_sfaa.*
+         CALL apsp300_03_ins_sfaa(l_sfaa.*)
+              RETURNING l_success
+         IF NOT l_success THEN
+            RETURN r_success
+         END IF 
+         LET g_rec_b = g_rec_b + 1         
+         LET g_sfaa_d[g_rec_b].* = l_sfaa.*
+         DISPLAY BY NAME g_sfaa_d[g_rec_b].*
+         CALL apsp300_03_detail_show(1,g_rec_b)          
+         
+         #3.将xmdd中keyno=0修改为最新的keyno
+         UPDATE apsp300_tmp02 SET keyno = l_sfaa.keyno          #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+          WHERE keyno = 0
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] <> 1 THEN
+            INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'update apsp300_tmp02'         #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+            RETURN r_success
+         END IF 
+
+         #4.FROM工单的重置
+         SELECT COUNT(*) INTO l_cnt FROM apsp300_tmp02           #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+          WHERE keyno = g_psab_d[drag_index].keyno
+         IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+         IF l_cnt = 0 THEN
+            DELETE FROM apsp300_tmp01 WHERE keyno = g_psab_d[drag_index].keyno          #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+            IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] <> 1 THEN
+               INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'delete apsp300_tmp01'                               #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+               RETURN r_success
+            END IF
+            #FROM行在ARRAY中清除
+            CALL g_sfaa_d.deleteElement(l_sfaa_idx)
+            LET g_rec_b = g_rec_b - 1
+         ELSE    
+            CALL apsp300_03_set_sfaa(g_psab_d[drag_index].keyno) RETURNING l_sfaa.*
+            CALL apsp300_03_upd_sfaa(l_sfaa.*)
+                 RETURNING l_success
+            IF NOT l_success THEN
+               RETURN r_success
+            END IF   
+            LET g_sfaa_d[l_sfaa_idx].* = l_sfaa.*   
+            DISPLAY BY NAME g_sfaa_d[l_sfaa_idx].*           
+            CALL apsp300_03_detail_show(1,l_sfaa_idx)                
+         END IF 
+         
+         #ARRAY更新     
+         LET g_master_idx = g_rec_b
+         CALL apsp300_03_fetch()         
+         
+      ELSE
+      #订单资料从一笔工单移支另一笔工单上
+         IF g_psab_d[drag_index].psab001 <> g_sfaa_d[drop_index].sfaa010 THEN
+            #料件编号不相同,不可合并!
+            INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'asf-00367'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+            RETURN r_success
+         END IF
+
+         #1.订单的KEYNO修改
+         UPDATE apsp300_tmp02 SET keyno = g_sfaa_d[drop_index].keyno          #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+          WHERE keyno     = g_psab_d[drag_index].keyno
+            AND psabdocno = g_psab_d[drag_index].psabdocno
+            AND psabseq   = g_psab_d[drag_index].psabseq
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] <> 1 THEN
+            INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'update apsp300_tmp02'              #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+            RETURN r_success
+         END IF
+
+         #2.TO工单的重置
+         CALL apsp300_03_set_sfaa(g_sfaa_d[drop_index].keyno) RETURNING l_sfaa.*
+         CALL apsp300_03_upd_sfaa(l_sfaa.*)
+              RETURNING l_success
+         IF NOT l_success THEN
+            RETURN r_success
+         END IF
+         LET g_sfaa_d[drop_index].* = l_sfaa.*
+         DISPLAY BY NAME g_sfaa_d[drop_index].*
+         CALL apsp300_03_detail_show(1,drop_index)           
+         
+         #3.FROM工单的重置
+         SELECT COUNT(*) INTO l_cnt FROM apsp300_tmp02          #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+          WHERE keyno = g_psab_d[drag_index].keyno
+         IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+         IF l_cnt = 0 THEN
+            DELETE FROM apsp300_tmp01 WHERE keyno = g_psab_d[drag_index].keyno       #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+            IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] <> 1 THEN
+               INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'delete apsp300_tmp01'                              #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+               RETURN r_success
+            END IF
+            #FROM行在ARRAY中清除
+            CALL g_sfaa_d.deleteElement(l_sfaa_idx)
+            LET g_rec_b = g_rec_b - 1
+         ELSE    
+            CALL apsp300_03_set_sfaa(g_psab_d[drag_index].keyno) RETURNING l_sfaa.*
+            CALL apsp300_03_upd_sfaa(l_sfaa.*)
+                 RETURNING l_success
+            IF NOT l_success THEN
+               RETURN r_success
+            END IF   
+            LET g_sfaa_d[l_sfaa_idx].* = l_sfaa.*  
+            DISPLAY BY NAME g_sfaa_d[l_sfaa_idx].*            
+            CALL apsp300_03_detail_show(1,l_sfaa_idx)              
+         END IF  
+
+         #ARRAY更新      
+         LET g_master_idx = drop_index
+         CALL apsp300_03_fetch()
+      END IF
+   END IF
+    
+   LET r_success = TRUE
+   RETURN r_success
+          
+END FUNCTION
+
+################################################################################
+# Descriptions...: 按xmdd_t的资料重置sfaa_t
+# Memo...........:
+# Usage..........: CALL apsp300_03_set_sfaa(p_keyno)
+#                       RETURNING l_sfaa
+# Input parameter: p_keyno        KEYNO
+# Return code....: l_sfaa         sfaa资料
+# Date & Author..: 2014-07-11 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp300_03_set_sfaa(p_keyno)
+   DEFINE p_keyno           LIKE type_t.num5
+   DEFINE l_sfaa            type_g_sfaa_d
+   DEFINE l_psab            type_psab
+   DEFINE l_cnt             LIKE type_t.num5
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_cmd             LIKE type_t.chr1
+   DEFINE l_i               LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   
+   INITIALIZE l_sfaa.* TO NULL
+   
+   IF cl_null(p_keyno) THEN
+      RETURN l_sfaa.*
+   END IF
+   
+   SELECT keyno  , sfaa005, sfaa006, sfaa007,
+          sfaa010, sfaa011 ,''     , '',sfac006,'', #160214-00005#5-add-'sfaa011' 
+          #160512-00016#1 20160524 add by ming -----(S) 
+          sfaa072, 
+          #160512-00016#1 20160524 add by ming -----(E) 
+          sfaa012, sfaa013, ''     , sfaa019, sfaa020
+     #170103-00052#1-s-mod 修正展星號的錯誤
+     ##161109-00085#13-s mod
+     ## INTO l_sfaa.*   #161109-00085#13-s mark
+     #INTO l_sfaa.keyno,l_sfaa.sfaa005,l_sfaa.sfaa006,l_sfaa.sfaa007,l_sfaa.sfaa010,
+     #     l_sfaa.sfaa011,l_sfaa.sfac006,l_sfaa.sfaa072,l_sfaa.sfaa012,l_sfaa.sfaa013,
+     #     l_sfaa.sfaa019,l_sfaa.sfaa020
+     ##161109-00085#13-e mod
+     INTO l_sfaa.keyno,l_sfaa.sfaa005,l_sfaa.sfaa006,l_sfaa.sfaa007,l_sfaa.sfaa010,l_sfaa.sfaa011,
+          l_sfaa.sfaa010_desc,l_sfaa.sfaa010_desc_desc,l_sfaa.sfac006,l_sfaa.sfac006_desc,l_sfaa.sfaa072,
+          l_sfaa.sfaa012,l_sfaa.sfaa013,l_sfaa.sfaa013_desc,l_sfaa.sfaa019,l_sfaa.sfaa020
+     #170103-00052#1-e-mod
+     
+     FROM apsp300_tmp01          #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+    WHERE keyno = p_keyno
+   IF SQLCA.sqlcode AND SQLCA.sqlcode <> 100 THEN
+      RETURN l_sfaa.*
+   ELSE
+      IF SQLCA.sqlcode = 100 THEN
+         LET l_cmd = 'a'
+      ELSE
+         LET l_cmd = 'u'
+      END IF
+   END IF
+   
+   SELECT COUNT(*) INTO l_cnt FROM apsp300_tmp02             #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+    WHERE keyno = p_keyno
+    
+   IF l_cnt = 1 THEN
+      #161109-00085#13-s mod
+#      SELECT * INTO l_psab.* FROM apsp300_tmp02   #161109-00085#13-s mark   #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+      SELECT keyno,psabdocno,psabseq,psab001,psab012,psab002,psab013,psab005,psab004,qty,psab003 
+        INTO l_psab.keyno,l_psab.psabdocno,l_psab.psabseq,l_psab.psab001,l_psab.psab012,
+             l_psab.psab002,l_psab.psab013,l_psab.psab005,l_psab.psab004,l_psab.qty,l_psab.psab003 
+        FROM apsp300_tmp02
+      #161109-00085#13-e mod
+        WHERE keyno = p_keyno
+       IF l_cmd = 'a' THEN
+          SELECT MAX(keyno) + 1 INTO l_i FROM apsp300_tmp01          #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+          IF cl_null(l_i) THEN LET l_i = 1 END IF
+          LET l_sfaa.keyno   = l_i                 #项次     
+       END IF
+       LET l_sfaa.sfaa005 = '6'        
+       LET l_sfaa.sfaa006 = l_psab.psabdocno
+       IF l_sfaa.sfaa006 IS NULL THEN
+          LET l_sfaa.sfaa006 = ' '
+       END IF       
+       LET l_sfaa.sfaa007 = l_psab.psabseq
+       
+       LET l_sfaa.sfaa010 = l_psab.psab001       #料号
+       LET l_sfaa.sfaa011 = l_psab.psab012       #BOM特性 #160214-00005#5-add
+       LET l_sfaa.sfac006 = l_psab.psab002       #特征
+       CALL s_feature_description(l_sfaa.sfaa010,l_sfaa.sfac006)
+            RETURNING l_success,l_sfaa.sfac006_desc       
+       IF l_sfaa.sfac006 IS NULL THEN
+          LET l_sfaa.sfac006 = ' '
+          LET l_sfaa.sfac006_desc = ''
+       END IF
+       
+       #160512-00016#1 20160524 add by ming -----(S) 
+       LET l_sfaa.sfaa072 = l_psab.psab013 
+       #160512-00016#1 20160524 add by ming -----(E) 
+       
+       LET l_sfaa.sfaa012 = l_psab.qty
+       LET l_sfaa.sfaa013 = l_psab.psab004       #单位
+       
+       LET l_sfaa.sfaa020 = l_psab.psab003
+       IF l_sfaa.sfaa020 IS NULL THEN
+          LET l_sfaa.sfaa020 = cl_get_today()
+       END IF
+       CALL s_asft300_06('2',l_sfaa.sfaa010,l_sfaa.sfaa012,l_sfaa.sfaa020)
+            RETURNING l_success,l_sfaa.sfaa019          
+   ELSE
+       LET l_sfaa.sfaa005 = '1'  
+       SELECT UNIQUE xmdddocno INTO l_sfaa.sfaa006 FROM apsp300_tmp02 WHERE keyno = p_keyno             #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+       IF SQLCA.sqlcode THEN
+          LET l_sfaa.sfaa006 = ' '
+       END IF 
+       LET l_sfaa.sfaa007 = ''    
+   
+       SELECT UNIQUE psab002 INTO l_sfaa.sfac006 FROM apsp300_tmp02 WHERE keyno = p_keyno             #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+       IF SQLCA.sqlcode THEN
+          LET l_sfaa.sfac006 = ' '
+          LET l_sfaa.sfac006_desc = ''
+       ELSE
+          CALL s_feature_description(l_sfaa.sfaa010,l_sfaa.sfac006)
+               RETURNING l_success,l_sfaa.sfac006_desc
+       END IF 
+       SELECT SUM(qty) INTO l_sfaa.sfaa012 FROM apsp300_tmp02 WHERE keyno = p_keyno            #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+       IF cl_null(l_sfaa.sfaa012) THEN       
+          LET l_sfaa.sfaa012 = 0
+       END IF
+       SELECT MAX(psab003) INTO l_sfaa.sfaa020 FROM apsp300_tmp02 WHERE keyno = p_keyno               #160727-00019#14 Mod   apsp300_03_temp_d2 -->apsp300_tmp02
+       CALL s_asft300_06('2',l_sfaa.sfaa010,l_sfaa.sfaa012,l_sfaa.sfaa020)
+            RETURNING l_success,l_sfaa.sfaa019      
+   END IF
+   
+   RETURN l_sfaa.*
+END FUNCTION
+
+################################################################################
+# Descriptions...: update sfaa
+# Memo...........:
+# Usage..........: CALL apsp300_03_upd_sfaa(p_sfaa)
+#                       RETURNING r_success
+# Input parameter: p_sfaa         sfaa资料
+# Return code....: r_success      成功否标识符
+# Date & Author..: 2014-07-11 By Carier
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp300_03_upd_sfaa(p_sfaa)
+   DEFINE p_sfaa           type_g_sfaa_d
+   DEFINE r_success        LIKE type_t.num5
+
+   LET r_success = FALSE
+   
+   UPDATE apsp300_tmp01 SET keyno   = p_sfaa.keyno   ,                #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+                                 sfaa005 = p_sfaa.sfaa005 ,      
+                                 sfaa006 = p_sfaa.sfaa006 ,      
+                                 sfaa007 = p_sfaa.sfaa007 ,          
+                                 sfaa010 = p_sfaa.sfaa010 ,   
+                                 sfaa011 = p_sfaa.sfaa011 , #160214-00005#5-add                                 
+                                 sfac006 = p_sfaa.sfac006 ,      
+                                 sfaa072 = p_sfaa.sfaa072 , #160512-00016#1 20160524 add by ming 
+                                 sfaa012 = p_sfaa.sfaa012 ,      
+                                 sfaa013 = p_sfaa.sfaa013 ,      
+                                 sfaa019 = p_sfaa.sfaa019 ,      
+                                 sfaa020 = p_sfaa.sfaa020    
+    WHERE keyno = p_sfaa.keyno   
+   IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] <> 1 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'update apsp300_tmp01'            #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: insert sfaa
+# Memo...........:
+# Usage..........: CALL apsp300_03_ins_sfaa(p_sfaa)
+#                       RETURNING r_success
+# Input parameter: p_sfaa         sfaa资料
+# Return code....: r_success      成功否标识符
+# Date & Author..: 2014-07-11 By Carier
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp300_03_ins_sfaa(p_sfaa)
+   DEFINE p_sfaa           type_g_sfaa_d
+   DEFINE r_success        LIKE type_t.num5
+
+   LET r_success = FALSE
+   
+   INSERT INTO apsp300_tmp01          #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+          VALUES(p_sfaa.keyno   ,p_sfaa.sfaa005 ,p_sfaa.sfaa006 ,
+                 p_sfaa.sfaa007 ,
+                 p_sfaa.sfaa010 ,p_sfaa.sfaa011 ,p_sfaa.sfac006, #160214-00005#5-add-'sfaa011'
+                 #160512-00016#1 20160524 add by ming -----(S) 
+                 p_sfaa.sfaa072 , 
+                 #160512-00016#1 20160524 add by ming -----(E) 
+                 p_sfaa.sfaa012 ,p_sfaa.sfaa013 ,p_sfaa.sfaa019 ,
+                 p_sfaa.sfaa020 )
+
+   IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] <> 1 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert apsp300_tmp01'         #160727-00019#14 Mod   apsp300_03_temp_d1 -->apsp300_tmp01
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

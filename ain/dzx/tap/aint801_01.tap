@@ -1,0 +1,1892 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aint801_01" std_prog="aint801_01" erpver="1.0" module="AIN" ver="1" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="Y" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.aint801_01" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION aint801_01(p_indrsite,p_indrdocno,p_indr002,p_indr004)
+   DEFINE p_indrsite     LIKE indr_t.indrsite
+   DEFINE p_indrdocno    LIKE indr_t.indrdocno
+   DEFINE p_indr002      LIKE indr_t.indr002
+   DEFINE p_indr004      LIKE indr_t.indr004
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE l_success      LIKE type_t.num5
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aint801_01 WITH FORM cl_ap_formpath("ain","aint801_01")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   CALL aint801_01_init()
+   
+   LET g_indrsite = p_indrsite
+   LET g_indrdocno = p_indrdocno
+   LET g_indr002 = p_indr002
+   LET g_indr004 = p_indr004
+   
+   #進入選單 Menu (="N")
+   LET r_success = TRUE
+   
+   CALL aint801_01_ui_dialog() RETURNING l_success
+   IF NOT l_success  THEN
+      LET r_success = FALSE
+   END IF
+
+   #畫面關閉
+   CLOSE WINDOW w_aint801_01
+
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_b_fill" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_b_fill(p_wc2)
+   DEFINE p_wc2    STRING
+   DEFINE l_where  STRING
+   
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   LET l_where = s_aooi500_sql_where(g_prog,'pmdssite')
+   LET l_where = cl_replace_str(l_where,'pmdssite','t0.pmdssite')
+   LET p_wc2 = p_wc2 CLIPPED," AND ",l_where
+
+   LET g_sql = "SELECT  UNIQUE 'N',t0.pmdsdocno, t2.pmduseq, t2.pmduseq1, t0.pmds007 ,t1.pmaal004,",
+               "                   t2.pmdu001  , t3.imaal003,t3.imaal004, t2.pmdu002 ,'',",
+               "                   t6.pmdt200  , t2.pmdu006 ,t4.inayl003, t2.pmdu007 ,t5.inab003,",
+               "                   t2.pmdu008  , t2.pmdu005 , SUM(t7.inag008),t7.inag007,t8.oocal003 ",
+               "  FROM pmds_t t0",
+               "       LEFT JOIN pmaal_t t1 ON t1.pmaalent = t0.pmdsent AND t1.pmaal001 = t0.pmds007 AND t1.pmaal002 ='"||g_dlang||"' ",
+               "      ,pmdu_t t2",
+               "       LEFT JOIN imaal_t t3 ON t3.imaalent = t2.pmduent AND t3.imaal001 = t2.pmdu001 AND t3.imaal002 ='"||g_dlang||"' ",
+               "       LEFT JOIN inayl_t t4 ON t4.inaylent = t2.pmduent AND t4.inayl001 = t2.pmdu006 AND t4.inayl002 ='"||g_dlang||"' ",
+               "       LEFT JOIN inab_t t5  ON t5.inabent  = t2.pmduent AND t5.inabsite = t2.pmdusite AND t5.inab001 = t2.pmdu006 AND t5.inab002 = t2.pmdu007 ",
+               "      ,pmdt_t t6",
+               "      ,inag_t t7",
+               "       LEFT JOIN oocal_t t8 ON t8.oocalent = t7.inagent AND t8.oocal001 = t7.inag007 AND t8.oocal002 ='"||g_dlang||"' ",               
+               " WHERE t0.pmdsent= ? ",
+               "   AND t0.pmdsent = t2.pmduent AND t0.pmdsent = t6.pmdtent AND t0.pmdsent = t7.inagent",
+               "   AND t0.pmdsdocno = t2.pmdudocno AND t0.pmdsdocno = t6.pmdtdocno ",
+               "   AND t2.pmduseq = t6.pmdtseq ",
+               "   AND t2.pmdusite = t7.inagsite AND t2.pmdu001 = t7.inag001 AND t2.pmdu002 = t7.inag002 AND t2.pmdu005 = t7.inag003",
+               "   AND t2.pmdu006  = t7.inag004  AND t2.pmdu007 = t7.inag005 AND t2.pmdu008 = t7.inag006 ",
+               "   AND t2.pmdu008 != ' ' ",
+               "   AND pmds000 IN ('3','4','6')",
+               "   AND (", p_wc2, ") "
+   IF g_indr002 != 'ALL' THEN
+      LET g_sql = g_sql CLIPPED,
+                  " AND pmdu001 IN (SELECT imaa001 FROM imaa_t ",
+                  "                  WHERE imaaent = ",g_enterprise,
+                  "                    AND imaa009 IN ( SELECT rtaw002 FROM rtaw_t ",
+                  "                                      WHERE rtawent = ",g_enterprise,
+                  "                                        AND rtaw001 = '",g_indr002,"'))"
+   END IF
+   LET g_sql = g_sql, cl_sql_add_filter("pmds_t"),
+               " GROUP BY 'N',t0.pmdsdocno, t2.pmduseq, t2.pmduseq1, t0.pmds007 ,t1.pmaal004,",
+               "              t2.pmdu001  , t3.imaal003,t3.imaal004, t2.pmdu002 ,'',",
+               "              t6.pmdt200  , t2.pmdu006 ,t4.inayl003, t2.pmdu007 ,t5.inab003,",
+               "              t2.pmdu008  , t2.pmdu005 ,t7.inag007,t8.oocal003 ",
+               " ORDER BY t0.pmdsdocno,t2.pmduseq,t2.pmduseq1,t0.pmds007,t2.pmdu001"
+
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE aint801_01_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aint801_01_pb
+
+   OPEN b_fill_curs USING g_enterprise
+
+   CALL g_pmds_d.clear()
+
+
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+
+   FOREACH b_fill_curs INTO g_pmds_d[l_ac].sel,g_pmds_d[l_ac].pmdsdocno,g_pmds_d[l_ac].pmduseq,g_pmds_d[l_ac].pmduseq1,g_pmds_d[l_ac].pmds007,g_pmds_d[l_ac].pmds007_desc,
+                            g_pmds_d[l_ac].pmdu001,g_pmds_d[l_ac].pmdu001_desc,g_pmds_d[l_ac].pmdu001_desc_desc,g_pmds_d[l_ac].pmdu002,g_pmds_d[l_ac].pmdu002_desc,
+                            g_pmds_d[l_ac].pmdt200,g_pmds_d[l_ac].pmdu006,g_pmds_d[l_ac].pmdu006_desc,g_pmds_d[l_ac].pmdu007,g_pmds_d[l_ac].pmdu007_desc,
+                            g_pmds_d[l_ac].pmdu008,g_pmds_d[l_ac].pmdu005,g_pmds_d[l_ac].inag008,g_pmds_d[l_ac].inag007,g_pmds_d[l_ac].inag007_desc
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      IF g_pmds_d[l_ac].inag008 <= 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      CALL aint801_01_detail_show()
+
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+
+      LET l_ac = l_ac + 1
+
+   END FOREACH
+
+   LET g_error_show = 0
+
+
+
+   CALL g_pmds_d.deleteElement(g_pmds_d.getLength())
+
+
+
+   FOR l_ac = 1 TO g_pmds_d.getLength()
+
+   END FOR
+
+   IF g_cnt > g_pmds_d.getLength() THEN
+      LET l_ac = g_pmds_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+
+   ERROR ""
+
+   LET g_detail_cnt = g_pmds_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+
+   CLOSE b_fill_curs
+   FREE aint801_01_pb
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_default_search" order="3" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_default_search()
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+
+
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " pmdsdocno = '", g_argv[01], "' AND "
+   END IF
+
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=1"
+      END IF
+   END IF
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_detail_show" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_detail_show()
+   DEFINE l_success    LIKE type_t.num5
+   
+   
+   #產品特徵
+   CALL s_feature_description( g_pmds_d[l_ac].pmdu001, g_pmds_d[l_ac].pmdu002)
+    RETURNING l_success,g_pmds_d[l_ac].pmdu001_desc
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_delete" order="4" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_delete()
+   DEFINE li_idx          LIKE type_t.num10
+   DEFINE li_ac_t         LIKE type_t.num10
+   DEFINE li_detail_tmp   LIKE type_t.num10
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+
+   #end add-point
+   #add-point:delete段define(客製用)
+
+   #end add-point
+
+   #add-point:單身刪除前
+
+   #end add-point
+
+   CALL s_transaction_begin()
+
+   LET li_ac_t = l_ac
+
+   LET li_detail_tmp = g_detail_idx
+
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_pmds_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN
+         #確定是否有被鎖定
+         IF NOT aint801_01_lock_b("pmds_t") THEN
+            #已被他人鎖定
+            RETURN
+         END IF
+      END IF
+   END FOR
+
+   #add-point:單身刪除詢問前
+
+   #end add-point
+
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      RETURN
+   END IF
+
+   FOR li_idx = 1 TO g_pmds_d.getLength()
+      IF g_pmds_d[li_idx].pmdsdocno IS NOT NULL
+
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN
+
+         #add-point:單身刪除前
+
+         #end add-point
+
+         DELETE FROM pmds_t
+          WHERE pmdsent = g_enterprise AND
+                pmdsdocno = g_pmds_d[li_idx].pmdsdocno
+
+         #add-point:單身刪除中
+
+         #end add-point
+
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "pmds_t"
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            LET l_ac = li_idx
+
+
+
+
+            #add-point:單身同步刪除前(同層table)
+
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL
+               LET gs_keys[1] = g_pmds_d_t.pmdsdocno
+
+            #add-point:單身同步刪除中(同層table)
+
+            #end add-point
+                           CALL aint801_01_delete_b('pmds_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table)
+
+            #end add-point
+         END IF
+      END IF
+
+   END FOR
+
+   LET g_detail_idx = li_detail_tmp
+
+   #add-point:單身刪除後
+
+   #end add-point
+
+   LET l_ac = li_ac_t
+
+   #刷新資料
+   CALL aint801_01_b_fill(g_wc2)
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_init" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_init()
+
+   LET g_error_show = 1
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_delete_b" order="5" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define
+
+   #end add-point
+   #add-point:delete_b段define(客製用)
+
+   #end add-point
+
+   #判斷是否是同一群組的table
+   LET ls_group = "pmds_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      IF ps_table <> 'pmds_t' THEN
+         #add-point:delete_b段刪除前
+
+         #end add-point
+
+         DELETE FROM pmds_t
+          WHERE pmdsent = g_enterprise AND
+            pmdsdocno = ps_keys_bak[1]
+
+         #add-point:delete_b段刪除中
+
+         #end add-point
+
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = ""
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = FALSE
+            CALL cl_err()
+         END IF
+      END IF
+
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN
+         CALL g_pmds_d.deleteElement(li_idx)
+      END IF
+
+
+      #add-point:delete_b段刪除後
+
+      #end add-point
+
+      RETURN
+   END IF
+
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_modify" order="5" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_modify()
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num10               #未取消的ARRAY CNT
+   DEFINE  l_n                    LIKE type_t.num10               #檢查重複用
+   DEFINE  l_cnt                  LIKE type_t.num10               #檢查重複用
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否
+   DEFINE  l_count                LIKE type_t.num10
+   DEFINE  l_i                    LIKE type_t.num10
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num10
+   DEFINE  li_reproduce_target    LIKE type_t.num10
+   DEFINE  lb_reproduce           BOOLEAN
+   #add-point:modify段define
+
+   #end add-point
+   #add-point:modify段define(客製用)
+
+   #end add-point
+   LET g_action_choice = ""
+
+   LET g_qryparam.state = "i"
+
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+
+   #add-point:modify開始前
+
+   #end add-point
+
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+
+   #add-point:modify段修改前
+
+   #end add-point
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_pmds_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+
+         #自訂ACTION(detail_input,page_1)
+
+
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN
+              CALL FGL_SET_ARR_CURR(g_pmds_d.getLength()+1)
+              LET g_insert = 'N'
+           END IF
+
+            CALL aint801_01_b_fill(g_wc2)
+            LET g_detail_cnt = g_pmds_d.getLength()
+
+         BEFORE ROW
+            #add-point:modify段before row
+
+            #end add-point
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_pmds_d.getLength() TO FORMONLY.cnt
+
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_pmds_d.getLength()
+
+            IF g_detail_cnt >= l_ac
+               AND g_pmds_d[l_ac].pmdsdocno IS NOT NULL
+
+            THEN
+               LET l_cmd='u'
+               LET g_pmds_d_t.* = g_pmds_d[l_ac].*  #BACKUP
+               LET g_pmds_d_o.* = g_pmds_d[l_ac].*  #BACKUP
+               IF NOT aint801_01_lock_b("pmds_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  #FETCH aint801_01_bcl INTO g_pmds_d[l_ac].pmdsdocno,g_pmds_d[l_ac].pmds007
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = g_pmds_d_t.pmdsdocno
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+
+                  #遮罩相關處理
+                  LET g_pmds_d_mask_o[l_ac].* =  g_pmds_d[l_ac].*
+                  #CALL aint801_01_pmds_t_mask()
+                  LET g_pmds_d_mask_n[l_ac].* =  g_pmds_d[l_ac].*
+
+                  CALL aint801_01_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+
+            #end add-point
+            #其他table資料備份(確定是否更改用)
+
+            #其他table進行lock
+
+
+         BEFORE INSERT
+
+            CALL s_transaction_begin()
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_pmds_d_t.* TO NULL
+            INITIALIZE g_pmds_d_o.* TO NULL
+            INITIALIZE g_pmds_d[l_ac].* TO NULL
+            #公用欄位給值(單身)
+
+            #自定義預設值(單身1)
+
+            #add-point:modify段before備份
+
+            #end add-point
+            LET g_pmds_d_t.* = g_pmds_d[l_ac].*     #新輸入資料
+            LET g_pmds_d_o.* = g_pmds_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL aint801_01_set_entry_b("a")
+            CALL aint801_01_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_pmds_d[li_reproduce_target].* = g_pmds_d[li_reproduce].*
+
+               LET g_pmds_d[g_pmds_d.getLength()].pmdsdocno = NULL
+
+            END IF
+
+            #add-point:modify段before insert
+
+            #end add-point
+
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 9001
+               LET g_errparam.popup  = FALSE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+
+            LET l_count = 1
+            SELECT COUNT(*) INTO l_count FROM pmds_t
+             WHERE pmdsent = g_enterprise AND pmdsdocno = g_pmds_d[l_ac].pmdsdocno
+
+
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN
+               #add-point:單身新增前
+
+               #end add-point
+
+                              INITIALIZE gs_keys TO NULL
+               LET gs_keys[1] = g_pmds_d[g_detail_idx].pmdsdocno
+               CALL aint801_01_insert_b('pmds_t',gs_keys,"'1'")
+
+               #add-point:單身新增後
+
+               #end add-point
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.code   = "std-00006"
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               INITIALIZE g_pmds_d[l_ac].* TO NULL
+               CANCEL INSERT
+            END IF
+
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "pmds_t"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aint801_01_b_fill(g_wc2)
+               #資料多語言用-增/改
+
+               #add-point:input段-after_insert
+
+               #end add-point
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+
+               LET g_wc2 = g_wc2, " OR (pmdsdocno = '", g_pmds_d[l_ac].pmdsdocno, "' "
+
+                                  ,")"
+            END IF
+
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               #add-point:單身刪除ask前
+
+               #end add-point
+
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = -263
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+
+               #add-point:單身刪除前
+
+               #end add-point
+
+               DELETE FROM pmds_t
+                WHERE pmdsent = g_enterprise AND
+                      pmdsdocno = g_pmds_d_t.pmdsdocno
+
+
+               #add-point:單身刪除中
+
+               #end add-point
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = "pmds_t"
+                  LET g_errparam.code   = SQLCA.sqlcode
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  CANCEL DELETE
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+
+                  #add-point:單身刪除後
+
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  CALL aint801_01_set_pk_array()
+                  IF NOT cl_log_modified_record('','') THEN
+                  ELSE
+                  END IF
+               END IF
+               #CLOSE aint801_01_bcl
+               #add-point:單身關閉bcl
+
+               #end add-point
+               LET l_count = g_pmds_d.getLength()
+                              INITIALIZE gs_keys TO NULL
+               LET gs_keys[1] = g_pmds_d_t.pmdsdocno
+
+               #應用 a47 樣板自動產生(Version:2)
+      #刪除相關文件
+      CALL aint801_01_set_pk_array()
+      #add-point:相關文件刪除前
+
+      #end add-point
+      CALL cl_doc_remove()
+
+
+
+            END IF
+
+         AFTER DELETE
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2
+
+               #end add-point
+                              CALL aint801_01_delete_b('pmds_t',gs_keys,"'1'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_pmds_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdsdocno
+            #add-point:BEFORE FIELD pmdsdocno
+
+            #END add-point
+
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdsdocno
+
+            #add-point:AFTER FIELD pmdsdocno
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d_t.pmdsdocno)) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmds_t WHERE "||"pmdsent = '" ||g_enterprise|| "' AND "||"pmdsdocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdsdocno
+            #add-point:ON CHANGE pmdsdocno
+
+            #END add-point
+
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmds007
+
+            #add-point:AFTER FIELD pmds007
+            IF NOT cl_null(g_pmds_d[l_ac].pmds007) THEN
+#應用 a17 樣板自動產生(Version:2)
+               #欄位存在檢查
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_pmds_d[l_ac].pmds007
+
+
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_pmaa001_1") THEN
+                  #檢查成功時後續處理
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+
+
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmds_d[l_ac].pmds007
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmds_d[l_ac].pmds007_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmds_d[l_ac].pmds007_desc
+
+
+            #END add-point
+
+
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmds007
+            #add-point:BEFORE FIELD pmds007
+
+            #END add-point
+
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmds007
+            #add-point:ON CHANGE pmds007
+
+            #END add-point
+
+
+                  #Ctrlp:input.c.page1.pmdsdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdsdocno
+            #add-point:ON ACTION controlp INFIELD pmdsdocno
+            #應用 a07 樣板自動產生(Version:2)
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmds_d[l_ac].pmdsdocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_pmds_d[l_ac].pmdsdocno = g_qryparam.return1
+
+            DISPLAY g_pmds_d[l_ac].pmdsdocno TO pmdsdocno              #
+
+            NEXT FIELD pmdsdocno                          #返回原欄位
+
+
+            #END add-point
+
+         #Ctrlp:input.c.page1.pmds007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmds007
+            #add-point:ON ACTION controlp INFIELD pmds007
+            #應用 a07 樣板自動產生(Version:2)
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmds_d[l_ac].pmds007             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_pmaa001_3()                                #呼叫開窗
+
+            LET g_pmds_d[l_ac].pmds007 = g_qryparam.return1
+
+            DISPLAY g_pmds_d[l_ac].pmds007 TO pmds007              #
+
+            NEXT FIELD pmds007                          #返回原欄位
+
+
+            #END add-point
+
+
+
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 9001
+               LET g_errparam.popup  = FALSE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_pmds_d[l_ac].* = g_pmds_d_t.*
+              # CLOSE aint801_01_bcl
+               #add-point:單身取消時
+
+               #end add-point
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = g_pmds_d[l_ac].pmdsdocno
+               LET g_errparam.code   = -263
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_pmds_d[l_ac].* = g_pmds_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身)
+
+
+               #add-point:單身修改前
+
+               #end add-point
+
+               #將遮罩欄位還原
+               #CALL aint801_01_pmds_t_mask_restore('restore_mask_o')
+
+               UPDATE pmds_t SET (pmdsdocno,pmds007) = (g_pmds_d[l_ac].pmdsdocno,g_pmds_d[l_ac].pmds007)
+
+                WHERE pmdsent = g_enterprise AND
+                  pmdsdocno = g_pmds_d_t.pmdsdocno #項次
+
+
+               #add-point:單身修改中
+
+               #end add-point
+
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = "pmds_t"
+                     LET g_errparam.code   = "std-00009"
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                    WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = "pmds_t"
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL
+               LET gs_keys[1] = g_pmds_d[g_detail_idx].pmdsdocno
+               LET gs_keys_bak[1] = g_pmds_d_t.pmdsdocno
+               CALL aint801_01_update_b('pmds_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_pmds_d_t)
+                     LET g_log2 = util.JSON.stringify(g_pmds_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN
+                     END IF
+               END CASE
+
+               #將遮罩欄位進行遮蔽
+               #CALL aint801_01_pmds_t_mask_restore('restore_mask_n')
+
+               #add-point:單身修改後
+
+               #end add-point
+
+            END IF
+
+         AFTER ROW
+            CALL aint801_01_unlock_b("pmds_t")
+            #其他table進行unlock
+
+             #add-point:單身after row
+
+            #end add-point
+
+         AFTER INPUT
+            #add-point:單身input後
+
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+
+         ON ACTION controlo
+            CALL FGL_SET_ARR_CURR(g_pmds_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_pmds_d.getLength()+1
+
+      END INPUT
+
+
+
+
+
+      #add-point:before_more_input
+
+      #end add-point
+
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         #LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog
+
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD pmdsdocno
+
+         END CASE
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         CANCEL DIALOG
+
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode())
+              RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+
+   END DIALOG
+
+   #新增後取消
+   IF l_cmd = 'a' THEN
+      #當取消或無輸入資料按確定時刪除對應資料
+      IF INT_FLAG OR cl_null(g_pmds_d[g_detail_idx].pmdsdocno) THEN
+         CALL g_pmds_d.deleteElement(g_detail_idx)
+
+      END IF
+   END IF
+
+   #修改後取消
+   IF l_cmd = 'u' AND INT_FLAG THEN
+      LET g_pmds_d[g_detail_idx].* = g_pmds_d_t.*
+   END IF
+
+   #add-point:modify段修改後
+
+   #end add-point
+
+   #CLOSE aint801_01_bcl
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_query" order="5" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING
+
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_pmds_d.clear()
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      CONSTRUCT g_wc2 ON pmdsdocno, pmduseq, pmduseq1, pmds007, pmdu001,
+                         pmdu002,   pmdt200, pmdu006,  pmdu007, pmdu008,
+                         pmdu005,   inag008, inag007
+         FROM s_detail1[1].l_pmdsdocno,s_detail1[1].l_pmduseq,s_detail1[1].l_pmduseq1,s_detail1[1].l_pmds007,s_detail1[1].l_pmdu001,
+              s_detail1[1].l_pmdu002,  s_detail1[1].l_pmdt200,s_detail1[1].l_pmdu006, s_detail1[1].l_pmdu007,s_detail1[1].l_pmdu008,
+              s_detail1[1].l_pmdu005,  s_detail1[1].l_inag008,  s_detail1[1].l_inag007
+
+         BEFORE CONSTRUCT
+
+         ON ACTION controlp INFIELD l_pmdsdocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "('3','4','6')"
+            CALL q_pmdsdocno()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO l_pmdsdocno  #顯示到畫面上
+            NEXT FIELD l_pmdsdocno                     #返回原欄位
+
+
+         ON ACTION controlp INFIELD l_pmds007
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO l_pmds007  #顯示到畫面上
+            NEXT FIELD l_pmds007                     #返回原欄位
+
+         ON ACTION controlp INFIELD l_pmdu001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            IF g_indr002 != 'ALL' THEN
+               LET g_qryparam.where = " imaa009 IN ( SELECT rtaw002 FROM rtaw_t ",
+                                      "               WHERE rtawent = ",g_enterprise,
+                                      "                 AND rtaw001 = '",g_indr002,"')"
+            END IF
+            CALL q_imaa001_15()                      #呼叫開窗
+            DISPLAY g_qryparam.return1 TO l_pmdu001  #顯示到畫面上
+            NEXT FIELD l_pmdu001                     #返回原欄位
+
+         ON ACTION controlp INFIELD l_pmdt200
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            IF g_indr002 != 'ALL' THEN
+               LET g_qryparam.where = " imaa009 IN ( SELECT rtaw002 FROM rtaw_t ",
+                                      "               WHERE rtawent = ",g_enterprise,
+                                      "                 AND rtaw001 = '",g_indr002,"')"
+            END IF
+            CALL q_imay003_2()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO l_pmdt200  #顯示到畫面上
+            NEXT FIELD l_pmdt200                     #返回原欄位
+
+         ON ACTION controlp INFIELD l_pmdu006
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inay001()                         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO l_pmdu006  #顯示到畫面上
+            NEXT FIELD l_pmdu006                     #返回原欄位
+
+         ON ACTION controlp INFIELD l_pmdu007
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inab002_11()                      #呼叫開窗
+            DISPLAY g_qryparam.return1 TO l_pmdu007  #顯示到畫面上
+            NEXT FIELD l_pmdu007                     #返回原欄位
+
+         ON ACTION controlp INFIELD l_pmdu008
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inag006_2()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO l_pmdu008  #顯示到畫面上
+            NEXT FIELD l_pmdu008                     #返回原欄位
+
+         ON ACTION controlp INFIELD l_inag007
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO l_inag007  #顯示到畫面上
+            NEXT FIELD l_inag007                     #返回原欄位
+
+      END CONSTRUCT
+
+
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+
+
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG
+   END DIALOG
+
+
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+
+   CALL aint801_01_b_fill(g_wc2)
+
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = -100
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+   END IF
+
+   LET INT_FLAG = FALSE
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_ui_dialog" order="6" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_ui_dialog()
+   DEFINE r_success LIKE type_t.num5
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+
+   LET r_success = TRUE
+   
+   LET g_action_choice = " "
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+
+   LET g_detail_idx = 1
+
+   WHILE TRUE
+
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_pmds_d.clear()
+
+         LET g_wc2 = ' 1=2'
+         LET g_action_choice = ""
+         CALL aint801_01_init()
+      END IF
+
+      CALL aint801_01_b_fill(g_wc2)
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         INPUT ARRAY g_pmds_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                     INSERT ROW = FALSE,
+                     DELETE ROW = FALSE,
+                     APPEND ROW = FALSE)
+     
+            BEFORE INPUT
+               LET g_detail_cnt = g_pmds_d.getLength()
+               
+         END INPUT
+
+
+
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+
+            NEXT FIELD CURRENT
+
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aint801_01_query()
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+
+            END IF
+
+         ON ACTION close
+            LET INT_FLAG = 1
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = 1
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+
+         ON ACTION accept
+            ACCEPT DIALOG
+        
+         ON ACTION cancel
+            LET INT_FLAG = 1
+            CANCEL DIALOG
+
+      END DIALOG
+   
+      IF NOT INT_FLAG THEN
+         CALL cl_err_collect_init()
+         IF NOT aint801_01_ins_inds() THEN
+            LET r_success = FALSE      
+            CALL cl_err_collect_show()            
+            RETURN r_success 
+         END IF
+         CALL cl_err_collect_show()
+      ELSE
+         LET INT_FLAG = 0 
+      END IF  
+
+      EXIT WHILE
+
+   END WHILE
+
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+
+   RETURN r_success 
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_ins_inds" order="7" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_ins_inds()
+   DEFINE r_success LIKE type_t.num5
+   DEFINE l_i       LIKE type_t.num5
+   DEFINE l_seq     LIKE type_t.num5
+   DEFINE l_cnt     LIKE type_t.num5
+   DEFINE l_success LIKE type_t.num5
+   DEFINE l_stan006 LIKE stan_t.stan006
+   DEFINE l_inds    RECORD
+            indsent           LIKE inds_t.indsent,
+            indssite          LIKE inds_t.indssite, 
+            indsunit          LIKE inds_t.indsunit, 
+            indsdocno         LIKE inds_t.indsdocno,
+            indsseq           LIKE inds_t.indsseq, 
+            indsseq1          LIKE inds_t.indsseq1, 
+            inds001           LIKE inds_t.inds001, 
+            inds003           LIKE inds_t.inds003, 
+            inds004           LIKE inds_t.inds004, 
+            inds005           LIKE inds_t.inds005, 
+            inds006           LIKE inds_t.inds006, 
+            inds007           LIKE inds_t.inds007, 
+            inds008           LIKE inds_t.inds008, 
+            inds009           LIKE inds_t.inds009,
+            inds010           LIKE inds_t.inds010,
+            inds014           LIKE inds_t.inds014,
+            inds015           LIKE inds_t.inds015,
+            inds020           LIKE inds_t.inds020,
+            inds021           LIKE inds_t.inds021
+                    END RECORD
+
+   LET r_success = TRUE
+   LET l_seq = 0
+   SELECT MAX(indsseq)+1 INTO l_seq FROM inds_t
+    WHERE indsent = g_enterprise
+      AND indsdocno = g_indrdocno
+   IF cl_null(l_seq) OR l_seq = 0 THEN
+      LET l_seq = 1
+   END IF
+   
+   FOR l_i = 1 TO g_pmds_d.getLength()
+      IF g_pmds_d[l_i].sel = 'Y' THEN
+      
+         INITIALIZE l_inds.* TO NULL
+         LET l_inds.indsent = g_enterprise
+         LET l_inds.indsunit = g_indrsite
+         LET l_inds.indsdocno = g_indrdocno
+         LET l_inds.indsseq = l_seq
+         LET l_inds.indsseq1 = 1
+         LET l_inds.inds001 = g_pmds_d[l_i].pmdu008  #批號
+         LET l_inds.inds003 = g_pmds_d[l_i].pmdu006  #庫位
+         LET l_inds.inds004 = g_pmds_d[l_i].pmdu001  #商品編號
+         LET l_inds.inds005 = g_pmds_d[l_i].pmdt200  #條碼編號
+         LET l_inds.inds006 = g_pmds_d[l_i].inag007  #庫存單位
+         LET l_inds.inds007 = g_pmds_d[l_i].inag008
+         LET l_inds.inds008 = 0
+         LET l_inds.inds009 = g_pmds_d[l_i].inag008   
+         LET l_inds.inds014 = g_pmds_d[l_i].pmds007  #採購供應商
+         LET l_inds.inds020 = g_pmds_d[l_i].pmdu002  #商品特徵
+         LET l_inds.inds021 = g_pmds_d[l_i].pmdu005  #庫存管理特徵
+         
+         SELECT pmdtsite,pmdt212 INTO l_inds.indssite,l_inds.inds015 FROM pmdt_t
+          WHERE pmdtent = g_enterprise
+            AND pmdtdocno = g_pmds_d[l_i].pmdsdocno
+            AND pmdtseq = g_pmds_d[l_i].pmduseq     
+              
+        SELECT stan006
+          INTO l_stan006
+          FROM stan_t
+         WHERE stanent = g_enterprise
+           AND stan001 = l_inds.inds015
+                 
+         CALL s_cost_price_get_item_cost(l_inds.indssite,             '',               '',             '',
+                                         '',                          '',   l_inds.inds004,   l_inds.inds020,
+                                         l_inds.inds006,  l_inds.inds001,   l_inds.inds021,   l_stan006)
+          RETURNING l_success, l_inds.inds010
+         IF NOT l_success THEN
+            CONTINUE FOR
+         END IF            
+                    
+         LET l_cnt = 0 
+         SELECT COUNT(*) INTO l_cnt FROM inds_t
+          WHERE indsent = l_inds.indsent
+            AND indsdocno = l_inds.indsdocno
+            AND inds001 = l_inds.inds001
+            AND indssite = l_inds.indssite
+            AND inds003 = l_inds.inds003
+            AND inds004 = l_inds.inds004
+            AND inds005 = l_inds.inds005
+            AND inds006 = l_inds.inds006
+            AND inds014 = l_inds.inds014
+            AND inds020 = l_inds.inds020
+            AND inds021 = l_inds.inds021            
+         IF l_cnt > 0 THEN
+            CONTINUE FOR
+         END IF
+         
+         
+         INSERT INTO inds_t(indsent, indssite,indsunit,indsdocno,indsseq,
+                            indsseq1,inds001, inds003, inds004,  inds005,
+                            inds006, inds007, inds008, inds009,  inds010,
+                            inds014, inds015, inds020, inds021)
+                VALUES(l_inds.indsent, l_inds.indssite,l_inds.indsunit,l_inds.indsdocno,l_inds.indsseq,
+                       l_inds.indsseq1,l_inds.inds001, l_inds.inds003, l_inds.inds004,  l_inds.inds005,
+                       l_inds.inds006, l_inds.inds007, l_inds.inds008, l_inds.inds009,  l_inds.inds010,
+                       l_inds.inds014, l_inds.inds015, l_inds.inds020, l_inds.inds021)
+
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "inds_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+         
+         LET l_seq = l_seq + 1
+      END IF
+   END FOR
+
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_insert" order="8" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_insert()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_insert_b" order="9" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+
+   #end add-point
+   #add-point:insert_b段define(客製用)
+
+   #end add-point
+
+   #判斷是否是同一群組的table
+   LET ls_group = "pmds_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+
+      #add-point:insert_b段新增前
+
+      #end add-point
+      INSERT INTO pmds_t
+                  (pmdsent,
+                   pmdsdocno
+                   ,pmds007)
+            VALUES(g_enterprise,
+                   ps_keys[1]
+                   ,g_pmds_d[l_ac].pmds007)
+      #add-point:insert_b段新增中
+
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "pmds_t"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = FALSE
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後
+
+      #end add-point
+   #END IF
+
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_lock_b" order="10" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_lock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+
+   #end add-point
+   #add-point:lock_b段define(客製用)
+
+   #end add-point
+
+   #先刷新資料
+   #CALL aint801_01_b_fill(g_wc2)
+
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "pmds_t"
+
+   IF ls_group.getIndexOf(ps_table,1) THEN
+
+      #OPEN aint801_01_bcl USING g_enterprise,
+      #                                 g_pmds_d[g_detail_idx].pmdsdocno
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "aint801_01_bcl"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+
+   END IF
+
+
+
+   RETURN TRUE
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_modify_detail_chk" order="13" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+
+   #end add-point
+   #add-point:modify_detail_chk段define(客製用)
+
+   #end add-point
+
+   #add-point:modify_detail_chk段開始前
+
+   #end add-point
+
+   #根據sr名稱確定該page第一個欄位的名稱
+   CASE ps_record
+      WHEN "s_detail1"
+         LET ls_return = "pmdsdocno"
+
+      #add-point:modify_detail_chk段自訂page控制
+
+      #end add-point
+   END CASE
+
+   #add-point:modify_detail_chk段結束前
+
+   #end add-point
+
+   RETURN ls_return
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_set_entry_b" order="14" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1
+   #add-point:set_entry_b段define
+
+   #end add-point
+   #add-point:set_entry_b段define(客製用)
+
+   #end add-point
+
+   #add-point:set_entry_b段control
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_set_no_entry_b" order="15" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1
+   #add-point:set_no_entry_b段define
+
+   #end add-point
+   #add-point:set_no_entry_b段define(客製用)
+
+   #end add-point
+
+   #add-point:set_no_entry_b段control
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_set_pk_array" order="16" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_set_pk_array()
+   #add-point:set_pk_array段define
+
+   #end add-point
+   #add-point:set_pk_array段define
+
+   #end add-point
+
+   #add-point:set_pk_array段之前
+
+   #end add-point
+
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_pmds_d[l_ac].pmdsdocno
+   LET g_pk_array[1].column = 'pmdsdocno'
+
+
+   #add-point:set_pk_array段之後
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_unlock_b" order="18" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+
+   #end add-point
+   #add-point:unlock_b段define(客製用)
+
+   #end add-point
+
+   LET ls_group = ""
+
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+     # CLOSE aint801_01_bcl
+   #END IF
+
+
+
+   #add-point:unlock_b段結束前
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aint801_01_update_b" order="18" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aint801_01_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+
+   #end add-point
+   #add-point:update_b段define(客製用)
+
+   #end add-point
+
+   #比對新舊值, 判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+
+   #若key無變動, 不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+
+   #若key有變動, 則連動其他table的資料
+   #判斷是否是同一群組的table
+   LET ls_group = "pmds_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "pmds_t" THEN
+      #add-point:update_b段修改前
+
+      #end add-point
+      UPDATE pmds_t
+         SET (pmdsdocno
+              ,pmds007)
+              =
+             (ps_keys[1]
+              ,g_pmds_d[l_ac].pmds007)
+         WHERE pmdsdocno = ps_keys_bak[1]
+      #add-point:update_b段修改中
+
+      #end add-point
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "pmds_t"
+            LET g_errparam.code   = "std-00009"
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "pmds_t"
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+         OTHERWISE
+
+      END CASE
+      #add-point:update_b段修改後
+
+      #end add-point
+      RETURN
+   END IF
+
+
+
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.page1.pmds007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmds007  #顯示到畫面上
+            NEXT FIELD pmds007                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.pmdsdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmdsdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmdsdocno  #顯示到畫面上
+            NEXT FIELD pmdsdocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="free_style.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#單身 type 宣告
+ TYPE type_g_pmds_d RECORD
+       sel                 LIKE type_t.chr1,
+       pmdsdocno           LIKE pmds_t.pmdsdocno, 
+       pmduseq             LIKE pmdu_t.pmduseq,
+       pmduseq1            LIKE pmdu_t.pmduseq1,
+       pmds007             LIKE pmds_t.pmds007, 
+       pmds007_desc        LIKE type_t.chr500,
+       pmdu001             LIKE pmdu_t.pmdu001,
+       pmdu001_desc        LIKE type_t.chr500,
+       pmdu001_desc_desc   LIKE type_t.chr500,
+       pmdu002             LIKE pmdu_t.pmdu002,
+       pmdu002_desc        LIKE type_t.chr500,
+       pmdt200             LIKE pmdt_t.pmdt200,
+       pmdu006             LIKE pmdu_t.pmdu006,
+       pmdu006_desc        LIKE type_t.chr500,
+       pmdu007             LIKE pmdu_t.pmdu007,
+       pmdu007_desc        LIKE type_t.chr500,
+       pmdu008             LIKE pmdu_t.pmdu008,
+       pmdu005             LIKE pmdu_t.pmdu005,
+       inag008             LIKE inag_t.inag008,
+       inag007             LIKE inag_t.inag007,
+       inag007_desc        LIKE type_t.chr500
+       END RECORD
+
+DEFINE g_pmds_d          DYNAMIC ARRAY OF type_g_pmds_d #單身變數
+       
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_error_show         LIKE type_t.num5 
+
+DEFINE g_indrsite           LIKE indr_t.indrsite
+DEFINE g_indrdocno          LIKE indr_t.indrdocno
+DEFINE g_indr002            LIKE indr_t.indr002
+DEFINE g_indr004            LIKE indr_t.indr004]]>
+  </point>
+  <point name="input.a.page1.pmds007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_pmds_d[l_ac].pmds007) THEN 
+#應用 a17 樣板自動產生(Version:2)
+               #欄位存在檢查
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_pmds_d[l_ac].pmds007
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_pmaa001_1") THEN
+                  #檢查成功時後續處理
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmds_d[l_ac].pmds007
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmds_d[l_ac].pmds007_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmds_d[l_ac].pmds007_desc
+
+]]>
+  </point>
+  <point name="input.a.page1.pmdsdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_pmds_d[g_detail_idx].pmdsdocno IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmds_d[g_detail_idx].pmdsdocno != g_pmds_d_t.pmdsdocno)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmds_t WHERE "||"pmdsent = '" ||g_enterprise|| "' AND "||"pmdsdocno = '"||g_pmds_d[g_detail_idx].pmdsdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.c.page1.pmds007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmds_d[l_ac].pmds007             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_pmaa001_3()                                #呼叫開窗
+
+            LET g_pmds_d[l_ac].pmds007 = g_qryparam.return1              
+
+            DISPLAY g_pmds_d[l_ac].pmds007 TO pmds007              #
+
+            NEXT FIELD pmds007                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.pmdsdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmds_d[l_ac].pmdsdocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_pmds_d[l_ac].pmdsdocno = g_qryparam.return1              
+
+            DISPLAY g_pmds_d[l_ac].pmdsdocno TO pmdsdocno              #
+
+            NEXT FIELD pmdsdocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="main.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT util]]>
+  </point>
+  <section id="aint801_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000006
+#+ 
+#+ Filename...: aint801_01
+#+ Description: 收貨入庫單選取作業
+#+ Creator....: 01752(2015-06-11 16:41:33)
+#+ Modifier...: 01752(2015-06-12 17:10:44) -SD/PR-
+]]>
+  </section>
+  <section id="aint801_01.free_style_variable" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aint801_01.global" ver="2" status="" src="s" readonly="">
+    <![CDATA[#應用 p00 樣板自動產生(Version:2)
+#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="aint801_01.global_variable" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aint801_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aint801_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

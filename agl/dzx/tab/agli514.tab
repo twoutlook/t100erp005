@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli514" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="05016" crtdt="2015-03-05 10:53:44" modid="05016" moddt="2016-01-05 15:59:36" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併報表匯率資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gldo001,gldo003,gldo004"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gldo002,gldo005,gldo006,gldo007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gldo002,gldoownid,gldoownid_desc(chr500),gldoowndp,gldoowndp_desc(chr500),gldocrtid,gldocrtid_desc(chr500),gldocrtdp,gldocrtdp_desc(chr500),gldocrtdt,gldomodid,gldomodid_desc(chr500),gldomoddt"/>
+      <var id="bs_field" value="gldo001,gldo003,gldo004" pk="gldo001,gldo003,gldo004" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli514" method="dialog">
+    <section id="input">
+      <input id="head" field="gldo001,gldo003,gldo004"/>
+      <input id="body" page="1" field="gldo002,gldo005,gldo006,gldo007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gldo001,gldo003,gldo004"/>
+      <construct id="body" page="1" field="gldo002,gldo005,gldo006,gldo007"/>
+      <construct id="body" page="2" field="gldoownid,gldoowndp,gldocrtid,gldocrtdp,gldocrtdt,gldomodid,gldomoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gldo001,gldo003,gldo004"/>
+      <set id="head" type="no_entry" field="gldo001,gldo003,gldo004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gldo001" type="S" default="0"/>
+      <column id="gldo003">
+        <controlp form="q_ooaj002" state="i"/>
+        <controlp form="q_ooaj002" state="c"/>
+      </column>
+      <column id="gldo004">
+        <controlp form="q_ooaj002" state="i"/>
+        <controlp form="q_ooaj002" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="gldo002" type="S" default="0"/>
+      <column id="gldo005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldo006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldo007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="gldoownid">
+        <after>
+          <reference field="gldoownid_desc" ref_field="gldo_t.gldoownid" map_field="gldoownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldoownid_desc"/>
+      <column id="gldoowndp">
+        <after>
+          <reference field="gldoowndp_desc" ref_field="gldo_t.gldoowndp" map_field="gldoowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldoowndp_desc"/>
+      <column id="gldocrtid">
+        <after>
+          <reference field="gldocrtid_desc" ref_field="gldo_t.gldocrtid" map_field="gldocrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldocrtid_desc"/>
+      <column id="gldocrtdp">
+        <after>
+          <reference field="gldocrtdp_desc" ref_field="gldo_t.gldocrtdp" map_field="gldocrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldocrtdp_desc"/>
+      <column id="gldocrtdt"/>
+      <column id="gldomodid">
+        <after>
+          <reference field="gldomodid_desc" ref_field="gldo_t.gldomodid" map_field="gldomodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldomodid_desc"/>
+      <column id="gldomoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gldo_t" pk="gldo001,gldo003,gldo004">
+      <sql id="forupd_sql" type="sql" query="SELECT gldo001,gldo003,gldo004 FROM gldo_t WHERE gldoent= ? AND gldo001=? AND gldo003=? AND gldo004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gldo001,gldo003,gldo004 FROM gldo_t" order="gldo001,gldo003,gldo004"/>
+    </head>
+    <body id="gldo_t" page="1,2" linked="" pk="gldo002" fk="gldo001,gldo003,gldo004">
+      <sql id="forupd_sql_detail" query="SELECT gldo002,gldo005,gldo006,gldo007,&apos;&apos;,gldoownid,&apos;&apos;,gldoowndp,&apos;&apos;,gldocrtid,&apos;&apos;,gldocrtdp,&apos;&apos;,gldocrtdt,gldomodid,&apos;&apos;,gldomoddt FROM gldo_t WHERE gldoent=? AND gldo001=? AND gldo003=? AND gldo004=? AND gldo002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gldo002,gldo005,gldo006,gldo007,&apos;&apos;,gldoownid,&apos;&apos;,gldoowndp,&apos;&apos;,gldocrtid,&apos;&apos;,gldocrtdp,&apos;&apos;,gldocrtdt,gldomodid,&apos;&apos;,gldomoddt FROM gldo_t WHERE gldoent= ? AND gldo001=? AND gldo003=? AND gldo004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

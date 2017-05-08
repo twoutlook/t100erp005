@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aloq001" module="alo" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="00824" crtdt="2014-07-22 17:39:16" modid="04010" moddt="2015-12-14 14:02:06" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="使用者程式執行時間記錄查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),loga006,loga007,loga001,loga009,loga009_desc(chr500),loga002,loga002_desc(chr500),loga012,loga012_desc(chr500),loga003,loga005,loga013,loga010,loga010_desc(chr500),l_loga010_type(chr5),loga008,loga004,loga014"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),loga006(b_loga006),loga007(b_loga007),loga001(b_loga001),loga009(b_loga009),loga009_desc(b_loga009_desc),loga002(b_loga002),loga002_desc(b_loga002_desc),loga012(b_loga012),loga012_desc(b_loga012_desc),loga003(b_loga003),loga005(b_loga005),loga013(b_loga013),loga010(b_loga010),loga010_desc(b_loga010_desc),l_loga010_type(l_loga010_type),loga008(b_loga008),loga004(b_loga004),loga014(b_loga014)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="alo" filename="aloq001" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="loga006,loga007,loga001,loga009,loga002,loga012,loga003,loga005,loga013,loga010,loga008,loga004,loga014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="loga006(b_loga006),loga007(b_loga007),loga001(b_loga001),loga009(b_loga009),loga002(b_loga002),loga012(b_loga012),loga003(b_loga003),loga005(b_loga005),loga013(b_loga013),loga010(b_loga010),loga008(b_loga008),loga004(b_loga004),loga014(b_loga014)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="loga006"/>
+      <column id="loga007"/>
+      <column id="loga001">
+        <controlp form="q_gzxa001_1" state="c"/>
+      </column>
+      <column id="loga009">
+        <after>
+          <reference field="loga009_desc" ref_field="loga009" map_field="loga009" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="loga009_desc"/>
+      <column id="loga002">
+        <after>
+          <reference field="loga002_desc" ref_field="loga002" map_field="loga002" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="loga002_desc"/>
+      <column id="loga012">
+        <after>
+          <reference field="loga012_desc" ref_field="loga012" map_field="loga012" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_01" state="c"/>
+      </column>
+      <column id="loga012_desc"/>
+      <column id="loga003"/>
+      <column id="loga005"/>
+      <column id="loga013"/>
+      <column id="loga010">
+        <after>
+          <reference field="loga010_desc" ref_field="loga010" map_field="loga010" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="loga010_desc"/>
+      <column id="l_loga010_type"/>
+      <column id="loga008"/>
+      <column id="loga004"/>
+      <column id="loga014"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="loga_t" page="1" linked="" pk="loga005">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,loga006,loga007,loga001,loga009,&apos;&apos;,loga002,&apos;&apos;,loga012,&apos;&apos;,loga003,loga005,loga013,loga010,&apos;&apos;,&apos;&apos;,loga008,loga004,loga014 FROM loga_t WHERE logaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

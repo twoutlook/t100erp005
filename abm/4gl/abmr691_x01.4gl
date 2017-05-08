@@ -1,0 +1,1564 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abmr691_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:5(2016-11-04 10:33:07), PR版次:0005(2016-11-07 10:26:51)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000093
+#+ Filename...: abmr691_x01
+#+ Description: ...
+#+ Creator....: 05423(2014-09-29 14:23:34)
+#+ Modifier...: 05423 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="abmr691_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+#160510-00019#2  2016/05/22  By zhujing 效能提升
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       type STRING,                  #data type 
+       level STRING,                  #level 
+       pr STRING,                  #print replace 
+       chk STRING,                  #check 
+       dat LIKE type_t.dat          #l_date
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+TYPE type_wc RECORD
+   wc    STRING
+END RECORD
+TYPE type_date RECORD
+   date     LIKE type_t.chr100,
+   bmba001  LIKE bmba_t.bmba001,
+   bmba002  LIKE bmba_t.bmba002
+END RECORD   
+
+DEFINE l_wc              DYNAMIC ARRAY OF type_wc  
+DEFINE l_date            DYNAMIC ARRAY OF type_date
+DEFINE g_type     LIKE type_t.num20
+DEFINE g_pid      LIKE type_t.num20
+DEFINE g_id       LIKE type_t.num20
+DEFINE g_first    LIKE type_t.chr1
+DEFINE g_tmp_id      LIKE type_t.num20   #临时表结点编号
+DEFINE g_cnt        LIKE type_t.num10   
+DEFINE g_cnt2        LIKE type_t.num10   
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abmr691_x01.main" readonly="Y" >}
+PUBLIC FUNCTION abmr691_x01(p_arg1,p_arg2,p_arg3,p_arg4,p_arg5,p_arg6)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 STRING                  #tm.type  data type 
+DEFINE  p_arg3 STRING                  #tm.level  level 
+DEFINE  p_arg4 STRING                  #tm.pr  print replace 
+DEFINE  p_arg5 STRING                  #tm.chk  check 
+DEFINE  p_arg6 LIKE type_t.dat         #tm.dat  l_date
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.type = p_arg2
+   LET tm.level = p_arg3
+   LET tm.pr = p_arg4
+   LET tm.chk = p_arg5
+   LET tm.dat = p_arg6
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   CALL abmr691_x01_getwc(tm.wc) RETURNING l_wc,l_date
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "abmr691_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL abmr691_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL abmr691_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL abmr691_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL abmr691_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL abmr691_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmr691_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION abmr691_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "l_cnt.type_t.chr50,bmba001.bmba_t.bmba001,l_bmba001_desc1.type_t.chr1000,l_bmba001_desc2.type_t.chr1000,bmba004.bmba_t.bmba004,l_bmba004_desc.type_t.chr30,bmba007.bmba_t.bmba007,l_bmba007_desc.type_t.chr30,bmba008.bmba_t.bmba008,l_bmba008_desc.type_t.chr100,bmba003.bmba_t.bmba003,l_bmba003_desc1.type_t.chr1000,l_bmba003_desc2.type_t.chr1000,bmba011.bmba_t.bmba011,bmba012.bmba_t.bmba012,l_bmba011_bmba012.type_t.chr30,l_type.type_t.num10,l_pid.type_t.num10,l_id.type_t.num10,bmba002.bmba_t.bmba002,bmba005.bmba_t.bmba005,bmbaent.bmba_t.bmbaent,bmbasite.bmba_t.bmbasite,l_key.type_t.chr50,l_bmba003.bmba_t.bmba003" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   #料号临时表创建
+   DROP TABLE bmba_tmp
+   CREATE TEMP TABLE bmba_tmp(
+   bmba001  LIKE bmba_t.bmba001, 
+   bmba002  LIKE bmba_t.bmba002, 
+   bmba003  LIKE bmba_t.bmba003,
+   l_bmba003  LIKE bmba_t.bmba003,  #存放主件料号
+   bmba004  LIKE bmba_t.bmba004,
+   bmba005  DATETIME YEAR TO FRACTION(5),
+   bmba007  LIKE bmba_t.bmba007,
+   bmba008  LIKE bmba_t.bmba008,
+   bmba011  LIKE bmba_t.bmba011,
+   bmba012  LIKE bmba_t.bmba012,
+   bmbaent  LIKE bmba_t.bmbaent, 
+   bmbasite LIKE bmba_t.bmbasite,
+   l_type   LIKE type_t.num10,      #树编号
+   l_pid    LIKE type_t.num10,      #父结点ID
+   l_id     LIKE type_t.num10);     #结点ID 
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmr691_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION abmr691_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         #料号临时表插入准备
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO bmba_tmp VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep1 FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_tmp_prep"
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            DROP TABLE bmba_tmp
+            LET g_rep_success = 'N'           
+         END IF 
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmr691_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION abmr691_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+DEFINE g_order       STRING
+DEFINE l_cnt         LIKE type_t.num5
+DEFINE l_sql         DYNAMIC ARRAY OF type_wc  
+DEFINE l_sql1        STRING
+DEFINE l_sql2        STRING
+DEFINE l_tmp_sql     STRING
+DEFINE l_tmp_name    STRING
+DEFINE l_tmp_where   STRING
+DEFINE l_sql3        STRING #160510-00019#2 add
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   LET l_tmp_name = 'bmba_tmp'
+
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   LET g_select = " SELECT NULL,a.bmba001,NULL,NULL,a.bmba004,NULL,a.bmba007,NULL,a.bmba008,NULL,a.bmba003,NULL,NULL,a.bmba011,a.bmba012,NULL,a.l_type,a.l_pid,a.l_id,a.bmba002,a.bmba005,a.bmbaent,a.bmbasite,NULL,a.l_bmba003 "
+   #160510-00019#2 mod-S
+   LET g_select = " SELECT NULL,a.bmba001,",
+                  " (SELECT imaal003 FROM imaal_t WHERE imaal001 = a.bmba001 AND imaalent = a.bmbaent AND imaal002 = '",g_dlang,"') t1_imaal003,",
+                  " (SELECT imaal004 FROM imaal_t WHERE imaal001 = a.bmba001 AND imaalent = a.bmbaent AND imaal002 = '",g_dlang,"') t1_imaal004,",
+                  " a.bmba004,",
+                  " (SELECT trim(oocql001)||'.'||trim(oocql004) FROM oocql_t WHERE oocql001 = '215' AND oocql002 = a.bmba004 AND oocqlent = a.bmbaent AND oocql003 = '",g_dlang,"' AND oocql001 IS NOT NULL) t2_oocql004,",
+                  " a.bmba007,",
+                  " (SELECT trim(oocql001)||'.'||trim(oocql004) FROM oocql_t WHERE oocql001 = '221' AND oocql002 = a.bmba007 AND oocqlent = a.bmbaent AND oocql003 = '",g_dlang,"' AND oocql001 IS NOT NULL) t3_oocql004,",
+                  " a.bmba008,NULL,a.bmba003,",
+                  " (SELECT imaal003 FROM imaal_t WHERE imaal001 = a.bmba003 AND imaalent = a.bmbaent AND imaal002 = '",g_dlang,"') t4_imaal003,",
+                  " (SELECT imaal004 FROM imaal_t WHERE imaal001 = a.bmba003 AND imaalent = a.bmbaent AND imaal002 = '",g_dlang,"') t4_imaal004,",
+                  " a.bmba011,a.bmba012,NULL,a.l_type,a.l_pid,a.l_id,a.bmba002,a.bmba005,a.bmbaent,a.bmbasite,NULL,a.l_bmba003 "
+   #160510-00019#2 mod-E   
+#   #end add-point
+#   LET g_select = " SELECT '',bmba001,'','',bmba004,'',bmba007,'',bmba008,'',bmba003,'','',bmba011,bmba012, 
+#       (trim(bmba011)||'/'||trim(bmba012)),NULL,NULL,NULL,bmba002,bmba005,bmbaent,bmbasite,NULL,NULL" 
+#
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+#   LET g_from = " FROM bmba_t LEFT OUTER JOIN bmaa_t ON bmaa001 = bmba001 AND bmaa002 = bmba002 AND bmaasite = bmbasite AND bmaaent = bmbaent ",
+#                "           LEFT OUTER JOIN bmfa_t ON bmfadocno = bmba026 AND bmfaent = bmbaent AND bmfasite = bmbasite "
+   CASE tm.type 
+      WHEN '1'
+         LET g_from = " FROM ",l_tmp_name CLIPPED," a "
+      WHEN '2' 
+         LET g_from = " FROM ",l_tmp_name CLIPPED," a ,",l_tmp_name CLIPPED," b "
+      WHEN '3'
+         LET g_from = " FROM ",l_tmp_name CLIPPED," a "
+   END CASE
+#   #end add-point
+#    LET g_from = " FROM bmaa_t,bmba_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   CASE tm.type
+      WHEN '1'
+         LET g_where = " WHERE 1=1 "
+      WHEN '2'
+         LET g_where = " WHERE a.bmba003 = b.bmba003 AND (a.bmba001 <> b.bmba001 OR (a.bmba001 = b.bmba001 AND a.bmba002 <> b.bmba002)) "
+      WHEN '3'
+         LET g_where = " WHERE a.bmba003 NOT IN (SELECT b.bmba003 FROM ",l_tmp_name CLIPPED," b WHERE a.bmba003 = b.bmba003 AND (a.bmba001 <> b.bmba001 OR (a.bmba001 = b.bmba001 AND a.bmba002 <> b.bmba002)) AND trim(a.bmba011)||'.'||trim(a.bmba012)=trim(b.bmba011)||'.'||trim(b.bmba012))"
+#         trim(a.bmba011)||'.'||trim(a.bmba012)<>trim(b.bmba011)||'.'||trim(b.bmba012))"
+   END CASE
+   IF NOT cl_null(tm.chk) THEN
+      LET g_where = g_where CLIPPED," AND a.bmbasite = '",g_site,"' "
+   ELSE 
+      LET g_where = g_where CLIPPED," AND a.bmbasite = 'ALL' "
+   END IF
+#   LET g_where = " WHERE bmba019 != '2' AND bmba003 = '", sr.bmba003,"' AND bmbasite = '",g_site,"' AND bmbaent = '",g_enterprise,"' AND (",tm.wc CLIPPED,") "
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+   LET g_order  = " ORDER BY a.bmba003,a.bmba004,a.bmba001 "
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED,' ', g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+   
+   #若需展至多阶或尾阶，使用临时表存放主件与元件资料，计算差异、共用、全部料件后存放至报表暂存档。
+   LET l_tmp_sql = " SELECT bmba001,bmba002,bmba003,'',bmba004,bmba005,bmba007,bmba008,bmba011,bmba012,bmbaent,bmbasite,0,0,0 ",
+                   " FROM bmba_t LEFT OUTER JOIN bmaa_t ON bmaaent = bmbaent AND bmaasite = bmbasite AND bmaa001 = bmba001 AND bmaa002 = bmba002 ",
+                   " WHERE (",tm.wc CLIPPED,") AND bmba019 != '2' "
+   IF NOT cl_null(tm.chk) THEN
+      LET l_tmp_sql = l_tmp_sql CLIPPED," AND bmbasite = '",g_site,"' "
+   ELSE 
+      LET l_tmp_sql = l_tmp_sql CLIPPED," AND bmbasite = 'ALL' "
+   END IF                   
+   LET l_tmp_sql = cl_sql_add_mask(l_tmp_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段                   
+   
+   PREPARE abmr691_x01_tmp_prepare FROM l_tmp_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE abmr691_x01_tmp_curs CURSOR FOR abmr691_x01_tmp_prepare 
+   #160510-00019#2 mod-S
+   #add--2015/09/23 By shiun--(S)
+    LET l_sql3 = " SELECT DISTINCT bmba001,bmba002, ", #160510-00019#2 marked
+    #160510-00019#2 add-S
+                 " (SELECT imaal003 FROM imaal_t WHERE imaal001 = bmba001 AND imaalent = bmbaent AND imaal002 = '",g_dlang,"') t1_imaal003,",
+                 " (SELECT imaal004 FROM imaal_t WHERE imaal001 = bmba001 AND imaalent = bmbaent AND imaal002 = '",g_dlang,"') t1_imaal004",
+    #160510-00019#2 add-E
+                 "   FROM bmba_tmp",
+                 "  WHERE bmba001 <> ? ",
+                 "     OR (bmba001 = ? AND bmba002 <> ?) "
+    PREPARE abmr691_x01_bmba001_prepare FROM l_sql3
+    IF STATUS THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.extend = 'prepare:'
+       LET g_errparam.code   = STATUS
+       LET g_errparam.popup  = TRUE
+       CALL cl_err()
+       LET g_rep_success = 'N' 
+    END IF
+    DECLARE abmr691_x01_bmba001_curs CURSOR FOR abmr691_x01_bmba001_prepare 
+    #add--2015/09/23 By shiun--(E)
+    #160510-00019#2 mod-E
+#   #end add-point:sel_prep.sql.before
+#   LET g_where = g_where ,cl_sql_add_filter("bmaa_t")   #資料過濾功能
+#   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+#   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+# 
+#   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE abmr691_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE abmr691_x01_curs CURSOR FOR abmr691_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmr691_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION abmr691_x01_ins_data()
+DEFINE sr RECORD 
+   l_cnt LIKE type_t.chr50, 
+   bmba001 LIKE bmba_t.bmba001, 
+   l_bmba001_desc1 LIKE type_t.chr1000, 
+   l_bmba001_desc2 LIKE type_t.chr1000, 
+   bmba004 LIKE bmba_t.bmba004, 
+   l_bmba004_desc LIKE type_t.chr30, 
+   bmba007 LIKE bmba_t.bmba007, 
+   l_bmba007_desc LIKE type_t.chr30, 
+   bmba008 LIKE bmba_t.bmba008, 
+   l_bmba008_desc LIKE type_t.chr100, 
+   bmba003 LIKE bmba_t.bmba003, 
+   l_bmba003_desc1 LIKE type_t.chr1000, 
+   l_bmba003_desc2 LIKE type_t.chr1000, 
+   bmba011 LIKE bmba_t.bmba011, 
+   bmba012 LIKE bmba_t.bmba012, 
+   l_bmba011_bmba012 LIKE type_t.chr30, 
+   l_type LIKE type_t.num10, 
+   l_pid LIKE type_t.num10, 
+   l_id LIKE type_t.num10, 
+   bmba002 LIKE bmba_t.bmba002, 
+   bmba005 LIKE bmba_t.bmba005, 
+   bmbaent LIKE bmba_t.bmbaent, 
+   bmbasite LIKE bmba_t.bmbasite, 
+   l_key LIKE type_t.chr50, 
+   l_bmba003 LIKE bmba_t.bmba003
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+   DEFINE g_sql2 STRING
+   DEFINE l_type LIKE type_t.num20
+   DEFINE l_pid  LIKE type_t.num20
+   DEFINE l_id   LIKE type_t.num20
+   DEFINE l_success LIKE type_t.chr1
+   DEFINE l_a2   LIKE type_t.dat
+   DEFINE l_bmba011  LIKE type_t.chr30
+   DEFINE l_bmba012  LIKE type_t.chr30
+   DEFINE l_len   LIKE type_t.num5
+   DEFINE l_no    LIKE type_t.num5
+   DEFINE l_tmp   LIKE type_t.chr100
+   DEFINE l_bmba003  LIKE bmba_t.bmba003
+   DEFINE l_bmba004  LIKE bmba_t.bmba004
+   DEFINE l_cnt   LIKE type_t.num5
+   DEFINE ln_bmba011   LIKE bmba_t.bmba011   #2015/09/11 by stellar add
+   DEFINE ln_bmba012   LIKE bmba_t.bmba012   #2015/09/11 by stellar add
+   #add--2015/09/23 By shiun--(S)
+   DEFINE l_bmba001    LIKE bmba_t.bmba001
+   DEFINE l_bmba002    LIKE bmba_t.bmba002
+   DEFINE l_sql        STRING
+   DEFINE l_count      LIKE type_t.num5
+   DEFINE l_bmba001_desc1 LIKE type_t.chr30 
+   DEFINE l_bmba001_desc2 LIKE type_t.chr30
+   DEFINE l_key LIKE type_t.chr50
+   #add--2015/09/23 By shiun--(E)
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    LET l_type = 1
+    LET g_cnt = 0
+    INITIALIZE l_bmba003 TO NULL
+    INITIALIZE l_bmba004 TO NULL
+    CALL abmr691_x01_ins_tmp_data()       #插入主件元件资料至临时表
+    SELECT COUNT(*) INTO l_cnt FROM bmba_tmp
+    #160510-00019#2 marked-S
+#    #add--2015/09/23 By shiun--(S)
+#    LET l_sql = " SELECT DISTINCT bmba001,bmba002 ",
+#                "   FROM bmba_tmp",
+#                "  WHERE bmba001 <> ? ",
+#                "     OR (bmba001 = ? AND bmba002 <> ?) "
+#    PREPARE abmr691_x01_bmba001_prepare FROM l_sql
+#    IF STATUS THEN
+#       INITIALIZE g_errparam TO NULL
+#       LET g_errparam.extend = 'prepare:'
+#       LET g_errparam.code   = STATUS
+#       LET g_errparam.popup  = TRUE
+#       CALL cl_err()
+#       LET g_rep_success = 'N' 
+#    END IF
+#    DECLARE abmr691_x01_bmba001_curs CURSOR FOR abmr691_x01_bmba001_prepare 
+#    #add--2015/09/23 By shiun--(E)
+    #160510-00019#2 marked-E
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH abmr691_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #2015/09/11 by stellar add ----- (S)
+       LET ln_bmba011 = sr.bmba011
+       LET ln_bmba012 = sr.bmba012
+       #2015/09/11 by stellar add ----- (E)
+#       IF NOT cl_null(tm.chk) THEN
+#         LET g_sql2 = "SELECT bmba001,bmba004,bmba007,bmba008,bmba011,bmba012,bmba002,bmba005,bmbaent,bmbasite,NULL
+#         FROM bmba_t LEFT OUTER JOIN bmaa_t ON bmaa001 = bmba001 AND bmaa002 = bmba002 AND bmaasite = bmbasite AND bmaaent = bmbaent 
+#                      LEFT OUTER JOIN bmfa_t ON bmfadocno = bmba026 AND bmfaent = bmbaent AND bmfasite = bmbasite 
+#         WHERE bmba019 != '2' AND bmba003 = '", sr.bmba003,"' AND bmbasite = '",g_site,"' AND bmbaent = '",g_enterprise,"' AND (",tm.wc CLIPPED,") ",
+#         " ORDER BY bmba003,bmba004 "
+#       ELSE
+#          LET g_sql2 = "SELECT bmba001,bmba004,bmba007,bmba008,bmba011,bmba012,bmba002,bmba005,bmbaent,bmbasite,NULL
+#          FROM bmba_t LEFT OUTER JOIN bmaa_t ON bmaa001 = bmba001 AND bmaa002 = bmba002 AND bmaasite = bmbasite AND bmaaent = bmbaent 
+#                      LEFT OUTER JOIN bmfa_t ON bmfadocno = bmba026 AND bmfaent = bmbaent AND bmfasite = bmbasite 
+#          WHERE bmba019 != '2' AND bmba003 = '", sr.bmba003,"' AND bmbasite = 'ALL' AND bmbaent = '",g_enterprise,"' AND (",tm.wc CLIPPED,") ",
+#          " ORDER BY bmba003,bmba004 "
+#       END IF
+#       PREPARE abmr691_x01_prepare2 FROM g_sql2
+#       IF STATUS THEN
+#          INITIALIZE g_errparam TO NULL
+#          LET g_errparam.extend = 'prepare:'
+#          LET g_errparam.code   = STATUS
+#          LET g_errparam.popup  = TRUE
+#          CALL cl_err()
+#          LET g_rep_success = 'N' 
+#       END IF
+#       DECLARE abmr691_x01_curs2 CURSOR FOR abmr691_x01_prepare2
+#       FOREACH abmr691_x01_curs2 INTO sr.bmba001,sr.bmba004,sr.bmba007,sr.bmba008,sr.bmba011,sr.bmba012,sr.bmba002,sr.bmba005,sr.bmbaent,sr.bmbasite,sr.l_key
+#         IF STATUS THEN
+#             INITIALIZE g_errparam TO NULL
+#             LET g_errparam.extend = 'foreach:'
+#             LET g_errparam.code   = STATUS
+#             LET g_errparam.popup  = TRUE
+#             CALL cl_err()
+#             LET g_rep_success = 'N'
+#             EXIT FOREACH
+#         END IF
+         
+         LET sr.l_key = sr.bmba001,"(",sr.bmba002,")"
+         #160510-00019#2 marked-S
+         #主件品名、規格
+#         SELECT imaal003,imaal004 INTO sr.l_bmba001_desc1,sr.l_bmba001_desc2
+#         FROM imaal_t
+#         WHERE imaal001 = sr.bmba001 AND imaalent = g_enterprise AND imaal002 = g_dlang
+#         #元件品名、規格
+#         SELECT imaal003,imaal004 INTO sr.l_bmba003_desc1,sr.l_bmba003_desc2
+#         FROM imaal_t
+#         WHERE imaal001 = sr.bmba003 AND imaalent = g_enterprise AND imaal002 = g_dlang
+##         #得到部位/作業
+#         IF NOT cl_null(sr.bmba004) THEN
+#            CALL abmr691_x01_desc('215',sr.bmba004) RETURNING sr.l_bmba004_desc
+#         END IF
+#         IF NOT cl_null(sr.bmba007) THEN
+#            CALL abmr691_x01_desc('221',sr.bmba007) RETURNING sr.l_bmba007_desc
+#         END IF
+         #160510-00019#2 marked-E
+         IF NOT cl_null(sr.l_bmba004_desc) AND NOT cl_null(sr.l_bmba007_desc) AND NOT cl_null(sr.bmba008) THEN
+            LET sr.l_bmba008_desc = sr.l_bmba004_desc CLIPPED ,'/',sr.l_bmba007_desc,' ',sr.bmba008
+         ELSE 
+            LET sr.l_bmba008_desc = NULL
+         END IF
+         
+#         CALL abmr691_x01_delfloat(sr.bmba011) RETURNING l_bmba011
+#         CALL abmr691_x01_delfloat(sr.bmba012) RETURNING l_bmba012
+#         CALL abmr691_x01_assemble(l_bmba011,l_bmba012,'/') RETURNING sr.l_bmba011_bmba012
+#         #用量無資料則置零
+#         IF (sr.l_bmba011_bmba012 = '/') THEN 
+#            LET sr.l_bmba011_bmba012 = 0
+#         END IF
+         LET sr.bmba012 = sr.bmba011 / sr.bmba012
+#               
+#         LET sr.l_type = l_type
+#         LET sr.l_pid = ''
+#         IF l_type = 1 THEN
+#            LET sr.l_id = 1
+#            LET g_id = 1
+#         ELSE
+#            LET sr.l_id = g_id + 1
+#         END IF
+         
+#         EXECUTE insert_prep USING sr.bmba001,sr.l_bmba001_desc1,sr.l_bmba001_desc2,sr.bmba004,sr.l_bmba004_desc,sr.bmba007,sr.l_bmba007_desc,sr.bmba008,sr.l_bmba008_desc,sr.bmba003,sr.l_bmba003_desc1,sr.l_bmba003_desc2,sr.bmba011,sr.bmba012,sr.l_bmba011_bmba012,sr.l_type,sr.l_pid,sr.l_id,sr.bmba002,sr.bmba005,sr.bmbaent,sr.bmbasite,sr.l_key        
+#            IF SQLCA.sqlcode THEN
+#               INITIALIZE g_errparam TO NULL
+#               LET g_errparam.extend = "abmr691_x01_execute"
+#               LET g_errparam.code   = SQLCA.sqlcode
+#               LET g_errparam.popup  = FALSE
+#               CALL cl_err()       
+#               LET g_rep_success = 'N'
+#               EXIT FOREACH
+#            END IF
+#
+#         #展BOM
+#         IF tm.level = '2' THEN
+            FOR l_no = 1 TO l_date.getlength()
+               IF l_date[l_no].bmba001 = sr.bmba001 AND l_date[l_no].bmba002 = sr.bmba002 THEN
+                  LET l_tmp = l_date[l_no].date
+                  EXIT FOR
+               END IF
+            END FOR
+#            CALL abmr691_x01_bom(sr.l_type,sr.l_pid,sr.l_id,sr.bmba001,sr.bmba002,sr.bmba003,sr.bmbaent,sr.bmbasite,tm.pr,l_tmp)
+#            RETURNING l_len,l_success
+#            LET l_type = l_type + 1
+#            IF l_success = "Y" THEN
+#               CONTINUE FOREACH
+#            END IF
+#         END IF
+         
+         #判断是否为相同元件料号+部位，若相同，则给同一序号。
+         IF cl_null(l_bmba003) OR l_bmba003 <> sr.bmba003  OR l_bmba004 <> sr.bmba004 THEN
+            LET l_bmba003 = sr.bmba003
+            LET l_bmba004 = sr.bmba004
+            LET g_cnt = g_cnt + 1
+         END IF
+         
+#         LET g_cnt = g_cnt + 1       
+         LET sr.l_cnt = g_cnt USING '&&&&&&'
+         
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.l_cnt,sr.bmba001,sr.l_bmba001_desc1,sr.l_bmba001_desc2,sr.bmba004,sr.l_bmba004_desc,sr.bmba007,sr.l_bmba007_desc,sr.bmba008,sr.l_bmba008_desc,sr.bmba003,sr.l_bmba003_desc1,sr.l_bmba003_desc2,sr.bmba011,sr.bmba012,sr.l_bmba011_bmba012,sr.l_type,sr.l_pid,sr.l_id,sr.bmba002,sr.bmba005,sr.bmbaent,sr.bmbasite,sr.l_key,sr.l_bmba003
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "abmr691_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #列印取替代料件      #2015-08-21 zhujing mod 添加传参 sr.l_cnt
+       IF tm.pr = 'Y' THEN
+          #2015/09/11 by stellar modify ----- (S)
+          #stellar 修改：加進傳入參數bmba011,bmba012
+#          CALL abmr691_x01_replace(sr.l_cnt,sr.bmba001,sr.l_bmba003,sr.bmba002,sr.bmba003,sr.bmba004,sr.bmba007,sr.bmba008,sr.bmbaent,sr.bmbasite,tm.pr,l_tmp)
+          CALL abmr691_x01_replace(sr.l_cnt,sr.bmba001,sr.l_bmba003,sr.bmba002,sr.bmba003,sr.bmba004,sr.bmba007,sr.bmba008,sr.bmbaent,sr.bmbasite,tm.pr,l_tmp,ln_bmba011,ln_bmba012)
+          #2015/09/11 by stellar modify ----- (E)
+       END IF
+            
+       #add--2015/09/23 By shiun--(S)
+       #160510-00019#2 add-S
+       IF tm.type = '3' THEN
+#          FOREACH abmr691_x01_bmba001_curs USING sr.bmba001,sr.bmba001,sr.bmba002 INTO l_bmba001,l_bmba002 #160510-00019#2 mod
+          FOREACH abmr691_x01_bmba001_curs USING sr.bmba001,sr.bmba001,sr.bmba002 INTO l_bmba001,l_bmba002,l_bmba001_desc1,l_bmba001_desc2
+             IF STATUS THEN
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.extend = 'foreach bmba001_curs:'
+                LET g_errparam.code   = STATUS
+                LET g_errparam.popup  = TRUE
+                CALL cl_err()
+                LET g_rep_success = 'N'
+                EXIT FOREACH
+             END IF
+             LET l_count = 0
+             SELECT COUNT(*) INTO l_count
+               FROM bmba_tmp
+              WHERE bmba001 = l_bmba001
+                AND bmba002 = l_bmba002
+                AND bmba003 = sr.bmba003
+             IF l_count = 0 THEN
+                LET l_key = l_bmba001,"(",l_bmba002,")"
+                
+#                CALL s_desc_get_item_desc(l_bmba001) RETURNING l_bmba001_desc1,l_bmba001_desc2 #160510-00019#2 marked
+                EXECUTE insert_prep USING sr.l_cnt,l_bmba001,l_bmba001_desc1,l_bmba001_desc2,sr.bmba004,sr.l_bmba004_desc,sr.bmba007,sr.l_bmba007_desc,sr.bmba008,sr.l_bmba008_desc,sr.bmba003,sr.l_bmba003_desc1,sr.l_bmba003_desc2,sr.bmba011,'',sr.l_bmba011_bmba012,sr.l_type,sr.l_pid,sr.l_id,l_bmba002,sr.bmba005,sr.bmbaent,sr.bmbasite,l_key,sr.l_bmba003
+             END IF
+          END FOREACH
+       END IF
+       #add--2015/09/23 By shiun--(E)
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmr691_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION abmr691_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmr691_x01.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION abmr691_x01_desc(p_num,p_target)
+DEFINE p_num    LIKE type_t.num5
+DEFINE p_target LIKE type_t.chr10
+DEFINE r_desc   LIKE type_t.chr30
+
+SELECT oocql004 INTO r_desc
+FROM oocql_t
+WHERE oocql001 = p_num
+AND oocql002 = p_target
+AND oocql003 = g_dlang
+AND oocqlent = g_enterprise
+
+IF cl_null(p_target) THEN
+   LET r_desc = p_target
+ELSE
+   LET r_desc = p_target CLIPPED, '.' , r_desc CLIPPED
+END IF
+
+RETURN  r_desc
+END FUNCTION
+
+PRIVATE FUNCTION abmr691_x01_getwc(wc)
+DEFINE wc   STRING
+DEFINE l_wc              DYNAMIC ARRAY OF type_wc 
+DEFINE l_dat             DYNAMIC ARRAY OF type_date
+DEFINE l_cnt      LIKE type_t.num5
+DEFINE l_start    LIKE type_t.num5
+DEFINE l_end      LIKE type_t.num5
+DEFINE l_start2   LIKE type_t.num5
+DEFINE l_end2     LIKE type_t.num5
+DEFINE l_start3   LIKE type_t.num5
+DEFINE l_end3     LIKE type_t.num5
+DEFINE l_start4   LIKE type_t.num5
+DEFINE l_end4     LIKE type_t.num5
+DEFINE l_len      LIKE type_t.num5
+
+LET l_start = 1   #wc
+LET l_end = 1
+LET l_start2 = 1  #date
+LET l_end2 = 1
+LET l_start3 = 1  #bmba001
+LET l_end3 = 1
+LET l_start4 = 1  #bmba002
+LET l_end4 = 1
+LET l_len = wc.getLength() 
+
+FOR l_cnt = 1 TO l_len
+   LET l_end = wc.getIndexOf('OR ( ',l_start) - 1
+   LET l_start2 = wc.getIndexOf("<= '",l_start2) + 4
+   LET l_end2 = wc.getIndexOf("' AND (to_char(bmba006",l_start2)-1
+   LET l_start3 = wc.getIndexOf("bmaa001 = '",l_start3) + 11
+   LET l_end3 = wc.getIndexOf("' AND bmaa002",l_start3) - 1
+   LET l_start4 = wc.getIndexOf("bmaa002 = '",l_start4) + 11
+   LET l_end4 = wc.getIndexOf(" AND (to_char(bmba005",l_start4) - 3
+   
+   IF (l_end = 0 OR l_end = -1) THEN 
+      IF (l_end <> l_len) THEN
+         LET l_wc[l_cnt].wc = wc.subString (l_start,l_len)
+         LET l_dat[l_cnt].date = wc.subString (l_start2,l_end2)
+         LET l_dat[l_cnt].bmba001 = wc.subString (l_start3,l_end3)
+         LET l_dat[l_cnt].bmba002 = wc.subString (l_start4,l_end4)
+      END IF
+      EXIT FOR 
+   END IF
+   LET l_wc[l_cnt].wc = wc.subString (l_start,l_end)
+   LET l_dat[l_cnt].date = wc.subString (l_start2,l_end2)
+   LET l_dat[l_cnt].bmba001 = wc.subString (l_start3,l_end3)
+   LET l_dat[l_cnt].bmba002 = wc.subString (l_start4,l_end4)
+   LET l_start = l_end + 3
+   IF (l_start > l_len)  THEN
+      EXIT FOR
+   END IF
+END FOR
+
+RETURN l_wc,l_dat
+   
+END FUNCTION
+
+PRIVATE FUNCTION abmr691_x01_bom(p_type,p_pid,p_id,p_bmba001,p_bmba002,p_bmba003,p_bmbaent,p_bmbasite,p_pr,l_vdate)
+   DEFINE l_sql      STRING
+   
+   DEFINE l_sql_2    STRING
+   
+   DEFINE l_datetype STRING
+   DEFINE l_id_add   LIKE type_t.num5
+   DEFINE p_pr       LIKE type_t.chr1         #列印取替代料 
+   DEFINE l_vdate    LIKE type_t.chr100  #有效日期
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_ac       LIKE type_t.num5
+   DEFINE l_ac2      LIKE type_t.num5
+   DEFINE l_count    LIKE type_t.num5
+   DEFINE l_count2   LIKE type_t.num5
+   DEFINE l_first    LIKE type_t.chr1
+   DEFINE p_type     LIKE type_t.num20
+   DEFINE p_pid      LIKE type_t.num20
+   DEFINE p_id       LIKE type_t.num20
+   DEFINE l_type     LIKE type_t.num20
+   DEFINE l_pid      LIKE type_t.num20
+   DEFINE l_id       LIKE type_t.num20
+   DEFINE p_bmbaent  LIKE bmba_t.bmbaent
+   DEFINE p_bmbasite LIKE bmba_t.bmbasite
+   DEFINE p_bmba001  LIKE bmba_t.bmba001
+   DEFINE p_bmba002  LIKE bmba_t.bmba002
+   DEFINE p_bmba003  LIKE bmba_t.bmba003
+   DEFINE l_bmbalen  LIKE type_t.num5
+   DEFINE l_bmealen  LIKE type_t.num5
+   DEFINE l_pmaal004 LIKE pmaal_t.pmaal004
+   DEFINE l_bmba005  LIKE ooff_t.ooff007
+   DEFINE l_bmba011  STRING
+   DEFINE l_bmba012  STRING
+   DEFINE l_bmea011  STRING
+   DEFINE l_bmea012  STRING
+   DEFINE l_bmea007_desc LIKE type_t.chr10
+   DEFINE l_bmba011_bmba012 LIKE type_t.chr100
+   DEFINE l_bmea011_bmea012 LIKE type_t.chr100
+   DEFINE l_bmba     DYNAMIC ARRAY OF RECORD
+         l_cnt    LIKE type_t.num10,
+         bmba001 LIKE bmba_t.bmba001, 
+         l_bmba001_desc1 LIKE type_t.chr30, 
+         l_bmba001_desc2 LIKE type_t.chr30, 
+         bmba002   LIKE bmba_t.bmba002,
+         bmba004 LIKE bmba_t.bmba004, 
+         l_bmba004_desc LIKE type_t.chr30, 
+         bmba007 LIKE bmba_t.bmba007, 
+         l_bmba007_desc LIKE type_t.chr30, 
+         bmba008 LIKE bmba_t.bmba008, 
+         l_bmba008_desc LIKE type_t.chr100, 
+         bmba003 LIKE bmba_t.bmba003, 
+         l_bmba003_desc1 LIKE type_t.chr30, 
+         l_bmba003_desc2 LIKE type_t.chr30, 
+         bmba011 LIKE bmba_t.bmba011, 
+         bmba012 LIKE bmba_t.bmba012, 
+         l_bmba011_bmba012 LIKE type_t.chr30, 
+         l_type LIKE type_t.num10, 
+         l_pid LIKE type_t.num10, 
+         l_id LIKE type_t.num10,
+         bmba005  LIKE bmba_t.bmba005,
+         bmbaent  LIKE bmba_t.bmbaent,
+         bmbasite LIKE bmba_t.bmbasite,
+         l_ac      LIKE type_t.num5,
+         l_key     LIKE type_t.chr50
+   END RECORD
+   DEFINE l_bmea DYNAMIC ARRAY OF RECORD
+          bmeaent   LIKE bmea_t.bmeaent,
+          bmeasite  LIKE bmea_t.bmeasite,
+          bmea001   LIKE bmea_t.bmea001,
+          bmea002   LIKE bmea_t.bmea002,
+          bmea003   LIKE bmea_t.bmea003,
+          bmea004   LIKE bmea_t.bmea004,
+          bmea005   LIKE bmea_t.bmea005,
+          bmea006   LIKE bmea_t.bmea006,
+          bmea007   LIKE bmea_t.bmea007,
+          bmea008   LIKE bmea_t.bmea008,
+          l_bmea008_desc1 LIKE type_t.chr30, 
+          l_bmea008_desc2 LIKE type_t.chr30, 
+          bmea009   LIKE bmea_t.bmea009,
+          bmea011   LIKE bmea_t.bmea011,
+          bmea012   LIKE bmea_t.bmea012,
+          l_key     LIKE type_t.chr50
+   END RECORD
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_sub_sql       STRING   
+   DEFINE l_suc           LIKE type_t.chr1
+   DEFINE l_suc1          LIKE type_t.chr1
+   DEFINE ln_bmba011      LIKE bmba_t.bmba011   #2015/09/11 by stellar add
+   DEFINE ln_bmba012      LIKE bmba_t.bmba012   #2015/09/11 by stellar add
+
+   #抓取環境變數
+   IF FGL_GETENV("DBDATE") ='Y2MD/' THEN
+      LET l_datetype = 'yy/mm/dd'
+   ELSE
+      LET l_datetype = 'yyyy/mm/dd'
+   END IF
+   LET l_sql = " SELECT bmba001,bmba002,bmba004,bmba007,bmba008,bmba003,bmba011,bmba012,NULL",
+               "   FROM bmba_t ",
+               "  WHERE bmbaent = '",p_bmbaent,"'",
+               "    AND bmbasite = '",p_bmbasite,"'",
+               "    AND bmba001 = '",p_bmba003,"'",
+               "    AND bmba002 = '",p_bmba002,"'",
+               "    AND bmba019 != '2' ",
+               "    AND to_char(bmba005,'yyyy-mm-dd hh24:mi:ss') <= '",l_vdate,"'",
+               "    AND (to_char(bmba006,'yyyy-mm-dd hh24:mi:ss') >= '",l_vdate,"' OR bmba006 IS NULL)",
+#               "    AND (to_char(bmba006,'",l_datetype,"') >= '",l_vdate,"' OR bmba006 IS NULL)",
+               "  ORDER BY bmba003"
+               
+   LET l_cnt = 0
+   LET l_sub_sql = ""
+   LET l_suc = 'N'
+   LET l_sub_sql = "SELECT COUNT(1) FROM (",l_sql,")"
+   PREPARE abmr691_x01_bom_cnt_pre FROM l_sub_sql
+   EXECUTE abmr691_x01_bom_cnt_pre INTO l_cnt
+   IF l_cnt > 0 THEN 
+      LET l_suc ="Y"
+   END IF
+   
+   PREPARE abmr691_x01_prepare_bom FROM l_sql
+   DECLARE abmr691_x01_bom CURSOR FOR abmr691_x01_prepare_bom
+   LET l_ac = l_ac + 1
+   LET g_first = 'N'
+   FOREACH abmr691_x01_bom INTO l_bmba[l_ac].bmba001,l_bmba[l_ac].bmba002,l_bmba[l_ac].bmba004,l_bmba[l_ac].bmba007,l_bmba[l_ac].bmba008,l_bmba[l_ac].bmba003,l_bmba[l_ac].bmba011,l_bmba[l_ac].bmba012,l_bmba[l_ac].l_key  
+      IF STATUS THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.code   = STATUS
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET g_rep_success = 'N'
+         EXIT FOREACH
+      END IF
+      LET g_first = 'Y'
+      INITIALIZE l_bmba011_bmba012 TO NULL
+      LET l_ac = l_ac + 1
+   END FOREACH
+   LET l_ac = l_ac - 1 
+ 
+   LET l_bmbalen = l_ac
+   
+   #輸出
+   FOR l_ac = 1 TO l_bmbalen
+      #2015/09/11 by stellar add ----- (S)
+      LET ln_bmba011 = l_bmba[l_ac].bmba011
+      LET ln_bmba012 = l_bmba[l_ac].bmba012
+      #2015/09/11 by stellar add ----- (E)
+      LET p_id = p_id + 1
+      IF p_id < g_id THEN
+         LET p_id = g_id +1 
+      END IF
+      IF p_id = g_id THEN
+         LET p_id = p_id + 1
+      END IF
+      LET g_id = p_id
+      LET l_id = g_id
+      LET l_bmba[l_ac].l_key = p_bmba001,"(",p_bmba002,")"
+      CALL s_desc_get_item_desc(p_bmba001) RETURNING l_bmba[l_ac].l_bmba001_desc1,l_bmba[l_ac].l_bmba001_desc2
+      CALL s_desc_get_item_desc(l_bmba[l_ac].bmba003) RETURNING l_bmba[l_ac].l_bmba003_desc1,l_bmba[l_ac].l_bmba003_desc2
+      CALL s_desc_get_acc_desc(215,l_bmba[l_ac].bmba004) RETURNING l_bmba[l_ac].l_bmba004_desc
+      CALL s_desc_get_acc_desc(221,l_bmba[l_ac].bmba007) RETURNING l_bmba[l_ac].l_bmba007_desc
+      CALL abmr691_x01_delfloat(l_bmba[l_ac].bmba011) RETURNING l_bmba011
+      CALL abmr691_x01_delfloat(l_bmba[l_ac].bmba012) RETURNING l_bmba012
+      CALL abmr691_x01_assemble(l_bmba011,l_bmba012,'/') RETURNING l_bmba011_bmba012
+      IF NOT (cl_null(l_bmba[l_ac].bmba004) AND cl_null(l_bmba[l_ac].bmba007)) THEN
+         LET l_bmba[l_ac].l_bmba008_desc = l_bmba[l_ac].l_bmba004_desc , "/" ,l_bmba[l_ac].l_bmba007_desc," ",l_bmba[l_ac].bmba008
+      END IF
+      LET l_bmba[l_ac].bmba012 = l_bmba[l_ac].bmba011 / l_bmba[l_ac].bmba012
+      IF l_bmba[l_ac].l_ac <> (g_id+2) THEN
+         LET p_id = p_id + l_id_add
+         IF p_id < g_id THEN
+            LET p_id = g_id +1 
+         END IF
+         IF p_id = g_id THEN
+            LET p_id = p_id + 1
+         END IF
+         LET g_id = p_id
+         LET l_id = g_id
+      END IF
+#      EXECUTE insert_prep USING p_bmba001,l_bmba[l_ac].l_bmba001_desc1,l_bmba[l_ac].l_bmba001_desc2,l_bmba[l_ac].bmba004,l_bmba[l_ac].l_bmba004_desc,l_bmba[l_ac].bmba007,l_bmba[l_ac].l_bmba007_desc,l_bmba[l_ac].bmba008,l_bmba[l_ac].l_bmba008_desc,l_bmba[l_ac].bmba003,l_bmba[l_ac].l_bmba003_desc1,l_bmba[l_ac].l_bmba003_desc2,l_bmba[l_ac].bmba011,l_bmba[l_ac].bmba012,l_bmba011_bmba012,l_type,l_pid,l_id,l_bmba[l_ac].bmba002,l_bmba[l_ac].bmba005,l_bmba[l_ac].bmbaent,l_bmba[l_ac].bmbasite,l_bmba[l_ac].l_key
+
+      IF NOT cl_null(l_bmba[l_ac].bmba003) THEN
+         CALL abmr691_x01_bom(l_type,l_pid,l_id,p_bmba001,l_bmba[l_ac].bmba002,l_bmba[l_ac].bmba003,p_bmbaent,p_bmbasite,p_pr,l_vdate)
+         RETURNING l_id_add,l_suc1
+      END IF
+      IF (l_suc1 = 'N' AND tm.level = '2') OR tm.level = '1' THEN
+         LET g_cnt = g_cnt + 1       
+         LET l_bmba[l_ac].l_cnt = g_cnt
+         EXECUTE insert_prep USING g_cnt,p_bmba001,l_bmba[l_ac].l_bmba001_desc1,l_bmba[l_ac].l_bmba001_desc2,l_bmba[l_ac].bmba004,l_bmba[l_ac].l_bmba004_desc,l_bmba[l_ac].bmba007,l_bmba[l_ac].l_bmba007_desc,l_bmba[l_ac].bmba008,l_bmba[l_ac].l_bmba008_desc,l_bmba[l_ac].bmba003,l_bmba[l_ac].l_bmba003_desc1,l_bmba[l_ac].l_bmba003_desc2,l_bmba[l_ac].bmba011,l_bmba[l_ac].bmba012,l_bmba011_bmba012,l_type,l_pid,l_id,l_bmba[l_ac].bmba002,l_bmba[l_ac].bmba005,l_bmba[l_ac].bmbaent,l_bmba[l_ac].bmbasite,l_bmba[l_ac].l_key
+         #列印取替代料  #2015-08-21 zhujing mod 添加传参 sr.l_cnt
+         IF p_pr = 'Y' THEN
+            #2015/09/11 by stellar modify ----- (S)
+             #stellar 修改：加進傳入參數bmba011,bmba012
+#            CALL abmr691_x01_replace(g_cnt,p_bmba001,p_bmba003,l_bmba[l_ac].bmba002,l_bmba[l_ac].bmba003,l_bmba[l_ac].bmba004,l_bmba[l_ac].bmba007,l_bmba[l_ac].bmba008,l_bmba[l_ac].bmbaent,l_bmba[l_ac].bmbasite,p_pr,l_vdate)
+            CALL abmr691_x01_replace(g_cnt,p_bmba001,p_bmba003,l_bmba[l_ac].bmba002,l_bmba[l_ac].bmba003,l_bmba[l_ac].bmba004,l_bmba[l_ac].bmba007,l_bmba[l_ac].bmba008,l_bmba[l_ac].bmbaent,l_bmba[l_ac].bmbasite,p_pr,l_vdate,ln_bmba011,ln_bmba012)
+            #2015/09/11 by stellar modify ----- (S)
+         END IF
+      END IF
+   END FOR
+
+   IF g_first = 'N' THEN
+      LET p_id = p_id + 1
+      IF g_id < p_id THEN
+         LET g_id = p_id
+      END IF
+   END IF
+   RETURN l_bmbalen,l_suc
+#           LET l_ac2 = 0
+#           LET l_bmba005 = YEAR(l_bmba[l_ac].bmba005) USING "####",'-',MONTH(l_bmba[l_ac].bmba005) USING "&&",'-',DAY(l_bmba[l_ac].bmba005) USING "&&"
+#           LET l_sql_2 = " SELECT bmeaent,bmeasite,bmea001,bmea002,bmea003,bmea004,bmea005,bmea006,bmea007,bmea008,NULL,NULL,bmea009,bmea011,bmea012,NULL",
+#                         "   FROM bmea_t ",
+#                         "  WHERE bmeaent = '",g_enterprise,"' ",
+#                         "    AND bmeasite = 'ALL' ",
+#                         "    AND bmea001 = '",l_bmba[l_ac].bmba001,"'",
+#                         "    AND bmea002 = '",l_bmba[l_ac].bmba002,"'",
+#                         "    AND bmea003 = '",l_bmba[l_ac].bmba003,"'",
+#                         "    AND bmea004 = '",l_bmba[l_ac].bmba004,"'",
+#                         "    AND bmea005 = '",l_bmba[l_ac].bmba007,"'",
+#                         "    AND bmea006 = '",l_bmba[l_ac].bmba008,"'",
+##                         "    AND to_char(bmea009,'yyyy-mm-dd') = '",l_bmba005,"'",
+#                         "  ORDER BY bmea007 "
+#           PREPARE abmr691_x01_prepare_bmea FROM l_sql_2
+#           DECLARE abmr691_x01_bmea CURSOR FOR abmr691_x01_prepare_bmea
+#           LET l_ac2 = l_ac2 + 1
+#           FOREACH abmr691_x01_bmea INTO l_bmea[l_ac2].*
+#              IF STATUS THEN
+#                 INITIALIZE g_errparam TO NULL
+#                 LET g_errparam.extend = 'foreach:'
+#                 LET g_errparam.code   = STATUS
+#                 LET g_errparam.popup  = TRUE
+#                 CALL cl_err()
+#                 LET g_rep_success = 'N'
+#                 EXIT FOREACH
+#              END IF
+#              
+#              LET l_ac2 = l_ac2 + 1
+#          END FOREACH
+#          CALL l_bmea.deleteElement(l_ac2)
+#          LET l_ac2 = l_ac2-1
+#        END IF
+#        LET l_bmealen = l_bmea.getLength() 
+#        FOR l_ac2 = 1 TO l_bmealen
+#                LET l_ac = l_ac + 1
+#                IF l_bmea[l_ac2].bmea007 = '1' THEN
+#                   LET l_bmba[l_ac].l_bmba008_desc = '取代料'
+#                ELSE
+#                   LET l_bmba[l_ac].l_bmba008_desc = '替代料'
+#                END IF
+#                CALL s_desc_get_item_desc(l_bmea[l_ac2].bmea008) RETURNING l_bmea[l_ac2].l_bmea008_desc1,l_bmea[l_ac2].l_bmea008_desc2
+#                CALL abmr691_x01_delfloat(l_bmea[l_ac2].bmea011) RETURNING l_bmea011
+#                CALL abmr691_x01_delfloat(l_bmea[l_ac2].bmea012) RETURNING l_bmea012
+#                CALL abmr691_x01_assemble(l_bmea011,l_bmea012,'/') RETURNING l_bmea011_bmea012
+#                LET l_bmba[l_ac].bmba003 = l_bmea[l_ac2].bmea008
+#                LET l_bmba[l_ac].l_bmba003_desc1 = l_bmea[l_ac2].l_bmea008_desc1
+#                LET l_bmba[l_ac].l_bmba003_desc2 = l_bmea[l_ac2].l_bmea008_desc2
+#                LET l_bmba[l_ac].bmba011 = l_bmea[l_ac2].bmea011
+#                LET l_bmba[l_ac].bmba012 = l_bmea[l_ac2].bmea012
+#                LET l_bmba[l_ac].l_ac = l_ac
+#                LET l_bmba[l_ac].l_key = l_bmea[l_ac2].bmea001,"(",l_bmea[l_ac2].bmea002,")"
+#
+#        END FOR
+#        LET l_ac = l_ac + 1
+#     END FOREACH
+#     CALL l_bmba.deleteElement(l_ac)    
+#     LET l_type = p_type
+#     LET l_pid = p_id
+#     LET l_bmbalen = l_bmba.getLength() - 1
+#     IF l_bmbalen < 0 THEN
+#        LET l_bmbalen = 0
+#     END IF     
+END FUNCTION
+
+PRIVATE FUNCTION abmr691_x01_assemble(p_str1,p_str2,p_mid)
+   DEFINE p_str1     STRING
+   DEFINE p_str2     STRING
+   DEFINE r_assemble STRING
+   DEFINE p_mid   LIKE type_t.chr1
+   IF cl_null(p_str1) OR cl_null(p_str2) THEN
+      LET r_assemble = p_str1 , p_mid , p_str2
+   ELSE
+      LET r_assemble = p_str1 || p_mid || p_str2
+   END IF
+   IF cl_null(p_str1) AND cl_null(p_str2) THEN
+      INITIALIZE r_assemble TO NULL
+   END IF
+   RETURN r_assemble
+END FUNCTION
+
+PRIVATE FUNCTION abmr691_x01_delfloat(p_num)
+DEFINE p_num       LIKE bmba_t.bmba011
+DEFINE p_str       STRING
+DEFINE l_float     STRING
+DEFINE l_int       STRING
+DEFINE l_count     INTEGER
+DEFINE l_length    INTEGER
+DEFINE l_float_length    INTEGER
+DEFINE l_i         INTEGER
+
+   LET p_str = p_num
+   LET l_count = p_str.getIndexOf(".",1)
+   LET l_length = p_str.getLength()
+   LET l_int = p_str.subString(1,l_count-1)
+   LET l_float = p_str.subString(l_count+1,l_length)
+   LET l_float_length = l_float.getLength()
+   FOR l_i = 1 TO l_float_length
+      IF l_float.subString(l_float_length+1-l_i,l_float_length+1-l_i) <> '0' THEN
+         EXIT FOR
+      END IF
+   END FOR
+   IF l_i < l_float_length+1 THEN
+      LET l_float = l_float.subString(1,l_float_length+1-l_i)
+      LET p_str = l_int || "." || l_float
+   ELSE
+      LET p_str = l_int
+   END IF
+   RETURN p_str
+END FUNCTION
+
+PRIVATE FUNCTION abmr691_x01_replace(p_cnt,p_bmba001,p_bmba003_1,p_bmba002,p_bmba003,p_bmba004,p_bmba007,p_bmba008,p_bmbaent,p_bmbasite,p_pr,l_vdate,p_bmba011,p_bmba012)
+   DEFINE p_cnt      LIKE type_t.chr50       #2015-08-21 zhujing add
+   DEFINE p_bmba001  LIKE bmba_t.bmba001
+   DEFINE p_bmba003_1   LIKE bmba_t.bmba003
+   DEFINE p_bmba002  LIKE bmba_t.bmba002
+   DEFINE p_bmba003  LIKE bmba_t.bmba003
+   DEFINE p_bmba004  LIKE bmba_t.bmba004
+   DEFINE p_bmba007  LIKE bmba_t.bmba007
+   DEFINE p_bmba008  LIKE bmba_t.bmba008
+   DEFINE p_bmbaent  LIKE bmba_t.bmbaent
+   DEFINE p_bmbasite LIKE bmba_t.bmbasite
+   DEFINE p_bmba011  LIKE bmba_t.bmba011     #2015/09/11 by stellar add
+   DEFINE p_bmba012  LIKE bmba_t.bmba012     #2015/09/11 by stellar add
+   DEFINE l_bmba005  LIKE ooff_t.ooff007
+   DEFINE p_pr       STRING
+   DEFINE l_sql      STRING
+   DEFINE l_ac       LIKE type_t.num5
+   #2015-08-21 zhujing add-----（S）
+   DEFINE l_sql2     STRING                  #资料重复判断sql
+   DEFINE l_sql3     STRING                  #资料重复删除sql
+   DEFINE l_bmea012_t   LIKE bmba_t.bmba012  #记录其他替代料使用量
+   DEFINE l_cnt_t   LIKE type_t.chr50        #记录其他替代料代号
+   #2015-08-21 zhujing add-----（E）
+   DEFINE l_bmealen  LIKE type_t.num5
+   DEFINE l_bmba001_desc1 LIKE type_t.chr30
+   DEFINE l_bmba001_desc2 LIKE type_t.chr30
+   DEFINE l_bmea011  LIKE type_t.chr30
+   DEFINE l_bmea012  LIKE type_t.chr30
+   DEFINE l_bmea011_bmea012   LIKE type_t.chr30
+   DEFINE l_bmea DYNAMIC ARRAY OF RECORD
+          l_cnt     LIKE type_t.chr50,
+          bmeaent   LIKE bmea_t.bmeaent,
+          bmeasite  LIKE bmea_t.bmeasite,
+          bmea001   LIKE bmea_t.bmea001,
+          bmea002   LIKE bmea_t.bmea002,
+          bmea003   LIKE bmea_t.bmea003,
+          bmea004   LIKE bmea_t.bmea004,
+          bmea005   LIKE bmea_t.bmea005,
+          bmea006   LIKE bmea_t.bmea006,
+          bmea007   LIKE bmea_t.bmea007,
+          l_bmea007_desc   LIKE type_t.chr100,
+          bmea008   LIKE bmea_t.bmea008,
+          l_bmea008_desc1 LIKE type_t.chr30, 
+          l_bmea008_desc2 LIKE type_t.chr30, 
+          bmea009   LIKE bmea_t.bmea009,
+          bmea011   LIKE bmea_t.bmea011,
+          bmea012   LIKE bmea_t.bmea012,
+          l_bmea011_bmea012   LIKE type_t.chr30,
+          l_key     LIKE type_t.chr50,
+          l_bmea003  LIKE bmea_t.bmea003
+    END RECORD
+    DEFINE l_vdate  LIKE type_t.chr100
+    #add--2015/09/23 By shiun--(S)
+    DEFINE l_bmba001      LIKE bmba_t.bmba001
+    DEFINE l_bmba002      LIKE bmba_t.bmba002
+    DEFINE l_count        LIKE type_t.num5
+    DEFINE l_key          LIKE type_t.chr50
+    #add--2015/09/23 By shiun--(E)
+    DEFINE  p_table      STRING
+    DEFINE  l_db_type    STRING
+    #列印取替代料
+    LET l_bmba005 = l_vdate --YEAR(l_vdate) USING "####",'-',MONTH(l_vdate) USING "&&",'-',DAY(l_vdate) USING "&&"
+    IF p_pr = 'Y' THEN
+      LET l_ac = 0
+      #2015-08-21 zhujing add-----（S）添加营运据点判断
+      IF NOT cl_null(tm.chk) THEN
+         LET l_sql = " SELECT '',bmeaent,bmeasite,bmea001,bmea002,bmea003,bmea004,bmea005,bmea006,bmea007,NULL,bmea008,NULL,NULL,bmea009,bmea011,bmea012,NULL,NULL,''",
+                       "   FROM bmea_t ",
+                       "  WHERE bmeaent = ",g_enterprise,  #20150916 DSC.liquor 把ent的單引號拿掉
+                       "    AND bmeasite = '",g_site,"'",
+                       "    AND (bmea001 = '",p_bmba003_1,"' OR bmea001 = 'ALL')",  #20150916 DSC.liquor add bmea001 = 'ALL'
+                       "    AND bmea002 = '",p_bmba002,"'",
+                       "    AND bmea003 = '",p_bmba003,"'",
+                       "    AND bmea004 = '",p_bmba004,"'",
+                       "    AND bmea005 = '",p_bmba007,"'",
+                       "    AND bmea006 = '",p_bmba008,"'",
+                       "    AND to_char(bmea009,'yyyy-mm-dd') <= '",l_bmba005,"'",
+                       "    AND (to_char(bmea010,'yyyy-mm-dd') > '",l_bmba005,"' OR bmea010 IS NULL )",
+                       "  ORDER BY bmea007 "
+      ELSE                    
+         LET l_sql = " SELECT '',bmeaent,bmeasite,bmea001,bmea002,bmea003,bmea004,bmea005,bmea006,bmea007,NULL,bmea008,NULL,NULL,bmea009,bmea011,bmea012,NULL,NULL,''",
+                       "   FROM bmea_t ",
+                       "  WHERE bmeaent = ",g_enterprise,  #20150916 DSC.liquor 把ent的單引號拿掉
+                       "    AND bmeasite = 'ALL'",
+                       "    AND (bmea001 = '",p_bmba003_1,"' OR bmea001 = 'ALL')", #20150916 DSC.liquor add bmea001 = 'ALL'
+                       "    AND bmea002 = '",p_bmba002,"'",
+                       "    AND bmea003 = '",p_bmba003,"'",
+                       "    AND bmea004 = '",p_bmba004,"'",
+                       "    AND bmea005 = '",p_bmba007,"'",
+                       "    AND bmea006 = '",p_bmba008,"'",
+                       "    AND to_char(bmea009,'yyyy-mm-dd') <= '",l_bmba005,"'",
+                       "    AND (to_char(bmea010,'yyyy-mm-dd') > '",l_bmba005,"' OR bmea010 IS NULL )",
+                       "  ORDER BY bmea007 "
+      END IF
+      #2015-08-21 zhujing add-----（E）      
+      PREPARE abmr691_x01_prepare_bmea1 FROM l_sql
+      DECLARE abmr691_x01_bmea1 CURSOR FOR abmr691_x01_prepare_bmea1
+      LET l_ac = 1
+      FOREACH abmr691_x01_bmea1 INTO l_bmea[l_ac].*
+         IF STATUS THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = 'foreach:'
+            LET g_errparam.code   = STATUS
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            LET g_rep_success = 'N'
+            EXIT FOREACH
+         END IF
+         LET l_bmea[l_ac].l_bmea003 = p_bmba003_1
+         LET l_ac = l_ac + 1
+      END FOREACH
+      CALL l_bmea.deleteElement(l_ac)
+   END IF
+   LET l_bmealen = l_bmea.getLength() 
+   FOR l_ac = 1 TO l_bmealen+1
+      IF l_ac <= l_bmealen THEN
+         INITIALIZE l_bmba001_desc1 TO NULL
+         INITIALIZE l_bmba001_desc2 TO NULL
+#         LET l_ac = l_ac + 1
+         IF l_bmea[l_ac].bmea007 = '1' THEN
+            LET l_bmea[l_ac].l_bmea007_desc = '取代料'
+         ELSE
+            LET l_bmea[l_ac].l_bmea007_desc = '替代料'
+         END IF
+         LET l_bmea[l_ac].l_key = p_bmba001,"(",p_bmba002,")"
+         CALL s_desc_get_item_desc(p_bmba001) RETURNING l_bmba001_desc1,l_bmba001_desc2
+         CALL s_desc_get_item_desc(l_bmea[l_ac].bmea008) RETURNING l_bmea[l_ac].l_bmea008_desc1,l_bmea[l_ac].l_bmea008_desc2
+         CALL abmr691_x01_delfloat(l_bmea[l_ac].bmea011) RETURNING l_bmea011
+         CALL abmr691_x01_delfloat(l_bmea[l_ac].bmea012) RETURNING l_bmea012
+         CALL abmr691_x01_assemble(l_bmea011,l_bmea012,'/') RETURNING l_bmea011_bmea012
+         LET l_bmea[l_ac].l_bmea011_bmea012 = l_bmea011_bmea012
+         #2015/09/11 by stellar modify ----- (S)
+         #stellar修改：換算成BOM的用量
+#         LET l_bmea[l_ac].bmea012 = l_bmea[l_ac].bmea011/l_bmea[l_ac].bmea012
+         LET l_bmea[l_ac].bmea012 = l_bmea[l_ac].bmea011/l_bmea[l_ac].bmea012 * p_bmba011/p_bmba012
+         #2015/09/11 by stellar modify ----- (E)
+         LET l_bmea[l_ac].l_cnt = g_cnt USING '&&&&&&','-',l_ac USING '&&&'      
+         #2015-08-21 zhujing add-----（S）
+         #3.差异料：抓取暂存档中的与当前替代料 相同主件，相同元件的序号ID,总用量
+         #暂存档元件ID LIKE 当前元件ID%
+         #暂存档替代料号 = 当前替代料号p_bmba003
+         #暂存档主件料号 <> 当前主件料号
+         IF tm.type = '3' THEN
+            LET l_sql2 = " SELECT l_cnt,SUM(bmba012) ",
+                         "   FROM ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," ",
+                         "  WHERE l_cnt LIKE '",p_cnt,"-%' ",
+                         "    AND bmba003 = '",l_bmea[l_ac].bmea008,"' ",
+                         "    AND l_bmba003 <> '",l_bmea[l_ac].bmea003,"' ",
+                         "  GROUP BY l_cnt "
+            PREPARE abmr691_x01_replace_prepare FROM l_sql2
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = 'prepare:'
+               LET g_errparam.code   = STATUS
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_rep_success = 'N' 
+            END IF
+            #排号
+            DECLARE abmr691_x01_replace_curs CURSOR FOR abmr691_x01_replace_prepare
+            EXECUTE abmr691_x01_replace_curs INTO l_cnt_t,l_bmea012_t
+            IF NOT cl_null(l_cnt_t) THEN                       #有相同替代料
+               IF l_bmea012_t = l_bmea[l_ac].bmea012 THEN      #用量若相同，则删去此笔资料--》至XG暂存档删除
+                  LET p_table = g_rep_tmpname[1] CLIPPED
+                  LET l_sql3 = " DELETE FROM ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," ",
+                               " WHERE l_cnt = '",l_cnt_t,"' ",
+                               "   AND bmba003 = '",l_bmea[l_ac].bmea008,"' ",
+                               "   AND l_bmba003 <> '",l_bmea[l_ac].bmea003,"' "
+
+                  PREPARE abmr691_x01_del_data_prep FROM l_sql3
+                  EXECUTE abmr691_x01_del_data_prep 
+                  IF SQLCA.sqlcode THEN
+                     LET p_table = -1
+                     LET l_db_type="ORA"
+                     IF (l_db_type="ORA" AND SQLCA.sqlcode=-206) THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'lib-00082'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     ELSE
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = 'abmr691_x01_deldata_prep:'
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     END IF
+                  END IF
+                  CONTINUE FOR
+               ELSE
+                  LET l_bmea[l_ac].l_cnt = l_cnt_t
+               END IF
+            END IF
+         END IF
+         #2015-08-21 zhujing add-----（E）    
+         EXECUTE insert_prep USING l_bmea[l_ac].l_cnt,p_bmba001,l_bmba001_desc1,l_bmba001_desc2,p_bmba004,p_bmba004,p_bmba007,p_bmba007,p_bmba008,l_bmea[l_ac].l_bmea007_desc,l_bmea[l_ac].bmea008,l_bmea[l_ac].l_bmea008_desc1,l_bmea[l_ac].l_bmea008_desc2,l_bmea[l_ac].bmea011,l_bmea[l_ac].bmea012,l_bmea011_bmea012,g_type,g_pid,g_id,p_bmba002,g_today,p_bmbaent,p_bmbasite,l_bmea[l_ac].l_key,l_bmea[l_ac].l_bmea003
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "abmr691_x01_execute"
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = FALSE
+            CALL cl_err()       
+            LET g_rep_success = 'N'
+            EXIT FOR
+         END IF
+         #add--2015/09/22 By shiun--(S)
+         IF tm.type = '3' THEN
+#            FOREACH abmr691_x01_bmba001_curs USING p_bmba001,p_bmba001,p_bmba002 INTO l_bmba001,l_bmba002   #160510-00019#2 mod
+            FOREACH abmr691_x01_bmba001_curs USING p_bmba001,p_bmba001,p_bmba002 INTO l_bmba001,l_bmba002,l_bmba001_desc1,l_bmba001_desc2   #160510-00019#2 mod
+               IF STATUS THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = 'foreach bmba001_curs:'
+                  LET g_errparam.code   = STATUS
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  LET g_rep_success = 'N'
+                  EXIT FOREACH
+               END IF
+               LET l_count = 0
+               SELECT COUNT(*) INTO l_count
+                 FROM bmba_tmp
+                WHERE bmba001 = l_bmba001
+                  AND bmba003 = sr.bmba003
+               IF l_count = 0 THEN
+                  LET l_key = l_bmba001,"(",l_bmba002,")"
+#                  CALL s_desc_get_item_desc(l_bmba001) RETURNING l_bmba001_desc1,l_bmba001_desc2   #160510-00019#2 marked
+                  EXECUTE insert_prep USING l_bmea[l_ac].l_cnt,l_bmba001,l_bmba001_desc1,l_bmba001_desc2,p_bmba004,p_bmba004,p_bmba007,p_bmba007,p_bmba008,l_bmea[l_ac].l_bmea007_desc,l_bmea[l_ac].bmea008,l_bmea[l_ac].l_bmea008_desc1,l_bmea[l_ac].l_bmea008_desc2,l_bmea[l_ac].bmea011,'',l_bmea011_bmea012,g_type,g_pid,g_id,l_bmba002,g_today,p_bmbaent,p_bmbasite,l_key,l_bmea[l_ac].l_bmea003
+               END IF
+            END FOREACH
+         END IF
+         #add--2015/09/22 By shiun--(E)
+      END IF
+      
+   END FOR
+END FUNCTION
+
+################################################################################
+# Descriptions...: 暂存档存放主件元件料号
+# Memo...........:
+# Usage..........: CALL abmr691_x01_ins_tmp_data()
+################################################################################
+PRIVATE FUNCTION abmr691_x01_ins_tmp_data()
+#临时表字段
+DEFINE sr1 RECORD 
+   bmba001  LIKE bmba_t.bmba001, 
+   bmba002  LIKE bmba_t.bmba002, 
+   bmba003  LIKE bmba_t.bmba003,
+   l_bmba003   LIKE bmba_t.bmba003,
+   bmba004  LIKE bmba_t.bmba004,
+   bmba005  LIKE bmba_t.bmba005,
+   bmba007  LIKE bmba_t.bmba007,
+   bmba008  LIKE bmba_t.bmba008,
+   bmba011  LIKE bmba_t.bmba011,
+   bmba012  LIKE bmba_t.bmba012,
+   bmbaent  LIKE bmba_t.bmbaent, 
+   bmbasite LIKE bmba_t.bmbasite,
+   l_type   LIKE type_t.num10,   #树编号
+   l_pid    LIKE type_t.num10,   #父结点ID
+   l_id     LIKE type_t.num10    #结点ID
+END RECORD
+
+DEFINE l_type  LIKE type_t.num10
+DEFINE l_pid   LIKE type_t.num10
+DEFINE l_no    LIKE type_t.num10
+DEFINE l_len   LIKE type_t.num5
+DEFINE l_tmp   LIKE type_t.chr100
+DEFINE l_success LIKE type_t.chr1
+#抓取元件资料
+    LET g_rep_success = 'Y'
+    LET l_type = 1
+    LET g_tmp_id = 1
+ 
+    FOREACH abmr691_x01_tmp_curs INTO sr1.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+       LET sr1.l_bmba003 = sr1.bmba001
+       LET sr1.l_type = l_type   #给定BOM树编号
+       LET sr1.l_pid = 0      #总是父结点
+       LET sr1.l_id = g_tmp_id    #按顺序编号
+       #将值插入表中
+       IF tm.level = '1' THEN
+          EXECUTE insert_prep1 USING sr1.bmba001,sr1.bmba002,sr1.bmba003,sr1.l_bmba003,sr1.bmba004,sr1.bmba005,sr1.bmba007,sr1.bmba008,sr1.bmba011,sr1.bmba012,
+          sr1.bmbaent,sr1.bmbasite,sr1.l_type,sr1.l_pid,sr1.l_id
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.extend = "abmr691_x01_tmp_execute"
+             LET g_errparam.code   = SQLCA.sqlcode
+             LET g_errparam.popup  = FALSE
+             CALL cl_err()       
+             LET g_rep_success = 'N'
+             EXIT FOREACH
+          END IF
+       END IF
+       #单阶：只抓取第一笔，不再展BOM
+       #尾阶：抓至最后一笔，只输出最后一笔（无子结点）     
+       IF tm.level = '2' THEN
+          FOR l_no = 1 TO l_date.getlength()
+             IF l_date[l_no].bmba001 = sr1.bmba001 AND l_date[l_no].bmba002 = sr1.bmba002 THEN
+                LET l_tmp = l_date[l_no].date
+                EXIT FOR
+             END IF
+          END FOR
+          CALL abmr691_x01_tmp_bom(sr1.l_type,sr1.l_pid,sr1.l_id,sr1.bmba001,sr1.bmba002,sr1.bmba003,sr1.bmbaent,sr1.bmbasite,l_tmp) 
+          RETURNING l_len,l_success
+          IF l_success = 'N' THEN
+             EXECUTE insert_prep1 USING sr1.bmba001,sr1.bmba002,sr1.bmba003,sr1.l_bmba003,sr1.bmba004,sr1.bmba005,sr1.bmba007,sr1.bmba008,sr1.bmba011,sr1.bmba012,
+             sr1.bmbaent,sr1.bmbasite,sr1.l_type,sr1.l_pid,sr1.l_id
+             IF SQLCA.sqlcode THEN
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.extend = "abmr691_x01_tmp_execute"
+                LET g_errparam.code   = SQLCA.sqlcode
+                LET g_errparam.popup  = FALSE
+                CALL cl_err()       
+                LET g_rep_success = 'N'
+                EXIT FOREACH
+             END IF
+          END IF
+#          IF l_success = "Y" THEN   #树展完
+#             CONTINUE FOREACH
+#          END IF
+       END IF
+       
+       LET l_type = l_type + 1   #树编号+1，开启新树！
+    END FOREACH
+    
+END FUNCTION
+
+################################################################################
+# Descriptions...: 展开临时表BOM表
+# Memo...........:
+# Usage..........: CALL abmr691_x01_tmp_bom(p_type,p_pid,p_id,p_bmba001,p_bmba002,p_bmba003,p_bmbaent,p_bmbasite)
+#                  RETURNING r_bmbalen,r_success
+# Input parameter: p_type      树编号
+#                : p_pid       父结点
+#                : p_id        结点编号
+#                : p_bmba001   主件料号
+#                : p_bmba002   特性
+#                : p_bmba003   元件料号
+#                : p_bmbaent   企业编号
+#                : p_bmbasite  营运据点
+#                : p_vdate     有效日期
+# Return code....: r_bmbalen   资料笔数
+#                : r_success   是否有子结点
+# Date & Author..: 2015-7-6 By zhujing
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abmr691_x01_tmp_bom(p_type,p_pid,p_id,p_bmba001,p_bmba002,p_bmba003,p_bmbaent,p_bmbasite,p_vdate)
+   DEFINE p_bmbaent  LIKE bmba_t.bmbaent
+   DEFINE p_bmbasite LIKE bmba_t.bmbasite
+   DEFINE p_bmba001  LIKE bmba_t.bmba001
+   DEFINE p_bmba002  LIKE bmba_t.bmba002
+   DEFINE p_bmba003  LIKE bmba_t.bmba003
+   DEFINE p_type     LIKE type_t.num20
+   DEFINE p_pid      LIKE type_t.num20
+   DEFINE p_id       LIKE type_t.num20
+   DEFINE p_vdate    LIKE type_t.chr100  #有效日期
+   DEFINE r_bmbalen  LIKE type_t.num5
+   DEFINE r_success  LIKE type_t.chr2
+   
+   DEFINE l_bmba     DYNAMIC ARRAY OF RECORD 
+      bmba001  LIKE bmba_t.bmba001, 
+      bmba002  LIKE bmba_t.bmba002,
+      bmba003  LIKE bmba_t.bmba003,
+      l_bmba003   LIKE bmba_t.bmba003,      
+      bmba004  LIKE bmba_t.bmba004, 
+      bmba005  LIKE bmba_t.bmba005,
+      bmba007  LIKE bmba_t.bmba007, 
+      bmba008  LIKE bmba_t.bmba008, 
+      bmba011  LIKE bmba_t.bmba011,
+      bmba012  LIKE bmba_t.bmba012, 
+      bmbaent  LIKE bmba_t.bmbaent,
+      bmbasite LIKE bmba_t.bmbasite,
+      l_type LIKE type_t.num10, 
+      l_pid LIKE type_t.num10, 
+      l_id LIKE type_t.num10
+   END RECORD
+   
+   DEFINE l_sql      STRING
+   DEFINE l_datetype STRING
+   DEFINE l_ac       LIKE type_t.num5
+   DEFINE l_bmbalen  LIKE type_t.num5
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_sub_sql       STRING   
+   
+   DEFINE l_suc1          LIKE type_t.chr2
+   
+   CALL l_bmba.clear()
+   #抓取環境變數
+   IF FGL_GETENV("DBDATE") ='Y2MD/' THEN
+      LET l_datetype = 'yy/mm/dd'
+   ELSE
+      LET l_datetype = 'yyyy/mm/dd'
+   END IF
+   LET l_sql = " SELECT bmba001,bmba002,bmba003,'',bmba004,bmba005,bmba007,bmba008,bmba011,bmba012,bmbaent,bmbasite,'",p_type,"','",p_id,"',0 ",
+               "   FROM bmba_t ",
+               "  WHERE bmbaent = '",p_bmbaent,"'",
+               "    AND bmbasite = '",p_bmbasite,"'",
+               "    AND bmba001 = '",p_bmba003,"'",
+               "    AND bmba002 = '",p_bmba002,"'",
+               "    AND bmba019 != '2' ",
+               "    AND to_char(bmba005,'yyyy-mm-dd hh24:mi:ss') <= '",p_vdate,"'",
+               "    AND (to_char(bmba006,'yyyy-mm-dd hh24:mi:ss') >= '",p_vdate,"' OR bmba006 IS NULL)",
+               "  ORDER BY bmba003"
+               
+   LET l_cnt = 0
+   LET l_sub_sql = ""
+   LET r_success  = 'N'
+   LET l_sub_sql = "SELECT COUNT(1) FROM (",l_sql,")"
+   PREPARE abmr691_x01_tmp_bom_cnt_pre FROM l_sub_sql
+   EXECUTE abmr691_x01_tmp_bom_cnt_pre INTO l_cnt
+   IF l_cnt > 0 THEN 
+      LET r_success  ="Y"       #有子结点
+   END IF
+   LET l_suc1 = 'N'
+   #单阶：只抓取第一笔，不再展BOM
+   #尾阶：抓至最后一笔，只输出最后一笔（无子结点）
+   
+   PREPARE abmr691_x01_prepare_tmp_bom FROM l_sql
+   DECLARE abmr691_x01_tmp_bom CURSOR FOR abmr691_x01_prepare_tmp_bom
+   LET l_ac = l_ac + 1
+   
+   FOREACH abmr691_x01_tmp_bom INTO l_bmba[l_ac].bmba001,l_bmba[l_ac].bmba002,l_bmba[l_ac].bmba003,l_bmba[l_ac].l_bmba003,l_bmba[l_ac].bmba004,l_bmba[l_ac].bmba005,l_bmba[l_ac].bmba007,l_bmba[l_ac].bmba008,l_bmba[l_ac].bmba011,l_bmba[l_ac].bmba012,l_bmba[l_ac].bmbaent,l_bmba[l_ac].bmbasite,l_bmba[l_ac].l_type,l_bmba[l_ac].l_pid,l_bmba[l_ac].l_id
+      IF STATUS THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'abmr691_x01_tmp_bom foreach:'
+         LET g_errparam.code   = STATUS
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET g_rep_success = 'N'
+         EXIT FOREACH
+      END IF
+      LET l_bmba[l_ac].l_bmba003 = l_bmba[l_ac].bmba001
+      LET l_bmba[l_ac].bmba001 = p_bmba001
+      LET l_bmba[l_ac].l_id = g_tmp_id + 1
+      LET g_tmp_id = l_bmba[l_ac].l_id       #临时表结点编号
+      
+      LET l_ac = l_ac + 1
+   END FOREACH
+   LET l_ac = l_ac - 1 
+   
+ 
+   LET r_bmbalen = l_ac
+   
+   #輸出
+   FOR l_ac = 1 TO r_bmbalen
+      IF NOT cl_null(l_bmba[l_ac].bmba003) THEN
+         CALL abmr691_x01_tmp_bom(l_bmba[l_ac].l_type,l_bmba[l_ac].l_pid,l_bmba[l_ac].l_id,p_bmba001,l_bmba[l_ac].bmba002,l_bmba[l_ac].bmba003,p_bmbaent,p_bmbasite,p_vdate)
+         RETURNING l_bmbalen,l_suc1
+      
+         IF (l_suc1 = 'N' AND tm.level = '2') THEN #尾阶，且无子结点
+            EXECUTE insert_prep1 USING p_bmba001,l_bmba[l_ac].bmba002,l_bmba[l_ac].bmba003,l_bmba[l_ac].l_bmba003,l_bmba[l_ac].bmba004,l_bmba[l_ac].bmba005,l_bmba[l_ac].bmba007,l_bmba[l_ac].bmba008,l_bmba[l_ac].bmba011,l_bmba[l_ac].bmba012,l_bmba[l_ac].bmbaent,l_bmba[l_ac].bmbasite,l_bmba[l_ac].l_type,l_bmba[l_ac].l_pid,l_bmba[l_ac].l_id
+         END IF
+      END IF
+   END FOR
+
+   RETURN r_bmbalen,r_success 
+END FUNCTION
+
+ 
+{</section>}
+ 

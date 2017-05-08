@@ -1,0 +1,1191 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="acrr722.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2015-04-02 17:13:29), PR版次:0002(2016-10-25 18:16:34)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000029
+#+ Filename...: acrr722
+#+ Description: 會員消費明細報表
+#+ Creator....: 03247(2015-03-13 17:21:08)
+#+ Modifier...: 03247 -SD/PR- 03247
+ 
+{</section>}
+ 
+{<section id="acrr722.global" >}
+#應用 r01 樣板自動產生(Version:21)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#161024-00025#2  2016/10/25 By dongsz   rtja018和rtja024替换 where ooef201 = 'Y'
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE gi_hiden_rep_temp    LIKE type_t.num5             
+   DEFINE g_chk_jobid          LIKE type_t.num5               
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       mmaq003 LIKE type_t.chr500, 
+   rtja017 LIKE type_t.chr500, 
+   mmaq001 LIKE type_t.chr500, 
+   rtja018 LIKE type_t.chr500, 
+   rtja002 LIKE type_t.chr500, 
+   rtja023 LIKE type_t.chr500, 
+   rtab001 LIKE type_t.chr500, 
+   rtja024 LIKE type_t.chr500, 
+   rtjasite LIKE type_t.chr500, 
+   rtja032 LIKE type_t.chr500, 
+   rtjadocno LIKE type_t.chr500, 
+   rtja033 LIKE type_t.chr500, 
+   rtjadocdt LIKE type_t.chr500, 
+   rtja034 LIKE type_t.chr500, 
+   rtja035 LIKE type_t.chr500, 
+   rtja004 LIKE type_t.chr500, 
+   rtjb004 LIKE type_t.chr500, 
+   rtja005 LIKE type_t.chr500, 
+   imaa009 LIKE type_t.chr500, 
+   rtjb001 LIKE type_t.chr500, 
+   imaa126 LIKE type_t.chr500,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="acrr722.main" >}
+MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   DEFINE l_success LIKE type_t.num5
+   #end add-point 
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("acr","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point   
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+      CALL util.JSON.parse(ls_js,g_master)      #r類背景參數解析入口
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL acrr722_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_acrr722 WITH FORM cl_ap_formpath("acr",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL acrr722_init()
+ 
+      #進入選單 Menu (="N")
+      CALL acrr722_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_acrr722
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL s_aooi500_drop_temp() RETURNING l_success
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="acrr722.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION acrr722_init()
+   #add-point:init段define name="init.define"
+   DEFINE l_success LIKE type_t.num5
+   #end add-point
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc("rtja017","6545")
+   CALL cl_set_combo_scc("rtja023","6546")
+   CALL cl_set_combo_scc("rtja032","6544")
+   
+   CALL s_aooi500_create_temp() RETURNING l_success
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr722.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION acrr722_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   
+   #end add-point
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON mmaq003,rtja017,mmaq001,rtja018,rtja002,rtja023,rtab001,rtja024, 
+             rtjasite,rtja032,rtjadocno,rtja033,rtjadocdt,rtja034,rtja035,rtja004,rtjb004,rtja005,imaa009, 
+             rtjb001,imaa126
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.mmaq003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmaq003
+            #add-point:ON ACTION controlp INFIELD mmaq003 name="construct.c.mmaq003"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaq003  #顯示到畫面上
+            NEXT FIELD mmaq003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmaq003
+            #add-point:BEFORE FIELD mmaq003 name="construct.b.mmaq003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmaq003
+            
+            #add-point:AFTER FIELD mmaq003 name="construct.a.mmaq003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja017
+            #add-point:BEFORE FIELD rtja017 name="construct.b.rtja017"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja017
+            
+            #add-point:AFTER FIELD rtja017 name="construct.a.rtja017"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtja017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja017
+            #add-point:ON ACTION controlp INFIELD rtja017 name="construct.c.rtja017"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.mmaq001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmaq001
+            #add-point:ON ACTION controlp INFIELD mmaq001 name="construct.c.mmaq001"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaq001_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaq001  #顯示到畫面上
+            NEXT FIELD mmaq001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmaq001
+            #add-point:BEFORE FIELD mmaq001 name="construct.b.mmaq001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmaq001
+            
+            #add-point:AFTER FIELD mmaq001 name="construct.a.mmaq001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtja018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja018
+            #add-point:ON ACTION controlp INFIELD rtja018 name="construct.c.rtja018"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            IF s_aooi500_setpoint(g_prog,'rtja018') THEN
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtja018',g_site,'c')
+               CALL q_ooef001_24()                           #呼叫開窗
+            ELSE
+               #CALL q_ooef001_14()          #161024-00025#2 mark
+               LET g_qryparam.where = " ooef201 = 'Y' "   #161024-00025#2 add
+               CALL q_ooef001_24()           #161024-00025#2 add
+            END IF
+            DISPLAY g_qryparam.return1 TO rtja018  #顯示到畫面上
+            NEXT FIELD rtja018                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja018
+            #add-point:BEFORE FIELD rtja018 name="construct.b.rtja018"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja018
+            
+            #add-point:AFTER FIELD rtja018 name="construct.a.rtja018"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtja002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja002
+            #add-point:ON ACTION controlp INFIELD rtja002 name="construct.c.rtja002"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef108()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtja002  #顯示到畫面上
+            NEXT FIELD rtja002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja002
+            #add-point:BEFORE FIELD rtja002 name="construct.b.rtja002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja002
+            
+            #add-point:AFTER FIELD rtja002 name="construct.a.rtja002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja023
+            #add-point:BEFORE FIELD rtja023 name="construct.b.rtja023"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja023
+            
+            #add-point:AFTER FIELD rtja023 name="construct.a.rtja023"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtja023
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja023
+            #add-point:ON ACTION controlp INFIELD rtja023 name="construct.c.rtja023"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.rtab001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtab001
+            #add-point:ON ACTION controlp INFIELD rtab001 name="construct.c.rtab001"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '1'
+            CALL q_rtaa001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtab001  #顯示到畫面上
+            NEXT FIELD rtab001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtab001
+            #add-point:BEFORE FIELD rtab001 name="construct.b.rtab001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtab001
+            
+            #add-point:AFTER FIELD rtab001 name="construct.a.rtab001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtja024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja024
+            #add-point:ON ACTION controlp INFIELD rtja024 name="construct.c.rtja024"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            IF s_aooi500_setpoint(g_prog,'rtja024') THEN
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtja024',g_site,'c')
+               CALL q_ooef001_24()                           #呼叫開窗
+            ELSE
+               #CALL q_ooef001_14()          #161024-00025#2 mark
+               LET g_qryparam.where = " ooef201 = 'Y' "   #161024-00025#2 add
+               CALL q_ooef001_24()           #161024-00025#2 add
+            END IF
+            DISPLAY g_qryparam.return1 TO rtja024  #顯示到畫面上
+            NEXT FIELD rtja024                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja024
+            #add-point:BEFORE FIELD rtja024 name="construct.b.rtja024"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja024
+            
+            #add-point:AFTER FIELD rtja024 name="construct.a.rtja024"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtjasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtjasite
+            #add-point:ON ACTION controlp INFIELD rtjasite name="construct.c.rtjasite"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtjasite',g_site,'c')
+            CALL q_ooef001_24()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtjasite  #顯示到畫面上
+            NEXT FIELD rtjasite                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtjasite
+            #add-point:BEFORE FIELD rtjasite name="construct.b.rtjasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtjasite
+            
+            #add-point:AFTER FIELD rtjasite name="construct.a.rtjasite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja032
+            #add-point:BEFORE FIELD rtja032 name="construct.b.rtja032"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja032
+            
+            #add-point:AFTER FIELD rtja032 name="construct.a.rtja032"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtja032
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja032
+            #add-point:ON ACTION controlp INFIELD rtja032 name="construct.c.rtja032"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.rtjadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtjadocno
+            #add-point:ON ACTION controlp INFIELD rtjadocno name="construct.c.rtjadocno"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " rtja000 IN ('artt600','artt610','artt620','artt700') "
+            CALL q_rtjadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtjadocno  #顯示到畫面上
+            NEXT FIELD rtjadocno                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtjadocno
+            #add-point:BEFORE FIELD rtjadocno name="construct.b.rtjadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtjadocno
+            
+            #add-point:AFTER FIELD rtjadocno name="construct.a.rtjadocno"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtja033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja033
+            #add-point:ON ACTION controlp INFIELD rtja033 name="construct.c.rtja033"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " rtja000 IN ('artt600','artt610','artt620','artt700') "
+            CALL q_rtja033()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtja033  #顯示到畫面上
+            NEXT FIELD rtja033                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja033
+            #add-point:BEFORE FIELD rtja033 name="construct.b.rtja033"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja033
+            
+            #add-point:AFTER FIELD rtja033 name="construct.a.rtja033"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtjadocdt
+            #add-point:BEFORE FIELD rtjadocdt name="construct.b.rtjadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtjadocdt
+            
+            #add-point:AFTER FIELD rtjadocdt name="construct.a.rtjadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtjadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtjadocdt
+            #add-point:ON ACTION controlp INFIELD rtjadocdt name="construct.c.rtjadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja034
+            #add-point:BEFORE FIELD rtja034 name="construct.b.rtja034"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja034
+            
+            #add-point:AFTER FIELD rtja034 name="construct.a.rtja034"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtja034
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja034
+            #add-point:ON ACTION controlp INFIELD rtja034 name="construct.c.rtja034"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja035
+            #add-point:BEFORE FIELD rtja035 name="construct.b.rtja035"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja035
+            
+            #add-point:AFTER FIELD rtja035 name="construct.a.rtja035"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtja035
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja035
+            #add-point:ON ACTION controlp INFIELD rtja035 name="construct.c.rtja035"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.rtja004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja004
+            #add-point:ON ACTION controlp INFIELD rtja004 name="construct.c.rtja004"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtja004  #顯示到畫面上
+            NEXT FIELD rtja004                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja004
+            #add-point:BEFORE FIELD rtja004 name="construct.b.rtja004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja004
+            
+            #add-point:AFTER FIELD rtja004 name="construct.a.rtja004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtjb004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtjb004
+            #add-point:ON ACTION controlp INFIELD rtjb004 name="construct.c.rtjb004"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtdx001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtjb004  #顯示到畫面上
+            NEXT FIELD rtjb004                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtjb004
+            #add-point:BEFORE FIELD rtjb004 name="construct.b.rtjb004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtjb004
+            
+            #add-point:AFTER FIELD rtjb004 name="construct.a.rtjb004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtja005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtja005
+            #add-point:ON ACTION controlp INFIELD rtja005 name="construct.c.rtja005"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_today
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtja005  #顯示到畫面上
+            NEXT FIELD rtja005                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtja005
+            #add-point:BEFORE FIELD rtja005 name="construct.b.rtja005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtja005
+            
+            #add-point:AFTER FIELD rtja005 name="construct.a.rtja005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imaa009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaa009
+            #add-point:ON ACTION controlp INFIELD imaa009 name="construct.c.imaa009"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtax001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+            NEXT FIELD imaa009                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaa009
+            #add-point:BEFORE FIELD imaa009 name="construct.b.imaa009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaa009
+            
+            #add-point:AFTER FIELD imaa009 name="construct.a.imaa009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtjb001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtjb001
+            #add-point:ON ACTION controlp INFIELD rtjb001 name="construct.c.rtjb001"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtildocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtjb001  #顯示到畫面上
+            NEXT FIELD rtjb001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtjb001
+            #add-point:BEFORE FIELD rtjb001 name="construct.b.rtjb001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtjb001
+            
+            #add-point:AFTER FIELD rtjb001 name="construct.a.rtjb001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imaa126
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaa126
+            #add-point:ON ACTION controlp INFIELD imaa126 name="construct.c.imaa126"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2002'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa126  #顯示到畫面上
+            NEXT FIELD imaa126                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaa126
+            #add-point:BEFORE FIELD imaa126 name="construct.b.imaa126"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaa126
+            
+            #add-point:AFTER FIELD imaa126 name="construct.a.imaa126"
+            
+            #END add-point
+            
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL cl_qbe_display_condition(FGL_GETENV("QUERYPLANID"), g_user)
+            CALL acrr722_get_buffer(l_dialog)
+ 
+         ON ACTION qbe_select
+            LET ls_wc = ""
+            #需要用ITM類程式查詢方案在CONSTRUCT的功能，將值set到畫面上
+            CALL cl_qbe_list("c") RETURNING ls_wc
+            CALL acrr722_get_buffer(l_dialog)
+            IF NOT cl_null(ls_wc) THEN
+               LET g_master.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後 name="ui_dialog.qbe_select"
+               
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION output
+            LET g_action_choice = "output"
+            ACCEPT DIALOG
+ 
+         ON ACTION quickprint
+            LET g_action_choice = "quickprint"
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION rpt_replang
+            CALL cl_gr_set_dlang()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL acrr722_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+ 
+     #LET lc_param.wc = g_master.wc    #r類主程式不在意lc_param,不使用轉換
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(g_master)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL acrr722_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = acrr722_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF           
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         LET gi_hiden_rep_temp = FALSE   #報表樣板設定
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr722.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION acrr722_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr722.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION acrr722_process(ls_js)
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_r01_status LIKE type_t.num5
+   DEFINE l_token       base.StringTokenizer      #cmdrun使用
+   DEFINE ls_next       STRING                    #cmdrun使用
+   DEFINE l_cnt         LIKE type_t.num5          #cmdrun使用   
+   DEFINE l_arg         DYNAMIC ARRAY OF STRING   ##cmdrun使用的陣列 
+   #add-point:process段define name="process.define"
+   DEFINE l_where       STRING
+   #end add-point
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+ 
+   INITIALIZE lc_param TO NULL
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_r01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   LET g_rep_wcchp = cl_wcchp(g_master.wc,"mmaq003,rtja017,mmaq001,rtja018,rtja002,rtja023,rtab001,rtja024,rtjasite,rtja032,rtjadocno,rtja033,rtjadocdt,rtja034,rtja035,rtja004,rtjb004,rtja005,imaa009,rtjb001,imaa126")  #取得列印條件
+  
+   #add-point:process段前處理 name="process.pre_process"
+   IF NOT cl_ask_confirm("lib-012") THEN
+      RETURN
+   END IF
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數   #r類不用計算進度條
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE acrr722_process_cs CURSOR FROM ls_sql
+#  FOREACH acrr722_process_cs INTO
+   #add-point:process段process name="process.process"
+   CALL s_aooi500_sql_where(g_prog,'rtjasite') RETURNING l_where
+   LET g_master.wc = g_master.wc," AND ",l_where
+   
+   CALL acrr722_x01(g_master.wc)
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" OR g_bgjob = "T" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_r01_status)
+   END IF
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr722.get_buffer" >}
+PRIVATE FUNCTION acrr722_get_buffer(p_dialog)
+   DEFINE p_dialog   ui.DIALOG
+   
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr722.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+#end add-point
+ 
+{</section>}
+ 

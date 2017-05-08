@@ -1,0 +1,247 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct300" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02291" crtdt="2014-04-08 10:03:17" modid="02295" moddt="2016-07-15 10:58:18" sdver="0015" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="期初庫存數量成本開帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xccacomp,xccacomp_desc(chr80),xccald,xccald_desc(chr80),xcca004,xcca005,xcca003,xcca003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcca001(chr500),xcca002,xcca006,xcca007,xcca006_desc(chr500),xcca006_1_desc(chr500),xcca008,xcca101,xcca110a,xcca110b,xcca110c,xcca110d,xcca110e,xcca110f,xcca110g,xcca110h,xcca110,xcca102a,xcca102b,xcca102c,xcca102d,xcca102e,xcca102f,xcca102g,xcca102h,xcca102"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcca001,xcca002,xcca006,xcca007,xcca008,xccaownid,xccaownid_desc(chr500),xccaowndp,xccaowndp_desc(chr500),xccacrtid,xccacrtid_desc(chr500),xccacrtdp,xccacrtdp_desc(chr500),xccacrtdt,xccamodid,xccamodid_desc(chr500),xccamoddt,xccacnfid,xccacnfid_desc(chr500),xccacnfdt,xccapstid,xccapstid_desc(chr500),xccapstdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="axct304"/>
+      <action id="open_axct300_s01"/>
+      <action id="open_axct300_02"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct300" method="dialog">
+    <section id="input">
+      <input id="head" field="xccacomp,xccald,xcca004,xcca005,xcca003"/>
+      <input id="body" page="1" field="xcca001,xcca002,xcca006,xcca007,xcca006_1_desc,xcca008,xcca101,xcca110a,xcca110b,xcca110c,xcca110d,xcca110e,xcca110f,xcca110g,xcca110h,xcca110,xcca102a,xcca102b,xcca102c,xcca102d,xcca102e,xcca102f,xcca102g,xcca102h,xcca102" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xccacomp,xccald,xcca004,xcca005,xcca003"/>
+      <construct id="body" page="1" field="xcca001,xcca002,xcca006,xcca007,xcca008,xcca101,xcca110a,xcca110b,xcca110c,xcca110d,xcca110e,xcca110f,xcca110g,xcca110h,xcca110,xcca102a,xcca102b,xcca102c,xcca102d,xcca102e,xcca102f,xcca102g,xcca102h,xcca102"/>
+      <construct id="body" page="2" field="xccaownid,xccaowndp,xccacrtid,xccacrtdp,xccacrtdt,xccamodid,xccamoddt,xccacnfid,xccacnfdt,xccapstid,xccapstdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xccald,xcca003,xcca004,xcca005"/>
+      <set id="head" type="no_entry" field="xccald,xcca003,xcca004,xcca005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xccacomp">
+        <after>
+          <reference field="xccacomp_desc" ref_field="xcca_t.xccacomp" map_field="xccaent,xccacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xccacomp_desc"/>
+      <column id="xccald">
+        <after>
+          <reference field="xccald_desc" ref_field="xcca_t.xccald" map_field="xccaent,xccald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xccald_desc"/>
+      <column id="xcca004"/>
+      <column id="xcca005"/>
+      <column id="xcca003" type="S" default="1">
+        <after>
+          <reference field="xcca003_desc" ref_field="xcca_t.xcca003" map_field="xccaent,xcca003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcca003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcca001" type="S" default="1" def_scc="8914"/>
+      <column id="xcca002">
+        <controlp form="q_xcbf001" state="i"/>
+        <controlp form="q_xcbf001" state="c"/>
+      </column>
+      <column id="xcca006">
+        <after>
+          <reference field="xcca006_desc" ref_field="xcca_t.xcca006" map_field="xccaent,xcca006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag001_2" state="i"/>
+        <controlp form="q_imag001_2" state="c"/>
+      </column>
+      <column id="xcca007"/>
+      <column id="xcca006_desc"/>
+      <column id="xcca006_1_desc"/>
+      <column id="xcca008">
+        <controlp form="q_inag006_2" state="i"/>
+        <controlp form="q_inag006_2" state="c"/>
+      </column>
+      <column id="xcca101">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca110a">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca110b">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca110c">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca110d">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca110e">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca110f">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca110g">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca110h">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca110"/>
+      <column id="xcca102a">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca102b">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca102c">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca102d">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca102e">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca102f">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca102g">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca102h">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcca102">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xccaownid">
+        <after>
+          <reference field="xccaownid_desc" ref_field="xcca_t.xccaownid" map_field="xccaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccaownid_desc"/>
+      <column id="xccaowndp">
+        <after>
+          <reference field="xccaowndp_desc" ref_field="xcca_t.xccaowndp" map_field="xccaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xccaowndp_desc"/>
+      <column id="xccacrtid">
+        <after>
+          <reference field="xccacrtid_desc" ref_field="xcca_t.xccacrtid" map_field="xccacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccacrtid_desc"/>
+      <column id="xccacrtdp">
+        <after>
+          <reference field="xccacrtdp_desc" ref_field="xcca_t.xccacrtdp" map_field="xccacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xccacrtdp_desc"/>
+      <column id="xccacrtdt"/>
+      <column id="xccamodid">
+        <after>
+          <reference field="xccamodid_desc" ref_field="xcca_t.xccamodid" map_field="xccamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccamodid_desc"/>
+      <column id="xccamoddt"/>
+      <column id="xccacnfid">
+        <after>
+          <reference field="xccacnfid_desc" ref_field="xcca_t.xccacnfid" map_field="xccacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccacnfid_desc"/>
+      <column id="xccacnfdt"/>
+      <column id="xccapstid">
+        <after>
+          <reference field="xccapstid_desc" ref_field="xcca_t.xccapstid" map_field="xccapstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccapstid_desc"/>
+      <column id="xccapstdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcca_t" pk="xccald,xcca003,xcca004,xcca005">
+      <sql id="forupd_sql" type="sql" query="SELECT xccacomp,&apos;&apos;,xccald,&apos;&apos;,xcca004,xcca005,xcca003,&apos;&apos; FROM xcca_t WHERE xccaent= ? AND xccald=? AND xcca003=? AND xcca004=? AND xcca005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xccacomp,&apos;&apos;,xccald,&apos;&apos;,xcca004,xcca005,xcca003,&apos;&apos; FROM xcca_t" order="xccald,xcca003,xcca004,xcca005"/>
+    </head>
+    <body id="xcca_t" page="1,2" linked="" pk="xcca001,xcca002,xcca006,xcca007,xcca008" fk="xccald,xcca003,xcca004,xcca005">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,xcca002,xcca006,xcca007,&apos;&apos;,&apos;&apos;,xcca008,xcca101,xcca110a,xcca110b,xcca110c,xcca110d,xcca110e,xcca110f,xcca110g,xcca110h,xcca110,xcca102a,xcca102b,xcca102c,xcca102d,xcca102e,xcca102f,xcca102g,xcca102h,xcca102,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccaownid,&apos;&apos;,xccaowndp,&apos;&apos;,xccacrtid,&apos;&apos;,xccacrtdp,&apos;&apos;,xccacrtdt,xccamodid,&apos;&apos;,xccamoddt,xccacnfid,&apos;&apos;,xccacnfdt,xccapstid,&apos;&apos;,xccapstdt FROM xcca_t WHERE xccaent=? AND xccald=? AND xcca003=? AND xcca004=? AND xcca005=? AND xcca001=? AND xcca002=? AND xcca006=? AND xcca007=? AND xcca008=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xcca002,xcca006,xcca007,&apos;&apos;,&apos;&apos;,xcca008,xcca101,xcca110a,xcca110b,xcca110c,xcca110d,xcca110e,xcca110f,xcca110g,xcca110h,xcca110,xcca102a,xcca102b,xcca102c,xcca102d,xcca102e,xcca102f,xcca102g,xcca102h,xcca102,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccaownid,&apos;&apos;,xccaowndp,&apos;&apos;,xccacrtid,&apos;&apos;,xccacrtdp,&apos;&apos;,xccacrtdt,xccamodid,&apos;&apos;,xccamoddt,xccacnfid,&apos;&apos;,xccacnfdt,xccapstid,&apos;&apos;,xccapstdt FROM xcca_t WHERE xccaent= ? AND xccald=? AND xcca003=? AND xcca004=? AND xcca005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

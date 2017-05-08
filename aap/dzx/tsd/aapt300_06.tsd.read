@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aapt300_06" std_prog="aapt300_06" erpver="1.0" ver="4" module="AAP" type="S" booking="N" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="3" cite_std="N">
+    <tbl name="apcf_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail4" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="3" src="s" status="">
+    <![CDATA[程式說明及目的：
+ 沖暫估資料明細查詢，立帳與原暫估金額差異數認列。
+  
+作業功能：新增/修改/刪除/複製/查詢/列印/匯出Excel/有效/無效/簽核/相關文件/說明/離開
+作業類型：
+          子作業
+輸入模式：
+          雙單身code_t02_A
+
+作業資料來源(Master)：
+ 應付沖暫估明細檔（apcf_t）
+ 帳款單身檔（apcb_t）
+
+補充明明：
+　第一段明細顯示立帳數有作沖暫估者；第二段明細顯示同交易業務單可沖暫估數據，並指定差異科目認列。
+１。增加資料表＂應付沖暫估明細檔（apcf_t）＂
+２。帳款作業(aapt300、aapt340、aapt330)單身輸入"沖暫估"資料時，寫入暫估沖銷明細檔（apcf_t）。
+    1.AFTER ROW 時, 檢核該筆是否為沖暫估apcb023='Y'；沖暫估須檢核同幣別者。
+    2.依單身立帳數量apcb007, 取原暫估單據之單價，寫入沖銷檔及計算沖銷金額、差異金額。
+　　3.一筆交易業務單(出貨單)立帳可沖抵二筆以上暫估單據（同來源單據項次且未沖銷者）；
+      即原交易單據有分次立暫估情形，一次發票沖銷者。
+    4.立帳金額(apcb103)＜＞可沖暫估金額者(apcf103)，則將金額差異寫入＂沖銷差異金額欄位(apcf116、apcf117)＂。
+
+###########################################################################
+資料處理
+●沖暫估明細檔(apcf_t)資料產生說明：
+　１。帳款單身(apcb_t)輸入沖暫估(apcb023='Y')資料時，同時寫入沖銷暫估明細檔(apcf_t)
+      。依沖暫估數量(apcf007)計算沖暫估金額(apcf103)。
+      。尾差金額處理：沖暫估數量=原立暫估數量時，沖暫估金額須等於原立暫估金額。(避免沖銷尾差)
+  ２。沖暫估資料由單身維護時，系統自動產生
+　３。取原暫估單據之科目作沖轉。
+  ４。產生對應字段方式，請參考ＥＸＣＥＬ表範例。
+
+●規格異動：
+。應付暫估作業(aapt320)
+　１。暫估進項稅額預設科目(apcd_t.apcd009)，原依稅別取得置入；
+    。暫估單(apca001=01、02)者，更改為取"帳款類別科目設定(aapi011)"的"8504_08.未收進項發票估列稅額歸屬科目"。
+      CALL 取設定科目元件。
+  　。置換科目時機點：CALL 展算稅額計算後，即依取得參數之科目作UPDATE apcd009動作。
+　２。購料進貨科目取得（apcb_t.apcb021)
+    。暫估單(apca001=01、02)者，更改為取"帳款類別科目設定(aapi011)"的＂8504_07.待確認購料歸屬科目(未附票)＂
+  ３。暫估應付科目取得（apcb_t.apcb029 / apca_t.apca0)
+    。暫估單(apca001=01、02)者，更改為取"帳款類別科目設定(aapi011)"的＂8504_22.暫估應付帳科目"
+
+。 aapt300、aapt340(增加沖暫估功能）：
+　１。欄位順序變更：　[沖暫估]改置於[來源單項次]後方。
+　２。修改[來源單號+項次apcb003]後，帶值處理；判別有無立"暫估單"且為尚有未沖銷金額者。
+　３。修改[立帳數量apcb007]之檢核：
+ 。檢核數量不可 ＞ 來源單據之"未立帳數量"＋"未沖暫估數量"
+   1.未立帳數量  ：依帳套別取 （計價數量 - 已立帳數量）
+   2.未沖暫估數量：依帳套別取 （已立暫估數 - 沖銷暫估數量(apcf_t)　） 
+ 。無［來源業務單據］者，不須檢核數量者。 
+  ４。科目取得：
+　　　。須判別法人參數設定＂S-FIN-2011　暫估帳款傳票期初不作迴轉＂
+　　　　Ｙ：不迴轉。
+　　　　Ｎ：期初迴轉。
+　　　。ＥＸＣＥＬ表案例說明取值。
+ 8504_11.沖暫估價格差異歸屬科目]]>
+  </all>
+  <db_all cite_std="N" ver="3" src="s" status="">
+    <![CDATA[沖暫估信息單身: apcb有沖暫估的單身
+來源檔案：
+ 帳款單身明細檔(apcb_t)  WHERE apcb023='Y'
+
+●操作說明：
+  。本段資料DISPLAY ONLY / 不可異動.
+  。沖銷差異金額, 合計自apcf_t，依單身項次對應apcbseq=apcfseq
+　。本位幣二、三字段欄位顯示與否，視該帳套有無使用輔助幣別。
+#####################################################]]>
+  </db_all>
+  <di_all cite_std="N" ver="3" src="s" status="">
+    <![CDATA[來源檔案：
+ 沖銷暫估明細檔(apcf_t)
+  WHERE apcfseq = apcb_t.apcbseq
+PAGE:
+  依第一段單身明細所在cursor,顯示對應之沖暫估內容。
+
+。沖暫估明細： 
+ 顯示帳款單身為’沖暫估’之資料，顯示原暫估數據及沖銷數據。
+。其他本位幣訊息：
+ 視該帳套別有無啟用其他本位幣功能，有啟用任一本位幣者，才顯示此page。
+。沖銷科目明細：
+ 維護沖銷差異科目。
+
+#####################################################
+]]>
+  </di_all>
+  <field cite_std="N" name="apca001" ver="4" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf008_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf021_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf026_2" ver="3" src="s" column="apcf026" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf026_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf027_2" ver="3" src="s" column="apcf027" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf027_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf028_2" ver="3" src="s" column="apcf028" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf028_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf029_2" ver="3" src="s" column="apcf029" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf029_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf030_2" ver="3" src="s" column="apcf030" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf030_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf031_2" ver="3" src="s" column="apcf031" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf031_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf032_2" ver="3" src="s" column="apcf032" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf032_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf033_2" ver="3" src="s" column="apcf033" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf033_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf034_2" ver="3" src="s" column="apcf034" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf034_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf035_2" ver="3" src="s" column="apcf035" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf035_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf036_2" ver="3" src="s" column="apcf036" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf037_2" ver="3" src="s" column="apcf037" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf037_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf038_2" ver="3" src="s" column="apcf038" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf038_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf039_2" ver="3" src="s" column="apcf039" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf039_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf040_2" ver="3" src="s" column="apcf040" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf040_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf041_2" ver="3" src="s" column="apcf041" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf041_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf042_2" ver="3" src="s" column="apcf042" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf042_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf043_2" ver="3" src="s" column="apcf043" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf043_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf044_2" ver="3" src="s" column="apcf044" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf044_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf045_2" ver="3" src="s" column="apcf045" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf045_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf046_2" ver="3" src="s" column="apcf046" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf046_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf047_2" ver="3" src="s" column="apcf047" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf047_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf048_2" ver="3" src="s" column="apcf048" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf048_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf049_2" ver="3" src="s" column="apcf049" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf001" ver="3" src="s" column="apcf001" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf002" ver="3" src="s" column="apcf002" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf007" ver="1" src="s" column="apcf007" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf008" ver="3" src="s" column="apcf008" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[未沖暫估單查詢開窗：
+　。傳入條件參數：
+ 來源業務交易單據S1= apcb002
+             項次S2= apcb003
+ 帳套別          S3= apcald
+ 帳款對象        S4= apca057
+  。顯示字段：
+      帳款日期  暫估帳款單 項次  暫估數量 未稅金額  稅額    含稅金額    未沖銷金額
+      --------  ----------- ---- --------  -------- ------- ----------  ----------------------
+      apcadocdt apcbdocno  seq  apcb007   apcb103  apcb104  apcb105    sum(apcc108-apcc109)
+  。處理：
+    SELECT .... FROM apcb_t,apca_t,apcc_t
+     WHERE  apcb_t=apca_t AND apcb_t=apcc_t
+ AND apca001 IN ('01','02') AND apcastus='Y' #存在於暫估單者
+            AND apcc108-apcc109 <> 0
+ AND { when S1 is not null THEN  (S1+S2 = apcb002+apcb003)   #非雜項有來源單者
+       when S1 is null     THEN  (S4=apca057)  }  #雜項暫估無來源單者,依對象別沖暫估
+ AND apcbld = S3
+    
+  。開窗輸入後帶值：
+    .t_bq暫估數、t_bmx暫估未稅、t_bmt暫估稅額、t_bmxt暫估含稅 
+   = SELECT (apcb007),(apcb103), (apcb104), (apcb105)
+   WHERE appcbdocno,apcbseq = [暫估單據號碼apcf008]、[項次apcf009] 
+     AND apcastus='Y'
+    .t_cq己沖暫估數、t_cmx沖暫估未稅t_cmt沖暫估稅額、t_bmxt沖暫估含稅
+   = SELECT SUM(apcf007) SUM(apcf103), SUM(apcf104), SUM(apcf105)
+    FROM apcf_t,apcb_t,apca_t,apcc_t
+   WHERE apcf008,apcf009 = [暫估單據號碼apcf008]、[項次apcf009]
+     AND apcastus <> 'X' 
+   。apcf007可沖銷暫估數量 = (t_bq - t_cq)  未沖暫估數量
+     apcf103原幣未稅沖銷金額 = (t_bmx 暫估額 - t_cmx己沖 ）
+     apcf105原幣含稅沖銷總額 = (t_bmxt暫估額 - t_cmxt己沖 ） 
+     apcf104原幣稅額沖銷     = (t_bmt 暫估額 - t_cmt己沖 ）]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf009" ver="1" src="s" column="apcf009" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf010" ver="3" src="s" column="apcf010" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf020" ver="3" src="s" column="apcf020" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf021" ver="3" src="s" column="apcf021" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf022" ver="3" src="s" column="apcf022" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf023" ver="3" src="s" column="apcf023" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf024" ver="3" src="s" column="apcf024" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf025" ver="3" src="s" column="apcf025" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf101" ver="3" src="s" column="apcf101" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf102" ver="3" src="s" column="apcf102" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf103" ver="1" src="s" column="apcf103" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf104" ver="1" src="s" column="apcf104" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf105" ver="4" src="s" column="apcf105" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[開含稅金額 因為 未稅立暫估時稅額也不會有金額]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf111" ver="3" src="s" column="apcf111" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf113" ver="1" src="s" column="apcf113" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf114" ver="1" src="s" column="apcf114" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf115" ver="1" src="s" column="apcf115" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf122" ver="3" src="s" column="apcf122" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf123" ver="3" src="s" column="apcf123" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf124" ver="3" src="s" column="apcf124" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf125" ver="3" src="s" column="apcf125" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf126" ver="3" src="s" column="apcf126" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf127" ver="3" src="s" column="apcf127" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf132" ver="3" src="s" column="apcf132" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf133" ver="3" src="s" column="apcf133" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf134" ver="3" src="s" column="apcf134" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf135" ver="3" src="s" column="apcf135" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf136" ver="3" src="s" column="apcf136" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcf137" ver="3" src="s" column="apcf137" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcfdocno" ver="1" src="s" column="apcfdocno" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcfld" ver="1" src="s" column="apcfld" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcfseq" ver="1" src="s" column="apcfseq" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcf_t.apcfseq2" ver="1" src="s" column="apcfseq2" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcfdocno_2" ver="3" src="s" column="apcfdocno" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcfld_2" ver="3" src="s" column="apcfld" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcforga_2" ver="3" src="s" column="apcforga" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcforga_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcfseq2_2" ver="3" src="s" column="apcfseq2" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcfseq_2" ver="3" src="s" column="apcfseq" table="apcf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_apcf021_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb001" ver="4" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="4" name="apca001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="4" name="apcb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="3" name="apcf008_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf021_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf026_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf026_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf027_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf027_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf028_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf028_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf029_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf029_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf030_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf030_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf031_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf031_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf032_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf032_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf033_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf033_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf034_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf034_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf035_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf035_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf036_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf037_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf037_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf038_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf038_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf039_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf039_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf040_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf040_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf041_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf041_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf042_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf042_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf043_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf043_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf044_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf044_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf045_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf045_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf046_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf046_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf047_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf047_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf048_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf048_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf049_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcf007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcf009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf101" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf102" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcf103" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcf104" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="apcf_t.apcf105" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf111" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcf113" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcf114" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcf115" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf122" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf123" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf124" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf125" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf126" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf127" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf132" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf133" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf134" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf135" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf136" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcf_t.apcf137" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcfdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcfld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcfseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcf_t.apcfseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcfdocno_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcfld_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcforga_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcforga_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcfseq2_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcfseq_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="l_apcf021_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="execute_add" ver="3" src="s" type="all" gen_code="N" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="execute_del" ver="3" src="s" type="all" gen_code="N" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_aapt300_06_bpage_1" text="沖銷暫估明細" lstr=""/>
+    <sfield name="lbl_apcfdocno" text="單號" lstr=""/>
+    <sfield name="lbl_apcfld" text="帳別" lstr=""/>
+    <sfield name="lbl_apcfseq" text="項次" lstr=""/>
+    <sfield name="lbl_apcfseq2" text="項次" lstr=""/>
+    <sfield name="lbl_apca001" text="性質" lstr=""/>
+    <sfield name="lbl_apcf008" text="暫估單號碼" lstr=""/>
+    <sfield name="lbl_apcf009" text="暫估單號項次" lstr=""/>
+    <sfield name="lbl_apcf010" text="期別" lstr=""/>
+    <sfield name="lbl_apcf021" text="應付暫估會科" lstr=""/>
+    <sfield name="lbl_apcf021_desc" text="科目名稱" lstr=""/>
+    <sfield name="lbl_apcf007" text="沖銷數量" lstr=""/>
+    <sfield name="lbl_apcf101" text="原幣單價" lstr=""/>
+    <sfield name="lbl_apcf103" text="原幣未稅金額" lstr=""/>
+    <sfield name="lbl_apcf104" text="原幣稅額" lstr=""/>
+    <sfield name="lbl_apcf105" text="原幣含稅金額" lstr=""/>
+    <sfield name="lbl_apcf102" text="原幣匯率" lstr=""/>
+    <sfield name="lbl_apcf113" text="本幣未稅金額" lstr=""/>
+    <sfield name="lbl_apcf114" text="本幣稅額" lstr=""/>
+    <sfield name="lbl_apcf115" text="本幣含稅金額" lstr=""/>
+    <sfield name="lbl_apcf020" text="稅別" lstr=""/>
+    <sfield name="lbl_apcf022" text="待沖銷未稅會科(進貨)" lstr=""/>
+    <sfield name="lbl_apcf023" text="待沖銷稅額會科" lstr=""/>
+    <sfield name="lbl_apcf111" text="本幣單價" lstr=""/>
+    <sfield name="lbl_apcf122" text="暫估本位幣二匯率" lstr=""/>
+    <sfield name="lbl_apcf123" text="本位幣二未稅金額" lstr=""/>
+    <sfield name="lbl_apcf124" text="本位幣二稅額" lstr=""/>
+    <sfield name="lbl_apcf125" text="本位幣二含稅金額" lstr=""/>
+    <sfield name="lbl_apcf126" text="本位幣二價格差異金額" lstr=""/>
+    <sfield name="lbl_apcf127" text="本位幣二匯差" lstr=""/>
+    <sfield name="lbl_apcf132" text="暫估本位幣三匯率" lstr=""/>
+    <sfield name="lbl_apcf133" text="本位幣三未稅金額" lstr=""/>
+    <sfield name="lbl_apcf134" text="本位幣三稅額" lstr=""/>
+    <sfield name="lbl_apcf135" text="本位幣三含稅金額" lstr=""/>
+    <sfield name="lbl_apcf136" text="本位幣三價格差異金額" lstr=""/>
+    <sfield name="lbl_apcf137" text="本位幣三匯差" lstr=""/>
+    <sfield name="lbl_apcf001" text="作業別" lstr=""/>
+    <sfield name="lbl_apcf002" text="沖銷類型" lstr=""/>
+    <sfield name="lbl_apcf024" text="沖銷價差科目" lstr=""/>
+    <sfield name="lbl_apcf025" text="沖銷匯差科目" lstr=""/>
+    <sfield name="aapt300_06.page_1" text="其他科目明細" lstr=""/>
+    <sfield name="lbl_apcfld_2" text="帳別" lstr=""/>
+    <sfield name="lbl_apcfdocno_2" text="立帳單號" lstr=""/>
+    <sfield name="lbl_apcf049" text="摘要" lstr=""/>
+    <sfield name="lbl_apcforga" text="來源組織" lstr=""/>
+    <sfield name="lbl_apcforga_desc" text="來源組織" lstr=""/>
+    <sfield name="lbl_apcf026" text="業務部門" lstr=""/>
+    <sfield name="lbl_apcf026_desc" text="部門名稱" lstr=""/>
+    <sfield name="lbl_apcf027" text="責任中心" lstr=""/>
+    <sfield name="lbl_apcf027_desc" text="責任中心名稱" lstr=""/>
+    <sfield name="lbl_apcf028" text="區域" lstr=""/>
+    <sfield name="lbl_apcf028_desc" text="區域名稱" lstr=""/>
+    <sfield name="lbl_apcf029" text="交易客商" lstr=""/>
+    <sfield name="lbl_apcf029_desc" text="交易客商" lstr=""/>
+    <sfield name="lbl_apcf030" text="帳款客商" lstr=""/>
+    <sfield name="lbl_apcf030_desc" text="帳款客商" lstr=""/>
+    <sfield name="lbl_apcf031" text="客群" lstr=""/>
+    <sfield name="lbl_apcf031_desc" text="客群" lstr=""/>
+    <sfield name="lbl_apcf032" text="產品類別" lstr=""/>
+    <sfield name="lbl_apcf032_desc" text="產品類別" lstr=""/>
+    <sfield name="lbl_apcf033" text="業務人員" lstr=""/>
+    <sfield name="lbl_apcf033_desc" text="業務人員" lstr=""/>
+    <sfield name="lbl_apcf034" text="專案編號" lstr=""/>
+    <sfield name="lbl_apcf035" text="WBS" lstr=""/>
+    <sfield name="lbl_apcf036" text="經營方式" lstr=""/>
+    <sfield name="lbl_apcf037" text="渠道" lstr=""/>
+    <sfield name="lbl_apcf038" text="品牌" lstr=""/>
+    <sfield name="lbl_apcf039" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_apcf039_desc" text="自由核算项一" lstr=""/>
+    <sfield name="lbl_apcf040" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_apcf040_desc" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_apcf041" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_apcf041_desc" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_apcf042" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_apcf042_desc" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_apcf043" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_apcf043_desc" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_apcf044" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_apcf044_desc" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_apcf045" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_apcf045_dsec" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_apcf046" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_apcf046_desc" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_apcf047" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_apcf047_desc" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_apcf048" text="自由核算項十" lstr=""/>
+    <sfield name="lbl_apcf048_desc" text="自由核算項十" lstr=""/>
+    <sfield name="execute_add" text="整批新增" lstr=""/>
+    <sfield name="execute_del" text="整批刪除" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="execute_add" text="" lstr=""/>
+    <sact name="execute_del" text="" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="4" cite_std="N" src="s">
+    <widget name="apcf008_desc" status="u"/>
+    <widget name="apcf021_desc" status="u"/>
+    <widget name="apcf026_2" status="u"/>
+    <widget name="apcf026_desc" status="u"/>
+    <widget name="apcf027_2" status="u"/>
+    <widget name="apcf027_desc" status="u"/>
+    <widget name="apcf028_2" status="u"/>
+    <widget name="apcf028_desc" status="u"/>
+    <widget name="apcf029_2" status="u"/>
+    <widget name="apcf029_desc" status="u"/>
+    <widget name="apcf030_2" status="u"/>
+    <widget name="apcf030_desc" status="u"/>
+    <widget name="apcf031_desc" status="u"/>
+    <widget name="apcf032_desc" status="u"/>
+    <widget name="apcf033_desc" status="u"/>
+    <widget name="apcf034_2" status="u"/>
+    <widget name="apcf035_2" status="u"/>
+    <widget name="apcf036_2" status="u"/>
+    <widget name="apcf039_2" status="u"/>
+    <widget name="apcf039_desc" status="u"/>
+    <widget name="apcf040_2" status="u"/>
+    <widget name="apcf040_desc" status="u"/>
+    <widget name="apcf041_2" status="u"/>
+    <widget name="apcf041_desc" status="u"/>
+    <widget name="apcf042_2" status="u"/>
+    <widget name="apcf042_desc" status="u"/>
+    <widget name="apcf043_2" status="u"/>
+    <widget name="apcf043_desc" status="u"/>
+    <widget name="apcf044_2" status="u"/>
+    <widget name="apcf044_desc" status="u"/>
+    <widget name="apcf045_2" status="u"/>
+    <widget name="apcf045_desc" status="u"/>
+    <widget name="apcf046_2" status="u"/>
+    <widget name="apcf046_desc" status="u"/>
+    <widget name="apcf047_2" status="u"/>
+    <widget name="apcf047_desc" status="u"/>
+    <widget name="apcf048_2" status="u"/>
+    <widget name="apcf048_desc" status="u"/>
+    <widget name="apcf_t.apcf024" status="u"/>
+    <widget name="apcf_t.apcf025" status="u"/>
+    <widget name="apcforga_2" status="u"/>
+    <widget name="apcforga_desc" status="u"/>
+    <widget name="apcfseq2_2" status="u"/>
+    <widget name="apcfseq_2" status="u"/>
+    <widget name="l_apcf021_desc" status="u"/>
+  </exclude>
+</spec>

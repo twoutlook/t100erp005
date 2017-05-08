@@ -1,0 +1,142 @@
+<spec prog="aooi320" std_prog="aooi320" erpver="1.0" ver="1" module="AOO" booking="Y" normal_style="Y" class="i" template="F003_00" env="s" zone="t10dev">
+  <toolbar items="insert,modify,delete,reproduce,output,query" />
+  <table ver="1">
+    <tbl name="oocr_t" parent="" main="Y" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" status="" />
+      <sr name="s_detail1_info" src="s" insert="Y" delete="Y" append="Y" status="" />
+    </tbl>
+  </table>
+  <all src="s" ver="1" cite_std="" cite_ver="" status="">
+<![CDATA[程式說明及目的：維護庫存管理標籤的關聯標籤，方便後續庫位/儲位在設置標籤時的方便性
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：雙檔沒有搭配查詢方案F003_00
+作業資料來源(Detail)：
+ 資料來源表：occr_t(庫關連標籤檔)
+                        oocq_t(應用分類碼檔)
+            關聯資料表: oocql_t(應用分類碼多語言檔)
+
+1.本作業執行一定要有傳入參數：應用分類g_oocr001 = g_argv[1]，
+　如果第一個傳入參數值為空值時，則顯示錯誤訊息並結束程式。
+2.接收到第一個傳入參數後，需檢查該值是否存在[T:應用分類檔]且為有效資料，
+　若是則抓取該應用分類的所有應用分類碼資料出來顯示；
+  若否則須顯示錯誤訊息並結束程式。
+3.在程式一開始執行時，將oocr001欄位設為隱藏]]>
+</all>
+  <prog_rel />
+  <ref_field>
+    <rfield src="s" ver="1" name="oocr002_desc" depend_filed="oocr_t.oocr002" correspon_key="oocrent,oocr001,oocr002" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status="" />
+    <rfield src="s" ver="1" name="oocr003_desc" depend_filed="oocr_t.oocr003" correspon_key="oocrent,oocr001,oocr003" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status="" />
+    <rfield src="s" ver="1" name="oocrcrtdp_desc" depend_filed="oocr_t.oocrcrtdp" correspon_key="oocrcrtdp" ref_table="ooeal_t" ref_fk="ooeal001" ref_dlang="ooeal002" ref_rtn="ooeal003" status="" />
+    <rfield src="s" ver="1" name="oocrcrtid_desc" depend_filed="oocr_t.oocrcrtid" correspon_key="'2',oocrcrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status="" />
+    <rfield src="s" ver="1" name="oocrmodid_desc" depend_filed="oocr_t.oocrmodid" correspon_key="'2',oocrmodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status="" />
+    <rfield src="s" ver="1" name="oocrowndp_desc" depend_filed="oocr_t.oocrowndp" correspon_key="oocrowndp" ref_table="ooeal_t" ref_fk="ooeal001" ref_dlang="ooeal002" ref_rtn="ooeal003" status="" />
+    <rfield src="s" ver="1" name="oocrownid_desc" depend_filed="oocr_t.oocrownid" correspon_key="'2',oocrownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status="" />
+  </ref_field>
+  <multi_lang />
+  <help_code>
+    <hfield src="s" ver="1" name="oocr_t.oocr001" depend_filed="" correspon_key="" help_table="" help_fk="" help_rtn="" help_dlang="" status="" />
+  </help_code>
+  <strings>
+    <sfield name="page_1" text="基本資料" comment="" lstr="" />
+    <sfield name="lbl_oocr001" text="應用分類碼" comment="" lstr="" />
+    <sfield name="lbl_oocr002" text="標籤編號" comment="" lstr="" />
+    <sfield name="bpage_1" text="項目" comment="" lstr="" />
+    <sfield name="lbl_acti" text="有效" comment="" lstr="" />
+    <sfield name="lbl_oocr003" text="關聯標籤編號" comment="" lstr="" />
+    <sfield name="lbl_oocql004" text="說明" comment="" lstr="" />
+    <sfield name="bpage_info" text="異動資訊" comment="" lstr="" />
+    <sfield name="lbl_oocr003" text="關聯標籤編號" comment="" lstr="" />
+    <sfield name="lbl_modid" text="最近修改者" comment="" lstr="" />
+    <sfield name="modid_desc" text="員工名" comment="" lstr="" />
+    <sfield name="lbl_moddt" text="最近修改日期" comment="" lstr="" />
+    <sfield name="lbl_ownid" text="資料所有者" comment="" lstr="" />
+    <sfield name="ownid_desc" text="員工名" comment="" lstr="" />
+    <sfield name="lbl_owndp" text="資料所有部門" comment="" lstr="" />
+    <sfield name="owndp_desc" text="部門名" comment="" lstr="" />
+    <sfield name="lbl_crtid" text="資料建立者" comment="" lstr="" />
+    <sfield name="crtid_desc" text="員工名" comment="" lstr="" />
+    <sfield name="lbl_crtdp" text="資料建立部門" comment="" lstr="" />
+    <sfield name="crtdp_desc" text="部門名" comment="" lstr="" />
+    <sfield name="lbl_crtdt" text="資料建立日期" comment="" lstr="" />
+    <sfield name="lbl_hbegin" text="第" comment="" lstr="" />
+    <sfield name="lbl_hsep" text="筆(共" comment="" lstr="" />
+    <sfield name="lbl_hend" text="筆)" comment="" lstr="" />
+    <sfield name="lbl_dbegin" text="第" comment="" lstr="" />
+    <sfield name="lbl_dsep" text="項(共" comment="" lstr="" />
+    <sfield name="lbl_dend" text="項)" comment="" lstr="" />
+  </strings>
+  <sa_spec />
+  <mi_all src="s" ver="1" cite_std="" cite_ver="" status="">
+<![CDATA[1. 新增時，預設oocr001(應用分類碼) = (參數)g_oocr001]]>
+</mi_all>
+  <field column="oocr001" name="oocr_t.oocr001" ver="1" table="oocr_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+<![CDATA[]]>
+</field>
+  <field column="oocr002" name="oocr_t.oocr002" ver="1" table="oocr_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+<![CDATA[查詢時開窗：
+    1. arg1 = (參數)g_oocr001
+編輯時開窗：
+    1. arg1 = (參數)g_oocr001
+校驗帶值設定：
+    1. arg1 = (參數)g_oocr001
+    2. arg2 = 畫面上的oocr002
+    3. 若回傳的oocqstus = 'N'，則顯示錯誤(aoo-00100)並停留該欄位上]]>
+</field>
+  <field column="oocr003" name="oocr_t.oocr003" ver="1" table="oocr_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+<![CDATA[查詢時開窗：
+    1. arg1 = (參數)g_oocr001
+編輯時開窗：
+    1. arg1 = (參數)g_oocr001
+    2. 多加where條件：
+        2.1 oocq002不為畫面上的oocr002 
+        2.2 oocq002不存在於該標籤(oocr002)的所有關連標籤(oocr003)內
+    3. 可回傳多值，一併新增到oocr_t內
+after field ：
+    1. 輸入的oocr003 不可等於畫面上的oocr002
+校驗帶值設定：
+    1. arg1 = (參數)g_oocr001
+    2. arg2 = 畫面上的oocr003
+    3. 若回傳的oocqstus = 'N'，則顯示錯誤(aoo-00100)並停留該欄位上]]>
+</field>
+  <field column="oocrcrtdp" name="oocr_t.oocrcrtdp" ver="1" table="oocr_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+<![CDATA[]]>
+</field>
+  <field column="oocrcrtdt" name="oocr_t.oocrcrtdt" ver="1" table="oocr_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+<![CDATA[]]>
+</field>
+  <field column="oocrcrtid" name="oocr_t.oocrcrtid" ver="1" table="oocr_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+<![CDATA[]]>
+</field>
+  <field column="oocrmoddt" name="oocr_t.oocrmoddt" ver="1" table="oocr_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+<![CDATA[]]>
+</field>
+  <field column="oocrmodid" name="oocr_t.oocrmodid" ver="1" table="oocr_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+<![CDATA[]]>
+</field>
+  <field column="oocrowndp" name="oocr_t.oocrowndp" ver="1" table="oocr_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+<![CDATA[]]>
+</field>
+  <field column="oocrownid" name="oocr_t.oocrownid" ver="1" table="oocr_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+<![CDATA[]]>
+</field>
+  <act src="s" id="delete" ver="1" cite_std="N" type="all" status="">
+<![CDATA[]]>
+</act>
+  <act src="s" id="insert" ver="1" cite_std="N" type="all" status="">
+<![CDATA[]]>
+</act>
+  <act src="s" id="modify" ver="1" cite_std="N" type="all" status="">
+<![CDATA[]]>
+</act>
+  <act src="s" id="output" ver="1" cite_std="N" type="all" status="">
+<![CDATA[]]>
+</act>
+  <act src="s" id="query" ver="1" cite_std="N" type="all" status="">
+<![CDATA[]]>
+</act>
+  <act src="s" id="reproduce" ver="1" cite_std="N" type="all" status="">
+<![CDATA[]]>
+</act>
+  <exclude ver="1" />
+</spec>

@@ -1,0 +1,2725 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmq050.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:4(2015-08-11 14:36:43), PR版次:0004(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000052
+#+ Filename...: apmq050
+#+ Description: 採購價格差異比較查詢作業
+#+ Creator....: 03079(2015-07-29 16:07:46)
+#+ Modifier...: 03079 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="apmq050.global" >}
+#應用 q01 樣板自動產生(Version:34)
+#add-point:填寫註解說明 name="global.memo"
+#160324-00042#1   2016/04/28 By shiun        子件特性未顯示問題
+#160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_pmdl004_t ——> apmq050_tmp01,apmq050_apmt500_t ——> apmq050_tmp02,apmq050_relest_t ——> apmq050_tmp03
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pmdl_d RECORD
+       
+       sel LIKE type_t.chr1, 
+   pmdn001 LIKE pmdn_t.pmdn001, 
+   pmdn001_desc LIKE type_t.chr500, 
+   pmdn001_desc_1 LIKE type_t.chr500, 
+   pmdl015 LIKE pmdl_t.pmdl015, 
+   pmdl015_desc LIKE type_t.chr500, 
+   pmdn015 LIKE pmdn_t.pmdn015, 
+   pmdn0151 LIKE type_t.num20_6, 
+   pmdl0041 LIKE type_t.chr500, 
+   pmdl0041_desc LIKE type_t.chr500, 
+   pmdn0152 LIKE type_t.num20_6, 
+   pmdl0042 LIKE type_t.chr500, 
+   pmdl0042_desc LIKE type_t.chr500, 
+   pmdn0153 LIKE type_t.num20_6, 
+   pmdl0043 LIKE type_t.chr500, 
+   pmdl0043_desc LIKE type_t.chr500, 
+   pmdn0154 LIKE type_t.num20_6, 
+   pmdl0044 LIKE type_t.chr500, 
+   pmdl0044_desc LIKE type_t.chr500, 
+   pmdn0155 LIKE type_t.num20_6, 
+   pmdl0045 LIKE type_t.chr500, 
+   pmdl0045_desc LIKE type_t.chr500, 
+   pmdn0156 LIKE type_t.num20_6, 
+   pmdl0046 LIKE type_t.chr500, 
+   pmdl0046_desc LIKE type_t.chr500, 
+   pmdn0157 LIKE type_t.num20_6, 
+   pmdl0047 LIKE type_t.chr500, 
+   pmdl0047_desc LIKE type_t.chr500, 
+   pmdn0158 LIKE type_t.num20_6, 
+   pmdl0048 LIKE type_t.chr500, 
+   pmdl0048_desc LIKE type_t.chr500, 
+   pmdn0159 LIKE type_t.num20_6, 
+   pmdl0049 LIKE type_t.chr500, 
+   pmdl0049_desc LIKE type_t.chr500, 
+   pmdn01510 LIKE type_t.num20_6, 
+   pmdl00410 LIKE type_t.chr500, 
+   pmdl00410_desc LIKE type_t.chr500, 
+   pmdn01511 LIKE type_t.num20_6, 
+   pmdl00411 LIKE type_t.chr500, 
+   pmdl00411_desc LIKE type_t.chr500, 
+   pmdn01512 LIKE type_t.num20_6, 
+   pmdl00412 LIKE type_t.chr500, 
+   pmdl00412_desc LIKE type_t.chr500, 
+   pmdn01513 LIKE type_t.num20_6, 
+   pmdl00413 LIKE type_t.chr500, 
+   pmdl00413_desc LIKE type_t.chr500, 
+   pmdn01514 LIKE type_t.num20_6, 
+   pmdl00414 LIKE type_t.chr500, 
+   pmdl00414_desc LIKE type_t.chr500, 
+   pmdn01515 LIKE type_t.num20_6, 
+   pmdl00415 LIKE type_t.chr500, 
+   pmdl00415_desc LIKE type_t.chr500, 
+   pmdn01516 LIKE type_t.num20_6, 
+   pmdl00416 LIKE type_t.chr500, 
+   pmdl00416_desc LIKE type_t.chr500, 
+   pmdn01517 LIKE type_t.num20_6, 
+   pmdl00417 LIKE type_t.chr500, 
+   pmdl00417_desc LIKE type_t.chr500, 
+   pmdn01518 LIKE type_t.num20_6, 
+   pmdl00418 LIKE type_t.chr500, 
+   pmdl00418_desc LIKE type_t.chr500, 
+   pmdn01519 LIKE type_t.num20_6, 
+   pmdl00419 LIKE type_t.chr500, 
+   pmdl00419_desc LIKE type_t.chr500, 
+   pmdn01520 LIKE type_t.num20_6, 
+   pmdl00420 LIKE type_t.chr500, 
+   pmdl00420_desc LIKE type_t.chr500, 
+   pmdn01521 LIKE type_t.num20_6, 
+   pmdl00421 LIKE type_t.chr500, 
+   pmdl00421_desc LIKE type_t.chr500, 
+   pmdn01522 LIKE type_t.num20_6, 
+   pmdl00422 LIKE type_t.chr500, 
+   pmdl00422_desc LIKE type_t.chr500, 
+   pmdn01523 LIKE type_t.num20_6, 
+   pmdl00423 LIKE type_t.chr500, 
+   pmdl00423_desc LIKE type_t.chr500, 
+   pmdn01524 LIKE type_t.num20_6, 
+   pmdl00424 LIKE type_t.chr500, 
+   pmdl00424_desc LIKE type_t.chr500, 
+   pmdn01525 LIKE type_t.num20_6, 
+   pmdl00425 LIKE type_t.chr500, 
+   pmdl00425_desc LIKE type_t.chr500, 
+   pmdn01526 LIKE type_t.num20_6, 
+   pmdl00426 LIKE type_t.chr500, 
+   pmdl00426_desc LIKE type_t.chr500, 
+   pmdn01527 LIKE type_t.num20_6, 
+   pmdl00427 LIKE type_t.chr500, 
+   pmdl00427_desc LIKE type_t.chr500, 
+   pmdn01528 LIKE type_t.num20_6, 
+   pmdl00428 LIKE type_t.chr500, 
+   pmdl00428_desc LIKE type_t.chr500, 
+   pmdn01529 LIKE type_t.num20_6, 
+   pmdl00429 LIKE type_t.chr500, 
+   pmdl00429_desc LIKE type_t.chr500, 
+   pmdn01530 LIKE type_t.num20_6, 
+   pmdl00430 LIKE type_t.chr500, 
+   pmdl00430_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+ TYPE type_master RECORD
+        date_s     LIKE type_t.dat,
+        date_e     LIKE type_t.dat,
+        radio      LIKE type_t.chr1
+               END RECORD
+DEFINE g_master    type_master
+DEFINE g_master_o  type_master
+
+ TYPE type_g_pmdn2_d RECORD
+       pmdldocno LIKE pmdl_t.pmdldocno,
+   pmdldocdt LIKE pmdl_t.pmdldocdt,
+   pmdl004 LIKE pmdl_t.pmdl004,
+   pmdl004_desc LIKE type_t.chr500,
+   pmdl002 LIKE pmdl_t.pmdl002,
+   url_b_pmdl002 STRING,
+   pmdl002_desc LIKE type_t.chr500,
+   pmdl003 LIKE pmdl_t.pmdl003,
+   pmdl003_desc LIKE type_t.chr500,
+   pmdnseq LIKE pmdn_t.pmdnseq,
+   pmdn019 LIKE pmdn_t.pmdn019,
+   pmdn002 LIKE pmdn_t.pmdn002,
+   pmdn002_desc LIKE type_t.chr500,
+   pmdn006 LIKE pmdn_t.pmdn006,
+   pmdn006_desc LIKE type_t.chr500,
+   pmdn007 LIKE pmdn_t.pmdn007,
+   pmdn015 LIKE pmdn_t.pmdn015,
+   pmdn015_1 LIKE type_t.chr500
+       END RECORD
+
+DEFINE g_pmdn2_d     DYNAMIC ARRAY OF type_g_pmdn2_d
+DEFINE g_pmdn2_d_t   type_g_pmdn2_d
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_pmdl_d            DYNAMIC ARRAY OF type_g_pmdl_d
+DEFINE g_pmdl_d_t          type_g_pmdl_d
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmq050.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:作業初始化 name="main.init"
+   CALL apmq050_create_temp_table()
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apmq050_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE apmq050_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apmq050_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmq050 WITH FORM cl_ap_formpath("apm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apmq050_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apmq050_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_apmq050
+      
+   END IF 
+   
+   CLOSE apmq050_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL apmq050_drop_temp_table()
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="apmq050.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION apmq050_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+     
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   LET g_master.date_s = g_today
+   LET g_master.date_e = g_today
+   LET g_master.radio  = '1' 
+   CALL cl_set_combo_scc('b_pmdn019','2055')
+   
+   CALL cl_set_comp_visible('b_pmdl0041,b_pmdl0041_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl0042,b_pmdl0042_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl0043,b_pmdl0043_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl0044,b_pmdl0044_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl0045,b_pmdl0045_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl0046,b_pmdl0046_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl0047,b_pmdl0047_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl0048,b_pmdl0048_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl0049,b_pmdl0049_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00410,b_pmdl00410_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00411,b_pmdl00411_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00412,b_pmdl00412_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00413,b_pmdl00413_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00414,b_pmdl00414_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00415,b_pmdl00415_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00416,b_pmdl00416_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00417,b_pmdl00417_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00418,b_pmdl00418_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00419,b_pmdl00419_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00420,b_pmdl00420_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00421,b_pmdl00421_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00422,b_pmdl00422_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00423,b_pmdl00423_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00424,b_pmdl00424_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00425,b_pmdl00425_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00426,b_pmdl00426_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00427,b_pmdl00427_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00428,b_pmdl00428_desc',FALSE) 
+   CALL cl_set_comp_visible('b_pmdl00429,b_pmdl00429_desc',FALSE)
+   CALL cl_set_comp_visible('b_pmdl00430,b_pmdl00430_desc',FALSE)
+   #end add-point
+ 
+   CALL apmq050_default_search()
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq050.default_search" >}
+PRIVATE FUNCTION apmq050_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " pmdldocno = '", g_argv[01], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq050.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apmq050_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old   STRING
+   DEFINE ls_js     STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   
+   CALL apmq050_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_pmdl_d.clear()
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL apmq050_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+         INPUT BY NAME g_master.date_s,g_master.date_e,g_master.radio
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            BEFORE INPUT
+               LET g_master_o.* = g_master.*
+            
+            AFTER FIELD date_s
+               IF NOT cl_null(g_master.date_s) AND NOT cl_null(g_master.date_e) THEN
+                  IF g_master.date_s <> g_master_o.date_s OR cl_null(g_master_o.date_s) THEN
+                     #起始日期不可大於截止日期,請檢查！
+                     IF g_master.date_e < g_master.date_s THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend = g_master.date_e
+                        LET g_errparam.code   = 'agl-00116'
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        LET g_master.date_s = g_master_o.date_s
+                        DISPLAY BY NAME g_master.date_s
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+               LET g_master_o.date_s = g_master.date_s
+            
+            AFTER FIELD date_e
+               IF NOT cl_null(g_master.date_e) AND NOT cl_null(g_master.date_s) THEN
+                  IF g_master.date_e <> g_master_o.date_e OR cl_null(g_master_o.date_e) THEN
+                     #截止日期不可小於起始日期,請檢查！
+                     IF g_master.date_e < g_master.date_s THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend = g_master.date_s
+                        LET g_errparam.code   = 'agl-00117'
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        LET g_master.date_e = g_master_o.date_e
+                        DISPLAY BY NAME g_master.date_e
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+               LET g_master_o.date_e = g_master.date_e
+         
+         END INPUT
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+         CONSTRUCT BY NAME g_wc ON pmdn001,imaa009,pmdl004,pmaa090,pmdl002,pmdl003,pmdl015
+            
+            ON ACTION controlp INFIELD pmdn001
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+               CALL q_imaf001_15()
+               DISPLAY g_qryparam.return1 TO pmdn001
+               NEXT FIELD pmdn001
+            
+            ON ACTION controlp INFIELD imaa009
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_rtax001()
+               DISPLAY g_qryparam.return1 TO imaa009
+               NEXT FIELD imaa009
+            
+            ON ACTION controlp INFIELD pmdl004
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_pmaa001_6()
+               DISPLAY g_qryparam.return1 TO pmdl004
+               NEXT FIELD pmdl004
+            
+            ON ACTION controlp INFIELD pmaa090
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = "281"
+               CALL q_oocq002()
+               DISPLAY g_qryparam.return1 TO pmaa090
+               NEXT FIELD pmaa090
+            
+            ON ACTION controlp INFIELD pmdl002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               DISPLAY g_qryparam.return1 TO pmdl002
+               NEXT FIELD pmdl002
+            
+            ON ACTION controlp INFIELD pmdl003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooeg001()
+               DISPLAY g_qryparam.return1 TO pmdl003
+               NEXT FIELD pmdl003
+            
+            ON ACTION controlp INFIELD pmdl015
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               CALL q_ooaj002_1()
+               DISPLAY g_qryparam.return1 TO pmdl015
+               NEXT FIELD pmdl015
+            
+         END CONSTRUCT
+         #end add-point
+     
+         DISPLAY ARRAY g_pmdl_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL apmq050_detail_action_trans()
+ 
+               LET g_master_idx = l_ac
+               #為避免按上下筆時影響執行效能，所以做一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL apmq050_b_fill2()
+               LET g_action_choice = lc_action_choice_old
+ 
+               #add-point:input段before row name="input.body.before_row"
+               
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+         #add-point:第一頁籤程式段mark結束用 name="ui_dialog.page1.mark.end"
+         
+         #end add-point
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_pmdn2_d TO s_detail2.* ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 2
+
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+
+         END DISPLAY 
+         #end add-point
+ 
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL apmq050_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            CALL cl_set_act_visible("insert",FALSE)
+            #end add-point
+            NEXT FIELD pmdn001
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+            
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+         
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+ 
+ 
+            #add-point:ON ACTION accept name="ui_dialog.accept"
+            
+            #end add-point
+ 
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            CALL apmq050_b_fill()
+ 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_pmdl_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL apmq050_b_fill()
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL apmq050_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL apmq050_b_fill()
+ 
+         ON ACTION detail_next               #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL apmq050_b_fill()
+ 
+         ON ACTION detail_last               #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL apmq050_b_fill()
+ 
+         #應用 qs19 樣板自動產生(Version:3)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_pmdl_d.getLength()
+               LET g_pmdl_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_pmdl_d.getLength()
+               LET g_pmdl_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_pmdl_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pmdl_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_pmdl_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pmdl_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+ 
+ 
+ 
+ 
+ 
+         #應用 qs16 樣板自動產生(Version:3)
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apmq050_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+ 
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq050.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION apmq050_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_sql           STRING
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_pmdn001       LIKE pmdn_t.pmdn001
+   DEFINE l_pmdl015       LIKE pmdl_t.pmdl015
+   DEFINE l_pmdl004       LIKE pmdl_t.pmdl004
+   DEFINE l_i             LIKE type_t.num5
+
+   DEFINE l_seq           LIKE type_t.num5
+   DEFINE l_pmdn015       LIKE pmdn_t.pmdn015
+
+   DEFINE l_apmt500       RECORD
+                             pmdldocno     LIKE pmdl_t.pmdldocno,    #單號  
+                             pmdldocdt     LIKE pmdl_t.pmdldocdt,    #日期     
+                             pmdn001       LIKE pmdn_t.pmdn001,      #料號  
+                             pmdl004       LIKE pmdl_t.pmdl004,      #客戶  
+                             pmdl015       LIKE pmdl_t.pmdl015,      #幣別  
+                             pmdn015       LIKE pmdn_t.pmdn015,      #單價   
+                             pmdn0152      LIKE pmdn_t.pmdn015,                             
+                             pmdl002       LIKE pmdl_t.pmdl002,
+                             pmdl003       LIKE pmdl_t.pmdl003,
+                             pmdnseq       LIKE pmdn_t.pmdnseq,
+                             pmdn019       LIKE pmdn_t.pmdn019,
+                             pmdn002       LIKE pmdn_t.pmdn002,
+                             pmdn006       LIKE pmdn_t.pmdn006,
+                             pmdn007       LIKE pmdn_t.pmdn007
+                          END RECORD
+
+   DEFINE l_sr            RECORD
+                             pmdn001     LIKE pmdn_t.pmdn001,        #料號 
+                             pmdl015     LIKE pmdl_t.pmdl015,        #幣別 
+                             pmdn0151    LIKE pmdn_t.pmdn015, 
+                             pmdl0041    LIKE pmdl_t.pmdl004,
+                             pmdn0152    LIKE pmdn_t.pmdn015, 
+                             pmdl0042    LIKE pmdl_t.pmdl004,
+                             pmdn0153    LIKE pmdn_t.pmdn015, 
+                             pmdl0043    LIKE pmdl_t.pmdl004, 
+                             pmdn0154    LIKE pmdn_t.pmdn015, 
+                             pmdl0044    LIKE pmdl_t.pmdl004,
+                             pmdn0155    LIKE pmdn_t.pmdn015, 
+                             pmdl0045    LIKE pmdl_t.pmdl004,
+                             pmdn0156    LIKE pmdn_t.pmdn015, 
+                             pmdl0046    LIKE pmdl_t.pmdl004,
+                             pmdn0157    LIKE pmdn_t.pmdn015, 
+                             pmdl0047    LIKE pmdl_t.pmdl004,
+                             pmdn0158    LIKE pmdn_t.pmdn015, 
+                             pmdl0048    LIKE pmdl_t.pmdl004,
+                             pmdn0159    LIKE pmdn_t.pmdn015, 
+                             pmdl0049    LIKE pmdl_t.pmdl004,
+                             pmdn01510   LIKE pmdn_t.pmdn015, 
+                             pmdl00410   LIKE pmdl_t.pmdl004,
+                             pmdn01511   LIKE pmdn_t.pmdn015, 
+                             pmdl00411   LIKE pmdl_t.pmdl004,
+                             pmdn01512   LIKE pmdn_t.pmdn015, 
+                             pmdl00412   LIKE pmdl_t.pmdl004,
+                             pmdn01513   LIKE pmdn_t.pmdn015, 
+                             pmdl00413   LIKE pmdl_t.pmdl004,
+                             pmdn01514   LIKE pmdn_t.pmdn015, 
+                             pmdl00414   LIKE pmdl_t.pmdl004,
+                             pmdn01515   LIKE pmdn_t.pmdn015, 
+                             pmdl00415   LIKE pmdl_t.pmdl004,
+                             pmdn01516   LIKE pmdn_t.pmdn015, 
+                             pmdl00416   LIKE pmdl_t.pmdl004,
+                             pmdn01517   LIKE pmdn_t.pmdn015, 
+                             pmdl00417   LIKE pmdl_t.pmdl004, 
+                             pmdn01518   LIKE pmdn_t.pmdn015, 
+                             pmdl00418   LIKE pmdl_t.pmdl004, 
+                             pmdn01519   LIKE pmdn_t.pmdn015, 
+                             pmdl00419   LIKE pmdl_t.pmdl004,
+                             pmdn01520   LIKE pmdn_t.pmdn015, 
+                             pmdl00420   LIKE pmdl_t.pmdl004, 
+                             pmdn01521   LIKE pmdn_t.pmdn015, 
+                             pmdl00421   LIKE pmdl_t.pmdl004,
+                             pmdn01522   LIKE pmdn_t.pmdn015, 
+                             pmdl00422   LIKE pmdl_t.pmdl004, 
+                             pmdn01523   LIKE pmdn_t.pmdn015, 
+                             pmdl00423   LIKE pmdl_t.pmdl004,
+                             pmdn01524   LIKE pmdn_t.pmdn015, 
+                             pmdl00424   LIKE pmdl_t.pmdl004,
+                             pmdn01525   LIKE pmdn_t.pmdn015, 
+                             pmdl00425   LIKE pmdl_t.pmdl004, 
+                             pmdn01526   LIKE pmdn_t.pmdn015, 
+                             pmdl00426   LIKE pmdl_t.pmdl004, 
+                             pmdn01527   LIKE pmdn_t.pmdn015, 
+                             pmdl00427   LIKE pmdl_t.pmdl004,
+                             pmdn01528   LIKE pmdn_t.pmdn015, 
+                             pmdl00428   LIKE pmdl_t.pmdl004,
+                             pmdn01529   LIKE pmdn_t.pmdn015, 
+                             pmdl00429   LIKE pmdl_t.pmdl004,
+                             pmdn01530   LIKE pmdn_t.pmdn015, 
+                             pmdl00430   LIKE pmdl_t.pmdl004 
+                          END RECORD 
+   DEFINE l_text          STRING 
+   
+   DEFINE l_pmdl012       LIKE pmdl_t.pmdl012
+   DEFINE l_pmdl013       LIKE pmdl_t.pmdl013
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   #依QBE與其他條件找出資料 
+   LET l_sql = "SELECT DISTINCT pmdn001,pmdl015,pmdl004 ",
+               "  FROM pmdn_t,pmdl_t,imaa_t,pmaa_t  ",
+               " WHERE pmdnent   = pmdlent ",
+               "   AND pmdndocno = pmdldocno ",
+               "   AND pmdnent   = '",g_enterprise,"' ",
+               "   AND pmdnent   = imaaent ",
+               "   AND pmdn001   = imaa001 ",
+               "   AND pmdlent   = pmaaent ",
+               "   AND pmdl004   = pmaa001 ", 
+               "   AND pmdlstus  = 'Y' ", 
+               "   AND pmdldocdt BETWEEN '",g_master.date_s,"' ",
+               "                     AND '",g_master.date_e,"' ",
+               "   AND ",g_wc,
+               " ORDER BY pmdn001,pmdl015,pmdl004 "
+   PREPARE apmq050_get_basic_data_prep FROM l_sql
+   DECLARE apmq050_get_basic_data_curs CURSOR FOR apmq050_get_basic_data_prep
+
+   #清空舊資料 
+   DELETE FROM apmq050_data1; 
+   DELETE FROM apmq050_tmp01;  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_pmdl004_t ——> apmq050_tmp01
+   DELETE FROM apmq050_tmp02;  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+   DELETE FROM apmq050_tmp03;  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_relest_t ——> apmq050_tmp03
+
+   FOREACH apmq050_get_basic_data_curs INTO l_pmdn001,l_pmdl015,l_pmdl004
+      INSERT INTO apmq050_data1 VALUES(l_pmdn001,l_pmdl015,l_pmdl004)
+   END FOREACH 
+   
+   LET l_sql = "SELECT DISTINCT pmdn001,pmdl015 ",
+               "  FROM apmq050_data1 ",
+               " ORDER BY pmdn001,pmdl015 "
+   PREPARE apmq050_get_pmdn001_prep FROM l_sql
+   DECLARE apmq050_get_pmdn001_curs CURSOR FOR apmq050_get_pmdn001_prep
+
+   LET l_sql = "SELECT DISTINCT pmdl004 ",
+               "  FROM apmq050_data1 ",
+               " WHERE pmdn001 = ? ",
+               "   AND pmdl015 = ? ",
+               " ORDER BY pmdl004 "
+   PREPARE apmq050_get_pmdl004_prep FROM l_sql
+   DECLARE apmq050_get_pmdl004_curs CURSOR FOR apmq050_get_pmdl004_prep
+
+   #選定最多30位客戶 
+   DELETE FROM apmq050_tmp01;  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_pmdl004_t ——> apmq050_tmp01
+   LET l_i = 1
+   FOREACH apmq050_get_pmdn001_curs INTO l_pmdn001,l_pmdl015
+
+      FOREACH apmq050_get_pmdl004_curs USING l_pmdn001,l_pmdl015
+                                        INTO l_pmdl004
+         SELECT COUNT(*) INTO l_cnt
+           FROM apmq050_tmp01  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_pmdl004_t ——> apmq050_tmp01
+          WHERE pmdl004 = l_pmdl004
+         IF l_cnt > 0 THEN
+            CONTINUE FOREACH
+         END IF 
+         
+         INSERT INTO apmq050_tmp01 VALUES(l_i,l_pmdl004)  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_pmdl004_t ——> apmq050_tmp01
+         LET l_i = l_i + 1
+
+         IF l_i > 30 THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+
+      IF l_i > 30 THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   LET l_sql = "SELECT seq,pmdl004 ",
+               "  FROM apmq050_tmp01 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_pmdl004_t ——> apmq050_tmp01
+               " ORDER BY seq "
+   PREPARE apmq050_pmdl004_prep FROM l_sql
+   DECLARE apmq050_pmdl004_curs CURSOR FOR apmq050_pmdl004_prep
+   FOREACH apmq050_pmdl004_curs INTO l_seq,l_pmdl004
+      FOREACH apmq050_get_pmdn001_curs INTO l_pmdn001,l_pmdl015
+         LET l_sql = "SELECT pmdldocno,pmdldocdt,pmdn001,pmdl004,pmdl015,pmdn015,pmdn015, ",
+                     "       pmdl002,pmdl003,pmdnseq,pmdn019,pmdn002,pmdn006,pmdn007, ", 
+                     "       pmdl012,pmdl013 ",
+                     "  FROM pmdl_t,pmdn_t ",
+                     " WHERE pmdlent   = pmdnent ",
+                     "   AND pmdldocno = pmdndocno ",
+                     "   AND pmdlent   = '",g_enterprise,"' ",
+                     "   AND pmdl004   = '",l_pmdl004,"' ",
+                     "   AND pmdl015   = '",l_pmdl015,"' ",
+                     "   AND pmdn001   = '",l_pmdn001,"' ",
+                     "   AND pmdldocdt BETWEEN '",g_master.date_s,"' ", 
+                     "                     AND '",g_master.date_e,"' "
+         PREPARE apmq050_apmt500_prep FROM l_sql
+         DECLARE apmq050_apmt500_curs CURSOR FOR apmq050_apmt500_prep
+
+         FOREACH apmq050_apmt500_curs INTO l_apmt500.*,l_pmdl012,l_pmdl013
+            IF l_pmdl013 = 'Y' THEN
+               LET l_apmt500.pmdn015= l_apmt500.pmdn015 / (1+ l_pmdl012 / 100)
+            END IF
+            INSERT INTO apmq050_tmp02 VALUES(l_apmt500.*)  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+         END FOREACH
+
+      END FOREACH
+   END FOREACH
+
+
+   FOREACH apmq050_get_pmdn001_curs INTO l_pmdn001,l_pmdl015
+      LET l_sr.pmdn001 = l_pmdn001
+      LET l_sr.pmdl015 = l_pmdl015
+
+      FOREACH apmq050_pmdl004_curs INTO l_seq,l_pmdl004
+         #最低單價 
+         IF g_master.radio = '1' THEN
+            LET l_sql = "SELECT MIN(pmdn015) ",
+                        "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                        " WHERE pmdn001 = '",l_pmdn001,"' ",
+                        "   AND pmdl015 = '",l_pmdl015,"' ",
+                        "   AND pmdl004 = '",l_pmdl004,"' "
+         END IF
+
+         #平均單價  
+         IF g_master.radio = '2' THEN
+            LET l_sql = "SELECT AVG(pmdn015) ",
+                        "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                        " WHERE pmdn001 = '",l_pmdn001,"' ",
+                        "   AND pmdl015 = '",l_pmdl015,"' ",
+                        "   AND pmdl004 = '",l_pmdl004,"' "
+         END IF
+
+         #最高單價 
+         IF g_master.radio = '3' THEN
+            LET l_sql = "SELECT MAX(pmdn015) ",
+                        "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                        " WHERE pmdn001 = '",l_pmdn001,"' ",
+                        "   AND pmdl015 = '",l_pmdl015,"' ",
+                        "   AND pmdl004 = '",l_pmdl004,"' "
+         END IF
+
+         #最近單價 
+         IF g_master.radio = '4' THEN
+            LET l_sql = "SELECT pmdn015 ",
+                        "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                        " WHERE pmdn001 = '",l_pmdn001,"' ",
+                        "   AND pmdl015 = '",l_pmdl015,"' ",
+                        "   AND pmdl004 = '",l_pmdl004,"' ",
+                        " ORDER BY pmdldocdt DESC "
+         END IF
+
+         PREPARE apmq050_get_pmdn015_prep FROM l_sql 
+         EXECUTE apmq050_get_pmdn015_prep INTO l_pmdn015
+
+         CASE l_seq
+            WHEN '1'
+               LET l_sr.pmdn0151  = l_pmdn015 
+               LET l_sr.pmdl0041  = l_pmdl004
+            WHEN '2'
+               LET l_sr.pmdn0152  = l_pmdn015 
+               LET l_sr.pmdl0042  = l_pmdl004
+            WHEN '3'
+               LET l_sr.pmdn0153  = l_pmdn015 
+               LET l_sr.pmdl0043  = l_pmdl004
+            WHEN '4'
+               LET l_sr.pmdn0154  = l_pmdn015 
+               LET l_sr.pmdl0044  = l_pmdl004
+            WHEN '5'
+               LET l_sr.pmdn0155  = l_pmdn015 
+               LET l_sr.pmdl0045  = l_pmdl004
+            WHEN '6'
+               LET l_sr.pmdn0156  = l_pmdn015 
+               LET l_sr.pmdl0046  = l_pmdl004
+            WHEN '7'
+               LET l_sr.pmdn0157  = l_pmdn015 
+               LET l_sr.pmdl0047  = l_pmdl004
+            WHEN '8'
+               LET l_sr.pmdn0158  = l_pmdn015 
+               LET l_sr.pmdl0048  = l_pmdl004
+            WHEN '9'
+               LET l_sr.pmdn0159  = l_pmdn015 
+               LET l_sr.pmdl0049  = l_pmdl004
+            WHEN '10'
+               LET l_sr.pmdn01510 = l_pmdn015 
+               LET l_sr.pmdl00410 = l_pmdl004
+            WHEN '11'
+               LET l_sr.pmdn01511 = l_pmdn015 
+               LET l_sr.pmdl00411 = l_pmdl004
+            WHEN '12'
+               LET l_sr.pmdn01512 = l_pmdn015 
+               LET l_sr.pmdl00412 = l_pmdl004 
+            WHEN '13'
+               LET l_sr.pmdn01513 = l_pmdn015 
+               LET l_sr.pmdl00413 = l_pmdl004 
+            WHEN '14' 
+               LET l_sr.pmdn01514 = l_pmdn015 
+               LET l_sr.pmdl00414 = l_pmdl004
+            WHEN '15'
+               LET l_sr.pmdn01515 = l_pmdn015 
+               LET l_sr.pmdl00415 = l_pmdl004 
+            WHEN '16'
+               LET l_sr.pmdn01516 = l_pmdn015 
+               LET l_sr.pmdl00416 = l_pmdl004 
+            WHEN '17'
+               LET l_sr.pmdn01517 = l_pmdn015 
+               LET l_sr.pmdl00417 = l_pmdl004 
+            WHEN '18'
+               LET l_sr.pmdn01518 = l_pmdn015 
+               LET l_sr.pmdl00418 = l_pmdl004 
+            WHEN '19'
+               LET l_sr.pmdn01519 = l_pmdn015 
+               LET l_sr.pmdl00419 = l_pmdl004 
+            WHEN '20'
+               LET l_sr.pmdn01520 = l_pmdn015 
+               LET l_sr.pmdl00420 = l_pmdl004 
+            WHEN '21'
+               LET l_sr.pmdn01521 = l_pmdn015 
+               LET l_sr.pmdl00421 = l_pmdl004 
+            WHEN '22'
+               LET l_sr.pmdn01522 = l_pmdn015 
+               LET l_sr.pmdl00422 = l_pmdl004 
+            WHEN '23'
+               LET l_sr.pmdn01523 = l_pmdn015 
+               LET l_sr.pmdl00423 = l_pmdl004 
+            WHEN '24'
+               LET l_sr.pmdn01524 = l_pmdn015 
+               LET l_sr.pmdl00424 = l_pmdl004 
+            WHEN '25'
+               LET l_sr.pmdn01525 = l_pmdn015 
+               LET l_sr.pmdl00425 = l_pmdl004 
+            WHEN '26'
+               LET l_sr.pmdn01526 = l_pmdn015 
+               LET l_sr.pmdl00426 = l_pmdl004 
+            WHEN '27'
+               LET l_sr.pmdn01527 = l_pmdn015 
+               LET l_sr.pmdl00427 = l_pmdl004 
+            WHEN '28'
+               LET l_sr.pmdn01528 = l_pmdn015 
+               LET l_sr.pmdl00428 = l_pmdl004 
+            WHEN '29' 
+               LET l_sr.pmdn01529 = l_pmdn015 
+               LET l_sr.pmdl00429 = l_pmdl004 
+            WHEN '30'
+               LET l_sr.pmdn01530 = l_pmdn015 
+               LET l_sr.pmdl00430 = l_pmdl004 
+         END CASE
+
+      END FOREACH
+
+      INSERT INTO apmq050_tmp03 VALUES(l_sr.*)  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_relest_t ——> apmq050_tmp03
+   END FOREACH 
+   
+   #end add-point
+ 
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:34) add cl_sql_auth_filter()
+ 
+   CALL g_pmdl_d.clear()
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs04 樣板自動產生(Version:9)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET ls_sql_rank = "SELECT  UNIQUE '','','','',pmdl015,'','','','','','','','','','','','','','','', 
+       '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+       '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+       '','','','','','','','','','','','','','',''  ,DENSE_RANK() OVER( ORDER BY pmdl_t.pmdldocno) AS RANK FROM pmdl_t", 
+ 
+ 
+ 
+                     "",
+                     " WHERE pmdlent= ? AND 1=1 AND ", ls_wc
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("pmdl_t"),
+                     " ORDER BY pmdl_t.pmdldocno"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+ 
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql  #總筆數
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '','','','',pmdl015,'','','','','','','','','','','','','','','','','','','', 
+       '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+       '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+       '','','','','','','','','','',''",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+   
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE apmq050_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apmq050_pb
+ 
+   OPEN b_fill_curs USING g_enterprise
+ 
+   FOREACH b_fill_curs INTO g_pmdl_d[l_ac].sel,g_pmdl_d[l_ac].pmdn001,g_pmdl_d[l_ac].pmdn001_desc,g_pmdl_d[l_ac].pmdn001_desc_1, 
+       g_pmdl_d[l_ac].pmdl015,g_pmdl_d[l_ac].pmdl015_desc,g_pmdl_d[l_ac].pmdn015,g_pmdl_d[l_ac].pmdn0151, 
+       g_pmdl_d[l_ac].pmdl0041,g_pmdl_d[l_ac].pmdl0041_desc,g_pmdl_d[l_ac].pmdn0152,g_pmdl_d[l_ac].pmdl0042, 
+       g_pmdl_d[l_ac].pmdl0042_desc,g_pmdl_d[l_ac].pmdn0153,g_pmdl_d[l_ac].pmdl0043,g_pmdl_d[l_ac].pmdl0043_desc, 
+       g_pmdl_d[l_ac].pmdn0154,g_pmdl_d[l_ac].pmdl0044,g_pmdl_d[l_ac].pmdl0044_desc,g_pmdl_d[l_ac].pmdn0155, 
+       g_pmdl_d[l_ac].pmdl0045,g_pmdl_d[l_ac].pmdl0045_desc,g_pmdl_d[l_ac].pmdn0156,g_pmdl_d[l_ac].pmdl0046, 
+       g_pmdl_d[l_ac].pmdl0046_desc,g_pmdl_d[l_ac].pmdn0157,g_pmdl_d[l_ac].pmdl0047,g_pmdl_d[l_ac].pmdl0047_desc, 
+       g_pmdl_d[l_ac].pmdn0158,g_pmdl_d[l_ac].pmdl0048,g_pmdl_d[l_ac].pmdl0048_desc,g_pmdl_d[l_ac].pmdn0159, 
+       g_pmdl_d[l_ac].pmdl0049,g_pmdl_d[l_ac].pmdl0049_desc,g_pmdl_d[l_ac].pmdn01510,g_pmdl_d[l_ac].pmdl00410, 
+       g_pmdl_d[l_ac].pmdl00410_desc,g_pmdl_d[l_ac].pmdn01511,g_pmdl_d[l_ac].pmdl00411,g_pmdl_d[l_ac].pmdl00411_desc, 
+       g_pmdl_d[l_ac].pmdn01512,g_pmdl_d[l_ac].pmdl00412,g_pmdl_d[l_ac].pmdl00412_desc,g_pmdl_d[l_ac].pmdn01513, 
+       g_pmdl_d[l_ac].pmdl00413,g_pmdl_d[l_ac].pmdl00413_desc,g_pmdl_d[l_ac].pmdn01514,g_pmdl_d[l_ac].pmdl00414, 
+       g_pmdl_d[l_ac].pmdl00414_desc,g_pmdl_d[l_ac].pmdn01515,g_pmdl_d[l_ac].pmdl00415,g_pmdl_d[l_ac].pmdl00415_desc, 
+       g_pmdl_d[l_ac].pmdn01516,g_pmdl_d[l_ac].pmdl00416,g_pmdl_d[l_ac].pmdl00416_desc,g_pmdl_d[l_ac].pmdn01517, 
+       g_pmdl_d[l_ac].pmdl00417,g_pmdl_d[l_ac].pmdl00417_desc,g_pmdl_d[l_ac].pmdn01518,g_pmdl_d[l_ac].pmdl00418, 
+       g_pmdl_d[l_ac].pmdl00418_desc,g_pmdl_d[l_ac].pmdn01519,g_pmdl_d[l_ac].pmdl00419,g_pmdl_d[l_ac].pmdl00419_desc, 
+       g_pmdl_d[l_ac].pmdn01520,g_pmdl_d[l_ac].pmdl00420,g_pmdl_d[l_ac].pmdl00420_desc,g_pmdl_d[l_ac].pmdn01521, 
+       g_pmdl_d[l_ac].pmdl00421,g_pmdl_d[l_ac].pmdl00421_desc,g_pmdl_d[l_ac].pmdn01522,g_pmdl_d[l_ac].pmdl00422, 
+       g_pmdl_d[l_ac].pmdl00422_desc,g_pmdl_d[l_ac].pmdn01523,g_pmdl_d[l_ac].pmdl00423,g_pmdl_d[l_ac].pmdl00423_desc, 
+       g_pmdl_d[l_ac].pmdn01524,g_pmdl_d[l_ac].pmdl00424,g_pmdl_d[l_ac].pmdl00424_desc,g_pmdl_d[l_ac].pmdn01525, 
+       g_pmdl_d[l_ac].pmdl00425,g_pmdl_d[l_ac].pmdl00425_desc,g_pmdl_d[l_ac].pmdn01526,g_pmdl_d[l_ac].pmdl00426, 
+       g_pmdl_d[l_ac].pmdl00426_desc,g_pmdl_d[l_ac].pmdn01527,g_pmdl_d[l_ac].pmdl00427,g_pmdl_d[l_ac].pmdl00427_desc, 
+       g_pmdl_d[l_ac].pmdn01528,g_pmdl_d[l_ac].pmdl00428,g_pmdl_d[l_ac].pmdl00428_desc,g_pmdl_d[l_ac].pmdn01529, 
+       g_pmdl_d[l_ac].pmdl00429,g_pmdl_d[l_ac].pmdl00429_desc,g_pmdl_d[l_ac].pmdn01530,g_pmdl_d[l_ac].pmdl00430, 
+       g_pmdl_d[l_ac].pmdl00430_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      EXIT FOREACH
+      #end add-point
+ 
+      CALL apmq050_detail_show("'1'")
+ 
+      CALL apmq050_pmdl_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+   #應用 qs05 樣板自動產生(Version:4)
+   #+ b_fill段其他table資料取得(包含sql組成及資料填充)
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   CALL g_pmdl_d.clear()
+
+   LET l_sql = "SELECT pmdn001,'','',pmdl015,'',pmdn0151,pmdl0041,'', ",
+               "       pmdn0152,pmdl0042,'',pmdn0153,pmdl0043,'',pmdn0154,pmdl0044,'',pmdn0155,pmdl0045,'', ",
+               "       pmdn0156,pmdl0046,'',pmdn0157,pmdl0047,'',pmdn0158,pmdl0048,'',pmdn0159,pmdl0049,'', ",
+               "       pmdn01510,pmdl00410,'',pmdn01511,pmdl00411,'',pmdn01512,pmdl00412,'',pmdn01513,pmdl00413,'', ",
+               "       pmdn01514,pmdl00414,'',pmdn01515,pmdl00415,'',pmdn01516,pmdl00416,'',pmdn01517,pmdl00417,'', ",
+               "       pmdn01518,pmdl00418,'',pmdn01519,pmdl00419,'',pmdn01520,pmdl00420,'',pmdn01521,pmdl00421,'', ",
+               "       pmdn01522,pmdl00422,'',pmdn01523,pmdl00423,'',pmdn01524,pmdl00424,'',pmdn01525,pmdl00425,'', ",
+               "       pmdn01526,pmdl00426,'',pmdn01527,pmdl00427,'',pmdn01528,pmdl00428,'',pmdn01529,pmdl00429,'', ",
+               "       pmdn01530,pmdl00430,'' ",
+               "  FROM apmq050_tmp03 "  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_relest_t ——> apmq050_tmp03
+   PREPARE apmq050_b_fill_prep FROM l_sql
+   DECLARE apmq050_b_fill_curs CURSOR FOR apmq050_b_fill_prep
+
+   FOREACH apmq050_b_fill_curs INTO g_pmdl_d[l_ac].pmdn001,g_pmdl_d[l_ac].pmdn001_desc,
+                                    g_pmdl_d[l_ac].pmdn001_desc_1,g_pmdl_d[l_ac].pmdl015,g_pmdl_d[l_ac].pmdl015_desc,
+                                    g_pmdl_d[l_ac].pmdn0151, 
+                                    g_pmdl_d[l_ac].pmdl0041,g_pmdl_d[l_ac].pmdl0041_desc, 
+                                    g_pmdl_d[l_ac].pmdn0152, 
+                                    g_pmdl_d[l_ac].pmdl0042,g_pmdl_d[l_ac].pmdl0042_desc, 
+                                    g_pmdl_d[l_ac].pmdn0153, 
+                                    g_pmdl_d[l_ac].pmdl0043,g_pmdl_d[l_ac].pmdl0043_desc, 
+                                    g_pmdl_d[l_ac].pmdn0154, 
+                                    g_pmdl_d[l_ac].pmdl0044,g_pmdl_d[l_ac].pmdl0044_desc, 
+                                    g_pmdl_d[l_ac].pmdn0155, 
+                                    g_pmdl_d[l_ac].pmdl0045,g_pmdl_d[l_ac].pmdl0045_desc, 
+                                    g_pmdl_d[l_ac].pmdn0156, 
+                                    g_pmdl_d[l_ac].pmdl0046,g_pmdl_d[l_ac].pmdl0046_desc, 
+                                    g_pmdl_d[l_ac].pmdn0157, 
+                                    g_pmdl_d[l_ac].pmdl0047,g_pmdl_d[l_ac].pmdl0047_desc, 
+                                    g_pmdl_d[l_ac].pmdn0158,
+                                    g_pmdl_d[l_ac].pmdl0048,g_pmdl_d[l_ac].pmdl0048_desc, 
+                                    g_pmdl_d[l_ac].pmdn0159, 
+                                    g_pmdl_d[l_ac].pmdl0049,g_pmdl_d[l_ac].pmdl0049_desc, 
+                                    g_pmdl_d[l_ac].pmdn01510,
+                                    g_pmdl_d[l_ac].pmdl00410,g_pmdl_d[l_ac].pmdl00410_desc, 
+                                    g_pmdl_d[l_ac].pmdn01511,
+                                    g_pmdl_d[l_ac].pmdl00411,g_pmdl_d[l_ac].pmdl00411_desc, 
+                                    g_pmdl_d[l_ac].pmdn01512,
+                                    g_pmdl_d[l_ac].pmdl00412,g_pmdl_d[l_ac].pmdl00412_desc,  
+                                    g_pmdl_d[l_ac].pmdn01513, 
+                                    g_pmdl_d[l_ac].pmdl00413,g_pmdl_d[l_ac].pmdl00413_desc, 
+                                    g_pmdl_d[l_ac].pmdn01514, 
+                                    g_pmdl_d[l_ac].pmdl00414,g_pmdl_d[l_ac].pmdl00414_desc, 
+                                    g_pmdl_d[l_ac].pmdn01515, 
+                                    g_pmdl_d[l_ac].pmdl00415,g_pmdl_d[l_ac].pmdl00415_desc, 
+                                    g_pmdl_d[l_ac].pmdn01516, 
+                                    g_pmdl_d[l_ac].pmdl00416,g_pmdl_d[l_ac].pmdl00416_desc, 
+                                    g_pmdl_d[l_ac].pmdn01517, 
+                                    g_pmdl_d[l_ac].pmdl00417,g_pmdl_d[l_ac].pmdl00417_desc, 
+                                    g_pmdl_d[l_ac].pmdn01518, 
+                                    g_pmdl_d[l_ac].pmdl00418,g_pmdl_d[l_ac].pmdl00418_desc, 
+                                    g_pmdl_d[l_ac].pmdn01519, 
+                                    g_pmdl_d[l_ac].pmdl00419,g_pmdl_d[l_ac].pmdl00419_desc, 
+                                    g_pmdl_d[l_ac].pmdn01520, 
+                                    g_pmdl_d[l_ac].pmdl00420,g_pmdl_d[l_ac].pmdl00420_desc, 
+                                    g_pmdl_d[l_ac].pmdn01521, 
+                                    g_pmdl_d[l_ac].pmdl00421,g_pmdl_d[l_ac].pmdl00421_desc, 
+                                    g_pmdl_d[l_ac].pmdn01522, 
+                                    g_pmdl_d[l_ac].pmdl00422,g_pmdl_d[l_ac].pmdl00422_desc, 
+                                    g_pmdl_d[l_ac].pmdn01523, 
+                                    g_pmdl_d[l_ac].pmdl00423,g_pmdl_d[l_ac].pmdl00423_desc, 
+                                    g_pmdl_d[l_ac].pmdn01524, 
+                                    g_pmdl_d[l_ac].pmdl00424,g_pmdl_d[l_ac].pmdl00424_desc, 
+                                    g_pmdl_d[l_ac].pmdn01525, 
+                                    g_pmdl_d[l_ac].pmdl00425,g_pmdl_d[l_ac].pmdl00425_desc, 
+                                    g_pmdl_d[l_ac].pmdn01526, 
+                                    g_pmdl_d[l_ac].pmdl00426,g_pmdl_d[l_ac].pmdl00426_desc, 
+                                    g_pmdl_d[l_ac].pmdn01527, 
+                                    g_pmdl_d[l_ac].pmdl00427,g_pmdl_d[l_ac].pmdl00427_desc, 
+                                    g_pmdl_d[l_ac].pmdn01528, 
+                                    g_pmdl_d[l_ac].pmdl00428,g_pmdl_d[l_ac].pmdl00428_desc,  
+                                    g_pmdl_d[l_ac].pmdn01529, 
+                                    g_pmdl_d[l_ac].pmdl00429,g_pmdl_d[l_ac].pmdl00429_desc, 
+                                    g_pmdl_d[l_ac].pmdn01530,
+                                    g_pmdl_d[l_ac].pmdl00430,g_pmdl_d[l_ac].pmdl00430_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF  
+      
+      #最低單價 
+      IF g_master.radio = '1' THEN
+         LET l_sql = "SELECT MIN(pmdn015) ",
+                     "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     " WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ",
+                     "   AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' "
+      END IF
+
+      #平均單價 
+      IF g_master.radio = '2' THEN
+         LET l_sql = "SELECT AVG(pmdn015) ",
+                     "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     " WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ",
+                     "   AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' "
+      END IF 
+      
+      #最高單價 
+      IF g_master.radio = '3' THEN
+         LET l_sql = "SELECT MAX(pmdn015) ",
+                     "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     " WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ",
+                     "   AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' "
+      END IF
+
+      IF g_master.radio = '4' THEN
+         LET l_sql = "SELECT pmdn015 ",
+                     "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     " WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ",
+                     "   AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' "
+      END IF
+
+      PREPARE apmq050_get_all_prep FROM l_sql
+      EXECUTE apmq050_get_all_prep INTO g_pmdl_d[l_ac].pmdn015
+      
+      CALL apmq050_detail_show("'1'")
+
+      CALL apmq050_pmdl_t_mask()
+
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend =  ""
+            LET g_errparam.code   =  9035
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+
+   END FOREACH   
+   
+   CALL cl_set_comp_visible("b_pmdn0151",FALSE)
+   CALL cl_set_comp_visible("b_pmdn0152",FALSE)
+   CALL cl_set_comp_visible("b_pmdn0153",FALSE)
+   CALL cl_set_comp_visible("b_pmdn0154",FALSE)
+   CALL cl_set_comp_visible("b_pmdn0155",FALSE)
+   CALL cl_set_comp_visible("b_pmdn0156",FALSE)
+   CALL cl_set_comp_visible("b_pmdn0157",FALSE)
+   CALL cl_set_comp_visible("b_pmdn0158",FALSE)
+   CALL cl_set_comp_visible("b_pmdn0159",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01510",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01511",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01512",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01513",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01514",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01515",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01516",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01517",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01518",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01519",FALSE) 
+   CALL cl_set_comp_visible("b_pmdn01520",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01521",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01522",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01523",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01524",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01525",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01526",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01527",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01528",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01529",FALSE)
+   CALL cl_set_comp_visible("b_pmdn01530",FALSE) 
+   
+   IF l_ac > 1 THEN
+      IF NOT cl_null(g_pmdl_d[1].pmdl0041) THEN
+         LET l_text = g_pmdl_d[1].pmdl0041,".",g_pmdl_d[1].pmdl0041_desc
+         CALL cl_set_comp_att_text('b_pmdn0151',l_text) 
+         CALL cl_set_comp_visible('b_pmdn0151',TRUE)
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl0042) THEN
+         LET l_text = g_pmdl_d[1].pmdl0042,".",g_pmdl_d[1].pmdl0042_desc
+         CALL cl_set_comp_att_text('b_pmdn0152',l_text) 
+         CALL cl_set_comp_visible('b_pmdn0152',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl0043) THEN
+         LET l_text = g_pmdl_d[1].pmdl0043,".",g_pmdl_d[1].pmdl0043_desc
+         CALL cl_set_comp_att_text('b_pmdn0153',l_text) 
+         CALL cl_set_comp_visible('b_pmdn0153',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl0044) THEN
+         LET l_text = g_pmdl_d[1].pmdl0044,".",g_pmdl_d[1].pmdl0044_desc
+         CALL cl_set_comp_att_text('b_pmdn0154',l_text) 
+         CALL cl_set_comp_visible('b_pmdn0154',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl0045) THEN
+         LET l_text = g_pmdl_d[1].pmdl0045,".",g_pmdl_d[1].pmdl0045_desc
+         CALL cl_set_comp_att_text('b_pmdn0155',l_text) 
+         CALL cl_set_comp_visible('b_pmdn0155',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl0046) THEN
+         LET l_text = g_pmdl_d[1].pmdl0046,".",g_pmdl_d[1].pmdl0046_desc
+         CALL cl_set_comp_att_text('b_pmdn0156',l_text) 
+         CALL cl_set_comp_visible('b_pmdn0156',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl0047) THEN
+         LET l_text = g_pmdl_d[1].pmdl0047,".",g_pmdl_d[1].pmdl0047_desc
+         CALL cl_set_comp_att_text('b_pmdn0157',l_text) 
+         CALL cl_set_comp_visible('b_pmdn0157',TRUE) 
+      END IF 
+      
+      IF NOT cl_null(g_pmdl_d[1].pmdl0048) THEN
+         LET l_text = g_pmdl_d[1].pmdl0048,".",g_pmdl_d[1].pmdl0048_desc
+         CALL cl_set_comp_att_text('b_pmdn0158',l_text) 
+         CALL cl_set_comp_visible('b_pmdn0158',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl0049) THEN
+         LET l_text = g_pmdl_d[1].pmdl0049,".",g_pmdl_d[1].pmdl0049_desc
+         CALL cl_set_comp_att_text('b_pmdn0159',l_text) 
+         CALL cl_set_comp_visible('b_pmdn0159',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00410) THEN
+         LET l_text = g_pmdl_d[1].pmdl00410,".",g_pmdl_d[1].pmdl00410_desc
+         CALL cl_set_comp_att_text('b_pmdn01510',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01510',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00411) THEN
+         LET l_text = g_pmdl_d[1].pmdl00411,".",g_pmdl_d[1].pmdl00411_desc
+         CALL cl_set_comp_att_text('b_pmdn01511',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01511',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00412) THEN
+         LET l_text = g_pmdl_d[1].pmdl00412,".",g_pmdl_d[1].pmdl00412_desc
+         CALL cl_set_comp_att_text('b_pmdn01512',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01512',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00413) THEN
+         LET l_text = g_pmdl_d[1].pmdl00413,".",g_pmdl_d[1].pmdl00413_desc
+         CALL cl_set_comp_att_text('b_pmdn01513',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01513',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00414) THEN
+         LET l_text = g_pmdl_d[1].pmdl00414,".",g_pmdl_d[1].pmdl00414_desc
+         CALL cl_set_comp_att_text('b_pmdn01514',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01514',TRUE) 
+      END IF 
+      IF NOT cl_null(g_pmdl_d[1].pmdl00415) THEN
+         LET l_text = g_pmdl_d[1].pmdl00415,".",g_pmdl_d[1].pmdl00415_desc
+         CALL cl_set_comp_att_text('b_pmdn01515',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01515',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00416) THEN
+         LET l_text = g_pmdl_d[1].pmdl00416,".",g_pmdl_d[1].pmdl00416_desc
+         CALL cl_set_comp_att_text('b_pmdn01516',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01516',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00417) THEN
+         LET l_text = g_pmdl_d[1].pmdl00417,".",g_pmdl_d[1].pmdl00417_desc
+         CALL cl_set_comp_att_text('b_pmdn01517',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01517',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00418) THEN
+         LET l_text = g_pmdl_d[1].pmdl00418,".",g_pmdl_d[1].pmdl00418_desc
+         CALL cl_set_comp_att_text('b_pmdn01518',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01518',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00419) THEN
+         LET l_text = g_pmdl_d[1].pmdl00419,".",g_pmdl_d[1].pmdl00419_desc
+         CALL cl_set_comp_att_text('b_pmdn01519',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01519',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00420) THEN
+         LET l_text = g_pmdl_d[1].pmdl00420,".",g_pmdl_d[1].pmdl00420_desc
+         CALL cl_set_comp_att_text('b_pmdn01520',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01520',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00421) THEN
+         LET l_text = g_pmdl_d[1].pmdl00421,".",g_pmdl_d[1].pmdl00421_desc
+         CALL cl_set_comp_att_text('b_pmdn01521',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01521',TRUE) 
+      END IF 
+      IF NOT cl_null(g_pmdl_d[1].pmdl00422) THEN
+         LET l_text = g_pmdl_d[1].pmdl00422,".",g_pmdl_d[1].pmdl00422_desc
+         CALL cl_set_comp_att_text('b_pmdn01522',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01522',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00423) THEN
+         LET l_text = g_pmdl_d[1].pmdl00423,".",g_pmdl_d[1].pmdl00423_desc
+         CALL cl_set_comp_att_text('b_pmdn01523',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01523',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00424) THEN
+         LET l_text = g_pmdl_d[1].pmdl00424,".",g_pmdl_d[1].pmdl00424_desc
+         CALL cl_set_comp_att_text('b_pmdn01524',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01524',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00425) THEN
+         LET l_text = g_pmdl_d[1].pmdl00425,".",g_pmdl_d[1].pmdl00425_desc
+         CALL cl_set_comp_att_text('b_pmdn01525',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01525',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00426) THEN
+         LET l_text = g_pmdl_d[1].pmdl00426,".",g_pmdl_d[1].pmdl00426_desc
+         CALL cl_set_comp_att_text('b_pmdn01526',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01526',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00427) THEN
+         LET l_text = g_pmdl_d[1].pmdl00427,".",g_pmdl_d[1].pmdl00427_desc
+         CALL cl_set_comp_att_text('b_pmdn01527',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01527',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00428) THEN
+         LET l_text = g_pmdl_d[1].pmdl00428,".",g_pmdl_d[1].pmdl00428_desc
+         CALL cl_set_comp_att_text('b_pmdn01528',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01528',TRUE) 
+      END IF 
+      IF NOT cl_null(g_pmdl_d[1].pmdl00429) THEN
+         LET l_text = g_pmdl_d[1].pmdl00429,".",g_pmdl_d[1].pmdl00429_desc
+         CALL cl_set_comp_att_text('b_pmdn01529',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01529',TRUE) 
+      END IF
+      IF NOT cl_null(g_pmdl_d[1].pmdl00430) THEN
+         LET l_text = g_pmdl_d[1].pmdl00430,".",g_pmdl_d[1].pmdl00430_desc
+         CALL cl_set_comp_att_text('b_pmdn01530',l_text) 
+         CALL cl_set_comp_visible('b_pmdn01530',TRUE) 
+      END IF
+
+   END IF
+   #end add-point
+ 
+   CALL g_pmdl_d.deleteElement(g_pmdl_d.getLength())
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_pmdl_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #應用 qs06 樣板自動產生(Version:3)
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE apmq050_pb
+ 
+ 
+ 
+ 
+ 
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL apmq050_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL apmq050_detail_action_trans()
+ 
+   LET l_ac = 1
+   IF g_pmdl_d.getLength() > 0 THEN
+      CALL apmq050_b_fill2()
+   END IF
+ 
+      CALL apmq050_filter_show('pmdn001','b_pmdn001')
+   CALL apmq050_filter_show('pmdl015','b_pmdl015')
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq050.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION apmq050_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   DEFINE l_sql           STRING
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_success       LIKE type_t.num5  
+   DEFINE l_pmdl004       LIKE pmdl_t.pmdl004
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="b_fill2.before_function"
+   
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #應用 qs07 樣板自動產生(Version:7)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+ 
+   #add-point:陣列清空 name="b_fill2.array_clear"
+   CALL g_pmdn2_d.clear()
+
+   LET l_sql = "SELECT DISTINCT pmdl004 ",
+               "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+               " WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ",
+               "   AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' "
+   PREPARE apmq050_b_fill2_pmdl004_prep FROM l_sql
+   DECLARE apmq050_b_fill2_pmdl004_curs CURSOR FOR apmq050_b_fill2_pmdl004_prep
+
+   LET l_i = 1
+   FOREACH apmq050_b_fill2_pmdl004_curs INTO l_pmdl004
+      #最低單價 
+      IF g_master.radio = '1' THEN
+         LET l_sql = "SELECT pmdldocno,pmdldocdt,pmdl004,'',pmdl002,'',pmdl003,'', ",
+                     "       pmdnseq,pmdn019,pmdn002,'',pmdn006,'',pmdn007,pmdn0152,pmdn015 ",
+                     "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     " WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ",
+                     "   AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' ",
+                     "   AND pmdl004 = '",l_pmdl004,"' ",
+                     "   AND pmdn015 = (SELECT MIN(pmdn015) ",
+                     "                    FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     "                   WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ",
+                     "                     AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' ",
+                     "                     AND pmdl004 = '",l_pmdl004,"' ) "
+      END IF
+
+      #平均單價 
+      IF g_master.radio = '2' THEN
+         LET l_sql = "SELECT pmdldocno,pmdldocdt,pmdl004,'',pmdl002,'',pmdl003,'', ",
+                     "       pmdnseq,pmdn019,pmdn002,'',pmdn006,'',pmdn007,pmdn0152,pmdn015 ",
+                     "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     " WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ", 
+                     "   AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' ",
+                     "   AND pmdl004 = '",l_pmdl004,"' "
+      END IF
+
+      #最高單價 
+      IF g_master.radio = '3' THEN
+         LET l_sql = "SELECT pmdldocno,pmdldocdt,pmdl004,'',pmdl002,'',pmdl003,'', ",
+                     "       pmdnseq,pmdn019,pmdn002,'',pmdn006,'',pmdn007,pmdn0152,pmdn015 ",
+                     "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     " WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ",
+                     "   AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' ",
+                     "   AND pmdl004 = '",l_pmdl004,"' ",
+                     "   AND pmdn015 = (SELECT MAX(pmdn015) ",
+                     "                    FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     "                   WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ",
+                     "                     AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' ",
+                     "                     AND pmdl004 = '",l_pmdl004,"' ) "
+      END IF
+
+      #最近單價 
+      IF g_master.radio = '4' THEN
+         LET l_sql = "SELECT pmdldocno,pmdldocdt,pmdl004,'',pmdl002,'',pmdl003,'', ",
+                     "       pmdnseq,pmdn019,pmdn002,'',pmdn006,'',pmdn007,pmdn0152,pmdn015 ",
+                     "  FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     " WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ",
+                     "   AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' ",
+                     "   AND pmdl004 = '",l_pmdl004,"' ",
+                     "   AND pmdldocdt = (SELECT MAX(pmdldocdt) ",
+                     "                    FROM apmq050_tmp02 ",  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+                     "                   WHERE pmdn001 = '",g_pmdl_d[l_ac].pmdn001,"' ", 
+                     "                     AND pmdl015 = '",g_pmdl_d[l_ac].pmdl015,"' ",
+                     "                     AND pmdl004 = '",l_pmdl004,"' ",
+                     "                     AND pmdldocdt <= '",g_today,"') "
+      END IF
+
+      PREPARE apmq050_b_fill2_prep FROM l_sql
+      DECLARE apmq050_b_fill2_curs CURSOR FOR apmq050_b_fill2_prep
+
+      FOREACH apmq050_b_fill2_curs INTO g_pmdn2_d[l_i].pmdldocno,g_pmdn2_d[l_i].pmdldocdt,
+                                        g_pmdn2_d[l_i].pmdl004,g_pmdn2_d[l_i].pmdl004_desc,
+                                        g_pmdn2_d[l_i].pmdl002,g_pmdn2_d[l_i].pmdl002_desc,
+                                        g_pmdn2_d[l_i].pmdl003,g_pmdn2_d[l_i].pmdl003_desc,
+                                        g_pmdn2_d[l_i].pmdnseq,g_pmdn2_d[l_i].pmdn019,
+                                        g_pmdn2_d[l_i].pmdn002,g_pmdn2_d[l_i].pmdn002_desc,
+                                        g_pmdn2_d[l_i].pmdn006,g_pmdn2_d[l_i].pmdn006_desc,
+                                        g_pmdn2_d[l_i].pmdn007,g_pmdn2_d[l_i].pmdn015, 
+                                        g_pmdn2_d[l_i].pmdn015_1
+
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdn2_d[l_i].pmdl004)
+              RETURNING g_pmdn2_d[l_i].pmdl004_desc
+
+         CALL s_desc_get_person_desc(g_pmdn2_d[l_i].pmdl002)
+              RETURNING g_pmdn2_d[l_i].pmdl002_desc
+
+         CALL s_desc_get_department_desc(g_pmdn2_d[l_i].pmdl003)
+              RETURNING g_pmdn2_d[l_i].pmdl003_desc
+
+         CALL s_feature_description(g_pmdl_d[l_ac].pmdn001,g_pmdn2_d[l_i].pmdn002)
+              RETURNING l_success,g_pmdn2_d[l_i].pmdn002_desc
+
+         CALL s_desc_get_unit_desc(g_pmdn2_d[l_i].pmdn006)
+              RETURNING g_pmdn2_d[l_i].pmdn006_desc
+
+         LET l_i = l_i + 1
+      END FOREACH
+   END FOREACH
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:陣列長度調整 name="b_fill2.array_deleteElement"
+   
+   #end add-point
+ 
+ 
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx2 = 1
+   DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+ 
+ 
+ 
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq050.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION apmq050_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+      #取得品名、規格  
+      CALL s_desc_get_item_desc(g_pmdl_d[l_ac].pmdn001)
+           RETURNING g_pmdl_d[l_ac].pmdn001_desc,
+                     g_pmdl_d[l_ac].pmdn001_desc_1
+
+      #取得幣別說明 
+      CALL s_desc_get_currency_desc(g_pmdl_d[l_ac].pmdl015)
+           RETURNING g_pmdl_d[l_ac].pmdl015_desc
+
+      #取得交易對象說明 
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl0041) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl0041)
+              RETURNING g_pmdl_d[l_ac].pmdl0041_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl0042) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl0042)
+              RETURNING g_pmdl_d[l_ac].pmdl0042_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl0043) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl0043)
+              RETURNING g_pmdl_d[l_ac].pmdl0043_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl0044) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl0044)
+              RETURNING g_pmdl_d[l_ac].pmdl0044_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl0045) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl0045)
+              RETURNING g_pmdl_d[l_ac].pmdl0045_desc
+      END IF 
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl0046) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl0046)
+              RETURNING g_pmdl_d[l_ac].pmdl0046_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl0047) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl0047)
+              RETURNING g_pmdl_d[l_ac].pmdl0047_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl0048) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl0048)
+              RETURNING g_pmdl_d[l_ac].pmdl0048_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl0049) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl0049)
+              RETURNING g_pmdl_d[l_ac].pmdl0049_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00410) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00410)
+              RETURNING g_pmdl_d[l_ac].pmdl00410_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00411) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00411)
+              RETURNING g_pmdl_d[l_ac].pmdl00411_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00412) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00412)
+              RETURNING g_pmdl_d[l_ac].pmdl00412_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00413) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00413)
+              RETURNING g_pmdl_d[l_ac].pmdl00413_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00414) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00414)
+              RETURNING g_pmdl_d[l_ac].pmdl00414_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00415) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00415)
+              RETURNING g_pmdl_d[l_ac].pmdl00415_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00416) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00416)
+              RETURNING g_pmdl_d[l_ac].pmdl00416_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00417) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00417)
+              RETURNING g_pmdl_d[l_ac].pmdl00417_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00418) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00418)
+              RETURNING g_pmdl_d[l_ac].pmdl00418_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00419) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00419)
+              RETURNING g_pmdl_d[l_ac].pmdl00419_desc
+      END IF 
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00420) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00420)
+              RETURNING g_pmdl_d[l_ac].pmdl00420_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00421) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00421)
+              RETURNING g_pmdl_d[l_ac].pmdl00421_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00422) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00422)
+              RETURNING g_pmdl_d[l_ac].pmdl00422_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00423) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00423)
+              RETURNING g_pmdl_d[l_ac].pmdl00423_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00424) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00424)
+              RETURNING g_pmdl_d[l_ac].pmdl00424_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00425) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00425)
+              RETURNING g_pmdl_d[l_ac].pmdl00425_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00426) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00426)
+              RETURNING g_pmdl_d[l_ac].pmdl00426_desc
+      END IF 
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00427) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00427)
+              RETURNING g_pmdl_d[l_ac].pmdl00427_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00428) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00428)
+              RETURNING g_pmdl_d[l_ac].pmdl00428_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00429) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00429)
+              RETURNING g_pmdl_d[l_ac].pmdl00429_desc
+      END IF
+      IF NOT cl_null(g_pmdl_d[l_ac].pmdl00430) THEN
+         CALL s_desc_get_trading_partner_abbr_desc(g_pmdl_d[l_ac].pmdl00430)
+              RETURNING g_pmdl_d[l_ac].pmdl00430_desc
+      END IF
+      
+      
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq050.filter" >}
+#應用 qs13 樣板自動產生(Version:8)
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION apmq050_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #應用 qs08 樣板自動產生(Version:5)
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON pmdn001,pmdl015
+                          FROM s_detail1[1].b_pmdn001,s_detail1[1].b_pmdl015
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY apmq050_filter_parser('pmdn001') TO s_detail1[1].b_pmdn001
+            DISPLAY apmq050_filter_parser('pmdl015') TO s_detail1[1].b_pmdl015
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+ 
+         #單身一般欄位開窗相關處理
+                  #----<<sel>>----
+         #----<<b_pmdn001>>----
+         #Ctrlp:construct.c.page1.b_pmdn001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdn001
+            #add-point:ON ACTION controlp INFIELD b_pmdn001 name="construct.c.filter.page1.b_pmdn001"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001_15()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdn001  #顯示到畫面上
+            NEXT FIELD b_pmdn001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #----<<b_pmdn001_desc>>----
+         #----<<b_pmdn001_desc_1>>----
+         #----<<b_pmdl015>>----
+         #Ctrlp:construct.c.page1.b_pmdl015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pmdl015
+            #add-point:ON ACTION controlp INFIELD b_pmdl015 name="construct.c.filter.page1.b_pmdl015"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooaj002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmdl015  #顯示到畫面上
+            NEXT FIELD b_pmdl015                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #----<<b_pmdl015_desc>>----
+         #----<<b_pmdn015_a>>----
+         #----<<b_pmdn0151>>----
+         #----<<b_pmdl0041>>----
+         #----<<b_pmdl0041_desc>>----
+         #----<<b_pmdn0152>>----
+         #----<<b_pmdl0042>>----
+         #----<<b_pmdl0042_desc>>----
+         #----<<b_pmdn0153>>----
+         #----<<b_pmdl0043>>----
+         #----<<b_pmdl0043_desc>>----
+         #----<<b_pmdn0154>>----
+         #----<<b_pmdl0044>>----
+         #----<<b_pmdl0044_desc>>----
+         #----<<b_pmdn0155>>----
+         #----<<b_pmdl0045>>----
+         #----<<b_pmdl0045_desc>>----
+         #----<<b_pmdn0156>>----
+         #----<<b_pmdl0046>>----
+         #----<<b_pmdl0046_desc>>----
+         #----<<b_pmdn0157>>----
+         #----<<b_pmdl0047>>----
+         #----<<b_pmdl0047_desc>>----
+         #----<<b_pmdn0158>>----
+         #----<<b_pmdl0048>>----
+         #----<<b_pmdl0048_desc>>----
+         #----<<b_pmdn0159>>----
+         #----<<b_pmdl0049>>----
+         #----<<b_pmdl0049_desc>>----
+         #----<<b_pmdn01510>>----
+         #----<<b_pmdl00410>>----
+         #----<<b_pmdl00410_desc>>----
+         #----<<b_pmdn01511>>----
+         #----<<b_pmdl00411>>----
+         #----<<b_pmdl00411_desc>>----
+         #----<<b_pmdn01512>>----
+         #----<<b_pmdl00412>>----
+         #----<<b_pmdl00412_desc>>----
+         #----<<b_pmdn01513>>----
+         #----<<b_pmdl00413>>----
+         #----<<b_pmdl00413_desc>>----
+         #----<<b_pmdn01514>>----
+         #----<<b_pmdl00414>>----
+         #----<<b_pmdl00414_desc>>----
+         #----<<b_pmdn01515>>----
+         #----<<b_pmdl00415>>----
+         #----<<b_pmdl00415_desc>>----
+         #----<<b_pmdn01516>>----
+         #----<<b_pmdl00416>>----
+         #----<<b_pmdl00416_desc>>----
+         #----<<b_pmdn01517>>----
+         #----<<b_pmdl00417>>----
+         #----<<b_pmdl00417_desc>>----
+         #----<<b_pmdn01518>>----
+         #----<<b_pmdl00418>>----
+         #----<<b_pmdl00418_desc>>----
+         #----<<b_pmdn01519>>----
+         #----<<b_pmdl00419>>----
+         #----<<b_pmdl00419_desc>>----
+         #----<<b_pmdn01520>>----
+         #----<<b_pmdl00420>>----
+         #----<<b_pmdl00420_desc>>----
+         #----<<b_pmdn01521>>----
+         #----<<b_pmdl00421>>----
+         #----<<b_pmdl00421_desc>>----
+         #----<<b_pmdn01522>>----
+         #----<<b_pmdl00422>>----
+         #----<<b_pmdl00422_desc>>----
+         #----<<b_pmdn01523>>----
+         #----<<b_pmdl00423>>----
+         #----<<b_pmdl00423_desc>>----
+         #----<<b_pmdn01524>>----
+         #----<<b_pmdl00424>>----
+         #----<<b_pmdl00424_desc>>----
+         #----<<b_pmdn01525>>----
+         #----<<b_pmdl00425>>----
+         #----<<b_pmdl00425_desc>>----
+         #----<<b_pmdn01526>>----
+         #----<<b_pmdl00426>>----
+         #----<<b_pmdl00426_desc>>----
+         #----<<b_pmdn01527>>----
+         #----<<b_pmdl00427>>----
+         #----<<b_pmdl00427_desc>>----
+         #----<<b_pmdn01528>>----
+         #----<<b_pmdl00428>>----
+         #----<<b_pmdl00428_desc>>----
+         #----<<b_pmdn01529>>----
+         #----<<b_pmdl00429>>----
+         #----<<b_pmdl00429_desc>>----
+         #----<<b_pmdn01530>>----
+         #----<<b_pmdl00430>>----
+         #----<<b_pmdl00430_desc>>----
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+ 
+ 
+   
+ 
+   #add-point:離開DIALOG後相關處理 name="filter.after_dialog"
+   
+   #end add-point
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL apmq050_filter_show('pmdn001','b_pmdn001')
+   CALL apmq050_filter_show('pmdl015','b_pmdl015')
+ 
+ 
+   CALL apmq050_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq050.filter_parser" >}
+#應用 qs14 樣板自動產生(Version:6)
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION apmq050_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   
+   #end add-point
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="apmq050.filter_show" >}
+#應用 qs15 樣板自動產生(Version:6)
+#+ filter標題欄位顯示搜尋條件
+PRIVATE FUNCTION apmq050_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apmq050_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="apmq050.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION apmq050_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq050.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION apmq050_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="detail_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_pmdl_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_pmdl_d.getLength() AND g_pmdl_d.getLength() > 0
+            LET g_detail_idx = g_pmdl_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_pmdl_d.getLength() THEN
+               LET g_detail_idx = g_pmdl_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq050.mask_functions" >}
+ &include "erp/apm/apmq050_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="apmq050.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 建立temp table 
+# Memo...........:
+# Usage..........: CALL apmq050_create_temp_table()
+# Date & Author..: 2015/07/27 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmq050_create_temp_table()
+   DROP TABLE apmq050_data1;
+   CREATE TEMP TABLE apmq050_data1(
+      pmdn001        LIKE pmdn_t.pmdn001,
+      pmdl015        LIKE pmdl_t.pmdl015,
+      pmdl004        LIKE pmdl_t.pmdl004
+   )
+
+   DROP TABLE apmq050_tmp01;  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_pmdl004_t ——> apmq050_tmp01
+   CREATE TEMP TABLE apmq050_tmp01(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_pmdl004_t ——> apmq050_tmp01
+      seq            LIKE type_t.num5,
+      pmdl004        LIKE pmdl_t.pmdl004
+   )
+
+   DROP TABLE apmq050_tmp02;  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+   CREATE TEMP TABLE apmq050_tmp02(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+      pmdldocno      LIKE pmdl_t.pmdldocno,
+      pmdldocdt      LIKE pmdl_t.pmdldocdt,
+      pmdn001        LIKE pmdn_t.pmdn001,
+      pmdl004        LIKE pmdl_t.pmdl004,
+      pmdl015        LIKE pmdl_t.pmdl015,
+      pmdn015        LIKE pmdn_t.pmdn015,  
+      pmdn0152       LIKE pmdn_t.pmdn015,  
+      pmdl002        LIKE pmdl_t.pmdl002,
+      pmdl003        LIKE pmdl_t.pmdl003,
+      pmdnseq        LIKE pmdn_t.pmdnseq,
+      pmdn019        LIKE pmdn_t.pmdn019,
+      pmdn002        LIKE pmdn_t.pmdn002,
+      pmdn006        LIKE pmdn_t.pmdn006,
+      pmdn007        LIKE pmdn_t.pmdn007
+   ) 
+   
+   DROP TABLE apmq050_tmp03;  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_relest_t ——> apmq050_tmp03
+   CREATE TEMP TABLE apmq050_tmp03(  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_relest_t ——> apmq050_tmp03
+      pmdn001        LIKE pmdn_t.pmdn001,
+      pmdl015        LIKE pmdl_t.pmdl015,
+      pmdn0151       LIKE pmdn_t.pmdn015, 
+      pmdl0041       LIKE pmdl_t.pmdl004, 
+      pmdn0152       LIKE pmdn_t.pmdn015,
+      pmdl0042       LIKE pmdl_t.pmdl004, 
+      pmdn0153       LIKE pmdn_t.pmdn015, 
+      pmdl0043       LIKE pmdl_t.pmdl004, 
+      pmdn0154       LIKE pmdn_t.pmdn015, 
+      pmdl0044       LIKE pmdl_t.pmdl004, 
+      pmdn0155       LIKE pmdn_t.pmdn015, 
+      pmdl0045       LIKE pmdl_t.pmdl004, 
+      pmdn0156       LIKE pmdn_t.pmdn015, 
+      pmdl0046       LIKE pmdl_t.pmdl004, 
+      pmdn0157       LIKE pmdn_t.pmdn015, 
+      pmdl0047       LIKE pmdl_t.pmdl004, 
+      pmdn0158       LIKE pmdn_t.pmdn015, 
+      pmdl0048       LIKE pmdl_t.pmdl004, 
+      pmdn0159       LIKE pmdn_t.pmdn015, 
+      pmdl0049       LIKE pmdl_t.pmdl004, 
+      pmdn01510      LIKE pmdn_t.pmdn015, 
+      pmdl00410      LIKE pmdl_t.pmdl004, 
+      pmdn01511      LIKE pmdn_t.pmdn015, 
+      pmdl00411      LIKE pmdl_t.pmdl004, 
+      pmdn01512      LIKE pmdn_t.pmdn015, 
+      pmdl00412      LIKE pmdl_t.pmdl004, 
+      pmdn01513      LIKE pmdn_t.pmdn015, 
+      pmdl00413      LIKE pmdl_t.pmdl004, 
+      pmdn01514      LIKE pmdn_t.pmdn015, 
+      pmdl00414      LIKE pmdl_t.pmdl004, 
+      pmdn01515      LIKE pmdn_t.pmdn015, 
+      pmdl00415      LIKE pmdl_t.pmdl004, 
+      pmdn01516      LIKE pmdn_t.pmdn015, 
+      pmdl00416      LIKE pmdl_t.pmdl004, 
+      pmdn01517      LIKE pmdn_t.pmdn015, 
+      pmdl00417      LIKE pmdl_t.pmdl004, 
+      pmdn01518      LIKE pmdn_t.pmdn015, 
+      pmdl00418      LIKE pmdl_t.pmdl004, 
+      pmdn01519      LIKE pmdn_t.pmdn015, 
+      pmdl00419      LIKE pmdl_t.pmdl004, 
+      pmdn01520      LIKE pmdn_t.pmdn015, 
+      pmdl00420      LIKE pmdl_t.pmdl004, 
+      pmdn01521      LIKE pmdn_t.pmdn015, 
+      pmdl00421      LIKE pmdl_t.pmdl004, 
+      pmdn01522      LIKE pmdn_t.pmdn015, 
+      pmdl00422      LIKE pmdl_t.pmdl004, 
+      pmdn01523      LIKE pmdn_t.pmdn015, 
+      pmdl00423      LIKE pmdl_t.pmdl004, 
+      pmdn01524      LIKE pmdn_t.pmdn015, 
+      pmdl00424      LIKE pmdl_t.pmdl004, 
+      pmdn01525      LIKE pmdn_t.pmdn015,  
+      pmdl00425      LIKE pmdl_t.pmdl004, 
+      pmdn01526      LIKE pmdn_t.pmdn015, 
+      pmdl00426      LIKE pmdl_t.pmdl004, 
+      pmdn01527      LIKE pmdn_t.pmdn015, 
+      pmdl00427      LIKE pmdl_t.pmdl004, 
+      pmdn01528      LIKE pmdn_t.pmdn015, 
+      pmdl00428      LIKE pmdl_t.pmdl004, 
+      pmdn01529      LIKE pmdn_t.pmdn015, 
+      pmdl00429      LIKE pmdl_t.pmdl004, 
+      pmdn01530      LIKE pmdn_t.pmdn015, 
+      pmdl00430      LIKE pmdl_t.pmdl004 
+
+   )
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 移除temp table
+# Memo...........:
+# Usage..........: CALL apmq050_drop_temp_table()
+# Date & Author..: 2015/07/27 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmq050_drop_temp_table()
+   DROP TABLE apmq050_data1;
+   DROP TABLE apmq050_tmp01;  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_pmdl004_t ——> apmq050_tmp01
+   DROP TABLE apmq050_tmp02;  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_apmt500_t ——> apmq050_tmp02
+   DROP TABLE apmq050_tmp03;  #160727-00019#12   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 apmq050_relest_t ——> apmq050_tmp03
+END FUNCTION
+
+ 
+{</section>}
+ 

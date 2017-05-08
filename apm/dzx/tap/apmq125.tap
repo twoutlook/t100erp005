@@ -1,0 +1,2420 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmq125" std_prog="apmq125" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="Q" status=""/>
+    <free_style value="Y" status=""/>
+  </other>
+  <point name="main.define_sql" order="0" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+   LET g_forupd_sql = " ",]]>
+  </point>
+  <point name="function.apmq125_init" order="1" ver="1" cite_std="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmq125_init()
+
+   #add-point:init段define
+
+   #end add-point
+
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   LET g_error_show  = 1
+#  LET g_selcolor    = "#D0E7FD"
+
+
+
+   #add-point:畫面資料初始化
+   #單頭資料內容預設勾選料件編號
+   LET g_pmar3_d.pmar002 = 'Y'
+   LET g_pmar3_d.pmar004 = 'N'
+   LET g_pmar3_d.pmar001 = 'N'
+   LET g_pmar3_d.pmar007 = 'N'
+   LET g_pmar3_d.pmar003 = 'N'
+   LET g_pmar3_d.pmar005 = 'N'
+   LET g_pmar3_d.pmar006 = 'N'
+   LET g_pmar3_d.pmar009 = 'N'
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmq125_ui_dialog" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmq125_ui_dialog()
+   {<Local define>}
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_result STRING
+   {</Local define>}
+   #add-point:ui_dialog段define
+   DEFINE ls_wc     STRING
+   DEFINE ldig_curr ui.Dialog
+   DEFINE li_index  LIKE type_t.num5
+   #end add-point
+
+
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET g_main_hidden = 1
+   LET l_ac = 1
+
+   #add-point:ui_dialog段before dialog
+
+   #end add-point
+
+
+   CALL apmq125_b_fill()
+
+   WHILE li_exit = FALSE
+
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+         CONSTRUCT BY NAME g_wc ON imaa009,pmar002,pmar003,pmar001,pmaa080,
+                                   pmar006,pmar007,pmar009,pmar019
+            BEFORE CONSTRUCT
+               IF cl_null(g_pmar.pmar019) THEN
+                  LET g_pmar.pmar019 = ''
+               END IF
+               DISPLAY BY NAME g_pmar.imaa009,g_pmar.pmar002,g_pmar.pmar003,
+                               g_pmar.pmar001,g_pmar.pmaa080,g_pmar.pmar006,
+                               g_pmar.pmar007,g_pmar.pmar009,g_pmar.pmar019
+
+            AFTER FIELD imaa009
+               LET g_pmar.imaa009 = GET_FLDBUF(imaa009)
+
+            AFTER FIELD pmar002
+               LET g_pmar.pmar002 = GET_FLDBUF(pmar002)
+
+            AFTER FIELD pmar003
+               LET g_pmar.pmar003 = GET_FLDBUF(pmar003)
+
+            AFTER FIELD pmar001
+               LET g_pmar.pmar001 = GET_FLDBUF(pmar001)
+
+            AFTER FIELD pmaa080
+               LET g_pmar.pmaa080 = GET_FLDBUF(pmaa080)
+
+            AFTER FIELD pmar006
+               LET g_pmar.pmar006 = GET_FLDBUF(pmar006)
+
+            AFTER FIELD pmar007
+               LET g_pmar.pmar007 = GET_FLDBUF(pmar007)
+
+            AFTER FIELD pmar009
+               LET g_pmar.pmar009 = GET_FLDBUF(pmar009)
+
+            AFTER FIELD pmar019
+               LET g_pmar.pmar019 = GET_FLDBUF(pmar019)
+
+            ON ACTION controlp INFIELD imaa009
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+               CALL q_rtax001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO imaa009      #顯示到畫面上
+               NEXT FIELD imaa009                         #返回原欄位
+
+            ON ACTION controlp INFIELD pmar002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaa001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar002      #顯示到畫面上
+               NEXT FIELD pmar002                         #返回原欄位
+
+            ON ACTION controlp INFIELD pmar003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmar003()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar003      #顯示到畫面上
+               NEXT FIELD pmar003                         #返回原欄位
+
+            ON ACTION controlp INFIELD pmar001
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmaa001_3()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar001      #顯示到畫面上
+               NEXT FIELD pmar001                         #返回原欄位
+
+            ON ACTION controlp INFIELD pmaa080
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '251'
+               CALL q_oocq002()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmaa080      #顯示到畫面上
+               NEXT FIELD pmaa080                         #返回原欄位
+
+            ON ACTION controlp INFIELD pmar006
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooca001_1()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar006      #顯示到畫面上
+               NEXT FIELD pmar006                         #返回原欄位
+
+            ON ACTION controlp INFIELD pmar007
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooaj002_1()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar007      #顯示到畫面上
+               NEXT FIELD pmar007                         #返回原欄位
+
+            ON ACTION controlp INFIELD pmar009
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_oodb002_2()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar009      #顯示到畫面上
+               NEXT FIELD pmar009                         #返回原欄位
+
+         END CONSTRUCT
+
+         #end add-point
+
+         #add-point:construct段落
+         INPUT BY NAME g_pmar000 ATTRIBUTE(WITHOUT DEFAULTS)
+            BEFORE INPUT
+
+            AFTER INPUT
+               IF INT_FLAG THEN
+                  EXIT DIALOG
+               END IF
+         END INPUT
+
+         INPUT BY NAME g_pmar3_d.pmar002,g_pmar3_d.pmar004,g_pmar3_d.pmar001,g_pmar3_d.pmar007,
+                       g_pmar3_d.pmar003,g_pmar3_d.pmar005,g_pmar3_d.pmar006,g_pmar3_d.pmar009
+
+            BEFORE INPUT
+
+            AFTER INPUT
+               IF g_pmar3_d.pmar002 = 'N' AND g_pmar3_d.pmar004 = 'N' AND g_pmar3_d.pmar001 = 'N' AND g_pmar3_d.pmar007 = 'N' AND
+                  g_pmar3_d.pmar003 = 'N' AND g_pmar3_d.pmar005 = 'N' AND g_pmar3_d.pmar006 = 'N' AND g_pmar3_d.pmar009 = 'N' THEN
+
+                 CALL cl_err(' ','ain-00173',1)
+                 NEXT FIELD pmar002
+               END IF
+         END INPUT
+         #end add-point
+
+         DISPLAY ARRAY g_pmar_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+
+            BEFORE DISPLAY
+               LET g_current_page = 1
+
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_pmar_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL apmq125_b_fill2()
+
+               #add-point:input段before row
+
+               #end add-point
+
+
+
+            #自訂ACTION(detail_show,page_1)
+
+
+         END DISPLAY
+
+         DISPLAY ARRAY g_pmar2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 2
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+
+               #end add-point
+            #自訂ACTION(detail_show,page_2)
+
+         END DISPLAY
+
+
+
+         #add-point:ui_dialog段自定義display array
+
+         #end add-point
+
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+
+         BEFORE DIALOG
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            #add-point:ui_dialog段before dialog
+            #關閉查詢按鈕，保持查詢狀態
+            CALL cl_set_act_visible("query", FALSE)
+            #end add-point
+
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+
+            #end add-point
+
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+
+         ON ACTION accept
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               #還原
+               LET g_wc = ls_wc
+            ELSE
+               CALL cl_dlg_save_user_latestqry("("||g_wc||")")  
+               LET g_master_idx = 1
+            END IF
+            
+            #CALL ainq120_comp_visible()
+            
+            LET g_error_show = 1
+            CALL apmq125_b_fill()
+            CALL apmq125_b_fill2()           
+            LET l_ac = g_master_idx
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               CALL cl_err("",-100,1)
+            END IF
+            
+            CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+
+
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+
+            #END add-point
+            CALL cl_user_overview()
+
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+
+         ON ACTION datarefresh   # 重新整理
+            CALL apmq125_b_fill()
+
+         #+ 此段落由子樣板qs19產生
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_pmar_d.getLength()
+               LET g_pmar_d[li_idx].sel = "Y"
+            END FOR
+
+            #add-point:ui_dialog段on action selall
+
+            #end add-point
+
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_pmar_d.getLength()
+               LET g_pmar_d[li_idx].sel = "N"
+            END FOR
+
+            #add-point:ui_dialog段on action selnone
+
+            #end add-point
+
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_pmar_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pmar_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+
+            #add-point:ui_dialog段on action sel
+
+            #end add-point
+
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_pmar_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pmar_d[li_idx].sel = "N"
+               END IF
+            END FOR
+
+            #add-point:ui_dialog段on action unsel
+
+            #end add-point
+
+
+
+         #+ 此段落由子樣板qs16產生
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apmq125_filter()
+            #add-point:ON ACTION filter
+
+            #END add-point
+            EXIT DIALOG
+
+
+
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+
+               #add-point:ON ACTION insert
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+
+
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+
+               #add-point:ON ACTION output
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+
+
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+
+               #add-point:ON ACTION query
+
+               #END add-point
+
+            END IF
+
+
+         #+ 此段落由子樣板a43產生
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+
+               #add-point:ON ACTION datainfo
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+
+
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+
+      END DIALOG
+
+   END WHILE
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmq125_b_fill" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmq125_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   {</Local define>}
+   #add-point:b_fill段define
+   DEFINE l_sql_order     STRING
+   DEFINE l_sql           STRING
+   DEFINE l_item          STRING
+   #end add-point
+
+   #add-point:b_fill段sql_before
+
+   #end add-point
+
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+
+   CALL g_pmar_d.clear()
+   CALL g_pmar2_d.clear()
+
+
+   #add-point:陣列清空
+
+   #end add-point
+
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+
+   # b_fill段sql組成及FOREACH撰寫
+   LET l_sql = "SELECT UNIQUE "
+   LET l_sql_order = " ORDER BY "
+   #單投資料內容
+   IF g_pmar3_d.pmar002 = 'Y' THEN
+      LET l_sql = l_sql,"pmar002,'',''"
+      LET l_sql_order = l_sql_order,"pmar002"
+   ELSE
+      LET l_sql = l_sql,"'','',''"
+      LET l_sql_order = l_sql_order,"''"
+   END IF
+
+   IF g_pmar3_d.pmar004 = 'Y' THEN
+      LET l_sql = l_sql,",pmar004"
+      LET l_sql_order = l_sql_order,",pmar004"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+
+   IF g_pmar3_d.pmar001 = 'Y' THEN
+      LET l_sql = l_sql,",pmar001,''"
+      LET l_sql_order = l_sql_order,",pmar001"
+   ELSE
+      LET l_sql = l_sql,",'',''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+
+   IF g_pmar3_d.pmar007 = 'Y' THEN
+      LET l_sql = l_sql,",pmar007"
+      LET l_sql_order = l_sql_order,",pmar007"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+
+   IF g_pmar3_d.pmar003 = 'Y' THEN
+      LET l_sql = l_sql,",pmar003"
+      LET l_sql_order = l_sql_order,",pmar003"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+
+   IF g_pmar3_d.pmar005 = 'Y' THEN
+      LET l_sql = l_sql,",pmar005"
+      LET l_sql_order = l_sql_order,",pmar005"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+
+   IF g_pmar3_d.pmar006 = 'Y' THEN
+      LET l_sql = l_sql,",pmar006"
+      LET l_sql_order = l_sql_order,",pmar006"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+
+   IF g_pmar3_d.pmar009 = 'Y' THEN
+      LET l_sql = l_sql,",pmar009"
+      LET l_sql_order = l_sql_order,",pmar009"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+
+   #價格類型
+   IF NOT cl_null(g_pmar000) THEN
+      LET ls_wc = ls_wc," AND pmar000='",g_pmar000,"'"
+   END IF
+
+   #CALL ls_wc.getItemName(1,l_item) #RETURNING l_item
+#   CASE ls_wc.getItemName(1,l_item)
+#      WHEN "imaa"
+#
+#         LET g_sql = l_sql,"  FROM pmar_t,imaa_t,pmaa_t ",
+#                           " WHERE pmarent = imaaent AND pmar002 = imaa001 AND pmarent = pmaarnt AND pmar001 = pmaa001 ",
+#                           "   AND pmarent=",g_enterprise," AND pmarsite='",g_site,"' AND ", ls_wc
+#      WHEN "pmaa"
+#
+#         LET g_sql = l_sql,"  FROM pmar_t,pmaa_t ",
+#                           " WHERE pmarent = pmaarnt AND pmar001 = pmaa001 ",
+#                           "   AND pmarent=",g_enterprise," AND pmarsite='",g_site,"' AND ", ls_wc
+#      OTHERWISE
+#
+#         LET g_sql = l_sql,"  FROM pmar_t ",
+#                           " WHERE pmarent=",g_enterprise," AND pmarsite='",g_site,"' AND ", ls_wc
+#   END CASE
+
+   LET g_sql = l_sql,"  FROM pmar_t,imaa_t,pmaa_t ",
+                     " WHERE pmarent = imaaent AND pmar002 = imaa001 AND pmarent = pmaarnt AND pmar001 = pmaa001 ",
+                     "   AND pmarent=",g_enterprise," AND pmarsite='",g_site,"' AND ", ls_wc
+   LET g_sql = g_sql,l_sql_order
+   #end add-point
+
+   PREPARE apmq125_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apmq125_pb
+
+   OPEN b_fill_curs USING g_enterprise, g_site
+
+   FOREACH b_fill_curs INTO g_pmar_d[l_ac].sel,g_pmar_d[l_ac].pmar002,g_pmar_d[l_ac].pmar002_desc,g_pmar_d[l_ac].pmar002_desc_desc,
+       g_pmar_d[l_ac].pmar003,g_pmar_d[l_ac].pmar004,g_pmar_d[l_ac].pmar005,g_pmar_d[l_ac].pmar001,g_pmar_d[l_ac].pmar001_desc,
+       g_pmar_d[l_ac].pmar007,g_pmar_d[l_ac].pmar009,g_pmar_d[l_ac].pmar006
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+
+
+
+      #add-point:b_fill段資料填充
+
+      #end add-point
+
+      CALL apmq125_detail_show("'1'")
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+
+
+
+
+
+   #add-point:b_fill段資料填充(其他單身)
+
+   #end add-point
+
+   CALL g_pmar_d.deleteElement(g_pmar_d.getLength())
+   CALL g_pmar2_d.deleteElement(g_pmar2_d.getLength())
+
+
+   #add-point:陣列長度調整
+
+   #end add-point
+
+   LET g_error_show = 0
+
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+
+   #+ 此段落由子樣板qs06產生
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE apmq125_pb
+
+
+
+
+   LET l_ac = 1
+   CALL apmq125_b_fill2()
+
+      CALL apmq125_filter_show('pmar002','b_pmar002')
+   CALL apmq125_filter_show('pmar003','b_pmar003')
+   CALL apmq125_filter_show('pmar004','b_pmar004')
+   CALL apmq125_filter_show('pmar005','b_pmar005')
+   CALL apmq125_filter_show('pmar001','b_pmar001')
+   CALL apmq125_filter_show('pmar007','b_pmar007')
+   CALL apmq125_filter_show('pmar009','b_pmar009')
+   CALL apmq125_filter_show('pmar006','b_pmar006')
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmq125_b_fill2" order="4" ver="1" cite_std="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmq125_b_fill2()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:b_fill2段define
+
+   #end add-point
+
+   LET li_ac = l_ac
+
+   #單身組成
+   #+ 此段落由子樣板qs07產生
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+
+   #add-point:陣列清空
+
+   #end add-point
+
+
+
+
+   #add-point:陣列長度調整
+
+   #end add-point
+
+
+
+   #add-point:單身填充後
+
+   #end add-point
+
+   LET l_ac = li_ac
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmq125_detail_show" order="5" ver="1" cite_std="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmq125_detail_show(ps_page)
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define
+
+   #end add-point
+
+   #add-point:detail_show段之前
+
+   #end add-point
+
+
+
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+
+
+      #add-point:show段單身reference
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar_d[l_ac].pmar002
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmar_d[l_ac].pmar002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar_d[l_ac].pmar002_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar_d[l_ac].pmar002
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmar_d[l_ac].pmar002_desc_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar_d[l_ac].pmar002_desc_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar_d[l_ac].pmar001
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmar_d[l_ac].pmar001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar_d[l_ac].pmar001_desc
+
+      #end add-point
+   END IF
+
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+
+      #add-point:show段單身reference
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar2_d[l_ac].l_pmar002
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmar2_d[l_ac].l_pmar002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar2_d[l_ac].l_pmar002_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar2_d[l_ac].l_pmar002
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmar2_d[l_ac].l_pmar002_desc_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar2_d[l_ac].l_pmar002_desc_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar2_d[l_ac].l_pmar001
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? ","") RETURNING g_rtn_fields
+            LET g_pmar2_d[l_ac].l_pmar001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar2_d[l_ac].l_pmar001_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar2_d[l_ac].l_pmar020
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_pmar2_d[l_ac].l_pmar020_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar2_d[l_ac].l_pmar020_desc
+
+      #end add-point
+   END IF
+
+
+
+   #add-point:detail_show段之後
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmq125_filter" order="6" ver="1" cite_std="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmq125_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+
+   #end add-point
+
+   LET INT_FLAG = 0
+
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+
+
+
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #+ 此段落由子樣板qs08產生
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #單頭
+      CONSTRUCT g_wc_filter ON pmar002,pmar003,pmar004,pmar005,pmar001,pmar007,pmar009,pmar006
+                          FROM s_detail1[1].b_pmar002,s_detail1[1].b_pmar003,s_detail1[1].b_pmar004,
+                              s_detail1[1].b_pmar005,s_detail1[1].b_pmar001,s_detail1[1].b_pmar007,s_detail1[1].b_pmar009,
+                              s_detail1[1].b_pmar006
+
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+                     DISPLAY apmq125_filter_parser('pmar002') TO s_detail1[1].b_pmar002
+            DISPLAY apmq125_filter_parser('pmar003') TO s_detail1[1].b_pmar003
+            DISPLAY apmq125_filter_parser('pmar004') TO s_detail1[1].b_pmar004
+            DISPLAY apmq125_filter_parser('pmar005') TO s_detail1[1].b_pmar005
+            DISPLAY apmq125_filter_parser('pmar001') TO s_detail1[1].b_pmar001
+            DISPLAY apmq125_filter_parser('pmar007') TO s_detail1[1].b_pmar007
+            DISPLAY apmq125_filter_parser('pmar009') TO s_detail1[1].b_pmar009
+            DISPLAY apmq125_filter_parser('pmar006') TO s_detail1[1].b_pmar006
+
+
+      END CONSTRUCT
+
+      #add-point:filter段add_cs
+
+      #end add-point
+
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+
+         #end add-point
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+
+   END DIALOG
+
+
+
+
+
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+
+      CALL apmq125_filter_show('pmar002','b_pmar002')
+   CALL apmq125_filter_show('pmar003','b_pmar003')
+   CALL apmq125_filter_show('pmar004','b_pmar004')
+   CALL apmq125_filter_show('pmar005','b_pmar005')
+   CALL apmq125_filter_show('pmar001','b_pmar001')
+   CALL apmq125_filter_show('pmar007','b_pmar007')
+   CALL apmq125_filter_show('pmar009','b_pmar009')
+   CALL apmq125_filter_show('pmar006','b_pmar006')
+
+   CALL apmq125_b_fill()
+
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmq125_filter_parser" order="7" ver="1" cite_std="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmq125_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+
+   #end add-point
+
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+
+   RETURN ls_var
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmq125_filter_show" order="8" ver="1" cite_std="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmq125_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+
+   LET ls_name = "formonly.", ps_object
+
+
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+
+   #顯示資料組合
+   LET ls_condition = apmq125_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_sql_order     STRING
+   DEFINE l_sql           STRING
+   DEFINE l_item          STRING]]>
+  </point>
+  <point name="b_fill.sql_after" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_sql = "SELECT UNIQUE "
+   LET l_sql_order = " ORDER BY "
+   #單投資料內容
+   IF g_pmar3_d.pmar002 = 'Y' THEN
+      LET l_sql = l_sql,"pmar002,'',''"
+      LET l_sql_order = l_sql_order,"pmar002"
+   ELSE
+      LET l_sql = l_sql,"'','',''"
+      LET l_sql_order = l_sql_order,"''"
+   END IF
+   
+   IF g_pmar3_d.pmar004 = 'Y' THEN
+      LET l_sql = l_sql,",pmar004"
+      LET l_sql_order = l_sql_order,",pmar004"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+
+   IF g_pmar3_d.pmar001 = 'Y' THEN
+      LET l_sql = l_sql,",pmar001,''"
+      LET l_sql_order = l_sql_order,",pmar001"
+   ELSE
+      LET l_sql = l_sql,",'',''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+   
+   IF g_pmar3_d.pmar007 = 'Y' THEN
+      LET l_sql = l_sql,",pmar007"
+      LET l_sql_order = l_sql_order,",pmar007"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+   
+   IF g_pmar3_d.pmar003 = 'Y' THEN
+      LET l_sql = l_sql,",pmar003"
+      LET l_sql_order = l_sql_order,",pmar003"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+   
+   IF g_pmar3_d.pmar005 = 'Y' THEN
+      LET l_sql = l_sql,",pmar005"
+      LET l_sql_order = l_sql_order,",pmar005"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+   
+   IF g_pmar3_d.pmar006 = 'Y' THEN
+      LET l_sql = l_sql,",pmar006"
+      LET l_sql_order = l_sql_order,",pmar006"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+   
+   IF g_pmar3_d.pmar009 = 'Y' THEN
+      LET l_sql = l_sql,",pmar009"
+      LET l_sql_order = l_sql_order,",pmar009"
+   ELSE
+      LET l_sql = l_sql,",''"
+      LET l_sql_order = l_sql_order,",''"
+   END IF
+   
+   #價格類型
+   IF NOT cl_null(g_pmar000) THEN
+      LET ls_wc = ls_wc," AND pmar000='",g_pmar000,"'"
+   END IF
+
+   #CALL ls_wc.getItemName(1,l_item) #RETURNING l_item
+#   CASE ls_wc.getItemName(1,l_item)
+#      WHEN "imaa"
+#         
+#         LET g_sql = l_sql,"  FROM pmar_t,imaa_t,pmaa_t ",
+#                           " WHERE pmarent = imaaent AND pmar002 = imaa001 AND pmarent = pmaarnt AND pmar001 = pmaa001 ",
+#                           "   AND pmarent=",g_enterprise," AND pmarsite='",g_site,"' AND ", ls_wc
+#      WHEN "pmaa"
+#         
+#         LET g_sql = l_sql,"  FROM pmar_t,pmaa_t ",
+#                           " WHERE pmarent = pmaarnt AND pmar001 = pmaa001 ",
+#                           "   AND pmarent=",g_enterprise," AND pmarsite='",g_site,"' AND ", ls_wc
+#      OTHERWISE
+#         
+#         LET g_sql = l_sql,"  FROM pmar_t ",
+#                           " WHERE pmarent=",g_enterprise," AND pmarsite='",g_site,"' AND ", ls_wc
+#   END CASE
+   
+   LET g_sql = l_sql,"  FROM pmar_t,imaa_t,pmaa_t ",
+                     " WHERE pmarent = imaaent AND pmar002 = imaa001 AND pmarent = pmaarnt AND pmar001 = pmaa001 ",
+                     "   AND pmarent=",g_enterprise," AND pmarsite='",g_site,"' AND ", ls_wc
+   LET g_sql = g_sql,l_sql_order]]>
+  </point>
+  <point name="construct.c.page1.b_pmar001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmar001  #顯示到畫面上
+            NEXT FIELD b_pmar001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmar002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmar002  #顯示到畫面上
+            NEXT FIELD b_pmar002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmar004" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmar004  #顯示到畫面上
+            NEXT FIELD b_pmar004                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmar006" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmar006  #顯示到畫面上
+            NEXT FIELD b_pmar006                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmar007" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooaj002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmar007  #顯示到畫面上
+            NEXT FIELD b_pmar007                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.b_pmar009" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oodb002_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_pmar009  #顯示到畫面上
+            NEXT FIELD b_pmar009                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="detail_show.body.reference" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar_d[l_ac].pmar002
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmar_d[l_ac].pmar002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar_d[l_ac].pmar002_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar_d[l_ac].pmar002
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmar_d[l_ac].pmar002_desc_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar_d[l_ac].pmar002_desc_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar_d[l_ac].pmar001
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmar_d[l_ac].pmar001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar_d[l_ac].pmar001_desc
+]]>
+  </point>
+  <point name="detail_show.body2.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar2_d[l_ac].l_pmar002
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmar2_d[l_ac].l_pmar002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar2_d[l_ac].l_pmar002_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar2_d[l_ac].l_pmar002
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmar2_d[l_ac].l_pmar002_desc_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar2_d[l_ac].l_pmar002_desc_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar2_d[l_ac].l_pmar001
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? ","") RETURNING g_rtn_fields
+            LET g_pmar2_d[l_ac].l_pmar001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar2_d[l_ac].l_pmar001_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmar2_d[l_ac].l_pmar020
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_pmar2_d[l_ac].l_pmar020_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmar2_d[l_ac].l_pmar020_desc
+]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#單身 type 宣告
+ TYPE type_g_pmar_d RECORD
+       
+       sel LIKE type_t.chr500, 
+   pmar002 LIKE pmar_t.pmar002, 
+   pmar002_desc LIKE type_t.chr500, 
+   pmar002_desc_desc LIKE type_t.chr500, 
+   pmar003 LIKE pmar_t.pmar003, 
+   pmar004 LIKE pmar_t.pmar004, 
+   pmar005 LIKE pmar_t.pmar005, 
+   pmar001 LIKE pmar_t.pmar001, 
+   pmar001_desc LIKE type_t.chr500, 
+   pmar007 LIKE pmar_t.pmar007, 
+   pmar009 LIKE pmar_t.pmar009, 
+   pmar006 LIKE pmar_t.pmar006
+       END RECORD
+ TYPE type_g_pmar2_d RECORD
+       l_pmar002 LIKE type_t.chr500, 
+   l_pmar002_desc LIKE type_t.chr500, 
+   l_pmar002_desc_desc LIKE type_t.chr500, 
+   l_pmar003 LIKE type_t.chr500, 
+   l_pmar004 LIKE type_t.chr10, 
+   l_pmar005 LIKE type_t.chr10, 
+   l_pmar001 LIKE type_t.chr10, 
+   l_pmar001_desc LIKE type_t.chr500, 
+   l_pmar007 LIKE type_t.chr10, 
+   l_pmar009 LIKE type_t.chr10, 
+   l_pmar006 LIKE type_t.chr10, 
+   l_pmar012 LIKE type_t.num20_6, 
+   l_pmar014 LIKE type_t.chr10, 
+   l_pmar015 LIKE type_t.num20_6, 
+   l_pmar016 LIKE type_t.num20_6, 
+   l_pmar017 LIKE type_t.num20_6, 
+   l_pmar018 LIKE type_t.chr20, 
+   l_pmar019 LIKE type_t.dat, 
+   l_pmar020 LIKE type_t.chr10, 
+   l_pmar020_desc LIKE type_t.chr500
+       END RECORD
+#查詢條件
+ TYPE type_g_pmar RECORD
+     imaa009 LIKE type_t.chr1000,
+     pmar002 LIKE type_t.chr1000,
+     pmar003 LIKE type_t.chr1000, 
+     pmar001 LIKE type_t.chr1000, 
+     pmaa080 LIKE type_t.chr1000, 
+     pmar006 LIKE type_t.chr1000, 
+     pmar007 LIKE type_t.chr1000, 
+     pmar009 LIKE type_t.chr1000, 
+     pmar019 LIKE type_t.chr1000
+         END RECORD
+DEFINE g_pmar        type_g_pmar
+#價格類型                
+DEFINE g_pmar000     LIKE pmar_t.pmar000
+#單頭資料內容
+ TYPE type_g_pmar3_d RECORD
+     pmar002 LIKE pmar_t.pmar000, 
+     pmar004 LIKE pmar_t.pmar000, 
+     pmar001 LIKE pmar_t.pmar000, 
+     pmar007 LIKE pmar_t.pmar000, 
+     pmar003 LIKE pmar_t.pmar000, 
+     pmar005 LIKE pmar_t.pmar000,  
+     pmar006 LIKE pmar_t.pmar000, 
+     pmar009 LIKE pmar_t.pmar000
+         END RECORD   
+DEFINE g_pmar3_d     type_g_pmar3_d
+
+DEFINE g_cnt2          LIKE type_t.num10              
+DEFINE l_ac2           LIKE type_t.num5              #目前處理的ARRAY CNT
+
+DEFINE g_pmar_d            DYNAMIC ARRAY OF type_g_pmar_d
+DEFINE g_pmar_d_t          type_g_pmar_d
+DEFINE g_pmar2_d     DYNAMIC ARRAY OF type_g_pmar2_d
+DEFINE g_pmar2_d_t   type_g_pmar2_d
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num5              #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num5
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num5
+DEFINE g_detail_idx          LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num5
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   #單頭資料內容預設勾選料件編號
+   LET g_pmar3_d.pmar002 = 'Y'
+   LET g_pmar3_d.pmar004 = 'N'
+   LET g_pmar3_d.pmar001 = 'N'
+   LET g_pmar3_d.pmar007 = 'N'
+   LET g_pmar3_d.pmar003 = 'N'
+   LET g_pmar3_d.pmar005 = 'N'
+   LET g_pmar3_d.pmar006 = 'N'
+   LET g_pmar3_d.pmar009 = 'N']]>
+  </point>
+  <point name="input.a.page1.pmar000" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar_d[g_detail_idx].pmar000 != g_pmar_d_t.pmar000 OR g_pmar_d[g_detail_idx].pmar001 != g_pmar_d_t.pmar001 OR g_pmar_d[g_detail_idx].pmar002 != g_pmar_d_t.pmar002 OR g_pmar_d[g_detail_idx].pmar003 != g_pmar_d_t.pmar003 OR g_pmar_d[g_detail_idx].pmar004 != g_pmar_d_t.pmar004 OR g_pmar_d[g_detail_idx].pmar005 != g_pmar_d_t.pmar005 OR g_pmar_d[g_detail_idx].pmar006 != g_pmar_d_t.pmar006 OR g_pmar_d[g_detail_idx].pmar007 != g_pmar_d_t.pmar007 OR g_pmar_d[g_detail_idx].pmar009 != g_pmar_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmar001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar_d[g_detail_idx].pmar000 != g_pmar_d_t.pmar000 OR g_pmar_d[g_detail_idx].pmar001 != g_pmar_d_t.pmar001 OR g_pmar_d[g_detail_idx].pmar002 != g_pmar_d_t.pmar002 OR g_pmar_d[g_detail_idx].pmar003 != g_pmar_d_t.pmar003 OR g_pmar_d[g_detail_idx].pmar004 != g_pmar_d_t.pmar004 OR g_pmar_d[g_detail_idx].pmar005 != g_pmar_d_t.pmar005 OR g_pmar_d[g_detail_idx].pmar006 != g_pmar_d_t.pmar006 OR g_pmar_d[g_detail_idx].pmar007 != g_pmar_d_t.pmar007 OR g_pmar_d[g_detail_idx].pmar009 != g_pmar_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmar002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar_d[g_detail_idx].pmar000 != g_pmar_d_t.pmar000 OR g_pmar_d[g_detail_idx].pmar001 != g_pmar_d_t.pmar001 OR g_pmar_d[g_detail_idx].pmar002 != g_pmar_d_t.pmar002 OR g_pmar_d[g_detail_idx].pmar003 != g_pmar_d_t.pmar003 OR g_pmar_d[g_detail_idx].pmar004 != g_pmar_d_t.pmar004 OR g_pmar_d[g_detail_idx].pmar005 != g_pmar_d_t.pmar005 OR g_pmar_d[g_detail_idx].pmar006 != g_pmar_d_t.pmar006 OR g_pmar_d[g_detail_idx].pmar007 != g_pmar_d_t.pmar007 OR g_pmar_d[g_detail_idx].pmar009 != g_pmar_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmar003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar_d[g_detail_idx].pmar000 != g_pmar_d_t.pmar000 OR g_pmar_d[g_detail_idx].pmar001 != g_pmar_d_t.pmar001 OR g_pmar_d[g_detail_idx].pmar002 != g_pmar_d_t.pmar002 OR g_pmar_d[g_detail_idx].pmar003 != g_pmar_d_t.pmar003 OR g_pmar_d[g_detail_idx].pmar004 != g_pmar_d_t.pmar004 OR g_pmar_d[g_detail_idx].pmar005 != g_pmar_d_t.pmar005 OR g_pmar_d[g_detail_idx].pmar006 != g_pmar_d_t.pmar006 OR g_pmar_d[g_detail_idx].pmar007 != g_pmar_d_t.pmar007 OR g_pmar_d[g_detail_idx].pmar009 != g_pmar_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmar004" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar_d[g_detail_idx].pmar000 != g_pmar_d_t.pmar000 OR g_pmar_d[g_detail_idx].pmar001 != g_pmar_d_t.pmar001 OR g_pmar_d[g_detail_idx].pmar002 != g_pmar_d_t.pmar002 OR g_pmar_d[g_detail_idx].pmar003 != g_pmar_d_t.pmar003 OR g_pmar_d[g_detail_idx].pmar004 != g_pmar_d_t.pmar004 OR g_pmar_d[g_detail_idx].pmar005 != g_pmar_d_t.pmar005 OR g_pmar_d[g_detail_idx].pmar006 != g_pmar_d_t.pmar006 OR g_pmar_d[g_detail_idx].pmar007 != g_pmar_d_t.pmar007 OR g_pmar_d[g_detail_idx].pmar009 != g_pmar_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmar005" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar_d[g_detail_idx].pmar000 != g_pmar_d_t.pmar000 OR g_pmar_d[g_detail_idx].pmar001 != g_pmar_d_t.pmar001 OR g_pmar_d[g_detail_idx].pmar002 != g_pmar_d_t.pmar002 OR g_pmar_d[g_detail_idx].pmar003 != g_pmar_d_t.pmar003 OR g_pmar_d[g_detail_idx].pmar004 != g_pmar_d_t.pmar004 OR g_pmar_d[g_detail_idx].pmar005 != g_pmar_d_t.pmar005 OR g_pmar_d[g_detail_idx].pmar006 != g_pmar_d_t.pmar006 OR g_pmar_d[g_detail_idx].pmar007 != g_pmar_d_t.pmar007 OR g_pmar_d[g_detail_idx].pmar009 != g_pmar_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmar006" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar_d[g_detail_idx].pmar000 != g_pmar_d_t.pmar000 OR g_pmar_d[g_detail_idx].pmar001 != g_pmar_d_t.pmar001 OR g_pmar_d[g_detail_idx].pmar002 != g_pmar_d_t.pmar002 OR g_pmar_d[g_detail_idx].pmar003 != g_pmar_d_t.pmar003 OR g_pmar_d[g_detail_idx].pmar004 != g_pmar_d_t.pmar004 OR g_pmar_d[g_detail_idx].pmar005 != g_pmar_d_t.pmar005 OR g_pmar_d[g_detail_idx].pmar006 != g_pmar_d_t.pmar006 OR g_pmar_d[g_detail_idx].pmar007 != g_pmar_d_t.pmar007 OR g_pmar_d[g_detail_idx].pmar009 != g_pmar_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmar007" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar_d[g_detail_idx].pmar000 != g_pmar_d_t.pmar000 OR g_pmar_d[g_detail_idx].pmar001 != g_pmar_d_t.pmar001 OR g_pmar_d[g_detail_idx].pmar002 != g_pmar_d_t.pmar002 OR g_pmar_d[g_detail_idx].pmar003 != g_pmar_d_t.pmar003 OR g_pmar_d[g_detail_idx].pmar004 != g_pmar_d_t.pmar004 OR g_pmar_d[g_detail_idx].pmar005 != g_pmar_d_t.pmar005 OR g_pmar_d[g_detail_idx].pmar006 != g_pmar_d_t.pmar006 OR g_pmar_d[g_detail_idx].pmar007 != g_pmar_d_t.pmar007 OR g_pmar_d[g_detail_idx].pmar009 != g_pmar_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmar009" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar_d[g_detail_idx].pmar000 != g_pmar_d_t.pmar000 OR g_pmar_d[g_detail_idx].pmar001 != g_pmar_d_t.pmar001 OR g_pmar_d[g_detail_idx].pmar002 != g_pmar_d_t.pmar002 OR g_pmar_d[g_detail_idx].pmar003 != g_pmar_d_t.pmar003 OR g_pmar_d[g_detail_idx].pmar004 != g_pmar_d_t.pmar004 OR g_pmar_d[g_detail_idx].pmar005 != g_pmar_d_t.pmar005 OR g_pmar_d[g_detail_idx].pmar006 != g_pmar_d_t.pmar006 OR g_pmar_d[g_detail_idx].pmar007 != g_pmar_d_t.pmar007 OR g_pmar_d[g_detail_idx].pmar009 != g_pmar_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pmar000_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar2_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar2_d[g_detail_idx].pmar000 != g_pmar2_d_t.pmar000 OR g_pmar2_d[g_detail_idx].pmar001 != g_pmar2_d_t.pmar001 OR g_pmar2_d[g_detail_idx].pmar002 != g_pmar2_d_t.pmar002 OR g_pmar2_d[g_detail_idx].pmar003 != g_pmar2_d_t.pmar003 OR g_pmar2_d[g_detail_idx].pmar004 != g_pmar2_d_t.pmar004 OR g_pmar2_d[g_detail_idx].pmar005 != g_pmar2_d_t.pmar005 OR g_pmar2_d[g_detail_idx].pmar006 != g_pmar2_d_t.pmar006 OR g_pmar2_d[g_detail_idx].pmar007 != g_pmar2_d_t.pmar007 OR g_pmar2_d[g_detail_idx].pmar009 != g_pmar2_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar2_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar2_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar2_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar2_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar2_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar2_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar2_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar2_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar2_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pmar001_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar2_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar2_d[g_detail_idx].pmar000 != g_pmar2_d_t.pmar000 OR g_pmar2_d[g_detail_idx].pmar001 != g_pmar2_d_t.pmar001 OR g_pmar2_d[g_detail_idx].pmar002 != g_pmar2_d_t.pmar002 OR g_pmar2_d[g_detail_idx].pmar003 != g_pmar2_d_t.pmar003 OR g_pmar2_d[g_detail_idx].pmar004 != g_pmar2_d_t.pmar004 OR g_pmar2_d[g_detail_idx].pmar005 != g_pmar2_d_t.pmar005 OR g_pmar2_d[g_detail_idx].pmar006 != g_pmar2_d_t.pmar006 OR g_pmar2_d[g_detail_idx].pmar007 != g_pmar2_d_t.pmar007 OR g_pmar2_d[g_detail_idx].pmar009 != g_pmar2_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar2_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar2_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar2_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar2_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar2_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar2_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar2_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar2_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar2_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pmar002_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar2_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar2_d[g_detail_idx].pmar000 != g_pmar2_d_t.pmar000 OR g_pmar2_d[g_detail_idx].pmar001 != g_pmar2_d_t.pmar001 OR g_pmar2_d[g_detail_idx].pmar002 != g_pmar2_d_t.pmar002 OR g_pmar2_d[g_detail_idx].pmar003 != g_pmar2_d_t.pmar003 OR g_pmar2_d[g_detail_idx].pmar004 != g_pmar2_d_t.pmar004 OR g_pmar2_d[g_detail_idx].pmar005 != g_pmar2_d_t.pmar005 OR g_pmar2_d[g_detail_idx].pmar006 != g_pmar2_d_t.pmar006 OR g_pmar2_d[g_detail_idx].pmar007 != g_pmar2_d_t.pmar007 OR g_pmar2_d[g_detail_idx].pmar009 != g_pmar2_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar2_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar2_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar2_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar2_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar2_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar2_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar2_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar2_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar2_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pmar003_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar2_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar2_d[g_detail_idx].pmar000 != g_pmar2_d_t.pmar000 OR g_pmar2_d[g_detail_idx].pmar001 != g_pmar2_d_t.pmar001 OR g_pmar2_d[g_detail_idx].pmar002 != g_pmar2_d_t.pmar002 OR g_pmar2_d[g_detail_idx].pmar003 != g_pmar2_d_t.pmar003 OR g_pmar2_d[g_detail_idx].pmar004 != g_pmar2_d_t.pmar004 OR g_pmar2_d[g_detail_idx].pmar005 != g_pmar2_d_t.pmar005 OR g_pmar2_d[g_detail_idx].pmar006 != g_pmar2_d_t.pmar006 OR g_pmar2_d[g_detail_idx].pmar007 != g_pmar2_d_t.pmar007 OR g_pmar2_d[g_detail_idx].pmar009 != g_pmar2_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar2_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar2_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar2_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar2_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar2_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar2_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar2_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar2_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar2_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pmar004_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar2_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar2_d[g_detail_idx].pmar000 != g_pmar2_d_t.pmar000 OR g_pmar2_d[g_detail_idx].pmar001 != g_pmar2_d_t.pmar001 OR g_pmar2_d[g_detail_idx].pmar002 != g_pmar2_d_t.pmar002 OR g_pmar2_d[g_detail_idx].pmar003 != g_pmar2_d_t.pmar003 OR g_pmar2_d[g_detail_idx].pmar004 != g_pmar2_d_t.pmar004 OR g_pmar2_d[g_detail_idx].pmar005 != g_pmar2_d_t.pmar005 OR g_pmar2_d[g_detail_idx].pmar006 != g_pmar2_d_t.pmar006 OR g_pmar2_d[g_detail_idx].pmar007 != g_pmar2_d_t.pmar007 OR g_pmar2_d[g_detail_idx].pmar009 != g_pmar2_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar2_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar2_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar2_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar2_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar2_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar2_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar2_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar2_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar2_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pmar005_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar2_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar2_d[g_detail_idx].pmar000 != g_pmar2_d_t.pmar000 OR g_pmar2_d[g_detail_idx].pmar001 != g_pmar2_d_t.pmar001 OR g_pmar2_d[g_detail_idx].pmar002 != g_pmar2_d_t.pmar002 OR g_pmar2_d[g_detail_idx].pmar003 != g_pmar2_d_t.pmar003 OR g_pmar2_d[g_detail_idx].pmar004 != g_pmar2_d_t.pmar004 OR g_pmar2_d[g_detail_idx].pmar005 != g_pmar2_d_t.pmar005 OR g_pmar2_d[g_detail_idx].pmar006 != g_pmar2_d_t.pmar006 OR g_pmar2_d[g_detail_idx].pmar007 != g_pmar2_d_t.pmar007 OR g_pmar2_d[g_detail_idx].pmar009 != g_pmar2_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar2_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar2_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar2_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar2_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar2_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar2_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar2_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar2_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar2_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pmar006_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar2_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar2_d[g_detail_idx].pmar000 != g_pmar2_d_t.pmar000 OR g_pmar2_d[g_detail_idx].pmar001 != g_pmar2_d_t.pmar001 OR g_pmar2_d[g_detail_idx].pmar002 != g_pmar2_d_t.pmar002 OR g_pmar2_d[g_detail_idx].pmar003 != g_pmar2_d_t.pmar003 OR g_pmar2_d[g_detail_idx].pmar004 != g_pmar2_d_t.pmar004 OR g_pmar2_d[g_detail_idx].pmar005 != g_pmar2_d_t.pmar005 OR g_pmar2_d[g_detail_idx].pmar006 != g_pmar2_d_t.pmar006 OR g_pmar2_d[g_detail_idx].pmar007 != g_pmar2_d_t.pmar007 OR g_pmar2_d[g_detail_idx].pmar009 != g_pmar2_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar2_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar2_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar2_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar2_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar2_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar2_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar2_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar2_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar2_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pmar007_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar2_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar2_d[g_detail_idx].pmar000 != g_pmar2_d_t.pmar000 OR g_pmar2_d[g_detail_idx].pmar001 != g_pmar2_d_t.pmar001 OR g_pmar2_d[g_detail_idx].pmar002 != g_pmar2_d_t.pmar002 OR g_pmar2_d[g_detail_idx].pmar003 != g_pmar2_d_t.pmar003 OR g_pmar2_d[g_detail_idx].pmar004 != g_pmar2_d_t.pmar004 OR g_pmar2_d[g_detail_idx].pmar005 != g_pmar2_d_t.pmar005 OR g_pmar2_d[g_detail_idx].pmar006 != g_pmar2_d_t.pmar006 OR g_pmar2_d[g_detail_idx].pmar007 != g_pmar2_d_t.pmar007 OR g_pmar2_d[g_detail_idx].pmar009 != g_pmar2_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar2_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar2_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar2_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar2_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar2_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar2_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar2_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar2_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar2_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pmar009_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmar2_d[g_detail_idx].pmar000 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar001 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar002 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar003 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar004 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar005 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar006 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar007 IS NOT NULL AND g_pmar2_d[g_detail_idx].pmar009 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmar2_d[g_detail_idx].pmar000 != g_pmar2_d_t.pmar000 OR g_pmar2_d[g_detail_idx].pmar001 != g_pmar2_d_t.pmar001 OR g_pmar2_d[g_detail_idx].pmar002 != g_pmar2_d_t.pmar002 OR g_pmar2_d[g_detail_idx].pmar003 != g_pmar2_d_t.pmar003 OR g_pmar2_d[g_detail_idx].pmar004 != g_pmar2_d_t.pmar004 OR g_pmar2_d[g_detail_idx].pmar005 != g_pmar2_d_t.pmar005 OR g_pmar2_d[g_detail_idx].pmar006 != g_pmar2_d_t.pmar006 OR g_pmar2_d[g_detail_idx].pmar007 != g_pmar2_d_t.pmar007 OR g_pmar2_d[g_detail_idx].pmar009 != g_pmar2_d_t.pmar009)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmar_t WHERE "||"pmarent = '" ||g_enterprise|| "' AND pmarsite = '" ||g_site|| "' AND "||"pmar000 = '"||g_pmar2_d[g_detail_idx].pmar000 ||"' AND "|| "pmar001 = '"||g_pmar2_d[g_detail_idx].pmar001 ||"' AND "|| "pmar002 = '"||g_pmar2_d[g_detail_idx].pmar002 ||"' AND "|| "pmar003 = '"||g_pmar2_d[g_detail_idx].pmar003 ||"' AND "|| "pmar004 = '"||g_pmar2_d[g_detail_idx].pmar004 ||"' AND "|| "pmar005 = '"||g_pmar2_d[g_detail_idx].pmar005 ||"' AND "|| "pmar006 = '"||g_pmar2_d[g_detail_idx].pmar006 ||"' AND "|| "pmar007 = '"||g_pmar2_d[g_detail_idx].pmar007 ||"' AND "|| "pmar009 = '"||g_pmar2_d[g_detail_idx].pmar009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="ui_dialog.bef_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #關閉查詢按鈕，保持查詢狀態
+            CALL cl_set_act_visible("query", FALSE)]]>
+  </point>
+  <point name="ui_dialog.construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         INPUT BY NAME g_pmar000 ATTRIBUTE(WITHOUT DEFAULTS)    
+            BEFORE INPUT
+           
+            AFTER INPUT
+               IF INT_FLAG THEN
+                  EXIT DIALOG
+               END IF  
+         END INPUT
+          
+         INPUT BY NAME g_pmar3_d.pmar002,g_pmar3_d.pmar004,g_pmar3_d.pmar001,g_pmar3_d.pmar007,
+                       g_pmar3_d.pmar003,g_pmar3_d.pmar005,g_pmar3_d.pmar006,g_pmar3_d.pmar009
+         
+            BEFORE INPUT
+               
+            AFTER INPUT
+               IF g_pmar3_d.pmar002 = 'N' AND g_pmar3_d.pmar004 = 'N' AND g_pmar3_d.pmar001 = 'N' AND g_pmar3_d.pmar007 = 'N' AND
+                  g_pmar3_d.pmar003 = 'N' AND g_pmar3_d.pmar005 = 'N' AND g_pmar3_d.pmar006 = 'N' AND g_pmar3_d.pmar009 = 'N' THEN
+                 
+                 CALL cl_err(' ','ain-00173',1)
+                 NEXT FIELD pmar002
+               END IF            
+         END INPUT]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE ls_wc     STRING
+   DEFINE ldig_curr ui.Dialog
+   DEFINE li_index  LIKE type_t.num5]]>
+  </point>
+  <point name="ui_dialog.input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         CONSTRUCT BY NAME g_wc ON imaa009,pmar002,pmar003,pmar001,pmaa080,
+                                   pmar006,pmar007,pmar009,pmar019
+            BEFORE CONSTRUCT
+               IF cl_null(g_pmar.pmar019) THEN
+                  LET g_pmar.pmar019 = ''
+               END IF
+               DISPLAY BY NAME g_pmar.imaa009,g_pmar.pmar002,g_pmar.pmar003,
+                               g_pmar.pmar001,g_pmar.pmaa080,g_pmar.pmar006,
+                               g_pmar.pmar007,g_pmar.pmar009,g_pmar.pmar019
+               
+            AFTER FIELD imaa009
+               LET g_pmar.imaa009 = GET_FLDBUF(imaa009)
+            
+            AFTER FIELD pmar002
+               LET g_pmar.pmar002 = GET_FLDBUF(pmar002)
+               
+            AFTER FIELD pmar003
+               LET g_pmar.pmar003 = GET_FLDBUF(pmar003)
+            
+            AFTER FIELD pmar001
+               LET g_pmar.pmar001 = GET_FLDBUF(pmar001)
+               
+            AFTER FIELD pmaa080
+               LET g_pmar.pmaa080 = GET_FLDBUF(pmaa080)
+               
+            AFTER FIELD pmar006
+               LET g_pmar.pmar006 = GET_FLDBUF(pmar006)
+            
+            AFTER FIELD pmar007
+               LET g_pmar.pmar007 = GET_FLDBUF(pmar007)
+               
+            AFTER FIELD pmar009
+               LET g_pmar.pmar009 = GET_FLDBUF(pmar009)
+               
+            AFTER FIELD pmar019
+               LET g_pmar.pmar019 = GET_FLDBUF(pmar019)
+               
+            ON ACTION controlp INFIELD imaa009
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+               CALL q_rtax001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO imaa009      #顯示到畫面上
+               NEXT FIELD imaa009                         #返回原欄位
+            
+            ON ACTION controlp INFIELD pmar002          
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaa001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar002      #顯示到畫面上
+               NEXT FIELD pmar002                         #返回原欄位
+               
+            ON ACTION controlp INFIELD pmar003          
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmar003()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar003      #顯示到畫面上
+               NEXT FIELD pmar003                         #返回原欄位
+               
+            ON ACTION controlp INFIELD pmar001          
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmaa001_3()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar001      #顯示到畫面上
+               NEXT FIELD pmar001                         #返回原欄位
+               
+            ON ACTION controlp INFIELD pmaa080          
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '251'
+               CALL q_oocq002()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmaa080      #顯示到畫面上
+               NEXT FIELD pmaa080                         #返回原欄位
+               
+            ON ACTION controlp INFIELD pmar006          
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooca001_1()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar006      #顯示到畫面上
+               NEXT FIELD pmar006                         #返回原欄位
+               
+            ON ACTION controlp INFIELD pmar007          
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooaj002_1()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar007      #顯示到畫面上
+               NEXT FIELD pmar007                         #返回原欄位
+               
+            ON ACTION controlp INFIELD pmar009          
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_oodb002_2()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmar009      #顯示到畫面上
+               NEXT FIELD pmar009                         #返回原欄位
+            
+         END CONSTRUCT  
+         ]]>
+  </point>
+  <section id="apmq125.b_fill" ver="3" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION apmq125_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+ 
+   CALL g_pmar_d.clear()
+   CALL g_pmar2_d.clear()
+ 
+ 
+   #add-point:陣列清空
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #+ 此段落由子樣板qs04產生
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET g_sql = "SELECT  UNIQUE '',pmar002,'','',pmar003,pmar004,pmar005,pmar001,'',pmar007,pmar009,pmar006, 
+       '','','','','','','','','','','','','','','','','','','','' FROM pmar_t",
+ 
+ 
+               "",
+               " WHERE pmarent= ? AND pmarsite= ? AND 1=1 AND ", ls_wc
+ 
+   LET g_sql = g_sql, " ORDER BY pmar_t.pmar000,pmar_t.pmar001,pmar_t.pmar002,pmar_t.pmar003,pmar_t.pmar004,pmar_t.pmar005,pmar_t.pmar006,pmar_t.pmar007,pmar_t.pmar009"
+ 
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+ 
+   PREPARE apmq125_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apmq125_pb
+ 
+   OPEN b_fill_curs USING g_enterprise, g_site
+ 
+   FOREACH b_fill_curs INTO g_pmar_d[l_ac].sel,g_pmar_d[l_ac].pmar002,g_pmar_d[l_ac].pmar002_desc,g_pmar_d[l_ac].pmar002_desc_desc, 
+       g_pmar_d[l_ac].pmar003,g_pmar_d[l_ac].pmar004,g_pmar_d[l_ac].pmar005,g_pmar_d[l_ac].pmar001,g_pmar_d[l_ac].pmar001_desc, 
+       g_pmar_d[l_ac].pmar007,g_pmar_d[l_ac].pmar009,g_pmar_d[l_ac].pmar006,g_pmar2_d[l_ac].l_pmar002, 
+       g_pmar2_d[l_ac].l_pmar002_desc,g_pmar2_d[l_ac].l_pmar002_desc_desc,g_pmar2_d[l_ac].l_pmar003, 
+       g_pmar2_d[l_ac].l_pmar004,g_pmar2_d[l_ac].l_pmar005,g_pmar2_d[l_ac].l_pmar001,g_pmar2_d[l_ac].l_pmar001_desc, 
+       g_pmar2_d[l_ac].l_pmar007,g_pmar2_d[l_ac].l_pmar009,g_pmar2_d[l_ac].l_pmar006,g_pmar2_d[l_ac].l_pmar012, 
+       g_pmar2_d[l_ac].l_pmar014,g_pmar2_d[l_ac].l_pmar015,g_pmar2_d[l_ac].l_pmar016,g_pmar2_d[l_ac].l_pmar017, 
+       g_pmar2_d[l_ac].l_pmar018,g_pmar2_d[l_ac].l_pmar019,g_pmar2_d[l_ac].l_pmar020,g_pmar2_d[l_ac].l_pmar020_desc 
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+      CALL apmq125_detail_show("'1'")
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   CALL g_pmar_d.deleteElement(g_pmar_d.getLength())
+   CALL g_pmar2_d.deleteElement(g_pmar2_d.getLength())
+ 
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #+ 此段落由子樣板qs06產生
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE apmq125_pb
+ 
+ 
+ 
+ 
+   LET l_ac = 1
+   CALL apmq125_b_fill2()
+ 
+      CALL apmq125_filter_show('pmar002','b_pmar002')
+   CALL apmq125_filter_show('pmar003','b_pmar003')
+   CALL apmq125_filter_show('pmar004','b_pmar004')
+   CALL apmq125_filter_show('pmar005','b_pmar005')
+   CALL apmq125_filter_show('pmar001','b_pmar001')
+   CALL apmq125_filter_show('pmar007','b_pmar007')
+   CALL apmq125_filter_show('pmar009','b_pmar009')
+   CALL apmq125_filter_show('pmar006','b_pmar006')
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq125.b_fill2" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION apmq125_b_fill2()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #+ 此段落由子樣板qs07產生
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+ 
+   #add-point:陣列清空
+   {<point name="b_fill2.array_clear" />}
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill2.array_deleteElement" />}
+   #end add-point
+ 
+ 
+ 
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq125.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000037
+#+ 
+#+ Filename...: apmq125
+#+ Description: 供應商料件最近採購查詢作業
+#+ Creator....: 05293(2014/07/09)
+#+ Modifier...: 05293(2014/07/09)
+#+ Buildtype..: 應用 i00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="apmq125.detail_show" ver="1" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION apmq125_detail_show(ps_page)
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body2.reference"/>}
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq125.filter" ver="2" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板qs13產生
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION apmq125_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #+ 此段落由子樣板qs08產生
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON pmar002,pmar003,pmar004,pmar005,pmar001,pmar007,pmar009,pmar006
+                          FROM s_detail1[1].b_pmar002,s_detail1[1].b_pmar003,s_detail1[1].b_pmar004, 
+                              s_detail1[1].b_pmar005,s_detail1[1].b_pmar001,s_detail1[1].b_pmar007,s_detail1[1].b_pmar009, 
+                              s_detail1[1].b_pmar006
+ 
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+                     DISPLAY apmq125_filter_parser('pmar002') TO s_detail1[1].b_pmar002
+            DISPLAY apmq125_filter_parser('pmar003') TO s_detail1[1].b_pmar003
+            DISPLAY apmq125_filter_parser('pmar004') TO s_detail1[1].b_pmar004
+            DISPLAY apmq125_filter_parser('pmar005') TO s_detail1[1].b_pmar005
+            DISPLAY apmq125_filter_parser('pmar001') TO s_detail1[1].b_pmar001
+            DISPLAY apmq125_filter_parser('pmar007') TO s_detail1[1].b_pmar007
+            DISPLAY apmq125_filter_parser('pmar009') TO s_detail1[1].b_pmar009
+            DISPLAY apmq125_filter_parser('pmar006') TO s_detail1[1].b_pmar006
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+   
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL apmq125_filter_show('pmar002','b_pmar002')
+   CALL apmq125_filter_show('pmar003','b_pmar003')
+   CALL apmq125_filter_show('pmar004','b_pmar004')
+   CALL apmq125_filter_show('pmar005','b_pmar005')
+   CALL apmq125_filter_show('pmar001','b_pmar001')
+   CALL apmq125_filter_show('pmar007','b_pmar007')
+   CALL apmq125_filter_show('pmar009','b_pmar009')
+   CALL apmq125_filter_show('pmar006','b_pmar006')
+ 
+   CALL apmq125_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq125.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板qs14產生
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION apmq125_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq125.filter_show" ver="1" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板qs15產生
+#+ 標題欄位顯示搜尋條件
+PRIVATE FUNCTION apmq125_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apmq125_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq125.global" ver="4" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmq125.init" ver="1" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION apmq125_init()
+ 
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+#  LET g_selcolor    = "#D0E7FD"
+   
+     
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmq125.main" ver="2" status="" src="s">
+    <![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE apmq125_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmq125 WITH FORM cl_ap_formpath("apm",g_code)
+   
+      #程式初始化
+      CALL apmq125_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #進入選單 Menu (='N')
+      CALL apmq125_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_apmq125
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+  </section>
+  <section id="apmq125.other_function" ver="2" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmq125.ui_dialog" ver="1" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apmq125_ui_dialog() 
+   {<Local define>}
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_result STRING
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET g_main_hidden = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   
+   CALL apmq125_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+         {<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落
+         {<point name="ui_dialog.construct"/>}
+         #end add-point
+     
+         DISPLAY ARRAY g_pmar_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_pmar_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL apmq125_b_fill2()
+ 
+               #add-point:input段before row
+               {<point name="input.body.before_row"/>}
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_pmar2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 2
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body2.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_2)
+            
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+      
+         BEFORE DIALOG
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+         
+            LET g_wc2 = " 1=1"
+ 
+            #儲存WC資訊
+            CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+            CALL apmq125_b_fill()
+      
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL apmq125_b_fill()
+ 
+         #+ 此段落由子樣板qs19產生
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_pmar_d.getLength()
+               LET g_pmar_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_pmar_d.getLength()
+               LET g_pmar_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_pmar_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pmar_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_pmar_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_pmar_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+ 
+ 
+ 
+         #+ 此段落由子樣板qs16產生
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apmq125_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

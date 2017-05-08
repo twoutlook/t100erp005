@@ -1,0 +1,793 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ammt320" std_prog="ammt320" erpver="1.0" ver="7" module="AMM" type="M" booking="Y" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="mmak_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供卡種基本資料異動記錄
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料申請作業
+輸入模式：單檔F001_00
+作業資料來源(Master)：
+ 資料來源表：mmak_t(卡種基本資申請檔)
+                        mmakl_t(卡種基本資申請多語言檔) 
+
+1.程式依參數設定是會員卡種維護否走申請流程(Y/N)?
+  當為'N'時按新增修改時則顯示"會員卡種資料異動不需由申請作業進行維護",不允許由ammt320直接進行新增修改維護.
+  
+]]>
+  </all>
+  <field cite_std="N" name="lbl_dummy4" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmakl002" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmakl003" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak000" ver="1" src="s" column="mmak000" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="32" default="&apos;I&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak001" ver="1" src="s" column="mmak001" table="mmak_t" attribute="" type="" req="Y" i_zoom="q_mman001" c_zoom="q_mmak001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[卡種編號：
+   ●欄位控管：
+     校驗:
+       1.程式需 check 同一卡種申請單,如有存在一張以上未確認資料時即顯示"XX卡種仍存在未確認申請單,不允許輸入",游標停在卡種編號欄位.
+       2.程式需 check 當[C:申請類別 mmak000]= 'U'修改時,
+                                   [C:卡種編號 mmak001] 需存在[T:會員卡種基本資料檔 mman_t]且為已確認 (mmanstus = 'Y')
+
+     帶值: 當[C:申請類別 mmak000]= 'U'修改時,輸入卡種編號(mmak001)後 自動將 mman_t的所有相關欄位帶入 mmak_t
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak002" ver="4" src="s" column="mmak002" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[版本：
+    1.預設值:抓取 [T:卡種基本資料檔].[C:版本 mman002] +1
+    2.需求單141203-00025#1:調整Default 版次為0
+      ]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak003" ver="5" src="s" column="mmak003" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[外社卡：
+    計算與處理: 1.當[T:卡種基本資料申請檔].[C:外社卡 mmak003]='Y '時以下畫面所有資料均不允許維護或修改.
+                         2.當外社卡從 N 異動成 Y時,提示此行為會將以下面畫面所有資料清空
+   
+ 
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak004" ver="3" src="s" column="mmak004" table="mmak_t" attribute="" type="" req="N" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[申請組織：
+     no use
+    隱藏
+
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak005" ver="1" src="s" column="mmak005" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="30.000" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak006" ver="1" src="s" column="mmak006" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[卡號固定代碼長度：
+     欄位控制:
+         進入欄位前先判斷
+         1.[卡號總碼長 mman006] 為空值時, 導到卡號總碼長
+    校驗:輸入值不可大於等於[C.卡號總碼長 mmak005]
+    計算與處理:當輸入值改變時,清空卡號固定代碼的值
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak007" ver="1" src="s" column="mmak007" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[卡號固定代碼：
+     欄位控制:
+         進入欄位前先判斷
+         1.[卡號總碼長 mman006] 為空值時, 導到卡號總碼長
+         2.[卡號固定代碼長 mman006] 為空值時, 導到卡號固定代長度
+     校驗:
+         1.程式需 check [T:卡種基本資料申請檔].[C:卡號固定代碼 mmak007] 資料長度必須 = [C:卡號固定代碼長度mmak006], 否則顯示 error message.
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak008" ver="1" src="s" column="mmak008" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[卡號流水碼：
+    預設值:[C:卡號總碼長 mmak004] - [C:卡號固定代碼長度 mmak005]
+   
+   
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak009" ver="1" src="s" column="mmak009" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6505" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak010" ver="1" src="s" column="mmak010" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[消費附贈最低消費金額
+   欄位控管: 發卡方式 若選擇 "2.銷售卡" 則不允許輸入 ]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak011" ver="1" src="s" column="mmak011" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak012" ver="1" src="s" column="mmak012" table="mmak_t" attribute="" type="" req="N" i_zoom="q_rtdx001_1" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[發卡贈品商品編號：
+     校驗:
+         1.輸入值必須存在於[T.門店清單檔 rtdx_t]中,且資料已確認(rtdxstus = 'Y')
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak013" ver="1" src="s" column="mmak013" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak014" ver="1" src="s" column="mmak014" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak015" ver="7" src="s" column="mmak015" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[卡記名：mmark015
+[150629-00020#1 調整]卡記名=Y時,記名累計金額為必填; 卡記名=N,記名累記金額預設為0 且不可輸入 ]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak016" ver="1" src="s" column="mmak016" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak017" ver="1" src="s" column="mmak017" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak018" ver="1" src="s" column="mmak018" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[卡效期控制：
+    計算與處理:
+        1.當輸入值為'N'時,將"效期規則起算基準"、"有效期至"、"效期指定日期"與"效期指定月份長度" 清空為Null]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak019" ver="1" src="s" column="mmak019" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6506" default="&apos;2&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[效期控管起算基準：
+    欄位控制:
+       1.當[C:卡效期控管 mmak018]='Y' 時才允許輸入
+    預設值: "2.發卡日"
+       
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak020" ver="1" src="s" column="mmak020" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6507" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[有效期至：
+    欄位控制:
+       1.當[C:卡效期控管 mmak018]='Y' 時才允許輸入
+    預設值: "1.指定日期"
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak021" ver="1" src="s" column="mmak021" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[效期指定日期：
+    欄位控制:
+        1.當[C:卡效期控管 mmak018]='Y' 且  [C.有效期至 mmak020] = '1.指定日期' 時,才可輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak022" ver="1" src="s" column="mmak022" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[效期指定長度：
+    欄位控制:
+        1.當[C:卡效期控管 mmak018]='Y' 時才允許輸入 且 [C.有效期至 mmak020] = '2.指定月長度' 時,才可輸入
+
+ 
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak023" ver="1" src="s" column="mmak023" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[卡效期延長：
+    計算與處理:
+       1.當輸入值為'N'時,將"效期延長月份長度"與"效期延長次數" 清空為Null
+       2.當欄位值 由'Y'變'N'時,檢查"卡種效期延長規則設定 mmal_t"是否有資料,如果有資料則提示,是否確定要將此欄位設定為'N'
+          在離開輸入的過程中,當此欄位為'N'時,將"卡種效期延長規則設定 mmal_t"的資料刪除]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak024" ver="1" src="s" column="mmak024" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[延長月份長度：
+    欄位控制:
+       1.當[C:卡效期延長 mmak023]='Y' 時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak025" ver="1" src="s" column="mmak025" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[延長次數：
+    欄位控制:
+       1.當[C:卡效期延長 mmak023]='Y' 時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak026" ver="1" src="s" column="mmak026" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak027" ver="5" src="s" column="mmak027" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[積點：
+    計算與處理:
+       1.當輸入值為'N'時,將"預設、積點基準單位"、"預設積點基準"、"預設單位積點"、"積點清零規則"
+                                          "月後清零"、"日後清零"、"指定日期清零"、"積點取位"與"取位方法" 清空為Null]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak028" ver="1" src="s" column="mmak028" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6503" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[效期控管起算基準：
+    欄位控制:
+       1.當[C.積點 mmak027] ='Y'時才允許輸入
+    預設值: '1.金額'
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak029" ver="1" src="s" column="mmak029" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設積點基準：
+    欄位控制:
+       1.當[C.積點 mmak027] ='Y'時才允許輸入
+     
+   
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak030" ver="1" src="s" column="mmak030" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設每單位積點：
+    欄位控制:
+       1.當[C.積點 mmak027] ='Y'時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak031" ver="1" src="s" column="mmak031" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6504" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[積點清零規則：
+    欄位控制:
+       1.當[C.積點 mmak027] ='Y'時才允許輸入
+    預設值: '1.不清零'
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak032" ver="1" src="s" column="mmak032" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="1.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[月後清零：
+    欄位控制:
+       1.當[C.積點 mmak027] ='Y' 且 [C:積點清零規則 mmak031] = 2 時,才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak033" ver="1" src="s" column="mmak033" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="1.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[日後清零：
+    欄位控制:
+       1.當[C.積點 mmak027] ='Y' 且 [C:積點清零規則 mmak031] = 3 時,才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak034" ver="1" src="s" column="mmak034" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="12.000" min_compare="&gt;=" min="1.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[指定日期清零-月：
+    欄位控制:
+       1.當[T.積點 mmak027] ='Y' 且 [C:積點清零規則 mmak031] = 4 時,才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak035" ver="1" src="s" column="mmak035" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[指定日期清零-日：
+    欄位控制:
+       1.當[T.積點 mmak027] ='Y'時才允許輸入 且 [C:積點清零規則 mmak031] = 4 時,才允許輸入
+       2.輸入前 如果 "月 mmak035"的資料為空值,則先將指標導向 "月"
+    校驗:
+       1. 1 ,3 ,5 ,7 ,8 ,10 ,12月 可輸入的範圍 為 1~31
+       2. 4 ,6 ,9 ,11月 可輸入的範圍為 1~30
+       3. 2月 可輸入範圍為 1~29
+  
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak036" ver="1" src="s" column="mmak036" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6509" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[積點取位：
+    欄位控制:
+       1.當[C.積點 mmak027] ='Y'時才允許輸入
+    預設值: '1.取整數'
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak037" ver="1" src="s" column="mmak037" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="12" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[取位方法：
+    欄位控制:
+       1.當[C.積點 mmak027] ='Y'時才允許輸入
+    預設值: '1.四捨五入'
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak038" ver="1" src="s" column="mmak038" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[積點抵現：
+    計算與處理:
+       1.當輸入值為'N'時,將"預設最低抵現消費額"、"預設抵現積點基準"、"預設抵現單位金額"、"預設抵現上限比例"與"預設抵現上限金額" 清空為Null]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak039" ver="1" src="s" column="mmak039" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設最低抵現消費額：
+    欄位控制:
+       1.當[C.積點抵現 mmak038] ='Y' 時才允許輸入
+     
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak040" ver="1" src="s" column="mmak040" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設抵現積點基準：
+    欄位控制:
+       1.當[C.積點抵現 mmak038] ='Y' 時才允許輸入
+     
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak041" ver="1" src="s" column="mmak041" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設抵現單位金額
+    欄位控制:
+       1.當[C.積點抵現 mmak038] ='Y' 時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak042" ver="1" src="s" column="mmak042" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[可儲值：
+    計算與處理:
+       1.當輸入值為'N'時,將 "可重複儲值" 修改成'N' 且將 "每次儲值金額上限"、"每次儲值金額下限"與"最高總儲值金額" 清空為Null
+       2.當輸入值為Y時,儲值金額對應商品(mmak054) 設為 必要輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak043" ver="1" src="s" column="mmak043" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[可重複儲值：
+    欄位控制:
+       1.[C.可儲值 mmak042] ='Y'時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak044" ver="1" src="s" column="mmak044" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[每次儲值金額上限：
+    欄位控制:
+       1.[C.可儲值 mmak042] ='Y'時才允許輸入
+    校驗:
+       1.必須大於 [C:每次儲值金額下限 mmak045]]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak045" ver="1" src="s" column="mmak045" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[每次儲值金額下限：
+    欄位控制:
+       1.[C.可儲值 mmak042] ='Y'時才允許輸入
+    校驗:
+       1.必須小於等於 [C:每次儲值金額上限 mmak044]
+       2.不可大於[C:最高總儲值金額 mmak046]]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak046" ver="1" src="s" column="mmak046" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[最高總儲值金額：
+    欄位控制:
+       1.[C.可儲值 mmak042] ='Y'時才允許輸入
+    校驗:
+       1.必須大於等於 [C:每次儲值金額下限 mmak045]
+    ]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak047" ver="1" src="s" column="mmak047" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[儲值折扣：
+    計算與處理:
+       1.當輸入值為'N'時,將"預設儲值折扣率"清空為Null]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak048" ver="1" src="s" column="mmak048" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="100.00" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設儲值折扣率：
+    欄位控制:
+       1.[C.儲值折扣 mmak047] ='Y'時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak049" ver="1" src="s" column="mmak049" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[儲值加值：
+    計算與處理:
+       1.當輸入值為'N'時,將"預設加值最低金額"、"預設加值儲值金額"與"預設單位加值金額" 清空為Null]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak050" ver="1" src="s" column="mmak050" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設加值最底金額：
+    欄位控制:
+       1.[C.儲值加值 mmak049] ='Y'時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak051" ver="1" src="s" column="mmak051" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設加值儲值金額：
+    欄位控制:
+       1.[C.儲值加值 mmak049] ='Y'時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak052" ver="1" src="s" column="mmak052" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設單位加值金額：
+    欄位控制:
+       1.[C.儲值加值 mmak049] ='Y'時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak053" ver="1" src="s" column="mmak053" table="mmak_t" attribute="" type="" req="Y" i_zoom="q_rtdx001_1" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[卡種對應商品編號：
+     校驗:
+         1.輸入值必須存在於[T.門店清單檔 rtdx_t]中,且資料已確認(rtdxstus = 'Y')
+
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak054" ver="1" src="s" column="mmak054" table="mmak_t" attribute="" type="" req="N" i_zoom="q_rtdx001_14" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[儲值金額對應商品編號：
+     校驗:
+         1.輸入值必須存在於[T.門店清單檔 rtdx_t]中,且資料已確認(rtdxstus = 'Y')
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak055" ver="1" src="s" column="mmak055" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="100" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設抵現上限比例
+    欄位控制:
+       1.當[C.積點抵現 mmak038] ='Y' 時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak056" ver="1" src="s" column="mmak056" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設抵現上限金額
+    欄位控制:
+       1.當[C.積點抵現 mmak038] ='Y' 時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak057" ver="1" src="s" column="mmak057" table="mmak_t" attribute="" type="" req="N" i_zoom="q_ooia001" c_zoom="q_ooia001" chk_ref="v_ooia001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值：無,允許空白 
+校驗：v_ooia001_1 
+           參數一：款別編號  mmak057
+           參數二：款別分類  '60' 
+           程式需 check 對應款別編號需存在[T:款別主檔ooia_t]且[T:款別主檔][C:款別分類]='60' AND 狀態碼='Y'
+   
+開窗：q_ooia001
+查詢條件：[T:款別主檔ooia_t][C:款別分類]='60' 且狀態碼='Y' 
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak058" ver="1" src="s" column="mmak058" table="mmak_t" attribute="" type="" req="N" i_zoom="q_ooia001" c_zoom="q_ooia001" chk_ref="v_ooia001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值：無,允許空白 
+校驗：v_ooia001_1 
+           參數一：款別編號  mmak058
+           參數二：款別分類  '60' 
+           程式需 check 對應款別編號需存在[T:款別主檔ooia_t]且[T:款別主檔][C:款別分類]='60' AND 狀態碼='Y'
+   
+開窗：q_ooia001
+查詢條件：[T:款別主檔ooia_t][C:款別分類]='60' 且狀態碼='Y' 
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak059" ver="1" src="s" column="mmak059" table="mmak_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="6021" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak060" ver="1" src="s" column="mmak060" table="mmak_t" attribute="" type="" req="N" i_zoom="q_rtdx001_14" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[積分對應商品編號：
+     校驗:
+         1.輸入值必須存在於[T.門店清單檔 rtdx_t]中,且資料已確認(rtdxstus = 'Y')]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak061" ver="5" src="s" column="mmak061" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak062" ver="7" src="s" column="mmak062" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak063" ver="5" src="s" column="mmak063" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak064" ver="5" src="s" column="mmak064" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak065" ver="6" src="s" column="mmak065" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak066" ver="6" src="s" column="mmak066" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6823" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak067" ver="6" src="s" column="mmak067" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak068" ver="6" src="s" column="mmak068" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmak069" ver="7" src="s" column="mmak069" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakacti" ver="1" src="s" column="mmakacti" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[資料有效：
+     預設值:當申請類別='I.新增'時則 Default 'Y'
+                      ='2.修改'時則依原卡種資料帶入]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakcnfdt" ver="1" src="s" column="mmakcnfdt" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakcnfid" ver="1" src="s" column="mmakcnfid" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakcrtdp" ver="1" src="s" column="mmakcrtdp" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakcrtdt" ver="1" src="s" column="mmakcrtdt" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakcrtid" ver="1" src="s" column="mmakcrtid" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakdocdt" ver="1" src="s" column="mmakdocdt" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[申請日期：
+     預設值:系統日期
+
+
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakdocno" ver="4" src="s" column="mmakdocno" table="mmak_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_mmakdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[申請單號：
+   ●欄位控管：
+     校驗:
+          1.輸入值須存在[T:單據別檔].[C:單據別 ooba002]，
+            且[T:單據別檔].[C:參照表號 ooba001] = g_site在ooef_t(營運據點檔)裡設定的ooef004(單據別使用參照表)
+            且[T.單據別檔].[C:對應程式代號 ooba005] = 'ammt320' 
+            且[T:單據別檔].[C:資料狀態碼] = 'Y'
+
+     計算或處理:
+         1.當新增時才可輸入單別，修改時此欄位為NoEntry
+         2.新增存檔時，呼叫應用元件s_aooi200_gen_docno自動編申請單號
+         3.呼叫s_arti200_get_def_doc_type預設單別   #20141205新增 
+
+   ●開窗處理：
+        1.新增：
+          查詢條件：arg1 = 當前登入據點設定的單據別使用參照表
+                             arg2 = 'ammt320'
+]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakmoddt" ver="1" src="s" column="mmakmoddt" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakmodid" ver="1" src="s" column="mmakmodid" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakowndp" ver="1" src="s" column="mmakowndp" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakownid" ver="1" src="s" column="mmakownid" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmaksite" ver="4" src="s" column="mmaksite" table="mmak_t" attribute="" type="" req="Y" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[申請組織：
+     預設值:登入系統的營運據點 g_site
+     校驗:輸入值 的 [T:組織基本資料檔].[C:狀態 ooeasuts]='有效' AND [C:營運組織否 ooea004]='Y'
+●141208-00001#3修改
+1.欄位開關：s_aooi500_comp_entry(g_prog,'mmaksite')
+2.校驗：s_aooi500_chk(g_prog,'mmaksite',g_mmak_m.mmaksite,g_mmak_m.mmaksite)
+3.開窗處理
+     參考函式：q_ooef001_24
+     編輯 where：s_aooi500_q_where(g_prog,'mmaksite',g_mmak_m.mmaksite) RETURNING l_where
+     查詢 where：s_aooi500_q_where(g_prog,'mmaksite',g_site) ]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakstus" ver="5" src="s" column="mmakstus" table="mmak_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak_t.mmakunit" ver="3" src="s" column="mmakunit" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="mmak004_desc" src="s" depend_field="mmak_t.mmak004" correspon_key="mmak004" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmak012_desc" src="s" depend_field="mmak_t.mmak012" correspon_key="mmak012" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmak053_desc" src="s" depend_field="mmak_t.mmak053" correspon_key="mmak053" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmak054_desc" src="s" depend_field="mmak_t.mmak054" correspon_key="mmak054" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmak057_desc" src="s" depend_field="mmak_t.mmak057" correspon_key="mmakent,mmak057" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmak058_desc" src="s" depend_field="mmak_t.mmak058" correspon_key="mmakent,mmak058" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmak060_desc" src="s" depend_field="mmak_t.mmak060" correspon_key="mmakent,mmak060" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmakcnfid_desc" src="s" depend_field="mmak_t.mmakcnfid" correspon_key="mmakcnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmakcrtdp_desc" src="s" depend_field="mmak_t.mmakcrtdp" correspon_key="mmakcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmakcrtid_desc" src="s" depend_field="mmak_t.mmakcrtid" correspon_key="mmakcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmakmodid_desc" src="s" depend_field="mmak_t.mmakmodid" correspon_key="mmakmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmakowndp_desc" src="s" depend_field="mmak_t.mmakowndp" correspon_key="mmakowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmakownid_desc" src="s" depend_field="mmak_t.mmakownid" correspon_key="mmakownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="3" name="mmaksite_desc" src="s" depend_field="mmak_t.mmaksite" correspon_key="mmaksite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="mmakl_t.mmakl002" src="s" depend_field="mmak_t.mmak001" correspon_key="mmakdocno,mmakent" lang_table="mmakl_t" lang_fk="mmakldocno,mmaklent" lang_dlang="mmakl001" lang_rtn="mmakl002" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="mmakl_t.mmakl003" src="s" depend_field="mmak_t.mmak001" correspon_key="mmakdocno,mmakent" lang_table="mmakl_t" lang_fk="mmakldocno,mmaklent" lang_dlang="mmakl001" lang_rtn="mmakl003" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="lbl_dummy4" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mmakl002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mmakl003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="mmak_t.mmak002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="mmak_t.mmak003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="mmak_t.mmak004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="mmak_t.mmak015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="mmak_t.mmak027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak039" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak040" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak043" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak044" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak045" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak046" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak047" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak049" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak050" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak052" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak053" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak054" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak055" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak056" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak057" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak058" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak059" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmak060" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="mmak_t.mmak061" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="mmak_t.mmak062" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="mmak_t.mmak063" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="mmak_t.mmak064" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mmak_t.mmak065" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mmak_t.mmak066" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mmak_t.mmak067" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mmak_t.mmak068" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="mmak_t.mmak069" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakacti" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakcnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakcnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="mmak_t.mmakdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak_t.mmakownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="mmak_t.mmaksite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="mmak_t.mmakstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="mmak_t.mmakunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_ammt320_01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[生效範圍設定 - 串 ammt320_01
+]]>
+  </act>
+  <act cite_std="N" id="open_ammt320_02" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[效期延長規則設定 - 串 ammt320_02 ]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_mmaksite" text="申請組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_mmakdocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_mmakdocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_mmak000" text="申請類別" lstr=""/>
+    <sfield name="lbl_mmak001" text="卡種編號" lstr=""/>
+    <sfield name="lbl_mmak002" text="版本" lstr=""/>
+    <sfield name="lbl_mmakunit" text="應用組織" lstr=""/>
+    <sfield name="lbl_ooeal003" text="營運組織名稱" lstr=""/>
+    <sfield name="lbl_mmak004" text="no use" lstr=""/>
+    <sfield name="lbl_mmakl002" text="卡種名稱" lstr=""/>
+    <sfield name="lbl_mmakl003" text="助記碼" lstr=""/>
+    <sfield name="lbl_mmak066" text="卡類型" lstr=""/>
+    <sfield name="lbl_mmak003" text="外社卡" lstr=""/>
+    <sfield name="lbl_mmakacti" text="資料有效" lstr=""/>
+    <sfield name="lbl_mmakstus" text="狀態碼" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="page_2" text="發行規則" lstr=""/>
+    <sfield name="lbl_mmak005" text="卡號總碼長" lstr=""/>
+    <sfield name="lbl_mmak006" text="卡號固定代碼長度" lstr=""/>
+    <sfield name="lbl_mmak007" text="卡號固定代碼" lstr=""/>
+    <sfield name="lbl_mmak008" text="卡號流水碼長度" lstr=""/>
+    <sfield name="page_3" text="發卡規則" lstr=""/>
+    <sfield name="lbl_mmak009" text="發卡方式" lstr=""/>
+    <sfield name="lbl_mmak010" text="消費附贈最低消費金額" lstr=""/>
+    <sfield name="lbl_mmak011" text="購卡金額" lstr=""/>
+    <sfield name="lbl_mmak012" text="發卡贈品商品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_mmak013" text="換卡工本費" lstr=""/>
+    <sfield name="lbl_mmak014" text="補卡工本費" lstr=""/>
+    <sfield name="lbl_mmak015" text="卡記名" lstr=""/>
+    <sfield name="lbl_mmak069" text="記名纍計金額" lstr=""/>
+    <sfield name="lbl_mmak016" text="使用時需開卡" lstr=""/>
+    <sfield name="lbl_mmak017" text="卡需設定密碼" lstr=""/>
+    <sfield name="page_4" text="效期控管規則" lstr=""/>
+    <sfield name="lbl_mmak018" text="卡效期控管" lstr=""/>
+    <sfield name="lbl_mmak019" text="效期規則起算基準" lstr=""/>
+    <sfield name="lbl_mmak020" text="有效期至" lstr=""/>
+    <sfield name="lbl_mmak021" text="效期指定日期" lstr=""/>
+    <sfield name="lbl_mmak022" text="效期指定月份長度" lstr=""/>
+    <sfield name="lbl_dummy01" text="月" lstr=""/>
+    <sfield name="lbl_mmak023" text="卡效期延長" lstr=""/>
+    <sfield name="lbl_mmak024" text="效期延長月份長度" lstr=""/>
+    <sfield name="lbl_dummy02" text="月" lstr=""/>
+    <sfield name="lbl_mmak025" text="效期延長次數" lstr=""/>
+    <sfield name="page_5" text="取價規則" lstr=""/>
+    <sfield name="lbl_mmak062" text="會員價" lstr=""/>
+    <sfield name="lbl_mmak063" text="會員價選擇" lstr=""/>
+    <sfield name="lbl_mmak026" text="會員折扣" lstr=""/>
+    <sfield name="lbl_mmak064" text="預設折扣率" lstr=""/>
+    <sfield name="lbl_dummy04" text="%" lstr=""/>
+    <sfield name="page_6" text="其它" lstr=""/>
+    <sfield name="lbl_mmak053" text="卡種對應商品編號" lstr=""/>
+    <sfield name="lbl_mmak060" text="積分對應商品編號" lstr=""/>
+    <sfield name="lbl_mmak054" text="儲值金額對應商品編號" lstr=""/>
+    <sfield name="lbl_mmak061" text="銷售認列方式" lstr=""/>
+    <sfield name="lbl_mmak058" text="儲值對應款別編號" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_mmak057" text="積點抵現對應款別編號" lstr=""/>
+    <sfield name="lbl_mmak059" text="卡異動明細產生方式" lstr=""/>
+    <sfield name="page_7" text="積點規則" lstr=""/>
+    <sfield name="lbl_mmak027" text="積點" lstr=""/>
+    <sfield name="lbl_mmak028" text="預設積點基準單位" lstr=""/>
+    <sfield name="lbl_mmak029" text="預設積點基準" lstr=""/>
+    <sfield name="lbl_mmak030" text="預設單位積點" lstr=""/>
+    <sfield name="lbl_mmak067" text="特價積分基準" lstr=""/>
+    <sfield name="lbl_mmak068" text="特價單位積分" lstr=""/>
+    <sfield name="lbl_mmak036" text="積點取位" lstr=""/>
+    <sfield name="lbl_mmak037" text="取位方法" lstr=""/>
+    <sfield name="lbl_mmak031" text="積點清零規則" lstr=""/>
+    <sfield name="lbl_mmak032" text="月後清零" lstr=""/>
+    <sfield name="lbl_mmak033" text="日後清零" lstr=""/>
+    <sfield name="lbl_mmak034" text="指定日期清零(月/日)" lstr=""/>
+    <sfield name="lbl_dummy03" text="/" lstr=""/>
+    <sfield name="lbl_mmak038" text="積點抵現" lstr=""/>
+    <sfield name="lbl_mmak039" text="預設最低抵現消費額" lstr=""/>
+    <sfield name="lbl_mmak040" text="預設抵現積點基準" lstr=""/>
+    <sfield name="lbl_mmak041" text="預設抵現單位金額" lstr=""/>
+    <sfield name="lbl_mmak055" text="預設抵現上限比例" lstr=""/>
+    <sfield name="lbl_dummy05" text="%" lstr=""/>
+    <sfield name="lbl_mmak056" text="預設抵現上限金額" lstr=""/>
+    <sfield name="page_8" text="儲值規則" lstr=""/>
+    <sfield name="lbl_mmak042" text="可儲值" lstr=""/>
+    <sfield name="lbl_mmak043" text="可重複儲值" lstr=""/>
+    <sfield name="lbl_mmak065" text="儲值付款單次使用否" lstr=""/>
+    <sfield name="lbl_mmak044" text="每次儲值金額上限" lstr=""/>
+    <sfield name="lbl_mmak045" text="每次儲值金額下限" lstr=""/>
+    <sfield name="lbl_mmak046" text="最高總儲值金額" lstr=""/>
+    <sfield name="lbl_mmak047" text="儲值折扣" lstr=""/>
+    <sfield name="lbl_mmak048" text="預設儲值折扣率" lstr=""/>
+    <sfield name="lbl_mmak049" text="儲值加值" lstr=""/>
+    <sfield name="lbl_mmak050" text="預設加值最低金額條件" lstr=""/>
+    <sfield name="lbl_mmak051" text="預設加值儲值金額基準" lstr=""/>
+    <sfield name="lbl_mmak052" text="預設單位加值金額" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="bpage_1" text="生效營運組織" lstr=""/>
+    <sfield name="lbl_mmamdocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_mmam000" text="申請類別" lstr=""/>
+    <sfield name="lbl_mmam001" text="程式編號" lstr=""/>
+    <sfield name="lbl_mmam002" text="卡種/券種" lstr=""/>
+    <sfield name="lbl_mmam003" text="營運組織" lstr=""/>
+    <sfield name="lbl_mmam005" text="包括組織以下所有營運據點" lstr=""/>
+    <sfield name="lbl_mmam006" text="上級發佈卡儲值規則自行確認" lstr=""/>
+    <sfield name="lbl_mmam007" text="上級發佈卡積點規則自行確認" lstr=""/>
+    <sfield name="lbl_mmam004" text="安全存量" lstr=""/>
+    <sfield name="lbl_mmamacti" text="有效" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="bpage_2" text="效期延長規則設定" lstr=""/>
+    <sfield name="lbl_mmaldocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_mmal000" text="申請類別" lstr=""/>
+    <sfield name="lbl_mmal001" text="卡種編碼" lstr=""/>
+    <sfield name="lbl_mmal002" text="規則組別" lstr=""/>
+    <sfield name="lbl_mmal003" text="效期延長規則" lstr=""/>
+    <sfield name="lbl_mmal004" text="下限" lstr=""/>
+    <sfield name="lbl_mmalacti" text="有效" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_mmakldocno" text="申請單號" lstr=""/>
+    <sfield name="lbl_mmakl001" text="語言別" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="open_ammt320_01" text="生效範圍設定" lstr=""/>
+    <sact name="open_ammt320_02" text="效期延長規則設定" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

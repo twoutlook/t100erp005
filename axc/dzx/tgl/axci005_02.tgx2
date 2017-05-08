@@ -1,0 +1,559 @@
+{<section id="axci005_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2013-12-09 14:07:18), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000184
+#+ Filename...: axci005_02
+#+ Description: 製程資源維護作業
+#+ Creator....: 02114(2013-09-16 16:57:03)
+#+ Modifier...: 02291 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="axci005_02.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xcaf_d        RECORD
+       xcaf001 LIKE xcaf_t.xcaf001, 
+   xcafsite LIKE xcaf_t.xcafsite, 
+   xcaf002 LIKE xcaf_t.xcaf002, 
+   xcafseq1 LIKE xcaf_t.xcafseq1, 
+   xcafseq2 LIKE xcaf_t.xcafseq2, 
+   xcaf003 LIKE xcaf_t.xcaf003, 
+   xcaf003_desc LIKE type_t.chr500, 
+   xcaf003_desc1 LIKE type_t.chr500, 
+   xcaf003_desc2 LIKE type_t.chr500, 
+   xcaf004 LIKE xcaf_t.xcaf004, 
+   xcaf005 LIKE xcaf_t.xcaf005, 
+   xcaf006 LIKE xcaf_t.xcaf006, 
+   xcaf007 LIKE xcaf_t.xcaf007
+       END RECORD
+PRIVATE TYPE type_g_xcaf2_d RECORD
+       xcaf001 LIKE xcaf_t.xcaf001, 
+   xcaf002 LIKE xcaf_t.xcaf002, 
+   xcafseq1 LIKE xcaf_t.xcafseq1, 
+   xcafseq2 LIKE xcaf_t.xcafseq2, 
+   xcafownid LIKE xcaf_t.xcafownid, 
+   xcafownid_desc LIKE type_t.chr500, 
+   xcafowndp LIKE xcaf_t.xcafowndp, 
+   xcafowndp_desc LIKE type_t.chr500, 
+   xcafcrtid LIKE xcaf_t.xcafcrtid, 
+   xcafcrtid_desc LIKE type_t.chr500, 
+   xcafcrtdp LIKE xcaf_t.xcafcrtdp, 
+   xcafcrtdp_desc LIKE type_t.chr500, 
+   xcafcrtdt DATETIME YEAR TO SECOND, 
+   xcafmodid LIKE xcaf_t.xcafmodid, 
+   xcafmodid_desc LIKE type_t.chr500, 
+   xcafmoddt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_xcaf_d          DYNAMIC ARRAY OF type_g_xcaf_d
+DEFINE g_xcaf_d_t        type_g_xcaf_d
+DEFINE g_xcaf2_d   DYNAMIC ARRAY OF type_g_xcaf2_d
+DEFINE g_xcaf2_d_t type_g_xcaf2_d
+ 
+ 
+DEFINE g_xcaf001_t   LIKE xcaf_t.xcaf001    #Key值備份
+DEFINE g_xcaf002_t      LIKE xcaf_t.xcaf002    #Key值備份
+DEFINE g_xcafseq1_t      LIKE xcaf_t.xcafseq1    #Key值備份
+DEFINE g_xcafseq2_t      LIKE xcaf_t.xcafseq2    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+{</section>}
+ 
+{<section id="axci005_02.input" >}    
+#+ 資料輸入
+PUBLIC FUNCTION axci005_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axci005_02 WITH FORM cl_ap_formpath("axc","axci005_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xcaf_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf001
+            #add-point:BEFORE FIELD xcaf001 name="input.b.page1.xcaf001"
+            {<point name="input.b.page1.xcaf001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf001
+            
+            #add-point:AFTER FIELD xcaf001 name="input.a.page1.xcaf001"
+            {<point name="input.a.page1.xcaf001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf001
+            #add-point:ON CHANGE xcaf001 name="input.g.page1.xcaf001"
+            {<point name="input.g.page1.xcaf001" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcafsite
+            #add-point:BEFORE FIELD xcafsite name="input.b.page1.xcafsite"
+            {<point name="input.b.page1.xcafsite" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcafsite
+            
+            #add-point:AFTER FIELD xcafsite name="input.a.page1.xcafsite"
+            {<point name="input.a.page1.xcafsite" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcafsite
+            #add-point:ON CHANGE xcafsite name="input.g.page1.xcafsite"
+            {<point name="input.g.page1.xcafsite" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf002
+            #add-point:BEFORE FIELD xcaf002 name="input.b.page1.xcaf002"
+            {<point name="input.b.page1.xcaf002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf002
+            
+            #add-point:AFTER FIELD xcaf002 name="input.a.page1.xcaf002"
+            {<point name="input.a.page1.xcaf002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf002
+            #add-point:ON CHANGE xcaf002 name="input.g.page1.xcaf002"
+            {<point name="input.g.page1.xcaf002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcafseq1
+            #add-point:BEFORE FIELD xcafseq1 name="input.b.page1.xcafseq1"
+            {<point name="input.b.page1.xcafseq1" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcafseq1
+            
+            #add-point:AFTER FIELD xcafseq1 name="input.a.page1.xcafseq1"
+            {<point name="input.a.page1.xcafseq1" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcafseq1
+            #add-point:ON CHANGE xcafseq1 name="input.g.page1.xcafseq1"
+            {<point name="input.g.page1.xcafseq1" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcafseq2
+            #add-point:BEFORE FIELD xcafseq2 name="input.b.page1.xcafseq2"
+            {<point name="input.b.page1.xcafseq2" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcafseq2
+            
+            #add-point:AFTER FIELD xcafseq2 name="input.a.page1.xcafseq2"
+            {<point name="input.a.page1.xcafseq2" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcafseq2
+            #add-point:ON CHANGE xcafseq2 name="input.g.page1.xcafseq2"
+            {<point name="input.g.page1.xcafseq2" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf003
+            
+            #add-point:AFTER FIELD xcaf003 name="input.a.page1.xcaf003"
+            {<point name="input.a.page1.xcaf003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf003
+            #add-point:BEFORE FIELD xcaf003 name="input.b.page1.xcaf003"
+            {<point name="input.b.page1.xcaf003" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf003
+            #add-point:ON CHANGE xcaf003 name="input.g.page1.xcaf003"
+            {<point name="input.g.page1.xcaf003" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xcaf_d[l_ac].xcaf004,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD xcaf004
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xcaf004 name="input.a.page1.xcaf004"
+            {<point name="input.a.page1.xcaf004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf004
+            #add-point:BEFORE FIELD xcaf004 name="input.b.page1.xcaf004"
+            {<point name="input.b.page1.xcaf004" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf004
+            #add-point:ON CHANGE xcaf004 name="input.g.page1.xcaf004"
+            {<point name="input.g.page1.xcaf004" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf005
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xcaf_d[l_ac].xcaf005,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD xcaf005
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xcaf005 name="input.a.page1.xcaf005"
+            {<point name="input.a.page1.xcaf005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf005
+            #add-point:BEFORE FIELD xcaf005 name="input.b.page1.xcaf005"
+            {<point name="input.b.page1.xcaf005" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf005
+            #add-point:ON CHANGE xcaf005 name="input.g.page1.xcaf005"
+            {<point name="input.g.page1.xcaf005" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf006
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xcaf_d[l_ac].xcaf006,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD xcaf006
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xcaf006 name="input.a.page1.xcaf006"
+            {<point name="input.a.page1.xcaf006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf006
+            #add-point:BEFORE FIELD xcaf006 name="input.b.page1.xcaf006"
+            {<point name="input.b.page1.xcaf006" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf006
+            #add-point:ON CHANGE xcaf006 name="input.g.page1.xcaf006"
+            {<point name="input.g.page1.xcaf006" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcaf007
+            #add-point:BEFORE FIELD xcaf007 name="input.b.page1.xcaf007"
+            {<point name="input.b.page1.xcaf007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcaf007
+            
+            #add-point:AFTER FIELD xcaf007 name="input.a.page1.xcaf007"
+            {<point name="input.a.page1.xcaf007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcaf007
+            #add-point:ON CHANGE xcaf007 name="input.g.page1.xcaf007"
+            {<point name="input.g.page1.xcaf007" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.xcaf001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf001
+            #add-point:ON ACTION controlp INFIELD xcaf001 name="input.c.page1.xcaf001"
+            {<point name="input.c.page1.xcaf001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcafsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcafsite
+            #add-point:ON ACTION controlp INFIELD xcafsite name="input.c.page1.xcafsite"
+            {<point name="input.c.page1.xcafsite" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf002
+            #add-point:ON ACTION controlp INFIELD xcaf002 name="input.c.page1.xcaf002"
+            {<point name="input.c.page1.xcaf002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcafseq1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcafseq1
+            #add-point:ON ACTION controlp INFIELD xcafseq1 name="input.c.page1.xcafseq1"
+            {<point name="input.c.page1.xcafseq1" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcafseq2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcafseq2
+            #add-point:ON ACTION controlp INFIELD xcafseq2 name="input.c.page1.xcafseq2"
+            {<point name="input.c.page1.xcafseq2" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf003
+            #add-point:ON ACTION controlp INFIELD xcaf003 name="input.c.page1.xcaf003"
+            {<point name="input.c.page1.xcaf003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf004
+            #add-point:ON ACTION controlp INFIELD xcaf004 name="input.c.page1.xcaf004"
+            {<point name="input.c.page1.xcaf004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf005
+            #add-point:ON ACTION controlp INFIELD xcaf005 name="input.c.page1.xcaf005"
+            {<point name="input.c.page1.xcaf005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf006
+            #add-point:ON ACTION controlp INFIELD xcaf006 name="input.c.page1.xcaf006"
+            {<point name="input.c.page1.xcaf006" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xcaf007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcaf007
+            #add-point:ON ACTION controlp INFIELD xcaf007 name="input.c.page1.xcaf007"
+            {<point name="input.c.page1.xcaf007" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axci005_02 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="axci005_02.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="axci005_02.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

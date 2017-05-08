@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="agcp403" std_prog="agcp403" erpver="1.0" ver="1" module="AGC" booking="Y" class="p" template="F002_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="1" cite_std="N">
+    <tbl name="mmay_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mmaz_t" main="N" head="N" pk="" fk_detail="" parent="mmay_t" fk_master="" src="s" status="">
+      <sr name="s_detail3" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供券發行中心批次確認各領用需求(和卡批次處理ammp403共用程式)
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：批次處理作業
+輸入模式：雙檔模式
+作業資料來源(Master)：
+資料來源表：mmay_t(會員卡券領用申請單頭檔)
+作業資料來源(Detail)：
+資料來源表： mmaz_t(會員卡券領用申請單身檔)
+特別說明：
+單頭處理
+1.程式依使用者輸入範圍查詢符合存在於[T:會員卡券領用申請單頭檔] 
+   且[T:會員卡券領用申請單頭檔][C:資料類型]=2.券(agcp403) [T:會員卡券領用申請單頭檔][C:資料類型]=1.卡(ammp403)
+   且[T:會員卡券領用申請單頭檔][C:狀態]='Y.已確認'
+   且發行營運據點=User登入據點資料顯示於畫面上 
+   且是未拋磚調撥單的資料
+2.領用申請單號由小到大排序顯示.
+單身處理
+1.第一單身程式依單頭點選之領用申請單依申請單號抓取[T:會員卡券領用申請單身檔]顯示
+  
+ 
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[單身修改不更新表資料，只是用臨時表記錄現在更新的資料]]>
+  </di_all>
+  <field cite_std="N" name="mmaydocno_2" ver="1" src="s" column="mmaydocno" table="mmay_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="q_ooba002_1" c_zoom="q_mmaydocno" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmaymodid" ver="1" src="s" column="mmaymodid" table="mmay_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmaymoddt" ver="1" src="s" column="mmaymoddt" table="mmay_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmayownid" ver="1" src="s" column="mmayownid" table="mmay_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmayowndp" ver="1" src="s" column="mmayowndp" table="mmay_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmaycrtid" ver="1" src="s" column="mmaycrtid" table="mmay_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmaycrtdp" ver="1" src="s" column="mmaycrtdp" table="mmay_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmaycrtdt" ver="1" src="s" column="mmaycrtdt" table="mmay_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmaycnfid" ver="1" src="s" column="mmaycnfid" table="mmay_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmaycnfdt" ver="1" src="s" column="mmaycnfdt" table="mmay_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaz_t.mmazseq" ver="1" src="s" column="mmazseq" table="mmaz_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaz_t.mmaz002" ver="1" src="s" column="mmaz002" table="mmaz_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位控管：
+     1.單頭領出組織不为空時，不可修改
+     2.傳入參數arg1 = mmaz002
+                     arg2 = '2'
+                     arg3 = g_site
+開窗處理：
+     1.修改/查詢時：
+       參考函式：q_ooed004
+       傳入參數：arg1 = g_site
+                        arg2 = '2']]>
+  </field>
+  <field cite_std="N" name="mmaz_t.mmaz003" ver="1" src="s" column="mmaz003" table="mmaz_t" attribute="C303" type="varchar2(10)" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_5" chk_ref="v_inaa001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位控管：
+     1.傳入參數arg1 = mmaz002
+                     arg2 = mmaz003
+開窗處理：
+     1.修改時：
+       參考函式：q_inaa001_6
+       傳入參數：arg1 = mmaz002
+]]>
+  </field>
+  <field cite_std="N" name="mmaz_t.mmaz004" ver="1" src="s" column="mmaz004" table="mmaz_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaz_t.mmaz005" ver="1" src="s" column="mmaz005" table="mmaz_t" attribute="C303" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_inaa001_5" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[
+]]>
+  </field>
+  <field cite_std="N" name="mmaz_t.mmaz001" ver="1" src="s" column="mmaz001" table="mmaz_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_mman001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗處理：
+    agcp403 
+    1.查詢時：
+       參考函式：q_gcaf001
+    ammp403
+    1.查詢時：
+       參考函式：q_mman001
+]]>
+  </field>
+  <field cite_std="N" name="mmaz_t.mmaz006" ver="1" src="s" column="mmaz006" table="mmaz_t" attribute="N002" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaz_t.mmaz007" ver="1" src="s" column="mmaz007" table="mmaz_t" attribute="N002" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位控管：
+     1.程式需check 當[C:確認數量] <> [C:申請數量]時顯示提示訊息"領用數量不等於申請數量,是否繼續輸入(Y/N)?"
+       -IF 'Y' THEN 繼續往下進行維護
+       -IF 'N' THEN 游標停留在此欄位
+  
+    
+]]>
+  </field>
+  <field cite_std="N" name="sel" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmaydocno" ver="1" src="s" column="mmaydocno" table="mmay_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="q_mmaydocno" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗處理：
+     1.查詢時：
+       參考函式：q_mmaydocno
+       過濾條件：mmay001 = g_site AND mmay000 = g_type]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmay001" ver="1" src="s" column="mmay001" table="mmay_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗處理：
+     1.查詢時：
+       參考函式：q_ooef001
+       過濾條件：ooef001 = g_site]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmaysite" ver="1" src="s" column="mmaysite" table="mmay_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmay_t.mmaystus" ver="1" src="s" column="mmaystus" table="mmay_t" attribute="C822" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="mmaymodid_desc" src="s" depend_field="mmay_t.mmaymodid" correspon_key="&apos;2&apos;,mmaymodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmayownid_desc" src="s" depend_field="mmay_t.mmayownid" correspon_key="&apos;2&apos;,mmayownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmayowndp_desc" src="s" depend_field="mmay_t.mmayowndp" correspon_key="mmayowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmaycrtid_desc" src="s" depend_field="mmay_t.mmaycrtid" correspon_key="&apos;2&apos;,mmaycrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmaycrtdp_desc" src="s" depend_field="mmay_t.mmaycrtdp" correspon_key="mmaycrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmaycnfid_desc" src="s" depend_field="mmay_t.mmaycnfid" correspon_key="&apos;2&apos;,mmaycnfid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmaz002_desc" src="s" depend_field="mmaz_t.mmaz002" correspon_key="mmaz002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmaz003_desc" src="s" depend_field="mmaz_t.mmaz003" correspon_key="mmaz003" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="mmaz004_desc" src="s" depend_field="mmaz_t.mmaz004" correspon_key="mmaz004" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmaz005_desc" src="s" depend_field="mmaz_t.mmaz005" correspon_key="mmaz005" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="mmaz001_desc" src="s" depend_field="mmaz_t.mmaz001" correspon_key="mmaz001" ref_table="gcafl_t" ref_fk="gcafl001" ref_dlang="gcafl002" ref_rtn="gcafl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmay001_desc" src="s" depend_field="mmay_t.mmay001" correspon_key="mmay001" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmaysite_desc" src="s" depend_field="mmay_t.mmaysite" correspon_key="mmaysite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="mmaydocno_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmaymodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmaymoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmayownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmayowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmaycrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmaycrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmaycrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmaycnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmaycnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaz_t.mmazseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaz_t.mmaz002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaz_t.mmaz003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaz_t.mmaz004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaz_t.mmaz005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaz_t.mmaz001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaz_t.mmaz006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaz_t.mmaz007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmaydocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmay001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmaysite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmay_t.mmaystus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="detailm" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="produce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[agcp403产出agct404资料
+ammp403产出ammt404资料
+]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="receive" ver="1" src="s" type="db1" gen_code="Y" status="">
+    <![CDATA[ammp403调用ammt402
+agcp403隱藏按鈕]]>
+  </act>
+  <act cite_std="N" id="receive1" ver="1" src="s" type="db1" gen_code="Y" status="">
+    <![CDATA[agcp403调用agct402
+ammp403隱藏按鈕]]>
+  </act>
+  <strings>
+    <sfield name="bpage1" text="基本資料" lstr=""/>
+    <sfield name="lbl_sel" text="勾選" lstr=""/>
+    <sfield name="lbl_mmaydocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_mmay001" text="發行組織" lstr=""/>
+    <sfield name="lbl_mmay001_desc" text="發行組織名稱" lstr=""/>
+    <sfield name="lbl_mmaysite_1" text="申請組織" lstr=""/>
+    <sfield name="lbl_mmaysite_desc" text="申請組織名稱" lstr=""/>
+    <sfield name="lbl_mmaystus" text="狀態碼" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="cnfid_desc" text="確認者名稱" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="bpage2" text="領用明細" lstr=""/>
+    <sfield name="lbl_mmazseq" text="項次" lstr=""/>
+    <sfield name="lbl_mmaz002" text="領出組織" lstr=""/>
+    <sfield name="lbl_mmaz002_desc" text="領出組織名稱" lstr=""/>
+    <sfield name="lbl_mmaz003" text="領出庫位" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_mmaz004" text="領用組織" lstr=""/>
+    <sfield name="lbl_mmaz004_desc" text="領用組織名稱" lstr=""/>
+    <sfield name="lbl_mmaz005" text="領用庫位" lstr=""/>
+    <sfield name="lbl_mmaz001_1" text="券種編號" lstr=""/>
+    <sfield name="lbl_mmaz001_desc" text="券種名稱" lstr=""/>
+    <sfield name="lbl_mmaz006" text="申請數量" lstr=""/>
+    <sfield name="lbl_mmaz007" text="確認數量" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="cl_err_s01_Detail" text="詳細資訊" lstr=""/>
+    <sfield name="cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_mmaydocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooed004" text="組織編號" lstr=""/>
+    <sfield name="lbl_inaa001" text="庫位編號" lstr=""/>
+    <sfield name="lbl_gcaf001" text="券種編號" lstr=""/>
+    <sfield name="lbl_gcafl003" text="說明" lstr=""/>
+    <sfield name="lbl_mman001" text="卡種編號" lstr=""/>
+    <sfield name="lbl_mmanl003" text="說明" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="查詢方案名稱" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sact name="detailm" text="領用明細修改" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="produce" text="確認產生調撥單" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="receive" text="會員卡領用申請維護作業" lstr=""/>
+    <sact name="receive1" text="券領用申請維護作業" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

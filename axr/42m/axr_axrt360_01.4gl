@@ -1,0 +1,462 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrt360_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2017-02-04 16:06:45), PR版次:0002(2017-02-14 21:09:42)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000000
+#+ Filename...: axrt360_01
+#+ Description: 產生帳款明細資料
+#+ Creator....: 02114(2017-02-04 16:05:10)
+#+ Modifier...: 02114 -SD/PR- 02114
+ 
+{</section>}
+ 
+{<section id="axrt360_01.global" >}
+#應用 c01c 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_input RECORD
+               type     LIKE type_t.chr1
+               END RECORD
+DEFINE g_docno         LIKE xrcg_t.xrcgdocno
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point  
+ 
+{</section>}
+ 
+{<section id="axrt360_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrt360_01(--)
+   #add-point:construct段變數傳入 name="construct.get_var"
+   p_comp,p_ld,p_site,p_docno,p_docdt,p_xrcg001,p_xrcg010
+   #end add-point
+   )
+   #add-point:construct段define name="construct.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="construct.define"
+   DEFINE p_comp          LIKE xrcg_t.xrcgcomp
+   DEFINE p_ld            LIKE xrca_t.xrcald
+   DEFINE p_site          LIKE xrcg_t.xrcgsite
+   DEFINE p_docno         LIKE xrcg_t.xrcgdocno
+   DEFINE p_docdt         LIKE xrcg_t.xrcgdocdt    #170210-00018#1 add lujh
+   DEFINE p_xrcg001       LIKE xrcg_t.xrcg001
+   DEFINE p_xrcg010       LIKE xrcg_t.xrcg010
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt360_01 WITH FORM cl_ap_formpath("axr","axrt360_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="construct.pre_construct"
+   LET g_input.type = '1'
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON xrcadocno,xrcadocdt,xrca008,xrca009,xrca010 
+      
+            #add-point:自定義action name="construct.action"
+            
+            #end add-point
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理 name="construct.before_construct"
+            BEFORE FIELD xrcadocno
+               IF g_input.type = '1' THEN
+                  NEXT FIELD type
+               END IF
+               
+            BEFORE FIELD xrcadocdt
+               IF g_input.type = '1' THEN
+                  NEXT FIELD type
+               END IF
+               
+            BEFORE FIELD xrca008
+               IF g_input.type = '1' THEN
+                  NEXT FIELD type
+               END IF
+               
+            BEFORE FIELD xrca009
+               IF g_input.type = '1' THEN
+                  NEXT FIELD type
+               END IF
+               
+            BEFORE FIELD xrca010
+               IF g_input.type = '1' THEN
+                  NEXT FIELD type
+               END IF
+            
+            ON ACTION controlp INFIELD xrcadocno
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.where = " xrca001 IN (SELECT gzcb002 FROM gzcb_t WHERE gzcb001 = '8302' AND gzcb005 IN ('axrt300','axrt310','axrt330'))",
+                                      " AND xrccent = ",g_enterprise,
+                                      " AND xrcc109 = 0 AND xrcastus = 'Y' AND xrccld = '",p_ld,"'",
+                                      " AND xrca004 = '",p_xrcg001,"'",
+                                      " AND xrccdocno||xrccseq NOT IN (SELECT xrcg002||xrcg003 FROM xrcg_t ",
+                                      "                                 WHERE xrcgent = ",g_enterprise,
+                                      "                                   AND xrcgld = '",p_ld,"'",
+                                      "                                   AND xrcgstus <> 'Y' ",
+                                      "                               )"                                      
+               CALL q_xrccdocno()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xrcadocno  #顯示到畫面上
+               NEXT FIELD xrcadocno                     #返回原欄位
+            
+            ON ACTION controlp INFIELD xrca008
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+               CALL q_ooib001_1()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xrca008  #顯示到畫面上
+               
+               NEXT FIELD xrca008                     #返回原欄位
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理 name="construct.after_construct"
+            
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct name="construct.more_construct"
+      INPUT BY NAME g_input.type
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         BEFORE INPUT
+         
+         
+      END INPUT
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="construct.before_close"
+   
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt360_01 
+   
+   #add-point:construct段after construct name="construct.post_construct"
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN '',''
+   END IF
+   IF g_input.type = '2' THEN 
+      CALL axrt360_01_ins(p_comp,p_ld,p_site,p_docno,p_docdt,p_xrcg001,p_xrcg010)  #170210-00018#1 add p_docdt lujh
+   END IF 
+   RETURN g_input.type,g_docno
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrt360_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axrt360_01.other_function" readonly="Y" >}
+# 整批產生單身
+PRIVATE FUNCTION axrt360_01_ins(p_comp,p_ld,p_site,p_docno,p_docdt,p_xrcg001,p_xrcg010)
+   DEFINE p_comp          LIKE xrcg_t.xrcgcomp
+   DEFINE p_ld            LIKE xrca_t.xrcald
+   DEFINE p_site          LIKE xrcg_t.xrcgsite
+   DEFINE p_docno         LIKE xrcg_t.xrcgdocno
+   DEFINE p_docdt         LIKE xrcg_t.xrcgdocdt    #170210-00018#1 add lujh
+   DEFINE p_xrcg001       LIKE xrcg_t.xrcg001
+   DEFINE p_xrcg010       LIKE xrcg_t.xrcg010
+   DEFINE l_glaa003       LIKE glaa_t.glaa003
+   DEFINE l_glaa024       LIKE glaa_t.glaa024
+   DEFINE l_sql           STRING
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_flag          LIKE type_t.chr1
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_tmp           RECORD
+                          xrccdocno         LIKE xrcc_t.xrccdocno,
+                          xrccseq           LIKE xrcc_t.xrccseq,
+                          xrcc015           LIKE xrcc_t.xrcc015,
+                          xrcc003           LIKE xrcc_t.xrcc003,
+                          xrcc004           LIKE xrcc_t.xrcc004
+                          END RECORD
+   DEFINE l_xrcg          RECORD  #收款條件變更申請紀錄檔
+                          xrcgent           LIKE xrcg_t.xrcgent, #企業編碼
+                          xrcgownid         LIKE xrcg_t.xrcgownid, #資料所有者
+                          xrcgowndp         LIKE xrcg_t.xrcgowndp, #資料所屬部門
+                          xrcgcrtid         LIKE xrcg_t.xrcgcrtid, #資料建立者
+                          xrcgcrtdp         LIKE xrcg_t.xrcgcrtdp, #資料建立部門
+                          xrcgcrtdt         LIKE xrcg_t.xrcgcrtdt, #資料創建日
+                          xrcgmodid         LIKE xrcg_t.xrcgmodid, #資料修改者
+                          xrcgmoddt         LIKE xrcg_t.xrcgmoddt, #最近修改日
+                          xrcgcnfid         LIKE xrcg_t.xrcgcnfid, #資料確認者
+                          xrcgcnfdt         LIKE xrcg_t.xrcgcnfdt, #資料確認日
+                          xrcgpstid         LIKE xrcg_t.xrcgpstid, #資料過帳者
+                          xrcgpstdt         LIKE xrcg_t.xrcgpstdt, #資料過帳日
+                          xrcgstus          LIKE xrcg_t.xrcgstus, #狀態碼
+                          xrcgcomp          LIKE xrcg_t.xrcgcomp, #法人
+                          xrcgld            LIKE xrcg_t.xrcgld, #帳套
+                          xrcgsite          LIKE xrcg_t.xrcgsite, #營運據點
+                          xrcgdocno         LIKE xrcg_t.xrcgdocno, #申請編號
+                          xrcgdocdt         LIKE xrcg_t.xrcgdocdt, #单据日期    #170210-00018#1 add lujh
+                          xrcgseq           LIKE xrcg_t.xrcgseq, #項次
+                          xrcglegl          LIKE xrcg_t.xrcglegl, #核算組織
+                          xrcg001           LIKE xrcg_t.xrcg001, #帳款對象
+                          xrcg002           LIKE xrcg_t.xrcg002, #應收單號
+                          xrcg003           LIKE xrcg_t.xrcg003, #多帳期項次
+                          xrcg004           LIKE xrcg_t.xrcg004, #原收款條件
+                          xrcg005           LIKE xrcg_t.xrcg005, #收款條件
+                          xrcg006           LIKE xrcg_t.xrcg006, #原應收款日
+                          xrcg007           LIKE xrcg_t.xrcg007, #應收款日
+                          xrcg008           LIKE xrcg_t.xrcg008, #原票據到期日
+                          xrcg009           LIKE xrcg_t.xrcg009, #票據到期日
+                          xrcg010           LIKE xrcg_t.xrcg010, #執行人員
+                          xrcgud001         LIKE xrcg_t.xrcgud001, #自定義欄位(文字)001
+                          xrcgud002         LIKE xrcg_t.xrcgud002, #自定義欄位(文字)002
+                          xrcgud003         LIKE xrcg_t.xrcgud003, #自定義欄位(文字)003
+                          xrcgud004         LIKE xrcg_t.xrcgud004, #自定義欄位(文字)004
+                          xrcgud005         LIKE xrcg_t.xrcgud005, #自定義欄位(文字)005
+                          xrcgud006         LIKE xrcg_t.xrcgud006, #自定義欄位(文字)006
+                          xrcgud007         LIKE xrcg_t.xrcgud007, #自定義欄位(文字)007
+                          xrcgud008         LIKE xrcg_t.xrcgud008, #自定義欄位(文字)008
+                          xrcgud009         LIKE xrcg_t.xrcgud009, #自定義欄位(文字)009
+                          xrcgud010         LIKE xrcg_t.xrcgud010, #自定義欄位(文字)010
+                          xrcgud011         LIKE xrcg_t.xrcgud011, #自定義欄位(數字)011
+                          xrcgud012         LIKE xrcg_t.xrcgud012, #自定義欄位(數字)012
+                          xrcgud013         LIKE xrcg_t.xrcgud013, #自定義欄位(數字)013
+                          xrcgud014         LIKE xrcg_t.xrcgud014, #自定義欄位(數字)014
+                          xrcgud015         LIKE xrcg_t.xrcgud015, #自定義欄位(數字)015
+                          xrcgud016         LIKE xrcg_t.xrcgud016, #自定義欄位(數字)016
+                          xrcgud017         LIKE xrcg_t.xrcgud017, #自定義欄位(數字)017
+                          xrcgud018         LIKE xrcg_t.xrcgud018, #自定義欄位(數字)018
+                          xrcgud019         LIKE xrcg_t.xrcgud019, #自定義欄位(數字)019
+                          xrcgud020         LIKE xrcg_t.xrcgud020, #自定義欄位(數字)020
+                          xrcgud021         LIKE xrcg_t.xrcgud021, #自定義欄位(日期時間)021
+                          xrcgud022         LIKE xrcg_t.xrcgud022, #自定義欄位(日期時間)022
+                          xrcgud023         LIKE xrcg_t.xrcgud023, #自定義欄位(日期時間)023
+                          xrcgud024         LIKE xrcg_t.xrcgud024, #自定義欄位(日期時間)024
+                          xrcgud025         LIKE xrcg_t.xrcgud025, #自定義欄位(日期時間)025
+                          xrcgud026         LIKE xrcg_t.xrcgud026, #自定義欄位(日期時間)026
+                          xrcgud027         LIKE xrcg_t.xrcgud027, #自定義欄位(日期時間)027
+                          xrcgud028         LIKE xrcg_t.xrcgud028, #自定義欄位(日期時間)028
+                          xrcgud029         LIKE xrcg_t.xrcgud029, #自定義欄位(日期時間)029
+                          xrcgud030         LIKE xrcg_t.xrcgud030  #自定義欄位(日期時間)030
+                          END RECORD
+   
+   IF cl_null(g_wc) THEN 
+      LET g_wc = " 1=1 "
+   END IF
+   
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   LET l_success = TRUE
+   LET l_flag = 'N'
+   
+   SELECT glaa003,glaa024 INTO l_glaa003,l_glaa024 
+     FROM glaa_t 
+    WHERE glaaent = g_enterprise 
+      AND glaald = p_ld
+   CALL s_aooi200_fin_gen_docno(p_ld,l_glaa024,l_glaa003,p_docno,p_docdt,g_prog)   #170210-00018#1 change g_today to p_docdt lujh
+   RETURNING l_success,g_docno
+   IF l_success  = 0  THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'apm-00003'
+      LET g_errparam.extend = p_docno
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+    
+      RETURN
+   END IF
+   
+   LET l_sql = "SELECT xrccdocno,xrccseq,xrcc015,xrcc003,xrcc004 ",
+               "  FROM xrcc_t,xrca_t ",
+               " WHERE xrccent = ",g_enterprise,
+               "   AND xrccent = xrcaent ",
+               "   AND xrccld = xrcald ",
+               "   AND xrccdocno = xrcadocno ",
+               "   AND xrca001 IN (SELECT gzcb002 FROM gzcb_t WHERE gzcb001 = '8302' AND gzcb005 IN ('axrt300','axrt310','axrt330'))",
+               "   AND xrcc109 = 0 AND xrcastus = 'Y' AND xrccld = '",p_ld,"'",
+               "   AND xrca004 = '",p_xrcg001,"'",
+               "   AND ",g_wc
+   PREPARE axrt360_01_ins_pre FROM l_sql
+   DECLARE axrt360_01_ins_cs CURSOR FOR axrt360_01_ins_pre
+   
+   FOREACH axrt360_01_ins_cs INTO l_tmp.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET l_n = 0
+      SELECT COUNT(1) INTO l_n
+        FROM xrcg_t
+       WHERE xrcgent = g_enterprise
+         AND xrcgld = p_ld
+         AND xrcg002 = l_tmp.xrccdocno
+         AND xrcg003 = l_tmp.xrccseq
+         AND xrcgstus = 'N'
+             
+      IF l_n > 0 THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'axr-01055'
+         LET g_errparam.extend = l_tmp.xrccdocno,"|",l_tmp.xrccseq
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         CONTINUE FOREACH         
+      END IF
+      
+      LET l_xrcg.xrcgent   = g_enterprise
+      LET l_xrcg.xrcgcomp  = p_comp
+      LET l_xrcg.xrcgld    = p_ld
+      LET l_xrcg.xrcgsite  = p_site
+      LET l_xrcg.xrcgdocno = g_docno
+      LET l_xrcg.xrcgdocdt = p_docdt            #170210-00018#1 add lujh
+      SELECT MAX(xrcgseq) INTO l_xrcg.xrcgseq
+        FROM xrcg_t
+       WHERE xrcgent = g_enterprise
+         AND xrcgld = l_xrcg.xrcgld
+         AND xrcgdocno = l_xrcg.xrcgdocno
+         
+      IF cl_null(l_xrcg.xrcgseq) THEN
+         LET l_xrcg.xrcgseq = 1
+      ELSE
+         LET l_xrcg.xrcgseq = l_xrcg.xrcgseq + 1
+      END IF
+      LET l_xrcg.xrcg001   = p_xrcg001
+      LET l_xrcg.xrcg002   = l_tmp.xrccdocno
+      LET l_xrcg.xrcg003   = l_tmp.xrccseq
+      LET l_xrcg.xrcg004   = l_tmp.xrcc015
+      LET l_xrcg.xrcg006   = l_tmp.xrcc003
+      LET l_xrcg.xrcg008   = l_tmp.xrcc004
+      LET l_xrcg.xrcg010   = p_xrcg010
+      
+      LET l_xrcg.xrcgownid = g_user
+      LET l_xrcg.xrcgowndp = g_dept
+      LET l_xrcg.xrcgcrtid = g_user
+      LET l_xrcg.xrcgcrtdp = g_dept 
+      LET l_xrcg.xrcgcrtdt = cl_get_current()
+      LET l_xrcg.xrcgmodid = g_user
+      LET l_xrcg.xrcgmoddt = cl_get_current() 
+      LET l_xrcg.xrcgstus = 'N'
+      
+      INSERT INTO xrcg_t(xrcgent,xrcgcomp,xrcgld,xrcgsite,xrcgdocno,xrcgdocdt,xrcgseq,  #170210-00018#1 add xrcgdocdt lujh
+                         xrcg001,xrcg002,xrcg003,xrcg004,xrcg006,xrcg008,xrcg010,
+                         xrcgownid,xrcgowndp,xrcgcrtid,xrcgcrtdp,xrcgcrtdt,xrcgmodid,xrcgmoddt,xrcgstus) 
+      VALUES(l_xrcg.xrcgent  ,l_xrcg.xrcgcomp,l_xrcg.xrcgld ,l_xrcg.xrcgsite,
+             l_xrcg.xrcgdocno,l_xrcg.xrcgdocdt,l_xrcg.xrcgseq ,l_xrcg.xrcg001,l_xrcg.xrcg002 ,  #170210-00018#1 add l_xrcg.xrcgdocdt lujhs
+             l_xrcg.xrcg003  ,l_xrcg.xrcg004 ,l_xrcg.xrcg006,l_xrcg.xrcg008 ,l_xrcg.xrcg010,
+             l_xrcg.xrcgownid,l_xrcg.xrcgowndp,l_xrcg.xrcgcrtid,l_xrcg.xrcgcrtdp,
+             l_xrcg.xrcgcrtdt,l_xrcg.xrcgmodid,l_xrcg.xrcgmoddt,l_xrcg.xrcgstus) 
+      
+      IF SQLCA.SQLcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "xrcg_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+      
+         LET l_success = FALSE                        
+      END IF
+
+      LET l_flag = 'Y'
+   END FOREACH
+   
+   CALL cl_err_collect_show()
+   IF l_success = TRUE THEN 
+      IF l_flag = 'N' THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = 'axc-00530' 
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')  
+      ELSE
+         CALL s_transaction_end('Y','1')
+      END IF
+   ELSE
+      CALL s_transaction_end('N','1')
+   END IF
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

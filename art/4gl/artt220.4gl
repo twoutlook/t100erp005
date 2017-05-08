@@ -1,0 +1,10451 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="artt220.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0020(2016-05-19 15:08:30), PR版次:0020(2016-11-25 13:43:10)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000271
+#+ Filename...: artt220
+#+ Description: 庫區異動申請作業
+#+ Creator....: 02296(2013-12-20 15:16:41)
+#+ Modifier...: 08172 -SD/PR- 06814
+ 
+{</section>}
+ 
+{<section id="artt220.global" >}
+#應用 t01 樣板自動產生(Version:79)
+#add-point:填寫註解說明 name="global.memo" 
+#160318-00025#21  2016/04/20  BY 07900   校验代码重复错误讯息的修改
+#160705-00042#10  2016/07/13  By sakura  程式中寫死g_prog部分改寫MATCHES方式
+#160816-00068#10  2016/08/17  By 08209   調整transaction
+#160818-00017#34  2016-08-24  By 08734   删除修改未重新判断状态码
+#160905-00007#14  2016/09/05  By 07900   调整系统中无ENT的SQL条件增加ent
+#161024-00025#1   2016/10/24  By dongsz  rtbb005增加aooi500逻辑
+#160824-00007#160 2016/11/25  By 06814   新舊值處理
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point 
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_rtba_m        RECORD
+       rtbasite LIKE rtba_t.rtbasite, 
+   rtbasite_desc LIKE type_t.chr80, 
+   rtbadocdt LIKE rtba_t.rtbadocdt, 
+   rtbadocno LIKE rtba_t.rtbadocno, 
+   rtbaunit LIKE rtba_t.rtbaunit, 
+   rtbaunit_desc LIKE type_t.chr80, 
+   rtba000 LIKE rtba_t.rtba000, 
+   rtba002 LIKE rtba_t.rtba002, 
+   rtba002_desc LIKE type_t.chr80, 
+   rtba003 LIKE rtba_t.rtba003, 
+   rtba003_desc LIKE type_t.chr80, 
+   rtbastus LIKE rtba_t.rtbastus, 
+   rtbaownid LIKE rtba_t.rtbaownid, 
+   rtbaownid_desc LIKE type_t.chr80, 
+   rtbaowndp LIKE rtba_t.rtbaowndp, 
+   rtbaowndp_desc LIKE type_t.chr80, 
+   rtbacrtid LIKE rtba_t.rtbacrtid, 
+   rtbacrtid_desc LIKE type_t.chr80, 
+   rtbacrtdp LIKE rtba_t.rtbacrtdp, 
+   rtbacrtdp_desc LIKE type_t.chr80, 
+   rtbacrtdt LIKE rtba_t.rtbacrtdt, 
+   rtbamodid LIKE rtba_t.rtbamodid, 
+   rtbamodid_desc LIKE type_t.chr80, 
+   rtbamoddt LIKE rtba_t.rtbamoddt, 
+   rtbacnfid LIKE rtba_t.rtbacnfid, 
+   rtbacnfid_desc LIKE type_t.chr80, 
+   rtbacnfdt LIKE rtba_t.rtbacnfdt
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_rtbb_d        RECORD
+       rtbbseqno LIKE rtbb_t.rtbbseqno, 
+   rtbb001 LIKE rtbb_t.rtbb001, 
+   rtbbl002 LIKE rtbbl_t.rtbbl002, 
+   rtbbl003 LIKE rtbbl_t.rtbbl003, 
+   rtbb002 LIKE rtbb_t.rtbb002, 
+   rtbb003 LIKE rtbb_t.rtbb003, 
+   rtbb005 LIKE rtbb_t.rtbb005, 
+   rtbb005_desc LIKE type_t.chr500, 
+   rtbb101 LIKE rtbb_t.rtbb101, 
+   rtbb102 LIKE rtbb_t.rtbb102, 
+   rtbb120 LIKE rtbb_t.rtbb120, 
+   rtbb120_desc LIKE type_t.chr500, 
+   rtbb130 LIKE rtbb_t.rtbb130, 
+   rtbb105 LIKE rtbb_t.rtbb105, 
+   rtbb106 LIKE rtbb_t.rtbb106, 
+   rtbb106_desc LIKE type_t.chr500, 
+   rtbb110 LIKE rtbb_t.rtbb110, 
+   rtbb111 LIKE rtbb_t.rtbb111, 
+   rtbb104 LIKE rtbb_t.rtbb104, 
+   rtbb121 LIKE rtbb_t.rtbb121, 
+   rtbb121_desc LIKE type_t.chr500, 
+   rtbb122 LIKE rtbb_t.rtbb122, 
+   rtbb122_desc LIKE type_t.chr500, 
+   rtbb123 LIKE rtbb_t.rtbb123, 
+   rtbb123_desc LIKE type_t.chr500, 
+   rtbb124 LIKE rtbb_t.rtbb124, 
+   rtbb124_desc LIKE type_t.chr500, 
+   rtbb008 LIKE rtbb_t.rtbb008, 
+   rtbb009 LIKE rtbb_t.rtbb009, 
+   rtbb010 LIKE rtbb_t.rtbb010, 
+   rtbb014 LIKE rtbb_t.rtbb014, 
+   rtbb011 LIKE rtbb_t.rtbb011, 
+   rtbbacti LIKE rtbb_t.rtbbacti, 
+   rtbb131 LIKE rtbb_t.rtbb131, 
+   rtbb131_desc LIKE type_t.chr500, 
+   rtbb132 LIKE rtbb_t.rtbb132, 
+   rtbb133 LIKE rtbb_t.rtbb133, 
+   rtbb134 LIKE rtbb_t.rtbb134, 
+   rtbb134_desc LIKE type_t.chr500, 
+   rtbb135 LIKE rtbb_t.rtbb135, 
+   rtbb136 LIKE rtbb_t.rtbb136, 
+   rtbb137 LIKE rtbb_t.rtbb137, 
+   rtbb138 LIKE rtbb_t.rtbb138, 
+   rtbb139 LIKE rtbb_t.rtbb139, 
+   rtbb140 LIKE rtbb_t.rtbb140, 
+   rtbb141 LIKE rtbb_t.rtbb141, 
+   rtbb141_desc LIKE type_t.chr500, 
+   rtbbsite LIKE rtbb_t.rtbbsite, 
+   rtbbunit LIKE rtbb_t.rtbbunit, 
+   rtbb142 LIKE rtbb_t.rtbb142
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_rtbasite LIKE rtba_t.rtbasite,
+   b_rtbasite_desc LIKE type_t.chr80,
+      b_rtbaunit LIKE rtba_t.rtbaunit,
+   b_rtbaunit_desc LIKE type_t.chr80,
+      b_rtbadocdt LIKE rtba_t.rtbadocdt,
+      b_rtbadocno LIKE rtba_t.rtbadocno,
+      b_rtba000 LIKE rtba_t.rtba000,
+      b_rtba002 LIKE rtba_t.rtba002,
+   b_rtba002_desc LIKE type_t.chr80,
+      b_rtba003 LIKE rtba_t.rtba003,
+   b_rtba003_desc LIKE type_t.chr80
+       END RECORD
+       
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_ooef004             LIKE ooef_t.ooef004
+DEFINE g_site_flag           LIKE type_t.num5
+#end add-point
+       
+#模組變數(Module Variables)
+DEFINE g_rtba_m          type_g_rtba_m
+DEFINE g_rtba_m_t        type_g_rtba_m
+DEFINE g_rtba_m_o        type_g_rtba_m
+DEFINE g_rtba_m_mask_o   type_g_rtba_m #轉換遮罩前資料
+DEFINE g_rtba_m_mask_n   type_g_rtba_m #轉換遮罩後資料
+ 
+   DEFINE g_rtbadocno_t LIKE rtba_t.rtbadocno
+ 
+ 
+DEFINE g_rtbb_d          DYNAMIC ARRAY OF type_g_rtbb_d
+DEFINE g_rtbb_d_t        type_g_rtbb_d
+DEFINE g_rtbb_d_o        type_g_rtbb_d
+DEFINE g_rtbb_d_mask_o   DYNAMIC ARRAY OF type_g_rtbb_d #轉換遮罩前資料
+DEFINE g_rtbb_d_mask_n   DYNAMIC ARRAY OF type_g_rtbb_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+DEFINE g_detail_multi_table_t    RECORD
+      rtbbldocno LIKE rtbbl_t.rtbbldocno,
+      rtbblseqno LIKE rtbbl_t.rtbblseqno,
+      rtbbl001 LIKE rtbbl_t.rtbbl001,
+      rtbbl002 LIKE rtbbl_t.rtbbl002,
+      rtbbl003 LIKE rtbbl_t.rtbbl003
+      END RECORD
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                         #Current Dialog
+                                                               
+DEFINE g_pagestart           LIKE type_t.num10                 
+DEFINE gwin_curr             ui.Window                         #Current Window
+DEFINE gfrm_curr             ui.Form                           #Current Form
+DEFINE g_page_action         STRING                            #page action
+DEFINE g_header_hidden       LIKE type_t.num5                  #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5                  #隱藏工作Panel
+DEFINE g_page                STRING                            #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10                  #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx_tmp      LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10                  #單身2目前所在筆數
+DEFINE g_detail_idx_list     DYNAMIC ARRAY OF LIKE type_t.num10 #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10                  #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10                  #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10                  #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                             #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10                  #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                            #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10                  #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5                   #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+DEFINE g_idx_group           om.SaxAttributes              #頁籤群組
+DEFINE g_master_commit       LIKE type_t.chr1              #確認單頭是否修改過
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="artt220.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE l_success LIKE type_t.num5      #150308-00001#5  By benson 150309
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("art","")
+ 
+   #add-point:作業初始化 name="main.init"
+   #150424-00018#3 150529 by s983961 add(s) 
+   #IF g_prog="adbt230" THEN          #160705-00042#10 160713 by sakura mark
+   IF g_prog MATCHES 'adbt230' THEN   #160705-00042#10 160713 by sakura add
+      IF cl_get_para(g_enterprise,g_site,'E-CIR-0019') ='N' THEN 
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = 'adb-00428'
+          LET g_errparam.extend = ''
+          LET g_errparam.popup = TRUE
+          CALL cl_err()    
+          CALL cl_ap_exitprogram("0")
+      END IF
+   END IF        
+   
+   #IF g_prog="artt220" THEN          #160705-00042#10 160713 by sakura mark
+   IF g_prog MATCHES 'artt220' THEN   #160705-00042#10 160713 by sakura add
+     IF cl_get_para(g_enterprise,g_site,'E-CIR-0019') ='N' THEN    
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = 'art-00577'
+       LET g_errparam.extend = ''
+       LET g_errparam.popup = TRUE
+       CALL cl_err()    
+       CALL cl_ap_exitprogram("0")
+   END IF
+     END IF
+   
+   #150424-00018#3 150529 by s983961 add(e) 
+   SELECT ooef004 INTO g_ooef004 FROM ooef_t WHERE ooefent=g_enterprise AND ooef001 = g_site
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT rtbasite,'',rtbadocdt,rtbadocno,rtbaunit,'',rtba000,rtba002,'',rtba003, 
+       '',rtbastus,rtbaownid,'',rtbaowndp,'',rtbacrtid,'',rtbacrtdp,'',rtbacrtdt,rtbamodid,'',rtbamoddt, 
+       rtbacnfid,'',rtbacnfdt", 
+                      " FROM rtba_t",
+                      " WHERE rtbaent= ? AND rtbadocno=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE artt220_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.rtbasite,t0.rtbadocdt,t0.rtbadocno,t0.rtbaunit,t0.rtba000,t0.rtba002, 
+       t0.rtba003,t0.rtbastus,t0.rtbaownid,t0.rtbaowndp,t0.rtbacrtid,t0.rtbacrtdp,t0.rtbacrtdt,t0.rtbamodid, 
+       t0.rtbamoddt,t0.rtbacnfid,t0.rtbacnfdt,t1.ooefl003 ,t2.ooefl003 ,t3.ooag011 ,t4.ooefl003 ,t5.ooag011 , 
+       t6.ooefl003 ,t7.ooag011 ,t8.ooefl003 ,t9.ooag011 ,t10.ooag011",
+               " FROM rtba_t t0",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.rtbasite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent="||g_enterprise||" AND t2.ooefl001=t0.rtbaunit AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent="||g_enterprise||" AND t3.ooag001=t0.rtba002  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent="||g_enterprise||" AND t4.ooefl001=t0.rtba003 AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t5 ON t5.ooagent="||g_enterprise||" AND t5.ooag001=t0.rtbaownid  ",
+               " LEFT JOIN ooefl_t t6 ON t6.ooeflent="||g_enterprise||" AND t6.ooefl001=t0.rtbaowndp AND t6.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t7 ON t7.ooagent="||g_enterprise||" AND t7.ooag001=t0.rtbacrtid  ",
+               " LEFT JOIN ooefl_t t8 ON t8.ooeflent="||g_enterprise||" AND t8.ooefl001=t0.rtbacrtdp AND t8.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t9 ON t9.ooagent="||g_enterprise||" AND t9.ooag001=t0.rtbamodid  ",
+               " LEFT JOIN ooag_t t10 ON t10.ooagent="||g_enterprise||" AND t10.ooag001=t0.rtbacnfid  ",
+ 
+               " WHERE t0.rtbaent = " ||g_enterprise|| " AND t0.rtbadocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE artt220_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_artt220 WITH FORM cl_ap_formpath("art",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL artt220_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL artt220_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_artt220
+      
+   END IF 
+   
+   CLOSE artt220_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL s_aooi500_drop_temp() RETURNING l_success      #150308-00001#5  By benson 150309
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="artt220.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION artt220_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point    
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_gzze003     LIKE gzze_t.gzze003
+   DEFINE l_success     LIKE type_t.num5      #150308-00001#5  By benson 150309
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   
+   #各個page指標
+   LET g_detail_idx_list[1] = 1 
+ 
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+      CALL cl_set_combo_scc_part('rtbastus','13','N,Y,A,D,R,W,X')
+ 
+      CALL cl_set_combo_scc('rtba000','32') 
+   CALL cl_set_combo_scc('rtbb102','6200') 
+   CALL cl_set_combo_scc('rtbb105','6201') 
+   CALL cl_set_combo_scc('rtbb110','6202') 
+   CALL cl_set_combo_scc('rtbb111','6203') 
+   CALL cl_set_combo_scc('rtbb104','6204') 
+   CALL cl_set_combo_scc('rtbb135','6781') 
+   CALL cl_set_combo_scc('rtbb140','6787') 
+ 
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #page群組
+   LET g_idx_group = om.SaxAttributes.create()
+   CALL g_idx_group.addAttribute("'1',","1")
+ 
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc('b_rtba000','32')
+   #IF g_prog = "adbt230" THEN        #160705-00042#10 160713 by sakura mark
+   IF g_prog MATCHES 'adbt230' THEN   #160705-00042#10 160713 by sakura add
+      CALL cl_set_comp_visible('rtbb102,rtbb120,rtbb130,rtbb105,rtbb106,rtbb110,rtbb111,rtbb104,rtbb121,rtbb122,rtbb123,rtbb124,rtbb009',FALSE) #sakura add rtbb009
+      CALL cl_set_comp_visible('rtbb106_desc,rtbb120_desc,rtbb121_desc,rtbb122_desc,rtbb123_desc,rtbb124_desc',FALSE)
+      LET l_gzze003 = cl_getmsg('adb-00313',g_dlang)         
+      CALL cl_set_comp_att_text('rtbb001',l_gzze003)
+      LET l_gzze003 = cl_getmsg('adb-00314',g_dlang)         
+      CALL cl_set_comp_att_text('rtbbl002',l_gzze003)
+   END IF
+   CALL cl_set_combo_scc('rtbb140','6843')             #add by yangxf 150616-00035#69
+   CALL s_aooi500_create_temp() RETURNING l_success    #150308-00001#5  By benson 150309
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL artt220_default_search()
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.ui_dialog" >}
+#+ 功能選單
+PRIVATE FUNCTION artt220_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   DEFINE  l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE  l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE  l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   #因應查詢方案進行處理
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL artt220_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_rtba_m.* TO NULL
+         CALL g_rtbb_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL artt220_init()
+      END IF
+   
+      CALL lib_cl_dlg.cl_dlg_before_display()
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+         #左側瀏覽頁簽
+         DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTES(COUNT=g_header_cnt)
+            BEFORE ROW
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+         
+               IF g_current_idx > g_browser.getLength() THEN
+                  LET g_current_idx = g_browser.getLength()
+               END IF 
+               
+               CALL artt220_fetch('') # reload data
+               LET l_ac = 1
+               CALL artt220_ui_detailshow() #Setting the current row 
+         
+               CALL artt220_idx_chk()
+               #NEXT FIELD rtbbseqno
+         
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+         END DISPLAY
+    
+         DISPLAY ARRAY g_rtbb_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL artt220_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[1] = l_ac
+               CALL g_idx_group.addAttribute("'1',",l_ac)
+               
+               #add-point:page1, before row動作 name="ui_dialog.page1.before_row"
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL artt220_idx_chk()
+               #add-point:page1自定義行為 name="ui_dialog.page1.before_display"
+               
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為 name="ui_dialog.page1.action"
+            
+            #end add-point
+               
+         END DISPLAY
+        
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+         
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+         SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL artt220_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+            IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               LET g_current_idx = g_current_row
+            END IF
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL artt220_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL artt220_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL artt220_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #add-point:ui_dialog段more_action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #狀態碼切換
+         ON ACTION statechange
+            LET g_action_choice = "statechange"
+            CALL artt220_statechange()
+            #根據資料狀態切換action狀態
+            CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+            CALL artt220_set_act_visible()   
+            CALL artt220_set_act_no_visible()
+            IF NOT (g_rtba_m.rtbadocno IS NULL
+ 
+              ) THEN
+               #組合條件
+               LET g_add_browse = " rtbaent = " ||g_enterprise|| " AND",
+                                  " rtbadocno = '", g_rtba_m.rtbadocno, "' "
+ 
+               #填到對應位置
+               CALL artt220_browser_fill("")
+            END IF
+         #應用 a32 樣板自動產生(Version:3)
+         #簽核狀況
+         ON ACTION bpm_status
+            #查詢簽核狀況, 統一建立HyperLink
+            CALL cl_bpm_status()
+            #add-point:ON ACTION bpm_status name="menu.bpm_status"
+            
+            #END add-point
+ 
+ 
+ 
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "rtba_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "rtbb_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL artt220_browser_fill("F")   #browser_fill()會將notice區塊清空
+               CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "rtba_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "rtbb_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL artt220_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code = "-100" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL artt220_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            CALL cl_notice()
+          
+         #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+               
+               #end add-point
+               CALL artt220_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL artt220_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL artt220_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL artt220_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL artt220_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL artt220_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL artt220_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL artt220_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL artt220_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL artt220_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL artt220_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_rtbb_d)
+                  LET g_export_id[1]   = "s_detail1"
+ 
+                  #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+                  
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+         #瀏覽頁折疊
+         ON ACTION worksheethidden   
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD rtbbseqno
+            END IF
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL artt220_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL artt220_modify()
+               #add-point:ON ACTION modify_detail name="menu.modify_detail"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL artt220_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL artt220_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               &include "erp/art/artt220_rep.4gl"
+               #add-point:ON ACTION output.after name="menu.after_output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               &include "erp/art/artt220_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu.after_quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL artt220_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL artt220_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL artt220_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL artt220_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow(g_rtba_m.rtbadocdt)
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:79) ---add start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:79) --- add end ---
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.browser_fill" >}
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION artt220_browser_fill(ps_page_action)
+   #add-point:browser_fill段define(客製用) name="browser_fill.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   DEFINE l_where           STRING
+   #end add-point    
+   
+   #add-point:Function前置處理 name="browser_fill.before_browser_fill"
+   LET l_where = s_aooi500_sql_where(g_prog,'rtbasite')
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前 name="browser_fill.before_foreach"
+   ##2014/10/27 暫時不用inaa101 當資料篩選條件
+   #IF g_prog = "adbt230" THEN
+   #   LET g_wc2 = g_wc2," AND rtbb101 = '1' "
+   #   LET l_wc2 = l_wc2," AND rtbb101 = '1' "
+   #ELSE
+   #   LET g_wc2 = g_wc2," AND rtbb101 = '2' "
+   #   LET l_wc2 = l_wc2," AND rtbb101 = '2' "
+   #END IF
+  
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT DISTINCT rtbadocno ",
+                      " FROM rtba_t ",
+                      " ",
+                      " LEFT JOIN rtbb_t ON rtbbent = rtbaent AND rtbadocno = rtbbdocno ", "  ",
+                      #add-point:browser_fill段sql(rtbb_t1) name="browser_fill.cnt.join.}"
+                      
+                      #end add-point
+ 
+ 
+                      " ", 
+                      " LEFT JOIN rtbbl_t ON rtbblent = "||g_enterprise||" AND rtbadocno = rtbbldocno AND rtbbseqno = rtbblseqno AND rtbbl001 = '",g_dlang,"' ", 
+ 
+ 
+                      " WHERE rtbaent = " ||g_enterprise|| " AND rtbbent = " ||g_enterprise|| " AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("rtba_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT DISTINCT rtbadocno ",
+                      " FROM rtba_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE rtbaent = " ||g_enterprise|| " AND ",l_wc CLIPPED, cl_sql_add_filter("rtba_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc name="browser_fill.cnt_sqlwc"
+   LET l_sub_sql = l_sub_sql CLIPPED," AND ",l_where
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(1) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前 name="browser_fill.before_count"
+   
+   #end add-point
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+      FREE header_cnt_pre
+   END IF
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code = 9035 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_rtba_m.* TO NULL
+      CALL g_rtbb_d.clear()        
+ 
+      #add-point:browser_fill g_add_browse段額外處理 name="browser_fill.add_browse.other"
+      
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.rtbasite,t0.rtbaunit,t0.rtbadocdt,t0.rtbadocno,t0.rtba000,t0.rtba002,t0.rtba003 Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.rtbastus,t0.rtbasite,t0.rtbaunit,t0.rtbadocdt,t0.rtbadocno,t0.rtba000, 
+          t0.rtba002,t0.rtba003,t1.ooefl003 ,t2.ooefl003 ,t3.ooag011 ,t4.ooefl003 ",
+                  " FROM rtba_t t0",
+                  "  ",
+                  "  LEFT JOIN rtbb_t ON rtbbent = rtbaent AND rtbadocno = rtbbdocno ", "  ", 
+                  #add-point:browser_fill段sql(rtbb_t1) name="browser_fill.join.rtbb_t1"
+                  
+                  #end add-point
+ 
+ 
+                  " LEFT JOIN rtbbl_t ON rtbblent = "||g_enterprise||" AND rtbadocno = rtbbldocno AND rtbbseqno = rtbblseqno AND rtbbl001 = '",g_dlang,"' ", 
+ 
+ 
+                                 " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.rtbasite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent="||g_enterprise||" AND t2.ooefl001=t0.rtbaunit AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent="||g_enterprise||" AND t3.ooag001=t0.rtba002  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent="||g_enterprise||" AND t4.ooefl001=t0.rtba003 AND t4.ooefl002='"||g_dlang||"' ",
+ 
+                  " WHERE t0.rtbaent = " ||g_enterprise|| " AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("rtba_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.rtbastus,t0.rtbasite,t0.rtbaunit,t0.rtbadocdt,t0.rtbadocno,t0.rtba000, 
+          t0.rtba002,t0.rtba003,t1.ooefl003 ,t2.ooefl003 ,t3.ooag011 ,t4.ooefl003 ",
+                  " FROM rtba_t t0",
+                  "  ",
+                                 " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.rtbasite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent="||g_enterprise||" AND t2.ooefl001=t0.rtbaunit AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent="||g_enterprise||" AND t3.ooag001=t0.rtba002  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent="||g_enterprise||" AND t4.ooefl001=t0.rtba003 AND t4.ooefl002='"||g_dlang||"' ",
+ 
+                  " WHERE t0.rtbaent = " ||g_enterprise|| " AND ",l_wc, cl_sql_add_filter("rtba_t")
+   END IF
+   #add-point:browser_fill,sql wc name="browser_fill.fill_sqlwc"
+   LET g_sql = g_sql CLIPPED," AND ",l_where
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY rtbadocno ",g_order
+ 
+   #add-point:browser_fill,before_prepare name="browser_fill.before_prepare"
+   
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"rtba_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      #add-point:browser_fill段open cursor name="browser_fill.open"
+      
+      #end add-point
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_rtbasite,g_browser[g_cnt].b_rtbaunit, 
+          g_browser[g_cnt].b_rtbadocdt,g_browser[g_cnt].b_rtbadocno,g_browser[g_cnt].b_rtba000,g_browser[g_cnt].b_rtba002, 
+          g_browser[g_cnt].b_rtba003,g_browser[g_cnt].b_rtbasite_desc,g_browser[g_cnt].b_rtbaunit_desc, 
+          g_browser[g_cnt].b_rtba002_desc,g_browser[g_cnt].b_rtba003_desc
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "Foreach:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+      
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+      
+         #遮罩相關處理
+         CALL artt220_browser_mask()
+      
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/unconfirmed.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/confirmed.png"
+         WHEN "A"
+            LET g_browser[g_cnt].b_statepic = "stus/16/approved.png"
+         WHEN "D"
+            LET g_browser[g_cnt].b_statepic = "stus/16/withdraw.png"
+         WHEN "R"
+            LET g_browser[g_cnt].b_statepic = "stus/16/rejection.png"
+         WHEN "W"
+            LET g_browser[g_cnt].b_statepic = "stus/16/signing.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/invalid.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_browse THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      FREE browse_pre
+   END IF
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_rtbadocno) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+ 
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.ui_headershow" >}
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION artt220_ui_headershow()
+   #add-point:ui_headershow段define(客製用) name="ui_headershow.define_customerization"
+   
+   #end add-point  
+   #add-point:ui_headershow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_headershow.define"
+   
+   #end add-point      
+   
+   #add-point:Function前置處理  name="ui_headershow.pre_function"
+   
+   #end add-point
+   
+   LET g_rtba_m.rtbadocno = g_browser[g_current_idx].b_rtbadocno   
+ 
+   EXECUTE artt220_master_referesh USING g_rtba_m.rtbadocno INTO g_rtba_m.rtbasite,g_rtba_m.rtbadocdt, 
+       g_rtba_m.rtbadocno,g_rtba_m.rtbaunit,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba003,g_rtba_m.rtbastus, 
+       g_rtba_m.rtbaownid,g_rtba_m.rtbaowndp,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdt, 
+       g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfdt,g_rtba_m.rtbasite_desc, 
+       g_rtba_m.rtbaunit_desc,g_rtba_m.rtba002_desc,g_rtba_m.rtba003_desc,g_rtba_m.rtbaownid_desc,g_rtba_m.rtbaowndp_desc, 
+       g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp_desc,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbacnfid_desc 
+ 
+   
+   CALL artt220_rtba_t_mask()
+   CALL artt220_show()
+      
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.ui_detailshow" >}
+#+ 單身資料重新顯示
+PRIVATE FUNCTION artt220_ui_detailshow()
+   #add-point:ui_detailshow段define(客製用) name="ui_detailshow.define_customerization"
+   
+   #end add-point    
+   #add-point:ui_detailshow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_detailshow.define"
+   
+   #end add-point    
+ 
+   #add-point:Function前置處理 name="ui_detailshow.before"
+   
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after name="ui_detailshow.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION artt220_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point    
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_rtbadocno = g_rtba_m.rtbadocno 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after name="ui_browser_refresh.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION artt220_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_rtba_m.* TO NULL
+   CALL g_rtbb_d.clear()        
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前 name="cs.before_construct"
+   
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON rtbasite,rtbadocdt,rtbadocno,rtbaunit,rtba000,rtba002,rtba003,rtbastus, 
+          rtbaownid,rtbaowndp,rtbacrtid,rtbacrtdp,rtbacrtdt,rtbamodid,rtbamoddt,rtbacnfid,rtbacnfdt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.head.before_construct"
+            
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<rtbacrtdt>>----
+         AFTER FIELD rtbacrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<rtbamoddt>>----
+         AFTER FIELD rtbamoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<rtbacnfdt>>----
+         AFTER FIELD rtbacnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<rtbapstdt>>----
+ 
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbasite
+            #add-point:BEFORE FIELD rtbasite name="construct.b.rtbasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbasite
+            
+            #add-point:AFTER FIELD rtbasite name="construct.a.rtbasite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtbasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbasite
+            #add-point:ON ACTION controlp INFIELD rtbasite name="construct.c.rtbasite"
+            #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtbasite',g_site,'c')   #150308-00001#5  By benson add 'c'
+            CALL q_ooef001_24()
+            DISPLAY g_qryparam.return1 TO rtbasite  #顯示到畫面上
+            NEXT FIELD rtbasite                     #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbadocdt
+            #add-point:BEFORE FIELD rtbadocdt name="construct.b.rtbadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbadocdt
+            
+            #add-point:AFTER FIELD rtbadocdt name="construct.a.rtbadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtbadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbadocdt
+            #add-point:ON ACTION controlp INFIELD rtbadocdt name="construct.c.rtbadocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.rtbadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbadocno
+            #add-point:ON ACTION controlp INFIELD rtbadocno name="construct.c.rtbadocno"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_rtbadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbadocno  #顯示到畫面上
+
+            NEXT FIELD rtbadocno                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbadocno
+            #add-point:BEFORE FIELD rtbadocno name="construct.b.rtbadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbadocno
+            
+            #add-point:AFTER FIELD rtbadocno name="construct.a.rtbadocno"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbaunit
+            #add-point:BEFORE FIELD rtbaunit name="construct.b.rtbaunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbaunit
+            
+            #add-point:AFTER FIELD rtbaunit name="construct.a.rtbaunit"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtbaunit
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbaunit
+            #add-point:ON ACTION controlp INFIELD rtbaunit name="construct.c.rtbaunit"
+            #sakura---add---str
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtbaunit',g_site,'c')   #150308-00001#5  By benson add 'c'
+            CALL q_ooef001_24()
+            DISPLAY g_qryparam.return1 TO rtbaunit  #顯示到畫面上
+            NEXT FIELD rtbaunit                     #返回原欄位            
+            #sakura---add---end
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtba000
+            #add-point:BEFORE FIELD rtba000 name="construct.b.rtba000"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtba000
+            
+            #add-point:AFTER FIELD rtba000 name="construct.a.rtba000"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtba000
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtba000
+            #add-point:ON ACTION controlp INFIELD rtba000 name="construct.c.rtba000"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.rtba002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtba002
+            #add-point:ON ACTION controlp INFIELD rtba002 name="construct.c.rtba002"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtba002  #顯示到畫面上
+
+            NEXT FIELD rtba002                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtba002
+            #add-point:BEFORE FIELD rtba002 name="construct.b.rtba002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtba002
+            
+            #add-point:AFTER FIELD rtba002 name="construct.a.rtba002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtba003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtba003
+            #add-point:ON ACTION controlp INFIELD rtba003 name="construct.c.rtba003"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtba003  #顯示到畫面上
+            NEXT FIELD rtba003                     #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtba003
+            #add-point:BEFORE FIELD rtba003 name="construct.b.rtba003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtba003
+            
+            #add-point:AFTER FIELD rtba003 name="construct.a.rtba003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbastus
+            #add-point:BEFORE FIELD rtbastus name="construct.b.rtbastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbastus
+            
+            #add-point:AFTER FIELD rtbastus name="construct.a.rtbastus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtbastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbastus
+            #add-point:ON ACTION controlp INFIELD rtbastus name="construct.c.rtbastus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.rtbaownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbaownid
+            #add-point:ON ACTION controlp INFIELD rtbaownid name="construct.c.rtbaownid"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbaownid  #顯示到畫面上
+
+            NEXT FIELD rtbaownid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbaownid
+            #add-point:BEFORE FIELD rtbaownid name="construct.b.rtbaownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbaownid
+            
+            #add-point:AFTER FIELD rtbaownid name="construct.a.rtbaownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtbaowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbaowndp
+            #add-point:ON ACTION controlp INFIELD rtbaowndp name="construct.c.rtbaowndp"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbaowndp  #顯示到畫面上
+
+            NEXT FIELD rtbaowndp                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbaowndp
+            #add-point:BEFORE FIELD rtbaowndp name="construct.b.rtbaowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbaowndp
+            
+            #add-point:AFTER FIELD rtbaowndp name="construct.a.rtbaowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtbacrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbacrtid
+            #add-point:ON ACTION controlp INFIELD rtbacrtid name="construct.c.rtbacrtid"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbacrtid  #顯示到畫面上
+
+            NEXT FIELD rtbacrtid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbacrtid
+            #add-point:BEFORE FIELD rtbacrtid name="construct.b.rtbacrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbacrtid
+            
+            #add-point:AFTER FIELD rtbacrtid name="construct.a.rtbacrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.rtbacrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbacrtdp
+            #add-point:ON ACTION controlp INFIELD rtbacrtdp name="construct.c.rtbacrtdp"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbacrtdp  #顯示到畫面上
+
+            NEXT FIELD rtbacrtdp                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbacrtdp
+            #add-point:BEFORE FIELD rtbacrtdp name="construct.b.rtbacrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbacrtdp
+            
+            #add-point:AFTER FIELD rtbacrtdp name="construct.a.rtbacrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbacrtdt
+            #add-point:BEFORE FIELD rtbacrtdt name="construct.b.rtbacrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.rtbamodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbamodid
+            #add-point:ON ACTION controlp INFIELD rtbamodid name="construct.c.rtbamodid"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbamodid  #顯示到畫面上
+
+            NEXT FIELD rtbamodid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbamodid
+            #add-point:BEFORE FIELD rtbamodid name="construct.b.rtbamodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbamodid
+            
+            #add-point:AFTER FIELD rtbamodid name="construct.a.rtbamodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbamoddt
+            #add-point:BEFORE FIELD rtbamoddt name="construct.b.rtbamoddt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.rtbacnfid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbacnfid
+            #add-point:ON ACTION controlp INFIELD rtbacnfid name="construct.c.rtbacnfid"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbacnfid  #顯示到畫面上
+
+            NEXT FIELD rtbacnfid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbacnfid
+            #add-point:BEFORE FIELD rtbacnfid name="construct.b.rtbacnfid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbacnfid
+            
+            #add-point:AFTER FIELD rtbacnfid name="construct.a.rtbacnfid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbacnfdt
+            #add-point:BEFORE FIELD rtbacnfdt name="construct.b.rtbacnfdt"
+            
+            #END add-point
+ 
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON rtbbseqno,rtbb001,rtbbl002,rtbbl003,rtbb002,rtbb003,rtbb005,rtbb101, 
+          rtbb102,rtbb120,rtbb130,rtbb105,rtbb106,rtbb110,rtbb111,rtbb104,rtbb121,rtbb122,rtbb123,rtbb124, 
+          rtbb008,rtbb009,rtbb010,rtbb014,rtbb011,rtbbacti,rtbb131,rtbb132,rtbb133,rtbb134,rtbb135,rtbb136, 
+          rtbb137,rtbb138,rtbb139,rtbb140,rtbb141,rtbbsite,rtbbunit,rtbb142
+           FROM s_detail1[1].rtbbseqno,s_detail1[1].rtbb001,s_detail1[1].rtbbl002,s_detail1[1].rtbbl003, 
+               s_detail1[1].rtbb002,s_detail1[1].rtbb003,s_detail1[1].rtbb005,s_detail1[1].rtbb101,s_detail1[1].rtbb102, 
+               s_detail1[1].rtbb120,s_detail1[1].rtbb130,s_detail1[1].rtbb105,s_detail1[1].rtbb106,s_detail1[1].rtbb110, 
+               s_detail1[1].rtbb111,s_detail1[1].rtbb104,s_detail1[1].rtbb121,s_detail1[1].rtbb122,s_detail1[1].rtbb123, 
+               s_detail1[1].rtbb124,s_detail1[1].rtbb008,s_detail1[1].rtbb009,s_detail1[1].rtbb010,s_detail1[1].rtbb014, 
+               s_detail1[1].rtbb011,s_detail1[1].rtbbacti,s_detail1[1].rtbb131,s_detail1[1].rtbb132, 
+               s_detail1[1].rtbb133,s_detail1[1].rtbb134,s_detail1[1].rtbb135,s_detail1[1].rtbb136,s_detail1[1].rtbb137, 
+               s_detail1[1].rtbb138,s_detail1[1].rtbb139,s_detail1[1].rtbb140,s_detail1[1].rtbb141,s_detail1[1].rtbbsite, 
+               s_detail1[1].rtbbunit,s_detail1[1].rtbb142
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbseqno
+            #add-point:BEFORE FIELD rtbbseqno name="construct.b.page1.rtbbseqno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbseqno
+            
+            #add-point:AFTER FIELD rtbbseqno name="construct.a.page1.rtbbseqno"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbbseqno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbseqno
+            #add-point:ON ACTION controlp INFIELD rtbbseqno name="construct.c.page1.rtbbseqno"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb001
+            #add-point:BEFORE FIELD rtbb001 name="construct.b.page1.rtbb001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb001
+            
+            #add-point:AFTER FIELD rtbb001 name="construct.a.page1.rtbb001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb001
+            #add-point:ON ACTION controlp INFIELD rtbb001 name="construct.c.page1.rtbb001"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa001_6()
+            DISPLAY g_qryparam.return1 TO rtbb001              #顯示到畫面上
+            NEXT FIELD rtbb001
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbl002
+            #add-point:BEFORE FIELD rtbbl002 name="construct.b.page1.rtbbl002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbl002
+            
+            #add-point:AFTER FIELD rtbbl002 name="construct.a.page1.rtbbl002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbbl002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbl002
+            #add-point:ON ACTION controlp INFIELD rtbbl002 name="construct.c.page1.rtbbl002"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbl003
+            #add-point:BEFORE FIELD rtbbl003 name="construct.b.page1.rtbbl003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbl003
+            
+            #add-point:AFTER FIELD rtbbl003 name="construct.a.page1.rtbbl003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbbl003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbl003
+            #add-point:ON ACTION controlp INFIELD rtbbl003 name="construct.c.page1.rtbbl003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb002
+            #add-point:BEFORE FIELD rtbb002 name="construct.b.page1.rtbb002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb002
+            
+            #add-point:AFTER FIELD rtbb002 name="construct.a.page1.rtbb002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb002
+            #add-point:ON ACTION controlp INFIELD rtbb002 name="construct.c.page1.rtbb002"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb003
+            #add-point:BEFORE FIELD rtbb003 name="construct.b.page1.rtbb003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb003
+            
+            #add-point:AFTER FIELD rtbb003 name="construct.a.page1.rtbb003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb003
+            #add-point:ON ACTION controlp INFIELD rtbb003 name="construct.c.page1.rtbb003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb005
+            #add-point:ON ACTION controlp INFIELD rtbb005 name="construct.c.page1.rtbb005"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #161024-00025#1--mark--s
+#            LET g_qryparam.where = "ooef201 = 'Y'"
+#            CALL q_ooef001()                           #呼叫開窗
+            #161024-00025#1--mark--e
+            #161024-00025#1--add--s
+            IF s_aooi500_setpoint(g_prog,'rtbb005') THEN
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtbb005',g_site,'c')
+               CALL q_ooef001_24()
+            ELSE
+               LET g_qryparam.where = "ooef201 = 'Y'"
+               CALL q_ooef001()                           #呼叫開窗
+            END IF
+            #161024-00025#1--add--e
+            DISPLAY g_qryparam.return1 TO rtbb005  #顯示到畫面上
+            NEXT FIELD rtbb005                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb005
+            #add-point:BEFORE FIELD rtbb005 name="construct.b.page1.rtbb005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb005
+            
+            #add-point:AFTER FIELD rtbb005 name="construct.a.page1.rtbb005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb101
+            #add-point:BEFORE FIELD rtbb101 name="construct.b.page1.rtbb101"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb101
+            
+            #add-point:AFTER FIELD rtbb101 name="construct.a.page1.rtbb101"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb101
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb101
+            #add-point:ON ACTION controlp INFIELD rtbb101 name="construct.c.page1.rtbb101"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb102
+            #add-point:BEFORE FIELD rtbb102 name="construct.b.page1.rtbb102"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb102
+            
+            #add-point:AFTER FIELD rtbb102 name="construct.a.page1.rtbb102"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb102
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb102
+            #add-point:ON ACTION controlp INFIELD rtbb102 name="construct.c.page1.rtbb102"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb120
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb120
+            #add-point:ON ACTION controlp INFIELD rtbb120 name="construct.c.page1.rtbb120"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_mhae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbb120  #顯示到畫面上
+            NEXT FIELD rtbb120                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb120
+            #add-point:BEFORE FIELD rtbb120 name="construct.b.page1.rtbb120"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb120
+            
+            #add-point:AFTER FIELD rtbb120 name="construct.a.page1.rtbb120"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb130
+            #add-point:BEFORE FIELD rtbb130 name="construct.b.page1.rtbb130"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb130
+            
+            #add-point:AFTER FIELD rtbb130 name="construct.a.page1.rtbb130"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb130
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb130
+            #add-point:ON ACTION controlp INFIELD rtbb130 name="construct.c.page1.rtbb130"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb105
+            #add-point:BEFORE FIELD rtbb105 name="construct.b.page1.rtbb105"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb105
+            
+            #add-point:AFTER FIELD rtbb105 name="construct.a.page1.rtbb105"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb105
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb105
+            #add-point:ON ACTION controlp INFIELD rtbb105 name="construct.c.page1.rtbb105"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb106
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb106
+            #add-point:ON ACTION controlp INFIELD rtbb106 name="construct.c.page1.rtbb106"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_rtax001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbb106  #顯示到畫面上
+
+            NEXT FIELD rtbb106                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb106
+            #add-point:BEFORE FIELD rtbb106 name="construct.b.page1.rtbb106"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb106
+            
+            #add-point:AFTER FIELD rtbb106 name="construct.a.page1.rtbb106"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb110
+            #add-point:BEFORE FIELD rtbb110 name="construct.b.page1.rtbb110"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb110
+            
+            #add-point:AFTER FIELD rtbb110 name="construct.a.page1.rtbb110"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb110
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb110
+            #add-point:ON ACTION controlp INFIELD rtbb110 name="construct.c.page1.rtbb110"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb111
+            #add-point:BEFORE FIELD rtbb111 name="construct.b.page1.rtbb111"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb111
+            
+            #add-point:AFTER FIELD rtbb111 name="construct.a.page1.rtbb111"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb111
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb111
+            #add-point:ON ACTION controlp INFIELD rtbb111 name="construct.c.page1.rtbb111"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb104
+            #add-point:BEFORE FIELD rtbb104 name="construct.b.page1.rtbb104"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb104
+            
+            #add-point:AFTER FIELD rtbb104 name="construct.a.page1.rtbb104"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb104
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb104
+            #add-point:ON ACTION controlp INFIELD rtbb104 name="construct.c.page1.rtbb104"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb121
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb121
+            #add-point:ON ACTION controlp INFIELD rtbb121 name="construct.c.page1.rtbb121"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_mhad001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbb121  #顯示到畫面上
+
+            NEXT FIELD rtbb121                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb121
+            #add-point:BEFORE FIELD rtbb121 name="construct.b.page1.rtbb121"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb121
+            
+            #add-point:AFTER FIELD rtbb121 name="construct.a.page1.rtbb121"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb122
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb122
+            #add-point:ON ACTION controlp INFIELD rtbb122 name="construct.c.page1.rtbb122"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_mhac003()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbb122  #顯示到畫面上
+
+            NEXT FIELD rtbb122                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb122
+            #add-point:BEFORE FIELD rtbb122 name="construct.b.page1.rtbb122"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb122
+            
+            #add-point:AFTER FIELD rtbb122 name="construct.a.page1.rtbb122"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb123
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb123
+            #add-point:ON ACTION controlp INFIELD rtbb123 name="construct.c.page1.rtbb123"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_mhab002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbb123  #顯示到畫面上
+
+            NEXT FIELD rtbb123                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb123
+            #add-point:BEFORE FIELD rtbb123 name="construct.b.page1.rtbb123"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb123
+            
+            #add-point:AFTER FIELD rtbb123 name="construct.a.page1.rtbb123"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb124
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb124
+            #add-point:ON ACTION controlp INFIELD rtbb124 name="construct.c.page1.rtbb124"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_mhaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbb124  #顯示到畫面上
+
+            NEXT FIELD rtbb124                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb124
+            #add-point:BEFORE FIELD rtbb124 name="construct.b.page1.rtbb124"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb124
+            
+            #add-point:AFTER FIELD rtbb124 name="construct.a.page1.rtbb124"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb008
+            #add-point:BEFORE FIELD rtbb008 name="construct.b.page1.rtbb008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb008
+            
+            #add-point:AFTER FIELD rtbb008 name="construct.a.page1.rtbb008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb008
+            #add-point:ON ACTION controlp INFIELD rtbb008 name="construct.c.page1.rtbb008"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb009
+            #add-point:BEFORE FIELD rtbb009 name="construct.b.page1.rtbb009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb009
+            
+            #add-point:AFTER FIELD rtbb009 name="construct.a.page1.rtbb009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb009
+            #add-point:ON ACTION controlp INFIELD rtbb009 name="construct.c.page1.rtbb009"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb010
+            #add-point:BEFORE FIELD rtbb010 name="construct.b.page1.rtbb010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb010
+            
+            #add-point:AFTER FIELD rtbb010 name="construct.a.page1.rtbb010"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb010
+            #add-point:ON ACTION controlp INFIELD rtbb010 name="construct.c.page1.rtbb010"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb014
+            #add-point:BEFORE FIELD rtbb014 name="construct.b.page1.rtbb014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb014
+            
+            #add-point:AFTER FIELD rtbb014 name="construct.a.page1.rtbb014"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb014
+            #add-point:ON ACTION controlp INFIELD rtbb014 name="construct.c.page1.rtbb014"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb011
+            #add-point:BEFORE FIELD rtbb011 name="construct.b.page1.rtbb011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb011
+            
+            #add-point:AFTER FIELD rtbb011 name="construct.a.page1.rtbb011"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb011
+            #add-point:ON ACTION controlp INFIELD rtbb011 name="construct.c.page1.rtbb011"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbacti
+            #add-point:BEFORE FIELD rtbbacti name="construct.b.page1.rtbbacti"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbacti
+            
+            #add-point:AFTER FIELD rtbbacti name="construct.a.page1.rtbbacti"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbbacti
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbacti
+            #add-point:ON ACTION controlp INFIELD rtbbacti name="construct.c.page1.rtbbacti"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb131
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb131
+            #add-point:ON ACTION controlp INFIELD rtbb131 name="construct.c.page1.rtbb131"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2127'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbb131  #顯示到畫面上
+            NEXT FIELD rtbb131                     #返回原欄位
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb131
+            #add-point:BEFORE FIELD rtbb131 name="construct.b.page1.rtbb131"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb131
+            
+            #add-point:AFTER FIELD rtbb131 name="construct.a.page1.rtbb131"
+            CALL artt220_rtbb131_ref()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb132
+            #add-point:BEFORE FIELD rtbb132 name="construct.b.page1.rtbb132"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb132
+            
+            #add-point:AFTER FIELD rtbb132 name="construct.a.page1.rtbb132"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb132
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb132
+            #add-point:ON ACTION controlp INFIELD rtbb132 name="construct.c.page1.rtbb132"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb133
+            #add-point:BEFORE FIELD rtbb133 name="construct.b.page1.rtbb133"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb133
+            
+            #add-point:AFTER FIELD rtbb133 name="construct.a.page1.rtbb133"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb133
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb133
+            #add-point:ON ACTION controlp INFIELD rtbb133 name="construct.c.page1.rtbb133"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb134
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb134
+            #add-point:ON ACTION controlp INFIELD rtbb134 name="construct.c.page1.rtbb134"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2127'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbb134  #顯示到畫面上
+            NEXT FIELD rtbb134                     #返回原欄位
+            
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb134
+            #add-point:BEFORE FIELD rtbb134 name="construct.b.page1.rtbb134"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb134
+            
+            #add-point:AFTER FIELD rtbb134 name="construct.a.page1.rtbb134"
+            CALL artt220_rtbb134_ref()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb135
+            #add-point:BEFORE FIELD rtbb135 name="construct.b.page1.rtbb135"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb135
+            
+            #add-point:AFTER FIELD rtbb135 name="construct.a.page1.rtbb135"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb135
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb135
+            #add-point:ON ACTION controlp INFIELD rtbb135 name="construct.c.page1.rtbb135"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb136
+            #add-point:BEFORE FIELD rtbb136 name="construct.b.page1.rtbb136"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb136
+            
+            #add-point:AFTER FIELD rtbb136 name="construct.a.page1.rtbb136"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb136
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb136
+            #add-point:ON ACTION controlp INFIELD rtbb136 name="construct.c.page1.rtbb136"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb137
+            #add-point:BEFORE FIELD rtbb137 name="construct.b.page1.rtbb137"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb137
+            
+            #add-point:AFTER FIELD rtbb137 name="construct.a.page1.rtbb137"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb137
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb137
+            #add-point:ON ACTION controlp INFIELD rtbb137 name="construct.c.page1.rtbb137"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb138
+            #add-point:BEFORE FIELD rtbb138 name="construct.b.page1.rtbb138"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb138
+            
+            #add-point:AFTER FIELD rtbb138 name="construct.a.page1.rtbb138"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb138
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb138
+            #add-point:ON ACTION controlp INFIELD rtbb138 name="construct.c.page1.rtbb138"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb139
+            #add-point:BEFORE FIELD rtbb139 name="construct.b.page1.rtbb139"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb139
+            
+            #add-point:AFTER FIELD rtbb139 name="construct.a.page1.rtbb139"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb139
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb139
+            #add-point:ON ACTION controlp INFIELD rtbb139 name="construct.c.page1.rtbb139"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb140
+            #add-point:BEFORE FIELD rtbb140 name="construct.b.page1.rtbb140"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb140
+            
+            #add-point:AFTER FIELD rtbb140 name="construct.a.page1.rtbb140"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb140
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb140
+            #add-point:ON ACTION controlp INFIELD rtbb140 name="construct.c.page1.rtbb140"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb141
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb141
+            #add-point:ON ACTION controlp INFIELD rtbb141 name="construct.c.page1.rtbb141"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa001_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtbb141  #顯示到畫面上
+            NEXT FIELD rtbb141                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb141
+            #add-point:BEFORE FIELD rtbb141 name="construct.b.page1.rtbb141"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb141
+            
+            #add-point:AFTER FIELD rtbb141 name="construct.a.page1.rtbb141"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbsite
+            #add-point:BEFORE FIELD rtbbsite name="construct.b.page1.rtbbsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbsite
+            
+            #add-point:AFTER FIELD rtbbsite name="construct.a.page1.rtbbsite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbbsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbsite
+            #add-point:ON ACTION controlp INFIELD rtbbsite name="construct.c.page1.rtbbsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbunit
+            #add-point:BEFORE FIELD rtbbunit name="construct.b.page1.rtbbunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbunit
+            
+            #add-point:AFTER FIELD rtbbunit name="construct.a.page1.rtbbunit"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbbunit
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbunit
+            #add-point:ON ACTION controlp INFIELD rtbbunit name="construct.c.page1.rtbbunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb142
+            #add-point:BEFORE FIELD rtbb142 name="construct.b.page1.rtbb142"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb142
+            
+            #add-point:AFTER FIELD rtbb142 name="construct.a.page1.rtbb142"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.rtbb142
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb142
+            #add-point:ON ACTION controlp INFIELD rtbb142 name="construct.c.page1.rtbb142"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令) name="cs.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "rtba_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "rtbb_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+ 
+   
+   #add-point:cs段結束前 name="cs.after_construct"
+   
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION artt220_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON rtbasite,rtbaunit,rtbadocdt,rtbadocno,rtba000,rtba002,rtba003
+                          FROM s_browse[1].b_rtbasite,s_browse[1].b_rtbaunit,s_browse[1].b_rtbadocdt, 
+                              s_browse[1].b_rtbadocno,s_browse[1].b_rtba000,s_browse[1].b_rtba002,s_browse[1].b_rtba003 
+ 
+ 
+         BEFORE CONSTRUCT
+               DISPLAY artt220_filter_parser('rtbasite') TO s_browse[1].b_rtbasite
+            DISPLAY artt220_filter_parser('rtbaunit') TO s_browse[1].b_rtbaunit
+            DISPLAY artt220_filter_parser('rtbadocdt') TO s_browse[1].b_rtbadocdt
+            DISPLAY artt220_filter_parser('rtbadocno') TO s_browse[1].b_rtbadocno
+            DISPLAY artt220_filter_parser('rtba000') TO s_browse[1].b_rtba000
+            DISPLAY artt220_filter_parser('rtba002') TO s_browse[1].b_rtba002
+            DISPLAY artt220_filter_parser('rtba003') TO s_browse[1].b_rtba003
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL artt220_filter_show('rtbasite')
+   CALL artt220_filter_show('rtbaunit')
+   CALL artt220_filter_show('rtbadocdt')
+   CALL artt220_filter_show('rtbadocno')
+   CALL artt220_filter_show('rtba000')
+   CALL artt220_filter_show('rtba002')
+   CALL artt220_filter_show('rtba003')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION artt220_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION artt220_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = artt220_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION artt220_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_wc STRING
+   #add-point:query段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF   
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_rtbb_d.clear()
+ 
+   
+   #add-point:query段other name="query.other"
+   
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL artt220_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL artt220_browser_fill("")
+      CALL artt220_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx_list[1] = 1
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+      CALL artt220_filter_show('rtbasite')
+   CALL artt220_filter_show('rtbaunit')
+   CALL artt220_filter_show('rtbadocdt')
+   CALL artt220_filter_show('rtbadocno')
+   CALL artt220_filter_show('rtba000')
+   CALL artt220_filter_show('rtba002')
+   CALL artt220_filter_show('rtba003')
+   CALL artt220_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "-100" 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL artt220_fetch("F") 
+      #顯示單身筆數
+      CALL artt220_idx_chk()
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION artt220_fetch(p_flag)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point    
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   #清空第二階單身
+ 
+   
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx) #設定browse 索引
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_rtba_m.rtbadocno = g_browser[g_current_idx].b_rtbadocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE artt220_master_referesh USING g_rtba_m.rtbadocno INTO g_rtba_m.rtbasite,g_rtba_m.rtbadocdt, 
+       g_rtba_m.rtbadocno,g_rtba_m.rtbaunit,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba003,g_rtba_m.rtbastus, 
+       g_rtba_m.rtbaownid,g_rtba_m.rtbaowndp,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdt, 
+       g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfdt,g_rtba_m.rtbasite_desc, 
+       g_rtba_m.rtbaunit_desc,g_rtba_m.rtba002_desc,g_rtba_m.rtba003_desc,g_rtba_m.rtbaownid_desc,g_rtba_m.rtbaowndp_desc, 
+       g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp_desc,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbacnfid_desc 
+ 
+   
+   #遮罩相關處理
+   LET g_rtba_m_mask_o.* =  g_rtba_m.*
+   CALL artt220_rtba_t_mask()
+   LET g_rtba_m_mask_n.* =  g_rtba_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL artt220_set_act_visible()   
+   CALL artt220_set_act_no_visible()
+   
+   #add-point:fetch段action控制 name="fetch.action_control"
+   IF g_rtba_m.rtbastus<>'N' THEN
+      CALL cl_set_act_visible("modify,delete", FALSE)
+   ELSE
+      CALL cl_set_act_visible("modify,delete", TRUE)
+   END IF  
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前 name="fetch.after"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_rtba_m_t.* = g_rtba_m.*
+   LET g_rtba_m_o.* = g_rtba_m.*
+   
+   LET g_data_owner = g_rtba_m.rtbaownid      
+   LET g_data_dept  = g_rtba_m.rtbaowndp
+   
+   #重新顯示   
+   CALL artt220_show()
+ 
+   #應用 a56 樣板自動產生(Version:3)
+   #檢查此單據是否需顯示BPM簽核狀況按鈕 
+   IF cl_bpm_chk() THEN
+      CALL cl_set_act_visible("bpm_status",TRUE)
+   ELSE
+      CALL cl_set_act_visible("bpm_status",FALSE)
+   END IF
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION artt220_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point    
+   #add-point:insert段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_doctype     LIKE rtai_t.rtai004   
+   DEFINE l_insert      LIKE type_t.num5
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_rtbb_d.clear()   
+ 
+ 
+   INITIALIZE g_rtba_m.* TO NULL             #DEFAULT 設定
+   
+   LET g_rtbadocno_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_rtba_m.rtbaownid = g_user
+      LET g_rtba_m.rtbaowndp = g_dept
+      LET g_rtba_m.rtbacrtid = g_user
+      LET g_rtba_m.rtbacrtdp = g_dept 
+      LET g_rtba_m.rtbacrtdt = cl_get_current()
+      LET g_rtba_m.rtbamodid = g_user
+      LET g_rtba_m.rtbamoddt = cl_get_current()
+      LET g_rtba_m.rtbastus = 'N'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_rtba_m.rtba000 = "I"
+      LET g_rtba_m.rtbastus = "N"
+ 
+  
+      #add-point:單頭預設值 name="insert.default"
+      LET g_site_flag = FALSE
+      CALL s_aooi500_default(g_prog,'rtbasite',g_rtba_m.rtbasite)
+       RETURNING l_insert,g_rtba_m.rtbasite
+      IF NOT l_insert THEN
+        RETURN
+      END IF
+      CALL artt220_rtbasite_ref()
+      
+      IF s_aooi500_setpoint(g_prog,'rtbaunit') THEN  #sakura Modify rtba001->rtbaunit
+         CALL s_aooi500_default(g_prog,'rtbaunit',g_rtba_m.rtbasite) #sakura Modify
+          RETURNING l_insert,g_rtba_m.rtbaunit #sakura Modify
+         IF NOT l_insert THEN
+           RETURN
+         END IF
+      ELSE
+         LET g_rtba_m.rtbaunit = g_site #sakura Modify
+      END IF
+      CALL artt220_rtbaunit_ref() #sakura Modify
+      
+      LET g_rtba_m.rtbadocdt = g_today
+      LET g_rtba_m.rtba002 = g_user
+      CALL artt220_rtba002_ref()
+      LET g_rtba_m_t.* = g_rtba_m.*   
+      #預設單據的單別 
+      LET l_success = ''
+      LET l_doctype = ''
+      CALL s_arti200_get_def_doc_type(g_rtba_m.rtbasite,g_prog,'1')
+           RETURNING l_success, l_doctype
+      LET g_rtba_m.rtbadocno = l_doctype      
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_rtba_m_t.* = g_rtba_m.*
+      LET g_rtba_m_o.* = g_rtba_m.*
+      
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_rtba_m.rtbastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+    
+      CALL artt220_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_rtba_m.* TO NULL
+         INITIALIZE g_rtbb_d TO NULL
+ 
+         #add-point:取消新增後 name="insert.cancel"
+         
+         #end add-point 
+         CALL artt220_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_rtbb_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL artt220_set_act_visible()   
+   CALL artt220_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_rtbadocno_t = g_rtba_m.rtbadocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " rtbaent = " ||g_enterprise|| " AND",
+                      " rtbadocno = '", g_rtba_m.rtbadocno, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後 name="insert.after.add_browse"
+   
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL artt220_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE artt220_cl
+   
+   CALL artt220_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE artt220_master_referesh USING g_rtba_m.rtbadocno INTO g_rtba_m.rtbasite,g_rtba_m.rtbadocdt, 
+       g_rtba_m.rtbadocno,g_rtba_m.rtbaunit,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba003,g_rtba_m.rtbastus, 
+       g_rtba_m.rtbaownid,g_rtba_m.rtbaowndp,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdt, 
+       g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfdt,g_rtba_m.rtbasite_desc, 
+       g_rtba_m.rtbaunit_desc,g_rtba_m.rtba002_desc,g_rtba_m.rtba003_desc,g_rtba_m.rtbaownid_desc,g_rtba_m.rtbaowndp_desc, 
+       g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp_desc,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbacnfid_desc 
+ 
+   
+   
+   #遮罩相關處理
+   LET g_rtba_m_mask_o.* =  g_rtba_m.*
+   CALL artt220_rtba_t_mask()
+   LET g_rtba_m_mask_n.* =  g_rtba_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_rtba_m.rtbasite,g_rtba_m.rtbasite_desc,g_rtba_m.rtbadocdt,g_rtba_m.rtbadocno,g_rtba_m.rtbaunit, 
+       g_rtba_m.rtbaunit_desc,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba002_desc,g_rtba_m.rtba003, 
+       g_rtba_m.rtba003_desc,g_rtba_m.rtbastus,g_rtba_m.rtbaownid,g_rtba_m.rtbaownid_desc,g_rtba_m.rtbaowndp, 
+       g_rtba_m.rtbaowndp_desc,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdp_desc, 
+       g_rtba_m.rtbacrtdt,g_rtba_m.rtbamodid,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid, 
+       g_rtba_m.rtbacnfid_desc,g_rtba_m.rtbacnfdt
+   
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+   
+   LET g_data_owner = g_rtba_m.rtbaownid      
+   LET g_data_dept  = g_rtba_m.rtbaowndp
+   
+   #功能已完成,通報訊息中心
+   CALL artt220_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION artt220_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point    
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+ 
+ 
+   #add-point:modify段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   IF g_rtba_m.rtbastus <> 'N'THEN
+      RETURN
+   END IF 
+   #end add-point    
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_rtba_m_t.* = g_rtba_m.*
+   LET g_rtba_m_o.* = g_rtba_m.*
+   
+   IF g_rtba_m.rtbadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_rtbadocno_t = g_rtba_m.rtbadocno
+ 
+   CALL s_transaction_begin()
+   
+   OPEN artt220_cl USING g_enterprise,g_rtba_m.rtbadocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN artt220_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE artt220_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE artt220_master_referesh USING g_rtba_m.rtbadocno INTO g_rtba_m.rtbasite,g_rtba_m.rtbadocdt, 
+       g_rtba_m.rtbadocno,g_rtba_m.rtbaunit,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba003,g_rtba_m.rtbastus, 
+       g_rtba_m.rtbaownid,g_rtba_m.rtbaowndp,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdt, 
+       g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfdt,g_rtba_m.rtbasite_desc, 
+       g_rtba_m.rtbaunit_desc,g_rtba_m.rtba002_desc,g_rtba_m.rtba003_desc,g_rtba_m.rtbaownid_desc,g_rtba_m.rtbaowndp_desc, 
+       g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp_desc,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbacnfid_desc 
+ 
+   
+   #檢查是否允許此動作
+   IF NOT artt220_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_rtba_m_mask_o.* =  g_rtba_m.*
+   CALL artt220_rtba_t_mask()
+   LET g_rtba_m_mask_n.* =  g_rtba_m.*
+   
+   
+   
+   #add-point:modify段show之前 name="modify.before_show"
+   
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+ 
+ 
+   
+   CALL artt220_show()
+   #add-point:modify段show之後 name="modify.after_show"
+   
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+ 
+ 
+    
+   WHILE TRUE
+      LET g_rtbadocno_t = g_rtba_m.rtbadocno
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_rtba_m.rtbamodid = g_user 
+LET g_rtba_m.rtbamoddt = cl_get_current()
+LET g_rtba_m.rtbamodid_desc = cl_get_username(g_rtba_m.rtbamodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      #「D抽單 / R已拒絕」狀況碼更改資料後，需還原為「N未確認」
+      IF g_rtba_m.rtbastus MATCHES "[DR]" THEN
+         LET g_rtba_m.rtbastus = "N"
+      END IF
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      LET g_master_commit = "N"
+      CALL artt220_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF g_update OR NOT INT_FLAG THEN
+         #若有modid跟moddt則進行update
+         UPDATE rtba_t SET (rtbamodid,rtbamoddt) = (g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt)
+          WHERE rtbaent = g_enterprise AND rtbadocno = g_rtbadocno_t
+ 
+      END IF
+    
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         #若單頭無commit則還原
+         IF g_master_commit = "N" THEN
+            LET g_rtba_m.* = g_rtba_m_t.*
+            CALL artt220_show()
+         END IF
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_rtba_m.rtbadocno != g_rtba_m_t.rtbadocno
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前 name="modify.body.b_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         UPDATE rtbb_t SET rtbbdocno = g_rtba_m.rtbadocno
+ 
+          WHERE rtbbent = g_enterprise AND rtbbdocno = g_rtba_m_t.rtbadocno
+ 
+            
+         #add-point:單身fk修改中 name="modify.body.m_fk_update"
+         
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "rtbb_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "rtbb_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後 name="modify.body.a_fk_update"
+         
+         #end add-point
+         
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         LET l_new_key[01] = g_enterprise
+LET l_old_key[01] = g_enterprise
+LET l_field_key[01] = 'rtbblent'
+LET l_new_key[02] = g_rtba_m.rtbadocno
+LET l_old_key[02] = g_rtbadocno_t
+LET l_field_key[02] = 'rtbbldocno'
+CALL cl_multitable_key_upd(l_new_key, l_old_key, l_field_key, 'rtbbl_t')
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL artt220_set_act_visible()   
+   CALL artt220_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " rtbaent = " ||g_enterprise|| " AND",
+                      " rtbadocno = '", g_rtba_m.rtbadocno, "' "
+ 
+   #填到對應位置
+   CALL artt220_browser_fill("")
+ 
+   CLOSE artt220_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL artt220_msgcentre_notify('modify')
+ 
+END FUNCTION 
+ 
+{</section>}
+ 
+{<section id="artt220.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION artt220_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point  
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_ac_t                LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE  l_success             LIKE type_t.num5 
+   DEFINE  l_errno               LIKE type_t.chr10
+   DEFINE  l_where               STRING     #sakura add
+   DEFINE  l_cmd2                LIKE type_t.chr1         
+   DEFINE  l_n2                  LIKE type_t.num10   
+   DEFINE  l_rtbb142             LIKE rtbb_t.rtbb142   
+   DEFINE l_cnt2         LIKE type_t.num5     #151113-00003#7 s983961--add
+   DEFINE l_inaa142      LIKE inaa_t.inaa142  #151113-00003#7 s983961--add
+   #end add-point  
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   
+   #end add-point
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_rtba_m.rtbasite,g_rtba_m.rtbasite_desc,g_rtba_m.rtbadocdt,g_rtba_m.rtbadocno,g_rtba_m.rtbaunit, 
+       g_rtba_m.rtbaunit_desc,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba002_desc,g_rtba_m.rtba003, 
+       g_rtba_m.rtba003_desc,g_rtba_m.rtbastus,g_rtba_m.rtbaownid,g_rtba_m.rtbaownid_desc,g_rtba_m.rtbaowndp, 
+       g_rtba_m.rtbaowndp_desc,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdp_desc, 
+       g_rtba_m.rtbacrtdt,g_rtba_m.rtbamodid,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid, 
+       g_rtba_m.rtbacnfid_desc,g_rtba_m.rtbacnfdt
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql name="input.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = "SELECT rtbbseqno,rtbb001,rtbb002,rtbb003,rtbb005,rtbb101,rtbb102,rtbb120,rtbb130, 
+       rtbb105,rtbb106,rtbb110,rtbb111,rtbb104,rtbb121,rtbb122,rtbb123,rtbb124,rtbb008,rtbb009,rtbb010, 
+       rtbb014,rtbb011,rtbbacti,rtbb131,rtbb132,rtbb133,rtbb134,rtbb135,rtbb136,rtbb137,rtbb138,rtbb139, 
+       rtbb140,rtbb141,rtbbsite,rtbbunit,rtbb142 FROM rtbb_t WHERE rtbbent=? AND rtbbdocno=? AND rtbbseqno=?  
+       FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE artt220_bcl CURSOR FROM g_forupd_sql
+   
+ 
+   
+ 
+ 
+   #add-point:input段define_sql name="input.other_sql"
+   
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL artt220_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   CALL artt220_set_no_required(p_cmd)
+   CALL artt220_set_required(p_cmd)
+   #end add-point
+   CALL artt220_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_rtba_m.rtbasite,g_rtba_m.rtbadocdt,g_rtba_m.rtbadocno,g_rtba_m.rtbaunit,g_rtba_m.rtba000, 
+       g_rtba_m.rtba002,g_rtba_m.rtba003,g_rtba_m.rtbastus
+   
+   LET lb_reproduce = FALSE
+   LET l_ac_t = 1
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前 name="input.before_input"
+   SELECT ooef004 INTO g_ooef004 FROM ooef_t WHERE ooefent=g_enterprise AND ooef001 = g_site
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+{</section>}
+ 
+{<section id="artt220.input.head" >}
+      #單頭段
+      INPUT BY NAME g_rtba_m.rtbasite,g_rtba_m.rtbadocdt,g_rtba_m.rtbadocno,g_rtba_m.rtbaunit,g_rtba_m.rtba000, 
+          g_rtba_m.rtba002,g_rtba_m.rtba003,g_rtba_m.rtbastus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN artt220_cl USING g_enterprise,g_rtba_m.rtbadocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN artt220_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE artt220_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL artt220_set_entry(p_cmd)
+            #add-point:資料輸入前 name="input.m.before_input"
+            CALL artt220_set_no_required(p_cmd)
+            CALL artt220_set_required(p_cmd)
+            #end add-point
+            CALL artt220_set_no_entry(p_cmd)
+    
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbasite
+            
+            #add-point:AFTER FIELD rtbasite name="input.a.rtbasite"
+            LET g_rtba_m.rtbasite_desc = NULL
+            DISPLAY BY NAME g_rtba_m.rtbasite_desc
+            IF  NOT cl_null(g_rtba_m.rtbasite) THEN 
+#               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_rtba_m.rtbasite != g_rtba_m_t.rtbasite OR g_rtba_m_t.rtbasite IS NULL )) THEN   #150427-00012#6 20150707 mark by beckxie
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_rtba_m.rtbasite != g_rtba_m_t.rtbasite OR cl_null(g_rtba_m_t.rtbasite) )) THEN   #150427-00012#6 20150707 add by beckxie
+                  CALL s_aooi500_chk(g_prog,'rtbasite',g_rtba_m.rtbasite,g_rtba_m.rtbasite) RETURNING l_success,l_errno
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = '' 
+                     LET g_errparam.code   = l_errno 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                  
+                     LET g_rtba_m.rtbasite = g_rtba_m_t.rtbasite
+                     CALL artt220_rtbasite_ref()
+                     NEXT FIELD rtbasite
+                  END IF
+               END IF
+            ELSE 
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 'art-00404'
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               
+               LET g_rtba_m.rtbasite = g_rtba_m_t.rtbasite
+               CALL artt220_rtbasite_ref()
+               NEXT FIELD rtbasite
+               
+            END IF 
+            LET g_site_flag = TRUE
+            CALL artt220_rtbasite_ref()
+            CALL artt220_set_entry(p_cmd)
+            CALL artt220_set_no_required(p_cmd)
+            CALL artt220_set_required(p_cmd)
+            CALL artt220_set_no_entry(p_cmd)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbasite
+            #add-point:BEFORE FIELD rtbasite name="input.b.rtbasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbasite
+            #add-point:ON CHANGE rtbasite name="input.g.rtbasite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbadocdt
+            #add-point:BEFORE FIELD rtbadocdt name="input.b.rtbadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbadocdt
+            
+            #add-point:AFTER FIELD rtbadocdt name="input.a.rtbadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbadocdt
+            #add-point:ON CHANGE rtbadocdt name="input.g.rtbadocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbadocno
+            #add-point:BEFORE FIELD rtbadocno name="input.b.rtbadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbadocno
+            
+            #add-point:AFTER FIELD rtbadocno name="input.a.rtbadocno"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_rtba_m.rtbadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_rtba_m.rtbadocno != g_rtbadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM rtba_t WHERE "||"rtbaent = '" ||g_enterprise|| "' AND "||"rtbadocno = '"||g_rtba_m.rtbadocno ||"'",'std-00004',0) THEN 
+                     LET g_rtba_m.rtbadocno = g_rtba_m_t.rtbadocno
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_aooi200_chk_slip(g_rtba_m.rtbasite,g_ooef004,g_rtba_m.rtbadocno,g_prog) RETURNING l_success
+                  IF NOT l_success THEN
+                     LET g_rtba_m.rtbadocno = g_rtba_m_t.rtbadocno
+                     NEXT FIELD rtbadocno
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbadocno
+            #add-point:ON CHANGE rtbadocno name="input.g.rtbadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbaunit
+            
+            #add-point:AFTER FIELD rtbaunit name="input.a.rtbaunit"
+           #sakura---mark---str
+           #INITIALIZE g_ref_fields TO NULL
+           #LET g_ref_fields[1] = g_rtba_m.rtbaunit
+           #CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+           #LET g_rtba_m.rtbaunit_desc = '', g_rtn_fields[1] , ''
+           #DISPLAY BY NAME g_rtba_m.rtbaunit_desc
+           #sakura---mark---end
+           
+           #sakura---add---str
+            LET g_rtba_m.rtbaunit_desc = ' '
+            DISPLAY BY NAME g_rtba_m.rtbaunit_desc
+            IF NOT cl_null(g_rtba_m.rtbaunit) THEN
+               #150427-00012#6 150528 add by beckxie
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtba_m.rtbaunit != g_rtba_m_o.rtbaunit OR g_rtba_m_o.rtbaunit IS NULL )) THEN
+               #150427-00012#6 150528 add by beckxie
+               IF g_rtba_m.rtbaunit != g_rtba_m_o.rtbaunit OR cl_null(g_rtba_m_o.rtbaunit) THEN
+                  CALL s_aooi500_chk(g_prog,'rtbaunit',g_rtba_m.rtbaunit,g_rtba_m.rtbasite)
+                     RETURNING l_success,l_errno
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ""
+                     LET g_errparam.code   = l_errno
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     
+                     LET g_rtba_m.rtbaunit = g_rtba_m_o.rtbaunit
+                     CALL s_desc_get_department_desc(g_rtba_m.rtbaunit)
+                       RETURNING g_rtba_m.rtbaunit_desc
+                     DISPLAY BY NAME g_rtba_m.rtbaunit_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 'axc-00120'
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+
+               LET g_rtba_m.rtbaunit = g_rtba_m_o.rtbaunit
+               CALL s_desc_get_department_desc(g_rtba_m.rtbaunit)
+                 RETURNING g_rtba_m.rtbaunit_desc
+               DISPLAY BY NAME g_rtba_m.rtbaunit_desc
+               NEXT FIELD CURRENT
+            END IF
+            LET g_rtba_m_o.rtbaunit = g_rtba_m.rtbaunit
+            CALL s_desc_get_department_desc(g_rtba_m.rtbaunit)
+               RETURNING g_rtba_m.rtbaunit_desc
+            DISPLAY BY NAME g_rtba_m.rtbaunit_desc
+            CALL artt220_set_entry(p_cmd)
+            CALL artt220_set_no_required(p_cmd)
+            CALL artt220_set_required(p_cmd)
+            CALL artt220_set_no_entry(p_cmd)
+           #sakura---add---end 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbaunit
+            #add-point:BEFORE FIELD rtbaunit name="input.b.rtbaunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbaunit
+            #add-point:ON CHANGE rtbaunit name="input.g.rtbaunit"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtba000
+            #add-point:BEFORE FIELD rtba000 name="input.b.rtba000"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtba000
+            
+            #add-point:AFTER FIELD rtba000 name="input.a.rtba000"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtba000
+            #add-point:ON CHANGE rtba000 name="input.g.rtba000"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtba002
+            
+            #add-point:AFTER FIELD rtba002 name="input.a.rtba002"
+            
+            LET g_rtba_m.rtba002_desc = NULL
+            LET g_rtba_m.rtba003_desc = NULL
+            LET g_rtba_m.rtba003 = NULL
+            DISPLAY BY NAME g_rtba_m.rtba002_desc,g_rtba_m.rtba003_desc,g_rtba_m.rtba003
+            IF  NOT cl_null(g_rtba_m.rtba002) THEN 
+#               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_rtba_m.rtba002 != g_rtba_m_t.rtba002 OR g_rtba_m_t.rtba002 IS NULL )) THEN   #150427-00012#6 20150707 mark by beckxie
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_rtba_m.rtba002 != g_rtba_m_t.rtba002 OR cl_null(g_rtba_m_t.rtba002) )) THEN   #150427-00012#6 20150707 add by beckxie
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_rtba_m.rtba002
+                   #160318-00025#21  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"
+                  #160318-00025#21  by 07900 --add-end 
+                  #呼叫檢查存在並帶值的library
+                  IF NOT cl_chk_exist("v_ooag001") THEN
+                     LET g_rtba_m.rtba002 = g_rtba_m_t.rtba002
+                     CALL artt220_rtba002_ref()
+                     NEXT FIELD rtba002
+                  END IF
+#                 CALL artt220_rtba002()
+#                 IF NOT cl_null(g_errno) THEN
+#                    CALL cl_err(g_rtba_m.rtba002,g_errno,1)
+#                    LET g_rtba_m.rtba002 = g_rtba_m_t.rtba002
+#                    CALL artt220_rtba002_ref()
+#                    NEXT FIELD rtba002
+#                 END IF
+               END IF
+            END IF 
+            CALL artt220_rtba002_ref()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtba002
+            #add-point:BEFORE FIELD rtba002 name="input.b.rtba002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtba002
+            #add-point:ON CHANGE rtba002 name="input.g.rtba002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtba003
+            
+            #add-point:AFTER FIELD rtba003 name="input.a.rtba003"
+            
+            LET g_rtba_m.rtba003_desc = NULL
+            DISPLAY BY NAME g_rtba_m.rtba003_desc
+            IF  NOT cl_null(g_rtba_m.rtba003) THEN 
+#               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_rtba_m.rtba003 != g_rtba_m_t.rtba003 OR g_rtba_m_t.rtba003 IS NULL )) THEN   #150427-00012#6 20150707 mark by beckxie
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_rtba_m.rtba003 != g_rtba_m_t.rtba003 OR cl_null(g_rtba_m_t.rtba003) )) THEN   #150427-00012#6 20150707 add by beckxie
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_rtba_m.rtba003
+                  LET g_chkparam.arg2 = g_today
+                   #160318-00025#21  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="aoo-00029:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+                  #160318-00025#21  by 07900 --add-end
+                  IF NOT cl_chk_exist("v_ooeg001") THEN
+                     LET g_rtba_m.rtba003 = g_rtba_m_t.rtba003
+                     CALL artt220_rtba003_ref()
+                     NEXT FIELD rtba003
+                  END IF
+               END IF
+            END IF 
+            CALL artt220_rtba003_ref()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtba003
+            #add-point:BEFORE FIELD rtba003 name="input.b.rtba003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtba003
+            #add-point:ON CHANGE rtba003 name="input.g.rtba003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbastus
+            #add-point:BEFORE FIELD rtbastus name="input.b.rtbastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbastus
+            
+            #add-point:AFTER FIELD rtbastus name="input.a.rtbastus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbastus
+            #add-point:ON CHANGE rtbastus name="input.g.rtbastus"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.rtbasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbasite
+            #add-point:ON ACTION controlp INFIELD rtbasite name="input.c.rtbasite"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_rtba_m.rtbasite             #給予default值
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtbasite',g_rtba_m.rtbasite,'i')   #150308-00001#5  By benson add 'i'
+            CALL q_ooef001_24()
+            LET g_rtba_m.rtbasite = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_rtba_m.rtbasite TO rtbasite                   #顯示到畫面上
+            CALL artt220_rtbasite_ref() 
+            NEXT FIELD rtbasite                                     #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rtbadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbadocdt
+            #add-point:ON ACTION controlp INFIELD rtbadocdt name="input.c.rtbadocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rtbadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbadocno
+            #add-point:ON ACTION controlp INFIELD rtbadocno name="input.c.rtbadocno"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtba_m.rtbadocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef004 #
+            LET g_qryparam.arg2 = g_prog #"artt220" #
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_rtba_m.rtbadocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_rtba_m.rtbadocno TO rtbadocno              #顯示到畫面上
+
+            NEXT FIELD rtbadocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rtbaunit
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbaunit
+            #add-point:ON ACTION controlp INFIELD rtbaunit name="input.c.rtbaunit"
+            #sakura---add---str
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_rtba_m.rtbaunit             #給予default值
+            
+            CALL s_aooi500_q_where(g_prog,'rtbaunit',g_rtba_m.rtbasite,'i') RETURNING l_where   #150308-00001#5  By benson add 'i'
+            LET g_qryparam.where = l_where
+            CALL q_ooef001_24()
+            LET g_rtba_m.rtbaunit = g_qryparam.return1
+            DISPLAY g_rtba_m.rtbaunit TO rtbaunit
+            CALL s_desc_get_department_desc(g_rtba_m.rtbaunit) RETURNING g_rtba_m.rtbaunit_desc
+            DISPLAY BY NAME g_rtba_m.rtbaunit_desc
+            NEXT FIELD rtbaunit                          #返回原欄位                       
+            #sakura---add---end
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rtba000
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtba000
+            #add-point:ON ACTION controlp INFIELD rtba000 name="input.c.rtba000"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rtba002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtba002
+            #add-point:ON ACTION controlp INFIELD rtba002 name="input.c.rtba002"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtba_m.rtba002             #給予default值
+
+            #給予arg
+
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_rtba_m.rtba002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_rtba_m.rtba002 TO rtba002              #顯示到畫面上
+            CALL artt220_rtba002_ref()
+            NEXT FIELD rtba002                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rtba003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtba003
+            #add-point:ON ACTION controlp INFIELD rtba003 name="input.c.rtba003"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_rtba_m.rtba003             #給予default值
+            #給予arg
+            CALL q_ooeg001_4()                                #呼叫開窗
+            LET g_rtba_m.rtba003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL artt220_rtba003_ref()
+            DISPLAY g_rtba_m.rtba003 TO rtba003              #顯示到畫面上
+            NEXT FIELD rtba003                               #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rtbastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbastus
+            #add-point:ON ACTION controlp INFIELD rtbastus name="input.c.rtbastus"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_rtba_m.rtbadocno
+                        
+            #add-point:單頭INPUT後 name="input.head.after_input"
+            
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前 name="input.head.b_insert"
+                  IF NOT cl_null(g_rtba_m.rtbadocno) THEN
+                     CALL s_aooi200_gen_docno(g_rtba_m.rtbasite,g_rtba_m.rtbadocno,g_rtba_m.rtbadocdt,g_prog) 
+                     RETURNING  g_success,g_rtba_m.rtbadocno
+                     IF g_success<>'1' THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = "amm-00001"
+                        LET g_errparam.extend = g_rtba_m.rtbadocno
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        NEXT FIELD rtbadocno
+                     ELSE
+                        IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM rtba_t WHERE "||"rtbaent = '" ||g_enterprise|| "' AND "||"rtbadocno = '"||g_rtba_m.rtbadocno ||"'",'std-00004',0) THEN 
+                           LET g_rtba_m.rtbadocno = g_rtba_m_t.rtbadocno
+                           NEXT FIELD CURRENT
+                        END IF    
+                                      
+                     END IF
+                     LET g_rtba_m_t.rtbadocno = g_rtba_m.rtbadocno 
+                  END IF
+               #end add-point
+               
+               INSERT INTO rtba_t (rtbaent,rtbasite,rtbadocdt,rtbadocno,rtbaunit,rtba000,rtba002,rtba003, 
+                   rtbastus,rtbaownid,rtbaowndp,rtbacrtid,rtbacrtdp,rtbacrtdt,rtbamodid,rtbamoddt,rtbacnfid, 
+                   rtbacnfdt)
+               VALUES (g_enterprise,g_rtba_m.rtbasite,g_rtba_m.rtbadocdt,g_rtba_m.rtbadocno,g_rtba_m.rtbaunit, 
+                   g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba003,g_rtba_m.rtbastus,g_rtba_m.rtbaownid, 
+                   g_rtba_m.rtbaowndp,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdt,g_rtba_m.rtbamodid, 
+                   g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfdt) 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_rtba_m:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭新增中 name="input.head.m_insert"
+               
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後 name="input.head.a_insert"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL artt220_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL artt220_b_fill()
+                  CALL artt220_b_fill2('0')
+               END IF
+               
+               #add-point:單頭新增後 name="input.head.a_insert2"
+               
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前 name="input.head.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL artt220_rtba_t_mask_restore('restore_mask_o')
+               
+               UPDATE rtba_t SET (rtbasite,rtbadocdt,rtbadocno,rtbaunit,rtba000,rtba002,rtba003,rtbastus, 
+                   rtbaownid,rtbaowndp,rtbacrtid,rtbacrtdp,rtbacrtdt,rtbamodid,rtbamoddt,rtbacnfid,rtbacnfdt) = (g_rtba_m.rtbasite, 
+                   g_rtba_m.rtbadocdt,g_rtba_m.rtbadocno,g_rtba_m.rtbaunit,g_rtba_m.rtba000,g_rtba_m.rtba002, 
+                   g_rtba_m.rtba003,g_rtba_m.rtbastus,g_rtba_m.rtbaownid,g_rtba_m.rtbaowndp,g_rtba_m.rtbacrtid, 
+                   g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdt,g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid, 
+                   g_rtba_m.rtbacnfdt)
+                WHERE rtbaent = g_enterprise AND rtbadocno = g_rtbadocno_t
+ 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "rtba_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               
+               
+               
+               
+               #將遮罩欄位進行遮蔽
+               CALL artt220_rtba_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_rtba_m_t)
+               LET g_log2 = util.JSON.stringify(g_rtba_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後 name="input.head.a_update"
+               
+               #end add-point
+            END IF
+            
+            LET g_master_commit = "Y"
+            LET g_rtbadocno_t = g_rtba_m.rtbadocno
+ 
+            
+      END INPUT
+   
+ 
+{</section>}
+ 
+{<section id="artt220.input.body" >}
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_rtbb_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item name="input.detail_input.page1.update_item"
+               IF NOT cl_null(g_rtba_m.rtbadocno) AND NOT cl_null(g_rtbb_d[l_ac].rtbbseqno) THEN
+                  CALL n_rtbbl(g_rtba_m.rtbadocno,g_rtbb_d[l_ac].rtbbseqno)    # n_glacl:對應多語言表格 。 g_glac_m.glac002: 對應值
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_rtba_m.rtbadocno
+                  LET g_ref_fields[2] = g_rtbb_d[l_ac].rtbbseqno
+                  CALL ap_ref_array2(g_ref_fields," SELECT rtbbl002,rtbbl003 FROM rtbbl_t WHERE rtbblent = '"
+                      ||g_enterprise||"' AND rtbbldocno = ? AND rtbblseqno = ? AND rtbbl001 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_rtbb_d[l_ac].rtbbl002= g_rtn_fields[1]
+                  LET g_rtbb_d[l_ac].rtbbl003= g_rtn_fields[2]
+                  
+                  DISPLAY BY NAME g_rtbb_d[l_ac].rtbbl002
+                  DISPLAY BY NAME g_rtbb_d[l_ac].rtbbl003
+               END IF    
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_rtbb_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL artt220_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_rtbb_d.getLength()
+            #add-point:資料輸入前 name="input.d.before_input"
+            
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2 name="input.body.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_detail_idx_list[1] = l_ac
+            LET g_current_page = 1
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN artt220_cl USING g_enterprise,g_rtba_m.rtbadocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN artt220_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE artt220_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_rtbb_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_rtbb_d[l_ac].rtbbseqno IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_rtbb_d_t.* = g_rtbb_d[l_ac].*  #BACKUP
+               LET g_rtbb_d_o.* = g_rtbb_d[l_ac].*  #BACKUP
+               CALL artt220_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body.after_set_entry_b"
+               CALL artt220_set_no_required_b(l_cmd)
+               CALL artt220_set_required_b(l_cmd)
+               #end add-point  
+               CALL artt220_set_no_entry_b(l_cmd)
+               IF NOT artt220_lock_b("rtbb_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH artt220_bcl INTO g_rtbb_d[l_ac].rtbbseqno,g_rtbb_d[l_ac].rtbb001,g_rtbb_d[l_ac].rtbb002, 
+                      g_rtbb_d[l_ac].rtbb003,g_rtbb_d[l_ac].rtbb005,g_rtbb_d[l_ac].rtbb101,g_rtbb_d[l_ac].rtbb102, 
+                      g_rtbb_d[l_ac].rtbb120,g_rtbb_d[l_ac].rtbb130,g_rtbb_d[l_ac].rtbb105,g_rtbb_d[l_ac].rtbb106, 
+                      g_rtbb_d[l_ac].rtbb110,g_rtbb_d[l_ac].rtbb111,g_rtbb_d[l_ac].rtbb104,g_rtbb_d[l_ac].rtbb121, 
+                      g_rtbb_d[l_ac].rtbb122,g_rtbb_d[l_ac].rtbb123,g_rtbb_d[l_ac].rtbb124,g_rtbb_d[l_ac].rtbb008, 
+                      g_rtbb_d[l_ac].rtbb009,g_rtbb_d[l_ac].rtbb010,g_rtbb_d[l_ac].rtbb014,g_rtbb_d[l_ac].rtbb011, 
+                      g_rtbb_d[l_ac].rtbbacti,g_rtbb_d[l_ac].rtbb131,g_rtbb_d[l_ac].rtbb132,g_rtbb_d[l_ac].rtbb133, 
+                      g_rtbb_d[l_ac].rtbb134,g_rtbb_d[l_ac].rtbb135,g_rtbb_d[l_ac].rtbb136,g_rtbb_d[l_ac].rtbb137, 
+                      g_rtbb_d[l_ac].rtbb138,g_rtbb_d[l_ac].rtbb139,g_rtbb_d[l_ac].rtbb140,g_rtbb_d[l_ac].rtbb141, 
+                      g_rtbb_d[l_ac].rtbbsite,g_rtbb_d[l_ac].rtbbunit,g_rtbb_d[l_ac].rtbb142
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_rtbb_d_t.rtbbseqno,":",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_rtbb_d_mask_o[l_ac].* =  g_rtbb_d[l_ac].*
+                  CALL artt220_rtbb_t_mask()
+                  LET g_rtbb_d_mask_n[l_ac].* =  g_rtbb_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL artt220_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body.before_row"
+            
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+LET g_detail_multi_table_t.rtbbldocno = g_rtba_m.rtbadocno
+LET g_detail_multi_table_t.rtbblseqno = g_rtbb_d[l_ac].rtbbseqno
+LET g_detail_multi_table_t.rtbbl001 = g_dlang
+LET g_detail_multi_table_t.rtbbl002 = g_rtbb_d[l_ac].rtbbl002
+LET g_detail_multi_table_t.rtbbl003 = g_rtbb_d[l_ac].rtbbl003
+ 
+            #其他table進行lock
+            
+            INITIALIZE l_var_keys TO NULL 
+            INITIALIZE l_field_keys TO NULL 
+            LET l_field_keys[01] = 'rtbblent'
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[02] = 'rtbbldocno'
+            LET l_var_keys[02] = g_rtba_m.rtbadocno
+            LET l_field_keys[03] = 'rtbblseqno'
+            LET l_var_keys[03] = g_rtbb_d[l_ac].rtbbseqno
+            LET l_field_keys[04] = 'rtbbl001'
+            LET l_var_keys[04] = g_dlang
+            IF NOT cl_multitable_lock(l_var_keys,l_field_keys,'rtbbl_t') THEN
+               RETURN 
+            END IF 
+ 
+        
+         BEFORE INSERT  
+            
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_rtbb_d[l_ac].* TO NULL 
+            INITIALIZE g_rtbb_d_t.* TO NULL 
+            INITIALIZE g_rtbb_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值
+                  LET g_rtbb_d[l_ac].rtbb008 = "Y"
+      LET g_rtbb_d[l_ac].rtbb009 = "Y"
+      LET g_rtbb_d[l_ac].rtbb010 = "Y"
+      LET g_rtbb_d[l_ac].rtbb014 = "N"
+      LET g_rtbb_d[l_ac].rtbb011 = "N"
+      LET g_rtbb_d[l_ac].rtbbacti = "Y"
+      LET g_rtbb_d[l_ac].rtbb132 = "N"
+      LET g_rtbb_d[l_ac].rtbb133 = "Y"
+      LET g_rtbb_d[l_ac].rtbb135 = "1"
+      LET g_rtbb_d[l_ac].rtbb136 = "N"
+      LET g_rtbb_d[l_ac].rtbb137 = "Y"
+      LET g_rtbb_d[l_ac].rtbb138 = "Y"
+      LET g_rtbb_d[l_ac].rtbb139 = "Y"
+      LET g_rtbb_d[l_ac].rtbb142 = "1"
+ 
+            #add-point:modify段before備份 name="input.body.insert.before_bak"
+            #151113-00003#7 s983961--add(s)   
+            LET g_rtbb_d[l_ac].rtbb142 = ''
+            IF g_rtba_m.rtba000 !='U' THEN 
+              SELECT MAX(inaa142)+1 INTO g_rtbb_d[l_ac].rtbb142
+                FROM inaa_t
+               WHERE inaaent = g_enterprise
+                 AND inaasite = g_rtba_m.rtbaunit
+              IF cl_null(g_rtbb_d[l_ac].rtbb142) OR g_rtbb_d[l_ac].rtbb142 = 0 THEN
+                 LET g_rtbb_d[l_ac].rtbb142 = 1
+              END IF  
+             
+              #151113-00003#7 s983961--add(S)
+              LET l_n2 = 0 
+              SELECT COUNT(rtbb142) INTO l_n2 FROM rtbb_t WHERE rtbbent = g_enterprise AND rtbbdocno = g_rtba_m.rtbadocno
+              IF l_n2 >= 1 THEN
+                SELECT MAX(rtbb142)+1 INTO l_rtbb142 FROM rtbb_t WHERE rtbbent = g_enterprise AND rtbbdocno = g_rtba_m.rtbadocno              
+                LET g_rtbb_d[l_ac].rtbb142 = l_rtbb142
+              END IF  
+              #151113-00003#7 s983961--add(E)
+            END IF 
+            #151113-00003#7 s983961--add(e)
+            #end add-point
+            LET g_rtbb_d_t.* = g_rtbb_d[l_ac].*     #新輸入資料
+            LET g_rtbb_d_o.* = g_rtbb_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL artt220_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body.insert.after_set_entry_b"
+            CALL artt220_set_no_required_b(l_cmd)
+            CALL artt220_set_required_b(l_cmd)
+            #end add-point
+            CALL artt220_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_rtbb_d[li_reproduce_target].* = g_rtbb_d[li_reproduce].*
+ 
+               LET g_rtbb_d[li_reproduce_target].rtbbseqno = NULL
+ 
+            END IF
+            
+LET g_detail_multi_table_t.rtbbldocno = g_rtba_m.rtbadocno
+LET g_detail_multi_table_t.rtbblseqno = g_rtbb_d[l_ac].rtbbseqno
+LET g_detail_multi_table_t.rtbbl001 = g_dlang
+LET g_detail_multi_table_t.rtbbl002 = g_rtbb_d[l_ac].rtbbl002
+LET g_detail_multi_table_t.rtbbl003 = g_rtbb_d[l_ac].rtbbl003
+ 
+            #add-point:modify段before insert name="input.body.before_insert"
+            #IF g_prog = "adbt230" THEN        #160705-00042#10 160713 by sakura mark
+            IF g_prog MATCHES 'adbt230' THEN   #160705-00042#10 160713 by sakura add
+               LET g_rtbb_d[l_ac].rtbb101 = "1"
+            ELSE
+               LET g_rtbb_d[l_ac].rtbb101 = "2"
+            END IF
+            CALL artt220_create_rtbbseq()
+           
+            LET g_rtbb_d[l_ac].rtbbsite = g_rtba_m.rtbasite
+            LET g_rtbb_d[l_ac].rtbbunit = g_rtba_m.rtbaunit #sakura Modify
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增 name="input.body.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM rtbb_t 
+             WHERE rtbbent = g_enterprise AND rtbbdocno = g_rtba_m.rtbadocno
+ 
+               AND rtbbseqno = g_rtbb_d[l_ac].rtbbseqno
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_rtba_m.rtbadocno
+               LET gs_keys[2] = g_rtbb_d[g_detail_idx].rtbbseqno
+               CALL artt220_insert_b('rtbb_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code = "std-00006" 
+               LET g_errparam.popup = TRUE 
+               INITIALIZE g_rtbb_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "rtbb_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL artt220_b_fill()
+               #資料多語言用-增/改
+                        INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF g_rtba_m.rtbadocno = g_detail_multi_table_t.rtbbldocno AND
+         g_rtbb_d[l_ac].rtbbseqno = g_detail_multi_table_t.rtbblseqno AND
+         g_rtbb_d[l_ac].rtbbl002 = g_detail_multi_table_t.rtbbl002 AND
+         g_rtbb_d[l_ac].rtbbl003 = g_detail_multi_table_t.rtbbl003 THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'rtbblent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_rtba_m.rtbadocno
+            LET l_field_keys[02] = 'rtbbldocno'
+            LET l_var_keys_bak[02] = g_detail_multi_table_t.rtbbldocno
+            LET l_var_keys[03] = g_rtbb_d[l_ac].rtbbseqno
+            LET l_field_keys[03] = 'rtbblseqno'
+            LET l_var_keys_bak[03] = g_detail_multi_table_t.rtbblseqno
+            LET l_var_keys[04] = g_dlang
+            LET l_field_keys[04] = 'rtbbl001'
+            LET l_var_keys_bak[04] = g_detail_multi_table_t.rtbbl001
+            LET l_vars[01] = g_rtbb_d[l_ac].rtbbl002
+            LET l_fields[01] = 'rtbbl002'
+            LET l_vars[02] = g_rtbb_d[l_ac].rtbbl003
+            LET l_fields[02] = 'rtbbl003'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'rtbbl_t')
+         END IF 
+ 
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d) name="input.body.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code = -263 
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               LET l_n = 0
+              #SELECT COUNT(*) INTO l_n FROM inag_t WHERE inagent = g_enterprise AND inagsite = g_rtba_m.rtba001 AND inag004 = g_rtbb_d[l_ac].rtbb001  #sakura mark
+               SELECT COUNT(*) INTO l_n FROM inag_t WHERE inagent = g_enterprise AND inagsite = g_rtba_m.rtbaunit AND inag004 = g_rtbb_d[l_ac].rtbb001 #sakura add
+               IF l_n > 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'art-00150'
+                  LET g_errparam.extend = g_rtbb_d[l_ac].rtbb001
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_rtba_m.rtbadocno
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_rtbb_d_t.rtbbseqno
+ 
+            
+               #刪除同層單身
+               IF NOT artt220_delete_b('rtbb_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE artt220_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT artt220_key_delete_b(gs_keys,'rtbb_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE artt220_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+INITIALIZE l_var_keys_bak TO NULL 
+                  INITIALIZE l_field_keys TO NULL 
+                  LET l_field_keys[01] = 'rtbblent'
+                  LET l_var_keys_bak[01] = g_enterprise
+                  LET l_field_keys[02] = 'rtbbldocno'
+                  LET l_var_keys_bak[02] = g_detail_multi_table_t.rtbbldocno
+                  LET l_field_keys[03] = 'rtbblseqno'
+                  LET l_var_keys_bak[03] = g_detail_multi_table_t.rtbblseqno
+                  CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'rtbbl_t')
+ 
+               
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE artt220_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後 name="input.body.a_delete"
+                  DELETE FROM rtbbl_t 
+                   WHERE rtbblent = g_enterprise AND rtbbldocno = g_rtba_m.rtbadocno AND rtbblseqno = g_rtbb_d_t.rtbbseqno
+               #end add-point
+               LET l_count = g_rtbb_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body.after_delete"
+               
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_rtbb_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbseqno
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_rtbb_d[l_ac].rtbbseqno,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD rtbbseqno
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD rtbbseqno name="input.a.page1.rtbbseqno"
+            IF NOT cl_null(g_rtbb_d[l_ac].rtbbseqno) THEN 
+            END IF 
+
+            #此段落由子樣板a05產生
+            IF  g_rtba_m.rtbadocno IS NOT NULL AND g_rtbb_d[g_detail_idx].rtbbseqno IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_rtba_m.rtbadocno != g_rtbadocno_t OR g_rtbb_d[g_detail_idx].rtbbseqno != g_rtbb_d_t.rtbbseqno)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM rtbb_t WHERE "||"rtbbent = '" ||g_enterprise|| "' AND "||"rtbbdocno = '"||g_rtba_m.rtbadocno ||"' AND "|| "rtbbseqno = '"||g_rtbb_d[g_detail_idx].rtbbseqno ||"'",'std-00004',0) THEN 
+                     LET g_rtbb_d[g_detail_idx].rtbbseqno = g_rtbb_d_t.rtbbseqno
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbseqno
+            #add-point:BEFORE FIELD rtbbseqno name="input.b.page1.rtbbseqno"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbbseqno
+            #add-point:ON CHANGE rtbbseqno name="input.g.page1.rtbbseqno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb001
+            #add-point:BEFORE FIELD rtbb001 name="input.b.page1.rtbb001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb001
+            
+            #add-point:AFTER FIELD rtbb001 name="input.a.page1.rtbb001"
+            IF  g_rtbb_d[l_ac].rtbb001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( g_rtbb_d[l_ac].rtbb001 != g_rtbb_d_t.rtbb001 or g_rtbb_d_t.rtbb001 is null)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM rtbb_t WHERE "||"rtbbent = '" ||g_enterprise|| "' AND "||"rtbbdocno = '"||g_rtba_m.rtbadocno ||"' AND "||" rtbb001 = '"||g_rtbb_d[l_ac].rtbb001||"' ",'std-00004',0) THEN 
+                     LET g_rtbb_d[l_ac].rtbb001 = g_rtbb_d_t.rtbb001
+                     NEXT FIELD rtbb001
+                  END IF
+                  IF l_cmd='u' THEN
+                     SELECT count(*) INTO l_count FROM inag_t
+                     WHERE inagent=g_enterprise AND inag004=g_rtbb_d[l_ac].rtbb001
+                      #and inagsite = g_rtba_m.rtba001  #sakura mark
+                       and inagsite = g_rtba_m.rtbaunit #sakura add
+                     IF l_count >0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = "art-00150"
+                        LET g_errparam.extend = g_rtbb_d[l_ac].rtbb001
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        LET g_rtbb_d[l_ac].rtbb001 = g_rtbb_d_t.rtbb001
+                        NEXT FIELD rtbb001
+                     END IF
+                  END IF
+                  CALL artt220_rtbb001(g_rtbb_d[l_ac].rtbb001,l_cmd)
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_rtbb_d[l_ac].rtbb001
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_rtbb_d[l_ac].rtbb001 = g_rtbb_d_t.rtbb001
+                     IF cl_null(g_errno) THEN
+                        IF l_cmd='a' THEN
+                           IF g_rtba_m.rtba000='U' THEN
+                              #151113-00003#7 s983961--mod(s)
+                              #CALL artt220_rtbb001_ref01(l_cmd)
+                              IF NOT artt220_rtbb001_ref01(l_cmd) THEN
+                                LET g_rtbb_d[l_ac].rtbb001 = g_rtbb_d_o.rtbb001 
+                                NEXT FIELD CURRENT  
+                              END IF
+                              #151113-00003#7 s983961--mod(e)                              
+                           END IF
+                        END IF
+                     END IF
+                     NEXT FIELD rtbb001
+                  END IF
+                  IF g_rtba_m.rtba000='U' THEN
+                     #151113-00003#7 s983961--mod(s)
+                     #CALL artt220_rtbb001_ref01(l_cmd)
+                     IF NOT artt220_rtbb001_ref01(l_cmd) THEN
+                       LET g_rtbb_d[l_ac].rtbb001 = g_rtbb_d_o.rtbb001 
+                       NEXT FIELD CURRENT                        
+                     END IF
+                     #151113-00003#7 s983961--mod(e)
+                  END IF  
+                  CALL artt220_rtbb001_ref()                  
+               END IF
+            ELSE
+               LET g_rtbb_d[l_ac].rtbbl002 = ''
+               LET g_rtbb_d[l_ac].rtbbl002 = ''
+               DISPLAY BY NAME g_rtbb_d[l_ac].rtbbl002,g_rtbb_d[l_ac].rtbbl003
+            END IF
+            LET g_rtbb_d_o.rtbb001  = g_rtbb_d[l_ac].rtbb001
+            
+            
+            
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb001
+            #add-point:ON CHANGE rtbb001 name="input.g.page1.rtbb001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbl002
+            #add-point:BEFORE FIELD rtbbl002 name="input.b.page1.rtbbl002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbl002
+            
+            #add-point:AFTER FIELD rtbbl002 name="input.a.page1.rtbbl002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbbl002
+            #add-point:ON CHANGE rtbbl002 name="input.g.page1.rtbbl002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbl003
+            #add-point:BEFORE FIELD rtbbl003 name="input.b.page1.rtbbl003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbl003
+            
+            #add-point:AFTER FIELD rtbbl003 name="input.a.page1.rtbbl003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbbl003
+            #add-point:ON CHANGE rtbbl003 name="input.g.page1.rtbbl003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb002
+            #add-point:BEFORE FIELD rtbb002 name="input.b.page1.rtbb002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb002
+            
+            #add-point:AFTER FIELD rtbb002 name="input.a.page1.rtbb002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb002
+            #add-point:ON CHANGE rtbb002 name="input.g.page1.rtbb002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb003
+            #add-point:BEFORE FIELD rtbb003 name="input.b.page1.rtbb003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb003
+            
+            #add-point:AFTER FIELD rtbb003 name="input.a.page1.rtbb003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb003
+            #add-point:ON CHANGE rtbb003 name="input.g.page1.rtbb003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb005
+            
+            #add-point:AFTER FIELD rtbb005 name="input.a.page1.rtbb005"
+            IF NOT cl_null(g_rtbb_d[l_ac].rtbb005) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_rtbb_d[l_ac].rtbb005 != g_rtbb_d_t.rtbb005 OR g_rtbb_d_t.rtbb005 IS null)) THEN
+                  #161024-00025#1--mark--s             
+#                  INITIALIZE g_chkparam.* TO NULL
+#                  LET g_chkparam.arg1 = g_rtbb_d[l_ac].rtbb005
+#                  
+#                  IF NOT cl_chk_exist("v_ooef001_20") THEN
+#                     LET g_rtbb_d[l_ac].rtbb005 = g_rtbb_d_t.rtbb005
+#                     CALL s_desc_get_department_desc(g_rtbb_d[l_ac].rtbb005) RETURNING g_rtbb_d[l_ac].rtbb005_desc
+#                     DISPLAY g_rtbb_d[l_ac].rtbb005_desc
+#                     NEXT FIELD CURRENT
+#                  END IF
+                  #161024-00025#1--mark--e
+                  #161024-00025#1--add--s
+                  IF s_aooi500_setpoint(g_prog,'rtbb005') THEN
+                     CALL s_aooi500_chk(g_prog,'rtbb005',g_rtbb_d[l_ac].rtbb005,g_rtba_m.rtbasite) RETURNING l_success,l_errno
+                     IF NOT l_success THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend = g_rtbb_d[l_ac].rtbb005
+                        LET g_errparam.code   = l_errno
+                        LET g_errparam.popup  = TRUE
+                        CALL cl_err()
+                     
+                        LET g_rtbb_d[l_ac].rtbb005 = g_rtbb_d_t.rtbb005
+                        CALL s_desc_get_department_desc(g_rtbb_d[l_ac].rtbb005) RETURNING g_rtbb_d[l_ac].rtbb005_desc
+                        DISPLAY g_rtbb_d[l_ac].rtbb005_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  ELSE
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = g_rtbb_d[l_ac].rtbb005
+                     
+                     IF NOT cl_chk_exist("v_ooef001_20") THEN
+                        LET g_rtbb_d[l_ac].rtbb005 = g_rtbb_d_t.rtbb005
+                        CALL s_desc_get_department_desc(g_rtbb_d[l_ac].rtbb005) RETURNING g_rtbb_d[l_ac].rtbb005_desc
+                        DISPLAY g_rtbb_d[l_ac].rtbb005_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  #161024-00025#1--add--e
+               END IF
+               CALL s_desc_get_department_desc(g_rtbb_d[l_ac].rtbb005) RETURNING g_rtbb_d[l_ac].rtbb005_desc
+               DISPLAY g_rtbb_d[l_ac].rtbb005_desc
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb005
+            #add-point:BEFORE FIELD rtbb005 name="input.b.page1.rtbb005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb005
+            #add-point:ON CHANGE rtbb005 name="input.g.page1.rtbb005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb101
+            #add-point:BEFORE FIELD rtbb101 name="input.b.page1.rtbb101"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb101
+            
+            #add-point:AFTER FIELD rtbb101 name="input.a.page1.rtbb101"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb101
+            #add-point:ON CHANGE rtbb101 name="input.g.page1.rtbb101"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb102
+            #add-point:BEFORE FIELD rtbb102 name="input.b.page1.rtbb102"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb102
+            
+            #add-point:AFTER FIELD rtbb102 name="input.a.page1.rtbb102"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb102
+            #add-point:ON CHANGE rtbb102 name="input.g.page1.rtbb102"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb120
+            
+            #add-point:AFTER FIELD rtbb120 name="input.a.page1.rtbb120"
+            #2015/4/29 add By 06814-BeckXie 
+            LET g_rtbb_d[l_ac].rtbb120_desc = ' '
+            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb120_desc
+            IF NOT cl_null(g_rtbb_d[l_ac].rtbb120) THEN
+               IF g_rtbb_d[l_ac].rtbb120 != g_rtbb_d_o.rtbb120 OR cl_null(g_rtbb_d_o.rtbb120) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_rtbb_d[l_ac].rtbb120
+                  IF NOT cl_chk_exist("v_mhae001") THEN
+                     LET g_rtbb_d[l_ac].rtbb120 = g_rtbb_d_o.rtbb120
+                     CALL s_desc_get_counter_desc(g_rtbb_d[l_ac].rtbb120) RETURNING g_rtbb_d[l_ac].rtbb120_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL artt220_rtbb120_def()
+               END IF
+            END IF
+            CALL s_desc_get_counter_desc(g_rtbb_d[l_ac].rtbb120) RETURNING g_rtbb_d[l_ac].rtbb120_desc
+            LET g_rtbb_d_o.rtbb120 = g_rtbb_d[l_ac].rtbb120
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb120
+            #add-point:BEFORE FIELD rtbb120 name="input.b.page1.rtbb120"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb120
+            #add-point:ON CHANGE rtbb120 name="input.g.page1.rtbb120"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb130
+            #add-point:BEFORE FIELD rtbb130 name="input.b.page1.rtbb130"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb130
+            
+            #add-point:AFTER FIELD rtbb130 name="input.a.page1.rtbb130"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb130
+            #add-point:ON CHANGE rtbb130 name="input.g.page1.rtbb130"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb105
+            #add-point:BEFORE FIELD rtbb105 name="input.b.page1.rtbb105"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb105
+            
+            #add-point:AFTER FIELD rtbb105 name="input.a.page1.rtbb105"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb105
+            #add-point:ON CHANGE rtbb105 name="input.g.page1.rtbb105"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb106
+            
+            #add-point:AFTER FIELD rtbb106 name="input.a.page1.rtbb106"
+            LET g_rtbb_d[l_ac].rtbb106_desc = NULL
+            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb106_desc
+            IF  g_rtbb_d[l_ac].rtbb106 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_rtbb_d[l_ac].rtbb106 != g_rtbb_d_t.rtbb106 OR g_rtbb_d_t.rtbb106 IS null)) THEN 
+                  CALL artt220_rtbb106(g_rtbb_d[l_ac].rtbb106)
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_rtbb_d[l_ac].rtbb106
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_rtbb_d[l_ac].rtbb106 = g_rtbb_d_t.rtbb106
+                     CALL artt220_rtbb106_ref(g_rtbb_d[l_ac].rtbb106)
+                     NEXT FIELD rtbb106
+                  END IF
+                  
+               END IF
+            END IF
+            CALL artt220_rtbb106_ref(g_rtbb_d[l_ac].rtbb106)
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb106
+            #add-point:BEFORE FIELD rtbb106 name="input.b.page1.rtbb106"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb106
+            #add-point:ON CHANGE rtbb106 name="input.g.page1.rtbb106"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb110
+            #add-point:BEFORE FIELD rtbb110 name="input.b.page1.rtbb110"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb110
+            
+            #add-point:AFTER FIELD rtbb110 name="input.a.page1.rtbb110"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb110
+            #add-point:ON CHANGE rtbb110 name="input.g.page1.rtbb110"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb111
+            #add-point:BEFORE FIELD rtbb111 name="input.b.page1.rtbb111"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb111
+            
+            #add-point:AFTER FIELD rtbb111 name="input.a.page1.rtbb111"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb111
+            #add-point:ON CHANGE rtbb111 name="input.g.page1.rtbb111"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb104
+            #add-point:BEFORE FIELD rtbb104 name="input.b.page1.rtbb104"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb104
+            
+            #add-point:AFTER FIELD rtbb104 name="input.a.page1.rtbb104"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb104
+            #add-point:ON CHANGE rtbb104 name="input.g.page1.rtbb104"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb121
+            
+            #add-point:AFTER FIELD rtbb121 name="input.a.page1.rtbb121"
+            
+            CALL artt220_rtbb121_null()
+            IF  g_rtbb_d[l_ac].rtbb121 IS NOT NULL THEN 
+               #IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( g_rtbb_d[l_ac].rtbb121 != g_rtbb_d_t.rtbb121 OR g_rtbb_d_t.rtbb121 IS null)) THEN    #160824-00007#160 20161125 mark by beckxie
+               IF g_rtbb_d[l_ac].rtbb121 != g_rtbb_d_o.rtbb121 OR cl_null(g_rtbb_d_o.rtbb121) THEN    #160824-00007#160 20161125 add by beckxie
+                
+                  CALL artt220_rtbb121(g_rtbb_d[l_ac].rtbb121)
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_rtbb_d[l_ac].rtbb121
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     #160824-00007#160 20161125 mark by beckxie---S
+                     #LET g_rtbb_d[l_ac].rtbb121 = g_rtbb_d_t.rtbb121
+                     #LET g_rtbb_d[l_ac].rtbb122 = g_rtbb_d_t.rtbb122
+                     #LET g_rtbb_d[l_ac].rtbb123 = g_rtbb_d_t.rtbb123
+                     #LET g_rtbb_d[l_ac].rtbb124 = g_rtbb_d_t.rtbb124
+                     #160824-00007#160 20161125 mark by beckxie---E
+                     #160824-00007#160 20161125 add by beckxie---S
+                     LET g_rtbb_d[l_ac].rtbb121 = g_rtbb_d_o.rtbb121
+                     LET g_rtbb_d[l_ac].rtbb122 = g_rtbb_d_o.rtbb122
+                     LET g_rtbb_d[l_ac].rtbb123 = g_rtbb_d_o.rtbb123
+                     LET g_rtbb_d[l_ac].rtbb124 = g_rtbb_d_o.rtbb124
+                     #160824-00007#160 20161125 add by beckxie---E
+                     CALL artt220_rtbb121_ref1()
+                     NEXT FIELD rtbb121
+                  END IF 
+               END IF
+            END IF
+            CALL artt220_rtbb121_ref()
+            CALL artt220_rtbb121_ref1()
+            LET g_rtbb_d_o.* = g_rtbb_d[l_ac].* #160824-00007#160 20161125 add by beckxie
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb121
+            #add-point:BEFORE FIELD rtbb121 name="input.b.page1.rtbb121"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb121
+            #add-point:ON CHANGE rtbb121 name="input.g.page1.rtbb121"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb122
+            
+            #add-point:AFTER FIELD rtbb122 name="input.a.page1.rtbb122"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb124
+            LET g_ref_fields[2] = g_rtbb_d[l_ac].rtbb123
+            LET g_ref_fields[3] = g_rtbb_d[l_ac].rtbb122
+            CALL ap_ref_array2(g_ref_fields,"SELECT mhacl005 FROM mhacl_t WHERE mhaclent='"||g_enterprise||"' AND mhacl001=? AND mhacl002=? AND mhacl003=? AND mhacl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_rtbb_d[l_ac].rtbb122_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb122_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb122
+            #add-point:BEFORE FIELD rtbb122 name="input.b.page1.rtbb122"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb122
+            #add-point:ON CHANGE rtbb122 name="input.g.page1.rtbb122"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb123
+            
+            #add-point:AFTER FIELD rtbb123 name="input.a.page1.rtbb123"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb123
+            #add-point:BEFORE FIELD rtbb123 name="input.b.page1.rtbb123"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb123
+            #add-point:ON CHANGE rtbb123 name="input.g.page1.rtbb123"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb124
+            
+            #add-point:AFTER FIELD rtbb124 name="input.a.page1.rtbb124"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb124
+            #add-point:BEFORE FIELD rtbb124 name="input.b.page1.rtbb124"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb124
+            #add-point:ON CHANGE rtbb124 name="input.g.page1.rtbb124"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb008
+            #add-point:BEFORE FIELD rtbb008 name="input.b.page1.rtbb008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb008
+            
+            #add-point:AFTER FIELD rtbb008 name="input.a.page1.rtbb008"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb008
+            #add-point:ON CHANGE rtbb008 name="input.g.page1.rtbb008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb009
+            #add-point:BEFORE FIELD rtbb009 name="input.b.page1.rtbb009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb009
+            
+            #add-point:AFTER FIELD rtbb009 name="input.a.page1.rtbb009"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb009
+            #add-point:ON CHANGE rtbb009 name="input.g.page1.rtbb009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb010
+            #add-point:BEFORE FIELD rtbb010 name="input.b.page1.rtbb010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb010
+            
+            #add-point:AFTER FIELD rtbb010 name="input.a.page1.rtbb010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb010
+            #add-point:ON CHANGE rtbb010 name="input.g.page1.rtbb010"
+            IF p_cmd = 'u' THEN 
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code   = "axc-00719"           
+            LET g_errparam.extend = "inaa010成本庫"           
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            END IF
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb014
+            #add-point:BEFORE FIELD rtbb014 name="input.b.page1.rtbb014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb014
+            
+            #add-point:AFTER FIELD rtbb014 name="input.a.page1.rtbb014"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb014
+            #add-point:ON CHANGE rtbb014 name="input.g.page1.rtbb014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb011
+            #add-point:BEFORE FIELD rtbb011 name="input.b.page1.rtbb011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb011
+            
+            #add-point:AFTER FIELD rtbb011 name="input.a.page1.rtbb011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb011
+            #add-point:ON CHANGE rtbb011 name="input.g.page1.rtbb011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbacti
+            #add-point:BEFORE FIELD rtbbacti name="input.b.page1.rtbbacti"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbacti
+            
+            #add-point:AFTER FIELD rtbbacti name="input.a.page1.rtbbacti"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbbacti
+            #add-point:ON CHANGE rtbbacti name="input.g.page1.rtbbacti"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb131
+            
+            #add-point:AFTER FIELD rtbb131 name="input.a.page1.rtbb131"
+            CALL artt220_rtbb131_ref()#add by BeckXie-06814 150402-00005-16 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb131
+            #add-point:BEFORE FIELD rtbb131 name="input.b.page1.rtbb131"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb131
+            #add-point:ON CHANGE rtbb131 name="input.g.page1.rtbb131"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb132
+            #add-point:BEFORE FIELD rtbb132 name="input.b.page1.rtbb132"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb132
+            
+            #add-point:AFTER FIELD rtbb132 name="input.a.page1.rtbb132"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb132
+            #add-point:ON CHANGE rtbb132 name="input.g.page1.rtbb132"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb133
+            #add-point:BEFORE FIELD rtbb133 name="input.b.page1.rtbb133"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb133
+            
+            #add-point:AFTER FIELD rtbb133 name="input.a.page1.rtbb133"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb133
+            #add-point:ON CHANGE rtbb133 name="input.g.page1.rtbb133"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb134
+            
+            #add-point:AFTER FIELD rtbb134 name="input.a.page1.rtbb134"
+            CALL artt220_rtbb134_ref()
+#            LET g_rtbb_d[l_ac].rtbb134_desc = ' '
+#            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb134_desc
+#            IF NOT cl_null(g_rtbb_d[l_ac].rtbb134) THEN
+#               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_rtbb_d[l_ac].rtbb134 != g_rtbb_d_o.rtbb134 OR g_rtbb_d_o.rtbb134 IS NULL )) THEN
+#                  
+#                  IF NOT s_azzi650_chk_exist('2126',g_rtbb_d[l_ac].rtbb134) THEN
+#                     LET g_rtbb_d[l_ac].rtbb134 = g_rtbb_d_o.rtbb134
+#                     CALL s_desc_get_acc_desc('2126',g_rtbb_d[l_ac].rtbb134) RETURNING g_rtbb_d[l_ac].rtbb134_desc
+#                     DISPLAY BY NAME g_rtbb_d[l_ac].rtbb134_desc
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF
+#            END IF
+#            LET g_rtbb_d_o.rtbb134 = g_rtbb_d[l_ac].rtbb134
+#            CALL s_desc_get_acc_desc('2126',g_rtbb_d[l_ac].rtbb134) RETURNING g_rtbb_d[l_ac].rtbb134_desc
+#            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb134_desc
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb134
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2126' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtbb_d[l_ac].rtbb134_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb134_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb134
+            #add-point:BEFORE FIELD rtbb134 name="input.b.page1.rtbb134"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb134
+            #add-point:ON CHANGE rtbb134 name="input.g.page1.rtbb134"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb135
+            #add-point:BEFORE FIELD rtbb135 name="input.b.page1.rtbb135"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb135
+            
+            #add-point:AFTER FIELD rtbb135 name="input.a.page1.rtbb135"
+            #150505-00015#6 20150521 add by BeckXie---S
+            IF g_rtbb_d[l_ac].rtbb135 = '1' THEN
+               LET g_rtbb_d[l_ac].rtbb141 = NULL
+            END IF
+            CALL artt220_set_entry_b(l_cmd)
+            CALL artt220_set_no_required_b(l_cmd)
+            CALL artt220_set_required_b(l_cmd)
+            CALL artt220_set_no_entry_b(l_cmd)
+            #150505-00015#6 20150521 add by BeckXie---E
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb135
+            #add-point:ON CHANGE rtbb135 name="input.g.page1.rtbb135"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb136
+            #add-point:BEFORE FIELD rtbb136 name="input.b.page1.rtbb136"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb136
+            
+            #add-point:AFTER FIELD rtbb136 name="input.a.page1.rtbb136"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb136
+            #add-point:ON CHANGE rtbb136 name="input.g.page1.rtbb136"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb137
+            #add-point:BEFORE FIELD rtbb137 name="input.b.page1.rtbb137"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb137
+            
+            #add-point:AFTER FIELD rtbb137 name="input.a.page1.rtbb137"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb137
+            #add-point:ON CHANGE rtbb137 name="input.g.page1.rtbb137"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb138
+            #add-point:BEFORE FIELD rtbb138 name="input.b.page1.rtbb138"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb138
+            
+            #add-point:AFTER FIELD rtbb138 name="input.a.page1.rtbb138"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb138
+            #add-point:ON CHANGE rtbb138 name="input.g.page1.rtbb138"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb139
+            #add-point:BEFORE FIELD rtbb139 name="input.b.page1.rtbb139"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb139
+            
+            #add-point:AFTER FIELD rtbb139 name="input.a.page1.rtbb139"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb139
+            #add-point:ON CHANGE rtbb139 name="input.g.page1.rtbb139"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb140
+            #add-point:BEFORE FIELD rtbb140 name="input.b.page1.rtbb140"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb140
+            
+            #add-point:AFTER FIELD rtbb140 name="input.a.page1.rtbb140"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb140
+            #add-point:ON CHANGE rtbb140 name="input.g.page1.rtbb140"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb141
+            
+            #add-point:AFTER FIELD rtbb141 name="input.a.page1.rtbb141"
+            #150505-00015#6 20150521 add by BeckXie---S
+            LET g_rtbb_d[l_ac].rtbb141_desc = NULL
+            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb141_desc
+            IF NOT cl_null(g_rtbb_d[l_ac].rtbb141) THEN
+#               IF g_rtbb_d[l_ac].rtbb141 != g_rtbb_d_o.rtbb141 OR g_rtbb_d_o.rtbb141 IS NULL  THEN   #150427-00012#6 20150707 mark by beckxie
+               IF g_rtbb_d[l_ac].rtbb141 != g_rtbb_d_o.rtbb141 OR cl_null(g_rtbb_d_o.rtbb141)  THEN   #150427-00012#6 20150707 add by beckxie
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_rtba_m.rtbasite
+                  LET g_chkparam.arg2 = g_rtbb_d[l_ac].rtbb141
+                  LET g_chkparam.where = " inaa135='1' "
+                   #160318-00025#21  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="aim-00065:sub-01302|aini001|",cl_get_progname("aini001",g_lang,"2"),"|:EXEPROGaini001"
+                  #160318-00025#21  by 07900 --add-end
+                  IF NOT cl_chk_exist("v_inaa001") THEN
+                     LET g_rtbb_d[l_ac].rtbb141 = g_rtbb_d_o.rtbb141
+                     CALL artt220_rtbb141_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_rtbb_d_o.rtbb141=g_rtbb_d[l_ac].rtbb141
+            CALL artt220_rtbb141_ref()
+            #150505-00015#6 20150521 add by BeckXie---E
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb141
+            #add-point:BEFORE FIELD rtbb141 name="input.b.page1.rtbb141"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb141
+            #add-point:ON CHANGE rtbb141 name="input.g.page1.rtbb141"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbsite
+            #add-point:BEFORE FIELD rtbbsite name="input.b.page1.rtbbsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbsite
+            
+            #add-point:AFTER FIELD rtbbsite name="input.a.page1.rtbbsite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbbsite
+            #add-point:ON CHANGE rtbbsite name="input.g.page1.rtbbsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbbunit
+            #add-point:BEFORE FIELD rtbbunit name="input.b.page1.rtbbunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbbunit
+            
+            #add-point:AFTER FIELD rtbbunit name="input.a.page1.rtbbunit"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbbunit
+            #add-point:ON CHANGE rtbbunit name="input.g.page1.rtbbunit"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rtbb142
+            #add-point:BEFORE FIELD rtbb142 name="input.b.page1.rtbb142"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rtbb142
+            
+            #add-point:AFTER FIELD rtbb142 name="input.a.page1.rtbb142"
+            #151113-00003#7 s983961--add(S)
+            LET l_cmd2 = l_cmd
+            IF g_rtba_m.rtba000='U' AND l_cmd = 'a' THEN
+             LET l_cmd = 'u'
+            END IF
+            
+            IF NOT cl_null(g_rtbb_d[l_ac].rtbb142) THEN
+              IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( g_rtbb_d[l_ac].rtbb142 != g_rtbb_d_t.rtbb142 or g_rtbb_d_t.rtbb142 is null)) THEN               
+                  #IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inaa_t WHERE "||"inaaent = '" ||g_enterprise|| "' AND "||"inaasite = '"||g_rtba_m.rtbaunit ||"' AND "|| "inaa142 = '"||g_rtbb_d[g_detail_idx].rtbb142 ||"'",'std-00004',0) THEN 
+                  # LET g_rtbb_d[l_ac].rtbb142 = g_rtbb_d_o.rtbb142
+                  # NEXT FIELD CURRENT
+                  #END IF  
+                  LET l_cnt2 = 0    
+                  SELECT count(*) INTO l_cnt2 FROM inaa_t WHERE  inaaent = g_enterprise
+                     AND inaasite = g_rtba_m.rtbaunit     
+                     AND inaa142 = g_rtbb_d[l_ac].rtbb142
+                  IF l_cnt2 >0 THEN
+                    IF g_rtba_m.rtba000<>'U' THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = "art-00722"
+                        LET g_errparam.extend = g_rtbb_d[l_ac].rtbb142
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_rtbb_d[l_ac].rtbb142 = g_rtbb_d_t.rtbb142
+                        NEXT FIELD CURRENT
+                    END IF
+                    
+                    IF g_rtba_m.rtba000 = 'U' THEN  
+                      SELECT inaa142 INTO l_inaa142
+                        FROM inaa_t  WHERE inaa001 = g_rtbb_d[l_ac].rtbb001 AND inaaent = g_enterprise AND inaasite = g_rtba_m.rtbaunit  
+                        IF g_rtbb_d[l_ac].rtbb142 != l_inaa142 OR l_inaa142 iS NULL  THEN
+                          INITIALIZE g_errparam TO NULL
+                          LET g_errparam.code = "art-00722"
+                          LET g_errparam.extend = g_rtbb_d[l_ac].rtbb142
+                          LET g_errparam.popup = TRUE
+                          CALL cl_err()
+                          LET g_rtbb_d[l_ac].rtbb142 = g_rtbb_d_t.rtbb142
+                          NEXT FIELD CURRENT
+                        END IF    
+                    END IF
+                  END IF      
+
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM rtbb_t WHERE "||"rtbbent = '" ||g_enterprise|| "' AND "||"rtbbdocno = '"||g_rtba_m.rtbadocno ||"' AND "||" rtbb142 = '"||g_rtbb_d[l_ac].rtbb142||"' ",'std-00004',0) THEN 
+                    LET g_rtbb_d[l_ac].rtbb142 = g_rtbb_d_o.rtbb142
+                    NEXT FIELD CURRENT
+                  END IF 
+              END IF
+            END IF  
+            LET g_rtbb_d_o.rtbb142=g_rtbb_d[l_ac].rtbb142
+            
+            IF g_rtba_m.rtba000='U' AND l_cmd2 = 'a' THEN
+             LET l_cmd = 'a'
+            END IF
+            #151113-00003#7 s983961--add(E)
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rtbb142
+            #add-point:ON CHANGE rtbb142 name="input.g.page1.rtbb142"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.rtbbseqno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbseqno
+            #add-point:ON ACTION controlp INFIELD rtbbseqno name="input.c.page1.rtbbseqno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb001
+            #add-point:ON ACTION controlp INFIELD rtbb001 name="input.c.page1.rtbb001"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb001             #給予default值
+
+            #給予arg
+            IF g_rtba_m.rtba000='U' THEN
+              #LET g_qryparam.arg1 = g_rtba_m.rtba001  #sakura mark
+               LET g_qryparam.arg1 = g_rtba_m.rtbaunit #sakura add 
+               
+               #IF g_prog = "adbt230" THEN        #160705-00042#10 160713 by sakura mark
+               IF g_prog MATCHES 'adbt230' THEN   #160705-00042#10 160713 by sakura add
+                  LET g_qryparam.where = " inaa101='1' "
+               ELSE
+                  LET g_qryparam.where = " inaa101='2' "
+               END IF
+
+               CALL q_inaa001_6()                                #呼叫開窗
+            ELSE
+              
+            END IF 
+            LET g_rtbb_d[l_ac].rtbb001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+#            IF g_rtba_m.rtba000='U' THEN
+#               IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM rtbb_t WHERE "||"rtbbent = '" ||g_enterprise|| "' AND "||"rtbbdocno = '"||g_rtba_m.rtbadocno ||"' AND "||" rtbb001 = '"||g_rtbb_d[l_ac].rtbb001||"' ",'std-00004',0) THEN 
+#                  LET g_rtbb_d[l_ac].rtbb001 = g_rtbb_d_t.rtbb001
+#                  NEXT FIELD rtbb001
+#               ELSE   
+#                  CALL artt220_rtbb001_ref01(l_cmd)
+#               END IF   
+#            ELSE
+#               
+#            END IF
+            DISPLAY g_rtbb_d[l_ac].rtbb001 TO rtbb001              #顯示到畫面上
+            NEXT FIELD rtbb001                         #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbbl002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbl002
+            #add-point:ON ACTION controlp INFIELD rtbbl002 name="input.c.page1.rtbbl002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbbl003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbl003
+            #add-point:ON ACTION controlp INFIELD rtbbl003 name="input.c.page1.rtbbl003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb002
+            #add-point:ON ACTION controlp INFIELD rtbb002 name="input.c.page1.rtbb002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb003
+            #add-point:ON ACTION controlp INFIELD rtbb003 name="input.c.page1.rtbb003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb005
+            #add-point:ON ACTION controlp INFIELD rtbb005 name="input.c.page1.rtbb005"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb005             #給予default值
+            LET g_qryparam.default2 = "" #g_rtbb_d[l_ac].ooefl003 #說明(簡稱)
+            #給予arg
+            #161024-00025#1--mark--s
+#            LET g_qryparam.where = "ooef201 = 'Y'"
+#            CALL q_ooef001()                                #呼叫開窗
+            #161024-00025#1--mark--e
+            
+            #161024-00025#1--add--s
+            IF s_aooi500_setpoint(g_prog,'rtbb005') THEN
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtbb005',g_rtba_m.rtbasite,'i')
+               CALL q_ooef001_24()
+            ELSE
+               LET g_qryparam.where = "ooef201 = 'Y'"
+               CALL q_ooef001()                                #呼叫開窗
+            END IF
+            #161024-00025#1--add--e
+
+            LET g_rtbb_d[l_ac].rtbb005 = g_qryparam.return1              
+            DISPLAY g_rtbb_d[l_ac].rtbb005 TO rtbb005              #
+
+            CALL s_desc_get_department_desc(g_rtbb_d[l_ac].rtbb005) RETURNING g_rtbb_d[l_ac].rtbb005_desc
+            DISPLAY g_rtbb_d[l_ac].rtbb005_desc
+            NEXT FIELD rtbb005                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb101
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb101
+            #add-point:ON ACTION controlp INFIELD rtbb101 name="input.c.page1.rtbb101"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb102
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb102
+            #add-point:ON ACTION controlp INFIELD rtbb102 name="input.c.page1.rtbb102"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb120
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb120
+            #add-point:ON ACTION controlp INFIELD rtbb120 name="input.c.page1.rtbb120"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb120             #給予default值
+            LET g_qryparam.default2 = "" #g_rtbb_d[l_ac].mhael023 #简称
+            #給予arg
+            LET g_qryparam.arg1 = g_site #s
+
+
+            CALL q_mhae001()                                #呼叫開窗
+
+            LET g_rtbb_d[l_ac].rtbb120 = g_qryparam.return1              
+            #LET g_rtbb_d[l_ac].mhael023 = g_qryparam.return2 
+            DISPLAY g_rtbb_d[l_ac].rtbb120 TO rtbb120              #
+            #DISPLAY g_rtbb_d[l_ac].mhael023 TO mhael023 #简称
+            NEXT FIELD rtbb120                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb130
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb130
+            #add-point:ON ACTION controlp INFIELD rtbb130 name="input.c.page1.rtbb130"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb105
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb105
+            #add-point:ON ACTION controlp INFIELD rtbb105 name="input.c.page1.rtbb105"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb106
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb106
+            #add-point:ON ACTION controlp INFIELD rtbb106 name="input.c.page1.rtbb106"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb106             #給予default值
+
+            #給予arg
+
+            CALL q_rtax001_1()                                #呼叫開窗
+
+            LET g_rtbb_d[l_ac].rtbb106 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_rtbb_d[l_ac].rtbb106 TO rtbb106              #顯示到畫面上
+            CALL artt220_rtbb106_ref(g_rtbb_d[l_ac].rtbb106)
+            NEXT FIELD rtbb106                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb110
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb110
+            #add-point:ON ACTION controlp INFIELD rtbb110 name="input.c.page1.rtbb110"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb111
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb111
+            #add-point:ON ACTION controlp INFIELD rtbb111 name="input.c.page1.rtbb111"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb104
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb104
+            #add-point:ON ACTION controlp INFIELD rtbb104 name="input.c.page1.rtbb104"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb121
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb121
+            #add-point:ON ACTION controlp INFIELD rtbb121 name="input.c.page1.rtbb121"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb121             #給予default值
+
+           #LET g_qryparam.where = "mhadsite='",g_rtba_m.rtba001,"' "  #sakura mark
+            LET g_qryparam.where = "mhadsite='",g_rtba_m.rtbaunit,"' " #sakura add
+            #給予arg
+
+            CALL q_mhad001()                                #呼叫開窗
+
+            LET g_rtbb_d[l_ac].rtbb121 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_rtbb_d[l_ac].rtbb121 TO rtbb121              #顯示到畫面上
+            CALL artt220_rtbb121_ref()
+            CALL artt220_rtbb121_ref1()
+            NEXT FIELD rtbb121                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb122
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb122
+            #add-point:ON ACTION controlp INFIELD rtbb122 name="input.c.page1.rtbb122"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb122             #給予default值
+
+            #給予arg
+
+            CALL q_mhac003()                                #呼叫開窗
+
+            LET g_rtbb_d[l_ac].rtbb122 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_rtbb_d[l_ac].rtbb122 TO rtbb122              #顯示到畫面上
+
+            NEXT FIELD rtbb122                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb123
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb123
+            #add-point:ON ACTION controlp INFIELD rtbb123 name="input.c.page1.rtbb123"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb123             #給予default值
+
+            #給予arg
+
+            CALL q_mhab002()                                #呼叫開窗
+
+            LET g_rtbb_d[l_ac].rtbb123 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_rtbb_d[l_ac].rtbb123 TO rtbb123              #顯示到畫面上
+
+            NEXT FIELD rtbb123                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb124
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb124
+            #add-point:ON ACTION controlp INFIELD rtbb124 name="input.c.page1.rtbb124"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb124             #給予default值
+
+            #給予arg
+
+            CALL q_mhaa001()                                #呼叫開窗
+
+            LET g_rtbb_d[l_ac].rtbb124 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_rtbb_d[l_ac].rtbb124 TO rtbb124              #顯示到畫面上
+
+            NEXT FIELD rtbb124                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb008
+            #add-point:ON ACTION controlp INFIELD rtbb008 name="input.c.page1.rtbb008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb009
+            #add-point:ON ACTION controlp INFIELD rtbb009 name="input.c.page1.rtbb009"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb010
+            #add-point:ON ACTION controlp INFIELD rtbb010 name="input.c.page1.rtbb010"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb014
+            #add-point:ON ACTION controlp INFIELD rtbb014 name="input.c.page1.rtbb014"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb011
+            #add-point:ON ACTION controlp INFIELD rtbb011 name="input.c.page1.rtbb011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbbacti
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbacti
+            #add-point:ON ACTION controlp INFIELD rtbbacti name="input.c.page1.rtbbacti"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb131
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb131
+            #add-point:ON ACTION controlp INFIELD rtbb131 name="input.c.page1.rtbb131"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb131             #給予default值
+            LET g_qryparam.default2 = "" #g_rtbb_d[l_ac].oocql004 #說明
+            #給予arg
+            LET g_qryparam.arg1 = '2127' #s
+
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_rtbb_d[l_ac].rtbb131 = g_qryparam.return1              
+            #LET g_rtbb_d[l_ac].oocql004 = g_qryparam.return2 
+            DISPLAY g_rtbb_d[l_ac].rtbb131 TO rtbb131              #
+            #DISPLAY g_rtbb_d[l_ac].oocql004 TO oocql004 #說明
+            NEXT FIELD rtbb131                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb132
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb132
+            #add-point:ON ACTION controlp INFIELD rtbb132 name="input.c.page1.rtbb132"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb133
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb133
+            #add-point:ON ACTION controlp INFIELD rtbb133 name="input.c.page1.rtbb133"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb134
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb134
+            #add-point:ON ACTION controlp INFIELD rtbb134 name="input.c.page1.rtbb134"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb134             #給予default值
+            LET g_qryparam.default2 = "" #g_rtbb_d[l_ac].oocql004 #說明
+            #給予arg
+            LET g_qryparam.arg1 = '2126' #s
+
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_rtbb_d[l_ac].rtbb134 = g_qryparam.return1              
+            #LET g_rtbb_d[l_ac].oocql004 = g_qryparam.return2 
+            DISPLAY g_rtbb_d[l_ac].rtbb134 TO rtbb134              #
+            #DISPLAY g_rtbb_d[l_ac].oocql004 TO oocql004 #說明
+            NEXT FIELD rtbb134                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb135
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb135
+            #add-point:ON ACTION controlp INFIELD rtbb135 name="input.c.page1.rtbb135"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb136
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb136
+            #add-point:ON ACTION controlp INFIELD rtbb136 name="input.c.page1.rtbb136"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb137
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb137
+            #add-point:ON ACTION controlp INFIELD rtbb137 name="input.c.page1.rtbb137"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb138
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb138
+            #add-point:ON ACTION controlp INFIELD rtbb138 name="input.c.page1.rtbb138"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb139
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb139
+            #add-point:ON ACTION controlp INFIELD rtbb139 name="input.c.page1.rtbb139"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb140
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb140
+            #add-point:ON ACTION controlp INFIELD rtbb140 name="input.c.page1.rtbb140"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb141
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb141
+            #add-point:ON ACTION controlp INFIELD rtbb141 name="input.c.page1.rtbb141"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_rtbb_d[l_ac].rtbb141             #給予default值
+            LET g_qryparam.default2 = "" #g_rtbb_d[l_ac].inayl003 #說明
+            #給予arg
+            LET g_qryparam.arg1 =  g_rtba_m.rtbaunit #s
+
+            LET g_qryparam.where = " inaa135='1' "
+            CALL q_inaa001_6()                                #呼叫開窗
+
+            LET g_rtbb_d[l_ac].rtbb141 = g_qryparam.return1              
+            #LET g_rtbb_d[l_ac].inayl003 = g_qryparam.return2 
+            DISPLAY g_rtbb_d[l_ac].rtbb141 TO rtbb141              #
+            #DISPLAY g_rtbb_d[l_ac].inayl003 TO inayl003 #說明
+            NEXT FIELD rtbb141                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbbsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbsite
+            #add-point:ON ACTION controlp INFIELD rtbbsite name="input.c.page1.rtbbsite"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbbunit
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbbunit
+            #add-point:ON ACTION controlp INFIELD rtbbunit name="input.c.page1.rtbbunit"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rtbb142
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rtbb142
+            #add-point:ON ACTION controlp INFIELD rtbb142 name="input.c.page1.rtbb142"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_rtbb_d[l_ac].* = g_rtbb_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE artt220_bcl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_rtbb_d[l_ac].rtbbseqno 
+               LET g_errparam.code = -263 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               LET g_rtbb_d[l_ac].* = g_rtbb_d_t.*
+            ELSE
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               #將遮罩欄位還原
+               CALL artt220_rtbb_t_mask_restore('restore_mask_o')
+      
+               UPDATE rtbb_t SET (rtbbdocno,rtbbseqno,rtbb001,rtbb002,rtbb003,rtbb005,rtbb101,rtbb102, 
+                   rtbb120,rtbb130,rtbb105,rtbb106,rtbb110,rtbb111,rtbb104,rtbb121,rtbb122,rtbb123,rtbb124, 
+                   rtbb008,rtbb009,rtbb010,rtbb014,rtbb011,rtbbacti,rtbb131,rtbb132,rtbb133,rtbb134, 
+                   rtbb135,rtbb136,rtbb137,rtbb138,rtbb139,rtbb140,rtbb141,rtbbsite,rtbbunit,rtbb142) = (g_rtba_m.rtbadocno, 
+                   g_rtbb_d[l_ac].rtbbseqno,g_rtbb_d[l_ac].rtbb001,g_rtbb_d[l_ac].rtbb002,g_rtbb_d[l_ac].rtbb003, 
+                   g_rtbb_d[l_ac].rtbb005,g_rtbb_d[l_ac].rtbb101,g_rtbb_d[l_ac].rtbb102,g_rtbb_d[l_ac].rtbb120, 
+                   g_rtbb_d[l_ac].rtbb130,g_rtbb_d[l_ac].rtbb105,g_rtbb_d[l_ac].rtbb106,g_rtbb_d[l_ac].rtbb110, 
+                   g_rtbb_d[l_ac].rtbb111,g_rtbb_d[l_ac].rtbb104,g_rtbb_d[l_ac].rtbb121,g_rtbb_d[l_ac].rtbb122, 
+                   g_rtbb_d[l_ac].rtbb123,g_rtbb_d[l_ac].rtbb124,g_rtbb_d[l_ac].rtbb008,g_rtbb_d[l_ac].rtbb009, 
+                   g_rtbb_d[l_ac].rtbb010,g_rtbb_d[l_ac].rtbb014,g_rtbb_d[l_ac].rtbb011,g_rtbb_d[l_ac].rtbbacti, 
+                   g_rtbb_d[l_ac].rtbb131,g_rtbb_d[l_ac].rtbb132,g_rtbb_d[l_ac].rtbb133,g_rtbb_d[l_ac].rtbb134, 
+                   g_rtbb_d[l_ac].rtbb135,g_rtbb_d[l_ac].rtbb136,g_rtbb_d[l_ac].rtbb137,g_rtbb_d[l_ac].rtbb138, 
+                   g_rtbb_d[l_ac].rtbb139,g_rtbb_d[l_ac].rtbb140,g_rtbb_d[l_ac].rtbb141,g_rtbb_d[l_ac].rtbbsite, 
+                   g_rtbb_d[l_ac].rtbbunit,g_rtbb_d[l_ac].rtbb142)
+                WHERE rtbbent = g_enterprise AND rtbbdocno = g_rtba_m.rtbadocno 
+ 
+                  AND rtbbseqno = g_rtbb_d_t.rtbbseqno #項次   
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_rtbb_d[l_ac].* = g_rtbb_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "rtbb_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     LET g_rtbb_d[l_ac].* = g_rtbb_d_t.*  
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "rtbb_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()                   
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                              INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF g_rtba_m.rtbadocno = g_detail_multi_table_t.rtbbldocno AND
+         g_rtbb_d[l_ac].rtbbseqno = g_detail_multi_table_t.rtbblseqno AND
+         g_rtbb_d[l_ac].rtbbl002 = g_detail_multi_table_t.rtbbl002 AND
+         g_rtbb_d[l_ac].rtbbl003 = g_detail_multi_table_t.rtbbl003 THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'rtbblent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_rtba_m.rtbadocno
+            LET l_field_keys[02] = 'rtbbldocno'
+            LET l_var_keys_bak[02] = g_detail_multi_table_t.rtbbldocno
+            LET l_var_keys[03] = g_rtbb_d[l_ac].rtbbseqno
+            LET l_field_keys[03] = 'rtbblseqno'
+            LET l_var_keys_bak[03] = g_detail_multi_table_t.rtbblseqno
+            LET l_var_keys[04] = g_dlang
+            LET l_field_keys[04] = 'rtbbl001'
+            LET l_var_keys_bak[04] = g_detail_multi_table_t.rtbbl001
+            LET l_vars[01] = g_rtbb_d[l_ac].rtbbl002
+            LET l_fields[01] = 'rtbbl002'
+            LET l_vars[02] = g_rtbb_d[l_ac].rtbbl003
+            LET l_fields[02] = 'rtbbl003'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'rtbbl_t')
+         END IF 
+ 
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_rtba_m.rtbadocno
+               LET gs_keys_bak[1] = g_rtbadocno_t
+               LET gs_keys[2] = g_rtbb_d[g_detail_idx].rtbbseqno
+               LET gs_keys_bak[2] = g_rtbb_d_t.rtbbseqno
+               CALL artt220_update_b('rtbb_t',gs_keys,gs_keys_bak,"'1'")
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL artt220_rtbb_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_rtbb_d[g_detail_idx].rtbbseqno = g_rtbb_d_t.rtbbseqno 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_rtba_m.rtbadocno
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_rtbb_d_t.rtbbseqno
+ 
+                  CALL artt220_key_update_b(gs_keys,'rtbb_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_rtba_m),util.JSON.stringify(g_rtbb_d_t)
+               LET g_log2 = util.JSON.stringify(g_rtba_m),util.JSON.stringify(g_rtbb_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row name="input.body.after_row"
+            
+            #end add-point
+            CALL artt220_unlock_b("rtbb_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2 name="input.body.after_row2"
+            
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input  name="input.body.after_input"
+            
+            #end add-point 
+    
+         ON ACTION controlo    
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_rtbb_d[li_reproduce_target].* = g_rtbb_d[li_reproduce].*
+ 
+               LET g_rtbb_d[li_reproduce_target].rtbbseqno = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_rtbb_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_rtbb_d.getLength()+1
+            END IF
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+ 
+      
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="artt220.input.other" >}
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog name="input.before_dialog"
+         IF p_cmd = 'a' THEN
+            NEXT FIELD rtbasite
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD rtbbseqno
+ 
+               #add-point:input段modify_detail 
+
+               #end add-point  
+            END CASE
+         END IF
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_idx_group.getValue("'1',"))      
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field name="input.next_field"
+            
+            #end add-point  
+            NEXT FIELD rtbadocno
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD rtbbseqno
+ 
+               #add-point:input段modify_detail  name="input.modify_detail.other"
+               
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog name="input.after_dialog"
+         
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept  name="input.accept"
+         
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel name="input.cancel"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+ 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close name="input.close"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit name="input.exit"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+ 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION artt220_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point  
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="show.before"
+   
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL artt220_b_fill() #單身填充
+      CALL artt220_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL artt220_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtba_m.rtbasite
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtba_m.rtbasite_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtba_m.rtbasite_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtba_m.rtba001
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtba_m.rtba001_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtba_m.rtba001_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtba_m.rtba002
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_rtba_m.rtba002_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtba_m.rtba002_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtba_m.rtba003
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtba_m.rtba003_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtba_m.rtba003_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtba_m.rtbaownid
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_rtba_m.rtbaownid_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtba_m.rtbaownid_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtba_m.rtbaowndp
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtba_m.rtbaowndp_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtba_m.rtbaowndp_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtba_m.rtbacrtid
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_rtba_m.rtbacrtid_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtba_m.rtbacrtid_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtba_m.rtbacrtdp
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtba_m.rtbacrtdp_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtba_m.rtbacrtdp_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtba_m.rtbamodid
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_rtba_m.rtbamodid_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtba_m.rtbamodid_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtba_m.rtbacnfid
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_rtba_m.rtbacnfid_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtba_m.rtbacnfid_desc
+
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_rtba_m_mask_o.* =  g_rtba_m.*
+   CALL artt220_rtba_t_mask()
+   LET g_rtba_m_mask_n.* =  g_rtba_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_rtba_m.rtbasite,g_rtba_m.rtbasite_desc,g_rtba_m.rtbadocdt,g_rtba_m.rtbadocno,g_rtba_m.rtbaunit, 
+       g_rtba_m.rtbaunit_desc,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba002_desc,g_rtba_m.rtba003, 
+       g_rtba_m.rtba003_desc,g_rtba_m.rtbastus,g_rtba_m.rtbaownid,g_rtba_m.rtbaownid_desc,g_rtba_m.rtbaowndp, 
+       g_rtba_m.rtbaowndp_desc,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdp_desc, 
+       g_rtba_m.rtbacrtdt,g_rtba_m.rtbamodid,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid, 
+       g_rtba_m.rtbacnfid_desc,g_rtba_m.rtbacnfdt
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_rtba_m.rtbastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_rtbb_d.getLength()
+      #add-point:show段單身reference name="show.body.reference"
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb106
+#            CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtbb_d[l_ac].rtbb106_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb106_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb124
+#            LET g_ref_fields[2] = g_rtbb_d[l_ac].rtbb123
+#            LET g_ref_fields[3] = g_rtbb_d[l_ac].rtbb122
+#            LET g_ref_fields[4] = g_rtbb_d[l_ac].rtbb121
+#            CALL ap_ref_array2(g_ref_fields,"SELECT mhadl006 FROM mhadl_t WHERE mhadlent='"||g_enterprise||"' AND mhadl001=? AND mhadl002=? AND mhadl003=? AND mhadl004=? AND mhadl005='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtbb_d[l_ac].rtbb121_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb121_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb124
+#            LET g_ref_fields[2] = g_rtbb_d[l_ac].rtbb123
+#            LET g_ref_fields[3] = g_rtbb_d[l_ac].rtbb122
+#            CALL ap_ref_array2(g_ref_fields,"SELECT mhacl005 FROM mhacl_t WHERE mhaclent='"||g_enterprise||"' AND mhacl001=? AND mhacl002=? AND mhacl003=? AND mhacl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtbb_d[l_ac].rtbb122_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb122_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb124
+#            LET g_ref_fields[2] = g_rtbb_d[l_ac].rtbb123
+#            CALL ap_ref_array2(g_ref_fields,"SELECT mhabl004 FROM mhabl_t WHERE mhablent='"||g_enterprise||"' AND mhabl001=? AND mhabl002=? AND mhabl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtbb_d[l_ac].rtbb123_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb123_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb124
+#            CALL ap_ref_array2(g_ref_fields,"SELECT mhaal003 FROM mhaal_t WHERE mhaalent='"||g_enterprise||"' AND mhaal001=? AND mhaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_rtbb_d[l_ac].rtbb124_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb124_desc
+
+             INITIALIZE g_ref_fields TO NULL
+             LET g_ref_fields[1] = g_rtba_m.rtbadocno
+             LET g_ref_fields[2] = g_rtbb_d[l_ac].rtbbseqno
+             CALL ap_ref_array2(g_ref_fields,"SELECT rtbbl002,rtbbl003 FROM rtbbl_t WHERE rtbblent='"||g_enterprise||"' AND rtbbldocno=? AND rtbblseqno=? AND rtbbl001='"||g_dlang||"'","") RETURNING g_rtn_fields
+             LET g_rtbb_d[l_ac].rtbbl002 = '', g_rtn_fields[1] , ''
+             LET g_rtbb_d[l_ac].rtbbl003 = '', g_rtn_fields[2] , ''
+             DISPLAY BY NAME g_rtbb_d[l_ac].rtbbl002
+             DISPLAY BY NAME g_rtbb_d[l_ac].rtbbl003
+      #end add-point
+   END FOR
+   
+ 
+   
+    
+   
+   #add-point:show段other name="show.other"
+   
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL artt220_detail_show()
+ 
+   #add-point:show段之後 name="show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.detail_show" >}
+#+ 第二階單身reference
+PRIVATE FUNCTION artt220_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point  
+   #add-point:detail_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="detail_show.before"
+   
+   #end add-point
+   
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION artt220_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point   
+   DEFINE l_newno     LIKE rtba_t.rtbadocno 
+   DEFINE l_oldno     LIKE rtba_t.rtbadocno 
+ 
+   DEFINE l_master    RECORD LIKE rtba_t.* #此變數樣板目前無使用
+   DEFINE l_detail    RECORD LIKE rtbb_t.* #此變數樣板目前無使用
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   DEFINE l_insert    LIKE type_t.num5
+   DEFINE l_success   LIKE type_t.num5    #sakura add
+   DEFINE l_doctype   LIKE rtai_t.rtai004 #sakura add  
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   LET g_master_insert = FALSE
+   
+   IF g_rtba_m.rtbadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_rtbadocno_t = g_rtba_m.rtbadocno
+ 
+    
+   LET g_rtba_m.rtbadocno = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_rtba_m.rtbaownid = g_user
+      LET g_rtba_m.rtbaowndp = g_dept
+      LET g_rtba_m.rtbacrtid = g_user
+      LET g_rtba_m.rtbacrtdp = g_dept 
+      LET g_rtba_m.rtbacrtdt = cl_get_current()
+      LET g_rtba_m.rtbamodid = g_user
+      LET g_rtba_m.rtbamoddt = cl_get_current()
+      LET g_rtba_m.rtbastus = 'N'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   LET g_site_flag = FALSE
+   CALL s_aooi500_default(g_prog,'rtbasite',g_rtba_m.rtbasite)
+    RETURNING l_insert,g_rtba_m.rtbasite
+   IF NOT l_insert THEN
+     RETURN
+   END IF
+   CALL artt220_rtbasite_ref()
+   #sakura---add---str
+   #預設單據的單別 
+   LET l_success = ''
+   LET l_doctype = ''
+   CALL s_arti200_get_def_doc_type(g_rtba_m.rtbasite,g_prog,'1')
+        RETURNING l_success, l_doctype
+   LET g_rtba_m.rtbadocno = l_doctype   
+   #sakura---add---end
+   
+   #sakura---modify---str
+   #rtba001->rtbaunit
+   IF s_aooi500_setpoint(g_prog,'rtbaunit') THEN
+      CALL s_aooi500_default(g_prog,'rtbaunit',g_rtba_m.rtbasite)
+       RETURNING l_insert,g_rtba_m.rtbaunit
+      IF NOT l_insert THEN
+        RETURN
+      END IF
+   ELSE
+      LET g_rtba_m.rtbaunit = g_site
+   END IF
+   CALL artt220_rtbaunit_ref()
+   #sakura---modify---str
+
+   LET g_rtba_m.rtbastus = "N"
+   LET g_rtba_m.rtbacnfid = ""
+   LET g_rtba_m.rtbacnfdt = ""
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_rtba_m.rtbastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+   
+   
+   CALL artt220_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_rtba_m.* TO NULL
+      INITIALIZE g_rtbb_d TO NULL
+ 
+      #add-point:複製取消後 name="reproduce.cancel"
+      
+      #end add-point
+      CALL artt220_show()
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code = 9001 
+      LET g_errparam.popup = FALSE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL artt220_set_act_visible()   
+   CALL artt220_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_rtbadocno_t = g_rtba_m.rtbadocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " rtbaent = " ||g_enterprise|| " AND",
+                      " rtbadocno = '", g_rtba_m.rtbadocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL artt220_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+   
+   CALL artt220_idx_chk()
+   
+   LET g_data_owner = g_rtba_m.rtbaownid      
+   LET g_data_dept  = g_rtba_m.rtbaowndp
+   
+   #功能已完成,通報訊息中心
+   CALL artt220_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.detail_reproduce" >}
+#+ 單身自動複製
+PRIVATE FUNCTION artt220_detail_reproduce()
+   #add-point:delete段define(客製用) name="detail_reproduce.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE rtbb_t.* #此變數樣板目前無使用
+ 
+ 
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_reproduce.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="detail_reproduce.pre_function"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE artt220_detail
+   
+   #add-point:單身複製前1 name="detail_reproduce.body.table1.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM rtbb_t
+    WHERE rtbbent = g_enterprise AND rtbbdocno = g_rtbadocno_t
+ 
+    INTO TEMP artt220_detail
+ 
+   #將key修正為調整後   
+   UPDATE artt220_detail 
+      #更新key欄位
+      SET rtbbdocno = g_rtba_m.rtbadocno
+ 
+      #更新共用欄位
+      
+ 
+   #add-point:單身修改前 name="detail_reproduce.body.table1.b_update"
+   
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO rtbb_t SELECT * FROM artt220_detail
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1 name="detail_reproduce.body.table1.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE artt220_detail
+   
+   #add-point:單身複製後1 name="detail_reproduce.body.table1.a_insert"
+   
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+      #應用 a38 樣板自動產生(Version:6)
+   #單身多語言複製
+   DROP TABLE artt220_detail_lang
+   
+   #add-point:單身複製前1 name="detail_reproduce.body.lang0.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE & INSERT 
+   SELECT * FROM rtbbl_t 
+    WHERE rtbblent = g_enterprise AND rtbbldocno = g_rtbadocno_t
+ 
+     INTO TEMP artt220_detail_lang
+ 
+   #將key修正為調整後   
+   UPDATE artt220_detail_lang 
+      #更新key欄位
+      SET rtbbldocno = g_rtba_m.rtbadocno
+ 
+  
+   #add-point:單身修改前 name="detail_reproduce.body.lang0.b_update"
+   
+   #end add-point   
+  
+   #將資料塞回原table   
+   INSERT INTO rtbbl_t SELECT * FROM artt220_detail_lang
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1 name="detail_reproduce.lang0.table1.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE artt220_detail_lang
+   
+   #add-point:單身複製後1 name="detail_reproduce.lang0.table1.a_insert"
+   
+   #end add-point
+ 
+ 
+ 
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_rtbadocno_t = g_rtba_m.rtbadocno
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION artt220_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point     
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   IF g_rtba_m.rtbastus <> 'N'THEN
+      RETURN
+   END IF  
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   IF g_rtba_m.rtbadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   
+   
+   CALL s_transaction_begin()
+ 
+   OPEN artt220_cl USING g_enterprise,g_rtba_m.rtbadocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN artt220_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE artt220_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE artt220_master_referesh USING g_rtba_m.rtbadocno INTO g_rtba_m.rtbasite,g_rtba_m.rtbadocdt, 
+       g_rtba_m.rtbadocno,g_rtba_m.rtbaunit,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba003,g_rtba_m.rtbastus, 
+       g_rtba_m.rtbaownid,g_rtba_m.rtbaowndp,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdt, 
+       g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfdt,g_rtba_m.rtbasite_desc, 
+       g_rtba_m.rtbaunit_desc,g_rtba_m.rtba002_desc,g_rtba_m.rtba003_desc,g_rtba_m.rtbaownid_desc,g_rtba_m.rtbaowndp_desc, 
+       g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp_desc,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbacnfid_desc 
+ 
+   
+   
+   #檢查是否允許此動作
+   IF NOT artt220_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_rtba_m_mask_o.* =  g_rtba_m.*
+   CALL artt220_rtba_t_mask()
+   LET g_rtba_m_mask_n.* =  g_rtba_m.*
+   
+   CALL artt220_show()
+   
+   #add-point:delete段before ask name="delete.before_ask"
+   
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL artt220_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+  
+  
+      #資料備份
+      LET g_rtbadocno_t = g_rtba_m.rtbadocno
+ 
+ 
+      DELETE FROM rtba_t
+       WHERE rtbaent = g_enterprise AND rtbadocno = g_rtba_m.rtbadocno
+ 
+       
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+       
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_rtba_m.rtbadocno,":",SQLERRMESSAGE  
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      #sakura---add---str
+      IF NOT s_aooi200_del_docno(g_rtba_m.rtbadocno,g_rtba_m.rtbadocdt) THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      #sakura---add---end
+      #end add-point
+  
+      #add-point:單身刪除前 name="delete.body.b_delete"
+      
+      #end add-point
+      
+      DELETE FROM rtbb_t
+       WHERE rtbbent = g_enterprise AND rtbbdocno = g_rtba_m.rtbadocno
+ 
+ 
+      #add-point:單身刪除中 name="delete.body.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "rtbb_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete"
+      DELETE FROM rtbbl_t 
+       WHERE rtbblent = g_enterprise AND rtbbldocno = g_rtba_m.rtbadocno
+      #end add-point
+      
+            
+                                                               
+ 
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_rtba_m)   #(ver:78)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:78)
+         CLOSE artt220_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_rtbb_d.clear() 
+ 
+     
+      CALL artt220_ui_browser_refresh()  
+      #CALL artt220_ui_headershow()  
+      #CALL artt220_ui_detailshow()
+ 
+      #add-point:多語言刪除 name="delete.lang.before_delete"
+      
+      #end add-point
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      INITIALIZE l_var_keys_bak TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         LET l_field_keys[01] = 'rtbblent'
+         LET l_var_keys_bak[01] = g_enterprise
+         LET l_field_keys[02] = 'rtbbldocno'
+         LET l_var_keys_bak[02] = g_rtba_m.rtbadocno
+         CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'rtbbl_t')
+ 
+ 
+   
+      #add-point:多語言刪除 name="delete.lang.delete"
+      
+      #end add-point
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL artt220_browser_fill("")
+         CALL artt220_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+      
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE artt220_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL artt220_msgcentre_notify('delete')
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION artt220_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point     
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   #清空第一階單身
+   CALL g_rtbb_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   
+   #end add-point
+   
+   #判斷是否填充
+   IF artt220_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+      #add-point:b_fill段long_sql_if name="b_fill.long_sql_if"
+      
+      #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT rtbbseqno,rtbb001,rtbb002,rtbb003,rtbb005,rtbb101,rtbb102,rtbb120, 
+             rtbb130,rtbb105,rtbb106,rtbb110,rtbb111,rtbb104,rtbb121,rtbb122,rtbb123,rtbb124,rtbb008, 
+             rtbb009,rtbb010,rtbb014,rtbb011,rtbbacti,rtbb131,rtbb132,rtbb133,rtbb134,rtbb135,rtbb136, 
+             rtbb137,rtbb138,rtbb139,rtbb140,rtbb141,rtbbsite,rtbbunit,rtbb142 ,t1.ooefl003 ,t2.ooefl003 , 
+             t3.rtaxl003 ,t4.mhadl006 ,t5.mhacl005 ,t6.mhabl004 ,t7.mhaal003 ,t8.oocql004 ,t9.oocql004 , 
+             t10.inayl003 FROM rtbb_t",   
+                     " INNER JOIN rtba_t ON rtbaent = " ||g_enterprise|| " AND rtbadocno = rtbbdocno ",
+ 
+                     #" LEFT JOIN rtbbl_t ON rtbblent = "||g_enterprise||" AND rtbadocno = rtbbldocno AND rtbbseqno = rtbblseqno AND rtbbl001 = '",g_dlang,"'",
+                     
+                     " LEFT JOIN rtbbl_t ON rtbblent = "||g_enterprise||" AND rtbadocno = rtbbldocno AND rtbbseqno = rtbblseqno AND rtbbl001 = '",g_dlang,"'",
+                     #下層單身所需的join條件
+ 
+                                    " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=rtbb005 AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent="||g_enterprise||" AND t2.ooefl001=rtbb120 AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN rtaxl_t t3 ON t3.rtaxlent="||g_enterprise||" AND t3.rtaxl001=rtbb106 AND t3.rtaxl002='"||g_dlang||"' ",
+               " LEFT JOIN mhadl_t t4 ON t4.mhadlent="||g_enterprise||" AND t4.mhadl001=rtbb124 AND t4.mhadl002=rtbb123 AND t4.mhadl003=rtbb122 AND t4.mhadl004=rtbb121 AND t4.mhadl005='"||g_dlang||"' ",
+               " LEFT JOIN mhacl_t t5 ON t5.mhaclent="||g_enterprise||" AND t5.mhacl001=rtbb124 AND t5.mhacl002=rtbb123 AND t5.mhacl003=rtbb122 AND t5.mhacl004='"||g_dlang||"' ",
+               " LEFT JOIN mhabl_t t6 ON t6.mhablent="||g_enterprise||" AND t6.mhabl001=rtbb124 AND t6.mhabl002=rtbb123 AND t6.mhabl003='"||g_dlang||"' ",
+               " LEFT JOIN mhaal_t t7 ON t7.mhaalent="||g_enterprise||" AND t7.mhaal001=rtbb124 AND t7.mhaal002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t8 ON t8.oocqlent="||g_enterprise||" AND t8.oocql001='2127' AND t8.oocql002=rtbb131 AND t8.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t9 ON t9.oocqlent="||g_enterprise||" AND t9.oocql001='2126' AND t9.oocql002=rtbb134 AND t9.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN inayl_t t10 ON t10.inaylent="||g_enterprise||" AND t10.inayl001=rtbb141 AND t10.inayl002='"||g_dlang||"' ",
+ 
+                     " WHERE rtbbent=? AND rtbbdocno=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body.fill_sql"
+         
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY rtbb_t.rtbbseqno"
+         
+         #add-point:單身填充控制 name="b_fill.sql"
+       
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE artt220_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR artt220_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs USING g_enterprise,g_rtba_m.rtbadocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs USING g_enterprise,g_rtba_m.rtbadocno INTO g_rtbb_d[l_ac].rtbbseqno,g_rtbb_d[l_ac].rtbb001, 
+          g_rtbb_d[l_ac].rtbb002,g_rtbb_d[l_ac].rtbb003,g_rtbb_d[l_ac].rtbb005,g_rtbb_d[l_ac].rtbb101, 
+          g_rtbb_d[l_ac].rtbb102,g_rtbb_d[l_ac].rtbb120,g_rtbb_d[l_ac].rtbb130,g_rtbb_d[l_ac].rtbb105, 
+          g_rtbb_d[l_ac].rtbb106,g_rtbb_d[l_ac].rtbb110,g_rtbb_d[l_ac].rtbb111,g_rtbb_d[l_ac].rtbb104, 
+          g_rtbb_d[l_ac].rtbb121,g_rtbb_d[l_ac].rtbb122,g_rtbb_d[l_ac].rtbb123,g_rtbb_d[l_ac].rtbb124, 
+          g_rtbb_d[l_ac].rtbb008,g_rtbb_d[l_ac].rtbb009,g_rtbb_d[l_ac].rtbb010,g_rtbb_d[l_ac].rtbb014, 
+          g_rtbb_d[l_ac].rtbb011,g_rtbb_d[l_ac].rtbbacti,g_rtbb_d[l_ac].rtbb131,g_rtbb_d[l_ac].rtbb132, 
+          g_rtbb_d[l_ac].rtbb133,g_rtbb_d[l_ac].rtbb134,g_rtbb_d[l_ac].rtbb135,g_rtbb_d[l_ac].rtbb136, 
+          g_rtbb_d[l_ac].rtbb137,g_rtbb_d[l_ac].rtbb138,g_rtbb_d[l_ac].rtbb139,g_rtbb_d[l_ac].rtbb140, 
+          g_rtbb_d[l_ac].rtbb141,g_rtbb_d[l_ac].rtbbsite,g_rtbb_d[l_ac].rtbbunit,g_rtbb_d[l_ac].rtbb142, 
+          g_rtbb_d[l_ac].rtbb005_desc,g_rtbb_d[l_ac].rtbb120_desc,g_rtbb_d[l_ac].rtbb106_desc,g_rtbb_d[l_ac].rtbb121_desc, 
+          g_rtbb_d[l_ac].rtbb122_desc,g_rtbb_d[l_ac].rtbb123_desc,g_rtbb_d[l_ac].rtbb124_desc,g_rtbb_d[l_ac].rtbb131_desc, 
+          g_rtbb_d[l_ac].rtbb134_desc,g_rtbb_d[l_ac].rtbb141_desc   #(ver:78)
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill.fill"
+         
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code = 9035 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+    
+ 
+   
+   #add-point:browser_fill段其他table處理 name="browser_fill.other_fill"
+   
+   #end add-point
+   
+   CALL g_rtbb_d.deleteElement(g_rtbb_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE artt220_pb
+ 
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_rtbb_d.getLength()
+      LET g_rtbb_d_mask_o[l_ac].* =  g_rtbb_d[l_ac].*
+      CALL artt220_rtbb_t_mask()
+      LET g_rtbb_d_mask_n[l_ac].* =  g_rtbb_d[l_ac].*
+   END FOR
+   
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION artt220_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete"
+      
+      #end add-point    
+      DELETE FROM rtbb_t
+       WHERE rtbbent = g_enterprise AND
+         rtbbdocno = ps_keys_bak[1] AND rtbbseqno = ps_keys_bak[2]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ":",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_rtbb_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:delete_b段other name="delete_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION artt220_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert"
+      
+      #end add-point 
+      INSERT INTO rtbb_t
+                  (rtbbent,
+                   rtbbdocno,
+                   rtbbseqno
+                   ,rtbb001,rtbb002,rtbb003,rtbb005,rtbb101,rtbb102,rtbb120,rtbb130,rtbb105,rtbb106,rtbb110,rtbb111,rtbb104,rtbb121,rtbb122,rtbb123,rtbb124,rtbb008,rtbb009,rtbb010,rtbb014,rtbb011,rtbbacti,rtbb131,rtbb132,rtbb133,rtbb134,rtbb135,rtbb136,rtbb137,rtbb138,rtbb139,rtbb140,rtbb141,rtbbsite,rtbbunit,rtbb142) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_rtbb_d[g_detail_idx].rtbb001,g_rtbb_d[g_detail_idx].rtbb002,g_rtbb_d[g_detail_idx].rtbb003, 
+                       g_rtbb_d[g_detail_idx].rtbb005,g_rtbb_d[g_detail_idx].rtbb101,g_rtbb_d[g_detail_idx].rtbb102, 
+                       g_rtbb_d[g_detail_idx].rtbb120,g_rtbb_d[g_detail_idx].rtbb130,g_rtbb_d[g_detail_idx].rtbb105, 
+                       g_rtbb_d[g_detail_idx].rtbb106,g_rtbb_d[g_detail_idx].rtbb110,g_rtbb_d[g_detail_idx].rtbb111, 
+                       g_rtbb_d[g_detail_idx].rtbb104,g_rtbb_d[g_detail_idx].rtbb121,g_rtbb_d[g_detail_idx].rtbb122, 
+                       g_rtbb_d[g_detail_idx].rtbb123,g_rtbb_d[g_detail_idx].rtbb124,g_rtbb_d[g_detail_idx].rtbb008, 
+                       g_rtbb_d[g_detail_idx].rtbb009,g_rtbb_d[g_detail_idx].rtbb010,g_rtbb_d[g_detail_idx].rtbb014, 
+                       g_rtbb_d[g_detail_idx].rtbb011,g_rtbb_d[g_detail_idx].rtbbacti,g_rtbb_d[g_detail_idx].rtbb131, 
+                       g_rtbb_d[g_detail_idx].rtbb132,g_rtbb_d[g_detail_idx].rtbb133,g_rtbb_d[g_detail_idx].rtbb134, 
+                       g_rtbb_d[g_detail_idx].rtbb135,g_rtbb_d[g_detail_idx].rtbb136,g_rtbb_d[g_detail_idx].rtbb137, 
+                       g_rtbb_d[g_detail_idx].rtbb138,g_rtbb_d[g_detail_idx].rtbb139,g_rtbb_d[g_detail_idx].rtbb140, 
+                       g_rtbb_d[g_detail_idx].rtbb141,g_rtbb_d[g_detail_idx].rtbbsite,g_rtbb_d[g_detail_idx].rtbbunit, 
+                       g_rtbb_d[g_detail_idx].rtbb142)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert"
+      
+      #end add-point 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "rtbb_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_rtbb_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert"
+      
+      #end add-point 
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:insert_b段other name="insert_b.other"
+   
+   #end add-point     
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION artt220_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "rtbb_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update"
+      
+      #end add-point 
+      
+      #將遮罩欄位還原
+      CALL artt220_rtbb_t_mask_restore('restore_mask_o')
+               
+      UPDATE rtbb_t 
+         SET (rtbbdocno,
+              rtbbseqno
+              ,rtbb001,rtbb002,rtbb003,rtbb005,rtbb101,rtbb102,rtbb120,rtbb130,rtbb105,rtbb106,rtbb110,rtbb111,rtbb104,rtbb121,rtbb122,rtbb123,rtbb124,rtbb008,rtbb009,rtbb010,rtbb014,rtbb011,rtbbacti,rtbb131,rtbb132,rtbb133,rtbb134,rtbb135,rtbb136,rtbb137,rtbb138,rtbb139,rtbb140,rtbb141,rtbbsite,rtbbunit,rtbb142) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_rtbb_d[g_detail_idx].rtbb001,g_rtbb_d[g_detail_idx].rtbb002,g_rtbb_d[g_detail_idx].rtbb003, 
+                  g_rtbb_d[g_detail_idx].rtbb005,g_rtbb_d[g_detail_idx].rtbb101,g_rtbb_d[g_detail_idx].rtbb102, 
+                  g_rtbb_d[g_detail_idx].rtbb120,g_rtbb_d[g_detail_idx].rtbb130,g_rtbb_d[g_detail_idx].rtbb105, 
+                  g_rtbb_d[g_detail_idx].rtbb106,g_rtbb_d[g_detail_idx].rtbb110,g_rtbb_d[g_detail_idx].rtbb111, 
+                  g_rtbb_d[g_detail_idx].rtbb104,g_rtbb_d[g_detail_idx].rtbb121,g_rtbb_d[g_detail_idx].rtbb122, 
+                  g_rtbb_d[g_detail_idx].rtbb123,g_rtbb_d[g_detail_idx].rtbb124,g_rtbb_d[g_detail_idx].rtbb008, 
+                  g_rtbb_d[g_detail_idx].rtbb009,g_rtbb_d[g_detail_idx].rtbb010,g_rtbb_d[g_detail_idx].rtbb014, 
+                  g_rtbb_d[g_detail_idx].rtbb011,g_rtbb_d[g_detail_idx].rtbbacti,g_rtbb_d[g_detail_idx].rtbb131, 
+                  g_rtbb_d[g_detail_idx].rtbb132,g_rtbb_d[g_detail_idx].rtbb133,g_rtbb_d[g_detail_idx].rtbb134, 
+                  g_rtbb_d[g_detail_idx].rtbb135,g_rtbb_d[g_detail_idx].rtbb136,g_rtbb_d[g_detail_idx].rtbb137, 
+                  g_rtbb_d[g_detail_idx].rtbb138,g_rtbb_d[g_detail_idx].rtbb139,g_rtbb_d[g_detail_idx].rtbb140, 
+                  g_rtbb_d[g_detail_idx].rtbb141,g_rtbb_d[g_detail_idx].rtbbsite,g_rtbb_d[g_detail_idx].rtbbunit, 
+                  g_rtbb_d[g_detail_idx].rtbb142) 
+         WHERE rtbbent = g_enterprise AND rtbbdocno = ps_keys_bak[1] AND rtbbseqno = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "rtbb_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "rtbb_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+ 
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL artt220_rtbb_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後 name="update_b.after_update"
+      
+      #end add-point  
+   END IF
+   
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      LET l_new_key[01] = g_enterprise
+LET l_old_key[01] = g_enterprise
+LET l_field_key[01] = 'rtbblent'
+LET l_new_key[02] = ps_keys[1] 
+LET l_old_key[02] = ps_keys_bak[1] 
+LET l_field_key[02] = 'rtbbldocno'
+LET l_new_key[03] = ps_keys[2] 
+LET l_old_key[03] = ps_keys_bak[2] 
+LET l_field_key[03] = 'rtbblseqno'
+LET l_new_key[04] = g_dlang 
+LET l_old_key[04] = g_dlang 
+LET l_field_key[04] = 'rtbbl001'
+CALL cl_multitable_key_upd(l_new_key, l_old_key, l_field_key, 'rtbbl_t')
+   END IF
+   
+   
+ 
+   
+ 
+   
+   #add-point:update_b段other name="update_b.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.key_update_b" >}
+#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION artt220_key_update_b(ps_keys_bak,ps_table)
+   #add-point:update_b段define(客製用) name="key_update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_key       DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_update_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_update_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.key_delete_b" >}
+#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION artt220_key_delete_b(ps_keys_bak,ps_table)
+   #add-point:delete_b段define(客製用) name="key_delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_delete_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_delete_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION artt220_lock_b(ps_table,ps_page)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+    
+   #先刷新資料
+   #CALL artt220_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "rtbb_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN artt220_bcl USING g_enterprise,
+                                       g_rtba_m.rtbadocno,g_rtbb_d[g_detail_idx].rtbbseqno     
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "artt220_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+ 
+   
+ 
+   
+   #add-point:lock_b段other name="lock_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION artt220_unlock_b(ps_table,ps_page)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE artt220_bcl
+   END IF
+   
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other name="unlock_b.other"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION artt220_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization"
+   
+   #end add-point       
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point       
+   
+   #add-point:Function前置處理  name="set_entry.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_comp_entry("rtbadocno",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("rtbadocno",TRUE)
+      CALL cl_set_comp_entry("rtbadocdt",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      CALL cl_set_comp_entry("rtbadocdt",TRUE)
+      CALL cl_set_comp_entry("rtbasite",TRUE) #sakura add
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+  #CALL cl_set_comp_entry("rtba000,rtbasite,rtba001",TRUE)  #sakura mark
+   CALL cl_set_comp_entry("rtba000,rtbasite,rtbaunit",TRUE) #sakura add
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION artt220_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   define l_count like type_t.num5
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("rtbadocno",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      CALL cl_set_comp_entry("rtbadocdt",FALSE)  
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN  #docno,ld欄位確認是絕對關閉
+      CALL cl_set_comp_entry("rtbadocno",FALSE)
+   END IF 
+ 
+#  IF p_cmd = 'u' THEN  #docdt欄位依照設定關閉(FALSE則為設定不同意修正) #(ver:78)
+      IF NOT cl_chk_update_docdt() THEN
+         CALL cl_set_comp_entry("rtbadocdt",FALSE)
+      END IF
+#  END IF 
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   #sakura---add---str
+   IF p_cmd = 'u' THEN
+      CALL cl_set_comp_entry("rtbasite,rtbadocdt,rtbadocno",FALSE)
+   END IF      
+   #sakura---add---end
+   SELECT count(*) INTO l_count   FROM rtbb_t
+    WHERE rtbbdocno = g_rtba_m.rtbadocno AND rtbbent = g_enterprise
+   IF l_count >0 THEN
+     #CALL cl_set_comp_entry("rtba000,rtbasite,rtba001",FALSE)  #sakura mark
+      CALL cl_set_comp_entry("rtba000,rtbasite,rtbaunit",FALSE) #sakura add
+   END IF   
+   
+   IF NOT s_aooi500_comp_entry(g_prog,'rtbasite') OR g_site_flag THEN
+      CALL cl_set_comp_entry("rtbasite",FALSE)
+   END IF
+   #sakura---add---str
+   IF NOT s_aooi500_comp_entry(g_prog,'rtbaunit') THEN
+      CALL cl_set_comp_entry("rtbaunit",FALSE)
+   END IF   
+   #sakura---add---end   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION artt220_set_entry_b(p_cmd)
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_entry_b.pre_function"
+   
+   #end add-point
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段 name="set_entry_b.set_entry_b"
+   CALL cl_set_comp_entry("rtbbacti",TRUE)
+   CALL cl_set_comp_entry("rtbb141",TRUE)#150505-00015#6 20150521 add by BeckXie 
+   #end add-point  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION artt220_set_no_entry_b(p_cmd)
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point    
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="set_no_entry_b.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段 name="set_no_entry_b.set_no_entry_b"
+   IF g_rtba_m.rtba000 = 'I' THEN
+      CALL cl_set_comp_entry("rtbbacti",FALSE)
+   END IF
+   #150505-00015#6 20150521 add by BeckXie---S
+   IF g_rtbb_d[l_ac].rtbb135 = '1' THEN
+      CALL cl_set_comp_entry("rtbb141",FALSE)
+   END IF
+   #150505-00015#6 20150521 add by BeckXie---E
+   #end add-point     
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION artt220_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION artt220_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   #應用 a63 樣板自動產生(Version:1)
+   IF g_rtba_m.rtbastus NOT MATCHES "[NDR]" THEN   # N未確認/D抽單/R已拒絕允許修改
+      CALL cl_set_act_visible("modify,delete,modify_detail", FALSE)
+   END IF
+
+
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.set_act_visible_b" >}
+#+ 單身權限開啟
+PRIVATE FUNCTION artt220_set_act_visible_b()
+   #add-point:set_act_visible_b段define(客製用) name="set_act_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段 name="set_act_visible_b.set_act_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.set_act_no_visible_b" >}
+#+ 單身權限關閉
+PRIVATE FUNCTION artt220_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define(客製用) name="set_act_no_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段 name="set_act_no_visible_b.set_act_no_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION artt220_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point  
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="default_search.before"
+   
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " rtbadocno = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "rtba_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "rtbb_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   #IF g_prog = "adbt230" THEN        #160705-00042#10 160713 by sakura mark
+   IF g_prog MATCHES 'adbt230' THEN   #160705-00042#10 160713 by sakura add
+      LET g_wc = g_wc," AND rtbb101 = '1' "
+   ELSE
+      LET g_wc = g_wc," AND rtbb101 = '2' "
+   END IF
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION artt220_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   define  l_success   like type_t.num5
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   IF g_rtba_m.rtbastus = 'X' or g_rtba_m.rtbastus = 'Y'THEN
+      RETURN
+   END IF
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_rtba_m.rtbadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN artt220_cl USING g_enterprise,g_rtba_m.rtbadocno
+   IF STATUS THEN
+      CLOSE artt220_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN artt220_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE artt220_master_referesh USING g_rtba_m.rtbadocno INTO g_rtba_m.rtbasite,g_rtba_m.rtbadocdt, 
+       g_rtba_m.rtbadocno,g_rtba_m.rtbaunit,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba003,g_rtba_m.rtbastus, 
+       g_rtba_m.rtbaownid,g_rtba_m.rtbaowndp,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdt, 
+       g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfdt,g_rtba_m.rtbasite_desc, 
+       g_rtba_m.rtbaunit_desc,g_rtba_m.rtba002_desc,g_rtba_m.rtba003_desc,g_rtba_m.rtbaownid_desc,g_rtba_m.rtbaowndp_desc, 
+       g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp_desc,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbacnfid_desc 
+ 
+   
+ 
+   #檢查是否允許此動作
+   IF NOT artt220_action_chk() THEN
+      CLOSE artt220_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_rtba_m.rtbasite,g_rtba_m.rtbasite_desc,g_rtba_m.rtbadocdt,g_rtba_m.rtbadocno,g_rtba_m.rtbaunit, 
+       g_rtba_m.rtbaunit_desc,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba002_desc,g_rtba_m.rtba003, 
+       g_rtba_m.rtba003_desc,g_rtba_m.rtbastus,g_rtba_m.rtbaownid,g_rtba_m.rtbaownid_desc,g_rtba_m.rtbaowndp, 
+       g_rtba_m.rtbaowndp_desc,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdp_desc, 
+       g_rtba_m.rtbacrtdt,g_rtba_m.rtbamodid,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid, 
+       g_rtba_m.rtbacnfid_desc,g_rtba_m.rtbacnfdt
+ 
+   CASE g_rtba_m.rtbastus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+      WHEN "A"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+      WHEN "D"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+      WHEN "R"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+      WHEN "W"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+      WHEN "X"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_rtba_m.rtbastus
+            
+            WHEN "N"
+               HIDE OPTION "unconfirmed"
+            WHEN "Y"
+               HIDE OPTION "confirmed"
+            WHEN "A"
+               HIDE OPTION "approved"
+            WHEN "D"
+               HIDE OPTION "withdraw"
+            WHEN "R"
+               HIDE OPTION "rejection"
+            WHEN "W"
+               HIDE OPTION "signing"
+            WHEN "X"
+               HIDE OPTION "invalid"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      CALL cl_set_act_visible("signing,withdraw",FALSE)
+      CASE g_rtba_m.rtbastus  
+         WHEN "N"
+            CALL cl_set_act_visible("unconfirmed,hold",FALSE)
+            #需提交至BPM時，則顯示「提交」功能並隱藏「確認」功能
+            IF cl_bpm_chk() THEN
+               CALL cl_set_act_visible("signing",TRUE)
+               CALL cl_set_act_visible("confirmed",FALSE)
+            END IF
+         WHEN "R"    #保留修改的功能(如作廢)，隱藏其他應用功能(如: 確認、未確認、留置、過帳…)
+            CALL cl_set_act_visible("confirmed,unconfirmed,hold",FALSE)
+         WHEN "D"    #保留修改的功能(如作廢)，隱藏其他應用功能(如: 確認、未確認、留置、過帳…)
+            CALL cl_set_act_visible("confirmed,unconfirmed,hold",FALSE)
+         WHEN "X"
+            HIDE OPTION "unconfirmed"
+            HIDE OPTION "confirmed"
+            CALL s_transaction_end('N','0')   #160816-00068#10 by 08209 add
+            RETURN
+         WHEN "Y"
+            HIDE OPTION "unconfirmed"
+            HIDE OPTION "invalid"
+            CALL s_transaction_end('N','0')   #160816-00068#10 by 08209 add
+            RETURN
+         WHEN "W"    #只能顯示抽單;其餘應用功能皆隱藏
+            CALL cl_set_act_visible("withdraw",TRUE)
+            CALL cl_set_act_visible("unconfirmed,invalid,confirmed,hold",FALSE)
+         WHEN "A"    #只能顯示確認; 其餘應用功能皆隱藏
+            CALL cl_set_act_visible("confirmed",TRUE)
+            CALL cl_set_act_visible("unconfirmed,invalid,hold",FALSE)
+      END CASE
+      #end add-point
+      
+      #應用 a36 樣板自動產生(Version:5)
+      #提交
+      ON ACTION signing
+         IF cl_auth_chk_act("signing") THEN
+            IF NOT artt220_send() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE artt220_cl
+            RETURN
+         END IF
+    
+      #抽單
+      ON ACTION withdraw
+         IF cl_auth_chk_act("withdraw") THEN
+            IF NOT artt220_draw_out() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE artt220_cl
+            RETURN
+         END IF
+ 
+ 
+ 
+	  
+      ON ACTION unconfirmed
+         IF cl_auth_chk_act("unconfirmed") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.unconfirmed"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION confirmed
+         IF cl_auth_chk_act("confirmed") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.confirmed"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION approved
+         IF cl_auth_chk_act("approved") THEN
+            LET lc_state = "A"
+            #add-point:action控制 name="statechange.approved"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION withdraw
+      #   IF cl_auth_chk_act("withdraw") THEN
+      #      LET lc_state = "D"
+      #      #add-point:action控制 name="statechange.withdraw"
+      #      
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION rejection
+         IF cl_auth_chk_act("rejection") THEN
+            LET lc_state = "R"
+            #add-point:action控制 name="statechange.rejection"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION signing
+      #   IF cl_auth_chk_act("signing") THEN
+      #      LET lc_state = "W"
+      #      #add-point:action控制 name="statechange.signing"
+      #      
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION invalid
+         IF cl_auth_chk_act("invalid") THEN
+            LET lc_state = "X"
+            #add-point:action控制 name="statechange.invalid"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+      
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      AND lc_state <> "A"
+      AND lc_state <> "D"
+      AND lc_state <> "R"
+      AND lc_state <> "W"
+      AND lc_state <> "X"
+      ) OR 
+      g_rtba_m.rtbastus = lc_state OR cl_null(lc_state) THEN
+      CLOSE artt220_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   LET l_success = TRUE
+   CASE lc_state 
+      WHEN 'Y'       
+         CALL s_artt220_conf_chk(g_rtba_m.rtbadocno,g_rtba_m.rtbastus) RETURNING l_success,g_errno
+         IF l_success THEN
+            IF cl_ask_confirm('lib-014') THEN
+               CALL s_transaction_begin()
+               CALL s_artt220_conf_upd(g_rtba_m.rtbadocno) RETURNING l_success
+               IF NOT l_success THEN
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               ELSE
+                  CALL s_transaction_end('Y','1')               
+               END IF
+            ELSE
+               CALL s_transaction_end('N','0')   #160816-00068#10 by 08209 add
+               RETURN
+            END IF            
+         ELSE
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = g_errno
+            LET g_errparam.extend = g_rtba_m.rtbadocno
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            CALL s_transaction_end('N','0')   #160816-00068#10 by 08209 add
+            RETURN            
+         END IF
+                
+      WHEN 'X'
+         CALL s_artt220_void_chk(g_rtba_m.rtbadocno,g_rtba_m.rtbastus) RETURNING l_success,g_errno
+         IF l_success THEN
+            IF cl_ask_confirm('lib-016') THEN
+               CALL s_transaction_begin()
+               CALL s_artt220_void_upd(g_rtba_m.rtbadocno) RETURNING l_success
+               IF NOT l_success THEN
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               ELSE
+                  CALL s_transaction_end('Y','1')
+               END IF
+            ELSE
+               CALL s_transaction_end('N','0')   #160816-00068#10 by 08209 add
+               RETURN
+            END IF
+         ELSE
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = g_errno
+            LET g_errparam.extend = g_rtba_m.rtbadocno
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            CALL s_transaction_end('N','0')   #160816-00068#10 by 08209 add
+            RETURN    
+         END IF  
+   END CASE
+
+   #end add-point
+   
+   LET g_rtba_m.rtbamodid = g_user
+   LET g_rtba_m.rtbamoddt = cl_get_current()
+   LET g_rtba_m.rtbastus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE rtba_t 
+      SET (rtbastus,rtbamodid,rtbamoddt) 
+        = (g_rtba_m.rtbastus,g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt)     
+    WHERE rtbaent = g_enterprise AND rtbadocno = g_rtba_m.rtbadocno
+ 
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE artt220_master_referesh USING g_rtba_m.rtbadocno INTO g_rtba_m.rtbasite,g_rtba_m.rtbadocdt, 
+          g_rtba_m.rtbadocno,g_rtba_m.rtbaunit,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba003,g_rtba_m.rtbastus, 
+          g_rtba_m.rtbaownid,g_rtba_m.rtbaowndp,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtdp,g_rtba_m.rtbacrtdt, 
+          g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt,g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfdt,g_rtba_m.rtbasite_desc, 
+          g_rtba_m.rtbaunit_desc,g_rtba_m.rtba002_desc,g_rtba_m.rtba003_desc,g_rtba_m.rtbaownid_desc, 
+          g_rtba_m.rtbaowndp_desc,g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp_desc,g_rtba_m.rtbamodid_desc, 
+          g_rtba_m.rtbacnfid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_rtba_m.rtbasite,g_rtba_m.rtbasite_desc,g_rtba_m.rtbadocdt,g_rtba_m.rtbadocno, 
+          g_rtba_m.rtbaunit,g_rtba_m.rtbaunit_desc,g_rtba_m.rtba000,g_rtba_m.rtba002,g_rtba_m.rtba002_desc, 
+          g_rtba_m.rtba003,g_rtba_m.rtba003_desc,g_rtba_m.rtbastus,g_rtba_m.rtbaownid,g_rtba_m.rtbaownid_desc, 
+          g_rtba_m.rtbaowndp,g_rtba_m.rtbaowndp_desc,g_rtba_m.rtbacrtid,g_rtba_m.rtbacrtid_desc,g_rtba_m.rtbacrtdp, 
+          g_rtba_m.rtbacrtdp_desc,g_rtba_m.rtbacrtdt,g_rtba_m.rtbamodid,g_rtba_m.rtbamodid_desc,g_rtba_m.rtbamoddt, 
+          g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfid_desc,g_rtba_m.rtbacnfdt
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   SELECT rtbacnfid,rtbacnfdt,rtbamodid,rtbamoddt INTO g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfdt,g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt 
+     FROM rtba_t
+    WHERE rtbaent = g_enterprise AND rtbadocno = g_rtba_m.rtbadocno
+   DISPLAY BY NAME g_rtba_m.rtbacnfid,g_rtba_m.rtbacnfdt,g_rtba_m.rtbamodid,g_rtba_m.rtbamoddt
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtba_m.rtbacnfid
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_rtba_m.rtbacnfid_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_rtba_m.rtbacnfid_desc
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtba_m.rtbamodid
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_rtba_m.rtbacnfid_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_rtba_m.rtbamodid_desc
+   IF g_rtba_m.rtbastus <>'N' THEN
+      CALL cl_set_act_visible("modify,delete", FALSE)
+   else
+      CALL cl_set_act_visible("modify,delete", true)   
+   END IF
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   
+   #end add-point  
+ 
+   CLOSE artt220_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL artt220_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="artt220.idx_chk" >}
+#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION artt220_idx_chk()
+   #add-point:idx_chk段define(客製用) name="idx_chk.define_customerization"
+   
+   #end add-point  
+   #add-point:idx_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="idx_chk.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="idx_chk.pre_function"
+   
+   #end add-point
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_rtbb_d.getLength() THEN
+         LET g_detail_idx = g_rtbb_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_rtbb_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_rtbb_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+ 
+   
+   #add-point:idx_chk段other name="idx_chk.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION artt220_b_fill2(pi_idx)
+   #add-point:b_fill2段define(客製用) name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE pi_idx                 LIKE type_t.num10
+   DEFINE li_ac                  LIKE type_t.num10
+   DEFINE li_detail_idx_tmp      LIKE type_t.num10
+   DEFINE ls_chk                 LIKE type_t.chr1
+   #add-point:b_fill2段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill2.pre_function"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+   LET li_detail_idx_tmp = g_detail_idx
+   
+ 
+      
+ 
+      
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL artt220_detail_show()
+   
+   LET g_detail_idx = li_detail_idx_tmp
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.fill_chk" >}
+#+ 單身填充確認
+PRIVATE FUNCTION artt220_fill_chk(ps_idx)
+   #add-point:fill_chk段define(客製用) name="fill_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fill_chk.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="fill_chk.before_chk"
+   
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk name="fill_chk.other_chk"
+      
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk name="fill_chk.after_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.status_show" >}
+PRIVATE FUNCTION artt220_status_show()
+   #add-point:status_show段define(客製用) name="status_show.define_customerization"
+   
+   #end add-point
+   #add-point:status_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="status_show.define"
+   
+   #end add-point
+   
+   #add-point:status_show段status_show name="status_show.status_show"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.mask_functions" >}
+&include "erp/art/artt220_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="artt220.signature" >}
+   #應用 a39 樣板自動產生(Version:10)
+#+ BPM提交
+PRIVATE FUNCTION artt220_send()
+   #add-point:send段define(客製用) name="send.define_customerization"
+   
+   #end add-point 
+   #add-point:send段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="send.define"
+   DEFINE l_success  LIKE type_t.num5
+   #end add-point 
+   
+   #add-point:Function前置處理  name="send.pre_function"
+   
+   #end add-point
+   
+   #依據單據個數，需要指定所有單身條件為" 1=1"  (單身有幾個就要設幾個)
+   LET g_wc2_table1 = " 1=1"
+ 
+ 
+   CALL artt220_show()
+   CALL artt220_set_pk_array()
+   
+   #add-point: 初始化的ADP name="send.before_send"
+   CALL s_artt220_conf_chk(g_rtba_m.rtbadocno,g_rtba_m.rtbastus) RETURNING l_success,g_errno
+   IF NOT l_success THEN
+      CLOSE artt220_cl
+      CALL s_transaction_end('N','0')
+      RETURN FALSE
+   END IF
+   #end add-point
+   
+   #公用變數初始化
+   CALL cl_bpm_data_init()
+                  
+   #依照主檔/單身個數產生 CALL cl_bpm_set_master_data() / cl_bpm_set_detail_data() 
+   #單頭固定為 CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(xxxx)) 傳入參數: (1)單頭陣列  ; 回傳值: 無
+   CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(g_rtba_m))
+                              
+   #單身固定為 CALL cl_bpm_set_detail_data(s_detailX, util.JSONArray.fromFGL(xxxx)) 傳入參數: (1)單身SR名稱  (2)單身陣列  ; 回傳值: 無
+   CALL cl_bpm_set_detail_data("s_detail1", util.JSONArray.fromFGL(g_rtbb_d))
+ 
+ 
+   # cl_bpm_cli() 裡有包含以前的aws_condition()=>送簽資料檢核和更新單據狀況碼為'W'
+   # cl_bpm_cli() 傳入參數:無  ;  回傳值: 0 開單失敗; 1 開單成功
+ 
+   #add-point: 提交前的ADP name="send.before_cli"
+   
+   #end add-point
+ 
+   #開單失敗
+   IF NOT cl_bpm_cli() THEN 
+      RETURN FALSE
+   END IF
+ 
+   #add-point: 提交後的ADP name="send.after_send"
+   
+   #end add-point
+ 
+   #此段落不需要刪除資料,但是否需要refresh圖片樣式???
+   #CALL artt220_ui_browser_refresh()
+ 
+   #重新指定此筆單據資料狀態圖片=>送簽中
+   LET g_browser[g_current_idx].b_statepic = "stus/16/signing.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL artt220_ui_headershow()
+   CALL artt220_ui_detailshow()
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+#應用 a40 樣板自動產生(Version:9)
+#+ BPM抽單
+PRIVATE FUNCTION artt220_draw_out()
+   #add-point:draw段define name="draw.define_customerization"
+   
+   #end add-point
+   #add-point:draw段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="draw.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="draw.pre_function"
+   
+   #end add-point
+   
+   #抽單失敗
+   IF NOT cl_bpm_draw_out() THEN 
+      RETURN FALSE
+   END IF    
+          
+   #重新指定此筆單據資料狀態圖片=>抽單
+   LET g_browser[g_current_idx].b_statepic = "stus/16/draw_out.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL artt220_ui_headershow()  
+   CALL artt220_ui_detailshow()
+ 
+   #add-point:Function後置處理  name="draw.after_function"
+   
+   #end add-point
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="artt220.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION artt220_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_rtba_m.rtbadocno
+   LET g_pk_array[1].column = 'rtbadocno'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="artt220.other_dialog" readonly="Y" >}
+   
+ 
+{</section>}
+ 
+{<section id="artt220.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION artt220_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL artt220_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_rtba_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="artt220.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION artt220_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization"
+   
+   #end add-point
+   #add-point:action_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   #160818-00017#34 add-S
+   SELECT rtbastus  INTO g_rtba_m.rtbastus
+     FROM rtba_t
+    WHERE rtbaent = g_enterprise
+      AND rtbadocno = g_rtba_m.rtbadocno
+
+   IF (g_action_choice="modify" OR g_action_choice="delete" OR g_action_choice="modify_detail")  THEN
+     LET g_errno = NULL
+     CASE g_rtba_m.rtbastus
+        WHEN 'W'
+           LET g_errno = 'sub-00180'
+        WHEN 'X'
+           LET g_errno = 'sub-00229'
+        WHEN 'Y'
+           LET g_errno = 'sub-00178'
+        WHEN 'S'
+           LET g_errno = 'sub-00230'
+     END CASE
+
+     IF NOT cl_null(g_errno) THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = g_errno
+        LET g_errparam.extend = g_rtba_m.rtbadocno
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        LET g_errno = NULL
+        CALL artt220_set_act_visible()
+        CALL artt220_set_act_no_visible()
+        CALL artt220_show()
+        RETURN FALSE
+     END IF
+   END IF
+   #160818-00017#34 add-E
+   #end add-point
+      
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artt220.other_function" readonly="Y" >}
+#display rtbasite
+PRIVATE FUNCTION artt220_rtbasite_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtba_m.rtbasite
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtba_m.rtbasite_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtba_m.rtbasite_desc
+END FUNCTION
+#display rtbaunit
+#2014/12/25---sakura modify
+PRIVATE FUNCTION artt220_rtbaunit_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtba_m.rtbaunit
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtba_m.rtbaunit_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtba_m.rtbaunit_desc
+   
+END FUNCTION
+#chk site
+PRIVATE FUNCTION artt220_rtbasite(p_rtbasite)
+   DEFINE l_cnt    LIKE type_t.num5
+   DEFINE l_cnt1    LIKE type_t.num5 
+   DEFINE p_rtbasite LIKE rtba_t.rtbasite
+   DEFINE l_sql     STRING
+   LET l_cnt = 0
+   LET l_cnt1 = 0
+   LET g_errno = NULL
+   LET l_sql="SELECT COUNT(*)  FROM ooed_t WHERE ooedent = '",g_enterprise,"' AND ooed004 ='",p_rtbasite,"' AND ooed001='9' ", #160905-00007#14 add  ooedent = '",g_enterprise,"'
+             "   AND ooed004 IN ((SELECT DISTINCT ooed004 FROM ooed_t START WITH ooed005='",g_site,"' AND ooed001='8' AND ooedent = '",g_enterprise,"' ", #160905-00007#14 add  ooedent = '",g_enterprise,"'
+             "  CONNECT BY  NOCYCLE PRIOR ooed004=ooed005 AND ooed001='9' )",
+             "          UNION ",
+             "         (SELECT ooed004 FROM ooed_t WHERE ooedent = '",g_enterprise,"' AND ooed004='",g_site,"'))" #160905-00007#14 add  ooedent = '",g_enterprise,"'
+   PREPARE l_sql_ooea_pre1 FROM l_sql
+   EXECUTE l_sql_ooea_pre1 INTO l_cnt   
+   IF l_cnt <= 0 THEN
+      LET g_errno = "aoo-00163"
+   ELSE
+      LET l_sql="SELECT COUNT(*)  FROM ooed_t,ooea_t WHERE ooeaent = ooedent AND ooedent = '",g_enterprise,"' AND   ooea001=ooed004 AND ooed004 ='",p_rtbasite,"' AND ooed001='8' AND ooeastus='Y' ", #160905-00007#14 add ooeaent = ooedent AND ooedent = '",g_enterprise,"'
+             "   AND TO_CHAR(ooed006,'YYYY/MM/DD')<='",g_today,"' AND (TO_CHAR(ooed007,'YYYY/MM/DD')>='",g_today,"' or ooed007 is null)",
+             "   AND ooea001 IN ((SELECT DISTINCT ooed004 FROM ooed_t START WITH ooed005='",g_site,"' AND ooed001='8' AND ooedent = '",g_enterprise,"' ", #160905-00007#14 add  ooedent = '",g_enterprise,"'
+             "   AND TO_CHAR(ooed006,'YYYY/MM/DD')<='",g_today,"' AND (TO_CHAR(ooed007,'YYYY/MM/DD')>='",g_today,"' or ooed007 is null) ",
+             "   CONNECT BY  NOCYCLE PRIOR ooed004=ooed005 AND ooed001='8' )",
+             "          UNION ",
+             "         (SELECT ooea001 FROM ooea_t WHERE ooeaent = '",g_enterprise,"' AND ooea001='",g_site,"'))" #160905-00007#14 add ooeaent = '",g_enterprise,"'
+      PREPARE l_sql_ooea_pre2 FROM l_sql
+      EXECUTE l_sql_ooea_pre2 INTO l_cnt1       
+      IF l_cnt1 <= 0 THEN
+#         LET g_errno = "amm-00007"     #160318-00005#42  mark
+         LET g_errno = "sub-01302"     #160318-00005#42  add
+      END IF         
+   END IF
+END FUNCTION
+#chk rtbadocno
+PRIVATE FUNCTION artt220_rtbadocno()
+   DEFINE   l_cnt   LIKE type_t.num5
+   DEFINE   l_cnt1  LIKE type_t.num5 
+   LET l_cnt=0
+   SELECT ooef004 INTO g_ooef004 FROM ooef_t WHERE ooefent=g_enterprise AND ooef001 = g_site
+   LET l_cnt1=0
+   LET g_errno = null
+   SELECT COUNT(*) INTO l_cnt  FROM ooba_t lEFT JOIN oobl_t ON ooba001=oobl001 AND ooba002=oobl002
+    WHERE ooba001 = g_ooef004 AND ooba002=g_rtba_m.rtbadocno
+      AND oobl003 = 'artt220'
+   IF l_cnt <= 0 THEN
+      LET g_errno = "aim-00056"
+   ELSE
+      SELECT COUNT(*) INTO l_cnt1  FROM ooba_t lEFT JOIN oobl_t ON ooba001=oobl001 AND ooba002=oobl002
+       WHERE oobl001 = g_ooef004 AND oobl002=g_rtba_m.rtbadocno
+      AND oobl003 = 'artt220' AND oobastus='Y'
+      IF l_cnt1 <= 0 THEN
+         LET g_errno = "aoo-00102"
+      END IF         
+   END IF
+END FUNCTION
+#chk rtba002
+PRIVATE FUNCTION artt220_rtba002()
+   DEFINE   l_cnt   LIKE type_t.num5
+   DEFINE   l_cnt1  LIKE type_t.num5 
+   LET l_cnt=0
+   LET l_cnt1=0
+   LET g_errno = null
+   SELECT count(*) INTO l_cnt FROM ooag_t WHERE ooagent = g_enterprise
+      AND ooag001 = g_rtba_m.rtba002
+   IF l_cnt <= 0 THEN
+      LET g_errno = "aim-00069"
+   ELSE
+      SELECT count(*) INTO l_cnt1 FROM ooag_t WHERE ooagent = g_enterprise
+         AND ooag001 = g_rtba_m.rtba002 AND ooagstus='Y'
+      IF l_cnt1 <= 0 THEN
+#         LET g_errno = "aim-00070"     #160318-00005#42 mark
+         LET g_errno = "sub-01302"     #160318-00005#42 add
+      END IF         
+   END IF
+END FUNCTION
+#display rtba002
+PRIVATE FUNCTION artt220_rtba002_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtba_m.rtba002
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_rtba_m.rtba002_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtba_m.rtba002_desc
+   
+   SELECT ooag003 INTO g_rtba_m.rtba003 FROM ooag_t
+    WHERE ooag001 = g_rtba_m.rtba002 AND ooagent = g_enterprise
+      
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtba_m.rtba003
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtba_m.rtba003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtba_m.rtba003_desc
+END FUNCTION
+#display rtba003
+PRIVATE FUNCTION artt220_rtba003_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtba_m.rtba003
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtba_m.rtba003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtba_m.rtba003_desc
+END FUNCTION
+#create rtbbseq
+PRIVATE FUNCTION artt220_create_rtbbseq()
+   IF (cl_null(g_rtbb_d[l_ac].rtbbseqno) OR g_rtbb_d[l_ac].rtbbseqno=0) THEN
+      SELECT MAX(rtbbseqno)+1 INTO g_rtbb_d[l_ac].rtbbseqno FROM rtbb_t
+       WHERE rtbbdocno = g_rtba_m.rtbadocno AND rtbbent = g_enterprise
+   END IF
+   IF (cl_null(g_rtbb_d[l_ac].rtbbseqno) OR g_rtbb_d[l_ac].rtbbseqno=0) THEN
+      LET g_rtbb_d[l_ac].rtbbseqno = 1
+   END IF
+   
+   
+END FUNCTION
+#chk rtbb001
+PRIVATE FUNCTION artt220_rtbb001(p_rtbb001,p_cmd)
+   DEFINE l_cnt   LIKE type_t.num5
+DEFINE l_cnt1  LIKE type_t.num5
+DEFINE p_rtbb001 LIKE rtbb_t.rtbb001
+DEFINE p_cmd     LIKE type_t.chr1
+DEFINE l_inaa101 LIKE inaa_t.inaa101
+
+   LET l_cnt = 0
+   LET l_cnt1 = 0
+   LET g_errno = NULL
+   SELECT DISTINCT inaa101 INTO l_inaa101 FROM inaa_t 
+    WHERE inaaent = g_enterprise AND inaa001 = p_rtbb001
+   IF p_cmd = 'a' THEN
+      IF g_rtba_m.rtba000 = 'I' THEN
+         SELECT count(*) INTO l_cnt FROM inaa_t 
+          WHERE inaa001 = p_rtbb001 AND inaaent=g_enterprise
+         IF l_cnt >0 THEN
+            LET g_errno = "art-00143"
+            IF l_inaa101 = '1' THEN
+               LET g_errno = "art-00143"
+            END IF
+            IF l_inaa101 = '2' THEN
+               LET g_errno = "art-00144"
+            END IF
+
+#         ELSE
+#            SELECT count(*) INTO l_cnt FROM inaa_t 
+#             WHERE inaa001 = p_rtbb001 AND inaaent=g_enterprise AND inaasite = g_rtba_m.rtba001
+#               AND inaastus = 'Y'
+#            IF l_inaa101 = '1' THEN
+#               LET g_errno = "art-00145"
+#            END IF
+#            IF l_inaa101 = '2' THEN
+#               LET g_errno = "art-00146"
+#            END IF   
+         END IF
+      END IF
+      IF g_rtba_m.rtba000 = 'U' THEN
+         SELECT count(*) INTO l_cnt FROM inaa_t 
+          WHERE inaa001 = p_rtbb001 AND inaaent=g_enterprise
+         IF l_cnt >0 THEN
+            #IF g_prog = "artt220" AND l_inaa101 = '1' THEN        #160705-00042#10 160713 by sakura mark
+            IF g_prog MATCHES 'artt220' AND l_inaa101 = '1' THEN   #160705-00042#10 160713 by sakura add
+               LET g_errno = "art-00155"
+            END IF
+            
+            #IF g_prog = "adbt230" AND l_inaa101 = '2' THEN        #160705-00042#10 160713 by sakura mark
+            IF g_prog MATCHES 'adbt230' AND l_inaa101 = '2' THEN   #160705-00042#10 160713 by sakura add
+               LET g_errno = "art-00403"
+            END IF
+         ELSE
+            LET g_errno = "art-00154"   
+         END IF
+      END IF
+   END IF
+      
+END FUNCTION
+#chk rtbb106
+PRIVATE FUNCTION artt220_rtbb106(p_rtbb106)
+   DEFINE   l_cnt   LIKE type_t.num5
+   DEFINE   l_cnt1  LIKE type_t.num5
+   DEFINE   p_rtbb106 LIKE rtbb_t.rtbb106
+   LET l_cnt=0
+   LET l_cnt1=0
+   LET g_errno = NULL
+#   IF p_rtbb106 ='ALL' OR p_rtbb106='all' THEN
+#      LET g_rtbb_d[l_ac].rtbb106 = 'ALL'
+#   ELSE
+      SELECT count(*) INTO l_cnt FROM rtax_t WHERE rtax001=p_rtbb106 AND rtaxent=g_enterprise
+      IF l_cnt<=0 THEN
+         LET g_errno = "art-00002"
+      ELSE
+         SELECT count(*) INTO l_cnt1 FROM rtax_t WHERE rtax001=p_rtbb106 AND rtaxent=g_enterprise
+            AND rtaxstus='Y'  
+         IF l_cnt1<=0 THEN
+            LET g_errno="art-00048"
+         END IF      
+      END IF
+#   END IF
+END FUNCTION
+#display rtbb106
+PRIVATE FUNCTION artt220_rtbb106_ref(p_rtbb106)
+   DEFINE l_msg   STRING
+   DEFINE p_rtbb106 LIKE rtbb_t.rtbb106   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_rtbb106
+   CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtbb_d[l_ac].rtbb106_desc = '', g_rtn_fields[1] , ''
+   
+   IF p_rtbb106 ='ALL' OR p_rtbb106='all' THEN
+      CALL cl_getmsg('apm-00058',g_dlang) RETURNING l_msg
+      LET g_rtbb_d[l_ac].rtbb106_desc = l_msg
+   END IF
+   DISPLAY g_rtbb_d[l_ac].rtbb106_desc to s_detail1[l_ac].rtbb106_desc
+END FUNCTION
+#null rtbb121
+PRIVATE FUNCTION artt220_rtbb121_null()
+   LET g_rtbb_d[l_ac].rtbb121_desc =null
+   LET g_rtbb_d[l_ac].rtbb122_desc =null
+   LET g_rtbb_d[l_ac].rtbb123_desc = null
+   LET g_rtbb_d[l_ac].rtbb124_desc = null
+   LET g_rtbb_d[l_ac].rtbb122 =null
+   LET g_rtbb_d[l_ac].rtbb123 = null
+   LET g_rtbb_d[l_ac].rtbb124 = null
+   DISPLAY g_rtbb_d[l_ac].rtbb121_desc,g_rtbb_d[l_ac].rtbb122_desc,g_rtbb_d[l_ac].rtbb123_desc,g_rtbb_d[l_ac].rtbb124_desc,
+           g_rtbb_d[l_ac].rtbb122,g_rtbb_d[l_ac].rtbb123,g_rtbb_d[l_ac].rtbb124
+        TO s_detail1[l_ac].rtbb121_desc,s_detail1[l_ac].rtbb122_desc,s_detail1[l_ac].rtbb123_desc,s_detail1[l_ac].rtbb124_desc,
+           s_detail1[l_ac].rtbb122,s_detail1[l_ac].rtbb123,s_detail1[l_ac].rtbb124 
+END FUNCTION
+#chk rtbb121
+PRIVATE FUNCTION artt220_rtbb121(p_rtbb121)
+   DEFINE   l_cnt   LIKE type_t.num5
+   DEFINE   l_cnt1  LIKE type_t.num5
+   DEFINE   p_rtbb121 LIKE rtbb_t.rtbb121
+   LET l_cnt=0
+   LET l_cnt1=0
+   LET g_errno = NULL
+
+   SELECT count(*) INTO l_cnt FROM mhad_t
+   #WHERE mhad004 = p_rtbb121 AND mhadent = g_enterprise AND mhadsite = g_rtba_m.rtba001  #sakura mark
+    WHERE mhad004 = p_rtbb121 AND mhadent = g_enterprise AND mhadsite = g_rtba_m.rtbaunit #sakura add
+   IF l_cnt <=0 THEN
+      LET g_errno="art-00147"
+   ELSE
+      SELECT count(*) INTO l_cnt1 FROM mhad_t
+      #WHERE mhad004 = p_rtbb121 AND mhadent = g_enterprise AND mhadsite = g_rtba_m.rtba001  #sakura mark
+       WHERE mhad004 = p_rtbb121 AND mhadent = g_enterprise AND mhadsite = g_rtba_m.rtbaunit #sakura add
+         AND mhadstus = 'Y'
+      IF l_cnt1 <=0 THEN
+         LET g_errno = "art-00148"
+      END IF      
+         
+   END IF
+END FUNCTION
+#display rtbb121,rtbb122,rtbb123,rtbb124
+PRIVATE FUNCTION artt220_rtbb121_ref()
+   SELECT mhad003,mhad002,mhad001
+     INTO g_rtbb_d[l_ac].rtbb122,g_rtbb_d[l_ac].rtbb123,g_rtbb_d[l_ac].rtbb124
+     FROM mhad_t
+    WHERE mhadent = g_enterprise AND mhad004 = g_rtbb_d[l_ac].rtbb121
+      AND mhadstus = 'Y' AND rownum=1
+   DISPLAY g_rtbb_d[l_ac].rtbb122,g_rtbb_d[l_ac].rtbb123,g_rtbb_d[l_ac].rtbb124
+        TO s_detail1[l_ac].rtbb122,s_detail1[l_ac].rtbb123,s_detail1[l_ac].rtbb124
+END FUNCTION
+#display rtbb001
+PRIVATE FUNCTION artt220_rtbb001_ref01(p_cmd)
+   DEFINE p_cmd      LIKE type_t.chr1
+   DEFINE l_sql      STRING 
+   DEFINE r_success  BOOLEAN  #s983961--add
+
+   LET r_success = TRUE #s983961--add
+
+#   IF p_cmd = 'a' THEN
+      IF g_rtba_m.rtba000='U' THEN
+         LET l_sql = "SELECT inayl003,inayl004,inaa101,inaa102,inaa120,'',inaa130,inaa105, ",
+                     "       inaa106,'',inaa110,inaa111,inaa104,inaa121,'',inaa122,'',inaa123,'',inaa124,'',inaa008,inaa009, ", 
+                     "       inaa010,inaa014,inaa011,inaastus,inaa142,inaa140 ",  #151113-00003#7 s983961--add inaa142,inaa140
+                     "  FROM inaa_t ",
+                     "  LEFT JOIN inayl_t ON inaylent=? AND inayl001=inaa001 AND inayl002=? ",
+                     " WHERE inaaent=? AND inaa001=?  ",
+                     "   AND inaasite=? "
+          #2014/10/27 暫時不用inaa101 當資料篩選條件
+          #IF g_prog = "adbt230" THEN
+          #   LET l_sql = l_sql," AND inaa101='1' "
+          #ELSE
+          #   LET l_sql = l_sql," AND inaa101='2' "
+          #END IF
+          PREPARE l_sql_inaa FROM l_sql
+          DECLARE l_sql_cr CURSOR FOR l_sql_inaa
+         #OPEN l_sql_cr USING g_enterprise,g_dlang,g_enterprise,g_rtbb_d[l_ac].rtbb001,g_rtba_m.rtba001  #sakura mark
+          OPEN l_sql_cr USING g_enterprise,g_dlang,g_enterprise,g_rtbb_d[l_ac].rtbb001,g_rtba_m.rtbaunit #sakura add
+          FETCH l_sql_cr INTO g_rtbb_d[l_ac].rtbbl002, 
+                      g_rtbb_d[l_ac].rtbbl003,g_rtbb_d[l_ac].rtbb101,g_rtbb_d[l_ac].rtbb102,g_rtbb_d[l_ac].rtbb120, 
+                      g_rtbb_d[l_ac].rtbb120_desc,g_rtbb_d[l_ac].rtbb130,g_rtbb_d[l_ac].rtbb105,g_rtbb_d[l_ac].rtbb106, 
+                      g_rtbb_d[l_ac].rtbb106_desc,g_rtbb_d[l_ac].rtbb110,g_rtbb_d[l_ac].rtbb111,g_rtbb_d[l_ac].rtbb104, 
+                      g_rtbb_d[l_ac].rtbb121,g_rtbb_d[l_ac].rtbb121_desc,g_rtbb_d[l_ac].rtbb122,g_rtbb_d[l_ac].rtbb122_desc, 
+                      g_rtbb_d[l_ac].rtbb123,g_rtbb_d[l_ac].rtbb123_desc,g_rtbb_d[l_ac].rtbb124,g_rtbb_d[l_ac].rtbb124_desc, 
+                      g_rtbb_d[l_ac].rtbb008,g_rtbb_d[l_ac].rtbb009,g_rtbb_d[l_ac].rtbb010,g_rtbb_d[l_ac].rtbb014, 
+                      g_rtbb_d[l_ac].rtbb011,g_rtbb_d[l_ac].rtbbacti,g_rtbb_d[l_ac].rtbb142,g_rtbb_d[l_ac].rtbb140  #151113-00003#7 s983961--add rtbb142,rtbb140
+
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'art-00721'
+                     LET g_errparam.extend = g_rtbb_d_t.rtbb001
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET r_success = FALSE                
+                     RETURN r_success                      
+                  END IF
+
+      END IF
+      DISPLAY g_rtbb_d[l_ac].rtbbl002,g_rtbb_d[l_ac].rtbbl003,g_rtbb_d[l_ac].rtbb101,g_rtbb_d[l_ac].rtbb101,g_rtbb_d[l_ac].rtbb120,
+                  g_rtbb_d[l_ac].rtbb120_desc,g_rtbb_d[l_ac].rtbb130,g_rtbb_d[l_ac].rtbb105,
+                  g_rtbb_d[l_ac].rtbb106,g_rtbb_d[l_ac].rtbb106_desc,g_rtbb_d[l_ac].rtbb110,g_rtbb_d[l_ac].rtbb104,
+                  g_rtbb_d[l_ac].rtbb121,g_rtbb_d[l_ac].rtbb121_desc,g_rtbb_d[l_ac].rtbb122,g_rtbb_d[l_ac].rtbb122_desc,g_rtbb_d[l_ac].rtbb123,
+                  g_rtbb_d[l_ac].rtbb123_desc,g_rtbb_d[l_ac].rtbb124,g_rtbb_d[l_ac].rtbb124_desc,g_rtbb_d[l_ac].rtbb008,g_rtbb_d[l_ac].rtbb009,
+                  g_rtbb_d[l_ac].rtbb010,g_rtbb_d[l_ac].rtbb014,g_rtbb_d[l_ac].rtbb011,g_rtbb_d[l_ac].rtbbacti,g_rtbb_d[l_ac].rtbb142,g_rtbb_d[l_ac].rtbb140
+           TO s_detail1[l_ac].rtbb002, s_detail1[l_ac].rtbb003,s_detail1[l_ac].rtbb101,s_detail1[l_ac].rtbb102,s_detail1[l_ac].rtbb120,s_detail1[l_ac].rtbb120_desc,
+              s_detail1[l_ac].rtbb130, s_detail1[l_ac].rtbb105,s_detail1[l_ac].rtbb106,s_detail1[l_ac].rtbb106_desc,s_detail1[l_ac].rtbb110,s_detail1[l_ac].rtbb104,
+              s_detail1[l_ac].rtbb121, s_detail1[l_ac].rtbb121_desc,s_detail1[l_ac].rtbb122,s_detail1[l_ac].rtbb122_desc,s_detail1[l_ac].rtbb123,s_detail1[l_ac].rtbb123_desc,
+              s_detail1[l_ac].rtbb124, s_detail1[l_ac].rtbb124_desc,s_detail1[l_ac].rtbb008,s_detail1[l_ac].rtbb009, s_detail1[l_ac].rtbb010,s_detail1[l_ac].rtbb014,
+              s_detail1[l_ac].rtbb011, s_detail1[l_ac].rtbbacti,s_detail1[l_ac].rtbb142,s_detail1[l_ac].rtbb140 #151113-00003#7 s983961--add rtbb142,rtbb140  
+
+      LET g_rtbb_d_t.rtbb142 = g_rtbb_d[l_ac].rtbb142  #151113-00003#7 s983961--add
+      
+      CALL artt220_rtbb121_ref()
+      CALL artt220_rtbb106_ref(g_rtbb_d[l_ac].rtbb106)
+      CALL artt220_rtbb121_ref1()
+      #add by Beck 06814
+      CALL s_desc_get_counter_desc(g_rtbb_d[l_ac].rtbb120) RETURNING g_rtbb_d[l_ac].rtbb120_desc
+#   END IF
+      RETURN r_success 
+END FUNCTION
+#display rtbb121_desc,rtbb122_desc,rtbb123_desc,rtbb124_desc
+PRIVATE FUNCTION artt220_rtbb121_ref1()
+#2015/04/28異動
+--欄位隱藏(hidden):場地、場地名稱、區域、區域名稱 
+--需求單號150402-00005項次16
+--By 06814 Beck Xie
+#   INITIALIZE g_ref_fields TO NULL
+#   LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb124
+#   LET g_ref_fields[2] = g_rtbb_d[l_ac].rtbb123
+#   LET g_ref_fields[3] = g_rtbb_d[l_ac].rtbb122
+#   LET g_ref_fields[4] = g_rtbb_d[l_ac].rtbb121
+#   CALL ap_ref_array2(g_ref_fields,"SELECT mhadl006 FROM mhadl_t WHERE mhadlent='"||g_enterprise||"' AND mhadl001=? AND mhadl002=? AND mhadl003=? AND mhadl004=? AND mhadl005='"||g_dlang||"'","") RETURNING g_rtn_fields
+#   LET g_rtbb_d[l_ac].rtbb121_desc = '', g_rtn_fields[1] , ''
+#
+#   
+#   INITIALIZE g_ref_fields TO NULL
+#   LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb124
+#   LET g_ref_fields[2] = g_rtbb_d[l_ac].rtbb123
+#   LET g_ref_fields[3] = g_rtbb_d[l_ac].rtbb122
+#   CALL ap_ref_array2(g_ref_fields,"SELECT mhacl005 FROM mhacl_t WHERE mhaclent='"||g_enterprise||"' AND mhacl001=? AND mhacl002=? AND mhacl003=? AND mhacl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+#   LET g_rtbb_d[l_ac].rtbb122_desc = '', g_rtn_fields[1] , ''
+
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb124
+   LET g_ref_fields[2] = g_rtbb_d[l_ac].rtbb123
+   CALL ap_ref_array2(g_ref_fields,"SELECT mhabl004 FROM mhabl_t WHERE mhablent='"||g_enterprise||"' AND mhabl001=? AND mhabl002=? AND mhabl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtbb_d[l_ac].rtbb123_desc = '', g_rtn_fields[1] , ''
+
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb124
+   CALL ap_ref_array2(g_ref_fields,"SELECT mhaal003 FROM mhaal_t WHERE mhaalent='"||g_enterprise||"' AND mhaal001=? AND mhaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtbb_d[l_ac].rtbb124_desc = '', g_rtn_fields[1] , ''
+   
+   DISPLAY g_rtbb_d[l_ac].rtbb121_desc,g_rtbb_d[l_ac].rtbb122_desc,g_rtbb_d[l_ac].rtbb123_desc,g_rtbb_d[l_ac].rtbb124_desc
+        TO s_detail1[l_ac].rtbb121_desc,s_detail1[l_ac].rtbb122_desc,s_detail1[l_ac].rtbb123_desc,s_detail1[l_ac].rtbb124_desc 
+END FUNCTION
+
+PRIVATE FUNCTION artt220_rtbb001_ref()
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_rtba_m.rtbadocno
+      LET g_ref_fields[2] = g_rtbb_d[l_ac].rtbbseqno
+      CALL ap_ref_array2(g_ref_fields,"SELECT rtbbl002,rtbbl003 FROM rtbbl_t WHERE rtbblent='"||g_enterprise||"' AND rtbbldocno=? AND rtbblseqno=? AND rtbbl001='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_rtbb_d[l_ac].rtbbl002 = '', g_rtn_fields[1] , ''
+      LET g_rtbb_d[l_ac].rtbbl003 = '', g_rtn_fields[2] , ''
+
+   IF cl_null(g_rtbb_d[l_ac].rtbbl002) AND cl_null(g_rtbb_d[l_ac].rtbbl003) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb001
+      CALL ap_ref_array2(g_ref_fields,"SELECT inayl003,inayl004 FROM inayl_t WHERE inaylent='"||g_enterprise||"' AND inayl001=? AND inayl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_rtbb_d[l_ac].rtbbl002 = '', g_rtn_fields[1] , ''
+      LET g_rtbb_d[l_ac].rtbbl003 = '', g_rtn_fields[2] , ''
+   END IF
+   
+   DISPLAY BY NAME g_rtbb_d[l_ac].rtbbl002,g_rtbb_d[l_ac].rtbbl003
+END FUNCTION
+
+################################################################################
+# Descriptions...: 專櫃編號連動
+# Memo...........: 樓層,樓棟,管理方式,庫區類型
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artt220_rtbb120_def()
+   DEFINE p_cmd  LIKE type_t.chr1
+   DEFINE l_sql  STRING
+   
+   LET l_sql="SELECT mhae021,mhae020,mhae014,mhae002        ",
+             "  FROM mhae_t                                 ",
+             " WHERE mhaeent='"||g_enterprise||"'           ",
+             "   AND mhaesite='"||g_site||"'                ",
+             "   AND mhae001='"||g_rtbb_d[l_ac].rtbb120||"' "
+   PREPARE l_sql_rtbb120 FROM l_sql
+   DECLARE l_sql_rtbb120_cr SCROLL CURSOR FOR l_sql_rtbb120
+   OPEN l_sql_rtbb120_cr
+      FETCH l_sql_rtbb120_cr INTO g_rtbb_d[l_ac].rtbb123,g_rtbb_d[l_ac].rtbb124,
+                                  g_rtbb_d[l_ac].rtbb131,g_rtbb_d[l_ac].rtbb134
+   
+   #連動樓棟,樓層,管理方式,專櫃類型說明
+   CALL artt220_rtbb121_ref1()
+   CALL artt220_rtbb131_ref()
+   CALL artt220_rtbb134_ref()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 校驗 & DISPLAY Refenerce
+# Memo...........: 
+# Usage..........: 
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2015/4/29 By 06814-BeckXie 
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artt220_rtbb131_ref()
+   DEFINE p_cmd  LIKE type_t.chr1
+   LET g_rtbb_d[l_ac].rtbb131_desc = ' '
+   DISPLAY BY NAME g_rtbb_d[l_ac].rtbb131_desc
+   IF NOT cl_null(g_rtbb_d[l_ac].rtbb131) THEN
+#      IF (g_rtbb_d[l_ac].rtbb131 != g_rtbb_d_o.rtbb131 OR g_rtbb_d_o.rtbb131 IS NULL ) THEN   #150427-00012#6 20150707 mark by beckxie
+      IF (g_rtbb_d[l_ac].rtbb131 != g_rtbb_d_o.rtbb131 OR cl_null(g_rtbb_d_o.rtbb131) ) THEN   #150427-00012#6 20150707 add by beckxie
+         IF NOT s_azzi650_chk_exist('2127',g_rtbb_d[l_ac].rtbb131) THEN
+            LET g_rtbb_d[l_ac].rtbb131 = g_rtbb_d_o.rtbb131
+            CALL s_desc_get_acc_desc('2127',g_rtbb_d[l_ac].rtbb131) RETURNING g_rtbb_d[l_ac].rtbb131_desc
+            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb131_desc
+#            NEXT FIELD CURRENT
+         END IF
+      END IF
+   END IF
+   LET g_rtbb_d_o.rtbb131 = g_rtbb_d[l_ac].rtbb131
+   CALL s_desc_get_acc_desc('2127',g_rtbb_d[l_ac].rtbb131) RETURNING g_rtbb_d[l_ac].rtbb131_desc
+   DISPLAY BY NAME g_rtbb_d[l_ac].rtbb131_desc 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 校驗 & DISPLAY Refenerce
+# Memo...........: 
+# Usage..........: 
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2015/4/29 By 06814-BeckXie 
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artt220_rtbb134_ref()
+   DEFINE p_cmd  LIKE type_t.chr1
+   LET g_rtbb_d[l_ac].rtbb134_desc = ' '
+   DISPLAY BY NAME g_rtbb_d[l_ac].rtbb134_desc
+   IF NOT cl_null(g_rtbb_d[l_ac].rtbb134) THEN
+#      IF (g_rtbb_d[l_ac].rtbb134 != g_rtbb_d_o.rtbb134 OR g_rtbb_d_o.rtbb134 IS NULL ) THEN   #150427-00012#6 20150707 mark by beckxie
+      IF (g_rtbb_d[l_ac].rtbb134 != g_rtbb_d_o.rtbb134 OR cl_null(g_rtbb_d_o.rtbb134) ) THEN   #150427-00012#6 20150707 add by beckxie
+         IF NOT s_azzi650_chk_exist('2126',g_rtbb_d[l_ac].rtbb134) THEN
+            LET g_rtbb_d[l_ac].rtbb134 = g_rtbb_d_o.rtbb134
+            CALL s_desc_get_acc_desc('2126',g_rtbb_d[l_ac].rtbb134) RETURNING g_rtbb_d[l_ac].rtbb134_desc
+            DISPLAY BY NAME g_rtbb_d[l_ac].rtbb134_desc
+         END IF
+      END IF
+   END IF
+   LET g_rtbb_d_o.rtbb134 = g_rtbb_d[l_ac].rtbb134
+   CALL s_desc_get_acc_desc('2126',g_rtbb_d[l_ac].rtbb134) RETURNING g_rtbb_d[l_ac].rtbb134_desc
+   DISPLAY BY NAME g_rtbb_d[l_ac].rtbb134_desc
+END FUNCTION
+
+PRIVATE FUNCTION artt220_rtbb141_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtbb_d[l_ac].rtbb141
+   CALL ap_ref_array2(g_ref_fields,"SELECT inayl003 FROM inayl_t WHERE inaylent='"||g_enterprise||"' AND inayl001=? AND inayl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_rtbb_d[l_ac].rtbb141_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_rtbb_d[l_ac].rtbb141_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 控制單頭欄位為必填
+# Usage..........: artt220_set_required(p_cmd)
+# Input parameter: p_cmd          單頭輸入狀態
+################################################################################
+PRIVATE FUNCTION artt220_set_required(p_cmd)
+   DEFINE p_cmd     LIKE type_t.chr1
+END FUNCTION
+################################################################################
+# Descriptions...: 控制單頭欄位為非必填
+# Usage..........: artt220_set_no_required(p_cmd)
+# Input parameter: p_cmd          單頭輸入狀態
+################################################################################
+PRIVATE FUNCTION artt220_set_no_required(p_cmd)
+   DEFINE p_cmd     LIKE type_t.chr1
+END FUNCTION
+################################################################################
+# Descriptions...: 控制單身欄位為必填
+# Usage..........: CALL artt220_set_required_b(p_cmd)
+# Input parameter: p_cmd          單頭輸入狀態
+################################################################################
+PRIVATE FUNCTION artt220_set_required_b(p_cmd)
+   DEFINE p_cmd     LIKE type_t.chr1
+   CALL cl_set_comp_required("rtbb141",TRUE)
+END FUNCTION
+################################################################################
+# Descriptions...: 控制單身欄位為非必填
+# Usage..........: CALL artt220_set_no_required_b(p_cmd)
+# Input parameter: p_cmd          單頭輸入狀態
+################################################################################
+PRIVATE FUNCTION artt220_set_no_required_b(p_cmd)
+   DEFINE p_cmd     LIKE type_t.chr1
+   CALL cl_set_comp_required("rtbb141",FALSE)
+END FUNCTION
+
+ 
+{</section>}
+ 

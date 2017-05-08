@@ -1,0 +1,194 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt561" module="anm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="01727" crtdt="2015-04-28 16:00:51" modid="01531" moddt="2017-01-03 15:46:52" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="第三方回款作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbasite,nmbasite_desc(chr80),nmba002,nmba002_desc(chr80),nmbacomp,nmbacomp_desc(chr80),nmbadocno,nmbadocdt,nmba013,nmba014,nmba007,nmba003,nmbastus,nmba001,nmba001_desc(chr80),nmba004,nmba004_desc(chr80),nmba005,nmba006,nmba008,nmba009,nmba010,nmba011,nmbaownid,nmbaownid_desc(chr80),nmbaowndp,nmbaowndp_desc(chr80),nmbacrtid,nmbacrtid_desc(chr80),nmbacrtdp,nmbacrtdp_desc(chr80),nmbacrtdt,nmbamodid,nmbamodid_desc(chr80),nmbamoddt,nmbacnfid,nmbacnfid_desc(chr80),nmbacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmecseq,nmecsite,nmec001,nmec002,nmec003,nmec004,nmec005,nmec012,nmec006,nmec007,nmec008,nmec009,nmec011,nmec015,nmec016,nmec017,nmec021,nmec027,nmec013,nmec028,nmec014,nmec024,nmec022,nmec026"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="approval"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="open_anmt311"/>
+      <action id="query" type="standard"/>
+      <action id="excel_load"/>
+      <action id="excel_example"/>
+      <action id="s_cashflow"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt561" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbasite,nmba002,nmbacomp,nmbadocno,nmbadocdt,nmba013,nmba014,nmba007,nmba003,nmbastus,nmba001,nmba004,nmba005,nmba006,nmba008,nmba009,nmba010,nmba011"/>
+      <input id="body" page="1" field="nmecseq,nmecsite,nmec001,nmec002,nmec003,nmec004,nmec005,nmec012,nmec006,nmec007,nmec008,nmec009,nmec011,nmec015,nmec016,nmec017,nmec021,nmec027,nmec013,nmec028,nmec014,nmec024,nmec022,nmec026" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmbasite,nmba002,nmbacomp,nmbadocno,nmbadocdt,nmba013,nmba014,nmba007,nmba003,nmbastus,nmba001,nmba004,nmba005,nmba006,nmba008,nmba009,nmba010,nmba011,nmbaownid,nmbaowndp,nmbacrtid,nmbacrtdp,nmbacrtdt,nmbamodid,nmbamoddt,nmbacnfid,nmbacnfdt"/>
+      <construct id="body" page="1" field="nmecseq,nmecsite,nmec001,nmec002,nmec003,nmec004,nmec005,nmec012,nmec006,nmec007,nmec008,nmec009,nmec011,nmec015,nmec016,nmec017,nmec021,nmec027,nmec013,nmec028,nmec014,nmec024,nmec022,nmec026"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmbacomp,nmbadocno"/>
+      <set id="head" type="no_entry" field="nmbacomp,nmbadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmbasite">
+        <after>
+          <reference field="nmbasite_desc" ref_field="nmba_t.nmbasite" map_field="nmbaent,nmbasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xrah002_3" state="i"/>
+        <controlp form="q_xrah002_3" state="c"/>
+      </column>
+      <column id="nmbasite_desc"/>
+      <column id="nmba002">
+        <after>
+          <reference field="nmba002_desc" ref_field="nmba_t.nmba002" map_field="nmba002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="nmba002_desc"/>
+      <column id="nmbacomp">
+        <after>
+          <reference field="nmbacomp_desc" ref_field="nmba_t.nmbacomp" map_field="nmbaent,nmbacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmbacomp_desc"/>
+      <column id="nmbadocno">
+        <controlp form="q_ooba002_4" state="i"/>
+        <controlp form="q_nmbadocno" state="c"/>
+      </column>
+      <column id="nmbadocdt"/>
+      <column id="nmba013"/>
+      <column id="nmba014"/>
+      <column id="nmba007"/>
+      <column id="nmba003"/>
+      <column id="nmbastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="V" pic="verify"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="nmba001">
+        <after>
+          <reference field="nmba001_desc" ref_field="nmba_t.nmba001" map_field="nmbaent,nmba001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmba001_desc"/>
+      <column id="nmba004" type="S" default="MISC">
+        <after>
+          <reference field="nmba004_desc" ref_field="nmba_t.nmba004" map_field="nmbaent,nmba004" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="nmba004_desc"/>
+      <column id="nmba005" type="S" default="MISC"/>
+      <column id="nmba006" type="S" default="N"/>
+      <column id="nmba008">
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="nmba009"/>
+      <column id="nmba010"/>
+      <column id="nmba011"/>
+      <column id="nmbaownid">
+        <after>
+          <reference field="nmbaownid_desc" ref_field="nmba_t.nmbaownid" map_field="nmbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbaownid_desc"/>
+      <column id="nmbaowndp">
+        <after>
+          <reference field="nmbaowndp_desc" ref_field="nmba_t.nmbaowndp" map_field="nmbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbaowndp_desc"/>
+      <column id="nmbacrtid">
+        <after>
+          <reference field="nmbacrtid_desc" ref_field="nmba_t.nmbacrtid" map_field="nmbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbacrtid_desc"/>
+      <column id="nmbacrtdp">
+        <after>
+          <reference field="nmbacrtdp_desc" ref_field="nmba_t.nmbacrtdp" map_field="nmbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbacrtdp_desc"/>
+      <column id="nmbacrtdt"/>
+      <column id="nmbamodid">
+        <after>
+          <reference field="nmbamodid_desc" ref_field="nmba_t.nmbamodid" map_field="nmbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbamodid_desc"/>
+      <column id="nmbamoddt"/>
+      <column id="nmbacnfid">
+        <after>
+          <reference field="nmbacnfid_desc" ref_field="nmba_t.nmbacnfid" map_field="nmbacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbacnfid_desc"/>
+      <column id="nmbacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmecseq"/>
+      <column id="nmecsite"/>
+      <column id="nmec001"/>
+      <column id="nmec002"/>
+      <column id="nmec003"/>
+      <column id="nmec004"/>
+      <column id="nmec005"/>
+      <column id="nmec012"/>
+      <column id="nmec006" type="S" default="0"/>
+      <column id="nmec007" type="S" default="0"/>
+      <column id="nmec008" type="S" default="0"/>
+      <column id="nmec009" type="S" default="0"/>
+      <column id="nmec011"/>
+      <column id="nmec015" type="S" default="0"/>
+      <column id="nmec016" type="S" default="0"/>
+      <column id="nmec017" type="S" default="0"/>
+      <column id="nmec021" type="S" default="0"/>
+      <column id="nmec027" type="S" default="0"/>
+      <column id="nmec013"/>
+      <column id="nmec028" type="S" default="0"/>
+      <column id="nmec014" type="S" default="0"/>
+      <column id="nmec024"/>
+      <column id="nmec022"/>
+      <column id="nmec026"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmba_t" pk="nmbacomp,nmbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmbasite,&apos;&apos;,nmba002,&apos;&apos;,nmbacomp,&apos;&apos;,nmbadocno,nmbadocdt,nmba013,nmba014,nmba007,nmba003,nmbastus,nmba001,&apos;&apos;,nmba004,&apos;&apos;,nmba005,nmba006,nmba008,nmba009,nmba010,nmba011,nmbaownid,&apos;&apos;,nmbaowndp,&apos;&apos;,nmbacrtid,&apos;&apos;,nmbacrtdp,&apos;&apos;,nmbacrtdt,nmbamodid,&apos;&apos;,nmbamoddt,nmbacnfid,&apos;&apos;,nmbacnfdt FROM nmba_t WHERE nmbaent= ? AND nmbacomp=? AND nmbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmbasite,&apos;&apos;,nmba002,&apos;&apos;,nmbacomp,&apos;&apos;,nmbadocno,nmbadocdt,nmba013,nmba014,nmba007,nmba003,nmbastus,nmba001,&apos;&apos;,nmba004,&apos;&apos;,nmba005,nmba006,nmba008,nmba009,nmba010,nmba011,nmbaownid,&apos;&apos;,nmbaowndp,&apos;&apos;,nmbacrtid,&apos;&apos;,nmbacrtdp,&apos;&apos;,nmbacrtdt,nmbamodid,&apos;&apos;,nmbamoddt,nmbacnfid,&apos;&apos;,nmbacnfdt FROM nmba_t" order="nmbacomp,nmbadocno"/>
+    </head>
+    <body id="nmec_t" page="1" linked="" pk="nmecseq" fk="nmeccomp,nmecdocno">
+      <sql id="forupd_sql_detail" query="SELECT nmecseq,nmecsite,nmec001,nmec002,nmec003,nmec004,nmec005,nmec012,nmec006,nmec007,nmec008,nmec009,nmec011,nmec015,nmec016,nmec017,nmec021,nmec027,nmec013,nmec028,nmec014,nmec024,nmec022,nmec026 FROM nmec_t WHERE nmecent=? AND nmeccomp=? AND nmecdocno=? AND nmecseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmecseq,nmecsite,nmec001,nmec002,nmec003,nmec004,nmec005,nmec012,nmec006,nmec007,nmec008,nmec009,nmec011,nmec015,nmec016,nmec017,nmec021,nmec027,nmec013,nmec028,nmec014,nmec024,nmec022,nmec026 FROM nmec_t WHERE nmecent=? AND nmeccomp=? AND nmecdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

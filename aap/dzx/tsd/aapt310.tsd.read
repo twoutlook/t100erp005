@@ -1,0 +1,2376 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aapt310" std_prog="aapt310" erpver="1.0" ver="5" module="AAP" type="M" booking="N" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="3" cite_std="N">
+    <tbl name="apca_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="apcb_t" main="N" head="N" pk="" fk_detail="" parent="apca_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail3" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="xrcd_t" main="N" head="N" pk="" fk_detail="" parent="apca_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail4" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail5" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+    資料來源表：apca_t(應付憑單單頭)
+作業資料來源(Detail)：
+    資料來源表：apcb_t(應付憑單單身),xrcd_t(交易稅明細檔)
+
+。依帳套權限管制，可查看範圍及修改內容。
+。帳套有啟用＂其他本位幣＂功能者，才需顯示其他本位二、三的金額相關欄位；無則隱藏相關欄位。
+。依不同的來源作業類型(apca016/apcb001)，取對應的來源檔案，參考EXCEL表說明。
+。各欄位字段的帶值及校驗，可考慮寫成小function（s_aapt310.4gl)，便於共用。例如業務部門，會受對象及交易單據的變動而變動，須重新捉取對應的責任中心。
+　付款條件、稅別...亦同。會應用於不同的應付立帳作業：採購預付請款、廠商發票請款、費用報支...。
+。金額異動處理流程：關聯影響　多帳期帳款展算、稅額計算、沖帳金額攤算...等。另單獨說明影响範圍及重計方式。
+。訂金類之帳款，其產生檔案之來源為採購單者，則依採購單指定之採購帳期檔（）產生]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[說明：
+。PAGE_帳款明細：
+。顯示及維護單身立帳資料；依來源類型取得來源table檔案。視ＥＸＣＥＬ表說明
+。依來源類型判別加減項。
+。PAGE_交易稅明細：
+    依單身項次之稅別，展算明細稅。
+    檔案來源：交易稅明細檔（xrcd_t）
+。PAGE_其它本位幣明細：
+。顯示否視該"帳套"有無啟用"其他本位幣"的功能。
+。維護其他本位幣之金額；異動金額後將影响合計帳款金額。
+。視帳套有無啟用其他本位幣功能；無則不顯示也不必維護，金額皆預設為０。
+。開放修改其他本位幣之金額，不可異動原幣及本位幣。
+。不可異動原幣及本位幣；開放修改其他本位幣之金額。
+。其他本位幣者，欄位title顯示，刮號內顯示該幣別代碼(apca120/apca130)
+。其他本位幣二相關金額欄位:
+    預設值: 取帳套設定之來源幣別金額 * 本位幣二之匯率apca121　／ not null 
+。其他本位幣三相關金額欄位:
+    預設值: 取帳套設定之來源幣別金額 * 本位幣二之匯率apca131　／ not null 
+。其他本位幣未稅金額或稅額若有異動時, 則自動計算:
+　１。含稅金額 = 未稅金額+稅額
+　２。帳款金額異動。
+作業處理：
+　。單頭來源參考單號有輸入值　ＡＮＤ　單身無資料時，系統自動將來源參考單號之內容寫入單身資料；立帳金額為未沖銷金額。
+
+]]>
+  </di_all>
+  <field cite_std="N" name="apca011_desc" ver="4" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca0181" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[。集團交易單號 = 來源參考單號　 apca018　（共用欄位） 
+　由其他信息頁籤輸入的資料 "來源參考單號" ，帶到本欄。
+。開窗：依來源作業類型開窗。
+]]>
+  </field>
+  <field cite_std="N" name="apca0501" ver="4" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[應附附件份數: 
+預設值:由其他信息頁籤維護本欄, 本處只顯示]]>
+  </field>
+  <field cite_std="N" name="apca051_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca1001" ver="1" src="s" column="apca100" table="apca_t" attribute="" type="" req="N" i_zoom="q_ooaj002_1" c_zoom="q_ooaj002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.]]>
+  </field>
+  <field cite_std="N" name="apca1011" ver="1" src="s" column="apca101" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[display only ]]>
+  </field>
+  <field cite_std="N" name="apca1031" ver="1" src="s" column="apca103" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.
+]]>
+  </field>
+  <field cite_std="N" name="apca1041" ver="1" src="s" column="apca104" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.
+]]>
+  </field>
+  <field cite_std="N" name="apca1061" ver="3" src="s" column="apca106" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.
+]]>
+  </field>
+  <field cite_std="N" name="apca1081" ver="1" src="s" column="apca108" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.
+]]>
+  </field>
+  <field cite_std="N" name="apca1131" ver="1" src="s" column="apca113" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.
+]]>
+  </field>
+  <field cite_std="N" name="apca1141" ver="1" src="s" column="apca114" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.
+]]>
+  </field>
+  <field cite_std="N" name="apca1161" ver="3" src="s" column="apca116" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.
+]]>
+  </field>
+  <field cite_std="N" name="apca1181" ver="3" src="s" column="apca118" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca001" ver="3" src="s" column="apca001" table="apca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[帳款單性質: 
+    預設值:　13/19
+    下拉選項: scc = 8502 
+    LET l_str = s_fin_get_slip_type(g_prog) 
+   CALL cl_set_combo_scc_part('b_apca001','8502',l_str) ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca003" ver="4" src="s" column="apca003" table="apca_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳務人員: 
+  ●欄位控管：
+     預設值:g_user
+     校驗：
+　　　CALL s_employee_chk(g_apca_m.apca003) RETURNING g_success1
+     帶值:
+            CALL s_desc_get_person_desc(g_apca_m.apca003) RETURNING g_apca_m.apca003_desc        ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca004" ver="1" src="s" column="apca004" table="apca_t" attribute="" type="" req="Y" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳款對象: 
+校驗: 
+CALL s_aap_apca004_chk(g_apca_m.apca004) RETURNING g_success1,g_errno
+
+帶值:
+１.交易對象簡稱CALL s_desc_get_trading_partner_abbr_desc(g_apca_m.apca004) RETURNING g_apca_m.apca004_desc
+２.付款對象：CALL 元件取主要的"付款對象" 如果取不到時帶帳款對象 apca004 放到付款對象欄 
+          ３.取出該廠商的相關"廠商慣用帳款條件"欄位:  依帳務人員所屬 site取得apmm102供應商慣用條件資料，
+            若取不到時, 則依帳款法人 apcacopm =pmabsite  為條件取值。
+            3.1 付款條件，並依條件計算 call 元件 計算應付日期的元件..推算出應付日期apca009 及票據到期日apca010 
+     多帳期條件、優惠條件(aooi716)。  
+　　　　　  3.2 帳款類別apca007：並帶出 應付帳款科目aapi011 
+            3.3 業務人員： 依人員取後業務部門
+            3.4 暫估立帳應該以未稅金額立帳，其稅別代號的預設值，取SITE級參數設定(法人層)"S-FIN-2010 暫估款預設稅別"。
+            3.5 幣別(apca100)：並帶出單據日期之匯率；若該帳套啟用其他本位幣應用者，依帳套取出本位幣二、三之匯率。 
+ 3.6 供應商分類(apca006): 依帳款對象取供應商分類
+          ４.企業關係人 (放入apca046)： 取 pmaa047 from pmaa_t WHERE pmaa001 = apca004 
+　　　　 
+      注意事項:若為修改狀態且修改本欄對象時,必須出現對框詢問confirm message "交易對象已變更，是否重新載入慣用帳款條件?(Y/N) "
+               如果Y,則必須再重新執行上述帶值的程式段
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca005" ver="1" src="s" column="apca005" table="apca_t" attribute="" type="" req="Y" i_zoom="q_pmac002_8" c_zoom="q_pmac002_8" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帶值：
+CALL s_desc_get_trading_partner_abbr_desc(g_apca_m.apca005) RETURNING g_apca_m.apca005_desc
+校驗：
+CALL s_aap_apca005_chk(g_apca_m.apca005)RETURNING g_success1,g_errno
+
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca006" ver="1" src="s" column="apca006" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca007" ver="1" src="s" column="apca007" table="apca_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:
+s_azzi650_chk_exist('3211',g_apca_m.apca007) 
+帶值: 
+1.CALL s_desc_get_acc_desc('3211',g_apca_m.apca007) RETURNING g_apca_m.apca007_desc
+2.帶出預設會科(放入應收會計科目)]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca008" ver="3" src="s" column="apca008" table="apca_t" attribute="" type="" req="Y" i_zoom="q_ooib001_2" c_zoom="q_ooib001_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗：CALL s_aap_ooib002_chk(g_apca_m.apca008,'1')RETURNING g_success1,g_errno
+帶值:  
+1.CALL s_fin_date_ap_payable]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca009" ver="1" src="s" column="apca009" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca010" ver="4" src="s" column="apca010" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[
+     
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca011" ver="3" src="s" column="apca011" table="apca_t" attribute="" type="" req="Y" i_zoom="q_oodb002_5" c_zoom="q_oodb002_5" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帶值:稅別若為單一稅率(oodb009='1') 
+          則帶出 含稅(oodb005),稅率(oodb006), 交易類型(oodb004)
+檢驗: 
+1. CALL s_tax_chk(g_apca_m.apcacomp,g_apca_m.apca011)
+有變更時，則提示confirm message"稅別條件有變更，是否重計稅額及應付金額?(Y/N)"; Y:則單身金額重新展算，並更新單頭合計金額值。
+2.為＂零稅率＂oodb008= 2.零稅  且為有效資料。
+    ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca012" ver="1" src="s" column="apca012" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[稅率: 
+  ●欄位控管：
+     資料欄位:apca012 / 可Display  
+     允許空白:yes 
+     預設值:由稅別帶出
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca013" ver="3" src="s" column="apca013" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[含稅否: 
+  ●欄位控管：
+     資料欄位:apca013 / 可Display  
+     允許空白:yes 
+     預設值:由稅別帶出
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca014" ver="4" src="s" column="apca014" table="apca_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:由帳款對象或參考單據帶出
+校驗:
+CALL s_employee_chk(g_apca_m.apca014)RETURNING g_success1
+帶值:
+CALL s_desc_get_person_desc(g_apca_m.apca014) RETURNING g_apca_m.apca014_desc
+所屬部門]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca015" ver="1" src="s" column="apca015" table="apca_t" attribute="" type="" req="N" i_zoom="q_ooeg001_4" c_zoom="q_ooeg001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[業務部門: 
+     預設值:由業務人員或參考單據帶出
+     帶值:  部門名稱
+              部門歸屬的責任中心]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca016" ver="1" src="s" column="apca016" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[。來源類型：
+   LET l_str = s_fin_last_doc_fields(g_prog)
+   CALL cl_set_combo_scc_part('apca016','24',l_str) #來源作業類型
+
+   IIF 帳款單性質.apca001='01' THEN 限定 ＂apmt570入庫單"　或無來源者
+   IIF 帳款單性質.apca001='02' THEN 限定 ＂apmt580倉退單"　或無來源
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca017" ver="1" src="s" column="apca017" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[下拉選項SCC_8324 帳款單產生方式
+CALL cl_set_combo_scc('apca017','8324')]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca018" ver="4" src="s" column="apca018" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[.依來源作業類型決定輸入之單據類型，可空白。有輸入值者單身依此指定單號展開資料。
+
+欄位名稱：
+   ●欄位控管：
+     資料欄位:apca018/可Display可Input
+     預設值:無
+     校驗:1.允許空白
+          2.不可小於0
+          3.輸入值不檢核，可能為外部單據編號，如開帳處理時。
+     帶值: 1.自動帶出該交易單據上之相關帳款條件資料。
+  .付款條件: 若有變動者重計應付款日及票到期日
+  .幣別: 依單據幣別，幣別不同者,重新取匯率。該帳套有設定其他本位幣者亦須重計匯率。
+  .稅別: 重設 稅別相關之欄位。
+  .業務人員、業務部門：　並更新所屬責任中心
+  .專案編號、WBS
+ 2.單身(apcb_t)若無資料者，則confirm message "是否依此交易單據，產生帳款明細資料？（Ｙ／Ｎ）"；
+   Y:依來源產生CALL 產生應付帳款作業，產生至單身明細檔。
+   (產生應付帳款作業: 請統一寫至s_aapt310程式，FUNCTION處理，日後供其他作業CALL；參考EXCEL表)
+
+     計算或處理:1.當xxxx999=1 時方可輸入
+               2.自動計算:金額=單價*數量
+
+   ●開窗處理：
+     參考ＥＸＣＥＬ表說明－－page＂來源參考單號apca018＂]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca019" ver="4" src="s" column="apca019" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_apca019" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[待抵產生單據:
+校驗 : 系統回寫值
+ ●查詢：
+　已存在之資訊供查詢　q_apca019_1
+    來源檔案：apca_t
+    顯示欄位 ： 產生之待抵單號 / 日期 / 帳款對象 /對象名稱 /來源參考單據
+     apcadocno / apcadocdt /apca004 /名稱 / apca018
+     WHERE apca001='21'         #此處 不考慮有效資料否
+   ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca020" ver="1" src="s" column="apca020" table="apca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca021" ver="1" src="s" column="apca021" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca022" ver="1" src="s" column="apca022" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca025" ver="1" src="s" column="apca025" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[。SCC_8511應付立帳發票與帳款的差異處理
+。參考ＥＸＣＥＬ表應用說明 PAGE_＂發票與帳款差異處理apca025＂
+欄位名稱：
+   ●欄位控管：
+     資料欄位:apca025/可Display可Input
+              before field: 無差異金額者（apca026+027+028+029=0），則不可異動欄位，
+ 　　　　　　　　並將處理方式改為’０’
+  　　歸屬差異科目清空apca030=' '
+     允許空白:No
+     預設值: 0.無
+     資料選項來源:
+       SCC: SCC_8511應付立帳發票與帳款的差異處理
+     校驗:1.不允許空白
+          2.輸入值須存在該SCC的單身項目中
+     帶值:
+ 參考ＥＸＣＥＬ表說明：
+ 0:無   
+ 1.留置  
+ 2.價差置入折讓科目 
+ 3 產生折讓扣款單
+ 4.差異分攤單身(金額)
+ 5.差異分攤單身(數量)
+ 6 自行分攤差異至單身
+ ESC.暫時離開待查核]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca026" ver="1" src="s" column="apca026" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca027" ver="1" src="s" column="apca027" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca028" ver="1" src="s" column="apca028" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca029" ver="1" src="s" column="apca029" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca030" ver="1" src="s" column="apca030" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[
+  ●欄位控管：  
+     資料欄位:apca030 / 可Display   
+ 。差異處理方式＝’２’時，才開放科目欄位輸入。
+     允許空白: yes
+     預設值:　空白
+     帶值: 科目名稱
+     校驗: 依標準檢核，須為有效科目。]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca031" ver="1" src="s" column="apca031" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_apca019_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[待抵產生單據:
+  ●欄位控管：
+    資料欄位: apca031  /可Display 可input  
+ 差異處理='5'產生折讓單時, 才可開放輸入,選擇單別
+    預設值: 可空白/無
+　　維護時開窗：　待抵性質單別開窗q_   (待參數設定方案完成）
+    校驗 : 單別合理性檢核
+
+ ●查詢：
+　　已存在之資訊供查詢　q_apca019_2
+    來源檔案：apca_t
+    顯示欄位 ： 產生之待抵單號 / 日期 / 帳款對象 /對象名稱 /來源參考單據
+     apcadocno / apcadocdt /apca004 /名稱 / apca018
+     WHERE apca001='22' 
+        #此處 不考慮有效資料否]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca033" ver="1" src="s" column="apca033" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[專案編號: 
+     帶值:專案名稱
+     
+   ●開窗處理：
+     1.新增/修改時:
+       參考函式：依標準查詢視窗 q_專案中心
+       查詢欄位：專案代碼, 專案名稱 ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca034" ver="1" src="s" column="apca034" table="apca_t" attribute="" type="" req="N" i_zoom="q_ooeg001_5" c_zoom="q_ooeg001_5" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值: 由業務部門帶出所屬歸屬責任中心ooeg004 
+校驗:
+CALL s_department_chk(g_apca_m.apca034,g_apca_m.apcadocdt) RETURNING g_success1
+條件: ooeg003 ='1' 責任中心
+帶值:
+LET g_apca_m.apca034_desc = s_desc_get_department_desc(g_apca_m.apca034)]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca035" ver="1" src="s" column="apca035" table="apca_t" attribute="" type="" req="Y" i_zoom="aglt310_04" c_zoom="aglt310_04" chk_ref="v_glac002_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[應收會計科目: 
+校驗:
+CALL s_aap_glac002_chk(g_apca_m.apca035,g_apca_m.apcald) RETURNING g_success1,g_errno
+帶值:
+CALL s_desc_get_account_desc(g_apca_m.apcald,g_apca_m.apca035) RETURNING g_apca_m.apca035_desc]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca036" ver="1" src="s" column="apca036" table="apca_t" attribute="" type="" req="N" i_zoom="aglt310_04" c_zoom="aglt310_04" chk_ref="v_glac002_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收入科目: 
+校驗:
+CALL s_aap_glac002_chk(g_apca_m.apca036,g_apca_m.apcald) RETURNING g_success1,g_errno
+帶值:
+CALL s_desc_get_account_desc(g_apca_m.apcald,g_apca_m.apca036) RETURNING g_apca_m.apca036_desc]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca037" ver="3" src="s" column="apca037" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca038" ver="4" src="s" column="apca038" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_apca038" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[傳票號碼: 
+  ●欄位控管：
+     資料欄位:apca038 / 可Display 
+     允許空白:yes
+     預設值:無
+      產生傳票時回寫本欄 
+
+         ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca039" ver="1" src="s" column="apca039" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[會計檢核份數: 
+預設值:帶應附附件份數apca050 ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca046" ver="1" src="s" column="apca046" table="apca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca047" ver="1" src="s" column="apca047" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca048" ver="1" src="s" column="apca048" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca050" ver="1" src="s" column="apca050" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[  
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca051" ver="1" src="s" column="apca051" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[作廢原因: 
+欄位控管：以原因說明顯示
+    資料欄位:apca051 / 可Display/ 輸入狀態stuts為"X作廢"處理，始可開放此欄位輸入。
+    帶值:原因說明
+　檢驗：須輸入值required, 未輸入者則不可變動單據狀態。（可ＥＳＣ離開表放弃） 
+   
+開窗處理：
+     1.修改時:
+       參考函式：依標準查詢視窗 q_原因碼
+       查詢欄位： 原因代碼,說明  ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca052" ver="1" src="s" column="apca052" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[列印時回寫]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca053" ver="1" src="s" column="apca053" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[      
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca054" ver="1" src="s" column="apca054" table="apca_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[多帳期設定:
+校驗:
+s_azzi650_chk_exist('3114',g_apca_m.apca058)
+帶值
+CALL s_desc_get_acc_desc('3114',g_apca_m.apca058) RETURNING g_apca_m.apca058_desc]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca055" ver="1" src="s" column="apca055" table="apca_t" attribute="" type="" req="N" i_zoom="q_ooid001_1" c_zoom="q_ooid001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:
+CALL s_aap_ooid001_chk(g_apca_m.apca055) RETURNING g_success1,g_errno
+帶值:
+LET g_apca_m.apca055_desc = s_desc_ooid001_desc(g_apca_m.apca055)]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca056" ver="1" src="s" column="apca056" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[下拉選項:
+CALL cl_set_combo_scc('apca056','8323')          #會計檢核附件狀態]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca057" ver="1" src="s" column="apca057" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca058" ver="1" src="s" column="apca058" table="apca_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:
+s_azzi650_chk_exist('264',g_apca_m.apca058)
+帶值
+CALL s_desc_get_acc_desc('264',g_apca_m.apca058) RETURNING g_apca_m.apca058_desc]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca059" ver="1" src="s" column="apca059" table="apca_t" attribute="" type="" req="N" i_zoom="q_bgaa001" c_zoom="q_bgaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:由來源參考單號帶入
+校驗:
+CALL s_fin_budget_chk(g_apca_m.apca059) RETURNING g_success1,g_errno
+帶值:預算名稱
+CALL s_desc_get_budget_desc(g_apca_m.apca059) RETURNING g_apca_m.apca059_desc]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca060" ver="3" src="s" column="apca060" table="apca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[交易類型: (本欄的作法要再考量)
+  ●欄位控管：
+     資料欄位:apca060 / 改為noentry型態, default '1.不開發票'
+     允許空白: no,default '1' 
+     預設值:  default '1'
+     校驗: SCC_8321　訂金發票開立方式
+
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca063" ver="1" src="s" column="apca063" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_apca063" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[整帳時的批序號帶入(SCC_15='14')
+CALL s_aooi390('14')]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca064" ver="3" src="s" column="apca064" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca065" ver="3" src="s" column="apca065" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca066" ver="3" src="s" column="apca066" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca100" ver="1" src="s" column="apca100" table="apca_t" attribute="" type="" req="Y" i_zoom="q_ooaj002_1" c_zoom="q_ooaj002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[交易貨幣: 
+預設值:依帳款對象的處理邏輯描述處理
+若交易幣與本幣相同，則本幣欄位皆要noEntry
+
+校驗: 
+CALL s_aap_ooaj001_chk(g_apca_m.apcacomp,g_apca_m.apca100) RETURNING g_success1,g_errno
+帶值:
+1. 設定本幣/本幣二/本幣三匯率
+2. 匯率
+   2-1 取法可參考本幣s_aooi160_get_exrate()，其他本位幣換算基準應該參考agli010的設定
+   2-2 取不到時default =  1
+3. 以S-BAS-0014為主
+CALL cl_get_para(g_enterprise,g_apca_m.apcacomp,'S-BAS-0014') RETURNING g_apca_m.apca101
+CALL s_aooi160_get_exrate('1',g_apca_m.apcacomp,g_apca_m.apcadocdt,g_apca_m.apca100,g_apca_m.glaa001,0,g_apca_m.apca101)
+            RETURNING g_apca_m.apca101]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca101" ver="1" src="s" column="apca101" table="apca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值 在設定交易原幣後 就應該帶入換算後的匯率值]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca103" ver="3" src="s" column="apca103" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單身有資料時由單身未稅合計sum(apcb103) 回寫 
+金額異動處理,另寫邏輯處理參考。]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca104" ver="3" src="s" column="apca104" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單身有資料時由單身未稅合計sum(apcb104) 回寫 ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca106" ver="1" src="s" column="apca106" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。單據確認時，檢核apca106=sum(apcc106)
+。合計金額寫入，故display only
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca108" ver="1" src="s" column="apca108" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單據確認時，檢核apca108=sum(apcc108) = (apca103-apca106+apca104-apca107)
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca113" ver="3" src="s" column="apca113" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[若交易避雨本幣金額 幣別相同 不開放修改
+單身有資料時由單身未稅合計sum(apcb113) 回寫 ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca114" ver="3" src="s" column="apca114" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[稅額 
+欄位控管: 若交易避雨本幣金額 幣別相同 不開放修改
+資料來源: 單身有資料時由單身未稅合計sum(apcb114) 回寫 
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca116" ver="1" src="s" column="apca116" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。單據確認時，檢核apca116=sum(apcc116)
+。合計金額寫入，故display only
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca118" ver="1" src="s" column="apca118" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。單據確認時，檢核apca118=sum(apcc118) = (apca113-apca116+apca114-apca117)
+。合計金額寫入，故display only
+
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca120" ver="1" src="s" column="apca120" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[ display only ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca121" ver="1" src="s" column="apca121" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[1.若無啟用本位幣二時，應將匯率設定為0
+2.預設值: 在異動交易幣後就應該做預設值的設定
+3.匯率
+   3-1 取法可參考本幣s_aooi160_get_exrate()，但換算基準應該參考agli010的設定
+   3-2 取不到時default =  1
+
+帶值:1.第二本位幣稅前金額, 稅額
+          2.重計多帳期明細檔 (單號apccdocno =apcadocno 的多帳期每筆都要修改) 
+         說明: 換算基礎 = '2' 帳簿幣別 則第二本位幣就要分二段
+               1.交易幣別換算成帳簿幣別   (即本幣金額) 
+               2.帳簿幣別算成第二本位幣幣別 (用本幣金額 * 第二本位幣匯率) 
+
+        #-----------  計算方式如下---------------------- 
+          if  glaa017 = '1' 交易原幣 then 
+              第二本位幣稅前金額apca123 = 原幣未稅金額apca103 *匯率 apca121
+              第二本位幣稅額    apca124 = 原幣稅額    apca104 *匯率 apca121
+            
+          else 
+              第二本位幣稅前金額apca123 = 本幣未稅金額apca113 *匯率 apca121
+              第二本位幣稅額    apca124 = 本幣稅額    apca114 *匯率 apca121
+         end if 
+       #--------------------end ----------------------
+
+       #--------重計多帳期明細檔 -------------------
+       本位幣二匯率 apcc121 = apca121 
+        if  glaa017 = '1' 交易原幣 then 
+            第二本位幣稅前apcc123 = 原幣未稅金額apcc103 *匯率 apcc121
+            第二本位幣稅額apcc124 = 原幣稅額    apcc104 *匯率 apcc121
+        else 
+            第二本位幣稅前金額apcc123 = 本幣未稅金額apcc113 *匯率 apcc121
+            第二本位幣稅額    apcc124 = 本幣稅額    apcc114 *匯率 apcc121
+        end if 
+        #-------重計多帳期明細檔end ----------------------
+        畫面上的顯示多帳期的數字要跟著異動 ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca123" ver="1" src="s" column="apca123" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[稅前金額: 
+  ●欄位控管：
+     資料欄位:apca123 / 可Display  可INPUT 
+     允許空白: no
+     預設值:0
+     單身有資料時由單身未稅合計sum(apcb123) 回寫 
+
+   金額異動處理,另寫邏輯處理參考。
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca124" ver="1" src="s" column="apca124" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[稅額: 
+  ●欄位控管：
+     資料欄位:apca124 / 可Display  可INPUT 
+     允許空白:no
+     預設值: 0 
+ 單身有資料時由單身未稅合計sum(apcb124) 回寫 
+
+     金額異動處理,另寫邏輯處理參考。
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca126" ver="3" src="s" column="apca126" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[。單據確認時，檢核apca126=sum(apcc126)
+。合計金額寫入，故display only
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca128" ver="3" src="s" column="apca128" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[。單據確認時，檢核apca128=sum(apcc128)
+。合計金額寫入，故display only
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca130" ver="1" src="s" column="apca130" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[第三本位幣幣別 : 
+  ●欄位控管：
+     資料欄位:apca130  / 可 Display   
+     允許空白:yes  
+     預設值:取帳套apcald 串到帳套的, 啟用第三本位幣否 glaa019
+            if  ='Y' then 
+                let apca130 = 第三本位幣幣別 glaa020
+            end if 
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca131" ver="1" src="s" column="apca131" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[資料處理參考第二本位幣]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca133" ver="1" src="s" column="apca133" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[稅前金額: 
+  ●欄位控管：
+     資料欄位:apca133 / 可Display  可INPUT 
+     允許空白: no
+     預設值:0
+     單身有資料時由單身未稅合計sum(apcb133) 回寫 
+   金額異動處理,另寫邏輯處理參考。
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca134" ver="1" src="s" column="apca134" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[稅額: 
+  ●欄位控管：
+     資料欄位:apca134 / 可Display  可INPUT 
+     允許空白:no
+     預設值: 0 
+ 單身有資料時由單身未稅合計sum(apcb134) 回寫 
+
+     金額異動處理,另寫邏輯處理參考。]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca136" ver="3" src="s" column="apca136" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[。單據確認時，檢核apca136=sum(apcc136)
+。合計金額寫入，故display only
+
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apca138" ver="3" src="s" column="apca138" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[。單據確認時，檢核apca138=sum(apcc138)
+。合計金額寫入，故display only
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcacnfdt" ver="1" src="s" column="apcacnfdt" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcacnfid" ver="1" src="s" column="apcacnfid" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcacomp" ver="1" src="s" column="apcacomp" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[暫估立帳應該以未稅金額立帳，其稅別代號的預設值，取SITE級參數設定(法人層)"S-FIN-2010 暫估款預設稅別"。]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcacrtdp" ver="1" src="s" column="apcacrtdp" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcacrtdt" ver="1" src="s" column="apcacrtdt" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcacrtid" ver="1" src="s" column="apcacrtid" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcadocdt" ver="1" src="s" column="apcadocdt" table="apca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[帳款日期: 
+     預設值:g_today
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcadocno" ver="1" src="s" column="apcadocno" table="apca_t" attribute="" type="" req="Y" i_zoom="q_ooba002_3" c_zoom="q_apcadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[應付單號: 
+校驗: 
+     1.CALL s_fin_slip_chk(g_apca_m.apcadocno,g_prog,g_apca_m.apcald) RETURNING g_success1,g_errno
+     2.在azzi600單別設定系統欄位八作為應='01'應付暫估 or '02.倉退暫估'
+     
+帶值：取得單別性質(apca001) 
+      單據編號原則: 傳入參數以法人apcacomp 為取單號原則
+      CALL cl_get_doc_para(g_enterprise,g_apca_m.apcacomp,g_apca_m.apcadocno,'D-FIN-3001') RETURNING g_apca_m.apca001]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcald" ver="1" src="s" column="apcald" table="apca_t" attribute="" type="" req="Y" i_zoom="q_authorised_ld" c_zoom="q_authorised_ld" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳套: 若新增途中要更換帳套，僅考慮本幣/其他本位幣 及會計科目
+  ●欄位控管：
+     預設值:
+              CALL s_fin_ld_carry('',g_user) RETURNING g_success1,g_apca_m.apcald,g_apca_m.apcacomp,g_errno
+     校驗：
+              CALL s_fin_account_center_with_ld_chk
+     帶值:    
+           1. CALL s_desc_get_ld_desc(g_apca_m.apcald) RETURNING g_apca_m.apcald_desc  
+           2. CALL aapt310_set_ld_info(g_apca_m.apcald) RETURNING g_apca_m.apcacomp          
+ 　　　   2.-1帳套歸屬法人glaacomp 放到應付apcacomp 
+                2-2 若該帳套啟用其他本位幣應用者，依帳套取出本位幣二、三之幣別。(匯率待交易貨幣取得後，並帶出匯率）
+]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcamoddt" ver="1" src="s" column="apcamoddt" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcamodid" ver="1" src="s" column="apcamodid" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcaowndp" ver="1" src="s" column="apcaowndp" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcaownid" ver="1" src="s" column="apcaownid" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcasite" ver="4" src="s" column="apcasite" table="apca_t" attribute="" type="" req="N" i_zoom="q_xrah002_2" c_zoom="q_xrah002_2" chk_ref="v_xrah002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳務中心: 
+  ●欄位控管：
+     預設值:
+　　　CALL s_fin_get_account_center('',g_user,'2') RETURNING g_success1,g_apca_m.apcasite,g_errno
+     校驗：
+            CALL s_fin_account_center_chk(g_apca_m.apcasite,g_apca_m.apcald,'2')RETURNING g_success1,g_errno
+     帶值: 帳務中心名稱 
+            CALL s_desc_get_acct_center_desc(g_apca_m.apcasite) RETURNING g_apca_m.apcasite_desc   ]]>
+  </field>
+  <field cite_std="N" name="apca_t.apcastus" ver="1" src="s" column="apcastus" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcacomp_desc" ver="1" src="s" column="chr1000" table="type_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcadocno_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb005_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb0201" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb020_desc" ver="3" src="s" column="apca053" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb021_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb029_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb103_1" ver="1" src="s" column="apcb103" table="apcb_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb105_1" ver="1" src="s" column="apcb105" table="apcb_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb1131" ver="1" src="s" column="apcb113" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb1141" ver="1" src="s" column="apcb114" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb1151" ver="1" src="s" column="apcb115" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb1231" ver="1" src="s" column="apcb123" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[依據稅別決定開啟含稅或未稅欄位維護，其他本位幣僅開放本位幣二三金額修改 修改後回寫apcc/apca]]>
+  </field>
+  <field cite_std="N" name="apcb1241" ver="1" src="s" column="apcb124" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb1251" ver="1" src="s" column="apcb125" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb1331" ver="1" src="s" column="apcb133" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb1341" ver="1" src="s" column="apcb134" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb1351" ver="1" src="s" column="apcb135" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb001" ver="3" src="s" column="apcb001" table="apcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[。來源類型：
+   LET l_str = s_fin_last_doc_fields(g_prog)
+   CALL cl_set_combo_scc_part('apca016','24',l_str) #來源作業類型
+
+   IIF 帳款單性質.apca001='01' THEN 限定 ＂apmt570入庫單"　或無來源者
+   IIF 帳款單性質.apca001='02' THEN 限定 ＂apmt580倉退單"　或無來源]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb002" ver="4" src="s" column="apcb002" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[。來源業務單號:
+  ●欄位控管：
+    預設值:單頭參考單號apca018/可空白
+    校驗:因來源類型不同而檢核不同的單據檔 
+    帶值:無
+    條件:與單頭同一帳款對象之單據 and 未全部沖帳之單據 
+ ●開窗處理：
+ 　　１.新增/修改時：
+        參考函式：
+                 因來源類型不同而開不同的單據檔
+                 視來源類型, 取 scc=24 的[應用分類五gzcb006],記錄的使用查詢代碼
+        回值類型：單一回值
+      2.查詢時：
+ select 來源類型，來源業務單號，參考單據號碼
+ 　FROM apcb_t
+  WHERE 1=1
+   GROUP by 來源類型，來源業務單號，參考單據號碼
+
+
+。沖暫估
+ 校驗: 來源業務單據號碼，須存在於原暫估作業中，且未沖銷完畢者。
+    帶值: 無
+    條件: 帳款單性質 IN (13,15,16)，才可沖暫估處理，否則提示錯誤訊息，並且清空[數量]、[金額]欄位。]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb003" ver="1" src="s" column="apcb003" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[來源單號項次:
+欄位控管：
+欄位是否可以空白是由來源業務單號是否有資料決定，沒有資料則可空白，有資料者 不可為空白
+在BEFORE FIELD設定
+校驗:因來源類型不同而檢核不同的單據檔 
+帶值:   1.檢核是否已有立暫估應付款資料，
+   apcb002+apcb003 IN apcb_file(apcb002+apcb003) WHERE apcbdocno=apcadocno AND apca001='10' AND apcastus='Y' #存在於暫估單者
+   存在者--> 則apcb023='Y' , 取原立暫估資料檔帶入。
+   不存在--> 則apcb023='N' , 依來源作業帶入資料值。
+ 2.帶入相關對應的字段內容： 料號,品名規格,單位,數量,稅別,原幣單價,原幣未稅金額,原幣稅額,原幣含稅金額
+    本幣單價,本幣未稅金額, 本幣稅額, 本幣含稅金額（視前端單據規格而定）　 
+    條件:與單頭同一帳款對象之單據，及該單據內存在的項次。]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb004" ver="1" src="s" column="apcb004" table="apcb_t" attribute="" type="" req="N" i_zoom="q_imaa001_14" c_zoom="q_imaa001_14" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[。產品編號
+  ●欄位控管：
+    資料欄位: apcb004  /可Display 可 input 
+　　　　　　　若參考單號非空白時，則本欄不可輸入
+    預設值:無  ／ 可空白
+    校驗: 必須存在於料件主檔之有效料件
+    帶值:　品名規格apcb005=imaal003
+　●開窗處理：
+ 　　１.新增/修改時：
+       參考函式：依標準查詢視窗 q_料件主檔
+       查詢欄位： 料號／品名003／規格004／產品分類009／料件類別004 
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb005" ver="1" src="s" column="apcb005" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。品名規格
+ ●欄位控管： 
+     資料欄位:xrcb004   
+ IF 帳款單性質 in ('12'、'15'、'16'、'22')
+     可Display  可input  
+ ELSE  
+     Display only  
+     允許空白:yes 
+     預設值: 無]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb006" ver="1" src="s" column="apcb006" table="apcb_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[。單位:
+  ●欄位控管：
+    資料欄位: apcb006   /可Display 可 input 
+    預設值:依來源單據帶入／無來源單據者，依產品編號之計價單位imaf113(依帳套別法人）／可空白
+    校驗:必須存在單位基本資料檔
+    帶值:無
+　●開窗處理：
+ 　　１.新增/修改時：
+       參考函式：依標準查詢視窗
+       查詢欄位：單位代碼, 說明
+       回值類型：單一回值,呈現單位說明]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb007" ver="1" src="s" column="apcb007" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。數量:
+  ●欄位控管：
+    資料欄位: apcb007   /可Display 可 input 
+    預設值:1　／不可空白
+    校驗:  不可＞沖銷數量
+ 1. 沖暫估apcb0232='Y', 則檢核AP暫估單;
+   1)取得原暫估數量  2)已沖暫估量(未作廢單)  3) 可立帳量 = (1) - (2) 不可為負數。
+   2)已暫估量規格修改(先以0作為預設值)
+ 2. 非沖暫估者，則檢核原始來源單據之數量。
+ 3. 不須檢核數量者, 帳款單性質 in (12,15,16)
+]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb008" ver="1" src="s" column="apcb008" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。參考單據：
+    資料欄位: apcb1008  /可Display 可 input 
+    預設值: 來源單據帶入／可空白
+    帶值: 無]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb009" ver="1" src="s" column="apcb009" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。參考單項次：
+    資料欄位: apcb1009  /可Display 可 input 
+    預設值: 來源單據帶入／可空白
+    帶值: 無]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb010" ver="1" src="s" column="apcb010" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb011" ver="1" src="s" column="apcb011" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb012" ver="1" src="s" column="apcb012" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb013" ver="1" src="s" column="apcb013" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb014" ver="1" src="s" column="apcb014" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb015" ver="1" src="s" column="apcb015" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb016" ver="1" src="s" column="apcb016" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb017" ver="1" src="s" column="apcb017" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb018" ver="1" src="s" column="apcb018" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb019" ver="1" src="s" column="apcb019" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb020" ver="1" src="s" column="apcb020" table="apcb_t" attribute="" type="" req="Y" i_zoom="q_oodb002_5" c_zoom="q_oodb002_5" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[。稅別: 
+  ●欄位控管：
+     資料欄位:apcb020 / 可Display 可INPUT 
+     允許空白:no
+     預設值: 皆default =單頭的稅別apca011 /可自行修改但必須為零稅率稅別
+　●開窗處理：
+     1.新增/修改時:
+       參考函式：依標準查詢視窗 s_aooi610_tax_query
+       查詢欄位：依查詢元件設計         
+       回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb021" ver="3" src="s" column="apcb021" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb022" ver="3" src="s" column="apcb022" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb023" ver="3" src="s" column="apcb023" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[取消欄位顯示 /  default 'N'
+]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb024" ver="1" src="s" column="apcb024" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb028" ver="3" src="s" column="apcb028" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb029" ver="3" src="s" column="apcb029" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb030" ver="1" src="s" column="apcb030" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[曉峰修改規格，隱藏單頭資訊多帳期條件 改由單身項次決定]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb047" ver="3" src="s" column="apcb047" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb048" ver="3" src="s" column="apcb048" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb051" ver="3" src="s" column="apcb051" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb100" ver="1" src="s" column="apcb100" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb101" ver="1" src="s" column="apcb101" table="apcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。原幣單價:
+  ●欄位控管：
+    預設值: 來源單據帶入／０／不可空白
+    帶值: CALL 稅額計算元件(待開發)，帶出未稅金額 ,稅額,含稅金額。
+          本幣金額 = 原幣金額 * 幣別匯率]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb102" ver="3" src="s" column="apcb102" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb103" ver="1" src="s" column="apcb103" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。原幣未稅金額:
+  ●欄位控管：
+    資料欄位: apcb103   /可Display 可 input 
+    預設值:　由來源單據帶入／由稅額計算帶出/not null
+    帶值: 本幣金額 = 原幣金額 * 幣別匯率]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb104" ver="1" src="s" column="apcb104" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。原幣稅額:
+    資料欄位: apcb104   /可Display 
+    預設值:　由來源單據帶入／由稅額計算帶出/not null
+#14/04/22 稅額修改為NoEntry，改由 交易稅明細的原幣稅額做修改，若交易稅明細有修改時，再回寫該欄位]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb105" ver="1" src="s" column="apcb105" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。原幣含稅金額:
+  ●欄位控管：
+    資料欄位: apcb105   /可Display 可 input 
+    預設值:　由來源單據帶入／未稅金額+稅額/not null
+    帶值: 本幣金額 = 原幣金額 * 幣別匯率apca101]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb106" ver="1" src="s" column="apcb106" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb108" ver="1" src="s" column="apcb108" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb111" ver="1" src="s" column="apcb111" table="apcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。本幣單價:
+  ●欄位控管：
+    資料欄位: apcb111   /可Display 可 input 
+    預設值: 原幣單價apcb101  *  匯率 apca101　／ not null ]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb113" ver="1" src="s" column="apcb113" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。本幣未稅金額:
+  ●欄位控管：
+    資料欄位: apcb113   /可Display 可 input 
+    預設值: 原幣apcb113  *  匯率 apca101　／ not null ]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb114" ver="1" src="s" column="apcb114" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。本幣稅額:
+  ●欄位控管：
+    資料欄位: apcb114   /可Display 
+    預設值: 原幣apcb114  *  匯率 apca101　／ not null 
+#14/04/22 稅額修改為NoEntry，改由 交易稅明細的本幣稅額做修改，若交易稅明細有修改時，再回寫該欄位]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb115" ver="1" src="s" column="apcb115" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[。本幣含稅金額:
+  ●欄位控管：
+    資料欄位: apcb115   /可Display 可 input 
+    預設值: 原幣apcb115  *  匯率 apca101　／ not null ]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb123" ver="1" src="s" column="apcb123" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb124" ver="1" src="s" column="apcb124" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb125" ver="1" src="s" column="apcb125" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb133" ver="1" src="s" column="apcb133" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb134" ver="1" src="s" column="apcb134" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcb135" ver="1" src="s" column="apcb135" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcblegl" ver="1" src="s" column="apcblegl" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcborga" ver="3" src="s" column="apcborga" table="apcb_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[。來源組織:
+    校驗: 必須存在於營運據點基本資料檔
+    帶值: 組織簡稱、[核算組織apcblegl]
+    條件: 與單頭組織同一法人下之組織
+    ]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcbseq" ver="1" src="s" column="apcbseq" table="apcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="1" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcb_t.apcbsite" ver="1" src="s" column="apcbsite" table="apcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcborga1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcc109" ver="1" src="s" column="apcc109" table="apcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[sum(apcc109)
+]]>
+  </field>
+  <field cite_std="N" name="apcc1091" ver="1" src="s" column="apcc109" table="apcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.
+]]>
+  </field>
+  <field cite_std="N" name="apcc1131" ver="3" src="s" column="apcc113" table="apcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcc119" ver="1" src="s" column="apcc119" table="apcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[。display only
+。sum(apcc119)
+]]>
+  </field>
+  <field cite_std="N" name="apcc1191" ver="1" src="s" column="apcc119" table="apcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only.
+]]>
+  </field>
+  <field cite_std="N" name="apcc129" ver="1" src="s" column="apcc129" table="apcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[。display only
+。sum(apcc129)
+]]>
+  </field>
+  <field cite_std="N" name="apcc139" ver="1" src="s" column="apcc139" table="apcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[。display only
+。sum(apcc139)
+]]>
+  </field>
+  <field cite_std="N" name="apcc_t.apcc113" ver="3" src="s" column="apcc113" table="apcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcc_t.apcc123" ver="3" src="s" column="apcc123" table="apcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apcc_t.apcc133" ver="3" src="s" column="apcc133" table="apcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_apca001" ver="1" src="s" column="apca001" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_apca003" ver="1" src="s" column="apca003" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_apca004" ver="1" src="s" column="apca004" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_apca005" ver="1" src="s" column="apca005" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_apcadocno" ver="1" src="s" column="apcadocno" table="apca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_apcald" ver="1" src="s" column="apcald" table="apca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa001" ver="1" src="s" column="glaa001" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳本位幣顯示[glaa001]]]>
+  </field>
+  <field cite_std="N" name="glaa0011" ver="1" src="s" column="glaa001" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[display only ]]>
+  </field>
+  <field cite_std="N" name="imaa003_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="net108" ver="3" src="s" column="apca108" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[應付金額apca108 － 已付sum(apcc109) ]]>
+  </field>
+  <field cite_std="N" name="net1081" ver="3" src="s" column="apca108" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[。display only
+。應付金額apca108 － 已付sum(apcc109) ]]>
+  </field>
+  <field cite_std="N" name="net118" ver="3" src="s" column="apca118" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[。display only
+。應付金額apca118 － 已付sum(apcc119) 
+]]>
+  </field>
+  <field cite_std="N" name="net1181" ver="3" src="s" column="apca118" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[。display only
+。應付金額apca118 － 已付sum(apcc119) 
+]]>
+  </field>
+  <field cite_std="N" name="net128" ver="3" src="s" column="apca128" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[。display only
+。應付金額apca128 － 已付sum(apcc129) 
+]]>
+  </field>
+  <field cite_std="N" name="net138" ver="3" src="s" column="apca138" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[。display only
+。應付金額apca138 － 已付sum(apcc139) 
+]]>
+  </field>
+  <field cite_std="N" name="partition2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="partition3" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd002_desc" ver="2" src="s" column="apca053" table="apca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd009_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd002" ver="1" src="s" column="xrcd002" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd003" ver="1" src="s" column="xrcd003" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd005" ver="1" src="s" column="xrcd005" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd006" ver="1" src="s" column="xrcd006" table="xrcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd007" ver="1" src="s" column="xrcd007" table="xrcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd009" ver="3" src="s" column="xrcd009" table="xrcd_t" attribute="" type="" req="N" i_zoom="q_glac002" c_zoom="q_glac002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd102" ver="1" src="s" column="xrcd102" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd103" ver="1" src="s" column="xrcd103" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd104" ver="1" src="s" column="xrcd104" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd105" ver="1" src="s" column="xrcd105" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd113" ver="1" src="s" column="xrcd113" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd114" ver="1" src="s" column="xrcd114" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd115" ver="1" src="s" column="xrcd115" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd123" ver="1" src="s" column="xrcd123" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd124" ver="1" src="s" column="xrcd124" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd125" ver="1" src="s" column="xrcd125" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd133" ver="1" src="s" column="xrcd133" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd134" ver="1" src="s" column="xrcd134" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd135" ver="1" src="s" column="xrcd135" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcdorga" ver="1" src="s" column="xrcdorga" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcdseq" ver="1" src="s" column="xrcdseq" table="xrcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcdseq2" ver="1" src="s" column="xrcdseq2" table="xrcd_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="4" name="prog_apca003" depend_field="apca_t.apca003" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+    <pfield cite_std="N" ver="4" name="prog_apca014" depend_field="apca_t.apca014" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+    <pfield cite_std="N" ver="4" name="prog_apca018" depend_field="apca_t.apca018" src="s" status="">
+      <program order="1" type="1" name="aapt300"/>
+    </pfield>
+    <pfield cite_std="N" ver="4" name="prog_apca019" depend_field="apca_t.apca019" src="s" status="">
+      <program order="1" type="1" name="aapq342"/>
+    </pfield>
+    <pfield cite_std="N" ver="4" name="prog_apca038" depend_field="apca_t.apca038" src="s" status="">
+      <program order="1" type="1" name="aglt310"/>
+    </pfield>
+    <pfield cite_std="N" ver="4" name="apcb_t.apcb002" depend_field="apcb_t.apcb002" src="s" status="">
+      <program order="1" type="1" name="apcb002"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="apca003_desc" src="s" depend_field="apca_t.apca003" correspon_key="apca003" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="apca004_desc" src="s" depend_field="apca_t.apca004" correspon_key="apcaent,apca004" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="apca005_desc" src="s" depend_field="apca_t.apca005" correspon_key="apcaent,apca005" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="apca007_desc" src="s" depend_field="apca_t.apca007" correspon_key="apcaent,&apos;3211&apos;,apca007" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="apca008_desc" src="s" depend_field="apca_t.apca008" correspon_key="apcaent,apca008" ref_table="ooibl_t" ref_fk="ooiblent,ooibl002" ref_dlang="ooibl003" ref_rtn="ooibl004" status=""/>
+    <rfield cite_std="N" ver="1" name="apca014_desc" src="s" depend_field="apca_t.apca014" correspon_key="apca014" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="apca015_desc" src="s" depend_field="apca_t.apca015" correspon_key="apcaent,apca015" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="apca030_desc" src="s" depend_field="apca_t.apca030" correspon_key="apcaent,&apos;&apos;,apca030" ref_table="glacl_t" ref_fk="glaclent,glacl001,glacl002" ref_dlang="glacl003" ref_rtn="glacl004" status=""/>
+    <rfield cite_std="N" ver="1" name="apca033_desc" src="s" depend_field="apca_t.apca033" correspon_key="apcaent,apca033" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="apca034_desc" src="s" depend_field="apca_t.apca034" correspon_key="apcaent,apca034" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="apca035_desc" src="s" depend_field="apca_t.apca035" correspon_key="apcaent,&apos;&apos;,apca036" ref_table="glacl_t" ref_fk="glaclent,glacl001,glacl002" ref_dlang="glacl003" ref_rtn="glacl004" status=""/>
+    <rfield cite_std="N" ver="1" name="apca036_desc" src="s" depend_field="apca_t.apca036" correspon_key="apcaent,&apos;&apos;,apca036" ref_table="glacl_t" ref_fk="glaclent,glacl001,glacl002" ref_dlang="glacl003" ref_rtn="glacl004" status=""/>
+    <rfield cite_std="N" ver="1" name="apca054_desc" src="s" depend_field="apca_t.apca054" correspon_key="apcaent,&apos;3114&apos;,apca054" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="apca055_desc" src="s" depend_field="apca_t.apca055" correspon_key="apcaent,apca055" ref_table="ooidl_t" ref_fk="ooidlent,ooidl001" ref_dlang="ooidl002" ref_rtn="ooidl003" status=""/>
+    <rfield cite_std="N" ver="1" name="apca058_desc" src="s" depend_field="apca_t.apca058" correspon_key="apcaent,&apos;264&apos;,apca058" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="apca059_desc" src="s" depend_field="apca_t.apca059" correspon_key="apcaent,apca059" ref_table="bgaal_t" ref_fk="bgaalent,bgaal001" ref_dlang="bgaal002" ref_rtn="bgaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="apcacnfid_desc" src="s" depend_field="apca_t.apcacnfid" correspon_key="apcacnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="apcacrtdp_desc" src="s" depend_field="apca_t.apcacrtdp" correspon_key="apcacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="apcacrtid_desc" src="s" depend_field="apca_t.apcacrtid" correspon_key="apcacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="apcald_desc" src="s" depend_field="apca_t.apcald" correspon_key="apcaent,apcald" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+    <rfield cite_std="N" ver="1" name="apcamodid_desc" src="s" depend_field="apca_t.apcamodid" correspon_key="apcamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="apcaowndp_desc" src="s" depend_field="apca_t.apcaowndp" correspon_key="apcaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="apcaownid_desc" src="s" depend_field="apca_t.apcaownid" correspon_key="apcaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="apcasite_desc" src="s" depend_field="apca_t.apcasite" correspon_key="apcaent,apcasite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_apca003_desc" src="s" depend_field="b_apca003" correspon_key="apca003" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_apca004_desc" src="s" depend_field="b_apca004" correspon_key="apcaent,apca004" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_apca005_desc" src="s" depend_field="b_apca005" correspon_key="apcaent,apca005" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_apcald_desc" src="s" depend_field="b_apcald" correspon_key="apcaent,apcald" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="4" name="apca011_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca0181" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="apca0501" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca051_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca1001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca1011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca1031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca1041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca1061" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca1081" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca1131" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca1141" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca1161" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca1181" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="apca_t.apca003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="apca_t.apca010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="apca_t.apca014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="apca_t.apca018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="apca_t.apca019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="apca_t.apca038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca039" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca046" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca047" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca050" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca052" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca053" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca054" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca055" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca056" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca057" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca058" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca059" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca060" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca063" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca064" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca065" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca066" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca100" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca101" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca103" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca104" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca106" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca108" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca113" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca114" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca116" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca118" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca120" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca121" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca123" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca124" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca126" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca128" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca130" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca131" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca133" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apca134" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca136" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apca_t.apca138" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcacomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcald" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="apca_t.apcasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apca_t.apcastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcacomp_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcadocno_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb005_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb0201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb020_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb021_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb029_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb103_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb105_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb1131" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb1141" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb1151" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb1231" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb1241" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb1251" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb1331" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb1341" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb1351" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="apcb_t.apcb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcb021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcb022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcb023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcb028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcb029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcb047" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcb048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcb051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb100" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb101" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcb102" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb103" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb104" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb105" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb106" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb108" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb111" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb113" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb114" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb115" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb123" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb124" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb125" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb133" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb134" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcb135" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcblegl" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcb_t.apcborga" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcbseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcb_t.apcbsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcborga1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcc109" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcc1091" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcc1131" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcc119" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcc1191" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcc129" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apcc139" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcc_t.apcc113" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcc_t.apcc123" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="apcc_t.apcc133" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_apca001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_apca003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_apca004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_apca005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_apcadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_apcald" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa0011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="imaa003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="net108" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="net1081" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="net118" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="net1181" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="net128" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="net138" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="partition2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="partition3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="xrcd002_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="xrcd009_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="xrcd_t.xrcd009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd102" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd103" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd104" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd105" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd113" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd114" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd115" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd123" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd124" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd125" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd133" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd134" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd135" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcdorga" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcdseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcdseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="lien" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[。ACTION "帳款留置設定"：
+　１。開放可EDIT欄位　: [帳款留置否]、 [原因]、［說明］、[設定日期]、[解除留置日期]、［留置金額］
+　２。[Var.原幣未收金額] ＜＝　０，則不可執行。
+
+。輸入時之檢核：
+ １。[帳款留置否]：變更為’Ｙ’時，若[設定日期]為空白者，則default給TODAY。
+ ２。[設定日期]　若　＞[解除留置日期]，則提示詢問訊息＂設定日期修改，是否重置解除留置日期（Ｙ／Ｎ）？＂；
+ 　　回覆為’Ｙ’者，則清空[解除留置日期]。（表示可能是作第二次的留置動作業）。
+
+。結束時之檢核：
+　１。若[帳款留置否]＝’Ｙ’，則[設定日期]、［原因］、［留置金額］不可空白。
+  　　　[解除留置日期]應＝空白。
+ 　　　　＝’Ｎ’ AND [留置金額]＞0，則[解除留置日期]＜＞空白。
+　２。[解除留置日期]：若有值,則日期則須＞＝［設定日期］。
+
+
+。異動 LOG寫入：
+　MEMO string： action名稱, [帳款留置否], [設定日期], [留置金額],[解除留置日期]]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_aapp330" ver="3" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[１。已有產生傳票者（apca038 is not null)，則取得該傳票號碼並判斷類型，決定啟動之作業別。
+　　glap001=1.轉帳傳票 CALL aglt310
+ 2.現收傳票 CALL aglt320
+ 3.現支傳票 CALL aglt330
+ 5 轉回傳票 CALL aglt350
+２。尚未產生傳票者，
+　 2.1。檢核該帳款單單別是否需產生傳票？
+　　　。解析帳款單號，取得＂帳款單別＂
+　　　。查該＂帳款單別＂設置之參數［D-FIN-0030　拋轉傳票］是否設為值為'Y'；'Y'才執行產生傳票, 'N'則提示 "此帳款單設定為不需產生傳票!"並結束。
+   2.2。取得指定的總帳單別
+　　　。解析帳款單號，取得＂帳款單別＂
+　　　。取單據別參數設定之對應傳票單別［D-FIN-1002　產生之總帳傳票單別］；
+　　　。無指定者對應傳票單別者，則執行axrp320作業，輸入指定的傳票單別。
+３。產生傳票：
+　　　執行"aapp320 應收帳款單產生傳票作業", 傳入參數。
+　　　。帳套別
+　　　。帳款單號碼
+　　　。傳票單別
+　　　。傳票日期　＝　帳款單立帳日期
+    無指定對應傳票單別者，則另開啟作業aapp320，輸入指定之傳票單別。]]>
+  </act>
+  <act cite_std="N" id="open_aapt300_01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[。CALL aapt310_01(多帳期帳款明細)]]>
+  </act>
+  <act cite_std="N" id="open_aapt300_03" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[。CALL aapt310_03(發票信息)
+。預付(11)有收取進項發票否?
+1.原採購單之設定(pmdl046)
+2.視單身稅別之展算
+3.進項發票(isam_t)有無登錄。]]>
+  </act>
+  <act cite_std="N" id="open_aapt300_05" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[。檢核帳款金額（單身合計額）、直接沖銷額、沖暫估處理　與　發票收據額（進項發票合計）相符否？　
+　　。不相符：開啟子作業差異處理(aapt310_05)。
+　　。相符　：message "帳款與發票金額相符，不須處理差異。"
+　　。視單別設定，允許進項發票與帳款不相符否。
+ 。視單別參數設置D_FIN_3003檢核帳款與發票的金額相符否?，　為’Ｙ’者須執行差異處理。
+。已確認、作廢、送簽　狀態的單據，不開放處理。
+。金額檢核作成可共用的元件，confirm 及其他作業共用。]]>
+  </act>
+  <act cite_std="N" id="open_aapt300_09" ver="3" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_aapt300_14" ver="3" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_pre" ver="3" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="waiver_of_lien" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[。ACTION "解除帳款留置"：
+　１。開放可EDIT　：[帳款留置否]、［說明］、［留置金額］、[解除留置日期]
+　２。帳款留置否＝’Ｙ’，才可執行。
+
+。輸入時檢核：
+　１。[帳款留置否]：更改為’Ｎ’時，[解除留置日期]空白者，則預設 TODAY 。
+　２。[解除留置日期]：可空白。
+  若輸入日期　則須＞［設定日期］
+。結束時檢核：
+　１。若[帳款留置否]＝’Ｙ’，則[設定日期]、［原因］、［留置金額］不可空白。
+ 　　　　[解除留置日期]應＝空白。
+ 　　　＝’Ｎ’ AND [留置金額]＞0，則[解除留置日期]＜＞須輸入，不可空白，。
+　２。[解除留置日期]：若有值,則日期則須＞［設定日期］。
+
+。異動 LOG寫入：
+　MEMO string： action名稱, [帳款留置否], [設定日期], [留置金額],[解除留置日期]
+]]>
+  </act>
+  <strings>
+    <sfield name="lbl_apca040" text="留置否" lstr=""/>
+    <sfield name="lbl_apca042" text="留置設定日" lstr=""/>
+    <sfield name="lbl_apca041" text="留置原因" lstr=""/>
+    <sfield name="lbl_apca044" text="留置金額" lstr=""/>
+    <sfield name="lbl_apca045" text="留置說明" lstr=""/>
+    <sfield name="lbl_apca043" text="留置解除日" lstr=""/>
+    <sfield name="lbl_apcbdocno" text="單號" lstr=""/>
+    <sfield name="lbl_apcbld" text="帳別" lstr=""/>
+    <sfield name="lbl_apcbseq" text="項次" lstr=""/>
+    <sfield name="lbl_apcb047" text="摘要" lstr=""/>
+    <sfield name="lbl_apcb021" text="費用科目" lstr=""/>
+    <sfield name="lbl_apcb021_desc" text="費用科目" lstr=""/>
+    <sfield name="lbl_apcb029" text="帳款科目" lstr=""/>
+    <sfield name="lbl_apcb029_desc" text="帳款科目" lstr=""/>
+    <sfield name="lbl_apcb051" text="業務人員" lstr=""/>
+    <sfield name="lbl_apcb051_desc" text="業務人員" lstr=""/>
+    <sfield name="lbl_apcb010" text="業務部門" lstr=""/>
+    <sfield name="lbl_apcb010_desc" text="業務部門" lstr=""/>
+    <sfield name="lbl_apcb011" text="責任中心" lstr=""/>
+    <sfield name="lbl_apcb011_desc" text="責任中心" lstr=""/>
+    <sfield name="lbl_apcb024" text="區域" lstr=""/>
+    <sfield name="lbl_apcb024_desc" text="區域" lstr=""/>
+    <sfield name="lbl_apcb012" text="產品類別" lstr=""/>
+    <sfield name="lbl_apcb012_desc" text="產品類別" lstr=""/>
+    <sfield name="lbl_apcb015" text="專案代號" lstr=""/>
+    <sfield name="lbl_apcb015_desc" text="專案代號" lstr=""/>
+    <sfield name="lbl_apcb016" text="WBS編號" lstr=""/>
+    <sfield name="lbl_apcb016_desc" text="說明" lstr=""/>
+    <sfield name="lbl_apcb033" text="經營方式" lstr=""/>
+    <sfield name="lbl_apcb034" text="渠道" lstr=""/>
+    <sfield name="lbl_apcb034_desc" text="渠道" lstr=""/>
+    <sfield name="lbl_apcb035" text="品牌" lstr=""/>
+    <sfield name="lbl_apcb035_desc" text="品牌" lstr=""/>
+    <sfield name="lbl_apcb036" text="客群" lstr=""/>
+    <sfield name="lbl_apcb036_desc" text="客群" lstr=""/>
+    <sfield name="lbl_apcb037" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_apcb037_desc" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_apcb038" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_apcb038_desc" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_apcb039" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_apcb039_desc" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_apcb040" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_apcb040_desc" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_apcb041" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_apcb041_desc" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_apcb042" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_apcb042_desc" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_apcb043" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_apcb043_desc" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_apcb044" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_apcb044_desc" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_apcb045" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_apcb045_desc" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_apcb046" text="自由核算項十" lstr=""/>
+    <sfield name="lbl_apcb046_desc" text="自由核算項十" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_isam001" text="發票來源" lstr=""/>
+    <sfield name="lbl_isamdocno" text="收票單號" lstr=""/>
+    <sfield name="lbl_isamseq" text="項次" lstr=""/>
+    <sfield name="lbl_isam008" text="發票類型" lstr=""/>
+    <sfield name="lbl_isam037" text="可扣抵代碼" lstr=""/>
+    <sfield name="lbl_isam011" text="發票日期" lstr=""/>
+    <sfield name="lbl_isam010" text="發票號碼" lstr=""/>
+    <sfield name="lbl_isam030" text="稅務編號" lstr=""/>
+    <sfield name="lbl_isam009" text="銷方發票代碼" lstr=""/>
+    <sfield name="lbl_isam012" text="稅別" lstr=""/>
+    <sfield name="lbl_isam012_desc_desc" text="說明" lstr=""/>
+    <sfield name="lbl_isam0121" text="含稅否" lstr=""/>
+    <sfield name="lbl_isam013" text="稅率" lstr=""/>
+    <sfield name="lbl_isam014" text="幣別" lstr=""/>
+    <sfield name="lbl_isam015" text="匯率" lstr=""/>
+    <sfield name="lbl_isam023" text="發票原幣未稅金額" lstr=""/>
+    <sfield name="lbl_isam024" text="發票原幣稅額" lstr=""/>
+    <sfield name="lbl_isam025" text="發票原幣含稅金額" lstr=""/>
+    <sfield name="lbl_isam026" text="發票本幣未稅金額" lstr=""/>
+    <sfield name="lbl_isam027" text="發票本幣稅額" lstr=""/>
+    <sfield name="lbl_isam028" text="發票本幣含稅金額" lstr=""/>
+    <sfield name="lbl_isamcomp" text="法人" lstr=""/>
+    <sfield name="lbl_isamstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_isam002" text="開發票人" lstr=""/>
+    <sfield name="lbl_isam004" text="帳務中心(業務組織)" lstr=""/>
+    <sfield name="lbl_isam016" text="購貨方名稱" lstr=""/>
+    <sfield name="lbl_isam017" text="購貨方稅務編號" lstr=""/>
+    <sfield name="lbl_isam018" text="購貨方地址" lstr=""/>
+    <sfield name="lbl_isam019" text="購貨方電話" lstr=""/>
+    <sfield name="lbl_isam020" text="購貨方開戶銀行" lstr=""/>
+    <sfield name="lbl_isam021" text="購貨方帳戶編碼" lstr=""/>
+    <sfield name="lbl_isam022" text="銷方銀行帳戶編碼" lstr=""/>
+    <sfield name="lbl_isam029" text="銷貨方名稱" lstr=""/>
+    <sfield name="lbl_isam031" text="銷貨方地址" lstr=""/>
+    <sfield name="lbl_isam032" text="銷貨方電話" lstr=""/>
+    <sfield name="lbl_isam033" text="銷貨方開戶銀行" lstr=""/>
+    <sfield name="lbl_isam034" text="銷貨方帳號" lstr=""/>
+    <sfield name="lbl_isam038" text="作廢(註銷)理由碼" lstr=""/>
+    <sfield name="lbl_isam039" text="作廢日期" lstr=""/>
+    <sfield name="aapt300_03.lbl_gp1" text="帳款合計金額" lstr=""/>
+    <sfield name="lbl_lab1" text="原　幣" lstr=""/>
+    <sfield name="lbl_lab2" text="本　幣" lstr=""/>
+    <sfield name="lbl_apca1031" text="未稅金額" lstr=""/>
+    <sfield name="lbl_apca1041" text="稅額" lstr=""/>
+    <sfield name="lbl_apca10311" text="含稅金額" lstr=""/>
+    <sfield name="aapt300_03.lbl_gp2" text="帳款與發票差異金額" lstr=""/>
+    <sfield name="lbl_apcadocno" text="應付單號" lstr=""/>
+    <sfield name="lbl_apcald" text="帳套" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_apca001" text="帳款單性質" lstr=""/>
+    <sfield name="lbl_apca003" text="帳務人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_apca004" text="帳款對象" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_apca005" text="付款對象" lstr=""/>
+    <sfield name="lbl_apcasite" text="帳務中心" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_apcadocdt" text="立帳日期" lstr=""/>
+    <sfield name="lbl_apca038" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_apca037" text="產生傳票否" lstr=""/>
+    <sfield name="page_1" text="帳務資料" lstr=""/>
+    <sfield name="lbl_group15" text="業務資料" lstr=""/>
+    <sfield name="lbl_apca065" text="發票代碼" lstr=""/>
+    <sfield name="lbl_apca066" text="發票號碼" lstr=""/>
+    <sfield name="lbl_apca008" text="付款條件" lstr=""/>
+    <sfield name="lbl_ooibl004" text="說明" lstr=""/>
+    <sfield name="lbl_apca009" text="應付款日" lstr=""/>
+    <sfield name="lbl_apca010" text="票到期日" lstr=""/>
+    <sfield name="lbl_apca060_1" text="稅別" lstr=""/>
+    <sfield name="lbl_apca013" text="含稅否" lstr=""/>
+    <sfield name="lbl_apca011" text="稅別" lstr=""/>
+    <sfield name="lbl_apca007" text="帳款類別" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_apca036" text="預支科目" lstr=""/>
+    <sfield name="lbl_glacl004" text="說明" lstr=""/>
+    <sfield name="lbl_apca035" text="帳款科目" lstr=""/>
+    <sfield name="lbl_group16" text="交易原幣帳款" lstr=""/>
+    <sfield name="lbl_apca100" text="交易原幣" lstr=""/>
+    <sfield name="lbl_apca103" text="未稅金額+" lstr=""/>
+    <sfield name="lbl_apca104" text="稅　　額+" lstr=""/>
+    <sfield name="lbl_apca106" text="沖　　帳-" lstr=""/>
+    <sfield name="lbl_apca108" text="應付金額=" lstr=""/>
+    <sfield name="lbl_apcc109" text="已　　付-" lstr=""/>
+    <sfield name="lbl_net108" text="未付金額=" lstr=""/>
+    <sfield name="lbl_group18" text="本幣帳款" lstr=""/>
+    <sfield name="lbl_apca101" text="幣別／匯率" lstr=""/>
+    <sfield name="lbl_apcc113" text="重評價匯差+" lstr=""/>
+    <sfield name="page_6" text="會計資料" lstr=""/>
+    <sfield name="lbl_group27" text="會計科目" lstr=""/>
+    <sfield name="lbl_group28" text="原始交易憑證" lstr=""/>
+    <sfield name="lbl_apca050_1" text="應附附件份數" lstr=""/>
+    <sfield name="lbl_apca039" text="會計檢核份數" lstr=""/>
+    <sfield name="page_2" text="其他信息" lstr=""/>
+    <sfield name="lbl_group19" text="帳款分期及核算資料" lstr=""/>
+    <sfield name="lbl_apca016" text="來源作業類型" lstr=""/>
+    <sfield name="lbl_apca054" text="多帳期設定" lstr=""/>
+    <sfield name="lbl_apca018" text="來源參考單號" lstr=""/>
+    <sfield name="lbl_apca055" text="繳款優惠條件" lstr=""/>
+    <sfield name="lbl_ooidl003" text="說明" lstr=""/>
+    <sfield name="lbl_apca014" text="業務人員" lstr=""/>
+    <sfield name="lbl_apca019" text="待抵產生單據" lstr=""/>
+    <sfield name="lbl_apca015" text="業務部門" lstr=""/>
+    <sfield name="lbl_apca034" text="責任中心" lstr=""/>
+    <sfield name="lbl_apca033" text="專案編號" lstr=""/>
+    <sfield name="lbl_apca058" text="採購分類" lstr=""/>
+    <sfield name="lbl_apca059" text="預算編號" lstr=""/>
+    <sfield name="lbl_bgaal003" text="說明" lstr=""/>
+    <sfield name="lbl_group20" text="其他" lstr=""/>
+    <sfield name="lbl_apca063" text="整帳批序號" lstr=""/>
+    <sfield name="lbl_apca050" text="應附附件份數" lstr=""/>
+    <sfield name="lbl_apca052" text="列印次數" lstr=""/>
+    <sfield name="lbl_apca017" text="產生方式" lstr=""/>
+    <sfield name="lbl_apca051" text="作廢原因" lstr=""/>
+    <sfield name="lbl_apca053" text="備註" lstr=""/>
+    <sfield name="page8" text="發票明細" lstr=""/>
+    <sfield name="page_4" text="差異處理及留置" lstr=""/>
+    <sfield name="lbl_group23" text="發票與帳款差異處理" lstr=""/>
+    <sfield name="lbl_apca025" text="差異處理方式" lstr=""/>
+    <sfield name="lbl_apca030" text="歸屬差異科目" lstr=""/>
+    <sfield name="lbl_diff" text="差異金額：" lstr=""/>
+    <sfield name="lbl_apca026" text="原幣未稅金額" lstr=""/>
+    <sfield name="lbl_apca027" text="稅額" lstr=""/>
+    <sfield name="lbl_apca028" text="本幣未稅差異" lstr=""/>
+    <sfield name="lbl_apca029" text="稅額" lstr=""/>
+    <sfield name="page_5" text="集團交易信息" lstr=""/>
+    <sfield name="lbl_group25" text="進口管理" lstr=""/>
+    <sfield name="lbl_apca020" text="L/C 請款管理否" lstr=""/>
+    <sfield name="lbl_apca021" text="商用發票號碼" lstr=""/>
+    <sfield name="lbl_apca022" text="出口報單號碼" lstr=""/>
+    <sfield name="lbl_group26" text="集團交易信息" lstr=""/>
+    <sfield name="lbl_apca046" text="關係人否" lstr=""/>
+    <sfield name="lbl_apca018_1" text="集團交易單號" lstr=""/>
+    <sfield name="lbl_apca047" text="交易序號" lstr=""/>
+    <sfield name="lbl_apca048" text="集團代收/代付單號" lstr=""/>
+    <sfield name="page_7" text="其它本位幣帳款" lstr=""/>
+    <sfield name="lbl_group37" text="交易原幣帳款" lstr=""/>
+    <sfield name="lbl_group36" text="本位幣帳款" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="bpage_1" text="帳款明細" lstr=""/>
+    <sfield name="lbl_apcb001" text="來源類型" lstr=""/>
+    <sfield name="lbl_apcborga" text="來源組織" lstr=""/>
+    <sfield name="lbl_apcb002" text="來源業務單" lstr=""/>
+    <sfield name="lbl_apcb003" text="來源單項次" lstr=""/>
+    <sfield name="lbl_apcb023" text="沖暫估" lstr=""/>
+    <sfield name="lbl_apcb004" text="產品編號" lstr=""/>
+    <sfield name="lbl_apcb005" text="品名規格" lstr=""/>
+    <sfield name="lbl_apcb020" text="稅別" lstr=""/>
+    <sfield name="lbl_apcb020_desc" text="稅別說明" lstr=""/>
+    <sfield name="lbl_apcb006" text="單位" lstr=""/>
+    <sfield name="lbl_apcb022" text="正負值" lstr=""/>
+    <sfield name="lbl_apcb007" text="數量" lstr=""/>
+    <sfield name="lbl_apcb101" text="原幣單價" lstr=""/>
+    <sfield name="lbl_apcb103" text="原幣未稅金額" lstr=""/>
+    <sfield name="lbl_apcb104" text="原幣稅額" lstr=""/>
+    <sfield name="lbl_apcb105" text="原幣含稅金額" lstr=""/>
+    <sfield name="lbl_apcb111" text="本幣單價" lstr=""/>
+    <sfield name="lbl_apcb113" text="本幣未稅金額" lstr=""/>
+    <sfield name="lbl_apcb114" text="本幣稅額" lstr=""/>
+    <sfield name="lbl_apcb115" text="本幣含稅金額" lstr=""/>
+    <sfield name="lbl_apcb030" text="付款條件" lstr=""/>
+    <sfield name="lbl_apcb028" text="發票號碼" lstr=""/>
+    <sfield name="lbl_apcb048" text="來源訂購單號" lstr=""/>
+    <sfield name="lbl_apcb008" text="參考單據" lstr=""/>
+    <sfield name="lbl_apcb009" text="參考單項次" lstr=""/>
+    <sfield name="lbl_apcb021_desc1" text="科目名稱" lstr=""/>
+    <sfield name="lbl_apcb029_desc1" text="科目名稱" lstr=""/>
+    <sfield name="lbl_apcb100" text="交易原幣" lstr=""/>
+    <sfield name="lbl_apcb123" text="本位幣二未稅金額" lstr=""/>
+    <sfield name="lbl_apcb124" text="本位幣二稅額" lstr=""/>
+    <sfield name="lbl_apcb125" text="本位幣二含稅金額" lstr=""/>
+    <sfield name="lbl_apcb133" text="本位幣三未稅金額" lstr=""/>
+    <sfield name="lbl_apcb134" text="本位幣三稅額" lstr=""/>
+    <sfield name="lbl_apcb135" text="本位幣三含稅金額" lstr=""/>
+    <sfield name="lbl_apcblegl" text="核算組織" lstr=""/>
+    <sfield name="lbl_apcb014" text="理由碼" lstr=""/>
+    <sfield name="lbl_apcb017" text="預算項目" lstr=""/>
+    <sfield name="lbl_apcbsite" text="帳務組織" lstr=""/>
+    <sfield name="lbl_apcb013" text="搭贈" lstr=""/>
+    <sfield name="lbl_apcb018" text="專櫃編號" lstr=""/>
+    <sfield name="lbl_apcb019" text="開票性質" lstr=""/>
+    <sfield name="lbl_apcb106" text="交易原幣調整差異金額" lstr=""/>
+    <sfield name="lbl_apcb108" text="交易原幣成本認列金額" lstr=""/>
+    <sfield name="lbl_apcb102" text="匯率" lstr=""/>
+    <sfield name="page_3" text="交易稅明細" lstr=""/>
+    <sfield name="lbl_xrcdseq" text="交易項次" lstr=""/>
+    <sfield name="lbl_xrcdseq2" text="項次2" lstr=""/>
+    <sfield name="lbl_imaa003_desc" text="品名規格" lstr=""/>
+    <sfield name="lbl_xrcd007" text="計算序" lstr=""/>
+    <sfield name="lbl_xrcd002" text="稅別編號" lstr=""/>
+    <sfield name="lbl_xrcd002_desc" text="稅別說明" lstr=""/>
+    <sfield name="lbl_xrcd003" text="稅率" lstr=""/>
+    <sfield name="lbl_xrcd006" text="含稅否" lstr=""/>
+    <sfield name="lbl_xrcd005" text="課稅數量" lstr=""/>
+    <sfield name="lbl_xrcd102" text="原幣" lstr=""/>
+    <sfield name="lbl_xrcd103" text="原幣未稅計稅基準" lstr=""/>
+    <sfield name="lbl_xrcd104" text="稅額" lstr=""/>
+    <sfield name="lbl_xrcd105" text="含稅金額" lstr=""/>
+    <sfield name="lbl_xrcd113" text="本幣未稅金額" lstr=""/>
+    <sfield name="lbl_xrcd114" text="本幣稅額" lstr=""/>
+    <sfield name="lbl_xrcd115" text="本幣含稅金額" lstr=""/>
+    <sfield name="lbl_xrcd123" text="本幣二未稅金額" lstr=""/>
+    <sfield name="lbl_xrcd124" text="本位幣二稅額" lstr=""/>
+    <sfield name="lbl_xrcd125" text="本位幣二含稅金額" lstr=""/>
+    <sfield name="lbl_xrcd133" text="本位幣三未稅金額" lstr=""/>
+    <sfield name="lbl_xrcd134" text="本位幣三稅額" lstr=""/>
+    <sfield name="lbl_xrcd135" text="本位幣三含稅金額" lstr=""/>
+    <sfield name="xrcd_t.xrcdorga" text="來源組織" lstr=""/>
+    <sfield name="lbl_xrcd009" text="稅額科目" lstr=""/>
+    <sfield name="lbl_xrcd009_desc" text="科目名稱" lstr=""/>
+    <sfield name="page_8" text="其他本位幣明細" lstr=""/>
+    <sfield name="lbl_apcbseq1" text="項次" lstr=""/>
+    <sfield name="lbl_apcb0021" text="來源單號" lstr=""/>
+    <sfield name="lbl_apcb0031" text="來源項次" lstr=""/>
+    <sfield name="lbl_apcb0041" text="產品編號" lstr=""/>
+    <sfield name="lbl_apcb0051" text="品名規格" lstr=""/>
+    <sfield name="lbl_apcb1031" text="原幣未稅金額" lstr=""/>
+    <sfield name="lbl_apcb1051" text="原幣含稅金額" lstr=""/>
+    <sfield name="lbl_apcb1131" text="本幣未稅金額" lstr=""/>
+    <sfield name="lbl_apcb1141" text="本幣稅額" lstr=""/>
+    <sfield name="lbl_apcb1151" text="本幣含稅金額" lstr=""/>
+    <sfield name="lbl_apcb1231" text="本位幣二未稅金額" lstr=""/>
+    <sfield name="lbl_apcb1241" text="本位幣二稅額" lstr=""/>
+    <sfield name="lbl_apcb1251" text="本位幣二含稅金額" lstr=""/>
+    <sfield name="lbl_apcb1331" text="本位幣三未稅金額" lstr=""/>
+    <sfield name="lbl_apcb1341" text="本位幣三稅額" lstr=""/>
+    <sfield name="lbl_apcb1351" text="本位幣三含稅金額" lstr=""/>
+    <sfield name="lbl_apcborga1" text="來源組織" lstr=""/>
+    <sfield name="lbl_apcb0201" text="稅別" lstr=""/>
+    <sfield name="aapt310.page_3" text="其他訊息" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_apccdocno" text="應付帳款單號碼" lstr=""/>
+    <sfield name="lbl_apccld" text="帳別" lstr=""/>
+    <sfield name="lbl_apccseq" text="項次" lstr=""/>
+    <sfield name="lbl_apcc001" text="分期" lstr=""/>
+    <sfield name="lbl_apcc002" text="款別類型" lstr=""/>
+    <sfield name="lbl_apcc003" text="應付款日" lstr=""/>
+    <sfield name="lbl_ooib002" text="間隔(季/月/日)" lstr=""/>
+    <sfield name="lbl_apcc004" text="付款到期日" lstr=""/>
+    <sfield name="lbl_apcc009_01" text="發票號碼" lstr=""/>
+    <sfield name="lbl_apcc108_01" text="原幣應付金額" lstr=""/>
+    <sfield name="lbl_apcc101_01" text="匯率" lstr=""/>
+    <sfield name="lbl_apcc118_01" text="本幣應付金額" lstr=""/>
+    <sfield name="lbl_apcc109_01" text="原幣已沖金額" lstr=""/>
+    <sfield name="lbl_apcc119_01" text="本幣已沖金額" lstr=""/>
+    <sfield name="lbl_apcc102_01" text="重評匯率" lstr=""/>
+    <sfield name="lbl_apcc113_01" text="重評價匯差" lstr=""/>
+    <sfield name="lbl_l_cal1_01" text="原幣未沖金額" lstr=""/>
+    <sfield name="lbl_l_cal2_01" text="本幣未沖金額" lstr=""/>
+    <sfield name="lbl_apcc105" text="交易金額" lstr=""/>
+    <sfield name="lbl_apcc106" text="應稅扣抵額" lstr=""/>
+    <sfield name="lbl_apcc107" text="直接沖帳金額" lstr=""/>
+    <sfield name="lbl_apcc104" text="調整金額" lstr=""/>
+    <sfield name="lbl_apcc115" text="本幣交易金額" lstr=""/>
+    <sfield name="lbl_apcc116" text="本幣應稅扣抵額" lstr=""/>
+    <sfield name="lbl_apcc117" text="本幣直接沖帳" lstr=""/>
+    <sfield name="lbl_apcc114" text="本幣調整" lstr=""/>
+    <sfield name="lbl_apcc005" text="帳款起算日" lstr=""/>
+    <sfield name="lbl_apcc006" text="正負值" lstr=""/>
+    <sfield name="lbl_apcc100" text="交易原幣別" lstr=""/>
+    <sfield name="lbl_apcc103" text="NO USE" lstr=""/>
+    <sfield name="lbl_apcc120" text="本位幣二幣別" lstr=""/>
+    <sfield name="lbl_apcc121" text="本位幣二匯率" lstr=""/>
+    <sfield name="lbl_apcc122" text="本位幣二重估後匯率" lstr=""/>
+    <sfield name="lbl_apcc130" text="本位幣三幣別" lstr=""/>
+    <sfield name="lbl_apcc131" text="本位幣三匯率" lstr=""/>
+    <sfield name="lbl_apcc132" text="本位幣三重估後匯率" lstr=""/>
+    <sfield name="lbl_apcccomp" text="法人" lstr=""/>
+    <sfield name="lbl_apcclegl" text="核算組織" lstr=""/>
+    <sfield name="lbl_apccsite" text="帳務中心" lstr=""/>
+    <sfield name="bpage_2.aapt300_01" text="其它本位幣信息" lstr=""/>
+    <sfield name="lbl_apcc009_2" text="發票號碼" lstr=""/>
+    <sfield name="lbl_apcc1082" text="原幣應付" lstr=""/>
+    <sfield name="lbl_apcc128_t" text="應付金額" lstr=""/>
+    <sfield name="lbl_apcc129" text="已冲帳金額" lstr=""/>
+    <sfield name="lbl_apcc123" text="重評調整" lstr=""/>
+    <sfield name="lbl_l_cal3" text="未沖帳金額" lstr=""/>
+    <sfield name="lbl_apcc138_t" text="應付金額" lstr=""/>
+    <sfield name="lbl_apcc133" text="重評調整" lstr=""/>
+    <sfield name="lbl_apcc139" text="已冲帳金額" lstr=""/>
+    <sfield name="lbl_l_cal4" text="未沖帳金額" lstr=""/>
+    <sfield name="lbl_apcc1182" text="本幣應付" lstr=""/>
+    <sfield name="lbl_apcc125_t" text="交易金額" lstr=""/>
+    <sfield name="lbl_apcc126_t" text="稅前折抵" lstr=""/>
+    <sfield name="lbl_apcc127_t" text="沖帳金額" lstr=""/>
+    <sfield name="lbl_apcc124_t" text="調整金額" lstr=""/>
+    <sfield name="lbl_apcc135_t" text="交易金額" lstr=""/>
+    <sfield name="lbl_apcc136_t" text="稅前折抵" lstr=""/>
+    <sfield name="lbl_apcc137_t" text="沖帳金額" lstr=""/>
+    <sfield name="lbl_apcc134_t" text="調整金額" lstr=""/>
+    <sfield name="bpage_3.aapt300_01" text="重評價及調整帳信息" lstr=""/>
+    <sfield name="lbl_bgroup_1" text="合計金額" lstr=""/>
+    <sfield name="lbl_label" text="匯率" lstr=""/>
+    <sfield name="lbl_lab5" text="應付款金額" lstr=""/>
+    <sfield name="lbl_lab6" text="(-)沖銷帳金額" lstr=""/>
+    <sfield name="lbl_lab7" text="(+)重評價匯差金額" lstr=""/>
+    <sfield name="lbl_lab8" text="(=)未沖帳金額" lstr=""/>
+    <sfield name="lbl_lab9" text="差異金額" lstr=""/>
+    <sfield name="lbl_lab3" text="本位幣二" lstr=""/>
+    <sfield name="lbl_lab4" text="本位幣三" lstr=""/>
+    <sfield name="lbl_bpage_1" text="直接沖銷帳" lstr=""/>
+    <sfield name="lbl_apcedocno" text="沖銷單單號" lstr=""/>
+    <sfield name="lbl_apceld" text="帳別" lstr=""/>
+    <sfield name="lbl_apceseq" text="項次" lstr=""/>
+    <sfield name="lbl_apce002" text="帳款類型" lstr=""/>
+    <sfield name="lbl_apceorga" text="來源組織" lstr=""/>
+    <sfield name="lbl_apceorga_desc" text="組織名稱" lstr=""/>
+    <sfield name="lbl_apce003" text="沖銷帳款單號" lstr=""/>
+    <sfield name="lbl_apce004" text="沖銷項次" lstr=""/>
+    <sfield name="lbl_apce005" text="帳期" lstr=""/>
+    <sfield name="lbl_apce048" text="發票/票號" lstr=""/>
+    <sfield name="lbl_apce015" text="借貸" lstr=""/>
+    <sfield name="lbl_apce016" text="沖銷科目" lstr=""/>
+    <sfield name="lbl_apce016_desc" text="科目名稱" lstr=""/>
+    <sfield name="lbl_apce100" text="幣別" lstr=""/>
+    <sfield name="lbl_apce101" text="匯率" lstr=""/>
+    <sfield name="lbl_apce109" text="原幣沖帳金額" lstr=""/>
+    <sfield name="lbl_apce119" text="本幣沖帳金額" lstr=""/>
+    <sfield name="lbl_apce027" text="應稅扣抵" lstr=""/>
+    <sfield name="lbl_apce011" text="理由碼" lstr=""/>
+    <sfield name="lbl_apce011_desc" text="說明" lstr=""/>
+    <sfield name="lbl_apce010" text="摘要說明" lstr=""/>
+    <sfield name="lbl_apce024" text="參考號碼" lstr=""/>
+    <sfield name="lbl_apce038" text="帳款對象" lstr=""/>
+    <sfield name="lbl_apce038_desc" text="名稱" lstr=""/>
+    <sfield name="lbl_apce031" text="應付款日" lstr=""/>
+    <sfield name="lbl_apcecomp" text="法人" lstr=""/>
+    <sfield name="lbl_apcesite" text="帳務組織" lstr=""/>
+    <sfield name="lbl_apce001" text="來源作業" lstr=""/>
+    <sfield name="aapt300_02.page_1" text="其他訊息" lstr=""/>
+    <sfield name="lbl_apce0152" text="借貸" lstr=""/>
+    <sfield name="lbl_apce017" text="業務人員" lstr=""/>
+    <sfield name="lbl_apce018" text="業務部門" lstr=""/>
+    <sfield name="lbl_apce019" text="責任中心" lstr=""/>
+    <sfield name="lbl_apce020" text="產品類別" lstr=""/>
+    <sfield name="lbl_apce022" text="專案代號" lstr=""/>
+    <sfield name="lbl_apce023" text="WBS編號" lstr=""/>
+    <sfield name="lbl_apce035" text="區域" lstr=""/>
+    <sfield name="lbl_apce036" text="客群" lstr=""/>
+    <sfield name="lbl_apce044" text="經營方式" lstr=""/>
+    <sfield name="lbl_apce045" text="渠道" lstr=""/>
+    <sfield name="lbl_apce046" text="品牌" lstr=""/>
+    <sfield name="lbl_apce051" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_apce052" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_apce053" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_apce054" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_apce055" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_apce056" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_apce057" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_apce058" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_apce059" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_apce060" text="自由核算項十" lstr=""/>
+    <sfield name="aapt300_02.page_2" text="其他本位幣" lstr=""/>
+    <sfield name="lbl_apce120" text="本位幣二幣別" lstr=""/>
+    <sfield name="lbl_apce121" text="本位幣二匯率" lstr=""/>
+    <sfield name="lbl_apce129" text="本位幣二沖帳金額" lstr=""/>
+    <sfield name="lbl_apce130" text="本位幣三幣別" lstr=""/>
+    <sfield name="lbl_apce131" text="本位幣三匯率" lstr=""/>
+    <sfield name="lbl_apce139" text="本位幣三沖帳金額" lstr=""/>
+    <sfield name="aapt300_02.group_1" text="合計金額" lstr=""/>
+    <sfield name="lbl_glaa001" text="使用幣別" lstr=""/>
+    <sfield name="lbl_glaa016" text="本位幣二" lstr=""/>
+    <sfield name="lbl_glaa020" text="本位幣三" lstr=""/>
+    <sfield name="lbl_master" text="差異處理方式" lstr=""/>
+    <sfield name="lbl_apca031" text="產生之差異折讓單號" lstr=""/>
+    <sfield name="aapt300_05.lbl_group1" text="發票合計金額" lstr=""/>
+    <sfield name="lbl_amt1" text="原幣未稅合計" lstr=""/>
+    <sfield name="lbl_amt2" text="含稅合計" lstr=""/>
+    <sfield name="lbl_amt3" text="本幣未稅合計" lstr=""/>
+    <sfield name="lbl_amt4" text="含稅合計" lstr=""/>
+    <sfield name="aapt300_05.lbl_group2" text="發票與帳款差異額" lstr=""/>
+    <sfield name="lbl_amt5" text="原幣未稅差異" lstr=""/>
+    <sfield name="lbl_amt6" text="稅額差異" lstr=""/>
+    <sfield name="lbl_amt7" text="本幣未稅差異" lstr=""/>
+    <sfield name="lbl_amt8" text="稅額差異" lstr=""/>
+    <sfield name="lbl_bpage_01" text="付款及其他調整" lstr=""/>
+    <sfield name="lbl_apdedocno" text="沖銷單單號" lstr=""/>
+    <sfield name="lbl_apdeld" text="帳套" lstr=""/>
+    <sfield name="lbl_apdeseq" text="項次" lstr=""/>
+    <sfield name="lbl_apdeorga" text="資金中心" lstr=""/>
+    <sfield name="lbl_apdeorga_desc" text="組織名稱" lstr=""/>
+    <sfield name="lbl_apde002" text="付款類型" lstr=""/>
+    <sfield name="lbl_apde006" text="款別性質" lstr=""/>
+    <sfield name="lbl_apde008" text="付款帳戶" lstr=""/>
+    <sfield name="lbl_apde021" text="票據類型" lstr=""/>
+    <sfield name="lbl_apde024" text="票據號碼" lstr=""/>
+    <sfield name="lbl_apde015" text="借貸" lstr=""/>
+    <sfield name="lbl_apde016" text="會計科目" lstr=""/>
+    <sfield name="lbl_apde016_desc" text="科目名稱" lstr=""/>
+    <sfield name="lbl_apde100" text="幣別" lstr=""/>
+    <sfield name="lbl_apde109" text="原幣金額" lstr=""/>
+    <sfield name="lbl_apde101" text="匯率" lstr=""/>
+    <sfield name="lbl_apde119" text="本幣金額" lstr=""/>
+    <sfield name="lbl_apde032" text="付款日" lstr=""/>
+    <sfield name="lbl_apde013" text="轉入對象" lstr=""/>
+    <sfield name="lbl_apde013_desc" text="對象名稱" lstr=""/>
+    <sfield name="lbl_apde014" text="轉入帳款單" lstr=""/>
+    <sfield name="lbl_apde010" text="摘要" lstr=""/>
+    <sfield name="lbl_apde009" text="已轉" lstr=""/>
+    <sfield name="lbl_apde039" text="受款銀行" lstr=""/>
+    <sfield name="lbl_apde040" text="受款帳號" lstr=""/>
+    <sfield name="lbl_apde011" text="存提碼" lstr=""/>
+    <sfield name="lbl_apde011_desc" text="說明" lstr=""/>
+    <sfield name="lbl_apde012" text="現金變動碼" lstr=""/>
+    <sfield name="lbl_apde012_desc" text="說明" lstr=""/>
+    <sfield name="lbl_apdecomp" text="法人" lstr=""/>
+    <sfield name="lbl_apdesite" text="帳務中心" lstr=""/>
+    <sfield name="lbl_apde001" text="來源作業" lstr=""/>
+    <sfield name="lbl_apde038" text="受款對象" lstr=""/>
+    <sfield name="aapt300_09.page_1" text="其他訊息" lstr=""/>
+    <sfield name="lbl_apde0152" text="借貸" lstr=""/>
+    <sfield name="lbl_apde017" text="業務人員" lstr=""/>
+    <sfield name="lbl_apde018" text="業務部門" lstr=""/>
+    <sfield name="lbl_apde019" text="責任中心" lstr=""/>
+    <sfield name="lbl_apde020" text="產品類別" lstr=""/>
+    <sfield name="lbl_apde022" text="專案代號" lstr=""/>
+    <sfield name="lbl_apde023" text="WBS編號" lstr=""/>
+    <sfield name="lbl_apde035" text="區域" lstr=""/>
+    <sfield name="lbl_apde036" text="客群" lstr=""/>
+    <sfield name="lbl_apde042" text="經營方式" lstr=""/>
+    <sfield name="lbl_apde043" text="渠道" lstr=""/>
+    <sfield name="lbl_apde044" text="品牌" lstr=""/>
+    <sfield name="lbl_apde051" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_apde052" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_apde053" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_apde054" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_apde055" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_apde056" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_apde057" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_apde058" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_apde059" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_apde060" text="自由核算項十" lstr=""/>
+    <sfield name="aapt300_09.page_2" text="其他本位幣訊息" lstr=""/>
+    <sfield name="lbl_apde120" text="本位幣二" lstr=""/>
+    <sfield name="lbl_apde121" text="本位幣二匯率" lstr=""/>
+    <sfield name="lbl_apde129" text="本位幣二金額" lstr=""/>
+    <sfield name="lbl_apde130" text="本位幣三" lstr=""/>
+    <sfield name="lbl_apde131" text="本位幣三匯率" lstr=""/>
+    <sfield name="lbl_apde139" text="本位幣三金額" lstr=""/>
+    <sfield name="aapt300_09.group_1" text="合計金額" lstr=""/>
+    <sfield name="lbl_label102" text="交易合計金額" lstr=""/>
+    <sfield name="lbl_label103" text="稅前折抵金額" lstr=""/>
+    <sfield name="lbl_label104" text="直接沖銷帳金額" lstr=""/>
+    <sfield name="lbl_label105" text="付款及其他金額" lstr=""/>
+    <sfield name="lbl_label106" text="應付付款金額" lstr=""/>
+    <sfield name="lbl_glaqdocno" text="單號" lstr=""/>
+    <sfield name="lbl_glaqld" text="帳別" lstr=""/>
+    <sfield name="lbl_glaqseq" text="項次" lstr=""/>
+    <sfield name="lbl_glaq001" text="摘要" lstr=""/>
+    <sfield name="lbl_glaq002_desc" text="科目編號" lstr=""/>
+    <sfield name="lbl_glaq005" text="交易幣別" lstr=""/>
+    <sfield name="lbl_glaq006" text="匯率" lstr=""/>
+    <sfield name="lbl_glaq010" text="原幣金額" lstr=""/>
+    <sfield name="lbl_glaq003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glaq004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glaq040" text="借方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glaq041" text="貸方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glaq043" text="借方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glaq044" text="貸方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glaq018" text="部門" lstr=""/>
+    <sfield name="lbl_glaq019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq020" text="區域" lstr=""/>
+    <sfield name="lbl_glaq021" text="交易客商" lstr=""/>
+    <sfield name="lbl_glaq022" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq023" text="客群" lstr=""/>
+    <sfield name="lbl_glaq024" text="產品類別" lstr=""/>
+    <sfield name="lbl_glaq025" text="人員" lstr=""/>
+    <sfield name="lbl_glaq027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glaq028" text="WBS" lstr=""/>
+    <sfield name="lbl_glaq051" text="經營方式" lstr=""/>
+    <sfield name="lbl_glaq052" text="渠道" lstr=""/>
+    <sfield name="lbl_glaq053" text="品牌" lstr=""/>
+    <sfield name="lbl_glaq029" text="核算項(一)" lstr=""/>
+    <sfield name="lbl_glaq030" text="核算項(二)" lstr=""/>
+    <sfield name="lbl_glaq031" text="核算項(三)" lstr=""/>
+    <sfield name="lbl_glaq032" text="核算項(四)" lstr=""/>
+    <sfield name="lbl_glaq033" text="核算項(五)" lstr=""/>
+    <sfield name="lbl_glaq034" text="核算項(六)" lstr=""/>
+    <sfield name="lbl_glaq035" text="核算項(七)" lstr=""/>
+    <sfield name="lbl_glaq036" text="核算項(八)" lstr=""/>
+    <sfield name="lbl_glaq037" text="核算項(九)" lstr=""/>
+    <sfield name="lbl_glaq038" text="核算項(十)" lstr=""/>
+    <sfield name="lbl_glgb055" text="現金變動碼" lstr=""/>
+    <sfield name="aapt300_14.page_1" text="固定核算項" lstr=""/>
+    <sfield name="lbl_glaq017" text="營運據點" lstr=""/>
+    <sfield name="aapt300_14.page_2" text="自由核算項" lstr=""/>
+    <sfield name="group1" text="產生核銷方式" lstr=""/>
+    <sfield name="aapt420_01.group_1" text="QBE單據範圍" lstr=""/>
+    <sfield name="lbl_apeadocno" text="付款申請單" lstr=""/>
+    <sfield name="lbl_apea005" text="帳款對象" lstr=""/>
+    <sfield name="lbl_apeasite" text="資金中心" lstr=""/>
+    <sfield name="lbl_apeacomp" text="付款法人" lstr=""/>
+    <sfield name="lbl_nmcldocno1" text="匯款單號" lstr=""/>
+    <sfield name="lbl_nmcldocno2" text="應付票據單號" lstr=""/>
+    <sfield name="aapt420_02.group_1" text="QBE單據範圍" lstr=""/>
+    <sfield name="lbl_glapdocno" text="傳票憑證單別" lstr=""/>
+    <sfield name="lbl_glapdocdt" text="傳票憑證日期" lstr=""/>
+    <sfield name="lbl_flag" text="補傳票空號" lstr=""/>
+    <sfield name="lbl_glap010" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_docno_e" text="~" lstr=""/>
+    <sfield name="lbl_accept" text="執行" lstr=""/>
+    <sfield name="lbl_cancel" text="取消" lstr=""/>
+    <sfield name="accept" text="確認" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="lbl_docno" text="應收單號" lstr=""/>
+    <sfield name="lbl_seq" text="項次" lstr=""/>
+    <sfield name="lbl_glaq002" text="會計科目" lstr=""/>
+    <sfield name="lbl_glaq017_desc" text="營運據點" lstr=""/>
+    <sfield name="lbl_glaq018_desc" text="部門" lstr=""/>
+    <sfield name="lbl_glaq019_desc" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq020_desc" text="區域" lstr=""/>
+    <sfield name="lbl_glaq021_desc" text="交易客商" lstr=""/>
+    <sfield name="lbl_glaq022_desc" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq023_desc" text="客群" lstr=""/>
+    <sfield name="lbl_glaq024_desc" text="產品類別" lstr=""/>
+    <sfield name="lbl_glaq025_desc" text="人員" lstr=""/>
+    <sfield name="lbl_glaq029_desc" text="核算項(一)" lstr=""/>
+    <sfield name="lbl_glaq030_desc" text="核算項(二)" lstr=""/>
+    <sfield name="lbl_glaq031_desc" text="核算項(三)" lstr=""/>
+    <sfield name="lbl_glaq032_desc" text="核算項(四)" lstr=""/>
+    <sfield name="lbl_glaq033_desc" text="核算項(五)" lstr=""/>
+    <sfield name="lbl_glaq034_desc" text="核算項(六)" lstr=""/>
+    <sfield name="lbl_glaq035_desc" text="核算項(七)" lstr=""/>
+    <sfield name="lbl_glaq036_desc" text="核算項(八)" lstr=""/>
+    <sfield name="lbl_glaq037_desc" text="核算項(九)" lstr=""/>
+    <sfield name="lbl_glaq038_desc" text="核算項(十)" lstr=""/>
+    <sfield name="lbl_source" text="科目來源" lstr=""/>
+    <sfield name="lbl_sw" text="借/貸" lstr=""/>
+    <sfield name="lbl_docdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_lc_subject" text="會計科目" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_glbc004" text="現金變動碼" lstr=""/>
+    <sfield name="lbl_glaq026" text="預算編號" lstr=""/>
+    <sfield name="lbl_oojdl003" text="說明" lstr=""/>
+    <sfield name="lbl_page_1" text="資產類" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_glac002" text="會計科目編號" lstr=""/>
+    <sfield name="lbl_glac003" text="統制/明細別" lstr=""/>
+    <sfield name="lbl_glac009" text="內部管理科目" lstr=""/>
+    <sfield name="lbl_page_2" text="負債類" lstr=""/>
+    <sfield name="lbl_page_3" text="公用類" lstr=""/>
+    <sfield name="lbl_page_4" text="股東權益類" lstr=""/>
+    <sfield name="lbl_page_5" text="成本類" lstr=""/>
+    <sfield name="lbl_page_6" text="損益類" lstr=""/>
+    <sfield name="lbl_ooef001" text="營運據點" lstr=""/>
+    <sfield name="apmm100_04.page_1" text="據點資料" lstr=""/>
+    <sfield name="lbl_sel" text="選擇" lstr=""/>
+    <sfield name="lbl_selall" text="全選" lstr=""/>
+    <sfield name="lbl_selnone" text="取消全選" lstr=""/>
+    <sfield name="lbl_execute" text="執行拋轉" lstr=""/>
+    <sfield name="lbl_page1" text="固定核算項" lstr=""/>
+    <sfield name="lbl_page2" text="自由核算項" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="page_s_aooi390_s01_1" text="QBE條件" lstr=""/>
+    <sfield name="lbl_oofg001" text="編碼分類" lstr=""/>
+    <sfield name="lbl_oofg002" text="編碼性質" lstr=""/>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_oofg005" text="節點編號" lstr=""/>
+    <sfield name="lbl_oofg006" text="前段節點編號" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_2" text="基本資料" lstr=""/>
+    <sfield name="lbl_n0" text="編碼分類" lstr=""/>
+    <sfield name="lbl_n1" text="編碼總長度" lstr=""/>
+    <sfield name="lbl_n2" text="編碼總段數" lstr=""/>
+    <sfield name="lbl_n3" text="自動編號" lstr=""/>
+    <sfield name="page_s_aooi390_s01_3" text="明細資料" lstr=""/>
+    <sfield name="lbl_oofg007" text="段次" lstr=""/>
+    <sfield name="lbl_oofgl004" text="節點名稱" lstr=""/>
+    <sfield name="lbl_oofg009" text="長度" lstr=""/>
+    <sfield name="lbl_oofg016" text="使用轉換表" lstr=""/>
+    <sfield name="lbl_oofg008" text="節點型態" lstr=""/>
+    <sfield name="lbl_value" text="輸入值" lstr=""/>
+    <sfield name="lbl_value_desc" text="說明" lstr=""/>
+    <sfield name="lbl_tbegin" text="第" lstr=""/>
+    <sfield name="lbl_tend" text="組" lstr=""/>
+    <sfield name="lbl_axrt300_07_xrcbdocno" text="單號_隱藏" lstr=""/>
+    <sfield name="lbl_axrt300_07_xrcbld" text="帳別_隱藏" lstr=""/>
+    <sfield name="lbl_xrcbseq" text="項次" lstr=""/>
+    <sfield name="lbl_xrcb047" text="摘要" lstr=""/>
+    <sfield name="lbl_xrcb029" text="應收帳款科目" lstr=""/>
+    <sfield name="lbl_xrcb021" text="收入會計科目" lstr=""/>
+    <sfield name="lbl_xrcb051" text="業務人員" lstr=""/>
+    <sfield name="lbl_xrcb010" text="業務部門" lstr=""/>
+    <sfield name="lbl_xrcb011" text="責任中心" lstr=""/>
+    <sfield name="lbl_xrcb024" text="區域" lstr=""/>
+    <sfield name="lbl_xrcb036" text="客群" lstr=""/>
+    <sfield name="lbl_xrcb012" text="產品類別" lstr=""/>
+    <sfield name="lbl_xrcb015" text="專案代號" lstr=""/>
+    <sfield name="lbl_xrcb016" text="WBS編號" lstr=""/>
+    <sfield name="lbl_xrcb033" text="經營方式" lstr=""/>
+    <sfield name="lbl_xrcb034" text="渠道" lstr=""/>
+    <sfield name="lbl_xrcb035" text="品牌" lstr=""/>
+    <sfield name="lbl_xrcb037" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_xrcb038" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_xrcb039" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_xrcb040" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_xrcb041" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_xrcb042" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_xrcb043" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_xrcb044" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_xrcb045" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_xrcb046" text="自由核算項十" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sfield name="lbl_glapld" text="帳別" lstr=""/>
+    <sfield name="lbl_glgald" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glgacomp" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_glgadocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_glgadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_glga100" text="系統/類別" lstr=""/>
+    <sfield name="lbl_glga007" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_glga008" text="傳票日期" lstr=""/>
+    <sfield name="lbl_glga006" text="附件張數" lstr=""/>
+    <sfield name="lbl_glgbseq" text="項次" lstr=""/>
+    <sfield name="lbl_glgb001" text="摘要" lstr=""/>
+    <sfield name="lbl_glgb002" text="科目編號" lstr=""/>
+    <sfield name="lbl_glgb005" text="幣別" lstr=""/>
+    <sfield name="lbl_glgb006" text="匯率" lstr=""/>
+    <sfield name="lbl_glgb010" text="原幣金額" lstr=""/>
+    <sfield name="lbl_glgb003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glgb004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glgb039" text="匯率(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb040" text="借方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb041" text="貸方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb042" text="匯率(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb043" text="借方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb044" text="貸方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb017" text="營運據點" lstr=""/>
+    <sfield name="lbl_glgb018" text="部門編號" lstr=""/>
+    <sfield name="lbl_glgb019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glgb020" text="區域" lstr=""/>
+    <sfield name="lbl_glgb021" text="交易客商" lstr=""/>
+    <sfield name="lbl_glgb022" text="帳款客商" lstr=""/>
+    <sfield name="lbl_glgb023" text="客群" lstr=""/>
+    <sfield name="lbl_glgb024" text="產品類別" lstr=""/>
+    <sfield name="lbl_glgb051" text="經營方式" lstr=""/>
+    <sfield name="lbl_glgb052" text="渠道" lstr=""/>
+    <sfield name="lbl_glgb053" text="品牌" lstr=""/>
+    <sfield name="lbl_glgb025" text="人員" lstr=""/>
+    <sfield name="lbl_glgb027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glgb028" text="WBS" lstr=""/>
+    <sfield name="lbl_glgb029" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_glgb030" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_glgb031" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_glgb032" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_glgb033" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_glgb034" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_glgb035" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_glgb036" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_glgb037" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_glgb038" text="自由核算項十" lstr=""/>
+    <sact name="lien" text="帳款留置設定" lstr=""/>
+    <sact name="open_aapp330" text="總帳傳票產生及查詢" lstr=""/>
+    <sact name="open_aapt300_01" text="多帳期帳款維護" lstr=""/>
+    <sact name="open_aapt300_03" text="進項發票信息" lstr=""/>
+    <sact name="open_aapt300_05" text="應付帳款差異處理" lstr=""/>
+    <sact name="open_aapt300_09" text="直接付款" lstr=""/>
+    <sact name="open_aapt300_14" text="傳票預覽" lstr=""/>
+    <sact name="open_pre" text="產生分錄底稿" lstr=""/>
+    <sact name="waiver_of_lien" text="解除帳款留置" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="4" cite_std="N" src="s">
+    <widget name="s_detail3" status=""/>
+  </exclude>
+</spec>

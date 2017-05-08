@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti710" module="art" jobmode="N" type="i12" industry="std" fix_arg="1" crtid="02749" crtdt="2014-04-02 15:35:04" modid="01752" moddt="2014-11-14 18:03:57" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="自動補貨供應商休假日設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtkd001,rtkd002,rtkd002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtkdstus,rtkd003,rtkd004,rtkd005,rtkd006,rtkd007,rtkdunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtkd003,rtkdownid,rtkdownid_desc(chr500),rtkdowndp,rtkdowndp_desc(chr500),rtkdcrtid,rtkdcrtid_desc(chr500),rtkdcrtdp,rtkdcrtdp_desc(chr500),rtkdcrtdt,rtkdmodid,rtkdmodid_desc(chr500),rtkdmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti710" method="dialog">
+    <section id="input">
+      <input id="head" field="rtkd002"/>
+      <input id="body" page="1" field="rtkdstus,rtkd003,rtkd004,rtkd005,rtkd006,rtkd007,rtkdunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtkd002"/>
+      <construct id="body" page="1" field="rtkdstus,rtkd003,rtkd004,rtkd005,rtkd006,rtkd007,rtkdunit"/>
+      <construct id="body" page="2" field="rtkdownid,rtkdowndp,rtkdcrtid,rtkdcrtdp,rtkdcrtdt,rtkdmodid,rtkdmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtkd001,rtkd002"/>
+      <set id="head" type="no_entry" field="rtkd001,rtkd002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtkd001"/>
+      <column id="rtkd002">
+        <after>
+          <reference field="rtkd002_desc" ref_field="rtkd_t.rtkd002" map_field="rtkdent,rtkd002" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtkd002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtkdstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="rtkd003"/>
+      <column id="rtkd004"/>
+      <column id="rtkd005"/>
+      <column id="rtkd006"/>
+      <column id="rtkd007"/>
+      <column id="rtkdunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtkdownid">
+        <after>
+          <reference field="rtkdownid_desc" ref_field="rtkd_t.rtkdownid" map_field="rtkdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkdownid_desc"/>
+      <column id="rtkdowndp">
+        <after>
+          <reference field="rtkdowndp_desc" ref_field="rtkd_t.rtkdowndp" map_field="rtkdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkdowndp_desc"/>
+      <column id="rtkdcrtid">
+        <after>
+          <reference field="rtkdcrtid_desc" ref_field="rtkd_t.rtkdcrtid" map_field="rtkdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkdcrtid_desc"/>
+      <column id="rtkdcrtdp">
+        <after>
+          <reference field="rtkdcrtdp_desc" ref_field="rtkd_t.rtkdcrtdp" map_field="rtkdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkdcrtdp_desc"/>
+      <column id="rtkdcrtdt"/>
+      <column id="rtkdmodid">
+        <after>
+          <reference field="rtkdmodid_desc" ref_field="rtkd_t.rtkdmodid" map_field="rtkdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkdmodid_desc"/>
+      <column id="rtkdmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtkd_t" pk="rtkd001,rtkd002">
+      <sql id="forupd_sql" type="sql" query="SELECT rtkd001,rtkd002,&apos;&apos; FROM rtkd_t WHERE rtkdent= ? AND rtkd001=? AND rtkd002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtkd001,rtkd002,&apos;&apos; FROM rtkd_t" order="rtkd001,rtkd002"/>
+    </head>
+    <body id="rtkd_t" page="1,2" linked="" pk="rtkd003" fk="rtkd001,rtkd002">
+      <sql id="forupd_sql_detail" query="SELECT rtkdstus,rtkd003,rtkd004,rtkd005,rtkd006,rtkd007,rtkdunit,&apos;&apos;,rtkdownid,&apos;&apos;,rtkdowndp,&apos;&apos;,rtkdcrtid,&apos;&apos;,rtkdcrtdp,&apos;&apos;,rtkdcrtdt,rtkdmodid,&apos;&apos;,rtkdmoddt FROM rtkd_t WHERE rtkdent=? AND rtkd001=? AND rtkd002=? AND rtkd003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtkdstus,rtkd003,rtkd004,rtkd005,rtkd006,rtkd007,rtkdunit,&apos;&apos;,rtkdownid,&apos;&apos;,rtkdowndp,&apos;&apos;,rtkdcrtid,&apos;&apos;,rtkdcrtdp,&apos;&apos;,rtkdcrtdt,rtkdmodid,&apos;&apos;,rtkdmoddt FROM rtkd_t WHERE rtkdent= ? AND rtkd001=? AND rtkd002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

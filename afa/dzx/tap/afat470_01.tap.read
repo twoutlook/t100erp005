@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="afat470_01" std_prog="afat470_01" erpver="1.0" module="AFA" ver="3" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.afat470_01_fabm_ins" order="1" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 新增合并资料
+# Memo...........:
+# Usage..........: CALL afat470_01_fabm_ins()
+# Input parameter: 无
+# Return code....: 无
+# Date & Author..: 2014/10/19 By yangxf
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION afat470_01_fabm_ins()
+   DEFINE l_fabm      RECORD LIKE fabm_t.*
+   DEFINE l_fabl      RECORD LIKE fabl_t.*
+   DEFINE l_sql       STRING 
+   DEFINE l_n         LIKE type_t.num5
+   DEFINE l_faah002   LIKE faah_t.faah002
+   DEFINE l_faah001   LIKE faah_t.faah001
+   DEFINE l_para_data LIKE type_t.chr80
+   DEFINE l_faaj003   LIKE faaj_t.faaj003
+   DEFINE l_faaj005   LIKE faaj_t.faaj005
+   DEFINE l_fabl009   LIKE fabl_t.fabl009
+   DEFINE l_fabl010   LIKE fabl_t.fabl010
+   DEFINE l_fabl006   LIKE fabl_t.fabl006
+   DEFINE l_fabl011   LIKE fabl_t.fabl011
+   DEFINE l_fabl012   LIKE fabl_t.fabl012
+   DEFINE l_fabl016   LIKE fabl_t.fabl016
+   DEFINE l_fabl019   LIKE fabl_t.fabl019
+   DEFINE l_fabl101   LIKE fabl_t.fabl101
+   DEFINE l_fabl102   LIKE fabl_t.fabl102
+   DEFINE l_fabl103   LIKE fabl_t.fabl103
+   DEFINE l_fabl104   LIKE fabl_t.fabl104
+   DEFINE l_fabl105   LIKE fabl_t.fabl105
+   DEFINE l_fabl106   LIKE fabl_t.fabl106
+   DEFINE l_fabl201   LIKE fabl_t.fabl201
+   DEFINE l_fabl202   LIKE fabl_t.fabl202
+   DEFINE l_fabl203   LIKE fabl_t.fabl203
+   DEFINE l_fabl204   LIKE fabl_t.fabl204
+   DEFINE l_fabl205   LIKE fabl_t.fabl205
+   DEFINE l_fabl206   LIKE fabl_t.fabl206
+   DEFINE l_fabl013   LIKE fabl_t.fabl013
+   DEFINE l_fabl014   LIKE fabl_t.fabl014
+   DEFINE l_fabl015   LIKE fabl_t.fabl015
+   #######################################add by huangtao
+   DEFINE l_str       STRING
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_ooab002_1 LIKE ooab_t.ooab002
+   DEFINE l_ooab002_2 LIKE ooab_t.ooab002
+   DEFINE l_faba      RECORD LIKE faba_t.*
+   DEFINE l_glaald    LIKE glaa_t.glaald
+   #######################################add by huangtao
+   
+   
+   WHENEVER ERROR CONTINUE
+   INITIALIZE l_fabm.* TO NULL
+   INITIALIZE l_fabl.* TO NULL
+   LET l_fabl013 = ''
+   LET l_fabl014 = ''
+   LET l_fabl015 = ''   
+   ##########################################
+   SELECT * INTO l_faba.* FROM faba_t WHERE fabaent = g_enterprise AND fabadocno = g_fabadocno  
+   SELECT  glaald INTO l_glaald FROM glaa_t WHERE glaaent = g_enterprise AND glaacomp = l_faba.fabacomp AND glaa014 = 'Y'
+     
+   CALL cl_get_para(g_enterprise,l_faba.fabacomp,'S-FIN-9010') RETURNING l_ooab002_1    #财编自动编号
+   CALL cl_get_para(g_enterprise,l_faba.fabacomp,'S-FIN-9005') RETURNING l_ooab002_2    #卡号自动编号
+   ##########################################
+   
+   CALL s_transaction_begin()
+  #######################mark by huangtao
+  # SELECT lpad((MAX(faah001) + 1),10,'0') INTO l_faah001
+  #   FROM faah_t
+  #  WHERE faahent = g_enterprise
+  #######################mark by huangtao
+   #以附件形式显示
+   IF g_ooia_m.sel = '1' THEN 
+      DECLARE sel_fabl  CURSOR FOR SELECT * FROM fabl_t 
+                                    WHERE fabldocno = g_fabadocno 
+                                      AND fablent = g_enterprise
+                                    ORDER BY fabl017
+      LET l_n = 1
+      FOREACH sel_fabl INTO l_fabl.*
+         LET l_fabm.fabment = l_fabl.fablent
+         LET l_fabm.fabmcomp = l_fabl.fablcomp
+         LET l_fabm.fabmdocno = l_fabl.fabldocno
+         LET l_fabm.fabmseq = l_n
+         ################################mark by huangtao
+         #LET l_fabm.fabm001 = ''
+         #IF l_n = 1 THEN 
+         #   LET l_fabm.fabm002 = ' '
+         #ELSE
+         #   LET l_fabm.fabm002 = ''
+         #END IF 
+         #LET l_fabm.fabm003 = l_faah001
+         #################################mark by huangtao
+         #################################add by huangtao
+         LET l_str = l_fabl.fabl001
+         LET l_cnt = l_str.getLength()
+         
+         LET l_fabm.fabm001 = l_fabl.fabl001
+        # IF l_ooab002_1 = 'N' OR cl_null(l_ooab002_1) THEN
+        #    LET l_fabm.fabm001 = l_fabl.fabl001
+        # ELSE
+        #    CALL s_aooi390('3') RETURNING l_success,l_fabm.fabm001     
+        # END IF
+
+         IF l_n = 1 THEN
+            LET l_fabm.fabm002 = ' '
+         ELSE
+            IF l_cnt > 4 THEN
+               LET l_fabm.fabm002 = l_fabl.fabl001[l_cnt-3,l_cnt]
+            ELSE
+               LET l_fabm.fabm002 = l_fabl.fabl001
+            END IF
+         END IF
+         
+         IF l_ooab002_2 = 'Y' THEN       
+            LET l_sql = " SELECT lpad((MAX(CAST(faah001 AS NUMBER(10,0)) + 1),10,'0') FROM faah_t ",
+                        " WHERE faahent ='",g_enterprise,"'",
+                        "    AND regexp_substr(faah001,'[0-9]+') IS NOT NULL"                         
+            PREPARE sel_faah001 FROM l_sql
+            EXECUTE sel_faah001 INTO l_fabm.fabm003 
+            IF cl_null(l_fabm.fabm003) THEN LET l_fabm.fabm003 = '0000000001' END IF 
+         ELSE
+            LET l_fabm.fabm003 = ''
+         END IF 
+         #################################add by huangtao
+         LET l_fabm.fabm004 = l_fabl.fabl004
+         IF l_n = 1 THEN
+            LET l_fabm.fabm005 = '1'
+         ELSE
+            IF l_fabl.fabl017 = '1' THEN 
+               LET l_fabm.fabm005 = '2'
+            ELSE
+               LET l_fabm.fabm005 = l_fabl.fabl017
+            END IF 
+         END IF 
+         LET l_fabm.fabm006 = l_fabl.fabl005
+         LET l_fabm.fabm007 = l_fabl.fabl006
+         LET l_fabm.fabm008 = l_fabl.fabl007
+         LET l_fabm.fabm009 = l_fabl.fabl008
+         LET l_fabm.fabm010 = l_fabl.fabl009
+         LET l_fabm.fabm011 = l_fabl.fabl010
+         LET l_fabm.fabm012 = l_fabl.fabl011
+         LET l_fabm.fabm013 = l_fabl.fabl012
+         LET l_fabm.fabm014 = l_fabl.fabl013
+         LET l_fabm.fabm015 = l_fabl.fabl014
+         LET l_fabm.fabm016 = l_fabl.fabl015
+         LET l_fabm.fabm017 = l_fabl.fabl016 
+         LET l_fabm.fabm018 = l_fabl.fabl019
+         LET l_fabm.fabm101 = l_fabl.fabl101
+         LET l_fabm.fabm102 = l_fabl.fabl102
+         LET l_fabm.fabm103 = l_fabl.fabl103
+         LET l_fabm.fabm104 = l_fabl.fabl104
+         LET l_fabm.fabm105 = l_fabl.fabl105
+         LET l_fabm.fabm106 = l_fabl.fabl106
+         LET l_fabm.fabm201 = l_fabl.fabl201
+         LET l_fabm.fabm202 = l_fabl.fabl202
+         LET l_fabm.fabm203 = l_fabl.fabl203
+         LET l_fabm.fabm204 = l_fabl.fabl204
+         LET l_fabm.fabm205 = l_fabl.fabl205
+         LET l_fabm.fabm206 = l_fabl.fabl206
+         INSERT INTO fabm_t VALUES(l_fabm.*)
+         IF SQLCA.sqlcode THEN 
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = 'INS fabm_t ' 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+            RETURN 
+         END IF 
+         LET l_n = l_n + 1
+        # SELECT lpad((MAX(faah001) + l_n),10,'0') INTO l_faah001
+        #   FROM faah_t
+        #  WHERE faahent = g_enterprise
+      END FOREACH 
+   END IF 
+   #相同年限，折旧方法合并
+   IF g_ooia_m.sel = '2' THEN 
+      LET l_n = 1
+      DECLARE sel_fabl2 CURSOR FOR SELECT faaj003,faaj005,fabl009,fabl010,SUM(fabl006),SUM(fabl011),SUM(fabl012),
+                                          SUM(fabl016),SUM(fabl019),fabl101,fabl102,SUM(fabl103),SUM(fabl104),SUM(fabl105),
+                                          SUM(fabl106),fabl201,fabl202,SUM(fabl203),SUM(fabl204),SUM(fabl205),SUM(fabl206)
+                                     FROM fabl_t,faaj_t
+                                    WHERE fablent = faajent
+                                      AND fabl001 = faaj001
+                                      AND fabl002 = faaj002
+                                      AND fabl003 = faaj037
+                                      AND faajld = l_glaald
+                                      AND fabldocno = g_fabadocno
+                                      AND fablent = g_enterprise
+                                    GROUP BY faaj003,faaj005,fabl009,fabl010,fabl101,fabl102,fabl201,fabl202#,fabl013,fabl014,fabl015
+      FOREACH sel_fabl2 INTO l_faaj003,l_faaj005,l_fabl009,l_fabl010,l_fabl006,l_fabl011,l_fabl012,
+                             l_fabl016,l_fabl019,l_fabl101,l_fabl102,l_fabl103,l_fabl104,l_fabl105,l_fabl106,
+                             l_fabl201,l_fabl202,l_fabl203,l_fabl204,l_fabl205,l_fabl206
+                             
+                             
+         #################################add by huangtao
+       
+         SELECT DISTINCT fabl001 INTO l_fabl.fabl001 FROM fabl_t,faaj_t
+          WHERE fablent = faajent AND fabl001 = faaj001 AND fabl002 = faaj002
+            AND fabl003 = faaj037 AND faajld = l_glaald AND fablent = g_enterprise AND fabldocno = g_fabadocno 
+            AND faaj003 = l_faaj003 AND faaj005 = l_faaj005
+            
+         LET l_str = l_fabl.fabl001
+         LET l_cnt = l_str.getLength()
+         
+         LET l_fabm.fabm001 = l_fabl.fabl001
+        # IF l_ooab002_1 = 'N' OR cl_null(l_ooab002_1) THEN
+        #    LET l_fabm.fabm001 = l_fabl.fabl001
+        # ELSE
+        #        
+        # END IF
+
+         IF l_n = 1 THEN
+            LET l_fabm.fabm002 = ' '
+         ELSE
+            IF l_cnt > 4 THEN
+               LET l_fabm.fabm002 = l_fabl.fabl001[l_cnt-3,l_cnt]
+            ELSE
+               LET l_fabm.fabm002 = l_fabl.fabl001
+            END IF
+         END IF
+         
+         IF l_ooab002_2 = 'Y' THEN
+            LET l_sql = " SELECT lpad((MAX(CAST(faah001 AS NUMBER(10,0)) + 1),10,'0') FROM faah_t ",
+                        " WHERE faahent ='",g_enterprise,"'",
+                        "    AND regexp_substr(faah001,'[0-9]+') IS NOT NULL"                         
+            PREPARE sel_faah001_1 FROM l_sql
+            EXECUTE sel_faah001_1 INTO l_fabm.fabm003 
+            IF cl_null(l_fabm.fabm003) THEN LET l_fabm.fabm003 = '0000000001' END IF
+         ELSE
+            LET l_fabm.fabm003 = ''
+         END IF 
+         #################################add by huangtao                    
+                             
+         IF l_n = 1 THEN
+            LET l_fabm.fabm005 = '1'
+         ELSE
+            LET l_fabm.fabm005 = '2'        
+         END IF
+         SELECT fabl013,fabl014,fabl015 INTO l_fabl013,l_fabl014,l_fabl015
+           FROM fabl_t
+          WHERE fabl017 = '1' 
+            AND fabldocno = g_fabadocno
+            AND fablent = g_enterprise 
+            
+         LET l_fabm.fabment = g_enterprise
+         LET l_fabm.fabmdocno = g_fabadocno
+         LET l_fabm.fabmseq = l_n
+         ############################mark by huangtao
+         #LET l_fabm.fabm001 = ''
+         #LET l_fabm.fabm003 = l_faah001
+         ############################mark by huangtao
+         LET l_fabm.fabm007 = l_fabl006
+         LET l_fabm.fabm010 = l_fabl009
+         LET l_fabm.fabm011 = l_fabl010
+         LET l_fabm.fabm012 = l_fabl011
+         LET l_fabm.fabm013 = l_fabl012
+         LET l_fabm.fabm014 = l_fabl013
+         LET l_fabm.fabm015 = l_fabl014
+         LET l_fabm.fabm016 = l_fabl015
+         LET l_fabm.fabm017 = l_fabl016 
+         LET l_fabm.fabm018 = l_fabl019
+         LET l_fabm.fabm101 = l_fabl101
+         LET l_fabm.fabm102 = l_fabl102
+         LET l_fabm.fabm103 = l_fabl103
+         LET l_fabm.fabm104 = l_fabl104
+         LET l_fabm.fabm105 = l_fabl105
+         LET l_fabm.fabm106 = l_fabl106
+         LET l_fabm.fabm201 = l_fabl201
+         LET l_fabm.fabm202 = l_fabl202
+         LET l_fabm.fabm203 = l_fabl203
+         LET l_fabm.fabm204 = l_fabl204
+         LET l_fabm.fabm205 = l_fabl205
+         LET l_fabm.fabm206 = l_fabl206
+         INSERT INTO fabm_t VALUES(l_fabm.*)
+         IF SQLCA.sqlcode THEN 
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = 'INS fabm_t ' 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+            RETURN 
+         END IF 
+         LET l_n = l_n + 1
+        ##############################mark by huangtao
+        # SELECT lpad((MAX(faah001) + l_n),10,'0') INTO l_faah001
+        #   FROM faah_t
+        #  WHERE faahent = g_enterprise
+        #############################mark by huangtao
+      END FOREACH 
+   END IF 
+   CALL s_transaction_end('Y','0')
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_fabadocno   LIKE faba_t.fabadocno]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_fabadocno     LIKE faba_t.fabadocno]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_fabadocno]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_fabadocno = p_fabadocno   
+   CALL afat470_01_fabm_ins()]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_ooia_m.sel = '1'
+   DISPLAY BY NAME  g_ooia_m.sel]]>
+  </point>
+  <section id="afat470_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000056
+#+ 
+#+ Filename...: afat470_01
+#+ Description: 合併原則
+#+ Creator....: 01531(2014-10-19 12:33:02)
+#+ Modifier...: 01531(2014-10-19 12:43:30) -SD/PR-
+]]>
+  </section>
+  <section id="afat470_01.global" ver="6" status="" src="s" readonly="">
+    <![CDATA[#應用 c01b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_ooia_m        RECORD
+       sel LIKE type_t.chr500
+       END RECORD
+DEFINE g_ooia_m        type_g_ooia_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="afat470_01.input" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION afat470_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_afat470_01 WITH FORM cl_ap_formpath("afa","afat470_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_ooia_m.sel ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sel
+            #add-point:BEFORE FIELD sel
+            {<point name="input.b.sel" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sel
+            
+            #add-point:AFTER FIELD sel
+            {<point name="input.a.sel" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sel
+            #add-point:ON CHANGE sel
+            {<point name="input.g.sel" />}
+            #END add-point 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.sel
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sel
+            #add-point:ON ACTION controlp INFIELD sel
+            {<point name="input.c.sel" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_afat470_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="afat470_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="afat470_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

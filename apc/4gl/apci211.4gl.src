@@ -1,0 +1,14408 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="apci211.description" >}
+#應用 a00 樣板自動產生(Version:2)
+#+ Version..: T100-ERP-1.01.00(SD版次:4,PR版次:4) Build-000156
+#+ 
+#+ Filename...: apci211
+#+ Description: POS觸屏分類設定作業
+#+ Creator....: 02749(2016-07-13 16:19:35)
+#+ Modifier...: 06137(2016-08-08 08:57:29) -SD/PR- 02159
+ 
+{</section>}
+ 
+{<section id="apci211.global" >}
+#應用 t01 樣板自動產生(Version:73) 
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#維護要點：
+#1.UI與資料有連動關係：大類->小類->商品
+#2.編輯段的開窗多選append的SQL須與r.q一致
+#3.Section調整:FUNCTION apci211_ui_dialog, g_pcbc2_d & g_pcbc3_d 的BEFORE DISPLAY
+#              FUNCTION apci211_input, g_pcbc3_d 的INPUT DISPLAY
+#              FUNCTION apci211_input, apci211.input.body, INPUT ARRAY g_pcbc_d FROM s_detail1.*
+#              FUNCTION apci211_input, apci211.input.body, INPUT ARRAY g_pcbc2_d FROM s_detail2.*
+#              FUNCTION apci211_construct,CONSTRUCT g_pcbc2_d, pcbc003更名pcbc003_1 
+#              FUNCTION apci211_input,INPUT ARRAY g_pcbc2_d, pcbc003更名pcbc003_1
+#
+#160901-00017#1  160902  By Ken    1.pcbd008 顏色欄位,如果原本有顏色值,再進行取消顏色的動作後, 原本的顏色值不會被清空
+#                                  2. artm300上 圖片如果更新或刪除,回apci211進行"重新載入圖檔" 的動作時,應與artm300 調整的情況同步
+#160914-00029#1  161102  By sakura 1.pcdb_t增加pcdb005小類key值-->解session自行加code
+#                                  2.新增系統參E-CIR-0077(20161201修正):數觸屏商品維護內容是否以小類範圍稽核，為N:不同小類能輸入相同商品
+#                                  3.新增詢問"是否異動此方案內容？"功能
+#                                  4.生效組織作作廢與傳POS狀態更新規則
+#161108-00009#1  161109  By sakura 產品單身維護時,如生效範圍有3門店,可選擇的商品必須是這三間門店"交集"後的結果
+#161201-00034#1  161201  By sakura 參數更改為E-CIR-0077
+#end add-point
+        
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point 
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_pcbb_m        RECORD
+       pcbb001 LIKE pcbb_t.pcbb001, 
+   pcbbl003 LIKE pcbbl_t.pcbbl003, 
+   pcbbl004 LIKE pcbbl_t.pcbbl004, 
+   pcbb002 LIKE pcbb_t.pcbb002, 
+   pcbb003 LIKE pcbb_t.pcbb003, 
+   pcbb004 LIKE pcbb_t.pcbb004, 
+   pcbb005 LIKE pcbb_t.pcbb005, 
+   pcbb006 LIKE pcbb_t.pcbb006, 
+   pcbb007 LIKE pcbb_t.pcbb007, 
+   pcbb008 LIKE pcbb_t.pcbb008, 
+   pcbb009 LIKE pcbb_t.pcbb009, 
+   pcbbunit LIKE pcbb_t.pcbbunit, 
+   pcbbunit_desc LIKE type_t.chr80, 
+   pcbbstus LIKE pcbb_t.pcbbstus, 
+   pcbbownid LIKE pcbb_t.pcbbownid, 
+   pcbbownid_desc LIKE type_t.chr80, 
+   pcbbowndp LIKE pcbb_t.pcbbowndp, 
+   pcbbowndp_desc LIKE type_t.chr80, 
+   pcbbcrtid LIKE pcbb_t.pcbbcrtid, 
+   pcbbcrtid_desc LIKE type_t.chr80, 
+   pcbbcrtdp LIKE pcbb_t.pcbbcrtdp, 
+   pcbbcrtdp_desc LIKE type_t.chr80, 
+   pcbbcrtdt LIKE pcbb_t.pcbbcrtdt, 
+   pcbbmodid LIKE pcbb_t.pcbbmodid, 
+   pcbbmodid_desc LIKE type_t.chr80, 
+   pcbbmoddt LIKE pcbb_t.pcbbmoddt
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pcbc_d        RECORD
+       pcbc005 LIKE pcbc_t.pcbc005, 
+   pcbc003 LIKE pcbc_t.pcbc003, 
+   pcbc003_desc LIKE type_t.chr500, 
+   pcbc002 LIKE pcbc_t.pcbc002, 
+   pcbc004 LIKE pcbc_t.pcbc004, 
+   pcbcstus LIKE pcbc_t.pcbcstus
+       END RECORD
+PRIVATE TYPE type_g_pcbc2_d RECORD
+       pcbc005 LIKE type_t.num5, 
+   pcbc003 LIKE type_t.chr10, 
+   pcbc003_1_desc LIKE type_t.chr500, 
+   pcbc002 LIKE type_t.chr10, 
+   pcbc004 LIKE type_t.chr10, 
+   pcbcstus LIKE type_t.chr10
+       END RECORD
+PRIVATE TYPE type_g_pcbc3_d RECORD
+       pcbd009 LIKE pcbd_t.pcbd009, 
+   pcbd002 LIKE pcbd_t.pcbd002, 
+   pcbd002_desc LIKE type_t.chr500, 
+   pcbd002_desc_desc LIKE type_t.chr500, 
+   pcbd003 LIKE pcbd_t.pcbd003, 
+   pcbd004 LIKE pcbd_t.pcbd004, 
+   pcbd004_desc LIKE type_t.chr500, 
+   pcbd005 LIKE pcbd_t.pcbd005, 
+   pcbd005_desc LIKE type_t.chr500, 
+   l_pcbd006 LIKE type_t.chr1, 
+   l_color LIKE type_t.chr500, 
+   pcbd007 LIKE pcbd_t.pcbd007, 
+   pcbd008 LIKE pcbd_t.pcbd008, 
+   pcbdstus LIKE pcbd_t.pcbdstus
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_pcbb001 LIKE pcbb_t.pcbb001,
+   b_pcbb001_desc LIKE type_t.chr80,
+      b_pcbb002 LIKE pcbb_t.pcbb002,
+      b_pcbb003 LIKE pcbb_t.pcbb003
+       END RECORD
+       
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_pcbe_chk           LIKE type_t.num5      #是否已檢查生效範圍筆數,已檢查過&筆數仍為0則報錯,未檢查過則自動開啟apci211_01
+DEFINE g_class_type         LIKE type_t.chr30     #分類來源參數編號
+DEFINE g_class_1            LIKE type_t.chr30     #大類層級參數編號
+DEFINE g_class_2            LIKE type_t.chr30     #小類層級參數編號
+DEFINE tok                  base.StringTokenizer
+DEFINE g_class_1_idx        LIKE type_t.num5      #大類畫面指標,資料連動或開窗校驗時需要用此指標
+DEFINE g_class_2_idx        LIKE type_t.num5      #小類畫面指標,資料連動或開窗校驗時需要用此指標
+DEFINE g_prod_idx           LIKE type_t.num5      #產品畫面指標,資料連動或開窗校驗時需要用此指標
+DEFINE g_txn_master_flag    LIKE type_t.num5      #判斷單頭資料是否異動過
+DEFINE g_txn_detail_flag    LIKE type_t.num5      #判斷單身資料是否異動過
+DEFINE g_upd_pcbd006        LIKE type_t.num5      #判斷是否更新圖檔
+DEFINE g_where_pcbb001      STRING                #紀錄方案編號   #160914-00029#1 by sakura add
+#顏色紀錄, 宣告同第三單身
+DEFINE g_pcbd_d_color DYNAMIC ARRAY OF RECORD
+   pcbd009           STRING,
+   pcbd002           STRING,
+   pcbd002_desc      STRING,
+   pcbd002_desc_desc STRING,
+   pcbd003           STRING,
+   pcbd004           STRING,
+   pcbd004_desc      STRING,
+   pcbd005           STRING,
+   pcbd005_desc      STRING,
+   l_pcbd006         STRING,   #160705-00013#9 Add BY ken 160808
+   l_color           STRING,   #顏色外顯依據
+   pcbd007           STRING,
+   pcbd008           STRING,
+   pcbdstus          STRING
+       END RECORD
+       
+#160705-00013#5 Add By ken 160727(S)
+DEFINE g_main_array      DYNAMIC ARRAY OF RECORD   # 大分類
+       main_id           LIKE type_t.chr10,     # 大分類編號
+       main_name         LIKE type_t.chr30      # 大分類名稱
+                         END RECORD
+DEFINE g_item_array      DYNAMIC ARRAY OF RECORD   # 小分類
+       item_main_id      LIKE type_t.chr10,     # 大分類編號
+       item_id           LIKE type_t.chr10,     # 小分類編號
+       item_name         LIKE type_t.chr30      # 小分類名稱
+                         END RECORD
+DEFINE g_product_array   DYNAMIC ARRAY OF RECORD   # 商品細項
+       product_main_id   LIKE type_t.chr10,     # 大分類編號
+       product_item_id   LIKE type_t.chr10,     # 小分類編號
+       product_id        LIKE type_t.chr30,     # 商品編號
+       product_name      LIKE type_t.chr30,     # 商品名稱
+       product_price     LIKE type_t.num5,      # 商品價格
+       product_unit      LIKE type_t.chr10,     # 商品单位
+       product_picture   LIKE type_t.chr300,    # 商品圖片
+       product_num       LIKE pcbd_t.pcbd009,   # 順序號
+       product_spec      LIKE pcbd_t.pcbd003    # 產品特徵
+                         END RECORD
+DEFINE g_main_form_but   DYNAMIC ARRAY OF RECORD   # 大分類
+       main_but_name     STRING,                   # 元件名稱(name)
+       main_id           LIKE type_t.chr10      # 大分類編號
+                         END RECORD
+DEFINE g_item_form_but   DYNAMIC ARRAY OF RECORD   # 小分類
+       item_but_name     STRING,                   # 元件名稱(name)
+       item_main_id      LIKE type_t.chr10,     # 大分類編號
+       item_id           LIKE type_t.chr10      # 小分類編號
+                         END RECORD
+DEFINE g_product_form_but    DYNAMIC ARRAY OF RECORD   # 商品細項
+       product_but_name  STRING,                   # 元件名稱(name)
+       product_main_id   LIKE type_t.chr10,     # 大分類編號
+       product_item_id   LIKE type_t.chr10,     # 小分類編號
+       product_id        LIKE type_t.chr10      # 商品編號
+                         END RECORD
+DEFINE g_main_col        LIKE type_t.num5       # 使用者輸入的大分類行數
+DEFINE g_main_row        LIKE type_t.num5       # 使用者輸入的大分類列數
+DEFINE g_item_col        LIKE type_t.num5       # 使用者輸入的小分類行數
+DEFINE g_item_row        LIKE type_t.num5       # 使用者輸入的小分類列數
+DEFINE g_product_col     LIKE type_t.num5       # 使用者輸入的商品細項行數
+DEFINE g_product_row     LIKE type_t.num5       # 使用者輸入的商品細項列數
+DEFINE g_main_page       LIKE type_t.num5       # 目前在大分類第幾頁
+DEFINE g_item_page       LIKE type_t.num5       # 目前在小分類第幾頁
+DEFINE g_product_page    LIKE type_t.num5       # 目前在商品細項第幾頁
+DEFINE g_curr_act        STRING                    # 紀錄目前游標所指的action
+DEFINE g_curr_act_old    STRING                    # 紀錄目前游標所指的action - 舊
+DEFINE g_act_max         LIKE type_t.num5       # 最多預設幾個按鈕
+DEFINE g_act_hidden      STRING                    # 紀錄要隱藏起來的action        
+DEFINE g_but1        STRING                 #大类的ACTION
+DEFINE g_but2        STRING                 #小类的ACTION
+DEFINE g_but3        STRING                 #产品的ACTION 
+DEFINE g_main_curr_page           LIKE type_t.num5    # 大分類目前的頁數
+DEFINE g_main_page_count          LIKE type_t.num5    # 大分類每頁可放置的元件個數 (行 * 列)
+DEFINE g_main_start_index         LIKE type_t.num5    # 大分類每頁的array起始位置
+DEFINE g_main_end_index           LIKE type_t.num5    # 大分類每頁的array結束位置 
+DEFINE g_main_array_langth        LIKE type_t.num5    # 大分類的array長度
+DEFINE g_item_curr_page           LIKE type_t.num5    # 小分類目前的頁數
+DEFINE g_item_page_count          LIKE type_t.num5    # 小分類每頁可放置的元件個數 (行 * 列)
+DEFINE g_item_start_index         LIKE type_t.num5    # 小分類每頁的array起始位置
+DEFINE g_item_end_index           LIKE type_t.num5    # 小分類每頁的array結束位置 
+DEFINE g_item_array_langth        LIKE type_t.num5    # 小分類的array長度
+DEFINE g_product_curr_page        LIKE type_t.num5    # 商品細項目前的頁數
+DEFINE g_product_page_count       LIKE type_t.num5    # 商品細項每頁可放置的元件個數 (行 * 列)
+DEFINE g_product_start_index      LIKE type_t.num5    # 商品細項每頁的起始位置
+DEFINE g_product_end_index        LIKE type_t.num5    # 商品細項每頁的結束位置 
+DEFINE g_product_array_langth     LIKE type_t.num5    # 商品細項的array長度
+DEFINE g_flag                     LIKE type_t.chr1    #鼠标位置标识符 0:单头 1:大类 2:小类 3:产品
+DEFINE g_flag1                    LIKE type_t.chr1    #区分是单身/单头的操作
+DEFINE g_button1                  LIKE type_t.num5    #大类的第几笔资料
+DEFINE g_button2                  LIKE type_t.num5    #小类的第几笔资料
+DEFINE g_button3                  LIKE type_t.num5    #产品的第几笔资料
+DEFINE g_eff                      LIKE type_t.chr1
+DEFINE g_product_id               LIKE type_t.chr30   #按下的商品編號
+DEFINE g_product_name             LIKE type_t.chr30   #按下的商品名稱
+DEFINE g_product_num              LIKE pcbd_t.pcbd009 #按下的商品順序號
+DEFINE g_touch                    LIKE type_t.num5
+DEFINE g_target_dir               STRING       #圖片存的路徑
+
+#DEFINE gwin_curr           ui.Window
+#DEFINE gfrm_curr           ui.Form
+DEFINE l_file              STRING   # 自定義 4st 檔
+DEFINE g_parameter         DYNAMIC ARRAY OF RECORD
+         id                STRING   #參數ID ( Action ID )
+                           END RECORD
+#160705-00013#5 Add By ken 160727(E)
+DEFINE g_pcbb003           LIKE pcbb_t.pcbb003   #160914-00029#1 by sakura add
+#end add-point
+       
+#模組變數(Module Variables)
+DEFINE g_pcbb_m          type_g_pcbb_m
+DEFINE g_pcbb_m_t        type_g_pcbb_m
+DEFINE g_pcbb_m_o        type_g_pcbb_m
+DEFINE g_pcbb_m_mask_o   type_g_pcbb_m #轉換遮罩前資料
+DEFINE g_pcbb_m_mask_n   type_g_pcbb_m #轉換遮罩後資料
+ 
+   DEFINE g_pcbb001_t LIKE pcbb_t.pcbb001
+ 
+ 
+DEFINE g_pcbc_d          DYNAMIC ARRAY OF type_g_pcbc_d
+DEFINE g_pcbc_d_t        type_g_pcbc_d
+DEFINE g_pcbc_d_o        type_g_pcbc_d
+DEFINE g_pcbc_d_mask_o   DYNAMIC ARRAY OF type_g_pcbc_d #轉換遮罩前資料
+DEFINE g_pcbc_d_mask_n   DYNAMIC ARRAY OF type_g_pcbc_d #轉換遮罩後資料
+DEFINE g_pcbc2_d          DYNAMIC ARRAY OF type_g_pcbc2_d
+DEFINE g_pcbc2_d_t        type_g_pcbc2_d
+DEFINE g_pcbc2_d_o        type_g_pcbc2_d
+DEFINE g_pcbc2_d_mask_o   DYNAMIC ARRAY OF type_g_pcbc2_d #轉換遮罩前資料
+DEFINE g_pcbc2_d_mask_n   DYNAMIC ARRAY OF type_g_pcbc2_d #轉換遮罩後資料
+DEFINE g_pcbc3_d          DYNAMIC ARRAY OF type_g_pcbc3_d
+DEFINE g_pcbc3_d_t        type_g_pcbc3_d
+DEFINE g_pcbc3_d_o        type_g_pcbc3_d
+DEFINE g_pcbc3_d_mask_o   DYNAMIC ARRAY OF type_g_pcbc3_d #轉換遮罩前資料
+DEFINE g_pcbc3_d_mask_n   DYNAMIC ARRAY OF type_g_pcbc3_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+DEFINE g_master_multi_table_t    RECORD
+      pcbbl001 LIKE pcbbl_t.pcbbl001,
+      pcbbl003 LIKE pcbbl_t.pcbbl003,
+      pcbbl004 LIKE pcbbl_t.pcbbl004
+      END RECORD
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+DEFINE g_wc2_table2   STRING
+ 
+DEFINE g_wc2_table3   STRING
+ 
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                         #Current Dialog
+                                                               
+DEFINE g_pagestart           LIKE type_t.num10                 
+DEFINE gwin_curr             ui.Window                         #Current Window
+DEFINE gfrm_curr             ui.Form                           #Current Form
+DEFINE g_page_action         STRING                            #page action
+DEFINE g_header_hidden       LIKE type_t.num5                  #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5                  #隱藏工作Panel
+DEFINE g_page                STRING                            #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10                  #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx_tmp      LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10                  #單身2目前所在筆數
+DEFINE g_detail_idx_list     DYNAMIC ARRAY OF LIKE type_t.num10 #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10                  #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10                  #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10                  #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                             #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10                  #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                            #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10                  #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5                   #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+DEFINE g_idx_group           om.SaxAttributes              #頁籤群組
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apci211.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE l_success LIKE type_t.num5 
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apc","")
+ 
+   #add-point:作業初始化 name="main.init"
+   LET g_class_type  = "E-CIR-0070"  #分類來源參數編號
+   LET g_class_1     = "E-CIR-0068"  #大類層級參數編號
+   LET g_class_2     = "E-CIR-0069"  #小類層級參數編號
+   LET g_class_1_idx = 1           #160705-00013#9 Modify BY Ken 160812 由0改成1
+   LET g_class_2_idx = 1           #160705-00013#9 Modify BY Ken 160812 由0改成1
+   
+   LET l_success = ''
+   CALL s_aooi500_drop_temp() RETURNING l_success
+   
+   
+   #160705-00013#9 Add BY Ken 160803(S)
+   #LET gwin_curr = ui.Window.getCurrent()
+   #LET gfrm_curr = gwin_curr.getForm()    
+    
+   #LET l_file = os.Path.join(FGL_GETENV("ERP"),"cfg")
+   #LET l_file = os.Path.join(os.Path.join(l_file,"4st"), "apci211.4st")
+   #CALL ui.Interface.loadStyles(l_file) 
+   #160705-00013#9 Add BY Ken 160803(E)   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT pcbb001,'','',pcbb002,pcbb003,pcbb004,pcbb005,pcbb006,pcbb007,pcbb008, 
+       pcbb009,pcbbunit,'',pcbbstus,pcbbownid,'',pcbbowndp,'',pcbbcrtid,'',pcbbcrtdp,'',pcbbcrtdt,pcbbmodid, 
+       '',pcbbmoddt", 
+                      " FROM pcbb_t",
+                      " WHERE pcbbent= ? AND pcbb001=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apci211_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.pcbb001,t0.pcbb002,t0.pcbb003,t0.pcbb004,t0.pcbb005,t0.pcbb006,t0.pcbb007, 
+       t0.pcbb008,t0.pcbb009,t0.pcbbunit,t0.pcbbstus,t0.pcbbownid,t0.pcbbowndp,t0.pcbbcrtid,t0.pcbbcrtdp, 
+       t0.pcbbcrtdt,t0.pcbbmodid,t0.pcbbmoddt,t1.ooefl003 ,t2.ooag011 ,t3.ooefl003 ,t4.ooag011 ,t5.ooefl003 , 
+       t6.ooag011",
+               " FROM pcbb_t t0",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent='"||g_enterprise||"' AND t1.ooefl001=t0.pcbbunit AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t2 ON t2.ooagent='"||g_enterprise||"' AND t2.ooag001=t0.pcbbownid  ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent='"||g_enterprise||"' AND t3.ooefl001=t0.pcbbowndp AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t4 ON t4.ooagent='"||g_enterprise||"' AND t4.ooag001=t0.pcbbcrtid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent='"||g_enterprise||"' AND t5.ooefl001=t0.pcbbcrtdp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t6 ON t6.ooagent='"||g_enterprise||"' AND t6.ooag001=t0.pcbbmodid  ",
+ 
+               " WHERE t0.pcbbent = '" ||g_enterprise|| "' AND t0.pcbb001 = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE apci211_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apci211 WITH FORM cl_ap_formpath("apc",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apci211_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apci211_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_apci211
+      
+   END IF 
+   
+   CLOSE apci211_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="apci211.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION apci211_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point    
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_success LIKE type_t.num5
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   
+   #各個page指標
+   LET g_detail_idx_list[1] = 1 
+   LET g_detail_idx_list[2] = 1
+   LET g_detail_idx_list[3] = 1
+ 
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+      CALL cl_set_combo_scc_part('pcbbstus','17','N,Y')
+ 
+      CALL cl_set_combo_scc('pcbb002','6104') 
+   CALL cl_set_combo_scc('pcbb003','6105') 
+ 
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #page群組
+   LET g_idx_group = om.SaxAttributes.create()
+   CALL g_idx_group.addAttribute("'1',","1")
+   CALL g_idx_group.addAttribute("'2',","1")
+   CALL g_idx_group.addAttribute("'3',","1")
+ 
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   LET g_errshow = 1
+   CALL cl_set_combo_scc_part('pcbcstus','17','N,Y')
+   CALL cl_set_combo_scc_part('pcbdstus','17','N,Y')
+   
+   LET l_success = ''
+   CALL s_aooi500_create_temp() RETURNING l_success  
+
+   #160705-00013#5 Add By ken 160727(S)
+   # 預設點選大分類的第一筆資料，
+   # 因為大分類的第一個元件是上一頁，所以改帶第二個元件
+   LET g_curr_act = "main_but002"
+   LET g_curr_act_old = "main_but002"
+   #LET g_but1 = "main_but002"
+   #LET g_but2 = "item_but001"
+   #LET g_but3 = "product_but001"   
+
+   LET g_flag = '0'
+   LET g_flag1 = '0'
+   LET g_button1 = 1
+   LET g_button2 = 1
+   LET g_button3 = 1
+   LET g_eff = 'N'    
+   # 定義最多只能設定100個按鈕
+   LET g_act_max = 100   
+   LET g_target_dir = FGL_GETENV('TEMPDIR')
+   
+   #160705-00013#9 Add BY Ken 160803(S) 
+   # 以標準樣版來說，是在 "CALL cl_ui_init()" 之後
+   Call apci211_add_style()   
+   #160705-00013#9 Add BY Ken 160803(E) 
+   #160705-00013#5 Add By ken 160727(E)
+
+   CALL apci211_create_tmp() #161108-00009#1 by sakura add
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL apci211_default_search()
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.ui_dialog" >}
+#+ 功能選單
+PRIVATE FUNCTION apci211_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+
+   #end add-point
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   DEFINE  l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE  l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE  l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   DEFINE  l_cnt                 LIKE type_t.num5
+   DEFINE  l_msg                 STRING              #160705-00013#5 Add By ken 160727
+   DEFINE  l_i                   LIKE type_t.num5    #160705-00013#9 Add By ken 160803
+   DEFINE  l_button_num          LIKE type_t.num5    #160705-00013#9 Add By ken 160803
+   DEFINE  l_mod_cnt             LIKE type_t.num5    #160705-00013#9 Add By ken 160803
+   DEFINE  p_mod_cnt             LIKE type_t.num5    #160705-00013#9 Add By ken 160803
+   DEFINE  l_page_tmp            LIKE type_t.num5    #160705-00013#9 Add By ken 160812
+   DEFINE  l_success             LIKE type_t.num5   #160914-00029#1 by sakura add
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   #因應查詢方案進行處理
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL apci211_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_pcbb_m.* TO NULL
+         CALL g_pcbc_d.clear()
+         CALL g_pcbc2_d.clear()
+         CALL g_pcbc3_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL apci211_init()
+      END IF
+   
+      CALL lib_cl_dlg.cl_dlg_before_display()
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+         #左側瀏覽頁簽
+         DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTES(COUNT=g_header_cnt)
+            BEFORE ROW
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+         
+               IF g_current_idx > g_browser.getLength() THEN
+                  LET g_current_idx = g_browser.getLength()
+               END IF 
+               
+               CALL apci211_fetch('') # reload data
+               LET l_ac = 1
+               CALL apci211_ui_detailshow() #Setting the current row 
+         
+               CALL apci211_idx_chk()
+               #NEXT FIELD pcbc003
+         
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+         END DISPLAY
+    
+         DISPLAY ARRAY g_pcbc_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL apci211_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[1] = l_ac
+               CALL g_idx_group.addAttribute("'1',",l_ac)
+               
+               #add-point:page1, before row動作 name="ui_dialog.page1.before_row"
+               LET g_class_1_idx = l_ac
+               CALL apci211_detail_referesh(1)
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL apci211_idx_chk()
+               #add-point:page1自定義行為 name="ui_dialog.page1.before_display"
+
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為 name="ui_dialog.page1.action"
+
+            #end add-point
+               
+         END DISPLAY
+        
+         #第一階單身段落
+         DISPLAY ARRAY g_pcbc2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL apci211_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[2] = l_ac
+               CALL g_idx_group.addAttribute("'2',",l_ac)
+               
+               #add-point:page2, before row動作 name="ui_dialog.body2.before_row"
+               LET g_class_2_idx = l_ac
+               CALL apci211_detail_referesh(2)
+               #end add-point
+               
+            BEFORE DISPLAY
+               #160705-00013#5 160720 by lori mod---(S)
+               #standard---(S)
+               ##如果一直都在單身1則控制筆數位置
+               #IF g_loc = 'm' THEN
+               #   CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+               #END IF
+               #LET g_loc = 'm'
+               #standard---(E)
+               
+               #Modify---(S)
+               #小類為第二單身, g_loc 應給值 d
+               IF g_loc = 'd' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+               END IF
+               LET g_loc = 'd'
+               #Modify---(E)      
+               #160705-00013#5 160720 by lori mod---(E)
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               #顯示單身筆數
+               CALL apci211_idx_chk()
+               #add-point:page2自定義行為 name="ui_dialog.body2.before_display"
+
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_2)
+            
+         
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+
+            #end add-point
+         
+         END DISPLAY
+         #第一階單身段落
+         DISPLAY ARRAY g_pcbc3_d TO s_detail3.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL apci211_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[3] = l_ac
+               CALL g_idx_group.addAttribute("'3',",l_ac)
+               
+               #add-point:page3, before row動作 name="ui_dialog.body3.before_row"
+               CALL DIALOG.setCellAttributes(g_pcbd_d_color)                 #参数：屏幕变量,属性数组
+               CALL DIALOG.setArrayAttributes("s_detail3",g_pcbd_d_color)    #参数：屏幕变量,属性数组 
+               
+               LET g_prod_idx = l_ac
+               #end add-point
+               
+            BEFORE DISPLAY
+               #160705-00013#5 160720 by lori mod---(S)
+               #Standard---(S)
+               ##如果一直都在單身1則控制筆數位置
+               #IF g_loc = 'm' THEN
+               #   CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'3',"))
+               #END IF
+               #LET g_loc = 'm'
+               #Standard---(E)
+               
+               #Modify---(S)
+               #產品為第三單身, g_loc 應給值d1
+               IF g_loc = 'd1' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'3',"))
+               END IF
+               LET g_loc = 'd1'
+               #Modify---(E)               
+               #160705-00013#5 160720 by lori mod---(E)
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_current_page = 3
+               #顯示單身筆數
+               CALL apci211_idx_chk()
+               #add-point:page3自定義行為 name="ui_dialog.body3.before_display"
+
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_3)
+            
+         
+            #add-point:page3自定義行為 name="ui_dialog.body3.action"
+
+            #end add-point
+         
+         END DISPLAY
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+
+         #end add-point
+         
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+         SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL apci211_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+            IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               LET g_current_idx = g_current_row
+            END IF
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL apci211_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL apci211_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL apci211_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+
+            #end add-point
+ 
+         #add-point:ui_dialog段more_action name="ui_dialog.more_action"
+         #向上置換
+         ON ACTION change_up
+            LET g_action_choice="change_up"
+               
+               #add-point:ON ACTION change_up name="menu.change_up"
+               IF apci211_button3_chk(g_button3) THEN
+                  IF apci211_up_change(g_button3,g_pcbb_m.pcbb009) THEN   
+                     IF apci211_pcbb003_upd(g_pcbb_m.pcbb001) THEN
+                        #动态显示画面ACTTION数量
+                        LET g_main_col = g_pcbb_m.pcbb005    #大類列數
+                        LET g_main_row = g_pcbb_m.pcbb004    #大類行數
+                        LET g_item_col = g_pcbb_m.pcbb007    #小類列數
+                        LET g_item_row = g_pcbb_m.pcbb006    #小類行數
+                        LET g_product_col = g_pcbb_m.pcbb009 #產品列數
+                        LET g_product_row = g_pcbb_m.pcbb008 #產品行數
+                        LET g_main_page_count = g_pcbb_m.pcbb005 * g_pcbb_m.pcbb004
+                        LET g_item_page_count = g_pcbb_m.pcbb007 * g_pcbb_m.pcbb006
+                        LET g_product_page_count = g_pcbb_m.pcbb009 * g_pcbb_m.pcbb008 +2
+                        CALL apci211_get_data("P",g_item_array[g_button2].item_main_id,g_item_array[g_button2].item_id)
+                        CALL apci211_product_index(g_button3)  #160705-00013#9 Add By Ken 160810(S)取得商品在第幾頁及第幾筆
+                        CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index) 
+                        CALL apci211_b_fill()
+                        LET l_mod_cnt = ((g_button3 - g_pcbb_m.pcbb009) MOD (g_product_page_count-2))
+                        LET l_page_tmp = (g_button3 - g_pcbb_m.pcbb009) / (g_product_page_count-2)
+                        IF l_mod_cnt != 0 THEN
+                           LET l_page_tmp = l_page_tmp + 1
+                        END IF
+                        IF l_page_tmp = g_product_curr_page THEN
+                           LET g_but3 = "product_but",g_button3 - g_pcbb_m.pcbb009 USING "&&&"
+                           LET g_button3 = g_button3 - g_pcbb_m.pcbb009  
+                        END IF                           
+                      END IF
+                  ELSE
+                     CALL gfrm_curr.ensureElementVisible("page_1")
+                  END IF                   
+                  CALL apci211_change_style("P")                    
+               ELSE
+                  CALL gfrm_curr.ensureElementVisible("page_1")
+               END IF    
+
+         #向下置換
+         ON ACTION change_down
+            LET g_action_choice="change_down"
+               
+               #add-point:ON ACTION change_down name="menu.change_down"
+               IF apci211_button3_chk(g_button3) THEN              
+                  IF apci211_down_change(g_button3,g_pcbb_m.pcbb009) THEN
+                     IF apci211_pcbb003_upd(g_pcbb_m.pcbb001) THEN                  
+                        #动态显示画面ACTTION数量
+                        LET g_main_col = g_pcbb_m.pcbb005    #大類列數
+                        LET g_main_row = g_pcbb_m.pcbb004    #大類行數
+                        LET g_item_col = g_pcbb_m.pcbb007    #小類列數
+                        LET g_item_row = g_pcbb_m.pcbb006    #小類行數
+                        LET g_product_col = g_pcbb_m.pcbb009 #產品列數
+                        LET g_product_row = g_pcbb_m.pcbb008 #產品行數
+                        LET g_main_page_count = g_pcbb_m.pcbb005 * g_pcbb_m.pcbb004
+                        LET g_item_page_count = g_pcbb_m.pcbb007 * g_pcbb_m.pcbb006
+                        LET g_product_page_count = g_pcbb_m.pcbb009 * g_pcbb_m.pcbb008 +2
+                        CALL apci211_get_data("P",g_item_array[g_button2].item_main_id,g_item_array[g_button2].item_id)
+                        CALL apci211_product_index(g_button3)  #160705-00013#9 Add By Ken 160810(S)取得商品在第幾頁及第幾筆
+                        CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index) 
+                        CALL apci211_b_fill() 
+                        IF g_button3 + g_pcbb_m.pcbb009 <= (g_product_page_count - 2) THEN
+                           LET g_but3 = "product_but",g_button3 + g_pcbb_m.pcbb009 USING "&&&"
+                           LET g_button3 = g_button3 + g_pcbb_m.pcbb009                            
+                        END IF                        
+                     END IF
+                  ELSE
+                     CALL gfrm_curr.ensureElementVisible("page_1")                  
+                  END IF
+                  CALL apci211_change_style("P")                      
+               ELSE
+                  CALL gfrm_curr.ensureElementVisible("page_1")                  
+               END IF  
+               #END add-point
+               
+         #向左置換
+         ON ACTION change_left
+            LET g_action_choice="change_left"
+               
+               #add-point:ON ACTION change_left name="menu.change_left"
+               IF apci211_button3_chk(g_button3) THEN                
+                  IF apci211_left_change(g_button3) THEN
+                     IF apci211_pcbb003_upd(g_pcbb_m.pcbb001) THEN                  
+                        #动态显示画面ACTTION数量
+                        LET g_main_col = g_pcbb_m.pcbb005    #大類列數
+                        LET g_main_row = g_pcbb_m.pcbb004    #大類行數
+                        LET g_item_col = g_pcbb_m.pcbb007    #小類列數
+                        LET g_item_row = g_pcbb_m.pcbb006    #小類行數
+                        LET g_product_col = g_pcbb_m.pcbb009 #產品列數
+                        LET g_product_row = g_pcbb_m.pcbb008 #產品行數
+                        LET g_main_page_count = g_pcbb_m.pcbb005 * g_pcbb_m.pcbb004
+                        LET g_item_page_count = g_pcbb_m.pcbb007 * g_pcbb_m.pcbb006
+                        LET g_product_page_count = g_pcbb_m.pcbb009 * g_pcbb_m.pcbb008 +2
+                        CALL apci211_get_data("P",g_item_array[g_button2].item_main_id,g_item_array[g_button2].item_id)                                           
+                        CALL apci211_product_index(g_button3)  #160705-00013#9 Add By Ken 160810(S)取得商品在第幾頁及第幾筆
+                        CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)                         
+                        CALL apci211_b_fill() 
+                        IF (g_button3) MOD (g_product_page_count - 2) != 1 THEN  
+                           LET g_but3 = "product_but",((g_button3 - 1) MOD (g_product_page_count - 2))  USING "&&&"                           
+                           LET g_button3 = g_button3 - 1
+                        END IF                                                                          
+                     END IF
+                  ELSE
+                     CALL gfrm_curr.ensureElementVisible("page_1")                  
+                  END IF                    
+                  CALL apci211_change_style("P")                     
+               ELSE
+                  CALL gfrm_curr.ensureElementVisible("page_1")                  
+               END IF 
+               #END add-point 
+
+
+         #向右置換
+         ON ACTION change_right
+            LET g_action_choice="change_right"
+               
+               #add-point:ON ACTION change_right name="menu.change_right"
+               IF apci211_button3_chk(g_button3) THEN            
+                  IF apci211_right_change(g_button3) THEN                             
+                     IF apci211_pcbb003_upd(g_pcbb_m.pcbb001) THEN                  
+                        #动态显示画面ACTTION数量
+                        LET g_main_col = g_pcbb_m.pcbb005    #大類列數
+                        LET g_main_row = g_pcbb_m.pcbb004    #大類行數
+                        LET g_item_col = g_pcbb_m.pcbb007    #小類列數
+                        LET g_item_row = g_pcbb_m.pcbb006    #小類行數
+                        LET g_product_col = g_pcbb_m.pcbb009 #產品列數
+                        LET g_product_row = g_pcbb_m.pcbb008 #產品行數               
+                        LET g_main_page_count = g_pcbb_m.pcbb005 * g_pcbb_m.pcbb004
+                        LET g_item_page_count = g_pcbb_m.pcbb007 * g_pcbb_m.pcbb006
+                        LET g_product_page_count = g_pcbb_m.pcbb009 * g_pcbb_m.pcbb008 +2
+                        CALL apci211_get_data("P",g_item_array[g_button2].item_main_id,g_item_array[g_button2].item_id)
+                        CALL apci211_product_index(g_button3)  #160705-00013#9 Add By Ken 160810(S)取得商品在第幾頁及第幾筆
+                        CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index) 
+                        CALL apci211_b_fill()  
+                        IF (g_button3) MOD (g_product_page_count - 2) != 0 THEN
+                           LET g_but3 = "product_but",(g_button3) MOD (g_product_page_count - 2) + 1 USING "&&&"
+                           LET g_button3 = g_button3 + 1                            
+                        END IF                        
+                     END IF
+                  ELSE     
+                     CALL gfrm_curr.ensureElementVisible("page_1")  
+                  END IF                     
+                  CALL apci211_change_style("P")                    
+               ELSE
+                  CALL gfrm_curr.ensureElementVisible("page_1")                  
+               END IF
+               #END add-point
+               
+         #商品刪除      
+         ON ACTION product_del
+            LET g_action_choice="product_del"
+               
+               #add-point:ON ACTION product_del name="menu.product_del"
+               IF apci211_button3_chk(g_button3) THEN            
+                  LET l_msg = g_product_array[g_button3].product_id
+                  IF cl_ask_confirm_parm('apc-00093',l_msg) THEN
+                     IF apci211_del_product(g_button3) THEN
+                        IF apci211_pcbb003_upd(g_pcbb_m.pcbb001) THEN                     
+                           LET g_main_col = g_pcbb_m.pcbb005    #大類列數
+                           LET g_main_row = g_pcbb_m.pcbb004    #大類行數
+                           LET g_item_col = g_pcbb_m.pcbb007    #小類列數
+                           LET g_item_row = g_pcbb_m.pcbb006    #小類行數
+                           LET g_product_col = g_pcbb_m.pcbb009 #產品列數
+                           LET g_product_row = g_pcbb_m.pcbb008 #產品行數               
+                           LET g_main_page_count = g_pcbb_m.pcbb005 * g_pcbb_m.pcbb004
+                           LET g_item_page_count = g_pcbb_m.pcbb007 * g_pcbb_m.pcbb006
+                           LET g_product_page_count = g_pcbb_m.pcbb009 * g_pcbb_m.pcbb008 +2
+                           CALL apci211_get_data("P",g_item_array[g_button2].item_main_id,g_item_array[g_button2].item_id)
+                           CALL apci211_product_index(g_button3)  #160705-00013#9 Add By Ken 160810(S)取得商品在第幾頁及第幾筆
+                           CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index) 
+                           CALL apci211_b_fill() 
+                           CALL gfrm_curr.ensureElementVisible("page_1")                            
+                        END IF
+                     ELSE
+                        CALL gfrm_curr.ensureElementVisible("page_1")                     
+                     END IF                        
+                     CALL apci211_change_style("P")                       
+                  END IF 
+               ELSE
+                  CALL gfrm_curr.ensureElementVisible("page_1")                     
+               END IF  
+               #END add-point
+
+         
+         
+         #大類按鈕
+         ON ACTION main_but001
+            CALL apci211_main_act(1)
+            
+         ON ACTION main_but002
+            CALL apci211_main_act(2)
+
+         ON ACTION main_but003
+            CALL apci211_main_act(3)
+            
+         ON ACTION main_but004
+            CALL apci211_main_act(4)
+
+         ON ACTION main_but005
+            CALL apci211_main_act(5)
+            
+         ON ACTION main_but006
+            CALL apci211_main_act(6)
+
+         ON ACTION main_but007
+            CALL apci211_main_act(7)
+            
+         ON ACTION main_but008
+            CALL apci211_main_act(8)
+            
+         ON ACTION main_but009
+            CALL apci211_main_act(9)
+
+         ON ACTION main_but010
+            CALL apci211_main_act(10)         
+         
+##
+         ON ACTION main_but011
+            CALL apci211_main_act(11)
+            
+         ON ACTION main_but012
+            CALL apci211_main_act(12)
+
+         ON ACTION main_but013
+            CALL apci211_main_act(13)
+            
+         ON ACTION main_but014
+            CALL apci211_main_act(14)
+
+         ON ACTION main_but015
+            CALL apci211_main_act(15)
+            
+         ON ACTION main_but016
+            CALL apci211_main_act(16)
+
+         ON ACTION main_but017
+            CALL apci211_main_act(17)
+            
+         ON ACTION main_but018
+            CALL apci211_main_act(18)
+            
+         ON ACTION main_but019
+            CALL apci211_main_act(19)
+
+         ON ACTION main_but020
+            CALL apci211_main_act(20) 
+
+##
+
+         ON ACTION main_but021
+            CALL apci211_main_act(21)
+            
+         ON ACTION main_but022
+            CALL apci211_main_act(22)
+
+         ON ACTION main_but023
+            CALL apci211_main_act(23)
+            
+         ON ACTION main_but024
+            CALL apci211_main_act(24)
+
+         ON ACTION main_but025
+            CALL apci211_main_act(25)
+            
+         ON ACTION main_but026
+            CALL apci211_main_act(26)
+
+         ON ACTION main_but027
+            CALL apci211_main_act(27)
+            
+         ON ACTION main_but028
+            CALL apci211_main_act(28)
+            
+         ON ACTION main_but029
+            CALL apci211_main_act(29)
+
+         ON ACTION main_but030
+            CALL apci211_main_act(30)  
+         
+         #小類按鈕
+         ON ACTION item_but001
+            CALL apci211_item_act(1)
+            
+         ON ACTION item_but002
+            CALL apci211_item_act(2)
+
+         ON ACTION item_but003
+            CALL apci211_item_act(3)
+            
+         ON ACTION item_but004
+            CALL apci211_item_act(4)
+
+         ON ACTION item_but005
+            CALL apci211_item_act(5)
+            
+         ON ACTION item_but006
+            CALL apci211_item_act(6)
+
+         ON ACTION item_but007
+            CALL apci211_item_act(7)
+            
+         ON ACTION item_but008
+            CALL apci211_item_act(8)
+
+         ON ACTION item_but009
+            CALL apci211_item_act(9)
+            
+         ON ACTION item_but010
+            CALL apci211_item_act(10) 
+
+##
+
+         ON ACTION item_but011
+            CALL apci211_item_act(11)
+            
+         ON ACTION item_but012
+            CALL apci211_item_act(12)
+
+         ON ACTION item_but013
+            CALL apci211_item_act(13)
+            
+         ON ACTION item_but014
+            CALL apci211_item_act(14)
+
+         ON ACTION item_but015
+            CALL apci211_item_act(15)
+            
+         ON ACTION item_but016
+            CALL apci211_item_act(16)
+
+         ON ACTION item_but017
+            CALL apci211_item_act(17)
+            
+         ON ACTION item_but018
+            CALL apci211_item_act(18)
+
+         ON ACTION item_but019
+            CALL apci211_item_act(19)
+            
+         ON ACTION item_but020
+            CALL apci211_item_act(20)
+            
+##
+
+         ON ACTION item_but021
+            CALL apci211_item_act(21)
+            
+         ON ACTION item_but022
+            CALL apci211_item_act(22)
+
+         ON ACTION item_but023
+            CALL apci211_item_act(23)
+            
+         ON ACTION item_but024
+            CALL apci211_item_act(24)
+
+         ON ACTION item_but025
+            CALL apci211_item_act(25)
+            
+         ON ACTION item_but026
+            CALL apci211_item_act(26)
+
+         ON ACTION item_but027
+            CALL apci211_item_act(27)
+            
+         ON ACTION item_but028
+            CALL apci211_item_act(28)
+
+         ON ACTION item_but029
+            CALL apci211_item_act(29)
+            
+         ON ACTION item_but030
+            CALL apci211_item_act(30)
+            
+##
+
+         ON ACTION item_but031
+            CALL apci211_item_act(31)
+            
+         ON ACTION item_but032
+            CALL apci211_item_act(32)
+
+         ON ACTION item_but033
+            CALL apci211_item_act(33)
+            
+         ON ACTION item_but034
+            CALL apci211_item_act(34)
+
+         ON ACTION item_but035
+            CALL apci211_item_act(35)
+            
+         ON ACTION item_but036
+            CALL apci211_item_act(36)
+
+         ON ACTION item_but037
+            CALL apci211_item_act(37)
+            
+         ON ACTION item_but038
+            CALL apci211_item_act(38)
+
+         ON ACTION item_but039
+            CALL apci211_item_act(39)
+            
+         ON ACTION item_but040
+            CALL apci211_item_act(40)
+
+            
+         #商品按鈕
+         ON ACTION product_but001
+            CALL apci211_product_act(1)
+         ON ACTION product_but002
+            CALL apci211_product_act(2)
+         ON ACTION product_but003
+            CALL apci211_product_act(3)
+         ON ACTION product_but004
+            CALL apci211_product_act(4)
+         ON ACTION product_but005
+            CALL apci211_product_act(5)
+         ON ACTION product_but006
+            CALL apci211_product_act(6)
+         ON ACTION product_but007
+            CALL apci211_product_act(7)
+         ON ACTION product_but008
+            CALL apci211_product_act(8)
+         ON ACTION product_but009
+            CALL apci211_product_act(9)
+         ON ACTION product_but010
+            CALL apci211_product_act(10)
+         ON ACTION product_but011
+            CALL apci211_product_act(11)
+         ON ACTION product_but012
+            CALL apci211_product_act(12)
+         ON ACTION product_but013
+            CALL apci211_product_act(13)
+         ON ACTION product_but014
+            CALL apci211_product_act(14)
+         ON ACTION product_but015
+            CALL apci211_product_act(15)
+         ON ACTION product_but016
+            CALL apci211_product_act(16)
+         ON ACTION product_but017
+            CALL apci211_product_act(17)
+         ON ACTION product_but018
+            CALL apci211_product_act(18)
+         ON ACTION product_but019
+            CALL apci211_product_act(19)
+         ON ACTION product_but020
+            CALL apci211_product_act(20)
+         ON ACTION product_but021
+            CALL apci211_product_act(21)
+         ON ACTION product_but022
+            CALL apci211_product_act(22)
+         ON ACTION product_but023
+            CALL apci211_product_act(23)
+         ON ACTION product_but024
+            CALL apci211_product_act(24)
+         ON ACTION product_but025
+            CALL apci211_product_act(25)   
+
+         ON ACTION product_but026
+            CALL apci211_product_act(26)
+         ON ACTION product_but027
+            CALL apci211_product_act(27)
+         ON ACTION product_but028
+            CALL apci211_product_act(28)
+         ON ACTION product_but029
+            CALL apci211_product_act(29)
+         ON ACTION product_but030
+            CALL apci211_product_act(30)
+         ON ACTION product_but031
+            CALL apci211_product_act(31)
+         ON ACTION product_but032
+            CALL apci211_product_act(32)
+         ON ACTION product_but033
+            CALL apci211_product_act(33)
+         ON ACTION product_but034
+            CALL apci211_product_act(34)
+         ON ACTION product_but035
+            CALL apci211_product_act(35)
+         ON ACTION product_but036
+            CALL apci211_product_act(36)
+         ON ACTION product_but037
+            CALL apci211_product_act(37)
+         ON ACTION product_but038
+            CALL apci211_product_act(38)
+         ON ACTION product_but039
+            CALL apci211_product_act(39)
+         ON ACTION product_but040
+            CALL apci211_product_act(40)
+         ON ACTION product_but041
+            CALL apci211_product_act(41)
+         ON ACTION product_but042
+            CALL apci211_product_act(42)
+         ON ACTION product_but043
+            CALL apci211_product_act(43)
+         ON ACTION product_but044
+            CALL apci211_product_act(44)
+         ON ACTION product_but045
+            CALL apci211_product_act(45)
+         ON ACTION product_but046
+            CALL apci211_product_act(46)
+         ON ACTION product_but047
+            CALL apci211_product_act(47)
+         ON ACTION product_but048
+            CALL apci211_product_act(48)
+         ON ACTION product_but049
+            CALL apci211_product_act(49)
+         ON ACTION product_but050
+            CALL apci211_product_act(50) 
+            
+         ON ACTION product_but051
+            CALL apci211_product_act(51)
+         ON ACTION product_but052
+            CALL apci211_product_act(52)
+         ON ACTION product_but053
+            CALL apci211_product_act(53)
+         ON ACTION product_but054
+            CALL apci211_product_act(54)
+         ON ACTION product_but055
+            CALL apci211_product_act(55)
+         ON ACTION product_but056
+            CALL apci211_product_act(56)
+         ON ACTION product_but057
+            CALL apci211_product_act(57)
+         ON ACTION product_but058
+            CALL apci211_product_act(58)
+         ON ACTION product_but059
+            CALL apci211_product_act(59)
+         ON ACTION product_but060
+            CALL apci211_product_act(60)            
+         #160705-00013#5 Add By ken 160727(E)
+         #end add-point
+ 
+         #狀態碼切換
+         ON ACTION statechange
+            LET g_action_choice = "statechange"
+            CALL apci211_statechange()
+            #根據資料狀態切換action狀態
+            CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+            CALL apci211_set_act_visible()   
+            CALL apci211_set_act_no_visible()
+            IF NOT (g_pcbb_m.pcbb001 IS NULL
+ 
+              ) THEN
+               #組合條件
+               LET g_add_browse = " pcbbent = '" ||g_enterprise|| "' AND",
+                                  " pcbb001 = '", g_pcbb_m.pcbb001, "' "
+ 
+               #填到對應位置
+               CALL apci211_browser_fill("")
+            END IF
+         
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+               INITIALIZE g_wc2_table3 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "pcbb_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "pcbc_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "pcbc_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "pcbd_t" 
+                        LET g_wc2_table3 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+                  OR NOT cl_null(g_wc2_table2)
+ 
+                  OR NOT cl_null(g_wc2_table3)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+                  IF g_wc2_table3 <> " 1=1" AND NOT cl_null(g_wc2_table3) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table3
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL apci211_browser_fill("F")   #browser_fill()會將notice區塊清空
+               CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+               INITIALIZE g_wc2_table3 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "pcbb_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "pcbc_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "pcbc_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "pcbd_t" 
+                        LET g_wc2_table3 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+                  OR NOT cl_null(g_wc2_table2)
+ 
+                  OR NOT cl_null(g_wc2_table3)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+                  IF g_wc2_table3 <> " 1=1" AND NOT cl_null(g_wc2_table3) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table3
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL apci211_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL apci211_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            CALL cl_notice()
+          
+         #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+
+               #end add-point
+               CALL apci211_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL apci211_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL apci211_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL apci211_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL apci211_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL apci211_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL apci211_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL apci211_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL apci211_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL apci211_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL apci211_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_pcbc_d)
+                  LET g_export_id[1]   = "s_detail1"
+                  LET g_export_node[2] = base.typeInfo.create(g_pcbc2_d)
+                  LET g_export_id[2]   = "s_detail2"
+                  LET g_export_node[3] = base.typeInfo.create(g_pcbc3_d)
+                  LET g_export_id[3]   = "s_detail3"
+ 
+                  #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+         #瀏覽頁折疊
+         ON ACTION worksheethidden   
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD pcbc003
+            END IF
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:4)
+         #ON ACTION change_up
+         #   LET g_action_choice="change_up"
+         #      
+         #      #add-point:ON ACTION change_up name="menu.change_up"
+ 
+         #      #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL apci211_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL apci211_modify()
+               #add-point:ON ACTION modify_detail name="menu.modify_detail"
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         ##應用 a43 樣板自動產生(Version:4)
+         #ON ACTION replace_up
+         #   LET g_action_choice="replace_up"
+         #      
+         #      #add-point:ON ACTION replace_up name="menu.replace_up"
+
+         #      #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         #ON ACTION product_del
+         #   LET g_action_choice="product_del"
+         #      
+         #      #add-point:ON ACTION product_del name="menu.product_del"
+ 
+         #      #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL apci211_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         ##應用 a43 樣板自動產生(Version:4)
+         #ON ACTION replace_down
+         #   LET g_action_choice="replace_down"
+         #      
+         #      #add-point:ON ACTION replace_down name="menu.replace_down"
+
+         #      #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         ##應用 a43 樣板自動產生(Version:4)
+         #ON ACTION replace_left
+         #   LET g_action_choice="replace_left"
+         #      
+         #      #add-point:ON ACTION replace_left name="menu.replace_left"
+
+         #      #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION upload_pos
+            LET g_action_choice="upload_pos"
+            IF cl_auth_chk_act("upload_pos") THEN
+               
+               #add-point:ON ACTION upload_pos name="menu.upload_pos"
+               IF cl_null(g_pcbb_m.pcbb001) THEN
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = "apc-00075" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  
+                  NEXT FIELD pcbb001               
+               ELSE
+                  #沒有商品不可上傳POS
+                  LET l_cnt = 0 
+                  SELECT COUNT(*) INTO l_cnt
+                    FROM pcbd_t
+                   WHERE pcbdent = g_enterprise
+                     AND pcbd001 = g_pcbb_m.pcbb001
+                  
+                  IF l_cnt = 0 THEN
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "apc-00091" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     
+                     NEXT FIELD pcbb001                    
+                  END IF
+                  
+                  #160914-00029#1 by sakura add(S)
+                  CALL s_transaction_begin()
+                  #檢查其他方案更新"傳POS狀態=Y"           
+                  CALL cl_err_collect_init()
+                  IF NOT apci211_upd_pcbb003_other() THEN
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err_collect_show()                     
+                  ELSE
+                     IF NOT apci211_upd_pcbb003(TRUE,'1') THEN
+                        CALL s_transaction_end('N','0')
+                        CALL cl_err_collect_show()
+                     ELSE
+                        CALL s_transaction_end('Y',0)
+                        CALL apci211_fetch('') # reload data
+                     END IF
+                  END IF
+                  #160914-00029#1 by sakura add(E)
+                  
+                  #160914-00029#1 by sakura mark(S)
+                  #CALL s_transaction_begin()
+                  #IF NOT apci211_upd_pcbb003(TRUE,'1') THEN
+                  #   CALL s_transaction_end('N','0')
+                  #ELSE
+                  #   CALL s_transaction_end('Y',0)
+                  #   CALL apci211_fetch('') # reload data
+                  #END IF
+                  #160914-00029#1 by sakura mark(E)
+               END IF 
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         #ON ACTION change_down
+         #   LET g_action_choice="change_down"
+         #      
+         #      #add-point:ON ACTION change_down name="menu.change_down"
+ 
+         #      #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         #ON ACTION change_left
+         #   LET g_action_choice="change_left"
+         #      
+         #      #add-point:ON ACTION change_left name="menu.change_left"
+         
+         #      #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION form_start
+            LET g_action_choice="form_start"
+               
+               #add-point:ON ACTION form_start name="menu.form_start"
+               LET g_touch = '2'
+               #动态显示画面ACTTION数量
+               CALL gfrm_curr.setElementHidden("hbox_4",0)            
+               LET g_main_col = g_pcbb_m.pcbb005    #大類列數
+               LET g_main_row = g_pcbb_m.pcbb004    #大類行數
+               LET g_item_col = g_pcbb_m.pcbb007    #小類列數
+               LET g_item_row = g_pcbb_m.pcbb006    #小類行數
+               LET g_product_col = g_pcbb_m.pcbb009 #產品列數
+               LET g_product_row = g_pcbb_m.pcbb008 #產品行數
+               LET g_main_page_count = g_pcbb_m.pcbb005 * g_pcbb_m.pcbb004
+               LET g_item_page_count = g_pcbb_m.pcbb007 * g_pcbb_m.pcbb006
+               LET g_product_page_count = g_pcbb_m.pcbb009 * g_pcbb_m.pcbb008 +2
+               #160705-00013#9 Add By Ken 160803(S)
+               IF g_pcbc_d.getLength() > 0 THEN
+                  IF g_pcbc_d[g_class_1_idx].pcbcstus = 'N' THEN
+                     CALL apci211_get_data("M",g_pcbc_d[1].pcbc003,g_pcbc2_d[1].pcbc003)
+                     LET g_but1 = ''
+                     LET g_but2 = '' 
+                     LET g_but3 = ''                     
+                  ELSE
+                     CALL apci211_get_data("M",g_pcbc_d[g_class_1_idx].pcbc003,g_pcbc2_d[g_class_2_idx].pcbc003)
+                     FOR l_i = 1 TO g_main_array_langth
+                         IF g_pcbc_d[g_class_1_idx].pcbc003 = g_main_array[l_i].main_id THEN
+                            LET g_button1 = l_i
+                  
+                            LET l_mod_cnt = l_i MOD (g_main_page_count-2)
+                            LET g_main_curr_page = l_i /(g_main_page_count-2)     #計算目前的按鈕在第幾頁
+                            IF (l_mod_cnt > 0) THEN  #如餘數大於0 則頁碼加1
+                               LET g_main_curr_page = g_main_curr_page + 1
+                            END IF
+                            LET l_button_num = l_i + (g_main_curr_page-1) * 2 + 1
+                            LET p_mod_cnt = l_button_num MOD g_main_page_count
+                            LET g_but1 = "main_but",p_mod_cnt USING "&&&"                            
+                            IF g_main_curr_page > 1 THEN                             
+                                  # 重新布置大分類的元件
+                                  LET g_main_start_index = g_main_start_index + (g_main_page_count - 2)
+                                  LET g_main_end_index = g_main_start_index + ((g_main_page_count - 2) - 1)
+                            END IF                                                                                       
+                            EXIT FOR
+                         END IF
+                     END FOR
+                  END IF
+               ELSE
+                 CALL apci211_get_data("M",g_main_array[g_button1].main_id,g_item_array[g_button2].item_id)
+                 LET g_but1 = ''
+                 LET g_but2 = '' 
+                 LET g_but3 = '' 
+                 CALL apci211_create_form("main","main_group",1,g_main_page_count-2)                 
+               END IF
+               CALL apci211_create_form("main","main_group",g_main_start_index,g_main_end_index)               
+               
+               #小類資料連動
+               IF g_pcbc2_d.getLength() > 0 THEN
+                  IF g_pcbc2_d[g_class_2_idx].pcbcstus = 'N' THEN
+                     CALL apci211_get_data("I",g_pcbc_d[1].pcbc003,g_pcbc2_d[1].pcbc003)
+                     LET g_but2 = '' 
+                     LET g_but3 = ''                     
+                  ELSE
+                     CALL apci211_get_data("I",g_pcbc_d[g_class_1_idx].pcbc003,g_pcbc2_d[g_class_2_idx].pcbc003)
+                     FOR l_i = 1 TO g_item_array_langth
+                         IF g_pcbc2_d[g_class_2_idx].pcbc003 = g_item_array[l_i].item_id THEN
+                            CALL apci211_item_index(l_i)     #取得小類在第幾頁及第幾筆                     
+                            EXIT FOR
+                         END IF
+                     END FOR               
+                  END IF 
+               ELSE
+                  LET g_but2 = '' 
+                  LET g_but3 = ''                 
+                  CALL apci211_create_form("item","item_group",1,g_item_page_count-2)               
+               END IF
+               CALL apci211_create_form("item","item_group",g_item_start_index,g_item_end_index)  
+               
+               
+               IF g_pcbc3_d.getLength() > 0 THEN
+                  CALL apci211_get_data("P",g_pcbc_d[g_class_1_idx].pcbc003,g_pcbc2_d[g_class_2_idx].pcbc003)
+                  FOR l_i = 1 TO g_product_array_langth
+                     IF g_pcbc3_d[g_prod_idx].pcbd009 = g_product_array[l_i].product_num THEN
+                        CALL apci211_product_index(l_i)  #取得商品在第幾頁及第幾筆                                 
+                     END IF
+                  END FOR
+               ELSE
+                  LET g_but3 = ''   
+                  CALL apci211_create_form("product","product_group",1,g_product_page_count-2)                
+               END IF
+               #160705-00013#9 Add By Ken 160803(E)                                                                        
+               CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index) 
+               CALL apci211_change_style("P")   
+               #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL apci211_query()
+               #add-point:ON ACTION query name="menu.query"
+
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+               CALL g_curr_diag.setCurrentRow("s_detail3",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION form_clear
+            LET g_action_choice="form_clear"
+               
+               #add-point:ON ACTION form_clear name="menu.form_clear"
+               LET g_touch = '1'            
+               CALL gfrm_curr.setElementHidden("hbox_4",1)
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL ui.Interface.refresh()
+               CALL gfrm_curr.setElementHidden("vb_master",0) 
+               #160705-00013#9 Add BY Ken 160804(S)
+               FOR l_i = 1 TO g_pcbc_d.getLength()
+                 IF g_main_array[g_button1].main_id = g_pcbc_d[l_i].pcbc003 THEN
+                    LET g_class_1_idx = l_i
+                    EXIT FOR
+                 END IF
+               END FOR       
+               FOR l_i = 1 TO g_pcbc2_d.getLength()
+                 IF g_item_array[g_button2].item_id = g_pcbc2_d[l_i].pcbc003 THEN
+                    LET g_class_2_idx = l_i
+                    EXIT FOR
+                 END IF
+               END FOR  
+               FOR l_i = 1 TO g_pcbc3_d.getLength()
+                 IF g_product_array[g_button3].product_num = g_pcbc3_d[l_i].pcbd009 THEN
+                    LET g_prod_idx = l_i                    
+                    EXIT FOR
+                 END IF
+               END FOR     
+               IF cl_null(g_class_1_idx) THEN
+                  LET g_class_1_idx = 1
+               END IF
+               IF cl_null(g_class_2_idx) THEN
+                  LET g_class_2_idx = 1
+               END IF            
+               IF cl_null(g_prod_idx) THEN
+                  LET g_prod_idx = 1
+               END IF               
+               CALL g_curr_diag.setCurrentRow("s_detail1",g_class_1_idx)                 
+               CALL g_curr_diag.setCurrentRow("s_detail2",g_class_2_idx) 
+               CALL g_curr_diag.setCurrentRow("s_detail3",g_prod_idx) 
+               CALL apci211_b_fill()
+               #160705-00013#9 Add BY Ken 160804(E)
+               #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_apci211_01
+            LET g_action_choice="open_apci211_01"
+            IF cl_auth_chk_act("open_apci211_01") THEN
+               
+               #add-point:ON ACTION open_apci211_01 name="menu.open_apci211_01"
+               IF cl_null(g_pcbb_m.pcbb001) THEN
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = "apc-00075" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  
+                  NEXT FIELD pcbb001               
+               ELSE
+                  #160914-00029#1 by sakura add(S)
+                  #當傳POS狀態 = 1.已傳送,詢問"是否異動此方案內容？"
+                  LET g_pcbb003 = ''
+                  LET l_success = TRUE
+                  IF g_pcbb_m.pcbb003 = 1 THEN
+                     CALL s_transaction_begin()
+                     LET g_pcbb003 = 0
+                     LET g_where_pcbb001 = ''   #紀錄更新其他方案值需清空
+                     CALL apci211_upd_pcbb003(TRUE,g_pcbb003) RETURNING l_success
+                     IF l_success THEN
+                        IF cl_ask_confirm('apc-00099') THEN
+                           CALL s_transaction_end('Y',0)
+                        ELSE
+                           CALL s_transaction_end('N','0')
+                           EXIT DIALOG
+                        END IF
+                     ELSE
+                        CALL s_transaction_end('N','0')
+                        EXIT DIALOG
+                     END IF
+                  END IF
+                  #160914-00029#1 by sakura add(E)
+
+                  CALL s_transaction_begin()
+                  CALL apci211_01(g_pcbb_m.pcbb001)
+                  CALL s_transaction_end('Y',0)
+                  CALL apci211_ui_headershow()                     
+               END IF 
+
+               CALL apci211_set_act_visible()     #160705-00013#7 160720 by lori add
+               CALL apci211_set_act_no_visible()  #160705-00013#7 160720 by lori add
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         ##應用 a43 樣板自動產生(Version:4)
+         #ON ACTION replace_right
+         #   LET g_action_choice="replace_right"
+         #      
+         #      #add-point:ON ACTION replace_right name="menu.replace_right"
+
+         #      #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         #ON ACTION change_right
+         #   LET g_action_choice="change_right"
+         #      
+         #      #add-point:ON ACTION change_right name="menu.change_right"
+ 
+         #      #END add-point
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION load_pic
+            LET g_action_choice="load_pic"
+               
+               #add-point:ON ACTION load_pic name="menu.load_pic"
+               #160705-00013#9 Add By Ken 160808(S)
+               LET g_upd_pcbd006 = TRUE
+               CALL s_transaction_begin()
+               IF NOT apci211_reload_pcbd006() THEN
+                  CALL cl_ask_pressanykey("apc-00096")              
+               ELSE
+                  CALL s_transaction_end('Y',0)
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = ''
+                  LET g_errparam.code   = 'apc-00095'
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()                                    
+                  CALL apci211_fetch('') # reload data
+               END IF
+               LET g_upd_pcbd006 = FALSE
+               #160705-00013#9 Add By Ken 160808(E) 
+               #END add-point
+ 
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL apci211_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL apci211_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL apci211_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.browser_fill" >}
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION apci211_browser_fill(ps_page_action)
+   #add-point:browser_fill段define(客製用) name="browser_fill.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   DEFINE l_where           STRING
+   #end add-point    
+   
+   #add-point:Function前置處理 name="browser_fill.before_browser_fill"
+   LET l_where = ''
+   CALL s_aooi500_sql_where(g_prog,'pcbbunit') RETURNING l_where
+   LET l_wc = l_wc," AND ",l_where
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前 name="browser_fill.before_foreach"
+ 
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT DISTINCT pcbb001 ",
+                      " FROM pcbb_t ",
+                      " ",
+                      " LEFT JOIN pcbc_t ON pcbcent = pcbbent AND pcbb001 = pcbc001 ", "  ",
+                      #add-point:browser_fill段sql(pcbc_t1) name="browser_fill.cnt.join.}"
+                      
+                      #end add-point
+                      "", "  ",
+                      #add-point:browser_fill段sql(pcbc_t2) name="browser_fill.cnt.join.pcbc_t2"
+                      
+                      #end add-point
+ 
+                      " LEFT JOIN pcbd_t ON pcbdent = pcbbent AND pcbb001 = pcbd001", "  ",
+                      #add-point:browser_fill段sql(pcbd_t1) name="browser_fill.cnt.join.pcbd_t1"
+                      
+                      #end add-point
+ 
+ 
+ 
+                      " LEFT JOIN pcbbl_t ON pcbblent = '"||g_enterprise||"' AND pcbb001 = pcbbl001 AND pcbbl002 = '",g_dlang,"' ", 
+                      " ", 
+                      " ",                      
+ 
+                      " ",                      
+ 
+ 
+ 
+                      " WHERE pcbbent = '" ||g_enterprise|| "' AND pcbcent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("pcbb_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT DISTINCT pcbb001 ",
+                      " FROM pcbb_t ", 
+                      "  ",
+                      "  LEFT JOIN pcbbl_t ON pcbblent = '"||g_enterprise||"' AND pcbb001 = pcbbl001 AND pcbbl002 = '",g_dlang,"' ",
+                      " WHERE pcbbent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED, cl_sql_add_filter("pcbb_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc name="browser_fill.cnt_sqlwc"
+   
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(1) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前 name="browser_fill.before_count"
+   
+   #end add-point
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+      FREE header_cnt_pre
+   END IF
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code   = 9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_pcbb_m.* TO NULL
+      CALL g_pcbc_d.clear()        
+      CALL g_pcbc2_d.clear() 
+      CALL g_pcbc3_d.clear() 
+ 
+      #add-point:browser_fill g_add_browse段額外處理 name="browser_fill.add_browse.other"
+      
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.pcbb001,t0.pcbb002,t0.pcbb003 Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.pcbbstus,t0.pcbb001,t0.pcbb002,t0.pcbb003,t1.pcbbl003 ",
+                  " FROM pcbb_t t0",
+                  "  ",
+                  "  LEFT JOIN pcbc_t ON pcbcent = pcbbent AND pcbb001 = pcbc001 ", "  ", 
+                  #add-point:browser_fill段sql(pcbc_t1) name="browser_fill.join.pcbc_t1"
+                  
+                  #end add-point
+                  " ", "  ", 
+                  #add-point:browser_fill段sql(pcbc_t2) name="browser_fill.join.pcbc_t2"
+                  
+                  #end add-point
+ 
+                  "  LEFT JOIN pcbd_t ON pcbdent = pcbbent AND pcbb001 = pcbd001", "  ", 
+                  #add-point:browser_fill段sql(pcbd_t1) name="browser_fill.join.pcbd_t1"
+                  
+                  #end add-point
+ 
+ 
+ 
+                  " ", 
+                  " ",                      
+ 
+                  " ",                      
+ 
+ 
+ 
+                                 " LEFT JOIN pcbbl_t t1 ON t1.pcbblent='"||g_enterprise||"' AND t1.pcbbl001=t0.pcbb001 AND t1.pcbbl002='"||g_dlang||"' ",
+ 
+                  " WHERE t0.pcbbent = '" ||g_enterprise|| "' AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("pcbb_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.pcbbstus,t0.pcbb001,t0.pcbb002,t0.pcbb003,t1.pcbbl003 ",
+                  " FROM pcbb_t t0",
+                  "  ",
+                                 " LEFT JOIN pcbbl_t t1 ON t1.pcbblent='"||g_enterprise||"' AND t1.pcbbl001=t0.pcbb001 AND t1.pcbbl002='"||g_dlang||"' ",
+ 
+                  " WHERE t0.pcbbent = '" ||g_enterprise|| "' AND ",l_wc, cl_sql_add_filter("pcbb_t")
+   END IF
+   #add-point:browser_fill,sql wc name="browser_fill.fill_sqlwc"
+   
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY pcbb001 ",g_order
+ 
+   #add-point:browser_fill,before_prepare name="browser_fill.before_prepare"
+   
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"pcbb_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      #add-point:browser_fill段open cursor name="browser_fill.open"
+      
+      #end add-point
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_pcbb001,g_browser[g_cnt].b_pcbb002, 
+          g_browser[g_cnt].b_pcbb003,g_browser[g_cnt].b_pcbb001_desc
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "Foreach:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+      
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+      
+         #遮罩相關處理
+         CALL apci211_browser_mask()
+      
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/inactive.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/active.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_browse THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      FREE browse_pre
+   END IF
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_pcbb001) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+ 
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+ 
+   #end add-point   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.ui_headershow" >}
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION apci211_ui_headershow()
+   #add-point:ui_headershow段define(客製用) name="ui_headershow.define_customerization"
+   
+   #end add-point  
+   #add-point:ui_headershow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_headershow.define"
+   
+   #end add-point      
+   
+   #add-point:Function前置處理  name="ui_headershow.pre_function"
+   
+   #end add-point
+   
+   LET g_pcbb_m.pcbb001 = g_browser[g_current_idx].b_pcbb001   
+ 
+   EXECUTE apci211_master_referesh USING g_pcbb_m.pcbb001 INTO g_pcbb_m.pcbb001,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbcrtid, 
+       g_pcbb_m.pcbbcrtdp,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt,g_pcbb_m.pcbbunit_desc, 
+       g_pcbb_m.pcbbownid_desc,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp_desc, 
+       g_pcbb_m.pcbbmodid_desc
+   
+   CALL apci211_pcbb_t_mask()
+   CALL apci211_show()
+      
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.ui_detailshow" >}
+#+ 單身資料重新顯示
+PRIVATE FUNCTION apci211_ui_detailshow()
+   #add-point:ui_detailshow段define(客製用) name="ui_detailshow.define_customerization"
+
+   #end add-point    
+   #add-point:ui_detailshow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_detailshow.define"
+
+   #end add-point    
+ 
+   #add-point:Function前置處理 name="ui_detailshow.before"
+
+   #end add-point    
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+      CALL g_curr_diag.setCurrentRow("s_detail3",g_detail_idx)
+   
+   END IF
+   #add-point:ui_detailshow段after name="ui_detailshow.after"
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_class_1_idx)
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_class_2_idx)
+      CALL g_curr_diag.setCurrentRow("s_detail3",g_prod_idx)
+ 
+   END IF
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION apci211_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point    
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_pcbb001 = g_pcbb_m.pcbb001 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after name="ui_browser_refresh.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION apci211_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+
+   #end add-point    
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   DEFINE l_color     STRING
+   #end add-point    
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+
+   #end add-point
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_pcbb_m.* TO NULL
+   CALL g_pcbc_d.clear()        
+   CALL g_pcbc2_d.clear() 
+   CALL g_pcbc3_d.clear() 
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+   INITIALIZE g_wc2_table2 TO NULL
+ 
+   INITIALIZE g_wc2_table3 TO NULL
+ 
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前 name="cs.before_construct"
+
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON pcbb001,pcbbl003,pcbbl004,pcbb002,pcbb003,pcbb004,pcbb005,pcbb006,pcbb007, 
+          pcbb008,pcbb009,pcbbunit,pcbbstus,pcbbownid,pcbbowndp,pcbbcrtid,pcbbcrtdp,pcbbcrtdt,pcbbmodid, 
+          pcbbmoddt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.head.before_construct"
+
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<pcbbcrtdt>>----
+         AFTER FIELD pcbbcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<pcbbmoddt>>----
+         AFTER FIELD pcbbmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<pcbbcnfdt>>----
+         
+         #----<<pcbbpstdt>>----
+ 
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+                  #Ctrlp:construct.c.pcbb001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb001
+            #add-point:ON ACTION controlp INFIELD pcbb001 name="construct.c.pcbb001"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pcbb001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pcbb001  #顯示到畫面上
+            NEXT FIELD pcbb001                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb001
+            #add-point:BEFORE FIELD pcbb001 name="construct.b.pcbb001"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb001
+            
+            #add-point:AFTER FIELD pcbb001 name="construct.a.pcbb001"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbl003
+            #add-point:BEFORE FIELD pcbbl003 name="construct.b.pcbbl003"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbl003
+            
+            #add-point:AFTER FIELD pcbbl003 name="construct.a.pcbbl003"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbbl003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbl003
+            #add-point:ON ACTION controlp INFIELD pcbbl003 name="construct.c.pcbbl003"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbl004
+            #add-point:BEFORE FIELD pcbbl004 name="construct.b.pcbbl004"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbl004
+            
+            #add-point:AFTER FIELD pcbbl004 name="construct.a.pcbbl004"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbbl004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbl004
+            #add-point:ON ACTION controlp INFIELD pcbbl004 name="construct.c.pcbbl004"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb002
+            #add-point:BEFORE FIELD pcbb002 name="construct.b.pcbb002"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb002
+            
+            #add-point:AFTER FIELD pcbb002 name="construct.a.pcbb002"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbb002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb002
+            #add-point:ON ACTION controlp INFIELD pcbb002 name="construct.c.pcbb002"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb003
+            #add-point:BEFORE FIELD pcbb003 name="construct.b.pcbb003"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb003
+            
+            #add-point:AFTER FIELD pcbb003 name="construct.a.pcbb003"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbb003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb003
+            #add-point:ON ACTION controlp INFIELD pcbb003 name="construct.c.pcbb003"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb004
+            #add-point:BEFORE FIELD pcbb004 name="construct.b.pcbb004"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb004
+            
+            #add-point:AFTER FIELD pcbb004 name="construct.a.pcbb004"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbb004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb004
+            #add-point:ON ACTION controlp INFIELD pcbb004 name="construct.c.pcbb004"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb005
+            #add-point:BEFORE FIELD pcbb005 name="construct.b.pcbb005"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb005
+            
+            #add-point:AFTER FIELD pcbb005 name="construct.a.pcbb005"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbb005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb005
+            #add-point:ON ACTION controlp INFIELD pcbb005 name="construct.c.pcbb005"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb006
+            #add-point:BEFORE FIELD pcbb006 name="construct.b.pcbb006"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb006
+            
+            #add-point:AFTER FIELD pcbb006 name="construct.a.pcbb006"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbb006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb006
+            #add-point:ON ACTION controlp INFIELD pcbb006 name="construct.c.pcbb006"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb007
+            #add-point:BEFORE FIELD pcbb007 name="construct.b.pcbb007"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb007
+            
+            #add-point:AFTER FIELD pcbb007 name="construct.a.pcbb007"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbb007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb007
+            #add-point:ON ACTION controlp INFIELD pcbb007 name="construct.c.pcbb007"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb008
+            #add-point:BEFORE FIELD pcbb008 name="construct.b.pcbb008"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb008
+            
+            #add-point:AFTER FIELD pcbb008 name="construct.a.pcbb008"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbb008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb008
+            #add-point:ON ACTION controlp INFIELD pcbb008 name="construct.c.pcbb008"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb009
+            #add-point:BEFORE FIELD pcbb009 name="construct.b.pcbb009"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb009
+            
+            #add-point:AFTER FIELD pcbb009 name="construct.a.pcbb009"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbb009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb009
+            #add-point:ON ACTION controlp INFIELD pcbb009 name="construct.c.pcbb009"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.pcbbunit
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbunit
+            #add-point:ON ACTION controlp INFIELD pcbbunit name="construct.c.pcbbunit"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'pcbbunit',g_site,'c')
+
+            CALL q_ooef001_24()              
+            
+            DISPLAY g_qryparam.return1 TO pcbbunit
+            NEXT FIELD pcbbunit 
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbunit
+            #add-point:BEFORE FIELD pcbbunit name="construct.b.pcbbunit"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbunit
+            
+            #add-point:AFTER FIELD pcbbunit name="construct.a.pcbbunit"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbstus
+            #add-point:BEFORE FIELD pcbbstus name="construct.b.pcbbstus"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbstus
+            
+            #add-point:AFTER FIELD pcbbstus name="construct.a.pcbbstus"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbbstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbstus
+            #add-point:ON ACTION controlp INFIELD pcbbstus name="construct.c.pcbbstus"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.pcbbownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbownid
+            #add-point:ON ACTION controlp INFIELD pcbbownid name="construct.c.pcbbownid"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pcbbownid  #顯示到畫面上
+            NEXT FIELD pcbbownid                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbownid
+            #add-point:BEFORE FIELD pcbbownid name="construct.b.pcbbownid"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbownid
+            
+            #add-point:AFTER FIELD pcbbownid name="construct.a.pcbbownid"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbbowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbowndp
+            #add-point:ON ACTION controlp INFIELD pcbbowndp name="construct.c.pcbbowndp"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pcbbowndp  #顯示到畫面上
+            NEXT FIELD pcbbowndp                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbowndp
+            #add-point:BEFORE FIELD pcbbowndp name="construct.b.pcbbowndp"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbowndp
+            
+            #add-point:AFTER FIELD pcbbowndp name="construct.a.pcbbowndp"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbbcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbcrtid
+            #add-point:ON ACTION controlp INFIELD pcbbcrtid name="construct.c.pcbbcrtid"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pcbbcrtid  #顯示到畫面上
+            NEXT FIELD pcbbcrtid                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbcrtid
+            #add-point:BEFORE FIELD pcbbcrtid name="construct.b.pcbbcrtid"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbcrtid
+            
+            #add-point:AFTER FIELD pcbbcrtid name="construct.a.pcbbcrtid"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.pcbbcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbcrtdp
+            #add-point:ON ACTION controlp INFIELD pcbbcrtdp name="construct.c.pcbbcrtdp"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pcbbcrtdp  #顯示到畫面上
+            NEXT FIELD pcbbcrtdp                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbcrtdp
+            #add-point:BEFORE FIELD pcbbcrtdp name="construct.b.pcbbcrtdp"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbcrtdp
+            
+            #add-point:AFTER FIELD pcbbcrtdp name="construct.a.pcbbcrtdp"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbcrtdt
+            #add-point:BEFORE FIELD pcbbcrtdt name="construct.b.pcbbcrtdt"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.pcbbmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbmodid
+            #add-point:ON ACTION controlp INFIELD pcbbmodid name="construct.c.pcbbmodid"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pcbbmodid  #顯示到畫面上
+            NEXT FIELD pcbbmodid                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbmodid
+            #add-point:BEFORE FIELD pcbbmodid name="construct.b.pcbbmodid"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbmodid
+            
+            #add-point:AFTER FIELD pcbbmodid name="construct.a.pcbbmodid"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbmoddt
+            #add-point:BEFORE FIELD pcbbmoddt name="construct.b.pcbbmoddt"
+
+            #END add-point
+ 
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON pcbc005,pcbc003,pcbc003_desc,pcbc002,pcbc004,pcbcstus
+           FROM s_detail1[1].pcbc005,s_detail1[1].pcbc003,s_detail1[1].pcbc003_desc,s_detail1[1].pcbc002, 
+               s_detail1[1].pcbc004,s_detail1[1].pcbcstus
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body.before_construct"
+
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<pcbccrtdt>>----
+ 
+         #----<<pcbcmoddt>>----
+         
+         #----<<pcbccnfdt>>----
+         
+         #----<<pcbcpstdt>>----
+ 
+ 
+ 
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc005
+            #add-point:BEFORE FIELD pcbc005 name="construct.b.page1.pcbc005"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc005
+            
+            #add-point:AFTER FIELD pcbc005 name="construct.a.page1.pcbc005"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.pcbc005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc005
+            #add-point:ON ACTION controlp INFIELD pcbc005 name="construct.c.page1.pcbc005"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc003
+            #add-point:BEFORE FIELD pcbc003 name="construct.b.page1.pcbc003"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc003
+            
+            #add-point:AFTER FIELD pcbc003 name="construct.a.page1.pcbc003"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.pcbc003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc003
+            #add-point:ON ACTION controlp INFIELD pcbc003 name="construct.c.page1.pcbc003"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = cl_get_para(g_enterprise,'',g_class_1)
+            
+            IF cl_get_para(g_enterprise,'',g_class_type) = '1' THEN
+               CALL q_rtax001_3()
+            ELSE
+               CALL q_pcba001_2()
+            END IF
+            
+            DISPLAY g_qryparam.return1 TO pcbc003 
+            NEXT FIELD pcbc003
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc003_desc
+            #add-point:BEFORE FIELD pcbc003_desc name="construct.b.page1.pcbc003_desc"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc003_desc
+            
+            #add-point:AFTER FIELD pcbc003_desc name="construct.a.page1.pcbc003_desc"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.pcbc003_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc003_desc
+            #add-point:ON ACTION controlp INFIELD pcbc003_desc name="construct.c.page1.pcbc003_desc"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc002
+            #add-point:BEFORE FIELD pcbc002 name="construct.b.page1.pcbc002"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc002
+            
+            #add-point:AFTER FIELD pcbc002 name="construct.a.page1.pcbc002"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.pcbc002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc002
+            #add-point:ON ACTION controlp INFIELD pcbc002 name="construct.c.page1.pcbc002"
+           
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.pcbc004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc004
+            #add-point:ON ACTION controlp INFIELD pcbc004 name="construct.c.page1.pcbc004"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            
+            CALL q_pcba001()    
+            
+            DISPLAY g_qryparam.return1 TO pcbc004 
+            NEXT FIELD pcbc004  
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc004
+            #add-point:BEFORE FIELD pcbc004 name="construct.b.page1.pcbc004"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc004
+            
+            #add-point:AFTER FIELD pcbc004 name="construct.a.page1.pcbc004"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbcstus
+            #add-point:BEFORE FIELD pcbcstus name="construct.b.page1.pcbcstus"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbcstus
+            
+            #add-point:AFTER FIELD pcbcstus name="construct.a.page1.pcbcstus"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.pcbcstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbcstus
+            #add-point:ON ACTION controlp INFIELD pcbcstus name="construct.c.page1.pcbcstus"
+
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc2_table2 ON pcbc005,pcbc003,pcbc003_1_desc,pcbc002,pcbc004,pcbcstus
+          #FROM s_detail2[1].pcbc005,s_detail2[1].pcbc003,s_detail2[1].pcbc003_1_desc,s_detail2[1].pcbc002,    #Stardand   #160705-00013#7 160720 by ken mark
+           FROM s_detail2[1].pcbc005,s_detail2[1].pcbc003_1,s_detail2[1].pcbc003_1_desc,s_detail2[1].pcbc002,  #Modify     #160705-00013#7 160720 by ken add
+               s_detail2[1].pcbc004,s_detail2[1].pcbcstus
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body2.before_construct"
+
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<pcbccrtdt>>----
+ 
+         #----<<pcbcmoddt>>----
+         
+         #----<<pcbccnfdt>>----
+         
+         #----<<pcbcpstdt>>----
+ 
+ 
+ 
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc005
+            #add-point:BEFORE FIELD pcbc005 name="construct.b.page2.pcbc005"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc005
+            
+            #add-point:AFTER FIELD pcbc005 name="construct.a.page2.pcbc005"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.pcbc005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc005
+            #add-point:ON ACTION controlp INFIELD pcbc005 name="construct.c.page2.pcbc005"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+        #BEFORE FIELD pcbc003     #Standard   #160705-00013#7 160720 by ken mark
+         BEFORE FIELD pcbc003_1   #Modify     #160705-00013#7
+            #add-point:BEFORE FIELD pcbc003 name="construct.b.page2.pcbc003"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+        #AFTER FIELD pcbc003     #Standard    #160705-00013#7 160720 by ken mark
+         AFTER FIELD pcbc003_1   #Modify      #160705-00013#7
+            
+            #add-point:AFTER FIELD pcbc003 name="construct.a.page2.pcbc003"
+ 
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.pcbc003
+         #應用 a03 樣板自動產生(Version:3)
+        #ON ACTION controlp INFIELD pcbc003     #Standard    #160705-00013#7 160720 by ken mark
+         ON ACTION controlp INFIELD pcbc003_1   #Modify      #160705-00013#7 160720 by ken add
+            #add-point:ON ACTION controlp INFIELD pcbc003 name="construct.c.page2.pcbc003"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = cl_get_para(g_enterprise,'',g_class_2)
+            LET g_qryparam.arg2 = cl_get_para(g_enterprise,'',g_class_1)
+            
+            IF cl_get_para(g_enterprise,'',g_class_type) = '1' THEN
+               CALL q_rtax001_11()
+            ELSE
+               CALL q_pcba001_3()
+            END IF
+            
+            DISPLAY g_qryparam.return1 TO pcbc003_1   #160720 by ken mod pcbc003 -> pcbc003_1 
+            NEXT FIELD pcbc003_1                      #160720 by ken mod pcbc003 -> pcbc003_1 
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc003_1_desc
+            #add-point:BEFORE FIELD pcbc003_1_desc name="construct.b.page2.pcbc003_1_desc"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc003_1_desc
+            
+            #add-point:AFTER FIELD pcbc003_1_desc name="construct.a.page2.pcbc003_1_desc"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.pcbc003_1_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc003_1_desc
+            #add-point:ON ACTION controlp INFIELD pcbc003_1_desc name="construct.c.page2.pcbc003_1_desc"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc002
+            #add-point:BEFORE FIELD pcbc002 name="construct.b.page2.pcbc002"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc002
+            
+            #add-point:AFTER FIELD pcbc002 name="construct.a.page2.pcbc002"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.pcbc002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc002
+            #add-point:ON ACTION controlp INFIELD pcbc002 name="construct.c.page2.pcbc002"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.pcbc004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc004
+            #add-point:ON ACTION controlp INFIELD pcbc004 name="construct.c.page2.pcbc004"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pcba001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pcbc004  #顯示到畫面上
+            NEXT FIELD pcbc004                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc004
+            #add-point:BEFORE FIELD pcbc004 name="construct.b.page2.pcbc004"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc004
+            
+            #add-point:AFTER FIELD pcbc004 name="construct.a.page2.pcbc004"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbcstus
+            #add-point:BEFORE FIELD pcbcstus name="construct.b.page2.pcbcstus"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbcstus
+            
+            #add-point:AFTER FIELD pcbcstus name="construct.a.page2.pcbcstus"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.pcbcstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbcstus
+            #add-point:ON ACTION controlp INFIELD pcbcstus name="construct.c.page2.pcbcstus"
+
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+ 
+      CONSTRUCT g_wc2_table3 ON pcbd009,pcbd002,pcbd003,pcbd004,pcbd005,pcbd005_desc,l_color,pcbd007, 
+          pcbd008,pcbdstus
+           FROM s_detail3[1].pcbd009,s_detail3[1].pcbd002,s_detail3[1].pcbd003,s_detail3[1].pcbd004, 
+               s_detail3[1].pcbd005,s_detail3[1].pcbd005_desc,s_detail3[1].l_color,s_detail3[1].pcbd007, 
+               s_detail3[1].pcbd008,s_detail3[1].pcbdstus
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body3.before_construct"
+
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 3)
+       #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<pcbdcrtdt>>----
+ 
+         #----<<pcbdmoddt>>----
+         
+         #----<<pcbdcnfdt>>----
+         
+         #----<<pcbdpstdt>>----
+ 
+ 
+ 
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd009
+            #add-point:BEFORE FIELD pcbd009 name="construct.b.page3.pcbd009"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd009
+            
+            #add-point:AFTER FIELD pcbd009 name="construct.a.page3.pcbd009"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.pcbd009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd009
+            #add-point:ON ACTION controlp INFIELD pcbd009 name="construct.c.page3.pcbd009"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page3.pcbd002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd002
+            #add-point:ON ACTION controlp INFIELD pcbd002 name="construct.c.page3.pcbd002"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            
+            CALL q_imaa001_24()                   
+            DISPLAY g_qryparam.return1 TO pcbd002 
+            
+            NEXT FIELD pcbd002 
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd002
+            #add-point:BEFORE FIELD pcbd002 name="construct.b.page3.pcbd002"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd002
+            
+            #add-point:AFTER FIELD pcbd002 name="construct.a.page3.pcbd002"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd003
+            #add-point:BEFORE FIELD pcbd003 name="construct.b.page3.pcbd003"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd003
+            
+            #add-point:AFTER FIELD pcbd003 name="construct.a.page3.pcbd003"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.pcbd003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd003
+            #add-point:ON ACTION controlp INFIELD pcbd003 name="construct.c.page3.pcbd003"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pcbd003  #顯示到畫面上
+            NEXT FIELD pcbd003                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd004
+            #add-point:BEFORE FIELD pcbd004 name="construct.b.page3.pcbd004"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd004
+            
+            #add-point:AFTER FIELD pcbd004 name="construct.a.page3.pcbd004"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.pcbd004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd004
+            #add-point:ON ACTION controlp INFIELD pcbd004 name="construct.c.page3.pcbd004"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd005
+            #add-point:BEFORE FIELD pcbd005 name="construct.b.page3.pcbd005"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd005
+            
+            #add-point:AFTER FIELD pcbd005 name="construct.a.page3.pcbd005"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.pcbd005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd005
+            #add-point:ON ACTION controlp INFIELD pcbd005 name="construct.c.page3.pcbd005"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd005_desc
+            #add-point:BEFORE FIELD pcbd005_desc name="construct.b.page3.pcbd005_desc"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd005_desc
+            
+            #add-point:AFTER FIELD pcbd005_desc name="construct.a.page3.pcbd005_desc"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.pcbd005_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd005_desc
+            #add-point:ON ACTION controlp INFIELD pcbd005_desc name="construct.c.page3.pcbd005_desc"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_color
+            #add-point:BEFORE FIELD l_color name="construct.b.page3.l_color"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_color
+            
+            #add-point:AFTER FIELD l_color name="construct.a.page3.l_color"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.l_color
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_color
+            #add-point:ON ACTION controlp INFIELD l_color name="construct.c.page3.l_color"
+            LET l_color = ''
+            CALL cl_select_color() RETURNING l_color
+            DISPLAY l_color TO pcbd007       
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd007
+            #add-point:BEFORE FIELD pcbd007 name="construct.b.page3.pcbd007"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd007
+            
+            #add-point:AFTER FIELD pcbd007 name="construct.a.page3.pcbd007"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.pcbd007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd007
+            #add-point:ON ACTION controlp INFIELD pcbd007 name="construct.c.page3.pcbd007"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd008
+            #add-point:BEFORE FIELD pcbd008 name="construct.b.page3.pcbd008"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd008
+            
+            #add-point:AFTER FIELD pcbd008 name="construct.a.page3.pcbd008"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.pcbd008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd008
+            #add-point:ON ACTION controlp INFIELD pcbd008 name="construct.c.page3.pcbd008"
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbdstus
+            #add-point:BEFORE FIELD pcbdstus name="construct.b.page3.pcbdstus"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbdstus
+            
+            #add-point:AFTER FIELD pcbdstus name="construct.a.page3.pcbdstus"
+
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.pcbdstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbdstus
+            #add-point:ON ACTION controlp INFIELD pcbdstus name="construct.c.page3.pcbdstus"
+
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令) name="cs.add_cs"
+
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+            INITIALIZE g_wc2_table2 TO NULL
+ 
+            INITIALIZE g_wc2_table3 TO NULL
+ 
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "pcbb_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "pcbc_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "pcbc_t" 
+                     LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+                  WHEN la_wc[li_idx].tableid = "pcbd_t" 
+                     LET g_wc2_table3 = la_wc[li_idx].wc
+ 
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+   IF g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+   END IF
+ 
+   IF g_wc2_table3 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table3
+   END IF
+ 
+ 
+ 
+ 
+   
+   #add-point:cs段結束前 name="cs.after_construct"
+
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION apci211_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON pcbb001,pcbb002,pcbb003
+                          FROM s_browse[1].b_pcbb001,s_browse[1].b_pcbb002,s_browse[1].b_pcbb003
+ 
+         BEFORE CONSTRUCT
+               DISPLAY apci211_filter_parser('pcbb001') TO s_browse[1].b_pcbb001
+            DISPLAY apci211_filter_parser('pcbb002') TO s_browse[1].b_pcbb002
+            DISPLAY apci211_filter_parser('pcbb003') TO s_browse[1].b_pcbb003
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL apci211_filter_show('pcbb001')
+   CALL apci211_filter_show('pcbb002')
+   CALL apci211_filter_show('pcbb003')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION apci211_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION apci211_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apci211_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION apci211_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_wc STRING
+   #add-point:query段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   DEFINE l_color    STRING
+   #end add-point   
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF   
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_pcbc_d.clear()
+   CALL g_pcbc2_d.clear()
+   CALL g_pcbc3_d.clear()
+ 
+   
+   #add-point:query段other name="query.other"
+   
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL apci211_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL apci211_browser_fill("")
+      CALL apci211_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx_list[1] = 1
+   LET g_detail_idx_list[2] = 1
+   LET g_detail_idx_list[3] = 1
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+      CALL apci211_filter_show('pcbb001')
+   CALL apci211_filter_show('pcbb002')
+   CALL apci211_filter_show('pcbb003')
+   CALL apci211_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL apci211_fetch("F") 
+      #顯示單身筆數
+      CALL apci211_idx_chk()
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION apci211_fetch(p_flag)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point    
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   #160914-00029#1 by sakura add(S)
+   #修正換頁指標虛增問題
+   IF NOT cl_null(p_flag) THEN
+      LET g_class_1_idx = 1
+      LET g_class_2_idx = 1
+      LET g_prod_idx = 1
+      LET g_detail_idx = 1
+      LET g_detail_idx2 = 1
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_class_1_idx)
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_class_2_idx)
+      CALL g_curr_diag.setCurrentRow("s_detail3",g_prod_idx)
+   END IF
+   #160914-00029#1 by sakura add(E)
+   #end add-point
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   #清空第二階單身
+ 
+   
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx) #設定browse 索引
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_pcbb_m.pcbb001 = g_browser[g_current_idx].b_pcbb001
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE apci211_master_referesh USING g_pcbb_m.pcbb001 INTO g_pcbb_m.pcbb001,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbcrtid, 
+       g_pcbb_m.pcbbcrtdp,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt,g_pcbb_m.pcbbunit_desc, 
+       g_pcbb_m.pcbbownid_desc,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp_desc, 
+       g_pcbb_m.pcbbmodid_desc
+   
+   #遮罩相關處理
+   LET g_pcbb_m_mask_o.* =  g_pcbb_m.*
+   CALL apci211_pcbb_t_mask()
+   LET g_pcbb_m_mask_n.* =  g_pcbb_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL apci211_set_act_visible()   
+   CALL apci211_set_act_no_visible()
+   
+   #add-point:fetch段action控制 name="fetch.action_control"
+ 
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前 name="fetch.after"
+   LET g_action_choice = "detail_referesh" 
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_pcbb_m_t.* = g_pcbb_m.*
+   LET g_pcbb_m_o.* = g_pcbb_m.*
+   
+   LET g_data_owner = g_pcbb_m.pcbbownid      
+   LET g_data_dept  = g_pcbb_m.pcbbowndp
+   
+   #重新顯示   
+   CALL apci211_show()
+ 
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION apci211_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point    
+   #add-point:insert段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_pcbc_d.clear()   
+   CALL g_pcbc2_d.clear()  
+   CALL g_pcbc3_d.clear()  
+ 
+ 
+   INITIALIZE g_pcbb_m.* LIKE pcbb_t.*             #DEFAULT 設定
+   
+   LET g_pcbb001_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_pcbb_m.pcbbownid = g_user
+      LET g_pcbb_m.pcbbowndp = g_dept
+      LET g_pcbb_m.pcbbcrtid = g_user
+      LET g_pcbb_m.pcbbcrtdp = g_dept 
+      LET g_pcbb_m.pcbbcrtdt = cl_get_current()
+      LET g_pcbb_m.pcbbmodid = g_user
+      LET g_pcbb_m.pcbbmoddt = cl_get_current()
+      LET g_pcbb_m.pcbbstus = 'Y'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_pcbb_m.pcbb003 = "0"
+      LET g_pcbb_m.pcbb004 = "8"
+      LET g_pcbb_m.pcbb005 = "1"
+      LET g_pcbb_m.pcbb006 = "2"
+      LET g_pcbb_m.pcbb007 = "6"
+      LET g_pcbb_m.pcbb008 = "4"
+      LET g_pcbb_m.pcbb009 = "4"
+      LET g_pcbb_m.pcbbstus = "Y"
+ 
+  
+      #add-point:單頭預設值 name="insert.default"
+      LET g_pcbb_m.pcbb002 = cl_get_para(g_enterprise,'',g_class_type)
+      LET g_pcbb_m.pcbbunit = g_site
+      LET g_pcbb_m.pcbbunit_desc = s_desc_get_department_desc(g_pcbb_m.pcbbunit)
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_pcbb_m_t.* = g_pcbb_m.*
+      LET g_pcbb_m_o.* = g_pcbb_m.*
+      
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_pcbb_m.pcbbstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+    
+      CALL apci211_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_pcbb_m.* TO NULL
+         INITIALIZE g_pcbc_d TO NULL
+         INITIALIZE g_pcbc2_d TO NULL
+         INITIALIZE g_pcbc3_d TO NULL
+ 
+         #add-point:取消新增後 name="insert.cancel"
+         
+         #end add-point 
+         CALL apci211_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_pcbc_d.clear()
+      #CALL g_pcbc2_d.clear()
+      #CALL g_pcbc3_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL apci211_set_act_visible()   
+   CALL apci211_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_pcbb001_t = g_pcbb_m.pcbb001
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " pcbbent = '" ||g_enterprise|| "' AND",
+                      " pcbb001 = '", g_pcbb_m.pcbb001, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後 name="insert.after.add_browse"
+   
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL apci211_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE apci211_cl
+   
+   CALL apci211_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE apci211_master_referesh USING g_pcbb_m.pcbb001 INTO g_pcbb_m.pcbb001,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbcrtid, 
+       g_pcbb_m.pcbbcrtdp,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt,g_pcbb_m.pcbbunit_desc, 
+       g_pcbb_m.pcbbownid_desc,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp_desc, 
+       g_pcbb_m.pcbbmodid_desc
+   
+   
+   #遮罩相關處理
+   LET g_pcbb_m_mask_o.* =  g_pcbb_m.*
+   CALL apci211_pcbb_t_mask()
+   LET g_pcbb_m_mask_n.* =  g_pcbb_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_pcbb_m.pcbb001,g_pcbb_m.pcbbl003,g_pcbb_m.pcbbl004,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbunit_desc,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbownid_desc, 
+       g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp, 
+       g_pcbb_m.pcbbcrtdp_desc,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmodid_desc,g_pcbb_m.pcbbmoddt 
+ 
+   
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+   
+   LET g_data_owner = g_pcbb_m.pcbbownid      
+   LET g_data_dept  = g_pcbb_m.pcbbowndp
+   
+   #功能已完成,通報訊息中心
+   CALL apci211_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION apci211_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point    
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+   DEFINE l_wc2_table2   STRING
+ 
+   DEFINE l_wc2_table3   STRING
+ 
+ 
+ 
+   #add-point:modify段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   DEFINE l_success LIKE type_t.num5   #160914-00029#1 by sakura add
+   #end add-point    
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   #160914-00029#1 by sakura add(S)
+   #當傳POS狀態 = 1.已傳送,詢問"是否異動此方案內容？"
+   LET g_pcbb003 = ''
+   LET l_success = TRUE
+   IF g_pcbb_m.pcbb003 = 1 THEN
+      CALL s_transaction_begin()
+      LET g_pcbb003 = 0
+      LET g_where_pcbb001 = ''   #紀錄更新其他方案值需清空
+      CALL apci211_upd_pcbb003(TRUE,g_pcbb003) RETURNING l_success
+      IF l_success THEN
+         IF cl_ask_confirm('apc-00099') THEN
+            CALL s_transaction_end('Y',0)
+         ELSE
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+      ELSE
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+   END IF
+   #160914-00029#1 by sakura add(E)
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_pcbb_m_t.* = g_pcbb_m.*
+   LET g_pcbb_m_o.* = g_pcbb_m.*
+   
+   IF g_pcbb_m.pcbb001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_pcbb001_t = g_pcbb_m.pcbb001
+ 
+   CALL s_transaction_begin()
+   
+   OPEN apci211_cl USING g_enterprise,g_pcbb_m.pcbb001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN apci211_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CLOSE apci211_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE apci211_master_referesh USING g_pcbb_m.pcbb001 INTO g_pcbb_m.pcbb001,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbcrtid, 
+       g_pcbb_m.pcbbcrtdp,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt,g_pcbb_m.pcbbunit_desc, 
+       g_pcbb_m.pcbbownid_desc,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp_desc, 
+       g_pcbb_m.pcbbmodid_desc
+   
+   #檢查是否允許此動作
+   IF NOT apci211_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_pcbb_m_mask_o.* =  g_pcbb_m.*
+   CALL apci211_pcbb_t_mask()
+   LET g_pcbb_m_mask_n.* =  g_pcbb_m.*
+   
+   
+   
+   #add-point:modify段show之前 name="modify.before_show"
+   
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+   #LET l_wc2_table2 = g_wc2_table2
+   #LET l_wc2_table2 = " 1=1"
+ 
+   #LET l_wc2_table3 = g_wc2_table3
+   #LET l_wc2_table3 = " 1=1"
+ 
+ 
+ 
+   
+   CALL apci211_show()
+   #add-point:modify段show之後 name="modify.after_show"
+   
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+   #LET  g_wc2_table2 = l_wc2_table2 
+ 
+   #LET  g_wc2_table3 = l_wc2_table3 
+ 
+ 
+ 
+    
+   WHILE TRUE
+      LET g_pcbb001_t = g_pcbb_m.pcbb001
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_pcbb_m.pcbbmodid = g_user 
+LET g_pcbb_m.pcbbmoddt = cl_get_current()
+LET g_pcbb_m.pcbbmodid_desc = cl_get_username(g_pcbb_m.pcbbmodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      CALL apci211_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF g_update OR NOT INT_FLAG THEN
+         #若有modid跟moddt則進行update
+         UPDATE pcbb_t SET (pcbbmodid,pcbbmoddt) = (g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt)
+          WHERE pcbbent = g_enterprise AND pcbb001 = g_pcbb001_t
+ 
+      END IF
+    
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         LET g_pcbb_m.* = g_pcbb_m_t.*
+         CALL apci211_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_pcbb_m.pcbb001 != g_pcbb_m_t.pcbb001
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前 name="modify.body.b_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         UPDATE pcbc_t SET pcbc001 = g_pcbb_m.pcbb001
+ 
+          WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb_m_t.pcbb001
+ 
+            
+         #add-point:單身fk修改中 name="modify.body.m_fk_update"
+         
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "pcbc_t" 
+            #   LET g_errparam.code   = "std-00009" 
+            #   LET g_errparam.popup  = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後 name="modify.body.a_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         #add-point:單身fk修改前 name="modify.body.b_fk_update2"
+         
+         #end add-point
+         
+         UPDATE pcbc_t
+            SET pcbc001 = g_pcbb_m.pcbb001
+ 
+          WHERE pcbcent = g_enterprise AND
+                pcbc001 = g_pcbb001_t
+ 
+         #add-point:單身fk修改中 name="modify.body.m_fk_update2"
+         
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "pcbc_t" 
+            #   LET g_errparam.code   = "std-00009" 
+            #   LET g_errparam.popup  = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後 name="modify.body.a_fk_update2"
+         
+         #end add-point
+ 
+         #更新單身key值
+         #add-point:單身fk修改前 name="modify.body.b_fk_update3"
+         
+         #end add-point
+         
+         UPDATE pcbd_t
+            SET pcbd001 = g_pcbb_m.pcbb001
+ 
+          WHERE pcbdent = g_enterprise AND
+                pcbd001 = g_pcbb001_t
+ 
+         #add-point:單身fk修改中 name="modify.body.m_fk_update3"
+         
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "pcbd_t" 
+            #   LET g_errparam.code   = "std-00009" 
+            #   LET g_errparam.popup  = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "pcbd_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後 name="modify.body.a_fk_update3"
+         
+         #end add-point
+ 
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+         
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL apci211_set_act_visible()   
+   CALL apci211_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " pcbbent = '" ||g_enterprise|| "' AND",
+                      " pcbb001 = '", g_pcbb_m.pcbb001, "' "
+ 
+   #填到對應位置
+   CALL apci211_browser_fill("")
+ 
+   CLOSE apci211_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL apci211_msgcentre_notify('modify')
+ 
+END FUNCTION 
+ 
+{</section>}
+ 
+{<section id="apci211.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION apci211_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+
+   #end add-point  
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_ac_t                LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE  l_return              STRING   
+   DEFINE  l_pcbc003             LIKE pcbc_t.pcbc003
+   DEFINE  l_pcbd002             LIKE pcbd_t.pcbd002
+   DEFINE  l_color               STRING
+   DEFINE  l_success             LIKE type_t.num5
+   DEFINE  l_errno               STRING   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="input.pre_function"
+
+   #end add-point
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_pcbb_m.pcbb001,g_pcbb_m.pcbbl003,g_pcbb_m.pcbbl004,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbunit_desc,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbownid_desc, 
+       g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp, 
+       g_pcbb_m.pcbbcrtdp_desc,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmodid_desc,g_pcbb_m.pcbbmoddt 
+ 
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql name="input.define_sql"
+
+   #end add-point 
+   LET g_forupd_sql = "SELECT pcbc005,pcbc003,pcbc002,pcbc004,pcbcstus FROM pcbc_t WHERE pcbcent=? AND  
+       pcbc001=? AND pcbc003=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql"
+
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apci211_bcl CURSOR FROM g_forupd_sql
+   
+   #add-point:input段define_sql name="input.define_sql2"
+
+   #end add-point    
+   LET g_forupd_sql = "SELECT pcbc005,pcbc003,pcbc002,pcbc004,pcbcstus FROM pcbc_t WHERE pcbcent=? AND  
+       pcbc001=? AND pcbc003=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql2"
+
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apci211_bcl2 CURSOR FROM g_forupd_sql
+ 
+   #add-point:input段define_sql name="input.define_sql3"
+
+   #end add-point    
+   LET g_forupd_sql = "SELECT pcbd009,pcbd002,pcbd003,pcbd004,pcbd005,pcbd007,pcbd008,pcbdstus FROM  
+       pcbd_t WHERE pcbdent=? AND pcbd001=? AND pcbd002=? AND pcbd003=? AND pcbd004=? AND pcbd005=? FOR UPDATE"   #160914-00029#1 by sakura add pcbd005
+   #add-point:input段define_sql name="input.after_define_sql3"
+
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apci211_bcl3 CURSOR FROM g_forupd_sql
+ 
+ 
+   
+ 
+ 
+   #add-point:input段define_sql name="input.other_sql"
+
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL apci211_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+
+   #end add-point
+   CALL apci211_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_pcbb_m.pcbb001,g_pcbb_m.pcbbl003,g_pcbb_m.pcbbl004,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus
+   
+   LET lb_reproduce = FALSE
+   LET l_ac_t = 1
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前 name="input.before_input"
+
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+{</section>}
+ 
+{<section id="apci211.input.head" >}
+      #單頭段
+      INPUT BY NAME g_pcbb_m.pcbb001,g_pcbb_m.pcbbl003,g_pcbb_m.pcbbl004,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+          g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+          g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item name="input.master_input.update_item"
+               IF cl_null(g_pcbb_m.pcbb001) THEN
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = "apc-00075" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  
+                  NEXT FIELD pcbb001
+               ELSE                  
+                  CALL n_pcbbl(g_pcbb_m.pcbb001)
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_pcbb_m.pcbb001
+                  CALL ap_ref_array2(g_ref_fields," SELECT pcbbl003,pcbbl004 FROM pcbbl_t WHERE pcbblent = '"
+                                                  ||g_enterprise||"' AND pcbbl001 = ? AND pcbbl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_pcbb_m.pcbbl003 = g_rtn_fields[1]
+                  LET g_pcbb_m.pcbbl004 = g_rtn_fields[2]  
+                  DISPLAY BY NAME g_pcbb_m.pcbbl003,g_pcbb_m.pcbbl004                  
+               END IF
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_apci211_01
+            LET g_action_choice="open_apci211_01"
+            IF cl_auth_chk_act("open_apci211_01") THEN
+               
+               #add-point:ON ACTION open_apci211_01 name="input.master_input.open_apci211_01"
+               IF cl_null(g_pcbb_m.pcbb001) THEN
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = "apc-00075" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  
+                  NEXT FIELD pcbb001               
+               ELSE
+                  CALL s_transaction_begin()
+                  CALL apci211_01(g_pcbb_m.pcbb001)
+                  CALL s_transaction_end('Y',0)
+                  CALL apci211_ui_headershow()                     
+               END IF  
+               
+               CALL apci211_set_act_visible()     #160705-00013#7 160720 by lori add
+               CALL apci211_set_act_no_visible()  #160705-00013#7 160720 by lori add               
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN apci211_cl USING g_enterprise,g_pcbb_m.pcbb001
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN apci211_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CLOSE apci211_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            LET g_master_multi_table_t.pcbbl001 = g_pcbb_m.pcbb001
+LET g_master_multi_table_t.pcbbl003 = g_pcbb_m.pcbbl003
+LET g_master_multi_table_t.pcbbl004 = g_pcbb_m.pcbbl004
+ 
+            IF l_cmd_t = 'r' THEN
+               LET g_master_multi_table_t.pcbbl001 = ''
+LET g_master_multi_table_t.pcbbl003 = ''
+LET g_master_multi_table_t.pcbbl004 = ''
+ 
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL apci211_set_entry(p_cmd)
+            #add-point:資料輸入前 name="input.m.before_input"
+            
+            #end add-point
+            CALL apci211_set_no_entry(p_cmd)
+    
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb001
+            
+            #add-point:AFTER FIELD pcbb001 name="input.a.pcbb001"
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF  NOT cl_null(g_pcbb_m.pcbb001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_pcbb_m.pcbb001 != g_pcbb001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pcbb_t WHERE "||"pcbbent = '" ||g_enterprise|| "' AND "||"pcbb001 = '"||g_pcbb_m.pcbb001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb001
+            #add-point:BEFORE FIELD pcbb001 name="input.b.pcbb001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbb001
+            #add-point:ON CHANGE pcbb001 name="input.g.pcbb001"
+            LET g_txn_master_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbl003
+            #add-point:BEFORE FIELD pcbbl003 name="input.b.pcbbl003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbl003
+            
+            #add-point:AFTER FIELD pcbbl003 name="input.a.pcbbl003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbbl003
+            #add-point:ON CHANGE pcbbl003 name="input.g.pcbbl003"
+            LET g_txn_master_flag = TRUE 
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbl004
+            #add-point:BEFORE FIELD pcbbl004 name="input.b.pcbbl004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbl004
+            
+            #add-point:AFTER FIELD pcbbl004 name="input.a.pcbbl004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbbl004
+            #add-point:ON CHANGE pcbbl004 name="input.g.pcbbl004"
+            LET g_txn_master_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb002
+            #add-point:BEFORE FIELD pcbb002 name="input.b.pcbb002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb002
+            
+            #add-point:AFTER FIELD pcbb002 name="input.a.pcbb002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbb002
+            #add-point:ON CHANGE pcbb002 name="input.g.pcbb002"
+            LET g_txn_master_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb003
+            #add-point:BEFORE FIELD pcbb003 name="input.b.pcbb003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb003
+            
+            #add-point:AFTER FIELD pcbb003 name="input.a.pcbb003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbb003
+            #add-point:ON CHANGE pcbb003 name="input.g.pcbb003"
+            LET g_txn_master_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pcbb_m.pcbb004,"1","1","10","1","azz-00087",1) THEN
+               NEXT FIELD pcbb004
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pcbb004 name="input.a.pcbb004"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb004
+            #add-point:BEFORE FIELD pcbb004 name="input.b.pcbb004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbb004
+            #add-point:ON CHANGE pcbb004 name="input.g.pcbb004"
+            LET g_txn_master_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb005
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pcbb_m.pcbb005,"1","1","2","1","azz-00087",1) THEN
+               NEXT FIELD pcbb005
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pcbb005 name="input.a.pcbb005"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb005
+            #add-point:BEFORE FIELD pcbb005 name="input.b.pcbb005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbb005
+            #add-point:ON CHANGE pcbb005 name="input.g.pcbb005"
+            LET g_txn_master_flag = TRUE 
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb006
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pcbb_m.pcbb006,"1","1","3","1","azz-00087",1) THEN
+               NEXT FIELD pcbb006
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pcbb006 name="input.a.pcbb006"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb006
+            #add-point:BEFORE FIELD pcbb006 name="input.b.pcbb006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbb006
+            #add-point:ON CHANGE pcbb006 name="input.g.pcbb006"
+            LET g_txn_master_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb007
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pcbb_m.pcbb007,"1","1","10","1","azz-00087",1) THEN
+               NEXT FIELD pcbb007
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pcbb007 name="input.a.pcbb007"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb007
+            #add-point:BEFORE FIELD pcbb007 name="input.b.pcbb007"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbb007
+            #add-point:ON CHANGE pcbb007 name="input.g.pcbb007"
+            LET g_txn_master_flag = TRUE 
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb008
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pcbb_m.pcbb008,"1","1","5","1","azz-00087",1) THEN
+               NEXT FIELD pcbb008
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pcbb008 name="input.a.pcbb008"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb008
+            #add-point:BEFORE FIELD pcbb008 name="input.b.pcbb008"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbb008
+            #add-point:ON CHANGE pcbb008 name="input.g.pcbb008"
+            LET g_txn_master_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbb009
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pcbb_m.pcbb009,"1","1","5","1","azz-00087",1) THEN
+               NEXT FIELD pcbb009
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pcbb009 name="input.a.pcbb009"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbb009
+            #add-point:BEFORE FIELD pcbb009 name="input.b.pcbb009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbb009
+            #add-point:ON CHANGE pcbb009 name="input.g.pcbb009"
+            LET g_txn_master_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbunit
+            
+            #add-point:AFTER FIELD pcbbunit name="input.a.pcbbunit"
+            LET g_pcbb_m.pcbbunit_desc = ''
+            DISPLAY BY NAME g_pcbb_m.pcbbunit_desc
+            
+            IF NOT cl_null(g_pcbb_m.pcbbunit) THEN
+               IF p_cmd= 'a' OR (p_cmd = 'u' AND (g_pcbb_m.pcbbunit != g_pcbb_m_t.pcbbunit OR cl_null(g_pcbb_m.pcbbunit))) THEN
+                  LET l_success = NULL
+                  LET l_errno = NULL
+                  CALL s_aooi500_chk(g_prog,'pcbbunit',g_pcbb_m.pcbbunit,g_site) RETURNING l_success,l_errno
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ''
+                     LET g_errparam.code   = l_errno
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                  
+                     LET g_pcbb_m.pcbbunit = g_pcbb_m_t.pcbbunit
+                     LET g_pcbb_m.pcbbunit_desc = s_desc_get_department_desc(g_pcbb_m.pcbbunit)
+                     DISPLAY BY NAME g_pcbb_m.pcbbunit,g_pcbb_m.pcbbunit_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  CALL apci211_set_entry(p_cmd)
+                  CALL apci211_set_no_entry(p_cmd)        
+               END IF
+            END IF
+            
+            LET g_pcbb_m.pcbbunit_desc = s_desc_get_department_desc(g_pcbb_m.pcbbunit)
+            DISPLAY BY NAME g_pcbb_m.pcbbunit_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbunit
+            #add-point:BEFORE FIELD pcbbunit name="input.b.pcbbunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbbunit
+            #add-point:ON CHANGE pcbbunit name="input.g.pcbbunit"
+            LET g_txn_master_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbbstus
+            #add-point:BEFORE FIELD pcbbstus name="input.b.pcbbstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbbstus
+            
+            #add-point:AFTER FIELD pcbbstus name="input.a.pcbbstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbbstus
+            #add-point:ON CHANGE pcbbstus name="input.g.pcbbstus"
+            LET g_txn_master_flag = TRUE
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.pcbb001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb001
+            #add-point:ON ACTION controlp INFIELD pcbb001 name="input.c.pcbb001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbbl003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbl003
+            #add-point:ON ACTION controlp INFIELD pcbbl003 name="input.c.pcbbl003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbbl004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbl004
+            #add-point:ON ACTION controlp INFIELD pcbbl004 name="input.c.pcbbl004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbb002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb002
+            #add-point:ON ACTION controlp INFIELD pcbb002 name="input.c.pcbb002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbb003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb003
+            #add-point:ON ACTION controlp INFIELD pcbb003 name="input.c.pcbb003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbb004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb004
+            #add-point:ON ACTION controlp INFIELD pcbb004 name="input.c.pcbb004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbb005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb005
+            #add-point:ON ACTION controlp INFIELD pcbb005 name="input.c.pcbb005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbb006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb006
+            #add-point:ON ACTION controlp INFIELD pcbb006 name="input.c.pcbb006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbb007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb007
+            #add-point:ON ACTION controlp INFIELD pcbb007 name="input.c.pcbb007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbb008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb008
+            #add-point:ON ACTION controlp INFIELD pcbb008 name="input.c.pcbb008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbb009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbb009
+            #add-point:ON ACTION controlp INFIELD pcbb009 name="input.c.pcbb009"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbbunit
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbunit
+            #add-point:ON ACTION controlp INFIELD pcbbunit name="input.c.pcbbunit"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_pcbb_m.pcbbunit
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'pcbbunit',g_pcbb_m.pcbbunit,'i')
+            
+            CALL q_ooef001_24()                               
+ 
+            LET g_pcbb_m.pcbbunit = g_qryparam.return1    
+            DISPLAY g_pcbb_m.pcbbunit TO pcbbunit 
+            
+            LET g_pcbb_m.pcbbunit_desc = s_desc_get_department_desc(g_pcbb_m.pcbbunit)
+            DISPLAY g_pcbb_m.pcbbunit_desc TO pcbbunit_desc
+            
+            NEXT FIELD pcbbunit  
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pcbbstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbbstus
+            #add-point:ON ACTION controlp INFIELD pcbbstus name="input.c.pcbbstus"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_pcbb_m.pcbb001
+                        
+            #add-point:單頭INPUT後 name="input.head.after_input"
+            
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前 name="input.head.b_insert"
+               
+               #end add-point
+               
+               INSERT INTO pcbb_t (pcbbent,pcbb001,pcbb002,pcbb003,pcbb004,pcbb005,pcbb006,pcbb007,pcbb008, 
+                   pcbb009,pcbbunit,pcbbstus,pcbbownid,pcbbowndp,pcbbcrtid,pcbbcrtdp,pcbbcrtdt,pcbbmodid, 
+                   pcbbmoddt)
+               VALUES (g_enterprise,g_pcbb_m.pcbb001,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003,g_pcbb_m.pcbb004, 
+                   g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+                   g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbcrtid, 
+                   g_pcbb_m.pcbbcrtdp,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt) 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_pcbb_m:",SQLERRMESSAGE 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭新增中 name="input.head.m_insert"
+               
+               #end add-point
+               
+               
+                        INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_pcbb_m.pcbb001 = g_master_multi_table_t.pcbbl001 AND
+         g_pcbb_m.pcbbl003 = g_master_multi_table_t.pcbbl003 AND 
+         g_pcbb_m.pcbbl004 = g_master_multi_table_t.pcbbl004  THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'pcbblent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_pcbb_m.pcbb001
+            LET l_field_keys[02] = 'pcbbl001'
+            LET l_var_keys_bak[02] = g_master_multi_table_t.pcbbl001
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'pcbbl002'
+            LET l_var_keys_bak[03] = g_dlang
+            LET l_vars[01] = g_pcbb_m.pcbbl003
+            LET l_fields[01] = 'pcbbl003'
+            LET l_vars[02] = g_pcbb_m.pcbbl004
+            LET l_fields[02] = 'pcbbl004'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'pcbbl_t')
+         END IF 
+ 
+               
+               #add-point:單頭新增後 name="input.head.a_insert"
+               IF NOT apci211_pcbe_chk() THEN
+                  NEXT FIELD g_pcbb_m.pcbb001
+               END IF
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL apci211_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL apci211_b_fill()
+                  CALL apci211_b_fill2('0')
+               END IF
+               
+               #add-point:單頭新增後 name="input.head.a_insert2"
+               
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前 name="input.head.b_update"
+          
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL apci211_pcbb_t_mask_restore('restore_mask_o')
+               
+               UPDATE pcbb_t SET (pcbb001,pcbb002,pcbb003,pcbb004,pcbb005,pcbb006,pcbb007,pcbb008,pcbb009, 
+                   pcbbunit,pcbbstus,pcbbownid,pcbbowndp,pcbbcrtid,pcbbcrtdp,pcbbcrtdt,pcbbmodid,pcbbmoddt) = (g_pcbb_m.pcbb001, 
+                   g_pcbb_m.pcbb002,g_pcbb_m.pcbb003,g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006, 
+                   g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009,g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus, 
+                   g_pcbb_m.pcbbownid,g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbcrtid,g_pcbb_m.pcbbcrtdp,g_pcbb_m.pcbbcrtdt, 
+                   g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt)
+                WHERE pcbbent = g_enterprise AND pcbb001 = g_pcbb001_t
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "pcbb_t:",SQLERRMESSAGE 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               
+               
+                        INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_pcbb_m.pcbb001 = g_master_multi_table_t.pcbbl001 AND
+         g_pcbb_m.pcbbl003 = g_master_multi_table_t.pcbbl003 AND 
+         g_pcbb_m.pcbbl004 = g_master_multi_table_t.pcbbl004  THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'pcbblent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_pcbb_m.pcbb001
+            LET l_field_keys[02] = 'pcbbl001'
+            LET l_var_keys_bak[02] = g_master_multi_table_t.pcbbl001
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'pcbbl002'
+            LET l_var_keys_bak[03] = g_dlang
+            LET l_vars[01] = g_pcbb_m.pcbbl003
+            LET l_fields[01] = 'pcbbl003'
+            LET l_vars[02] = g_pcbb_m.pcbbl004
+            LET l_fields[02] = 'pcbbl004'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'pcbbl_t')
+         END IF 
+ 
+               
+               #將遮罩欄位進行遮蔽
+               CALL apci211_pcbb_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_pcbb_m_t)
+               LET g_log2 = util.JSON.stringify(g_pcbb_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後 name="input.head.a_update"
+               ##160705-00013#5 Add By ken 160727(S)
+               CASE g_touch
+                 WHEN 1
+                    CALL gfrm_curr.ensureElementVisible("bpage_1")       
+                 WHEN 2
+                    CALL gfrm_curr.ensureElementVisible("page_1")       
+                    LET g_touch = '2'
+                    #动态显示画面ACTTION数量
+                    CALL gfrm_curr.setElementHidden("hbox_4",0)
+                    LET g_main_col = g_pcbb_m.pcbb005    #大類列數
+                    LET g_main_row = g_pcbb_m.pcbb004    #大類行數
+                    LET g_item_col = g_pcbb_m.pcbb007    #小類列數
+                    LET g_item_row = g_pcbb_m.pcbb006    #小類行數
+                    LET g_product_col = g_pcbb_m.pcbb009 #產品列數
+                    LET g_product_row = g_pcbb_m.pcbb008 #產品行數
+                    LET g_main_page_count = g_pcbb_m.pcbb005 * g_pcbb_m.pcbb004
+                    LET g_item_page_count = g_pcbb_m.pcbb007 * g_pcbb_m.pcbb006
+                    LET g_product_page_count = g_pcbb_m.pcbb009 * g_pcbb_m.pcbb008 +2
+                    CALL apci211_get_data("M",g_main_array[g_button1].main_id,g_item_array[g_button2].item_id)               
+                    CALL apci211_create_form("main","main_group",1,g_main_page_count-2)
+                    CALL apci211_create_form("item","item_group",1,g_item_page_count-2)
+                    CALL apci211_create_form("product","product_group",1,g_product_page_count-2) 
+                    CALL apci211_change_style("P")   
+               END CASE        
+               ##160705-00013#5 Add By ken 160727(E)               
+               #end add-point
+            END IF
+            
+            LET g_pcbb001_t = g_pcbb_m.pcbb001
+ 
+            
+      END INPUT
+   
+ 
+{</section>}
+ 
+{<section id="apci211.input.body" >}
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_pcbc_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body.before_input2"
+            IF NOT apci211_pcbe_chk() THEN
+               NEXT FIELD pcbbl003
+            END IF
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_pcbc_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL apci211_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_pcbc_d.getLength()
+            #add-point:資料輸入前 name="input.d.before_input"
+
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2 name="input.body.before_row2"
+            IF NOT apci211_pcbe_chk() THEN
+               NEXT FIELD pcbbl003
+            END IF
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_detail_idx_list[1] = l_ac
+            LET g_current_page = 1
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN apci211_cl USING g_enterprise,g_pcbb_m.pcbb001
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN apci211_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CLOSE apci211_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_pcbc_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_pcbc_d[l_ac].pcbc003 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_pcbc_d_t.* = g_pcbc_d[l_ac].*  #BACKUP
+               LET g_pcbc_d_o.* = g_pcbc_d[l_ac].*  #BACKUP
+               CALL apci211_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body.after_set_entry_b"
+
+               #end add-point  
+               CALL apci211_set_no_entry_b(l_cmd)
+               IF NOT apci211_lock_b("pcbc_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apci211_bcl INTO g_pcbc_d[l_ac].pcbc005,g_pcbc_d[l_ac].pcbc003,g_pcbc_d[l_ac].pcbc002, 
+                      g_pcbc_d[l_ac].pcbc004,g_pcbc_d[l_ac].pcbcstus
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_pcbc_d_t.pcbc003,":",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_pcbc_d_mask_o[l_ac].* =  g_pcbc_d[l_ac].*
+                  CALL apci211_pcbc_t_mask()
+                  LET g_pcbc_d_mask_n[l_ac].* =  g_pcbc_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL apci211_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body.before_row"
+            LET g_class_1_idx = l_ac
+            CALL apci211_detail_referesh(1)
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+        
+         BEFORE INSERT  
+            
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_pcbc_d[l_ac].* TO NULL 
+            INITIALIZE g_pcbc_d_t.* TO NULL 
+            INITIALIZE g_pcbc_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_pcbc_d[l_ac].pcbcstus = 'Y'
+ 
+ 
+ 
+            #自定義預設值
+                  LET g_pcbc_d[l_ac].pcbc002 = "1"
+      LET g_pcbc_d[l_ac].pcbcstus = "Y"
+ 
+            #add-point:modify段before備份 name="input.body.insert.before_bak"
+            LET g_pcbc_d[l_ac].pcbc005 = apci211_pcbc005_def(g_pcbc_d[l_ac].pcbc002,'')
+            #end add-point
+            LET g_pcbc_d_t.* = g_pcbc_d[l_ac].*     #新輸入資料
+            LET g_pcbc_d_o.* = g_pcbc_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL apci211_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body.insert.after_set_entry_b"
+
+            #end add-point
+            CALL apci211_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_pcbc_d[li_reproduce_target].* = g_pcbc_d[li_reproduce].*
+ 
+               LET g_pcbc_d[li_reproduce_target].pcbc003 = NULL
+ 
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body.before_insert"
+
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增 name="input.body.b_a_insert"
+
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM pcbc_t 
+             WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb_m.pcbb001
+ 
+               AND pcbc003 = g_pcbc_d[l_ac].pcbc003
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               LET g_txn_detail_flag = TRUE 
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_pcbb_m.pcbb001
+               LET gs_keys[2] = g_pcbc_d[g_detail_idx].pcbc003
+               CALL apci211_insert_b('pcbc_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               INITIALIZE g_pcbc_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL apci211_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d) name="input.body.after_delete_d"
+
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               LET g_txn_detail_flag = TRUE 
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_pcbb_m.pcbb001
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_pcbc_d_t.pcbc003
+ 
+            
+               #刪除同層單身
+               IF NOT apci211_delete_b('pcbc_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE apci211_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT apci211_key_delete_b(gs_keys,'pcbc_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE apci211_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身刪除中 name="input.body.m_delete"
+
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE apci211_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後 name="input.body.a_delete"
+
+               #end add-point
+               LET l_count = g_pcbc_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body.after_delete"
+
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_pcbc_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc005
+            #add-point:BEFORE FIELD pcbc005 name="input.b.page1.pcbc005"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc005
+            
+            #add-point:AFTER FIELD pcbc005 name="input.a.page1.pcbc005"
+            IF NOT cl_null(g_pcbc_d[l_ac].pcbc005) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_pcbc_d[l_ac].pcbc005 != g_pcbc_d_t.pcbc005 OR g_pcbc_d_t.pcbc005 IS NULL)) THEN
+                  IF NOT apci211_pcbc005_chk(g_pcbc_d[l_ac].pcbc002,'',g_pcbc_d[l_ac].pcbc005) THEN
+                     LET g_pcbc_d[l_ac].pcbc005 = g_pcbc_d_t.pcbc005
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbc005
+            #add-point:ON CHANGE pcbc005 name="input.g.page1.pcbc005"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc003
+            
+            #add-point:AFTER FIELD pcbc003 name="input.a.page1.pcbc003"
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            #IF  g_pcbb_m.pcbb001 IS NOT NULL AND g_pcbc_d[g_detail_idx].pcbc003 IS NOT NULL THEN 
+            #   IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pcbb_m.pcbb001 != g_pcbb001_t OR g_pcbc_d[g_detail_idx].pcbc003 != g_pcbc_d_t.pcbc003)) THEN 
+            #      IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pcbc_t WHERE "||"pcbcent = '" ||g_enterprise|| "' AND "||"pcbc001 = '"||g_pcbb_m.pcbb001 ||"' AND "|| "pcbc003 = '"||g_pcbc_d[g_detail_idx].pcbc003 ||"'",'std-00004',0) THEN 
+            #         NEXT FIELD CURRENT
+            #      END IF
+            #   END IF
+            #END IF
+
+            LET g_pcbc_d[l_ac].pcbc003_desc = ' '
+            DISPLAY BY NAME g_pcbc_d[l_ac].pcbc003_desc
+            IF NOT cl_null(g_pcbc_d[l_ac].pcbc003) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_pcbc_d[l_ac].pcbc003 != g_pcbc_d_t.pcbc003 OR g_pcbc_d_t.pcbc003 IS NULL)) THEN
+                  IF NOT apci211_pcbc003_chk(g_pcbc_d[l_ac].pcbc002,g_pcbc_d[l_ac].pcbc003) THEN
+                     LET g_pcbc_d[l_ac].pcbc003 = g_pcbc_d_t.pcbc003
+                     CALL apci211_pcbc003_ref(g_pcbc_d[l_ac].pcbc002,g_pcbc_d[l_ac].pcbc003)
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+            CALL apci211_pcbc003_ref(g_pcbc_d[l_ac].pcbc002,g_pcbc_d[l_ac].pcbc003)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc003
+            #add-point:BEFORE FIELD pcbc003 name="input.b.page1.pcbc003"
+
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbc003
+            #add-point:ON CHANGE pcbc003 name="input.g.page1.pcbc003"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc002
+            #add-point:BEFORE FIELD pcbc002 name="input.b.page1.pcbc002"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc002
+            
+            #add-point:AFTER FIELD pcbc002 name="input.a.page1.pcbc002"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbc002
+            #add-point:ON CHANGE pcbc002 name="input.g.page1.pcbc002"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc004
+            #add-point:BEFORE FIELD pcbc004 name="input.b.page1.pcbc004"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc004
+            
+            #add-point:AFTER FIELD pcbc004 name="input.a.page1.pcbc004"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbc004
+            #add-point:ON CHANGE pcbc004 name="input.g.page1.pcbc004"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbcstus
+            #add-point:BEFORE FIELD pcbcstus name="input.b.page1.pcbcstus"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbcstus
+            
+            #add-point:AFTER FIELD pcbcstus name="input.a.page1.pcbcstus"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbcstus
+            #add-point:ON CHANGE pcbcstus name="input.g.page1.pcbcstus"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.pcbc005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc005
+            #add-point:ON ACTION controlp INFIELD pcbc005 name="input.c.page1.pcbc005"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pcbc003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc003
+            #add-point:ON ACTION controlp INFIELD pcbc003 name="input.c.page1.pcbc003"
+            IF l_cmd = 'u' THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i' 
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_pcbc_d[l_ac].pcbc003
+               LET g_qryparam.arg1 = cl_get_para(g_enterprise,'',g_class_1)
+               
+               IF g_pcbb_m.pcbb002 = '1' THEN
+                  CALL q_rtax001_3()                 
+               ELSE
+                  CALL q_pcba001_2()                  
+               END IF
+               
+               LET g_pcbc_d[l_ac].pcbc003 = g_qryparam.return1 
+               DISPLAY g_pcbc_d[l_ac].pcbc003 TO pcbc003
+               CALL apci211_pcbc003_ref(g_pcbc_d[l_ac].pcbc002,g_pcbc_d[l_ac].pcbc003)
+               DISPLAY g_pcbc_d[l_ac].pcbc003_desc TO pcbc003_desc               
+            ELSE
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_pcbc_d[l_ac].pcbc003
+               LET g_qryparam.arg1 = cl_get_para(g_enterprise,'',g_class_1)
+               
+               IF g_pcbb_m.pcbb002 = '1' THEN
+                  CALL q_rtax001_3()
+               ELSE
+                  CALL q_pcba001_2()
+               END IF            
+               
+               LET l_return = g_qryparam.return1
+               IF NOT cl_null(l_return) THEN
+                  LET tok = base.StringTokenizer.create(l_return,"|")
+                  LET l_n = g_pcbc_d.getLength()  
+                  LET l_cnt = 0 
+                  LET l_ac_t = l_ac 
+                  CALL cl_err_collect_init()
+                  
+                  WHILE tok.hasMoreTokens()
+                     LET l_pcbc003  = tok.nextToken() 
+                     IF NOT apci211_pcbc003_chk('1',l_pcbc003) THEN
+                        CONTINUE WHILE
+                     END IF
+                     
+                     LET l_cnt = l_cnt + 1
+                     IF l_cnt = 1 THEN
+                        LET g_pcbc_d[l_ac].pcbc003 = l_pcbc003
+                        DISPLAY g_pcbc_d[l_ac].pcbc003 TO pcbc003
+                        CALL apci211_pcbc003_ref(g_pcbc_d[l_ac].pcbc002,g_pcbc_d[l_ac].pcbc003)
+                     ELSE
+                        LET l_ac = l_n + l_cnt - 1
+                        LET g_pcbc_d[l_ac].pcbc002 = '1'
+                        LET g_pcbc_d[l_ac].pcbc003 = l_pcbc003
+                        CALL apci211_pcbc005_get() RETURNING g_pcbc_d[l_ac].pcbc005   #160705-00013#9 Add By ken 160810
+                        #LET g_pcbc_d[l_ac].pcbc005 = l_ac                            #160705-00013#9 Mark By ken 160810 
+                        LET g_pcbc_d[l_ac].pcbcstus = 'Y'
+                        
+                        INITIALIZE gs_keys TO NULL
+                        LET gs_keys[1] = g_pcbb_m.pcbb001
+                        LET gs_keys[2] = l_pcbc003
+                        LET g_detail_idx = l_ac
+                        CALL apci211_insert_b('pcbc_t',gs_keys,"'1'")
+                        IF SQLCA.sqlcode THEN
+                           LET l_cnt = l_cnt - 1
+                        ELSE
+                           CALL apci211_pcbc003_ref(g_pcbc_d[l_ac].pcbc002,g_pcbc_d[l_ac].pcbc003)
+                        END IF         
+                     END IF
+                     
+                     LET l_ac = l_ac_t
+                     LET g_detail_idx = l_ac_t
+                  END WHILE
+                  
+                  CALL cl_err_collect_show()                     
+               END IF
+            END IF   
+            
+            NEXT FIELD pcbc003
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pcbc002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc002
+            #add-point:ON ACTION controlp INFIELD pcbc002 name="input.c.page1.pcbc002"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pcbc004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc004
+            #add-point:ON ACTION controlp INFIELD pcbc004 name="input.c.page1.pcbc004"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pcbcstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbcstus
+            #add-point:ON ACTION controlp INFIELD pcbcstus name="input.c.page1.pcbcstus"
+
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_pcbc_d[l_ac].* = g_pcbc_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CLOSE apci211_bcl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_pcbc_d[l_ac].pcbc003 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_pcbc_d[l_ac].* = g_pcbc_d_t.*
+            ELSE
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               LET g_txn_detail_flag = TRUE
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+      
+               #將遮罩欄位還原
+               CALL apci211_pcbc_t_mask_restore('restore_mask_o')
+      
+               UPDATE pcbc_t SET (pcbc001,pcbc005,pcbc003,pcbc002,pcbc004,pcbcstus) = (g_pcbb_m.pcbb001, 
+                   g_pcbc_d[l_ac].pcbc005,g_pcbc_d[l_ac].pcbc003,g_pcbc_d[l_ac].pcbc002,g_pcbc_d[l_ac].pcbc004, 
+                   g_pcbc_d[l_ac].pcbcstus)
+                WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb_m.pcbb001 
+ 
+                  AND pcbc003 = g_pcbc_d_t.pcbc003 #項次   
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_pcbc_d[l_ac].* = g_pcbc_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pcbc_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     LET g_pcbc_d[l_ac].* = g_pcbc_d_t.*  
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()                   
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_pcbb_m.pcbb001
+               LET gs_keys_bak[1] = g_pcbb001_t
+               LET gs_keys[2] = g_pcbc_d[g_detail_idx].pcbc003
+               LET gs_keys_bak[2] = g_pcbc_d_t.pcbc003
+               CALL apci211_update_b('pcbc_t',gs_keys,gs_keys_bak,"'1'")
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL apci211_pcbc_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_pcbc_d[g_detail_idx].pcbc003 = g_pcbc_d_t.pcbc003 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_pcbb_m.pcbb001
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_pcbc_d_t.pcbc003
+ 
+                  CALL apci211_key_update_b(gs_keys,'pcbc_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_pcbb_m),util.JSON.stringify(g_pcbc_d_t)
+               LET g_log2 = util.JSON.stringify(g_pcbb_m),util.JSON.stringify(g_pcbc_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後 name="input.body.a_update"
+
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row name="input.body.after_row"
+
+            #end add-point
+            CALL apci211_unlock_b("pcbc_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2 name="input.body.after_row2"
+
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input  name="input.body.after_input"
+            LET g_class_1_idx = l_ac
+            #end add-point 
+    
+         ON ACTION controlo    
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_pcbc_d[li_reproduce_target].* = g_pcbc_d[li_reproduce].*
+ 
+               LET g_pcbc_d[li_reproduce_target].pcbc003 = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_pcbc_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_pcbc_d.getLength()+1
+            END IF
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+      INPUT ARRAY g_pcbc2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = FALSE,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_2)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body2.before_input2"
+            IF NOT apci211_pcbe_chk() THEN
+               NEXT FIELD pcbbl003
+            END IF
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_pcbc2_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL apci211_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'd' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+            END IF
+            LET g_loc = 'd'
+            LET g_rec_b = g_pcbc2_d.getLength()
+            #add-point:資料輸入前 name="input.body2.before_input"
+
+            #end add-point
+            
+         BEFORE INSERT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_pcbc2_d[l_ac].* TO NULL 
+            INITIALIZE g_pcbc2_d_t.* TO NULL 
+            INITIALIZE g_pcbc2_d_o.* TO NULL 
+            #公用欄位給值(單身2)
+            #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_pcbc2_d[l_ac].pcbcstus = 'Y'
+ 
+ 
+ 
+            #自定義預設值(單身2)
+                  LET g_pcbc2_d[l_ac].pcbc002 = "1"
+      LET g_pcbc2_d[l_ac].pcbcstus = "Y"
+ 
+            #add-point:modify段before備份 name="input.body2.insert.before_bak"
+            LET g_pcbc2_d[l_ac].pcbc002 = "2"
+            LET g_pcbc2_d[l_ac].pcbc004 = g_pcbc_d[g_class_1_idx].pcbc003
+            LET g_pcbc2_d[l_ac].pcbc005 = apci211_pcbc005_def(g_pcbc2_d[l_ac].pcbc002,g_pcbc_d[g_class_1_idx].pcbc003)
+            #end add-point
+            LET g_pcbc2_d_t.* = g_pcbc2_d[l_ac].*     #新輸入資料
+            LET g_pcbc2_d_o.* = g_pcbc2_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL apci211_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body2.insert.after_set_entry_b"
+    
+            #end add-point
+            CALL apci211_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_pcbc2_d[li_reproduce_target].* = g_pcbc2_d[li_reproduce].*
+ 
+               LET g_pcbc2_d[li_reproduce_target].pcbc003 = NULL
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body2.before_insert"
+
+            #end add-point  
+ 
+         BEFORE ROW     
+            #add-point:modify段before row2 name="input.body2.before_row2"
+            IF NOT apci211_pcbe_chk() THEN
+               NEXT FIELD pcbbl003
+            END IF
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET g_detail_idx_list[2] = l_ac
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_current_page = 2
+              
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN apci211_cl USING g_enterprise,g_pcbb_m.pcbb001
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN apci211_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CLOSE apci211_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_pcbc2_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_pcbc2_d[l_ac].pcbc003 IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_pcbc2_d_t.* = g_pcbc2_d[l_ac].*  #BACKUP
+               LET g_pcbc2_d_o.* = g_pcbc2_d[l_ac].*  #BACKUP
+               CALL apci211_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body2.after_set_entry_b"
+
+               #end add-point  
+               CALL apci211_set_no_entry_b(l_cmd)
+               IF NOT apci211_lock_b("pcbc_t","'2'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apci211_bcl2 INTO g_pcbc2_d[l_ac].pcbc005,g_pcbc2_d[l_ac].pcbc003,g_pcbc2_d[l_ac].pcbc002, 
+                      g_pcbc2_d[l_ac].pcbc004,g_pcbc2_d[l_ac].pcbcstus
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = SQLERRMESSAGE  
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_pcbc2_d_mask_o[l_ac].* =  g_pcbc2_d[l_ac].*
+                  CALL apci211_pcbc_t_mask()
+                  LET g_pcbc2_d_mask_n[l_ac].* =  g_pcbc2_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL apci211_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body2.before_row"
+            LET g_class_2_idx = l_ac
+            CALL apci211_detail_referesh(2)
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身AFTER DELETE (=d) name="input.body2.after_delete_d"
+
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body2.b_delete_ask"
+
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身2刪除前 name="input.body2.b_delete"
+               LET g_txn_detail_flag = TRUE 
+               #end add-point    
+                  
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_pcbb_m.pcbb001
+               LET gs_keys[gs_keys.getLength()+1] = g_pcbc2_d_t.pcbc003
+            
+               #刪除同層單身
+               IF NOT apci211_delete_b('pcbc_t',gs_keys,"'2'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE apci211_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT apci211_key_delete_b(gs_keys,'pcbc_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE apci211_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身2刪除中 name="input.body2.m_delete"
+
+               #end add-point    
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE apci211_bcl
+ 
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身2刪除後 name="input.body2.a_delete"
+
+               #end add-point
+               LET l_count = g_pcbc_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body2.after_delete"
+
+               #end add-point
+            END IF 
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_pcbc2_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身2新增前 name="input.body2.b_a_insert"
+
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM pcbc_t 
+             WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb_m.pcbb001
+               AND pcbc003 = g_pcbc2_d[l_ac].pcbc003
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身2新增前 name="input.body2.b_insert"
+               LET g_txn_detail_flag = TRUE 
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_pcbb_m.pcbb001
+               LET gs_keys[2] = g_pcbc2_d[g_detail_idx].pcbc003
+               CALL apci211_insert_b('pcbc_t',gs_keys,"'2'")
+                           
+               #add-point:單身新增後2 name="input.body2.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_pcbc_d[l_ac].* TO NULL
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL apci211_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後 name="input.body2.after_insert"
+
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_pcbc2_d[l_ac].* = g_pcbc2_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CLOSE apci211_bcl2
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_pcbc2_d[l_ac].* = g_pcbc2_d_t.*
+            ELSE
+               #add-point:單身page2修改前 name="input.body2.b_update"
+               LET g_txn_detail_flag = TRUE
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身2)
+               
+               #將遮罩欄位還原
+               CALL apci211_pcbc_t_mask_restore('restore_mask_o')
+                              
+               UPDATE pcbc_t SET (pcbc001,pcbc005,pcbc003,pcbc002,pcbc004,pcbcstus) = (g_pcbb_m.pcbb001, 
+                   g_pcbc2_d[l_ac].pcbc005,g_pcbc2_d[l_ac].pcbc003,g_pcbc2_d[l_ac].pcbc002,g_pcbc2_d[l_ac].pcbc004, 
+                   g_pcbc2_d[l_ac].pcbcstus) #自訂欄位頁簽
+                WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb_m.pcbb001
+                  AND pcbc003 = g_pcbc2_d_t.pcbc003 #項次 
+                  
+               #add-point:單身page2修改中 name="input.body2.m_update"
+
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_pcbc2_d[l_ac].* = g_pcbc2_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pcbc_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     LET g_pcbc2_d[l_ac].* = g_pcbc2_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_pcbb_m.pcbb001
+               LET gs_keys_bak[1] = g_pcbb001_t
+               LET gs_keys[2] = g_pcbc2_d[g_detail_idx].pcbc003
+               LET gs_keys_bak[2] = g_pcbc2_d_t.pcbc003
+               CALL apci211_update_b('pcbc_t',gs_keys,gs_keys_bak,"'2'")
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL apci211_pcbc_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT (g_pcbc2_d[g_detail_idx].pcbc003 = g_pcbc2_d_t.pcbc003 
+                  ) THEN
+                  LET gs_keys[01] = g_pcbb_m.pcbb001
+                  LET gs_keys[gs_keys.getLength()+1] = g_pcbc2_d_t.pcbc003
+                  CALL apci211_key_update_b(gs_keys,'pcbc_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_pcbb_m),util.JSON.stringify(g_pcbc2_d_t)
+               LET g_log2 = util.JSON.stringify(g_pcbb_m),util.JSON.stringify(g_pcbc2_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身page2修改後 name="input.body2.a_update"
+
+               #end add-point
+            END IF
+         
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc005
+            #add-point:BEFORE FIELD pcbc005 name="input.b.page2.pcbc005"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc005
+            
+            #add-point:AFTER FIELD pcbc005 name="input.a.page2.pcbc005"
+            IF NOT cl_null(g_pcbc2_d[l_ac].pcbc005) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_pcbc2_d[l_ac].pcbc005 != g_pcbc2_d_t.pcbc005 OR g_pcbc2_d_t.pcbc005 IS NULL)) THEN
+                  IF NOT apci211_pcbc005_chk(g_pcbc2_d[l_ac].pcbc002,g_pcbc_d[g_class_1_idx].pcbc003,g_pcbc2_d[l_ac].pcbc005) THEN
+                     LET g_pcbc2_d[l_ac].pcbc005 = g_pcbc2_d_t.pcbc005
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbc005
+            #add-point:ON CHANGE pcbc005 name="input.g.page2.pcbc005"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+        #AFTER FIELD pcbc003    #Standard    #160705-00013#7 160720 by ken mark
+         AFTER FIELD pcbc003_1  #Modify      #160705-00013#7 160720 by ken add
+            
+            #add-point:AFTER FIELD pcbc003 name="input.a.page2.pcbc003"
+            LET g_pcbc2_d[l_ac].pcbc003_1_desc = ' '
+            DISPLAY BY NAME g_pcbc2_d[l_ac].pcbc003_1_desc
+            IF NOT cl_null(g_pcbc2_d[l_ac].pcbc003) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_pcbc2_d[l_ac].pcbc003 != g_pcbc2_d_t.pcbc003 OR g_pcbc2_d_t.pcbc003 IS NULL)) THEN
+                  IF NOT apci211_pcbc003_chk(g_pcbc2_d[l_ac].pcbc002,g_pcbc2_d[l_ac].pcbc003) THEN
+                     LET g_pcbc2_d[l_ac].pcbc003 = g_pcbc2_d_t.pcbc003
+                     DISPLAY g_pcbc2_d[l_ac].pcbc003 TO pcbc003_1   ##160705-00013#7 160720 by ken mod pcbc003 -> pcbc003_1
+                     CALL apci211_pcbc003_ref(g_pcbc2_d[l_ac].pcbc002,g_pcbc2_d[l_ac].pcbc003)
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+            CALL apci211_pcbc003_ref(g_pcbc2_d[l_ac].pcbc002,g_pcbc2_d[l_ac].pcbc003)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+        #BEFORE FIELD pcbc003    #Standard    #160705-00013#7 160720 by ken mark
+         BEFORE FIELD pcbc003_1  #Modify      #160705-00013#7 160720 by ken add
+            #add-point:BEFORE FIELD pcbc003 name="input.b.page2.pcbc003"
+
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+        #ON CHANGE pcbc003    #Standard    #160705-00013#7 160720 by ken mark
+         ON CHANGE pcbc003_1  #Modify      #160705-00013#7 160720 by ken add
+            #add-point:ON CHANGE pcbc003 name="input.g.page2.pcbc003"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc002
+            #add-point:BEFORE FIELD pcbc002 name="input.b.page2.pcbc002"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc002
+            
+            #add-point:AFTER FIELD pcbc002 name="input.a.page2.pcbc002"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbc002
+            #add-point:ON CHANGE pcbc002 name="input.g.page2.pcbc002"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbc004
+            #add-point:BEFORE FIELD pcbc004 name="input.b.page2.pcbc004"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbc004
+            
+            #add-point:AFTER FIELD pcbc004 name="input.a.page2.pcbc004"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbc004
+            #add-point:ON CHANGE pcbc004 name="input.g.page2.pcbc004"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbcstus
+            #add-point:BEFORE FIELD pcbcstus name="input.b.page2.pcbcstus"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbcstus
+            
+            #add-point:AFTER FIELD pcbcstus name="input.a.page2.pcbcstus"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbcstus
+            #add-point:ON CHANGE pcbcstus name="input.g.page2.pcbcstus"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page2.pcbc005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc005
+            #add-point:ON ACTION controlp INFIELD pcbc005 name="input.c.page2.pcbc005"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.pcbc003
+         #應用 a03 樣板自動產生(Version:3)
+        #ON ACTION controlp INFIELD pcbc003    #Standard    #160705-00013#7 160720 by ken mark
+         ON ACTION controlp INFIELD pcbc003_1  #Modify      #160705-00013#7 160720 by ken add
+            #add-point:ON ACTION controlp INFIELD pcbc003 name="input.c.page2.pcbc003"
+            IF l_cmd = 'u' THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i' 
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_pcbc2_d[l_ac].pcbc003
+               LET g_qryparam.arg1 = cl_get_para(g_enterprise,'',g_class_2)
+               LET g_qryparam.arg2 = cl_get_para(g_enterprise,'',g_class_1)
+               LET g_qryparam.arg3 = g_pcbc_d[g_class_1_idx].pcbc003
+               
+               IF g_pcbb_m.pcbb002 = '1' THEN
+                  CALL q_rtax001_11()                 
+               ELSE
+                  CALL q_pcba001_3()                  
+               END IF
+               
+               LET g_pcbc2_d[l_ac].pcbc003 = g_qryparam.return1 
+               CALL apci211_pcbc003_ref(g_pcbc2_d[l_ac].pcbc002,g_pcbc2_d[l_ac].pcbc003)
+               DISPLAY BY NAME g_pcbc2_d[l_ac].pcbc003,g_pcbc2_d[l_ac].pcbc003_1_desc               
+            ELSE
+               DISPLAY "g_class_1_idx: ",g_class_1_idx
+               
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_pcbc2_d[l_ac].pcbc003
+               LET g_qryparam.arg1 = cl_get_para(g_enterprise,'',g_class_2)
+               LET g_qryparam.arg2 = cl_get_para(g_enterprise,'',g_class_1)
+               
+               IF g_pcbb_m.pcbb002 = '1' THEN
+                  LET g_qryparam.where = " rtaxstus = 'Y' ",
+                                         " AND EXISTS (SELECT 1 FROM rtaw_t WHERE rtawent = rtaxent AND rtaw001 = rtax001 ",
+                                         "                AND rtaw002 IN (SELECT rtaw002 FROM rtaw_t ",
+                                         "                                 WHERE rtawent = ",g_enterprise,
+                                         "                                   AND rtaw001 = '",g_pcbc_d[g_class_1_idx].pcbc003,"')) "
+                  CALL q_rtax001_11()
+               ELSE
+                  LET g_qryparam.where = " pcbastus = 'Y' ",
+                                         " AND EXISTS(SELECT 1 FROM pcbf_t WHERE pcbfent = pcbaent AND pcbf001 = pcba001 ",
+                                         "               AND pcbf003 IN (SELECT pcbf003 FROM pcbf_t ",
+                                         "                                WHERE pcbfent = ",g_enterprise,
+                                         "                                  AND pcbf001 = '",g_pcbc_d[g_class_1_idx].pcbc003,"')) "
+                  CALL q_pcba001_3()
+               END IF            
+               
+               LET l_return = g_qryparam.return1
+               IF NOT cl_null(l_return) THEN 
+                  LET tok = base.StringTokenizer.create(l_return,"|")
+                  LET l_n = g_pcbc2_d.getLength()  
+                  LET l_cnt = 0 
+                  LET l_ac_t = l_ac 
+                  CALL cl_err_collect_init()
+                  
+                  WHILE tok.hasMoreTokens()
+                     LET l_pcbc003  = tok.nextToken() 
+                     IF NOT apci211_pcbc003_chk('2',l_pcbc003) THEN
+                        CONTINUE WHILE
+                     END IF
+                     
+                     LET l_cnt = l_cnt + 1
+                     IF l_cnt = 1 THEN
+                        LET g_pcbc2_d[l_ac].pcbc003 = l_pcbc003
+                        DISPLAY g_pcbc2_d[l_ac].pcbc003 TO pcbc003_1   #160720 by ken mod pcbc003 -> pcbc003_1 
+                        LET g_pcbc2_d[l_ac].pcbc004 = g_pcbc_d[g_class_1_idx].pcbc003
+                        CALL apci211_pcbc003_ref(g_pcbc2_d[l_ac].pcbc002,g_pcbc2_d[l_ac].pcbc003)
+                        DISPLAY g_pcbc2_d[l_ac].pcbc003_1_desc TO pcbc003_1_desc
+                     ELSE
+                        LET l_ac = l_n + l_cnt - 1
+                        LET g_pcbc2_d[l_ac].pcbc002 = '2'
+                        LET g_pcbc2_d[l_ac].pcbc003 = l_pcbc003
+                        LET g_pcbc2_d[l_ac].pcbc004 = g_pcbc_d[g_class_1_idx].pcbc003
+                        CALL apci211_pcbc005_get1() RETURNING g_pcbc2_d[l_ac].pcbc005  #160705-00013#9 Add By ken 160810
+                        #LET g_pcbc2_d[l_ac].pcbc005 = l_ac                            #160705-00013#9 Mark By ken 160810
+                        LET g_pcbc2_d[l_ac].pcbcstus = 'Y'
+                        
+                        INITIALIZE gs_keys TO NULL
+                        LET gs_keys[1] = g_pcbb_m.pcbb001
+                        LET gs_keys[2] = l_pcbc003
+                        LET g_detail_idx = l_ac
+                        CALL apci211_insert_b('pcbc_t',gs_keys,"'2'")
+                        IF SQLCA.sqlcode THEN
+                           LET l_cnt = l_cnt - 1
+                        ELSE
+                           CALL apci211_pcbc003_ref(g_pcbc2_d[l_ac].pcbc002,g_pcbc2_d[l_ac].pcbc003)
+                        END IF         
+                     END IF
+                     
+                     LET l_ac = l_ac_t
+                     LET g_detail_idx = l_ac_t
+                  END WHILE
+                  
+                  CALL cl_err_collect_show()                     
+               END IF
+            END IF   
+            
+            NEXT FIELD pcbc003_1            #160720 by ken mod pcbc003 -> pcbc003_1 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.pcbc002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc002
+            #add-point:ON ACTION controlp INFIELD pcbc002 name="input.c.page2.pcbc002"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.pcbc004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbc004
+            #add-point:ON ACTION controlp INFIELD pcbc004 name="input.c.page2.pcbc004"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.pcbcstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbcstus
+            #add-point:ON ACTION controlp INFIELD pcbcstus name="input.c.page2.pcbcstus"
+
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER ROW
+            #add-point:單身page2 after_row name="input.body2.after_row"
+
+            #end add-point
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_pcbc2_d[l_ac].* = g_pcbc2_d_t.*
+               END IF
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CLOSE apci211_bcl2
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+            CALL apci211_unlock_b("pcbc_t","'2'")
+            CALL s_transaction_end('Y','0')
+            #add-point:單身page2 after_row2 name="input.body2.after_row2"
+
+            #end add-point
+ 
+         AFTER INPUT
+            #add-point:input段after input  name="input.body2.after_input"
+            LET g_class_2_idx = l_ac 
+            #end add-point   
+    
+         ON ACTION controlo
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_pcbc2_d[li_reproduce_target].* = g_pcbc2_d[li_reproduce].*
+ 
+               LET g_pcbc2_d[li_reproduce_target].pcbc003 = NULL
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_pcbc2_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_pcbc2_d.getLength()+1
+            END IF
+            
+      END INPUT
+      INPUT ARRAY g_pcbc3_d FROM s_detail3.*
+         ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_3)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body3.before_input2"
+            IF NOT apci211_pcbe_chk() THEN
+               NEXT FIELD pcbbl003
+            END IF
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_pcbc3_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL apci211_b_fill()
+            #160705-00013#5 160720 by lori mod---(S)
+            #Standard---(S)
+            ##如果一直都在單身1則控制筆數位置
+            #IF g_loc = 'd' AND g_rec_b != 0 THEN
+            #   CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'3',"))
+            #END IF
+            #LET g_loc = 'd'
+            #Standard---(E)
+            
+            #Modify---(S)
+            #產品為第三單身,g_loc應給值d1
+            IF g_loc = 'd1' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'3',"))
+            END IF
+            LET g_loc = 'd1'
+            #Modify---(E)           
+            #160705-00013#5 160720 by lori mod---(E) 
+            LET g_rec_b = g_pcbc3_d.getLength()
+            #add-point:資料輸入前 name="input.body3.before_input"
+
+            #end add-point
+            
+         BEFORE INSERT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_pcbc3_d[l_ac].* TO NULL 
+            INITIALIZE g_pcbc3_d_t.* TO NULL 
+            INITIALIZE g_pcbc3_d_o.* TO NULL 
+            #公用欄位給值(單身3)
+            #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_pcbc3_d[l_ac].pcbdstus = 'Y'
+ 
+ 
+ 
+            #自定義預設值(單身3)
+                  LET g_pcbc3_d[l_ac].l_pcbd006 = "N"
+      LET g_pcbc3_d[l_ac].pcbdstus = "Y"
+ 
+            #add-point:modify段before備份 name="input.body3.insert.before_bak"
+            LET g_pcbc3_d[l_ac].pcbd003 = ' '                                 #產品特徵
+            LET g_pcbc3_d[l_ac].pcbd005 = g_pcbc2_d[g_class_2_idx].pcbc003    #所屬小類
+            LET g_pcbc3_d[l_ac].pcbd009 = apci211_pcbd009_def()               #順序
+            #end add-point
+            LET g_pcbc3_d_t.* = g_pcbc3_d[l_ac].*     #新輸入資料
+            LET g_pcbc3_d_o.* = g_pcbc3_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL apci211_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body3.insert.after_set_entry_b"
+
+            #end add-point
+            CALL apci211_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_pcbc3_d[li_reproduce_target].* = g_pcbc3_d[li_reproduce].*
+ 
+               LET g_pcbc3_d[li_reproduce_target].pcbd002 = NULL
+               LET g_pcbc3_d[li_reproduce_target].pcbd003 = NULL
+               LET g_pcbc3_d[li_reproduce_target].pcbd004 = NULL
+               LET g_pcbc3_d[li_reproduce_target].pcbd005 = NULL   #160914-00029#1 by sakura add
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body3.before_insert"
+
+            #end add-point  
+ 
+         BEFORE ROW     
+            #add-point:modify段before row2 name="input.body3.before_row2"
+          
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET g_detail_idx_list[3] = l_ac
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_current_page = 3
+              
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN apci211_cl USING g_enterprise,g_pcbb_m.pcbb001
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN apci211_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CLOSE apci211_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_pcbc3_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_pcbc3_d[l_ac].pcbd002 IS NOT NULL
+               AND g_pcbc3_d[l_ac].pcbd003 IS NOT NULL
+               AND g_pcbc3_d[l_ac].pcbd004 IS NOT NULL
+               AND g_pcbc3_d[l_ac].pcbd005 IS NOT NULL   #160914-00029#1 by sakura add
+            THEN 
+               LET l_cmd='u'
+               LET g_pcbc3_d_t.* = g_pcbc3_d[l_ac].*  #BACKUP
+               LET g_pcbc3_d_o.* = g_pcbc3_d[l_ac].*  #BACKUP
+               CALL apci211_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body3.after_set_entry_b"
+
+               #end add-point  
+               CALL apci211_set_no_entry_b(l_cmd)
+               IF NOT apci211_lock_b("pcbd_t","'3'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apci211_bcl3 INTO g_pcbc3_d[l_ac].pcbd009,g_pcbc3_d[l_ac].pcbd002,g_pcbc3_d[l_ac].pcbd003, 
+                      g_pcbc3_d[l_ac].pcbd004,g_pcbc3_d[l_ac].pcbd005,g_pcbc3_d[l_ac].pcbd007,g_pcbc3_d[l_ac].pcbd008, 
+                      g_pcbc3_d[l_ac].pcbdstus
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = SQLERRMESSAGE  
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_pcbc3_d_mask_o[l_ac].* =  g_pcbc3_d[l_ac].*
+                  CALL apci211_pcbd_t_mask()
+                  LET g_pcbc3_d_mask_n[l_ac].* =  g_pcbc3_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL apci211_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body3.before_row"
+            LET g_upd_pcbd006 = FALSE   #預設不更新圖檔,新增商品或修改商品編號時才需要
+            LET g_prod_idx = l_ac
+            
+            IF NOT apci211_pcbe_chk() THEN
+               NEXT FIELD pcbbl003
+            END IF
+            
+            IF NOT cl_null(g_pcbc3_d[l_ac].pcbd007) THEN
+               LET g_pcbd_d_color[l_ac].l_color = g_pcbc3_d[l_ac].pcbd007," reverse "
+            ELSE
+               LET g_pcbd_d_color[l_ac].l_color = ''
+            END IF
+            CALL DIALOG.setCellAttributes(g_pcbd_d_color)
+            IF (g_pcbc3_d.getLength() - l_ac) > 0 THEN
+               NEXT FIELD l_color
+            END IF  
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身AFTER DELETE (=d) name="input.body3.after_delete_d"
+
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body3.b_delete_ask"
+
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身3刪除前 name="input.body3.b_delete"
+               LET g_txn_detail_flag = TRUE  
+               #end add-point    
+                  
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_pcbb_m.pcbb001
+               LET gs_keys[gs_keys.getLength()+1] = g_pcbc3_d_t.pcbd002
+               LET gs_keys[gs_keys.getLength()+1] = g_pcbc3_d_t.pcbd003
+               LET gs_keys[gs_keys.getLength()+1] = g_pcbc3_d_t.pcbd004
+               LET gs_keys[gs_keys.getLength()+1] = g_pcbc3_d_t.pcbd005   #160914-00029#1 by sakura add
+            
+               #刪除同層單身
+               IF NOT apci211_delete_b('pcbd_t',gs_keys,"'3'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE apci211_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT apci211_key_delete_b(gs_keys,'pcbd_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE apci211_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身3刪除中 name="input.body3.m_delete"
+
+               #end add-point    
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE apci211_bcl
+ 
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身3刪除後 name="input.body3.a_delete"
+
+               #end add-point
+               LET l_count = g_pcbc_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body3.after_delete"
+
+               #end add-point
+            END IF 
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_pcbc3_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身3新增前 name="input.body3.b_a_insert"
+
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM pcbd_t 
+             WHERE pcbdent = g_enterprise AND pcbd001 = g_pcbb_m.pcbb001
+               AND pcbd002 = g_pcbc3_d[l_ac].pcbd002
+               AND pcbd003 = g_pcbc3_d[l_ac].pcbd003
+               AND pcbd004 = g_pcbc3_d[l_ac].pcbd004
+               AND pcbd005 = g_pcbc3_d[l_ac].pcbd005   #160914-00029#1 by sakura add
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身3新增前 name="input.body3.b_insert"
+               LET g_txn_detail_flag = TRUE 
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_pcbb_m.pcbb001
+               LET gs_keys[2] = g_pcbc3_d[g_detail_idx].pcbd002
+               LET gs_keys[3] = g_pcbc3_d[g_detail_idx].pcbd003
+               LET gs_keys[4] = g_pcbc3_d[g_detail_idx].pcbd004
+               LET gs_keys[5] = g_pcbc3_d[g_detail_idx].pcbd005   #160914-00029#1 by sakura add
+               CALL apci211_insert_b('pcbd_t',gs_keys,"'3'")
+                           
+               #add-point:單身新增後3 name="input.body3.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_pcbc_d[l_ac].* TO NULL
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "pcbd_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL apci211_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後 name="input.body3.after_insert"
+ 
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_pcbc3_d[l_ac].* = g_pcbc3_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CLOSE apci211_bcl3
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_pcbc3_d[l_ac].* = g_pcbc3_d_t.*
+            ELSE
+               #add-point:單身page3修改前 name="input.body3.b_update"
+               LET g_txn_detail_flag = TRUE
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身3)
+               
+               #將遮罩欄位還原
+               CALL apci211_pcbd_t_mask_restore('restore_mask_o')
+                              
+               UPDATE pcbd_t SET (pcbd001,pcbd009,pcbd002,pcbd003,pcbd004,pcbd005,pcbd007,pcbd008,pcbdstus) = (g_pcbb_m.pcbb001, 
+                   g_pcbc3_d[l_ac].pcbd009,g_pcbc3_d[l_ac].pcbd002,g_pcbc3_d[l_ac].pcbd003,g_pcbc3_d[l_ac].pcbd004, 
+                   g_pcbc3_d[l_ac].pcbd005,g_pcbc3_d[l_ac].pcbd007,g_pcbc3_d[l_ac].pcbd008,g_pcbc3_d[l_ac].pcbdstus)  
+                   #自訂欄位頁簽
+                WHERE pcbdent = g_enterprise AND pcbd001 = g_pcbb_m.pcbb001
+                  AND pcbd002 = g_pcbc3_d_t.pcbd002 #項次 
+                  AND pcbd003 = g_pcbc3_d_t.pcbd003
+                  AND pcbd004 = g_pcbc3_d_t.pcbd004
+                  AND pcbd005 = g_pcbc3_d_t.pcbd005   #160914-00029#1 by sakura add
+                  
+               #add-point:單身page3修改中 name="input.body3.m_update"
+
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_pcbc3_d[l_ac].* = g_pcbc3_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pcbd_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     LET g_pcbc3_d[l_ac].* = g_pcbc3_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "pcbd_t:",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_pcbb_m.pcbb001
+               LET gs_keys_bak[1] = g_pcbb001_t
+               LET gs_keys[2] = g_pcbc3_d[g_detail_idx].pcbd002
+               LET gs_keys_bak[2] = g_pcbc3_d_t.pcbd002
+               LET gs_keys[3] = g_pcbc3_d[g_detail_idx].pcbd003
+               LET gs_keys_bak[3] = g_pcbc3_d_t.pcbd003
+               LET gs_keys[4] = g_pcbc3_d[g_detail_idx].pcbd004
+               LET gs_keys_bak[4] = g_pcbc3_d_t.pcbd004
+               #160914-00029#1 by sakura add(S)
+               LET gs_keys[5] = g_pcbc3_d[g_detail_idx].pcbd005
+               LET gs_keys_bak[5] = g_pcbc3_d_t.pcbd005
+               #160914-00029#1 by sakura add(E)
+               CALL apci211_update_b('pcbd_t',gs_keys,gs_keys_bak,"'3'")
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL apci211_pcbd_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT (g_pcbc3_d[g_detail_idx].pcbd002 = g_pcbc3_d_t.pcbd002 
+                  AND g_pcbc3_d[g_detail_idx].pcbd003 = g_pcbc3_d_t.pcbd003 
+                  AND g_pcbc3_d[g_detail_idx].pcbd004 = g_pcbc3_d_t.pcbd004 
+                  AND g_pcbc3_d[g_detail_idx].pcbd005 = g_pcbc3_d_t.pcbd005   #160914-00029#1 by sakura add
+                  ) THEN
+                  LET gs_keys[01] = g_pcbb_m.pcbb001
+                  LET gs_keys[gs_keys.getLength()+1] = g_pcbc3_d_t.pcbd002
+                  LET gs_keys[gs_keys.getLength()+1] = g_pcbc3_d_t.pcbd003
+                  LET gs_keys[gs_keys.getLength()+1] = g_pcbc3_d_t.pcbd004
+                  LET gs_keys[gs_keys.getLength()+1] = g_pcbc3_d_t.pcbd005   #160914-00029#1 by sakura add
+                  CALL apci211_key_update_b(gs_keys,'pcbd_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_pcbb_m),util.JSON.stringify(g_pcbc3_d_t)
+               LET g_log2 = util.JSON.stringify(g_pcbb_m),util.JSON.stringify(g_pcbc3_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身page3修改後 name="input.body3.a_update"
+
+               #end add-point
+            END IF
+         
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd009
+            #add-point:BEFORE FIELD pcbd009 name="input.b.page3.pcbd009"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd009
+            
+            #add-point:AFTER FIELD pcbd009 name="input.a.page3.pcbd009"
+            IF NOT cl_null(g_pcbc3_d[l_ac].pcbd009) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_pcbc3_d[l_ac].pcbd009 != g_pcbc3_d_t.pcbd009 OR cl_null(g_pcbc3_d_t.pcbd009))) THEN
+                  IF NOT apci211_pcbd009_chk(g_pcbc3_d[l_ac].pcbd009) THEN
+                     LET g_pcbc3_d[l_ac].pcbd009 = g_pcbc3_d_t.pcbd009
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbd009
+            #add-point:ON CHANGE pcbd009 name="input.g.page3.pcbd009"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd002
+            
+            #add-point:AFTER FIELD pcbd002 name="input.a.page3.pcbd002"
+            #應用 a05 樣板自動產生(Version:3)
+            LET g_pcbc3_d[l_ac].pcbd002_desc = ''
+            LET g_pcbc3_d[l_ac].pcbd002_desc_desc = ''
+            LET g_pcbc3_d[l_ac].pcbd004_desc = ''
+            IF NOT cl_null(g_pcbc3_d[l_ac].pcbd002) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_pcbc3_d[l_ac].pcbd002 != g_pcbc3_d_t.pcbd002 OR g_pcbc3_d_t.pcbd002 IS NULL )) THEN
+                  CALL cl_err_collect_init()
+                  IF NOT apci211_pcbd002_chk(g_pcbc3_d[l_ac].pcbd002) THEN
+                     CALL cl_err_collect_show()
+                     LET g_pcbc3_d[l_ac].pcbd002 = g_pcbc3_d_t.pcbd002
+                     LET g_pcbc3_d[l_ac].pcbd003 = g_pcbc3_d_t.pcbd003
+                     LET g_pcbc3_d[l_ac].pcbd004 = g_pcbc3_d_t.pcbd004
+                     LET g_pcbc3_d[l_ac].pcbd005 = g_pcbc3_d_t.pcbd005   #160914-00029#1 by sakura add
+                     CALL apci211_pcbd002_ref(g_pcbc3_d[l_ac].pcbd002)
+                     LET g_pcbc3_d[l_ac].pcbd004_desc = s_desc_get_unit_desc(g_pcbc3_d[l_ac].pcbd004)   
+                     
+                     NEXT FIELD CURRENT
+                  ELSE
+                     CALL cl_err_collect_show()
+                  END IF
+                  
+                  LET g_upd_pcbd006 = TRUE
+               END IF
+            END IF
+            CALL apci211_pcbd002_ref(g_pcbc3_d[l_ac].pcbd002)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd002
+            #add-point:BEFORE FIELD pcbd002 name="input.b.page3.pcbd002"
+
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbd002
+            #add-point:ON CHANGE pcbd002 name="input.g.page3.pcbd002"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd003
+            #add-point:BEFORE FIELD pcbd003 name="input.b.page3.pcbd003"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd003
+            
+            #add-point:AFTER FIELD pcbd003 name="input.a.page3.pcbd003"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbd003
+            #add-point:ON CHANGE pcbd003 name="input.g.page3.pcbd003"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd004
+            
+            #add-point:AFTER FIELD pcbd004 name="input.a.page3.pcbd004"
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF  g_pcbb_m.pcbb001 IS NOT NULL AND g_pcbc3_d[g_detail_idx].pcbd002 IS NOT NULL AND g_pcbc3_d[g_detail_idx].pcbd003 IS NOT NULL AND g_pcbc3_d[g_detail_idx].pcbd004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pcbb_m.pcbb001 != g_pcbb001_t OR g_pcbc3_d[g_detail_idx].pcbd002 != g_pcbc3_d_t.pcbd002 OR g_pcbc3_d[g_detail_idx].pcbd003 != g_pcbc3_d_t.pcbd003 OR g_pcbc3_d[g_detail_idx].pcbd004 != g_pcbc3_d_t.pcbd004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pcbd_t WHERE "||"pcbdent = '" ||g_enterprise|| "' AND "||"pcbd001 = '"||g_pcbb_m.pcbb001 ||"' AND "|| "pcbd002 = '"||g_pcbc3_d[g_detail_idx].pcbd002 ||"' AND "|| "pcbd003 = '"||g_pcbc3_d[g_detail_idx].pcbd003 ||"' AND "|| "pcbd004 = '"||g_pcbc3_d[g_detail_idx].pcbd004 ||"'AND "|| "pcbd005 = '"||g_pcbc3_d[g_detail_idx].pcbd005 ||"'",'std-00004',0) THEN  ##160914-00029#1 by sakura add pcbd005
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pcbc3_d[l_ac].pcbd004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pcbc3_d[l_ac].pcbd004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pcbc3_d[l_ac].pcbd004_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd004
+            #add-point:BEFORE FIELD pcbd004 name="input.b.page3.pcbd004"
+
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbd004
+            #add-point:ON CHANGE pcbd004 name="input.g.page3.pcbd004"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd005
+            
+            #add-point:AFTER FIELD pcbd005 name="input.a.page3.pcbd005"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd005
+            #add-point:BEFORE FIELD pcbd005 name="input.b.page3.pcbd005"
+
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbd005
+            #add-point:ON CHANGE pcbd005 name="input.g.page3.pcbd005"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_color
+            #add-point:BEFORE FIELD l_color name="input.b.page3.l_color"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_color
+            
+            #add-point:AFTER FIELD l_color name="input.a.page3.l_color"
+            IF NOT cl_null(g_pcbc3_d[l_ac].pcbd007) THEN     #160705-00013#9 Add By Ken 160809             
+               LET g_pcbc3_d[l_ac].pcbd008 = s_color_hexadecimal_conver_rgb(g_pcbc3_d[l_ac].pcbd007)
+            ELSE
+               LET g_pcbc3_d[l_ac].pcbd008 = ''  #160901-00017#1 Add By Ken 160902
+            END IF                                           #160705-00013#9 Add By Ken 160809   
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_color
+            #add-point:ON CHANGE l_color name="input.g.page3.l_color"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd007
+            #add-point:BEFORE FIELD pcbd007 name="input.b.page3.pcbd007"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd007
+            
+            #add-point:AFTER FIELD pcbd007 name="input.a.page3.pcbd007"
+            IF NOT cl_null(g_pcbc3_d[l_ac].pcbd007) THEN
+               LET g_pcbd_d_color[l_ac].l_color = g_pcbc3_d[l_ac].pcbd007," reverse "
+            ELSE
+               LET g_pcbd_d_color[l_ac].l_color = ''
+            END IF
+            CALL DIALOG.setCellAttributes(g_pcbd_d_color)    
+            IF NOT cl_null(g_pcbc3_d[l_ac].pcbd007) THEN     #160705-00013#9 Add By Ken 160809                 
+               LET g_pcbc3_d[l_ac].pcbd008 = s_color_hexadecimal_conver_rgb(g_pcbc3_d[l_ac].pcbd007)
+            ELSE
+               LET g_pcbc3_d[l_ac].pcbd008 = ''  #160901-00017#1 Add By Ken 160902
+            END IF                                           #160705-00013#9 Add By Ken 160809
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbd007
+            #add-point:ON CHANGE pcbd007 name="input.g.page3.pcbd007"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbd008
+            #add-point:BEFORE FIELD pcbd008 name="input.b.page3.pcbd008"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbd008
+            
+            #add-point:AFTER FIELD pcbd008 name="input.a.page3.pcbd008"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbd008
+            #add-point:ON CHANGE pcbd008 name="input.g.page3.pcbd008"
+            LET g_txn_detail_flag = TRUE  
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pcbdstus
+            #add-point:BEFORE FIELD pcbdstus name="input.b.page3.pcbdstus"
+
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pcbdstus
+            
+            #add-point:AFTER FIELD pcbdstus name="input.a.page3.pcbdstus"
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pcbdstus
+            #add-point:ON CHANGE pcbdstus name="input.g.page3.pcbdstus"
+            LET g_txn_detail_flag = TRUE
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page3.pcbd009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd009
+            #add-point:ON ACTION controlp INFIELD pcbd009 name="input.c.page3.pcbd009"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page3.pcbd002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd002
+            #add-point:ON ACTION controlp INFIELD pcbd002 name="input.c.page3.pcbd002"
+            IF l_cmd = 'u' THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE 
+               LET g_qryparam.default1 = g_pcbc3_d[l_ac].pcbd002               
+               LET g_qryparam.arg1 = g_pcbb_m.pcbb001 
+               LET g_qryparam.arg2 = g_pcbb_m.pcbb002
+               LET g_qryparam.arg3 = g_pcbc2_d[g_class_2_idx].pcbc003
+               
+               CALL q_imaa001_24()                               
+               
+               LET g_pcbc3_d[l_ac].pcbd002 = g_qryparam.return1 
+               DISPLAY g_pcbc3_d[l_ac].pcbd002 TO pcbd002 
+               
+               CALL apci211_pcbd002_ref(g_pcbc3_d[l_ac].pcbd002)
+            ELSE
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE 
+               LET g_qryparam.default1 = g_pcbc3_d[l_ac].pcbd002               
+               LET g_qryparam.arg1 = g_pcbb_m.pcbb001 
+               LET g_qryparam.arg2 = g_pcbb_m.pcbb002
+               LET g_qryparam.arg3 = g_pcbc2_d[g_class_2_idx].pcbc003
+               LET g_qryparam.where = " imaastus = 'Y' ",
+                                      #161108-00009#1 by sakura mark(S)
+                                      #" AND EXISTS(SELECT 1 FROM rtdx_t WHERE rtdxent = imaaent AND rtdx001 = imaa001 AND rtdx025 = 'Y' AND rtdxstus='Y' ",
+                                      #"               AND rtdxsite IN (SELECT pcbe002 FROM pcbe_t WHERE pcbeent = ",g_enterprise," AND pcbe001 = '",g_pcbb_m.pcbb001,"')) ",
+                                      #161108-00009#1 by sakura mark(E)
+                                      " AND EXISTS (SELECT 1 FROM apci211_tmp_01 WHERE rtdx001 = imaa001 )",   #161108-00009#1 by sakura add
+                                      " AND (imaa009 IN (SELECT rtaw002 FROM rtaw_t WHERE rtawent = ",g_enterprise," AND '",g_pcbb_m.pcbb002,"' = '1'  AND rtaw001 = '",g_pcbc2_d[g_class_2_idx].pcbc003,"') ",
+                                      "      OR ",
+                                      "      imaa161 IN (SELECT pcbf003 FROM pcbf_t WHERE pcbfent = ",g_enterprise," AND '",g_pcbb_m.pcbb002,"' = '2'  AND pcbf001 = '",g_pcbc2_d[g_class_2_idx].pcbc003,"'))"
+               CALL q_imaa001_24()                               
+               
+               LET l_return = g_qryparam.return1
+               IF NOT cl_null(l_return) THEN
+                  LET tok = base.StringTokenizer.create(l_return,"|")
+                  LET l_n = g_pcbc3_d.getLength()
+                  LET l_cnt = 0
+                  LET l_ac_t = l_ac
+                  CALL cl_err_collect_init()
+
+                  WHILE tok.hasMoreTokens()
+                     LET l_pcbd002  = tok.nextToken()
+                     IF NOT apci211_pcbd002_chk(l_pcbd002) THEN
+                        CONTINUE WHILE
+                     END IF
+
+                     LET l_cnt = l_cnt + 1
+                     IF l_cnt = 1 THEN
+                        LET g_pcbc3_d[l_ac].pcbd002 = l_pcbd002
+                        DISPLAY g_pcbc3_d[l_ac].pcbd002 TO pcbd002 
+                        CALL apci211_pcbd002_def(l_pcbd002)   #get pcbd003,4,5
+                        CALL apci211_pcbd002_ref(g_pcbc3_d[l_ac].pcbd002)
+                     ELSE
+                        LET l_ac = l_n + l_cnt - 1
+                        LET g_pcbc3_d[l_ac].pcbd002 = l_pcbd002
+                        CALL apci211_pcbd002_def(l_pcbd002)   #get pcbd003,4,5
+                        CALL apci211_pcbd002_ref(g_pcbc3_d[l_ac].pcbd002)
+                        CALL apci211_pcbd009_get() RETURNING g_pcbc3_d[l_ac].pcbd009  #160705-00013#9 Add By ken 160810
+                        #LET g_pcbc3_d[l_ac].pcbd009 = l_ac   #160705-00013#9 Mark By ken 160810
+                        LET g_pcbc3_d[l_ac].pcbdstus = 'Y'   
+
+                        INITIALIZE gs_keys TO NULL
+                        LET gs_keys[1] = g_pcbb_m.pcbb001
+                        LET gs_keys[2] = l_pcbd002
+                        LET gs_keys[3] = g_pcbc3_d[l_ac].pcbd003
+                        LET gs_keys[4] = g_pcbc3_d[l_ac].pcbd004
+                        LET gs_keys[5] = g_pcbc3_d[l_ac].pcbd005   #160914-00029#1 by sakura add
+                        LET g_detail_idx = l_ac
+                        CALL apci211_insert_b('pcbd_t',gs_keys,"'3'")
+                        IF SQLCA.sqlcode THEN
+                           LET l_cnt = l_cnt - 1
+                        ELSE
+                           CALL apci211_pcbd002_ref(g_pcbc3_d[l_ac].pcbd002)
+                           #160705-00013#9 Add By Ken 160810  加上存圖片(S)
+                           LET g_upd_pcbd006 = TRUE
+                           IF NOT apci211_upd_pcbd006(gs_keys[1],gs_keys[2],gs_keys[3],gs_keys[4],gs_keys[5]) THEN   #160901-00017#1 Add By Ken 160902新增傳入參數gs_keys[1] #160914-00029#1 by sakura add gs_keys[5]
+                           END IF     
+                           LET g_upd_pcbd006 = FALSE                            
+                           #160705-00013#9 Add By Ken 160810  加上存圖片(E)
+                        END IF
+                     END IF
+
+                     LET l_ac = l_ac_t
+                     LET g_detail_idx = l_ac_t                        
+                  END WHILE
+                  
+                  CALL cl_err_collect_show()
+               END IF                  
+            END IF    
+            
+            NEXT FIELD pcbd002 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page3.pcbd003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd003
+            #add-point:ON ACTION controlp INFIELD pcbd003 name="input.c.page3.pcbd003"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page3.pcbd004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd004
+            #add-point:ON ACTION controlp INFIELD pcbd004 name="input.c.page3.pcbd004"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page3.pcbd005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd005
+            #add-point:ON ACTION controlp INFIELD pcbd005 name="input.c.page3.pcbd005"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page3.l_color
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_color
+            #add-point:ON ACTION controlp INFIELD l_color name="input.c.page3.l_color"
+            CALL cl_select_color() RETURNING g_pcbc3_d[l_ac].pcbd007
+            DISPLAY g_pcbc3_d[l_ac].pcbd007 TO pcbd007            
+            
+            IF NOT cl_null(g_pcbc3_d[l_ac].pcbd007) THEN
+               LET g_pcbd_d_color[l_ac].l_color = g_pcbc3_d[l_ac].pcbd007," reverse "
+            ELSE
+               LET g_pcbd_d_color[l_ac].l_color = ''
+            END IF
+            CALL DIALOG.setCellAttributes(g_pcbd_d_color)
+            IF NOT cl_null(g_pcbc3_d[l_ac].pcbd007) THEN     #160705-00013#9 Add By Ken 160809            
+               LET g_pcbc3_d[l_ac].pcbd008 = s_color_hexadecimal_conver_rgb(g_pcbc3_d[l_ac].pcbd007)
+            ELSE
+               LET g_pcbc3_d[l_ac].pcbd008 = ''  #160901-00017#1 Add By Ken 160902
+            END IF
+            
+            NEXT FIELD l_color
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page3.pcbd007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd007
+            #add-point:ON ACTION controlp INFIELD pcbd007 name="input.c.page3.pcbd007"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page3.pcbd008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbd008
+            #add-point:ON ACTION controlp INFIELD pcbd008 name="input.c.page3.pcbd008"
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page3.pcbdstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pcbdstus
+            #add-point:ON ACTION controlp INFIELD pcbdstus name="input.c.page3.pcbdstus"
+
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER ROW
+            #add-point:單身page3 after_row name="input.body3.after_row"
+
+            #end add-point
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_pcbc3_d[l_ac].* = g_pcbc3_d_t.*
+               END IF
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CLOSE apci211_bcl3
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+            CALL apci211_unlock_b("pcbd_t","'3'")
+            CALL s_transaction_end('Y','0')
+            #add-point:單身page3 after_row2 name="input.body3.after_row2"
+
+            #end add-point
+ 
+         AFTER INPUT
+            #add-point:input段after input  name="input.body3.after_input"
+
+            #end add-point   
+    
+         ON ACTION controlo
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_pcbc3_d[li_reproduce_target].* = g_pcbc3_d[li_reproduce].*
+ 
+               LET g_pcbc3_d[li_reproduce_target].pcbd002 = NULL
+               LET g_pcbc3_d[li_reproduce_target].pcbd003 = NULL
+               LET g_pcbc3_d[li_reproduce_target].pcbd004 = NULL
+               LET g_pcbc3_d[li_reproduce_target].pcbd005 = NULL   #160914-00029#1 by sakura add
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_pcbc3_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_pcbc3_d.getLength()+1
+            END IF
+            
+      END INPUT
+ 
+      
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="apci211.input.other" >}
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog name="input.before_dialog"
+         LET g_pcbe_chk = FALSE
+         LET g_txn_master_flag = FALSE
+         LET g_txn_detail_flag = FALSE
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_idx_group.getValue("'1',"))      
+         CALL DIALOG.setCurrentRow("s_detail2",g_idx_group.getValue("'2',"))
+         CALL DIALOG.setCurrentRow("s_detail3",g_idx_group.getValue("'3',"))
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field name="input.next_field"
+            
+            #end add-point  
+            NEXT FIELD pcbb001
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD pcbc005
+               WHEN "s_detail2"
+                  NEXT FIELD pcbc005
+               WHEN "s_detail3"
+                  NEXT FIELD pcbd009
+ 
+               #add-point:input段modify_detail  name="input.modify_detail.other"
+               
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog name="input.after_dialog"
+         IF g_txn_master_flag OR g_txn_detail_flag THEN          
+            CALL s_transaction_begin()
+            LET g_where_pcbb001 = ''   #紀錄更新其他方案值需清空   #160914-00029#1 by sakura add
+            IF NOT apci211_upd_pcbb003(TRUE,'0') THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y',0)
+               CALL apci211_fetch('') # reload data
+            END IF
+         END IF   
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept  name="input.accept"
+ 
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel name="input.cancel"
+         LET g_txn_master_flag = FALSE
+         LET g_txn_detail_flag = FALSE
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+         LET g_detail_idx_list[3] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+         CALL g_curr_diag.setCurrentRow("s_detail3",1)
+ 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close name="input.close"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit name="input.exit"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+         LET g_detail_idx_list[3] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+         CALL g_curr_diag.setCurrentRow("s_detail3",1)
+ 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION apci211_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point  
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="show.before"
+   
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL apci211_b_fill() #單身填充
+      CALL apci211_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL apci211_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_pcbb_m.pcbb001
+   CALL ap_ref_array2(g_ref_fields," SELECT pcbbl003,pcbbl004 FROM pcbbl_t WHERE pcbblent = '"||g_enterprise||"' AND pcbbl001 = ? AND pcbbl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_pcbb_m.pcbbl003 = g_rtn_fields[1] 
+   LET g_pcbb_m.pcbbl004 = g_rtn_fields[2] 
+   DISPLAY g_pcbb_m.pcbbl003,g_pcbb_m.pcbbl004 TO pcbbl003,pcbbl004
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_pcbb_m_mask_o.* =  g_pcbb_m.*
+   CALL apci211_pcbb_t_mask()
+   LET g_pcbb_m_mask_n.* =  g_pcbb_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_pcbb_m.pcbb001,g_pcbb_m.pcbbl003,g_pcbb_m.pcbbl004,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbunit_desc,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbownid_desc, 
+       g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp, 
+       g_pcbb_m.pcbbcrtdp_desc,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmodid_desc,g_pcbb_m.pcbbmoddt 
+ 
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_pcbb_m.pcbbstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_pcbc_d.getLength()
+      #add-point:show段單身reference name="show.body.reference"
+      
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_pcbc2_d.getLength()
+      #add-point:show段單身reference name="show.body2.reference"
+      
+      #end add-point
+   END FOR
+   FOR l_ac = 1 TO g_pcbc3_d.getLength()
+      #add-point:show段單身reference name="show.body3.reference"
+      
+      #end add-point
+   END FOR
+ 
+   
+    
+   
+   #add-point:show段other name="show.other"
+   
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL apci211_detail_show()
+ 
+   #add-point:show段之後 name="show.after"
+   CALL apci211_ins_tmp()  #161108-00009#1 by sakura add #建立生效組織交集商品資料
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.detail_show" >}
+#+ 第二階單身reference
+PRIVATE FUNCTION apci211_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point  
+   #add-point:detail_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="detail_show.before"
+   
+   #end add-point
+   
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION apci211_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point   
+   DEFINE l_newno     LIKE pcbb_t.pcbb001 
+   DEFINE l_oldno     LIKE pcbb_t.pcbb001 
+ 
+   DEFINE l_master    RECORD LIKE pcbb_t.*
+   DEFINE l_detail    RECORD LIKE pcbc_t.*
+   DEFINE l_detail2    RECORD LIKE pcbc_t.*
+ 
+   DEFINE l_detail3    RECORD LIKE pcbd_t.*
+ 
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   LET g_master_insert = FALSE
+   
+   IF g_pcbb_m.pcbb001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_pcbb001_t = g_pcbb_m.pcbb001
+ 
+    
+   LET g_pcbb_m.pcbb001 = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_pcbb_m.pcbbownid = g_user
+      LET g_pcbb_m.pcbbowndp = g_dept
+      LET g_pcbb_m.pcbbcrtid = g_user
+      LET g_pcbb_m.pcbbcrtdp = g_dept 
+      LET g_pcbb_m.pcbbcrtdt = cl_get_current()
+      LET g_pcbb_m.pcbbmodid = g_user
+      LET g_pcbb_m.pcbbmoddt = cl_get_current()
+      LET g_pcbb_m.pcbbstus = 'Y'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_pcbb_m.pcbbstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+   
+   
+   CALL apci211_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_pcbb_m.* TO NULL
+      INITIALIZE g_pcbc_d TO NULL
+      INITIALIZE g_pcbc2_d TO NULL
+      INITIALIZE g_pcbc3_d TO NULL
+ 
+      #add-point:複製取消後 name="reproduce.cancel"
+      
+      #end add-point
+      CALL apci211_show()
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL apci211_set_act_visible()   
+   CALL apci211_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_pcbb001_t = g_pcbb_m.pcbb001
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " pcbbent = '" ||g_enterprise|| "' AND",
+                      " pcbb001 = '", g_pcbb_m.pcbb001, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL apci211_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+   
+   CALL apci211_idx_chk()
+   
+   LET g_data_owner = g_pcbb_m.pcbbownid      
+   LET g_data_dept  = g_pcbb_m.pcbbowndp
+   
+   #功能已完成,通報訊息中心
+   CALL apci211_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.detail_reproduce" >}
+#+ 單身自動複製
+PRIVATE FUNCTION apci211_detail_reproduce()
+   #add-point:delete段define(客製用) name="detail_reproduce.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE pcbc_t.*
+   DEFINE l_detail2    RECORD LIKE pcbc_t.*
+ 
+   DEFINE l_detail3    RECORD LIKE pcbd_t.*
+ 
+ 
+ 
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_reproduce.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="detail_reproduce.pre_function"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE apci211_detail
+   
+   #add-point:單身複製前1 name="detail_reproduce.body.table1.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM pcbc_t
+    WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb001_t
+ 
+    INTO TEMP apci211_detail
+ 
+   #將key修正為調整後   
+   UPDATE apci211_detail 
+      #更新key欄位
+      SET pcbc001 = g_pcbb_m.pcbb001
+ 
+      #更新共用欄位
+      #應用 a13 樣板自動產生(Version:4)
+      #, pcbcstus = "Y" 
+ 
+ 
+#應用 a13 樣板自動產生(Version:4)
+      #, pcbcstus = "Y" 
+ 
+ 
+#應用 a13 樣板自動產生(Version:4)
+      #, pcbdstus = "Y" 
+ 
+ 
+ 
+ 
+   #add-point:單身修改前 name="detail_reproduce.body.table1.b_update"
+   
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO pcbc_t SELECT * FROM apci211_detail
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce:",SQLERRMESSAGE 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1 name="detail_reproduce.body.table1.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE apci211_detail
+   
+   #add-point:單身複製後1 name="detail_reproduce.body.table1.a_insert"
+   
+   #end add-point
+ 
+   #add-point:單身複製前 name="detail_reproduce.body.table2.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   #SELECT * FROM pcbc_t 
+   # WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb001_t
+ 
+   # INTO TEMP apci211_detail
+ 
+   #將key修正為調整後   
+   #UPDATE apci211_detail SET pcbc001 = g_pcbb_m.pcbb001
+ 
+  
+   #add-point:單身修改前 name="detail_reproduce.body.table2.b_update"
+   
+   #end add-point    
+ 
+   #將資料塞回原table   
+   #INSERT INTO pcbc_t SELECT * FROM apci211_detail
+   
+   #add-point:單身複製中 name="detail_reproduce.body.table2.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   #DROP TABLE apci211_detail
+   
+   #add-point:單身複製後 name="detail_reproduce.body.table2.a_insert"
+   
+   #end add-point
+ 
+   #add-point:單身複製前 name="detail_reproduce.body.table3.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM pcbd_t 
+    WHERE pcbdent = g_enterprise AND pcbd001 = g_pcbb001_t
+ 
+    INTO TEMP apci211_detail
+ 
+   #將key修正為調整後   
+   UPDATE apci211_detail SET pcbd001 = g_pcbb_m.pcbb001
+ 
+  
+   #add-point:單身修改前 name="detail_reproduce.body.table3.b_update"
+   
+   #end add-point    
+ 
+   #將資料塞回原table   
+   INSERT INTO pcbd_t SELECT * FROM apci211_detail
+   
+   #add-point:單身複製中 name="detail_reproduce.body.table3.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE apci211_detail
+   
+   #add-point:單身複製後 name="detail_reproduce.body.table3.a_insert"
+   
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_pcbb001_t = g_pcbb_m.pcbb001
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION apci211_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point     
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   IF g_pcbb_m.pcbb001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   LET g_master_multi_table_t.pcbbl001 = g_pcbb_m.pcbb001
+LET g_master_multi_table_t.pcbbl003 = g_pcbb_m.pcbbl003
+LET g_master_multi_table_t.pcbbl004 = g_pcbb_m.pcbbl004
+ 
+   
+   CALL s_transaction_begin()
+ 
+   OPEN apci211_cl USING g_enterprise,g_pcbb_m.pcbb001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN apci211_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CLOSE apci211_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE apci211_master_referesh USING g_pcbb_m.pcbb001 INTO g_pcbb_m.pcbb001,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbcrtid, 
+       g_pcbb_m.pcbbcrtdp,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt,g_pcbb_m.pcbbunit_desc, 
+       g_pcbb_m.pcbbownid_desc,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp_desc, 
+       g_pcbb_m.pcbbmodid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT apci211_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_pcbb_m_mask_o.* =  g_pcbb_m.*
+   CALL apci211_pcbb_t_mask()
+   LET g_pcbb_m_mask_n.* =  g_pcbb_m.*
+   
+   CALL apci211_show()
+   
+   #add-point:delete段before ask name="delete.before_ask"
+   
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL apci211_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+  
+  
+      #資料備份
+      LET g_pcbb001_t = g_pcbb_m.pcbb001
+ 
+ 
+      DELETE FROM pcbb_t
+       WHERE pcbbent = g_enterprise AND pcbb001 = g_pcbb_m.pcbb001
+ 
+       
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_pcbb_m.pcbb001,":",SQLERRMESSAGE  
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      #生效範圍應一併刪除
+      DELETE FROM pcbe_t
+       WHERE pcbeent = g_enterprise AND pcbe001 = g_pcbb001_t
+       
+      IF SQLCA.sqlcode THEN
+         CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pcbe_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF       
+      #end add-point
+  
+      #add-point:單身刪除前 name="delete.body.b_delete"
+      
+      #end add-point
+      
+      DELETE FROM pcbc_t
+       WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb_m.pcbb001
+ 
+ 
+      #add-point:單身刪除中 name="delete.body.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete"
+      
+      #end add-point
+      
+            
+                                                               
+      #add-point:單身刪除前 name="delete.body.b_delete2"
+      
+      #end add-point
+      DELETE FROM pcbc_t
+       WHERE pcbcent = g_enterprise AND
+             pcbc001 = g_pcbb_m.pcbb001
+      #add-point:單身刪除中 name="delete.body.m_delete2"
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete2"
+      
+      #end add-point
+ 
+      #add-point:單身刪除前 name="delete.body.b_delete3"
+      
+      #end add-point
+      DELETE FROM pcbd_t
+       WHERE pcbdent = g_enterprise AND
+             pcbd001 = g_pcbb_m.pcbb001
+      #add-point:單身刪除中 name="delete.body.m_delete3"
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pcbd_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete3"
+      
+      #end add-point
+ 
+ 
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      IF NOT cl_log_modified_record('','') THEN 
+         CLOSE apci211_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_pcbc_d.clear() 
+      CALL g_pcbc2_d.clear()       
+      CALL g_pcbc3_d.clear()       
+ 
+     
+      CALL apci211_ui_browser_refresh()  
+      #CALL apci211_ui_headershow()  
+      #CALL apci211_ui_detailshow()
+ 
+      #add-point:多語言刪除 name="delete.lang.before_delete"
+      
+      #end add-point
+      
+      #單頭多語言刪除
+      INITIALIZE l_var_keys_bak TO NULL 
+   INITIALIZE l_field_keys   TO NULL 
+   LET l_var_keys_bak[01] = g_enterprise
+   LET l_field_keys[01] = 'pcbblent'
+   LET l_var_keys_bak[02] = g_master_multi_table_t.pcbbl001
+   LET l_field_keys[02] = 'pcbbl001'
+   CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'pcbbl_t')
+ 
+      
+      #單身多語言刪除
+      
+      
+      
+ 
+   
+      #add-point:多語言刪除 name="delete.lang.delete"
+      
+      #end add-point
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL apci211_browser_fill("")
+         CALL apci211_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+      
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE apci211_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL apci211_msgcentre_notify('delete')
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION apci211_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+
+   #end add-point     
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+ 
+   #end add-point     
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+
+   #end add-point
+   
+   #清空第一階單身
+   CALL g_pcbc_d.clear()
+   CALL g_pcbc2_d.clear()
+   CALL g_pcbc3_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+ 
+   #end add-point
+   
+   #判斷是否填充
+   IF apci211_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF g_action_choice <> 'fetch' OR cl_null(g_action_choice) THEN
+         LET g_sql = "SELECT  DISTINCT pcbc005,pcbc003,pcbc002,pcbc004,pcbcstus  FROM pcbc_t",   
+                     " INNER JOIN pcbb_t ON pcbbent = '" ||g_enterprise|| "' AND pcbb001 = pcbc001 ",
+ 
+                     #"",
+                     
+                     "",
+                     #下層單身所需的join條件
+ 
+                     
+                     " WHERE pcbcent=? AND pcbc001=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body.fill_sql"
+         LET g_sql = g_sql, " AND pcbc002 = '1' "
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY pcbc_t.pcbc003"
+         
+         #add-point:單身填充控制 name="b_fill.sql"
+         LET g_sql = cl_replace_str(g_sql,"ORDER BY pcbc_t.pcbc003","ORDER BY pcbc005,pcbc003")
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE apci211_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR apci211_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs USING g_enterprise,g_pcbb_m.pcbb001
+                                               
+      FOREACH b_fill_cs INTO g_pcbc_d[l_ac].pcbc005,g_pcbc_d[l_ac].pcbc003,g_pcbc_d[l_ac].pcbc002,g_pcbc_d[l_ac].pcbc004, 
+          g_pcbc_d[l_ac].pcbcstus
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill.fill"
+         CALL apci211_pcbc003_ref(g_pcbc_d[l_ac].pcbc002,g_pcbc_d[l_ac].pcbc003)
+         
+         IF g_class_1_idx = 0 AND l_ac = 1 THEN
+            LET g_class_1_idx = 1
+         END IF
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code   = 9035 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+    
+   #判斷是否填充
+   IF apci211_fill_chk(2) THEN
+      IF g_action_choice <> 'fetch' OR cl_null(g_action_choice) THEN
+         LET g_sql = "SELECT  DISTINCT pcbc005,pcbc003,pcbc002,pcbc004,pcbcstus  FROM pcbc_t",   
+                     " INNER JOIN  pcbb_t ON pcbbent = '" ||g_enterprise|| "' AND pcbb001 = pcbc001 ",
+ 
+                     "",
+                     
+                     
+                     " WHERE pcbcent=? AND pcbc001=?"   
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body2.fill_sql"
+         LET g_sql = g_sql," AND pcbc002 = '2' "
+         
+         IF g_class_1_idx > 0 THEN
+            LET g_sql = g_sql," AND pcbc004 = '",g_pcbc_d[g_class_1_idx].pcbc003,"' "     
+         ELSE
+            LET g_sql = g_sql," AND 1 = 2 "         
+         END IF
+         #end add-point
+         IF NOT cl_null(g_wc2_table2) THEN
+            LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY pcbc_t.pcbc003"
+         
+         #add-point:單身填充控制 name="b_fill.sql2"
+         LET g_sql = cl_replace_str(g_sql,"ORDER BY pcbc_t.pcbc003","ORDER BY pcbc005,pcbc003") 
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE apci211_pb2 FROM g_sql
+         DECLARE b_fill_cs2 CURSOR FOR apci211_pb2
+      END IF
+    
+      LET l_ac = 1
+      
+      OPEN b_fill_cs2 USING g_enterprise,g_pcbb_m.pcbb001
+                                               
+      FOREACH b_fill_cs2 INTO g_pcbc2_d[l_ac].pcbc005,g_pcbc2_d[l_ac].pcbc003,g_pcbc2_d[l_ac].pcbc002, 
+          g_pcbc2_d[l_ac].pcbc004,g_pcbc2_d[l_ac].pcbcstus
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill2.fill"
+         CALL apci211_pcbc003_ref(g_pcbc2_d[l_ac].pcbc002,g_pcbc2_d[l_ac].pcbc003) 
+         
+         IF g_class_2_idx = 0 AND l_ac = 1 THEN
+            LET g_class_2_idx = 1
+         END IF    
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   END IF
+ 
+   #判斷是否填充
+   IF apci211_fill_chk(3) THEN
+      IF g_action_choice <> 'fetch' OR cl_null(g_action_choice) THEN
+         LET g_sql = "SELECT  DISTINCT pcbd009,pcbd002,pcbd003,pcbd004,pcbd005,pcbd007,pcbd008,pcbdstus , 
+             t1.imaal003 ,t2.imaal004 ,t3.oocal003 FROM pcbd_t",   
+                     " INNER JOIN  pcbb_t ON pcbbent = '" ||g_enterprise|| "' AND pcbb001 = pcbd001 ",
+ 
+                     "",
+                     
+                                    " LEFT JOIN imaal_t t1 ON t1.imaalent='"||g_enterprise||"' AND t1.imaal001=pcbd002 AND t1.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t2 ON t2.imaalent='"||g_enterprise||"' AND t2.imaal001=pcbd002 AND t2.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN oocal_t t3 ON t3.oocalent='"||g_enterprise||"' AND t3.oocal001=pcbd004 AND t3.oocal002='"||g_dlang||"' ",
+ 
+                     " WHERE pcbdent=? AND pcbd001=?"   
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body3.fill_sql"
+         IF g_class_2_idx > 0 THEN
+            LET g_sql = g_sql, " AND pcbd005 = '",g_pcbc2_d[g_class_2_idx].pcbc003,"' "
+         ELSE
+            LET g_sql = g_sql," AND 1 = 2 "      
+         END IF
+         #end add-point
+         IF NOT cl_null(g_wc2_table3) THEN
+            LET g_sql = g_sql CLIPPED," AND ",g_wc2_table3 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY pcbd_t.pcbd002,pcbd_t.pcbd003,pcbd_t.pcbd004"
+         
+         #add-point:單身填充控制 name="b_fill.sql3"
+         LET g_sql = cl_replace_str(g_sql,"ORDER BY pcbd_t.pcbd002,pcbd_t.pcbd003,pcbd_t.pcbd004",
+                                          "ORDER BY pcbd009,pcbd002,pcbd003,pcbd004")
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE apci211_pb3 FROM g_sql
+         DECLARE b_fill_cs3 CURSOR FOR apci211_pb3
+      END IF
+    
+      LET l_ac = 1
+      
+      OPEN b_fill_cs3 USING g_enterprise,g_pcbb_m.pcbb001
+                                               
+      FOREACH b_fill_cs3 INTO g_pcbc3_d[l_ac].pcbd009,g_pcbc3_d[l_ac].pcbd002,g_pcbc3_d[l_ac].pcbd003, 
+          g_pcbc3_d[l_ac].pcbd004,g_pcbc3_d[l_ac].pcbd005,g_pcbc3_d[l_ac].pcbd007,g_pcbc3_d[l_ac].pcbd008, 
+          g_pcbc3_d[l_ac].pcbdstus,g_pcbc3_d[l_ac].pcbd002_desc,g_pcbc3_d[l_ac].pcbd002_desc_desc,g_pcbc3_d[l_ac].pcbd004_desc 
+ 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill3.fill"
+         IF g_prod_idx = 0 AND l_ac = 1 THEN
+            LET g_prod_idx = l_ac
+         END IF   
+         
+         #160705-00013#9 Add By Ken 160805(S)
+         CALL apci211_pcbd006_show()
+         #160705-00013#9 Add By Ken 160805(E)
+         
+         IF NOT cl_null(g_pcbc3_d[l_ac].pcbd007) THEN
+            LET g_pcbd_d_color[l_ac].l_color = g_pcbc3_d[l_ac].pcbd007," reverse "
+         ELSE 
+            LET g_pcbd_d_color[l_ac].l_color = ''
+         END IF
+         
+        #CALL apci211_pcbd005_ref(g_pcbc3_d[l_ac].pcbd005)
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   END IF
+ 
+ 
+   
+   #add-point:browser_fill段其他table處理 name="browser_fill.other_fill"
+ 
+   #end add-point
+   
+   CALL g_pcbc_d.deleteElement(g_pcbc_d.getLength())
+   CALL g_pcbc2_d.deleteElement(g_pcbc2_d.getLength())
+   CALL g_pcbc3_d.deleteElement(g_pcbc3_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE apci211_pb
+   FREE apci211_pb2
+ 
+   FREE apci211_pb3
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_pcbc_d.getLength()
+      LET g_pcbc_d_mask_o[l_ac].* =  g_pcbc_d[l_ac].*
+      CALL apci211_pcbc_t_mask()
+      LET g_pcbc_d_mask_n[l_ac].* =  g_pcbc_d[l_ac].*
+   END FOR
+   
+   LET g_pcbc2_d_mask_o.* =  g_pcbc2_d.*
+   FOR l_ac = 1 TO g_pcbc2_d.getLength()
+      LET g_pcbc2_d_mask_o[l_ac].* =  g_pcbc2_d[l_ac].*
+      CALL apci211_pcbc_t_mask()
+      LET g_pcbc2_d_mask_n[l_ac].* =  g_pcbc2_d[l_ac].*
+   END FOR
+   LET g_pcbc3_d_mask_o.* =  g_pcbc3_d.*
+   FOR l_ac = 1 TO g_pcbc3_d.getLength()
+      LET g_pcbc3_d_mask_o[l_ac].* =  g_pcbc3_d[l_ac].*
+      CALL apci211_pcbd_t_mask()
+      LET g_pcbc3_d_mask_n[l_ac].* =  g_pcbc3_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION apci211_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   DEFINE l_del_class2   LIKE type_t.chr1
+   DEFINE l_del_prod     LIKE type_t.chr1
+   DEFINE l_class_1      LIKE pcbc_t.pcbc003
+   DEFINE l_class_2      LIKE pcbc_t.pcbc003
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   LET l_del_class2 = ''
+   LET l_del_prod = ''
+   LET l_class_1 = ''
+   LET l_class_2 = ''
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete"
+      LET l_del_class2 = 'Y'
+      LET l_del_prod = 'Y'
+      LET l_class_1 = ps_keys_bak[2]
+      #end add-point    
+      DELETE FROM pcbc_t
+       WHERE pcbcent = g_enterprise AND
+         pcbc001 = ps_keys_bak[1] AND pcbc003 = ps_keys_bak[2]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete"
+
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ":",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_pcbc_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete2"
+      LET l_del_prod = 'Y'
+      LET l_class_2 = ps_keys_bak[2]
+      #end add-point    
+      DELETE FROM pcbc_t
+       WHERE pcbcent = g_enterprise AND
+             pcbc001 = ps_keys_bak[1] AND pcbc003 = ps_keys_bak[2]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete2"
+
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_pcbc2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      #add-point:delete_b段刪除後 name="delete_b.a_delete2"
+
+      #end add-point    
+   END IF
+ 
+   LET ls_group = "'3',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete3"
+
+      #end add-point    
+      DELETE FROM pcbd_t
+       WHERE pcbdent = g_enterprise AND
+             pcbd001 = ps_keys_bak[1] AND pcbd002 = ps_keys_bak[2] AND pcbd003 = ps_keys_bak[3] AND pcbd004 = ps_keys_bak[4]
+             AND pcbd005 = ps_keys_bak[5]   #160914-00029#1 by sakura add
+      #add-point:delete_b段刪除中 name="delete_b.m_delete3"
+
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pcbd_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'3'" THEN 
+         CALL g_pcbc3_d.deleteElement(li_idx) 
+      END IF 
+ 
+      #add-point:delete_b段刪除後 name="delete_b.a_delete3"
+
+      #end add-point    
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:delete_b段other name="delete_b.other"
+   IF l_del_class2 = 'Y' THEN
+      DELETE FROM pcbc_t
+       WHERE pcbcent = g_enterprise 
+         AND pcbc001 = ps_keys_bak[1] AND pcbc004 = l_class_1   
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF      
+   END IF
+   
+   IF l_del_prod = 'Y' THEN
+      IF g_pcbb_m.pcbb002 = '1' THEN
+         #商品品類
+         DELETE FROM pcbd_t
+          WHERE pcbdent = g_enterprise AND pcbd001 = ps_keys_bak[1]
+            AND pcbd005 IN (SELECT rtaw002 FROM rtaw_t
+                             WHERE rtawent = g_enterprise AND rtaw001 IN (l_class_1,l_class_2))  
+      ELSE
+         #觸屏分類
+         DELETE FROM pcbd_t
+          WHERE pcbdent = g_enterprise AND pcbd001 = ps_keys_bak[1]
+            AND pcbd005 IN (SELECT pcbf003 FROM pcbf_t
+                             WHERE pcbfent = g_enterprise AND pcbf001 IN (l_class_1,l_class_2))  
+      END IF   
+   END IF  
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION apci211_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+ 
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert"
+  
+      #end add-point 
+      INSERT INTO pcbc_t
+                  (pcbcent,
+                   pcbc001,
+                   pcbc003
+                   ,pcbc005,pcbc002,pcbc004,pcbcstus) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_pcbc_d[g_detail_idx].pcbc005,g_pcbc_d[g_detail_idx].pcbc002,g_pcbc_d[g_detail_idx].pcbc004, 
+                       g_pcbc_d[g_detail_idx].pcbcstus)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert"
+
+      #end add-point 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_pcbc_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert"
+
+      #end add-point 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert2"
+ 
+      #end add-point 
+      INSERT INTO pcbc_t
+                  (pcbcent,
+                   pcbc001,
+                   pcbc003
+                   ,pcbc005,pcbc002,pcbc004,pcbcstus) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_pcbc2_d[g_detail_idx].pcbc005,g_pcbc2_d[g_detail_idx].pcbc002,g_pcbc2_d[g_detail_idx].pcbc004, 
+                       g_pcbc2_d[g_detail_idx].pcbcstus)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert2"
+
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_pcbc2_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert2"
+
+      #end add-point
+   END IF
+ 
+   LET ls_group = "'3',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert3"
+      #產品特徵
+      IF cl_null(g_pcbc3_d[g_detail_idx].pcbd003) THEN   
+         LET g_pcbc3_d[g_detail_idx].pcbd003 = ' '   
+      END IF   
+      
+      #單位
+      IF cl_null(g_pcbc3_d[g_detail_idx].pcbd004) THEN   
+         LET g_pcbc3_d[g_detail_idx].pcbd004 = ' '   
+      END IF        
+      #end add-point 
+      INSERT INTO pcbd_t
+                  (pcbdent,
+                   pcbd001,
+                   pcbd002,pcbd003,pcbd004
+                   ,pcbd009,pcbd005,pcbd007,pcbd008,pcbdstus) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+                   ,g_pcbc3_d[g_detail_idx].pcbd009,ps_keys[5],g_pcbc3_d[g_detail_idx].pcbd007,   ##160914-00029#1 by sakura add  ps_keys[5]
+                       g_pcbc3_d[g_detail_idx].pcbd008,g_pcbc3_d[g_detail_idx].pcbdstus)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert3"
+
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "pcbd_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'3'" THEN 
+         CALL g_pcbc3_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert3"
+      IF NOT apci211_upd_pcbd006(ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5]) THEN  #160901-00017#1 Add By Ken 160902新增傳入參數gs_keys[1] #160914-00029#1 by sakura add gs_keys[5]
+      END IF 
+      #end add-point
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:insert_b段other name="insert_b.other"
+
+   #end add-point     
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION apci211_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+
+   #end add-point   
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+
+   #end add-point   
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+ 
+   #end add-point
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "pcbc_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update"
+
+      #end add-point 
+      
+      #將遮罩欄位還原
+      CALL apci211_pcbc_t_mask_restore('restore_mask_o')
+               
+      UPDATE pcbc_t 
+         SET (pcbc001,
+              pcbc003
+              ,pcbc005,pcbc002,pcbc004,pcbcstus) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_pcbc_d[g_detail_idx].pcbc005,g_pcbc_d[g_detail_idx].pcbc002,g_pcbc_d[g_detail_idx].pcbc004, 
+                  g_pcbc_d[g_detail_idx].pcbcstus) 
+         WHERE pcbcent = g_enterprise AND pcbc001 = ps_keys_bak[1] AND pcbc003 = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update"
+
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pcbc_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+ 
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL apci211_pcbc_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後 name="update_b.after_update"
+
+      #end add-point  
+   END IF
+   
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+   
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "pcbc_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update2"
+
+      #end add-point  
+      
+      #將遮罩欄位還原
+      CALL apci211_pcbc_t_mask_restore('restore_mask_o')
+               
+      UPDATE pcbc_t 
+         SET (pcbc001,
+              pcbc003
+              ,pcbc005,pcbc002,pcbc004,pcbcstus) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_pcbc2_d[g_detail_idx].pcbc005,g_pcbc2_d[g_detail_idx].pcbc002,g_pcbc2_d[g_detail_idx].pcbc004, 
+                  g_pcbc2_d[g_detail_idx].pcbcstus) 
+         WHERE pcbcent = g_enterprise AND pcbc001 = ps_keys_bak[1] AND pcbc003 = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update2"
+
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pcbc_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pcbc_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+          
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL apci211_pcbc_t_mask_restore('restore_mask_n')
+ 
+      #add-point:update_b段修改後 name="update_b.after_update2"
+
+      #end add-point  
+   END IF
+ 
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+ 
+   LET ls_group = "'3',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "pcbd_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update3"
+      IF cl_null(g_pcbc3_d[g_detail_idx].pcbd003) THEN   
+         LET g_pcbc3_d[g_detail_idx].pcbd003 = ' '   
+      END IF   
+      #end add-point  
+      
+      #將遮罩欄位還原
+      CALL apci211_pcbd_t_mask_restore('restore_mask_o')
+               
+      UPDATE pcbd_t 
+         SET (pcbd001,
+              pcbd002,pcbd003,pcbd004,pcbd005   #160914-00029#1 by sakura add pcbd005
+              ,pcbd009,pcbd005,pcbd007,pcbd008,pcbdstus) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5]   #160914-00029#1 by sakura add ps_keys[5]
+              ,g_pcbc3_d[g_detail_idx].pcbd009,g_pcbc3_d[g_detail_idx].pcbd005,g_pcbc3_d[g_detail_idx].pcbd007, 
+                  g_pcbc3_d[g_detail_idx].pcbd008,g_pcbc3_d[g_detail_idx].pcbdstus) 
+         WHERE pcbdent = g_enterprise AND pcbd001 = ps_keys_bak[1] AND pcbd002 = ps_keys_bak[2] AND pcbd003 = ps_keys_bak[3] AND pcbd004 = ps_keys_bak[4]
+               AND pcbd005 = ps_keys_bak[5]   #160914-00029#1 by sakura add
+      #add-point:update_b段修改中 name="update_b.m_update3"
+
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pcbd_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "pcbd_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+          
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL apci211_pcbd_t_mask_restore('restore_mask_n')
+ 
+      #add-point:update_b段修改後 name="update_b.after_update3"
+      IF NOT apci211_upd_pcbd006(ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5]) THEN   #160901-00017#1 Add By Ken 160902新增傳入參數gs_keys[1] #160914-00029#1 by sakura add gs_keys[5]
+      END IF
+      #end add-point  
+   END IF
+ 
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:update_b段other name="update_b.other"
+
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.key_update_b" >}
+#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION apci211_key_update_b(ps_keys_bak,ps_table)
+   #add-point:update_b段define(客製用) name="key_update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_key       DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_update_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_update_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.key_delete_b" >}
+#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION apci211_key_delete_b(ps_keys_bak,ps_table)
+   #add-point:delete_b段define(客製用) name="key_delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_delete_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_delete_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION apci211_lock_b(ps_table,ps_page)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+
+   #end add-point   
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+
+   #end add-point
+    
+   #先刷新資料
+   #CALL apci211_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "pcbc_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN apci211_bcl USING g_enterprise,
+                                       g_pcbb_m.pcbb001,g_pcbc_d[g_detail_idx].pcbc003     
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "apci211_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+   #鎖定整組table
+   #LET ls_group = "'2',"
+   #僅鎖定自身table
+   LET ls_group = "pcbc_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN apci211_bcl2 USING g_enterprise,
+                                             g_pcbb_m.pcbb001,g_pcbc2_d[g_detail_idx].pcbc003
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "apci211_bcl2:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+   #鎖定整組table
+   #LET ls_group = "'3',"
+   #僅鎖定自身table
+   LET ls_group = "pcbd_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN apci211_bcl3 USING g_enterprise,
+                                             g_pcbb_m.pcbb001,g_pcbc3_d[g_detail_idx].pcbd002,g_pcbc3_d[g_detail_idx].pcbd003, 
+                                                 g_pcbc3_d[g_detail_idx].pcbd004,g_pcbc3_d[g_detail_idx].pcbd005   #160914-00029#1 by sakura add pcbd005
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "apci211_bcl3:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:lock_b段other name="lock_b.other"
+
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION apci211_unlock_b(ps_table,ps_page)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE apci211_bcl
+   END IF
+   
+   LET ls_group = "'2',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE apci211_bcl2
+   END IF
+ 
+   LET ls_group = "'3',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE apci211_bcl3
+   END IF
+ 
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other name="unlock_b.other"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION apci211_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization"
+   
+   #end add-point       
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point       
+   
+   #add-point:Function前置處理  name="set_entry.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_comp_entry("",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("pcbb001",TRUE)
+      CALL cl_set_comp_entry("",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   CALL cl_set_comp_entry("pcbbunit",TRUE)
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION apci211_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("pcbb001",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN  #docno,ld欄位確認是絕對關閉
+      CALL cl_set_comp_entry("",FALSE)
+   END IF 
+ 
+   IF p_cmd = 'u' THEN  #docdt欄位依照設定關閉(FALSE則為設定不同意修正)
+      IF NOT cl_chk_update_docdt() THEN
+         CALL cl_set_comp_entry("",FALSE)
+      END IF
+   END IF 
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   IF NOT s_aooi500_comp_entry(g_prog,'pcbbunit') THEN
+      CALL cl_set_comp_entry("pcbbunit",FALSE)
+   END IF
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION apci211_set_entry_b(p_cmd)
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_entry_b.pre_function"
+   
+   #end add-point
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制 name="set_entry_b.field_control"
+      CALL cl_set_comp_entry("pcbc003,pcbc003_1",TRUE)    #160705-00013#7 160720 by ken add pcbc003_1
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段 name="set_entry_b.set_entry_b"
+   
+   #end add-point  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION apci211_set_no_entry_b(p_cmd)
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point    
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="set_no_entry_b.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      CALL cl_set_comp_entry("pcbc003,pcbc003_1",FALSE)   #160705-00013#7 160720 by ken add pcbc003_1
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段 name="set_no_entry_b.set_no_entry_b"
+   
+   #end add-point     
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION apci211_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   CALL cl_set_act_visible("upload_pos",TRUE)
+   CALL cl_set_act_visible("delete",TRUE)     #160705-00013#7 Add By Ken 160720
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION apci211_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   IF g_pcbb_m.pcbb003 = '1' THEN
+      CALL cl_set_act_visible("upload_pos",FALSE)
+   END IF
+   
+   CALL cl_set_act_visible("delete",FALSE)     #160705-00013#7 Add By Ken 160720
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.set_act_visible_b" >}
+#+ 單身權限開啟
+PRIVATE FUNCTION apci211_set_act_visible_b()
+   #add-point:set_act_visible_b段define(客製用) name="set_act_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段 name="set_act_visible_b.set_act_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.set_act_no_visible_b" >}
+#+ 單身權限關閉
+PRIVATE FUNCTION apci211_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define(客製用) name="set_act_no_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段 name="set_act_no_visible_b.set_act_no_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION apci211_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point  
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="default_search.before"
+   
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " pcbb001 = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+         INITIALIZE g_wc2_table2 TO NULL
+ 
+         INITIALIZE g_wc2_table3 TO NULL
+ 
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "pcbb_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "pcbc_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "pcbc_t" 
+                  LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+               WHEN la_wc[li_idx].tableid = "pcbd_t" 
+                  LET g_wc2_table3 = la_wc[li_idx].wc
+ 
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+            OR NOT cl_null(g_wc2_table2)
+ 
+            OR NOT cl_null(g_wc2_table3)
+ 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+            IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+            END IF
+ 
+            IF g_wc2_table3 <> " 1=1" AND NOT cl_null(g_wc2_table3) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_table3
+            END IF
+ 
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION apci211_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_pcbb_m.pcbb001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN apci211_cl USING g_enterprise,g_pcbb_m.pcbb001
+   IF STATUS THEN
+      CLOSE apci211_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN apci211_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE apci211_master_referesh USING g_pcbb_m.pcbb001 INTO g_pcbb_m.pcbb001,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbcrtid, 
+       g_pcbb_m.pcbbcrtdp,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt,g_pcbb_m.pcbbunit_desc, 
+       g_pcbb_m.pcbbownid_desc,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp_desc, 
+       g_pcbb_m.pcbbmodid_desc
+   
+ 
+   #檢查是否允許此動作
+   IF NOT apci211_action_chk() THEN
+      CLOSE apci211_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_pcbb_m.pcbb001,g_pcbb_m.pcbbl003,g_pcbb_m.pcbbl004,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+       g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+       g_pcbb_m.pcbbunit,g_pcbb_m.pcbbunit_desc,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbownid_desc, 
+       g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp, 
+       g_pcbb_m.pcbbcrtdp_desc,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmodid_desc,g_pcbb_m.pcbbmoddt 
+ 
+ 
+   CASE g_pcbb_m.pcbbstus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_pcbb_m.pcbbstus
+            
+            WHEN "N"
+               HIDE OPTION "inactive"
+            WHEN "Y"
+               HIDE OPTION "active"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      
+      #end add-point
+      
+      
+	  
+      ON ACTION inactive
+         IF cl_auth_chk_act("inactive") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.inactive"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION active
+         IF cl_auth_chk_act("active") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.active"
+            IF NOT apci211_active_chk() THEN
+               CLOSE apci211_cl
+               CALL s_transaction_end('N','0')              
+            END IF
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+      
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      ) OR 
+      g_pcbb_m.pcbbstus = lc_state OR cl_null(lc_state) THEN
+      CLOSE apci211_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   
+   #end add-point
+   
+   LET g_pcbb_m.pcbbmodid = g_user
+   LET g_pcbb_m.pcbbmoddt = cl_get_current()
+   LET g_pcbb_m.pcbbstus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE pcbb_t 
+      SET (pcbbstus,pcbbmodid,pcbbmoddt) 
+        = (g_pcbb_m.pcbbstus,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt)     
+    WHERE pcbbent = g_enterprise AND pcbb001 = g_pcbb_m.pcbb001
+ 
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE apci211_master_referesh USING g_pcbb_m.pcbb001 INTO g_pcbb_m.pcbb001,g_pcbb_m.pcbb002, 
+          g_pcbb_m.pcbb003,g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008, 
+          g_pcbb_m.pcbb009,g_pcbb_m.pcbbunit,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbowndp, 
+          g_pcbb_m.pcbbcrtid,g_pcbb_m.pcbbcrtdp,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmoddt, 
+          g_pcbb_m.pcbbunit_desc,g_pcbb_m.pcbbownid_desc,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid_desc, 
+          g_pcbb_m.pcbbcrtdp_desc,g_pcbb_m.pcbbmodid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_pcbb_m.pcbb001,g_pcbb_m.pcbbl003,g_pcbb_m.pcbbl004,g_pcbb_m.pcbb002,g_pcbb_m.pcbb003, 
+          g_pcbb_m.pcbb004,g_pcbb_m.pcbb005,g_pcbb_m.pcbb006,g_pcbb_m.pcbb007,g_pcbb_m.pcbb008,g_pcbb_m.pcbb009, 
+          g_pcbb_m.pcbbunit,g_pcbb_m.pcbbunit_desc,g_pcbb_m.pcbbstus,g_pcbb_m.pcbbownid,g_pcbb_m.pcbbownid_desc, 
+          g_pcbb_m.pcbbowndp,g_pcbb_m.pcbbowndp_desc,g_pcbb_m.pcbbcrtid,g_pcbb_m.pcbbcrtid_desc,g_pcbb_m.pcbbcrtdp, 
+          g_pcbb_m.pcbbcrtdp_desc,g_pcbb_m.pcbbcrtdt,g_pcbb_m.pcbbmodid,g_pcbb_m.pcbbmodid_desc,g_pcbb_m.pcbbmoddt 
+ 
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   #160914-00029#1 by sakura mark(S)
+   #
+   #IF NOT apci211_upd_detail_stus(lc_state) THEN
+   #   CLOSE apci211_cl
+   #   CALL s_transaction_end('N','0')   
+   #   RETURN
+   #END IF
+   #160914-00029#1 by sakura mark(E)
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   
+   #end add-point  
+ 
+   CLOSE apci211_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL apci211_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="apci211.idx_chk" >}
+#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION apci211_idx_chk()
+   #add-point:idx_chk段define(客製用) name="idx_chk.define_customerization"
+   
+   #end add-point  
+   #add-point:idx_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="idx_chk.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="idx_chk.pre_function"
+   
+   #end add-point
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_pcbc_d.getLength() THEN
+         LET g_detail_idx = g_pcbc_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_pcbc_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_pcbc_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx > g_pcbc2_d.getLength() THEN
+         LET g_detail_idx = g_pcbc2_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_pcbc2_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_pcbc2_d.getLength() TO FORMONLY.cnt
+   END IF
+   IF g_current_page = 3 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail3")
+      IF g_detail_idx > g_pcbc3_d.getLength() THEN
+         LET g_detail_idx = g_pcbc3_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_pcbc3_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_pcbc3_d.getLength() TO FORMONLY.cnt
+   END IF
+ 
+   
+   #add-point:idx_chk段other name="idx_chk.other"
+   ##160705-00013#5 Add By ken 160727(S)
+   CASE g_touch
+     WHEN 1
+        CALL gfrm_curr.ensureElementVisible("bpage_1")       
+     WHEN 2
+        CALL gfrm_curr.ensureElementVisible("page_1")       
+        LET g_touch = '2'
+        #动态显示画面ACTTION数量
+        CALL gfrm_curr.setElementHidden("hbox_4",0)
+        LET g_but1 = 0
+        LET g_but2 = 0
+        LET g_but3 = 0 
+        LET g_button1 = 1        
+        LET g_button2 = 1
+        LET g_button3 = 1
+        LET g_main_col = g_pcbb_m.pcbb005    #大類列數
+        LET g_main_row = g_pcbb_m.pcbb004    #大類行數
+        LET g_item_col = g_pcbb_m.pcbb007    #小類列數
+        LET g_item_row = g_pcbb_m.pcbb006    #小類行數
+        LET g_product_col = g_pcbb_m.pcbb009 #產品列數
+        LET g_product_row = g_pcbb_m.pcbb008 #產品行數
+        LET g_main_page_count = g_pcbb_m.pcbb005 * g_pcbb_m.pcbb004
+        LET g_item_page_count = g_pcbb_m.pcbb007 * g_pcbb_m.pcbb006
+        LET g_product_page_count = g_pcbb_m.pcbb009 * g_pcbb_m.pcbb008 +2
+        CALL apci211_get_data("M",g_main_array[g_button1].main_id,g_item_array[g_button2].item_id)               
+        CALL apci211_create_form("main","main_group",1,g_main_page_count-2)
+        CALL apci211_create_form("item","item_group",1,g_item_page_count-2)
+        CALL apci211_create_form("product","product_group",1,g_product_page_count-2) 
+        CALL apci211_change_style("P")   
+   END CASE        
+   ##160705-00013#5 Add By ken 160727(E)
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION apci211_b_fill2(pi_idx)
+   #add-point:b_fill2段define(客製用) name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE pi_idx                 LIKE type_t.num10
+   DEFINE li_ac                  LIKE type_t.num10
+   DEFINE li_detail_idx_tmp      LIKE type_t.num10
+   DEFINE ls_chk                 LIKE type_t.chr1
+   #add-point:b_fill2段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill2.pre_function"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+   LET li_detail_idx_tmp = g_detail_idx
+   
+ 
+      
+ 
+      
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL apci211_detail_show()
+   
+   LET g_detail_idx = li_detail_idx_tmp
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.fill_chk" >}
+#+ 單身填充確認
+PRIVATE FUNCTION apci211_fill_chk(ps_idx)
+   #add-point:fill_chk段define(客製用) name="fill_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fill_chk.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="fill_chk.before_chk"
+   
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table2) OR g_wc2_table2.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table3) OR g_wc2_table3.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk name="fill_chk.other_chk"
+      
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk name="fill_chk.after_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.status_show" >}
+PRIVATE FUNCTION apci211_status_show()
+   #add-point:status_show段define(客製用) name="status_show.define_customerization"
+   
+   #end add-point
+   #add-point:status_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="status_show.define"
+   
+   #end add-point
+   
+   #add-point:status_show段status_show name="status_show.status_show"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.mask_functions" >}
+&include "erp/apc/apci211_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="apci211.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="apci211.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION apci211_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_pcbb_m.pcbb001
+   LET g_pk_array[1].column = 'pcbb001'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="apci211.other_dialog" readonly="Y" >}
+   
+ 
+{</section>}
+ 
+{<section id="apci211.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION apci211_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL apci211_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_pcbb_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="apci211.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION apci211_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization"
+   
+   #end add-point
+   #add-point:action_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   
+   #end add-point
+      
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apci211.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 檢查是否有輸入生效範圍
+# Memo...........:
+# Usage..........: CALL apci211_pcbe_chk()
+#                     RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success   檢查結果
+# Date & Author..: 2016/07/14 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbe_chk()
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   
+   LET r_success = TRUE
+   LET l_cnt = 0
+   
+   SELECT COUNT(*) INTO l_cnt
+     FROM pcbe_t
+    WHERE pcbeent = g_enterprise
+      AND pcbe001 = g_pcbb_m.pcbb001
+      AND pcbestus = 'Y'
+
+   IF l_cnt = 0 THEN
+      IF g_pcbe_chk THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_pcbb_m.pcbb001 
+         LET g_errparam.code   = "apc-00076" 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err() 
+      
+         LET r_success = FALSE 
+      ELSE
+         CALL s_transaction_begin()
+         CALL apci211_01(g_pcbb_m.pcbb001)
+         CALL s_transaction_end('Y',0)
+      END IF
+   END IF
+   
+   LET g_pcbe_chk = TRUE
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 大類,小類編號檢查
+# Memo...........:
+# Usage..........: CALL apci211_pcbc003_chk(p_pcbc002,p_pcbc003)
+#                  RETURNING r_success
+# Input parameter: p_pcbc002   分類類型
+#                  p_pcbc003   分類編號
+# Return code....: r_success   檢查結果
+# Date & Author..: 2016/07/14 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbc003_chk(p_pcbc002,p_pcbc003)
+   DEFINE p_pcbc002      LIKE pcbc_t.pcbc002
+   DEFINE p_pcbc003      LIKE pcbc_t.pcbc003   
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE l_cnt          LIKE type_t.num5
+   DEFINE l_evel         LIKE type_t.num5
+   DEFINE l_sql          STRING
+   
+   LET r_success = TRUE
+   LET l_evel = ''
+
+   #分類編號重複性檢查
+   LET l_cnt = 0 
+   SELECT COUNT(*) INTO l_cnt
+     FROM pcbc_t
+    WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb_m.pcbb001
+      AND pcbb002 = p_pcbc002
+      AND pcbc003 = p_pcbc003
+   
+   IF l_cnt > 0 THEN    
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = p_pcbc003
+      LET g_errparam.code   = "apc-00082"
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err() 
+      
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   #大類可以輸入ALL
+   IF p_pcbc002 = '1' AND p_pcbc003 = 'ALL' THEN  
+      RETURN r_success   
+   END IF
+   
+   #小類不可與大類相同
+   IF p_pcbc002 = '2' AND p_pcbc003 = g_pcbc_d[g_class_1_idx].pcbc003 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = p_pcbc003
+      LET g_errparam.code   = "apc-00086"
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err() 
+      
+      LET r_success = FALSE
+      RETURN r_success   
+   END IF
+   
+   #存在檢查與層級
+   IF p_pcbc002 = '1' THEN   
+      LET l_evel = cl_get_para(g_enterprise,'',g_class_1)  #大類
+   ELSE
+      LET l_evel = cl_get_para(g_enterprise,'',g_class_2)  #小類
+   END IF
+   
+   IF l_evel <> 99 THEN
+      #大類檢查或小類指定層級<>99
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = p_pcbc003   
+      IF g_pcbb_m.pcbb002 = '1' THEN
+         IF NOT cl_chk_exist("v_rtax001_2") THEN
+            LET r_success = FALSE
+            RETURN r_success      
+         END IF
+      ELSE
+         IF NOT cl_chk_exist("v_pcba001_1") THEN
+            LET r_success = FALSE
+            RETURN r_success      
+         END IF      
+      END IF
+   ELSE
+      #小類檢查&最尾階
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = p_pcbc003   
+      IF g_pcbb_m.pcbb002 = '1' THEN
+         IF NOT cl_chk_exist("v_rtax001_1") THEN
+            LET r_success = FALSE
+            RETURN r_success      
+         END IF
+      ELSE
+         IF NOT cl_chk_exist("v_pcba001") THEN
+            LET r_success = FALSE
+            RETURN r_success      
+         END IF      
+      END IF      
+   END IF
+   
+   #小類須符合大類旗下的分類
+   IF p_pcbc002 = '2' AND p_pcbc003 <> 'ALL' THEN
+      LET l_cnt = 0
+      
+      IF g_pcbb_m.pcbb002 = '1' THEN
+         LET l_sql = " SELECT COUNT(*) ",
+                     "  FROM rtaw_t ",
+                     " WHERE rtawent = ",g_enterprise," AND rtaw001 = '",p_pcbc003,"' ",
+                     "   AND rtaw002 NOT IN (SELECT rtaw002 FROM rtaw_t ",
+                     "                        WHERE rtawent = ",g_enterprise," AND rtaw001 = '",g_pcbc_d[g_class_1_idx].pcbc003,"') "
+      ELSE 
+         LET l_sql = " SELECT COUNT(*) ",
+                     "  FROM pcbf_t ",
+                     " WHERE pcbfent = ",g_enterprise," AND pcbf001 = '",p_pcbc003,"' ",
+                     "   AND pcbf003 NOT IN (SELECT pcbf003 FROM pcbf_t ",
+                     "                       WHERE pcbfent = ",g_enterprise," AND pcbf001 = '",g_pcbc_d[g_class_1_idx].pcbc003,"') "          
+      END IF
+
+      PREPARE apci211_pcbc003_chk FROM l_sql
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err() 
+         
+         LET r_success = FALSE
+         RETURN r_success         
+      END IF
+      
+      EXECUTE apci211_pcbc003_chk INTO l_cnt
+      IF l_cnt > 0 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = "apc-00083"
+         LET g_errparam.popup  = TRUE 
+         LET g_errparam.replace[1] = p_pcbc003
+         LET g_errparam.replace[2] = g_pcbc_d[g_class_1_idx].pcbc003
+         CALL cl_err() 
+         
+         LET r_success = FALSE
+         RETURN r_success      
+      END IF
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取分類說明
+# Memo...........:
+# Usage..........: CALL apci211_pcbc003_ref(p_pcbc002,p_pcbc003)
+# Input parameter: p_pcbc002     分類類型
+#                : p_pcbc003     分類編號
+# Return code....: 無
+# Date & Author..: 2016/07/14 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbc003_ref(p_pcbc002,p_pcbc003)
+    DEFINE p_pcbc002   LIKE pcbc_t.pcbc002
+    DEFINE p_pcbc003   LIKE pcbc_t.pcbc003
+    
+    IF g_pcbb_m.pcbb002 = '1' THEN
+      #品類
+       IF p_pcbc002 = '1' THEN
+          LET g_pcbc_d[l_ac].pcbc003_desc = s_desc_get_rtaxl003_desc(p_pcbc003)        #大類
+       ELSE  
+          LET g_pcbc2_d[l_ac].pcbc003_1_desc = s_desc_get_rtaxl003_desc(p_pcbc003)     #小類
+       END IF       
+    ELSE   
+       #觸屏
+       IF p_pcbc002 = '1' THEN
+          LET g_pcbc_d[l_ac].pcbc003_desc = s_desc_pcba001_desc(p_pcbc003)             #大類
+       ELSE 
+          LET g_pcbc2_d[l_ac].pcbc003_1_desc = s_desc_pcba001_desc(p_pcbc003)          #小類
+       END IF       
+    END IF
+         
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查大/小類順序是否重複
+# Memo...........:
+# Usage..........: CALL apci211_pcbc005_chk(p_pcbc002,p_pcbc004,p_pcbc005)
+#                  RETURNING r_success
+# Input parameter: p_pcbc002   分類類型
+#                  p_pcbc004   上層分類
+#                  p_pcbc005   順序號
+# Return code....: r_success   檢查結果
+# Date & Author..: 2016/07/16 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbc005_chk(p_pcbc002,p_pcbc004,p_pcbc005)
+   DEFINE p_pcbc002   LIKE pcbc_t.pcbc002
+   DEFINE p_pcbc004   LIKE pcbc_t.pcbc004
+   DEFINE p_pcbc005   LIKE pcbc_t.pcbc005
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   
+   LET r_success = ''
+   LET l_cnt = 0
+   
+   IF p_pcbc002 = '1' THEN
+      #大類
+      SELECT COUNT(*) INTO l_cnt
+        FROM pcbc_t
+       WHERE pcbcent = g_enterprise
+         AND pcbc001 = g_pcbb_m.pcbb001
+         AND pcbc002 = p_pcbc002
+         AND pcbc005 = p_pcbc005      
+   ELSE
+      #小類   
+      SELECT COUNT(*) INTO l_cnt
+        FROM pcbc_t
+       WHERE pcbcent = g_enterprise
+         AND pcbc001 = g_pcbb_m.pcbb001
+         AND pcbc002 = p_pcbc002
+         AND pcbc004 = p_pcbc004
+         AND pcbc005 = p_pcbc005
+   END IF
+   
+   IF l_cnt > 0 THEN
+      #順序不可重複
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "aps-00062"
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      
+      LET r_success = FALSE
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得大/小類順序預設值
+# Memo...........:
+# Usage..........: CALL apci211_pcbc005_def(p_pcbc002,p_master)
+#                  RETURNING r_pcbc005
+# Input parameter: p_pcbc002   分類類型
+#                  p_master    上級分類
+# Return code....: r_pcbc005   順序預設值
+# Date & Author..: 2016/07/16 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbc005_def(p_pcbc002,p_master)
+   DEFINE p_pcbc002   LIKE pcbc_t.pcbc002
+   DEFINE p_master    LIKE pcbc_t.pcbc004
+   DEFINE r_pcbc005   LIKE pcbc_t.pcbc005
+   
+   LET r_pcbc005 = ''
+   
+   IF p_pcbc002 = '1' THEN
+      #大類
+      SELECT MAX(pcbc005) INTO r_pcbc005
+        FROM pcbc_t
+       WHERE pcbcent = g_enterprise
+         AND pcbc001 = g_pcbb_m.pcbb001
+         AND pcbc002 = p_pcbc002      
+   ELSE
+      #小類   
+      SELECT MAX(pcbc005) INTO r_pcbc005
+        FROM pcbc_t
+       WHERE pcbcent = g_enterprise
+         AND pcbc001 = g_pcbb_m.pcbb001
+         AND pcbc002 = p_pcbc002
+         AND pcbc004 = p_master
+   END IF
+   
+   IF cl_null(r_pcbc005) THEN
+      LET r_pcbc005 = 1
+   ELSE
+      LET r_pcbc005 = r_pcbc005 + 1   
+   END IF
+   
+   RETURN r_pcbc005
+END FUNCTION
+
+################################################################################
+# Descriptions...: 商品校驗
+# Memo...........: 引用前後需宣告使用整批錯誤訊息
+#                  CALL cl_err_collect_init()
+#                  CALL apci211_pcbd002_chk(p_pcbd002)
+#                  CALL cl_err_collect_show()
+# Usage..........: CALL apci211_pcbd002_chk(p_pcbd002)
+#                  RETURNING r_success
+# Input parameter: p_pcbd002      商品編號
+# Return code....: r_success      檢查結果
+# Date & Author..: 2016/07/14 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbd002_chk(p_pcbd002)
+   DEFINE p_pcbd002   LIKE pcbd_t.pcbd002
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_err_cnt   LIKE type_t.num5
+   DEFINE l_sql       STRING
+   DEFINE l_org       LIKE pcbe_t.pcbe002
+   DEFINE l_sys       LIKE type_t.chr10   #160914-00029#1 by sakura add
+   
+   LET r_success = TRUE
+   LET l_err_cnt = 0
+   
+   CALL apci211_pcbd002_def(p_pcbd002)   #get pcbd003,4,5      
+        
+   #商品在方案中重複
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt
+     FROM pcbd_t
+    WHERE pcbdent = g_enterprise
+      AND pcbd001 = g_pcbb_m.pcbb001
+      AND pcbd002 = p_pcbd002
+      AND pcbd003 = g_pcbc3_d[l_ac].pcbd003
+      AND pcbd004 = g_pcbc3_d[l_ac].pcbd004
+      AND pcbd005 = g_pcbc2_d[g_class_2_idx].pcbc003
+      AND pcbd009 <> g_pcbc3_d[l_ac].pcbd009
+   IF l_cnt > 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "apc-00087"
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      
+      LET l_err_cnt = l_err_cnt + 1
+   END IF  
+   
+   #160914-00029#1 by sakura add(S)
+   LET l_sys = ''
+   CALL cl_get_para(g_enterprise,'','E-CIR-0077') RETURNING l_sys   #161201-00034#1 by sakura add
+   IF l_sys = 'Y' THEN
+   #160914-00029#1 by sakura add(E)   
+      #商品不符合小類
+      LET l_cnt = 0 
+      SELECT COUNT(*) INTO l_cnt
+        FROM imaa_t
+       WHERE imaaent = g_enterprise
+         AND imaa001 = p_pcbd002
+         AND  ((g_pcbb_m.pcbb002 = '1' 
+                AND NOT EXISTS(SELECT 1 FROM rtaw_t 
+                                WHERE rtawent = imaaent AND rtaw002 = imaa009 
+                                  AND rtaw001 = g_pcbc2_d[g_class_2_idx].pcbc003))
+            OR (g_pcbb_m.pcbb002 = '2' 
+                AND NOT EXISTS(SELECT 1 FROM pcbf_t 
+                                WHERE pcbfent = imaaent AND pcbf003 = imaa161
+                                  AND pcbf001 = g_pcbc2_d[g_class_2_idx].pcbc003))) 
+      IF l_cnt > 0 THEN
+         IF g_pcbb_m.pcbb002 = '1' THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         
+         LET g_errparam.popup  = TRUE
+            LET g_errparam.code   = "apc-00089"    
+         ELSE
+            LET g_errparam.code   = "apc-00090"    
+         END IF
+         CALL cl_err()   #160914-00029#1 by sakura add
+         LET l_err_cnt = l_err_cnt + 1  
+      END IF
+   END IF  #160914-00029#1 by sakura add     
+   
+   #門店清單資料不符合
+   LET l_cnt = 0   
+   #1.商品不存在於門店清單
+   LET l_sql = "SELECT pcbe002 FROM pcbe_t ",
+               " WHERE pcbeent = ",g_enterprise," AND pcbe001 = '",g_pcbb_m.pcbb001,"' ",
+               "   AND NOT EXISTS (SELECT 1 FROM rtdx_t ",
+               "                    WHERE rtdxent = ",g_enterprise," AND rtdxsite = pcbe002 ",
+               "                      AND rtdx001 = '",p_pcbd002,"') ",
+               "   AND pcbestus = 'Y' "
+   PREPARE apci211_sel_rtdx_pre1 FROM l_sql
+   DECLARE apci211_sel_rtdx_cur1 CURSOR FOR apci211_sel_rtdx_pre1 
+   FOREACH apci211_sel_rtdx_cur1 INTO l_org
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()  
+
+         LET l_err_cnt = l_err_cnt + 1
+      END IF
+      
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = l_org
+      LET g_errparam.code   = "apc-00078"
+      LET g_errparam.popup  = TRUE
+      LET g_errparam.replace[1] = p_pcbd002
+      CALL cl_err()
+      
+      LET l_err_cnt = l_err_cnt + 1
+   END FOREACH   
+
+   #2.商品存在於門店清單但狀態為無效
+   LET l_sql = "SELECT pcbe002 FROM pcbe_t ",
+               " WHERE pcbeent = ",g_enterprise," AND pcbe001 = '",g_pcbb_m.pcbb001,"' ",
+               "   AND EXISTS (SELECT 1 FROM rtdx_t ",
+               "                WHERE rtdxent = ",g_enterprise," AND rtdxsite = pcbe002 ",
+               "                  AND rtdx001 = '",p_pcbd002,"'  AND rtdxstus = 'N') "
+   PREPARE apci211_sel_rtdx_pre2 FROM l_sql
+   DECLARE apci211_sel_rtdx_cur2 CURSOR FOR apci211_sel_rtdx_pre2 
+   FOREACH apci211_sel_rtdx_cur2 INTO l_org
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()  
+
+         LET l_err_cnt = l_err_cnt + 1
+      END IF
+      
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = l_org
+      LET g_errparam.code   = "apc-00079"
+      LET g_errparam.popup  = TRUE
+      LET g_errparam.replace[1] = p_pcbd002
+      CALL cl_err()
+      
+      LET l_err_cnt = l_err_cnt + 1
+   END FOREACH 
+   
+   #3.商品存在於門店清單但不可售
+   LET l_sql = "SELECT pcbe002 FROM pcbe_t ",
+               " WHERE pcbeent = ",g_enterprise," AND pcbe001 = '",g_pcbb_m.pcbb001,"' ",
+               "   AND EXISTS (SELECT 1 FROM rtdx_t ",
+               "                WHERE rtdxent = ",g_enterprise," AND rtdxsite = pcbe002 ",
+               "                  AND rtdx001 = '",p_pcbd002,"'  AND rtdx025 <> 'Y' AND rtdxstus = 'Y') "
+   PREPARE apci211_sel_rtdx_pre3 FROM l_sql
+   DECLARE apci211_sel_rtdx_cur3 CURSOR FOR apci211_sel_rtdx_pre3 
+   FOREACH apci211_sel_rtdx_cur3 INTO l_org
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()  
+
+         LET l_err_cnt = l_err_cnt + 1
+      END IF
+      
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = l_org
+      LET g_errparam.code   = "apc-00080"
+      LET g_errparam.popup  = TRUE
+      LET g_errparam.replace[1] = p_pcbd002
+      CALL cl_err()
+      
+      LET l_err_cnt = l_err_cnt + 1
+   END FOREACH  
+  
+   IF l_err_cnt > 0 THEN
+      LET r_success = FALSE   
+      RETURN r_success 
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依商品取產品特徵,單位,小類編號預設值
+# Memo...........:
+# Usage..........: CALL apci211_pcbd002_def(p_pcbd002)
+# Input parameter: p_pcbd002     商品編號
+# Return code....: 無
+# Date & Author..: 2016/07/15 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbd002_def(p_pcbd002)
+   DEFINE p_pcbd002   LIKE pcbd_t.pcbd002
+   
+   #產品特徵
+   LET g_pcbc3_d[l_ac].pcbd003 = ' '   
+   
+   #單位
+   SELECT imay004 INTO g_pcbc3_d[l_ac].pcbd004 FROM imay_t WHERE imayent = g_enterprise AND imay001 = p_pcbd002
+                                                             AND imay006 = 'Y'
+   LET g_pcbc3_d[l_ac].pcbd004_desc = s_desc_get_unit_desc(g_pcbc3_d[l_ac].pcbd004)   
+   
+   IF cl_null(g_pcbc3_d[l_ac].pcbd004) THEN
+      LET g_pcbc3_d[l_ac].pcbd004 = ' '
+   END IF
+   
+   #所屬小類   
+   LET g_pcbc3_d[l_ac].pcbd005 = g_pcbc2_d[g_class_2_idx].pcbc003    
+   #CALL apci211_pcbd005_ref(g_pcbc3_d[l_ac].pcbd005)   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取商品品名,規格
+# Memo...........:
+# Usage..........: CALL apci211_pcbd002_ref(p_pcbd002)
+# Input parameter: p_pcbd002      商品編號
+# Return code....: 無
+# Date & Author..: 2016/07/14 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbd002_ref(p_pcbd002)
+   DEFINE p_pcbd002   LIKE pcbd_t.pcbd002
+   
+   CALL s_desc_get_item_desc(p_pcbd002)
+      RETURNING g_pcbc3_d[l_ac].pcbd002_desc,g_pcbc3_d[l_ac].pcbd002_desc_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取商品所屬小類說明
+# Memo...........:
+# Usage..........: CALL apci211_pcbd005_ref(p_pcbd005)
+# Input parameter: p_pcbd005      所屬小類
+# Return code....: 無
+# Date & Author..: 2016/07/14 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbd005_ref(p_pcbd005)
+   DEFINE p_pcbd005   LIKE pcbd_t.pcbd005
+   
+   #所屬小類
+   IF g_pcbb_m.pcbb002 = '1' THEN
+      LET g_pcbc3_d[l_ac].pcbd005_desc = s_desc_get_rtaxl003_desc(p_pcbd005)
+   ELSE
+      LET g_pcbc3_d[l_ac].pcbd005_desc = s_desc_pcba001_desc(p_pcbd005)
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查商品順序是否重複
+# Memo...........:
+# Usage..........: CALL apci211_pcbc005_chk(p_pcbd009)
+#                  RETURNING r_success
+# Input parameter: p_pcbd009   順序號
+# Return code....: r_success   檢查結果
+# Date & Author..: 2016/07/16 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbd009_chk(p_pcbd009)
+   DEFINE p_pcbd009   LIKE pcbc_t.pcbc005
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   
+   LET r_success = ''
+   LET l_cnt = 0
+   
+   SELECT COUNT(*) INTO l_cnt
+     FROM pcbd_t
+    WHERE pcbdent = g_enterprise AND pcbd001 = g_pcbb_m.pcbb001 AND pcbd009 = p_pcbd009
+      AND pcbd005 = g_pcbc2_d[g_class_2_idx].pcbc003  
+
+   IF l_cnt > 0 THEN
+      #順序不可重複
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "aps-00062"
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      
+      LET r_success = FALSE
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取商品明細順序
+# Memo...........:
+# Usage..........: CALL apci211_pcbd009_def()
+#                  RETURNING r_pcbd009
+# Input parameter: 無
+# Return code....: r_pcbd009   商品明細順序
+# Date & Author..: 2016/07/14 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbd009_def()
+   DEFINE r_pcbd009   LIKE pcbd_t.pcbd009
+   
+   LET r_pcbd009 = ''
+   
+   IF g_class_2_idx = 0 OR cl_null(g_class_2_idx) THEN
+      RETURN r_pcbd009
+   END IF
+   
+   SELECT MAX(pcbd009) INTO r_pcbd009
+     FROM pcbd_t
+    WHERE pcbdent = g_enterprise AND pcbd001 = g_pcbb_m.pcbb001
+      AND pcbd005 = g_pcbc2_d[g_class_2_idx].pcbc003
+      
+   IF cl_null(r_pcbd009) THEN
+      LET r_pcbd009 = 1
+   ELSE
+      LET r_pcbd009 = r_pcbd009 + 1   
+   END IF
+   
+   RETURN r_pcbd009
+END FUNCTION
+
+################################################################################
+# Descriptions...: 方案異動或上傳POS,均須更新狀態
+# Memo...........:
+# Usage..........: CALL apci211_upd_pcbb003(p_txn_flag,p_pcbb003)
+#                  RETURNING r_success
+# Input parameter: p_txn_flag     更新否
+#                  p_pcbb003      更新後的傳POS狀態
+# Return code....: r_success      處理結果
+# Date & Author..: 2016/7/14 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_upd_pcbb003(p_txn_flag,p_pcbb003)
+   DEFINE p_pcbb003      LIKE pcbb_t.pcbb003    
+   DEFINE p_txn_flag     LIKE type_t.num5
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE l_sql1         STRING   #160914-00029#1 by sakura add
+   DEFINE l_sql2         STRING   #160914-00029#1 by sakura add
+   DEFINE l_sql3         STRING   #160914-00029#1 by sakura add
+   
+   LET r_success = TRUE
+   
+   IF p_txn_flag AND p_pcbb003 <> g_pcbb_m.pcbb003 THEN
+   
+      IF cl_null(g_where_pcbb001) THEN   #160914-00029#1 by sakura add
+         OPEN apci211_cl USING g_enterprise,g_pcbb_m.pcbb001
+         IF STATUS THEN
+            #160914-00029#1 by sakura mark(S)
+            #CLOSE apci211_cl
+            #CALL s_transaction_end('N','0')
+            #160914-00029#1 by sakura mark(E)
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "OPEN apci211_cl:" 
+            LET g_errparam.code   = STATUS 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            #160914-00029#1 by sakura add(S) 
+            CLOSE apci211_cl
+            CALL s_transaction_end('N','0')         
+            #160914-00029#1 by sakura add(E)
+            LET r_success = FALSE
+            RETURN r_success
+         END IF      
+         
+         UPDATE pcbb_t SET pcbb003 = p_pcbb003 WHERE pcbbent = g_enterprise AND pcbb001 = g_pcbb_m.pcbb001
+         IF SQLCA.sqlcode THEN
+            CLOSE apci211_cl
+            
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()    
+         
+            LET r_success = FALSE
+            RETURN r_success
+         ELSE
+            CLOSE apci211_cl
+         END IF
+      #160914-00029#1 by sakura add(S)
+      ELSE
+         LET l_sql1 = "SELECT pcbb001 ",
+                      "  FROM pcbb_t ",
+                      " WHERE pcbbent = ? AND pcbb001 IN (",g_where_pcbb001,") FOR UPDATE "
+         DECLARE apci211_upd_pcbb001_cur1 CURSOR FROM l_sql1
+         
+         OPEN apci211_upd_pcbb001_cur1 USING g_enterprise
+         IF STATUS THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "OPEN apci211_upd_pcbb001_cur1:" 
+            LET g_errparam.code   = STATUS 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CLOSE apci211_upd_pcbb001_cur1
+            CALL s_transaction_end('N','0')                   
+            LET r_success = FALSE
+            RETURN r_success                  
+         END IF
+         #更新方案傳POS狀態(pcbb003) = '1.已傳送'
+         LET l_sql3 = " UPDATE pcbb_t SET pcbb003 = 1 ",
+                      "  WHERE pcbbent = ",g_enterprise,
+                      "    AND pcbb001 IN (",g_where_pcbb001,")"
+         PREPARE apci211_upd_pcbb001_pre1 FROM l_sql3
+         EXECUTE apci211_upd_pcbb001_pre1
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            DISPLAY " UPDATE pcbb003=1: ERROR ",SQLCA.sqlerrd[2],STATUS            
+            CALL cl_err()
+            CLOSE apci211_upd_pcbb001_cur1
+            LET r_success = FALSE
+            RETURN r_success
+         ELSE
+            CLOSE apci211_upd_pcbb001_cur1
+         END IF         
+      END IF
+      #160914-00029#1 by sakura add(E)      
+   END IF
+   
+   RETURN r_success   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 更新圖檔
+# Memo...........:
+# Usage..........: CALL apci211_upd_pcbd006(p_pcbd001,p_pcbd002,p_pcbd003,p_pcbd004,pcbd005)
+#                  RETURNING r_success
+# Input parameter: p_pcbd001      方案編號
+#                  p_pcbd002      商品編號
+#                  p_pcbd003      產品特徵
+#                  p_pcbd004      單位
+#                  p_pcbd005      所屬小類
+# Return code....: r_success      更新成功與否
+# Date & Author..: 2016/07/17 By Lori 
+# Modify.........: 2016/08/02 By Lori 依照商品的相關文件紀錄的存放類型取得取檔來源
+#                : 2016/09/02 By Ken  方案編號改用傳入參數
+#                : 2016/11/08 By sakura  方案編號改用傳入參數pcbd005
+################################################################################
+PRIVATE FUNCTION apci211_upd_pcbd006(p_pcbd001,p_pcbd002,p_pcbd003,p_pcbd004,p_pcbd005)
+   DEFINE p_pcbd001      LIKE pcbd_t.pcbd001   #160901-00017#1 Add By Ken 160902
+   DEFINE p_pcbd002      LIKE pcbd_t.pcbd002
+   DEFINE p_pcbd003      LIKE pcbd_t.pcbd003
+   DEFINE p_pcbd004      LIKE pcbd_t.pcbd004
+   DEFINE p_pcbd005      LIKE pcbd_t.pcbd005   #160914-00029#1 by sakura add
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE l_sql          STRING
+   DEFINE ls_sql         STRING
+   DEFINE ls_js          STRING
+   DEFINE l_cnt          LIKE type_t.num5
+   #160705-00013#10 160802 by lori add---(S)
+   DEFINE l_loaa         RECORD
+             loaa001     LIKE loaa_t.loaa001,
+             loaa006     LIKE loaa_t.loaa006,
+             loaa007     LIKE loaa_t.loaa007,
+             loaa008     LIKE loaa_t.loaa008,
+             loaa009     LIKE loaa_t.loaa009
+                         END RECORD   
+   DEFINE l_source       STRING
+   DEFINE l_source_bak   STRING         
+   DEFINE l_loab008      BYTE   
+   #160705-00013#10 160802 by lori add---(E)                      
+                         
+   LET r_success = TRUE
+   
+   IF g_upd_pcbd006 THEN
+      #160705-00013#10 160802 by lori mark---(S)
+      ##CALL g_pk_array.clear()
+      ##LET g_pk_array[1].values = p_pcbd002
+      ##LET g_pk_array[1].column = 'imaa001'
+      ##LET ls_js = util.JSON.stringify(g_pk_array)   #組成字串後多"\", 與loaa001儲存的資料有落差,暫先不使用
+      ##LET ls_js = ls_js.trim()
+      #
+      #LET l_cnt = 0      
+      #LET l_sql = "SELECT COUNT(*) ",
+      #            "FROM (SELECT loaaent,loaa001,MIN(loaa006),MIN(loaa007) ",
+      #            "        FROM loaa_t ",
+      #            "       WHERE loaaent = ",g_enterprise,
+      #           #"         AND loaa001 = '",ls_js,"' ",
+      #            "         AND loaa001 LIKE '%imaa001%",p_pcbd002,"%' ",
+      #            "         AND loaa004 = 'B' ",
+      #            "       GROUP BY loaaent,loaa001) "
+      #PREPARE apci211_cnt_loaa FROM l_sql
+      #EXECUTE apci211_cnt_loaa INTO l_cnt
+      #IF SQLCA.sqlcode THEN
+      #   INITIALIZE g_errparam TO NULL 
+      #   LET g_errparam.extend = "Select loaa_t"
+      #   LET g_errparam.code   = SQLCA.sqlcode
+      #   LET g_errparam.popup  = TRUE 
+      #   CALL cl_err()
+      #   
+      #   LET r_success = FALSE      
+      #   RETURN r_success
+      #END IF 
+      #   
+      #IF l_cnt > 0 THEN 
+      #   #取商品主檔的相關文件,圖檔中最小版本,最小序號
+      #   LET l_sql = "UPDATE pcbd_t ",
+      #               "   SET pcbd006 = (SELECT loab008 FROM loab_t ",
+      #               "                   WHERE (loabent,loab001,loab006,loab007) IN (SELECT loaaent,loaa001,MIN(loaa006),MIN(loaa007) FROM loaa_t ",
+      #               "                                                                WHERE loaaent = ",g_enterprise,
+      #              #"                                                                  AND loaa001 = '",ls_js,
+      #               "                                                                  AND loaa001 LIKE '%imaa001%",p_pcbd002,"%' ",
+      #               "                                                                  AND loaa004 = 'B' ",
+      #               "                                                                GROUP BY loaaent,loaa001)) ",
+      #               "WHERE pcbdent = ",g_enterprise," AND pcbd001 = '",g_pcbb_m.pcbb001,"' ",
+      #               "  ANd pcbd002 = '",p_pcbd002,"'  AND pcbd003 = '",p_pcbd003,"' ",
+      #               "  AND pcbd004 = '",p_pcbd004,"' "
+      #   PREPARE apci211_upd_pcbd006 FROM l_sql
+      #   EXECUTE apci211_upd_pcbd006      
+      #   IF SQLCA.sqlcode THEN
+      #      INITIALIZE g_errparam TO NULL 
+      #      LET g_errparam.extend = "Update pcbd_t"
+      #      LET g_errparam.code   = SQLCA.sqlcode
+      #      LET g_errparam.popup  = TRUE 
+      #      CALL cl_err()
+      #      
+      #      LET r_success = FALSE      
+      #      RETURN r_success
+      #   END IF   
+      #END IF         
+      #160705-00013#10 160802 by lori mark---(E)
+      
+      #160705-00013#10 160802 by lori add---(S)
+      INITIALIZE l_loaa.* TO NULL
+      LET l_source = ""
+      LET l_source_bak = ""
+      
+      LET l_sql = "SELECT loaa001,loaa006,loaa007,loaa008,loaa009 ",
+                  "  FROM loaa_t ",
+                  " WHERE (loaaent,loaa001,loaa006,loaa007) IN (SELECT loaaent,loaa001,MIN(loaa006),MIN(loaa007) ",
+                  "                FROM loaa_t ",
+                  "               WHERE loaaent = ",g_enterprise,
+                  "                 AND loaa001 LIKE '%imaa001%",p_pcbd002,"%' ",
+                  "                 AND loaa004 = 'B' ",
+                  "               GROUP BY loaaent,loaa001) "
+      PREPARE apci211_sel_doc FROM l_sql
+      #檢查SQL正確性
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "Select loaa_t"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         
+         LET r_success = FALSE      
+         RETURN r_success
+      END IF      
+      
+      EXECUTE apci211_sel_doc INTO l_loaa.loaa001,l_loaa.loaa006,l_loaa.loaa007,l_loaa.loaa008,l_loaa.loaa009 
+      
+      #有可能商品沒有圖檔資料
+      IF cl_null(l_loaa.loaa001) THEN
+         LET SQLCA.sqlcode = 0
+         #160901-00017#1 Add By Ken 160902(S)
+         UPDATE pcbd_t
+            SET pcbd006 = NULL
+          WHERE pcbdent = g_enterprise AND pcbd001 = p_pcbd001
+            ANd pcbd002 = p_pcbd002    AND pcbd003 = p_pcbd003
+            AND pcbd004 = p_pcbd004    AND pcbd005 = p_pcbd005   #160914-00029#1 by sakura add p_pcbd005
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "UPDATE pcbd_t"
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF            
+         #160901-00017#1 Add By Ken 160902(E)            
+         RETURN r_success
+      END IF
+      
+      IF l_loaa.loaa008 = '1' THEN
+         #存file
+         
+         LET l_source = os.Path.join(cl_get_para(g_enterprise,g_site,"E-SYS-0008"),l_loaa.loaa009)
+         LET l_source_bak = os.Path.join(cl_get_para(g_enterprise,g_site,"E-SYS-0008"),l_loaa.loaa009)
+
+         LOCATE l_loab008 IN FILE
+         CALL l_loab008.readFile(l_source) 
+
+         UPDATE pcbd_t
+            SET pcbd006 = l_loab008
+          WHERE pcbdent = g_enterprise AND pcbd001 = p_pcbd001  #160901-00017#1 Add By Ken 160902  g_pcbb_m.pcbb001改成p_pcbd001
+            ANd pcbd002 = p_pcbd002    AND pcbd003 = p_pcbd003
+            AND pcbd004 = p_pcbd004    AND pcbd005 = p_pcbd005   #160914-00029#1 by sakura add p_pcbd005         
+      ELSE
+         #存DB
+         LET l_sql = "UPDATE pcbd_t ",
+                     "   SET pcbd006 = (SELECT loab008 FROM loab_t ",
+                     "                   WHERE loabent = ",g_enterprise,"   AND loab001 = '",l_loaa.loaa001,"' ",
+                     "                     AND loab006 = ",l_loaa.loaa006," AND loab007 = ",l_loaa.loaa007,") ",
+                     "WHERE pcbdent = ",g_enterprise," AND pcbd001 = '",p_pcbd001,"' ",   #160901-00017#1 Add By Ken 160902  g_pcbb_m.pcbb001改成p_pcbd001
+                     "  ANd pcbd002 = '",p_pcbd002,"'  AND pcbd003 = '",p_pcbd003,"' ",
+                     "  AND pcbd004 = '",p_pcbd004,"'  AND pcbd005 = '",p_pcbd005,"' "   #160914-00029#1 by sakura add p_pcbd005 
+         PREPARE apci211_upd_pcbd006 FROM l_sql
+         EXECUTE apci211_upd_pcbd006                      
+      END IF
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "Update pcbd_t"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         
+         LET r_success = FALSE      
+         RETURN r_success
+      END IF     
+      #160705-00013#10 160802 by lori add---(E)
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 方案失效時,將明細所有內容一併更新為失效
+# Memo...........:
+# Usage..........: CALL apci211_upd_detail_stus(p_stus)
+#                  RETURNING r_success
+# Input parameter: p_stus       要更新的狀態
+# Return code....: r_success
+# Date & Author..: 2016/07/14 By Lori
+# Modify.........: 
+################################################################################
+PRIVATE FUNCTION apci211_upd_detail_stus(p_stus)
+   DEFINE p_stus         LIKE pcbb_t.pcbbstus
+   DEFINE r_success      LIKE type_t.num5
+   
+   LET r_success = TRUE
+   
+   UPDATE pcbc_t SET pcbcstus = p_stus WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb_m.pcbb001
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()    
+   
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   UPDATE pcbd_t SET pcbdstus = p_stus WHERE pcbdent = g_enterprise AND pcbd001 = g_pcbb_m.pcbb001
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()    
+   
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   UPDATE pcbe_t SET pcbestus = p_stus WHERE pcbeent = g_enterprise AND pcbe001 = g_pcbb_m.pcbb001
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()    
+   
+      LET r_success = FALSE
+      RETURN r_success
+   END IF   
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 恢復有效時檢查生效範圍的門店是否存在於其他方案中
+# Memo...........:
+# Usage..........: CALL apci211_active_chk()
+#                     RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success    檢查結果
+# Date & Author..: 2016/07/14 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_active_chk()
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE l_sql          STRING
+   DEFINE l_pcbe001      LIKE pcbe_t.pcbe001
+   DEFINE l_pcbe002      LIKE pcbe_t.pcbe002
+   
+   LET r_success = TRUE
+   
+   LET l_sql = "SELECT pcbe001,pcbe002 FROM pcbe_t t1 ",
+               " WHERE t1.pcbeent = ",g_enterprise," AND t1.pcbe001 <> '",g_pcbb_m.pcbb001,"' ",
+               "   AND t1.pcbestus = 'Y' ",
+               "   AND EXISTS(SELECT 1 FROM pcbe_t t2 ",
+               "               WHERE t2.pcbeent = ",g_enterprise," AND t2.pcbe001 = '",g_pcbb_m.pcbb001,"' ",
+               "                 AND t2.pcbe002 = t1.pcebe001) ",
+               " ORDER BY pcbe002,pcbe001 "
+   PREPARE apci211_sel_pcbe_pre FROM l_sql
+   DECLARE apci211_sel_pcbe_cur CURSOR FOR apci211_sel_pcbe_pre
+
+   LET l_pcbe001 = ''
+   LET l_pcbe002 = ''
+   CALL cl_err_collect_init()
+   
+   FOREACH apci211_sel_pcbe_cur INTO l_pcbe001, l_pcbe002
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = "apc-00084"
+      LET g_errparam.popup  = TRUE 
+      LET g_errparam.replace[1] = l_pcbe002
+      LET g_errparam.replace[2] = l_pcbe001
+      
+      CALL cl_err()
+      
+      LET r_success = FALSE
+   END FOREACH
+   
+   CALL cl_err_collect_show()
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查單身是否有需要重新整理
+# Memo...........: 例：大類換筆,小類與商品應連動更新; 小類換筆,商品應連動更新
+# Usage..........: CALL apci211_detail_referesh(p_detail)
+# Input parameter: p_detail      單身,大類:1,小類:2
+# Return code....: 無
+# Date & Author..: 2016/07/14 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_detail_referesh(p_detail)
+   DEFINE p_detail      LIKE type_t.num5
+   DEFINE l_cnt         LIKE type_t.num5
+      
+   LET l_cnt = 0
+   IF p_detail = 1 THEN
+      #大類
+      SELECT COUNT(*) INTO l_cnt
+        FROM pcbc_t
+       WHERE pcbcent = g_enterprise AND pcbc001 = g_pcbb_m.pcbb001
+         AND pcbc002 = '2'          AND pcbc004 = g_pcbc_d[g_class_1_idx].pcbc003 
+   ELSE
+      #小類
+      SELECT COUNT(*) INTO l_cnt
+        FROM pcbd_t
+       WHERE pcbdent = g_enterprise AND pcbd001 = g_pcbb_m.pcbb001
+         AND pcbd005 = g_pcbc2_d[g_class_2_idx].pcbc003
+   END IF      
+   
+   IF l_cnt > 0 THEN
+      LET g_action_choice = "detail_referesh"
+      CALL apci211_b_fill()
+   ELSE
+      IF p_detail = 1 THEN
+         #大類:清除小類,產品畫面
+         CALL g_pcbc2_d.clear()
+         CALL g_pcbc3_d.clear()         
+      ELSE
+         #小類:清除產品畫面
+         CALL g_pcbc3_d.clear()  
+      END IF         
+   END IF      
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 动态显示画面ACTION
+# Memo...........:
+# Usage..........: apci211_create_form(p_kind,p_group,p_start_index,p_end_index)
+# Input parameter: p_kind         區分是哪一個分類
+#                : p_group        紀錄畫面上GROUP元件
+#                : p_start_index  紀錄要從第幾筆資料開始顯示，因為有翻頁功能
+#                : p_end_index    紀錄顯示到第幾筆資料顯示，因為有翻頁功能
+# Date & Author..: 2016-07-27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_create_form(p_kind,p_group,p_start_index,p_end_index)
+   DEFINE p_kind          STRING               # 區分是哪一個分類
+   DEFINE p_group         STRING               # 紀錄畫面上GROUP元件
+   DEFINE p_start_index   LIKE type_t.num5     # 紀錄要從第幾筆資料開始顯示，因為有翻頁功能
+   DEFINE p_end_index     LIKE type_t.num5     # 紀錄顯示到第幾筆資料顯示，因為有翻頁功能
+   DEFINE l_act_num       LIKE type_t.num5     # 按鈕數量
+   DEFINE l_acthidden     STRING               # 隱藏的按鈕,以","分隔
+   DEFINE li_cnt          LIKE type_t.num5
+   DEFINE li_k            LIKE type_t.num5
+   DEFINE ls_name         STRING               # 元件名稱(name)
+   DEFINE ls_desc         STRING               # 元件顯示說明(text)
+   DEFINE li_x            LIKE type_t.num5     # 元件的x軸位置
+   DEFINE li_y            LIKE type_t.num5     # 元件的y軸位置
+   DEFINE li_col_now      LIKE type_t.num5     # 紀錄目前是第幾行
+   DEFINE li_row_now      LIKE type_t.num5     # 紀錄目前是第幾列
+   DEFINE li_num          LIKE type_t.num5     # 紀錄目前是第幾個元件
+   DEFINE li_width        LIKE type_t.num5     # 元件寬度
+   DEFINE li_height       LIKE type_t.num5     # 元件高度
+   DEFINE li_mod_num      LIKE type_t.num5     # 取餘數用
+   DEFINE li_j            LIKE type_t.num5
+   DEFINE li_first        LIKE type_t.num5
+
+   LET li_x = 0
+   LET li_y = 0
+   LET li_col_now = 0
+   LET li_row_now = 0
+   LET li_first = TRUE
+
+   # 動態設定元件
+   CASE
+      WHEN p_kind = "main"     # 大分類
+         LET li_width = 10
+         LET li_height = 1
+
+         # 先刪除原先建立的元件
+         CALL apci211_remove_component(p_group)
+         
+         #160705-00013#9 Add By Ken 20160804(S)
+         LET p_start_index = p_start_index - (g_main_page_count - 2) * (g_main_curr_page - 1)
+         LET p_end_index   = p_end_index -   (g_main_page_count - 2) * (g_main_curr_page - 1)
+         #160705-00013#9 Add By Ken 20160804(E)
+         
+         FOR li_cnt = p_start_index TO p_end_index
+            IF li_first THEN
+               # 因為每一頁都有兩個action用來做上下頁
+               IF li_cnt > 2 THEN
+                  LET li_num = li_cnt + ((g_main_curr_page - 1) * 2)
+               ELSE
+                  LET li_num = li_cnt
+               END IF
+               LET li_first = FALSE
+            ELSE
+               LET li_num = li_num + 1
+            END IF
+            IF li_cnt = 0 THEN LET li_cnt = 1 END IF
+            IF li_num = 0 THEN LET li_num = 1 END IF
+
+            # 設定元件的x軸與y軸位置
+            CALL apci211_xy(li_num,g_main_col,li_col_now,li_row_now,li_width,li_height)
+                 RETURNING li_col_now,li_row_now,li_x,li_y
+
+            # 大分類的上一頁功能要排在第一個元件
+            IF li_row_now = 1 AND li_col_now = 1 THEN
+               # 設定上一頁
+               LET ls_name = "main_but",li_num USING "&&&"
+               LET ls_desc = "↑"
+               CALL apci211_create_button_component(p_group,ls_name,ls_desc,
+                                                      li_x,li_y,li_width,li_height)
+               LET g_main_form_but[li_num].main_but_name = ls_name
+               LET g_main_form_but[li_num].main_id = "P"
+
+               LET li_num = li_num + 1
+
+               # 設定元件的x軸與y軸位置
+               CALL apci211_xy(li_num,g_main_col,li_col_now,li_row_now,li_width,li_height)
+                    RETURNING li_col_now,li_row_now,li_x,li_y
+            END IF
+
+            LET ls_name = "main_but",li_num USING "&&&"
+            #LET ls_desc = g_main_array[li_cnt].main_name
+            LET ls_desc = g_main_array[li_cnt+((g_main_page_count - 2) * (g_main_curr_page - 1))].main_name
+            CALL apci211_create_button_component(p_group,ls_name,ls_desc,
+                                                   li_x,li_y,li_width,li_height)
+            LET g_main_form_but[li_num].main_but_name = ls_name
+            LET g_main_form_but[li_num].main_id = g_main_array[li_cnt].main_id
+
+            # 每一頁要留兩個action放置上下頁功能鍵
+            IF li_cnt MOD (g_main_page_count - 2) = 0 THEN
+               # 設定下一頁
+               LET li_num = li_num + 1
+
+               # 設定元件的x軸與y軸位置
+               CALL apci211_xy(li_num,g_main_col,li_col_now,li_row_now,li_width,li_height)
+                    RETURNING li_col_now,li_row_now,li_x,li_y
+
+               LET ls_name = "main_but",li_num USING "&&&"
+               LET ls_desc = "↓"
+               CALL apci211_create_button_component(p_group,ls_name,ls_desc,
+                                                      li_x,li_y,li_width,li_height)
+               LET g_main_form_but[li_num].main_but_name = ls_name
+               LET g_main_form_but[li_num].main_id = "N"
+
+               EXIT FOR
+            END IF
+         END FOR
+
+      WHEN p_kind = "item"    # 小分類
+         LET li_width = 10
+         LET li_height = 1
+
+         # 先刪除原先建立的元件
+         CALL apci211_remove_component(p_group)
+         
+         #160705-00013#9 Add By Ken 20160804(S)
+         LET p_start_index = p_start_index - (g_item_page_count - 2) * (g_item_curr_page - 1)
+         LET p_end_index   = p_end_index -   (g_item_page_count - 2) * (g_item_curr_page - 1)
+         #160705-00013#9 Add By Ken 20160804(E)         
+
+         FOR li_cnt = p_start_index TO p_end_index
+            IF li_first THEN
+               # 因為每一頁都有兩個action用來做上下頁
+               IF li_cnt > 2 THEN
+                  LET li_num = li_cnt + ((g_item_curr_page - 1) * 2)
+               ELSE
+                  LET li_num = li_cnt
+               END IF
+               LET li_first = FALSE
+            ELSE
+               LET li_num = li_num + 1
+            END IF
+            IF li_cnt = 0 THEN LET li_cnt = 1 END IF
+            IF li_num = 0 THEN LET li_num = 1 END IF
+
+            # 設定元件的x軸與y軸位置
+            CALL apci211_xy(li_num,g_item_col,li_col_now,li_row_now,li_width,li_height)
+                 RETURNING li_col_now,li_row_now,li_x,li_y
+
+            LET ls_name = "item_but",li_num USING "&&&"
+            #LET ls_desc = g_item_array[li_cnt].item_name
+            LET ls_desc = g_item_array[li_cnt + ((g_item_page_count - 2) * (g_item_curr_page - 1))].item_name
+            
+            
+            CALL apci211_create_button_component(p_group,ls_name,ls_desc,
+                                                   li_x,li_y,li_width,li_height)
+            LET g_item_form_but[li_num].item_but_name = ls_name
+            LET g_item_form_but[li_num].item_main_id = g_item_array[li_cnt].item_main_id
+            LET g_item_form_but[li_num].item_id = g_item_array[li_cnt].item_id          
+
+            # 每一頁要留兩個action放置上下頁功能鍵
+            IF li_cnt MOD (g_item_page_count - 2) = 0 THEN
+               # 設定上一頁
+               LET li_num = li_num + 1
+
+               # 設定元件的x軸與y軸位置
+               CALL apci211_xy(li_num,g_item_col,li_col_now,li_row_now,li_width,li_height)
+                    RETURNING li_col_now,li_row_now,li_x,li_y
+
+               LET ls_name = "item_but",li_num USING "&&&"
+               LET ls_desc = "←"
+               CALL apci211_create_button_component(p_group,ls_name,ls_desc,
+                                                      li_x,li_y,li_width,li_height)
+               LET g_item_form_but[li_num].item_but_name = ls_name
+               LET g_item_form_but[li_num].item_main_id = "P"
+               LET g_item_form_but[li_num].item_id = "P"
+
+               # 設定下一頁
+               LET li_num = li_num + 1
+
+               # 設定元件的x軸與y軸位置
+               CALL apci211_xy(li_num,g_item_col,li_col_now,li_row_now,li_width,li_height)
+                    RETURNING li_col_now,li_row_now,li_x,li_y
+
+               LET ls_name = "item_but",li_num USING "&&&"
+               LET ls_desc = "→"
+               CALL apci211_create_button_component(p_group,ls_name,ls_desc,
+                                                      li_x,li_y,li_width,li_height)
+               LET g_item_form_but[li_num].item_but_name = ls_name
+               LET g_item_form_but[li_num].item_main_id = "N"
+               LET g_item_form_but[li_num].item_id = "N"
+
+               EXIT FOR
+            END IF
+         END FOR
+
+      WHEN p_kind = "product"    # 商品細項
+         LET li_width = 10
+         LET li_height = 8
+
+         # 先刪除原先建立的元件
+         CALL apci211_remove_component(p_group)
+         
+         #160705-00013#9 Add By Ken 20160804(S)
+         LET p_start_index = p_start_index - (g_product_page_count - 2) * (g_product_curr_page - 1)
+         LET p_end_index   = p_end_index -   (g_product_page_count - 2) * (g_product_curr_page - 1)
+         #160705-00013#9 Add By Ken 20160804(E)            
+
+         FOR li_cnt = p_start_index TO p_end_index  
+            IF li_first THEN
+               # 因為每一頁都有兩個action用來做上下頁
+               IF li_cnt > 2 THEN
+                  LET li_num = li_cnt + ((g_product_curr_page - 1) * 2)
+               ELSE
+                  LET li_num = li_cnt
+               END IF
+               LET li_first = FALSE
+            ELSE
+               LET li_num = li_num + 1
+            END IF
+            IF li_cnt = 0 THEN LET li_cnt = 1 END IF
+            IF li_num = 0 THEN LET li_num = 1 END IF
+ 
+            # 設定元件的x軸與y軸位置
+            CALL apci211_xy(li_num,g_product_col,li_col_now,li_row_now,li_width,li_height)
+                 RETURNING li_col_now,li_row_now,li_x,li_y            
+            #CALL apci211_xy(li_num-(g_product_curr_page-1)*2,g_product_col,li_col_now,li_row_now,li_width,li_height)
+            #     RETURNING li_col_now,li_row_now,li_x,li_y
+            CALL apci211_create_product_component(p_group,"1",li_num,
+                                                    g_product_array[li_cnt+ ((g_product_page_count - 2) * (g_product_curr_page - 1))].product_name,
+                                                    g_product_array[li_cnt+ ((g_product_page_count - 2) * (g_product_curr_page - 1))].product_picture,
+                                                    g_product_array[li_cnt+ ((g_product_page_count - 2) * (g_product_curr_page - 1))].product_price,
+                                                    li_x,li_y,li_width,li_height)
+
+            LET g_product_form_but[li_num].product_but_name = "product_but",li_num USING "&&&"
+            LET g_product_form_but[li_num].product_main_id = g_product_array[li_cnt].product_main_id
+            LET g_product_form_but[li_num].product_item_id = g_product_array[li_cnt].product_item_id
+            LET g_product_form_but[li_num].product_id = g_product_array[li_cnt].product_id
+
+            # 每一頁要留兩個action放置上下頁功能鍵
+            IF li_cnt MOD (g_product_page_count - 2) = 0 THEN
+               # 設定上一頁
+               LET li_num = li_num + 1
+
+               # 設定元件的x軸與y軸位置
+               CALL apci211_xy(li_num,g_product_col,li_col_now,li_row_now,li_width,li_height)
+                    RETURNING li_col_now,li_row_now,li_x,li_y               
+               #CALL apci211_xy(li_num-(g_product_curr_page-1)*2,g_product_col,li_col_now,li_row_now,li_width,li_height)
+               #     RETURNING li_col_now,li_row_now,li_x,li_y
+
+               LET ls_desc = "←"
+               CALL apci211_create_product_component(p_group,"2",li_num,
+                                                       ls_desc,
+                                                       g_product_array[li_cnt].product_picture,
+                                                       g_product_array[li_cnt].product_price,
+                                                       li_x,li_y,li_width,li_height)
+
+               LET g_product_form_but[li_num].product_but_name = "product_but",li_num USING "&&&"
+               LET g_product_form_but[li_num].product_main_id = "P"
+               LET g_product_form_but[li_num].product_item_id = "P"
+               LET g_product_form_but[li_num].product_id = "P"
+               
+               # 設定下一頁
+               LET li_num = li_num + 1
+
+               # 設定元件的x軸與y軸位置
+               CALL apci211_xy(li_num,g_product_col,li_col_now,li_row_now,li_width,li_height) 
+                    RETURNING li_col_now,li_row_now,li_x,li_y               
+               #CALL apci211_xy(li_num-(g_product_curr_page-1)*2,g_product_col,li_col_now,li_row_now,li_width,li_height) 
+               #     RETURNING li_col_now,li_row_now,li_x,li_y
+
+               LET ls_desc = "→"
+               CALL apci211_create_product_component(p_group,"2",li_num,
+                                                       ls_desc,
+                                                       g_product_array[li_cnt].product_picture,
+                                                       g_product_array[li_cnt].product_price,
+                                                       li_x,li_y,li_width,li_height)
+
+               LET g_product_form_but[li_num].product_but_name = "product_but",li_num USING "&&&"
+               LET g_product_form_but[li_num].product_main_id = "N"
+               LET g_product_form_but[li_num].product_item_id = "N"
+               LET g_product_form_but[li_num].product_id = "N"
+
+               EXIT FOR
+            END IF
+         END FOR
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 刪除分類元件
+# Memo...........:
+# Usage..........: CALL apci211_remove_component(p_group)
+# Input parameter: p_group        畫面上哪一個Group
+# Date & Author..: 2016-07-27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_remove_component(p_group)
+   DEFINE p_group         STRING                  # 畫面上哪一個Group
+   DEFINE lc_kind         STRING                 # 紀錄是哪個分類   
+   DEFINE lwin_curr       ui.Window
+   DEFINE lfrm_curr       ui.Form
+   DEFINE lnode_group     om.DomNode
+   DEFINE llst_items      om.nodeList
+   DEFINE lnode_item      om.DomNode
+   DEFINE ls_item_name    STRING
+   DEFINE ls_parent_tag   STRING
+   DEFINE li_k            LIKE type_t.num5
+
+
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lfrm_curr = lwin_curr.getForm()
+   LET lnode_group = lfrm_curr.findNode("Group",p_group)
+   IF lnode_group IS NULL THEN
+      MESSAGE "Can't find layout"
+      RETURN
+   END IF
+
+   LET ls_parent_tag = lnode_group.getTagName()
+   LET llst_items = lnode_group.selectByPath("//" || ls_parent_tag || "//*")
+   FOR li_k = 1 to llst_items.getLength()
+      LET lnode_item = llst_items.item(li_k)
+      CALL lnode_group.removeChild(lnode_item)
+   END FOR
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定元件要呈現的X軸與Y軸位置
+# Memo...........:
+# Usage..........: apci211_xy(p_num,p_disp_col,p_col_now,p_row_now,p_width,p_height)
+#                :   RETURNING r_col_now,r_row_now,r_x,r_y
+# Input parameter: p_num          紀錄目前是第幾個元件
+#                : p_disp_col     紀錄使用者設定的列數
+#                : p_col_now      紀錄目前是第幾行
+#                : p_row_now      紀錄目前是第幾列
+#                : p_width        紀錄元件寬度
+#                : p_height       紀錄元件高度
+# Date & Author..: 2016-07-27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_xy(p_num,p_disp_col,p_col_now,p_row_now,p_width,p_height)
+   DEFINE p_num        LIKE type_t.num5   # 紀錄目前是第幾個元件
+   DEFINE p_disp_col   LIKE type_t.num5   # 紀錄使用者設定的列數
+   DEFINE p_col_now    LIKE type_t.num5   # 紀錄目前是第幾行
+   DEFINE p_row_now    LIKE type_t.num5   # 紀錄目前是第幾列   
+   DEFINE p_width      LIKE type_t.num5   # 紀錄元件寬度
+   DEFINE p_height     LIKE type_t.num5   # 紀錄元件高度
+   DEFINE p_x          LIKE type_t.num5   # 要回傳的x軸位置
+   DEFINE p_y          LIKE type_t.num5   # 要回傳的y軸位置
+
+
+   IF p_disp_col = 1 THEN                    # 若使用者設定的行數為1，表示每放一個元件就要換列
+      LET p_col_now = 1
+      LET p_row_now = p_row_now + 1
+   ELSE
+      IF p_num MOD p_disp_col = 1 THEN       # 表示為新的一行
+         LET p_col_now = 0
+         LET p_row_now = p_row_now + 1
+      END IF
+      LET p_col_now = p_col_now + 1
+   END IF
+
+   # 先計算出該元件位在這一列的第幾個元件，再乘以元件寬度
+   # 若寬度為10，第一個元件應該從第1個位元開始排起，所以第二個元件應該在第11個位元呈現才對
+   LET p_x = ((p_col_now - 1) * p_width) + 1
+
+   # 先計算出該元件位在第幾列，再乘以元件高度
+   LET p_y = ((p_row_now - 1) * p_height) + 1
+
+   RETURN p_col_now,p_row_now,p_x,p_y
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立Button元件
+# Memo...........:
+# Usage..........: CALL apci211_create_button_component(p_group,p_name,p_desc,p_x,p_y,p_width,p_height)
+# Input parameter: p_group        畫面上那一個group
+#                : p_name         元件名稱
+#                : p_desc         元件顯示說明
+#                : p_x            元件的x軸
+#                : p_y            元件的y軸
+#                : p_width        元件寬度
+#                : p_height       元件高度
+# Date & Author..: 2016-07-27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_create_button_component(p_group,p_name,p_desc,p_x,p_y,p_width,p_height)
+   DEFINE p_group         STRING                  # 畫面上哪一個Group
+   DEFINE p_name          STRING                  # 元件名稱(name)
+   DEFINE p_desc          STRING                  # 元件顯示說明(text)
+   DEFINE p_x             LIKE type_t.num5        # 元件的x軸
+   DEFINE p_y             LIKE type_t.num5        # 元件的y軸
+   DEFINE p_width         LIKE type_t.num5        # 元件寬度
+   DEFINE p_height        LIKE type_t.num5        # 元件高度
+   DEFINE lwin_curr       ui.Window
+   DEFINE lfrm_curr       ui.Form
+   DEFINE lnode_group     om.DomNode
+   DEFINE lnode_button    om.DomNode
+   DEFINE lnode_replace   om.DomNode
+   DEFINE lnode_old       om.DomNode
+   DEFINE lc_but_name     STRING
+   DEFINE lc_mod_num      LIKE type_t.num5
+
+
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lfrm_curr = lwin_curr.getForm()
+   LET lnode_group = lfrm_curr.findNode("Group",p_group)
+   IF lnode_group IS NULL THEN
+      MESSAGE "Can't find layout"
+      RETURN
+   END IF
+
+   LET lnode_button = lnode_group.createChild("Button")
+   CALL lnode_button.setAttribute("name",p_name)
+   CALL lnode_button.setAttribute("text",p_desc)
+   CALL lnode_button.setAttribute("comment",p_desc)
+   CALL lnode_button.setAttribute("posX",p_x)
+   CALL lnode_button.setAttribute("posY",p_y)
+   CALL lnode_button.setAttribute("gridWidth",p_width)
+   CALL lnode_button.setAttribute("gridHeight",p_height)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立商品細項元件
+# Memo...........:
+# Usage..........: CALL apci211_create_product_component(p_group,p_type,p_num,p_desc,p_picture,p_price,p_x,p_y,p_width,p_height)
+# Input parameter: p_group        畫面上那一個group 
+#                : p_type         1建立商品元件，2建立上下頁功能鍵
+#                : p_num          元件個數
+#                : p_desc         元件顯示說明
+#                : p_picture      商品圖片
+#                : p_price        商品價格
+#                : p_x            元件的x軸
+#                : p_y            元件的y軸
+#                : p_width        元件寬度
+#                : p_height       元件高度
+# Date & Author..: 2016-07-27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_create_product_component(p_group,p_type,p_num,p_desc,p_picture,p_price,p_x,p_y,p_width,p_height)
+   DEFINE p_group        STRING                  # 畫面上哪一個Group
+   DEFINE p_type         LIKE type_t.chr1        # 1表示建立完整商品細項元件，2表示建立上下頁功能鍵
+   DEFINE p_num          LIKE type_t.num5        # 元件個數
+   DEFINE p_desc         STRING                  # 元件顯示說明(text)
+   DEFINE p_picture      STRING                  # 商品圖片
+   DEFINE p_price        LIKE type_t.num5        # 商品價格
+   DEFINE p_x            LIKE type_t.num5        # 元件的x軸
+   DEFINE p_y            LIKE type_t.num5        # 元件的y軸
+   DEFINE p_width        LIKE type_t.num5        # 元件寬度
+   DEFINE p_height       LIKE type_t.num5        # 元件高度
+   DEFINE l_name         STRING                  # 元件名稱(name)   
+   DEFINE lwin_curr       ui.Window
+   DEFINE lfrm_curr       ui.Form
+   DEFINE lnode_group     om.DomNode
+   DEFINE lnode_group_2   om.DomNode
+   DEFINE lnode_button    om.DomNode
+   DEFINE lnode_grid      om.DomNode
+   DEFINE lnode_label_1   om.DomNode
+   DEFINE lnode_label_2   om.DomNode
+   DEFINE lnode_vbox      om.DomNode
+   DEFINE lnode_hbox      om.DomNode
+   DEFINE lnode_img       om.DomNode    #FUN-D20081 Mark
+   DEFINE ln_formfield    om.DomNode
+
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lfrm_curr = lwin_curr.getForm()
+   LET lnode_group = lfrm_curr.findNode("Group",p_group)
+   IF lnode_group IS NULL THEN
+      MESSAGE "Can't find layout"
+      RETURN
+   END IF
+
+   IF p_type = "1" THEN    # 建立商品細項元件
+      # 商品細項包含商品名稱、商品圖片、商品價格，
+      # 因此須以group包含以上三個元件
+
+      # 建立Group     # 因為想要以框線區別產品資訊，所以這邊用group，而不用grid
+      LET lnode_group_2 = lnode_group.createChild("Group")
+      LET l_name = "product_group2_",p_num USING "&&&"  #元件名稱 ex:"product_group2_001"
+      CALL lnode_group_2.setAttribute("name",l_name)
+      CALL lnode_group_2.setAttribute("posX",p_x)
+      CALL lnode_group_2.setAttribute("posY",p_y)
+      CALL lnode_group_2.setAttribute("gridWidth",p_width)
+      CALL lnode_group_2.setAttribute("gridHeight",p_height)
+
+      # 建立Buttton
+      LET lnode_button = lnode_group_2.createChild("Button") 
+      LET l_name = "product_but",p_num USING "&&&" 
+      CALL lnode_button.setAttribute("name",l_name)
+      CALL lnode_button.setAttribute("text",p_desc)
+      CALL lnode_button.setAttribute("sizePolicy","fixed") #fixed,dynamic,initial
+      CALL lnode_button.setAttribute("comment",p_desc)
+      CALL lnode_button.setAttribute("posX",1)
+      CALL lnode_button.setAttribute("posY",1)
+      CALL lnode_button.setAttribute("gridWidth",10)
+      CALL lnode_button.setAttribute("gridHeight",1)
+
+      # 建立圖片
+      LET l_name = "product_img",p_num USING "&&&" 
+      LET ln_formfield = lnode_group_2.createChild("FormField")
+      call ln_formfield.setAttribute("name", "formonly."||l_name)
+      call ln_formfield.setAttribute("colName", l_name)
+      LET lnode_img = ln_formfield.createChild("Image")
+      CALL lnode_img.setAttribute("sizePolicy","fixed") #fixed,dynamic,initial
+      CALL lnode_img.setAttribute("comment",p_desc)
+      CALL lnode_img.setAttribute("posX",1)
+      CALL lnode_img.setAttribute("posY",2)
+      CALL lnode_img.setAttribute("gridWidth",10)
+      CALL lnode_img.setAttribute("gridHeight",6)
+      CALL lnode_img.setAttribute("autoScale",1)
+      CALL lnode_img.setAttribute("stretch",'')
+      call ln_formfield.setAttribute("value", p_picture)
+      
+      # 建立Label
+      LET lnode_label_2 = lnode_group_2.createChild("Label")
+      LET l_name = "product_lab2_",p_num USING "&&&"  #元件名稱 ex:"product_lab2_001"
+      CALL lnode_label_2.setAttribute("name",l_name)
+      CALL lnode_label_2.setAttribute("text",p_price)
+      CALL lnode_label_2.setAttribute("comment",p_price)
+      CALL lnode_label_2.setAttribute("posX",1)
+      CALL lnode_label_2.setAttribute("posY",8)
+      CALL lnode_label_2.setAttribute("gridWidth",10)
+      CALL lnode_label_2.setAttribute("gridHeight",1)
+   ELSE
+      # 建立上下頁功能鍵
+      LET lnode_button = lnode_group.createChild("Button")
+      LET l_name = "product_but",p_num USING "&&&"      #元件名稱 ex:"product_but001"
+      CALL lnode_button.setAttribute("name",l_name)     
+      CALL lnode_button.setAttribute("text",p_desc)
+      CALL lnode_button.setAttribute("comment",p_desc)
+      CALL lnode_button.setAttribute("posX",p_x)
+      CALL lnode_button.setAttribute("posY",p_y+7)
+      CALL lnode_button.setAttribute("gridWidth",10)
+      CALL lnode_button.setAttribute("gridHeight",1)
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 按下大類按鈕
+# Memo...........:
+# Usage..........: CALL apci211_main_act(p_button)
+# Input parameter: p_button       按下第幾個按鈕
+# Return code....: 
+# Date & Author..: 2016/7/27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_main_act(p_button)
+   DEFINE p_button        LIKE type_t.num5   #按下第6個按鈕，則p_button = 6
+   DEFINE p_mod_cnt       LIKE type_t.num5   #紀錄取得的餘數
+   DEFINE li_array_num    LIKE type_t.num5
+   DEFINE li_k            LIKE type_t.num5
+   DEFINE li_start        LIKE type_t.num5
+   DEFINE l_flag          LIKE type_t.num5   #頁數flag 0:第1頁 1:大於第一頁
+
+   LET g_flag = '1'
+   LET g_but2 = 'item_but001'
+   LET g_button2 = 1   
+   #LET g_button3 = 1
+   LET g_curr_act_old = g_curr_act
+   LET g_curr_act = "main_but",p_button USING "&&&"   # 紀錄目前按下哪一個按鈕
+   LET p_mod_cnt = p_button MOD g_main_page_count     # 紀錄目前的action在畫面上的位置
+   IF g_main_curr_page > 1 THEN
+      LET l_flag = 1
+   ELSE
+      LET l_flag = 0
+   END IF
+
+   # 大分類的上一頁action固定放在第一個元件
+   # 所以若取餘數為1的話，表示是這一頁的第一個元件
+   IF p_mod_cnt = 1 THEN
+      IF g_main_curr_page = 1 THEN
+         #LET g_button1 = 1
+         LET g_curr_act = g_but1
+      ELSE
+         #LET g_button1 = p_button - (g_main_page_count - 2) - ((g_main_curr_page-1)*2)  #20160804
+         LET g_button1 = p_button + ((g_main_curr_page - 1)*g_main_page_count) - (g_main_page_count - 2) - ((g_main_curr_page-1)*2)
+         #LET g_curr_act = "main_but",p_button-(g_main_page_count-2)  USING "&&&"
+         LET g_curr_act = "main_but002"
+      END IF
+      # 起始位置位在第二頁以後的，按上一頁才有作用
+      IF g_main_curr_page > 1 THEN    # 目前所在頁數在第二頁以後的
+         LET g_main_curr_page = g_main_curr_page - 1
+         # 重新布置大分類的元件
+         LET g_main_start_index = g_main_start_index - (g_main_page_count - 2)
+         LET g_main_end_index = g_main_start_index + ((g_main_page_count - 2) - 1)
+         CALL apci211_create_form("main","main_group",g_main_start_index,g_main_end_index)
+      END IF
+   END IF
+
+   # 大分類的下一頁action固定放在最後一個元件
+   # 所以若取餘數為0的話，表示是這一頁的最後一個元件
+   IF p_mod_cnt = 0 THEN
+      # 資料總筆數大於目前筆數，按下一頁才有作用
+      #IF  g_main_curr_page*(g_main_page_count-2)-1 < g_main_array_langth THEN
+      IF  g_main_curr_page*(g_main_page_count-2) < g_main_array_langth THEN
+         #LET g_button1 = p_button - (g_main_curr_page*2 - 1)  #20160804
+         LET g_button1 = p_button + ((g_main_curr_page - 1)*g_main_page_count) - (g_main_curr_page*2 - 1)   #20160804
+         LET g_curr_act = "main_but",p_button-(g_main_page_count-2)  USING "&&&"
+         LET g_main_curr_page = g_main_curr_page + 1
+         # 重新布置大分類的元件
+         LET g_main_start_index = g_main_start_index + (g_main_page_count - 2)
+         LET g_main_end_index = g_main_start_index + ((g_main_page_count - 2) - 1)
+         CALL apci211_create_form("main","main_group",g_main_start_index,g_main_end_index)
+      ELSE
+         #LET g_button1 = (g_main_curr_page*2-1)*g_main_page_count+1
+         #LET g_curr_act = "main_but",p_button-(g_main_page_count-2) USING "&&&"
+         LET g_curr_act = g_but1
+      END IF
+   END IF
+
+   # 當按下大分類中非上下頁的按鈕
+   # 若餘數為0表示最後一個元件，在此為下一頁，若餘數為1表示第一個元件，在此為上一頁
+   IF p_mod_cnt > 1 THEN
+      #LET g_button1 = p_button - (g_main_curr_page*2 - 1)   #20160804
+      LET g_button1 = p_button + ((g_main_curr_page - 1)*g_main_page_count) - (g_main_curr_page*2 - 1)    #20160804 
+      # 判斷是否為最後一頁，因為只有最後一頁才會佈署空白元件
+      IF g_main_end_index > g_main_array_langth THEN
+
+         # 判斷是否按下空白元件
+         # 若元件在畫面上的位置 > array資料總筆數取得的餘數+1 (會+1是因為每頁的第一個元件是放上一頁)
+         # 表示按下的是空白元件
+         IF p_mod_cnt > ((g_main_array_langth MOD (g_main_page_count - 2)) + 1) THEN
+            LET g_item_curr_page = 1
+            CALL apci211_get_data("I",g_main_array[g_button1].main_id,"")
+         ELSE
+            # 按下非空白元件的按鈕，應該帶出相關的小分類資料
+            # 判斷要取的是array中第幾筆資料
+            # (目前的頁數 -1) * (畫面上能布置的個數(須扣除下上頁功能鍵)) + 畫面位置 -1
+            LET li_array_num = ((g_main_curr_page - 1) * (g_main_page_count - 2)) + p_mod_cnt - 1
+            LET g_item_curr_page = 1
+            CALL apci211_get_data("I",g_main_array[li_array_num].main_id,"")
+
+            # 重新布置小分類的元件
+            LET g_item_start_index = 1
+            LET g_item_end_index = g_item_start_index + ((g_item_page_count - 2) - 1)
+            CALL apci211_create_form("item","item_group",g_item_start_index,g_item_end_index)
+
+            # 重新布置商品細項的元件
+            LET g_product_start_index = 1
+            LET g_product_end_index = g_product_start_index + ((g_product_page_count - 2) - 1)
+            CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)
+
+         END IF
+      ELSE
+         # 按下非空白元件的按鈕，應該帶出相關的小分類資料
+         # 判斷要取的是array中第幾筆資料
+         # (目前的頁數 -1) * (畫面上能布置的個數(須扣除下上頁功能鍵)) + 畫面位置 -1
+         LET li_array_num = ((g_main_curr_page - 1) * (g_main_page_count - 2)) + p_mod_cnt - 1
+         LET g_item_curr_page = 1
+         CALL apci211_get_data("I",g_main_array[li_array_num].main_id,"")
+
+         # 重新布置小分類的元件
+         LET g_item_start_index = 1
+         LET g_item_end_index = g_item_start_index + ((g_item_page_count - 2) - 1)
+         CALL apci211_create_form("item","item_group",g_item_start_index,g_item_end_index)
+
+         # 重新布置商品細項的元件
+         LET g_product_start_index = 1
+         LET g_product_end_index = g_product_start_index + ((g_product_page_count - 2) - 1)
+         CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)
+      END IF
+   END IF
+   IF ((p_mod_cnt != 0) AND (p_mod_cnt != 1)) THEN
+      LET g_but1 = g_curr_act 
+      LET g_item_curr_page = 1
+      LET g_item_start_index = 1
+      CALL apci211_get_data("I",g_main_array[g_button1].main_id,"")
+      CALL apci211_create_form("item","item_group",g_item_start_index,g_item_end_index)
+      CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)
+   ELSE
+      IF (l_flag = 1 OR (l_flag = 0 AND g_button1 > 1)) AND (g_button1 < g_main_array_langth) THEN 
+         LET g_but1 = g_curr_act 
+         CALL apci211_get_data("I",g_main_array[g_button1].main_id,"")
+         CALL apci211_create_form("item","item_group",g_item_start_index,g_item_end_index)
+         CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)       
+      END IF      
+   END IF
+   CALL apci211_change_style("M")  
+   LET g_product_num = ''
+   LET g_product_name = ''
+   LET g_product_id = '' 
+   DISPLAY "main_data------------------------------------"
+   DISPLAY "main_id:",g_main_array[g_button1].main_id
+   DISPLAY "g_button1:",g_button1
+   DISPLAY "g_but1:",g_but1
+   DISPLAY "g_main_curr_page:",g_main_curr_page   
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 按下小分類按鈕
+# Memo...........:
+# Usage..........: CALL apci211_item_act(p_button)
+# Input parameter: p_button       按下第幾個按鈕
+# Date & Author..: 2016/7/27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_item_act(p_button)
+   DEFINE p_button        LIKE type_t.num5   #按下第6個按鈕，則p_button = 6
+   DEFINE l_mod_cnt       LIKE type_t.num5   #紀錄取得的餘數
+   DEFINE li_array_num    LIKE type_t.num5
+   DEFINE li_k            LIKE type_t.num5
+   DEFINE li_start        LIKE type_t.num5
+
+   LET g_flag = '2'
+   LET g_curr_act_old = g_curr_act
+   LET g_curr_act = "item_but",p_button USING "&&&"   # 紀錄目前按下哪一個按鈕
+   LET l_mod_cnt = p_button MOD g_item_page_count     # 紀錄目前的action在畫面上的位置
+
+   # 小分類的上一頁action固定放在倒數第二個元件
+   # 所以若取餘數 = (畫面行*列總個數 - 1) 的話，表示是這一頁的倒數第二個元件
+   IF l_mod_cnt = g_item_page_count - 1  THEN
+      IF g_item_curr_page = 1 OR g_item_curr_page = 2 THEN
+         LET g_button2 = 1
+         LET g_curr_act = "item_but001"
+      ELSE
+         LET g_button2 = p_button - (g_item_page_count + g_item_curr_page*2)
+         LET g_curr_act = "item_but",p_button-(g_item_page_count*2-2)  USING "&&&"
+      END IF
+      # 起始位置位在第二頁以後的，按上一頁才有作用
+      IF g_item_curr_page > 1 THEN
+         LET g_item_curr_page = g_item_curr_page - 1
+   
+         # 重新布置小分類的元件
+         LET g_item_start_index = g_item_start_index - (g_item_page_count - 2)
+         LET g_item_end_index = g_item_start_index + ((g_item_page_count - 2) - 1)
+         CALL apci211_create_form("item","item_group",g_item_start_index,g_item_end_index)
+      END IF
+   END IF
+   
+   # 小分類的下一頁action固定放在最後一個元件
+   # 所以若取餘數為0的話，表示是這一頁的最後一個元件
+   IF l_mod_cnt = 0 THEN
+      # 資料總筆數大於目前筆數，按下一頁才有作用
+      IF g_item_curr_page*(g_item_page_count - 2)  < g_item_array_langth THEN
+      #IF g_item_curr_page*(g_item_page_count - 2) - 1 < g_item_array_langth THEN
+         LET g_button2 = p_button + ((g_item_curr_page - 1)*g_item_page_count)  - (g_item_curr_page*2 - 1)
+         #LET g_curr_act = "item_but",p_button+1  USING "&&&"
+         #LET g_curr_act = "item_but",p_button-(g_item_page_count)+1  USING "&&&"
+         LET g_but2 = "item_but",p_button-(g_item_page_count)+1  USING "&&&"
+         LET g_item_curr_page = g_item_curr_page + 1
+         # 重新布置小分類的元件
+         LET g_item_start_index = g_item_start_index + (g_item_page_count - 2)
+         LET g_item_end_index = (g_item_start_index + (g_item_page_count - 2) - 1)
+         CALL apci211_create_form("item","item_group",g_item_start_index,g_item_end_index)
+      ELSE
+         #LET g_button2 = (g_item_curr_page*2-1)*g_item_page_count+1
+         #LET g_curr_act = "item_but",g_button2 USING "&&&"
+         LET g_curr_act = g_but2
+      END IF
+   END IF
+   
+   # 當按下小分類中非上下頁的按鈕
+   # 若餘數為0表示最後一個元件，在此為下一頁，若餘數為(畫面個數-1)表示是倒數第二個元件，在此為上一頁
+   IF l_mod_cnt <> 0 AND l_mod_cnt <> (g_item_page_count - 1) THEN
+      #LET g_button2 = p_button - (g_item_curr_page-1)*2
+      LET g_button2 =((g_item_curr_page - 1) * (g_item_page_count - 2)) + l_mod_cnt
+      # 判斷是否為最後一頁，因為只有最後一頁才會佈署空白元件
+      IF g_item_end_index > g_item_array_langth THEN
+         # 判斷是否按下空白元件
+         # 若元件在畫面上的位置 > array資料總筆數取得的餘數，表示按下的是空白元件
+         IF l_mod_cnt <= (g_item_array_langth MOD (g_item_page_count - 2)) THEN
+            # 按下非空白元件的按鈕，應該帶出相關的商品細項資料
+            # 判斷要取的是array中第幾筆資料
+            # 先算出按下的按鈕在畫面上的位置
+            # (目前的頁數 -1) * (畫面上能布置的個數(須扣除下上頁功能鍵)) + 畫面位置
+            LET li_array_num = ((g_item_curr_page - 1) * (g_item_page_count - 2)) + l_mod_cnt
+            LET g_product_curr_page = 1
+            CALL apci211_get_data("P",g_item_array[li_array_num].item_main_id,g_item_array[li_array_num].item_id)
+   
+            # 重新布置商品細項的元件
+            LET g_product_start_index = 1
+            LET g_product_end_index = g_product_start_index + ((g_product_page_count - 2) - 1)
+            CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)
+         END IF
+     ELSE
+         # 按下非空白元件的按鈕，應該帶出相關的小分類資料
+         # 判斷要取的是array中第幾筆資料
+         # (目前的頁數 -1) * (畫面上能布置的個數(須扣除下上頁功能鍵)) + 畫面位置
+         LET li_array_num = ((g_item_curr_page - 1) * (g_item_page_count - 2)) + l_mod_cnt
+         LET g_product_curr_page = 1
+         CALL apci211_get_data("P",g_item_array[li_array_num].item_main_id,g_item_array[li_array_num].item_id)
+   
+         # 重新布置商品細項的元件
+         LET g_product_start_index = 1
+         LET g_product_end_index = g_product_start_index + ((g_product_page_count - 2) - 1)
+         CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)
+      END IF
+   END IF
+   IF (l_mod_cnt != 0) AND (l_mod_cnt != g_item_page_count - 1) THEN   
+      LET g_but2 = g_curr_act
+      LET g_product_curr_page = 1
+      LET g_product_start_index = 1
+      CALL apci211_get_data("P",g_item_array[g_button2].item_main_id,g_item_array[g_button2].item_id)
+      CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)     
+   ELSE
+      #IF (p_button != g_item_page_count - 1) AND (g_button2 < g_main_array_langth) THEN 
+      #   LET g_but2 = ''
+      #   LET g_product_curr_page = 1
+      #   LET g_product_start_index = 1
+      #   CALL apci211_get_data("P",g_item_array[g_button2].item_main_id,g_item_array[g_button2].item_id)
+      #   CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)
+      #   CALL apci211_change_style("I")
+      #END IF
+   END IF
+   CALL apci211_change_style("I")     
+   LET g_product_num = ''
+   LET g_product_name = ''
+   LET g_product_id = ''
+   
+   DISPLAY "item_data--------------------------------------"
+   DISPLAY "item_id:",g_item_array[g_button2].item_id
+   DISPLAY "g_button2:",g_button2
+   DISPLAY "g_but2:",g_but2
+   DISPLAY "g_item_curr_page:",g_item_curr_page   
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 按下產生商品細項按鈕
+# Memo...........:
+# Usage..........: apci211_product_act(p_button)
+# Input parameter: p_button       按下第幾個按鈕
+# Return code....: 
+# Date & Author..: 2016/7/27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_product_act(p_button)
+   DEFINE p_button        LIKE type_t.num5   #按下第6個按鈕，則p_button = 6
+   DEFINE p_mod_cnt       LIKE type_t.num5   #紀錄取得的餘數
+   DEFINE li_array_num    LIKE type_t.num5
+   DEFINE li_k            LIKE type_t.num5
+   DEFINE li_start        LIKE type_t.num5
+   DEFINE l_page_cnt      LIKE type_t.num5
+
+   LET g_flag = '3'
+   #LET g_curr_act_old = g_curr_act   
+   LET g_curr_act = "product_but",p_button USING "&&&"   # 紀錄目前按下哪一個按鈕
+   LET p_mod_cnt = p_button MOD g_product_page_count     # 紀錄目前的action在畫面上的位置
+   LET l_page_cnt = g_product_array_langth MOD (g_product_page_count - 2)
+   IF l_page_cnt != 0 THEN
+      LET l_page_cnt = g_product_array_langth / (g_product_page_count - 2) + 1
+   ELSE
+      LET l_page_cnt = g_product_array_langth / (g_product_page_count - 2)    
+   END IF
+
+   # 商品細項的上一頁action固定放在倒數第二個元件
+   # 所以若取餘數 = (畫面行*列總個數 - 1)，表示是這一頁的倒數第二個元件
+   IF p_button MOD g_product_page_count = g_product_page_count - 1 THEN
+      IF g_product_curr_page = 1 THEN
+         #LET g_button3 = g_curr_act_old
+         LET g_curr_act = g_but3
+      ELSE
+         LET g_button3 = 1 +((g_product_page_count -2) * (g_product_curr_page-1)) - (g_product_page_count -2) 
+         LET g_but3 = "product_but",g_button3 USING "&&&"
+      END IF
+      # 起始位置位在第二頁以後的，按上一頁才有作用
+      IF g_product_curr_page > 1 THEN
+         LET g_product_curr_page = g_product_curr_page - 1
+         # 重新布置商品細項的元件
+         LET g_product_start_index = g_product_start_index - (g_product_page_count - 2)
+         LET g_product_end_index = (g_product_start_index + (g_product_page_count - 2) - 1)
+         CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)
+      END IF
+   END IF
+
+   # 商品細項的下一頁action固定放在最後一個元件
+   # 所以若取餘數為0的話，表示是這一頁的最後一個元件
+   IF p_button MOD g_product_page_count = 0 THEN
+      # 資料總筆數大於目前筆數，按下一頁才有作用
+      IF g_product_curr_page*(g_product_page_count - 2)  < g_product_array_langth THEN
+      #IF g_product_curr_page*(g_product_page_count - 2) - 1 < g_product_array_langth THEN
+         LET g_button3 = p_button - (g_product_curr_page*2 - 1)
+         #LET g_curr_act = "product_but",(p_button+1) MOD g_product_page_count USING "&&&"
+         LET g_but3 = "product_but",(p_button+1) MOD g_product_page_count USING "&&&"
+         LET g_product_curr_page = g_product_curr_page + 1
+         # 重新布置商品細項的元件
+         LET g_product_start_index = g_product_start_index + (g_product_page_count - 2)
+         LET g_product_end_index = g_product_start_index + ((g_product_page_count - 2) - 1)
+         CALL apci211_create_form("product","product_group",g_product_start_index,g_product_end_index)
+      ELSE
+         #LET g_button3 = (g_product_curr_page-1)*g_product_page_count+1
+         #LET g_curr_act = "product_but",g_button3 USING "&&&"
+         #LET g_but3 = "product_but",g_button3 USING "&&&"
+      END IF
+   END IF
+
+   # 當按下商品細項中非上下頁的按鈕
+   # 若餘數為0表示最後一個元件，在此為下一頁，若餘數為(畫面個數-1)表示是倒數第二個元件，在此為上一頁
+   IF p_mod_cnt <> 0 AND p_mod_cnt <> (g_product_page_count - 1) THEN
+      LET g_button3 = p_button + (g_product_curr_page-1)*(g_product_page_count-2)
+   END IF
+   IF (p_button MOD g_product_page_count != g_product_page_count - 1) AND (p_button MOD g_product_page_count != 0) THEN
+      LET g_but3 = g_curr_act
+   ELSE
+      #IF (p_button != g_product_page_count - 1) AND ((g_product_curr_page-1) != l_page_cnt) THEN
+      #   LET g_but3 = ''      
+      #END IF
+   END IF
+   
+   LET g_product_num = g_product_array[g_button3].product_num
+   LET g_product_name = g_product_array[g_button3].product_name
+   LET g_product_id = g_product_array[g_button3].product_id
+   DISPLAY "product_data------------------------------------"
+   DISPLAY "product_id:",g_product_array[g_button3].product_id
+   DISPLAY "g_button3:",g_button3
+   DISPLAY "g_but3:",g_but3
+   DISPLAY "g_product_curr_page:",g_product_curr_page
+   CALL apci211_change_style("P")
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得要顯示的資料
+# Memo...........:
+# Usage..........: CALL apci211_get_data(p_kind,p_curr_main_id,p_curr_item_id)
+# Input parameter: p_kind            要取得何種分類的資料
+#                : p_curr_main_id    目前大分類的哪一筆資料
+#                : p_curr_item_id    目前小分類的哪一筆資料
+# Date & Author..: 2016/7/27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_get_data(p_kind,p_curr_main_id,p_curr_item_id)
+   DEFINE p_kind                 LIKE type_t.chr1     # 要取得何種分類的資料
+   DEFINE p_curr_main_id         LIKE type_t.chr10    # 目前大分類的哪一筆資料
+   DEFINE p_curr_item_id         LIKE type_t.chr10    # 目前小分類的哪一筆資料   
+   DEFINE li_m                   LIKE type_t.num5     # 大分類
+   DEFINE li_i                   LIKE type_t.num5     # 小分類
+   DEFINE li_p                   LIKE type_t.num5     # 商品細項
+   DEFINE li_cnt                 LIKE type_t.num5    
+   DEFINE li_k                   LIKE type_t.num5
+   DEFINE li_sql                 STRING
+   DEFINE l_str                  STRING   
+   DEFINE l_target               STRING
+   DEFINE l_ac                   LIKE type_t.num5
+   DEFINE lb_file                LIKE pcbd_t.pcbd006
+   
+   LOCATE lb_file  IN FILE    
+
+   CASE p_kind
+      WHEN "M"     # 取得大分類資料
+         LET g_item_curr_page = 1
+         LET g_item_start_index = 1
+         LET g_product_curr_page = 1
+         LET g_product_start_index = 1
+         CALL g_main_array.clear()
+         CALL g_main_form_but.clear()
+         LET li_cnt = 1
+         LET li_k = 1
+         DECLARE main_data_curs CURSOR FOR
+            SELECT pcbc003,''
+              FROM pcbc_t
+             WHERE pcbc001 = g_pcbb_m.pcbb001
+               AND pcbc002 = '1'
+               AND pcbcstus = 'Y'
+               AND pcbcent = g_enterprise
+             ORDER BY pcbc005
+         FOREACH main_data_curs INTO g_main_array[li_cnt].*
+            IF g_pcbb_m.pcbb002 = '1' THEN
+              #品類
+              LET g_main_array[li_cnt].main_name = s_desc_get_rtaxl003_desc(g_main_array[li_cnt].main_id)        #大類
+            ELSE   
+               #觸屏
+              LET g_main_array[li_cnt].main_name = s_desc_pcba001_desc(g_main_array[li_cnt].main_id)             #大類
+            END IF
+            IF cl_null(p_curr_main_id) THEN
+               IF li_cnt = 1 THEN     # 預設取第一筆資料
+                  LET p_curr_main_id = g_main_array[li_cnt].main_id
+               END IF
+            END IF
+
+            # 將資料塞到array中，以便之後要做資料update時可以取到button與資料的對應關係
+            # 所以g_main_form_but中需預留上下頁的button的筆數
+            IF li_k MOD g_main_page_count = 1 THEN   # 表示為上一頁
+               LET g_main_form_but[li_k].main_but_name = "main_but",li_k USING "&&&"
+               LET g_main_form_but[li_k].main_id = "P"
+               LET li_k = li_k + 1
+            END IF
+
+            IF li_k MOD g_main_page_count <> 0 AND li_k MOD g_main_page_count <> 1 THEN
+               LET g_main_form_but[li_k].main_but_name = ""
+               LET g_main_form_but[li_k].main_id = g_main_array[li_cnt].main_id
+               LET li_k = li_k + 1
+            END IF
+
+            IF li_k MOD g_main_page_count = 0 THEN   # 表示為下一頁
+               LET g_main_form_but[li_k].main_but_name = "main_but",li_k USING "&&&"
+               LET g_main_form_but[li_k].main_id = "N"
+               LET li_k = li_k + 1
+            END IF
+
+            LET li_cnt = li_cnt + 1
+         END FOREACH
+         CALL g_main_array.deleteElement(li_cnt)
+         
+         # 紀錄array長度，因為後面可能還會塞空白資料
+         LET g_main_array_langth = g_main_array.getLength()         
+
+         IF cl_null(g_main_curr_page) OR g_main_curr_page = 0 OR g_flag1 = '0' THEN 
+            LET g_main_curr_page = 1        # 預設從第一頁開始
+         END IF
+         IF cl_null(g_main_start_index) OR g_main_start_index = 0 OR g_flag1 = '0' THEN 
+            LET g_main_start_index = 1      # 預設從第一筆開始
+         END IF
+
+         # 每頁須扣除掉2個元件，作為上下頁功能鍵
+         LET g_main_end_index = (g_main_start_index + (g_main_page_count - 2)) - 1
+  
+         # 若更新大分類資料，也須一併更新小分類資料
+         #CALL apci211_get_data("I",p_curr_main_id,"")
+         CALL apci211_get_data("I",p_curr_main_id,p_curr_item_id)
+  
+      WHEN "I"     # 取得小分類資料
+         CALL g_item_array.clear()
+         CALL g_item_form_but.clear()
+         LET g_product_curr_page = 1
+         LET g_product_start_index = 1
+         LET li_cnt = 1
+         LET li_k = 1
+         DECLARE item_data_curs CURSOR FOR
+            SELECT pcbc004,pcbc003,''
+              FROM pcbc_t
+             WHERE pcbc001 = g_pcbb_m.pcbb001
+               AND pcbc002 = '2'
+               AND pcbc004 = p_curr_main_id
+               AND pcbcstus = 'Y'
+               AND pcbcent = g_enterprise
+             ORDER BY pcbc005
+         FOREACH item_data_curs INTO g_item_array[li_cnt].*
+            IF g_pcbb_m.pcbb002 = '1' THEN
+              #品類
+              LET g_item_array[li_cnt].item_name = s_desc_get_rtaxl003_desc(g_item_array[li_cnt].item_id)        #大類
+            ELSE   
+               #觸屏
+              LET g_item_array[li_cnt].item_name = s_desc_pcba001_desc(g_item_array[li_cnt].item_id)             #大類
+            END IF            
+            IF cl_null(p_curr_item_id) THEN   
+               IF li_cnt = 1 THEN     # 預設取第一筆資料
+                  LET p_curr_main_id = g_item_array[li_cnt].item_main_id
+                  LET p_curr_item_id = g_item_array[li_cnt].item_id               
+               END IF 
+            END IF                             
+
+            # 將資料塞到array中，以便之後要做資料update時可以取到button與資料的對應關係
+            # 所以g_item_form_but中需預留上下頁的button的筆數
+            IF li_k MOD g_item_page_count > 1 THEN
+               LET g_item_form_but[li_k].item_but_name = ""
+               LET g_item_form_but[li_k].item_main_id = g_item_array[li_cnt].item_main_id
+               LET g_item_form_but[li_k].item_id = g_item_array[li_cnt].item_id    
+               LET li_k = li_k + 1
+            END IF
+
+            IF li_k MOD g_item_page_count = g_item_page_count - 1 THEN   # 表示為上一頁
+               LET g_item_form_but[li_k].item_but_name = "item_but",li_k USING "&&&"
+               LET g_item_form_but[li_k].item_main_id = "P"
+               LET g_item_form_but[li_k].item_id = "P"
+               LET li_k = li_k + 1
+            END IF
+
+            IF li_k MOD g_item_page_count = 0 THEN   # 表示為下一頁
+               LET g_item_form_but[li_k].item_but_name = "item_but",li_k USING "&&&"
+               LET g_item_form_but[li_k].item_main_id = "N"
+               LET g_item_form_but[li_k].item_id = "N"
+               LET li_k = li_k + 1
+            END IF
+
+            LET li_cnt = li_cnt + 1
+         END FOREACH
+         CALL g_item_array.deleteElement(li_cnt)
+         
+         # 紀錄array長度，因為後面可能還會塞空白資料
+         LET g_item_array_langth = g_item_array.getLength()        
+
+         IF cl_null(g_item_curr_page) OR g_item_curr_page = 0 OR g_flag1 = '0' THEN
+            LET g_item_curr_page = 1       # 預設從第一頁開始
+         END IF
+         IF cl_null(g_item_start_index) OR g_item_start_index = 0 OR g_flag1 = '0' THEN
+            LET g_item_start_index = 1     # 預設從第一筆開始
+         END IF
+
+         # 每頁須扣除掉2個元件，作為上下頁功能鍵
+         LET g_item_end_index = (g_item_start_index + (g_item_page_count - 2)) - 1
+
+         # 若更新小分類資料，也須一併更新商品細項資料
+         CALL apci211_get_data("P",p_curr_main_id,p_curr_item_id)
+  
+      WHEN "P"     # 取得商品細項資料
+         CALL g_product_array.clear()
+         CALL g_product_form_but.clear()
+         LET li_cnt = 1
+         LET li_k = 1
+         DECLARE product_data_curs CURSOR FOR
+         #SELECT '','',pcbd002,'','',pcbd004,'',pcbd009,pcbd003,pcbd006   #160914-00029#1 by sakura mark
+         SELECT '',pcbd005,pcbd002,'','',pcbd004,'',pcbd009,pcbd003,pcbd006    #160914-00029#1 by sakura add
+           FROM pcbd_t 
+          WHERE pcbd001 = g_pcbb_m.pcbb001
+            AND pcbd005 = p_curr_item_id
+            AND pcbdstus = 'Y'
+            AND pcbdent = g_enterprise
+          ORDER BY pcbd009  
+         
+         FOREACH product_data_curs INTO g_product_array[li_cnt].*,lb_file   #lb_file是存放2進位的圖片欄位使用
+            SELECT imaal003 INTO g_product_array[li_cnt].product_name
+              FROM imaal_t               
+             WHERE imaal001 = g_product_array[li_cnt].product_id  
+               AND imaalent = g_enterprise
+            
+            #把二進位的圖片轉存到TEMPDIR
+            LET l_target = g_enterprise,g_pcbb_m.pcbb001,g_product_array[li_cnt].product_id,".jpg"
+            LET l_target = os.Path.join(g_target_dir,l_target)
+            LET g_product_array[li_cnt].product_picture = l_target
+            #寫入實體檔案 
+            CALL lb_file.writeFile(l_target)            
+            
+            # 將資料塞到array中，以便之後要做資料update時可以取到button與資料的對應關係
+            # 所以g_product_form_but中需預留上下頁的button的筆數
+            IF li_k MOD g_product_page_count > 1 THEN
+               LET g_product_form_but[li_k].product_but_name = ""
+               LET g_product_form_but[li_k].product_main_id = p_curr_main_id
+               LET g_product_form_but[li_k].product_item_id = p_curr_item_id
+               LET g_product_form_but[li_k].product_id = g_product_array[li_cnt].product_id
+               LET li_k = li_k + 1
+            END IF
+
+            IF li_k MOD g_product_page_count = g_product_page_count - 1 THEN   # 表示為上一頁
+               LET g_product_form_but[li_k].product_but_name = "product_but",li_k USING "&&&"
+               LET g_product_form_but[li_k].product_main_id = "P"
+               LET g_product_form_but[li_k].product_item_id = "P"
+               LET g_product_form_but[li_k].product_id = "P"
+               LET li_k = li_k + 1
+            END IF
+
+            IF li_k MOD g_product_page_count = 0 THEN   # 表示為下一頁
+               LET g_product_form_but[li_k].product_but_name = "product_but",li_k USING "&&&"
+               LET g_product_form_but[li_k].product_main_id = "N"
+               LET g_product_form_but[li_k].product_item_id = "N"
+               LET g_product_form_but[li_k].product_id = "N"
+               LET li_k = li_k + 1
+            END IF
+
+            LET li_cnt = li_cnt + 1
+         END FOREACH
+         CALL g_product_array.deleteElement(li_cnt)
+         
+         # 紀錄array長度，因為後面可能還會塞空白資料
+         LET g_product_array_langth = g_product_array.getLength()         
+
+         IF cl_null(g_product_curr_page) OR g_product_curr_page = 0 OR g_flag1 = '0' THEN
+            LET g_product_curr_page = 1        # 預設從第一筆開始
+         END IF
+         IF cl_null(g_product_start_index) OR g_product_start_index = 0 OR g_flag1 = '0' THEN
+            LET g_product_start_index = 1      # 預設從第一筆開始
+         END IF
+
+         # 每頁須扣除掉2個元件，作為上下頁功能鍵
+         LET g_product_end_index = (g_product_start_index + (g_product_page_count - 2)) - 1
+
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 調整元件style
+# Memo...........:
+# Usage..........: CALL apci211_change_style(p_type)
+# Input parameter: p_type         M:点击大类 I:点击小类 P:点击产品 R:清空  
+# Return code....: 
+# Date & Author..: 2016/7/27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_change_style(p_type)
+   DEFINE p_type          LIKE type_t.chr1     # M:点击大类 I:点击小类 P:点击产品 R:清空
+   DEFINE lc_kind         STRING                  # 紀錄是哪個分類
+   DEFINE lc_node         STRING                  # 畫面上哪一個元件
+   DEFINE lc_node_name    STRING                  # 畫面元件名稱
+   DEFINE lc_node_name1   STRING                  # 畫面元件名稱
+   DEFINE lc_node_name2   STRING                  # 畫面元件名稱
+   DEFINE lwin_curr       ui.Window
+   DEFINE lfrm_curr       ui.Form
+   DEFINE lnode_node      om.DomNode
+   DEFINE lnode_node1     om.DomNode
+   DEFINE lnode_node2     om.DomNode
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_button1       LIKE type_t.num5    #大类的第几個按鈕
+   DEFINE l_button2       LIKE type_t.num5    #小类的第几個按鈕
+   DEFINE l_button3       LIKE type_t.num5    #产品的第几個按鈕
+   DEFINE l_main          STRING
+   DEFINE l_item          STRING
+   DEFINE l_product       STRING
+   
+
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lfrm_curr = lwin_curr.getForm()
+
+   LET lc_node = "Button"
+   #FOR l_n = 1 TO g_pcbb_m.pcbb005*g_pcbb_m.pcbb004*g_main_curr_page
+   FOR l_n = 1 TO g_pcbb_m.pcbb005*g_pcbb_m.pcbb004
+       LET lc_node_name = "main_but",l_n USING "&&&"
+       LET lnode_node = lfrm_curr.findNode(lc_node,lc_node_name)
+       CALL lfrm_curr.setElementStyle(lc_node_name, "t_menuitem")
+   END FOR
+   #FOR l_n = 1 TO g_pcbb_m.pcbb007*g_pcbb_m.pcbb006*g_item_curr_page
+   FOR l_n = 1 TO g_pcbb_m.pcbb007*g_pcbb_m.pcbb006
+       LET lc_node_name1 = "item_but",l_n USING "&&&"
+       LET lnode_node1 = lfrm_curr.findNode(lc_node,lc_node_name1)
+       CALL lfrm_curr.setElementStyle(lc_node_name1, "t_menuitem")
+   END FOR
+   #FOR l_n = 1 TO g_pcbb_m.pcbb009*g_pcbb_m.pcbb008*g_product_curr_page
+   FOR l_n = 1 TO g_pcbb_m.pcbb009*g_pcbb_m.pcbb008+2
+       LET lc_node_name2 = "product_but",l_n USING "&&&"
+       LET lnode_node2 = lfrm_curr.findNode(lc_node,lc_node_name2)
+       CALL lfrm_curr.setElementStyle(lc_node_name2, "t_menuitem")
+   END FOR
+
+   
+   IF p_type = "M" THEN
+      LET lc_node_name = g_but1
+      LET lc_node_name1 = g_but2
+      LET lc_node_name2 = "0"    
+      LET lnode_node = lfrm_curr.findNode(lc_node,lc_node_name)
+      LET lnode_node1 = lfrm_curr.findNode(lc_node,lc_node_name1)
+      LET lnode_node2 = lfrm_curr.findNode(lc_node,lc_node_name2)    
+   END IF
+   IF p_type = "I" THEN
+      LET lc_node_name = g_but1
+      LET lc_node_name1 = g_but2   
+      LET lc_node_name2 = "0"      
+      LET lnode_node = lfrm_curr.findNode(lc_node,lc_node_name)
+      LET lnode_node1 = lfrm_curr.findNode(lc_node,lc_node_name1)
+      LET lnode_node2 = lfrm_curr.findNode(lc_node,lc_node_name2)        
+   END IF
+   IF p_type = "P" THEN
+      LET lc_node_name = g_but1
+      LET lc_node_name1 = g_but2
+      LET lc_node_name2 = g_but3      
+      LET lnode_node = lfrm_curr.findNode(lc_node,lc_node_name)
+      LET lnode_node1 = lfrm_curr.findNode(lc_node,lc_node_name1)
+      LET lnode_node2 = lfrm_curr.findNode(lc_node,lc_node_name2)                 
+   END IF
+   IF p_type <> "R" THEN
+      IF lc_node_name <> '0' THEN
+         CALL lfrm_curr.setElementStyle(lc_node_name, "t_menuitemfocus")
+      END IF
+      IF lc_node_name1 <> '0' THEN      
+         CALL lfrm_curr.setElementStyle(lc_node_name1, "t_menuitemfocus")
+      END IF
+      IF lc_node_name2 <> '0' THEN      
+         CALL lfrm_curr.setElementStyle(lc_node_name2, "t_menuitemfocus")
+      END IF
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 向右置換
+# Memo...........:
+# Usage..........: CALL apci211_right_change(p_num)
+#                  RETURNING r_success
+# Input parameter: p_num          按下第幾筆商品資料
+# Return code....: r_sucess       TRUE/FALSE
+# Date & Author..: 2016/7/27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_right_change(p_num)
+DEFINE p_num             LIKE type_t.num5
+DEFINE l_pcbd009         LIKE pcbd_t.pcbd009
+DEFINE l_pcbd009_n       LIKE pcbd_t.pcbd009
+DEFINE l_pcbd001         LIKE pcbd_t.pcbd001
+DEFINE l_pcbd001_n       LIKE pcbd_t.pcbd001
+DEFINE l_pcbd002         LIKE pcbd_t.pcbd002
+DEFINE l_pcbd002_n       LIKE pcbd_t.pcbd002
+DEFINE l_pcbd003         LIKE pcbd_t.pcbd003
+DEFINE l_pcbd003_n       LIKE pcbd_t.pcbd003
+DEFINE l_pcbd004         LIKE pcbd_t.pcbd004
+DEFINE l_pcbd004_n       LIKE pcbd_t.pcbd004
+#160914-00029#1 by sakura add(S)
+DEFINE l_pcbd005         LIKE pcbd_t.pcbd005
+DEFINE l_pcbd005_n       LIKE pcbd_t.pcbd005
+#160914-00029#1 by sakura add(E)
+DEFINE r_success         LIKE type_t.num5
+
+  LET r_success = TRUE
+
+  IF (p_num + 1) > g_product_array_langth THEN
+     INITIALIZE g_errparam TO NULL 
+     LET g_errparam.extend = "" 
+     LET g_errparam.code   = 'apc-00092' 
+     LET g_errparam.popup  = FALSE 
+     CALL cl_err()
+     LET r_success = FALSE
+     RETURN r_success
+  ELSE
+     LET l_pcbd009 = g_product_array[p_num].product_num
+     LET l_pcbd009_n = g_product_array[p_num + 1].product_num
+     LET l_pcbd001 = g_pcbb_m.pcbb001 
+     LET l_pcbd002 = g_product_array[p_num].product_id
+     LET l_pcbd002_n = g_product_array[p_num + 1].product_id
+     LET l_pcbd003 = g_product_array[p_num].product_spec
+     LET l_pcbd003_n = g_product_array[p_num + 1].product_spec
+     LET l_pcbd004 = g_product_array[p_num].product_unit
+     LET l_pcbd004_n = g_product_array[p_num + 1].product_unit
+     #160914-00029#1 by sakura add(S)
+     LET l_pcbd005 = g_product_array[p_num].product_item_id
+     LET l_pcbd005_n = g_product_array[p_num + 1].product_item_id
+     #160914-00029#1 by sakura add(E)     
+
+     UPDATE pcbd_t SET pcbd009 = l_pcbd009
+      WHERE pcbdent = g_enterprise
+        AND pcbd001 = l_pcbd001
+        AND pcbd002 = l_pcbd002_n
+        AND pcbd003 = l_pcbd003_n
+        AND pcbd004 = l_pcbd004_n
+        AND pcbd005 = l_pcbd005_n   #160914-00029#1 by sakura add
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "rightrepalce pcbd_t:",SQLERRMESSAGE 
+       LET g_errparam.code   = SQLCA.sqlcode 
+       LET g_errparam.popup  = TRUE 
+       CALL cl_err()
+       LET r_success = FALSE
+       RETURN r_success       
+    END IF        
+        
+     UPDATE pcbd_t SET pcbd009 = l_pcbd009_n
+      WHERE pcbdent = g_enterprise
+        AND pcbd001 = l_pcbd001
+        AND pcbd002 = l_pcbd002
+        AND pcbd003 = l_pcbd003
+        AND pcbd004 = l_pcbd004  
+        AND pcbd005 = l_pcbd005   #160914-00029#1 by sakura add
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "rightrepalce pcbd_t:",SQLERRMESSAGE 
+       LET g_errparam.code   = SQLCA.sqlcode 
+       LET g_errparam.popup  = TRUE 
+       CALL cl_err()
+       LET r_success = FALSE
+       RETURN r_success       
+    END IF             
+  END IF
+  RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 向左置換
+# Memo...........:
+# Usage..........: CALL apci211_left_change(p_num)
+#                  RETURNING r_success
+# Input parameter: p_num          按下第幾筆商品資料
+# Return code....: r_sucess       TRUE/FALSE
+# Date & Author..: 2016/7/27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_left_change(p_num)
+DEFINE p_num             LIKE type_t.num5
+DEFINE l_pcbd009         LIKE pcbd_t.pcbd009
+DEFINE l_pcbd009_n       LIKE pcbd_t.pcbd009
+DEFINE l_pcbd001         LIKE pcbd_t.pcbd001
+DEFINE l_pcbd001_n       LIKE pcbd_t.pcbd001
+DEFINE l_pcbd002         LIKE pcbd_t.pcbd002
+DEFINE l_pcbd002_n       LIKE pcbd_t.pcbd002
+DEFINE l_pcbd003         LIKE pcbd_t.pcbd003
+DEFINE l_pcbd003_n       LIKE pcbd_t.pcbd003
+DEFINE l_pcbd004         LIKE pcbd_t.pcbd004
+DEFINE l_pcbd004_n       LIKE pcbd_t.pcbd004
+#160914-00029#1 by sakura add(S)
+DEFINE l_pcbd005         LIKE pcbd_t.pcbd005
+DEFINE l_pcbd005_n       LIKE pcbd_t.pcbd005
+#160914-00029#1 by sakura add(E)
+DEFINE r_success         LIKE type_t.num5
+
+  LET r_success = TRUE
+
+  IF (p_num - 1) <= 0 THEN
+     INITIALIZE g_errparam TO NULL 
+     LET g_errparam.extend = "" 
+     LET g_errparam.code   = 'apc-00092' 
+     LET g_errparam.popup  = FALSE 
+     CALL cl_err()    
+     LET r_success = FALSE
+     RETURN r_success
+  ELSE
+     LET l_pcbd009 = g_product_array[p_num].product_num
+     LET l_pcbd009_n = g_product_array[p_num - 1].product_num
+     LET l_pcbd001 = g_pcbb_m.pcbb001 
+     LET l_pcbd002 = g_product_array[p_num].product_id
+     LET l_pcbd002_n = g_product_array[p_num - 1].product_id
+     LET l_pcbd003 = g_product_array[p_num].product_spec
+     LET l_pcbd003_n = g_product_array[p_num - 1].product_spec
+     LET l_pcbd004 = g_product_array[p_num].product_unit
+     LET l_pcbd004_n = g_product_array[p_num - 1].product_unit
+     #160914-00029#1 by sakura add(S)
+     LET l_pcbd005 = g_product_array[p_num].product_item_id
+     LET l_pcbd005_n = g_product_array[p_num - 1].product_item_id
+     #160914-00029#1 by sakura add(E)     
+
+     UPDATE pcbd_t SET pcbd009 = l_pcbd009
+      WHERE pcbdent = g_enterprise
+        AND pcbd001 = l_pcbd001
+        AND pcbd002 = l_pcbd002_n
+        AND pcbd003 = l_pcbd003_n
+        AND pcbd004 = l_pcbd004_n
+        AND pcbd005 = l_pcbd005_n   #160914-00029#1 by sakura add
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "leftrepalce pcbd_t:",SQLERRMESSAGE 
+       LET g_errparam.code   = SQLCA.sqlcode 
+       LET g_errparam.popup  = TRUE 
+       CALL cl_err()
+       LET r_success = FALSE
+       RETURN r_success       
+    END IF        
+        
+     UPDATE pcbd_t SET pcbd009 = l_pcbd009_n
+      WHERE pcbdent = g_enterprise
+        AND pcbd001 = l_pcbd001
+        AND pcbd002 = l_pcbd002
+        AND pcbd003 = l_pcbd003
+        AND pcbd004 = l_pcbd004  
+        AND pcbd005 = l_pcbd005   #160914-00029#1 by sakura add
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "leftrepalce pcbd_t:",SQLERRMESSAGE 
+       LET g_errparam.code   = SQLCA.sqlcode 
+       LET g_errparam.popup  = TRUE 
+       CALL cl_err()
+       LET r_success = FALSE
+       RETURN r_success       
+    END IF             
+  END IF
+  RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 向上置換
+# Memo...........:
+# Usage..........: CALL apci211_up_change(p_num,p_pcbb009)
+#                  RETURNING r_success
+# Input parameter: p_num          按下第幾筆商品
+#                : p_pcbb009      商品有幾行
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2016/7/27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_up_change(p_num,p_pcbb009)
+DEFINE p_num             LIKE type_t.num5
+DEFINE p_pcbb009         LIKE pcbb_t.pcbb009
+DEFINE l_pcbd009         LIKE pcbd_t.pcbd009
+DEFINE l_pcbd009_n       LIKE pcbd_t.pcbd009
+DEFINE l_pcbd001         LIKE pcbd_t.pcbd001
+DEFINE l_pcbd001_n       LIKE pcbd_t.pcbd001
+DEFINE l_pcbd002         LIKE pcbd_t.pcbd002
+DEFINE l_pcbd002_n       LIKE pcbd_t.pcbd002
+DEFINE l_pcbd003         LIKE pcbd_t.pcbd003
+DEFINE l_pcbd003_n       LIKE pcbd_t.pcbd003
+DEFINE l_pcbd004         LIKE pcbd_t.pcbd004
+DEFINE l_pcbd004_n       LIKE pcbd_t.pcbd004
+#160914-00029#1 by sakura add(S)
+DEFINE l_pcbd005         LIKE pcbd_t.pcbd005
+DEFINE l_pcbd005_n       LIKE pcbd_t.pcbd005
+#160914-00029#1 by sakura add(E)
+DEFINE r_success         LIKE type_t.num5
+
+  LET r_success = TRUE
+
+  IF (p_num - p_pcbb009) <= 0 THEN
+     INITIALIZE g_errparam TO NULL 
+     LET g_errparam.extend = "" 
+     LET g_errparam.code   = 'apc-00092' 
+     LET g_errparam.popup  = FALSE 
+     CALL cl_err()
+     LET r_success = FALSE
+     RETURN r_success
+  ELSE
+     LET l_pcbd009 = g_product_array[p_num].product_num
+     LET l_pcbd009_n = g_product_array[p_num - p_pcbb009].product_num
+     LET l_pcbd001 = g_pcbb_m.pcbb001 
+     LET l_pcbd002 = g_product_array[p_num].product_id
+     LET l_pcbd002_n = g_product_array[p_num - p_pcbb009].product_id
+     LET l_pcbd003 =  g_product_array[p_num].product_spec
+     LET l_pcbd003_n =  g_product_array[p_num - p_pcbb009].product_spec
+     LET l_pcbd004 = g_product_array[p_num].product_unit
+     LET l_pcbd004_n = g_product_array[p_num - p_pcbb009].product_unit
+     #160914-00029#1 by sakura add(S)
+     LET l_pcbd005 = g_product_array[p_num].product_item_id
+     LET l_pcbd005_n = g_product_array[p_num - p_pcbb009].product_item_id
+     #160914-00029#1 by sakura add(E)     
+
+     UPDATE pcbd_t SET pcbd009 = l_pcbd009
+      WHERE pcbdent = g_enterprise
+        AND pcbd001 = l_pcbd001
+        AND pcbd002 = l_pcbd002_n
+        AND pcbd003 = l_pcbd003_n
+        AND pcbd004 = l_pcbd004_n
+        AND pcbd005 = l_pcbd005_n   #160914-00029#1 by sakura add
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "upreplace pcbd_t:",SQLERRMESSAGE 
+       LET g_errparam.code   = SQLCA.sqlcode 
+       LET g_errparam.popup  = TRUE 
+       CALL cl_err()
+       LET r_success = FALSE
+       RETURN r_success       
+    END IF        
+        
+     UPDATE pcbd_t SET pcbd009 = l_pcbd009_n
+      WHERE pcbdent = g_enterprise
+        AND pcbd001 = l_pcbd001
+        AND pcbd002 = l_pcbd002
+        AND pcbd003 = l_pcbd003
+        AND pcbd004 = l_pcbd004  
+        AND pcbd005 = l_pcbd005   #160914-00029#1 by sakura add
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "upreplace pcbd_t:",SQLERRMESSAGE 
+       LET g_errparam.code   = SQLCA.sqlcode 
+       LET g_errparam.popup  = TRUE 
+       CALL cl_err()
+       LET r_success = FALSE
+       RETURN r_success       
+    END IF             
+  END IF
+  RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 向下置換
+# Memo...........:
+# Usage..........: CALL apci211_down_change(p_num,p_pcbb009)
+#                  RETURNING r_success
+# Input parameter: p_num          按下第幾筆商品
+#                : p_pcbb009      商品有幾行
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2016/7/27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_down_change(p_num,p_pcbb009)
+DEFINE p_num             LIKE type_t.num5
+DEFINE p_pcbb009         LIKE pcbb_t.pcbb009
+DEFINE l_pcbd009         LIKE pcbd_t.pcbd009
+DEFINE l_pcbd009_n       LIKE pcbd_t.pcbd009
+DEFINE l_pcbd001         LIKE pcbd_t.pcbd001
+DEFINE l_pcbd001_n       LIKE pcbd_t.pcbd001
+DEFINE l_pcbd002         LIKE pcbd_t.pcbd002
+DEFINE l_pcbd002_n       LIKE pcbd_t.pcbd002
+DEFINE l_pcbd003         LIKE pcbd_t.pcbd003
+DEFINE l_pcbd003_n       LIKE pcbd_t.pcbd003
+DEFINE l_pcbd004         LIKE pcbd_t.pcbd004
+DEFINE l_pcbd004_n       LIKE pcbd_t.pcbd004
+#160914-00029#1 by sakura add(S)
+DEFINE l_pcbd005         LIKE pcbd_t.pcbd005
+DEFINE l_pcbd005_n       LIKE pcbd_t.pcbd005
+#160914-00029#1 by sakura add(E)
+DEFINE r_success         LIKE type_t.num5
+
+  LET r_success = TRUE
+
+  IF (p_num + p_pcbb009) > g_product_array_langth THEN
+     INITIALIZE g_errparam TO NULL 
+     LET g_errparam.extend = "" 
+     LET g_errparam.code   = 'apc-00092' 
+     LET g_errparam.popup  = FALSE 
+     CALL cl_err()
+     LET r_success = FALSE
+     RETURN r_success
+  ELSE
+     LET l_pcbd009 = g_product_array[p_num].product_num
+     LET l_pcbd009_n = g_product_array[p_num + p_pcbb009].product_num
+     LET l_pcbd001 = g_pcbb_m.pcbb001 
+     LET l_pcbd002 = g_product_array[p_num].product_id
+     LET l_pcbd002_n = g_product_array[p_num + p_pcbb009].product_id
+     LET l_pcbd003 = g_product_array[p_num].product_spec
+     LET l_pcbd003_n = g_product_array[p_num + p_pcbb009].product_id
+     LET l_pcbd004 = g_product_array[p_num].product_unit
+     LET l_pcbd004_n = g_product_array[p_num + p_pcbb009].product_unit
+     #160914-00029#1 by sakura add(S)
+     LET l_pcbd005 = g_product_array[p_num].product_item_id
+     LET l_pcbd005_n = g_product_array[p_num + p_pcbb009].product_item_id
+     #160914-00029#1 by sakura add(E)     
+
+     UPDATE pcbd_t SET pcbd009 = l_pcbd009
+      WHERE pcbdent = g_enterprise
+        AND pcbd001 = l_pcbd001
+        AND pcbd002 = l_pcbd002_n
+        AND pcbd003 = l_pcbd003_n
+        AND pcbd004 = l_pcbd004_n
+        AND pcbd005 = l_pcbd005_n   #160914-00029#1 by sakura add
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "upreplace pcbd_t:",SQLERRMESSAGE 
+       LET g_errparam.code   = SQLCA.sqlcode 
+       LET g_errparam.popup  = TRUE 
+       CALL cl_err()
+       LET r_success = FALSE
+       RETURN r_success       
+    END IF        
+        
+     UPDATE pcbd_t SET pcbd009 = l_pcbd009_n
+      WHERE pcbdent = g_enterprise
+        AND pcbd001 = l_pcbd001
+        AND pcbd002 = l_pcbd002
+        AND pcbd003 = l_pcbd003
+        AND pcbd004 = l_pcbd004  
+        AND pcbd005 = l_pcbd005   #160914-00029#1 by sakura add
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "upreplace pcbd_t:",SQLERRMESSAGE 
+       LET g_errparam.code   = SQLCA.sqlcode 
+       LET g_errparam.popup  = TRUE 
+       CALL cl_err()
+       LET r_success = FALSE
+       RETURN r_success       
+    END IF             
+  END IF
+  RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 刪除商品資料
+# Memo...........:
+# Usage..........: CALL apci211_del_product(p_num)
+#                  RETURNING r_success
+# Input parameter: p_num          按下第幾筆商品資料
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2016/7/27 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_del_product(p_num)
+DEFINE p_num             LIKE type_t.num5
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_pcbd001         LIKE pcbd_t.pcbd001
+DEFINE l_pcbd002         LIKE pcbd_t.pcbd002
+DEFINE l_pcbd003         LIKE pcbd_t.pcbd003
+DEFINE l_pcbd004         LIKE pcbd_t.pcbd004
+DEFINE l_pcbd005         LIKE pcbd_t.pcbd005
+
+  LET r_success = TRUE
+  
+  LET l_pcbd001 = g_pcbb_m.pcbb001 
+  LET l_pcbd002 = g_product_array[p_num].product_id
+  LET l_pcbd003 = g_product_array[p_num].product_spec
+  LET l_pcbd004 = g_product_array[p_num].product_unit
+  LET l_pcbd005 = g_product_array[p_num].product_item_id   #160914-00029#1 by sakura add
+  
+  DELETE FROM pcbd_t
+   WHERE pcbdent = g_enterprise
+     AND pcbd001 = l_pcbd001
+     AND pcbd002 = l_pcbd002
+     AND pcbd003 = l_pcbd003
+     AND pcbd004 = l_pcbd004
+     AND pcbd005 = l_pcbd005   #160914-00029#1 by sakura add
+  IF SQLCA.sqlcode THEN
+     INITIALIZE g_errparam TO NULL 
+     LET g_errparam.extend = "del_product pcbd_t:",SQLERRMESSAGE 
+     LET g_errparam.code   = SQLCA.sqlcode 
+     LET g_errparam.popup  = TRUE 
+     CALL cl_err()
+     LET r_success = FALSE
+     RETURN r_success       
+  END IF     
+    
+  RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 更新pos狀態為0未傳送
+# Memo...........:
+# Usage..........: CALL apci211_pcbb003_upd(p_pcbb001)
+#                  RETURNING r_success
+# Input parameter: p_pcbb001      方案編號
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2016/7/28 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbb003_upd(p_pcbb001)
+DEFINE p_pcbb001        LIKE pcbb_t.pcbb001
+DEFINE r_success        LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   UPDATE pcbb_t SET pcbb003 = 0   
+    WHERE pcbbent = g_enterprise
+      AND pcbb001 = p_pcbb001
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "pcbb003_upd:",SQLERRMESSAGE 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success       
+   END IF          
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查是否有選取到商品資料
+# Memo...........:
+# Usage..........: CALL apci211_button3_chk(p_button3)
+#                  RETURNING r_success
+# Input parameter: p_button3      點選商品第幾筆
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2016/7/29 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_button3_chk(p_button3)
+DEFINE p_button3        LIKE type_t.num5    #产品的第几笔资料
+DEFINE r_success        LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_button3) OR p_button3 = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = ''
+      LET g_errparam.code   = 'apc-00094'
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success    
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 動態增加 Style 設定
+# Memo...........:
+# Usage..........: CALL apci211_add_style()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/8/4 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_add_style()
+   DEFINE lnode_root,lnode_item,lnode_child,lnode_att om.DomNode
+   DEFINE llst_styles om.NodeList
+   DEFINE li_i SMALLINT
+
+   LET lnode_root = ui.Interface.getRootNode()
+   LET llst_styles = lnode_root.selectByTagName("StyleList")
+   FOR li_i = 1 TO llst_styles.getLength()
+       LET lnode_item = llst_styles.item(li_i)
+       # 新增 Style 項目
+       LET lnode_child = lnode_item.createChild("Style")
+       # Style 名稱
+       CALL lnode_child.setAttribute("name", "Button.t_menuitem")
+       LET lnode_att = lnode_child.createChild("StyleAttribute")   
+       # 設定項目：以 textColor 為例
+       CALL lnode_att.setAttribute("name", "textColor")            
+       CALL lnode_att.setAttribute("value", "#000")
+       
+       
+       LET lnode_child = lnode_item.createChild("Style")
+       CALL lnode_child.setAttribute("name", "Button.t_menuitemfocus")
+       LET lnode_att = lnode_child.createChild("StyleAttribute")
+       CALL lnode_att.setAttribute("name", "textColor")
+       CALL lnode_att.setAttribute("value", "red")       
+       EXIT FOR
+   END FOR
+END FUNCTION
+
+################################################################################
+# Descriptions...: 顯示是否有圖片的flag
+# Memo...........:
+# Usage..........: CALL apci211_pcbd006_show()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/8/5 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbd006_show()
+   SELECT (CASE WHEN pcbd006 IS NULL THEN 'N' ELSE 'Y' END) 
+     INTO g_pcbc3_d[l_ac].l_pcbd006 
+     FROM pcbd_t
+    WHERE pcbdent = g_enterprise 
+      AND pcbd001 = g_pcbb_m.pcbb001
+      ANd pcbd002 = g_pcbc3_d[l_ac].pcbd002      
+      AND pcbd003 = g_pcbc3_d[l_ac].pcbd003 
+      AND pcbd004 = g_pcbc3_d[l_ac].pcbd004
+      AND pcbd005 = g_pcbc3_d[l_ac].pcbd005
+END FUNCTION
+
+################################################################################
+# Descriptions...: 重新找入圖檔
+# Memo...........:
+# Usage..........: CALL apci211_reload_pcbd006()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/8/8 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_reload_pcbd006()
+DEFINE l_sql            STRING
+DEFINE l_pcbd002        LIKE pcbd_t.pcbd002
+DEFINE l_pcbd003        LIKE pcbd_t.pcbd003
+DEFINE l_pcbd004        LIKE pcbd_t.pcbd004
+DEFINE l_pcbd005        LIKE pcbd_t.pcbd005   #160914-00029#1 by sakura add  
+DEFINE r_success        LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+    #先更新POS傳送狀態為0
+    LET l_sql = " UPDATE pcbb_t ",
+                "    SET pcbb003 = 0 ",
+                "  WHERE pcbbent = ",g_enterprise ,
+                "    AND pcbb001 = '",g_pcbb_m.pcbb001,"'"
+    PREPARE apci211_upd_pcbb003 FROM l_sql
+    EXECUTE apci211_upd_pcbb003
+                
+    #將圖片重新載入
+    LET l_sql = " SELECT pcbd002,pcbd003,pcbd004,pcbd005 ",   #160914-00029#1 by sakura add l_pcbd005
+                "   FROM pcbd_t ",
+                "  WHERE pcbdent = ",g_enterprise,
+                "    AND pcbd001 = '",g_pcbb_m.pcbb001,"'"
+    PREPARE apci211_reload_pcbd006 FROM l_sql
+    DECLARE apci211_reload_pcbd006_cur CURSOR FOR apci211_reload_pcbd006
+    FOREACH apci211_reload_pcbd006_cur INTO l_pcbd002,l_pcbd003,l_pcbd004,l_pcbd005  #160914-00029#1 by sakura add l_pcbd005
+       IF NOT apci211_upd_pcbd006(g_pcbb_m.pcbb001,l_pcbd002,l_pcbd003,l_pcbd004,l_pcbd005) THEN  #160901-00017#1 Add By Ken 160902新增傳入參數g_pcbb_m.pcbb001 #160914-00029#1 by sakura add l_pcbd005
+          LET r_success = FALSE 
+          RETURN r_success 
+       END IF                                        
+    END FOREACH   
+    
+    RETURN r_success     
+END FUNCTION
+
+################################################################################
+# Descriptions...: 商品開窗多選時取得正確的順序號
+# Memo...........:
+# Usage..........: CALL apci211_pcbd009_get()
+#                  RETURNING r_pcbd009
+# Input parameter: 
+# Return code....: r_pcbd009
+# Date & Author..: 2016/8/10 By Ken   #160705-00013#9 Mark By ken 160810
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbd009_get()
+DEFINE l_i              LIKE type_t.num5
+DEFINE l_pcbd009        LIKE pcbd_t.pcbd009
+DEFINE r_pcbd009        LIKE pcbd_t.pcbd009
+
+  LET r_pcbd009 = 1
+  LET l_pcbd009 = 0
+  
+  FOR l_i = 1 TO g_pcbc3_d.getLength()
+     IF g_pcbc3_d[l_i].pcbd009 > l_pcbd009 THEN
+        LET l_pcbd009 = g_pcbc3_d[l_i].pcbd009
+     END IF
+  END FOR
+  
+  LET r_pcbd009 = l_pcbd009 + 1
+  
+  RETURN r_pcbd009
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得商品在第幾頁及第幾筆
+# Memo...........:
+# Usage..........: CALL apci211_product_index(p_button3)
+# Input parameter: p_button3        傳入第幾筆商品
+# Return code....: 
+# Date & Author..: 2016-8-10 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_product_index(p_button3)
+DEFINE p_button3                LIKE type_t.num5
+DEFINE l_button_num             LIKE type_t.num5    
+DEFINE l_mod_cnt                LIKE type_t.num5 
+DEFINE p_mod_cnt                LIKE type_t.num5  
+
+   LET g_button3 = p_button3
+   
+   LET l_mod_cnt = g_button3 MOD (g_product_page_count-2)
+   LET g_product_curr_page = g_button3 /(g_product_page_count-2)     #計算目前的按鈕在第幾頁
+   IF (l_mod_cnt > 0) THEN  #如餘數大於0 則頁碼加1
+      LET g_product_curr_page = g_product_curr_page + 1
+   END IF                        
+   IF g_product_curr_page = 1 THEN
+      LET l_button_num = g_button3 
+   ELSE
+      LET l_button_num = g_button3 + (g_product_curr_page-1) * 2                        
+   END IF
+   LET p_mod_cnt = l_button_num MOD g_product_page_count
+   LET g_but3 = "product_but",p_mod_cnt USING "&&&"                            
+   IF g_product_curr_page > 1 THEN                              
+      # 重新布置商品的元件
+      LET g_product_start_index = g_product_start_index + (g_product_page_count - 2)
+      LET g_product_end_index = g_product_start_index + ((g_product_page_count - 2) - 1)
+   END IF 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得小類在第幾頁及第幾筆
+# Memo...........:
+# Usage..........: CALL apci211_item_index(p_button2)
+# Input parameter: p_button2      第幾筆小類
+# Return code....: 
+# Date & Author..: 2016-8-10 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_item_index(p_button2)
+DEFINE p_button2                LIKE type_t.num5
+DEFINE l_button_num             LIKE type_t.num5    
+DEFINE l_mod_cnt                LIKE type_t.num5 
+DEFINE p_mod_cnt                LIKE type_t.num5
+
+   LET g_button2 = p_button2
+
+   LET l_mod_cnt = g_button2 MOD (g_item_page_count-2)
+   LET g_item_curr_page = g_button2 /(g_item_page_count-2)     #計算目前的按鈕在第幾頁
+   IF (l_mod_cnt > 0) THEN  #如餘數大於0 則頁碼加1
+      LET g_item_curr_page = g_item_curr_page + 1
+   END IF
+   LET l_button_num = g_button2 + (g_item_curr_page-1) * (g_item_page_count-2)
+   LET p_mod_cnt = l_button_num MOD g_item_page_count
+   LET g_but2 = "item_but",p_mod_cnt USING "&&&"                            
+   IF g_item_curr_page > 1 THEN                             
+      # 重新布置小分類的元件
+      LET g_item_start_index = g_item_start_index + (g_item_page_count - 2)
+      LET g_item_end_index = g_item_start_index + ((g_item_page_count - 2) - 1)
+   END IF 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 大類開窗多選時取得正確的順序號
+# Memo...........:
+# Usage..........: CALL apci211_pcbc005_get()
+#                  RETURNING r_pcbc005
+# Input parameter: 
+# Return code....: r_pcbd005
+# Date & Author..: 2016/8/10 By Ken   #160705-00013#9 Mark By ken 160810
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbc005_get()
+DEFINE l_i              LIKE type_t.num5
+DEFINE l_pcbc005        LIKE pcbc_t.pcbc005
+DEFINE r_pcbc005        LIKE pcbc_t.pcbc005
+
+  LET r_pcbc005 = 1
+  LET l_pcbc005 = 0
+  
+  FOR l_i = 1 TO g_pcbc_d.getLength()
+     IF g_pcbc_d[l_i].pcbc005 > l_pcbc005 THEN
+        LET l_pcbc005 = g_pcbc_d[l_i].pcbc005
+     END IF
+  END FOR
+  
+  LET l_pcbc005 = l_pcbc005 + 1
+  
+  RETURN l_pcbc005
+END FUNCTION
+
+################################################################################
+# Descriptions...: 大類開窗多選時取得正確的順序號
+# Memo...........:
+# Usage..........: CALL apci211_pcbc005_get1()
+#                  RETURNING r_pcbc005
+# Input parameter: 
+# Return code....: r_pcbd005
+# Date & Author..: 2016/8/10 By Ken   #160705-00013#9 Mark By ken 160810
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_pcbc005_get1()
+DEFINE l_i              LIKE type_t.num5
+DEFINE l_pcbc005        LIKE pcbc_t.pcbc005
+DEFINE r_pcbc005        LIKE pcbc_t.pcbc005
+
+  LET r_pcbc005 = 1
+  LET l_pcbc005 = 0
+  
+  FOR l_i = 1 TO g_pcbc2_d.getLength()
+     IF g_pcbc2_d[l_i].pcbc005 > l_pcbc005 THEN
+        LET l_pcbc005 = g_pcbc2_d[l_i].pcbc005
+     END IF
+  END FOR
+  
+  LET l_pcbc005 = l_pcbc005 + 1
+  
+  RETURN l_pcbc005
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查其他方案並更新傳POS狀態碼
+# Memo...........:
+# Usage..........: CALL apci211_upd_pcbb003_other()
+#                  RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success      處理結果
+# Date & Author..: 2016/11/03 By sakura
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_upd_pcbb003_other()
+   DEFINE r_success        LIKE type_t.num5
+   DEFINE l_sql1           STRING
+   DEFINE l_sql2           STRING
+   DEFINE l_sql3           STRING
+   DEFINE l_sql4           STRING
+   DEFINE l_sql5           STRING
+   DEFINE l_pcbe002        LIKE pcbe_t.pcbe002
+   DEFINE l_pcbestus       LIKE pcbe_t.pcbestus
+   DEFINE l_pcbe001_other  LIKE pcbe_t.pcbe001
+   DEFINE l_pcbe002_other  LIKE pcbe_t.pcbe002
+   DEFINE l_cnt            LIKE type_t.num5
+   DEFINE l_err_cnt        LIKE type_t.num5
+   DEFINE li_str           LIKE type_t.num10   
+   
+   LET r_success = TRUE
+   
+   #目前方案生效組織
+   LET l_sql1 = "SELECT pcbe002,pcbestus ",
+                "  FROM pcbe_t ",
+                " WHERE pcbeent = ",g_enterprise,
+                "   AND pcbe001 = '",g_pcbb_m.pcbb001,"'"
+   PREPARE apci211_upd_pcbb003_other_pre1 FROM l_sql1
+   DECLARE apci211_upd_pcbb003_other_cur1 CURSOR FOR apci211_upd_pcbb003_other_pre1
+   
+   #查詢存在其他方案的組織
+   LET l_sql2 ="SELECT pcbe001,pcbe002 ",
+               " FROM pcbe_t ",
+               "WHERE pcbeent = ",g_enterprise,
+               "  AND pcbe002 = ? ",
+               "  AND pcbestus = 'Y' ",
+               "  AND EXISTS(SELECT 1 FROM pcbb_t ",
+               "              WHERE pcbbent = ",g_enterprise,
+               "                AND pcbb001 = pcbe001 ",
+               "                AND pcbb003 = 1) "
+   PREPARE apci211_upd_pcbb003_other_pre2 FROM l_sql2
+   DECLARE apci211_upd_pcbb003_other_cur2 CURSOR FOR apci211_upd_pcbb003_other_pre2
+   
+   LET l_sql3 = "SELECT pcbe001,pcbe002,pcbestus ",
+                "  FROM pcbe_t ",
+                " WHERE pcbeent = ? AND pcbe001 = ? AND pcbe002 = ? FOR UPDATE "
+   DECLARE apci211_upd_pcbb003_other_cur3 CURSOR FROM l_sql3   
+   
+   LET l_pcbe002 = ''
+   LET l_pcbestus = ''
+   LET g_where_pcbb001 = ''   
+   
+   FOREACH apci211_upd_pcbb003_other_cur1 INTO l_pcbe002,l_pcbestus
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+      
+      #確認是否存在其他方案
+      LET l_cnt = 0
+      SELECT COUNT(pcbe001) INTO l_cnt
+        FROM pcbe_t
+       WHERE pcbeent = g_enterprise
+         AND pcbe002 = l_pcbe002
+         AND pcbestus = 'Y'
+         AND EXISTS(SELECT 1 FROM pcbb_t WHERE pcbbent = g_enterprise AND pcbb001 = pcbe001 AND pcbb003 = 1)
+      
+      LET l_pcbe001_other = ''
+      LET l_pcbe002_other = ''
+      CASE l_pcbestus
+        WHEN 'Y'   #有效
+          IF l_cnt > 0 THEN
+             FOREACH apci211_upd_pcbb003_other_cur2 USING l_pcbe002 INTO l_pcbe001_other,l_pcbe002_other
+                IF SQLCA.sqlcode THEN
+                   INITIALIZE g_errparam TO NULL
+                   LET g_errparam.code = SQLCA.sqlcode
+                   LET g_errparam.popup  = TRUE 
+                   CALL cl_err()
+                   LET l_err_cnt = l_err_cnt + 1
+                END IF
+                
+                IF NOT cl_null(l_pcbe001_other) THEN
+                   LET li_str = 0
+                   LET li_str = g_where_pcbb001.getIndexOf(l_pcbe001_other,1)
+                   IF li_str = 0 THEN
+                      IF cl_null(g_where_pcbb001) THEN
+                         LET g_where_pcbb001 = "'",l_pcbe001_other,"'"
+                      ELSE
+                         LET g_where_pcbb001 = g_where_pcbb001,",'",l_pcbe001_other,"'"
+                      END IF
+                   END IF
+                END IF
+                #更新前先將對方的資料做lock-pcbe_t
+                OPEN apci211_upd_pcbb003_other_cur3 USING g_enterprise,l_pcbe001_other,l_pcbe002_other
+                IF STATUS THEN
+                   INITIALIZE g_errparam TO NULL 
+                   LET g_errparam.extend = "OPEN apci211_upd_pcbb003_other_cur3:" 
+                   LET g_errparam.code   = STATUS 
+                   LET g_errparam.popup  = TRUE 
+                   CALL cl_err()
+                   #這邊不做匯總訊息,直接回傳錯誤
+                   CLOSE apci211_upd_pcbb003_other_cur3
+                   CALL s_transaction_end('N','0')                   
+                   LET r_success = FALSE
+                   RETURN r_success                   
+                END IF
+                #生效範圍有效否(pcbestus) = 'N.無效'                
+                UPDATE pcbe_t SET pcbestus = 'N' 
+                 WHERE pcbeent = g_enterprise 
+                   AND pcbe001 = l_pcbe001_other 
+                   AND pcbe002 = l_pcbe002_other
+                IF SQLCA.sqlcode THEN
+                   INITIALIZE g_errparam TO NULL 
+                   LET g_errparam.extend = "" 
+                   LET g_errparam.code   = SQLCA.sqlcode
+                   LET g_errparam.popup  = TRUE
+                   CLOSE apci211_upd_pcbb003_other_cur3
+                   CALL cl_err()
+                   LET r_success = FALSE
+                   RETURN r_success
+                ELSE
+                   CLOSE apci211_upd_pcbb003_other_cur3
+                END IF
+             END FOREACH                
+          ELSE
+            #不做處理
+          END IF
+        WHEN 'N'   #無效
+          IF l_cnt > 0 THEN
+             FOREACH apci211_upd_pcbb003_other_cur2 USING l_pcbe002 INTO l_pcbe001_other,l_pcbe002_other
+                IF SQLCA.sqlcode THEN
+                   INITIALIZE g_errparam TO NULL
+                   LET g_errparam.code = SQLCA.sqlcode
+                   LET g_errparam.popup  = TRUE 
+                   CALL cl_err()
+                   LET l_err_cnt = l_err_cnt + 1
+                END IF
+                
+                IF NOT cl_null(l_pcbe001_other) THEN
+                   LET li_str = 0
+                   LET li_str = g_where_pcbb001.getIndexOf(l_pcbe001_other,1)
+                   IF li_str = 0 THEN
+                      IF cl_null(g_where_pcbb001) THEN
+                         LET g_where_pcbb001 = "'",l_pcbe001_other,"'"
+                      ELSE
+                         LET g_where_pcbb001 = g_where_pcbb001,",'",l_pcbe001_other,"'"
+                      END IF
+                   END IF
+                END IF                   
+             END FOREACH          
+          ELSE
+            #提示錯誤 "請先將門店：%1 對應的生效觸屏方案傳送至POS或"刪除本方案中此門店的無效資料"再進行本次的操作"
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = ''
+            LET g_errparam.replace[1] = l_pcbe002
+            LET g_errparam.code   = "apc-00100"
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            LET l_err_cnt = l_err_cnt + 1          
+          END IF
+      END CASE
+      
+   END FOREACH
+   
+   #先將符合的方案更新為'0.未傳送'
+   IF NOT cl_null(g_where_pcbb001) THEN
+      LET g_where_pcbb001 = g_where_pcbb001,",'",g_pcbb_m.pcbb001,"'"   #將目前的方案也組進來一起Lock與更新
+      LET l_sql4 = "SELECT pcbb001 ",
+                   "  FROM pcbb_t ",
+                   " WHERE pcbbent = ? AND pcbb001 IN (",g_where_pcbb001,") FOR UPDATE "
+      DECLARE apci211_upd_pcbb003_other_cur4 CURSOR FROM l_sql4
+      OPEN apci211_upd_pcbb003_other_cur4 USING g_enterprise
+      IF STATUS THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "OPEN apci211_upd_pcbb003_other_cur3:" 
+         LET g_errparam.code   = STATUS 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CLOSE apci211_upd_pcbb003_other_cur4
+         CALL s_transaction_end('N','0')                   
+         LET r_success = FALSE
+         RETURN r_success                   
+      END IF
+      #更新方案傳POS狀態(pcbb003) = '0.未傳送'
+      LET l_sql5 = " UPDATE pcbb_t SET pcbb003 = 0 ",
+                   "  WHERE pcbbent = ",g_enterprise,
+                   "    AND pcbb001 IN (",g_where_pcbb001,")"
+      PREPARE apci211_upd_pcbb003_other_pre3 FROM l_sql5
+      EXECUTE apci211_upd_pcbb003_other_pre3
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         DISPLAY " UPDATE pcbb003=0: ERROR ",SQLCA.sqlerrd[2],STATUS
+         CLOSE apci211_upd_pcbb003_other_cur4
+         LET r_success = FALSE
+         RETURN r_success
+      ELSE
+         CLOSE apci211_upd_pcbb003_other_cur4
+      END IF
+   END IF      
+   
+   IF l_err_cnt > 0 THEN
+      LET r_success = FALSE
+   END IF   
+   
+   RETURN r_success      
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立暫存檔
+# Memo...........:
+# Usage..........: CALL apci211_create_tmp()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2016/11/09 By sakura
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_create_tmp()
+   DEFINE l_session_id       LIKE type_t.num20
+
+   SELECT USERENV('SESSIONID') INTO l_session_id FROM DUAL
+   DISPLAY "SessionId: ",l_session_id
+   
+   WHENEVER ERROR CONTINUE
+   
+   #生效組織存在的商品資料
+   DROP TABLE apci211_tmp_01
+   
+   CREATE TEMP TABLE apci211_tmp_01(
+      rtdxsite LIKE rtdx_t.rtdxsite,
+      rtdx001  LIKE rtdx_t.rtdx001)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增生效組織商品到臨時表
+# Memo...........:
+# Usage..........: CALL apci211_ins_tmp()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2016/11/09 By sakura
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apci211_ins_tmp()
+   DEFINE l_sql1       STRING
+   DEFINE l_sql2       STRING
+   DEFINE l_sql3       STRING
+   DEFINE l_pcbe002   LIKE pcbe_t.pcbe002
+   DEFINE l_ac        LIKE type_t.num5
+   
+   DELETE FROM apci211_tmp_01
+   
+   #目前方案生效組織
+   LET l_sql1 = "SELECT pcbe002 ",
+                "  FROM pcbe_t ",
+                " WHERE pcbeent = ",g_enterprise,
+                "   AND pcbe001 = '",g_pcbb_m.pcbb001,"'",
+                "   AND pcbestus = 'Y' "
+   PREPARE apci211_ins_tmp_pre1 FROM l_sql1
+   DECLARE apci211_ins_tmp_cur1 CURSOR FOR apci211_ins_tmp_pre1
+   
+   LET l_sql2 = "INSERT INTO apci211_tmp_01(rtdxsite,rtdx001) ",
+                "SELECT rtdxsite,rtdx001 ",
+                "  FROM rtdx_t ",
+                " WHERE rtdxent = ",g_enterprise,
+                "   AND rtdx025 = 'Y' ",
+                "   AND rtdxstus = 'Y' ",
+                "   AND rtdxsite = ? "
+   PREPARE apci211_tmp_01_ins FROM l_sql2
+   
+   LET l_sql3 = "DELETE FROM apci211_tmp_01 a ",
+                " WHERE NOT EXISTS(SELECT 1 ",
+                "                    FROM rtdx_t b ",
+                "                   WHERE rtdxent = ",g_enterprise,
+                "                     AND a.rtdx001 = b.rtdx001 ",
+                "                     AND rtdx025 = 'Y' ",
+                "                     AND rtdxstus='Y' ",
+                "                     AND rtdxsite = ? ) "
+   PREPARE apci211_tmp_01_del FROM l_sql3   
+   
+   LET l_pcbe002 = ''
+   LET l_ac = 0
+   FOREACH apci211_ins_tmp_cur1 INTO l_pcbe002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+      
+      IF l_ac = 0 THEN
+         EXECUTE apci211_tmp_01_ins USING l_pcbe002
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "ERROR:apci211_tmp_01_ins"
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+         END IF
+      ELSE
+         EXECUTE apci211_tmp_01_del USING l_pcbe002
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "ERROR:apci211_tmp_01_del"
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+         END IF         
+      END IF
+      
+      LET l_ac = l_ac + 1 
+   END FOREACH
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

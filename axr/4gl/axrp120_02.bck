@@ -1,0 +1,522 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrp120_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2014-05-23 15:17:17), PR版次:0003(2016-12-01 10:25:02)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000097
+#+ Filename...: axrp120_02
+#+ Description: 整批確認立帳
+#+ Creator....: 01727(2014-05-22 10:06:14)
+#+ Modifier...: 01727 -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="axrp120_02.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#161128-00061#3   2016/12/01 by 02481    标准程式定义采用宣告模式,弃用.*写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xrca_m        RECORD
+       xrcadocno LIKE xrca_t.xrcadocno, 
+   xrca063 LIKE xrca_t.xrca063, 
+   lbl_ra1 LIKE type_t.chr500, 
+   lbl_ra2 LIKE type_t.chr500, 
+   xrcadocdt LIKE xrca_t.xrcadocdt, 
+   xrcald LIKE xrca_t.xrcald
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+#161128-00061#3-----modify--begin----------
+#DEFINE g_glaa_t              RECORD LIKE glaa_t.*
+DEFINE g_glaa_t RECORD  #帳套資料檔
+       glaaent LIKE glaa_t.glaaent, #企業編號
+       glaaownid LIKE glaa_t.glaaownid, #資料所有者
+       glaaowndp LIKE glaa_t.glaaowndp, #資料所屬部門
+       glaacrtid LIKE glaa_t.glaacrtid, #資料建立者
+       glaacrtdp LIKE glaa_t.glaacrtdp, #資料建立部門
+       glaacrtdt LIKE glaa_t.glaacrtdt, #資料創建日
+       glaamodid LIKE glaa_t.glaamodid, #資料修改者
+       glaamoddt LIKE glaa_t.glaamoddt, #最近修改日
+       glaastus LIKE glaa_t.glaastus, #狀態碼
+       glaald LIKE glaa_t.glaald, #帳套編號
+       glaacomp LIKE glaa_t.glaacomp, #歸屬法人
+       glaa001 LIKE glaa_t.glaa001, #使用幣別
+       glaa002 LIKE glaa_t.glaa002, #匯率參照表號
+       glaa003 LIKE glaa_t.glaa003, #會計週期參照表號
+       glaa004 LIKE glaa_t.glaa004, #會計科目參照表號
+       glaa005 LIKE glaa_t.glaa005, #現金變動參照表號
+       glaa006 LIKE glaa_t.glaa006, #月結方式
+       glaa007 LIKE glaa_t.glaa007, #年結方式
+       glaa008 LIKE glaa_t.glaa008, #平行記帳否
+       glaa009 LIKE glaa_t.glaa009, #傳票登入方式
+       glaa010 LIKE glaa_t.glaa010, #現行年度
+       glaa011 LIKE glaa_t.glaa011, #現行期別
+       glaa012 LIKE glaa_t.glaa012, #最後過帳日期
+       glaa013 LIKE glaa_t.glaa013, #關帳日期
+       glaa014 LIKE glaa_t.glaa014, #主帳套
+       glaa015 LIKE glaa_t.glaa015, #啟用本位幣二
+       glaa016 LIKE glaa_t.glaa016, #本位幣二
+       glaa017 LIKE glaa_t.glaa017, #本位幣二換算基準
+       glaa018 LIKE glaa_t.glaa018, #本位幣二匯率採用
+       glaa019 LIKE glaa_t.glaa019, #啟用本位幣三
+       glaa020 LIKE glaa_t.glaa020, #本位幣三
+       glaa021 LIKE glaa_t.glaa021, #本位幣三換算基準
+       glaa022 LIKE glaa_t.glaa022, #本位幣三匯率採用
+       glaa023 LIKE glaa_t.glaa023, #次帳套帳務產生時機
+       glaa024 LIKE glaa_t.glaa024, #單據別參照表號
+       glaa025 LIKE glaa_t.glaa025, #本位幣一匯率採用
+       glaa026 LIKE glaa_t.glaa026, #幣別參照表號
+       glaa100 LIKE glaa_t.glaa100, #傳票輸入時自動按缺號產生
+       glaa101 LIKE glaa_t.glaa101, #傳票總號輸入時機
+       glaa102 LIKE glaa_t.glaa102, #傳票成立時,借貸不平衡的處理方式
+       glaa103 LIKE glaa_t.glaa103, #未列印的傳票可否進行過帳
+       glaa111 LIKE glaa_t.glaa111, #應計調整單別
+       glaa112 LIKE glaa_t.glaa112, #期末結轉單別
+       glaa113 LIKE glaa_t.glaa113, #年底結轉單別
+       glaa120 LIKE glaa_t.glaa120, #成本計算類型
+       glaa121 LIKE glaa_t.glaa121, #子模組啟用分錄底稿
+       glaa122 LIKE glaa_t.glaa122, #總帳可維護資金異動明細
+       glaa027 LIKE glaa_t.glaa027, #單據據點編號
+       glaa130 LIKE glaa_t.glaa130, #合併帳套否
+       glaa131 LIKE glaa_t.glaa131, #分層合併
+       glaa132 LIKE glaa_t.glaa132, #平均匯率計算方式
+       glaa133 LIKE glaa_t.glaa133, #非T100公司匯入餘額類型
+       glaa134 LIKE glaa_t.glaa134, #合併科目轉換依據異動碼設定值
+       glaa135 LIKE glaa_t.glaa135, #現流表間接法群組參照表號
+       glaa136 LIKE glaa_t.glaa136, #應收帳款核銷限定己立帳傳票
+       glaa137 LIKE glaa_t.glaa137, #應付帳款核銷限定已立帳傳票
+       glaa138 LIKE glaa_t.glaa138, #合併報表編制期別
+       glaa139 LIKE glaa_t.glaa139, #遞延收入(負債)管理產生否
+       glaa140 LIKE glaa_t.glaa140, #無原出貨單的遞延負債減項者,是否仍立遞延收入管理?
+       glaa123 LIKE glaa_t.glaa123, #應收帳款核銷可維護資金異動明細
+       glaa124 LIKE glaa_t.glaa124, #應付帳款核銷可維護資金異動明細
+       glaa028 LIKE glaa_t.glaa028  #匯率來源
+       END RECORD
+
+#161128-00061#3-----modify--end----------
+DEFINE g_success             LIKE type_t.chr1
+#end add-point
+ 
+DEFINE g_xrca_m        type_g_xrca_m
+ 
+   DEFINE g_xrcadocno_t LIKE xrca_t.xrcadocno
+DEFINE g_xrcald_t LIKE xrca_t.xrcald
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrp120_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrp120_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_ld
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_ld            LIKE glaa_t.glaald
+   #add--2015/05/08 By shiun--(S)
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_oofg_return   DYNAMIC ARRAY OF RECORD
+                   oofg019   LIKE oofg_t.oofg019,   #field
+                   oofg020   LIKE oofg_t.oofg020    #value
+                          END RECORD
+   #add--2015/05/08 By shiun--(E)
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrp120_02 WITH FORM cl_ap_formpath("axr","axrp120_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   #161128-00061#3-----modify--begin----------
+   #SELECT * INTO g_glaa_t.* 
+    SELECT glaaent,glaaownid,glaaowndp,glaacrtid,glaacrtdp,glaacrtdt,glaamodid,glaamoddt,glaastus,glaald,
+           glaacomp,glaa001,glaa002,glaa003,glaa004,glaa005,glaa006,glaa007,glaa008,glaa009,glaa010,glaa011,
+           glaa012,glaa013,glaa014,glaa015,glaa016,glaa017,glaa018,glaa019,glaa020,glaa021,glaa022,glaa023,
+           glaa024,glaa025,glaa026,glaa100,glaa101,glaa102,glaa103,glaa111,glaa112,glaa113,glaa120,glaa121,
+           glaa122,glaa027,glaa130,glaa131,glaa132,glaa133,glaa134,glaa135,glaa136,glaa137,glaa138,glaa139,
+           glaa140,glaa123,glaa124,glaa028 INTO g_glaa_t.* 
+   #161128-00061#3-----modify--end----------
+   FROM glaa_t WHERE glaaent = g_enterprise AND glaald = p_ld
+   LET g_xrca_m.lbl_ra1 = '1'
+   LET g_xrca_m.lbl_ra2 = '1'
+   DISPLAY BY NAME g_xrca_m.lbl_ra1,g_xrca_m.lbl_ra2
+   CALL cl_set_comp_visible('xrcadocdt',FALSE)
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xrca_m.xrcadocno,g_xrca_m.xrca063,g_xrca_m.lbl_ra1,g_xrca_m.lbl_ra2,g_xrca_m.xrcadocdt, 
+          g_xrca_m.xrcald ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcadocno
+            #add-point:BEFORE FIELD xrcadocno name="input.b.xrcadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcadocno
+            
+            #add-point:AFTER FIELD xrcadocno name="input.a.xrcadocno"
+            IF NOT cl_null(g_xrca_m.xrcadocno) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_glaa_t.glaa024
+               LET g_chkparam.arg2 = g_xrca_m.xrcadocno
+               IF NOT cl_chk_exist("v_oobx001_1") THEN
+                  LET g_xrca_m.xrcadocno = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcadocno
+            #add-point:ON CHANGE xrcadocno name="input.g.xrcadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca063
+            #add-point:BEFORE FIELD xrca063 name="input.b.xrca063"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca063
+            
+            #add-point:AFTER FIELD xrca063 name="input.a.xrca063"
+            #add--2015/07/02 By shiun--(S)
+            IF NOT cl_null(g_xrca_m.xrca063) THEN
+               IF NOT s_aooi390_chk('14',g_xrca_m.xrca063) THEN
+                  LET g_xrca_m.xrca063 = ''
+                  DISPLAY BY NAME g_xrca_m.xrca063
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #add--2015/07/02 By shiun--(E)
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca063
+            #add-point:ON CHANGE xrca063 name="input.g.xrca063"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ra1
+            #add-point:BEFORE FIELD lbl_ra1 name="input.b.lbl_ra1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ra1
+            
+            #add-point:AFTER FIELD lbl_ra1 name="input.a.lbl_ra1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ra1
+            #add-point:ON CHANGE lbl_ra1 name="input.g.lbl_ra1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ra2
+            #add-point:BEFORE FIELD lbl_ra2 name="input.b.lbl_ra2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ra2
+            
+            #add-point:AFTER FIELD lbl_ra2 name="input.a.lbl_ra2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ra2
+            #add-point:ON CHANGE lbl_ra2 name="input.g.lbl_ra2"
+            IF g_xrca_m.lbl_ra2 = '1' THEN
+               CALL cl_set_comp_visible('xrcadocdt',FALSE)
+               LET g_xrca_m.xrcadocdt = NULL
+            ELSE
+               CALL cl_set_comp_visible('xrcadocdt',TRUE)
+               LET g_xrca_m.xrcadocdt = g_today
+            END IF
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcadocdt
+            #add-point:BEFORE FIELD xrcadocdt name="input.b.xrcadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcadocdt
+            
+            #add-point:AFTER FIELD xrcadocdt name="input.a.xrcadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcadocdt
+            #add-point:ON CHANGE xrcadocdt name="input.g.xrcadocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcald
+            #add-point:BEFORE FIELD xrcald name="input.b.xrcald"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcald
+            
+            #add-point:AFTER FIELD xrcald name="input.a.xrcald"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcald
+            #add-point:ON CHANGE xrcald name="input.g.xrcald"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xrcadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcadocno
+            #add-point:ON ACTION controlp INFIELD xrcadocno name="input.c.xrcadocno"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xrca_m.xrcadocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_glaa_t.glaa024
+            LET g_qryparam.arg2 = "axrt120"
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_xrca_m.xrcadocno = g_qryparam.return1              
+
+            DISPLAY g_xrca_m.xrcadocno TO xrcadocno              #
+
+            NEXT FIELD xrcadocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca063
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca063
+            #add-point:ON ACTION controlp INFIELD xrca063 name="input.c.xrca063"
+#            CALL s_aooi390('14') RETURNING g_success,g_xrca_m.xrca063  #mark--2015/05/08 By shiun
+            CALL s_aooi390_gen('14') RETURNING l_success,g_xrca_m.xrca063,l_oofg_return   #add--2015/05/08 By shiun
+            DISPLAY BY NAME g_xrca_m.xrca063
+            NEXT FIELD xrca063
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lbl_ra1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ra1
+            #add-point:ON ACTION controlp INFIELD lbl_ra1 name="input.c.lbl_ra1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lbl_ra2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ra2
+            #add-point:ON ACTION controlp INFIELD lbl_ra2 name="input.c.lbl_ra2"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrcadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcadocdt
+            #add-point:ON ACTION controlp INFIELD xrcadocdt name="input.c.xrcadocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrcald
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcald
+            #add-point:ON ACTION controlp INFIELD xrcald name="input.c.xrcald"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xrca_m.xrcald             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_xrca_m.xrcald = g_qryparam.return1              
+
+            DISPLAY g_xrca_m.xrcald TO xrcald              #
+
+            NEXT FIELD xrcald                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+ 
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrp120_02 
+   
+   #add-point:input段after input name="input.post_input"
+   LET INT_FLAG = FALSE
+   RETURN g_xrca_m.xrcadocno,g_xrca_m.xrca063,g_xrca_m.lbl_ra1,g_xrca_m.lbl_ra2,g_xrca_m.xrcadocdt
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrp120_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axrp120_02.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

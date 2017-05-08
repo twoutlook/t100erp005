@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq117" module="ade" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="08172" crtdt="2016-10-12 14:44:12" modid="08172" moddt="2016-10-13 09:30:07" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="營運組織商品日結庫存查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="debnsite,debn002,debn005,imaa009,imaa126"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="debnsite,debnsite_desc(chr500),debn002,debn005,debn005_desc(chr500),debn016,debn016_desc(chr500),debn009,debn009_desc(chr500),debn007,debn008,debn014"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="debnsite(b_debnsite),debnsite_desc(b_debnsite_desc),debn002(b_debn002),debn005(b_debn005),debn005_desc(b_debn005_desc),debn016(b_debn016),debn016_desc(b_debn016_desc),debn009(b_debn009),debn009_desc(b_debn009_desc),debn007(b_debn007),debn008(b_debn008),debn014(b_debn014)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq117" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="debnsite,debn002,debn005,debn016,debn016_desc,debn009,debn007,debn008,debn014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="debnsite(b_debnsite),debn002(b_debn002),debn005(b_debn005),debn016(b_debn016),debn009(b_debn009),debn007(b_debn007),debn008(b_debn008),debn014(b_debn014)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="debnsite">
+        <after>
+          <reference field="debnsite_desc" ref_field="debnsite" map_field="debnsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="debnsite_desc"/>
+      <column id="debn002"/>
+      <column id="debn005">
+        <after>
+          <reference field="debn005_desc" ref_field="debn005" map_field="debn005" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="debn005_desc"/>
+      <column id="debn016">
+        <after/>
+      </column>
+      <column id="debn016_desc"/>
+      <column id="debn009">
+        <after>
+          <reference field="debn009_desc" ref_field="debn009" map_field="debn009" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="debn009_desc"/>
+      <column id="debn007" type="S" default="0"/>
+      <column id="debn008" type="S" default="0"/>
+      <column id="debn014"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="debn_t" page="1" linked="" pk="debnsite,debn002,debn005,debn009,debn016,debn017">
+      <sql id="b_fill_sql" query="SELECT debnsite,&apos;&apos;,debn002,debn005,&apos;&apos;,debn016,&apos;&apos;,debn009,&apos;&apos;,debn007,debn008,debn014 FROM debn_t WHERE debnent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,502 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axci301_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2014-04-24 14:48:16), PR版次:0004(2016-12-01 16:24:46)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000106
+#+ Filename...: axci301_01
+#+ Description: 整批導入
+#+ Creator....: 02599(2014-04-23 17:52:35)
+#+ Modifier...: 02599 -SD/PR- 08171
+ 
+{</section>}
+ 
+{<section id="axci301_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#161109-00085#25   2016/11/16  By 08993      整批調整系統星號寫法
+#161109-00085#63   2016/12/01  By 08171      整批調整系統星號寫法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xcbn_m        RECORD
+       format LIKE type_t.chr500, 
+   mold LIKE type_t.chr500, 
+   dir LIKE type_t.chr500
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_xcbn_m_t      type_g_xcbn_m
+#end add-point
+ 
+DEFINE g_xcbn_m        type_g_xcbn_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axci301_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axci301_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE ls_str          STRING
+   DEFINE l_chr           LIKE type_t.chr1   
+   DEFINE l_chr1          LIKE type_t.chr1   
+   DEFINE l_num           LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axci301_01 WITH FORM cl_ap_formpath("axc","axci301_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   INITIALIZE g_xcbn_m.* TO NULL
+   CALL cl_set_combo_scc('format','8915')
+   LET l_success=TRUE
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xcbn_m.format,g_xcbn_m.mold,g_xcbn_m.dir ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD format
+            #add-point:BEFORE FIELD format name="input.b.format"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD format
+            
+            #add-point:AFTER FIELD format name="input.a.format"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE format
+            #add-point:ON CHANGE format name="input.g.format"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mold
+            #add-point:BEFORE FIELD mold name="input.b.mold"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mold
+            
+            #add-point:AFTER FIELD mold name="input.a.mold"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mold
+            #add-point:ON CHANGE mold name="input.g.mold"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD dir
+            #add-point:BEFORE FIELD dir name="input.b.dir"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD dir
+            
+            #add-point:AFTER FIELD dir name="input.a.dir"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE dir
+            #add-point:ON CHANGE dir name="input.g.dir"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.format
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD format
+            #add-point:ON ACTION controlp INFIELD format name="input.c.format"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mold
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mold
+            #add-point:ON ACTION controlp INFIELD mold name="input.c.mold"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.dir
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD dir
+            #add-point:ON ACTION controlp INFIELD dir name="input.c.dir"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      ON ACTION browser
+         CALL cl_client_browse_file() RETURNING g_xcbn_m.dir
+         LET ls_str = g_xcbn_m.dir
+         #抓取目录斜杆
+         LET l_num =ls_str.getIndexOf(':',1)                                    #抓取：后的字符位置
+         LET l_chr = ls_str.substring(l_num+1,l_num+1)                        #截取冒号后的字符 
+         LET l_chr1 = ls_str.substring(ls_str.getLength(),ls_str.getLength())    #判断是否为根目录
+         LET g_xcbn_m.dir = g_xcbn_m.dir
+         DISPLAY BY NAME g_xcbn_m.dir
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axci301_01 
+   
+   #add-point:input段after input name="input.post_input"
+   CALL axci301_01_ins_excel(g_xcbn_m.dir) RETURNING l_success
+   RETURN l_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axci301_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axci301_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 讀取Excel中內容插入xcbn_t中
+# Memo...........:
+# Usage..........: CALL axci301_01_ins_excel(p_excelname)
+#                  RETURNING r_success
+# Input parameter: p_excelname    excel文件名稱
+# Return code....: r_success      執行結果
+# Date & Author..: 2014/04/24 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axci301_01_ins_excel(p_excelname)
+   DEFINE p_excelname LIKE type_t.chr1000  #excel档名
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE l_excelname STRING               #excel档名
+   DEFINE l_count     LIKE type_t.num10
+   DEFINE li_i        LIKE type_t.num10
+   DEFINE li_j        LIKE type_t.num10
+   DEFINE xlapp,iRes,iRow    LIKE type_t.num5
+   #161109-00085#25-s mod
+#   DEFINE l_xcbn      RECORD LIKE xcbn_t.*   #161109-00085#25-s mark
+   DEFINE l_xcbn      RECORD  #轉撥計價檔
+       xcbnent LIKE xcbn_t.xcbnent, #企業編號
+       xcbn001 LIKE xcbn_t.xcbn001, #年度
+       xcbn002 LIKE xcbn_t.xcbn002, #期別
+       xcbn003 LIKE xcbn_t.xcbn003, #撥出營運據點
+       xcbn004 LIKE xcbn_t.xcbn004, #撥入營運據點
+       xcbn005 LIKE xcbn_t.xcbn005, #料號
+       xcbn006 LIKE xcbn_t.xcbn006, #特性
+       xcbn010 LIKE xcbn_t.xcbn010, #計價幣別
+       xcbn102 LIKE xcbn_t.xcbn102, #轉撥單價
+       xcbn102a LIKE xcbn_t.xcbn102a, #材料單價
+       xcbn102b LIKE xcbn_t.xcbn102b, #人工單價
+       xcbn102c LIKE xcbn_t.xcbn102c, #委外加工單價
+       xcbn102d LIKE xcbn_t.xcbn102d, #制費一單價
+       xcbn102e LIKE xcbn_t.xcbn102e, #制費二單價
+       xcbn102f LIKE xcbn_t.xcbn102f, #制費三單價
+       xcbn102g LIKE xcbn_t.xcbn102g, #制費四單價
+       xcbn102h LIKE xcbn_t.xcbn102h, #制費五單價
+       xcbnownid LIKE xcbn_t.xcbnownid, #資料所有者
+       xcbnowndp LIKE xcbn_t.xcbnowndp, #資料所屬部門
+       xcbncrtid LIKE xcbn_t.xcbncrtid, #資料建立者
+       xcbncrtdp LIKE xcbn_t.xcbncrtdp, #資料建立部門
+       xcbncrtdt LIKE xcbn_t.xcbncrtdt, #資料創建日
+       xcbnmodid LIKE xcbn_t.xcbnmodid, #資料修改者
+      #xcbnmoddt LIKE xcbn_t.xcbnmoddt  #最近修改日 #161109-00085#63 mark
+       #161109-00085#63 --s add
+       xcbnmoddt LIKE xcbn_t.xcbnmoddt, #最近修改日
+       xcbnud001 LIKE xcbn_t.xcbnud001, #自定義欄位(文字)001
+       xcbnud002 LIKE xcbn_t.xcbnud002, #自定義欄位(文字)002
+       xcbnud003 LIKE xcbn_t.xcbnud003, #自定義欄位(文字)003
+       xcbnud004 LIKE xcbn_t.xcbnud004, #自定義欄位(文字)004
+       xcbnud005 LIKE xcbn_t.xcbnud005, #自定義欄位(文字)005
+       xcbnud006 LIKE xcbn_t.xcbnud006, #自定義欄位(文字)006
+       xcbnud007 LIKE xcbn_t.xcbnud007, #自定義欄位(文字)007
+       xcbnud008 LIKE xcbn_t.xcbnud008, #自定義欄位(文字)008
+       xcbnud009 LIKE xcbn_t.xcbnud009, #自定義欄位(文字)009
+       xcbnud010 LIKE xcbn_t.xcbnud010, #自定義欄位(文字)010
+       xcbnud011 LIKE xcbn_t.xcbnud011, #自定義欄位(數字)011
+       xcbnud012 LIKE xcbn_t.xcbnud012, #自定義欄位(數字)012
+       xcbnud013 LIKE xcbn_t.xcbnud013, #自定義欄位(數字)013
+       xcbnud014 LIKE xcbn_t.xcbnud014, #自定義欄位(數字)014
+       xcbnud015 LIKE xcbn_t.xcbnud015, #自定義欄位(數字)015
+       xcbnud016 LIKE xcbn_t.xcbnud016, #自定義欄位(數字)016
+       xcbnud017 LIKE xcbn_t.xcbnud017, #自定義欄位(數字)017
+       xcbnud018 LIKE xcbn_t.xcbnud018, #自定義欄位(數字)018
+       xcbnud019 LIKE xcbn_t.xcbnud019, #自定義欄位(數字)019
+       xcbnud020 LIKE xcbn_t.xcbnud020, #自定義欄位(數字)020
+       xcbnud021 LIKE xcbn_t.xcbnud021, #自定義欄位(日期時間)021
+       xcbnud022 LIKE xcbn_t.xcbnud022, #自定義欄位(日期時間)022
+       xcbnud023 LIKE xcbn_t.xcbnud023, #自定義欄位(日期時間)023
+       xcbnud024 LIKE xcbn_t.xcbnud024, #自定義欄位(日期時間)024
+       xcbnud025 LIKE xcbn_t.xcbnud025, #自定義欄位(日期時間)025
+       xcbnud026 LIKE xcbn_t.xcbnud026, #自定義欄位(日期時間)026
+       xcbnud027 LIKE xcbn_t.xcbnud027, #自定義欄位(日期時間)027
+       xcbnud028 LIKE xcbn_t.xcbnud028, #自定義欄位(日期時間)028
+       xcbnud029 LIKE xcbn_t.xcbnud029, #自定義欄位(日期時間)029
+       xcbnud030 LIKE xcbn_t.xcbnud030  #自定義欄位(日期時間)030
+       #161109-00085#63 --e add
+       END RECORD
+   #161109-00085#25-e mod
+   
+   DEFINE l_n         LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   
+   LET r_success = TRUE
+   LET l_count = LENGTH(p_excelname CLIPPED)
+   #转换路径分隔符
+   FOR li_i = 1 TO l_count
+      IF p_excelname[li_i,li_i] ="/" THEN
+         LET l_excelname = l_excelname CLIPPED,'\\'
+      ELSE
+         LET l_excelname = l_excelname CLIPPED,p_excelname[li_i,li_i]
+      END IF
+   END FOR
+
+   CALL ui.interface.frontCall('WinCOM','CreateInstance',['Excel.Application'],[xlApp])
+   IF xlApp <> -1 THEN
+      CALL ui.interface.frontCall('WinCOM','CallMethod',[xlApp,'WorkBooks.Open',l_excelname],[iRes])
+      IF iRes <> -1 THEN
+         CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.UsedRange.Rows.Count'],[iRow])
+         IF iRow > 1 THEN
+            FOR li_i = 2 TO iRow
+               INITIALIZE l_xcbn.* TO NULL
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',1).Value'],[l_xcbn.xcbnent])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',2).Value'],[l_xcbn.xcbn001])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',3).Value'],[l_xcbn.xcbn002])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',4).Value'],[l_xcbn.xcbn003])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',5).Value'],[l_xcbn.xcbn004])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',6).Value'],[l_xcbn.xcbn005])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',7).Value'],[l_xcbn.xcbn006])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',8).Value'],[l_xcbn.xcbn010])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',9).Value'],[l_xcbn.xcbn102])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',10).Value'],[l_xcbn.xcbn102a])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',11).Value'],[l_xcbn.xcbn102b])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',12).Value'],[l_xcbn.xcbn102c])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',13).Value'],[l_xcbn.xcbn102d])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',14).Value'],[l_xcbn.xcbn102e])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',15).Value'],[l_xcbn.xcbn102f])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',16).Value'],[l_xcbn.xcbn102g])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',17).Value'],[l_xcbn.xcbn102h])
+               
+               IF cl_null(l_xcbn.xcbn102) THEN LET l_xcbn.xcbn102=0 END IF
+               IF cl_null(l_xcbn.xcbn102a) THEN LET l_xcbn.xcbn102a=0 END IF
+               IF cl_null(l_xcbn.xcbn102b) THEN LET l_xcbn.xcbn102b=0 END IF
+               IF cl_null(l_xcbn.xcbn102c) THEN LET l_xcbn.xcbn102c=0 END IF
+               IF cl_null(l_xcbn.xcbn102d) THEN LET l_xcbn.xcbn102d=0 END IF
+               IF cl_null(l_xcbn.xcbn102e) THEN LET l_xcbn.xcbn102e=0 END IF
+               IF cl_null(l_xcbn.xcbn102f) THEN LET l_xcbn.xcbn102f=0 END IF
+               IF cl_null(l_xcbn.xcbn102g) THEN LET l_xcbn.xcbn102g=0 END IF
+               IF cl_null(l_xcbn.xcbn102h) THEN LET l_xcbn.xcbn102h=0 END IF
+               #轉撥單價
+               LET l_xcbn.xcbn102=l_xcbn.xcbn102a+l_xcbn.xcbn102b+l_xcbn.xcbn102c+l_xcbn.xcbn102d+
+                                  l_xcbn.xcbn102e+l_xcbn.xcbn102f+l_xcbn.xcbn102g+l_xcbn.xcbn102h
+               #赋默认值
+               LET l_xcbn.xcbnownid = g_user
+               LET l_xcbn.xcbnowndp = g_dept
+               LET l_xcbn.xcbncrtid = g_user
+               LET l_xcbn.xcbncrtdp = g_dept 
+               LET l_xcbn.xcbncrtdt = cl_get_current()
+               LET l_xcbn.xcbnmodid = ""
+               LET l_xcbn.xcbnmoddt = ""
+               
+               #161109-00085#25-s mod               
+#               INSERT INTO xcbn_t VALUES l_xcbn.*   #161109-00085#25-s mod
+               #161109-00085#63 --s mark
+               #INSERT INTO xcbn_t (xcbnent,xcbn001,xcbn002,xcbn003,xcbn004,xcbn005,xcbn006,xcbn010,xcbn102,xcbn102a,
+               #                    xcbn102b,xcbn102c,xcbn102d,xcbn102e,xcbn102f,xcbn102g,xcbn102h,xcbnownid,xcbnowndp,
+               #                    xcbncrtid,xcbncrtdp,xcbncrtdt,xcbnmodid,xcbnmoddt)
+               #            VALUES (l_xcbn.xcbnent,l_xcbn.xcbn001,l_xcbn.xcbn002,l_xcbn.xcbn003,l_xcbn.xcbn004,l_xcbn.xcbn005,
+               #                    l_xcbn.xcbn006,l_xcbn.xcbn010,l_xcbn.xcbn102,l_xcbn.xcbn102a,l_xcbn.xcbn102b,l_xcbn.xcbn102c,
+               #                    l_xcbn.xcbn102d,l_xcbn.xcbn102e,l_xcbn.xcbn102f,l_xcbn.xcbn102g,l_xcbn.xcbn102h,l_xcbn.xcbnownid,
+               #                    l_xcbn.xcbnowndp,l_xcbn.xcbncrtid,l_xcbn.xcbncrtdp,l_xcbn.xcbncrtdt,l_xcbn.xcbnmodid,l_xcbn.xcbnmoddt)
+               #161109-00085#63 --e mark
+               #161109-00085#25-e mod
+               #161109-00085#63 --s add
+               INSERT INTO xcbn_t(xcbnent,xcbn001,xcbn002,xcbn003,xcbn004,
+                                  xcbn005,xcbn006,xcbn010,xcbn102,xcbn102a,
+                                  xcbn102b,xcbn102c,xcbn102d,xcbn102e,xcbn102f,
+                                  xcbn102g,xcbn102h,xcbnownid,xcbnowndp,xcbncrtid,
+                                  xcbncrtdp,xcbncrtdt,xcbnmodid,xcbnmoddt,xcbnud001,
+                                  xcbnud002,xcbnud003,xcbnud004,xcbnud005,xcbnud006,
+                                  xcbnud007,xcbnud008,xcbnud009,xcbnud010,xcbnud011,
+                                  xcbnud012,xcbnud013,xcbnud014,xcbnud015,xcbnud016,
+                                  xcbnud017,xcbnud018,xcbnud019,xcbnud020,xcbnud021,
+                                  xcbnud022,xcbnud023,xcbnud024,xcbnud025,xcbnud026,
+                                  xcbnud027,xcbnud028,xcbnud029,xcbnud030)
+               VALUES (l_xcbn.xcbnent,l_xcbn.xcbn001,l_xcbn.xcbn002,l_xcbn.xcbn003,l_xcbn.xcbn004,
+                       l_xcbn.xcbn005,l_xcbn.xcbn006,l_xcbn.xcbn010,l_xcbn.xcbn102,l_xcbn.xcbn102a,
+                       l_xcbn.xcbn102b,l_xcbn.xcbn102c,l_xcbn.xcbn102d,l_xcbn.xcbn102e,l_xcbn.xcbn102f,
+                       l_xcbn.xcbn102g,l_xcbn.xcbn102h,l_xcbn.xcbnownid,l_xcbn.xcbnowndp,l_xcbn.xcbncrtid,
+                       l_xcbn.xcbncrtdp,l_xcbn.xcbncrtdt,l_xcbn.xcbnmodid,l_xcbn.xcbnmoddt,l_xcbn.xcbnud001,
+                       l_xcbn.xcbnud002,l_xcbn.xcbnud003,l_xcbn.xcbnud004,l_xcbn.xcbnud005,l_xcbn.xcbnud006,
+                       l_xcbn.xcbnud007,l_xcbn.xcbnud008,l_xcbn.xcbnud009,l_xcbn.xcbnud010,l_xcbn.xcbnud011,
+                       l_xcbn.xcbnud012,l_xcbn.xcbnud013,l_xcbn.xcbnud014,l_xcbn.xcbnud015,l_xcbn.xcbnud016,
+                       l_xcbn.xcbnud017,l_xcbn.xcbnud018,l_xcbn.xcbnud019,l_xcbn.xcbnud020,l_xcbn.xcbnud021,
+                       l_xcbn.xcbnud022,l_xcbn.xcbnud023,l_xcbn.xcbnud024,l_xcbn.xcbnud025,l_xcbn.xcbnud026,
+                       l_xcbn.xcbnud027,l_xcbn.xcbnud028,l_xcbn.xcbnud029,l_xcbn.xcbnud030)
+               #161109-00085#63 --e add
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = 'ins xcbn'
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  LET r_success = FALSE
+                  EXIT FOR
+               END IF
+            END FOR
+         END IF
+      ELSE
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = ''
+         LET g_errparam.extend = 'NO FILE'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+      END IF
+   ELSE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = ''
+      LET g_errparam.extend = 'NO EXCEL'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+   END IF
+
+   CALL ui.interface.frontCall('WinCOM','CallMethod',[xlApp,'Quit'],[iRes])
+   CALL ui.interface.frontCall('WinCOM','ReleaseInstance',[xlApp],[iRes])
+
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

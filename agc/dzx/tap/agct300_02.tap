@@ -1,0 +1,2690 @@
+<add_points prog="agct300_02" std_prog="agct300_02" erpver="1.0" module="AGC" ver="2" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status="" />
+    <free_style value="N" status="" />
+  </other>
+  <point name="construct.c.page1.gcap002" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.arg1  = '2071'
+			LET g_qryparam.where = " oocq019 = '40' "
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gcap002  #顯示到畫面上
+
+            NEXT FIELD gcap002                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page1.gcap003" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_gcap003()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gcap003  #顯示到畫面上
+
+            NEXT FIELD gcap003                     #返回原欄位
+
+]]>
+</point>
+  <point name="detail_show.body.reference" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   CALL agct300_02_gcap002_ref()
+
+   CALL agct300_02_gcap003_ref()
+]]>
+</point>
+  <point name="detail_show.reference" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[#                        INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_gcap_d[l_ac].gcap002
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2071' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_gcap_d[l_ac].gcap002_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_gcap_d[l_ac].gcap002_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_gcap_d[l_ac].gcap003
+#            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_gcap_d[l_ac].gcap003_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_gcap_d[l_ac].gcap003_desc
+]]>
+</point>
+  <point name="input.a.page1.gcap001" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            #此段落由子樣板a05產生
+            IF  g_gcap_d[g_detail_idx].gcapdocno IS NOT NULL AND g_gcap_d[g_detail_idx].gcap001 IS NOT NULL AND g_gcap_d[g_detail_idx].gcap002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gcap_d[g_detail_idx].gcapdocno != g_gcap_d_t.gcapdocno OR g_gcap_d[g_detail_idx].gcap001 != g_gcap_d_t.gcap001 OR g_gcap_d[g_detail_idx].gcap002 != g_gcap_d_t.gcap002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gcap_t WHERE "||"gcapent = '" ||g_enterprise|| "' AND "||"gcapdocno = '"||g_gcap_d[g_detail_idx].gcapdocno ||"' AND "|| "gcap001 = '"||g_gcap_d[g_detail_idx].gcap001 ||"' AND "|| "gcap002 = '"||g_gcap_d[g_detail_idx].gcap002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.gcap002" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            LET g_gcap_d[l_ac].gcap002_desc = ''
+            DISPLAY BY NAME g_gcap_d[l_ac].gcap002_desc
+            #此段落由子樣板a05產生
+            IF  g_gcap_d[g_detail_idx].gcapdocno IS NOT NULL AND g_gcap_d[g_detail_idx].gcap001 IS NOT NULL AND g_gcap_d[g_detail_idx].gcap002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gcap_d[g_detail_idx].gcapdocno != g_gcap_d_t.gcapdocno OR g_gcap_d[g_detail_idx].gcap001 != g_gcap_d_t.gcap001 OR g_gcap_d[g_detail_idx].gcap002 != g_gcap_d_t.gcap002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gcap_t WHERE "||"gcapent = '" ||g_enterprise|| "' AND "||"gcapdocno = '"||g_gcap_d[g_detail_idx].gcapdocno ||"' AND "|| "gcap001 = '"||g_gcap_d[g_detail_idx].gcap001 ||"' AND "|| "gcap002 = '"||g_gcap_d[g_detail_idx].gcap002 ||"'",'std-00004',0) THEN 
+                     LET g_gcap_d[l_ac].gcap002 = g_gcap_d_t.gcap002
+                     DISPLAY BY NAME g_gcap_d[l_ac].gcap002
+                     CALL agct300_02_gcap002_ref()
+                     CALL agct300_02_gcap005_init()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL agct300_02_gcap002_chk()
+                  IF NOT cl_null(g_errno) THEN
+                     CALL cl_err(g_gcap_d[l_ac].gcap002,g_errno,1)
+                     LET g_gcap_d[l_ac].gcap002 = g_gcap_d_t.gcap002
+                     DISPLAY BY NAME g_gcap_d[l_ac].gcap002
+                     CALL agct300_02_gcap002_ref()
+                     CALL agct300_02_gcap005_init()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL agct300_02_currency_chk()
+                  IF NOT cl_null(g_errno) THEN
+                     CALL cl_err(g_gcap_d[l_ac].gcap002,g_errno,1)
+                     LET g_gcap_d[l_ac].gcap002 = g_gcap_d_t.gcap002
+                     DISPLAY BY NAME g_gcap_d[l_ac].gcap002
+                     CALL agct300_02_gcap002_ref()
+                     CALL agct300_02_gcap005_init()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL agct300_02_gcap002_ref()
+            CALL agct300_02_gcap005_init()]]>
+</point>
+  <point name="input.a.page1.gcap003" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            LET g_gcap_d[l_ac].gcap003_desc = ''
+            DISPLAY BY NAME g_gcap_d[l_ac].gcap003_desc
+            IF NOT cl_null(g_gcap_d[l_ac].gcap003) THEN
+               CALL agct300_02_gcap003_chk()
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_gcap_d[l_ac].gcap003,g_errno,1)
+                  LET g_gcap_d[l_ac].gcap003 = g_gcap_d_t.gcap003
+                  DISPLAY BY NAME g_gcap_d[l_ac].gcap003
+                  CALL agct300_02_gcap003_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL agct300_02_gcap003_ref()]]>
+</point>
+  <point name="input.a.page1.gcapdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            #此段落由子樣板a05產生
+            IF  g_gcap_d[g_detail_idx].gcapdocno IS NOT NULL AND g_gcap_d[g_detail_idx].gcap001 IS NOT NULL AND g_gcap_d[g_detail_idx].gcap002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gcap_d[g_detail_idx].gcapdocno != g_gcap_d_t.gcapdocno OR g_gcap_d[g_detail_idx].gcap001 != g_gcap_d_t.gcap001 OR g_gcap_d[g_detail_idx].gcap002 != g_gcap_d_t.gcap002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gcap_t WHERE "||"gcapent = '" ||g_enterprise|| "' AND "||"gcapdocno = '"||g_gcap_d[g_detail_idx].gcapdocno ||"' AND "|| "gcap001 = '"||g_gcap_d[g_detail_idx].gcap001 ||"' AND "|| "gcap002 = '"||g_gcap_d[g_detail_idx].gcap002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.c.page1.gcap002" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_gcap_d[l_ac].gcap002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "2071" #
+			LET g_qryparam.where = " oocq019 = '40' "
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_gcap_d[l_ac].gcap002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_gcap_d[l_ac].gcap002 TO gcap002              #顯示到畫面上
+            
+            CALL agct300_02_gcap002_ref()
+            
+            CALL agct300_02_gcap005_init()
+
+            NEXT FIELD gcap002                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.page1.gcap003" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_gcap_d[l_ac].gcap003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_gcapsite #
+
+            CALL q_rtdx001_1()                                #呼叫開窗
+
+            LET g_gcap_d[l_ac].gcap003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_gcap_d[l_ac].gcap003 TO gcap003              #顯示到畫面上
+            
+            CALL agct300_02_gcap003_ref()
+
+            NEXT FIELD gcap003                          #返回原欄位
+
+]]>
+</point>
+  <point name="function.agct300_02_gcap002_ref" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION agct300_02_gcap002_ref()
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_gcap_d[l_ac].gcap002
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2071' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_gcap_d[l_ac].gcap002_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_gcap_d[l_ac].gcap002_desc
+END FUNCTION]]>
+</point>
+  <point name="function.agct300_02_gcap002_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION agct300_02_gcap002_chk()
+DEFINE l_oocqstus   LIKE oocq_t.oocqstus
+DEFINE l_oocq019    LIKE oocq_t.oocq019
+
+   INITIALIZE g_errno TO NULL
+   SELECT oocqstus,oocq019 INTO l_oocqstus,l_oocq019
+     FROM oocq_t
+    WHERE oocqent = g_enterprise AND oocq001 = '2071' AND oocq002 = g_gcap_d[l_ac].gcap002
+   CASE
+      WHEN SQLCA.sqlcode = 100 LET g_errno = 'agc-00011' #该券面额编号不存在
+      WHEN l_oocqstus <> 'Y'   LET g_errno = 'agc-00012' #该券面额编号已无效
+      WHEN cl_null(l_oocq019) OR l_oocq019 <> '40' LET g_errno = 'agc-00089' #该面额编号非券面额编号
+   END CASE
+END FUNCTION]]>
+</point>
+  <point name="function.agct300_02_gcap003_ref" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION agct300_02_gcap003_ref()
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_gcap_d[l_ac].gcap003
+   CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_gcap_d[l_ac].gcap003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_gcap_d[l_ac].gcap003_desc
+END FUNCTION]]>
+</point>
+  <point name="function.agct300_02_gcap003_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION agct300_02_gcap003_chk()
+DEFINE l_rtdxstus   LIKE rtdx_t.rtdxstus
+
+   INITIALIZE g_errno TO NULL
+   SELECT rtdxstus INTO l_rtdxstus
+     FROM rtdx_t
+    WHERE rtdxent = g_enterprise AND rtdxsite = g_gcapsite AND rtdx001 = g_gcap_d[l_ac].gcap003
+   CASE
+      WHEN SQLCA.sqlcode = 100 LET g_errno = 'agc-00013' #该商品不存在或在当前组织不可使用
+      WHEN l_rtdxstus <> 'Y'   LET g_errno = 'agc-00014' #该商品在当前组织已无效
+   END CASE
+END FUNCTION]]>
+</point>
+  <point name="function.agct300_02_gcap005_init" cite_std="N" status="" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION agct300_02_gcap005_init()
+   
+   IF NOT cl_null(g_gcap_d[l_ac].gcap002) THEN
+      SELECT oocq009 INTO g_gcap_d[l_ac].gcap005
+        FROM oocq_t
+       WHERE oocqent = g_enterprise AND oocq001 = '2071' AND oocq002 = g_gcap_d[l_ac].gcap002
+   ELSE
+      LET g_gcap_d[l_ac].gcap005 = ''
+   END IF
+   DISPLAY BY NAME g_gcap_d[l_ac].gcap005
+END FUNCTION]]>
+</point>
+  <point name="function.agct300_02_gcaa012_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION agct300_02_gcaa012_chk()
+DEFINE l_cnt       LIKE type_t.num5
+DEFINE l_gcaa012   LIKE gcaa_t.gcaa012
+
+   INITIALIZE g_errno TO NULL
+   LET l_cnt = 0
+   
+  IF cl_null(g_gcap_d_t.gcap002) THEN RETURN END IF
+   
+   SELECT gcaa012 INTO l_gcaa012
+     FROM gcaa_t
+    WHERE gcaaent = g_enterprise AND gcaadocno = g_gcapdocno
+   IF l_gcaa012 = g_gcap_d_t.gcap002 THEN
+      LET g_errno = 'agc-00058'   #[券種基本資料檔]中的券面額編號請在單頭異動或刪除
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.agct300_02_gcaq002_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="7" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION agct300_02_gcaq002_chk()
+DEFINE l_cnt       LIKE type_t.num5
+
+   INITIALIZE g_errno TO NULL
+   LET l_cnt = 0
+   
+   SELECT COUNT(*) INTO l_cnt
+     FROM gcaq_t
+    WHERE gcaqent = g_enterprise AND gcaqdocno = g_gcap_d[l_ac].gcapdocno AND gcaq002 = g_gcap_d_t.gcap002
+   IF l_cnt > 0 THEN
+      LET g_errno = 'agc-00057'   #該券面額編號已在提貨商品設定中使用，不可異動或刪除
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.agct300_02_currency_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="8" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION agct300_02_currency_chk()
+DEFINE l_cnt   LIKE type_t.num5
+
+   #检查和单头面额的币别是否一致
+   INITIALIZE g_errno TO NULL
+   LET l_cnt = 0
+   SELECT COUNT(DISTINCT oocq004) INTO l_cnt
+     FROM oocq_t
+    WHERE oocqent = g_enterprise AND oocq001 = '2071' 
+      AND (oocq002 = (SELECT gcaa012 FROM gcaa_t WHERE gcaaent = g_enterprise AND gcaadocno = g_gcapdocno)
+       OR oocq002 = g_gcap_d[l_ac].gcap002)
+   IF l_cnt > 1 THEN
+      LET g_errno = 'agc-00087' #该面额编号的币别与单头面额编号的币别不一致,请检查
+      RETURN
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="b_fill.fill" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="b_fill.others.fill" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="b_fill.sql_after" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="cs.before_construct" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="delete.a_delete" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="delete.b_delete" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="delete.m_delete" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="delete_b.a_delete" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="delete_b.b_delete" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="delete_b.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="delete_b.m_delete" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="detail_show.after" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="detail_show.before" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="detail_show.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[DEFINE g_gcapdocno          LIKE gcap_t.gcapdocno
+DEFINE g_gcapsite           LIKE gcap_t.gcapsite
+DEFINE g_gcapunit           LIKE gcap_t.gcapunit
+DEFINE g_gcap000            LIKE gcap_t.gcap000
+DEFINE g_gcap001            LIKE gcap_t.gcap001]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="input.a.page1.gcap000" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.a.page1.gcap005" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.a.page1.gcapacti" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.a.page1.gcapsite" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.a.page1.gcapunit" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.b.page1.gcap000" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.b.page1.gcap001" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.b.page1.gcap002" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.b.page1.gcap003" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.b.page1.gcap005" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.b.page1.gcapacti" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.b.page1.gcapdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.b.page1.gcapsite" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.b.page1.gcapunit" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.before_dialog" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                    ]]>
+</point>
+  <point name="input.body.a_delete" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                                        ]]>
+</point>
+  <point name="input.body.a_input" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.body.a_insert" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            ]]>
+</point>
+  <point name="input.body.a_insert2" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            ]]>
+</point>
+  <point name="input.body.a_row" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.body.a_update" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            ]]>
+</point>
+  <point name="input.body.after_delete" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.body.b_delete" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                                           CALL agct300_02_gcaq002_chk()
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_gcap_d_t.gcap002,g_errno,1)
+                  CANCEL DELETE
+               END IF]]>
+</point>
+  <point name="input.body.b_delete_ask" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            ]]>
+</point>
+  <point name="input.body.b_insert" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            ]]>
+</point>
+  <point name="input.body.b_update" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            ]]>
+</point>
+  <point name="input.body.before_insert" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            LET g_gcap_d[l_ac].gcapdocno = g_gcapdocno
+            LET g_gcap_d[l_ac].gcapsite  = g_gcapsite
+            LET g_gcap_d[l_ac].gcapunit  = g_gcapunit
+            LET g_gcap_d[l_ac].gcap000   = g_gcap000
+            LET g_gcap_d[l_ac].gcap001   = g_gcap001]]>
+</point>
+  <point name="input.body.before_row" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            CALL agct300_02_set_entry_b(l_cmd)
+            CALL agct300_02_set_no_entry_b(l_cmd)]]>
+</point>
+  <point name="input.body.before_row2" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            LET l_ac = ARR_CURR()
+            LET l_n = ARR_COUNT()
+            INITIALIZE g_gcap_d_t.* TO NULL
+            LET g_gcap_d_t.* = g_gcap_d[l_ac].*
+            CALL agct300_02_gcaa012_chk()
+            IF NOT cl_null(g_errno) THEN
+               CALL cl_err(g_gcap_d_t.gcap002,g_errno,1)
+               LET l_ac = l_ac + 1
+               CALL fgl_set_arr_curr(l_ac)
+            END IF]]>
+</point>
+  <point name="input.body.m_delete" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            ]]>
+</point>
+  <point name="input.body.m_update" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            ]]>
+</point>
+  <point name="input.c.page1.gcap000" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.c.page1.gcap001" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.c.page1.gcap005" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.c.page1.gcapacti" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.c.page1.gcapdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.c.page1.gcapsite" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.c.page1.gcapunit" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.g.page1.gcap000" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.g.page1.gcap001" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.g.page1.gcap002" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.g.page1.gcap003" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.g.page1.gcap005" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.g.page1.gcapacti" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.g.page1.gcapdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.g.page1.gcapsite" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.g.page1.gcapunit" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="insert.a_insert" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="insert.b_insert" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="insert.before_insert" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="insert_b.a_insert" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="insert_b.b_insert" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="insert_b.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="insert_b.m_insert" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="link_b.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="lock_b.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               DEFINE p_gcapdocno   LIKE gcap_t.gcapdocno
+   DEFINE p_gcapsite    LIKE gcap_t.gcapsite
+   DEFINE p_gcapunit    LIKE gcap_t.gcapunit
+   DEFINE p_gcap000     LIKE gcap_t.gcap000
+   DEFINE p_gcap001     LIKE gcap_t.gcap001]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               LET g_action_choice = '']]>
+</point>
+  <point name="main.get_var" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               p_gcapdocno,p_gcapsite,p_gcapunit,p_gcap000,p_gcap001]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF cl_null(p_gcapdocno) OR cl_null(p_gcapsite) OR cl_null(p_gcapunit) OR cl_null(p_gcap000) OR cl_null(p_gcap001) THEN
+      RETURN
+   END IF 
+   LET g_gcapdocno = p_gcapdocno
+   LET g_gcapsite  = p_gcapsite
+   LET g_gcapunit  = p_gcapunit
+   LET g_gcap000   = p_gcap000
+   LET g_gcap001   = p_gcap001]]>
+</point>
+  <point name="menu.modify" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            ]]>
+</point>
+  <point name="menu.modify_detail" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            ]]>
+</point>
+  <point name="modify.after_define_sql" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="modify.define_sql" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="modify_detail_chk.after" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="modify_detail_chk.before" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="modify_detail_chk.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="modify_detail_chk.page_control" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="query.a.page1.gcap000" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.a.page1.gcap001" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.a.page1.gcap002" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.a.page1.gcap003" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.a.page1.gcap005" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.a.page1.gcapacti" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.a.page1.gcapdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.a.page1.gcapsite" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.a.page1.gcapunit" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.after_construct" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="query.b.page1.gcap000" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.b.page1.gcap001" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.b.page1.gcap002" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.b.page1.gcap003" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.b.page1.gcap005" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.b.page1.gcapacti" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.b.page1.gcapdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.b.page1.gcapsite" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.b.page1.gcapunit" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.c.page1.gcap000" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.c.page1.gcap001" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.c.page1.gcap005" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.c.page1.gcapacti" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.c.page1.gcapdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.c.page1.gcapsite" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.c.page1.gcapunit" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                ]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="query.more_construct" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="set_entry_b.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="set_entry_b.set_entry_b" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               CALL cl_set_comp_entry("gcap002",TRUE)
+   CALL cl_set_comp_entry("gcapacti",TRUE)]]>
+</point>
+  <point name="set_no_entry_b.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="set_no_entry_b.set_no_entry_b" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF p_cmd = 'u' THEN
+      CALL agct300_02_gcaq002_chk()
+      IF NOT cl_null(g_errno) THEN
+         CALL cl_err(g_gcap_d_t.gcap002,g_errno,0)
+         CALL cl_set_comp_entry("gcap002",FALSE)
+         CALL cl_set_comp_entry("gcapacti",FALSE)
+      END IF
+   END IF]]>
+</point>
+  <point name="ui_dialog.b_dialog" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                                            SELECT gcaastus INTO l_gcaastus
+              FROM gcaa_t
+             WHERE gcaaent = g_enterprise AND gcaadocno = g_gcapdocno
+            IF NOT cl_null(l_gcaastus) AND (l_gcaastus = 'Y' OR l_gcaastus = 'X') THEN
+              #CALL cl_set_act_visible("modify",FALSE)
+               CALL DIALOG.setActionActive("modify",FALSE)
+            ELSE
+              #CALL cl_set_act_visible("modify",TRUE)
+               CALL DIALOG.setActionActive("modify",TRUE)
+            END IF]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               IF cl_null(g_wc2) THEN LET g_wc2 = " 1=1" END IF
+   LET g_wc2 = g_wc2 CLIPPED," AND gcapdocno = '",g_gcapdocno,"' ",
+                             " AND gcapsite  = '",g_gcapsite,"' ",
+                             " AND gcapunit  = '",g_gcapunit,"' ",
+                             " AND gcap000   = '",g_gcap000,"' ",
+                             " AND gcap001   = '",g_gcap001,"' "]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[               DEFINE l_gcaastus   LIKE gcaa_t.gcaastus]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                                    ]]>
+</point>
+  <point name="unlock_b.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="update_b.a_update" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="update_b.b_update" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="update_b.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="update_b.m_update" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[                        ]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.body.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.body.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.body.before_display" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.body.before_display2" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_row" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="query.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.before_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.b_delete_ask" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.b_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.m_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_delete2" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_delete3" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="default_search.after_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="agct300_02.b_fill" ver="4" status="" src="s">
+<![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION agct300_02_b_fill(p_wc2)              #BODY FILL UP
+   DEFINE p_wc2    STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT  UNIQUE gcapdocno,gcapsite,gcapunit,gcap000,gcap001,gcap002,gcap005,gcap003,gcapacti , 
+       t1.oocql004 ,t2.imaal003 FROM gcap_t",
+               "",
+                              " LEFT JOIN oocql_t t1 ON t1.oocqlent='"||g_enterprise||"' AND t1.oocql001='2071' AND t1.oocql002=gcap002 AND t1.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t2 ON t2.imaalent='"||g_enterprise||"' AND t2.imaal001=gcap003 AND t2.imaal002='"||g_dlang||"' ",
+ 
+               " WHERE gcapent= ? AND 1=1 AND ", p_wc2 
+    
+   LET g_sql = g_sql, cl_sql_add_filter("gcap_t"),
+                      " ORDER BY gcap_t.gcapdocno,gcap_t.gcap001,gcap_t.gcap002"
+   
+   #add-point:b_fill段sql之後
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+   
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE agct300_02_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR agct300_02_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_gcap_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_gcap_d[l_ac].gcapdocno,g_gcap_d[l_ac].gcapsite,g_gcap_d[l_ac].gcapunit, 
+       g_gcap_d[l_ac].gcap000,g_gcap_d[l_ac].gcap001,g_gcap_d[l_ac].gcap002,g_gcap_d[l_ac].gcap005,g_gcap_d[l_ac].gcap003, 
+       g_gcap_d[l_ac].gcapacti,g_gcap_d[l_ac].gcap002_desc,g_gcap_d[l_ac].gcap003_desc
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL agct300_02_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   IF l_ac > g_max_rec THEN
+      IF g_error_show = 1 THEN
+         CALL cl_err("gcap_t",9035,1)
+      END IF
+   END IF 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_gcap_d.deleteElement(g_gcap_d.getLength())   
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_gcap_d.getLength()
+ 
+   END FOR
+   
+   IF g_cnt > g_gcap_d.getLength() THEN
+      LET l_ac = g_gcap_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_gcap_d.getLength()
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE agct300_02_pb
+   
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.default_search" ver="4" status="" src="s">
+<![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION agct300_02_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " gcapdocno = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " gcap001 = ", g_argv[02], " AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " gcap002 = ", g_argv[03], " AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.delete" ver="3" status="" src="s">
+<![CDATA[#+ 資料刪除
+PRIVATE FUNCTION agct300_02_delete()
+   DEFINE li_idx           LIKE type_t.num5
+   DEFINE li_detail_tmp    LIKE type_t.num5
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point 
+   
+   #add-point:單身刪除前
+   {<point name="delete.body.before_delete"/>}
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_gcap_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT agct300_02_lock_b("gcap_t") THEN
+            #已被他人鎖定
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前
+   {<point name="delete.body.b_delete_ask"/>}
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_gcap_d.getLength()
+      IF g_gcap_d[li_idx].gcapdocno IS NOT NULL
+         AND g_gcap_d_t.gcap001 IS NOT NULL
+         AND g_gcap_d_t.gcap002 IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前
+         {<point name="delete.body.b_delete" mark="Y"/>}
+         #end add-point   
+         
+         DELETE FROM gcap_t
+          WHERE gcapent = g_enterprise AND 
+                gcapdocno = g_gcap_d[li_idx].gcapdocno
+                AND gcap001 = g_gcap_d[li_idx].gcap001
+                AND gcap002 = g_gcap_d[li_idx].gcap002
+ 
+         #add-point:單身刪除中
+         {<point name="delete.body.m_delete"/>}
+         #end add-point  
+                
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("gcap_t",SQLCA.sqlcode,1)
+            CALL s_transaction_end('N','0')
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            
+            #add-point:單身同步刪除前(同層table)
+            {<point name="delete.body.a_delete"/>}
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcap_d[g_detail_idx].gcapdocno
+               LET gs_keys[2] = g_gcap_d[g_detail_idx].gcap001
+               LET gs_keys[3] = g_gcap_d[g_detail_idx].gcap002
+ 
+            #add-point:單身同步刪除中(同層table)
+            {<point name="delete.body.a_delete2"/>}
+            #end add-point
+                           CALL agct300_02_delete_b('gcap_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table)
+            {<point name="delete.body.a_delete3"/>}
+            #end add-point
+         END IF 
+      END IF 
+    
+   END FOR
+   CALL s_transaction_end('Y','0')
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後
+   {<point name="delete.after"/>}
+   #end add-point  
+   
+   #刷新資料
+   CALL agct300_02_b_fill(g_wc2)
+            
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.delete_b" ver="3" status="" src="s">
+<![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION agct300_02_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "gcap_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> 'gcap_t' THEN
+   
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.b_delete" mark="Y"/>}
+      #end add-point     
+   
+      DELETE FROM gcap_t
+       WHERE gcapent = g_enterprise AND
+         gcapdocno = ps_keys_bak[1] AND gcap001 = ps_keys_bak[2] AND gcap002 = ps_keys_bak[3]
+ 
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete"/>}
+      #end add-point  
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+      END IF
+      
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.a_delete"/>}
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.description" ver="11" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000062
+#+ 
+#+ Filename...: agct300_02
+#+ Description: ...
+#+ Creator....: 01726(2013/11/25)
+#+ Modifier...: 01726(2014/06/30)
+#+ Buildtype..: 應用 i02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="agct300_02.detail_show" ver="1" status="" src="s">
+<![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION agct300_02_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.reference"/>}
+   #end add-point
+   
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.global" ver="5" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_gcap_d RECORD
+       gcapdocno LIKE gcap_t.gcapdocno, 
+   gcapsite LIKE gcap_t.gcapsite, 
+   gcapunit LIKE gcap_t.gcapunit, 
+   gcap000 LIKE gcap_t.gcap000, 
+   gcap001 LIKE gcap_t.gcap001, 
+   gcap002 LIKE gcap_t.gcap002, 
+   gcap002_desc LIKE type_t.chr500, 
+   gcap005 LIKE gcap_t.gcap005, 
+   gcap003 LIKE gcap_t.gcap003, 
+   gcap003_desc LIKE type_t.chr500, 
+   gcapacti LIKE gcap_t.gcapacti
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_gcap_d          DYNAMIC ARRAY OF type_g_gcap_d
+DEFINE g_gcap_d_t        type_g_gcap_d
+DEFINE g_gcap_d_o        type_g_gcap_d
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num5              #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="agct300_02.init" ver="1" status="" src="s">
+<![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION agct300_02_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   
+   
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL agct300_02_default_search()
+   
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.insert" ver="3" status="" src="s">
+<![CDATA[#+ 資料新增
+PRIVATE FUNCTION agct300_02_insert()
+   #add-point:delete段define
+   {<point name="insert.define"/>}
+   #end add-point                
+   
+   #add-point:單身新增前
+   {<point name="insert.b_insert"/>}
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL agct300_02_modify()
+            
+   #add-point:單身新增後
+   {<point name="insert.a_insert"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.insert_b" ver="2" status="" src="s">
+<![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION agct300_02_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "gcap_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前
+      {<point name="insert_b.b_insert" mark="Y"/>}
+      #end add-point    
+      INSERT INTO gcap_t
+                  (gcapent,
+                   gcapdocno,gcap001,gcap002
+                   ,gcapsite,gcapunit,gcap000,gcap005,gcap003,gcapacti) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_gcap_d[l_ac].gcapsite,g_gcap_d[l_ac].gcapunit,g_gcap_d[l_ac].gcap000,g_gcap_d[l_ac].gcap005, 
+                       g_gcap_d[l_ac].gcap003,g_gcap_d[l_ac].gcapacti)
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("gcap_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.a_insert"/>}
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.link_b" ver="1" status="" src="s">
+<![CDATA[#+ 連動單身idx
+PRIVATE FUNCTION agct300_02_link_b(ps_table,pi_idx)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   DEFINE pi_idx   INTEGER
+   #add-point:link_b段define
+   {<point name="link_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+ 
+   END IF
+   
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.lock_b" ver="1" status="" src="s">
+<![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION agct300_02_lock_b(ps_table)
+ 
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL agct300_02_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "gcap_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN agct300_02_bcl USING g_enterprise,
+                                       g_gcap_d[g_detail_idx].gcapdocno,g_gcap_d[g_detail_idx].gcap001, 
+                                           g_gcap_d[g_detail_idx].gcap002
+                                       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("agct300_02_bcl",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.main" ver="5" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a27產生
+#+ 資料輸入
+PUBLIC FUNCTION agct300_02(--)
+   #add-point:main段變數傳入
+   {<point name="main.get_var"/>}
+   #end add-point
+   )
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+ 
+   
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT gcapdocno,gcapsite,gcapunit,gcap000,gcap001,gcap002,gcap005,gcap003,gcapacti  
+       FROM gcap_t WHERE gcapent=? AND gcapdocno=? AND gcap001=? AND gcap002=? FOR UPDATE"
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE agct300_02_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_agct300_02 WITH FORM cl_ap_formpath("agc","agct300_02")
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   CALL agct300_02_init()   
+ 
+   #進入選單 Menu (="N")
+   CALL agct300_02_ui_dialog() 
+ 
+   #畫面關閉
+   CLOSE WINDOW w_agct300_02
+ 
+   
+   
+ 
+   #add-point:離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="agct300_02.modify" ver="7" status="" src="s">
+<![CDATA[#+ 資料修改
+PRIVATE FUNCTION agct300_02_modify()
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num5
+   DEFINE  l_i                    LIKE type_t.num5
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num5
+   DEFINE  li_reproduce_target    LIKE type_t.num5
+   DEFINE  lb_reproduce           BOOLEAN
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point 
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前
+   {<point name="modify.define_sql" mark="Y"/>}
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+ 
+   #add-point:modify段修改前
+   {<point name="modify.before_input"/>}
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_gcap_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_gcap_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL agct300_02_b_fill(g_wc2)
+            LET g_detail_cnt = g_gcap_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_gcap_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_gcap_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_gcap_d[l_ac].gcapdocno IS NOT NULL
+               AND g_gcap_d[l_ac].gcap001 IS NOT NULL
+               AND g_gcap_d[l_ac].gcap002 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_gcap_d_t.* = g_gcap_d[l_ac].*  #BACKUP
+               LET g_gcap_d_o.* = g_gcap_d[l_ac].*  #BACKUP
+               IF NOT agct300_02_lock_b("gcap_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH agct300_02_bcl INTO g_gcap_d[l_ac].gcapdocno,g_gcap_d[l_ac].gcapsite,g_gcap_d[l_ac].gcapunit, 
+                      g_gcap_d[l_ac].gcap000,g_gcap_d[l_ac].gcap001,g_gcap_d[l_ac].gcap002,g_gcap_d[l_ac].gcap005, 
+                      g_gcap_d[l_ac].gcap003,g_gcap_d[l_ac].gcapacti
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_gcap_d_t.gcapdocno,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL agct300_02_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            CALL s_transaction_begin()
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_gcap_d_t.* TO NULL
+            INITIALIZE g_gcap_d_o.* TO NULL
+            INITIALIZE g_gcap_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            
+                  LET g_gcap_d[l_ac].gcapacti = "Y"
+ 
+            LET g_gcap_d_t.* = g_gcap_d[l_ac].*     #新輸入資料
+            LET g_gcap_d_o.* = g_gcap_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL agct300_02_set_entry_b("a")
+            CALL agct300_02_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_gcap_d[li_reproduce_target].* = g_gcap_d[li_reproduce].*
+ 
+               LET g_gcap_d[g_gcap_d.getLength()].gcapdocno = NULL
+               LET g_gcap_d[g_gcap_d.getLength()].gcap001 = NULL
+               LET g_gcap_d[g_gcap_d.getLength()].gcap002 = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM gcap_t 
+             WHERE gcapent = g_enterprise AND gcapdocno = g_gcap_d[l_ac].gcapdocno
+                                       AND gcap001 = g_gcap_d[l_ac].gcap001
+                                       AND gcap002 = g_gcap_d[l_ac].gcap002
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcap_d[g_detail_idx].gcapdocno
+               LET gs_keys[2] = g_gcap_d[g_detail_idx].gcap001
+               LET gs_keys[3] = g_gcap_d[g_detail_idx].gcap002
+               CALL agct300_02_insert_b('gcap_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_gcap_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("gcap_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL agct300_02_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (gcapdocno = '", g_gcap_d[l_ac].gcapdocno, "' "
+                                  ," AND gcap001 = '", g_gcap_d[l_ac].gcap001, "' "
+                                  ," AND gcap002 = '", g_gcap_d[l_ac].gcap002, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_gcap_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_gcap_d.deleteElement(l_ac)
+               NEXT FIELD gcapdocno
+            END IF
+            IF g_gcap_d[l_ac].gcapdocno IS NOT NULL
+               AND g_gcap_d_t.gcap001 IS NOT NULL
+               AND g_gcap_d_t.gcap002 IS NOT NULL
+ 
+               THEN     
+            
+               #add-point:單身刪除ask前
+               {<point name="input.body.b_delete_ask"/>}
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point   
+               
+               DELETE FROM gcap_t
+                WHERE gcapent = g_enterprise AND 
+                      gcapdocno = g_gcap_d_t.gcapdocno
+                      AND gcap001 = g_gcap_d_t.gcap001
+                      AND gcap002 = g_gcap_d_t.gcap002
+ 
+                      
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point  
+                      
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("gcap_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE agct300_02_bcl
+               LET l_count = g_gcap_d.getLength()
+            END IF 
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcap_d[g_detail_idx].gcapdocno
+               LET gs_keys[2] = g_gcap_d[g_detail_idx].gcap001
+               LET gs_keys[3] = g_gcap_d[g_detail_idx].gcap002
+ 
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+                           CALL agct300_02_delete_b('gcap_t',gs_keys,"'1'")
+ 
+                  #此段落由子樣板a01產生
+         BEFORE FIELD gcapdocno
+            #add-point:BEFORE FIELD gcapdocno
+            {<point name="input.b.page1.gcapdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcapdocno
+            
+            #add-point:AFTER FIELD gcapdocno
+            {<point name="input.a.page1.gcapdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gcapdocno
+            #add-point:ON CHANGE gcapdocno
+            {<point name="input.g.page1.gcapdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcapsite
+            #add-point:BEFORE FIELD gcapsite
+            {<point name="input.b.page1.gcapsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcapsite
+            
+            #add-point:AFTER FIELD gcapsite
+            {<point name="input.a.page1.gcapsite" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gcapsite
+            #add-point:ON CHANGE gcapsite
+            {<point name="input.g.page1.gcapsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcapunit
+            #add-point:BEFORE FIELD gcapunit
+            {<point name="input.b.page1.gcapunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcapunit
+            
+            #add-point:AFTER FIELD gcapunit
+            {<point name="input.a.page1.gcapunit" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gcapunit
+            #add-point:ON CHANGE gcapunit
+            {<point name="input.g.page1.gcapunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcap000
+            #add-point:BEFORE FIELD gcap000
+            {<point name="input.b.page1.gcap000" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcap000
+            
+            #add-point:AFTER FIELD gcap000
+            {<point name="input.a.page1.gcap000" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gcap000
+            #add-point:ON CHANGE gcap000
+            {<point name="input.g.page1.gcap000" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcap001
+            #add-point:BEFORE FIELD gcap001
+            {<point name="input.b.page1.gcap001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcap001
+            
+            #add-point:AFTER FIELD gcap001
+            {<point name="input.a.page1.gcap001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gcap001
+            #add-point:ON CHANGE gcap001
+            {<point name="input.g.page1.gcap001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcap002
+            
+            #add-point:AFTER FIELD gcap002
+            {<point name="input.a.page1.gcap002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcap002
+            #add-point:BEFORE FIELD gcap002
+            {<point name="input.b.page1.gcap002" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gcap002
+            #add-point:ON CHANGE gcap002
+            {<point name="input.g.page1.gcap002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcap005
+            #add-point:BEFORE FIELD gcap005
+            {<point name="input.b.page1.gcap005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcap005
+            
+            #add-point:AFTER FIELD gcap005
+            {<point name="input.a.page1.gcap005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gcap005
+            #add-point:ON CHANGE gcap005
+            {<point name="input.g.page1.gcap005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcap003
+            
+            #add-point:AFTER FIELD gcap003
+            {<point name="input.a.page1.gcap003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcap003
+            #add-point:BEFORE FIELD gcap003
+            {<point name="input.b.page1.gcap003" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gcap003
+            #add-point:ON CHANGE gcap003
+            {<point name="input.g.page1.gcap003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcapacti
+            #add-point:BEFORE FIELD gcapacti
+            {<point name="input.b.page1.gcapacti" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcapacti
+            
+            #add-point:AFTER FIELD gcapacti
+            {<point name="input.a.page1.gcapacti" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gcapacti
+            #add-point:ON CHANGE gcapacti
+            {<point name="input.g.page1.gcapacti" />}
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page1.gcapdocno
+         ON ACTION controlp INFIELD gcapdocno
+            #add-point:ON ACTION controlp INFIELD gcapdocno
+            {<point name="input.c.page1.gcapdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gcapsite
+         ON ACTION controlp INFIELD gcapsite
+            #add-point:ON ACTION controlp INFIELD gcapsite
+            {<point name="input.c.page1.gcapsite" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gcapunit
+         ON ACTION controlp INFIELD gcapunit
+            #add-point:ON ACTION controlp INFIELD gcapunit
+            {<point name="input.c.page1.gcapunit" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gcap000
+         ON ACTION controlp INFIELD gcap000
+            #add-point:ON ACTION controlp INFIELD gcap000
+            {<point name="input.c.page1.gcap000" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gcap001
+         ON ACTION controlp INFIELD gcap001
+            #add-point:ON ACTION controlp INFIELD gcap001
+            {<point name="input.c.page1.gcap001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gcap002
+         ON ACTION controlp INFIELD gcap002
+            #add-point:ON ACTION controlp INFIELD gcap002
+            {<point name="input.c.page1.gcap002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gcap005
+         ON ACTION controlp INFIELD gcap005
+            #add-point:ON ACTION controlp INFIELD gcap005
+            {<point name="input.c.page1.gcap005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gcap003
+         ON ACTION controlp INFIELD gcap003
+            #add-point:ON ACTION controlp INFIELD gcap003
+            {<point name="input.c.page1.gcap003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gcapacti
+         ON ACTION controlp INFIELD gcapacti
+            #add-point:ON ACTION controlp INFIELD gcapacti
+            {<point name="input.c.page1.gcapacti" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_gcap_d[l_ac].* = g_gcap_d_t.*
+               CLOSE agct300_02_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_gcap_d[l_ac].gcapdocno,-263,1)
+               LET g_gcap_d[l_ac].* = g_gcap_d_t.*
+            ELSE
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               UPDATE gcap_t SET (gcapdocno,gcapsite,gcapunit,gcap000,gcap001,gcap002,gcap005,gcap003, 
+                   gcapacti) = (g_gcap_d[l_ac].gcapdocno,g_gcap_d[l_ac].gcapsite,g_gcap_d[l_ac].gcapunit, 
+                   g_gcap_d[l_ac].gcap000,g_gcap_d[l_ac].gcap001,g_gcap_d[l_ac].gcap002,g_gcap_d[l_ac].gcap005, 
+                   g_gcap_d[l_ac].gcap003,g_gcap_d[l_ac].gcapacti)
+                WHERE gcapent = g_enterprise AND
+                  gcapdocno = g_gcap_d_t.gcapdocno #項次   
+                  AND gcap001 = g_gcap_d_t.gcap001  
+                  AND gcap002 = g_gcap_d_t.gcap002  
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("gcap_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                    WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("gcap_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcap_d[g_detail_idx].gcapdocno
+               LET gs_keys_bak[1] = g_gcap_d_t.gcapdocno
+               LET gs_keys[2] = g_gcap_d[g_detail_idx].gcap001
+               LET gs_keys_bak[2] = g_gcap_d_t.gcap001
+               LET gs_keys[3] = g_gcap_d[g_detail_idx].gcap002
+               LET gs_keys_bak[3] = g_gcap_d_t.gcap002
+               CALL agct300_02_update_b('gcap_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+                     LET g_log1 = util.JSON.stringify(g_gcap_d_t)
+                     LET g_log2 = util.JSON.stringify(g_gcap_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL agct300_02_unlock_b("gcap_t")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+             #add-point:單身after row
+            {<point name="input.body.a_row"/>}
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後
+            {<point name="input.body.a_input"/>}
+            #end add-point
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_gcap_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_gcap_d.getLength()+1
+            
+      END INPUT
+      
+ 
+      
+ 
+      
+      #add-point:before_more_input
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG 
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD gcapdocno
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   
+   #add-point:modify段修改後
+   {<point name="modify.after_input"/>}
+   #end add-point
+ 
+   CLOSE agct300_02_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.modify_detail_chk" ver="2" status="" src="s">
+<![CDATA[#+ 單身輸入判定
+PRIVATE FUNCTION agct300_02_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "gcapdocno"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="agct300_02.other_function" ver="2" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="agct300_02.query" ver="5" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION agct300_02_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_gcap_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON gcapdocno,gcapsite,gcapunit,gcap000,gcap001,gcap002,gcap005,gcap003,gcapacti  
+
+ 
+         FROM s_detail1[1].gcapdocno,s_detail1[1].gcapsite,s_detail1[1].gcapunit,s_detail1[1].gcap000, 
+             s_detail1[1].gcap001,s_detail1[1].gcap002,s_detail1[1].gcap005,s_detail1[1].gcap003,s_detail1[1].gcapacti  
+
+      
+         
+      
+                  #此段落由子樣板a01產生
+         BEFORE FIELD gcapdocno
+            #add-point:BEFORE FIELD gcapdocno
+            {<point name="query.b.page1.gcapdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcapdocno
+            
+            #add-point:AFTER FIELD gcapdocno
+            {<point name="query.a.page1.gcapdocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.gcapdocno
+         ON ACTION controlp INFIELD gcapdocno
+            #add-point:ON ACTION controlp INFIELD gcapdocno
+            {<point name="query.c.page1.gcapdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcapsite
+            #add-point:BEFORE FIELD gcapsite
+            {<point name="query.b.page1.gcapsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcapsite
+            
+            #add-point:AFTER FIELD gcapsite
+            {<point name="query.a.page1.gcapsite" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.gcapsite
+         ON ACTION controlp INFIELD gcapsite
+            #add-point:ON ACTION controlp INFIELD gcapsite
+            {<point name="query.c.page1.gcapsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcapunit
+            #add-point:BEFORE FIELD gcapunit
+            {<point name="query.b.page1.gcapunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcapunit
+            
+            #add-point:AFTER FIELD gcapunit
+            {<point name="query.a.page1.gcapunit" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.gcapunit
+         ON ACTION controlp INFIELD gcapunit
+            #add-point:ON ACTION controlp INFIELD gcapunit
+            {<point name="query.c.page1.gcapunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcap000
+            #add-point:BEFORE FIELD gcap000
+            {<point name="query.b.page1.gcap000" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcap000
+            
+            #add-point:AFTER FIELD gcap000
+            {<point name="query.a.page1.gcap000" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.gcap000
+         ON ACTION controlp INFIELD gcap000
+            #add-point:ON ACTION controlp INFIELD gcap000
+            {<point name="query.c.page1.gcap000" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcap001
+            #add-point:BEFORE FIELD gcap001
+            {<point name="query.b.page1.gcap001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcap001
+            
+            #add-point:AFTER FIELD gcap001
+            {<point name="query.a.page1.gcap001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.gcap001
+         ON ACTION controlp INFIELD gcap001
+            #add-point:ON ACTION controlp INFIELD gcap001
+            {<point name="query.c.page1.gcap001" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1.gcap002
+         ON ACTION controlp INFIELD gcap002
+            #add-point:ON ACTION controlp INFIELD gcap002
+            {<point name="construct.c.page1.gcap002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcap002
+            #add-point:BEFORE FIELD gcap002
+            {<point name="query.b.page1.gcap002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcap002
+            
+            #add-point:AFTER FIELD gcap002
+            {<point name="query.a.page1.gcap002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcap005
+            #add-point:BEFORE FIELD gcap005
+            {<point name="query.b.page1.gcap005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcap005
+            
+            #add-point:AFTER FIELD gcap005
+            {<point name="query.a.page1.gcap005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.gcap005
+         ON ACTION controlp INFIELD gcap005
+            #add-point:ON ACTION controlp INFIELD gcap005
+            {<point name="query.c.page1.gcap005" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1.gcap003
+         ON ACTION controlp INFIELD gcap003
+            #add-point:ON ACTION controlp INFIELD gcap003
+            {<point name="construct.c.page1.gcap003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcap003
+            #add-point:BEFORE FIELD gcap003
+            {<point name="query.b.page1.gcap003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcap003
+            
+            #add-point:AFTER FIELD gcap003
+            {<point name="query.a.page1.gcap003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gcapacti
+            #add-point:BEFORE FIELD gcapacti
+            {<point name="query.b.page1.gcapacti" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gcapacti
+            
+            #add-point:AFTER FIELD gcapacti
+            {<point name="query.a.page1.gcapacti" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.gcapacti
+         ON ACTION controlp INFIELD gcapacti
+            #add-point:ON ACTION controlp INFIELD gcapacti
+            {<point name="query.c.page1.gcapacti" />}
+            #END add-point
+ 
+  
+         
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog
+         {<point name="query.before_dialog"/>}
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct
+   {<point name="query.after_construct"/>}
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   END IF
+    
+   LET g_error_show = 1
+   CALL agct300_02_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.set_entry_b" ver="2" status="" src="s">
+<![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION agct300_02_set_entry_b(p_cmd)                                                  
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point     
+   
+   #add-point:set_entry_b段control
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                    
+]]>
+</section>
+  <section id="agct300_02.set_no_entry_b" ver="2" status="" src="s">
+<![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION agct300_02_set_no_entry_b(p_cmd)                                               
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point  
+ 
+   #add-point:set_no_entry_b段control
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point       
+                                                                                
+END FUNCTION  
+]]>
+</section>
+  <section id="agct300_02.state_change" ver="1" status="" src="s">
+<![CDATA[   
+]]>
+</section>
+  <section id="agct300_02.ui_dialog" ver="7" status="" src="s">
+<![CDATA[#+ 功能選單 
+PRIVATE FUNCTION agct300_02_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      CALL agct300_02_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_gcap_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display 
+               {<point name="ui_dialog.body.before_display" mark="Y"/>}
+               #end add-point
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2
+               {<point name="ui_dialog.body.before_display2"/>}
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #add-point:display array-before row
+               {<point name="ui_dialog.before_row"/>}
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before
+            {<point name="ui_dialog.b_dialog"/>}
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL agct300_02_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL agct300_02_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL agct300_02_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL agct300_02_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+            
+         
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.unlock_b" ver="1" status="" src="s">
+<![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION agct300_02_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE agct300_02_bcl
+   #END IF
+   
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="agct300_02.update_b" ver="2" status="" src="s">
+<![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION agct300_02_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #判斷是否是同一群組的table
+   LET ls_group = "gcap_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "gcap_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.b_update" mark="Y"/>}
+      #end add-point     
+      UPDATE gcap_t 
+         SET (gcapdocno,gcap001,gcap002
+              ,gcapsite,gcapunit,gcap000,gcap005,gcap003,gcapacti) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_gcap_d[l_ac].gcapsite,g_gcap_d[l_ac].gcapunit,g_gcap_d[l_ac].gcap000,g_gcap_d[l_ac].gcap005, 
+                  g_gcap_d[l_ac].gcap003,g_gcap_d[l_ac].gcapacti) 
+         WHERE gcapdocno = ps_keys_bak[1] AND gcap001 = ps_keys_bak[2] AND gcap002 = ps_keys_bak[3]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL cl_err("gcap_t","std-00009",1)
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            CALL cl_err("gcap_t",SQLCA.sqlcode,1)  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.a_update"/>}
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+</section>
+</add_points>

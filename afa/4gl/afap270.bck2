@@ -1,0 +1,3435 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="afap270.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0011(2014-09-09 15:11:00), PR版次:0011(2016-10-24 16:38:05)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000114
+#+ Filename...: afap270
+#+ Description: 資產出售產生帳款作業
+#+ Creator....: 02599(2014-08-08 11:16:07)
+#+ Modifier...: 02599 -SD/PR- 05016
+ 
+{</section>}
+ 
+{<section id="afap270.global" >}
+#應用 p02 樣板自動產生(Version:19)
+#add-point:填寫註解說明
+#150601-00034#1 2015/06/03 By 01727 1.afap270_xrca004_ref()中拿掉人员所属据点之惯用设置
+#                                   2.根据收款条件带出应收款日、票到期日
+#150731-00004#1  by yangtt 20150807   錯誤信息匯總報錯，將舊的報錯方式(cl_errmdg)改成新的報錯方式
+#151125-00006#1  2015/12/15 by 06862 产生应收/应付账款后立即审核及立即抛转传票
+#160318-00005#9  2016/03/23 by 07675 將重複內容的錯誤訊息置換為公用錯誤訊息
+#160616-00005#3  2016/06/21 By 02599 修正BUG
+#160628-00015#1  2016/07/14 By 01531 去除平行账套生成账款
+#160125-00005#7  2016/08/09 By 01531 查詢時加上帳套人員權限條件過濾
+#160727-00019#34   16/08/15 By 08734      临时表长度超过15码的减少到15码以下 s_pre_voucher_tmp ——> s_pre_vr_tmp01
+#160913-00017#1  2016/09/23 By 07900      AFA模组调整交易客商开窗
+#161021-00053#1  2016/10/21 By dorishsu   根據課稅別(oodb008),決定產生到axrt300的稅別(xrca060)
+#161024-00008#1  2016/10/24 By Hans     AFA組織類型與職能開窗清單調整。 
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔
+#
+##end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   fabgld              LIKE fabg_t.fabgld,
+   fabgld_desc         LIKE glaal_t.glaal002,
+   fabgcomp            LIKE fabg_t.fabgcomp,
+   fabgcomp_desc       LIKE ooefl_t.ooefl003,
+   type                LIKE type_t.chr1,
+   fabg005             LIKE fabg_t.fabg005,
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD
+   sel              LIKE type_t.chr1,
+   fabgdocno        LIKE fabg_t.fabgdocno,
+   fabgdocdt        LIKE fabg_t.fabgdocdt,
+   fabg006          LIKE fabg_t.fabg006,
+   fabg015          LIKE fabg_t.fabg015,
+   fabg013          LIKE fabg_t.fabg013,
+   fabo012          LIKE fabo_t.fabo012,
+   fabo013          LIKE fabo_t.fabo013,
+   fabo014          LIKE fabo_t.fabo014,
+   fabo015          LIKE fabo_t.fabo015,
+   fabo016          LIKE fabo_t.fabo016,
+   fabo017          LIKE fabo_t.fabo017
+   END RECORD 
+TYPE type_g_fabo_d RECORD
+   fabgdocno        LIKE fabg_t.fabgdocno,
+   faboseq          LIKE fabo_t.faboseq,
+   fabg007          LIKE fabg_t.fabg007,
+   fabg006          LIKE fabg_t.fabg006,
+   fabo024          LIKE fabo_t.fabo024,
+   fabo024_desc     LIKE glacl_t.glacl004,
+   fabo010          LIKE fabo_t.fabo010,
+   fabo009          LIKE fabo_t.fabo009,
+   fabo012          LIKE fabo_t.fabo012,
+   fabo013          LIKE fabo_t.fabo013,
+   fabo014          LIKE fabo_t.fabo014,
+   fabo015          LIKE fabo_t.fabo015,
+   fabo016          LIKE fabo_t.fabo016,
+   fabo017          LIKE fabo_t.fabo017
+   END RECORD
+ TYPE type_g_fabu_d RECORD
+   fabgdocno        LIKE fabg_t.fabgdocno,
+   fabuseq          LIKE fabu_t.fabuseq,
+   fabg007          LIKE fabg_t.fabg007,
+   fabg006          LIKE fabg_t.fabg006,
+   fabu022          LIKE fabu_t.fabu022,
+   fabu022_desc     LIKE glacl_t.glacl004,
+   fabu010          LIKE fabu_t.fabu010,
+   fabu009          LIKE fabu_t.fabu009,
+   fabu012          LIKE fabu_t.fabu012,
+   fabu013          LIKE fabu_t.fabu013,
+   fabu014          LIKE fabu_t.fabu014,
+   fabu015          LIKE fabu_t.fabu015,
+   fabu016          LIKE fabu_t.fabu016,
+   fabu017          LIKE fabu_t.fabu017
+   END RECORD
+DEFINE g_input      RECORD
+   xrcasite         LIKE xrca_t.xrcasite,
+   xrcasite_desc    LIKE ooefl_t.ooefl003,
+   xrcald           LIKE xrca_t.xrcald,
+   xrcald_desc      LIKE ooefl_t.ooefl003,
+   xrcadocno        LIKE xrca_t.xrcadocno,
+   xrcadocdt        LIKE xrca_t.xrcadocdt,
+   flag             LIKE type_t.chr1,
+   docno_s          LIKE xrca_t.xrcadocno,
+   docno_e          LIKE xrca_t.xrcadocno,
+   apcasite         LIKE apca_t.apcasite,
+   apcasite_desc    LIKE ooefl_t.ooefl003,
+   apcald           LIKE apca_t.apcald,
+   apcald_desc      LIKE ooefl_t.ooefl003,
+   apcadocno        LIKE apca_t.apcadocno,
+   apcadocdt        LIKE apca_t.apcadocdt,
+   flag1            LIKE type_t.chr1,
+   docno_s1         LIKE apca_t.apcadocno,
+   docno_e1         LIKE apca_t.apcadocno
+                    END RECORD   
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+DEFINE g_master          type_parameter
+DEFINE g_fabo_d          DYNAMIC ARRAY OF type_g_fabo_d
+DEFINE g_fabu_d          DYNAMIC ARRAY OF type_g_fabu_d
+DEFINE g_glaald          LIKE glaa_t.glaald
+DEFINE g_glaa004         LIKE glaa_t.glaa004
+DEFINE g_rec_b           LIKE type_t.num5              #單身筆數
+DEFINE g_detail_idx      LIKE type_t.num5
+DEFINE l_ac2             LIKE type_t.num5 
+DEFINE l_ac3             LIKE type_t.num5 
+DEFINE g_success         LIKE type_t.num5
+DEFINE g_xrca            RECORD LIKE xrca_t.*
+DEFINE g_xrcb            RECORD LIKE xrcb_t.*
+DEFINE g_xrcc            RECORD LIKE xrcc_t.*
+DEFINE g_apca            RECORD LIKE apca_t.*
+DEFINE g_apcb            RECORD LIKE apcb_t.*
+DEFINE g_apcc            RECORD LIKE apcc_t.*
+DEFINE g_glaa            RECORD LIKE glaa_t.*
+DEFINE g_fabgdocno       LIKE fabg_t.fabgdocno
+DEFINE g_wc_cs_orga      STRING      #160125-00005#7
+DEFINE g_site_str        STRING      #160125-00005#7
+DEFINE g_wc_cs_ld        STRING      #160125-00005#7
+#end add-point
+ 
+{</section>}
+ 
+{<section id="afap270.main" >}
+#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   DEFINE l_success   LIKE type_t.num5
+   #end add-point   
+   #add-point:main段define
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("afa","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   #151125-00006#1---add---s
+   CALL s_fin_create_account_center_tmp()
+   CALL s_voucher_cre_ar_tmp_table() RETURNING l_success 
+   CALL s_pre_voucher_cre_tmp_table() RETURNING l_success 
+   CALL s_fin_continue_no_tmp() 
+   #151125-00006#1---add---e
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_afap270 WITH FORM cl_ap_formpath("afa",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL afap270_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL afap270_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_afap270
+   END IF 
+   
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="afap270.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION afap270_init()
+   #add-point:init段define
+   DEFINE l_success   LIKE type_t.num5
+   #end add-point   
+   #add-point:init段define
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   #营运据点范围
+   CALL s_axrt300_get_site(g_user,'','1') RETURNING g_wc_cs_orga #160125-00005#7   
+   
+   CALL cl_set_combo_scc_part('fabg005','9910','4,17')
+   IF NOT cl_null(g_argv[1]) THEN
+      LET g_glaald=g_argv[1]
+   END IF
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_fabgdocno=g_argv[02]
+      DISPLAY g_fabgdocno TO fabgdocno
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET g_master.fabg005=g_argv[03]
+      DISPLAY g_master.fabg005 TO fabg005
+   END IF
+   IF cl_null(g_glaald) THEN
+      #抓取预设帐别
+      CALL s_ld_bookno() RETURNING l_success,g_glaald
+      IF l_success = FALSE THEN
+         LET g_glaald=NULL
+         RETURN
+      END IF
+      CALL s_ld_chk_authorization(g_user,g_glaald) RETURNING l_success
+      IF l_success = FALSE THEN
+         LET g_glaald=NULL
+         RETURN
+      END IF
+   END IF
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap270.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION afap270_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define
+   DEFINE l_pass      LIKE type_t.num5
+     
+   #end add-point 
+   #add-point:ui_dialog段define
+   
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   CLEAR FORM 
+   LET g_master.wc=NULL
+   DISPLAY BY NAME g_master.fabgld,g_master.fabgld_desc,g_master.fabgcomp,g_master.fabgcomp_desc,g_master.type,g_master.fabg005
+   LET g_site_str = NULL #160125-00005#7   
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL afap270_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         INPUT BY NAME g_master.fabgld,g_master.type,g_master.fabg005  
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            BEFORE INPUT
+               #帳套
+               IF cl_null(g_master.fabgld) THEN 
+                  LET g_master.fabgld=g_glaald
+               END IF
+               CALL afap270_fabgld_desc(g_master.fabgld)
+               #單據性質
+               IF cl_null(g_master.fabg005) OR g_master.fabg005=0 THEN
+                  LET g_master.fabg005='4'
+                  DISPLAY BY NAME g_master.fabg005
+               END IF
+               IF g_master.fabg005='4' THEN #出售單
+                  CALL cl_set_comp_visible("page_3",FALSE)
+               ELSE#調撥單
+                  CALL cl_set_comp_visible("page_3",TRUE)
+               END IF
+               IF NOT cl_null(g_fabgdocno) THEN
+                  DISPLAY g_fabgdocno TO fabgdocno
+               END IF
+               #匯總方式
+               IF cl_null(g_master.type) THEN
+                  LET g_master.type='1'
+                  DISPLAY BY NAME g_master.type
+               END IF
+               IF g_master.type='1' THEN
+                  CALL cl_set_comp_visible("fabgdocno_1,fabgdocdt_1",TRUE)
+                  CALL cl_set_comp_visible("fabg006_1",FALSE)
+               ELSE
+                  CALL cl_set_comp_visible("fabgdocno_1,fabgdocdt_1",FALSE)
+                  CALL cl_set_comp_visible("fabg006_1",TRUE)
+               END IF
+               
+            AFTER FIELD fabgld
+               IF NOT cl_null(g_master.fabgld) THEN
+                  CALL afap270_fabgld_chk(g_master.fabgld)
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_master.fabgld
+                     #160318-00005#9 --add--str
+                     LET g_errparam.replace[1] ='agli010'
+                     LET g_errparam.replace[2] = cl_get_progname('agli010',g_lang,"2")
+                     LET g_errparam.exeprog    ='agli010'
+                     #160318-00005#9 --add--end
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+            
+                     LET g_master.fabgld = ''
+                     NEXT FIELD fabgld
+                  END IF
+                  #检查使用者是否有权限使用当前账别
+                  CALL s_ld_chk_authorization(g_user,g_master.fabgld) RETURNING l_pass
+                  IF l_pass = FALSE THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axr-00022'
+                     LET g_errparam.extend = g_master.fabgld
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+            
+                     LET g_master.fabgld = ''
+                     NEXT FIELD fabgld
+                  END IF
+                  CALL afap270_fabgld_desc(g_master.fabgld)               
+               END IF 
+               
+            ON CHANGE type
+               IF g_master.type NOT MATCHES '[12]' THEN
+                  NEXT FIELD type
+               END IF
+               IF g_master.type='1' THEN
+                  CALL cl_set_comp_visible("fabgdocno_1,fabgdocdt_1",TRUE)
+                  CALL cl_set_comp_visible("fabg006_1",FALSE)
+               ELSE
+                  CALL cl_set_comp_visible("fabgdocno_1,fabgdocdt_1",FALSE)
+                  CALL cl_set_comp_visible("fabg006_1",TRUE)
+               END IF
+                 
+            ON CHANGE fabg005
+               IF g_master.fabg005<>'4' AND g_master.fabg005<>'17' THEN
+                  NEXT FIELD fabg005
+               END IF
+               IF g_master.fabg005='4' THEN #出售單
+                  CALL cl_set_comp_visible("page_3",FALSE)
+               ELSE#調撥單
+                  CALL cl_set_comp_visible("page_3",TRUE)
+               END IF
+               
+            ON ACTION controlp INFIELD fabgld
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.fabgld             #給予default值
+               #給予arg
+               LET g_qryparam.arg1 = g_user
+               LET g_qryparam.arg2 = g_dept 
+               #160125-00005#7--add--str--
+               #账套范围
+               CALL s_axrt300_get_site(g_user,g_site_str,'2')  RETURNING g_wc_cs_ld 
+               IF NOT cl_null(g_wc_cs_ld) THEN   
+                  LET g_qryparam.where = g_wc_cs_ld
+               END IF
+               #160125-00005#7--add--end               
+               CALL q_authorised_ld()                                #呼叫開窗
+               LET g_master.fabgld = g_qryparam.return1              
+               DISPLAY g_master.fabgld TO fabgld              #
+               CALL afap270_fabgld_desc(g_master.fabgld)
+               NEXT FIELD fabgld                          #返回原欄位
+         END INPUT
+ 
+ 
+         
+         #+ 此段落由子樣板a57產生
+         CONSTRUCT BY NAME g_master.wc ON fabgsite,fabg001,fabg006,fabgdocdt,fabgdocno
+         
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               CALL cl_qbe_init()
+            #160125-00005#7 add s---   
+            AFTER FIELD fabgsite   
+               CALL FGL_DIALOG_GETBUFFER() RETURNING g_site_str  
+            #160125-00005#7 add e---
+            
+            ON ACTION controlp INFIELD fabgsite
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               #160125-00005#7--add--str--   
+               LET g_qryparam.where = " ooef201 = 'Y' "
+               IF NOT cl_null(g_wc_cs_orga) THEN
+			         LET g_qryparam.where = g_wc_cs_orga
+			      END IF
+			      #160125-00005#7--add--end               
+               #CALL q_ooef001()                           #呼叫開窗 #161024-00008#1 
+               CALL q_ooef001_47()                                  #161024-00008#1 
+               DISPLAY g_qryparam.return1 TO fabgsite  #顯示到畫面上
+               NEXT FIELD fabgsite                     #返回原欄位
+            ON ACTION controlp INFIELD fabg001
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO fabg001  #顯示到畫面上
+               NEXT FIELD fabg001  
+            ON ACTION controlp INFIELD fabg006
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               # CALL q_pmaa001()   #160913-00017#1  mark                  #呼叫開窗
+               #160913-00017#1--ADD(S)--
+               LET g_qryparam.arg1="('2','3')"
+               CALL q_pmaa001_1()
+               #160913-00017#1--ADD(E)- 
+               DISPLAY g_qryparam.return1 TO fabg006  #顯示到畫面上
+               NEXT FIELD fabg006                     #返回原欄位
+            ON ACTION controlp INFIELD fabgdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               IF g_master.fabg005='4' THEN
+                  LET g_qryparam.where = " fabg005='4' "
+               END IF
+               IF g_master.fabg005='17' THEN
+                  LET g_qryparam.where = " fabg005='17' "
+               END IF
+               CALL q_fabgdocno()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO fabgdocno  #顯示到畫面上
+               NEXT FIELD fabgdocno                     #返回原欄位
+         END CONSTRUCT
+         
+#         DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+#    
+#            BEFORE ROW
+#               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+#               
+#            BEFORE DISPLAY
+#               CALL FGL_SET_ARR_CURR(g_detail_idx)
+#               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+#               CALL afap270_b_fill()
+#               
+#         END DISPLAY
+         
+         INPUT ARRAY g_detail_d FROM s_detail1.* 
+              ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                        INSERT ROW = FALSE,
+                        DELETE ROW = FALSE,
+                        APPEND ROW = FALSE)
+            BEFORE INPUT
+#               IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+#                 CALL FGL_SET_ARR_CURR(g_detail_d.getLength()+1) 
+#                 LET g_insert = 'N' 
+#               END IF 
+#               CALL afap270_b_fill()
+             
+            BEFORE ROW
+               LET l_ac = ARR_CURR()
+#               LET g_master_idx = l_ac
+#               DISPLAY l_ac TO FORMONLY.h_index
+#               CALL afap270_fetch() 
+#               IF l_ac>0 THEN
+#                  CALL afap270_b_fill()
+#               END IF                  
+               
+                    
+         END INPUT
+         
+         DISPLAY ARRAY g_fabo_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+               CALL afap270_b_fill2()
+               
+         END DISPLAY
+         
+         DISPLAY ARRAY g_fabu_d TO s_detail3.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               LET l_ac3 = DIALOG.getCurrentRow("s_detail1")
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac3 = DIALOG.getCurrentRow("s_detail1")
+               CALL afap270_b_fill3()
+               
+         END DISPLAY
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+            NEXT FIELD fabgld
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL afap270_filter()
+            #add-point:ON ACTION filter
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前
+            
+            #end add-point
+            CALL afap270_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段
+            
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh
+            
+            #end add-point
+            CALL afap270_b_fill()
+ 
+         #add-point:ui_dialog段action
+         ON ACTION sel_page
+            NEXT FIELD sel
+            
+         ON ACTION sale_page
+            NEXT FIELD fabgdocno_2
+            
+         ON ACTION detail_page
+            NEXT FIELD fabgdocno_3
+            
+         ON ACTION batch_execute
+            CALL afap270_execute()
+            IF NOT cl_null(g_argv[03]) THEN
+               LET INT_FLAG=FALSE         
+               LET g_action_choice = "exit"
+               EXIT DIALOG
+            END IF
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap270.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION afap270_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   
+   #end add-point 
+   #add-point:query段define
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct
+   LET g_master_idx=1
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL afap270_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap270.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION afap270_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+ 
+   #end add-point
+   #add-point:b_fill段define
+   
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   IF cl_null(g_master.wc) THEN
+      LET g_master.wc=" 1=1"
+   END IF
+   LET ls_wc="SUM(fabo012),SUM(fabo013),SUM(fabo014),SUM(fabo015),SUM(fabo016),SUM(fabo017)",
+             "  FROM fabg_t,fabo_t",
+             " WHERE fabgent=faboent AND fabgld=fabold AND fabgdocno=fabodocno AND fabgent=?",
+             "   AND fabgld='",g_master.fabgld,"'",   
+             "   AND fabg011 IS NULL AND fabg012 IS NULL "
+   IF g_master.fabg005='4' THEN #出售單
+#      LET ls_wc=ls_wc," AND fabg005='4' AND fabgstus='Y' AND fabg019 IS NULL "  #20141120 mark
+      LET ls_wc=ls_wc," AND fabg005='4' AND (fabgstus='Y' OR fabgstus = 'S')  "   #20141120 add by chenying 应收账款为空时，已过帐单据也可产生应收账款；另调拨在调整，fabg019调拨单号条件先mark  
+   ELSE #調撥單 
+      LET ls_wc=ls_wc," AND fabg005='17' AND fabgstus='Y' "                          
+   END IF
+   IF NOT cl_null(g_fabgdocno) THEN
+      LET ls_wc = ls_wc," AND fabgdocno ='",g_fabgdocno,"'"
+   END IF
+   LET ls_wc=ls_wc,"   AND ",g_master.wc   
+   
+   IF g_master.type='1' THEN
+      IF g_master.fabg005='4' THEN
+         LET g_sql="SELECT 'N',fabgdocno,fabgdocdt,'',fabg015,fabg013,",ls_wc,                
+                   " GROUP BY fabgdocno,fabgdocdt,fabg015,fabg013",
+                   " ORDER BY fabgdocno,fabgdocdt,fabg015,fabg013"
+      END IF             
+      IF g_master.fabg005='17' THEN
+         LET g_sql="SELECT 'N',fabgdocno,fabgdocdt,'',fabo010,fabo009,",ls_wc,                
+                   " GROUP BY fabgdocno,fabgdocdt,fabo010,fabo009",
+                   " ORDER BY fabgdocno,fabgdocdt,fabo010,fabo009"
+      END IF           
+   ELSE
+      IF g_master.fabg005='4' THEN
+         LET g_sql="SELECT 'N','','',fabg006,fabg015,fabg013,",ls_wc,                
+                   " GROUP BY fabg006,fabg015,fabg013",
+                   " ORDER BY fabg006,fabg015,fabg013"
+      END IF         
+      IF g_master.fabg005='17' THEN
+         LET g_sql="SELECT 'N','','',fabg006,fabo010,fabo009,",ls_wc,                
+                   " GROUP BY fabg006,fabo010,fabo009",
+                   " ORDER BY fabg006,fabo010,fabo009"
+      END IF             
+   END IF
+   #end add-point
+ 
+   PREPARE afap270_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR afap270_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   g_detail_d[l_ac].sel,g_detail_d[l_ac].fabgdocno,g_detail_d[l_ac].fabgdocdt,g_detail_d[l_ac].fabg006,
+   g_detail_d[l_ac].fabg015,g_detail_d[l_ac].fabg013,g_detail_d[l_ac].fabo012,g_detail_d[l_ac].fabo013,
+   g_detail_d[l_ac].fabo014,g_detail_d[l_ac].fabo015,g_detail_d[l_ac].fabo016,g_detail_d[l_ac].fabo017
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      
+      #end add-point
+      
+      CALL afap270_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE afap270_sel
+   
+   LET l_ac = 1
+   CALL afap270_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap270.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION afap270_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define
+   
+   #end add-point
+   #add-point:fetch段define
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap270.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION afap270_detail_show()
+   #add-point:show段define
+   
+   #end add-point
+   #add-point:show段define
+   
+   #end add-point
+   
+   #add-point:detail_show段
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap270.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION afap270_filter()
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL afap270_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap270.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION afap270_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap270.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION afap270_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = afap270_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap270.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+################################################################################
+# Descriptions...: 帳別檢查
+# Memo...........:
+# Usage..........: CALL afap270_fabgld_chk(p_fabgld)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_fabgld_chk(p_fabgld)
+   DEFINE p_fabgld    LIKE fabg_t.fabgld
+   DEFINE l_glaastus  LIKE glaa_t.glaastus
+   
+   LET g_errno = ''
+   SELECT glaastus INTO l_glaastus FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = p_fabgld
+   CASE
+      WHEN SQLCA.SQLCODE = 100   LET g_errno = 'agl-00016'
+      WHEN l_glaastus = 'N'      LET g_errno = 'sub-01302' #'agl-00051' #160318-00005#9 mod
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 帳套說明
+# Memo...........:
+# Usage..........: CALL afap270_fabgld_desc(p_fabgld)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_fabgld_desc(p_fabgld)
+   DEFINE p_fabgld    LIKE fabg_t.fabgld
+   
+   SELECT glaacomp,glaa004 INTO g_master.fabgcomp,g_glaa004 FROM glaa_t 
+   WHERE glaaent=g_enterprise AND glaald= p_fabgld
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_fabgld 
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.fabgld_desc=g_rtn_fields[1]
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.fabgcomp 
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.fabgcomp_desc=g_rtn_fields[1]
+   DISPLAY BY NAME g_master.fabgld_desc,g_master.fabgcomp,g_master.fabgcomp_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 顯示單身2資料
+# Memo...........:
+# Usage..........: CALL afap270_b_fill2()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_b_fill2()
+DEFINE l_wc   STRING
+
+   IF l_ac<1 THEN
+      RETURN
+   END IF
+   IF cl_null(g_master.wc) THEN
+      LET g_master.wc=" 1=1"
+   END IF    
+   LET g_sql="SELECT fabgdocno,faboseq,fabg007,fabg006,fabo024,fabo010,fabo009,",
+             "       fabo012,fabo013,fabo014,fabo015,fabo016,fabo017",
+             "  FROM fabg_t,fabo_t",
+             " WHERE fabgent=faboent AND fabgld=fabold AND fabgdocno=fabodocno AND fabgent=?",
+#             "   AND fabgld='",g_master.fabgld,"' AND fabg005='4' AND fabgstus='Y' ",  #20141120 mark
+             "   AND fabgld='",g_master.fabgld,"' AND fabg005='4' AND (fabgstus='Y' OR fabgstus='S') ",  #20141120 add             
+             "   AND fabg015='",g_detail_d[l_ac].fabg015,"' AND fabg013='",g_detail_d[l_ac].fabg013,"'"
+   IF g_master.fabg005 = '4' THEN 
+      #異動單號
+      IF NOT cl_null(g_detail_d[l_ac].fabgdocno) THEN
+         LET g_sql=g_sql," AND fabgdocno='",g_detail_d[l_ac].fabgdocno,"' "
+      END IF
+      #單據日期
+      IF NOT cl_null(g_detail_d[l_ac].fabgdocdt) THEN
+         LET g_sql=g_sql," AND fabgdocdt='",g_detail_d[l_ac].fabgdocdt,"' "
+      END IF
+   ELSE
+      #異動單號
+      IF NOT cl_null(g_detail_d[l_ac].fabgdocno) THEN
+         LET g_sql=g_sql," AND fabg019='",g_detail_d[l_ac].fabgdocno,"' "
+      END IF   
+   END IF   
+
+   #帳款客戶
+   IF NOT cl_null(g_detail_d[l_ac].fabg006) THEN
+      LET g_sql=g_sql," AND fabg006='",g_detail_d[l_ac].fabg006,"' "
+   END IF
+   
+   IF NOT cl_null(g_fabgdocno) THEN
+      LET g_sql = g_sql," AND fabgdocno ='",g_fabgdocno,"'"
+   END IF
+   
+   IF g_master.fabg005 = '4' THEN 
+      LET g_sql=g_sql," AND ",g_master.wc   
+   ELSE 
+      LET l_wc = ""
+      LET l_wc = cl_replace_str(g_master.wc,'fabgdocno','fabg019')
+      LET g_sql=g_sql," AND ",l_wc   
+   END IF
+   PREPARE afap270_sel2 FROM g_sql
+   DECLARE b_fill2_curs CURSOR FOR afap270_sel2
+   
+   CALL g_fabo_d.clear()
+   LET l_ac2 = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill2_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   g_fabo_d[l_ac2].fabgdocno,g_fabo_d[l_ac2].faboseq,g_fabo_d[l_ac2].fabg006,g_fabo_d[l_ac2].fabg007,g_fabo_d[l_ac2].fabo024,
+   g_fabo_d[l_ac2].fabo010,g_fabo_d[l_ac2].fabo009,g_fabo_d[l_ac2].fabo012,g_fabo_d[l_ac2].fabo013,
+   g_fabo_d[l_ac2].fabo014,g_fabo_d[l_ac2].fabo015,g_fabo_d[l_ac2].fabo016,g_fabo_d[l_ac2].fabo017
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+
+      CALL afap270_fabo024_desc(g_fabo_d[l_ac2].fabo024) RETURNING g_fabo_d[l_ac2].fabo024_desc
+      
+      LET l_ac2 = l_ac2 + 1
+      IF l_ac2 > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+       
+   LET g_detail_cnt = l_ac2 - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   CALL g_fabo_d.deleteElement(g_fabo_d.getLength())
+   CLOSE b_fill2_curs
+   FREE afap270_sel2
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 顯示單身3資料
+# Memo...........:
+# Usage..........: CALL afap270_b_fill3()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_b_fill3()
+   
+   IF l_ac<1 THEN
+      RETURN
+   END IF
+   IF cl_null(g_master.wc) THEN
+      LET g_master.wc=" 1=1"
+   END IF
+   LET g_sql="SELECT fabgdocno,fabuseq,fabg007,fabg006,fabu022,fabu010,fabu009,",
+             "       fabu012,fabu013,fabu014,fabu015,fabu016,fabu017",
+             "  FROM fabg_t,fabu_t",
+             " WHERE fabgent=fabuent AND fabgld=fabuld AND fabgdocno=fabudocno AND fabgent=?",
+             "   AND fabgld='",g_master.fabgld,"' AND fabg005='17' AND fabgstus='Y' "       
+             #"   AND fabu010='",g_detail_d[l_ac].fabg015,"' AND fabu009='",g_detail_d[l_ac].fabg013,"'"
+ 
+   #異動單號
+   IF NOT cl_null(g_detail_d[l_ac].fabgdocno) THEN
+      LET g_sql=g_sql," AND fabgdocno='",g_detail_d[l_ac].fabgdocno,"' "
+   END IF
+   #單據日期
+   IF NOT cl_null(g_detail_d[l_ac].fabgdocdt) THEN
+      LET g_sql=g_sql," AND fabgdocdt='",g_detail_d[l_ac].fabgdocdt,"' "
+   END IF
+
+   #帳款客戶
+   IF NOT cl_null(g_detail_d[l_ac].fabg006) THEN
+      LET g_sql=g_sql," AND fabg006='",g_detail_d[l_ac].fabg006,"' "
+   END IF
+   
+   IF NOT cl_null(g_fabgdocno) THEN
+      LET g_sql = g_sql," AND fabgdocno ='",g_fabgdocno,"'"
+   END IF
+   
+   LET g_sql=g_sql," AND ",g_master.wc  
+  
+ 
+   PREPARE afap270_sel3 FROM g_sql
+   DECLARE b_fill3_curs CURSOR FOR afap270_sel3
+   
+   CALL g_fabu_d.clear()
+   LET l_ac3 = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill3_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   g_fabu_d[l_ac3].fabgdocno,g_fabu_d[l_ac3].fabuseq,g_fabu_d[l_ac3].fabg006,g_fabu_d[l_ac3].fabg007,g_fabu_d[l_ac3].fabu022,
+   g_fabu_d[l_ac3].fabu010,g_fabu_d[l_ac3].fabu009,g_fabu_d[l_ac3].fabu012,g_fabu_d[l_ac3].fabu013,
+   g_fabu_d[l_ac3].fabu014,g_fabu_d[l_ac3].fabu015,g_fabu_d[l_ac3].fabu016,g_fabu_d[l_ac3].fabu017
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+
+      CALL afap270_fabo024_desc(g_fabu_d[l_ac3].fabu022) RETURNING g_fabu_d[l_ac3].fabu022_desc
+      
+      LET l_ac3 = l_ac3 + 1
+      IF l_ac3 > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+       
+   LET g_detail_cnt = l_ac3 - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+
+   CALL g_fabu_d.deleteElement(g_fabu_d.getLength())
+   CLOSE b_fill3_curs
+   FREE afap270_sel3
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL afap270_fabo024_desc(p_fabo024)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_fabo024_desc(p_fabo024)
+   DEFINE p_fabo024      LIKE fabo_t.fabo024
+   DEFINE r_desc         LIKE glacl_t.glacl004
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaa004
+   LET g_ref_fields[2] = p_fabo024
+   CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001=? AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_desc = '', g_rtn_fields[1] , ''
+   
+   RETURN r_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生應收賬款
+# Memo...........:
+# Usage..........: CALL afap270_execute()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_execute()
+   DEFINE l_flag         LIKE type_t.num5
+   DEFINE l_para_data    LIKE xrca_t.xrcadocdt
+   DEFINE l_para_data1   LIKE xrca_t.xrcadocdt
+   DEFINE l_ooef004      LIKE ooef_t.ooef004
+   DEFINE l_success      LIKE type_t.num5
+   #20141120
+   DEFINE l_fabgsite     LIKE fabg_t.fabgsite 
+   DEFINE l_colname_1     STRING   
+   DEFINE l_colname_2     STRING   
+   DEFINE l_colname_3     STRING   
+   DEFINE l_colname_4     STRING   
+   DEFINE l_comment_1     STRING   
+   DEFINE l_comment_2     STRING   
+   DEFINE l_comment_3     STRING   
+   DEFINE l_comment_4     STRING 
+   DEFINE l_site          LIKE fabg_t.fabgsite 
+   DEFINE l_month         LIKE type_t.num5
+   DEFINE l_year          LIKE type_t.num5    
+   #20141120   
+   #20141226 add by chenying
+   DEFINE l_xrcacomp      LIKE xrca_t.xrcacomp
+   DEFINE l_xrca003       LIKE xrca_t.xrca003
+   DEFINE l_xrca003_desc  STRING
+   DEFINE l_xrca001       LIKE xrca_t.xrca001
+   DEFINE g_wc_apcald     STRING
+   DEFINE ls_wc           STRING
+   DEFINE g_bookno        LIKE glaa_t.glaald
+   DEFINE l_apcacomp      LIKE apca_t.apcacomp
+   #20141226 add by chenying
+   DEFINE l_glaa024       LIKE glaa_t.glaa024
+   
+   #(1)判斷是否有勾選要拋轉的資料，沒有勾選提示用戶，勾選了進行拋轉操作
+   LET l_flag=FALSE
+   FOR l_ac=1 TO g_detail_d.getLength()
+      IF g_detail_d[l_ac].sel='Y' THEN
+         LET l_flag=TRUE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   IF l_flag=FALSE THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'afa-00172'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #20141120 add by chenying 
+   #现行年月与关账日期检查
+   CALL cl_err_collect_init()  #汇总错误讯息初始化
+   CALL s_azzi902_get_gzzd('afat504',"lbl_fabgdocno")    RETURNING l_colname_1,l_comment_1   
+   CALL s_azzi902_get_gzzd('afat504',"lbl_fabgld")       RETURNING l_colname_2,l_comment_2
+   CALL s_azzi902_get_gzzd('afat504',"lbl_fabgsite")     RETURNING l_colname_4,l_comment_4   
+   CALL s_azzi902_get_gzzd('afat504',"lbl_fabgdocdt")    RETURNING l_colname_3,l_comment_3   
+   LET g_coll_title[1] = l_colname_1
+   LET g_coll_title[2] = l_colname_2
+   LET g_coll_title[3] = l_colname_3
+   LET g_coll_title[4] = l_colname_4
+   
+   LET g_success = TRUE
+   FOR l_ac=1 TO g_detail_d.getLength()
+      IF g_detail_d[l_ac].sel='Y' THEN
+         SELECT fabgsite INTO l_fabgsite FROM fabg_t WHERE fabgent = g_enterprise
+            AND fabgdocno = g_detail_d[l_ac].fabgdocno AND fabgld = g_master.fabgld
+         SELECT glaacomp INTO l_site FROM glaa_t
+          WHERE glaaent = g_enterprise AND glaald = g_master.fabgld
+         CALL cl_get_para(g_enterprise,l_site,'S-FIN-9018') RETURNING l_year
+         CALL cl_get_para(g_enterprise,l_site,'S-FIN-9019') RETURNING l_month
+         IF l_year <> YEAR(g_detail_d[l_ac].fabgdocdt) OR l_month <> MONTH(g_detail_d[l_ac].fabgdocdt)  THEN          
+            LET g_errparam.code = "afa-00283"  
+            LET g_errparam.extend = ""
+            LET g_errparam.popup = TRUE
+            LET g_errparam.replace[1] = ''
+            LET g_errparam.coll_vals[1] = g_detail_d[l_ac].fabgdocno
+            LET g_errparam.coll_vals[2] = g_master.fabgld 
+            LET g_errparam.coll_vals[3] = l_fabgsite
+            LET g_errparam.coll_vals[4] = g_detail_d[l_ac].fabgdocdt
+            LET g_errparam.sqlerr = SQLCA.SQLCODE  
+            CALL cl_err()
+            LET g_success = FALSE       
+         END IF 
+      END IF
+   END FOR
+   CALL cl_err_collect_show()  #显示错误讯息汇总
+   IF g_success = FALSE THEN
+      RETURN
+   END IF
+   #20141120 add by chenying
+   
+   #(2)開啟窗口錄入拋轉單別等資料
+   INITIALIZE g_input.* TO NULL
+   
+   OPEN WINDOW w_afap270_s01 WITH FORM cl_ap_formpath("afa","afap270_s01")
+   
+   IF g_master.fabg005='17' THEN #調撥單
+      CALL cl_set_comp_visible("master_gen1",TRUE)
+      CALL cl_set_comp_visible("master",FALSE)
+   ELSE
+      CALL cl_set_comp_visible("master_gen1",FALSE)
+      CALL cl_set_comp_visible("master",TRUE)
+   END IF
+  # SELECT ooef004 INTO l_ooef004 from ooef_t where ooefent = g_enterprise AND ooef001 = g_master.fabgcomp
+    SELECT glaa024 INTO l_glaa024 FROM glaa_t  WHERE glaaent = g_enterprise AND glaald = g_master.fabgld
+   LET INT_FLAG = FALSE  
+   
+   CALL s_axrt300_create_tmp() #20141226 add by chenying
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+             #輸入開始
+         INPUT BY NAME g_input.xrcasite,g_input.xrcald,g_input.xrcadocno,g_input.xrcadocdt,g_input.flag,
+                       g_input.apcasite,g_input.apcald,g_input.apcadocno,g_input.apcadocdt,g_input.flag1
+            ATTRIBUTE(WITHOUT DEFAULTS)
+       
+            BEFORE INPUT
+               LET g_input.flag='N'
+               LET g_input.xrcadocdt=g_today
+               LET g_input.apcadocdt=g_today
+               DISPLAY BY NAME g_input.xrcadocdt,g_input.apcadocdt
+               
+               #20141226 add by chenying
+               IF g_master.fabg005='4' THEN #出售單
+                  #應收
+                 ##################################################mark by huangtao\默认带afap270的账务中心及账套
+                 #CALL s_axrt300_ins_default('xrca',g_bookno) 
+                 #  RETURNING l_success,g_input.xrcasite,g_input.xrcasite_desc,g_input.xrcald,g_input.xrcald_desc,
+                 #            l_xrcacomp,l_xrca003,l_xrca003_desc,l_xrca001,g_input.xrcadocdt
+                 LET g_input.xrcasite = g_master.fabgcomp
+                 LET g_input.xrcald = g_master.fabgld
+                 LET g_input.xrcadocdt = g_today
+                 CALL s_desc_get_department_desc(g_input.xrcasite) RETURNING g_input.xrcasite_desc
+                 CALL s_desc_get_ld_desc(g_input.xrcald) RETURNING g_input.xrcald_desc
+                 #################################################mark by huangtao
+                  DISPLAY BY NAME g_input.xrcasite,g_input.xrcasite_desc,g_input.xrcald,g_input.xrcald_desc,g_input.xrcadocdt
+                  SELECT * INTO g_glaa.* FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_input.xrcald
+               END IF
+               
+               IF g_master.fabg005='17' THEN #調撥單 
+                  #應付
+                 #############################################mark by huangtao
+                 #CALL s_aap_get_default_apcasite('','','') RETURNING l_success,g_errno,g_input.apcasite,g_input.apcald,l_apcacomp 
+                 #CALL s_desc_get_department_desc(g_input.apcasite) RETURNING g_input.apcasite_desc
+                 ##設定帳別相關預設值
+                 #IF NOT cl_null(g_input.apcald) THEN
+                 #   CALL s_desc_get_ld_desc(g_input.apcald)  RETURNING g_input.apcald_desc
+                 #END IF
+                 LET g_input.apcasite = g_master.fabgcomp
+                 LET g_input.apcald = g_master.fabgld
+                 LET g_input.apcadocdt = g_today
+                 CALL s_desc_get_department_desc(g_input.apcasite) RETURNING g_input.apcasite_desc
+                 CALL s_desc_get_ld_desc(g_input.apcald) RETURNING g_input.apcald_desc
+                 #############################################mark by huangtao                  
+                  DISPLAY BY NAME g_input.apcasite,g_input.apcasite_desc,g_input.apcald,g_input.apcald_desc,g_input.apcadocdt
+                  SELECT * INTO g_glaa.* FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_input.apcald               
+               END IF
+               #20141226 add by chenying
+               
+#               CALL cl_get_para(g_enterprise,g_site,'S-FIN-2007') RETURNING l_para_data  #20141226 mod by chenying
+               CALL cl_get_para(g_enterprise,g_glaa.glaacomp,'S-FIN-2007') RETURNING l_para_data   #20141226 add by chenying
+               IF g_today>l_para_data THEN
+                  LET g_input.xrcadocdt=g_today
+               END IF
+               IF g_master.fabg005='17' THEN
+                  LET g_input.flag1='N'
+                  CALL cl_get_para(g_enterprise,g_site,'S-FIN-3007') RETURNING l_para_data1
+                  IF g_today>l_para_data1 THEN
+                     LET g_input.apcadocdt=g_today
+                  END IF
+               END IF
+               
+            AFTER FIELD xrcasite
+               IF NOT cl_null(g_input.xrcasite) THEN 
+#                  IF NOT ap_chk_isExist(g_input.xrcasite,"SELECT COUNT(*) FROM xrah_t WHERE "||"xrahent = '" ||g_enterprise|| "' AND "||"xrah002 = ? AND xrah001 = '1'  ",'axr-00018',1) THEN 
+#                     LET g_input.xrcasite = ''
+#                     LET g_input.xrcasite_desc=''
+#                     DISPLAY BY NAME g_input.xrcasite_desc
+#                     NEXT FIELD CURRENT
+#                  END IF
+#                  IF NOT ap_chk_isExist(g_input.xrcasite,"SELECT COUNT(*) FROM xrah_t WHERE "||"xrahent = '" ||g_enterprise|| "' AND "||"xrah002 = ? AND xrah001 = '1' AND xrahstus = 'Y' ",'axr-00019',1) THEN 
+#                     LET g_input.xrcasite = ''
+#                     LET g_input.xrcasite_desc=''
+#                     DISPLAY BY NAME g_input.xrcasite_desc
+#                     NEXT FIELD CURRENT
+#                  END IF
+#                  IF NOT ap_chk_isExist(g_input.xrcasite,"SELECT COUNT(*) FROM xrah_t WHERE "||"xrahent = '" ||g_enterprise|| "' AND "||"xrah002 = ? AND xrah001 = '1' AND xrah007 = 'Y' AND xrahstus = 'Y' ",'axr-00020',1) THEN 
+#                     LET g_input.xrcasite = ''
+#                     LET g_input.xrcasite_desc=''
+#                     DISPLAY BY NAME g_input.xrcasite_desc
+#                     NEXT FIELD CURRENT
+#                  END IF 
+#                  IF NOT ap_chk_isExist(g_input.xrcasite,"SELECT COUNT(*) FROM xrah_t WHERE "||"xrahent = '" ||g_enterprise|| "' AND "||"xrah002 = ? AND xrah001 = '1' AND xrah007 = 'Y' AND xrahstus = 'Y' AND xrah004 = (SELECT ooag004 FROM ooag_t WHERE ooagent = '"||g_enterprise||"' AND ooag001 ='"||g_user||"')",'axr-00069',1) THEN 
+#                     LET g_input.xrcasite = ''
+#                     LET g_input.xrcasite_desc=''
+#                     DISPLAY BY NAME g_input.xrcasite_desc
+#                     NEXT FIELD CURRENT
+#                  END IF
+                  CALL s_fin_account_center_with_ld_chk(g_input.xrcasite,g_input.xrcald,g_user,'3','N','',g_input.xrcadocdt) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.xrcasite = ''
+                     LET g_input.xrcasite_desc=''
+                     DISPLAY BY NAME g_input.xrcasite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL s_desc_get_department_desc(g_input.xrcasite) RETURNING g_input.xrcasite_desc
+               DISPLAY BY NAME g_input.xrcasite_desc
+               
+            AFTER FIELD xrcald
+               IF NOT cl_null(g_input.xrcald) THEN
+                  CALL s_fin_account_center_with_ld_chk(g_input.xrcasite,g_input.xrcald,g_user,'3','N','',g_input.xrcadocdt) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.xrcald = ''
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_desc_get_ld_desc(g_input.xrcald) RETURNING g_input.xrcald_desc
+                  DISPLAY BY NAME g_input.xrcald_desc
+               END IF
+            
+            AFTER FIELD xrcadocno
+               IF NOT cl_null(g_input.xrcadocno) THEN
+                  SELECT glaa024 INTO l_glaa024 FROM glaa_t
+                   WHERE glaaent = g_enterprise AND glaald = g_master.fabgld
+#                  IF NOT s_aooi200_chk_slip(g_master.fabgcomp,l_ooef004,g_input.xrcadocno,'axrt330') THEN   #mark by yangxf
+                  IF NOT s_aooi200_fin_chk_slip(g_input.xrcald,l_glaa024,g_input.xrcadocno,'axrt330') THEN   #add by yangxf
+                     LET g_input.xrcadocno = ''
+                     NEXT FIELD xrcadocno
+                  END IF                         
+               END IF 
+               
+            AFTER FIELD xrcadocdt
+               IF NOT cl_null(g_input.xrcadocdt) THEN
+                  IF g_input.xrcadocdt < l_para_data THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "asf-00008"
+                     LET g_errparam.extend = g_input.xrcadocdt
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+                     NEXT FIELD xrcadocdt
+                  END IF 
+               END IF
+               
+            AFTER FIELD apcasite
+#               IF NOT cl_null(g_input.apcasite) THEN
+#                  CALL s_fin_account_center_with_ld_chk(g_input.apcasite,g_master.fabgld,g_user,3,'N','',g_input.apcadocdt) RETURNING l_success,g_errno
+#                  IF NOT cl_null(g_errno) THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = g_errno
+#                     LET g_errparam.extend = ''
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#      
+#                     LET g_input.apcasite = ''
+#                     NEXT FIELD apcasite
+#                  END IF
+#               END IF
+               IF NOT cl_null(g_input.apcasite) THEN 
+#                  IF NOT ap_chk_isExist(g_input.apcasite,"SELECT COUNT(*) FROM xrah_t WHERE "||"xrahent = '" ||g_enterprise|| "' AND "||"xrah002 = ? AND xrah001 = '1'  ",'axr-00018',1) THEN 
+#                     LET g_input.apcasite = ''
+#                     LET g_input.apcasite_desc=''
+#                     DISPLAY BY NAME g_input.apcasite_desc
+#                     NEXT FIELD CURRENT
+#                  END IF
+#                  IF NOT ap_chk_isExist(g_input.apcasite,"SELECT COUNT(*) FROM xrah_t WHERE "||"xrahent = '" ||g_enterprise|| "' AND "||"xrah002 = ? AND xrah001 = '1' AND xrahstus = 'Y' ",'axr-00019',1) THEN 
+#                     LET g_input.apcasite = ''
+#                     LET g_input.apcasite_desc=''
+#                     DISPLAY BY NAME g_input.apcasite_desc
+#                     NEXT FIELD CURRENT
+#                  END IF
+#                  IF NOT ap_chk_isExist(g_input.apcasite,"SELECT COUNT(*) FROM xrah_t WHERE "||"xrahent = '" ||g_enterprise|| "' AND "||"xrah002 = ? AND xrah001 = '1' AND xrah007 = 'Y' AND xrahstus = 'Y' ",'axr-00020',1) THEN 
+#                     LET g_input.apcasite = ''
+#                     LET g_input.apcasite_desc=''
+#                     DISPLAY BY NAME g_input.apcasite_desc
+#                     NEXT FIELD CURRENT
+#                  END IF 
+#                  IF NOT ap_chk_isExist(g_input.apcasite,"SELECT COUNT(*) FROM xrah_t WHERE "||"xrahent = '" ||g_enterprise|| "' AND "||"xrah002 = ? AND xrah001 = '1' AND xrah007 = 'Y' AND xrahstus = 'Y' AND xrah004 = (SELECT ooag004 FROM ooag_t WHERE ooagent = '"||g_enterprise||"' AND ooag001 ='"||g_user||"')",'axr-00069',1) THEN 
+#                     LET g_input.apcasite = ''
+#                     LET g_input.apcasite_desc=''
+#                     DISPLAY BY NAME g_input.apcasite_desc
+#                     NEXT FIELD CURRENT
+#                  END IF
+                  CALL s_fin_account_center_with_ld_chk(g_input.apcasite,g_input.apcald,g_user,'3','N','',g_input.apcadocdt) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.apcasite = ''
+                     LET g_input.apcasite_desc=''
+                     DISPLAY BY NAME g_input.apcasite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL s_desc_get_department_desc(g_input.apcasite) RETURNING g_input.apcasite_desc
+               DISPLAY BY NAME g_input.apcasite_desc
+               
+            AFTER FIELD apcald
+               IF NOT cl_null(g_input.apcald) THEN
+                  CALL s_fin_account_center_with_ld_chk(g_input.apcasite,g_input.apcald,g_user,'3','N','',g_input.apcadocdt) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.apcald = ''
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_desc_get_ld_desc(g_input.apcald) RETURNING g_input.apcald_desc
+                  DISPLAY BY NAME g_input.apcald_desc
+               END IF
+            
+            AFTER FIELD apcadocno
+               IF NOT cl_null(g_input.apcadocno) THEN
+                  SELECT glaa024 INTO l_glaa024 FROM glaa_t
+                   WHERE glaaent = g_enterprise AND glaald = g_master.fabgld
+#                  IF NOT s_aooi200_chk_slip(g_master.fabgcomp,l_ooef004,g_input.xrcadocno,'aapt300') THEN   #mark by yangxf
+                  IF NOT s_aooi200_fin_chk_slip(g_input.xrcald,l_glaa024,g_input.xrcadocno,'aapt300') THEN   #add by yangxf
+                     LET g_input.apcadocno = ''
+                     NEXT FIELD apcadocno
+                  END IF                         
+               END IF 
+               
+            AFTER FIELD apcadocdt
+               IF NOT cl_null(g_input.apcadocdt) THEN
+                  IF g_input.apcadocdt < l_para_data1 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "asf-00008"
+                     LET g_errparam.extend = g_input.apcadocdt
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+                     NEXT FIELD apcadocdt
+                  END IF 
+               END IF
+            
+            AFTER INPUT
+            
+            ON ACTION controlp INFIELD xrcasite
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+	   		   LET g_qryparam.reqry = FALSE
+      
+               LET g_qryparam.default1 = g_input.xrcasite             #給予default值
+               LET g_qryparam.default2 = "" # #帳務中心
+              #LET g_qryparam.where = " xrah004 = (SELECT ooag004 FROM ooag_t WHERE ooagent = '",g_enterprise,"' AND ooag001 ='",g_user,"')"
+               LET g_qryparam.where = " ooef201 = 'Y' "  #20141226 add by chenying
+               #給予arg     
+              #CALL q_xrah002_1()                                #呼叫開窗
+               CALL q_ooef001()
+               LET g_input.xrcasite = g_qryparam.return1              #將開窗取得的值回傳到變數
+               CALL s_desc_get_department_desc(g_input.xrcasite) RETURNING g_input.xrcasite_desc  
+               DISPLAY g_input.xrcasite,g_input.xrcasite_desc   TO xrcasite,xrcasite_desc  #顯 LET g_qryparam.where = " ooef201 = 'Y' "示到畫面上
+               NEXT FIELD xrcasite                          #返回原欄位
+            
+            ON ACTION controlp INFIELD xrcald
+               #帳別
+               #開窗i段
+#20141226 mod by chenying               
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.default1 = g_input.xrcald
+#               LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') "  #glaa008(平行記帳)/glaa014(主帳套)
+#               LET g_qryparam.arg1 = g_user                                 #人員權限
+#               LET g_qryparam.arg2 = g_dept                                 #部門權限
+#               CALL q_authorised_ld()
+#               LET g_input.xrcald = g_qryparam.return1
+#               CALL s_desc_get_ld_desc(g_input.xrcald) RETURNING g_input.xrcald_desc
+#               DISPLAY BY NAME g_input.xrcald,g_input.xrcald_desc
+#               NEXT FIELD xrcald
+
+               CALL s_fin_create_account_center_tmp()   
+               #取得帳務組織下所屬成員
+               CALL s_fin_account_center_sons_query('3',g_input.xrcasite,g_today,'1')
+               #取得帳務組織下所屬成員之帳別   
+               CALL s_fin_account_center_comp_str() RETURNING ls_wc
+               #將取回的字串轉換為SQL條件
+               CALL afap270_get_ooef001_wc(ls_wc) RETURNING ls_wc  
+               #開窗i段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+			      LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.xrcald             #給予default值
+               IF NOT cl_null(ls_wc) AND ls_wc <> '(\'\')' THEN
+                  LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') AND glaacomp IN ",ls_wc,""
+               ELSE
+                  LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y')"
+               END IF
+               LET g_qryparam.arg1 = g_user
+               LET g_qryparam.arg2 = g_dept
+               CALL q_authorised_ld()                                  #呼叫開窗
+               LET g_input.xrcald = g_qryparam.return1       #將開窗取得的值回傳到變數
+               CALL s_desc_get_ld_desc(g_input.xrcald) RETURNING g_input.xrcald_desc
+               DISPLAY BY NAME g_input.xrcald,g_input.xrcald_desc
+#20141226 mod by chenying                 
+            
+            ON ACTION controlp INFIELD xrcadocno
+	   		   INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+	   		   LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.xrcadocno             #給予default值
+               #給予arg
+               LET g_qryparam.arg1 = l_glaa024 
+               LET g_qryparam.arg2 = "axrt330" 
+               CALL q_ooba002_1()                                #呼叫開窗
+               LET g_input.xrcadocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+               DISPLAY g_input.xrcadocno TO xrcadocno              #顯示到畫面上
+               NEXT FIELD xrcadocno  
+            
+            ON ACTION controlp INFIELD apcasite
+                #帳務中心            
+                #開窗i段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+                LET g_qryparam.default1 = g_input.apcasite       #給予default值
+               #LET g_qryparam.where = " xrah004 = (SELECT ooag004 FROM ooag_t WHERE ooagent = '",g_enterprise,"' AND ooag001 ='",g_user,"')"
+               #CALL q_xrah002_2()                                #呼叫開窗
+                CALL q_ooef001()
+                LET g_input.apcasite = g_qryparam.return1        #將開窗取得的值回傳到變數
+                CALL s_desc_get_department_desc(g_input.apcasite) RETURNING g_input.apcasite_desc                    
+                DISPLAY BY NAME g_input.apcasite,g_input.apcasite_desc
+                NEXT FIELD apcasite    
+         
+            ON ACTION controlp INFIELD apcald
+               #帳別
+               #開窗i段
+#20141226 mod by chenying                 
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = 'i'
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.default1 = g_input.apcald
+#               LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') "  #glaa008(平行記帳)/glaa014(主帳套)
+#               LET g_qryparam.arg1 = g_user                                 #人員權限
+#               LET g_qryparam.arg2 = g_dept                                 #部門權限
+#               CALL q_authorised_ld()
+#               LET g_input.apcald = g_qryparam.return1
+#               CALL s_desc_get_ld_desc(g_input.apcald) RETURNING g_input.apcald_desc
+#               DISPLAY BY NAME g_input.apcald,g_input.apcald_desc
+#               NEXT FIELD apcald
+
+               LET g_qryparam.state = 'i'
+			      LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.apcald        
+               LET g_qryparam.arg1 = g_user                                 #人員權限
+               LET g_qryparam.arg2 = g_dept                 #部門權限
+               CALL s_fin_create_account_center_tmp() 
+               CALL s_fin_account_center_sons_query('3',g_input.apcasite,g_input.apcadocdt,'1')
+               CALL s_fin_account_center_ld_str() RETURNING g_wc_apcald               
+               LET g_qryparam.where = " glaald IN ",g_wc_apcald
+               CALL q_authorised_ld()                                 
+               LET g_input.apcald = g_qryparam.return1                  
+               CALL s_desc_get_ld_desc(g_input.apcald) RETURNING g_input.apcald_desc
+               DISPLAY BY NAME g_input.apcald,g_input.apcald_desc
+               NEXT FIELD apcald 
+#20141226 mod by chenying               
+            
+            ON ACTION controlp INFIELD apcadocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+      		   LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.apcadocno             #給予default值
+               #給予arg
+               LET g_qryparam.arg1 = l_glaa024 
+               LET g_qryparam.arg2 = "aapt300" 
+               CALL q_ooba002_1()                                #呼叫開窗
+               LET g_input.apcadocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+               DISPLAY g_input.apcadocno TO apcadocno              #顯示到畫面上
+               NEXT FIELD apcadocno      
+         END INPUT
+      
+         ON ACTION cancel
+            LET INT_FLAG = TRUE 
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG = TRUE 
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET INT_FLAG = TRUE 
+            EXIT DIALOG
+            
+         ON ACTION accept
+            IF NOT cl_null(g_input.docno_s) OR NOT cl_null(g_input.docno_e) OR
+               (g_master.fabg005='17' AND (NOT cl_null(g_input.docno_s1) OR NOT cl_null(g_input.docno_e1))) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00408'
+               LET g_errparam.extend = g_input.docno_s
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            ELSE
+               CALL afap270_p()
+               #在畫面中顯示拋轉的起始截止單號
+               DISPLAY BY NAME g_input.docno_s,g_input.docno_e,g_input.docno_s1,g_input.docno_e1
+               IF NOT cl_null(g_argv[02]) THEN
+                  LET INT_FLAG=TRUE
+                  EXIT DIALOG
+               END IF
+            END IF
+            ACCEPT DIALOG
+      END DIALOG
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+   END WHILE
+   
+   #畫面關閉
+   CLOSE WINDOW w_afap270_s01   
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 插入應收帳款(xrca_t xrcb_t xrcc_t xrcd_t)
+# Memo...........:
+# Usage..........: CALL afap270_xrca_ins()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_xrca_ins()
+   DEFINE l_fabg        RECORD LIKE fabg_t.*
+   DEFINE l_fabo        RECORD LIKE fabo_t.*
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_xrcbseq     LIKE xrcb_t.xrcbseq
+   DEFINE l_cnt         LIKE type_t.num5
+   DEFINE l_glaacomp    LIKE glaa_t.glaacomp
+   DEFINE l_sql         STRING
+   DEFINE l_wc          STRING
+   #151125-00006#1--add--s
+   DEFINE  l_ooba002             LIKE ooba_t.ooba002
+   DEFINE  l_dfin0030            LIKE type_t.chr1
+   DEFINE  l_dfin0031            LIKE type_t.chr1
+   DEFINE  l_conf_success        LIKE type_t.chr1
+   #151125-00006#1--add--e
+   DEFINE l_glaa003       LIKE glaa_t.glaa003 #160616-00005#3 add
+   DEFINE l_glaa024       LIKE glaa_t.glaa024 #160616-00005#3 add
+   DEFINE l_oodb008       LIKE oodb_t.oodb008 #161021-00053#1 add
+   
+   INITIALIZE l_fabg.* TO NULL
+   LET l_fabg.fabgld=g_master.fabgld
+   LET l_fabg.fabg013=g_detail_d[l_ac].fabg013 #稅別
+   LET l_fabg.fabg015=g_detail_d[l_ac].fabg015 #幣別
+   #依單號匯總
+   IF g_master.type='1' THEN
+      LET l_fabg.fabgdocno=g_detail_d[l_ac].fabgdocno
+      SELECT fabg001,fabg006,fabg007,fabg016 
+        INTO l_fabg.fabg001,l_fabg.fabg006,l_fabg.fabg007,l_fabg.fabg016
+        FROM fabg_t
+       WHERE fabgent=g_enterprise AND fabgld=g_master.fabgld
+         AND fabgdocno=g_detail_d[l_ac].fabgdocno
+   ELSE #依帳款客戶匯總
+      LET l_fabg.fabg006=g_detail_d[l_ac].fabg006
+   END IF
+   SELECT glaacomp INTO l_glaacomp FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaald = g_input.xrcald
+   INITIALIZE g_xrca.* TO NULL
+   
+   #################
+   #160628-00015#1 mod s---
+#   LET l_sql = "SELECT glaald,glaa024,glaa003 FROM glaa_t WHERE glaaent = '",g_enterprise,"' AND (glaald = '",g_master.fabgld,"'", #160616-00005#3 add glaa024,glaa003
+#               " OR glaald IN (SELECT glaald FROM glaa_t WHERE glaaent = '",g_enterprise,"' AND glaa008 = 'Y' AND glaacomp = '",l_glaacomp,"' )) ORDER BY glaa023 "
+   LET l_sql = "SELECT glaald,glaa024,glaa003 FROM glaa_t WHERE glaaent = '",g_enterprise,"' AND glaald = '",g_master.fabgld,"'", #160616-00005#3 add glaa024,glaa003
+               " ORDER BY glaa023 "   
+   #160628-00015#1 mod e---
+   PREPARE pre_glaald FROM l_sql
+   DECLARE sel_glaald CURSOR FOR  pre_glaald
+   FOREACH  sel_glaald INTO g_xrca.xrcald,l_glaa024,l_glaa003  #160616-00005#3 add glaa024,glaa003
+   #################
+      #插入單頭
+      LET g_xrca.xrcaent = g_enterprise
+      LET g_xrca.xrcaownid = g_user
+      LET g_xrca.xrcaowndp = g_dept
+      LET g_xrca.xrcacrtid = g_user
+      LET g_xrca.xrcacrtdp = g_dept 
+      LET g_xrca.xrcacrtdt = cl_get_current()
+      LET g_xrca.xrcamodid = ""
+      LET g_xrca.xrcamoddt = ""
+      LET g_xrca.xrcastus = "N"
+      LET g_xrca.xrcacomp = l_glaacomp
+      #LET g_xrca.xrcald = g_master.fabgld  
+      #單據日期
+      LET g_xrca.xrcadocdt= g_input.xrcadocdt
+      #单据编号
+#      CALL s_aooi200_gen_docno(l_glaacomp,g_input.xrcadocno,g_input.xrcadocdt,'axrt330')      #mark by yangxf
+#      CALL s_aooi200_fin_gen_docno(g_xrca.xrcald,'','',g_input.xrcadocno,g_input.xrcadocdt,'axrt330')   #add by yangxf #20150204 g_input.xrcald-->g_xrca.xrcald #160616-00005#3 mark
+      CALL s_aooi200_fin_gen_docno(g_xrca.xrcald,l_glaa024,l_glaa003,g_input.xrcadocno,g_input.xrcadocdt,'axrt330') #160616-00005#3 add
+      RETURNING l_success,g_xrca.xrcadocno
+      IF l_success  = 0  THEN
+         #150731-00004#1 20150807 str---
+         #CALL cl_errmsg('','','','apm-00003',1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00003'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         #150731-00004#1 20150807 end---
+         #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+         LET g_success = FALSE  #151125-00006#1--add by aiqq
+         CONTINUE FOREACH       #151125-00006#1--add by aiqq
+      END IF 
+      LET g_xrca.xrca001 = '19' #其他應收帳款
+      LET g_xrca.xrcasite = g_input.xrcasite
+      LET g_xrca.xrca003 = g_user          #帳務人員
+      LET g_xrca.xrca004 = l_fabg.fabg006  #帳款客戶
+      LET g_xrca.xrca005 = l_fabg.fabg007  #收款客戶
+      LET g_xrca.xrca011 = l_fabg.fabg013  #稅別
+      CALL afap270_xrca004_ref()
+      LET g_xrca.xrca016 = '15'
+  #   LET g_xrca.xrca017 = 1  #150917 mark
+      LET g_xrca.xrca017 = 0  #150917
+      LET g_xrca.xrca018 = g_detail_d[l_ac].fabgdocno
+      LET g_xrca.xrca020 = 'N'     
+      LET g_xrca.xrca030 = 0
+      LET g_xrca.xrca031 = 0
+      LET g_xrca.xrca032 = 0
+      LET g_xrca.xrca037 = 'N'
+      LET g_xrca.xrca039 = 0
+      LET g_xrca.xrca040 = 'N'
+      LET g_xrca.xrca044 = 0
+      LET g_xrca.xrca052 = 0
+      #LET g_xrca.xrca060 = 1   #161021-00053#1 mark
+      #161021-00053#1---add---str--
+      SELECT oodb008 INTO l_oodb008
+        FROM oodb_t,ooef_t 
+       WHERE ooefent = oodbent AND oodb001 = ooef019 AND ooef001 = g_xrca.xrcacomp 
+         AND oodbent= g_enterprise AND oodb002=g_xrca.xrca011
+         
+      CASE l_oodb008
+         WHEN '1'
+            LET g_xrca.xrca060 = 2
+         WHEN '2'
+            LET g_xrca.xrca060 = 1
+         WHEN '3'
+            LET g_xrca.xrca060 = 3
+         OTHERWISE
+            LET g_xrca.xrca060 = 1         
+      END CASE
+      #161021-00053#1---add---end--
+      LET g_xrca.xrca062 = '1'
+      LET g_xrca.xrca100 = l_fabg.fabg015  #交易原幣
+      LET g_xrca.xrca101 = l_fabg.fabg016
+      SELECT DISTINCT fabo101,fabo102,fabo150,fabo151 
+        INTO g_xrca.xrca120,g_xrca.xrca121,g_xrca.xrca130,g_xrca.xrca131
+      FROM fabo_t
+      WHERE faboent=g_enterprise AND fabold=l_fabg.fabgld AND fabodocno=l_fabg.fabgdocno
+   
+      LET g_xrca.xrca103 = 0
+      LET g_xrca.xrca104 = 0
+      LET g_xrca.xrca106 = 0
+      LET g_xrca.xrca107 = 0
+      LET g_xrca.xrca108 = 0
+      LET g_xrca.xrca113 = 0
+      LET g_xrca.xrca114 = 0
+      LET g_xrca.xrca116 = 0
+      LET g_xrca.xrca117 = 0
+      LET g_xrca.xrca118 = 0
+      
+      LET g_xrca.xrca123 = 0
+      LET g_xrca.xrca124 = 0
+      LET g_xrca.xrca126 = 0
+      LET g_xrca.xrca127 = 0
+      LET g_xrca.xrca128 = 0
+   
+      LET g_xrca.xrca133 = 0
+      LET g_xrca.xrca134 = 0
+      LET g_xrca.xrca136 = 0
+      LET g_xrca.xrca137 = 0
+      LET g_xrca.xrca138 = 0
+   
+      INSERT INTO xrca_t VALUES (g_xrca.*)
+      IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN 
+         #150731-00004#1 20150807 str---
+         #CALL cl_errmsg('ins xrca_t','','',SQLCA.SQLCODE,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =SQLCA.SQLCODE
+         LET g_errparam.extend = 'ins xrca_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         #150731-00004#1 20150807 end---
+         #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+         LET g_success = FALSE  #151125-00006#1--add by aiqq
+      END IF
+   
+      #記錄第一張應收單單號
+      IF cl_null(g_input.docno_s) THEN
+         LET g_input.docno_s=g_xrca.xrcadocno
+      END IF
+   
+      #插入單身
+      LET g_sql="SELECT fabodocno,faboseq,fabo001,fabo002,fabo003,fabo005,",
+                "       fabo007,fabo009,fabo010,fabo034,fabo039,fabo040,fabo044,",
+                "       fabo012,fabo013,fabo014,fabo015,fabo016,fabo017,",
+                "       fabo103,fabo104,fabo105,fabo152,fabo153,fabo154 ",
+                "  FROM fabg_t,fabo_t",
+                " WHERE fabgent=faboent AND fabgld=fabold AND fabgdocno=fabodocno AND fabgent=",g_enterprise,
+#                "   AND fabgld='",g_master.fabgld,"' AND fabg005='4' AND fabgstus='Y' ",                     #20141213 mark by chenying
+                "   AND fabgld='",g_master.fabgld,"' AND fabg005='4' AND (fabgstus='Y' OR fabgstus='S') ",    #20141213 add by chenying
+                "   AND fabg011 IS NULL AND fabg012 IS NULL ",
+                "   AND fabg015='",g_detail_d[l_ac].fabg015,"' AND fabg013='",g_detail_d[l_ac].fabg013,"'"
+      IF g_master.type='1' THEN
+         IF g_master.fabg005 = '4' THEN 
+            LET g_sql=g_sql," AND fabgdocno='",g_detail_d[l_ac].fabgdocno,"' "
+         END IF   
+      ELSE
+         LET g_sql=g_sql," AND fabg006='",g_detail_d[l_ac].fabg006,"' "
+      END IF
+      IF NOT cl_null(g_master.wc) THEN
+         IF g_master.fabg005 = '4' THEN 
+            LET g_sql=g_sql," AND ",g_master.wc
+         ELSE
+            LET l_wc = ""
+            LET l_wc = cl_replace_str(g_master.wc,'fabgdocno','fabg019')
+            LET g_sql=g_sql," AND ",l_wc         
+         END IF    
+      END IF
+      LET g_sql=g_sql," ORDER BY fabodocno,faboseq"
+   
+      PREPARE afap270_pr1 FROM g_sql
+      DECLARE afap270_cs1 CURSOR FOR afap270_pr1
+      LET l_xrcbseq =0
+      
+      FOREACH afap270_cs1 INTO l_fabo.fabodocno,l_fabo.faboseq,l_fabo.fabo001,l_fabo.fabo002,l_fabo.fabo003,
+                               l_fabo.fabo005,l_fabo.fabo007,l_fabo.fabo009,
+                               l_fabo.fabo010,l_fabo.fabo034,l_fabo.fabo039,l_fabo.fabo040,l_fabo.fabo044,
+                               l_fabo.fabo012,l_fabo.fabo013,l_fabo.fabo014,l_fabo.fabo015,l_fabo.fabo016,
+                               l_fabo.fabo017,l_fabo.fabo103,l_fabo.fabo104,l_fabo.fabo105,l_fabo.fabo152,
+                               l_fabo.fabo153,l_fabo.fabo154
+      
+         IF SQLCA.sqlcode THEN
+            #150731-00004#1 20150807 str---
+            #CALL cl_errmsg('','foreach','',SQLCA.SQLCODE,1)
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =SQLCA.SQLCODE
+            LET g_errparam.extend = 'foreach'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            #150731-00004#1 20150807 end---
+            #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+            LET g_success = FALSE  #151125-00006#1--add by aiqq
+            EXIT FOREACH
+         END IF
+         LET l_xrcbseq = l_xrcbseq + 1
+         
+         INITIALIZE g_xrcb.* TO NULL
+         LET g_xrcb.xrcbent = g_enterprise
+         LET g_xrcb.xrcbld  = g_xrca.xrcald
+         LET g_xrcb.xrcbdocno = g_xrca.xrcadocno
+         LET g_xrcb.xrcbseq = l_xrcbseq
+         LET g_xrcb.xrcbsite= g_xrca.xrcasite    #?營運據點
+         #來源組織
+         SELECT faah028 INTO g_xrcb.xrcborga FROM faah_t
+          WHERE faahent = g_enterprise AND faah001 = l_fabo.fabo003
+            AND faah003 = l_fabo.fabo001 AND faah004 = l_fabo.fabo002
+         IF g_master.fabg005='17' AND NOT cl_null(l_fabo.fabo044) THEN
+            LET g_xrcb.xrcborga = l_fabo.fabo044
+         END IF
+         LET g_xrcb.xrcb001 = '15'          #來源類型
+         LET g_xrcb.xrcb002 = l_fabo.fabodocno #來源單號
+         LET g_xrcb.xrcb003 = l_fabo.faboseq   #來源項次
+         LET g_xrcb.xrcb004 = ''
+         LET g_xrcb.xrcb005 = ''
+         LET g_xrcb.xrcb006 = l_fabo.fabo005
+         LET g_xrcb.xrcb007 = l_fabo.fabo007
+         LET g_xrcb.xrcb008 = ''
+         LET g_xrcb.xrcb009 = ''
+         LET g_xrcb.xrcblegl= g_xrca.xrcacomp  #?核算組織
+         LET g_xrcb.xrcb010 = g_xrca.xrca015
+         LET g_xrcb.xrcb011 = g_xrca.xrca034
+         LET g_xrcb.xrcb012 = '' #產品類別
+         LET g_xrcb.xrcb013 = '' #
+         LET g_xrcb.xrcb014 = ''
+         LET g_xrcb.xrcb015 = l_fabo.fabo039 #專案代碼
+         LET g_xrcb.xrcb016 = l_fabo.fabo040 #WBS 
+         LET g_xrcb.xrcb017 = '' #預算項目
+         LET g_xrcb.xrcb018 = '' #客戶編號 
+         LET g_xrcb.xrcb019 = ''
+         LET g_xrcb.xrcb020 = l_fabo.fabo009
+         LET g_xrcb.xrcb021 = g_xrca.xrca036 
+         LET g_xrcb.xrcb022 = 1  #正負值
+         LET g_xrcb.xrcb023 = 'N'
+         LET g_xrcb.xrcb024 = l_fabo.fabo034 #區域
+         LET g_xrcb.xrcb025 = ''
+         LET g_xrcb.xrcb026 = ''
+         LET g_xrcb.xrcb027 = ''
+         LET g_xrcb.xrcb028 = ''
+         LET g_xrcb.xrcb029 = g_xrca.xrca035  #收入會計科目
+         LET g_xrcb.xrcb030 = 0
+         LET g_xrcb.xrcb031 = g_xrca.xrca008 #收款條件
+         LET g_xrcb.xrcb100 = l_fabo.fabo010
+         LET g_xrcb.xrcb101 = l_fabo.fabo014/l_fabo.fabo007 #原幣單價
+         LET g_xrcb.xrcb103 = l_fabo.fabo012
+         LET g_xrcb.xrcb104 = l_fabo.fabo013
+         LET g_xrcb.xrcb105 = l_fabo.fabo014
+         LET g_xrcb.xrcb106 = 0
+         LET g_xrcb.xrcb111 = l_fabo.fabo017/l_fabo.fabo007 #本幣單價
+         LET g_xrcb.xrcb113 = l_fabo.fabo015
+         LET g_xrcb.xrcb114 = l_fabo.fabo016
+         LET g_xrcb.xrcb115 = l_fabo.fabo017
+         LET g_xrcb.xrcb116 = 0
+         LET g_xrcb.xrcb117 = 0
+         LET g_xrcb.xrcb118 = g_xrcb.xrcb113
+         LET g_xrcb.xrcb119 = g_xrcb.xrcb115
+         LET g_xrcb.xrcb123 = l_fabo.fabo103
+         LET g_xrcb.xrcb124 = l_fabo.fabo104
+         LET g_xrcb.xrcb125 = l_fabo.fabo105
+         LET g_xrcb.xrcb126 = 0
+         LET g_xrcb.xrcb133 = l_fabo.fabo152
+         LET g_xrcb.xrcb134 = l_fabo.fabo153
+         LET g_xrcb.xrcb135 = l_fabo.fabo154
+         LET g_xrcb.xrcb136 = 0
+       
+         INSERT INTO xrcb_t VALUES (g_xrcb.*)
+         IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN 
+            #150731-00004#1 20150807 str---
+            #CALL cl_errmsg('ins xrcb_t','','',SQLCA.SQLCODE,1)
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =SQLCA.SQLCODE
+            LET g_errparam.extend = 'ins xrcb_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            #150731-00004#1 20150807 end---
+            #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+            LET g_success = FALSE  #151125-00006#1--add by aiqq 
+         END IF
+      
+         #插入多賬期（只含一期）
+         INITIALIZE g_xrcc.* TO NULL
+         LET g_xrcc.xrccent = g_enterprise
+         LET g_xrcc.xrccld  = g_xrca.xrcald
+         LET g_xrcc.xrcccomp = g_xrca.xrcacomp
+         LET g_xrcc.xrccdocno = g_xrca.xrcadocno
+         LET g_xrcc.xrccseq = g_xrcb.xrcbseq
+         LET g_xrcc.xrcc001 = 1   #期別
+         LET g_xrcc.xrcc002 = ''  #應收收款類別
+         LET g_xrcc.xrcc003 = ''  #應收款日
+         LET g_xrcc.xrcc004 = ''  #容許票據到期日
+         LET g_xrcc.xrcc005 = ''  #帳款起算日
+         LET g_xrcc.xrcclegl = '' #核算組織
+         LET g_xrcc.xrccsite = g_xrca.xrcasite #帳務中心
+         LET g_xrcc.xrcc100 = g_xrca.xrca100 #原幣
+         LET g_xrcc.xrcc101 = g_xrca.xrca101 #原幣匯率
+         LET g_xrcc.xrcc102 = 0
+         LET g_xrcc.xrcc103 = 0
+         LET g_xrcc.xrcc104 = 0
+         LET g_xrcc.xrcc105 = g_xrcb.xrcb105
+         LET g_xrcc.xrcc106 = 0
+         LET g_xrcc.xrcc107 = 0
+         LET g_xrcc.xrcc108 = g_xrcb.xrcb105
+         LET g_xrcc.xrcc109 = 0
+         LET g_xrcc.xrcc113 = 0
+         LET g_xrcc.xrcc114 = 0
+         LET g_xrcc.xrcc115 = g_xrcb.xrcb115
+         LET g_xrcc.xrcc116 = 0
+         LET g_xrcc.xrcc117 = 0
+         LET g_xrcc.xrcc118 = g_xrcb.xrcb115
+         LET g_xrcc.xrcc119 = 0
+         LET g_xrcc.xrcc120 = g_xrca.xrca120
+         LET g_xrcc.xrcc121 = g_xrca.xrca121
+         LET g_xrcc.xrcc122 = 0
+         LET g_xrcc.xrcc123 = 0
+         LET g_xrcc.xrcc124 = 0
+         LET g_xrcc.xrcc125 = g_xrcb.xrcb125
+         LET g_xrcc.xrcc126 = 0
+         LET g_xrcc.xrcc127 = 0
+         LET g_xrcc.xrcc128 = g_xrcb.xrcb125
+         LET g_xrcc.xrcc129 = 0
+         LET g_xrcc.xrcc130 = g_xrca.xrca130
+         LET g_xrcc.xrcc131 = g_xrca.xrca131
+         LET g_xrcc.xrcc132 = 0
+         LET g_xrcc.xrcc133 = 0
+         LET g_xrcc.xrcc134 = 0
+         LET g_xrcc.xrcc135 = g_xrcb.xrcb135
+         LET g_xrcc.xrcc136 = 0
+         LET g_xrcc.xrcc137 = 0
+         LET g_xrcc.xrcc138 = g_xrcb.xrcb135
+         LET g_xrcc.xrcc139 = 0
+        
+         INSERT INTO xrcc_t VALUES (g_xrcc.*)
+         IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN
+            #150731-00004#1 20150807 str---
+            #CALL cl_errmsg('ins xrcc_t','','',SQLCA.SQLCODE,1)
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =SQLCA.SQLCODE
+            LET g_errparam.extend = 'ins xrcc_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            #150731-00004#1 20150807 end---
+            #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+            LET g_success = FALSE  #151125-00006#1--add by aiqq 
+         END IF
+      
+         #插入交易明細稅
+         LET l_sql = "CREATE GLOBAL TEMPORARY TABLE afap270_detail AS ",
+                       "SELECT * FROM xrcd_t "
+         PREPARE repro_tbl1 FROM l_sql
+         EXECUTE repro_tbl1
+         FREE repro_tbl1
+   
+         #將符合條件的資料丟入TEMP TABLE
+         INSERT INTO afap270_detail SELECT * FROM xrcd_t
+                                     WHERE xrcdent = g_enterprise AND xrcdld = g_xrca.xrcald 
+                                     AND xrcddocno = l_fabo.fabodocno AND xrcdseq=l_fabo.faboseq   
+                                    
+      
+         #將key修正為調整後   
+         UPDATE afap270_detail SET xrcddocno = g_xrca.xrcadocno,
+                                   xrcdseq   = g_xrcb.xrcbseq
+              
+         #將資料塞回原table   
+         INSERT INTO xrcd_t SELECT * FROM afap270_detail
+         IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN 
+            #150731-00004#1 20150807 str---
+            #CALL cl_errmsg('upd xrcd_t','','',SQLCA.SQLCODE,1)
+            INITIALIZE g_errparam TO NULL
+            #LET g_errparam.code =SQLCA.SQLCODE  #160628-00015#1
+            LET g_errparam.code ='afa-01074'     #160628-00015#1
+            LET g_errparam.extend = 'upd xrcd_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            #150731-00004#1 20150807 end---
+            #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+            LET g_success = FALSE  #151125-00006#1--add by aiqq
+         END IF
+         #刪除TEMP TABLE
+         DROP TABLE afap270_detail
+      
+         ################
+         IF g_xrca.xrcald = g_master.fabgld THEN
+            ################
+            #更新單頭應收帳款單號
+            UPDATE fabg_t SET fabg011 = g_xrca.xrcadocno
+             WHERE fabgent=g_enterprise AND fabgld=g_xrca.xrcald 
+               AND fabgdocno=l_fabo.fabodocno 
+            IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN 
+               #150731-00004#1 20150807 str---
+               #CALL cl_errmsg('upd fabg_t','','',SQLCA.SQLCODE,1)
+               INITIALIZE g_errparam TO NULL
+               #LET g_errparam.code =SQLCA.SQLCODE  #160628-00015#1
+               LET g_errparam.code ='afa-01075'     #160628-00015#1
+               LET g_errparam.extend = 'upd fabg_t'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               #150731-00004#1 20150807 end---
+               #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+               LET g_success = FALSE  #151125-00006#1--add by aiqq 
+            END IF
+            
+            #更新單身應收帳款單號
+            UPDATE fabo_t SET fabo050 = g_xrca.xrcadocno
+             WHERE faboent=g_enterprise AND fabold=g_xrca.xrcald 
+               AND fabodocno=l_fabo.fabodocno AND faboseq=l_fabo.faboseq
+            IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN 
+               #150731-00004#1 20150807 str---
+               #CALL cl_errmsg('upd fabu_t','','',SQLCA.SQLCODE,1)
+               INITIALIZE g_errparam TO NULL
+               #LET g_errparam.code =SQLCA.SQLCODE  #160628-00015#1
+               LET g_errparam.code ='afa-01075'     #160628-00015#1
+               LET g_errparam.extend = 'upd fabu_t'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               #150731-00004#1 20150807 end---
+               #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+               LET g_success = FALSE  #151125-00006#1--add by aiqq 
+            END IF
+         ################
+         
+         END IF
+         ################
+      END FOREACH
+       
+      #判斷是否產生單身，如果有資料，匯總金額更新單頭金額，否則刪除單頭資料
+      SELECT COUNT(*) INTO l_cnt FROM xrcb_t
+       WHERE xrcbent = g_enterprise AND xrcbld = g_xrca.xrcald AND xrcbdocno = g_xrca.xrcadocno 
+      IF l_cnt > 0 THEN  
+         SELECT SUM(xrcb103),SUM(xrcb104),SUM(xrcb105),SUM(xrcb113),SUM(xrcb114),SUM(xrcb115),
+                SUM(xrcb123),SUM(xrcb124),SUM(xrcb125),SUM(xrcb133),SUM(xrcb134),SUM(xrcb135)  
+           INTO g_xrca.xrca103,g_xrca.xrca104,g_xrca.xrca108,g_xrca.xrca113,g_xrca.xrca114,g_xrca.xrca118,
+                g_xrca.xrca123,g_xrca.xrca124,g_xrca.xrca128,g_xrca.xrca133,g_xrca.xrca134,g_xrca.xrca138   
+           FROM xrcb_t
+          WHERE xrcbent = g_enterprise AND xrcbld = g_xrca.xrcald AND xrcbdocno = g_xrca.xrcadocno
+         IF cl_null(g_xrca.xrca103) THEN LET g_xrca.xrca103 = 0 END IF 
+         IF cl_null(g_xrca.xrca104) THEN LET g_xrca.xrca104 = 0 END IF 
+         IF cl_null(g_xrca.xrca108) THEN LET g_xrca.xrca108 = 0 END IF
+         IF cl_null(g_xrca.xrca113) THEN LET g_xrca.xrca113 = 0 END IF 
+         IF cl_null(g_xrca.xrca114) THEN LET g_xrca.xrca114 = 0 END IF
+         IF cl_null(g_xrca.xrca118) THEN LET g_xrca.xrca118 = 0 END IF
+         IF cl_null(g_xrca.xrca123) THEN LET g_xrca.xrca123 = 0 END IF 
+         IF cl_null(g_xrca.xrca124) THEN LET g_xrca.xrca124 = 0 END IF
+         IF cl_null(g_xrca.xrca128) THEN LET g_xrca.xrca128 = 0 END IF
+         IF cl_null(g_xrca.xrca133) THEN LET g_xrca.xrca133 = 0 END IF 
+         IF cl_null(g_xrca.xrca134) THEN LET g_xrca.xrca134 = 0 END IF
+         IF cl_null(g_xrca.xrca138) THEN LET g_xrca.xrca138 = 0 END IF
+         UPDATE xrca_t SET (xrca103,xrca104,xrca108,xrca113,xrca114,xrca118,
+                            xrca123,xrca124,xrca128,xrca133,xrca134,xrca138)
+                         = (g_xrca.xrca103,g_xrca.xrca104,g_xrca.xrca108,g_xrca.xrca113,g_xrca.xrca114,g_xrca.xrca118,
+                            g_xrca.xrca123,g_xrca.xrca124,g_xrca.xrca128,g_xrca.xrca133,g_xrca.xrca134,g_xrca.xrca138) 
+          WHERE xrcaent = g_enterprise AND xrcald = g_xrca.xrcald AND xrcadocno = g_xrca.xrcadocno
+         IF SQLCA.SQLCODE THEN 
+            #150731-00004#1 20150807 str---
+            #CALL cl_errmsg('upd xrca_t','','',SQLCA.SQLCODE,1)
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =SQLCA.SQLCODE
+            LET g_errparam.extend = 'upd xrca_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            #150731-00004#1 20150807 end---
+            #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+            LET g_success = FALSE  #151125-00006#1--add by aiqq
+         END IF
+      ELSE
+         DELETE FROM xrca_t WHERE xrcaent = g_enterprise AND xrcald = g_xrca.xrcald AND xrcadocno = g_xrca.xrcadocno
+         IF SQLCA.SQLCODE THEN 
+            #150731-00004#1 20150807 str---
+            #CALL cl_errmsg('delete xrca_t','','',SQLCA.SQLCODE,1)
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =SQLCA.SQLCODE
+            LET g_errparam.extend = 'delete xrca_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            #150731-00004#1 20150807 end---
+            #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+            LET g_success = FALSE  #151125-00006#1--add by aiqq 
+         END IF
+         
+         #160616-00005#3--add--str--
+         #刪除單號
+         IF NOT s_aooi200_fin_del_docno(g_xrca.xrcald,g_xrca.xrcadocno,g_xrca.xrcadocdt) THEN
+            LET g_success = FALSE
+         END IF
+         CONTINUE FOREACH  #无账款单身产生时，后续生产分录底稿和审核操作不用在执行
+         #160616-00005#3--add--end
+      END IF
+    
+      #151125-00006#1--add-s
+      #生成分录底稿
+      IF NOT cl_null(g_xrca.xrcadocno) AND g_xrca.xrcastus = 'N' THEN
+         #获取单别
+         CALL s_aooi200_fin_get_slip(g_xrca.xrcadocno) RETURNING l_success,l_ooba002
+         #是否抛傳票
+         CALL s_fin_get_doc_para(g_xrca.xrcald,g_xrca.xrcacomp,l_ooba002,'D-FIN-0030') RETURNING l_dfin0030
+      
+         IF g_glaa.glaa121 = 'Y' AND l_dfin0030 = 'Y' THEN
+            CALL s_pre_voucher_cre_tmp_table() RETURNING l_success
+            CALL s_pre_voucher_ins('AR','R10',g_glaald,g_xrca.xrcadocno,g_xrca.xrcadocdt,'1')
+               RETURNING l_success
+            IF NOT l_success THEN
+               LET g_success = FALSE
+            END IF
+        END IF 
+      END IF
+  
+      #应收账款立即审核
+      CALL s_fin_get_doc_para(g_xrca.xrcald,g_xrca.xrcacomp,l_ooba002,'D-FIN-0031') RETURNING l_dfin0031
+      IF NOT cl_null(l_dfin0031) AND l_dfin0031 MATCHES '[Yy]' THEN 
+         CALL s_axrp133_immediately_conf(g_xrca.xrcald,g_xrca.xrcadocno)
+               RETURNING l_conf_success
+      END IF
+      IF NOT l_conf_success  THEN 
+         LET g_success = FALSE
+      END IF 
+      #151125-00006#1--add-e
+   END FOREACH 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取帳款客戶相關資料
+# Memo...........:
+# Usage..........: CALL afap270_xrca004_ref()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_xrca004_ref()
+   DEFINE l_site    LIKE xrca_t.xrcasite
+   DEFINE l_ooba002 LIKE ooba_t.ooba002
+   DEFINE l_success LIKE type_t.num5
+
+  #SELECT DISTINCT ooag004 INTO l_site
+  #  FROM ooag_t
+  # WHERE ooag001 = g_xrca.xrca003 AND ooagstus ='Y' 
+     
+  ##抓取客戶慣用收款條件/應收帳款類別/負責業務人員/客戶慣用交易幣別  
+  #SELECT pmab087,pmab105,pmab081,pmab089
+  #  INTO g_xrca.xrca008,g_xrca.xrca007,g_xrca.xrca014,g_xrca.xrca058
+  #  FROM pmab_t
+  # WHERE pmabent = g_enterprise AND pmabsite = l_site AND pmab001 = g_xrca.xrca004 
+  #IF SQLCA.sqlcode = 100 THEN 
+      SELECT pmab087,pmab105,pmab081,pmab089
+        INTO g_xrca.xrca008,g_xrca.xrca007,g_xrca.xrca014,g_xrca.xrca058
+        FROM pmab_t
+       WHERE pmabent = g_enterprise AND pmabsite = g_xrca.xrcacomp AND pmab001 = g_xrca.xrca004    
+  #END IF
+   IF cl_null(g_xrca.xrca007) THEN 
+#      CALL s_aooi200_get_slip(g_xrca.xrcadocno) RETURNING l_success,l_ooba002           #mark by yangxf
+#      CALL s_aooi200_fin_get_slip_desc(g_xrca.xrcadocno) RETURNING l_success,l_ooba002   #add by yangxf
+       CALL s_aooi200_fin_get_slip(g_xrca.xrcadocno) RETURNING l_success,l_ooba002        #add by huangtao
+#      CALL cl_get_doc_para(g_enterprise,g_xrca.xrcacomp,l_ooba002,'S-FIN-2011') RETURNING g_xrca.xrca007
+      CALL s_fin_get_doc_para(g_xrca.xrcald,'',l_ooba002,'S-FIN-2011') RETURNING g_xrca.xrca007      
+   END IF
+  #150601-00034#1 Add  ---(S)---
+   IF NOT cl_null(g_xrca.xrca008) THEN
+      CALL s_fin_date_ar_receivable(g_xrca.xrcacomp,g_xrca.xrca004,g_xrca.xrca008,g_xrca.xrcadocdt,g_xrca.xrcadocdt,g_xrca.xrcadocdt,'') 
+         RETURNING l_success,g_xrca.xrca009,g_xrca.xrca010
+   END IF
+  #150601-00034#1 Add  ---(E)---
+   SELECT ooib025,ooib005 INTO g_xrca.xrca054,g_xrca.xrca055 FROM ooib_t
+    WHERE ooibent = g_enterprise AND ooib001 = g_xrca.xrca008
+   #應收(借方)科目編號
+#   SELECT glab005 INTO g_xrca.xrca035 FROM glab_t 
+#    WHERE glabent=g_enterprise AND glabld= g_xrca.xrcald AND glab002=g_xrca.xrca007 
+#      AND glab001='13' AND glab003 = '8304_01' 
+   SELECT glab005 INTO g_xrca.xrca035 FROM glab_t 
+    WHERE glabent=g_enterprise AND glabld= g_xrca.xrcald AND glab001='90' 
+      AND glab002='40' AND glab003 = '9902_05' 
+   #收入(貸方)科目編號
+#   SELECT glab005 INTO g_xrca.xrca036 FROM glab_t 
+#    WHERE glabent=g_enterprise AND glabld= g_xrca.xrcald AND glab002=g_xrca.xrca007 
+#     AND glab001='13' AND glab003 = '8304_21'
+   SELECT glab005 INTO g_xrca.xrca036 FROM glab_t 
+    WHERE glabent=g_enterprise AND glabld= g_xrca.xrcald AND glab001='90'
+      AND glab002='25' AND glab003 = '9902_12'
+   
+   
+   IF cl_null(g_xrca.xrca005) THEN
+      #帶出收款客戶   
+      SELECT pmac002 INTO g_xrca.xrca005
+        FROM pmac_t
+       WHERE pmacent = g_enterprise AND pmac001 = g_xrca.xrca004 
+         AND pmac003 = '1' AND pmac004 = 'Y' AND pmacstus = 'Y'
+      IF SQLCA.sqlcode = 100 THEN
+         LET g_xrca.xrca005 = g_xrca.xrca004
+      END IF  
+   END IF   
+      
+   #關係人   
+   SELECT pmaa047 INTO g_xrca.xrca046
+     FROM pmaa_t
+    WHERE pmaaent = g_enterprise AND pmaa001 = g_xrca.xrca004     
+   #稅率、含稅否
+   SELECT oodb005,oodb006 INTO g_xrca.xrca013,g_xrca.xrca012 FROM oodb_t,ooef_t 
+    WHERE ooefent = oodbent AND oodb001 = ooef019 AND ooef001 = g_xrca.xrcacomp 
+      AND oodbent= g_enterprise AND oodb002=g_xrca.xrca011
+  
+   #部門
+   SELECT ooag003 INTO g_xrca.xrca015 FROM ooag_t
+   WHERE ooagent=g_enterprise AND ooag001=g_xrca.xrca014 AND ooagstus ='Y' 
+   #責任中心
+   SELECT ooeg004 INTO g_xrca.xrca034 FROM ooeg_t WHERE ooegent = g_enterprise AND ooeg001 = g_xrca.xrca015
+     
+END FUNCTION
+
+################################################################################
+# Descriptions...: 執行插入應收應付帳款
+# Memo...........:
+# Usage..........: CALL afap270_p()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_p()
+   DEFINE l_para_data    LIKE xrca_t.xrcadocdt
+   DEFINE l_para_data1   LIKE xrca_t.xrcadocdt
+   #151125-00006#1--add--s
+   DEFINE  l_ooba002             LIKE ooba_t.ooba002
+   DEFINE  l_dfin0032            LIKE type_t.chr1
+   #151125-00006#1--add--e
+   
+   #詢問是否產生應收帳款
+   IF NOT cl_ask_confirm("afa-00158") THEN
+      RETURN
+   END IF
+   IF g_master.fabg005='4' THEN
+      CALL cl_get_para(g_enterprise,g_site,'S-FIN-2007') RETURNING l_para_data
+      #IF g_input.xrcadocdt>l_para_data THEN
+       IF g_input.xrcadocdt<=l_para_data THEN            #huangtao mod
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "asf-00008"
+         LET g_errparam.extend = g_input.xrcadocdt
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         RETURN
+      END IF
+   END IF
+   IF g_master.fabg005='17' THEN
+      LET g_input.flag1='N'
+      CALL cl_get_para(g_enterprise,g_site,'S-FIN-3007') RETURNING l_para_data1
+      IF g_input.xrcadocdt>l_para_data1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "asf-00008"
+         LET g_errparam.extend = g_input.xrcadocdt
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         RETURN
+      END IF
+   END IF
+   
+  #CALL cl_showmsg_init()       #150731-00004#1 20150807 mark
+   CALL cl_err_collect_init()   #150731-00004#1 20150807 add
+   LET g_success=TRUE
+   CALL s_transaction_begin()
+   LET g_input.docno_s=''
+   LET g_input.docno_e=''
+   LET g_input.docno_s1=''
+   LET g_input.docno_e1=''
+   FOR l_ac=1 TO g_detail_d.getLength()
+      IF g_detail_d[l_ac].sel='Y' THEN
+         CALL afap270_xrca_ins()
+         #記錄最後一張應收單單號
+         LET g_input.docno_e=g_xrca.xrcadocno
+         #當為調撥單時，同時產生應付帳款
+         IF g_master.fabg005='17' THEN
+            CALL afap270_apca_ins()
+            #記錄最後一張應付單單號
+            LET g_input.docno_e1=g_apca.apcadocno
+         END IF
+      END IF
+   END FOR
+   
+   #IF g_success='N' THEN
+   IF NOT g_success THEN           #151125-00006#1 20151221 add
+     #CALL cl_err_showmsg()        #150731-00004#1 20150807 mark
+      CALL s_transaction_end('N','1') 
+      LET g_input.docno_s=''
+      LET g_input.docno_e=''
+      LET g_input.docno_s1=''
+      LET g_input.docno_e1=''
+      CALL cl_err_collect_show()   #150731-00004#1 20150807 add
+      RETURN    
+   ELSE
+      CALL s_transaction_end('Y','1')    
+   END IF
+   
+   #151125-00006#1---add-s
+   #应收账款立即抛转
+   CALL afap270_xrca_immediately_gen()
+   #应付账款立即抛转
+   IF g_master.fabg005='17' THEN
+      CALL afap270_apca_immediately_gen()
+   END IF 
+   #资产出售立即抛转
+   CALL afap270_fabg_immediately_gen()  
+   CALL cl_err_collect_show() 
+   #151125-00006#1---add-s
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 插入應付帳款(apca_t apcb_t apcc_t)
+# Memo...........:
+# Usage..........: CALL afap270_apca_ins()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_apca_ins()
+   DEFINE l_fabg        RECORD LIKE fabg_t.*
+   DEFINE l_fabu        RECORD LIKE fabu_t.*
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_apcbseq     LIKE apcb_t.apcbseq
+   DEFINE l_cnt         LIKE type_t.num5
+   DEFINE l_oodb004     LIKE oodb_t.oodb004
+   DEFINE l_oodb011     LIKE oodb_t.oodb011
+   DEFINE l_fabo044     LIKE fabo_t.fabo044
+   DEFINE l_glaacomp    LIKE glaa_t.glaacomp
+   DEFINE l_sql         STRING
+   DEFINE l_wc          STRING
+   #151125-00006#1--add--s
+   DEFINE  l_ooba002             LIKE ooba_t.ooba002
+   DEFINE  l_dfin0030            LIKE type_t.chr1
+   DEFINE  l_dfin0031            LIKE type_t.chr1
+   #151125-00006#1--add--e
+   
+   INITIALIZE l_fabg.* TO NULL
+   LET l_fabg.fabgld=g_master.fabgld
+   LET l_fabg.fabg013=g_detail_d[l_ac].fabg013 #稅別
+   LET l_fabg.fabg015=g_detail_d[l_ac].fabg015 #幣別
+   #依單號匯總
+   IF g_master.type='1' THEN
+      LET l_fabg.fabgdocno=g_detail_d[l_ac].fabgdocno
+      SELECT fabg001,fabg006,fabg007,fabg016 
+        INTO l_fabg.fabg001,l_fabg.fabg006,l_fabg.fabg007,l_fabg.fabg016
+        FROM fabg_t
+       WHERE fabgent=g_enterprise AND fabgld=g_master.fabgld
+         AND fabgdocno=g_detail_d[l_ac].fabgdocno
+   ELSE #依帳款客戶匯總
+      LET l_fabg.fabg006=g_detail_d[l_ac].fabg006
+   END IF
+   
+   #插入單頭
+   INITIALIZE g_apca.* TO NULL
+   
+   SELECT glaacomp INTO l_glaacomp FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaald = g_input.apcald
+   LET g_apca.apcaent = g_enterprise
+   LET g_apca.apcaownid = g_user
+   LET g_apca.apcaowndp = g_dept
+   LET g_apca.apcacrtid = g_user
+   LET g_apca.apcacrtdp = g_dept 
+   LET g_apca.apcacrtdt = cl_get_current()
+   LET g_apca.apcamodid = ""
+   LET g_apca.apcamoddt = ""
+   LET g_apca.apcastus = "N"
+   LET g_apca.apcacomp = l_glaacomp
+   LET g_apca.apcald = g_input.apcald
+   #單據日期
+   LET g_apca.apcadocdt= g_input.apcadocdt
+   #单据编号
+#   CALL s_aooi200_gen_docno(l_glaacomp,g_input.xrcadocno,g_input.xrcadocdt,'axrt330')      #mark by yangxf
+   CALL s_aooi200_fin_gen_docno(g_input.xrcald,'','',g_input.xrcadocno,g_input.xrcadocdt,'axrt330')     #add by yangxf
+   RETURNING l_success,g_apca.apcadocno
+   IF l_success  = 0  THEN
+      #150731-00004#1 20150807 str---
+      #CALL cl_errmsg('','','','apm-00003',1)
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code ='apm-00003'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      #150731-00004#1 20150807 end---
+      #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+      LET g_success = FALSE  #151125-00006#1--add by aiqq
+   END IF 
+   LET g_apca.apca001 = '19' #其他應付帳款
+   LET g_apca.apcasite = g_input.apcasite
+   LET g_apca.apca003 = g_user          #帳務人員
+   LET g_apca.apca004 = l_fabg.fabg006  #帳款客戶
+   CALL afap270_apca004_ref()
+   #稅別
+   LET g_apca.apca011 = l_fabg.fabg013  #稅別
+   CALL s_tax_chk(g_apca.apcacomp,g_apca.apca011) 
+   RETURNING l_success,l_oodb004,g_apca.apca013,g_apca.apca012,l_oodb011
+   LET g_apca.apca016 = '15' #調撥單
+   LET g_apca.apca017 = 1
+   LET g_apca.apca017 = g_detail_d[l_ac].fabgdocno
+   LET g_apca.apca020 = 'N'     
+   LET g_apca.apca026 = 0
+   LET g_apca.apca027 = 0
+   LET g_apca.apca028 = 0
+   LET g_apca.apca029 = 0
+   LET g_apca.apca037 = 'N'
+   LET g_apca.apca039 = 0
+   LET g_apca.apca040 = 'N'
+   LET g_apca.apca044 = 0 
+   LET g_apca.apca052 = 0
+   LET g_apca.apca060 = 1
+   LET g_apca.apca062 = '1'
+   LET g_apca.apca100 = l_fabg.fabg015  #交易原幣
+   LET g_apca.apca101 = l_fabg.fabg016
+   SELECT DISTINCT fabu101,fabu102,fabu150,fabu151 
+     INTO g_apca.apca120,g_apca.apca121,g_apca.apca130,g_apca.apca131
+   FROM fabu_t
+   WHERE fabuent=g_enterprise AND fabuld=l_fabg.fabgld AND fabudocno=l_fabg.fabgdocno
+   
+   LET g_apca.apca103 = 0
+   LET g_apca.apca104 = 0
+   LET g_apca.apca106 = 0
+   LET g_apca.apca107 = 0
+   LET g_apca.apca108 = 0
+   LET g_apca.apca113 = 0
+   LET g_apca.apca114 = 0
+   LET g_apca.apca116 = 0
+   LET g_apca.apca117 = 0
+   LET g_apca.apca118 = 0
+      
+   LET g_apca.apca123 = 0
+   LET g_apca.apca124 = 0
+   LET g_apca.apca126 = 0
+   LET g_apca.apca127 = 0
+   LET g_apca.apca128 = 0
+   
+   LET g_apca.apca133 = 0
+   LET g_apca.apca134 = 0
+   LET g_apca.apca136 = 0
+   LET g_apca.apca137 = 0
+   LET g_apca.apca138 = 0
+   
+   INSERT INTO apca_t VALUES (g_apca.*)
+   IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN 
+      #150731-00004#1 20150807 str---
+      #CALL cl_errmsg('ins apca_t','','',SQLCA.SQLCODE,1)
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =SQLCA.SQLCODE
+      LET g_errparam.extend = 'ins apca_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      #150731-00004#1 20150807 end---
+      #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+      LET g_success = FALSE  #151125-00006#1--add by aiqq 
+   END IF
+   
+   #記錄第一張應收單單號
+   IF cl_null(g_input.docno_s1) THEN
+      LET g_input.docno_s1=g_apca.apcadocno
+   END IF
+   
+   #插入單身
+   LET g_sql="SELECT fabudocno,fabuseq,fabu001,fabu002,fabu003,fabu005,",
+             "       fabu007,fabu009,fabu010,fabu011,fabu027,fabu032,fabu033,",
+             "       fabu012,fabu013,fabu014,fabu015,fabu016,fabu017,",
+             "       fabu102,fabu103,fabu104,fabu105,fabu151,fabu152,fabu153,fabu154 ",
+             "  FROM fabg_t,fabu_t",
+             " WHERE fabgent=fabuent AND fabgld=fabuld AND fabgdocno=fabudocno AND fabgent=",g_enterprise,
+#0921
+#            "   AND fabgld='",g_master.fabgld,"' AND fabg005='4' AND fabgstus='S' ",
+#            "   AND fabg011 IS NULL AND fabg012 IS NULL ",  
+#            "   AND fabg015='",g_detail_d[l_ac].fabg015,"' AND fabg013='",g_detail_d[l_ac].fabg013,"'"
+             "   AND fabg012 IS NULL ",
+             "   AND fabgld='",g_master.fabgld,"' AND fabg005='17' AND fabgstus='Y' "
+             
+   IF g_master.type='1' THEN
+      LET g_sql=g_sql," AND fabgdocno='",g_detail_d[l_ac].fabgdocno,"' "  
+   ELSE
+      LET g_sql=g_sql," AND fabg006='",g_detail_d[l_ac].fabg006,"' "
+   END IF
+   IF NOT cl_null(g_master.wc) THEN
+      LET g_sql=g_sql," AND ",g_master.wc  
+   END IF
+   LET g_sql=g_sql," ORDER BY fabudocno,fabuseq"
+   
+   PREPARE afap270_pr2 FROM g_sql
+   DECLARE afap270_cs2 CURSOR FOR afap270_pr2
+   LET l_apcbseq =0
+   
+   FOREACH afap270_cs2 INTO l_fabu.fabudocno,l_fabu.fabuseq,l_fabu.fabu001,l_fabu.fabu002,l_fabu.fabu003,
+                            l_fabu.fabu005,l_fabu.fabu007,l_fabu.fabu009,
+                            l_fabu.fabu010,l_fabu.fabu011,l_fabu.fabu027,l_fabu.fabu032,l_fabu.fabu033,
+                            l_fabu.fabu012,l_fabu.fabu013,l_fabu.fabu014,l_fabu.fabu015,l_fabu.fabu016,
+                            l_fabu.fabu017,l_fabu.fabu102,l_fabu.fabu103,l_fabu.fabu104,l_fabu.fabu105,
+                            l_fabu.fabu151,l_fabu.fabu152,l_fabu.fabu153,l_fabu.fabu154
+
+      IF SQLCA.sqlcode THEN
+         #150731-00004#1 20150807 str---
+         #CALL cl_errmsg('foreach','','',SQLCA.SQLCODE,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =SQLCA.SQLCODE
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         #150731-00004#1 20150807 end---
+         #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+         LET g_success = FALSE  #151125-00006#1--add by aiqq
+         EXIT FOREACH
+      END IF
+      LET l_apcbseq = l_apcbseq + 1
+      
+      INITIALIZE g_apcb.* TO NULL
+      LET g_apcb.apcbent = g_enterprise
+      LET g_apcb.apcbld  = g_apca.apcald
+      LET g_apcb.apcbdocno = g_apca.apcadocno
+      LET g_apcb.apcbseq = l_apcbseq
+      LET g_apcb.apcbsite= g_apca.apcasite    #營運據點
+      #來源組織
+      SELECT fabo048 INTO g_apcb.apcborga FROM fabo_t
+      WHERE faboent=g_enterprise AND fabold=g_master.fabgld 
+      AND fabodocno=l_fabu.fabudocno AND faboseq=l_fabu.fabuseq
+      IF cl_null(g_apcb.apcborga) THEN
+         SELECT faah028 INTO g_apcb.apcborga FROM faah_t
+          WHERE faahent = g_enterprise AND faah001 = l_fabu.fabu003
+            AND faah003 = l_fabu.fabu001 AND faah004 = l_fabu.fabu002
+      END IF
+      LET g_apcb.apcb001 = 'afat505'        #來源類型
+      LET g_apcb.apcb002 = l_fabu.fabudocno #來源單號
+      LET g_apcb.apcb003 = l_fabu.fabuseq   #來源項次
+      LET g_apcb.apcb004 = ''
+      LET g_apcb.apcb005 = ''
+      LET g_apcb.apcb006 = l_fabu.fabu005
+      LET g_apcb.apcb007 = l_fabu.fabu007
+      LET g_apcb.apcb008 = ''
+      LET g_apcb.apcb009 = ''
+      LET g_apcb.apcblegl= g_apca.apcacomp  #?核算組織
+      LET g_apcb.apcb010 = g_apca.apca015
+      LET g_apcb.apcb011 = g_apca.apca034
+      LET g_apcb.apcb012 = '' #產品類別
+      LET g_apcb.apcb013 = '' #
+      LET g_apcb.apcb014 = ''
+      LET g_apcb.apcb015 = l_fabu.fabu032 #專案代碼
+      LET g_apcb.apcb016 = l_fabu.fabu033 #WBS 
+      LET g_apcb.apcb017 = '' #預算項目
+      LET g_apcb.apcb018 = '' #客戶編號 
+      LET g_apcb.apcb019 = ''
+      LET g_apcb.apcb020 = l_fabu.fabu009
+      LET g_apcb.apcb021 = g_apca.apca036 
+      LET g_apcb.apcb022 = 1  #正負值
+      LET g_apcb.apcb023 = 'N'
+      LET g_apcb.apcb024 = l_fabu.fabu027 #區域
+      LET g_apcb.apcb025 = ''
+      LET g_apcb.apcb026 = ''
+      LET g_apcb.apcb027 = ''
+      LET g_apcb.apcb028 = ''
+      LET g_apcb.apcb029 = g_apca.apca035  #收入會計科目
+      LET g_apcb.apcb030 = g_apca.apca008  #付款條件
+      LET g_apcb.apcb100 = l_fabu.fabu010
+      LET g_apcb.apcb101 = l_fabu.fabu006 #原幣單價
+      LET g_apcb.apcb102 = l_fabu.fabu011 #匯率
+      LET g_apcb.apcb103 = l_fabu.fabu012
+      LET g_apcb.apcb104 = l_fabu.fabu013
+      LET g_apcb.apcb105 = l_fabu.fabu014
+      LET g_apcb.apcb106 = 0
+      LET g_apcb.apcb107 = 0
+      LET g_apcb.apcb108 = 0
+      LET g_apcb.apcb111 = l_fabu.fabu006 #本幣單價
+      LET g_apcb.apcb113 = l_fabu.fabu015
+      LET g_apcb.apcb114 = l_fabu.fabu016
+      LET g_apcb.apcb115 = l_fabu.fabu017
+      LET g_apcb.apcb116 = 0
+      LET g_apcb.apcb117 = 0
+      LET g_apcb.apcb118 = 0
+      LET g_apcb.apcb119 = g_apcb.apcb115
+      LET g_apcb.apcb121 = l_fabu.fabu102
+      LET g_apcb.apcb123 = l_fabu.fabu103
+      LET g_apcb.apcb124 = l_fabu.fabu104
+      LET g_apcb.apcb125 = l_fabu.fabu105
+      LET g_apcb.apcb126 = 0
+      LET g_apcb.apcb127 = 0
+      LET g_apcb.apcb128 = 0
+      LET g_apcb.apcb133 = l_fabu.fabu152
+      LET g_apcb.apcb134 = l_fabu.fabu153
+      LET g_apcb.apcb135 = l_fabu.fabu154
+      LET g_apcb.apcb136 = 0
+      LET g_apcb.apcb137 = 0
+      LET g_apcb.apcb138 = 0
+      
+      INSERT INTO apcb_t VALUES (g_apcb.*)
+      IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN 
+         #150731-00004#1 20150807 str---
+         #CALL cl_errmsg('ins apcb_t','','',SQLCA.SQLCODE,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =SQLCA.SQLCODE
+         LET g_errparam.extend = 'ins apcb_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         #150731-00004#1 20150807 end---
+         #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+         LET g_success = FALSE  #151125-00006#1--add by aiqq
+      END IF
+      
+      #插入多賬期（只含一期）
+      INITIALIZE g_apcc.* TO NULL
+      LET g_apcc.apccent = g_enterprise
+      LET g_apcc.apccld  = g_apca.apcald
+      LET g_apcc.apcccomp = g_apca.apcacomp
+      LET g_apcc.apccdocno = g_apca.apcadocno
+      LET g_apcc.apccseq = g_apcb.apcbseq
+      LET g_apcc.apcc001 = 1   #期別
+      LET g_apcc.apcc002 = ''  #應付付款類別
+      LET g_apcc.apcc003 = ''  #應付款日
+      LET g_apcc.apcc004 = ''  #容許票據到期日
+      LET g_apcc.apcc005 = ''  #帳款起算日
+      LET g_apcc.apcc005 = 1   #正負值
+      LET g_apcc.apcclegl = '' #核算組織
+      LET g_apcc.apccsite = g_apca.apcasite #帳務中心
+      LET g_apcc.apcc100 = g_apca.apca100 #原幣
+      LET g_apcc.apcc101 = g_apca.apca101 #原幣匯率
+      LET g_apcc.apcc102 = 0
+      LET g_apcc.apcc103 = 0
+      LET g_apcc.apcc104 = 0
+      LET g_apcc.apcc105 = g_apcb.apcb105
+      LET g_apcc.apcc106 = 0
+      LET g_apcc.apcc107 = 0
+      LET g_apcc.apcc108 = g_apcb.apcb105
+      LET g_apcc.apcc109 = 0
+      LET g_apcc.apcc113 = 0
+      LET g_apcc.apcc114 = 0
+      LET g_apcc.apcc115 = g_apcb.apcb115
+      LET g_apcc.apcc116 = 0
+      LET g_apcc.apcc117 = 0
+      LET g_apcc.apcc118 = g_apcb.apcb115
+      LET g_apcc.apcc119 = 0
+      LET g_apcc.apcc120 = g_apca.apca120
+      LET g_apcc.apcc121 = g_apca.apca121
+      LET g_apcc.apcc122 = 0
+      LET g_apcc.apcc123 = 0
+      LET g_apcc.apcc124 = 0
+      LET g_apcc.apcc125 = g_apcb.apcb125
+      LET g_apcc.apcc126 = 0
+      LET g_apcc.apcc127 = 0
+      LET g_apcc.apcc128 = g_apcb.apcb125
+      LET g_apcc.apcc129 = 0
+      LET g_apcc.apcc130 = g_apca.apca130
+      LET g_apcc.apcc131 = g_apca.apca131
+      LET g_apcc.apcc132 = 0
+      LET g_apcc.apcc133 = 0
+      LET g_apcc.apcc134 = 0
+      LET g_apcc.apcc135 = g_apcb.apcb135
+      LET g_apcc.apcc136 = 0
+      LET g_apcc.apcc137 = 0
+      LET g_apcc.apcc138 = g_apcb.apcb135
+      LET g_apcc.apcc139 = 0
+
+      INSERT INTO apcc_t VALUES (g_apcc.*)
+      IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN
+         #150731-00004#1 20150807 str---
+         #CALL cl_errmsg('ins apcc_t','','',SQLCA.SQLCODE,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =SQLCA.SQLCODE
+         LET g_errparam.extend = 'ins apcc_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         #150731-00004#1 20150807 end---
+         #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+         LET g_success = FALSE  #151125-00006#1--add by aiqq 
+      END IF
+      
+      #插入交易明細稅
+      LET l_sql = "CREATE GLOBAL TEMPORARY TABLE afap270_detail AS ",
+                    "SELECT * FROM xrcd_t "
+      PREPARE repro_tbl2 FROM l_sql
+      EXECUTE repro_tbl2
+      FREE repro_tbl2
+   
+      #將符合條件的資料丟入TEMP TABLE
+      INSERT INTO afap270_detail SELECT * FROM xrcd_t
+                                  WHERE xrcdent = g_enterprise AND xrcdld = g_apca.apcald
+                                  AND xrcddocno = l_fabu.fabudocno AND xrcdseq2=l_fabu.fabuseq
+      
+      
+      #將key修正為調整後   
+      UPDATE afap270_detail SET xrcddocno = g_apca.apcadocno,
+                                xrcdseq   = g_apcb.apcbseq
+           
+      #將資料塞回原table   
+      INSERT INTO xrcd_t SELECT * FROM afap270_detail
+      IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN 
+         #150731-00004#1 20150807 str---
+         #CALL cl_errmsg('upd xrcd_t','','',SQLCA.SQLCODE,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =SQLCA.SQLCODE
+         LET g_errparam.extend = 'upd xrcd_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         #150731-00004#1 20150807 end---
+         #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+         LET g_success = FALSE  #151125-00006#1--add by aiqq
+      END IF
+      #刪除TEMP TABLE
+      DROP TABLE afap270_detail
+      
+      
+      #更新單頭應付帳款單號
+      UPDATE fabg_t SET fabg012 = g_apca.apcadocno
+       WHERE fabgent=g_enterprise AND fabgld=g_apca.apcald 
+         AND fabgdocno=l_fabu.fabudocno 
+      IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN 
+         #150731-00004#1 20150807 str---
+         #CALL cl_errmsg('upd fabg_t','','',SQLCA.SQLCODE,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =SQLCA.SQLCODE
+         LET g_errparam.extend = 'upd fabg_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         #150731-00004#1 20150807 end---
+         #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+         LET g_success = FALSE  #151125-00006#1--add by aiqq 
+      END IF
+      
+      #更新單身應付帳款單號
+      UPDATE fabu_t SET fabu036 = g_apca.apcadocno
+       WHERE fabuent=g_enterprise AND fabuld=g_apca.apcald 
+         AND fabudocno=l_fabu.fabudocno AND fabuseq=l_fabu.fabuseq
+      IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN 
+         #150731-00004#1 20150807 str---
+         #CALL cl_errmsg('upd fabu_t','','',SQLCA.SQLCODE,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =SQLCA.SQLCODE
+         LET g_errparam.extend = 'upd fabu_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         #150731-00004#1 20150807 end---
+         #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+         LET g_success = FALSE  #151125-00006#1--add by aiqq
+      END IF
+      
+      #151125-00006#1---add-s
+      #执行立即审核
+      CALL s_aooi200_fin_get_slip(l_fabu.fabudocno) RETURNING l_success,l_ooba002
+      CALL s_fin_get_doc_para(g_apca.apcald,g_apca.apcacomp,l_ooba002,'D-FIN-0031') RETURNING l_dfin0031
+      IF NOT cl_null(l_dfin0031) AND l_dfin0031 MATCHES '[Yy]' THEN 
+         CALL s_afat503_immediately_conf(l_fabu.fabudocno ,'',g_apca.apcald,g_apca.apcadocdt,'afap270') 
+              RETURNING l_success
+      END IF 
+      IF NOT l_success THEN
+         LET g_success = 'N'
+      END IF 
+      #151125-00006#1---add-e
+      
+   END FOREACH
+   
+   #判斷是否產生單身，如果有資料，匯總金額更新單頭金額，否則刪除單頭資料
+   SELECT COUNT(*) INTO l_cnt FROM apcb_t
+    WHERE apcbent = g_enterprise AND apcbld = g_apca.apcald AND apcbdocno = g_apca.apcadocno 
+   IF l_cnt > 0 THEN  
+      SELECT SUM(apcb103),SUM(apcb104),SUM(apcb105),SUM(apcb113),SUM(apcb114),SUM(apcb115),
+             SUM(apcb123),SUM(apcb124),SUM(apcb125),SUM(apcb133),SUM(apcb134),SUM(apcb135)  
+        INTO g_apca.apca103,g_apca.apca104,g_apca.apca108,g_apca.apca113,g_apca.apca114,g_apca.apca118,
+             g_apca.apca123,g_apca.apca124,g_apca.apca128,g_apca.apca133,g_apca.apca134,g_apca.apca138   
+        FROM apcb_t
+       WHERE apcbent = g_enterprise AND apcbld = g_apca.apcald AND apcbdocno = g_apca.apcadocno
+      IF cl_null(g_apca.apca103) THEN LET g_apca.apca103 = 0 END IF 
+      IF cl_null(g_apca.apca104) THEN LET g_apca.apca104 = 0 END IF 
+      IF cl_null(g_apca.apca108) THEN LET g_apca.apca108 = 0 END IF
+      IF cl_null(g_apca.apca113) THEN LET g_apca.apca113 = 0 END IF 
+      IF cl_null(g_apca.apca114) THEN LET g_apca.apca114 = 0 END IF
+      IF cl_null(g_apca.apca118) THEN LET g_apca.apca118 = 0 END IF
+      IF cl_null(g_apca.apca123) THEN LET g_apca.apca123 = 0 END IF 
+      IF cl_null(g_apca.apca124) THEN LET g_apca.apca124 = 0 END IF
+      IF cl_null(g_apca.apca128) THEN LET g_apca.apca128 = 0 END IF
+      IF cl_null(g_apca.apca133) THEN LET g_apca.apca133 = 0 END IF 
+      IF cl_null(g_apca.apca134) THEN LET g_apca.apca134 = 0 END IF
+      IF cl_null(g_apca.apca138) THEN LET g_apca.apca138 = 0 END IF
+      UPDATE apca_t SET (apca103,apca104,apca108,apca113,apca114,apca118,
+                         apca123,apca124,apca128,apca133,apca134,apca138)
+                      = (g_apca.apca103,g_apca.apca104,g_apca.apca108,g_apca.apca113,g_apca.apca114,g_apca.apca118,
+                         g_apca.apca123,g_apca.apca124,g_apca.apca128,g_apca.apca133,g_apca.apca134,g_apca.apca138) 
+       WHERE apcaent = g_enterprise AND apcald = g_apca.apcald AND apcadocno = g_apca.apcadocno
+      IF SQLCA.SQLCODE THEN 
+         #150731-00004#1 20150807 str---
+         #CALL cl_errmsg('upd apca_t','','',SQLCA.SQLCODE,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =SQLCA.SQLCODE
+         LET g_errparam.extend = 'upd apca_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         #150731-00004#1 20150807 end---
+         #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+         LET g_success = FALSE  #151125-00006#1--add by aiqq 
+      END IF  
+   ELSE
+      DELETE FROM apca_t WHERE apcaent = g_enterprise AND apcald = g_apca.apcald AND apcadocno = g_apca.apcadocno
+      IF SQLCA.SQLCODE THEN 
+         #150731-00004#1 20150807 str---
+         #CALL cl_errmsg('delete apca_t','','',SQLCA.SQLCODE,1)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =SQLCA.SQLCODE
+         LET g_errparam.extend = 'delete apca_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         #150731-00004#1 20150807 end---
+         #LET g_success = 'N'   #151125-00006#1--mark by aiqq
+         LET g_success = FALSE  #151125-00006#1--add by aiqq 
+      END IF      
+   END IF
+   
+   #151125-00006#1--add-s
+   #生成分录底稿
+   IF NOT cl_null(g_apca.apcadocno) AND g_apca.apcastus = 'N' THEN
+      #获取单别
+      CALL s_aooi200_fin_get_slip(g_apca.apcadocno) RETURNING l_success,l_ooba002
+      #是否抛傳票
+      CALL s_fin_get_doc_para(g_apca.apcald,g_apca.apcacomp,l_ooba002,'D-FIN-0030') RETURNING l_dfin0030
+   
+      IF l_dfin0030 = 'N' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = l_ooba002
+         LET g_errparam.code   = 'axr-00225'
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+     ELSE     
+         CALL s_pre_voucher_ins('AR','R10',g_glaald,g_apca.apcadocno,g_apca.apcadocdt,'1')
+            RETURNING l_success
+         IF NOT l_success THEN
+            LET g_success = FALSE
+         END IF
+     END IF 
+   END IF
+   #应付账款立即审核
+   CALL s_fin_get_doc_para(g_apca.apcald,g_apca.apcacomp,l_ooba002,'D-FIN-0031') RETURNING l_dfin0031
+   IF NOT cl_null(l_dfin0031) AND l_dfin0031 MATCHES '[Yy]' THEN 
+      CALL s_aapp131_immediately_conf(g_apca.apcald,g_apca.apcacomp,g_apca.apcadocno)
+            RETURNING l_success
+   END IF
+   IF NOT l_success THEN 
+      LET g_success = FALSE  
+   END IF 
+   #151125-00006#1--add-e
+END FUNCTION
+
+################################################################################
+# Descriptions...: 帳款對象帶出相關付款資料
+# Memo...........:
+# Usage..........: CALL afap270_apca004_ref()
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_apca004_ref()
+   DEFINE l_using     LIKE type_t.num5
+   DEFINE l_oodb004   LIKE oodb_t.oodb004
+   DEFINE l_oodb011   LIKE oodb_t.oodb011
+   DEFINE l_desc      STRING
+   DEFINE l_success   LIKE type_t.num5
+   
+   #付款對象
+   IF NOT cl_null(g_apca.apca004) THEN #0921
+      CALL s_apmm100_sel_pmac002(g_apca.apca004,'1') RETURNING g_apca.apca005,l_desc
+   END IF
+   
+   #抓取客戶慣用收款條件 
+   SELECT pmab037 INTO g_apca.apca008 FROM pmab_t
+    WHERE pmabent = g_enterprise AND pmabsite = g_apca.apcacomp AND pmab001 = g_apca.apca005 
+   
+   #供應商分類/企業關係人
+   SELECT pmaa080,pmaa047
+     INTO g_apca.apca006,g_apca.apca046
+     FROM pmaa_t
+    WHERE pmaaent = g_enterprise AND pmaa001 = g_apca.apca004
+   #帳款資訊
+   CALL s_aap_get_payment_term(g_apca.apcald,g_apca.apcacomp,g_apca.apca004,g_apca.apca001)
+   RETURNING l_success,g_errno,g_apca.apca007,g_apca.apca008,g_apca.apca035,
+             g_apca.apca036,g_apca.apca058,g_apca.apca100,g_apca.apca011,g_apca.apca014
+   
+   #依據付款條件帶出票到期日
+   #付款日期/票據到期日
+   CALL s_fin_date_ap_payable(g_apca.apcasite,g_apca.apca004,g_apca.apca008,g_apca.apcadocdt,
+       g_apca.apcadocdt,g_apca.apcadocdt,g_apca.apcadocdt) RETURNING g_sub_success,g_apca.apca009,g_apca.apca010
+   #多帳期設定/繳款優惠條件
+   IF NOT cl_null(g_apca.apca008) THEN
+      SELECT ooib025,ooib005 INTO g_apca.apca054,g_apca.apca055
+        FROM ooib_t
+       WHERE ooibent = g_enterprise AND ooib002 = g_apca.apca008
+   END IF
+   
+   #稅別
+   IF NOT cl_null(g_apca.apca011) THEN #0921
+      CALL s_tax_chk(g_apca.apcacomp,g_apca.apca011) 
+      RETURNING l_success,l_oodb004,g_apca.apca013,g_apca.apca012,l_oodb011
+   END IF 
+   #部門/人員
+   CALL s_employee_get_dept(g_apca.apca014)    RETURNING l_success,g_errno,g_apca.apca015,l_desc
+   #以部門去取aooi125設定的所屬責任中心,若抓不到值則帶業務部門
+   IF NOT cl_null(g_apca.apca015) THEN
+      CALL s_department_get_respon_center(g_apca.apca015,g_apca.apcadocdt)
+           RETURNING l_success,g_errno,g_apca.apca034,l_desc
+      IF NOT l_success THEN
+         LET g_apca.apca034 = g_apca.apca015
+      END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...:  
+################################################################################
+PRIVATE FUNCTION afap270_get_ooef001_wc(p_wc)
+   DEFINE p_wc       STRING
+   DEFINE r_wc       STRING
+   DEFINE tok        base.StringTokenizer
+   DEFINE l_str      STRING
+
+   LET tok = base.StringTokenizer.create(p_wc,",")
+   WHILE tok.hasMoreTokens()
+      IF cl_null(l_str) THEN
+         LET l_str = tok.nextToken()
+      ELSE
+         LET l_str = l_str,"','",tok.nextToken()
+      END IF      
+   END WHILE   
+   LET r_wc = "('",l_str,"')"
+   
+   RETURN r_wc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 立即抛转传票
+# Memo...........:
+# Usage..........: CALL afap270_fabg_immediately_gen()
+#                  RETURNING 回传参数
+# Date & Author..: 2015/12/11 By 06862
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_fabg_immediately_gen()
+   DEFINE l_fabg           RECORD LIKE fabg_t.* 
+   DEFINE l_ooba002        LIKE ooba_t.ooba002
+   DEFINE l_dfin0032       LIKE type_t.chr1
+   DEFINE l_slip           LIKE type_t.chr20   
+   DEFINE l_wc             STRING 
+   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_cate           LIKE type_t.chr10
+   DEFINE r_success        LIKE type_t.num5
+   DEFINE l_fabgmoddt      LIKE fabg_t.fabgmoddt
+   
+    
+     
+     FOR l_ac=1 TO g_detail_d.getLength()
+       IF g_detail_d[l_ac].sel='Y' THEN
+          SELECT * INTO l_fabg.* FROM fabg_t WHERE fabgent = g_enterprise
+                                  AND fabgdocno = g_detail_d[l_ac].fabgdocno AND fabgld = g_master.fabgld
+         
+          IF cl_null(l_fabg.fabgdocno) THEN RETURN END IF     #无此单号不做处理
+          IF cl_null(l_fabg.fabgld) THEN RETURN END IF        #无账套不做处理  
+          IF l_fabg.fabgstus != 'Y' THEN RETURN END IF        #未审核不做处理
+          IF NOT cl_null(l_fabg.fabg008) THEN RETURN END IF   #已有传票不做处理
+          
+          #获取单别
+          CALL s_aooi200_fin_get_slip(l_fabg.fabgdocno) RETURNING l_success,l_ooba002 
+         
+          #判断是否可直接抛转
+          CALL s_fin_get_doc_para(l_fabg.fabgld,l_fabg.fabgcomp,l_ooba002,'D-FIN-0032') RETURNING l_dfin0032
+          
+          #获取默认单别
+          CALL s_fin_get_doc_para(l_fabg.fabgld,l_fabg.fabgcomp,l_ooba002,'D-FIN-2002') RETURNING l_slip
+          
+          #不存在默认单别，不抛转
+          IF cl_null(l_slip) THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "" 
+             LET g_errparam.code   = "axr-00987" 
+             LET g_errparam.popup  = TRUE 
+             CALL cl_err()
+             EXIT FOR 
+          END IF  
+          
+          DROP TABLE s_pre_vr_tmp01;    #160727-00019#34   16/08/15 By 08734      临时表长度超过15码的减少到15码以下 s_pre_voucher_tmp ——> s_pre_vr_tmp01                        
+          CALL s_pre_voucher_cre_tmp_table() RETURNING l_success 
+         
+          CASE l_fabg.fabg005
+              WHEN '0'
+                 LET l_cate =  'F30'  
+              WHEN '4'
+                 LET l_cate =  'F40'  
+              WHEN '6'
+                 LET l_cate =  'F50'  
+              WHEN '8'
+                 LET l_cate =  'F50' 
+              WHEN '14'
+                 LET l_cate =  'F50'  
+              WHEN '21'
+                 LET l_cate =  'F50'
+              WHEN '9'
+                 LET l_cate =  'F50'   
+              WHEN '31'              
+                 LET l_cate =  'F50'    
+              OTHERWISE                          
+                 LET l_cate =  'F50'             
+           END CASE  
+          
+           SELECT * INTO g_glaa.* FROM glaa_t WHERE glaaent = g_enterprise AND glaald = l_fabg.fabgld
+           IF g_glaa.glaa121 = 'Y' THEN 
+              CALL s_transaction_begin()
+              CALL cl_err_collect_init() 
+                           
+              LET l_wc =" glgbdocno IN ('",l_fabg.fabgdocno,"')"     
+                
+              CALL s_pre_voucher_ins_glap('FA',l_cate,l_fabg.fabgld,l_fabg.fabgdocdt,l_slip,g_master.type,l_wc) 
+                   RETURNING r_success,l_fabg.fabg008,l_fabg.fabg008
+           ELSE 
+              CALL afap280_01_p(l_fabg.fabg005,l_fabg.fabgld,g_master.type,l_slip,l_fabg.fabgdocdt) 
+                   RETURNING l_fabg.fabg008,l_fabg.fabg008
+           END IF  
+           
+           #更新传票单号
+           LET l_fabgmoddt = cl_get_current()
+           UPDATE fabg_t SET fabg008 = r_start_no,
+                             fabgmodid= g_user,
+                             fabgmoddt= l_fabgmoddt
+                       WHERE fabgent = g_enterprise
+                         AND fabgdocno = l_fabg.fabgdocno                 
+           IF SQLCA.sqlcode THEN
+              INITIALIZE g_errparam TO NULL 
+              LET g_errparam.extend = "" 
+              LET g_errparam.code   = SQLCA.sqlcode 
+              LET g_errparam.popup  = FALSE 
+              CALL cl_err()
+              LET r_success = FALSE
+           END IF
+           
+           IF r_success THEN
+              CALL s_transaction_end('Y','1')
+           ELSE
+              IF cl_null(l_fabg.fabg008) THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = SQLCA.sqlcode
+                 LET g_errparam.extend = ''
+                 LET g_errparam.code   = 'axc-00530' 
+                 LET g_errparam.popup = TRUE
+                 CALL cl_err()
+              ELSE
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = SQLCA.sqlcode
+                 LET g_errparam.extend = ''
+                 LET g_errparam.code   = 'axr-00120' 
+                 LET g_errparam.popup = TRUE
+                 CALL cl_err()
+              END IF
+              CALL s_transaction_end('N','0')    
+           END IF
+                    
+       END IF 
+       
+     END FOR 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 应付账款立即抛转
+# Memo...........:
+# Usage..........: CALL afap270_xrca_immediately_gen()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/12/14 By 06862
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_xrca_immediately_gen()
+    DEFINE l_xrca       RECORD LIKE xrca_t.*
+    DEFINE l_sql        STRING 
+    DEFINE l_ooba002    LIKE ooba_t.ooba002
+    DEFINE l_dfin0032   LIKE type_t.chr1
+    DEFINE l_gl_slip    LIKE type_t.chr20
+    DEFINE l_success    LIKE type_t.num5
+    DEFINE l_glaa121    LIKE glaa_t.glaa121
+    DEFINE r_success    LIKE type_t.num5
+    DEFINE r_start_no   LIKE xrca_t.xrcadocno
+    DEFINE r_end_no     LIKE xrca_t.xrcadocno
+    DEFINE l_wc         STRING 
+    DEFINE l_xrcamoddt  LIKE xrca_t.xrcamoddt
+    
+    
+    FOR l_ac=1 TO g_detail_d.getLength()
+      IF g_detail_d[l_ac].sel='Y' THEN
+         SELECT * INTO l_xrca.* FROM xrca_t 
+                               WHERE xrcaent = g_enterprise
+                                 AND xrcadocno in 
+                                 (select fabg011 FROM fabg_t WHERE fabgent = g_enterprise AND fabgdocno = g_detail_d[l_ac].fabgdocno AND fabgld = g_master.fabgld) 
+   
+           #获取单别
+           CALL s_aooi200_fin_get_slip(l_xrca.xrcadocno) RETURNING l_success,l_ooba002
+           #是否可立即抛转
+           CALL s_fin_get_doc_para(l_xrca.xrcald,l_xrca.xrcacomp,l_ooba002,'D-FIN-0032') RETURNING l_dfin0032
+           #抛转默认单据别
+           CALL s_fin_get_doc_para(l_xrca.xrcald,l_xrca.xrcacomp,l_ooba002,'D-FIN-2002') RETURNING l_gl_slip
+           IF NOT cl_null(l_gl_slip) THEN 
+              IF NOT cl_null(l_dfin0032) AND l_dfin0032 MATCHES '[Yy]' THEN 
+              
+                     IF cl_null(l_xrca.xrcald)    THEN RETURN END IF   #無資料直接返回不做處理
+                     IF cl_null(l_xrca.xrcadocno) THEN RETURN END IF   #無資料直接返回不做處理
+                     IF l_xrca.xrcastus <> 'Y' THEN RETURN END IF      #未审核直接返回不做处理
+                     
+                     CALL s_transaction_begin()
+                     
+                     #是否产生分录底稿
+                     SELECT glaa121 INTO l_glaa121
+                       FROM glaa_t
+                      WHERE glaaent = g_enterprise
+                        AND glaald = l_xrca.xrcald
+                        
+                     IF l_glaa121 = 'Y' THEN 
+                        LET l_wc =" xrcadocno = '",l_xrca.xrcadocno,"' "
+                        CALL s_voucher_gen_ar('1',l_xrca.xrcald,l_xrca.xrcadocdt,l_gl_slip,1,l_wc,'N') 
+                             RETURNING r_success,r_start_no,r_end_no
+                     END IF
+                    
+                     #更新传票单号
+                     LET l_xrcamoddt = cl_get_current()
+                     UPDATE xrca_t SET xrca038 = r_start_no,
+                                       xrcamodid= g_user,
+                                       xrcamoddt= l_xrcamoddt
+                                 WHERE xrcaent = g_enterprise
+                                   AND xrcadocno = l_xrca.xrcadocno                 
+                     IF SQLCA.sqlcode THEN
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = "" 
+                        LET g_errparam.code   = SQLCA.sqlcode 
+                        LET g_errparam.popup  = FALSE 
+                        CALL cl_err()
+                        LET r_success = FALSE
+                     END IF
+                     
+                     IF r_success THEN
+                        CALL s_transaction_end('Y','1')
+                     ELSE
+                        IF cl_null(r_start_no) THEN 
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = SQLCA.sqlcode
+                           LET g_errparam.extend = ''
+                           LET g_errparam.code   = 'axc-00530' 
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                        ELSE
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = SQLCA.sqlcode
+                           LET g_errparam.extend = ''
+                           LET g_errparam.code   = 'axr-00120' 
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                        END IF
+                        CALL s_transaction_end('N','0')    
+                     END IF
+              END IF  
+           END IF 
+      END IF 
+           
+   END FOR    
+        
+END FUNCTION
+
+################################################################################
+# Descriptions...: 应付账款立即抛转
+# Memo...........:
+# Usage..........: CALL afap270_apca_immediately_gen()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/12/14 By 06862
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap270_apca_immediately_gen()
+    DEFINE l_apca       RECORD LIKE apca_t.*
+    DEFINE l_sql        STRING 
+    DEFINE l_ooba002    LIKE ooba_t.ooba002
+    DEFINE l_dfin0032   LIKE type_t.chr1
+    DEFINE l_gl_slip    LIKE type_t.chr20
+    DEFINE l_success    LIKE type_t.num5
+
+    FOR l_ac=1 TO g_detail_d.getLength()
+      IF g_detail_d[l_ac].sel='Y' THEN
+         SELECT * INTO l_apca.* FROM apca_t 
+                               WHERE apcaent = g_enterprise
+                                 AND apcadocno in 
+                                 (select fabg012 FROM fabg_t WHERE fabgent = g_enterprise AND fabgdocno = g_detail_d[l_ac].fabgdocno AND fabgld = g_master.fabgld) 
+            CALL s_aapp131_immediately_gen(l_apca.apcald,l_apca.apcacomp,l_apca.apcadocno)
+       END IF 
+    END FOR
+    
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

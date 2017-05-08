@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt005" module="apm" jobmode="N" type="i12" industry="std" fix_arg="1" crtid="00593" crtdt="2015-09-07 12:10:56" modid="00593" moddt="2015-09-16 02:12:02" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="交易對象聯絡人申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmbjdocno,pmbjdocno_desc(chr80),pmbj001,pmbal003(chr500),pmaa002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmbjstus,pmbj003,pmbj003_desc(chr500),pmbj002,pmbj009,pmbj010,pmbj011,pmbj012,pmbj013,pmbj014,pmbj004,pmbj005,pmbj006,pmbj007,pmbj008,pmbj015"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="aooi350_01"/>
+      <action id="aooi350_02"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt005" method="dialog">
+    <section id="input">
+      <input id="head" field="pmbjdocno,pmbj001,pmbal003,pmaa002"/>
+      <input id="body" page="1" field="pmbjstus,pmbj003,pmbj002,pmbj009,pmbj010,pmbj011,pmbj012,pmbj013,pmbj014,pmbj004,pmbj005,pmbj006,pmbj007,pmbj008,pmbj015" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmbjdocno,pmbjdocno_desc,pmbj001"/>
+      <construct id="body" page="1" field="pmbjstus,pmbj003,pmbj002,pmbj009,pmbj010,pmbj011,pmbj012,pmbj013,pmbj014,pmbj004,pmbj005,pmbj006,pmbj007,pmbj008,pmbj015"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmbjdocno"/>
+      <set id="head" type="no_entry" field="pmbjdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmbjdocno">
+        <after/>
+        <controlp form="q_pmbadocno" state="i"/>
+        <controlp form="q_pmbadocno" state="c"/>
+      </column>
+      <column id="pmbjdocno_desc"/>
+      <column id="pmbj001">
+        <controlp form="q_pmaa001_4" state="i"/>
+        <controlp form="q_pmaa001_4" state="c"/>
+      </column>
+      <column id="pmbal003"/>
+      <column id="pmaa002" def_scc="2014"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmbjstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmbj003">
+        <after>
+          <reference field="pmbj003_desc" ref_field="pmbj003" map_field="pmbj003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;259&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmbj003_desc"/>
+      <column id="pmbj002"/>
+      <column id="pmbj009"/>
+      <column id="pmbj010"/>
+      <column id="pmbj011"/>
+      <column id="pmbj012"/>
+      <column id="pmbj013"/>
+      <column id="pmbj014"/>
+      <column id="pmbj004" type="S" default="N"/>
+      <column id="pmbj005" type="S" default="N"/>
+      <column id="pmbj006"/>
+      <column id="pmbj007"/>
+      <column id="pmbj008"/>
+      <column id="pmbj015"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmbj_t" pk="pmbjdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT pmbjdocno,&apos;&apos;,pmbj001,&apos;&apos;,&apos;&apos; FROM pmbj_t WHERE pmbjent= ? AND pmbjdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmbjdocno,&apos;&apos;,pmbj001,&apos;&apos;,&apos;&apos; FROM pmbj_t" order="pmbjdocno"/>
+    </head>
+    <body id="pmbj_t" page="1" linked="" pk="pmbj002" fk="pmbjdocno">
+      <sql id="forupd_sql_detail" query="SELECT pmbjstus,pmbj003,&apos;&apos;,pmbj002,pmbj009,pmbj010,pmbj011,pmbj012,pmbj013,pmbj014,pmbj004,pmbj005,pmbj006,pmbj007,pmbj008,pmbj015 FROM pmbj_t WHERE pmbjent=? AND pmbjdocno=? AND pmbj002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmbjstus,pmbj003,&apos;&apos;,pmbj002,pmbj009,pmbj010,pmbj011,pmbj012,pmbj013,pmbj014,pmbj004,pmbj005,pmbj006,pmbj007,pmbj008,pmbj015 FROM pmbj_t WHERE pmbjent= ? AND pmbjdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

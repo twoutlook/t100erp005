@@ -1,0 +1,344 @@
+<spec prog="adep600" std_prog="adep600" erpver="1.0" ver="1" module="ADE" type="M" booking="Y" class="p" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="P" status="" />
+    <free_style value="N" status="" />
+  </other>
+  <toolbar items="output" />
+  <prog_rel>
+    <pfield src="s" ver="1" name="type2" depend_field="type2" program="" type="1" cite_std="N" status="d" />
+    <pfield src="s" ver="1" name="dema_t.deam002" depend_field="dema_t.deam002" program="" type="1" cite_std="N" status="d" />
+    <pfield src="s" ver="1" name="type1" depend_field="type1" program="" type="1" cite_std="N" status="d" />
+    <pfield src="s" ver="1" name="dema_t.demasite" depend_field="dema_t.demasite" program="" type="1" cite_std="N" status="d" />
+    <pfield src="s" ver="1" name="dema_t.dema002" depend_field="dema_t.dema002" program="" type="1" cite_std="N" status="d" />
+  </prog_rel>
+  <ref_field />
+  <multi_lang />
+  <help_code>
+    <hfield src="s" ver="1" name="dema_t.demasite" help_table="" help_find="" help_dlang="" help_field="" mapping_widget="" help_wc="" cite_std="N" status="u" />
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr="" />
+    <sfield name="group_qbe" text="QBE條件" lstr="" />
+    <sfield name="group_input" text="處理條件" lstr="u" />
+    <sfield name="group_progress" text="處理進度" lstr="" />
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr="" />
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr="" />
+    <sfield name="scheduling_page" text="排程設定" lstr="" />
+    <sfield name="history_page" text="執行歷程" lstr="" />
+    <sfield name="lbl_demasite" text="日結銷售組織" comment="" lstr="u" />
+    <sfield name="cmt_demasite" text="cmt_demasite" comment="" lstr="d" />
+    <sfield name="lbl_dema002" text="日結日期" comment="" lstr="u" />
+    <sfield name="cmt_dema002" text="cmt_dema002" comment="" lstr="d" />
+    <sfield name="lbl_type1" text="銷售組織往下展開" comment="" lstr="u" />
+    <sfield name="cmt_type1" text="cmt_type1" comment="" lstr="d" />
+    <sfield name="lbl_type2" text="已存在日結資料刪除重新結算" comment="" lstr="u" />
+    <sfield name="cmt_type2" text="cmt_type2" comment="" lstr="d" />
+  </strings>
+  <sa_spec />
+  <table ver="" cite_std="N" />
+  <all cite_std="N" ver="" src="" status="u">
+<![CDATA[程式說明及目的： 經銷商銷售日結批次處理
+作業功能：說明/離開
+作業類型：批次作業
+輸入模式： 
+作業資料來源(Master)：
+ 資料來源表：pmaa_t(交易對象主檔)
+                         imay_t(商品條碼檔)
+                         imaa_t(料件主檔)
+                         ooef_t(組織基本資料檔)
+                         imag_t(料件據點財務檔)
+                         xmda_t(訂單單頭檔)
+                         xmdd_t(訂單交期明細檔)
+                         xmdk_t(出貨/簽收/銷退單單頭檔)
+                         xmdl_t(出貨/簽收/銷退單單身明細檔)
+              寫入: dema_t(經銷商日銷售統計檔)
+                        demb_t(經銷商單品日銷售統計檔)
+
+
+
+依畫面QBE條件，分三段抓取出貨資料，銷售資料及銷退資料
+條件對應：出貨單/銷退單：日結銷售組織= 銷售組織:xmdl212  ,日結日期 = 扣帳日期 xmdk001
+          訂單：日結銷售組織= 銷售組織:xmddsite  ,日結日期 = 單據日期 xmdadocdt ,抓取已訂未出的資料
+            
+
+
+1.抓取數據寫到暫存檔
+ 1-1.出貨資料： 取出貨單  xmdk_t/xmdl_t
+   (單據性質<>'5.出貨簽退單' AND 單據性質<>'6.銷退單') AND      <--1.非簽退/銷退單
+   (((出貨性質<>'簽收單') AND (經營方式<>'寄銷') AND (銷售組織<>空白 或 NULL) AND (狀態='已扣帳')) OR <--2.非簽收的出貨單，且非寄銷，銷售組織有值
+   (出貨性質 ='寄銷正式出貨單') AND (狀態='已確認' OR  狀態='已扣帳'))  <--正式寄銷出貨單
+
+
+     銷售組織     =[T:出貨/簽收/銷退單單身明細檔][C:銷售組織] xmdl212
+     客戶經營類型 =依經銷商取對應的[T:pmaa_t交易對象主檔][C:客戶經營類型pmaa092]
+     日結日期     =[T:出貨/簽收/銷退單單頭檔][C:扣帳日期] xmdk001
+     會計週       =取日結日期對應會計週
+     會計期       =取日結日期對應會計期
+     經銷商編號   =[T:出貨/簽收/銷退單單頭檔][C:訂單客戶]
+     合同編號     =[T:出貨/簽收/銷退單單身明細檔][C:合同編號]
+     經營方式     =[T:出貨/簽收/銷退單單身明細檔][C:經營方式]
+     結算類型     =[T:出貨/簽收/銷退單單身明細檔][C:結算類型]
+     結算方式     =[T:出貨/簽收/銷退單單身明細檔][C:結算方式]
+     商品編號     =[T:出貨/簽收/銷退單單身明細檔][C:料件編號]
+     商品條碼     =[T:商品條碼檔][C:料件編號] WHERE [C:主條碼]='Y'
+     品牌         =[T:料件主檔][C:品牌]
+     稅別編號     =[T:出貨/簽收/銷退單單身明細檔][C:稅別]
+     本幣幣別     =[T:組織基本資料檔][C:主幣別編號]
+     銷售單位     =[T:出貨/簽收/銷退單單身明細檔][C:出貨單位]
+     成本單位     =依營運據點取[T:料件據點財務檔][C:成本單位]
+     成本單價     =未確認先不處理
+
+     ======出貨========= 
+     銷售數量               =[T:出貨/簽收/銷退單單身明細檔][C:數量]
+     進價成本金額           =成本單價*銷售數量*銷售單位成本單位換算率
+
+     銷貨標準售價金額(未稅) =IF 含稅否='N' LET [T:出貨/簽收/銷退單單身明細檔][C:標準價]*[T:出貨/簽收/銷退單單身明細檔][C:數量] 
+                                       'Y' CALL s_tax應用元件中的計算元件抓取未稅金額
+     銷貨標準售價金額(含稅) =IF 含稅否='Y' LET [T:出貨/簽收/銷退單單身明細檔][C:標準價]*[T:出貨/簽收/銷退單單身明細檔][C:數量] 
+                                       'N' CALL s_tax應用元件中的計算元件抓取含稅金額 
+     銷貨折扣金額           =[T:出貨/簽收/銷退單單身明細檔][C:折價金額]
+     銷貨實收金額(未稅)     =[T:出貨/簽收/銷退單單身明細檔][C:未稅金額]
+     銷貨實收金額(含稅)     =[T:出貨/簽收/銷退單單身明細檔][C:含稅金額]
+     毛利額                 =0  //(第二輪計算)銷售實收金額(含稅) - 進價成本金額  
+     毛利率                 =0  //(第二輪計算)(毛利額/進價成本金額) * 100
+     促銷銷售數量           =[T:出貨/簽收/銷退單單身明細檔][C:數量]      WHERE [C:折價金額]<>0
+     促銷應收金額(未稅)     =[T:出貨/簽收/銷退單單身明細檔][C:未稅金額]  WHERE [C:折價金額]<>0
+     促銷應收金額(含稅)     =[T:出貨/簽收/銷退單單身明細檔][C:含稅金額]  WHERE [C:折價金額]<>0
+     ======銷退============
+     退貨數量               =0
++    退貨標準售價金額(未稅) =0
++    退貨標準售價金額(含稅) =0
++    退貨折扣金額           =0
++    退貨實退金額(未稅)     =0
++    退貨實退金額(含稅)     =0
++    銷售標準售價淨額(未稅) =0
++    銷售標準售價淨額(含稅) =0
++    銷售折扣淨             =0
++    銷售實收淨額(未稅)     =0
++    銷售實收淨額(含稅)     =0
+
+     ======訂單============
+     訂貨數量               =0
++    訂貨標準售價金額(未稅) =0
+     訂貨標準售價金額(含稅) =0
+     訂貨折扣金額           =0
++    訂貨實收金額(未稅)     =0
+     訂貨實收金額(含稅)     =0
+  
+
+
+
+
+ 1-2.取訂單xmda_t/xmdd_t  (營運據點其對應組織='銷售組織') AND  (狀態='已確認')  AND (分批訂購數量 - 已出貨數量 + 銷退換貨數量) > 0
+     銷售組織       =[T:訂單交期明細檔][C:營運據點] xmddsite
+     客戶經營類型   =依經銷商取對應的[T:pmaa_t交易對象主檔][C:客戶經營類型pmaa092]
+     日結日期       =[T:訂單單頭檔][C:單據日期]xmdadocdt
+     會計週         =取日結日期對應會計週
+     會計期         =取日結日期對應會計期
+     經銷商編號     =[T:訂單單頭檔][C:客戶編號]
+     合同編號       =[T:訂單交期明細檔][C:合同編號]
+     經營方式       =[T:訂單交期明細檔][C:經營方式]
+     結算類型       =[T:訂單交期明細檔][C:結算類型]
+     結算方式       =[T:訂單交期明細檔][C:結算方式]
+     商品編號       =[T:訂單交期明細檔][C:料件編號]
+     特徵碼         =[T:訂單交期明細檔][C:特徵碼] 
+     商品條碼       =[T:商品條碼檔][C:料件編號] WHERE [C:主條碼]='Y'
+     品牌           =[T:料件主檔][C:品牌]
+     稅別編號       =[T:訂單交期明細檔][C:稅別]
+     本幣幣別       =[T:組織基本資料檔][C:主幣別編號]
+     銷售單位       =[T:訂單交期明細檔][C:銷售單位] 
+     成本單位       =依營運據點取[T:料件據點財務檔][C:成本單位] IF 據點抓不到，抓ALL 的資料
+     成本單價       =未確認先不處理
+     ======出貨============
+     銷售數量               =0
+     進價成本金額           =0
+     銷貨標準售價金額(未稅) =0
+     銷貨標準售價金額(含稅) =0
+     銷貨折扣金額           =0
+     銷貨實收金額(未稅)     =0
+     銷貨實收金額(含稅)     =0
+     毛利額                 =0
+     毛利率                 =0
+     促銷銷售數量           =0
+     促銷應收金額(未稅)     =0
+     促銷應收金額(含稅)     =0
+     ======銷退==============
+     退貨數量               =0
++    退貨標準售價金額(未稅) =0
++    退貨標準售價金額(含稅) =0
++    退貨折扣金額           =0
++    退貨實退金額(未稅)     =0
++    退貨實退金額(含稅)     =0
++    銷售標準售價淨額(未稅) =0
++    銷售標準售價淨額(含稅) =0
++    銷售折扣淨             =0
++    銷售實收淨額(未稅)     =0
++    銷售實收淨額(含稅)     =0
+     ======訂單==============
+     訂貨數量               =(分批訂購數量 - 已出貨數量 + 銷退換貨數量)  //已訂未出的數量
++    訂貨標準售價金額(未稅) =IF 含稅否='N' LET [T:訂單交期明細檔][C:標準價]*[T:訂單交期明細檔][C:數量] 
+                                       'Y' CALL s_tax 中的應用元件抓取未稅金額
+
+     訂貨標準售價金額(含稅) =IF 含稅否='Y' LET [T:訂單交期明細檔][C:標準價]*[T:訂單交期明細檔][C:數量] 
+                                       'N' CALL s_tax 中的應用元件抓取含稅金額
+
+     訂貨折扣金額           =[T:訂單交期明細檔][C:折價金額]
++    訂貨實收金額(未稅)     =[T:訂單交期明細檔][C:分批未稅金額]
+     訂貨實收金額(含稅)     =[T:訂單交期明細檔][C:分批含稅金額]
+ 
+
+
+ 1-3.取銷退單   (單據性質='5.出貨簽退單' OR 單據性質='6.銷退單') AND (營運據點其對應組織='銷售組織') AND  (狀態='已扣帳')
+     銷售組織     =[T:出貨/簽收/銷退單單頭檔][C:銷售組織] xmdl212
+     客戶經營類型 =依經銷商取對應的[T:pmaa_t交易對象主檔][C:客戶經營類型pmaa092]
+     日結日期     =[T:出貨/簽收/銷退單單頭檔][C:扣帳日期] xmdk001
+     會計週       =取日結日期對應週
+     會計期       =取日結日期對應期
+     經銷商編號   =[T:出貨/簽收/銷退單單頭檔][C:訂單客戶]
+     合同編號     =[T:出貨/簽收/銷退單單身明細檔][C:合同編號]
+     經營方式     =[T:出貨/簽收/銷退單單身明細檔][C:經營方式]
+     結算類型     =[T:出貨/簽收/銷退單單身明細檔][C:結算類型]
+     結算方式     =[T:出貨/簽收/銷退單單身明細檔][C:結算方式]
+     商品編號     =[T:出貨/簽收/銷退單單身明細檔][C:料件編號]
+     商品條碼     =[T:商品條碼檔][C:料件編號] WHERE [C:主條碼]='Y'
+     品牌         =[T:料件主檔][C:品牌]
+     稅別編號     =[T:出貨/簽收/銷退單單身明細檔][C:稅別]
+     本幣幣別     =[T:組織基本資料檔][C:主幣別編號]
+     銷售單位     =[T:出貨/簽收/銷退單單身明細檔][C:出貨單位]
+     成本單位     =依營運據點取[T:料件據點財務檔][C:成本單位]
+     成本單價     =未確認先不處理
+     =====銷售===========
+     銷售數量               =0
+     進價成本金額           =0
+     銷貨標準售價金額(未稅) =0
+     銷貨標準售價金額(含稅) =0
+     銷貨折扣金額           =0
+     銷貨實收金額(未稅)     =0
+     銷貨實收金額(含稅)     =0
+     毛利額                 =0
+     毛利率                 =0
+     促銷銷售數量           =0
+     促銷應收金額(未稅)     =0
+     促銷應收金額(含稅)     =0
+     ======銷退=======
+ 
++    退貨標準售價金額(未稅) =IF 含稅='N' [T:出貨/簽收/銷退單單身明細檔][C:標準價]*[T:出貨/簽收/銷退單單身明細檔][C:數量]
+                                     'Y'  CALL s_tax 中的應用元件抓取未稅金額
++    退貨標準售價金額(含稅) =IF 含稅='Y' [T:出貨/簽收/銷退單單身明細檔][C:標準價]*[T:出貨/簽收/銷退單單身明細檔][C:數量]
+                                     'N'  CALL s_tax 中的應用元件抓取含稅金額
++    退貨折扣金額           =[T:出貨/簽收/銷退單單身明細檔][C:折價金額]
++    退貨實退金額(未稅)     =[T:出貨/簽收/銷退單單身明細檔][C:未稅金額]
++    退貨實退金額(含稅)     =[T:出貨/簽收/銷退單單身明細檔][C:含稅金額]
+
++    銷售標準售價淨額(未稅) =匯總再計算(銷售-銷退)
++    銷售標準售價淨額(含稅) =匯總再計算(銷售-銷退)
++    銷售折扣淨額           =匯總再計算(銷售-銷退)
++    銷售實收淨額(未稅)     =匯總再計算(銷售-銷退)
++    銷售實收淨額(含稅)     =匯總再計算(銷售-銷退)
+
+     ======訂單=======
+     訂貨數量               =0
++    訂貨標準售價金額(未稅) =0
+     訂貨標準售價金額(含稅) =0
+     訂貨折扣金額           =0
++    訂貨實收金額(未稅)     =0
+     訂貨實收金額(含稅)     =0
+  
+  
+
+
+2.暫存檔匯整-經銷商單品日銷售統計檔demb_t
+ 2-1.依下方欄位匯總寫入[T:經銷商單品日銷售統計檔 demb_t]
+     銷售組織   
+     客戶經營類型
+     日結日期     
+     會計週      
+     會計期       
+     經銷商編號 
+     合同編號 
+     經營方式   
+     結算類型   
+     結算方式    
+     商品編號    
+     商品條碼   
+     品牌         
+     稅別編號
+     本幣幣別    
+     銷售單位    
+     成本單位     
+     成本單價   
+     ======除下列欄位外其餘均加總=========================
+     毛利額             =銷售實收金額(含稅) - 進價成本金額  
+     毛利率             =(毛利額/進價成本金額) * 100
++    銷售標準售價淨額(未稅) =銷售標準售價淨額(未稅) - 退貨標準售價淨額(未稅)
++    銷售標準售價淨額(含稅) =銷售標準售價淨額(含稅) - 退貨標準售價淨額(含稅)
++    銷售折扣淨額           =銷貨折扣金額-銷退折扣金額
++    銷售實收淨額(未稅)     =銷貨實收金額(未稅) - 退貨金額(未稅)
++    銷售實收淨額(含稅)     =銷貨實收金額(含稅) - 退貨金額(含稅)
+
+
+ 2-2.暫存檔匯整-經銷商日銷售統計檔dema_t
+     依下方欄位匯總寫入[T:經銷商日銷售統計檔 dema_t]
+     銷售組織   
+     客戶經營類型
+     日結日期     
+     會計週      
+     會計期       
+     經銷商編號  
+     合同編號 
+     經營方式   
+     結算類型   
+     結算方式    
+     品牌         
+     稅別編號
+     本幣幣別    
+     ======除數量欄位不可匯總外其餘欄位均加總,下列欄位外其餘均加總=========== 
+     毛利額             =銷售實收金額(含稅) - 進價成本金額  
+     毛利率             =(毛利額/進價成本金額) * 100 
++    銷售標準售價淨額(未稅) =銷售標準售價淨額(未稅) - 退貨標準售價淨額(未稅)
++    銷售標準售價淨額(含稅) =銷售標準售價淨額(含稅) - 退貨標準售價淨額(含稅)
++    銷售折扣淨額           =銷貨折扣金額-銷退折扣金額
++    銷售實收淨額(未稅)     =銷貨實收金額(未稅) - 退貨金額(未稅)
++    銷售實收淨額(含稅)     =銷貨實收金額(含稅) - 退貨金額(含稅)
+     
+
+
+3.產生日結 log 檔
+  [C:銷售組織]: 銷售組織
+  [C:日結日期]: g_today
+  [C:作業編號]: g_progno
+  [C:日結執行次數]: 日結執行次數+1
+  [C:最後異動人員]: g_user
+  [C:最後異動日期時間]: DATETIME
+
+]]>
+</all>
+  <field src="s" ver="1" column="" name="dema_t.deam002" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" cite_std="N" status="d">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="" name="checkbox_1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="CheckBox" cite_std="N" status="d">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="" name="checkbox_1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="CheckBox" cite_std="N" status="d">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="" name="buttonedit_1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" status="d">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="" name="dateedit_1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" cite_std="N" status="d">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="" name="type2" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="CheckBox" cite_std="N" status="u">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="demasite" name="dema_t.demasite" table="dema_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" status="u">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="dema002" name="dema_t.dema002" table="dema_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" cite_std="N" status="u">
+<![CDATA[]]>
+</field>
+  <field src="s" ver="1" column="" name="type1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="CheckBox" cite_std="N" status="u">
+<![CDATA[]]>
+</field>
+  <exclude ver="" cite_std="N" src="" />
+</spec>

@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abci300" module="abc" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="04543" crtdt="2016-12-23 09:37:11" modid="04543" moddt="2016-12-23 09:37:11" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="條碼編碼維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bcba001,bcbal003(chr500),bcba002,bcba003,separate(chr500),bcba004,bcbastus,bcbaownid,bcbaownid_desc(chr80),bcbaowndp,bcbaowndp_desc(chr80),bcbacrtid,bcbacrtid_desc(chr80),bcbacrtdp,bcbacrtdp_desc(chr80),bcbacrtdt,bcbamodid,bcbamodid_desc(chr80),bcbamoddt,bcbacnfid,bcbacnfid_desc(chr80),bcbacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bcbbseq,bcbb002,bcbb003,bcbb004,bcbb005"/>
+      <var id="bs_field" value="bcba001,bcba002,bcbacrtid,bcbacrtid_desc(chr80),bcbacrtdp,bcbacrtdp_desc(chr80),bcbacrtdt" pk="bcba001" order=""/>
+      <bs_reference field="bcbacrtid_desc" ref_field="bcbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="bcbacrtdp_desc" ref_field="bcbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="abc" filename="abci300" method="dialog">
+    <section id="input">
+      <input id="head" field="bcba001,bcbal003,bcba002,bcba003,bcba004,bcbastus"/>
+      <input id="body" page="1" field="bcbbseq,bcbb002,bcbb003,bcbb004,bcbb005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bcba001,bcbal003,bcba002,bcba003,bcba004,bcbastus,bcbaownid,bcbaowndp,bcbacrtid,bcbacrtdp,bcbacrtdt,bcbamodid,bcbamoddt,bcbacnfid,bcbacnfdt"/>
+      <construct id="body" page="1" field="bcbbseq,bcbb002,bcbb003,bcbb004,bcbb005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bcba001"/>
+      <set id="head" type="no_entry" field="bcba001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bcba001"/>
+      <column id="bcbal003"/>
+      <column id="bcba002" type="S" default="1" def_scc="16022"/>
+      <column id="bcba003" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="separate"/>
+      <column id="bcba004" type="S" default="1" def_scc="16027"/>
+      <column id="bcbastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="bcbaownid">
+        <after>
+          <reference field="bcbaownid_desc" ref_field="bcba_t.bcbaownid" map_field="bcbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bcbaownid_desc"/>
+      <column id="bcbaowndp">
+        <after>
+          <reference field="bcbaowndp_desc" ref_field="bcba_t.bcbaowndp" map_field="bcbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bcbaowndp_desc"/>
+      <column id="bcbacrtid">
+        <after>
+          <reference field="bcbacrtid_desc" ref_field="bcba_t.bcbacrtid" map_field="bcbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bcbacrtid_desc"/>
+      <column id="bcbacrtdp">
+        <after>
+          <reference field="bcbacrtdp_desc" ref_field="bcba_t.bcbacrtdp" map_field="bcbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bcbacrtdp_desc"/>
+      <column id="bcbacrtdt"/>
+      <column id="bcbamodid">
+        <after>
+          <reference field="bcbamodid_desc" ref_field="bcba_t.bcbamodid" map_field="bcbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bcbamodid_desc"/>
+      <column id="bcbamoddt"/>
+      <column id="bcbacnfid">
+        <after>
+          <reference field="bcbacnfid_desc" ref_field="bcba_t.bcbacnfid" map_field="bcbacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bcbacnfid_desc"/>
+      <column id="bcbacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bcbbseq" type="S" default="0"/>
+      <column id="bcbb002" type="S" default="1" def_scc="16025"/>
+      <column id="bcbb003"/>
+      <column id="bcbb004">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bcbb005" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bcba_t" pk="bcba001">
+      <sql id="forupd_sql" type="sql" query="SELECT bcba001,&apos;&apos;,bcba002,bcba003,&apos;&apos;,bcba004,bcbastus,bcbaownid,&apos;&apos;,bcbaowndp,&apos;&apos;,bcbacrtid,&apos;&apos;,bcbacrtdp,&apos;&apos;,bcbacrtdt,bcbamodid,&apos;&apos;,bcbamoddt,bcbacnfid,&apos;&apos;,bcbacnfdt FROM bcba_t WHERE bcbaent= ? AND bcba001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bcba001,&apos;&apos;,bcba002,bcba003,&apos;&apos;,bcba004,bcbastus,bcbaownid,&apos;&apos;,bcbaowndp,&apos;&apos;,bcbacrtid,&apos;&apos;,bcbacrtdp,&apos;&apos;,bcbacrtdt,bcbamodid,&apos;&apos;,bcbamoddt,bcbacnfid,&apos;&apos;,bcbacnfdt FROM bcba_t" order="bcba001"/>
+      <sql id="append" type="lang" target="bcbal003" table="bcbal_t" fk="bcba001" pk="bcbal001,bcbal002" field="bcbal003"/>
+    </head>
+    <body id="bcbb_t" page="1" linked="" pk="bcbbseq" fk="bcbb001">
+      <sql id="forupd_sql_detail" query="SELECT bcbbseq,bcbb002,bcbb003,bcbb004,bcbb005 FROM bcbb_t WHERE bcbbent=? AND bcbb001=? AND bcbbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bcbbseq,bcbb002,bcbb003,bcbb004,bcbb005 FROM bcbb_t WHERE bcbbent=? AND bcbb001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

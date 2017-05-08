@@ -1,0 +1,1315 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmt500_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0013(2015-09-01 16:09:39), PR版次:0013(2016-10-13 16:31:21)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000277
+#+ Filename...: axmt500_02
+#+ Description: 維護訂單備置作業
+#+ Creator....: 02040(2014-05-12 16:18:29)
+#+ Modifier...: 02040 -SD/PR- 05384
+ 
+{</section>}
+ 
+{<section id="axmt500_02.global" >}
+#應用 c02b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160331-00038#1  16/03/31  By Sarah      新增訂單後,不管做軟備置與硬備置,xmdr009的數字都是錯的
+#160330-00005#1  16/04/01  By Ann_Huang  當有啟用產品特徵S-BAS-0036參數,則輸入的備置數量不可大於該料號+產品特徵的庫存總量
+#160409-00003#1  16/04/13  By catmoon    軟備置也需控卡備置量不可大於可備置量
+#160408-00035#3  16/04/14  By shiun      加判斷修改後數量不可小於備置量-已沖銷備置量
+#160705-00001    16/07/06  By whitney    備置數量更新為0系統刪除備置檔(xmdr_t)後一併更新庫存在揀量統計檔(inan_t)
+#160906-00008#1  16/09/06  By Sarah      當傳入的訂單單號為空時，報錯後的RETURN不應該有回傳值；離開後應該要關閉備置的畫面
+#160912-00057#1  16/09/29  By 06948      判斷總硬備置量與修改後數量不一致時，就必須彈窗讓使用者修改數量。
+#160927-00023#1  16/10/13  By shiun      料件在aimm212存貨備置策略設置為0:不限制，系統應不允許備置
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmdd_d        RECORD
+       xmdddocno LIKE xmdd_t.xmdddocno, 
+   xmddseq LIKE xmdd_t.xmddseq, 
+   xmddseq2 LIKE xmdd_t.xmddseq2, 
+   xmddseq1 LIKE xmdd_t.xmddseq1, 
+   xmdd001 LIKE xmdd_t.xmdd001, 
+   xmdd001_desc LIKE type_t.chr500, 
+   imaal004 LIKE type_t.chr500, 
+   xmdd002 LIKE xmdd_t.xmdd002, 
+   xmdd002_desc LIKE type_t.chr500, 
+   xmdd004 LIKE xmdd_t.xmdd004, 
+   xmdd004_desc LIKE type_t.chr500, 
+   xmdd006 LIKE xmdd_t.xmdd006, 
+   xmdd014 LIKE xmdd_t.xmdd014, 
+   xmdd015 LIKE xmdd_t.xmdd015, 
+   xmdd032 LIKE xmdd_t.xmdd032, 
+   xmdd033 LIKE xmdd_t.xmdd033, 
+   xmdd033_desc LIKE type_t.chr500
+       END RECORD
+PRIVATE TYPE type_g_xmdd2_d RECORD
+       xmdrdocno LIKE xmdr_t.xmdrdocno, 
+   xmdrseq LIKE xmdr_t.xmdrseq, 
+   xmdrseq1 LIKE xmdr_t.xmdrseq1, 
+   xmdrseq2 LIKE xmdr_t.xmdrseq2, 
+   xmdr001 LIKE xmdr_t.xmdr001, 
+   xmdr002 LIKE xmdr_t.xmdr002, 
+   xmdr002_desc LIKE type_t.chr500, 
+   xmdr004 LIKE xmdr_t.xmdr004, 
+   xmdr004_desc LIKE type_t.chr500, 
+   xmdr005 LIKE xmdr_t.xmdr005, 
+   xmdr005_desc LIKE type_t.chr500, 
+   xmdr003 LIKE xmdr_t.xmdr003, 
+   xmdr006 LIKE xmdr_t.xmdr006, 
+   xmdr007 LIKE xmdr_t.xmdr007, 
+   xmdr007_desc LIKE type_t.chr500, 
+   xmdr008 LIKE xmdr_t.xmdr008, 
+   xmdr009 LIKE xmdr_t.xmdr009
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_xmdadocno     LIKE xmda_t.xmdadocno
+DEFINE g_xmdddocno     LIKE xmdd_t.xmdddocno
+DEFINE g_xmddseq       LIKE xmdd_t.xmddseq
+DEFINE g_xmddseq1      LIKE xmdd_t.xmddseq1
+DEFINE g_xmddseq2      LIKE xmdd_t.xmddseq2
+DEFINE g_xmdd001       LIKE xmdd_t.xmdd001
+DEFINE g_xmdd002       LIKE xmdd_t.xmdd002
+DEFINE g_imaf058       LIKE imaf_t.imaf058      #存貨備置作業 
+DEFINE g_imaf053       LIKE imaf_t.imaf053      #庫存單位  
+DEFINE g_success       LIKE type_t.num5
+DEFINE g_mode          LIKE type_t.num5         #1軟備置2硬備置
+
+DEFINE g_xmdr        DYNAMIC ARRAY OF RECORD    #已勾選的備置
+       xmdr008          LIKE xmdr_t.xmdr008,
+       xmdr009          LIKE xmdr_t.xmdr009,
+       xmdr010          LIKE xmdr_t.xmdr010,
+       xmdr004          LIKE xmdr_t.xmdr004, 
+       xmdr005          LIKE xmdr_t.xmdr005,
+       xmdr003          LIKE xmdr_t.xmdr003,
+       xmdr006          LIKE xmdr_t.xmdr006,
+       xmdr007          LIKE xmdr_t.xmdr007
+                     END RECORD
+
+DEFINE g_xmdd_d_o        type_g_xmdd_d  #160705-00001 by whitney add
+
+#end add-point
+ 
+DEFINE g_xmdd_d          DYNAMIC ARRAY OF type_g_xmdd_d
+DEFINE g_xmdd_d_t        type_g_xmdd_d
+DEFINE g_xmdd2_d   DYNAMIC ARRAY OF type_g_xmdd2_d
+DEFINE g_xmdd2_d_t type_g_xmdd2_d
+ 
+ 
+DEFINE g_xmdddocno_t   LIKE xmdd_t.xmdddocno    #Key值備份
+DEFINE g_xmddseq_t      LIKE xmdd_t.xmddseq    #Key值備份
+DEFINE g_xmddseq1_t      LIKE xmdd_t.xmddseq1    #Key值備份
+DEFINE g_xmddseq2_t      LIKE xmdd_t.xmddseq2    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="axmt500_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axmt500_02(--)
+   #add-point:input段變數傳入
+   p_xmdadocno
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_xmdadocno     LIKE xmda_t.xmdadocno
+   DEFINE r_success       LIKE type_t.num5   
+   DEFINE l_forupd_sql    STRING   
+   DEFINE l_cnt           LIKE type_t.num5
+#160705-00001 by whitney mark start
+#   DEFINE l_xmdr009       LIKE xmdr_t.xmdr009
+#   #160330-00005#1 --- add Start ---
+#   DEFINE l_success           LIKE type_t.num5
+#   DEFINE g_xmdd004           LIKE xmdd_t.xmdd004      #單位   
+#   DEFINE l_inag008_inag033   LIKE inag_t.inag008      #帳面庫存數量 或 基礎單位數量
+#   DEFINE l_inag032           LIKE inag_t.inag032      #料件基礎單位
+#   DEFINE l_xmdd032_convert   LIKE xmdd_t.xmdd032      #存放轉換後基礎單位數量 或 原始備置量
+#   #160330-00005#1 --- add End ---
+#   #160409-00003#1--add--start--
+#   DEFINE l_inan010           LIKE inan_t.inan010      #已在揀量&已備置量
+#   DEFINE l_yxmdd032          LIKE xmdd_t.xmdd032      #可備置量
+#   #160409-00003#1--add--end----
+#160705-00001 by whitney mark end
+ 
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axmt500_02 WITH FORM cl_ap_formpath("axm","axmt500_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+
+   
+   LET r_success = TRUE
+   LET g_success = TRUE
+   LET INT_FLAG = 0
+   
+   #判斷據點參數若不使用產品特徵時，則產品特徵需隱藏(據點參數:S-BAS-0036)
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0036') = 'N' THEN
+      CALL cl_set_comp_visible("xmdd002,xmdd002_desc",FALSE)
+   END IF 
+
+   
+   IF cl_null(p_xmdadocno) THEN
+      #傳入單據編號為空;請指定單據編號!
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-00228'
+      LET g_errparam.extend = p_xmdadocno
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+#160906-00008#1-s mod
+      CLOSE WINDOW w_axmt500_02
+#     RETURN r_success
+      RETURN
+#160906-00008#1-e mod
+   END IF
+      
+   CALL s_transaction_begin()    
+   
+   LET g_xmdadocno = p_xmdadocno
+      
+   CALL axmt500_02_b_fill() 
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xmdd_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         BEFORE ROW
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_ac = g_detail_idx
+            LET g_xmdddocno = g_xmdd_d[l_ac].xmdddocno
+            LET g_xmddseq = g_xmdd_d[l_ac].xmddseq
+            LET g_xmddseq1 = g_xmdd_d[l_ac].xmddseq1
+            LET g_xmddseq2 = g_xmdd_d[l_ac].xmddseq2
+            LET g_xmdd001 = g_xmdd_d[l_ac].xmdd001
+            LET g_xmdd002 = g_xmdd_d[l_ac].xmdd002
+#            LET g_xmdd004 = g_xmdd_d[l_ac].xmdd004       #160330-00005#1 --- add  #單位  #160705-00001 by whitney mark
+            LET g_xmdd_d_t.* = g_xmdd_d[l_ac].*          #BACKUP
+            LET g_mode = 1
+            
+#160705-00001 by whitney mark start
+#            #160330-00005#1  By Ann_Huang  --- add Start ---
+#            #取得料件基礎單位
+#            LET l_inag032 = ''
+#            SELECT imaa006 INTO l_inag032
+#              FROM imaa_t
+#             WHERE imaaent = g_enterprise
+#               AND imaa001 = g_xmdd_d[l_ac].xmdd001
+#            #160330-00005#1  By Ann_Huang  --- add End ---
+#160705-00001 by whitney mark end
+            
+            CALL axmt500_02_fetch()
+            CALL axmt500_02_get_imaf() 
+            CALL axmt500_02_set_entry()
+            CALL axmt500_02_set_no_entry()            
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_xmdd_d.getLength() TO FORMONLY.cnt            
+            LET g_xmdd_d_o.* = g_xmdd_d[l_ac].*          #160705-00001 by whitney add
+            
+         AFTER ROW   
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+               LET INT_FLAG = 0               
+               EXIT DIALOG
+            END IF       
+           #modify--160408-00035#3 By shiun--(S)
+           #IF (g_xmdd_d[l_ac].xmdd032 > 0 AND (g_xmdd_d[l_ac].xmdd032 <> g_xmdd_d_t.xmdd032)) OR g_mode = 2 THEN
+            IF (g_xmdd_d[l_ac].xmdd032 >=0 AND 
+                (g_xmdd_d[l_ac].xmdd032 <> g_xmdd_d_t.xmdd032 OR g_xmdd_d[l_ac].xmdd033 <> g_xmdd_d_t.xmdd033)) OR
+                g_mode = 2 THEN           
+           #modify--160408-00035#3 By shiun--(E)
+               UPDATE xmdd_t 
+                  SET xmdd032 = g_xmdd_d[l_ac].xmdd032,
+                      xmdd033 = g_xmdd_d[l_ac].xmdd033
+                WHERE xmddent = g_enterprise
+                  AND xmdddocno = g_xmdd_d[l_ac].xmdddocno
+                  AND xmddseq = g_xmdd_d[l_ac].xmddseq
+                  AND xmddseq1 = g_xmdd_d[l_ac].xmddseq1
+                  AND xmddseq2 = g_xmdd_d[l_ac].xmddseq2
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "xmdd_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_xmdd_d[l_ac].* = g_xmdd_d_t.*
+                  LET g_success = FALSE  
+                  EXIT DIALOG
+               #160818-00043#1-s
+               ELSE
+                  IF NOT axmt500_02_gen_xmdr() THEN
+                     LET g_success = FALSE
+                     EXIT DIALOG
+                  END IF
+               END IF
+               #160818-00043#1-e
+            END IF
+            CALL axmt500_02_fetch()
+            
+            
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdd032
+            #add-point:BEFORE FIELD xmdd032 name="input.b.page1.xmdd032"
+ 
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdd032
+            
+            #add-point:AFTER FIELD xmdd032 name="input.a.page1.xmdd032"
+#160705-00001 by whitney mark start
+#            IF NOT cl_ap_chk_range(g_xmdd_d[l_ac].xmdd032,"0.000","1","","","azz-00079",1) THEN
+#               LET g_xmdd_d[l_ac].xmdd032 = g_xmdd_d_t.xmdd032
+#               DISPLAY BY NAME g_xmdd_d[l_ac].xmdd032
+#               NEXT FIELD xmdd032
+#            END IF            
+#            IF NOT cl_null(g_xmdd_d[l_ac].xmdd032) THEN 
+#              #modify--160408-00035#3 By shiun--(S)
+#              #IF g_xmdd_d[l_ac].xmdd032 > 0 AND g_xmdd_d[l_ac].xmdd032 <> g_xmdd_d_t.xmdd032 THEN
+#               IF g_xmdd_d[l_ac].xmdd032 <> g_xmdd_d_t.xmdd032 THEN
+#              #modify--160408-00035#3 By shiun--(E)
+#                  #備置量不可大於分批數量
+#                  IF g_xmdd_d[l_ac].xmdd032 > g_xmdd_d[l_ac].xmdd006 THEN
+#                      INITIALIZE g_errparam TO NULL
+#                      LET g_errparam.code = 'axm-00295'
+#                      LET g_errparam.extend = "xmdd032"
+#                      LET g_errparam.popup = TRUE
+#                      CALL cl_err()
+#                      LET g_xmdd_d[l_ac].xmdd032 = g_xmdd_d_t.xmdd032
+#                      DISPLAY BY NAME g_xmdd_d[l_ac].xmdd032
+#                      NEXT FIELD xmdd032
+#                  END IF
+#                  
+#                  #備置數量應卡不可大於訂單數量-已出貨量 
+#                  IF g_xmdd_d[l_ac].xmdd032 > g_xmdd_d[l_ac].xmdd006 - g_xmdd_d[l_ac].xmdd014 THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.extend = 'xmdd032'
+#                     LET g_errparam.code   = 'axm-00488'        #備置量不可大於訂單數量-已出貨量  
+#                     LET g_errparam.popup  = TRUE
+#                     CALL cl_err()
+#
+#                     LET g_xmdd_d[l_ac].xmdd032 = g_xmdd_d_t.xmdd032
+#                     DISPLAY BY NAME g_xmdd_d[l_ac].xmdd032
+#                     NEXT FIELD xmdd032
+#                  END IF
+#                  
+#                  #備置量不可小於備置已沖銷量
+#                  LET l_xmdr009 = 0
+#                  SELECT SUM(xmdr009) INTO l_xmdr009
+#                    FROM xmdr_t
+#                   WHERE xmdrent = g_enterprise
+#                     AND xmdrsite = g_site
+#                     AND xmdrdocno = g_xmdddocno
+#                     AND xmdrseq = g_xmddseq
+#                     AND xmdrseq1 = g_xmddseq1
+#                     AND xmdrseq2 = g_xmddseq2
+#                  IF l_xmdr009 > 0 THEN
+#                    #modify--160408-00035#3 By shiun--(S)
+#                    #IF g_xmdd_d[l_ac].xmdd032 < l_xmdr009 THEN
+#                     IF g_xmdd_d[l_ac].xmdd032=0 OR g_xmdd_d[l_ac].xmdd032 < l_xmdr009 THEN
+#                    #modify--160408-00035#3 By shiun--(E)
+#                        INITIALIZE g_errparam TO NULL
+#                        LET g_errparam.code = 'axm-00296'
+#                        LET g_errparam.extend = "xmdd032"
+#                        LET g_errparam.popup = TRUE
+#                        CALL cl_err()
+#                        LET g_xmdd_d[l_ac].xmdd032 = g_xmdd_d_t.xmdd032
+#                        DISPLAY BY NAME g_xmdd_d[l_ac].xmdd032                        
+#                        NEXT FIELD xmdd032                     
+#                     END IF
+#                  END IF
+#                  
+#                 #add--160408-00035#3 By shiun--(S)
+#                 #備置數量改為0表示要取消備置,將xmdr_t刪除
+#                  IF g_xmdd_d[l_ac].xmdd032 = 0 THEN
+#                     DELETE FROM xmdr_t 
+#                      WHERE xmdrent = g_enterprise
+#                        AND xmdrsite = g_site
+#                        AND xmdrdocno = g_xmdddocno
+#                        AND xmdrseq = g_xmddseq
+#                        AND xmdrseq1 = g_xmddseq1
+#                        AND xmdrseq2 = g_xmddseq2
+#                     IF SQLCA.sqlcode THEN
+#                        INITIALIZE g_errparam TO NULL
+#                        LET g_errparam.code = SQLCA.sqlcode
+#                        LET g_errparam.extend = "xmdr_t"
+#                        LET g_errparam.popup = FALSE
+#                        CALL cl_err()
+#                        NEXT FIELD xmdd032
+#                     END IF
+#                  END IF
+#                 #add--160408-00035#3 By shiun--(E) 
+#                 
+#                  #160330-00005#1 By Ann_Huang  --- add Start ---
+#                  #軟備置                  
+#                  IF g_imaf058 = '1' THEN
+#                     LET l_inag008_inag033 = 0
+#                     LET l_xmdd032_convert = g_xmdd_d[l_ac].xmdd032
+#                  
+#                     IF cl_get_para(g_enterprise,g_site,'S-BAS-0036')  = 'Y' THEN   #啟用產品特徵               
+#                        IF NOT cl_null(l_inag032) AND g_xmdd004 <> l_inag032 THEN                       
+#                           CALL s_aooi250_convert_qty(g_xmdd_d[l_ac].xmdd001,g_xmdd004,l_inag032,g_xmdd_d[l_ac].xmdd032)
+#                                RETURNING l_success,l_xmdd032_convert
+#                           
+#                           SELECT SUM(inag033) INTO l_inag008_inag033     #基礎單位數量
+#                             FROM inag_t                     
+#                            WHERE inagent  = g_enterprise 
+#                              AND inagsite = g_site
+#                              AND inag001  = g_xmdd_d[l_ac].xmdd001
+#                              AND inag002  = g_xmdd_d[l_ac].xmdd002
+#                            GROUP BY inag001, inag002
+#                        ELSE
+#                           SELECT SUM(inag008) INTO l_inag008_inag033     #帳面庫存數量
+#                             FROM inag_t                     
+#                            WHERE inagent  = g_enterprise 
+#                              AND inagsite = g_site                           
+#                              AND inag001  = g_xmdd_d[l_ac].xmdd001
+#                              AND inag002  = g_xmdd_d[l_ac].xmdd002
+#                            GROUP BY inag001, inag002  
+#                        END IF      
+#                        IF cl_null(l_inag008_inag033) THEN  LET l_inag008_inag033 = 0 END IF                                
+#                        #160409-00003#1--mark--start--
+#                        ##備置量不可大於庫存數量
+#                        #IF l_xmdd032_convert > l_inag008_inag033 THEN
+#                        #    INITIALIZE g_errparam TO NULL
+#                        #    LET g_errparam.code = 'axm-00756'
+#                        #    LET g_errparam.extend = "xmdd032"
+#                        #    LET g_errparam.popup = TRUE
+#                        #    CALL cl_err()
+#                        #    LET g_xmdd_d[l_ac].xmdd032 = g_xmdd_d_t.xmdd032
+#                        #    DISPLAY BY NAME g_xmdd_d[l_ac].xmdd032
+#                        #    NEXT FIELD xmdd032
+#                        #END IF
+#                        #160409-00003#1--mark--end----
+#                        #160409-00003#1--add--start---
+#                        #已在揀量&已備置量inan010
+#                        LET l_inan010 = 0
+#                        SELECT SUM(inan010)  INTO l_inan010
+#                          FROM inan_t
+#                         WHERE inanent = g_enterprise
+#                           AND inansite = g_site
+#                           AND inan001 = g_xmdd_d[l_ac].xmdd001
+#                           AND inan002 = g_xmdd_d[l_ac].xmdd002       
+#                        IF cl_null(l_inan010) THEN LET l_inan010 = 0 END IF
+#                        #可備置量(l_yxmdd032) = 庫存量(inag008)-已在揀量&已備置量(inan010)+這張單子本身的備置量
+#                        LET l_yxmdd032 = l_inag008_inag033 - l_inan010 + g_xmdd_d_t.xmdd032
+#                        #不可大於可備置量
+#                        IF l_xmdd032_convert > l_yxmdd032 THEN
+#                           INITIALIZE g_errparam TO NULL
+#                           LET g_errparam.code = 'axm-00306'
+#                           LET g_errparam.extend = "xmdd032"
+#                           LET g_errparam.popup = TRUE
+#                           CALL cl_err()
+#                           LET g_xmdd_d[l_ac].xmdd032 = g_xmdd_d_t.xmdd032
+#                           DISPLAY BY NAME g_xmdd_d[l_ac].xmdd032 
+#                           NEXT FIELD xmdd032 
+#                        END IF
+#                        #160409-00003#1--add--end-----
+#                     END IF
+#                  END IF
+#                  #160330-00005#1 By Ann_Huang  --- add End --- 
+#                  
+#                  IF g_imaf058 = '2' THEN
+#                     LET g_mode = 2  #add--160408-00035#3 By shiun
+#                     IF g_xmdd_d[l_ac].xmdd032 <> 0 THEN  #add--160408-00035#3 By shiun
+#                        CALL g_xmdr.clear()                        
+#                        CALL axmt500_06(g_xmdd_d[l_ac].xmdddocno,g_xmdd_d[l_ac].xmddseq,g_xmdd_d[l_ac].xmddseq1,g_xmdd_d[l_ac].xmddseq2,g_xmdd_d[l_ac].xmdd032)
+#                            RETURNING r_success,g_xmdr                                        
+#                        IF NOT r_success THEN
+#                           LET g_xmdd_d[l_ac].xmdd032 = g_xmdd_d_t.xmdd032
+#                           DISPLAY BY NAME g_xmdd_d[l_ac].xmdd032                        
+#                           NEXT FIELD xmdd032
+#                        ELSE
+#                           LET g_mode = 2                        
+#                        END IF   
+#                     END IF  #add--160408-00035#3 By shiun                        
+#                  END IF
+#160705-00001 by whitney mark end
+            #160705-00001 by whitney add start
+            IF NOT cl_null(g_xmdd_d[l_ac].xmdd032) THEN
+               IF g_xmdd_d[l_ac].xmdd032 <> g_xmdd_d_o.xmdd032 THEN
+                  IF NOT axmt500_02_xmdd032_chk() THEN
+                      LET g_xmdd_d[l_ac].xmdd032 = g_xmdd_d_o.xmdd032
+                      DISPLAY BY NAME g_xmdd_d[l_ac].xmdd032
+                      NEXT FIELD xmdd032
+                  END IF
+                  LET g_xmdd_d_o.xmdd032 = g_xmdd_d[l_ac].xmdd032
+            #160705-00001 by whitney add end
+               END IF
+            END IF 
+            CALL axmt500_02_set_entry()
+            CALL axmt500_02_set_no_entry()
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdd032
+            #add-point:ON CHANGE xmdd032 name="input.g.page1.xmdd032"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdd033
+            
+            #add-point:AFTER FIELD xmdd033 name="input.a.page1.xmdd033"
+           IF NOT cl_null(g_xmdd_d[l_ac].xmdd033) THEN
+              IF NOT s_azzi650_chk_exist('307',g_xmdd_d[l_ac].xmdd033) THEN
+                 LET g_xmdd_d[l_ac].xmdd033 = g_xmdd_d_t.xmdd033
+                 NEXT FIELD xmdd033
+              END IF
+           END IF
+           CALL s_desc_get_acc_desc('307',g_xmdd_d[l_ac].xmdd033) RETURNING g_xmdd_d[l_ac].xmdd033_desc
+           DISPLAY BY NAME g_xmdd_d[l_ac].xmdd033_desc            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdd033
+            #add-point:BEFORE FIELD xmdd033 name="input.b.page1.xmdd033"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdd033
+            #add-point:ON CHANGE xmdd033 name="input.g.page1.xmdd033"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.xmdd032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdd032
+            #add-point:ON ACTION controlp INFIELD xmdd032 name="input.c.page1.xmdd032"
+            IF g_imaf058 MATCHES "[02]" AND g_xmdd_d[l_ac].xmdd032 > 0 THEN               
+               CALL axmt500_06(g_xmdd_d[l_ac].xmdddocno,g_xmdd_d[l_ac].xmddseq,g_xmdd_d[l_ac].xmddseq1,g_xmdd_d[l_ac].xmddseq2,g_xmdd_d[l_ac].xmdd032)
+                 RETURNING r_success,g_xmdr                              
+               IF r_success THEN
+                  LET g_mode = 2   
+                  #160705-00001 by whitney add start
+                  IF axmt500_02_gen_xmdr() THEN
+                     CALL axmt500_02_fetch()
+                  ELSE
+                     LET g_xmdd_d[l_ac].xmdd032 = g_xmdd_d_o.xmdd032
+                     DISPLAY BY NAME g_xmdd_d[l_ac].xmdd032
+                     NEXT FIELD xmdd032
+                  END IF
+                  #160705-00001 by whitney add end                                 
+               ELSE
+                  LET g_xmdd_d[l_ac].xmdd032 = g_xmdd_d_o.xmdd032
+                  DISPLAY BY NAME g_xmdd_d[l_ac].xmdd032                        
+                  NEXT FIELD xmdd032  
+               END IF 
+            END IF
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdd033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdd033
+            #add-point:ON ACTION controlp INFIELD xmdd033 name="input.c.page1.xmdd033"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_xmdd_d[l_ac].xmdd033                #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = "307" 
+            CALL q_oocq002()                                                #呼叫開窗
+            LET g_xmdd_d[l_ac].xmdd033 = g_qryparam.return1                 #將開窗取得的值回傳到變數
+            DISPLAY g_xmdd_d[l_ac].xmdd033 TO xmdd033                       #顯示到畫面上
+            CALL s_desc_get_acc_desc('307',g_xmdd_d[l_ac].xmdd033) RETURNING g_xmdd_d[l_ac].xmdd033_desc
+            DISPLAY BY NAME g_xmdd_d[l_ac].xmdd033_desc            
+            
+            NEXT FIELD xmdd033                                              #返回原欄位       
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            IF INT_FLAG THEN
+               LET g_success = FALSE
+               EXIT DIALOG
+            END IF
+
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      DISPLAY ARRAY g_xmdd2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)
+
+         BEFORE ROW
+            LET l_ac = DIALOG.getCurrentRow("s_detail2")
+            LET g_detail_idx = l_ac
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            DISPLAY g_xmdd2_d.getLength() TO FORMONLY.cnt
+
+         BEFORE DISPLAY
+            CALL FGL_SET_ARR_CURR(g_detail_idx)
+            LET l_ac = DIALOG.getCurrentRow("s_detail2")
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            DISPLAY g_xmdd2_d.getLength() TO FORMONLY.cnt
+      END DISPLAY      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   IF INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 9001
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      LET INT_FLAG = 0
+      LET g_success = FALSE
+   END IF
+      
+   IF g_success THEN
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axmt500_02 
+   
+   #add-point:input段after input 
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt500_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axmt500_02.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION axmt500_02_b_fill()
+   DEFINE l_sql         STRING
+   DEFINE l_ac          LIKE type_t.num5 
+   DEFINE l_success     LIKE type_t.num5
+
+   
+   LET l_sql = "SELECT xmdddocno,xmddseq,xmddseq2,xmddseq1,xmdd001, ",
+               "       ''       ,''     ,xmdd002 ,''      ,xmdd004, ",
+               "       ''       ,xmdd006,xmdd014,xmdd015  ,xmdd032, ",
+               "       xmdd033  ,''      ",
+               #mod--160927-00023#1 By shiun--(S)
+#               "  FROM xmdd_t ",
+               "  FROM xmdd_t ,imaf_t",
+               #mod--160927-00023#1 By shiun--(E)
+               " WHERE xmddent = '",g_enterprise,"' ",
+               "   AND xmdddocno = '",g_xmdadocno,"' ",
+               #add--160927-00023#1 By shiun--(S)
+               "   AND imafent = xmddent ",
+               "   AND imafsite = xmddsite ",
+               "   AND imaf001 = xmdd001 ",
+               "   AND imaf058 <> '0' "
+               #add--160927-00023#1 By shiun--(E)
+
+
+   PREPARE axmt500_sel FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR axmt500_sel
+   CALL g_xmdd_d.clear()
+   
+   LET l_ac = 1
+   FOREACH b_fill_curs INTO g_xmdd_d[l_ac].*
+        IF SQLCA.sqlcode THEN
+           INITIALIZE g_errparam TO NULL
+           LET g_errparam.code = SQLCA.sqlcode
+           LET g_errparam.extend = "FOREACH:"
+           LET g_errparam.popup = TRUE
+           CALL cl_err()
+           EXIT FOREACH
+        END IF
+        IF cl_null(g_xmdd_d[l_ac].xmdd032) THEN LET g_xmdd_d[l_ac].xmdd032 = 0 END IF
+        CALL s_desc_get_item_desc(g_xmdd_d[l_ac].xmdd001) RETURNING g_xmdd_d[l_ac].xmdd001_desc,g_xmdd_d[l_ac].imaal004
+        CALL s_desc_get_unit_desc(g_xmdd_d[l_ac].xmdd004) RETURNING g_xmdd_d[l_ac].xmdd004_desc             
+        CALL s_desc_get_acc_desc('307',g_xmdd_d[l_ac].xmdd033) RETURNING g_xmdd_d[l_ac].xmdd033_desc 
+        
+
+        #取得產品特徵說明 
+        CALL s_feature_description(g_xmdd_d[l_ac].xmdd001,g_xmdd_d[l_ac].xmdd002)
+             RETURNING l_success,g_xmdd_d[l_ac].xmdd002_desc
+
+                   
+        LET l_ac = l_ac + 1
+        IF l_ac > g_max_rec THEN
+           INITIALIZE g_errparam TO NULL
+           LET g_errparam.code =  9035
+           LET g_errparam.extend =  ''
+           LET g_errparam.popup = FALSE
+           CALL cl_err()
+           EXIT FOREACH
+        END IF        
+   END FOREACH
+   CALL g_xmdd_d.deleteElement(g_xmdd_d.getLength())
+   #LET g_rec_b = l_ac - 1  
+
+   CLOSE b_fill_curs
+   FREE axmt500_sel
+   
+END FUNCTION
+
+PRIVATE FUNCTION axmt500_02_fetch()
+   DEFINE l_sql         STRING
+   DEFINE l_ac          LIKE type_t.num5 
+ 
+   DEFINE l_success     LIKE type_t.num5
+
+   
+   INITIALIZE g_xmdd2_d TO NULL
+   
+
+   LET l_sql = " SELECT xmdrdocno,xmdrseq,xmdrseq1,xmdrseq2,xmdr001, ",
+               "        xmdr002,'',xmdr004,'',xmdr005,'', ",
+               "        xmdr003,xmdr006,xmdr007,'',xmdr008, ",
+               "        xmdr009 ",
+               "   FROM xmdr_t ",
+               "  WHERE xmdrent = '",g_enterprise,"' ",
+               "    AND xmdrdocno = '",g_xmdddocno,"' ",
+               "    AND xmdrseq = '",g_xmddseq,"' ",
+               "    AND xmdrseq1 = '",g_xmddseq1,"' ",
+               "    AND xmdrseq2 = '",g_xmddseq2,"' "
+
+   PREPARE axmt500_xmdr_sel FROM l_sql
+   DECLARE axmt500_xmdr_per CURSOR FOR axmt500_xmdr_sel       
+
+   LET l_ac = 1
+   FOREACH axmt500_xmdr_per INTO g_xmdd2_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      CALL s_desc_get_stock_desc(g_site,g_xmdd2_d[l_ac].xmdr004) RETURNING g_xmdd2_d[l_ac].xmdr004_desc
+      CALL s_desc_get_locator_desc(g_site,g_xmdd2_d[l_ac].xmdr004,g_xmdd2_d[l_ac].xmdr005) RETURNING g_xmdd2_d[l_ac].xmdr005_desc   
+      CALL s_desc_get_unit_desc(g_xmdd2_d[l_ac].xmdr007) RETURNING g_xmdd2_d[l_ac].xmdr007_desc     
+
+      CALL s_feature_description(g_xmdd2_d[l_ac].xmdr001,g_xmdd2_d[l_ac].xmdr002)
+           RETURNING l_success,g_xmdd2_d[l_ac].xmdr002_desc
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF        
+   END FOREACH
+   CALL g_xmdd2_d.deleteElement(g_xmdd2_d.getLength())
+   LET g_rec_b = l_ac - 1  
+   CLOSE axmt500_xmdr_per
+   FREE axmt500_xmdr_sel
+   
+END FUNCTION
+
+PRIVATE FUNCTION axmt500_02_set_entry()
+
+      CALL cl_set_comp_entry("xmdd032,xmdd033",TRUE)
+END FUNCTION
+
+PRIVATE FUNCTION axmt500_02_set_no_entry()
+      
+      IF g_imaf058 = '4' THEN    #等候需求模式
+         CALL cl_set_comp_entry("xmdd032",FALSE)
+      END IF
+      IF g_xmdd_d[l_ac].xmdd032 <= 0 THEN
+         CALL cl_set_comp_entry("xmdd033",FALSE)
+      END IF
+END FUNCTION
+#取得庫存資料
+PRIVATE FUNCTION axmt500_02_get_imaf()
+   LET g_imaf053 = ''
+   LET g_imaf058 = ''
+   SELECT imaf053,imaf058 INTO g_imaf053,g_imaf058
+     FROM imaf_t
+    WHERE imafent = g_enterprise
+      AND imafsite = g_site
+      AND imaf001 = g_xmdd001  
+
+END FUNCTION
+#產生訂單備置明細檔
+PRIVATE FUNCTION axmt500_02_gen_xmdr()
+DEFINE p_xmdrdocno       LIKE xmdr_t.xmdrdocno
+DEFINE p_xmdrseq         LIKE xmdr_t.xmdrseq
+DEFINE p_xmdrseq1        LIKE xmdr_t.xmdrseq1
+DEFINE p_xmdrseq2        LIKE xmdr_t.xmdrseq2
+DEFINE l_xmdr008         LIKE xmdr_t.xmdr008
+DEFINE l_cnt             LIKE type_t.num5
+DEFINE l_cnt1            LIKE type_t.num5
+DEFINE i                 LIKE type_t.num5
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE 
+
+   #add--160408-00035#3 By shiun--(S)
+   IF g_xmdd_d[l_ac].xmdd032 =0 THEN
+      RETURN r_success
+   END IF
+   #add--160408-00035#3 By shiun--(E)
+
+   LET l_cnt = 0   
+   SELECT COUNT(*)
+     INTO l_cnt
+     FROM xmdr_t
+    WHERE xmdrent = g_enterprise
+      AND xmdrsite = g_site
+      AND xmdrdocno = g_xmdddocno
+      AND xmdrseq = g_xmddseq
+      AND xmdrseq1 = g_xmddseq1
+      AND xmdrseq2 = g_xmddseq2  
+
+   IF g_mode = 1 THEN    
+      #軟備置
+      IF l_cnt = 0 THEN
+         #庫存管理特徵、庫位、儲位、批號、庫存單位均為空白，已沖銷庫存量為0
+         INSERT INTO xmdr_t (xmdrent,xmdrsite,xmdrdocno,xmdrseq,xmdrseq1,xmdrseq2,
+                             xmdr001,xmdr002,xmdr003,xmdr004,xmdr005,
+                             xmdr006,xmdr007,xmdr008,xmdr009,xmdr010)
+           VALUES (g_enterprise,g_site,g_xmdddocno,g_xmddseq,g_xmddseq1,g_xmddseq2,
+                   g_xmdd001,g_xmdd002,' ',' ',' ',
+                   ' ',g_imaf053,g_xmdd_d[l_ac].xmdd032,0,g_xmdd_d[l_ac].xmdd004)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "INSERT xmdr"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE  
+            RETURN r_success                                  
+         ELSE
+#160331-00038#1 mod str
+#            #備置量增加
+#            IF NOT s_prepare_upd('1',g_site,g_xmdddocno,g_xmddseq,g_xmddseq1,
+#                              g_xmddseq2,g_xmdd001,g_xmdd002,' ',' ',
+#                              ' ',' ',g_imaf053,g_xmdd_d[l_ac].xmdd032,'-1') THEN         
+#               LET r_success = FALSE  
+#               RETURN r_success                                   
+#            END IF
+            #更新備置量
+            IF NOT s_inventory_upd_inan('2',g_site,g_xmdd001,g_xmdd002,' ',' ',' ',' ',
+                                        g_imaf053,g_xmdd_d[l_ac].xmdd032,g_xmdddocno,g_xmddseq,g_xmddseq1,g_site) THEN
+               LET r_success = FALSE
+               RETURN r_success
+            END IF
+#160331-00038#1 mod end
+         END IF        
+      ELSE          
+         #撈出調整前的備置量
+         LET l_xmdr008 = 0
+         SELECT xmdr008 INTO l_xmdr008
+           FROM xmdr_t
+          WHERE xmdrent = g_enterprise
+            AND xmdrsite = g_site
+            AND xmdrdocno = g_xmdddocno
+            AND xmdrseq = g_xmddseq
+            AND xmdrseq1 = g_xmddseq1
+            AND xmdrseq2 = g_xmddseq2             
+            
+         UPDATE xmdr_t 
+            SET xmdr008 = g_xmdd_d[l_ac].xmdd032
+          WHERE xmdrent = g_enterprise
+            AND xmdrsite = g_site
+            AND xmdrdocno = g_xmdddocno
+            AND xmdrseq = g_xmddseq
+            AND xmdrseq1 = g_xmddseq1
+            AND xmdrseq2 = g_xmddseq2 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "UPDATE xmdr008"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE  
+            RETURN r_success       
+         ELSE
+            #需將舊的備置量先沖消後，再寫入新的備置量
+            IF l_xmdr008 >= 0 AND l_xmdr008 <> g_xmdd_d[l_ac].xmdd032 THEN
+               #modify--#160408-00035#3 By shiun   改呼叫s_prepare_upd_inan--(S)
+               IF NOT s_prepare_upd_inan('1',g_site,g_xmdddocno,g_xmddseq,g_xmddseq1,
+                                 g_xmddseq2,g_xmdd001,g_xmdd002,' ',' ',
+                                 ' ',' ',g_imaf053,l_xmdr008,'1') THEN         
+                  LET r_success = FALSE  
+                  RETURN r_success
+               END IF
+               #備置量增加
+               #modify--#160408-00035#3 By shiun   改呼叫s_prepare_upd_inan--(S)
+               IF NOT s_prepare_upd_inan('1',g_site,g_xmdddocno,g_xmddseq,g_xmddseq1,
+                                 g_xmddseq2,g_xmdd001,g_xmdd002,' ',' ',
+                                 ' ',' ',g_imaf053,g_xmdd_d[l_ac].xmdd032,'-1') THEN         
+                  LET r_success = FALSE  
+                  RETURN r_success                                   
+               END IF
+            END IF         
+         END IF        
+      END IF
+   ELSE
+      #硬備置
+      IF l_cnt = 0 AND g_xmdr.getLength() > 0 THEN
+         FOR i = 1 TO g_xmdr.getLength()
+             INSERT INTO xmdr_t (xmdrent,xmdrsite,xmdrdocno,xmdrseq,xmdrseq1,xmdrseq2,xmdr001,xmdr002,xmdr003,xmdr004,xmdr005,xmdr006,xmdr007,xmdr008,xmdr009,xmdr010)
+               VALUES (g_enterprise,g_site,g_xmdddocno,g_xmddseq,g_xmddseq1,g_xmddseq2,g_xmdd001,g_xmdd002,g_xmdr[i].xmdr003,g_xmdr[i].xmdr004,g_xmdr[i].xmdr005,g_xmdr[i].xmdr006,g_xmdr[i].xmdr007,g_xmdr[i].xmdr008,g_xmdr[i].xmdr009,g_xmdr[i].xmdr010)
+             IF SQLCA.sqlcode THEN
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.code = SQLCA.sqlcode
+                LET g_errparam.extend = "INSERT xmdr"
+                LET g_errparam.popup = TRUE
+                CALL cl_err()
+                LET r_success = FALSE  
+                RETURN r_success    
+             ELSE 
+#160331-00038#1 mod str             
+#                #備置量增加
+#                IF NOT s_prepare_upd('1',g_site,g_xmdddocno,g_xmddseq,g_xmddseq1,
+#                                  g_xmddseq2,g_xmdd001,g_xmdd002,g_xmdr[i].xmdr003,g_xmdr[i].xmdr004,
+#                                  g_xmdr[i].xmdr005,g_xmdr[i].xmdr006,g_xmdr[i].xmdr010,g_xmdr[i].xmdr008,'-1') THEN
+#                   LET r_success = FALSE  
+#                   RETURN r_success  
+#                END IF
+                #更新備置量
+                IF NOT s_inventory_upd_inan('2',g_site,g_xmdd001,g_xmdd002,g_xmdr[i].xmdr003,g_xmdr[i].xmdr004,
+                                            g_xmdr[i].xmdr005,g_xmdr[i].xmdr006,g_xmdr[i].xmdr010,g_xmdr[i].xmdr008,
+                                            g_xmdddocno,g_xmddseq,g_xmddseq1,g_site) THEN
+                   LET r_success = FALSE
+                   RETURN r_success
+                END IF
+#160331-00038#1 mod end
+             END IF          
+         END FOR
+      ELSE         
+         FOR i = 1 TO g_xmdr.getLength()
+             LET l_xmdr008 = 0
+             LET l_cnt1 = 0
+             SELECT COUNT(*) 
+               INTO l_cnt1
+               FROM xmdr_t
+              WHERE xmdrent = g_enterprise       AND xmdrsite = g_site
+                AND xmdrdocno = g_xmdddocno      AND xmdrseq = g_xmddseq
+                AND xmdrseq1 = g_xmddseq1        AND xmdrseq2 = g_xmddseq2
+                AND xmdr001 = g_xmdd001          AND xmdr002 = g_xmdd002
+                AND xmdr003 = g_xmdr[i].xmdr003  AND xmdr004 = g_xmdr[i].xmdr004
+                AND xmdr005 = g_xmdr[i].xmdr005  AND xmdr006 = g_xmdr[i].xmdr006
+                AND xmdr007 = g_xmdr[i].xmdr007
+             IF l_cnt1 = 0 THEN
+                INSERT INTO xmdr_t (xmdrent,xmdrsite,xmdrdocno,xmdrseq,xmdrseq1,xmdrseq2,xmdr001,xmdr002,xmdr003,xmdr004,xmdr005,xmdr006,xmdr007,xmdr008,xmdr009,xmdr010)
+                  VALUES (g_enterprise,g_site,g_xmdddocno,g_xmddseq,g_xmddseq1,g_xmddseq2,g_xmdd001,g_xmdd002,g_xmdr[i].xmdr003,g_xmdr[i].xmdr004,g_xmdr[i].xmdr005,g_xmdr[i].xmdr006,g_xmdr[i].xmdr007,g_xmdr[i].xmdr008,g_xmdr[i].xmdr009,g_xmdr[i].xmdr010)
+                IF SQLCA.sqlcode THEN
+                   INITIALIZE g_errparam TO NULL
+                   LET g_errparam.code = SQLCA.sqlcode
+                   LET g_errparam.extend = "INSERT xmdr"
+                   LET g_errparam.popup = TRUE
+                   CALL cl_err()
+                   LET r_success = FALSE  
+                   RETURN r_success 
+                ELSE                   
+#160331-00038#1 mod str             
+#                   #備置量增加
+#                   IF NOT s_prepare_upd('1',g_site,g_xmdddocno,g_xmddseq,g_xmddseq1,
+#                                     g_xmddseq2,g_xmdd001,g_xmdd002,g_xmdr[i].xmdr003,g_xmdr[i].xmdr004,
+#                                     g_xmdr[i].xmdr005,g_xmdr[i].xmdr006,g_xmdr[i].xmdr010,g_xmdr[i].xmdr008,'-1') THEN
+#                      LET r_success = FALSE  
+#                      RETURN r_success  
+#                   END IF
+                   #更新備置量
+                   IF NOT s_inventory_upd_inan('2',g_site,g_xmdd001,g_xmdd002,g_xmdr[i].xmdr003,g_xmdr[i].xmdr004,
+                                               g_xmdr[i].xmdr005,g_xmdr[i].xmdr006,g_xmdr[i].xmdr010,g_xmdr[i].xmdr008,
+                                               g_xmdddocno,g_xmddseq,g_xmddseq1,g_site) THEN
+                      LET r_success = FALSE
+                      RETURN r_success
+                   END IF
+#160331-00038#1 mod end
+                END IF           
+             ELSE
+               SELECT xmdr008 
+                 INTO l_xmdr008
+                 FROM xmdr_t
+                WHERE xmdrent = g_enterprise       AND xmdrsite = g_site
+                  AND xmdrdocno = g_xmdddocno      AND xmdrseq = g_xmddseq
+                  AND xmdrseq1 = g_xmddseq1        AND xmdrseq2 = g_xmddseq2
+                  AND xmdr001 = g_xmdd001          AND xmdr002 = g_xmdd002
+                  AND xmdr003 = g_xmdr[i].xmdr003  AND xmdr004 = g_xmdr[i].xmdr004
+                  AND xmdr005 = g_xmdr[i].xmdr005  AND xmdr006 = g_xmdr[i].xmdr006
+                  AND xmdr007 = g_xmdr[i].xmdr007             
+                  
+               UPDATE xmdr_t 
+                  SET xmdr008 = g_xmdr[i].xmdr008
+                WHERE xmdrent = g_enterprise       AND xmdrsite = g_site
+                  AND xmdrdocno = g_xmdddocno      AND xmdrseq = g_xmddseq
+                  AND xmdrseq1 = g_xmddseq1        AND xmdrseq2 = g_xmddseq2
+                   AND xmdr001 = g_xmdd001         AND xmdr002 = g_xmdd002
+                  AND xmdr003 = g_xmdr[i].xmdr003  AND xmdr004 = g_xmdr[i].xmdr004
+                  AND xmdr005 = g_xmdr[i].xmdr005  AND xmdr006 = g_xmdr[i].xmdr006
+                  AND xmdr007 = g_xmdr[i].xmdr007
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "UPDATE xmdr008"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET r_success = FALSE  
+                  RETURN r_success  
+               ELSE
+                  #需將舊的備置量先沖消後，再寫入新的備置量
+                  IF l_xmdr008 >= 0 AND l_xmdr008 <> g_xmdd_d[l_ac].xmdd032 THEN
+                     #modify--#160408-00035#3 By shiun   改呼叫s_prepare_upd_inan--(S)
+                     IF NOT s_prepare_upd_inan('1',g_site,g_xmdddocno,g_xmddseq,g_xmddseq1,
+                                       g_xmddseq2,g_xmdd001,g_xmdd002,g_xmdr[i].xmdr003,g_xmdr[i].xmdr004,
+                                      g_xmdr[i].xmdr005,g_xmdr[i].xmdr006,g_xmdr[i].xmdr010,g_xmdr[i].xmdr008,'1') THEN                                             
+                     #modify--#160408-00035#3 By shiun   改呼叫s_prepare_upd_inan--(E)
+                        LET r_success = FALSE  
+                        RETURN r_success                                   
+                     END IF 
+                     #備置量增加
+                     #modify--#160408-00035#3 By shiun   改呼叫s_prepare_upd_inan--(S)
+                     IF NOT s_prepare_upd_inan('1',g_site,g_xmdddocno,g_xmddseq,g_xmddseq1,
+                                         g_xmddseq2,g_xmdd001,g_xmdd002,g_xmdr[i].xmdr003,g_xmdr[i].xmdr004,
+                                         g_xmdr[i].xmdr005,g_xmdr[i].xmdr006,g_xmdr[i].xmdr010,g_xmdr[i].xmdr008,'-1') THEN                                            
+                     #modify--#160408-00035#3 By shiun   改呼叫s_prepare_upd_inan--(E)
+                        LET r_success = FALSE  
+                        RETURN r_success                                   
+                     END IF                
+                  END IF                
+               END IF                  
+             END IF             
+         END FOR
+      END IF
+   END IF
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢核 AFTER FIELD xmdd032
+# Memo...........:
+# Usage..........: CALL axmt500_02_xmdd032_chk()
+#                  RETURNING TRUE OR FALSE
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160705-00001 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt500_02_xmdd032_chk()
+DEFINE r_success    LIKE type_t.num5
+DEFINE l_xmdr008    LIKE xmdr_t.xmdr008
+DEFINE l_xmdr009    LIKE xmdr_t.xmdr009
+DEFINE l_xmdr  RECORD
+    xmdr001    LIKE xmdr_t.xmdr001,
+    xmdr002    LIKE xmdr_t.xmdr002,
+    xmdr003    LIKE xmdr_t.xmdr003,
+    xmdr004    LIKE xmdr_t.xmdr004,
+    xmdr005    LIKE xmdr_t.xmdr005,
+    xmdr006    LIKE xmdr_t.xmdr006,
+    xmdr008    LIKE xmdr_t.xmdr008,
+    xmdr010    LIKE xmdr_t.xmdr010
+           END RECORD
+DEFINE l_inag008_inag033   LIKE inag_t.inag008      #帳面庫存數量 或 基礎單位數量
+DEFINE l_xmdd032_convert   LIKE xmdd_t.xmdd032      #存放轉換後基礎單位數量 或 原始備置量
+DEFINE l_success           LIKE type_t.num5
+DEFINE l_inan010           LIKE inan_t.inan010      #已在揀量&已備置量
+DEFINE l_yxmdd032          LIKE xmdd_t.xmdd032      #可備置量
+DEFINE l_inag032           LIKE inag_t.inag032      #料件基礎單位
+
+   CALL cl_err_collect_init()
+   LET r_success = TRUE
+
+   IF NOT cl_ap_chk_range(g_xmdd_d[l_ac].xmdd032,"0.000","1","","","azz-00079",1) THEN
+      LET r_success = FALSE
+   END IF
+
+   #備置量不可大於分批數量
+   IF g_xmdd_d[l_ac].xmdd032 > g_xmdd_d[l_ac].xmdd006 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axm-00295'
+      LET g_errparam.extend = g_xmdd_d[l_ac].xmdd032
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+   END IF
+
+   #備置數量應卡不可大於訂單數量-已出貨量
+   IF g_xmdd_d[l_ac].xmdd032 > g_xmdd_d[l_ac].xmdd006 - g_xmdd_d[l_ac].xmdd014 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'xmdd032'
+      LET g_errparam.code   = 'axm-00488'
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+   END IF
+
+   #備置量不可小於備置已沖銷量
+   LET l_xmdr008 = 0
+   LET l_xmdr009 = 0
+   SELECT SUM(xmdr008),SUM(xmdr009) INTO l_xmdr008,l_xmdr009
+     FROM xmdr_t
+    WHERE xmdrent = g_enterprise
+      AND xmdrsite = g_site
+      AND xmdrdocno = g_xmdddocno
+      AND xmdrseq = g_xmddseq
+      AND xmdrseq1 = g_xmddseq1
+      AND xmdrseq2 = g_xmddseq2
+   IF cl_null(l_xmdr008) THEN LET l_xmdr008 = 0 END IF
+   IF cl_null(l_xmdr009) THEN LET l_xmdr009 = 0 END IF
+   IF l_xmdr009 > 0 THEN
+      IF g_xmdd_d[l_ac].xmdd032=0 OR g_xmdd_d[l_ac].xmdd032 < l_xmdr009 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'axm-00296'
+         LET g_errparam.extend = "xmdd032"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END IF
+
+   #備置數量改為0表示要取消備置,將xmdr_t刪除
+   IF g_xmdd_d[l_ac].xmdd032 = 0 THEN
+   
+      DECLARE upd_inan_cs CURSOR FOR
+         SELECT xmdr001,xmdr002,xmdr003,xmdr004,xmdr005,xmdr006,xmdr008,xmdr010
+           FROM xmdr_t
+          WHERE xmdrent = g_enterprise
+            AND xmdrdocno = g_xmdddocno
+            AND xmdrseq = g_xmddseq
+            AND xmdrseq1 = g_xmddseq1
+            AND xmdrseq2 = g_xmddseq2
+      FOREACH upd_inan_cs INTO l_xmdr.xmdr001,l_xmdr.xmdr002,l_xmdr.xmdr003,l_xmdr.xmdr004,l_xmdr.xmdr005,
+                               l_xmdr.xmdr006,l_xmdr.xmdr008,l_xmdr.xmdr010
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "Foreach:",SQLERRMESSAGE
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            LET r_success = FALSE
+         END IF
+         IF NOT s_inventory_upd_inan('-2',g_site,l_xmdr.xmdr001,l_xmdr.xmdr002,l_xmdr.xmdr003,
+                                     l_xmdr.xmdr004,l_xmdr.xmdr005,l_xmdr.xmdr006,l_xmdr.xmdr010,l_xmdr.xmdr008,
+                                     g_xmdddocno,g_xmddseq,g_xmddseq1,g_site) THEN
+            LET r_success = FALSE
+         END IF
+      END FOREACH
+   
+      DELETE FROM xmdr_t 
+       WHERE xmdrent = g_enterprise
+         AND xmdrsite = g_site
+         AND xmdrdocno = g_xmdddocno
+         AND xmdrseq = g_xmddseq
+         AND xmdrseq1 = g_xmddseq1
+         AND xmdrseq2 = g_xmddseq2
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "DELETE FROM xmdr_t",SQLERRMESSAGE
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END IF
+
+   CASE g_imaf058
+      WHEN '1'  #軟備置
+         LET l_inag008_inag033 = 0
+         LET l_xmdd032_convert = g_xmdd_d[l_ac].xmdd032
+         #啟用產品特徵
+         IF cl_get_para(g_enterprise,g_site,'S-BAS-0036')  = 'Y' THEN
+            #取得料件基礎單位
+            LET l_inag032 = ''
+            SELECT imaa006 INTO l_inag032
+              FROM imaa_t
+             WHERE imaaent = g_enterprise
+               AND imaa001 = g_xmdd_d[l_ac].xmdd001
+            IF NOT cl_null(l_inag032) AND g_xmdd_d[l_ac].xmdd004 <> l_inag032 THEN
+               CALL s_aooi250_convert_qty(g_xmdd_d[l_ac].xmdd001,g_xmdd_d[l_ac].xmdd004,l_inag032,g_xmdd_d[l_ac].xmdd032)
+                    RETURNING l_success,l_xmdd032_convert
+               #基礎單位數量
+               SELECT SUM(inag033) INTO l_inag008_inag033
+                 FROM inag_t
+                WHERE inagent  = g_enterprise
+                  AND inagsite = g_site
+                  AND inag001  = g_xmdd_d[l_ac].xmdd001
+                  AND inag002  = g_xmdd_d[l_ac].xmdd002
+                GROUP BY inag001, inag002
+            ELSE
+               #帳面庫存數量
+               SELECT SUM(inag008) INTO l_inag008_inag033
+                 FROM inag_t
+                WHERE inagent  = g_enterprise
+                  AND inagsite = g_site
+                  AND inag001  = g_xmdd_d[l_ac].xmdd001
+                  AND inag002  = g_xmdd_d[l_ac].xmdd002
+                GROUP BY inag001, inag002
+            END IF
+            IF cl_null(l_inag008_inag033) THEN  LET l_inag008_inag033 = 0 END IF
+            #已在揀量&已備置量inan010
+            LET l_inan010 = 0
+            SELECT SUM(inan010)  INTO l_inan010
+              FROM inan_t
+             WHERE inanent = g_enterprise
+               AND inansite = g_site
+               AND inan001 = g_xmdd_d[l_ac].xmdd001
+               AND inan002 = g_xmdd_d[l_ac].xmdd002
+            IF cl_null(l_inan010) THEN LET l_inan010 = 0 END IF
+            #可備置量(l_yxmdd032) = 庫存量(inag008)-已在揀量&已備置量(inan010)+這張單子本身的備置量
+            LET l_yxmdd032 = l_inag008_inag033 - l_inan010 + g_xmdd_d_o.xmdd032
+            #不可大於可備置量
+            IF l_xmdd032_convert > l_yxmdd032 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'axm-00306'
+               LET g_errparam.extend = "xmdd032"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET r_success = FALSE
+            END IF
+         END IF
+      WHEN '2'
+         LET g_mode = 2
+        #IF g_xmdd_d[l_ac].xmdd032 <> 0 AND l_xmdr008 < g_xmdd_d[l_ac].xmdd032 THEN     #160912-00057#1 mark
+         IF g_xmdd_d[l_ac].xmdd032 <> 0 AND l_xmdr008 <> g_xmdd_d[l_ac].xmdd032 THEN    #160912-00057#1 add
+            CALL g_xmdr.clear()
+            CALL axmt500_06(g_xmdd_d[l_ac].xmdddocno,g_xmdd_d[l_ac].xmddseq,g_xmdd_d[l_ac].xmddseq1,g_xmdd_d[l_ac].xmddseq2,g_xmdd_d[l_ac].xmdd032)
+                RETURNING l_success,g_xmdr
+            IF l_success THEN
+               LET g_mode = 2
+               IF axmt500_02_gen_xmdr() THEN
+                  CALL axmt500_02_fetch()
+               ELSE
+                  LET r_success = FALSE
+               END IF
+            ELSE
+               LET r_success = FALSE
+            END IF
+         END IF
+   END CASE
+
+   CALL cl_err_collect_show()
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

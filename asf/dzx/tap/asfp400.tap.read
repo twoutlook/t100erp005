@@ -1,0 +1,2053 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="asfp400" std_prog="asfp400" erpver="1.0" module="ASF" ver="9" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="W" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.asfp400_def_cursor" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 定义取已委外数量的CURSOR
+# Memo...........:
+# Usage..........: CALL asfp400_def_cursor(p_type)
+#                  RETURNING r_success
+# Input parameter: p_type      '1' 按工单+RUN CARD+作业编号+作业序
+#                :             '2' 按工单+RUN CARD+作业编号+作业序+特征
+# Return code....: r_success   成功否标识符
+# Date & Author..: 2014-04-15 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_def_cursor(p_type)
+   DEFINE p_type         LIKE type_t.chr1
+   DEFINE l_sql          STRING
+   DEFINE r_success      LIKE type_t.num5
+   
+   LET r_success = FALSE
+   
+   
+   LET l_sql = "SELECT pmdp022,SUM(pmdp023) FROM pmdp_t,pmdl_t",
+               " WHERE pmdpent   = pmdlent AND pmdpent = ",g_enterprise,
+               "   AND pmdpdocno = pmdldocno ", 
+               "   AND pmdp003   = ? ",                    #工单单号
+               "   AND pmdp004   = ? "                     #RUN CARD               
+   #按特征
+   IF p_type = '2' THEN
+      LET l_sql = l_sql CLIPPED,"   AND pmdp008   = ? "    #特征
+   END IF
+   LET l_sql = l_sql CLIPPED,
+               "   AND pmdp009   = ? ",                    #作业编号
+               "   AND pmdp010   = ? ",                    #作业序
+               "   AND pmdlstus <> 'X' ",
+               " GROUP BY pmdp022 "
+   PREPARE asfp400_def_cursor_p1 FROM l_sql
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'prepare asfp400_def_cursor_p1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   DECLARE asfp400_cs1 CURSOR FOR asfp400_def_cursor_p1
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'declare asfp400_cs1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_set_desc" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 各说明字段的FILL
+# Memo...........:
+# Usage..........: CALL asfp400_set_desc(p_i)
+#                  RETURNING NULL
+# Input parameter: p_i       当前行号
+# Return code....: NULL
+# Date & Author..: 2014-04-12 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_set_desc(p_i)
+   DEFINE p_i            LIKE type_t.num10
+   
+   IF p_i <= 0 OR cl_null(p_i) THEN
+      RETURN
+   END IF
+   
+   #生管人员
+   IF NOT cl_null(g_detail_d[p_i].b_sfaa002) THEN
+      CALL s_desc_get_person_desc(g_detail_d[p_i].b_sfaa002)
+           RETURNING g_detail_d[p_i].b_sfaa002_desc
+   END IF
+   
+   #品名/规格
+   IF NOT cl_null(g_detail_d[p_i].b_sfaa010) THEN
+      CALL s_desc_get_item_desc(g_detail_d[p_i].b_sfaa010)
+           RETURNING g_detail_d[p_i].b_sfaa010_desc1,g_detail_d[p_i].b_sfaa010_desc2
+   END IF   
+   
+   #作业编号
+   IF NOT cl_null(g_detail_d[p_i].b_sfcb003) THEN
+      CALL s_desc_get_acc_desc('221',g_detail_d[p_i].b_sfcb003)
+           RETURNING g_detail_d[p_i].b_sfcb003_desc
+   END IF 
+
+   #单位
+   IF NOT cl_null(g_detail_d[p_i].b_sfcb020) THEN
+      CALL s_desc_get_unit_desc(g_detail_d[p_i].b_sfcb020)
+           RETURNING g_detail_d[p_i].b_sfcb020_desc
+   END IF    
+   
+   #厂商说明
+   IF NOT cl_null(g_detail_d[p_i].b_sfcb013) THEN
+      CALL s_desc_get_trading_partner_abbr_desc(g_detail_d[p_i].b_sfcb013)
+           RETURNING g_detail_d[p_i].b_sfcb013_desc
+   END IF    
+    
+   #取价说明
+   IF NOT cl_null(g_detail_d[p_i].b_pmdl017) THEN
+      CALL s_desc_get_price_type_desc(g_detail_d[p_i].b_pmdl017)
+           RETURNING g_detail_d[p_i].b_pmdl017_desc
+   END IF    
+   
+   #币种
+   IF NOT cl_null(g_detail_d[p_i].b_pmdl015) THEN
+      CALL s_desc_get_currency_desc(g_detail_d[p_i].b_pmdl015)
+           RETURNING g_detail_d[p_i].b_pmdl015_desc
+   END IF 
+
+   #税种
+   IF NOT cl_null(g_detail_d[p_i].b_pmdl011) THEN
+      CALL s_desc_get_tax_desc1(g_site,g_detail_d[p_i].b_pmdl011)
+           RETURNING g_detail_d[p_i].b_pmdl011_desc
+   END IF    
+  
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_b_sfcb013_reference" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 厂商相关字段的DEFAULT
+# Memo...........:
+# Usage..........: CALL asfp400_b_sfcb013_reference(p_i)
+#                  RETURNING NULL
+# Input parameter: p_i       行号
+# Return code....: NULL
+# Date & Author..: 2014-04-12 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_b_sfcb013_reference(p_i)
+   DEFINE p_i            LIKE type_t.num10
+   DEFINE l_pmal         RECORD LIKE pmal_t.*
+   DEFINE l_pmab         RECORD LIKE pmab_t.*
+   DEFINE l_pmal002      LIKE pmal_t.pmal002   #控制组
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_i            LIKE type_t.num5
+   
+   IF p_i <= 0 THEN
+      RETURN
+   END IF
+   
+   IF cl_null(g_detail_d[p_i].b_sfcb013) THEN
+      RETURN
+   END IF
+   #相同的供应商时,仅提供一次取pmal002的机会,否则可能同一个供应商,有几十笔资料时,跳几十次选择的情形
+   LET l_pmal002 = ''
+   FOR l_i = 1 TO g_pmal.getLength()
+       IF g_pmal[l_i].b_sfcb013 = g_detail_d[p_i].b_sfcb013 AND NOT cl_null(g_pmal[l_i].pmal002) THEN
+          LET l_pmal002 = g_pmal[l_i].pmal002
+          EXIT FOR
+       END IF
+   END FOR
+
+   IF cl_null(l_pmal002) THEN   
+      CALL s_control_get_pmal002('4',g_user,g_dept,g_detail_d[p_i].b_sfcb013)
+           RETURNING l_success,l_pmal002
+      IF NOT l_success THEN
+         LET l_pmal002 = NULL
+      END IF        
+      IF NOT cl_null(l_pmal002) THEN
+         CALL g_pmal.insertElement(1)
+         LET g_pmal[1].b_sfcb013 = g_detail_d[p_i].b_sfcb013
+         LET g_pmal[1].pmal002 = l_pmal002
+      END IF
+   END IF
+   
+   #取供应商的控制组预设条件
+   SELECT * INTO l_pmal.* FROM pmal_t
+    WHERE pmalent = g_enterprise
+      AND pmal001 = g_detail_d[p_i].b_sfcb013
+      AND pmal002 = l_pmal002
+      
+   SELECT * INTO l_pmab.* FROM pmab_t
+    WHERE pmabent  = g_enterprise
+      AND pmabsite = g_site  
+      AND pmab001  = g_detail_d[p_i].b_sfcb013
+
+   #取价方式
+   LET g_detail_d[p_i].b_pmdl017 = l_pmal.pmal021
+   IF cl_null(g_detail_d[p_i].b_pmdl017) THEN
+      LET g_detail_d[p_i].b_pmdl017 = l_pmab.pmab054
+   END IF
+   CALL s_desc_get_price_type_desc(g_detail_d[p_i].b_pmdl017)
+        RETURNING g_detail_d[p_i].b_pmdl017_desc
+
+   #币种
+   LET g_detail_d[p_i].b_pmdl015 = l_pmal.pmal003
+   IF cl_null(g_detail_d[p_i].b_pmdl015) THEN
+      LET g_detail_d[p_i].b_pmdl015 = l_pmab.pmab033
+   END IF
+   CALL s_desc_get_currency_desc(g_detail_d[p_i].b_pmdl015)
+        RETURNING g_detail_d[p_i].b_pmdl015_desc
+
+   #税别
+   LET g_detail_d[p_i].b_pmdl011 = l_pmal.pmal004
+   IF cl_null(g_detail_d[p_i].b_pmdl011) THEN
+      LET g_detail_d[p_i].b_pmdl011 = l_pmab.pmab034
+   END IF
+   CALL s_desc_get_tax_desc1(g_site,g_detail_d[p_i].b_pmdl011)
+        RETURNING g_detail_d[p_i].b_pmdl011_desc
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_get_b_exrate" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取汇率
+# Memo...........:
+# Usage..........: CALL asfp400_get_b_exrate(p_b_pmdl015)
+#                  RETURNING r_b_exrate
+# Input parameter: p_b_pmdl015    币种
+# Return code....: r_b_exrate     汇率
+# Date & Author..: 2014-04-13 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_get_b_exrate(p_b_pmdl015)
+   DEFINE p_b_pmdl015        LIKE pmdl_t.pmdl015
+   DEFINE r_b_exrate         LIKE ooan_t.ooan005
+   DEFINE l_date             LIKE type_t.dat
+   DEFINE l_ooef016          LIKE ooef_t.ooef016
+   DEFINE l_acc40            LIKE type_t.chr80
+   
+   LET r_b_exrate = 1
+   IF cl_null(p_b_pmdl015) THEN
+      RETURN r_b_exrate
+   END IF
+   
+   LET l_date = cl_get_today()
+   SELECT ooef016 INTO l_ooef016 FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_site
+   CALL cl_get_para(g_enterprise,g_site,'S-BAS-0010') RETURNING l_acc40
+   CALL s_aooi160_get_exrate('1',g_site,l_date,p_b_pmdl015,l_ooef016,0,l_acc40)
+        RETURNING r_b_exrate   
+   
+   RETURN r_b_exrate
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_chk_b_qty3" order="5" ver="6" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 特征-本次委外数量检查
+# Memo...........:
+# Usage..........: CALL asfp400_chk_b_qty3(p_i)
+#                       RETURNING r_success
+# Input parameter: p_i            行号
+# Return code....: r_success      检查通过否标识符
+# Date & Author..: 2014-04-18 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_chk_b_qty3(p_i)
+   DEFINE p_i            LIKE type_t.num10
+   DEFINE r_success      LIKE type_t.num5
+   
+   IF p_i <= 0 THEN
+      LET r_success = TRUE
+      RETURN r_success
+   END IF
+   
+   LET r_success = FALSE
+
+   IF cl_null(g_sfac_d[p_i].b_qty3) THEN
+      #本次委外数量不可为空!
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00224'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF   
+
+   IF g_sfac_d[p_i].b_qty3 < 0 THEN
+      #数量不可小于等于0
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'ade-00016'
+      LET g_errparam.extend = g_sfac_d[p_i].b_qty3
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   
+   IF g_sfac_d[p_i].b_qty3 > g_sfac_d[p_i].b_qty2 THEN
+      #最大可委外数量为 %1，本次委外数量不可超过此数值
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00220'
+      LET g_errparam.extend = g_sfac_d[p_i].b_qty3
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = g_sfac_d[p_i].b_qty2
+      CALL cl_err()
+
+      RETURN r_success
+   END IF 
+
+   LET r_success = TRUE
+   RETURN r_success   
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_chk_tot_qty" order="6" ver="6" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 检查工单页签的本次委外数量和特征页签的本次委外数量合计量是否相等
+# Memo...........:
+# Usage..........: CALL asfp400_chk_tot_qty(p_i)
+#                       RETURNING r_success
+# Input parameter: p_i            行号
+# Return code....: r_success      相等否标识符
+# Date & Author..: 2014-04-18 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_chk_tot_qty(p_i)
+   DEFINE p_i            LIKE type_t.num10
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE l_tot_qty      LIKE sfac_t.sfac003
+   DEFINE l_cnt          LIKE type_t.num10
+   
+   LET r_success = FALSE
+   
+   #检查工单是否有特征值,若没有时,则不需要检查
+   SELECT COUNT(*) INTO l_cnt FROM asfp400_tmp_tab1
+    WHERE sfacdocno = g_detail_d[p_i].b_sfcbdocno
+   IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+   IF l_cnt = 0 THEN
+      LET r_success = TRUE
+      RETURN r_success
+   END IF
+
+   SELECT SUM(qty3) INTO l_tot_qty FROM asfp400_tmp_tab1
+    WHERE sfacdocno = g_detail_d[p_i].b_sfcbdocno
+   IF cl_null(l_tot_qty) THEN LET l_tot_qty = 0 END IF
+   
+   IF l_tot_qty <> g_detail_d[p_i].b_carry_qty THEN
+      #工单各特征的本次委外数量合计 %1 不等于工单的本次委外数量 %2 !
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00239'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = l_tot_qty 
+      LET g_errparam.replace[2] =  g_detail_d[p_i].b_carry_qty
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_get_qty1" order="7" ver="8" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 从采购单取已经委外的数量-BY特征
+# Memo...........:
+# Usage..........: CALL asfp400_get_qty1(p_pmdp003,p_pmdp004,p_pmdp007,p_pmdp008,pmdp009,p_pmdp010,p_sfcb020)
+#                       RETURNING r_qty1
+# Input parameter: p_pmdp003      工单单号
+#                : p_pmdp004      RUN CARD
+#                : p_pmdp007      料号
+#                : p_pmdp008      特征
+#                : p_pmdp009      作业编号
+#                : p_pmdp010      作业序
+#                : p_sfcb020      制程站的转出单位
+# Return code....: r_qty1         已委外数量
+# Date & Author..: 2014-04-17 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_get_qty1(p_pmdp003,p_pmdp004,p_pmdp007,p_pmdp008,p_pmdp009,p_pmdp010,p_sfcb020)
+   DEFINE p_pmdp003      LIKE pmdp_t.pmdp003
+   DEFINE p_pmdp004      LIKE pmdp_t.pmdp004
+   DEFINE p_pmdp007      LIKE pmdp_t.pmdp007
+   DEFINE p_pmdp008      LIKE pmdp_t.pmdp008
+   DEFINE p_pmdp009      LIKE pmdp_t.pmdp009
+   DEFINE p_pmdp010      LIKE pmdp_t.pmdp010
+   DEFINE p_sfcb020      LIKE sfcb_t.sfcb020
+   DEFINE r_qty          LIKE pmdp_t.pmdp023
+   DEFINE l_unit         LIKE pmdp_t.pmdp022
+   DEFINE l_qty          LIKE pmdp_t.pmdp023
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_rate         LIKE inaj_t.inaj014
+   DEFINE l_tot          LIKE pmdp_t.pmdp023
+   DEFINE l_qty1         LIKE pmdp_t.pmdp023
+   
+   LET r_qty = 0
+   LET l_tot = 0
+   
+   FOREACH asfp400_cs1 USING p_pmdp003,p_pmdp004,p_pmdp008,p_pmdp009,p_pmdp010 
+                       INTO l_unit,l_qty
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach asfp400_cs1'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN r_qty
+      END IF
+      
+      LET l_qty1 = l_qty
+      
+      LET l_rate = 1
+      IF l_unit <> p_sfcb020 THEN
+#         CALL s_aimi190_get_convert(p_pmdp007,l_unit,p_sfcb020)
+#              RETURNING l_success,l_rate
+#         IF NOT l_success THEN
+#            RETURN r_qty
+#         END IF      
+         CALL s_aooi250_convert_qty(p_pmdp007,l_unit,p_sfcb020,l_qty)
+              RETURNING l_success,l_qty1
+         IF NOT l_success THEN
+            RETURN r_qty
+         END IF      
+      END IF
+      
+      LET l_tot = l_tot + l_qty1
+   END FOREACH
+   
+   LET r_qty = l_tot
+   RETURN r_qty
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_chk_before_carry" order="8" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 抛转采购单前的整体检查
+# Memo...........:
+# Usage..........: CALL asfp400_chk_before_carry()
+#                  RETURNING r_success
+# Input parameter: NULL
+# Return code....: r_success   检查通过否
+# Date & Author..: 2014-04-15 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_chk_before_carry()
+   DEFINE l_i            LIKE type_t.num10
+   DEFINE r_success      LIKE type_t.num5
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_flag         LIKE type_t.chr1
+   
+   LET r_success = TRUE
+   LET l_flag = 'N'
+   
+   FOR l_i = 1 TO g_detail_cnt
+       IF g_detail_d[l_i].sel = 'N' THEN
+          CONTINUE FOR
+       END IF
+       
+       #本次委外数
+       CALL s_asfp400_chk_carry_qty(g_detail_d[l_i].b_sfcbdocno,g_detail_d[l_i].b_sfcb001,
+                                    g_detail_d[l_i].b_sfcb002,g_detail_d[l_i].b_carry_qty)
+            RETURNING l_success
+       IF NOT l_success THEN
+          LET r_success = FALSE
+       END IF
+       
+       #工单的委外数与特征委外合计数是否相等
+       CALL asfp400_chk_tot_qty(l_i)
+            RETURNING l_success       
+       IF NOT l_success THEN
+          LET r_success = FALSE
+       END IF
+       
+       #委外厂商
+       CALL s_asfp400_chk_sfcb013(g_detail_d[l_i].b_sfcbdocno,g_detail_d[l_i].b_sfcb013,NULL)
+            RETURNING l_success
+       IF NOT l_success THEN
+          LET r_success = FALSE
+       END IF
+       
+       #预计交期
+       CALL s_asfp400_chk_sfcb045(g_detail_d[l_i].b_sfcbdocno,g_detail_d[l_i].b_sfcb044,g_detail_d[l_i].b_sfcb045,NULL)
+            RETURNING l_success
+       IF NOT l_success THEN
+          LET r_success = FALSE
+       END IF       
+
+       #取价方式
+       CALL s_asfp400_chk_pmdl017(g_detail_d[l_i].b_sfcbdocno,g_detail_d[l_i].b_pmdl017)
+            RETURNING l_success
+       IF NOT l_success THEN
+          LET r_success = FALSE
+       END IF
+       
+       #币种
+       CALL s_asfp400_chk_pmdl015(g_detail_d[l_i].b_sfcbdocno,g_detail_d[l_i].b_pmdl015)
+            RETURNING l_success
+       IF NOT l_success THEN
+          LET r_success = FALSE
+       END IF
+
+       #税种
+       CALL s_asfp400_chk_pmdl011(g_detail_d[l_i].b_sfcbdocno,g_detail_d[l_i].b_pmdl011)
+            RETURNING l_success
+       IF NOT l_success THEN
+          LET r_success = FALSE
+       END IF
+       LET l_flag = 'Y'
+   END FOR
+   
+   IF l_flag = 'N' THEN
+      #无资料处理!
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00230'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_b2_fill" order="9" ver="6" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 特征单身fill
+# Memo...........:
+# Usage..........: CALL asfp400_b2_fill()
+#                  RETURNING NULL
+# Input parameter: NULL
+# Return code....: NULL
+# Date & Author..: 2014-04-15 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_b2_fill()
+   DEFINE l_i            LIKE type_t.num5
+
+   CALL g_sfac_d.clear()
+   
+   IF l_ac <=0 THEN
+      RETURN
+   END IF
+   
+   LET g_sql = " SELECT sfac006, sfac003, qty1, qty2, qty3 ",
+               "   FROM asfp400_tmp_tab1 ",
+               "  WHERE sfacdocno = '",g_detail_d[l_ac].b_sfcbdocno,"'",
+               "  ORDER BY sfac006 "
+
+   PREPARE asfp400_b2_fill_p1 FROM g_sql
+   DECLARE asfp400_b2_fill_cs1 CURSOR FOR asfp400_b2_fill_p1
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'declare asfp400_b2_fill_cs1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   LET l_i = 1
+   FOREACH asfp400_b2_fill_cs1 INTO g_sfac_d[l_i].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF   
+
+      LET l_i = l_i + 1
+   
+   END FOREACH
+   LET g_rec_b2 = l_i - 1   
+   CALL g_sfac_d.deleteElement(l_i)
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_ins_tmp_table" order="10" ver="8" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 插入特征临时表
+# Memo...........:
+# Usage..........: CALL asfp400_ins_tmp_table(p_sfacdocno,p_i)
+#                       RETURNING r_success
+# Input parameter: p_sfacdocno    工单单号
+#                : p_i            行号
+# Return code....: r_success      插入成功否标识符
+# Date & Author..: 2014-04-18 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_ins_tmp_table(p_sfacdocno,p_i)
+   DEFINE p_sfacdocno    LIKE sfac_t.sfacdocno
+   DEFINE p_i            LIKE type_t.num10
+   DEFINE r_success      LIKE type_t.num5   
+   DEFINE l_i            LIKE type_t.num5
+   DEFINE l_sfaa013      LIKE sfaa_t.sfaa013
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_rate         LIKE inaj_t.inaj014
+   DEFINE l_sfac         RECORD
+                         sfacdocno      LIKE sfac_t.sfacdocno,
+                         sfac006        LIKE sfac_t.sfac006, 
+                         sfac003        LIKE sfac_t.sfac003, 
+                         qty1           LIKE sfaa_t.sfaa012,
+                         qty2           LIKE sfaa_t.sfaa012,
+                         qty3           LIKE sfaa_t.sfaa012
+                         END RECORD
+   DEFINE l_qty          LIKE sfac_t.sfac003
+   
+   LET r_success = FALSE
+   
+   LET g_sql = " SELECT sfacdocno, sfac006, sfac003, 0, 0, 0, sfaa013     ",
+               "   FROM sfac_t,sfaa_t ",
+               "  WHERE sfacent   = sfaaent   AND sfacent   =  ",g_enterprise,
+               "    AND sfacdocno = sfaadocno AND sfacdocno = '",p_sfacdocno,"'",
+               "    AND sfac002 IN ('1','2') ",         #一般/联产品
+               "    AND sfac006 IS NOT NULL AND sfac006 <> ' ' ",
+               "    AND sfac003 > 0 ",
+               "  ORDER BY sfac006 "
+
+   PREPARE asfp400_ins_tmp_tab1_p1 FROM g_sql
+   DECLARE asfp400_ins_tmp_tab1_cs1 CURSOR FOR asfp400_ins_tmp_tab1_p1
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'declare asfp400_ins_tmp_tab1_cs1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+
+   FOREACH asfp400_ins_tmp_tab1_cs1 INTO l_sfac.*,l_sfaa013
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF   
+      
+      LET l_qty = l_sfac.sfac003
+      #生产数量
+      LET l_rate = 1
+      IF l_sfaa013 <> g_detail_d[p_i].b_sfcb020 THEN
+#         CALL s_aimi190_get_convert(g_detail_d[p_i].b_sfaa010,l_sfaa013,g_detail_d[p_i].b_sfcb020)
+#              RETURNING l_success,l_rate
+#         IF NOT l_success THEN
+#            EXIT FOREACH
+#         END IF      
+         CALL s_aooi250_convert_qty(g_detail_d[p_i].b_sfaa010,l_sfaa013,g_detail_d[p_i].b_sfcb020,l_sfac.sfac003)
+              RETURNING l_success,l_qty
+         IF NOT l_success THEN
+            EXIT FOREACH
+         END IF      
+      END IF
+#      LET l_sfac.sfac003 = l_sfac.sfac003 * l_rate
+      LET l_sfac.sfac003 = l_qty
+      
+      #已委外数量
+      CALL asfp400_get_qty1(p_sfacdocno,g_detail_d[p_i].b_sfcb001,
+                            g_detail_d[p_i].b_sfaa010,l_sfac.sfac006,
+                            g_detail_d[p_i].b_sfcb003,g_detail_d[p_i].b_sfcb004,
+                            g_detail_d[p_i].b_sfcb020)
+           RETURNING l_sfac.qty1
+
+      #可委外数量
+      LET l_sfac.qty2 = l_sfac.sfac003 - l_sfac.qty1
+      
+      #本次转委外数量
+      LET l_sfac.qty3 = l_sfac.qty2
+      
+      INSERT INTO asfp400_tmp_tab1 VALUES(l_sfac.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'insert asfp400_tmp_tab1'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN r_success
+      END IF
+   
+   END FOREACH
+
+   LET r_success = TRUE
+   RETURN r_success
+
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_cre_tmp_table" order="11" ver="6" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 特征页签使用的临时表
+# Memo...........:
+# Usage..........: CALL asfp400_cre_tmp_table()
+#                  RETURNING r_success
+# Input parameter: NULL
+# Return code....: r_success  临时表建立成功否的标识符
+# Date & Author..: 2014-04-18 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_cre_tmp_table()
+   DEFINE r_success       LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = FALSE
+
+   #检查事务中
+   IF NOT s_transaction_chk('N',1) THEN
+      RETURN r_success
+   END IF
+
+   DROP TABLE asfp400_tmp_tab1;
+   CREATE TEMP TABLE asfp400_tmp_tab1(
+   sfacdocno      LIKE sfac_t.sfacdocno,
+   sfac006        LIKE sfac_t.sfac006, 
+   sfac003        LIKE sfac_t.sfac003,
+   qty1           LIKE sfac_t.sfac003, 
+   qty2           LIKE sfac_t.sfac003, 
+   qty3           LIKE sfac_t.sfac003
+   );
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+
+   LET r_success = TRUE
+   RETURN r_success
+
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_drop_tmp_table" order="12" ver="6" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL asfp400_drop_tmp_table()
+#                       RETURNING NULL
+# Input parameter: NULL
+# Return code....: NULL
+# Date & Author..: 2014-04-18 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_drop_tmp_table()
+   WHENEVER ERROR CONTINUE
+
+   DROP TABLE asfp400_tmp_tab1;
+END FUNCTION]]>
+  </point>
+  <point name="function.asfp400_carry_po" order="13" ver="7" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 抛转采购单
+# Memo...........:
+# Usage..........: CALL asfp400_carry_po()
+#                       RETURNING r_success
+# Input parameter: NULL
+# Return code....: r_success    成功否标识符
+# Date & Author..: 2014-04-29 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfp400_carry_po()
+   DEFINE r_success        LIKE type_t.num5
+   DEFINE l_doc_type       LIKE ooba_t.ooba002     
+   DEFINE l_date           LIKE type_t.dat    
+   DEFINE l_combine        LIKE type_t.chr1   
+   DEFINE l_begin_no       LIKE pmdl_t.pmdldocno   
+   DEFINE l_end_no         LIKE pmdl_t.pmdldocno
+   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_i              LIKE type_t.num10
+   DEFINE l_j              LIKE type_t.num10
+   DEFINE l_k              LIKE type_t.num10
+   DEFINE l_choice         LIKE type_t.num5
+   DEFINE la_param         RECORD
+                           prog   STRING,
+                           param  DYNAMIC ARRAY OF STRING
+                           END RECORD
+   DEFINE ls_js            STRING
+   
+   LET r_success = FALSE
+   
+   CALL cl_err_collect_init()
+
+   CALL asfp400_chk_before_carry()
+        RETURNING l_success
+   IF NOT l_success THEN
+      CALL cl_err_collect_show()   
+      RETURN r_success
+   END IF
+
+   
+   CALL asfp400_01(g_detail_d)
+        RETURNING l_success,l_doc_type,l_date,l_combine
+   IF NOT l_success THEN
+      RETURN r_success
+   END IF
+   LET g_sql = "SELECT sfacdocno,sfac006,qty3 FROM asfp400_tmp_tab1 ",
+               " WHERE sfacdocno = ?   ",
+               "   AND qty3 > 0 ",
+               " ORDER BY sfac006 "
+   PREPARE asfp400_arr2_p1 FROM g_sql                           
+   DECLARE asfp400_arr2_cs1 CURSOR FOR asfp400_arr2_p1
+
+   CALL g_arr1.clear()
+   CALL g_arr2.clear()
+   LET l_j = 1
+   LET l_k = 1
+   FOR l_i = 1 TO g_detail_d.getLength()
+       IF g_detail_d[l_i].sel = 'Y' THEN
+          LET g_arr1[l_j].sfcbdocno = g_detail_d[l_i].b_sfcbdocno
+          LET g_arr1[l_j].sfaa010   = g_detail_d[l_i].b_sfaa010  
+          LET g_arr1[l_j].sfcb001   = g_detail_d[l_i].b_sfcb001  
+          LET g_arr1[l_j].sfcb002   = g_detail_d[l_i].b_sfcb002  
+          LET g_arr1[l_j].sfcb003   = g_detail_d[l_i].b_sfcb003  
+          LET g_arr1[l_j].sfcb004   = g_detail_d[l_i].b_sfcb004  
+          LET g_arr1[l_j].sfcb020   = g_detail_d[l_i].b_sfcb020  
+          LET g_arr1[l_j].carry_qty = g_detail_d[l_i].b_carry_qty
+          LET g_arr1[l_j].sfcb013   = g_detail_d[l_i].b_sfcb013  
+          LET g_arr1[l_j].sfcb044   = g_detail_d[l_i].b_sfcb044  
+          LET g_arr1[l_j].sfcb045   = g_detail_d[l_i].b_sfcb045  
+          LET g_arr1[l_j].pmdl017   = g_detail_d[l_i].b_pmdl017  
+          LET g_arr1[l_j].pmdl015   = g_detail_d[l_i].b_pmdl015  
+          LET g_arr1[l_j].exrate    = g_detail_d[l_i].b_exrate   
+          LET g_arr1[l_j].pmdl011   = g_detail_d[l_i].b_pmdl011  
+          LET g_arr1[l_j].price     = g_detail_d[l_i].b_price     
+   
+
+          FOREACH asfp400_arr2_cs1 USING g_arr1[l_j].sfcbdocno
+                                   INTO g_arr2[l_k].*
+              IF SQLCA.sqlcode THEN
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = SQLCA.sqlcode
+                 LET g_errparam.extend = 'foreach asfp400_arr2_cs1'
+                 LET g_errparam.popup = TRUE
+                 CALL cl_err()
+
+              END IF
+              LET l_k = l_k + 1
+          END FOREACH
+          
+          LET l_j = l_j + 1                     
+       END IF
+   END FOR
+            
+   CALL s_asfp400_cre_tmp_table(l_doc_type,l_date,g_arr1,g_arr2)
+        RETURNING l_success
+   IF NOT l_success THEN
+      RETURN r_success
+   END IF
+   
+   CALL s_transaction_begin()
+   CALL s_asfp400_carry_po(l_doc_type,l_date,l_combine,g_arr1,g_arr2)
+        RETURNING l_success,l_begin_no,l_end_no
+   IF l_success THEN
+      CALL s_transaction_end('Y',0)
+      #成功产生单据，单据范围：%1 ~ %2
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00251'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = l_begin_no 
+      LET g_errparam.replace[2] = l_end_no
+      CALL cl_err()
+
+   ELSE
+      CALL s_transaction_end('N',1)
+   END IF
+
+   CALL s_asfp400_drop_tmp_table()
+
+   IF l_success AND NOT cl_null(l_begin_no) THEN
+      #是否要运行apmt501查看生成的采购单信息[Y/N]?
+      LET l_choice = cl_ask_promp('asf-00261')
+      IF l_choice = TRUE THEN
+          LET la_param.prog     = "apmt501"
+          #LET la_param.param[1] = l_begin_no
+          #LET la_param.param[1] = '1'
+          LET la_param.param[1] = ''
+          LET la_param.param[2] = " AND pmdldocno BETWEEN '",l_begin_no,"' AND '",l_end_no,"'"
+          LET ls_js = util.JSON.stringify( la_param )
+          CALL cl_cmdrun(ls_js)
+      END IF
+   END IF
+      
+   LET r_success = TRUE
+   RETURN r_success
+   
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.after_b_fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL asfp400_b2_fill()]]>
+  </point>
+  <point name="b_fill.clear" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL g_pmal.clear()]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_sfaa         RECORD LIKE sfaa_t.*
+   DEFINE l_sfcb         RECORD LIKE sfcb_t.*
+   DEFINE l_i            LIKE type_t.num5
+   DEFINE l_unfinish_rt  LIKE type_t.num26_10
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_cnt          LIKE type_t.num10]]>
+  </point>
+  <point name="b_fill.foreach_into" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   l_sfaa.*,l_sfcb.*]]>
+  </point>
+  <point name="b_fill.foreach_iside" order="" ver="6" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      INITIALIZE g_detail_d[l_ac].* TO NULL
+      LET g_detail_d[l_ac].sel            = 'N'   
+      LET g_detail_d[l_ac].b_sfcbdocno      = l_sfcb.sfcbdocno
+      LET g_detail_d[l_ac].b_sfcb001        = l_sfcb.sfcb001
+      LET g_detail_d[l_ac].b_sfcb002        = l_sfcb.sfcb002
+      LET g_detail_d[l_ac].b_sfaa003        = l_sfaa.sfaa003
+      LET g_detail_d[l_ac].b_sfaa002        = l_sfaa.sfaa002
+      LET g_detail_d[l_ac].b_sfaa010        = l_sfaa.sfaa010                                                         
+      LET g_detail_d[l_ac].b_sfcb003        = l_sfcb.sfcb003
+      LET g_detail_d[l_ac].b_sfcb004        = l_sfcb.sfcb004
+      LET g_detail_d[l_ac].b_sfcb020        = l_sfcb.sfcb020
+      
+      IF cl_null(l_sfcb.sfcb027) THEN LET l_sfcb.sfcb027 = 0 END IF
+      IF cl_null(l_sfcb.sfcb029) THEN LET l_sfcb.sfcb029 = 0 END IF
+      IF cl_null(l_sfcb.sfcb030) THEN LET l_sfcb.sfcb030 = 0 END IF
+      IF cl_null(l_sfcb.sfcb031) THEN LET l_sfcb.sfcb031 = 0 END IF
+      IF cl_null(l_sfcb.sfcb032) THEN LET l_sfcb.sfcb032 = 0 END IF
+      IF cl_null(l_sfcb.sfcb033) THEN LET l_sfcb.sfcb033 = 0 END IF
+      IF cl_null(l_sfcb.sfcb034) THEN LET l_sfcb.sfcb034 = 0 END IF
+      IF cl_null(l_sfcb.sfcb035) THEN LET l_sfcb.sfcb035 = 0 END IF
+      IF cl_null(l_sfcb.sfcb036) THEN LET l_sfcb.sfcb036 = 0 END IF
+      IF cl_null(l_sfcb.sfcb037) THEN LET l_sfcb.sfcb037 = 0 END IF
+      IF cl_null(l_sfcb.sfcb038) THEN LET l_sfcb.sfcb038 = 0 END IF
+      IF cl_null(l_sfcb.sfcb039) THEN LET l_sfcb.sfcb039 = 0 END IF
+      IF cl_null(l_sfcb.sfcb041) THEN LET l_sfcb.sfcb041 = 0 END IF
+      IF cl_null(l_sfcb.sfcb042) THEN LET l_sfcb.sfcb042 = 0 END IF
+      LET g_detail_d[l_ac].b_tot_qty        = l_sfcb.sfcb027 + l_sfcb.sfcb029 + l_sfcb.sfcb030 + l_sfcb.sfcb031 + l_sfcb.sfcb032 
+                                         - l_sfcb.sfcb033 - l_sfcb.sfcb034 - l_sfcb.sfcb035 - l_sfcb.sfcb036 - l_sfcb.sfcb037 
+                                         - l_sfcb.sfcb038 - l_sfcb.sfcb039 - l_sfcb.sfcb041 + l_sfcb.sfcb042
+   
+      LET g_detail_d[l_ac].b_carry_qty      = g_detail_d[l_ac].b_tot_qty
+      LET g_detail_d[l_ac].b_sfcb013        = l_sfcb.sfcb013
+      IF cl_null(g_detail_d[l_ac].b_sfcb013) THEN
+         LET g_detail_d[l_ac].b_sfcb013     = l_sfaa.sfaa017
+      END IF
+      LET g_detail_d[l_ac].b_sfcb044        = l_sfcb.sfcb044
+      LET g_detail_d[l_ac].b_sfcb045        = l_sfcb.sfcb045
+      CALL asfp400_b_sfcb013_reference(l_ac)
+      LET g_detail_d[l_ac].b_exrate         = asfp400_get_b_exrate(g_detail_d[l_ac].b_pmdl015)
+      LET g_detail_d[l_ac].b_price          = 0 
+      
+      #取各字段说明
+      CALL asfp400_set_desc(l_ac)
+      
+      #整单委外时处理特征页签，工艺委外不处理
+      IF cl_null(l_sfcb.sfcb003) AND cl_null(l_sfcb.sfcb004) THEN      
+         CALL asfp400_ins_tmp_table(g_detail_d[l_ac].b_sfcbdocno,l_ac)   
+              RETURNING l_success
+         IF NOT l_success THEN
+            CONTINUE FOREACH
+         END IF
+      END IF
+]]>
+  </point>
+  <point name="b_fill.other_table" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   #选项清空
+   CALL g_pmal.clear() ]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="9" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   #可委外數=標準產出數量(sfcb027)+重工轉入(sfcb029)+工單轉入(sfcb030)+分割轉入(sfcb031)+合併轉入(sfcb032)
+   #        -良品轉出(sfcb033)-重工轉出(sfcb034)-工單轉出(sfcb035)-當站報廢(sfcb036)-當站下線(sfcb037)
+   #        -分割轉出(sfcb038)-合併轉出(sfcb039)-委外數量(sfcb041)+委外完工數量(sfcb042)         
+   
+   DELETE FROM asfp400_tmp_tab1;
+   
+   LET g_sql = " SELECT sfaa_t.*,sfcb_t.* ",
+               "  FROM sfcb_t,sfaa_t ",
+               " WHERE sfcbent   = sfaaent AND sfcbent = ? ",
+               "   AND sfaasite  = '",g_site,"'",
+               "   AND sfcbdocno = sfaadocno ",
+               "   AND sfaastus IN ('F','Y') ",
+               "   AND (sfcb012  = 'Y' OR sfaa057 = '2')",
+               "   AND (sfcb027 + sfcb029 + sfcb030 + sfcb031 + sfcb032 ",
+               "      - sfcb033 - sfcb034 - sfcb035 - sfcb036 - sfcb037 ",
+               "      - sfcb038 - sfcb039 - sfcb041 + sfcb042) > 0 ",
+               "   AND ",g_param.wc,
+               " ORDER BY sfcbdocno,sfcb002"]]>
+  </point>
+  <point name="global.variable" order="" ver="6" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[                       sel            LIKE type_t.chr1,
+                       b_sfcbdocno      LIKE sfcb_t.sfcbdocno,
+                       b_sfcb001        LIKE sfcb_t.sfcb001, 
+                       b_sfcb002        LIKE sfcb_t.sfcb002, 
+                       b_sfaa003        LIKE sfaa_t.sfaa003,
+                       b_sfaa002        LIKE sfaa_t.sfaa002,
+                       b_sfaa002_desc   LIKE type_t.chr500,
+                       b_sfaa010        LIKE sfaa_t.sfaa010,   
+                       b_sfaa010_desc1  LIKE imaal_t.imaal003,
+                       b_sfaa010_desc2  LIKE imaal_t.imaal004,                                                                  
+                       b_sfcb003        LIKE sfcb_t.sfcb003, 
+                       b_sfcb003_desc   LIKE type_t.chr500,
+                       b_sfcb004        LIKE sfcb_t.sfcb004, 
+                       b_sfcb020        LIKE sfcb_t.sfcb020, 
+                       b_sfcb020_desc   LIKE type_t.chr500,
+                       b_tot_qty        LIKE sfaa_t.sfaa012,
+                       b_carry_qty      LIKE sfaa_t.sfaa012,
+                       b_sfcb013        LIKE sfcb_t.sfcb013, 
+                       b_sfcb013_desc   LIKE type_t.chr500,
+                       b_sfcb044        LIKE sfcb_t.sfcb044, 
+                       b_sfcb045        LIKE sfcb_t.sfcb045, 
+                       b_pmdl017        LIKE pmdl_t.pmdl017,
+                       b_pmdl017_desc   LIKE type_t.chr500,
+                       b_pmdl015        LIKE pmdl_t.pmdl015,
+                       b_pmdl015_desc   LIKE type_t.chr500,
+                       b_exrate         LIKE ooan_t.ooan005,
+                       b_pmdl011        LIKE pmdl_t.pmdl011,
+                       b_pmdl011_desc   LIKE type_t.chr500,
+                       b_price          LIKE pmdn_t.pmdn015
+                       END RECORD
+TYPE type_g_sfac_d     RECORD
+                       b_sfac006        LIKE sfac_t.sfac006, 
+                       b_sfac003        LIKE sfac_t.sfac003, 
+                       b_qty1           LIKE sfaa_t.sfaa012,
+                       b_qty2           LIKE sfaa_t.sfaa012,
+                       b_qty3           LIKE sfaa_t.sfaa012
+                       END RECORD
+                                           
+DEFINE g_sfac_d        DYNAMIC ARRAY OF type_g_sfac_d 
+DEFINE g_rec_b1        LIKE type_t.num10
+DEFINE g_rec_b2        LIKE type_t.num10
+DEFINE g_param         type_parameter
+DEFINE l_ac1           LIKE type_t.num10
+
+TYPE type_g_arr1       RECORD
+                       sfcbdocno      LIKE sfcb_t.sfcbdocno,
+                       sfaa010        LIKE sfaa_t.sfaa010,
+                       sfcb001        LIKE sfcb_t.sfcb001,
+                       sfcb002        LIKE sfcb_t.sfcb002,
+                       sfcb003        LIKE sfcb_t.sfcb003,
+                       sfcb004        LIKE sfcb_t.sfcb004,
+                       sfcb020        LIKE sfcb_t.sfcb020,
+                       carry_qty      LIKE sfaa_t.sfaa012,
+                       sfcb013        LIKE sfcb_t.sfcb013,
+                       sfcb044        LIKE sfcb_t.sfcb044,
+                       sfcb045        LIKE sfcb_t.sfcb045,
+                       pmdl017        LIKE pmdl_t.pmdl017,
+                       pmdl015        LIKE pmdl_t.pmdl015,
+                       exrate         LIKE ooan_t.ooan005,
+                       pmdl011        LIKE pmdl_t.pmdl011,
+                       price          LIKE pmdn_t.pmdn015
+                       END RECORD
+
+TYPE type_g_arr2       RECORD
+                       sfacdocno      LIKE sfac_t.sfacdocno,
+                       sfac006        LIKE sfac_t.sfac006,
+                       carry_qty      LIKE sfac_t.sfac003
+                       END RECORD
+DEFINE g_arr1          DYNAMIC ARRAY OF type_g_arr1                        
+DEFINE g_arr2          DYNAMIC ARRAY OF type_g_arr2   
+DEFINE g_pmal          DYNAMIC ARRAY OF RECORD
+                       b_sfcb013     LIKE pmdl_t.pmdl004,
+                       pmal002       LIKE pmal_t.pmal002
+                       END RECORD]]>
+  </point>
+  <point name="init.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE lwin_curr      ui.Window
+   DEFINE lfrm_curr      ui.Form
+   DEFINE ls_path        STRING
+   DEFINE l_success      LIKE type_t.num5]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   
+   #载入query按键
+#   LET lwin_curr = ui.Window.getCurrent()
+#   LET lfrm_curr = lwin_curr.getForm()
+#   LET ls_path = os.Path.join(os.Path.join(FGL_GETENV("ERP"),"cfg"),"4tb")
+#   LET ls_path = os.Path.join(ls_path,"toolbar_q.4tb")
+#   CALL lfrm_curr.loadToolBar(ls_path)
+   
+   #工单状态
+   CALL cl_set_combo_scc('b_sfaa003','4007')
+   CALL cl_set_combo_scc('sfaa003','4007')
+   
+   #创建临时表
+   CALL asfp400_cre_tmp_table()
+        RETURNING l_success
+   IF NOT l_success THEN
+      RETURN
+   END IF]]>
+  </point>
+  <point name="main.background" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL asfp400_def_cursor('2')]]>
+  </point>
+  <point name="main.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      CALL asfp400_drop_tmp_table()]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success     LIKE type_t.num10]]>
+  </point>
+  <point name="query.after_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_master_idx = l_ac]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="6" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_sfcb_t         type_g_detail_d    
+   DEFINE l_sfac_t         type_g_sfac_d   
+   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_sfcb           RECORD LIKE sfcb_t.*
+   DEFINE l_sql            STRING
+   DEFINE l_sql1           STRING
+   
+   LET g_param.wc = ' 1=1'
+   CALL asfp400_query()   ]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         ON ACTION batch_execute
+            CALL asfp400_carry_po()
+                 RETURNING l_success
+            CALL asfp400_b_fill() 
+            IF l_ac > 0 THEN
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac) 
+               LET l_sfcb_t.* = g_detail_d[l_ac].*
+            END IF              ]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+         CONSTRUCT BY NAME g_param.wc ON sfcbdocno, sfcb001, sfaa003, sfaa002, sfaa010, sfcb003, sfcb004, sfcb020
+         
+            #工单单号
+            ON ACTION controlp INFIELD sfcbdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_sfcbdocno_3()
+               DISPLAY g_qryparam.return1 TO sfcbdocno
+               NEXT FIELD sfcbdocno
+               
+            #人员编号
+            ON ACTION controlp INFIELD sfaa002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               DISPLAY g_qryparam.return1 TO sfaa002
+               NEXT FIELD sfaa002  
+         
+            #生产料号
+            ON ACTION controlp INFIELD sfaa010
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaa001_9()
+               DISPLAY g_qryparam.return1 TO sfaa010
+               NEXT FIELD sfaa010
+         
+            #作业编号
+            ON ACTION controlp INFIELD sfcb003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '221'
+               CALL q_oocq002()
+               DISPLAY g_qryparam.return1 TO sfcb003
+               NEXT FIELD sfcb003
+         
+            #单位
+            ON ACTION controlp INFIELD sfcb020
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooca001()
+               DISPLAY g_qryparam.return1 TO sfcb020
+               NEXT FIELD sfcb020
+         
+         END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="6" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                     INSERT ROW = FALSE, 
+                     DELETE ROW = FALSE,
+                     APPEND ROW = FALSE)
+            
+            BEFORE ROW
+               LET l_ac = ARR_CURR()
+               CALL asfp400_b2_fill()               
+               IF g_detail_d[l_ac].sel = 'Y' THEN
+                  CALL cl_set_comp_entry('b_carry_qty,b_sfcb013,b_sfcb045,b_pmdl017,b_pmdl015,b_pmdl011',TRUE)
+               ELSE
+                  CALL cl_set_comp_entry('b_carry_qty,b_sfcb013,b_sfcb045,b_pmdl017,b_pmdl015,b_pmdl011',FALSE)
+               END IF
+               
+               INITIALIZE l_sfcb.* TO NULL
+               IF NOT cl_null(g_detail_d[l_ac].b_sfcbdocno) AND NOT cl_null(g_detail_d[l_ac].b_sfcb001) AND
+                  NOT cl_null(g_detail_d[l_ac].b_sfcb002) THEN
+                  SELECT * INTO l_sfcb.* FROM sfcb_t
+                   WHERE sfcbent   = g_enterprise
+                     AND sfcbdocno = g_detail_d[l_ac].b_sfcbdocno
+                     AND sfcb001   = g_detail_d[l_ac].b_sfcb001
+                     AND sfcb002   = g_detail_d[l_ac].b_sfcb002
+               END IF
+               LET l_sfcb_t.* = g_detail_d[l_ac].*
+               
+            BEFORE FIELD b_sel
+               CALL cl_set_comp_entry('b_carry_qty,b_sfcb013,b_sfcb045,b_pmdl017,b_pmdl015,b_pmdl011',TRUE)
+               CALL cl_set_comp_required('b_carry_qty,b_sfcb013,b_sfcb045,b_pmdl017,b_pmdl015,b_pmdl011',FALSE)
+    
+            AFTER FIELD b_sel
+               IF g_detail_d[l_ac].sel NOT MATCHES '[YN]' THEN
+                  NEXT FIELD b_sel
+               END IF
+               IF g_detail_d[l_ac].sel = 'Y' THEN
+                  CALL cl_set_comp_required('b_carry_qty,b_sfcb013,b_sfcb045,b_pmdl017,b_pmdl015,b_pmdl011',TRUE)
+                  #本次委外数
+                  IF cl_null(g_detail_d[l_ac].b_carry_qty) OR g_detail_d[l_ac].b_carry_qty = 0 THEN
+                     LET g_detail_d[l_ac].b_carry_qty = g_detail_d[l_ac].b_tot_qty
+                  END IF
+                  #委外厂商
+                  IF cl_null(g_detail_d[l_ac].b_sfcb013) THEN
+                     LET g_detail_d[l_ac].b_sfcb013 = l_sfcb.sfcb013
+                     CALL s_desc_get_trading_partner_abbr_desc(g_detail_d[l_ac].b_sfcb013)
+                          RETURNING g_detail_d[l_ac].b_sfcb013_desc
+                     #取价方式/币种/税种的DEFAULT
+                     CALL asfp400_b_sfcb013_reference(l_ac)
+                  END IF
+                  #预计交期
+                  IF cl_null(g_detail_d[l_ac].b_sfcb045) THEN
+                     LET g_detail_d[l_ac].b_sfcb045 = l_sfcb.sfcb045
+                  END IF  
+               ELSE
+                  CALL cl_set_comp_entry('b_carry_qty,b_sfcb013,b_sfcb045,b_pmdl017,b_pmdl015,b_pmdl011',FALSE)                    
+               END IF   
+               
+            AFTER FIELD b_carry_qty
+               IF NOT cl_null(g_detail_d[l_ac].b_carry_qty) THEN
+                  CALL s_asfp400_chk_carry_qty(g_detail_d[l_ac].b_sfcbdocno,g_detail_d[l_ac].b_sfcb001,
+                                               g_detail_d[l_ac].b_sfcb002,g_detail_d[l_ac].b_carry_qty)
+                       RETURNING l_success
+                  IF NOT l_success THEN
+                     LET g_detail_d[l_ac].b_carry_qty = l_sfcb_t.b_carry_qty
+                     NEXT FIELD b_carry_qty
+                  END IF
+               END IF  
+               
+            AFTER FIELD b_sfcb013
+               IF NOT cl_null(g_detail_d[l_ac].b_sfcb013) THEN
+                  IF cl_null(l_sfcb_t.b_sfcb013) OR l_sfcb_t.b_sfcb013 <> g_detail_d[l_ac].b_sfcb013 THEN
+                     CALL s_asfp400_chk_sfcb013(g_detail_d[l_ac].b_sfcbdocno,g_detail_d[l_ac].b_sfcb013,NULL)
+                          RETURNING l_success
+                     IF NOT l_success THEN
+                        LET g_detail_d[l_ac].b_sfcb013 = l_sfcb_t.b_sfcb013
+                        CALL s_desc_get_trading_partner_abbr_desc(g_detail_d[l_ac].b_sfcb013)
+                             RETURNING g_detail_d[l_ac].b_sfcb013_desc
+                        NEXT FIELD b_sfcb013
+                     END IF
+                     CALL asfp400_b_sfcb013_reference(l_ac)             
+                  END IF
+                  CALL s_desc_get_trading_partner_abbr_desc(g_detail_d[l_ac].b_sfcb013)
+                       RETURNING g_detail_d[l_ac].b_sfcb013_desc
+               ELSE
+                  LET g_detail_d[l_ac].b_sfcb013_desc = NULL
+               END IF
+    
+
+            AFTER FIELD b_sfcb045
+               IF NOT cl_null(g_detail_d[l_ac].b_sfcb045) THEN
+                  CALL s_asfp400_chk_sfcb045(g_detail_d[l_ac].b_sfcbdocno,g_detail_d[l_ac].b_sfcb044,g_detail_d[l_ac].b_sfcb045,NULL)
+                       RETURNING l_success
+                  IF NOT l_success THEN
+                     LET g_detail_d[l_ac].b_sfcb045 = l_sfcb_t.b_sfcb045
+                     NEXT FIELD b_sfcb045
+                  END IF
+               END IF
+               
+            AFTER FIELD b_pmdl017
+               IF NOT cl_null(g_detail_d[l_ac].b_pmdl017) THEN
+                  IF cl_null(l_sfcb_t.b_pmdl017) OR l_sfcb_t.b_pmdl017 <> g_detail_d[l_ac].b_pmdl017 THEN
+                     CALL s_asfp400_chk_pmdl017(g_detail_d[l_ac].b_sfcbdocno,g_detail_d[l_ac].b_pmdl017)
+                          RETURNING l_success
+                     IF NOT l_success THEN
+                        LET g_detail_d[l_ac].b_pmdl017 = l_sfcb_t.b_pmdl017
+                        CALL s_desc_get_price_type_desc(g_detail_d[l_ac].b_pmdl017)
+                             RETURNING g_detail_d[l_ac].b_pmdl017_desc
+                        NEXT FIELD b_pmdl017
+                     END IF           
+                  END IF
+                  CALL s_desc_get_price_type_desc(g_detail_d[l_ac].b_pmdl017)
+                       RETURNING g_detail_d[l_ac].b_pmdl017_desc    
+               ELSE
+                  LET g_detail_d[l_ac].b_pmdl017_desc = NULL
+               END IF
+               
+            AFTER FIELD b_pmdl015
+               IF NOT cl_null(g_detail_d[l_ac].b_pmdl015) THEN
+                  IF cl_null(l_sfcb_t.b_pmdl015) OR l_sfcb_t.b_pmdl015 <> g_detail_d[l_ac].b_pmdl015 THEN
+                     CALL s_asfp400_chk_pmdl015(g_detail_d[l_ac].b_sfcbdocno,g_detail_d[l_ac].b_pmdl015)
+                          RETURNING l_success
+                     IF NOT l_success THEN
+                        LET g_detail_d[l_ac].b_pmdl015 = l_sfcb_t.b_pmdl015
+                        CALL s_desc_get_currency_desc(g_detail_d[l_ac].b_pmdl015)
+                             RETURNING g_detail_d[l_ac].b_pmdl015_desc
+                        NEXT FIELD b_pmdl015
+                     END IF           
+                  END IF
+                  CALL s_desc_get_currency_desc(g_detail_d[l_ac].b_pmdl015)
+                       RETURNING g_detail_d[l_ac].b_pmdl015_desc    
+                  CALL asfp400_get_b_exrate(g_detail_d[l_ac].b_pmdl015)
+                       RETURNING g_detail_d[l_ac].b_exrate
+               ELSE
+                  LET g_detail_d[l_ac].b_pmdl015_desc = NULL
+                  LET g_detail_d[l_ac].b_exrate = NULL
+               END IF  
+
+            AFTER FIELD b_pmdl011
+               IF NOT cl_null(g_detail_d[l_ac].b_pmdl011) THEN
+                  IF cl_null(l_sfcb_t.b_pmdl011) OR l_sfcb_t.b_pmdl011 <> g_detail_d[l_ac].b_pmdl011 THEN
+                     CALL s_asfp400_chk_pmdl011(g_detail_d[l_ac].b_sfcbdocno,g_detail_d[l_ac].b_pmdl011)
+                          RETURNING l_success
+                     IF NOT l_success THEN
+                        LET g_detail_d[l_ac].b_pmdl011 = l_sfcb_t.b_pmdl011
+                        CALL s_desc_get_tax_desc1(g_site,g_detail_d[l_ac].b_pmdl011)
+                             RETURNING g_detail_d[l_ac].b_pmdl011_desc
+                        NEXT FIELD b_pmdl011
+                     END IF           
+                  END IF
+                  CALL s_desc_get_tax_desc1(g_site,g_detail_d[l_ac].b_pmdl011)
+                       RETURNING g_detail_d[l_ac].b_pmdl011_desc    
+               ELSE
+                  LET g_detail_d[l_ac].b_pmdl011_desc = NULL
+               END IF
+
+
+            ON ACTION controlp INFIELD b_sfcb013
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_detail_d[l_ac].b_sfcb013    
+               LET g_qryparam.where = "1=1 "
+               LET l_sql = ''
+               CALL s_control_get_sql("pmaa080",'3','4',g_user,g_dept) RETURNING l_success,l_sql
+               IF l_success THEN
+                  LET g_qryparam.where = g_qryparam.where ," AND ",l_sql
+               END IF
+               LET l_sql1 = ''
+               CALL s_control_get_sql("pmaa001",'4','4',g_user,g_dept) RETURNING l_success,l_sql1
+               IF l_success THEN
+                  LET g_qryparam.where = g_qryparam.where ," AND ",l_sql1
+               END IF
+               CALL q_pmaa001_3()                                
+               LET g_detail_d[l_ac].b_sfcb013 = g_qryparam.return1     
+               NEXT FIELD b_sfcb013    
+
+            ON ACTION controlp INFIELD b_pmdl017
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_detail_d[l_ac].b_pmdl017    
+               CALL q_pmam001()                                
+               LET g_detail_d[l_ac].b_pmdl017 = g_qryparam.return1     
+               NEXT FIELD b_pmdl017    
+
+            ON ACTION controlp INFIELD b_pmdl015
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_detail_d[l_ac].b_pmdl015    
+               LET g_qryparam.arg1 = g_site
+               CALL q_ooaj002_1()                                
+               LET g_detail_d[l_ac].b_pmdl015 = g_qryparam.return1     
+               NEXT FIELD b_pmdl015   
+
+            ON ACTION controlp INFIELD b_pmdl011
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_detail_d[l_ac].b_pmdl011    
+               CALL q_oodb002_2()                                
+               LET g_detail_d[l_ac].b_pmdl011 = g_qryparam.return1     
+               NEXT FIELD b_pmdl011    
+ 
+            ON ACTION cancel
+               LET INT_FLAG = 1
+               EXIT DIALOG 
+
+         END INPUT         
+
+
+         INPUT ARRAY g_sfac_d FROM s_detail2.*
+             ATTRIBUTE(COUNT = g_rec_b2,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                     INSERT ROW = FALSE, 
+                     DELETE ROW = FALSE,
+                     APPEND ROW = FALSE)
+            
+            BEFORE ROW
+               IF g_rec_b2 <=0 THEN
+                  CONTINUE DIALOG
+               END IF
+               LET l_ac1 = ARR_CURR()
+               LET l_sfac_t.* = g_sfac_d[l_ac1].*
+
+               
+            AFTER FIELD b_qty3
+               CALL asfp400_chk_b_qty3(l_ac1)
+                    RETURNING l_success
+               IF NOT l_success THEN
+                  LET g_sfac_d[l_ac1].b_qty3 = l_sfac_t.b_qty3
+                  NEXT FIELD b_qty3
+               END IF 
+               
+            ON ROW CHANGE
+               IF l_sfac_t.b_qty3 <> g_sfac_d[l_ac1].b_qty3 THEN
+                  CALL s_transaction_begin()
+                  UPDATE asfp400_tmp_tab1 SET qty3 = g_sfac_d[l_ac1].b_qty3
+                   WHERE sfacdocno = g_detail_d[l_ac].b_sfcbdocno
+                     AND sfac006   = g_sfac_d[l_ac1].b_sfac006
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = 'update asfp400_tmp_tab1'
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                  #  CANCEL UPDATE
+                     CALL s_transaction_end('N',1)
+                  ELSE
+                     CALL s_transaction_end('Y',0)
+                  END IF               
+               END IF
+               
+            AFTER INPUT
+               CALL asfp400_chk_tot_qty(l_ac)
+                    RETURNING l_success
+               IF NOT l_success THEN
+                  NEXT FIELD b_qty3
+               END IF
+ 
+            ON ACTION cancel
+               LET INT_FLAG = 1
+               EXIT DIALOG 
+
+         END INPUT ]]>
+  </point>
+  <section id="asfp400.b_fill" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION asfp400_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill段define
+   {<point name="b_fill.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   PREPARE asfp400_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR asfp400_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   {<point name="b_fill.clear"/>}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   {<point name="b_fill.foreach_into"/>}
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.foreach_iside"/>}
+      #end add-point
+      
+      CALL asfp400_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.other_table"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE asfp400_sel
+   
+   LET l_ac = 1
+   CALL asfp400_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.after_b_fill"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfp400.description" ver="141" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:9,PR版次:9) Build-000226
+#+ 
+#+ Filename...: asfp400
+#+ Description: 工單轉委外批次作業
+#+ Creator....: 00378(2014-04-10 16:29:55)
+#+ Modifier...: 00378(2015-01-09 14:29:55) -SD/PR-
+]]>
+  </section>
+  <section id="asfp400.detail_show" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION asfp400_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define" edit="s"/>}
+   #end add-point
+   #add-point:show段define
+   {<point name="detail_show.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:detail_show段
+   {<point name="detail_show.detail_show"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfp400.fetch" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION asfp400_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define
+   {<point name="fetch.define" edit="s"/>}
+   #end add-point
+   #add-point:fetch段define
+   {<point name="fetch.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfp400.filter" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION asfp400_filter()
+   #add-point:filter段define
+   {<point name="filter.define" edit="s"/>}
+   #end add-point    
+   #add-point:filter段define
+   {<point name="filter.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   {<point name="filter.detail_cnt"/>}
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL asfp400_b_fill()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfp400.filter_parser" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION asfp400_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define" edit="s"/>}
+   #end add-point    
+   #add-point:filter段define
+   {<point name="filter_parser.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfp400.filter_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION asfp400_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = asfp400_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfp400.global" ver="9" status="" src="s" readonly="">
+    <![CDATA[#應用 p02 樣板自動產生(Version:12)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asfp400.init" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION asfp400_init()
+   #add-point:init段define
+   {<point name="init.define" edit="s"/>}
+   #end add-point   
+   #add-point:init段define
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfp400.main" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   {<point name="main.define" edit="s"/>}
+   #end add-point   
+   #add-point:main段define
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asfp400 WITH FORM cl_ap_formpath("asf",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL asfp400_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL asfp400_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_asfp400
+   END IF 
+   
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="asfp400.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asfp400.query" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION asfp400_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" edit="s" />}
+   #end add-point 
+   #add-point:query段define
+   {<point name="query.define_customerization" edit="c" />}
+   #end add-point 
+    
+   #add-point:cs段after_construct
+   {<point name="query.after_construct" />}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL asfp400_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query
+   {<point name="query.cs段after_query" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfp400.ui_dialog" ver="13" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION asfp400_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point 
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL asfp400_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.selall.befroe"/>}
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall
+               {<point name="ui_dialog.for.onaction_selall"/>}
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone
+               {<point name="ui_dialog.for.onaction_selnone"/>}
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL asfp400_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前
+            {<point name="ui_dialog.before_accept"/>}
+            #end add-point
+            CALL asfp400_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh
+            {<point name="ui_dialog.datarefresh"/>}
+            #end add-point
+            CALL asfp400_b_fill()
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

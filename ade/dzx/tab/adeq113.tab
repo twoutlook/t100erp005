@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq113" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06137" crtdt="2015-07-06 20:59:22" modid="06137" moddt="2015-07-07 02:27:28" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店銷售中類日結查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),deba002,ooga002,debasite,debasite_desc(chr500),l_imaa009(chr500),l_imaa009_desc(chr500),deba026,l_deba026_1(num20_6),l_deba026_2(num20_6),l_deba026_3(num20_6),l_deba026_4(num20_6),deba022,deba027,deba005,deba005_desc(chr500),deba009,deba017,deba018,deba018_desc(chr500),deba020,deba043"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),deba002(b_deba002),ooga002(b_ooga002),debasite(b_debasite),debasite_desc(b_debasite_desc),l_imaa009(l_imaa009),l_imaa009_desc(l_imaa009_desc),deba026(b_deba026),l_deba026_1(l_deba026_1),l_deba026_2(l_deba026_2),l_deba026_3(l_deba026_3),l_deba026_4(l_deba026_4),deba022(b_deba022),deba027(b_deba027),deba005(b_deba005),deba005_desc(b_deba005_desc),deba009(b_deba009),deba017(b_deba017),deba018(b_deba018),deba018_desc(b_deba018_desc),deba020(b_deba020),deba043(b_deba043)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq113" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="deba002,ooga002,debasite,deba026,deba022,deba027,deba005,deba009,deba017,deba018,deba020,deba043" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="deba002(b_deba002),ooga002(b_ooga002),debasite(b_debasite),deba026(b_deba026),deba022(b_deba022),deba027(b_deba027),deba005(b_deba005),deba009(b_deba009),deba017(b_deba017),deba018(b_deba018),deba020(b_deba020),deba043(b_deba043)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="deba002"/>
+      <column id="ooga002"/>
+      <column id="debasite">
+        <after>
+          <reference field="debasite_desc" ref_field="debasite" map_field="debaent,debasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="debasite_desc"/>
+      <column id="l_imaa009">
+        <after/>
+      </column>
+      <column id="l_imaa009_desc"/>
+      <column id="deba026" type="S" default="0"/>
+      <column id="l_deba026_1"/>
+      <column id="l_deba026_2"/>
+      <column id="l_deba026_3"/>
+      <column id="l_deba026_4"/>
+      <column id="deba022" type="S" default="0"/>
+      <column id="deba027" type="S" default="0"/>
+      <column id="deba005">
+        <after>
+          <reference field="deba005_desc" ref_field="deba005" map_field="debaent,debasite,deba005" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_7" state="c"/>
+      </column>
+      <column id="deba005_desc"/>
+      <column id="deba009">
+        <controlp form="q_rtdx001_1" state="c"/>
+      </column>
+      <column id="deba017"/>
+      <column id="deba018">
+        <after>
+          <reference field="deba018_desc" ref_field="deba018" map_field="debaent,debasite" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002" state="c"/>
+      </column>
+      <column id="deba018_desc"/>
+      <column id="deba020">
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="deba043"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="deba_t" page="1" linked="" pk="debasite,deba002,deba005,deba009,deba017,deba018,deba020,deba043">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,deba002,&apos;&apos;,debasite,&apos;&apos;,&apos;&apos;,&apos;&apos;,deba026,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,deba022,deba027,deba005,&apos;&apos;,deba009,deba017,deba018,&apos;&apos;,deba020,deba043 FROM deba_t WHERE debaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

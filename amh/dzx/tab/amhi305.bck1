@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhi305" module="amh" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="06189" crtdt="2015-05-04 13:46:03" modid="06189" moddt="2015-05-04 13:46:03" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="電器基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mhamstus,mham001,mhaml003,mhaml004,mham002,mham003,mham004,mham005,mham005_desc(chr500),mham006,mham006_desc(chr500),mham007,mham007_desc(chr500),mham008,mham009,mham010,mham010_desc(chr500),mham011,mham012,mham013"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mham001,mhamownid,mhamownid_desc(chr500),mhamowndp,mhamowndp_desc(chr500),mhamcrtid,mhamcrtid_desc(chr500),mhamcrtdp,mhamcrtdp_desc(chr500),mhamcrtdt,mhammodid,mhammodid_desc(chr500),mhammoddt,mhamcnfid,mhamcnfid_desc(chr500),mhamcnfdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhi305" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="mhamstus,mham001,mhaml003,mhaml004,mham002,mham003,mham004,mham005,mham006,mham007,mham008,mham009,mham010,mham011,mham012,mham013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="mhamstus,mham001,mhaml003,mhaml004,mham002,mham003,mham004,mham005,mham006,mham007,mham008,mham009,mham010,mham011,mham012,mham013"/>
+      <construct id="body" page="2" field="mhamownid,mhamowndp,mhamcrtid,mhamcrtdp,mhamcrtdt,mhammodid,mhammoddt,mhamcnfid,mhamcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="mhamstus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="mham001"/>
+      <column id="mhaml003"/>
+      <column id="mhaml004"/>
+      <column id="mham002"/>
+      <column id="mham003">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mham004">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mham005">
+        <after>
+          <reference field="mham005_desc" ref_field="mham_t.mham005" map_field="mhament,mham005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="mham005_desc"/>
+      <column id="mham006">
+        <after>
+          <check chkid="v_mhae001" id="isExist"/>
+          <reference field="mham006_desc" ref_field="mham_t.mham006" map_field="mhament,mham006" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhae001" state="i"/>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="mham006_desc"/>
+      <column id="mham007">
+        <after>
+          <reference field="mham007_desc" ref_field="mham_t.mham007" map_field="mhament,mham007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="mham007_desc"/>
+      <column id="mham008">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mham009"/>
+      <column id="mham010">
+        <after>
+          <reference field="mham010_desc" ref_field="mham_t.mham010" map_field="mhament,mham010" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="mham010_desc"/>
+      <column id="mham011"/>
+      <column id="mham012" type="S" default="N"/>
+      <column id="mham013"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mhamownid">
+        <after>
+          <reference field="mhamownid_desc" ref_field="mham_t.mhamownid" map_field="mhamownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhamownid_desc"/>
+      <column id="mhamowndp">
+        <after>
+          <reference field="mhamowndp_desc" ref_field="mham_t.mhamowndp" map_field="mhamowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhamowndp_desc"/>
+      <column id="mhamcrtid">
+        <after>
+          <reference field="mhamcrtid_desc" ref_field="mham_t.mhamcrtid" map_field="mhamcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhamcrtid_desc"/>
+      <column id="mhamcrtdp">
+        <after>
+          <reference field="mhamcrtdp_desc" ref_field="mham_t.mhamcrtdp" map_field="mhamcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhamcrtdp_desc"/>
+      <column id="mhamcrtdt"/>
+      <column id="mhammodid">
+        <after>
+          <reference field="mhammodid_desc" ref_field="mham_t.mhammodid" map_field="mhammodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhammodid_desc"/>
+      <column id="mhammoddt"/>
+      <column id="mhamcnfid">
+        <after>
+          <reference field="mhamcnfid_desc" ref_field="mham_t.mhamcnfid" map_field="mhamcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhamcnfid_desc"/>
+      <column id="mhamcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="mham_t" page="1,2" linked="" pk="mham001">
+      <sql id="forupd_sql_detail" query="SELECT mhamstus,mham001,&apos;&apos;,&apos;&apos;,mham002,mham003,mham004,mham005,&apos;&apos;,mham006,&apos;&apos;,mham007,&apos;&apos;,mham008,mham009,mham010,&apos;&apos;,mham011,mham012,mham013,&apos;&apos;,mhamownid,&apos;&apos;,mhamowndp,&apos;&apos;,mhamcrtid,&apos;&apos;,mhamcrtdp,&apos;&apos;,mhamcrtdt,mhammodid,&apos;&apos;,mhammoddt,mhamcnfid,&apos;&apos;,mhamcnfdt FROM mham_t WHERE mhament=? AND mham001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mhamstus,mham001,&apos;&apos;,&apos;&apos;,mham002,mham003,mham004,mham005,&apos;&apos;,mham006,&apos;&apos;,mham007,&apos;&apos;,mham008,mham009,mham010,&apos;&apos;,mham011,mham012,mham013,&apos;&apos;,mhamownid,&apos;&apos;,mhamowndp,&apos;&apos;,mhamcrtid,&apos;&apos;,mhamcrtdp,&apos;&apos;,mhamcrtdt,mhammodid,&apos;&apos;,mhammoddt,mhamcnfid,&apos;&apos;,mhamcnfdt FROM mham_t WHERE mhament= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="mhaml_t.mhaml003,mhaml_t.mhaml004" table="mhaml_t" fk="mham001" pk="mhaml001,mhaml002" field="mhaml003,mhaml004"/>
+    </body>
+  </dataset>
+</assembly>
+

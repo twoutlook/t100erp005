@@ -1,0 +1,1185 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="afap110.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2015-05-11 11:10:25), PR版次:0006(2016-12-26 14:01:19)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000061
+#+ Filename...: afap110
+#+ Description: 資產整批取消確認作業
+#+ Creator....: 05795(2015-04-30 10:11:28)
+#+ Modifier...: 05795 -SD/PR- 08171
+ 
+{</section>}
+ 
+{<section id="afap110.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#160318-00005#9   2016/03/23  by 07675    將重複內容的錯誤訊息置換為公用錯誤訊息
+#160318-00025#43  2016/04/26  By pengxin  將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#160905-00007#1   2016-09-05  By08734     ent调整
+#161024-00008#1   2016/10/24  By Hans     AFA組織類型與職能開窗清單調整。
+#161123-00048#2   2016/12/26  By 08171    開窗範圍處理(卡片編號、財產編號、附號)
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       faah030 LIKE faah_t.faah030, 
+   faah030_desc LIKE type_t.chr80, 
+   faah001 LIKE faah_t.faah001, 
+   faah003 LIKE faah_t.faah003, 
+   faah004 LIKE faah_t.faah004, 
+   faah025 LIKE faah_t.faah025, 
+   faah025_desc LIKE type_t.chr80, 
+   faah026 LIKE faah_t.faah026, 
+   faah026_desc LIKE type_t.chr80, 
+   faah014 LIKE faah_t.faah014, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_faahstus         LIKE faah_t.faahstus   # 'Y' --- 審核/ 'N' --- 取消审核
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="afap110.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("afa","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   LET g_faahstus = g_argv[1]
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL afap110_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_afap110 WITH FORM cl_ap_formpath("afa",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL afap110_init()
+ 
+      #進入選單 Menu (="N")
+      CALL afap110_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_afap110
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="afap110.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION afap110_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap110.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION afap110_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   DEFINE l_comp_str     STRING #161123-00048#2 add
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.faah030 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               CALL afap110_def()
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD faah030
+            
+            #add-point:AFTER FIELD faah030 name="input.a.faah030"
+            IF NOT cl_null(g_master.faah030) THEN 
+#應用 a17 樣板自動產生(Version:2)
+               #欄位存在檢查
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_master.faah030
+
+               #160318-00025#43  2016/04/26  by pengxin  add(S)
+               LET g_errshow = TRUE #是否開窗 
+               LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+               #160318-00025#43  2016/04/26  by pengxin  add(E)
+               #呼叫檢查存在並帶值的library
+               #IF cl_chk_exist("v_ooef001") THEN     #161024-00008#1
+               IF cl_chk_exist("v_ooef001_26") THEN   #161024-00008#1               
+                  #檢查成功時後續處理
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+
+               CALL s_desc_get_department_desc(g_master.faah030) RETURNING g_master.faah030_desc
+               DISPLAY BY NAME g_master.faah030,g_master.faah030_desc
+               
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD faah030
+            #add-point:BEFORE FIELD faah030 name="input.b.faah030"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE faah030
+            #add-point:ON CHANGE faah030 name="input.g.faah030"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.faah030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD faah030
+            #add-point:ON ACTION controlp INFIELD faah030 name="input.c.faah030"
+           
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.faah030             #給予default值
+            LET g_qryparam.default2 = "" #g_master.ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            #CALL q_ooef001()                                #呼叫開窗 #161024-00008#1 
+             CALL q_ooef001_47()                             #161024-00008#1 
+            
+
+            LET g_master.faah030 = g_qryparam.return1              
+            #LET g_master.ooefl003 = g_qryparam.return2 
+            DISPLAY g_master.faah030 TO faah030              #
+            #DISPLAY g_master.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD faah030                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON faah001,faah003,faah004,faah025,faah026,faah014
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.faah001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD faah001
+            #add-point:ON ACTION controlp INFIELD faah001 name="construct.c.faah001"
+            
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            #161123-00048#2 add s--- 
+			   CALL s_axrt300_get_site(g_user,'','3') RETURNING l_comp_str 
+			   LET l_comp_str = cl_replace_str(l_comp_str ,"ooef017","faah032")
+			   LET g_qryparam.where = " faah032 IN (SELECT ooef017 FROM ooef_t WHERE ooefent = ",g_enterprise," AND ooef001 = '",g_master.faah030,"') AND ",l_comp_str 
+			   #161123-00048#2 add e--- 
+            CALL q_faah001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO faah001  #顯示到畫面上
+            NEXT FIELD faah001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD faah001
+            #add-point:BEFORE FIELD faah001 name="construct.b.faah001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD faah001
+            
+            #add-point:AFTER FIELD faah001 name="construct.a.faah001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.faah003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD faah003
+            #add-point:ON ACTION controlp INFIELD faah003 name="construct.c.faah003"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            #161123-00048#2 add s--- 
+			   CALL s_axrt300_get_site(g_user,'','3') RETURNING l_comp_str 
+			   LET l_comp_str = cl_replace_str(l_comp_str ,"ooef017","faah032")
+			   LET g_qryparam.where = " faah032 IN (SELECT ooef017 FROM ooef_t WHERE ooefent = ",g_enterprise," AND ooef001 = '",g_master.faah030,"') AND ",l_comp_str 
+			   #161123-00048#2 add e--- 
+            CALL q_faah003()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO faah003  #顯示到畫面上
+            NEXT FIELD faah003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD faah003
+            #add-point:BEFORE FIELD faah003 name="construct.b.faah003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD faah003
+            
+            #add-point:AFTER FIELD faah003 name="construct.a.faah003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.faah004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD faah004
+            #add-point:ON ACTION controlp INFIELD faah004 name="construct.c.faah004"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            #161123-00048#2 add s--- 
+			   CALL s_axrt300_get_site(g_user,'','3') RETURNING l_comp_str 
+			   LET l_comp_str = cl_replace_str(l_comp_str ,"ooef017","faah032")
+			   LET g_qryparam.where = " faah032 IN (SELECT ooef017 FROM ooef_t WHERE ooefent = ",g_enterprise," AND ooef001 = '",g_master.faah030,"') AND ",l_comp_str 
+			   #161123-00048#2 add e--- 
+            CALL q_faah004()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO faah004  #顯示到畫面上
+            NEXT FIELD faah004                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD faah004
+            #add-point:BEFORE FIELD faah004 name="construct.b.faah004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD faah004
+            
+            #add-point:AFTER FIELD faah004 name="construct.a.faah004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.faah025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD faah025
+            #add-point:ON ACTION controlp INFIELD faah025 name="construct.c.faah025"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO faah025  #顯示到畫面上
+            NEXT FIELD faah025                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD faah025
+            #add-point:BEFORE FIELD faah025 name="construct.b.faah025"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD faah025
+            
+            #add-point:AFTER FIELD faah025 name="construct.a.faah025"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.faah026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD faah026
+            #add-point:ON ACTION controlp INFIELD faah026 name="construct.c.faah026"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            #CALL q_ooef001()                           #呼叫開窗 #161024-00008#1
+            CALL q_ooeg001_4()                                    #161024-00008#1
+            DISPLAY g_qryparam.return1 TO faah026  #顯示到畫面上
+            NEXT FIELD faah026                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD faah026
+            #add-point:BEFORE FIELD faah026 name="construct.b.faah026"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD faah026
+            
+            #add-point:AFTER FIELD faah026 name="construct.a.faah026"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD faah014
+            #add-point:BEFORE FIELD faah014 name="construct.b.faah014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD faah014
+            
+            #add-point:AFTER FIELD faah014 name="construct.a.faah014"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.faah014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD faah014
+            #add-point:ON ACTION controlp INFIELD faah014 name="construct.c.faah014"
+            
+            #END add-point
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL afap110_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL
+            CALL afap110_def()
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL afap110_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL afap110_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = afap110_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap110.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION afap110_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap110.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION afap110_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   DEFINE l_gzzd005         LIKE gzzd_t.gzzd005
+   DEFINE l_colname         STRING
+   DEFINE l_comment         STRING
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE afap110_process_cs CURSOR FROM ls_sql
+#  FOREACH afap110_process_cs INTO
+   #add-point:process段process name="process.process"
+   
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #錯誤訊息匯總初始化
+      CALL cl_err_collect_init()
+      CALL s_azzi902_get_gzzd('afap110',"lbl_faah001") RETURNING l_colname,l_comment  #卡片编号
+      LET g_coll_title[1] = l_colname
+      CALL s_azzi902_get_gzzd('afap110',"lbl_faah003") RETURNING l_colname,l_comment  #财产编号
+      LET g_coll_title[2] = l_colname
+      CALL s_azzi902_get_gzzd('afap100',"lbl_faah004") RETURNING l_colname,l_comment  #符号
+      LET g_coll_title[3] = l_colname
+      LET g_success    = 'Y'
+      LET g_totsuccess = 'Y'
+
+      SELECT gzzd005 INTO l_gzzd005 FROM gzzd_t
+       WHERE gzzd001 = 'afap110' AND gzzd002 = g_lang AND gzzdstus = 'Y' AND gzzd003 = 'step1'
+      CALL cl_progress_no_window_ing(l_gzzd005)
+      CALL afap110_get_date()
+
+      IF g_success = 'N' THEN
+         CALL cl_err_collect_show()
+         #清空進度條
+         DISPLAY '' ,0 TO stagenow,stagecomplete
+         RETURN
+      END IF
+
+      CALL s_transaction_begin()
+
+      SELECT gzzd005 INTO l_gzzd005 FROM gzzd_t
+       WHERE gzzd001 = 'afap110' AND gzzd002 = g_lang AND gzzdstus = 'Y' AND gzzd003 = 'step2'
+      CALL cl_progress_no_window_ing(l_gzzd005)
+      CALL afap110_run_conf()
+      
+      IF g_success = 'N' THEN
+         CALL s_transaction_end('N',1)
+         CALL cl_err_collect_show()
+         #清空進度條
+         DISPLAY '' ,0 TO stagenow,stagecomplete
+         RETURN
+      END IF
+      CALL s_transaction_end('Y',1)
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL afap110_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap110.get_buffer" >}
+PRIVATE FUNCTION afap110_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.faah030 = p_dialog.getFieldBuffer('faah030')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap110.msgcentre_notify" >}
+PRIVATE FUNCTION afap110_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afap110.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 描述说明:默认值
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者:20150430 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap110_def()
+   DEFINE l_success     LIKE type_t.chr1
+   IF cl_null(g_master.faah030) THEN
+      #資產中心
+      #取得預設的帳務中心,因新增階段的時候,並不會知道site,所以以登入人員做為依據
+      CALL s_fin_get_account_center('',g_user,'3',g_today) RETURNING l_success,g_master.faah030,g_errno
+      CALL s_desc_get_department_desc(g_master.faah030) RETURNING g_master.faah030_desc
+      DISPLAY BY NAME g_master.faah030,g_master.faah030_desc
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明:拼接组织下层的组织
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者:20150430 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap110_get_ooef001_wc(p_wc)
+   DEFINE p_wc       STRING
+   DEFINE r_wc       STRING
+   DEFINE tok        base.StringTokenizer
+   DEFINE l_str      STRING
+
+   LET tok = base.StringTokenizer.create(p_wc,",")
+   WHILE tok.hasMoreTokens()
+      IF cl_null(l_str) THEN
+         LET l_str = tok.nextToken()
+      ELSE
+         LET l_str = l_str,"','",tok.nextToken()
+      END IF      
+   END WHILE   
+   LET r_wc = "('",l_str,"')"
+   
+   RETURN r_wc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明:获得需要查询的数据
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者:20150430 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap110_get_date()
+   DEFINE l_origin_str  STRING
+   DEFINE l_sql         STRING
+   DEFINE l_count       LIKE type_t.num5
+   DEFINE l_faahstus    LIKE faah_t.faahstus 
+   
+
+   IF cl_null(g_master.wc) THEN LET g_master.wc = " 1=1" END IF
+   
+   CALL s_fin_create_account_center_tmp()
+   CALL s_fin_account_center_sons_query('5',g_master.faah030,g_today,'')
+   CALL s_fin_account_center_sons_str()RETURNING l_origin_str
+   LET l_origin_str = l_origin_str,",",g_master.faah030
+   CALL afap110_get_ooef001_wc(l_origin_str)RETURNING l_origin_str
+   
+   LET l_sql = "SELECT faah000,faah001,faah003,faah004,faah032 ",
+               "  FROM faah_t ",
+               " WHERE faahent = '",g_enterprise,"'  ",
+               "   AND faahstus = 'Y' ",
+               "   AND faah030 IN ",l_origin_str,
+               "   AND ",g_master.wc
+   PREPARE afap110_prep FROM l_sql
+   DECLARE afap110_curs CURSOR FOR afap110_prep
+
+   LET l_sql = "SELECT COUNT(*) FROM (",l_sql,")"
+   PREPARE afap110_count_prep FROM l_sql
+
+   LET l_count = 0
+   EXECUTE afap110_count_prep INTO l_count
+   IF cl_null(l_count) THEN LET l_count = 0 END IF
+   IF l_count = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'ins temp table:'
+      LET g_errparam.code   = 'sub-01321'  #'axm-00276' #160318-00005#9 mod
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_success = 'N'
+   END IF            
+               
+            
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明:取消确认进行update更新
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者:20150430 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap110_run_conf()
+   DEFINE l_faah000 LIKE faah_t.faah000
+   DEFINE l_faah001 LIKE faah_t.faah000
+   DEFINE l_faah003 LIKE faah_t.faah000
+   DEFINE l_faah004 LIKE faah_t.faah000
+   DEFINE l_faah032 LIKE faah_t.faah000
+   DEFINE l_glaald  LIKE glaa_t.glaald
+   DEFINE l_faahmodid LIKE faah_t.faahmodid
+   DEFINE l_faahmoddt LIKE faah_t.faahmoddt
+   DEFINE l_faajmodid LIKE faaj_t.faajmodid
+   DEFINE l_faajmoddt LIKE faaj_t.faajmoddt
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_success_1 LIKE type_t.num5
+   
+   LET l_faahmodid = g_user
+   LET l_faahmoddt = cl_get_current()
+   LET l_faajmodid = g_user
+   LET l_faajmoddt = cl_get_current()
+   LET g_totsuccess = 'Y'
+   FOREACH afap110_curs INTO l_faah000,l_faah001,l_faah003,l_faah004,l_faah032
+ 
+#      CALL afap110_check_unconfirm(l_faah000,l_faah001,l_faah003,l_faah004) RETURNING g_success
+      CALL s_afai100_unconfirm_chk(l_faah000,l_faah001,l_faah003,l_faah004) RETURNING l_success
+      IF l_success = TRUE THEN 
+          CALL s_afai100_unconfirm(l_faah000,l_faah001,l_faah003,l_faah004) RETURNING l_success_1
+          IF NOT l_success_1 THEN
+            LET g_success = 'N'
+          END IF
+      ELSE
+         LET g_success = 'N'
+      END IF
+      
+      IF g_success = 'N' THEN
+         LET g_totsuccess = 'N'
+      ELSE
+         UPDATE faah_t 
+         SET (faahstus,faahmodid,faahmoddt) 
+           = ('N',l_faahmodid,l_faahmoddt)     
+         WHERE faahent = g_enterprise 
+           AND faah000 = l_faah000
+           AND faah001 = l_faah001      
+           AND faah003 = l_faah003      
+           AND faah004 = l_faah004
+         
+         #獲取法人對應的主帳套
+         SELECT glaald INTO l_glaald
+           FROM glaa_t
+          WHERE glaaent = g_enterprise
+            AND glaacomp = l_faah032
+            AND glaa014 = 'Y'
+         UPDATE faaj_t 
+         SET (faajstus,faajmodid,faajmoddt) 
+           = ('N',l_faajmodid,l_faajmoddt)   
+         WHERE faajent = g_enterprise 
+           AND faaj000 = l_faah000
+           AND faaj037 = l_faah001      
+           AND faaj001 = l_faah003
+           AND faaj002 = l_faah004
+           AND faajld =  l_glaald      
+      END IF
+
+   END FOREACH
+   IF g_totsuccess = 'N' THEN LET g_success = 'N' END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明:检查取消确认时候是否可以更新
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者:20150430 By dujuan
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap110_check_unconfirm(p_faah000,p_faah001,p_faah003,p_faah004)
+   DEFINE  p_faah000             LIKE faah_t.faah000
+   DEFINE  p_faah001             LIKE faah_t.faah001
+   DEFINE  p_faah003             LIKE faah_t.faah003
+   DEFINE  p_faah004             LIKE faah_t.faah004
+   DEFINE  l_faah000             LIKE faah_t.faah000
+   DEFINE  l_faah001             LIKE faah_t.faah001
+   DEFINE  l_faah003             LIKE faah_t.faah003
+   DEFINE  l_faah004             LIKE faah_t.faah004
+   DEFINE  l_faah015             LIKE faah_t.faah015
+   DEFINE  l_faah033             LIKE faah_t.faah033
+   DEFINE  l_faahstus            LIKE faah_t.faahstus
+   DEFINE  r_success             LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num5
+   
+   
+   SELECT faah000,faah001,faah003,faah004,faah015,faahstus,faah033
+     INTO l_faah000,l_faah001,l_faah003,l_faah004,l_faah015,l_faahstus,l_faah033 
+     FROM faah_t
+     WHERE faahent = g_enterprise 
+       AND faah000 = p_faah000
+       AND faah001 = p_faah001      
+       AND faah003 = p_faah003      
+       AND faah004 = p_faah004
+       
+   WHENEVER ERROR CONTINUE
+   LET r_success = 'Y' 
+   
+   IF l_faahstus = 'X' THEN 
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'afa-00023'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.coll_vals[1] = l_faah001
+      LET g_errparam.coll_vals[2] = l_faah003
+      CALL cl_err()
+      LET r_success = 'N'
+      RETURN r_success
+   END IF
+   #检查是否存在与异动档中
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n
+     FROM fabb_t
+    WHERE fabb001 = l_faah003
+      AND fabb000 = l_faah001
+      AND fabb002 = l_faah004
+      AND fabbent=g_enterprise #160905-00007#1 add
+   IF l_n > 0 THEN 
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'afa-00326'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.coll_vals[1] = l_faah001
+      LET g_errparam.coll_vals[2] = l_faah003
+      CALL cl_err()
+      LET r_success = 'N'
+      RETURN r_success
+   END IF 
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n
+     FROM fabh_t
+    WHERE fabh001 = l_faah003
+      AND fabh000 = l_faah001
+      AND fabh002 = l_faah004
+      AND fabhent=g_enterprise  #160905-00007#1 add
+   IF l_n > 0 THEN 
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'afa-00326'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.coll_vals[1] = l_faah001
+      LET g_errparam.coll_vals[2] = l_faah003
+      CALL cl_err()
+      LET r_success = 'N'
+      RETURN r_success
+   END IF 
+   IF l_faah015 <> '0' THEN 
+      IF l_faah033 = 'Y' AND l_faah015 = '1' THEN 
+         UPDATE faah_t SET faah015 = '0' 
+          WHERE faahent = g_enterprise AND faah000 = l_faah000
+            AND faah001 = l_faah001
+            AND faah003 = l_faah003
+            AND faah004 = l_faah004
+               
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = ""
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+            RETURN r_success            
+         END IF
+      ELSE 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'afa-00102'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         LET g_errparam.coll_vals[1] = l_faah001
+         LET g_errparam.coll_vals[2] = l_faah003
+         CALL cl_err()
+         LET r_success = 'N'
+         RETURN r_success
+     END IF 
+   END IF
+   RETURN r_success
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

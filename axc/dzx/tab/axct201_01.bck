@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct201_01" module="axc" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02114" crtdt="2014-05-13 10:47:13" modid="03297" moddt="2014-09-24 14:54:51" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="依費用分攤設定產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbl002,xcbl003,xcblld,xcblld_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct201_01" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbl002,xcbl003,xcblld"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xcbl002"/>
+      <column id="xcbl003"/>
+      <column id="xcblld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcblld_desc" ref_field="xcbl_t.xcblld" map_field="xcblent,xcblld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcblld_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcbl_t" pk="xcblld,xcbl001,xcbl002,xcbl003,xcbl004,xcbl005,xcblseq">
+      <sql id="forupd_sql" type="sql" query="SELECT xcbl002,xcbl003,xcblld,&apos;&apos; FROM xcbl_t WHERE xcblent= ? AND xcblld=? AND xcbl001=? AND xcbl002=? AND xcbl003=? AND xcbl004=? AND xcbl005=? AND xcblseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xcblld,xcbl001,xcbl002,xcbl003,xcbl004,xcbl005,xcblseq"/>
+    </head>
+  </dataset>
+</assembly>
+

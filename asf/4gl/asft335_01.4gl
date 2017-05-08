@@ -1,0 +1,1775 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asft335_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2015-10-16 15:03:37), PR版次:0007(2016-10-18 11:45:36)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000167
+#+ Filename...: asft335_01
+#+ Description: 條碼報工子程式
+#+ Creator....: 00537(2013-12-25 14:23:41)
+#+ Modifier...: 03297 -SD/PR- 05384
+ 
+{</section>}
+ 
+{<section id="asft335_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#+ Modifier...:   No.160318-00025#34   2016/04/14  BY pengxin  將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#+ Modifier...:   No.161014-00030#1    2016/10/14  By Mandy    輸入時工單單號開窗查詢-加上製程否='Y'的條件q_sfaadocno_18
+#+ Modifier...:   No.161013-00051#1    2016/10/18  By shiun    整批調整據點組織開窗
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_sffb_m        RECORD
+       sffbdocno LIKE sffb_t.sffbdocno, 
+   sffbdocno_desc LIKE type_t.chr80, 
+   sffbseq LIKE sffb_t.sffbseq, 
+   sffb001 LIKE sffb_t.sffb001, 
+   sffb005 LIKE sffb_t.sffb005, 
+   sffb006 LIKE sffb_t.sffb006, 
+   sffb007 LIKE sffb_t.sffb007, 
+   sffb007_desc LIKE type_t.chr80, 
+   sffb008 LIKE sffb_t.sffb008, 
+   sffb002 LIKE sffb_t.sffb002, 
+   sffb002_desc LIKE type_t.chr80, 
+   sffb004 LIKE sffb_t.sffb004, 
+   sffb004_desc LIKE type_t.chr80, 
+   sffb010 LIKE sffb_t.sffb010, 
+   sffb010_desc LIKE type_t.chr80, 
+   sffb009 LIKE sffb_t.sffb009, 
+   sffb009_desc LIKE type_t.chr80, 
+   sffb030 LIKE sffb_t.sffb030, 
+   sffb030_desc LIKE type_t.chr80, 
+   sffb011 LIKE sffb_t.sffb011, 
+   sffb003 LIKE sffb_t.sffb003, 
+   sffb003_desc LIKE type_t.chr80, 
+   sffb012 LIKE sffb_t.sffb012, 
+   sffb013 LIKE sffb_t.sffb013, 
+   sffb014 LIKE sffb_t.sffb014, 
+   sffb015 LIKE sffb_t.sffb015, 
+   sffb016 LIKE sffb_t.sffb016, 
+   sffb017 LIKE sffb_t.sffb017, 
+   sffb018 LIKE sffb_t.sffb018, 
+   sffb019 LIKE sffb_t.sffb019, 
+   sffb020 LIKE sffb_t.sffb020, 
+   sffb021 LIKE sffb_t.sffb021, 
+   sffb021_desc LIKE type_t.chr80, 
+   sffb022 LIKE sffb_t.sffb022, 
+   sffb023 LIKE sffb_t.sffb023, 
+   sffb024 LIKE sffb_t.sffb024, 
+   sffb024_desc LIKE type_t.chr80, 
+   sffbdocdt LIKE sffb_t.sffbdocdt, 
+   sffbsite LIKE sffb_t.sffbsite, 
+   sffbstus LIKE sffb_t.sffbstus, 
+   sffbownid LIKE sffb_t.sffbownid, 
+   sffbownid_desc LIKE type_t.chr80, 
+   sffbowndp LIKE sffb_t.sffbowndp, 
+   sffbowndp_desc LIKE type_t.chr80, 
+   sffbcrtid LIKE sffb_t.sffbcrtid, 
+   sffbcrtid_desc LIKE type_t.chr80, 
+   sffbcrtdp LIKE sffb_t.sffbcrtdp, 
+   sffbcrtdp_desc LIKE type_t.chr80, 
+   sffbcrtdt LIKE sffb_t.sffbcrtdt, 
+   sffbmodid LIKE sffb_t.sffbmodid, 
+   sffbmodid_desc LIKE type_t.chr80, 
+   sffbmoddt LIKE sffb_t.sffbmoddt, 
+   sffbcnfid LIKE sffb_t.sffbcnfid, 
+   sffbcnfid_desc LIKE type_t.chr80, 
+   sffbcnfdt LIKE sffb_t.sffbcnfdt
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+DEFINE g_sffb_m        type_g_sffb_m
+ 
+   DEFINE g_sffbdocno_t LIKE sffb_t.sffbdocno
+DEFINE g_sffbseq_t LIKE sffb_t.sffbseq
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asft335_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION asft335_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+ 
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_sfaa010       LIKE sfaa_t.sfaa010
+   DEFINE l_slip          LIKE sffb_t.sffbdocno
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asft335_01 WITH FORM cl_ap_formpath("asf","asft335_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   CALL cl_set_combo_scc('sffb001','4020')
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_sffb_m.sffbdocno,g_sffb_m.sffbseq,g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006, 
+          g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb002,g_sffb_m.sffb004,g_sffb_m.sffb010,g_sffb_m.sffb009, 
+          g_sffb_m.sffb030,g_sffb_m.sffb011,g_sffb_m.sffb003,g_sffb_m.sffb012,g_sffb_m.sffb013,g_sffb_m.sffb014, 
+          g_sffb_m.sffb015,g_sffb_m.sffb016,g_sffb_m.sffb017,g_sffb_m.sffb018,g_sffb_m.sffb019,g_sffb_m.sffb020, 
+          g_sffb_m.sffb021,g_sffb_m.sffb022,g_sffb_m.sffb023,g_sffb_m.sffb024,g_sffb_m.sffbdocdt,g_sffb_m.sffbsite, 
+          g_sffb_m.sffbstus ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            CALL s_transaction_begin() 
+            LET g_sffb_m.sffb001 = "3"
+            LET g_sffb_m.sffb002 = g_user
+            LET g_sffb_m.sffb002_desc = s_desc_get_person_desc(g_sffb_m.sffb002)
+            LET g_sffb_m.sffb003 = g_dept
+            LET g_sffb_m.sffb006 = NULL
+            LET g_sffb_m.sffbdocno = cl_get_para(g_enterprise,g_site,'S-MFG-0035')
+            LET g_sffb_m.sffbdocdt = cl_get_today()
+            CALL s_aooi200_gen_docno(g_site,g_sffb_m.sffbdocno,g_sffb_m.sffbdocdt,g_prog) RETURNING l_success,g_sffb_m.sffbdocno
+            IF NOT l_success THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00003'
+               LET g_errparam.extend = g_sffb_m.sffbdocno
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_sffb_m.sffbdocno = NULL
+               RETURN g_sffb_m.sffbdocno
+            END IF
+            LET g_sffb_m.sffbseq   = 0
+            LET g_sffb_m.sffb011   = 1
+            LET g_sffb_m.sffb012   = cl_get_today()
+            LET g_sffb_m.sffb013   = cl_get_time()
+            LET g_sffb_m.sffb013   = g_sffb_m.sffb013[1,5]
+            LET g_sffb_m.sffb014 = s_asft335_get_working_time(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb012,g_sffb_m.sffb013) * g_sffb_m.sffb011
+            LET g_sffb_m.sffb015 = s_asft335_get_working_time(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb012,g_sffb_m.sffb013)
+            LET g_sffb_m.sffb018 = 0
+            LET g_sffb_m.sffb019 = 0
+            LET g_sffb_m.sffb020 = 0
+            LET g_sffb_m.sffbownid = g_user
+            LET g_sffb_m.sffbowndp = g_dept
+            LET g_sffb_m.sffbcrtid = g_user
+            LET g_sffb_m.sffbcrtdp = g_dept 
+            LET g_sffb_m.sffbcrtdt = cl_get_current()
+            LET g_sffb_m.sffbmodid = ""
+            LET g_sffb_m.sffbmoddt = ""
+            LET g_sffb_m.sffbstus = "N"            
+            DISPLAY BY NAME g_sffb_m.*
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffbdocno
+            
+            #add-point:AFTER FIELD sffbdocno name="input.a.sffbdocno"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffbdocno
+            #add-point:BEFORE FIELD sffbdocno name="input.b.sffbdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffbdocno
+            #add-point:ON CHANGE sffbdocno name="input.g.sffbdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffbseq
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffb_m.sffbseq,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD sffbseq
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sffbseq name="input.a.sffbseq"
+ 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffbseq
+            #add-point:BEFORE FIELD sffbseq name="input.b.sffbseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffbseq
+            #add-point:ON CHANGE sffbseq name="input.g.sffbseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb001
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffb_m.sffb001,"1.000","1","5.000","1","azz-00087",1) THEN
+               NEXT FIELD sffb001
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sffb001 name="input.a.sffb001"
+            IF NOT cl_null(g_sffb_m.sffb001) THEN 
+               IF p_cmd = 'a'  THEN
+                  IF NOT s_asft335_chk_sffb0078(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) THEN
+                     LET g_sffb_m.sffb001 = NULL
+                     NEXT FIELD CURRENT
+                  END IF                  
+               END IF
+               
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb001
+            #add-point:BEFORE FIELD sffb001 name="input.b.sffb001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb001
+            #add-point:ON CHANGE sffb001 name="input.g.sffb001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb005
+            
+            #add-point:AFTER FIELD sffb005 name="input.a.sffb005"
+#当工单栏位是新增或者修改后，如果对应的run card是唯一的，则预设到run card栏位
+#预设工单对应的其他资料
+            IF NOT cl_null(g_sffb_m.sffb005) THEN 
+               IF p_cmd = 'a'  THEN 
+                  IF NOT s_asft335_chk_sffb0078(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) THEN
+                     LET g_sffb_m.sffb005 = NULL
+                     #檢查失敗時後續處理
+                     NEXT FIELD CURRENT
+                  END IF
+                           
+                  CALL s_asft335_default_sffb056(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008)
+                  RETURNING l_sfaa010,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb009,g_sffb_m.sffb030 #fengmy151013 add sffb030
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_sffb_m.sffb007
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_sffb_m.sffb007_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_sffb_m.sffb007_desc                    
+                  DISPLAY BY NAME g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb009,g_sffb_m.sffb017
+                  #fengmy151016---begin
+                  CALL s_desc_get_department_desc(g_sffb_m.sffb030) RETURNING g_sffb_m.sffb030_desc
+                  DISPLAY BY NAME g_sffb_m.sffb030,g_sffb_m.sffb030_desc
+                  #fengmy151016---end
+               END IF            
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb005
+            #add-point:BEFORE FIELD sffb005 name="input.b.sffb005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb005
+            #add-point:ON CHANGE sffb005 name="input.g.sffb005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb006
+            
+            #add-point:AFTER FIELD sffb006 name="input.a.sffb006"
+            IF NOT cl_null(g_sffb_m.sffb006) THEN 
+               IF p_cmd = 'a'  THEN
+                  IF NOT s_asft335_chk_sffb0078(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) THEN
+                     LET g_sffb_m.sffb006 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_asft335_default_sffb056(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008)
+                  RETURNING l_sfaa010,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb009,g_sffb_m.sffb030 #fengmy151013 add sffb030
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_sffb_m.sffb007
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_sffb_m.sffb007_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_sffb_m.sffb007_desc 
+                  #fengmy151016---begin
+                  CALL s_desc_get_department_desc(g_sffb_m.sffb030) RETURNING g_sffb_m.sffb030_desc
+                  DISPLAY BY NAME g_sffb_m.sffb030,g_sffb_m.sffb030_desc
+                  #fengmy151016---end
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb006
+            #add-point:BEFORE FIELD sffb006 name="input.b.sffb006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb006
+            #add-point:ON CHANGE sffb006 name="input.g.sffb006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb007
+            
+            #add-point:AFTER FIELD sffb007 name="input.a.sffb007"
+
+            IF NOT cl_null(g_sffb_m.sffb007) THEN 
+               IF p_cmd = 'a'  THEN
+#共用检查逻辑搬到同一个function内
+                  IF NOT s_asft335_chk_sffb0078(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) THEN
+                     LET g_sffb_m.sffb007 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_asft335_default_sffb056(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008)
+                  RETURNING l_sfaa010,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb009,g_sffb_m.sffb030 #fengmy151013 add sffb030
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_sffb_m.sffb007
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_sffb_m.sffb007_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_sffb_m.sffb007_desc 
+               END IF
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffb007
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb007_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb007_desc           
+            #fengmy151016---begin
+            CALL s_desc_get_department_desc(g_sffb_m.sffb030) RETURNING g_sffb_m.sffb030_desc
+            DISPLAY BY NAME g_sffb_m.sffb030,g_sffb_m.sffb030_desc
+            #fengmy151016---end
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb007
+            #add-point:BEFORE FIELD sffb007 name="input.b.sffb007"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb007
+            #add-point:ON CHANGE sffb007 name="input.g.sffb007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb008
+            
+            #add-point:AFTER FIELD sffb008 name="input.a.sffb008"
+            IF NOT cl_null(g_sffb_m.sffb008) THEN 
+               IF p_cmd = 'a'  THEN
+#共用检查逻辑搬到同一个function内
+                  IF NOT s_asft335_chk_sffb0078(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) THEN
+                     LET g_sffb_m.sffb008 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_asft335_default_sffb056(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008)
+                  RETURNING l_sfaa010,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb009,g_sffb_m.sffb030 #fengmy151013 add sffb030
+               END IF
+ #预设待处理数量
+               CALL s_asft335_set_qty(g_sffb_m.sffbdocno,g_sffb_m.sffbseq,g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) RETURNING g_sffb_m.sffb017,g_sffb_m.sffb016
+               DISPLAY BY NAME g_sffb_m.sffb017,g_sffb_m.sffb016            
+
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb008
+            #add-point:BEFORE FIELD sffb008 name="input.b.sffb008"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb008
+            #add-point:ON CHANGE sffb008 name="input.g.sffb008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb002
+            
+            #add-point:AFTER FIELD sffb002 name="input.a.sffb002"
+            IF NOT cl_null(g_sffb_m.sffb002) THEN 
+               IF p_cmd = 'a' THEN
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_errshow = TRUE #是否開窗 #160318-00025#34  add
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sffb_m.sffb002
+                  LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"  #160318-00025#34  add
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_ooag001") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+   
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_sffb_m.sffb002 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            
+
+            END IF 
+            LET g_sffb_m.sffb002_desc = s_desc_get_person_desc(g_sffb_m.sffb002)
+            DISPLAY BY NAME g_sffb_m.sffb002_desc
+            CALL s_aooi200_get_slip(g_sffb_m.sffbdocno) RETURNING l_success,l_slip
+            IF cl_get_doc_para(g_enterprise,g_site,l_slip,'D-MFG-0068') ='Y' THEN 
+               IF p_cmd ='a'  THEN
+                  SELECT TOP oogf001 INTO g_sffb_m.sffb024
+                    FROM oogf_t 
+                   WHERE oogfent  = g_enterprise
+                     AND oogfsite = g_site
+                     AND oogf002  = g_sffb_m.sffb002
+                     AND oogfstus = 'Y'
+                     AND oogf003 <= g_sffb_m.sffbdocdt
+ 
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_site
+                  LET g_ref_fields[2] = g_sffb_m.sffb024
+                  CALL ap_ref_array2(g_ref_fields,"SELECT ooge002 FROM ooge_t WHERE oogeent='"||g_enterprise||"' AND oogesite=? AND ooge001=? ","") RETURNING g_rtn_fields
+                  LET g_sffb_m.sffb024_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_sffb_m.sffb024_desc 
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb002
+            #add-point:BEFORE FIELD sffb002 name="input.b.sffb002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb002
+            #add-point:ON CHANGE sffb002 name="input.g.sffb002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb004
+            
+            #add-point:AFTER FIELD sffb004 name="input.a.sffb004"
+            IF NOT cl_null(g_sffb_m.sffb004) THEN 
+               IF p_cmd = 'a'  THEN
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_site
+                  LET g_chkparam.arg2 = g_sffb_m.sffb004
+                  
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_oogd001") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_sffb_m.sffb004 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_site
+            LET g_ref_fields[2] = g_sffb_m.sffb004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oogd002 FROM oogd_t WHERE oogdent='"||g_enterprise||"' AND oogdsite=? AND oogd001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb004_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb004
+            #add-point:BEFORE FIELD sffb004 name="input.b.sffb004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb004
+            #add-point:ON CHANGE sffb004 name="input.g.sffb004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb010
+            
+            #add-point:AFTER FIELD sffb010 name="input.a.sffb010"
+            IF NOT cl_null(g_sffb_m.sffb010) THEN 
+               IF p_cmd ='a'  THEN
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_sffb_m.sffb010
+			      
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_mrba001") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+			      
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_sffb_m.sffb010 = NULL
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sffb_m.sffb010
+            CALL ap_ref_array2(g_ref_fields,"SELECT mrba004 FROM mrba_t WHERE mrbaent='"||g_enterprise||"' AND mrbasite = '"||g_site||"' AND mrba001=? ","") RETURNING g_rtn_fields
+            LET g_sffb_m.sffb010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sffb_m.sffb010_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb010
+            #add-point:BEFORE FIELD sffb010 name="input.b.sffb010"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb010
+            #add-point:ON CHANGE sffb010 name="input.g.sffb010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb009
+            
+            #add-point:AFTER FIELD sffb009 name="input.a.sffb009"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb009
+            #add-point:BEFORE FIELD sffb009 name="input.b.sffb009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb009
+            #add-point:ON CHANGE sffb009 name="input.g.sffb009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb030
+            
+            #add-point:AFTER FIELD sffb030 name="input.a.sffb030"
+            #fengmy151016---begin
+            DISPLAY "" TO g_sffb_m.sffb030_desc
+            CALL s_asft335_sffb030_chk(g_sffb_m.sffb030) RETURNING l_success,g_sffb_m.sffb030
+            IF NOT l_success THEN
+               NEXT FIELD CURRENT
+            END IF            
+            CALL s_desc_get_department_desc(g_sffb_m.sffb030) RETURNING g_sffb_m.sffb030_desc
+            DISPLAY BY NAME g_sffb_m.sffb030_desc
+            #fengmy151016---end
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb030
+            #add-point:BEFORE FIELD sffb030 name="input.b.sffb030"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb030
+            #add-point:ON CHANGE sffb030 name="input.g.sffb030"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb011
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffb_m.sffb011,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffb011
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sffb011 name="input.a.sffb011"
+            IF NOT cl_null(g_sffb_m.sffb011) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb011
+            #add-point:BEFORE FIELD sffb011 name="input.b.sffb011"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb011
+            #add-point:ON CHANGE sffb011 name="input.g.sffb011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb003
+            
+            #add-point:AFTER FIELD sffb003 name="input.a.sffb003"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb003
+            #add-point:BEFORE FIELD sffb003 name="input.b.sffb003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb003
+            #add-point:ON CHANGE sffb003 name="input.g.sffb003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb012
+            #add-point:BEFORE FIELD sffb012 name="input.b.sffb012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb012
+            
+            #add-point:AFTER FIELD sffb012 name="input.a.sffb012"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb012
+            #add-point:ON CHANGE sffb012 name="input.g.sffb012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb013
+            #add-point:BEFORE FIELD sffb013 name="input.b.sffb013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb013
+            
+            #add-point:AFTER FIELD sffb013 name="input.a.sffb013"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb013
+            #add-point:ON CHANGE sffb013 name="input.g.sffb013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb014
+            #add-point:BEFORE FIELD sffb014 name="input.b.sffb014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb014
+            
+            #add-point:AFTER FIELD sffb014 name="input.a.sffb014"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb014
+            #add-point:ON CHANGE sffb014 name="input.g.sffb014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb015
+            #add-point:BEFORE FIELD sffb015 name="input.b.sffb015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb015
+            
+            #add-point:AFTER FIELD sffb015 name="input.a.sffb015"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb015
+            #add-point:ON CHANGE sffb015 name="input.g.sffb015"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb016
+            #add-point:BEFORE FIELD sffb016 name="input.b.sffb016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb016
+            
+            #add-point:AFTER FIELD sffb016 name="input.a.sffb016"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb016
+            #add-point:ON CHANGE sffb016 name="input.g.sffb016"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb017
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffb_m.sffb017,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffb017
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sffb017 name="input.a.sffb017"
+            IF NOT cl_null(g_sffb_m.sffb017) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb017
+            #add-point:BEFORE FIELD sffb017 name="input.b.sffb017"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb017
+            #add-point:ON CHANGE sffb017 name="input.g.sffb017"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb018
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffb_m.sffb018,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffb018
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sffb018 name="input.a.sffb018"
+            IF NOT cl_null(g_sffb_m.sffb018) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb018
+            #add-point:BEFORE FIELD sffb018 name="input.b.sffb018"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb018
+            #add-point:ON CHANGE sffb018 name="input.g.sffb018"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb019
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffb_m.sffb019,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffb019
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sffb019 name="input.a.sffb019"
+            IF NOT cl_null(g_sffb_m.sffb019) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb019
+            #add-point:BEFORE FIELD sffb019 name="input.b.sffb019"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb019
+            #add-point:ON CHANGE sffb019 name="input.g.sffb019"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb020
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sffb_m.sffb020,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sffb020
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD sffb020 name="input.a.sffb020"
+            IF NOT cl_null(g_sffb_m.sffb020) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb020
+            #add-point:BEFORE FIELD sffb020 name="input.b.sffb020"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb020
+            #add-point:ON CHANGE sffb020 name="input.g.sffb020"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb021
+            
+            #add-point:AFTER FIELD sffb021 name="input.a.sffb021"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb021
+            #add-point:BEFORE FIELD sffb021 name="input.b.sffb021"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb021
+            #add-point:ON CHANGE sffb021 name="input.g.sffb021"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb022
+            #add-point:BEFORE FIELD sffb022 name="input.b.sffb022"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb022
+            
+            #add-point:AFTER FIELD sffb022 name="input.a.sffb022"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb022
+            #add-point:ON CHANGE sffb022 name="input.g.sffb022"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb023
+            #add-point:BEFORE FIELD sffb023 name="input.b.sffb023"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb023
+            
+            #add-point:AFTER FIELD sffb023 name="input.a.sffb023"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb023
+            #add-point:ON CHANGE sffb023 name="input.g.sffb023"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffb024
+            
+            #add-point:AFTER FIELD sffb024 name="input.a.sffb024"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffb024
+            #add-point:BEFORE FIELD sffb024 name="input.b.sffb024"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffb024
+            #add-point:ON CHANGE sffb024 name="input.g.sffb024"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffbdocdt
+            #add-point:BEFORE FIELD sffbdocdt name="input.b.sffbdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffbdocdt
+            
+            #add-point:AFTER FIELD sffbdocdt name="input.a.sffbdocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffbdocdt
+            #add-point:ON CHANGE sffbdocdt name="input.g.sffbdocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffbsite
+            #add-point:BEFORE FIELD sffbsite name="input.b.sffbsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffbsite
+            
+            #add-point:AFTER FIELD sffbsite name="input.a.sffbsite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffbsite
+            #add-point:ON CHANGE sffbsite name="input.g.sffbsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sffbstus
+            #add-point:BEFORE FIELD sffbstus name="input.b.sffbstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sffbstus
+            
+            #add-point:AFTER FIELD sffbstus name="input.a.sffbstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sffbstus
+            #add-point:ON CHANGE sffbstus name="input.g.sffbstus"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.sffbdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffbdocno
+            #add-point:ON ACTION controlp INFIELD sffbdocno name="input.c.sffbdocno"
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffbseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffbseq
+            #add-point:ON ACTION controlp INFIELD sffbseq name="input.c.sffbseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb001
+            #add-point:ON ACTION controlp INFIELD sffb001 name="input.c.sffb001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb005
+            #add-point:ON ACTION controlp INFIELD sffb005 name="input.c.sffb005"
+                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = 'F'
+            LET g_qryparam.arg2 = '1'  #161014-00030#1 add
+            LET g_qryparam.arg3 = 'Y'  #161014-00030#1 add 製程否
+            CALL q_sfaadocno_18()      #161014-00030#1 add
+           #CALL q_sfaadocno_1()       #161014-00030#1 mark
+
+            LET g_sffb_m.sffb005 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb005 TO sffb005              #顯示到畫面上
+
+            NEXT FIELD sffb005                          #返回原欄位
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb006
+            #add-point:ON ACTION controlp INFIELD sffb006 name="input.c.sffb006"
+                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb006             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sffb_m.sffb005
+
+            CALL q_sfca001()                                #呼叫開窗
+
+            LET g_sffb_m.sffb006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb006 TO sffb006              #顯示到畫面上
+
+            NEXT FIELD sffb006                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb007
+            #add-point:ON ACTION controlp INFIELD sffb007 name="input.c.sffb007"
+                                   #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb007             #給予default值
+            LET g_qryparam.default2 = g_sffb_m.sffb008             #製程序
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sffb_m.sffb005
+            LET g_qryparam.arg3 = g_sffb_m.sffb006
+
+            CALL q_sfcb003()                                #呼叫開窗
+
+            LET g_sffb_m.sffb007 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET g_sffb_m.sffb008 = g_qryparam.return2 #製程序
+
+            DISPLAY g_sffb_m.sffb007 TO sffb007              #顯示到畫面上
+            DISPLAY g_sffb_m.sffb008 TO sffb008 #製程序
+
+            NEXT FIELD sffb007                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb008
+            #add-point:ON ACTION controlp INFIELD sffb008 name="input.c.sffb008"
+                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb007             #給予default值
+            LET g_qryparam.default2 = g_sffb_m.sffb008             #製程序
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sffb_m.sffb005
+            LET g_qryparam.arg3 = g_sffb_m.sffb006
+
+            CALL q_sfcb003()                                #呼叫開窗
+
+            LET g_sffb_m.sffb007 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET g_sffb_m.sffb008 = g_qryparam.return2 #製程序
+
+            DISPLAY g_sffb_m.sffb007 TO sffb007              #顯示到畫面上
+            DISPLAY g_sffb_m.sffb008 TO sffb008 #製程序
+
+            NEXT FIELD sffb008                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb002
+            #add-point:ON ACTION controlp INFIELD sffb002 name="input.c.sffb002"
+                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb002             #給予default值
+
+            #給予arg
+
+            CALL q_ooag001_4()                                #呼叫開窗
+
+            LET g_sffb_m.sffb002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb002 TO sffb002              #顯示到畫面上
+
+            NEXT FIELD sffb002                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb004
+            #add-point:ON ACTION controlp INFIELD sffb004 name="input.c.sffb004"
+                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb004             #給予default值
+
+            #給予arg
+
+            CALL q_oogd001_01()                                #呼叫開窗
+
+            LET g_sffb_m.sffb004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb004 TO sffb004              #顯示到畫面上
+
+            NEXT FIELD sffb004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb010
+            #add-point:ON ACTION controlp INFIELD sffb010 name="input.c.sffb010"
+                                    #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb010             #給予default值
+            LET g_qryparam.where = " mrbasite ='",g_site,"' "
+            #給予arg
+
+            CALL q_mrba001()                                #呼叫開窗
+
+            LET g_sffb_m.sffb010 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb010 TO sffb010              #顯示到畫面上
+
+            NEXT FIELD sffb010                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb009
+            #add-point:ON ACTION controlp INFIELD sffb009 name="input.c.sffb009"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb009             #給予default值
+
+            #給予arg
+
+            CALL q_ecaa001_1()                                #呼叫開窗
+
+            LET g_sffb_m.sffb009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb009 TO sffb009              #顯示到畫面上
+
+            NEXT FIELD sffb009                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb030
+            #add-point:ON ACTION controlp INFIELD sffb030 name="input.c.sffb030"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb030             #給予default值
+            LET g_qryparam.default2 = "" #g_sffb_m.ooef001 #组织编号
+            #給予arg
+            #add--161013-00051#1 By shiun--(S)
+            LET g_qryparam.arg1 = cl_get_today()
+#            CALL q_ooef001()                                  #呼叫開窗
+            CALL q_ooeg001_8()
+            #add--161013-00051#1 By shiun--(E)
+
+            LET g_sffb_m.sffb030 = g_qryparam.return1
+            DISPLAY g_sffb_m.sffb030 TO sffb030
+            NEXT FIELD sffb030                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb011
+            #add-point:ON ACTION controlp INFIELD sffb011 name="input.c.sffb011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb003
+            #add-point:ON ACTION controlp INFIELD sffb003 name="input.c.sffb003"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            CALL q_ooeg001()                                #呼叫開窗
+
+            LET g_sffb_m.sffb003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb003 TO sffb003              #顯示到畫面上
+
+            NEXT FIELD sffb003                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb012
+            #add-point:ON ACTION controlp INFIELD sffb012 name="input.c.sffb012"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb013
+            #add-point:ON ACTION controlp INFIELD sffb013 name="input.c.sffb013"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb014
+            #add-point:ON ACTION controlp INFIELD sffb014 name="input.c.sffb014"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb015
+            #add-point:ON ACTION controlp INFIELD sffb015 name="input.c.sffb015"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb016
+            #add-point:ON ACTION controlp INFIELD sffb016 name="input.c.sffb016"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb017
+            #add-point:ON ACTION controlp INFIELD sffb017 name="input.c.sffb017"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb018
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb018
+            #add-point:ON ACTION controlp INFIELD sffb018 name="input.c.sffb018"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb019
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb019
+            #add-point:ON ACTION controlp INFIELD sffb019 name="input.c.sffb019"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb020
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb020
+            #add-point:ON ACTION controlp INFIELD sffb020 name="input.c.sffb020"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb021
+            #add-point:ON ACTION controlp INFIELD sffb021 name="input.c.sffb021"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb021             #給予default值
+            LET g_qryparam.default2 = "" #g_sffb_m.sfcb004 #製程序
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            LET g_qryparam.arg3 = "" #
+
+            CALL q_sfcb003()                                #呼叫開窗
+
+            LET g_sffb_m.sffb021 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_sffb_m.sfcb004 = g_qryparam.return2 #製程序
+
+            DISPLAY g_sffb_m.sffb021 TO sffb021              #顯示到畫面上
+            #DISPLAY g_sffb_m.sfcb004 TO sfcb004 #製程序
+
+            NEXT FIELD sffb021                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb022
+            #add-point:ON ACTION controlp INFIELD sffb022 name="input.c.sffb022"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb022             #給予default值
+            LET g_qryparam.default2 = "" #g_sffb_m.sfcb004 #製程序
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            LET g_qryparam.arg3 = "" #
+
+            CALL q_sfcb003()                                #呼叫開窗
+
+            LET g_sffb_m.sffb022 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_sffb_m.sfcb004 = g_qryparam.return2 #製程序
+
+            DISPLAY g_sffb_m.sffb022 TO sffb022              #顯示到畫面上
+            #DISPLAY g_sffb_m.sfcb004 TO sfcb004 #製程序
+
+            NEXT FIELD sffb022                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb023
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb023
+            #add-point:ON ACTION controlp INFIELD sffb023 name="input.c.sffb023"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffb024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffb024
+            #add-point:ON ACTION controlp INFIELD sffb024 name="input.c.sffb024"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sffb_m.sffb024             #給予default值
+
+            #給予arg
+
+            CALL q_ooge001()                                #呼叫開窗
+
+            LET g_sffb_m.sffb024 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_sffb_m.sffb024 TO sffb024              #顯示到畫面上
+
+            NEXT FIELD sffb024                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffbdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffbdocdt
+            #add-point:ON ACTION controlp INFIELD sffbdocdt name="input.c.sffbdocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffbsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffbsite
+            #add-point:ON ACTION controlp INFIELD sffbsite name="input.c.sffbsite"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sffbstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sffbstus
+            #add-point:ON ACTION controlp INFIELD sffbstus name="input.c.sffbstus"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+
+               
+             CALL s_asft335_set_qty(g_sffb_m.sffbdocno,g_sffb_m.sffbseq,g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008) 
+                       RETURNING g_sffb_m.sffb017,g_sffb_m.sffb016         
+
+            LET g_sffb_m.sffb014 = s_asft335_get_working_time(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb012,g_sffb_m.sffb013) * g_sffb_m.sffb011
+            LET g_sffb_m.sffb015 = s_asft335_get_working_time(g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb012,g_sffb_m.sffb013)
+            IF g_sffb_m.sffb007 IS NULL THEN LET g_sffb_m.sffb007 = ' ' END IF
+            IF g_sffb_m.sffb008 IS NULL THEN LET g_sffb_m.sffb008 = ' ' END IF
+
+            INSERT INTO sffb_t (sffbent,sffbsite,sffbdocno,sffbseq,sffb001,sffb005,sffb006,sffb007,sffb008,sffb002,
+                                sffb004,sffb010,sffb009,sffb011,sffb003,sffb012,sffb013,sffb014,sffb015,sffb016,sffb030,  #fengmy151016 add sffb030
+                                sffb017,sffb018,sffb019,sffb020,sffb021,sffb022,sffb023,sffb024,sffbdocdt,
+                                sffbstus,sffbownid,sffbowndp,sffbcrtid,sffbcrtdp,sffbcrtdt,sffbmodid,sffbmoddt,sffbcnfid,sffbcnfdt)
+            VALUES (g_enterprise,g_site,g_sffb_m.sffbdocno,g_sffb_m.sffbseq,g_sffb_m.sffb001,g_sffb_m.sffb005,g_sffb_m.sffb006,g_sffb_m.sffb007,g_sffb_m.sffb008,g_sffb_m.sffb002,
+                    g_sffb_m.sffb004,g_sffb_m.sffb010,g_sffb_m.sffb009,g_sffb_m.sffb011,g_sffb_m.sffb003,g_sffb_m.sffb012,g_sffb_m.sffb013,g_sffb_m.sffb014,g_sffb_m.sffb015,g_sffb_m.sffb016,g_sffb_m.sffb030,  #fengmy151016 add sffb030
+                    g_sffb_m.sffb017,g_sffb_m.sffb018,g_sffb_m.sffb019,g_sffb_m.sffb020,g_sffb_m.sffb021,g_sffb_m.sffb022,g_sffb_m.sffb023,g_sffb_m.sffb024,g_sffb_m.sffbdocdt,
+                    g_sffb_m.sffbstus,g_sffb_m.sffbownid,g_sffb_m.sffbowndp,g_sffb_m.sffbcrtid,g_sffb_m.sffbcrtdp,g_sffb_m.sffbcrtdt,g_sffb_m.sffbmodid,g_sffb_m.sffbmoddt,g_sffb_m.sffbcnfid,g_sffb_m.sffbcnfdt)
+            
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "asft335_01 ins sffb"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+               LET g_sffb_m.sffbdocno = NULL               
+               CALL s_transaction_end('N','0')
+            ELSE
+               IF NOT s_asft335_ins_sffc(g_sffb_m.sffbdocno,g_sffb_m.sffbseq) THEN
+                  CALL s_transaction_end('N','0')
+                  LET g_sffb_m.sffbdocno = NULL 
+               END IF
+               CALL s_transaction_end('Y','0')
+            END IF
+
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asft335_01 
+   
+   #add-point:input段after input name="input.post_input"
+   IF s_transaction_chk('Y',0) THEN
+      CALL s_transaction_end('Y','0')
+   END IF
+   IF INT_FLAG THEN
+      LET g_sffb_m.sffbdocno = NULL
+   END IF
+                  
+   RETURN g_sffb_m.sffbdocno
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft335_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="asft335_01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

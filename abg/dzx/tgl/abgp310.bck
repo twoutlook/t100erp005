@@ -1,0 +1,1002 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgp310.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2016-11-30 15:20:48), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000006
+#+ Filename...: abgp310
+#+ Description: 預算參考資料轉入作業
+#+ Creator....: 02114(2016-11-30 15:20:48)
+#+ Modifier...: 02114 -SD/PR-
+
+{</section>}
+
+{<section id="abgp310.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       bgcj002 LIKE bgcj_t.bgcj002, 
+   bgcj002_desc LIKE type_t.chr80, 
+   bgcj003 LIKE bgcj_t.bgcj003, 
+   f LIKE type_t.chr500, 
+   source LIKE type_t.chr1, 
+   a LIKE type_t.chr1, 
+   bgcj007 LIKE type_t.chr10, 
+   b LIKE type_t.chr500, 
+   date LIKE type_t.chr500, 
+   c LIKE type_t.chr500, 
+   d LIKE type_t.chr500, 
+   e LIKE type_t.chr500, 
+   bgcj016_1 LIKE type_t.chr10, 
+   bgcj003_1 LIKE type_t.chr10, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="abgp310.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   {<point name="main.before_ap_init"/>}
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("abg","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      {<point name="main.servicecall"/>}
+      #end add-point
+      CALL abgp310_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_abgp310 WITH FORM cl_ap_formpath("abg",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL abgp310_init()
+ 
+      #進入選單 Menu (="N")
+      CALL abgp310_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      {<point name="main.before_close"/>}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_abgp310
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   {<point name="main.exit"/>}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+
+{</section>}
+
+{<section id="abgp310.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION abgp310_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init"/>}
+   #end add-point
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="abgp310.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION abgp310_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      {<point name="ui_dialog.before_dialog2"/>}
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.bgcj002,g_master.bgcj003,g_master.f,g_master.source,g_master.a,g_master.b, 
+             g_master.date,g_master.c,g_master.d,g_master.e,g_master.bgcj016_1,g_master.bgcj003_1 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj002
+            
+            #add-point:AFTER FIELD bgcj002 name="input.a.bgcj002"
+            {<point name="input.a.bgcj002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj002
+            #add-point:BEFORE FIELD bgcj002 name="input.b.bgcj002"
+            {<point name="input.b.bgcj002" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj002
+            #add-point:ON CHANGE bgcj002 name="input.g.bgcj002"
+            {<point name="input.g.bgcj002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj003
+            #add-point:BEFORE FIELD bgcj003 name="input.b.bgcj003"
+            {<point name="input.b.bgcj003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj003
+            
+            #add-point:AFTER FIELD bgcj003 name="input.a.bgcj003"
+            {<point name="input.a.bgcj003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj003
+            #add-point:ON CHANGE bgcj003 name="input.g.bgcj003"
+            {<point name="input.g.bgcj003" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD f
+            #add-point:BEFORE FIELD f name="input.b.f"
+            {<point name="input.b.f" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD f
+            
+            #add-point:AFTER FIELD f name="input.a.f"
+            {<point name="input.a.f" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE f
+            #add-point:ON CHANGE f name="input.g.f"
+            {<point name="input.g.f" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD source
+            #add-point:BEFORE FIELD source name="input.b.source"
+            {<point name="input.b.source" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD source
+            
+            #add-point:AFTER FIELD source name="input.a.source"
+            {<point name="input.a.source" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE source
+            #add-point:ON CHANGE source name="input.g.source"
+            {<point name="input.g.source" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD a
+            #add-point:BEFORE FIELD a name="input.b.a"
+            {<point name="input.b.a" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD a
+            
+            #add-point:AFTER FIELD a name="input.a.a"
+            {<point name="input.a.a" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE a
+            #add-point:ON CHANGE a name="input.g.a"
+            {<point name="input.g.a" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b
+            #add-point:BEFORE FIELD b name="input.b.b"
+            {<point name="input.b.b" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b
+            
+            #add-point:AFTER FIELD b name="input.a.b"
+            {<point name="input.a.b" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE b
+            #add-point:ON CHANGE b name="input.g.b"
+            {<point name="input.g.b" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD date
+            #add-point:BEFORE FIELD date name="input.b.date"
+            {<point name="input.b.date" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD date
+            
+            #add-point:AFTER FIELD date name="input.a.date"
+            {<point name="input.a.date" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE date
+            #add-point:ON CHANGE date name="input.g.date"
+            {<point name="input.g.date" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD c
+            #add-point:BEFORE FIELD c name="input.b.c"
+            {<point name="input.b.c" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD c
+            
+            #add-point:AFTER FIELD c name="input.a.c"
+            {<point name="input.a.c" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE c
+            #add-point:ON CHANGE c name="input.g.c"
+            {<point name="input.g.c" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD d
+            #add-point:BEFORE FIELD d name="input.b.d"
+            {<point name="input.b.d" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD d
+            
+            #add-point:AFTER FIELD d name="input.a.d"
+            {<point name="input.a.d" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE d
+            #add-point:ON CHANGE d name="input.g.d"
+            {<point name="input.g.d" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD e
+            #add-point:BEFORE FIELD e name="input.b.e"
+            {<point name="input.b.e" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD e
+            
+            #add-point:AFTER FIELD e name="input.a.e"
+            {<point name="input.a.e" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE e
+            #add-point:ON CHANGE e name="input.g.e"
+            {<point name="input.g.e" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj016_1
+            #add-point:BEFORE FIELD bgcj016_1 name="input.b.bgcj016_1"
+            {<point name="input.b.bgcj016_1" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj016_1
+            
+            #add-point:AFTER FIELD bgcj016_1 name="input.a.bgcj016_1"
+            {<point name="input.a.bgcj016_1" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj016_1
+            #add-point:ON CHANGE bgcj016_1 name="input.g.bgcj016_1"
+            {<point name="input.g.bgcj016_1" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj003_1
+            #add-point:BEFORE FIELD bgcj003_1 name="input.b.bgcj003_1"
+            {<point name="input.b.bgcj003_1" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj003_1
+            
+            #add-point:AFTER FIELD bgcj003_1 name="input.a.bgcj003_1"
+            {<point name="input.a.bgcj003_1" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgcj003_1
+            #add-point:ON CHANGE bgcj003_1 name="input.g.bgcj003_1"
+            {<point name="input.g.bgcj003_1" />}
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.bgcj002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj002
+            #add-point:ON ACTION controlp INFIELD bgcj002 name="input.c.bgcj002"
+            {<point name="input.c.bgcj002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bgcj003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj003
+            #add-point:ON ACTION controlp INFIELD bgcj003 name="input.c.bgcj003"
+            {<point name="input.c.bgcj003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.f
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD f
+            #add-point:ON ACTION controlp INFIELD f name="input.c.f"
+            {<point name="input.c.f" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.source
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD source
+            #add-point:ON ACTION controlp INFIELD source name="input.c.source"
+            {<point name="input.c.source" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.a
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD a
+            #add-point:ON ACTION controlp INFIELD a name="input.c.a"
+            {<point name="input.c.a" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.b
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b
+            #add-point:ON ACTION controlp INFIELD b name="input.c.b"
+            {<point name="input.c.b" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.date
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD date
+            #add-point:ON ACTION controlp INFIELD date name="input.c.date"
+            {<point name="input.c.date" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.c
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD c
+            #add-point:ON ACTION controlp INFIELD c name="input.c.c"
+            {<point name="input.c.c" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.d
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD d
+            #add-point:ON ACTION controlp INFIELD d name="input.c.d"
+            {<point name="input.c.d" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.e
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD e
+            #add-point:ON ACTION controlp INFIELD e name="input.c.e"
+            {<point name="input.c.e" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bgcj016_1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj016_1
+            #add-point:ON ACTION controlp INFIELD bgcj016_1 name="input.c.bgcj016_1"
+            {<point name="input.c.bgcj016_1" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bgcj003_1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj003_1
+            #add-point:ON ACTION controlp INFIELD bgcj003_1 name="input.c.bgcj003_1"
+            {<point name="input.c.bgcj003_1" />}
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            {<point name="input.other"/>}
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON bgcj007
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.bgcj007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgcj007
+            #add-point:ON ACTION controlp INFIELD bgcj007 name="construct.c.bgcj007"
+            {<point name="construct.c.bgcj007" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgcj007
+            #add-point:BEFORE FIELD bgcj007 name="construct.b.bgcj007"
+            {<point name="construct.b.bgcj007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgcj007
+            
+            #add-point:AFTER FIELD bgcj007 name="construct.a.bgcj007"
+            {<point name="construct.a.bgcj007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b
+            #add-point:BEFORE FIELD b name="construct.b.b"
+            {<point name="construct.b.b" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b
+            
+            #add-point:AFTER FIELD b name="construct.a.b"
+            {<point name="construct.a.b" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.b
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b
+            #add-point:ON ACTION controlp INFIELD b name="construct.c.b"
+            {<point name="construct.c.b" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD c
+            #add-point:BEFORE FIELD c name="construct.b.c"
+            {<point name="construct.b.c" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD c
+            
+            #add-point:AFTER FIELD c name="construct.a.c"
+            {<point name="construct.a.c" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.c
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD c
+            #add-point:ON ACTION controlp INFIELD c name="construct.c.c"
+            {<point name="construct.c.c" />}
+            #END add-point
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL abgp310_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            {<point name="ui_dialog.before_dialog3"/>}
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         {<point name="ui_dialog.before_qbeclear" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL abgp310_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL abgp310_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = abgp310_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         {<point name="process.after_schedule"/>}
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="abgp310.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION abgp310_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   {<point name="transfer_agrv.define_customerization" edit="c"/>}
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   {<point name="transfer_agrv.define"/>}
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+
+{</section>}
+
+{<section id="abgp310.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION abgp310_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   {<point name="process.define_customerization" edit="c"/>}
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   {<point name="process.define"/>}
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE abgp310_process_cs CURSOR FROM ls_sql
+#  FOREACH abgp310_process_cs INTO
+   #add-point:process段process name="process.process"
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      {<point name="process.background_finish"/>}
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL abgp310_msgcentre_notify()
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="abgp310.get_buffer" >}
+PRIVATE FUNCTION abgp310_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   {<point name="get_buffer.define_customerization" edit="c"/>}
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   {<point name="get_buffer.define"/>}
+   #end add-point
+ 
+   
+   LET g_master.bgcj002 = p_dialog.getFieldBuffer('bgcj002')
+   LET g_master.bgcj003 = p_dialog.getFieldBuffer('bgcj003')
+   LET g_master.f = p_dialog.getFieldBuffer('f')
+   LET g_master.source = p_dialog.getFieldBuffer('source')
+   LET g_master.a = p_dialog.getFieldBuffer('a')
+   LET g_master.b = p_dialog.getFieldBuffer('b')
+   LET g_master.date = p_dialog.getFieldBuffer('date')
+   LET g_master.c = p_dialog.getFieldBuffer('c')
+   LET g_master.d = p_dialog.getFieldBuffer('d')
+   LET g_master.e = p_dialog.getFieldBuffer('e')
+   LET g_master.bgcj016_1 = p_dialog.getFieldBuffer('bgcj016_1')
+   LET g_master.bgcj003_1 = p_dialog.getFieldBuffer('bgcj003_1')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   {<point name="get_buffer.others"/>}
+   #end add-point
+END FUNCTION
+
+{</section>}
+
+{<section id="abgp310.msgcentre_notify" >}
+PRIVATE FUNCTION abgp310_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   {<point name="msgcentre_notify.define_customerization" edit="c"/>}
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   {<point name="msgcentre_notify.define"/>}
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   {<point name="msg_centre.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="abgp310.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+

@@ -1,0 +1,1208 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axcp203" std_prog="axcp203" erpver="1.0" module="AXC" ver="1" env="s" zone="t10prd" booking="Y" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.axcp203_execute" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp203_execute()
+DEFINE l_count LIKE type_t.num5
+DEFINE l_xcbr  RECORD  LIKE xcbr_t.*
+DEFINE l_xcbq  RECORD  LIKE xcbq_t.*
+DEFINE l_seq     LIKE type_t.num5
+DEFINE l_sfaa068 LIKE sfaa_t.sfaa068
+DEFINE l_sfaa010 LIKE sfaa_t.sfaa010
+DEFINE l_success LIKE type_t.num5
+DEFINE l_flag    LIKE type_t.chr1 
+ TYPE type_sffb RECORD
+  sffbsite LIKE sffb_t.sffbsite, 
+   sffb005 LIKE sffb_t.sffb005,
+   sffb007 LIKE sffb_t.sffb007,
+   sffb008 LIKE sffb_t.sffb008,
+   sffb014 LIKE sffb_t.sffb014,
+   sffb015 LIKE sffb_t.sffb015,
+   sffb017 LIKE sffb_t.sffb017,
+   sffb018 LIKE sffb_t.sffb018
+       END RECORD
+DEFINE l_sffb type_sffb
+DEFINE l_cnt  LIKE type_t.num5
+DEFINE l_msg     STRING
+DEFINE l_site_t   LIKE sffb_t.sffbsite
+DEFINE l_xcbqdocno  LIKE xcbq_t.xcbqdocno
+DEFINE l_comp     STRING
+
+   WHENEVER ERROR CONTINUE
+   
+   IF cl_null(g_compp) THEN LET g_success = 'N' RETURN END IF
+#DELETE
+   #刪除舊值
+   LET l_msg = cl_getmsg("axc-00499",g_dlang)  #删除旧值
+   CALL cl_progress_no_window_ing(l_msg)
+   
+   LET g_tmp = " SELECT UNIQUE xcbrdocno,xcbrseq FROM xcbr_t,xcbq_t,sffb_t ",
+               "   LEFT JOIN sfaa_t ON sfaadocno = sffb005 AND sfaaent = sffbent ",
+               "  WHERE sffbent = '",g_enterprise,"'", 
+               "    AND sffbdocdt BETWEEN '",g_bdate,"' AND '",g_edate,"'",
+               "    AND sffbstus = 'Y' ",
+               "    AND ",g_master.wc,
+               "    AND xcbqent = xcbrent AND xcbqdocno = xcbrdocno AND xcbqstus = 'N' ",
+               "    AND xcbrent = sffbent AND xcbrsite = sffbsite ",
+               "    AND xcbr002 = sffb005 AND xcbr003 = sffb007 AND xcbr004 = sffb008 "
+               
+   IF g_wc_comp <> " 1=1" THEN
+      LET g_wc_comp = cl_replace_str(g_wc_comp,"comp","xcbrcomp")    
+#      LET g_tmp = g_tmp CLIPPED,"    AND xcbrcomp = '",g_wc_comp,"'"
+      LET g_tmp = g_tmp CLIPPED,"    AND  ",g_wc_comp
+   END IF
+   IF g_master.Outsourcing = 'N' THEN 
+      LET g_tmp = g_tmp," AND sfaa057 != '2'"
+   END IF   
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",g_tmp,") "   
+   PREPARE cursor_cnt_pre FROM g_sql
+   DECLARE cursor_cnt_cs CURSOR FOR cursor_cnt_pre 
+
+
+   LET g_sql = "DELETE FROM xcbr_t a",
+               " WHERE a.xcbrent = '",g_enterprise,"'",
+               "   AND EXISTS ( SELECT 1 FROM (",g_tmp,") b WHERE a.xcbrdocno = b.xcbrdocno AND a.xcbrseq = b.xcbrseq )"
+   PREPARE cursor_pre_1 FROM g_sql 
+
+   LET g_sql = "DELETE FROM xcbq_t ",
+               " WHERE xcbqent = '",g_enterprise,"'",
+               "   AND xcbq001 BETWEEN '",g_bdate,"' AND '",g_edate,"'",
+               "   AND xcbqstus = 'N' ",
+               "   AND NOT EXISTS ( SELECT 1 FROM xcbr_t WHERE xcbrent = xcbqent AND xcbrdocno = xcbqdocno )"
+   PREPARE cursor_pre_2 FROM g_sql 
+
+   LET l_cnt = 0
+   OPEN cursor_cnt_cs
+   FETCH cursor_cnt_cs INTO l_cnt
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'FETCH cursor_cnt_pre'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_success = 'N'      
+      RETURN 
+   END IF
+   
+   IF l_cnt > 0 THEN
+      IF cl_ask_confirm('axc-00717') THEN
+         EXECUTE cursor_pre_1  
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'DELETE xcbr FILE'
+            LET g_errparam.popup  = FALSE
+            CALL cl_err()
+            LET g_success = 'N'
+            RETURN
+         END IF
+         EXECUTE cursor_pre_2 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'DELETE xcbq FILE'
+            LET g_errparam.popup  = FALSE
+            CALL cl_err()
+            LET g_success = 'N'
+            RETURN
+         END IF   
+      ELSE
+         RETURN      
+      END IF
+   END IF
+
+#generate
+   #從報工單抓取
+   LET l_msg = cl_getmsg("axc-00688",g_dlang)  #从报工单抓取
+   CALL cl_progress_no_window_ing(l_msg)
+   
+   LET g_sql = " SELECT sffbsite,sffb005,sffb007,sffb008,SUM(sffb014),SUM(sffb015),SUM(sffb017),SUM(sffb018) FROM sffb_t ",
+               "   LEFT JOIN sfaa_t ON sfaadocno = sffb005 AND sfaaent = sffbent ",
+               "  WHERE sffbent = '",g_enterprise,"'", 
+               "    AND sffbdocdt BETWEEN '",g_bdate,"' AND '",g_edate,"'",
+               "    AND sffbstus = 'Y' ",
+               "    AND ",g_master.wc
+               
+   IF g_master.Outsourcing = 'N' THEN 
+      LET g_sql = g_sql," AND sfaa057 != '2'"
+   END IF
+   LET g_sql = g_sql," GROUP BY sffbsite,sffb005,sffb007,sffb008 ",
+                     " ORDER BY sffbsite "
+   PREPARE sffb_pre FROM g_sql
+   DECLARE sffb_cur CURSOR FOR sffb_pre
+    
+
+   
+   LET g_token = base.StringTokenizer.create(g_compp,"|")
+   WHILE g_token.hasMoreTokens() 
+      LET l_comp =g_token.nextToken()
+      LET l_site_t = ''
+      FOREACH sffb_cur INTO l_sffb.*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:sffb"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET g_success = 'N'         
+            EXIT FOREACH
+            RETURN
+         END IF
+         
+         IF cl_null(l_site_t) OR l_sffb.sffbsite <> l_site_t THEN 
+            LET l_flag = 'N' 
+            #xcdqdocno 单号 自动编号
+            CALL axcp203_get_glaa(l_sffb.sffbsite)            
+#            CALL s_aooi200_fin_chk_docno(g_glaald,g_glaa024,g_glaa003,g_master.xcbqdocno,g_master.xcbq001,'axct203') RETURNING l_success
+#            IF l_success  = 0  THEN
+#               INITIALIZE g_errparam TO NULL
+#               LET g_errparam.code = 'amm-00001'
+#               LET g_errparam.extend = l_sffb.sffbsite
+#               LET g_errparam.popup = TRUE
+#               CALL cl_err()
+#               LET g_success = 'N'         
+#               EXIT FOREACH
+#               RETURN
+#            END IF
+            CALL s_aooi200_fin_gen_docno(g_glaald,g_glaa024,g_glaa003,g_master.xcbqdocno,g_master.xcbq001,'axct203')
+            RETURNING l_success,l_xcbqdocno
+            IF l_success  = 0  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00003'
+               LET g_errparam.extend = l_xcbqdocno
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CALL cl_err_collect_show()
+               LET g_success = 'N'         
+               EXIT FOREACH
+               RETURN
+            END IF
+            
+            LET l_xcbq.xcbqent = g_enterprise
+            LET l_xcbq.xcbqsite = l_sffb.sffbsite
+#            IF g_wc_comp = " 1=1" THEN 
+#               LET l_xcbq.xcbqcomp = l_sffb.sffbsite 
+#            ELSE
+               LET l_xcbq.xcbqcomp = l_comp         
+#            END IF
+            LET l_xcbq.xcbqdocno = l_xcbqdocno
+            LET l_xcbq.xcbq001 = g_master.xcbq001
+            LET l_xcbq.xcbq002 = ' '
+            LET l_xcbq.xcbqownid = g_user
+            LET l_xcbq.xcbqowndp = g_dept
+            LET l_xcbq.xcbqcrtid = g_user
+            LET l_xcbq.xcbqcrtdp = g_dept 
+            LET l_xcbq.xcbqcrtdt = cl_get_current()
+            LET l_xcbq.xcbqmodid = ""
+            LET l_xcbq.xcbqmoddt = ""      
+            LET l_xcbq.xcbqcnfid = ""
+            LET l_xcbq.xcbqcnfdt = ""  
+            LET l_xcbq.xcbqstus = 'N'
+            
+            INSERT INTO xcbq_t VALUES(l_xcbq.*)
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "insert xcbq"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET g_success = 'N'
+               EXIT FOREACH
+               RETURN
+            ELSE
+               LET l_site_t = l_sffb.sffbsite
+               LET l_seq = 1
+               LET l_flag = 'Y'            
+            END IF
+         END IF 
+         
+         IF l_flag = 'Y' THEN            
+            LET l_xcbr.xcbrent = g_enterprise
+            LET l_xcbr.xcbrsite = l_sffb.sffbsite
+#            IF g_wc_comp = " 1=1" THEN 
+#               LET l_xcbr.xcbrcomp = l_sffb.sffbsite 
+#            ELSE
+               LET l_xcbr.xcbrcomp = l_comp         
+#            END IF
+            LET l_xcbr.xcbrdocno = l_xcbqdocno
+            LET l_xcbr.xcbrseq = l_seq
+            SELECT sfaa068,sfaa010 INTO l_sfaa068,l_sfaa010 FROM sfaa_t WHERE sfaaent = g_enterprise AND sfaadocno = l_sffb.sffb005
+            IF cl_null(l_sfaa068) THEN LET l_sfaa068 = ' ' END IF
+            LET l_xcbr.xcbr001 = l_sfaa068  #成本中心
+            LET l_xcbr.xcbr002 = l_sffb.sffb005  #工單編號
+            LET l_xcbr.xcbr003 = l_sffb.sffb007  #作業編號
+            LET l_xcbr.xcbr004 = l_sffb.sffb008  #製程式
+            LET l_xcbr.xcbr009 = ''       #備註
+            IF cl_null(l_sffb.sffb017) THEN LET l_sffb.sffb017 = 0 END IF
+            IF cl_null(l_sffb.sffb018) THEN LET l_sffb.sffb018 = 0 END IF
+            LET l_xcbr.xcbr099 = l_sffb.sffb017  #良品数量
+            LET l_xcbr.xcbr100 = l_sffb.sffb018  #报废数量
+            LET l_xcbr.xcbr101 = 0        #期末在制数量
+            LET l_xcbr.xcbr102 = 0        #期末在制约当率
+            LET l_xcbr.xcbr103 = 0        #期末在制约当量
+            LET l_xcbr.xcbr104 = l_xcbr.xcbr099+l_xcbr.xcbr100+l_xcbr.xcbr103     #报工数量
+            IF cl_null(l_sffb.sffb014) THEN LET l_sffb.sffb014 = 0 END IF
+            IF cl_null(l_sffb.sffb015) THEN LET l_sffb.sffb015 = 0 END IF         
+            LET l_xcbr.xcbr201 = l_sffb.sffb014  #实际工时
+            LET l_xcbr.xcbr202 = l_sffb.sffb015  #实际机时
+            
+            SELECT imae051,imae052 INTO l_xcbr.xcbr203,l_xcbr.xcbr204
+              FROM imae_t
+             WHERE imaeent  = g_enterprise
+               AND imaesite = l_sffb.sffbsite 
+               AND imae001  = l_sfaa010  
+            IF cl_null(l_xcbr.xcbr203) THEN LET l_xcbr.xcbr203 = 0 END IF
+            IF cl_null(l_xcbr.xcbr204) THEN LET l_xcbr.xcbr204 = 0 END IF                              
+            LET l_xcbr.xcbr203 = l_xcbr.xcbr104 * l_xcbr.xcbr203 #标准工时 = 报工数量*工单生产主件的单位标准工时
+            LET l_xcbr.xcbr204 = l_xcbr.xcbr104 * l_xcbr.xcbr204 #标准机时 = 报工数量*工单生产主件的单位标准机时
+            
+            INSERT INTO xcbr_t VALUES(l_xcbr.*)
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "insert xcbr"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET g_success = 'N'
+               EXIT FOREACH
+               RETURN
+            END IF
+         END IF  
+         LET l_seq = l_seq + 1
+      END FOREACH
+   END WHILE
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axcp203_get_glaa" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp203_get_glaa(p_comp)
+DEFINE p_comp LIKE xcbq_t.xcbqcomp
+#DEFINE r_success LIKE type_t.num5
+
+IF cl_null(p_comp) THEN
+   LET p_comp = g_site
+END IF 
+#抓出会计周期参考表号  glaa003
+   SELECT glaa003,glaald INTO g_glaa003,g_glaald
+      FROM glaa_t
+      WHERE glaaent = g_enterprise
+       AND glaacomp = p_comp
+       AND glaa014= 'Y' 
+CALL s_ld_sel_glaa(g_glaald,'glaa024') RETURNING g_sub_success,g_glaa024 
+#取得画面上年期
+   CALL s_get_accdate(g_glaa003,g_master.xcbq001,'','')
+     RETURNING g_flag1,g_errno,g_glav002,g_glav005,g_sdate_s,g_sdate_e,
+               g_glav006,g_bdate,g_edate,g_glav007,g_wdate_s,g_wdate_e
+
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.comp" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO comp  #顯示到畫面上
+            NEXT FIELD comp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.sfaa010" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfaa010  #顯示到畫面上
+            NEXT FIELD sfaa010                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.sfaadocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            IF cl_null(g_master.xcbq001) THEN
+               LET g_qryparam.where = #" EXISTS ( SELECT 1 FROM sfeb_t,sfea_t WHERE sfaadocno = sfeb001 AND sfaaent = sfebent AND sfeaent = sfebent AND sfeadocno = sfebdocno AND sfeastus = 'Y' ) ",
+                                      "  EXISTS ( SELECT 1 FROM sffb_t WHERE sfaadocno = sffb005 AND sfaaent = sffbent AND sffbstus = 'Y' ) "
+#            ELSE
+#               CALL axcp203_get_glaa('')
+#               LET g_qryparam.where = #" EXISTS ( SELECT 1 FROM sfeb_t,sfea_t WHERE sfaadocno = sfeb001 AND sfaaent = sfebent AND sfeaent = sfebent AND sfeadocno = sfebdocno AND sfeastus = 'Y' AND sfeadocdt BETWEEN '",g_bdate,"' AND '",g_edate,"'  ) ",
+#                                      "  EXISTS ( SELECT 1 FROM sffb_t WHERE sfaadocno = sffb005 AND sfaaent = sffbent  AND sffbstus = 'Y' AND sffbdocdt BETWEEN '",g_bdate,"' AND '",g_edate,"' ) "
+            END IF
+
+            CALL q_sfaadocno_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfaadocno  #顯示到畫面上
+            NEXT FIELD sfaadocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.sfaasite" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfaasite  #顯示到畫面上
+            NEXT FIELD sfaasite                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_glaa003         LIKE glaa_t.glaa003
+DEFINE g_glaald          LIKE glaa_t.glaald
+DEFINE g_glaa024         LIKE glaa_t.glaa024
+DEFINE g_flag1           LIKE type_t.chr1
+DEFINE g_errno           LIKE type_t.chr100
+DEFINE g_glav002         LIKE glav_t.glav002
+DEFINE g_glav005         LIKE glav_t.glav005
+DEFINE g_bdate           LIKE glav_t.glav004 #起始年度+期別對應的起始截止日期
+DEFINE g_edate           LIKE glav_t.glav004
+DEFINE g_sdate_s         LIKE glav_t.glav004
+DEFINE g_sdate_e         LIKE glav_t.glav004
+DEFINE g_glav006         LIKE glav_t.glav006
+DEFINE g_glav007         LIKE glav_t.glav007
+DEFINE g_wdate_s         LIKE glav_t.glav004
+DEFINE g_wdate_e         LIKE glav_t.glav004
+DEFINE g_wc_comp         STRING
+DEFINE g_tmp             STRING
+DEFINE g_token           base.StringTokenizer
+DEFINE g_compp           STRING]]>
+  </point>
+  <point name="input.a.xcbqdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_master.xcbqdocno) THEN
+               IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcbq_t WHERE "||"xcbqent = '" ||g_enterprise|| "' AND "||"xcbqdocno = '"||g_master.xcbqdocno ||"'",'std-00004',0) THEN
+                 NEXT FIELD CURRENT
+               END IF
+               CALL axcp203_get_glaa('')
+               CALL s_aooi200_fin_chk_docno(g_glaald,g_glaa024,g_glaa003,g_master.xcbqdocno,g_master.xcbq001,'axct203') RETURNING l_success
+               IF l_success = FALSE THEN
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+]]>
+  </point>
+  <point name="input.c.xcbqdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            CALL axcp203_get_glaa('')
+            
+            LET g_qryparam.default1 = g_master.xcbqdocno             #給予default值
+            LET g_qryparam.where = " ooba001 = '",g_glaa024,"' AND oobx003 = 'axct203'" 
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            CALL q_ooba002_4()                                #呼叫開窗
+
+            LET g_master.xcbqdocno = g_qryparam.return1              
+
+            DISPLAY g_master.xcbqdocno TO xcbqdocno              #
+
+            NEXT FIELD xcbqdocno                          #返回原欄位]]>
+  </point>
+  <point name="process.background_finish" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      CALL s_transaction_begin()  #事务开始
+      CALL cl_err_collect_init()  #汇总错误讯息初始化
+      LET g_success = 'Y'
+      CALL axcp203_execute()
+      
+      IF g_success = 'N' THEN
+         CALL cl_err_collect_show()  #显示错误讯息汇总
+         CALL s_transaction_end('N','0')
+         RETURN
+      ELSE
+         CALL s_transaction_end('Y','0')
+      END IF]]>
+  </point>
+  <point name="process.count_progress" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      CALL cl_progress_bar_no_window(2)]]>
+  </point>
+  <point name="process.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="process.exit_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#      LET g_wc_comp = cl_replace_str(g_wc_comp,"comp=","")
+#      LET g_wc_comp = cl_replace_str(g_wc_comp,"'","")      ]]>
+  </point>
+  <point name="process.foreground_finish" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      CALL s_transaction_begin()  #事务开始
+      CALL cl_err_collect_init()  #汇总错误讯息初始化
+      LET g_success = 'Y'
+      
+      CALL axcp203_execute()
+      
+      
+      #CALL s_transaction_end(g_success,0)  #事务结束
+      IF g_success = 'N' THEN
+         CALL cl_err_collect_show()  #显示错误讯息汇总
+         CALL s_transaction_end('N','0')
+         RETURN
+      ELSE
+         CALL s_transaction_end('Y','0')
+      END IF]]>
+  </point>
+  <point name="process.pre_process" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+
+   
+]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.before_dialog3" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            LET g_master.xcbq001 = g_today
+            LET g_master.Outsourcing = 'N'
+            DISPLAY g_site TO sfaasite
+            DISPLAY g_site TO comp
+            LET g_compp = g_site]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE  l_success  LIKE type_t.num5]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         CONSTRUCT BY NAME g_wc_comp ON comp
+            BEFORE CONSTRUCT
+            
+                     #Ctrlp:construct.c.comp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD comp
+            #add-point:ON ACTION controlp INFIELD comp
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO comp  #顯示到畫面上
+#            LET g_compp = g_qryparam.return1
+            NEXT FIELD comp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD comp
+            #add-point:BEFORE FIELD comp
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD comp
+            
+            #add-point:AFTER FIELD comp
+            CALL GET_FLDBUF(comp) RETURNING g_compp
+            #END add-point
+         END CONSTRUCT
+ ]]>
+  </point>
+  <section id="axcp203.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000009
+#+ 
+#+ Filename...: axcp203
+#+ Description: 報工單批次生成工藝成本工時作業
+#+ Creator....: 03297(2015-04-10 16:24:44)
+#+ Modifier...: 03297(2015-04-16 09:56:06) -SD/PR-
+]]>
+  </section>
+  <section id="axcp203.get_buffer" ver="3" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axcp203_get_buffer(p_dialog)
+   DEFINE p_dialog   ui.DIALOG
+   
+   LET g_master.xcbqdocno = p_dialog.getFieldBuffer('xcbqdocno')
+   LET g_master.xcbq001 = p_dialog.getFieldBuffer('xcbq001')
+   LET g_master.Outsourcing = p_dialog.getFieldBuffer('Outsourcing')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   {<point name="get_buffer.others"/>}
+   #end add-point
+END FUNCTION
+]]>
+  </section>
+  <section id="axcp203.global" ver="5" status="" src="s" readonly="">
+    <![CDATA[#應用 p01 樣板自動產生(Version:10)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       sfaasite LIKE type_t.chr10, 
+   comp LIKE type_t.chr500, 
+   sfaadocno LIKE type_t.chr20, 
+   sfaa010 LIKE type_t.chr500, 
+   sfaadocdt LIKE type_t.dat, 
+   xcbqdocno LIKE type_t.chr20, 
+   xcbq001 LIKE type_t.dat, 
+   Outsourcing LIKE type_t.chr500, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axcp203.init" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION axcp203_init()
+   #add-point:init段define 
+   {<point name="init.define" edit="s"/>}
+   #end add-point
+   #add-point:init段define (客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axcp203.main" ver="2" status="" src="s" readonly="">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   {<point name="main.define" edit="s"/>}
+   #end add-point 
+   #add-point:main段define (客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axc","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL axcp203_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axcp203 WITH FORM cl_ap_formpath("axc",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axcp203_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axcp203_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axcp203
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="axcp203.msgcentre_notify" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axcp203_msgcentre_notify()
+ 
+   DEFINE lc_state LIKE type_t.chr5
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知
+   {<point name="msg_centre.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="axcp203.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axcp203.process" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION axcp203_process(ls_js)
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define 
+   {<point name="process.define" edit="s"/>}
+   #end add-point
+   #add-point:process段define (客製用)
+   {<point name="process.define_customerization" edit="c"/>}
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axcp203_process_cs CURSOR FROM ls_sql
+#  FOREACH axcp203_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL axcp203_msgcentre_notify()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="axcp203.transfer_argv" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axcp203_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   {<point name="transfer_agrv.define" edit="s"/>}
+   #end add-point
+   #add-point:transfer_agrv段define (客製用)
+   {<point name="transfer_agrv.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="axcp203.ui_dialog" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION axcp203_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point
+   #add-point:ui_dialog段define (客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      {<point name="ui_dialog.before_dialog2"/>}
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:2)
+         INPUT BY NAME g_master.xcbqdocno,g_master.xcbq001,g_master.Outsourcing 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xcbqdocno
+            #add-point:BEFORE FIELD xcbqdocno
+            {<point name="input.b.xcbqdocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xcbqdocno
+            
+            #add-point:AFTER FIELD xcbqdocno
+            {<point name="input.a.xcbqdocno" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xcbqdocno
+            #add-point:ON CHANGE xcbqdocno
+            {<point name="input.g.xcbqdocno" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xcbq001
+            #add-point:BEFORE FIELD xcbq001
+            {<point name="input.b.xcbq001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xcbq001
+            
+            #add-point:AFTER FIELD xcbq001
+            {<point name="input.a.xcbq001" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xcbq001
+            #add-point:ON CHANGE xcbq001
+            {<point name="input.g.xcbq001" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD Outsourcing
+            #add-point:BEFORE FIELD Outsourcing
+            {<point name="input.b.Outsourcing" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD Outsourcing
+            
+            #add-point:AFTER FIELD Outsourcing
+            {<point name="input.a.Outsourcing" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE Outsourcing
+            #add-point:ON CHANGE Outsourcing
+            {<point name="input.g.Outsourcing" />}
+            #END add-point 
+ 
+ 
+                     #Ctrlp:input.c.xcbqdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xcbqdocno
+            #add-point:ON ACTION controlp INFIELD xcbqdocno
+            {<point name="input.c.xcbqdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xcbq001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xcbq001
+            #add-point:ON ACTION controlp INFIELD xcbq001
+            {<point name="input.c.xcbq001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.Outsourcing
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD Outsourcing
+            #add-point:ON ACTION controlp INFIELD Outsourcing
+            {<point name="input.c.Outsourcing" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+         END INPUT
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:2)
+         CONSTRUCT BY NAME g_master.wc ON sfaasite,sfaadocno,sfaa010,sfaadocdt
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.sfaasite
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sfaasite
+            #add-point:ON ACTION controlp INFIELD sfaasite
+            {<point name="construct.c.sfaasite" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sfaasite
+            #add-point:BEFORE FIELD sfaasite
+            {<point name="construct.b.sfaasite" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sfaasite
+            
+            #add-point:AFTER FIELD sfaasite
+            {<point name="construct.a.sfaasite" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.sfaadocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sfaadocno
+            #add-point:ON ACTION controlp INFIELD sfaadocno
+            {<point name="construct.c.sfaadocno" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sfaadocno
+            #add-point:BEFORE FIELD sfaadocno
+            {<point name="construct.b.sfaadocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sfaadocno
+            
+            #add-point:AFTER FIELD sfaadocno
+            {<point name="construct.a.sfaadocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.sfaa010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sfaa010
+            #add-point:ON ACTION controlp INFIELD sfaa010
+            {<point name="construct.c.sfaa010" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sfaa010
+            #add-point:BEFORE FIELD sfaa010
+            {<point name="construct.b.sfaa010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sfaa010
+            
+            #add-point:AFTER FIELD sfaa010
+            {<point name="construct.a.sfaa010" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sfaadocdt
+            #add-point:BEFORE FIELD sfaadocdt
+            {<point name="construct.b.sfaadocdt" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sfaadocdt
+            
+            #add-point:AFTER FIELD sfaadocdt
+            {<point name="construct.a.sfaadocdt" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.sfaadocdt
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sfaadocdt
+            #add-point:ON ACTION controlp INFIELD sfaadocdt
+            {<point name="construct.c.sfaadocdt" />}
+            #END add-point
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL axcp203_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.before_dialog3"/>}
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear
+         {<point name="ui_dialog.before_qbeclear" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL axcp203_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axcp203_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = axcp203_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         {<point name="process.after_schedule"/>}
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

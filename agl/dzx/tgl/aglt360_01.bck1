@@ -1,0 +1,636 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglt360_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2014-10-14 10:56:39), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000267
+#+ Filename...: aglt360_01
+#+ Description: 固定核算項
+#+ Creator....: 02114(2013-10-29 17:46:10)
+#+ Modifier...: 02599 -SD/PR-
+
+{</section>}
+
+{<section id="aglt360_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+{<point name="global.memo" />}
+#end add-point
+#add-point:填寫註解說明(客製用)
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glam_m        RECORD
+       glam007 LIKE glam_t.glam007, 
+   glam007_desc LIKE type_t.chr80, 
+   glam008 LIKE glam_t.glam008, 
+   glam008_desc LIKE type_t.chr80, 
+   glam009 LIKE glam_t.glam009, 
+   glam009_desc LIKE type_t.chr80, 
+   glam010 LIKE glam_t.glam010, 
+   glam010_desc LIKE type_t.chr80, 
+   glam011 LIKE glam_t.glam011, 
+   glam011_desc LIKE type_t.chr80, 
+   glam012 LIKE glam_t.glam012, 
+   glam012_desc LIKE type_t.chr80, 
+   glam013 LIKE glam_t.glam013, 
+   glam013_desc LIKE type_t.chr80, 
+   glam014 LIKE glam_t.glam014, 
+   glam014_desc LIKE type_t.chr80, 
+   glam051 LIKE glam_t.glam051, 
+   glam052 LIKE glam_t.glam052, 
+   glam052_desc LIKE type_t.chr80, 
+   glam053 LIKE glam_t.glam053, 
+   glam053_desc LIKE type_t.chr80, 
+   glam015 LIKE glam_t.glam015, 
+   glam015_desc LIKE type_t.chr80, 
+   glam017 LIKE glam_t.glam017, 
+   glam017_desc LIKE type_t.chr80, 
+   glam018 LIKE glam_t.glam018, 
+   glam018_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_glam_m        type_g_glam_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="aglt360_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aglt360_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglt360_01 WITH FORM cl_ap_formpath("agl","aglt360_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glam_m.glam007,g_glam_m.glam008,g_glam_m.glam009,g_glam_m.glam010,g_glam_m.glam011, 
+          g_glam_m.glam012,g_glam_m.glam013,g_glam_m.glam014,g_glam_m.glam051,g_glam_m.glam052,g_glam_m.glam053, 
+          g_glam_m.glam015,g_glam_m.glam017,g_glam_m.glam018 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam007
+            
+            #add-point:AFTER FIELD glam007 name="input.a.glam007"
+            {<point name="input.a.glam007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam007
+            #add-point:BEFORE FIELD glam007 name="input.b.glam007"
+            {<point name="input.b.glam007" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam007
+            #add-point:ON CHANGE glam007 name="input.g.glam007"
+            {<point name="input.g.glam007" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam008
+            
+            #add-point:AFTER FIELD glam008 name="input.a.glam008"
+            {<point name="input.a.glam008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam008
+            #add-point:BEFORE FIELD glam008 name="input.b.glam008"
+            {<point name="input.b.glam008" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam008
+            #add-point:ON CHANGE glam008 name="input.g.glam008"
+            {<point name="input.g.glam008" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam009
+            
+            #add-point:AFTER FIELD glam009 name="input.a.glam009"
+            {<point name="input.a.glam009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam009
+            #add-point:BEFORE FIELD glam009 name="input.b.glam009"
+            {<point name="input.b.glam009" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam009
+            #add-point:ON CHANGE glam009 name="input.g.glam009"
+            {<point name="input.g.glam009" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam010
+            
+            #add-point:AFTER FIELD glam010 name="input.a.glam010"
+            {<point name="input.a.glam010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam010
+            #add-point:BEFORE FIELD glam010 name="input.b.glam010"
+            {<point name="input.b.glam010" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam010
+            #add-point:ON CHANGE glam010 name="input.g.glam010"
+            {<point name="input.g.glam010" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam011
+            
+            #add-point:AFTER FIELD glam011 name="input.a.glam011"
+            {<point name="input.a.glam011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam011
+            #add-point:BEFORE FIELD glam011 name="input.b.glam011"
+            {<point name="input.b.glam011" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam011
+            #add-point:ON CHANGE glam011 name="input.g.glam011"
+            {<point name="input.g.glam011" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam012
+            
+            #add-point:AFTER FIELD glam012 name="input.a.glam012"
+            {<point name="input.a.glam012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam012
+            #add-point:BEFORE FIELD glam012 name="input.b.glam012"
+            {<point name="input.b.glam012" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam012
+            #add-point:ON CHANGE glam012 name="input.g.glam012"
+            {<point name="input.g.glam012" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam013
+            
+            #add-point:AFTER FIELD glam013 name="input.a.glam013"
+            {<point name="input.a.glam013" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam013
+            #add-point:BEFORE FIELD glam013 name="input.b.glam013"
+            {<point name="input.b.glam013" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam013
+            #add-point:ON CHANGE glam013 name="input.g.glam013"
+            {<point name="input.g.glam013" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam014
+            
+            #add-point:AFTER FIELD glam014 name="input.a.glam014"
+            {<point name="input.a.glam014" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam014
+            #add-point:BEFORE FIELD glam014 name="input.b.glam014"
+            {<point name="input.b.glam014" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam014
+            #add-point:ON CHANGE glam014 name="input.g.glam014"
+            {<point name="input.g.glam014" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam051
+            #add-point:BEFORE FIELD glam051 name="input.b.glam051"
+            {<point name="input.b.glam051" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam051
+            
+            #add-point:AFTER FIELD glam051 name="input.a.glam051"
+            {<point name="input.a.glam051" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam051
+            #add-point:ON CHANGE glam051 name="input.g.glam051"
+            {<point name="input.g.glam051" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam052
+            
+            #add-point:AFTER FIELD glam052 name="input.a.glam052"
+            {<point name="input.a.glam052" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam052
+            #add-point:BEFORE FIELD glam052 name="input.b.glam052"
+            {<point name="input.b.glam052" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam052
+            #add-point:ON CHANGE glam052 name="input.g.glam052"
+            {<point name="input.g.glam052" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam053
+            
+            #add-point:AFTER FIELD glam053 name="input.a.glam053"
+            {<point name="input.a.glam053" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam053
+            #add-point:BEFORE FIELD glam053 name="input.b.glam053"
+            {<point name="input.b.glam053" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam053
+            #add-point:ON CHANGE glam053 name="input.g.glam053"
+            {<point name="input.g.glam053" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam015
+            
+            #add-point:AFTER FIELD glam015 name="input.a.glam015"
+            {<point name="input.a.glam015" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam015
+            #add-point:BEFORE FIELD glam015 name="input.b.glam015"
+            {<point name="input.b.glam015" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam015
+            #add-point:ON CHANGE glam015 name="input.g.glam015"
+            {<point name="input.g.glam015" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam017
+            
+            #add-point:AFTER FIELD glam017 name="input.a.glam017"
+            {<point name="input.a.glam017" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam017
+            #add-point:BEFORE FIELD glam017 name="input.b.glam017"
+            {<point name="input.b.glam017" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam017
+            #add-point:ON CHANGE glam017 name="input.g.glam017"
+            {<point name="input.g.glam017" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glam018
+            
+            #add-point:AFTER FIELD glam018 name="input.a.glam018"
+            {<point name="input.a.glam018" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glam018
+            #add-point:BEFORE FIELD glam018 name="input.b.glam018"
+            {<point name="input.b.glam018" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glam018
+            #add-point:ON CHANGE glam018 name="input.g.glam018"
+            {<point name="input.g.glam018" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glam007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam007
+            #add-point:ON ACTION controlp INFIELD glam007 name="input.c.glam007"
+            {<point name="input.c.glam007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam008
+            #add-point:ON ACTION controlp INFIELD glam008 name="input.c.glam008"
+            {<point name="input.c.glam008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam009
+            #add-point:ON ACTION controlp INFIELD glam009 name="input.c.glam009"
+            {<point name="input.c.glam009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam010
+            #add-point:ON ACTION controlp INFIELD glam010 name="input.c.glam010"
+            {<point name="input.c.glam010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam011
+            #add-point:ON ACTION controlp INFIELD glam011 name="input.c.glam011"
+            {<point name="input.c.glam011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam012
+            #add-point:ON ACTION controlp INFIELD glam012 name="input.c.glam012"
+            {<point name="input.c.glam012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam013
+            #add-point:ON ACTION controlp INFIELD glam013 name="input.c.glam013"
+            {<point name="input.c.glam013" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam014
+            #add-point:ON ACTION controlp INFIELD glam014 name="input.c.glam014"
+            {<point name="input.c.glam014" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam051
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam051
+            #add-point:ON ACTION controlp INFIELD glam051 name="input.c.glam051"
+            {<point name="input.c.glam051" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam052
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam052
+            #add-point:ON ACTION controlp INFIELD glam052 name="input.c.glam052"
+            {<point name="input.c.glam052" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam053
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam053
+            #add-point:ON ACTION controlp INFIELD glam053 name="input.c.glam053"
+            {<point name="input.c.glam053" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam015
+            #add-point:ON ACTION controlp INFIELD glam015 name="input.c.glam015"
+            {<point name="input.c.glam015" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam017
+            #add-point:ON ACTION controlp INFIELD glam017 name="input.c.glam017"
+            {<point name="input.c.glam017" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glam018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glam018
+            #add-point:ON ACTION controlp INFIELD glam018 name="input.c.glam018"
+            {<point name="input.c.glam018" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglt360_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aglt360_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="aglt360_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq802" module="ain" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="08172" crtdt="2016-07-21 11:07:29" modid="08172" moddt="2016-07-25 18:22:46" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="預盤清單商品貨架清單查詢">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ineesite,ineesite_desc(chr80),inee001,inee001_desc(chr80),ineeunit,inea002,inea003,l_inef005(chr10),l_inef005_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inee002,inee002_desc(chr500),l_infq002(chr500),inee002_desc1(chr500),inef005(chr10),inef005_desc(chr500),inef006(chr10),inef007(chr30),inef009(chr10),l_count(num10)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainq802" method="dialog">
+    <section id="input">
+      <input id="head" field="inee001,l_inef005"/>
+      <input id="body" page="1" field="inee002,l_infq002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ineesite,inee001,l_inef005"/>
+      <construct id="body" page="1" field="inee002,l_infq002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ineesite,inee001"/>
+      <set id="head" type="no_entry" field="ineesite,inee001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ineesite">
+        <after>
+          <reference field="ineesite_desc" ref_field="inee_t.ineesite" map_field="ineeent,ineesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="ineesite_desc"/>
+      <column id="inee001">
+        <after>
+          <reference field="inee001_desc" ref_field="inee_t.inee001" map_field="ineeent,inee001" ref_sql="SELECT inea001 FROM inea_t WHERE ineaent=$varg_enterprise$var AND ineadocno=? "/>
+        </after>
+        <controlp form="q_ineadocno" state="c"/>
+      </column>
+      <column id="inee001_desc"/>
+      <column id="ineeunit"/>
+      <column id="inea002"/>
+      <column id="inea003"/>
+      <column id="l_inef005">
+        <after>
+          <reference field="l_inef005_desc" ref_field="l_inef005" map_field="l_inef005" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_12" state="i"/>
+        <controlp form="q_inaa001_12" state="c"/>
+      </column>
+      <column id="l_inef005_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="inee002">
+        <after>
+          <reference field="inee002_desc" ref_field="inee_t.inee002" map_field="ineeent,inee002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="inee002_desc"/>
+      <column id="l_infq002"/>
+      <column id="inee002_desc1"/>
+      <column id="inef005">
+        <after>
+          <reference field="inef005_desc" ref_field="inefsite,inef005" map_field="inefsite,inef005" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+      </column>
+      <column id="inef005_desc"/>
+      <column id="inef006"/>
+      <column id="inef007"/>
+      <column id="inef009"/>
+      <column id="l_count"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="inee_t" pk="ineesite,inee001">
+      <sql id="forupd_sql" type="sql" query="SELECT ineesite,&apos;&apos;,inee001,&apos;&apos;,ineeunit,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inee_t WHERE ineeent= ? AND ineesite=? AND inee001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ineesite,&apos;&apos;,inee001,&apos;&apos;,ineeunit,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inee_t" order="ineesite,inee001"/>
+    </head>
+    <body id="inee_t" page="1" linked="" pk="inee002" fk="ineesite,inee001">
+      <sql id="forupd_sql_detail" query="SELECT inee002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inee_t WHERE ineeent=? AND ineesite=? AND inee001=? AND inee002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inee002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inee_t WHERE ineeent= ? AND ineesite=? AND inee001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

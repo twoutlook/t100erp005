@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr006" module="aps" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05384" crtdt="2014-11-18 11:30:10" modid="05384" moddt="2014-11-21 11:21:14" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="APS建議替代表">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psos008,psos007,psot011,psot020,psot015,psot003,psca001(chr500),psca001_desc(chr80),combo(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aps" filename="apsr006" method="dialog">
+    <section id="input">
+      <input id="head" field="psca001,combo"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psos008,psos007,psot011,psot020,psot015,psot003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psos008"/>
+      <column id="psos007"/>
+      <column id="psot011"/>
+      <column id="psot020">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="psot015">
+        <controlp form="q_imaa001_2" state="c"/>
+      </column>
+      <column id="psot003">
+        <controlp form="q_psot003" state="c"/>
+      </column>
+      <column id="psca001">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+          <reference field="psca001_desc" ref_field="pscasite,psca001" map_field="pscasite,psca001" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscalsite=? AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+      </column>
+      <column id="psca001_desc"/>
+      <column id="combo" type="S" default="1"/>
+    </init>
+  </form>
+</assembly>
+

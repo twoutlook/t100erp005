@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq270" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06541" crtdt="2015-06-19 13:24:24" modid="06541" moddt="2015-06-19 13:24:24" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店收入月結查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="dedt018,dedt019,dedt020,dedtsite,dedtsite_desc(chr500),dedt005,dedt005_desc(chr500),dedt007,dedt007_desc(chr500),dedt014,dedt014_desc(chr500),dedt008,dedt008_desc(chr500),dedt010,dedt011,dedt012,dedt009,dedt013"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="dedt018(b_dedt018),dedt019(b_dedt019),dedt020(b_dedt020),dedtsite(b_dedtsite),dedtsite_desc(b_dedtsite_desc),dedt005(b_dedt005),dedt005_desc(b_dedt005_desc),dedt007(b_dedt007),dedt007_desc(b_dedt007_desc),dedt014(b_dedt014),dedt014_desc(b_dedt014_desc),dedt008(b_dedt008),dedt008_desc(b_dedt008_desc),dedt010(b_dedt010),dedt011(b_dedt011),dedt012(b_dedt012),dedt009(b_dedt009),dedt013(b_dedt013)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq270" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="dedt018,dedt019,dedt020,dedtsite,dedt005,dedt007,dedt014,dedt008,dedt010,dedt011,dedt012,dedt009,dedt013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="dedt018(b_dedt018),dedt019(b_dedt019),dedt020(b_dedt020),dedtsite(b_dedtsite),dedt005(b_dedt005),dedt007(b_dedt007),dedt014(b_dedt014),dedt008(b_dedt008),dedt010(b_dedt010),dedt011(b_dedt011),dedt012(b_dedt012),dedt009(b_dedt009),dedt013(b_dedt013)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="dedt018"/>
+      <column id="dedt019" type="S" default="0"/>
+      <column id="dedt020" type="S" default="0"/>
+      <column id="dedtsite">
+        <after>
+          <reference field="dedtsite_desc" ref_field="dedtsite" map_field="dedtent,dedtsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="dedtsite_desc"/>
+      <column id="dedt005">
+        <after>
+          <reference field="dedt005_desc" ref_field="dedtsite,dedt005" map_field="dedtsite,dedt005" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhaelsite=? AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhae001_3" state="c"/>
+      </column>
+      <column id="dedt005_desc"/>
+      <column id="dedt007">
+        <after>
+          <reference field="dedt007_desc" ref_field="dedt007" map_field="dedtent,dedt007" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_2" state="c"/>
+      </column>
+      <column id="dedt007_desc"/>
+      <column id="dedt014">
+        <after>
+          <reference field="dedt014_desc" ref_field="dedtsit,dedt014" map_field="dedtsit,dedt014" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_7" state="c"/>
+      </column>
+      <column id="dedt014_desc"/>
+      <column id="dedt008">
+        <after>
+          <reference field="dedt008_desc" ref_field="dedt008" map_field="dedtent,dedt008" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002" state="c"/>
+      </column>
+      <column id="dedt008_desc"/>
+      <column id="dedt010" type="S" default="0"/>
+      <column id="dedt011" type="S" default="0"/>
+      <column id="dedt012" type="S" default="0"/>
+      <column id="dedt009" type="S" default="0"/>
+      <column id="dedt013" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="dedt_t" page="1" linked="" pk="dedtsite,dedt005,dedt007,dedt008,dedt014,dedt018,dedt019,dedt020">
+      <sql id="b_fill_sql" query="SELECT dedt018,dedt019,dedt020,dedtsite,&apos;&apos;,dedt005,&apos;&apos;,dedt007,&apos;&apos;,dedt014,&apos;&apos;,dedt008,&apos;&apos;,dedt010,dedt011,dedt012,dedt009,dedt013 FROM dedt_t WHERE dedtent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

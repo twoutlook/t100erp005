@@ -1,0 +1,792 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmt400" std_prog="apmt400" erpver="1.0" ver="8" module="APM" type="M" booking="Y" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="pmda_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pmdb_t" main="N" head="N" pk="" fk_detail="" parent="pmda_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：當需求部門有原物料、庶務類等等的採買需求時，透過請購單填寫採買的需求資訊，作為採購單位採買的參考依據
+標準作業功能取消：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：/ [確認/取消確認/作廢]
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：pmda_t(請購單單頭檔)
+
+作業資料來源(Detail)：
+ 資料來源表：pmdb_t(請購單明細檔)
+
+查詢方案設定：
+ (1)系統預設查詢方案：
+    (根目錄)：
+        查詢方案1：未確認單據
+        查詢方案2：已確認單據
+        查詢方案3：已作廢單據
+
+ (2)瀏覽Browse顯示欄位及型態：
+    pmdadocno(請購單號)：ButtonEdit
+    pmdadodt(請購日期)：DateEdit
+    pmda001(請購單版本)：Edit
+    pmda002(請購人員)：ButtonEdit 
+    pmda003(請購部門)：ButtonEdit 
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[請購明細頁簽：
+●新增狀態:
+  1.新增時單身欄位預設值
+    1-1.如果是第一筆項次時，相關欄位預設值
+        欄位清單:
+         [C:供應商選擇方式] = '0'
+         [C:超交限率] = 0
+         [C:費用部門] = pmda007
+         [C:MRP/MPS計算] = pmda020
+         [C:MRP交期凍結] = 'N'
+         [C:允許部分交貨]= 'N'
+         [C:允許提前交貨] = 'N'
+         [C:行狀態] = '1' 
+         [C:緊急度] = '1'
+         [C:已轉採購量] = 0
+         [C:稅率] = 單頭[C:稅率]
+    1-2.新增第二筆以後的項次資料時，單身欄位預設上一筆項次的欄位值
+        欄位清單:
+         [C:需求日期]    、   [C:收貨時段]  、  [C:理由碼]
+         [C:備註]        、   [C:供應商選擇]、  [C:供應商]
+         [C:付款條件]  、  [C:交易條件]
+         [C:專案編號]    、   [C:WBS]
+         [C:活動編號]    、   [C:收貨據點]  、  [C:收貨庫位]
+         [C:收貨儲位]    、   [C:超交限率]  、  [C:允許部分交貨]
+         [C:允許提前交貨]、   [C:保稅]      、  [C:MRP交期凍結]
+         [C:費用部門] = pmda007
+         [C:MRP/MPS計算] = pmda020
+         [C:行狀態] = '1' 
+         [C:緊急度] = '1'
+         [C:已轉採購量] = 0      
+         [C:稅率] = 單頭[C:稅率]
+
+請購其他資訊頁簽：
+1.此頁籤單身table不可做新增、刪除功能
+2.離開頁籤單身table時，需SUM單身所有的pmdb020金額後更新單頭]]>
+  </di_all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[資料處理：
+●程式初始狀態:
+  1.呼叫s_control_get_group('3',g_user,g_dept)應用元件，產生請購控制組需要控制的資料範圍清單
+
+●新增狀態:
+  1.新增時單頭相關欄位的預設值如下:
+    [C:版本]    = 0
+    [請購日期]  = g_today
+    [請購人員]  = g_user  
+    [請購部門]  = g_grup
+  2.呼叫s_control_chk_group('5',g_controlno,g_site,'','','','')，判斷當下的營運據點是否在控制組限制的營運據點範圍內，
+    若不在限制內則不允許新增請購單]]>
+  </mi_all>
+  <field cite_std="N" name="b_pmda001" ver="1" src="s" column="pmda001" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pmda002" ver="1" src="s" column="pmda002" table="pmda_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pmda003" ver="1" src="s" column="pmda003" table="pmda_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pmdadocdt" ver="1" src="s" column="pmdadocdt" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pmdadocno" ver="1" src="s" column="pmdadocno" table="pmda_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_pmdadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal001_2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal003_2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal004" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal004_2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooan005" ver="1" src="s" column="ooan005" table="ooan_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda010_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda001" ver="1" src="s" column="pmda001" table="pmda_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值:0]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda002" ver="1" src="s" column="pmda002" table="pmda_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.傳入參數 pmda002
+帶值:1.依據pmda002的值到[T:員工檔]抓取[C:歸屬部門]的值，並預設到pmda003(請購部門)欄位上]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda003" ver="1" src="s" column="pmda003" table="pmda_t" attribute="" type="" req="Y" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.傳入參數 arg1 = pmda003,arg2 = pmdadocdt
+開窗處理： 傳入參數 arg1 = pmdadocdt
+新增時將pmda003(請購部門)的值預設給pmda007(費用部門)]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda004" ver="1" src="s" column="pmda004" table="pmda_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[計算或處理:1.當pmda004為勾選時，pmda010(稅別)、pmda005(評量幣別)欄位為必輸
+                 2.當pmda004為勾選時，單身pmdb019(參考單價)欄位為必輸]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda005" ver="1" src="s" column="pmda005" table="pmda_t" attribute="" type="" req="N" i_zoom="q_ooaj002_1" c_zoom="q_ooaj002_1" chk_ref="v_ooaj002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗： 傳入參數 arg1 = g_site  arg2 = pmda005
+帶值:1.呼叫取匯率應用元件抓取出匯率後顯示在{C:匯率]欄位
+開窗處理：傳入參數 arg1 = g_site]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda006" ver="1" src="s" column="pmda006" table="pmda_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda007" ver="1" src="s" column="pmda007" table="pmda_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.傳入參數 arg1 = pmda007,arg2 = pmdadocdt
+開窗處理： 傳入參數 arg1 = pmdadocdt]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda008" ver="1" src="s" column="pmda008" table="pmda_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda009" ver="1" src="s" column="pmda009" table="pmda_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda010" ver="1" src="s" column="pmda010" table="pmda_t" attribute="" type="" req="N" i_zoom="q_oodb002_2" c_zoom="q_oodb002_2" chk_ref="v_oodb002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[  校驗:
+     1.傳入參數 arg1 = g_site  arg2 = pmda010
+ 
+  帶值:1..抓取[T:稅別基本資料檔].[C:單價含稅否]顯示在下方[C:單價含稅]欄位
+         2.抓取[T:稅別基本資料檔].[C:稅率]顯示在下方[C:稅率]欄位
+  計算或處理:修改稅別時，需開窗詢問是否要更新單身稅率與金額，若選擇是時則須做下面的更新。
+              1.修改稅別時，需要重新更新單身的稅率
+                1-1.若[T:稅別基本資料檔].[C:稅率來源]是設置為依單頭的話，則單身[C:稅率]固定更新成
+                    [T:稅別基本資料檔].[C:稅率]
+                1-2.若[T:稅別基本資料檔].[C:稅率來源]是設置為依單身品項的話，則單身[C:稅率]需呼叫
+                    取稅率的應用元件來取得單身各品項的稅率並更新
+              2.修改稅別時，需判斷[C:稅率]與[C:單價含稅否]是否改變，若兩欄位值任一欄位改變的話，
+                需從新計算單申每一筆的[C:含稅金額]與[C:未稅金額]]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda011" ver="1" src="s" column="pmda011" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda012" ver="1" src="s" column="pmda012" table="pmda_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda020" ver="1" src="s" column="pmda020" table="pmda_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda021" ver="1" src="s" column="pmda021" table="pmda_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_263" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.傳入參數 arg1 = pmda021
+開窗處理： 傳入參數 arg1 = 263]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda022" ver="1" src="s" column="pmda022" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmda023" ver="6" src="s" column="pmda023" table="pmda_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdacnfdt" ver="1" src="s" column="pmdacnfdt" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdacnfid" ver="1" src="s" column="pmdacnfid" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdacrtdp" ver="1" src="s" column="pmdacrtdp" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdacrtdt" ver="1" src="s" column="pmdacrtdt" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdacrtid" ver="1" src="s" column="pmdacrtid" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdadocdt" ver="1" src="s" column="pmdadocdt" table="pmda_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdadocno" ver="1" src="s" column="pmdadocno" table="pmda_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_pmdadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[    校驗:1.不允許空白
+          2.呼叫s_control_doc_chk('1',pmdadocno,'','','','')應用元件，檢核輸入的單據別是否
+            可以被key人員對應的控制組使用
+
+     帶值:1.抓取[T:單據別多語言檔][C:說明]的值顯示在下方[C:單別名稱]欄位
+          2.依據輸入的單別抓取單別的[C:預算控管]參數值，預設給pmda006(預算控管)
+     計算或處理:1.當新增時才可輸入單別，修改時此欄位為NoEntry
+                2.新增存檔時，呼叫應用元件s_aooi200_gen_docno自動編申請單號]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdamoddt" ver="1" src="s" column="pmdamoddt" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdamodid" ver="1" src="s" column="pmdamodid" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdaowndp" ver="1" src="s" column="pmdaowndp" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdaownid" ver="1" src="s" column="pmdaownid" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmda_t.pmdastus" ver="1" src="s" column="pmdastus" table="pmda_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[●確認功能、取消確認功能、作廢功能:]]>
+  </field>
+  <field cite_std="N" name="pmdadocno_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdasite" ver="1" src="s" column="pmdasite" table="pmda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb005_desc" ver="5" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb031_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb038_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb039_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb051_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb001" ver="1" src="s" column="pmdb001" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb002" ver="1" src="s" column="pmdb002" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb003" ver="1" src="s" column="pmdb003" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb004" ver="1" src="s" column="pmdb004" table="pmdb_t" attribute="" type="" req="Y" i_zoom="q_imaf001_15" c_zoom="q_imaf001_15" chk_ref="v_imaf001_14" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[    校驗:1傳入參數 arg1 = pmdb004
+          2.呼叫s_control_chk_group('3',g_controlno,p_pmdb004,'','','','')應用元件，判斷輸入的料件編號是否在控制組限制
+            的產品範圍內，若不在限制內則不允許請購此料
+          3.呼叫s_control_chk_doc('4',pmdadocno,pmdb004,'','','','')應用元件，檢核輸入的料件的生命週期是否在
+            單據別限制範圍內，若不在限制內則不允許請購此料
+          4.呼叫s_control_chk_doc('5',pmdadocno,pmdb004,'','','','')應用元件，檢核輸入的料件的產品分類是否在
+            單據別限制範圍內，若不在限制內則不允許請購此料
+
+     帶值:1.自動填入: [C:品名]=[T:料件基本資料多語言檔].[C:品名]
+                      [C:規格]=[T:料件基本資料多語言檔].[C:規格]
+                      [C:單位]=[T:料件據點進銷存檔].[C:採購單位]
+                      [C:參考單位]=[T:料件據點產品檔].[C:參考單位]
+                      [C:收貨時段]=[T:料件據點進銷存檔].[C:收貨時段] 
+                      [C:包裝容器]=[T:料件據點進銷存檔].[C:慣用包裝容器] 
+           2.如果整體參數使用採購計價單位時:
+               [C:計價單位]=[T:料件據點進銷存檔].[C:採購計價單位] 
+ 計算或處理:1.修改料號時需要開窗詢問是否重新取價，若選擇要時則需呼叫取價應用元件重新取價，並重新計算[C:含稅金額]與[C:未稅金額]
+                  2.修改料號時，需把產品特徵、包裝容器的值一併清空
+
+開窗處理：調用s_control_get_sql獲取控制組範圍的SQL，加上where條件（元件未完成）
+                單據別的限制目前不做處理
+ps:  錄入的時候會出現，開窗開出來的，AFTER FIELD 欄位檢查過不去]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb005" ver="4" src="s" column="pmdb005" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[計算/處理:1.當料件有使用產品特徵功能時此欄位才可輸入
+校驗：呼叫應用元件檢查輸入的值是否合理]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb006" ver="1" src="s" column="pmdb006" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[ 計算或處理:1.新增或修改需求量時需呼叫單位數量取位應用元件對需求數量進行取位
+                  2.若參數有使用計價單位時，則輸入[C:需求數量]時則應自動推算計價數量，
+                  [C:計價數量]=[C:需求數量]*[C:單位]與[C:計價單位]換算率]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb007" ver="1" src="s" column="pmdb007" table="pmdb_t" attribute="" type="" req="Y" i_zoom="q_imao002" c_zoom="q_ooca001_1" chk_ref="v_imao002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[編輯狀態下開窗   傳入參數 arg1 = pmdb004
+校驗: 傳入參數 arg1 = pmdb004  arg2 = pmdb007
+1.修改單位時需呼叫單位數量取位應用元件對需求數量進行取位]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb008" ver="1" src="s" column="pmdb008" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[計算或處理:1.新增或修改參考數量時需呼叫單位數量取位應用元件對參考數量進行取位]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb009" ver="1" src="s" column="pmdb009" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[    校驗: 傳入參數 arg1 = pmdb009
+   計算或處理:1.修改參考單位時需呼叫單位數量取位應用元件對參考數量進行取位]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb010" ver="1" src="s" column="pmdb010" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[計算或處理:1.當整體參數未使用計價單位時，此欄位不可輸入
+                2.新增或修改計價數量時需呼叫單位數量取位應用元件對計價數量進行取位]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb011" ver="1" src="s" column="pmdb011" table="pmdb_t" attribute="" type="" req="Y" i_zoom="q_imao002" c_zoom="q_ooca001_1" chk_ref="v_imao002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[    校驗: 傳入參數arg1= pmdb004  arg2 = pmdb011
+   計算或處理:1.當整體參數未使用計價單位時，此欄位不可輸入
+                2.修改計價單位時需呼叫單位數量取位應用元件對計價數量進行取位]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb012" ver="1" src="s" column="pmdb012" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_imaf001_5" c_zoom="q_imaf001_5" chk_ref="v_imaf001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗： 傳入參數 arg1 =pmdb012]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb014" ver="1" src="s" column="pmdb014" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2037" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[ 計算或處理:1.當pmdb014 = '2' 或pmdb014 ='3'時，則pmdb015必須要輸入
+]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb015" ver="1" src="s" column="pmdb015" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_pmaa001_3" c_zoom="q_pmaa001_3" chk_ref="v_pmaa001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:  1.傳入參數 arg1 = pmdb015
+          2.呼叫s_control_group_chk(3,pmdb015,'')應用元件，判斷輸入的供應商編號是否在控制組限制
+            的供應商範圍內，若不在限制內則不允許跟此供應商採購    
+          3.呼叫s_doc_chk('2',pmdadocno,pmdb015,'','','','')應用元件，檢核輸入的供應商是否在
+            單據別限制範圍內，若不在限制內則不允許跟此供應商採購
+     帶值:1.顯示時將[T:交易對象多語言檔].[C:簡稱]帶回欄位後面顯示
+          2.自動填入:[C:付款條件]=[T:交易對象據點檔].[C:慣用付款條件]
+                     [C:允許部分交貨]=[T:交易對象據點檔].[C:允許部交收貨]
+                     [C:允許提前交貨]=[T:交易對象據點檔].[C:允許提前交貨]]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb016" ver="1" src="s" column="pmdb016" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_pmad002_2" c_zoom="q_ooib002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[     校驗1.若pmdb015(供應商)有輸入值時，則校驗設定 v_pmad002_1 ,傳入參數 arg1 = pmdb015 arg2 = pmdb016
+            2.若pmdb015(供應商)未輸入值時，則校驗設定 v_ooib002 ,傳入參數 arg1 = pmdb016
+開窗處理： 新增時， 如果供應商欄位有值，開窗 q_pmad002_2 傳入參數 arg1 = pmdb015
+                                如果供應商欄位沒有值，開窗 q_ooib002_1]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb017" ver="1" src="s" column="pmdb017" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_238" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗： 傳入參數 arg1 = pmdb017
+開窗處理： 傳入參數 arg1 = 238
+]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb018" ver="1" src="s" column="pmdb018" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[ 預設值:1.單頭[C:稅率]]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb019" ver="1" src="s" column="pmdb019" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[ 計算或處理:1.若單頭的[C:單價含稅否]為Y時，且整體參數有使用計價單位時，
+                  則自動計算[C:含稅金額]=[C:計價數量]*[C:單價]，
+                  [C:未稅金額]=[C:計價數量]*[C:單價]*(1-[C:單身稅率]/100)
+                2.若單頭的[C:單價含稅否]為Y時，且整體參數不使用計價單位時，
+                  則自動計算[C:含稅金額]=[C:需求數量]*[C:單價]，
+                  [C:未稅金額]=[C:需求數量]*[C:單價]*(1-[C:單身稅率]/100)
+                3.若單頭的[C:單價含稅否]為N時，且整體參數有使用計價單位時，
+                  則自動計算[C:未稅金額]=[C:計價數量]*[C:單價]，
+                  [C:含稅金額]=[C:計價數量]*[C:單價]*(1+[C:單身稅率]/100)
+                4.若單頭的[C:單價含稅否]為N時，且整體參數不使用計價單位時，
+                  則自動計算[C:未稅金額]=[C:需求數量]*[C:單價]，
+                  [C:含稅金額]=[C:需求數量]*[C:單價]*(1+[C:單身稅率]/100)
+                5.單頭pmda004(單價必須輸入)有勾選時，參考單價一定要輸入]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb020" ver="1" src="s" column="pmdb020" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb021" ver="1" src="s" column="pmdb021" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb030" ver="1" src="s" column="pmdb030" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[計算或處理:1.若輸入的需求日期 - g_today >[T:料件據點進銷存檔]設置的(文件+交貨+到廠+入庫)前置天數時，
+                  則[C:緊急度] = '1'(一般)
+                2.若輸入的需求日期 - g_today <[T:料件據點進銷存檔]設置的(文件+交貨+到廠+入庫)前置天數，
+                  且需求日期 - g_today >[T:料件據點進銷存檔].[C:嚴守交期前置時間]時，
+                  則[C:緊急度] = '2'(緊急)
+                3.若輸入的需求日期 - g_today <[T:料件據點進銷存檔].[C:嚴守交期前置時間]時，
+                   則[C:緊急度] = '3'(特急)]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb031" ver="1" src="s" column="pmdb031" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[ 校驗:1.抓取[T:系統分類值檔].[C:系統分類碼]=24且[T:系統分類值檔].[C:系統分類碼]=g_prog
+            的[T:系統分類值檔].[C:參考欄位二]的欄位值(對應的ACC碼下面規格用g_acc代表此欄位值),
+            pmdb031的值須存在[T:應用分類碼檔].[C:應用分類]=g_acc 且為有效資料
+          2.呼叫s_control_chk_doc('8',pmdadocno,pmdb031,'','','','')應用元件，檢核輸入的理由碼是否在
+            單據別限制範圍內，若不在限制內則不允許使用此理由碼
+開窗處理： 傳入參數 arg1 = 抓取[T:系統分類值檔].[C:系統分類碼]=24且[T:系統分類值檔].[C:系統分類碼]=g_prog
+            的[T:系統分類值檔].[C:參考欄位二]的欄位值]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb032" ver="1" src="s" column="pmdb032" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2035" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb033" ver="1" src="s" column="pmdb033" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="2036" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb034" ver="8" src="s" column="pmdb034" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_pjba001" c_zoom="q_pjba001" chk_ref="v_pjba001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb035" ver="8" src="s" column="pmdb035" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_pjbb002_1" c_zoom="q_pjbb002_1" chk_ref="v_pjbb002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb036" ver="8" src="s" column="pmdb036" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_pjbm002" c_zoom="q_pjbm002" chk_ref="v_pjbm002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb037" ver="1" src="s" column="pmdb037" table="pmdb_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗：傳入參數 arg1 = pmdb037]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb038" ver="1" src="s" column="pmdb038" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_6" chk_ref="v_inaa001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗處理：傳入參數 arg1 = pmdb037
+校驗：傳入參數 arg1 = pmdb037  arg2 = pmdb038]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb039" ver="1" src="s" column="pmdb039" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_inab002_6" c_zoom="q_inab002_6" chk_ref="v_inab002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗處理：傳入參數 arg1 =pmdb037  arg2 = pmdb038
+校驗：傳入參數 arg1 = pmdb037  arg2 = pmdb038   arg3 = pmdb039]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb041" ver="1" src="s" column="pmdb041" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb042" ver="1" src="s" column="pmdb042" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb043" ver="1" src="s" column="pmdb043" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb044" ver="1" src="s" column="pmdb044" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb045" ver="1" src="s" column="pmdb045" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb046" ver="1" src="s" column="pmdb046" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:g_grup
+校驗:1.傳入參數 arg1 = pmdb046,arg2 = pmdadocdt
+開窗處理： 傳入參數 arg1 = pmdadocdt
+1.若單頭pmda007(費用部門)有輸入值時，則pmda046輸入的值，在預算組織中必須是pmda007(費用部門)
+            的下面部門]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb048" ver="1" src="s" column="pmdb048" table="pmdb_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_274" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗： 傳入參數 arg1 = pmdb048
+開窗處理： 傳入參數 arg1 = 274]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb049" ver="1" src="s" column="pmdb049" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb050" ver="1" src="s" column="pmdb050" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb051" ver="1" src="s" column="pmdb051" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗處理：傳入參數 arg1 = 抓取[T:系統分類值檔].[C:系統分類碼]=24且[T:系統分類值檔].[C:系統分類碼]=g_prog
+            的[T:系統分類值檔].[C:參考欄位二]的欄位值]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdb052" ver="8" src="s" column="pmdb052" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb_t.pmdbseq" ver="1" src="s" column="pmdbseq" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值=最大值+1]]>
+  </field>
+  <field cite_std="N" name="pmdbseq_2" ver="1" src="s" column="pmdbseq" table="pmdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdbsite" ver="1" src="s" column="pmdbsite" table="pmdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="8" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdb052" ver="8" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_pmda002" depend_field="pmda_t.pmda002" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_pmda_m.pmda002)"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_pmda002_desc" src="s" depend_field="b_pmda002" correspon_key="pmda002" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_pmda003_desc" src="s" depend_field="b_pmda003" correspon_key="pmda003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmda002_desc" src="s" depend_field="pmda_t.pmda002" correspon_key="pmda002" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmda003_desc" src="s" depend_field="pmda_t.pmda003" correspon_key="pmda003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmda005_desc" src="s" depend_field="pmda_t.pmda005" correspon_key="pmda005" ref_table="ooail_t" ref_fk="ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmda007_desc" src="s" depend_field="pmda_t.pmda007" correspon_key="pmda007" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmda021_desc" src="s" depend_field="pmda_t.pmda021" correspon_key="&apos;263&apos;,pmda021" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="6" name="pmda023_desc" src="s" depend_field="pmda_t.pmda023" correspon_key="&apos;317&apos;,pmda023" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdacnfid_desc" src="s" depend_field="pmda_t.pmdacnfid" correspon_key="pmdacnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdacrtdp_desc" src="s" depend_field="pmda_t.pmdacrtdp" correspon_key="pmdacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdacrtid_desc" src="s" depend_field="pmda_t.pmdacrtid" correspon_key="pmdacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdamodid_desc" src="s" depend_field="pmda_t.pmdamodid" correspon_key="pmdamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdaowndp_desc" src="s" depend_field="pmda_t.pmdaowndp" correspon_key="pmdaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdaownid_desc" src="s" depend_field="pmda_t.pmdaownid" correspon_key="pmdaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdb004_desc" src="s" depend_field="pmdb_t.pmdb004" correspon_key="pmdb004" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdb007_desc" src="s" depend_field="pmdb_t.pmdb007" correspon_key="pmdb007" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdb009_desc" src="s" depend_field="pmdb_t.pmdb009" correspon_key="pmdb009" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdb011_desc" src="s" depend_field="pmdb_t.pmdb011" correspon_key="pmdb011" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdb012_desc" src="s" depend_field="pmdb_t.pmdb012" correspon_key="pmdb012" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdb015_desc" src="s" depend_field="pmdb_t.pmdb015" correspon_key="pmdb015" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdb016_desc" src="s" depend_field="pmdb_t.pmdb016" correspon_key="pmdb016" ref_table="ooibl_t" ref_fk="ooibl002" ref_dlang="ooibl003" ref_rtn="ooibl004" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdb017_desc" src="s" depend_field="pmdb_t.pmdb017" correspon_key="&apos;238&apos;,pmdb017" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="8" name="pmdb034_desc" src="s" depend_field="pmdb_t.pmdb034" correspon_key="pmdb034" ref_table="pjbal_t" ref_fk="pjbal001" ref_dlang="pjbal002" ref_rtn="pjbal003" status="u"/>
+    <rfield cite_std="N" ver="8" name="pmdb035_desc" src="s" depend_field="pmdb_t.pmdb035" correspon_key="pmdb034,pmdb035" ref_table="pjbbl_t" ref_fk="pjbbl001,pjbbl002" ref_dlang="pjbbl003" ref_rtn="pjbbl004" status="u"/>
+    <rfield cite_std="N" ver="8" name="pmdb036_desc" src="s" depend_field="pmdb_t.pmdb036" correspon_key="pmdb034,pmdb036" ref_table="pjbml_t" ref_fk="pjbml001,pjbml002" ref_dlang="pjbml003" ref_rtn="pjbml004" status="u"/>
+    <rfield cite_std="N" ver="1" name="pmdb037_desc" src="s" depend_field="pmdb_t.pmdb037" correspon_key="pmdb037" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pmdb046_desc" src="s" depend_field="pmdb_t.pmdb046" correspon_key="pmdb046" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="4" name="pmdb048_desc" src="s" depend_field="pmdb_t.pmdb048" correspon_key="&apos;274&apos;,pmdb048" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_pmda001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pmda002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pmda003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pmdadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pmdadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="8" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="imaal001_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal003_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal004_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooan005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmda010_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmda022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="pmda_t.pmda023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmda_t.pmdastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdadocno_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="pmdb005_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmdb031_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmdb038_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmdb039_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmdb051_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="8" name="pmdb052" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="pmdb_t.pmdb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="8" name="pmdb_t.pmdb034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="8" name="pmdb_t.pmdb035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="8" name="pmdb_t.pmdb036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb039" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb043" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb044" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb045" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb046" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb049" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb050" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdb051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="8" name="pmdb_t.pmdb052" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="pmdb_t.pmdbseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdbseq_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdbsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="memo" ver="4" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_pmdadocno" text="請購單號" lstr=""/>
+    <sfield name="lbl_pmdadocdt" text="請購日期" lstr=""/>
+    <sfield name="lbl_pmda001" text="版次" lstr=""/>
+    <sfield name="lbl_pmda002" text="請購人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="人員姓名" lstr=""/>
+    <sfield name="lbl_pmda003" text="請購部門" lstr=""/>
+    <sfield name="lbl_ooeal003" text="部門名稱" lstr=""/>
+    <sfield name="lbl_pmdasite" text="營運據點" lstr=""/>
+    <sfield name="lbl_pmdastus" text="狀態碼" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="group6" text="價格資訊" lstr=""/>
+    <sfield name="lbl_pmda004" text="單價為必要輸入" lstr=""/>
+    <sfield name="lbl_pmda010" text="稅別" lstr=""/>
+    <sfield name="lbl_pmda011" text="稅率" lstr=""/>
+    <sfield name="lbl_pmda012" text="單價含稅否" lstr=""/>
+    <sfield name="lbl_pmda005" text="評量幣別" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_ooan005" text="匯率" lstr=""/>
+    <sfield name="lbl_pmda008" text="請購未稅總金額" lstr=""/>
+    <sfield name="lbl_pmda009" text="請購含稅總金額" lstr=""/>
+    <sfield name="group8" text="其他資訊" lstr=""/>
+    <sfield name="lbl_pmda007" text="費用部門" lstr=""/>
+    <sfield name="lbl_pmda021" text="運送方式" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_pmda020" text="納入 MPS/MRP計算" lstr=""/>
+    <sfield name="lbl_pmda006" text="預算控管否" lstr=""/>
+    <sfield name="lbl_pmda023" text="留置原因" lstr=""/>
+    <sfield name="lbl_pmda022" text="請購備註" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="bpage_1" text="請購明細" lstr=""/>
+    <sfield name="lbl_pmdbsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_pmdbseq" text="項次" lstr=""/>
+    <sfield name="lbl_pmdb001" text="來源單號" lstr=""/>
+    <sfield name="lbl_pmdb002" text="來源項次" lstr=""/>
+    <sfield name="lbl_pmdb003" text="來源項序" lstr=""/>
+    <sfield name="lbl_pmdb052" text="來源分批序" lstr=""/>
+    <sfield name="lbl_pmdb004" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_pmdb005" text="產品特徵" lstr=""/>
+    <sfield name="lbl_pmdb005_desc" text="產品特徵說明" lstr=""/>
+    <sfield name="lbl_pmdb007" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_sum_pmdb006" text="合計" lstr=""/>
+    <sfield name="lbl_pmdb006" text="需求數量" lstr=""/>
+    <sfield name="lbl_pmdb009" text="參考單位" lstr=""/>
+    <sfield name="lbl_pmdb008" text="參考數量" lstr=""/>
+    <sfield name="lbl_pmdb011" text="計價單位" lstr=""/>
+    <sfield name="lbl_pmdb010" text="計價數量" lstr=""/>
+    <sfield name="lbl_pmdb030" text="需求日期" lstr=""/>
+    <sfield name="lbl_pmdb048" text="收貨時段" lstr=""/>
+    <sfield name="lbl_pmdb031" text="理由碼" lstr=""/>
+    <sfield name="pmdb031_desc" text="說明" lstr=""/>
+    <sfield name="lbl_pmdb050" text="備註" lstr=""/>
+    <sfield name="lbl_pmdb032" text="行狀態" lstr=""/>
+    <sfield name="lbl_pmdb051" text="留置/結案理由碼" lstr=""/>
+    <sfield name="pmdb051_desc" text="說明" lstr=""/>
+    <sfield name="lbl_pmdb033" text="緊急度" lstr=""/>
+    <sfield name="lbl_pmdb049" text="已轉採購量" lstr=""/>
+    <sfield name="page_2" text="請購其他資訊" lstr=""/>
+    <sfield name="lbl_imaal001" text="料件編號" lstr=""/>
+    <sfield name="lbl_pmdb012" text="包裝容器" lstr=""/>
+    <sfield name="lbl_pmdb014" text="供應商選擇" lstr=""/>
+    <sfield name="lbl_pmdb015" text="供應商編號" lstr=""/>
+    <sfield name="lbl_pmaal004" text="供應商簡稱" lstr=""/>
+    <sfield name="lbl_pmdb016" text="付款條件" lstr=""/>
+    <sfield name="lbl_ooibl004" text="說明" lstr=""/>
+    <sfield name="lbl_pmdb017" text="交易條件" lstr=""/>
+    <sfield name="lbl_pmdb018" text="稅率" lstr=""/>
+    <sfield name="lbl_pmdb019" text="參考單價" lstr=""/>
+    <sfield name="lbl_sum_pmdb020" text="合計" lstr=""/>
+    <sfield name="lbl_pmdb020" text="未稅金額" lstr=""/>
+    <sfield name="lbl_pmdb021" text="含稅金額" lstr=""/>
+    <sfield name="lbl_pmdb034" text="專案編號" lstr=""/>
+    <sfield name="lbl_pjbal003" text="說明" lstr=""/>
+    <sfield name="lbl_pmdb035" text="WBS" lstr=""/>
+    <sfield name="lbl_pjbbl004" text="說明" lstr=""/>
+    <sfield name="lbl_pmdb036" text="活動編號" lstr=""/>
+    <sfield name="lbl_pjbml004" text="說明" lstr=""/>
+    <sfield name="lbl_pmdb037" text="收貨據點" lstr=""/>
+    <sfield name="lbl_ooeal003_1" text="據點名稱" lstr=""/>
+    <sfield name="lbl_pmdb038" text="收貨庫位" lstr=""/>
+    <sfield name="pmdb038_desc" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_pmdb039" text="收貨儲位" lstr=""/>
+    <sfield name="pmdb039_desc" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_pmdb041" text="允許部份交貨" lstr=""/>
+    <sfield name="lbl_pmdb042" text="允許提前交貨" lstr=""/>
+    <sfield name="lbl_pmdb043" text="保稅" lstr=""/>
+    <sfield name="lbl_pmdb044" text="納入MRP" lstr=""/>
+    <sfield name="lbl_pmdb045" text="交期凍結否" lstr=""/>
+    <sfield name="lbl_pmdb046" text="費用部門" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_ooff002" text="第一KEY值" lstr=""/>
+    <sfield name="lbl_ooff007" text="第六KEY值" lstr=""/>
+    <sfield name="lbl_ooff003" text="第二KEY值" lstr=""/>
+    <sfield name="lbl_ooff008" text="第七KEY值" lstr=""/>
+    <sfield name="lbl_ooff004" text="第三KEY值" lstr=""/>
+    <sfield name="lbl_ooff009" text="第八KEY值" lstr=""/>
+    <sfield name="lbl_ooff005" text="第四KEY值" lstr=""/>
+    <sfield name="lbl_ooff010" text="第九KEY值" lstr=""/>
+    <sfield name="lbl_ooff006" text="第五KEY值" lstr=""/>
+    <sfield name="lbl_ooff011" text="第十KEY值" lstr=""/>
+    <sfield name="lbl_ooff001" text="備註類型" lstr=""/>
+    <sfield name="lbl_ooff012" text="控制類型" lstr=""/>
+    <sfield name="lbl_ooff014" text="失效日期" lstr=""/>
+    <sfield name="define" text="預設備註" lstr=""/>
+    <sfield name="comme" text="個人常用備註" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_ooff013" text="備註說明" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sfield name="s_feature_s01.page1" text="基本資料" lstr=""/>
+    <sfield name="lbl_inam012" text="特徵一值" lstr=""/>
+    <sfield name="lbl_inam014" text="特徵二值" lstr=""/>
+    <sfield name="lbl_inam016" text="特徵三值" lstr=""/>
+    <sfield name="lbl_inam018" text="特徵四值" lstr=""/>
+    <sfield name="lbl_inam020" text="特徵五值" lstr=""/>
+    <sfield name="lbl_inam022" text="特徵六值" lstr=""/>
+    <sfield name="lbl_inam024" text="特徵七值" lstr=""/>
+    <sfield name="lbl_inam026" text="特徵八值" lstr=""/>
+    <sfield name="lbl_inam028" text="特徵九值" lstr=""/>
+    <sfield name="lbl_inam030" text="特徵十值" lstr=""/>
+    <sfield name="lbl_inam032" text="特徵十一值" lstr=""/>
+    <sfield name="lbl_inam034" text="特徵十二值" lstr=""/>
+    <sfield name="lbl_inam036" text="特徵十三值" lstr=""/>
+    <sfield name="lbl_inam038" text="特徵十四值" lstr=""/>
+    <sfield name="lbl_inam040" text="特徵十五值" lstr=""/>
+    <sfield name="lbl_inam042" text="特徵十六值" lstr=""/>
+    <sfield name="lbl_inam044" text="特徵十七值" lstr=""/>
+    <sfield name="lbl_inam046" text="特徵十八值" lstr=""/>
+    <sfield name="lbl_inam048" text="特徵十九值" lstr=""/>
+    <sfield name="lbl_inam050" text="特徵二十值" lstr=""/>
+    <sfield name="lbl_imak001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imeb003" text="歸屬層級" lstr=""/>
+    <sfield name="lbl_imak002" text="特徵類型" lstr=""/>
+    <sfield name="lbl_imak003" text="特徵值" lstr=""/>
+    <sfield name="lbl_imecl005" text="說明" lstr=""/>
+    <sact name="memo" text="備註" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrq410" module="axr" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="01531" crtdt="2014-09-11 16:02:20" modid="01727" moddt="2016-04-19 14:14:46" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="收款沖銷明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),nmbb027,nmbb027_desc(chr500),nmbadocdt,nmbb029,nmbb004,nmbb006,nmbb053,nmbb053_desc(chr500),nmbb031,nmbb003,nmbb003_desc(chr500),nmbb030,nmbb042,nmbb040,unrev(num20_6),nmbbdocno,nmbbseq,nmbborga,nmbborga_desc(chr500),nmbb026,nmbb026_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="flag(chr500),xrdadocdt,xrce002,xrce024,xrce003,xrce014,xrce005,xrcb031,xrcc003,xrce100,xrce109,xrce119,delay(num5),xrda006,xrda006_desc(chr500),xrdadocno,xrce004"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),nmbb027(b_nmbb027),nmbb027_desc(b_nmbb027_desc),nmbadocdt(b_nmbadocdt),nmbb029(b_nmbb029),nmbb004(b_nmbb004),nmbb006(b_nmbb006),nmbb053(b_nmbb053),nmbb053_desc(b_nmbb053_desc),nmbb031(b_nmbb031),nmbb003(b_nmbb003),nmbb003_desc(b_nmbb003_desc),nmbb030(b_nmbb030),nmbb042(b_nmbb042),nmbb040(b_nmbb040),unrev(unrev),nmbbdocno(b_nmbbdocno),nmbbseq(b_nmbbseq),nmbborga(b_nmbborga),nmbborga_desc(b_nmbborga_desc),nmbb026(b_nmbb026),nmbb026_desc(b_nmbb026_desc)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="flag(flag),xrdadocdt(b_xrdadocdt),xrce002(b_xrce002),xrce024(b_xrce024),xrce003(b_xrce003),xrce014(b_xrce014),xrce005(b_xrce005),xrcb031(b_xrcb031),xrcc003(b_xrcc003),xrce100(b_xrce100),xrce109(b_xrce109),xrce119(b_xrce119),delay(delay),xrda006(b_xrda006),xrda006_desc(b_xrda006_desc),xrdadocno(b_xrdadocno),xrce004(b_xrce004)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrq410" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmbb027,nmbadocdt,nmbb029,nmbb004,nmbb006,nmbb053,nmbb053_desc,nmbb031,nmbb003,nmbb003_desc,nmbb042,nmbb040,nmbbdocno,nmbbseq,nmbborga,nmbborga_desc,nmbb026" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xrce014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmbb027(b_nmbb027),nmbadocdt(b_nmbadocdt),nmbb029(b_nmbb029),nmbb004(b_nmbb004),nmbb006(b_nmbb006),nmbb053(b_nmbb053),nmbb031(b_nmbb031),nmbb003(b_nmbb003),nmbb030(b_nmbb030),nmbb042(b_nmbb042),nmbb040(b_nmbb040),nmbbdocno(b_nmbbdocno),nmbbseq(b_nmbbseq),nmbborga(b_nmbborga),nmbb026(b_nmbb026)"/>
+      <construct id="body" page="2" field="xrce014(b_xrce014)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="nmbb027">
+        <after>
+          <reference field="nmbb027_desc" ref_field="nmbb027" map_field="nmbbent,nmbb027" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmbb027_desc"/>
+      <column id="nmbadocdt"/>
+      <column id="nmbb029"/>
+      <column id="nmbb004">
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="nmbb006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbb053">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbb053_desc">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbb031"/>
+      <column id="nmbb003">
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmbb003_desc">
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmbb030">
+        <controlp form="q_nmbb030" state="c"/>
+      </column>
+      <column id="nmbb042" type="S" default="1" def_scc="8714"/>
+      <column id="nmbb040" type="S" default="N"/>
+      <column id="unrev"/>
+      <column id="nmbbdocno">
+        <controlp form="q_nmbadocno" state="c"/>
+      </column>
+      <column id="nmbbseq"/>
+      <column id="nmbborga">
+        <controlp form="q_nmbborga_1" state="c"/>
+      </column>
+      <column id="nmbborga_desc">
+        <controlp form="q_nmbborga_1" state="c"/>
+      </column>
+      <column id="nmbb026">
+        <after>
+          <reference field="nmbb026_desc" ref_field="nmbb026" map_field="nmbbent,nmbb026" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmbb026_1" state="c"/>
+      </column>
+      <column id="nmbb026_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="flag"/>
+      <column id="xrdadocdt"/>
+      <column id="xrce002"/>
+      <column id="xrce024">
+        <controlp form="q_xrce024" state="c"/>
+      </column>
+      <column id="xrce003">
+        <controlp form="q_xrca002" state="i"/>
+        <controlp form="q_xrce003" state="c"/>
+      </column>
+      <column id="xrce014"/>
+      <column id="xrce005"/>
+      <column id="xrcb031"/>
+      <column id="xrcc003"/>
+      <column id="xrce100">
+        <controlp form="q_aooi001_1" state="i"/>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="xrce109"/>
+      <column id="xrce119"/>
+      <column id="delay"/>
+      <column id="xrda006">
+        <after>
+          <reference field="xrda006_desc" ref_field="xrda006" map_field="xrdaent,xrda006" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrda006_desc"/>
+      <column id="xrdadocno">
+        <controlp form="q_xrdadocno" state="c"/>
+      </column>
+      <column id="xrce004"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmbb_t" page="1,2" linked="" pk="nmbbdocno,nmbbseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,nmbb027,&apos;&apos;,&apos;&apos;,nmbb029,nmbb004,nmbb006,nmbb053,&apos;&apos;,nmbb031,nmbb003,&apos;&apos;,nmbb030,nmbb042,nmbb040,&apos;&apos;,nmbbdocno,nmbbseq,nmbborga,&apos;&apos;,nmbb026,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmbb_t WHERE nmbbent= ? AND 1=1 "/>
+      <sql id="detail_append" type="single" table="xrda_t" pk="xrdald,xrdadocno" field="xrdadocdt,xrda006,xrdadocno"/>
+      <sql id="detail_append" type="single" table="xrce_t" pk="xrceld,xrcedocno,xrceseq" field="xrdadocdt,xrda006,xrdadocno,xrce002,xrce024,xrce003,xrce014,xrce005,xrce100,xrce109,xrce119,xrce004"/>
+      <sql id="detail_append" type="single" table="xrcb_t" pk="xrcbld,xrcbdocno,xrcbseq" field="xrdadocdt,xrda006,xrdadocno,xrce002,xrce024,xrce003,xrce014,xrce005,xrce100,xrce109,xrce119,xrce004,xrcb031"/>
+      <sql id="detail_append" type="single" table="xrcc_t" pk="xrccld,xrccdocno,xrccseq,xrcc001" field="xrdadocdt,xrda006,xrdadocno,xrce002,xrce024,xrce003,xrce014,xrce005,xrce100,xrce109,xrce119,xrce004,xrcb031,xrcc003"/>
+    </body>
+  </dataset>
+</assembly>
+

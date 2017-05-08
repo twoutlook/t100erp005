@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsq501" module="aps" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="05384" crtdt="2015-12-21 10:15:55" modid="05384" moddt="2015-12-21 17:37:45" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="APS版本歷史查詢">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psea001,psea001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="psea002,l_psea002_1(chr500),psea003,l_psea003_desc(chr500),psea004"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="aps_db_delete"/>
+      <action id="aps_manual_tuner"/>
+    </section>
+  </structure>
+  <form id="0" module="aps" filename="apsq501" method="dialog">
+    <section id="input">
+      <input id="head" field="psea001"/>
+      <input id="body" page="1" field="psea002,psea003,psea004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psea001"/>
+      <construct id="body" page="1" field="psea002,psea003,psea004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="psea001"/>
+      <set id="head" type="no_entry" field="psea001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psea001">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+          <reference field="psea001_desc" ref_field="pscasite,psca001" map_field="pscasite,psca001" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscalsite=? AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+        <controlp form="q_psca001" state="c"/>
+      </column>
+      <column id="psea001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="psea002"/>
+      <column id="l_psea002_1"/>
+      <column id="psea003">
+        <after/>
+        <controlp form="q_gzze001" state="c"/>
+      </column>
+      <column id="l_psea003_desc"/>
+      <column id="psea004"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="psea_t" pk="psea001">
+      <sql id="forupd_sql" type="sql" query="SELECT psea001,&apos;&apos; FROM psea_t WHERE pseaent= ? AND pseasite= ? AND psea001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT psea001,&apos;&apos; FROM psea_t" order="psea001"/>
+    </head>
+    <body id="psea_t" page="1" linked="" pk="psea002" fk="psea001">
+      <sql id="forupd_sql_detail" query="SELECT psea002,&apos;&apos;,psea003,&apos;&apos;,psea004 FROM psea_t WHERE pseaent=? AND pseasite=? AND psea001=? AND psea002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT psea002,&apos;&apos;,psea003,&apos;&apos;,psea004 FROM psea_t WHERE pseaent= ? AND pseasite= ? AND psea001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi880" module="azz" jobmode="N" type="i05" industry="std" fix_arg="0" crtid="01856" crtdt="2013-10-10 23:23:48" modid="00824" moddt="2016-11-28 16:48:11" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="選單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzwe001,gzwe002,gzwe003,gzwe004,gzwel003,gzweownid,gzweownid_desc(chr80),gzweowndp,gzweowndp_desc(chr80),gzwecrtid,gzwecrtid_desc(chr80),gzwecrtdp,gzwecrtdp_desc(chr80),gzwecrtdt,gzwemodid,gzwemodid_desc(chr80),gzwemoddt"/>
+      <var id="bs_field" value="gzwe001,gzwe002,gzwe003,gzwe004" pk="gzwe001,gzwe002" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi880" method="dialog">
+    <section id="input">
+      <input id="head" field="gzwe001,gzwe002,gzwe003,gzwe004,gzwel003"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzwe001,gzwe002,gzwe003,gzwe004,gzwel003,gzweownid,gzweowndp,gzwecrtid,gzwecrtdp,gzwecrtdt,gzwemodid,gzwemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzwe001,gzwe002"/>
+      <set id="head" type="no_entry" field="gzwe001,gzwe002"/>
+    </init>
+    <init id="head">
+      <column id="gzwe001"/>
+      <column id="gzwe002">
+        <controlp form="q_gzzz001_1" state="i"/>
+        <controlp form="q_gzwe001" state="c"/>
+      </column>
+      <column id="gzwe003"/>
+      <column id="gzwe004" def_scc="87"/>
+      <column id="gzwel003"/>
+      <column id="gzweownid">
+        <after>
+          <reference field="gzweownid_desc" ref_field="gzwe_t.gzweownid" map_field="gzweownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzweownid_desc"/>
+      <column id="gzweowndp">
+        <after>
+          <reference field="gzweowndp_desc" ref_field="gzwe_t.gzweowndp" map_field="gzweowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzweowndp_desc"/>
+      <column id="gzwecrtid">
+        <after>
+          <reference field="gzwecrtid_desc" ref_field="gzwe_t.gzwecrtid" map_field="gzwecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzwecrtid_desc"/>
+      <column id="gzwecrtdp">
+        <after>
+          <reference field="gzwecrtdp_desc" ref_field="gzwe_t.gzwecrtdp" map_field="gzwecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzwecrtdp_desc"/>
+      <column id="gzwecrtdt"/>
+      <column id="gzwemodid">
+        <after>
+          <reference field="gzwemodid_desc" ref_field="gzwe_t.gzwemodid" map_field="gzwemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzwemodid_desc"/>
+      <column id="gzwemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzwe_t" lid="gzwe002" pid="gzwe001" type="" desc="" speed="gzwes_t" stype="" slid="gzwes002" spid="gzwes001" pk="gzwe001,gzwe002">
+      <sql id="forupd_sql" type="sql" query="SELECT gzwe001,gzwe002,gzwe003,gzwe004,&apos;&apos;,gzweownid,&apos;&apos;,gzweowndp,&apos;&apos;,gzwecrtid,&apos;&apos;,gzwecrtdp,&apos;&apos;,gzwecrtdt,gzwemodid,&apos;&apos;,gzwemoddt FROM gzwe_t WHERE gzweent= ? AND gzwe001=? AND gzwe002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzwe001,gzwe002,gzwe003,gzwe004,&apos;&apos;,gzweownid,&apos;&apos;,gzweowndp,&apos;&apos;,gzwecrtid,&apos;&apos;,gzwecrtdp,&apos;&apos;,gzwecrtdt,gzwemodid,&apos;&apos;,gzwemoddt FROM gzwe_t" order="gzwe001,gzwe002"/>
+      <sql id="append" type="lang" target="gzwel_t.gzwel003" table="gzwel_t" fk="gzwe002" pk="gzwel001,gzwel002" field="gzwel003"/>
+    </head>
+  </dataset>
+</assembly>
+

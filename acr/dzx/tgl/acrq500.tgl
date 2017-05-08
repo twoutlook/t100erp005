@@ -1,0 +1,1771 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="acrq500.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000088
+#+ 
+#+ Filename...: acrq500
+#+ Description: 單一會員分析查詢作業
+#+ Creator....: 02296(2014/05/29)
+#+ Modifier...: 02296(2014/05/30)
+#+ Buildtype..: 應用 q04 樣板自動產生
+#+ 以上段落由子樣板a00產生
+
+{</section>}
+
+{<section id="acrq500.global" >}
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_master        RECORD
+       mmaf001 LIKE type_t.chr30, 
+   mmaf013 LIKE type_t.chr20, 
+   mmaf008 LIKE type_t.chr500, 
+   mmaf014 LIKE type_t.chr20, 
+   mmaf009 LIKE type_t.chr500, 
+   mmaf011 LIKE type_t.chr500, 
+   sex LIKE type_t.chr80,
+   sex_desc LIKE type_t.chr80,   
+   age LIKE type_t.chr80, 
+   mmaq018a LIKE type_t.num15_3, 
+   mmaq016a LIKE type_t.num15_3, 
+   decc021a LIKE type_t.num20_6, 
+   decc021b LIKE type_t.num20_6, 
+   mmaq013a LIKE type_t.dat, 
+   daya LIKE type_t.num5, 
+   weekend LIKE type_t.chr80, 
+   rate LIKE type_t.num20_6, 
+   mmaq015a LIKE type_t.num20_6, 
+   rtia031a LIKE type_t.num20_6, 
+   decc010a LIKE type_t.num20_6, 
+   mmaq015b LIKE type_t.num20_6, 
+   mmaq014a LIKE type_t.num5, 
+   decc018a LIKE type_t.num20_6, 
+   crba021a LIKE type_t.num15_3, 
+   mmaq014b LIKE type_t.num5, 
+   mmaq009a LIKE type_t.num20_6, 
+   mmau009a LIKE type_t.num20_6, 
+   mmau009b LIKE type_t.num20_6, 
+   mmau009c LIKE type_t.num20_6, 
+   mmau009d LIKE type_t.num20_6, 
+   mmaucount LIKE type_t.num5, 
+   mmau009e LIKE type_t.num20_6, 
+   mmaqcount LIKE type_t.chr80, 
+   mmaf020a LIKE type_t.chr10, 
+   mmaf021a LIKE type_t.chr10, 
+   radiogroup LIKE type_t.chr80
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_detail RECORD
+       sel            LIKE type_t.chr1,
+       mmaq001 LIKE mmaq_t.mmaq001, 
+   mmaq002 LIKE mmaq_t.mmaq002, 
+   mmaq002_desc LIKE type_t.chr500, 
+   mmaq003 LIKE mmaq_t.mmaq003, 
+   mmaq003_desc LIKE type_t.chr500, 
+   mmaq005 LIKE mmaq_t.mmaq005, 
+   mmaq006 LIKE mmaq_t.mmaq006, 
+   mmaq007 LIKE mmaq_t.mmaq007, 
+   mmaq009 LIKE mmaq_t.mmaq009, 
+   mmaq013 LIKE mmaq_t.mmaq013, 
+   mmaq014 LIKE mmaq_t.mmaq014, 
+   mmaq015 LIKE mmaq_t.mmaq015, 
+   mmaq016 LIKE mmaq_t.mmaq016, 
+   mmaq017 LIKE mmaq_t.mmaq017, 
+   mmaq018 LIKE mmaq_t.mmaq018
+       END RECORD
+PRIVATE TYPE type_g_detail2 RECORD
+       deca009f LIKE type_t.chr500, 
+   deca009f_desc LIKE type_t.chr500, 
+   deca010f LIKE type_t.chr500, 
+   deca019f LIKE type_t.chr10, 
+   deca019f_desc LIKE type_t.chr500, 
+   deca022f LIKE type_t.num20_6, 
+   decf027f LIKE type_t.num20_6, 
+   deca030f LIKE type_t.num10, 
+   deca025f LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail3 RECORD
+       weeka LIKE type_t.chr80, 
+   counta LIKE type_t.num20_6, 
+   ratea LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail4 RECORD
+       timea LIKE type_t.chr80, 
+   timea_desc LIKE type_t.chr500, 
+   moneya LIKE type_t.num20_6, 
+   numbera LIKE type_t.num5, 
+   rateb LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail5 RECORD
+       calendar LIKE type_t.chr80, 
+   moneyc LIKE type_t.num20_6, 
+   numberc LIKE type_t.num5, 
+   countc LIKE type_t.num5, 
+   ratec LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail6 RECORD
+       class LIKE type_t.chr80, 
+   class_desc LIKE type_t.chr500, 
+   moneyd LIKE type_t.num20_6, 
+   numberd LIKE type_t.num5, 
+   countd LIKE type_t.num5, 
+   rated LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail7 RECORD
+       oocq002a LIKE type_t.chr10, 
+   oocq002a_desc LIKE type_t.chr500, 
+   deca027s LIKE type_t.num20_6, 
+   deca031s LIKE type_t.num20_6, 
+   deca022s LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail8 RECORD
+       deca002t LIKE type_t.chr20, 
+   deca027t LIKE type_t.num20_6, 
+   deca031t LIKE type_t.num20_6, 
+   maxmoney LIKE type_t.num20_6, 
+   avgmoney LIKE type_t.num20_6, 
+   minmoney LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail9 RECORD
+       rtjf025 LIKE type_t.dat, 
+   rtjf003 LIKE type_t.num20_6, 
+   rtjf022 LIKE type_t.num15_3
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail10 RECORD
+       weeku LIKE type_t.chr80, 
+   rtjfsite LIKE type_t.chr10, 
+   rtjfsite_desc LIKE type_t.chr500, 
+   rtjf003u LIKE type_t.num20_6, 
+   rtjf022u LIKE type_t.num15_3
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail11 RECORD
+       mmaq001v LIKE type_t.chr30, 
+   mmaq002v LIKE type_t.chr10, 
+   mmaq002v_desc LIKE type_t.chr500, 
+   rtjf025v LIKE type_t.dat, 
+   rtjfsitev LIKE type_t.chr10, 
+   rtjfsitev_desc LIKE type_t.chr500, 
+   rtjf003v LIKE type_t.num20_6, 
+   rtjf022v LIKE type_t.num15_3
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail12 RECORD
+       rtjasite LIKE type_t.chr500, 
+   rtjasite_desc LIKE type_t.chr500, 
+   rtjadocno LIKE type_t.chr500, 
+   rtja032 LIKE type_t.chr500, 
+   rtja007 LIKE type_t.chr500, 
+   rtja001 LIKE type_t.chr500, 
+   rtjadocdt LIKE rtja_t.rtjadocdt, 
+   rtja031 LIKE rtja_t.rtja031, 
+   rtjb020 LIKE type_t.num20_6, 
+   rtja016 LIKE rtja_t.rtja016
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail13 RECORD
+       yearw LIKE type_t.chr30, 
+   ooga009 LIKE type_t.num5, 
+   rankw LIKE type_t.num20_6, 
+   rankw2 LIKE type_t.num20_6, 
+   rankcount LIKE type_t.num20_6, 
+   decc010 LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail14 RECORD
+       crdc002 LIKE type_t.num5, 
+   crdc003 LIKE type_t.num5, 
+   crdc010 LIKE type_t.chr10, 
+   crdc010_desc LIKE type_t.chr500, 
+   crdcrate LIKE type_t.num15_3
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail15 RECORD
+       mmaq001x LIKE type_t.chr30, 
+   mmaq002x LIKE type_t.chr10, 
+   mmaq002x_desc LIKE type_t.chr500, 
+   mmau006 LIKE mmau_t.mmau006, 
+   mmaucountx LIKE type_t.num5, 
+   mmau009 LIKE mmau_t.mmau009, 
+   mmaq009x LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail16 RECORD
+       ymonth LIKE type_t.chr10, 
+   mmau018 LIKE type_t.chr500, 
+   mmau018_desc LIKE type_t.chr500, 
+   mmau009y LIKE type_t.num20_6, 
+   mmaucounty LIKE type_t.num5, 
+   mmau011 LIKE mmau_t.mmau011, 
+   mmau012 LIKE mmau_t.mmau012
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail17 RECORD
+       mmau001 LIKE type_t.chr500, 
+   mmaq002z LIKE type_t.chr10, 
+   mmaq002z_desc LIKE type_t.chr500, 
+   mmau006z LIKE type_t.dat, 
+   mmau018z LIKE type_t.chr10, 
+   mmau018z_desc LIKE type_t.chr500, 
+   mmau009z LIKE type_t.num20_6, 
+   mmau011z LIKE type_t.num20_6, 
+   mmau012z LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail18 RECORD
+       rtje001 LIKE type_t.chr500, 
+   rtje002 LIKE rtje_t.rtje002, 
+   rtje002_desc LIKE type_t.chr500, 
+   rtje006 LIKE rtje_t.rtje006, 
+   rtje004 LIKE rtje_t.rtje004
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail19 RECORD
+       rtjbseq LIKE type_t.chr500, 
+   rtjb003 LIKE type_t.chr500, 
+   rtjb004 LIKE type_t.chr500, 
+   rtjb004_desc LIKE type_t.chr500, 
+   rtjb008 LIKE rtjb_t.rtjb008, 
+   rtjb009 LIKE rtjb_t.rtjb009, 
+   rtjb010 LIKE rtjb_t.rtjb010, 
+   rtjb013 LIKE rtjb_t.rtjb013, 
+   rtjb013_desc LIKE type_t.chr500, 
+   rtjb012 LIKE rtjb_t.rtjb012, 
+   rtjb020 LIKE rtjb_t.rtjb020, 
+   rtjb021 LIKE rtjb_t.rtjb021, 
+   rtjb025 LIKE rtjb_t.rtjb025, 
+   rtjb026 LIKE rtjb_t.rtjb026, 
+   rtjb027 LIKE rtjb_t.rtjb027, 
+   rtjb028 LIKE rtjb_t.rtjb028
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail20 RECORD
+       deca013a LIKE type_t.chr20, 
+   deca013a_desc LIKE type_t.chr500, 
+   deca031 LIKE type_t.num20_6, 
+   deca033a LIKE type_t.num20_6, 
+   deca027a LIKE type_t.num20_6, 
+   deca025a LIKE type_t.num20_6, 
+   deca026a LIKE type_t.num20_6, 
+   deca028a LIKE type_t.num20_6, 
+   deca028b LIKE type_t.num20_6, 
+   deca030a LIKE type_t.num10
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail21 RECORD
+       deca002b LIKE type_t.chr10, 
+   decasiteb LIKE type_t.chr10, 
+   decasitea_desc LIKE type_t.chr500, 
+   deca027b LIKE type_t.num20_6, 
+   deca031b LIKE type_t.num20_6, 
+   deca030b LIKE type_t.num10, 
+   deca033b LIKE type_t.num20_6, 
+   deca025b LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail22 RECORD
+       deca009c LIKE type_t.chr500, 
+   deca009c_desc LIKE type_t.chr500, 
+   deca010c LIKE type_t.chr500, 
+   deca019c LIKE type_t.chr10, 
+   deca022c LIKE type_t.num20_6, 
+   deca027c LIKE type_t.num20_6, 
+   deca030c LIKE type_t.num10, 
+   deca025c LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail23 RECORD
+       deca016d LIKE type_t.chr10, 
+   deca016d_desc LIKE type_t.chr500, 
+   deca031d LIKE type_t.num20_6, 
+   deca033d LIKE type_t.num20_6, 
+   deca027d LIKE type_t.num20_6, 
+   deca025d LIKE type_t.num20_6, 
+   deca026d LIKE type_t.num20_6, 
+   deca028d LIKE type_t.num20_6, 
+   decacount LIKE type_t.num20_6, 
+   deca030d LIKE type_t.num10
+       END RECORD
+ 
+PRIVATE TYPE type_g_detail24 RECORD
+       deca002e LIKE type_t.chr10, 
+   decasitee LIKE type_t.chr10, 
+   decasitee_desc LIKE type_t.chr500, 
+   deca027e LIKE type_t.num20_6, 
+   deca031e LIKE type_t.num20_6, 
+   deca030e LIKE type_t.num10, 
+   deca033e LIKE type_t.num20_6, 
+   deca025e LIKE type_t.num20_6
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_master            type_g_master
+DEFINE g_master_t          type_g_master
+ 
+   
+ 
+DEFINE g_detail            DYNAMIC ARRAY OF type_g_detail
+DEFINE g_detail_t          type_g_detail
+DEFINE g_detail2     DYNAMIC ARRAY OF type_g_detail2
+DEFINE g_detail2_t   type_g_detail2
+ 
+DEFINE g_detail3     DYNAMIC ARRAY OF type_g_detail3
+DEFINE g_detail3_t   type_g_detail3
+ 
+DEFINE g_detail4     DYNAMIC ARRAY OF type_g_detail4
+DEFINE g_detail4_t   type_g_detail4
+ 
+DEFINE g_detail5     DYNAMIC ARRAY OF type_g_detail5
+DEFINE g_detail5_t   type_g_detail5
+ 
+DEFINE g_detail6     DYNAMIC ARRAY OF type_g_detail6
+DEFINE g_detail6_t   type_g_detail6
+ 
+DEFINE g_detail7     DYNAMIC ARRAY OF type_g_detail7
+DEFINE g_detail7_t   type_g_detail7
+ 
+DEFINE g_detail8     DYNAMIC ARRAY OF type_g_detail8
+DEFINE g_detail8_t   type_g_detail8
+ 
+DEFINE g_detail9     DYNAMIC ARRAY OF type_g_detail9
+DEFINE g_detail9_t   type_g_detail9
+ 
+DEFINE g_detail10     DYNAMIC ARRAY OF type_g_detail10
+DEFINE g_detail10_t   type_g_detail10
+ 
+DEFINE g_detail11     DYNAMIC ARRAY OF type_g_detail11
+DEFINE g_detail11_t   type_g_detail11
+ 
+DEFINE g_detail12     DYNAMIC ARRAY OF type_g_detail12
+DEFINE g_detail12_t   type_g_detail12
+ 
+DEFINE g_detail13     DYNAMIC ARRAY OF type_g_detail13
+DEFINE g_detail13_t   type_g_detail13
+ 
+DEFINE g_detail14     DYNAMIC ARRAY OF type_g_detail14
+DEFINE g_detail14_t   type_g_detail14
+ 
+DEFINE g_detail15     DYNAMIC ARRAY OF type_g_detail15
+DEFINE g_detail15_t   type_g_detail15
+ 
+DEFINE g_detail16     DYNAMIC ARRAY OF type_g_detail16
+DEFINE g_detail16_t   type_g_detail16
+ 
+DEFINE g_detail17     DYNAMIC ARRAY OF type_g_detail17
+DEFINE g_detail17_t   type_g_detail17
+ 
+DEFINE g_detail18     DYNAMIC ARRAY OF type_g_detail18
+DEFINE g_detail18_t   type_g_detail18
+ 
+DEFINE g_detail19     DYNAMIC ARRAY OF type_g_detail19
+DEFINE g_detail19_t   type_g_detail19
+ 
+DEFINE g_detail20     DYNAMIC ARRAY OF type_g_detail20
+DEFINE g_detail20_t   type_g_detail20
+ 
+DEFINE g_detail21     DYNAMIC ARRAY OF type_g_detail21
+DEFINE g_detail21_t   type_g_detail21
+ 
+DEFINE g_detail22     DYNAMIC ARRAY OF type_g_detail22
+DEFINE g_detail22_t   type_g_detail22
+ 
+DEFINE g_detail23     DYNAMIC ARRAY OF type_g_detail23
+DEFINE g_detail23_t   type_g_detail23
+ 
+DEFINE g_detail24     DYNAMIC ARRAY OF type_g_detail24
+DEFINE g_detail24_t   type_g_detail24
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_cnt_sql             STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num5              #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num5
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_master_idx          LIKE type_t.num5
+DEFINE g_detail_idx          LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num5
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_msg                 STRING
+DEFINE g_jump                LIKE type_t.num10
+DEFINE g_no_ask              LIKE type_t.num5
+DEFINE g_row_count           LIKE type_t.num10
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="acrq500.main" >}
+#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("acr","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE acrq500_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               " WHERE  "
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE acrq500_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE acrq500_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_acrq500 WITH FORM cl_ap_formpath("acr",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL acrq500_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL acrq500_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_acrq500
+      
+   END IF 
+   
+   CLOSE acrq500_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+
+{</section>}
+
+{<section id="acrq500.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION acrq500_init()
+ 
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+#  LET g_selcolor    = "#D0E7FD"
+   
+      CALL cl_set_combo_scc('b_mmaq006','6515') 
+  
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="acrq500.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION acrq500_ui_dialog() 
+   {<Local define>}
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_result STRING
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   {</Local define>}
+   #add-point:ui_dialog段define
+{<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   CLEAR FORM  
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET g_main_hidden = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog 
+{<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   
+  
+   WHILE li_exit = FALSE
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+{<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落
+{<point name="ui_dialog.construct"/>}
+         #end add-point
+     
+         DISPLAY ARRAY g_detail TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               DISPLAY g_detail.getLength() TO FORMONLY.cnt
+               LET g_master_idx = l_ac
+               CALL acrq500_b_fill2()
+ 
+               #add-point:input段before row
+{<point name="input.body.before_row"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail2 TO s_detail10.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 2
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail10")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body10.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_2)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail3 TO s_detail11.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 3
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail11")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body11.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_3)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail4 TO s_detail12.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 4
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail12")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body12.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_4)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail5 TO s_detail13.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 5
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail13")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body13.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_5)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail6 TO s_detail14.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 6
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail14")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body14.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_6)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail7 TO s_detail15.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 7
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail15")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body15.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_7)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail8 TO s_detail16.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 8
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail16")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body16.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_8)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail9 TO s_detail17.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 9
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail17")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body17.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_9)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail10 TO s_detail18.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 10
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail18")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body18.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_10)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail11 TO s_detail19.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 11
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail19")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body19.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_11)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail12 TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 12
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body2.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_12)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail13 TO s_detail20.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 13
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail20")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body20.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_13)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail14 TO s_detail21.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 14
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail21")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body21.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_14)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail15 TO s_detail22.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 15
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail22")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body22.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_15)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail16 TO s_detail23.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 16
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail23")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body23.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_16)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail17 TO s_detail24.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 17
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail24")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body24.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_17)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail18 TO s_detail3.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 18
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body3.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_18)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail19 TO s_detail4.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 19
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail4")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body4.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_19)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail20 TO s_detail5.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 20
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail5")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body5.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_20)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail21 TO s_detail6.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 21
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail6")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body6.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_21)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail22 TO s_detail7.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 22
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail7")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body7.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_22)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail23 TO s_detail8.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 23
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail8")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body8.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_23)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_detail24 TO s_detail9.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 24
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail9")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+{<point name="input.body9.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_24)
+            
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段define
+{<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+    
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+  
+         BEFORE DIALOG
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL acrq500_fetch('')
+ 
+            #add-point:ui_dialog段before dialog
+{<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+            NEXT FIELD sel
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+{<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+            
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail.getLength()
+               LET g_detail[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+{<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail.getLength()
+               LET g_detail[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+{<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+{<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+{<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+ 
+         ON ACTION exit
+            CLEAR FORM
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            CLEAR FORM
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+   
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+            CALL acrq500_cs()
+            NEXT FIELD sel   # 為了讓一開始的focus停留在單頭
+      
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+{<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL acrq500_fetch('F')
+ 
+         ON ACTION first   # 第一筆
+            CALL acrq500_fetch('F')
+ 
+         ON ACTION previous   # 上一筆
+            CALL acrq500_fetch('P')
+ 
+         ON ACTION jump   # 跳至第幾筆
+            CALL acrq500_fetch('/')
+ 
+         ON ACTION next   # 下一筆
+            CALL acrq500_fetch('N')
+ 
+         ON ACTION last   # 最後一筆
+            CALL acrq500_fetch('L')
+ 
+         
+ 
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+{<point name="menu.datainfo" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION hdeca_query
+            LET g_action_choice="hdeca_query"
+            IF cl_auth_chk_act("hdeca_query") THEN
+               
+               #add-point:ON ACTION hdeca_query
+{<point name="menu.hdeca_query" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert
+{<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query
+{<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+{<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION high_query
+            LET g_action_choice="high_query"
+            IF cl_auth_chk_act("high_query") THEN
+               
+               #add-point:ON ACTION high_query
+{<point name="menu.high_query" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="acrq500.cs" >}
+#+ 組單頭CURSOR
+PRIVATE FUNCTION acrq500_cs()
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point
+ 
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+ 
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   IF g_wc2 = " 1=1" THEN
+      #add-point:cs段單頭sql組成(未下單身條件)
+      {<point name="cs.sql_define_1"/>}
+      #end add-point
+   ELSE
+      #add-point:cs段單頭sql組成(有下單身條件)
+      {<point name="cs.sql_define_2"/>}
+      #end add-point
+   END IF
+ 
+   PREPARE acrq500_pre FROM g_sql
+   DECLARE acrq500_curs SCROLL CURSOR WITH HOLD FOR acrq500_pre
+   OPEN acrq500_curs
+ 
+   #add-point:cs段單頭總筆數計算
+   {<point name="cs.head_total_row_count"/>}
+   #end add-point
+   PREPARE acrq500_precount FROM g_cnt_sql
+   EXECUTE acrq500_precount INTO g_row_count
+ 
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+   ELSE
+      CALL acrq500_fetch("F")
+   END IF
+END FUNCTION
+
+{</section>}
+
+{<section id="acrq500.fetch" >}
+#+ 抓取單頭資料
+PRIVATE FUNCTION acrq500_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+{<point name="fetch.define"/>}
+   #end add-point
+ 
+   MESSAGE ""
+ 
+   #FETCH段CURSOR移動
+   #+ 此段落由子樣板qs18產生
+   #add-point:fetch段CURSOR移動
+{<point name="fetch.cursor_action"/>}
+   #end add-point
+ 
+ 
+ 
+   IF SQLCA.sqlcode THEN
+      # 清空右側畫面欄位值，但須保留左側qbe查詢條件
+      INITIALIZE g_master.* TO NULL
+      DISPLAY g_master.* TO mmaf001,mmaf013,mmaf008,mmaf014,mmaf009,mmaf011,sex,sex_desc,age,mmaq018a, 
+          mmaq016a,decc021a,decc021b,mmaq013a,daya,weekend,rate,mmaq015a,rtia031a,decc010a,mmaq015b, 
+          mmaq014a,decc018a,crba021a,mmaq014b,mmaq009a,mmau009a,mmau009b,mmau009c,mmau009d,mmaucount, 
+          mmau009e,mmaqcount,mmaf020a,mmaf021a,radiogroup
+      CALL g_detail.clear()
+      CALL g_detail2.clear()
+ 
+      CALL g_detail3.clear()
+ 
+      CALL g_detail4.clear()
+ 
+      CALL g_detail5.clear()
+ 
+      CALL g_detail6.clear()
+ 
+      CALL g_detail7.clear()
+ 
+      CALL g_detail8.clear()
+ 
+      CALL g_detail9.clear()
+ 
+      CALL g_detail10.clear()
+ 
+      CALL g_detail11.clear()
+ 
+      CALL g_detail12.clear()
+ 
+      CALL g_detail13.clear()
+ 
+      CALL g_detail14.clear()
+ 
+      CALL g_detail15.clear()
+ 
+      CALL g_detail16.clear()
+ 
+      CALL g_detail17.clear()
+ 
+      CALL g_detail18.clear()
+ 
+      CALL g_detail19.clear()
+ 
+      CALL g_detail20.clear()
+ 
+      CALL g_detail21.clear()
+ 
+      CALL g_detail22.clear()
+ 
+      CALL g_detail23.clear()
+ 
+      CALL g_detail24.clear()
+ 
+ 
+      #add-point:陣列清空
+{<point name="fetch.array_clear" />}
+      #end add-point
+      DISPLAY '' TO FORMONLY.h_index
+      DISPLAY '' TO FORMONLY.h_count
+      DISPLAY '' TO FORMONLY.idx
+      DISPLAY '' TO FORMONLY.cnt
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = '-100'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   ELSE
+      CASE p_flag
+         WHEN 'F' LET g_current_idx = 1
+         WHEN 'P' LET g_current_idx = g_current_idx - 1
+         WHEN 'N' LET g_current_idx = g_current_idx + 1
+         WHEN 'L' LET g_current_idx = g_row_count
+         WHEN '/' LET g_current_idx = g_jump
+      END CASE
+      DISPLAY g_current_idx TO FORMONLY.h_index
+      DISPLAY g_row_count TO FORMONLY.h_count
+      CALL cl_navigator_setting( g_current_idx, g_row_count )
+   END IF
+ 
+   #add-point:fetch結束前
+{<point name="fetch.after" />}
+   #end add-point
+ 
+   #重新顯示
+   CALL acrq500_show()
+   LET l_ac = 1
+   CALL acrq500_b_fill4()
+   DISPLAY ARRAY g_detail18 TO s_detail3.*
+      ATTRIBUTES(COUNT=g_detail_cnt)
+      BEFORE DISPLAY
+         EXIT DISPLAY
+   END DISPLAY
+    
+   DISPLAY ARRAY g_detail19 TO s_detail4.*
+      ATTRIBUTES(COUNT=g_detail_cnt)
+      BEFORE DISPLAY
+         EXIT DISPLAY
+      
+   END DISPLAY
+END FUNCTION
+
+{</section>}
+
+{<section id="acrq500.show" >}
+PRIVATE FUNCTION acrq500_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point
+ 
+   DISPLAY g_master.* TO mmaf001,mmaf013,mmaf008,mmaf014,mmaf009,mmaf011,sex,sex_desc,age,mmaq018a,mmaq016a, 
+       decc021a,decc021b,mmaq013a,daya,weekend,rate,mmaq015a,rtia031a,decc010a,mmaq015b,mmaq014a,decc018a, 
+       crba021a,mmaq014b,mmaq009a,mmau009a,mmau009b,mmau009c,mmau009d,mmaucount,mmau009e,mmaqcount,mmaf020a, 
+       mmaf021a,radiogroup
+ 
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   CALL acrq500_b_fill()
+END FUNCTION
+
+{</section>}
+
+{<section id="acrq500.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION acrq500_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   CALL g_detail.clear()
+ 
+   #add-point:陣列清空
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   
+ 
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #+ 此段落由子樣板qs09產生
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   #add-point:b_fill段sql
+   {<point name="b_fill.sql"/>}
+   #end add-point
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   CALL g_detail.deleteElement(g_detail.getLength())
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   #單身總筆數顯示
+   LET g_detail_cnt = g_detail.getLength()
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   IF g_detail_cnt > 0 THEN
+      LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx
+   END IF
+ 
+   CALL acrq500_b_fill2()
+ 
+   
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="acrq500.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION acrq500_b_fill2()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+ 
+   LET li_ac = 1
+ 
+   #單身組成
+   #+ 此段落由子樣板qs11產生
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+   #add-point:sql組成
+   {<point name="b_fill2.fill" />}
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="acrq500.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION acrq500_detail_show(ps_page)
+   DEFINE ps_page   STRING
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body10.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'3'",1) > 0 THEN
+      #帶出公用欄位reference值page3
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body11.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'4'",1) > 0 THEN
+      #帶出公用欄位reference值page4
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body12.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'5'",1) > 0 THEN
+      #帶出公用欄位reference值page5
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body13.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'6'",1) > 0 THEN
+      #帶出公用欄位reference值page6
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body14.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'7'",1) > 0 THEN
+      #帶出公用欄位reference值page7
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body15.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'8'",1) > 0 THEN
+      #帶出公用欄位reference值page8
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body16.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'9'",1) > 0 THEN
+      #帶出公用欄位reference值page9
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body17.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'10'",1) > 0 THEN
+      #帶出公用欄位reference值page10
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body18.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'11'",1) > 0 THEN
+      #帶出公用欄位reference值page11
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body19.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'12'",1) > 0 THEN
+      #帶出公用欄位reference值page12
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body2.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'13'",1) > 0 THEN
+      #帶出公用欄位reference值page13
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body20.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'14'",1) > 0 THEN
+      #帶出公用欄位reference值page14
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body21.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'15'",1) > 0 THEN
+      #帶出公用欄位reference值page15
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body22.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'16'",1) > 0 THEN
+      #帶出公用欄位reference值page16
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body23.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'17'",1) > 0 THEN
+      #帶出公用欄位reference值page17
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body24.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'18'",1) > 0 THEN
+      #帶出公用欄位reference值page18
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body3.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'19'",1) > 0 THEN
+      #帶出公用欄位reference值page19
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body4.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'20'",1) > 0 THEN
+      #帶出公用欄位reference值page20
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body5.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'21'",1) > 0 THEN
+      #帶出公用欄位reference值page21
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body6.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'22'",1) > 0 THEN
+      #帶出公用欄位reference值page22
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body7.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'23'",1) > 0 THEN
+      #帶出公用欄位reference值page23
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body8.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'24'",1) > 0 THEN
+      #帶出公用欄位reference值page24
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body9.reference"/>}
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="acrq500.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

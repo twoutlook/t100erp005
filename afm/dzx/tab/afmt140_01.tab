@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt140_01" module="afm" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="06421" crtdt="2015-11-19 10:59:57" modid="06421" moddt="2015-11-24 18:56:07" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="融資費用維護">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmdcseq2,fmdcdocno,fmdcseq,fmdc001,fmdc002,fmdc003,fmdc004,fmdc004_desc(chr500),fmdc005,fmdc006,fmdc008,fmdc007,fmdc009,fmdc010,fmdc011,fmdc012,fmdc013,fmdc014,fmdc015,fmdc016,fmdc016_desc(chr500),fmdc017,fmdc017_desc(chr500),fmdc018"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt140_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fmdcseq2,fmdcdocno,fmdcseq,fmdc001,fmdc002,fmdc003,fmdc004,fmdc005,fmdc006,fmdc008,fmdc007,fmdc015,fmdc016,fmdc017,fmdc018" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="fmdcseq2,fmdcdocno,fmdcseq,fmdc001,fmdc002,fmdc003,fmdc004,fmdc005,fmdc006,fmdc008,fmdc007,fmdc009,fmdc010,fmdc011,fmdc012,fmdc013,fmdc014,fmdc015,fmdc016,fmdc017,fmdc018"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmdcseq2"/>
+      <column id="fmdcdocno"/>
+      <column id="fmdcseq">
+        <after>
+          <check chkid="v_fmdcseq" id="isExist"/>
+        </after>
+        <controlp form="q_fmdcseq" state="i"/>
+        <controlp form="q_fmdcseq" state="c"/>
+      </column>
+      <column id="fmdc001">
+        <controlp form="q_fmdc001" state="c"/>
+      </column>
+      <column id="fmdc002"/>
+      <column id="fmdc003" type="S" default="1" def_scc="8858"/>
+      <column id="fmdc004">
+        <after>
+          <reference field="fmdc004_desc" ref_field="fmdc_t.fmdc004" map_field="fmdcent,fmdc004" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_5" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="fmdc004_desc"/>
+      <column id="fmdc005">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmdc006">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmdc008">
+        <controlp form="q_fmdc008" state="c"/>
+      </column>
+      <column id="fmdc007" type="S" default="1" def_scc="8871"/>
+      <column id="fmdc009"/>
+      <column id="fmdc010" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmdc011"/>
+      <column id="fmdc012" type="S" default="0"/>
+      <column id="fmdc013"/>
+      <column id="fmdc014" type="S" default="0"/>
+      <column id="fmdc015" type="S" default="2" def_scc="8708"/>
+      <column id="fmdc016">
+        <after>
+          <reference field="fmdc016_desc" ref_field="fmdc_t.fmdc016" map_field="fmdcent,fmdc016" ref_sql="SELECT nmajl003 FROM nmajl_t WHERE nmajlent=$varg_enterprise$var AND nmajl001=? AND nmajl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="fmdc016_desc"/>
+      <column id="fmdc017">
+        <after/>
+      </column>
+      <column id="fmdc017_desc"/>
+      <column id="fmdc018"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="fmdc_t" page="1" linked="" pk="fmdcdocno,fmdcseq,fmdcseq2">
+      <sql id="forupd_sql_detail" query="SELECT fmdcseq2,fmdcdocno,fmdcseq,fmdc001,fmdc002,fmdc003,fmdc004,&apos;&apos;,fmdc005,fmdc006,fmdc008,fmdc007,fmdc009,fmdc010,fmdc011,fmdc012,fmdc013,fmdc014,fmdc015,fmdc016,&apos;&apos;,fmdc017,&apos;&apos;,fmdc018 FROM fmdc_t WHERE fmdcent=? AND fmdcdocno=? AND fmdcseq=? AND fmdcseq2=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmdcseq2,fmdcdocno,fmdcseq,fmdc001,fmdc002,fmdc003,fmdc004,&apos;&apos;,fmdc005,fmdc006,fmdc008,fmdc007,fmdc009,fmdc010,fmdc011,fmdc012,fmdc013,fmdc014,fmdc015,fmdc016,&apos;&apos;,fmdc017,&apos;&apos;,fmdc018 FROM fmdc_t WHERE fmdcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

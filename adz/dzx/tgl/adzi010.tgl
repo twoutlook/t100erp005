@@ -1,0 +1,1041 @@
+#+ 程式版本......: T6 Version 1.00.00 Build-0000 at 12/11/08
+#
+#+ 程式代碼......: adzi010
+#+ 設計人員......: henry
+#樣板功能名稱: code_i02 標準單檔多欄(單table)
+ 
+IMPORT os
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_dzeh_d RECORD
+       actipic LIKE type_t.chr80, 
+   dzeh001 LIKE dzeh_t.dzeh001, 
+   dzeh002 LIKE dzeh_t.dzeh002, 
+   dzeh003 LIKE dzeh_t.dzeh003, 
+   dzeh004 LIKE dzeh_t.dzeh004, 
+   dzeh005 LIKE dzeh_t.dzeh005, 
+   dzeh006 LIKE dzeh_t.dzeh006, 
+   dzeh007 LIKE dzeh_t.dzeh007, 
+   dzeh008 LIKE dzeh_t.dzeh008, 
+   dzeh009 LIKE dzeh_t.dzeh009, 
+   dzehacti LIKE dzeh_t.dzehacti, 
+   dzehmodu LIKE dzeh_t.dzehmodu, 
+   modu_desc LIKE type_t.chr80, 
+   dzehdate DATETIME YEAR TO SECOND, 
+   dzehoriu LIKE dzeh_t.dzehoriu, 
+   oriu_desc LIKE type_t.chr80, 
+   dzehorid LIKE dzeh_t.dzehorid, 
+   orid_desc LIKE type_t.chr80, 
+   dzehuser LIKE dzeh_t.dzehuser, 
+   user_desc LIKE type_t.chr80, 
+   dzehdept LIKE dzeh_t.dzehdept, 
+   dept_desc LIKE type_t.chr80, 
+   dzehbuid DATETIME YEAR TO SECOND
+       END RECORD
+
+ 
+#模組變數(Module Variables)
+DEFINE g_dzeh_d          DYNAMIC ARRAY OF type_g_dzeh_d
+DEFINE g_dzeh_d_t        type_g_dzeh_d
+
+	  
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                  #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5        #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog               #Current Dialog
+DEFINE g_temp_idx           LIKE type_t.num5        #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5        #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5        #單身 總筆數(所有資料)
+ 
+{</Module define>}
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="module.variable"/>}
+#END add-point
+ 
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #END add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("adz","N")
+   
+   #add-point:作業初始化
+   {<point name="main.init"/>}
+   #END add-point
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #END add-point
+ 
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adzi010 WITH FORM cl_ap_formpath("adz",g_prog)
+ 
+      CALL adzi010_init()   
+         
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      LET g_wc2 = '1=1'
+      CALL adzi010_b_fill(g_wc2)
+   
+      #進入選單 Menu (='N')
+      CALL adzi010_ui_dialog() 
+ 
+      #畫面關閉
+      CLOSE WINDOW w_adzi010
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #END add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0") 	
+   
+END MAIN
+ 
+ 
+#+ 畫面資料初始化
+PRIVATE FUNCTION adzi010_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #END add-point   
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #END add-point
+   
+END FUNCTION
+ 
+ 
+#+ 選單功能實際執行處
+PRIVATE FUNCTION adzi010_ui_dialog()
+   #add-point:menu段define
+   {<point name="menu.define"/>}
+   #END add-point 
+   
+   WHILE TRUE
+      CALL adzi010_bp("G")
+ 
+      CASE g_action_choice
+ 
+         
+
+      WHEN "modify"
+         IF cl_chk_act_auth() THEN 
+            CALL adzi010_modify()
+            #add-point:ON ACTION modify
+            {<point name="dialog.modify" />}
+            #END add-point
+
+         END IF
+      WHEN "query"
+         IF cl_chk_act_auth() THEN 
+            CALL adzi010_query()
+            #add-point:ON ACTION query
+            {<point name="dialog.query" />}
+            #END add-point
+
+         END IF
+ 
+         WHEN "exit"
+            EXIT WHILE
+			
+      END CASE
+	  
+   END WHILE
+   
+END FUNCTION
+ 
+ 
+#+ 功能選單 
+PRIVATE FUNCTION adzi010_bp(p_ud)
+   {<Local define>}
+   DEFINE p_ud     LIKE type_t.chr1
+   {</Local define>}
+   #add-point:bp段define
+   {<point name="bp.define"/>}
+   #END add-point 
+ 
+   IF p_ud <> "G" OR g_action_choice = "detail" THEN
+      RETURN
+   END IF
+ 
+   LET g_action_choice = " "          
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   DIALOG ATTRIBUTES(UNBUFFERED) 
+      DISPLAY ARRAY g_dzeh_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+ 
+         BEFORE ROW
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+			LET l_ac = g_detail_idx
+            IF g_dzeh_d[l_ac].dzehacti = "Y" THEN
+               CALL cl_set_act_visible("void", TRUE)
+               CALL cl_set_act_visible("valid", FALSE)
+            ELSE
+               CALL cl_set_act_visible("valid", TRUE)
+               CALL cl_set_act_visible("void", FALSE)
+            END IF
+			DISPLAY g_detail_idx TO FORMONLY.idx
+            CALL cl_show_fld_cont() 
+      END DISPLAY
+ 
+
+	  
+      BEFORE DIALOG
+	     IF g_temp_idx > 0 THEN
+		    LET l_ac = g_temp_idx
+			CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+			LET g_temp_idx = 1
+		 END IF
+         LET g_curr_diag = ui.DIALOG.getCurrent()         
+         NEXT FIELD CURRENT
+ 
+      
+
+      ON ACTION modify
+            LET g_action_choice="modify"
+         EXIT DIALOG
+
+      ON ACTION query
+            LET g_action_choice="query"
+         EXIT DIALOG
+ 
+      # 全選修改狀態
+      ON ACTION valid
+         CALL adzi010_statechange("Y")
+		 LET g_temp_idx = l_ac
+		 #資料重讀
+		 CALL adzi010_b_fill(g_wc2)
+		 EXIT DIALOG
+		 
+      ON ACTION void
+         CALL adzi010_statechange("N")
+		 LET g_temp_idx = l_ac
+		 #資料重讀
+		 CALL adzi010_b_fill(g_wc2)
+		 EXIT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG=FALSE 		
+         LET g_action_choice="exit"
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET g_action_choice="exit"
+         EXIT DIALOG
+ 
+      #主選單用ACTION
+      &include "main_menu.4gl"
+	  
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+		 
+   END DIALOG
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+ 
+#+ QBE資料查詢
+PRIVATE FUNCTION adzi010_query()
+ 
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #END add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_dzeh_d.clear()
+ 
+   CONSTRUCT g_wc2 ON dzeh001,dzeh002,dzeh003,dzeh004,dzeh005,dzeh006,dzeh007,dzeh008,dzeh009,dzehacti,dzehmodu,dzehdate,dzehoriu,dzehorid,dzehuser,dzehdept,dzehbuid                        
+        FROM s_detail1[1].dzeh001,s_detail1[1].dzeh002,s_detail1[1].dzeh003,s_detail1[1].dzeh004,s_detail1[1].dzeh005,s_detail1[1].dzeh006,s_detail1[1].dzeh007,s_detail1[1].dzeh008,s_detail1[1].dzeh009,s_detail1[1].dzehacti,s_detail1[1].dzehmodu,s_detail1[1].dzehdate,s_detail1[1].dzehoriu,s_detail1[1].dzehorid,s_detail1[1].dzehuser,s_detail1[1].dzehdept,s_detail1[1].dzehbuid  
+		
+	  #---------------------<  Detail: page     1  >---------------------
+         #----<<dzeh001>>----
+         ON ACTION controlp INFIELD dzeh001
+            #add-point:CONTROLP dzeh001
+            {<point name="construct.c.dzeh001" />}
+            #END add-point
+
+         #----<<dzeh002>>----
+         ON ACTION controlp INFIELD dzeh002
+            #add-point:CONTROLP dzeh002
+            {<point name="construct.c.dzeh002" />}
+            #END add-point
+
+         #----<<dzeh003>>----
+         ON ACTION controlp INFIELD dzeh003
+            #add-point:CONTROLP dzeh003
+            {<point name="construct.c.dzeh003" />}
+            #END add-point
+
+         #----<<dzeh004>>----
+         ON ACTION controlp INFIELD dzeh004
+            #add-point:CONTROLP dzeh004
+            {<point name="construct.c.dzeh004" />}
+            #END add-point
+
+         #----<<dzeh005>>----
+         ON ACTION controlp INFIELD dzeh005
+            #add-point:CONTROLP dzeh005
+            {<point name="construct.c.dzeh005" />}
+            #END add-point
+
+         #----<<dzeh006>>----
+         ON ACTION controlp INFIELD dzeh006
+            #add-point:CONTROLP dzeh006
+            {<point name="construct.c.dzeh006" />}
+            #END add-point
+
+         #----<<dzeh007>>----
+         ON ACTION controlp INFIELD dzeh007
+            #add-point:CONTROLP dzeh007
+            {<point name="construct.c.dzeh007" />}
+            #END add-point
+
+         #----<<dzeh008>>----
+         ON ACTION controlp INFIELD dzeh008
+            #add-point:CONTROLP dzeh008
+            {<point name="construct.c.dzeh008" />}
+            #END add-point
+
+         #----<<dzeh009>>----
+         ON ACTION controlp INFIELD dzeh009
+            #add-point:CONTROLP dzeh009
+            {<point name="construct.c.dzeh009" />}
+            #END add-point
+
+         #----<<dzehacti>>----
+         ON ACTION controlp INFIELD dzehacti
+            #add-point:CONTROLP dzehacti
+            {<point name="construct.c.dzehacti" />}
+            #END add-point
+
+         #----<<dzehmodu>>----
+         ON ACTION controlp INFIELD dzehmodu
+            #add-point:CONTROLP dzehmodu
+            {<point name="construct.c.dzehmodu" />}
+            #END add-point
+
+         #----<<dzehdate>>----
+         ON ACTION controlp INFIELD dzehdate
+            #add-point:CONTROLP dzehdate
+            {<point name="construct.c.dzehdate" />}
+            #END add-point
+
+         #----<<dzehoriu>>----
+         ON ACTION controlp INFIELD dzehoriu
+            #add-point:CONTROLP dzehoriu
+            {<point name="construct.c.dzehoriu" />}
+            #END add-point
+
+         #----<<dzehorid>>----
+         ON ACTION controlp INFIELD dzehorid
+            #add-point:CONTROLP dzehorid
+            {<point name="construct.c.dzehorid" />}
+            #END add-point
+
+         #----<<dzehuser>>----
+         ON ACTION controlp INFIELD dzehuser
+            #add-point:CONTROLP dzehuser
+            {<point name="construct.c.dzehuser" />}
+            #END add-point
+
+         #----<<dzehdept>>----
+         ON ACTION controlp INFIELD dzehdept
+            #add-point:CONTROLP dzehdept
+            {<point name="construct.c.dzehdept" />}
+            #END add-point
+
+         #----<<dzehbuid>>----
+         ON ACTION controlp INFIELD dzehbuid
+            #add-point:CONTROLP dzehbuid
+            {<point name="construct.c.dzehbuid" />}
+            #END add-point
+
+  
+ 
+      BEFORE CONSTRUCT
+         CALL cl_qbe_init()
+ 
+      ON ACTION qbe_select
+         CALL cl_qbe_select()
+ 
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE CONSTRUCT
+   END CONSTRUCT
+ 
+   LET g_wc2 = g_wc2 CLIPPED, cl_get_extra_cond('g_dzeh_d[l_ac].dzehuser', '')
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      LET g_wc2 = NULL
+      RETURN
+   END IF
+ 
+   CALL adzi010_b_fill(g_wc2)
+   
+END FUNCTION
+ 
+ 
+#+ 資料修改
+PRIVATE FUNCTION adzi010_modify()
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5     #未取消的ARRAY CNT      
+   DEFINE l_n             LIKE type_t.num5     #檢查重複用             
+   DEFINE l_lock_sw       LIKE type_t.chr1     #單身鎖住否            
+   DEFINE p_cmd           LIKE type_t.chr1     #處理狀態              
+   DEFINE l_allow_insert  LIKE type_t.chr1     #可新增否
+   DEFINE l_allow_delete  LIKE type_t.chr1     
+   DEFINE l_insert        LIKE type_t.num5     #輸入時判斷是否在inser狀態
+   {</Local define>}
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #END add-point 
+   
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET l_allow_insert = cl_detail_input_auth('insert')
+   LET l_allow_delete = cl_detail_input_auth('delete')
+ 
+   LET g_forupd_sql = "SELECT '',dzeh001,dzeh002,dzeh003,dzeh004,dzeh005,dzeh006,dzeh007,dzeh008,dzeh009,dzehacti,dzehmodu,'',dzehdate,dzehoriu,'',dzehorid,'',dzehuser,'',dzehdept,'',dzehbuid FROM dzeh_t WHERE dzeh001=? FOR UPDATE"
+   LET g_forupd_sql = cl_forupd_sql(g_forupd_sql)
+   DECLARE adzi010_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+ 
+   INPUT ARRAY g_dzeh_d WITHOUT DEFAULTS FROM s_detail1.*
+         ATTRIBUTE (COUNT=g_detail_cnt,MAXCOUNT=g_max_rec,UNBUFFERED,
+                    INSERT ROW = l_allow_insert,
+                    DELETE ROW = l_allow_delete,
+                    APPEND ROW = l_allow_insert) 
+      BEFORE INPUT
+         IF g_detail_cnt != 0 THEN
+            CALL fgl_set_arr_curr(l_ac)
+         END IF
+ 
+      BEFORE ROW
+	  
+         LET p_cmd='' 
+         LET l_ac = ARR_CURR()
+         LET l_lock_sw = 'N'            #DEFAULT
+         LET l_n  = ARR_COUNT()
+ 
+         IF g_detail_cnt>=l_ac THEN
+            BEGIN WORK
+            LET p_cmd='u'
+ 
+            LET g_before_input_done = FALSE                                      
+            CALL adzi010_set_entry_b(p_cmd)                                           
+            CALL adzi010_set_no_entry_b(p_cmd)                                        
+            LET g_before_input_done = TRUE                                       
+            
+            LET g_dzeh_d_t.* = g_dzeh_d[l_ac].*  #BACKUP
+ 
+            OPEN adzi010_bcl USING g_dzeh_d_t.dzeh001
+
+            IF STATUS THEN
+               CALL cl_err("OPEN adzi010_bcl:", STATUS, 1)
+               LET l_lock_sw = "Y"
+            ELSE 
+               FETCH adzi010_bcl INTO g_dzeh_d[l_ac].actipic,g_dzeh_d[l_ac].dzeh001,g_dzeh_d[l_ac].dzeh002,g_dzeh_d[l_ac].dzeh003,g_dzeh_d[l_ac].dzeh004,g_dzeh_d[l_ac].dzeh005,g_dzeh_d[l_ac].dzeh006,g_dzeh_d[l_ac].dzeh007,g_dzeh_d[l_ac].dzeh008,g_dzeh_d[l_ac].dzeh009,g_dzeh_d[l_ac].dzehacti,g_dzeh_d[l_ac].dzehmodu,g_dzeh_d[l_ac].modu_desc,g_dzeh_d[l_ac].dzehdate,g_dzeh_d[l_ac].dzehoriu,g_dzeh_d[l_ac].oriu_desc,g_dzeh_d[l_ac].dzehorid,g_dzeh_d[l_ac].orid_desc,g_dzeh_d[l_ac].dzehuser,g_dzeh_d[l_ac].user_desc,g_dzeh_d[l_ac].dzehdept,g_dzeh_d[l_ac].dept_desc,g_dzeh_d[l_ac].dzehbuid 
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err(g_dzeh_d_t.dzeh001,SQLCA.sqlcode,1)
+                  LET l_lock_sw = "Y"
+               END IF
+                 
+            END IF
+			CALL adzi010_detail_show()      
+            CALL cl_show_fld_cont()     
+         END IF
+  
+      BEFORE INSERT
+         LET l_insert = TRUE
+         LET l_n = ARR_COUNT()
+         LET p_cmd='a'   
+                                                        
+         LET g_before_input_done = FALSE                                        
+         CALL adzi010_set_entry_b(p_cmd)                                             
+         CALL adzi010_set_no_entry_b(p_cmd)                                          
+         LET g_before_input_done = TRUE                                         
+ 
+         INITIALIZE g_dzeh_d[l_ac].* TO NULL      
+ 
+         LET g_dzeh_d_t.* = g_dzeh_d[l_ac].*         #新輸入資料
+         CALL cl_show_fld_cont()  
+         LET g_dzeh_d[l_ac].dzehacti = "Y"
+         LET g_dzeh_d[l_ac].dzehbuid = cl_get_current()
+         LET g_dzeh_d[l_ac].dzehdate = cl_get_current()
+         LET g_dzeh_d[l_ac].dzehmodu = g_user
+         LET g_dzeh_d[l_ac].dzehuser = g_user
+         LET g_dzeh_d[l_ac].dzehoriu = g_user
+         LET g_dzeh_d[l_ac].dzehorid = g_dept
+         LET g_dzeh_d[l_ac].dzehdept = g_dept
+         		
+         		 
+		 CALL adzi010_detail_show()      
+         NEXT FIELD dzeh001
+ 
+      AFTER INSERT
+         LET l_insert = FALSE
+         IF INT_FLAG THEN
+            CALL cl_err('',9001,0)
+            LET INT_FLAG = 0
+            CLOSE adzi010_bcl
+            CANCEL INSERT
+         END IF
+      
+         BEGIN WORK                    
+ 
+         INSERT INTO dzeh_t
+                     (dzeh001,dzeh002,dzeh003,dzeh004,dzeh005,dzeh006,dzeh007,dzeh008,dzeh009,dzehacti,dzehmodu,dzehdate,dzehoriu,dzehorid,dzehuser,dzehdept,dzehbuid)
+                     VALUES 
+		     (g_dzeh_d[l_ac].dzeh001,g_dzeh_d[l_ac].dzeh002,g_dzeh_d[l_ac].dzeh003,g_dzeh_d[l_ac].dzeh004,g_dzeh_d[l_ac].dzeh005,g_dzeh_d[l_ac].dzeh006,g_dzeh_d[l_ac].dzeh007,g_dzeh_d[l_ac].dzeh008,g_dzeh_d[l_ac].dzeh009,g_dzeh_d[l_ac].dzehacti,g_dzeh_d[l_ac].dzehmodu,g_dzeh_d[l_ac].dzehdate,g_dzeh_d[l_ac].dzehoriu,g_dzeh_d[l_ac].dzehorid,g_dzeh_d[l_ac].dzehuser,g_dzeh_d[l_ac].dzehdept,g_dzeh_d[l_ac].dzehbuid)
+				
+         IF SQLCA.sqlcode THEN
+            CALL cl_err3("ins","dzeh_t",g_dzeh_d[l_ac].dzeh001,"",SQLCA.sqlcode,"","",1)  
+            ROLLBACK WORK              
+            CANCEL INSERT
+         ELSE
+            MESSAGE 'INSERT O.K'
+            LET g_detail_cnt=g_detail_cnt+1
+            DISPLAY g_detail_cnt TO FORMONLY.cnt
+         END IF
+ 
+      BEFORE DELETE                            #是否取消單身
+         IF g_dzeh_d_t.dzeh001 IS NOT NULL THEN
+            IF NOT cl_ask_delete() THEN
+               ROLLBACK WORK
+               CANCEL DELETE
+            END IF
+ 
+            IF l_lock_sw = "Y" THEN 
+               CALL cl_err("", -263, 1) 
+               ROLLBACK WORK
+               CANCEL DELETE 
+            END IF 
+ 
+            DELETE FROM dzeh_t
+             WHERE  dzeh001 = g_dzeh_d_t.dzeh001
+
+            IF SQLCA.sqlcode THEN
+               CALL cl_err3("del","dzeh_t",g_dzeh_d_t.dzeh001,"",SQLCA.sqlcode,"","",1) 
+               ROLLBACK WORK
+               CANCEL DELETE
+               EXIT INPUT
+            ELSE
+               MESSAGE 'DELETE O.K.'
+               LET g_detail_cnt=g_detail_cnt-1
+               DISPLAY g_detail_cnt TO FORMONLY.cnt
+            END IF
+         END IF
+ 
+      ON ROW CHANGE
+         IF INT_FLAG THEN                 #新增程式段
+            CALL cl_err('',9001,0)
+            LET INT_FLAG = 0
+            LET g_dzeh_d[l_ac].* = g_dzeh_d_t.*
+            CLOSE adzi010_bcl
+            ROLLBACK WORK
+            EXIT INPUT
+         END IF
+ 
+         IF l_lock_sw = "Y" THEN
+            CALL cl_err(g_dzeh_d[l_ac].dzeh001,-263,0)
+            LET g_dzeh_d[l_ac].* = g_dzeh_d_t.*
+         ELSE
+            LET g_dzeh_d[l_ac].dzehmodu = g_user                  #修改者
+            LET g_dzeh_d[l_ac].dzehdate = cl_get_current()        #修改日期
+            UPDATE dzeh_t
+               SET (dzeh001,dzeh002,dzeh003,dzeh004,dzeh005,dzeh006,dzeh007,dzeh008,dzeh009,dzehacti,dzehmodu,dzehdate,dzehoriu,dzehorid,dzehuser,dzehdept,dzehbuid) = 
+			       (g_dzeh_d[l_ac].dzeh001,g_dzeh_d[l_ac].dzeh002,g_dzeh_d[l_ac].dzeh003,g_dzeh_d[l_ac].dzeh004,g_dzeh_d[l_ac].dzeh005,g_dzeh_d[l_ac].dzeh006,g_dzeh_d[l_ac].dzeh007,g_dzeh_d[l_ac].dzeh008,g_dzeh_d[l_ac].dzeh009,g_dzeh_d[l_ac].dzehacti,g_dzeh_d[l_ac].dzehmodu,g_dzeh_d[l_ac].dzehdate,g_dzeh_d[l_ac].dzehoriu,g_dzeh_d[l_ac].dzehorid,g_dzeh_d[l_ac].dzehuser,g_dzeh_d[l_ac].dzehdept,g_dzeh_d[l_ac].dzehbuid)
+             WHERE  dzeh001 = g_dzeh_d_t.dzeh001 
+
+            IF SQLCA.sqlcode THEN
+               CALL cl_err3("upd","dzeh_t",g_dzeh_d_t.dzeh001,"",SQLCA.sqlcode,"","",1)
+               ROLLBACK WORK
+               LET g_dzeh_d[l_ac].* = g_dzeh_d_t.*
+            ELSE
+               MESSAGE 'UPDATE O.K'
+			   CALL adzi010_detail_show()      
+            END IF
+         END IF
+ 
+      AFTER ROW
+         LET l_ac = ARR_CURR()
+         LET l_ac_t = l_ac
+ 
+         IF INT_FLAG THEN
+            CALL cl_err('',9001,0)
+            LET INT_FLAG = 0
+            IF p_cmd='u' THEN
+               LET g_dzeh_d[l_ac].* = g_dzeh_d_t.*
+            END IF
+            CLOSE adzi010_bcl      
+            ROLLBACK WORK
+            EXIT INPUT
+         END IF
+         CLOSE adzi010_bcl
+         COMMIT WORK
+		
+ 
+      #---------------------<  Detail: page     1  >---------------------
+         #----<<dzeh001>>----
+         BEFORE FIELD dzeh001
+            #add-point:BEFORE FIELD dzeh001
+            {<point name="input.b.dzeh001" />}
+            #END add-point
+
+         AFTER FIELD dzeh001
+            #add-point:AFTER FIELD dzeh001
+            {<point name="input.a.dzeh001" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzeh001
+            #add-point:CONTROLP dzeh001
+            {<point name="input.c.dzeh001" />}
+            #END add-point
+
+         #----<<dzeh002>>----
+         BEFORE FIELD dzeh002
+            #add-point:BEFORE FIELD dzeh002
+            {<point name="input.b.dzeh002" />}
+            #END add-point
+
+         AFTER FIELD dzeh002
+            #add-point:AFTER FIELD dzeh002
+            {<point name="input.a.dzeh002" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzeh002
+            #add-point:CONTROLP dzeh002
+            {<point name="input.c.dzeh002" />}
+            #END add-point
+
+         #----<<dzeh003>>----
+         BEFORE FIELD dzeh003
+            #add-point:BEFORE FIELD dzeh003
+            {<point name="input.b.dzeh003" />}
+            #END add-point
+
+         AFTER FIELD dzeh003
+            #add-point:AFTER FIELD dzeh003
+            {<point name="input.a.dzeh003" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzeh003
+            #add-point:CONTROLP dzeh003
+            {<point name="input.c.dzeh003" />}
+            #END add-point
+
+         #----<<dzeh004>>----
+         BEFORE FIELD dzeh004
+            #add-point:BEFORE FIELD dzeh004
+            {<point name="input.b.dzeh004" />}
+            #END add-point
+
+         AFTER FIELD dzeh004
+            #add-point:AFTER FIELD dzeh004
+            {<point name="input.a.dzeh004" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzeh004
+            #add-point:CONTROLP dzeh004
+            {<point name="input.c.dzeh004" />}
+            #END add-point
+
+         #----<<dzeh005>>----
+         BEFORE FIELD dzeh005
+            #add-point:BEFORE FIELD dzeh005
+            {<point name="input.b.dzeh005" />}
+            #END add-point
+
+         AFTER FIELD dzeh005
+            #add-point:AFTER FIELD dzeh005
+            {<point name="input.a.dzeh005" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzeh005
+            #add-point:CONTROLP dzeh005
+            {<point name="input.c.dzeh005" />}
+            #END add-point
+
+         #----<<dzeh006>>----
+         BEFORE FIELD dzeh006
+            #add-point:BEFORE FIELD dzeh006
+            {<point name="input.b.dzeh006" />}
+            #END add-point
+
+         AFTER FIELD dzeh006
+            #add-point:AFTER FIELD dzeh006
+            {<point name="input.a.dzeh006" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzeh006
+            #add-point:CONTROLP dzeh006
+            {<point name="input.c.dzeh006" />}
+            #END add-point
+
+         #----<<dzeh007>>----
+         BEFORE FIELD dzeh007
+            #add-point:BEFORE FIELD dzeh007
+            {<point name="input.b.dzeh007" />}
+            #END add-point
+
+         AFTER FIELD dzeh007
+            #add-point:AFTER FIELD dzeh007
+            {<point name="input.a.dzeh007" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzeh007
+            #add-point:CONTROLP dzeh007
+            {<point name="input.c.dzeh007" />}
+            #END add-point
+
+         #----<<dzeh008>>----
+         BEFORE FIELD dzeh008
+            #add-point:BEFORE FIELD dzeh008
+            {<point name="input.b.dzeh008" />}
+            #END add-point
+
+         AFTER FIELD dzeh008
+            #add-point:AFTER FIELD dzeh008
+            {<point name="input.a.dzeh008" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzeh008
+            #add-point:CONTROLP dzeh008
+            {<point name="input.c.dzeh008" />}
+            #END add-point
+
+         #----<<dzeh009>>----
+         BEFORE FIELD dzeh009
+            #add-point:BEFORE FIELD dzeh009
+            {<point name="input.b.dzeh009" />}
+            #END add-point
+
+         AFTER FIELD dzeh009
+            #add-point:AFTER FIELD dzeh009
+            {<point name="input.a.dzeh009" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzeh009
+            #add-point:CONTROLP dzeh009
+            {<point name="input.c.dzeh009" />}
+            #END add-point
+
+         #----<<dzehacti>>----
+         BEFORE FIELD dzehacti
+            #add-point:BEFORE FIELD dzehacti
+            {<point name="input.b.dzehacti" />}
+            #END add-point
+
+         AFTER FIELD dzehacti
+            #add-point:AFTER FIELD dzehacti
+            {<point name="input.a.dzehacti" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzehacti
+            #add-point:CONTROLP dzehacti
+            {<point name="input.c.dzehacti" />}
+            #END add-point
+
+         #----<<dzehmodu>>----
+         BEFORE FIELD dzehmodu
+            #add-point:BEFORE FIELD dzehmodu
+            {<point name="input.b.dzehmodu" />}
+            #END add-point
+
+         AFTER FIELD dzehmodu
+            #add-point:AFTER FIELD dzehmodu
+            {<point name="input.a.dzehmodu" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzehmodu
+            #add-point:CONTROLP dzehmodu
+            {<point name="input.c.dzehmodu" />}
+            #END add-point
+
+         #----<<dzehdate>>----
+         BEFORE FIELD dzehdate
+            #add-point:BEFORE FIELD dzehdate
+            {<point name="input.b.dzehdate" />}
+            #END add-point
+
+         AFTER FIELD dzehdate
+            #add-point:AFTER FIELD dzehdate
+            {<point name="input.a.dzehdate" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzehdate
+            #add-point:CONTROLP dzehdate
+            {<point name="input.c.dzehdate" />}
+            #END add-point
+
+         #----<<dzehoriu>>----
+         BEFORE FIELD dzehoriu
+            #add-point:BEFORE FIELD dzehoriu
+            {<point name="input.b.dzehoriu" />}
+            #END add-point
+
+         AFTER FIELD dzehoriu
+            #add-point:AFTER FIELD dzehoriu
+            {<point name="input.a.dzehoriu" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzehoriu
+            #add-point:CONTROLP dzehoriu
+            {<point name="input.c.dzehoriu" />}
+            #END add-point
+
+         #----<<dzehorid>>----
+         BEFORE FIELD dzehorid
+            #add-point:BEFORE FIELD dzehorid
+            {<point name="input.b.dzehorid" />}
+            #END add-point
+
+         AFTER FIELD dzehorid
+            #add-point:AFTER FIELD dzehorid
+            {<point name="input.a.dzehorid" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzehorid
+            #add-point:CONTROLP dzehorid
+            {<point name="input.c.dzehorid" />}
+            #END add-point
+
+         #----<<dzehuser>>----
+         BEFORE FIELD dzehuser
+            #add-point:BEFORE FIELD dzehuser
+            {<point name="input.b.dzehuser" />}
+            #END add-point
+
+         AFTER FIELD dzehuser
+            #add-point:AFTER FIELD dzehuser
+            {<point name="input.a.dzehuser" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzehuser
+            #add-point:CONTROLP dzehuser
+            {<point name="input.c.dzehuser" />}
+            #END add-point
+
+         #----<<dzehdept>>----
+         BEFORE FIELD dzehdept
+            #add-point:BEFORE FIELD dzehdept
+            {<point name="input.b.dzehdept" />}
+            #END add-point
+
+         AFTER FIELD dzehdept
+            #add-point:AFTER FIELD dzehdept
+            {<point name="input.a.dzehdept" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzehdept
+            #add-point:CONTROLP dzehdept
+            {<point name="input.c.dzehdept" />}
+            #END add-point
+
+         #----<<dzehbuid>>----
+         BEFORE FIELD dzehbuid
+            #add-point:BEFORE FIELD dzehbuid
+            {<point name="input.b.dzehbuid" />}
+            #END add-point
+
+         AFTER FIELD dzehbuid
+            #add-point:AFTER FIELD dzehbuid
+            {<point name="input.a.dzehbuid" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD dzehbuid
+            #add-point:CONTROLP dzehbuid
+            {<point name="input.c.dzehbuid" />}
+            #END add-point
+
+
+	  
+	  
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE INPUT
+   END INPUT
+ 
+   CLOSE adzi010_bcl
+   COMMIT WORK
+   
+END FUNCTION
+ 
+ 
+#+ 單身陣列填充
+PRIVATE FUNCTION adzi010_b_fill(p_wc2)              #BODY FILL UP
+   {<Local define>}
+   DEFINE p_wc2           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #END add-point
+ 
+   LET g_sql = "SELECT '',dzeh001,dzeh002,dzeh003,dzeh004,dzeh005,dzeh006,dzeh007,dzeh008,dzeh009,dzehacti,dzehmodu,'',dzehdate,dzehoriu,'',dzehorid,'',dzehuser,'',dzehdept,'',dzehbuid FROM dzeh_t WHERE 1=1  AND ", p_wc2 CLIPPED,           #單身
+               " ORDER BY dzeh001" 
+   PREPARE adzi010_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR adzi010_pb
+ 
+   CALL g_dzeh_d.clear()
+
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   MESSAGE "Searching!" 
+   FOREACH b_fill_curs INTO g_dzeh_d[l_ac].actipic,g_dzeh_d[l_ac].dzeh001,g_dzeh_d[l_ac].dzeh002,g_dzeh_d[l_ac].dzeh003,g_dzeh_d[l_ac].dzeh004,g_dzeh_d[l_ac].dzeh005,g_dzeh_d[l_ac].dzeh006,g_dzeh_d[l_ac].dzeh007,g_dzeh_d[l_ac].dzeh008,g_dzeh_d[l_ac].dzeh009,g_dzeh_d[l_ac].dzehacti,g_dzeh_d[l_ac].dzehmodu,g_dzeh_d[l_ac].modu_desc,g_dzeh_d[l_ac].dzehdate,g_dzeh_d[l_ac].dzehoriu,g_dzeh_d[l_ac].oriu_desc,g_dzeh_d[l_ac].dzehorid,g_dzeh_d[l_ac].orid_desc,g_dzeh_d[l_ac].dzehuser,g_dzeh_d[l_ac].user_desc,g_dzeh_d[l_ac].dzehdept,g_dzeh_d[l_ac].dept_desc,g_dzeh_d[l_ac].dzehbuid
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+
+	  
+	  CALL adzi010_detail_show()      
+      
+      #add-point:單身資料抓取
+      {<point name="bfill.foreach"/>}
+      #END add-point
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( '', 9035, 0 )
+         EXIT FOREACH
+      END IF
+	  
+   END FOREACH
+ 
+   CALL g_dzeh_d.deleteElement(l_ac) 
+   MESSAGE "" 
+
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+END FUNCTION
+ 
+#+ 顯示相關資料
+PRIVATE FUNCTION adzi010_detail_show()      
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #END add-point
+   
+   #帶出預設欄位之值
+   LET g_dzeh_d[l_ac].modu_desc = cl_get_username(g_dzeh_d[l_ac].dzehmodu)
+   LET g_dzeh_d[l_ac].oriu_desc = cl_get_username(g_dzeh_d[l_ac].dzehoriu)
+   LET g_dzeh_d[l_ac].user_desc = cl_get_username(g_dzeh_d[l_ac].dzehuser)
+   LET g_dzeh_d[l_ac].dept_desc = cl_get_deptname(g_dzeh_d[l_ac].dzehdept)
+   LET g_dzeh_d[l_ac].orid_desc = cl_get_deptname(g_dzeh_d[l_ac].dzehorid)
+   LET g_dzeh_d[l_ac].actipic   = cl_get_actipic(g_dzeh_d[l_ac].dzehacti)
+   
+   #讀入ref值
+   
+ 
+END FUNCTION
+ 
+ 
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION adzi010_set_entry_b(p_cmd)                                                  
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1         
+   {</Local define>}
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #END add-point
+                                                                          
+   IF p_cmd = "a" AND ( NOT g_before_input_done ) THEN 
+      CALL cl_set_comp_entry("",TRUE)
+   END IF                                                                       
+                                                                                
+END FUNCTION                                                                    
+                                                                                
+ 
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION adzi010_set_no_entry_b(p_cmd)                                               
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1           
+   {</Local define>}
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry.define"/>}
+   #END add-point   
+                                                                                
+   IF p_cmd = "u" AND ( NOT g_before_input_done ) AND g_chkey = "N" THEN
+      CALL cl_set_comp_entry("",FALSE)
+   END IF                                                                       
+                                                                                
+END FUNCTION  
+ 
+#確認碼變更
+PRIVATE FUNCTION adzi010_statechange(pc_state)
+   DEFINE pc_state  LIKE type_t.chr5
+   DEFINE lc_state LIKE type_t.chr5
+   MESSAGE ""
+ 
+   IF cl_null(g_dzeh_d[l_ac].dzeh001) THEN
+      CALL cl_err('',-400,0)
+      RETURN
+   END IF
+   
+   LET lc_state = pc_state
+ 
+   UPDATE dzeh_t SET dzehacti = lc_state 
+      WHERE  dzeh001 = g_dzeh_d[l_ac].dzeh001
+
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('',SQLCA.sqlcode,0)
+   END IF
+   
+   IF g_dzeh_d[l_ac].dzehacti = "Y" THEN
+      CALL cl_set_act_visible("void", TRUE)
+   	CALL cl_set_act_visible("valid", FALSE)
+   ELSE
+      CALL cl_set_act_visible("valid", TRUE)
+   	CALL cl_set_act_visible("void", FALSE)
+   END IF
+ 
+END FUNCTION
+ 
+#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#END add-point
+ 
+

@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artt205_02" module="art" jobmode="N" type="c02a" industry="std" fix_arg="3" crtid="06254" crtdt="2016-01-11 17:00:56" modid="06254" moddt="2016-01-11 17:03:24" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtad001,rtad002,rtad002_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artt205_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="sel,rtad001,rtad002"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtad001"/>
+      <column id="rtad002">
+        <after>
+          <reference field="rtad002_desc" ref_field="rtad_t.rtad002" map_field="rtadent,rtad002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_1" state="i"/>
+        <controlp form="q_rtax001_1" state="c"/>
+      </column>
+      <column id="rtad002_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtad_t" page="1" linked="" pk="rtad001,rtad002">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,rtad001,rtad002,&apos;&apos; FROM rtad_t WHERE rtadent=? AND rtadsite=? AND rtad001=? AND rtad002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,rtad001,rtad002,&apos;&apos; FROM rtad_t WHERE rtadent= ? AND rtadsite= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

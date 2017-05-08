@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq860" module="ast" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="05948" crtdt="2016-07-31 22:15:55" modid="05948" moddt="2016-08-07 14:58:34" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="促銷商戶費用分攤明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="stkasite,stka002,stka003,stka004,stka001,stka005,stka006,stka007,stka010"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stka002,stkasite,stkasite_desc(chr500),stkadocno,stkaseq,stka001,stka003,stka004,stka004_desc(chr500),stka005,stka005_desc(chr500),stka006,stka006_desc(chr500),stka007,stka008,stka009,stka010,stka011"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stka002(b_stka002),stkasite(b_stkasite),stkasite_desc(b_stkasite_desc),stkadocno(b_stkadocno),stkaseq(b_stkaseq),stka001(b_stka001),stka003(b_stka003),stka004(b_stka004),stka004_desc(b_stka004_desc),stka005(b_stka005),stka005_desc(b_stka005_desc),stka006(b_stka006),stka006_desc(b_stka006_desc),stka007(b_stka007),stka008(b_stka008),stka009(b_stka009),stka010(b_stka010),stka011(b_stka011)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq860" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stka002,stkasite,stkadocno,stkaseq,stka001,stka003,stka004,stka005,stka006,stka007,stka008,stka009,stka010,stka011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="stka011(b_stka011)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="stka002"/>
+      <column id="stkasite">
+        <after>
+          <reference field="stkasite_desc" ref_field="stkasite" map_field="stkasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stkasite_desc"/>
+      <column id="stkadocno"/>
+      <column id="stkaseq" type="S" default="0"/>
+      <column id="stka001"/>
+      <column id="stka003"/>
+      <column id="stka004">
+        <after>
+          <reference field="stka004_desc" ref_field="stkasite,stka002" map_field="stkasite,stka002" ref_sql="SELECT prdwl003 FROM prdwl_t WHERE prdwlent=$varg_enterprise$var AND prdwlsite=? AND prdwl001=? AND prdwl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stka004_desc"/>
+      <column id="stka005">
+        <after>
+          <reference field="stka005_desc" ref_field="stka005" map_field="stka005" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stka005_desc"/>
+      <column id="stka006">
+        <after>
+          <reference field="stka006_desc" ref_field="stka006" map_field="stka006" ref_sql="SELECT mhbel003 FROM mhbel_t WHERE mhbelent=$varg_enterprise$var AND mhbel001=? AND mhbel002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stka006_desc"/>
+      <column id="stka007"/>
+      <column id="stka008" type="S" default="0"/>
+      <column id="stka009" type="S" default="0"/>
+      <column id="stka010"/>
+      <column id="stka011" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stka_t" page="1" linked="" pk="stkadocno,stkaseq">
+      <sql id="b_fill_sql" query="SELECT stka002,stkasite,&apos;&apos;,stkadocno,stkaseq,stka001,stka003,stka004,&apos;&apos;,stka005,&apos;&apos;,stka006,&apos;&apos;,stka007,stka008,stka009,stka010,stka011 FROM stka_t WHERE stkaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

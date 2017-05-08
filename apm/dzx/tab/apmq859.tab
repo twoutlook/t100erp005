@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmq859" module="apm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02159" crtdt="2014-12-05 16:25:51" modid="02749" moddt="2015-03-11 16:33:03" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="採購收貨預約查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="pmelsite,pmeldocno,pmeldocdt,pmem001,pmel002,pmel003,pmel004,pmel006,pmel007,pmem007"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pmelsite,pmelsite_desc(chr500),pmeldocno,pmel006,pmel006_desc(chr500),pmel007,pmel007_desc(chr500),pmel001,pmel002,pmel003,pmel003_desc(chr500),l_sum_pmem012(num20_6)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmemseq,pmem001,pmem002,pmem003,pmem004,pmem005,pmem006,pmem007,pmem007_desc(chr500),pmem007_desc_1(chr500),pmem008,pmem008_desc(chr500),pmdn020,pmem009,pmem009_desc(chr500),pmem010,pmem011,pmem011_desc(chr500),pmem012,pmem013,pmem014,pmem014_desc(chr500),pmem015,pmem015_desc(chr500),pmem016,pmem020,pmem017,pmem017_desc(chr500),pmem018,pmem018_desc(chr500),pmem019,pmem019_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pmelsite(b_pmelsite),pmelsite_desc(b_pmelsite_desc),pmeldocno(b_pmeldocno),pmel006(b_pmel006),pmel006_desc(b_pmel006_desc),pmel007(b_pmel007),pmel007_desc(b_pmel007_desc),pmel001(b_pmel001),pmel002(b_pmel002),pmel003(b_pmel003),pmel003_desc(b_pmel003_desc),l_sum_pmem012(l_sum_pmem012)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmemseq(b_pmemseq),pmem001(b_pmem001),pmem002(b_pmem002),pmem003(b_pmem003),pmem004(b_pmem004),pmem005(b_pmem005),pmem006(b_pmem006),pmem007(b_pmem007),pmem007_desc(b_pmem007_desc),pmem007_desc_1(b_pmem007_desc_1),pmem008(b_pmem008),pmem008_desc(b_pmem008_desc),pmdn020(b_pmdn020),pmem009(b_pmem009),pmem009_desc(b_pmem009_desc),pmem010(b_pmem010),pmem011(b_pmem011),pmem011_desc(b_pmem011_desc),pmem012(b_pmem012),pmem013(b_pmem013),pmem014(b_pmem014),pmem014_desc(b_pmem014_desc),pmem015(b_pmem015),pmem015_desc(b_pmem015_desc),pmem016(b_pmem016),pmem020(b_pmem020),pmem017(b_pmem017),pmem017_desc(b_pmem017_desc),pmem018(b_pmem018),pmem018_desc(b_pmem018_desc),pmem019(b_pmem019),pmem019_desc(b_pmem019_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmq859" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmelsite,pmeldocno,pmel006,pmel007,pmel001,pmel002,pmel003" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="pmemseq,pmem001,pmem002,pmem003,pmem004,pmem005,pmem006,pmem007,pmem008,pmem008_desc,pmdn020,pmem009,pmem010,pmem011,pmem012,pmem013,pmem014,pmem014_desc,pmem015,pmem015_desc,pmem016,pmem020,pmem017,pmem018,pmem019" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="pmelsite(b_pmelsite),pmeldocno(b_pmeldocno),pmel006(b_pmel006),pmel007(b_pmel007),pmel001(b_pmel001),pmel002(b_pmel002),pmel003(b_pmel003)"/>
+      <construct id="body" page="2" field="pmemseq(b_pmemseq),pmem001(b_pmem001),pmem002(b_pmem002),pmem003(b_pmem003),pmem004(b_pmem004),pmem005(b_pmem005),pmem006(b_pmem006),pmem007(b_pmem007),pmem008(b_pmem008),pmdn020(b_pmdn020),pmem009(b_pmem009),pmem010(b_pmem010),pmem011(b_pmem011),pmem012(b_pmem012),pmem013(b_pmem013),pmem014(b_pmem014),pmem015(b_pmem015),pmem016(b_pmem016),pmem020(b_pmem020),pmem017(b_pmem017),pmem018(b_pmem018),pmem019(b_pmem019)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pmelsite">
+        <after>
+          <reference field="pmelsite_desc" ref_field="pmelsite" map_field="pmelsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooef002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmelsite_desc"/>
+      <column id="pmeldocno"/>
+      <column id="pmel006">
+        <after>
+          <reference field="pmel006_desc" ref_field="pmel006" map_field="pmel006" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmel006_desc"/>
+      <column id="pmel007">
+        <after>
+          <reference field="pmel007_desc" ref_field="pmel007" map_field="pmel007" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmel007_desc"/>
+      <column id="pmel001"/>
+      <column id="pmel002"/>
+      <column id="pmel003">
+        <after>
+          <reference field="pmel003_desc" ref_field="pmel003" map_field="pmel003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;274&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmel003_desc"/>
+      <column id="l_sum_pmem012"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pmemseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmem001"/>
+      <column id="pmem002">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmem003">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmem004"/>
+      <column id="pmem005" def_scc="2055"/>
+      <column id="pmem006"/>
+      <column id="pmem007">
+        <after>
+          <reference field="pmem007_desc" ref_field="pmem007" map_field="pmem007" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmem007_desc"/>
+      <column id="pmem007_desc_1"/>
+      <column id="pmem008">
+        <after/>
+      </column>
+      <column id="pmem008_desc"/>
+      <column id="pmdn020" def_scc="2036">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmem009">
+        <after>
+          <reference field="pmem009_desc" ref_field="pmem_t.pmem009" map_field="pmem009" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmem009_desc"/>
+      <column id="pmem010" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmem011">
+        <after>
+          <reference field="pmem011_desc" ref_field="pmem_t.pmem011" map_field="pmem011" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmem011_desc"/>
+      <column id="pmem012" type="S" default="0"/>
+      <column id="pmem013" type="S" default="0"/>
+      <column id="pmem014">
+        <after/>
+      </column>
+      <column id="pmem014_desc"/>
+      <column id="pmem015">
+        <after/>
+      </column>
+      <column id="pmem015_desc"/>
+      <column id="pmem016"/>
+      <column id="pmem020"/>
+      <column id="pmem017">
+        <after>
+          <reference field="pmem017_desc" ref_field="pmem_t.pmem017" map_field="pmem017" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmem017_desc"/>
+      <column id="pmem018">
+        <after>
+          <reference field="pmem018_desc" ref_field="pmem_t.pmem018" map_field="pmem018" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmem018_desc"/>
+      <column id="pmem019">
+        <after>
+          <reference field="pmem019_desc" ref_field="pmem_t.pmem019" map_field="pmem019" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmem019_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmel_t" page="1" linked="" pk="pmeldocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pmelsite,&apos;&apos;,pmeldocno,pmel006,&apos;&apos;,pmel007,&apos;&apos;,pmel001,pmel002,pmel003,&apos;&apos;,&apos;&apos; FROM pmel_t WHERE pmelent= ? AND 1=1 "/>
+    </body>
+    <body id="pmem_t" page="2" linked="" pk="pmemseq" fk="pmemdocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT pmemseq,pmem001,pmem002,pmem003,pmem004,pmem005,pmem006,pmem007,&apos;&apos;,&apos;&apos;,pmem008,&apos;&apos;,&apos;&apos;,pmem009,&apos;&apos;,pmem010,pmem011,&apos;&apos;,pmem012,pmem013,pmem014,&apos;&apos;,pmem015,&apos;&apos;,pmem016,pmem020,pmem017,&apos;&apos;,pmem018,&apos;&apos;,pmem019,&apos;&apos; FROM pmem_t WHERE pmement=? AND pmemdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

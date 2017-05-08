@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi250" module="anm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02481" crtdt="2014-09-03 16:32:02" modid="06821" moddt="2015-07-15 16:10:53" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="網銀傳輸規則設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmaq001,nmaq001_desc(chr80),nmaq003,nmaq003_desc(chr80),nmaq002,nmaq006,nmaq004,nmaq007,nmaq005,nmaq013,nmaq008,nmaq009,nmaq010,nmaq011,nmaq012,nmaqownid,nmaqownid_desc(chr80),nmaqowndp,nmaqowndp_desc(chr80),nmaqcrtid,nmaqcrtid_desc(chr80),nmaqcrtdp,nmaqcrtdp_desc(chr80),nmaqcrtdt,nmaqmodid,nmaqmodid_desc(chr80),nmaqmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmar006,nmar007,nmar008,nmar009,nmar010,nmar011,nmar012,nmar013,nmar014,nmar015,nmar016,nmar017,nmar018,nmar019,nmar020,nmar021,nmar022,nmar023,nmar024"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="browser"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi250" method="dialog">
+    <section id="input">
+      <input id="head" field="nmaq001,nmaq003,nmaq002,nmaq006,nmaq004,nmaq007,nmaq005,nmaq013,nmaq008,nmaq009,nmaq010,nmaq011,nmaq012"/>
+      <input id="body" page="1" field="nmar006,nmar007,nmar008,nmar009,nmar010,nmar011,nmar012,nmar013,nmar014,nmar015,nmar016,nmar017,nmar018,nmar019,nmar020,nmar021,nmar022,nmar023,nmar024" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmaq001,nmaq001_desc,nmaq003,nmaq003_desc,nmaq002,nmaq006,nmaq004,nmaq007,nmaq005,nmaq013,nmaq008,nmaq009,nmaq010,nmaq011,nmaq012,nmaqownid,nmaqowndp,nmaqcrtid,nmaqcrtdp,nmaqcrtdt,nmaqmodid,nmaqmoddt"/>
+      <construct id="body" page="1" field="nmar006,nmar007,nmar008,nmar009,nmar010,nmar011,nmar012,nmar013,nmar014,nmar015,nmar016,nmar017,nmar018,nmar019,nmar020,nmar021,nmar022,nmar023,nmar024"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmaq001,nmaq002,nmaq003,nmaq004,nmaq005"/>
+      <set id="head" type="no_entry" field="nmaq001,nmaq002,nmaq003,nmaq004,nmaq005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmaq001">
+        <after>
+          <check chkid="v_nmaq001" id="chkandReturn"/>
+        </after>
+        <controlp form="q_nman001" state="i"/>
+        <controlp form="q_nman001" state="c"/>
+      </column>
+      <column id="nmaq001_desc"/>
+      <column id="nmaq003">
+        <after>
+          <check chkid="v_nmaq003" id="chkandReturn"/>
+        </after>
+        <controlp form="q_nmao001" state="i"/>
+        <controlp form="q_nmao001" state="c"/>
+      </column>
+      <column id="nmaq003_desc"/>
+      <column id="nmaq002"/>
+      <column id="nmaq006" type="S" default="1" def_scc="8731"/>
+      <column id="nmaq004" type="S" default="1" def_scc="8730"/>
+      <column id="nmaq007"/>
+      <column id="nmaq005"/>
+      <column id="nmaq013" type="S" default="N"/>
+      <column id="nmaq008"/>
+      <column id="nmaq009"/>
+      <column id="nmaq010" type="S" default="1" def_scc="8732"/>
+      <column id="nmaq011" type="S" default="1" def_scc="8733"/>
+      <column id="nmaq012"/>
+      <column id="nmaqownid">
+        <after>
+          <reference field="nmaqownid_desc" ref_field="nmaq_t.nmaqownid" map_field="nmaqownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaqownid_desc"/>
+      <column id="nmaqowndp">
+        <after>
+          <reference field="nmaqowndp_desc" ref_field="nmaq_t.nmaqowndp" map_field="nmaqowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmaqowndp_desc"/>
+      <column id="nmaqcrtid">
+        <after>
+          <reference field="nmaqcrtid_desc" ref_field="nmaq_t.nmaqcrtid" map_field="nmaqcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaqcrtid_desc"/>
+      <column id="nmaqcrtdp">
+        <after>
+          <reference field="nmaqcrtdp_desc" ref_field="nmaq_t.nmaqcrtdp" map_field="nmaqcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmaqcrtdp_desc"/>
+      <column id="nmaqcrtdt"/>
+      <column id="nmaqmodid">
+        <after>
+          <reference field="nmaqmodid_desc" ref_field="nmaq_t.nmaqmodid" map_field="nmaqmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaqmodid_desc"/>
+      <column id="nmaqmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmar006"/>
+      <column id="nmar007"/>
+      <column id="nmar008"/>
+      <column id="nmar009" type="S" default="1" def_scc="8734"/>
+      <column id="nmar010"/>
+      <column id="nmar011"/>
+      <column id="nmar012"/>
+      <column id="nmar013"/>
+      <column id="nmar014">
+        <controlp form="q_nmar014" state="i"/>
+        <controlp form="q_nmar014" state="c"/>
+      </column>
+      <column id="nmar015" type="S" default="N"/>
+      <column id="nmar016"/>
+      <column id="nmar017" type="S" default="N"/>
+      <column id="nmar018"/>
+      <column id="nmar019"/>
+      <column id="nmar020" type="S" default="N"/>
+      <column id="nmar021"/>
+      <column id="nmar022" type="S" default="N"/>
+      <column id="nmar023"/>
+      <column id="nmar024"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmaq_t" pk="nmaq001,nmaq002,nmaq003,nmaq004,nmaq005">
+      <sql id="forupd_sql" type="sql" query="SELECT nmaq001,&apos;&apos;,nmaq003,&apos;&apos;,nmaq002,nmaq006,nmaq004,nmaq007,nmaq005,nmaq013,nmaq008,nmaq009,nmaq010,nmaq011,nmaq012,nmaqownid,&apos;&apos;,nmaqowndp,&apos;&apos;,nmaqcrtid,&apos;&apos;,nmaqcrtdp,&apos;&apos;,nmaqcrtdt,nmaqmodid,&apos;&apos;,nmaqmoddt FROM nmaq_t WHERE nmaqent= ? AND nmaq001=? AND nmaq002=? AND nmaq003=? AND nmaq004=? AND nmaq005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmaq001,&apos;&apos;,nmaq003,&apos;&apos;,nmaq002,nmaq006,nmaq004,nmaq007,nmaq005,nmaq013,nmaq008,nmaq009,nmaq010,nmaq011,nmaq012,nmaqownid,&apos;&apos;,nmaqowndp,&apos;&apos;,nmaqcrtid,&apos;&apos;,nmaqcrtdp,&apos;&apos;,nmaqcrtdt,nmaqmodid,&apos;&apos;,nmaqmoddt FROM nmaq_t" order="nmaq001,nmaq002,nmaq003,nmaq004,nmaq005"/>
+    </head>
+    <body id="nmar_t" page="1" linked="" pk="nmar006" fk="nmar001,nmar002,nmar003,nmar004,nmar005">
+      <sql id="forupd_sql_detail" query="SELECT nmar006,nmar007,nmar008,nmar009,nmar010,nmar011,nmar012,nmar013,nmar014,nmar015,nmar016,nmar017,nmar018,nmar019,nmar020,nmar021,nmar022,nmar023,nmar024 FROM nmar_t WHERE nmarent=? AND nmar001=? AND nmar002=? AND nmar003=? AND nmar004=? AND nmar005=? AND nmar006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmar006,nmar007,nmar008,nmar009,nmar010,nmar011,nmar012,nmar013,nmar014,nmar015,nmar016,nmar017,nmar018,nmar019,nmar020,nmar021,nmar022,nmar023,nmar024 FROM nmar_t WHERE nmarent=? AND nmar001=? AND nmar002=? AND nmar003=? AND nmar004=? AND nmar005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

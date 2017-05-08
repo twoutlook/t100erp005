@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi931" module="anm" jobmode="N" type="i05" industry="std" fix_arg="0" crtid="02299" crtdt="2013-10-08 15:52:52" modid="02299" moddt="2013-10-08 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="資金收支項目存提碼維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbe001,nmbe002,nmbe002_desc(chr80),nmbe003,nmbe003_desc(chr80),nmbestus,nmbeownid,nmbeownid_desc(chr80),nmbeowndp,nmbeowndp_desc(chr80),nmbecrtid,nmbecrtid_desc(chr80),nmbecrtdp,nmbecrtdp_desc(chr80),nmbecrtdt,nmbemodid,nmbemodid_desc(chr80),nmbemoddt"/>
+      <var id="bs_field" value="nmbe001,nmbe002,nmbe002_desc(chr80),nmbe003,nmbe003_desc(chr80)" pk="nmbe001,nmbe002,nmbe003" order=""/>
+      <bs_reference field="nmbe002_desc" ref_field="nmbe001,nmbe002" ref_sql="SELECT nmbdl004 FROM nmbdl_t WHERE nmbdlent=$varg_enterprise$var AND nmbdl001=? AND nmbdl002=? AND nmbdl003=$varg_dlang$var"/>
+      <bs_reference field="nmbe003_desc" ref_field="nmbe003" ref_sql="SELECT nmajl003 FROM nmajl_t WHERE nmajlent=$varg_enterprise$var AND nmajl001=? AND nmajl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi931" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbe001,nmbe002,nmbe003,nmbestus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmbe001,nmbe002,nmbe003,nmbestus,nmbeownid,nmbeowndp,nmbecrtid,nmbecrtdp,nmbecrtdt,nmbemodid,nmbemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmbe001,nmbe002,nmbe003"/>
+      <set id="head" type="no_entry" field="nmbe001,nmbe002,nmbe003"/>
+    </init>
+    <init id="head">
+      <column id="nmbe001"/>
+      <column id="nmbe002">
+        <after>
+          <reference field="nmbe002_desc" ref_field="nmbe001,nmbe002" map_field="nmbe001,nmbe002" ref_sql="SELECT nmbdl004 FROM nmbdl_t WHERE nmbdlent=$varg_enterprise$var AND nmbdl001=? AND nmbdl002=? AND nmbdl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmbd002" state="i"/>
+        <controlp form="q_nmbd002" state="c"/>
+      </column>
+      <column id="nmbe002_desc"/>
+      <column id="nmbe003">
+        <after>
+          <reference field="nmbe003_desc" ref_field="nmbe_t.nmbe003" map_field="nmbeent,nmbe003" ref_sql="SELECT nmajl003 FROM nmajl_t WHERE nmajlent=$varg_enterprise$var AND nmajl001=? AND nmajl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="nmbe003_desc"/>
+      <column id="nmbestus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="nmbeownid">
+        <after>
+          <reference field="nmbeownid_desc" ref_field="nmbe_t.nmbeownid" map_field="nmbeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbeownid_desc"/>
+      <column id="nmbeowndp">
+        <after>
+          <reference field="nmbeowndp_desc" ref_field="nmbe_t.nmbeowndp" map_field="nmbeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbeowndp_desc"/>
+      <column id="nmbecrtid">
+        <after>
+          <reference field="nmbecrtid_desc" ref_field="nmbe_t.nmbecrtid" map_field="nmbecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbecrtid_desc"/>
+      <column id="nmbecrtdp">
+        <after>
+          <reference field="nmbecrtdp_desc" ref_field="nmbe_t.nmbecrtdp" map_field="nmbecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbecrtdp_desc"/>
+      <column id="nmbecrtdt"/>
+      <column id="nmbemodid">
+        <after>
+          <reference field="nmbemodid_desc" ref_field="nmbe_t.nmbemodid" map_field="nmbemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbemodid_desc"/>
+      <column id="nmbemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmbe_t" lid="nmbe003" pid="nmbe002" type="nmbe001" desc="" speed="nmbes_t" stype="nmbes001" slid="nmbes003" spid="nmbes002" pk="nmbe001,nmbe002,nmbe003">
+      <sql id="forupd_sql" type="sql" query="SELECT nmbe001,nmbe002,&apos;&apos;,nmbe003,&apos;&apos;,nmbestus,nmbeownid,&apos;&apos;,nmbeowndp,&apos;&apos;,nmbecrtid,&apos;&apos;,nmbecrtdp,&apos;&apos;,nmbecrtdt,nmbemodid,&apos;&apos;,nmbemoddt FROM nmbe_t WHERE nmbeent= ? AND nmbe001=? AND nmbe002=? AND nmbe003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmbe001,nmbe002,&apos;&apos;,nmbe003,&apos;&apos;,nmbestus,nmbeownid,&apos;&apos;,nmbeowndp,&apos;&apos;,nmbecrtid,&apos;&apos;,nmbecrtdp,&apos;&apos;,nmbecrtdt,nmbemodid,&apos;&apos;,nmbemoddt FROM nmbe_t" order="nmbe001,nmbe002,nmbe003"/>
+    </head>
+  </dataset>
+</assembly>
+

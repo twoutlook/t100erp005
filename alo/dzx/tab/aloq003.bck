@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aloq003" module="alo" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="00824" crtdt="2014-01-17 15:47:38" modid="01856" moddt="2016-08-10 11:43:08" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="修改歷程查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),logc001,logc001_desc(chr500),logc002,logc002_desc(chr500),logc003,logc004,logc005,logc005_desc(chr500),logc006,logc007,logc008"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),logc001(b_logc001),logc001_desc(b_logc001_desc),logc002(b_logc002),logc002_desc(b_logc002_desc),logc003(b_logc003),logc004(b_logc004),logc005(b_logc005),logc005_desc(b_logc005_desc),logc006(b_logc006),logc007(b_logc007),logc008(b_logc008)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="alo" filename="aloq003" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="logc001,logc002,logc003,logc004,logc005,logc006,logc007,logc008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="logc001(b_logc001),logc002(b_logc002),logc003(b_logc003),logc004(b_logc004),logc005(b_logc005),logc006(b_logc006),logc007(b_logc007),logc008(b_logc008)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="logc001">
+        <after>
+          <reference field="logc001_desc" ref_field="logc001" map_field="logc001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_gzxa001" state="i"/>
+        <controlp form="q_gzxa001" state="c"/>
+      </column>
+      <column id="logc001_desc"/>
+      <column id="logc002">
+        <after>
+          <check chkid="q_gzza001_1" id="isExist"/>
+          <reference field="logc002_desc" ref_field="logc002" map_field="logc002" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzza001_1" state="c"/>
+      </column>
+      <column id="logc002_desc"/>
+      <column id="logc003"/>
+      <column id="logc004"/>
+      <column id="logc005">
+        <after>
+          <reference field="logc005_desc" ref_field="logc005" map_field="logc005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001" state="i"/>
+        <controlp form="q_ooea001" state="c"/>
+      </column>
+      <column id="logc005_desc"/>
+      <column id="logc006"/>
+      <column id="logc007"/>
+      <column id="logc008"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="logc_t" page="1" linked="" pk="logc001,logc002,logc003">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,logc001,&apos;&apos;,logc002,&apos;&apos;,logc003,logc004,logc005,&apos;&apos;,logc006,logc007,logc008 FROM logc_t WHERE logcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

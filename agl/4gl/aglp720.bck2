@@ -1,0 +1,1243 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglp720.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2015-11-17 14:23:43), PR版次:0001(2016-04-01 10:08:59)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000026
+#+ Filename...: aglp720
+#+ Description: 合併報表沖銷前各期餘額產生作業
+#+ Creator....: 06821(2015-11-17 14:13:59)
+#+ Modifier...: 06821 -SD/PR- 06821
+ 
+{</section>}
+ 
+{<section id="aglp720.global" >}
+#應用 p01 樣板自動產生(Version:18)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       gldtld LIKE gldt_t.gldtld, 
+   gldtld_desc LIKE type_t.chr80, 
+   gldt001 LIKE gldt_t.gldt001, 
+   gldt001_desc LIKE type_t.chr80, 
+   gldt005 LIKE gldt_t.gldt005, 
+   l_type LIKE type_t.chr500, 
+   gldt006 LIKE gldt_t.gldt006, 
+   chk1 LIKE type_t.chr500, 
+   chk2 LIKE type_t.chr500, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_gldt_ar DYNAMIC ARRAY OF RECORD
+          chr1      LIKE type_t.chr1000,
+          dat       LIKE type_t.dat
+          END RECORD
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglp720.main" >}
+MAIN
+   #add-point:main段define (客製用)
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("agl","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call
+      
+      #end add-point
+      CALL aglp720_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aglp720 WITH FORM cl_ap_formpath("agl",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL aglp720_init()
+ 
+      #進入選單 Menu (="N")
+      CALL aglp720_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aglp720
+   END IF
+ 
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aglp720.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION aglp720_init()
+ 
+   #add-point:init段define (客製用)
+   
+   #end add-point
+   #add-point:ui_dialog段define 
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   CALL cl_set_combo_scc('l_type','9998')
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp720.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aglp720_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用)
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   CALL aglp720_qbe_clear()
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.gldtld,g_master.gldt001,g_master.gldt005,g_master.l_type,g_master.gldt006, 
+             g_master.chk1,g_master.chk2 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gldtld
+            
+            #add-point:AFTER FIELD gldtld name="input.a.gldtld"
+            #合併帳別
+            LET g_master.gldtld_desc = ' '
+            DISPLAY BY NAME g_master.gldtld_desc
+            IF NOT cl_null(g_master.gldtld) THEN
+               CALL s_merge_ld_with_comp_chk(g_master.gldtld,g_master.gldt001,g_user,1)RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_master.gldtld = ''
+                  LET g_master.gldtld_desc = ''
+                  DISPLAY BY NAME g_master.gldtld,g_master.gldtld_desc    
+                  NEXT FIELD CURRENT
+               END IF             
+            END IF
+            CALL aglp720_set_entry()
+            CALL s_desc_get_ld_desc(g_master.gldtld) RETURNING g_master.gldtld_desc
+            DISPLAY BY NAME g_master.gldtld,g_master.gldtld_desc                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gldtld
+            #add-point:BEFORE FIELD gldtld name="input.b.gldtld"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gldtld
+            #add-point:ON CHANGE gldtld name="input.g.gldtld"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gldt001
+            
+            #add-point:AFTER FIELD gldt001 name="input.a.gldt001"
+            #上層公司
+            LET g_master.gldt001_desc = ' '
+            DISPLAY BY NAME g_master.gldt001_desc
+            IF NOT cl_null(g_master.gldt001) THEN
+               CALL s_merge_ld_with_comp_chk(g_master.gldtld,g_master.gldt001,g_user,1)RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_master.gldt001 = ''
+                  LET g_master.gldt001_desc = ''
+                  DISPLAY BY NAME g_master.gldt001,g_master.gldt001_desc 
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            LET g_master.gldt001_desc = s_desc_glda001_desc(g_master.gldt001)
+            DISPLAY BY NAME g_master.gldt001,g_master.gldt001_desc,g_master.gldtld,g_master.gldtld_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gldt001
+            #add-point:BEFORE FIELD gldt001 name="input.b.gldt001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gldt001
+            #add-point:ON CHANGE gldt001 name="input.g.gldt001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gldt005
+            #add-point:BEFORE FIELD gldt005 name="input.b.gldt005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gldt005
+            
+            #add-point:AFTER FIELD gldt005 name="input.a.gldt005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gldt005
+            #add-point:ON CHANGE gldt005 name="input.g.gldt005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_type
+            #add-point:BEFORE FIELD l_type name="input.b.l_type"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_type
+            
+            #add-point:AFTER FIELD l_type name="input.a.l_type"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_type
+            #add-point:ON CHANGE l_type name="input.g.l_type"
+            CALL aglp720_set_entry()
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gldt006
+            #add-point:BEFORE FIELD gldt006 name="input.b.gldt006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gldt006
+            
+            #add-point:AFTER FIELD gldt006 name="input.a.gldt006"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gldt006
+            #add-point:ON CHANGE gldt006 name="input.g.gldt006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD chk1
+            #add-point:BEFORE FIELD chk1 name="input.b.chk1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD chk1
+            
+            #add-point:AFTER FIELD chk1 name="input.a.chk1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE chk1
+            #add-point:ON CHANGE chk1 name="input.g.chk1"
+ 
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD chk2
+            #add-point:BEFORE FIELD chk2 name="input.b.chk2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD chk2
+            
+            #add-point:AFTER FIELD chk2 name="input.a.chk2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE chk2
+            #add-point:ON CHANGE chk2 name="input.g.chk2"
+ 
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.gldtld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gldtld
+            #add-point:ON ACTION controlp INFIELD gldtld name="input.c.gldtld"
+            #應用 a07 樣板自動產生(Version:2)   
+            #合併帳別
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL                                                
+            LET g_qryparam.state = 'i'                                                     
+            LET g_qryparam.reqry = FALSE                                                   
+            LET g_qryparam.default1 = g_master.gldtld                                     
+            LET g_qryparam.arg1 = g_user                                 #人員權限         
+            LET g_qryparam.arg2 = g_dept                                 #部門權限         
+            LET g_qryparam.where = " glaald IN (SELECT DISTINCT gldbld FROM gldb_t ",              
+                                               "  WHERE gldbstus = 'Y' ",                                    
+                                               "   AND gldbent = '",g_enterprise,"') "                          
+            CALL q_authorised_ld()                                                         
+            LET g_master.gldtld = g_qryparam.return1                                      
+            CALL s_desc_get_ld_desc(g_master.gldtld) RETURNING g_master.gldtld_desc      
+            CALL aglp720_set_entry()
+            DISPLAY BY NAME g_master.gldtld,g_master.gldtld_desc                         
+            NEXT FIELD gldtld                                                             
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.gldt001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gldt001
+            #add-point:ON ACTION controlp INFIELD gldt001 name="input.c.gldt001"
+            #應用 a07 樣板自動產生(Version:2)   
+            #上層公司
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.gldt001
+            LET g_qryparam.where = "gldc009 = 'Y' AND gldbstus = 'Y' ",
+                                   " AND gldcld = '",g_master.gldtld,"' "  
+            CALL q_gldc001()    
+            LET g_master.gldt001 = g_qryparam.return1
+            CALL s_desc_glda001_desc(g_master.gldt001) RETURNING g_master.gldt001_desc
+            DISPLAY BY NAME g_master.gldt001,g_master.gldt001_desc
+            NEXT FIELD gldt001
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.gldt005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gldt005
+            #add-point:ON ACTION controlp INFIELD gldt005 name="input.c.gldt005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_type
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_type
+            #add-point:ON ACTION controlp INFIELD l_type name="input.c.l_type"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.gldt006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gldt006
+            #add-point:ON ACTION controlp INFIELD gldt006 name="input.c.gldt006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.chk1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD chk1
+            #add-point:ON ACTION controlp INFIELD chk1 name="input.c.chk1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.chk2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD chk2
+            #add-point:ON ACTION controlp INFIELD chk2 name="input.c.chk2"
+            
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         
+      
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL aglp720_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            CALL aglp720_qbe_clear()
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL aglp720_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL aglp720_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = aglp720_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp720.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION aglp720_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用)
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp720.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION aglp720_process(ls_js)
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define 
+   DEFINE l_gldt      RECORD LIKE gldt_t.*  #主要TABLE
+   DEFINE l_gldn      RECORD LIKE gldn_t.*  #來源TABLE
+   DEFINE l_gldpq     RECORD                #來源TABLE
+                      gldpld    LIKE gldp_t.gldpld,                           
+                      gldp001   LIKE gldp_t.gldp001,    
+                      gldp002   LIKE gldp_t.gldp002,    
+                      gldp003   LIKE gldp_t.gldp003,    
+                      gldp004   LIKE gldp_t.gldp004,    
+                      gldq001   LIKE gldq_t.gldq001,  
+                      gldp008   LIKE gldp_t.gldp008,                     
+                      gldq017   LIKE gldq_t.gldq017,    
+                      gldq018   LIKE gldq_t.gldq018,    
+                      gldq003   LIKE gldq_t.gldq003,    
+                      gldq004   LIKE gldq_t.gldq004,   
+                      gldq005   LIKE gldq_t.gldq005, 
+                      gldq006   LIKE gldq_t.gldq006,    
+                      gldq007   LIKE gldq_t.gldq007,   
+                      gldq008   LIKE gldq_t.gldq008,    
+                      gldq009   LIKE gldq_t.gldq009,    
+                      gldq010   LIKE gldq_t.gldq010,   
+                      gldq014   LIKE gldq_t.gldq014,              
+                      gldq015   LIKE gldq_t.gldq015,  
+                      gldq016   LIKE gldq_t.gldq016,   
+                      gldp011   LIKE gldp_t.gldp011,
+                      gldq019   LIKE gldq_t.gldq019,  
+                      gldq020   LIKE gldq_t.gldq020,    
+                      gldp014   LIKE gldp_t.gldp014,    
+                      gldq021   LIKE gldq_t.gldq021,   
+                      gldq022   LIKE gldq_t.gldq022,              
+                      gldq011   LIKE gldq_t.gldq011,  
+                      gldq012   LIKE gldq_t.gldq012,   
+                      gldq013   LIKE gldq_t.gldq013                        
+                      END RECORD                         
+   DEFINE l_sql       STRING                               
+   DEFINE l_glaa003   LIKE glaa_t.glaa003   #會計周期參照表
+   DEFINE l_gldt006   LIKE gldt_t.gldt006   #期別
+   DEFINE l_gldq001is LIKE gldq_t.gldq001   #本期損益(IS)科目
+   DEFINE l_argv      LIKE gldt_t.gldt006   #編制合併期別抓取條件
+   DEFINE l_cnt       LIKE type_t.num10  
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理
+   #合併期別-----#   
+   #取得會計參照表
+   SELECT glaa003 INTO l_glaa003 FROM glaa_t  WHERE glaaent = g_enterprise AND glaald = g_master.gldtld
+   
+   #依編制合併期別抓取條件
+   LET l_argv = ''
+   CASE g_master.l_type
+      WHEN 0
+         LET l_argv = g_master.gldt006
+      WHEN 1
+         LET l_argv = g_master.chk1
+      WHEN 2
+         LET l_argv = g_master.chk2
+   END CASE
+   CALL s_merge_get_glav006(l_glaa003,g_master.gldt005,g_master.l_type,l_argv) RETURNING g_sub_success,g_errno,l_gldt006
+   
+   #本期損益IS科目
+   LET l_gldq001is = NULL
+   SELECT glab005 INTO l_gldq001is 
+     FROM glab_t
+    WHERE glabent = g_enterprise
+      AND glabld  = g_master.gldtld
+      AND glab001 = '12' 
+      AND glab002 = '9929'
+      AND glab003 = '9929_03'
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE aglp720_process_cs CURSOR FROM ls_sql
+#  FOREACH aglp720_process_cs INTO
+   #add-point:process段process
+   LET g_success = 'Y'
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+
+   #gldn---寫入
+   INITIALIZE l_gldn.* TO NULL
+   LET l_sql = "SELECT * FROM gldn_t ",
+               " WHERE gldnent = ",g_enterprise," ",
+               "   AND gldnld = '",g_master.gldtld,"' ",
+               "   AND gldn001 = '",g_master.gldt001,"' ",
+               "   AND gldn005 = '",g_master.gldt005,"' ",
+               "   AND gldn006 = '",l_gldt006,"' ",
+               "   AND gldn040 = gldn032 AND gldn041 = gldn033 ",
+               "   AND gldn040 IN (SELECT gldc002 FROM gldc_t WHERE gldcent = ",g_enterprise," AND gldcld='",g_master.gldtld,"' AND gldc001 = '",g_master.gldt001,"' AND gldc005 = 'Y')" 
+   DECLARE sel_gldnc CURSOR FROM l_sql
+   FOREACH sel_gldnc INTO l_gldn.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF 
+      
+      INITIALIZE l_gldt.* TO NULL
+      LET l_gldt.gldtent = g_enterprise   #key
+      LET l_gldt.gldtld  = l_gldn.gldnld
+      LET l_gldt.gldt001 = l_gldn.gldn001
+      LET l_gldt.gldt002 = l_gldn.gldn002
+      LET l_gldt.gldt003 = l_gldn.gldn040
+      LET l_gldt.gldt004 = l_gldn.gldn041
+      LET l_gldt.gldt005 = l_gldn.gldn005
+      LET l_gldt.gldt006 = l_gldn.gldn006
+      LET l_gldt.gldt007 = l_gldn.gldn007
+      LET l_gldt.gldt008 = l_gldn.gldn008
+      LET l_gldt.gldt009 = l_gldn.gldn009
+      LET l_gldt.gldt010 = l_gldn.gldn010      
+      LET l_gldt.gldt011 = l_gldn.gldn011
+      LET l_gldt.gldt012 = l_gldn.gldn012
+      LET l_gldt.gldt013 = l_gldn.gldn013
+      LET l_gldt.gldt014 = l_gldn.gldn014 #核算項 
+      LET l_gldt.gldt015 = l_gldn.gldn015 
+      LET l_gldt.gldt016 = l_gldn.gldn016
+      LET l_gldt.gldt017 = l_gldn.gldn017
+      LET l_gldt.gldt018 = l_gldn.gldn018
+      LET l_gldt.gldt019 = l_gldn.gldn019
+      LET l_gldt.gldt020 = l_gldn.gldn020
+      LET l_gldt.gldt021 = l_gldn.gldn021
+      LET l_gldt.gldt022 = l_gldn.gldn022
+      LET l_gldt.gldt023 = l_gldn.gldn024
+      LET l_gldt.gldt024 = l_gldn.gldn025
+      LET l_gldt.gldt025 = l_gldn.gldn026
+      LET l_gldt.gldt026 = l_gldn.gldn027
+      LET l_gldt.gldt027 = l_gldn.gldn028
+      LET l_gldt.gldt028 = l_gldn.gldn029
+      LET l_gldt.gldt029 = l_gldn.gldn030
+      LET l_gldt.gldt030 = l_gldn.gldn031
+      LET l_gldt.gldt031 = l_gldn.gldn032
+      LET l_gldt.gldt032 = l_gldn.gldn033
+      LET l_gldt.gldt033 = l_gldn.gldn034
+      LET l_gldt.gldt034 = l_gldn.gldn035
+      LET l_gldt.gldt035 = l_gldn.gldn036
+      LET l_gldt.gldt036 = l_gldn.gldn037
+      LET l_gldt.gldt037 = l_gldn.gldn038
+      LET l_gldt.gldt038 = l_gldn.gldn039
+
+      DELETE FROM gldt_t 
+       WHERE gldtent = g_enterprise
+         AND gldtld  = l_gldt.gldtld   
+         AND gldt001 = l_gldt.gldt001  
+         AND gldt002 = l_gldt.gldt002  
+         AND gldt003 = l_gldt.gldt003  
+         AND gldt004 = l_gldt.gldt004  
+         AND gldt005 = l_gldt.gldt005  
+         AND gldt006 = l_gldt.gldt006  
+         AND gldt007 = l_gldt.gldt007  
+         AND gldt008 = l_gldt.gldt008
+         AND gldt031 = l_gldt.gldt031  
+         AND gldt032 = l_gldt.gldt032  
+
+     #insert
+     INSERT INTO gldt_t(gldtent,gldtld,gldt001,gldt002,gldt003,gldt004,gldt005,gldt006, 
+                        gldt007,gldt008,gldt009,gldt010,gldt011,gldt012,gldt013,gldt014, 
+                        gldt015,gldt016,gldt017,gldt018,gldt019,gldt020,gldt021,gldt022, 
+                        gldt023,gldt024,gldt025,gldt026,gldt027,gldt028,gldt029,gldt030, 
+                        gldt031,gldt032,gldt033,gldt034,gldt035,gldt036,gldt037,gldt038) 
+                 VALUES(g_enterprise,l_gldn.gldnld,l_gldn.gldn001,l_gldn.gldn002,l_gldn.gldn040,l_gldn.gldn041,l_gldn.gldn005,l_gldn.gldn006,
+                        l_gldn.gldn007,l_gldn.gldn008,l_gldn.gldn009,l_gldn.gldn010,l_gldn.gldn011,l_gldn.gldn012,l_gldn.gldn013,l_gldn.gldn014,
+                        l_gldn.gldn015,l_gldn.gldn016,l_gldn.gldn017,l_gldn.gldn018,l_gldn.gldn019,l_gldn.gldn020,l_gldn.gldn021,l_gldn.gldn022,
+                        l_gldn.gldn024,l_gldn.gldn025,l_gldn.gldn026,l_gldn.gldn027,l_gldn.gldn028,l_gldn.gldn029,l_gldn.gldn030,l_gldn.gldn031,
+                        l_gldn.gldn032,l_gldn.gldn033,l_gldn.gldn034,l_gldn.gldn035,l_gldn.gldn036,l_gldn.gldn037,l_gldn.gldn038,l_gldn.gldn039)
+     
+     IF SQLCA.SQLcode  THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = "ins gldt_t_gldn"
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        LET g_success = 'N'
+        EXIT FOREACH
+     END IF
+   END FOREACH
+ 
+   #gldpq---寫入
+   INITIALIZE l_gldpq.* TO NULL
+   LET l_sql = " SELECT gldpld,gldp001,gldp002,gldp003,gldp004,gldq001,gldp008,SUM(gldq017),SUM(gldq018),
+                        COALESCE(gldq003,' '),COALESCE(gldq004,' '),COALESCE(gldq005,' '),COALESCE(gldq006,' '),COALESCE(gldq007,' '),COALESCE(gldq008,' '),COALESCE(gldq009,' '),COALESCE(gldq010,' '),COALESCE(gldq014,' '),COALESCE(gldq015,' '),
+                        COALESCE(gldq016,' '),gldp011,SUM(gldq019),SUM(gldq020),gldp014,SUM(gldq021),SUM(gldq022),COALESCE(gldq011,' '),COALESCE(gldq012,' '),COALESCE(gldq013,' ') ",
+               "  FROM gldq_t,gldp_t ",
+               "  WHERE gldqent = gldpent ",
+               "    AND gldqdocno = gldpdocno ",
+               "    AND gldpent = ",g_enterprise," ",
+               "    AND gldpstus = 'Y' ",
+               "    AND gldpld   = '",g_master.gldtld,"' ",
+               "    AND gldp001 IN (SELECT gldc002 FROM gldc_t WHERE gldcent = ",g_enterprise," AND gldcld='",g_master.gldtld,"' AND gldc001 = '",g_master.gldt001,"' AND gldc005 = 'Y') ",
+               "    AND gldp003  = '",g_master.gldt005,"' ",
+               "    AND gldp004  = '",l_gldt006,"' ",
+               "    AND gldp005 = '1' ",
+               "    AND gldp006 IN ('U','W','V','8','9') "
+   
+   IF NOT cl_null(l_gldq001is) THEN
+      LET l_sql = l_sql, " AND gldq001 <> '",l_gldq001is,"' "
+   END IF
+   
+   LET l_sql = l_sql, " GROUP BY gldpld,gldp001,gldp002,gldp003,gldp004,gldq001,gldp008,gldq003,gldq004,gldq005,
+                                 gldq006,gldq007,gldq008,gldq009,gldq010,gldq014,gldq015,gldq016,gldp011,gldp014,
+                                 gldq011,gldq012,gldq013"
+   
+   DECLARE sel_gldpqc CURSOR FROM l_sql
+   FOREACH sel_gldpqc INTO l_gldpq.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF 
+
+
+      INITIALIZE l_gldt.* TO NULL
+      LET l_gldt.gldtent = g_enterprise     
+      LET l_gldt.gldtld  = l_gldpq.gldpld
+      
+      #上層公司編號,帳別
+      SELECT gldc001,gldc003 INTO l_gldt.gldt001,l_gldt.gldt002 FROM gldc_t WHERE gldcent = g_enterprise AND gldcld = g_master.gldtld AND gldc002 = l_gldpq.gldp001
+
+      LET l_gldt.gldt001 = l_gldt.gldt001
+      LET l_gldt.gldt002 = l_gldt.gldt002
+      LET l_gldt.gldt003 = l_gldpq.gldp001
+      
+      #個體公司帳別
+      CALL s_merge_get_gl_ld(g_master.gldtld,l_gldpq.gldp001) RETURNING l_gldpq.gldp002
+      
+      LET l_gldt.gldt004 = l_gldpq.gldp002
+      LET l_gldt.gldt005 = l_gldpq.gldp003
+      LET l_gldt.gldt006 = l_gldpq.gldp004
+      LET l_gldt.gldt007 = l_gldpq.gldq001
+      LET l_gldt.gldt009 = l_gldpq.gldp008
+      LET l_gldt.gldt010 = l_gldpq.gldq017      
+      LET l_gldt.gldt011 = l_gldpq.gldq018
+      IF l_gldt.gldt010 > l_gldt.gldt011 THEN
+         LET l_gldt.gldt012 = '1'
+         LET l_gldt.gldt013 = '0'
+      ELSE
+         LET l_gldt.gldt012 = '0'
+         LET l_gldt.gldt013 = '1'
+      END IF
+      LET l_gldt.gldt014 = l_gldpq.gldq003    #核算項 
+      LET l_gldt.gldt015 = l_gldpq.gldq004 
+      LET l_gldt.gldt016 = l_gldpq.gldq005
+      LET l_gldt.gldt017 = l_gldpq.gldq006
+      LET l_gldt.gldt018 = l_gldpq.gldq007
+      LET l_gldt.gldt019 = l_gldpq.gldq008
+      LET l_gldt.gldt020 = l_gldpq.gldq009
+      LET l_gldt.gldt021 = l_gldpq.gldq010
+      LET l_gldt.gldt022 = l_gldpq.gldq014
+      LET l_gldt.gldt023 = l_gldpq.gldq015
+      LET l_gldt.gldt024 = l_gldpq.gldq016
+      LET l_gldt.gldt025 = l_gldpq.gldp001
+      LET l_gldt.gldt026 = l_gldpq.gldq019
+      LET l_gldt.gldt027 = l_gldpq.gldq020
+      LET l_gldt.gldt028 = l_gldpq.gldp014
+      LET l_gldt.gldt029 = l_gldpq.gldq021
+      LET l_gldt.gldt030 = l_gldpq.gldq022
+      LET l_gldt.gldt031 = l_gldpq.gldp001
+      LET l_gldt.gldt032 = l_gldpq.gldp002
+      LET l_gldt.gldt033 = ''
+      LET l_gldt.gldt034 = ''
+      LET l_gldt.gldt035 = ''
+      LET l_gldt.gldt036 = l_gldpq.gldq011
+      LET l_gldt.gldt037 = l_gldpq.gldq012
+      LET l_gldt.gldt038 = l_gldpq.gldq013
+   
+      CALL g_gldt_ar.clear()
+      LET g_gldt_ar[1].chr1  = l_gldt.gldt014
+      LET g_gldt_ar[2].chr1  = l_gldt.gldt015
+      LET g_gldt_ar[3].chr1  = l_gldt.gldt016
+      LET g_gldt_ar[4].chr1  = l_gldt.gldt017
+      LET g_gldt_ar[5].chr1  = l_gldt.gldt018
+      LET g_gldt_ar[6].chr1  = l_gldt.gldt019
+      LET g_gldt_ar[7].chr1  = l_gldt.gldt020
+      LET g_gldt_ar[8].chr1  = l_gldt.gldt021
+      LET g_gldt_ar[9].chr1  = l_gldt.gldt036 
+      LET g_gldt_ar[10].chr1 = l_gldt.gldt037
+      LET g_gldt_ar[11].chr1 = l_gldt.gldt038
+      LET g_gldt_ar[12].chr1 = l_gldt.gldt022 
+      LET g_gldt_ar[13].chr1 = l_gldt.gldt023 
+      LET g_gldt_ar[14].chr1 = l_gldt.gldt024 
+      
+      CALL s_merge_get_gldn008(g_gldt_ar) RETURNING l_gldt.gldt008
+
+      #檢查是否存在
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM gldt_t 
+       WHERE gldtent = g_enterprise
+         AND gldtld  = l_gldt.gldtld   
+         AND gldt001 = l_gldt.gldt001  
+         AND gldt002 = l_gldt.gldt002  
+         AND gldt003 = l_gldt.gldt003  
+         AND gldt004 = l_gldt.gldt004  
+         AND gldt005 = l_gldt.gldt005  
+         AND gldt006 = l_gldt.gldt006  
+         AND gldt007 = l_gldt.gldt007   
+         AND gldt008 = l_gldt.gldt008  
+         AND gldt031 = l_gldt.gldt031  
+         AND gldt032 = l_gldt.gldt032  
+
+      IF l_cnt > 0 THEN
+         #UPDATE
+         UPDATE gldt_t SET
+                gldt010 = l_gldt.gldt010, 
+                gldt011 = l_gldt.gldt011, 
+                gldt026 = l_gldt.gldt026, 
+                gldt027 = l_gldt.gldt027, 
+                gldt029 = l_gldt.gldt029, 
+                gldt030 = l_gldt.gldt030  
+          WHERE gldtent = g_enterprise     
+            AND gldtld  = l_gldt.gldtld   
+            AND gldt001 = l_gldt.gldt001
+            AND gldt002 = l_gldt.gldt002
+            AND gldt003 = l_gldt.gldt003
+            AND gldt004 = l_gldt.gldt004           
+            AND gldt005 = l_gldt.gldt005
+            AND gldt006 = l_gldt.gldt006
+            AND gldt007 = l_gldt.gldt007
+            AND gldt008 = l_gldt.gldt008           
+            AND gldt031 = l_gldt.gldt031
+            AND gldt032 = l_gldt.gldt032
+            
+         IF SQLCA.SQLcode OR SQLCA.SQLERRD[3]=0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "upd gldt_t_gldpq"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET g_success = 'N'
+         END IF 
+      ELSE
+         #INSERT
+         INSERT INTO gldt_t(gldtent,gldtld,gldt001,gldt002,gldt003,gldt004,gldt005,gldt006, 
+                            gldt007,gldt008,gldt009,gldt010,gldt011,gldt012,gldt013,gldt014, 
+                            gldt015,gldt016,gldt017,gldt018,gldt019,gldt020,gldt021,gldt022, 
+                            gldt023,gldt024,gldt025,gldt026,gldt027,gldt028,gldt029,gldt030, 
+                            gldt031,gldt032,gldt033,gldt034,gldt035,gldt036,gldt037,gldt038) 
+                      VALUES(g_enterprise,l_gldpq.gldpld,l_gldt.gldt001,l_gldt.gldt002,l_gldpq.gldp001,l_gldpq.gldp002,l_gldpq.gldp003,l_gldpq.gldp004,
+                             l_gldpq.gldq001,l_gldt.gldt008,l_gldpq.gldp008,l_gldpq.gldq017,l_gldpq.gldq018,l_gldt.gldt012,l_gldt.gldt013,l_gldpq.gldq003,
+                             l_gldpq.gldq004,l_gldpq.gldq005,l_gldpq.gldq006,l_gldpq.gldq007,l_gldpq.gldq008,l_gldpq.gldq009,l_gldpq.gldq010,l_gldpq.gldq014,
+                             l_gldpq.gldq015,l_gldpq.gldq016,l_gldpq.gldp011,l_gldpq.gldq019,l_gldpq.gldq020,l_gldpq.gldp014,l_gldpq.gldq021,l_gldpq.gldq022,
+                             l_gldpq.gldp001,l_gldpq.gldp002,'1','1','1',l_gldpq.gldq011,l_gldpq.gldq012,l_gldpq.gldq013)
+
+         IF SQLCA.SQLcode  THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "ins gldt_t_gldpq"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET g_success = 'N'
+         END IF
+      END IF 
+
+      IF g_success = 'N' THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+      
+   IF g_success = 'Y' THEN
+      #寫入合併報表各公司執行階段記錄檔
+      CALL s_merge_ins_glec(g_master.gldtld,g_master.gldt001,g_prog) RETURNING g_sub_success
+      IF NOT g_sub_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_err_collect_show()         
+         RETURN
+      ELSE
+         CALL s_transaction_end('Y','0')
+         CALL cl_err_collect_show() 
+      END IF 
+   ELSE
+      CALL s_transaction_end('N','0')
+      CALL cl_err_collect_show()         
+      RETURN
+   END IF
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL aglp720_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp720.get_buffer" >}
+PRIVATE FUNCTION aglp720_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define
+   
+   #end add-point
+ 
+   
+   LET g_master.gldtld = p_dialog.getFieldBuffer('gldtld')
+   LET g_master.gldt001 = p_dialog.getFieldBuffer('gldt001')
+   LET g_master.gldt005 = p_dialog.getFieldBuffer('gldt005')
+   LET g_master.l_type = p_dialog.getFieldBuffer('l_type')
+   LET g_master.gldt006 = p_dialog.getFieldBuffer('gldt006')
+   LET g_master.chk1 = p_dialog.getFieldBuffer('chk1')
+   LET g_master.chk2 = p_dialog.getFieldBuffer('chk2')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp720.msgcentre_notify" >}
+PRIVATE FUNCTION aglp720_msgcentre_notify()
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp720.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+################################################################################
+# Descriptions...: 預設值
+# Memo...........:
+# Usage..........: CALL aglp720_qbe_clear()
+# Date & Author..: 151117 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp720_qbe_clear()
+DEFINE l_glaacomp LIKE glaa_t.glaacomp
+DEFINE l_glaald   LIKE glaa_t.glaald
+DEFINE l_glaa138  LIKE glaa_t.glaa138
+
+   CLEAR FORM
+   INITIALIZE g_master.* TO NULL
+   
+   CALL s_fin_orga_get_comp_ld(g_site) RETURNING g_sub_success,g_errno,l_glaacomp,l_glaald
+   SELECT glaa138 INTO l_glaa138 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = l_glaald
+   IF cl_null(l_glaa138) THEN LET l_glaa138 = '0' END IF
+   
+   LET g_master.gldt005 = YEAR(g_today)
+   LET g_master.chk1 = '0'
+   LET g_master.chk2 = '0'
+   LET g_master.l_type = l_glaa138
+   CALL aglp720_set_entry()
+
+   DISPLAY BY NAME g_master.gldt005,g_master.l_type,g_master.chk1,g_master.chk2,g_master.gldt006
+END FUNCTION
+################################################################################
+# Descriptions...: 依合併編制期別條件 開放期/季/年輸入
+# Memo...........:
+# Usage..........: CALL aglp720_set_entry()
+# Date & Author..: 151118 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp720_set_entry()
+   SELECT glaa138 INTO g_master.l_type FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_master.gldtld
+   IF cl_null(g_master.l_type) THEN LET g_master.l_type = '0' END IF
+
+   CALL cl_set_comp_entry("gldt006,chk1,chk2",TRUE)
+   CASE g_master.l_type
+      WHEN 0
+         LET g_master.chk1 = '0'
+         LET g_master.chk2 = '0'
+         LET g_master.gldt006 = MONTH(g_today)
+         CALL cl_set_comp_entry("chk1,chk2",FALSE)
+         CALL cl_set_comp_required("gldt006",TRUE)
+      WHEN 1
+         LET g_master.gldt006 = ''
+         LET g_master.chk2 = '0'
+         LET g_master.chk1 = '1'
+         CALL cl_set_comp_entry("gldt006,chk2",FALSE)
+         CALL cl_set_comp_required("chk1",TRUE)
+      WHEN 2
+         LET g_master.gldt006 = ''
+         LET g_master.chk1 = '0'
+         LET g_master.chk2 = '1'
+         CALL cl_set_comp_entry("gldt006,chk1",FALSE)
+         CALL cl_set_comp_required("chk2",TRUE)
+   END CASE
+   DISPLAY BY NAME g_master.l_type,g_master.gldt006,g_master.chk1,g_master.chk2
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

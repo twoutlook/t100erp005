@@ -1,0 +1,761 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aooi410_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2015-08-18 18:02:40), PR版次:0009(2016-10-20 17:09:41)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000246
+#+ Filename...: aooi410_01
+#+ Description: 例假日產生
+#+ Creator....: 01258(2013-08-16 10:53:43)
+#+ Modifier...: 01534 -SD/PR- 02295
+ 
+{</section>}
+ 
+{<section id="aooi410_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160318-00005#32  2016/03/27 By 07900    重复错误信息修改
+#160817-00043#1   2016/08/18 By 02295    行事历参照表号为空时，抓取当前据点的资料
+#160831-00038#1   2016/10/20 By 02295    弹出窗口中指定自己设定的工作日类型，重新生成行事历时，oogb003不会依照自己指定的工作日类型生成
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_oogb_m        RECORD
+       oogb001 LIKE oogb_t.oogb001, 
+   oogb001_desc LIKE type_t.chr80, 
+   bdate LIKE type_t.chr500, 
+   edate LIKE type_t.chr500, 
+   lbl_ooga002_1 LIKE type_t.chr500, 
+   lbl_ooga002_2 LIKE type_t.chr500, 
+   lbl_ooga002_3 LIKE type_t.chr500, 
+   lbl_ooga002_4 LIKE type_t.chr500, 
+   lbl_ooga002_5 LIKE type_t.chr500, 
+   lbl_ooga002_6 LIKE type_t.chr500, 
+   lbl_ooga002_7 LIKE type_t.chr500, 
+   oogb003 LIKE oogb_t.oogb003, 
+   oogb003_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_oogb_m_t        type_g_oogb_m
+#end add-point
+ 
+DEFINE g_oogb_m        type_g_oogb_m
+ 
+   DEFINE g_oogb001_t LIKE oogb_t.oogb001
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aooi410_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aooi410_01(--)
+   #add-point:input段變數傳入
+p_oogb001
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE l_date_first    LIKE type_t.dat 
+   DEFINE l_date_last     LIKE type_t.dat
+   DEFINE l_year          LIKE type_t.chr10
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_sql           STRING
+   DEFINE l_sql1          STRING
+   DEFINE l_success       LIKE type_t.chr1
+   DEFINE l_crtdt         DATETIME YEAR TO SECOND
+   DEFINE p_oogb001       LIKE oogb_t.oogb001
+   DEFINE l_bdate         LIKE type_t.dat
+   DEFINE l_sql2          STRING   #160831-00038#1
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aooi410_01 WITH FORM cl_ap_formpath("aoo","aooi410_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   #160817-00043#1---add---s   
+   IF cl_null(p_oogb001) THEN 
+      SELECT ooef008 INTO p_oogb001 FROM ooef_t
+       WHERE ooefent = g_enterprise
+         AND ooef001 = g_site
+   END IF 
+   #160817-00043#1---add---e   
+   LET g_oogb_m.oogb001 = p_oogb001
+   DISPLAY BY NAME g_oogb_m.oogb001
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_oogb_m.bdate,g_oogb_m.edate,g_oogb_m.lbl_ooga002_1,g_oogb_m.lbl_ooga002_2,g_oogb_m.lbl_ooga002_3, 
+          g_oogb_m.lbl_ooga002_4,g_oogb_m.lbl_ooga002_5,g_oogb_m.lbl_ooga002_6,g_oogb_m.lbl_ooga002_7, 
+          g_oogb_m.oogb003 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+           LET g_oogb_m.lbl_ooga002_1 = 'N'
+           LET g_oogb_m.lbl_ooga002_2 = 'N'
+           LET g_oogb_m.lbl_ooga002_3 = 'N'
+           LET g_oogb_m.lbl_ooga002_4 = 'N'
+           LET g_oogb_m.lbl_ooga002_5 = 'N'
+           LET g_oogb_m.lbl_ooga002_6 = 'Y'
+           LET g_oogb_m.lbl_ooga002_7 = 'Y'
+           LET l_year = YEAR(g_today) + 1
+           LET g_oogb_m.bdate = MDY(1,1,l_year)
+           LET g_oogb_m.edate = MDY(12,31,l_year) 
+           DISPLAY BY NAME g_oogb_m.bdate,g_oogb_m.edate,g_oogb_m.lbl_ooga002_1,g_oogb_m.lbl_ooga002_2,
+                           g_oogb_m.lbl_ooga002_3,g_oogb_m.lbl_ooga002_4,g_oogb_m.lbl_ooga002_5,g_oogb_m.lbl_ooga002_6,
+                           g_oogb_m.lbl_ooga002_7
+           LET g_oogb_m_t.bdate = g_oogb_m.bdate
+           LET g_oogb_m_t.edate = g_oogb_m.edate
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bdate
+            #add-point:BEFORE FIELD bdate name="input.b.bdate"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bdate
+            
+            #add-point:AFTER FIELD bdate name="input.a.bdate"
+            IF NOT cl_null(g_oogb_m.bdate) AND NOT cl_null(g_oogb_m.edate) THEN
+              LET l_bdate = g_oogb_m.bdate
+              LET g_oogb_m.bdate = l_bdate
+              DISPLAY BY NAME g_oogb_m.bdate              
+              LET g_oogb_m.edate = s_date_get_date(g_oogb_m.bdate,12,-1)
+              DISPLAY BY NAME g_oogb_m.edate
+              IF g_oogb_m.bdate > g_oogb_m.edate THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'sub-00095'
+                  LET g_errparam.extend = g_oogb_m.bdate
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD bdate
+              END IF
+           END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bdate
+            #add-point:ON CHANGE bdate name="input.g.bdate"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD edate
+            #add-point:BEFORE FIELD edate name="input.b.edate"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD edate
+            
+            #add-point:AFTER FIELD edate name="input.a.edate"
+             IF NOT cl_null(g_oogb_m.bdate) AND NOT cl_null(g_oogb_m.edate) THEN
+                IF g_oogb_m.bdate > g_oogb_m.edate THEN
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = 'sub-00095'
+                    LET g_errparam.extend = g_oogb_m.edate
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+
+                    NEXT FIELD edate
+                END IF
+             END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE edate
+            #add-point:ON CHANGE edate name="input.g.edate"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_1
+            #add-point:BEFORE FIELD lbl_ooga002_1 name="input.b.lbl_ooga002_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_1
+            
+            #add-point:AFTER FIELD lbl_ooga002_1 name="input.a.lbl_ooga002_1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_1
+            #add-point:ON CHANGE lbl_ooga002_1 name="input.g.lbl_ooga002_1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_2
+            #add-point:BEFORE FIELD lbl_ooga002_2 name="input.b.lbl_ooga002_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_2
+            
+            #add-point:AFTER FIELD lbl_ooga002_2 name="input.a.lbl_ooga002_2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_2
+            #add-point:ON CHANGE lbl_ooga002_2 name="input.g.lbl_ooga002_2"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_3
+            #add-point:BEFORE FIELD lbl_ooga002_3 name="input.b.lbl_ooga002_3"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_3
+            
+            #add-point:AFTER FIELD lbl_ooga002_3 name="input.a.lbl_ooga002_3"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_3
+            #add-point:ON CHANGE lbl_ooga002_3 name="input.g.lbl_ooga002_3"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_4
+            #add-point:BEFORE FIELD lbl_ooga002_4 name="input.b.lbl_ooga002_4"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_4
+            
+            #add-point:AFTER FIELD lbl_ooga002_4 name="input.a.lbl_ooga002_4"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_4
+            #add-point:ON CHANGE lbl_ooga002_4 name="input.g.lbl_ooga002_4"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_5
+            #add-point:BEFORE FIELD lbl_ooga002_5 name="input.b.lbl_ooga002_5"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_5
+            
+            #add-point:AFTER FIELD lbl_ooga002_5 name="input.a.lbl_ooga002_5"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_5
+            #add-point:ON CHANGE lbl_ooga002_5 name="input.g.lbl_ooga002_5"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_6
+            #add-point:BEFORE FIELD lbl_ooga002_6 name="input.b.lbl_ooga002_6"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_6
+            
+            #add-point:AFTER FIELD lbl_ooga002_6 name="input.a.lbl_ooga002_6"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_6
+            #add-point:ON CHANGE lbl_ooga002_6 name="input.g.lbl_ooga002_6"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_7
+            #add-point:BEFORE FIELD lbl_ooga002_7 name="input.b.lbl_ooga002_7"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_7
+            
+            #add-point:AFTER FIELD lbl_ooga002_7 name="input.a.lbl_ooga002_7"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_7
+            #add-point:ON CHANGE lbl_ooga002_7 name="input.g.lbl_ooga002_7"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD oogb003
+            
+            #add-point:AFTER FIELD oogb003 name="input.a.oogb003"
+            IF NOT cl_null(g_oogb_m.oogb003) THEN
+               IF NOT aooi410_01_oogb003_chk(g_oogb_m.oogb003,6) THEN
+                  LET g_oogb_m.oogb003 = ''
+                  NEXT FIELD CURRENT
+               END IF 
+             END IF
+             
+             INITIALIZE g_ref_fields TO NULL
+             LET g_ref_fields[1] = g_oogb_m.oogb003
+             CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='6' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+             LET g_oogb_m.oogb003_desc = g_rtn_fields[1]
+             DISPLAY BY NAME g_oogb_m.oogb003_desc
+            
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD oogb003
+            #add-point:BEFORE FIELD oogb003 name="input.b.oogb003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE oogb003
+            #add-point:ON CHANGE oogb003 name="input.g.oogb003"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.bdate
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bdate
+            #add-point:ON ACTION controlp INFIELD bdate name="input.c.bdate"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.edate
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD edate
+            #add-point:ON ACTION controlp INFIELD edate name="input.c.edate"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lbl_ooga002_1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_1
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_1 name="input.c.lbl_ooga002_1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lbl_ooga002_2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_2
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_2 name="input.c.lbl_ooga002_2"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lbl_ooga002_3
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_3
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_3 name="input.c.lbl_ooga002_3"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lbl_ooga002_4
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_4
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_4 name="input.c.lbl_ooga002_4"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lbl_ooga002_5
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_5
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_5 name="input.c.lbl_ooga002_5"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lbl_ooga002_6
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_6
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_6 name="input.c.lbl_ooga002_6"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lbl_ooga002_7
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_7
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_7 name="input.c.lbl_ooga002_7"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.oogb003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD oogb003
+            #add-point:ON ACTION controlp INFIELD oogb003 name="input.c.oogb003"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = "i"
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_oogb_m.oogb003             #給予default值
+
+            #給予arg
+
+            LET g_qryparam.arg1 = '6'
+            CALL q_oocq002()                           #呼叫開窗
+
+            LET g_oogb_m.oogb003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_oogb_m.oogb003 TO oogb003              #顯示到畫面上
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oogb_m.oogb003
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='6' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oogb_m.oogb003_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oogb_m.oogb003_desc
+
+            NEXT FIELD oogb003                          #返回原欄位
+
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aooi410_01 
+   
+   #add-point:input段after input 
+   IF NOT INT_FLAG THEN
+      
+      LET l_crtdt = cl_get_current()  
+      #160831-00038#1---add---s  
+      LET l_sql2 = "DELETE FROM oogb_t WHERE oogbent = ",g_enterprise," AND oogb001 = '",g_oogb_m.oogb001,"'",
+                   "       AND EXISTS (SELECT 1 FROM ooga_t WHERE oogaent=oogbent AND ooga001=oogb002 ",
+                   "       AND ooga001 BETWEEN '",g_oogb_m.bdate CLIPPED,"' AND '",g_oogb_m.edate CLIPPED,"' "
+      #160831-00038#1---add---e  
+      LET l_sql = "SELECT ",g_enterprise,",'",g_oogb_m.oogb001 CLIPPED,"',ooga001,'",g_oogb_m.oogb003,"',",
+                  "          ooga004,ooga005,ooga006,ooga007,ooga008,to_number(to_char(ooga001,'YYYY')),oogastus,",
+                  "         '",g_user CLIPPED,"',",
+                  "         '",g_dept CLIPPED,"',",   
+                  "         '",g_user CLIPPED,"',",
+                  "         '",g_dept CLIPPED,"',",
+                  "         to_date('",l_crtdt,"','yyyy-mm-dd hh24:mi:ss')",                  
+                  " FROM ooga_t WHERE ooga001 BETWEEN '",g_oogb_m.bdate CLIPPED,"' AND '",g_oogb_m.edate CLIPPED,"' AND oogaent = ",g_enterprise,
+                  " AND NOT EXISTS (SELECT * FROM oogb_t WHERE oogbent = oogaent AND oogb001 = '",g_oogb_m.oogb001,"' AND oogb002 = ooga001) "
+       IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' AND
+         g_oogb_m.lbl_ooga002_4 = 'N' AND g_oogb_m.lbl_ooga002_5 = 'N' AND g_oogb_m.lbl_ooga002_6 = 'N' AND g_oogb_m.lbl_ooga002_7 = 'N' THEN 
+       ELSE
+         LET l_sql = l_sql," AND ( "
+         LET l_sql2 = l_sql2," AND ( "   #160831-00038#1
+       END IF
+       
+      IF g_oogb_m.lbl_ooga002_1 = 'Y' THEN
+         LET l_sql = l_sql,"ooga002 = '1'"
+         LET l_sql2 = l_sql2,"ooga002 = '1'"  #160831-00038#1
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_2 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' THEN
+            LET l_sql = l_sql," OR ooga002 = '2'"
+            LET l_sql2 = l_sql2," OR ooga002 = '2'"  #160831-00038#1
+         ELSE
+            LET l_sql = l_sql," ooga002 = '2'"
+            LET l_sql2 = l_sql2," ooga002 = '2'"   #160831-00038#1
+         END IF
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_3 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' OR g_oogb_m.lbl_ooga002_2 = 'Y' THEN
+            LET l_sql = l_sql," OR ooga002 = '3'"
+            LET l_sql2 = l_sql2," OR ooga002 = '3'"   #160831-00038#1  
+         END IF
+         IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' THEN
+            LET l_sql = l_sql," ooga002 = '3'"
+            LET l_sql2 = l_sql2," ooga002 = '3'"   #160831-00038#1
+         END IF
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_4 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' OR g_oogb_m.lbl_ooga002_2 = 'Y' OR g_oogb_m.lbl_ooga002_3 = 'Y' THEN
+            LET l_sql = l_sql," OR ooga002 = '4'"
+            LET l_sql2 = l_sql2," OR ooga002 = '4'"   #160831-00038#1
+         END IF
+         IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' THEN
+            LET l_sql = l_sql," ooga002 = '4'"
+            LET l_sql2 = l_sql2," ooga002 = '4'"   #160831-00038#1
+         END IF
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_5 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' OR g_oogb_m.lbl_ooga002_2 = 'Y' OR g_oogb_m.lbl_ooga002_3 = 'Y' OR g_oogb_m.lbl_ooga002_4 = 'Y' THEN
+            LET l_sql = l_sql," OR ooga002 = '5'"
+            LET l_sql2 = l_sql2," OR ooga002 = '5'"   #160831-00038#1
+         END IF
+         IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' AND g_oogb_m.lbl_ooga002_5 = 'N' THEN
+            LET l_sql = l_sql," ooga002 = '5'"
+            LET l_sql2 = l_sql2," ooga002 = '5'"   #160831-00038#1
+         END IF
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_6 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' OR g_oogb_m.lbl_ooga002_2 = 'Y' OR g_oogb_m.lbl_ooga002_3 = 'Y' OR g_oogb_m.lbl_ooga002_4 = 'Y' OR
+            g_oogb_m.lbl_ooga002_5 = 'Y' THEN
+            LET l_sql = l_sql," OR ooga002 = '6'"
+            LET l_sql2 = l_sql2," OR ooga002 = '6'"   #160831-00038#1
+         END IF
+         IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' AND g_oogb_m.lbl_ooga002_4 = 'N' AND
+            g_oogb_m.lbl_ooga002_5 = 'N' THEN
+            LET l_sql = l_sql," ooga002 = '6'"
+            LET l_sql2 = l_sql2," ooga002 = '6'"   #160831-00038#1
+         END IF
+      END IF
+      
+      IF g_oogb_m.lbl_ooga002_7 = 'Y' THEN
+         IF g_oogb_m.lbl_ooga002_1 = 'Y' OR g_oogb_m.lbl_ooga002_2 = 'Y' OR g_oogb_m.lbl_ooga002_3 = 'Y' OR g_oogb_m.lbl_ooga002_4 = 'Y' OR
+            g_oogb_m.lbl_ooga002_5 = 'Y' OR g_oogb_m.lbl_ooga002_6 = 'Y' THEN 
+            LET l_sql = l_sql," OR ooga002 = '0'"
+            LET l_sql2 = l_sql2," OR ooga002 = '0'"   #160831-00038#1
+         END IF
+         IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' AND g_oogb_m.lbl_ooga002_4 = 'N' AND
+            g_oogb_m.lbl_ooga002_5 = 'N' AND g_oogb_m.lbl_ooga002_6 = 'N' THEN 
+            LET l_sql = l_sql," ooga002 = '0'"
+            LET l_sql2 = l_sql2," ooga002 = '0'"   #160831-00038#1
+         END IF
+      END IF
+
+      IF g_oogb_m.lbl_ooga002_1 = 'N' AND g_oogb_m.lbl_ooga002_2 = 'N' AND g_oogb_m.lbl_ooga002_3 = 'N' AND
+         g_oogb_m.lbl_ooga002_4 = 'N' AND g_oogb_m.lbl_ooga002_5 = 'N' AND g_oogb_m.lbl_ooga002_6 = 'N' AND g_oogb_m.lbl_ooga002_7 = 'N' THEN 
+         LET l_sql2 = l_sql2,")"   #160831-00038#1
+       ELSE
+         LET l_sql = l_sql,")"
+         LET l_sql2 = l_sql2,"))"   #160831-00038#1
+       END IF
+
+      LET l_sql1 = "INSERT INTO oogb_t(oogbent,oogb001,oogb002,oogb003,oogb005,oogb006,oogb007,oogb008,oogb009,oogb010,",
+                   "                   oogbstus,oogbownid,oogbowndp,oogbcrtid,oogbcrtdp,oogbcrtdt) "
+      LET l_sql = l_sql1,l_sql
+      CALL s_transaction_begin()
+      
+      #160831-00038#1---add---s
+      PREPARE aooi410_01_delete_pre FROM l_sql2
+      EXECUTE aooi410_01_delete_pre      
+      #160831-00038#1---add---e
+      PREPARE aooi410_01_pre1 FROM l_sql
+      EXECUTE aooi410_01_pre1
+      IF sqlca.sqlcode THEN
+         LET l_success = 'N'
+         #CALL cl_err('','aoo-00146',1)
+      ELSE
+         LET l_success = 'Y'
+         #CALL cl_err('','aoo-00147',1)
+      END IF
+      CALL s_transaction_end(l_success,'1')
+   END IF
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi410_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aooi410_01.other_function" readonly="Y" >}
+#+
+PRIVATE FUNCTION aooi410_01_oogb003_chk(p_str,p_cmd)
+DEFINE l_n   LIKE type_t.num5
+DEFINE p_cmd LIKE type_t.num5
+DEFINE p_str LIKE oogb_t.oogb003
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n FROM oocq_t
+    WHERE oocqent =  g_enterprise
+      AND oocq001 = p_cmd
+      AND oocq002 = p_str
+   IF l_n = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aoo-00055'
+      LET g_errparam.extend = p_str
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF 
+   
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n FROM oocq_t
+    WHERE oocqent =  g_enterprise
+      AND oocq001 = p_cmd
+      AND oocq002 = p_str
+      AND oocqstus= 'Y'
+   IF l_n = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-01302' #aoo-00056 #160318-00005#31  By 07900--mod
+      LET g_errparam.extend = p_str
+      #160318-00005#31  By 07900 --add-str
+      LET g_errparam.replace[1] ='aooi707'
+      LET g_errparam.replace[2] = cl_get_progname("aooi707",g_lang,"2")
+      LET g_errparam.exeprog ='aooi707'
+      #160318-00005#31  By 07900 --add-end
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF 
+   RETURN TRUE
+END FUNCTION
+
+ 
+{</section>}
+ 

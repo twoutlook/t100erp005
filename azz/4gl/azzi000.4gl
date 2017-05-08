@@ -1,0 +1,84 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzi000.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0014(2015-10-15 10:29:48), PR版次:0014(2016-07-19 17:02:33)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000226
+#+ Filename...: azzi000
+#+ Description: T100 系統首頁
+#+ Creator....: ()
+#+ Modifier...: 01274 -SD/PR- 01274
+ 
+{</section>}
+ 
+{<section id="azzi000.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+IMPORT util   #for cl_ap_url()
+IMPORT com
+IMPORT security
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT FGL azz_azzi000_01
+IMPORT FGL azz_azzi000_03
+IMPORT JAVA java.net.URLDecoder
+IMPORT JAVA java.net.URLEncoder
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+ 
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+ 
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzi000.main" >}
+#+ 作業開始
+MAIN
+   
+   IF TRUE THEN
+      CALL ui.interface.loadActionDefaults(os.Path.join(FGL_GETENV("ERP"), "cfg/4ad/homepage.4ad"))
+      CALL azzi000_main()
+   ELSE
+      OPEN WINDOW w1 WITH FORM cl_ap_formpath("azz","azzi000") CLOSE WINDOW w1
+      OPEN WINDOW w2 WITH FORM cl_ap_formpath("azz","azzi000_02") CLOSE WINDOW w2
+      OPEN WINDOW w3 WITH FORM cl_ap_formpath("azz","azzi000_s02") CLOSE WINDOW w3
+      
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="azzi000.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+#end add-point
+ 
+{</section>}
+ 

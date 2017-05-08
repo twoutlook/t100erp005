@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapq110" module="aap" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="04152" crtdt="2015-01-21 12:58:05" modid="02097" moddt="2015-12-18 16:05:01" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="供應商對帳單明細查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="type1(chr500),apbbcomp,apbbcomp_desc(chr500),apbb002(chr500),apbbdocdt,apbbdocno,apbb010,apbb012,apbb054,apbb051(chr500),apba004(chr500),apba005,apbb014,apba105,apba115,apbbstus"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="type1(type1),apbbcomp(b_apbbcomp),apbbcomp_desc(b_apbbcomp_desc),apbb002(b_apbb002),apbbdocdt(b_apbbdocdt),apbbdocno(b_apbbdocno),apbb010(b_apbb010),apbb012(b_apbb012),apbb054(b_apbb054),apbb051(b_apbb051),apba004(b_apba004),apba005(b_apba005),apbb014(b_apbb014),apba105(b_apba105),apba115(b_apba115),apbbstus(b_apbbstus)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapq110" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="apbbcomp,apbbdocno,apbb010,apbb012,apbb054,apba004,apbbstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="apbbcomp(b_apbbcomp),apbbdocno(b_apbbdocno),apbb010(b_apbb010),apbb012(b_apbb012),apbb054(b_apbb054),apbb014(b_apbb014),apbbstus(b_apbbstus)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="type1"/>
+      <column id="apbbcomp">
+        <after>
+          <reference field="apbbcomp_desc" ref_field="apbbcomp" map_field="apbbent,apbbcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="apbbcomp_desc"/>
+      <column id="apbb002"/>
+      <column id="apbbdocdt"/>
+      <column id="apbbdocno">
+        <controlp form="q_isamdocno" state="c"/>
+      </column>
+      <column id="apbb010">
+        <controlp form="q_isam010" state="i"/>
+        <controlp form="q_isam010" state="c"/>
+      </column>
+      <column id="apbb012">
+        <controlp form="q_oodb002_5" state="i"/>
+        <controlp form="q_oodb002_5" state="c"/>
+      </column>
+      <column id="apbb054"/>
+      <column id="apbb051"/>
+      <column id="apba004" def_scc="8541"/>
+      <column id="apba005"/>
+      <column id="apbb014">
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="apba105"/>
+      <column id="apba115"/>
+      <column id="apbbstus" scc="13">
+        <stus id="Y" pic="confirmed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="apbb_t" page="1" linked="" pk="apbbdocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,apbbcomp,&apos;&apos;,&apos;&apos;,apbbdocdt,apbbdocno,apbb010,apbb012,apbb054,&apos;&apos;,&apos;&apos;,&apos;&apos;,apbb014,&apos;&apos;,&apos;&apos;,apbbstus FROM apbb_t WHERE apbbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aimi091" std_prog="aimi091" erpver="1.0" ver="2" module="AIM" type="M" booking="N" class="i" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="imed_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：透過本作業維護料件建檔檢核設定，設定以後料件資料的檢核。
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：假雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+            資料來源表：imed_t(料件建檔檢核設定檔)
+
+作業資料來源(Detail)：
+            資料來源表：imed_t(料件建檔檢核設定檔)
+
+查詢方案設定：
+ (1)系統預設查詢方案：
+    有效 imedstus = 'Y' 
+    無效 imedstus = 'N'
+ (2)系統預設相關作業：
+    無
+
+ (3)瀏覽Browse顯示欄位及型態：
+    imed001(營運據點)：ButtonEdit
+    ooeal003(說明)：Edit
+    imed002(主分群碼)：ButtonEdit
+    oocql004(說明)：Edit
+特別說明：
+1.新增時，單頭輸入完後，進單身之前，將職能(SCC1017)的各種選項先新增到資料庫
+  營運據點 = 畫面上的營運據點
+  主分群碼 = 畫面上的主分群碼
+  職能 = SCC1017的系統分類碼值
+  產品檢核類型 = 2.不檢查
+  角色、通知人員、email、分機皆為null
+
+]]>
+  </all>
+  <field cite_std="N" name="b_imed001" ver="1" src="s" column="imed001" table="imed_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imed002" ver="1" src="s" column="imed002" table="imed_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed003_2" ver="1" src="s" column="imed003" table="imed_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1017" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imed001" ver="1" src="s" column="imed001" table="imed_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1傳入參數 arg1 =輸入營運據點的值
+]]>
+  </field>
+  <field cite_std="N" name="imed_t.imed002" ver="1" src="s" column="imed002" table="imed_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.CALL s_azzi650_chk_exist('200',imed002) RETURNING l_success检查资料有效性
+開窗處理：1.查詢時：
+                    參考函式：q_oocq002
+                    传值：arg1 = '200'
+                 2.新增/修改時：
+                    參考函式：q_oocq002
+                    传值：arg1 = '200'
+ ]]>
+  </field>
+  <field cite_std="N" name="imed_t.imed003" ver="1" src="s" column="imed003" table="imed_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1017" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imed004" ver="1" src="s" column="imed004" table="imed_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1007" default="2" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imed005" ver="1" src="s" column="imed005" table="imed_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.CALL s_azzi650_chk_exist('5',imed005) RETURNING l_success检查资料有效性
+        2.若[C:通知人員]有輸入值，則[C:角色]必須與[T:員工資料檔].[C:職稱]相同
+開窗處理：1.查詢時：
+                    參考函式：q_oocq002
+                    传值：arg1 = '5'
+                 2.新增/修改時：
+                    參考函式：q_oocq002
+                    传值：arg1 = '5'
+ ]]>
+  </field>
+  <field cite_std="N" name="imed_t.imed006" ver="1" src="s" column="imed006" table="imed_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="q_ooag001_4" c_zoom="q_ooag001_4" chk_ref="v_ooag001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.传入参数arg1=imed006
+        2.若[C:角色]有輸入值，則必須與[T:員工資料檔].[C:職稱]相同
+帶值:1.以[C:通知人員]值到[T:員工檔]抓取[C:聯絡對象識別碼],再以[C:聯絡對象識別碼]
+           到[T:聯絡對象檔]中抓取[C:全名]到本欄位後面顯示
+        2.以[C:聯絡對象識別碼]到[T:通訊方式檔]中且[C:通訊類型]='4.電子郵件]，抓取[C:通訊內容]到[C:Email]
+           (會抓到多筆，[C:主要通訊方式]='Y'的先抓，抓第一筆)
+計算或處理:1.當產品檢核類型為0或1時，通知人員必須輸入
+                 2.若[C:角色]為空值，則給值=[T:員工資料檔].[C:職稱]
+
+開窗處理：
+     1.查詢或新增/修改時：
+       參考函式：q_ooag001_4
+       新增/修改時過濾條件：1.若[C:角色]有值，則ooag005=[C:角色]
+]]>
+  </field>
+  <field cite_std="N" name="imed_t.imed007" ver="1" src="s" column="imed007" table="imed_t" attribute="C104" type="varchar2(500)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值:利用[C:通知人員]抓取[T:員工資料檔].[C.聯絡對象識別碼]，再利用[C.聯絡對象識別碼]
+            到[T:通訊方式檔]抓取[C:通訊類型]='4.電子郵件'的[C:通訊內容]的值
+            (抓其中一筆，[T:通訊方式檔].[C:主要通訊方式]='Y'的優先)
+校驗:1.可輸入多個email，以','做分割，每個email呼叫s_aooi350_chk_email做檢核
+]]>
+  </field>
+  <field cite_std="N" name="imed_t.imed008" ver="1" src="s" column="imed008" table="imed_t" attribute="C150" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imedcrtdp" ver="1" src="s" column="imedcrtdp" table="imed_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imedcrtdt" ver="1" src="s" column="imedcrtdt" table="imed_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imedcrtid" ver="1" src="s" column="imedcrtid" table="imed_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imedmoddt" ver="1" src="s" column="imedmoddt" table="imed_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imedmodid" ver="1" src="s" column="imedmodid" table="imed_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imedowndp" ver="1" src="s" column="imedowndp" table="imed_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imedownid" ver="1" src="s" column="imedownid" table="imed_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imed_t.imedstus" ver="1" src="s" column="imedstus" table="imed_t" attribute="C822" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_glccstus_3" depend_field="glccstus_3" src="s" status="">
+      <program order="1" type="1" name=""/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_imed001_desc" src="s" depend_field="b_imed001" correspon_key="imed_t,imed001" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_imed002_desc" src="s" depend_field="b_imed002" correspon_key="imedent,imed002" ref_table="oocql_t" ref_fk="oocqlent,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="imed001_desc" src="s" depend_field="imed_t.imed001" correspon_key="imedent,imed001" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="imed002_desc" src="s" depend_field="imed_t.imed002" correspon_key="imedent,imed002" ref_table="oocql_t" ref_fk="oocqlent,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="imed005_desc" src="s" depend_field="imed_t.imed005" correspon_key="imedent,imed005" ref_table="oocql_t" ref_fk="oocqlent,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="imed006_desc" src="s" depend_field="imed_t.imed006" correspon_key="&apos;2&apos;,imed006" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="imedcrtdp_desc" src="s" depend_field="imed_t.imedcrtdp" correspon_key="imedcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="imedcrtid_desc" src="s" depend_field="imed_t.imedcrtid" correspon_key="&apos;2&apos;,imedcrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="imedmodid_desc" src="s" depend_field="imed_t.imedmodid" correspon_key="&apos;2&apos;,imedmodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="imedowndp_desc" src="s" depend_field="imed_t.imedowndp" correspon_key="imedowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="imedownid_desc" src="s" depend_field="imed_t.imedownid" correspon_key="&apos;2&apos;,imedownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_imed001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imed002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed003_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imed001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imed002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imed003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imed004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imed005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imed006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imed007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imed008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imedcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imedcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imedcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imedmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imedmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imedowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imedownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imed_t.imedstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_imed001" text="營運據點" lstr=""/>
+    <sfield name="lbl_ooeal003_1" text="說明" lstr=""/>
+    <sfield name="lbl_imed002" text="主分群碼" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="bpage_1" text="項目" lstr=""/>
+    <sfield name="lbl_imedstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_imed003" text="職能" lstr=""/>
+    <sfield name="lbl_imed004" text="產品檢核類型" lstr=""/>
+    <sfield name="lbl_imed005" text="角色" lstr=""/>
+    <sfield name="lbl_imed006" text="通知人員" lstr=""/>
+    <sfield name="lbl_oofa011_1" text="名稱" lstr=""/>
+    <sfield name="lbl_imed007" text="E-mail" lstr=""/>
+    <sfield name="lbl_imed008" text="分機" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣版說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣版名稱(4rp)" lstr=""/>
+    <sfield name="lbl_rep_fmt" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+  </strings>
+  <sa_spec>
+    <sa_field name="imed001">
+      <![CDATA[營運據點：
+   ●欄位控管：
+     資料欄位:[T:料件建檔檢核設定檔].[C:營運據點]/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.imedent+imed001+imed002為單頭key值，不可重複
+          3.輸入值須存在[T:組織基本資料檔].[C:組織編號]，ooea004='Y'且為有效資料
+     帶值:帶出[T:組織基本資料多語言檔].[C:說明(簡稱)]在欄位後面顯示
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢或新增/修改時：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:組織基本資料檔].[C:組織編號],[T:組織基本資料多語言檔].[C:說明(簡稱)]
+       過濾條件：ooea004='Y'
+       新增/修改時過濾條件：有效資料
+       回值類型：查詢時多重回值，新增/修改時單一回值
+]]>
+    </sa_field>
+    <sa_field name="imed002">
+      <![CDATA[主分群碼：
+   ●欄位控管：
+     資料欄位:[T:料件建檔檢核設定檔].[C:主分群碼]/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.imedent+imed001+imed002為單頭key值，不可重複
+          3.輸入值須存在ACC200
+     帶值:帶出[T:應用分類碼多語言檔].[C:說明]在欄位後面顯示
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢或新增/修改時：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：oocq001='200'
+       新增/修改時過濾條件：有效資料
+       回值類型：查詢時多重回值，新增/修改時單一回值
+]]>
+    </sa_field>
+    <sa_field name="imed003">
+      <![CDATA[職能：
+   ●欄位控管：
+     資料欄位:[T:料件建檔檢核設定檔].[C:職能]/可Display可Input
+     允許空白:No
+     預設值:無
+     資料選項來源:SCC1017
+       資料庫:請呼叫cl_set_combo_scc("imed003",1017)
+     校驗:1.不允許空白
+          2.輸入值須存在SCC1017
+          3.imedent+imed001+imed002+imed003為key值，不可重複
+     帶值:無
+     計算或處理:無
+]]>
+    </sa_field>
+    <sa_field name="imed004">
+      <![CDATA[產品檢核類型：
+   ●欄位控管：
+     資料欄位:[T:料件建檔檢核設定檔].[C:產品檢核類型]/可Display可Input
+     允許空白:No
+     預設值:無
+     資料選項來源:SCC1007
+       資料庫:請呼叫cl_set_combo_scc("imed003",1007)
+     校驗:1.不允許空白
+          2.輸入值須存在SCC1007
+     帶值:無
+     計算或處理:無
+]]>
+    </sa_field>
+    <sa_field name="imed005">
+      <![CDATA[角色：
+   ●欄位控管：
+     資料欄位:[T:料件建檔檢核設定檔].[C:角色]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在ACC5
+          2.若[C:通知人員]有輸入值，則[C:角色]必須與[T:員工資料檔].[C:職稱]相同
+     帶值:帶出[T:應用分類碼多語言檔].[C:說明]在[C:角色]顯示
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢或新增/修改時：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：oocq001='5'
+       新增/修改時過濾條件：有效資料
+       回值類型：查詢時多重回值，新增/修改時單一回值
+]]>
+    </sa_field>
+    <sa_field name="imed006">
+      <![CDATA[通知人員：
+   ●欄位控管：
+     資料欄位:[T:料件建檔檢核設定檔].[C:通知人員]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:員工資料檔].[C:員工編號]且為有效資料
+          2.若[C:角色]有輸入值，則必須與[T:員工資料檔].[C:職稱]相同
+     帶值:1.以[C:通知人員]值到[T:員工檔]抓取[C:聯絡對象識別碼],再以[C:聯絡對象識別碼]
+            到[T:聯絡對象檔]中抓取[C:全名]到本欄位後面顯示
+          2.以[C:聯絡對象識別碼]到[T:通訊方式檔]中且[C:通訊類型]='4.電子郵件]，
+            抓取[C:通訊內容]到[C:Email]
+            (會抓到多筆，[C:主要通訊方式]='Y'的先抓，抓第一筆)
+     計算或處理:1.當產品檢核類型為0或1時，通知人員必須輸入
+                2.若[C:角色]為空值，則給值=[T:員工資料檔].[C:職稱]
+
+   ●開窗處理：
+     1.查詢或新增/修改時：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:員工資料檔].[C:員工編號],[T:聯絡對象檔].[C:全名]
+       過濾條件：[T:員工檔].[C:聯絡對象識別碼]=[T:聯絡對象檔].[C:聯絡對象識別碼]
+       新增/修改時過濾條件：1.若[C:角色]有值，則ooag005=[C:角色]
+                            2.有效資料
+       回值類型：查詢時多重回值，新增/修改時單一回值
+]]>
+    </sa_field>
+    <sa_field name="imed007">
+      <![CDATA[Email：
+   ●欄位控管：
+     資料欄位:[T:料件建檔檢核設定檔].[C:Email]/可Display可Input
+     預設值:利用[C:通知人員]抓取[T:員工資料檔].[C.聯絡對象識別碼]，再利用[C.聯絡對象識別碼]
+            到[T:通訊方式檔]抓取[C:通訊類型]='4.電子郵件'的[C:通訊內容]的值
+            (抓其中一筆，[T:通訊方式檔].[C:主要通訊方式]='Y'的優先)
+     校驗:1.可輸入多個email，以','做分割，每個email呼叫s_aooi350_chk_email做檢核
+     帶值:無
+     計算或處理:無
+]]>
+    </sa_field>
+    <sa_field name="imedstus">
+      <![CDATA[資料狀態碼：
+   ●欄位控管：
+     資料欄位:[T:料件建檔檢核設定檔].[C:資料狀態碼]/可Display可Input
+     允許空白:No
+     預設值:勾選
+     資料選項來源:
+       資料庫: SCC17
+               N.無效
+               Y.有效
+     校驗:1.不允許空白
+     帶值:無
+     計算或處理:無
+]]>
+    </sa_field>
+    <sa_field name="主視窗">
+      <![CDATA[程式說明及目的：透過本作業維護料件建檔檢核設定，設定以後料件資料的檢核。
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：假雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+            資料來源表：imed_t(料件建檔檢核設定檔)
+
+作業資料來源(Detail)：
+            資料來源表：imed_t(料件建檔檢核設定檔)
+
+查詢方案設定：
+ (1)系統預設查詢方案：
+    有效 imedstus = 'Y' 
+    無效 imedstus = 'N'
+ (2)系統預設相關作業：
+    無
+
+ (3)瀏覽Browse顯示欄位及型態：
+    imed001(營運據點)：ButtonEdit
+    ooeal003(說明)：Edit
+    imed002(主分群碼)：ButtonEdit
+    oocql004(說明)：Edit
+]]>
+    </sa_field>
+    <sa_field name="資料處理">
+      <![CDATA[1.新增時，單頭輸入完後，進單身之前，將職能(SCC1017)的各種選項先新增到資料庫
+  營運據點 = 畫面上的營運據點
+  主分群碼 = 畫面上的主分群碼
+  職能 = SCC1017的系統分類碼值
+  產品檢核類型 = 2.不檢查
+  角色、通知人員、email、分機皆為null
+]]>
+    </sa_field>
+  </sa_spec>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

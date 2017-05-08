@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi717" std_prog="aooi717" erpver="1.0" ver="1" module="AOO" booking="Y" normal_style="Y" class="i" template="F002_00" env="s" zone="t10dev">
+  <toolbar items="delete,insert,modify,output,query"/>
+  <table ver="1">
+    <tbl name="ooid_t" parent="" main="Y" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" status=""/>
+    </tbl>
+  </table>
+  <all src="s" ver="1" cite_std="" cite_ver="" status="">
+    <![CDATA[程式說明及目的：
+ 提供提前繳款者，因其提前之日數，而可有不同的優惠折扣金額。
+ 鼓勵應收款對象可縮短帳期；提示採購應付對象提供之繳款優惠。
+ 集團層企業設定；可依交易時之性質，指定該筆交易適用之優惠折扣。
+
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：單檔多欄模式F002_00
+作業資料來源(Detail)：
+ 資料來源表：繳款優惠條件設定檔（ooid_t）(資料檔)
+                                                      ooidl_t(多語言資料檔)
+
+補充說明： 
+　　　　1.優惠折扣認定：
+                 天數認定： 天數計算的方式應是算頭不算尾。
+　　　　　提前兌款天數：收付款應兌現日（依原交易收付條件計算）　～　實際收款兌收（付）日（出納所收到的票據到期日或匯款到款日）
+                 折扣利率取得：　提前天數落於　＜＝　提前日數欄位（含設定日）　
+　　　　2.優惠折扣計算:
+　　　　　　天數　　　　　　＝　收付款應兌現日　～　實際收款兌收（付）日
+                    優惠金額　　　　＝　［帳款金額 * 利率 * （天數/365）］
+                    本期應兌收金額　＝　本金　－　優惠金額
+
+　　　　３。客商的據點檔、單據本身、客戶控制組慣用交易條件均會增加這個預設條件。 
+                    取用順序是由最小的找到最大的
+                    單據別中有特殊設定default＞銷售或採購控制組中（客戶預設條件）　＞ 客商據點層設定慣用條件　＞　收付款修件慣用優惠條件 。
+
+
+]]>
+  </all>
+  <field column="ooid001" name="ooid001_2" ver="1" table="ooid_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooid001" name="ooid_t.ooid001" ver="1" table="ooid_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[優惠條件編號
+   ●欄位控管：
+     資料欄位:優惠條件編號/可Display可Input
+     預設值:无　
+     校驗:不可重複
+     帶值:無]]>
+  </field>
+  <field column="ooid002" name="ooid_t.ooid002" ver="1" table="ooid_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="46" default="0" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooid003" name="ooid_t.ooid003" ver="1" table="ooid_t" attribute="C105" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TextEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooid011" name="ooid_t.ooid011" ver="1" table="ooid_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="&lt;=999" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[提前天數(含):
+ 1.數值由小至大, 檢核前一筆及後一筆之數值合理性，警示"日期數值應由小至大輸入，請檢核數值正確性!"。
+ 2.整數, 不可為負數。
+ 3.設定之值表示日數以上者，含設定值。
+●欄位控管：
+      帶值:　
+       計算或處理:　數值比較，數值不為０的狀況下。
+ 　　　提前繳款天數（１）＜　提前繳款天數（２）＜　提前繳款天數（３）　]]>
+  </field>
+  <field column="ooid021" name="ooid_t.ooid021" ver="1" table="ooid_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="&lt;=999" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[提前天數(含):
+ 1.數值由小至大, 檢核前一筆及後一筆之數值合理性，警示"日期數值應由小至大輸入，請檢核數值正確性!"。
+ 2.整數, 不可為負數。
+ 3.設定之值表示日數以上者，含設定值。
+●欄位控管：
+      帶值:　
+       計算或處理:　數值比較，數值不為０的狀況下。
+ 　　　提前繳款天數（１）＜　提前繳款天數（２）＜　提前繳款天數（３）]]>
+  </field>
+  <field column="ooid022" name="ooid_t.ooid022" ver="1" table="ooid_t" attribute="N301" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="0" max="&lt;=100" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[折扣利率欄位：
+   ●欄位控管：
+     資料欄位:優惠折扣率/可Display可Input
+     預設值:０　
+     校驗:1.不允許空白
+          2.不可小於0
+          3.輸入值須存在０～１００
+          4.輸入百分比值，不可空白，預設值為0.00%]]>
+  </field>
+  <field column="ooid031" name="ooid_t.ooid031" ver="1" table="ooid_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="&lt;=999" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[提前天數(含):
+ 1.數值由小至大, 檢核前一筆及後一筆之數值合理性，警示"日期數值應由小至大輸入，請檢核數值正確性!"。
+ 2.整數, 不可為負數。
+ 3.設定之值表示日數以上者，含設定值。
+●欄位控管：
+      帶值:　
+       計算或處理:　數值比較，數值不為０的狀況下。
+ 　　　提前繳款天數（１）＜　提前繳款天數（２）＜　提前繳款天數（３）]]>
+  </field>
+  <field column="ooidmoddt" name="ooid_t.ooidmoddt" ver="1" table="ooid_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooid012" name="ooid_t.ooid012" ver="1" table="ooid_t" attribute="N301" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="0" max="&lt;=100" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[折扣利率欄位：
+   ●欄位控管：
+     資料欄位:優惠折扣率/可Display可Input
+     預設值:０　
+     校驗:1.不允許空白
+          2.不可小於0
+          3.輸入值須存在０～１００
+          4.輸入百分比值，不可空白，預設值為0.00%
+
+     ]]>
+  </field>
+  <field column="ooid032" name="ooid_t.ooid032" ver="1" table="ooid_t" attribute="N301" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="0" max="&lt;=100" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[折扣利率欄位：
+   ●欄位控管：
+     資料欄位:優惠折扣率/可Display可Input
+     預設值:０　
+     校驗:1.不允許空白
+          2.不可小於0
+          3.輸入值須存在０～１００
+          4.輸入百分比值，不可空白，預設值為0.00%]]>
+  </field>
+  <field column="ooidcrtdp" name="ooid_t.ooidcrtdp" ver="1" table="ooid_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooidcrtdt" name="ooid_t.ooidcrtdt" ver="1" table="ooid_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooidcrtid" name="ooid_t.ooidcrtid" ver="1" table="ooid_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooidmodid" name="ooid_t.ooidmodid" ver="1" table="ooid_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooidowndp" name="ooid_t.ooidowndp" ver="1" table="ooid_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooidownid" name="ooid_t.ooidownid" ver="1" table="ooid_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooidstus" name="ooid_t.ooidstus" ver="1" table="ooid_t" attribute="C822" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield src="s" ver="1" name="ooidcrtdp_desc" depend_filed="ooid_t.ooidcrtdp" correspon_key="ooidcrtdp" ref_table="ooeal_t" ref_fk="ooeal001" ref_dlang="ooeal002" ref_rtn="ooeal003" status=""/>
+    <rfield src="s" ver="1" name="ooidcrtid_desc" depend_filed="ooid_t.ooidcrtid" correspon_key="&apos;2&apos;,ooidcrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield src="s" ver="1" name="ooidmodid_desc" depend_filed="ooid_t.ooidmodid" correspon_key="&apos;2&apos;,ooidmodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield src="s" ver="1" name="ooidowndp_desc" depend_filed="ooid_t.ooidowndp" correspon_key="ooidowndp" ref_table="ooeal_t" ref_fk="ooeal001" ref_dlang="ooeal002" ref_rtn="ooeal003" status=""/>
+    <rfield src="s" ver="1" name="ooidownid_desc" depend_filed="ooid_t.ooidownid" correspon_key="&apos;2&apos;,ooidownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield src="s" ver="1" name="ooidl_t.ooidl003" depend_filed="ooid_t.ooid001" correspon_key="ooident,ooid001" lang_table="ooidl_t" lang_fk="ooidlent,ooidl001" lang_dlang="ooidl002" lang_rtn="ooidl003" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code/>
+  <act src="s" id="delete" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[須為無效資料，才可刪除。]]>
+  </act>
+  <act src="s" id="insert" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act src="s" id="modify" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act src="s" id="output" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act src="s" id="query" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="bpage_1" text="基本資料" comment="" lstr=""/>
+    <sfield name="lbl_ooidstus" text="有效否" comment="" lstr=""/>
+    <sfield name="lbl_ooid001" text="優惠條件編號" comment="" lstr=""/>
+    <sfield name="lbl_ooidl003_1" text="繳款優惠說明" comment="" lstr=""/>
+    <sfield name="lbl_ooid002" text="適用類型" comment="" lstr=""/>
+    <sfield name="lbl_ooid011" text="提前天數(一)" comment="" lstr=""/>
+    <sfield name="lbl_ooid012" text="折扣利率(一)" comment="" lstr=""/>
+    <sfield name="lbl_ooid021" text="提前天數(二)" comment="" lstr=""/>
+    <sfield name="lbl_ooid022" text="折扣利率(二)" comment="" lstr=""/>
+    <sfield name="lbl_ooid031" text="提前天數(三)" comment="" lstr=""/>
+    <sfield name="lbl_ooid032" text="折扣利率(三)" comment="" lstr=""/>
+    <sfield name="lbl_ooid003" text="備註說明" comment="" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" comment="" lstr=""/>
+    <sfield name="lbl_ooid001" text="優惠條件編號" comment="" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" comment="" lstr=""/>
+    <sfield name="modid_desc" text="員工名" comment="" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" comment="" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" comment="" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" comment="" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" comment="" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" comment="" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" comment="" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" comment="" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" comment="" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" comment="" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" comment="" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" comment="" lstr=""/>
+    <sfield name="lbl_dend" text="項)" comment="" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" comment="" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxm005" text="查詢方案名稱" comment="" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxm004_qbe" text="設為預設查詢條件" comment="" lstr=""/>
+    <sfield name="bpage_1_qbe" text="條件組合內容" comment="" lstr=""/>
+    <sfield name="lbl_gzxn005_qbe" text="欄位說明" comment="" lstr=""/>
+    <sfield name="lbl_gzxn006_qbe" text="運算子" comment="" lstr=""/>
+    <sfield name="lbl_gzxn007_qbe" text="條件值" comment="" lstr=""/>
+    <sfield name="accept" text="確定" comment="" lstr=""/>
+    <sfield name="cancel" text="取消" comment="" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" comment="" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" comment="" lstr=""/>
+    <sfield name="accept" text="確定" comment="" lstr=""/>
+    <sfield name="cancel" text="取消" comment="" lstr=""/>
+    <sfield name="lbl_ooidl001" text="優惠條件編號" comment="" lstr=""/>
+    <sfield name="lbl_ooidl002" text="語言別" comment="" lstr=""/>
+    <sfield name="lbl_ooidl003" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_ooidl004" text="助記碼" comment="" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" comment="" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" comment="" lstr=""/>
+    <sfield name="lbl_check" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1"/>
+</spec>

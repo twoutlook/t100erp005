@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aist420" module="ais" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="05016" crtdt="2015-06-01 10:04:40" modid="05016" moddt="2015-06-09 10:57:37" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="固定資產退稅資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isccsite,isccsite_desc(chr80),iscccomp,iscccomp_desc(chr80),iscc001,iscc002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isccseq,iscc003,iscc004,iscc005,iscc007,iscc006,iscc008,iscc009,iscc103,iscc104,iscc010,isccstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="isccseq,isccownid,isccownid_desc(chr500),isccowndp,isccowndp_desc(chr500),iscccrtid,iscccrtid_desc(chr500),iscccrtdp,iscccrtdp_desc(chr500),iscccrtdt,isccmodid,isccmodid_desc(chr500),isccmoddt"/>
+      <var id="bs_field" value="iscc001,iscc002,isccsite" pk="isccsite,iscc001,iscc002" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aist420" method="dialog">
+    <section id="input">
+      <input id="head" field="isccsite,iscc001,iscc002"/>
+      <input id="body" page="1" field="isccseq,iscc003,iscc004,iscc005,iscc007,iscc006,iscc008,iscc009,iscc103,iscc104,iscc010,isccstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isccsite,iscc001,iscc002"/>
+      <construct id="body" page="1" field="isccseq,iscc003,iscc004,iscc005,iscc007,iscc006,iscc008,iscc009,iscc103,iscc104,iscc010,isccstus"/>
+      <construct id="body" page="2" field="isccownid,isccowndp,iscccrtid,iscccrtdp,iscccrtdt,isccmodid,isccmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="isccsite,iscc001,iscc002"/>
+      <set id="head" type="no_entry" field="isccsite,iscc001,iscc002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isccsite">
+        <after>
+          <reference field="isccsite_desc" ref_field="iscc_t.isccsite" map_field="isccsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="isccsite_desc"/>
+      <column id="iscccomp">
+        <after>
+          <reference field="iscccomp_desc" ref_field="iscc_t.iscccomp" map_field="iscccomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="iscccomp_desc"/>
+      <column id="iscc001"/>
+      <column id="iscc002">
+        <after>
+          <check id="range" st="12" st_type="1" errno="azz-00087" bt="1" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="isccseq" type="S" default="0"/>
+      <column id="iscc003"/>
+      <column id="iscc004"/>
+      <column id="iscc005"/>
+      <column id="iscc007"/>
+      <column id="iscc006"/>
+      <column id="iscc008"/>
+      <column id="iscc009" type="S" default="0"/>
+      <column id="iscc103">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="iscc104">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="iscc010"/>
+      <column id="isccstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="X" pic="void"/>
+        <stus id="Y" pic="valid"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="isccownid">
+        <after>
+          <reference field="isccownid_desc" ref_field="iscc_t.isccownid" map_field="isccownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isccownid_desc"/>
+      <column id="isccowndp">
+        <after>
+          <reference field="isccowndp_desc" ref_field="iscc_t.isccowndp" map_field="isccowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isccowndp_desc"/>
+      <column id="iscccrtid">
+        <after>
+          <reference field="iscccrtid_desc" ref_field="iscc_t.iscccrtid" map_field="iscccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="iscccrtid_desc"/>
+      <column id="iscccrtdp">
+        <after>
+          <reference field="iscccrtdp_desc" ref_field="iscc_t.iscccrtdp" map_field="iscccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="iscccrtdp_desc"/>
+      <column id="iscccrtdt"/>
+      <column id="isccmodid">
+        <after>
+          <reference field="isccmodid_desc" ref_field="iscc_t.isccmodid" map_field="isccmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isccmodid_desc"/>
+      <column id="isccmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="iscc_t" pk="isccsite,iscc001,iscc002">
+      <sql id="forupd_sql" type="sql" query="SELECT isccsite,&apos;&apos;,iscccomp,&apos;&apos;,iscc001,iscc002 FROM iscc_t WHERE isccent= ? AND isccsite=? AND iscc001=? AND iscc002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT isccsite,&apos;&apos;,iscccomp,&apos;&apos;,iscc001,iscc002 FROM iscc_t" order="isccsite,iscc001,iscc002"/>
+    </head>
+    <body id="iscc_t" page="1,2" linked="" pk="isccseq" fk="isccsite,iscc001,iscc002">
+      <sql id="forupd_sql_detail" query="SELECT isccseq,iscc003,iscc004,iscc005,iscc007,iscc006,iscc008,iscc009,iscc103,iscc104,iscc010,isccstus,&apos;&apos;,isccownid,&apos;&apos;,isccowndp,&apos;&apos;,iscccrtid,&apos;&apos;,iscccrtdp,&apos;&apos;,iscccrtdt,isccmodid,&apos;&apos;,isccmoddt FROM iscc_t WHERE isccent=? AND isccsite=? AND iscc001=? AND iscc002=? AND isccseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isccseq,iscc003,iscc004,iscc005,iscc007,iscc006,iscc008,iscc009,iscc103,iscc104,iscc010,isccstus,&apos;&apos;,isccownid,&apos;&apos;,isccowndp,&apos;&apos;,iscccrtid,&apos;&apos;,iscccrtdp,&apos;&apos;,iscccrtdt,isccmodid,&apos;&apos;,isccmoddt FROM iscc_t WHERE isccent= ? AND isccsite=? AND iscc001=? AND iscc002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

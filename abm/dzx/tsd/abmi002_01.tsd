@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="abmi002_01" std_prog="abmi002_01" erpver="1.0" ver="1" module="ABM" booking="Y" class="i" template="F002_00" normal_style="Y" env="s" zone="t10dev">
+  <toolbar items="insert,modify,delete,output,query"/>
+  <table ver="1">
+    <tbl name="bmzf_t" parent="" main="Y" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" status=""/>
+    </tbl>
+  </table>
+  <all src="s" ver="1" cite_std="" cite_ver="" status="">
+    <![CDATA[1.此table內的資料由公式參數帶出參數項次和參數說明，並可自行輸入數值或修改
+2.若是由BOM維護作業串入的驗証公式，將值自動帶出(參數項次和參數說明)
+]]>
+  </all>
+  <field column="" name="bmze003_desc" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" cite_std="N" cite_ver="" status="">
+    <![CDATA[根據公式編號帶出對應公式的公式說明，可參考abmi002帶出公式說明規格
+]]>
+  </field>
+  <field column="" name="bmze003_desc1" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" cite_std="N" cite_ver="" status="">
+    <![CDATA[在按下計算後，顯示將參數轉換為數值的公式
+
+根據對應的參數項次找到對應輸入的數值，講公式轉換為相應的數值公式，與帶出公式類似，可參考帶出公式說明部分
+如果輸入的數值為負數，則用括號()講對應的負數括起來]]>
+  </field>
+  <field column="" name="bmzf008" ver="1" table="" attribute="" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[輸入的資料必須為數字，可輸入正負數
+可先判斷是否為有‘-’號，判斷是否在第一位，如果不在第一位，則報錯，輸入必須為數值
+再判斷是否有小數點'.'，如果有超過兩個‘.’，則報錯，輸入必須為數值
+然後再判斷取每一個字符去判斷是否是0~9的數或者是小數點，如果是負數，則從第二位開始判斷，到字符長度結束
+                                                                                              如果是正數，則從第一位開始判斷，到字符長度結束]]>
+  </field>
+  <field column="bmzf001" name="bmzf_t.bmzf001" ver="1" table="bmzf_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="bmzf002" name="bmzf_t.bmzf002" ver="1" table="bmzf_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="&gt;=,1.000" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="bmzf003" name="bmzf_t.bmzf003" ver="1" table="bmzf_t" attribute="C103" type="varchar2(80)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="result" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[1.公式套入參數值的計算結果
+可用SELECT ROUND(公式,6) FROM dual 計算結果，如果超過6位小數，則四捨五入，保留6位
+
+2.若公式無錯誤公式，無法正確算出結果，在此欄位顯示錯誤"公式錯誤，請檢查公式設定"]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code/>
+  <act src="s" id="compute" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[輸入完參數後，按下此按鈕依公式計算出結果]]>
+  </act>
+  <strings>
+    <sfield name="lbl_bmzf001" text="公式代號" comment="" lstr=""/>
+    <sfield name="lbl_bmzf002" text="參數項次" comment="" lstr=""/>
+    <sfield name="lbl_bmzf003" text="參數說明" comment="" lstr=""/>
+    <sfield name="lbl_bmzf008" text="值" comment="" lstr=""/>
+    <sfield name="lbl_result" text="計算結果=" comment="" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" comment="" lstr=""/>
+    <sfield name="lbl_dend" text="項)" comment="" lstr=""/>
+    <sact name="compute" text="compute" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude/>
+</spec>

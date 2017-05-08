@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ainp850" std_prog="ainp850" erpver="1.0" ver="3" module="AIN" type="M" booking="N" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 依據盤點計劃產生盤點資料，此作業可以透過選項的勾選產生盤點資料或是空白標籤
+作業功能：單選/單選取消/多選/多選取消/新增/報表/詳細資料/查詢/篩選/條件查詢/條件儲存/說明/離開/重新整理
+作業類型：批次處理作業
+輸入模式：批次 P001_00
+作業資料來源(Master)：
+ 資料來源表：inpa_t(盤點計畫單頭檔)
+                        inpb_t(盤點計劃流程檔)
+                        inpc_t(盤點限定庫位檔)
+                        inag_t(庫存明細檔)
+                        inai_t(製造批序號庫存明細檔)
+
+            資料目的表：inpd_t(盤點明細檔)
+                        inpe_t(盤點製造批序號明細檔)
+                        inpf_t(在製工單盤點單頭檔)
+                        inpg_t(在製工單盤點明細檔)
+
+
+補充說明：(輸入此作的補充說明事項)
+
+操作方式說明:
+1.條件輸入完後，按下確定，依條件產生相關的盤點資料
+2.並於下方顯示所有盤點資料的執行過程
+3.於畫面最下方顯示資料的處理進度
+
+進入程式後，判斷
+ //此判斷先Mark
+ //[T:盤點計劃流程檔].[盤點作業] = '2'盤點明細產生 且[C:進度狀況] = 'Y'
+ // 若[T:盤點明細檔]已存在，則顯示"現有庫存盤點資料已存在"
+ // 若[T:在製工單盤點單頭檔]已存在，則顯示"在製工單盤點資料已存在"
+ // 若兩者皆有資料，則顯示現有庫存與在製工單已執行過，無法繼續往下執行
+
+處理邏輯：
+   1.存貨凍結 = 'Y' 
+     1-1.判斷盤點計畫限定庫位，如果有資料則
+         依據[T:盤點限定庫位檔]的每一筆資料進行存貨凍結
+         更新[T:庫位資料檔].[C:存貨凍結] = 'Y'
+         更新[T:盤點計畫單頭檔].[C:存貨實際凍結日] = g_today
+     1-2.若沒有限定庫位，則表示所有可用庫位都需進行存貨凍結
+         處理邏輯同上
+   2.現有庫存產生盤點資料 = 'Y'
+     2-1.資料來源：[T:庫存明細檔]、[T:參考單位/包裝庫存明細檔]
+         條件：若[T:盤點計畫單頭檔].[C:包含已無庫存量資料] = 'N' 則
+         篩選：[T:庫存明細檔].[C:實際庫存數量] > 0
+         條件：判斷盤點計畫限定庫位，如果有資料則
+         篩選：符合該限定的庫位資料
+         排序：依[T:盤點計畫單頭檔].[C:存貨排序一~六]的選項，進行資料產生的排序
+         新增到[T:盤點明細檔]，重要欄位說明：
+            [C:標籤編號] = 依[T:盤點計畫單頭檔].[C:存貨盤點單別]
+                           呼叫應用元件s_aooi200_gen_docno自動編標籤編號
+            判斷[T:盤點計畫單頭檔].[C:產生方式]
+               若產生方式 = '一料一盤點卡號'
+                 [C:標籤編號] = 不同資料，依序增加
+                 [C:項次] = 固定給0
+                  
+               若產生方式= '同盤點卡號，用項次呈現'則
+                 [C:項次] = 同標籤編號，項次依序增加
+            [C:料件編號] = [T:庫存明細檔].[C:料件編號]
+            [C:產品特徵] = [T:庫存明細檔].[C:產品特徵]
+            [C:庫存管理特徵] = [T:庫存明細檔].[C:庫存管理特徵]
+            [C:包裝容器編號] =[T:參考單位/包裝庫存明細檔].[C:參考單位/包裝編號]
+                              庫存類型 = '2'包裝編號
+            [C:庫位] = [T:庫存明細檔].[C:庫位]
+            [C:儲位] = [T:庫存明細檔].[C:儲位]
+            [C:批號] = [T:庫存明細檔].[C:批號]
+            [C:盤點計劃單號] = 畫面上.盤點計劃單號
+            [C:空白標籤] = 'N'
+            [C:庫存單位] = [T:庫存明細檔].[C:庫存單位]
+            [C:現有庫存量] =[T:庫存明細檔].[C:實際庫存數量]
+             若據點參數的參考單位= 'Y'詞需要處理參考單位
+             [C:參考單位] = T:參考單位/包裝庫存明細檔].[C:參考單位/包裝編號]
+                    庫存類型 = '1'參考單位
+             [C:參考單位現有庫存量] = T:參考單位/包裝庫存明細檔].[C:實際庫存數量]
+                    庫存類型 = '1'參考單位
+            
+            [C:產生人員] = g_user
+            [C:產生日期] = g_today
+            若[T:盤點計畫單頭檔].[C:盤點輸入方式] = '盤差輸入'，則
+              [C:盤點數量-初盤(一)] = [C:現有庫存數量]
+              [C:盤點數量-初盤(二)] =若[T:盤點計畫單頭檔].[C:現有庫存初盤二]= 'Y'則
+                                      [C:現有庫存數量]
+              [C:參考單位盤點量-初盤(一)] =[C:參考單位現有庫存量] 
+              [C:參考單位盤點量-初盤(二)] = 若[T:盤點計畫單頭檔].[C:現有庫存初盤二]= 'Y'則
+                                             [C:參考單位現有庫存量]
+              [C:盤點數量-複盤(一)] = 若[T:盤點計畫單頭檔].[C:現有庫存複盤一]= 'Y'則
+                                       [C:現有庫存數量]
+              [C:盤點數量-複盤(二)] = 若[T:盤點計畫單頭檔].[C:現有庫存複盤二]= 'Y'則
+                                       [C:現有庫存數量]
+              [C:參考單位盤點量-複盤(一)] = 若[T:盤點計畫單頭檔].[C:現有庫存複盤一]= 'Y'則
+                                            [C:參考單位現有庫存數量]
+              [C:參考單位盤點量-複盤(二)] = 若[T:盤點計畫單頭檔].[C:現有庫存複盤二]= 'Y'則
+                                            [C:參考單位現有庫存數量]
+            否則盤點數量給0
+     2-2.資料來源：[T:製造批序號庫存明細檔] 
+           當該筆料件編號有作批序號管理時，則須同時將批序號資料寫入[T:盤點單製造批序號明細檔]
+           重要欄位說明：
+              [C:盤點編號] =  [T:盤點明細檔].[C:標籤編號] 
+              [C:項次] =  [T:盤點明細檔].[C:項次] 
+              [C:序號] = 依序增加
+              [C:料件編號] =[T:盤點明細檔].[C:料件編號]
+              [C:產品特徵] = [T:盤點明細檔].[C:產品特徵]
+              [C:庫存管理特徵] = [T:盤點明細檔].[C:庫存管理特徵]
+              [C:包裝容器編號] = [T:盤點明細檔].[C:包裝容器編號]
+              [C:庫位] = [T:盤點明細檔].[C:庫位]
+              [C:儲位] = [T:盤點明細檔].[C:儲位]
+              [C:批號] = [T:盤點明細檔].[C:批號]
+              [C:製造批號] = [T:製造批序號庫存明細檔].[C:製造批號]
+              [C:製造序號] = [T:製造批序號庫存明細檔].[C:製造序號]    
+              [C:製造日期] = [T:製造批序號庫存明細檔].[C:製造日期]
+              [C:現有庫存量] = [T:製造批序號庫存明細檔].[C:實際庫存數量]
+              若[T:盤點計畫單頭檔].[C:盤點輸入方式] = '盤差輸入'，則
+              [C:盤點數量-初盤(一)] = [C:現有庫存數量]
+              [C:盤點數量-初盤(二)] =若[T:盤點計畫單頭檔].[C:現有庫存初盤二]= 'Y'則
+                                      [C:現有庫存數量]
+              [C:盤點數量-複盤(一)] = 若[T:盤點計畫單頭檔].[C:現有庫存複盤一]= 'Y'則
+                                       [C:現有庫存數量]
+              [C:盤點數量-複盤(二)] = 若[T:盤點計畫單頭檔].[C:現有庫存複盤二]= 'Y'則
+                                       [C:現有庫存數量]
+              否則盤點數量給0
+   3.現有庫存產生空白標籤 = 'Y'
+     3-1.新增到[T:盤點明細檔]，重要欄位說明：
+         依據畫面欄位[C:產生張數]產生資料
+           [C:標籤編號] = 依[T:盤點計畫單頭檔].[C:存貨空白單別]
+                          呼叫應用元件s_aooi200_gen_docno自動編標籤編號
+           判斷[T:盤點計畫單頭檔].[C:產生方式]
+               若產生方式 = '一料一盤點卡號'
+                 [C:標籤編號] = 不同資料，依序增加
+                 [C:項次] = 固定給0
+               
+               若產生方式= '同盤點卡號，用項次呈現'則
+                 [C:項次] = 同標籤編號，項次依序增加
+           [C:盤點計劃單號] = 畫面上.盤點計劃單號
+           [C:空白標籤] = 'Y'
+           [C:產生人員] = g_user
+           [C:產生日期] = g_today             
+
+   4.產生在製工單盤點資料 = 'Y'
+     4-1.資料來源：[T:工單單頭檔]、[T:工單備料單身檔]
+         條件：[T:工單單頭檔].{C:生管結案狀態]= '0':未結案
+               [T:工單備料單身檔].[C:應發數量] > 0
+             ???
+         排序：依[T:盤點計畫單頭檔].[C:在製排序一~六]的選項，進行資料產生的排序
+         4-1-1.新增到[T:在製工單盤點單頭檔]，重要欄位說明：
+              [C:標籤編號] = 依[T:盤點計畫單頭檔].[C:在製盤點單別]
+                             呼叫應用元件s_aooi200_gen_docno自動編標籤編號
+              判斷[T:盤點計畫單頭檔].[C:產生方式]
+                 若產生方式 = '一料一盤點卡號'
+                   [C:標籤編號] = 不同資料，依序增加
+                   [C:項次] = 固定給0
+                  
+                 若產生方式= '同盤點卡號，用項次呈現'則
+                   [C:項次] = 同標籤編號，項次依序增加
+              [C:工單單號] = [T:工單單頭檔].{C:工單單號]
+              [C:作業編號] = [T:工單備料單身檔].{C:作業編號]
+              [C:生產料號] = [T:工單單頭檔].{C:生產料號]
+              [C:盤點計劃單號] = 畫面上.盤點計劃單號
+              [C:空白標籤] = 'N'
+              [C:部門/廠商] = [T:工單單頭檔].{C:部門廠商]
+              [C:生產數量] = [T:工單單頭檔].{C:生產數量]
+              [C:生產單位] = [T:工單單頭檔].{C:生產單位]
+              [C:製程編號] = [T:工單單頭檔].{C:製程編號]
+              [C:已發料套數] = [T:工單單頭檔].{C:已發料套數]
+              [C:已入庫合格量] = [T:工單單頭檔].{C:已入庫合格量]
+              [C:已入庫不合格量] = [T:工單單頭檔].{C:已入庫不合格量]
+              [C:報廢量] = [T:工單單頭檔].{C:報廢數量]
+              [C:產生人員] = g_user
+              [C:產生日期] = g_today
+         4-1-2.新增到[T:在製工單盤點明細檔]，重要欄位說明：  
+              [C:標籤編號] = [T:在製工單盤點單頭檔].[C:標籤編號]
+              [C:項次] = [T:在製工單盤點單頭檔].[C:項次]
+              [C:項序] = [T:工單備料單身檔].[C:項次]  
+              [C:序號] = [T:工單備料單身檔].[C:項序]
+              [C:發料料號] = [T:工單備料單身檔].[C:發料料號]
+              [C:作業編號] = [T:工單備料單身檔].[C:作業編號]
+              [C:製程序] = [T:工單備料單身檔].[C:製程序]
+              [C:標準QPA] = [T:工單備料單身檔].[C:標準QPA]
+              [C:實際QPA] = [T:工單備料單身檔].[C:實際QPA]
+              [C:應發數量] = [T:工單備料單身檔].[C:應發數量]
+              [C:單位] = [T:工單備料單身檔].[C:單位]
+              [C:已發數量] = [T:工單備料單身檔].[C:已發數量]
+              [C:報廢數量] = [T:工單備料單身檔].[C:報廢數量]
+              [C:庫存管理特徵] = [T:工單備料單身檔].[C:特徵]
+              [C:超領數量] = [T:工單備料單身檔].[C:超領數量]
+               //實際已用量 = ((完工入庫量 + 報廢數量) * QPA) + 下階報廢量
+               //應盤數量 = 已發數量 + 超領數量 - 實際已用量
+                實際已用量 = (([T:工單單頭檔].[C:已入庫合格量] + 
+                  [T:工單單頭檔].{C:報廢數量]) * [T:工單備料單身檔].[C:實際QPA]) +
+                  [T:工單備料單身檔].[C:報廢數量]
+              [C:應盤數量] = [T:工單備料單身檔].[C:已發數量] + 
+                  [T:工單備料單身檔].[C:超領數量] - 實際已用量
+              若[T:盤點計畫單頭檔].[C:盤點輸入方式] = '盤差輸入'，則
+                [C:盤點數量-初盤(一)] = [C:應盤數量]
+                [C:盤點數量-初盤(二)] =若[T:盤點計畫單頭檔].[C:在製工單初盤二]= 'Y'則
+                                        [C:應盤數量]
+                [C:盤點數量-複盤(一)] = 若[T:盤點計畫單頭檔].[C:在製工單複盤一]= 'Y'則
+                                         [C:應盤數量]
+                [C:盤點數量-複盤(二)] = 若[T:盤點計畫單頭檔].[C:在製工單複盤二]= 'Y'則
+                                         [C:應盤數量]  
+              否則盤點數量給0              
+
+   5.在製工單產生空白標籤 = 'Y'
+     5-1.新增到[T:在製工單盤點單頭檔]，重要欄位說明：
+         依據畫面欄位[C:產生張數]產生資料
+           [C:標籤編號] = 依[T:盤點計畫單頭檔].[C:在製空白單別]
+                          呼叫應用元件s_aooi200_gen_docno自動編標籤編號
+           判斷[T:盤點計畫單頭檔].[C:產生方式]
+               若產生方式 = '一料一盤點卡號'
+                 [C:標籤編號] = 不同資料，依序增加
+                 [C:項次] = 固定給0
+               
+               若產生方式= '同盤點卡號，用項次呈現'則
+                 [C:項次] = 同標籤編號，項次依序增加
+           [C:盤點計劃單號] = 畫面上.盤點計劃單號
+           [C:空白標籤] = 'Y'
+           [C:產生人員] = g_user
+           [C:產生日期] = g_today   
+     5-2.新增到[T:在製工單盤點明細檔]，重要欄位說明：
+         [C:標籤編號] = 同[T:在製工單盤點單頭檔].[C:標籤編號]
+         [C:項次] = 同[T:在製工單盤點單頭檔].[C:項次] 
+         [C:項序] = 給第一筆初始值
+
+   6.存貨凍結執行成功後，更新[T:盤點計劃流程檔].[盤點作業] = '4'存貨凍結，更新欄位：
+         [C:進度狀況] = 'Y'
+         [C:處理進度= 100%
+         [C:操作人員] = g_user
+         [C:實際操作日期] = g_today
+
+   7.盤點資料產生執行成功後，更新[T:盤點計劃流程檔].[盤點作業] = '2'盤點明細產生，更新欄位：
+         [C:進度狀況] = 'Y'
+         [C:處理進度= 100%
+         [C:操作人員] = g_user
+         [C:實際操作日期] = g_today
+         
+   8.畫面單身欄位顯示執行過程
+   9.畫面最下方，顯示目前已處理筆數 / 總筆數的執行百分比
+]]>
+  </all>
+  <field cite_std="N" name="blank1" ver="3" src="s" column="inpa010" table="inpa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="blank2" ver="3" src="s" column="inpa010" table="inpa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="freeze" ver="3" src="s" column="inpa010" table="inpa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="u">
+    <![CDATA[存貨凍結：
+   ●欄位控管：
+     資料欄位: 
+     預設值:無
+     校驗: 
+     帶值:無
+     計算或處理:1.當存貨實際凍結日沒有值為空時，此欄位才可輸入
+               ]]>
+  </field>
+  <field cite_std="N" name="inpa_t.inpa002" ver="3" src="s" column="inpa002" table="inpa_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[計劃人員：
+   ●欄位控管：
+     資料欄位: inpa002/Display Only
+     預設值:無
+     校驗: 
+     帶值:無
+     計算或處理:
+]]>
+  </field>
+  <field cite_std="N" name="inpa_t.inpa005" ver="3" src="s" column="inpa005" table="inpa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="u">
+    <![CDATA[存貨預計凍結日：
+   ●欄位控管：
+     資料欄位: inpa005/Display Only
+     預設值:無
+     校驗: 
+     帶值:無
+     計算或處理:]]>
+  </field>
+  <field cite_std="N" name="inpa_t.inpa006" ver="3" src="s" column="inpa006" table="inpa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="u">
+    <![CDATA[存貨實際凍結日：
+   ●欄位控管：
+     資料欄位: inpa006/Display Only
+     預設值:無
+     校驗: 
+     帶值:無
+     計算或處理:
+]]>
+  </field>
+  <field cite_std="N" name="inpa_t.inpadocno" ver="3" src="s" column="inpadocno" table="inpa_t" attribute="" type="" req="Y" i_zoom="q_inpadocno_3" c_zoom="" chk_ref="v_inpadocno" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[盤點計劃單號：
+   ●欄位控管：
+     校驗:1.不允許空白
+          2.輸入的盤點計劃單號狀態需要為已確認的計劃單
+          3.輸入的盤點計劃單號的盤點類型(piaa001)值需為'1:實地盤點'
+    
+     計算或處理：
+
+   ●開窗處理:
+      1.查詢時：
+       參考函式：依標準查詢視窗 
+       查詢欄位：盤點計劃單號、輸入日期、計劃人員、計畫部門
+       查詢條件：盤點計劃狀態已確認
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依標準查詢視窗
+           查詢欄位：盤點計劃單號、輸入日期、計劃人員、計畫部門
+           查詢條件：盤點計劃狀態已確認
+           回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="inpadocno_desc" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="FFLabel" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="number1" ver="3" src="s" column="inpbseq" table="inpb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="N" widget="Edit" status="u">
+    <![CDATA[產生張數：
+   ●欄位控管：
+     預設值:無
+     校驗: 
+     帶值:無
+     計算或處理:1.若產生空白標籤為'Y'，才可輸入且不可空白；否則不可輸入]]>
+  </field>
+  <field cite_std="N" name="number2" ver="3" src="s" column="inpbseq" table="inpb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stock" ver="3" src="s" column="inpa010" table="inpa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="u">
+    <![CDATA[[T:盤點計劃流程檔].[盤點作業] = '2'盤點明細產生 且[C:進度狀況] = 'Y'
+  若[T:盤點明細檔]已存在，則顯示"現有庫存盤點資料已存在"
+  此欄位不能勾選  
+]]>
+  </field>
+  <field cite_std="N" name="work" ver="3" src="s" column="inpa010" table="inpa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="u">
+    <![CDATA[[T:盤點計劃流程檔].[盤點作業] = '2'盤點明細產生 且[C:進度狀況] = 'Y'
+  若[T:在製工單盤點單頭檔]已存在，則顯示"在製工單盤點資料已存在"
+  此欄位不能勾選]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="3" name="inpa002_desc" src="s" depend_field="inpa_t.inpa002" correspon_key="inpa002" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status="u"/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="3" name="blank1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="blank2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="freeze" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="inpa_t.inpa002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="inpa_t.inpa005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="inpa_t.inpa006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="inpa_t.inpadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="inpadocno_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="number1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="number2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="stock" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="work" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="lbl_inpadocno" text="計劃單號" lstr=""/>
+    <sfield name="lbl_inpa002" text="計劃人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="group_qbe" text="現有庫存" lstr=""/>
+    <sfield name="lbl_freezz" text="存貨凍結" lstr=""/>
+    <sfield name="lbl_inpa005" text="存貨預計凍結日" lstr=""/>
+    <sfield name="lbl_inpa006" text="存貨實際凍結日" lstr=""/>
+    <sfield name="lbl_stock" text="產生盤點資料" lstr=""/>
+    <sfield name="lbl_blank1" text="產生空白標籤" lstr=""/>
+    <sfield name="lbl_number1" text="產生張數" lstr=""/>
+    <sfield name="ainp850.group_1" text="在製工單" lstr=""/>
+    <sfield name="lbl_work" text="產生在製工單盤點資料" lstr=""/>
+    <sfield name="lbl_blank2" text="產生空白標籤" lstr=""/>
+    <sfield name="lbl_number2" text="產生張數" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="背景執行設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

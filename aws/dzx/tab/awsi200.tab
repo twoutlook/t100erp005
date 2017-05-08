@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="awsi200" module="aws" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02669" crtdt="2015-06-18 16:03:02" modid="07558" moddt="2015-10-14 14:26:33" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="ETL Job 設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="wsca001,wsca001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="wsca007,wsca008,wsca002,wsca005,wscal009(chr500),wsca004,wscastus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="wsca007,wscaownid,wscaownid_desc(chr500),wscaowndp,wscaowndp_desc(chr500),wscacrtid,wscacrtid_desc(chr500),wscacrtdp,wscacrtdp_desc(chr500),wscacrtdt,wscamodid,wscamodid_desc(chr500),wscamoddt"/>
+      <var id="bs_field" value="wsca001,wsca001_desc(chr80)" pk="wsca001" order=""/>
+      <bs_reference field="wsca001_desc" ref_field="wsca001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aws" filename="awsi200" method="dialog">
+    <section id="input">
+      <input id="head" field="wsca001"/>
+      <input id="body" page="1" field="wsca007,wsca008,wsca002,wsca005,wscal009,wsca004,wscastus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="wsca001"/>
+      <construct id="body" page="1" field="wsca007,wsca008,wsca002,wsca005,wscal009,wsca004,wscastus"/>
+      <construct id="body" page="2" field="wscaownid,wscaowndp,wscacrtid,wscacrtdp,wscacrtdt,wscamodid,wscamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="wsca001"/>
+      <set id="head" type="no_entry" field="wsca001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="wsca001">
+        <after>
+          <check chkid="v_gzza001" id="isExist"/>
+          <reference field="wsca001_desc" ref_field="wsca_t.wsca001" map_field="wsca001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001_1" state="i"/>
+        <controlp form="q_wsca001" state="c"/>
+      </column>
+      <column id="wsca001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="wsca007" type="S" default="0"/>
+      <column id="wsca008" type="S" default="1" def_scc="202"/>
+      <column id="wsca002"/>
+      <column id="wsca005"/>
+      <column id="wscal009"/>
+      <column id="wsca004" type="S" default="1" def_scc="175"/>
+      <column id="wscastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="wscaownid">
+        <after>
+          <reference field="wscaownid_desc" ref_field="wsca_t.wscaownid" map_field="wscaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="wscaownid_desc"/>
+      <column id="wscaowndp">
+        <after>
+          <reference field="wscaowndp_desc" ref_field="wsca_t.wscaowndp" map_field="wscaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="wscaowndp_desc"/>
+      <column id="wscacrtid">
+        <after>
+          <reference field="wscacrtid_desc" ref_field="wsca_t.wscacrtid" map_field="wscacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="wscacrtid_desc"/>
+      <column id="wscacrtdp">
+        <after>
+          <reference field="wscacrtdp_desc" ref_field="wsca_t.wscacrtdp" map_field="wscacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="wscacrtdp_desc"/>
+      <column id="wscacrtdt"/>
+      <column id="wscamodid">
+        <after>
+          <reference field="wscamodid_desc" ref_field="wsca_t.wscamodid" map_field="wscamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="wscamodid_desc"/>
+      <column id="wscamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="wsca_t" pk="wsca001">
+      <sql id="forupd_sql" type="sql" query="SELECT wsca001,&apos;&apos; FROM wsca_t WHERE wsca001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT wsca001,&apos;&apos; FROM wsca_t" order="wsca001"/>
+    </head>
+    <body id="wsca_t" page="1,2" linked="" pk="wsca007" fk="wsca001">
+      <sql id="forupd_sql_detail" query="SELECT wsca007,wsca008,wsca002,wsca005,&apos;&apos;,wsca004,wscastus,&apos;&apos;,wscaownid,&apos;&apos;,wscaowndp,&apos;&apos;,wscacrtid,&apos;&apos;,wscacrtdp,&apos;&apos;,wscacrtdt,wscamodid,&apos;&apos;,wscamoddt FROM wsca_t WHERE wsca001=? AND wsca007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT wsca007,wsca008,wsca002,wsca005,&apos;&apos;,wsca004,wscastus,&apos;&apos;,wscaownid,&apos;&apos;,wscaowndp,&apos;&apos;,wscacrtid,&apos;&apos;,wscacrtdp,&apos;&apos;,wscacrtdt,wscamodid,&apos;&apos;,wscamoddt FROM wsca_t WHERE wsca001=?"/>
+      <sql id="detail_append" type="lang" target="wscal009" table="wscal_t" fk="wsca001,wsca007" pk="wscal001,wscal007,wscal008" field="wscal009"/>
+    </body>
+  </dataset>
+</assembly>
+

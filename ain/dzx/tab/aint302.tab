@@ -1,0 +1,288 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint302" module="ain" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02294" crtdt="2013-10-15 14:04:49" modid="05423" moddt="2017-02-07 10:16:22" sdver="0025" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="雜項庫存收料作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inbadocno,inbadocno_desc(chr80),inbasite,inbadocdt,inba002,inba003,inba003_desc(chr80),inba004,inba004_desc(chr80),inbastus,inba005,inba006,inba007,inba007_desc(chr80),inba008,inbaownid,inbaownid_desc(chr80),inbacrtdp,inbacrtdp_desc(chr80),inbaowndp,inbaowndp_desc(chr80),inbacrtdt,inbacrtid,inbacrtid_desc(chr80),inbamodid,inbamodid_desc(chr80),inbacnfdt,inbamoddt,inbapstid,inbapstid_desc(chr80),inbacnfid,inbacnfid_desc(chr80),inbapstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inbbsite,inbbseq,inbb001,inbb001_desc(chr500),imaal004(chr500),inbb002,inbb002_desc(chr500),inbb004,inbb004_desc(chr500),inbb007,inbb007_desc(chr500),inbb008,inbb008_desc(chr500),inbb009,inbb010,inbb010_desc(chr500),inbb003,inbb011,inbb012,inbb013,inbb013_desc(chr500),inbb014,inbb015,inbb016,inbb016_desc(chr500),inbb017,inbb018,inbb019,inbb023,inbb023_desc(chr500),inbb024,inbb024_desc(chr500),inbb025,inbb025_desc(chr500),inbb020,inbb204,inbb022,inbb021,ooff013(chr500)"/>
+      <var id="bs_field" value="inbadocno,inbadocdt,inba002,inba003,inba003_desc(chr80),inba004,inba004_desc(chr80)" pk="inbadocno" order=""/>
+      <bs_reference field="inba003_desc" ref_field="inba003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="inba004_desc" ref_field="inba004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="aint302_01"/>
+      <action id="modify" type="standard"/>
+      <action id="gen_detail"/>
+      <action id="unposted"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_memo"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="qc_query"/>
+      <action id="reproduce" type="standard"/>
+      <action id="open_detail_memo"/>
+      <action id="query" type="standard"/>
+      <action id="gen_qc"/>
+      <action id="scan_barcode"/>
+      <action id="storage_by_qc"/>
+      <action id="prog_inba003" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_inba_m.inba003"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="s_lot_sel1"/>
+      <action id="s_lot_ins"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="gen_detail"/>
+      <action id="s_lot_sel1"/>
+      <action id="open_detail_memo"/>
+      <action id="s_lot_ins"/>
+    </section>
+    <section id="master_input">
+      <action id="open_memo"/>
+      <action id="open_detail_memo"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint302" method="dialog">
+    <section id="input">
+      <input id="head" field="inbadocno,inbasite,inbadocdt,inba002,inba003,inba004,inbastus,inba005,inba006,inba007,inba008"/>
+      <input id="body" page="1" field="inbbseq,inbb001,inbb002,inbb004,inbb007,inbb008,inbb009,inbb010,inbb003,inbb011,inbb012,inbb013,inbb014,inbb015,inbb016,inbb016_desc,inbb017,inbb018,inbb019,inbb023,inbb024,inbb025,inbb020,inbb204,inbb022,inbb021,ooff013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="inbadocno,inbadocno_desc,inbasite,inbadocdt,inba002,inba003,inba004,inbastus,inba005,inba006,inba007,inba007_desc,inba008,inbaownid,inbacrtdp,inbaowndp,inbacrtdt,inbacrtid,inbamodid,inbacnfdt,inbamoddt,inbapstid,inbacnfid,inbapstdt"/>
+      <construct id="body" page="1" field="inbbseq,inbb001,inbb002,inbb004,inbb007,inbb008,inbb009,inbb010,inbb003,inbb011,inbb012,inbb013,inbb014,inbb015,inbb016,inbb016_desc,inbb017,inbb018,inbb019,inbb023,inbb024,inbb025,inbb020,inbb204,inbb022,inbb021,ooff013"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="inbadocno"/>
+      <set id="head" type="no_entry" field="inbadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="inbadocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_inbadocno" state="c"/>
+      </column>
+      <column id="inbadocno_desc"/>
+      <column id="inbasite"/>
+      <column id="inbadocdt"/>
+      <column id="inba002"/>
+      <column id="inba003">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="inba003_desc" ref_field="inba_t.inba003" map_field="inba003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inba003_desc"/>
+      <column id="inba004">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="inba004_desc" ref_field="inba_t.inba004" map_field="inba004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="inba004_desc"/>
+      <column id="inbastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Z" pic="unposted"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="inba005" type="S" default="1" def_scc="2051"/>
+      <column id="inba006"/>
+      <column id="inba007">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="inba007_desc"/>
+      <column id="inba008"/>
+      <column id="inbaownid">
+        <after>
+          <reference field="inbaownid_desc" ref_field="inba_t.inbaownid" map_field="inbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inbaownid_desc"/>
+      <column id="inbacrtdp">
+        <after>
+          <reference field="inbacrtdp_desc" ref_field="inba_t.inbacrtdp" map_field="inbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inbacrtdp_desc"/>
+      <column id="inbaowndp">
+        <after>
+          <reference field="inbaowndp_desc" ref_field="inba_t.inbaowndp" map_field="inbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inbaowndp_desc"/>
+      <column id="inbacrtdt"/>
+      <column id="inbacrtid">
+        <after>
+          <reference field="inbacrtid_desc" ref_field="inba_t.inbacrtid" map_field="inbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inbacrtid_desc"/>
+      <column id="inbamodid">
+        <after>
+          <reference field="inbamodid_desc" ref_field="inba_t.inbamodid" map_field="inbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inbamodid_desc"/>
+      <column id="inbacnfdt"/>
+      <column id="inbamoddt"/>
+      <column id="inbapstid">
+        <after>
+          <reference field="inbapstid_desc" ref_field="inba_t.inbapstid" map_field="inbapstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inbapstid_desc"/>
+      <column id="inbacnfid">
+        <after>
+          <reference field="inbacnfid_desc" ref_field="inba_t.inbacnfid" map_field="inbacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inbacnfid_desc"/>
+      <column id="inbapstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="inbbsite"/>
+      <column id="inbbseq"/>
+      <column id="inbb001">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+          <reference field="inbb001_desc" ref_field="inbb_t.inbb001" map_field="inbb001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="inbb001_desc"/>
+      <column id="imaal004"/>
+      <column id="inbb002">
+        <after>
+          <reference field="inbb002_desc" ref_field="inbb001,inbb002" map_field="inbb001,inbb002" ref_sql="SELECT inaml004 FROM inaml_t WHERE inamlent=$varg_enterprise$var AND inaml001=? AND inaml002=? AND inaml003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inbb002_desc"/>
+      <column id="inbb004">
+        <after>
+          <check chkid="v_imaa001_3" id="isExist"/>
+          <reference field="inbb004_desc" ref_field="inbb_t.inbb004" map_field="inbb004" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_3" state="i"/>
+        <controlp form="q_imaa001_3" state="c"/>
+      </column>
+      <column id="inbb004_desc"/>
+      <column id="inbb007">
+        <after>
+          <reference field="inbb007_desc" ref_field="inbb_t.inbb007" map_field="inbb007" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag004_13" state="i"/>
+        <controlp form="q_inag004_13" state="c"/>
+      </column>
+      <column id="inbb007_desc"/>
+      <column id="inbb008">
+        <after>
+          <reference field="inbb008_desc" ref_field="inbbsite,inbb007,inbb008" map_field="inbbsite,inbb007,inbb008" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inag004_13" state="i"/>
+        <controlp form="q_inag004_13" state="c"/>
+      </column>
+      <column id="inbb008_desc"/>
+      <column id="inbb009">
+        <controlp form="q_inag004_13" state="i"/>
+        <controlp form="q_inag004_13" state="c"/>
+      </column>
+      <column id="inbb010">
+        <after>
+          <check chkid="v_imao002" id="isExist"/>
+          <reference field="inbb010_desc" ref_field="inbb_t.inbb010" map_field="inbb010" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imao002" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="inbb010_desc"/>
+      <column id="inbb003"/>
+      <column id="inbb011" type="S" default="0"/>
+      <column id="inbb012" type="S" default="0"/>
+      <column id="inbb013">
+        <after>
+          <reference field="inbb013_desc" ref_field="inbb_t.inbb013" map_field="inbb013" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="inbb013_desc"/>
+      <column id="inbb014" type="S" default="0"/>
+      <column id="inbb015" type="S" default="0"/>
+      <column id="inbb016">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="inbb016_desc"/>
+      <column id="inbb017"/>
+      <column id="inbb018" type="S" default="N"/>
+      <column id="inbb019" type="S" default="0"/>
+      <column id="inbb023">
+        <after>
+          <check chkid="v_pjba001" id="isExist"/>
+          <reference field="inbb023_desc" ref_field="inbb_t.inbb023" map_field="inbb023" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="inbb023_desc"/>
+      <column id="inbb024">
+        <after>
+          <check chkid="v_pjbb002" id="isExist"/>
+          <reference field="inbb024_desc" ref_field="inbb023,inbb024" map_field="inbb023,inbb024" ref_sql="SELECT pjbbl004 FROM pjbbl_t WHERE pjbblent=$varg_enterprise$var AND pjbbl001=? AND pjbbl002=? AND pjbbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbb002_1" state="i"/>
+        <controlp form="q_pjbb002_1" state="c"/>
+      </column>
+      <column id="inbb024_desc"/>
+      <column id="inbb025">
+        <after>
+          <check chkid="v_pjbm002" id="isExist"/>
+          <reference field="inbb025_desc" ref_field="inbb023,inbb025" map_field="inbb023,inbb025" ref_sql="SELECT pjbml004 FROM pjbml_t WHERE pjbmlent=$varg_enterprise$var AND pjbml001=? AND pjbml002=? AND pjbml003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbm002" state="i"/>
+        <controlp form="q_pjbm002" state="c"/>
+      </column>
+      <column id="inbb025_desc"/>
+      <column id="inbb020"/>
+      <column id="inbb204"/>
+      <column id="inbb022"/>
+      <column id="inbb021"/>
+      <column id="ooff013"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="inba_t" pk="inbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT inbadocno,&apos;&apos;,inbasite,inbadocdt,inba002,inba003,&apos;&apos;,inba004,&apos;&apos;,inbastus,inba005,inba006,inba007,&apos;&apos;,inba008,inbaownid,&apos;&apos;,inbacrtdp,&apos;&apos;,inbaowndp,&apos;&apos;,inbacrtdt,inbacrtid,&apos;&apos;,inbamodid,&apos;&apos;,inbacnfdt,inbamoddt,inbapstid,&apos;&apos;,inbacnfid,&apos;&apos;,inbapstdt FROM inba_t WHERE inbaent= ? AND inbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT inbadocno,&apos;&apos;,inbasite,inbadocdt,inba002,inba003,&apos;&apos;,inba004,&apos;&apos;,inbastus,inba005,inba006,inba007,&apos;&apos;,inba008,inbaownid,&apos;&apos;,inbacrtdp,&apos;&apos;,inbaowndp,&apos;&apos;,inbacrtdt,inbacrtid,&apos;&apos;,inbamodid,&apos;&apos;,inbacnfdt,inbamoddt,inbapstid,&apos;&apos;,inbacnfid,&apos;&apos;,inbapstdt FROM inba_t" order="inbadocno"/>
+    </head>
+    <body id="inbb_t" page="1" linked="" pk="inbbseq" fk="inbbdocno">
+      <sql id="forupd_sql_detail" query="SELECT inbbsite,inbbseq,inbb001,&apos;&apos;,&apos;&apos;,inbb002,&apos;&apos;,inbb004,&apos;&apos;,inbb007,&apos;&apos;,inbb008,&apos;&apos;,inbb009,inbb010,&apos;&apos;,inbb003,inbb011,inbb012,inbb013,&apos;&apos;,inbb014,inbb015,inbb016,&apos;&apos;,inbb017,inbb018,inbb019,inbb023,&apos;&apos;,inbb024,&apos;&apos;,inbb025,&apos;&apos;,inbb020,inbb204,inbb022,inbb021,&apos;&apos; FROM inbb_t WHERE inbbent=? AND inbbdocno=? AND inbbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inbbsite,inbbseq,inbb001,&apos;&apos;,&apos;&apos;,inbb002,&apos;&apos;,inbb004,&apos;&apos;,inbb007,&apos;&apos;,inbb008,&apos;&apos;,inbb009,inbb010,&apos;&apos;,inbb003,inbb011,inbb012,inbb013,&apos;&apos;,inbb014,inbb015,inbb016,&apos;&apos;,inbb017,inbb018,inbb019,inbb023,&apos;&apos;,inbb024,&apos;&apos;,inbb025,&apos;&apos;,inbb020,inbb204,inbb022,inbb021,&apos;&apos; FROM inbb_t WHERE inbbent=? AND inbbdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

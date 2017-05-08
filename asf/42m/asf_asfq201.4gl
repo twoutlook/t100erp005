@@ -1,0 +1,912 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfq201.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-04-12 18:17:58), PR版次:0001(2016-05-11 16:58:50)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000027
+#+ Filename...: asfq201
+#+ Description: eSOP查詢作業
+#+ Creator....: 05384(2016-04-12 18:18:01)
+#+ Modifier...: 05384 -SD/PR- 05384
+ 
+{</section>}
+ 
+{<section id="asfq201.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+ 
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       fflabel_1 LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+#s01
+DEFINE g_sfcbdocno_o      LIKE sfcb_t.sfcbdocno
+DEFINE g_sfcb01_m         RECORD
+    sfcbdocno_01          LIKE sfcb_t.sfcbdocno,
+    sfaa010_01            LIKE sfaa_t.sfaa010,
+    sfaa010_01_desc       LIKE imaal_t.imaal003,
+    sfaa010_01_desc1      LIKE imaal_t.imaal004,
+    sfaa016_01            LIKE sfaa_t.sfaa016,
+    process_files         LIKE type_t.chr1000
+                      END RECORD
+
+DEFINE g_detail_cnt       LIKE type_t.num10  #單身總筆數
+DEFINE g_detail_idx       LIKE type_t.num10  #單身目前所在筆數
+DEFINE g_current_page     LIKE type_t.num10  #目前所在頁數
+#
+DEFINE g_rec_b            LIKE type_t.num10
+DEFINE l_ac               LIKE type_t.num10
+DEFINE g_loaa001          LIKE loaa_t.loaa001   #取檔key值
+DEFINE pa_array   DYNAMIC ARRAY OF RECORD
+    value                 STRING,
+    label_tag             STRING,
+    label                 STRING
+                      END RECORD
+GLOBALS
+   DEFINE g_notneed_labeltag   BOOLEAN
+   DEFINE mi_return_array      BOOLEAN
+END GLOBALS
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfq201.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL asfq201_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asfq201 WITH FORM cl_ap_formpath("asf",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL asfq201_init()
+ 
+      #進入選單 Menu (="N")
+      CALL asfq201_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_asfq201
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+ 
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="asfq201.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION asfq201_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   DEFINE ls_4stpath   STRING
+   DEFINE ls_4tmpath   STRING
+   DEFINE l_sql        STRING
+   DEFINE l_n          LIKE type_t.num5
+   DEFINE l_oocql001   LIKE oocql_t.oocql001
+   DEFINE l_oocql002   LIKE oocql_t.oocql002
+   DEFINE l_oocql004   LIKE oocql_t.oocql004
+   DEFINE l_oobx003    LIKE oobx_t.oobx003
+   DEFINE ls_file      STRING
+   DEFINE ls_result    STRING
+   DEFINE ls_count     LIKE type_t.num5
+   DEFINE lc_channel   base.Channel
+   DEFINE l_sfcbdocno  LIKE sfcb_t.sfcbdocno
+   DEFINE l_values     STRING   #產生sfcbdocno，combobox
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   #inport style
+   LET ls_4stpath = os.Path.join(FGL_GETENV("ERP"), os.Path.join("cfg", os.Path.join("4st", os.Path.join(g_lang, "asfp331.4st"))))
+   CALL ui.Interface.loadStyles(ls_4stpath)
+   LET ls_4tmpath = os.Path.join(FGL_GETENV("ERP"), os.Path.join("cfg", os.Path.join("4tm", "asfq201.4tm")))
+   CALL gfrm_curr2.loadTopMenu(ls_4tmpath)
+   
+   #嵌入畫面
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfq201_s01"), "main_grid03", "VBox", "mainlayout")
+   
+   #隱藏嵌入畫面
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+#   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+#   CALL cl_set_comp_visible("main_vbox04",FALSE)
+#   CALL cl_set_comp_visible("main_vbox05",FALSE)
+#   CALL cl_set_comp_visible("main_vbox08",FALSE)
+#   CALL cl_set_comp_visible("main_vbox09",FALSE)
+   
+#   LET l_sql = " SELECT DISTINCT sfcbdocno FROM sfcb_t ",
+#               "  WHERE sfcbent = '",g_enterprise,"' ",
+#               "    AND sfcbsite = '",g_site,"' ",
+#               "    AND (sfcb046 > 0 OR sfcb047 > 0 OR sfcb048 > 0 OR sfcb049 > 0 OR sfcb050 > 0) ",
+#               "  ORDER BY sfcbdocno "
+#   
+#   PREPARE get_sfcbdocno_pre FROM l_sql
+#   DECLARE get_sfcbdocno_cur CURSOR FOR get_sfcbdocno_pre
+#   FOREACH get_sfcbdocno_cur INTO l_sfcbdocno
+#      IF cl_null(l_values) THEN
+#         LET l_values = l_sfcbdocno
+#         LET g_sfcb01_m.sfcbdocno_01 = l_values
+#      ELSE
+#         LET l_values = l_values CLIPPED ,",",l_sfcbdocno
+#      END IF
+#   END FOREACH
+#   CALL cl_set_combo_items("sfcbdocno_01",l_values,l_values)
+   LET g_sfcbdocno_o = ''
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfq201.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION asfq201_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   LET g_action_choice = 'openfile'
+   CALL cl_set_comp_visible("main_vbox01",TRUE)
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   WHILE TRUE
+      CASE g_action_choice
+#         WHEN 'menu'
+#            CALL cl_set_comp_visible("main_vbox01",TRUE)
+#            CALL asfq201_menu()
+#            CALL cl_set_comp_visible("main_vbox01",FALSE)            
+         WHEN 'openfile'
+            CALL cl_set_comp_visible("main_vbox03",TRUE)
+            CALL asfq201_open_file()
+            CALL cl_set_comp_visible("main_vbox03",FALSE)
+             
+         WHEN 'logout'
+            EXIT WHILE
+            
+         WHEN 'exit'
+            EXIT WHILE
+            
+         OTHERWISE
+            EXIT WHILE
+      END CASE
+   END WHILE
+   RETURN
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         
+         
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL asfq201_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL asfq201_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL asfq201_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = asfq201_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfq201.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION asfq201_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfq201.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION asfq201_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_n           LIKE type_t.num5
+   DEFINE l_n1          LIKE type_t.num5
+   DEFINE l_n2          LIKE type_t.num5
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+ 
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE asfq201_process_cs CURSOR FROM ls_sql
+#  FOREACH asfq201_process_cs INTO
+   #add-point:process段process name="process.process"
+  
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+ 
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL asfq201_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfq201.get_buffer" >}
+PRIVATE FUNCTION asfq201_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfq201.msgcentre_notify" >}
+PRIVATE FUNCTION asfq201_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfq201.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 主選單
+# Memo...........: 
+# Usage..........: CALL asfq201_menu()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160114 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfq201_menu()
+   MENU
+   
+      BEFORE MENU
+         CLEAR FORM
+         
+         
+      ON ACTION movein
+         LET g_action_choice = "movein"
+         EXIT MENU
+      
+      ON ACTION checkin
+         LET g_action_choice = "checkin"
+         EXIT MENU
+      
+      ON ACTION processing
+         LET g_action_choice = "processing"
+         EXIT MENU
+      
+      ON ACTION checkout
+         LET g_action_choice = "checkout"
+         EXIT MENU
+      
+      ON ACTION moveout
+         LET g_action_choice = "moveout"
+         EXIT MENU
+      
+      ON ACTION overview
+         LET g_action_choice = "overview"
+         EXIT MENU
+      
+      ON ACTION setup
+         LET g_action_choice = "setup"
+         EXIT MENU
+      
+      ON ACTION logout
+         LET g_action_choice = "logout"
+         EXIT MENU
+      
+      #公用action
+      ON ACTION close
+         LET g_action_choice = "exit"
+         EXIT MENU
+      
+      ON ACTION exit
+         LET g_action_choice = "exit"
+         EXIT MENU
+      
+      #主選單用ACTION
+      &include "main_menu_exit_menu.4gl"
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+   END MENU
+END FUNCTION
+################################################################################
+# Descriptions...: 設定製程文件combobox
+# Memo...........:
+# Usage..........: CALL asfq201_set_combo_process_files()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20160408 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfq201_set_combo_process_files()
+   DEFINE p_sfcbdocno   LIKE sfcb_t.sfcbdocno
+   DEFINE l_sql         STRING
+   DEFINE l_loaa001     LIKE loaa_t.loaa001
+   DEFINE l_loaa007     LIKE loaa_t.loaa007
+   DEFINE l_loaa010     LIKE loaa_t.loaa010
+   DEFINE l_loaa013     LIKE loaa_t.loaa013
+   DEFINE l_values      STRING
+   DEFINE l_items       STRING
+   
+   LET l_sql = " SELECT loaa007,loaa010,loaa013 ",
+               "   FROM loaa_t ",
+               "  WHERE loaaent = '",g_enterprise,"' ",
+               "    AND loaa001 = '",g_loaa001,"' "
+   
+   LET g_sfcb01_m.process_files = ''
+   
+   PREPARE get_process_files_pre FROM l_sql
+   DECLARE get_process_files_cur CURSOR FOR get_process_files_pre
+   FOREACH get_process_files_cur INTO l_loaa007,l_loaa010,l_loaa013
+      IF cl_null(l_values) THEN
+         LET l_values = l_loaa010,"(",l_loaa013,")"
+      ELSE
+         LET l_values = l_values CLIPPED ,",",l_loaa010,"(",l_loaa013,")"
+      END IF
+      IF cl_null(l_items) THEN
+         LET l_items = l_loaa007
+         LET g_sfcb01_m.process_files = l_loaa007
+         DISPLAY BY NAME g_sfcb01_m.process_files
+      ELSE
+         LET l_items = l_items CLIPPED ,",",l_loaa007
+      END IF
+   END FOREACH
+   CALL cl_set_combo_items("process_files",l_items,l_values)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 開啟文件
+# Memo...........: 
+# Usage..........: CALL asfq201_open_file()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/04/11 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfq201_open_file()
+   DEFINE l_sql        STRING
+   DEFINE l_sfcbdocno  LIKE sfcb_t.sfcbdocno
+   DEFINE l_sfaa016    LIKE sfaa_t.sfaa016
+   DEFINE l_values     STRING   #產生sfcbdocno，combobox
+   CLEAR FORM
+#   INITIALIZE g_sfcb01_m.* TO NULL
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      CONSTRUCT BY NAME g_wc ON sfcbdocno_01
+         BEFORE FIELD sfcbdocno_01
+               LET l_sql = " SELECT DISTINCT sfcbdocno FROM sfcb_t ",
+                           "  WHERE sfcbent = '",g_enterprise,"' ",
+                           "    AND sfcbsite = '",g_site,"' ",
+                           "    AND (sfcb046 > 0 OR sfcb047 > 0 OR sfcb048 > 0 OR sfcb049 > 0 OR sfcb050 > 0) ",
+                           "  ORDER BY sfcbdocno "
+               
+               PREPARE get_sfcbdocno_pre FROM l_sql
+               DECLARE get_sfcbdocno_cur CURSOR FOR get_sfcbdocno_pre
+               
+               LET l_sql = " SELECT sfaa016 ",
+                           "   FROM sfaa_t ",
+                           "  WHERE sfaaent = '",g_enterprise,"' ",
+                           "    AND sfaadocno = ? "
+               PREPARE asfq201_sfaa016 FROM l_sql
+               INITIALIZE l_values TO NULL
+               FOREACH get_sfcbdocno_cur INTO l_sfcbdocno
+                  INITIALIZE l_sfaa016 TO NULL
+                  EXECUTE asfq201_sfaa016 USING l_sfcbdocno INTO l_sfaa016
+                  IF cl_null(l_sfaa016) THEN
+                     CONTINUE FOREACH
+                  END IF
+                  IF cl_null(l_values) THEN
+                     LET l_values = l_sfcbdocno
+                     LET g_sfcb01_m.sfcbdocno_01 = l_values
+                  ELSE
+                     LET l_values = l_values CLIPPED ,",",l_sfcbdocno
+                  END IF
+               END FOREACH
+               CALL cl_set_combo_items("sfcbdocno_01",l_values,l_values)
+         AFTER FIELD sfcbdocno_01
+#            INITIALIZE g_sfcb01_m.* TO NULL
+            INITIALIZE g_sfcb01_m.sfcbdocno_01 TO NULL
+            LET g_sfcb01_m.sfcbdocno_01 = GET_FLDBUF(sfcbdocno_01)
+            IF cl_null(g_sfcb01_m.sfcbdocno_01) THEN
+               LET g_sfcb01_m.sfcbdocno_01 = ''
+               DISPLAY BY NAME g_sfcb01_m.*
+               ERROR "This field requires an entered value."
+               NEXT FIELD CURRENT
+            ELSE
+               IF g_sfcb01_m.sfcbdocno_01 <> g_sfcbdocno_o OR cl_null(g_sfcbdocno_o) THEN
+                  LET g_sfcbdocno_o = g_sfcb01_m.sfcbdocno_01
+                  INITIALIZE g_sfcb01_m.* TO NULL
+                  LET g_sfcb01_m.sfcbdocno_01 = g_sfcbdocno_o
+                  SELECT sfaa010,imaal003,imaal004,sfaa016
+                    INTO g_sfcb01_m.sfaa010_01,g_sfcb01_m.sfaa010_01_desc,g_sfcb01_m.sfaa010_01_desc1,g_sfcb01_m.sfaa016_01
+                    FROM sfaa_t
+                    LEFT OUTER JOIN imaal_t ON imaalent = sfaaent AND imaal001 = sfaa010 AND imaal002 = g_dlang
+                   WHERE sfaaent = g_enterprise
+                     AND sfaadocno = g_sfcb01_m.sfcbdocno_01
+                  DISPLAY BY NAME g_sfcb01_m.sfcbdocno_01,g_sfcb01_m.sfaa010_01,g_sfcb01_m.sfaa010_01_desc
+                  DISPLAY BY NAME g_sfcb01_m.sfaa010_01_desc1,g_sfcb01_m.sfaa016_01
+                  LET g_loaa001 = '[{"column":"ecba001","values":"',g_sfcb01_m.sfaa010_01,'"},{"column":"ecba002","values":"',g_sfcb01_m.sfaa016_01,'"}]'
+                  CALL asfq201_set_combo_process_files()
+                  LET g_sfcbdocno_o = g_sfcb01_m.sfcbdocno_01
+               END IF
+            END IF
+         END CONSTRUCT
+         
+         INPUT BY NAME g_sfcb01_m.process_files ATTRIBUTE(WITHOUT DEFAULTS=TRUE)
+         
+         BEFORE INPUT
+            IF NOT cl_null(g_sfcb01_m.sfcbdocno_01) THEN
+               IF g_sfcb01_m.sfcbdocno_01 <> g_sfcbdocno_o OR cl_null(g_sfcbdocno_o) THEN
+                  SELECT sfaa010,imaal003,imaal004,sfaa016
+                    INTO g_sfcb01_m.sfaa010_01,g_sfcb01_m.sfaa010_01_desc,g_sfcb01_m.sfaa010_01_desc1,g_sfcb01_m.sfaa016_01
+                    FROM sfaa_t
+                    LEFT OUTER JOIN imaal_t ON imaalent = sfaaent AND imaal001 = sfaa010 AND imaal002 = g_dlang
+                   WHERE sfaaent = g_enterprise
+                     AND sfaadocno = g_sfcb01_m.sfcbdocno_01
+                  DISPLAY BY NAME g_sfcb01_m.sfcbdocno_01,g_sfcb01_m.sfaa010_01,g_sfcb01_m.sfaa010_01_desc
+                  DISPLAY BY NAME g_sfcb01_m.sfaa010_01_desc1,g_sfcb01_m.sfaa016_01
+                  LET g_loaa001 = '[{"column":"ecba001","values":"',g_sfcb01_m.sfaa010_01,'"},{"column":"ecba002","values":"',g_sfcb01_m.sfaa016_01,'"}]'
+                  CALL asfq201_set_combo_process_files()
+                  LET g_sfcbdocno_o = g_sfcb01_m.sfcbdocno_01
+               END IF
+            END IF
+#         AFTER FIELD process_files
+         
+         ON CHANGE process_files
+            LET g_sfcb01_m.process_files = GET_FLDBUF(process_files)
+            DISPLAY BY NAME g_sfcb01_m.process_files
+         
+#      END CONSTRUCT
+      END INPUT
+      
+      
+      ON ACTION update_doc
+         INITIALIZE g_sfcb01_m.* TO NULL
+         LET g_sfcb01_m.sfcbdocno_01 = GET_FLDBUF(sfcbdocno_01)
+         LET g_sfcbdocno_o = g_sfcb01_m.sfcbdocno_01
+         IF cl_null(g_sfcb01_m.sfcbdocno_01) THEN
+            LET g_sfcb01_m.sfcbdocno_01 = ''
+            DISPLAY BY NAME g_sfcb01_m.*
+            ERROR "This field requires an entered value."
+            NEXT FIELD CURRENT
+         ELSE
+            SELECT sfaa010,imaal003,imaal004,sfaa016
+              INTO g_sfcb01_m.sfaa010_01,g_sfcb01_m.sfaa010_01_desc,g_sfcb01_m.sfaa010_01_desc1,g_sfcb01_m.sfaa016_01
+              FROM sfaa_t
+              LEFT OUTER JOIN imaal_t ON imaalent = sfaaent AND imaal001 = sfaa010 AND imaal002 = g_dlang
+             WHERE sfaaent = g_enterprise
+               AND sfaadocno = g_sfcb01_m.sfcbdocno_01
+            DISPLAY BY NAME g_sfcb01_m.sfcbdocno_01,g_sfcb01_m.sfaa010_01,g_sfcb01_m.sfaa010_01_desc
+            DISPLAY BY NAME g_sfcb01_m.sfaa010_01_desc1,g_sfcb01_m.sfaa016_01
+            LET g_loaa001 = '[{"column":"ecba001","values":"',g_sfcb01_m.sfaa010_01,'"},{"column":"ecba002","values":"',g_sfcb01_m.sfaa016_01,'"}]'
+            CALL asfq201_set_combo_process_files()
+         END IF
+      ON ACTION openfile
+#         INITIALIZE g_sfcb01_m.* TO NULL
+         INITIALIZE g_sfcb01_m.sfcbdocno_01 TO NULL
+         LET g_sfcb01_m.sfcbdocno_01 = GET_FLDBUF(sfcbdocno_01)
+         IF cl_null(g_sfcb01_m.sfcbdocno_01) THEN
+            LET g_sfcb01_m.sfcbdocno_01 = ''
+            DISPLAY BY NAME g_sfcb01_m.*
+            ERROR "This field requires an entered value."
+            NEXT FIELD CURRENT
+         ELSE
+            IF g_sfcb01_m.sfcbdocno_01 <> g_sfcbdocno_o OR cl_null(g_sfcbdocno_o) THEN
+               LET g_sfcbdocno_o = g_sfcb01_m.sfcbdocno_01
+               INITIALIZE g_sfcb01_m.* TO NULL
+               LET g_sfcb01_m.sfcbdocno_01 = g_sfcbdocno_o
+               SELECT sfaa010,imaal003,imaal004,sfaa016
+                 INTO g_sfcb01_m.sfaa010_01,g_sfcb01_m.sfaa010_01_desc,g_sfcb01_m.sfaa010_01_desc1,g_sfcb01_m.sfaa016_01
+                 FROM sfaa_t
+                 LEFT OUTER JOIN imaal_t ON imaalent = sfaaent AND imaal001 = sfaa010 AND imaal002 = g_dlang
+                WHERE sfaaent = g_enterprise
+                  AND sfaadocno = g_sfcb01_m.sfcbdocno_01
+               DISPLAY BY NAME g_sfcb01_m.sfcbdocno_01,g_sfcb01_m.sfaa010_01,g_sfcb01_m.sfaa010_01_desc
+               DISPLAY BY NAME g_sfcb01_m.sfaa010_01_desc1,g_sfcb01_m.sfaa016_01
+               LET g_loaa001 = '[{"column":"ecba001","values":"',g_sfcb01_m.sfaa010_01,'"},{"column":"ecba002","values":"',g_sfcb01_m.sfaa016_01,'"}]'
+               CALL asfq201_set_combo_process_files()               
+            END IF
+         END IF
+         IF cl_null(g_sfcb01_m.process_files) THEN
+            ERROR "This field requires an entered value."
+            NEXT FIELD process_files
+         END IF
+         IF NOT cl_doc_open_attach(g_loaa001,'1',g_sfcb01_m.process_files,'1') THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aws-00012'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err() 
+         END IF
+#         EXIT DIALOG
+      
+      ON ACTION logout
+         LET g_action_choice = "logout"
+         EXIT DIALOG
+
+      ON ACTION close
+         LET g_action_choice = 'exit'
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET g_action_choice = 'exit'
+         EXIT DIALOG
+
+      #主選單用ACTION
+      &include "main_menu_exit_dialog.4gl"
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+END FUNCTION
+
+################################################################################
+# Descriptions...: |
+# Memo...........:
+# Usage..........: CALL asfq201_subString(p_str)
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160125 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asfq201_subString(p_str)
+DEFINE p_str        STRING
+DEFINE r_str        STRING
+
+   LET r_str = ''
+   
+   IF cl_null(p_str) THEN
+      RETURN p_str,r_str
+   END IF
+   
+   IF p_str.getIndexOf('|',1) = 0 THEN
+      LET r_str = p_str.subString(1,p_str.getLength())
+      LET p_str = ''
+   ELSE
+      LET r_str = p_str.subString(1,p_str.getIndexOf('|',1)-1)
+      LET p_str = p_str.subString(p_str.getIndexOf('|',1)+1,p_str.getLength())
+   END IF
+
+   RETURN p_str,r_str
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisr440_g01" module="ais" jobmode="N" type="g01" industry="std" crtid="02159" crtdt="2015-12-22 17:57:00" modid="04152" moddt="2016-05-06 10:53:51" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="iscesite,iscecomp,l_ooef002(ooef002|&apos;&apos;),l_ooefl006(ooefl006|&apos;&apos;),l_isaa002(isaa002|&apos;&apos;),isce001,l_isce002_s(isce002|&apos;&apos;),l_isce002_e(isce002|&apos;&apos;),l_isaa032(isaa032|&apos;&apos;),l_year(chr10|&apos;&apos;),l_month(chr10|&apos;&apos;),l_date(chr10|&apos;&apos;),isce002,isce003,isce004,isce005,isce006,isce007,isce008,isce009,isce010,l_iscd003(iscd003|NULL),l_iscd004(iscd004|NULL),isceent"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="iscesite,iscecomp,l_ooef002(ooef002|&apos;&apos;),l_ooefl006(ooefl006|&apos;&apos;),l_isaa002(isaa002|&apos;&apos;),isce001,l_isce002_s(isce002|&apos;&apos;),l_isce002_e(isce002|&apos;&apos;),l_isaa032(isaa032|&apos;&apos;),l_year(chr10|&apos;&apos;),l_month(chr10|&apos;&apos;),l_date(chr10|&apos;&apos;),isce002,isce003,isce004,isce005,isce006,isce007,isce008,isce009,isce010,l_iscd003(iscd003|NULL),l_iscd004(iscd004|NULL),isceent"/>
+    <sql id="g_from" query="isce_t"/>
+    <sql id="g_where" query="" maintable="isce_t"/>
+    <sql id="g_order" query="isce001"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="isce001,isce002"/>
+    <section id="b_group" reptype="d01">
+      <rep type="isce001" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="isceent,isce001"/>
+      <rep type="isce002"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="isceent,isce001,isce002"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="isceent,isce001,isce002"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="isce001" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="isceent,isce001"/>
+      <rep type="isce002"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

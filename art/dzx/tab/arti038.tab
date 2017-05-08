@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti038" module="art" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="06189" crtdt="2015-03-12 10:54:31" modid="06189" moddt="2015-03-18 14:09:26" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="生命週期限定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtdc001,rtdc002,rtdc003,rtdc003_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtdc001,rtdc002,rtdc003,rtdcownid,rtdcownid_desc(chr500),rtdcowndp,rtdcowndp_desc(chr500),rtdccrtid,rtdccrtid_desc(chr500),rtdccrtdp,rtdccrtdp_desc(chr500),rtdccrtdt,rtdcmodid,rtdcmodid_desc(chr500),rtdcmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti038" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtdc001,rtdc002,rtdc003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="rtdc001,rtdc002,rtdc003"/>
+      <construct id="body" page="2" field="rtdcownid,rtdcowndp,rtdccrtid,rtdccrtdp,rtdccrtdt,rtdcmodid,rtdcmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtdc001">
+        <controlp form="q_gzcb002_01" state="i"/>
+        <controlp form="q_gzcb002_01" state="c"/>
+      </column>
+      <column id="rtdc002"/>
+      <column id="rtdc003">
+        <after/>
+      </column>
+      <column id="rtdc003_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtdcownid">
+        <after>
+          <reference field="rtdcownid_desc" ref_field="rtdc_t.rtdcownid" map_field="rtdcownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdcownid_desc"/>
+      <column id="rtdcowndp">
+        <after>
+          <reference field="rtdcowndp_desc" ref_field="rtdc_t.rtdcowndp" map_field="rtdcowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdcowndp_desc"/>
+      <column id="rtdccrtid">
+        <after>
+          <reference field="rtdccrtid_desc" ref_field="rtdc_t.rtdccrtid" map_field="rtdccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdccrtid_desc"/>
+      <column id="rtdccrtdp">
+        <after>
+          <reference field="rtdccrtdp_desc" ref_field="rtdc_t.rtdccrtdp" map_field="rtdccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdccrtdp_desc"/>
+      <column id="rtdccrtdt"/>
+      <column id="rtdcmodid">
+        <after>
+          <reference field="rtdcmodid_desc" ref_field="rtdc_t.rtdcmodid" map_field="rtdcmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdcmodid_desc"/>
+      <column id="rtdcmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtdc_t" page="1,2" linked="" pk="rtdc001,rtdc002,rtdc003">
+      <sql id="forupd_sql_detail" query="SELECT rtdc001,rtdc002,rtdc003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtdcownid,&apos;&apos;,rtdcowndp,&apos;&apos;,rtdccrtid,&apos;&apos;,rtdccrtdp,&apos;&apos;,rtdccrtdt,rtdcmodid,&apos;&apos;,rtdcmoddt FROM rtdc_t WHERE rtdcent=? AND rtdc001=? AND rtdc002=? AND rtdc003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtdc001,rtdc002,rtdc003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtdcownid,&apos;&apos;,rtdcowndp,&apos;&apos;,rtdccrtid,&apos;&apos;,rtdccrtdp,&apos;&apos;,rtdccrtdt,rtdcmodid,&apos;&apos;,rtdcmoddt FROM rtdc_t WHERE rtdcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

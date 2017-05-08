@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="asft338_01" std_prog="asft338_01" erpver="1.0" module="ASF" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.asft338_01" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 多上站作业资料维护
+# Memo...........:
+# Usage..........: CALL asft338_01(p_sficdocno,p_sfic001,p_sficseq)
+# Input parameter: 1.p_sficdocno               LIKE sfic_t.sficdocno
+#                : 2.p_sficseq                 LIKE sfic_t.sficseq
+#                : 3.p_type                    LIKE type_t.chr1
+# Date & Author..: 2014/4/11 By wujie
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asft338_01(p_sficdocno,p_sficseq,p_type)
+DEFINE p_sficdocno               LIKE sfic_t.sficdocno
+DEFINE p_sficseq                 LIKE sfic_t.sficseq
+DEFINE p_type                    LIKE type_t.chr1
+DEFINE l_count                   LIKE type_t.num5
+DEFINE l_n                       LIKE type_t.num5
+DEFINE l_cmd                     LIKE type_t.chr5
+DEFINE l_lock_sw                 LIKE type_t.chr1
+DEFINE l_allow_insert            LIKE type_t.num5        #可新增否 
+DEFINE l_allow_delete            LIKE type_t.num5        #可刪除否
+DEFINE l_flag                    LIKE type_t.chr1
+DEFINE l_sfca003                 LIKE sfca_t.sfca003
+
+
+   WHENEVER ERROR CONTINUE
+   IF cl_null(p_sficdocno) OR cl_null(p_sficseq) THEN
+      CALL cl_err('','sub-00001',1)
+      RETURN
+   END IF
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asft338_01 WITH FORM cl_ap_formpath("asf","asft338_01")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+
+   LET g_qryparam.state = "i"
+
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+
+   
+   SELECT sfib001,sfib002 INTO g_sfib001,g_sfib002 FROM sfib_t WHERE sfibent=g_enterprise AND sfibsite=g_site
+      AND sfibdocno=p_sficdocno  AND sfibseq=p_sficseq
+   
+   LET g_sficdocno = p_sficdocno
+   LET g_sficseq = p_sficseq
+   
+   #作业编号说明
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = '221'
+   LET g_chkparam.arg2 = g_sfib001
+   CALL cl_ref_val("v_oocql002")
+   LET g_sfib001_desc = g_chkparam.return1
+   
+   DISPLAY g_sficseq,g_sfib001,g_sfib002 TO sficseq,sfib001,sfib002
+   DISPLAY g_sfib001_desc TO sfib001_desc
+   
+   LET g_forupd_sql = " SELECT sfic001,'',sfic002 FROM sfic_t ",
+                   "  WHERE sficent = '",g_enterprise,"' AND sficsite = '",g_site,"'",
+                   "    AND sficdocno='",g_sficdocno,"' AND sficseq='",g_sficseq,"'",
+                   "    AND sfic001 = ? AND sfic002 = ? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   PREPARE asft338_01_pre FROM g_forupd_sql
+   DECLARE asft338_01_cs CURSOR FOR asft338_01_pre
+   
+   CALL asft338_01_b_fill()
+   
+   IF p_type = 'N' THEN
+      DISPLAY ARRAY g_sfic TO s_detail1.*
+         ON ACTION accept
+            LET INT_FLAG = TRUE
+            EXIT DISPLAY
+
+         ON ACTION cancel
+            LET INT_FLAG = TRUE
+            EXIT DISPLAY
+
+         ON ACTION exit
+           LET INT_FLAG = TRUE
+           EXIT DISPLAY
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DISPLAY
+      END DISPLAY
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         CLOSE WINDOW w_asft338_01
+         RETURN
+      END IF
+   END IF
+   
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT ARRAY g_sfic FROM s_detail1.*
+         ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert,
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+         
+         BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+
+            CALL s_transaction_begin()
+
+            IF g_rec_b >= l_ac THEN
+               LET l_cmd='u'
+               LET g_sfic_t.* = g_sfic[l_ac].*  #BACKUP
+               OPEN asft338_01_cs USING g_sfic[l_ac].sfic001,g_sfic[l_ac].sfic002
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("asft338_01_cs",SQLCA.sqlcode,1)
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH asft338_01_cs INTO g_sfic[l_ac].*
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_sfic[l_ac].sfic001
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND oocql001 = '221' AND oocql002 = ? AND oocql003 = '"||g_lang||"'","") RETURNING g_rtn_fields
+                  LET g_sfic[l_ac].sfic001_desc = g_rtn_fields[1]
+                  DISPLAY g_sfic[l_ac].sfic001_desc TO s_detail1[l_ac].sfic001_desc
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+         BEFORE INSERT
+            CALL s_transaction_begin()
+            LET l_cmd = 'a'
+            INITIALIZE g_sfic_t.* TO NULL
+            INITIALIZE g_sfic[l_ac].* TO NULL
+            CALL cl_show_fld_cont()
+
+         AFTER INSERT
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,1)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            SELECT COUNT(*) INTO l_count FROM sfic_t WHERE sficent=g_enterprise AND sficsite=g_site AND sficdocno=g_sficdocno
+                AND sficseq=g_sficseq AND sfic001=g_sfic[l_ac].sfic001 AND sfic002=g_sfic[l_ac].sfic002
+            IF l_count = 0 THEN
+               INSERT INTO sfic_t VALUES(g_enterprise,g_site,g_sficdocno,g_sficseq,g_sfic[l_ac].sfic001,g_sfic[l_ac].sfic002)
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("INSERT sfic_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N',0)
+                  CANCEL INSERT
+               ELSE
+                  CALL s_transaction_end('Y',0)
+                  ERROR 'INSERT O.K'
+                  LET g_rec_b = g_rec_b + 1
+               END IF
+            ELSE
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_sfic[l_ac].* TO NULL
+               CALL s_transaction_end('N',0)
+               CANCEL INSERT
+            END IF
+            
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_sfic[l_ac].sfic001) AND NOT cl_null(g_sfic[l_ac].sfic002)THEN
+
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               DELETE FROM sfic_t WHERE sficent=g_enterprise AND sficsite=g_site AND sficdocno=g_sficdocno
+                   AND sficseq=g_sficseq AND sfic001=g_sfic[l_ac].sfic001 AND sfic002=g_sfic[l_ac].sfic002
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("DELETE sfic_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N',0)
+                  CANCEL DELETE
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  CALL s_transaction_end('Y',0)
+               END IF
+               CLOSE asft338_01_cs
+            END IF
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,1)
+               LET INT_FLAG = 0
+               LET g_sfic[l_ac].* = g_sfic_t.*
+               CLOSE asft338_01_cs
+               CALL s_transaction_end('N',0)
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err('',-263,1)
+               LET g_sfic[l_ac].* = g_sfic_t.*
+            ELSE
+               UPDATE sfic_t SET (sfic001,sfic002)= (g_sfic[l_ac].sfic001,g_sfic[l_ac].sfic002)
+                WHERE sficent=g_enterprise AND sficsite=g_site AND sficdocno=g_sficdocno
+                  AND sficseq=g_sficseq AND sfic001=g_sfic_t.sfic001 AND sfic002=g_sfic_t.sfic002
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("UPDATE sfic_t",SQLCA.sqlcode,1)
+                  LET g_sfic[l_ac].* = g_sfic_t.*
+                  CALL s_transaction_end('N',0)
+               ELSE
+                  CALL s_transaction_end('Y',0)
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE asft338_01_cs          {#ADP版次:1#}
+            
+         AFTER FIELD sfic001
+            IF NOT cl_null(g_sfic[l_ac].sfic001) AND (cl_null(g_sfic_t.sfic001) OR g_sfic[l_ac].sfic001 != g_sfic_t.sfic001) THEN
+               #排除INIT,群组编号
+               IF g_sfic[l_ac].sfic001 = 'INIT' THEN
+                  LET g_sfic[l_ac].sfic002 = 0
+               ELSE
+                  SELECT COUNT(*) INTO l_n FROM sfib_t WHERE sfibent=g_enterprise AND sfibsite=g_site
+                     AND sfibdocno=g_sficdocno AND sfib004=g_sfic[l_ac].sfic001
+                  IF l_n > 0 THEN
+                     LET g_sfic[l_ac].sfic002 = 0
+                  ELSE                                    
+                     #是否存在本站作业
+                     IF NOT cl_null(g_sfic[l_ac].sfic002) THEN
+                        SELECT COUNT(*) INTO l_n FROM sfib_t WHERE sfibent=g_enterprise AND sfibsite=g_site
+                        AND sfibdocno=g_sficdocno AND sfib001=g_sfic[l_ac].sfic001 AND sfib002=g_sfic[l_ac].sfic002
+                     ELSE
+                        SELECT COUNT(*) INTO l_n FROM sfib_t WHERE sfibent=g_enterprise AND sfibsite=g_site
+                        AND sfibdocno=g_sficdocno AND sfib001=g_sfic[l_ac].sfic001 
+                     END IF
+                     IF l_n = 0 THEN
+                        CALL cl_err(g_sfic[l_ac].sfic001,'asf-00132',1)
+                        LET g_sfic[l_ac].sfic001 = g_sfic_t.sfic001
+                        INITIALIZE g_chkparam.* TO NULL
+                        LET g_chkparam.arg1 = '221'
+                        LET g_chkparam.arg2 = g_sfic[l_ac].sfic001
+                        CALL cl_ref_val("v_oocql002")
+                        LET g_sfic[l_ac].sfic001_desc = g_chkparam.return1
+                        DISPLAY BY NAME g_sfic[l_ac].sfic001_desc
+                        NEXT FIELD sfic001
+                     END IF
+                  END IF
+               END IF                  
+
+               IF NOT cl_null(g_sfic[l_ac].sfic002) THEN
+                  IF NOT ap_chk_notDup(g_sfic[l_ac].sfic001,"SELECT COUNT(*) FROM sfic_t WHERE sficent = '" ||g_enterprise|| "' AND sficsite = '"||g_site ||"' AND sficdocno ='"||g_sficdocno||"' AND sficseq='"||g_sficseq||"' AND sfic001 = '"||g_sfic[l_ac].sfic001 ||"' AND sfic002 = '"||g_sfic[l_ac].sfic002||"'",'std-00004',1) THEN
+                     LET g_sfic[l_ac].sfic001 = g_sfic_t.sfic001
+                     LET g_sfic[l_ac].sfic002 = g_sfic_t.sfic002
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = '221'
+                     LET g_chkparam.arg2 = g_sfic[l_ac].sfic001
+                     CALL cl_ref_val("v_oocql002")
+                     LET g_sfic[l_ac].sfic001_desc = g_chkparam.return1
+                     DISPLAY BY NAME g_sfic[l_ac].sfic001_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #上站作業+上站製程序不可與同項次的本站作業、製程序相同
+                  IF g_sfic[l_ac].sfic001 = g_sfib001 AND g_sfic[l_ac].sfic002 = g_sfib002 THEN
+                     CALL cl_err('','asf-00132',1)
+                     LET g_sfic[l_ac].sfic001 = g_sfic_t.sfic001
+                     LET g_sfic[l_ac].sfic002 = g_sfic_t.sfic002
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = '221'
+                     LET g_chkparam.arg2 = g_sfic[l_ac].sfic001
+                     CALL cl_ref_val("v_oocql002")
+                     LET g_sfic[l_ac].sfic001_desc = g_chkparam.return1
+                     DISPLAY BY NAME g_sfic[l_ac].sfic001_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #本站作业为群组，上站作业群组不可维护成同本站作业群组的
+                  SELECT COUNT(*) INTO l_n FROM sfib_t WHERE sfibent=g_enterprise AND sfibsite=g_site
+                     AND sfibdocno=g_sficdocno AND sfibseq=g_sficseq AND sfib004=g_sfic[l_ac].sfic001
+                  IF l_n > 0 THEN
+                     CALL cl_err(g_sfic[l_ac].sfic001,'asf-00194',1)
+                     LET g_sfic[l_ac].sfic001 = g_sfic_t.sfic001
+                     LET g_sfic[l_ac].sfic002 = g_sfic_t.sfic002
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = '221'
+                     LET g_chkparam.arg2 = g_sfic[l_ac].sfic001
+                     CALL cl_ref_val("v_oocql002")
+                     LET g_sfic[l_ac].sfic001_desc = g_chkparam.return1
+                     DISPLAY BY NAME g_sfic[l_ac].sfic001_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = '221'
+               LET g_chkparam.arg2 = g_sfic[l_ac].sfic001
+               CALL cl_ref_val("v_oocql002")
+               LET g_sfic[l_ac].sfic001_desc = g_chkparam.return1
+               DISPLAY BY NAME g_sfic[l_ac].sfic001_desc 
+            END IF
+         
+         BEFORE FIELD sfic002
+            IF NOT cl_null(g_sfic[l_ac].sfic001) THEN
+               SELECT COUNT(*) INTO l_n FROM sfib_t WHERE sfibent=g_enterprise AND sfibsite=g_site
+                  AND sfibdocno=g_sficdocno  AND sfib004=g_sfic[l_ac].sfic001
+               IF g_sfic[l_ac].sfic001 = 'INIT' OR l_n > 0 THEN
+                  CALL cl_set_comp_entry("sfic002",FALSE)
+                  LET l_flag = 'N'
+               ELSE
+                  CALL cl_set_comp_entry("sfic002",TRUE)
+                  LET l_flag = 'Y'
+               END IF
+              # LET g_sfic_t.sfic002 = g_sfic[l_ac].sfic002
+            END IF
+            
+         AFTER FIELD sfic002
+            IF NOT cl_null(g_sfic[l_ac].sfic002) AND (cl_null(g_sfic_t.sfic002) OR g_sfic[l_ac].sfic002 != g_sfic_t.sfic002) AND l_flag = 'Y' THEN
+                  IF NOT cl_null(g_sfic[l_ac].sfic001) THEN
+                     IF NOT ap_chk_notDup(g_sfic[l_ac].sfic002,"SELECT COUNT(*) FROM sfic_t WHERE sficent = '" ||g_enterprise|| "' AND sficsite = '"||g_site ||"' AND sficdocno ='"||g_sficdocno||"' AND sficseq='"||g_sficseq||"' AND sfic001 = '"||g_sfic[l_ac].sfic001 ||"' AND sfic002 = '"||g_sfic[l_ac].sfic002||"'",'std-00004',1) THEN
+                        LET g_sfic[l_ac].sfic002 = g_sfic_t.sfic002
+                        NEXT FIELD CURRENT
+                     END IF
+                     #是否存在本站作业+制程序
+                     SELECT COUNT(*) INTO l_n FROM sfib_t WHERE sfibent=g_enterprise AND sfibsite=g_site
+                        AND sfibdocno=g_sficdocno AND sfib001=g_sfic[l_ac].sfic001 AND sfib002=g_sfic[l_ac].sfic002        
+                     IF l_n = 0 THEN
+                        CALL cl_err(g_sfic[l_ac].sfic002,'asf-00132',1)
+                        LET g_sfic[l_ac].sfic002 = g_sfic_t.sfic002
+                        NEXT FIELD sfic002
+                     END IF 
+                     #上站作業+上站製程序不可與同項次的本站作業、製程序相同
+                     IF g_sfic[l_ac].sfic001 = g_sfib001 AND g_sfic[l_ac].sfic002 = g_sfib002 THEN
+                        CALL cl_err(g_sfic[l_ac].sfic002,'asf-00132',1)
+                        LET g_sfic[l_ac].sfic002 = g_sfic_t.sfic002
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+            END IF
+            
+         ON ACTION controlp INFIELD sfic001
+            SELECT sfca003 INTO l_sfca003 
+              FROM sfca_t
+             WHERE sfcaent   = g_enterprise 
+               AND sfcasite  = g_site
+               AND sfcadocno =  g_sficdocno              
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_sfic[l_ac].sfic001
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = l_sfca003
+            CALL q_sfib001_1()
+            LET g_sfic[l_ac].sfic001 = g_qryparam.return1 
+            LET g_sfic[l_ac].sfic002 = g_qryparam.return2 
+            DISPLAY g_sfic[l_ac].sfic001 TO sfic001
+            DISPLAY g_sfic[l_ac].sfic002 TO sfic002
+            NEXT FIELD sfic001 
+      END INPUT
+      
+      BEFORE DIALOG
+         CALL DIALOG.setCurrentRow("s_detail1",l_ac)                {#ADP版次:1#}
+
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+   END DIALOG
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+   END IF
+   CLOSE asft338_01_cs
+   CLOSE WINDOW w_asft338_01
+END FUNCTION]]>
+  </point>
+  <point name="function.asft338_01_b_fill" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 单身显示
+# Memo...........:
+# Usage..........: CALL asft338_01_b_fill()
+# Date & Author..: 2014/2/13 By wuxja
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft338_01_b_fill()
+   LET g_sql="SELECT sfic001,'',sfic002 FROM sfic_t WHERE sficent='",g_enterprise,"' AND sficsite='",g_site,"'",
+             "   AND sficdocno='",g_sficdocno,"' AND sficseq='",g_sficseq,"'"
+   PREPARE asft338_01_pre1 FROM g_sql
+   DECLARE asft338_01_cs1 CURSOR FOR asft338_01_pre1
+   LET l_ac = 1
+   FOREACH asft338_01_cs1 INTO g_sfic[l_ac].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      #作业编号说明
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = '221'
+      LET g_chkparam.arg2 = g_sfic[l_ac].sfic001
+      CALL cl_ref_val("v_oocql002")
+      LET g_sfic[l_ac].sfic001_desc = g_chkparam.return1
+   
+      LET l_ac = l_ac + 1
+   END FOREACH
+   CALL g_sfic.deleteElement(g_sfic.getLength())
+   LET g_rec_b = l_ac - 1
+END FUNCTION]]>
+  </point>
+  <point name="free_style.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_sficdocno            LIKE sfic_t.sficdocno
+DEFINE g_sficseq              LIKE sfic_t.sficseq
+DEFINE g_sfib001              LIKE sfib_t.sfib001
+DEFINE g_sfib002              LIKE sfib_t.sfib002
+DEFINE g_sfib001_desc         LIKE oocql_t.oocql004
+DEFINE g_sql                  STRING
+DEFINE g_forupd_sql           STRING
+DEFINE l_ac                   LIKE type_t.num5
+DEFINE g_rec_b                LIKE type_t.num5
+DEFINE g_sfic                 DYNAMIC ARRAY OF RECORD
+       sfic001                LIKE sfic_t.sfic001,
+       sfic001_desc           LIKE oocql_t.oocql004,
+       sfic002                LIKE sfic_t.sfic002
+                              END RECORD
+DEFINE g_sfic_t               RECORD
+       sfic001                LIKE sfic_t.sfic001,
+       sfic001_desc           LIKE oocql_t.oocql004,
+       sfic002                LIKE sfic_t.sfic002
+                              END RECORD 
+DEFINE g_ref_fields           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列                              ]]>
+  </point>
+  <section id="asft338_01.description" ver="18" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000017
+#+ 
+#+ Filename...: asft338_01
+#+ Description: ...
+#+ Creator....: 00537(2014/04/11)
+#+ Modifier...: 00537(2014/04/11)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="asft338_01.free_style_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style
+{<point name="free_style.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asft338_01.free_style_variable" ver="2" status="" src="s">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asft338_01.global" ver="2" status="" src="s">
+    <![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="asft338_01.global_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asft338_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="asft338_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmi550" module="afm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="03538" crtdt="2015-04-28 11:26:12" modid="03538" moddt="2015-04-28 17:11:19" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="交易市場維護">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmme001,fmmel003,fmme002,fmmestus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="fmme001,fmmeownid,fmmeownid_desc(chr500),fmmeowndp,fmmeowndp_desc(chr500),fmmecrtid,fmmecrtid_desc(chr500),fmmecrtdp,fmmecrtdp_desc(chr500),fmmecrtdt,fmmemodid,fmmemodid_desc(chr500),fmmemoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmi550" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fmme001,fmmel003,fmme002,fmmestus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="fmme001,fmmel003,fmme002,fmmestus"/>
+      <construct id="body" page="2" field="fmmeownid,fmmeowndp,fmmecrtid,fmmecrtdp,fmmecrtdt,fmmemodid,fmmemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmme001">
+        <controlp form="q_fmme001" state="c"/>
+      </column>
+      <column id="fmmel003"/>
+      <column id="fmme002">
+        <controlp form="q_fmme002" state="c"/>
+      </column>
+      <column id="fmmestus" scc="17" type="S" default="Y">
+        <stus id="Y" pic="active"/>
+        <stus id="N" pic="inactive"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="fmmeownid">
+        <after>
+          <reference field="fmmeownid_desc" ref_field="fmme_t.fmmeownid" map_field="fmmeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmeownid_desc"/>
+      <column id="fmmeowndp">
+        <after>
+          <reference field="fmmeowndp_desc" ref_field="fmme_t.fmmeowndp" map_field="fmmeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmmeowndp_desc"/>
+      <column id="fmmecrtid">
+        <after>
+          <reference field="fmmecrtid_desc" ref_field="fmme_t.fmmecrtid" map_field="fmmecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmecrtid_desc"/>
+      <column id="fmmecrtdp">
+        <after>
+          <reference field="fmmecrtdp_desc" ref_field="fmme_t.fmmecrtdp" map_field="fmmecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmmecrtdp_desc"/>
+      <column id="fmmecrtdt"/>
+      <column id="fmmemodid">
+        <after>
+          <reference field="fmmemodid_desc" ref_field="fmme_t.fmmemodid" map_field="fmmemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmemodid_desc"/>
+      <column id="fmmemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="fmme_t" page="1,2" linked="" pk="fmme001">
+      <sql id="forupd_sql_detail" query="SELECT fmme001,&apos;&apos;,fmme002,fmmestus,&apos;&apos;,fmmeownid,&apos;&apos;,fmmeowndp,&apos;&apos;,fmmecrtid,&apos;&apos;,fmmecrtdp,&apos;&apos;,fmmecrtdt,fmmemodid,&apos;&apos;,fmmemoddt FROM fmme_t WHERE fmmeent=? AND fmme001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmme001,&apos;&apos;,fmme002,fmmestus,&apos;&apos;,fmmeownid,&apos;&apos;,fmmeowndp,&apos;&apos;,fmmecrtid,&apos;&apos;,fmmecrtdp,&apos;&apos;,fmmecrtdt,fmmemodid,&apos;&apos;,fmmemoddt FROM fmme_t WHERE fmmeent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="fmmel_t.fmmel003" table="fmmel_t" fk="fmme001" pk="fmmel001,fmmel002" field="fmmel003"/>
+    </body>
+  </dataset>
+</assembly>
+

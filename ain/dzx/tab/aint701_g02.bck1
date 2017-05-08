@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint701_g02" module="ain" jobmode="N" type="g01" industry="std" crtid="08172" crtdt="2016-09-18 11:23:00" modid="08172" moddt="2016-11-02 13:40:51" sdver="5" tabver="10001" description="裝箱彙總單">
+  <define arg="tm.wc(STRING|where condition),tm.typ(chr20|inbm008),tm.typ1(chr20|inbm003)">
+    <var seq="1" value="inbm001,inbmdocno,inbment,inbmsite,inbmunit,inboent,inbo001,l_inbo006(inbo006|&apos;&apos;),l_imaal003(chr100|&apos;&apos;),l_inam012(inam012|&apos;&apos;),l_inam014(inam014|&apos;&apos;),l_inam018(inam018|&apos;&apos;),l_inbo008(inbo008|&apos;&apos;),l_inbo0091(inbo009|0),l_inbo0092(inbo009|0),l_inbo0093(inbo009|0),l_inbo0094(inbo009|0),l_inbo0095(inbo009|0),l_inbo0096(inbo009|0),l_inbo0097(inbo009|0),l_inaa001(inaa001|&apos;&apos;),l_inaa002(inaa002|NULL),l_indcdocno(indcdocno|&apos;&apos;),l_sum(num20|0),l_imaa157(imaa157|0),l_money(num20_6|0),l_rel_num(num20|0),l_ooag011(ooag011|NULL),l_ooefl003(ooefl003|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="inbm001,inbmdocno,inbment,inbmsite,inbmunit,inboent,inbo001,l_inbo006(inbo006|&apos;&apos;),l_imaal003(chr100|&apos;&apos;),l_inam012(inam012|&apos;&apos;),l_inam014(inam014|&apos;&apos;),l_inam018(inam018|&apos;&apos;),l_inbo008(inbo008|&apos;&apos;),l_inbo0091(inbo009|0),l_inbo0092(inbo009|0),l_inbo0093(inbo009|0),l_inbo0094(inbo009|0),l_inbo0095(inbo009|0),l_inbo0096(inbo009|0),l_inbo0097(inbo009|0),l_inaa001(inaa001|&apos;&apos;),l_inaa002(inaa002|NULL),l_indcdocno(indcdocno|&apos;&apos;),l_sum(num20|0),l_imaa157(imaa157|0),l_money(num20_6|0),l_rel_num(num20|0),l_ooag011(ooag011|NULL),l_ooefl003(ooefl003|NULL)"/>
+    <sql id="g_from" query="inbm_t,inbo_t,indc_t"/>
+    <sql id="g_where" query="" maintable="inbm_t"/>
+    <sql id="g_order" query="inbo001"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="l_indcdocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_indcdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="inbment,l_indcdocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="inbment,l_indcdocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff002" where="inbment,l_indcdocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_indcdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="inbment,l_indcdocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

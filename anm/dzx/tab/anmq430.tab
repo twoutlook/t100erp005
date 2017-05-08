@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmq430" module="anm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06816" crtdt="2015-10-22 14:19:25" modid="03080" moddt="2016-11-30 09:38:14" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="應付票據異動查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="nmcksite,nmcksite_desc(chr80),nmckcomp,nmckcomp_desc(chr80),nmckdocno,nmck011,nmck004,nmck100"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),nmckdocno,nmck005,nmck005_desc(chr500),nmck004,l_nmck004_desc(chr500),nmck024,nmck025,nmck002,nmck002_desc(chr500),nmckdocdt,nmck011,nmck012,nmck100,nmck103,nmck101,nmck113,nmck030,nmck031,nmck026,nmckcomp"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),nmckdocno(b_nmckdocno),nmck005(b_nmck005),nmck005_desc(b_nmck005_desc),nmck004(b_nmck004),l_nmck004_desc(l_nmck004_desc),nmck024(b_nmck024),nmck025(b_nmck025),nmck002(b_nmck002),nmck002_desc(b_nmck002_desc),nmckdocdt(b_nmckdocdt),nmck011(b_nmck011),nmck012(b_nmck012),nmck100(b_nmck100),nmck103(b_nmck103),nmck101(b_nmck101),nmck113(b_nmck113),nmck030(b_nmck030),nmck031(b_nmck031),nmck026(b_nmck026),nmckcomp(b_nmckcomp)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmq430" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmckdocno,nmck005,nmck004,nmck024,nmck025,nmck002,nmckdocdt,nmck011,nmck012,nmck100,nmck103,nmck101,nmck113,nmck030,nmck031,nmck026,nmckcomp" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="nmckdocno(b_nmckdocno),nmck005(b_nmck005),nmck004(b_nmck004),nmck024(b_nmck024),nmck025(b_nmck025),nmck002(b_nmck002),nmckdocdt(b_nmckdocdt),nmck011(b_nmck011),nmck012(b_nmck012),nmck100(b_nmck100),nmck103(b_nmck103),nmck101(b_nmck101),nmck113(b_nmck113),nmck030(b_nmck030),nmck031(b_nmck031),nmck026(b_nmck026),nmckcomp(b_nmckcomp)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="nmckdocno">
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_nmckdocno" state="c"/>
+      </column>
+      <column id="nmck005">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+          <reference field="nmck005_desc" ref_field="nmck005" map_field="nmckent,nmck005" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_13" state="i"/>
+        <controlp form="q_pmaa001_13" state="c"/>
+      </column>
+      <column id="nmck005_desc"/>
+      <column id="nmck004">
+        <after>
+          <check chkid="v_nmas002_1" id="isExist"/>
+        </after>
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="l_nmck004_desc"/>
+      <column id="nmck024">
+        <controlp form="q_nmaf004" state="i"/>
+        <controlp form="q_nmaf004" state="c"/>
+      </column>
+      <column id="nmck025"/>
+      <column id="nmck002">
+        <after>
+          <reference field="nmck002_desc" ref_field="nmck002" map_field="nmckent,nmck002" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmck002_desc"/>
+      <column id="nmckdocdt"/>
+      <column id="nmck011"/>
+      <column id="nmck012"/>
+      <column id="nmck100">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_aooi001_1" state="i"/>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="nmck103" type="S" default="0"/>
+      <column id="nmck101"/>
+      <column id="nmck113" type="S" default="0"/>
+      <column id="nmck030"/>
+      <column id="nmck031">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmck026" def_scc="8711"/>
+      <column id="nmckcomp">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmck_t" page="1" linked="" pk="nmckcomp,nmckdocno" fk="" detail="Y">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,nmckdocno,nmck005,&apos;&apos;,nmck004,&apos;&apos;,nmck024,nmck025,nmck002,&apos;&apos;,nmckdocdt,nmck011,nmck012,nmck100,nmck103,nmck101,nmck113,nmck030,nmck031,nmck026,nmckcomp FROM nmck_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

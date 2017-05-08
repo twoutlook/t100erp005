@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq509" module="ast" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06529" crtdt="2015-08-27 10:55:35" modid="06529" moddt="2015-09-14 16:30:45" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="專櫃導購員核對查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="debaent,debasite,debasite_desc(chr500),deba002,rtaw001,rtaw001_desc(chr500),deba017,deba017_desc(chr500),deba024(chr10),deba032(chr10),deba045(chr10),deba047(chr10),l_sell(chr500),l_guide(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="debaent(b_debaent),debasite(b_debasite),debasite_desc(b_debasite_desc),deba002(b_deba002),rtaw001(b_rtaw001),rtaw001_desc(b_rtaw001_desc),deba017(b_deba017),deba017_desc(b_deba017_desc),deba024(b_deba024),deba032(b_deba032),deba045(b_deba045),deba047(b_deba047),l_sell(l_sell),l_guide(l_guide)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq509" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="debaent" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="debaent(b_debaent)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="debaent"/>
+      <column id="debasite">
+        <after>
+          <reference field="debasite_desc" ref_field="debasite" map_field="debaent,debasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="debasite_desc"/>
+      <column id="deba002"/>
+      <column id="rtaw001">
+        <after>
+          <reference field="rtaw001_desc" ref_field="rtaw001" map_field="rtaw001" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtaw001_desc"/>
+      <column id="deba017">
+        <after>
+          <reference field="deba017_desc" ref_field="deba017" map_field="deba017" ref_sql="SELECT stfal003 FROM stfal_t WHERE stfalent=$varg_enterprise$var AND stfal001=? AND stfal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="deba017_desc"/>
+      <column id="deba024"/>
+      <column id="deba032"/>
+      <column id="deba045"/>
+      <column id="deba047"/>
+      <column id="l_sell"/>
+      <column id="l_guide"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="deba_t" page="1" linked="" pk="debasite,deba002,deba005,deba009,deba017,deba018,deba020,deba043">
+      <sql id="b_fill_sql" query="SELECT debaent,debasite,&apos;&apos;,deba002,&apos;&apos;,&apos;&apos;,deba017,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM deba_t WHERE debaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

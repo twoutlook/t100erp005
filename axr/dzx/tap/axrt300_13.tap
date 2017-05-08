@@ -1,0 +1,2525 @@
+<add_points prog="axrt300_13" std_prog="axrt300_13" erpver="1.0" module="AXR" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.axrt300_13_create_tmp" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_13_create_tmp()
+   DEFINE r_success       LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = FALSE
+   
+   #检查事务中
+   IF NOT s_transaction_chk('N',1) THEN
+      RETURN r_success
+   END IF 
+   
+   DROP TABLE axrp330_gen_ar_tmp;
+   CREATE TEMP TABLE axrp330_gen_ar_tmp(
+   docno    LIKE glaq_t.glaqdocno,
+   docdt    LIKE glap_t.glapdocdt, 
+   sw       LIKE type_t.chr1,   
+   glaqent  LIKE glaq_t.glaqent,
+   glaqcomp LIKE glaq_t.glaqcomp,
+   glaqld   LIKE glaq_t.glaqld,
+   glaq001  LIKE glaq_t.glaq001,
+   glaq002  LIKE glaq_t.glaq002,
+   glaq005  LIKE glaq_t.glaq005,
+   glaq006  LIKE glaq_t.glaq006,
+   glaq007  LIKE glaq_t.glaq007,
+   glaq009  LIKE glaq_t.glaq009,
+   glaq011  LIKE glaq_t.glaq011,
+   glaq012  LIKE glaq_t.glaq012,
+   glaq013  LIKE glaq_t.glaq013,
+   glaq014  LIKE glaq_t.glaq014,
+   glaq015  LIKE glaq_t.glaq015,
+   glaq016  LIKE glaq_t.glaq016,   
+   glaq017  LIKE glaq_t.glaq017,
+   glaq018  LIKE glaq_t.glaq018,
+   glaq019  LIKE glaq_t.glaq019,
+   glaq020  LIKE glaq_t.glaq020,
+   glaq021  LIKE glaq_t.glaq021,
+   glaq022  LIKE glaq_t.glaq022,
+   glaq023  LIKE glaq_t.glaq023,
+   glaq024  LIKE glaq_t.glaq024,
+   glaq025  LIKE glaq_t.glaq025,
+   glaq026  LIKE glaq_t.glaq026,
+   glaq027  LIKE glaq_t.glaq027,
+   glaq028  LIKE glaq_t.glaq028,
+   glaq029  LIKE glaq_t.glaq029,
+   glaq030  LIKE glaq_t.glaq030,
+   glaq031  LIKE glaq_t.glaq031,
+   glaq032  LIKE glaq_t.glaq032,
+   glaq033  LIKE glaq_t.glaq033,
+   glaq034  LIKE glaq_t.glaq034,
+   glaq035  LIKE glaq_t.glaq035,
+   glaq036  LIKE glaq_t.glaq036,
+   glaq037  LIKE glaq_t.glaq037,
+   glaq038  LIKE glaq_t.glaq038,
+   d        LIKE glaq_t.glaq003,
+   c        LIKE glaq_t.glaq004,
+   qty      LIKE glaq_t.glaq008,
+   sum      LIKE glaq_t.glaq010,
+   glaq039  LIKE glaq_t.glaq039,
+   glaq040  LIKE glaq_t.glaq040,
+   glaq041  LIKE glaq_t.glaq041,
+   glaq042  LIKE glaq_t.glaq042,
+   glaq043  LIKE glaq_t.glaq043,
+   glaq044  LIKE glaq_t.glaq044,
+   seq      LIKE glaq_t.glaqseq,
+   source   LIKE type_t.chr100,
+   glaqseq  LIKE glaq_t.glaqseq,
+   xrca039  LIKE xrca_t.xrca039  
+   );
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('create',SQLCA.sqlcode,1)
+      RETURN r_success
+   END IF
+   
+   
+   DROP TABLE axrp330_gen_ar_tmp2;
+   CREATE TEMP TABLE axrp330_gen_ar_tmp2(
+   docno    LIKE glaq_t.glaqdocno,
+   docdt    LIKE glap_t.glapdocdt, 
+   sw       LIKE type_t.chr1,   
+   glaqent  LIKE glaq_t.glaqent,
+   glaqcomp LIKE glaq_t.glaqcomp,
+   glaqld   LIKE glaq_t.glaqld,
+   glaq001  LIKE glaq_t.glaq001,
+   glaq002  LIKE glaq_t.glaq002,
+   glaq005  LIKE glaq_t.glaq005,
+   glaq006  LIKE glaq_t.glaq006,
+   glaq007  LIKE glaq_t.glaq007,
+   glaq009  LIKE glaq_t.glaq009,
+   glaq011  LIKE glaq_t.glaq011,
+   glaq012  LIKE glaq_t.glaq012,
+   glaq013  LIKE glaq_t.glaq013,
+   glaq014  LIKE glaq_t.glaq014,
+   glaq015  LIKE glaq_t.glaq015,
+   glaq016  LIKE glaq_t.glaq016,   
+   glaq017  LIKE glaq_t.glaq017,
+   glaq018  LIKE glaq_t.glaq018,
+   glaq019  LIKE glaq_t.glaq019,
+   glaq020  LIKE glaq_t.glaq020,
+   glaq021  LIKE glaq_t.glaq021,
+   glaq022  LIKE glaq_t.glaq022,
+   glaq023  LIKE glaq_t.glaq023,
+   glaq024  LIKE glaq_t.glaq024,
+   glaq025  LIKE glaq_t.glaq025,
+   glaq026  LIKE glaq_t.glaq026,
+   glaq027  LIKE glaq_t.glaq027,
+   glaq028  LIKE glaq_t.glaq028,
+   glaq029  LIKE glaq_t.glaq029,
+   glaq030  LIKE glaq_t.glaq030,
+   glaq031  LIKE glaq_t.glaq031,
+   glaq032  LIKE glaq_t.glaq032,
+   glaq033  LIKE glaq_t.glaq033,
+   glaq034  LIKE glaq_t.glaq034,
+   glaq035  LIKE glaq_t.glaq035,
+   glaq036  LIKE glaq_t.glaq036,
+   glaq037  LIKE glaq_t.glaq037,
+   glaq038  LIKE glaq_t.glaq038,
+   d        LIKE glaq_t.glaq003,
+   c        LIKE glaq_t.glaq004,
+   qty      LIKE glaq_t.glaq008,
+   sum      LIKE glaq_t.glaq010,
+   glaq039  LIKE glaq_t.glaq039,
+   glaq040  LIKE glaq_t.glaq040,
+   glaq041  LIKE glaq_t.glaq041,
+   glaq042  LIKE glaq_t.glaq042,
+   glaq043  LIKE glaq_t.glaq043,
+   glaq044  LIKE glaq_t.glaq044,
+   seq      LIKE glaq_t.glaqseq,
+   source   LIKE type_t.chr100,
+   glaqseq  LIKE glaq_t.glaqseq,
+   xrca039  LIKE xrca_t.xrca039  
+   );
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('create',SQLCA.sqlcode,1)
+      RETURN r_success
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.axrt300_13_glaq002_desc" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_13_glaq002_desc(p_glaq002)
+DEFINE p_glaq002           LIKE glaq_t.glaq002
+DEFINE l_glaq002_desc      LIKE glacl_t.glacl004
+DEFINE r_glaq002           STRING
+DEFINE l_oogf002_desc      LIKE oofa_t.oofa011
+DEFINE l_glaq      RECORD 
+         glaq017   LIKE glaq_t.glaq017,
+         glaq018   LIKE glaq_t.glaq018,
+         glaq019   LIKE glaq_t.glaq019,
+         glaq020   LIKE glaq_t.glaq020,
+         glaq021   LIKE glaq_t.glaq021,
+         glaq022   LIKE glaq_t.glaq022,
+         glaq023   LIKE glaq_t.glaq023,
+         glaq024   LIKE glaq_t.glaq024,
+         glaq025   LIKE glaq_t.glaq025,
+         glaq026   LIKE glaq_t.glaq026,
+         glaq027   LIKE glaq_t.glaq027,
+         glaq028   LIKE glaq_t.glaq028        
+                   END RECORD
+   
+   SELECT glaq017,glaq018,glaq019,glaq020,
+          glaq021,glaq022,glaq023,glaq024,
+          glaq025,glaq026,glaq027,glaq028
+     INTO l_glaq.*
+     FROM s_voucher_group_tmp
+    WHERE glaqent = g_enterprise
+      AND glaqld = g_xrcald
+      AND glaq002 = p_glaq002      
+   
+   #抓取科目名称
+   LET l_glaq002_desc = ''
+   SELECT glacl004 INTO l_glaq002_desc FROM glacl_t,glaa_t
+    WHERE glaaent = glaclent 
+      AND glaa004 = glacl001
+      AND glaclent = g_enterprise
+      AND glaald = g_xrcald
+      AND glacl002 = p_glaq002
+      AND glacl003 = g_dlang  
+
+
+   #组合名称以及核算项
+   LET r_glaq002 = ''
+   #部门
+   IF NOT cl_null(l_glaq.glaq018) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq018
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET r_glaq002 = g_rtn_fields[1]     
+   END IF 
+   #成本利润中心
+   IF NOT cl_null(l_glaq.glaq019) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq019
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   
+   #区域
+   IF NOT cl_null(l_glaq.glaq020) THEN 
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = '287'
+      LET g_ref_fields[2] = l_glaq.glaq020
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields  
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   #交易客商
+   IF NOT cl_null(l_glaq.glaq021) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq021
+      CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1] 
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1] 
+      END IF      
+   END IF 
+   #帐款客商
+   IF NOT cl_null(l_glaq.glaq022) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq022
+      CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   #客群
+   IF NOT cl_null(l_glaq.glaq023) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = '281'
+      LET g_ref_fields[2] = l_glaq.glaq023
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   
+   #产品分类
+   IF NOT cl_null(l_glaq.glaq024) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq024
+      CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   #人员
+   IF NOT cl_null(l_glaq.glaq025) THEN
+      LET  l_oogf002_desc = ''
+      SELECT oofa011 INTO l_oogf002_desc FROM oofa_t
+       WHERE oofaent = g_enterprise
+         AND oofa001 IN (SELECT ooag002 FROM ooag_t
+                          WHERE ooagent = g_enterprise
+                            AND ooag001 = l_glaq.glaq025)
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',l_oogf002_desc
+      ELSE
+         LET r_glaq002 = l_oogf002_desc
+      END IF      
+   END IF 
+   #预算编号
+   IF NOT cl_null(l_glaq.glaq026) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = l_glaq.glaq026
+      CALL ap_ref_array2(g_ref_fields,"SELECT bgaal003 FROM bgaal_t WHERE bgaalent='"||g_enterprise||"' AND bgaal001=? AND bgaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',g_rtn_fields[1]
+      ELSE
+         LET r_glaq002 = g_rtn_fields[1]
+      END IF      
+   END IF 
+   #专案编号
+   IF NOT cl_null(l_glaq.glaq027) THEN
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',l_glaq.glaq027
+      ELSE
+         LET r_glaq002 = l_glaq.glaq027
+      END IF      
+   END IF 
+   #WBS
+   IF NOT cl_null(l_glaq.glaq028) THEN
+      IF NOT cl_null(r_glaq002) THEN
+         LET r_glaq002 = r_glaq002 ,'-',l_glaq.glaq028
+      ELSE
+         LET r_glaq002 = l_glaq.glaq028
+      END IF      
+   END IF 
+   #组合科目名称以及核算项
+   LET r_glaq002 = l_glaq002_desc,'\n',
+                   r_glaq002
+                   
+   RETURN r_glaq002 
+END FUNCTION]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   DEFINE r_success       LIKE type_t.num5]]>
+</point>
+  <point name="b_fill.fill" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[      LET g_glaq_d[l_ac].glacl004 = g_glaq_d[l_ac].glacl004,'\n',axrt300_13_glaq002_desc(g_glaq_d[l_ac].glacl004)]]>
+</point>
+  <point name="b_fill.others.fill" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql_after" cite_std="N" status="u" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   CALL axrt300_13_create_tmp() RETURNING r_success
+
+   CALL s_transaction_begin()
+   LET g_wc = "xrcadocno = '",g_xrcadocno,"'"
+   CALL s_voucher_gen_ar(1,g_xrcald,'','',1,g_wc,'Y') RETURNING r_success
+   
+   IF r_success THEN
+      CALL s_transaction_end('Y','Y')
+   ELSE
+      CALL s_transaction_end('N','Y')  
+      RETURN       
+   END IF
+   
+   LET g_sql= " SELECT DISTINCT docno,glaqld,seq,glaq001,glaq002,d,c FROM s_voucher_ar_group ",
+              "  WHERE glaqent = ?",      #增加此段是为了规避下方的：OPEN b_fill_curs USING g_enterprise
+              "  ORDER BY d DESC"]]>
+</point>
+  <point name="construct.c.page1.glaq001" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.reference" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[DEFINE g_xrcadocno      LIKE xrca_t.xrcadocno
+DEFINE g_xrcald         LIKE xrca_t.xrcald
+DEFINE g_wc             STRING]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   CALL cl_set_act_visible('modify,modify_detail',FALSE)]]>
+</point>
+  <point name="input.a.page1.glaqdocno" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glaqld" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glaqseq" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.xrcb010" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_d[l_ac].xrcb010
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_d[l_ac].xrcb010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_d[l_ac].xrcb010_desc
+]]>
+</point>
+  <point name="input.a.page1.xrcb011" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_d[l_ac].xrcb011
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_d[l_ac].xrcb011_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_d[l_ac].xrcb011_desc
+]]>
+</point>
+  <point name="input.a.page1.xrcb012" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_d[l_ac].xrcb012
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='200' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_d[l_ac].xrcb012_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_d[l_ac].xrcb012_desc
+]]>
+</point>
+  <point name="input.a.page1.xrcb015" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.xrcb016" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.xrcb021" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrcb_d[l_ac].xrcb021
+            CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001='' AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrcb_d[l_ac].xrcb021_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrcb_d[l_ac].xrcb021_desc
+]]>
+</point>
+  <point name="input.a.page1.xrcbdocno" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_xrcb_d[g_detail_idx].xrcbld IS NOT NULL AND g_xrcb_d[g_detail_idx].xrcbdocno IS NOT NULL AND g_xrcb_d[g_detail_idx].xrcbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xrcb_d[g_detail_idx].xrcbld != g_xrcb_d_t.xrcbld OR g_xrcb_d[g_detail_idx].xrcbdocno != g_xrcb_d_t.xrcbdocno OR g_xrcb_d[g_detail_idx].xrcbseq != g_xrcb_d_t.xrcbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrcb_t WHERE "||"xrcbent = '" ||g_enterprise|| "' AND "||"xrcbld = '"||g_xrcb_d[g_detail_idx].xrcbld ||"' AND "|| "xrcbdocno = '"||g_xrcb_d[g_detail_idx].xrcbdocno ||"' AND "|| "xrcbseq = '"||g_xrcb_d[g_detail_idx].xrcbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.xrcbld" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_xrcb_d[g_detail_idx].xrcbld IS NOT NULL AND g_xrcb_d[g_detail_idx].xrcbdocno IS NOT NULL AND g_xrcb_d[g_detail_idx].xrcbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xrcb_d[g_detail_idx].xrcbld != g_xrcb_d_t.xrcbld OR g_xrcb_d[g_detail_idx].xrcbdocno != g_xrcb_d_t.xrcbdocno OR g_xrcb_d[g_detail_idx].xrcbseq != g_xrcb_d_t.xrcbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrcb_t WHERE "||"xrcbent = '" ||g_enterprise|| "' AND "||"xrcbld = '"||g_xrcb_d[g_detail_idx].xrcbld ||"' AND "|| "xrcbdocno = '"||g_xrcb_d[g_detail_idx].xrcbdocno ||"' AND "|| "xrcbseq = '"||g_xrcb_d[g_detail_idx].xrcbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.xrcblegl" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.xrcbseq" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_xrcb_d[l_ac].xrcbseq) THEN 
+            END IF 
+
+            #此段落由子樣板a05產生
+            IF  g_xrcb_d[g_detail_idx].xrcbld IS NOT NULL AND g_xrcb_d[g_detail_idx].xrcbdocno IS NOT NULL AND g_xrcb_d[g_detail_idx].xrcbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xrcb_d[g_detail_idx].xrcbld != g_xrcb_d_t.xrcbld OR g_xrcb_d[g_detail_idx].xrcbdocno != g_xrcb_d_t.xrcbdocno OR g_xrcb_d[g_detail_idx].xrcbseq != g_xrcb_d_t.xrcbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrcb_t WHERE "||"xrcbent = '" ||g_enterprise|| "' AND "||"xrcbld = '"||g_xrcb_d[g_detail_idx].xrcbld ||"' AND "|| "xrcbdocno = '"||g_xrcb_d[g_detail_idx].xrcbdocno ||"' AND "|| "xrcbseq = '"||g_xrcb_d[g_detail_idx].xrcbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.c.page1.glaq001" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.xrcb011" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xrcb_d[l_ac].xrcb011             #給予default值
+
+            #給予arg
+
+          # CALL axrt300_11()                                #呼叫開窗
+
+            LET g_xrcb_d[l_ac].xrcb011 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xrcb_d[l_ac].xrcb011 TO xrcb011              #顯示到畫面上
+
+            NEXT FIELD xrcb011                          #返回原欄位
+
+]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   DEFINE p_ld      LIKE xrca_t.xrcald
+   DEFINE p_docno   LIKE xrca_t.xrcadocno]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   LET g_action_choice = '']]>
+</point>
+  <point name="main.get_var" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   p_ld,p_docno]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   LET g_xrcadocno = p_docno
+   LET g_xrcald    = p_ld]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.after_refresh_sql" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_row" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.b_dialog" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.b.page1.glaqdocno" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.a.page1.glaqdocno" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.c.page1.glaqdocno" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.b.page1.glaqld" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.a.page1.glaqld" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.c.page1.glaqld" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.b.page1.glaqseq" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.a.page1.glaqseq" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.c.page1.glaqseq" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.b.page1.glaq001" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.a.page1.glaq001" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.b.page1.glaq003" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.a.page1.glaq003" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.c.page1.glaq003" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.b.page1.glaq004" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.a.page1.glaq004" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.c.page1.glaq004" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="cs.before_construct" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.more_construct" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.before_dialog" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="query.after_construct" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert.before_insert" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert.b_insert" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert.a_insert" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.b_delete" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.m_delete" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete.a_delete" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.define_sql" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_row2" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_row" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_insert" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_insert" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_insert" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_insert2" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_delete_ask" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_delete" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_delete" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_delete" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_delete" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glaqdocno" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glaqdocno" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glaqld" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glaqld" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glaqseq" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glaqseq" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glaq001" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glaq001" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glaq001" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glaq003" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glaq003" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glaq003" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glaq004" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glaq004" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glaq004" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glaqdocno" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glaqld" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glaqseq" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glaq003" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glaq004" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_update" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_update" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_update" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_row" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_input" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_dialog" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.before" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.after" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.set_entry_b" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry_b.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry_b.set_no_entry_b" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.b_delete" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.m_delete" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.a_delete" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.b_insert" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.m_insert" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.a_insert" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.b_update" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.m_update" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.a_update" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="lock_b.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="unlock_b.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="link_b.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.before" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.page_control" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.after" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <section id="axrt300_13.b_fill" ver="9" status="" src="s">
+<![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION axrt300_13_b_fill(p_wc2)              #BODY FILL UP
+   DEFINE p_wc2           STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT  UNIQUE glaqdocno,glaqld,glaqseq,glaq001,'',glaq003,glaq004 FROM glaq_t",
+               "",
+               " WHERE glaqent= ? AND 1=1 AND ", p_wc2 
+    
+   LET g_sql = g_sql, #,cl_get_extra_cond('zzuser', 'zzgrup') 
+                      " ORDER BY glaq_t.glaqld,glaq_t.glaqdocno,glaq_t.glaqseq"
+  
+   #add-point:b_fill段sql之後
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+  
+   PREPARE axrt300_13_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR axrt300_13_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_glaq_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_glaq_d[l_ac].glaqdocno,g_glaq_d[l_ac].glaqld,g_glaq_d[l_ac].glaqseq,g_glaq_d[l_ac].glaq001, 
+       g_glaq_d[l_ac].glacl004,g_glaq_d[l_ac].glaq003,g_glaq_d[l_ac].glaq004
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL axrt300_13_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   IF l_ac > g_max_rec THEN
+      IF g_error_show = 1 THEN
+         CALL cl_err("glaq_t",9035,1)
+      END IF
+   END IF 
+   LET g_error_show = 0
+   
+ 
+  
+   
+   CALL g_glaq_d.deleteElement(g_glaq_d.getLength())   
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_glaq_d.getLength()
+ 
+   END FOR
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE axrt300_13_pb
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.default_search" ver="3" status="" src="s">
+<![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION axrt300_13_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " glaqld = '", g_argv[1], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " glaqdocno = ", g_argv[02], " AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " glaqseq = ", g_argv[03], " AND "
+   END IF
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.delete" ver="3" status="" src="s">
+<![CDATA[#+ 資料刪除
+PRIVATE FUNCTION axrt300_13_delete()
+   DEFINE li_ac LIKE type_t.num5
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point 
+   
+   IF NOT cl_ask_delete() THEN
+      LET INT_FLAG = 1 #不刪除
+   ELSE
+      LET INT_FLAG = 0 #要刪除
+   END IF
+   
+   LET li_ac = ARR_CURR()
+   
+   CALL s_transaction_begin()  
+ 
+   #add-point:delete段刪除前
+   {<point name="delete.b_delete" mark="Y"/>}
+   #end add-point 
+   DELETE FROM glaq_t 
+         WHERE glaqld = g_glaq_d[li_ac].glaqld
+           AND glaqdocno = g_glaq_d[li_ac].glaqdocno
+           AND glaqseq = g_glaq_d[li_ac].glaqseq
+ 
+   #add-point:delete段刪除中
+   {<point name="delete.m_delete"/>}
+   #end add-point 
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("glaq_t",SQLCA.sqlcode,1) 
+      CALL s_transaction_end('N','0')
+   ELSE
+      CALL s_transaction_end('Y','0')
+   END IF
+   #add-point:delete段刪除後
+   {<point name="delete.a_delete"/>}
+   #end add-point 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.delete_b" ver="2" status="" src="s">
+<![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION axrt300_13_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "glaq_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+   
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.b_delete" mark="Y"/>}
+      #end add-point     
+   
+      DELETE FROM glaq_t
+       WHERE glaqent = g_enterprise AND
+         glaqld = ps_keys_bak[1] AND glaqdocno = ps_keys_bak[2] AND glaqseq = ps_keys_bak[3]
+ 
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete"/>}
+      #end add-point  
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+      END IF
+      
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.a_delete"/>}
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.description" ver="46" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000045
+#+ 
+#+ Filename...: axrt300_13
+#+ Description: ...
+#+ Creator....: 01727(2014/03/26)
+#+ Modifier...: 01727(2014/03/26)
+#+ Buildtype..: 應用 i02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="axrt300_13.detail_show" ver="1" status="" src="s">
+<![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION axrt300_13_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.reference"/>}
+   #end add-point
+   
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.global" ver="8" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_glaq_d RECORD
+       glaqdocno LIKE glaq_t.glaqdocno, 
+   glaqld LIKE glaq_t.glaqld, 
+   glaqseq LIKE glaq_t.glaqseq, 
+   glaq001 LIKE glaq_t.glaq001, 
+   glacl004 LIKE type_t.chr500, 
+   glaq003 LIKE glaq_t.glaq003, 
+   glaq004 LIKE glaq_t.glaq004
+       END RECORD
+ 
+ 
+#無單身append欄位定義
+ 
+#模組變數(Module Variables)
+DEFINE g_glaq_d          DYNAMIC ARRAY OF type_g_glaq_d
+DEFINE g_glaq_d_t        type_g_glaq_d
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num5              #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="axrt300_13.init" ver="1" status="" src="s">
+<![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION axrt300_13_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   
+   
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL axrt300_13_default_search()
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.insert" ver="2" status="" src="s">
+<![CDATA[#+ 資料新增
+PRIVATE FUNCTION axrt300_13_insert()
+   DEFINE li_ac LIKE type_t.num5
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="insert.define"/>}
+   #end add-point 
+   
+   #輸入前動作  
+   LET li_ac = l_ac 
+   LET l_ac = 1   
+   LET g_before_input_done = FALSE                                        
+   CALL axrt300_13_set_entry_b("a")  
+   
+   CALL axrt300_13_set_no_entry_b("a")                                          
+   LET g_before_input_done = TRUE                                            
+   
+   #append欄位         
+      
+ 
+ 
+   
+   #add-point:insert段before insert
+   {<point name="insert.before_insert"/>}
+   #end add-point  
+ 
+   #資料輸入
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM) 
+      INPUT g_glaq_d[1].* FROM s_detail1[1].*
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         BEFORE INPUT
+         
+      END INPUT
+      
+ 
+      
+      BEFORE DIALOG 
+   
+   END DIALOG
+   
+   #輸入後動作
+   IF INT_FLAG THEN
+      CALL cl_err("",9001,0)
+      LET INT_FLAG = 1
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()                    
+   
+   #add-point:單身新增前
+   {<point name="insert.b_insert"/>}
+   #end add-point
+   
+   
+   #add-point:單身新增後
+   {<point name="insert.a_insert"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.insert_b" ver="3" status="" src="s">
+<![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION axrt300_13_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "glaq_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前
+      {<point name="insert_b.b_insert" mark="Y"/>}
+      #end add-point    
+      INSERT INTO glaq_t
+                  (glaqent,
+                   glaqld,glaqdocno,glaqseq
+                   ,glaq001,glaq003,glaq004) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_glaq_d[l_ac].glaq001,g_glaq_d[l_ac].glaq003,g_glaq_d[l_ac].glaq004)
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("glaq_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.a_insert"/>}
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.link_b" ver="1" status="" src="s">
+<![CDATA[#+ 連動單身idx
+PRIVATE FUNCTION axrt300_13_link_b(ps_table,pi_idx)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   DEFINE pi_idx   INTEGER
+   #add-point:link_b段define
+   {<point name="link_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+ 
+   END IF
+   
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.lock_b" ver="2" status="" src="s">
+<![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION axrt300_13_lock_b(ps_table)
+ 
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL axrt300_13_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "glaq_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN axrt300_13_bcl USING g_enterprise,
+                                       g_glaq_d[g_detail_idx].glaqld,g_glaq_d[g_detail_idx].glaqdocno, 
+                                           g_glaq_d[g_detail_idx].glaqseq
+                                       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("axrt300_13_bcl",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.main" ver="2" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a27產生
+#+ 資料輸入
+PUBLIC FUNCTION axrt300_13(--)
+   #add-point:main段變數傳入
+   {<point name="main.get_var"/>}
+   #end add-point
+   )
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" mark="Y"/>}
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)   #轉換不同資料庫語法
+   DECLARE axrt300_13_cl CURSOR FROM g_forupd_sql     # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               " WHERE  "
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE axrt300_13_master_referesh FROM g_sql
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt300_13 WITH FORM cl_ap_formpath("axr","axrt300_13")
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   CALL axrt300_13_init()   
+ 
+   #進入選單 Menu (="N")
+   CALL axrt300_13_ui_dialog() 
+ 
+   #畫面關閉
+   CLOSE WINDOW w_axrt300_13
+ 
+   CLOSE axrt300_13_cl
+   
+   
+ 
+   #add-point:離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="axrt300_13.modify" ver="6" status="" src="s">
+<![CDATA[#+ 資料修改
+PRIVATE FUNCTION axrt300_13_modify()
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num5
+   DEFINE  l_i                    LIKE type_t.num5
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num5
+   DEFINE  li_reproduce_target    LIKE type_t.num5
+   DEFINE  lb_reproduce           BOOLEAN
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point 
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+ 
+   #add-point:modify段define_sql
+   {<point name="modify.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT glaqdocno,glaqld,glaqseq,glaq001,'',glaq003,glaq004 FROM glaq_t WHERE  
+       glaqent=? AND glaqld=? AND glaqdocno=? AND glaqseq=? FOR UPDATE"
+   #add-point:modify段define_sql
+   {<point name="modify.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE axrt300_13_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+   
+ 
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+ 
+   #add-point:modify段修改前
+   {<point name="modify.before_input"/>}
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_glaq_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_glaq_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL axrt300_13_b_fill(g_wc2)
+            LET g_detail_cnt = g_glaq_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_glaq_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_glaq_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_glaq_d[l_ac].glaqld IS NOT NULL
+               AND g_glaq_d[l_ac].glaqdocno IS NOT NULL
+               AND g_glaq_d[l_ac].glaqseq IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_glaq_d_t.* = g_glaq_d[l_ac].*  #BACKUP
+               IF NOT axrt300_13_lock_b("glaq_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH axrt300_13_bcl INTO g_glaq_d[l_ac].glaqdocno,g_glaq_d[l_ac].glaqld,g_glaq_d[l_ac].glaqseq, 
+                      g_glaq_d[l_ac].glaq001,g_glaq_d[l_ac].glacl004,g_glaq_d[l_ac].glaq003,g_glaq_d[l_ac].glaq004 
+
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_glaq_d_t.glaqld,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL axrt300_13_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            CALL s_transaction_begin()
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_glaq_d_t.* TO NULL
+            INITIALIZE g_glaq_d[l_ac].* TO NULL 
+            
+            LET g_glaq_d_t.* = g_glaq_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL axrt300_13_set_entry_b("a")
+            CALL axrt300_13_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_glaq_d[li_reproduce_target].* = g_glaq_d[li_reproduce].*
+ 
+               LET g_glaq_d[g_glaq_d.getLength()].glaqld = NULL
+               LET g_glaq_d[g_glaq_d.getLength()].glaqdocno = NULL
+               LET g_glaq_d[g_glaq_d.getLength()].glaqseq = NULL
+ 
+            END IF
+            #公用欄位給值(單身)
+            
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM glaq_t 
+             WHERE glaqent = g_enterprise AND glaqld = g_glaq_d[l_ac].glaqld
+                                       AND glaqdocno = g_glaq_d[l_ac].glaqdocno
+                                       AND glaqseq = g_glaq_d[l_ac].glaqseq
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_glaq_d[g_detail_idx].glaqld
+               LET gs_keys[2] = g_glaq_d[g_detail_idx].glaqdocno
+               LET gs_keys[3] = g_glaq_d[g_detail_idx].glaqseq
+               CALL axrt300_13_insert_b('glaq_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_glaq_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("glaq_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL axrt300_13_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (glaqld = '", g_glaq_d[l_ac].glaqld, "' "
+                                  ," AND glaqdocno = '", g_glaq_d[l_ac].glaqdocno, "' "
+                                  ," AND glaqseq = '", g_glaq_d[l_ac].glaqseq, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_glaq_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_glaq_d.deleteElement(l_ac)
+               NEXT FIELD glaqld
+            END IF
+            IF g_glaq_d[l_ac].glaqld IS NOT NULL
+               AND g_glaq_d_t.glaqdocno IS NOT NULL
+               AND g_glaq_d_t.glaqseq IS NOT NULL
+ 
+               THEN     
+            
+               #add-point:單身刪除ask前
+               {<point name="input.body.b_delete_ask"/>}
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point   
+               
+               DELETE FROM glaq_t
+                WHERE glaqent = g_enterprise AND 
+                      glaqld = g_glaq_d_t.glaqld
+                      AND glaqdocno = g_glaq_d_t.glaqdocno
+                      AND glaqseq = g_glaq_d_t.glaqseq
+ 
+                      
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point  
+                      
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("glaq_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE axrt300_13_bcl
+               LET l_count = g_glaq_d.getLength()
+            END IF 
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_glaq_d[g_detail_idx].glaqld
+               LET gs_keys[2] = g_glaq_d[g_detail_idx].glaqdocno
+               LET gs_keys[3] = g_glaq_d[g_detail_idx].glaqseq
+ 
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+                           CALL axrt300_13_delete_b('glaq_t',gs_keys,"'1'")
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<glaqdocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaqdocno
+            #add-point:BEFORE FIELD glaqdocno
+            {<point name="input.b.page1.glaqdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaqdocno
+            
+            #add-point:AFTER FIELD glaqdocno
+            {<point name="input.a.page1.glaqdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaqdocno
+            #add-point:ON CHANGE glaqdocno
+            {<point name="input.g.page1.glaqdocno" />}
+            #END add-point
+ 
+         #----<<glaqld>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaqld
+            #add-point:BEFORE FIELD glaqld
+            {<point name="input.b.page1.glaqld" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaqld
+            
+            #add-point:AFTER FIELD glaqld
+            {<point name="input.a.page1.glaqld" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaqld
+            #add-point:ON CHANGE glaqld
+            {<point name="input.g.page1.glaqld" />}
+            #END add-point
+ 
+         #----<<glaqseq>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaqseq
+            #add-point:BEFORE FIELD glaqseq
+            {<point name="input.b.page1.glaqseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaqseq
+            
+            #add-point:AFTER FIELD glaqseq
+            {<point name="input.a.page1.glaqseq" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaqseq
+            #add-point:ON CHANGE glaqseq
+            {<point name="input.g.page1.glaqseq" />}
+            #END add-point
+ 
+         #----<<glaq001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq001
+            #add-point:BEFORE FIELD glaq001
+            {<point name="input.b.page1.glaq001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq001
+            
+            #add-point:AFTER FIELD glaq001
+            {<point name="input.a.page1.glaq001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq001
+            #add-point:ON CHANGE glaq001
+            {<point name="input.g.page1.glaq001" />}
+            #END add-point
+ 
+         #----<<glacl004>>----
+         #----<<glaq003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq003
+            #add-point:BEFORE FIELD glaq003
+            {<point name="input.b.page1.glaq003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq003
+            
+            #add-point:AFTER FIELD glaq003
+            {<point name="input.a.page1.glaq003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq003
+            #add-point:ON CHANGE glaq003
+            {<point name="input.g.page1.glaq003" />}
+            #END add-point
+ 
+         #----<<glaq004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq004
+            #add-point:BEFORE FIELD glaq004
+            {<point name="input.b.page1.glaq004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq004
+            
+            #add-point:AFTER FIELD glaq004
+            {<point name="input.a.page1.glaq004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glaq004
+            #add-point:ON CHANGE glaq004
+            {<point name="input.g.page1.glaq004" />}
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<glaqdocno>>----
+         #Ctrlp:input.c.page1.glaqdocno
+         ON ACTION controlp INFIELD glaqdocno
+            #add-point:ON ACTION controlp INFIELD glaqdocno
+            {<point name="input.c.page1.glaqdocno" />}
+            #END add-point
+ 
+         #----<<glaqld>>----
+         #Ctrlp:input.c.page1.glaqld
+         ON ACTION controlp INFIELD glaqld
+            #add-point:ON ACTION controlp INFIELD glaqld
+            {<point name="input.c.page1.glaqld" />}
+            #END add-point
+ 
+         #----<<glaqseq>>----
+         #Ctrlp:input.c.page1.glaqseq
+         ON ACTION controlp INFIELD glaqseq
+            #add-point:ON ACTION controlp INFIELD glaqseq
+            {<point name="input.c.page1.glaqseq" />}
+            #END add-point
+ 
+         #----<<glaq001>>----
+         #Ctrlp:input.c.page1.glaq001
+         ON ACTION controlp INFIELD glaq001
+            #add-point:ON ACTION controlp INFIELD glaq001
+            {<point name="input.c.page1.glaq001" />}
+            #END add-point
+ 
+         #----<<glacl004>>----
+         #----<<glaq003>>----
+         #Ctrlp:input.c.page1.glaq003
+         ON ACTION controlp INFIELD glaq003
+            #add-point:ON ACTION controlp INFIELD glaq003
+            {<point name="input.c.page1.glaq003" />}
+            #END add-point
+ 
+         #----<<glaq004>>----
+         #Ctrlp:input.c.page1.glaq004
+         ON ACTION controlp INFIELD glaq004
+            #add-point:ON ACTION controlp INFIELD glaq004
+            {<point name="input.c.page1.glaq004" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_glaq_d[l_ac].* = g_glaq_d_t.*
+               CLOSE axrt300_13_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_glaq_d[l_ac].glaqld,-263,1)
+               LET g_glaq_d[l_ac].* = g_glaq_d_t.*
+            ELSE
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               UPDATE glaq_t SET (glaqdocno,glaqld,glaqseq,glaq001,glaq003,glaq004) = (g_glaq_d[l_ac].glaqdocno, 
+                   g_glaq_d[l_ac].glaqld,g_glaq_d[l_ac].glaqseq,g_glaq_d[l_ac].glaq001,g_glaq_d[l_ac].glaq003, 
+                   g_glaq_d[l_ac].glaq004)
+                WHERE glaqent = g_enterprise AND
+                  glaqld = g_glaq_d_t.glaqld #項次   
+                  AND glaqdocno = g_glaq_d_t.glaqdocno  
+                  AND glaqseq = g_glaq_d_t.glaqseq  
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("glaq_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                    WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("glaq_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_glaq_d[g_detail_idx].glaqld
+               LET gs_keys_bak[1] = g_glaq_d_t.glaqld
+               LET gs_keys[2] = g_glaq_d[g_detail_idx].glaqdocno
+               LET gs_keys_bak[2] = g_glaq_d_t.glaqdocno
+               LET gs_keys[3] = g_glaq_d[g_detail_idx].glaqseq
+               LET gs_keys_bak[3] = g_glaq_d_t.glaqseq
+               CALL axrt300_13_update_b('glaq_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL axrt300_13_unlock_b("glaq_t")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+             #add-point:單身after row
+            {<point name="input.body.a_row"/>}
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後
+            {<point name="input.body.a_input"/>}
+            #end add-point
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_glaq_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_glaq_d.getLength()+1
+            
+      END INPUT
+      
+ 
+      
+ 
+      
+      #add-point:before_more_input
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG 
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD glaqdocno
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   
+   #add-point:modify段修改後
+   {<point name="modify.after_input"/>}
+   #end add-point
+ 
+   CLOSE axrt300_13_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.modify_detail_chk" ver="2" status="" src="s">
+<![CDATA[#+ 單身輸入判定
+PRIVATE FUNCTION axrt300_13_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "glaqdocno"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="axrt300_13.other_function" ver="2" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="axrt300_13.query" ver="4" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION axrt300_13_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_glaq_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON glaqdocno,glaqld,glaqseq,glaq001,glaq003,glaq004 
+ 
+         FROM s_detail1[1].glaqdocno,s_detail1[1].glaqld,s_detail1[1].glaqseq,s_detail1[1].glaq001,s_detail1[1].glaq003, 
+             s_detail1[1].glaq004 
+      
+         
+      
+         #---------------------<  Detail: page1  >---------------------
+         #----<<glaqdocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaqdocno
+            #add-point:BEFORE FIELD glaqdocno
+            {<point name="query.b.page1.glaqdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaqdocno
+            
+            #add-point:AFTER FIELD glaqdocno
+            {<point name="query.a.page1.glaqdocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.glaqdocno
+         ON ACTION controlp INFIELD glaqdocno
+            #add-point:ON ACTION controlp INFIELD glaqdocno
+            {<point name="query.c.page1.glaqdocno" />}
+            #END add-point
+ 
+         #----<<glaqld>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaqld
+            #add-point:BEFORE FIELD glaqld
+            {<point name="query.b.page1.glaqld" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaqld
+            
+            #add-point:AFTER FIELD glaqld
+            {<point name="query.a.page1.glaqld" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.glaqld
+         ON ACTION controlp INFIELD glaqld
+            #add-point:ON ACTION controlp INFIELD glaqld
+            {<point name="query.c.page1.glaqld" />}
+            #END add-point
+ 
+         #----<<glaqseq>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaqseq
+            #add-point:BEFORE FIELD glaqseq
+            {<point name="query.b.page1.glaqseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaqseq
+            
+            #add-point:AFTER FIELD glaqseq
+            {<point name="query.a.page1.glaqseq" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.glaqseq
+         ON ACTION controlp INFIELD glaqseq
+            #add-point:ON ACTION controlp INFIELD glaqseq
+            {<point name="query.c.page1.glaqseq" />}
+            #END add-point
+ 
+         #----<<glaq001>>----
+         #Ctrlp:construct.c.page1.glaq001
+         ON ACTION controlp INFIELD glaq001
+            #add-point:ON ACTION controlp INFIELD glaq001
+            {<point name="construct.c.page1.glaq001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq001
+            #add-point:BEFORE FIELD glaq001
+            {<point name="query.b.page1.glaq001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq001
+            
+            #add-point:AFTER FIELD glaq001
+            {<point name="query.a.page1.glaq001" />}
+            #END add-point
+            
+ 
+         #----<<glacl004>>----
+         #----<<glaq003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq003
+            #add-point:BEFORE FIELD glaq003
+            {<point name="query.b.page1.glaq003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq003
+            
+            #add-point:AFTER FIELD glaq003
+            {<point name="query.a.page1.glaq003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.glaq003
+         ON ACTION controlp INFIELD glaq003
+            #add-point:ON ACTION controlp INFIELD glaq003
+            {<point name="query.c.page1.glaq003" />}
+            #END add-point
+ 
+         #----<<glaq004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaq004
+            #add-point:BEFORE FIELD glaq004
+            {<point name="query.b.page1.glaq004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glaq004
+            
+            #add-point:AFTER FIELD glaq004
+            {<point name="query.a.page1.glaq004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.glaq004
+         ON ACTION controlp INFIELD glaq004
+            #add-point:ON ACTION controlp INFIELD glaq004
+            {<point name="query.c.page1.glaq004" />}
+            #END add-point
+ 
+  
+         
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog
+         {<point name="query.before_dialog"/>}
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct
+   {<point name="query.after_construct"/>}
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   END IF
+    
+   LET g_error_show = 1
+   CALL axrt300_13_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.set_entry_b" ver="2" status="" src="s">
+<![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION axrt300_13_set_entry_b(p_cmd)                                                  
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point     
+   
+   #add-point:set_entry_b段control
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                    
+]]>
+</section>
+  <section id="axrt300_13.set_no_entry_b" ver="2" status="" src="s">
+<![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION axrt300_13_set_no_entry_b(p_cmd)                                               
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point  
+ 
+   #add-point:set_no_entry_b段control
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point       
+                                                                                
+END FUNCTION  
+]]>
+</section>
+  <section id="axrt300_13.state_change" ver="1" status="" src="s">
+<![CDATA[   
+]]>
+</section>
+  <section id="axrt300_13.ui_dialog" ver="8" status="" src="s">
+<![CDATA[#+ 功能選單 
+PRIVATE FUNCTION axrt300_13_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      CALL axrt300_13_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_glaq_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+      
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #add-point:display array-before row
+               {<point name="ui_dialog.before_row"/>}
+               #end add-point                        
+      
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            #add-point:ui_dialog段before
+            {<point name="ui_dialog.b_dialog"/>}
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+ 
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL axrt300_13_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+            END IF
+ 
+ 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+            
+         
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.unlock_b" ver="1" status="" src="s">
+<![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION axrt300_13_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE axrt300_13_bcl
+   #END IF
+   
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="axrt300_13.update_b" ver="3" status="" src="s">
+<![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION axrt300_13_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #判斷是否是同一群組的table
+   LET ls_group = "glaq_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "glaq_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.b_update" mark="Y"/>}
+      #end add-point     
+      UPDATE glaq_t 
+         SET (glaqld,glaqdocno,glaqseq
+              ,glaq001,glaq003,glaq004) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_glaq_d[l_ac].glaq001,g_glaq_d[l_ac].glaq003,g_glaq_d[l_ac].glaq004) 
+         WHERE glaqld = ps_keys_bak[1] AND glaqdocno = ps_keys_bak[2] AND glaqseq = ps_keys_bak[3]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL cl_err("glaq_t","std-00009",1)
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            CALL cl_err("glaq_t",SQLCA.sqlcode,1)  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.a_update"/>}
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+</section>
+</add_points>

@@ -1,0 +1,920 @@
+<add_points prog="axcp210" std_prog="axcp210" erpver="1.0" module="AXC" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.axcp210_construct" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp210_construct()
+DEFINE l_n     LIKE type_t.num5  
+   CLEAR FORM
+   INITIALIZE g_glaa_m.* TO NULL
+   LET g_glaa_m.sw_1 = 'N'
+   LET g_glaa_m.sw_2 = 'N'
+   INITIALIZE g_wc2 TO NULL
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      CONSTRUCT BY NAME g_wc2 ON imaa001,imaa003
+      BEFORE CONSTRUCT
+          CALL cl_qbe_init() 
+               
+          
+       ON ACTION controlp INFIELD imaa001     #單據單號開窗
+          INITIALIZE g_qryparam.* TO NULL
+          LET g_qryparam.state = 'c'
+		  LET g_qryparam.reqry = FALSE
+		  LET g_qryparam.where = " imaastus = 'Y'  "
+          CALL q_imaa001()                    #呼叫開窗
+          DISPLAY g_qryparam.return1 TO imaa001  #顯示到畫面上
+          NEXT FIELD imaa001
+         
+       ON ACTION controlp INFIELD imaa003     #單據單號開窗
+          INITIALIZE g_qryparam.* TO NULL
+          LET g_qryparam.state = 'c'
+		  LET g_qryparam.reqry = FALSE
+		  LET g_qryparam.arg1 = "200"
+		  LET g_qryparam.where = " oocqstus = 'Y'  "
+          CALL q_oocq002()                    #呼叫開窗
+          DISPLAY g_qryparam.return1 TO imaa003  #顯示到畫面上
+          NEXT FIELD imaa003
+          
+       
+      END CONSTRUCT 
+      
+      INPUT BY NAME g_glaa_m.glaacomp,g_glaa_m.glaald,g_glaa_m.year,g_glaa_m.month,g_glaa_m.sw_1,g_glaa_m.sw_2
+       
+      
+         BEFORE INPUT 
+            LET g_glaa_m.sw_1 = 'N'
+            LET g_glaa_m.sw_2 = 'N'
+            DISPLAY BY NAME g_glaa_m.sw_1,g_glaa_m.sw_2
+         
+         AFTER FIELD glaacomp
+        
+            IF NOT cl_null(g_glaa_m.glaacomp) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaa_m.glaacomp
+
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist('v_ooef001_15') THEN
+                  #檢查失敗時後續處理
+                  LET g_glaa_m.glaacomp = g_glaa_m_t.glaacomp
+                  CALL axcp210_glaacomp_desc()
+                  NEXT FIELD glaacomp
+               END IF
+               IF NOT cl_null(g_glaa_m.glaald) THEN
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n FROM glaa_t 
+                   WHERE glaaent = g_enterprise AND glaald = g_glaa_m.glaald
+                     AND glaacomp = g_glaa_m.glaacomp
+                  IF l_n = 0 THEN
+                     CALL cl_err(g_glaa_m.glaacomp,'axc-00225',0)
+                     NEXT FIELD glaald
+                  END IF
+               END IF
+               CALL axcp210_glaacomp_desc()        {#ADP版次:1#}
+               
+               
+                                                    
+            END IF            
+            
+             
+          ON ACTION controlp INFIELD glaacomp
+	  	     #開窗i段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+                LET g_qryparam.reqry = FALSE
+		        
+                LET g_qryparam.default1 = g_glaa_m.glaacomp            #給予default值
+                IF NOT cl_null(g_glaa_m.glaald) THEN
+                   LET g_qryparam.where = " ooef003 = 'Y' AND ooef017 =(SELECT glaacomp FROM glaa_t ",
+                         " WHERE glaaent = '",g_enterprise,"' AND glaald = '",g_glaa_m.glaald,"')"
+                ELSE
+                   LET g_qryparam.where = " ooef003 = 'Y' "
+                END IF
+		        
+                #給予arg
+                CALL q_ooef001()
+		        
+                LET g_glaa_m.glaacomp = g_qryparam.return1              #將開窗取得的值回傳到變數
+		        
+		        
+                DISPLAY g_glaa_m.glaacomp TO glaacomp              #顯示到畫面上
+                LET g_qryparam.where = NULL
+                CALL axcp210_glaacomp_desc()
+		        
+                NEXT FIELD glaacomp                          #返回原欄位    
+
+         AFTER FIELD glaald
+        
+            IF NOT cl_null(g_glaa_m.glaald) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_glaa_m.glaald
+
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist('v_glaald') THEN
+                  #檢查失敗時後續處理
+                  LET g_glaa_m.glaald = g_glaa_m_t.glaald
+                  CALL axcp210_glaald_desc()
+                  NEXT FIELD glaald
+               END IF
+               
+               
+               IF NOT cl_null(g_glaa_m.glaacomp) THEN
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n FROM glaa_t 
+                   WHERE glaaent = g_enterprise AND glaacomp = g_glaa_m.glaacomp
+                     AND glaald = g_glaa_m.glaald
+                  IF l_n = 0 THEN
+                     CALL cl_err(g_glaa_m.glaald,'axc-00225',0)
+                     NEXT FIELD glaacomp
+                  END IF
+               END IF
+               
+               IF NOT s_ld_chk_authorization(g_user,g_glaa_m.glaald) THEN
+                  CALL cl_err(g_glaa_m.glaald,'agl-00165',0)
+                  NEXT FIELD glaacomp
+               END IF
+               CALL axcp210_glaald_desc()        {#ADP版次:1#}
+               SELECT glaa003,glaa010,glaa011 INTO g_glaa003,g_glaa_m.year,g_glaa_m.month FROM glaa_t
+                WHERE glaaent = g_enterprise 
+                  AND glaald = g_glaa_m.glaald
+               DISPLAY BY NAME g_glaa_m.year,g_glaa_m.month                                     
+            END IF            
+            
+             
+          ON ACTION controlp INFIELD glaald
+	  	     #開窗i段
+             INITIALIZE g_qryparam.* TO NULL
+             LET g_qryparam.state = 'i'
+             LET g_qryparam.reqry = FALSE
+		     
+             LET g_qryparam.default1 = g_glaa_m.glaald             #給予default值
+             LET g_qryparam.arg1 = g_user
+             LET g_qryparam.arg2 = g_dept
+             IF NOT cl_null(g_glaa_m.glaacomp) THEN
+                LET g_qryparam.where = " glaacomp='",g_glaa_m.glaacomp,"'"
+             END IF
+		     
+             #給予arg
+             CALL q_authorised_ld()
+		     
+             LET g_glaa_m.glaald = g_qryparam.return1              #將開窗取得的值回傳到變數
+		     
+             DISPLAY g_glaa_m.glaald TO glaald              #顯示到畫面上
+             LET g_qryparam.where = NULL
+             CALL axcp210_glaald_desc()
+		        
+              NEXT FIELD glaald                          #返回原欄位 
+         
+         AFTER FIELD year
+        
+            IF NOT cl_null(g_glaa_m.year) THEN
+               IF NOT s_fin_date_chk_year(g_glaa_m.year) THEN
+                  LET g_glaa_m.year = g_glaa_m_t.year
+                  DISPLAY BY NAME g_glaa_m.year
+                  CALL cl_err(g_glaa_m.year,'aoo-00113',1)
+                  NEXT FIELD CURRENT
+               END IF
+                                                    
+            END IF  
+            IF NOT cl_null(g_glaa_m.year) AND NOT cl_null(g_glaa_m.month) THEN
+               CALL s_fin_date_get_period_range(g_glaa003, g_glaa_m.year,g_glaa_m.month)
+                   RETURNING l_bdate,l_edate               
+            END IF               
+            
+         BEFORE FIELD month
+            IF cl_null(g_glaa_m.year) THEN
+               NEXT FIELD year
+            END IF
+
+         AFTER FIELD month
+            IF NOT cl_null(g_glaa_m.month) THEN                      
+               IF NOT s_fin_date_chk_period(g_glaa003,g_glaa_m.year,g_glaa_m.month) THEN
+                  LET g_glaa_m.month = g_glaa_m_t.month
+                  DISPLAY BY NAME g_glaa_m.month
+                  CALL cl_err(g_glaa_m.month,'amm-00106',1)
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            IF NOT cl_null(g_glaa_m.year) AND NOT cl_null(g_glaa_m.month) THEN
+               CALL s_fin_date_get_period_range(g_glaa003, g_glaa_m.year,g_glaa_m.month)
+                   RETURNING l_bdate,l_edate               
+            END IF 
+        AFTER INPUT
+     END INPUT
+       
+      BEFORE DIALOG
+#          CALL cl_qbe_init()
+ 
+      ON ACTION qbe_select      
+ 
+      ON ACTION qbe_save       
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   
+ 
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF 
+END FUNCTION]]>
+</point>
+  <point name="function.axcp210_glaacomp_desc" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp210_glaacomp_desc()
+   SELECT ooefl003 INTO g_glaa_m.glaacomp_desc FROM ooefl_t 
+    WHERE ooeflent=g_enterprise AND ooefl001=g_glaa_m.glaacomp AND ooefl002=g_dlang
+
+   DISPLAY BY NAME g_glaa_m.glaacomp_desc
+END FUNCTION]]>
+</point>
+  <point name="function.axcp210_glaald_desc" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="3" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp210_glaald_desc()
+   SELECT glaal003 INTO g_glaa_m.glaald_desc FROM glaal_t 
+    WHERE glaalent=g_enterprise AND glaal001=g_glaa_m.glaald AND glaal002=g_dlang
+
+   DISPLAY BY NAME g_glaa_m.glaald_desc
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[#單頭 type 宣告
+ TYPE type_g_glaa_m RECORD
+   glaacomp LIKE glaa_t.glaacomp,
+   glaacomp_desc LIKE type_t.chr80,
+   glaald LIKE glaa_t.glaald,
+   glaald_desc LIKE type_t.chr80,
+   year LIKE type_t.num5,
+   month LIKE type_t.num5,
+   sw_1 LIKE type_t.chr1,
+   sw_2 LIKE type_t.chr1
+END RECORD
+DEFINE g_glaa_m     type_g_glaa_m
+DEFINE g_glaa_m_t   type_g_glaa_m
+DEFINE l_bdate      LIKE glav_t.glav004 #起始年度+期別對應的起始截止日期
+DEFINE l_edate      LIKE glav_t.glav004
+DEFINE g_success    LIKE type_t.chr1
+DEFINE g_wc2        STRING
+DEFINE g_glaa003    LIKE glaa_t.glaa003]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   CALL axcp210_construct()]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.parameter" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.background" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_construct" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.exit_dialog" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="transfer.argv.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.define" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.pre_process" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.count_progress" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[      CALL axcp210_ins_xcbz()]]>
+</point>
+  <point name="process.process" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="process.foreground_finish" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[      CALL axcp210_ins_xcbz()]]>
+</point>
+  <point name="process.background_finish" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="">
+<![CDATA[      CALL axcp210_ins_xcbz()]]>
+</point>
+  <point name="function.axcp210_ins_xcbz" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="" order="4">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp210_ins_xcbz()
+DEFINE l_sql           STRING
+DEFINE l_sql1          STRING
+DEFINE l_sql2          STRING
+DEFINE l_sql3          STRING
+DEFINE l_msg           STRING
+DEFINE l_inaj          RECORD LIKE inaj_t.*
+DEFINE l_xcbz          RECORD LIKE xcbz_t.*
+DEFINE l_sum           LIKE type_t.num10
+DEFINE l_sum1          LIKE type_t.num10
+DEFINE l_year          LIKE type_t.num5
+DEFINE l_month         LIKE type_t.num5
+DEFINE l_n             LIKE type_t.num5
+
+   IF g_glaa_m.month > 1 THEN
+      LET l_year = g_glaa_m.year
+      LET l_month = g_glaa_m.month -1
+   ELSE
+      LET l_year = g_glaa_m.year -1 
+      LET l_month = 12
+   END IF
+  
+   CALL axcp210_create_tmp()
+   DELETE FROM axcp210_ins_xcbz_tmp
+
+   LET l_sql = " INSERT INTO axcp210_ins_xcbz_tmp ",   
+               " SELECT inajent,'','',inajsite,0,0,inaj005,inaj008,inaj009,inaj010,inaj015,0,",
+               "  CASE WHEN inaj015 = 'apmt530' THEN SUM(inaj011) END,CASE WHEN inaj015 = '' THEN SUM(inaj011) END ,",
+               "  CASE WHEN inaj015 = 'asft300' THEN SUM(inaj011) END,CASE WHEN inaj015 = '' THEN SUM(inaj011) END,",
+               "  CASE WHEN inaj015 = '       ' THEN SUM(inaj011) END,CASE WHEN inaj015 = 'aint302' THEN SUM(inaj011) END,",
+               "  CASE WHEN inaj015 = 'aint809' THEN SUM(inaj011) END,CASE WHEN inaj015 = '' THEN SUM(inaj011) END,",
+               "   0, ",
+               "  CASE WHEN inaj015 = '       ' THEN SUM(inaj011) END,CASE WHEN inaj015 = 'axmt540' THEN SUM(inaj011) END,",
+               "  CASE WHEN inaj015 = '       ' THEN SUM(inaj011) END,CASE WHEN inaj015 = '' THEN SUM(inaj011) END,",
+               "  CASE WHEN inaj015 = 'aint301' THEN SUM(inaj011) END,0,0",
+               "   FROM inaj_t,imaa_t ",
+               "  WHERE inajent = imaaent AND imaa001 = inaj005 AND (inaj004 = '1' OR inaj004 = '-1')",
+               "    AND inajent = '",g_enterprise,"' AND inaj022 BETWEEN '",l_bdate,"' AND '",l_edate,"'",
+               "    AND inajsite IN ( SELECT ooef001 FROM ooef_t,ooee_t ",
+               "  WHERE ooefent = ooeeent AND ooef001 = ooee001 ",
+               "    AND ooee002 = '1' AND ooee003 = '2' ",
+               "    AND ooef003 = 'Y' AND ooef017 = '",g_glaa_m.glaacomp,"')",
+               "    AND ",g_wc2 CLIPPED,
+               " GROUP BY inajent,inajsite,inaj005,inaj008,inaj009,inaj010,inaj015 ", 
+               " ORDER BY inajent,inajsite,inaj005,inaj008,inaj009,inaj010,inaj015 "
+                
+   PREPARE axcp210_inaj_prep1 FROM l_sql
+   EXECUTE axcp210_inaj_prep1
+   FREE axcp210_inaj_prep1
+   
+   LET l_sql = " INSERT INTO axcp210_ins_xcbz_tmp ",   
+               " SELECT inajent,'','',inajsite,0,0,inaj005,inaj008,inaj009,inaj010,0,0,",
+               "  0,0,0,0,0,0,0,0,0,0,0,0,0,SUM(inaj011),0,0",
+               "   FROM inaj_t,imaa_t ",
+               "  WHERE inajent = imaaent AND imaa001 = inaj005 AND inaj004 = '2' ",
+               "    AND inajent = '",g_enterprise,"' AND inaj022 BETWEEN '",l_bdate,"' AND '",l_edate,"'",
+               "    AND inajsite IN ( SELECT ooef001 FROM ooef_t,ooee_t ",
+               "  WHERE ooefent = ooeeent AND ooef001 = ooee001 ",
+               "    AND ooee002 = '1' AND ooee003 = '2' ",
+               "    AND ooef003 = 'Y' AND ooef017 = '",g_glaa_m.glaacomp,"')",
+               "    AND ",g_wc2 CLIPPED,
+               " GROUP BY inajent,inajsite,inaj005,inaj008,inaj009,inaj010,0 ", 
+               " ORDER BY inajent,inajsite,inaj005,inaj008,inaj009,inaj010,0 "
+                
+   PREPARE axcp210_inaj_prep2 FROM l_sql
+   EXECUTE axcp210_inaj_prep2
+   FREE axcp210_inaj_prep2
+   
+   UPDATE axcp210_ins_xcbz_tmp SET xcbzld = g_glaa_m.glaald,
+                                   xcbzcomp = g_glaa_m.glaacomp,
+                                   xcbz001 = g_glaa_m.year,
+                                   xcbz002 = g_glaa_m.month
+ 
+  LET l_sql = " SELECT xcbzent,xcbzcomp,xcbzld,xcbzsite,xcbz001,xcbz002,xcbz003,xcbz004,xcbz005,xcbz006,SUM(xcbz101), ",
+              "        SUM(xcbz201),SUM(xcbz202),SUM(xcbz203),SUM(xcbz204),SUM(xcbz205),SUM(xcbz206),SUM(xcbz207),",
+              "        SUM(xcbz208),SUM(xcbz209),SUM(xcbz301),SUM(xcbz302),SUM(xcbz303),SUM(xcbz304),SUM(xcbz305), ",
+              "        SUM(xcbz306),SUM(xcbz901) ",
+              "        FROM axcp210_ins_xcbz_tmp ",
+              " GROUP BY xcbzent,xcbzcomp,xcbzld,xcbzsite,xcbz001,xcbz002,xcbz003,xcbz004,xcbz005,xcbz006 ",
+              " ORDER BY xcbzent,xcbzcomp,xcbzld,xcbzsite,xcbz001,xcbz002,xcbz003,xcbz004,xcbz005,xcbz006 "
+   
+   PREPARE axcp210_xcbz_prep1 FROM l_sql
+   DECLARE axcp210_xcbz_curs1 CURSOR FOR axcp210_xcbz_prep1
+   
+   LET g_success = 'Y'
+    #啟用事務
+    CALL s_transaction_begin()
+    CALL cl_showmsg_init()
+    IF g_glaa_m.sw_2 = 'Y' THEN
+       CALL axcp210_del_xcbz()
+    END IF
+   
+    FOREACH axcp210_xcbz_curs1 INTO l_xcbz.*
+    
+      IF g_glaa_m.sw_1 = 'Y' THEN
+         SELECT xcbz101 INTO l_xcbz.xcbz901 FROM xcbz_t
+          WHERE xcbzent = g_enterprise AND xcbzsite = l_inaj.inajsite
+            AND xcbzld = g_glaa_m.glaald AND xcbzcomp = g_glaa_m.glaacomp
+            AND xcbz001 = l_year AND xcbz002 = l_month
+            AND xcbz003 = l_inaj.inaj006 AND xcbz004 = l_inaj.inaj008 
+            AND xcbz005 = l_inaj.inaj009 AND xcbz006 = l_inaj.inaj010
+      END IF
+    
+       IF cl_null(l_xcbz.xcbz003) THEN LET l_xcbz.xcbz003 = " " END IF
+       IF cl_null(l_xcbz.xcbz004) THEN LET l_xcbz.xcbz004 = " " END IF
+       IF cl_null(l_xcbz.xcbz005) THEN LET l_xcbz.xcbz005 = " " END IF
+       IF cl_null(l_xcbz.xcbz006) THEN LET l_xcbz.xcbz006 = " " END IF
+       
+      IF g_glaa_m.sw_2 = 'Y' THEN
+         INSERT INTO xcbz_t VALUES l_xcbz.*
+      ELSE
+         SELECT COUNT(*) INTO l_n FROM xcbz_t
+          WHERE xcbzent = g_enterprise AND xcbzsite = l_inaj.inajsite
+            AND xcbzld = g_glaa_m.glaald AND xcbzcomp = g_glaa_m.glaacomp
+            AND xcbz001 = g_glaa_m.year AND xcbz002 = g_glaa_m.month
+            AND xcbz003 = l_xcbz.xcbz003 AND xcbz004 = l_xcbz.xcbz004 
+            AND xcbz005 = l_xcbz.xcbz005 AND xcbz006 = l_xcbz.xcbz006
+         IF l_n > 0 THEN            
+            UPDATE xcbz_t SET xcbz201 = l_xcbz.xcbz201,
+                              xcbz202 = l_xcbz.xcbz202,
+                              xcbz203 = l_xcbz.xcbz203,
+                              xcbz204 = l_xcbz.xcbz204,
+                              xcbz205 = l_xcbz.xcbz205,
+                              xcbz206 = l_xcbz.xcbz206,
+                              xcbz207 = l_xcbz.xcbz207,
+                              xcbz208 = l_xcbz.xcbz208,
+                              xcbz209 = l_xcbz.xcbz209,
+                              xcbz301 = l_xcbz.xcbz301,
+                              xcbz302 = l_xcbz.xcbz302,
+                              xcbz303 = l_xcbz.xcbz303,
+                              xcbz304 = l_xcbz.xcbz304,
+                              xcbz305 = l_xcbz.xcbz305,
+                              xcbz306 = l_xcbz.xcbz306,
+                              xcbz901 = l_xcbz.xcbz901
+              WHERE xcbzent = g_enterprise AND xcbzsite = l_inaj.inajsite
+                AND xcbzld = g_glaa_m.glaald AND xcbzcomp = g_glaa_m.glaacomp
+                AND xcbz001 = g_glaa_m.year AND xcbz002 = g_glaa_m.month
+                AND xcbz003 = l_xcbz.xcbz003 AND xcbz004 = l_xcbz.xcbz004 
+                AND xcbz005 = l_xcbz.xcbz005 AND xcbz006 = l_xcbz.xcbz006
+       ELSE 
+          INSERT INTO xcbz_t VALUES l_xcbz.*
+       END IF
+       IF STATUS OR SQLCA.sqlerrd[3]=0 THEN
+          LET l_msg = l_xcbz.xcbz003,'/',l_xcbz.xcbz004,'/',l_xcbz.xcbz005,'/',l_xcbz.xcbz006
+          CALL cl_errmsg('xcbz003,xcbz004,xcbz005,xcbz006',l_msg,'update error',SQLCA.sqlcode,1)                               
+          LET g_success = 'N'
+       END IF
+     END IF
+    END FOREACH
+   CALL cl_err_showmsg()
+   #結束事務
+   CALL s_transaction_end(g_success,1)
+END FUNCTION]]>
+</point>
+  <point name="function.axcp210_del_xcbz" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="" order="5">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp210_del_xcbz()
+   IF g_glaa_m.sw_2 = 'Y' THEN
+      DELETE FROM xcbz_t WHERE xcbzent = g_enterprise 
+        AND xcbz001 = g_glaa_m.year AND xcbz002 = g_glaa_m.month
+        AND glaald = g_glaa_m.glaald
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.axcp210_create_tmp" cite_std="N" status="u" ver="" src="" new="Y" cite_ver="" order="6">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axcp210_create_tmp()
+   DROP TABLE axcp210_ins_xcbz_tmp
+
+   CREATE TEMP TABLE axcp210_ins_xcbz_tmp
+   (
+   xcbzent DECIMAL(5,0),
+   xcbzcomp VARCHAR(10),
+   xcbzld VARCHAR(5),
+   xcbzsite VARCHAR(10),
+   xcbz001 DECIMAL(5,0),
+   xcbz002 DECIMAL(5,0),
+   xcbz003 VARCHAR(40),
+   xcbz004 VARCHAR(10),
+   xcbz005 VARCHAR(10),
+   xcbz006 VARCHAR(30),
+   inaj015 VARCHAR(10),
+   xcbz101 DECIMAL(20,6),
+   xcbz201 DECIMAL(20,6),
+   xcbz202 DECIMAL(20,6),
+   xcbz203 DECIMAL(20,6),
+   xcbz204 DECIMAL(20,6),
+   xcbz205 DECIMAL(20,6),
+   xcbz206 DECIMAL(20,6),
+   xcbz207 DECIMAL(20,6),
+   xcbz208 DECIMAL(20,6),
+   xcbz209 DECIMAL(20,6),
+   xcbz301 DECIMAL(20,6),
+   xcbz302 DECIMAL(20,6),
+   xcbz303 DECIMAL(20,6),
+   xcbz304 DECIMAL(20,6),
+   xcbz305 DECIMAL(20,6),
+   xcbz306 DECIMAL(20,6),
+   xcbz901 DECIMAL(20,6)
+    );
+END FUNCTION]]>
+</point>
+  <section id="axcp210.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000000
+#+ 
+#+ Filename...: axcp210
+#+ Description: 料件庫存量按帳套期統計作業
+#+ Creator....: 02291(2014/04/03)
+#+ Modifier...: 02291(2014/04/03)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="axcp210.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="axcp210.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION axcp210_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axcp210.main" ver="1" status="" src="s">
+<![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axc","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL axcp210_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axcp210 WITH FORM cl_ap_formpath("axc",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axcp210_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axcp210_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axcp210
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+</section>
+  <section id="axcp210.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="axcp210.process" ver="1" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION axcp210_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axcp210_process_cs CURSOR FROM ls_sql
+#  FOREACH axcp210_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="axcp210.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axcp210_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="axcp210.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION axcp210_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+#saki       CALL cl_qbe_select()
+ 
+         ON ACTION qbe_save
+#saki       CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION batch_qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.*  TO NULL
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION CLOSE 
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #交談指令共用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         &include "common_action.4gl"
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = g_prog,TODAY USING "yyyymmdd",CURRENT HOUR TO SECOND 
+         LET g_jobid = cl_schedule_trim_colon(g_jobid)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axcp210_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = axcp210_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

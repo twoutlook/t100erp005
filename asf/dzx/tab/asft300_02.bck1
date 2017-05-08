@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asft300_02" module="asf" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="01258" crtdt="2014-01-02 15:46:29" modid="00593" moddt="2016-09-26 14:38:24" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="取替代">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sfbaseq,sfbaseq1,sfba002,sfba003,sfba004,sfba005,sfba005_desc(chr500),sfba005_desc_desc(chr500),sfba021,replace(chr500),qty1(num20_6),qty2(num20_6),qty3(num20_6),sfba016(num20_6)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="seq(num10),seq1(num10),part(chr500),part_desc(chr500),part_desc_desc(chr500),feature(chr500),unit(chr10),mole(num20_6),deno(num20_6),qty4(num20_6),checkcl(chr1),qty5(num20_6),qty6(num20_6),qty7(num20_6),qty8(num20_6),qty9(num20_6),qty10(num20_6)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asft300_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sfba021,replace" insert="N" append="N" delete="N"/>
+      <input id="body" page="2" field="seq,seq1,feature,qty4,checkcl,qty5,qty6,qty7,qty8,qty9,qty10" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sfbaseq"/>
+      <column id="sfbaseq1"/>
+      <column id="sfba002"/>
+      <column id="sfba003"/>
+      <column id="sfba004"/>
+      <column id="sfba005">
+        <after>
+          <reference field="sfba005_desc" ref_field="sfba_t.sfba005" map_field="sfba005" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfba005_desc">
+        <after>
+          <reference field="sfba005_desc_desc" ref_field="sfba005_desc" map_field="sfba005" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfba005_desc_desc"/>
+      <column id="sfba021"/>
+      <column id="replace"/>
+      <column id="qty1" type="S" default="0"/>
+      <column id="qty2" type="S" default="0"/>
+      <column id="qty3" type="S" default="0"/>
+      <column id="sfba016" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="seq"/>
+      <column id="seq1"/>
+      <column id="part">
+        <after>
+          <reference field="part_desc" ref_field="part" map_field="part" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="part_desc">
+        <after>
+          <reference field="part_desc_desc" ref_field="part_desc" map_field="part" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="part_desc_desc"/>
+      <column id="feature"/>
+      <column id="unit"/>
+      <column id="mole" type="S" default="1"/>
+      <column id="deno" type="S" default="1"/>
+      <column id="qty4" type="S" default="0"/>
+      <column id="checkcl"/>
+      <column id="qty5" type="S" default="0"/>
+      <column id="qty6" type="S" default="0"/>
+      <column id="qty7" type="S" default="0"/>
+      <column id="qty8" type="S" default="0"/>
+      <column id="qty9" type="S" default="0"/>
+      <column id="qty10" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="sfba_t" page="1,2" linked="" pk="sfbadocno,sfbaseq,sfbaseq1">
+      <sql id="forupd_sql_detail" query="SELECT sfbaseq,sfbaseq1,sfba002,sfba003,sfba004,sfba005,&apos;&apos;,&apos;&apos;,sfba021,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfba_t WHERE sfbaent=? AND sfbadocno=? AND sfbaseq=? AND sfbaseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sfbaseq,sfbaseq1,sfba002,sfba003,sfba004,sfba005,&apos;&apos;,&apos;&apos;,sfba021,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfba_t WHERE sfbaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

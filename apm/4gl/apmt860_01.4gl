@@ -1,0 +1,1585 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmt860_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2015-01-07 11:56:03), PR版次:0009(2016-11-18 10:09:42)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000099
+#+ Filename...: apmt860_01
+#+ Description: 整批產生收貨單身子作業
+#+ Creator....: 04226(2015-01-05 17:46:17)
+#+ Modifier...: 04226 -SD/PR- 02749
+ 
+{</section>}
+ 
+{<section id="apmt860_01.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#160318-00005#38   2016/03/29 By 07900      重复错误讯息修改
+#161108-00027#1    2016/11/08  By lori      調整g_browser_cnt長度變數定義為num10
+#161117-00022#1    2016/11/18  By lori      筆數相關變數型態定義改為NUM10
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmt860_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+#單身 type 宣告
+ TYPE type_g_pmdo_d        RECORD
+   sel          LIKE type_t.chr1,       #選擇
+   pmdodocno    LIKE pmdo_t.pmdodocno,  #採購單號
+   pmdoseq      LIKE pmdo_t.pmdoseq,    #採購項次
+   pmdoseq1     LIKE pmdo_t.pmdoseq1,   #採購項序
+   pmdoseq2     LIKE pmdo_t.pmdoseq2,   #採購分批序
+   pmdo003      LIKE pmdo_t.pmdo003,    #子件特性
+   pmdo001      LIKE pmdo_t.pmdo001,    #採購商品編號
+   imaal003     LIKE imaal_t.imaal003,  #品名
+   imaal004     LIKE imaal_t.imaal004,  #規格
+   pmdo002      LIKE pmdo_t.pmdo002,    #產品特徵
+   pmdo002_desc LIKE type_t.chr80,      #產品特徵說明
+   pmdo200      LIKE pmdo_t.pmdo200,    #採購包裝單位
+   pmdo200_desc LIKE oocal_t.oocal003,  #採購包裝單位名稱
+   pmdo201      LIKE pmdo_t.pmdo201,    #採購包裝數量
+   pmdo004      LIKE pmdo_t.pmdo004,    #採購單位
+   pmdo004_desc LIKE oocal_t.oocal003,  #採購單位名稱
+   pmdo005      LIKE pmdo_t.pmdo005,    #採購數量
+   pmdo013      LIKE pmdo_t.pmdo013,    #預計到庫日
+   pmdn020      LIKE pmdn_t.pmdn020,    #緊急度
+   pmdl002      LIKE pmdl_t.pmdl002,    #採購人員
+   pmdl002_desc LIKE ooag_t.ooag011,    #姓名
+   pmdl003      LIKE pmdl_t.pmdl003,    #採購部門
+   pmdl003_desc LIKE ooefl_t.ooefl003,  #採購部門名稱
+   pmdn028      LIKE pmdn_t.pmdn028,    #庫位
+   pmdn028_desc LIKE type_t.chr500,     #庫位名稱
+   pmdn029      LIKE pmdn_t.pmdn029,    #儲位
+   pmdn029_desc LIKE type_t.chr500,     #儲位名稱
+   pmdn030      LIKE pmdn_t.pmdn030,    #批號
+   pmdo010      LIKE pmdo_t.pmdo010,    #收貨時段
+   pmdo010_desc LIKE oocql_t.oocql004,  #收貨時段說明
+   pmdn010      LIKE pmdn_t.pmdn010,    #採購計價單位
+   pmdn011      LIKE pmdn_t.pmdn011     #採購計價數量
+                END RECORD
+
+ TYPE type_g_pmdo2_d        RECORD
+   pmdodocno    LIKE pmdo_t.pmdodocno,  #採購單號
+   pmdoseq      LIKE pmdo_t.pmdoseq,    #採購項次
+   pmdoseq1     LIKE pmdo_t.pmdoseq1,   #採購項序
+   pmdoseq2     LIKE pmdo_t.pmdoseq2,   #採購分批序
+   pmdo001      LIKE pmdo_t.pmdo001,    #採購商品編號
+   imaal003     LIKE imaal_t.imaal003,  #品名
+   imaal004     LIKE imaal_t.imaal004,  #規格
+   pmdo002      LIKE pmdo_t.pmdo002,    #產品特徵
+   pmdo002_desc LIKE type_t.chr80,      #產品特徵說明
+   pmdo003      LIKE pmdo_t.pmdo003,    #子件特性
+   pmdt006      LIKE pmdt_t.pmdt006,    #收貨商品編號
+   imaal003_2   LIKE imaal_t.imaal003,  #品名
+   imaal004_2   LIKE imaal_t.imaal004,  #規格
+   pmdt007      LIKE pmdt_t.pmdt007,    #收貨產品特徵
+   pmdt007_desc LIKE type_t.chr80,      #收貨產品特徵說明
+   pmdt201      LIKE pmdt_t.pmdt201,    #包裝單位
+   pmdt201_desc LIKE oocal_t.oocal003,  #包裝單位名稱
+   pmdt202      LIKE pmdt_t.pmdt202,    #包裝數量
+   pmdt019      LIKE pmdt_t.pmdt019,    #收貨/入庫單位
+   pmdt019_desc LIKE oocal_t.oocal003,  #收貨/入庫單位名稱
+   pmdt020      LIKE pmdt_t.pmdt020,    #收貨/入庫數量
+   pmdt023      LIKE pmdt_t.pmdt023,    #計價單位
+   pmdt023_desc LIKE oocal_t.oocal003,  #計價單位名稱
+   pmdt024      LIKE pmdt_t.pmdt024,    #計價數量
+   pmdt016      LIKE pmdt_t.pmdt016,    #庫位
+   pmdt016_desc LIKE type_t.chr500,     #庫位名稱
+   pmdt017      LIKE pmdt_t.pmdt017,    #儲位
+   pmdt017_desc LIKE type_t.chr500,     #儲位名稱
+   pmdt018      LIKE pmdt_t.pmdt018     #批號
+                END RECORD
+DEFINE g_pmdo_d          DYNAMIC ARRAY OF type_g_pmdo_d
+DEFINE g_pmdo_d_t        type_g_pmdo_d
+DEFINE g_pmdo2_d         DYNAMIC ARRAY OF type_g_pmdo2_d
+DEFINE g_pmdo2_d_t       type_g_pmdo2_d
+DEFINE g_pmdo2_d_o       type_g_pmdo2_d
+
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+
+
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_jump                LIKE type_t.num10
+DEFINE g_no_ask              LIKE type_t.num5
+DEFINE g_rec_b               LIKE type_t.num10             #161117-00022#1 161118 by lori mod:num5 to num10
+DEFINE l_ac                  LIKE type_t.num10             #161117-00022#1 161118 by lori mod:num5 to num10 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+
+DEFINE g_pagestart           LIKE type_t.num10             #161117-00022#1 161118 by lori mod:num5 to num10
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_state               STRING
+
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身總筆數                   #161117-00022#1 161118 by lori mod:num5 to num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身目前所在筆數             #161117-00022#1 161118 by lori mod:num5 to num10
+DEFINE g_detail_idx2         LIKE type_t.num10             #單身2目前所在筆數            #161117-00022#1 161118 by lori mod:num5 to num10
+#DEFINE g_browser_cnt         LIKE type_t.num5             #Browser總筆數               #161108-00027#1 161108 by lori mark
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser總筆數               #161108-00027#1 161108 by lori add
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser目前所在筆數          #161117-00022#1 161118 by lori mod:num5 to num10
+DEFINE g_temp_idx            LIKE type_t.num10             #Browser目前所在筆數(暫存用)   #161117-00022#1 161118 by lori mod:num5 to num10
+
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序欄位
+
+DEFINE g_current_row         LIKE type_t.num10             #Browser所在筆數              #161117-00022#1 161118 by lori mod:num5 to num10
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10             #目前所在頁數                 #161117-00022#1 161118 by lori mod:num5 to num10
+DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page
+
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #
+
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+
+DEFINE g_rec_b2     LIKE type_t.num10   #161117-00022#1 161118 by lori mod:num5 to num10
+DEFINE l_ac2        LIKE type_t.num10   #161117-00022#1 161118 by lori mod:num5 to num10
+DEFINE g_success    LIKE type_t.num5
+DEFINE g_pmds       RECORD
+       pmds000      LIKE pmds_t.pmds000,    #單據性質
+       pmdsdocno    LIKE pmds_t.pmdsdocno,  #單據編號
+       pmdsdocdt    LIKE pmds_t.pmdsdocdt,  #單據日期
+       pmds006      LIKE pmds_t.pmds006,    #來源單據
+       pmds007      LIKE pmds_t.pmds007,    #採購供應商
+       pmds008      LIKE pmds_t.pmds008,    #帳款供應商
+       pmds009      LIKE pmds_t.pmds009     #送貨供應商
+                    END RECORD
+{</Module define>}
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmt860_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmt860_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="apmt860_01.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION apmt860_01(--)
+   #add-point:main段變數傳入
+   p_pmdsdocno
+   #end add-point
+   )
+   #add-point:main段define
+   DEFINE p_pmdsdocno  LIKE pmds_t.pmdsdocno
+   #end add-point
+
+   IF cl_null(p_pmdsdocno) THEN
+      RETURN
+   END IF
+
+   CREATE TEMP TABLE apmt860_01_tmp (
+       sel          LIKE type_t.chr1,       #選擇
+       pmdodocno    LIKE pmdo_t.pmdodocno,  #採購單號
+       pmdoseq      LIKE pmdo_t.pmdoseq,    #採購項次
+       pmdoseq1     LIKE pmdo_t.pmdoseq1,   #採購項序
+       pmdoseq2     LIKE pmdo_t.pmdoseq2,   #採購分批序
+       pmdo003      LIKE pmdo_t.pmdo003,    #子件特性
+       pmdo001      LIKE pmdo_t.pmdo001,    #採購商品編號
+       pmdo002      LIKE pmdo_t.pmdo002,    #採購產品特徵
+       pmdo200      LIKE pmdo_t.pmdo200,    #採購包裝單位
+       pmdo201      LIKE pmdo_t.pmdo201,    #採購包裝數量
+       pmdo004      LIKE pmdo_t.pmdo004,    #採購單位
+       pmdo005      LIKE pmdo_t.pmdo005,    #採購數量
+       pmdo013      LIKE pmdo_t.pmdo013,    #到庫日期
+       pmdn020      LIKE pmdn_t.pmdn020,    #緊急度
+       pmdl002      LIKE pmdl_t.pmdl002,    #採購人員
+       pmdl003      LIKE pmdl_t.pmdl003,    #採購部門
+       pmdn028      LIKE pmdn_t.pmdn028,    #庫位
+       pmdn029      LIKE pmdn_t.pmdn029,    #儲位
+       pmdn030      LIKE pmdn_t.pmdn030,    #批號
+       pmdo010      LIKE pmdo_t.pmdo010,    #出貨時段
+       pmdn010      LIKE pmdn_t.pmdn010,    #採購計價單位
+       pmdn011      LIKE pmdn_t.pmdn011);   #採購計價數量
+  
+   CREATE TEMP TABLE apmt860_01_tmp2 (
+      pmdodocno    LIKE pmdo_t.pmdodocno,  #採購單號
+      pmdoseq      LIKE pmdo_t.pmdoseq,    #採購項次
+      pmdoseq1     LIKE pmdo_t.pmdoseq1,   #採購項序
+      pmdoseq2     LIKE pmdo_t.pmdoseq2,   #採購分批序
+      pmdo001      LIKE pmdo_t.pmdo001,    #採購商品編號
+      pmdo002      LIKE pmdo_t.pmdo002,    #產品特徵
+      pmdo003      LIKE pmdo_t.pmdo003,    #子件特性
+      pmdt006      LIKE pmdt_t.pmdt006,    #收貨商品編號
+      pmdt007      LIKE pmdt_t.pmdt007,    #收貨產品特徵
+      pmdt201      LIKE pmdt_t.pmdt201,    #包裝單位
+      pmdt202      LIKE pmdt_t.pmdt202,    #包裝數量
+      pmdt019      LIKE pmdt_t.pmdt019,    #收貨/入庫單位
+      pmdt020      LIKE pmdt_t.pmdt020,    #收貨/入庫數量
+      pmdt023      LIKE pmdt_t.pmdt023,    #計價單位
+      pmdt024      LIKE pmdt_t.pmdt024,    #計價數量
+      pmdt016      LIKE pmdt_t.pmdt016,    #庫位
+      pmdt017      LIKE pmdt_t.pmdt017,    #儲位
+      pmdt018      LIKE pmdt_t.pmdt018);   #批號
+
+
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CONTINUE
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmt860_01 WITH FORM cl_ap_formpath("apm","apmt860_01")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+  
+   CALL s_transaction_begin()
+   
+   #程式初始化
+   CALL apmt860_01_init()
+   
+   LET g_pmds.pmdsdocno = p_pmdsdocno
+   SELECT pmdsdocdt,pmds000,pmds006,pmds007,
+          pmds008,  pmds009
+     INTO g_pmds.pmdsdocdt,g_pmds.pmds000,g_pmds.pmds006,g_pmds.pmds007,
+          g_pmds.pmds008,  g_pmds.pmds009
+     FROM pmds_t
+    WHERE pmdsent = g_enterprise
+      AND pmdsdocno = g_pmds.pmdsdocno
+
+   LET g_forupd_sql = "SELECT pmdsdocno FROM pmds_t WHERE pmdsent= ? AND pmdsdocno=? FOR UPDATE"
+
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE apmt860_01_cl CURSOR FROM g_forupd_sql
+
+   OPEN apmt860_01_cl USING g_enterprise,p_pmdsdocno
+   
+   LET g_success = TRUE
+   #進入選單 Menu (="N")
+   CALL apmt860_01_input()
+
+   #畫面關閉
+   CLOSE WINDOW w_apmt860_01
+
+   CLOSE apmt860_01_cl
+   CALL s_transaction_end('Y','0')
+
+
+   #add-point:離開前
+   DROP TABLE apmt860_01_tmp
+   DROP TABLE apmt860_01_tmp2
+   
+   LET INT_FLAG = FALSE
+   RETURN g_success
+   
+END FUNCTION
+
+PRIVATE FUNCTION apmt860_01_input()
+DEFINE l_cnt        LIKE type_t.num5
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_where      STRING
+DEFINE l_sql        STRING
+DEFINE l_pmdt020    LIKE pmdt_t.pmdt020
+
+   CLEAR FORM
+   CALL g_pmdo_d.clear()
+
+   INITIALIZE g_wc TO NULL
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      CONSTRUCT BY NAME g_wc ON pmdldocno,pmdn001,pmdo013,pmdo010,pmdn028,imaa009
+
+         BEFORE CONSTRUCT
+            DISPLAY g_pmds.pmds006 TO pmdldocno
+            #CALL cl_qbe_init()
+         
+         BEFORE FIELD pmdldocno
+            IF NOT cl_null(g_pmds.pmds006) THEN
+               NEXT FIELD NEXT
+            END IF
+         
+         #一般欄位開窗相關處理
+         #---------------------------<  Master  >---------------------------
+         #----<<pmdldocno>>----
+         #Ctrlp:construct.c.pmdldocno
+         ON ACTION controlp INFIELD pmdldocno
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET l_where = "     pmdl005 = '1'",
+			                 " AND pmdl006 = '1'",
+			                 " AND pmdl004 = '",g_pmds.pmds007,"'",
+                          " AND pmdl021 = '",g_pmds.pmds008,"'",
+                          " AND pmdn023 = '",g_pmds.pmds009,"' ",
+#                          " AND pmdldocdt >= '",g_pmds.pmdsdocdt,"'"
+                          " AND pmdldocdt <= '",g_pmds.pmdsdocdt,"'"       #160604-00009#148    by 08172
+			   IF g_pmds.pmds000 = '3' THEN
+			      LET l_where = l_where, " AND pmdn052 = 'N'"
+			   END IF
+            LET g_qryparam.where = l_where
+            CALL q_pmdldocno_8()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmdldocno  #顯示到畫面上
+            NEXT FIELD pmdldocno                     #返回原欄位
+
+         ON ACTION controlp INFIELD pmdn001
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.arg1 = 'ALL'
+			   LET g_qryparam.where = "     imaastus = 'Y'",
+			                          " AND EXISTS (SELECT 1",
+			                          "               FROM rtdx_t",
+			                          "              WHERE rtdxent =",g_enterprise,
+			                          "                AND rtdxsite = '",g_site,"'",
+			                          "                AND rtdx001 = imaa001",
+			                          "                AND rtdxstus = 'Y')"
+            CALL q_imaf001_18()                    #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmdn001  #顯示到畫面上
+            NEXT FIELD pmdn001                     #返回原欄位
+
+         ON ACTION controlp INFIELD pmdo010
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.arg1 = '274'
+            CALL q_oocq002()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmdo010  #顯示到畫面上
+            NEXT FIELD pmdo010                     #返回原欄位
+
+         ON ACTION controlp INFIELD pmdn028
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_inaa001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmdn028  #顯示到畫面上
+            NEXT FIELD pmdn028                     #返回原欄位
+
+         ON ACTION controlp INFIELD imaa009
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.where = "     imaastus = 'Y'",
+			                          " AND EXISTS (SELECT 1",
+			                          "               FROM rtdx_t",
+			                          "              WHERE rtdxent =",g_enterprise,
+			                          "                AND rtdxsite = '",g_site,"'",
+			                          "                AND rtdx001 = imaa001",
+			                          "                AND rtdxstus = 'Y')"
+            CALL q_imaa009()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+            NEXT FIELD imaa009                     #返回原欄位
+            
+      END CONSTRUCT
+      
+      INPUT ARRAY g_pmdo_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         BEFORE INPUT
+            CALL apmt860_01_b1_fill()
+            LET g_rec_b = g_pmdo_d.getLength()
+            
+         BEFORE ROW
+            LET l_ac = ARR_CURR()
+            
+         ON CHANGE sel
+            UPDATE apmt860_01_tmp
+               SET sel = g_pmdo_d[l_ac].sel
+             WHERE pmdodocno = g_pmdo_d[l_ac].pmdodocno
+               AND pmdoseq = g_pmdo_d[l_ac].pmdoseq
+               AND pmdoseq1 = g_pmdo_d[l_ac].pmdoseq1
+               AND pmdoseq2 = g_pmdo_d[l_ac].pmdoseq2
+            DISPLAY BY NAME g_pmdo_d[l_ac].sel
+      END INPUT
+      
+      INPUT ARRAY g_pmdo2_d FROM s_detail2.*
+          ATTRIBUTE(COUNT = g_rec_b2,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         BEFORE INPUT
+            CALL apmt860_01_b2_fill()
+            LET g_rec_b2 = g_pmdo2_d.getLength()
+            
+         BEFORE ROW
+            LET l_ac2 = ARR_CURR()
+            LET g_pmdo2_d_t.* = g_pmdo2_d[l_ac2].*
+            LET g_pmdo2_d_o.* = g_pmdo2_d[l_ac2].*
+            CALL apmt860_01_set_entry_b()
+            CALL apmt860_01_set_no_entry_b()
+         
+         BEFORE FIELD pmdt202
+            IF NOT cl_null(g_pmdo2_d[l_ac2].pmdt020) THEN
+               NEXT FIELD NEXT
+            END IF
+         
+         #收貨包裝數量
+         AFTER FIELD pmdt202
+            IF NOT cl_null(g_pmdo2_d[l_ac2].pmdt202) THEN
+               IF g_pmdo2_d[l_ac2].pmdt202 != g_pmdo2_d_o.pmdt202 OR cl_null(g_pmdo2_d_o.pmdt202) THEN          
+                  LET l_success = ''
+                  CALL apmt860_chk_num('1') RETURNING l_success
+                  IF l_success = FALSE THEN
+                     LET g_pmdo2_d[l_ac2].pmdt202 = g_pmdo2_d_o.pmdt202
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL apmt860_01_num_change()
+            END IF
+            LET g_pmdo2_d_o.pmdt202 = g_pmdo2_d[l_ac2].pmdt202
+            LET g_pmdo2_d_o.pmdt020 = g_pmdo2_d[l_ac2].pmdt020
+            LET g_pmdo2_d_o.pmdt024 = g_pmdo2_d[l_ac2].pmdt024
+            CALL apmt860_01_set_entry_b()
+            CALL apmt860_01_set_no_entry_b()
+         
+         #收貨數量
+         AFTER FIELD pmdt020
+            IF NOT cl_null(g_pmdo2_d[l_ac2].pmdt020) THEN
+               IF g_pmdo2_d[l_ac2].pmdt020 != g_pmdo2_d_o.pmdt020 OR cl_null(g_pmdo2_d_o.pmdt020) THEN          
+                  LET l_success = ''
+                  CALL apmt860_chk_num('2') RETURNING l_success
+                  IF l_success = FALSE THEN
+                     LET g_pmdo2_d[l_ac2].pmdt020 = g_pmdo2_d_o.pmdt020
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL apmt860_01_num_change()
+               END IF
+            END IF
+            LET g_pmdo2_d_o.pmdt202 = g_pmdo2_d[l_ac2].pmdt202
+            LET g_pmdo2_d_o.pmdt020 = g_pmdo2_d[l_ac2].pmdt020
+            LET g_pmdo2_d_o.pmdt024 = g_pmdo2_d[l_ac2].pmdt024
+            CALL apmt860_01_set_entry_b()
+            CALL apmt860_01_set_no_entry_b()
+            
+         ON ROW CHANGE
+            UPDATE apmt860_01_tmp2 
+               SET pmdt202 = g_pmdo2_d[l_ac2].pmdt202,
+                   pmdt020 = g_pmdo2_d[l_ac2].pmdt020,
+                   pmdt024 = g_pmdo2_d[l_ac2].pmdt024
+             WHERE pmdodocno = g_pmdo2_d[l_ac2].pmdodocno
+               AND pmdoseq = g_pmdo2_d[l_ac2].pmdoseq
+               AND pmdoseq1 = g_pmdo2_d[l_ac2].pmdoseq1
+               AND pmdoseq2 = g_pmdo2_d[l_ac2].pmdoseq2
+      END INPUT
+      
+      ON ACTION ok
+         #產生採購明細單身
+         CALL apmt860_01_gen_pmdo()
+         
+      ON ACTION check_all
+         #採購明細單身全選
+         CALL apmt860_01_check_all() 
+
+      ON ACTION check_no_all
+         #採購明細單身全不選
+         CALL apmt860_01_check_no_all()
+         
+      ON ACTION gen_pmdt_draft
+         #產生收貨底搞
+         CALL apmt860_01_gen_pmdt_draft()
+
+      ON ACTION gen_pmdt
+         ##產生採購明細單身
+         #UPDATE apmt860_01_tmp2 
+         #   SET pmdt202 = g_pmdo2_d[l_ac2].pmdt202,
+         #       pmdt020 = g_pmdo2_d[l_ac2].pmdt020,
+         #       pmdt024 = g_pmdo2_d[l_ac2].pmdt024
+         # WHERE pmdodocno = g_pmdo2_d[l_ac2].pmdodocno
+         #   AND pmdoseq = g_pmdo2_d[l_ac2].pmdoseq
+         #   AND pmdoseq1 = g_pmdo2_d[l_ac2].pmdoseq1
+         #   AND pmdoseq2 = g_pmdo2_d[l_ac2].pmdoseq2
+
+
+         #檢查單身的必輸欄位不可為空
+         CALL apmt860_01_b2_fill()
+         LET g_rec_b2 = g_pmdo2_d.getLength()
+         
+         IF g_rec_b2 > 0 THEN
+            LET l_success = TRUE
+            #CALL cl_err_collect_init()
+            #FOR l_cnt = 1 TO g_rec_b2
+            #    IF cl_null(g_pmdo2_d[l_cnt].pmdt023) OR cl_null(g_pmdo2_d[l_cnt].pmdt024) THEN
+            #       UPDATE apmt860_01_tmp2 
+            #          SET pmdt202 = g_pmdo2_d[l_ac2].pmdt202,
+            #              pmdt020 = g_pmdo2_d[l_ac2].pmdt020,
+            #              pmdt024 = g_pmdo2_d[l_ac2].pmdt024
+            #        WHERE pmdodocno = g_pmdo2_d[l_ac2].pmdodocno
+            #          AND pmdoseq = g_pmdo2_d[l_ac2].pmdoseq
+            #          AND pmdoseq1 = g_pmdo2_d[l_ac2].pmdoseq1
+            #          AND pmdoseq2 = g_pmdo2_d[l_ac2].pmdoseq2
+            #    END IF
+            #    IF (cl_null(g_pmdo2_d[l_cnt].pmdt020) OR g_pmdo2_d[l_cnt].pmdt020 = 0) THEN
+            #       INITIALIZE g_errparam TO NULL
+            #       LET g_errparam.code = "apm-00756"
+            #       LET g_errparam.extend = ""
+            #       LET g_errparam.popup = TRUE
+            #       LET g_errparam.replace[1] = g_pmdo2_d[l_cnt].pmdodocno
+            #       LET g_errparam.replace[2] = g_pmdo2_d[l_cnt].pmdoseq
+            #       LET g_errparam.replace[3] = g_pmdo2_d[l_cnt].pmdoseq1
+            #       LET g_errparam.replace[4] = g_pmdo2_d[l_cnt].pmdoseq2
+            #       CALL cl_err()
+            #       LET l_success = FALSE
+            #    END IF
+            #END FOR
+            #CALL cl_err_collect_show()
+            IF l_success THEN  #沒有欄位值為空
+               LET g_success = TRUE
+               IF NOT apmt860_01_gen_pmdt() THEN
+                  IF NOT cl_ask_confirm('apm-00284') THEN #產生失敗，是否繼續
+                     LET g_success = FALSE                 
+                     RETURN
+                  END IF
+               ELSE
+                  IF cl_ask_confirm('apm-00285') THEN #產生成功，是否繼續
+                     CALL g_pmdo2_d.clear()
+                     DELETE FROM apmt860_01_tmp2
+                     IF SQLCA.sqlcode THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = 'Del apmt860_01_tmp2'
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     END IF
+                     CALL apmt860_01_gen_pmdo()
+                  ELSE
+                     LET INT_FLAG = TRUE 
+                     EXIT DIALOG
+                  END IF
+               END IF
+            END IF
+         ELSE
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'apm-00292'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         END IF
+          
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+   
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION apmt860_01_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+   
+   CALL cl_set_combo_scc('pmdo003','2055')
+   CALL cl_set_combo_scc('pmdo003_1','2055')
+   CALL cl_set_combo_scc('pmdn020','2036')
+   CALL g_pmdo2_d.clear()
+
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+
+   #add-point:畫面資料初始化
+   {<point name="init.init"/>}
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION apmt860_01_set_entry_b()
+    CALL cl_set_comp_entry("pmdt202",TRUE)
+END FUNCTION
+
+PRIVATE FUNCTION apmt860_01_set_no_entry_b()
+
+   #end add-point    
+   #add-point:set_no_entry_b段
+   
+   #當收貨數量有值，收貨包裝數量不可以維護
+   IF NOT cl_null(g_pmdo2_d[l_ac2].pmdt020) THEN
+      CALL cl_set_comp_entry("pmdt202",FALSE)
+   END IF
+   
+END FUNCTION
+#填充採購明細單身
+PRIVATE FUNCTION apmt860_01_b1_fill()
+DEFINE l_sql          STRING
+DEFINE l_success      LIKE type_t.num5
+
+    CALL g_pmdo_d.clear()
+    LET l_ac = 1
+    
+    LET l_sql = "SELECT sel,         pmdodocno,   pmdoseq,     pmdoseq1,",
+                "       pmdoseq2,    pmdo003,     pmdo001,     t1.imaal003,",
+                "       t1.imaal004, pmdo002,     '',          pmdo200,",
+                "       t2.oocal003, pmdo201,     pmdo004,     t3.oocal003,",
+                "       pmdo005,     pmdo013,     pmdn020,     pmdl002,",
+                "       t4.ooag011,  pmdl003,     t5.ooefl003, pmdn028,",
+                "       t6.inayl003, pmdn029,     '',          pmdn030,",
+                "       pmdo010,     t7.oocql004, pmdn010,     pmdn011",
+                "  FROM apmt860_01_tmp ",
+                "  LEFT OUTER JOIN imaal_t t1 ON t1.imaalent = ",g_enterprise,
+                "                            AND t1.imaal001 = pmdo001",
+                "                            AND t1.imaal002 = '",g_dlang,"'",
+                "  LEFT OUTER JOIN oocal_t t2 ON t2.oocalent = ",g_enterprise,
+                "                            AND t2.oocal001 = pmdo200",
+                "                            AND t2.oocal002 = '",g_dlang,"'",
+                "  LEFT OUTER JOIN oocal_t t3 ON t3.oocalent = ",g_enterprise,
+                "                            AND t3.oocal001 = pmdo004",
+                "                            AND t3.oocal002 = '",g_dlang,"'",
+                "  LEFT OUTER JOIN ooag_t  t4 ON t4.ooagent = ",g_enterprise,
+                "                            AND t4.ooag001 = pmdl002",
+                "  LEFT OUTER JOIN ooefl_t t5 ON t5.ooeflent = ",g_enterprise,
+                "                            AND t5.ooefl001 = pmdl003",
+                "                            AND t5.ooefl002 = '",g_dlang,"'",
+                "  LEFT OUTER JOIN inayl_t t6 ON t6.inaylent = ",g_enterprise,
+                "                            AND t6.inayl001 = pmdn028",
+                "                            AND t6.inayl002 = '",g_dlang,"'",
+                "  LEFT OUTER JOIN oocql_t t7 ON t7.oocqlent = ",g_enterprise,
+                "                            AND t7.oocql001 = '274'",
+                "                            AND t7.oocql002 = pmdo010",
+                "                            AND t7.oocql003 = '",g_dlang,"'",
+                " ORDER BY pmdodocno,pmdoseq,pmdoseq1,pmdoseq2 "
+    PREPARE apmt860_01_pmdo_pb FROM l_sql
+    DECLARE apmt860_01_pmdo_cs CURSOR FOR apmt860_01_pmdo_pb
+    FOREACH apmt860_01_pmdo_cs
+       INTO g_pmdo_d[l_ac].sel,          g_pmdo_d[l_ac].pmdodocno,    g_pmdo_d[l_ac].pmdoseq,
+            g_pmdo_d[l_ac].pmdoseq1,     g_pmdo_d[l_ac].pmdoseq2,     g_pmdo_d[l_ac].pmdo003,
+            g_pmdo_d[l_ac].pmdo001,      g_pmdo_d[l_ac].imaal003,     g_pmdo_d[l_ac].imaal004,
+            g_pmdo_d[l_ac].pmdo002,      g_pmdo_d[l_ac].pmdo002_desc, g_pmdo_d[l_ac].pmdo200,
+            g_pmdo_d[l_ac].pmdo200_desc, g_pmdo_d[l_ac].pmdo201,      g_pmdo_d[l_ac].pmdo004,
+            g_pmdo_d[l_ac].pmdo004_desc, g_pmdo_d[l_ac].pmdo005,      g_pmdo_d[l_ac].pmdo013,
+            g_pmdo_d[l_ac].pmdn020,      g_pmdo_d[l_ac].pmdl002,      g_pmdo_d[l_ac].pmdl002_desc,
+            g_pmdo_d[l_ac].pmdl003,      g_pmdo_d[l_ac].pmdl003_desc, g_pmdo_d[l_ac].pmdn028,
+            g_pmdo_d[l_ac].pmdn028_desc, g_pmdo_d[l_ac].pmdn029,      g_pmdo_d[l_ac].pmdn029_desc,
+            g_pmdo_d[l_ac].pmdn030,      g_pmdo_d[l_ac].pmdo010,      g_pmdo_d[l_ac].pmdo010_desc
+              
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = "Foreach apmt860_01_pmdo_cs"
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+          EXIT FOREACH
+       END IF
+       
+       #產品特徵說明
+       CALL s_feature_description(g_pmdo_d[l_ac].pmdo001,g_pmdo_d[l_ac].pmdo002) RETURNING l_success,g_pmdo_d[l_ac].pmdo002_desc
+       DISPLAY BY NAME g_pmdo_d[l_ac].pmdo002_desc
+       
+       #儲位說明
+       CALL s_desc_get_locator_desc(g_site,g_pmdo_d[l_ac].pmdn028,g_pmdo_d[l_ac].pmdn029) RETURNING g_pmdo_d[l_ac].pmdn029_desc
+       DISPLAY BY NAME g_pmdo_d[l_ac].pmdn029_desc
+       
+       LET l_ac = l_ac + 1
+       IF l_ac > g_max_rec AND g_error_show = 1 THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code =  9035
+          LET g_errparam.extend =  ''
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+          EXIT FOREACH
+       END IF
+    END FOREACH
+    
+    CALL g_pmdo_d.deleteElement(g_pmdo_d.getLength())
+    
+END FUNCTION
+#填充收貨底稿單身
+PRIVATE FUNCTION apmt860_01_b2_fill()
+DEFINE l_sql          STRING
+DEFINE l_success      LIKE type_t.num5
+
+   CALL g_pmdo2_d.clear()
+   LET l_ac2 = 1
+   
+   LET l_sql = "SELECT pmdodocno,   pmdoseq,     pmdoseq1,    pmdoseq2,",
+               "       pmdo001,     t1.imaal003, t1.imaal004, pmdo002,",
+               "       '',          pmdo003,     pmdt006,     t2.imaal003,",
+               "       t2.imaal004, pmdt007,     '',          pmdt201,",
+               "       t3.oocal003, pmdt202,     pmdt019,     t4.oocal003,",
+               "       pmdt020,     pmdt023,     t5.oocal003, pmdt024,",
+               "       pmdt016,     t6.inayl003, pmdt017,     '',",
+               "       pmdt018",
+               "  FROM apmt860_01_tmp2 ",
+               "  LEFT OUTER JOIN imaal_t t1 ON t1.imaalent = ",g_enterprise,
+               "                            AND t1.imaal001 = pmdo001",
+               "                            AND t1.imaal002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN imaal_t t2 ON t2.imaalent = ",g_enterprise,
+               "                            AND t2.imaal001 = pmdt006",
+               "                            AND t2.imaal002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN oocal_t t3 ON t3.oocalent = ",g_enterprise,
+               "                            AND t3.oocal001 = pmdt201",
+               "                            AND t3.oocal002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN oocal_t t4 ON t4.oocalent = ",g_enterprise,
+               "                            AND t4.oocal001 = pmdt019",
+               "                            AND t4.oocal002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN oocal_t t5 ON t5.oocalent = ",g_enterprise,
+               "                            AND t5.oocal001 = pmdt023",
+               "                            AND t5.oocal002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN inayl_t t6 ON t6.inaylent = ",g_enterprise,
+               "                            AND t6.inayl001 = pmdt016",
+               "                            AND t6.inayl002 = '",g_dlang,"'",
+               " ORDER BY pmdodocno,pmdoseq,pmdoseq1,pmdoseq2 "
+               
+   PREPARE apmt860_01_pmdo_pb2 FROM l_sql
+   DECLARE apmt860_01_pmdo_cs2 CURSOR FOR apmt860_01_pmdo_pb2
+
+   FOREACH apmt860_01_pmdo_cs2
+      INTO g_pmdo2_d[l_ac2].pmdodocno,    g_pmdo2_d[l_ac2].pmdoseq,      g_pmdo2_d[l_ac2].pmdoseq1,     g_pmdo2_d[l_ac2].pmdoseq2,
+           g_pmdo2_d[l_ac2].pmdo001,      g_pmdo2_d[l_ac2].imaal003,     g_pmdo2_d[l_ac2].imaal004,     g_pmdo2_d[l_ac2].pmdo002,
+           g_pmdo2_d[l_ac2].pmdo002_desc, g_pmdo2_d[l_ac2].pmdo003,      g_pmdo2_d[l_ac2].pmdt006,      g_pmdo2_d[l_ac2].imaal003_2,
+           g_pmdo2_d[l_ac2].imaal004_2,   g_pmdo2_d[l_ac2].pmdt007,      g_pmdo2_d[l_ac2].pmdt007_desc, g_pmdo2_d[l_ac2].pmdt201,
+           g_pmdo2_d[l_ac2].pmdt201_desc, g_pmdo2_d[l_ac2].pmdt202,      g_pmdo2_d[l_ac2].pmdt019,      g_pmdo2_d[l_ac2].pmdt019_desc,
+           g_pmdo2_d[l_ac2].pmdt020,      g_pmdo2_d[l_ac2].pmdt023,      g_pmdo2_d[l_ac2].pmdt023_desc, g_pmdo2_d[l_ac2].pmdt024,
+           g_pmdo2_d[l_ac2].pmdt016,      g_pmdo2_d[l_ac2].pmdt016_desc, g_pmdo2_d[l_ac2].pmdt017,      g_pmdo2_d[l_ac2].pmdt017_desc,
+           g_pmdo2_d[l_ac2].pmdt018
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "Foreach apmt860_01_pmdo_cs2"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      CALL s_feature_description(g_pmdo2_d[l_ac2].pmdo001,g_pmdo2_d[l_ac2].pmdo002) RETURNING l_success,g_pmdo2_d[l_ac2].pmdo002_desc
+      DISPLAY BY NAME g_pmdo2_d[l_ac2].pmdo002_desc
+
+      CALL s_feature_description(g_pmdo2_d[l_ac2].pmdt006,g_pmdo2_d[l_ac2].pmdt007) RETURNING l_success,g_pmdo2_d[l_ac2].pmdt007_desc
+      DISPLAY BY NAME g_pmdo2_d[l_ac2].pmdt007_desc
+            
+      CALL s_desc_get_locator_desc(g_site,g_pmdo2_d[l_ac2].pmdt016,g_pmdo2_d[l_ac2].pmdt017) RETURNING g_pmdo2_d[l_ac2].pmdt017_desc
+      DISPLAY BY NAME g_pmdo2_d[l_ac2].pmdt017_desc
+      
+      LET l_ac2 = l_ac2 + 1
+      IF l_ac2 > g_max_rec AND g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   CALL g_pmdo2_d.deleteElement(g_pmdo2_d.getLength())
+   
+END FUNCTION
+#採購明細單身全選
+PRIVATE FUNCTION apmt860_01_check_all()
+   UPDATE apmt860_01_tmp SET sel = 'Y'
+   
+   CALL apmt860_01_b1_fill()
+   
+END FUNCTION
+#採購明細單身全不選
+PRIVATE FUNCTION apmt860_01_check_no_all()
+   UPDATE apmt860_01_tmp SET sel = 'N'
+   
+   CALL apmt860_01_b1_fill()
+   
+END FUNCTION
+#根據查詢條件，產生採購明細單身資料
+PRIVATE FUNCTION apmt860_01_gen_pmdo()
+DEFINE l_sql             STRING
+DEFINE l_pmdldocno       LIKE pmdl_t.pmdldocno
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_ooba002         LIKE ooba_t.ooba002
+DEFINE l_pmdoseq         LIKE pmdo_t.pmdoseq
+DEFINE l_pmdoseq1        LIKE pmdo_t.pmdoseq
+DEFINE l_pmdoseq2        LIKE pmdo_t.pmdoseq
+DEFINE l_pmdn            RECORD
+       pmdo001           LIKE pmdo_t.pmdo001,     #商品編號
+       pmdo004           LIKE pmdo_t.pmdo004,     #出貨單位
+       pmdo005           LIKE pmdo_t.pmdo005,     #出貨數量
+       pmdo200           LIKE pmdo_t.pmdo200,     #包裝單位
+       pmdo201           LIKE pmdo_t.pmdo201,     #包裝數量
+       pmdn010           LIKE pmdn_t.pmdn010,     #計價單位
+       pmdn011           LIKE pmdn_t.pmdn011      #計價數量
+                         END RECORD
+
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   
+   DELETE FROM apmt860_01_tmp
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Del apmt860_01_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   END IF
+   
+   LET l_sql = "INSERT INTO apmt860_01_tmp (sel,      pmdodocno, pmdoseq, pmdoseq1,",
+               "                            pmdoseq2, pmdo003,   pmdo001, pmdo002,",
+               "                            pmdo200,  pmdo201,   pmdo004, pmdo005,",
+               "                            pmdo013,  pmdn020,   pmdl002, pmdl003,",
+               "                            pmdn028,  pmdn029,   pmdn030, pmdo010,",
+               "                            pmdn010,  pmdn011)",
+               " SELECT 'N',      pmdodocno, pmdoseq, pmdoseq1,",
+               "        pmdoseq2, pmdo003,   pmdo001, pmdo002,",
+               "        pmdo200,  pmdo201,   pmdo004, (COALESCE (pmdo006,0)-COALESCE(pmdo015,0)+COALESCE(pmdo016,0)-COALESCE(d.sumpmdt020,0)),",
+               "        pmdo013,  pmdn020,   pmdl002, pmdl003,",
+               "        pmdn028,  pmdn029,   pmdn030, pmdo010,",
+               "        pmdn010,  pmdn011",
+               "   FROM pmdl_t,pmab_t,pmdn_t,pmdo_t",
+               "   LEFT OUTER JOIN imaa_t ON pmdoent = imaaent AND pmdo001 = imaa001",
+               "   LEFT OUTER JOIN (SELECT pmdtent,pmdt001,pmdt002,pmdt003,pmdt004,",
+               "                           COALESCE(SUM(pmdt020),0) sumpmdt020",
+               "                      FROM pmds_t, pmdt_t",
+               "                     WHERE pmdsent = pmdtent",
+               "                       AND pmdsdocno = pmdtdocno",
+               "                       AND pmdsent = ",g_enterprise,
+               "                       AND (pmds000 = '1' OR pmds000 = '3')",
+               "                       AND pmdsstus = 'N'",
+               "                     GROUP BY pmdtent,pmdt001,pmdt002,pmdt003,pmdt004) d",
+               "     ON d.pmdtent = pmdoent AND d.pmdt001 = pmdodocno",
+               "    AND d.pmdt002 = pmdoseq AND d.pmdt003 = pmdoseq1",
+               "    AND d.pmdt004 = pmdoseq2",
+               "   LEFT OUTER JOIN (SELECT pmdtent,pmdt001,pmdt002,pmdt003,pmdt004,",
+               "                           COALESCE(SUM(pmdt020),0) sumpmdt020,COUNT(pmdt001) cnt",
+               "                      FROM pmds_t, pmdt_t",
+               "                     WHERE pmdsent = pmdtent",
+               "                       AND pmdsdocno = pmdtdocno",
+               "                       AND pmdsent = ",g_enterprise,
+               "                       AND (pmds000 = '1' OR pmds000 = '3')",
+               "                       AND pmdsstus != 'X'",
+               "                     GROUP BY pmdtent,pmdt001,pmdt002,pmdt003,pmdt004) e",
+               "     ON e.pmdtent = pmdoent AND e.pmdt001 = pmdodocno",
+               "    AND e.pmdt002 = pmdoseq AND e.pmdt003 = pmdoseq1",
+               "    AND e.pmdt004 = pmdoseq2",
+               "  WHERE pmdlent = pmdnent AND pmdldocno = pmdndocno ",
+               "    AND pmdnent = pmdoent AND pmdndocno = pmdodocno AND pmdnseq = pmdoseq ",
+               "    AND pmdoent = imaaent AND pmdo001 = imaa001 ",
+               "    AND  0 < (COALESCE (pmdo006,0)-COALESCE(pmdo015,0)+COALESCE(pmdo016,0)-COALESCE(d.sumpmdt020,0))",
+               "    AND pmdlent = ",g_enterprise,
+               "    AND pmdnunit = '",g_site,"' ",
+               "    ANd pmdlstus = 'Y'",
+               "    AND pmdldocdt <= '",g_pmds.pmdsdocdt,"'",
+               "    AND pmdl004 = '",g_pmds.pmds007,"'",
+               "    AND pmdl021 = '",g_pmds.pmds008,"'",
+               "    AND pmabent = pmdlent",
+               "    AND pmabsite = 'ALL'",
+               "    AND pmab001 = pmdl004",
+               "    AND (COALESCE (pmdl206, 'N') = 'Y'",
+               "     OR  ((pmdn022 = 'Y'",
+               "    AND   (COALESCE (pmab050, 0) >= 1",
+               "    AND    COALESCE (pmdl206, 'N') = 'N'",
+               "    AND    COALESCE (pmab050, 0) > COALESCE (e.cnt, 0)",
+               "     OR    COALESCE (pmab050, 0) = 0))",
+               "     OR   (pmdn022 = 'N' AND COALESCE(e.cnt,0) = 0)))",
+               
+               "    AND NOT EXISTS(SELECT 1",
+               "                     FROM pmel_t,pmem_t",
+               "                    WHERE pmelent = pmement",
+               "                      AND pmeldocno = pmemdocno",
+               "                      AND pmelstus != 'X'",
+               "                      AND pmement = pmdoent",
+               "                      AND pmem001 = pmdodocno",
+               "                      AND pmem002 = pmdoseq",
+               "                      AND pmem003 = pmdoseq1",
+               "                      AND pmem004 = pmdoseq2)",
+               "    AND '-1' != COALESCE(pmdn201,'-1')"    #確保單據都是流通的
+   LET l_sql = l_sql ," AND ",g_wc
+   
+   #當為採購收貨入庫的時候，採購的檢驗否必須要等於'N'
+   IF g_pmds.pmds000 = '3' THEN
+      LET l_sql = l_sql," AND pmdn052 = 'N'"
+   END IF
+   
+   LET l_sql = l_sql ," ORDER BY pmdldocno "
+   
+   DISPLAY ' QBE SQL = ',l_sql
+   
+   PREPARE apmt860_01_ins_tmp FROM l_sql
+   EXECUTE apmt860_01_ins_tmp
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Ins apmt860_01_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   END IF
+   
+   #由採購數量轉換成包裝數量及計價數量
+   LET l_sql = "SELECT DISTINCT pmdo001,pmdo004,pmdo005,pmdo200,pmdn010",
+               "  FROM apmt860_01_tmp"
+   PREPARE apmt860_sel_change_num_pre FROM l_sql
+   DECLARE apmt860_sel_change_num_cs CURSOR FOR apmt860_sel_change_num_pre
+   
+   FOREACH apmt860_sel_change_num_cs INTO l_pmdn.pmdo001,l_pmdn.pmdo004,l_pmdn.pmdo005,
+                                          l_pmdn.pmdo200,l_pmdn.pmdn010
+   
+      #由收貨數量轉換成包裝數量
+      CALL s_aooi250_convert_qty(l_pmdn.pmdo001,l_pmdn.pmdo004,l_pmdn.pmdo200,l_pmdn.pmdo005)
+         RETURNING l_success,l_pmdn.pmdo201
+
+      #由收貨數量轉換成計價數量
+      CALL s_aooi250_convert_qty(l_pmdn.pmdo001,l_pmdn.pmdo004,l_pmdn.pmdn010,l_pmdn.pmdo005)
+         RETURNING l_success,l_pmdn.pmdn011
+         
+      UPDATE apmt860_01_tmp
+         SET pmdo201 = l_pmdn.pmdo201,
+             pmdn011 = l_pmdn.pmdn011
+       WHERE pmdo001 = l_pmdn.pmdo001
+         AND pmdo004 = l_pmdn.pmdo004
+         AND pmdo005 = l_pmdn.pmdo005
+         AND pmdo200 = l_pmdn.pmdo200
+         AND pmdn010 = l_pmdn.pmdn010
+   END FOREACH
+   
+   CALL apmt860_01_b1_fill()
+   
+   LET g_rec_b = g_pmdo_d.getLength()
+   IF g_rec_b = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-01321'  #apm-00294   #160318-00005#38  By 07900--mod
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   END IF
+   
+END FUNCTION
+#產生收貨底稿
+PRIVATE FUNCTION apmt860_01_gen_pmdt_draft()
+DEFINE l_cnt    LIKE type_t.num5
+
+   LET g_rec_b = g_pmdo_d.getLength()
+   IF g_rec_b = 0 THEN
+      RETURN
+   END IF
+   
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt
+     FROM apmt860_01_tmp
+    WHERE sel = 'Y'
+    
+   IF l_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-00329'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   CALL apmt860_01_insert_pmdt_draft()
+   
+   CALL apmt860_01_b2_fill()
+   LET g_rec_b2 = g_pmdo2_d.getLength()
+        
+END FUNCTION
+#將資料插入到收貨底稿臨時表中
+PRIVATE FUNCTION apmt860_01_insert_pmdt_draft()
+DEFINE l_sql          STRING
+DEFINE l_cnt          LIKE type_t.num5
+DEFINE l_pmdt         type_g_pmdo2_d
+DEFINE l_success      LIKE type_t.num5
+DEFINE l_pmdt020      LIKE pmdt_t.pmdt020
+DEFINE l_pmdl203      LIKE pmdl_t.pmdl203    #採購方式 #160304-00027#1 160307 By pomelo add
+
+   LET l_sql = " SELECT pmdodocno, pmdoseq, pmdoseq1, pmdoseq2,",
+               "        pmdo003,   pmdo001, pmdo002,  pmdo200,",
+               "        pmdo201,   pmdo004, pmdo005,  pmdn028,",
+               "        pmdn029,   pmdn030, pmdn010,  pmdn011",
+               "  FROM apmt860_01_tmp ",
+               " WHERE sel = 'Y' ",
+               " ORDER BY pmdodocno,pmdoseq,pmdoseq1,pmdoseq2 "
+               
+   PREPARE apmt860_01_tmp_pmdo_pb FROM l_sql
+   DECLARE apmt860_01_tmp_pmdo_cs CURSOR FOR apmt860_01_tmp_pmdo_pb
+
+   #160304-00027#1 160307 By pomelo add(S)
+   LET l_sql = "SELECT pmdl203",
+               "  FROM pmdl_t",
+               " WHERE pmdlent = ",g_enterprise,
+               "   AND pmdldocno = ?"
+   PREPARE apmt860_01_get_pmdl203 FROM l_sql
+   #160304-00027#1 160307 By pomelo add(E)
+
+   FOREACH apmt860_01_tmp_pmdo_cs
+      INTO l_pmdt.pmdodocno, l_pmdt.pmdoseq, l_pmdt.pmdoseq1, l_pmdt.pmdoseq2,
+           l_pmdt.pmdo003,   l_pmdt.pmdo001, l_pmdt.pmdo002,  l_pmdt.pmdt201,
+           l_pmdt.pmdt202,   l_pmdt.pmdt019, l_pmdt.pmdt020,  l_pmdt.pmdt016,
+           l_pmdt.pmdt017,   l_pmdt.pmdt018, l_pmdt.pmdt023,  l_pmdt.pmdt024
+              
+      SELECT COUNT(*) INTO l_cnt
+        FROM apmt860_01_tmp2 
+       WHERE pmdodocno = l_pmdt.pmdodocno
+         AND pmdoseq = l_pmdt.pmdoseq
+         AND pmdoseq1 = l_pmdt.pmdoseq1
+         AND pmdoseq2 = l_pmdt.pmdoseq2
+         
+      IF l_cnt > 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      LET l_pmdt.pmdt006 = l_pmdt.pmdo001   #採購料號
+      LET l_pmdt.pmdt007 = l_pmdt.pmdo002   #採購產品特徵
+      
+      #數量
+      LET l_pmdt020 = 0
+      CALL s_apmt860_chk_pmdt020('1', g_pmds.pmds000, g_site,
+                                 g_pmds.pmdsdocno,    '-1',
+                                 l_pmdt.pmdodocno,    l_pmdt.pmdoseq,
+                                 l_pmdt.pmdoseq1,     l_pmdt.pmdoseq2,
+                                 l_pmdt.pmdt006,      '',
+                                 '', 0)
+         RETURNING l_success,l_pmdt020
+      LET l_pmdt.pmdt020 = l_pmdt020
+      
+      #由收貨數量轉換成包裝數量
+      CALL s_aooi250_convert_qty(l_pmdt.pmdt006,l_pmdt.pmdt019,l_pmdt.pmdt201,l_pmdt.pmdt020)
+         RETURNING l_success,l_pmdt.pmdt202
+
+      #由收貨數量轉換成計價數量
+      CALL s_aooi250_convert_qty(l_pmdt.pmdt006,l_pmdt.pmdt019,l_pmdt.pmdt023,l_pmdt.pmdt020)
+         RETURNING l_success,l_pmdt.pmdt024
+      
+      #160304-00027#1 160307 By pomelo add(S)
+      LET l_pmdl203 = ''
+      EXECUTE apmt860_01_get_pmdl203 USING l_pmdt.pmdodocno
+        INTO l_pmdl203
+      IF l_pmdl203 = '3' THEN
+         LET l_pmdt.pmdt016 = s_apmt860_warehouse_default(g_site,l_pmdt.pmdt006)
+         LET l_pmdt.pmdt017 = ' '
+      END IF
+      #160304-00027#1 160307 By pomelo add(E)
+      
+      INSERT INTO apmt860_01_tmp2 (pmdodocno, pmdoseq, pmdoseq1, pmdoseq2,
+                                   pmdo001,   pmdo002, pmdo003,  pmdt006,
+                                   pmdt007,   pmdt201, pmdt202,  pmdt019,
+                                   pmdt020,   pmdt023, pmdt024,  pmdt016,
+                                   pmdt017,   pmdt018)
+        VALUES (l_pmdt.pmdodocno, l_pmdt.pmdoseq, l_pmdt.pmdoseq1, l_pmdt.pmdoseq2,
+                l_pmdt.pmdo001,   l_pmdt.pmdo002, l_pmdt.pmdo003,  l_pmdt.pmdt006,
+                l_pmdt.pmdt007,   l_pmdt.pmdt201, l_pmdt.pmdt202,  l_pmdt.pmdt019,
+                l_pmdt.pmdt020,   l_pmdt.pmdt023, l_pmdt.pmdt024,  l_pmdt.pmdt016,
+                l_pmdt.pmdt017,   l_pmdt.pmdt018)
+   
+   END FOREACH
+   
+END FUNCTION
+#產生收貨單單身
+PRIVATE FUNCTION apmt860_01_gen_pmdt()
+DEFINE l_sql       STRING
+DEFINE l_pmdt089   LIKE pmdt_t.pmdt089
+DEFINE l_imaa149   LIKE imaa_t.imaa149     #臨期控管方式  150714-00016#1 150714 By pomelo add
+DEFINE l_pmdt      RECORD
+       pmdtent     LIKE pmdt_t.pmdtent,    #企業編號
+       pmdtsite    LIKE pmdt_t.pmdtsite,   #營運據點
+       pmdtdocno   LIKE pmdt_t.pmdtdocno,  #單據編號
+       pmdtseq     LIKE pmdt_t.pmdtseq,    #項次
+       pmdt001     LIKE pmdt_t.pmdt001,    #採購單號
+       pmdt002     LIKE pmdt_t.pmdt002,    #採購項次
+       pmdt003     LIKE pmdt_t.pmdt003,    #採購項序
+       pmdt004     LIKE pmdt_t.pmdt004,    #採購分批序
+       pmdt005     LIKE pmdt_t.pmdt005,    #子件特性
+       pmdt006     LIKE pmdt_t.pmdt006,    #料件編號
+       pmdt007     LIKE pmdt_t.pmdt007,    #產品特徵
+       pmdt016     LIKE pmdt_t.pmdt016,    #庫位
+       pmdt017     LIKE pmdt_t.pmdt017,    #儲位
+       pmdt018     LIKE pmdt_t.pmdt018,    #批號
+       pmdt019     LIKE pmdt_t.pmdt019,    #收貨/入庫單位
+       pmdt020     LIKE pmdt_t.pmdt020,    #收貨/入庫數量
+       pmdt023     LIKE pmdt_t.pmdt023,    #計價單位
+       pmdt024     LIKE pmdt_t.pmdt024,    #計價數量
+       pmdt025     LIKE pmdt_t.pmdt025,    #緊急度
+       pmdt026     LIKE pmdt_t.pmdt026,    #檢驗否
+       pmdt027     LIKE pmdt_t.pmdt027,    #出貨單號
+       pmdt028     LIKE pmdt_t.pmdt028,    #出貨項次
+       pmdt036     LIKE pmdt_t.pmdt036,    #單價
+       pmdt037     LIKE pmdt_t.pmdt037,    #稅率
+       pmdt038     LIKE pmdt_t.pmdt038,    #未稅金額
+       pmdt039     LIKE pmdt_t.pmdt039,    #含稅金額
+       pmdt044     LIKE pmdt_t.pmdt044,    #取出單價
+       pmdt046     LIKE pmdt_t.pmdt046,    #稅別
+       pmdt047     LIKE pmdt_t.pmdt047,    #稅額
+       pmdt051     LIKE pmdt_t.pmdt051,    #理由碼
+       pmdt052     LIKE pmdt_t.pmdt052,    #狀態碼
+       pmdt053     LIKE pmdt_t.pmdt053,    #允收數量
+       pmdt054     LIKE pmdt_t.pmdt054,    #已入庫量
+       pmdt055     LIKE pmdt_t.pmdt055,    #驗退量
+       pmdt062     LIKE pmdt_t.pmdt062,    #多庫儲批收貨入庫
+       pmdt063     LIKE pmdt_t.pmdt063,    #庫存管理特徵
+       pmdt084     LIKE pmdt_t.pmdt084,    #須自立AP否
+       pmdt088     LIKE pmdt_t.pmdt088,    #存貨備註
+       pmdt089     LIKE pmdt_t.pmdt089,    #有效日期
+       pmdt200     LIKE pmdt_t.pmdt200,    #商品條碼
+       pmdt201     LIKE pmdt_t.pmdt201,    #收貨包裝單位
+       pmdt202     LIKE pmdt_t.pmdt202,    #收貨包裝數量
+       pmdt203     LIKE pmdt_t.pmdt203,    #採購組織
+       pmdt204     LIKE pmdt_t.pmdt204,    #採購中心
+       pmdt205     LIKE pmdt_t.pmdt205,    #要貨組織
+       pmdt206     LIKE pmdt_t.pmdt206,    #預約收貨單號
+       pmdt207     LIKE pmdt_t.pmdt207,    #預約收貨項次
+       pmdt208     LIKE pmdt_t.pmdt208,    #採購渠道
+       pmdt209     LIKE pmdt_t.pmdt209,    #渠道性質
+       pmdt210     LIKE pmdt_t.pmdt210,    #經營方式
+       pmdt211     LIKE pmdt_t.pmdt211,    #結算方式
+       pmdt212     LIKE pmdt_t.pmdt212,    #合約編號
+       pmdt213     LIKE pmdt_t.pmdt213,    #協議編號
+       pmdt214     LIKE pmdt_t.pmdt214,    #採購方式
+       pmdt215     LIKE pmdt_t.pmdt215,    #最終收貨組織
+       pmdt218     LIKE pmdt_t.pmdt218,    #採購價
+       pmdt219     LIKE pmdt_t.pmdt219,    #製造日期
+       pmdtorga    LIKE pmdt_t.pmdtorga    #帳務組織
+                   END RECORD
+DEFINE l_pmdt020   LIKE pmdt_t.pmdt020     #可打數量
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_cnt       LIKE type_t.num5
+DEFINE l_pmds043   LIKE pmds_t.pmds043
+DEFINE l_pmds044   LIKE pmds_t.pmds044
+DEFINE l_pmds046   LIKE pmds_t.pmds046
+DEFINE l_success   LIKE type_t.num5
+DEFINE l_pmdt220   LIKE pmdt_t.pmdt220     #商品品類     151202-00010#2 s983961--add
+DEFINE l_pmdt221   LIKE pmdt_t.pmdt221     #來源商品品類  151202-00010#2 s983961--add
+
+   LET r_success = TRUE
+   INITIALIZE l_pmdt.* TO NULL
+   
+   LET l_sql = " SELECT pmdodocno, pmdoseq, pmdoseq1, pmdoseq2,",
+               "        pmdo003,   pmdt006, pmdt007,  pmdt201,",
+               "        pmdt202,   pmdt019, pmdt020,  pmdt023,",
+               "        pmdt024,   pmdt016, pmdt017,  pmdt018",
+               "  FROM apmt860_01_tmp2 ",
+               " ORDER BY pmdodocno,pmdoseq,pmdoseq1,pmdoseq2 "
+   PREPARE ins_pmdt_pre FROM l_sql
+   DECLARE ins_pmdt_cs CURSOR FOR ins_pmdt_pre
+   
+   FOREACH ins_pmdt_cs INTO l_pmdt.pmdt001,l_pmdt.pmdt002,l_pmdt.pmdt003,l_pmdt.pmdt004,
+                            l_pmdt.pmdt005,l_pmdt.pmdt006,l_pmdt.pmdt007,l_pmdt.pmdt201,
+                            l_pmdt.pmdt202,l_pmdt.pmdt019,l_pmdt.pmdt020,l_pmdt.pmdt023,
+                            l_pmdt.pmdt024,l_pmdt.pmdt016,l_pmdt.pmdt017,l_pmdt.pmdt018
+      
+      #若採購單號+採購項次+採購項序+分批序已經存在收貨明細中(pmdt_t)則不可在產生
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt
+        FROM pmdt_t
+       WHERE pmdtent = g_enterprise
+         AND pmdt001 = l_pmdt.pmdt001
+         AND pmdt002 = l_pmdt.pmdt002
+         AND pmdt003 = l_pmdt.pmdt003
+         AND pmdt004 = l_pmdt.pmdt004
+         AND pmdtdocno = g_pmds.pmdsdocno
+          
+      IF l_cnt > 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      LET l_pmdt.pmdtent = g_enterprise
+      LET l_pmdt.pmdtsite = g_site 
+      LET l_pmdt.pmdtdocno = g_pmds.pmdsdocno
+      
+      #項次加1
+      SELECT COALESCE(MAX(pmdtseq),0)+1 INTO l_pmdt.pmdtseq
+        FROM pmdt_t
+       WHERE pmdtent = g_enterprise
+         AND pmdtdocno = g_pmds.pmdsdocno
+         
+      #緊急度、保稅否、單價、稅別等資料
+      SELECT pmdn020,  pmdn052, pmdn015, pmdn017,
+             pmdn043,  pmdn016, pmdn200, pmdn201,
+             pmdnsite, pmdn222, pmdn205, pmdn214,
+             pmdn215,  pmdn216, pmdn217, pmdn218,
+             pmdn219,  pmdl203, pmdn225, pmdn053,
+             pmdn015,  pmdnorga
+        INTO l_pmdt.pmdt025, l_pmdt.pmdt026, l_pmdt.pmdt036, l_pmdt.pmdt037,
+             l_pmdt.pmdt044, l_pmdt.pmdt046, l_pmdt.pmdt200, l_pmdt.pmdt201,
+             l_pmdt.pmdt203, l_pmdt.pmdt204, l_pmdt.pmdt205, l_pmdt.pmdt208,
+             l_pmdt.pmdt209, l_pmdt.pmdt210, l_pmdt.pmdt211, l_pmdt.pmdt212,
+             l_pmdt.pmdt213, l_pmdt.pmdt214, l_pmdt.pmdt215, l_pmdt.pmdt063,
+             l_pmdt.pmdt218, l_pmdt.pmdtorga
+        FROM pmdl_t,pmdn_t
+       WHERE pmdlent = pmdnent
+         AND pmdldocno = pmdndocno
+         AND pmdnent = g_enterprise
+         AND pmdndocno = l_pmdt.pmdt001
+         AND pmdnseq = l_pmdt.pmdt002
+      
+      LET l_success = ''
+      LET l_pmdt020 = 0
+      CALL s_apmt860_chk_pmdt020('1', g_pmds.pmds000, l_pmdt.pmdtsite,
+                                 g_pmds.pmdsdocno,    l_pmdt.pmdtseq,
+                                 l_pmdt.pmdt001,      l_pmdt.pmdt002,
+                                 l_pmdt.pmdt003,      l_pmdt.pmdt004,
+                                 l_pmdt.pmdt006,      l_pmdt.pmdt206,
+                                 l_pmdt.pmdt207,      0)
+         RETURNING l_success,l_pmdt020
+      IF l_pmdt020 <= 0 THEN
+         CONTINUE FOREACH
+      END IF
+      IF l_pmdt.pmdt020 >= l_pmdt020 THEN
+         LET l_pmdt.pmdt020 = l_pmdt020
+      END IF
+      
+      #由收貨數量轉換成包裝數量
+      CALL s_aooi250_convert_qty(l_pmdt.pmdt006,l_pmdt.pmdt019,l_pmdt.pmdt201,l_pmdt.pmdt020)
+         RETURNING l_success,l_pmdt.pmdt202
+
+      #由收貨數量轉換成計價數量
+      CALL s_aooi250_convert_qty(l_pmdt.pmdt006,l_pmdt.pmdt019,l_pmdt.pmdt023,l_pmdt.pmdt020)
+         RETURNING l_success,l_pmdt.pmdt024
+      
+      #獲取含稅、未稅金額
+      CALL s_apmt860_get_amount(g_pmds.pmdsdocno,l_pmdt.pmdtseq,
+                                l_pmdt.pmdt001,g_site,
+                                '',l_pmdt.pmdt024,
+                                l_pmdt.pmdt036,l_pmdt.pmdt046)
+         RETURNING l_pmdt.pmdt038,l_pmdt.pmdt047,l_pmdt.pmdt039
+      
+      LET l_pmdt.pmdt052 = '1'  #狀態碼 '1:一般'
+      LET l_pmdt.pmdt053 = l_pmdt.pmdt020
+      LET l_pmdt.pmdt054 = 0
+      LET l_pmdt.pmdt055 = 0
+      LET l_pmdt.pmdt062 = 'N'  #多庫儲批收貨入庫否
+      
+      #產品特徵為null時，給空格
+      IF cl_null(l_pmdt.pmdt007) THEN
+         LET l_pmdt.pmdt007 = ' '
+      END IF 
+     
+      #儲位 若為空，給一個空格
+      IF cl_null(l_pmdt.pmdt017) THEN
+         LET l_pmdt.pmdt017 = ' '
+      END IF 
+	   
+	   #批號 若為空，給一個空格
+      IF cl_null(l_pmdt.pmdt018) THEN
+         LET l_pmdt.pmdt018 = ' '
+      END IF
+      
+      #庫存管理特徵 若為空，給一個空格
+      IF cl_null(l_pmdt.pmdt063) THEN
+         LET l_pmdt.pmdt063 = ' '
+      END IF
+      
+      #自立應付欄位是判斷多角時是不是要自立帳款，所以在一般的採購入庫/倉退與銷售出貨/銷退流程新增時,此欄位均預設為’Y’
+      IF g_argv[1] MATCHES '[3467]' THEN
+         LET l_pmdt.pmdt084 = 'Y'
+      ELSE
+         LET l_pmdt.pmdt084 = 'N'
+      END IF
+      LET l_pmdt.pmdt088 = ''
+      
+      #150714-00016#1 By pomelo add(S)
+      LET l_imaa149 = s_apmt860_get_imaa149(l_pmdt.pmdt006)
+      IF l_imaa149 MATCHES '[23]' AND NOT cl_null(l_imaa149) THEN
+      #150714-00016#1 By pomelo add(E)
+         LET l_pmdt.pmdt219 = g_pmds.pmdsdocdt    #製造日期
+         
+         #有效日期
+         LET l_success = ''
+         LET l_pmdt089 = ''
+         CALL s_lot_out_effdate(l_pmdt.pmdtsite,l_pmdt.pmdt006,l_pmdt.pmdt007,
+                                l_pmdt.pmdt219, l_pmdt.pmdt018)
+            RETURNING l_success,l_pmdt089
+         LET l_pmdt.pmdt089 = l_pmdt089
+      END IF             #150714-00016#1 By pomelo add
+      
+      #151202-00010#2 s983961--add(s)
+      #商品品類編號
+      LET l_pmdt220 = '' 
+      LET l_pmdt221 = ''
+      IF g_argv[1] MATCHES '[13]' THEN
+        SELECT imaa009 INTO l_pmdt220
+          FROM imaa_t
+         WHERE imaaent = g_enterprise
+           AND imaa001 = l_pmdt.pmdt006
+        #來源商品品類編號
+        SELECT pmdn228 INTO l_pmdt221
+          FROM pmdn_t
+         WHERE pmdnent = g_enterprise
+           AND pmdndocno = l_pmdt.pmdt001
+           AND pmdnseq = l_pmdt.pmdt002   
+      END IF   
+      #151202-00010#2 s983961--add(e)
+      
+      #160310-00007#1 160314 By pomelo add(S)
+      LET l_success = ''
+      CALL s_lot_out_get_batch_no(l_pmdt.pmdt006)
+         RETURNING l_success,l_pmdt.pmdt018
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      #160310-00007#1 160314 By pomelo add(E)
+      
+      INSERT INTO pmdt_t(pmdtent, pmdtsite, pmdtdocno, pmdtseq,
+                         pmdt001, pmdt002,  pmdt003,   pmdt004,
+                         pmdt005, pmdt006,  pmdt007,   pmdt016,
+                         pmdt017, pmdt018,  pmdt019,   pmdt020,
+                         pmdt023, pmdt024,  pmdt025,   pmdt026,
+                         pmdt027, pmdt028,  pmdt036,   pmdt037,
+                         pmdt038, pmdt039,  pmdt044,   pmdt046,
+                         pmdt047, pmdt051,  pmdt052,   pmdt053,
+                         pmdt054, pmdt055,  pmdt062,   pmdt063,
+                         pmdt084, pmdt088,  pmdt089,   pmdt200,
+                         pmdt201, pmdt202,  pmdt203,   pmdt204,
+                         pmdt205, pmdt206,  pmdt207,   pmdt208,
+                         pmdt209, pmdt210,  pmdt211,   pmdt212,
+                         pmdt213, pmdt214,  pmdt215,   pmdt218,
+                         pmdt219, pmdtorga, pmdt220,   pmdt221)   #151202-00010#2 s983961--add pmdt220,pmdt221
+       VALUES(l_pmdt.pmdtent, l_pmdt.pmdtsite, l_pmdt.pmdtdocno, l_pmdt.pmdtseq,
+              l_pmdt.pmdt001, l_pmdt.pmdt002,  l_pmdt.pmdt003,   l_pmdt.pmdt004,
+              l_pmdt.pmdt005, l_pmdt.pmdt006,  l_pmdt.pmdt007,   l_pmdt.pmdt016,
+              l_pmdt.pmdt017, l_pmdt.pmdt018,  l_pmdt.pmdt019,   l_pmdt.pmdt020,
+              l_pmdt.pmdt023, l_pmdt.pmdt024,  l_pmdt.pmdt025,   l_pmdt.pmdt026,
+              l_pmdt.pmdt027, l_pmdt.pmdt028,  l_pmdt.pmdt036,   l_pmdt.pmdt037,
+              l_pmdt.pmdt038, l_pmdt.pmdt039,  l_pmdt.pmdt044,   l_pmdt.pmdt046,
+              l_pmdt.pmdt047, l_pmdt.pmdt051,  l_pmdt.pmdt052,   l_pmdt.pmdt053,
+              l_pmdt.pmdt054, l_pmdt.pmdt055,  l_pmdt.pmdt062,   l_pmdt.pmdt063,
+              l_pmdt.pmdt084, l_pmdt.pmdt088,  l_pmdt.pmdt089,   l_pmdt.pmdt200,
+              l_pmdt.pmdt201, l_pmdt.pmdt202,  l_pmdt.pmdt203,   l_pmdt.pmdt204,
+              l_pmdt.pmdt205, l_pmdt.pmdt206,  l_pmdt.pmdt207,   l_pmdt.pmdt208,
+              l_pmdt.pmdt209, l_pmdt.pmdt210,  l_pmdt.pmdt211,   l_pmdt.pmdt212,
+              l_pmdt.pmdt213, l_pmdt.pmdt214,  l_pmdt.pmdt215,   l_pmdt.pmdt218,
+              l_pmdt.pmdt219, l_pmdt.pmdtorga, l_pmdt220,        l_pmdt221)  #151202-00010#2 s983961--add l_pmdt220,l_pmdt221
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "Ins pmdt_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      #產生多庫儲批資料
+      CALL s_apmt860_ins_pmdu(g_pmds.pmds000, g_pmds.pmdsdocno, l_pmdt.pmdtsite,#150514-00002#1 150514 By pomelo add pmdtsite
+                              l_pmdt.pmdtseq, l_pmdt.pmdt006,   l_pmdt.pmdt007,
+                              l_pmdt.pmdt016, l_pmdt.pmdt017,   l_pmdt.pmdt018,
+                              l_pmdt.pmdt019, l_pmdt.pmdt020,   l_pmdt.pmdt027,
+                              l_pmdt.pmdt028, l_pmdt.pmdt053,   l_pmdt.pmdt054,
+                              l_pmdt.pmdt055, l_pmdt.pmdt062,   l_pmdt.pmdt063,
+                              l_pmdt.pmdt088, l_pmdt.pmdt089,   l_pmdt.pmdt201,
+                              l_pmdt.pmdt202, l_pmdt.pmdt219) RETURNING l_success
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      #產生收貨原始需求分配明細資料
+      IF NOT s_apmt860_gen_pmdv(l_pmdt.pmdtdocno,l_pmdt.pmdtseq) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      INITIALIZE l_pmdt.* TO NULL
+   END FOREACH
+   
+   #160310-00007#1 160314 By pomelo add(S)
+   #IF NOT s_lot_no_batch('pmdt_t', 'pmdtent', 'pmdtdocno', 'pmdtseq',
+   #                      '',       'pmdt006', 'pmdt018',   g_pmds.pmdsdocno,
+   #                      '') THEN
+   #   LET r_success = FALSE
+   #   RETURN r_success
+   #END IF
+   #UPDATE pmdu_t SET pmdu008 = (SELECT pmdt018
+   #                               FROM pmdt_t
+   #                              WHERE pmdtent = pmduent
+   #                                AND pmdtdocno = pmdudocno
+   #                                AND pmdtseq = pmduseq)
+   # WHERE pmduent = g_enterprise
+   #   AND pmdudocno = g_pmds.pmdsdocno
+   #IF SQLCA.sqlcode THEN
+   #   INITIALIZE g_errparam TO NULL
+   #   LET g_errparam.code = SQLCA.sqlcode
+   #   LET g_errparam.extend = "Upd pmdu_t"
+   #   LET g_errparam.popup = TRUE
+   #   CALL cl_err()
+   #   LET r_success = FALSE
+   #   RETURN r_success
+   #END IF
+   #160310-00007#1 160314 By pomelo add(E)
+   
+   #重新計算整單的未稅、含稅總金額
+   LET l_success = ''
+   LET l_pmds043 = 0
+   LET l_pmds044 = 0
+   LET l_pmds046 = 0
+   CALL s_apmt860_upd_pmds(g_pmds.pmdsdocno)
+      RETURNING l_success,l_pmds043,l_pmds044,l_pmds046
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 獲取料號是否使用產品特徵
+# Memo...........: 
+# Usage..........: CALL apmt860_01_get_imaa005(p_imaa001)
+# Input parameter: p_imaa001      商品編號
+# Return code....: r_imaa005      特徵組別
+# Date & Author..: 2015/01/05 By pomelo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt860_01_get_imaa005(p_imaa001)
+DEFINE p_imaa001      LIKE imaa_t.imaa001
+DEFINE r_imaa005      LIKE imaa_t.imaa005
+
+   LET r_imaa005 = ''
+   SELECT imaa005 INTO r_imaa005 
+     FROM imaa_t 
+    WHERE imaaent = g_enterprise 
+      AND imaa001 = p_imaa001
+      
+   RETURN r_imaa005   
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 確認輸入的包裝數量或收貨數量
+# Memo...........: 
+# Usage..........: CALL apmt860_01_num_chk(p_type)
+#                :    RETURNING r_success
+# Input parameter: p_type         1.檢查包裝數量
+#                :                2.檢查出貨/入庫數量
+# Return code....: r_success      True/False
+# Date & Author..: 2015/01/06 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_01_num_chk(p_type)
+DEFINE p_type           LIKE type_t.num5
+DEFINE r_success        LIKE type_t.num5
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_change         LIKE pmdt_t.pmdt020
+DEFINE l_pmdt020        LIKE pmdt_t.pmdt020
+
+   LET r_success = TRUE
+   
+   IF p_type = '1' THEN
+      LET l_success = ''
+      LET l_change = 0
+      CALL s_aooi250_convert_qty(g_pmdo2_d[l_ac2].pmdt006,g_pmdo2_d[l_ac2].pmdt201,g_pmdo2_d[l_ac2].pmdt019,g_pmdo2_d[l_ac2].pmdt202)
+         RETURNING l_success,l_change
+      
+      LET l_success = ''
+      LET l_pmdt020 = ''
+      CALL s_apmt860_chk_pmdt020('2', g_pmds.pmds000,        g_site,
+                                 g_pmds.pmdsdocno,           '-1', 
+                                 g_pmdo2_d[l_ac2].pmdodocno, g_pmdo2_d[l_ac2].pmdoseq,
+                                 g_pmdo2_d[l_ac2].pmdoseq1,  g_pmdo2_d[l_ac2].pmdoseq2,
+                                 g_pmdo2_d[l_ac2].pmdt006,   '',
+                                 '',                         l_change)
+         RETURNING l_success,l_pmdt020
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+      END IF
+   ELSE
+      LET l_change = g_pmdo2_d[l_ac2].pmdt020
+      LET l_success = ''
+      LET l_pmdt020 = ''
+      CALL s_apmt860_chk_pmdt020('2', g_pmds.pmds000,        g_site,
+                                 g_pmds.pmdsdocno,           '-1',
+                                 g_pmdo2_d[l_ac2].pmdodocno, g_pmdo2_d[l_ac2].pmdoseq,
+                                 g_pmdo2_d[l_ac2].pmdoseq1,  g_pmdo2_d[l_ac2].pmdoseq2,
+                                 g_pmdo2_d[l_ac2].pmdt006,   '',
+                                 '', l_change)
+         RETURNING l_success,l_pmdt020
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+      END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 單位間的轉換數量
+# Memo...........: 當收貨數量為空，由包裝數量轉換成收貨數量及計價數量
+#                : 當收貨數量有值，由收貨數量轉換成包裝數量及計價數量
+# Usage..........: CALL apmt860_01_num_change()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/01/06 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_01_num_change()
+DEFINE l_success        LIKE type_t.num5
+
+   #當包裝單位或收貨單位都為空，表示無法轉換
+   IF cl_null(g_pmdo2_d[l_ac2].pmdt201) OR cl_null(g_pmdo2_d[l_ac2].pmdt019) THEN
+      RETURN
+   END IF
+
+   #當收貨數量為空
+   IF cl_null(g_pmdo2_d[l_ac2].pmdt020) THEN
+      #當包裝數量為空
+      IF cl_null(g_pmdo2_d[l_ac2].pmdt202) THEN
+         RETURN
+      ELSE
+         #當收貨數量為空，由包裝數量轉換成收貨數量
+         CALL s_aooi250_convert_qty(g_pmdo2_d[l_ac2].pmdt006,g_pmdo2_d[l_ac2].pmdt201,g_pmdo2_d[l_ac2].pmdt019,g_pmdo2_d[l_ac2].pmdt202)
+            RETURNING l_success,g_pmdo2_d[l_ac2].pmdt020
+      END IF
+   ELSE
+      #當收貨數量有值，由收貨數量轉換成包裝數量
+      CALL s_aooi250_convert_qty(g_pmdo2_d[l_ac2].pmdt006,g_pmdo2_d[l_ac2].pmdt019,g_pmdo2_d[l_ac2].pmdt201,g_pmdo2_d[l_ac2].pmdt020)
+         RETURNING l_success,g_pmdo2_d[l_ac2].pmdt202
+   END IF
+
+   #計算計價數量
+   IF NOT cl_null(g_pmdo2_d[l_ac2].pmdt023) THEN
+      CALL s_aooi250_convert_qty(g_pmdo2_d[l_ac2].pmdt006,g_pmdo2_d[l_ac2].pmdt019,g_pmdo2_d[l_ac2].pmdt023,g_pmdo2_d[l_ac2].pmdt020)
+         RETURNING l_success,g_pmdo2_d[l_ac2].pmdt024
+   END IF
+
+END FUNCTION
+
+ 
+{</section>}
+ 

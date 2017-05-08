@@ -1,0 +1,357 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglq320_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2015-12-28 14:20:19), PR版次:0001(2015-12-28 19:16:37)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000031
+#+ Filename...: aglq320_01
+#+ Description: 多欄式明細帳查詢
+#+ Creator....: 05016(2015-12-28 13:57:30)
+#+ Modifier...: 05016 -SD/PR- 05016
+ 
+{</section>}
+ 
+{<section id="aglq320_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glap_m        RECORD
+       glapdocno LIKE glap_t.glapdocno, 
+   glapld LIKE glap_t.glapld, 
+   glapld_desc LIKE type_t.chr80, 
+   l_type LIKE type_t.chr500
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE r_success LIKE type_t.num5
+
+#end add-point
+ 
+DEFINE g_glap_m        type_g_glap_m
+ 
+   DEFINE g_glapdocno_t LIKE glap_t.glapdocno
+DEFINE g_glapld_t LIKE glap_t.glapld
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglq320_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aglq320_01(--)
+   #add-point:input段變數傳入
+   p_multicurr
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_multicurr     LIKE type_t.chr1
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglq320_01 WITH FORM cl_ap_formpath("agl","aglq320_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+  
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glap_m.glapdocno,g_glap_m.glapld,g_glap_m.l_type ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            LET g_glap_m.l_type = 1
+            LET r_success =TRUE
+            CASE p_multicurr
+               WHEN 0
+                  CALL cl_set_combo_scc_part('l_type','9938','1')
+               WHEN 1
+                  CALL cl_set_combo_scc_part('l_type','9938','1,2')
+               WHEN 2
+                  CALL cl_set_combo_scc_part('l_type','9938','1,3')
+               WHEN 3
+                  CALL cl_set_combo_scc('l_type','9938')
+            END CASE
+            DISPLAY BY NAME g_glap_m.l_type  
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glapdocno
+            #add-point:BEFORE FIELD glapdocno name="input.b.glapdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glapdocno
+            
+            #add-point:AFTER FIELD glapdocno name="input.a.glapdocno"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_glap_m.glapld) AND NOT cl_null(g_glap_m.glapdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_glap_m.glapld != g_glapld_t  OR g_glap_m.glapdocno != g_glapdocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glap_t WHERE "||"glapent = '" ||g_enterprise|| "' AND "||"glapld = '"||g_glap_m.glapld ||"' AND "|| "glapdocno = '"||g_glap_m.glapdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glapdocno
+            #add-point:ON CHANGE glapdocno name="input.g.glapdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glapld
+            
+            #add-point:AFTER FIELD glapld name="input.a.glapld"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glap_m.glapld
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glap_m.glapld_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_glap_m.glapld_desc
+
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_glap_m.glapld) AND NOT cl_null(g_glap_m.glapdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_glap_m.glapld != g_glapld_t  OR g_glap_m.glapdocno != g_glapdocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glap_t WHERE "||"glapent = '" ||g_enterprise|| "' AND "||"glapld = '"||g_glap_m.glapld ||"' AND "|| "glapdocno = '"||g_glap_m.glapdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glapld
+            #add-point:BEFORE FIELD glapld name="input.b.glapld"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glapld
+            #add-point:ON CHANGE glapld name="input.g.glapld"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_type
+            #add-point:BEFORE FIELD l_type name="input.b.l_type"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_type
+            
+            #add-point:AFTER FIELD l_type name="input.a.l_type"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_type
+            #add-point:ON CHANGE l_type name="input.g.l_type"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glapdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glapdocno
+            #add-point:ON ACTION controlp INFIELD glapdocno name="input.c.glapdocno"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glap_m.glapdocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            CALL q_ooba002()                                #呼叫開窗
+
+            LET g_glap_m.glapdocno = g_qryparam.return1              
+
+            DISPLAY g_glap_m.glapdocno TO glapdocno              #
+
+            NEXT FIELD glapdocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glapld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glapld
+            #add-point:ON ACTION controlp INFIELD glapld name="input.c.glapld"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glap_m.glapld             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_glap_m.glapld = g_qryparam.return1              
+
+            DISPLAY g_glap_m.glapld TO glapld              #
+
+            NEXT FIELD glapld                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_type
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_type
+            #add-point:ON ACTION controlp INFIELD l_type name="input.c.l_type"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglq320_01 
+   
+   #add-point:input段after input 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      LET r_success = FALSE
+   END IF
+       RETURN r_success,g_glap_m.l_type
+  
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq320_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aglq320_01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi140" module="aoo" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02298" crtdt="2013-08-23 14:06:55" modid="02298" moddt="2013-12-16 09:33:42" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="幣別維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ooaistus,ooai001,ooail003,ooail004,ooai002,ooai002_desc(chr500),ooai003,ooai004,ooai005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="ooai001,ooaimodid,ooaimodid_desc(chr500),ooaimoddt,ooaiownid,ooaiownid_desc(chr500),ooaiowndp,ooaiowndp_desc(chr500),ooaicrtid,ooaicrtid_desc(chr500),ooaicrtdp,ooaicrtdp_desc(chr500),ooaicrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi140" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="ooaistus,ooai001,ooail003,ooail004,ooai002,ooai003,ooai004,ooai005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="ooaistus,ooai001,ooail003,ooail004,ooai002,ooai003,ooai004,ooai005"/>
+      <construct id="body" page="2" field="ooaimodid,ooaimoddt,ooaiownid,ooaiowndp,ooaicrtid,ooaicrtdp,ooaicrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="ooaistus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="ooai001">
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="ooail003"/>
+      <column id="ooail004"/>
+      <column id="ooai002">
+        <after>
+          <reference field="ooai002_desc" ref_field="ooai_t.ooai002" map_field="ooaient,ooai002" ref_sql="SELECT oocgl003 FROM oocgl_t WHERE oocglent=$varg_enterprise$var AND oocgl001=? AND oocgl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocg001" state="i"/>
+        <controlp form="q_oocg001" state="c"/>
+      </column>
+      <column id="ooai002_desc"/>
+      <column id="ooai003" def_scc="44"/>
+      <column id="ooai004"/>
+      <column id="ooai005"/>
+    </init>
+    <init id="body" page="2">
+      <column id="ooaimodid">
+        <after>
+          <reference field="ooaimodid_desc" ref_field="ooai_t.ooaimodid" map_field="ooaimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooaimodid_desc"/>
+      <column id="ooaimoddt"/>
+      <column id="ooaiownid">
+        <after>
+          <reference field="ooaiownid_desc" ref_field="ooai_t.ooaiownid" map_field="ooaiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooaiownid_desc"/>
+      <column id="ooaiowndp">
+        <after>
+          <reference field="ooaiowndp_desc" ref_field="ooai_t.ooaiowndp" map_field="ooaiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooaiowndp_desc"/>
+      <column id="ooaicrtid">
+        <after>
+          <reference field="ooaicrtid_desc" ref_field="ooai_t.ooaicrtid" map_field="ooaicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooaicrtid_desc"/>
+      <column id="ooaicrtdp">
+        <after>
+          <reference field="ooaicrtdp_desc" ref_field="ooai_t.ooaicrtdp" map_field="ooaicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooaicrtdp_desc"/>
+      <column id="ooaicrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="ooai_t" page="1,2" linked="" pk="ooai001">
+      <sql id="forupd_sql_detail" query="SELECT ooaistus,ooai001,&apos;&apos;,&apos;&apos;,ooai002,&apos;&apos;,ooai003,ooai004,ooai005,&apos;&apos;,ooaimodid,&apos;&apos;,ooaimoddt,ooaiownid,&apos;&apos;,ooaiowndp,&apos;&apos;,ooaicrtid,&apos;&apos;,ooaicrtdp,&apos;&apos;,ooaicrtdt FROM ooai_t WHERE ooaient=? AND ooai001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ooaistus,ooai001,&apos;&apos;,&apos;&apos;,ooai002,&apos;&apos;,ooai003,ooai004,ooai005,&apos;&apos;,ooaimodid,&apos;&apos;,ooaimoddt,ooaiownid,&apos;&apos;,ooaiowndp,&apos;&apos;,ooaicrtid,&apos;&apos;,ooaicrtdp,&apos;&apos;,ooaicrtdt FROM ooai_t WHERE ooaient= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="ooail_t.ooail003,ooail_t.ooail004" table="ooail_t" fk="ooai001" pk="ooail001,ooail002" field="ooail003,ooail004"/>
+    </body>
+  </dataset>
+</assembly>
+

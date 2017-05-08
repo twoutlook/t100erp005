@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agct300_02" module="agc" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="01726" crtdt="2013-11-11 17:22:47" modid="01726" moddt="2014-06-30 17:02:11" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="券種基本資料申請維護作業 -發行面額設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gcapdocno,gcapsite,gcapunit,gcap000,gcap001,gcap002,gcap002_desc(chr500),gcap005,gcap003,gcap003_desc(chr500),gcapacti"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agc" filename="agct300_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gcapdocno,gcapsite,gcapunit,gcap000,gcap001,gcap002,gcap005,gcap003,gcapacti" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gcapdocno,gcapsite,gcapunit,gcap000,gcap001,gcap002,gcap005,gcap003,gcapacti"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gcapdocno"/>
+      <column id="gcapsite"/>
+      <column id="gcapunit"/>
+      <column id="gcap000"/>
+      <column id="gcap001"/>
+      <column id="gcap002">
+        <after>
+          <reference field="gcap002_desc" ref_field="gcap002" map_field="gcap002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2071&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="gcap002_desc"/>
+      <column id="gcap005"/>
+      <column id="gcap003">
+        <after>
+          <reference field="gcap003_desc" ref_field="gcap_t.gcap003" map_field="gcapent,gcap003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_1" state="i"/>
+        <controlp form="q_gcap003" state="c"/>
+      </column>
+      <column id="gcap003_desc"/>
+      <column id="gcapacti" type="S" default="Y"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gcap_t" page="1" linked="" pk="gcapdocno,gcap001,gcap002">
+      <sql id="forupd_sql_detail" query="SELECT gcapdocno,gcapsite,gcapunit,gcap000,gcap001,gcap002,&apos;&apos;,gcap005,gcap003,&apos;&apos;,gcapacti FROM gcap_t WHERE gcapent=? AND gcapdocno=? AND gcap001=? AND gcap002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gcapdocno,gcapsite,gcapunit,gcap000,gcap001,gcap002,&apos;&apos;,gcap005,gcap003,&apos;&apos;,gcapacti FROM gcap_t WHERE gcapent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

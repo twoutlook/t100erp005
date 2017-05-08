@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsq401" module="aps" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="04441" crtdt="2014-04-07 09:01:09" modid="04441" moddt="2015-01-09 09:48:25" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="銷售預測沖銷明細查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),psbc001,psbc004,psbc004_desc_desc(chr500),psbc004_desc(chr500),psbc005,psbc006,psbc006_desc(chr500),psbc003,psbc003_desc(chr500),psbc002,psbc002_desc(chr500),psbc007,psbc007_desc(chr500),psbc008,psbc009,psbc010,psbc011,psbc012,psbc013,psbc014,psbc015"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="psbd009,psbd010,psbd011,psbd012,psbd017,psbd017_desc(chr500),psbd014,psbd014_desc(chr500),psbd013,psbd013_desc(chr500),psbd018,psbd018_desc(chr500),psbd015,psbd015_desc_desc(chr500),psbd015_desc(chr500),psbd019,psbd020"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),psbc001(b_psbc001),psbc004(b_psbc004),psbc004_desc_desc(b_psbc004_desc_desc),psbc004_desc(b_psbc004_desc),psbc005(b_psbc005),psbc006(b_psbc006),psbc006_desc(b_psbc006_desc),psbc003(b_psbc003),psbc003_desc(b_psbc003_desc),psbc002(b_psbc002),psbc002_desc(b_psbc002_desc),psbc007(b_psbc007),psbc007_desc(b_psbc007_desc),psbc008(b_psbc008),psbc009(b_psbc009),psbc010(b_psbc010),psbc011(b_psbc011),psbc012(b_psbc012),psbc013(b_psbc013),psbc014(b_psbc014),psbc015(b_psbc015)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="psbd009(b_psbd009),psbd010(b_psbd010),psbd011(b_psbd011),psbd012(b_psbd012),psbd017(b_psbd017),psbd017_desc(b_psbd017_desc),psbd014(b_psbd014),psbd014_desc(b_psbd014_desc),psbd013(b_psbd013),psbd013_desc(b_psbd013_desc),psbd018(b_psbd018),psbd018_desc(b_psbd018_desc),psbd015(b_psbd015),psbd015_desc_desc(b_psbd015_desc_desc),psbd015_desc(b_psbd015_desc),psbd019(b_psbd019),psbd020(b_psbd020)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aps" filename="apsq401" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="psbc001,psbc004,psbc005,psbc006,psbc003,psbc002,psbc007,psbc008,psbc009,psbc010,psbc011,psbc012,psbc013,psbc014,psbc015" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="psbd009,psbd010,psbd011,psbd012,psbd017,psbd014,psbd013,psbd018,psbd015,psbd019,psbd020" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="psbc001(b_psbc001),psbc004(b_psbc004),psbc005(b_psbc005),psbc006(b_psbc006),psbc003(b_psbc003),psbc002(b_psbc002),psbc007(b_psbc007),psbc008(b_psbc008),psbc009(b_psbc009),psbc010(b_psbc010),psbc011(b_psbc011),psbc012(b_psbc012),psbc013(b_psbc013),psbc014(b_psbc014),psbc015(b_psbc015)"/>
+      <construct id="body" page="2" field="psbd009(b_psbd009),psbd010(b_psbd010),psbd011(b_psbd011),psbd012(b_psbd012),psbd017(b_psbd017),psbd014(b_psbd014),psbd013(b_psbd013),psbd018(b_psbd018),psbd015(b_psbd015),psbd019(b_psbd019),psbd020(b_psbd020)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="psbc001"/>
+      <column id="psbc004">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="psbc004_desc" ref_field="psbc004" map_field="psbc004" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="psbc004_desc_desc"/>
+      <column id="psbc004_desc">
+        <after>
+          <reference field="psbc004_desc_desc" ref_field="psbc004" map_field="psbc004" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="psbc005"/>
+      <column id="psbc006">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+          <reference field="psbc006_desc" ref_field="psbc006" map_field="&apos;2&apos;,psbc006" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="psbc006_desc"/>
+      <column id="psbc003">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="psbc003_desc" ref_field="psbc003" map_field="psbc003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psbc003_desc"/>
+      <column id="psbc002">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="psbc002_desc" ref_field="psbc002" map_field="psbc002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="psbc002_desc"/>
+      <column id="psbc007">
+        <after>
+          <reference field="psbc007_desc" ref_field="psbc007" map_field="psbc007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;275&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="psbc007_desc"/>
+      <column id="psbc008"/>
+      <column id="psbc009"/>
+      <column id="psbc010"/>
+      <column id="psbc011" def_scc="5403"/>
+      <column id="psbc012"/>
+      <column id="psbc013"/>
+      <column id="psbc014"/>
+      <column id="psbc015"/>
+    </init>
+    <init id="body" page="2">
+      <column id="psbd009">
+        <after>
+          <check chkid="v_xmdadocno_1" id="isExist"/>
+        </after>
+        <controlp form="q_xmdadocno" state="c"/>
+      </column>
+      <column id="psbd010"/>
+      <column id="psbd011"/>
+      <column id="psbd012"/>
+      <column id="psbd017">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+          <reference field="psbd017_desc" ref_field="psbd017" map_field="&apos;2&apos;,psbd017" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="psbd017_desc"/>
+      <column id="psbd014">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="psbd014_desc" ref_field="psbd014" map_field="psbd014" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psbd014_desc"/>
+      <column id="psbd013">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="psbd013_desc" ref_field="psbd013" map_field="psbd013" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="psbd013_desc"/>
+      <column id="psbd018">
+        <after>
+          <reference field="psbd018_desc" ref_field="psbd018" map_field="psbd018" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;275&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="psbd018_desc"/>
+      <column id="psbd015">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="psbd015_desc" ref_field="psbd015" map_field="psbd015" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="psbd015_desc_desc"/>
+      <column id="psbd015_desc">
+        <after>
+          <reference field="psbd015_desc_desc" ref_field="psbd015" map_field="psbd015" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="psbd019"/>
+      <column id="psbd020"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="psbc_t" page="1" linked="" pk="psbc001,psbc002,psbc003,psbc004,psbc005,psbc006,psbc007,psbc008">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,psbc001,psbc004,&apos;&apos;,&apos;&apos;,psbc005,psbc006,&apos;&apos;,psbc003,&apos;&apos;,psbc002,&apos;&apos;,psbc007,&apos;&apos;,psbc008,psbc009,psbc010,psbc011,psbc012,psbc013,psbc014,psbc015 FROM psbc_t WHERE psbcent= ? AND psbcsite= ? AND 1=1 "/>
+    </body>
+    <body id="psbd_t" page="2" linked="" pk="psbd009,psbd010,psbd011,psbd012" fk="psbd001,psbd002,psbd003,psbd004,psbd005,psbd006,psbd007,psbd008" detail="Y">
+      <sql id="b_fill_sql" query="SELECT psbd009,psbd010,psbd011,psbd012,psbd017,&apos;&apos;,psbd014,&apos;&apos;,psbd013,&apos;&apos;,psbd018,&apos;&apos;,psbd015,&apos;&apos;,&apos;&apos;,psbd019,psbd020 FROM psbd_t WHERE psbdent=? AND psbdsite=? AND psbd001=? AND psbd002=? AND psbd003=? AND psbd004=? AND psbd005=? AND psbd006=? AND psbd007=? AND psbd008=?"/>
+    </body>
+  </dataset>
+</assembly>
+

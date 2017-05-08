@@ -1,0 +1,179 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt501" module="ast" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="06814" crtdt="2015-06-01 14:26:31" modid="08172" moddt="2016-09-14 17:20:01" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="專櫃成本調整單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="stghsite,stghdocdt,stghdocno,stgh000,stgh001,stgh002,stgh003(chr500),stghstus,stghownid,stghownid_desc(chr80),stghowndp,stghowndp_desc(chr80),stghcrtid,stghcrtid_desc(chr80),stghcrtdp,stghcrtdp_desc(chr80),stghcrtdt,stghmodid,stghmodid_desc(chr80),stghmoddt,stghcnfid,stghcnfid_desc(chr80),stghcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stgiseq,stgi005,stgi001,stgi001_desc(chr500),stgi002,stgi002_desc(chr500),stgi003,stgi003_desc(chr500),stgi004,stgi004_desc(chr500),stgi006,stgi006_desc(chr500),stgi007,stgi008,stgi009,stgi010,stgi011,stgi012,stgi015(num20_6),stgi013,stgi014,l_expense(num20_6)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="upd_detail"/>
+      <action id="downloadtemplet"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="uploadtemplet"/>
+      <action id="import"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt501" method="dialog">
+    <section id="input">
+      <input id="head" field="stghsite,stghdocdt,stghdocno,stgh000,stgh001,stgh002,stgh003,stghstus,stghcnfid,stghcnfdt"/>
+      <input id="body" page="1" field="stgiseq,stgi005,stgi001,stgi002,stgi003,stgi004,stgi006,stgi007,stgi008,stgi009,stgi010,stgi011,stgi012,stgi015,stgi013,stgi014,l_expense" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="stghsite,stghdocdt,stghdocno,stgh000,stgh001,stgh002,stgh003,stghstus,stghownid,stghowndp,stghcrtid,stghcrtdp,stghcrtdt,stghmodid,stghmoddt,stghcnfid,stghcnfdt"/>
+      <construct id="body" page="1" field="stgiseq,stgi005,stgi001,stgi002,stgi003,stgi004,stgi006,stgi007,stgi008,stgi009,stgi010,stgi011,stgi012,stgi015,stgi013,stgi014,l_expense"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="stghdocno"/>
+      <set id="head" type="no_entry" field="stghdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="stghsite">
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="stghdocdt"/>
+      <column id="stghdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_stghdocno" state="c"/>
+      </column>
+      <column id="stgh000" type="S" default="1" def_scc="6822"/>
+      <column id="stgh001"/>
+      <column id="stgh002"/>
+      <column id="stgh003"/>
+      <column id="stghstus" scc="13">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="stghownid">
+        <after>
+          <reference field="stghownid_desc" ref_field="stgh_t.stghownid" map_field="stghownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stghownid_desc"/>
+      <column id="stghowndp">
+        <after>
+          <reference field="stghowndp_desc" ref_field="stgh_t.stghowndp" map_field="stghowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stghowndp_desc"/>
+      <column id="stghcrtid">
+        <after>
+          <reference field="stghcrtid_desc" ref_field="stgh_t.stghcrtid" map_field="stghcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stghcrtid_desc"/>
+      <column id="stghcrtdp">
+        <after>
+          <reference field="stghcrtdp_desc" ref_field="stgh_t.stghcrtdp" map_field="stghcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stghcrtdp_desc"/>
+      <column id="stghcrtdt"/>
+      <column id="stghmodid">
+        <after>
+          <reference field="stghmodid_desc" ref_field="stgh_t.stghmodid" map_field="stghmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stghmodid_desc"/>
+      <column id="stghmoddt"/>
+      <column id="stghcnfid">
+        <after>
+          <reference field="stghcnfid_desc" ref_field="stgh_t.stghcnfid" map_field="stghcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stghcnfid_desc"/>
+      <column id="stghcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="stgiseq"/>
+      <column id="stgi005"/>
+      <column id="stgi001">
+        <after>
+          <check chkid="v_rtdx001" id="isExist"/>
+          <reference field="stgi001_desc" ref_field="stgi_t.stgi001" map_field="stgi001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001" state="i"/>
+        <controlp form="q_rtdx001" state="c"/>
+      </column>
+      <column id="stgi001_desc"/>
+      <column id="stgi002">
+        <after>
+          <check chkid="v_stga003" id="isExist"/>
+          <reference field="stgi002_desc" ref_field="stgi_t.stgi002" map_field="stgi002" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stga003" state="i"/>
+        <controlp form="q_inaa001" state="c"/>
+      </column>
+      <column id="stgi002_desc"/>
+      <column id="stgi003">
+        <after>
+          <check chkid="v_stga004" id="isExist"/>
+          <reference field="stgi003_desc" ref_field="stgi_t.stgi003" map_field="stgi003" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stga004" state="i"/>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="stgi003_desc"/>
+      <column id="stgi004">
+        <after>
+          <check chkid="v_stga005" id="isExist"/>
+          <reference field="stgi004_desc" ref_field="stgi_t.stgi004" map_field="stgi004" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stga005" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="stgi004_desc"/>
+      <column id="stgi006">
+        <after>
+          <check chkid="v_stae001" id="isExist"/>
+          <reference field="stgi006_desc" ref_field="stgi_t.stgi006" map_field="stgi006" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="i"/>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="stgi006_desc"/>
+      <column id="stgi007" type="S" default="0"/>
+      <column id="stgi008" type="S" default="0"/>
+      <column id="stgi009" type="S" default="0"/>
+      <column id="stgi010" type="S" default="0"/>
+      <column id="stgi011" type="S" default="0"/>
+      <column id="stgi012" type="S" default="0"/>
+      <column id="stgi015" type="S" default="0"/>
+      <column id="stgi013"/>
+      <column id="stgi014"/>
+      <column id="l_expense"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="stgh_t" pk="stghdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT stghsite,stghdocdt,stghdocno,stgh000,stgh001,stgh002,&apos;&apos;,stghstus,stghownid,&apos;&apos;,stghowndp,&apos;&apos;,stghcrtid,&apos;&apos;,stghcrtdp,&apos;&apos;,stghcrtdt,stghmodid,&apos;&apos;,stghmoddt,stghcnfid,&apos;&apos;,stghcnfdt FROM stgh_t WHERE stghent= ? AND stghdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT stghsite,stghdocdt,stghdocno,stgh000,stgh001,stgh002,&apos;&apos;,stghstus,stghownid,&apos;&apos;,stghowndp,&apos;&apos;,stghcrtid,&apos;&apos;,stghcrtdp,&apos;&apos;,stghcrtdt,stghmodid,&apos;&apos;,stghmoddt,stghcnfid,&apos;&apos;,stghcnfdt FROM stgh_t" order="stghdocno"/>
+    </head>
+    <body id="stgi_t" page="1" linked="" pk="stgiseq" fk="stgidocno">
+      <sql id="forupd_sql_detail" query="SELECT stgiseq,stgi005,stgi001,&apos;&apos;,stgi002,&apos;&apos;,stgi003,&apos;&apos;,stgi004,&apos;&apos;,stgi006,&apos;&apos;,stgi007,stgi008,stgi009,stgi010,stgi011,stgi012,&apos;&apos;,stgi013,stgi014,&apos;&apos; FROM stgi_t WHERE stgient=? AND stgidocno=? AND stgiseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stgiseq,stgi005,stgi001,&apos;&apos;,stgi002,&apos;&apos;,stgi003,&apos;&apos;,stgi004,&apos;&apos;,stgi006,&apos;&apos;,stgi007,stgi008,stgi009,stgi010,stgi011,stgi012,&apos;&apos;,stgi013,stgi014,&apos;&apos; FROM stgi_t WHERE stgient=? AND stgidocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

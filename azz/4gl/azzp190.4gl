@@ -1,0 +1,710 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzp190.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(1900-01-01 00:00:00), PR版次:0005(2015-06-09 15:17:10)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000067
+#+ Filename...: azzp190
+#+ Description: 外部參數更新作業
+#+ Creator....: 01856(2014-07-02 14:14:21)
+#+ Modifier...: 00000 -SD/PR- 01856
+ 
+{</section>}
+ 
+{<section id="azzp190.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE gs_target   STRING 
+DEFINE g_gzza003   LIKE gzza_t.gzza003
+DEFINE g_filepath  STRING
+
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp190.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   LET g_bgjob = "Y"
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+
+   LET gs_target = DOWNSHIFT(g_argv[1])
+   LET gs_target = gs_target.trim()
+   DISPLAY "azzp190:外部參數更新作業"
+   DISPLAY "程式參數:",gs_target
+   
+   IF gs_target IS NULL THEN
+      DISPLAY "g_argv[1]:"
+      DISPLAY "Error: 參數不足"
+      DISPLAY "Example: r.r azzp190 程式編號 "
+      #離開作業
+      CALL cl_ap_exitprogram("0")
+   END IF
+   #end add-point
+ 
+   #add-point:SQL_define
+   IF cl_chk_module(UPSHIFT(gs_target)) THEN 
+      IF gs_target.subString(1,1) = 'b' THEN 
+         LET gs_target =  'a',gs_target.subString(2,3)
+         IF cl_chk_module(UPSHIFT(gs_target)) THEN  
+         ELSE
+            DISPLAY "程式參數是模組:",gs_target," 不須更新"
+            CALL cl_ap_exitprogram("0")
+         END IF
+      END IF 
+   ELSE
+      DISPLAY "程式參數是模組:",gs_target," 不須更新"
+      CALL cl_ap_exitprogram("0")
+   END IF
+ 
+   #檢查檔案是否存在
+   IF NOT azzp190_chk_file() THEN
+      DISPLAY "Error: 檔案不存在實體路徑:",g_filepath
+      CALL cl_ap_exitprogram("0")
+   END IF 
+ 
+  #先 delete gzzc_t 參數 #15/06/09
+  CALL azzp190_del_gzzc_para(gs_target)
+  #15/06/09
+  
+  #insert gzzc_t 參數 gzzc001 gzzc002 沒有就insert 有就不insert
+  CALL azzp190_ins_gzzc_para()
+  #在更新gzzc003 gzzc04 gzzc005  會去讀add-point global.argv  
+  CALL azzp190_upd_para()
+  
+   
+   #end add-point
+#   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+#   DECLARE azzp190_cl CURSOR FROM g_forupd_sql 
+#   
+#   IF g_bgjob = "Y" THEN
+# 
+      #add-point:Service Call
+
+      #end add-point
+#   ELSE
+      #畫面開啟 (identifier)
+#      OPEN WINDOW w_azzp190 WITH FORM cl_ap_formpath("azz",g_code)
+#   
+#      #程式初始化
+#      CALL azzp190_init()
+#   
+#      #瀏覽頁簽資料初始化
+#      CALL cl_ui_init()
+#   
+#      #進入選單 Menu (='N')
+#      CALL azzp190_ui_dialog()
+#   
+#      #畫面關閉
+#      CLOSE WINDOW w_azzp190
+#   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="azzp190.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION azzp190_init()
+   #add-point:init段define
+
+   #end add-point
+
+#   LET g_error_show = 1
+#   LET gwin_curr2 = ui.Window.getCurrent()
+#   LET gfrm_curr2 = gwin_curr2.getForm()
+#   CALL cl_schedule_import_4fd()
+#   CALL cl_set_combo_scc("gzpa003","75")
+#   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+#       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+#   END IF
+   #add-point:畫面資料初始化
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION azzp190_process(ls_js)
+   DEFINE ls_js       STRING
+#   DEFINE lc_param    type_parameter
+#   DEFINE li_stus     LIKE type_t.num5
+#   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+#   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+
+   #end add-point
+
+#   CALL util.JSON.parse(ls_js,lc_param)
+#
+#   #add-point:process段前處理
+#
+#   #end add-point
+#
+#   #預先計算progressbar迴圈次數
+#   IF g_bgjob <> "Y" THEN
+#      #add-point:process段count_progress
+#
+#      #end add-point
+#   END IF
+#
+#   #主SQL及相關FOREACH前置處理
+##  DECLARE azzp190_process_cs CURSOR FROM ls_sql
+##  FOREACH azzp190_process_cs INTO
+#   #add-point:process段process
+#
+#   #end add-point
+##  END FOREACH
+#
+#   IF g_bgjob = "N" THEN
+#      #前景作業完成處理
+#      #add-point:process段foreground完成處理
+#
+#      #end add-point
+#      CALL cl_ask_confirm3("std-00012","")
+#   ELSE
+#      #背景作業完成處理
+#      #add-point:process段background完成處理
+#
+#      #end add-point
+#   END IF
+END FUNCTION
+
+PRIVATE FUNCTION azzp190_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+#   DEFINE la_cmdrun   RECORD
+#             prog     STRING,
+#             param    DYNAMIC ARRAY OF STRING
+#                  END RECORD
+#   DEFINE la_param    type_parameter
+#
+#   CALL util.JSON.parse(ls_js,la_param)
+#
+#   LET la_cmdrun.prog = g_prog
+#   #add-point:transfer.argv段define
+#
+#   #end add-point
+#
+#   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+
+PRIVATE FUNCTION azzp190_ui_dialog()
+#   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+#   DEFINE li_idx   LIKE type_t.num5
+#   DEFINE ls_js    STRING
+#   DEFINE ls_wc    STRING
+#   DEFINE lc_param type_parameter
+#   #add-point:ui_dialog段define
+#
+#   #end add-point
+#
+#   #add-point:ui_dialog段before dialog
+#
+#   #end add-point
+#
+#   WHILE TRUE
+#      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+#
+#
+#
+#
+#         #add-point:ui_dialog段construct
+#
+#         #end add-point
+#         #add-point:ui_dialog段input
+#
+#         #end add-point
+#         #add-point:ui_dialog段自定義display array
+#
+#         #end add-point
+#
+#         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+#         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+#         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+#         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+#
+#         ON ACTION qbe_select
+#            CALL cl_qbe_list("m") RETURNING ls_wc
+#            IF NOT cl_null(ls_wc) THEN
+#               LET lc_param.wc = ls_wc
+#               #取得條件後需要執行項目,應新增於下方adp
+#               #add-point:ui_dialog段qbe_select後
+#
+#               #end add-point
+#            END IF
+#
+#         ON ACTION qbe_save
+#            CALL cl_qbe_save()
+#
+#         ON ACTION batch_execute
+#            ACCEPT DIALOG
+#
+#         ON ACTION qbeclear
+#            CLEAR FORM
+#            INITIALIZE lc_param.* TO NULL
+#            #add-point:ui_dialog段qbeclear
+#
+#            #end add-point
+#
+#         ON ACTION history_fill
+#            CALL cl_schedule_history_fill()
+#
+#         ON ACTION close
+#            LET INT_FLAG = TRUE
+#            EXIT DIALOG
+#
+#         ON ACTION exit
+#            LET INT_FLAG = TRUE
+#            EXIT DIALOG
+#
+#         #add-point:ui_dialog段action
+#
+#         #end add-point
+#
+#         #主選單用ACTION
+#         &include "main_menu.4gl"
+#         &include "relating_action.4gl"
+#         #交談指令共用ACTION
+#         &include "common_action.4gl"
+#            CONTINUE DIALOG
+#      END DIALOG
+#
+#      #add-point:ui_dialog段exit dialog
+#
+#      #end add-point
+#
+#      LET ls_js = util.JSON.stringify(lc_param)
+#
+#      IF INT_FLAG THEN
+#         LET INT_FLAG = FALSE
+#         EXIT WHILE
+#      ELSE
+#         LET g_jobid = cl_schedule_get_jobid(g_prog)
+#         CASE
+#            WHEN g_schedule.gzpa003 = "0"
+#                 CALL azzp190_process(ls_js)
+#            WHEN g_schedule.gzpa003 = "1"
+#            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+#                 LET ls_js = azzp190_transfer_argv(ls_js)
+#                 CALL cl_cmdrun(ls_js)
+#            WHEN g_schedule.gzpa003 = "2"
+#                 CALL cl_schedule_update_data(g_jobid,ls_js)
+#            WHEN g_schedule.gzpa003 = "3"
+#                 CALL cl_schedule_update_data(g_jobid,ls_js)
+#         END CASE
+#         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+#         INITIALIZE lc_param.*  TO NULL
+#         #欄位初始資訊
+#         CALL cl_schedule_init_info("all",g_schedule.gzpa003)
+#         LET gi_hiden_asign = FALSE
+#         LET gi_hiden_exec = FALSE
+#         LET gi_hiden_spec = FALSE
+#         LET gi_hiden_exec_end = FALSE
+#         CALL cl_schedule_hidden()
+#      END IF
+#   END WHILE
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查gzzc_t 是否有資料
+# Memo...........:
+# Usage..........: CALL azzp190_chk_gzzc(p_gzza001,pi_ser_no)
+#                  RETURNING 回传参数
+# Input parameter: p_gzza001 程式編號
+#                : pi_ser_no 序號
+# Return code....: TRUE/FALSE
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp190_chk_gzzc(p_gzza001,pi_ser_no)
+   DEFINE pi_ser_no   LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE p_gzza001   LIKE gzza_t.gzza001
+   DEFINE r_success   LIKE type_t.num5
+   
+   SELECT COUNT(*) INTO l_cnt FROM gzzc_t
+     WHERE gzzc001 = p_gzza001 AND gzzc002 = pi_ser_no
+   
+   IF l_cnt > 0 THEN 
+      LET r_success = TRUE
+   ELSE 
+      LET r_success = FALSE  
+   END IF  
+
+   RETURN r_success 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查file 是否存在
+# Memo...........:
+# Usage..........: CALL azzp190_chk_file()
+#                  RETURNING 回传参数
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp190_chk_file()
+   DEFINE r_success   LIKE type_t.num5
+
+   LET g_gzza003 = gs_target.subString(1,3)
+   LET g_filepath = os.Path.join(os.Path.join(FGL_GETENV(UPSHIFT(g_gzza003)),"4gl"),gs_target) ,".4gl"
+
+   IF os.Path.exists(g_filepath) THEN 
+      LET r_success = TRUE
+   ELSE 
+      LET r_success = FALSE  
+   END IF 
+
+   RETURN r_success  
+END FUNCTION
+
+################################################################################
+# Descriptions...: 更新外部參數使用g_argv[]
+# Memo...........:
+# Usage..........: CALL azzp190_ins_gzzc_para()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp190_ins_gzzc_para()
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_cnt1      LIKE type_t.num5
+   DEFINE l_cnt2      LIKE type_t.num5
+   DEFINE l_ch        base.Channel
+   DEFINE l_buf       STRING
+   DEFINE l_buf2      STRING
+   DEFINE l_length    LIKE type_t.num5
+   DEFINE l_gzzc      DYNAMIC ARRAY OF RECORD
+                    gzzc001  LIKE gzzc_t.gzzc001,
+                    gzzc002  LIKE gzzc_t.gzzc002,
+                    gzzc003  LIKE gzzc_t.gzzc003,
+                    gzzc004  LIKE gzzc_t.gzzc004,
+                    gzzc005  LIKE gzzc_t.gzzc005,
+                    gzzc006  LIKE gzzc_t.gzzc006,
+                    gzzc007  LIKE gzzc_t.gzzc007
+                   END RECORD
+   DEFINE ls_tmp    STRING 
+   DEFINE ls_file   STRING 
+   
+   display "azzp190 程序路徑:",g_filepath
+   LET ls_tmp = FGL_GETENV("TOP"),os.Path.separator()
+   LET ls_file = g_filepath.subString(ls_tmp.getLength()+1,g_filepath.getLength())
+   LET ls_tmp = ""
+   #read
+   LET l_ch = base.Channel.create()
+   CALL l_ch.setDelimiter("")
+   CALL l_ch.openFile(g_filepath,"r")
+
+   WHILE TRUE
+       CALL l_ch.readLine() RETURNING l_buf  #读一行资料
+       IF l_ch.isEof() THEN EXIT WHILE END IF
+
+       LET ls_tmp = l_buf
+       LET ls_tmp = ls_tmp.trim()
+       LET l_buf = DOWNSHIFT(l_buf)
+       LET l_buf = l_buf.trim()
+
+       #先判斷本行行頭是否以 # 或 -- 為開頭, 如果是就放棄這個找下個
+       #補上 { 符號   請勿在行首放大括號
+       IF l_buf.subString(1,1) = "#" OR l_buf.subString(1,2) = "--" OR
+          l_buf.subString(1,1) = "{" THEN
+          CONTINUE WHILE
+       END IF
+       #display 跳過
+       IF l_buf.getIndexOf("display",1) THEN 
+          CONTINUE WHILE
+       END IF 
+       #g_argv[
+       CALL l_buf.getIndexOf("g_argv[",1) RETURNING l_cnt
+       IF l_cnt > 0 THEN
+        
+
+          LET l_length = l_buf.getlength()
+                        
+          #從[截到字尾
+          LET l_buf2 = l_buf.subString(l_cnt+7,l_length)
+          #找到] 
+          CALL l_buf2.getIndexOf("]",1) RETURNING l_cnt2
+          #取出參數序號
+          LET l_buf2 = l_buf2.subString(1,l_cnt2-1)
+          #比對是否是數字
+          IF NOT cl_chk_num(l_buf2.trim(),"N") THEN 
+             CONTINUE WHILE
+          END IF 
+          LET l_cnt1 = l_buf2.trim()
+
+          #假如是第一次掃到就放進來，有重複的就跳過
+          IF cl_null(l_gzzc[l_cnt1].gzzc002) OR l_cnt1 <> l_gzzc[l_cnt1].gzzc002 THEN 
+             #確認 gzzc_t gzzc001+gzzc002 是有此筆資料  
+             IF azzp190_chk_gzzc(gs_target,l_cnt1) THEN 
+                CONTINUE WHILE
+             END IF  
+
+             LET l_gzzc[l_cnt1].gzzc001 = gs_target  #程式代碼   
+             LET l_gzzc[l_cnt1].gzzc002 = l_cnt1     #序号
+             LET l_gzzc[l_cnt1].gzzc003 = cl_getmsg("azz-00250",g_dlang)   #"尚未定義"  
+             LET l_gzzc[l_cnt1].gzzc004 = ""         #变量形态
+             LET l_gzzc[l_cnt1].gzzc005 = ""         #变量长度
+             LET l_gzzc[l_cnt1].gzzc006 = ls_file    #使用程式
+             LET l_gzzc[l_cnt1].gzzc007 = ls_tmp     #參考程式碼段落
+
+             TRY
+                INSERT INTO gzzc_t (gzzc001,gzzc002,gzzc003,gzzc004,gzzc005,gzzc006,gzzc007)
+                  VALUES(l_gzzc[l_cnt1].gzzc001,l_gzzc[l_cnt1].gzzc002,l_gzzc[l_cnt1].gzzc003,l_gzzc[l_cnt1].gzzc004,l_gzzc[l_cnt1].gzzc005,l_gzzc[l_cnt1].gzzc006,l_gzzc[l_cnt1].gzzc007)
+
+                DISPLAY "Insert Succeed "
+             CATCH
+                DISPLAY "[Warning] The parameter have duplicate : ",ls_tmp
+             END TRY
+          END IF  
+       END IF
+   END WHILE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 更新參數
+# Memo...........:
+# Usage..........: CALL azzp190_upd_para()
+#                  RETURNING 
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp190_upd_para()
+    DEFINE l_ch        base.Channel
+   DEFINE l_buf       STRING
+   DEFINE l_buf2      STRING
+   DEFINE ls_tmp      STRING 
+   DEFINE li_cnt      LIKE type_t.num5
+   DEFINE li_cnt1     LIKE type_t.num5
+   DEFINE li_cnt2     LIKE type_t.num5
+   DEFINE li_chk      LIKE type_t.num5
+   DEFINE li_chk2     LIKE type_t.num5
+   DEFINE lc_dzeb007  LIKE dzeb_t.dzeb007
+   DEFINE lc_dzeb008  LIKE dzeb_t.dzeb008
+   DEFINE lc_dzeb003  LIKE dzeb_t.dzeb003
+   DEFINE lc_gzzc001  LIKE gzzc_t.gzzc001
+
+   #read
+   LET l_ch = base.Channel.create()
+   CALL l_ch.setDelimiter("")
+   CALL l_ch.openFile(g_filepath,"r")
+   #point name=global.argv
+   LET li_chk = FALSE 
+   LET li_chk2 = FALSE
+   
+    WHILE TRUE
+       CALL l_ch.readLine() RETURNING l_buf  #讀一行資料
+       IF l_ch.isEof() THEN EXIT WHILE END IF
+
+       LET ls_tmp = l_buf
+       LET ls_tmp = ls_tmp.trim()
+       LET l_buf = DOWNSHIFT(l_buf)
+       LET l_buf = l_buf.trim()
+       
+       #先判斷本行行頭是否以 # 或 -- 為開頭, 如果是就放棄這個找下個
+       #補上 { 符號   請勿在行首放大括號
+       IF l_buf.subString(1,2) = "#+" OR l_buf.subString(1,2) = "--" THEN
+          CONTINUE WHILE
+       END IF
+       #add-point:傳入參數說明(global.argv)
+       #{<point name="global.argv"/>}
+       #end add-point
+       LET li_cnt = l_buf.getIndexOf("add-point:",1)
+       IF li_cnt > 0 THEN 
+
+          #截取 global.argv
+          IF l_buf.getIndexOf("global.argv",li_cnt+10) THEN 
+             LET li_chk = TRUE 
+                 CONTINUE WHILE 
+             #END IF
+          END IF 
+           END IF 
+          # 找到global.argv 往下搜尋
+          IF li_chk THEN 
+          #找到end add-point
+          IF l_buf.getIndexOf("end add-point",1) THEN 
+              LET li_chk2 = TRUE 
+          END IF
+          
+          #找出 argv[] 
+          CALL l_buf.getIndexOf("argv[",1) RETURNING li_cnt
+          IF li_cnt > 0 THEN 
+             LET l_buf = l_buf.subString(li_cnt,l_buf.getlength())
+             LET li_cnt = l_buf.getIndexOf("[",1) 
+             LET li_cnt2 = l_buf.getIndexOf("]",1)
+  
+             #取出參數序號
+             LET l_buf2 = l_buf.subString(li_cnt+1,li_cnt2-1)
+             LET li_cnt1 = l_buf2.trim()
+             
+             #截取 ] 後面的字串
+             LET l_buf2 = l_buf.subString(li_cnt2+1,l_buf.getlength())
+             LET l_buf2 = l_buf2.trim()
+             LET l_buf = NULL 
+             LET li_cnt = l_buf2.getIndexOf("#",1)
+
+             IF li_cnt > 0 THEN 
+                LET l_buf = l_buf2.subString(li_cnt+1,l_buf2.getLength())
+                #取出#後面字串
+                LET l_buf = l_buf.trim()
+                LET li_cnt = li_cnt - 1
+             ELSE
+                LET li_cnt = l_buf2.getLength()                     
+             END IF 
+             
+             #取出表格及欄位
+             IF l_buf2.getIndexOf(".",1) THEN 
+                LET li_cnt2 = l_buf2.getIndexOf(".",1)
+                CALL azzp190_get_dzeb_info(l_buf2.subString(1,li_cnt2-1),l_buf2.subString(li_cnt2+1,li_cnt)) 
+                   RETURNING lc_dzeb003,lc_dzeb007,lc_dzeb008
+             END IF 
+             #display "lc_dzeb003:",lc_dzeb003 ,"lc_dzeb007: ",lc_dzeb007 ,"lc_dzeb008:",lc_dzeb008 
+             LET lc_gzzc001 = gs_target
+             #沒有說明就以欄位說明為主
+             IF NOT cl_null(l_buf) THEN
+                LET lc_dzeb003 = l_buf
+             END IF 
+             
+             SELECT COUNT(*) INTO li_cnt 
+                FROM gzzc_t 
+                WHERE gzzc001 = lc_gzzc001 AND gzzc002 = li_cnt1  
+             #display "li_cnt1:",li_cnt1
+             TRY
+
+               IF li_cnt > 0 THEN 
+                  
+                   UPDATE gzzc_t
+                     SET gzzc003 = lc_dzeb003, gzzc004 = lc_dzeb007,gzzc005 = lc_dzeb008
+                     WHERE gzzc001 = lc_gzzc001
+                     AND gzzc002 = li_cnt1
+                   DISPLAY "Update Succeed "
+               END IF 
+                
+             CATCH
+                DISPLAY "[Warning] The parameter have duplicate : ",ls_tmp
+             END TRY
+             
+          END IF 
+       END IF 
+       #找到<point name="global.argv"> 及 end add-point 就離開WHILE
+       IF li_chk AND li_chk2 THEN 
+          EXIT WHILE  
+       END IF 
+   END WHILE 
+   IF NOT li_chk OR NOT li_chk2 THEN
+      DISPLAY "[Warning] 傳入參數說明未定義(global.argv)"
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取出dzeb_t 變數型態及變數長度
+# Memo...........:
+# Usage..........: CALL azzp190_get_dzeb_info(pc_dzeb001,pc_dzeb002)
+#                  RETURNING 回传参数
+# Input parameter: pc_dzeb001  
+#                : pc_dzeb002   
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp190_get_dzeb_info(pc_dzeb001,pc_dzeb002)
+   DEFINE pc_dzeb001 LIKE dzeb_t.dzeb001
+   DEFINE pc_dzeb002 LIKE dzeb_t.dzeb002
+   DEFINE lc_dzeb007 LIKE dzeb_t.dzeb007
+   DEFINE lc_dzeb008 LIKE dzeb_t.dzeb008
+   DEFINE lc_dzeb003 LIKE dzeb_t.dzeb003 
+   DEFINE ls_sql     STRING 
+
+   LET ls_sql = " SELECT dzeb003,dzeb007,dzeb008 ",
+                "    FROM dzeb_t ",
+                "    WHERE dzeb001 = '",pc_dzeb001 CLIPPED,"'", 
+                "    AND dzeb002 = '",pc_dzeb002 CLIPPED,"'"       
+   PREPARE  azzp190_token_param_pre FROM ls_sql
+   EXECUTE azzp190_token_param_pre INTO lc_dzeb003,lc_dzeb007,lc_dzeb008
+   FREE azzp190_token_param_pre
+   IF cl_null(lc_dzeb003) THEN 
+      LET lc_dzeb003 = ""
+   END IF 
+
+   IF cl_null(lc_dzeb007) THEN 
+      LET lc_dzeb007 = ""
+   END IF 
+
+   IF cl_null(lc_dzeb008) THEN 
+      LET lc_dzeb008 = ""
+   END IF 
+
+   RETURN lc_dzeb003,lc_dzeb007,lc_dzeb008 
+END FUNCTION
+
+PRIVATE FUNCTION azzp190_del_gzzc_para(p_gzza001)
+   DEFINE p_gzza001   LIKE gzza_t.gzza001
+
+   TRY
+     DELETE FROM gzzc_t
+      WHERE gzzc001 = p_gzza001
+  CATCH
+      DISPLAY "[Warning] The parameter cannot delete : ",p_gzza001
+  END TRY
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

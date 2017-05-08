@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmr820_g01" module="anm" jobmode="N" type="g01" industry="std" crtid="02159" crtdt="2015-10-22 19:11:24" modid="02291" moddt="2016-02-18 11:02:50" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="nmde001,nmde002,nmde004,nmde005,nmde017,nmde100,nmde101,nmde102,nmde103,nmde104,nmde105,nmde106,nmde111,nmde113,nmde114,nmde115,nmde116,nmde121,nmde123,nmde124,nmde125,nmde126,nmdecomp,nmdedocdt,nmdedocno,nmdeent,nmdeld,nmdesite,l_nmdeld_desc(chr100|&apos;&apos;),l_nmdesite_desc(chr100|&apos;&apos;),l_nmdecomp_desc(chr100|&apos;&apos;),l_nmde005_desc(chr100|&apos;&apos;),l_nmde004_desc(chr100|&apos;&apos;),l_nmde001_nmde002(chr10|&apos;&apos;),l_glab005(chr20|&apos;&apos;),l_glab005_desc(chr100|&apos;&apos;),l_order(chr20|trim(nmdeld)||&apos;.&apos;||trim(nmde001)),l_nmde101_01(nmde101|0)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="nmde001,nmde002,nmde004,nmde005,nmde017,nmde100,nmde101,nmde102,nmde103,nmde104,nmde105,nmde106,nmde111,nmde113,nmde114,nmde115,nmde116,nmde121,nmde123,nmde124,nmde125,nmde126,nmdecomp,nmdedocdt,nmdedocno,nmdeent,nmdeld,nmdesite,l_nmdeld_desc(chr100|&apos;&apos;),l_nmdesite_desc(chr100|&apos;&apos;),l_nmdecomp_desc(chr100|&apos;&apos;),l_nmde005_desc(chr100|&apos;&apos;),l_nmde004_desc(chr100|&apos;&apos;),l_nmde001_nmde002(chr10|&apos;&apos;),l_glab005(chr20|&apos;&apos;),l_glab005_desc(chr100|&apos;&apos;),l_order(chr20|trim(nmdeld)||&apos;.&apos;||trim(nmde001)),l_nmde101_01(nmde101|0)"/>
+    <sql id="g_from" query="nmde_t"/>
+    <sql id="g_where" query="" maintable="nmde_t"/>
+    <sql id="g_order" query="nmdeld,nmde001,nmde002"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="l_order,nmde002,nmde100"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmdeent,l_order"/>
+      <rep type="nmde002"/>
+      <rep type="nmde100"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="nmdeent,l_order,nmde002,nmde100"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="nmdeent,l_order,nmde002,nmde100"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmdeent,l_order"/>
+      <rep type="nmde002"/>
+      <rep type="nmde100"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

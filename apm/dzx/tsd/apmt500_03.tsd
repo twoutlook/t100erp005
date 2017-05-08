@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmt500_03" std_prog="apmt500_03" erpver="1.0" ver="1" module="APM" type="S" booking="Y" class="T" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="pmdq_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：提供維護採購多交期資料
+標準作業功能取消：
+狀態功能：無
+作業類型：批處處理作業
+輸入模式：單檔多欄版型
+資料來源:pmdq_t
+資料處理：
+1.執行此程式需傳入2個參數，當此參數為NULL時則不可以執行
+  1-1.p_pmdndocno(採購單號):
+  1-2.p_pmdnseq(採購項次):
+2.傳入的採購項次資料需有勾選多交期時才可以維護此子作業
+3.傳入的採購單號+採購項次已經有對應的pmdq_t資料時，則自動帶出供維護
+4.離開時回傳交貨日期最早的那一分批序的交貨日期、到廠日期、到庫日期]]>
+  </all>
+  <field cite_std="N" name="pmdq_t.pmdq002" ver="1" src="s" column="pmdq002" table="pmdq_t" attribute="N101" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[以登打的分批數量總合+本分批數量不可以大於採購數量]]>
+  </field>
+  <field cite_std="N" name="pmdq_t.pmdq003" ver="1" src="s" column="pmdq003" table="pmdq_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[計算或處理:1.輸入交貨日期後需自動計算到廠日期，公式為交貨日期+[T:料件據點進銷存檔].[C:到廠前置時間]
+                2.輸入交貨日期後需自動計算到庫日期，公式為到廠日期+[T:料件據點進銷存檔].[C:到庫前置時間]
+     備註:1.當輸入交貨日期時，需自動推算到廠日期與到庫日期]]>
+  </field>
+  <field cite_std="N" name="pmdq_t.pmdq004" ver="1" src="s" column="pmdq004" table="pmdq_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[計算或處理:1.若到廠日期為NULL時，輸入到庫日期後需自動計算到廠日期，
+                  公式為到庫日期-[T:料件據點進銷存檔].[C:到庫前置時間]
+                2.輸入的到庫日期不可以小於到廠日期
+                3.若交貨日期為NULL時，輸入到庫日期後需自動計算交貨日期，
+                  公式為到廠日期-[T:料件據點進銷存檔].[C:到廠前置時間]
+               
+     備註:1.若到廠日期是空白時才需自動推算到廠日期           
+          2.若交貨日期是空白時才需自動推算交貨日期]]>
+  </field>
+  <field cite_std="N" name="pmdq_t.pmdq005" ver="1" src="s" column="pmdq005" table="pmdq_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[算或處理:1.若到廠日期為NULL時，輸入到庫日期後需自動計算到廠日期，
+                  公式為到庫日期-[T:料件據點進銷存檔].[C:到庫前置時間]
+                2.輸入的到庫日期不可以小於到廠日期
+                3.若交貨日期為NULL時，輸入到庫日期後需自動計算交貨日期，
+                  公式為到廠日期-[T:料件據點進銷存檔].[C:到廠前置時間]
+               
+     備註:1.若到廠日期是空白時才需自動推算到廠日期           
+          2.若交貨日期是空白時才需自動推算交貨日期]]>
+  </field>
+  <field cite_std="N" name="pmdq_t.pmdq006" ver="1" src="s" column="pmdq006" table="pmdq_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_274" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:1.預設採購料件主檔設置的收貨時段
+校驗：傳入參數 arg1 = pmdq006]]>
+  </field>
+  <field cite_std="N" name="pmdq_t.pmdq007" ver="1" src="s" column="pmdq007" table="pmdq_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdq_t.pmdqdocno" ver="1" src="s" column="pmdqdocno" table="pmdq_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdq_t.pmdqseq" ver="1" src="s" column="pmdqseq" table="pmdq_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdq_t.pmdqseq2" ver="1" src="s" column="pmdqseq2" table="pmdq_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmdq_t.pmdqsite" ver="1" src="s" column="pmdqsite" table="pmdq_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_glab005" depend_field="glab_t.glab005" src="s" status="">
+      <program order="1" type="1" name="agli020"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_glabld" depend_field="glab_t.glabld" src="s" status="">
+      <program order="1" type="1" name="agli010"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_pmdl002" depend_field="pmdl_t.pmdl002" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_pmdl027" depend_field="pmdl_t.pmdl027" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;apmi004&quot;, &quot;pmaj_t&quot;, &quot;pmaj002&quot;, &quot;pmaj001&quot;)"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="pmdq006_desc" src="s" depend_field="pmdq_t.pmdq006" correspon_key="&apos;274&apos;,pmdq006" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="pmdq_t.pmdq002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdq_t.pmdq003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdq_t.pmdq004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdq_t.pmdq005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdq_t.pmdq006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdq_t.pmdq007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdq_t.pmdqdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdq_t.pmdqseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdq_t.pmdqseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmdq_t.pmdqsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_pmdqsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_pmdqdocno" text="採購單號" lstr=""/>
+    <sfield name="lbl_pmdqseq" text="採購項次" lstr=""/>
+    <sfield name="lbl_pmdqseq2" text="分批序" lstr=""/>
+    <sfield name="lbl_pmdq002" text="分批數量" lstr=""/>
+    <sfield name="lbl_pmdq003" text="交貨日期" lstr=""/>
+    <sfield name="lbl_pmdq004" text="到廠日期" lstr=""/>
+    <sfield name="lbl_pmdq005" text="到庫日期" lstr=""/>
+    <sfield name="lbl_pmdq006" text="收貨時段" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_pmdq007" text="MRP凍結否" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

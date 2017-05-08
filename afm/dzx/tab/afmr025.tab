@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmr025" module="afm" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="08171" crtdt="2016-09-23 10:51:10" modid="08171" moddt="2016-09-23 10:51:10" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="融資申請確認單列印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmagsite,fmagsite_desc(chr80),fmagdocno,fmagdocdt,fmagstus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="afm" filename="afmr025" method="dialog">
+    <section id="input">
+      <input id="head" field="fmagsite,fmagstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmagdocno,fmagdocdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmagsite">
+        <after>
+          <check chkid="v_ooef001_42" id="isExist"/>
+          <reference field="fmagsite_desc" ref_field="fmag_t.fmagsite" map_field="fmagsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmagsite_desc"/>
+      <column id="fmagdocno">
+        <controlp form="q_ooba002_4" state="i"/>
+        <controlp form="q_fmagdocno" state="c"/>
+      </column>
+      <column id="fmagdocdt"/>
+      <column id="fmagstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+  </form>
+</assembly>
+

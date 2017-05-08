@@ -1,0 +1,1100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aglt310_07" std_prog="aglt310_07" erpver="1.0" module="AGL" ver="3" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.aglt310_07_b_fill" order="1" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglt310_07_b_fill(p_glapld,p_glapdocno)
+   DEFINE p_glapld        LIKE glap_t.glapld
+   DEFINE p_glapdocno     LIKE glap_t.glapdocno
+   DEFINE la_param        RECORD
+          prog            STRING,
+          param           DYNAMIC ARRAY OF STRING
+                          END RECORD
+   DEFINE ls_js           STRING
+   DEFINE r_success       LIKE type_t.num5 #標示是否要開啟畫面
+   DEFINE l_docno         LIKE glap_t.glapdocno #單號
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_sql           STRING
+   DEFINE l_xrca001       LIKE xrca_t.xrca001
+   DEFINE l_glap007       LIKE glap_t.glap007
+   DEFINE l_glap008       LIKE glap_t.glap008
+   DEFINE l_fabg005       LIKE fabg_t.fabg005
+   
+   SELECT glap007,glap008 INTO l_glap007,l_glap008 FROM glap_t 
+    WHERE glapent=g_enterprise AND glapld=p_glapld AND glapdocno=p_glapdocno
+   
+   IF l_glap007 = 'GL' AND l_glap008 = 'TH' THEN
+      CALL cl_set_comp_visible('glce001,glce002',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('glce001,glce002',FALSE)
+   END IF
+   
+   CALL g_glap_d.clear()
+   INITIALIZE la_param.* TO NULL
+   LET r_success = TRUE
+   LET l_cnt=0
+   LET l_i=1
+   
+   #應收
+   IF l_glap007 = 'AR' THEN
+      CASE 
+         WHEN l_glap008 = 'R10'   #axrt3*
+            LET l_sql="SELECT DISTINCT xrcadocno,xrca001 FROM xrca_t",
+                      " WHERE xrcaent = ",g_enterprise," AND xrcald ='", p_glapld,"'",
+                      "   AND xrca038 = '",p_glapdocno,"'",
+                      " ORDER BY xrcadocno"
+            PREPARE aglt310_07_sel_xrca_pr FROM l_sql
+            DECLARE aglt310_07_sel_xrca_cs CURSOR FOR aglt310_07_sel_xrca_pr
+            FOREACH aglt310_07_sel_xrca_cs INTO g_glap_d[l_i].glapdocno,l_xrca001
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "FOREACH:" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  EXIT FOREACH
+               END IF
+               LET g_glap_d[l_i].glapld =p_glapld
+               LET g_glap_d[l_i].glap007=l_glap007
+               LET g_glap_d[l_i].glap008=l_glap008
+               #程式編號
+               SELECT gzcb005 INTO g_glap_d[l_i].gzzz001 FROM gzcb_t WHERE gzcb001='8302' AND gzcb002=l_xrca001
+               LET l_i = l_i + 1
+            END FOREACH
+            LET l_i=l_i - 1
+            CALL g_glap_d.deleteElement(g_glap_d.getLength())
+            IF l_i = 1 THEN
+               LET la_param.prog = g_glap_d[l_i].gzzz001
+               LET la_param.param[1] = g_glap_d[l_i].glapld     #帳別
+               LET la_param.param[2] = g_glap_d[l_i].glapdocno  #單號
+               LET ls_js = util.JSON.stringify( la_param )
+               CALL cl_cmdrun(ls_js)
+            END IF
+            IF l_i >1 THEN
+               LET r_success = FALSE
+            END IF
+         WHEN l_glap008 = 'R20'   #axrt400
+            LET l_sql="SELECT xrdadocno FROM xrda_t",
+                      " WHERE xrdaent = ",g_enterprise," AND xrdald ='",p_glapld,"'",
+                      "   AND xrda014 = '",p_glapdocno,"'",
+                      " ORDER BY xrdadocno"
+            PREPARE aglt310_07_sel_xrda_pr FROM l_sql
+            DECLARE aglt310_07_sel_xrda_cs CURSOR FOR aglt310_07_sel_xrda_pr
+            FOREACH aglt310_07_sel_xrda_cs INTO g_glap_d[l_i].glapdocno
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "FOREACH:" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  EXIT FOREACH
+               END IF
+               LET g_glap_d[l_i].glapld=p_glapld
+               LET g_glap_d[l_i].glap007=l_glap007
+               LET g_glap_d[l_i].glap008=l_glap008
+               LET g_glap_d[l_i].gzzz001='axrt400'
+               LET l_i = l_i + 1
+            END FOREACH
+            LET l_i=l_i - 1
+            CALL g_glap_d.deleteElement(g_glap_d.getLength())
+            IF l_i = 1 THEN
+               LET la_param.prog = g_glap_d[l_i].gzzz001
+               LET la_param.param[1] = g_glap_d[l_i].glapld     #帳別
+               LET la_param.param[2] = g_glap_d[l_i].glapdocno  #單號
+               LET ls_js = util.JSON.stringify( la_param )
+               CALL cl_cmdrun(ls_js)
+            END IF
+            IF l_i >1 THEN
+               LET r_success = FALSE
+            END IF
+      END CASE
+   END IF
+   
+   IF l_glap007 = 'AP' THEN
+      CASE 
+         WHEN l_glap008='P10'   #aapt3*
+            LET l_sql="SELECT apcadocno,apca001 FROM apca_t",
+                      " WHERE apcaent = ",g_enterprise," AND apcald = '",p_glapld,"'", 
+                      "   AND apca038 ='",p_glapdocno,"'",
+                      " ORDER BY apcadocno "
+            PREPARE aglt310_07_sel_apca_pr FROM l_sql
+            DECLARE aglt310_07_sel_apca_cs CURSOR FOR aglt310_07_sel_apca_pr
+            FOREACH aglt310_07_sel_apca_cs INTO g_glap_d[l_i].glapdocno,l_xrca001
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "FOREACH:" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  EXIT FOREACH
+               END IF
+               LET g_glap_d[l_i].glapld =p_glapld
+               LET g_glap_d[l_i].glap007=l_glap007
+               LET g_glap_d[l_i].glap008=l_glap008
+               #程式編號
+               SELECT gzcb005 INTO g_glap_d[l_i].gzzz001 FROM gzcb_t WHERE gzcb001='8502' AND gzcb002=l_xrca001
+               LET l_i = l_i + 1
+            END FOREACH
+            LET l_i=l_i - 1
+            CALL g_glap_d.deleteElement(g_glap_d.getLength())
+            IF l_i = 1 THEN
+               LET la_param.prog = g_glap_d[l_i].gzzz001
+               IF g_glap_d[l_i].gzzz001='aapt300' OR g_glap_d[l_i].gzzz001='aapt301' OR
+                  g_glap_d[l_i].gzzz001='aapt340' OR g_glap_d[l_i].gzzz001='aapt341' THEN
+                  LET la_param.param[2] = g_glap_d[l_i].glapld     #帳別
+                  LET la_param.param[3] = g_glap_d[l_i].glapdocno  #單號
+               ELSE
+                  LET la_param.param[1] = g_glap_d[l_i].glapld     #帳別
+                  LET la_param.param[2] = g_glap_d[l_i].glapdocno  #單號
+               END IF
+               LET ls_js = util.JSON.stringify( la_param )
+               CALL cl_cmdrun(ls_js)
+            END IF
+            IF l_i >1 THEN
+               LET r_success = FALSE
+            END IF          
+         WHEN l_glap008='P20' OR l_glap008='P30'  #aapt420/#aapt430
+            LET l_sql="SELECT apdadocno FROM apda_t",
+                      " WHERE apdaent = ",g_enterprise," AND apdald = '",p_glapld,"'", 
+                      "   AND apda014 ='",p_glapdocno,"'",
+                      " ORDER BY apdadocno "
+            PREPARE aglt310_07_sel_apda_pr FROM l_sql
+            DECLARE aglt310_07_sel_apda_cs CURSOR FOR aglt310_07_sel_apda_pr
+            FOREACH aglt310_07_sel_apda_cs INTO g_glap_d[l_i].glapdocno
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "FOREACH:" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  EXIT FOREACH
+               END IF
+               LET g_glap_d[l_i].glapld =p_glapld
+               LET g_glap_d[l_i].glap007=l_glap007
+               LET g_glap_d[l_i].glap008=l_glap008
+               #程式編號
+               IF l_glap008='P20' THEN
+                  LET g_glap_d[l_i].gzzz001 = 'aapt420'
+               ELSE
+                  LET g_glap_d[l_i].gzzz001 = 'aapt430'
+               END IF
+               LET l_i = l_i + 1
+            END FOREACH
+            LET l_i=l_i - 1
+            CALL g_glap_d.deleteElement(g_glap_d.getLength())
+            IF l_i = 1 THEN
+               LET la_param.prog = g_glap_d[l_i].gzzz001
+               LET la_param.param[1] = g_glap_d[l_i].glapld     #帳別
+               LET la_param.param[2] = g_glap_d[l_i].glapdocno  #單號
+               LET ls_js = util.JSON.stringify( la_param )
+               CALL cl_cmdrun(ls_js)
+            END IF
+            IF l_i >1 THEN
+               LET r_success = FALSE
+            END IF
+      END CASE
+   END IF
+   
+   #axrt920 #aapt920
+   IF (l_glap007 = 'AR' AND l_glap008 = 'R40' )  #axrt920 
+      OR (l_glap007 = 'AP' AND l_glap008 = 'P40' ) THEN #aapt920 
+      LET l_sql="SELECT xregdocno FROM xreg_t",
+                " WHERE xregent = ",g_enterprise," AND xregld ='",p_glapld,"'",
+                "   AND xreg005 = '",p_glapdocno,"'",
+                " ORDER BY xregdocno"
+      PREPARE aglt310_07_sel_xreg_pr FROM l_sql
+      DECLARE aglt310_07_sel_xreg_cs CURSOR FOR aglt310_07_sel_xreg_pr
+      FOREACH aglt310_07_sel_xreg_cs INTO g_glap_d[l_i].glapdocno
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         LET g_glap_d[l_i].glapld=p_glapld
+         LET g_glap_d[l_i].glap007=l_glap007
+         LET g_glap_d[l_i].glap008=l_glap008
+         IF l_glap007 = 'AR' AND l_glap008 = 'R40' THEN
+            LET g_glap_d[l_i].gzzz001='axrt920'
+         END IF
+         IF l_glap007 = 'AP' AND l_glap008 = 'P40' THEN
+            LET g_glap_d[l_i].gzzz001='aapt920'
+         END IF
+         LET l_i = l_i + 1
+      END FOREACH
+      LET l_i=l_i - 1
+      CALL g_glap_d.deleteElement(g_glap_d.getLength())
+      IF l_i = 1 THEN
+         LET la_param.prog = g_glap_d[l_i].gzzz001
+         LET la_param.param[1] = g_glap_d[l_i].glapdocno  #單號
+         LET ls_js = util.JSON.stringify( la_param )
+         CALL cl_cmdrun(ls_js)
+      END IF
+      IF l_i >1 THEN
+         LET r_success = FALSE
+      END IF
+   END IF
+   
+   #axrt930/axrt931 #aapt930/#aapt931
+   IF (l_glap007 = 'AR' AND (l_glap008 = 'R50' OR l_glap008 = 'R51' )) #axrt930/axrt931
+      OR (l_glap007 = 'AP' AND (l_glap008='P50' OR l_glap008='P51' ))  THEN #aapt930/#aapt931
+      LET l_sql="SELECT xremdocno FROM xrem_t",
+                " WHERE xrement = ",g_enterprise," AND xremld ='",p_glapld,"'",
+                "   AND xrem005 = '",p_glapdocno,"'",
+                " ORDER BY xremdocno"
+      PREPARE aglt310_07_sel_xrem_pr FROM l_sql
+      DECLARE aglt310_07_sel_xrem_cs CURSOR FOR aglt310_07_sel_xrem_pr
+      FOREACH aglt310_07_sel_xrem_cs INTO g_glap_d[l_i].glapdocno
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         LET g_glap_d[l_i].glapld=p_glapld
+         LET g_glap_d[l_i].glap007=l_glap007
+         LET g_glap_d[l_i].glap008=l_glap008
+         IF l_glap007 = 'AR' AND l_glap008 = 'R50' THEN
+            LET g_glap_d[l_i].gzzz001='axrt930'
+         END IF
+         IF l_glap007 = 'AR' AND l_glap008 = 'R50' THEN
+            LET g_glap_d[l_i].gzzz001='axrt931'
+         END IF
+         IF l_glap007 = 'AP' AND l_glap008 = 'P50' THEN
+            LET g_glap_d[l_i].gzzz001='aapt930'
+         END IF
+         IF l_glap007 = 'AP' AND l_glap008 = 'P50' THEN
+            LET g_glap_d[l_i].gzzz001='aapt931'
+         END IF
+         LET l_i = l_i + 1
+      END FOREACH
+      LET l_i=l_i - 1
+      CALL g_glap_d.deleteElement(g_glap_d.getLength())
+      IF l_i = 1 THEN
+         LET la_param.prog = g_glap_d[l_i].gzzz001
+         LET la_param.param[1] = g_glap_d[l_i].glapdocno  #單號
+         LET ls_js = util.JSON.stringify( la_param )
+         CALL cl_cmdrun(ls_js)
+      END IF
+      IF l_i >1 THEN
+         LET r_success = FALSE
+      END IF
+   END IF
+   
+   #axrt940 #aapt940
+   IF (l_glap007 = 'AR' AND l_glap008 = 'R60')   #axrt940
+      OR (l_glap007 = 'AP' AND l_glap008='P60') THEN  #aapt940
+      LET l_sql="SELECT xrejdocno FROM xrej_t",
+                " WHERE xrejent = ",g_enterprise," AND xrejld ='",p_glapld,"'",
+                "   AND xrej005 = '",p_glapdocno,"'",
+                " ORDER BY xrejdocno"
+      PREPARE aglt310_07_sel_xrej_pr FROM l_sql
+      DECLARE aglt310_07_sel_xrej_cs CURSOR FOR aglt310_07_sel_xrej_pr
+      FOREACH aglt310_07_sel_xrej_cs INTO g_glap_d[l_i].glapdocno
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         LET g_glap_d[l_i].glapld=p_glapld
+         LET g_glap_d[l_i].glap007=l_glap007
+         LET g_glap_d[l_i].glap008=l_glap008
+         IF l_glap007 = 'AR' AND l_glap008 = 'R60' THEN
+            LET g_glap_d[l_i].gzzz001='axrt940'
+         END IF
+         IF l_glap007 = 'AP' AND l_glap008='P60' THEN
+            LET g_glap_d[l_i].gzzz001='aapt940'
+         END IF
+         LET l_i = l_i + 1
+      END FOREACH
+      LET l_i=l_i - 1
+      CALL g_glap_d.deleteElement(g_glap_d.getLength())
+      IF l_i = 1 THEN
+         LET la_param.prog = g_glap_d[l_i].gzzz001
+         LET la_param.param[1] = g_glap_d[l_i].glapdocno  #單號
+         LET ls_js = util.JSON.stringify( la_param )
+         CALL cl_cmdrun(ls_js)
+      END IF
+      IF l_i >1 THEN
+         LET r_success = FALSE
+      END IF
+   END IF
+   
+   IF l_glap007 = 'FA' THEN
+      LET l_sql="SELECT fabgdocno,fabg005 FROM fabg_t",
+                " WHERE fabgent = ",g_enterprise," AND fabgld ='",p_glapld,"'",
+                "   AND fabg008 ='",p_glapdocno,"'",
+                " ORDER BY fabgdocno "
+      PREPARE aglt310_07_sel_fabg_pr FROM l_sql
+      DECLARE aglt310_07_sel_fabg_cs CURSOR FOR aglt310_07_sel_fabg_pr
+      FOREACH aglt310_07_sel_fabg_cs INTO g_glap_d[l_i].glapdocno,l_fabg005
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         LET g_glap_d[l_i].glapld =p_glapld
+         LET g_glap_d[l_i].glap007=l_glap007
+         LET g_glap_d[l_i].glap008=l_glap008
+         #程式編號
+         CASE l_glap008
+            WHEN 'F10'   #afat500
+               LET g_glap_d[l_i].gzzz001 = 'afat500'
+            WHEN 'F20'   #
+            WHEN 'F30'   #afat509
+               LET g_glap_d[l_i].gzzz001 = 'afat509'
+            WHEN 'F40'   #afat504
+               LET g_glap_d[l_i].gzzz001 = 'afat504'
+            WHEN 'F50'   #afat502/afat503/afat506/afat507
+               IF l_fabg005='6' THEN
+                  LET g_glap_d[l_i].gzzz001 = 'afat506'
+               END IF
+               IF l_fabg005='8' THEN
+                  LET g_glap_d[l_i].gzzz001 = 'afat503'
+               END IF
+               IF l_fabg005='14' THEN
+                  LET g_glap_d[l_i].gzzz001 = 'afat502'
+               END IF
+               IF l_fabg005='21' THEN
+                  LET g_glap_d[l_i].gzzz001 = 'afat507'
+               END IF
+         END CASE
+         LET l_i = l_i + 1
+      END FOREACH
+      LET l_i=l_i - 1
+      CALL g_glap_d.deleteElement(g_glap_d.getLength())
+      IF l_i = 1 THEN
+         LET la_param.prog = g_glap_d[l_i].gzzz001
+         LET la_param.param[1] = g_glap_d[l_i].glapld     #帳別
+         LET la_param.param[2] = g_glap_d[l_i].glapdocno  #單號
+         LET ls_js = util.JSON.stringify( la_param )
+         CALL cl_cmdrun(ls_js)
+      END IF
+      IF l_i >1 THEN
+         LET r_success = FALSE
+      END IF
+   END IF
+   
+   IF l_glap007 = 'FM' THEN
+      CASE l_glap008
+         WHEN 'M10'   #
+      END CASE
+   END IF
+   
+   IF l_glap007 = 'NM' THEN
+      CASE l_glap008
+         WHEN 'N10'   #
+         WHEN 'N20'   #
+         WHEN 'N30'   #
+         WHEN 'N40'   #
+      END CASE
+   END IF
+   
+   IF l_glap007 = 'XC' THEN
+      CASE l_glap008
+         WHEN 'C10'   #
+      END CASE
+   END IF
+   
+   IF l_glap007 = 'GL' AND l_glap008 = 'TH' THEN
+      LET l_sql="SELECT glcedocno,glce001,glce002 FROM glce_t",
+                " WHERE glceent = ",g_enterprise," AND glceld ='",p_glapld,"'",
+                "   AND glce005 ='",p_glapdocno,"'",
+                " ORDER BY glcedocno "
+      PREPARE aglt310_07_sel_glce_pr FROM l_sql
+      DECLARE aglt310_07_sel_glce_cs CURSOR FOR aglt310_07_sel_glce_pr
+      FOREACH aglt310_07_sel_glce_cs INTO g_glap_d[l_i].glapdocno,g_glap_d[l_i].glce001,g_glap_d[l_i].glce002
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         LET g_glap_d[l_i].glapld =p_glapld
+         LET g_glap_d[l_i].glap007=l_glap007
+         LET g_glap_d[l_i].glap008=l_glap008
+         #程式編號
+         LET g_glap_d[l_i].gzzz001 = 'aglt420'
+         LET l_i = l_i + 1
+      END FOREACH
+      LET l_i=l_i - 1
+      CALL g_glap_d.deleteElement(g_glap_d.getLength())
+      IF l_i = 1 THEN
+         LET la_param.prog = g_glap_d[l_i].gzzz001
+         LET la_param.param[1] = g_glap_d[l_i].glapld   #帳別
+         LET la_param.param[2] = g_glap_d[l_i].glce001  #年度
+         LET la_param.param[3] = g_glap_d[l_i].glce002  #期别
+         LET ls_js = util.JSON.stringify( la_param )
+         CALL cl_cmdrun(ls_js)
+      END IF
+      IF l_i >1 THEN
+         LET r_success = FALSE
+      END IF
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.aglt310_07_cmdrun" order="2" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 串查前端資料
+# Memo...........:
+# Usage..........: CALL aglt310_07_cmdrun()
+################################################################################
+PRIVATE FUNCTION aglt310_07_cmdrun()
+   DEFINE la_param        RECORD
+          prog            STRING,
+          param           DYNAMIC ARRAY OF STRING
+                          END RECORD
+   DEFINE ls_js           STRING
+   
+   INITIALIZE la_param.* TO NULL
+   LET la_param.prog = g_glap_d[l_ac].gzzz001
+   
+   IF (g_glap_d[l_ac].glap007='AR' AND (g_glap_d[l_ac].glap008='R10' OR g_glap_d[l_ac].glap008='R20')) OR
+      (g_glap_d[l_ac].glap007='AP' AND (g_glap_d[l_ac].glap008='P20' OR g_glap_d[l_ac].glap008='P30')) OR
+      g_glap_d[l_ac].glap007='FA'
+   THEN
+      LET la_param.param[1] = g_glap_d[l_ac].glapld     #帳別
+      LET la_param.param[2] = g_glap_d[l_ac].glapdocno  #單號
+   END IF
+   
+   #aapt3*
+   IF g_glap_d[l_ac].glap007='AP' AND g_glap_d[l_ac].glap008='P10' 
+      AND (g_glap_d[l_ac].gzzz001='aapt300' OR g_glap_d[l_ac].gzzz001='aapt301' OR 
+           g_glap_d[l_ac].gzzz001='aapt340' OR g_glap_d[l_ac].gzzz001='aapt341') THEN
+      LET la_param.param[2] = g_glap_d[l_ac].glapld     #帳別
+      LET la_param.param[3] = g_glap_d[l_ac].glapdocno  #單號
+   ELSE
+      LET la_param.param[1] = g_glap_d[l_ac].glapld     #帳別
+      LET la_param.param[2] = g_glap_d[l_ac].glapdocno  #單號
+   END IF
+   
+   IF (g_glap_d[l_ac].glap007='AR' AND (g_glap_d[l_ac].glap008='R40' OR g_glap_d[l_ac].glap008='R50' OR
+                                        g_glap_d[l_ac].glap008='R51' OR g_glap_d[l_ac].glap008='R60'    )) OR
+      (g_glap_d[l_ac].glap007='AP' AND (g_glap_d[l_ac].glap008='P40' OR g_glap_d[l_ac].glap008='P50' OR 
+                                        g_glap_d[l_ac].glap008='P51' OR g_glap_d[l_ac].glap008='P60'    ))
+   THEN
+      LET la_param.param[1] = g_glap_d[l_ac].glapdocno  #單號
+   END IF 
+   
+   #串查aglt420总账调汇
+   IF g_glap_d[l_ac].glap007='GL' AND g_glap_d[l_ac].glap008='TH' THEN
+      LET la_param.param[1] = g_glap_d[l_ac].glapld   #帳別
+      LET la_param.param[2] = g_glap_d[l_ac].glce001  #年度
+      LET la_param.param[3] = g_glap_d[l_ac].glce002  #期别
+   END IF
+   
+   LET ls_js = util.JSON.stringify( la_param )
+   CALL cl_cmdrun(ls_js)
+END FUNCTION]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT util]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.page1.glapdocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_glap_d[g_detail_idx].glapld IS NOT NULL AND g_glap_d[g_detail_idx].glapdocno IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_glap_d[g_detail_idx].glapld != g_glap_d_t.glapld OR g_glap_d[g_detail_idx].glapdocno != g_glap_d_t.glapdocno)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glap_t WHERE "||"glapent = '" ||g_enterprise|| "' AND "||"glapld = '"||g_glap_d[g_detail_idx].glapld ||"' AND "|| "glapdocno = '"||g_glap_d[g_detail_idx].glapdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.glapld" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_glap_d[g_detail_idx].glapld IS NOT NULL AND g_glap_d[g_detail_idx].glapdocno IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_glap_d[g_detail_idx].glapld != g_glap_d_t.glapld OR g_glap_d[g_detail_idx].glapdocno != g_glap_d_t.glapdocno)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glap_t WHERE "||"glapent = '" ||g_enterprise|| "' AND "||"glapld = '"||g_glap_d[g_detail_idx].glapld ||"' AND "|| "glapdocno = '"||g_glap_d[g_detail_idx].glapdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   END IF]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         
+         BEFORE ROW
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            DISPLAY l_ac TO FORMONLY.idx]]>
+  </point>
+  <point name="input.c.page1.glap008" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glap_d[l_ac].glap008             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_glac002_2()                                #呼叫開窗
+
+            LET g_glap_d[l_ac].glap008 = g_qryparam.return1              
+
+            DISPLAY g_glap_d[l_ac].glap008 TO glap008              #
+
+            NEXT FIELD glap008                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.glapdocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glap_d[l_ac].glapdocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            CALL q_ooba002()                                #呼叫開窗
+
+            LET g_glap_d[l_ac].glapdocno = g_qryparam.return1              
+
+            DISPLAY g_glap_d[l_ac].glapdocno TO glapdocno              #
+
+            NEXT FIELD glapdocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.glapld" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glap_d[l_ac].glapld             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_glap_d[l_ac].glapld = g_qryparam.return1              
+
+            DISPLAY g_glap_d[l_ac].glapld TO glapld              #
+
+            NEXT FIELD glapld                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_glapld        LIKE glap_t.glapld
+   DEFINE p_glapdocno     LIKE glap_t.glapdocno
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_flag          LIKE type_t.num5
+   
+   #當只有一筆資料時直接顯示前段資料，如果有多筆，則須顯示單據清單，雙擊選中要顯示的資料
+   CALL aglt310_07_b_fill(p_glapld,p_glapdocno) RETURNING l_success
+   IF g_glap_d.getLength() <= 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "agl-00329" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   IF l_success = TRUE THEN
+      RETURN
+   END IF
+   LET l_flag=FALSE]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_glapld,p_glapdocno]]>
+  </point>
+  <point name="input.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      DISPLAY ARRAY g_glap_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+         BEFORE ROW
+            #確定當下選擇的筆數
+            LET l_ac = DIALOG.getCurrentRow("s_detail1")
+            LET g_detail_idx = l_ac
+            
+         BEFORE DISPLAY
+           
+      END DISPLAY
+      
+      BEFORE DIALOG
+      
+      ON ACTION modify_detail
+      IF l_ac > 0 THEN
+         CALL aglt310_07_cmdrun()
+      END IF
+      
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+   
+   IF l_flag= TRUE THEN  ]]>
+  </point>
+  <point name="show.body.reference" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_glap_d[l_ac].glapld
+   LET g_ref_fields[2] = g_glap_d[l_ac].glapdocno
+   CALL ap_ref_array2(g_ref_fields," SELECT glce001,glce002 FROM glce_t WHERE glceent = '"||g_enterprise||"' AND glceld = ? AND glce001 = ? AND glce002 = ? ","") RETURNING g_rtn_fields 
+   LET g_glap_d[l_ac].glce001 = g_rtn_fields[1] 
+   LET g_glap_d[l_ac].glce002 = g_rtn_fields[2] 
+   DISPLAY BY NAME g_glap_d[l_ac].glce001,g_glap_d[l_ac].glce002]]>
+  </point>
+  <section id="aglt310_07.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000066
+#+ 
+#+ Filename...: aglt310_07
+#+ Description: 追溯來源單據
+#+ Creator....: 02599(2014-12-29 22:30:09)
+#+ Modifier...: 02599(2015-03-25 11:32:55) -SD/PR-
+]]>
+  </section>
+  <section id="aglt310_07.global" ver="4" status="" src="s" readonly="">
+    <![CDATA[#應用 c02b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_glap_d        RECORD
+       glapdocno LIKE glap_t.glapdocno, 
+   glapld LIKE glap_t.glapld, 
+   glap007 LIKE glap_t.glap007, 
+   glap008 LIKE glap_t.glap008, 
+   glce001 LIKE glce_t.glce001, 
+   glce002 LIKE glce_t.glce002, 
+   gzzz001 LIKE type_t.chr500
+       END RECORD
+ 
+ 
+DEFINE g_glap_d          DYNAMIC ARRAY OF type_g_glap_d
+DEFINE g_glap_d_t        type_g_glap_d
+ 
+ 
+DEFINE g_glapld_t   LIKE glap_t.glapld    #Key值備份
+DEFINE g_glapdocno_t      LIKE glap_t.glapdocno    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point    
+]]>
+  </section>
+  <section id="aglt310_07.input" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aglt310_07(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglt310_07 WITH FORM cl_ap_formpath("agl","aglt310_07")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_glap_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD glapdocno
+            #add-point:BEFORE FIELD glapdocno
+            {<point name="input.b.page1.glapdocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD glapdocno
+            
+            #add-point:AFTER FIELD glapdocno
+            {<point name="input.a.page1.glapdocno" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE glapdocno
+            #add-point:ON CHANGE glapdocno
+            {<point name="input.g.page1.glapdocno" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD glapld
+            #add-point:BEFORE FIELD glapld
+            {<point name="input.b.page1.glapld" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD glapld
+            
+            #add-point:AFTER FIELD glapld
+            {<point name="input.a.page1.glapld" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE glapld
+            #add-point:ON CHANGE glapld
+            {<point name="input.g.page1.glapld" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD glap007
+            #add-point:BEFORE FIELD glap007
+            {<point name="input.b.page1.glap007" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD glap007
+            
+            #add-point:AFTER FIELD glap007
+            {<point name="input.a.page1.glap007" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE glap007
+            #add-point:ON CHANGE glap007
+            {<point name="input.g.page1.glap007" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD glap008
+            #add-point:BEFORE FIELD glap008
+            {<point name="input.b.page1.glap008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD glap008
+            
+            #add-point:AFTER FIELD glap008
+            {<point name="input.a.page1.glap008" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE glap008
+            #add-point:ON CHANGE glap008
+            {<point name="input.g.page1.glap008" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD glce001
+            #add-point:BEFORE FIELD glce001
+            {<point name="input.b.page1.glce001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD glce001
+            
+            #add-point:AFTER FIELD glce001
+            {<point name="input.a.page1.glce001" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE glce001
+            #add-point:ON CHANGE glce001
+            {<point name="input.g.page1.glce001" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD glce002
+            #add-point:BEFORE FIELD glce002
+            {<point name="input.b.page1.glce002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD glce002
+            
+            #add-point:AFTER FIELD glce002
+            {<point name="input.a.page1.glce002" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE glce002
+            #add-point:ON CHANGE glce002
+            {<point name="input.g.page1.glce002" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD gzzz001
+            #add-point:BEFORE FIELD gzzz001
+            {<point name="input.b.page1.gzzz001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD gzzz001
+            
+            #add-point:AFTER FIELD gzzz001
+            {<point name="input.a.page1.gzzz001" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE gzzz001
+            #add-point:ON CHANGE gzzz001
+            {<point name="input.g.page1.gzzz001" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.glapdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD glapdocno
+            #add-point:ON ACTION controlp INFIELD glapdocno
+            {<point name="input.c.page1.glapdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.glapld
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD glapld
+            #add-point:ON ACTION controlp INFIELD glapld
+            {<point name="input.c.page1.glapld" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.glap007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD glap007
+            #add-point:ON ACTION controlp INFIELD glap007
+            {<point name="input.c.page1.glap007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.glap008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD glap008
+            #add-point:ON ACTION controlp INFIELD glap008
+            {<point name="input.c.page1.glap008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.glce001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD glce001
+            #add-point:ON ACTION controlp INFIELD glce001
+            {<point name="input.c.page1.glce001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.glce002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD glce002
+            #add-point:ON ACTION controlp INFIELD glce002
+            {<point name="input.c.page1.glce002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzzz001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD gzzz001
+            #add-point:ON ACTION controlp INFIELD gzzz001
+            {<point name="input.c.page1.gzzz001" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglt310_07 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aglt310_07.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aglt310_07.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

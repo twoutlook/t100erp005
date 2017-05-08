@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi340" module="abg" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="08171" crtdt="2016-08-05 14:15:32" modid="08171" moddt="2016-08-11 09:28:46" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="模擬收入對應預算細項設置">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgce001,bgce001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgce002,bgce002_desc(chr500),bgce003,bgce003_desc(chr500),bgcestus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bgce002,bgceownid,bgceownid_desc(chr500),bgceowndp,bgceowndp_desc(chr500),bgcecrtid,bgcecrtid_desc(chr500),bgcecrtdp,bgcecrtdp_desc(chr500),bgcecrtdt,bgcemodid,bgcemodid_desc(chr500),bgcemoddt"/>
+      <var id="bs_field" value="bgce001" pk="bgce001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi340" method="dialog">
+    <section id="input">
+      <input id="head" field="bgce001"/>
+      <input id="body" page="1" field="bgce002,bgce003,bgcestus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bgce001"/>
+      <construct id="body" page="1" field="bgce002,bgce003,bgcestus"/>
+      <construct id="body" page="2" field="bgceownid,bgceowndp,bgcecrtid,bgcecrtdp,bgcecrtdt,bgcemodid,bgcemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bgce001"/>
+      <set id="head" type="no_entry" field="bgce001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bgce001">
+        <after>
+          <reference field="bgce001_desc" ref_field="bgce001" map_field="bgce001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;11&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_12" state="i"/>
+        <controlp form="q_ooal002_12" state="c"/>
+      </column>
+      <column id="bgce001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgce002">
+        <after>
+          <reference field="bgce002_desc" ref_field="bgce_t.bgce002" map_field="bgce001" ref_sql="SELECT bgccl003 FROM bgccl_t WHERE bgcclent=$varg_enterprise$var AND bgccl001=? AND bgccl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bgce002_desc"/>
+      <column id="bgce003">
+        <after>
+          <reference field="bgce003_desc" ref_field="bgce001,bgce003" map_field="bgce001,bgce003" ref_sql="SELECT bgael003 FROM bgael_t WHERE bgaelent=$varg_enterprise$var AND bgael006=? AND bgael001=? AND bgael002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bgce003_desc"/>
+      <column id="bgcestus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bgceownid">
+        <after>
+          <reference field="bgceownid_desc" ref_field="bgce_t.bgceownid" map_field="bgceownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgceownid_desc"/>
+      <column id="bgceowndp">
+        <after>
+          <reference field="bgceowndp_desc" ref_field="bgce_t.bgceowndp" map_field="bgceowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgceowndp_desc"/>
+      <column id="bgcecrtid">
+        <after>
+          <reference field="bgcecrtid_desc" ref_field="bgce_t.bgcecrtid" map_field="bgcecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgcecrtid_desc"/>
+      <column id="bgcecrtdp">
+        <after>
+          <reference field="bgcecrtdp_desc" ref_field="bgce_t.bgcecrtdp" map_field="bgcecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgcecrtdp_desc"/>
+      <column id="bgcecrtdt"/>
+      <column id="bgcemodid">
+        <after>
+          <reference field="bgcemodid_desc" ref_field="bgce_t.bgcemodid" map_field="bgcemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgcemodid_desc"/>
+      <column id="bgcemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgce_t" pk="bgce001">
+      <sql id="forupd_sql" type="sql" query="SELECT bgce001,&apos;&apos; FROM bgce_t WHERE bgceent= ? AND bgce001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bgce001,&apos;&apos; FROM bgce_t" order="bgce001"/>
+    </head>
+    <body id="bgce_t" page="1,2" linked="" pk="bgce002" fk="bgce001">
+      <sql id="forupd_sql_detail" query="SELECT bgce002,&apos;&apos;,bgce003,&apos;&apos;,bgcestus,&apos;&apos;,bgceownid,&apos;&apos;,bgceowndp,&apos;&apos;,bgcecrtid,&apos;&apos;,bgcecrtdp,&apos;&apos;,bgcecrtdt,bgcemodid,&apos;&apos;,bgcemoddt FROM bgce_t WHERE bgceent=? AND bgce001=? AND bgce002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgce002,&apos;&apos;,bgce003,&apos;&apos;,bgcestus,&apos;&apos;,bgceownid,&apos;&apos;,bgceowndp,&apos;&apos;,bgcecrtid,&apos;&apos;,bgcecrtdp,&apos;&apos;,bgcecrtdt,bgcemodid,&apos;&apos;,bgcemoddt FROM bgce_t WHERE bgceent= ? AND bgce001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

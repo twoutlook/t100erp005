@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt561_01" module="anm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01727" crtdt="2015-04-28 17:05:01" modid="01727" moddt="2015-04-28 17:29:57" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="匯入回款清單">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbasite,nmbasite_desc(chr80),nmba002,nmba002_desc(chr80),nmbacomp,nmbacomp_desc(chr80),nmbadocno,nmbadocdt,excel(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="browser"/>
+      <action id="query" type="standard"/>
+      <action id="download"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt561_01" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbasite,nmba002,nmbacomp,nmbadocno,nmbadocdt,excel"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="nmbasite">
+        <after/>
+        <controlp form="q_xrah002_3" state="i"/>
+        <controlp form="q_xrah002_3" state="c"/>
+      </column>
+      <column id="nmbasite_desc"/>
+      <column id="nmba002">
+        <after/>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="nmba002_desc"/>
+      <column id="nmbacomp">
+        <after/>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmbacomp_desc"/>
+      <column id="nmbadocno">
+        <controlp form="q_ooba002_4" state="i"/>
+        <controlp form="q_nmbadocno" state="c"/>
+      </column>
+      <column id="nmbadocdt"/>
+      <column id="excel"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmba_t" pk="nmbacomp,nmbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmbasite,&apos;&apos;,nmba002,&apos;&apos;,nmbacomp,&apos;&apos;,nmbadocno,nmbadocdt,&apos;&apos; FROM nmba_t WHERE nmbaent= ? AND nmbacomp=? AND nmbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="nmbacomp,nmbadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

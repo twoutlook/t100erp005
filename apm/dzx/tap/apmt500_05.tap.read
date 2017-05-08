@@ -1,0 +1,2338 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmt500_05" std_prog="apmt500_05" erpver="1.0" module="APM" ver="9" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.apmt500_05_set_entry" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_05_set_entry()
+   
+    CALL cl_set_comp_entry("sfcbdocno,sfcb003,sfcb004",TRUE)
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_set_no_entry" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_05_set_no_entry()
+DEFINE l_sfaa061   LIKE sfaa_t.sfaa061
+
+    IF NOT cl_null(g_sfcb_m.sfcbdocno) THEN
+       CALL cl_set_comp_entry("sfcbdocno",FALSE)
+    END IF
+    
+    LET l_sfaa061 = ''
+    SELECT sfaa061 INTO l_sfaa061 FROM sfaa_t WHERE sfaaent = g_enterprise AND sfaadocno = g_sfcb_m.sfcbdocno
+    IF l_sfaa061 != 'Y' THEN
+       CALL cl_set_comp_entry("sfcb003,sfcb004",FALSE)
+    END IF
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_sfcbdocno_chk" order="3" ver="7" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#工單單號檢查
+PRIVATE FUNCTION apmt500_05_sfcbdocno_chk(p_sfcbdocno)
+DEFINE p_sfcbdocno LIKE sfcb_t.sfcbdocno
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_pmdl006   LIKE pmdl_t.pmdl006
+
+    LET r_success = TRUE
+    
+    SELECT pmdl006 INTO l_pmdl006 FROM pmdl_t WHERE pmdlent = g_enterprise AND pmdldocno = g_pmdldocno
+    
+    IF NOT cl_null(p_sfcbdocno) THEN 
+       #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+       INITIALIZE g_chkparam.* TO NULL
+       
+       #設定g_chkparam.*的參數
+       LET g_chkparam.arg1 = p_sfcbdocno
+
+       IF l_pmdl006 = '8' THEN   #協作採購單
+          IF NOT cl_chk_exist("v_sfcbdocno_2") THEN
+             #檢查失敗時後續處理
+             LET r_success = FALSE
+             RETURN r_success
+          END IF
+       ELSE
+          IF NOT cl_chk_exist("v_sfcbdocno_1") THEN
+             #檢查失敗時後續處理
+             LET r_success = FALSE
+             RETURN r_success
+          END IF
+       END IF
+    END IF
+    RETURN r_success
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_sfcb001_chk" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#RUN CARD 檢查
+PRIVATE FUNCTION apmt500_05_sfcb001_chk(p_sfcbdocno,p_sfcb001)
+DEFINE p_sfcbdocno LIKE sfcb_t.sfcbdocno
+DEFINE p_sfcb001   LIKE sfcb_t.sfcb001
+DEFINE r_success   LIKE type_t.num5
+
+    LET r_success = TRUE
+    IF NOT cl_null(p_sfcb001) THEN 
+       #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+       INITIALIZE g_chkparam.* TO NULL
+       
+       #設定g_chkparam.*的參數
+       LET g_chkparam.arg1 = p_sfcbdocno
+       LET g_chkparam.arg2 = p_sfcb001
+       
+       #呼叫檢查存在並帶值的library
+       IF NOT cl_chk_exist("v_sfcb001") THEN
+          #檢查失敗時後續處理
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+    END IF
+    RETURN r_success
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_set_required" order="5" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_05_set_required()
+DEFINE l_sfaa061   LIKE sfaa_t.sfaa061
+
+    LET l_sfaa061 = ''
+    SELECT sfaa061 INTO l_sfaa061 FROM sfaa_t WHERE sfaaent = g_enterprise AND sfaadocno = g_sfcb_m.sfcbdocno
+    IF l_sfaa061 = 'Y' THEN   #走製程流程
+       CALL cl_set_comp_required("sfcb003,sfcb004",TRUE)
+    END IF
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_set_no_required" order="6" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_05_set_no_required()
+   
+    CALL cl_set_comp_required("sfcb003,sfcb004",FALSE)
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_sfcb003_chk" order="7" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#作業編號檢查
+PRIVATE FUNCTION apmt500_05_sfcb003_chk(p_sfcbdocno,p_sfcb001,p_sfcb003)
+DEFINE p_sfcbdocno LIKE sfcb_t.sfcbdocno
+DEFINE p_sfcb001   LIKE sfcb_t.sfcb001
+DEFINE p_sfcb003   LIKE sfcb_t.sfcb003
+DEFINE r_success   LIKE type_t.num5
+
+    LET r_success = TRUE
+    IF NOT cl_null(p_sfcb003) THEN 
+       #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+       INITIALIZE g_chkparam.* TO NULL
+       
+       #設定g_chkparam.*的參數
+       LET g_chkparam.arg1 = g_site
+       LET g_chkparam.arg2 = p_sfcbdocno
+       LET g_chkparam.arg3 = p_sfcb001
+       LET g_chkparam.arg4 = p_sfcb003
+       
+       #呼叫檢查存在並帶值的library
+       IF NOT cl_chk_exist("v_sfcb003") THEN
+          #檢查失敗時後續處理
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+    END IF
+    RETURN r_success
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_sfcb004_chk" order="8" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#製程序檢查
+PRIVATE FUNCTION apmt500_05_sfcb004_chk(p_sfcbdocno,p_sfcb001,p_sfcb003,p_sfcb004)
+DEFINE p_sfcbdocno LIKE sfcb_t.sfcbdocno
+DEFINE p_sfcb001   LIKE sfcb_t.sfcb001
+DEFINE p_sfcb003   LIKE sfcb_t.sfcb003
+DEFINE p_sfcb004   LIKE sfcb_t.sfcb004
+DEFINE r_success   LIKE type_t.num5
+
+    LET r_success = TRUE
+    IF NOT cl_null(p_sfcb004) THEN 
+       #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+       INITIALIZE g_chkparam.* TO NULL
+       
+       #設定g_chkparam.*的參數
+       LET g_chkparam.arg1 = g_site
+       LET g_chkparam.arg2 = p_sfcbdocno
+       LET g_chkparam.arg3 = p_sfcb001
+       LET g_chkparam.arg4 = p_sfcb003
+       LET g_chkparam.arg5 = p_sfcb004
+       
+       #呼叫檢查存在並帶值的library
+       IF NOT cl_chk_exist("v_sfcb004_1") THEN
+          #檢查失敗時後續處理
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+    END IF
+    RETURN r_success
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_sfcb003_ref" order="9" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_05_sfcb003_ref()
+     
+     INITIALIZE g_ref_fields TO NULL
+     LET g_ref_fields[1] = g_sfcb_m.sfcb003
+     CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+     LET g_sfcb_m.sfcb003_desc = '', g_rtn_fields[1] , ''
+     DISPLAY BY NAME g_sfcb_m.sfcb003_desc
+     
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_ins_pmdn_1" order="10" ver="9" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#走製程流程時，新增採購單身
+PRIVATE FUNCTION apmt500_05_ins_pmdn_1()
+DEFINE r_success    LIKE type_t.num5
+DEFINE l_sfaa       RECORD LIKE sfaa_t.*
+DEFINE l_sfcb       RECORD LIKE sfcb_t.*
+DEFINE l_pmdn       RECORD LIKE pmdn_t.*
+DEFINE l_pmdl       RECORD LIKE pmdl_t.*
+DEFINE l_rate       LIKE inaj_t.inaj014
+DEFINE l_sql        STRING
+DEFINE l_qty        LIKE pmdp_t.pmdp023
+DEFINE l_imaf173    LIKE imaf_t.imaf173
+DEFINE l_imaf174    LIKE imaf_t.imaf174
+DEFINE l_cnt        LIKE type_t.num10
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_ooef008    LIKE ooef_t.ooef008
+DEFINE l_ooef009    LIKE ooef_t.ooef009
+DEFINE l_oodbl004  LIKE oodbl_t.oodbl004  #稅別名稱
+DEFINE l_oodb005   LIKE oodb_t.oodb005    #含稅否
+DEFINE l_oodb006   LIKE oodb_t.oodb006    #稅率 
+DEFINE l_oodb011   LIKE oodb_t.oodb011    #取得稅別類型1:正常稅率2:依料件設定
+
+   LET r_success = TRUE
+   
+   SELECT * INTO l_sfaa.* FROM sfaa_t WHERE sfaaent = g_enterprise AND sfaadocno = g_sfcb_m.sfcbdocno
+    
+   SELECT * INTO l_pmdl.* FROM pmdl_t WHERE pmdlent = g_enterprise AND pmdldocno = g_pmdldocno
+   
+   LET l_sql = " SELECT * FROM sfcb_t",
+               "  WHERE sfcbent = '",g_enterprise,"'",        
+               "    AND sfcbdocno = '",g_sfcb_m.sfcbdocno,"'", 
+               "    AND sfcb001 = '",g_sfcb_m.sfcb001,"'",     
+               "    AND sfcb003 = '",g_sfcb_m.sfcb003,"'",
+               "    AND sfcb004 = '",g_sfcb_m.sfcb004,"'",
+               " ORDER BY sfcbdocno,sfcb001,sfcb002"               
+
+   PREPARE apmt500_05_ins_pmdn_p1 FROM l_sql
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'prepare apmt500_05_ins_pmdn_p1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF      
+   
+   DECLARE apmt500_05_ins_pmdn_cs1 CURSOR FOR apmt500_05_ins_pmdn_p1
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'declare apmt500_05_ins_pmdn_cs1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   FOREACH apmt500_05_ins_pmdn_cs1 INTO l_sfcb.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach apmt500_05_ins_pmdn_cs1'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      INITIALIZE l_pmdn.* TO NULL
+      
+      LET l_pmdn.pmdnent   = g_enterprise      #企業編號
+      LET l_pmdn.pmdnsite  = g_site            #營運據點
+      LET l_pmdn.pmdndocno = g_pmdldocno       #採購單號
+      
+      #項次
+      SELECT MAX(pmdnseq) + 1 INTO l_pmdn.pmdnseq
+        FROM pmdn_t
+       WHERE pmdnent   = g_enterprise
+         AND pmdndocno = l_pmdn.pmdndocno
+      IF cl_null(l_pmdn.pmdnseq) THEN
+         LET l_pmdn.pmdnseq = 1
+      END IF
+      LET l_pmdn.pmdn001   = l_sfaa.sfaa010    #料件編號
+      LET l_pmdn.pmdn002   = ' '               #產品特徵
+      LET l_pmdn.pmdn003   = ''                #包裝容器
+      LET l_pmdn.pmdn004   = l_sfcb.sfcb003    #作業編號
+      LET l_pmdn.pmdn005   = l_sfcb.sfcb004    #製程序  
+      LET l_pmdn.pmdn006   = l_sfcb.sfcb020    #採購單位
+      
+      IF cl_null(l_sfcb.sfcb027) THEN LET l_sfcb.sfcb027 = 0 END IF
+      IF cl_null(l_sfcb.sfcb029) THEN LET l_sfcb.sfcb029 = 0 END IF
+      IF cl_null(l_sfcb.sfcb030) THEN LET l_sfcb.sfcb030 = 0 END IF
+      IF cl_null(l_sfcb.sfcb031) THEN LET l_sfcb.sfcb031 = 0 END IF
+      IF cl_null(l_sfcb.sfcb032) THEN LET l_sfcb.sfcb032 = 0 END IF
+      IF cl_null(l_sfcb.sfcb033) THEN LET l_sfcb.sfcb033 = 0 END IF
+      IF cl_null(l_sfcb.sfcb034) THEN LET l_sfcb.sfcb034 = 0 END IF
+      IF cl_null(l_sfcb.sfcb035) THEN LET l_sfcb.sfcb035 = 0 END IF
+      IF cl_null(l_sfcb.sfcb036) THEN LET l_sfcb.sfcb036 = 0 END IF
+      IF cl_null(l_sfcb.sfcb037) THEN LET l_sfcb.sfcb037 = 0 END IF
+      IF cl_null(l_sfcb.sfcb038) THEN LET l_sfcb.sfcb038 = 0 END IF
+      IF cl_null(l_sfcb.sfcb039) THEN LET l_sfcb.sfcb039 = 0 END IF
+      IF cl_null(l_sfcb.sfcb041) THEN LET l_sfcb.sfcb041 = 0 END IF
+      IF cl_null(l_sfcb.sfcb042) THEN LET l_sfcb.sfcb042 = 0 END IF
+      
+      #可委外數=標準產出數量(sfcb027)+重工轉入(sfcb029)+工單轉入(sfcb030)+分割轉入(sfcb031)+合併轉入(sfcb032)
+      # -良品轉出(sfcb033)-重工轉出(sfcb034)-工單轉出(sfcb035)-當站報廢(sfcb036)-當站下線(sfcb037)
+      # -分割轉出(sfcb038)-合併轉出(sfcb039)-委外數量(sfcb041)+委外完工數量(sfcb042)
+      #採購數量
+      LET l_pmdn.pmdn007  = l_sfcb.sfcb027 + l_sfcb.sfcb029 + l_sfcb.sfcb030 + l_sfcb.sfcb031 + l_sfcb.sfcb032 
+                            - l_sfcb.sfcb033 - l_sfcb.sfcb034 - l_sfcb.sfcb035 - l_sfcb.sfcb036 - l_sfcb.sfcb037 
+                            - l_sfcb.sfcb038 - l_sfcb.sfcb039 - l_sfcb.sfcb041 + l_sfcb.sfcb042
+      
+      #已委外數量
+      CALL apmt500_05_get_qty('1',l_sfcb.sfcbdocno,l_sfcb.sfcb001,l_sfaa.sfaa010,' ',l_sfcb.sfcb003,l_sfcb.sfcb004,l_sfcb.sfcb020)
+            RETURNING l_qty 
+       
+      LET l_pmdn.pmdn007 = l_pmdn.pmdn007 - l_qty
+      
+      IF l_pmdn.pmdn007 = 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      #參考單位
+      SELECT imaf015 INTO l_pmdn.pmdn008 FROM imaf_t
+       WHERE imafent  = g_enterprise
+         AND imafsite = g_site
+         AND imaf001  = l_pmdn.pmdn001
+         
+      #參考數量 
+      #若没有参考单位时,参考数量DEFAULT NULL
+      IF cl_null(l_pmdn.pmdn008) THEN
+         LET l_pmdn.pmdn009 = NULL
+      ELSE
+         #CALL s_aimi190_get_convert(l_pmdn.pmdn001,l_pmdn.pmdn006,l_pmdn.pmdn008)
+         #     RETURNING l_success,l_rate
+         #IF NOT l_success THEN
+         #   LET l_rate = 1
+         #END IF
+         #LET l_pmdn.pmdn009 = l_pmdn.pmdn007 * l_rate
+         CALL s_aooi250_convert_qty(l_pmdn.pmdn001,l_pmdn.pmdn006,l_pmdn.pmdn008,l_pmdn.pmdn007)
+                   RETURNING l_success,l_pmdn.pmdn009
+      END IF
+         
+      LET l_pmdn.pmdn010   = l_pmdn.pmdn006    #計價單位
+      LET l_pmdn.pmdn011   = l_pmdn.pmdn007    #計價數量
+      LET l_pmdn.pmdn014   = l_sfcb.sfcb045    #到庫日期
+    
+      IF NOT cl_null(l_pmdn.pmdn014) THEN
+         #推算"到厂日期"及"出貨日期"
+         LET l_imaf173 = 0
+         LET l_imaf174 = 0
+         SELECT imaf173,imaf174 INTO l_imaf173,l_imaf174
+           FROM imaf_t
+          WHERE imafent = g_enterprise AND imafsite = g_site AND imaf001 = l_pmdn.pmdn001
+         LET l_imaf173 = l_imaf173 * -1
+         LET l_imaf174 = l_imaf174 * -1
+         
+         #根据当前营运据点g_site抓取aooi120中设置的行事历参照表号
+         SELECT ooef008,ooef009 INTO l_ooef008,l_ooef009 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001=g_site
+          
+         #以下倒推,由到库日期往前推算到厂日期,再由到厂日期推算交货日期
+         #1.到廠日期 = 到库日期 - [T:料件據點進銷存檔].[C:到庫前置時間]
+         IF NOT cl_null(l_imaf174) AND l_imaf174 <> 0 THEN
+            CALL s_date_get_work_date(g_site,l_ooef008,l_ooef009,l_pmdn.pmdn014,0,l_imaf174) RETURNING l_pmdn.pmdn013
+         ELSE
+            LET l_pmdn.pmdn013 = l_pmdn.pmdn014
+         END IF
+         #2.出貨日期= 到厂日期 - [T:料件據點進銷存檔].[C:到廠前置時間]                              
+         IF NOT cl_null(l_imaf173) AND l_imaf173 <> 0 THEN
+            CALL s_date_get_work_date(g_site,l_ooef008,l_ooef009,l_pmdn.pmdn013,0,l_imaf173) RETURNING l_pmdn.pmdn012
+         ELSE
+            LET l_pmdn.pmdn012 = l_pmdn.pmdn013
+         END IF
+      END IF
+      
+      LET l_pmdn.pmdn015   = 0    #單價 
+      #等取单价的应用元件
+      #LET l_pmdn.pmdn015 = 1
+      
+      LET l_pmdn.pmdn016   = l_pmdl.pmdl011    #稅別 
+      LET l_pmdn.pmdn017   = l_pmdl.pmdl012    #稅率 
+      
+      #取得稅別類型
+      CALL s_tax_chk(g_site,l_pmdl.pmdl011)
+        RETURNING l_success,l_oodbl004,l_oodb005,l_oodb006,l_oodb011
+      IF l_oodb011 = '2' AND NOT cl_null(l_pmdn.pmdn001) AND NOT cl_null(l_pmdl.pmdl024) THEN
+         #依料件設定
+         CALL s_tax_chktype(g_site,l_pmdl.pmdl004,l_pmdn.pmdn001,'2',l_pmdl.pmdl024)
+              RETURNING l_success,l_pmdn.pmdn016,l_pmdn.pmdn017
+         IF NOT l_success THEN
+            #稅別檢查失敗，將稅別、稅率清空
+            LET l_pmdn.pmdn016 = ''
+            LET l_pmdn.pmdn017 = ''
+         END IF                   
+      END IF
+      IF cl_null(l_pmdn.pmdn016) OR cl_null(l_pmdn.pmdn017) THEN
+         #依正常稅率
+         LET l_pmdn.pmdn016 = l_pmdl.pmdl011
+         LET l_pmdn.pmdn017 = l_pmdl.pmdl012
+      END IF 
+      
+      #子件特性
+      #若拆件式工单时,为'10',否则为'1'
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM sfba_t
+       WHERE sfbaent   = g_enterprise
+         AND sfbadocno = g_sfcb.sfcbdocno
+         AND sfba006   = l_pmdn.pmdn001
+         AND sfba015   > 0
+      IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+      IF l_cnt > 0 THEN
+         LET l_pmdn.pmdn019 = '8'    #代买料
+      ELSE
+         IF l_sfaa.sfaa003 = '3' THEN      
+            LET l_pmdn.pmdn019= '10'  #拆件主件
+         ELSE
+            LET l_pmdn.pmdn019= '1'  #一般
+         END IF
+      END IF
+      
+      LET l_pmdn.pmdn020   = '1'               #緊急度                       
+      LET l_pmdn.pmdn021   = 'N'               #保稅                    
+      LET l_pmdn.pmdn022   = 'Y'               #部分交貨                
+      LET l_pmdn.pmdnunit  = g_site            #收貨據點                 
+      LET l_pmdn.pmdnorga  = g_site            #付款據點                 
+      LET l_pmdn.pmdn023   = l_pmdl.pmdl004    #送貨供應商              
+      LET l_pmdn.pmdn024   = 'N'               #多交期                  
+      LET l_pmdn.pmdn025   = l_pmdl.pmdl025    #收貨地址代碼            
+      LET l_pmdn.pmdn026   = l_pmdl.pmdl026    #帳款地址代碼 
+      
+      #供應商料號
+      DECLARE apmt500_05_ins_pmdn_sel_cs1 SCROLL CURSOR FOR
+       SELECT pmao004 FROM pmao_t
+        WHERE pmaoent = g_enterprise 
+          AND pmao001 = l_pmdl.pmdl004
+          AND pmao002 = l_pmdn.pmdn001
+          AND pmao003 = l_pmdn.pmdn002
+        ORDER BY pmao007 DESC
+        
+      OPEN apmt500_05_ins_pmdn_sel_cs1 
+      FETCH FIRST apmt500_05_ins_pmdn_sel_cs1 INTO l_pmdn.pmdn027
+      
+      LET l_pmdn.pmdn028   = l_sfaa.sfaa034    #收貨庫位                
+      LET l_pmdn.pmdn029   = l_sfaa.sfaa035    #收貨儲位                
+      LET l_pmdn.pmdn030   = l_sfaa.sfaa059    #收貨批號                
+      LET l_pmdn.pmdn031   = l_pmdl.pmdl020    #運輸方式                
+      LET l_pmdn.pmdn032   = '1'               #取貨模式                
+      LET l_pmdn.pmdn033   = 0                 #備品率                   
+      LET l_pmdn.pmdn035   = '1'               #價格核決                
+      LET l_pmdn.pmdn036   = l_sfaa.sfaa028    #專案編號                
+      LET l_pmdn.pmdn037   = l_sfaa.sfaa029    #WBS編號                 
+      LET l_pmdn.pmdn038   = l_sfaa.sfaa030    #活動編號                
+      LET l_pmdn.pmdn039   = ''                #費用原因
+      
+      #以下5个字段等价格应用元件      
+      LET l_pmdn.pmdn040   = '1'               #取價來源    
+      LET l_pmdn.pmdn041   = ''                #價格參考單號
+      LET l_pmdn.pmdn042   = ''                #價格參考項次
+      LET l_pmdn.pmdn043   = 0                 #取出價格    
+      LET l_pmdn.pmdn044   = 0                 #價差比      
+      LET l_pmdn.pmdn045   ='1'                #行狀態
+
+      CALL s_apmt500_get_price(l_pmdl.pmdl017,l_pmdl.pmdl004,l_pmdn.pmdn001,l_pmdn.pmdn002,l_pmdl.pmdl015,
+          l_pmdn.pmdn016,l_pmdl.pmdl009,l_pmdl.pmdl010,l_pmdl.pmdl023,g_pmdldocno,
+          l_pmdl.pmdldocdt,l_pmdn.pmdn010,l_pmdn.pmdn011,g_site,l_pmdl.pmdl054,'2',l_pmdn.pmdn004,l_pmdn.pmdn005)
+        RETURNING l_pmdn.pmdn040,l_pmdn.pmdn043,l_pmdn.pmdn041,l_pmdn.pmdn042
+      
+      LET l_pmdn.pmdn015 = l_pmdn.pmdn043
+      
+      #未稅金額/#含稅金額/#稅額
+      CALL s_apmt500_get_amount(l_pmdn.pmdndocno,l_pmdn.pmdnseq,l_pmdl.pmdl015,
+                                l_pmdn.pmdn007,l_pmdn.pmdn015,l_pmdn.pmdn016)
+           RETURNING l_pmdn.pmdn046,l_pmdn.pmdn048,l_pmdn.pmdn047
+
+      LET l_pmdn.pmdn049   = ''                #理由碼      
+      LET l_pmdn.pmdn050   = ''                #備註        
+      LET l_pmdn.pmdn051   = ''                #結案理由碼  
+      LET l_pmdn.pmdn900   = ''                #保留欄位str 
+      LET l_pmdn.pmdn999   = ''                #保留欄位end
+      
+      LET l_pmdn.pmdn052 = ''
+      LET l_sql = " SELECT qcap006 FROM qcap_t ",
+                 " WHERE qcapent = '",g_enterprise,"' ",
+                 "  AND qcapsite = '",l_pmdn.pmdnsite,"' ",
+                 "  AND qcap001 = '",l_pmdn.pmdn001,"' ",
+                 "  AND qcap002 = '",l_pmdl.pmdl004,"' "
+                 
+      IF l_pmdn.pmdn002 IS NOT NULL THEN
+         LET l_sql = l_sql ," AND ( qcap005 = '",l_pmdn.pmdn002,"' OR qcap005 = 'ALL' )"
+      END IF
+      IF (NOT cl_null(l_pmdn.pmdn004)) AND (NOT cl_null(l_pmdn.pmdn005)) THEN
+         LET l_sql = l_sql ," AND ( qcap003 = '",l_pmdn.pmdn004,"' OR qcap003 = 'ALL' ) AND qcap004 = '",l_pmdn.pmdn005,"' "
+      END IF
+      
+      PREPARE get_qcap1 FROM l_sql
+      EXECUTE get_qcap1 INTO l_pmdn.pmdn052   #總筆數
+      FREE get_qcap1
+      IF cl_null(l_pmdn.pmdn052) THEN
+         #若沒有維護aqci050,再從aqci040中帶值
+         SELECT imae114 INTO l_pmdn.pmdn052 FROM imae_t 
+             WHERE imaeent = g_enterprise AND imaesite = l_pmdn.pmdnsite AND imae001 = l_pmdn.pmdn001
+             
+      END IF
+      
+      IF cl_null(l_pmdn.pmdn052) THEN
+         LET l_pmdn.pmdn052 = 'N'
+      END IF  
+           
+
+      INSERT INTO pmdn_t VALUES(l_pmdn.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      CALL s_apmt500_gen_pmdq(l_pmdn.pmdndocno,l_pmdn.pmdnseq) RETURNING l_success
+      IF NOT l_success THEN
+         RETURN r_success
+      END IF
+      
+      #插入"pmdo_t:採購交期明細檔"
+      CALL apmt500_05_ins_pmdo(l_sfcb.*,l_pmdn.*)
+           RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF           
+      #插入"pmdp_t:採購關聯單據明細檔"
+      CALL apmt500_05_ins_pmdp(l_sfcb.*,l_pmdn.*)
+           RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+      #更新工单sfcb041 委外数量
+      #代买料不影响可委外数量
+      IF l_pmdn.pmdn019 <> '8' THEN
+         UPDATE sfcb_t SET sfcb041 = sfcb041 + l_pmdn.pmdn007
+          WHERE sfcbent   = g_enterprise
+            AND sfcbdocno = l_sfcb.sfcbdocno
+            AND sfcb001   = l_sfcb.sfcb001
+            AND sfcb002   = l_sfcb.sfcb002
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'update sfcb041'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+      END IF
+      
+   END FOREACH
+   
+   RETURN r_success
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_ins_pmdn" order="11" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apmt500_05_ins_pmdn()
+DEFINE l_sfaa061    LIKE sfaa_t.sfaa061
+DEFINE l_success    LIKE type_t.num5
+DEFINE r_success    LIKE type_t.num5
+DEFINE l_pmdl040    LIKE pmdl_t.pmdl040
+DEFINE l_pmdl041    LIKE pmdl_t.pmdl041
+DEFINE l_pmdl042    LIKE pmdl_t.pmdl042
+DEFINE l_n          LIKE type_t.num5
+
+    LET r_success = TRUE
+    
+    LET l_sfaa061 = ''
+    SELECT sfaa061 INTO l_sfaa061 FROM sfaa_t WHERE sfaaent = g_enterprise AND sfaadocno = g_sfcb_m.sfcbdocno
+    IF l_sfaa061 = 'Y' THEN  #走製程流程
+       CALL apmt500_05_ins_pmdn_1() RETURNING l_success
+    ELSE
+       LET l_n = 0
+       SELECT COUNT(*) INTO l_n FROM sfad_t WHERE sfadent = g_enterprise AND sfaddocno = g_sfcb_m.sfcbdocno
+       IF l_n > 0 THEN  #有維護產品特徵
+          CALL apmt500_05_ins_pmdn_2() RETURNING l_success
+       ELSE   #未維護產品特徵
+          CALL apmt500_05_ins_pmdn_3() RETURNING l_success
+       END IF
+    END IF
+    
+    IF NOT l_success THEN
+       LET r_success = FALSE
+       RETURN r_success
+    END IF
+    
+    #更新單頭的未税/含税/税额
+    SELECT SUM(pmdn046),SUM(pmdn047),SUM(pmdn048) INTO l_pmdl040,l_pmdl041,l_pmdl042
+      FROM pmdn_t
+     WHERE pmdnent   = g_enterprise
+       AND pmdndocno = p_pmdndocno
+    IF cl_null(l_pmdl040) THEN LET l_pmdl040 = 0 END IF
+    IF cl_null(l_pmdl041) THEN LET l_pmdl041 = 0 END IF
+    IF cl_null(l_pmdl042) THEN LET l_pmdl042 = 0 END IF
+    UPDATE pmdl_t SET pmdl040 = l_pmdl040, pmdl041 = l_pmdl041, pmdl042 = l_pmdl042
+     WHERE pmdlent   = g_enterprise
+       AND pmdldocno = g_pmdldocno
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = SQLCA.sqlcode
+       LET g_errparam.extend = 'update pmdl_t SUM'
+       LET g_errparam.popup = TRUE
+       CALL cl_err()
+
+       LET r_success = FALSE
+       RETURN r_success
+    END IF
+    
+    RETURN r_success
+    
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_ins_pmdn_2" order="12" ver="9" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#不走製程流程時，新增採購單身
+PRIVATE FUNCTION apmt500_05_ins_pmdn_2()
+DEFINE r_success    LIKE type_t.num5
+DEFINE l_sfaa       RECORD LIKE sfaa_t.*
+DEFINE l_sfcb       RECORD LIKE sfcb_t.*
+DEFINE l_sfad       RECORD LIKE sfad_t.*
+DEFINE l_pmdn       RECORD LIKE pmdn_t.*
+DEFINE l_pmdl       RECORD LIKE pmdl_t.*
+DEFINE l_sql        STRING
+DEFINE l_qty        LIKE pmdp_t.pmdp023
+DEFINE l_rate       LIKE inaj_t.inaj014
+DEFINE l_imaf173    LIKE imaf_t.imaf173
+DEFINE l_imaf174    LIKE imaf_t.imaf174
+DEFINE l_cnt        LIKE type_t.num10
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_ooef008    LIKE ooef_t.ooef008
+DEFINE l_ooef009    LIKE ooef_t.ooef009
+DEFINE l_oodbl004  LIKE oodbl_t.oodbl004  #稅別名稱
+DEFINE l_oodb005   LIKE oodb_t.oodb005    #含稅否
+DEFINE l_oodb006   LIKE oodb_t.oodb006    #稅率 
+DEFINE l_oodb011   LIKE oodb_t.oodb011    #取得稅別類型1:正常稅率2:依料件設定
+
+   LET r_success = TRUE
+   
+   SELECT * INTO l_sfaa.* FROM sfaa_t WHERE sfaaent = g_enterprise AND sfaadocno = g_sfcb_m.sfcbdocno
+   
+   #不走製程時，只會生成一筆製程單身資料
+   SELECT * INTO l_sfcb.* FROM sfcb_t WHERE sfcbent = g_enterprise 
+      AND sfcbdocno = g_sfcb_m.sfcbdocno AND sfcb001 = g_sfcb_m.sfcb001
+      
+   SELECT * INTO l_pmdl.* FROM pmdl_t WHERE pmdlent = g_enterprise AND pmdldocno = g_pmdldocno
+   
+   LET l_sql = " SELECT * FROM sfad_t",
+               "  WHERE sfadent = '",g_enterprise,"'",        
+               "    AND sfaddocno = '",g_sfcb_m.sfcbdocno,"'", 
+               " ORDER BY sfad001"               
+
+   PREPARE apmt500_05_ins_pmdn_p2 FROM l_sql
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'prepare apmt500_05_ins_pmdn_p2'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF      
+   
+   DECLARE apmt500_05_ins_pmdn_cs2 CURSOR FOR apmt500_05_ins_pmdn_p2
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'declare apmt500_05_ins_pmdn_cs2'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   FOREACH apmt500_05_ins_pmdn_cs2 INTO l_sfad.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach apmt500_05_ins_pmdn_cs2'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      INITIALIZE l_pmdn.* TO NULL
+      
+      LET l_pmdn.pmdnent   = g_enterprise      #企業編號
+      LET l_pmdn.pmdnsite  = g_site            #營運據點
+      LET l_pmdn.pmdndocno = g_pmdldocno       #採購單號
+      
+      #項次
+      SELECT MAX(pmdnseq) + 1 INTO l_pmdn.pmdnseq
+        FROM pmdn_t
+       WHERE pmdnent   = g_enterprise
+         AND pmdndocno = l_pmdn.pmdndocno
+      IF cl_null(l_pmdn.pmdnseq) THEN
+         LET l_pmdn.pmdnseq = 1
+      END IF
+      LET l_pmdn.pmdn001   = l_sfaa.sfaa010    #料件編號
+      LET l_pmdn.pmdn002   = l_sfad.sfad001    #產品特徵
+      LET l_pmdn.pmdn003   = ''                #包裝容器
+      LET l_pmdn.pmdn004   = ''                #作業編號
+      LET l_pmdn.pmdn005   = ''                #製程序  
+      LET l_pmdn.pmdn006   = l_sfcb.sfcb020    #採購單位
+      
+      #已委外數量
+      CALL apmt500_05_get_qty('1',l_sfcb.sfcbdocno,l_sfcb.sfcb001,l_sfaa.sfaa010,' ',l_sfcb.sfcb003,l_sfcb.sfcb004,l_sfcb.sfcb020)
+            RETURNING l_qty 
+       
+      #採購數量
+      LET l_pmdn.pmdn007 = l_sfad.sfad002 - l_qty
+      IF l_pmdn.pmdn007 = 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      #參考單位
+      SELECT imaf015 INTO l_pmdn.pmdn008 FROM imaf_t
+       WHERE imafent  = g_enterprise
+         AND imafsite = g_site
+         AND imaf001  = l_pmdn.pmdn001
+         
+      #參考數量 
+      #若没有参考单位时,参考数量DEFAULT NULL
+      IF cl_null(l_pmdn.pmdn008) THEN
+         LET l_pmdn.pmdn009 = NULL
+      ELSE
+         #CALL s_aimi190_get_convert(l_pmdn.pmdn001,l_pmdn.pmdn006,l_pmdn.pmdn008)
+         #     RETURNING l_success,l_rate
+         #IF NOT l_success THEN
+         #   LET l_rate = 1
+         #END IF
+         #LET l_pmdn.pmdn009 = l_pmdn.pmdn007 * l_rate
+         CALL s_aooi250_convert_qty(l_pmdn.pmdn001,l_pmdn.pmdn006,l_pmdn.pmdn008,l_pmdn.pmdn007)
+                   RETURNING l_success,l_pmdn.pmdn009
+      END IF
+         
+      LET l_pmdn.pmdn010   = l_pmdn.pmdn006    #計價單位
+      LET l_pmdn.pmdn011   = l_pmdn.pmdn007    #計價數量
+      LET l_pmdn.pmdn014   = l_sfcb.sfcb045    #到庫日期
+    
+      IF NOT cl_null(l_pmdn.pmdn014) THEN
+         #推算"到厂日期"及"出貨日期"
+         LET l_imaf173 = 0
+         LET l_imaf174 = 0
+         SELECT imaf173,imaf174 INTO l_imaf173,l_imaf174
+           FROM imaf_t
+          WHERE imafent = g_enterprise AND imafsite = g_site AND imaf001 = l_pmdn.pmdn001
+         LET l_imaf173 = l_imaf173 * -1
+         LET l_imaf174 = l_imaf174 * -1
+         
+         #根据当前营运据点g_site抓取aooi120中设置的行事历参照表号
+         SELECT ooef008,ooef009 INTO l_ooef008,l_ooef009 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001=g_site
+          
+         #以下倒推,由到库日期往前推算到厂日期,再由到厂日期推算交货日期
+         #1.到廠日期 = 到库日期 - [T:料件據點進銷存檔].[C:到庫前置時間]
+         IF NOT cl_null(l_imaf174) AND l_imaf174 <> 0 THEN
+            CALL s_date_get_work_date(g_site,l_ooef008,l_ooef009,l_pmdn.pmdn014,0,l_imaf174) RETURNING l_pmdn.pmdn013
+         ELSE
+            LET l_pmdn.pmdn013 = l_pmdn.pmdn014
+         END IF
+         #2.出貨日期= 到厂日期 - [T:料件據點進銷存檔].[C:到廠前置時間]                              
+         IF NOT cl_null(l_imaf173) AND l_imaf173 <> 0 THEN
+            CALL s_date_get_work_date(g_site,l_ooef008,l_ooef009,l_pmdn.pmdn013,0,l_imaf173) RETURNING l_pmdn.pmdn012
+         ELSE
+            LET l_pmdn.pmdn012 = l_pmdn.pmdn013
+         END IF
+      END IF
+      
+      LET l_pmdn.pmdn015   = 0    #單價 
+      #等取单价的应用元件
+      #LET l_pmdn.pmdn015 = 1
+      
+      LET l_pmdn.pmdn016   = l_pmdl.pmdl011    #稅別 
+      LET l_pmdn.pmdn017   = l_pmdl.pmdl012    #稅率 
+      
+      #取得稅別類型
+      CALL s_tax_chk(g_site,l_pmdl.pmdl011)
+        RETURNING l_success,l_oodbl004,l_oodb005,l_oodb006,l_oodb011
+      IF l_oodb011 = '2' AND NOT cl_null(l_pmdn.pmdn001) AND NOT cl_null(l_pmdl.pmdl024) THEN
+         #依料件設定
+         CALL s_tax_chktype(g_site,l_pmdl.pmdl004,l_pmdn.pmdn001,'2',l_pmdl.pmdl024)
+              RETURNING l_success,l_pmdn.pmdn016,l_pmdn.pmdn017
+         IF NOT l_success THEN
+            #稅別檢查失敗，將稅別、稅率清空
+            LET l_pmdn.pmdn016 = ''
+            LET l_pmdn.pmdn017 = ''
+         END IF                   
+      END IF
+      IF cl_null(l_pmdn.pmdn016) OR cl_null(l_pmdn.pmdn017) THEN
+         #依正常稅率
+         LET l_pmdn.pmdn016 = l_pmdl.pmdl011
+         LET l_pmdn.pmdn017 = l_pmdl.pmdl012
+      END IF 
+      
+      
+      #子件特性
+      #若拆件式工单时,为'10',否则为'1'
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM sfba_t
+       WHERE sfbaent   = g_enterprise
+         AND sfbadocno = g_sfcb.sfcbdocno
+         AND sfba006   = l_pmdn.pmdn001
+         AND sfba015   > 0
+      IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+      IF l_cnt > 0 THEN
+         LET l_pmdn.pmdn019 = '8'    #代买料
+      ELSE
+         IF l_sfaa.sfaa003 = '3' THEN      
+            LET l_pmdn.pmdn019= '10'  #拆件主件
+         ELSE
+            LET l_pmdn.pmdn019= '1'  #一般
+         END IF
+      END IF
+      
+      LET l_pmdn.pmdn020   = '1'               #緊急度                       
+      LET l_pmdn.pmdn021   = 'N'               #保稅                    
+      LET l_pmdn.pmdn022   = 'Y'               #部分交貨                
+      LET l_pmdn.pmdnunit  = g_site            #收貨據點                 
+      LET l_pmdn.pmdnorga  = g_site            #付款據點                 
+      LET l_pmdn.pmdn023   = l_pmdl.pmdl004    #送貨供應商              
+      LET l_pmdn.pmdn024   = 'N'               #多交期                  
+      LET l_pmdn.pmdn025   = l_pmdl.pmdl025    #收貨地址代碼            
+      LET l_pmdn.pmdn026   = l_pmdl.pmdl026    #帳款地址代碼 
+      
+      #供應商料號
+      DECLARE apmt500_05_ins_pmdn_sel_cs2 SCROLL CURSOR FOR
+       SELECT pmao004 FROM pmao_t
+        WHERE pmaoent = g_enterprise 
+          AND pmao001 = l_pmdl.pmdl004
+          AND pmao002 = l_pmdn.pmdn001
+          AND pmao003 = l_pmdn.pmdn002
+        ORDER BY pmao007 DESC
+        
+      OPEN apmt500_05_ins_pmdn_sel_cs2
+      FETCH FIRST apmt500_05_ins_pmdn_sel_cs2 INTO l_pmdn.pmdn027
+      
+      LET l_pmdn.pmdn028   = l_sfaa.sfaa034    #收貨庫位                
+      LET l_pmdn.pmdn029   = l_sfaa.sfaa035    #收貨儲位                
+      LET l_pmdn.pmdn030   = l_sfaa.sfaa059    #收貨批號                
+      LET l_pmdn.pmdn031   = l_pmdl.pmdl020    #運輸方式                
+      LET l_pmdn.pmdn032   = '1'               #取貨模式                
+      LET l_pmdn.pmdn033   = 0                 #備品率                   
+      LET l_pmdn.pmdn035   = '1'               #價格核決                
+      LET l_pmdn.pmdn036   = l_sfaa.sfaa028    #專案編號                
+      LET l_pmdn.pmdn037   = l_sfaa.sfaa029    #WBS編號                 
+      LET l_pmdn.pmdn038   = l_sfaa.sfaa030    #活動編號                
+      LET l_pmdn.pmdn039   = ''                #費用原因
+      
+      #以下5个字段等价格应用元件      
+      LET l_pmdn.pmdn040   = '1'               #取價來源    
+      LET l_pmdn.pmdn041   = ''                #價格參考單號
+      LET l_pmdn.pmdn042   = ''                #價格參考項次
+      LET l_pmdn.pmdn043   = 0                 #取出價格    
+      LET l_pmdn.pmdn044   = 0                 #價差比      
+      LET l_pmdn.pmdn045   ='1'                #行狀態
+
+      CALL s_apmt500_get_price(l_pmdl.pmdl017,l_pmdl.pmdl004,l_pmdn.pmdn001,l_pmdn.pmdn002,l_pmdl.pmdl015,
+          l_pmdn.pmdn016,l_pmdl.pmdl009,l_pmdl.pmdl010,l_pmdl.pmdl023,g_pmdldocno,
+          l_pmdl.pmdldocdt,l_pmdn.pmdn010,l_pmdn.pmdn011,g_site,l_pmdl.pmdl054,'2',l_pmdn.pmdn004,l_pmdn.pmdn005)
+        RETURNING l_pmdn.pmdn040,l_pmdn.pmdn043,l_pmdn.pmdn041,l_pmdn.pmdn042
+      
+      LET l_pmdn.pmdn015 = l_pmdn.pmdn043
+      
+      #未稅金額/#含稅金額/#稅額
+      CALL s_apmt500_get_amount(l_pmdn.pmdndocno,l_pmdn.pmdnseq,l_pmdl.pmdl015,
+                                l_pmdn.pmdn007,l_pmdn.pmdn015,l_pmdn.pmdn016)
+           RETURNING l_pmdn.pmdn046,l_pmdn.pmdn048,l_pmdn.pmdn047
+
+      LET l_pmdn.pmdn049   = ''                #理由碼      
+      LET l_pmdn.pmdn050   = ''                #備註        
+      LET l_pmdn.pmdn051   = ''                #結案理由碼  
+      LET l_pmdn.pmdn900   = ''                #保留欄位str 
+      LET l_pmdn.pmdn999   = ''                #保留欄位end 
+      
+      LET l_pmdn.pmdn052 = ''
+      LET l_sql = " SELECT qcap006 FROM qcap_t ",
+                 " WHERE qcapent = '",g_enterprise,"' ",
+                 "  AND qcapsite = '",l_pmdn.pmdnsite,"' ",
+                 "  AND qcap001 = '",l_pmdn.pmdn001,"' ",
+                 "  AND qcap002 = '",l_pmdl.pmdl004,"' "
+                 
+      IF l_pmdn.pmdn002 IS NOT NULL THEN
+         LET l_sql = l_sql ," AND (qcap005 = '",l_pmdn.pmdn002,"' OR qcap005 = 'ALL' )"
+      END IF
+      IF (NOT cl_null(l_pmdn.pmdn004)) AND (NOT cl_null(l_pmdn.pmdn005)) THEN
+         LET l_sql = l_sql ," AND ( qcap003 = '",l_pmdn.pmdn004,"' OR qcap003 = 'ALL' ) AND qcap004 = '",l_pmdn.pmdn005,"' "
+      END IF
+      
+      PREPARE get_qcap2 FROM l_sql
+      EXECUTE get_qcap2 INTO l_pmdn.pmdn052   #總筆數
+      FREE get_qcap2
+      IF cl_null(l_pmdn.pmdn052) THEN
+         #若沒有維護aqci050,再從aqci040中帶值
+         SELECT imae114 INTO l_pmdn.pmdn052 FROM imae_t 
+             WHERE imaeent = g_enterprise AND imaesite = l_pmdn.pmdnsite AND imae001 = l_pmdn.pmdn001
+             
+      END IF
+      
+      IF cl_null(l_pmdn.pmdn052) THEN
+         LET l_pmdn.pmdn052 = 'N'
+      END IF
+
+      INSERT INTO pmdn_t VALUES(l_pmdn.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      CALL s_apmt500_gen_pmdq(l_pmdn.pmdndocno,l_pmdn.pmdnseq) RETURNING l_success
+      IF NOT l_success THEN
+         RETURN r_success
+      END IF
+      
+      #插入"pmdo_t:採購交期明細檔"
+      CALL apmt500_05_ins_pmdo(l_sfcb.*,l_pmdn.*)
+           RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF           
+      #插入"pmdp_t:採購關聯單據明細檔"
+      CALL apmt500_05_ins_pmdp(l_sfcb.*,l_pmdn.*)
+           RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+      #更新工单sfcb041 委外数量
+      #代买料不影响可委外数量
+      IF l_pmdn.pmdn019 <> '8' THEN
+         UPDATE sfcb_t SET sfcb041 = sfcb041 + l_pmdn.pmdn007
+          WHERE sfcbent   = g_enterprise
+            AND sfcbdocno = l_sfcb.sfcbdocno
+            AND sfcb001   = l_sfcb.sfcb001
+            AND sfcb002   = l_sfcb.sfcb002
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'update sfcb041'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+      END IF
+      
+   END FOREACH
+   
+   RETURN r_success
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_ins_pmdo" order="13" ver="7" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 从工单产生采购单 -- 产生采购交期明细单身pmdo_t
+# Memo...........:
+# Usage..........: CALL apmt500_05_ins_pmdo(p_sfcb,p_pmdn)
+#                       RETURNING r_success
+# Input parameter: p_sfcb         工单制程信息
+#                : p_pmdn         采购明细单身资料
+# Return code....: r_success      成功否标识符
+# Date & Author..: 2014/05/28 By lixiang (複製s_apmt500中的s_apmt500_gen_4_ins_pmdo)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt500_05_ins_pmdo(p_sfcb,p_pmdn)
+   DEFINE p_sfcb          RECORD LIKE sfcb_t.*
+   DEFINE p_pmdn          RECORD LIKE pmdn_t.*                          
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_pmdo          RECORD LIKE pmdo_t.*
+   DEFINE l_arr           DYNAMIC ARRAY OF RECORD
+                          item    LIKE sfac_t.sfac001,
+                          qty     LIKE pmdo_t.pmdo005,
+                          unit    LIKE sfac_t.sfac004,
+                          rate    LIKE pmdo_t.pmdo005,    #sfac003 / SUM(sfac003)
+                          QPA     LIKE pmdo_t.pmdo005,    #sfac003 / sfaa012
+                          pmdo005 LIKE pmdo_t.pmdo005,
+                          pmdo007 LIKE pmdo_t.pmdo007,
+                          pmdo008 LIKE pmdo_t.pmdo008,
+                          pmdo022 LIKE pmdo_t.pmdo022,
+                          pmdo032 LIKE pmdo_t.pmdo032,
+                          pmdo033 LIKE pmdo_t.pmdo033,
+                          pmdo034 LIKE pmdo_t.pmdo034
+                          END RECORD
+   DEFINE l_tot_pmdo007   LIKE pmdo_t.pmdo007
+   DEFINE l_tot_pmdo032   LIKE pmdo_t.pmdo032
+   DEFINE l_tot_pmdo033   LIKE pmdo_t.pmdo033
+   DEFINE l_tot_pmdo034   LIKE pmdo_t.pmdo034   
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_cnt           LIKE type_t.num10   
+   DEFINE l_flag          LIKE type_t.chr1
+   DEFINE l_sfaa061       LIKE sfaa_t.sfaa061
+   DEFINE l_sfaa012       LIKE sfaa_t.sfaa012
+   DEFINE l_j             LIKE type_t.num10
+   DEFINE l_sum_sfac003   LIKE sfac_t.sfac003
+   DEFINE l_oodb005       LIKE oodb_t.oodb005
+   DEFINE l_max_sum       LIKE pmdo_t.pmdo033
+   DEFINE l_rate          LIKE inaj_t.inaj014
+   
+   LET r_success = FALSE
+
+   #检查:应在事物中的
+   IF NOT s_transaction_chk('Y','0') THEN
+      RETURN r_success
+   END IF
+   
+   #说明:采购明细交期档对"多产出主件"时会有特别处理
+   #     若当下工单是一般工单,且多产出主件时,一笔"采购单身资料"pmdn_t会对应多笔pmdo_t"采购交期明细档"
+   #     pmdo_t中的(1)pmdo001"料件"记录多产出主件的料件号 (2)pmdo004"采购单位"记录多产出主件的生产单位
+   #               (3)pmdo005"采购数量"=pmdn007 * "多产出主件对生产料号的QPA"
+   #               (4)多笔多产出主件的pmdo007"折合主件数量"= pmdn007(主件的采购数量)
+   #               (5)pmdo008"QPA"=多产出主件对生产料号的QPA(SA决定)
+   #               (6)pmdo032"分批未税金额"=pmdn046(生产主件的未税金额)*多产出主件的占比数
+   #               (7)pmdo033/pmdo034类似
+   #               (8)pmdo022(单价),用pmdo032(未税金额)或是pmdo33(含税金额)/pmdo005
+   
+   #具体例子如下:
+   # |----------------------------------------------------------------------------------------------------------------
+   # |              | 料件编号     |预计产出量    |与生产料件的QPA (A)       | 生产总数 (B)   | 占比% (C)                 |
+   # |              |             |             |= sfac003 / sfaa012      | =SUM(sfac003) | =sfac003 / SUM(sfac003)   |
+   # |--------------|-------------|-------------|-------------------------|---------------|---------------------------|                                     
+   # |工单生产料件   | A           |100          |                         | 1000          |                           |
+   # |--------------|-------------|-------------|-------------------------|---------------|---------------------------|
+   # |多产出主件     | A1          |100          | 1                       |               | 0.1                       |
+   # |--------------|-------------|-------------|-------------------------|---------------|---------------------------|
+   # |              | A2          |300          | 3                       |               | 0.3                       |
+   # |--------------|-------------|-------------|-------------------------|---------------|---------------------------|               
+   # |              | A3          |600          | 6                       |               | 0.6                       |
+   # |----------------------------------------------------------------------------------------------------------------                
+   # |
+   # |                              
+   # |采购单身 pmdn_t     
+   # |-----------------------------------------------------------    
+   # |pmdn001  | pmdn015| pmdn007| pmdn046  | pmdn047 |pmdn048  |
+   # |---------|--------|--------|----------|---------|---------|
+   # |生产料件  | 单价   | 数量   | 未税      | 含税    |税额      |
+   # |---------|--------|--------|----------|---------|---------|
+   # |A        | 100    | 100    | 10000    | 11700   |1700     |
+   # |-----------------------------------------------------------
+   # |
+   # |采购交期明细档 pmdo_t  
+   # |-----------------------------------------------------------------------------------------------------------------------------------   
+   # |      |pmdo001   |pmdo004   |pmdo005       |pmdo007       |pmdo008   |pmdo022          | pmdo032      | pmdo033      | pmdo034     |
+   # |      |料件编号   |采购单位   |采购数量      |折合主件数量   |QPA       |参考单价          | 分批未税金额  | 分批含税金额  | 分批税额     |
+   # |------|----------|----------|--------------|--------------|----------|-----------------|--------------|--------------|-------------|
+   # |公式  |sfac001   |sfac004   |pmdn007 * A   |pmdn007 * C   |A         |未税金额/数量     | pmdn046 * C   | pmdn047 * C | pmdn048 * C |
+   # |      |          |          |              |              |          |或含税金额/数量   |              |              |             |
+   # |------|----------|----------|--------------|--------------|----------|-----------------|--------------|--------------|-------------|                                                         
+   # |      |A1        |PCS       |100           |10            |1         |10               | 1000         | 1170         | 170         |
+   # |------|----------|----------|--------------|--------------|----------|-----------------|--------------|--------------|-------------|
+   # |      |A2        |PCS       |300           |30            |3         |10               | 3000         | 3510         | 510         |
+   # |------|----------|----------|--------------|--------------|----------|-----------------|--------------|--------------|-------------|
+   # |      |A3        |PCS       |600           |60            |6         |10               | 6000         | 7020         | 1020        |
+   # |------|----------|----------|--------------|--------------|----------|-----------------|--------------|--------------|-------------|
+   # |合计   |          |          |1000          |100           |10        |30               | 10000        | 11700        | 1700        |
+   # |-----------------------------------------------------------------------------------------------------------------------------------                                                                                        
+
+   #若最后多产出主件的"折合主件数量"/"未税金额"/"含税金额"/"税额"与pmdn_t的那笔资料不匹配时,差异的部分由多产出主件金额最大的那笔资料吸收
+
+   LET l_i = 1
+   #制程工单时,资料取至pmdn,若是多产出主件时特别处理
+   SELECT sfaa012,sfaa061 INTO l_sfaa012,l_sfaa061 FROM sfaa_t
+    WHERE sfaaent   = g_enterprise
+      AND sfaadocno = p_sfcb.sfcbdocno
+   SELECT COUNT(*),SUM(sfac003) INTO l_cnt,l_sum_sfac003 FROM sfac_t
+    WHERE sfacent   = g_enterprise
+      AND sfacdocno = p_sfcb.sfcbdocno
+      AND sfac002   = '3'
+   IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+   IF cl_null(l_sum_sfac003) THEN LET l_sum_sfac003 = 0 END IF
+   #制程工单或是非多产出主件或代买料
+   IF l_sfaa061 = 'Y' OR l_cnt = 0 OR p_pmdn.pmdn019 = '8' THEN
+      LET l_flag = '2'
+      LET l_arr[1].item    = p_pmdn.pmdn001
+      LET l_arr[1].qty     = p_pmdn.pmdn007
+      LET l_arr[1].unit    = p_pmdn.pmdn006
+      LET l_arr[1].rate    = 1
+      LET l_arr[1].QPA     = 1
+      LET l_arr[1].pmdo005 = p_pmdn.pmdn007
+      LET l_arr[1].pmdo007 = p_pmdn.pmdn007
+      LET l_arr[1].pmdo008 = 1
+      LET l_arr[1].pmdo022 = p_pmdn.pmdn015
+      LET l_arr[1].pmdo032 = p_pmdn.pmdn046
+      LET l_arr[1].pmdo033 = p_pmdn.pmdn047
+      LET l_arr[1].pmdo034 = p_pmdn.pmdn048
+      LET l_cnt = 1
+   ELSE
+   #非制程工单 & 多产出主件
+      SELECT oodb005 INTO l_oodb005 FROM oodb_t,ooef_t
+        WHERE ooefent = oodbent AND oodbent = g_enterprise 
+          AND ooef001 = g_site 
+          AND ooef019 = oodb001
+          AND oodb002 = p_pmdn.pmdn016
+
+      LET l_flag = '1'
+      DECLARE apmt500_05_ins_pmdo_cs1 CURSOR FOR
+      SELECT sfac001,sfac003,sfac004,1,1,0,0,1,0,0,0,0 FROM sfac_t
+       WHERE sfacent   = g_enterprise
+         AND sfacdocno = p_sfcb.sfcbdocno
+         AND sfac002   = '3'
+         
+      LET l_tot_pmdo007 = 0
+      LET l_tot_pmdo032 = 0
+      LET l_tot_pmdo033 = 0
+      LET l_tot_pmdo034 = 0
+      LET l_max_sum     = 0
+      
+      FOREACH apmt500_05_ins_pmdo_cs1 INTO l_arr[l_i].*
+         LET l_arr[l_i].rate    = l_arr[l_i].qty / l_sum_sfac003
+         LET l_arr[l_i].QPA     = l_arr[l_i].qty / l_sfaa012
+         LET l_arr[l_i].pmdo005 = p_pmdn.pmdn007 * l_arr[l_i].QPA
+         LET l_arr[l_i].pmdo007 = p_pmdn.pmdn007 * l_arr[l_i].rate
+         LET l_arr[l_i].pmdo008 = l_arr[l_i].QPA 
+         LET l_arr[l_i].pmdo032 = p_pmdn.pmdn046 * l_arr[l_i].rate 
+         LET l_arr[l_i].pmdo033 = p_pmdn.pmdn047 * l_arr[l_i].rate 
+         LET l_arr[l_i].pmdo034 = p_pmdn.pmdn048 * l_arr[l_i].rate             
+         IF l_oodb005 = 'Y' THEN  #含税
+            LET l_arr[l_i].pmdo022 = l_arr[l_i].pmdo033 / l_arr[l_i].pmdo005
+         ELSE                     #不含税
+            LET l_arr[l_i].pmdo022 = l_arr[l_i].pmdo032 / l_arr[l_i].pmdo005         
+         END IF
+
+         LET l_tot_pmdo007 = l_tot_pmdo007 + l_arr[l_i].pmdo007
+         LET l_tot_pmdo032 = l_tot_pmdo032 + l_arr[l_i].pmdo032
+         LET l_tot_pmdo033 = l_tot_pmdo033 + l_arr[l_i].pmdo033
+         LET l_tot_pmdo034 = l_tot_pmdo034 + l_arr[l_i].pmdo034        
+     
+         IF l_max_sum < l_arr[l_i].pmdo033 THEN
+            LET l_max_sum = l_arr[l_i].pmdo033
+            LET l_j = l_i
+         END IF 
+         LET l_i = l_i + 1
+      END FOREACH
+      LET l_cnt = l_i - 1 
+      
+      #多有尾差时,把差异的单价分在单价最大的一笔上
+      #折合主件数量
+      IF l_tot_pmdo007 <> p_pmdn.pmdn007 THEN
+          LET l_arr[l_j].pmdo007 = l_arr[l_j].pmdo007 + p_pmdn.pmdn007 - l_tot_pmdo007 
+      END IF
+      #未税金额
+      IF l_tot_pmdo032 <> p_pmdn.pmdn046 THEN
+          LET l_arr[l_j].pmdo032 = l_arr[l_j].pmdo032 + p_pmdn.pmdn046 - l_tot_pmdo032 
+      END IF
+      #含税金额
+      IF l_tot_pmdo033 <> p_pmdn.pmdn047 THEN
+          LET l_arr[l_j].pmdo033 = l_arr[l_j].pmdo033 + p_pmdn.pmdn047 - l_tot_pmdo033
+      END IF
+      #税额
+      IF l_tot_pmdo034 <> p_pmdn.pmdn048 THEN
+          LET l_arr[l_j].pmdo034 = l_arr[l_j].pmdo034 + p_pmdn.pmdn048 - l_tot_pmdo034 
+      END IF
+
+   END IF
+   
+   FOR l_i = 1 TO l_cnt
+       INITIALIZE l_pmdo.* TO NULL
+       LET l_pmdo.pmdoent   = p_pmdn.pmdnent               #企業編號    
+       LET l_pmdo.pmdosite  = p_pmdn.pmdnsite              #營運據點    
+       LET l_pmdo.pmdodocno = p_pmdn.pmdndocno             #採購單號    
+       LET l_pmdo.pmdoseq   = p_pmdn.pmdnseq               #採購項次 
+       #項序  
+       SELECT MAX(pmdoseq1) + 1 INTO l_pmdo.pmdoseq1
+         FROM pmdo_t
+        WHERE pmdoent   = g_enterprise
+          AND pmdodocno = l_pmdo.pmdodocno
+          AND pmdoseq   = l_pmdo.pmdoseq
+       IF cl_null(l_pmdo.pmdoseq1) THEN
+          LET l_pmdo.pmdoseq1 = 1
+       END IF
+       LET l_pmdo.pmdoseq2  = 1                            #分批序   
+       LET l_pmdo.pmdo001   = l_arr[l_i].item              #料件編號    
+       LET l_pmdo.pmdo002   = p_pmdn.pmdn002               #產品特徵    
+       LET l_pmdo.pmdo003   = p_pmdn.pmdn019               #子件特性    
+       LET l_pmdo.pmdo004   = l_arr[l_i].unit              #採購單位
+       
+       ##採購總數量        
+       LET l_pmdo.pmdo005   = l_arr[l_i].pmdo005               
+       LET l_pmdo.pmdo006   = l_pmdo.pmdo005               #分批採購數量
+       LET l_pmdo.pmdo007   = l_arr[l_i].pmdo007           #折合主件數量
+       LET l_pmdo.pmdo008   = l_arr[l_i].pmdo008           #QPA      
+       
+       LET l_pmdo.pmdo009   = '1'                          #交期類型    
+       LET l_pmdo.pmdo010   = ''                           #收貨時段    
+       LET l_pmdo.pmdo011   = p_pmdn.pmdn012               #出貨日期    
+       LET l_pmdo.pmdo012   = p_pmdn.pmdn013               #到廠日期    
+       LET l_pmdo.pmdo013   = p_pmdn.pmdn014               #到庫日期    
+       LET l_pmdo.pmdo014   = 'N'                          #MRP交期凍結 
+       LET l_pmdo.pmdo015   = 0                            #已收貨量    
+       LET l_pmdo.pmdo016   = 0                            #驗退量      
+       LET l_pmdo.pmdo017   = 0                            #倉退換貨量     
+       LET l_pmdo.pmdo019   = 0                            #已入庫量    
+       LET l_pmdo.pmdo020   = 0                            #VMI請款量   
+       LET l_pmdo.pmdo021   = '2'                          #交貨狀態    
+       LET l_pmdo.pmdo022   = l_arr[l_i].pmdo022           #參考價格 
+       LET l_pmdo.pmdo023   = p_pmdn.pmdn016               #稅別
+       LET l_pmdo.pmdo024   = p_pmdn.pmdn017               #稅率
+       LET l_pmdo.pmdo025   = ''                           #電子採購單號
+       LET l_pmdo.pmdo026   = g_user                       #最近修改人員
+       LET l_pmdo.pmdo027   = g_dept                       #最近修改時間
+       #分批參考單位
+       SELECT imaf015 INTO l_pmdo.pmdo028 FROM imaf_t
+        WHERE imafent  = g_enterprise
+          AND imafsite = g_site
+          AND imaf001  = l_pmdo.pmdo001
+          
+       #分批參考數量 
+       #若没有参考单位时,参考数量DEFAULT NULL
+       IF cl_null(l_pmdo.pmdo028) THEN
+          LET l_pmdo.pmdo029 = NULL
+       ELSE
+          #CALL s_aimi190_get_convert(l_pmdo.pmdo001,l_pmdo.pmdo004,l_pmdo.pmdo028)
+          #     RETURNING l_success,l_rate
+          #IF NOT l_success THEN
+          #   LET l_rate = 1
+          #END IF
+          #LET l_pmdo.pmdo029 = l_pmdo.pmdo006 * l_rate
+          CALL s_aooi250_convert_qty(l_pmdo.pmdo001,l_pmdo.pmdo004,l_pmdo.pmdo028,l_pmdo.pmdo006)
+                   RETURNING l_success,l_pmdo.pmdo029
+       END IF
+
+       LET l_pmdo.pmdo030   = l_pmdo.pmdo004               #分批計價單位
+       LET l_pmdo.pmdo031   = l_pmdo.pmdo006               #分批計價數量
+       
+       LET l_pmdo.pmdo032   = l_arr[l_i].pmdo032           #分批未稅金額
+       LET l_pmdo.pmdo033   = l_arr[l_i].pmdo033           #分批含稅金額
+       LET l_pmdo.pmdo034   = l_arr[l_i].pmdo034           #分批稅額    
+       LET l_pmdo.pmdo900   = p_pmdn.pmdn900               #保留欄位str 
+       LET l_pmdo.pmdo999   = p_pmdn.pmdn999               #保留欄位end 
+       INSERT INTO pmdo_t VALUES(l_pmdo.*)
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = 'insert pmdo_t'
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+
+          RETURN r_success
+       END IF   
+   END FOR
+   
+   LET r_success = TRUE
+   RETURN r_success
+   
+      
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_ins_pmdp" order="14" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 从工单产生采购单 -- 采购关联单据明细档 pmdp_t
+# Memo...........:
+# Usage..........: CALL apmt500_05_ins_pmdp(p_sfcb,p_pmdn)
+#                       RETURNING r_success
+# Input parameter: p_sfcb         工单制程信息
+#                : p_pmdn         采购明细单身资料
+# Return code....: r_success      成功否标识符
+# Date & Author..: 2014/05/28 By lixiang (複製s_apmt500中的s_apmt500_gen_4_ins_pmdp)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt500_05_ins_pmdp(p_sfcb,p_pmdn)
+   DEFINE p_sfcb          RECORD LIKE sfcb_t.*
+   DEFINE p_pmdn          RECORD LIKE pmdn_t.*                          
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_pmdp          RECORD LIKE pmdp_t.*
+
+   
+   LET r_success = FALSE
+
+   #检查:应在事物中的
+   IF NOT s_transaction_chk('Y','0') THEN
+      RETURN r_success
+   END IF
+   
+   INITIALIZE l_pmdp.* TO NULL
+
+   LET l_pmdp.pmdpent   = p_pmdn.pmdnent                #企業編號      
+   LET l_pmdp.pmdpsite  = p_pmdn.pmdnsite               #營運據點      
+   LET l_pmdp.pmdpdocno = p_pmdn.pmdndocno              #採購單號      
+   LET l_pmdp.pmdpseq   = p_pmdn.pmdnseq                #採購項次      
+   LET l_pmdp.pmdpseq1  = 1                             #項序          
+   LET l_pmdp.pmdp001   = p_pmdn.pmdn001                #料件編號      
+   LET l_pmdp.pmdp002   = p_pmdn.pmdn002                #產品特徵      
+   LET l_pmdp.pmdp003   = p_sfcb.sfcbdocno              #來源單號      
+   LET l_pmdp.pmdp004   = p_sfcb.sfcb001                #來源項次      
+   LET l_pmdp.pmdp005   = 0                             #來源項序      
+   LET l_pmdp.pmdp006   = 0                             #來源分批序    
+   LET l_pmdp.pmdp007   = p_pmdn.pmdn001                #來源料號      
+   LET l_pmdp.pmdp008   = p_pmdn.pmdn002                #來源產品特徵  
+   LET l_pmdp.pmdp009   = p_pmdn.pmdn004                #來源作業編號  
+   LET l_pmdp.pmdp010   = p_pmdn.pmdn005                #來源製程序    
+   LET l_pmdp.pmdp011   = ''                            #來源BOM特性   
+   LET l_pmdp.pmdp012   = ''                            #來源生產控制組
+   LET l_pmdp.pmdp021   = 1                             #沖銷順序      
+   LET l_pmdp.pmdp022   = p_sfcb.sfcb020                #需求單位      
+   LET l_pmdp.pmdp023   = p_pmdn.pmdn007                #需求數量      
+   LET l_pmdp.pmdp024   = p_pmdn.pmdn007                #折合採購量    
+   LET l_pmdp.pmdp025   = 0                             #已收貨量      
+   LET l_pmdp.pmdp026   = 0                             #已入庫量      
+   LET l_pmdp.pmdp900   = p_pmdn.pmdn900                #保留欄位str   
+   LET l_pmdp.pmdp999   = p_pmdn.pmdn999                #保留欄位end   
+   
+   INSERT INTO pmdp_t VALUES(l_pmdp.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert pmdp_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_get_qty" order="15" ver="7" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 从采购单取已经委外的数量-BY特征
+# Memo...........:
+# Usage..........: CALL apmt500_05_get_qty(p_type,p_pmdp003,p_pmdp004,p_pmdp007,p_pmdp008,p_pmdp009,p_pmdp010,p_sfcb020)
+#                       RETURNING r_qty1
+# Input parameter: p_type         製程 / 特徵
+#                : p_pmdp003      工单单号
+#                : p_pmdp004      RUN CARD
+#                : p_pmdp007      料号
+#                : p_pmdp008      特征
+#                : p_pmdp009      作业编号
+#                : p_pmdp010      作业序
+#                : p_sfcb020      制程站的转出单位
+# Return code....: r_qty1         已委外数量
+# Date & Author..: 2014-05-28 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmt500_05_get_qty(p_type,p_pmdp003,p_pmdp004,p_pmdp007,p_pmdp008,p_pmdp009,p_pmdp010,p_sfcb020)
+   DEFINE p_type         LIKE type_t.chr1
+   DEFINE l_sql          STRING
+   DEFINE p_pmdp003      LIKE pmdp_t.pmdp003
+   DEFINE p_pmdp004      LIKE pmdp_t.pmdp004
+   DEFINE p_pmdp007      LIKE pmdp_t.pmdp007
+   DEFINE p_pmdp008      LIKE pmdp_t.pmdp008
+   DEFINE p_pmdp009      LIKE pmdp_t.pmdp009
+   DEFINE p_pmdp010      LIKE pmdp_t.pmdp010
+   DEFINE p_sfcb020      LIKE sfcb_t.sfcb020
+   DEFINE r_qty          LIKE pmdp_t.pmdp023
+   DEFINE l_unit         LIKE pmdp_t.pmdp022
+   DEFINE l_qty          LIKE pmdp_t.pmdp023
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_rate         LIKE inaj_t.inaj014
+   DEFINE l_tot          LIKE pmdp_t.pmdp023
+
+   LET r_qty = 0
+   LET l_tot = 0
+   
+   
+   LET l_sql = "SELECT pmdp022,SUM(pmdp023) FROM pmdp_t,pmdl_t",
+               " WHERE pmdpent   = pmdlent AND pmdpent = ",g_enterprise,
+               "   AND pmdpdocno = pmdldocno ", 
+               "   AND pmdp003   = ? ",                    #工单单号
+               "   AND pmdp004   = ? "                     #RUN CARD               
+   
+   #製程
+   IF p_type = '1' THEN
+      LET l_sql = l_sql CLIPPED,
+                  "   AND pmdp009   = ? ",                    #作业编号
+                  "   AND pmdp010   = ? "                     #作业序
+   END IF
+   
+   #按特征
+   IF p_type = '2' THEN
+      LET l_sql = l_sql CLIPPED,"   AND pmdp008   = ? "    #特征
+   END IF
+   
+   #p_type = '3' 不走製程，且未維護產品特徵
+   
+   LET l_sql = l_sql CLIPPED,
+               "   AND pmdlstus <> 'X' ",
+               " GROUP BY pmdp022 "
+   PREPARE apmt500_05_def_cursor_p1 FROM l_sql
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'prepare apmt500_05_def_cursor_p1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+   
+   DECLARE apmt500_05_cs1 CURSOR FOR apmt500_05_def_cursor_p1
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'declare apmt500_05_cs1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+   
+   
+   IF p_type = '1' THEN   #製程
+      FOREACH apmt500_05_cs1 USING p_pmdp003,p_pmdp004,p_pmdp009,p_pmdp010 
+                          INTO l_unit,l_qty
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'foreach asfp400_cs1'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            RETURN r_qty
+         END IF
+         
+         LET l_rate = 1
+         IF l_unit <> p_sfcb020 THEN
+            #CALL s_aimi190_get_convert(p_pmdp007,l_unit,p_sfcb020)
+            #     RETURNING l_success,l_rate
+            CALL s_aooi250_convert_qty(p_pmdp007,l_unit,p_sfcb020,l_qty)
+                   RETURNING l_success,l_qty 
+            IF NOT l_success THEN
+               RETURN r_qty
+            END IF  
+                  
+         END IF
+         
+         #LET l_tot = l_tot + l_qty * l_rate
+         LET l_tot = l_tot + l_qty
+      END FOREACH
+   END IF
+   
+   IF p_type = '2' THEN   #特徵
+      FOREACH apmt500_05_cs1 USING p_pmdp003,p_pmdp004,p_pmdp008
+                          INTO l_unit,l_qty
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'foreach asfp400_cs1'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            RETURN r_qty
+         END IF
+         
+         LET l_rate = 1
+         IF l_unit <> p_sfcb020 THEN
+            #CALL s_aimi190_get_convert(p_pmdp007,l_unit,p_sfcb020)
+            #     RETURNING l_success,l_rate
+            CALL s_aooi250_convert_qty(p_pmdp007,l_unit,p_sfcb020,l_qty)
+                   RETURNING l_success,l_qty 
+            IF NOT l_success THEN
+               RETURN r_qty
+            END IF      
+         END IF
+         
+         #LET l_tot = l_tot + l_qty * l_rate
+         LET l_tot = l_tot + l_qty
+      END FOREACH
+   END IF
+   
+   IF p_type = '3' THEN   
+      FOREACH apmt500_05_cs1 USING p_pmdp003,p_pmdp004
+                          INTO l_unit,l_qty
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'foreach asfp400_cs1'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            RETURN r_qty
+         END IF
+         
+         LET l_rate = 1
+         IF l_unit <> p_sfcb020 THEN
+            #CALL s_aimi190_get_convert(p_pmdp007,l_unit,p_sfcb020)
+            #     RETURNING l_success,l_rate
+            CALL s_aooi250_convert_qty(p_pmdp007,l_unit,p_sfcb020,l_qty)
+                   RETURNING l_success,l_qty 
+            IF NOT l_success THEN
+               RETURN r_qty
+            END IF      
+         END IF
+         
+         #LET l_tot = l_tot + l_qty * l_rate
+         LET l_tot = l_tot + l_qty
+      END FOREACH
+   END IF
+   
+   LET r_qty = l_tot
+   RETURN r_qty
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt500_05_ins_pmdn_3" order="16" ver="7" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#不走製程、且未維護產品特徵
+PRIVATE FUNCTION apmt500_05_ins_pmdn_3()
+DEFINE r_success    LIKE type_t.num5
+DEFINE l_sfaa       RECORD LIKE sfaa_t.*
+DEFINE l_sfcb       RECORD LIKE sfcb_t.*
+DEFINE l_sfad       RECORD LIKE sfad_t.*
+DEFINE l_pmdn       RECORD LIKE pmdn_t.*
+DEFINE l_pmdl       RECORD LIKE pmdl_t.*
+DEFINE l_sql        STRING
+DEFINE l_qty        LIKE pmdp_t.pmdp023
+DEFINE l_rate       LIKE inaj_t.inaj014
+DEFINE l_imaf173    LIKE imaf_t.imaf173
+DEFINE l_imaf174    LIKE imaf_t.imaf174
+DEFINE l_cnt        LIKE type_t.num10
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_ooef008    LIKE ooef_t.ooef008
+DEFINE l_ooef009    LIKE ooef_t.ooef009
+
+   LET r_success = TRUE
+   
+   SELECT * INTO l_sfaa.* FROM sfaa_t WHERE sfaaent = g_enterprise AND sfaadocno = g_sfcb_m.sfcbdocno
+   
+   #不走製程時，只會生成一筆製程單身資料
+   SELECT * INTO l_sfcb.* FROM sfcb_t WHERE sfcbent = g_enterprise 
+      AND sfcbdocno = g_sfcb_m.sfcbdocno AND sfcb001 = g_sfcb_m.sfcb001
+      
+   SELECT * INTO l_pmdl.* FROM pmdl_t WHERE pmdlent = g_enterprise AND pmdldocno = g_pmdldocno
+   
+   
+   INITIALIZE l_pmdn.* TO NULL
+   
+   LET l_pmdn.pmdnent   = g_enterprise      #企業編號
+   LET l_pmdn.pmdnsite  = g_site            #營運據點
+   LET l_pmdn.pmdndocno = g_pmdldocno       #採購單號
+   
+   #項次
+   SELECT MAX(pmdnseq) + 1 INTO l_pmdn.pmdnseq
+     FROM pmdn_t
+    WHERE pmdnent   = g_enterprise
+      AND pmdndocno = l_pmdn.pmdndocno
+   IF cl_null(l_pmdn.pmdnseq) THEN
+      LET l_pmdn.pmdnseq = 1
+   END IF
+   LET l_pmdn.pmdn001   = l_sfaa.sfaa010    #料件編號
+   LET l_pmdn.pmdn002   = ' '    #產品特徵
+   LET l_pmdn.pmdn003   = ''                #包裝容器
+   LET l_pmdn.pmdn004   = ''                #作業編號
+   LET l_pmdn.pmdn005   = ''                #製程序  
+   LET l_pmdn.pmdn006   = l_sfcb.sfcb020    #採購單位
+   
+   #已委外數量
+   CALL apmt500_05_get_qty('3',l_sfcb.sfcbdocno,l_sfcb.sfcb001,l_sfaa.sfaa010,' ','','',l_sfcb.sfcb020)
+         RETURNING l_qty 
+    
+   #若生成單位為輸出單位不一致，進行換算
+   LET l_rate = 1
+   IF l_sfaa.sfaa013 <> l_sfcb.sfcb020 THEN
+      #CALL s_aimi190_get_convert(l_sfaa.sfaa010,l_sfaa.sfaa013,l_sfcb.sfcb020)
+      #     RETURNING l_success,l_rate  
+      CALL s_aooi250_convert_qty(l_sfaa.sfaa010,l_sfaa.sfaa013,l_sfcb.sfcb020,l_sfaa.sfaa012)
+                   RETURNING l_success,l_sfaa.sfaa012       
+   END IF
+
+   #採購數量
+   #LET l_pmdn.pmdn007 = l_sfaa.sfaa012 * l_rate - l_qty
+   LET l_pmdn.pmdn007 = l_sfaa.sfaa012 - l_qty
+   IF l_pmdn.pmdn007 = 0 THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #參考單位
+   SELECT imaf015 INTO l_pmdn.pmdn008 FROM imaf_t
+    WHERE imafent  = g_enterprise
+      AND imafsite = g_site
+      AND imaf001  = l_pmdn.pmdn001
+      
+   #參考數量 
+   #若没有参考单位时,参考数量DEFAULT NULL
+   IF cl_null(l_pmdn.pmdn008) THEN
+      LET l_pmdn.pmdn009 = NULL
+   ELSE
+      #CALL s_aimi190_get_convert(l_pmdn.pmdn001,l_pmdn.pmdn006,l_pmdn.pmdn008)
+      #     RETURNING l_success,l_rate
+      #IF NOT l_success THEN
+      #   LET l_rate = 1
+      #END IF
+      #LET l_pmdn.pmdn009 = l_pmdn.pmdn007 * l_rate
+      CALL s_aooi250_convert_qty(l_pmdn.pmdn001,l_pmdn.pmdn006,l_pmdn.pmdn008,l_pmdn.pmdn007)
+                   RETURNING l_success,l_pmdn.pmdn009
+   END IF
+      
+   LET l_pmdn.pmdn010   = l_pmdn.pmdn006    #計價單位
+   LET l_pmdn.pmdn011   = l_pmdn.pmdn007    #計價數量
+   LET l_pmdn.pmdn014   = l_sfcb.sfcb045    #到庫日期
+   
+   IF NOT cl_null(l_pmdn.pmdn014) THEN
+      #推算"到厂日期"及"出貨日期"
+      LET l_imaf173 = 0
+      LET l_imaf174 = 0
+      SELECT imaf173,imaf174 INTO l_imaf173,l_imaf174
+        FROM imaf_t
+       WHERE imafent = g_enterprise AND imafsite = g_site AND imaf001 = l_pmdn.pmdn001
+      LET l_imaf173 = l_imaf173 * -1
+      LET l_imaf174 = l_imaf174 * -1
+      
+      #根据当前营运据点g_site抓取aooi120中设置的行事历参照表号
+      SELECT ooef008,ooef009 INTO l_ooef008,l_ooef009 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001=g_site
+      
+      #以下倒推,由到库日期往前推算到厂日期,再由到厂日期推算交货日期
+      #1.到廠日期 = 到库日期 - [T:料件據點進銷存檔].[C:到庫前置時間]
+      IF NOT cl_null(l_imaf174) AND l_imaf174 <> 0 THEN
+         CALL s_date_get_work_date(g_site,l_ooef008,l_ooef009,l_pmdn.pmdn014,0,l_imaf174) RETURNING l_pmdn.pmdn013
+      ELSE
+         LET l_pmdn.pmdn013 = l_pmdn.pmdn014
+      END IF
+      #2.出貨日期= 到厂日期 - [T:料件據點進銷存檔].[C:到廠前置時間]                              
+      IF NOT cl_null(l_imaf173) AND l_imaf173 <> 0 THEN
+         CALL s_date_get_work_date(g_site,l_ooef008,l_ooef009,l_pmdn.pmdn013,0,l_imaf173) RETURNING l_pmdn.pmdn012
+      ELSE
+         LET l_pmdn.pmdn012 = l_pmdn.pmdn013
+      END IF
+   END IF
+   
+   LET l_pmdn.pmdn015   = 0    #單價 
+   #等取单价的应用元件
+   #LET l_pmdn.pmdn015 = 1
+   
+   LET l_pmdn.pmdn016   = l_pmdl.pmdl011    #稅別 
+   LET l_pmdn.pmdn017   = l_pmdl.pmdl012    #稅率 
+   
+   #子件特性
+   #若拆件式工单时,为'10',否则为'1'
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt FROM sfba_t
+    WHERE sfbaent   = g_enterprise
+      AND sfbadocno = g_sfcb.sfcbdocno
+      AND sfba006   = l_pmdn.pmdn001
+      AND sfba015   > 0
+   IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+   IF l_cnt > 0 THEN
+      LET l_pmdn.pmdn019 = '8'    #代买料
+   ELSE
+      IF l_sfaa.sfaa003 = '3' THEN      
+         LET l_pmdn.pmdn019= '10'  #拆件主件
+      ELSE
+         LET l_pmdn.pmdn019= '1'  #一般
+      END IF
+   END IF
+   
+   LET l_pmdn.pmdn020   = '1'               #緊急度                       
+   LET l_pmdn.pmdn021   = 'N'               #保稅                    
+   LET l_pmdn.pmdn022   = 'Y'               #部分交貨                
+   LET l_pmdn.pmdnunit  = g_site            #收貨據點                 
+   LET l_pmdn.pmdnorga  = g_site            #付款據點                 
+   LET l_pmdn.pmdn023   = l_pmdl.pmdl004    #送貨供應商              
+   LET l_pmdn.pmdn024   = 'N'               #多交期                  
+   LET l_pmdn.pmdn025   = l_pmdl.pmdl025    #收貨地址代碼            
+   LET l_pmdn.pmdn026   = l_pmdl.pmdl026    #帳款地址代碼 
+   
+   #供應商料號
+   DECLARE apmt500_05_ins_pmdn_sel_cs3 SCROLL CURSOR FOR
+    SELECT pmao004 FROM pmao_t
+     WHERE pmaoent = g_enterprise 
+       AND pmao001 = l_pmdl.pmdl004
+       AND pmao002 = l_pmdn.pmdn001
+       AND pmao003 = l_pmdn.pmdn002
+     ORDER BY pmao007 DESC
+     
+   OPEN apmt500_05_ins_pmdn_sel_cs2
+   FETCH FIRST apmt500_05_ins_pmdn_sel_cs2 INTO l_pmdn.pmdn027
+   
+   LET l_pmdn.pmdn028   = l_sfaa.sfaa034    #收貨庫位                
+   LET l_pmdn.pmdn029   = l_sfaa.sfaa035    #收貨儲位                
+   LET l_pmdn.pmdn030   = l_sfaa.sfaa059    #收貨批號                
+   LET l_pmdn.pmdn031   = l_pmdl.pmdl020    #運輸方式                
+   LET l_pmdn.pmdn032   = '1'               #取貨模式                
+   LET l_pmdn.pmdn033   = 0                 #備品率                  
+   LET l_pmdn.pmdn035   = '1'               #價格核決                
+   LET l_pmdn.pmdn036   = l_sfaa.sfaa028    #專案編號                
+   LET l_pmdn.pmdn037   = l_sfaa.sfaa029    #WBS編號                 
+   LET l_pmdn.pmdn038   = l_sfaa.sfaa030    #活動編號                
+   LET l_pmdn.pmdn039   = ''                #費用原因
+   
+   #以下5个字段等价格应用元件      
+   LET l_pmdn.pmdn040   = '1'               #取價來源    
+   LET l_pmdn.pmdn041   = ''                #價格參考單號
+   LET l_pmdn.pmdn042   = ''                #價格參考項次
+   LET l_pmdn.pmdn043   = 0                 #取出價格    
+   LET l_pmdn.pmdn044   = 0                 #價差比      
+   LET l_pmdn.pmdn045   ='1'                #行狀態
+
+   #未稅金額/#含稅金額/#稅額
+   CALL s_apmt500_get_amount(l_pmdn.pmdndocno,l_pmdn.pmdnseq,l_pmdl.pmdl015,
+                             l_pmdn.pmdn007,l_pmdn.pmdn015,l_pmdn.pmdn016)
+        RETURNING l_pmdn.pmdn046,l_pmdn.pmdn048,l_pmdn.pmdn047
+
+   LET l_pmdn.pmdn049   = ''                #理由碼      
+   LET l_pmdn.pmdn050   = ''                #備註        
+   LET l_pmdn.pmdn051   = ''                #結案理由碼  
+   LET l_pmdn.pmdn900   = ''                #保留欄位str 
+   LET l_pmdn.pmdn999   = ''                #保留欄位end 
+   
+   LET l_pmdn.pmdn052 = ''
+   LET l_sql = " SELECT qcap006 FROM qcap_t ",
+              " WHERE qcapent = '",g_enterprise,"' ",
+              "  AND qcapsite = '",l_pmdn.pmdnsite,"' ",
+              "  AND qcap001 = '",l_pmdn.pmdn001,"' ",
+              "  AND qcap002 = '",l_pmdl.pmdl004,"' "
+              
+   IF l_pmdn.pmdn002 IS NOT NULL THEN
+      LET l_sql = l_sql ," AND ( qcap005 = '",l_pmdn.pmdn002,"' OR qcap005 = 'ALL' )"
+   END IF
+   IF (NOT cl_null(l_pmdn.pmdn004)) AND (NOT cl_null(l_pmdn.pmdn005)) THEN
+      LET l_sql = l_sql ," AND ( qcap003 = '",l_pmdn.pmdn004,"' OR qcap003 = 'ALL' ) AND qcap004 = '",l_pmdn.pmdn005,"' "
+   END IF
+   
+   PREPARE get_qcap3 FROM l_sql
+   EXECUTE get_qcap3 INTO l_pmdn.pmdn052   #總筆數
+   FREE get_qcap3
+   IF cl_null(l_pmdn.pmdn052) THEN
+      #若沒有維護aqci050,再從aqci040中帶值
+      SELECT imae114 INTO l_pmdn.pmdn052 FROM imae_t 
+          WHERE imaeent = g_enterprise AND imaesite = l_pmdn.pmdnsite AND imae001 = l_pmdn.pmdn001
+          
+   END IF
+   
+   IF cl_null(l_pmdn.pmdn052) THEN
+      LET l_pmdn.pmdn052 = 'N'
+   END IF
+
+   INSERT INTO pmdn_t VALUES(l_pmdn.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   CALL s_apmt500_gen_pmdq(l_pmdn.pmdndocno,l_pmdn.pmdnseq) RETURNING l_success
+   IF NOT l_success THEN
+      RETURN r_success
+   END IF
+      
+   #插入"pmdo_t:採購交期明細檔"
+   CALL apmt500_05_ins_pmdo(l_sfcb.*,l_pmdn.*)
+        RETURNING l_success
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF           
+   #插入"pmdp_t:採購關聯單據明細檔"
+   CALL apmt500_05_ins_pmdp(l_sfcb.*,l_pmdn.*)
+        RETURNING l_success
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   #更新工单sfcb041 委外数量
+   #代买料不影响可委外数量
+   IF l_pmdn.pmdn019 <> '8' THEN
+      UPDATE sfcb_t SET sfcb041 = sfcb041 + l_pmdn.pmdn007
+       WHERE sfcbent   = g_enterprise
+         AND sfcbdocno = l_sfcb.sfcbdocno
+         AND sfcb001   = l_sfcb.sfcb001
+         AND sfcb002   = l_sfcb.sfcb002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'update sfcb041'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+      
+   RETURN r_success
+
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_pmdldocno   LIKE pmdl_t.pmdldocno]]>
+  </point>
+  <point name="input.a.sfcb001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_sfcb_m.sfcb001) THEN 
+               IF NOT apmt500_05_sfcb001_chk(g_sfcb_m.sfcbdocno,g_sfcb_m.sfcb001) THEN 
+                  LET g_sfcb_m.sfcb001 = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.sfcb002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_sfcb_m.sfcbdocno) AND NOT cl_null(g_sfcb_m.sfcb001) AND NOT cl_null(g_sfcb_m.sfcb002) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_sfcb_m.sfcbdocno != g_sfcbdocno_t  OR g_sfcb_m.sfcb001 != g_sfcb001_t  OR g_sfcb_m.sfcb002 != g_sfcb002_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfcb_t WHERE "||"sfcbent = '" ||g_enterprise|| "' AND "||"sfcbdocno = '"||g_sfcb_m.sfcbdocno ||"' AND "|| "sfcb001 = '"||g_sfcb_m.sfcb001 ||"' AND "|| "sfcb002 = '"||g_sfcb_m.sfcb002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.sfcb003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sfcb_m.sfcb003) THEN   
+               IF NOT apmt500_05_sfcb003_chk(g_sfcb_m.sfcbdocno,g_sfcb_m.sfcb001,g_sfcb_m.sfcb003) THEN 
+                  LET g_sfcb_m.sfcb003 = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL apmt500_05_sfcb003_ref()
+            DISPLAY BY NAME g_sfcb_m.sfcb003_desc
+
+]]>
+  </point>
+  <point name="input.a.sfcb004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_sfcb_m.sfcb004) THEN 
+               IF NOT apmt500_05_sfcb004_chk(g_sfcb_m.sfcbdocno,g_sfcb_m.sfcb001,g_sfcb_m.sfcb003,g_sfcb_m.sfcb004) THEN 
+                  LET g_sfcb_m.sfcb004 = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.sfcbdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_sfcb_m.sfcbdocno) THEN 
+               IF NOT apmt500_05_sfcbdocno_chk(g_sfcb_m.sfcbdocno) THEN 
+                  LET g_sfcb_m.sfcbdocno = ''
+                  NEXT FIELD CURRENT
+               END IF
+               #當工單只有一個Run Card，自動帶出
+               LET l_n = 0
+               SELECT COUNT(DISTINCT(sfcb001)) INTO l_n FROM sfcb_t WHERE sfcbent = g_enterprise AND sfcbdocno = g_sfcb_m.sfcbdocno
+               IF l_n = 1 THEN
+                  SELECT DISTINCT(sfcb001) INTO g_sfcb_m.sfcb001 FROM sfcb_t WHERE sfcbent = g_enterprise AND sfcbdocno = g_sfcb_m.sfcbdocno
+                  DISPLAY BY NAME g_sfcb_m.sfcb001
+               END IF                  
+            END IF
+            CALL apmt500_05_set_entry()
+            CALL apmt500_05_set_no_required()
+            CALL apmt500_05_set_required()
+            CALL apmt500_05_set_no_entry()
+            ]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT apmt500_05_ins_pmdn() THEN
+               LET r_success = FALSE
+               EXIT DIALOG
+            END IF]]>
+  </point>
+  <point name="input.before_close" order="" ver="7" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET r_success = FALSE
+   END IF]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #若單頭有錄入來源單號，則這邊的工單單號為來源單號
+            SELECT pmdl008 INTO g_sfcb_m.sfcbdocno FROM pmdl_t WHERE pmdlent = g_enterprise AND pmdldocno = g_pmdldocno
+            #當工單只有一個Run Card，自動帶出
+            LET l_n = 0
+            SELECT COUNT(DISTINCT(sfcb001)) INTO l_n FROM sfcb_t WHERE sfcbent = g_enterprise AND sfcbdocno = g_sfcb_m.sfcbdocno
+            IF l_n = 1 THEN
+               SELECT DISTINCT(sfcb001) INTO g_sfcb_m.sfcb001 FROM sfcb_t WHERE sfcbent = g_enterprise AND sfcbdocno = g_sfcb_m.sfcbdocno
+               DISPLAY BY NAME g_sfcb_m.sfcb001
+            END IF
+            CALL apmt500_05_set_entry()
+            CALL apmt500_05_set_no_required()
+            CALL apmt500_05_set_required()
+            CALL apmt500_05_set_no_entry()
+            ]]>
+  </point>
+  <point name="input.c.sfcb001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfcb_m.sfcb001             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = g_sfcb_m.sfcbdocno
+            
+            CALL q_sfcb001()                                #呼叫開窗
+
+            LET g_sfcb_m.sfcb001 = g_qryparam.return1   
+            DISPLAY g_sfcb_m.sfcb001 TO sfcb001              
+            NEXT FIELD sfcb001                          #返回原欄位
+]]>
+  </point>
+  <point name="input.c.sfcb003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfcb_m.sfcb003             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sfcb_m.sfcbdocno
+            LET g_qryparam.arg3 = g_sfcb_m.sfcb001
+
+            
+            CALL q_sfcb003_2()                                #呼叫開窗
+
+            LET g_sfcb_m.sfcb003 = g_qryparam.return1              
+            LET g_sfcb_m.sfcb004 = g_qryparam.return2 
+            DISPLAY g_sfcb_m.sfcb003 TO sfcb003              #
+            CALL apmt500_05_sfcb003_ref()
+            
+            DISPLAY g_sfcb_m.sfcb004 TO sfcb004 
+            NEXT FIELD sfcb003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.sfcb004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfcb_m.sfcb003             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sfcb_m.sfcbdocno
+            LET g_qryparam.arg3 = g_sfcb_m.sfcb001
+            LET g_qryparam.arg4 = g_sfcb_m.sfcb003
+            
+            CALL q_sfcb004_1()                                #呼叫開窗
+
+            LET g_sfcb_m.sfcb004 = g_qryparam.return1     
+            DISPLAY g_sfcb_m.sfcb004 TO sfcb004 
+            NEXT FIELD sfcb004                          #返回原欄位
+]]>
+  </point>
+  <point name="input.c.sfcbdocno" order="" ver="8" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfcb_m.sfcbdocno             #給予default值
+
+            #給予arg
+            IF l_pmdl006 = '8' THEN
+               LET g_qryparam.where = " sfaa003 = '6' " #
+            END IF
+            
+            CALL q_sfcbdocno_3()                                #呼叫開窗
+
+            LET g_sfcb_m.sfcbdocno = g_qryparam.return1              
+
+            DISPLAY g_sfcb_m.sfcbdocno TO sfcbdocno              #
+
+            NEXT FIELD sfcbdocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="8" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_pmdldocno     LIKE pmdl_t.pmdldocno
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_pmdl006       LIKE pmdl_t.pmdl006]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_pmdldocno]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET INT_FLAG = FALSE
+   RETURN r_success
+   ]]>
+  </point>
+  <point name="input.pre_input" order="" ver="8" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   WHENEVER ERROR CONTINUE
+   
+   LET r_success = TRUE
+    
+   LET g_pmdldocno = p_pmdldocno
+   LET g_errshow = 1
+   
+   SELECT pmdl006 FROM pmdl_t WHERE pmdlent = g_enterprise AND pmdldocno = g_pmdldocno]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfcb_m.sfcb003
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sfcb_m.sfcb003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_sfcb_m.sfcb003_desc
+]]>
+  </point>
+  <section id="apmt500_05.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:9,PR版次:9) Build-000163
+#+ 
+#+ Filename...: apmt500_05
+#+ Description: 錄入工單來源資料
+#+ Creator....: 02294(2014-05-27 11:20:16)
+#+ Modifier...: 02294(2015-01-22 15:01:43) -SD/PR-
+]]>
+  </section>
+  <section id="apmt500_05.global" ver="5" status="" src="s" readonly="">
+    <![CDATA[#應用 c01b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_sfcb_m        RECORD
+       sfcbdocno LIKE sfcb_t.sfcbdocno, 
+   sfcb001 LIKE sfcb_t.sfcb001, 
+   sfcb003 LIKE sfcb_t.sfcb003, 
+   sfcb003_desc LIKE type_t.chr80, 
+   sfcb004 LIKE sfcb_t.sfcb004, 
+   sfcb002 LIKE sfcb_t.sfcb002
+       END RECORD
+DEFINE g_sfcb_m        type_g_sfcb_m
+ 
+   DEFINE g_sfcbdocno_t LIKE sfcb_t.sfcbdocno
+DEFINE g_sfcb001_t LIKE sfcb_t.sfcb001
+DEFINE g_sfcb002_t LIKE sfcb_t.sfcb002
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmt500_05.input" ver="8" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION apmt500_05(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmt500_05 WITH FORM cl_ap_formpath("apm","apmt500_05")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_sfcb_m.sfcbdocno,g_sfcb_m.sfcb001,g_sfcb_m.sfcb003,g_sfcb_m.sfcb004,g_sfcb_m.sfcb002  
+          ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sfcbdocno
+            #add-point:BEFORE FIELD sfcbdocno
+            {<point name="input.b.sfcbdocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sfcbdocno
+            
+            #add-point:AFTER FIELD sfcbdocno
+            {<point name="input.a.sfcbdocno" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sfcbdocno
+            #add-point:ON CHANGE sfcbdocno
+            {<point name="input.g.sfcbdocno" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sfcb001
+            #add-point:BEFORE FIELD sfcb001
+            {<point name="input.b.sfcb001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sfcb001
+            
+            #add-point:AFTER FIELD sfcb001
+            {<point name="input.a.sfcb001" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sfcb001
+            #add-point:ON CHANGE sfcb001
+            {<point name="input.g.sfcb001" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sfcb003
+            
+            #add-point:AFTER FIELD sfcb003
+            {<point name="input.a.sfcb003" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sfcb003
+            #add-point:BEFORE FIELD sfcb003
+            {<point name="input.b.sfcb003" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sfcb003
+            #add-point:ON CHANGE sfcb003
+            {<point name="input.g.sfcb003" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sfcb004
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sfcb_m.sfcb004,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sfcb004
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD sfcb004
+            {<point name="input.a.sfcb004" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sfcb004
+            #add-point:BEFORE FIELD sfcb004
+            {<point name="input.b.sfcb004" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sfcb004
+            #add-point:ON CHANGE sfcb004
+            {<point name="input.g.sfcb004" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sfcb002
+            #add-point:BEFORE FIELD sfcb002
+            {<point name="input.b.sfcb002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sfcb002
+            
+            #add-point:AFTER FIELD sfcb002
+            {<point name="input.a.sfcb002" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sfcb002
+            #add-point:ON CHANGE sfcb002
+            {<point name="input.g.sfcb002" />}
+            #END add-point 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.sfcbdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sfcbdocno
+            #add-point:ON ACTION controlp INFIELD sfcbdocno
+            {<point name="input.c.sfcbdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sfcb001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sfcb001
+            #add-point:ON ACTION controlp INFIELD sfcb001
+            {<point name="input.c.sfcb001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sfcb003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sfcb003
+            #add-point:ON ACTION controlp INFIELD sfcb003
+            {<point name="input.c.sfcb003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sfcb004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sfcb004
+            #add-point:ON ACTION controlp INFIELD sfcb004
+            {<point name="input.c.sfcb004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sfcb002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sfcb002
+            #add-point:ON ACTION controlp INFIELD sfcb002
+            {<point name="input.c.sfcb002" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmt500_05 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apmt500_05.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="apmt500_05.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

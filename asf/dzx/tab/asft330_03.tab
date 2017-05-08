@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asft330_03" module="asf" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="04441" crtdt="2016-07-27 17:55:22" modid="04441" moddt="2016-07-28 13:50:41" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="作業人員明細">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sffedocno,sffeseq,sffe001,sffe001_desc(chr500),sffe002,sffe003"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asft330_03" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sffedocno,sffeseq,sffe001,sffe002,sffe003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="sffedocno,sffeseq,sffe001,sffe002,sffe003"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sffedocno"/>
+      <column id="sffeseq"/>
+      <column id="sffe001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="sffe001_desc" ref_field="sffe_t.sffe001" map_field="sffe001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sffe001_desc"/>
+      <column id="sffe002"/>
+      <column id="sffe003"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="sffe_t" page="1" linked="" pk="sffedocno,sffeseq,sffe001">
+      <sql id="forupd_sql_detail" query="SELECT sffedocno,sffeseq,sffe001,&apos;&apos;,sffe002,sffe003 FROM sffe_t WHERE sffeent=? AND sffedocno=? AND sffeseq=? AND sffe001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sffedocno,sffeseq,sffe001,&apos;&apos;,sffe002,sffe003 FROM sffe_t WHERE sffeent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

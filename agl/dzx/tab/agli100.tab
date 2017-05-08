@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli100" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="01727" crtdt="2013-10-28 09:29:11" modid="02599" moddt="2016-06-06 16:43:09" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="會計週期維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glav001,glav001_desc(chr80),glav002,glav003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glavstus,glav004,glav005,glav006,glav007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glav004,glavownid,glavownid_desc(chr500),glavowndp,glavowndp_desc(chr500),glavcrtid,glavcrtid_desc(chr500),glavcrtdp,glavcrtdp_desc(chr500),glavcrtdt,glavmodid,glavmodid_desc(chr500),glavmoddt"/>
+      <var id="bs_field" value="glav001,glav001_desc(chr80),glav002,glav003" pk="glav001,glav002" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_agli100_01"/>
+      <action id="statechange"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli100" method="dialog">
+    <section id="input">
+      <input id="head" field="glav001,glav002,glav003"/>
+      <input id="body" page="1" field="glavstus,glav004,glav005,glav006,glav007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glav001,glav002,glav003"/>
+      <construct id="body" page="1" field="glavstus,glav004,glav005,glav006,glav007"/>
+      <construct id="body" page="2" field="glavownid,glavowndp,glavcrtid,glavcrtdp,glavcrtdt,glavmodid,glavmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glav001,glav002"/>
+      <set id="head" type="no_entry" field="glav001,glav002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glav001">
+        <after>
+          <reference field="glav001_desc" ref_field="glav001" map_field="glav001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;5&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal001" state="i"/>
+        <controlp form="q_ooal001" state="c"/>
+      </column>
+      <column id="glav001_desc"/>
+      <column id="glav002"/>
+      <column id="glav003" type="S" default="1" def_scc="9416"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glavstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glav004"/>
+      <column id="glav005">
+        <after>
+          <check id="range" st="4" st_type="1" errno="azz-00087" bt="1" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="glav006">
+        <after>
+          <check id="range" st="13" st_type="1" errno="azz-00087" bt="1" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="glav007">
+        <after>
+          <check id="range" st="54" st_type="1" errno="azz-00087" bt="1" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="glavownid">
+        <after>
+          <reference field="glavownid_desc" ref_field="glav_t.glavownid" map_field="glavownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glavownid_desc"/>
+      <column id="glavowndp">
+        <after>
+          <reference field="glavowndp_desc" ref_field="glav_t.glavowndp" map_field="glavowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glavowndp_desc"/>
+      <column id="glavcrtid">
+        <after>
+          <reference field="glavcrtid_desc" ref_field="glav_t.glavcrtid" map_field="glavcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glavcrtid_desc"/>
+      <column id="glavcrtdp">
+        <after>
+          <reference field="glavcrtdp_desc" ref_field="glav_t.glavcrtdp" map_field="glavcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glavcrtdp_desc"/>
+      <column id="glavcrtdt"/>
+      <column id="glavmodid">
+        <after>
+          <reference field="glavmodid_desc" ref_field="glav_t.glavmodid" map_field="glavmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glavmodid_desc"/>
+      <column id="glavmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glav_t" pk="glav001,glav002">
+      <sql id="forupd_sql" type="sql" query="SELECT glav001,&apos;&apos;,glav002,glav003 FROM glav_t WHERE glavent= ? AND glav001=? AND glav002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glav001,&apos;&apos;,glav002,glav003 FROM glav_t" order="glav001,glav002"/>
+    </head>
+    <body id="glav_t" page="1,2" linked="" pk="glav004" fk="glav001,glav002">
+      <sql id="forupd_sql_detail" query="SELECT glavstus,glav004,glav005,glav006,glav007,&apos;&apos;,glavownid,&apos;&apos;,glavowndp,&apos;&apos;,glavcrtid,&apos;&apos;,glavcrtdp,&apos;&apos;,glavcrtdt,glavmodid,&apos;&apos;,glavmoddt FROM glav_t WHERE glavent=? AND glav001=? AND glav002=? AND glav004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glavstus,glav004,glav005,glav006,glav007,&apos;&apos;,glavownid,&apos;&apos;,glavowndp,&apos;&apos;,glavcrtid,&apos;&apos;,glavcrtdp,&apos;&apos;,glavcrtdt,glavmodid,&apos;&apos;,glavmoddt FROM glav_t WHERE glavent= ? AND glav001=? AND glav002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

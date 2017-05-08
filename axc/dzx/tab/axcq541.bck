@@ -1,0 +1,187 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq541" module="axc" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="00537" crtdt="2015-03-17 10:36:08" modid="05599" moddt="2017-02-18 17:57:54" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="工單在製累計投入和轉出查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xccdcomp,xccdcomp_desc(chr80),xccdld,xccdld_desc(chr80),xccd004,xccd005,xccd001,xccd001_desc(chr80),xccd003,xccd003_desc(chr80),xccd002,xccd002_desc(chr80),chk(chr500),xccd006,sfaa019(dat),sfaa020(dat),xccd007,sfaa012(num20_6),sfaa049(num20_6),xccd007_desc(chr80),xccd301_sum(num20_6),xccd301,xccd007_desc_1(chr80),xcbk100(num20_6),xcbk100_1(num20_6)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcce002,xcce002_desc(chr500),xcce007,xcce007_desc(chr500),xcce007_desc_1(chr500),xcce008,xcce009,xcbb005(chr500),xcbb005_desc(chr500),xcce201,xcce202a,xcce202b,xcce202c,xcce202d,xcce202e,xcce202f,xcce202g,xcce202h,xcce202,xcce301_sum(num20_6),xcce302a_sum(num20_6),xcce302b_sum(num20_6),xcce302c_sum(num20_6),xcce302d_sum(num20_6),xcce302e_sum(num20_6),xcce302f_sum(num20_6),xcce302g_sum(num20_6),xcce302h_sum(num20_6),xcce302_sum(num20_6),xcce301(num20_6),xcce302a(num20_6),xcce302b(num20_6),xcce302c(num20_6),xcce302d(num20_6),xcce302e(num20_6),xcce302f(num20_6),xcce302g(num20_6),xcce302h(num20_6),xcce302(num20_6),xcce_price(chr500),xcce_conv_rate(chr500),xcce_conv_price(chr500),xcce303,xcce304a,xcce304b,xcce304c,xcce304d,xcce304e,xcce304f,xcce304g,xcce304h,xcce304,xcce901,xcce902a,xcce902b,xcce902c,xcce902d,xcce902e,xcce902f,xcce902g,xcce902h,xcce902"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq541" method="dialog">
+    <section id="input">
+      <input id="head" field="xccdcomp,xccdld,xccd004,xccd005,xccd001,xccd003,xccd002,chk,xccd006,xccd007"/>
+      <input id="body" page="1" field="xcce002,xcce007,xcce008,xcce009,xcce201,xcce202a,xcce202b,xcce202c,xcce202d,xcce202e,xcce202f,xcce202g,xcce202h,xcce202,xcce301_sum,xcce302a_sum,xcce302b_sum,xcce302c_sum,xcce302d_sum,xcce302e_sum,xcce302f_sum,xcce302g_sum,xcce302h_sum,xcce302_sum,xcce301,xcce302a,xcce302b,xcce302c,xcce302d,xcce302e,xcce302f,xcce302g,xcce302h,xcce302,xcce_price,xcce_conv_rate,xcce_conv_price,xcce303,xcce304a,xcce304b,xcce304c,xcce304d,xcce304e,xcce304f,xcce304g,xcce304h,xcce304,xcce901,xcce902a,xcce902b,xcce902c,xcce902d,xcce902e,xcce902f,xcce902g,xcce902h,xcce902" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xccdcomp,xccdld,xccd004,xccd005,xccd001,xccd003,xccd002,chk,xccd006,xccd007"/>
+      <construct id="body" page="1" field="xcce002,xcce007,xcce008,xcce009,xcce201,xcce202a,xcce202b,xcce202c,xcce202d,xcce202e,xcce202f,xcce202g,xcce202h,xcce202,xcce301,xcce302a,xcce302b,xcce302c,xcce302d,xcce302e,xcce302f,xcce302g,xcce302h,xcce302,xcce303,xcce304a,xcce304b,xcce304c,xcce304d,xcce304e,xcce304f,xcce304g,xcce304h,xcce304,xcce901,xcce902a,xcce902b,xcce902c,xcce902d,xcce902e,xcce902f,xcce902g,xcce902h,xcce902"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xccdld,xccd001,xccd002,xccd003,xccd004,xccd005,xccd006"/>
+      <set id="head" type="no_entry" field="xccdld,xccd001,xccd002,xccd003,xccd004,xccd005,xccd006"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xccdcomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="xccdcomp_desc" ref_field="xccd_t.xccdcomp" map_field="xccdent,b_xccdcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xccdcomp_desc"/>
+      <column id="xccdld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xccdld_desc" ref_field="xccd_t.xccdld" map_field="xccdent,b_xccdld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xccdld_desc"/>
+      <column id="xccd004"/>
+      <column id="xccd005"/>
+      <column id="xccd001" type="S" default="1">
+        <after>
+          <reference field="xccd001_desc" ref_field="xccd_t.xccd001" map_field="" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND =? "/>
+        </after>
+      </column>
+      <column id="xccd001_desc"/>
+      <column id="xccd003">
+        <after>
+          <reference field="xccd003_desc" ref_field="xccd_t.xccd003" map_field="xccdent,b_xccd003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xccd003_desc"/>
+      <column id="xccd002">
+        <after>
+          <reference field="xccd002_desc" ref_field="xccd_t.xccd002" map_field="xccdent,xccd002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccd002_desc"/>
+      <column id="chk"/>
+      <column id="xccd006">
+        <controlp form="q_sfaadocno" state="c"/>
+      </column>
+      <column id="sfaa019"/>
+      <column id="sfaa020"/>
+      <column id="xccd007">
+        <after>
+          <reference field="xccd007_desc" ref_field="xccd_t.xccd007" map_field="xccdent,xccd007" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="sfaa012">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfaa049" type="S" default="0"/>
+      <column id="xccd007_desc"/>
+      <column id="xccd301_sum"/>
+      <column id="xccd301"/>
+      <column id="xccd007_desc_1"/>
+      <column id="xcbk100"/>
+      <column id="xcbk100_1"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcce002">
+        <after>
+          <reference field="xcce002_desc" ref_field="xcce_t.xcce002" map_field="xcceent,xcce002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcce002_desc"/>
+      <column id="xcce007">
+        <after>
+          <reference field="xcce007_desc" ref_field="xcce_t.xcce007" map_field="xcceent,xcce007" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="xcce007_desc"/>
+      <column id="xcce007_desc_1"/>
+      <column id="xcce008"/>
+      <column id="xcce009"/>
+      <column id="xcbb005">
+        <after>
+          <reference field="xcbb005_desc" ref_field="xcbb005" map_field="xcbbent,xcbb005" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcbb005_desc"/>
+      <column id="xcce201"/>
+      <column id="xcce202a"/>
+      <column id="xcce202b"/>
+      <column id="xcce202c"/>
+      <column id="xcce202d"/>
+      <column id="xcce202e"/>
+      <column id="xcce202f"/>
+      <column id="xcce202g"/>
+      <column id="xcce202h"/>
+      <column id="xcce202"/>
+      <column id="xcce301_sum"/>
+      <column id="xcce302a_sum"/>
+      <column id="xcce302b_sum"/>
+      <column id="xcce302c_sum"/>
+      <column id="xcce302d_sum"/>
+      <column id="xcce302e_sum"/>
+      <column id="xcce302f_sum"/>
+      <column id="xcce302g_sum"/>
+      <column id="xcce302h_sum"/>
+      <column id="xcce302_sum"/>
+      <column id="xcce301"/>
+      <column id="xcce302a"/>
+      <column id="xcce302b"/>
+      <column id="xcce302c"/>
+      <column id="xcce302d"/>
+      <column id="xcce302e"/>
+      <column id="xcce302f"/>
+      <column id="xcce302g"/>
+      <column id="xcce302h"/>
+      <column id="xcce302"/>
+      <column id="xcce_price"/>
+      <column id="xcce_conv_rate"/>
+      <column id="xcce_conv_price"/>
+      <column id="xcce303"/>
+      <column id="xcce304a"/>
+      <column id="xcce304b"/>
+      <column id="xcce304c"/>
+      <column id="xcce304d"/>
+      <column id="xcce304e"/>
+      <column id="xcce304f"/>
+      <column id="xcce304g"/>
+      <column id="xcce304h"/>
+      <column id="xcce304"/>
+      <column id="xcce901"/>
+      <column id="xcce902a"/>
+      <column id="xcce902b"/>
+      <column id="xcce902c"/>
+      <column id="xcce902d"/>
+      <column id="xcce902e"/>
+      <column id="xcce902f"/>
+      <column id="xcce902g"/>
+      <column id="xcce902h"/>
+      <column id="xcce902"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xccd_t" pk="xccdld,xccd001,xccd002,xccd003,xccd004,xccd005,xccd006">
+      <sql id="forupd_sql" type="sql" query="SELECT xccdcomp,&apos;&apos;,xccdld,&apos;&apos;,xccd004,xccd005,xccd001,&apos;&apos;,xccd003,&apos;&apos;,xccd002,&apos;&apos;,&apos;&apos;,xccd006,&apos;&apos;,&apos;&apos;,xccd007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccd301,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xccd_t WHERE xccdent= ? AND xccdld=? AND xccd001=? AND xccd002=? AND xccd003=? AND xccd004=? AND xccd005=? AND xccd006=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xccdcomp,&apos;&apos;,xccdld,&apos;&apos;,xccd004,xccd005,xccd001,&apos;&apos;,xccd003,&apos;&apos;,xccd002,&apos;&apos;,&apos;&apos;,xccd006,&apos;&apos;,&apos;&apos;,xccd007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccd301,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xccd_t" order="xccdld,xccd001,xccd002,xccd003,xccd004,xccd005,xccd006"/>
+    </head>
+    <body id="xcce_t" page="1" linked="" pk="xcce007,xcce008,xcce009" fk="xcceld,xcce001,xcce002,xcce003,xcce004,xcce005,xcce006">
+      <sql id="forupd_sql_detail" query="SELECT xcce002,&apos;&apos;,xcce007,&apos;&apos;,&apos;&apos;,xcce008,xcce009,&apos;&apos;,&apos;&apos;,xcce201,xcce202a,xcce202b,xcce202c,xcce202d,xcce202e,xcce202f,xcce202g,xcce202h,xcce202,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcce303,xcce304a,xcce304b,xcce304c,xcce304d,xcce304e,xcce304f,xcce304g,xcce304h,xcce304,xcce901,xcce902a,xcce902b,xcce902c,xcce902d,xcce902e,xcce902f,xcce902g,xcce902h,xcce902 FROM xcce_t WHERE xcceent=? AND xcceld=? AND xcce001=? AND xcce002=? AND xcce003=? AND xcce004=? AND xcce005=? AND xcce006=? AND xcce007=? AND xcce008=? AND xcce009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcce002,&apos;&apos;,xcce007,&apos;&apos;,&apos;&apos;,xcce008,xcce009,&apos;&apos;,&apos;&apos;,xcce201,xcce202a,xcce202b,xcce202c,xcce202d,xcce202e,xcce202f,xcce202g,xcce202h,xcce202,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcce303,xcce304a,xcce304b,xcce304c,xcce304d,xcce304e,xcce304f,xcce304g,xcce304h,xcce304,xcce901,xcce902a,xcce902b,xcce902c,xcce902d,xcce902e,xcce902f,xcce902g,xcce902h,xcce902 FROM xcce_t WHERE xcceent=? AND xcceld=? AND xcce001=? AND xcce002=? AND xcce003=? AND xcce004=? AND xcce005=? AND xcce006=?"/>
+    </body>
+  </dataset>
+</assembly>
+

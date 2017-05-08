@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmi040" module="afm" jobmode="N" type="i10" industry="std" fix_arg="0" crtid="05426" crtdt="2014-08-04 20:36:01" modid="05426" moddt="2014-08-25 10:10:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="融資外幣重評價基礎設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmaf001,fmaf001_desc(chr80),lbl_glaa001(chr500),lbl_glaa001_desc(chr80),fmaf002,fmaf002_desc(chr80),fmaf003(num5),fmaf004(num5),fmaf005(chr1),fmaf006(chr1),lbl_fmaf007(chr1),fmaf008,lbl_fmaf008_desc(chr80),fmaf009,lbl_fmaf009_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmi040" method="dialog">
+    <section id="input">
+      <input id="head" field="fmaf001,lbl_glaa001,fmaf002,fmaf003,fmaf004,fmaf005,fmaf006,lbl_fmaf007,fmaf008,fmaf009"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmaf001,lbl_glaa001,lbl_glaa001_desc,fmaf002,fmaf003,fmaf004,fmaf005,fmaf006,lbl_fmaf007,fmaf008,lbl_fmaf008_desc,fmaf009,lbl_fmaf009_desc"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmaf001,fmaf002"/>
+      <set id="head" type="no_entry" field="fmaf001,fmaf002"/>
+    </init>
+    <init id="head">
+      <column id="fmaf001">
+        <after>
+          <check chkid="v_fmaf001" id="chkandReturn"/>
+          <reference field="fmaf001_desc" ref_field="fmaf_t.fmaf001" map_field="fmafent,fmaf001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? "/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="fmaf001_desc"/>
+      <column id="lbl_glaa001">
+        <after/>
+      </column>
+      <column id="lbl_glaa001_desc"/>
+      <column id="fmaf002">
+        <after>
+          <check chkid="v_fmaf002" id="chkandReturn"/>
+          <reference field="fmaf002_desc" ref_field="fmaf_t.fmaf002" map_field="fmafent,fmaf002" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? "/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="fmaf002_desc"/>
+      <column id="fmaf003"/>
+      <column id="fmaf004"/>
+      <column id="fmaf005" type="S" default="N"/>
+      <column id="fmaf006" type="S" default="N"/>
+      <column id="lbl_fmaf007" type="S" default="1"/>
+      <column id="fmaf008">
+        <after>
+          <check chkid="v_fmaf008" id="chkandReturn"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="lbl_fmaf008_desc"/>
+      <column id="fmaf009">
+        <after>
+          <check chkid="v_fmaf008" id="chkandReturn"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="lbl_fmaf009_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmaf_t" pk="fmaf001,fmaf002">
+      <sql id="forupd_sql" type="sql" query="SELECT fmaf001,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmaf002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmaf008,&apos;&apos;,fmaf009,&apos;&apos; FROM fmaf_t WHERE fmafent= ? AND fmaf001=? AND fmaf002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmaf001,fmaf002 FROM fmaf_t" order="fmaf001,fmaf002"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,131 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aist440" module="ais" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="04152" crtdt="2015-12-17 11:16:14" modid="04152" moddt="2015-12-17 11:16:14" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="兼營營業人營業稅額調整計算表">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="iscdsite,iscdsite_desc(chr80),iscdcomp,iscdcomp_desc(chr80),iscd001,iscd003,iscd004,iscdstus,iscdownid,iscdownid_desc(chr80),iscdowndp,iscdowndp_desc(chr80),iscdcrtid,iscdcrtid_desc(chr80),iscdcrtdp,iscdcrtdp_desc(chr80),iscdcrtdt,iscdmodid,iscdmodid_desc(chr80),iscdmoddt,iscdcnfid,iscdcnfid_desc(chr80),iscdcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isce002,isce003,isce004,isce005,isce006,isce007,isce008,isce009,isce010"/>
+      <var id="bs_field" value="iscdsite,iscdcomp,iscd001,iscd003,iscd004" pk="iscdcomp,iscdsite,iscd001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="aist440_01"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aist440" method="dialog">
+    <section id="input">
+      <input id="head" field="iscdsite,iscd001,iscdstus"/>
+      <input id="body" page="1" field="isce002,isce003,isce004,isce005,isce006,isce007,isce008,isce009,isce010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="iscdsite,iscdcomp,iscd001,iscd003,iscd004,iscdstus,iscdownid,iscdowndp,iscdcrtid,iscdcrtdp,iscdcrtdt,iscdmodid,iscdmoddt,iscdcnfid,iscdcnfdt"/>
+      <construct id="body" page="1" field="isce002,isce003,isce004,isce005,isce006,isce007,isce008,isce009,isce010"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="iscdcomp,iscdsite,iscd001"/>
+      <set id="head" type="no_entry" field="iscdcomp,iscdsite,iscd001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="iscdsite">
+        <after/>
+      </column>
+      <column id="iscdsite_desc"/>
+      <column id="iscdcomp">
+        <after/>
+      </column>
+      <column id="iscdcomp_desc"/>
+      <column id="iscd001">
+        <after>
+          <check id="range" st="2099" st_type="1" errno="azz-00087" bt="0" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="iscd003"/>
+      <column id="iscd004" type="S" default="0"/>
+      <column id="iscdstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="Y" pic="confirmed"/>
+      </column>
+      <column id="iscdownid">
+        <after>
+          <reference field="iscdownid_desc" ref_field="iscd_t.iscdownid" map_field="iscdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="iscdownid_desc"/>
+      <column id="iscdowndp">
+        <after>
+          <reference field="iscdowndp_desc" ref_field="iscd_t.iscdowndp" map_field="iscdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="iscdowndp_desc"/>
+      <column id="iscdcrtid">
+        <after>
+          <reference field="iscdcrtid_desc" ref_field="iscd_t.iscdcrtid" map_field="iscdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="iscdcrtid_desc"/>
+      <column id="iscdcrtdp">
+        <after>
+          <reference field="iscdcrtdp_desc" ref_field="iscd_t.iscdcrtdp" map_field="iscdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="iscdcrtdp_desc"/>
+      <column id="iscdcrtdt"/>
+      <column id="iscdmodid">
+        <after>
+          <reference field="iscdmodid_desc" ref_field="iscd_t.iscdmodid" map_field="iscdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="iscdmodid_desc"/>
+      <column id="iscdmoddt"/>
+      <column id="iscdcnfid">
+        <after>
+          <reference field="iscdcnfid_desc" ref_field="iscd_t.iscdcnfid" map_field="iscdcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="iscdcnfid_desc"/>
+      <column id="iscdcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="isce002">
+        <after>
+          <check id="range" st="12" st_type="1" errno="azz-00087" bt="0" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="isce003" type="S" default="0"/>
+      <column id="isce004" type="S" default="0"/>
+      <column id="isce005" type="S" default="0"/>
+      <column id="isce006" type="S" default="0"/>
+      <column id="isce007" type="S" default="0"/>
+      <column id="isce008" type="S" default="0"/>
+      <column id="isce009" type="S" default="0"/>
+      <column id="isce010" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="iscd_t" pk="iscdcomp,iscdsite,iscd001">
+      <sql id="forupd_sql" type="sql" query="SELECT iscdsite,&apos;&apos;,iscdcomp,&apos;&apos;,iscd001,iscd003,iscd004,iscdstus,iscdownid,&apos;&apos;,iscdowndp,&apos;&apos;,iscdcrtid,&apos;&apos;,iscdcrtdp,&apos;&apos;,iscdcrtdt,iscdmodid,&apos;&apos;,iscdmoddt,iscdcnfid,&apos;&apos;,iscdcnfdt FROM iscd_t WHERE iscdent= ? AND iscdcomp=? AND iscdsite=? AND iscd001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT iscdsite,&apos;&apos;,iscdcomp,&apos;&apos;,iscd001,iscd003,iscd004,iscdstus,iscdownid,&apos;&apos;,iscdowndp,&apos;&apos;,iscdcrtid,&apos;&apos;,iscdcrtdp,&apos;&apos;,iscdcrtdt,iscdmodid,&apos;&apos;,iscdmoddt,iscdcnfid,&apos;&apos;,iscdcnfdt FROM iscd_t" order="iscdcomp,iscdsite,iscd001"/>
+    </head>
+    <body id="isce_t" page="1" linked="" pk="isce002" fk="iscecomp,iscesite,isce001">
+      <sql id="forupd_sql_detail" query="SELECT isce002,isce003,isce004,isce005,isce006,isce007,isce008,isce009,isce010 FROM isce_t WHERE isceent=? AND iscesite=? AND iscecomp=? AND isce001=? AND isce002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isce002,isce003,isce004,isce005,isce006,isce007,isce008,isce009,isce010 FROM isce_t WHERE isceent=? AND iscecomp=? AND iscesite=? AND isce001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

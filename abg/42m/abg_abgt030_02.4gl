@@ -1,0 +1,341 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgt030_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2016-12-14 14:36:01), PR版次:0002(2016-12-14 15:12:13)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000000
+#+ Filename...: abgt030_02
+#+ Description: 業務資訊
+#+ Creator....: 05016(2016-11-23 11:36:08)
+#+ Modifier...: 05016 -SD/PR- 05016
+ 
+{</section>}
+ 
+{<section id="abgt030_02.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_bgbb_m        RECORD
+       bgbb005 LIKE bgbb_t.bgbb005, 
+   bgbb006 LIKE bgbb_t.bgbb006, 
+   bgbb007 LIKE bgbb_t.bgbb007
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+DEFINE g_bgbb_m        type_g_bgbb_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abgt030_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION abgt030_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_docno,p_seq,p_bgbb010
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_docno         LIKE bgba_t.bgbadocno
+   DEFINE p_seq           LIKE bgbb_t.bgbbseq         
+   DEFINE p_bgbb010       LIKE bgbb_t.bgbb010 #原幣金額
+   DEFINE l_amt           LIKE bgbb_t.bgbb010
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_abgt030_02 WITH FORM cl_ap_formpath("abg","abgt030_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   LET g_bgbb_m.bgbb005 ='' LET g_bgbb_m.bgbb006 = '' LET g_bgbb_m.bgbb007 = ''
+   SELECT bgbb005,bgbb006,bgbb007 INTO g_bgbb_m.bgbb005,g_bgbb_m.bgbb006,g_bgbb_m.bgbb007
+     FROM bgbb_t WHERE bgbbent = g_enterprise AND bgbbdocno = p_docno AND bgbbseq = p_seq      
+   DISPLAY BY NAME g_bgbb_m.bgbb005,g_bgbb_m.bgbb006,g_bgbb_m.bgbb007
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_bgbb_m.bgbb005,g_bgbb_m.bgbb006,g_bgbb_m.bgbb007 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgbb005
+            #add-point:BEFORE FIELD bgbb005 name="input.b.bgbb005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgbb005
+            
+            #add-point:AFTER FIELD bgbb005 name="input.a.bgbb005"
+            IF NOT cl_null(g_bgbb_m.bgbb005) THEN
+               CALL abgt030_02_bgbb005_chk(g_bgbb_m.bgbb005) RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_bgbb_m.bgbb005
+                   LET g_errparam.replace[1] ='aooi250'
+                   LET g_errparam.replace[2] = cl_get_progname('aooi250',g_lang,"2")
+                   LET g_errparam.exeprog    ='aooi250'
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_bgbb_m.bgbb005 = ''
+                  NEXT FIELD bgbb005
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgbb005
+            #add-point:ON CHANGE bgbb005 name="input.g.bgbb005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgbb006
+            #add-point:BEFORE FIELD bgbb006 name="input.b.bgbb006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgbb006
+            
+            #add-point:AFTER FIELD bgbb006 name="input.a.bgbb006"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgbb006
+            #add-point:ON CHANGE bgbb006 name="input.g.bgbb006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgbb007
+            #add-point:BEFORE FIELD bgbb007 name="input.b.bgbb007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgbb007
+            
+            #add-point:AFTER FIELD bgbb007 name="input.a.bgbb007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgbb007
+            #add-point:ON CHANGE bgbb007 name="input.g.bgbb007"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.bgbb005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgbb005
+            #add-point:ON ACTION controlp INFIELD bgbb005 name="input.c.bgbb005"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_bgbb_m.bgbb005             #給予default值
+            CALL q_ooca001_1()                                     #呼叫開窗
+            LET g_bgbb_m.bgbb005 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_bgbb_m.bgbb005 TO bgbb005                    #顯示到畫面上
+            NEXT FIELD bgbb005              
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bgbb006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgbb006
+            #add-point:ON ACTION controlp INFIELD bgbb006 name="input.c.bgbb006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bgbb007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgbb007
+            #add-point:ON ACTION controlp INFIELD bgbb007 name="input.c.bgbb007"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            LET l_amt = 0
+            LET l_amt = g_bgbb_m.bgbb006 * g_bgbb_m.bgbb007
+            IF l_amt <> p_bgbb010 THEN
+                IF cl_ask_confirm('abg-00293') THEN
+                   LET p_bgbb010 = l_amt
+                ELSE
+                   NEXT FIELD bgbb005
+                END IF
+            END IF
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_abgt030_02 
+   
+   #add-point:input段after input name="input.post_input"
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      RETURN '','','',''
+   END IF
+  
+   RETURN g_bgbb_m.bgbb005,g_bgbb_m.bgbb006,g_bgbb_m.bgbb007,p_bgbb010 
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgt030_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="abgt030_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgt030_02_bgbb005_chk(p_bgbb005)
+DEFINE p_bgbb005     LIKE bgbb_t.bgbb005
+DEFINE l_oocastus    LIKE ooca_t.oocastus
+DEFINE r_errno       LIKE gzze_t.gzze001
+DEFINE r_success     LIKE type_t.num5
+
+   LET r_errno = '' LET r_success =TRUE
+   SELECT oocastus INTO l_oocastus FROM ooca_t
+    WHERE oocaent = g_enterprise
+      AND ooca001 = p_bgbb005
+
+   CASE
+      WHEN SQLCA.sqlcode = 100   LET r_errno = 'aim-00004' LET r_success = FALSE
+      WHEN l_oocastus = 'N'      LET r_errno = 'sub-01302' LET r_success = FALSE
+   END CASE
+     
+   RETURN r_success,r_errno
+           
+END FUNCTION
+
+ 
+{</section>}
+ 

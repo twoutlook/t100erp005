@@ -1,0 +1,793 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axct300_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2014-04-08 00:00:00), PR版次:0003(2016-04-25 17:16:51)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000149
+#+ Filename...: axct300_02
+#+ Description: 整批導入
+#+ Creator....: 02291(2014-04-08 16:39:04)
+#+ Modifier...: 02291 -SD/PR- 07675
+ 
+{</section>}
+ 
+{<section id="axct300_02.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160318-00025#11   2016/04/25 By 07675       將重複內容的錯誤訊息置換為公用錯誤訊息(r.v）
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xcca_m        RECORD
+       xccacomp LIKE xcca_t.xccacomp, 
+   xccacomp_desc LIKE type_t.chr80, 
+   xccald LIKE xcca_t.xccald, 
+   xccald_desc LIKE type_t.chr80, 
+   format LIKE type_t.chr500, 
+   mold LIKE type_t.chr2, 
+   way LIKE type_t.chr500
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_xcca_m_t      type_g_xcca_m
+DEFINE l_success       LIKE type_t.num5
+DEFINE g_glaa015       LIKE glaa_t.glaa015
+DEFINE g_glaa019       LIKE glaa_t.glaa019
+#end add-point
+ 
+DEFINE g_xcca_m        type_g_xcca_m
+ 
+   DEFINE g_xccald_t LIKE xcca_t.xccald
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axct300_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axct300_02(--)
+   #add-point:input段變數傳入
+   
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE l_excel         STRING 
+   DEFINE ls_str          STRING
+   DEFINE l_chr           LIKE type_t.chr1   
+   DEFINE l_chr1          LIKE type_t.chr1   
+   DEFINE l_num           LIKE type_t.num5
+   DEFINE l_n             LIKE type_t.num5
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axct300_02 WITH FORM cl_ap_formpath("axc","axct300_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET g_xcca_m.xccacomp = ' '
+   LET g_xcca_m.xccald = '' 
+   LET g_xcca_m.format = ''
+   LET g_xcca_m.mold = ''
+   LET g_xcca_m.way = ''
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xcca_m.xccacomp,g_xcca_m.xccald,g_xcca_m.format,g_xcca_m.mold,g_xcca_m.way ATTRIBUTE(WITHOUT  
+          DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            CALL cl_set_combo_scc('format','8915')
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccacomp
+            
+            #add-point:AFTER FIELD xccacomp name="input.a.xccacomp"
+            IF NOT cl_null(g_xcca_m.xccacomp) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xcca_m.xccacomp
+               #160318-00025#11--add--str
+               LET g_errshow = TRUE 
+               LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+               #160318-00025#11--add--end 
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist('v_ooef001_15') THEN
+                  #檢查失敗時後續處理
+                  LET g_xcca_m.xccacomp = g_xcca_m_t.xccacomp
+                  CALL axct300_02_xccacomp_desc() 
+                  NEXT FIELD xccacomp
+               END IF
+               IF NOT cl_null(g_xcca_m.xccald) THEN
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n FROM glaa_t 
+                   WHERE glaaent = g_enterprise AND glaald = g_xcca_m.xccald
+                     AND glaacomp = g_xcca_m.xccacomp
+                  IF l_n = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axc-00224'
+                     LET g_errparam.extend = g_xcca_m_t.xccacomp
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     CALL axct300_02_xccacomp_desc() 
+                     NEXT FIELD xccald
+                  END IF
+               END IF
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_xcca_m.xccacomp
+               CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+               LET g_xcca_m.xccacomp_desc = '', g_rtn_fields[1] , ''
+               DISPLAY BY NAME g_xcca_m.xccacomp_desc
+               
+               
+                                                    
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccacomp
+            #add-point:BEFORE FIELD xccacomp name="input.b.xccacomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccacomp
+            #add-point:ON CHANGE xccacomp name="input.g.xccacomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccald
+            
+            #add-point:AFTER FIELD xccald name="input.a.xccald"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xcca_m.xccald
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xcca_m.xccald_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xcca_m.xccald_desc
+
+            IF NOT cl_null(g_xcca_m.xccald) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xcca_m.xccald
+               #160318-00025#11--add--str
+               LET g_errshow = TRUE 
+               LET g_chkparam.err_str[1] = "agl-00051:sub-01302|agli010|",cl_get_progname("agli010",g_lang,"2"),"|:EXEPROGagli010"
+               #160318-00025#11--add--end
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist('v_glaald') THEN
+                  #檢查失敗時後續處理
+                  LET g_xcca_m.xccald = g_xcca_m_t.xccald
+                  CALL axct300_02_xccald_desc()
+                  NEXT FIELD xccald
+               END IF
+               
+               IF NOT cl_null(g_xcca_m.xccacomp) THEN
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n FROM glaa_t 
+                   WHERE glaaent = g_enterprise AND glaacomp = g_xcca_m.xccacomp
+                     AND glaald = g_xcca_m.xccald
+                  IF l_n = 0 THEN
+                     CALL axct300_02_xccald_desc()
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axc-00225'
+                     LET g_errparam.extend = g_xcca_m.xccald
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     NEXT FIELD xccald
+                  END IF
+               END IF
+               
+               IF NOT s_ld_chk_authorization(g_user,g_xcca_m.xccald) THEN
+                  CALL axct300_02_xccald_desc()
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'agl-00165'
+                  LET g_errparam.extend = g_xcca_m.xccacomp
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  NEXT FIELD xccacomp
+               END IF
+               CALL axct300_02_xccald_desc()                               
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccald
+            #add-point:BEFORE FIELD xccald name="input.b.xccald"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccald
+            #add-point:ON CHANGE xccald name="input.g.xccald"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD format
+            #add-point:BEFORE FIELD format name="input.b.format"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD format
+            
+            #add-point:AFTER FIELD format name="input.a.format"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE format
+            #add-point:ON CHANGE format name="input.g.format"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mold
+            #add-point:BEFORE FIELD mold name="input.b.mold"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mold
+            
+            #add-point:AFTER FIELD mold name="input.a.mold"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mold
+            #add-point:ON CHANGE mold name="input.g.mold"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD way
+            #add-point:BEFORE FIELD way name="input.b.way"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD way
+            
+            #add-point:AFTER FIELD way name="input.a.way"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE way
+            #add-point:ON CHANGE way name="input.g.way"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xccacomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccacomp
+            #add-point:ON ACTION controlp INFIELD xccacomp name="input.c.xccacomp"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcca_m.xccacomp             #給予default值
+            LET g_qryparam.default2 = "" #g_xcca_m.ooefl003 #說明(簡稱)
+            #給予arg
+           #LET g_qryparam.arg1 = "" #
+           IF NOT cl_null(g_xcca_m.xccald) THEN
+              LET g_qryparam.where = "ooef003 = 'Y' AND ooef017 = (SELECT glaacomp FROM glaa_t",
+                      "  WHERE glaaent = '",g_enterprise,"' AND glaald = '",g_xcca_m.xccald,"' )"
+            END IF
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_xcca_m.xccacomp = g_qryparam.return1              
+            #LET g_xcca_m.ooefl003 = g_qryparam.return2 
+            DISPLAY g_xcca_m.xccacomp TO xccacomp              #
+            #DISPLAY g_xcca_m.ooefl003 TO ooefl003 #說明(簡稱)
+            LET g_qryparam.where = NULL
+            NEXT FIELD xccacomp                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xccald
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccald
+            #add-point:ON ACTION controlp INFIELD xccald name="input.c.xccald"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcca_m.xccald             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            IF NOT cl_null(g_xcca_m.xccacomp) THEN
+               LET g_qryparam.where = " glaacomp = '",g_xcca_m.xccacomp,"'"
+            END IF
+            
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_xcca_m.xccald = g_qryparam.return1              
+
+            DISPLAY g_xcca_m.xccald TO xccald              #
+            LET g_qryparam.where = NULL
+
+            NEXT FIELD xccald                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.format
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD format
+            #add-point:ON ACTION controlp INFIELD format name="input.c.format"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mold
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mold
+            #add-point:ON ACTION controlp INFIELD mold name="input.c.mold"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.way
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD way
+            #add-point:ON ACTION controlp INFIELD way name="input.c.way"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      ON ACTION browser
+         CALL cl_client_browse_file() RETURNING g_xcca_m.way
+         LET ls_str = g_xcca_m.way
+         #抓取目录斜杆
+         LET l_num =ls_str.getIndexOf(':',1)                                    #抓取：后的字符位置
+         LET l_chr = ls_str.substring(l_num+1,l_num+1)                        #截取冒号后的字符 
+         LET l_chr1 = ls_str.substring(ls_str.getLength(),ls_str.getLength())    #判断是否为根目录
+#         IF l_chr <> l_chr1  THEN         
+#            LET g_xcca_m.way = g_xcca_m.way||l_chr
+#         ELSE
+            LET g_xcca_m.way = g_xcca_m.way
+#         END IF 
+         DISPLAY BY NAME g_xcca_m.way
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axct300_02 
+   
+   #add-point:input段after input 
+   CALL axct300_02_ins_excel(g_xcca_m.way) RETURNING l_success
+   RETURN l_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axct300_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axct300_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct300_02_xccacomp_desc()
+   SELECT ooefl003 INTO g_xcca_m.xccacomp_desc FROM ooefl_t 
+    WHERE ooeflent=g_enterprise AND ooefl001=g_xcca_m.xccacomp AND ooefl002=g_dlang
+
+   DISPLAY BY NAME g_xcca_m.xccacomp_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct300_02_ins_excel(p_excelname)
+DEFINE p_excelname LIKE type_t.chr1000  #excel档名
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_excelname STRING               #excel档名
+DEFINE l_count     LIKE type_t.num10
+DEFINE li_i        LIKE type_t.num10
+DEFINE li_j        LIKE type_t.num10
+DEFINE xlapp,iRes,iRow    LIKE type_t.num5
+DEFINE l_xcca      RECORD LIKE xcca_t.*
+DEFINE l_xcca1     RECORD LIKE xcca_t.*
+DEFINE l_xcca2     RECORD LIKE xcca_t.*
+DEFINE l_today     LIKE type_t.dat       #zll g_today 没有了
+DEFINE l_n         LIKE type_t.num5
+DEFINE l_xccastus  LIKE xcca_t.xccastus
+DEFINE l_xccacrtdt    DATETIME YEAR TO SECOND
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   LET l_today= cl_get_current()
+   LET l_count = LENGTH(p_excelname CLIPPED)
+   #转换路径分隔符
+   FOR li_i = 1 TO l_count
+       IF p_excelname[li_i,li_i] ="/" THEN
+          LET l_excelname = l_excelname CLIPPED,'\\'
+       ELSE
+          LET l_excelname = l_excelname CLIPPED,p_excelname[li_i,li_i]
+       END IF
+   END FOR
+
+   CALL ui.interface.frontCall('WinCOM','CreateInstance',
+                               ['Excel.Application'],[xlApp])
+   IF xlApp <> -1 THEN
+      CALL ui.interface.frontCall('WinCOM','CallMethod',
+                                  [xlApp,'WorkBooks.Open',l_excelname],[iRes])
+      IF iRes <> -1 THEN
+         CALL ui.interface.frontCall('WinCOM','GetProperty',
+              [xlApp,'ActiveSheet.UsedRange.Rows.Count'],[iRow])
+         IF iRow > 1 THEN
+            FOR li_i = 2 TO iRow
+                INITIALIZE l_xcca.* TO NULL
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',1).Value'],[l_xcca.xccaent])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',2).Value'],[l_xcca.xccald])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',3).Value'],[l_xcca.xccacomp])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',4).Value'],[l_xcca.xcca001])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',5).Value'],[l_xcca.xcca002])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',6).Value'],[l_xcca.xcca003])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',7).Value'],[l_xcca.xcca004])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',8).Value'],[l_xcca.xcca005])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',9).Value'],[l_xcca.xcca006])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',10).Value'],[l_xcca.xcca007])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',11).Value'],[l_xcca.xcca008])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',12).Value'],[l_xcca.xcca101])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',13).Value'],[l_xcca.xcca110a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',14).Value'],[l_xcca.xcca110b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',15).Value'],[l_xcca.xcca110c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',16).Value'],[l_xcca.xcca110d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',17).Value'],[l_xcca.xcca110e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',18).Value'],[l_xcca.xcca110f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',19).Value'],[l_xcca.xcca110g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',20).Value'],[l_xcca.xcca110h])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',21).Value'],[l_xcca.xcca110])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',22).Value'],[l_xcca.xcca102a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',23).Value'],[l_xcca.xcca102b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',24).Value'],[l_xcca.xcca102c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',25).Value'],[l_xcca.xcca102d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',26).Value'],[l_xcca.xcca102e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',27).Value'],[l_xcca.xcca102f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',28).Value'],[l_xcca.xcca102g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',29).Value'],[l_xcca.xcca102h])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',30).Value'],[l_xcca.xcca102])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',31).Value'],[l_xcca1.xcca110a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',32).Value'],[l_xcca1.xcca110b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',33).Value'],[l_xcca1.xcca110c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',34).Value'],[l_xcca1.xcca110d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',35).Value'],[l_xcca1.xcca110e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',36).Value'],[l_xcca1.xcca110f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',37).Value'],[l_xcca1.xcca110g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',38).Value'],[l_xcca1.xcca110h])
+#                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',39).Value'],[l_xcca.xcca110])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',39).Value'],[l_xcca1.xcca110])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',40).Value'],[l_xcca1.xcca102a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',41).Value'],[l_xcca1.xcca102b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',42).Value'],[l_xcca1.xcca102c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',43).Value'],[l_xcca1.xcca102d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',44).Value'],[l_xcca1.xcca102e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',45).Value'],[l_xcca1.xcca102f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',46).Value'],[l_xcca1.xcca102g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',47).Value'],[l_xcca1.xcca102h])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',48).Value'],[l_xcca1.xcca102])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',49).Value'],[l_xcca2.xcca110a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',50).Value'],[l_xcca2.xcca110b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',51).Value'],[l_xcca2.xcca110c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',52).Value'],[l_xcca2.xcca110d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',53).Value'],[l_xcca2.xcca110e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',54).Value'],[l_xcca2.xcca110f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',55).Value'],[l_xcca2.xcca110g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',56).Value'],[l_xcca2.xcca110h])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',57).Value'],[l_xcca2.xcca110])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',58).Value'],[l_xcca2.xcca102a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',59).Value'],[l_xcca2.xcca102b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',60).Value'],[l_xcca2.xcca102c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',61).Value'],[l_xcca2.xcca102d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',62).Value'],[l_xcca2.xcca102e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',63).Value'],[l_xcca2.xcca102f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',64).Value'],[l_xcca2.xcca102g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',65).Value'],[l_xcca2.xcca102h])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',66).Value'],[l_xcca2.xcca102])
+
+                #如果excel中存在不在畫面上的法人或者帳套CONTINUE
+                IF l_xcca.xccald != g_xcca_m.xccald OR l_xcca.xccacomp != g_xcca_m.xccacomp THEN
+                 #fengmy150122---begin
+                  #CONTINUE FOR
+                  #匯出畫面中帳套不一致的，提示檢核訊息，不予新增
+                   INITIALIZE g_errparam TO NULL
+                   LET g_errparam.code = 'axc-00514'
+                   LET g_errparam.extend = ''
+                   LET g_errparam.popup = TRUE
+                   CALL cl_err()
+
+                   LET r_success = FALSE
+                   EXIT FOR
+                   #fengmy150122---end
+                END IF
+                #fengmy150120--begin
+                IF cl_null(l_xcca.xcca002) THEN LET l_xcca.xcca002 = ' ' END IF
+                IF cl_null(l_xcca.xcca007) THEN LET l_xcca.xcca007 = ' ' END IF
+                IF cl_null(l_xcca.xcca008) THEN LET l_xcca.xcca008 = ' ' END IF
+                #fengmy150120--end
+                #赋默认值
+                LET l_xcca1.xccaent = l_xcca.xccaent
+                LET l_xcca1.xccald = l_xcca.xccald
+                LET l_xcca1.xccacomp = l_xcca.xccacomp
+                LET l_xcca1.xcca002 = l_xcca.xcca002
+                LET l_xcca1.xcca003 = l_xcca.xcca003
+                LET l_xcca1.xcca004 = l_xcca.xcca004
+                LET l_xcca1.xcca005 = l_xcca.xcca005
+                LET l_xcca1.xcca006 = l_xcca.xcca006
+                LET l_xcca1.xcca007 = l_xcca.xcca007
+                LET l_xcca1.xcca008 = l_xcca.xcca008
+                LET l_xcca1.xcca101 = l_xcca.xcca101
+                LET l_xcca2.xccaent = l_xcca.xccaent
+                LET l_xcca2.xccald = l_xcca.xccald
+                LET l_xcca2.xccacomp = l_xcca.xccacomp
+                LET l_xcca2.xcca002 = l_xcca.xcca002
+                LET l_xcca2.xcca003 = l_xcca.xcca003
+                LET l_xcca2.xcca004 = l_xcca.xcca004
+                LET l_xcca2.xcca005 = l_xcca.xcca005
+                LET l_xcca2.xcca006 = l_xcca.xcca006
+                LET l_xcca2.xcca007 = l_xcca.xcca007
+                LET l_xcca2.xcca008 = l_xcca.xcca008
+                LET l_xcca2.xcca101 = l_xcca.xcca101
+                LET l_xcca.xcca001 = '1'
+                LET l_xcca.xccaownid = g_user
+                LET l_xcca.xccaowndp = g_dept
+                LET l_xcca.xccacrtid = g_user
+                LET l_xcca.xccacrtdp = g_dept 
+                LET l_xccacrtdt = cl_get_current()
+                LET l_xcca.xccamodid = ""
+                LET l_xcca.xccamoddt = ""
+                LET l_xcca.xccacnfid = ""
+                LET l_xcca.xccacnfdt = "" 
+                LET l_xcca.xccapstid = ""
+                LET l_xcca.xccapstdt = "" 
+                LET l_xcca.xccapstdt = ""
+                LET l_xcca1.xcca001 = '2'
+                LET l_xcca1.xccaownid = g_user
+                LET l_xcca1.xccaowndp = g_dept
+                LET l_xcca1.xccacrtid = g_user
+                LET l_xcca1.xccacrtdp = g_dept 
+                LET l_xcca1.xccamodid = ""
+                LET l_xcca1.xccamoddt = ""
+                LET l_xcca1.xccacnfid = ""
+                LET l_xcca1.xccacnfdt = "" 
+                LET l_xcca1.xccapstid = ""
+                LET l_xcca1.xccapstdt = "" 
+                LET l_xcca1.xccapstdt = ""
+                LET l_xcca2.xcca001 = '3'
+                LET l_xcca2.xccaownid = g_user
+                LET l_xcca2.xccaowndp = g_dept
+                LET l_xcca2.xccacrtid = g_user
+                LET l_xcca2.xccacrtdp = g_dept 
+                LET l_xcca2.xccamodid = ""
+                LET l_xcca2.xccamoddt = ""
+                LET l_xcca2.xccacnfid = ""
+                LET l_xcca2.xccacnfdt = "" 
+                LET l_xcca2.xccapstid = ""
+                LET l_xcca2.xccapstdt = "" 
+                LET l_xcca2.xccapstdt = ""
+
+                   
+               INSERT INTO xcca_t VALUES l_xcca.*
+               IF g_glaa015 = 'Y' THEN
+                  INSERT INTO xcca_t VALUES l_xcca1.*
+               END IF
+               IF g_glaa019 = 'Y' THEN
+                  INSERT INTO xcca_t VALUES l_xcca2.*
+               END IF
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = 'ins xcca'
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  LET r_success = FALSE
+                  EXIT FOR
+               END IF
+               #END IF
+            END FOR
+         END IF
+      ELSE
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = ''
+         LET g_errparam.extend = 'NO FILE'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+      END IF
+   ELSE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = ''
+      LET g_errparam.extend = 'NO EXCEL'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+   END IF
+
+   CALL ui.interface.frontCall('WinCOM','CallMethod',[xlApp,'Quit'],[iRes])
+   CALL ui.interface.frontCall('WinCOM','ReleaseInstance',[xlApp],[iRes])
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct300_02_xccald_desc()
+   SELECT glaa015,glaa019 INTO g_glaa015,g_glaa019 FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaald = g_xcca_m.xccald
+    
+   SELECT glaal003 INTO g_xcca_m.xccald_desc FROM glaal_t 
+    WHERE glaalent=g_enterprise AND glaal001=g_xcca_m.xccald AND glaal002=g_dlang
+
+   DISPLAY BY NAME g_xcca_m.xccald_desc
+END FUNCTION
+
+ 
+{</section>}
+ 

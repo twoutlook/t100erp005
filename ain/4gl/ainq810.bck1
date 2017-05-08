@@ -1,0 +1,3628 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="ainq810.description" >}
+#+ Version..: T100-ERP-1.00.00(版次:1) Build-000079
+#+ 
+#+ Filename...: ainq810
+#+ Description: 盤點結果預覽作業
+#+ Creator....: 01251(2014/03/26)
+#+ Modifier...: 01251(2014/04/02)
+#+ Buildtype..: 應用 i01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+ 
+{<section id="ainq810.global" >}
+#161108-00012#2  2016/11/09 By 08734  g_browser_cnt 由num5改為num10
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_ineg_m RECORD
+       inegsite LIKE ineg_t.inegsite, 
+   inegsite_desc LIKE type_t.chr80, 
+   ineg002 LIKE ineg_t.ineg002, 
+   ineg002_desc LIKE type_t.chr80, 
+   inea002 LIKE inea_t.inea002, 
+   inegdocno LIKE ineg_t.inegdocno, 
+   inea003 LIKE inea_t.inea003
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_ineg_m        type_g_ineg_m
+DEFINE g_ineg_m_t      type_g_ineg_m                #備份舊值
+   DEFINE g_inegsite_t LIKE ineg_t.inegsite
+DEFINE g_inegdocno_t LIKE ineg_t.inegdocno
+ 
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位  
+         b_statepic     LIKE type_t.chr50,
+            b_inegsite LIKE ineg_t.inegsite,
+      b_inegdocno LIKE ineg_t.inegdocno
+         #,rank           LIKE type_t.num10
+      END RECORD 
+          
+#無單頭append欄位定義
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+  
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10              #單身筆數  #161108-00012#2 num5==》num10                        
+DEFINE l_ac                  LIKE type_t.num10              #目前處理的ARRAY CNT  #161108-00012#2 num5==》num10 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10              #page起始筆數  #161108-00012#2 num5==》num10
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_aw                  STRING             #確定當下點擊的單身
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10   #Browser 所在筆數(當下page)  #161108-00012#2 num5==》num10
+DEFINE g_current_row         LIKE type_t.num10   #Browser 所在筆數(暫存用)  #161108-00012#2 num5==》num10
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10   #Browser 所在筆數(所有資料)  #161108-00012#2 num5==》num10
+#DEFINE g_browser_cnt         LIKE type_t.num5   #Browser 總筆數(所有資料)   #161108-00012#2  2016/11/09 By 08734 mark
+DEFINE g_browser_cnt         LIKE type_t.num10   #Browser 總筆數(所有資料)   #161108-00012#2  2016/11/09 By 08734 add
+DEFINE g_tmp_page            LIKE type_t.num10   #161108-00012#2 num5==》num10
+DEFINE g_row_index           LIKE type_t.num10   #161108-00012#2 num5==》num10
+DEFINE g_chk                 BOOLEAN
+DEFINE g_default             BOOLEAN            #是否有外部參數查詢
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_detail_idx          LIKE type_t.num10  #161108-00012#2 num5==》num10
+DEFINE g_wc2_table1          STRING
+DEFINE g_browser_query    DYNAMIC ARRAY OF RECORD                   
+         b_inegsite LIKE ineg_t.inegsite,
+         b_ineg002  LIKE ineg_t.ineg002
+       END RECORD   
+DEFINE g_ineh_d          DYNAMIC ARRAY OF RECORD
+   inehseq LIKE ineh_t.inehseq,
+   ineh001 LIKE ineh_t.ineh001, 
+   ineh002 LIKE ineh_t.ineh002, 
+   ineh001_desc LIKE type_t.chr500, 
+   ineh004 LIKE ineh_t.ineh004, 
+   ineh005 LIKE ineh_t.ineh005, 
+   ineh006 LIKE ineh_t.ineh006, 
+   ineh007 LIKE ineh_t.ineh007, 
+   ineh008 LIKE ineh_t.ineh008, 
+   ineh008_desc LIKE type_t.chr500, 
+   ineh010 LIKE ineh_t.ineh010, 
+   ineh011 LIKE ineh_t.ineh011, 
+   ineh012 LIKE ineh_t.ineh012, 
+   ineh013 LIKE ineh_t.ineh013, 
+   ineh014 LIKE ineh_t.ineh014, 
+   ineh009 LIKE ineh_t.ineh009, 
+   ineh015 LIKE ineh_t.ineh015, 
+   ineh016 LIKE ineh_t.ineh016, 
+   amount1 LIKE type_t.num20_6, 
+   ineh017 LIKE ineh_t.ineh017, 
+   amount2 LIKE type_t.num20_6,
+   amount3 LIKE type_t.num20_6    
+       END RECORD
+DEFINE g_ineh_d1          DYNAMIC ARRAY OF RECORD
+   ineh001_1 LIKE ineh_t.ineh001, 
+   ineh002_1 LIKE ineh_t.ineh002, 
+   ineh001_1_desc LIKE type_t.chr500, 
+   ineh004_1 LIKE ineh_t.ineh004, 
+   ineh005_1 LIKE ineh_t.ineh005, 
+   ineh006_1 LIKE ineh_t.ineh006, 
+   ineh007_1 LIKE ineh_t.ineh007, 
+   ineh008_1 LIKE ineh_t.ineh008, 
+   ineh008_1_desc LIKE type_t.chr500,
+   ineh011_1 LIKE ineh_t.ineh011, 
+   ineh012_1 LIKE ineh_t.ineh012, 
+   ineh015_1 LIKE ineh_t.ineh015, 
+   ineh016_1 LIKE ineh_t.ineh016, 
+   amount1_1 LIKE type_t.num20_6, 
+   ineh017_1 LIKE ineh_t.ineh017, 
+   amount2_1 LIKE type_t.num20_6 
+       END RECORD
+DEFINE g_ineh_d2          DYNAMIC ARRAY OF RECORD
+   ineh001_2 LIKE ineh_t.ineh001, 
+   ineh002_2 LIKE ineh_t.ineh002, 
+   ineh001_2_desc LIKE type_t.chr500, 
+   ineh004_2 LIKE ineh_t.ineh004, 
+   ineh005_2 LIKE ineh_t.ineh005, 
+   ineh006_2 LIKE ineh_t.ineh006, 
+   ineh007_2 LIKE ineh_t.ineh007, 
+   ineh008_2 LIKE ineh_t.ineh008, 
+   ineh008_2_desc LIKE type_t.chr500,  
+   ineh011_2 LIKE ineh_t.ineh011, 
+   ineh012_2 LIKE ineh_t.ineh012, 
+   ineh013_2 LIKE ineh_t.ineh013, 
+   ineh015_2 LIKE ineh_t.ineh015, 
+   ineh016_2 LIKE ineh_t.ineh016, 
+   amount1_2 LIKE type_t.num20_6, 
+   ineh017_2 LIKE ineh_t.ineh017, 
+   amount2_2 LIKE type_t.num20_6 
+       END RECORD
+DEFINE g_ineh_d3          DYNAMIC ARRAY OF RECORD
+   ineh001_3 LIKE ineh_t.ineh001, 
+   ineh002_3 LIKE ineh_t.ineh002, 
+   ineh001_3_desc LIKE type_t.chr500, 
+   ineh004_3 LIKE ineh_t.ineh004, 
+   ineh005_3 LIKE ineh_t.ineh005, 
+   ineh006_3 LIKE ineh_t.ineh006, 
+   ineh007_3 LIKE ineh_t.ineh007, 
+   ineh008_3 LIKE ineh_t.ineh008, 
+   ineh008_3_desc LIKE type_t.chr500, 
+   ineh010_3 LIKE ineh_t.ineh010,  
+   ineh015_3 LIKE ineh_t.ineh015, 
+   ineh016_3 LIKE ineh_t.ineh016, 
+   amount1_3 LIKE type_t.num20_6, 
+   ineh017_3 LIKE ineh_t.ineh017, 
+   amount2_3 LIKE type_t.num20_6 
+       END RECORD
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ainq810.main" >}
+#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   DEFINE l_success LIKE type_t.num5 #150308-00001#1  By Ken 150309
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ain","")
+ 
+   #add-point:作業初始化
+   
+   #end add-point
+   
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_forupd_sql = "SELECT inegsite,'',ineg002,'','',inegdocno,'' FROM ineg_t WHERE inegent= ? AND  
+       inegsite=? AND inegdocno=? FOR UPDATE"
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE ainq810_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE inegsite,ineg002,inegdocno",
+               " FROM ineg_t",
+               " WHERE inegent = '" ||g_enterprise|| "' AND inegsite = ? AND inegdocno = ?"
+   #add-point:SQL_define
+   
+   #end add-point
+   PREPARE ainq810_master_referesh FROM g_sql
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ainq810 WITH FORM cl_ap_formpath("ain",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL ainq810_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL ainq810_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_ainq810
+      
+   END IF 
+   
+   CLOSE ainq810_cl
+   
+   
+ 
+   #add-point:作業離開前
+   CALL s_aooi500_drop_temp() RETURNING l_success #150308-00001#1  By Ken 150309
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="ainq810.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION ainq810_init()
+   #add-point:init段define
+   DEFINE l_success LIKE type_t.num5 #150308-00001#1  By Ken 150309
+   #end add-point
+ 
+   
+   
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化
+   CALL s_aooi500_create_temp() RETURNING l_success #150308-00001#1  By Ken 150309   
+   CALL cl_set_combo_scc('inea003','6549')
+   #end add-point
+   
+   CALL ainq810_default_search()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ainq810_ui_dialog() 
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10  #161108-00012#2 num5==》num10
+   DEFINE ls_wc     STRING
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   
+   
+   #action default動作
+   
+   
+   #add-point:ui_dialog段before dialog 
+   LET g_main_hidden=1
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+      
+#      CALL ainq810_browser_fill(g_wc,"")
+#      
+#      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+#      IF g_state = "Y" THEN
+#         FOR li_idx = 1 TO g_browser.getLength()
+#            IF g_browser[li_idx].b_inegsite = g_inegsite_t
+#               AND g_browser[li_idx].b_inegdocno = g_inegdocno_t
+# 
+# 
+#               THEN
+#               LET g_current_row = li_idx
+#               EXIT FOR
+#            END IF
+#         END FOR
+#         LET g_state = ""
+#      END IF
+    
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+                  
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+               
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL ainq810_fetch("")   
+               END IF               
+         
+            #ON ACTION statechange
+            #   CALL ainq810_statechange()
+            #   LET g_action_choice="statechange"
+               
+            ON ACTION first
+               CALL ainq810_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               CALL ainq810_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION jump
+               CALL ainq810_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION previous
+               CALL ainq810_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION last 
+               CALL ainq810_fetch("L")  
+               #CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               #CALL fgl_set_arr_curr(g_current_idx)
+               LET g_current_row = g_current_idx
+            
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+            
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL ainq810_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL ainq810_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "-100"
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+ 
+                     CLEAR FORM
+                  ELSE
+                     CALL ainq810_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+            
+ 
+         ON ACTION datainfo
+ 
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN 
+               #add-point:ON ACTION datainfo
+
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL ainq810_query()
+               #add-point:ON ACTION query
+               LET g_main_hidden = 1
+               EXIT MENU
+               #END add-point
+            END IF
+ 
+            
+            
+            ON ACTION related_document
+               CALL cl_doc()
+            
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+#            #左側瀏覽頁簽
+#            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+#            
+#               BEFORE ROW
+#                  #回歸舊筆數位置 (回到當時異動的筆數)
+#                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+#                  IF g_current_idx = 0 THEN
+#                     LET g_current_idx = 1
+#                  END IF
+#                  LET g_current_row = g_current_idx  #目前指標
+#                  LET g_current_sw = TRUE
+#                  CALL cl_show_fld_cont()     
+#                  
+#                  #當每次點任一筆資料都會需要用到               
+#                  CALL ainq810_fetch("")      
+#                  
+#               
+#            
+#            END DISPLAY
+ 
+         
+            #add-point:ui_dialog段define
+            DISPLAY ARRAY g_ineh_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+            
+               BEFORE ROW
+                  LET l_ac = DIALOG.getCurrentRow("s_detail1")
+                  LET g_detail_idx = l_ac
+                  DISPLAY l_ac TO FORMONLY.idx
+                  DISPLAY g_ineh_d.getLength() TO FORMONLY.cnt
+                  
+
+               BEFORE DISPLAY
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+                  LET l_ac = DIALOG.getCurrentRow("s_detail1")
+                  DISPLAY g_ineh_d.getLength() TO FORMONLY.cnt
+                 
+		    
+                  
+            END DISPLAY
+            DISPLAY ARRAY g_ineh_d1 TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+            
+               BEFORE ROW
+                  LET l_ac = DIALOG.getCurrentRow("s_detail2")
+                  LET g_detail_idx = l_ac
+                  DISPLAY l_ac TO FORMONLY.idx
+                  DISPLAY g_ineh_d1.getLength() TO FORMONLY.cnt
+                  
+
+               BEFORE DISPLAY
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+                  LET l_ac = DIALOG.getCurrentRow("s_detail2")
+                  DISPLAY g_ineh_d1.getLength() TO FORMONLY.cnt
+                  
+		    
+                  
+            END DISPLAY
+            DISPLAY ARRAY g_ineh_d2 TO s_detail3.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+            
+               BEFORE ROW
+                  LET l_ac = DIALOG.getCurrentRow("s_detail3")
+                  LET g_detail_idx = l_ac
+                  DISPLAY l_ac TO FORMONLY.idx
+                  DISPLAY g_ineh_d1.getLength() TO FORMONLY.cnt
+                  
+
+               BEFORE DISPLAY
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+                  LET l_ac = DIALOG.getCurrentRow("s_detail3")
+                  DISPLAY g_ineh_d2.getLength() TO FORMONLY.cnt
+                  
+		    
+                  
+            END DISPLAY  
+            DISPLAY ARRAY g_ineh_d3 TO s_detail4.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+            
+               BEFORE ROW
+                  LET l_ac = DIALOG.getCurrentRow("s_detail4")
+                  LET g_detail_idx = l_ac
+                  DISPLAY l_ac TO FORMONLY.idx
+                  DISPLAY g_ineh_d3.getLength() TO FORMONLY.cnt
+                  
+
+               BEFORE DISPLAY
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+                  LET l_ac = DIALOG.getCurrentRow("s_detail4")
+                  DISPLAY g_ineh_d3.getLength() TO FORMONLY.cnt
+                
+		    
+                  
+            END DISPLAY              
+            #end add-point
+         
+            BEFORE DIALOG
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL ainq810_fetch("")   
+               END IF               
+               
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog
+
+               #end add-point
+            
+            #ON ACTION statechange
+            #   CALL ainq810_statechange()
+            #   LET g_action_choice="statechange"
+            #   EXIT DIALOG
+         
+ 
+            ON ACTION first
+               CALL ainq810_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               CALL ainq810_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION jump
+               CALL ainq810_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION previous
+               CALL ainq810_fetch("P")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION last 
+               CALL ainq810_fetch("L")  
+               #CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               #CALL fgl_set_arr_curr(g_current_idx)
+               LET g_current_row = g_current_idx
+         
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT DIALOG
+         
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT DIALOG
+               
+         
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            #快速搜尋
+               
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL ainq810_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL ainq810_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "-100"
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+ 
+                     CLEAR FORM
+                  ELSE
+                     CALL ainq810_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+ 
+         ON ACTION datainfo
+ 
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN 
+               #add-point:ON ACTION datainfo
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL ainq810_query()
+               #add-point:ON ACTION query
+
+               #END add-point
+            END IF
+ 
+            
+            
+ 
+            ON ACTION related_document
+               CALL cl_doc()
+ 
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.browser_fill" >}
+#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION ainq810_browser_fill(p_wc,ps_page_action) 
+   DEFINE p_wc              STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define
+   DEFINE l_where           STRING
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_ineg_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   CALL g_browser.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET l_searchcol = "inegsite"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   
+   #add-point:browser_fill段wc控制
+   CALL s_aooi500_sql_where(g_prog,'inegsite') RETURNING l_where
+   LET p_wc = p_wc," AND ",l_where
+   LET p_wc  = p_wc.trim() 
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(*) FROM ineg_t ",
+               "  ",
+               "  ",
+               " WHERE inegent = '" ||g_enterprise|| "' AND ", 
+               p_wc CLIPPED
+                
+   #add-point:browser_fill段cnt_sql
+   
+   IF g_wc2_table1<>" 1=1" THEN  #單身有輸入搜尋條件
+   
+      LET g_sql = "SELECT COUNT(*) FROM (", 
+                  " SELECT DISTINCT inegsite,ineg002 FROM ineg_t ",
+                  "        LEFT JOIN ineh_t ON inehent = inegent AND inegsite = inehsite AND inegdocno = inehdocno ",
+                  "  ",
+                  " WHERE inegent = '" ||g_enterprise|| "'",
+                  "   AND inehent = '" ||g_enterprise|| "'",
+                  "   AND ",p_wc CLIPPED,
+                  "   AND ",g_wc2_table1 CLIPPED,
+                  ")"
+   ELSE
+      LET g_sql = "SELECT COUNT(*) FROM (", 
+                  " SELECT DISTINCT inegsite,ineg002 FROM ineg_t ",
+                  "  ",
+                  " WHERE inegent = '" ||g_enterprise|| "'",
+                  "   AND ",p_wc CLIPPED,
+                  ")"   
+     
+   END IF
+
+   #end add-point
+				
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt
+   FREE header_cnt_pre 
+   
+   #若超過最大顯示筆數
+   
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   LET g_wc = p_wc
+   #LET g_page_action = ps_page_action          # Keep Action
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+ 
+   CASE ps_page_action
+      
+      WHEN "F" 
+         LET g_pagestart = 1
+      
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+            LET g_pagestart = 1
+         END IF
+      
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+         
+      WHEN '/'
+         LET g_pagestart = g_jump
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = 1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'azz-998'
+            LET g_errparam.extend = g_jump
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+ 
+         END IF
+         
+      OTHERWISE
+         
+   END CASE
+   
+   LET l_sql_rank = "SELECT inegstus,inegsite,inegdocno,RANK() OVER(ORDER BY inegsite ",
+                    ",inegdocno ",
+ 
+                    g_order,
+                    ") AS RANK ",
+                    " FROM ineg_t ",
+                    "  ",
+                    "  ",
+                    " WHERE inegent = '" ||g_enterprise|| "' AND ", g_wc
+ 
+   #add-point:browser_fill段before_pre
+
+                    
+                    
+   #單身有輸入查詢條件且非null
+   IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN  
+      LET l_sql_rank = "SELECT inegstus,inegsite,ineg002,RANK() OVER(ORDER BY inegsite",
+                       ",ineg002 ",
+                       
+                       g_order,
+                       ") AS RANK ",
+                       " FROM ineg_t ",
+                       "        LEFT JOIN ineh_t ON inehent = inegent AND inegsite = inehsite AND inegdocno = inehdocno ",
+                       "  ",
+                       " WHERE inegent = '" ||g_enterprise|| "' ",
+                       "   AND ",g_wc CLIPPED,
+                       "   AND ",g_wc2_table1 CLIPPED       
+   
+   ELSE
+      LET l_sql_rank = "SELECT inegstus,inegsite,ineg002,RANK() OVER(ORDER BY inegsite",
+                       ",ineg002 ",
+                       
+                       g_order,
+                       ") AS RANK ",
+                       " FROM ineg_t ",
+                       "  ",
+                       "  ",
+                       " WHERE inegent = '" ||g_enterprise|| "' ",
+                       "   AND ",g_wc CLIPPED
+   END IF                    
+   #end add-point					
+					
+   #定義翻頁CURSOR
+   LET g_sql= " SELECT inegstus,inegsite,ineg002 FROM (",l_sql_rank,") ",
+              "  WHERE RANK >= ", g_pagestart,
+              "    AND RANK <  ", (g_pagestart + g_max_browse) , 
+              "  ORDER BY ",l_searchcol," ",g_order
+ 
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_inegsite,g_browser[g_cnt].b_inegdocno 
+ 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "foreach:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+
+      #end add-point
+      
+      LET g_browser[g_cnt].b_statepic = cl_get_actipic(g_browser[g_cnt].b_statepic)
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "std-00002"
+         LET g_errparam.extend = "Max_Row:"||g_max_rec USING "<<<<<"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser_cnt
+   LET g_rec_b = g_cnt - 1
+   LET g_current_cnt = g_browser_cnt
+   LET g_cnt = 0
+   
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="ainq810.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION ainq810_construct()
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define
+   DEFINE l_wcother              STRING
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_ineg_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON inegsite,ineg002
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct
+            
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         
+      
+         #一般欄位
+         #---------------------------<  Master  >---------------------------
+         #----<<inegsite>>----
+         #Ctrlp:construct.c.inegsite
+         ON ACTION controlp INFIELD inegsite
+            #add-point:ON ACTION controlp INFIELD inegsite
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+#            LET g_qryparam.arg1=g_site
+#            LET g_qryparam.arg2='8'            
+#            CALL q_ooed004_3()                           #呼叫開窗
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'inegsite',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+            CALL q_ooef001_24() 
+            DISPLAY g_qryparam.return1 TO inegsite  #顯示到畫面上
+            NEXT FIELD inegsite                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD inegsite
+            #add-point:BEFORE FIELD inegsite
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD inegsite
+            
+            #add-point:AFTER FIELD inegsite
+            
+            #END add-point
+            
+ 
+         #----<<inegsite_desc>>----
+         #----<<ineg002>>----
+         #Ctrlp:construct.c.ineg002
+         ON ACTION controlp INFIELD ineg002
+            #add-point:ON ACTION controlp INFIELD ineg002
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ineadocno_01()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ineg002  #顯示到畫面上
+            NEXT FIELD ineg002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ineg002
+            #add-point:BEFORE FIELD ineg002
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ineg002
+            
+            #add-point:AFTER FIELD ineg002
+            
+            #END add-point
+            
+ 
+         #----<<ineg002_desc>>----
+         #----<<inea002>>----
+         #----<<inegdocno>>----
+         #----<<inea003>>----
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct
+      CONSTRUCT BY NAME l_wcother ON inea002,inea003
+ 
+                      
+         BEFORE CONSTRUCT
+      
+         BEFORE FIELD inea002
+
+         AFTER FIELD inea002
+ 
+ 
+         BEFORE FIELD inea003
+
+         AFTER FIELD inea003
+            
+        
+      END CONSTRUCT
+
+      CONSTRUCT g_wc2_table1 ON ineh001,ineh002,ineh004,ineh005,ineh006,ineh008,ineh010,ineh011, 
+          ineh012,ineh013,ineh014,ineh009,ineh015,ineh016,ineh017
+           FROM s_detail1[1].ineh001,s_detail1[1].ineh002,s_detail1[1].ineh004, 
+               s_detail1[1].ineh005,s_detail1[1].ineh006,s_detail1[1].ineh008,s_detail1[1].ineh010,s_detail1[1].ineh011, 
+               s_detail1[1].ineh012,s_detail1[1].ineh013,s_detail1[1].ineh014,s_detail1[1].ineh009, 
+               s_detail1[1].ineh015,s_detail1[1].ineh016,s_detail1[1].ineh017
+
+                      
+         BEFORE CONSTRUCT
+ 
+
+         ON ACTION controlp INFIELD ineh001
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_rtdx001_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ineh001  #顯示到畫面上
+
+            NEXT FIELD ineh001                     #返回原欄位
+
+
+
+         ON ACTION controlp INFIELD ineh004
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_inaa001_12()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ineh004  #顯示到畫面上
+
+            NEXT FIELD ineh004                     #返回原欄位
+
+
+
+            
+
+         ON ACTION controlp INFIELD ineh005
+
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_inab002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ineh005  #顯示到畫面上
+
+            NEXT FIELD ineh005                     #返回原欄位
+
+         ON ACTION controlp INFIELD ineh008
+
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ineh008  #顯示到畫面上
+
+            NEXT FIELD ineh008                     #返回原欄位
+       
+      END CONSTRUCT
+
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct
+   IF cl_null(g_wc) THEN
+      LET g_wc=" 1=1"
+   END IF
+   IF cl_null(g_wc2_table1) THEN
+      LET g_wc2_table1=" 1=1"
+   END IF
+   IF NOT cl_null(l_wcother) THEN
+      LET g_wc="  ineg001<>'5' AND ineg004<>'4'",
+               " AND (inegstus='Y' AND (ineg001='1' OR ineg001='2' OR ineg001='3')) ",
+               " AND EXISTS (SELECT ineadocno FROM inea_t ",
+               "                             WHERE ineaent='",g_enterprise,"'",
+               "                               AND ineadocno=ineg_t.ineg002",
+               "                               AND ",l_wcother CLIPPED,")",
+               " AND ",g_wc CLIPPED
+   ELSE                                            
+      LET g_wc="  ineg001<>'5' AND ineg004<>'4'",
+               " AND (inegstus='Y' AND (ineg001='1' OR ineg001='2' OR ineg001='3')) ",
+               " AND ",g_wc CLIPPED                                             
+   END IF
+
+   #end add-point
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION ainq810_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+ 
+   CALL g_browser.clear() 
+   CALL g_ineh_d.clear()
+   CALL g_ineh_d1.clear()
+   CALL g_ineh_d2.clear()
+   CALL g_ineh_d3.clear()
+ 
+   IF g_worksheet_hidden THEN  #browser panel 單身折疊
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   IF g_header_hidden THEN    #單頭折疊
+      CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_ineg_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   DISPLAY " " TO FORMONLY.b_index        #當下筆數
+   DISPLAY " " TO FORMONLY.b_count        #總筆數
+   DISPLAY " " TO FORMONLY.h_index        #當下筆數
+   DISPLAY " " TO FORMONLY.h_count        #總筆數   
+   CALL ainq810_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL ainq810_browser_fill(g_wc,"F")
+      CALL ainq810_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   LET g_error_show = 1
+   CALL ainq810_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "-100"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+ 
+   ELSE
+      CALL ainq810_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION ainq810_fetch(p_fl)
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   DEFINE l_ined004_5 LIKE ined_t.ined004
+   DEFINE l_ined004_6 LIKE ined_t.ined004
+   #end add-point  
+   
+#   CASE p_fl
+#      WHEN "F" LET g_current_idx = 1
+#      WHEN "P"
+#         IF g_current_idx > 1 THEN               
+#            LET g_current_idx = g_current_idx - 1
+#         END IF 
+#      WHEN "N"
+#         IF g_current_idx < g_header_cnt THEN
+#            LET g_current_idx =  g_current_idx + 1
+#         END IF        
+#      WHEN "L" 
+#         LET g_current_idx = g_header_cnt        
+#      WHEN "/"
+#         IF (NOT g_no_ask) THEN      
+#            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+#            LET INT_FLAG = 0
+# 
+#            PROMPT ls_msg CLIPPED,": " FOR g_jump
+#               #交談指令共用ACTION
+#               &include "common_action.4gl"
+#            END PROMPT
+#            
+#            IF INT_FLAG THEN
+#               LET INT_FLAG = 0
+#               EXIT CASE  
+#            END IF           
+#         END IF
+#         IF g_jump > 0 THEN
+#            LET g_current_idx = g_jump
+#         END IF
+#         LET g_no_ask = FALSE     
+#   END CASE
+#   
+#   LET g_browser_cnt = g_browser.getLength()
+# 
+#   #瀏覽頁筆數顯示
+#   LET g_browser_idx = g_pagestart+g_current_idx-1
+#   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+#   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+#   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+#   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+#   CALL ui.Interface.refresh()
+#   
+#   #單頭筆數顯示
+#   #DISPLAY g_browser_idx TO FORMONLY.idx            #當下筆數
+#   #DISPLAY g_browser_cnt TO FORMONLY.cnt            #總筆數
+#   
+#   
+#   
+#   IF g_current_idx > g_browser.getLength() THEN
+#      LET g_current_idx = g_browser.getLength()
+#   END IF
+#   
+#   # 設定browse索引
+# 
+#   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+# 
+#   #代表沒有資料, 無需做後續資料撈取之動作
+#   IF g_current_idx = 0 THEN
+#      RETURN
+#   END IF
+# 
+#   LET g_ineg_m.inegsite = g_browser[g_current_idx].b_inegsite
+#   LET g_ineg_m.inegdocno = g_browser[g_current_idx].b_inegdocno
+# 
+# 
+#                       
+#   #重讀DB,因TEMP有不被更新特性
+#    SELECT UNIQUE inegsite,ineg002,inegdocno
+# INTO g_ineg_m.inegsite,g_ineg_m.ineg002,g_ineg_m.inegdocno
+# FROM ineg_t
+# WHERE inegent = g_enterprise AND inegsite = g_ineg_m.inegsite AND inegdocno = g_ineg_m.inegdocno
+#   IF SQLCA.sqlcode THEN
+#      CALL cl_err("ineg_t",SQLCA.sqlcode,0)
+#      INITIALIZE g_ineg_m.* TO NULL
+#      RETURN
+#   END IF
+   
+   #add-point:fetch段action控制
+   #單身有輸入查詢條件且非null
+   IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN  
+      LET g_sql = " SELECT DISTINCT inegsite,ineg002 FROM ineg_t ",
+                  "    LEFT JOIN ineh_t ON inehent = inegent AND inegsite = inehsite AND inegdocno = inehdocno ",
+                  "  ",
+                  " WHERE inegent = '" ||g_enterprise|| "'",
+                  "   AND ",g_wc CLIPPED,
+                  "   AND ",g_wc2_table1 CLIPPED
+   ELSE
+      LET g_sql = " SELECT DISTINCT inegsite,ineg002 FROM ineg_t ",
+                  "  ",
+                  "  ",
+                  " WHERE inegent = '" ||g_enterprise|| "'",
+                  "   AND ",g_wc CLIPPED
+   END IF
+				
+   PREPARE ainq810_sel_pre FROM g_sql
+   DECLARE ainq810_sel_cur CURSOR FOR ainq810_sel_pre 
+ 
+   CALL g_browser_query.clear()
+   LET g_cnt = 1
+   FOREACH ainq810_sel_cur INTO g_browser_query[g_cnt].b_inegsite,g_browser_query[g_cnt].b_ineg002
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "foreach:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      
+      
+
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "std-00002"
+         LET g_errparam.extend = "Max_Row:"||g_max_rec USING "<<<<<"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser_query.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser_cnt
+   LET g_rec_b = g_cnt - 1
+   LET g_current_cnt = g_browser_cnt
+   LET g_cnt = 0
+ 
+    IF g_browser_query.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "-100"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+    END IF
+ 
+   CASE p_fl
+      WHEN "F" LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         LET g_current_idx = g_header_cnt        
+      WHEN "/"
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+   
+   LET g_browser_cnt = g_browser_query.getLength()
+ 
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+   CALL ui.Interface.refresh()
+         
+   IF g_current_idx > g_browser_query.getLength() THEN
+      LET g_current_idx = g_browser_query.getLength()
+   END IF
+   
+   # 設定browse索引
+ 
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   LET g_ineg_m.inegsite = g_browser_query[g_current_idx].b_inegsite
+   LET g_ineg_m.ineg002 = g_browser_query[g_current_idx].b_ineg002
+ 
+ 
+                       
+   #重讀DB,因TEMP有不被更新特性
+    SELECT inea002,inea003
+      INTO g_ineg_m.inea002,g_ineg_m.inea003
+      FROM inea_t 
+     WHERE ineaent = g_enterprise AND ineadocno = g_ineg_m.ineg002
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "inea_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      INITIALIZE g_ineg_m.* TO NULL
+      RETURN
+   END IF
+
+
+   SELECT ined004 INTO l_ined004_5
+     FROM ined_t
+    WHERE inedent=g_enterprise
+      AND inedsite=g_ineg_m.inegsite
+      AND ined001=g_ineg_m.ineg002
+      AND ined003='5'
+   SELECT ined004 INTO l_ined004_6
+     FROM ined_t
+    WHERE inedent=g_enterprise
+      AND inedsite=g_ineg_m.inegsite
+      AND ined001=g_ineg_m.ineg002
+      AND ined003='6' 
+
+   IF l_ined004_5='N' THEN
+      CALL cl_set_comp_visible("ineh012",FALSE)
+      CALL cl_set_comp_visible("ineh012_2",FALSE)
+      CALL cl_set_comp_visible("page",FALSE)
+   ELSE
+      CALL cl_set_comp_visible("ineh012",TRUE)
+      CALL cl_set_comp_visible("ineh012_2",TRUE)
+      CALL cl_set_comp_visible("page",TRUE)
+   END IF
+   IF l_ined004_6='N' THEN
+      CALL cl_set_comp_visible("ineh013",FALSE)
+      CALL cl_set_comp_visible("page_1",FALSE)
+   ELSE
+      CALL cl_set_comp_visible("ineh013",TRUE)
+      CALL cl_set_comp_visible("page_1",TRUE)
+   END IF
+
+   LET g_main_hidden=1
+   #end add-point  
+   
+   
+   
+   #重新顯示
+   CALL ainq810_show()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION ainq810_insert()
+   #add-point:insert段define
+   
+   #end add-point    
+   
+   CLEAR FORM #清畫面欄位內容
+ 
+   INITIALIZE g_ineg_m.* LIKE ineg_t.*             #DEFAULT 設定
+   LET g_inegsite_t = NULL
+   LET g_inegdocno_t = NULL
+ 
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      #六階樹狀給值
+ 
+      
+      #公用欄位給值
+      
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_ineg_m.inea003 = "1"
+ 
+ 
+      #add-point:單頭預設值
+      
+      #end add-point   
+     
+      CALL ainq810_input("a")
+      
+      #add-point:單頭輸入後
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_ineg_m.* = g_ineg_m_t.*
+         CALL ainq810_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         EXIT WHILE
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   LET g_inegsite_t = g_ineg_m.inegsite
+   LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+   
+   LET g_state = "Y"
+ 
+   LET g_wc = g_wc,  
+              " OR ( inegent = '" ||g_enterprise|| "' AND",
+              " inegsite = '", g_ineg_m.inegsite CLIPPED, "' "
+              ," AND inegdocno = '", g_ineg_m.inegdocno CLIPPED, "' "
+ 
+              , ") "
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION ainq810_modify()
+   #add-point:modify段define
+   
+   #end add-point
+   
+   IF g_ineg_m.inegsite IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+ 
+      RETURN
+   END IF 
+   
+   EXECUTE ainq810_master_referesh USING g_ineg_m.inegsite,g_ineg_m.inegdocno INTO g_ineg_m.inegsite, 
+       g_ineg_m.ineg002,g_ineg_m.inegdocno
+ 
+   ERROR ""
+  
+   LET g_inegsite_t = g_ineg_m.inegsite
+   LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+   
+   CALL s_transaction_begin()
+   
+   OPEN ainq810_cl USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.inegdocno
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN ainq810_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+ 
+      CLOSE ainq810_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH ainq810_cl INTO g_ineg_m.inegsite,g_ineg_m.inegsite_desc,g_ineg_m.ineg002,g_ineg_m.ineg002_desc, 
+       g_ineg_m.inea002,g_ineg_m.inegdocno,g_ineg_m.inea003
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ineg_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+ 
+      CLOSE ainq810_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   
+ 
+   CALL ainq810_show()
+   
+   WHILE TRUE
+      LET g_ineg_m.inegsite = g_inegsite_t
+      LET g_ineg_m.inegdocno = g_inegdocno_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      
+      
+      #add-point:modify段修改前
+      
+      #end add-point
+ 
+      CALL ainq810_input("u")     #欄位更改
+ 
+      #add-point:modify段修改後
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_ineg_m.* = g_ineg_m_t.*
+         CALL ainq810_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         EXIT WHILE
+      END IF
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_ineg_m.inegsite,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE ainq810_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_ineg_m.inegsite,"U")
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+ 
+{</section>}
+ 
+{<section id="ainq810.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION ainq810_input(p_cmd)
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num10        #未取消的ARRAY CNT  #161108-00012#2 num5==》num10
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define
+
+   #end add-point
+ 
+   #切換畫面
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL ainq810_set_entry(p_cmd)
+   #add-point:set_entry後
+
+   #end add-point
+   CALL ainq810_set_no_entry(p_cmd)
+   #add-point:資料輸入前
+
+   #end add-point
+   
+   DISPLAY BY NAME g_ineg_m.ineg002
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_ineg_m.ineg002 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前
+
+            #end add-point
+   
+         #---------------------------<  Master  >---------------------------
+         #----<<inegsite>>----
+         #----<<inegsite_desc>>----
+         #----<<ineg002>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD ineg002
+            
+            #add-point:AFTER FIELD ineg002
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ineg_m.ineg002
+            CALL ap_ref_array2(g_ref_fields,"SELECT inea001 FROM inea_t WHERE ineaent='"||g_enterprise||"' AND ineadocno=? ","") RETURNING g_rtn_fields
+            LET g_ineg_m.ineg002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ineg_m.ineg002_desc
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ineg002
+            #add-point:BEFORE FIELD ineg002
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ineg002
+            #add-point:ON CHANGE ineg002
+
+            #END add-point
+ 
+         #----<<ineg002_desc>>----
+         #----<<inea002>>----
+         #----<<inegdocno>>----
+         #----<<inea003>>----
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<inegsite>>----
+         #----<<inegsite_desc>>----
+         #----<<ineg002>>----
+         #Ctrlp:input.c.ineg002
+         ON ACTION controlp INFIELD ineg002
+            #add-point:ON ACTION controlp INFIELD ineg002
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ineg_m.ineg002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ineadocno()                                #呼叫開窗
+
+            LET g_ineg_m.ineg002 = g_qryparam.return1              
+
+            DISPLAY g_ineg_m.ineg002 TO ineg002              #
+
+            NEXT FIELD ineg002                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<ineg002_desc>>----
+         #----<<inea002>>----
+         #----<<inegdocno>>----
+         #----<<inea003>>----
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+                
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+ 
+            IF p_cmd <> "u" THEN
+               LET l_count = 1  
+ 
+               SELECT COUNT(*) INTO l_count FROM ineg_t
+                WHERE inegent = g_enterprise AND inegsite = g_ineg_m.inegsite
+                  AND inegdocno = g_ineg_m.inegdocno
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前
+
+                  #end add-point
+               
+                  INSERT INTO ineg_t (inegent,inegsite,ineg002,inegdocno)
+                  VALUES (g_enterprise,g_ineg_m.inegsite,g_ineg_m.ineg002,g_ineg_m.inegdocno) 
+                  
+                  #add-point:單頭新增中
+
+                  #end add-point
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "ineg_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CONTINUE DIALOG
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後
+
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "std-00006"
+                  LET g_errparam.extend =  "g_ineg_m.inegsite"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+ 
+                  CALL s_transaction_end('N','0')
+               END IF 
+            ELSE
+               #add-point:單頭修改前
+
+               #end add-point
+               UPDATE ineg_t SET (inegsite,ineg002,inegdocno) = (g_ineg_m.inegsite,g_ineg_m.ineg002, 
+                   g_ineg_m.inegdocno)
+                WHERE inegent = g_enterprise AND inegsite = g_inegsite_t #
+                  AND inegdocno = g_inegdocno_t
+ 
+               #add-point:單頭修改中
+
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "std-00009"
+                     LET g_errparam.extend = "ineg_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+ 
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "ineg_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     #add-point:單頭修改後
+
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+               END CASE
+            END IF
+           #controlp
+      END INPUT
+          
+      #add-point:input段more input 
+
+      #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input 
+
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION ainq810_reproduce()
+   DEFINE l_newno     LIKE ineg_t.inegsite 
+   DEFINE l_oldno     LIKE ineg_t.inegsite 
+   DEFINE l_newno02     LIKE ineg_t.inegdocno 
+   DEFINE l_oldno02     LIKE ineg_t.inegdocno 
+ 
+   DEFINE l_master    RECORD LIKE ineg_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   
+   #end add-point   
+   
+   #切換畫面
+   
+   IF g_ineg_m.inegsite IS NULL
+      OR g_ineg_m.inegdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+   
+   LET g_inegsite_t = g_ineg_m.inegsite
+   LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+   
+   LET g_ineg_m.inegsite = ""
+   LET g_ineg_m.inegdocno = ""
+ 
+    
+   CALL ainq810_set_entry("a")
+   CALL ainq810_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   
+   
+   #add-point:複製輸入前
+   
+   #end add-point
+   
+   CALL ainq810_input("r")
+ 
+      LET g_ineg_m.inegsite_desc = ''
+   DISPLAY BY NAME g_ineg_m.inegsite_desc
+ 
+   
+   IF INT_FLAG  THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前
+   
+   #end add-point
+   
+   #add-point:單頭複製中
+   
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ineg_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+ 
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後
+   
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   LET g_state = "Y"
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              " inegsite = '", g_ineg_m.inegsite CLIPPED, "' "
+              ," AND inegdocno = '", g_ineg_m.inegdocno CLIPPED, "' "
+ 
+              , ") "
+   
+   LET g_inegsite_t = g_ineg_m.inegsite
+   LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+   
+   #add-point:完成複製段落後
+   
+   #end add-point
+                   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.show" >}
+#+ 單頭資料重新顯示 
+PRIVATE FUNCTION ainq810_show()
+   #add-point:show段define
+   
+   #end add-point  
+   
+   #add-point:show段之前
+   SELECT inea002,inea003 INTO g_ineg_m.inea002,g_ineg_m.inea003
+     FROM inea_t
+    WHERE ineaent=g_enterprise
+      AND ineadocno=g_ineg_m.ineg002
+   #end add-point
+   
+   
+   
+   LET g_ineg_m_t.* = g_ineg_m.*      #保存單頭舊值
+   
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+   
+   #帶出公用欄位reference值
+   
+    
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL ainq810_set_pk_array()
+   #add-point:ON ACTION agendum
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ineg_m.inegsite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ineg_m.inegsite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ineg_m.inegsite_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ineg_m.ineg002
+            CALL ap_ref_array2(g_ref_fields,"SELECT inea001 FROM inea_t WHERE ineaent='"||g_enterprise||"' AND ineadocno=? ","") RETURNING g_rtn_fields
+            LET g_ineg_m.ineg002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ineg_m.ineg002_desc
+
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_ineg_m.inegsite,g_ineg_m.inegsite_desc,g_ineg_m.ineg002,g_ineg_m.ineg002_desc,g_ineg_m.inea002, 
+       g_ineg_m.inegdocno,g_ineg_m.inea003
+   
+   #顯示狀態(stus)圖片
+   
+ 
+   #add-point:show段之後
+   CALL ainq810_b_fill()
+   CALL ainq810_b1_fill()
+   CALL ainq810_b2_fill()
+   CALL ainq810_b3_fill()
+
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION ainq810_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   
+   #end add-point  
+   
+   IF g_ineg_m.inegsite IS NULL
+   OR g_ineg_m.inegdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+ 
+   CALL ainq810_show()
+   
+   CALL s_transaction_begin()
+    
+   LET g_inegsite_t = g_ineg_m.inegsite
+   LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+   
+   
+ 
+   OPEN ainq810_cl USING g_enterprise,
+                           g_ineg_m.inegsite
+                           ,g_ineg_m.inegdocno
+ 
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN ainq810_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+ 
+      CLOSE ainq810_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   FETCH ainq810_cl INTO g_ineg_m.inegsite,g_ineg_m.inegsite_desc,g_ineg_m.ineg002,g_ineg_m.ineg002_desc, 
+       g_ineg_m.inea002,g_ineg_m.inegdocno,g_ineg_m.inea003
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_ineg_m.inegsite
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前
+      
+      #end add-point
+ 
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL ainq810_set_pk_array()
+      #add-point:相關文件刪除前
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+      DELETE FROM ineg_t 
+       WHERE inegent = g_enterprise AND inegsite = g_ineg_m.inegsite 
+         AND inegdocno = g_ineg_m.inegdocno 
+ 
+ 
+      #add-point:單頭刪除中
+      
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ineg_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後
+      
+      #end add-point
+      
+          
+      
+      CLEAR FORM
+      CALL ainq810_ui_browser_refresh()
+      IF g_browser_cnt > 0 THEN
+         CALL ainq810_fetch("P")
+      ELSE
+         CALL ainq810_browser_fill(" 1=1 ","F")
+      END IF
+      
+   END IF
+ 
+   CLOSE ainq810_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_ineg_m.inegsite,"D")
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION ainq810_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   
+   #end add-point     
+ 
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_inegsite = g_ineg_m.inegsite THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+   
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION ainq810_set_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define
+   
+   #end add-point     
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("inegsite,inegdocno",TRUE)
+      #add-point:set_entry段欄位控制
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION ainq810_set_no_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define
+   
+   #end add-point     
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("inegsite,inegdocno",FALSE)
+      #add-point:set_no_entry段欄位控制
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION ainq810_default_search()
+   DEFINE li_idx  LIKE type_t.num10  #161108-00012#2 num5==》num10
+   DEFINE li_cnt  LIKE type_t.num10  #161108-00012#2 num5==》num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+
+   #end add-point  
+   
+   #add-point:default_search段開始前
+
+   #end add-point  
+   
+   LET g_pagestart = 1
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " inegsite = '", g_argv[1], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " inegdocno = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq810.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="ainq810.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="ainq810.set_pk_array" >}
+   #+ 此段落由子樣板a51產生
+#+ 給予pk_array內容
+PRIVATE FUNCTION ainq810_set_pk_array()
+   #add-point:set_pk_array段define
+   
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_ineg_m.inegsite
+   LET g_pk_array[1].column = 'inegsite'
+   LET g_pk_array[2].values = g_ineg_m.inegdocno
+   LET g_pk_array[2].column = 'inegdocno'
+   
+   #add-point:set_pk_array段之後
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="ainq810.other_dialog" readonly="Y" >}
+ 
+ 
+{</section>}
+ 
+{<section id="ainq810.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 提取单身盘点明细-初盤、複盤差異
+# Memo...........:
+# Usage..........: CALL ainq810_b1_fill()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20140327 By huangrh
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION ainq810_b1_fill()
+DEFINE l_inegcrtdt1       DATETIME YEAR TO SECOND
+DEFINE l_inegcrtdt2       DATETIME YEAR TO SECOND
+DEFINE l_inegcrtdt3       DATETIME YEAR TO SECOND
+DEFINE l_ineh017_1        LIKE ineh_t.ineh017
+DEFINE l_ineh017_2        LIKE ineh_t.ineh017
+DEFINE l_ineh017_3        LIKE ineh_t.ineh017
+DEFINE l_ineh017_4        LIKE ineh_t.ineh017
+
+   CALL g_ineh_d1.clear()  
+ 
+   #huangrh 20150616---modify---盤點流程不使用批號
+#按照盤點計劃和提取 
+   #150826-00013#1 20160307 mark by beckxie---S
+   #LET g_sql = "SELECT DISTINCT ineh001,ineh004,ineh005,ineh007,ineh008", 
+   #            "  FROM ineh_t,ineg_t",   
+   #            " WHERE inegent=inehent",
+   #            "   AND inegsite=inehsite",
+   #            "   AND inegdocno=inehdocno",               
+   #            "   AND inegent=?",
+   #            "   AND inegsite=?",
+   #            "   AND ineg002=?",
+   #            "   AND (inegstus='Y' AND (ineg001='1' OR ineg001='2' )) ",
+   #            "   AND ",g_wc2_table1 CLIPPED,
+   #            "   ORDER BY ineh001"
+   #150826-00013#1 20160307 mark by beckxie---E
+   #150826-00013#1 20160307 add by beckxie---S
+   LET g_sql = "SELECT DISTINCT ineh001,",
+               "                (SELECT rtdx002 ",
+               "                   FROM rtdx_t ",
+               "                  WHERE rtdxent=inehent AND rtdxsite=inehsite AND rtdx001=ineh001 ), ",
+               "                (SELECT imaal003 ",
+               "                   FROM imaal_t ",
+               "                  WHERE imaalent=inehent AND imaal001=ineh001 AND imaal002='",g_dlang,"' ), ",
+               "                ineh004,ineh005,ineh007,ineh008,", 
+               "                (SELECT oocal003 ",
+               "                   FROM oocal_t ",
+               "                  WHERE oocalent=inehent AND oocal001=ineh008 AND oocal002='",g_dlang,"' ) ",
+               "  FROM ineh_t,ineg_t",   
+               " WHERE inegent=inehent",
+               "   AND inegsite=inehsite",
+               "   AND inegdocno=inehdocno",               
+               "   AND inegent=?",
+               "   AND inegsite=?",
+               "   AND ineg002=?",
+               "   AND (inegstus='Y' AND (ineg001='1' OR ineg001='2' )) ",
+               "   AND ",g_wc2_table1 CLIPPED,
+               "   ORDER BY ineh001"
+   #150826-00013#1 20160307 add by beckxie---E
+   
+   PREPARE ainq810_b1_pb FROM g_sql
+   DECLARE ainq810_b1_cs CURSOR FOR ainq810_b1_pb
+   
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   
+   OPEN ainq810_b1_cs USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.ineg002
+ 
+   #150826-00013#1 20160307 mark by beckxie---S
+   #FOREACH ainq810_b1_cs INTO g_ineh_d1[l_ac].ineh001_1,g_ineh_d1[l_ac].ineh004_1,
+   #                           g_ineh_d1[l_ac].ineh005_1,g_ineh_d1[l_ac].ineh007_1,
+   #                           g_ineh_d1[l_ac].ineh008_1
+   #150826-00013#1 20160307 mark by beckxie---E
+   #150826-00013#1 20160307 add by beckxie---S
+   FOREACH ainq810_b1_cs INTO g_ineh_d1[l_ac].ineh001_1,g_ineh_d1[l_ac].ineh002_1,g_ineh_d1[l_ac].ineh001_1_desc,
+                              g_ineh_d1[l_ac].ineh004_1,g_ineh_d1[l_ac].ineh005_1,g_ineh_d1[l_ac].ineh007_1,
+                              g_ineh_d1[l_ac].ineh008_1,g_ineh_d1[l_ac].ineh008_1_desc
+   #150826-00013#1 20160307 add by beckxie---E
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF  
+      
+      LET l_inegcrtdt1=''
+      LET l_inegcrtdt2=''
+      LET l_ineh017_1=''
+      LET l_ineh017_2=''  
+      #150826-00013#1 20160307 mark by beckxie---S
+      #SELECT rtdx002 INTO g_ineh_d1[l_ac].ineh002_1
+      #  FROM rtdx_t
+      # WHERE rtdxent=g_enterprise AND rtdxsite=g_ineg_m.inegsite AND rtdx001=g_ineh_d1[l_ac].ineh001_1
+      #SELECT imaal003 INTO g_ineh_d1[l_ac].ineh001_1_desc
+      #  FROM imaal_t
+      # WHERE imaalent=g_enterprise AND imaal001=g_ineh_d1[l_ac].ineh001_1 AND imaal002=g_dlang
+      #SELECT oocal003 INTO g_ineh_d1[l_ac].ineh008_1_desc
+      #  FROM oocal_t
+      # WHERE oocalent=g_enterprise AND oocal001=g_ineh_d1[l_ac].ineh008_1 AND oocal002=g_dlang       
+      #150826-00013#1 20160307 mark by beckxie---E
+       #初盤數量     
+       SELECT SUM(ineh009),MAX(inegcrtdt) INTO g_ineh_d1[l_ac].ineh011_1,l_inegcrtdt1 
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='1'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d1[l_ac].ineh001_1 
+          AND ineh004=g_ineh_d1[l_ac].ineh004_1
+          AND ineh005=g_ineh_d1[l_ac].ineh005_1
+#          AND ineh006=g_ineh_d1[l_ac].ineh006_1
+          AND ineh007=g_ineh_d1[l_ac].ineh007_1
+          AND ineh008=g_ineh_d1[l_ac].ineh008_1
+      
+        
+       #複盤數量  
+       SELECT SUM(ineh009),MAX(inegcrtdt) INTO g_ineh_d1[l_ac].ineh012_1,l_inegcrtdt2
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='2'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d1[l_ac].ineh001_1 
+          AND ineh004=g_ineh_d1[l_ac].ineh004_1
+          AND ineh005=g_ineh_d1[l_ac].ineh005_1
+#          AND ineh006=g_ineh_d1[l_ac].ineh006_1
+          AND ineh007=g_ineh_d1[l_ac].ineh007_1
+          AND ineh008=g_ineh_d1[l_ac].ineh008_1
+                             
+ 
+      #差異數量          
+      
+      LET g_ineh_d1[l_ac].ineh015_1=g_ineh_d1[l_ac].ineh012_1-g_ineh_d1[l_ac].ineh011_1
+      IF g_ineh_d1[l_ac].ineh015_1 IS NULL THEN
+         IF g_ineh_d1[l_ac].ineh012_1 IS NULL THEN
+            LET g_ineh_d1[l_ac].ineh015_1=0-g_ineh_d1[l_ac].ineh011_1
+         END IF
+         IF g_ineh_d1[l_ac].ineh011_1 IS NULL THEN
+            LET g_ineh_d1[l_ac].ineh015_1=g_ineh_d1[l_ac].ineh012_1-0            
+         END IF
+      END IF         
+
+      IF cl_null(g_ineh_d1[l_ac].ineh015_1) THEN LET g_ineh_d1[l_ac].ineh015_1=0 END IF
+
+      
+      #成本價
+      LET g_ineh_d1[l_ac].ineh016_1=0
+      SELECT inee003 INTO g_ineh_d1[l_ac].ineh016_1
+        FROM inee_t
+       WHERE ineeent=g_enterprise
+         AND ineesite=g_ineg_m.inegsite
+         AND inee001=g_ineg_m.ineg002
+         AND inee002=g_ineh_d1[l_ac].ineh001_1
+      IF cl_null(g_ineh_d1[l_ac].ineh016_1) THEN
+         LET g_ineh_d1[l_ac].ineh016_1=0
+      END IF
+
+      #售價
+
+       SELECT ineh017 INTO l_ineh017_1
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='1'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d1[l_ac].ineh001_1 
+          AND ineh004=g_ineh_d1[l_ac].ineh004_1
+          AND ineh005=g_ineh_d1[l_ac].ineh005_1
+#          AND ineh006=g_ineh_d1[l_ac].ineh006_1
+          AND ineh007=g_ineh_d1[l_ac].ineh007_1
+          AND ineh008=g_ineh_d1[l_ac].ineh008_1 
+          AND inegcrtdt=l_inegcrtdt1
+         
+       SELECT ineh017 INTO l_ineh017_2
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='2'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d1[l_ac].ineh001_1 
+          AND ineh004=g_ineh_d1[l_ac].ineh004_1
+          AND ineh005=g_ineh_d1[l_ac].ineh005_1
+#          AND ineh006=g_ineh_d1[l_ac].ineh006_1
+          AND ineh007=g_ineh_d1[l_ac].ineh007_1
+          AND ineh008=g_ineh_d1[l_ac].ineh008_1 
+          AND inegcrtdt=l_inegcrtdt2
+
+
+       IF l_ineh017_1 IS NOT NULL THEN
+          LET g_ineh_d1[l_ac].ineh017_1=l_ineh017_1
+       END IF 
+       IF l_ineh017_2 IS NOT NULL THEN
+          LET g_ineh_d1[l_ac].ineh017_1=l_ineh017_2
+       END IF
+       
+      
+      LET g_ineh_d1[l_ac].amount2_1=g_ineh_d1[l_ac].ineh015_1*g_ineh_d1[l_ac].ineh017_1
+      LET g_ineh_d1[l_ac].amount1_1=g_ineh_d1[l_ac].ineh015_1*g_ineh_d1[l_ac].ineh016_1
+      IF cl_null(g_ineh_d1[l_ac].ineh015_1) THEN LET g_ineh_d1[l_ac].ineh015_1=0 END IF 
+      IF cl_null(g_ineh_d1[l_ac].ineh016_1) THEN LET g_ineh_d1[l_ac].ineh016_1=0 END IF
+      IF cl_null(g_ineh_d1[l_ac].ineh017_1) THEN LET g_ineh_d1[l_ac].ineh017_1=0 END IF
+      IF cl_null(g_ineh_d1[l_ac].amount1_1) THEN LET g_ineh_d1[l_ac].amount1_1=0 END IF
+      IF cl_null(g_ineh_d1[l_ac].amount2_1) THEN LET g_ineh_d1[l_ac].amount2_1=0 END IF
+
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec AND g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+    
+   CALL g_ineh_d1.deleteElement(g_ineh_d1.getLength())
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE ainq810_b1_pb
+
+
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 提取单身盘点明细
+# Memo...........:
+# Usage..........: CALL ainq810_b_fill()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20140327 By huangrh
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION ainq810_b_fill()
+DEFINE l_inegcrtdt1       DATETIME YEAR TO SECOND
+DEFINE l_inegcrtdt2       DATETIME YEAR TO SECOND
+DEFINE l_inegcrtdt3       DATETIME YEAR TO SECOND
+DEFINE l_ineh017_1        LIKE ineh_t.ineh017
+DEFINE l_ineh017_2        LIKE ineh_t.ineh017
+DEFINE l_ineh017_3        LIKE ineh_t.ineh017
+DEFINE l_ineh017_4        LIKE ineh_t.ineh017
+
+
+
+  CALL g_ineh_d.clear()  
+ 
+ 
+   #huangrh 20150616---modify---盤點流程不使用批號
+#按照盤點計劃和提取 
+   #150826-00013#1 20160307 mark by beckxie---S
+   #LET g_sql = "SELECT DISTINCT '',ineh001,ineh004,ineh005,ineh007,ineh008", 
+   #            "  FROM ineh_t,ineg_t",   
+   #            " WHERE inegent=inehent",
+   #            "   AND inegsite=inehsite",
+   #            "   AND inegdocno=inehdocno",               
+   #            "   AND inegent=?",
+   #            "   AND inegsite=?",
+   #            "   AND ineg002=?",
+   #            "   AND ((inegstus='Y' AND (ineg001='1' OR ineg001='2' OR ineg001='3')) )",
+   #            "   AND ",g_wc2_table1 CLIPPED,
+   #            "   ORDER BY ineh001"
+   #150826-00013#1 20160307 mark by beckxie---E
+   #150826-00013#1 20160307 add by beckxie---S
+   LET g_sql = "SELECT DISTINCT '',ineh001,",
+               "                (SELECT rtdx002 ",
+               "                   FROM rtdx_t ",
+               "                  WHERE rtdxent=inehent AND rtdxsite=inehsite AND rtdx001=ineh001 ), ",
+               "                (SELECT imaal003 ",
+               "                   FROM imaal_t ",
+               "                  WHERE imaalent=inehent AND imaal001=ineh001 AND imaal002='",g_dlang,"' ), ",
+               "                ineh004,ineh005,ineh007,ineh008,", 
+               "                (SELECT oocal003 ",
+               "                   FROM oocal_t ",
+               "                  WHERE oocalent=inehent AND oocal001=ineh008 AND oocal002='",g_dlang,"' ) ",
+               "  FROM ineh_t,ineg_t",   
+               " WHERE inegent=inehent",
+               "   AND inegsite=inehsite",
+               "   AND inegdocno=inehdocno",               
+               "   AND inegent=?",
+               "   AND inegsite=?",
+               "   AND ineg002=?",
+               "   AND ((inegstus='Y' AND (ineg001='1' OR ineg001='2' OR ineg001='3')) )",
+               "   AND ",g_wc2_table1 CLIPPED,
+               "   ORDER BY ineh001"
+   #150826-00013#1 20160307 add by beckxie---E
+   PREPARE ainq810_b_pb FROM g_sql
+   DECLARE ainq810_b_cs CURSOR FOR ainq810_b_pb
+   
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   
+   OPEN ainq810_b_cs USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.ineg002
+ 
+   #150826-00013#1 20160307 mark by beckxie---S                                          
+   #FOREACH ainq810_b_cs INTO g_ineh_d[l_ac].inehseq,g_ineh_d[l_ac].ineh001,g_ineh_d[l_ac].ineh004,
+   #                           g_ineh_d[l_ac].ineh005,g_ineh_d[l_ac].ineh007,
+   #                           g_ineh_d[l_ac].ineh008
+   #150826-00013#1 20160307 mark by beckxie---E
+   #150826-00013#1 20160307  add by beckxie---S                                          
+   FOREACH ainq810_b_cs INTO g_ineh_d[l_ac].inehseq,g_ineh_d[l_ac].ineh001,g_ineh_d[l_ac].ineh002,
+                             g_ineh_d[l_ac].ineh001_desc,g_ineh_d[l_ac].ineh004,g_ineh_d[l_ac].ineh005,
+                             g_ineh_d[l_ac].ineh007,g_ineh_d[l_ac].ineh008,g_ineh_d[l_ac].ineh008_desc
+   #150826-00013#1 20160307  add by beckxie---E
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF  
+             
+      LET l_inegcrtdt1=''
+      LET l_inegcrtdt2=''
+      LET l_inegcrtdt3=''
+      LET l_ineh017_1=''
+      LET l_ineh017_2=''
+      LET l_ineh017_3=''
+      LET l_ineh017_4=''
+      #150826-00013#1 20160307 mark by beckxie---S
+      #SELECT rtdx002 INTO g_ineh_d[l_ac].ineh002
+      #  FROM rtdx_t
+      # WHERE rtdxent=g_enterprise AND rtdxsite=g_ineg_m.inegsite AND rtdx001=g_ineh_d[l_ac].ineh001
+      #SELECT imaal003 INTO g_ineh_d[l_ac].ineh001_desc
+      #  FROM imaal_t
+      # WHERE imaalent=g_enterprise AND imaal001=g_ineh_d[l_ac].ineh001 AND imaal002=g_dlang
+      #SELECT oocal003 INTO g_ineh_d[l_ac].ineh008_desc
+      #  FROM oocal_t
+      # WHERE oocalent=g_enterprise AND oocal001=g_ineh_d[l_ac].ineh008 AND oocal002=g_dlang     
+      #150826-00013#1 20160307 mark by beckxie---E       
+      SELECT SUM(inef010) INTO g_ineh_d[l_ac].ineh010
+        FROM inef_t
+       WHERE inefent=g_enterprise AND inefsite=g_ineg_m.inegsite AND inef001=g_ineg_m.ineg002 AND inef002=g_ineh_d[l_ac].ineh001
+         AND inef005=g_ineh_d[l_ac].ineh004 AND inef006=g_ineh_d[l_ac].ineh005 
+#         AND inef007=g_ineh_d[l_ac].ineh006
+         AND inef008=g_ineh_d[l_ac].ineh007 AND inef009=g_ineh_d[l_ac].ineh008
+         
+#      IF cl_null(g_ineh_d[l_ac].ineh010) THEN
+#         LET g_ineh_d[l_ac].ineh010=0
+#      END IF         
+      
+       #初盤數量
+       SELECT SUM(ineh009),MAX(inegcrtdt) INTO g_ineh_d[l_ac].ineh011,l_inegcrtdt1 
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='1'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d[l_ac].ineh001 
+          AND ineh004=g_ineh_d[l_ac].ineh004
+          AND ineh005=g_ineh_d[l_ac].ineh005
+#          AND ineh006=g_ineh_d[l_ac].ineh006
+          AND ineh007=g_ineh_d[l_ac].ineh007
+          AND ineh008=g_ineh_d[l_ac].ineh008
+           
+        
+       #複盤數量  
+       SELECT SUM(ineh009),MAX(inegcrtdt) INTO g_ineh_d[l_ac].ineh012,l_inegcrtdt2
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='2'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d[l_ac].ineh001 
+          AND ineh004=g_ineh_d[l_ac].ineh004
+          AND ineh005=g_ineh_d[l_ac].ineh005
+#          AND ineh006=g_ineh_d[l_ac].ineh006
+          AND ineh007=g_ineh_d[l_ac].ineh007
+          AND ineh008=g_ineh_d[l_ac].ineh008
+                      
+
+       #抽盤數量
+       SELECT SUM(ineh009),MAX(inegcrtdt) INTO g_ineh_d[l_ac].ineh013,l_inegcrtdt3 
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='3'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d[l_ac].ineh001 
+          AND ineh004=g_ineh_d[l_ac].ineh004
+          AND ineh005=g_ineh_d[l_ac].ineh005
+#          AND ineh006=g_ineh_d[l_ac].ineh006
+          AND ineh007=g_ineh_d[l_ac].ineh007
+          AND ineh008=g_ineh_d[l_ac].ineh008
+      
+
+       #實盤數量    
+       IF g_ineh_d[l_ac].ineh011 IS NOT NULL THEN
+          LET g_ineh_d[l_ac].ineh014=g_ineh_d[l_ac].ineh011 
+       END IF 
+       IF g_ineh_d[l_ac].ineh012 IS NOT NULL THEN
+          LET g_ineh_d[l_ac].ineh014=g_ineh_d[l_ac].ineh012 
+       END IF  
+       IF g_ineh_d[l_ac].ineh013 IS NOT NULL THEN
+          LET g_ineh_d[l_ac].ineh014=g_ineh_d[l_ac].ineh013 
+       END IF         
+
+       IF cl_null(g_ineh_d[l_ac].ineh014) THEN LET g_ineh_d[l_ac].ineh014=0 END IF      
+       #確認數量
+       SELECT ineh009,ineh017 INTO g_ineh_d[l_ac].ineh009,l_ineh017_4 
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='4'
+          AND inegstus='S'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d[l_ac].ineh001 
+          AND ineh004=g_ineh_d[l_ac].ineh004
+          AND ineh005=g_ineh_d[l_ac].ineh005
+#          AND ineh006=g_ineh_d[l_ac].ineh006
+          AND ineh007=g_ineh_d[l_ac].ineh007
+          AND ineh008=g_ineh_d[l_ac].ineh008  
+      #差異數量          
+      IF g_ineh_d[l_ac].ineh009 IS NULL THEN
+         IF g_ineh_d[l_ac].ineh010 IS NULL THEN
+            LET g_ineh_d[l_ac].ineh015=g_ineh_d[l_ac].ineh014-0
+         ELSE
+            LET g_ineh_d[l_ac].ineh015=g_ineh_d[l_ac].ineh014-g_ineh_d[l_ac].ineh010
+         END IF
+      ELSE
+         IF g_ineh_d[l_ac].ineh010 IS NULL THEN
+            LET g_ineh_d[l_ac].ineh015=g_ineh_d[l_ac].ineh009-0
+         ELSE
+            LET g_ineh_d[l_ac].ineh015=g_ineh_d[l_ac].ineh009-g_ineh_d[l_ac].ineh010
+         END IF     
+      END IF
+      
+      IF cl_null(g_ineh_d[l_ac].ineh015) THEN LET g_ineh_d[l_ac].ineh015=0 END IF
+      
+      #成本價
+      LET g_ineh_d[l_ac].ineh016=0
+      SELECT inee003 INTO g_ineh_d[l_ac].ineh016
+        FROM inee_t
+       WHERE ineeent=g_enterprise
+         AND ineesite=g_ineg_m.inegsite
+         AND inee001=g_ineg_m.ineg002
+         AND inee002=g_ineh_d[l_ac].ineh001
+      IF cl_null(g_ineh_d[l_ac].ineh016) THEN
+         LET g_ineh_d[l_ac].ineh016=0
+      END IF
+
+      #售價
+       SELECT ineh017 INTO l_ineh017_1
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='1'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d[l_ac].ineh001 
+          AND ineh004=g_ineh_d[l_ac].ineh004
+          AND ineh005=g_ineh_d[l_ac].ineh005
+#          AND ineh006=g_ineh_d[l_ac].ineh006
+          AND ineh007=g_ineh_d[l_ac].ineh007
+          AND ineh008=g_ineh_d[l_ac].ineh008 
+          AND inegcrtdt=l_inegcrtdt1
+          
+       SELECT ineh017 INTO l_ineh017_2
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='2'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d[l_ac].ineh001 
+          AND ineh004=g_ineh_d[l_ac].ineh004
+          AND ineh005=g_ineh_d[l_ac].ineh005
+#          AND ineh006=g_ineh_d[l_ac].ineh006
+          AND ineh007=g_ineh_d[l_ac].ineh007
+          AND ineh008=g_ineh_d[l_ac].ineh008 
+          AND inegcrtdt=l_inegcrtdt2
+
+       SELECT ineh017 INTO l_ineh017_3
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='3'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d[l_ac].ineh001 
+          AND ineh004=g_ineh_d[l_ac].ineh004
+          AND ineh005=g_ineh_d[l_ac].ineh005
+#          AND ineh006=g_ineh_d[l_ac].ineh006
+          AND ineh007=g_ineh_d[l_ac].ineh007
+          AND ineh008=g_ineh_d[l_ac].ineh008 
+          AND inegcrtdt=l_inegcrtdt3
+
+    
+       IF l_ineh017_1 IS NOT NULL THEN
+          LET g_ineh_d[l_ac].ineh017=l_ineh017_1
+       END IF 
+       IF l_ineh017_2 IS NOT NULL THEN
+          LET g_ineh_d[l_ac].ineh017=l_ineh017_2
+       END IF
+       IF l_ineh017_3 IS NOT NULL THEN
+          LET g_ineh_d[l_ac].ineh017=l_ineh017_3
+       END IF 
+       IF l_ineh017_4 IS NOT NULL THEN
+          LET g_ineh_d[l_ac].ineh017=l_ineh017_4
+       END IF        
+      
+      LET g_ineh_d[l_ac].amount2=g_ineh_d[l_ac].ineh015*g_ineh_d[l_ac].ineh017
+      LET g_ineh_d[l_ac].amount1=g_ineh_d[l_ac].ineh015*g_ineh_d[l_ac].ineh016
+      LET g_ineh_d[l_ac].amount3=g_ineh_d[l_ac].ineh014*g_ineh_d[l_ac].ineh016
+      IF cl_null(g_ineh_d[l_ac].ineh015) THEN LET g_ineh_d[l_ac].ineh015=0 END IF 
+      IF cl_null(g_ineh_d[l_ac].ineh016) THEN LET g_ineh_d[l_ac].ineh016=0 END IF
+      IF cl_null(g_ineh_d[l_ac].ineh017) THEN LET g_ineh_d[l_ac].ineh017=0 END IF
+      IF cl_null(g_ineh_d[l_ac].amount1) THEN LET g_ineh_d[l_ac].amount1=0 END IF
+      IF cl_null(g_ineh_d[l_ac].amount2) THEN LET g_ineh_d[l_ac].amount2=0 END IF
+      IF cl_null(g_ineh_d[l_ac].amount3) THEN LET g_ineh_d[l_ac].amount3=0 END IF
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec AND g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+    
+   CALL g_ineh_d.deleteElement(g_ineh_d.getLength())
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE ainq810_b_pb
+
+
+
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 提取单身盘点明细-抽盤差異
+# Memo...........:
+# Usage..........: CALL ainq810_b1_fill()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20140327 By huangrh
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION ainq810_b2_fill()
+DEFINE l_inegcrtdt1       DATETIME YEAR TO SECOND
+DEFINE l_inegcrtdt2       DATETIME YEAR TO SECOND
+DEFINE l_inegcrtdt3       DATETIME YEAR TO SECOND
+DEFINE l_ineh017_1        LIKE ineh_t.ineh017
+DEFINE l_ineh017_2        LIKE ineh_t.ineh017
+DEFINE l_ineh017_3        LIKE ineh_t.ineh017
+DEFINE l_ineh017_4        LIKE ineh_t.ineh017  
+
+   CALL g_ineh_d2.clear()  
+ 
+   #huangrh 20150616---modify---盤點流程不使用批號
+#按照盤點計劃和提取 
+   #150826-00013#1 20160307 mark by beckxie---S
+   #LET g_sql = "SELECT DISTINCT ineh001,ineh004,ineh005,ineh007,ineh008", 
+   #            "  FROM ineh_t,ineg_t",   
+   #            " WHERE inegent=inehent",
+   #            "   AND inegsite=inehsite",
+   #            "   AND inegdocno=inehdocno",               
+   #            "   AND inegent=?",
+   #            "   AND inegsite=?",
+   #            "   AND ineg002=?",
+   #            "   AND (inegstus='Y' AND (ineg001='3'))",
+   #            "   AND ",g_wc2_table1 CLIPPED,
+   #            "   ORDER BY ineh001"
+   #150826-00013#1 20160307 mark by beckxie---E
+   #150826-00013#1 20160307 add by beckxie---S
+   LET g_sql = "SELECT DISTINCT ineh001,",
+               "                (SELECT rtdx002 ",
+               "                   FROM rtdx_t ",
+               "                  WHERE rtdxent=inehent AND rtdxsite=inehsite AND rtdx001=ineh001 ), ",
+               "                (SELECT imaal003 ",
+               "                   FROM imaal_t ",
+               "                  WHERE imaalent=inehent AND imaal001=ineh001 AND imaal002='",g_dlang,"' ), ",
+               "                ineh004,ineh005,ineh007,ineh008,", 
+               "                (SELECT oocal003 ",
+               "                   FROM oocal_t ",
+               "                  WHERE oocalent=inehent AND oocal001=ineh008 AND oocal002='",g_dlang,"' ) ",
+               "  FROM ineh_t,ineg_t",   
+               " WHERE inegent=inehent",
+               "   AND inegsite=inehsite",
+               "   AND inegdocno=inehdocno",               
+               "   AND inegent=?",
+               "   AND inegsite=?",
+               "   AND ineg002=?",
+               "   AND (inegstus='Y' AND (ineg001='3'))",
+               "   AND ",g_wc2_table1 CLIPPED,
+               "   ORDER BY ineh001"
+   #150826-00013#1 20160307 add by beckxie---E
+   
+   PREPARE ainq810_b2_pb FROM g_sql
+   DECLARE ainq810_b2_cs CURSOR FOR ainq810_b2_pb
+   
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   
+   OPEN ainq810_b2_cs USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.ineg002
+ 
+   #150826-00013#1 20160307 mark by beckxie---S                                          
+   #FOREACH ainq810_b2_cs INTO g_ineh_d2[l_ac].ineh001_2,g_ineh_d2[l_ac].ineh004_2,
+   #                           g_ineh_d2[l_ac].ineh005_2,g_ineh_d2[l_ac].ineh007_2,
+   #                           g_ineh_d2[l_ac].ineh008_2
+   #150826-00013#1 20160307 mark by beckxie---E
+   #150826-00013#1 20160307 add by beckxie---S                                          
+   FOREACH ainq810_b2_cs INTO g_ineh_d2[l_ac].ineh001_2,g_ineh_d2[l_ac].ineh002_2,g_ineh_d2[l_ac].ineh001_2_desc,
+                              g_ineh_d2[l_ac].ineh004_2,g_ineh_d2[l_ac].ineh005_2,g_ineh_d2[l_ac].ineh007_2,
+                              g_ineh_d2[l_ac].ineh008_2,g_ineh_d2[l_ac].ineh008_2_desc
+   #150826-00013#1 20160307 add by beckxie---E
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF   
+ 
+      LET l_inegcrtdt1=''
+      LET l_inegcrtdt2=''
+      LET l_inegcrtdt3=''
+      LET l_ineh017_1=''
+      LET l_ineh017_2=''
+      LET l_ineh017_3=''
+      #150826-00013#1 20160307 mark by beckxie---S
+      #SELECT rtdx002 INTO g_ineh_d2[l_ac].ineh002_2
+      #  FROM rtdx_t
+      # WHERE rtdxent=g_enterprise AND rtdxsite=g_ineg_m.inegsite AND rtdx001=g_ineh_d2[l_ac].ineh001_2
+      #SELECT imaal003 INTO g_ineh_d2[l_ac].ineh001_2_desc
+      #  FROM imaal_t
+      # WHERE imaalent=g_enterprise AND imaal001=g_ineh_d2[l_ac].ineh001_2 AND imaal002=g_dlang
+      #SELECT oocal003 INTO g_ineh_d2[l_ac].ineh008_2_desc
+      #  FROM oocal_t
+      # WHERE oocalent=g_enterprise AND oocal001=g_ineh_d2[l_ac].ineh008_2 AND oocal002=g_dlang       
+      #150826-00013#1 20160307 mark by beckxie---E
+      
+       #初盤數量
+       SELECT SUM(ineh009),MAX(inegcrtdt) INTO g_ineh_d2[l_ac].ineh011_2,l_inegcrtdt1 
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='1'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d2[l_ac].ineh001_2 
+          AND ineh004=g_ineh_d2[l_ac].ineh004_2
+          AND ineh005=g_ineh_d2[l_ac].ineh005_2
+#          AND ineh006=g_ineh_d2[l_ac].ineh006_2
+          AND ineh007=g_ineh_d2[l_ac].ineh007_2
+          AND ineh008=g_ineh_d2[l_ac].ineh008_2
+      
+        
+       #複盤數量  
+       SELECT SUM(ineh009),MAX(inegcrtdt) INTO g_ineh_d2[l_ac].ineh012_2,l_inegcrtdt2
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='2'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d2[l_ac].ineh001_2 
+          AND ineh004=g_ineh_d2[l_ac].ineh004_2
+          AND ineh005=g_ineh_d2[l_ac].ineh005_2
+#          AND ineh006=g_ineh_d2[l_ac].ineh006_2
+          AND ineh007=g_ineh_d2[l_ac].ineh007_2
+          AND ineh008=g_ineh_d2[l_ac].ineh008_2                     
+
+       #抽盤數量
+       SELECT SUM(ineh009),MAX(inegcrtdt) INTO g_ineh_d2[l_ac].ineh013_2,l_inegcrtdt3 
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='3'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d2[l_ac].ineh001_2 
+          AND ineh004=g_ineh_d2[l_ac].ineh004_2
+          AND ineh005=g_ineh_d2[l_ac].ineh005_2
+#          AND ineh006=g_ineh_d2[l_ac].ineh006_2
+          AND ineh007=g_ineh_d2[l_ac].ineh007_2
+          AND ineh008=g_ineh_d2[l_ac].ineh008_2
+       
+      
+      #差異數量 
+      IF g_ineh_d2[l_ac].ineh011_2 IS NOT NULL THEN
+         LET g_ineh_d2[l_ac].ineh015_2=g_ineh_d2[l_ac].ineh013_2-g_ineh_d2[l_ac].ineh011_2
+      END IF
+      IF g_ineh_d2[l_ac].ineh012_2 IS NOT NULL THEN
+         LET g_ineh_d2[l_ac].ineh015_2=g_ineh_d2[l_ac].ineh013_2-g_ineh_d2[l_ac].ineh012_2
+      END IF
+      IF cl_null(g_ineh_d2[l_ac].ineh015_2) THEN LET g_ineh_d2[l_ac].ineh015_2=0 END IF 
+     
+      #成本價
+      LET g_ineh_d2[l_ac].ineh016_2 =0
+      SELECT inee003 INTO g_ineh_d2[l_ac].ineh016_2 
+        FROM inee_t
+       WHERE ineeent=g_enterprise
+         AND ineesite=g_ineg_m.inegsite
+         AND inee001=g_ineg_m.ineg002
+         AND inee002=g_ineh_d2[l_ac].ineh001_2 
+      IF cl_null(g_ineh_d2[l_ac].ineh016_2 ) THEN
+         LET g_ineh_d2[l_ac].ineh016_2 =0
+      END IF
+
+      #售價
+       SELECT ineh017 INTO l_ineh017_1
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='1'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d2[l_ac].ineh001_2 
+          AND ineh004=g_ineh_d2[l_ac].ineh004_2
+          AND ineh005=g_ineh_d2[l_ac].ineh005_2
+#          AND ineh006=g_ineh_d2[l_ac].ineh006_2
+          AND ineh007=g_ineh_d2[l_ac].ineh007_2
+          AND ineh008=g_ineh_d2[l_ac].ineh008_2 
+          AND inegcrtdt=l_inegcrtdt1
+         
+       SELECT ineh017 INTO l_ineh017_2
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='2'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d2[l_ac].ineh001_2 
+          AND ineh004=g_ineh_d2[l_ac].ineh004_2
+          AND ineh005=g_ineh_d2[l_ac].ineh005_2
+#          AND ineh006=g_ineh_d2[l_ac].ineh006_2
+          AND ineh007=g_ineh_d2[l_ac].ineh007_2
+          AND ineh008=g_ineh_d2[l_ac].ineh008_2 
+          AND inegcrtdt=l_inegcrtdt2
+
+       SELECT ineh017 INTO l_ineh017_3
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='3'
+          AND inegstus='Y'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d2[l_ac].ineh001_2 
+          AND ineh004=g_ineh_d2[l_ac].ineh004_2
+          AND ineh005=g_ineh_d2[l_ac].ineh005_2
+#          AND ineh006=g_ineh_d2[l_ac].ineh006_2
+          AND ineh007=g_ineh_d2[l_ac].ineh007_2
+          AND ineh008=g_ineh_d2[l_ac].ineh008_2 
+          AND inegcrtdt=l_inegcrtdt3
+    
+       IF l_ineh017_1 IS NOT NULL THEN
+          LET g_ineh_d2[l_ac].ineh017_2=l_ineh017_1
+       END IF 
+       IF l_ineh017_2 IS NOT NULL THEN
+          LET g_ineh_d2[l_ac].ineh017_2=l_ineh017_2
+       END IF
+       IF l_ineh017_2 IS NOT NULL THEN
+          LET g_ineh_d2[l_ac].ineh017_2=l_ineh017_3
+       END IF        
+      
+      LET g_ineh_d2[l_ac].amount2_2=g_ineh_d2[l_ac].ineh015_2*g_ineh_d2[l_ac].ineh017_2
+      LET g_ineh_d2[l_ac].amount1_2=g_ineh_d2[l_ac].ineh015_2*g_ineh_d2[l_ac].ineh016_2
+      IF cl_null(g_ineh_d2[l_ac].ineh015_2) THEN LET g_ineh_d2[l_ac].ineh015_2=0 END IF 
+      IF cl_null(g_ineh_d2[l_ac].ineh016_2) THEN LET g_ineh_d2[l_ac].ineh016_2=0 END IF
+      IF cl_null(g_ineh_d2[l_ac].ineh017_2) THEN LET g_ineh_d2[l_ac].ineh017_2=0 END IF
+      IF cl_null(g_ineh_d2[l_ac].amount1_2) THEN LET g_ineh_d2[l_ac].amount1_2=0 END IF
+      IF cl_null(g_ineh_d2[l_ac].amount2_2) THEN LET g_ineh_d2[l_ac].amount2_2=0 END IF
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec AND g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+    
+   CALL g_ineh_d2.deleteElement(g_ineh_d2.getLength())
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE ainq810_b2_pb
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 提取单身盘点明细-漏盤
+# Memo...........:
+# Usage..........: CALL ainq810_b3_fill()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20140327 By huangrh
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION ainq810_b3_fill()
+DEFINE l_inegcrtdt1       DATETIME YEAR TO SECOND
+DEFINE l_inegcrtdt2       DATETIME YEAR TO SECOND
+DEFINE l_inegcrtdt3       DATETIME YEAR TO SECOND
+DEFINE l_ineh017_1        LIKE ineh_t.ineh017
+DEFINE l_ineh017_2        LIKE ineh_t.ineh017
+DEFINE l_ineh017_3        LIKE ineh_t.ineh017
+DEFINE l_ineh017_4        LIKE ineh_t.ineh017
+
+   CALL g_ineh_d3.clear()  
+ 
+ 
+#存在于盤點快照，不存在于盤點錄入 
+#   LET g_sql = "SELECT DISTINCT inef002,inef005,inef006,inef007,inef008,inef009", 
+#               "  FROM inef_t",   
+#               " WHERE inefent='",g_enterprise,"'",
+#               "   AND inefsite='",g_ineg_m.inegsite,"'",
+#               "   AND inef001='",g_ineg_m.ineg002,"'", 
+#               "   AND NOT EXISTS ",
+#               "       (SELECT 1 ", 
+#               "          FROM ineh_t,ineg_t",   
+#               "         WHERE inegent=inehent",
+#               "           AND inegsite=inehsite",
+#               "           AND inegdocno=inehdocno",  
+#               "           AND inefent=inegent",
+#               "           AND inefsite=inegsite",
+#               "           AND inef001=ineg002",
+#               "           AND inef002=ineh001",
+#               "           AND inef005=ineh004",
+#               "           AND inef006=ineh005",
+#               "           AND inef007=ineh006", 
+#               "           AND inef008=ineh007", 
+#               "           AND inef009=ineh008", 
+#               "           AND inegent='",g_enterprise,"'",
+#               "           AND inegsite='",g_ineg_m.inegsite,"'",
+#               "           AND ineg002='",g_ineg_m.ineg002,"'",
+#               "           AND (inegstus='Y' AND (ineg001='1' OR ineg001='2' OR ineg001='3'))",
+#               "        )"
+
+   #huangrh 20150616---modify---盤點流程不使用批號
+   #150826-00013#1 20160307 mark by beckxie---S
+   #LET g_sql=" SELECT DISTINCT inef002,inef005,inef006,inef008,inef009",
+   #          "   FROM inef_t",
+   #          "  WHERE inefent='",g_enterprise,"'",
+   #          "    AND inefsite='",g_ineg_m.inegsite,"'",
+   #          "    AND inef001='",g_ineg_m.ineg002,"'",
+   #          "    AND NOT EXISTS (",
+   #          "        SELECT 1 FROM ineg_t,ineh_t",
+   #          "         WHERE inegent=inehent",
+   #          "           AND inegsite=inehsite",
+   #          "           AND inegdocno=inehdocno",
+   #          "           AND inegent=inefent",
+   #          "           AND inegsite=inefsite",
+   #          "           AND ineg002=inef001",
+   #          "           AND ineh001=inef002",
+   #          "           AND ineh004=inef005",
+   #          "           AND ineh005=inef006",
+#  #           "           AND ineh006=inef007",
+   #          "           AND ineh007=inef008",
+   #          "           AND ineh008=inef009",
+   #          "           AND inegent='",g_enterprise,"'",
+   #          "           AND inegsite='",g_ineg_m.inegsite,"'",
+   #          "           AND ineg002='",g_ineg_m.ineg002,"'",
+   #          "           AND ( inegstus='Y' AND (ineg001='1' OR ineg001='2' OR ineg001='3'))",
+   #          "       )",
+   #          "   AND ",g_wc2_table1 CLIPPED,
+   #          "   ORDER BY inef002"
+   #150826-00013#1 20160307 mark by beckxie---E
+   #150826-00013#1 20160307 add by beckxie---S
+   LET g_sql=" SELECT DISTINCT inef002,",
+             "                (SELECT rtdx002 ",
+             "                   FROM rtdx_t ",
+             "                  WHERE rtdxent=inefent AND rtdxsite=inefsite AND rtdx001=inef002 ), ",
+             "                (SELECT imaal003 ",
+             "                   FROM imaal_t ",
+             "                  WHERE imaalent=inefent AND imaal001=inef002 AND imaal002='",g_dlang,"' ), ",
+             "                inef005,inef006,inef008,inef009,",
+             "                (SELECT oocal003 ",
+             "                   FROM oocal_t ",
+             "                  WHERE oocalent=inefent AND oocal001=inef009 AND oocal002='",g_dlang,"' ) ",
+             "   FROM inef_t",
+             "  WHERE inefent='",g_enterprise,"'",
+             "    AND inefsite='",g_ineg_m.inegsite,"'",
+             "    AND inef001='",g_ineg_m.ineg002,"'",
+             "    AND NOT EXISTS (",
+             "        SELECT 1 FROM ineg_t,ineh_t",
+             "         WHERE inegent=inehent",
+             "           AND inegsite=inehsite",
+             "           AND inegdocno=inehdocno",
+             "           AND inegent=inefent",
+             "           AND inegsite=inefsite",
+             "           AND ineg002=inef001",
+             "           AND ineh001=inef002",
+             "           AND ineh004=inef005",
+             "           AND ineh005=inef006",
+#             "           AND ineh006=inef007",
+             "           AND ineh007=inef008",
+             "           AND ineh008=inef009",
+             "           AND inegent='",g_enterprise,"'",
+             "           AND inegsite='",g_ineg_m.inegsite,"'",
+             "           AND ineg002='",g_ineg_m.ineg002,"'",
+             "           AND ( inegstus='Y' AND (ineg001='1' OR ineg001='2' OR ineg001='3'))",
+             "       )",
+             "   AND ",g_wc2_table1 CLIPPED,
+             "   ORDER BY inef002"
+   #150826-00013#1 20160307 add by beckxie---E
+   PREPARE ainq810_b3_pb FROM g_sql
+   DECLARE ainq810_b3_cs CURSOR FOR ainq810_b3_pb
+   
+   LET g_cnt = l_ac
+   LET l_ac = 1
+  
+   #150826-00013#1 20160307 mark by beckxie---S
+   #FOREACH ainq810_b3_cs INTO  g_ineh_d3[l_ac].ineh001_3,g_ineh_d3[l_ac].ineh004_3,
+   #                           g_ineh_d3[l_ac].ineh005_3,g_ineh_d3[l_ac].ineh007_3,
+   #                           g_ineh_d3[l_ac].ineh008_3
+   #150826-00013#1 20160307 mark by beckxie---E
+   #150826-00013#1 20160307 add by beckxie---S
+   FOREACH ainq810_b3_cs INTO g_ineh_d3[l_ac].ineh001_3,g_ineh_d3[l_ac].ineh002_3,g_ineh_d3[l_ac].ineh001_3_desc,
+                              g_ineh_d3[l_ac].ineh004_3,g_ineh_d3[l_ac].ineh005_3,g_ineh_d3[l_ac].ineh007_3,
+                              g_ineh_d3[l_ac].ineh008_3,g_ineh_d3[l_ac].ineh008_3_desc
+   #150826-00013#1 20160307 add by beckxie---E
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF   
+
+      LET l_ineh017_4=''
+      #150826-00013#1 20160307 mark by beckxie---S
+      #SELECT rtdx002 INTO g_ineh_d3[l_ac].ineh002_3
+      #  FROM rtdx_t
+      # WHERE rtdxent=g_enterprise AND rtdxsite=g_ineg_m.inegsite AND rtdx001=g_ineh_d3[l_ac].ineh001_3
+      #SELECT imaal003 INTO g_ineh_d3[l_ac].ineh001_3_desc
+      #  FROM imaal_t
+      # WHERE imaalent=g_enterprise AND imaal001=g_ineh_d3[l_ac].ineh001_3 AND imaal002=g_dlang
+      #SELECT oocal003 INTO g_ineh_d3[l_ac].ineh008_3_desc
+      #  FROM oocal_t
+      # WHERE oocalent=g_enterprise AND oocal001=g_ineh_d3[l_ac].ineh008_3 AND oocal002=g_dlang       
+      #150826-00013#1 20160307 mark by beckxie---E
+      SELECT SUM(inef010) INTO g_ineh_d3[l_ac].ineh010_3
+        FROM inef_t
+       WHERE inefent=g_enterprise AND inefsite=g_ineg_m.inegsite AND inef001=g_ineg_m.ineg002 AND inef002=g_ineh_d3[l_ac].ineh001_3
+         AND inef005=g_ineh_d3[l_ac].ineh004_3 AND inef006=g_ineh_d3[l_ac].ineh005_3
+#         AND inef007=g_ineh_d3[l_ac].ineh006_3
+         AND inef008=g_ineh_d3[l_ac].ineh007_3 AND inef009=g_ineh_d3[l_ac].ineh008_3
+      
+     
+ 
+      #差異數量          
+
+      LET g_ineh_d3[l_ac].ineh015_3=g_ineh_d3[l_ac].ineh010_3
+
+      IF cl_null(g_ineh_d3[l_ac].ineh015_3) THEN LET g_ineh_d3[l_ac].ineh015_3=0 END IF
+      IF cl_null(l_ineh017_4) THEN LET l_ineh017_4=0 END IF
+      
+      #成本價
+      SELECT rtdx034 INTO g_ineh_d3[l_ac].ineh016_3
+        FROM rtdx_t
+       WHERE rtdxent=g_enterprise
+         AND rtdxsite=g_ineg_m.inegsite
+         AND rtdx001=g_ineh_d3[l_ac].ineh001_3
+      IF cl_null(g_ineh_d3[l_ac].ineh016_3 ) THEN
+         LET g_ineh_d3[l_ac].ineh016_3 =0
+      END IF         
+      #售價
+      
+       SELECT ineh017 INTO l_ineh017_4 
+         FROM ineg_t,ineh_t
+        WHERE inegent=inehent
+          AND inegsite=inehsite
+          AND inegdocno=inehdocno
+          AND inegent=g_enterprise
+          AND inegsite=g_ineg_m.inegsite
+          AND ineg001='4'
+          AND inegstus='S'
+          AND ineg002=g_ineg_m.ineg002
+          AND ineh001=g_ineh_d3[l_ac].ineh001_3 
+          AND ineh004=g_ineh_d3[l_ac].ineh004_3
+          AND ineh005=g_ineh_d3[l_ac].ineh005_3
+#          AND ineh006=g_ineh_d3[l_ac].ineh006_3
+          AND ineh007=g_ineh_d3[l_ac].ineh007_3
+          AND ineh008=g_ineh_d3[l_ac].ineh008_3
+
+      LET g_ineh_d3[l_ac].ineh017_3=l_ineh017_4
+   
+      LET g_ineh_d3[l_ac].amount2_3=g_ineh_d3[l_ac].ineh015_3*g_ineh_d3[l_ac].ineh017_3
+      LET g_ineh_d3[l_ac].amount1_3=g_ineh_d3[l_ac].ineh015_3*g_ineh_d3[l_ac].ineh016_3
+      IF cl_null(g_ineh_d3[l_ac].ineh015_3) THEN LET g_ineh_d3[l_ac].ineh015_3=0 END IF 
+      IF cl_null(g_ineh_d3[l_ac].ineh016_3) THEN LET g_ineh_d3[l_ac].ineh016_3=0 END IF
+      IF cl_null(g_ineh_d3[l_ac].ineh017_3) THEN LET g_ineh_d3[l_ac].ineh017_3=0 END IF
+      IF cl_null(g_ineh_d3[l_ac].amount1_3) THEN LET g_ineh_d3[l_ac].amount1_3=0 END IF
+      IF cl_null(g_ineh_d3[l_ac].amount2_3) THEN LET g_ineh_d3[l_ac].amount2_3=0 END IF
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec AND g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+    
+   CALL g_ineh_d3.deleteElement(g_ineh_d3.getLength())
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE ainq810_b3_pb
+
+
+
+
+END FUNCTION
+
+ 
+{</section>}
+ 

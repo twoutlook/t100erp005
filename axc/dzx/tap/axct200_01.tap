@@ -1,0 +1,480 @@
+<add_points prog="axct200_01" std_prog="axct200_01" erpver="1.0" module="AXC" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="construct.more_construct" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      CONSTRUCT BY NAME g_wc1 ON xcbhcomp
+      
+            #add-point:自定義action
+            ON ACTION controlp INFIELD xcbhcomp
+            #add-point:ON ACTION controlp INFIELD xcbhcomp
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcbhcomp  #顯示到畫面上
+            NEXT FIELD xcbhcomp                     #返回原欄位
+            #end add-point
+	  
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+      
+      CONSTRUCT BY NAME g_wc2 ON sfaadocno,sfaa010,sfaadocdt
+      
+            #add-point:自定義action
+            ON ACTION controlp INFIELD sfaadocno
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_sfaadocno_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfaadocno  #顯示到畫面上
+            NEXT FIELD sfaadocno                     #返回原欄位
+            
+            ON ACTION controlp INFIELD sfaa010
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfaa010  #顯示到畫面上
+            NEXT FIELD sfaa010                     #返回原欄位
+            #end add-point
+	  
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+      
+      INPUT BY NAME g_xcbh_m.xcbhdocno,g_xcbh_m.xcbh001,g_xcbh_m.Outsourcing,g_xcbh_m.xcbi001 ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT
+
+         AFTER FIELD xcbhdocno
+            
+            
+         ON ACTION controlp INFIELD xcbhdocno
+            #add-point:ON ACTION controlp INFIELD xcbhdocno
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcbh_m.xcbhdocno             #給予default值
+            LET g_qryparam.where = " oobx003 = 'axct200'" 
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooba002()                                #呼叫開窗
+
+            LET g_xcbh_m.xcbhdocno = g_qryparam.return1              
+            
+            DISPLAY g_xcbh_m.xcbhdocno TO xcbhdocno              #
+
+            NEXT FIELD xcbhdocno                          #返回原欄位   
+      
+         AFTER INPUT
+         #add-point:單頭輸入後處理
+
+         #end add-point
+            
+      END INPUT
+      
+      BEFORE DIALOG
+         LET g_xcbh_m.xcbh001 = g_today
+         LET g_xcbh_m.Outsourcing = 'N']]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[ type type_g_xcbh_m        RECORD
+   xcbhdocno LIKE xcbh_t.xcbhdocno, 
+   xcbh001   LIKE xcbh_t.xcbh001, 
+   Outsourcing LIKE type_t.chr1, 
+   xcbi001     LIKE xcbi_t.xcbi001
+       END RECORD
+DEFINE g_xcbh_m          type_g_xcbh_m
+
+DEFINE g_wc1                 STRING
+DEFINE g_wc2                 STRING
+DEFINE g_sql                 STRING]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.get_var" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.pre_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.action" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[            ON ACTION controlp INFIELD sfaasite
+            #add-point:ON ACTION controlp INFIELD sfaasite
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfaasite  #顯示到畫面上
+            NEXT FIELD sfaasite                     #返回原欄位]]>
+</point>
+  <point name="construct.before_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.after_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.before_close" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG = TRUE 
+   ELSE
+      CALL axct200_01_ins()
+   END IF]]>
+</point>
+  <point name="construct.post_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="function.axct200_01_ins" cite_std="N" status="u" ver="" src="s" new="Y" order="1">
+<![CDATA[# 整批插入
+PRIVATE FUNCTION axct200_01_ins()
+   DEFINE l_year     LIKE type_t.num5
+   DEFINE l_month    LIKE type_t.num5
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_site_t   LIKE sfaa_t.sfaasite
+   DEFINE l_sffb006  LIKE sffb_t.sffb006
+   DEFINE l_sffb007  LIKE sffb_t.sffb007
+   DEFINE l_sffb008  LIKE sffb_t.sffb008
+   DEFINE l_sfcb024  LIKE sfcb_t.sfcb024
+   DEFINE l_sfcb026  LIKE sfcb_t.sfcb026
+   DEFINE l_time1    LIKE sfcb_t.sfcb024
+   DEFINE l_time2    LIKE sfcb_t.sfcb026
+   DEFINE l_xcbh     RECORD  LIKE  xcbh_t.*   
+   DEFINE l_xcbi     RECORD  LIKE  xcbi_t.*   
+   DEFINE l_sfaa     RECORD  LIKE  sfaa_t.*   
+   
+   CALL s_transaction_begin()
+   LET g_success = 'Y'
+   
+   LET l_year = YEAR(g_xcbh_m.xcbh001)
+   LET l_month = MONTH(g_xcbh_m.xcbh001)
+   LET g_wc2 = cl_replace_str(g_wc,"xcbhcomp","sfaasite")  
+   
+   LET g_sql = "SELECT * FROM sfaa_t ",
+               " WHERE sfaaent = '",g_enterprise,"'",
+               "   AND sfaadocno IN ( ",
+               "SELECT sfec001 FROM sfec_t,sfea_t ",
+               " WHERE sfecent = sfecent ",
+               "   AND sfeadocno =sfecdocno ",
+               "   AND sfeaent = '",g_enterprise,"'",
+               "   AND sfeastus = 'S' )",
+               "   AND sfaadocno IN ( ",
+               "SELECT sffb005 FROM sffb_t ",
+               " WHERE sffbent = '",g_enterprise,"'",
+               "   AND sffbstus = 'Y' )",
+               "   AND TO_CHAR(sfaadocdt,'YYYY') = ",l_year,
+               "   AND TO_CHAR(sfaadocdt,'MM') = ",l_month,
+               "   AND ",g_wc,
+               "   AND ",g_wc1,
+               "   AND ",g_wc2
+    IF g_xcbh_m.Outsourcing = 'N' THEN 
+       LET g_sql = g_sql," AND sfaa057 != '2'"
+    END IF
+    LET g_sql = g_sql," ORDER BY sfaasite"
+    
+    PREPARE sfaa_pre FROM g_sql
+    DECLARE sfaa_cur CURSOR FOR sfaa_pre 
+
+    FOREACH sfaa_cur INTO l_sfaa.*
+       IF SQLCA.sqlcode THEN
+          CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+          EXIT FOREACH
+       END IF
+       
+       IF cl_null(l_site_t) OR l_sfaa.sfaasite <> l_site_t THEN 
+          #單頭
+          CALL s_aooi200_gen_docno(l_sfaa.sfaasite,g_xcbh_m.xcbhdocno,g_xcbh_m.xcbh001,'axct200')
+          RETURNING l_success,l_xcbh.xcbhdocno
+          IF l_success  = 0  THEN
+             CALL cl_err(g_xcbh_m.xcbhdocno,'apm-00003',1)
+             LET g_success = 'N'
+             RETURN g_success
+          END IF
+          
+          LET l_xcbh.xcbhent  = g_enterprise
+          LET l_xcbh.xcbhsite = l_sfaa.sfaasite
+          LET l_xcbh.xcbhcomp = l_sfaa.sfaasite
+          LET l_xcbh.xcbh001 = g_xcbh_m.xcbh001
+          LET l_xcbh.xcbh002 = ''
+          LET l_xcbh.xcbhownid = g_user
+          LET l_xcbh.xcbhowndp = g_dept
+          LET l_xcbh.xcbhcrtid = g_user
+          LET l_xcbh.xcbhcrtdp = g_dept 
+          LET l_xcbh.xcbhcrtdt = cl_get_current()
+          LET l_xcbh.xcbhmodid = ""
+          LET l_xcbh.xcbhmoddt = ""
+          LET l_xcbh.xcbhcnfid = ""
+          LET l_xcbh.xcbhcnfdt = ""
+          LET l_xcbh.xcbhstus = "N"
+          
+          INSERT INTO xcbh_t VALUES(l_xcbh.*)
+          IF SQLCA.SQLcode  THEN
+             CALL cl_err("l_xcbh",SQLCA.sqlcode,1)  
+             LET g_success = 'N'                        
+          END IF
+       END IF 
+       
+       LET l_site_t = l_sfaa.sfaasite
+       
+       #單身
+       LET l_xcbi.xcbient = g_enterprise
+       LET l_xcbi.xcbisite = l_sfaa.sfaasite
+       LET l_xcbi.xcbicomp = l_sfaa.sfaasite 
+       LET l_xcbi.xcbidocno = l_xcbh.xcbhdocno
+       
+       SELECT MAX(xcbiseq)+1 INTO l_xcbi.xcbiseq
+         FROM xcbi_t
+        WHERE xcbient = g_enterprise
+          AND xcbidocno = l_xcbh.xcbhdocno
+       IF cl_null(l_xcbi.xcbiseq) THEN 
+          LET l_xcbi.xcbiseq = 1 
+       END IF
+       
+       #成本中心
+       IF g_xcbh_m.xcbi001 = '1' THEN 
+          LET l_xcbi.xcbi001 = l_sfaa.sfaa017
+       ELSE
+          SELECT ooeg004 INTO l_xcbi.xcbi001 FROM ooeg_t
+           WHERE ooegent = g_enterprise 
+             AND ooeg001 = l_sfaa.sfaa017  
+       END IF
+       
+       
+       LET l_xcbi.xcbi002 = l_sfaa.sfaadocno
+       LET l_xcbi.xcbi009 = ''
+       LET l_xcbi.xcbi100 = l_sfaa.sfaa050
+       LET l_xcbi.xcbi101 = l_sfaa.sfaa012 - l_sfaa.sfaa050
+       LET l_xcbi.xcbi102 = 0
+       LET l_xcbi.xcbi103 = l_xcbi.xcbi101 * l_xcbi.xcbi102
+       LET l_xcbi.xcbi104 = l_xcbi.xcbi100 + l_xcbi.xcbi103
+       LET l_xcbi.xcbi201 = 0
+       LET l_xcbi.xcbi202 = 0
+       
+       SELECT SUM(sfcb024),SUM(sfcb026) 
+         INTO l_sfcb024,l_sfcb026
+         FROM sfcb_t
+         LEFT OUTER JOIN sfaa_t
+           ON sfcbdocno = sfaadocno
+         LEFT OUTER JOIN sffb_t 
+           ON sfcb001 = sffb006
+          AND sfcb003 = sffb007
+          AND sfcb004 = sffb008
+        WHERE sfcbent = 99
+          AND sfaa010 = l_sfaa.sfaa010
+          AND sfcbdocno = l_sfaa.sfaadocno
+          AND sfcbdocno = sffb005
+          
+       LET l_time1 = l_sfcb024/l_sfaa.sfaa012
+       LET l_time2 = l_sfcb026/l_sfaa.sfaa012
+       
+       LET l_xcbi.xcbi203 = l_xcbi.xcbi104 * l_time1
+       LET l_xcbi.xcbi204 = l_xcbi.xcbi104 * l_time2
+       
+       INSERT INTO xcbi_t VALUES(l_xcbi.*)
+       
+       IF SQLCA.SQLcode  THEN
+          CALL cl_err("l_xcbi",SQLCA.sqlcode,1)  
+          LET g_success = 'N'                        
+       END IF
+    END FOREACH 
+    
+    IF g_success = 'N' THEN
+       CALL s_transaction_end('N','1') 
+    ELSE
+       CALL s_transaction_end('Y','1')
+    END IF
+END FUNCTION]]>
+</point>
+  <section id="axct200_01.description" ver="13" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000012
+#+ 
+#+ Filename...: axct200_01
+#+ Description: ...
+#+ Creator....: 02114(2014/05/07)
+#+ Modifier...: 02114(2014/05/07)
+#+ Buildtype..: 應用 c01c 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="axct200_01.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num5   
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point  
+]]>
+</section>
+  <section id="axct200_01.input" ver="6" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION axct200_01(--)
+   #add-point:construct段變數傳入
+   {<point name="construct.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define
+   {<point name="construct.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axct200_01 WITH FORM cl_ap_formpath("axc","axct200_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="construct.pre_construct"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON sfaasite 
+      
+            #add-point:自定義action
+            {<point name="construct.action"/>}
+            #end add-point
+	  
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            {<point name="construct.before_construct"/>}
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            {<point name="construct.after_construct"/>}
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct
+      {<point name="construct.more_construct"/>}
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="construct.before_close"/>}
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_axct200_01 
+   
+   #add-point:construct段after construct 
+   {<point name="construct.post_construct"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="axct200_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="axct200_01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

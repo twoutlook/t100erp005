@@ -1,0 +1,1030 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="anmr563_g01" std_prog="anmr563_g01" erpver="1.0" module="ANM" ver="1" env="s" zone="t10prd" booking="N" type="G" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="G" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="report.anmr563_g01_subrep05" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 繳款明細合計
+# Memo...........:
+# Usage..........: CALL anmr563_g01_subrep05(sr5)
+#                  RETURNING 
+# Input parameter: sr5            合計金額
+# Return code....: 
+# Date & Author..: 2015/06/06 By 01727
+# Modify.........:
+################################################################################
+PRIVATE REPORT anmr563_g01_subrep05(sr5)
+   DEFINE sr5      sr5_r
+
+   FORMAT
+           
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr5.*
+END REPORT]]>
+  </point>
+  <point name="report.anmr563_g01_subrep06" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 收款明細
+# Memo...........:
+# Usage..........: CALL anmr563_g01_subrep06(sr6)
+#                  RETURNING
+# Input parameter: sr6            明細資料
+# Return code....: 
+# Date & Author..: 2015/06/06 By 01727
+# Modify.........:
+################################################################################
+PRIVATE REPORT anmr563_g01_subrep06(sr6)
+   DEFINE sr6      sr6_r
+
+   FORMAT
+           
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr6.*
+END REPORT]]>
+  </point>
+  <point name="report.anmr563_g01_subrep07" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 收款明細合計
+# Memo...........:
+# Usage..........: CALL anmr563_g01_subrep07(sr7)
+#                  RETURNING 
+# Input parameter: sr7            合計金額
+# Return code....: 
+# Date & Author..: 2015/06/06 By 01727
+# Modify.........:
+################################################################################
+PRIVATE REPORT anmr563_g01_subrep07(sr7)
+   DEFINE sr7      sr7_r
+
+    FORMAT
+           
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr7.*
+END REPORT]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+
+ TYPE sr5_r RECORD
+   l_tst   LIKE type_t.chr20,
+   nmbb004 LIKE nmbb_t.nmbb004,
+   nmbb006 LIKE nmbb_t.nmbb006
+END RECORD
+
+ TYPE sr6_r RECORD
+   nmeeseq         LIKE nmee_t.nmeeseq,
+   nmeesite        LIKE nmee_t.nmeesite,
+   nmeesite_desc   LIKE type_t.chr200,
+   nmee005         LIKE nmee_t.nmee005,
+   nmee005_desc    LIKE type_t.chr200,
+   nmee014         LIKE nmee_t.nmee014,
+   nmee014_desc    LIKE type_t.chr200,
+   nmee006         LIKE nmee_t.nmee006,
+   nmee006_desc    LIKE type_t.chr200,
+   nmee009         LIKE nmee_t.nmee009,
+   nmee009_desc    LIKE type_t.chr200,
+   nmee012         LIKE nmee_t.nmee012
+END RECORD
+
+ TYPE sr7_r RECORD
+   l_tst   LIKE type_t.chr20,
+   nmee009 LIKE nmee_t.nmee009,
+   nmee012 LIKE nmee_t.nmee012
+END RECORD]]>
+  </point>
+  <point name="ins_data.after.save" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      #收款人員
+       CALL s_axrt300_xrca_ref('xrca003',sr_s.nmba008,'','') RETURNING l_success,sr_s.nmba08_desc
+       LET sr[l_cnt].nmba08_desc = sr_s.nmba008,".",sr_s.nmba08_desc
+
+      #收款部門
+       CALL s_axrt300_xrca_ref('xrca015',sr_s.nmba001,'','') RETURNING l_success,sr_s.nmba001_desc
+       LET sr[l_cnt].nmba001_desc = sr_s.nmba001,".",sr_s.nmba001_desc
+
+      #來源組織
+       CALL s_axrt300_xrca_ref('xrcasite',sr_s.nmbborga,'','') RETURNING l_success,sr_s.nmbborga_desc
+       LET sr[l_cnt].nmbborga_desc = sr_s.nmbborga,".",sr_s.nmbborga_desc
+
+      #交易對象
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.nmbb026
+       CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr_s.nmbb026_desc = '', g_rtn_fields[1] , ''
+       LET sr[l_cnt].nmbb026_desc = sr_s.nmbb026,".",sr_s.nmbb026_desc
+
+      #款別
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.nmbb028
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooial003 FROM ooial_t WHERE ooialent='"||g_enterprise||"' AND ooial001=? AND ooial002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr_s.nmbb028_desc = '', g_rtn_fields[1] , ''
+       LET sr[l_cnt].nmbb028_desc = sr_s.nmbb028,".",sr_s.nmbb028_desc
+
+      #票據號碼/匯款帳號
+       LET sr[l_cnt].nmbbdocno_desc = sr_s.nmbbdocno
+
+     #開票人/帳戶名稱
+     #INITIALIZE g_ref_fields TO NULL
+     #LET g_ref_fields[1] = sr_s.nmbb003
+     #CALL ap_ref_array2(g_ref_fields,"SELECT nmabl003 FROM nmabl_t WHERE nmablent='"||g_enterprise||"' AND nmabl001=? AND nmabl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+     #LET sr_s.nmbb003_desc = '', g_rtn_fields[1] , ''
+     #DISPLAY BY NAME g_nmbb_d[l_ac].nmbb003_desc
+]]>
+  </point>
+  <point name="ins_data.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success       LIKE type_t.num5]]>
+  </point>
+  <point name="rep.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE sr5             sr5_r
+DEFINE sr6             sr6_r
+DEFINE sr7             sr7_r
+DEFINE l_subrep05_show  LIKE type_t.chr1
+DEFINE l_subrep06_show  LIKE type_t.chr1
+DEFINE l_subrep07_show  LIKE type_t.chr1
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_test           LIKE type_t.chr20]]>
+  </point>
+  <point name="rep.sub04.sql" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[          #繳款明細合計 ---(S)---
+           LET g_sql = " SELECT '',nmbb004,SUM(nmbb006) FROM nmbb_t WHERE nmbbent='",g_enterprise,"'",
+                       "    AND nmbbdocno='",sr1.nmbadocno,"' AND nmbbcomp ='",tm.a1,"'",
+                       "  GROUP BY nmbb004"
+
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep05_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE anmr563_g01_repcur05_cnt_pre FROM l_sub_sql
+           EXECUTE anmr563_g01_repcur05_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep05_show ="Y"
+              LET l_test = cl_getmsg("anm-00355",g_lang)
+           END IF
+           PRINTX l_subrep05_show
+           START REPORT anmr563_g01_subrep05
+           DECLARE anmr563_g01_repcur05 CURSOR FROM g_sql
+           FOREACH anmr563_g01_repcur05 INTO sr5.*
+              IF NOT cl_null(l_test) THEN
+                 LET sr5.l_tst = l_test
+                 LET l_test = ''
+              END IF
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "anmr563_g01_repcur05:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+
+              OUTPUT TO REPORT anmr563_g01_subrep05(sr5.*)
+           END FOREACH
+           FINISH REPORT anmr563_g01_subrep05
+          #繳款明細合計 ---(E)---
+
+          #收款明細　　 ---(S)---
+           LET g_sql = " SELECT nmeeseq,nmeesite,'',nmee005,'',nmee014,'',nmee006,'',nmee009,'',nmee012",
+                       "   FROM nmee_t WHERE nmeeent='",g_enterprise,"'",
+                       "    AND nmeedocno='",sr1.nmbadocno,"' AND nmeecomp ='",tm.a1,"'",
+                       "  ORDER BY nmeeseq"
+
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep06_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE anmr563_g01_repcur06_cnt_pre FROM l_sub_sql
+           EXECUTE anmr563_g01_repcur06_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep06_show ="Y"
+           END IF
+           PRINTX l_subrep06_show
+           START REPORT anmr563_g01_subrep06
+           DECLARE anmr563_g01_repcur06 CURSOR FROM g_sql
+           FOREACH anmr563_g01_repcur06 INTO sr6.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "anmr563_g01_repcur06:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+
+             #門店
+              CALL s_axrt300_xrca_ref('xrcasite',sr6.nmeesite,'','') RETURNING l_success,sr6.nmeesite_desc
+              LET sr6.nmeesite_desc = sr6.nmeesite,".",sr6.nmeesite_desc
+
+             #專櫃简称
+              INITIALIZE g_ref_fields TO NULL
+              LET g_ref_fields[1] = sr6.nmee005
+              CALL ap_ref_array2(g_ref_fields,"SELECT mhael023 FROM mhael_t WHERE mhaelent='"||g_enterprise||"' AND mhael001=? AND mhael022='"||g_dlang||"'","") RETURNING g_rtn_fields
+              LET sr6.nmee005_desc = sr6.nmee005,".",'', g_rtn_fields[1] , ''
+
+             #品類
+              INITIALIZE g_ref_fields TO NULL
+              LET g_ref_fields[1] = sr6.nmee014
+              CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+              LET sr6.nmee014_desc = sr6.nmee014,".",'', g_rtn_fields[1] , ''
+
+             #費用編號
+              INITIALIZE g_ref_fields TO NULL
+              LET g_ref_fields[1] = sr6.nmee006
+              CALL ap_ref_array2(g_ref_fields,"SELECT stael003 FROM stael_t WHERE staelent='"||g_enterprise||"' AND stael001=? AND stael002='"||g_dlang||"'","") RETURNING g_rtn_fields
+              LET sr6.nmee006_desc = sr6.nmee006,".",'', g_rtn_fields[1] , ''
+
+              OUTPUT TO REPORT anmr563_g01_subrep06(sr6.*)
+           END FOREACH
+           FINISH REPORT anmr563_g01_subrep06
+          #收款明細　　 ---(E)---
+
+          #收款明細合計 ---(S)---
+           LET g_sql = " SELECT '',nmee009,SUM(nmee012) FROM nmee_t WHERE nmeeent='",g_enterprise,"'",
+                       "    AND nmeedocno='",sr1.nmbadocno,"' AND nmeecomp ='",tm.a1,"'",
+                       "  GROUP BY nmee009"
+
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep07_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE anmr563_g01_repcur07_cnt_pre FROM l_sub_sql
+           EXECUTE anmr563_g01_repcur07_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep07_show ="Y"
+              LET l_test = cl_getmsg("anm-00355",g_lang)
+           END IF
+           PRINTX l_subrep07_show
+           START REPORT anmr563_g01_subrep07
+           DECLARE anmr563_g01_repcur07 CURSOR FROM g_sql
+           FOREACH anmr563_g01_repcur07 INTO sr7.*
+              IF NOT cl_null(l_test) THEN
+                 LET sr7.l_tst = l_test
+                 LET l_test = ''
+              END IF
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "anmr563_g01_repcur07:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+
+              OUTPUT TO REPORT anmr563_g01_subrep07(sr7.*)
+           END FOREACH
+           FINISH REPORT anmr563_g01_subrep07
+          #收款明細合計 ---(E)---]]>
+  </point>
+  <point name="sel_prep.g_order" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_where = g_where," AND nmbacomp = '",tm.a1,"'"
+   LET g_where = g_where," AND nmbbent = nmbaent AND nmbbdocno = nmbadocno AND nmbbcomp = nmbacomp AND nmba003 = 'anmt563'"]]>
+  </point>
+  <point name="sel_prep.g_where" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <section id="anmr563_g01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000004
+#+ 
+#+ Filename...: anmr563_g01
+#+ Description: 交款彙總單收款列印
+#+ Creator....: 01727(2015-06-05 17:37:28)
+#+ Modifier...: 01727(2015-06-06 17:25:18) -SD/PR-
+]]>
+  </section>
+  <section id="anmr563_g01.global" ver="3" status="" src="s" readonly="">
+    <![CDATA[#報表 g01 樣板自動產生(Version:1)
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   nmbaent LIKE nmba_t.nmbaent, 
+   nmbadocno LIKE nmba_t.nmbadocno, 
+   nmbadocdt LIKE nmba_t.nmbadocdt, 
+   nmba008 LIKE nmba_t.nmba008, 
+   nmba001 LIKE nmba_t.nmba001, 
+   nmba08_desc LIKE type_t.chr200, 
+   nmba001_desc LIKE type_t.chr200, 
+   nmbbseq LIKE nmbb_t.nmbbseq, 
+   nmbborga LIKE nmbb_t.nmbborga, 
+   nmbborga_desc LIKE type_t.chr200, 
+   nmbb026 LIKE nmbb_t.nmbb026, 
+   nmbb026_desc LIKE type_t.chr200, 
+   nmbb028 LIKE nmbb_t.nmbb028, 
+   nmbb028_desc LIKE type_t.chr200, 
+   nmbbdocno LIKE nmbb_t.nmbbdocno, 
+   nmbbdocno_desc LIKE type_t.chr200, 
+   nmbb003 LIKE nmbb_t.nmbb003, 
+   nmbb031 LIKE nmbb_t.nmbb031, 
+   nmbb004 LIKE nmbb_t.nmbb004, 
+   nmbb005 LIKE nmbb_t.nmbb005, 
+   nmbb006 LIKE nmbb_t.nmbb006
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       a1 LIKE type_t.chr20          #comp
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="anmr563_g01.ins_data" ver="2" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION anmr563_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   nmbaent LIKE nmba_t.nmbaent, 
+   nmbadocno LIKE nmba_t.nmbadocno, 
+   nmbadocdt LIKE nmba_t.nmbadocdt, 
+   nmba008 LIKE nmba_t.nmba008, 
+   nmba001 LIKE nmba_t.nmba001, 
+   nmba08_desc LIKE type_t.chr200, 
+   nmba001_desc LIKE type_t.chr200, 
+   nmbbseq LIKE nmbb_t.nmbbseq, 
+   nmbborga LIKE nmbb_t.nmbborga, 
+   nmbborga_desc LIKE type_t.chr200, 
+   nmbb026 LIKE nmbb_t.nmbb026, 
+   nmbb026_desc LIKE type_t.chr200, 
+   nmbb028 LIKE nmbb_t.nmbb028, 
+   nmbb028_desc LIKE type_t.chr200, 
+   nmbbdocno LIKE nmbb_t.nmbbdocno, 
+   nmbbdocno_desc LIKE type_t.chr200, 
+   nmbb003 LIKE nmbb_t.nmbb003, 
+   nmbb031 LIKE nmbb_t.nmbb031, 
+   nmbb004 LIKE nmbb_t.nmbb004, 
+   nmbb005 LIKE nmbb_t.nmbb005, 
+   nmbb006 LIKE nmbb_t.nmbb006
+ END RECORD
+   DEFINE l_cnt           INTEGER
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH anmr563_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before_arr
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].nmbaent = sr_s.nmbaent
+       LET sr[l_cnt].nmbadocno = sr_s.nmbadocno
+       LET sr[l_cnt].nmbadocdt = sr_s.nmbadocdt
+       LET sr[l_cnt].nmba008 = sr_s.nmba008
+       LET sr[l_cnt].nmba001 = sr_s.nmba001
+       LET sr[l_cnt].nmba08_desc = sr_s.nmba08_desc
+       LET sr[l_cnt].nmba001_desc = sr_s.nmba001_desc
+       LET sr[l_cnt].nmbbseq = sr_s.nmbbseq
+       LET sr[l_cnt].nmbborga = sr_s.nmbborga
+       LET sr[l_cnt].nmbborga_desc = sr_s.nmbborga_desc
+       LET sr[l_cnt].nmbb026 = sr_s.nmbb026
+       LET sr[l_cnt].nmbb026_desc = sr_s.nmbb026_desc
+       LET sr[l_cnt].nmbb028 = sr_s.nmbb028
+       LET sr[l_cnt].nmbb028_desc = sr_s.nmbb028_desc
+       LET sr[l_cnt].nmbbdocno = sr_s.nmbbdocno
+       LET sr[l_cnt].nmbbdocno_desc = sr_s.nmbbdocno_desc
+       LET sr[l_cnt].nmbb003 = sr_s.nmbb003
+       LET sr[l_cnt].nmbb031 = sr_s.nmbb031
+       LET sr[l_cnt].nmbb004 = sr_s.nmbb004
+       LET sr[l_cnt].nmbb005 = sr_s.nmbb005
+       LET sr[l_cnt].nmbb006 = sr_s.nmbb006
+ 
+ 
+       #add-point:ins_data段after_arr
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+END FUNCTION
+]]>
+  </section>
+  <section id="anmr563_g01.main" ver="2" status="" src="s" readonly="">
+    <![CDATA[PUBLIC FUNCTION anmr563_g01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr20         #tm.a1  comp
+#add-point:init段define
+{<point name="component_name.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "anmr563_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL anmr563_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL anmr563_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL anmr563_g01_rep_data()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmr563_g01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="anmr563_g01.other_report" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.report"/>}
+]]>
+  </section>
+  <section id="anmr563_g01.rep" ver="4" status="" src="s" readonly="">
+    <![CDATA[PRIVATE REPORT anmr563_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num5
+DEFINE l_sub_sql       STRING
+#add-point:rep段define
+{<point name="rep.define"/>}
+#end add-point
+ 
+    #add-point:rep段ORDER_before
+    {<point name="rep.order.before" mark="Y"/>}
+    #end add-point
+    ORDER  BY sr1.nmbadocno
+    #add-point:rep段ORDER_after
+    {<point name="rep.order.after"/>}
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:1)
+        BEFORE GROUP OF sr1.nmbadocno
+            #報表 d05 樣板自動產生(Version:5)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內)
+            {<point name="rep.header"  mark="Y"/>}
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.nmbadocno
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before
+            {<point name="rep.apr.signstr.before"  mark="Y"/>}              
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'nmbaent=' ,sr1.nmbaent,'{+}nmbadocno=' ,sr1.nmbadocno         
+            CALL cl_gr_init_apr(sr1.nmbadocno)
+            #add-point:rep.apr.signstr
+            {<point name="rep.apr.signstr"/>}              
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.nmbadocno.before
+           {<point name="rep.b_group.nmbadocno.before"/>}
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:2)
+           #add-point:rep.sub01.before
+           {<point name="rep.sub01.before"/>}
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql
+           {<point name="rep.sub01.sql" mark="Y"/>}
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooffent = '", 
+                sr1.nmbaent CLIPPED ,"'", " AND  ooff002 = '", sr1.nmbadocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql
+           {<point name="rep.sub01.afsql"/>}
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE anmr563_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE anmr563_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT anmr563_g01_subrep01
+           DECLARE anmr563_g01_repcur01 CURSOR FROM g_sql
+           FOREACH anmr563_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "anmr563_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach
+              {<point name="rep.sub01.foreach"/>}
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT anmr563_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT anmr563_g01_subrep01
+           #add-point:rep.sub01.after
+           {<point name="rep.sub01.after"/>}
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.nmbadocno.after
+           {<point name="rep.b_group.nmbadocno.after"/>}
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before
+          {<point name="rep.everyrow.before"/>}
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:2)
+           #add-point:rep.sub02.before
+           {<point name="rep.sub02.before"/>}
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql
+           {<point name="rep.sub02.sql" mark="Y"/>}
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.nmbaent CLIPPED ,"'", " AND  ooff002 = '", sr1.nmbadocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub02.afsql
+           {<point name="rep.sub02.afsql"/>}
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE anmr563_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE anmr563_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT anmr563_g01_subrep02
+           DECLARE anmr563_g01_repcur02 CURSOR FROM g_sql
+           FOREACH anmr563_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "anmr563_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach
+              {<point name="rep.sub02.foreach"/>}
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT anmr563_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT anmr563_g01_subrep02
+           #add-point:rep.sub02.after
+           {<point name="rep.sub02.after"/>}
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow
+          {<point name="rep.everyrow.beforerow"/>}
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow
+          {<point name="rep.everyrow.afterrow"/>}
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:2)
+           #add-point:rep.sub03.before
+           {<point name="rep.sub03.before"/>}
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql
+           {<point name="rep.sub03.sql" mark="Y"/>}
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff002 = '", 
+                sr1.nmbaent CLIPPED ,"'"
+ 
+           #add-point:rep.sub03.afsql
+           {<point name="rep.sub03.afsql"/>}
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE anmr563_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE anmr563_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT anmr563_g01_subrep03
+           DECLARE anmr563_g01_repcur03 CURSOR FROM g_sql
+           FOREACH anmr563_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "anmr563_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach
+              {<point name="rep.sub03.foreach"/>}
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT anmr563_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT anmr563_g01_subrep03
+           #add-point:rep.sub03.after
+           {<point name="rep.sub03.after"/>}
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after
+          {<point name="rep.everyrow.after"/>}
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:1)
+        AFTER GROUP OF sr1.nmbadocno
+ 
+           #add-point:rep.a_group.nmbadocno.before
+           {<point name="rep.a_group.nmbadocno.before"/>}
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:2)
+           #add-point:rep.sub04.before
+           {<point name="rep.sub04.before"/>}
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql
+           {<point name="rep.sub04.sql" mark="Y"/>}
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooffent = '", 
+                sr1.nmbaent CLIPPED ,"'", " AND  ooff002 = '", sr1.nmbadocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql
+           {<point name="rep.sub04.afsql"/>}
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE anmr563_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE anmr563_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT anmr563_g01_subrep04
+           DECLARE anmr563_g01_repcur04 CURSOR FROM g_sql
+           FOREACH anmr563_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "anmr563_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach
+              {<point name="rep.sub04.foreach"/>}
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT anmr563_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT anmr563_g01_subrep04
+           #add-point:rep.sub04.after
+           {<point name="rep.sub04.after"/>}
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.nmbadocno.after
+           {<point name="rep.a_group.nmbadocno.after"/>}
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before  
+            {<point name="rep.lastrow.before"/>}        
+            #edn add point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after
+            {<point name="rep.lastrow.after"/>}
+            #edn add point :rep.lastrow.after
+END REPORT
+]]>
+  </section>
+  <section id="anmr563_g01.rep_data" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION anmr563_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE               
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT anmr563_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT anmr563_g01_rep(sr[l_i].*)
+          END FOR
+          FINISH REPORT anmr563_g01_rep
+       END IF
+       IF INT_FLAG = TRUE THEN
+          LET INT_FLAG = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    CALL cl_gr_close_report()
+END FUNCTION
+]]>
+  </section>
+  <section id="anmr563_g01.sel_prep" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION anmr563_g01_sel_prep()
+   #add-point:sel_prep段define
+   {<point name="sel_prep.define"/>}
+   #end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+   
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT nmbaent,nmbadocno,nmbadocdt,nmba008,nmba001,NULL,NULL,nmbbseq,nmbborga,NULL, 
+       nmbb026,NULL,nmbb028,NULL,nmbbdocno,NULL,nmbb003,nmbb031,nmbb004,nmbb005,nmbb006"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM nmba_t,nmbb_t"
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+    LET g_order = " ORDER BY nmbadocno"
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("nmba_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE anmr563_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE anmr563_g01_curs CURSOR FOR anmr563_g01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmr563_g01.subrep_str" ver="1" status="" src="s" readonly="">
+    <![CDATA[#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:1)
+PRIVATE REPORT anmr563_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:sub01.define
+{<point name="sub01.define"/>}
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before
+    {<point name="sub01.order.before"/>}
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before
+            {<point name="sub01.everyrow.before"/>}              
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after
+            {<point name="sub01.everyrow.after"/>}
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:1)
+PRIVATE REPORT anmr563_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:sub02.define
+{<point name="sub02.define"/>}
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before
+    {<point name="sub02.order.before"/>}
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before
+            {<point name="sub02.everyrow.before"/>}              
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after
+            {<point name="sub02.everyrow.after"/>}
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:1)
+PRIVATE REPORT anmr563_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:sub03.define
+{<point name="sub03.define"/>}
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before
+    {<point name="sub03.order.before"/>}
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before
+            {<point name="sub03.everyrow.before"/>}              
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after
+            {<point name="sub03.everyrow.after"/>}
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:1)
+PRIVATE REPORT anmr563_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:sub04.define
+{<point name="sub04.define"/>}
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before
+    {<point name="sub04.order.before"/>}
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before
+            {<point name="sub04.everyrow.before"/>}              
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after
+            {<point name="sub04.everyrow.after"/>}
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcp163" module="axc" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02294" crtdt="2016-11-28 10:14:17" modid="02294" moddt="2016-11-28 14:14:23" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="工單製程順序計算作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbtcomp(chr10),xcbtcomp_desc(chr80),xcbt001(num5),xcbt002(num5),sfaadocno(chr20),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcp163" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbtcomp,xcbt001,xcbt002"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="sfaadocno"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcbtcomp">
+        <after>
+          <reference field="xcbtcomp_desc" ref_field="xcbtcomp" map_field="xcbtcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+      </column>
+      <column id="xcbtcomp_desc"/>
+      <column id="xcbt001"/>
+      <column id="xcbt002"/>
+      <column id="sfaadocno">
+        <controlp form="q_sfcadocno" state="c"/>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

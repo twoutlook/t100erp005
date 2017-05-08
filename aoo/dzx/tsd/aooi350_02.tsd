@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi350_02" std_prog="aooi350_02" erpver="1.0" ver="5" module="AOO" type="S" booking="Y" designer_ver="1.0" class="I" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="oofc_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail1_aooi350_02" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護通訊方式的子作業，完成後將子作業嵌入營運據點維護作業、員工維護作業、
+　　　　　　　　廠商維護作業、客戶維護作業...等維護作業的畫面中，方便USER以比較直覺的方式
+                來維護各聯絡對象的通訊方式。
+作業功能：新增/修改/刪除/複製/匯出Excel/查詢/說明/離開
+作業類型：子作業
+輸入模式：單檔多欄模式F002_00
+作業資料來源(Detail)：oofc_t(通訊方式檔)
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[資料欄位: [T:通訊方式檔].[C:通訊方式識別碼]
+允許空白: No
+預設值: 由系統自動編出(以流水號的方式,抓取最大號+1,未滿20碼者,前面補0,例如:
+        抓到的最大號為8,則系統自動編出的號碼為00000000000000000009)
+        請呼叫應用元件s_aooi350_get_oofc001來取得預設值
+資料內容: 無
+欄位格式: 文字(20碼長)
+允許編輯: No
+允許輸入控制: No
+一般資料驗證: key值,不可重複,由系統自動編出(以流水號的方式,抓取最大號+1,未滿20碼者,前面補0)
+
+資料欄位: [T:通訊方式檔].[C:聯絡對象識別碼]
+允許空白: No
+預設值:   單頭的[C:聯絡對象識別碼]
+資料內容: 無
+欄位格式: 文字(20碼長)
+允許編輯: No
+允許輸入控制: No
+一般資料驗證: 無
+]]>
+  </di_all>
+  <field cite_std="N" name="oofc_t.oofc001" ver="1" src="s" column="oofc001" table="oofc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[key值欄位，抓取資料。在畫面上隱藏此欄位。]]>
+  </field>
+  <field cite_std="N" name="oofc_t.oofc008" ver="1" src="s" column="oofc008" table="oofc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[通訊類型：
+   ●欄位控管：
+     資料欄位:[T:通訊方式檔].[C:通訊類型]
+     預設值:無
+     資料選項來源: 
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=6的資料,
+　　     　　　　　[T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:1.不允許空白
+          2.單身裡同一種[C:通訊類型]裡只能有一筆資料的[C:主要通訊方式]=Y。報錯信息(aoo-00153)：同一種[通訊類型]里只能有一筆資料的[主要通訊方式]=‘Y’
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oofc_t.oofc009" ver="1" src="s" column="oofc009" table="oofc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[通訊應用分類：
+   ●欄位控管：
+     資料欄位:[T:通訊方式檔].[C:通訊應用分類]
+     預設值:無
+     資料選項來源:ACC3
+     校驗:無
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔(ACC)].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+     傳入參數arg1：3
+     回值類型：查詢時多重回值，新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="oofc_t.oofc010" ver="1" src="s" column="oofc010" table="oofc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[主要通訊方式：
+   ●欄位控管：
+     資料欄位:[T:通訊方式檔].[C:主要通訊方式]/可Display可Input
+     允許空白:No
+     預設值:N
+     選項組合:勾選為Y，未勾選為N
+     其他: 單身裡同一種[C:通訊類型]裡只能有一筆資料的[C:主要通訊方式]=Y。報錯信息(aoo-00153)：同一種[通訊類型]里只能有一筆資料的[主要通訊方式]=‘Y’
+           例：單身有四筆資料，通訊類型=電子郵件的有三筆，通訊類型=QQ的有一筆。
+               三筆電子郵件的其中一筆可設為主要通訊方式；
+               QQ這一筆可設為主要通訊方式
+
+]]>
+  </field>
+  <field cite_std="N" name="oofc_t.oofc011" ver="1" src="s" column="oofc011" table="oofc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofc_t.oofc012" ver="1" src="s" column="oofc012" table="oofc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofc_t.oofc013" ver="1" src="s" column="oofc013" table="oofc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofc_t.oofc014" ver="1" src="s" column="oofc014" table="oofc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[簡要代碼：
+   ●欄位控管：
+     資料欄位:[T:通訊方式檔].[C:簡要代碼]/可Display可Input
+     預設值:無
+     校驗:若有輸入值不可重複
+     帶值:無
+     計算或處理:無
+     其他說明:後續交易單據中可能會有個地址代碼的欄位，開窗或檢查來源就是簡要
+              代碼的資料，故本欄位並非必輸欄位，可一旦有輸入值，則輸入值不可
+              重複]]>
+  </field>
+  <field cite_std="N" name="oofc_t.oofc015" ver="5" src="s" column="oofc015" table="oofc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oofc_t.oofcstus" ver="1" src="s" column="oofcstus" table="oofc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="5" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="oofc009_desc" src="s" depend_field="oofc_t.oofc009" correspon_key="oofcent,&apos;3&apos;,oofc009" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="5" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="oofc_t.oofc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofc_t.oofc008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofc_t.oofc009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofc_t.oofc010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofc_t.oofc011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofc_t.oofc012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofc_t.oofc013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oofc_t.oofc014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="oofc_t.oofc015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="oofc_t.oofcstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_oofcstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_oofc001" text="通訊方式識別碼" lstr=""/>
+    <sfield name="lbl_oofc008" text="通訊類型" lstr=""/>
+    <sfield name="lbl_oofc009" text="通訊應用分類" lstr=""/>
+    <sfield name="lbl_oocql004_desc" text="通訊應用分類碼說明" lstr=""/>
+    <sfield name="lbl_oofc012" text="通訊內容" lstr=""/>
+    <sfield name="lbl_oofc010" text="主要通訊方式" lstr=""/>
+    <sfield name="lbl_oofc014" text="簡要代碼" lstr=""/>
+    <sfield name="lbl_oofc011" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofc015" text="寄發郵件" lstr=""/>
+    <sfield name="lbl_oofc013" text="失效日期" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi070_02" module="abg" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01267" crtdt="2016-07-12 11:55:13" modid="03080" moddt="2016-07-27 10:56:12" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="複製財報結構">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glfa001,glfa001_desc(chr80),glfa004,glfa002,l_dummy(chr80),l_glfa001_1(chr10),l_glfa001_1_desc(chr100),l_glfa004_1(chr10),l_glfa002_1(chr1)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi070_02" method="dialog">
+    <section id="input">
+      <input id="head" field="glfa001,glfa004,glfa002,l_glfa001_1,l_glfa001_1_desc,l_glfa004_1,l_glfa002_1"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="glfa001">
+        <after/>
+        <controlp form="q_glfa001" state="c"/>
+      </column>
+      <column id="glfa001_desc"/>
+      <column id="glfa004">
+        <after>
+          <check chkid="v_ooal002_7" id="isExist"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="glfa002" type="S" default="1" def_scc="9930"/>
+      <column id="l_dummy"/>
+      <column id="l_glfa001_1">
+        <after/>
+        <controlp form="q_glfa001" state="c"/>
+      </column>
+      <column id="l_glfa001_1_desc"/>
+      <column id="l_glfa004_1">
+        <after>
+          <check chkid="v_ooal002_7" id="isExist"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="l_glfa002_1" type="S" default="1"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glfa_t" pk="glfa001">
+      <sql id="forupd_sql" type="sql" query="SELECT glfa001,&apos;&apos;,glfa004,glfa002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glfa_t WHERE glfaent= ? AND glfa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="glfa001"/>
+    </head>
+  </dataset>
+</assembly>
+

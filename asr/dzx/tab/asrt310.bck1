@@ -1,0 +1,282 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrt310" module="asr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02482" crtdt="2013-11-19 17:34:08" modid="02295" moddt="2016-03-08 10:57:35" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="重覆性生產發料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sfdadocno,oobxl003(chr80),sfdasite,sfdadocdt,sfda001,sfda004,sfda004_desc(chr80),sfda003,sfda003_desc(chr80),sfdastus,sfda002,sfda009,sfda009_desc(chr80),sfda006,sfda006_desc(chr500),sfda006_desc1(chr500),sfda007,sfda008,sfda010,sfda010_desc(chr80),sfda011,sfda012,sfda012_desc(chr80),sfda013,sfdacrtid,sfdacrtid_desc(chr80),sfdacrtdp,sfdacrtdp_desc(chr80),sfdacrtdt,sfdaownid,sfdaownid_desc(chr80),sfdaowndp,sfdaowndp_desc(chr80),sfdamodid,sfdamodid_desc(chr80),sfdamoddt,sfdacnfid,sfdacnfid_desc(chr80),sfdacnfdt,sfdapstid,sfdapstid_desc(chr80),sfdapstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sfdcsite,sfdcseq,sfdc004,sfdc004_desc(chr500),sfdc004_desc1(chr500),sfdc005,sfdc005_desc(chr500),imaf034(chr1),imae092(chr1),sfdc006,sfdc007,sfdc008,sfdc008_desc(chr500),sfdc009,sfdc010,sfdc011,sfdc011_desc(chr500),sfdc012,sfdc012_desc(chr500),sfdc013,sfdc013_desc(chr500),sfdc014,sfdc016,sfdc015,sfdc015_desc(chr500)"/>
+      <var id="bs_field" value="sfdadocno,sfdadocdt,sfda001,sfda002,sfda004,sfda004_desc(chr80),sfda003,sfda003_desc(chr80),sfda006,sfda006_desc(chr80),sfda006_desc1(chr80),sfda007,sfda008,sfda009,sfda010,sfda010_desc(chr80),sfda011,sfda012,sfda012_desc(chr80),sfda013" pk="sfdadocno" order=""/>
+      <bs_reference field="sfda004_desc" ref_field="sfda004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="sfda003_desc" ref_field="sfda003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="sfda006_desc" ref_field="sfda006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="sfda010_desc" ref_field="sfda010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="mdemand"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="s_lot_sel1"/>
+      <action id="demand"/>
+    </section>
+  </structure>
+  <form id="0" module="asr" filename="asrt310" method="dialog">
+    <section id="input">
+      <input id="head" field="sfdadocno,sfdasite,sfdadocdt,sfda001,sfda004,sfda003,sfdastus,sfda002,sfda009,sfda006,sfda007,sfda008,sfda010,sfda011,sfda012,sfda013"/>
+      <input id="body" page="1" field="sfdcseq,sfdc004,sfdc005,sfdc005_desc,imaf034,imae092,sfdc006,sfdc007,sfdc008,sfdc008_desc,sfdc009,sfdc010,sfdc011,sfdc011_desc,sfdc012,sfdc013,sfdc014,sfdc016,sfdc015" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="sfdadocno,oobxl003,sfdasite,sfdadocdt,sfda001,sfda004,sfda003,sfdastus,sfda002,sfda009,sfda006,sfda007,sfda008,sfda010,sfda011,sfda012,sfda013,sfdacrtid,sfdacrtdp,sfdacrtdt,sfdaownid,sfdaowndp,sfdamodid,sfdamoddt,sfdacnfid,sfdacnfdt,sfdapstid,sfdapstdt"/>
+      <construct id="body" page="1" field="sfdcseq,sfdc004,sfdc005,sfdc005_desc,imaf034,imae092,sfdc006,sfdc007,sfdc008,sfdc008_desc,sfdc009,sfdc010,sfdc011,sfdc011_desc,sfdc012,sfdc013,sfdc014,sfdc016,sfdc015"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="sfdadocno"/>
+      <set id="head" type="no_entry" field="sfdadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="sfdadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_sfdadocno" state="c"/>
+      </column>
+      <column id="oobxl003"/>
+      <column id="sfdasite"/>
+      <column id="sfdadocdt"/>
+      <column id="sfda001"/>
+      <column id="sfda004">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="sfda004_desc" ref_field="sfda_t.sfda004" map_field="sfda004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="sfda004_desc"/>
+      <column id="sfda003">
+        <after>
+          <check chkid="v_ooeg001_3" id="isExist"/>
+          <reference field="sfda003_desc" ref_field="sfda_t.sfda003" map_field="sfda003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="sfda003_desc"/>
+      <column id="sfdastus" scc="13" type="S" default="N">
+        <stus id="D" pic="withdraw"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="S" pic="posted"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="Z" pic="unposted"/>
+      </column>
+      <column id="sfda002" def_scc="4013"/>
+      <column id="sfda009">
+        <after>
+          <reference field="sfda009_desc" ref_field="sfdasite,sfda009" map_field="sfdasite,sfda009" ref_sql="SELECT srza002 FROM srza_t WHERE srzaent=$varg_enterprise$var AND srzasite=? AND srza001=? "/>
+        </after>
+        <controlp form="q_sraa001" state="i"/>
+        <controlp form="q_sraa001" state="c"/>
+      </column>
+      <column id="sfda009_desc"/>
+      <column id="sfda006">
+        <after/>
+        <controlp form="q_srab004" state="i"/>
+        <controlp form="q_srab004" state="c"/>
+      </column>
+      <column id="sfda006_desc"/>
+      <column id="sfda006_desc1"/>
+      <column id="sfda007">
+        <controlp form="q_srab004" state="i"/>
+        <controlp form="q_srab004" state="c"/>
+      </column>
+      <column id="sfda008">
+        <controlp form="q_srab004" state="i"/>
+        <controlp form="q_srab004" state="c"/>
+      </column>
+      <column id="sfda010">
+        <after>
+          <reference field="sfda010_desc" ref_field="sfda010" map_field="sfda010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bmba007" state="i"/>
+        <controlp form="q_bmba007" state="c"/>
+      </column>
+      <column id="sfda010_desc"/>
+      <column id="sfda011">
+        <controlp form="q_bmba007" state="i"/>
+        <controlp form="q_bmba007" state="c"/>
+      </column>
+      <column id="sfda012">
+        <after>
+          <check chkid="v_inaa001_2" id="isExist"/>
+          <reference field="sfda012_desc" ref_field="sfdasite,sfda012" map_field="sfdasite,sfda012" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_1" state="i"/>
+        <controlp form="q_inaa001_1" state="c"/>
+      </column>
+      <column id="sfda012_desc"/>
+      <column id="sfda013">
+        <after>
+          <check id="range" bt="0.000000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfdacrtid">
+        <after>
+          <reference field="sfdacrtid_desc" ref_field="sfda_t.sfdacrtid" map_field="sfdacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfdacrtid_desc"/>
+      <column id="sfdacrtdp">
+        <after>
+          <reference field="sfdacrtdp_desc" ref_field="sfda_t.sfdacrtdp" map_field="sfdacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="sfdacrtdp_desc"/>
+      <column id="sfdacrtdt"/>
+      <column id="sfdaownid">
+        <after>
+          <reference field="sfdaownid_desc" ref_field="sfda_t.sfdaownid" map_field="sfdaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfdaownid_desc"/>
+      <column id="sfdaowndp">
+        <after>
+          <reference field="sfdaowndp_desc" ref_field="sfda_t.sfdaowndp" map_field="sfdaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="sfdaowndp_desc"/>
+      <column id="sfdamodid">
+        <after>
+          <reference field="sfdamodid_desc" ref_field="sfda_t.sfdamodid" map_field="sfdamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfdamodid_desc"/>
+      <column id="sfdamoddt"/>
+      <column id="sfdacnfid">
+        <after>
+          <reference field="sfdacnfid_desc" ref_field="sfda_t.sfdacnfid" map_field="sfdacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfdacnfid_desc"/>
+      <column id="sfdacnfdt"/>
+      <column id="sfdapstid">
+        <after>
+          <reference field="sfdapstid_desc" ref_field="sfda_t.sfdapstid" map_field="sfdapstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfdapstid_desc"/>
+      <column id="sfdapstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="sfdcsite"/>
+      <column id="sfdcseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfdc004">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="sfdc004_desc" ref_field="sfdc_t.sfdc004" map_field="sfdc004" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_6" state="i"/>
+        <controlp form="q_imaf001_6" state="c"/>
+      </column>
+      <column id="sfdc004_desc"/>
+      <column id="sfdc004_desc1"/>
+      <column id="sfdc005">
+        <after/>
+      </column>
+      <column id="sfdc005_desc"/>
+      <column id="imaf034"/>
+      <column id="imae092" type="S" default="Y"/>
+      <column id="sfdc006">
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="sfdc007">
+        <after>
+          <check id="range" bt="0.000000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfdc008" type="S" default="0">
+        <after/>
+      </column>
+      <column id="sfdc008_desc"/>
+      <column id="sfdc009">
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="sfdc010">
+        <after>
+          <check id="range" bt="0.00000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfdc011" type="S" default="0">
+        <after/>
+      </column>
+      <column id="sfdc011_desc"/>
+      <column id="sfdc012">
+        <after>
+          <check chkid="v_inaa001_2" id="isExist"/>
+          <reference field="sfdc012_desc" ref_field="sfdcsite,sfdc012" map_field="sfdcsite,sfdc012" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inag005_9" state="i"/>
+        <controlp form="q_inaa001_1" state="c"/>
+      </column>
+      <column id="sfdc012_desc"/>
+      <column id="sfdc013">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="sfdc013_desc" ref_field="sfdc012,sfdc013" map_field="sfdc012,sfdc013" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inag005_9" state="i"/>
+        <controlp form="q_inab002_1" state="c"/>
+      </column>
+      <column id="sfdc013_desc"/>
+      <column id="sfdc014">
+        <controlp form="q_inag005_9" state="i"/>
+        <controlp form="q_sfdc014_1" state="c"/>
+      </column>
+      <column id="sfdc016">
+        <controlp form="q_inag005_9" state="i"/>
+        <controlp form="q_sfdc016_1" state="c"/>
+      </column>
+      <column id="sfdc015">
+        <after>
+          <reference field="sfdc015_desc" ref_field="sfdc015" map_field="sfdc015" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;226&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="sfdc015_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="sfda_t" pk="sfdadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT sfdadocno,&apos;&apos;,sfdasite,sfdadocdt,sfda001,sfda004,&apos;&apos;,sfda003,&apos;&apos;,sfdastus,sfda002,sfda009,&apos;&apos;,sfda006,&apos;&apos;,&apos;&apos;,sfda007,sfda008,sfda010,&apos;&apos;,sfda011,sfda012,&apos;&apos;,sfda013,sfdacrtid,&apos;&apos;,sfdacrtdp,&apos;&apos;,sfdacrtdt,sfdaownid,&apos;&apos;,sfdaowndp,&apos;&apos;,sfdamodid,&apos;&apos;,sfdamoddt,sfdacnfid,&apos;&apos;,sfdacnfdt,sfdapstid,&apos;&apos;,sfdapstdt FROM sfda_t WHERE sfdaent= ? AND sfdadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT sfdadocno,&apos;&apos;,sfdasite,sfdadocdt,sfda001,sfda004,&apos;&apos;,sfda003,&apos;&apos;,sfdastus,sfda002,sfda009,&apos;&apos;,sfda006,&apos;&apos;,&apos;&apos;,sfda007,sfda008,sfda010,&apos;&apos;,sfda011,sfda012,&apos;&apos;,sfda013,sfdacrtid,&apos;&apos;,sfdacrtdp,&apos;&apos;,sfdacrtdt,sfdaownid,&apos;&apos;,sfdaowndp,&apos;&apos;,sfdamodid,&apos;&apos;,sfdamoddt,sfdacnfid,&apos;&apos;,sfdacnfdt,sfdapstid,&apos;&apos;,sfdapstdt FROM sfda_t" order="sfdadocno"/>
+    </head>
+    <body id="sfdc_t" page="1" linked="" pk="sfdcseq" fk="sfdcdocno">
+      <sql id="forupd_sql_detail" query="SELECT sfdcsite,sfdcseq,sfdc004,&apos;&apos;,&apos;&apos;,sfdc005,&apos;&apos;,&apos;&apos;,&apos;&apos;,sfdc006,sfdc007,sfdc008,&apos;&apos;,sfdc009,sfdc010,sfdc011,&apos;&apos;,sfdc012,&apos;&apos;,sfdc013,&apos;&apos;,sfdc014,sfdc016,sfdc015,&apos;&apos; FROM sfdc_t WHERE sfdcent=? AND sfdcdocno=? AND sfdcseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sfdcsite,sfdcseq,sfdc004,&apos;&apos;,&apos;&apos;,sfdc005,&apos;&apos;,&apos;&apos;,&apos;&apos;,sfdc006,sfdc007,sfdc008,&apos;&apos;,sfdc009,sfdc010,sfdc011,&apos;&apos;,sfdc012,&apos;&apos;,sfdc013,&apos;&apos;,sfdc014,sfdc016,sfdc015,&apos;&apos; FROM sfdc_t WHERE sfdcent=? AND sfdcdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

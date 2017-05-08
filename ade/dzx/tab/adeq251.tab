@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq251" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06541" crtdt="2015-06-24 16:08:11" modid="06137" moddt="2015-10-30 09:08:52" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店收款周結查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="decv019,decv020,decvsite,decvsite_desc(chr500),decv001,decv002,decv002_desc(chr500),decv004,decv005,decv006,decv007,decv008,decv008_desc(chr500),decv009,decv010,decv012,decv013,decv014,decv015,decv011,decv011_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="decv019(b_decv019),decv020(b_decv020),decvsite(b_decvsite),decvsite_desc(b_decvsite_desc),decv001(b_decv001),decv002(b_decv002),decv002_desc(b_decv002_desc),decv004(b_decv004),decv005(b_decv005),decv006(b_decv006),decv007(b_decv007),decv008(b_decv008),decv008_desc(b_decv008_desc),decv009(b_decv009),decv010(b_decv010),decv012(b_decv012),decv013(b_decv013),decv014(b_decv014),decv015(b_decv015),decv011(b_decv011),decv011_desc(b_decv011_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq251" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="decv019,decv020,decvsite,decv001,decv002,decv004,decv005,decv006,decv007,decv008,decv009,decv010,decv012,decv013,decv014,decv015,decv011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="decv019(b_decv019),decv020(b_decv020),decvsite(b_decvsite),decv001(b_decv001),decv002(b_decv002),decv004(b_decv004),decv005(b_decv005),decv006(b_decv006),decv007(b_decv007),decv008(b_decv008),decv009(b_decv009),decv010(b_decv010),decv012(b_decv012),decv013(b_decv013),decv014(b_decv014),decv015(b_decv015),decv011(b_decv011)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="decv019" type="S" default="0"/>
+      <column id="decv020" type="S" default="0"/>
+      <column id="decvsite">
+        <after>
+          <reference field="decvsite_desc" ref_field="decvsite" map_field="decvent,decvsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="decvsite_desc"/>
+      <column id="decv001" def_scc="8310"/>
+      <column id="decv002">
+        <after>
+          <reference field="decv002_desc" ref_field="decv002" map_field="decvent,decv002" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001_04" state="c"/>
+      </column>
+      <column id="decv002_desc"/>
+      <column id="decv004" type="S" default="0"/>
+      <column id="decv005"/>
+      <column id="decv006" type="S" default="0"/>
+      <column id="decv007"/>
+      <column id="decv008">
+        <after>
+          <reference field="decv008_desc" ref_field="decv008" map_field="decvent,decv008" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="decv008_desc"/>
+      <column id="decv009"/>
+      <column id="decv010"/>
+      <column id="decv012" type="S" default="0"/>
+      <column id="decv013"/>
+      <column id="decv014"/>
+      <column id="decv015"/>
+      <column id="decv011">
+        <after>
+          <reference field="decv011_desc" ref_field="decv011" map_field="decvent,decv011" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001_4" state="c"/>
+      </column>
+      <column id="decv011_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="decv_t" page="1" linked="" pk="decvsite,decv002,decv005,decv007,decv008,decv009,decv010,decv011,decv013,decv015,decv019,decv020">
+      <sql id="b_fill_sql" query="SELECT decv019,decv020,decvsite,&apos;&apos;,decv001,decv002,&apos;&apos;,decv004,decv005,decv006,decv007,decv008,&apos;&apos;,decv009,decv010,decv012,decv013,decv014,decv015,decv011,&apos;&apos; FROM decv_t WHERE decvent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

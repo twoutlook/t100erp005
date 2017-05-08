@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmq903" module="apm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02159" crtdt="2015-02-25 18:48:59" modid="02159" moddt="2015-07-14 17:58:19" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="供應商送貨準時率查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="pmel006,l_sdate,l_edate,l_rate"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pmeldocdt,pmel002,pmel003,pmel003_desc(chr500),l_pmel003_oocq009(chr500),l_pmel003_oocq010(chr500),l_def_time(chr500),pmel011,pmel012,pmel014,pmel013,pmel006,pmel006_desc(chr500),pmeldocno,pmel001"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pmeldocdt(b_pmeldocdt),pmel002(b_pmel002),pmel003(b_pmel003),pmel003_desc(b_pmel003_desc),l_pmel003_oocq009(l_pmel003_oocq009),l_pmel003_oocq010(l_pmel003_oocq010),l_def_time(l_def_time),pmel011(b_pmel011),pmel012(b_pmel012),pmel014(b_pmel014),pmel013(b_pmel013),pmel006(b_pmel006),pmel006_desc(b_pmel006_desc),pmeldocno(b_pmeldocno),pmel001(b_pmel001)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmq903" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmeldocdt,pmel002,pmel003,pmel011,pmel012,pmel014,pmel013,pmel006,pmeldocno,pmel001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="pmeldocdt(b_pmeldocdt),pmel002(b_pmel002),pmel003(b_pmel003),pmel011(b_pmel011),pmel012(b_pmel012),pmel014(b_pmel014),pmel013(b_pmel013),pmel006(b_pmel006),pmeldocno(b_pmeldocno),pmel001(b_pmel001)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pmeldocdt"/>
+      <column id="pmel002"/>
+      <column id="pmel003">
+        <after>
+          <reference field="pmel003_desc" ref_field="pmel003" map_field="pmel003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;274&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmel003_desc"/>
+      <column id="l_pmel003_oocq009"/>
+      <column id="l_pmel003_oocq010"/>
+      <column id="l_def_time"/>
+      <column id="pmel011"/>
+      <column id="pmel012"/>
+      <column id="pmel014" type="S" default="0"/>
+      <column id="pmel013"/>
+      <column id="pmel006">
+        <after>
+          <reference field="pmel006_desc" ref_field="pmel006" map_field="pmel006" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmel006_desc"/>
+      <column id="pmeldocno"/>
+      <column id="pmel001"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmel_t" page="1" linked="" pk="pmeldocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pmeldocdt,pmel002,pmel003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmel011,pmel012,pmel014,pmel013,pmel006,&apos;&apos;,pmeldocno,pmel001 FROM pmel_t WHERE pmelent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

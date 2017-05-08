@@ -1,0 +1,641 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aint838" std_prog="aint838" erpver="1.0" ver="2" module="AIN" type="M" booking="N" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="inpd_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護現有庫存複盤調整相關資訊
+標準作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+標準作業功能取消：新增/刪除/複製/
+作業類型：交易單據維護作業
+輸入模式：單檔無搭配任何方案模式F001_00
+作業資料來源(Master)：
+ 資料來源表：inpd_t(盤點明細檔)
+
+
+  (1)瀏覽Browse顯示欄位及型態：
+    inpddocno(標籤編號)：ButtonEdit
+    inpd008(空白標籤)：CheckboxEdit 
+    inpd009(盤點計劃單號)：ButtonEdit 
+    inpd001(料件編號)：ButtonEdit
+
+
+補充說明：
+
+
+●程式執行狀態:
+  1.進入程式後詢問"是否僅顯示複盤一與複盤二數量有差異之資料?"
+    若是，則僅帶出盤點數量-複盤一與複盤二數量不一致的資料
+
+●新增狀態:無新增功能
+      
+
+●修改狀態:
+  1.修改時，僅能修改調整數量、參考單位調整量、理由碼等欄位
+  2.不是開立狀態的盤點資料不可進行修改
+  3.只要有修改該盤點計劃的資料存檔後更新[T:盤點計劃流程檔].[盤點作業] = '12'現有庫存複盤調整，更新欄位：
+         [C:進度狀況] = 'Y'
+         [C:處理進度= 100%
+         [C:操作人員] = g_user
+         [C:實際操作日期] = g_today
+
+●刪除狀態:無
+   
+  
+●查詢狀態:
+
+]]>
+  </all>
+  <field cite_std="N" name="adjust" ver="1" src="s" column="inpd050" table="inpd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[調整數量：
+   ●欄位控管：
+     資料欄位:畫面欄位/可Display可Input
+     預設值:無
+     校驗: 1.允許空白: No
+           2.不可等於0，錯誤訊息「盤點數量不可為0，請重新輸入」
+      
+   ●帶值:無
+                
+   ●計算或處理:1.非實體欄位
+                2.輸入後存檔確定，同步更新[T:盤點明細檔].盤點數量-複盤一、
+                  [T:盤點明細檔].盤點數量-複盤二 ，如果盤點計畫現有庫存-複盤二為'Y]]>
+  </field>
+  <field cite_std="N" name="adjust_ref" ver="1" src="s" column="inpd050" table="inpd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[參考單位調整量：
+   ●欄位控管：
+     資料欄位:畫面欄位/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.依據單據別參數控管是否可以輸入小於0
+     帶值:無
+                
+   ●計算或處理:1.若參考單位不為空白才可輸入
+                2. 輸入後存檔確定，同步更新[T:盤點明細檔].參考單位盤點數量-複盤一、
+                  [T:盤點明細檔].參考單位盤點數量-複盤二 ，如果盤點計畫現有庫存-複盤二為'Y'   ]]>
+  </field>
+  <field cite_std="N" name="b_inpd001" ver="1" src="s" column="inpd001" table="inpd_t" attribute="" type="" req="N" i_zoom="q_imaf001" c_zoom="q_imaf001" chk_ref="v_imaf001_7" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_inpd008" ver="1" src="s" column="inpd008" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inpadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_inpd009" ver="1" src="s" column="inpd009" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_inpddocno" ver="1" src="s" column="inpddocno" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inpddocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_inpdseq" ver="1" src="s" column="inpdseq" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_inpdsite" ver="1" src="s" column="inpdsite" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal_t.imaal003" ver="1" src="s" column="imaal003" table="imaal_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal_t.imaal004" ver="1" src="s" column="imaal004" table="imaal_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd002_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd014_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd001" ver="1" src="s" column="inpd001" table="inpd_t" attribute="" type="" req="N" i_zoom="q_imaf001" c_zoom="q_imaf001" chk_ref="v_imaf001_7" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[料件編號：
+   ●欄位控管：
+     資料欄位:inpd001/可Display不可Input
+     預設值:無
+      校驗:1.不允許空白
+         
+      帶值:
+
+      計算或處理:
+
+   ●開窗處理:
+    1.依料件標準開窗]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd002" ver="1" src="s" column="inpd002" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inpd002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品特徵：
+   ●欄位控管：
+     資料欄位: inpd002/可Display不可Input
+     預設值:無
+     校驗: 1.不允許空白
+          
+     帶值:無
+     計算或處理:
+]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd003" ver="1" src="s" column="inpd003" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inpd003" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[庫存管理特徵：
+   ●欄位控管：
+     資料欄位: inpd003/可Display不可Input
+     預設值:無
+     校驗: 
+
+     帶值:無
+     計算或處理:
+]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd004" ver="1" src="s" column="inpd004" table="inpd_t" attribute="" type="" req="N" i_zoom="q_imaf001_12" c_zoom="q_imaf001_12" chk_ref="v_imaf001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[包裝容器：
+   ●欄位控管：
+     資料欄位: inpd004/可Display不可Input
+     預設值:無
+     校驗: 1.允許空白
+           2.輸入值須存在[T:料件包裝資料檔].[C:包裝容器編號]，且為有效資料，
+             若沒有則show錯誤訊息「此料沒有這種包裝方式，請重新輸入」
+     帶值:無
+     計算/處理:
+
+ ●開窗處理：]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd005" ver="1" src="s" column="inpd005" table="inpd_t" attribute="" type="" req="N" i_zoom="q_inaa001_12" c_zoom="q_inaa001_12" chk_ref="v_inaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[庫位：
+   ●欄位控管：
+     資料欄位:inpd005 /可Display不可Input
+     預設值:無
+     校驗:1.不允許空白
+          
+     帶值:                 
+     計算或處理:
+
+   ●開窗處理：
+     ]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd006" ver="1" src="s" column="inpd006" table="inpd_t" attribute="" type="" req="N" i_zoom="q_inab002_3" c_zoom="q_inab002_3" chk_ref="v_inab002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[儲位：
+   ●欄位控管：
+     資料欄位:inpd006 /可Display不可Input
+     預設值:無
+     校驗:1.允許空白 
+         
+         
+     帶值:               
+     計算或處理:
+
+   ●開窗處理:]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd007" ver="1" src="s" column="inpd007" table="inpd_t" attribute="" type="" req="N" i_zoom="q_inad001" c_zoom="q_inad001" chk_ref="v_inad001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[批號：
+   ●欄位控管：
+     資料欄位:inpd007 /可Display不可Input
+     預設值:無
+     校驗:  1.允許空白
+           
+              
+     帶值:無               
+     計算或處理: 
+
+   ●開窗處理:]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd008" ver="2" src="s" column="inpd008" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inpadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[盤點計劃單號：
+   ●欄位控管：
+     資料欄位: inpd008/可Display不可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入的盤點計劃單號狀態需要為已確認的計劃單
+          3.輸入的盤點計劃單號的盤點類型(inpa001)值需為'1:實地盤點'
+    
+     計算或處理：
+
+   ●開窗處理:
+      1.查詢時：
+       參考函式：依標準查詢視窗 
+       查詢欄位：盤點計劃單號、輸入日期、計劃人員、計畫部門
+       查詢條件：盤點計劃狀態已確認
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依標準查詢視窗
+           查詢欄位：盤點計劃單號、輸入日期、計劃人員、計畫部門
+           查詢條件：盤點計劃狀態已確認
+           回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd009" ver="1" src="s" column="inpd009" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[空白標籤：
+   ●欄位控管：
+     資料欄位: inpd009/可Display不可Input
+     預設值:無
+     校驗:
+     計算或處理：不可修改]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd010" ver="1" src="s" column="inpd010" table="inpd_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[庫存單位：
+   ●欄位控管：
+     資料欄位:inpd010 /可Display不可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值需存在[T:單位基本資料檔].[C:單位編號]
+   ●帶值:無
+                
+   ●計算或處理:
+                
+
+   ●開窗處理:依單位標準開窗 
+]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd012" ver="1" src="s" column="inpd012" table="inpd_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[參考單位：
+   ●欄位控管：
+     資料欄位:inpd012/Display Only
+     預設值:無
+  
+   ●開窗處理:
+      1.依單位標準開窗 
+]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd014" ver="1" src="s" column="inpd014" table="inpd_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[理由碼：
+   ●欄位控管：
+     資料欄位: inpd014/可Display可Input
+     預設值:無
+     校驗:1.抓取[T:系統分類值檔].[C:系統分類碼]=24且[T:系統分類值檔].[C:系統分類碼]=g_prog
+            的[T:系統分類值檔].[C:參考欄位二]的欄位值(對應的ACC碼下面規格用g_acc代表此欄位值),
+            inpd014的值須存在[T:應用分類碼檔].[C:應用分類]=g_acc 且為有效資料
+          2.呼叫s_doc_chk('8',inpddocno,inpd014,'','','','')應用元件，檢核輸入的理由碼是否在
+            單據別限制範圍內，若不在限制內則不允許使用此理由碼
+     帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+          WHERE [T:應用分類碼多語言檔].[C:應用分類]=g_acc
+            AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:理由碼]
+          到本欄位顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:應用分類碼檔(ACC)].[C:應用分類瑪],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔(ACC)].[C:應用分類]=g_acc
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd015" ver="1" src="s" column="inpd015" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd050" ver="1" src="s" column="inpd050" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[盤點數量：
+   ●欄位控管：
+     資料欄位:inpd050/可Display不可Input
+     預設值:無
+     校驗:
+   ●帶值:無
+                
+   ●計算或處理:]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd051" ver="1" src="s" column="inpd051" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[參考單位盤點數量：
+   ●欄位控管：
+     資料欄位:inpd051/可Display不可Input
+     預設值:無
+     校驗:
+     帶值:無
+                
+   ●計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd056" ver="1" src="s" column="inpd056" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[盤點數量：
+   ●欄位控管：
+     資料欄位:inpd056/可Display不可Input
+     預設值:無
+     校驗:
+   ●帶值:無
+                
+   ●計算或處理:
+    ]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpd057" ver="1" src="s" column="inpd057" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[參考單位盤點數量：
+   ●欄位控管：
+     資料欄位:inpd057/可Display不可Input
+     預設值:無
+     校驗:
+     帶值:無
+                
+   ●計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdcnfdt" ver="1" src="s" column="inpdcnfdt" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdcnfid" ver="1" src="s" column="inpdcnfid" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdcrtdp" ver="1" src="s" column="inpdcrtdp" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdcrtdt" ver="1" src="s" column="inpdcrtdt" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdcrtid" ver="1" src="s" column="inpdcrtid" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpddocno" ver="1" src="s" column="inpddocno" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inpddocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[標籤編號：
+   ●欄位控管：
+     資料欄位:inpddocno/可Display不可Input
+     預設值:無
+     校驗:1.不允許空白
+
+     帶值:1.抓取[T:單據別多語言檔][C:說明]的值顯示在下方[C:單別名稱]欄位
+     計算或處理:1.不提供新增功能，修改時此欄位為NoEntry
+              
+
+   ●開窗處理：
+        1.查詢時：
+          參考函式：依標準查詢視窗
+          查詢欄位：[T:盤點明細檔].[C:標籤編號],[T:盤點明細檔].[C:輸入日期],
+                    [T:盤點明細檔].[C:狀態],[T:盤點明細檔].[C:輸入人員],
+          回值類型：多重回值
+
+        2.新增：不提供新增功能
+         ]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdmoddt" ver="1" src="s" column="inpdmoddt" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdmodid" ver="1" src="s" column="inpdmodid" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdowndp" ver="1" src="s" column="inpdowndp" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdownid" ver="1" src="s" column="inpdownid" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdpstdt" ver="1" src="s" column="inpdpstdt" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdpstid" ver="1" src="s" column="inpdpstid" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdseq" ver="1" src="s" column="inpdseq" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次：
+   ●欄位控管：
+     資料欄位:inpdseq/可Display不可Input
+     預設值:
+     校驗:1.不允許空白
+
+     帶值:無
+     計算或處理:1.當[T:盤點計劃單頭檔].[C:產生方式] = '2.同盤點卡號，用項次呈現'時，才可輸入項次，
+                  且依規則自動取最大號，修改時此欄位為NoEntry
+                2.當[T:盤點計劃單頭檔].[C:產生方式] = '1.一料一盤點卡號'時，固定給0，不可輸入修改
+                3.不提供新增功能
+                4.修改時，不能修改此欄位
+
+   ●開窗處理：]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdsite" ver="1" src="s" column="inpdsite" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpd_t.inpdstus" ver="1" src="s" column="inpdstus" table="inpd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inpddocno_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="2" name="prog_inpd008" depend_field="inpd_t.inpd008" src="s" status="">
+      <program order="1" type="1" name="aint820"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_inpd001_desc" src="s" depend_field="b_inpd001" correspon_key="inpd001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_inpd001_desc_desc" src="s" depend_field="b_inpd001" correspon_key="inpd001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="inpd004_desc" src="s" depend_field="inpd_t.inpd004" correspon_key="inpd004" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inpd005_desc" src="s" depend_field="inpd_t.inpd005" correspon_key="inpdsite,inpd005" ref_table="inaa_t" ref_fk="inaasite,inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="inpd006_desc" src="s" depend_field="inpd_t.inpd006" correspon_key="inpdsite,inpd005,inpd006" ref_table="inab_t" ref_fk="inabsite,inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+    <rfield cite_std="N" ver="1" name="inpd010_desc" src="s" depend_field="inpd_t.inpd010" correspon_key="inpd010" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inpd012_desc" src="s" depend_field="inpd_t.inpd012" correspon_key="inpd012" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inpdcnfid_desc" src="s" depend_field="inpd_t.inpdcnfid" correspon_key="inpdcnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="inpdcrtdp_desc" src="s" depend_field="inpd_t.inpdcrtdp" correspon_key="inpdcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inpdcrtid_desc" src="s" depend_field="inpd_t.inpdcrtid" correspon_key="inpdcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="inpdmodid_desc" src="s" depend_field="inpd_t.inpdmodid" correspon_key="inpdmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="inpdowndp_desc" src="s" depend_field="inpd_t.inpdowndp" correspon_key="inpdowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="inpdownid_desc" src="s" depend_field="inpd_t.inpdownid" correspon_key="inpdownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="inpdpstid_desc" src="s" depend_field="inpd_t.inpdpstid" correspon_key="inpdpstid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="adjust" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="adjust_ref" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inpd001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inpd008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inpd009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inpddocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inpdseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_inpdsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal_t.imaal003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal_t.imaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd002_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd014_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="inpd_t.inpd008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd050" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd056" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpd057" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdcnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdcnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpddocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdpstdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdpstid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpd_t.inpdstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpddocno_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="batch_number" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_inpddocno" text="標籤編號" lstr=""/>
+    <sfield name="lbl_inpdseq" text="項次" lstr=""/>
+    <sfield name="lbl_inpdsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_inpd008" text="盤點計劃單號" lstr=""/>
+    <sfield name="lbl_inpd009" text="空白標籤" lstr=""/>
+    <sfield name="lbl_inpd001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_inpd005" text="庫位編號" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_inpd006" text="儲位編號" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_inpd007" text="批號" lstr=""/>
+    <sfield name="lbl_inpd002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_inpd003" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_inpd004" text="包裝容器編號" lstr=""/>
+    <sfield name="lbl_inpd010" text="庫存單位" lstr=""/>
+    <sfield name="lbl_inpd012" text="參考單位" lstr=""/>
+    <sfield name="lbl_inpd050" text="盤點數量-複盤(一)" lstr=""/>
+    <sfield name="lbl_inpd051" text="參考單位盤點量-複盤(一)" lstr=""/>
+    <sfield name="lbl_inpd056" text="盤點數量-複盤(二)" lstr=""/>
+    <sfield name="lbl_inpd057" text="參考單位盤點量-複盤(二)" lstr=""/>
+    <sfield name="lbl_adjust" text="調整數量" lstr=""/>
+    <sfield name="lbl_adjust_ref" text="參考單位調整數量" lstr=""/>
+    <sfield name="lbl_inpd014" text="理由碼" lstr=""/>
+    <sfield name="lbl_inpd015" text="備註" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_pstid" text="資料過帳者" lstr=""/>
+    <sfield name="lbl_pstdt" text="資料過帳日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_inpedocno" text="盤點編號" lstr=""/>
+    <sfield name="lbl_inpeseq" text="項次" lstr=""/>
+    <sfield name="lbl_inpeseq2" text="序號" lstr=""/>
+    <sfield name="lbl_inpesite" text="營運據點" lstr=""/>
+    <sfield name="lbl_inpe008" text="製造批號" lstr=""/>
+    <sfield name="lbl_inpe009" text="製造序號" lstr=""/>
+    <sfield name="lbl_inpe012" text="現有庫存量" lstr=""/>
+    <sfield name="lbl_inpe030" text="盤點數量-初盤(一)" lstr=""/>
+    <sfield name="lbl_inpe035" text="盤點數量-初盤(二)" lstr=""/>
+    <sfield name="lbl_inpe050" text="盤點數量-複盤(一)" lstr=""/>
+    <sfield name="lbl_inpe055" text="盤點數量-複盤(二)" lstr=""/>
+    <sfield name="lbl_inpe010" text="製造日期" lstr=""/>
+    <sfield name="lbl_inpe011" text="有效日期" lstr=""/>
+    <sfield name="lbl_inpe031" text="輸入人員-初盤(一)" lstr=""/>
+    <sfield name="lbl_ooag011" text="全名" lstr=""/>
+    <sfield name="lbl_inpe032" text="輸入日期-初盤(一)" lstr=""/>
+    <sfield name="lbl_inpe033" text="盤點人員-初盤(一)" lstr=""/>
+    <sfield name="lbl_inpe034" text="盤點日期-初盤(一)" lstr=""/>
+    <sfield name="lbl_inpe036" text="輸入人員-初盤(二)" lstr=""/>
+    <sfield name="lbl_inpe037" text="輸入日期-初盤(二)" lstr=""/>
+    <sfield name="lbl_inpe038" text="盤點人員-初盤(二)" lstr=""/>
+    <sfield name="lbl_inpe039" text="盤點日期-初盤(二)" lstr=""/>
+    <sfield name="lbl_inpe051" text="輸入人員-複盤(一)" lstr=""/>
+    <sfield name="lbl_inpe052" text="輸入日期-複盤(一)" lstr=""/>
+    <sfield name="lbl_inpe053" text="盤點人員-複盤(一)" lstr=""/>
+    <sfield name="lbl_inpe054" text="盤點日期-複盤(一)" lstr=""/>
+    <sfield name="lbl_inpe056" text="輸入人員-複盤(二)" lstr=""/>
+    <sfield name="lbl_inpe057" text="輸入日期-複盤(二)" lstr=""/>
+    <sfield name="lbl_inpe058" text="盤點人員-複盤(二)" lstr=""/>
+    <sfield name="lbl_inpe059" text="盤點日期-複盤(二)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="page_s_aooi390_s01_1" text="QBE條件" lstr=""/>
+    <sfield name="lbl_oofg001" text="編碼分類" lstr=""/>
+    <sfield name="lbl_oofg002" text="編碼性質" lstr=""/>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_oofg005" text="節點編號" lstr=""/>
+    <sfield name="lbl_oofg006" text="前段節點編號" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_2" text="基本資料" lstr=""/>
+    <sfield name="lbl_n0" text="編碼分類" lstr=""/>
+    <sfield name="lbl_n1" text="編碼總長度" lstr=""/>
+    <sfield name="lbl_n2" text="編碼總段數" lstr=""/>
+    <sfield name="lbl_n3" text="自動編號" lstr=""/>
+    <sfield name="page_s_aooi390_s01_3" text="明細資料" lstr=""/>
+    <sfield name="lbl_oofg007" text="段次" lstr=""/>
+    <sfield name="lbl_oofgl004" text="節點名稱" lstr=""/>
+    <sfield name="lbl_oofg009" text="長度" lstr=""/>
+    <sfield name="lbl_oofg016" text="使用轉換表" lstr=""/>
+    <sfield name="lbl_oofg008" text="節點型態" lstr=""/>
+    <sfield name="lbl_value" text="輸入值" lstr=""/>
+    <sfield name="lbl_value_desc" text="說明" lstr=""/>
+    <sfield name="lbl_tbegin" text="第" lstr=""/>
+    <sfield name="lbl_tend" text="組" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sfield name="s_feature_s01.page1" text="基本資料" lstr=""/>
+    <sfield name="lbl_inam012" text="特徵一值" lstr=""/>
+    <sfield name="lbl_inam014" text="特徵二值" lstr=""/>
+    <sfield name="lbl_inam016" text="特徵三值" lstr=""/>
+    <sfield name="lbl_inam018" text="特徵四值" lstr=""/>
+    <sfield name="lbl_inam020" text="特徵五值" lstr=""/>
+    <sfield name="lbl_inam022" text="特徵六值" lstr=""/>
+    <sfield name="lbl_inam024" text="特徵七值" lstr=""/>
+    <sfield name="lbl_inam026" text="特徵八值" lstr=""/>
+    <sfield name="lbl_inam028" text="特徵九值" lstr=""/>
+    <sfield name="lbl_inam030" text="特徵十值" lstr=""/>
+    <sfield name="lbl_inam032" text="特徵十一值" lstr=""/>
+    <sfield name="lbl_inam034" text="特徵十二值" lstr=""/>
+    <sfield name="lbl_inam036" text="特徵十三值" lstr=""/>
+    <sfield name="lbl_inam038" text="特徵十四值" lstr=""/>
+    <sfield name="lbl_inam040" text="特徵十五值" lstr=""/>
+    <sfield name="lbl_inam042" text="特徵十六值" lstr=""/>
+    <sfield name="lbl_inam044" text="特徵十七值" lstr=""/>
+    <sfield name="lbl_inam046" text="特徵十八值" lstr=""/>
+    <sfield name="lbl_inam048" text="特徵十九值" lstr=""/>
+    <sfield name="lbl_inam050" text="特徵二十值" lstr=""/>
+    <sfield name="lbl_imak001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imeb003" text="歸屬層級" lstr=""/>
+    <sfield name="lbl_imak002" text="特徵類型" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_imak003" text="特徵值" lstr=""/>
+    <sfield name="lbl_imecl005" text="說明" lstr=""/>
+    <sact name="batch_number" text="製造批序號維護" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

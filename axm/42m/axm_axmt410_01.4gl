@@ -1,0 +1,1354 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmt410_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2014-07-07 17:56:45), PR版次:0003(2016-12-07 13:10:17)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000092
+#+ Filename...: axmt410_01
+#+ Description: 報價分量計價維護作業
+#+ Creator....: 03079(2014-06-30 17:40:24)
+#+ Modifier...: 03079 -SD/PR- 08171
+ 
+{</section>}
+ 
+{<section id="axmt410_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#161109-00085#5   2016/11/10  By 08993      整批調整系統星號寫法
+#161109-00085#64  2016/11/30  By 08171      整批調整系統星號寫法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmfg_d        RECORD
+       xmfgdocno LIKE xmfg_t.xmfgdocno, 
+   xmfgseq LIKE xmfg_t.xmfgseq, 
+   xmfg001 LIKE xmfg_t.xmfg001, 
+   xmfg002 LIKE xmfg_t.xmfg002, 
+   xmfg003 LIKE xmfg_t.xmfg003, 
+   xmfg004 LIKE xmfg_t.xmfg004, 
+   xmfgsite LIKE xmfg_t.xmfgsite
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_xmfgdocno           LIKE xmfg_t.xmfgdocno
+DEFINE g_xmfgseq             LIKE xmfg_t.xmfgseq
+DEFINE l_ac_t                LIKE type_t.num5 
+DEFINE g_xmff004             LIKE xmff_t.xmff004      #單位 
+#end add-point
+ 
+DEFINE g_xmfg_d          DYNAMIC ARRAY OF type_g_xmfg_d
+DEFINE g_xmfg_d_t        type_g_xmfg_d
+ 
+ 
+DEFINE g_xmfgdocno_t   LIKE xmfg_t.xmfgdocno    #Key值備份
+DEFINE g_xmfgseq_t      LIKE xmfg_t.xmfgseq    #Key值備份
+DEFINE g_xmfg001_t      LIKE xmfg_t.xmfg001    #Key值備份
+DEFINE g_xmfg002_t      LIKE xmfg_t.xmfg002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="axmt410_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axmt410_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_xmfgdocno,p_xmfgseq,p_xmff001,p_xmff002,p_xmff004,p_transaction
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_xmfgdocno     LIKE xmfg_t.xmfgdocno
+   DEFINE p_xmfgseq       LIKE xmfg_t.xmfgseq 
+   DEFINE p_xmff001       LIKE xmff_t.xmff001
+   DEFINE p_xmff002       LIKE xmff_t.xmff002
+   DEFINE p_xmff004       LIKE xmff_t.xmff004 
+   DEFINE p_transaction   LIKE type_t.chr1        #是否已在transaction中 
+   #161109-00085#5-mod-s
+   #DEFINE l_xmfd     RECORD LIKE xmfd_t.*    mark 
+   DEFINE l_xmfd RECORD  #銷售報價單頭檔
+          xmfdent LIKE xmfd_t.xmfdent, #企業編號
+          xmfdsite LIKE xmfd_t.xmfdsite, #營運據點
+          xmfddocno LIKE xmfd_t.xmfddocno, #報價單號
+          xmfddocdt LIKE xmfd_t.xmfddocdt, #報價日期
+          xmfd001 LIKE xmfd_t.xmfd001, #業務人員
+          xmfd002 LIKE xmfd_t.xmfd002, #業務部門
+          xmfd003 LIKE xmfd_t.xmfd003, #客戶編號
+          xmfd004 LIKE xmfd_t.xmfd004, #no use
+          xmfd005 LIKE xmfd_t.xmfd005, #估價單號
+          xmfd006 LIKE xmfd_t.xmfd006, #客戶單號
+          xmfd007 LIKE xmfd_t.xmfd007, #報價有效日期
+          xmfd008 LIKE xmfd_t.xmfd008, #產生方式
+          xmfd009 LIKE xmfd_t.xmfd009, #範本編號
+          xmfd010 LIKE xmfd_t.xmfd010, #幣別
+          xmfd011 LIKE xmfd_t.xmfd011, #匯率
+          xmfd012 LIKE xmfd_t.xmfd012, #稅別
+          xmfd013 LIKE xmfd_t.xmfd013, #稅率
+          xmfd014 LIKE xmfd_t.xmfd014, #單價含稅否
+          xmfd015 LIKE xmfd_t.xmfd015, #交易條件
+          xmfd016 LIKE xmfd_t.xmfd016, #收款條件
+          xmfd017 LIKE xmfd_t.xmfd017, #取價方式
+          xmfd018 LIKE xmfd_t.xmfd018, #銷售通路
+          xmfd019 LIKE xmfd_t.xmfd019, #運送方式
+          xmfd020 LIKE xmfd_t.xmfd020, #起運地
+          xmfd021 LIKE xmfd_t.xmfd021, #目的地
+          xmfd022 LIKE xmfd_t.xmfd022, #出貨地址
+          xmfd023 LIKE xmfd_t.xmfd023, #材積計算方式
+          xmfd024 LIKE xmfd_t.xmfd024, #預估銷售金額
+          xmfd025 LIKE xmfd_t.xmfd025, #預估成本
+          xmfd026 LIKE xmfd_t.xmfd026, #預估銷售費用
+          xmfd027 LIKE xmfd_t.xmfd027, #預估毛利率
+          xmfd028 LIKE xmfd_t.xmfd028, #預估利潤率
+          xmfd029 LIKE xmfd_t.xmfd029, #備註
+          xmfdownid LIKE xmfd_t.xmfdownid, #資料所有者
+          xmfdowndp LIKE xmfd_t.xmfdowndp, #資料所屬部門
+          xmfdcrtid LIKE xmfd_t.xmfdcrtid, #資料建立者
+          xmfdcrtdp LIKE xmfd_t.xmfdcrtdp, #資料建立部門
+          xmfdcrtdt LIKE xmfd_t.xmfdcrtdt, #資料創建日
+          xmfdmodid LIKE xmfd_t.xmfdmodid, #資料修改者
+          xmfdmoddt LIKE xmfd_t.xmfdmoddt, #資料修改日
+          xmfdcnfid LIKE xmfd_t.xmfdcnfid, #資料確認者
+          xmfdcnfdt LIKE xmfd_t.xmfdcnfdt, #資料確認日
+          xmfdpstid LIKE xmfd_t.xmfdpstid, #資料過帳者
+          xmfdpstdt LIKE xmfd_t.xmfdpstdt, #資料過帳日
+          xmfdstus LIKE xmfd_t.xmfdstus, #狀態碼
+          #161109-00085#64 --s add
+          xmfdud001 LIKE xmfd_t.xmfdud001, #自定義欄位(文字)001
+          xmfdud002 LIKE xmfd_t.xmfdud002, #自定義欄位(文字)002
+          xmfdud003 LIKE xmfd_t.xmfdud003, #自定義欄位(文字)003
+          xmfdud004 LIKE xmfd_t.xmfdud004, #自定義欄位(文字)004
+          xmfdud005 LIKE xmfd_t.xmfdud005, #自定義欄位(文字)005
+          xmfdud006 LIKE xmfd_t.xmfdud006, #自定義欄位(文字)006
+          xmfdud007 LIKE xmfd_t.xmfdud007, #自定義欄位(文字)007
+          xmfdud008 LIKE xmfd_t.xmfdud008, #自定義欄位(文字)008
+          xmfdud009 LIKE xmfd_t.xmfdud009, #自定義欄位(文字)009
+          xmfdud010 LIKE xmfd_t.xmfdud010, #自定義欄位(文字)010
+          xmfdud011 LIKE xmfd_t.xmfdud011, #自定義欄位(數字)011
+          xmfdud012 LIKE xmfd_t.xmfdud012, #自定義欄位(數字)012
+          xmfdud013 LIKE xmfd_t.xmfdud013, #自定義欄位(數字)013
+          xmfdud014 LIKE xmfd_t.xmfdud014, #自定義欄位(數字)014
+          xmfdud015 LIKE xmfd_t.xmfdud015, #自定義欄位(數字)015
+          xmfdud016 LIKE xmfd_t.xmfdud016, #自定義欄位(數字)016
+          xmfdud017 LIKE xmfd_t.xmfdud017, #自定義欄位(數字)017
+          xmfdud018 LIKE xmfd_t.xmfdud018, #自定義欄位(數字)018
+          xmfdud019 LIKE xmfd_t.xmfdud019, #自定義欄位(數字)019
+          xmfdud020 LIKE xmfd_t.xmfdud020, #自定義欄位(數字)020
+          xmfdud021 LIKE xmfd_t.xmfdud021, #自定義欄位(日期時間)021
+          xmfdud022 LIKE xmfd_t.xmfdud022, #自定義欄位(日期時間)022
+          xmfdud023 LIKE xmfd_t.xmfdud023, #自定義欄位(日期時間)023
+          xmfdud024 LIKE xmfd_t.xmfdud024, #自定義欄位(日期時間)024
+          xmfdud025 LIKE xmfd_t.xmfdud025, #自定義欄位(日期時間)025
+          xmfdud026 LIKE xmfd_t.xmfdud026, #自定義欄位(日期時間)026
+          xmfdud027 LIKE xmfd_t.xmfdud027, #自定義欄位(日期時間)027
+          xmfdud028 LIKE xmfd_t.xmfdud028, #自定義欄位(日期時間)028
+          xmfdud029 LIKE xmfd_t.xmfdud029, #自定義欄位(日期時間)029
+          xmfdud030 LIKE xmfd_t.xmfdud030, #自定義欄位(日期時間)030
+          #161109-00085#64 --e add
+          xmfd030 LIKE xmfd_t.xmfd030, #回覆狀態
+          xmfd031 LIKE xmfd_t.xmfd031, #回覆客戶日期
+          xmfd032 LIKE xmfd_t.xmfd032, #未轉單原因碼
+          xmfd033 LIKE xmfd_t.xmfd033  #未轉單原因說明
+   END RECORD
+   #161109-00085#5-mod-e
+   #161109-00085#5-mod-s  
+   #DEFINE l_xmff     RECORD LIKE xmff_t.*   
+   DEFINE l_xmff          RECORD  #銷售報價明細單身檔
+       xmffent LIKE xmff_t.xmffent, #企業編號
+       xmffsite LIKE xmff_t.xmffsite, #營運據點
+       xmffdocno LIKE xmff_t.xmffdocno, #報價單號
+       xmffseq LIKE xmff_t.xmffseq, #項次
+       xmff001 LIKE xmff_t.xmff001, #料件編號
+       xmff002 LIKE xmff_t.xmff002, #產品特徵
+       xmff003 LIKE xmff_t.xmff003, #客戶料號
+       xmff004 LIKE xmff_t.xmff004, #銷售單位
+       xmff005 LIKE xmff_t.xmff005, #分量計價
+       xmff006 LIKE xmff_t.xmff006, #數量
+       xmff007 LIKE xmff_t.xmff007, #報價單價
+       xmff008 LIKE xmff_t.xmff008, #未稅金額
+       xmff009 LIKE xmff_t.xmff009, #含稅金額
+       xmff010 LIKE xmff_t.xmff010, #稅額
+       xmff011 LIKE xmff_t.xmff011, #標準成本單價
+       xmff012 LIKE xmff_t.xmff012, #預估毛利率
+       xmff013 LIKE xmff_t.xmff013, #預估毛利金額
+       xmff014 LIKE xmff_t.xmff014, #備註
+       #161109-00085#64 --s add
+       xmffud001 LIKE xmff_t.xmffud001, #自定義欄位(文字)001
+       xmffud002 LIKE xmff_t.xmffud002, #自定義欄位(文字)002
+       xmffud003 LIKE xmff_t.xmffud003, #自定義欄位(文字)003
+       xmffud004 LIKE xmff_t.xmffud004, #自定義欄位(文字)004
+       xmffud005 LIKE xmff_t.xmffud005, #自定義欄位(文字)005
+       xmffud006 LIKE xmff_t.xmffud006, #自定義欄位(文字)006
+       xmffud007 LIKE xmff_t.xmffud007, #自定義欄位(文字)007
+       xmffud008 LIKE xmff_t.xmffud008, #自定義欄位(文字)008
+       xmffud009 LIKE xmff_t.xmffud009, #自定義欄位(文字)009
+       xmffud010 LIKE xmff_t.xmffud010, #自定義欄位(文字)010
+       xmffud011 LIKE xmff_t.xmffud011, #自定義欄位(數字)011
+       xmffud012 LIKE xmff_t.xmffud012, #自定義欄位(數字)012
+       xmffud013 LIKE xmff_t.xmffud013, #自定義欄位(數字)013
+       xmffud014 LIKE xmff_t.xmffud014, #自定義欄位(數字)014
+       xmffud015 LIKE xmff_t.xmffud015, #自定義欄位(數字)015
+       xmffud016 LIKE xmff_t.xmffud016, #自定義欄位(數字)016
+       xmffud017 LIKE xmff_t.xmffud017, #自定義欄位(數字)017
+       xmffud018 LIKE xmff_t.xmffud018, #自定義欄位(數字)018
+       xmffud019 LIKE xmff_t.xmffud019, #自定義欄位(數字)019
+       xmffud020 LIKE xmff_t.xmffud020, #自定義欄位(數字)020
+       xmffud021 LIKE xmff_t.xmffud021, #自定義欄位(日期時間)021
+       xmffud022 LIKE xmff_t.xmffud022, #自定義欄位(日期時間)022
+       xmffud023 LIKE xmff_t.xmffud023, #自定義欄位(日期時間)023
+       xmffud024 LIKE xmff_t.xmffud024, #自定義欄位(日期時間)024
+       xmffud025 LIKE xmff_t.xmffud025, #自定義欄位(日期時間)025
+       xmffud026 LIKE xmff_t.xmffud026, #自定義欄位(日期時間)026
+       xmffud027 LIKE xmff_t.xmffud027, #自定義欄位(日期時間)027
+       xmffud028 LIKE xmff_t.xmffud028, #自定義欄位(日期時間)028
+       xmffud029 LIKE xmff_t.xmffud029, #自定義欄位(日期時間)029
+       xmffud030 LIKE xmff_t.xmffud030, #自定義欄位(日期時間)030
+       #161109-00085#64 --e add
+       xmff015 LIKE xmff_t.xmff015, #包裝方式
+       xmff016 LIKE xmff_t.xmff016, #箱數
+       xmff017 LIKE xmff_t.xmff017, #淨重
+       xmff018 LIKE xmff_t.xmff018, #毛重
+       xmff019 LIKE xmff_t.xmff019 #材積
+          END RECORD
+   #161109-00085#5-mod-e
+   
+   #161109-00085#5-mod-s
+   #DEFINE l_xmfg     RECORD LIKE xmfg_t.*    mark
+   DEFINE l_xmfg          RECORD  #銷售報價單身分量計價檔
+       xmfgent LIKE xmfg_t.xmfgent, #企業編號
+       xmfgsite LIKE xmfg_t.xmfgsite, #營運據點
+       xmfgdocno LIKE xmfg_t.xmfgdocno, #報價單號
+       xmfgseq LIKE xmfg_t.xmfgseq, #項次
+       xmfg001 LIKE xmfg_t.xmfg001, #起始數量
+       xmfg002 LIKE xmfg_t.xmfg002, #截止數量
+       xmfg003 LIKE xmfg_t.xmfg003, #單價
+      #xmfg004 LIKE xmfg_t.xmfg004 #折扣率 #161109-00085#64 mark
+       #161109-00085#64 --s add
+       xmfg004 LIKE xmfg_t.xmfg004, #折扣率
+       xmfgud001 LIKE xmfg_t.xmfgud001, #自定義欄位(文字)001
+       xmfgud002 LIKE xmfg_t.xmfgud002, #自定義欄位(文字)002
+       xmfgud003 LIKE xmfg_t.xmfgud003, #自定義欄位(文字)003
+       xmfgud004 LIKE xmfg_t.xmfgud004, #自定義欄位(文字)004
+       xmfgud005 LIKE xmfg_t.xmfgud005, #自定義欄位(文字)005
+       xmfgud006 LIKE xmfg_t.xmfgud006, #自定義欄位(文字)006
+       xmfgud007 LIKE xmfg_t.xmfgud007, #自定義欄位(文字)007
+       xmfgud008 LIKE xmfg_t.xmfgud008, #自定義欄位(文字)008
+       xmfgud009 LIKE xmfg_t.xmfgud009, #自定義欄位(文字)009
+       xmfgud010 LIKE xmfg_t.xmfgud010, #自定義欄位(文字)010
+       xmfgud011 LIKE xmfg_t.xmfgud011, #自定義欄位(數字)011
+       xmfgud012 LIKE xmfg_t.xmfgud012, #自定義欄位(數字)012
+       xmfgud013 LIKE xmfg_t.xmfgud013, #自定義欄位(數字)013
+       xmfgud014 LIKE xmfg_t.xmfgud014, #自定義欄位(數字)014
+       xmfgud015 LIKE xmfg_t.xmfgud015, #自定義欄位(數字)015
+       xmfgud016 LIKE xmfg_t.xmfgud016, #自定義欄位(數字)016
+       xmfgud017 LIKE xmfg_t.xmfgud017, #自定義欄位(數字)017
+       xmfgud018 LIKE xmfg_t.xmfgud018, #自定義欄位(數字)018
+       xmfgud019 LIKE xmfg_t.xmfgud019, #自定義欄位(數字)019
+       xmfgud020 LIKE xmfg_t.xmfgud020, #自定義欄位(數字)020
+       xmfgud021 LIKE xmfg_t.xmfgud021, #自定義欄位(日期時間)021
+       xmfgud022 LIKE xmfg_t.xmfgud022, #自定義欄位(日期時間)022
+       xmfgud023 LIKE xmfg_t.xmfgud023, #自定義欄位(日期時間)023
+       xmfgud024 LIKE xmfg_t.xmfgud024, #自定義欄位(日期時間)024
+       xmfgud025 LIKE xmfg_t.xmfgud025, #自定義欄位(日期時間)025
+       xmfgud026 LIKE xmfg_t.xmfgud026, #自定義欄位(日期時間)026
+       xmfgud027 LIKE xmfg_t.xmfgud027, #自定義欄位(日期時間)027
+       xmfgud028 LIKE xmfg_t.xmfgud028, #自定義欄位(日期時間)028
+       xmfgud029 LIKE xmfg_t.xmfgud029, #自定義欄位(日期時間)029
+       xmfgud030 LIKE xmfg_t.xmfgud030  #自定義欄位(日期時間)030
+       #161109-00085#64 --e add
+          END RECORD
+   #161109-00085#5-mod-e
+   
+   DEFINE l_stus          LIKE type_t.chr1
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_imaal003      LIKE imaal_t.imaal003
+   DEFINE l_imaal004      LIKE imaal_t.imaal004
+
+   DEFINE l_ooca002       LIKE ooca_t.ooca002
+   DEFINE l_ooca004       LIKE ooca_t.ooca004
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_round         LIKE xmfg_t.xmfg001
+   DEFINE l_num           LIKE xmfg_t.xmfg001
+   DEFINE l_xmfg002       LIKE xmfg_t.xmfg002
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axmt410_01 WITH FORM cl_ap_formpath("axm","axmt410_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   WHENEVER ERROR CONTINUE
+   
+   #如果沒有設定的話 就預設為未開transaction
+   IF cl_null(p_transaction) THEN
+      LET p_transaction = 'N'
+   END IF
+   
+   DISPLAY p_xmfgdocno TO xmffdocno
+   DISPLAY p_xmfgseq   TO xmffseq
+
+   INITIALIZE l_xmfd.* TO NULL
+   INITIALIZE l_xmff.* TO NULL
+
+   LET g_xmfgdocno = p_xmfgdocno
+   LET g_xmfgseq   = p_xmfgseq
+   #161109-00085#5-mod-s
+#   SELECT * INTO l_xmfd.*   #161109-00085#5   mark 
+   #161109-00085#64 --s mark
+   #SELECT xmfdent,xmfdsite,xmfddocno,xmfddocdt,xmfd001,xmfd002,xmfd003,xmfd004,xmfd005,xmfd006,xmfd007,
+   #       xmfd008,xmfd009,xmfd010,xmfd011,xmfd012,xmfd013,xmfd014,xmfd015,xmfd016,xmfd017,xmfd018,xmfd019,
+   #       xmfd020,xmfd021,xmfd022,xmfd023,xmfd024,xmfd025,xmfd026,xmfd027,xmfd028,xmfd029,xmfdownid,xmfdowndp,
+   #       xmfdcrtid,xmfdcrtdp,xmfdcrtdt,xmfdmodid,xmfdmoddt,xmfdcnfid,xmfdcnfdt,xmfdpstid,xmfdpstdt,xmfdstus,
+   #       xmfd030,xmfd031,xmfd032,xmfd033 
+   #  INTO l_xmfd.xmfdent,l_xmfd.xmfdsite,l_xmfd.xmfddocno,l_xmfd.xmfddocdt,l_xmfd.xmfd001,l_xmfd.xmfd002,
+   #       l_xmfd.xmfd003,l_xmfd.xmfd004,l_xmfd.xmfd005,l_xmfd.xmfd006,l_xmfd.xmfd007,l_xmfd.xmfd008,
+   #       l_xmfd.xmfd009,l_xmfd.xmfd010,l_xmfd.xmfd011,l_xmfd.xmfd012,l_xmfd.xmfd013,l_xmfd.xmfd014,
+   #       l_xmfd.xmfd015,l_xmfd.xmfd016,l_xmfd.xmfd017,l_xmfd.xmfd018,l_xmfd.xmfd019,l_xmfd.xmfd020,
+   #       l_xmfd.xmfd021,l_xmfd.xmfd022,l_xmfd.xmfd023,l_xmfd.xmfd024,l_xmfd.xmfd025,l_xmfd.xmfd026,
+   #       l_xmfd.xmfd027,l_xmfd.xmfd028,l_xmfd.xmfd029,l_xmfd.xmfdownid,l_xmfd.xmfdowndp,l_xmfd.xmfdcrtid,
+   #       l_xmfd.xmfdcrtdp,l_xmfd.xmfdcrtdt,l_xmfd.xmfdmodid,l_xmfd.xmfdmoddt,l_xmfd.xmfdcnfid,l_xmfd.xmfdcnfdt,
+   #       l_xmfd.xmfdpstid,l_xmfd.xmfdpstdt,l_xmfd.xmfdstus,l_xmfd.xmfd030,l_xmfd.xmfd031,l_xmfd.xmfd032,l_xmfd.xmfd033
+   #161109-00085#64 --e mark
+   #161109-00085#5-mod-e
+   #161109-00085#64 --s add
+   SELECT xmfdent,xmfdsite,xmfddocno,xmfddocdt,xmfd001,
+          xmfd002,xmfd003,xmfd004,xmfd005,xmfd006,
+          xmfd007,xmfd008,xmfd009,xmfd010,xmfd011,
+          xmfd012,xmfd013,xmfd014,xmfd015,xmfd016,
+          xmfd017,xmfd018,xmfd019,xmfd020,xmfd021,
+          xmfd022,xmfd023,xmfd024,xmfd025,xmfd026,
+          xmfd027,xmfd028,xmfd029,xmfdownid,xmfdowndp,
+          xmfdcrtid,xmfdcrtdp,xmfdcrtdt,xmfdmodid,xmfdmoddt,
+          xmfdcnfid,xmfdcnfdt,xmfdpstid,xmfdpstdt,xmfdstus,
+          xmfdud001,xmfdud002,xmfdud003,xmfdud004,xmfdud005,
+          xmfdud006,xmfdud007,xmfdud008,xmfdud009,xmfdud010,
+          xmfdud011,xmfdud012,xmfdud013,xmfdud014,xmfdud015,
+          xmfdud016,xmfdud017,xmfdud018,xmfdud019,xmfdud020,
+          xmfdud021,xmfdud022,xmfdud023,xmfdud024,xmfdud025,
+          xmfdud026,xmfdud027,xmfdud028,xmfdud029,xmfdud030,
+          xmfd030,xmfd031,xmfd032,xmfd033
+     INTO l_xmfd.xmfdent,l_xmfd.xmfdsite,l_xmfd.xmfddocno,l_xmfd.xmfddocdt,l_xmfd.xmfd001,
+          l_xmfd.xmfd002,l_xmfd.xmfd003,l_xmfd.xmfd004,l_xmfd.xmfd005,l_xmfd.xmfd006,
+          l_xmfd.xmfd007,l_xmfd.xmfd008,l_xmfd.xmfd009,l_xmfd.xmfd010,l_xmfd.xmfd011,
+          l_xmfd.xmfd012,l_xmfd.xmfd013,l_xmfd.xmfd014,l_xmfd.xmfd015,l_xmfd.xmfd016,
+          l_xmfd.xmfd017,l_xmfd.xmfd018,l_xmfd.xmfd019,l_xmfd.xmfd020,l_xmfd.xmfd021,
+          l_xmfd.xmfd022,l_xmfd.xmfd023,l_xmfd.xmfd024,l_xmfd.xmfd025,l_xmfd.xmfd026,
+          l_xmfd.xmfd027,l_xmfd.xmfd028,l_xmfd.xmfd029,l_xmfd.xmfdownid,l_xmfd.xmfdowndp,
+          l_xmfd.xmfdcrtid,l_xmfd.xmfdcrtdp,l_xmfd.xmfdcrtdt,l_xmfd.xmfdmodid,l_xmfd.xmfdmoddt,
+          l_xmfd.xmfdcnfid,l_xmfd.xmfdcnfdt,l_xmfd.xmfdpstid,l_xmfd.xmfdpstdt,l_xmfd.xmfdstus,
+          l_xmfd.xmfdud001,l_xmfd.xmfdud002,l_xmfd.xmfdud003,l_xmfd.xmfdud004,l_xmfd.xmfdud005,
+          l_xmfd.xmfdud006,l_xmfd.xmfdud007,l_xmfd.xmfdud008,l_xmfd.xmfdud009,l_xmfd.xmfdud010,
+          l_xmfd.xmfdud011,l_xmfd.xmfdud012,l_xmfd.xmfdud013,l_xmfd.xmfdud014,l_xmfd.xmfdud015,
+          l_xmfd.xmfdud016,l_xmfd.xmfdud017,l_xmfd.xmfdud018,l_xmfd.xmfdud019,l_xmfd.xmfdud020,
+          l_xmfd.xmfdud021,l_xmfd.xmfdud022,l_xmfd.xmfdud023,l_xmfd.xmfdud024,l_xmfd.xmfdud025,
+          l_xmfd.xmfdud026,l_xmfd.xmfdud027,l_xmfd.xmfdud028,l_xmfd.xmfdud029,l_xmfd.xmfdud030,
+          l_xmfd.xmfd030,l_xmfd.xmfd031,l_xmfd.xmfd032,l_xmfd.xmfd033
+   #161109-00085#64 --e add
+     FROM xmfd_t
+    WHERE xmfdent = g_enterprise
+      AND xmfddocno = g_xmfgdocno
+   #161109-00085#5-mod-s
+#   SELECT * INTO l_xmff.*   #161109-00085#5   mark
+   #161109-00085#64 --s mark
+   #SELECT xmffent,xmffsite,xmffdocno,xmffseq,xmff001,xmff002,xmff003,xmff004,xmff005,xmff006,xmff007,
+   #       xmff008,xmff009,xmff010,xmff011,xmff012,xmff013,xmff014,xmff015,xmff016,xmff017,xmff018,xmff019
+   #INTO l_xmff.xmffent,l_xmff.xmffsite,l_xmff.xmffdocno,l_xmff.xmffseq,l_xmff.xmff001,l_xmff.xmff002,
+   #     l_xmff.xmff003,l_xmff.xmff004,l_xmff.xmff005,l_xmff.xmff006,l_xmff.xmff007,l_xmff.xmff008,l_xmff.xmff009,
+   #     l_xmff.xmff010,l_xmff.xmff011,l_xmff.xmff012,l_xmff.xmff013,l_xmff.xmff014,l_xmff.xmff015,l_xmff.xmff016,
+   #     l_xmff.xmff017,l_xmff.xmff018,l_xmff.xmff019
+   #161109-00085#64 --e mark
+   #161109-00085#5-mod-e
+   #161109-00085#64 --s add
+   SELECT xmffent,xmffsite,xmffdocno,xmffseq,xmff001,
+          xmff002,xmff003,xmff004,xmff005,xmff006,
+          xmff007,xmff008,xmff009,xmff010,xmff011,
+          xmff012,xmff013,xmff014,xmffud001,xmffud002,
+          xmffud003,xmffud004,xmffud005,xmffud006,xmffud007,
+          xmffud008,xmffud009,xmffud010,xmffud011,xmffud012,
+          xmffud013,xmffud014,xmffud015,xmffud016,xmffud017,
+          xmffud018,xmffud019,xmffud020,xmffud021,xmffud022,
+          xmffud023,xmffud024,xmffud025,xmffud026,xmffud027,
+          xmffud028,xmffud029,xmffud030,xmff015,xmff016,
+          xmff017,xmff018,xmff019
+     INTO l_xmff.xmffent,l_xmff.xmffsite,l_xmff.xmffdocno,l_xmff.xmffseq,l_xmff.xmff001,
+          l_xmff.xmff002,l_xmff.xmff003,l_xmff.xmff004,l_xmff.xmff005,l_xmff.xmff006,
+          l_xmff.xmff007,l_xmff.xmff008,l_xmff.xmff009,l_xmff.xmff010,l_xmff.xmff011,
+          l_xmff.xmff012,l_xmff.xmff013,l_xmff.xmff014,l_xmff.xmffud001,l_xmff.xmffud002,
+          l_xmff.xmffud003,l_xmff.xmffud004,l_xmff.xmffud005,l_xmff.xmffud006,l_xmff.xmffud007,
+          l_xmff.xmffud008,l_xmff.xmffud009,l_xmff.xmffud010,l_xmff.xmffud011,l_xmff.xmffud012,
+          l_xmff.xmffud013,l_xmff.xmffud014,l_xmff.xmffud015,l_xmff.xmffud016,l_xmff.xmffud017,
+          l_xmff.xmffud018,l_xmff.xmffud019,l_xmff.xmffud020,l_xmff.xmffud021,l_xmff.xmffud022,
+          l_xmff.xmffud023,l_xmff.xmffud024,l_xmff.xmffud025,l_xmff.xmffud026,l_xmff.xmffud027,
+          l_xmff.xmffud028,l_xmff.xmffud029,l_xmff.xmffud030,l_xmff.xmff015,l_xmff.xmff016,
+          l_xmff.xmff017,l_xmff.xmff018,l_xmff.xmff019
+   #161109-00085#64 --e add
+     FROM xmff_t
+    WHERE xmffent   = g_enterprise
+      AND xmffdocno = g_xmfgdocno
+      
+   IF cl_null(l_xmff.xmff001) THEN
+      LET l_xmff.xmff001 = p_xmff001
+   END IF
+   IF cl_null(l_xmff.xmff002) THEN
+      LET l_xmff.xmff002 = p_xmff002
+   END IF
+   IF cl_null(l_xmff.xmff004) THEN
+      LET l_xmff.xmff004 = p_xmff004
+   END IF
+
+   LET g_xmff004 = l_xmff.xmff004
+
+   DISPLAY l_xmfd.xmfd010 TO xmfd010
+   DISPLAY l_xmff.xmff001 TO xmff001
+   DISPLAY l_xmff.xmff002 TO xmff002
+
+   CALL s_desc_get_item_desc(l_xmff.xmff001) RETURNING l_imaal003,l_imaal004
+   DISPLAY l_imaal003 TO imaal003
+   DISPLAY l_imaal004 TO imaal004 
+
+   WHENEVER ERROR CALL cl_err_msg_log 
+   
+   CALL axmt410_01_b_fill(p_xmfgdocno,p_xmfgseq)
+
+   LET l_stus = ''
+   SELECT xmfdstus INTO l_stus
+     FROM xmfd_t
+    WHERE xmfdent = g_enterprise
+      AND xmfddocno = p_xmfgdocno
+   IF l_stus != 'N' THEN
+      LET INT_FLAG = FALSE
+      CLOSE WINDOW w_axmt410_01
+      RETURN
+   END IF
+
+   LET l_forupd_sql = "SELECT xmfgdocno,xmfgseq,xmfg001,xmfg002,xmfg003,xmfg004,xmfgsite ",
+                      "  FROM xmfg_t ",
+                      " WHERE xmfgdocno = ? ",
+                      "   AND xmfgseq = ? ",
+                      "   AND xmfg001 = ? ",
+                      "   AND xmfg002 = ? ",
+                      "   FOR UPDATE "
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)
+   PREPARE axmt410_01_b FROM l_forupd_sql
+   DECLARE axmt410_01_cs CURSOR FOR axmt410_01_b
+   LET INT_FLAG = FALSE
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xmfg_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+         
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'
+            DISPLAY l_ac TO FORMONLY.idx
+
+            IF p_transaction = 'N' THEN
+               CALL s_transaction_begin()
+            END IF
+
+            IF g_rec_b >= l_ac THEN
+               LET l_cmd = 'u'
+               LET g_xmfg_d_t.* = g_xmfg_d[l_ac].*   #BACKUP 
+               OPEN axmt410_01_cs USING p_xmfgdocno,p_xmfgseq,g_xmfg_d[l_ac].xmfg001,g_xmfg_d[l_ac].xmfg002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "axmt410_01_cs"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw = 'Y'
+               ELSE
+                  FETCH axmt410_01_cs INTO g_xmfg_d[l_ac].*
+                  IF SQLCA.sqlcode THEN
+                     LET l_lock_sw = 'Y'
+                  END IF
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd = 'a'
+            END IF 
+            
+         BEFORE INSERT
+            IF p_transaction = 'N' THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_cmd = 'a'
+            INITIALIZE g_xmfg_d_t.* TO NULL
+            INITIALIZE g_xmfg_d[l_ac].* TO NULL
+            LET g_xmfg_d[l_ac].xmfgdocno = p_xmfgdocno
+            LET g_xmfg_d[l_ac].xmfgseq   = p_xmfgseq
+            LET g_xmfg_d[l_ac].xmfgsite  = g_site 
+            
+            LET l_xmfg002 = 0
+            SELECT MAX(xmfg002) INTO l_xmfg002
+              FROM xmfg_t
+             WHERE xmfgent   = g_enterprise
+               AND xmfgdocno = p_xmfgdocno
+               AND xmfgseq   = p_xmfgseq
+            IF cl_null(l_xmfg002) THEN
+               LET l_xmfg002 = 0
+            END IF
+
+            IF NOT cl_null(g_xmff004) THEN
+               LET l_ooca002 = 0         #小數位數 
+               LET l_ooca004 = NULL      #捨入類型  
+
+               LET l_round = 0
+               LET l_num = 0
+               CALL s_aooi250_get_msg(g_xmff004)
+                    RETURNING l_success,l_ooca002,l_ooca004
+               IF l_success THEN
+                  LET l_round = util.Math.pow(10,l_ooca002)
+                  LET l_num = 1 / l_round
+                  LET g_xmfg_d[l_ac].xmfg001 = l_xmfg002 + l_num 
+                  
+                  CALL axmt410_01_round(g_xmfg_d[l_ac].xmfg001) RETURNING g_xmfg_d[l_ac].xmfg001
+               END IF
+            END IF
+            
+            LET g_xmfg_d[l_ac].xmfg004 = 0
+
+            LET g_xmfg_d_t.* = g_xmfg_d[l_ac].*
+            CALL cl_show_fld_cont() 
+            
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+
+            INITIALIZE l_xmfg.* TO NULL
+            LET l_xmfg.xmfgdocno = g_xmfg_d[l_ac].xmfgdocno
+            LET l_xmfg.xmfgent   = g_enterprise
+            LET l_xmfg.xmfgsite  = g_site
+            LET l_xmfg.xmfgseq   = g_xmfg_d[l_ac].xmfgseq
+            LET l_xmfg.xmfg001   = g_xmfg_d[l_ac].xmfg001
+            LET l_xmfg.xmfg002   = g_xmfg_d[l_ac].xmfg002
+            LET l_xmfg.xmfg003   = g_xmfg_d[l_ac].xmfg003
+            LET l_xmfg.xmfg004   = g_xmfg_d[l_ac].xmfg004
+
+            LET l_count = 0
+            SELECT COUNT(*) INTO l_count
+              FROM xmfg_t
+             WHERE xmfgent = g_enterprise
+               AND xmfgdocno = p_xmfgdocno
+               AND xmfgseq   = p_xmfgseq
+               AND xmfg001   = g_xmfg_d[l_ac].xmfg001
+               AND xmfg002   = g_xmfg_d[l_ac].xmfg002
+
+            #資料未重覆 插入新增資料  
+            IF l_count = 0 THEN
+              
+               #161109-00085#5-mod-s #161109-00085#64 mark
+               #INSERT INTO xmfg_t VALUES(l_xmfg.*)
+               #INSERT INTO xmfg_t(xmfgent,xmfgsite,xmfgdocno,xmfgseq,xmfg001,xmfg002,xmfg003,xmfg004) 
+               #            VALUES(l_xmfg.xmfgent,l_xmfg.xmfgsite,l_xmfg.xmfgdocno,
+               #                   l_xmfg.xmfgseq,l_xmfg.xmfg001,l_xmfg.xmfg002,l_xmfg.xmfg003,l_xmfg.xmfg004)
+               #161109-00085#5-mod-e #161109-00085#64 mark
+               #161109-00085#64 --s add
+               INSERT INTO xmfg_t(xmfgent,xmfgsite,xmfgdocno,xmfgseq,xmfg001,
+                                  xmfg002,xmfg003,xmfg004,xmfgud001,xmfgud002,
+                                  xmfgud003,xmfgud004,xmfgud005,xmfgud006,xmfgud007,
+                                  xmfgud008,xmfgud009,xmfgud010,xmfgud011,xmfgud012,
+                                  xmfgud013,xmfgud014,xmfgud015,xmfgud016,xmfgud017,
+                                  xmfgud018,xmfgud019,xmfgud020,xmfgud021,xmfgud022,
+                                  xmfgud023,xmfgud024,xmfgud025,xmfgud026,xmfgud027,
+                                  xmfgud028,xmfgud029,xmfgud030)
+               VALUES(l_xmfg.xmfgent,l_xmfg.xmfgsite,l_xmfg.xmfgdocno,l_xmfg.xmfgseq,l_xmfg.xmfg001,
+                      l_xmfg.xmfg002,l_xmfg.xmfg003,l_xmfg.xmfg004,l_xmfg.xmfgud001,l_xmfg.xmfgud002,
+                      l_xmfg.xmfgud003,l_xmfg.xmfgud004,l_xmfg.xmfgud005,l_xmfg.xmfgud006,l_xmfg.xmfgud007,
+                      l_xmfg.xmfgud008,l_xmfg.xmfgud009,l_xmfg.xmfgud010,l_xmfg.xmfgud011,l_xmfg.xmfgud012,
+                      l_xmfg.xmfgud013,l_xmfg.xmfgud014,l_xmfg.xmfgud015,l_xmfg.xmfgud016,l_xmfg.xmfgud017,
+                      l_xmfg.xmfgud018,l_xmfg.xmfgud019,l_xmfg.xmfgud020,l_xmfg.xmfgud021,l_xmfg.xmfgud022,
+                      l_xmfg.xmfgud023,l_xmfg.xmfgud024,l_xmfg.xmfgud025,l_xmfg.xmfgud026,l_xmfg.xmfgud027,
+                      l_xmfg.xmfgud028,l_xmfg.xmfgud029,l_xmfg.xmfgud030)
+               #161109-00085#64 --e add
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "xmfg_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CONTINUE DIALOG
+               END IF
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_xmfg_d[l_ac].* TO NULL
+               IF p_transaction = 'N' THEN
+                  CALL s_transaction_end('N',0)
+               END IF
+               CANCEL INSERT
+            END IF
+
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "xmfg_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               IF p_transaction = 'N' THEN
+                  CALL s_transaction_end('N',0)
+               END IF
+               CANCEL INSERT
+            ELSE
+               IF p_transaction = 'N' THEN
+                  CALL s_transaction_end('Y',0)
+               END IF
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+         
+         BEFORE DELETE
+            IF NOT cl_null(p_xmfgdocno) AND NOT cl_null(p_xmfgseq) AND
+               NOT cl_null(g_xmfg_d[l_ac].xmfg001) AND
+               NOT cl_null(g_xmfg_d[l_ac].xmfg002) THEN
+
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = 'Y' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+
+               DELETE FROM xmfg_t
+                WHERE xmfgent = g_enterprise
+                  AND xmfgdocno = p_xmfgdocno
+                  AND xmfgseq   = p_xmfgseq
+                  AND xmfg001   = g_xmfg_d_t.xmfg001
+                  AND xmfg002   = g_xmfg_d_t.xmfg002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = 'xmfg_t'
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  IF p_transaction = 'N' THEN
+                     CALL s_transaction_end('N',0)
+                  END IF
+                  CANCEL DELETE
+               ELSE
+                  LET g_rec_b = g_rec_b - 1
+                  IF p_transaction = 'N' THEN
+                     CALL s_transaction_end('Y',0)
+                  END IF
+               END IF
+               CLOSE axmt410_01_cs
+
+            END IF
+         
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_xmfg_d[l_ac].* = g_xmfg_d_t.*
+               CLOSE axmt410_01_cs
+               IF p_transaction = 'N' THEN
+                  CALL s_transaction_end('N',0)
+               END IF
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = l_xmfg.xmfg001
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_xmfg_d[l_ac].* = g_xmfg_d_t.*
+            ELSE
+               UPDATE xmfg_t SET (xmfg001,xmfg002,xmfg003,xmfg004) =
+                                 (g_xmfg_d[l_ac].xmfg001,g_xmfg_d[l_ac].xmfg002,
+                                  g_xmfg_d[l_ac].xmfg003,g_xmfg_d[l_ac].xmfg004)
+                WHERE xmfgent = g_enterprise
+                  AND xmfgdocno = p_xmfgdocno
+                  AND xmfgseq = p_xmfgseq
+                  AND xmfg001 = g_xmfg_d_t.xmfg001
+                  AND xmfg002 = g_xmfg_d_t.xmfg002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = 'xmfg_t'
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_xmfg_d[l_ac].* = g_xmfg_d_t.*
+                  IF p_transaction = 'N' THEN
+                     CALL s_transaction_end('N',0)
+                  END IF
+               ELSE
+                  IF p_transaction = 'N' THEN
+                     CALL s_transaction_end('Y',0)
+                  END IF
+               END IF
+            END IF
+         
+         AFTER ROW
+            CLOSE axmt410_01_cs
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfgdocno
+            #add-point:BEFORE FIELD xmfgdocno name="input.b.page1.xmfgdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfgdocno
+            
+            #add-point:AFTER FIELD xmfgdocno name="input.a.page1.xmfgdocno"
+            
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfgdocno
+            #add-point:ON CHANGE xmfgdocno name="input.g.page1.xmfgdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfgseq
+            #add-point:BEFORE FIELD xmfgseq name="input.b.page1.xmfgseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfgseq
+            
+            #add-point:AFTER FIELD xmfgseq name="input.a.page1.xmfgseq"
+            
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfgseq
+            #add-point:ON CHANGE xmfgseq name="input.g.page1.xmfgseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfg001
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfg_d[l_ac].xmfg001,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmfg001
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmfg001 name="input.a.page1.xmfg001"
+            #此段落由子樣板a05產生
+            IF NOT cl_null(g_xmfg_d[l_ac].xmfg001) THEN
+               IF NOT cl_null(g_xmfg_d[l_ac].xmfg002) THEN
+                  IF g_xmfg_d[l_ac].xmfg001 > g_xmfg_d[l_ac].xmfg002 THEN    #起始數量不可大於截止數量  
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'apm-00228'
+                     LET g_errparam.extend = g_xmfg_d[l_ac].xmfg001
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xmfg_d[l_ac].xmfg001 = g_xmfg_d_t.xmfg001
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+               IF NOT axmt410_01_xmfg001_chk(g_xmfg_d[l_ac].xmfg001,g_xmfg_d[l_ac].xmfg002) THEN
+                  LET g_xmfg_d[l_ac].xmfg001 = g_xmfg_d_t.xmfg001
+                  NEXT FIELD CURRENT
+               END IF
+
+            END IF 
+            
+            IF g_xmfg_d[l_ac].xmfgdocno IS NOT NULL AND g_xmfg_d[l_ac].xmfgseq IS NOT NULL AND g_xmfg_d[l_ac].xmfg001 IS NOT NULL AND g_xmfg_d[l_ac].xmfg002 IS NOT NULL THEN  
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmfg_d[l_ac].xmfgdocno != g_xmfg_d_t.xmfgdocno OR g_xmfg_d[l_ac].xmfgseq != g_xmfg_d_t.xmfgseq OR g_xmfg_d[l_ac].xmfg001 != g_xmfg_d_t.xmfg001 OR g_xmfg_d[l_ac].xmfg002 != g_xmfg_d_t.xmfg002)) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmfg_t WHERE "||"xmfgent = '" ||g_enterprise|| "' AND "||"xmfgdocno = '"||g_xmfg_d[l_ac].xmfgdocno ||"' AND "|| "xmfgseq = '"||g_xmfg_d[l_ac].xmfgseq ||"' AND "|| "xmfg001 = '"||g_xmfg_d[l_ac].xmfg001 ||"' AND "|| "xmfg002 = '"||g_xmfg_d[l_ac].xmfg002 ||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+            CALL axmt410_01_round(g_xmfg_d[l_ac].xmfg001) RETURNING g_xmfg_d[l_ac].xmfg001
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfg001
+            #add-point:BEFORE FIELD xmfg001 name="input.b.page1.xmfg001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfg001
+            #add-point:ON CHANGE xmfg001 name="input.g.page1.xmfg001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfg002
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfg_d[l_ac].xmfg002,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmfg002
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmfg002 name="input.a.page1.xmfg002"
+            IF NOT cl_null(g_xmfg_d[l_ac].xmfg002) THEN
+               IF NOT cl_null(g_xmfg_d[l_ac].xmfg001) THEN
+                  IF g_xmfg_d[l_ac].xmfg002 < g_xmfg_d[l_ac].xmfg001 THEN   #截止數量不可小於起始數量   
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'apm-00229'
+                     LET g_errparam.extend = g_xmfg_d[l_ac].xmfg002
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xmfg_d[l_ac].xmfg002 = g_xmfg_d_t.xmfg002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+               IF NOT axmt410_01_xmfg001_chk(g_xmfg_d[l_ac].xmfg001,g_xmfg_d[l_ac].xmfg002) THEN
+                  LET g_xmfg_d[l_ac].xmfg002 = g_xmfg_d_t.xmfg002
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+            IF g_xmfg_d[l_ac].xmfgdocno IS NOT NULL AND g_xmfg_d[l_ac].xmfgseq IS NOT NULL AND g_xmfg_d[l_ac].xmfg001 IS NOT NULL AND g_xmfg_d[l_ac].xmfg002 IS NOT NULL THEN  
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmfg_d[l_ac].xmfgdocno != g_xmfg_d_t.xmfgdocno OR g_xmfg_d[l_ac].xmfgseq != g_xmfg_d_t.xmfgseq OR g_xmfg_d[l_ac].xmfg001 != g_xmfg_d_t.xmfg001 OR g_xmfg_d[l_ac].xmfg002 != g_xmfg_d_t.xmfg002)) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmfg_t WHERE "||"xmfgent = '" ||g_enterprise|| "' AND "||"xmfgdocno = '"||g_xmfg_d[l_ac].xmfgdocno ||"' AND "|| "xmfgseq = '"||g_xmfg_d[l_ac].xmfgseq ||"' AND "|| "xmfg001 = '"||g_xmfg_d[l_ac].xmfg001 ||"' AND "|| "xmfg002 = '"||g_xmfg_d[l_ac].xmfg002 ||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            CALL axmt410_01_round(g_xmfg_d[l_ac].xmfg002) RETURNING g_xmfg_d[l_ac].xmfg002
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfg002
+            #add-point:BEFORE FIELD xmfg002 name="input.b.page1.xmfg002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfg002
+            #add-point:ON CHANGE xmfg002 name="input.g.page1.xmfg002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfg003
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfg_d[l_ac].xmfg003,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmfg003
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmfg003 name="input.a.page1.xmfg003"
+            IF NOT cl_null(g_xmfg_d[l_ac].xmfg003) THEN 
+               #呼叫幣別取位應用元件對單價作取位(依詢價單單頭幣別做取位基準)
+               CALL s_curr_round(g_site,l_xmfd.xmfd010,g_xmfg_d[l_ac].xmfg003,'1')
+                    RETURNING g_xmfg_d[l_ac].xmfg003
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfg003
+            #add-point:BEFORE FIELD xmfg003 name="input.b.page1.xmfg003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfg003
+            #add-point:ON CHANGE xmfg003 name="input.g.page1.xmfg003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfg004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfg_d[l_ac].xmfg004,"0","1","100","1","azz-00087",1) THEN
+               NEXT FIELD xmfg004
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmfg004 name="input.a.page1.xmfg004"
+            IF NOT cl_null(g_xmfg_d[l_ac].xmfg004) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfg004
+            #add-point:BEFORE FIELD xmfg004 name="input.b.page1.xmfg004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfg004
+            #add-point:ON CHANGE xmfg004 name="input.g.page1.xmfg004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfgsite
+            #add-point:BEFORE FIELD xmfgsite name="input.b.page1.xmfgsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfgsite
+            
+            #add-point:AFTER FIELD xmfgsite name="input.a.page1.xmfgsite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfgsite
+            #add-point:ON CHANGE xmfgsite name="input.g.page1.xmfgsite"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.xmfgdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfgdocno
+            #add-point:ON ACTION controlp INFIELD xmfgdocno name="input.c.page1.xmfgdocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfgseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfgseq
+            #add-point:ON ACTION controlp INFIELD xmfgseq name="input.c.page1.xmfgseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfg001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfg001
+            #add-point:ON ACTION controlp INFIELD xmfg001 name="input.c.page1.xmfg001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfg002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfg002
+            #add-point:ON ACTION controlp INFIELD xmfg002 name="input.c.page1.xmfg002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfg003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfg003
+            #add-point:ON ACTION controlp INFIELD xmfg003 name="input.c.page1.xmfg003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfg004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfg004
+            #add-point:ON ACTION controlp INFIELD xmfg004 name="input.c.page1.xmfg004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfgsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfgsite
+            #add-point:ON ACTION controlp INFIELD xmfgsite name="input.c.page1.xmfgsite"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axmt410_01 
+   
+   #add-point:input段after input name="input.post_input"
+   LET INT_FLAG = FALSE
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt410_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axmt410_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 分量計價單身填充
+# Memo...........:
+# Usage..........: CALL axmt410_01_b_fill(p_xmfgdocno,p_xmfgseq)
+# Input parameter: p_xmfgdocno：單號 
+#                  p_xmfgseq：項次
+# Date & Author..: 2014/07/03 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt410_01_b_fill(p_xmfgdocno,p_xmfgseq)
+   DEFINE p_xmfgdocno     LIKE xmfg_t.xmfgdocno
+   DEFINE p_xmfgseq       LIKE xmfg_t.xmfgseq
+   DEFINE l_sql           STRING
+
+   LET l_sql = "SELECT xmfgdocno,xmfgseq,xmfg001,xmfg002,xmfg003,xmfg004,xmfgsite ",
+               "  FROM xmfg_t ",
+               " WHERE xmfgent = '",g_enterprise,"' ",
+               "   AND xmfgdocno = '",p_xmfgdocno,"' ",
+               "   AND xmfgseq = '",p_xmfgseq,"' "
+   PREPARE axmt410_01_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR axmt410_01_pb
+
+   CALL g_xmfg_d.clear()
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+
+   #FOREACH b_fill_curs INTO g_xmfg_d[l_ac].* #161109-00085#64 mark
+   #161109-00085#64 --s add
+   FOREACH b_fill_curs INTO g_xmfg_d[l_ac].xmfgdocno,g_xmfg_d[l_ac].xmfgseq,g_xmfg_d[l_ac].xmfg001,g_xmfg_d[l_ac].xmfg002,g_xmfg_d[l_ac].xmfg003,
+                            g_xmfg_d[l_ac].xmfg004,g_xmfg_d[l_ac].xmfgsite 
+   #161109-00085#64 --e add                         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'FOREACH:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH 
+   
+   CALL g_xmfg_d.deleteElement(g_xmfg_d.getLength())
+   LET g_rec_b = l_ac - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   LET l_ac = l_ac_t
+   CLOSE b_fill_curs
+   FREE axmt410_01_pb
+END FUNCTION
+
+################################################################################
+# Descriptions...: 起始數量檢查
+# Memo...........:
+# Usage..........: CALL axmt410_01_xmfg001_chk(p_xmfg001,p_xmfg002)
+#                  RETURNING TRUE/FALSE
+# Date & Author..: 2014/07/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt410_01_xmfg001_chk(p_xmfg001,p_xmfg002)
+   DEFINE p_xmfg001     LIKE xmfg_t.xmfg001
+   DEFINE p_xmfg002     LIKE xmfg_t.xmfg002
+   DEFINE l_count       LIKE type_t.num5
+   DEFINE l_sql         STRING
+
+   #如果之前沒資料就不檢查 
+   LET l_count = 0
+   SELECT COUNT(*) INTO l_count
+     FROM xmfg_t
+    WHERE xmfgent   = g_enterprise
+      AND xmfgdocno = g_xmfgdocno
+      AND xmfgseq   = g_xmfgseq
+   IF cl_null(l_count) THEN
+      LET l_count = 0
+   END IF
+   IF l_count = 0 THEN
+      RETURN TRUE
+   END IF 
+   
+   #起始值或截止值落入先前存在的區間(排除此筆)  
+   LET l_count = NULL
+   LET l_sql = "SELECT COUNT(*) ",
+               "  FROM xmfg_t ",
+               " WHERE xmfgent = '",g_enterprise,"' ",
+               "   AND xmfgdocno = '",g_xmfgdocno,"' ",
+               "   AND xmfgseq = '",g_xmfgseq,"' ",
+               "   AND ((xmfg001 BETWEEN ",p_xmfg001," AND ",p_xmfg002,") ",
+               "    OR (xmfg002 BETWEEN ",p_xmfg001," AND ",p_xmfg002,")) "
+   IF NOT cl_null(g_xmfg_d_t.xmfg001) AND NOT cl_null(g_xmfg_d_t.xmfg002) THEN
+      LET l_sql = l_sql CLIPPED," AND xmfg001 <> ",g_xmfg_d_t.xmfg001,
+                                " AND xmfg002 <> ",g_xmfg_d_t.xmfg002
+   END IF
+   PREPARE axmt410_01_sel_xmfg001_chkp1 FROM l_sql
+   EXECUTE axmt410_01_sel_xmfg001_chkp1 INTO l_count
+   IF cl_null(l_count) THEN
+      LET l_count = 0
+   END IF 
+   
+   IF l_count = 0 THEN
+      #起始值或截止值落入輸入的區間(排除此筆)  
+      LET l_count = NULL
+      LET l_sql = "SELECT COUNT(*) ",
+                  "  FROM xmfg_t ",
+                  " WHERE xmfgent = '",g_enterprise,"' ",
+                  "   AND xmfgdocno = '",g_xmfgdocno,"' ",
+                  "   AND xmfgseq = '",g_xmfgseq,"' ",
+                  "   AND ((xmfg001 <= ",p_xmfg001," AND xmfg002 >= ",p_xmfg001,") ",
+                  "    OR (xmfg002 >= ",p_xmfg002," AND xmfg001 <= ",p_xmfg002,")) "
+      IF NOT cl_null(g_xmfg_d_t.xmfg001) AND NOT cl_null(g_xmfg_d_t.xmfg002) THEN
+         LET l_sql = l_sql CLIPPED," AND xmfg001 <> ",g_xmfg_d_t.xmfg001,
+                                   " AND xmfg002 <> ",g_xmfg_d_t.xmfg002
+      END IF
+      PREPARE axmt410_01_sel_xmfg001_chkp2 FROM l_sql
+      EXECUTE axmt410_01_sel_xmfg001_chkp2 INTO l_count
+
+      IF cl_null(l_count) THEN
+         LET l_count = 0
+      END IF
+
+      IF l_count = 0 THEN
+
+      ELSE
+         #起始值或截止值落入輸入的區間(排除此筆)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00227'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+   ELSE 
+      #起始值或截止值落入輸入的區間(排除此筆)
+      INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00227'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+      RETURN FALSE
+   END IF
+
+   RETURN TRUE
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依單位取位 
+# Memo...........:
+# Usage..........: CALL axmt410_01_round(p_xmfg001)
+#                  RETURNING r_xmfg001
+# Date & Author..: 2014/07/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt410_01_round(p_xmfg001)
+   DEFINE p_xmfg001     LIKE xmfg_t.xmfg001
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_ooca002     LIKE ooca_t.ooca002
+   DEFINE l_ooca004     LIKE ooca_t.ooca004
+   DEFINE r_xmfg001     LIKE xmfg_t.xmfg001
+
+   LET l_success = NULL
+   LET l_ooca002 = 0
+   LET l_ooca004 = NULL
+
+   LET r_xmfg001 = p_xmfg001
+
+   IF NOT cl_null(p_xmfg001) THEN
+      IF NOT cl_null(g_xmff004) THEN
+         CALL s_aooi250_get_msg(g_xmff004) RETURNING l_success,l_ooca002,l_ooca004
+         IF l_success THEN
+            CALL s_num_round(l_ooca004,p_xmfg001,l_ooca002) RETURNING r_xmfg001
+         END IF
+      END IF
+   END IF
+
+   RETURN r_xmfg001
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrp139" module="axr" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="05948" crtdt="2016-05-19 14:37:04" modid="02114" moddt="2016-06-15 17:24:17" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="租賃費用認列收入批次立帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrcasite,xrcasite_desc(chr80),xrcald,xrcald_desc(chr80),glav002,glav006,xrcadocno,xrcadocno_desc(chr80),xrca008,xrca008_desc(chr80),xrca007,xrca007_desc(chr80),b_check2(chr500),xrcadocdt,stbc008,stbc004,stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axr" filename="axrp139" method="dialog">
+    <section id="input">
+      <input id="head" field="xrcadocno,xrca008,xrca007,b_check2,xrcadocdt"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="stbc008,stbc004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xrcasite">
+        <after>
+          <reference field="xrcasite_desc" ref_field="xrca_t.xrcasite" map_field="xrcaent,xrcasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xrah002_1" state="i"/>
+        <controlp form="q_xrah002_1" state="c"/>
+      </column>
+      <column id="xrcasite_desc"/>
+      <column id="xrcald">
+        <after>
+          <reference field="xrcald_desc" ref_field="xrca_t.xrcald" map_field="xrcaent,xrcald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xrcald_desc"/>
+      <column id="glav002"/>
+      <column id="glav006">
+        <after>
+          <check id="range" st="13.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="xrcadocno">
+        <after/>
+        <controlp form="q_ooba002_3" state="i"/>
+      </column>
+      <column id="xrcadocno_desc"/>
+      <column id="xrca008">
+        <after/>
+        <controlp form="q_ooib001_1" state="i"/>
+      </column>
+      <column id="xrca008_desc"/>
+      <column id="xrca007">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="xrca007_desc"/>
+      <column id="b_check2" type="S" default="Y"/>
+      <column id="xrcadocdt"/>
+      <column id="stbc008">
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="stbc004">
+        <controlp form="q_stbc003" state="c"/>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abcr002_g01" module="abc" jobmode="N" type="g01" industry="std" crtid="05384" crtdt="2016-11-08 13:59:52" modid="04226" moddt="2016-11-30 15:54:46" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.chk(chr1|自行輸入),tm.aa001(bcaa001|條碼編號),tm.aa002(bcaa002|料件編號),tm.aa013(bcaa013|批次),tm.aa009(bcaa009|數量),tm.num(num10|列印張數)">
+    <var seq="1" value="bcaa001,bcaa002,imaal003,imaal004,imaf_t_imaf053(imaf053|imaf_t.imaf053),bcaa013,bcaa009,l_barcode_num(chr1000|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="bcaa001,bcaa002,imaal003,imaal004,imaf_t_imaf053(imaf053|imaf_t.imaf053),bcaa013,bcaa009,l_barcode_num(chr1000|NULL)"/>
+    <sql id="g_from" query="bcaa_t,imaal_t,imaf_t"/>
+    <sql id="g_where" query="" maintable="bcaa_t"/>
+    <sql id="g_order" query="bcaa001"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="l_barcode_num"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_barcode_num" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="bcaaent,l_barcode_num"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="bcaaent,l_barcode_num"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="bcaaent,l_barcode_num"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_barcode_num" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="bcaaent,l_barcode_num"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

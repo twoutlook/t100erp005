@@ -1,0 +1,900 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abcr001.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-10-06 14:58:19), PR版次:0001(2016-10-11 15:24:49)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000000
+#+ Filename...: abcr001
+#+ Description: BarTender條碼列印作業
+#+ Creator....: 04543(2016-10-06 14:58:19)
+#+ Modifier...: 04543 -SD/PR- 04543
+ 
+{</section>}
+ 
+{<section id="abcr001.global" >}
+#應用 r01 樣板自動產生(Version:21)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE gi_hiden_rep_temp    LIKE type_t.num5             
+   DEFINE g_chk_jobid          LIKE type_t.num5               
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       bcaa001 LIKE bcaa_t.bcaa001, 
+   bcaa002 LIKE bcaa_t.bcaa002, 
+   bcaa004 LIKE bcaa_t.bcaa004, 
+   bcaa005 LIKE bcaa_t.bcaa005, 
+   bcaastus LIKE bcaa_t.bcaastus,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abcr001.main" >}
+MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("abc","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point   
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+      CALL util.JSON.parse(ls_js,g_master)      #r類背景參數解析入口
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL abcr001_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_abcr001 WITH FORM cl_ap_formpath("abc",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL abcr001_init()
+ 
+      #進入選單 Menu (="N")
+      CALL abcr001_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_abcr001
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="abcr001.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION abcr001_init()
+   #add-point:init段define name="init.define"
+   
+   #end add-point
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   LET g_master.bcaastus = 'Y'
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abcr001.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION abcr001_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   
+   #end add-point
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.bcaastus 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               
+               #end add-point
+         
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bcaastus
+            #add-point:BEFORE FIELD bcaastus name="input.b.bcaastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bcaastus
+            
+            #add-point:AFTER FIELD bcaastus name="input.a.bcaastus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bcaastus
+            #add-point:ON CHANGE bcaastus name="input.g.bcaastus"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.bcaastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bcaastus
+            #add-point:ON ACTION controlp INFIELD bcaastus name="input.c.bcaastus"
+            
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON bcaa001,bcaa002,bcaa004,bcaa005
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.bcaa001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bcaa001
+            #add-point:ON ACTION controlp INFIELD bcaa001 name="construct.c.bcaa001"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_bcaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bcaa001  #顯示到畫面上
+            NEXT FIELD bcaa001                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bcaa001
+            #add-point:BEFORE FIELD bcaa001 name="construct.b.bcaa001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bcaa001
+            
+            #add-point:AFTER FIELD bcaa001 name="construct.a.bcaa001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bcaa002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bcaa002
+            #add-point:ON ACTION controlp INFIELD bcaa002 name="construct.c.bcaa002"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001_15()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bcaa002  #顯示到畫面上
+            NEXT FIELD bcaa002                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bcaa002
+            #add-point:BEFORE FIELD bcaa002 name="construct.b.bcaa002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bcaa002
+            
+            #add-point:AFTER FIELD bcaa002 name="construct.a.bcaa002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bcaa004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bcaa004
+            #add-point:ON ACTION controlp INFIELD bcaa004 name="construct.c.bcaa004"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_bcaa004()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bcaa004  #顯示到畫面上
+            NEXT FIELD bcaa004                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bcaa004
+            #add-point:BEFORE FIELD bcaa004 name="construct.b.bcaa004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bcaa004
+            
+            #add-point:AFTER FIELD bcaa004 name="construct.a.bcaa004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bcaa005
+            #add-point:BEFORE FIELD bcaa005 name="construct.b.bcaa005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bcaa005
+            
+            #add-point:AFTER FIELD bcaa005 name="construct.a.bcaa005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bcaa005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bcaa005
+            #add-point:ON ACTION controlp INFIELD bcaa005 name="construct.c.bcaa005"
+            
+            #END add-point
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL cl_qbe_display_condition(FGL_GETENV("QUERYPLANID"), g_user)
+            CALL abcr001_get_buffer(l_dialog)
+ 
+         ON ACTION qbe_select
+            LET ls_wc = ""
+            #需要用ITM類程式查詢方案在CONSTRUCT的功能，將值set到畫面上
+            CALL cl_qbe_list("c") RETURNING ls_wc
+            CALL abcr001_get_buffer(l_dialog)
+            IF NOT cl_null(ls_wc) THEN
+               LET g_master.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後 name="ui_dialog.qbe_select"
+               
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION output
+            LET g_action_choice = "output"
+            ACCEPT DIALOG
+ 
+         ON ACTION quickprint
+            LET g_action_choice = "quickprint"
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION rpt_replang
+            CALL cl_gr_set_dlang()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL abcr001_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+ 
+     #LET lc_param.wc = g_master.wc    #r類主程式不在意lc_param,不使用轉換
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(g_master)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL abcr001_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = abcr001_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF           
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         LET gi_hiden_rep_temp = FALSE   #報表樣板設定
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abcr001.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION abcr001_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abcr001.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION abcr001_process(ls_js)
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_r01_status LIKE type_t.num5
+   DEFINE l_token       base.StringTokenizer      #cmdrun使用
+   DEFINE ls_next       STRING                    #cmdrun使用
+   DEFINE l_cnt         LIKE type_t.num5          #cmdrun使用   
+   DEFINE l_arg         DYNAMIC ARRAY OF STRING   ##cmdrun使用的陣列 
+   #add-point:process段define name="process.define"
+   
+   #end add-point
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+ 
+   INITIALIZE lc_param TO NULL
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_r01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   LET g_rep_wcchp = cl_wcchp(g_master.wc,"bcaa001,bcaa002,bcaa004,bcaa005")  #取得列印條件
+  
+   #add-point:process段前處理 name="process.pre_process"
+   
+   CALL abcr001_print(g_master.wc,g_master.bcaastus)
+   
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數   #r類不用計算進度條
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE abcr001_process_cs CURSOR FROM ls_sql
+#  FOREACH abcr001_process_cs INTO
+   #add-point:process段process name="process.process"
+   
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" OR g_bgjob = "T" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_r01_status)
+   END IF
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abcr001.get_buffer" >}
+PRIVATE FUNCTION abcr001_get_buffer(p_dialog)
+   DEFINE p_dialog   ui.DIALOG
+   
+   LET g_master.bcaastus = p_dialog.getFieldBuffer('bcaastus')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abcr001.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abcr001_print(p_wc,p_bcaastus)
+   DEFINE p_wc                    STRING
+   DEFINE p_bcaastus              LIKE bcaa_t.bcaastus
+   DEFINE l_file_name             STRING
+   DEFINE l_file_name_txt         STRING
+   DEFINE l_file_name_bat         STRING
+   DEFINE l_server                STRING
+   DEFINE l_client                STRING
+   DEFINE l_client_download       STRING
+   DEFINE l_client_BarTender      STRING
+   DEFINE l_client_btw            STRING
+   DEFINE li_stat                 LIKE type_t.num5
+   DEFINE l_channel               base.Channel
+   DEFINE l_str                   STRING
+   DEFINE l_path                  STRING
+   DEFINE ls_cmd                  STRING
+
+   #檔案名稱
+   LET l_file_name = "Barcode_BarTender"
+   #Client下載路徑
+   LET l_client = "C:\\T100\\BarTender"
+   #Client BarTender路徑
+   LET l_client_BarTender = 'C:\\"Program Files"\\Seagull\\"BarTender Suite"\\bartend.exe'
+   #BTW樣板路徑
+   LET l_client_btw = "C:\\T100\\BarTender\\Barcode_BarTender.BTW"
+   
+   ##報表主機tmp
+   #LET l_path = os.Path.join(cl_rpt_get_env_global("MNT4RP"),"tmp")
+   
+   #產生TXT
+   LET l_file_name_txt = l_file_name CLIPPED,".TXT"
+   IF NOT abcr001_txt(l_file_name_txt,p_wc,p_bcaastus) THEN
+      RETURN
+   END IF
+
+   #下載TXT
+   LET l_server = os.Path.join(FGL_GETENV("TEMPDIR"),l_file_name_txt)
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #LET l_client_download = os.Path.join(l_path,l_file_name_txt)
+      #LET ls_cmd = "cp ",l_server," ",l_client_download
+      #RUN ls_cmd
+   ELSE
+      LET l_client_download = l_client,"\\",l_file_name_txt
+      LET li_stat = cl_client_download_file(l_server,l_client_download)   #下載檔案
+      IF NOT li_stat THEN
+         DISPLAY l_server,":",l_client_download
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'adz-00329'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         RETURN
+      END IF
+   END IF
+   
+   #產生BAT
+   LET l_file_name_bat = l_file_name CLIPPED,".BAT"
+   LET l_channel = base.Channel.create()
+   CALL l_channel.openFile(l_file_name_bat, "w")
+   CALL l_channel.setDelimiter("")
+
+   #標頭
+   LET l_str = l_client_BarTender,
+               " /F=",l_client_btw,
+               " /D=",l_client_download," /P /X "
+
+   CALL l_channel.write(l_str)
+   
+   CALL l_channel.close()
+   
+   #下載BAT
+   LET l_server = os.Path.join(FGL_GETENV("TEMPDIR"),l_file_name_bat)
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #LET l_client_download = os.Path.join(l_path,l_file_name_bat)
+      #LET ls_cmd = "cp ",l_server," ",l_client_download
+      #RUN ls_cmd
+      #
+      ##等待資料下載
+      #SLEEP 2
+      #
+      #{
+      #LET l_client_download = "/",l_client_download,"/"
+      ## 執行 windows 下面的 bat file
+      #CALL ui.Interface.frontCall("standard",
+      #                             "shellexec",
+      #                             [l_client_download],
+      #                             [])
+      #}
+      
+   ELSE
+      LET l_client_download = l_client,"\\",l_file_name_bat
+      LET li_stat = cl_client_download_file(l_server,l_client_download)   #下載檔案
+      IF NOT li_stat THEN
+         DISPLAY l_server,":",l_client_download
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'adz-00329'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         RETURN
+      END IF
+      
+      #等待資料下載
+      SLEEP 3
+      
+      # 執行 windows 下面的 bat file
+      CALL ui.Interface.frontCall("standard",
+                                   "shellexec",
+                                   [l_client_download],
+                                   [])
+       
+      SLEEP 5
+      
+      CALL cl_ask_pressanykey('abc-00013')  #已驅動印表機列印！
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abcr001_txt(p_file_name,p_wc,p_bcaastus)
+   DEFINE p_file_name   STRING
+   DEFINE p_wc          STRING
+   DEFINE p_bcaastus    LIKE bcaa_t.bcaastus
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_foreach    RECORD
+             bcaa001       LIKE bcaa_t.bcaa001,
+             bcaa002       LIKE bcaa_t.bcaa002,
+             imaal003      LIKE imaal_t.imaal003,
+             imaal004      LIKE imaal_t.imaal004,
+             bcaa009       LIKE bcaa_t.bcaa009,
+             bcaa004       LIKE bcaa_t.bcaa004,
+             bcaa005       LIKE bcaa_t.bcaa005
+                       END RECORD
+   DEFINE l_channel     base.Channel
+   DEFINE l_str         STRING
+   DEFINE l_data       LIKE type_t.num5
+   
+   LET r_success = TRUE
+   LET l_data = FALSE
+   
+   LET l_channel = base.Channel.create()
+   CALL l_channel.openFile(p_file_name, "w")
+   CALL l_channel.setDelimiter("")
+   
+   #標頭
+   LET l_str = "barcode_no;item_no;item_name;item_spec;barcode_qty;lot_no;source_no;source_seq"
+   CALL l_channel.write(l_str)
+   
+   LET l_sql = "SELECT bcaa001,bcaa002,imaal003,imaal004,",
+               "       bcaa009,bcaa004,bcaa005",
+               "  FROM bcaa_t",
+               "  LEFT OUTER JOIN imaal_t ON imaalent = bcaaent AND imaal001 = bcaa002 AND imaal002 = '",g_dlang,"'",
+               " WHERE bcaaent = ",g_enterprise,
+               "   AND bcaasite = '",g_site,"'"
+   
+   IF NOT cl_null(p_wc) THEN
+      LET l_sql = l_sql," AND ",p_wc
+   END IF
+   
+   IF p_bcaastus = 'Y' THEN
+      LET l_sql = l_sql," AND bcaastus = 'Y'"
+   END IF
+   
+   PREPARE abcr001_pre FROM l_sql
+   DECLARE abcr001_cs  CURSOR FOR abcr001_pre
+   
+   FOREACH abcr001_cs INTO l_foreach.bcaa001,l_foreach.bcaa002,l_foreach.imaal003,l_foreach.imaal004,
+                           l_foreach.bcaa009,l_foreach.bcaa004,l_foreach.bcaa005
+      
+      LET l_data = TRUE
+      
+      #barcode_no;item_no;item_name;item_spec;
+      #barcode_qty;lot_no;source_no;source_seq
+      LET l_str = l_foreach.bcaa001,";",l_foreach.bcaa002,";",l_foreach.imaal003,";",l_foreach.imaal004,";",
+                  l_foreach.bcaa009,";",'',";",l_foreach.bcaa004,";",l_foreach.bcaa005
+      CALL l_channel.write(l_str)
+      
+   END FOREACH
+   
+   CALL l_channel.close()
+   
+   IF NOT l_data THEN
+      LET r_success = FALSE
+      
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = "-100"
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

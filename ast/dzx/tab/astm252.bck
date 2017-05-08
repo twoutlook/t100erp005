@@ -1,0 +1,220 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astm252" module="ast" jobmode="N" type="t01" industry="std" fix_arg="1" crtid="04226" crtdt="2016-03-24 17:56:30" modid="08172" moddt="2016-12-09 10:07:34" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="費用標準設定維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sthisite,sthisite_desc(chr80),sthi002,sthi003,sthil003,sthi004,sthi004_desc(chr80),sthi005,sthi006,sthi007,sthi008,sthi008_desc(chr80),sthi009,sthi009_desc(chr80),sthi001,sthiunit,sthistus,sthiownid,sthiownid_desc(chr80),sthiowndp,sthiowndp_desc(chr80),sthicrtid,sthicrtid_desc(chr80),sthicrtdp,sthicrtdp_desc(chr80),sthicrtdt,sthimodid,sthimodid_desc(chr80),sthimoddt,sthicnfid,sthicnfid_desc(chr80),sthicnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sthjseq,sthj002,sthj002_desc(chr500),sthj003,sthj003_desc(chr500),sthj004,sthj004_desc(chr500),sthj005,sthj005_desc(chr500),sthj006,sthj006_desc(chr500),sthj007,sthj007_desc(chr500),sthj008,sthj009,sthj010,sthj011,sthjsite,sthjunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="sthkseq1,sthk002,sthk003,sthk004,sthk005,sthk006,sthk007,sthk008,sthk009,sthk010,sthksite,sthkunit"/>
+      <var id="bs_field" value="sthisite,sthisite_desc(chr80),sthi002,sthi002_desc(chr80),sthi004,sthi004_desc(chr80),sthi007,sthi008,sthi008_desc(chr80),sthi009,sthi009_desc(chr80)" pk="sthi002" order=""/>
+      <bs_reference field="sthisite_desc" ref_field="sthisite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="sthi002_desc" ref_field="sthi002" ref_sql="SELECT sthil003 FROM sthil_t WHERE sthilent=$varg_enterprise$var AND sthil001=? AND sthil002=$varg_dlang$var"/>
+      <bs_reference field="sthi004_desc" ref_field="sthi004" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+      <bs_reference field="sthi008_desc" ref_field="sthi008" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="sthi009_desc" ref_field="sthi009" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astm252" method="dialog">
+    <section id="input">
+      <input id="head" field="sthisite,sthi002,sthi003,sthil003,sthi004,sthi005,sthi006,sthi007,sthi008,sthi009,sthi001,sthiunit,sthistus,sthicrtdp"/>
+      <input id="body" page="1" field="sthjseq,sthj002,sthj003,sthj004,sthj005,sthj006,sthj007,sthj008,sthj009,sthj010,sthj011,sthjsite,sthjunit" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="sthkseq1,sthk002,sthk003,sthk004,sthk005,sthk006,sthk007,sthk008,sthk009,sthk010,sthksite,sthkunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="sthisite,sthi002,sthi003,sthil003,sthi004,sthi005,sthi006,sthi007,sthi008,sthi009,sthi001,sthiunit,sthistus,sthiownid,sthiowndp,sthicrtid,sthicrtdp,sthicrtdt,sthimodid,sthimoddt,sthicnfid,sthicnfdt"/>
+      <construct id="body" page="1" field="sthjseq,sthj002,sthj003,sthj004,sthj005,sthj006,sthj007,sthj008,sthj009,sthj010,sthj011,sthjsite,sthjunit"/>
+      <construct id="body" page="2" field="sthkseq1,sthk002,sthk003,sthk004,sthk005,sthk006,sthk007,sthk008,sthk009,sthk010,sthksite,sthkunit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="sthi002"/>
+      <set id="head" type="no_entry" field="sthi002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="sthisite">
+        <after>
+          <reference field="sthisite_desc" ref_field="sthi_t.sthisite" map_field="sthisite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="sthisite_desc"/>
+      <column id="sthi002">
+        <controlp form="q_sthi002" state="c"/>
+      </column>
+      <column id="sthi003"/>
+      <column id="sthil003"/>
+      <column id="sthi004">
+        <after>
+          <reference field="sthi004_desc" ref_field="sthi_t.sthi004" map_field="sthi004" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001_4" state="c"/>
+      </column>
+      <column id="sthi004_desc"/>
+      <column id="sthi005"/>
+      <column id="sthi006"/>
+      <column id="sthi007" type="S" default="N"/>
+      <column id="sthi008">
+        <after>
+          <reference field="sthi008_desc" ref_field="sthi_t.sthi008" map_field="sthi008" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sthi008_desc"/>
+      <column id="sthi009">
+        <after>
+          <reference field="sthi009_desc" ref_field="sthi_t.sthi009" map_field="sthi009" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="sthi009_desc"/>
+      <column id="sthi001" def_scc="6908"/>
+      <column id="sthiunit"/>
+      <column id="sthistus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="E" pic="ended"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="sthiownid">
+        <after>
+          <reference field="sthiownid_desc" ref_field="sthi_t.sthiownid" map_field="sthiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sthiownid_desc"/>
+      <column id="sthiowndp">
+        <after>
+          <reference field="sthiowndp_desc" ref_field="sthi_t.sthiowndp" map_field="sthiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="sthiowndp_desc"/>
+      <column id="sthicrtid">
+        <after>
+          <reference field="sthicrtid_desc" ref_field="sthi_t.sthicrtid" map_field="sthicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sthicrtid_desc"/>
+      <column id="sthicrtdp">
+        <after>
+          <reference field="sthicrtdp_desc" ref_field="sthi_t.sthicrtdp" map_field="sthicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sthicrtdp_desc"/>
+      <column id="sthicrtdt"/>
+      <column id="sthimodid">
+        <after>
+          <reference field="sthimodid_desc" ref_field="sthi_t.sthimodid" map_field="sthimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sthimodid_desc"/>
+      <column id="sthimoddt"/>
+      <column id="sthicnfid">
+        <after>
+          <reference field="sthicnfid_desc" ref_field="sthi_t.sthicnfid" map_field="sthicnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sthicnfid_desc"/>
+      <column id="sthicnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="sthjseq" type="S" default="0"/>
+      <column id="sthj002">
+        <after>
+          <reference field="sthj002_desc" ref_field="sthj_t.sthj002" map_field="sthj002" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="sthj002_desc"/>
+      <column id="sthj003">
+        <after>
+          <reference field="sthj003_desc" ref_field="sthj002,sthj003" map_field="sthj002,sthj003" ref_sql="SELECT mhabl004 FROM mhabl_t WHERE mhablent=$varg_enterprise$var AND mhabl001=? AND mhabl002=? AND mhabl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="sthj003_desc"/>
+      <column id="sthj004">
+        <after>
+          <reference field="sthj004_desc" ref_field="sthj002,sthj003,sthj004" map_field="sthj002,sthj003,sthj004" ref_sql="SELECT mhacl005 FROM mhacl_t WHERE mhaclent=$varg_enterprise$var AND mhacl001=? AND mhacl002=? AND mhacl003=? AND mhacl004=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhac003" state="c"/>
+      </column>
+      <column id="sthj004_desc"/>
+      <column id="sthj005">
+        <after>
+          <reference field="sthj005_desc" ref_field="sthj_t.sthj005" map_field="sthj005" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_1" state="c"/>
+      </column>
+      <column id="sthj005_desc"/>
+      <column id="sthj006">
+        <after>
+          <reference field="sthj006_desc" ref_field="sthj006" map_field="sthj006" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2144&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="sthj006_desc"/>
+      <column id="sthj007">
+        <after>
+          <reference field="sthj007_desc" ref_field="sthj_t.sthj007" map_field="sthj007" ref_sql="SELECT mhbel003 FROM mhbel_t WHERE mhbelent=$varg_enterprise$var AND mhbel001=? AND mhbel002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhbe001" state="c"/>
+      </column>
+      <column id="sthj007_desc"/>
+      <column id="sthj008" def_scc="6920"/>
+      <column id="sthj009" type="S" default="0"/>
+      <column id="sthj010" def_scc="6909"/>
+      <column id="sthj011" def_scc="6904"/>
+      <column id="sthjsite"/>
+      <column id="sthjunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="sthkseq1" type="S" default="0"/>
+      <column id="sthk002"/>
+      <column id="sthk003"/>
+      <column id="sthk004"/>
+      <column id="sthk005" type="S" default="0"/>
+      <column id="sthk006" type="S" default="0"/>
+      <column id="sthk007" def_scc="6010"/>
+      <column id="sthk008" type="S" default="0"/>
+      <column id="sthk009" type="S" default="0"/>
+      <column id="sthk010" def_scc="6011"/>
+      <column id="sthksite"/>
+      <column id="sthkunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="sthi_t" pk="sthi002">
+      <sql id="forupd_sql" type="sql" query="SELECT sthisite,&apos;&apos;,sthi002,sthi003,&apos;&apos;,sthi004,&apos;&apos;,sthi005,sthi006,sthi007,sthi008,&apos;&apos;,sthi009,&apos;&apos;,sthi001,sthiunit,sthistus,sthiownid,&apos;&apos;,sthiowndp,&apos;&apos;,sthicrtid,&apos;&apos;,sthicrtdp,&apos;&apos;,sthicrtdt,sthimodid,&apos;&apos;,sthimoddt,sthicnfid,&apos;&apos;,sthicnfdt FROM sthi_t WHERE sthient= ? AND sthi002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT sthisite,&apos;&apos;,sthi002,sthi003,&apos;&apos;,sthi004,&apos;&apos;,sthi005,sthi006,sthi007,sthi008,&apos;&apos;,sthi009,&apos;&apos;,sthi001,sthiunit,sthistus,sthiownid,&apos;&apos;,sthiowndp,&apos;&apos;,sthicrtid,&apos;&apos;,sthicrtdp,&apos;&apos;,sthicrtdt,sthimodid,&apos;&apos;,sthimoddt,sthicnfid,&apos;&apos;,sthicnfdt FROM sthi_t" order="sthi002"/>
+      <sql id="append" type="lang" target="sthil_t.sthil003" table="sthil_t" fk="sthi002" pk="sthil001,sthil002" field="sthil003"/>
+    </head>
+    <body id="sthj_t" page="1" linked="" pk="sthjseq" fk="sthj001">
+      <sql id="forupd_sql_detail" query="SELECT sthjseq,sthj002,&apos;&apos;,sthj003,&apos;&apos;,sthj004,&apos;&apos;,sthj005,&apos;&apos;,sthj006,&apos;&apos;,sthj007,&apos;&apos;,sthj008,sthj009,sthj010,sthj011,sthjsite,sthjunit FROM sthj_t WHERE sthjent=? AND sthj001=? AND sthjseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sthjseq,sthj002,&apos;&apos;,sthj003,&apos;&apos;,sthj004,&apos;&apos;,sthj005,&apos;&apos;,sthj006,&apos;&apos;,sthj007,&apos;&apos;,sthj008,sthj009,sthj010,sthj011,sthjsite,sthjunit FROM sthj_t WHERE sthjent=? AND sthj001=?"/>
+    </body>
+    <body id="sthk_t" page="2" linked="" detail="Y" master="sthj_t" default_site="N" pk="sthkseq1" fk="sthk001,sthkseq">
+      <sql id="forupd_sql_detail" query="SELECT sthkseq1,sthk002,sthk003,sthk004,sthk005,sthk006,sthk007,sthk008,sthk009,sthk010,sthksite,sthkunit FROM sthk_t WHERE sthkent=? AND sthk001=? AND sthkseq=? AND sthkseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sthkseq1,sthk002,sthk003,sthk004,sthk005,sthk006,sthk007,sthk008,sthk009,sthk010,sthksite,sthkunit FROM sthk_t WHERE sthkent=? AND sthk001=? AND sthkseq=?"/>
+    </body>
+  </dataset>
+</assembly>
+

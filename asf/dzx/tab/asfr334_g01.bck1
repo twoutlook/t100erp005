@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfr334_g01" module="asf" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2014-10-21 13:58:23" modid="05423" moddt="2015-01-04 16:29:16" sdver="2" tabver="10001" description="工單當站報廢表">
+  <define arg="tm.wc(STRING|where condition),tm.pr1(STRING|print subrep01),tm.pr2(STRING|print subrep02)">
+    <var seq="1" value="sfgadocno,sfgadocdt,sfga002,l_sfga002_desc(chr30|NULL),sfga003,l_sfga003_desc(chr30|NULL),sfga010,sfga004,sfga012,imaal003,imaal004,sfga006,l_sfga006_desc(chr30|NULL),sfga007,sfga008,sfgaent,l_sfgadocno_desc(chr50|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="sfgadocno(sfgadocno|sfgadocno),sfgadocdt(sfgadocdt|sfgadocdt),sfga002(sfga002|sfga002),l_sfga002_desc(chr30|NULL),sfga003(sfga003|sfga003),l_sfga003_desc(chr30|NULL),sfga010(sfga010|sfga010),sfga004(sfga004|sfga004),sfga012(sfga012|sfga012),imaal003(imaal003|imaal003),imaal004(imaal004|imaal004),sfga006(sfga006|sfga006),l_sfga006_desc(chr30|NULL),sfga007(sfga007|sfga007),sfga008(sfga008|sfga008),sfgaent(sfgaent|sfgaent),l_sfgadocno_desc(chr50|NULL)"/>
+    <sql id="g_from" query="sfga_t,imaal_t"/>
+    <sql id="g_where" query="" maintable="sfga_t"/>
+    <sql id="g_order" query="sfgadocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="sfgadocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="sfgadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="sfgaent,sfgadocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="sfgaent,sfgadocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff002" where="sfgaent,sfgadocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="sfgadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="sfgaent,sfgadocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

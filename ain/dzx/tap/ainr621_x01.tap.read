@@ -1,0 +1,810 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="ainr621_x01" std_prog="ainr621_x01" erpver="1.0" module="AIN" ver="1" env="s" zone="t10prd" booking="N" type="X" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="X" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.ainr621_x01_sel_ain010" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 计算高库存品项数、缺货品项数
+# Memo...........:
+# Usage..........: CALL ainr621_x01_sel_ain010(p_ent,p_site,p_ain003,p_flag)
+#                  RETURNING r_num
+# Input parameter: p_ent        企业编号
+#                : p_site       营运据点
+#                : p_ain003     品类
+#                : p_flag       1：计算高库存品项数 2：计算缺货品项数
+# Return code....: r_num
+# Date & Author..: 20150624 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainr621_x01_sel_ain010(p_ent,p_site,p_ain003,p_flag)
+DEFINE p_ent     LIKE ooef_t.ooefent
+DEFINE p_site    LIKE ooef_t.ooef001
+DEFINE p_ain003  LIKE imaa_t.imaa009
+DEFINE p_flag    LIKE type_t.chr1
+DEFINE r_num     LIKE type_t.num20
+DEFINE l_debn010 LIKE debn_t.debn010
+DEFINE l_debn007 LIKE debn_t.debn007
+DEFINE l_indo005 LIKE indo_t.indo005
+DEFINE l_indo006 LIKE indo_t.indo006
+DEFINE l_indo007 LIKE indo_t.indo007
+DEFINE l_rtdx001 LIKE rtdx_t.rtdx001
+
+
+    SELECT indo005,indo006,indo007
+      INTO l_indo005,l_indo006,l_indo007
+      FROM indo_t
+     WHERE indoent=p_ent
+       AND indo001=p_ain003
+       AND indostus='Y'
+
+     DECLARE ainr621_x01_seldebn CURSOR FOR SELECT DISTINCT rtdx001 
+                                              FROM rtdx_t,imaa_t
+                                             WHERE rtdxent=imaaent
+                                               AND rtdx001=imaa001
+                                               AND rtdxsite=p_site
+                                               AND imaa009=p_ain003
+                                               AND rtdxstus='Y'
+                                               AND rtdxent=p_ent
+    LET r_num=0
+    FOREACH ainr621_x01_seldebn INTO l_rtdx001
+
+      #考核周期库存量
+      SELECT SUM(debn010) INTO l_debn010 
+        FROM debn_t
+       WHERE debnent = p_ooefent 
+         AND debnsite = p_site 
+         AND debn005 = l_rtdx001
+         AND debn002 BETWEEN g_today - l_indo005 AND g_today 
+       
+      #日均库存量
+      LET l_debn010=l_debn010/l_indo005       
+
+      #日均销量DMS
+      SELECT debn007 INTO l_debn007 
+        FROM debn_t
+       WHERE debnent = p_ent
+         AND debnsite = p_site
+         AND debn005 = l_rtdx001
+         AND debn002 BETWEEN g_today - l_indo005 AND g_today  
+         AND debn002 = ( SELECT MAX(debn002) FROM  debn_t
+                         WHERE debnent = p_ent AND debnsite = p_site AND debn005 = l_rtdx001
+                           AND debn002 BETWEEN g_today - l_indo005 AND g_today )
+      IF cl_null(l_debn007) THEN
+         CONTINUE FOREACH
+      END IF
+                     
+      #高库存  
+      IF p_flag='1' AND l_debn010/l_debn007 > l_indo007 THEN      
+         LET r_num=r_num+1
+      END IF
+      
+      #缺货  
+      IF p_flag='2' AND l_debn010/l_debn007 < l_indo006 THEN      
+         LET r_num=r_num+1
+      END IF      
+   END FOREACH
+
+   RETURN r_num
+END FUNCTION]]>
+  </point>
+  <point name="function.ainr621_x01_sel_ain017" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 计算高库存金额
+# Memo...........:
+# Usage..........: CALL ainr621_x01_sel_ain017(p_ent,p_site,p_ain003,p_flag)
+#                  RETURNING r_num
+# Input parameter: p_ent        企业编号
+#                : p_site       营运据点
+#                : p_ain003     品类
+# Return code....: r_num        高库存金额
+# Date & Author..: 20150624 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainr621_x01_sel_ain017(p_ent,p_site,p_ain003)
+DEFINE p_ent     LIKE ooef_t.ooefent
+DEFINE p_site    LIKE ooef_t.ooef001
+DEFINE p_ain003  LIKE imaa_t.imaa009
+DEFINE r_num     LIKE type_t.num20_6
+DEFINE l_debn010 LIKE debn_t.debn010
+DEFINE l_debn007 LIKE debn_t.debn007
+DEFINE l_indo005 LIKE indo_t.indo005
+DEFINE l_indo007 LIKE indo_t.indo007
+DEFINE l_rtdx001 LIKE rtdx_t.rtdx001
+DEFINE l_xccu102 LIKE xccu_t.xccu102
+DEFINE l_ooef017 LIKE ooef_t.ooef017
+DEFINE l_glaald  LIKE glaa_t.glaald
+DEFINE l_glaa120 LIKE glaa_t.glaa120
+DEFINE l_xcaz005 LIKE xcaz_t.xcaz005
+
+    SELECT ooef017 INTO l_ooef017  #法人
+      FROM ooef_t
+     WHERE ooefent=p_ent
+       AND ooef001=p_ain002
+       
+    SELECT glaald,glaa120 INTO l_glaald,l_glaa120 #账套、成本计算类型
+      FROM glaa_t
+     WHERE glaaent=p_ent
+       AND glaa014='Y'
+       AND glaacomp=l_ooef017      
+    
+   SELECT xcaz005 INTO l_xcaz005   #成本域类型
+     FROM xcaz_t
+    WHERE xcazent=sr.ooefent
+      AND xcazld=l_glaald
+      AND xcaz001=l_glaa120
+    
+    SELECT indo005,indo007
+      INTO l_indo005,l_indo007
+      FROM indo_t
+     WHERE indoent=p_ent
+       AND indo001=p_ain003
+       AND indostus='Y'
+
+     DECLARE ainr621_x01_seldebn2 CURSOR FOR SELECT DISTINCT rtdx001 
+                                              FROM rtdx_t,imaa_t
+                                             WHERE rtdxent=imaaent
+                                               AND rtdx001=imaa001
+                                               AND rtdxsite=p_site
+                                               AND imaa009=p_ain003
+                                               AND rtdxstus='Y'
+                                               AND rtdxent=p_ent
+    LET r_num=0
+    FOREACH ainr621_x01_seldebn2 INTO l_rtdx001
+
+      #考核周期库存量
+      SELECT SUM(debn010) INTO l_debn010 
+        FROM debn_t
+       WHERE debnent = p_ooefent 
+         AND debnsite = p_site 
+         AND debn005 = l_rtdx001
+         AND debn002 BETWEEN g_today - l_indo005 AND g_today 
+       
+      #日均库存量
+      LET l_debn010=l_debn010/l_indo005       
+
+      #日均销量DMS
+      SELECT debn007 INTO l_debn007 
+        FROM debn_t
+       WHERE debnent = p_ent
+         AND debnsite = p_site
+         AND debn005 = l_rtdx001
+         AND debn002 BETWEEN g_today - l_indo005 AND g_today  
+         AND debn002 = ( SELECT MAX(debn002) FROM  debn_t
+                         WHERE debnent = p_ent AND debnsite = p_site AND debn005 = l_rtdx001
+                           AND debn002 BETWEEN g_today - l_indo005 AND g_today )
+      IF cl_null(l_debn007) THEN
+         CONTINUE FOREACH
+      END IF
+                     
+      #高库存  
+      IF l_debn010/l_debn007 > l_indo007 THEN  
+         IF l_xcaz005='1' THEN   #成本域：1-门店           
+            SELECT SUM(xccu102) INTO l_xccu102   #高库存库存总额
+              FROM xccu_t,rtdx_t
+             WHERE xccuent=rtdxent
+               AND xccu004=rtdx001
+               AND rtdxstus='Y'
+               AND rtdxsite=p_site
+               AND xccuent=p_ent
+               AND xcculd=l_glaald
+               AND xccu002=p_site
+               AND xccu003=l_glaa120 
+               AND xccu004=l_rtdx001
+            IF cl_null(l_xccu102) THEN
+               LET l_xccu102=0
+            END IF               
+            LET r_num=r_num+l_xccu102
+         ELSE
+            SELECT SUM(xccu102) INTO l_xccu102   #高库存库存总额
+              FROM xccu_t,rtdx_t
+             WHERE xccuent=rtdxent
+               AND xccu004=rtdx001
+               AND rtdxstus='Y'
+               AND rtdxsite=p_site
+               AND xccuent=p_ent
+               AND xcculd=l_glaald
+               AND xccu003=l_glaa120 
+               AND xccu004=l_rtdx001
+            IF cl_null(l_xccu102) THEN
+               LET l_xccu102=0
+            END IF               
+            LET r_num=r_num+l_xccu102         
+         END IF 
+      END IF
+      
+   
+   END FOREACH
+
+   RETURN r_num
+END FUNCTION]]>
+  </point>
+  <point name="ins_data.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE l_ooef017   LIKE ooef_t.ooef017
+DEFINE l_glaald    LIKE glaa_t.glaald
+DEFINE l_glaa120   LIKE glaa_t.glaa120
+DEFINE l_xcaz005   LIKE xcaz_t.xcaz005
+DEFINE l_indo002   LIKE indo_t.indo002
+DEFINE l_indo003   LIKE indo_t.indo003
+DEFINE l_indo004   LIKE indo_t.indo004
+DEFINE l_indo005   LIKE indo_t.indo005
+DEFINE l_indo006   LIKE indo_t.indo006
+DEFINE l_indo007   LIKE indo_t.indo007
+DEFINE l_ooefl003  LIKE ooefl_t.ooefl003]]>
+  </point>
+  <point name="ins_data.foreach" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       SELECT indo002,indo003,indo004,indo005,indo006,indo007
+         INTO l_indo002,l_indo003,l_indo004,l_indo005,l_indo006,l_indo007
+         FROM indo_t
+        WHERE indoent=sr.ooefent
+          AND indo001=sr.ain003
+          AND indostus='Y'
+          
+     SELECT SUM(COUNT(DISTINCT rtdx001)) INTO sr.ain004 #总品项数
+         FROM rtdx_t,imaa_t
+        WHERE rtdxent=imaaent
+          AND rtdx001=imaa001
+          AND rtdxsite=sr.ain002
+          AND imaa009=sr.ain003
+          AND rtdxstus='Y'
+          AND rtdxent=sr.ooefent
+        GROUP BY rtdx001
+          
+       SELECT ooef017 INTO l_ooef017  #法人
+         FROM ooef_t
+        WHERE ooefent=sr.ooefent
+          AND ooef001=sr.ain002
+          
+       SELECT glaald,glaa120 INTO l_glaald,l_glaa120 #账套、成本计算类型
+         FROM glaa_t
+        WHERE glaaent=sr.ooefent
+          AND glaa014='Y'
+          AND glaacomp=l_ooef017      
+
+      SELECT xcaz005 INTO l_xcaz005   #成本域类型
+        FROM xcaz_t
+       WHERE xcazent=sr.ooefent
+         AND xcazld=l_glaald
+         AND xcaz001=l_glaa120
+       IF l_xcaz005='1' THEN   #成本域：1-门店           
+          SELECT SUM(xccu102) INTO sr.ain005   #库存总额
+            FROM xccu_t,rtdx_t,imaa_t
+           WHERE xccuent=rtdxent
+             AND xccuent=imaaent
+             AND xccu004=imaa001
+             AND xccu004=rtdx001
+             AND imaa009=sr.ain003
+             AND rtdxstus='Y'
+             AND rtdxsite=sr.ain002
+             AND xccuent=sr.ooefent
+             AND xcculd=l_glaald
+             AND xccu002=sr.ain002
+             AND xccu003=l_glaa120 
+             
+          SELECT SUM(xccu102) INTO sr.ain013   #异常状态库存金额
+            FROM xccu_t,rtdx_t,imaa_t
+           WHERE xccuent=rtdxent
+             AND xccuent=imaaent
+             AND xccu004=imaa001
+             AND xccu004=rtdx001
+             AND imaa009=sr.ain003
+             AND rtdxstus='Y'
+             AND rtdxsite=sr.ain002
+             AND xccuent=sr.ooefent
+             AND xcculd=l_glaald
+             AND xccu002=sr.ain002
+             AND xccu003=l_glaa120
+             AND rtdx006<>'003'  
+          IF cl_null(sr.ain013) THEN LET sr.ain013=0 END IF             
+             
+          SELECT SUM(xccu102) INTO sr.ain014   #无销售库存金额
+            FROM xccu_t,rtdx_t,imaa_t
+           WHERE xccuent=rtdxent
+             AND xccuent=imaaent
+             AND xccu004=imaa001
+             AND xccu004=rtdx001
+             AND imaa009=sr.ain003
+             AND rtdxstus='Y'
+             AND rtdxsite=sr.ain002
+             AND xccuent=sr.ooefent
+             AND xcculd=l_glaald
+             AND xccu002=sr.ain002
+             AND xccu003=l_glaa120
+             AND xccu004 NOT IN ( SELECT DISTINCT deba009 
+                                   FROM deba_t
+                                  WHERE debaent=sr.ooefent 
+                                    AND debasite=sr.ain002
+                                    AND deba002>g_today-l_indo002 )
+          IF cl_null(sr.ain014) THEN LET sr.ain014=0 END IF                                      
+          
+                                    
+
+       ELSE
+          SELECT SUM(xccu102) INTO sr.ain005   #库存总额
+            FROM xccu_t,rtdx_t,imaa_t
+           WHERE xccuent=rtdxent
+             AND xccuent=imaaent
+             AND xccu004=imaa001
+             AND xccu004=rtdx001
+             AND imaa009=sr.ain003
+             AND rtdxsite=sr.ain002
+             AND xccuent=sr.ooefent
+             AND xcculd=l_glaald
+             AND xccu003=l_glaa120  
+             
+          SELECT SUM(xccu102) INTO sr.ain013   #异常状态库存金额
+            FROM xccu_t,rtdx_t,imaa_t
+           WHERE xccuent=rtdxent
+             AND xccuent=imaaent
+             AND xccu004=imaa001
+             AND xccu004=rtdx001
+             AND imaa009=sr.ain003
+             AND rtdxsite=sr.ain002
+             AND xccuent=sr.ooefent
+             AND xcculd=l_glaald
+             AND xccu003=l_glaa120 
+             AND rtdx006<>'003'
+          IF cl_null(sr.ain013) THEN LET sr.ain013=0 END IF  
+             
+          SELECT SUM(xccu102) INTO sr.ain014   #无销售库存金额
+            FROM xccu_t,rtdx_t,imaa_t
+           WHERE xccuent=rtdxent
+             AND xccuent=imaaent
+             AND xccu004=imaa001
+             AND xccu004=rtdx001
+             AND imaa009=sr.ain003
+             AND rtdxsite=sr.ain002
+             AND xccuent=sr.ooefent
+             AND xcculd=l_glaald
+             AND xccu003=l_glaa120 
+             AND xccu004 NOT IN ( SELECT DISTINCT deba009 
+                                   FROM deba_t
+                                  WHERE debaent=sr.ooefent 
+                                    AND debasite=sr.ain002
+                                    AND deba002>g_today-l_indo002 )
+         IF cl_null(sr.ain014) THEN LET sr.ain014=0 END IF                                      
+
+       END IF
+       
+       SELECT SUM(COUNT(DISTINCT rtdx001)) INTO sr.ain006 #有效品项数
+         FROM rtdx_t,imaa_t
+        WHERE rtdxent=imaaent
+          AND rtdx001=imaa001
+          AND rtdxsite=sr.ain002
+          AND imaa009=sr.ain003
+          AND rtdxstus='Y'
+          AND rtdxent=sr.ooefent 
+          AND rtdx006='003'          #生命周期：003-正常
+        GROUP BY rtdx001
+       IF cl_null(sr.ain006) THEN LET sr.ain006=0 END IF  
+          
+       SELECT SUM(COUNT(DISTINCT rtdx001)) INTO sr.ain007 #异常状态品项数
+         FROM rtdx_t,imaa_t
+        WHERE rtdxent=imaaent
+          AND rtdx001=imaa001
+          AND rtdxsite=sr.ain002
+          AND imaa009=sr.ain003
+          AND rtdxstus='Y'
+          AND rtdxent=sr.ooefent 
+          AND rtdx006<>'003'          #生命周期：003-正常    
+        GROUP BY rtdx001      
+       IF cl_null(sr.ain007) THEN LET sr.ain007=0 END IF         
+          
+       SELECT SUM(COUNT(DISTINCT rtdx001)) INTO sr.ain008 #负库存品项数
+         FROM rtdx_t,imaa_t
+        WHERE rtdxent=imaaent
+          AND rtdx001=imaa001
+          AND rtdxsite=sr.ain002
+          AND imaa009=sr.ain003
+          AND rtdxstus='Y'
+          AND rtdxent=sr.ooefent 
+          AND EXISTS (SELECT 1 FROM inag_t WHERE inagent=sr.ooefent AND inagsite=sr.ain002 AND inag001=rtdx001 GROUP BY inag001 HAVING SUM(inag008)<0) 
+        GROUP BY rtdx001 
+      IF cl_null(sr.ain008) THEN LET sr.ain008=0 END IF         
+
+      SELECT SUM(COUNT(DISTINCT deba009)) INTO sr.ain009 #负毛利率品项数
+        FROM deba_t
+       WHERE debaent=sr.ooefent 
+         AND debasite=sr.ain002
+         AND deba002=g_today-1
+         AND deba028<0   
+       GROUP BY deba009         
+      IF cl_null(sr.ain009) THEN LET sr.ain009=0 END IF      
+          
+      SELECT SUM(COUNT(DISTINCT deba009)) INTO sr.ain010 #有销售品项数
+        FROM deba_t
+       WHERE debaent=sr.ooefent 
+         AND debasite=sr.ain002
+         AND deba002>g_today-l_indo002
+       GROUP BY deba009           
+      IF cl_null(sr.ain010) THEN
+         LET sr.ain010=0
+      END IF
+      LET sr.ain010=sr.ain004-sr.ain010     #无销售品项数
+
+ 
+      CALL ainr621_x01_sel_ain010(sr.ooefent,sr.ain002,sr.ain003,'1') RETURNING sr.ain011 #高库存品项数
+      
+      CALL ainr621_x01_sel_ain010(sr.ooefent,sr.ain002,sr.ain003,'2') RETURNING sr.ain012 #缺货品项数
+      
+      CALL ainr621_x01_sel_ain017(sr.ooefent,sr.ain002,sr.ain003) RETURNING sr.ain017     #高库存库存金额 
+ 
+      LET sr.ain019=sr.ain012/sr.ain004*100 #缺货率
+      LET sr.ain014=sr.ain013/sr.ain005*100 #异常状态库存金额占比
+      LET sr.ain016=sr.ain015/sr.ain005*100 #无销售库存金额占比
+      LET sr.ain018=sr.ain017/sr.ain005*100 #高库存库存金额占比
+      
+      #查找此门店对应的大区编号
+       SELECT ooed005 INTO sr.ain001
+         FROM ooed_t,ooef_t
+        WHERE ooedent=sr.ooefent
+          AND ooedent=ooefent
+          AND ooed005=ooef001
+          AND ooef101='3'         #大区
+          AND ooed004=sr.ain002
+          AND ooed006<=g_today
+          AND (ooed007>=g_today OR ooed007 IS NULL)
+      
+       SELECT ooefl003 INTO l_ooefl003
+         FROM ooefl_t
+        WHERE ooeflent=sr.ooefent
+          AND ooefl001=sr.ain001
+          AND ooefl002=g_dlang
+       IF NOT cl_null(l_ooefl003) THEN
+          LET sr.ain001=sr.ain001||'.'||l_ooefl003
+       END IF
+       SELECT ooefl003 INTO l_ooefl003
+         FROM ooefl_t
+        WHERE ooeflent=sr.ooefent
+          AND ooefl001=sr.ain002
+          AND ooefl002=g_dlang
+       IF NOT cl_null(l_ooefl003) THEN
+          LET sr.ain002=sr.ain002||'.'||l_ooefl003
+       END IF     
+       
+       SELECT rtaxl003 INTO l_ooefl003
+         FROM rtaxl_t
+        WHERE rtaxlent=sr.ooefent
+          AND rtaxl001=sr.ain003
+          AND rtaxl002=g_dlang
+       IF NOT cl_null(l_ooefl003) THEN
+          LET sr.ain003=sr.ain003||'.'||l_ooefl003
+       END IF         
+       
+]]>
+  </point>
+  <point name="sel_prep.g_from" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_select = " SELECT  DISTINCT NULL,rtdxsite,imaa009,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, 
+       NULL,NULL,NULL,NULL,ooefent"]]>
+  </point>
+  <point name="sel_prep.g_order" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_where = " WHERE " ,tm.wc CLIPPED,
+                 "   AND ooefent='",g_enterprise,"'",
+                 "   AND ooefent=rtdxent",
+                 "   AND imaaent=rtdxent",                
+                 "   AND ooef001=rtdxsite",
+                 "   AND rtdx001=imaa001",
+                 "   AND imaastus='Y'",
+                 "   AND rtdxstus='Y'",
+                 "   AND ooef101='4'",
+                 "   AND ooef304='Y'"
+                 ]]>
+  </point>
+  <point name="sel_prep.g_where" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[    LET g_from = " FROM ooef_t,rtdx_t,imaa_t"]]>
+  </point>
+  <point name="sel_prep.sql.after" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql =g_sql CLIPPED," ORDER BY ooefent,rtdxsite,imaa009"]]>
+  </point>
+  <section id="ainr621_x01.create_tmptable" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION ainr621_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "ain001.type_t.chr100,ain002.type_t.chr100,ain003.type_t.chr100,ain004.type_t.num20,ain005.type_t.num20_6,ain006.type_t.num20,ain007.type_t.num20,ain008.type_t.num20,ain009.type_t.num20,ain010.type_t.num20,ain011.type_t.num20,ain012.type_t.num20,ain013.type_t.num20_6,ain014.type_t.num15_3,ain015.type_t.num20_6,ain016.type_t.num15_3,ain017.type_t.num20_6,ain018.type_t.num15_3,ain019.type_t.num15_3,ooefent.ooef_t.ooefent" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr621_x01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000000
+#+ 
+#+ Filename...: ainr621_x01
+#+ Description: 門店商品異常報表
+#+ Creator....: 01251(2015-06-23 20:43:01)
+#+ Modifier...: 01251(2015-06-24 17:44:37) -SD/PR-
+]]>
+  </section>
+  <section id="ainr621_x01.global" ver="1" status="" src="s" readonly="">
+    <![CDATA[#報表 x01 樣板自動產生(Version:1)
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="ainr621_x01.ins_data" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION ainr621_x01_ins_data()
+DEFINE sr RECORD 
+   ain001 LIKE type_t.chr100, 
+   ain002 LIKE type_t.chr100, 
+   ain003 LIKE type_t.chr100, 
+   ain004 LIKE type_t.num20, 
+   ain005 LIKE type_t.num20_6, 
+   ain006 LIKE type_t.num20, 
+   ain007 LIKE type_t.num20, 
+   ain008 LIKE type_t.num20, 
+   ain009 LIKE type_t.num20, 
+   ain010 LIKE type_t.num20, 
+   ain011 LIKE type_t.num20, 
+   ain012 LIKE type_t.num20, 
+   ain013 LIKE type_t.num20_6, 
+   ain014 LIKE type_t.num15_3, 
+   ain015 LIKE type_t.num20_6, 
+   ain016 LIKE type_t.num15_3, 
+   ain017 LIKE type_t.num20_6, 
+   ain018 LIKE type_t.num15_3, 
+   ain019 LIKE type_t.num15_3, 
+   ooefent LIKE ooef_t.ooefent
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH ainr621_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.ain001,sr.ain002,sr.ain003,sr.ain004,sr.ain005,sr.ain006,sr.ain007,sr.ain008,sr.ain009,sr.ain010,sr.ain011,sr.ain012,sr.ain013,sr.ain014,sr.ain015,sr.ain016,sr.ain017,sr.ain018,sr.ain019,sr.ooefent
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "ainr621_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr621_x01.ins_prep" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION ainr621_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr621_x01.main" ver="1" status="" src="s" readonly="">
+    <![CDATA[PUBLIC FUNCTION ainr621_x01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "ainr621_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL ainr621_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL ainr621_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL ainr621_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL ainr621_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL ainr621_x01_rep_data()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr621_x01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="ainr621_x01.rep_data" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION ainr621_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr621_x01.sel_prep" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION ainr621_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, 
+       NULL,NULL,NULL,NULL,ooefent"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM ooef_t"
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("ooef_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE ainr621_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE ainr621_x01_curs CURSOR FOR ainr621_x01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

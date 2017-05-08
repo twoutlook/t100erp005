@@ -1,0 +1,12728 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmt420.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0037(2017-02-03 14:56:03), PR版次:0037(2017-02-14 15:08:31)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000585
+#+ Filename...: axmt420
+#+ Description: 銷售核價單維護作業
+#+ Creator....: 03080(2014-01-21 14:52:52)
+#+ Modifier...: 08992 -SD/PR- 08993
+ 
+{</section>}
+ 
+{<section id="axmt420.global" >}
+#應用 t01 樣板自動產生(Version:79)
+#add-point:填寫註解說明 name="global.memo" 
+#151224-00025#5   2015/12/28  By dorishsu   產品特徵欄位若無開窗輸入反而自行手動輸入時,則無法新增至inam_t
+#160307-00001#1   2016/03/07  By Ann_Huang  將訂單的功能(axm-00445)補上，使新的客戶料號可以在axmi120查詢的到, 並且當客戶料號不為空時，才詢問axm-00445
+#160314-00009#15  2016/03/29  By xujing     产品特征自动开窗增加参数判断
+#160318-00005#49  2016/04/01  by pengxin    修正azzi920重复定义之错误讯息
+#160318-00025#35  2016/04/15  by pengxin    將重複內容的錯誤訊息置換為公用錯誤訊息(r.v) 
+#160324-00037#4   2016/04/27  By ming       在整單操作中增加「修改失效日期」，已確認單據才可執行
+#160505-00027#1   2016/05/06  By ywtsai     於axmt420_b_fill3取資料SQL條件單號欄位打錯字(xmdvdocno錯打成xmsdvdocno)，更正之
+#151214-00001#1   2016/05/26  By Sarah      銷售核價的分量計價設置了但是顯示不出來
+#160526-00020#1   2016/06/01  By 02097      調整規格的資料表關聯設定,改為三層的結構
+#160620-00001#1   2016/06/20  By Sarah      按下整單操作的"分量計價維護"會出現axmt420_bcl的錯誤
+#160621-00027#1   2016/06/22  By Sarah      程式中寫死給值axmt420的寫法會造成行業程式開發的問題,將寫死的部分改為g_prog
+#160705-00042#12  2016/07/15  By 02159      把gzcb002=固定寫死的作業代號改成g_prog,然後gzcb_t要多JOIN gzzz_t
+#160711-00005#1   2016/07/21  By 03079      產品特徵控制 
+#160812-00017#6   2016/08/19  By 06814      在satatchange( )的FUNCTION中，有RETURN指令但沒有加上transaction_end( ) 
+#                                           造成transaction沒有結束就直接RETURN
+#160818-00017#42  2016-08-29  By 08734      删除修改未重新判断状态码
+#161026-00025#1   2016/11/10  By 08993      在呼叫v_pmao004前,增加一行轉換錯誤訊息apm-00260改為使用axm-00053
+#161109-00085#6   2016/11/10  By 08993      整批調整系統星號寫法
+#160824-00007#215 2016/11/28  By sakura     新舊值備份處理
+#161221-00064#14  2017/01/10  By zhujing    增加pmao000(1-采购，2-销售),用于区分axmi120和apmi120数据显示
+#161031-00025#20  2017/02/02  By 08992    1.將aooi360_01以嵌入的方式，用頁籤放在axmt420單頭多帳期頁籤與異動資訊頁籤中間
+#                                           要可修改
+#                                           控制類型 =3:內部資訊傳遞 取消不要了
+#                                           項次固定寫入0
+#                                         2.原axmt420的備註action，改為確認後可執行，直接修改單頭新的"備註"頁籤
+#                                         3.axmt420單身最後面增加顯示"長備註"欄位，一樣抓取aooi360的備註顯示
+#                                           項次 = 單身項次
+#                                           控制類型 = 列印在後
+#170116-00071#1  2017/02/14   By 08993      修正輸入料號後沒有帶出客戶料號、客戶料號品名、客戶料號規格的問題
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT FGL aoo_aooi360_01   #161031-00025#20
+#end add-point 
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+#161031-00025#20-s
+GLOBALS
+TYPE type_g_ooff_d        RECORD
+       ooff001 LIKE ooff_t.ooff001, 
+   ooff002 LIKE ooff_t.ooff002, 
+   ooff004 LIKE ooff_t.ooff004, 
+   ooff005 LIKE ooff_t.ooff005, 
+   ooff006 LIKE ooff_t.ooff006, 
+   ooff007 LIKE ooff_t.ooff007, 
+   ooff008 LIKE ooff_t.ooff008, 
+   ooff009 LIKE ooff_t.ooff009, 
+   ooff010 LIKE ooff_t.ooff010, 
+   ooff011 LIKE ooff_t.ooff011, 
+   ooff003 LIKE ooff_t.ooff003, 
+   ooff012 LIKE ooff_t.ooff012, 
+   ooff013 LIKE ooff_t.ooff013, 
+   ooff014 LIKE ooff_t.ooff014
+       END RECORD
+ 
+DEFINE g_ooff_d4          DYNAMIC ARRAY OF type_g_ooff_d
+
+DEFINE g_detail_insert   LIKE type_t.num5   #單身的新增權限
+DEFINE g_detail_delete   LIKE type_t.num5   #單身的刪除權限
+DEFINE g_wc2_i36001      STRING             #备注单身QBE條件
+DEFINE g_d_idx_i36001    LIKE type_t.num5   #备注单身所在筆數
+DEFINE g_d_cnt_i36001    LIKE type_t.num5   #备注单身總筆數
+DEFINE g_appoint_idx     LIKE type_t.num5   #指定進入單身行數
+DEFINE g_ooff001_d       LIKE ooff_t.ooff001
+DEFINE g_ooff002_d       LIKE ooff_t.ooff002
+DEFINE g_ooff003_d       LIKE ooff_t.ooff003
+DEFINE g_ooff004_d       LIKE ooff_t.ooff004
+DEFINE g_ooff005_d       LIKE ooff_t.ooff005
+DEFINE g_ooff006_d       LIKE ooff_t.ooff006
+DEFINE g_ooff007_d       LIKE ooff_t.ooff007
+DEFINE g_ooff008_d       LIKE ooff_t.ooff008
+DEFINE g_ooff009_d       LIKE ooff_t.ooff009
+DEFINE g_ooff010_d       LIKE ooff_t.ooff010
+DEFINE g_ooff011_d       LIKE ooff_t.ooff011
+END GLOBALS
+#161031-00025#20-e
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xmdt_m        RECORD
+       xmdtdocno LIKE xmdt_t.xmdtdocno, 
+   oobal004 LIKE type_t.chr80, 
+   xmdt001 LIKE xmdt_t.xmdt001, 
+   xmdtsite LIKE xmdt_t.xmdtsite, 
+   xmdtdocdt LIKE xmdt_t.xmdtdocdt, 
+   xmdt004 LIKE xmdt_t.xmdt004, 
+   xmdt004_desc LIKE type_t.chr80, 
+   xmdt002 LIKE xmdt_t.xmdt002, 
+   xmdt002_desc LIKE type_t.chr80, 
+   xmdt003 LIKE xmdt_t.xmdt003, 
+   xmdt003_desc LIKE type_t.chr80, 
+   xmdtstus LIKE xmdt_t.xmdtstus, 
+   xmdt005 LIKE xmdt_t.xmdt005, 
+   xmdt005_desc LIKE type_t.chr80, 
+   xmdt006 LIKE xmdt_t.xmdt006, 
+   xmdt006_desc LIKE type_t.chr80, 
+   xmdt007 LIKE xmdt_t.xmdt007, 
+   xmdt008 LIKE xmdt_t.xmdt008, 
+   xmdt009 LIKE xmdt_t.xmdt009, 
+   xmdt009_desc LIKE type_t.chr80, 
+   xmdt011 LIKE xmdt_t.xmdt011, 
+   xmdt011_desc LIKE type_t.chr80, 
+   xmdt019 LIKE xmdt_t.xmdt019, 
+   xmdt019_desc LIKE type_t.chr80, 
+   xmdt030 LIKE xmdt_t.xmdt030, 
+   xmdt013 LIKE xmdt_t.xmdt013, 
+   xmdt014 LIKE xmdt_t.xmdt014, 
+   xmdt010 LIKE xmdt_t.xmdt010, 
+   xmdt012 LIKE xmdt_t.xmdt012, 
+   xmdt020 LIKE xmdt_t.xmdt020, 
+   xmdt015 LIKE xmdt_t.xmdt015, 
+   xmdt016 LIKE xmdt_t.xmdt016, 
+   xmdt017 LIKE xmdt_t.xmdt017, 
+   xmdt018 LIKE xmdt_t.xmdt018, 
+   xmdtownid LIKE xmdt_t.xmdtownid, 
+   xmdtownid_desc LIKE type_t.chr80, 
+   xmdtowndp LIKE xmdt_t.xmdtowndp, 
+   xmdtowndp_desc LIKE type_t.chr80, 
+   xmdtcrtid LIKE xmdt_t.xmdtcrtid, 
+   xmdtcrtid_desc LIKE type_t.chr80, 
+   xmdtcrtdp LIKE xmdt_t.xmdtcrtdp, 
+   xmdtcrtdp_desc LIKE type_t.chr80, 
+   xmdtcrtdt LIKE xmdt_t.xmdtcrtdt, 
+   xmdtmodid LIKE xmdt_t.xmdtmodid, 
+   xmdtmodid_desc LIKE type_t.chr80, 
+   xmdtmoddt LIKE xmdt_t.xmdtmoddt, 
+   xmdtcnfid LIKE xmdt_t.xmdtcnfid, 
+   xmdtcnfid_desc LIKE type_t.chr80, 
+   xmdtcnfdt LIKE xmdt_t.xmdtcnfdt
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmdu_d        RECORD
+       xmduseq LIKE xmdu_t.xmduseq, 
+   xmdu001 LIKE xmdu_t.xmdu001, 
+   xmdu002 LIKE xmdu_t.xmdu002, 
+   imaal003 LIKE type_t.chr500, 
+   imaal004 LIKE type_t.chr500, 
+   xmdu003 LIKE xmdu_t.xmdu003, 
+   xmdu003_desc LIKE type_t.chr500, 
+   xmdu031 LIKE xmdu_t.xmdu031, 
+   xmdu031_desc LIKE type_t.chr500, 
+   xmdu032 LIKE xmdu_t.xmdu032, 
+   xmdu032_desc LIKE type_t.chr500, 
+   xmdu005 LIKE xmdu_t.xmdu005, 
+   l_pmao009 LIKE type_t.chr500, 
+   l_pmao010 LIKE type_t.chr500, 
+   xmdu006 LIKE xmdu_t.xmdu006, 
+   xmdu006_desc LIKE type_t.chr500, 
+   xmdu007 LIKE xmdu_t.xmdu007, 
+   xmdu015 LIKE xmdu_t.xmdu015, 
+   xmdu015_desc LIKE type_t.chr500, 
+   xmdu008 LIKE xmdu_t.xmdu008, 
+   xmdu008_desc LIKE type_t.chr500, 
+   xmdu009 LIKE xmdu_t.xmdu009, 
+   xmdu010 LIKE xmdu_t.xmdu010, 
+   xmdu011 LIKE xmdu_t.xmdu011, 
+   xmdu012 LIKE xmdu_t.xmdu012, 
+   xmdu013 LIKE xmdu_t.xmdu013, 
+   xmdu014 LIKE xmdu_t.xmdu014, 
+   xmdu014_desc LIKE type_t.chr500, 
+   xmdu004 LIKE xmdu_t.xmdu004, 
+   xmdu030 LIKE xmdu_t.xmdu030, 
+   ooff013 LIKE type_t.chr500, 
+   xmdusite LIKE xmdu_t.xmdusite
+       END RECORD
+PRIVATE TYPE type_g_xmdu2_d RECORD
+       xmdvseq LIKE xmdv_t.xmdvseq, 
+   xmdv001 LIKE xmdv_t.xmdv001, 
+   xmdv002 LIKE xmdv_t.xmdv002, 
+   xmdv003 LIKE xmdv_t.xmdv003, 
+   xmdv004 LIKE xmdv_t.xmdv004
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_xmdtdocno LIKE xmdt_t.xmdtdocno,
+      b_xmdtdocdt LIKE xmdt_t.xmdtdocdt,
+      b_xmdt002 LIKE xmdt_t.xmdt002,
+   b_xmdt002_desc LIKE type_t.chr80,
+      b_xmdt003 LIKE xmdt_t.xmdt003,
+   b_xmdt003_desc LIKE type_t.chr80,
+      b_xmdt004 LIKE xmdt_t.xmdt004,
+   b_xmdt004_desc LIKE type_t.chr80,
+      b_xmdt005 LIKE xmdt_t.xmdt005,
+   b_xmdt005_desc LIKE type_t.chr80,
+      b_xmdt015 LIKE xmdt_t.xmdt015,
+      b_xmdt016 LIKE xmdt_t.xmdt016
+       END RECORD
+       
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+#DEFINE g_xmdt_m_o   type_g_xmdt_m
+#161109-00085#6-mod-s
+#DEFINE g_ooef     RECORD LIKE ooef_t.*   #161109-00085#6   mark 
+DEFINE g_ooef      RECORD  #組織基本資料檔
+       ooefent LIKE ooef_t.ooefent, #企業編號
+       ooefstus LIKE ooef_t.ooefstus, #狀態碼
+       ooef001 LIKE ooef_t.ooef001, #組織編號
+       ooef002 LIKE ooef_t.ooef002, #統一編號
+       ooef004 LIKE ooef_t.ooef004, #單據別參照表號
+       ooef005 LIKE ooef_t.ooef005, #單據據點編號
+       ooef006 LIKE ooef_t.ooef006, #所屬國家地區
+       ooef007 LIKE ooef_t.ooef007, #上市櫃公司編號
+       ooef008 LIKE ooef_t.ooef008, #行事曆參照表號
+       ooef009 LIKE ooef_t.ooef009, #製造行事曆對應類別
+       ooef010 LIKE ooef_t.ooef010, #辦公行事曆對應類別
+       ooef011 LIKE ooef_t.ooef011, #專屬國家地區功能
+       ooef012 LIKE ooef_t.ooef012, #聯絡對象識別碼
+       ooef013 LIKE ooef_t.ooef013, #日期顯示格式
+       ooefownid LIKE ooef_t.ooefownid, #資料所有者
+       ooefowndp LIKE ooef_t.ooefowndp, #資料所有部門
+       ooefcrtid LIKE ooef_t.ooefcrtid, #資料建立者
+       ooefcrtdp LIKE ooef_t.ooefcrtdp, #資料建立部門
+       ooefcrtdt LIKE ooef_t.ooefcrtdt, #資料創建日
+       ooefmodid LIKE ooef_t.ooefmodid, #資料修改者
+       ooefmoddt LIKE ooef_t.ooefmoddt, #最近修改日
+       ooef014 LIKE ooef_t.ooef014, #幣別參照表號
+       ooef015 LIKE ooef_t.ooef015, #匯率參照表號
+       ooef016 LIKE ooef_t.ooef016, #主幣別編號
+       ooef017 LIKE ooef_t.ooef017, #法人歸屬
+       ooef018 LIKE ooef_t.ooef018, #時區
+       ooef019 LIKE ooef_t.ooef019, #稅區
+       ooef020 LIKE ooef_t.ooef020, #工商登記號
+       ooef021 LIKE ooef_t.ooef021, #法人代表
+       ooef022 LIKE ooef_t.ooef022, #註冊資本
+       ooef003 LIKE ooef_t.ooef003, #法人否
+       ooef023 LIKE ooef_t.ooef023, #數字/金額顯示格式
+       ooef024 LIKE ooef_t.ooef024, #據點對應客戶/供應商編號
+       ooef025 LIKE ooef_t.ooef025, #品管參照表號
+       ooef026 LIKE ooef_t.ooef026, #預設存款銀行帳戶
+       ooef100 LIKE ooef_t.ooef100, #門店狀態
+       ooef101 LIKE ooef_t.ooef101, #層級類型
+       ooef102 LIKE ooef_t.ooef102, #業態
+       ooef103 LIKE ooef_t.ooef103, #渠道
+       ooef104 LIKE ooef_t.ooef104, #商圈
+       ooef105 LIKE ooef_t.ooef105, #可比店
+       ooef106 LIKE ooef_t.ooef106, #價格參考標準
+       ooef107 LIKE ooef_t.ooef107, #店慶會計期
+       ooef108 LIKE ooef_t.ooef108, #散客編號
+       ooef109 LIKE ooef_t.ooef109, #開業日期
+       ooef110 LIKE ooef_t.ooef110, #閉店日期
+       ooef111 LIKE ooef_t.ooef111, #測量面積
+       ooef112 LIKE ooef_t.ooef112, #建築面積
+       ooef113 LIKE ooef_t.ooef113, #經營面積
+       ooef114 LIKE ooef_t.ooef114, #合作對象總數
+       ooef115 LIKE ooef_t.ooef115, #24小時營業否
+       ooef120 LIKE ooef_t.ooef120, #本店取貨訂定比例
+       ooef121 LIKE ooef_t.ooef121, #異店取貨訂定比例
+       ooef122 LIKE ooef_t.ooef122, #總部配送訂定比例
+       ooef123 LIKE ooef_t.ooef123, #預設收貨成本倉
+       ooef124 LIKE ooef_t.ooef124, #預設出貨成本倉
+       ooef125 LIKE ooef_t.ooef125, #預設在途成本倉
+       ooef150 LIKE ooef_t.ooef150, #門店類別
+       ooef151 LIKE ooef_t.ooef151, #規模類別
+       ooef152 LIKE ooef_t.ooef152, #門店週期
+       ooef153 LIKE ooef_t.ooef153, #銷售區域
+       ooef154 LIKE ooef_t.ooef154, #銷售省區
+       ooef155 LIKE ooef_t.ooef155, #銷售地區
+       ooef156 LIKE ooef_t.ooef156, #銷售片區
+       ooef157 LIKE ooef_t.ooef157, #其他屬性1
+       ooef158 LIKE ooef_t.ooef158, #其他屬性2
+       ooef159 LIKE ooef_t.ooef159, #其他屬性3
+       ooef160 LIKE ooef_t.ooef160, #其他屬性4
+       ooef161 LIKE ooef_t.ooef161, #其他屬性5
+       ooef162 LIKE ooef_t.ooef162, #其他屬性6
+       ooef163 LIKE ooef_t.ooef163, #其他屬性7
+       ooef164 LIKE ooef_t.ooef164, #其他屬性8
+       ooef165 LIKE ooef_t.ooef165, #其他屬性9
+       ooef166 LIKE ooef_t.ooef166, #其他屬性10
+       ooef167 LIKE ooef_t.ooef167, #其他屬性11
+       ooef168 LIKE ooef_t.ooef168, #其他屬性12
+       ooef169 LIKE ooef_t.ooef169, #其他屬性13
+       ooef170 LIKE ooef_t.ooef170, #其他屬性14
+       ooef171 LIKE ooef_t.ooef171, #其他屬性15
+       ooef172 LIKE ooef_t.ooef172, #其他屬性16
+       ooef173 LIKE ooef_t.ooef173, #其他屬性17
+       ooefunit LIKE ooef_t.ooefunit, #應用組織
+       ooef200 LIKE ooef_t.ooef200, #分群編號
+       ooef201 LIKE ooef_t.ooef201, #營運據點
+       ooef202 LIKE ooef_t.ooef202, #預測組織
+       ooef203 LIKE ooef_t.ooef203, #部門組織
+       ooef204 LIKE ooef_t.ooef204, #核算組織
+       ooef205 LIKE ooef_t.ooef205, #預算組織
+       ooef206 LIKE ooef_t.ooef206, #資金組織
+       ooef207 LIKE ooef_t.ooef207, #資產組織
+       ooef208 LIKE ooef_t.ooef208, #銷售組織
+       ooef209 LIKE ooef_t.ooef209, #銷售範圍
+       ooef210 LIKE ooef_t.ooef210, #採購組織
+       ooef211 LIKE ooef_t.ooef211, #物流組織
+       ooef212 LIKE ooef_t.ooef212, #結算組織
+       ooef213 LIKE ooef_t.ooef213, #nouse
+       ooef214 LIKE ooef_t.ooef214, #nouse
+       ooef215 LIKE ooef_t.ooef215, #nouse
+       ooef216 LIKE ooef_t.ooef216, #nouse
+       ooef217 LIKE ooef_t.ooef217, #nouse
+       ooef301 LIKE ooef_t.ooef301, #營銷中心
+       ooef302 LIKE ooef_t.ooef302, #配送中心
+       ooef303 LIKE ooef_t.ooef303, #採購中心
+       ooef304 LIKE ooef_t.ooef304, #門店
+       ooef305 LIKE ooef_t.ooef305, #辦事處
+       ooef306 LIKE ooef_t.ooef306, #nouse
+       ooef307 LIKE ooef_t.ooef307, #nouse
+       ooef308 LIKE ooef_t.ooef308, #nouse
+       ooef309 LIKE ooef_t.ooef309, #nouse
+       ooef310 LIKE ooef_t.ooef310, #nouse
+       ooef126 LIKE ooef_t.ooef126, #預設收貨非成本倉
+       ooef127 LIKE ooef_t.ooef127, #預設出貨非成本倉
+       ooef128 LIKE ooef_t.ooef128, #預設在途非成本倉
+       ooef116 LIKE ooef_t.ooef116 #語言別
+          END RECORD
+#161109-00085#6-mod-e
+#DEFINE g_xmdu_d_o   type_g_xmdu_d
+DEFINE g_axmt420_err  DYNAMIC ARRAY OF RECORD                #錯誤訊息ARRAY
+       req           LIKE type_t.num10,    #項次
+       gzze001       LIKE gzze_t.gzze001   #錯誤訊息代碼
+                     END RECORD
+DEFINE l_ac_page1    LIKE type_t.num5
+DEFINE g_gzcb004_1   LIKE gzcb_t.gzcb004   #axmt420對應在系統分類碼24的異動碼號
+DEFINE g_pmao_flag   LIKE type_t.chr1
+DEFINE g_detail_id          STRING           #紀錄停留在哪個Page #161031-00025#20 add
+#end add-point
+       
+#模組變數(Module Variables)
+DEFINE g_xmdt_m          type_g_xmdt_m
+DEFINE g_xmdt_m_t        type_g_xmdt_m
+DEFINE g_xmdt_m_o        type_g_xmdt_m
+DEFINE g_xmdt_m_mask_o   type_g_xmdt_m #轉換遮罩前資料
+DEFINE g_xmdt_m_mask_n   type_g_xmdt_m #轉換遮罩後資料
+ 
+   DEFINE g_xmdtdocno_t LIKE xmdt_t.xmdtdocno
+ 
+ 
+DEFINE g_xmdu_d          DYNAMIC ARRAY OF type_g_xmdu_d
+DEFINE g_xmdu_d_t        type_g_xmdu_d
+DEFINE g_xmdu_d_o        type_g_xmdu_d
+DEFINE g_xmdu_d_mask_o   DYNAMIC ARRAY OF type_g_xmdu_d #轉換遮罩前資料
+DEFINE g_xmdu_d_mask_n   DYNAMIC ARRAY OF type_g_xmdu_d #轉換遮罩後資料
+DEFINE g_xmdu2_d          DYNAMIC ARRAY OF type_g_xmdu2_d
+DEFINE g_xmdu2_d_t        type_g_xmdu2_d
+DEFINE g_xmdu2_d_o        type_g_xmdu2_d
+DEFINE g_xmdu2_d_mask_o   DYNAMIC ARRAY OF type_g_xmdu2_d #轉換遮罩前資料
+DEFINE g_xmdu2_d_mask_n   DYNAMIC ARRAY OF type_g_xmdu2_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+ 
+DEFINE g_wc2_table2   STRING
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                         #Current Dialog
+                                                               
+DEFINE g_pagestart           LIKE type_t.num10                 
+DEFINE gwin_curr             ui.Window                         #Current Window
+DEFINE gfrm_curr             ui.Form                           #Current Form
+DEFINE g_page_action         STRING                            #page action
+DEFINE g_header_hidden       LIKE type_t.num5                  #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5                  #隱藏工作Panel
+DEFINE g_page                STRING                            #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10                  #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx_tmp      LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10                  #單身2目前所在筆數
+DEFINE g_detail_idx_list     DYNAMIC ARRAY OF LIKE type_t.num10 #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10                  #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10                  #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10                  #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                             #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10                  #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                            #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10                  #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5                   #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+DEFINE g_idx_group           om.SaxAttributes              #頁籤群組
+DEFINE g_master_commit       LIKE type_t.chr1              #確認單頭是否修改過
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+ 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmt420.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+      
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axm","")
+ 
+   #add-point:作業初始化 name="main.init"
+      
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+ 
+   #end add-point
+   LET g_forupd_sql = " SELECT xmdtdocno,'',xmdt001,xmdtsite,xmdtdocdt,xmdt004,'',xmdt002,'',xmdt003, 
+       '',xmdtstus,xmdt005,'',xmdt006,'',xmdt007,xmdt008,xmdt009,'',xmdt011,'',xmdt019,'',xmdt030,xmdt013, 
+       xmdt014,xmdt010,xmdt012,xmdt020,xmdt015,xmdt016,xmdt017,xmdt018,xmdtownid,'',xmdtowndp,'',xmdtcrtid, 
+       '',xmdtcrtdp,'',xmdtcrtdt,xmdtmodid,'',xmdtmoddt,xmdtcnfid,'',xmdtcnfdt", 
+                      " FROM xmdt_t",
+                      " WHERE xmdtent= ? AND xmdtdocno=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+      
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE axmt420_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.xmdtdocno,t0.xmdt001,t0.xmdtsite,t0.xmdtdocdt,t0.xmdt004,t0.xmdt002, 
+       t0.xmdt003,t0.xmdtstus,t0.xmdt005,t0.xmdt006,t0.xmdt007,t0.xmdt008,t0.xmdt009,t0.xmdt011,t0.xmdt019, 
+       t0.xmdt030,t0.xmdt013,t0.xmdt014,t0.xmdt010,t0.xmdt012,t0.xmdt020,t0.xmdt015,t0.xmdt016,t0.xmdt017, 
+       t0.xmdt018,t0.xmdtownid,t0.xmdtowndp,t0.xmdtcrtid,t0.xmdtcrtdp,t0.xmdtcrtdt,t0.xmdtmodid,t0.xmdtmoddt, 
+       t0.xmdtcnfid,t0.xmdtcnfdt,t1.pmaal004 ,t2.ooag011 ,t3.ooefl003 ,t4.ooail003 ,t5.oocql004 ,t6.oojdl003 , 
+       t7.ooag011 ,t8.ooefl003 ,t9.ooag011 ,t10.ooefl003 ,t11.ooag011 ,t12.ooag011",
+               " FROM xmdt_t t0",
+                              " LEFT JOIN pmaal_t t1 ON t1.pmaalent="||g_enterprise||" AND t1.pmaal001=t0.xmdt004 AND t1.pmaal002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t2 ON t2.ooagent="||g_enterprise||" AND t2.ooag001=t0.xmdt002  ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent="||g_enterprise||" AND t3.ooefl001=t0.xmdt003 AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooail_t t4 ON t4.ooailent="||g_enterprise||" AND t4.ooail001=t0.xmdt005 AND t4.ooail002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t5 ON t5.oocqlent="||g_enterprise||" AND t5.oocql001='238' AND t5.oocql002=t0.xmdt011 AND t5.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oojdl_t t6 ON t6.oojdlent="||g_enterprise||" AND t6.oojdl001=t0.xmdt019 AND t6.oojdl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t7 ON t7.ooagent="||g_enterprise||" AND t7.ooag001=t0.xmdtownid  ",
+               " LEFT JOIN ooefl_t t8 ON t8.ooeflent="||g_enterprise||" AND t8.ooefl001=t0.xmdtowndp AND t8.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t9 ON t9.ooagent="||g_enterprise||" AND t9.ooag001=t0.xmdtcrtid  ",
+               " LEFT JOIN ooefl_t t10 ON t10.ooeflent="||g_enterprise||" AND t10.ooefl001=t0.xmdtcrtdp AND t10.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t11 ON t11.ooagent="||g_enterprise||" AND t11.ooag001=t0.xmdtmodid  ",
+               " LEFT JOIN ooag_t t12 ON t12.ooagent="||g_enterprise||" AND t12.ooag001=t0.xmdtcnfid  ",
+ 
+               " WHERE t0.xmdtent = " ||g_enterprise|| " AND t0.xmdtdocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE axmt420_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+            
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axmt420 WITH FORM cl_ap_formpath("axm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL axmt420_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL axmt420_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+            
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_axmt420
+      
+   END IF 
+   
+   CLOSE axmt420_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+      
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="axmt420.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION axmt420_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point    
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_bas0036     LIKE type_t.chr1  #160711-00005#1 20160721 
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   
+   #各個page指標
+   LET g_detail_idx_list[1] = 1 
+   LET g_detail_idx_list[2] = 1
+ 
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+      CALL cl_set_combo_scc_part('xmdtstus','13','N,Y,A,D,R,W,X')
+ 
+      CALL cl_set_combo_scc('xmdt017','2046') 
+   CALL cl_set_combo_scc('xmdt018','2042') 
+ 
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #page群組
+   LET g_idx_group = om.SaxAttributes.create()
+   CALL g_idx_group.addAttribute("'1',","1")
+   CALL g_idx_group.addAttribute("'2',","1")
+ 
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   #161031-00025#20-s
+   #子程式畫面取代主程式元件
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aoo", "aooi360_01"), "grid_remarks", "Table", "s_detail1_aooi360_01")
+   CALL cl_set_combo_scc_part('ooff012','11','1,2,4')
+   CALL cl_set_comp_visible("ooff003",FALSE)
+   #161031-00025#20-e      
+         #161109-00085#6-mod-s
+#         SELECT * INTO g_ooef.* FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_site   #161109-00085#6   mark
+         SELECT ooefent,ooefstus,ooef001,ooef002,ooef004,ooef005,ooef006,ooef007,ooef008,ooef009,ooef010,ooef011,ooef012,
+                ooef013,ooefownid,ooefowndp,ooefcrtid,ooefcrtdp,ooefcrtdt,ooefmodid,ooefmoddt,ooef014,ooef015,ooef016,ooef017,
+                ooef018,ooef019,ooef020,ooef021,ooef022,ooef003,ooef023,ooef024,ooef025,ooef026,ooef100,ooef101,ooef102,ooef103,
+                ooef104,ooef105,ooef106,ooef107,ooef108,ooef109,ooef110,ooef111,ooef112,ooef113,ooef114,ooef115,ooef120,ooef121,
+                ooef122,ooef123,ooef124,ooef125,ooef150,ooef151,ooef152,ooef153,ooef154,ooef155,ooef156,ooef157,ooef158,ooef159,
+                ooef160,ooef161,ooef162,ooef163,ooef164,ooef165,ooef166,ooef167,ooef168,ooef169,ooef170,ooef171,ooef172,ooef173,
+                ooefunit,ooef200,ooef201,ooef202,ooef203,ooef204,ooef205,ooef206,ooef207,ooef208,ooef209,ooef210,ooef211,ooef212,
+                ooef213,ooef214,ooef215,ooef216,ooef217,ooef301,ooef302,ooef303,ooef304,ooef305,ooef306,ooef307,ooef308,ooef309,
+                ooef310,ooef126,ooef127,ooef128,ooef116 
+          INTO g_ooef.ooefent,g_ooef.ooefstus,g_ooef.ooef001,g_ooef.ooef002,g_ooef.ooef004,g_ooef.ooef005,g_ooef.ooef006,
+               g_ooef.ooef007,g_ooef.ooef008,g_ooef.ooef009,g_ooef.ooef010,g_ooef.ooef011,g_ooef.ooef012,g_ooef.ooef013,
+               g_ooef.ooefownid,g_ooef.ooefowndp,g_ooef.ooefcrtid,g_ooef.ooefcrtdp,g_ooef.ooefcrtdt,g_ooef.ooefmodid,g_ooef.ooefmoddt,
+               g_ooef.ooef014,g_ooef.ooef015,g_ooef.ooef016,g_ooef.ooef017,g_ooef.ooef018,g_ooef.ooef019,g_ooef.ooef020,g_ooef.ooef021,
+               g_ooef.ooef022,g_ooef.ooef003,g_ooef.ooef023,g_ooef.ooef024,g_ooef.ooef025,g_ooef.ooef026,g_ooef.ooef100,g_ooef.ooef101,
+               g_ooef.ooef102,g_ooef.ooef103,g_ooef.ooef104,g_ooef.ooef105,g_ooef.ooef106,g_ooef.ooef107,g_ooef.ooef108,g_ooef.ooef109,
+               g_ooef.ooef110,g_ooef.ooef111,g_ooef.ooef112,g_ooef.ooef113,g_ooef.ooef114,g_ooef.ooef115,g_ooef.ooef120,g_ooef.ooef121,
+               g_ooef.ooef122,g_ooef.ooef123,g_ooef.ooef124,g_ooef.ooef125,g_ooef.ooef150,g_ooef.ooef151,g_ooef.ooef152,g_ooef.ooef153,
+               g_ooef.ooef154,g_ooef.ooef155,g_ooef.ooef156,g_ooef.ooef157,g_ooef.ooef158,g_ooef.ooef159,g_ooef.ooef160,g_ooef.ooef161,
+               g_ooef.ooef162,g_ooef.ooef163,g_ooef.ooef164,g_ooef.ooef165,g_ooef.ooef166,g_ooef.ooef167,g_ooef.ooef168,g_ooef.ooef169,
+               g_ooef.ooef170,g_ooef.ooef171,g_ooef.ooef172,g_ooef.ooef173,g_ooef.ooefunit,g_ooef.ooef200,g_ooef.ooef201,g_ooef.ooef202,
+               g_ooef.ooef203,g_ooef.ooef204,g_ooef.ooef205,g_ooef.ooef206,g_ooef.ooef207,g_ooef.ooef208,g_ooef.ooef209,g_ooef.ooef210,
+               g_ooef.ooef211,g_ooef.ooef212,g_ooef.ooef213,g_ooef.ooef214,g_ooef.ooef215,g_ooef.ooef216,g_ooef.ooef217,g_ooef.ooef301,
+               g_ooef.ooef302,g_ooef.ooef303,g_ooef.ooef304,g_ooef.ooef305,g_ooef.ooef306,g_ooef.ooef307,g_ooef.ooef308,g_ooef.ooef309,
+               g_ooef.ooef310,g_ooef.ooef126,g_ooef.ooef127,g_ooef.ooef128,g_ooef.ooef116 
+          FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_site
+         #161109-00085#6-mod-e
+   LET g_gzcb004_1 = NULL
+   #160705-00042#12 160715 by sakura mark(S)   
+   #SELECT gzcb004 INTO g_gzcb004_1 
+   #  FROM gzcb_t
+   # WHERE gzcb001 = '24'
+##160621-00027#1-s
+##      AND gzcb002 = 'axmt420'
+#      AND gzcb002 = g_code      
+##160621-00027#1-e
+   #160705-00042#12 160715 by sakura mark(E)
+   #160705-00042#12 160715 by sakura add(S)
+   SELECT gzcb004 INTO g_gzcb004_1 
+     FROM gzcb_t,gzzz_t 
+    WHERE gzcb001 = '24' 
+      AND gzcb002 = gzzz006 
+      AND gzzz001 = g_prog
+   #160705-00042#12 160715 by sakura add(E)
+      
+  #LET g_forupd_sql = "SELECT xmduseq,xmdu001,xmdu002,'','',xmdu003,'',xmdu005,xmdu006,'',xmdu007,xmdu015, 
+  #    '',xmdu008,xmdu009,xmdu010,xmdu011,xmdu012,xmdu013,xmdu014,'',xmdu004,xmdu030,'','','','',''  
+  #    FROM xmdu_t WHERE xmduent=? AND xmdudocno=? AND xmduseq=? FOR UPDATE"
+  #
+  #LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+  #DECLARE axmt420_bcl2 CURSOR FROM g_forupd_sql
+   
+   #所有錯誤都跳窗
+   LET g_errshow = 1
+   
+   #160711-00005#1 20160721 -----(S) 
+   CALL cl_get_para(g_enterprise,g_site,'S-BAS-0036') RETURNING l_bas0036
+   IF l_bas0036 = 'N' OR cl_null(l_bas0036) THEN
+      CALL cl_set_comp_visible("xmdu003,xmdu003_desc",FALSE)
+   END IF
+   #160711-00005#1 20160721 -----(E) 
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL axmt420_default_search()
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.ui_dialog" >}
+#+ 功能選單
+PRIVATE FUNCTION axmt420_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   DEFINE  l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE  l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE  l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   #160324-00037#4 20160427 add by ming -----(S) 
+   DEFINE l_success              LIKE type_t.num5
+   #160324-00037#4 20160427 add by ming -----(E)  
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   #因應查詢方案進行處理
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL axmt420_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+                        
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+            
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+         CALL gfrm_curr.setElementHidden("mainlayout",1)
+   CALL gfrm_curr.setElementHidden("worksheet",0)
+   LET g_main_hidden = 1
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_xmdt_m.* TO NULL
+         CALL g_xmdu_d.clear()
+         CALL g_xmdu2_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL axmt420_init()
+      END IF
+   
+      CALL lib_cl_dlg.cl_dlg_before_display()
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+         #左側瀏覽頁簽
+         DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTES(COUNT=g_header_cnt)
+            BEFORE ROW
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+         
+               IF g_current_idx > g_browser.getLength() THEN
+                  LET g_current_idx = g_browser.getLength()
+               END IF 
+               
+               CALL axmt420_fetch('') # reload data
+               LET l_ac = 1
+               CALL axmt420_ui_detailshow() #Setting the current row 
+         
+               CALL axmt420_idx_chk()
+               #NEXT FIELD xmduseq
+         
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+         END DISPLAY
+    
+         DISPLAY ARRAY g_xmdu_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL axmt420_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[1] = l_ac
+               CALL g_idx_group.addAttribute("'1',",l_ac)
+               CALL axmt420_b_fill2('2')
+ 
+               #add-point:page1, before row動作 name="ui_dialog.page1.before_row"
+                                             LET l_ac_page1 = l_ac
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL axmt420_idx_chk()
+               #add-point:page1自定義行為 name="ui_dialog.page1.before_display"
+                                             LET l_ac_page1 = l_ac
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為 name="ui_dialog.page1.action"
+                                       
+            #end add-point
+               
+         END DISPLAY
+        
+ 
+         
+         #第二階單身段落
+         DISPLAY ARRAY g_xmdu2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL axmt420_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx2 = l_ac
+               LET g_detail_idx_list[2] = l_ac
+               CALL g_idx_group.addAttribute("'2',",l_ac)
+               
+               #add-point:page2, before row動作 name="ui_dialog.body2.before_row"
+                              
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在下階單身則控制筆數位置
+               IF g_loc = 'd' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+               END IF
+               LET g_loc = 'd'
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               #顯示單身筆數
+               CALL axmt420_idx_chk()
+               #add-point:page2自定義行為 name="ui_dialog.body2.before_display"
+              #CALL axmt420_b_fill3(l_ac_page1)    #160526-00020#1 mark
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_2)
+            
+         
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+                                      
+            #end add-point
+         
+         END DISPLAY
+ 
+         
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         SUBDIALOG aoo_aooi360_01.aooi360_01_display     #161031-00025#20 add         
+         #end add-point
+         
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+         SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL axmt420_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+            IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               LET g_current_idx = g_current_row
+            END IF
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL axmt420_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL axmt420_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL axmt420_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+                                    NEXT FIELD xmduseq     
+            #end add-point
+ 
+         #add-point:ui_dialog段more_action name="ui_dialog.more_action"
+         #161031-00025#20-s
+         ON ACTION remarks_page
+            LET g_detail_id = "remarks_page"
+            NEXT FIELD ooff012
+         #161031-00025#20-e
+         #end add-point
+ 
+         #狀態碼切換
+         ON ACTION statechange
+            LET g_action_choice = "statechange"
+            CALL axmt420_statechange()
+            #根據資料狀態切換action狀態
+            CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+            CALL axmt420_set_act_visible()   
+            CALL axmt420_set_act_no_visible()
+            IF NOT (g_xmdt_m.xmdtdocno IS NULL
+ 
+              ) THEN
+               #組合條件
+               LET g_add_browse = " xmdtent = " ||g_enterprise|| " AND",
+                                  " xmdtdocno = '", g_xmdt_m.xmdtdocno, "' "
+ 
+               #填到對應位置
+               CALL axmt420_browser_fill("")
+            END IF
+         #應用 a32 樣板自動產生(Version:3)
+         #簽核狀況
+         ON ACTION bpm_status
+            #查詢簽核狀況, 統一建立HyperLink
+            CALL cl_bpm_status()
+            #add-point:ON ACTION bpm_status name="menu.bpm_status"
+            
+            #END add-point
+ 
+ 
+ 
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "xmdt_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "xmdu_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL axmt420_browser_fill("F")   #browser_fill()會將notice區塊清空
+               CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "xmdt_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "xmdu_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL axmt420_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code = "-100" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL axmt420_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            CALL cl_notice()
+          
+         #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+               
+               #end add-point
+               CALL axmt420_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL axmt420_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL axmt420_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL axmt420_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL axmt420_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL axmt420_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL axmt420_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL axmt420_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL axmt420_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL axmt420_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL axmt420_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_xmdu_d)
+                  LET g_export_id[1]   = "s_detail1"
+                  LET g_export_node[2] = base.typeInfo.create(g_xmdu2_d)
+                  LET g_export_id[2]   = "s_detail2"
+ 
+                  #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+                  #161031-00025#20-s
+                  LET g_export_node[3] = base.typeInfo.create(g_ooff_d4)
+                  LET g_export_id[3]   = "s_detail1_aooi360_01"
+                  #161031-00025#20-e
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+         #瀏覽頁折疊
+         ON ACTION worksheethidden   
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD xmduseq
+            END IF
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL axmt420_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+                              
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL axmt420_modify()
+               #add-point:ON ACTION modify_detail name="menu.modify_detail"
+                              
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_axmt420_01
+            LET g_action_choice="open_axmt420_01"
+            IF cl_auth_chk_act("open_axmt420_01") THEN
+               
+               #add-point:ON ACTION open_axmt420_01 name="menu.open_axmt420_01"
+               LET l_ac_page1 = DIALOG.getCurrentRow("s_detail1")
+               IF cl_null(l_ac_page1) THEN LET l_ac_page1 = 0 END IF
+               IF l_ac_page1 > 0 THEN
+                  CALL s_transaction_begin()
+                  
+                  #lock單頭
+                  OPEN axmt420_cl USING g_enterprise,g_xmdt_m.xmdtdocno
+
+                  IF STATUS THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  STATUS
+                     LET g_errparam.extend = "OPEN axmt420_cl:"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CLOSE axmt420_cl
+                     CALL s_transaction_end('N','0')
+                     EXIT DIALOG
+                  END IF
+                  
+                  #lock單身
+                  IF NOT axmt420_lock_b2("xmdu_t","'1'",g_xmdu_d[l_ac_page1].xmduseq) THEN  #160705-00001 by whitney modify l_ac_page1->g_xmdu_d[l_ac_page1].xmduseq
+                     CALL s_transaction_end('N','0')
+                     EXIT DIALOG
+                  ELSE
+                     IF cl_null(g_xmdu_d[l_ac_page1].xmdu009) OR g_xmdu_d[l_ac_page1].xmdu009 = 'N' THEN
+                        #沒勾分量計價
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'axm-00016'
+                        LET g_errparam.extend = "open_axmt420_01"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                     ELSE               
+                        IF NOT cl_null(g_xmdt_m.xmdtdocno) 
+                           AND l_ac_page1 > 0 THEN
+                           CALL axmt420_01(g_xmdt_m.xmdtdocno,
+                                           g_xmdu_d[l_ac_page1].xmduseq,  #160705-00001 by whitney modify l_ac_page1->g_xmdu_d[l_ac_page1].xmduseq
+                                           g_xmdu_d[l_ac_page1].xmdu002, 
+                                           g_xmdu_d[l_ac_page1].xmdu003, 
+                                           g_xmdu_d[l_ac_page1].xmdu031, 
+                                           g_xmdu_d[l_ac_page1].xmdu032)
+                           CALL axmt420_b_fill()
+                        END IF
+                     END IF
+                  END IF
+#                  CALL axmt420_unlock_b("xmdu_t","'1'")   #160614-00030#1 mark
+                  CALL axmt420_unlock_b("xmdv_t","'2'")    #160614-00030#1 mod
+                  CLOSE axmt420_cl
+                  CALL s_transaction_end('Y','0')
+
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION action_1
+            LET g_action_choice="action_1"
+            IF cl_auth_chk_act("action_1") THEN
+               
+               #add-point:ON ACTION action_1 name="menu.action_1"
+                              
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL axmt420_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+                              
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL axmt420_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+                              
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               #CALL axmr420_g01("xmdtent ="|| g_enterprise ||" AND xmdtdocno ='"|| g_xmdt_m.xmdtdocno||"'")
+               LET g_rep_wc = "xmdtent ="|| g_enterprise ||" AND xmdtdocno ='"|| g_xmdt_m.xmdtdocno||"'"
+               
+               #END add-point
+               &include "erp/axm/axmt420_rep.4gl"
+               #add-point:ON ACTION output.after name="menu.after_output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               #CALL axmr420_g01("xmdtent ="|| g_enterprise ||" AND xmdtdocno ='"|| g_xmdt_m.xmdtdocno||"'")
+               LET g_rep_wc = "xmdtent ="|| g_enterprise ||" AND xmdtdocno ='"|| g_xmdt_m.xmdtdocno||"'"
+               
+               #END add-point
+               &include "erp/axm/axmt420_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu.after_quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL axmt420_reproduce()
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+                              
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL axmt420_query()
+               #add-point:ON ACTION query name="menu.query"
+                              
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION memo
+            LET g_action_choice="memo"
+            IF cl_auth_chk_act("memo") THEN
+               
+               #add-point:ON ACTION memo name="menu.memo"
+#160621-00027#1-s
+#               CALL aooi360_02('6','axmt420',g_xmdt_m.xmdtdocno,'','','','','','','','','')
+               #CALL aooi360_02('6',g_prog,g_xmdt_m.xmdtdocno,'','','','','','','','','') #161031-00025#20 mark
+#160621-00027#1-e
+               #161031-00025#20-s
+               IF NOT cl_null(g_xmdt_m.xmdtdocno) THEN
+                  CALL axmt420_remaks()
+               END IF
+               #161031-00025#20-e
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION change_xmdt016
+            LET g_action_choice="change_xmdt016"
+            IF cl_auth_chk_act("change_xmdt016") THEN
+               
+               #add-point:ON ACTION change_xmdt016 name="menu.change_xmdt016"
+               #160324-00037#4 20160427 add by ming -----(S)  
+               CALL s_transaction_begin()
+               CALL axmt420_change_xmdt016() RETURNING l_success
+
+               IF l_success THEN
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL s_transaction_end('N','0')
+               END IF
+               #160324-00037#4 20160427 add by ming -----(E)   
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL axmt420_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL axmt420_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL axmt420_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow(g_xmdt_m.xmdtdocdt)
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:79) ---add start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:79) --- add end ---
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.browser_fill" >}
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION axmt420_browser_fill(ps_page_action)
+   #add-point:browser_fill段define(客製用) name="browser_fill.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+      
+   #end add-point    
+   
+   #add-point:Function前置處理 name="browser_fill.before_browser_fill"
+   #161031-00025#20-s
+   IF cl_null(g_add_browse) THEN
+      CALL aooi360_01_clear_detail()   #清除备注单身
+   END IF
+   #161031-00025#20-e
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前 name="browser_fill.before_foreach"
+   LET l_wc = l_wc," AND xmdtsite = '",g_site,"' "   
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT DISTINCT xmdtdocno ",
+                      " FROM xmdt_t ",
+                      " ",
+                      " LEFT JOIN xmdu_t ON xmduent = xmdtent AND xmdtdocno = xmdudocno ", "  ",
+                      #add-point:browser_fill段sql(xmdu_t1) name="browser_fill.cnt.join.}"
+                      
+                      #end add-point
+ 
+                      " LEFT JOIN xmdv_t ON xmdvent = xmdtent AND xmdudocno = xmdvdocno AND xmduseq = xmdvseq", "  ",
+                      #add-point:browser_fill段sql(xmdv_t1) name="browser_fill.cnt.join.xmdv_t1"
+                      " LEFT JOIN ooff_t ON ooffent = xmdtent AND ooff001 = '7' 
+                              AND ooff002 = 'axmt420' AND xmdtdocno = ooff003  AND ooff004 = xmduseq ",  "  ",   #161031-00025#20 add
+                      #end add-point
+ 
+ 
+                      " ", 
+                      " ", 
+ 
+                      " ",
+ 
+ 
+                      " WHERE xmdtent = " ||g_enterprise|| " AND xmduent = " ||g_enterprise|| " AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("xmdt_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT DISTINCT xmdtdocno ",
+                      " FROM xmdt_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE xmdtent = " ||g_enterprise|| " AND ",l_wc CLIPPED, cl_sql_add_filter("xmdt_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc name="browser_fill.cnt_sqlwc"
+   #161031-00025#20-s
+   IF NOT cl_null(g_wc2_i36001) AND g_wc2_i36001 <> " 1=1" THEN
+      LET l_sub_sql = l_sub_sql CLIPPED, " AND EXISTS (SELECT ooff003 FROM ooff_t 
+                                                        WHERE ooffent = ",g_enterprise," AND ooff001 = '6' 
+                                                          AND ooff002 = 'axmt420' AND ooff003 = xmdtdocno
+                                                          AND ooff004 = '0' AND ",g_wc2_i36001 CLIPPED ,")" 
+   END IF                                                    
+   #161031-00025#20-e
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(1) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前 name="browser_fill.before_count"
+   LET g_wc = g_wc," AND xmdtsite = '",g_site,"' "   
+   #end add-point
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+      FREE header_cnt_pre
+   END IF
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code = 9035 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_xmdt_m.* TO NULL
+      CALL g_xmdu_d.clear()        
+      CALL g_xmdu2_d.clear() 
+ 
+      #add-point:browser_fill g_add_browse段額外處理 name="browser_fill.add_browse.other"
+      
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.xmdtdocno,t0.xmdtdocdt,t0.xmdt002,t0.xmdt003,t0.xmdt004,t0.xmdt005,t0.xmdt015,t0.xmdt016 Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.xmdtstus,t0.xmdtdocno,t0.xmdtdocdt,t0.xmdt002,t0.xmdt003,t0.xmdt004, 
+          t0.xmdt005,t0.xmdt015,t0.xmdt016,t1.ooail003 ",
+                  " FROM xmdt_t t0",
+                  "  ",
+                  "  LEFT JOIN xmdu_t ON xmduent = xmdtent AND xmdtdocno = xmdudocno ", "  ", 
+                  #add-point:browser_fill段sql(xmdu_t1) name="browser_fill.join.xmdu_t1"
+                  
+                  #end add-point
+ 
+                  "  LEFT JOIN xmdv_t ON xmdvent = xmdtent AND xmdudocno = xmdvdocno AND xmduseq = xmdvseq", "  ", 
+                  #add-point:browser_fill段sql(xmdv_t1) name="browser_fill.join.xmdv_t1"
+                  " LEFT JOIN ooff_t ON ooffent = xmdtent AND ooff001 = '7' 
+                          AND ooff002 = 'axmt420' AND xmdtdocno = ooff003  AND ooff004 = xmduseq ",  "  ",   #161031-00025#20 add
+                  #end add-point
+ 
+ 
+                  " ", 
+ 
+                  " ",
+ 
+ 
+                                 " LEFT JOIN ooail_t t1 ON t1.ooailent="||g_enterprise||" AND t1.ooail001=t0.xmdt005 AND t1.ooail002='"||g_dlang||"' ",
+ 
+                  " WHERE t0.xmdtent = " ||g_enterprise|| " AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("xmdt_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.xmdtstus,t0.xmdtdocno,t0.xmdtdocdt,t0.xmdt002,t0.xmdt003,t0.xmdt004, 
+          t0.xmdt005,t0.xmdt015,t0.xmdt016,t1.ooail003 ",
+                  " FROM xmdt_t t0",
+                  "  ",
+                                 " LEFT JOIN ooail_t t1 ON t1.ooailent="||g_enterprise||" AND t1.ooail001=t0.xmdt005 AND t1.ooail002='"||g_dlang||"' ",
+ 
+                  " WHERE t0.xmdtent = " ||g_enterprise|| " AND ",l_wc, cl_sql_add_filter("xmdt_t")
+   END IF
+   #add-point:browser_fill,sql wc name="browser_fill.fill_sqlwc"
+   #161031-00025#20-s
+   IF NOT cl_null(g_wc2_i36001) AND g_wc2_i36001 <> " 1=1" THEN
+      LET g_sql = g_sql CLIPPED, " AND EXISTS (SELECT ooff003 FROM ooff_t 
+                                                        WHERE ooffent = ",g_enterprise," AND ooff001 = '6' 
+                                                          AND ooff002 = 'axmt420' AND ooff003 = xmdtdocno
+                                                          AND ooff004 = '0' AND ",g_wc2_i36001 CLIPPED ,")" 
+   END IF                                                    
+   #161031-00025#20-e
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY xmdtdocno ",g_order
+ 
+   #add-point:browser_fill,before_prepare name="browser_fill.before_prepare"
+      
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"xmdt_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      #add-point:browser_fill段open cursor name="browser_fill.open"
+      
+      #end add-point
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_xmdtdocno,g_browser[g_cnt].b_xmdtdocdt, 
+          g_browser[g_cnt].b_xmdt002,g_browser[g_cnt].b_xmdt003,g_browser[g_cnt].b_xmdt004,g_browser[g_cnt].b_xmdt005, 
+          g_browser[g_cnt].b_xmdt015,g_browser[g_cnt].b_xmdt016,g_browser[g_cnt].b_xmdt005_desc
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "Foreach:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+      
+         #add-point:browser_fill段reference name="browser_fill.reference"
+                  CALL axmt420_b_xmdt002_ref()
+      CALL axmt420_b_xmdt003_ref()
+      CALL axmt420_b_xmdt004_ref()
+         #end add-point
+      
+         #遮罩相關處理
+         CALL axmt420_browser_mask()
+      
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/unconfirmed.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/confirmed.png"
+         WHEN "A"
+            LET g_browser[g_cnt].b_statepic = "stus/16/approved.png"
+         WHEN "D"
+            LET g_browser[g_cnt].b_statepic = "stus/16/withdraw.png"
+         WHEN "R"
+            LET g_browser[g_cnt].b_statepic = "stus/16/rejection.png"
+         WHEN "W"
+            LET g_browser[g_cnt].b_statepic = "stus/16/signing.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/invalid.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_browse THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      FREE browse_pre
+   END IF
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_xmdtdocno) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+ 
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+      
+   #end add-point   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.ui_headershow" >}
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION axmt420_ui_headershow()
+   #add-point:ui_headershow段define(客製用) name="ui_headershow.define_customerization"
+   
+   #end add-point  
+   #add-point:ui_headershow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_headershow.define"
+      
+   #end add-point      
+   
+   #add-point:Function前置處理  name="ui_headershow.pre_function"
+   
+   #end add-point
+   
+   LET g_xmdt_m.xmdtdocno = g_browser[g_current_idx].b_xmdtdocno   
+ 
+   EXECUTE axmt420_master_referesh USING g_xmdt_m.xmdtdocno INTO g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001, 
+       g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtstus, 
+       g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011, 
+       g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012, 
+       g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid, 
+       g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtdp,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid, 
+       g_xmdt_m.xmdtmoddt,g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfdt,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002_desc, 
+       g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdtownid_desc, 
+       g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtmodid_desc, 
+       g_xmdt_m.xmdtcnfid_desc
+   
+   CALL axmt420_xmdt_t_mask()
+   CALL axmt420_show()
+      
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.ui_detailshow" >}
+#+ 單身資料重新顯示
+PRIVATE FUNCTION axmt420_ui_detailshow()
+   #add-point:ui_detailshow段define(客製用) name="ui_detailshow.define_customerization"
+   
+   #end add-point    
+   #add-point:ui_detailshow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_detailshow.define"
+      
+   #end add-point    
+ 
+   #add-point:Function前置處理 name="ui_detailshow.before"
+      
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after name="ui_detailshow.after"
+      
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION axmt420_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point    
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+      
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_xmdtdocno = g_xmdt_m.xmdtdocno 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after name="ui_browser_refresh.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION axmt420_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+         DEFINE l_sql       STRING
+   DEFINE l_success   LIKE type_t.num5
+   #end add-point    
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   CALL aooi360_01_clear_detail()   #清除备注单身  #161031-00025#20
+   #end add-point
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_xmdt_m.* TO NULL
+   CALL g_xmdu_d.clear()        
+   CALL g_xmdu2_d.clear() 
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前 name="cs.before_construct"
+      
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON xmdtdocno,xmdt001,xmdtsite,xmdtdocdt,xmdt004,xmdt002,xmdt003,xmdtstus, 
+          xmdt005,xmdt006,xmdt006_desc,xmdt007,xmdt008,xmdt009,xmdt011,xmdt019,xmdt030,xmdt013,xmdt014, 
+          xmdt010,xmdt012,xmdt020,xmdt015,xmdt016,xmdt017,xmdt018,xmdtownid,xmdtowndp,xmdtcrtid,xmdtcrtdp, 
+          xmdtcrtdt,xmdtmodid,xmdtmoddt,xmdtcnfid,xmdtcnfdt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.head.before_construct"
+                        
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<xmdtcrtdt>>----
+         AFTER FIELD xmdtcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<xmdtmoddt>>----
+         AFTER FIELD xmdtmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<xmdtcnfdt>>----
+         AFTER FIELD xmdtcnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<xmdtpstdt>>----
+ 
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+                  #Ctrlp:construct.c.xmdtdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtdocno
+            #add-point:ON ACTION controlp INFIELD xmdtdocno name="construct.c.xmdtdocno"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.where = " xmdtsite ='",g_site,"' "
+            CALL q_xmdtdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdtdocno  #顯示到畫面上
+
+            NEXT FIELD xmdtdocno                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtdocno
+            #add-point:BEFORE FIELD xmdtdocno name="construct.b.xmdtdocno"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtdocno
+            
+            #add-point:AFTER FIELD xmdtdocno name="construct.a.xmdtdocno"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt001
+            #add-point:BEFORE FIELD xmdt001 name="construct.b.xmdt001"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt001
+            
+            #add-point:AFTER FIELD xmdt001 name="construct.a.xmdt001"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt001
+            #add-point:ON ACTION controlp INFIELD xmdt001 name="construct.c.xmdt001"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtsite
+            #add-point:BEFORE FIELD xmdtsite name="construct.b.xmdtsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtsite
+            
+            #add-point:AFTER FIELD xmdtsite name="construct.a.xmdtsite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdtsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtsite
+            #add-point:ON ACTION controlp INFIELD xmdtsite name="construct.c.xmdtsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtdocdt
+            #add-point:BEFORE FIELD xmdtdocdt name="construct.b.xmdtdocdt"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtdocdt
+            
+            #add-point:AFTER FIELD xmdtdocdt name="construct.a.xmdtdocdt"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdtdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtdocdt
+            #add-point:ON ACTION controlp INFIELD xmdtdocdt name="construct.c.xmdtdocdt"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.xmdt004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt004
+            #add-point:ON ACTION controlp INFIELD xmdt004 name="construct.c.xmdt004"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   
+			   LET g_qryparam.arg1 = g_site
+			   
+            CALL q_pmaa001_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdt004  #顯示到畫面上
+
+            NEXT FIELD xmdt004                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt004
+            #add-point:BEFORE FIELD xmdt004 name="construct.b.xmdt004"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt004
+            
+            #add-point:AFTER FIELD xmdt004 name="construct.a.xmdt004"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt002
+            #add-point:ON ACTION controlp INFIELD xmdt002 name="construct.c.xmdt002"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdt002  #顯示到畫面上
+
+            NEXT FIELD xmdt002                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt002
+            #add-point:BEFORE FIELD xmdt002 name="construct.b.xmdt002"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt002
+            
+            #add-point:AFTER FIELD xmdt002 name="construct.a.xmdt002"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt003
+            #add-point:ON ACTION controlp INFIELD xmdt003 name="construct.c.xmdt003"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdt003  #顯示到畫面上
+
+            NEXT FIELD xmdt003                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt003
+            #add-point:BEFORE FIELD xmdt003 name="construct.b.xmdt003"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt003
+            
+            #add-point:AFTER FIELD xmdt003 name="construct.a.xmdt003"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtstus
+            #add-point:BEFORE FIELD xmdtstus name="construct.b.xmdtstus"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtstus
+            
+            #add-point:AFTER FIELD xmdtstus name="construct.a.xmdtstus"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdtstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtstus
+            #add-point:ON ACTION controlp INFIELD xmdtstus name="construct.c.xmdtstus"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.xmdt005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt005
+            #add-point:ON ACTION controlp INFIELD xmdt005 name="construct.c.xmdt005"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.arg1 =g_site
+            CALL q_ooaj002_1()                         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdt005  #顯示到畫面上
+               #DISPLAY g_qryparam.return2 TO ooail004 #助記碼 
+               #DISPLAY g_qryparam.return3 TO ooail003 #說明 
+
+            NEXT FIELD xmdt005                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt005
+            #add-point:BEFORE FIELD xmdt005 name="construct.b.xmdt005"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt005
+            
+            #add-point:AFTER FIELD xmdt005 name="construct.a.xmdt005"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt006
+            #add-point:ON ACTION controlp INFIELD xmdt006 name="construct.c.xmdt006"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_oodb002_2()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdt006  #顯示到畫面上
+
+            NEXT FIELD xmdt006                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt006
+            #add-point:BEFORE FIELD xmdt006 name="construct.b.xmdt006"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt006
+            
+            #add-point:AFTER FIELD xmdt006 name="construct.a.xmdt006"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt006_desc
+            #add-point:BEFORE FIELD xmdt006_desc name="construct.b.xmdt006_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt006_desc
+            
+            #add-point:AFTER FIELD xmdt006_desc name="construct.a.xmdt006_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt006_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt006_desc
+            #add-point:ON ACTION controlp INFIELD xmdt006_desc name="construct.c.xmdt006_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt007
+            #add-point:BEFORE FIELD xmdt007 name="construct.b.xmdt007"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt007
+            
+            #add-point:AFTER FIELD xmdt007 name="construct.a.xmdt007"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt007
+            #add-point:ON ACTION controlp INFIELD xmdt007 name="construct.c.xmdt007"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt008
+            #add-point:BEFORE FIELD xmdt008 name="construct.b.xmdt008"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt008
+            
+            #add-point:AFTER FIELD xmdt008 name="construct.a.xmdt008"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt008
+            #add-point:ON ACTION controlp INFIELD xmdt008 name="construct.c.xmdt008"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.xmdt009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt009
+            #add-point:ON ACTION controlp INFIELD xmdt009 name="construct.c.xmdt009"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooib002_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdt009  #顯示到畫面上
+
+            NEXT FIELD xmdt009                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt009
+            #add-point:BEFORE FIELD xmdt009 name="construct.b.xmdt009"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt009
+            
+            #add-point:AFTER FIELD xmdt009 name="construct.a.xmdt009"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt011
+            #add-point:ON ACTION controlp INFIELD xmdt011 name="construct.c.xmdt011"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.arg1 = '238'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdt011  #顯示到畫面上
+
+            NEXT FIELD xmdt011                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt011
+            #add-point:BEFORE FIELD xmdt011 name="construct.b.xmdt011"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt011
+            
+            #add-point:AFTER FIELD xmdt011 name="construct.a.xmdt011"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt019
+            #add-point:ON ACTION controlp INFIELD xmdt019 name="construct.c.xmdt019"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			   #160621-00003#3 20160627 modify by beckxie---S
+			   #LET g_qryparam.arg1 = "275"
+            #CALL q_oocq002()                           #呼叫開窗
+            LET g_qryparam.arg1 = '1'
+            CALL q_oojd001_1()
+            #160621-00003#3 20160627 modify by beckxie---E
+            DISPLAY g_qryparam.return1 TO xmdt019  #顯示到畫面上
+
+            NEXT FIELD xmdt019                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt019
+            #add-point:BEFORE FIELD xmdt019 name="construct.b.xmdt019"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt019
+            
+            #add-point:AFTER FIELD xmdt019 name="construct.a.xmdt019"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt030
+            #add-point:BEFORE FIELD xmdt030 name="construct.b.xmdt030"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt030
+            
+            #add-point:AFTER FIELD xmdt030 name="construct.a.xmdt030"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt030
+            #add-point:ON ACTION controlp INFIELD xmdt030 name="construct.c.xmdt030"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt013
+            #add-point:BEFORE FIELD xmdt013 name="construct.b.xmdt013"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt013
+            
+            #add-point:AFTER FIELD xmdt013 name="construct.a.xmdt013"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt013
+            #add-point:ON ACTION controlp INFIELD xmdt013 name="construct.c.xmdt013"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt014
+            #add-point:BEFORE FIELD xmdt014 name="construct.b.xmdt014"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt014
+            
+            #add-point:AFTER FIELD xmdt014 name="construct.a.xmdt014"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt014
+            #add-point:ON ACTION controlp INFIELD xmdt014 name="construct.c.xmdt014"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt010
+            #add-point:BEFORE FIELD xmdt010 name="construct.b.xmdt010"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt010
+            
+            #add-point:AFTER FIELD xmdt010 name="construct.a.xmdt010"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt010
+            #add-point:ON ACTION controlp INFIELD xmdt010 name="construct.c.xmdt010"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt012
+            #add-point:BEFORE FIELD xmdt012 name="construct.b.xmdt012"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt012
+            
+            #add-point:AFTER FIELD xmdt012 name="construct.a.xmdt012"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt012
+            #add-point:ON ACTION controlp INFIELD xmdt012 name="construct.c.xmdt012"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt020
+            #add-point:BEFORE FIELD xmdt020 name="construct.b.xmdt020"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt020
+            
+            #add-point:AFTER FIELD xmdt020 name="construct.a.xmdt020"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt020
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt020
+            #add-point:ON ACTION controlp INFIELD xmdt020 name="construct.c.xmdt020"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt015
+            #add-point:BEFORE FIELD xmdt015 name="construct.b.xmdt015"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt015
+            
+            #add-point:AFTER FIELD xmdt015 name="construct.a.xmdt015"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt015
+            #add-point:ON ACTION controlp INFIELD xmdt015 name="construct.c.xmdt015"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt016
+            #add-point:BEFORE FIELD xmdt016 name="construct.b.xmdt016"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt016
+            
+            #add-point:AFTER FIELD xmdt016 name="construct.a.xmdt016"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt016
+            #add-point:ON ACTION controlp INFIELD xmdt016 name="construct.c.xmdt016"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt017
+            #add-point:BEFORE FIELD xmdt017 name="construct.b.xmdt017"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt017
+            
+            #add-point:AFTER FIELD xmdt017 name="construct.a.xmdt017"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt017
+            #add-point:ON ACTION controlp INFIELD xmdt017 name="construct.c.xmdt017"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt018
+            #add-point:BEFORE FIELD xmdt018 name="construct.b.xmdt018"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt018
+            
+            #add-point:AFTER FIELD xmdt018 name="construct.a.xmdt018"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdt018
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt018
+            #add-point:ON ACTION controlp INFIELD xmdt018 name="construct.c.xmdt018"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.xmdtownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtownid
+            #add-point:ON ACTION controlp INFIELD xmdtownid name="construct.c.xmdtownid"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdtownid  #顯示到畫面上
+
+            NEXT FIELD xmdtownid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtownid
+            #add-point:BEFORE FIELD xmdtownid name="construct.b.xmdtownid"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtownid
+            
+            #add-point:AFTER FIELD xmdtownid name="construct.a.xmdtownid"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdtowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtowndp
+            #add-point:ON ACTION controlp INFIELD xmdtowndp name="construct.c.xmdtowndp"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdtowndp  #顯示到畫面上
+
+            NEXT FIELD xmdtowndp                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtowndp
+            #add-point:BEFORE FIELD xmdtowndp name="construct.b.xmdtowndp"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtowndp
+            
+            #add-point:AFTER FIELD xmdtowndp name="construct.a.xmdtowndp"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdtcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtcrtid
+            #add-point:ON ACTION controlp INFIELD xmdtcrtid name="construct.c.xmdtcrtid"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdtcrtid  #顯示到畫面上
+
+            NEXT FIELD xmdtcrtid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtcrtid
+            #add-point:BEFORE FIELD xmdtcrtid name="construct.b.xmdtcrtid"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtcrtid
+            
+            #add-point:AFTER FIELD xmdtcrtid name="construct.a.xmdtcrtid"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xmdtcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtcrtdp
+            #add-point:ON ACTION controlp INFIELD xmdtcrtdp name="construct.c.xmdtcrtdp"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdtcrtdp  #顯示到畫面上
+
+            NEXT FIELD xmdtcrtdp                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtcrtdp
+            #add-point:BEFORE FIELD xmdtcrtdp name="construct.b.xmdtcrtdp"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtcrtdp
+            
+            #add-point:AFTER FIELD xmdtcrtdp name="construct.a.xmdtcrtdp"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtcrtdt
+            #add-point:BEFORE FIELD xmdtcrtdt name="construct.b.xmdtcrtdt"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.xmdtmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtmodid
+            #add-point:ON ACTION controlp INFIELD xmdtmodid name="construct.c.xmdtmodid"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdtmodid  #顯示到畫面上
+
+            NEXT FIELD xmdtmodid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtmodid
+            #add-point:BEFORE FIELD xmdtmodid name="construct.b.xmdtmodid"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtmodid
+            
+            #add-point:AFTER FIELD xmdtmodid name="construct.a.xmdtmodid"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtmoddt
+            #add-point:BEFORE FIELD xmdtmoddt name="construct.b.xmdtmoddt"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.xmdtcnfid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtcnfid
+            #add-point:ON ACTION controlp INFIELD xmdtcnfid name="construct.c.xmdtcnfid"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdtcnfid  #顯示到畫面上
+
+            NEXT FIELD xmdtcnfid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtcnfid
+            #add-point:BEFORE FIELD xmdtcnfid name="construct.b.xmdtcnfid"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtcnfid
+            
+            #add-point:AFTER FIELD xmdtcnfid name="construct.a.xmdtcnfid"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtcnfdt
+            #add-point:BEFORE FIELD xmdtcnfdt name="construct.b.xmdtcnfdt"
+                        
+            #END add-point
+ 
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON xmduseq,xmdu001,xmdu002,xmdu003,xmdu031,xmdu032,xmdu005,xmdu006,xmdu007, 
+          xmdu015,xmdu015_desc,xmdu008,xmdu009,xmdu010,xmdu011,xmdu012,xmdu013,xmdu014,xmdu004,xmdu030, 
+          ooff013
+           FROM s_detail1[1].xmduseq,s_detail1[1].xmdu001,s_detail1[1].xmdu002,s_detail1[1].xmdu003, 
+               s_detail1[1].xmdu031,s_detail1[1].xmdu032,s_detail1[1].xmdu005,s_detail1[1].xmdu006,s_detail1[1].xmdu007, 
+               s_detail1[1].xmdu015,s_detail1[1].xmdu015_desc,s_detail1[1].xmdu008,s_detail1[1].xmdu009, 
+               s_detail1[1].xmdu010,s_detail1[1].xmdu011,s_detail1[1].xmdu012,s_detail1[1].xmdu013,s_detail1[1].xmdu014, 
+               s_detail1[1].xmdu004,s_detail1[1].xmdu030,s_detail1[1].ooff013
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body.before_construct"
+                        
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmduseq
+            #add-point:BEFORE FIELD xmduseq name="construct.b.page1.xmduseq"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmduseq
+            
+            #add-point:AFTER FIELD xmduseq name="construct.a.page1.xmduseq"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmduseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmduseq
+            #add-point:ON ACTION controlp INFIELD xmduseq name="construct.c.page1.xmduseq"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu001
+            #add-point:BEFORE FIELD xmdu001 name="construct.b.page1.xmdu001"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu001
+            
+            #add-point:AFTER FIELD xmdu001 name="construct.a.page1.xmdu001"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu001
+            #add-point:ON ACTION controlp INFIELD xmdu001 name="construct.c.page1.xmdu001"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu002
+            #add-point:ON ACTION controlp INFIELD xmdu002 name="construct.c.page1.xmdu002"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_imaf001_15()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdu002  #顯示到畫面上
+
+            NEXT FIELD xmdu002                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu002
+            #add-point:BEFORE FIELD xmdu002 name="construct.b.page1.xmdu002"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu002
+            
+            #add-point:AFTER FIELD xmdu002 name="construct.a.page1.xmdu002"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu003
+            #add-point:BEFORE FIELD xmdu003 name="construct.b.page1.xmdu003"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu003
+            
+            #add-point:AFTER FIELD xmdu003 name="construct.a.page1.xmdu003"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu003
+            #add-point:ON ACTION controlp INFIELD xmdu003 name="construct.c.page1.xmdu003"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu031
+            #add-point:ON ACTION controlp INFIELD xmdu031 name="construct.c.page1.xmdu031"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "2003"
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdu031  #顯示到畫面上
+            NEXT FIELD xmdu031                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu031
+            #add-point:BEFORE FIELD xmdu031 name="construct.b.page1.xmdu031"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu031
+            
+            #add-point:AFTER FIELD xmdu031 name="construct.a.page1.xmdu031"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu032
+            #add-point:ON ACTION controlp INFIELD xmdu032 name="construct.c.page1.xmdu032"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtax001()                          #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdu032  #顯示到畫面上
+            NEXT FIELD xmdu032                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu032
+            #add-point:BEFORE FIELD xmdu032 name="construct.b.page1.xmdu032"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu032
+            
+            #add-point:AFTER FIELD xmdu032 name="construct.a.page1.xmdu032"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu005
+            #add-point:BEFORE FIELD xmdu005 name="construct.b.page1.xmdu005"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu005
+            
+            #add-point:AFTER FIELD xmdu005 name="construct.a.page1.xmdu005"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu005
+            #add-point:ON ACTION controlp INFIELD xmdu005 name="construct.c.page1.xmdu005"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_pmao004()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdu005  #顯示到畫面上
+
+            NEXT FIELD xmdu005  
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu006
+            #add-point:ON ACTION controlp INFIELD xmdu006 name="construct.c.page1.xmdu006"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.arg1 = '221'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdu006  #顯示到畫面上
+
+            NEXT FIELD xmdu006                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu006
+            #add-point:BEFORE FIELD xmdu006 name="construct.b.page1.xmdu006"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu006
+            
+            #add-point:AFTER FIELD xmdu006 name="construct.a.page1.xmdu006"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu007
+            #add-point:BEFORE FIELD xmdu007 name="construct.b.page1.xmdu007"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu007
+            
+            #add-point:AFTER FIELD xmdu007 name="construct.a.page1.xmdu007"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu007
+            #add-point:ON ACTION controlp INFIELD xmdu007 name="construct.c.page1.xmdu007"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu015
+            #add-point:ON ACTION controlp INFIELD xmdu015 name="construct.c.page1.xmdu015"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.arg1 = g_gzcb004_1
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdu015  #顯示到畫面上
+
+            NEXT FIELD xmdu015                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu015
+            #add-point:BEFORE FIELD xmdu015 name="construct.b.page1.xmdu015"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu015
+            
+            #add-point:AFTER FIELD xmdu015 name="construct.a.page1.xmdu015"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu015_desc
+            #add-point:BEFORE FIELD xmdu015_desc name="construct.b.page1.xmdu015_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu015_desc
+            
+            #add-point:AFTER FIELD xmdu015_desc name="construct.a.page1.xmdu015_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu015_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu015_desc
+            #add-point:ON ACTION controlp INFIELD xmdu015_desc name="construct.c.page1.xmdu015_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu008
+            #add-point:ON ACTION controlp INFIELD xmdu008 name="construct.c.page1.xmdu008"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_ooca001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdu008  #顯示到畫面上
+
+            NEXT FIELD xmdu008                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu008
+            #add-point:BEFORE FIELD xmdu008 name="construct.b.page1.xmdu008"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu008
+            
+            #add-point:AFTER FIELD xmdu008 name="construct.a.page1.xmdu008"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu009
+            #add-point:BEFORE FIELD xmdu009 name="construct.b.page1.xmdu009"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu009
+            
+            #add-point:AFTER FIELD xmdu009 name="construct.a.page1.xmdu009"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu009
+            #add-point:ON ACTION controlp INFIELD xmdu009 name="construct.c.page1.xmdu009"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu010
+            #add-point:BEFORE FIELD xmdu010 name="construct.b.page1.xmdu010"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu010
+            
+            #add-point:AFTER FIELD xmdu010 name="construct.a.page1.xmdu010"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu010
+            #add-point:ON ACTION controlp INFIELD xmdu010 name="construct.c.page1.xmdu010"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu011
+            #add-point:BEFORE FIELD xmdu011 name="construct.b.page1.xmdu011"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu011
+            
+            #add-point:AFTER FIELD xmdu011 name="construct.a.page1.xmdu011"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu011
+            #add-point:ON ACTION controlp INFIELD xmdu011 name="construct.c.page1.xmdu011"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu012
+            #add-point:BEFORE FIELD xmdu012 name="construct.b.page1.xmdu012"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu012
+            
+            #add-point:AFTER FIELD xmdu012 name="construct.a.page1.xmdu012"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu012
+            #add-point:ON ACTION controlp INFIELD xmdu012 name="construct.c.page1.xmdu012"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu013
+            #add-point:BEFORE FIELD xmdu013 name="construct.b.page1.xmdu013"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu013
+            
+            #add-point:AFTER FIELD xmdu013 name="construct.a.page1.xmdu013"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu013
+            #add-point:ON ACTION controlp INFIELD xmdu013 name="construct.c.page1.xmdu013"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu014
+            #add-point:ON ACTION controlp INFIELD xmdu014 name="construct.c.page1.xmdu014"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.arg1 = '263'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdu014  #顯示到畫面上
+
+            NEXT FIELD xmdu014
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu014
+            #add-point:BEFORE FIELD xmdu014 name="construct.b.page1.xmdu014"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu014
+            
+            #add-point:AFTER FIELD xmdu014 name="construct.a.page1.xmdu014"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu004
+            #add-point:ON ACTION controlp INFIELD xmdu004 name="construct.c.page1.xmdu004"
+                                    #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			
+            CALL q_imaa001_11()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdu004  #顯示到畫面上
+
+            NEXT FIELD xmdu004                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu004
+            #add-point:BEFORE FIELD xmdu004 name="construct.b.page1.xmdu004"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu004
+            
+            #add-point:AFTER FIELD xmdu004 name="construct.a.page1.xmdu004"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu030
+            #add-point:BEFORE FIELD xmdu030 name="construct.b.page1.xmdu030"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu030
+            
+            #add-point:AFTER FIELD xmdu030 name="construct.a.page1.xmdu030"
+                        
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.xmdu030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu030
+            #add-point:ON ACTION controlp INFIELD xmdu030 name="construct.c.page1.xmdu030"
+                        
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff013
+            #add-point:BEFORE FIELD ooff013 name="construct.b.page1.ooff013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff013
+            
+            #add-point:AFTER FIELD ooff013 name="construct.a.page1.ooff013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.ooff013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff013
+            #add-point:ON ACTION controlp INFIELD ooff013 name="construct.c.page1.ooff013"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+      CONSTRUCT g_wc2_table2 ON xmdvseq,xmdv001,xmdv002,xmdv003,xmdv004
+           FROM s_detail2[1].xmdvseq,s_detail2[1].xmdv001,s_detail2[1].xmdv002,s_detail2[1].xmdv003, 
+               s_detail2[1].xmdv004
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body2.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdvseq
+            #add-point:BEFORE FIELD xmdvseq name="construct.b.page2.xmdvseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdvseq
+            
+            #add-point:AFTER FIELD xmdvseq name="construct.a.page2.xmdvseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.xmdvseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdvseq
+            #add-point:ON ACTION controlp INFIELD xmdvseq name="construct.c.page2.xmdvseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdv001
+            #add-point:BEFORE FIELD xmdv001 name="construct.b.page2.xmdv001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdv001
+            
+            #add-point:AFTER FIELD xmdv001 name="construct.a.page2.xmdv001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.xmdv001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdv001
+            #add-point:ON ACTION controlp INFIELD xmdv001 name="construct.c.page2.xmdv001"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdv002
+            #add-point:BEFORE FIELD xmdv002 name="construct.b.page2.xmdv002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdv002
+            
+            #add-point:AFTER FIELD xmdv002 name="construct.a.page2.xmdv002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.xmdv002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdv002
+            #add-point:ON ACTION controlp INFIELD xmdv002 name="construct.c.page2.xmdv002"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdv003
+            #add-point:BEFORE FIELD xmdv003 name="construct.b.page2.xmdv003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdv003
+            
+            #add-point:AFTER FIELD xmdv003 name="construct.a.page2.xmdv003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.xmdv003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdv003
+            #add-point:ON ACTION controlp INFIELD xmdv003 name="construct.c.page2.xmdv003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdv004
+            #add-point:BEFORE FIELD xmdv004 name="construct.b.page2.xmdv004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdv004
+            
+            #add-point:AFTER FIELD xmdv004 name="construct.a.page2.xmdv004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.xmdv004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdv004
+            #add-point:ON ACTION controlp INFIELD xmdv004 name="construct.c.page2.xmdv004"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令) name="cs.add_cs"
+      SUBDIALOG aoo_aooi360_01.aooi360_01_construct   #备注单身  #161031-00025#20            
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+                  
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "xmdt_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "xmdu_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+   IF g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+   END IF
+ 
+ 
+   
+   #add-point:cs段結束前 name="cs.after_construct"
+      
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION axmt420_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+      
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON xmdtdocno,xmdtdocdt,xmdt002,xmdt003,xmdt004,xmdt005,xmdt015,xmdt016
+                          FROM s_browse[1].b_xmdtdocno,s_browse[1].b_xmdtdocdt,s_browse[1].b_xmdt002, 
+                              s_browse[1].b_xmdt003,s_browse[1].b_xmdt004,s_browse[1].b_xmdt005,s_browse[1].b_xmdt015, 
+                              s_browse[1].b_xmdt016
+ 
+         BEFORE CONSTRUCT
+               DISPLAY axmt420_filter_parser('xmdtdocno') TO s_browse[1].b_xmdtdocno
+            DISPLAY axmt420_filter_parser('xmdtdocdt') TO s_browse[1].b_xmdtdocdt
+            DISPLAY axmt420_filter_parser('xmdt002') TO s_browse[1].b_xmdt002
+            DISPLAY axmt420_filter_parser('xmdt003') TO s_browse[1].b_xmdt003
+            DISPLAY axmt420_filter_parser('xmdt004') TO s_browse[1].b_xmdt004
+            DISPLAY axmt420_filter_parser('xmdt005') TO s_browse[1].b_xmdt005
+            DISPLAY axmt420_filter_parser('xmdt015') TO s_browse[1].b_xmdt015
+            DISPLAY axmt420_filter_parser('xmdt016') TO s_browse[1].b_xmdt016
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+            
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+                  
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL axmt420_filter_show('xmdtdocno')
+   CALL axmt420_filter_show('xmdtdocdt')
+   CALL axmt420_filter_show('xmdt002')
+   CALL axmt420_filter_show('xmdt003')
+   CALL axmt420_filter_show('xmdt004')
+   CALL axmt420_filter_show('xmdt005')
+   CALL axmt420_filter_show('xmdt015')
+   CALL axmt420_filter_show('xmdt016')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION axmt420_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+      
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION axmt420_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = axmt420_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION axmt420_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_wc STRING
+   #add-point:query段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+      
+   #end add-point   
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF   
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_xmdu_d.clear()
+   CALL g_xmdu2_d.clear()
+ 
+   
+   #add-point:query段other name="query.other"
+   CALL aooi360_01_clear_detail()   #清除备注单身  #161031-00025#20      
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL axmt420_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL axmt420_browser_fill("")
+      CALL axmt420_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx_list[1] = 1
+   LET g_detail_idx_list[2] = 1
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+      CALL axmt420_filter_show('xmdtdocno')
+   CALL axmt420_filter_show('xmdtdocdt')
+   CALL axmt420_filter_show('xmdt002')
+   CALL axmt420_filter_show('xmdt003')
+   CALL axmt420_filter_show('xmdt004')
+   CALL axmt420_filter_show('xmdt005')
+   CALL axmt420_filter_show('xmdt015')
+   CALL axmt420_filter_show('xmdt016')
+   CALL axmt420_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "-100" 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL axmt420_fetch("F") 
+      #顯示單身筆數
+      CALL axmt420_idx_chk()
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION axmt420_fetch(p_flag)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point    
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+      
+   #end add-point    
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   #清空第二階單身
+   CALL g_xmdu2_d.clear()
+ 
+   
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx) #設定browse 索引
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_xmdt_m.xmdtdocno = g_browser[g_current_idx].b_xmdtdocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE axmt420_master_referesh USING g_xmdt_m.xmdtdocno INTO g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001, 
+       g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtstus, 
+       g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011, 
+       g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012, 
+       g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid, 
+       g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtdp,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid, 
+       g_xmdt_m.xmdtmoddt,g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfdt,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002_desc, 
+       g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdtownid_desc, 
+       g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtmodid_desc, 
+       g_xmdt_m.xmdtcnfid_desc
+   
+   #遮罩相關處理
+   LET g_xmdt_m_mask_o.* =  g_xmdt_m.*
+   CALL axmt420_xmdt_t_mask()
+   LET g_xmdt_m_mask_n.* =  g_xmdt_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL axmt420_set_act_visible()   
+   CALL axmt420_set_act_no_visible()
+   
+   #add-point:fetch段action控制 name="fetch.action_control"
+   #2014/12/02 by stellar mark ----- (S)
+   #移到act_visible內
+#   #IF g_xmdt_m.xmdtstus = 'N' THEN
+#   # N未確認/D抽單/R已拒絕允許修改
+#   IF g_xmdt_m.xmdtstus MATCHES "[NDR]" THEN   
+#      CALL cl_set_act_visible("modify,delete,modify_detail",TRUE)
+#   ELSE
+#      CALL cl_set_act_visible("modify,delete,modify_detail",FALSE)
+#   END IF   
+   #2014/12/02 by stellar mark ----- (E)
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前 name="fetch.after"
+      
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_xmdt_m_t.* = g_xmdt_m.*
+   LET g_xmdt_m_o.* = g_xmdt_m.*
+   
+   LET g_data_owner = g_xmdt_m.xmdtownid      
+   LET g_data_dept  = g_xmdt_m.xmdtowndp
+   
+   #重新顯示   
+   CALL axmt420_show()
+ 
+   #應用 a56 樣板自動產生(Version:3)
+   #檢查此單據是否需顯示BPM簽核狀況按鈕 
+   IF cl_bpm_chk() THEN
+      CALL cl_set_act_visible("bpm_status",TRUE)
+   ELSE
+      CALL cl_set_act_visible("bpm_status",FALSE)
+   END IF
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION axmt420_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point    
+   #add-point:insert段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+      
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_xmdu_d.clear()   
+   CALL g_xmdu2_d.clear()  
+ 
+ 
+   INITIALIZE g_xmdt_m.* TO NULL             #DEFAULT 設定
+   
+   LET g_xmdtdocno_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before name="insert.before"
+   CALL aooi360_01_clear_detail()   #清除备注单身  #161031-00025#20
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_xmdt_m.xmdtownid = g_user
+      LET g_xmdt_m.xmdtowndp = g_dept
+      LET g_xmdt_m.xmdtcrtid = g_user
+      LET g_xmdt_m.xmdtcrtdp = g_dept 
+      LET g_xmdt_m.xmdtcrtdt = cl_get_current()
+      LET g_xmdt_m.xmdtmodid = g_user
+      LET g_xmdt_m.xmdtmoddt = cl_get_current()
+      LET g_xmdt_m.xmdtstus = 'N'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_xmdt_m.xmdt017 = "1"
+      LET g_xmdt_m.xmdt018 = "1"
+ 
+  
+      #add-point:單頭預設值 name="insert.default"
+      LET g_xmdt_m.xmdtdocdt = g_today
+      LET g_xmdt_m.xmdt002   = g_user
+      CALL axmt420_xmdt002_ref() 
+      LET g_xmdt_m.xmdt003   = g_dept
+      CALL axmt420_xmdt003_ref()
+      LET g_xmdt_m.xmdt013 = 'N'
+      LET g_xmdt_m.xmdt014 = 'N'
+      LET g_xmdt_m.xmdt010 = 'N'
+      LET g_xmdt_m.xmdt012 = 'N'
+      LET g_xmdt_m.xmdt020 = 'N'
+      LET g_xmdt_m.xmdt015 = g_today
+      LET g_xmdt_m.xmdt017 = '1'
+      LET g_xmdt_m.xmdt018 = '1'
+      LET g_xmdt_m.xmdtstus = 'N'
+      LET g_xmdt_m.xmdtsite = g_site
+      
+      #外傳參數為委外否1一般2委外
+      CASE g_argv[1]
+         WHEN '1'
+            LET g_xmdt_m.xmdt001 = 'N'
+         WHEN '2'
+            LET g_xmdt_m.xmdt001 = 'Y'
+         OTHERWISE
+            LET g_xmdt_m.xmdt001 = 'N'
+      END CASE
+      
+      INITIALIZE g_xmdt_m_t.* TO NULL
+      LET g_xmdt_m_t.* = g_xmdt_m.*
+      LET g_xmdt_m_o.* = g_xmdt_m.*
+      
+      #161031-00025#20-s
+      LET g_ooff001_d = '6'   #6.單據單頭備註
+      LET g_ooff002_d = g_prog
+      LET g_ooff003_d = ''    #单号
+      LET g_ooff004_d = '0'     #项次
+      LET g_ooff005_d = ' '
+      LET g_ooff006_d = ' '
+      LET g_ooff007_d = ' '
+      LET g_ooff008_d = ' '
+      LET g_ooff009_d = ' '
+      LET g_ooff010_d = ' '
+      LET g_ooff011_d = ' '
+      #161031-00025#20-e
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_xmdt_m_t.* = g_xmdt_m.*
+      LET g_xmdt_m_o.* = g_xmdt_m.*
+      
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_xmdt_m.xmdtstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+    
+      CALL axmt420_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+            
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_xmdt_m.* TO NULL
+         INITIALIZE g_xmdu_d TO NULL
+         INITIALIZE g_xmdu2_d TO NULL
+ 
+         #add-point:取消新增後 name="insert.cancel"
+         
+         #end add-point 
+         CALL axmt420_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_xmdu_d.clear()
+      #CALL g_xmdu2_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL axmt420_set_act_visible()   
+   CALL axmt420_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_xmdtdocno_t = g_xmdt_m.xmdtdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " xmdtent = " ||g_enterprise|| " AND",
+                      " xmdtdocno = '", g_xmdt_m.xmdtdocno, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後 name="insert.after.add_browse"
+   
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL axmt420_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE axmt420_cl
+   
+   CALL axmt420_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE axmt420_master_referesh USING g_xmdt_m.xmdtdocno INTO g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001, 
+       g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtstus, 
+       g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011, 
+       g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012, 
+       g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid, 
+       g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtdp,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid, 
+       g_xmdt_m.xmdtmoddt,g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfdt,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002_desc, 
+       g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdtownid_desc, 
+       g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtmodid_desc, 
+       g_xmdt_m.xmdtcnfid_desc
+   
+   
+   #遮罩相關處理
+   LET g_xmdt_m_mask_o.* =  g_xmdt_m.*
+   CALL axmt420_xmdt_t_mask()
+   LET g_xmdt_m_mask_n.* =  g_xmdt_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_xmdt_m.xmdtdocno,g_xmdt_m.oobal004,g_xmdt_m.xmdt001,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt, 
+       g_xmdt_m.xmdt004,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002,g_xmdt_m.xmdt002_desc,g_xmdt_m.xmdt003, 
+       g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdtstus,g_xmdt_m.xmdt005,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt006, 
+       g_xmdt_m.xmdt006_desc,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt009_desc, 
+       g_xmdt_m.xmdt011,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdt030, 
+       g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015, 
+       g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid,g_xmdt_m.xmdtownid_desc, 
+       g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp, 
+       g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid,g_xmdt_m.xmdtmodid_desc,g_xmdt_m.xmdtmoddt, 
+       g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfid_desc,g_xmdt_m.xmdtcnfdt
+   
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+   
+   LET g_data_owner = g_xmdt_m.xmdtownid      
+   LET g_data_dept  = g_xmdt_m.xmdtowndp
+   
+   #功能已完成,通報訊息中心
+   CALL axmt420_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION axmt420_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point    
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+ 
+   DEFINE l_wc2_table2   STRING
+ 
+ 
+   #add-point:modify段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+      
+   #end add-point    
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_xmdt_m_t.* = g_xmdt_m.*
+   LET g_xmdt_m_o.* = g_xmdt_m.*
+   
+   IF g_xmdt_m.xmdtdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_xmdtdocno_t = g_xmdt_m.xmdtdocno
+ 
+   CALL s_transaction_begin()
+   
+   OPEN axmt420_cl USING g_enterprise,g_xmdt_m.xmdtdocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN axmt420_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE axmt420_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE axmt420_master_referesh USING g_xmdt_m.xmdtdocno INTO g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001, 
+       g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtstus, 
+       g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011, 
+       g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012, 
+       g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid, 
+       g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtdp,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid, 
+       g_xmdt_m.xmdtmoddt,g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfdt,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002_desc, 
+       g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdtownid_desc, 
+       g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtmodid_desc, 
+       g_xmdt_m.xmdtcnfid_desc
+   
+   #檢查是否允許此動作
+   IF NOT axmt420_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_xmdt_m_mask_o.* =  g_xmdt_m.*
+   CALL axmt420_xmdt_t_mask()
+   LET g_xmdt_m_mask_n.* =  g_xmdt_m.*
+   
+   
+   
+   #add-point:modify段show之前 name="modify.before_show"
+   
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+ 
+   #LET l_wc2_table2 = g_wc2_table2
+   #LET l_wc2_table2 = " 1=1"
+ 
+ 
+   
+   CALL axmt420_show()
+   #add-point:modify段show之後 name="modify.after_show"
+   
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+ 
+   #LET  g_wc2_table2 = l_wc2_table2 
+ 
+ 
+    
+   WHILE TRUE
+      LET g_xmdtdocno_t = g_xmdt_m.xmdtdocno
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_xmdt_m.xmdtmodid = g_user 
+LET g_xmdt_m.xmdtmoddt = cl_get_current()
+LET g_xmdt_m.xmdtmodid_desc = cl_get_username(g_xmdt_m.xmdtmodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      #「D抽單 / R已拒絕」狀況碼更改資料後，需還原為「N未確認」
+      IF g_xmdt_m.xmdtstus MATCHES "[DR]" THEN 
+         LET g_xmdt_m.xmdtstus = "N"
+      END IF
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      LET g_master_commit = "N"
+      CALL axmt420_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+
+
+      #end add-point
+      
+      IF g_update OR NOT INT_FLAG THEN
+         #若有modid跟moddt則進行update
+         UPDATE xmdt_t SET (xmdtmodid,xmdtmoddt) = (g_xmdt_m.xmdtmodid,g_xmdt_m.xmdtmoddt)
+          WHERE xmdtent = g_enterprise AND xmdtdocno = g_xmdtdocno_t
+ 
+      END IF
+    
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         #若單頭無commit則還原
+         IF g_master_commit = "N" THEN
+            LET g_xmdt_m.* = g_xmdt_m_t.*
+            CALL axmt420_show()
+         END IF
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_xmdt_m.xmdtdocno != g_xmdt_m_t.xmdtdocno
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前 name="modify.body.b_fk_update"
+                  
+         #end add-point
+         
+         #更新單身key值
+         UPDATE xmdu_t SET xmdudocno = g_xmdt_m.xmdtdocno
+ 
+          WHERE xmduent = g_enterprise AND xmdudocno = g_xmdt_m_t.xmdtdocno
+ 
+            
+         #add-point:單身fk修改中 name="modify.body.m_fk_update"
+                  
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "xmdu_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "xmdu_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後 name="modify.body.a_fk_update"
+                  
+         #end add-point
+         
+ 
+         
+         #更新單身key值
+         #add-point:單身fk修改前 name="modify.body.b_fk_update2"
+         
+         #end add-point
+         UPDATE xmdv_t
+            SET xmdvdocno = g_xmdt_m.xmdtdocno
+ 
+          WHERE xmdvent = g_enterprise AND
+                xmdvdocno = g_xmdtdocno_t
+ 
+         #add-point:單身fk修改中 name="modify.body.m_fk_update2"
+         
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "xmdv_t" 
+               LET g_errparam.code = "std-00009" 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "xmdv_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後 name="modify.body.a_fk_update2"
+         
+         #end add-point
+ 
+ 
+         
+         #UPDATE 多語言table key值
+         
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL axmt420_set_act_visible()   
+   CALL axmt420_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " xmdtent = " ||g_enterprise|| " AND",
+                      " xmdtdocno = '", g_xmdt_m.xmdtdocno, "' "
+ 
+   #填到對應位置
+   CALL axmt420_browser_fill("")
+ 
+   CLOSE axmt420_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL axmt420_msgcentre_notify('modify')
+ 
+END FUNCTION 
+ 
+{</section>}
+ 
+{<section id="axmt420.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION axmt420_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point  
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_ac_t                LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE  l_success             LIKE type_t.num5                     #TRUE 自動編號成功 FALSE 自動編號失敗
+   DEFINE  l_flag                LIKE type_t.chr1
+   DEFINE  l_sql                 STRING
+   DEFINE  l_xmdu002             LIKE xmdu_t.xmdu002                  #客料帶料+產品特徵用料號
+   DEFINE  l_xmdu003             LIKE xmdu_t.xmdu003                  #客料帶料+產品特徵用產品特徵
+   DEFINE  l_success1            LIKE type_t.num5
+   DEFINE  l_msg                 STRING                               #接收回傳的字串
+   DEFINE  l_msg1                STRING                               #接收axm-00645 %1 的替代值
+   DEFINE  l_msg2                STRING                               #接收axm-00645 %2 的替代值
+   DEFINE  l_chk                 LIKE  type_t.num10                   ##僅在小部分程式段內的確認
+   DEFINE  l_chk2                LIKE  type_t.num5                    #避免AFTER ROW、AFTER INSERT、ON ROW CHANGE的訊息重複出現
+                                                                      #0-無跳到任何區段；1-AFTER INSERT；2-AFTER ROW；3-ON ROW CHANGE
+   DEFINE  l_del_chk             LIKE  type_t.num5                    #判斷是否有進入刪除資料 
+   DEFINE  l_imaa001             LIKE  type_t.chr100                  #接收抓取到的料件編號值
+   DEFINE  l_str                 STRING                               #串料件編號的字串
+   DEFINE  l_str_cnt             LIKE  type_t.num10                   #計算接收字串次數
+  
+   DEFINE  l_msg3                LIKE gzze_t.gzze003   #160621-00003#3 20160629 add by beckxie
+   #end add-point  
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   #160621-00003#3 20160629 add by beckxie---S
+   LET l_msg3 = ''
+   SELECT gzze003 INTO l_msg3 FROM gzze_t WHERE gzze001 = 'aoo-00708' AND gzze002 = g_dlang 
+   #160621-00003#3 20160629 add by beckxie---E
+   #end add-point
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_xmdt_m.xmdtdocno,g_xmdt_m.oobal004,g_xmdt_m.xmdt001,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt, 
+       g_xmdt_m.xmdt004,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002,g_xmdt_m.xmdt002_desc,g_xmdt_m.xmdt003, 
+       g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdtstus,g_xmdt_m.xmdt005,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt006, 
+       g_xmdt_m.xmdt006_desc,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt009_desc, 
+       g_xmdt_m.xmdt011,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdt030, 
+       g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015, 
+       g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid,g_xmdt_m.xmdtownid_desc, 
+       g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp, 
+       g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid,g_xmdt_m.xmdtmodid_desc,g_xmdt_m.xmdtmoddt, 
+       g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfid_desc,g_xmdt_m.xmdtcnfdt
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql name="input.define_sql"
+      
+   #end add-point 
+   LET g_forupd_sql = "SELECT xmduseq,xmdu001,xmdu002,xmdu003,xmdu031,xmdu032,xmdu005,xmdu006,xmdu007, 
+       xmdu015,xmdu008,xmdu009,xmdu010,xmdu011,xmdu012,xmdu013,xmdu014,xmdu004,xmdu030,xmdusite FROM  
+       xmdu_t WHERE xmduent=? AND xmdudocno=? AND xmduseq=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql"
+      
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE axmt420_bcl CURSOR FROM g_forupd_sql
+   
+ 
+   
+   #add-point:input段define_sql name="input.define_sql2"
+   
+   #end add-point 
+   LET g_forupd_sql = "SELECT xmdvseq,xmdv001,xmdv002,xmdv003,xmdv004 FROM xmdv_t WHERE xmdvent=? AND  
+       xmdvdocno=? AND xmdvseq=? AND xmdv001=? AND xmdv002=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql2"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE axmt420_bcl2 CURSOR FROM g_forupd_sql
+ 
+ 
+ 
+   #add-point:input段define_sql name="input.other_sql"
+      
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL axmt420_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   #將單身輸入權限放入共用變數給嵌入的子程式用, 若子程式要自己控管, 還是可以從子程式中覆蓋掉值
+   #161031-00025#20-s
+   LET g_detail_insert = l_allow_insert
+   LET g_detail_delete = l_allow_delete
+   #161031-00025#20-e      
+   #end add-point
+   CALL axmt420_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004, 
+       g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtstus,g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007, 
+       g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011,g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013, 
+       g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016, 
+       g_xmdt_m.xmdt017,g_xmdt_m.xmdt018
+   
+   LET lb_reproduce = FALSE
+   LET l_ac_t = 1
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前 name="input.before_input"
+   LET l_chk2 = 0   
+   LET l_del_chk = FALSE 
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+{</section>}
+ 
+{<section id="axmt420.input.head" >}
+      #單頭段
+      INPUT BY NAME g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004, 
+          g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtstus,g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007, 
+          g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011,g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013, 
+          g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016, 
+          g_xmdt_m.xmdt017,g_xmdt_m.xmdt018 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN axmt420_cl USING g_enterprise,g_xmdt_m.xmdtdocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN axmt420_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE axmt420_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL axmt420_set_entry(p_cmd)
+            #add-point:資料輸入前 name="input.m.before_input"
+                        
+            #end add-point
+            CALL axmt420_set_no_entry(p_cmd)
+    
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtdocno
+            #add-point:BEFORE FIELD xmdtdocno name="input.b.xmdtdocno"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtdocno
+            
+            #add-point:AFTER FIELD xmdtdocno name="input.a.xmdtdocno"
+                                    #此段落由子樣板a05產生            
+            DISPLAY '' TO oobal004
+            IF NOT cl_null(g_xmdt_m.xmdtdocno) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdt_m.xmdtdocno != g_xmdt_m_o.xmdtdocno OR g_xmdt_m.xmdtdocno IS NULL )) THEN
+                  IF NOT s_aooi200_chk_slip(g_site,'',g_xmdt_m.xmdtdocno,g_prog) THEN
+                     LET g_xmdt_m.xmdtdocno = g_xmdt_m_o.xmdtdocno
+                     DISPLAY BY NAME g_xmdt_m.xmdtdocno
+                     CALL axmt420_xmdtdocno_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #先抓客戶預設值
+                  LET g_xmdt_m.xmdt004   = s_aooi200_get_doc_default(g_site,'1',g_xmdt_m.xmdtdocno,'xmdt004',g_xmdt_m.xmdt004)
+                  DISPLAY BY NAME g_xmdt_m.xmdt004                  
+                  CALL axmt420_xmdt004_carry()
+                  
+                  #單別預設值
+                  CALL axmt420_docno_xmdt_default()
+                  
+                  #重取有效日期及失效日期
+                  IF NOT cl_null(g_xmdt_m.xmdt015)THEN
+                     CALL axmt420_xmdt015_carry()
+                  END IF
+               END IF
+            END IF
+            CALL axmt420_set_entry(p_cmd)
+            CALL axmt420_set_no_entry(p_cmd)
+            LET g_xmdt_m_o.xmdtdocno = g_xmdt_m.xmdtdocno
+            CALL axmt420_xmdtdocno_ref()
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdtdocno
+            #add-point:ON CHANGE xmdtdocno name="input.g.xmdtdocno"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt001
+            #add-point:BEFORE FIELD xmdt001 name="input.b.xmdt001"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt001
+            
+            #add-point:AFTER FIELD xmdt001 name="input.a.xmdt001"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt001
+            #add-point:ON CHANGE xmdt001 name="input.g.xmdt001"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtsite
+            #add-point:BEFORE FIELD xmdtsite name="input.b.xmdtsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtsite
+            
+            #add-point:AFTER FIELD xmdtsite name="input.a.xmdtsite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdtsite
+            #add-point:ON CHANGE xmdtsite name="input.g.xmdtsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtdocdt
+            #add-point:BEFORE FIELD xmdtdocdt name="input.b.xmdtdocdt"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtdocdt
+            
+            #add-point:AFTER FIELD xmdtdocdt name="input.a.xmdtdocdt"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdtdocdt
+            #add-point:ON CHANGE xmdtdocdt name="input.g.xmdtdocdt"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt004
+            
+            #add-point:AFTER FIELD xmdt004 name="input.a.xmdt004"
+            LET g_xmdt_m.xmdt004_desc = ' '
+            DISPLAY BY NAME g_xmdt_m.xmdt004_desc
+            IF NOT cl_null(g_xmdt_m.xmdt004) THEN
+               #160824-00007#215 by sakura mark(S)
+               #IF p_cmd = 'a' 
+               #   OR (p_cmd = 'u' AND (g_xmdt_m.xmdt004 != g_xmdt_m_o.xmdt004 OR g_xmdt_m_o.xmdt004 IS NULL )) THEN
+               #160824-00007#215 by sakura mark(E)
+               IF g_xmdt_m.xmdt004 != g_xmdt_m_o.xmdt004 OR cl_null(g_xmdt_m_o.xmdt004) THEN   #160824-00007#215 by sakura add
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xmdt_m.xmdt004
+                  #LET g_chkparam.arg2 = ' '
+                  IF NOT axmt420_xmdt004_chk() THEN
+                     LET g_xmdt_m.xmdt004 = g_xmdt_m_o.xmdt004
+                     CALL axmt420_xmdt004_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL axmt420_xmdt004_carry()
+               END IF
+            END IF
+           #LET g_xmdt_m_o.xmdt004 = g_xmdt_m.xmdt004   #160824-00007#215 by sakura mark
+            LET g_xmdt_m_o.* = g_xmdt_m.*               #160824-00007#215 by sakura add
+            CALL axmt420_xmdt004_ref()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt004
+            #add-point:BEFORE FIELD xmdt004 name="input.b.xmdt004"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt004
+            #add-point:ON CHANGE xmdt004 name="input.g.xmdt004"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt002
+            
+            #add-point:AFTER FIELD xmdt002 name="input.a.xmdt002"
+            LET g_xmdt_m.xmdt002_desc = ' '
+            DISPLAY BY NAME g_xmdt_m.xmdt002_desc
+            IF NOT cl_null(g_xmdt_m.xmdt002) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdt_m.xmdt002 != g_xmdt_m_t.xmdt002 OR g_xmdt_m_t.xmdt002 IS NULL )) THEN   #160824-00007#215 by sakura mark
+               IF g_xmdt_m.xmdt002 != g_xmdt_m_o.xmdt002 OR cl_null(g_xmdt_m_o.xmdt002) THEN   #160824-00007#215 by sakura add
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xmdt_m.xmdt002
+                  #160318-00025#35  2016/05/15  by pengxin  add(S)
+                  LET g_errshow = TRUE #是否開窗 
+                  LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"
+                  #160318-00025#35  2016/05/15  by pengxin  add(E)
+                  IF NOT cl_chk_exist("v_ooag001") THEN
+                     #LET g_xmdt_m.xmdt002 = g_xmdt_m_t.xmdt002   #160824-00007#215 by sakura mark
+                     LET g_xmdt_m.xmdt002 = g_xmdt_m_o.xmdt002    #160824-00007#215 by sakura add
+                     CALL axmt420_xmdt002_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               #員工帶部門
+               CALL axmt420_xmdt002_carry()
+            END IF
+            LET g_xmdt_m_o.* = g_xmdt_m.*   #160824-00007#215 by sakura add
+            CALL axmt420_xmdt002_ref()                    
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt002
+            #add-point:BEFORE FIELD xmdt002 name="input.b.xmdt002"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt002
+            #add-point:ON CHANGE xmdt002 name="input.g.xmdt002"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt003
+            
+            #add-point:AFTER FIELD xmdt003 name="input.a.xmdt003"
+            LET g_xmdt_m.xmdt003_desc = ' '
+            DISPLAY BY NAME g_xmdt_m.xmdt003_desc
+            IF NOT cl_null(g_xmdt_m.xmdt003) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdt_m.xmdt003 != g_xmdt_m_t.xmdt003 OR g_xmdt_m_t.xmdt003 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xmdt_m.xmdt003
+                  LET g_chkparam.arg2 = g_xmdt_m.xmdtdocdt
+                  #160318-00025#35  2016/04/15  by pengxin  add(S)
+                  LET g_errshow = TRUE #是否開窗 
+                  LET g_chkparam.err_str[1] = "aoo-00029:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+                  #160318-00025#35  2016/04/15  by pengxin  add(E)
+                  IF NOT cl_chk_exist("v_ooeg001") THEN
+                     LET g_xmdt_m.xmdt003 = g_xmdt_m_t.xmdt003
+                     CALL axmt420_xmdt003_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL axmt420_xmdt003_ref()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt003
+            #add-point:BEFORE FIELD xmdt003 name="input.b.xmdt003"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt003
+            #add-point:ON CHANGE xmdt003 name="input.g.xmdt003"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdtstus
+            #add-point:BEFORE FIELD xmdtstus name="input.b.xmdtstus"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdtstus
+            
+            #add-point:AFTER FIELD xmdtstus name="input.a.xmdtstus"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdtstus
+            #add-point:ON CHANGE xmdtstus name="input.g.xmdtstus"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt005
+            
+            #add-point:AFTER FIELD xmdt005 name="input.a.xmdt005"
+            LET g_xmdt_m.xmdt005_desc = ' '
+            DISPLAY BY NAME g_xmdt_m.xmdt005_desc
+            IF NOT cl_null(g_xmdt_m.xmdt005) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdt_m.xmdt005 != g_xmdt_m_t.xmdt005 OR g_xmdt_m_t.xmdt005 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  LET g_chkparam.arg1 = g_site
+                  LET g_chkparam.arg2 = g_xmdt_m.xmdt005
+                  #160318-00025#35  2016/04/15  by pengxin  add(S)
+                  LET g_errshow = TRUE #是否開窗 
+                  LET g_chkparam.err_str[1] = "aoo-00176:sub-01302|aooi150|",cl_get_progname("aooi150",g_lang,"2"),"|:EXEPROGaooi150"
+                  #160318-00025#35  2016/04/15  by pengxin  add(E)
+                  IF NOT cl_chk_exist("v_ooaj002") THEN
+                     LET g_xmdt_m.xmdt005 = g_xmdt_m_t.xmdt005
+                     CALL axmt420_xmdt005_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL axmt420_xmdt005_ref()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt005
+            #add-point:BEFORE FIELD xmdt005 name="input.b.xmdt005"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt005
+            #add-point:ON CHANGE xmdt005 name="input.g.xmdt005"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt006
+            
+            #add-point:AFTER FIELD xmdt006 name="input.a.xmdt006"
+            LET g_xmdt_m.xmdt006_desc = ' '
+            DISPLAY BY NAME g_xmdt_m.xmdt006_desc
+            IF NOT cl_null(g_xmdt_m.xmdt006) THEN
+              # IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdt_m.xmdt006 != g_xmdt_m_o.xmdt006 OR g_xmdt_m_o.xmdt006 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_site
+                  LET g_chkparam.arg2 = g_xmdt_m.xmdt006
+                  #160318-00025#35  2016/04/15  by pengxin  add(S)
+                  LET g_errshow = TRUE #是否開窗 
+                  LET g_chkparam.err_str[1] = "aoo-00223:sub-01302|aooi610|",cl_get_progname("aooi610",g_lang,"2"),"|:EXEPROGaooi610"
+                  #160318-00025#35  2016/04/15  by pengxin  add(E)
+                  IF NOT cl_chk_exist("v_oodb002") THEN
+                     LET g_xmdt_m.xmdt006 = g_xmdt_m_o.xmdt006
+                     
+                     CALL axmt420_xmdt006_ref()
+                     CALL axmt420_xmdt006_carry()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL axmt420_xmdt006_carry()
+               #END IF
+            END IF
+            LET g_xmdt_m_o.xmdt006 = g_xmdt_m.xmdt006
+            CALL axmt420_xmdt006_ref()
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt006
+            #add-point:BEFORE FIELD xmdt006 name="input.b.xmdt006"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt006
+            #add-point:ON CHANGE xmdt006 name="input.g.xmdt006"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt007
+            #add-point:BEFORE FIELD xmdt007 name="input.b.xmdt007"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt007
+            
+            #add-point:AFTER FIELD xmdt007 name="input.a.xmdt007"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt007
+            #add-point:ON CHANGE xmdt007 name="input.g.xmdt007"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt008
+            #add-point:BEFORE FIELD xmdt008 name="input.b.xmdt008"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt008
+            
+            #add-point:AFTER FIELD xmdt008 name="input.a.xmdt008"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt008
+            #add-point:ON CHANGE xmdt008 name="input.g.xmdt008"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt009
+            
+            #add-point:AFTER FIELD xmdt009 name="input.a.xmdt009"
+            LET g_xmdt_m.xmdt009_desc = ' '
+            DISPLAY BY NAME g_xmdt_m.xmdt009_desc
+            IF NOT cl_null(g_xmdt_m.xmdt009) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdt_m.xmdt009 != g_xmdt_m_t.xmdt009 OR g_xmdt_m_t.xmdt009 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xmdt_m.xmdt009
+                  LET g_chkparam.arg2 = ' '
+                  #160318-00025#35  2016/04/15  by pengxin  add(S)
+                  LET g_errshow = TRUE #是否開窗 
+                  LET g_chkparam.err_str[1] = "apm-00184:sub-01302|aooi714|",cl_get_progname("aooi714",g_lang,"2"),"|:EXEPROGaooi714"
+                  #160318-00025#35  2016/04/15  by pengxin  add(E)
+                  IF NOT cl_chk_exist("v_ooib002_1") THEN
+                     LET g_xmdt_m.xmdt009 = g_xmdt_m_t.xmdt009
+                     CALL axmt420_xmdt009_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL axmt420_xmdt009_ref()
+            CALL axmt420_set_no_entry(p_cmd)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt009
+            #add-point:BEFORE FIELD xmdt009 name="input.b.xmdt009"
+                                    CALL axmt420_set_entry(p_cmd)
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt009
+            #add-point:ON CHANGE xmdt009 name="input.g.xmdt009"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt011
+            
+            #add-point:AFTER FIELD xmdt011 name="input.a.xmdt011"
+            LET g_xmdt_m.xmdt011_desc = ' '
+            DISPLAY BY NAME g_xmdt_m.xmdt011_desc
+            IF NOT cl_null(g_xmdt_m.xmdt011) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdt_m.xmdt011 != g_xmdt_m_t.xmdt011 OR g_xmdt_m_t.xmdt011 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = '238'
+                  LET g_chkparam.arg2 = g_xmdt_m.xmdt011
+                  LET g_chkparam.err_str[1] = "aoo-00099:axm-00048"
+                  #160318-00025#35  2016/04/15  by pengxin  add(S)
+                  LET g_errshow = TRUE #是否開窗 
+                  LET g_chkparam.err_str[2] = "aqc-00032:sub-01302|aqci030|",cl_get_progname("aqci030",g_lang,"2"),"|:EXEPROGaqci030"
+                  #160318-00025#35  2016/04/15  by pengxin  add(E)
+                  IF NOT cl_chk_exist("v_oocq002_1") THEN
+                     LET g_xmdt_m.xmdt011 = g_xmdt_m_t.xmdt011
+                     CALL axmt420_xmdt011_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL axmt420_xmdt011_ref()
+            CALL axmt420_set_no_entry(p_cmd)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt011
+            #add-point:BEFORE FIELD xmdt011 name="input.b.xmdt011"
+                                    CALL axmt420_set_entry(p_cmd)
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt011
+            #add-point:ON CHANGE xmdt011 name="input.g.xmdt011"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt019
+            
+            #add-point:AFTER FIELD xmdt019 name="input.a.xmdt019"
+            LET g_xmdt_m.xmdt019_desc = ' '
+            DISPLAY BY NAME g_xmdt_m.xmdt019_desc
+            IF NOT cl_null(g_xmdt_m.xmdt019) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdt_m.xmdt019 != g_xmdt_m_t.xmdt019 OR g_xmdt_m_t.xmdt019 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  #160621-00003#3 20160627 modify by beckxie---S
+                  #LET g_chkparam.arg1 = '275'
+                  #LET g_chkparam.arg2 = g_xmdt_m.xmdt019
+                  #LET g_chkparam.err_str[1] = "aoo-00099:axm-00049"
+                  ##160318-00025#35  2016/04/15  by pengxin  add(S)
+                  #LET g_errshow = TRUE #是否開窗 
+                  #LET g_chkparam.err_str[2] = "aqc-00032:sub-01302|aqci030|",cl_get_progname("aqci030",g_lang,"2"),"|:EXEPROGaqci030"
+                  ##160318-00025#35  2016/04/15  by pengxin  add(E)
+                  #IF NOT cl_chk_exist("v_oocq002_1") THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xmdt_m.xmdt019
+                  LET g_chkparam.arg2 = '1'
+                  LET g_chkparam.err_str[1] = "aoo-00299|",l_msg3
+                  IF NOT cl_chk_exist("v_oojd001") THEN
+                  #160621-00003#3 20160627 modify by beckxie---E
+                     LET g_xmdt_m.xmdt019 = g_xmdt_m_t.xmdt019
+                     CALL axmt420_xmdt019_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL axmt420_xmdt019_ref()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt019
+            #add-point:BEFORE FIELD xmdt019 name="input.b.xmdt019"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt019
+            #add-point:ON CHANGE xmdt019 name="input.g.xmdt019"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt030
+            #add-point:BEFORE FIELD xmdt030 name="input.b.xmdt030"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt030
+            
+            #add-point:AFTER FIELD xmdt030 name="input.a.xmdt030"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt030
+            #add-point:ON CHANGE xmdt030 name="input.g.xmdt030"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt013
+            #add-point:BEFORE FIELD xmdt013 name="input.b.xmdt013"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt013
+            
+            #add-point:AFTER FIELD xmdt013 name="input.a.xmdt013"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt013
+            #add-point:ON CHANGE xmdt013 name="input.g.xmdt013"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt014
+            #add-point:BEFORE FIELD xmdt014 name="input.b.xmdt014"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt014
+            
+            #add-point:AFTER FIELD xmdt014 name="input.a.xmdt014"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt014
+            #add-point:ON CHANGE xmdt014 name="input.g.xmdt014"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt010
+            #add-point:BEFORE FIELD xmdt010 name="input.b.xmdt010"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt010
+            
+            #add-point:AFTER FIELD xmdt010 name="input.a.xmdt010"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt010
+            #add-point:ON CHANGE xmdt010 name="input.g.xmdt010"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt012
+            #add-point:BEFORE FIELD xmdt012 name="input.b.xmdt012"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt012
+            
+            #add-point:AFTER FIELD xmdt012 name="input.a.xmdt012"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt012
+            #add-point:ON CHANGE xmdt012 name="input.g.xmdt012"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt020
+            #add-point:BEFORE FIELD xmdt020 name="input.b.xmdt020"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt020
+            
+            #add-point:AFTER FIELD xmdt020 name="input.a.xmdt020"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt020
+            #add-point:ON CHANGE xmdt020 name="input.g.xmdt020"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt015
+            #add-point:BEFORE FIELD xmdt015 name="input.b.xmdt015"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt015
+            
+            #add-point:AFTER FIELD xmdt015 name="input.a.xmdt015"
+            IF NOT cl_null(g_xmdt_m.xmdt015) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdt_m.xmdt015 != g_xmdt_m_t.xmdt015 OR g_xmdt_m_t.xmdt015 IS NULL )) THEN   #160824-00007#215 by sakura mark
+               IF g_xmdt_m.xmdt015 != g_xmdt_m_o.xmdt015 OR cl_null(g_xmdt_m_o.xmdt015) THEN   #160824-00007#215 by sakura add
+                  CALL axmt420_xmdt015_carry()                    
+               END IF
+            END IF
+            LET g_xmdt_m_o.* = g_xmdt_m.*   #160824-00007#215 by sakura add
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt015
+            #add-point:ON CHANGE xmdt015 name="input.g.xmdt015"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt016
+            #add-point:BEFORE FIELD xmdt016 name="input.b.xmdt016"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt016
+            
+            #add-point:AFTER FIELD xmdt016 name="input.a.xmdt016"
+            IF NOT cl_null(g_xmdt_m.xmdt016) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdt_m.xmdt016 != g_xmdt_m_t.xmdt016 OR g_xmdt_m_t.xmdt016 IS NULL )) THEN
+
+                  #有效日不可大於失效日
+                  IF NOT axmt420_xmdt015_chk() THEN
+                     LET g_xmdt_m.xmdt016 = g_xmdt_m_t.xmdt016
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt016
+            #add-point:ON CHANGE xmdt016 name="input.g.xmdt016"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt017
+            #add-point:BEFORE FIELD xmdt017 name="input.b.xmdt017"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt017
+            
+            #add-point:AFTER FIELD xmdt017 name="input.a.xmdt017"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt017
+            #add-point:ON CHANGE xmdt017 name="input.g.xmdt017"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdt018
+            #add-point:BEFORE FIELD xmdt018 name="input.b.xmdt018"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdt018
+            
+            #add-point:AFTER FIELD xmdt018 name="input.a.xmdt018"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdt018
+            #add-point:ON CHANGE xmdt018 name="input.g.xmdt018"
+                        
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xmdtdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtdocno
+            #add-point:ON ACTION controlp INFIELD xmdtdocno name="input.c.xmdtdocno"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdt_m.xmdtdocno             #給予default值
+
+            #給予arg
+            
+            LET g_qryparam.arg1 = g_ooef.ooef004
+#160621-00027#1-s
+#            LET g_qryparam.arg2 = 'axmt420'
+            LET g_qryparam.arg2 = g_prog
+#160621-00027#1-e
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_xmdt_m.xmdtdocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdt_m.xmdtdocno TO xmdtdocno              #顯示到畫面上
+            CALL axmt420_xmdtdocno_ref()
+
+            NEXT FIELD xmdtdocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt001
+            #add-point:ON ACTION controlp INFIELD xmdt001 name="input.c.xmdt001"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdtsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtsite
+            #add-point:ON ACTION controlp INFIELD xmdtsite name="input.c.xmdtsite"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdtdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtdocdt
+            #add-point:ON ACTION controlp INFIELD xmdtdocdt name="input.c.xmdtdocdt"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt004
+            #add-point:ON ACTION controlp INFIELD xmdt004 name="input.c.xmdt004"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdt_m.xmdt004             #給予default值
+
+            #給予arg
+            CALL s_control_get_customer_sql('2',g_xmdt_m.xmdtsite,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtdocno) #albireo-s
+                 RETURNING g_sub_success,g_qryparam.where
+
+            LET g_qryparam.arg1 = g_site
+                 
+            CALL q_pmaa001_6()                                #呼叫開窗
+
+            LET g_xmdt_m.xmdt004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdt_m.xmdt004 TO xmdt004              #顯示到畫面上
+            CALL axmt420_xmdt004_ref() 
+
+            NEXT FIELD xmdt004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt002
+            #add-point:ON ACTION controlp INFIELD xmdt002 name="input.c.xmdt002"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+		    	LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdt_m.xmdt002             #給予default值
+
+            #給予arg
+
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_xmdt_m.xmdt002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdt_m.xmdt002 TO xmdt002              #顯示到畫面上
+            CALL axmt420_xmdt002_ref()
+
+            NEXT FIELD xmdt002                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt003
+            #add-point:ON ACTION controlp INFIELD xmdt003 name="input.c.xmdt003"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdt_m.xmdt003             #給予default值
+
+            #給予arg
+            #2015/01/29 by stellar modify ----- (S)
+            #參數沒給值，導致開窗無資料
+#            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg1 = g_xmdt_m.xmdtdocdt
+            #2015/01/29 by stellar modify ----- (E)
+
+            CALL q_ooeg001()                                #呼叫開窗
+
+            LET g_xmdt_m.xmdt003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdt_m.xmdt003 TO xmdt003              #顯示到畫面上
+            CALL axmt420_xmdt003_ref()
+
+            NEXT FIELD xmdt003                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdtstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdtstus
+            #add-point:ON ACTION controlp INFIELD xmdtstus name="input.c.xmdtstus"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt005
+            #add-point:ON ACTION controlp INFIELD xmdt005 name="input.c.xmdt005"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdt_m.xmdt005             #給予default值
+            LET g_qryparam.default2 = "" #g_xmdt_m.ooail004 #助記碼
+            LET g_qryparam.default3 = "" #g_xmdt_m.ooail003 #說明
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site
+            CALL q_ooaj002_1()                                #呼叫開窗
+
+            LET g_xmdt_m.xmdt005 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_xmdt_m.ooail004 = g_qryparam.return2 #助記碼
+            #LET g_xmdt_m.ooail003 = g_qryparam.return3 #說明
+
+            DISPLAY g_xmdt_m.xmdt005 TO xmdt005              #顯示到畫面上
+            #DISPLAY g_xmdt_m.ooail004 TO ooail004 #助記碼
+            #DISPLAY g_xmdt_m.ooail003 TO ooail003 #說明
+            CALL axmt420_xmdt005_ref()
+
+            NEXT FIELD xmdt005                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt006
+            #add-point:ON ACTION controlp INFIELD xmdt006 name="input.c.xmdt006"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdt_m.xmdt006             #給予default值
+           
+            #給予arg
+            CALL q_oodb002_2()    #呼叫開窗
+
+            LET g_xmdt_m.xmdt006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdt_m.xmdt006 TO xmdt006              #顯示到畫面上
+            CALL axmt420_xmdt006_ref()
+
+            NEXT FIELD xmdt006                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt007
+            #add-point:ON ACTION controlp INFIELD xmdt007 name="input.c.xmdt007"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt008
+            #add-point:ON ACTION controlp INFIELD xmdt008 name="input.c.xmdt008"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt009
+            #add-point:ON ACTION controlp INFIELD xmdt009 name="input.c.xmdt009"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdt_m.xmdt009             #給予default值
+
+            #給予arg
+
+            CALL q_ooib002_2()                                #呼叫開窗
+
+            LET g_xmdt_m.xmdt009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdt_m.xmdt009 TO xmdt009              #顯示到畫面上
+            CALL axmt420_xmdt009_ref()
+
+            NEXT FIELD xmdt009                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt011
+            #add-point:ON ACTION controlp INFIELD xmdt011 name="input.c.xmdt011"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdt_m.xmdt011             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "238" 
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_xmdt_m.xmdt011 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdt_m.xmdt011 TO xmdt011              #顯示到畫面上
+            CALL axmt420_xmdt011_ref()
+
+            NEXT FIELD xmdt011                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt019
+            #add-point:ON ACTION controlp INFIELD xmdt019 name="input.c.xmdt019"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+		    	INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdt_m.xmdt019             #給予default值
+
+            #給予arg
+            #160621-00003#3 20160627 modify by beckxie---S
+			   #LET g_qryparam.arg1 = "275"
+            #CALL q_oocq002()                           #呼叫開窗
+            LET g_qryparam.arg1 = '1'
+            CALL q_oojd001_1()
+            #160621-00003#3 20160627 modify by beckxie---E
+
+            LET g_xmdt_m.xmdt019 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdt_m.xmdt019 TO xmdt019              #顯示到畫面上
+            CALL axmt420_xmdt019_ref()
+
+            NEXT FIELD xmdt019                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt030
+            #add-point:ON ACTION controlp INFIELD xmdt030 name="input.c.xmdt030"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt013
+            #add-point:ON ACTION controlp INFIELD xmdt013 name="input.c.xmdt013"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt014
+            #add-point:ON ACTION controlp INFIELD xmdt014 name="input.c.xmdt014"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt010
+            #add-point:ON ACTION controlp INFIELD xmdt010 name="input.c.xmdt010"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt012
+            #add-point:ON ACTION controlp INFIELD xmdt012 name="input.c.xmdt012"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt020
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt020
+            #add-point:ON ACTION controlp INFIELD xmdt020 name="input.c.xmdt020"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt015
+            #add-point:ON ACTION controlp INFIELD xmdt015 name="input.c.xmdt015"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt016
+            #add-point:ON ACTION controlp INFIELD xmdt016 name="input.c.xmdt016"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt017
+            #add-point:ON ACTION controlp INFIELD xmdt017 name="input.c.xmdt017"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xmdt018
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdt018
+            #add-point:ON ACTION controlp INFIELD xmdt018 name="input.c.xmdt018"
+                        
+            #END add-point
+ 
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_xmdt_m.xmdtdocno
+                        
+            #add-point:單頭INPUT後 name="input.head.after_input"
+            
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前 name="input.head.b_insert"
+               LET l_success = NULL
+               CALL s_aooi200_gen_docno(g_site,g_xmdt_m.xmdtdocno,g_xmdt_m.xmdtdocdt,g_prog) 
+                  RETURNING l_success,g_xmdt_m.xmdtdocno
+               
+               IF NOT l_success THEN 
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               
+
+
+               
+
+               #end add-point
+               
+               INSERT INTO xmdt_t (xmdtent,xmdtdocno,xmdt001,xmdtsite,xmdtdocdt,xmdt004,xmdt002,xmdt003, 
+                   xmdtstus,xmdt005,xmdt006,xmdt007,xmdt008,xmdt009,xmdt011,xmdt019,xmdt030,xmdt013, 
+                   xmdt014,xmdt010,xmdt012,xmdt020,xmdt015,xmdt016,xmdt017,xmdt018,xmdtownid,xmdtowndp, 
+                   xmdtcrtid,xmdtcrtdp,xmdtcrtdt,xmdtmodid,xmdtmoddt,xmdtcnfid,xmdtcnfdt)
+               VALUES (g_enterprise,g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt, 
+                   g_xmdt_m.xmdt004,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtstus,g_xmdt_m.xmdt005, 
+                   g_xmdt_m.xmdt006,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011, 
+                   g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010, 
+                   g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016,g_xmdt_m.xmdt017, 
+                   g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid,g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtdp, 
+                   g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid,g_xmdt_m.xmdtmoddt,g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfdt)  
+ 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_xmdt_m:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭新增中 name="input.head.m_insert"
+               LET g_ooff003_d = g_xmdt_m.xmdtdocno   #161031-00025#20 add                              
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後 name="input.head.a_insert"
+                              
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL axmt420_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL axmt420_b_fill()
+                  CALL axmt420_b_fill2('0')
+               END IF
+               
+               #add-point:單頭新增後 name="input.head.a_insert2"
+               
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前 name="input.head.b_update"
+                                             #若有變更客戶 幣別 稅別 將重新更新單身上次單價
+               IF cl_null(g_xmdt_m_t.xmdt005) OR (g_xmdt_m.xmdt005 <> g_xmdt_m_t.xmdt005)
+                  OR cl_null(g_xmdt_m_t.xmdt004) OR (g_xmdt_m.xmdt004 <> g_xmdt_m_t.xmdt004)
+                  OR cl_null(g_xmdt_m_t.xmdt006) OR (g_xmdt_m.xmdt006 <> g_xmdt_m_t.xmdt006) THEN
+                  IF NOT axmt420_get_lasttime_price_2() THEN
+                     CALL s_transaction_end('N','0')
+                     CONTINUE DIALOG
+                  END IF
+               END IF
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL axmt420_xmdt_t_mask_restore('restore_mask_o')
+               
+               UPDATE xmdt_t SET (xmdtdocno,xmdt001,xmdtsite,xmdtdocdt,xmdt004,xmdt002,xmdt003,xmdtstus, 
+                   xmdt005,xmdt006,xmdt007,xmdt008,xmdt009,xmdt011,xmdt019,xmdt030,xmdt013,xmdt014,xmdt010, 
+                   xmdt012,xmdt020,xmdt015,xmdt016,xmdt017,xmdt018,xmdtownid,xmdtowndp,xmdtcrtid,xmdtcrtdp, 
+                   xmdtcrtdt,xmdtmodid,xmdtmoddt,xmdtcnfid,xmdtcnfdt) = (g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001, 
+                   g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003, 
+                   g_xmdt_m.xmdtstus,g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008, 
+                   g_xmdt_m.xmdt009,g_xmdt_m.xmdt011,g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013, 
+                   g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015, 
+                   g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid,g_xmdt_m.xmdtowndp, 
+                   g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtdp,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid,g_xmdt_m.xmdtmoddt, 
+                   g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfdt)
+                WHERE xmdtent = g_enterprise AND xmdtdocno = g_xmdtdocno_t
+ 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "xmdt_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭修改中 name="input.head.m_update"
+                              
+               #end add-point
+               
+               
+               
+               
+               #將遮罩欄位進行遮蔽
+               CALL axmt420_xmdt_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_xmdt_m_t)
+               LET g_log2 = util.JSON.stringify(g_xmdt_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後 name="input.head.a_update"
+                              
+               #end add-point
+            END IF
+            
+            LET g_master_commit = "Y"
+            LET g_xmdtdocno_t = g_xmdt_m.xmdtdocno
+ 
+            
+      END INPUT
+   
+ 
+{</section>}
+ 
+{<section id="axmt420.input.body" >}
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_xmdu_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_xmdu_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL axmt420_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_xmdu_d.getLength()
+            #add-point:資料輸入前 name="input.d.before_input"
+                        
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2 name="input.body.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_detail_idx_list[1] = l_ac
+            LET g_current_page = 1
+            CALL axmt420_b_fill2('2')
+ 
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN axmt420_cl USING g_enterprise,g_xmdt_m.xmdtdocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN axmt420_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE axmt420_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_xmdu_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_xmdu_d[l_ac].xmduseq IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_xmdu_d_t.* = g_xmdu_d[l_ac].*  #BACKUP
+               LET g_xmdu_d_o.* = g_xmdu_d[l_ac].*  #BACKUP
+               CALL axmt420_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body.after_set_entry_b"
+ 
+               #end add-point  
+               CALL axmt420_set_no_entry_b(l_cmd)
+               IF NOT axmt420_lock_b("xmdu_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH axmt420_bcl INTO g_xmdu_d[l_ac].xmduseq,g_xmdu_d[l_ac].xmdu001,g_xmdu_d[l_ac].xmdu002, 
+                      g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu031,g_xmdu_d[l_ac].xmdu032,g_xmdu_d[l_ac].xmdu005, 
+                      g_xmdu_d[l_ac].xmdu006,g_xmdu_d[l_ac].xmdu007,g_xmdu_d[l_ac].xmdu015,g_xmdu_d[l_ac].xmdu008, 
+                      g_xmdu_d[l_ac].xmdu009,g_xmdu_d[l_ac].xmdu010,g_xmdu_d[l_ac].xmdu011,g_xmdu_d[l_ac].xmdu012, 
+                      g_xmdu_d[l_ac].xmdu013,g_xmdu_d[l_ac].xmdu014,g_xmdu_d[l_ac].xmdu004,g_xmdu_d[l_ac].xmdu030, 
+                      g_xmdu_d[l_ac].xmdusite
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_xmdu_d_t.xmduseq,":",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_xmdu_d_mask_o[l_ac].* =  g_xmdu_d[l_ac].*
+                  CALL axmt420_xmdu_t_mask()
+                  LET g_xmdu_d_mask_n[l_ac].* =  g_xmdu_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL axmt420_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body.before_row"
+            CALL axmt420_xmdu006_ref()
+            CALL axmt420_xmdu002_ref()
+            CALL axmt420_xmdu015_ref()
+            CALL axmt420_xmdu014_ref()
+            CALL axmt420_xmdu008_ref()
+            LET g_pmao_flag = 'N'
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+        
+         BEFORE INSERT  
+            
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_xmdu_d[l_ac].* TO NULL 
+            INITIALIZE g_xmdu_d_t.* TO NULL 
+            INITIALIZE g_xmdu_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值
+                  LET g_xmdu_d[l_ac].xmdu009 = "N"
+ 
+            #add-point:modify段before備份 name="input.body.insert.before_bak"
+            LET g_pmao_flag = 'N'
+            #end add-point
+            LET g_xmdu_d_t.* = g_xmdu_d[l_ac].*     #新輸入資料
+            LET g_xmdu_d_o.* = g_xmdu_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL axmt420_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL axmt420_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_xmdu_d[li_reproduce_target].* = g_xmdu_d[li_reproduce].*
+ 
+               LET g_xmdu_d[li_reproduce_target].xmduseq = NULL
+ 
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body.before_insert"
+                                    #繼承單頭委外否
+            LET g_xmdu_d[l_ac].xmdu001 = g_xmdt_m.xmdt001
+            #稅率
+            LET g_xmdu_d[l_ac].xmdu012 = g_xmdt_m.xmdt007
+            
+            #項次
+            SELECT MAX(xmduseq)+1 INTO g_xmdu_d[l_ac].xmduseq FROM xmdu_t
+             WHERE xmduent = g_enterprise AND xmdudocno = g_xmdt_m.xmdtdocno
+            IF cl_null(g_xmdu_d[l_ac].xmduseq) OR g_xmdu_d[l_ac].xmduseq = 0 THEN
+               LET g_xmdu_d[l_ac].xmduseq = 1
+            END IF
+            
+            #折扣率
+            LET g_xmdu_d[l_ac].xmdu013 = 0
+            
+            #單價
+            LET g_xmdu_d[l_ac].xmdu011 = 0
+            
+            #上次單價
+            LET g_xmdu_d[l_ac].xmdu010 = 0 
+            
+            #分量計價否
+            LET g_xmdu_d[l_ac].xmdu009 = 'N'
+            
+            LET g_xmdu_d[l_ac].xmdusite = g_site
+            
+            LET g_xmdu_d_o.* = g_xmdu_d[l_ac].*  #160705-00001 by whitney add
+
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增 name="input.body.b_a_insert"
+            #產品特徵 作業編號 製程序為空時給空白
+            IF cl_null(g_xmdu_d[l_ac].xmdu003) THEN
+               LET g_xmdu_d[l_ac].xmdu003 = ' '
+            END IF
+            IF cl_null(g_xmdu_d[l_ac].xmdu006) THEN
+               LET g_xmdu_d[l_ac].xmdu006 = ' '
+            END IF
+            IF cl_null(g_xmdu_d[l_ac].xmdu007) THEN
+               LET g_xmdu_d[l_ac].xmdu007 = ' '
+            END IF
+           #20141229--polly-----add---(S)
+           #判斷客戶料號是否存在交易對象料號對應檔，若無，則跳出詢問示窗是否要回寫交易對象料號對應檔中
+            #IF NOT cl_null(g_xmdu_d[l_ac].xmdu005) THEN
+            #   LET l_cnt = 0
+            #   SELECT COUNT(*) INTO l_cnt
+            #     FROM pmao_t
+            #    WHERE pmaoent = g_enterprise
+            #      AND pmao001 = g_xmdt_m.xmdt004
+            #      AND pmao002 = g_xmdu_d[l_ac].xmdu002
+            #      AND pmao003 = g_xmdu_d[l_ac].xmdu003
+            #      AND pmao004 = g_xmdu_d[l_ac].xmdu005
+            #   IF l_cnt = 0 THEN
+            #      IF cl_ask_confirm('axm-00445') THEN
+            #         IF NOT s_axmt500_ins_pmao(g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu005) THEN
+            #            LET g_xmdu_d[l_ac].xmdu005 = ''
+            #            DISPLAY BY NAME g_xmdu_d[l_ac].xmdu005
+            #         END IF
+            #     ELSE
+            #         LET g_xmdu_d[l_ac].xmdu005 = ''
+            #         DISPLAY BY NAME g_xmdu_d[l_ac].xmdu005
+            #      END IF
+            #   END IF
+            #END IF
+            #20141229--polly-----add---(E) 
+               IF g_pmao_flag = 'Y' THEN
+                  IF NOT s_axmt500_ins_pmao(g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu005,
+                                            g_xmdu_d[l_ac].l_pmao009, g_xmdu_d[l_ac].l_pmao010  ) THEN
+                        LET g_xmdu_d[l_ac].xmdu005 = ''
+                        LET g_xmdu_d[l_ac].l_pmao009 = ''
+                        LET g_xmdu_d[l_ac].l_pmao010 = ''
+                        DISPLAY BY NAME g_xmdu_d[l_ac].xmdu005,g_xmdu_d[l_ac].l_pmao009, g_xmdu_d[l_ac].l_pmao010
+                      
+                  END IF
+               END IF   
+            
+
+           #2015-06-08----dorislai----add
+           #新增或編輯時，若料件編號、系列、產品分類皆無值，跳出訊息框 
+           IF (l_cmd = 'a' OR l_cmd = 'u') THEN
+              LET l_chk2 = 1
+              IF cl_null(g_xmdu_d[l_ac].xmdu031) =TRUE AND cl_null(g_xmdu_d[l_ac].xmdu002) AND cl_null(g_xmdu_d[l_ac].xmdu032) THEN
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend=""
+                 LET g_errparam.code="axm-00650"
+                 LET g_errparam.popup=TRUE
+                 CALL cl_err()
+                 NEXT FIELD xmdu002
+              END IF
+           END IF
+           #2015-06-08----dorislai----end  
+
+
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM xmdu_t 
+             WHERE xmduent = g_enterprise AND xmdudocno = g_xmdt_m.xmdtdocno
+ 
+               AND xmduseq = g_xmdu_d[l_ac].xmduseq
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+                           
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_xmdt_m.xmdtdocno
+               LET gs_keys[2] = g_xmdu_d[g_detail_idx].xmduseq
+               CALL axmt420_insert_b('xmdu_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               #161031-00025#20-s
+               IF NOT cl_null(g_xmdu_d[l_ac].ooff013) THEN
+                  CALL s_aooi360_gen('7',g_prog,g_xmdt_m.xmdtdocno,g_xmdu_d[l_ac].xmduseq,'','','','','','','','1',g_xmdu_d[l_ac].ooff013) RETURNING l_success
+               END IF
+               #161031-00025#20-e                              
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code = "std-00006" 
+               LET g_errparam.popup = TRUE 
+               INITIALIZE g_xmdu_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "xmdu_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL axmt420_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               #161031-00025#20-s
+               IF NOT cl_null(g_xmdu_d[l_ac].ooff013) THEN
+                  CALL s_aooi360_gen('7',g_prog,g_xmdt_m.xmdtdocno,g_xmdu_d[l_ac].xmduseq,'','','','','','','','1',g_xmdu_d[l_ac].ooff013) RETURNING l_success
+               END IF
+               #161031-00025#20-e                                 
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d) name="input.body.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code = -263 
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               LET l_del_chk = TRUE         #避免刪除後，跑進AFTER ROW、AFTER INSERT、ON ROW CHANGE三欄位皆為空判斷式  
+               LET g_xmdu_d_o.xmdu008 = ''  #刪除後將舊值紀錄給清空，用於AFTER ROW 判斷
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_xmdt_m.xmdtdocno
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_xmdu_d_t.xmduseq
+ 
+            
+               #刪除同層單身
+               IF NOT axmt420_delete_b('xmdu_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE axmt420_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT axmt420_key_delete_b(gs_keys,'xmdu_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE axmt420_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身刪除中 name="input.body.m_delete"
+               #161031-00025#20-s
+               CALL s_aooi360_del('7',g_prog,g_xmdt_m.xmdtdocno,g_xmdu_d_t.xmduseq,'','','','','','','','1') RETURNING l_success
+               #161031-00025#20-e                              
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE axmt420_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後 name="input.body.a_delete"
+                   DELETE FROM xmdv_t
+                   WHERE xmdvent = g_enterprise 
+                     AND xmdvdocno = g_xmdv_m.xmdtdocno
+                     AND xmdvseq   = g_xmdu_d_t.xmduseq               
+               #end add-point
+               LET l_count = g_xmdu_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body.after_delete"
+                        
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_xmdu_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmduseq
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdu_d[l_ac].xmduseq,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD xmduseq
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmduseq name="input.a.page1.xmduseq"
+                                    #此段落由子樣板a05產生
+            IF  g_xmdt_m.xmdtdocno IS NOT NULL AND g_xmdu_d[g_detail_idx].xmduseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdt_m.xmdtdocno != g_xmdtdocno_t OR g_xmdu_d[g_detail_idx].xmduseq != g_xmdu_d_t.xmduseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdu_t WHERE "||"xmduent = '" ||g_enterprise|| "' AND "||"xmdudocno = '"||g_xmdt_m.xmdtdocno ||"' AND "|| "xmduseq = '"||g_xmdu_d[g_detail_idx].xmduseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #分量計價項次一起變
+                  UPDATE xmdv_t SET xmdvseq = g_xmdu_d[l_ac].xmduseq 
+                   WHERE xmdvent = g_enterprise
+                     AND xmdvdocno = g_xmdt_m.xmdtdocno
+                     AND xmdvseq = g_xmdu_d_o.xmduseq  #160705-00001 by whitney modify g_xmdu_d_t->g_xmdu_d_o
+               END IF
+            END IF
+            LET g_xmdu_d_o.xmduseq = g_xmdu_d[l_ac].xmduseq  #160705-00001 by whitney add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmduseq
+            #add-point:BEFORE FIELD xmduseq name="input.b.page1.xmduseq"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmduseq
+            #add-point:ON CHANGE xmduseq name="input.g.page1.xmduseq"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu001
+            #add-point:BEFORE FIELD xmdu001 name="input.b.page1.xmdu001"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu001
+            
+            #add-point:AFTER FIELD xmdu001 name="input.a.page1.xmdu001"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu001
+            #add-point:ON CHANGE xmdu001 name="input.g.page1.xmdu001"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu002
+            
+            #add-point:AFTER FIELD xmdu002 name="input.a.page1.xmdu002"
+
+            LET g_xmdu_d[l_ac].imaal003 = ' '
+            LET g_xmdu_d[l_ac].imaal004 = ' '
+            DISPLAY BY NAME g_xmdu_d[l_ac].imaal003,g_xmdu_d[l_ac].imaal004
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu002) THEN
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdu_d[l_ac].xmdu002 != g_xmdu_d_o.xmdu002 OR g_xmdu_d_o.xmdu002 IS NULL )) THEN   #160824-00007#215 by sakura mark
+               IF g_xmdu_d[l_ac].xmdu002 != g_xmdu_d_o.xmdu002 OR cl_null(g_xmdu_d_o.xmdu002) THEN   #160824-00007#215 by sakura add
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xmdu_d[l_ac].xmdu002
+                  IF NOT cl_chk_exist("v_imaf001_14") THEN
+                     LET g_xmdu_d[l_ac].xmdu002 = g_xmdu_d_o.xmdu002
+                     CALL axmt420_xmdu002_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  IF NOT axmt420_xmdu002_chk() THEN
+                     LET g_xmdu_d[l_ac].xmdu002 = g_xmdu_d_o.xmdu002
+                     CALL axmt420_xmdu002_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #料件+產品特徵抓客料
+                  IF NOT cl_null(g_xmdu_d[l_ac].xmdu003)THEN
+                     #161221-00064#14 mod-S
+#                     CALL s_apmi070_get_pmao004(g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003)
+#                       RETURNING g_sub_success,g_xmdu_d[l_ac].xmdu005
+                     CALL s_apmi070_get_pmao004_2(g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,'2')
+                       RETURNING g_sub_success,g_xmdu_d[l_ac].xmdu005
+                     #161221-00064#14 mod-E
+                     DISPLAY BY NAME g_xmdu_d[l_ac].xmdu005
+                  END IF                  
+                  #料件給與預設
+                  CALL axmt420_xmdu002_carry()
+                  
+                  #160307-00001#1  By Ann_Huang --- add Start ---
+                  #判斷客戶料號是否存在交易對象料號對應檔，若無，則跳出詢問示窗是否要回寫交易對象料號對應檔中
+                  IF NOT cl_null(g_xmdu_d[l_ac].xmdu002) AND NOT cl_null(g_xmdu_d[l_ac].xmdu005) THEN        
+                     IF g_xmdu_d[l_ac].xmdu002 != g_xmdu_d_o.xmdu002 OR g_xmdu_d_o.xmdu002 IS NULL THEN                     
+                        IF cl_null(g_xmdu_d[l_ac].xmdu003) THEN  LET g_xmdu_d[l_ac].xmdu003 =' ' END IF      
+                        LET l_cnt = 0
+                        SELECT COUNT(*) INTO l_cnt
+                          FROM pmao_t
+                         WHERE pmaoent = g_enterprise
+                           AND pmao001 = g_xmdt_m.xmdt004
+                           AND pmao002 = g_xmdu_d[l_ac].xmdu002
+                           AND pmao003 = g_xmdu_d[l_ac].xmdu003
+                           AND pmao004 = g_xmdu_d[l_ac].xmdu005 
+                           AND pmao000 = '2' #161221-00064#14 add
+                        IF l_cnt = 0 THEN
+                           IF cl_ask_confirm('axm-00445') THEN
+                              LET g_pmao_flag = 'Y'
+                           ELSE
+                              LET g_xmdu_d[l_ac].xmdu005 = ''
+                              DISPLAY BY NAME g_xmdu_d[l_ac].xmdu005                   
+                           END IF               
+                        END IF
+                     END IF                  
+                  END IF
+                  #160307-00001#1  By Ann_Huang --- add End ---
+               END IF
+            END IF
+            
+            #2015-05-28---dorislai----add
+            #判斷料件編號、系列、產品分類，是否僅有一欄位有值
+               #料件編號有值時，系列、產品分類是否也有值         
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu002) AND (cl_null(g_xmdu_d[l_ac].xmdu031)=FALSE  OR cl_null(g_xmdu_d[l_ac].xmdu032)=FALSE) THEN
+               LET l_msg = ''   #清空值
+               LET l_msg1 = ''
+               LET l_msg2 = ''   
+#               CALL cl_getmsg('axm-00647',g_lang) RETURNING l_msg1  #%1替換成 料件編號    #160318-00005#49  mark
+               CALL cl_getmsg('apm-00939',g_lang) RETURNING l_msg1  #%1替換成 料件編號     #160318-00005#49  add
+               
+               IF NOT cl_null(g_xmdu_d[l_ac].xmdu031) THEN
+                  CALL cl_getmsg('axm-00648',g_lang) RETURNING l_msg2  #%2替換成 系列
+               ELSE
+                  CALL cl_getmsg('axm-00649',g_lang) RETURNING l_msg2  #%2替換成 產品分類             
+               END IF
+               
+               #替換axm-00645的字串(料件編號、系列、產品分類擇一輸入，%1已有值，是否將%2清空？)
+               CALL cl_getmsg_parm('axm-00645',g_lang,l_msg1 ||'|'|| l_msg2) RETURNING l_msg
+               #跳出提醒視窗，確認：保留當下欄位值、清除另一個欄位值  ; 取消：保留另一個欄位值、清除當下欄位值
+               IF cl_ask_confirm2('',l_msg) THEN
+                  LET g_xmdu_d[l_ac].xmdu031 = ''        #清空系列
+                  LET g_xmdu_d[l_ac].xmdu031_desc=''     #清空系列說明
+                  LET g_xmdu_d_o.xmdu031 = ''            #清空系列舊值
+                  LET g_xmdu_d[l_ac].xmdu032 = ''        #清空產品分類
+                  LET g_xmdu_d[l_ac].xmdu032_desc=''     #清空產品分類說明
+                  LET g_xmdu_d_o.xmdu032 = ''            #清空產品分類舊值
+                  DISPLAY BY NAME g_xmdu_d[l_ac].xmdu031,g_xmdu_d[l_ac].xmdu031_desc
+                  DISPLAY BY NAME g_xmdu_d[l_ac].xmdu032,g_xmdu_d[l_ac].xmdu032_desc
+               ELSE 
+                  LET g_xmdu_d[l_ac].xmdu002 = ''        #清空料號編號
+                  LET g_xmdu_d_o.xmdu002 = ''            #清空料號舊值
+                  LET g_xmdu_d[l_ac].imaal003 = ''       #清空品名
+                  LET g_xmdu_d[l_ac].imaal004 = ''       #清空規格
+                  LET g_xmdu_d[l_ac].xmdu003 = ''        #清空產品特徵
+                  LET g_xmdu_d[l_ac].xmdu003_desc = ''   #清空產品特徵說明
+                  CAll axmt420_set_no_entry_b(p_cmd)
+                  DISPLAY BY NAME g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].imaal003,g_xmdu_d[l_ac].imaal004
+                  DISPLAY BY NAME g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu003_desc
+               END IF
+                  
+            END IF
+            #2015-05-28---dorislai----end
+            #170116-00071#1-s add
+            #依交易對象、料號、產品特徵回傳客戶料號
+            IF cl_null(g_xmdu_d[l_ac].xmdu005) AND g_xmdu_d[l_ac].xmdu003 IS NOT NULL THEN
+               CALL s_apmi070_get_pmao004_2(g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,'2')
+               RETURNING l_success,g_xmdu_d[l_ac].xmdu005 
+               IF NOT cl_null(g_xmdu_d[l_ac].xmdu005 ) THEN
+            #170116-00071#1-e add                    
+                  SELECT pmao009,pmao010
+                    INTO g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010
+                    FROM pmao_t
+                   WHERE pmaoent = g_enterprise
+                     AND pmao001 = g_xmdt_m.xmdt004
+                     AND pmao002 = g_xmdu_d[l_ac].xmdu002
+                     AND pmao003 = g_xmdu_d[l_ac].xmdu003
+                     AND pmao004 = g_xmdu_d[l_ac].xmdu005                     
+                     AND pmao000 = '2' #161221-00064#14 add
+                  DISPLAY BY NAME g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010
+               END IF  #170116-00071#1 add
+            END IF     #170116-00071#1 add
+           #LET g_xmdu_d_o.xmdu002 = g_xmdu_d[l_ac].xmdu002   #160824-00007#215 by sakura mark
+            LET g_xmdu_d_o.* = g_xmdu_d[l_ac].*               #160824-00007#215 by sakura add
+            CALL axmt420_xmdu002_ref()
+            CALL axmt420_set_entry_b(l_cmd)
+            CALL axmt420_set_no_entry_b(l_cmd)
+   
+            
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu002
+            #add-point:BEFORE FIELD xmdu002 name="input.b.page1.xmdu002"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu002
+            #add-point:ON CHANGE xmdu002 name="input.g.page1.xmdu002"
+      
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu003
+            
+            #add-point:AFTER FIELD xmdu003 name="input.a.page1.xmdu003"
+            LET g_xmdu_d[l_ac].xmdu003_desc = ''
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu003) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdu_d[l_ac].xmdu003 != g_xmdu_d_t.xmdu003 OR g_xmdu_d_t.xmdu003 IS NULL )) THEN   #160824-00007#215 by sakura mark
+               IF g_xmdu_d[l_ac].xmdu003 != g_xmdu_d_o.xmdu003 OR cl_null(g_xmdu_d_o.xmdu003) THEN   #160824-00007#215 by sakura add
+                  IF NOT s_feature_check(g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003) THEN
+                     CALL s_feature_description(g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003) RETURNING l_success,g_xmdu_d[l_ac].xmdu003_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #151224-00025#5---dorishsu---151228---add--
+                 #IF NOT s_feature_direct_input(g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,g_xmdu_d_t.xmdu003,g_xmdt_m.xmdtdocno,g_xmdt_m.xmdtsite) THEN   #160824-00007#215 by sakura mark
+                  IF NOT s_feature_direct_input(g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,g_xmdu_d_o.xmdu003,g_xmdt_m.xmdtdocno,g_xmdt_m.xmdtsite) THEN   #160824-00007#215 by sakura add
+                     NEXT FIELD CURRENT
+                  END IF
+                  #151224-00025#5---dorishsu---151228---end--
+                  
+                  #160307-00001#1  By Ann_Huang  --- add Start ---
+                  #判斷客戶料號是否存在交易對象料號對應檔，若無，則跳出詢問示窗是否要回寫交易對象料號對應檔中                  
+                  IF NOT cl_null(g_xmdu_d[l_ac].xmdu002) AND NOT cl_null(g_xmdu_d[l_ac].xmdu005) THEN        
+                     IF g_xmdu_d[l_ac].xmdu003 != g_xmdu_d_o.xmdu003 OR g_xmdu_d_o.xmdu003 IS NULL THEN                     
+                        IF cl_null(g_xmdu_d[l_ac].xmdu003) THEN  LET g_xmdu_d[l_ac].xmdu003 =' ' END IF      
+                        LET l_cnt = 0
+                        SELECT COUNT(*) INTO l_cnt
+                          FROM pmao_t
+                         WHERE pmaoent = g_enterprise
+                           AND pmao001 = g_xmdt_m.xmdt004
+                           AND pmao002 = g_xmdu_d[l_ac].xmdu002
+                           AND pmao003 = g_xmdu_d[l_ac].xmdu003
+                           AND pmao004 = g_xmdu_d[l_ac].xmdu005 
+                           AND pmao000 = '2' #161221-00064#14 add
+                        IF l_cnt = 0 THEN
+                           IF cl_ask_confirm('axm-00445') THEN
+                              LET g_pmao_flag = 'Y'
+                           ELSE
+                              LET g_xmdu_d[l_ac].xmdu002 = ''
+                              DISPLAY BY NAME g_xmdu_d[l_ac].xmdu002               
+                           END IF               
+                        END IF
+                     END IF
+                  END IF
+                  #160307-00001#1  By Ann_Huang  --- add End ---
+                  IF NOT cl_null(g_xmdu_d[l_ac].xmdu002)THEN
+                     #161221-00064#14 mod-S
+#                     CALL s_apmi070_get_pmao004(g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003)
+#                        RETURNING g_sub_success,g_xmdu_d[l_ac].xmdu005
+                     CALL s_apmi070_get_pmao004_2(g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,'2')
+                        RETURNING g_sub_success,g_xmdu_d[l_ac].xmdu005
+                     #161221-00064#14 mod-E
+                        DISPLAY BY NAME g_xmdu_d[l_ac].xmdu005
+                  END IF
+                  CALL axmt420_xmdu003_carry()
+               END IF
+            END IF
+            LET g_xmdu_d_o.* = g_xmdu_d[l_ac].*   #160824-00007#215 by sakura add
+            CALL s_feature_description(g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003) RETURNING l_success,g_xmdu_d[l_ac].xmdu003_desc
+            SELECT pmao009,pmao010
+              INTO g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010
+              FROM pmao_t
+             WHERE pmaoent = g_enterprise
+               AND pmao001 = g_xmdt_m.xmdt004
+               AND pmao002 = g_xmdu_d[l_ac].xmdu002
+               AND pmao003 = g_xmdu_d[l_ac].xmdu003
+               AND pmao004 = g_xmdu_d[l_ac].xmdu005                     
+               AND pmao000 = '2' #161221-00064#14 add
+            DISPLAY BY NAME g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu003
+            #add-point:BEFORE FIELD xmdu003 name="input.b.page1.xmdu003"
+            #stellar 140828 add ----------------------(S)
+            #增加產品特徵的功能
+            IF l_cmd = 'a' AND NOT cl_null(g_xmdu_d[l_ac].xmdu002) THEN
+               IF s_feature_auto_chk(g_xmdu_d[l_ac].xmdu002) AND cl_null(g_xmdu_d[l_ac].xmdu003) THEN #160314-00009#15 add
+                  CALL s_feature_single(g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocno)
+                       RETURNING l_success1,g_xmdu_d[l_ac].xmdu003
+                  IF NOT l_success1 THEN
+                     LET g_xmdu_d[l_ac].xmdu003 = g_xmdu_d_t.xmdu003
+                     DISPLAY BY NAME g_xmdu_d[l_ac].xmdu003
+                  END IF
+                  CALL s_feature_description(g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003) RETURNING l_success,g_xmdu_d[l_ac].xmdu003_desc
+               END IF #160314-00009#15 add
+            END IF
+            #stellar 140828 add ----------------------(E)
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu003
+            #add-point:ON CHANGE xmdu003 name="input.g.page1.xmdu003"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu031
+            
+            #add-point:AFTER FIELD xmdu031 name="input.a.page1.xmdu031"
+            
+            #2015-05-28---dorislai----add
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu031) THEN
+            
+               #抓取系列說明(含校驗帶值)
+               IF NOT cl_null(g_xmdu_d[l_ac].xmdu031) THEN
+                 #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdu_d[l_ac].xmdu031 != g_xmdu_d_o.xmdu031 OR g_xmdu_d_o.xmdu031 IS NULL )) THEN   #160824-00007#215 by sakura mark
+                  IF g_xmdu_d[l_ac].xmdu031 != g_xmdu_d_o.xmdu031 OR cl_null(g_xmdu_d_o.xmdu031) THEN   #160824-00007#215 by sakura add
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = '2003'
+                     LET g_chkparam.arg2 = g_xmdu_d[l_ac].xmdu031
+                     #160318-00025#35  2016/04/15  by pengxin  add(S)
+                     LET g_errshow = TRUE #是否開窗 
+                     LET g_chkparam.err_str[1] = "aqc-00032:sub-01302|aqci030|",cl_get_progname("aqci030",g_lang,"2"),"|:EXEPROGaqci030"
+                     #160318-00025#35  2016/04/15  by pengxin  add(E)
+                     IF NOT cl_chk_exist("v_oocq002_01") THEN  #判斷是否有此 校驗帶值
+                        LET g_xmdu_d[l_ac].xmdu031 = g_xmdu_d_o.xmdu031
+                        DISPLAY BY NAME g_xmdu_d[l_ac].xmdu031
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  CALL axmt420_xmdu031_ref() #抓取系列說明
+               END IF
+            
+               
+               #判斷料件編號、系列、產品分類，是否僅有一欄位有值
+               IF NOT cl_null(g_xmdu_d[l_ac].xmdu031) AND (cl_null(g_xmdu_d[l_ac].xmdu002)=FALSE  OR cl_null(g_xmdu_d[l_ac].xmdu032)=FALSE) THEN
+                  LET l_msg = ''   #清空值
+                  LET l_msg1 = ''
+                  LET l_msg2 = ''
+                  
+                  CALL cl_getmsg('axm-00648',g_lang) RETURNING l_msg1  #%1替換成 系列
+                  
+                  IF NOT cl_null(g_xmdu_d[l_ac].xmdu002) THEN
+#                     CALL cl_getmsg('axm-00647',g_lang) RETURNING l_msg2  #%2替換成 料件編號    #160318-00005#49  mark
+                     CALL cl_getmsg('apm-00939',g_lang) RETURNING l_msg2  #%2替換成 料件編號     #160318-00005#49  add
+                  ELSE
+                     CALL cl_getmsg('axm-00649',g_lang) RETURNING l_msg2  #%2替換成 產品分類             
+                  END IF
+                  
+                  #替換axm-00645的字串(料件編號、系列、產品分類擇一輸入，%1已有值，是否將%2清空？)
+                  CALL cl_getmsg_parm('axm-00645',g_lang,l_msg1 ||'|'|| l_msg2) RETURNING l_msg
+                  
+                  #跳出提醒視窗，並確認要保留當下欄位值、清除另一個欄位值；或保留另一個欄位值、清除當下欄位值
+                  IF cl_ask_confirm2('',l_msg) THEN            
+                     LET g_xmdu_d[l_ac].xmdu002 = ''              #清空料號編號
+                     LET g_xmdu_d_o.xmdu002 = ''                  #清空料號舊值
+                     LET g_xmdu_d[l_ac].imaal003 = ''             #清空品名
+                     LET g_xmdu_d[l_ac].imaal004 = ''             #清空規格
+                     LET g_xmdu_d[l_ac].xmdu003 = ''              #清空產品特徵
+                     LET g_xmdu_d[l_ac].xmdu003_desc = ''         #清空產品特徵說明
+                     LET g_xmdu_d[l_ac].xmdu032 = ''              #清空產品分類
+                     LET g_xmdu_d[l_ac].xmdu032_desc=''           #清空產品分類說明
+                     LET g_xmdu_d_o.xmdu032 = ''                  #清空產品分類舊值
+                     CAll axmt420_set_no_entry_b(p_cmd)
+                     DISPLAY BY NAME g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].imaal003,g_xmdu_d[l_ac].imaal004
+                     DISPLAY BY NAME g_xmdu_d[l_ac].xmdu032,g_xmdu_d[l_ac].xmdu032_desc
+                     DISPLAY BY NAME g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu003_desc
+                  ELSE 
+                     LET g_xmdu_d[l_ac].xmdu031 = ''              #清空系列
+                     LET g_xmdu_d[l_ac].xmdu031_desc=''           #清空系列說明
+                     LET g_xmdu_d_o.xmdu031 = ''                  #清空系列舊值
+                     DISPLAY BY NAME g_xmdu_d[l_ac].xmdu031,g_xmdu_d[l_ac].xmdu031_desc
+                  END IF
+               END IF
+           
+               
+               #確認單位，若當下單位不在當下輸入系列中的單位值，則清空單位
+               IF NOT axmt420_xmdu031_xmdu032_chk_unit() THEN
+                  LET g_xmdu_d[l_ac].xmdu008 = ''
+                  LET g_xmdu_d_o.xmdu008 = g_xmdu_d[l_ac].xmdu008
+                  CALL axmt420_xmdu008_ref()
+               END IF
+            END IF
+           #LET g_xmdu_d_o.xmdu031 = g_xmdu_d[l_ac].xmdu031   #160824-00007#215 by sakura mark
+            LET g_xmdu_d_o.* = g_xmdu_d[l_ac].*               #160824-00007#215 by sakura add
+            CALL axmt420_xmdu031_ref()
+            #2015-05-28---dorislai----end 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu031
+            #add-point:BEFORE FIELD xmdu031 name="input.b.page1.xmdu031"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu031
+            #add-point:ON CHANGE xmdu031 name="input.g.page1.xmdu031"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu032
+            
+            #add-point:AFTER FIELD xmdu032 name="input.a.page1.xmdu032"
+            #2015-05-28---dorislai----add
+            #判斷料件編號、系列、產品分類，是否僅有一欄位有值
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu032) THEN
+               #抓取產品分類說明(含校驗帶值)
+               IF NOT cl_null(g_xmdu_d[l_ac].xmdu032) THEN
+                 #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdu_d[l_ac].xmdu032 != g_xmdu_d_o.xmdu032 OR g_xmdu_d_o.xmdu032 IS NULL )) THEN   #160824-00007#215 by sakura mark
+                  IF g_xmdu_d[l_ac].xmdu032 != g_xmdu_d_o.xmdu032 OR cl_null(g_xmdu_d_o.xmdu032) THEN   #160824-00007#215 by sakura add
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = g_xmdu_d[l_ac].xmdu032
+                     #160318-00025#35  2016/04/15  by pengxin  add(S)
+                     LET g_errshow = TRUE #是否開窗 
+                     LET g_chkparam.err_str[1] = "anm-00081:sub-01302|aimi010|",cl_get_progname("aimi010",g_lang,"2"),"|:EXEPROGaimi010"
+                     #160318-00025#35  2016/04/15  by pengxin  add(E)
+                     IF NOT cl_chk_exist("v_rtax001") THEN
+                        LET g_xmdu_d[l_ac].xmdu032 = g_xmdu_d_o.xmdu032
+                        DISPLAY BY NAME g_xmdu_d[l_ac].xmdu032
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  CALL axmt420_xmdu032_ref()
+               END IF
+               IF NOT cl_null(g_xmdu_d[l_ac].xmdu032) AND (cl_null(g_xmdu_d[l_ac].xmdu002)=FALSE  OR cl_null(g_xmdu_d[l_ac].xmdu031)=FALSE) THEN
+                  LET l_msg = ''   #清空值
+                  LET l_msg1 = ''
+                  LET l_msg2 = ''
+                  CALL cl_getmsg('axm-00649',g_lang) RETURNING l_msg1  #%1替換成 產品分類
+                  
+                  IF NOT cl_null(g_xmdu_d[l_ac].xmdu002) THEN
+#                     CALL cl_getmsg('axm-00647',g_lang) RETURNING l_msg2  #%2替換成 料件編號    #160318-00005#49  mark
+                     CALL cl_getmsg('apm-00939',g_lang) RETURNING l_msg2  #%2替換成 料件編號     #160318-00005#49  add
+                  ELSE
+                     CALL cl_getmsg('axm-00648',g_lang) RETURNING l_msg2  #%2替換成 系列             
+                  END IF
+                  
+                  #替換axm-00645的字串(料件編號、系列、產品分類擇一輸入，%1已有值，是否將%2清空？)
+                  CALL cl_getmsg_parm('axm-00645',g_lang,l_msg1 ||'|'|| l_msg2) RETURNING l_msg
+                  #跳出提醒視窗，並確認要保留當下欄位值、清除另一個欄位值；或保留另一個欄位值、清除當下欄位值
+                  IF cl_ask_confirm2('',l_msg) THEN
+                     LET g_xmdu_d[l_ac].xmdu002 = ''              #清空料號編號
+                     LET g_xmdu_d_o.xmdu002 = ''                  #清空料號舊值
+                     LET g_xmdu_d[l_ac].imaal003 = ''             #清空品名
+                     LET g_xmdu_d[l_ac].imaal004 = ''             #清空規格
+                     LET g_xmdu_d[l_ac].xmdu003 = ''              #清空產品特徵
+                     LET g_xmdu_d[l_ac].xmdu003_desc = ''         #清空產品特徵說明
+                     LET g_xmdu_d[l_ac].xmdu031 = ''              #清空系列
+                     LET g_xmdu_d[l_ac].xmdu031_desc=''           #清空系列說明
+                     LET g_xmdu_d_o.xmdu031 = ''                  #清空系列舊值
+                     CAll axmt420_set_no_entry_b(p_cmd)
+                     DISPLAY BY NAME g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].imaal003,g_xmdu_d[l_ac].imaal004
+                     DISPLAY BY NAME g_xmdu_d[l_ac].xmdu031,g_xmdu_d[l_ac].xmdu031_desc
+                     DISPLAY BY NAME g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu003_desc
+                  ELSE 
+                     LET g_xmdu_d[l_ac].xmdu032 = ''              #清空產品分類
+                     LET g_xmdu_d[l_ac].xmdu032_desc=''           #清空產品分類說明
+                     LET g_xmdu_d_o.xmdu032 = ''             #清空產品分類舊值
+                     DISPLAY BY NAME g_xmdu_d[l_ac].xmdu032,g_xmdu_d[l_ac].xmdu032_desc
+                  END IF
+               END IF
+               
+               
+               
+               #確認單位，若當下單位不在當下輸入產品分類中的單位值，則清空單位
+               IF NOT axmt420_xmdu031_xmdu032_chk_unit() THEN
+                  LET g_xmdu_d[l_ac].xmdu008 = ''
+                  LET g_xmdu_d_o.xmdu008 = g_xmdu_d[l_ac].xmdu008
+                  CALL axmt420_xmdu008_ref()
+               END IF
+            END IF
+           #LET g_xmdu_d_o.xmdu032 = g_xmdu_d[l_ac].xmdu032   #160824-00007#215 by sakura mark
+            LET g_xmdu_d_o.* = g_xmdu_d[l_ac].*               #160824-00007#215 by sakura add
+            CALL axmt420_xmdu032_ref()
+            #2015-05-28---dorislai----end
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu032
+            #add-point:BEFORE FIELD xmdu032 name="input.b.page1.xmdu032"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu032
+            #add-point:ON CHANGE xmdu032 name="input.g.page1.xmdu032"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu005
+            #add-point:BEFORE FIELD xmdu005 name="input.b.page1.xmdu005"
+             CALL axmt420_set_entry_b(l_cmd)           
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu005
+            
+            #add-point:AFTER FIELD xmdu005 name="input.a.page1.xmdu005"
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu005) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdu_d[l_ac].xmdu005 != g_xmdu_d_t.xmdu005 OR g_xmdu_d_t.xmdu005 IS NULL )) THEN   #160824-00007#215 by sakura mark
+               IF g_xmdu_d[l_ac].xmdu005 != g_xmdu_d_o.xmdu005 OR cl_null(g_xmdu_d_o.xmdu005) THEN   #160824-00007#215 by sakura add
+                  #若料件為空時，呼叫元件帶出料件+產品特徵
+                  IF cl_null(g_xmdu_d[l_ac].xmdu002) THEN
+                     #依回傳決定是否蓋掉
+                     LET l_xmdu002 = ''
+                     LET l_xmdu003 = ''
+                     #161221-00064#14 mod-S
+#                     CALL s_apmi070_get_pmao002_pmao003(g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu005)
+#                       RETURNING g_sub_success,l_xmdu002,l_xmdu003
+                     CALL s_apmi070_get_pmao002_pmao003_2(g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu005,'2')
+                       RETURNING g_sub_success,l_xmdu002,l_xmdu003
+                     #161221-00064#14 mod-E
+                     IF g_sub_success THEN
+                        LET g_xmdu_d[l_ac].xmdu002 = l_xmdu002
+                        LET g_xmdu_d[l_ac].xmdu003 = l_xmdu003
+                        CALL s_desc_get_item_desc(g_xmdu_d[l_ac].xmdu002)
+                          RETURNING g_xmdu_d[l_ac].imaal003,g_xmdu_d[l_ac].imaal004
+                        DISPLAY BY NAME g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003
+                        DISPLAY BY NAME g_xmdu_d[l_ac].imaal003,g_xmdu_d[l_ac].imaal004                          
+                     END IF
+                  END IF
+                  #判斷客戶料號是否存在交易對象料號對應檔，若無，則跳出詢問示窗是否要回寫交易對象料號對應檔中
+                  IF NOT cl_null(g_xmdu_d[l_ac].xmdu002) AND NOT cl_null(g_xmdu_d[l_ac].xmdu005) THEN    #160307-00001#1  --- add
+                    #IF g_xmdu_d[l_ac].xmdu005 != g_xmdu_d_t.xmdu005 THEN                                #160307-00001#1  --- mark
+                     #IF g_xmdu_d[l_ac].xmdu005 != g_xmdu_d_t.xmdu005 OR g_xmdu_d_t.xmdu005 IS NULL THEN  #160307-00001#1  --- add   #160824-00007#215 by sakura mark
+                     IF g_xmdu_d[l_ac].xmdu005 != g_xmdu_d_o.xmdu005 OR cl_null(g_xmdu_d_o.xmdu005) THEN   #160824-00007#215 by sakura add
+                        IF cl_null(g_xmdu_d[l_ac].xmdu003) THEN  LET g_xmdu_d[l_ac].xmdu003 =' ' END IF  #160307-00001#1  --- add
+                        LET l_cnt = 0
+                        SELECT COUNT(*) INTO l_cnt
+                          FROM pmao_t
+                         WHERE pmaoent = g_enterprise
+                           AND pmao001 = g_xmdt_m.xmdt004
+                           AND pmao002 = g_xmdu_d[l_ac].xmdu002
+                           AND pmao003 = g_xmdu_d[l_ac].xmdu003
+                           AND pmao004 = g_xmdu_d[l_ac].xmdu005
+                           AND pmao000 = '2' #161221-00064#14 add
+                        IF l_cnt = 0 THEN
+                           IF cl_ask_confirm('axm-00445') THEN
+                              LET g_pmao_flag = 'Y'
+                              #IF NOT s_axmt500_ins_pmao(g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu005) THEN
+                              #   LET g_xmdu_d[l_ac].xmdu005 = ''
+                              #   DISPLAY BY NAME g_xmdu_d[l_ac].xmdu005
+                              #END IF
+                           ELSE
+                              LET g_xmdu_d[l_ac].xmdu005 = ''
+                              DISPLAY BY NAME g_xmdu_d[l_ac].xmdu005
+                           END IF
+                        END IF
+                     END IF 
+                  END IF
+               END IF
+               SELECT pmao009,pmao010
+                 INTO g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010
+                 FROM pmao_t
+                WHERE pmaoent = g_enterprise
+                  AND pmao001 = g_xmdt_m.xmdt004
+                  AND pmao002 = g_xmdu_d[l_ac].xmdu002
+                  AND pmao003 = g_xmdu_d[l_ac].xmdu003
+                  AND pmao004 = g_xmdu_d[l_ac].xmdu005                     
+                  AND pmao000 = '2' #161221-00064#14 add
+               DISPLAY BY NAME g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010
+               #LET g_xmdu_d_t.xmdu005 = g_xmdu_d[l_ac].xmdu005 #160824-00007#215 by sakura mark
+            ELSE
+              LET g_xmdu_d[l_ac].l_pmao009 = NULL
+              LET g_xmdu_d[l_ac].l_pmao010 = NULL
+              DISPLAY BY NAME g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010
+            END IF
+            LET g_xmdu_d_o.* = g_xmdu_d[l_ac].*   #160824-00007#215 by sakura add
+            CALL axmt420_set_entry_b(l_cmd)
+            CALL axmt420_set_no_entry_b(l_cmd)              
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu005
+            #add-point:ON CHANGE xmdu005 name="input.g.page1.xmdu005"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_pmao009
+            #add-point:BEFORE FIELD l_pmao009 name="input.b.page1.l_pmao009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_pmao009
+            
+            #add-point:AFTER FIELD l_pmao009 name="input.a.page1.l_pmao009"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_pmao009
+            #add-point:ON CHANGE l_pmao009 name="input.g.page1.l_pmao009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_pmao010
+            #add-point:BEFORE FIELD l_pmao010 name="input.b.page1.l_pmao010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_pmao010
+            
+            #add-point:AFTER FIELD l_pmao010 name="input.a.page1.l_pmao010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_pmao010
+            #add-point:ON CHANGE l_pmao010 name="input.g.page1.l_pmao010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu006
+            
+            #add-point:AFTER FIELD xmdu006 name="input.a.page1.xmdu006"
+                                    LET g_xmdu_d[l_ac].xmdu006_desc = ' '
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu006) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdu_d[l_ac].xmdu006 != g_xmdu_d_t.xmdu006 OR g_xmdu_d_t.xmdu006 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = '221'
+                  LET g_chkparam.arg2 = g_xmdu_d[l_ac].xmdu006
+                  LET g_chkparam.err_str[1] = "aoo-00099:axm-00052"
+                  #160318-00025#35  2016/04/15  by pengxin  add(S)
+                  LET g_errshow = TRUE #是否開窗 
+                  LET g_chkparam.err_str[2] = "aqc-00032:sub-01302|aqci030|",cl_get_progname("aqci030",g_lang,"2"),"|:EXEPROGaqci030"
+                  #160318-00025#35  2016/04/15  by pengxin  add(E)
+                  IF NOT cl_chk_exist("v_oocq002_1") THEN
+                     LET g_xmdu_d[l_ac].xmdu006 = g_xmdu_d_t.xmdu006
+                     CALL axmt420_xmdu006_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL axmt420_xmdu006_ref()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu006
+            #add-point:BEFORE FIELD xmdu006 name="input.b.page1.xmdu006"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu006
+            #add-point:ON CHANGE xmdu006 name="input.g.page1.xmdu006"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu007
+            #add-point:BEFORE FIELD xmdu007 name="input.b.page1.xmdu007"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu007
+            
+            #add-point:AFTER FIELD xmdu007 name="input.a.page1.xmdu007"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu007
+            #add-point:ON CHANGE xmdu007 name="input.g.page1.xmdu007"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu015
+            
+            #add-point:AFTER FIELD xmdu015 name="input.a.page1.xmdu015"
+            LET g_xmdu_d[l_ac].xmdu015_desc = ' '
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu015) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdu_d[l_ac].xmdu015 != g_xmdu_d_t.xmdu015 OR g_xmdu_d_t.xmdu015 IS NULL )) THEN
+                  
+                  CALL s_azzi650_chk_exist(g_gzcb004_1,g_xmdu_d[l_ac].xmdu015) RETURNING l_success
+                  IF NOT l_success THEN
+                     LET g_xmdu_d[l_ac].xmdu015 = g_xmdu_d_t.xmdu015
+                     CALL axmt420_xmdu015_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  IF NOT cl_null(g_xmdt_m.xmdtdocno)THEN
+                     CALL s_control_chk_doc('8',g_xmdt_m.xmdtdocno,g_xmdu_d[l_ac].xmdu015,'','','','') RETURNING l_success,l_flag
+                     IF NOT l_success THEN
+                        NEXT FIELD CURRENT
+                     ELSE
+                        IF NOT l_flag THEN
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                  END IF
+               END IF
+            END IF
+            CALL axmt420_xmdu015_ref()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu015
+            #add-point:BEFORE FIELD xmdu015 name="input.b.page1.xmdu015"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu015
+            #add-point:ON CHANGE xmdu015 name="input.g.page1.xmdu015"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu015_desc
+            #add-point:BEFORE FIELD xmdu015_desc name="input.b.page1.xmdu015_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu015_desc
+            
+            #add-point:AFTER FIELD xmdu015_desc name="input.a.page1.xmdu015_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu015_desc
+            #add-point:ON CHANGE xmdu015_desc name="input.g.page1.xmdu015_desc"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu008
+            
+            #add-point:AFTER FIELD xmdu008 name="input.a.page1.xmdu008"
+            LET g_xmdu_d[l_ac].xmdu008_desc = ''
+            
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu008) THEN
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdu_d[l_ac].xmdu008 != g_xmdu_d_t.xmdu008 OR g_xmdu_d_t.xmdu008 IS NULL )) THEN   #160824-00007#215 by sakura mark
+               IF g_xmdu_d[l_ac].xmdu008 != g_xmdu_d_o.xmdu008 OR cl_null(g_xmdu_d_o.xmdu008) THEN   #160824-00007#215 by sakura add
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xmdu_d[l_ac].xmdu008
+                  #160318-00025#35  2016/04/15  by pengxin  add(S)
+                  LET g_errshow = TRUE #是否開窗 
+                  LET g_chkparam.err_str[1] = "aim-00005:sub-01302|aooi250|",cl_get_progname("aooi250",g_lang,"2"),"|:EXEPROGaooi250"
+                  #160318-00025#35  2016/04/15  by pengxin  add(E)
+                  IF NOT cl_chk_exist("v_ooca001") THEN
+                     #LET g_xmdu_d[l_ac].xmdu008 = g_xmdu_d_t.xmdu008    #160824-00007#215 by sakura mark
+                     LET g_xmdu_d[l_ac].xmdu008 = g_xmdu_d_o.xmdu008     #160824-00007#215 by sakura add
+                     CALL axmt420_xmdu008_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #有料件的話要檢查是否跟他可使用的單位勾稽
+                  IF NOT cl_null(g_xmdu_d[l_ac].xmdu002)THEN
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = g_xmdu_d[l_ac].xmdu002
+                     LET g_chkparam.arg2 = g_xmdu_d[l_ac].xmdu008
+                     IF NOT cl_chk_exist("v_imao002")THEN
+                        LET g_xmdu_d[l_ac].xmdu008 = g_xmdu_d_o.xmdu008
+                        CALL axmt420_xmdu008_ref()
+                        NEXT FIELD CURRENT                     
+                     END IF
+                  END IF
+                  
+                  
+                  #2015-06-03----dorislai----add
+                  #系列 或 產品分類有值的話，檢查跟他可使用的單位勾稽
+                  IF (NOT cl_null(g_xmdu_d[l_ac].xmdu031)) OR cl_null(g_xmdu_d[l_ac].xmdu032) = FALSE THEN
+                     IF NOT axmt420_xmdu031_xmdu032_chk_unit() THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.extend=""
+                        LET g_errparam.code="aim-00212"
+                        LET g_errparam.popup=TRUE
+                        LET g_xmdu_d[l_ac].xmdu008 = g_xmdu_d_o.xmdu008
+                        CALL axmt420_xmdu008_ref()
+                        CALL cl_err()
+                     END IF         
+                  END IF
+                  #2015-06-03----dorislai----end
+               END IF
+            END IF
+            LET g_xmdu_d_o.* = g_xmdu_d[l_ac].*   #160824-00007#215 by sakura add
+            CALL axmt420_xmdu008_ref()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu008
+            #add-point:BEFORE FIELD xmdu008 name="input.b.page1.xmdu008"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu008
+            #add-point:ON CHANGE xmdu008 name="input.g.page1.xmdu008"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu009
+            #add-point:BEFORE FIELD xmdu009 name="input.b.page1.xmdu009"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu009
+            
+            #add-point:AFTER FIELD xmdu009 name="input.a.page1.xmdu009"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu009
+            #add-point:ON CHANGE xmdu009 name="input.g.page1.xmdu009"
+            CALL axmt420_set_entry_b(p_cmd)
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu009)THEN
+               IF g_xmdu_d[l_ac].xmdu009 = 'Y' THEN
+                  CALL axmt420_01(g_xmdt_m.xmdtdocno,g_xmdu_d[l_ac].xmduseq, 
+                                  g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003, 
+                                  g_xmdu_d[l_ac].xmdu031,g_xmdu_d[l_ac].xmdu032)
+                  SELECT xmdu011,xmdu013 
+                    INTO g_xmdu_d[l_ac].xmdu011,g_xmdu_d[l_ac].xmdu013 
+                    FROM xmdu_t
+                   WHERE xmduent = g_enterprise
+                     AND xmdudocno = g_xmdt_m.xmdtdocno
+                     AND xmduseq   = g_xmdu_d_t.xmduseq
+               ELSE
+                  DELETE FROM xmdv_t
+                   WHERE xmdvent = g_enterprise
+                     AND xmdvdocno = g_xmdt_m.xmdtdocno
+                     AND xmdvseq   = g_xmdu_d_t.xmduseq
+                  IF SQLCA.SQLCODE THEN
+                     #處理albireo
+                  END IF
+               END IF
+            END IF
+            CALL axmt420_set_no_entry_b(p_cmd)
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu010
+            #add-point:BEFORE FIELD xmdu010 name="input.b.page1.xmdu010"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu010
+            
+            #add-point:AFTER FIELD xmdu010 name="input.a.page1.xmdu010"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu010
+            #add-point:ON CHANGE xmdu010 name="input.g.page1.xmdu010"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu011
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdu_d[l_ac].xmdu011,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD xmdu011
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmdu011 name="input.a.page1.xmdu011"
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu011) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu011
+            #add-point:BEFORE FIELD xmdu011 name="input.b.page1.xmdu011"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu011
+            #add-point:ON CHANGE xmdu011 name="input.g.page1.xmdu011"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu012
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdu_d[l_ac].xmdu012,"0.000","1","100.000","1","azz-00087",1) THEN 
+ 
+               NEXT FIELD xmdu012
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmdu012 name="input.a.page1.xmdu012"
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu012) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu012
+            #add-point:BEFORE FIELD xmdu012 name="input.b.page1.xmdu012"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu012
+            #add-point:ON CHANGE xmdu012 name="input.g.page1.xmdu012"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu013
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdu_d[l_ac].xmdu013,"0.000","1","100.000","1","azz-00087",1) THEN 
+ 
+               NEXT FIELD xmdu013
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmdu013 name="input.a.page1.xmdu013"
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu013) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu013
+            #add-point:BEFORE FIELD xmdu013 name="input.b.page1.xmdu013"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu013
+            #add-point:ON CHANGE xmdu013 name="input.g.page1.xmdu013"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu014
+            
+            #add-point:AFTER FIELD xmdu014 name="input.a.page1.xmdu014"
+            LET g_xmdu_d[l_ac].xmdu014_desc = ' '
+             
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu014) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdu_d[l_ac].xmdu014 != g_xmdu_d_t.xmdu014 OR g_xmdu_d_t.xmdu014 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = '263'
+                  LET g_chkparam.arg2 = g_xmdu_d[l_ac].xmdu014
+                  LET g_chkparam.err_str[1] = "aoo-00099:axm-00050"
+                  #160318-00025#35  2016/04/15  by pengxin  add(S)
+                  LET g_errshow = TRUE #是否開窗 
+                  LET g_chkparam.err_str[2] = "aqc-00032:sub-01302|aqci030|",cl_get_progname("aqci030",g_lang,"2"),"|:EXEPROGaqci030"
+                  #160318-00025#35  2016/04/15  by pengxin  add(E)
+                  IF NOT cl_chk_exist("v_oocq002_1") THEN
+                     LET g_xmdu_d[l_ac].xmdu014 = g_xmdu_d_t.xmdu014
+                     CALL axmt420_xmdu014_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL axmt420_xmdu014_ref()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu014
+            #add-point:BEFORE FIELD xmdu014 name="input.b.page1.xmdu014"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu014
+            #add-point:ON CHANGE xmdu014 name="input.g.page1.xmdu014"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu004
+            
+            #add-point:AFTER FIELD xmdu004 name="input.a.page1.xmdu004"
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu004) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_xmdu_d[l_ac].xmdu004 != g_xmdu_d_t.xmdu004 OR g_xmdu_d_t.xmdu004 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_xmdu_d[l_ac].xmdu004
+                  
+                  IF NOT cl_chk_exist("v_imaa001_3") THEN
+                     LET g_xmdu_d[l_ac].xmdu004 = g_xmdu_d_t.xmdu004
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu004
+            #add-point:BEFORE FIELD xmdu004 name="input.b.page1.xmdu004"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu004
+            #add-point:ON CHANGE xmdu004 name="input.g.page1.xmdu004"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmdu030
+            #add-point:BEFORE FIELD xmdu030 name="input.b.page1.xmdu030"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmdu030
+            
+            #add-point:AFTER FIELD xmdu030 name="input.a.page1.xmdu030"
+                        
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmdu030
+            #add-point:ON CHANGE xmdu030 name="input.g.page1.xmdu030"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff013
+            #add-point:BEFORE FIELD ooff013 name="input.b.page1.ooff013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff013
+            
+            #add-point:AFTER FIELD ooff013 name="input.a.page1.ooff013"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff013
+            #add-point:ON CHANGE ooff013 name="input.g.page1.ooff013"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.xmduseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmduseq
+            #add-point:ON ACTION controlp INFIELD xmduseq name="input.c.page1.xmduseq"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu001
+            #add-point:ON ACTION controlp INFIELD xmdu001 name="input.c.page1.xmdu001"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu002
+            #add-point:ON ACTION controlp INFIELD xmdu002 name="input.c.page1.xmdu002"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdu_d[l_ac].xmdu002             #給予default值
+
+            #給予arg
+            CALL s_control_get_item_sql('2',g_xmdt_m.xmdtsite,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtdocno)  
+               RETURNING g_sub_success,g_qryparam.where 
+            CALL q_imaf001_15()             #呼叫開窗
+
+            LET g_xmdu_d[l_ac].xmdu002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdu_d[l_ac].xmdu002 TO xmdu002              #顯示到畫面上
+            CALL axmt420_xmdu002_ref()
+
+            NEXT FIELD xmdu002                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu003
+            #add-point:ON ACTION controlp INFIELD xmdu003 name="input.c.page1.xmdu003"
+            #stellar 140828 add ----------------------(S)
+            #增加產品特徵的功能
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu002) THEN
+               CALL s_feature_single(g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocno)
+                 RETURNING l_success1,g_xmdu_d[l_ac].xmdu003
+               IF NOT l_success1 THEN
+                  LET g_xmdu_d[l_ac].xmdu003 = g_xmdu_d_t.xmdu003
+                  DISPLAY BY NAME g_xmdu_d[l_ac].xmdu003
+               END IF
+               CALL s_feature_description(g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003) RETURNING l_success,g_xmdu_d[l_ac].xmdu003_desc
+            END IF
+            NEXT FIELD xmdu003
+            #stellar 140828 add ----------------------(E)
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu031
+            #add-point:ON ACTION controlp INFIELD xmdu031 name="input.c.page1.xmdu031"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdu_d[l_ac].xmdu031             #給予default值
+            LET g_qryparam.default2 = "" #g_xmdu_d[l_ac].oocql004 #說明
+            #給予arg
+            LET g_qryparam.arg1 = "2003" #s
+
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_xmdu_d[l_ac].xmdu031 = g_qryparam.return1              
+            #LET g_xmdu_d[l_ac].oocql004 = g_qryparam.return2 
+            DISPLAY g_xmdu_d[l_ac].xmdu031 TO xmdu031              #
+            CALL axmt420_xmdu031_ref()
+            #DISPLAY g_xmdu_d[l_ac].oocql004 TO oocql004 #說明
+            NEXT FIELD xmdu031                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu032
+            #add-point:ON ACTION controlp INFIELD xmdu032 name="input.c.page1.xmdu032"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdu_d[l_ac].xmdu032             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_rtax001()                                #呼叫開窗
+
+            LET g_xmdu_d[l_ac].xmdu032 = g_qryparam.return1              
+
+            DISPLAY g_xmdu_d[l_ac].xmdu032 TO xmdu032              #
+            CALL axmt420_xmdu032_ref()
+            NEXT FIELD xmdu032                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu005
+            #add-point:ON ACTION controlp INFIELD xmdu005 name="input.c.page1.xmdu005"
+                        			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdu_d[l_ac].xmdu005             #給予default值
+            LET g_qryparam.where = " pmao001 = '",g_xmdt_m.xmdt004,"' "
+            
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu002)THEN
+               LET g_qryparam.where = g_qryparam.where CLIPPED," AND pmao002 = '",g_xmdu_d[l_ac].xmdu002,"' "
+            END IF
+            
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu003)THEN
+               LET g_qryparam.where = g_qryparam.where CLIPPED," AND pmao003 = '",g_xmdu_d[l_ac].xmdu003,"' "
+            ELSE
+               LET g_qryparam.where = g_qryparam.where CLIPPED," AND pmao003 = ' ' "               
+            END IF
+            
+            
+            CALL q_pmao004()                               #呼叫開窗
+
+            LET g_xmdu_d[l_ac].xmdu005 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdu_d[l_ac].xmdu005 TO xmdu005              #顯示到畫面上
+            SELECT pmao009,pmao010
+              INTO g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010
+              FROM pmao_t
+             WHERE pmaoent = g_enterprise
+               AND pmao001 = g_xmdt_m.xmdt004
+               AND pmao002 = g_xmdu_d[l_ac].xmdu002
+               AND pmao003 = g_xmdu_d[l_ac].xmdu003
+               AND pmao004 = g_xmdu_d[l_ac].xmdu005                     
+               AND pmao000 = '2' #161221-00064#14 add
+            DISPLAY BY NAME g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010
+            NEXT FIELD xmdu005
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.l_pmao009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_pmao009
+            #add-point:ON ACTION controlp INFIELD l_pmao009 name="input.c.page1.l_pmao009"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.l_pmao010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_pmao010
+            #add-point:ON ACTION controlp INFIELD l_pmao010 name="input.c.page1.l_pmao010"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu006
+            #add-point:ON ACTION controlp INFIELD xmdu006 name="input.c.page1.xmdu006"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdu_d[l_ac].xmdu006             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "221"
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_xmdu_d[l_ac].xmdu006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdu_d[l_ac].xmdu006 TO xmdu006              #顯示到畫面上
+            CALL axmt420_xmdu006_ref()
+            NEXT FIELD xmdu006                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu007
+            #add-point:ON ACTION controlp INFIELD xmdu007 name="input.c.page1.xmdu007"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu015
+            #add-point:ON ACTION controlp INFIELD xmdu015 name="input.c.page1.xmdu015"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdu_d[l_ac].xmdu015             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_gzcb004_1 #
+            CALL s_control_get_doc_sql("oocq002",g_xmdt_m.xmdtdocno,'8') RETURNING l_success,l_sql
+            IF l_success THEN
+               LET g_qryparam.where = l_sql
+            END IF
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_xmdu_d[l_ac].xmdu015 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            
+
+            DISPLAY g_xmdu_d[l_ac].xmdu015 TO xmdu015              #顯示到畫面上
+            CALL axmt420_xmdu015_ref()
+
+            NEXT FIELD xmdu015                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu015_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu015_desc
+            #add-point:ON ACTION controlp INFIELD xmdu015_desc name="input.c.page1.xmdu015_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu008
+            #add-point:ON ACTION controlp INFIELD xmdu008 name="input.c.page1.xmdu008"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            LET l_chk = FALSE #避免輸入料件編號出現二次開窗
+			   
+
+            #若料件編號有值
+            IF NOT cl_null(g_xmdu_d[l_ac].xmdu002) THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+			      LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_xmdu_d[l_ac].xmdu008             #給予default值
+               LET g_qryparam.arg1 = g_xmdu_d[l_ac].xmdu002
+               #給予arg
+               CALL q_imao002()                                #呼叫開窗
+               LET g_xmdu_d[l_ac].xmdu008 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               LET l_chk = TRUE               
+            END IF
+
+            #2015-06-04----dorislai----add
+            #若系列或產品分類有值，抓取aimm200中的單位開窗
+            IF (NOT cl_null(g_xmdu_d[l_ac].xmdu031)) OR cl_null(g_xmdu_d[l_ac].xmdu032) = FALSE THEN
+               #先判斷是哪個欄位有值，給予sql查詢條件
+                  #---用系列去抓料件編號
+               IF NOT cl_null(g_xmdu_d[l_ac].xmdu031)THEN
+                  LET l_sql = "SELECT imaa001 FROM imaa_t ",
+                              "WHERE imaaent = '"||g_enterprise||"' AND imaa127 = '"||g_xmdu_d[l_ac].xmdu031||"'",
+                              "ORDER BY imaa001" 
+               END IF
+                  #---用產品分類抓料件編號
+               IF NOT cl_null(g_xmdu_d[l_ac].xmdu032)THEN
+                  LET l_sql = "SELECT imaa001 FROM imaa_t ",
+                              "WHERE imaaent = '"||g_enterprise||"' AND imaa009 = '"||g_xmdu_d[l_ac].xmdu032||"'",
+                              "ORDER BY imaa001" 
+               END IF
+                              
+               PREPARE axmt420_get_imaa001_open_pre FROM l_sql
+               DECLARE axmt420_get_imaa001_open_curs CURSOR FOR axmt420_get_imaa001_open_pre
+               #先清空值，避免殘留舊值
+               LET l_imaa001 = ''
+               LET l_str = ''
+               LET l_str_cnt = 1
+               #一筆一筆比對是否有符合任一 料件編號中的可使用單位
+               FOREACH axmt420_get_imaa001_open_curs INTO l_imaa001
+                  #抓取到第一筆資料時，開始組字串
+                  IF l_str_cnt = 1 THEN
+                     LET l_str = "'",l_imaa001,"'"
+                  #抓取道第二筆資料時(含第二筆)，接著第一筆或先前的字串繼續串字串
+                  ELSE
+                     LET l_str = l_str||",'"||l_imaa001||"'"
+                  END IF
+                  LET l_str_cnt = l_str_cnt + 1 #筆數增加，避免重複判斷是第一筆資料
+               END FOREACH
+               FREE axmt420_get_imaa001_open_pre#已使用完畢，釋放
+               
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+			      LET g_qryparam.reqry = FALSE
+			      #依是否抓到料號，來決定g_qryparam.where值
+               IF cl_null(l_str) THEN   #沒抓到對應的料號
+                  LET g_qryparam.where = "imao001 = ''"
+               ELSE
+                  LET g_qryparam.where = "imao001 IN ("||l_str||")"#增加q_imao002_01的條件判斷
+               END IF
+               CALL q_imao002_01()
+               LET g_xmdu_d[l_ac].xmdu008 = g_qryparam.return1
+            ELSE
+               IF l_chk = FALSE THEN
+                  INITIALIZE g_qryparam.* TO NULL
+                  LET g_qryparam.state = 'i'
+			         LET g_qryparam.reqry = FALSE
+                  LET g_qryparam.default1 = g_xmdu_d[l_ac].xmdu008   #給予default值
+                  #給予arg
+                  CALL q_ooca001_1()                          #呼叫開窗
+                  LET g_xmdu_d[l_ac].xmdu008 = g_qryparam.return1
+               END IF
+            END IF
+            #2015-06-04----dorislai----end
+
+            DISPLAY BY NAME g_xmdu_d[l_ac].xmdu008      #顯示到畫面上
+            CALL axmt420_xmdu008_ref()
+            NEXT FIELD xmdu008                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu009
+            #add-point:ON ACTION controlp INFIELD xmdu009 name="input.c.page1.xmdu009"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu010
+            #add-point:ON ACTION controlp INFIELD xmdu010 name="input.c.page1.xmdu010"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu011
+            #add-point:ON ACTION controlp INFIELD xmdu011 name="input.c.page1.xmdu011"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu012
+            #add-point:ON ACTION controlp INFIELD xmdu012 name="input.c.page1.xmdu012"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu013
+            #add-point:ON ACTION controlp INFIELD xmdu013 name="input.c.page1.xmdu013"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu014
+            #add-point:ON ACTION controlp INFIELD xmdu014 name="input.c.page1.xmdu014"
+                        			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdu_d[l_ac].xmdu014             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = '263' #
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_xmdu_d[l_ac].xmdu014 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdu_d[l_ac].xmdu014 TO xmdu014              #顯示到畫面上
+            CALL axmt420_xmdu014_ref()
+
+            NEXT FIELD xmdu014
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu004
+            #add-point:ON ACTION controlp INFIELD xmdu004 name="input.c.page1.xmdu004"
+                        #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdu_d[l_ac].xmdu004             #給予default值
+
+            #給予arg
+
+            CALL q_imaa001_11()                                #呼叫開窗
+
+            LET g_xmdu_d[l_ac].xmdu004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdu_d[l_ac].xmdu004 TO xmdu004              #顯示到畫面上
+
+            NEXT FIELD xmdu004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmdu030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmdu030
+            #add-point:ON ACTION controlp INFIELD xmdu030 name="input.c.page1.xmdu030"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooff013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff013
+            #add-point:ON ACTION controlp INFIELD ooff013 name="input.c.page1.ooff013"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_xmdu_d[l_ac].* = g_xmdu_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE axmt420_bcl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_xmdu_d[l_ac].xmduseq 
+               LET g_errparam.code = -263 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               LET g_xmdu_d[l_ac].* = g_xmdu_d_t.*
+            ELSE
+            
+               #add-point:單身修改前 name="input.body.b_update"
+            IF cl_null(g_xmdu_d[l_ac].xmdu003) THEN
+               LET g_xmdu_d[l_ac].xmdu003 = ' '
+            END IF
+            IF cl_null(g_xmdu_d[l_ac].xmdu006) THEN
+               LET g_xmdu_d[l_ac].xmdu006 = ' '
+            END IF
+            IF cl_null(g_xmdu_d[l_ac].xmdu007) THEN
+               LET g_xmdu_d[l_ac].xmdu007 = ' '
+            END IF
+            
+            #2015-06-08----dorislai----add
+            #新增或編輯時，若料件編號、系列、產品分類皆無值，跳出訊息框 
+            IF (l_cmd = 'a' OR l_cmd = 'u') AND l_del_chk = FALSE THEN
+               LET l_chk2 = 3
+               IF cl_null(g_xmdu_d[l_ac].xmdu031) AND cl_null(g_xmdu_d[l_ac].xmdu002) AND cl_null(g_xmdu_d[l_ac].xmdu032) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend=""
+                  LET g_errparam.code="axm-00650"
+                  LET g_errparam.popup=TRUE
+                  CALL cl_err()
+                  NEXT FIELD xmdu002
+               END IF                       
+            END IF
+            #2015-06-08----dorislai----end  
+               IF g_pmao_flag = 'Y' THEN
+                  IF NOT s_axmt500_ins_pmao(g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt004,g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu005,
+                                            g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010 ) THEN
+                        LET g_xmdu_d[l_ac].xmdu005 = ''
+                        LET g_xmdu_d[l_ac].l_pmao009 = ''
+                        LET g_xmdu_d[l_ac].l_pmao010 = ''
+                        DISPLAY BY NAME g_xmdu_d[l_ac].xmdu005,g_xmdu_d[l_ac].l_pmao009, g_xmdu_d[l_ac].l_pmao010
+                      
+                  END IF
+               END IF   
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               #將遮罩欄位還原
+               CALL axmt420_xmdu_t_mask_restore('restore_mask_o')
+      
+               UPDATE xmdu_t SET (xmdudocno,xmduseq,xmdu001,xmdu002,xmdu003,xmdu031,xmdu032,xmdu005, 
+                   xmdu006,xmdu007,xmdu015,xmdu008,xmdu009,xmdu010,xmdu011,xmdu012,xmdu013,xmdu014,xmdu004, 
+                   xmdu030,xmdusite) = (g_xmdt_m.xmdtdocno,g_xmdu_d[l_ac].xmduseq,g_xmdu_d[l_ac].xmdu001, 
+                   g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu031,g_xmdu_d[l_ac].xmdu032, 
+                   g_xmdu_d[l_ac].xmdu005,g_xmdu_d[l_ac].xmdu006,g_xmdu_d[l_ac].xmdu007,g_xmdu_d[l_ac].xmdu015, 
+                   g_xmdu_d[l_ac].xmdu008,g_xmdu_d[l_ac].xmdu009,g_xmdu_d[l_ac].xmdu010,g_xmdu_d[l_ac].xmdu011, 
+                   g_xmdu_d[l_ac].xmdu012,g_xmdu_d[l_ac].xmdu013,g_xmdu_d[l_ac].xmdu014,g_xmdu_d[l_ac].xmdu004, 
+                   g_xmdu_d[l_ac].xmdu030,g_xmdu_d[l_ac].xmdusite)
+                WHERE xmduent = g_enterprise AND xmdudocno = g_xmdt_m.xmdtdocno 
+ 
+                  AND xmduseq = g_xmdu_d_t.xmduseq #項次   
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+                              
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_xmdu_d[l_ac].* = g_xmdu_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "xmdu_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     LET g_xmdu_d[l_ac].* = g_xmdu_d_t.*  
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "xmdu_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()                   
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_xmdt_m.xmdtdocno
+               LET gs_keys_bak[1] = g_xmdtdocno_t
+               LET gs_keys[2] = g_xmdu_d[g_detail_idx].xmduseq
+               LET gs_keys_bak[2] = g_xmdu_d_t.xmduseq
+               CALL axmt420_update_b('xmdu_t',gs_keys,gs_keys_bak,"'1'")
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL axmt420_xmdu_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_xmdu_d[g_detail_idx].xmduseq = g_xmdu_d_t.xmduseq 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_xmdt_m.xmdtdocno
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_xmdu_d_t.xmduseq
+ 
+                  CALL axmt420_key_update_b(gs_keys,'xmdu_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_xmdt_m),util.JSON.stringify(g_xmdu_d_t)
+               LET g_log2 = util.JSON.stringify(g_xmdt_m),util.JSON.stringify(g_xmdu_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               #161031-00025#20-s
+               CALL s_aooi360_del('7',g_prog,g_xmdt_m.xmdtdocno,g_xmdu_d_t.xmduseq,'','','','','','','','1') RETURNING l_success
+               IF NOT cl_null(g_xmdu_d[l_ac].ooff013) THEN
+                  CALL s_aooi360_gen('7',g_prog,g_xmdt_m.xmdtdocno,g_xmdu_d[l_ac].xmduseq,'','','','','','','','1',g_xmdu_d[l_ac].ooff013) RETURNING l_success
+               END IF
+               #161031-00025#20-e
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row name="input.body.after_row"
+            #2015-06-08----dorislai----add
+            #新增或編輯時，若料件編號、系列、產品分類皆無值，跳出訊息框
+            IF l_chk2 = 1  OR l_chk2 = 3 THEN
+               LET l_chk2 = 2
+            ELSE                                                         #以舊值判斷，避免使用[l_ac]，進入資料增部分         
+               IF (l_cmd = 'a' OR l_cmd = 'u') AND l_del_chk = FALSE AND g_xmdu_d_o.xmdu008 IS NOT NULL THEN
+                  IF cl_null(g_xmdu_d[l_ac].xmdu031) AND cl_null(g_xmdu_d[l_ac].xmdu002) AND cl_null(g_xmdu_d[l_ac].xmdu032) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend=""
+                     LET g_errparam.code="axm-00650"
+                     LET g_errparam.popup=TRUE
+                     CALL cl_err()
+                     NEXT FIELD xmdu002
+                  END IF      
+               END IF
+            END IF
+            #2015-06-08----dorislai----end  
+
+            #end add-point
+            CALL axmt420_unlock_b("xmdu_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2 name="input.body.after_row2"
+            
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input  name="input.body.after_input"
+                        
+            #end add-point 
+    
+         ON ACTION controlo    
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_xmdu_d[li_reproduce_target].* = g_xmdu_d[li_reproduce].*
+ 
+               LET g_xmdu_d[li_reproduce_target].xmduseq = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_xmdu_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_xmdu_d.getLength()+1
+            END IF
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+ 
+      
+ 
+ 
+      DISPLAY ARRAY g_xmdu2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+         BEFORE ROW 
+            CALL axmt420_idx_chk()
+            LET l_ac = DIALOG.getCurrentRow("s_detail2")
+            LET g_detail_idx2 = l_ac
+            
+            #add-point:page2, before row動作 name="input.body2.before_row"
+                        
+            #end add-point
+            
+         BEFORE DISPLAY
+            #如果一直都在單身2則控制筆數位置
+            IF g_loc = 'd' THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+            END IF
+            LET g_loc = 'd'
+            LET l_ac = DIALOG.getCurrentRow("s_detail2")
+            CALL axmt420_idx_chk()
+            LET g_current_page = 2
+      
+         #自訂ACTION(detail_show,page_2)
+         
+      
+         #add-point:page2自定義行為 name="input.body2.action"
+                  
+         #end add-point
+      
+      END DISPLAY
+ 
+ 
+{</section>}
+ 
+{<section id="axmt420.input.other" >}
+      
+      #add-point:自定義input name="input.more_input"
+      SUBDIALOG aoo_aooi360_01.aooi360_01_input   #备注单身  #161031-00025#20       
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog name="input.before_dialog"
+         #161031-00025#20-s
+         #為了修改功能doubleClick可以直接進入單身, 需指定要進入哪一個單身
+         IF NOT cl_null(p_cmd) AND p_cmd != 'a' THEN
+            CASE g_aw
+               WHEN "s_detail1_aooi360_01"
+                  NEXT FIELD ooff012     
+            END CASE
+         END IF
+         #161031-00025#20-e                  
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_idx_group.getValue("'1',"))      
+         CALL DIALOG.setCurrentRow("s_detail2",g_idx_group.getValue("'2',"))
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field name="input.next_field"
+            
+            #end add-point  
+            NEXT FIELD xmdtdocno
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD xmduseq
+               WHEN "s_detail2"
+                  NEXT FIELD xmdvseq
+ 
+               #add-point:input段modify_detail  name="input.modify_detail.other"
+               
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog name="input.after_dialog"
+         
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept  name="input.accept"
+         
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel name="input.cancel"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close name="input.close"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit name="input.exit"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+      
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION axmt420_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point  
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   DEFINE l_success LIKE type_t.num5
+   #end add-point  
+   
+   #add-point:Function前置處理 name="show.before"
+         #附予_o預設值
+   LET g_xmdt_m_o.* = g_xmdt_m.*     
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL axmt420_b_fill() #單身填充
+      CALL axmt420_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL axmt420_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+  ##151214-00001#1-s    #160526-00020#1 mark--(S)
+  #IF g_bfill = "Y" THEN
+  #  CALL axmt420_b_fill3(g_detail_idx)   #單身填充
+  #END IF
+  ##151214-00001#1-e    #160526-00020#1 mark--(E)
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+ 
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_xmdt_m_mask_o.* =  g_xmdt_m.*
+   CALL axmt420_xmdt_t_mask()
+   LET g_xmdt_m_mask_n.* =  g_xmdt_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_xmdt_m.xmdtdocno,g_xmdt_m.oobal004,g_xmdt_m.xmdt001,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt, 
+       g_xmdt_m.xmdt004,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002,g_xmdt_m.xmdt002_desc,g_xmdt_m.xmdt003, 
+       g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdtstus,g_xmdt_m.xmdt005,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt006, 
+       g_xmdt_m.xmdt006_desc,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt009_desc, 
+       g_xmdt_m.xmdt011,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdt030, 
+       g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015, 
+       g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid,g_xmdt_m.xmdtownid_desc, 
+       g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp, 
+       g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid,g_xmdt_m.xmdtmodid_desc,g_xmdt_m.xmdtmoddt, 
+       g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfid_desc,g_xmdt_m.xmdtcnfdt
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_xmdt_m.xmdtstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_xmdu_d.getLength()
+      #add-point:show段單身reference name="show.body.reference"
+      CALL s_feature_description(g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003) RETURNING l_success,g_xmdu_d[l_ac].xmdu003_desc
+
+
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_xmdu2_d.getLength()
+      #add-point:show段單身reference name="show.body2.reference"
+            
+      #end add-point
+   END FOR
+ 
+   
+    
+   
+   #add-point:show段other name="show.other"
+      
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL axmt420_detail_show()
+ 
+   #add-point:show段之後 name="show.after"
+      
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.detail_show" >}
+#+ 第二階單身reference
+PRIVATE FUNCTION axmt420_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point  
+   #add-point:detail_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+      
+   #end add-point  
+   
+   #add-point:Function前置處理 name="detail_show.before"
+      
+   #end add-point
+   
+   #add-point:detail_show段之後 name="detail_show.after"
+      
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION axmt420_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point   
+   DEFINE l_newno     LIKE xmdt_t.xmdtdocno 
+   DEFINE l_oldno     LIKE xmdt_t.xmdtdocno 
+ 
+   DEFINE l_master    RECORD LIKE xmdt_t.* #此變數樣板目前無使用
+   DEFINE l_detail    RECORD LIKE xmdu_t.* #此變數樣板目前無使用
+ 
+   DEFINE l_detail2    RECORD LIKE xmdv_t.* #此變數樣板目前無使用
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+      
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   LET g_master_insert = FALSE
+   
+   IF g_xmdt_m.xmdtdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_xmdtdocno_t = g_xmdt_m.xmdtdocno
+ 
+    
+   LET g_xmdt_m.xmdtdocno = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_xmdt_m.xmdtownid = g_user
+      LET g_xmdt_m.xmdtowndp = g_dept
+      LET g_xmdt_m.xmdtcrtid = g_user
+      LET g_xmdt_m.xmdtcrtdp = g_dept 
+      LET g_xmdt_m.xmdtcrtdt = cl_get_current()
+      LET g_xmdt_m.xmdtmodid = g_user
+      LET g_xmdt_m.xmdtmoddt = cl_get_current()
+      LET g_xmdt_m.xmdtstus = 'N'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   LET g_xmdt_m.xmdtdocdt = g_today
+   LET g_xmdt_m.xmdt002   = g_user
+   LET g_xmdt_m.xmdt003   = g_dept
+   CALL axmt420_xmdt002_ref()
+   CALL axmt420_xmdt003_ref()
+   DISPLAY BY NAME g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_xmdt_m.xmdtstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+   
+   
+   CALL axmt420_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_xmdt_m.* TO NULL
+      INITIALIZE g_xmdu_d TO NULL
+      INITIALIZE g_xmdu2_d TO NULL
+ 
+      #add-point:複製取消後 name="reproduce.cancel"
+      
+      #end add-point
+      CALL axmt420_show()
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code = 9001 
+      LET g_errparam.popup = FALSE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL axmt420_set_act_visible()   
+   CALL axmt420_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_xmdtdocno_t = g_xmdt_m.xmdtdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " xmdtent = " ||g_enterprise|| " AND",
+                      " xmdtdocno = '", g_xmdt_m.xmdtdocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL axmt420_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+      
+   #end add-point
+   
+   CALL axmt420_idx_chk()
+   
+   LET g_data_owner = g_xmdt_m.xmdtownid      
+   LET g_data_dept  = g_xmdt_m.xmdtowndp
+   
+   #功能已完成,通報訊息中心
+   CALL axmt420_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.detail_reproduce" >}
+#+ 單身自動複製
+PRIVATE FUNCTION axmt420_detail_reproduce()
+   #add-point:delete段define(客製用) name="detail_reproduce.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE xmdu_t.* #此變數樣板目前無使用
+ 
+   DEFINE l_detail2    RECORD LIKE xmdv_t.* #此變數樣板目前無使用
+ 
+ 
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_reproduce.define"
+      
+   #end add-point    
+   
+   #add-point:Function前置處理  name="detail_reproduce.pre_function"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE axmt420_detail
+   
+   #add-point:單身複製前1 name="detail_reproduce.body.table1.b_insert"
+      
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM xmdu_t
+    WHERE xmduent = g_enterprise AND xmdudocno = g_xmdtdocno_t
+ 
+    INTO TEMP axmt420_detail
+ 
+   #將key修正為調整後   
+   UPDATE axmt420_detail 
+      #更新key欄位
+      SET xmdudocno = g_xmdt_m.xmdtdocno
+ 
+      #更新共用欄位
+      
+ 
+   #add-point:單身修改前 name="detail_reproduce.body.table1.b_update"
+   
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO xmdu_t SELECT * FROM axmt420_detail
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1 name="detail_reproduce.body.table1.m_insert"
+      
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE axmt420_detail
+   
+   #add-point:單身複製後1 name="detail_reproduce.body.table1.a_insert"
+      
+   #end add-point
+ 
+ 
+   
+   #add-point:單身複製前 name="detail_reproduce.body.table2.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM xmdv_t 
+    WHERE xmdvent = g_enterprise AND xmdvdocno = g_xmdtdocno_t
+ 
+    INTO TEMP axmt420_detail
+ 
+   #將key修正為調整後   
+   UPDATE axmt420_detail SET xmdvdocno = g_xmdt_m.xmdtdocno
+ 
+  
+   #add-point:單身修改前 name="detail_reproduce.body.table2.b_update"
+   
+   #end add-point    
+  
+   #將資料塞回原table   
+   INSERT INTO xmdv_t SELECT * FROM axmt420_detail
+   
+   #add-point:單身複製中 name="detail_reproduce.body.table2.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE axmt420_detail
+   
+   LET g_data_owner = g_xmdt_m.xmdtownid      
+   LET g_data_dept  = g_xmdt_m.xmdtowndp
+   
+   #add-point:單身複製後 name="detail_reproduce.body.table2.a_insert"
+   
+   #end add-point
+ 
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_xmdtdocno_t = g_xmdt_m.xmdtdocno
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION axmt420_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point     
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+      
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   IF g_xmdt_m.xmdtdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   
+   
+   CALL s_transaction_begin()
+ 
+   OPEN axmt420_cl USING g_enterprise,g_xmdt_m.xmdtdocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN axmt420_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE axmt420_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE axmt420_master_referesh USING g_xmdt_m.xmdtdocno INTO g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001, 
+       g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtstus, 
+       g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011, 
+       g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012, 
+       g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid, 
+       g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtdp,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid, 
+       g_xmdt_m.xmdtmoddt,g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfdt,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002_desc, 
+       g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdtownid_desc, 
+       g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtmodid_desc, 
+       g_xmdt_m.xmdtcnfid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT axmt420_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_xmdt_m_mask_o.* =  g_xmdt_m.*
+   CALL axmt420_xmdt_t_mask()
+   LET g_xmdt_m_mask_n.* =  g_xmdt_m.*
+   
+   CALL axmt420_show()
+   
+   #add-point:delete段before ask name="delete.before_ask"
+   
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+            
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL axmt420_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+  
+  
+      #資料備份
+      LET g_xmdtdocno_t = g_xmdt_m.xmdtdocno
+ 
+ 
+      DELETE FROM xmdt_t
+       WHERE xmdtent = g_enterprise AND xmdtdocno = g_xmdt_m.xmdtdocno
+ 
+       
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+            
+      #end add-point
+       
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_xmdt_m.xmdtdocno,":",SQLERRMESSAGE  
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      IF NOT s_aooi200_del_docno(g_xmdt_m.xmdtdocno,g_xmdt_m.xmdtdocdt) THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF     
+     #161031-00025#20-s MARK
+     #160621-00027#1-s
+##      IF NOT s_aooi360_del('6','axmt420',g_xmdt_m.xmdtdocno,'','','','','','','','','4') THEN
+#      IF NOT s_aooi360_del('6',g_prog,g_xmdt_m.xmdtdocno,'','','','','','','','','4') THEN
+#     #160621-00027#1-e
+#
+#         CALL s_transaction_end('N','0')
+#         RETURN
+#      END IF 
+#   
+      #161031-00025#20-e MARK  
+      #161031-00025#20-s
+      #单头的aooi360_01的备注单身资料同步删除
+      DELETE FROM ooff_t
+       WHERE ooffent = g_enterprise AND ooff001 IN ('6','7')
+         AND ooff002 = 'axmt420' AND ooff003 = g_xmdt_m.xmdtdocno
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_xmdt_m.xmdtdocno,":",SQLERRMESSAGE  
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF   
+      CALL aooi360_01_clear_detail()   #清除备注单身  
+      #161031-00025#20-e
+      DELETE FROM xmdv_t
+      WHERE xmdvent = g_enterprise AND xmdvdocno = g_xmdt_m.xmdtdocno
+       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'delete xmdv_t'
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+    
+      #end add-point
+  
+      #add-point:單身刪除前 name="delete.body.b_delete"
+            
+      #end add-point
+      
+      DELETE FROM xmdu_t
+       WHERE xmduent = g_enterprise AND xmdudocno = g_xmdt_m.xmdtdocno
+ 
+ 
+      #add-point:單身刪除中 name="delete.body.m_delete"
+            
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "xmdu_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete"
+            
+      #end add-point
+      
+            
+                                                               
+ 
+ 
+      #add-point:單身刪除前 name="delete.body.b_delete2"
+      
+      #end add-point
+      DELETE FROM xmdv_t
+       WHERE xmdvent = g_enterprise AND
+             xmdvdocno = g_xmdt_m.xmdtdocno
+      #add-point:單身刪除中 name="delete.body.m_delete2"
+      
+      #end add-point
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "xmdv_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete2"
+      
+      #end add-point
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_xmdt_m)   #(ver:78)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:78)
+         CLOSE axmt420_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_xmdu_d.clear() 
+      CALL g_xmdu2_d.clear()       
+ 
+     
+      CALL axmt420_ui_browser_refresh()  
+      #CALL axmt420_ui_headershow()  
+      #CALL axmt420_ui_detailshow()
+ 
+      #add-point:多語言刪除 name="delete.lang.before_delete"
+      
+      #end add-point
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+      
+ 
+   
+      #add-point:多語言刪除 name="delete.lang.delete"
+      
+      #end add-point
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL axmt420_browser_fill("")
+         CALL axmt420_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+      
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE axmt420_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL axmt420_msgcentre_notify('delete')
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION axmt420_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point     
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_success              LIKE type_t.num5    
+   #end add-point     
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   #清空第一階單身
+   CALL g_xmdu_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+      
+   #end add-point
+   
+   #判斷是否填充
+   IF axmt420_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+      #add-point:b_fill段long_sql_if name="b_fill.long_sql_if"
+      
+      #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT xmduseq,xmdu001,xmdu002,xmdu003,xmdu031,xmdu032,xmdu005,xmdu006, 
+             xmdu007,xmdu015,xmdu008,xmdu009,xmdu010,xmdu011,xmdu012,xmdu013,xmdu014,xmdu004,xmdu030, 
+             xmdusite ,t1.oocql004 ,t2.rtaxl003 ,t3.oocql004 ,t4.oocal003 ,t5.oocql004 FROM xmdu_t", 
+                
+                     " INNER JOIN xmdt_t ON xmdtent = " ||g_enterprise|| " AND xmdtdocno = xmdudocno ",
+ 
+                     #"",
+                     " LEFT JOIN xmdv_t ON xmduent = xmdvent AND xmdudocno = xmdvdocno AND xmduseq = xmdvseq ",
+                     "",
+                     #下層單身所需的join條件
+                     " ",
+ 
+ 
+                                    " LEFT JOIN oocql_t t1 ON t1.oocqlent="||g_enterprise||" AND t1.oocql001='2003' AND t1.oocql002=xmdu031 AND t1.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN rtaxl_t t2 ON t2.rtaxlent="||g_enterprise||" AND t2.rtaxl001=xmdu032 AND t2.rtaxl002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t3 ON t3.oocqlent="||g_enterprise||" AND t3.oocql001='221' AND t3.oocql002=xmdu006 AND t3.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oocal_t t4 ON t4.oocalent="||g_enterprise||" AND t4.oocal001=xmdu008 AND t4.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t5 ON t5.oocqlent="||g_enterprise||" AND t5.oocql001='263' AND t5.oocql002=xmdu014 AND t5.oocql003='"||g_dlang||"' ",
+ 
+                     " WHERE xmduent=? AND xmdudocno=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body.fill_sql"
+         #161031-00025#20-s
+         LET g_sql = "SELECT  DISTINCT xmduseq,xmdu001,xmdu002,xmdu003,xmdu031,xmdu032,xmdu005,xmdu006, 
+             xmdu007,xmdu015,xmdu008,xmdu009,xmdu010,xmdu011,xmdu012,xmdu013,xmdu014,xmdu004,xmdu030, 
+             xmdusite ,t1.oocql004 ,t2.rtaxl003 ,t3.oocql004 ,t4.oocal003 ,t5.oocql004 FROM xmdu_t", 
+                
+                     " INNER JOIN xmdt_t ON xmdtent = " ||g_enterprise|| " AND xmdtdocno = xmdudocno ",
+ 
+                     #"",
+                     " LEFT JOIN xmdv_t ON xmduent = xmdvent AND xmdudocno = xmdvdocno AND xmduseq = xmdvseq ",
+                     "",
+                     #下層單身所需的join條件
+                     " ",
+ 
+ 
+                                    " LEFT JOIN oocql_t t1 ON t1.oocqlent="||g_enterprise||" AND t1.oocql001='2003' AND t1.oocql002=xmdu031 AND t1.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN rtaxl_t t2 ON t2.rtaxlent="||g_enterprise||" AND t2.rtaxl001=xmdu032 AND t2.rtaxl002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t3 ON t3.oocqlent="||g_enterprise||" AND t3.oocql001='221' AND t3.oocql002=xmdu006 AND t3.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oocal_t t4 ON t4.oocalent="||g_enterprise||" AND t4.oocal001=xmdu008 AND t4.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t5 ON t5.oocqlent="||g_enterprise||" AND t5.oocql001='263' AND t5.oocql002=xmdu014 AND t5.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN ooff_t  ON ooffent="||g_enterprise||" AND ooff002 = 'axmt420' AND ooff003 = xmdudocno AND ooff004 = xmduseq",
+                     " WHERE xmduent=? AND xmdudocno=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #161031-00025#20-e            
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+            IF NOT cl_null(g_wc2_table2) THEN 
+      LET g_sql = g_sql CLIPPED," AND ", g_wc2_table2 CLIPPED
+   END IF 
+ 
+         
+         LET g_sql = g_sql, " ORDER BY xmdu_t.xmduseq"
+         
+         #add-point:單身填充控制 name="b_fill.sql"
+            
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE axmt420_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR axmt420_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs USING g_enterprise,g_xmdt_m.xmdtdocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs USING g_enterprise,g_xmdt_m.xmdtdocno INTO g_xmdu_d[l_ac].xmduseq,g_xmdu_d[l_ac].xmdu001, 
+          g_xmdu_d[l_ac].xmdu002,g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu031,g_xmdu_d[l_ac].xmdu032, 
+          g_xmdu_d[l_ac].xmdu005,g_xmdu_d[l_ac].xmdu006,g_xmdu_d[l_ac].xmdu007,g_xmdu_d[l_ac].xmdu015, 
+          g_xmdu_d[l_ac].xmdu008,g_xmdu_d[l_ac].xmdu009,g_xmdu_d[l_ac].xmdu010,g_xmdu_d[l_ac].xmdu011, 
+          g_xmdu_d[l_ac].xmdu012,g_xmdu_d[l_ac].xmdu013,g_xmdu_d[l_ac].xmdu014,g_xmdu_d[l_ac].xmdu004, 
+          g_xmdu_d[l_ac].xmdu030,g_xmdu_d[l_ac].xmdusite,g_xmdu_d[l_ac].xmdu031_desc,g_xmdu_d[l_ac].xmdu032_desc, 
+          g_xmdu_d[l_ac].xmdu006_desc,g_xmdu_d[l_ac].xmdu008_desc,g_xmdu_d[l_ac].xmdu014_desc   #(ver:78) 
+ 
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill.fill"
+                           #品名 規格
+         CALL axmt420_xmdu002_ref()
+         CALL axmt420_xmdu015_ref()
+         CALL axmt420_xmdu006_ref()
+         CALL axmt420_xmdu014_ref()
+         CALL axmt420_xmdu008_ref()
+         SELECT pmao009,pmao010
+           INTO g_xmdu_d[l_ac].l_pmao009,g_xmdu_d[l_ac].l_pmao010
+           FROM pmao_t
+          WHERE pmaoent = g_enterprise
+            AND pmao001 = g_xmdt_m.xmdt004
+            AND pmao002 = g_xmdu_d[l_ac].xmdu002
+            AND pmao003 = g_xmdu_d[l_ac].xmdu003
+            AND pmao004 = g_xmdu_d[l_ac].xmdu005                     
+            AND pmao000 = '2' #161221-00064#14 add
+         #161031-00025#20-s
+         CALL s_aooi360_sel('7',g_prog,g_xmdt_m.xmdtdocno,g_xmdu_d[l_ac].xmduseq,'','','','','','','','1') RETURNING l_success,g_xmdu_d[l_ac].ooff013
+         #161031-00025#20-e
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code = 9035 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+    
+ 
+   
+   #add-point:browser_fill段其他table處理 name="browser_fill.other_fill"
+   #161031-00025#20-s
+   LET g_ooff001_d = '6'   #6.單據單頭備註
+   LET g_ooff002_d = g_prog
+   LET g_ooff003_d = g_xmdt_m.xmdtdocno   #单号
+   LET g_ooff004_d = '0'     #项次
+   LET g_ooff005_d = ' '
+   LET g_ooff006_d = ' '
+   LET g_ooff007_d = ' '
+   LET g_ooff008_d = ' '
+   LET g_ooff009_d = ' '
+   LET g_ooff010_d = ' '
+   LET g_ooff011_d = ' '
+   CALL aooi360_01_b_fill(g_ooff001_d,g_ooff002_d,g_ooff003_d,g_ooff004_d,g_ooff005_d,g_ooff006_d,g_ooff007_d,g_ooff008_d,g_ooff009_d,g_ooff010_d,g_ooff011_d)   #备注单身 
+   #161031-00025#20-e      
+   #end add-point
+   
+   CALL g_xmdu_d.deleteElement(g_xmdu_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE axmt420_pb
+ 
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_xmdu_d.getLength()
+      LET g_xmdu_d_mask_o[l_ac].* =  g_xmdu_d[l_ac].*
+      CALL axmt420_xmdu_t_mask()
+      LET g_xmdu_d_mask_n[l_ac].* =  g_xmdu_d[l_ac].*
+   END FOR
+   
+   LET g_xmdu2_d_mask_o.* =  g_xmdu2_d.*
+   FOR l_ac = 1 TO g_xmdu2_d.getLength()
+      LET g_xmdu2_d_mask_o[l_ac].* =  g_xmdu2_d[l_ac].*
+      CALL axmt420_xmdv_t_mask()
+      LET g_xmdu2_d_mask_n[l_ac].* =  g_xmdu2_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION axmt420_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+      
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete"
+            
+      #end add-point    
+      DELETE FROM xmdu_t
+       WHERE xmduent = g_enterprise AND
+         xmdudocno = ps_keys_bak[1] AND xmduseq = ps_keys_bak[2]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete"
+            
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ":",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_xmdu_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+ 
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table2
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete2"
+      
+      #end add-point    
+      DELETE FROM xmdv_t
+       WHERE xmdvent = g_enterprise AND
+             xmdvdocno = ps_keys_bak[1] AND xmdvseq = ps_keys_bak[2] AND xmdv001 = ps_keys_bak[3] AND xmdv002 = ps_keys_bak[4]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete2"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "xmdv_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+    
+      LET li_idx = g_detail_idx2
+      IF ps_page <> "'2'" THEN 
+         CALL g_xmdu2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      #add-point:delete_b段刪除後 name="delete_b.a_delete2"
+      
+      #end add-point    
+   END IF
+ 
+ 
+   
+   #add-point:delete_b段other name="delete_b.other"
+      
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION axmt420_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+      
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert"
+            
+      #end add-point 
+      INSERT INTO xmdu_t
+                  (xmduent,
+                   xmdudocno,
+                   xmduseq
+                   ,xmdu001,xmdu002,xmdu003,xmdu031,xmdu032,xmdu005,xmdu006,xmdu007,xmdu015,xmdu008,xmdu009,xmdu010,xmdu011,xmdu012,xmdu013,xmdu014,xmdu004,xmdu030,xmdusite) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_xmdu_d[g_detail_idx].xmdu001,g_xmdu_d[g_detail_idx].xmdu002,g_xmdu_d[g_detail_idx].xmdu003, 
+                       g_xmdu_d[g_detail_idx].xmdu031,g_xmdu_d[g_detail_idx].xmdu032,g_xmdu_d[g_detail_idx].xmdu005, 
+                       g_xmdu_d[g_detail_idx].xmdu006,g_xmdu_d[g_detail_idx].xmdu007,g_xmdu_d[g_detail_idx].xmdu015, 
+                       g_xmdu_d[g_detail_idx].xmdu008,g_xmdu_d[g_detail_idx].xmdu009,g_xmdu_d[g_detail_idx].xmdu010, 
+                       g_xmdu_d[g_detail_idx].xmdu011,g_xmdu_d[g_detail_idx].xmdu012,g_xmdu_d[g_detail_idx].xmdu013, 
+                       g_xmdu_d[g_detail_idx].xmdu014,g_xmdu_d[g_detail_idx].xmdu004,g_xmdu_d[g_detail_idx].xmdu030, 
+                       g_xmdu_d[g_detail_idx].xmdusite)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert"
+            
+      #end add-point 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "xmdu_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_xmdu_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert"
+            
+      #end add-point 
+   END IF
+   
+ 
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert2"
+      
+      #end add-point 
+      INSERT INTO xmdv_t
+                  (xmdvent,
+                   xmdvdocno,xmdvseq,
+                   xmdv001,xmdv002
+                   ,xmdv003,xmdv004) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+                   ,g_xmdu2_d[g_detail_idx2].xmdv003,g_xmdu2_d[g_detail_idx2].xmdv004)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert2"
+      
+      #end add-point
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "xmdv_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx2
+      IF ps_page <> "'2'" THEN 
+         CALL g_xmdu2_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert2"
+      
+      #end add-point
+   END IF
+ 
+ 
+   
+   #add-point:insert_b段other name="insert_b.other"
+      
+   #end add-point     
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION axmt420_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+      
+   #end add-point   
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "xmdu_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update"
+            
+      #end add-point 
+      
+      #將遮罩欄位還原
+      CALL axmt420_xmdu_t_mask_restore('restore_mask_o')
+               
+      UPDATE xmdu_t 
+         SET (xmdudocno,
+              xmduseq
+              ,xmdu001,xmdu002,xmdu003,xmdu031,xmdu032,xmdu005,xmdu006,xmdu007,xmdu015,xmdu008,xmdu009,xmdu010,xmdu011,xmdu012,xmdu013,xmdu014,xmdu004,xmdu030,xmdusite) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_xmdu_d[g_detail_idx].xmdu001,g_xmdu_d[g_detail_idx].xmdu002,g_xmdu_d[g_detail_idx].xmdu003, 
+                  g_xmdu_d[g_detail_idx].xmdu031,g_xmdu_d[g_detail_idx].xmdu032,g_xmdu_d[g_detail_idx].xmdu005, 
+                  g_xmdu_d[g_detail_idx].xmdu006,g_xmdu_d[g_detail_idx].xmdu007,g_xmdu_d[g_detail_idx].xmdu015, 
+                  g_xmdu_d[g_detail_idx].xmdu008,g_xmdu_d[g_detail_idx].xmdu009,g_xmdu_d[g_detail_idx].xmdu010, 
+                  g_xmdu_d[g_detail_idx].xmdu011,g_xmdu_d[g_detail_idx].xmdu012,g_xmdu_d[g_detail_idx].xmdu013, 
+                  g_xmdu_d[g_detail_idx].xmdu014,g_xmdu_d[g_detail_idx].xmdu004,g_xmdu_d[g_detail_idx].xmdu030, 
+                  g_xmdu_d[g_detail_idx].xmdusite) 
+         WHERE xmduent = g_enterprise AND xmdudocno = ps_keys_bak[1] AND xmduseq = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update"
+            
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "xmdu_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "xmdu_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+ 
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL axmt420_xmdu_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後 name="update_b.after_update"
+   
+      #end add-point  
+   END IF
+   
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+   
+   
+ 
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "xmdv_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update2"
+      
+      #end add-point
+      
+      #將遮罩欄位還原
+      CALL axmt420_xmdv_t_mask_restore('restore_mask_o')
+               
+      UPDATE xmdv_t 
+         SET (xmdvdocno,xmdvseq,
+              xmdv001,xmdv002
+              ,xmdv003,xmdv004) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+              ,g_xmdu2_d[g_detail_idx2].xmdv003,g_xmdu2_d[g_detail_idx2].xmdv004) 
+         WHERE xmdvent = g_enterprise AND xmdvdocno = ps_keys_bak[1] AND xmdvseq = ps_keys_bak[2] AND xmdv001 = ps_keys_bak[3] AND xmdv002 = ps_keys_bak[4]
+      #add-point:update_b段修改中 name="update_b.m_update2"
+      
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "xmdv_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "xmdv_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+ 
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL axmt420_xmdv_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後 name="update_b.after_update2"
+      
+      #end add-point  
+   END IF
+ 
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+ 
+ 
+   
+   #add-point:update_b段other name="update_b.other"
+      
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.key_update_b" >}
+#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION axmt420_key_update_b(ps_keys_bak,ps_table)
+   #add-point:update_b段define(客製用) name="key_update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_key       DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_update_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_update_b.pre_function"
+   
+   #end add-point
+   
+   #如果是上層單身則進行update
+   IF ps_table = 'xmdu_t' THEN
+      #add-point:update_b段修改前 name="key_update_b.before_update2"
+      
+      #end add-point
+      
+      UPDATE xmdv_t 
+         SET (xmdvdocno,xmdvseq) 
+              = 
+             (g_xmdt_m.xmdtdocno,g_xmdu_d[g_detail_idx].xmduseq) 
+         WHERE xmdvent = g_enterprise AND
+               xmdvdocno = ps_keys_bak[1] AND xmdvseq = ps_keys_bak[2]
+ 
+      #add-point:update_b段修改中 name="key_update_b.m_update2"
+      
+      #end add-point
+              
+      CASE
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "xmdv_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+            #若有多語言table資料一同更新
+            
+      END CASE
+      
+      #add-point:update_b段修改後 name="key_update_b.after_update2"
+      
+      #end add-point
+   END IF
+ 
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.key_delete_b" >}
+#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION axmt420_key_delete_b(ps_keys_bak,ps_table)
+   #add-point:delete_b段define(客製用) name="key_delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_delete_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_delete_b.pre_function"
+   
+   #end add-point
+   
+   #如果是上層單身則進行delete
+   IF ps_table = 'xmdu_t' THEN
+      #add-point:delete_b段修改前 name="key_delete_b.before_delete2"
+      
+      #end add-point
+      
+      DELETE FROM xmdv_t 
+            WHERE xmdvent = g_enterprise AND
+                  xmdvdocno = ps_keys_bak[1] AND xmdvseq = ps_keys_bak[2]
+ 
+      #add-point:delete_b段修改中 name="key_delete_b.m_delete2"
+      
+      #end add-point
+              
+      CASE
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "xmdv_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            RETURN FALSE
+         OTHERWISE
+      END CASE
+ 
+       
+ 
+      #add-point:delete_b段修改後 name="key_delete_b.after_delete2"
+      
+      #end add-point
+   END IF
+ 
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION axmt420_lock_b(ps_table,ps_page)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+      
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+    
+   #先刷新資料
+   #CALL axmt420_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "xmdu_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN axmt420_bcl USING g_enterprise,
+                                       g_xmdt_m.xmdtdocno,g_xmdu_d[g_detail_idx].xmduseq     
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "axmt420_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+ 
+   
+   #鎖定整組table
+   #LET ls_group = "'2',"
+   #僅鎖定自身table
+   LET ls_group = "xmdv_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN axmt420_bcl2 USING g_enterprise,
+                                             g_xmdt_m.xmdtdocno,g_xmdu_d[g_detail_idx].xmduseq,
+                                             g_xmdu2_d[g_detail_idx2].xmdv001,g_xmdu2_d[g_detail_idx2].xmdv002 
+ 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "axmt420_bcl2:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+   #add-point:lock_b段other name="lock_b.other"
+      
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION axmt420_unlock_b(ps_table,ps_page)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+      
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE axmt420_bcl
+   END IF
+   
+ 
+   
+   LET ls_group = "'2',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE axmt420_bcl2
+   END IF
+ 
+ 
+ 
+   #add-point:unlock_b段other name="unlock_b.other"
+      
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION axmt420_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization"
+   
+   #end add-point       
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+      
+   #end add-point       
+   
+   #add-point:Function前置處理  name="set_entry.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_comp_entry("xmdtdocno",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("xmdtdocno",TRUE)
+      CALL cl_set_comp_entry("xmdtdocdt",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      CALL cl_set_comp_entry("xmdtdocdt",TRUE)
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   CALL cl_set_comp_entry("xmdt010,xmdt012",TRUE)
+   CALL cl_set_comp_entry('xmdt001,xmdtdocdt,xmdt004,xmdt002',TRUE) 
+   CALL cl_set_comp_entry('xmdt003,xmdt005,xmdt006',TRUE)
+   CALL cl_set_comp_entry('xmdt009,xmdt011,xmdt019',TRUE)
+   CALL cl_set_comp_entry('xmdt030,xmdt013,xmdt014,xmdt010',TRUE)
+   CALL cl_set_comp_entry('xmdt012,xmdt020,xmdt015,xmdt016',TRUE)
+   CALL cl_set_comp_entry('xmdt017,xmdt018',TRUE)
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION axmt420_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   DEFINE l_fields STRING
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("xmdtdocno",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+                  CALL cl_set_comp_entry("xmdtdocdt",FALSE)
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN  #docno,ld欄位確認是絕對關閉
+      CALL cl_set_comp_entry("xmdtdocno",FALSE)
+   END IF 
+ 
+#  IF p_cmd = 'u' THEN  #docdt欄位依照設定關閉(FALSE則為設定不同意修正) #(ver:78)
+      IF NOT cl_chk_update_docdt() THEN
+         CALL cl_set_comp_entry("xmdtdocdt",FALSE)
+      END IF
+#  END IF 
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+         IF cl_null(g_xmdt_m.xmdt009)THEN
+      CALL cl_set_comp_entry("xmdt010",FALSE)
+      LET g_xmdt_m.xmdt010 = 'N'
+      DISPLAY BY NAME g_xmdt_m.xmdt010
+   END IF
+   
+   IF cl_null(g_xmdt_m.xmdt011)THEN
+      CALL cl_set_comp_entry("xmdt012",FALSE)
+      LET g_xmdt_m.xmdt012 = 'N'
+      DISPLAY BY NAME g_xmdt_m.xmdt012
+   END IF   
+   
+   #依單據別設定判斷欄位是否需要做輸入控制
+   IF NOT cl_null(g_xmdt_m.xmdtdocno) THEN
+      LET l_fields = ''
+      CALL s_aooi200_get_doc_fields(g_site,'1',g_xmdt_m.xmdtdocno) RETURNING l_fields
+      CALL cl_set_comp_entry(l_fields,FALSE)
+   END IF
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION axmt420_set_entry_b(p_cmd)
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+      
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_entry_b.pre_function"
+   
+   #end add-point
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段 name="set_entry_b.set_entry_b"
+   CALL cl_set_comp_entry('xmdu003,xmdu011,xmdu013',TRUE)
+   CALL cl_set_comp_entry('l_pmao009,l_pmao010',TRUE)
+   #end add-point  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION axmt420_set_no_entry_b(p_cmd)
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point    
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   DEFINE l_imaa005    LIKE imaa_t.imaa005   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="set_no_entry_b.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段 name="set_no_entry_b.set_no_entry_b"
+   #分量計價時不可輸入單價
+   IF g_xmdu_d[l_ac].xmdu009 = 'Y' THEN
+      CALL cl_set_comp_entry('xmdu011,xmdu013',FALSE)
+   END IF
+   #產品特徵
+   IF cl_null(g_xmdu_d[l_ac].xmdu002) THEN
+      CALL axmt420_set_entry_b(p_cmd)
+      LET g_xmdu_d[l_ac].xmdu003 = ''
+      LET g_xmdu_d[l_ac].xmdu003_desc = ''
+      DISPLAY BY NAME g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu003_desc
+      CALL cl_set_comp_entry('xmdu003',FALSE)
+   ELSE
+      #料件主檔無特徵類別，不能維護產品特徵
+      IF cl_get_para(g_enterprise,g_site,'S-BAS-0036') = 'Y' THEN
+         LET l_imaa005 = ''
+         SELECT imaa005 INTO l_imaa005
+           FROM imaa_t
+          WHERE imaaent = g_enterprise
+            AND imaa001 = g_xmdu_d[l_ac].xmdu002
+         IF cl_null(l_imaa005) THEN
+            LET g_xmdu_d[l_ac].xmdu003 = ''
+            LET g_xmdu_d[l_ac].xmdu003_desc = ''
+            DISPLAY BY NAME g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu003_desc
+            CALL cl_set_comp_entry('xmdu003',FALSE)
+         END IF
+      ELSE 
+         LET g_xmdu_d[l_ac].xmdu003 = ''
+         LET g_xmdu_d[l_ac].xmdu003_desc = ''
+         DISPLAY BY NAME g_xmdu_d[l_ac].xmdu003,g_xmdu_d[l_ac].xmdu003_desc   
+         CALL axmt420_set_entry_b(p_cmd)         
+      END IF
+   END IF 
+   IF g_pmao_flag ='Y' THEN
+   ELSE
+      CALL cl_set_comp_entry('l_pmao009,l_pmao010',FALSE)
+   END IF
+   #end add-point     
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION axmt420_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+
+   CALL cl_set_act_visible("modify,delete,modify_detail",TRUE)   #2014/12/02 by stellar
+   
+   #160324-00037#4 20160427 add by ming -----(S) 
+   CALL cl_set_act_visible("change_xmdt016",TRUE)
+   #160324-00037#4 20160427 add by ming -----(E) 
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION axmt420_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+ 
+   #2014/12/02 by stellar add ----- (S)
+   IF g_xmdt_m.xmdtstus NOT MATCHES "[NDR]" THEN   
+      CALL cl_set_act_visible("modify,delete,modify_detail",FALSE)
+   END IF   
+   #2014/12/02 by stellar add ----- (E)
+
+   #160324-00037#4 20160427 add by ming -----(S) 
+   IF g_xmdt_m.xmdtstus != 'Y' THEN
+      CALL cl_set_act_visible("change_xmdt016",FALSE)
+   END IF
+   #160324-00037#4 20160427 add by ming -----(E)  
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.set_act_visible_b" >}
+#+ 單身權限開啟
+PRIVATE FUNCTION axmt420_set_act_visible_b()
+   #add-point:set_act_visible_b段define(客製用) name="set_act_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段 name="set_act_visible_b.set_act_visible_b"
+ 
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.set_act_no_visible_b" >}
+#+ 單身權限關閉
+PRIVATE FUNCTION axmt420_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define(客製用) name="set_act_no_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段 name="set_act_no_visible_b.set_act_no_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION axmt420_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point  
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+      
+   #end add-point  
+   
+   #add-point:Function前置處理 name="default_search.before"
+      
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " xmdtdocno = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   LET ls_wc = ''
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc," xmdtdocno = '", g_argv[02], "' AND "
+   END IF
+
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "xmdt_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "xmdu_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   #stellar 140828 add ----------------------(S)
+   #一般時(argv1=1)，作業編號及製程序隱藏
+   #委外時(argv1=2)，作業編號及製程序顯示
+   #外傳參數為委外否1一般2委外
+   CASE g_argv[1]
+      WHEN '1'
+         LET g_wc = g_wc," AND xmdt001 = 'N' "
+         CALL cl_set_comp_visible("xmdu006,xmdu006_desc,xmdu007",FALSE)
+      WHEN '2'
+         LET g_wc = g_wc," AND xmdt001 = 'Y' "
+         CALL cl_set_comp_visible("xmdu006,xmdu006_desc,xmdu007",TRUE)
+      OTHERWISE
+         LET g_argv[1] = '1'
+         LET g_wc = g_wc," AND xmdt001 = 'N' "
+         CALL cl_set_comp_visible("xmdu006,xmdu006_desc,xmdu007",FALSE)
+   END CASE
+   #stellar 140828 add ----------------------(E)
+   
+
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION axmt420_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+      
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   IF g_xmdt_m.xmdtstus = 'X' THEN
+      RETURN
+   END IF    
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_xmdt_m.xmdtdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN axmt420_cl USING g_enterprise,g_xmdt_m.xmdtdocno
+   IF STATUS THEN
+      CLOSE axmt420_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN axmt420_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE axmt420_master_referesh USING g_xmdt_m.xmdtdocno INTO g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001, 
+       g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtstus, 
+       g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011, 
+       g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012, 
+       g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid, 
+       g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtdp,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid, 
+       g_xmdt_m.xmdtmoddt,g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfdt,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002_desc, 
+       g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdtownid_desc, 
+       g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtmodid_desc, 
+       g_xmdt_m.xmdtcnfid_desc
+   
+ 
+   #檢查是否允許此動作
+   IF NOT axmt420_action_chk() THEN
+      CLOSE axmt420_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_xmdt_m.xmdtdocno,g_xmdt_m.oobal004,g_xmdt_m.xmdt001,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt, 
+       g_xmdt_m.xmdt004,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002,g_xmdt_m.xmdt002_desc,g_xmdt_m.xmdt003, 
+       g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdtstus,g_xmdt_m.xmdt005,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt006, 
+       g_xmdt_m.xmdt006_desc,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt009_desc, 
+       g_xmdt_m.xmdt011,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdt030, 
+       g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015, 
+       g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid,g_xmdt_m.xmdtownid_desc, 
+       g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp, 
+       g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid,g_xmdt_m.xmdtmodid_desc,g_xmdt_m.xmdtmoddt, 
+       g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfid_desc,g_xmdt_m.xmdtcnfdt
+ 
+   CASE g_xmdt_m.xmdtstus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+      WHEN "A"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+      WHEN "D"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+      WHEN "R"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+      WHEN "W"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+      WHEN "X"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_xmdt_m.xmdtstus
+            
+            WHEN "N"
+               HIDE OPTION "unconfirmed"
+            WHEN "Y"
+               HIDE OPTION "confirmed"
+            WHEN "A"
+               HIDE OPTION "approved"
+            WHEN "D"
+               HIDE OPTION "withdraw"
+            WHEN "R"
+               HIDE OPTION "rejection"
+            WHEN "W"
+               HIDE OPTION "signing"
+            WHEN "X"
+               HIDE OPTION "invalid"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      #提交和抽單一開始先無條件關,其餘應用功能無條件開
+      CALL cl_set_act_visible("signing,withdraw",FALSE)
+      CALL cl_set_act_visible("unconfirmed,invalid,confirmed",TRUE)
+      
+      CASE g_xmdt_m.xmdtstus
+         WHEN "N"
+            CALL cl_set_act_visible("unconfirmed,closed",FALSE)
+            #需提交至BPM時，則顯示「提交」功能並隱藏「確認」功能
+            IF cl_bpm_chk() THEN
+               CALL cl_set_act_visible("signing",TRUE)
+               CALL cl_set_act_visible("confirmed",FALSE)
+            END IF
+         WHEN "X"
+            #HIDE OPTION "confirmed"
+            CALL cl_set_act_visible("unconfirmed,invalid,confirmed",FALSE)
+         WHEN "Y"
+            #HIDE OPTION "invalid"
+            CALL cl_set_act_visible("invalid,confirmed",FALSE)
+         
+         #已核准只能顯示確認;其餘應用功能皆隱藏
+         WHEN "A"     
+             CALL cl_set_act_visible("confirmed ",TRUE)  
+             CALL cl_set_act_visible("unconfirmed,invalid",FALSE)
+         #保留修改的功能(如作廢)，隱藏其他應用功能
+         WHEN "R"   
+            CALL cl_set_act_visible("confirmed,unconfirmed",FALSE)
+         WHEN "D"  
+            CALL cl_set_act_visible("confirmed,unconfirmed",FALSE)
+         #送簽中只能顯示抽單;其餘應用功能皆隱藏
+         WHEN "W"   
+            CALL cl_set_act_visible("withdraw",TRUE)  
+            CALL cl_set_act_visible("unconfirmed,invalid,confirmed",FALSE)
+      END CASE
+      #end add-point
+      
+      #應用 a36 樣板自動產生(Version:5)
+      #提交
+      ON ACTION signing
+         IF cl_auth_chk_act("signing") THEN
+            IF NOT axmt420_send() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE axmt420_cl
+            RETURN
+         END IF
+    
+      #抽單
+      ON ACTION withdraw
+         IF cl_auth_chk_act("withdraw") THEN
+            IF NOT axmt420_draw_out() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE axmt420_cl
+            RETURN
+         END IF
+ 
+ 
+ 
+	  
+      ON ACTION unconfirmed
+         IF cl_auth_chk_act("unconfirmed") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.unconfirmed"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION confirmed
+         IF cl_auth_chk_act("confirmed") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.confirmed"
+                           CALL s_axmt420_prepare_declare()
+         
+         CALL s_transaction_begin()
+         
+         IF NOT s_axmt420_conf_chk(g_xmdt_m.xmdtdocno)  THEN
+            CALL s_transaction_end('N','0')   #160812-00017#6 20160819 add by beckxie
+            RETURN
+         ELSE
+            IF NOT cl_ask_confirm('aim-00108') THEN
+               CALL s_transaction_end('N','0')   #160812-00017#6 20160819 add by beckxie
+               RETURN
+            ELSE
+               IF NOT s_axmt420_conf_upd(g_xmdt_m.xmdtdocno) THEN
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF
+         END IF
+         
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION approved
+         IF cl_auth_chk_act("approved") THEN
+            LET lc_state = "A"
+            #add-point:action控制 name="statechange.approved"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION withdraw
+      #   IF cl_auth_chk_act("withdraw") THEN
+      #      LET lc_state = "D"
+      #      #add-point:action控制 name="statechange.withdraw"
+      #      
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION rejection
+         IF cl_auth_chk_act("rejection") THEN
+            LET lc_state = "R"
+            #add-point:action控制 name="statechange.rejection"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION signing
+      #   IF cl_auth_chk_act("signing") THEN
+      #      LET lc_state = "W"
+      #      #add-point:action控制 name="statechange.signing"
+      #      
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION invalid
+         IF cl_auth_chk_act("invalid") THEN
+            LET lc_state = "X"
+            #add-point:action控制 name="statechange.invalid"
+                           CALL s_axmt420_prepare_declare()
+         
+         CALL s_transaction_begin()
+         
+         IF NOT s_axmt420_invalid_chk(g_xmdt_m.xmdtdocno)  THEN
+            CALL s_transaction_end('N','0')   #160812-00017#6 20160819 add by beckxie
+            RETURN
+         ELSE
+            IF NOT cl_ask_confirm('aim-00109') THEN
+               CALL s_transaction_end('N','0')   #160812-00017#6 20160819 add by beckxie
+               RETURN
+            ELSE
+               IF NOT s_axmt420_invalid_upd(g_xmdt_m.xmdtdocno) THEN
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF
+         END IF
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+            
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      AND lc_state <> "A"
+      AND lc_state <> "D"
+      AND lc_state <> "R"
+      AND lc_state <> "W"
+      AND lc_state <> "X"
+      ) OR 
+      g_xmdt_m.xmdtstus = lc_state OR cl_null(lc_state) THEN
+      CLOSE axmt420_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+      
+   #end add-point
+   
+   LET g_xmdt_m.xmdtmodid = g_user
+   LET g_xmdt_m.xmdtmoddt = cl_get_current()
+   LET g_xmdt_m.xmdtstus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE xmdt_t 
+      SET (xmdtstus,xmdtmodid,xmdtmoddt) 
+        = (g_xmdt_m.xmdtstus,g_xmdt_m.xmdtmodid,g_xmdt_m.xmdtmoddt)     
+    WHERE xmdtent = g_enterprise AND xmdtdocno = g_xmdt_m.xmdtdocno
+ 
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE axmt420_master_referesh USING g_xmdt_m.xmdtdocno INTO g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt001, 
+          g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtstus, 
+          g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011, 
+          g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012, 
+          g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid, 
+          g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtdp,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid, 
+          g_xmdt_m.xmdtmoddt,g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfdt,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002_desc, 
+          g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdtownid_desc, 
+          g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtmodid_desc, 
+          g_xmdt_m.xmdtcnfid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_xmdt_m.xmdtdocno,g_xmdt_m.oobal004,g_xmdt_m.xmdt001,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt, 
+          g_xmdt_m.xmdt004,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002,g_xmdt_m.xmdt002_desc,g_xmdt_m.xmdt003, 
+          g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdtstus,g_xmdt_m.xmdt005,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt006, 
+          g_xmdt_m.xmdt006_desc,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt009_desc, 
+          g_xmdt_m.xmdt011,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdt030, 
+          g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015, 
+          g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid,g_xmdt_m.xmdtownid_desc, 
+          g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp, 
+          g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid,g_xmdt_m.xmdtmodid_desc,g_xmdt_m.xmdtmoddt, 
+          g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfid_desc,g_xmdt_m.xmdtcnfdt
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+      
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+      
+   #end add-point  
+ 
+   CLOSE axmt420_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL axmt420_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="axmt420.idx_chk" >}
+#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION axmt420_idx_chk()
+   #add-point:idx_chk段define(客製用) name="idx_chk.define_customerization"
+   
+   #end add-point  
+   #add-point:idx_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="idx_chk.define"
+      
+   #end add-point  
+   
+   #add-point:Function前置處理  name="idx_chk.pre_function"
+   
+   #end add-point
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_xmdu_d.getLength() THEN
+         LET g_detail_idx = g_xmdu_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_xmdu_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_xmdu_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx2 = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx2 > g_xmdu2_d.getLength() THEN
+         LET g_detail_idx2 = g_xmdu2_d.getLength()
+      END IF
+      IF g_detail_idx2 = 0 AND g_xmdu2_d.getLength() <> 0 THEN
+         LET g_detail_idx2 = 1
+      END IF
+      DISPLAY g_detail_idx2 TO FORMONLY.idx
+      DISPLAY g_xmdu2_d.getLength() TO FORMONLY.cnt
+   END IF
+ 
+   
+   #add-point:idx_chk段other name="idx_chk.other"
+      
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION axmt420_b_fill2(pi_idx)
+   #add-point:b_fill2段define(客製用) name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE pi_idx                 LIKE type_t.num10
+   DEFINE li_ac                  LIKE type_t.num10
+   DEFINE li_detail_idx_tmp      LIKE type_t.num10
+   DEFINE ls_chk                 LIKE type_t.chr1
+   #add-point:b_fill2段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+      
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill2.pre_function"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+   LET li_detail_idx_tmp = g_detail_idx
+   
+   IF axmt420_fill_chk(2) THEN
+      IF (pi_idx = 2 OR pi_idx = 0 ) AND g_xmdu_d.getLength() > 0 THEN
+               CALL g_xmdu2_d.clear()
+ 
+         
+         #取得該單身上階單身的idx
+         LET g_detail_idx = g_detail_idx_list[1]
+         
+         LET g_sql = "SELECT  DISTINCT xmdvseq,xmdv001,xmdv002,xmdv003,xmdv004  FROM xmdv_t",    
+                     "",
+                     
+                     " WHERE xmdvent=? AND xmdvdocno=? AND xmdvseq=?"
+         
+         IF NOT cl_null(g_wc2_table2) THEN
+            LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+         END IF
+         
+         LET g_sql = g_sql, " ORDER BY  xmdv_t.xmdv001,xmdv_t.xmdv002" 
+                            
+         #add-point:單身填充前 name="b_fill2.before_fill2"
+         
+         #end add-point
+         
+         #先清空資料
+               CALL g_xmdu2_d.clear()
+ 
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE axmt420_pb2 FROM g_sql
+         DECLARE b_fill_curs2 CURSOR FOR axmt420_pb2
+         
+      #  OPEN b_fill_curs2 USING g_enterprise,g_xmdt_m.xmdtdocno,g_xmdu_d[g_detail_idx].xmduseq   #(ver:78) 
+ 
+         LET l_ac = 1
+         FOREACH b_fill_curs2 USING g_enterprise,g_xmdt_m.xmdtdocno,g_xmdu_d[g_detail_idx].xmduseq INTO g_xmdu2_d[l_ac].xmdvseq, 
+             g_xmdu2_d[l_ac].xmdv001,g_xmdu2_d[l_ac].xmdv002,g_xmdu2_d[l_ac].xmdv003,g_xmdu2_d[l_ac].xmdv004  
+               #(ver:78)
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               EXIT FOREACH
+            END IF
+            
+            #add-point:b_fill段資料填充 name="b_fill2.fill2"
+            
+            #end add-point
+           
+            IF l_ac > g_max_rec THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code = 9035 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               EXIT FOREACH
+            END IF
+            
+            LET l_ac = l_ac + 1
+            
+         END FOREACH
+               CALL g_xmdu2_d.deleteElement(g_xmdu2_d.getLength())
+ 
+      END IF
+   END IF
+ 
+ 
+      
+   LET g_xmdu2_d_mask_o.* =  g_xmdu2_d.*
+   FOR l_ac = 1 TO g_xmdu2_d.getLength()
+      LET g_xmdu2_d_mask_o[l_ac].* =  g_xmdu2_d[l_ac].*
+      CALL axmt420_xmdv_t_mask()
+      LET g_xmdu2_d_mask_n[l_ac].* =  g_xmdu2_d[l_ac].*
+   END FOR
+ 
+      
+   #add-point:單身填充後 name="b_fill2.after_fill"
+      
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL axmt420_detail_show()
+   
+   LET g_detail_idx = li_detail_idx_tmp
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.fill_chk" >}
+#+ 單身填充確認
+PRIVATE FUNCTION axmt420_fill_chk(ps_idx)
+   #add-point:fill_chk段define(客製用) name="fill_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fill_chk.define"
+      
+   #end add-point
+   
+   #add-point:Function前置處理 name="fill_chk.before_chk"
+   
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table2) OR g_wc2_table2.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk name="fill_chk.other_chk"
+            
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk name="fill_chk.after_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.status_show" >}
+PRIVATE FUNCTION axmt420_status_show()
+   #add-point:status_show段define(客製用) name="status_show.define_customerization"
+   
+   #end add-point
+   #add-point:status_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="status_show.define"
+   
+   #end add-point
+   
+   #add-point:status_show段status_show name="status_show.status_show"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.mask_functions" >}
+&include "erp/axm/axmt420_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="axmt420.signature" >}
+   #應用 a39 樣板自動產生(Version:10)
+#+ BPM提交
+PRIVATE FUNCTION axmt420_send()
+   #add-point:send段define(客製用) name="send.define_customerization"
+   
+   #end add-point 
+   #add-point:send段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="send.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="send.pre_function"
+   
+   #end add-point
+   
+   #依據單據個數，需要指定所有單身條件為" 1=1"  (單身有幾個就要設幾個)
+   LET g_wc2_table1 = " 1=1"
+ 
+ 
+   CALL axmt420_show()
+   CALL axmt420_set_pk_array()
+   
+   #add-point: 初始化的ADP name="send.before_send"
+   #確認前檢核段
+   IF NOT s_axmt420_conf_chk(g_xmdt_m.xmdtdocno) THEN
+      CLOSE axmt420_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   #end add-point
+   
+   #公用變數初始化
+   CALL cl_bpm_data_init()
+                  
+   #依照主檔/單身個數產生 CALL cl_bpm_set_master_data() / cl_bpm_set_detail_data() 
+   #單頭固定為 CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(xxxx)) 傳入參數: (1)單頭陣列  ; 回傳值: 無
+   CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(g_xmdt_m))
+                              
+   #單身固定為 CALL cl_bpm_set_detail_data(s_detailX, util.JSONArray.fromFGL(xxxx)) 傳入參數: (1)單身SR名稱  (2)單身陣列  ; 回傳值: 無
+   CALL cl_bpm_set_detail_data("s_detail1", util.JSONArray.fromFGL(g_xmdu_d))
+   CALL cl_bpm_set_detail_data("s_detail2", util.JSONArray.fromFGL(g_xmdu2_d))
+ 
+ 
+   # cl_bpm_cli() 裡有包含以前的aws_condition()=>送簽資料檢核和更新單據狀況碼為'W'
+   # cl_bpm_cli() 傳入參數:無  ;  回傳值: 0 開單失敗; 1 開單成功
+ 
+   #add-point: 提交前的ADP name="send.before_cli"
+   
+   #end add-point
+ 
+   #開單失敗
+   IF NOT cl_bpm_cli() THEN 
+      RETURN FALSE
+   END IF
+ 
+   #add-point: 提交後的ADP name="send.after_send"
+   
+   #end add-point
+ 
+   #此段落不需要刪除資料,但是否需要refresh圖片樣式???
+   #CALL axmt420_ui_browser_refresh()
+ 
+   #重新指定此筆單據資料狀態圖片=>送簽中
+   LET g_browser[g_current_idx].b_statepic = "stus/16/signing.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL axmt420_ui_headershow()
+   CALL axmt420_ui_detailshow()
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+#應用 a40 樣板自動產生(Version:9)
+#+ BPM抽單
+PRIVATE FUNCTION axmt420_draw_out()
+   #add-point:draw段define name="draw.define_customerization"
+   
+   #end add-point
+   #add-point:draw段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="draw.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="draw.pre_function"
+   
+   #end add-point
+   
+   #抽單失敗
+   IF NOT cl_bpm_draw_out() THEN 
+      RETURN FALSE
+   END IF    
+          
+   #重新指定此筆單據資料狀態圖片=>抽單
+   LET g_browser[g_current_idx].b_statepic = "stus/16/draw_out.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL axmt420_ui_headershow()  
+   CALL axmt420_ui_detailshow()
+ 
+   #add-point:Function後置處理  name="draw.after_function"
+   
+   #end add-point
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="axmt420.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION axmt420_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_xmdt_m.xmdtdocno
+   LET g_pk_array[1].column = 'xmdtdocno'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="axmt420.other_dialog" readonly="Y" >}
+   
+ 
+{</section>}
+ 
+{<section id="axmt420.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION axmt420_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL axmt420_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_xmdt_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="axmt420.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION axmt420_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization"
+   
+   #end add-point
+   #add-point:action_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   #160818-00017#42 add-S
+   SELECT xmdtstus  INTO g_xmdt_m.xmdtstus
+     FROM xmdt_t
+    WHERE xmdtent = g_enterprise
+      AND xmdtdocno = g_xmdt_m.xmdtdocno
+
+   IF (g_action_choice="modify" OR g_action_choice="delete" OR g_action_choice="modify_detail")  THEN     
+     LET g_errno = NULL
+     CASE g_xmdt_m.xmdtstus
+        WHEN 'W'
+           LET g_errno = 'sub-00180'
+        WHEN 'X'
+           LET g_errno = 'sub-00229'
+        WHEN 'Y'
+           LET g_errno = 'sub-00178'
+        WHEN 'S'
+           LET g_errno = 'sub-00230'
+     END CASE
+
+     IF NOT cl_null(g_errno) THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = g_errno
+        LET g_errparam.extend = g_xmdt_m.xmdtdocno
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        LET g_errno = NULL
+        CALL axmt420_set_act_visible()
+        CALL axmt420_set_act_no_visible()
+        CALL axmt420_show()
+        RETURN FALSE
+     END IF
+   END IF
+   #160818-00017#42 add-E
+   #end add-point
+      
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt420.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 客戶名稱抓取
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt004_ref()
+# Input parameter: void
+# Return code....:
+# Date & Author..: 14/01/22 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt004_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdt_m.xmdt004
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001 = ? AND pmaal002 = '"||g_dlang||"' ","") RETURNING g_rtn_fields
+   LET g_xmdt_m.xmdt004_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xmdt_m.xmdt004_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 單別說明
+# Memo...........:
+# Usage..........: axmt420_xmdtdocno_ref()
+# Input parameter: void
+# Return code....: void
+# Date & Author..: 14/01/21 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdtdocno_ref()
+   DEFINE l_slip     LIKE ooba_t.ooba001
+   DEFINE l_oobal004 LIKE oobal_t.oobal004
+   DEFINE l_success  LIKE type_t.num5
+   
+   INITIALIZE g_ref_fields TO NULL
+   CALL s_aooi200_get_slip(g_xmdt_m.xmdtdocno)RETURNING l_success,l_slip
+   CALL s_aooi200_get_slip_desc(l_slip) RETURNING l_oobal004
+   
+   LET g_xmdt_m.oobal004 = l_oobal004
+   DISPLAY BY NAME g_xmdt_m.oobal004
+END FUNCTION
+################################################################################
+# Descriptions...: 人員名稱
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt002_ref()
+# Input parameter: void
+# Return code....:
+# Date & Author..: 14/01/22 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt002_ref()
+   DEFINE l_xmdt002_desc   LIKE oofa_t.oofa011
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdt_m.xmdt002
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_xmdt_m.xmdt002_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xmdt_m.xmdt002_desc
+   
+END FUNCTION
+################################################################################
+# Descriptions...: 客戶編號改變時預帶其他欄位
+# Memo...........:
+# Usage..........: axmt420_xmdt004_carry()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/01/22 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt004_carry()
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_controlno      LIKE ooha_t.ooha001
+DEFINE l_n              LIKE type_t.num5      
+
+
+   #先判斷是否有控制組，有則抓控制組預設條件，沒有則抓客戶據點資料
+   #控制組編號 
+   LET l_n = 0                                        
+   CALL s_control_get_group('2',g_xmdt_m.xmdt002,g_xmdt_m.xmdt003)
+        RETURNING l_success,l_controlno
+   IF NOT cl_null(l_controlno) THEN 
+      SELECT COUNT(*) INTO l_n
+        FROM xmae_t
+       WHERE xmaeent  = g_enterprise
+         AND xmae001  = g_xmdt_m.xmdt004
+         AND xmae002  = l_controlno
+      IF l_n > 0 THEN         
+         #幣別    稅別    收款條件 交易條件 銷售通路
+         SELECT xmae003,xmae004,xmae006,xmae020,xmae008
+           INTO g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011,g_xmdt_m.xmdt019
+           FROM xmae_t
+          WHERE xmaeent  = g_enterprise
+            AND xmae001  = g_xmdt_m.xmdt004
+            AND xmae002  = l_controlno
+      END IF   
+   END IF 
+   IF cl_null(l_controlno) OR l_n = 0 THEN
+      #幣別    稅別    收款條件 交易條件 銷售通路
+      SELECT pmab083,pmab084,pmab087,pmab103,pmab088
+        INTO g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt009,g_xmdt_m.xmdt011,g_xmdt_m.xmdt019
+        FROM pmab_t
+       WHERE pmabent  = g_enterprise
+         AND pmabsite = g_site
+         AND pmab001  = g_xmdt_m.xmdt004
+   END IF
+
+   DISPLAY BY NAME g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,
+                   g_xmdt_m.xmdt009,g_xmdt_m.xmdt011,g_xmdt_m.xmdt019
+   
+   CALL axmt420_xmdt009_ref()
+   CALL axmt420_xmdt005_ref()
+   CALL axmt420_xmdt019_ref()
+   CALL axmt420_xmdt011_ref()
+   
+   #稅別預設值及說明   
+   CALL axmt420_xmdt006_ref()
+   CALL axmt420_xmdt006_carry()   
+
+   #最後重新CALL單別預設植 因為單別預設值優先
+   CALL axmt420_docno_xmdt_default()
+
+END FUNCTION
+################################################################################
+# Descriptions...: 員工帶出預設值
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt002_carry()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/01/27 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt002_carry()
+   DEFINE l_xmdt003   LIKE xmdt_t.xmdt003    #部門         
+                     
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdt_m.xmdt002
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag003 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001 = ? ","") RETURNING g_rtn_fields
+   LET l_xmdt003 = g_rtn_fields[1]
+   
+   LET g_xmdt_m.xmdt003 = l_xmdt003
+   DISPLAY BY NAME g_xmdt_m.xmdt003
+   
+   #帶出部門名稱
+   CALL axmt420_xmdt003_ref()
+                     
+END FUNCTION
+################################################################################
+# Descriptions...: 客戶檢查
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt004_chk()
+#                  RETURNING l_success
+# Input parameter: void
+# Return code....: l_success    成功或失敗
+# Date & Author..: 14/01/27 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt004_chk()
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE l_flag      LIKE type_t.num5  
+
+   LET r_success = TRUE
+   
+   #單據別檢查(客戶生命週期)
+   IF NOT cl_null(g_xmdt_m.xmdtdocno)THEN
+      #CALL s_control_chk_doc('3',g_xmdt_m.xmdtdocno,g_xmdt_m.xmdt004,'','','','') RETURNING l_success,l_flag
+      CALL s_control_check_customer(g_xmdt_m.xmdt004,'2',g_xmdt_m.xmdtsite,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,
+                                    g_xmdt_m.xmdtdocno)
+         RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   
+   #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+   INITIALIZE g_chkparam.* TO NULL
+               
+   #設定g_chkparam.*的參數
+   LET g_chkparam.arg1 = g_xmdt_m.xmdt004
+   LET g_chkparam.arg2 = g_site   
+   #160318-00025#35  2016/04/15  by pengxin  add(S)
+   LET g_errshow = TRUE #是否開窗 
+   LET g_chkparam.err_str[1] = "apm-00201:sub-01302|axmm200|",cl_get_progname("axmm200",g_lang,"2"),"|:EXEPROGaxmm200"
+   #160318-00025#35  2016/04/15  by pengxin  add(E)
+   #基本檢查
+   IF NOT cl_chk_exist("v_pmaa001_3") THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+   
+END FUNCTION
+################################################################################
+# Descriptions...: 帶出部門名稱
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt003_ref()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/01/27 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt003_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdt_m.xmdt003
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdt_m.xmdt003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xmdt_m.xmdt003_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 稅別預設值
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt006_carry()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/01/27 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt006_carry()
+   #dorislai-20150727-modify----(S)
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE  l_oodb011    LIKE oodb_t.oodb011    #取得稅別類型1:正常稅率2:依料件設定
+#   INITIALIZE g_ref_fields TO NULL
+#   LET g_ref_fields[1] = g_xmdt_m.xmdt006
+#
+#   CALL ap_ref_array2(g_ref_fields,"SELECT oodb005,oodb006 FROM oodb_t,ooef_t WHERE oodbent ='"||g_enterprise||"' AND oodbent = ooefent AND oodb001 = ooef019 AND oodb001 = ooef019 AND oodb002 = ? ","") RETURNING g_rtn_fields
+#   LET g_xmdt_m.xmdt008 = g_rtn_fields[1]
+#   LET g_xmdt_m.xmdt007 = g_rtn_fields[2]
+#   DISPLAY BY NAME g_xmdt_m.xmdt008,g_xmdt_m.xmdt007
+
+   #150914---earl---mod---s
+   IF NOT cl_null(g_xmdt_m.xmdt006) THEN
+      CALL s_tax_chk(g_site,g_xmdt_m.xmdt006)
+           RETURNING l_success,g_xmdt_m.xmdt006_desc,g_xmdt_m.xmdt008,g_xmdt_m.xmdt007,l_oodb011   
+   END IF
+   #150914---earl---mod---e
+   
+   #dorislai-20150727-modify----(E)
+   UPDATE xmdu_t SET xmdu012 = g_xmdt_m.xmdt007
+    WHERE xmduent = g_enterprise
+      AND xmdudocno = g_xmdt_m.xmdtdocno
+END FUNCTION
+################################################################################
+# Descriptions...: 稅別名稱
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt006_ref()
+# Input parameter: void
+# Return code....:
+# Date & Author..: 14/01/27 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt006_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdt_m.xmdt006
+   CALL ap_ref_array2(g_ref_fields,"SELECT oodbl004 FROM oodbl_t WHERE oodblent='"||g_enterprise||"' AND oodbl002=? AND oodbl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdt_m.xmdt006_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xmdt_m.xmdt006_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 幣別說明
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt005_ref()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/01/27 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt005_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdt_m.xmdt005
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooail003 FROM ooail_t WHERE ooailent='"||g_enterprise||"' AND ooail001=? AND ooail002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdt_m.xmdt005_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xmdt_m.xmdt005_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 收款條件說明
+# Memo...........:
+# Usage..........: axmt420_xmdt009_ref()
+# Input parameter: void
+# Return code....:
+# Date & Author..: 14/01/27 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt009_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdt_m.xmdt009
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooibl004 FROM ooibl_t WHERE ooiblent='"||g_enterprise||"' AND ooibl002=? AND ooibl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdt_m.xmdt009_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xmdt_m.xmdt009_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 交易條件說明
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt011_ref()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/02/05 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt011_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdt_m.xmdt011
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001 = '238' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdt_m.xmdt011_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xmdt_m.xmdt011_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 銷售通路說明
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt019_ref()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/02/05 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt019_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdt_m.xmdt019
+   #160621-00003#3 20160627 modify by beckxie---S
+   #CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='275' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   CALL ap_ref_array2(g_ref_fields,"SELECT oojdl003 FROM oojdl_t WHERE oojdlent='"||g_enterprise||"' AND oojdl001=? AND oojdl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #160621-00003#3 20160627 modify by beckxie---E
+   LET g_xmdt_m.xmdt019_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xmdt_m.xmdt019_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 由生效日期取得失效日期
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt015_carry()
+# Input parameter: void
+# Return code....:
+# Date & Author..: 14/02/05 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt015_carry()
+   DEFINE l_month   LIKE type_t.num10    #單據別有效月數
+   DEFINE l_ooba002 LIKE ooba_t.ooba002
+   #albireo 未見單據別有指定有效月數先給定值0
+   #LET l_month = 0
+   #
+   #LET g_xmdt_m.xmdt016 = g_xmdt_m.xmdt015 + l_month * 30
+   CALL s_aooi200_get_slip(g_xmdt_m.xmdtdocno) RETURNING g_sub_success,l_ooba002
+   CALL cl_get_doc_para(g_enterprise,g_xmdt_m.xmdtsite,l_ooba002,'D-BAS-0080') RETURNING l_month
+   IF NOT cl_null(l_month) AND l_month <> 0 THEN
+      CALL s_date_get_date(g_xmdt_m.xmdt015,l_month,0) RETURNING g_xmdt_m.xmdt016
+   END IF
+   DISPLAY BY NAME g_xmdt_m.xmdt016
+END FUNCTION
+################################################################################
+# Descriptions...: 有效日期起迄檢查
+# Memo...........:
+# Usage..........: CALL axmt420_xmdt015_chk()
+# Input parameter: void
+# Return code....:
+# Date & Author..: 14/02/05 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdt015_chk()
+   DEFINE r_success    LIKE type_t.num5
+   
+   LET r_success = TRUE
+   IF g_xmdt_m.xmdt015 > g_xmdt_m.xmdt016 THEN
+      LET r_success = FALSE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'ais-00048'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   RETURN r_success 
+END FUNCTION
+################################################################################
+# Descriptions...: 料號相關說明
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu002_ref()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/02/05 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdu002_ref()
+   IF cl_null(l_ac) OR l_ac <= 0 THEN RETURN END IF
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdu_d[l_ac].xmdu002
+   CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001 = ? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdu_d[l_ac].imaal003 = g_rtn_fields[1]
+   LET g_xmdu_d[l_ac].imaal004 = g_rtn_fields[2]
+
+END FUNCTION
+################################################################################
+# Descriptions...: 料件帶出預設值
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu002_carry()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/02/05 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdu002_carry()
+   IF cl_null(l_ac) OR l_ac <= 0 THEN RETURN END IF
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdu_d[l_ac].xmdu002
+   CALL ap_ref_array2(g_ref_fields,"SELECT imaf112,imaf123 FROM imaf_t WHERE imafent='"||g_enterprise||"' AND imaf001 = ? AND imafsite='"||g_site||"'","") RETURNING g_rtn_fields
+   #單位
+   LET g_xmdu_d[l_ac].xmdu008 = g_rtn_fields[1]
+   #包裝容器
+   LET g_xmdu_d[l_ac].xmdu004 = g_rtn_fields[2]
+   
+   #如果整體參數使用採購計價單位時，[C:詢價單位]=[T:料件據點進銷存檔].[C:銷售計價單位] 
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0019') THEN
+      SELECT imaf113 INTO g_xmdu_d[l_ac].xmdu008 FROM imaf_t
+      WHERE imafent = g_enterprise AND imafsite = g_site AND imaf001 = g_xmdu_d[l_ac].xmdu003
+   END IF
+  
+   #取上次單價
+   CALL axmt420_get_lasttime_price_1(l_ac)
+END FUNCTION
+################################################################################
+# Descriptions...: 料件相關檢查
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu002_chk()
+# Input parameter: void
+# Return code....:
+# Date & Author..: 14/02/05 By 14/02/05
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdu002_chk()
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_flag       LIKE type_t.num5
+   DEFINE r_success    LIKE type_t.num5
+
+   LET r_success = TRUE
+   IF cl_null(l_ac) OR l_ac <= 0 THEN RETURN r_success END IF
+
+   #檢核輸入的料件的生命週期是否在單據別限制範圍內，若不在限制內則不允許選擇此料
+   #CALL s_control_chk_doc('4',g_xmdt_m.xmdtdocno,g_xmdu_d[l_ac].xmdu002,'','','','') RETURNING l_success,l_flag
+   CALL s_control_check_item(g_xmdu_d[l_ac].xmdu002,'2',g_xmdt_m.xmdtsite,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,g_xmdt_m.xmdtdocno)
+      RETURNING l_success   #albireo-s
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+      #ELSE
+      #   IF NOT l_flag THEN
+      #      INITIALIZE g_errparam TO NULL
+      #      LET g_errparam.code = 'ain-00015'
+      #      LET g_errparam.extend = ''
+      #      LET g_errparam.popup = TRUE
+      #      CALL cl_err()
+      #
+      #      LET r_success = FALSE
+      #      RETURN r_success
+      #   END IF
+   END IF
+
+   #檢核輸入的料件的產品分類是否在單據別限制範圍內，若不在限制內則不允許選擇此料
+   CALL s_control_chk_doc('5',g_xmdt_m.xmdtdocno,g_xmdu_d[l_ac].xmdu002,'','','','') RETURNING l_success,l_flag
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   ELSE
+      IF NOT l_flag THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   RETURN r_success
+END FUNCTION
+################################################################################
+# Descriptions...: 產品特徵預設
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu003_carry()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/02/05 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdu003_carry()
+   IF cl_null(l_ac) OR l_ac <= 0 THEN RETURN END IF
+   
+   #取上次單價
+   CALL axmt420_get_lasttime_price_1(l_ac)
+END FUNCTION
+################################################################################
+# Descriptions...: 取得上次價格(單身當筆)
+# Memo...........:
+# Usage..........: CALL axmt420_get_lasttime_price_1(p_ac)
+# Input parameter: p_ac           單身index
+# Return code....: 
+# Date & Author..: 14/02/06 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_get_lasttime_price_1(p_ac)
+   DEFINE p_ac    LIKE type_t.num5
+   DEFINE l_sql   STRING
+   
+   IF cl_null(p_ac) OR p_ac <= 0 THEN RETURN END IF
+  
+   IF cl_null(g_xmdu_d[l_ac].xmdu003) THEN LET g_xmdu_d[l_ac].xmdu003 = ' ' END IF
+
+   #取客戶 幣別 稅率 料號 產品特徵相同 並且為確認的 最小單價(別張單據)
+   LET l_sql = " SELECT MIN(xmdu011) FROM xmdu_t,xmdt_t ",
+               "  WHERE xmdu002 = '",g_xmdu_d[l_ac].xmdu002,"' ",
+               "    AND xmdu003 = '",g_xmdu_d[l_ac].xmdu003,"' ",
+               "    AND xmdtstus = 'Y' ",
+               "    AND xmdt004 = '",g_xmdt_m.xmdt004,"'",
+               "    AND xmdt005 = '",g_xmdt_m.xmdt005,"' ",
+               "    AND xmdt006 = '",g_xmdt_m.xmdt006,"' ",
+               "    AND xmdtdocno <> '",g_xmdt_m.xmdtdocno,"' ",
+               "    AND xmdtdocdt = (SELECT MAX(xmdtdocdt) from xmdt_t,xmdu_t ",
+               "                      WHERE xmdtdocdt <= '",g_xmdt_m.xmdtdocdt,"' ",
+               "                        AND xmdtstus = 'Y' ",
+               "                        AND xmdtdocno <> '",g_xmdt_m.xmdtdocno,"' ",
+               "                        AND xmdt004 = '",g_xmdt_m.xmdt004,"' ",
+               "                        AND xmdt005 = '",g_xmdt_m.xmdt005,"' ",
+               "                        AND xmdt006 = '",g_xmdt_m.xmdt006,"' ",
+               "                        AND xmdu002 = '",g_xmdu_d[l_ac].xmdu002,"' ",
+               "                        AND xmdu003 = '",g_xmdu_d[l_ac].xmdu003,"' ",
+               "                        AND xmdt001 = xmdu001 ",
+               "                        AND xmdtdocno = xmdudocno ",
+               "                        AND xmdtent =xmduent) ",
+               "    AND xmdtdocno = xmdudocno ",
+               "    AND xmdtent = xmduent ",
+               "    AND xmdtent = '",g_enterprise,"' "
+   
+   PREPARE axmt420_getp FROM l_sql
+   EXECUTE axmt420_getp INTO g_xmdu_d[p_ac].xmdu010
+   IF cl_null(g_xmdu_d[p_ac].xmdu010)THEN LET g_xmdu_d[p_ac].xmdu010 = 0 END IF
+   #DISPLAY BY NAME g_xmdu_d[p_ac].xmdu010
+END FUNCTION
+################################################################################
+# Descriptions...: 更新上次單價(全單身)
+# Memo...........:
+# Usage..........: CALL axmt420_get_lasttime_price_2()
+# Input parameter: void
+# Return code....: r_success
+# Date & Author..: 14/02/06 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_get_lasttime_price_2()
+   DEFINE l_i       LIKE type_t.num10
+   DEFINE r_success LIKE type_t.num10
+   DEFINE l_count   LIKE type_t.num10
+   
+   LET r_success = TRUE
+   
+   #沒單身不做
+   LET l_count = NULL
+   SELECT COUNT(*) INTO l_count FROM xmdu_t
+    WHERE xmdudocno = g_xmdt_m.xmdtdocno
+      AND xmduent   = g_enterprise
+   IF cl_null(l_count)THEN LET l_count = 0 END IF
+   IF l_count = 0 THEN RETURN r_success END IF
+   
+   CALL axmt420_showmsg_init()
+   FOR l_i = 1 TO g_xmdu_d.getLength()
+      CALL axmt420_get_lasttime_price_1(l_i)
+      UPDATE xmdu_t SET xmdu010 = g_xmdu_d[l_i].xmdu010
+       WHERE xmdudocno = g_xmdt_m.xmdtdocno
+         AND xmduent   = g_enterprise
+         AND xmduseq   = g_xmdu_d[l_i].xmduseq
+      IF SQLCA.SQLCODE THEN
+         # UPD失敗的處理
+         LET r_success = FALSE
+         CALL axmt420_err_msg(g_xmdu_d[l_i].xmduseq,SQLCA.SQLCODE)
+         
+      END IF
+   END FOR
+   CALL axmt420_showmsg()
+   
+   RETURN r_success
+END FUNCTION
+################################################################################
+# Descriptions...: 作業編號名稱
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu006_ref()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/02/05 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdu006_ref()
+   IF cl_null(l_ac) OR l_ac <= 0 THEN RETURN END IF
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdu_d[l_ac].xmdu006
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001 = '221' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdu_d[l_ac].xmdu006_desc = g_rtn_fields[1]
+END FUNCTION
+################################################################################
+# Descriptions...: 錯誤訊息ARRAY初始化
+# Memo...........:
+# Usage..........: CALL axmt420_showmsg_init()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/02/06 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_showmsg_init()
+   INITIALIZE g_axmt420_err TO NULL
+END FUNCTION
+################################################################################
+# Descriptions...: 給對應的項次及錯誤訊息代碼到錯誤訊息陣列
+# Memo...........:
+# Usage..........: CALL axmt420_err_msg(p_req,p_gzze001)
+# Input parameter: p_req          項次
+#                : p_gzze001      錯誤訊息代碼
+# Return code....: 
+# Date & Author..: 14/02/06 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_err_msg(p_req,p_gzze001)
+   DEFINE l_i       LIKE type_t.num10     #目前要更新的index
+   DEFINE p_req     LIKE type_t.num10
+   DEFINE p_gzze001 LIKE gzze_t.gzze001
+   
+   LET l_i = g_axmt420_err.getLength() + 1
+   LET g_axmt420_err[l_i].req = p_req
+   LET g_axmt420_err[l_i].gzze001 = p_gzze001
+END FUNCTION
+################################################################################
+# Descriptions...: 顯示儲存在ARRAY的錯誤訊息
+# Memo...........:
+# Usage..........: CALL axmt420_showmsg()
+# Input parameter: void
+# Return code....: 
+# Date & Author..: 14/02/06 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_showmsg()
+   DEFINE l_str    STRING             #組出來的錯誤訊息
+   DEFINE l_i      LIKE type_t.num10  #錯誤訊息index
+   DEFINE l_msg    STRING
+   DEFINE l_title  STRING
+   
+   IF g_axmt420_err.getLength() <= 0 THEN RETURN END IF
+   
+   LET l_title = cl_getmsg('axm-00009',g_dlang) CLIPPED, ASCII(10),ASCII(13)
+   LET l_msg = NULL
+   FOR l_i = 1 TO g_axmt420_err.getLength()
+#      LET l_str = cl_getmsg('axm-00008',g_dlang) CLIPPED,':',g_axmt420_err[l_i].req USING '<<<<<<<<<<<<',  #160318-00005#49  mark
+      LET l_str = cl_getmsg('anm-00225',g_dlang) CLIPPED,':',g_axmt420_err[l_i].req USING '<<<<<<<<<<<<',   #160318-00005#49  add
+                  ' ',cl_getmsg(g_axmt420_err[l_i].gzze001,g_dlang) CLIPPED, ASCII(10),ASCII(13)
+      LET l_msg = l_msg CLIPPED, l_str CLIPPED
+   END FOR
+   
+   #CALL cl_err(l_msg,'!',1)
+   CALL FGL_WINMESSAGE(l_title,l_msg, "stop")
+
+END FUNCTION
+################################################################################
+
+################################################################################
+PUBLIC FUNCTION axmt420_b_fill3(p_ac)
+   DEFINE p_ac    LIKE type_t.num5
+   DEFINE l_sql   STRING
+   DEFINE l_i     LIKE type_t.num5
+
+ ##160526-00020#1 mark--(S)  
+ # LET l_sql = "SELECT xmdvseq,xmdv001,xmdv002,xmdv003,xmdv004 ",
+ #             "  FROM xmdv_t ",
+ #             " WHERE xmdvent = '",g_enterprise,"' ",
+ #            #"   AND xmsdvdocno = '",g_xmdt_m.xmdtdocno,"'",              #160505-00027#1 mark
+ #             "   AND xmdvdocno = '",g_xmdt_m.xmdtdocno,"'",               #160505-00027#1 add
+ #             "   AND xmdvseq = ",p_ac," "
+ # PREPARE axmt420_pb2 FROM l_sql
+ # DECLARE b_fill2_curs CURSOR FOR axmt420_pb2 
+ # 
+ # CALL g_xmdu2_d.clear()
+ #
+ # LET l_i = 1
+ # FOREACH b_fill2_curs INTO g_xmdu2_d[l_i].*
+ #    IF SQLCA.sqlcode THEN
+ #       INITIALIZE g_errparam TO NULL
+ #       LET g_errparam.code = SQLCA.sqlcode
+ #       LET g_errparam.extend = "FOREACH:"
+ #       LET g_errparam.popup = TRUE
+ #       CALL cl_err()
+ #
+ #       EXIT FOREACH
+ #    END IF
+ #   
+ #
+ #    LET l_i = l_i + 1
+ #    IF l_i > g_max_rec THEN
+ #       EXIT FOREACH
+ #    END IF
+ # END FOREACH 
+ # CALL g_xmdu2_d.deleteElement(g_xmdu2_d.getLength())   
+ #
+ # CLOSE b_fill2_curs
+ # FREE axmt420_pb2
+ ##160526-00020#1 mark--(E)
+END FUNCTION
+################################################################################
+# Descriptions...: lock單身
+# Memo...........:
+# Usage..........: CALL axmt420_lock_b2(table,page,p_ac)
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 14/02/11 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_lock_b2(ps_table,ps_page,p_ac)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   DEFINE p_ac        LIKE type_t.num5
+
+#160620-00001#1-s add
+   LET g_forupd_sql = "SELECT xmduseq,xmdu001,xmdu002,xmdu003,xmdu031,xmdu032,xmdu005,xmdu006,xmdu007, 
+       xmdu015,xmdu008,xmdu009,xmdu010,xmdu011,xmdu012,xmdu013,xmdu014,xmdu004,xmdu030,xmdusite FROM  
+       xmdu_t WHERE xmduent=? AND xmdudocno=? AND xmduseq=? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE axmt420_bcl3 CURSOR FROM g_forupd_sql
+#160620-00001#1-e add
+
+   IF cl_null(p_ac) OR p_ac <= 0 THEN RETURN FALSE END IF
+
+   LET ls_group = "xmdu_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+#160620-00001#1-s mod
+#      OPEN axmt420_bcl2 USING g_enterprise,
+#                                       g_xmdt_m.xmdtdocno,p_ac
+      OPEN axmt420_bcl3 USING g_enterprise,
+                              g_xmdt_m.xmdtdocno,g_xmdu_d[p_ac].xmduseq
+#160620-00001#1-e mod                                       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "axmt420_bcl3"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                      
+   RETURN TRUE
+END FUNCTION
+################################################################################
+# Descriptions...: 理由碼說明
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu015_ref()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 14/02/12 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdu015_ref()
+   IF cl_null(l_ac) OR l_ac <= 0 THEN RETURN END IF
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_gzcb004_1
+   LET g_ref_fields[2] = g_xmdu_d[l_ac].xmdu015
+   
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001 = ? AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdu_d[l_ac].xmdu015_desc = g_rtn_fields[1]
+END FUNCTION
+################################################################################
+# Descriptions...: 運輸方式說明
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu014_ref()
+# Input parameter: 
+# Return code....:
+# Date & Author..: 14/02/12 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdu014_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdu_d[l_ac].xmdu014
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='263' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdu_d[l_ac].xmdu014_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xmdu_d[l_ac].xmdu014_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 人員名稱for查詢方案
+# Memo...........:
+# Usage..........: CALL axmt420_b_xmdt002_ref()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 14/02/17 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_b_xmdt002_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_browser[g_cnt].b_xmdt002
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_browser[g_cnt].b_xmdt002_desc = '', g_rtn_fields[1] , ''
+   
+END FUNCTION
+################################################################################
+# Descriptions...: 部門說明for查詢方案
+# Memo...........:
+# Usage..........: CALL axmt420_b_xmdt003_ref()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 14/02/17 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_b_xmdt003_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_browser[g_cnt].b_xmdt003
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_browser[g_cnt].b_xmdt003_desc = '', g_rtn_fields[1] , ''
+
+END FUNCTION
+################################################################################
+# Descriptions...: 核價客戶for查詢方案
+# Memo...........:
+# Usage..........: CALL axmt420_b_xmdt004_ref()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 14/02/17 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_b_xmdt004_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] =g_browser[g_cnt].b_xmdt004
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001 = ? AND pmaal002 = '"||g_dlang||"' ","") RETURNING g_rtn_fields
+   LET g_browser[g_cnt].b_xmdt004_desc = g_rtn_fields[1]
+   
+END FUNCTION
+################################################################################
+# Descriptions...: 單位说明
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu008_ref()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 14/02/21 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdu008_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdu_d[l_ac].xmdu008
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdu_d[l_ac].xmdu008_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xmdu_d[l_ac].xmdu008_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 客戶料號檢查
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu005_chk()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 14/02/21 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_xmdu005_chk()
+   DEFINE r_success LIKE type_t.num5
+   
+   LET r_success = TRUE
+
+   IF cl_null(g_xmdt_m.xmdt004)THEN RETURN TRUE END IF
+   IF cl_null(g_xmdu_d[l_ac].xmdu002) THEN RETURN TRUE END IF
+   IF cl_null(g_xmdu_d[l_ac].xmdu003) THEN RETURN TRUE END IF
+   IF cl_null(g_xmdu_d[l_ac].xmdu005) THEN RETURN TRUE END IF
+
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = g_xmdt_m.xmdt004
+   LET g_chkparam.arg2 = g_xmdu_d[l_ac].xmdu002
+   LET g_chkparam.arg3 = g_xmdu_d[l_ac].xmdu003
+   LET g_chkparam.arg4 = g_xmdu_d[l_ac].xmdu005
+   #161026-00025#1-s
+#   LET g_chkparam.err_str[1] = "apm-00260:axm-00053"
+    LET g_chkparam.err_str[1] = "apm-00260:axm-00053|axmi120|",cl_get_progname('axmi120',g_lang,"2"),"|:EXEPROGaxmi120"
+   #161026-00025#1-e
+#   LET g_chkparam.err_str[2] = "apm-00261:axm-00142" #160318-00005#49  mark
+   LET g_chkparam.err_str[2] = "apm-00261:sub-01302|axmi120|",cl_get_progname('axmi120',g_lang,"2"),"|:EXEPROGaxmi120"   #160318-00005#49 add
+   IF NOT cl_chk_exist("v_pmao004") THEN
+      LET r_success = FALSE
+   END IF
+
+   RETURN r_success 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 單別抓單別預設值
+# Memo...........: 只針對主TABLE(單頭)
+#                : 客戶也有預設的話，以單別為主
+#                :
+# Date & Author..: 14/08/04 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_docno_xmdt_default()
+DEFINE  l_slip       LIKE oobal_t.oobal002
+
+   #抓取單據別
+   LET l_slip = ''
+   CALL s_aooi200_get_slip(g_xmdt_m.xmdtdocno) RETURNING g_sub_success,l_slip
+   IF NOT g_sub_success THEN
+      RETURN
+   END IF
+   
+   #給預設植
+   LET g_xmdt_m.xmdt001   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt001',g_xmdt_m.xmdt001) 
+   LET g_xmdt_m.xmdtdocdt = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdtdocdt',g_xmdt_m.xmdtdocdt) 
+   #LET g_xmdt_m.xmdt004   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt004',g_xmdt_m.xmdt004)  
+   #這邊要做依據新値的帶預設
+   #但因為客戶預設完之後還要CALL一次單別預設會造成遞回無法離開
+   #所以在此先不做
+   #CALL axmt420_xmdt004_carry()
+   CALL axmt420_xmdt004_ref()
+   LET g_xmdt_m.xmdt002   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt002',g_xmdt_m.xmdt002)
+   CALL axmt420_xmdt002_carry()
+   CALL axmt420_xmdt002_ref()
+   LET g_xmdt_m.xmdt003   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt003',g_xmdt_m.xmdt003)
+   CALL axmt420_xmdt003_ref()
+   LET g_xmdt_m.xmdt005   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt005',g_xmdt_m.xmdt005)
+   CALL axmt420_xmdt005_ref()
+   LET g_xmdt_m.xmdt006   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt006',g_xmdt_m.xmdt006)
+   CALL axmt420_xmdt006_carry()
+   CALL axmt420_xmdt006_ref()
+   LET g_xmdt_m.xmdt007   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt007',g_xmdt_m.xmdt007)
+   LET g_xmdt_m.xmdt008   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt008',g_xmdt_m.xmdt008)
+   LET g_xmdt_m.xmdt009   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt009',g_xmdt_m.xmdt009)
+   CALL axmt420_xmdt009_ref()
+   LET g_xmdt_m.xmdt011   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt011',g_xmdt_m.xmdt011)
+   CALL axmt420_xmdt011_ref()
+   LET g_xmdt_m.xmdt019   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt019',g_xmdt_m.xmdt019)
+   CALL axmt420_xmdt019_ref()
+   LET g_xmdt_m.xmdt030   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt030',g_xmdt_m.xmdt030)
+   LET g_xmdt_m.xmdt013   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt013',g_xmdt_m.xmdt013)
+   LET g_xmdt_m.xmdt014   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt014',g_xmdt_m.xmdt014)
+   LET g_xmdt_m.xmdt010   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt010',g_xmdt_m.xmdt010)
+   LET g_xmdt_m.xmdt012   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt012',g_xmdt_m.xmdt012)
+   LET g_xmdt_m.xmdt020   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt020',g_xmdt_m.xmdt020)
+   LET g_xmdt_m.xmdt015   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt015',g_xmdt_m.xmdt015)
+   CALL axmt420_xmdt015_carry()
+   LET g_xmdt_m.xmdt016   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt016',g_xmdt_m.xmdt016)
+   LET g_xmdt_m.xmdt017   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt017',g_xmdt_m.xmdt017)
+   LET g_xmdt_m.xmdt018   = s_aooi200_get_doc_default(g_site,'1',l_slip,'xmdt018',g_xmdt_m.xmdt018)
+
+   DISPLAY BY NAME g_xmdt_m.xmdt001,g_xmdt_m.xmdtdocdt,g_xmdt_m.xmdt004,g_xmdt_m.xmdt002,g_xmdt_m.xmdt003,
+                   g_xmdt_m.xmdt005,g_xmdt_m.xmdt006,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,
+                   g_xmdt_m.xmdt011,g_xmdt_m.xmdt019,g_xmdt_m.xmdt030,g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,
+                   g_xmdt_m.xmdt010,g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015,g_xmdt_m.xmdt016,
+                   g_xmdt_m.xmdt017,g_xmdt_m.xmdt018
+END FUNCTION
+
+################################################################################
+# Descriptions...: 系列相關说明
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu031_ref()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 15/5/29 By dorislai
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt420_xmdu031_ref()
+   #抓取系列說明
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdu_d[l_ac].xmdu031
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql002=? AND oocql001='2003' AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdu_d[l_ac].xmdu031_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xmdu_d[l_ac].xmdu031_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產品分類說明
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu032_ref()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 15/05/29 By dorislai
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt420_xmdu032_ref()
+   #抓取產品分類說明
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdu_d[l_ac].xmdu032
+   CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdu_d[l_ac].xmdu032_desc =g_rtn_fields[1]
+   DISPLAY BY NAME g_xmdu_d[l_ac].xmdu032_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 系列或產品分類的單位校驗
+# Memo...........:
+# Usage..........: CALL axmt420_xmdu031_xmdu032_chk_unit()
+#                  RETURNING TRUE/FALSE
+# Input parameter: 回傳 TRUE/FALSE
+# Return code....: 
+# Date & Author..: 2015-06-16 By dorislai
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt420_xmdu031_xmdu032_chk_unit()
+   DEFINE  l_sql                 STRING                               #抓取sql語法
+   DEFINE  l_chk                 LIKE  type_t.num5                    #判斷是否有抓到符合的值
+   DEFINE  l_imaa001             LIKE  type_t.chr100                  #接收抓取到的料件編號值
+
+
+   #先依欄位抓取sql語法
+      #---用系列去抓料件編號
+   IF NOT cl_null(g_xmdu_d[l_ac].xmdu031) THEN
+      LET l_sql = "SELECT imaa001 FROM imaa_t ",
+                  "WHERE imaaent = '"||g_enterprise||"' AND imaa127 = '"||g_xmdu_d[l_ac].xmdu031||"'",
+                  "ORDER BY imaa001"
+   END IF
+      #----用產品分類去抓料件編號
+   IF NOT cl_null(g_xmdu_d[l_ac].xmdu032) THEN
+      LET l_sql = "SELECT imaa001 FROM imaa_t ",
+                  "WHERE imaaent = '"||g_enterprise||"' AND imaa009 = '"||g_xmdu_d[l_ac].xmdu032||"'",
+                  "ORDER BY imaa001"
+   END IF
+               
+   
+   PREPARE axmt420_get_imaa001_chk_pre FROM l_sql
+   DECLARE axmt420_get_imaa001_chk_curs CURSOR FOR axmt420_get_imaa001_chk_pre
+   LET l_imaa001 =''
+   LET l_chk = FALSE  #判斷是否有抓到符合的值
+   #一筆一筆比對是否有符合任一 料件編號中的可使用單位
+   FOREACH axmt420_get_imaa001_chk_curs INTO l_imaa001 
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_xmdu_d[l_ac].xmdu008
+      #以COUNT來計算，並判斷是否有比對到符合的資料
+      CALL ap_ref_array2(g_ref_fields,"SELECT COUNT(*) FROM imao_t WHERE imaoent='"||g_enterprise||"' AND imao002 = ? AND imao001 = '"||l_imaa001||"'","") RETURNING g_rtn_fields
+      IF g_rtn_fields[1] > 0 THEN
+         LET l_chk = TRUE 
+         EXIT FOREACH
+      END IF 
+   END FOREACH
+   FREE  axmt420_get_imaa001_chk_pre  #已使用完畢，釋放
+   #若料件編號中無相對應的可使用單位，跳出錯誤訊息提示
+   IF NOT l_chk THEN
+      RETURN FALSE
+   END IF    
+   RETURN TRUE   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 修改失效日期
+# Memo...........:
+# Usage..........: CALL axmt420_change_xmdt016()
+#                  RETURNING r_success
+# Return code....: r_success:TRUE/FALSE
+# Date & Author..: 2016/04/27 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt420_change_xmdt016()
+   DEFINE r_success     LIKE type_t.num5
+
+   LET r_success = TRUE
+
+   OPEN axmt420_cl USING g_enterprise,g_xmdt_m.xmdtdocno
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'OPEN axmt420_cl:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+
+      CLOSE axmt420_cl
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CALL axmt420_show()
+   LET g_xmdtdocno_t = g_xmdt_m.xmdtdocno
+
+   INPUT BY NAME g_xmdt_m.xmdt016 ATTRIBUTE(WITHOUT DEFAULTS)
+      BEFORE INPUT
+         LET g_xmdt_m_t.* = g_xmdt_m.*
+         LET g_xmdt_m_o.* = g_xmdt_m.*
+
+      AFTER FIELD xmdt016
+         IF NOT cl_null(g_xmdt_m.xmdt016) AND (g_xmdt_m_o.xmdt016 IS NULL OR
+                                               g_xmdt_m_o.xmdt016 != g_xmdt_m.xmdt016) THEN
+            #有效日不可大於失效日 
+            IF NOT axmt420_xmdt015_chk() THEN
+               LET g_xmdt_m.xmdt016 = g_xmdt_m_o.xmdt016 
+               NEXT FIELD CURRENT
+            END IF
+
+         END IF
+
+         LET g_xmdt_m_o.xmdt016 = g_xmdt_m.xmdt016
+
+      AFTER INPUT
+         IF INT_FLAG THEN
+            EXIT INPUT
+         END IF
+
+      ON ACTION accept
+         ACCEPT INPUT
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT INPUT
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT INPUT
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT INPUT
+
+   END INPUT 
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      LET g_xmdt_m.* = g_xmdt_m_t.*
+      CALL axmt420_show()
+
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ''
+      LET g_errparam.code   = 9001
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+
+      CLOSE axmt420_cl
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   UPDATE xmdt_t SET xmdt016 = g_xmdt_m.xmdt016
+    WHERE xmdtent   = g_enterprise
+      AND xmdtdocno = g_xmdtdocno_t
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'upd xmdt_t'
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+
+      CLOSE axmt420_cl
+      LET r_success = FALSE
+      RETURN r_success
+   END IF 
+   
+   CLOSE axmt420_cl
+
+   RETURN r_success
+   
+END FUNCTION
+#161031-00025#20 add
+#維護備註單身##############################
+PRIVATE FUNCTION axmt420_remaks()
+
+   IF g_xmdt_m.xmdtdocno IS NULL THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      RETURN
+   END IF
+       
+   CALL s_transaction_begin()
+   
+   OPEN axmt420_cl USING g_enterprise,g_xmdt_m.xmdtdocno
+
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN axmt420_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CLOSE axmt420_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #鎖住將被更改的資料
+   FETCH axmt420_cl INTO g_xmdt_m.xmdtdocno,g_xmdt_m.oobal004,g_xmdt_m.xmdt001,g_xmdt_m.xmdtsite,g_xmdt_m.xmdtdocdt, 
+                         g_xmdt_m.xmdt004,g_xmdt_m.xmdt004_desc,g_xmdt_m.xmdt002,g_xmdt_m.xmdt002_desc,g_xmdt_m.xmdt003, 
+                         g_xmdt_m.xmdt003_desc,g_xmdt_m.xmdtstus,g_xmdt_m.xmdt005,g_xmdt_m.xmdt005_desc,g_xmdt_m.xmdt006, 
+                         g_xmdt_m.xmdt006_desc,g_xmdt_m.xmdt007,g_xmdt_m.xmdt008,g_xmdt_m.xmdt009,g_xmdt_m.xmdt009_desc, 
+                         g_xmdt_m.xmdt011,g_xmdt_m.xmdt011_desc,g_xmdt_m.xmdt019,g_xmdt_m.xmdt019_desc,g_xmdt_m.xmdt030, 
+                         g_xmdt_m.xmdt013,g_xmdt_m.xmdt014,g_xmdt_m.xmdt010,g_xmdt_m.xmdt012,g_xmdt_m.xmdt020,g_xmdt_m.xmdt015, 
+                         g_xmdt_m.xmdt016,g_xmdt_m.xmdt017,g_xmdt_m.xmdt018,g_xmdt_m.xmdtownid,g_xmdt_m.xmdtownid_desc, 
+                         g_xmdt_m.xmdtowndp,g_xmdt_m.xmdtowndp_desc,g_xmdt_m.xmdtcrtid,g_xmdt_m.xmdtcrtid_desc,g_xmdt_m.xmdtcrtdp, 
+                         g_xmdt_m.xmdtcrtdp_desc,g_xmdt_m.xmdtcrtdt,g_xmdt_m.xmdtmodid,g_xmdt_m.xmdtmodid_desc,g_xmdt_m.xmdtmoddt, 
+                         g_xmdt_m.xmdtcnfid,g_xmdt_m.xmdtcnfid_desc,g_xmdt_m.xmdtcnfdt   
+       
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = g_xmdt_m.xmdtdocno 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      CLOSE axmt420_cl
+      CALL s_transaction_end('N','0')
+      RETURN 
+   END IF
+ 
+   #檢查是否允許此動作
+   IF NOT axmt420_action_chk() THEN
+      CLOSE axmt420_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   LET g_detail_insert = cl_auth_detail_input("insert")
+   LET g_detail_delete = cl_auth_detail_input("delete")
+   
+   LET g_ooff001_d = '6'   #6.單據單頭備註
+   LET g_ooff002_d = g_prog   
+   LET g_ooff003_d = g_xmdt_m.xmdtdocno   #单号  
+   LET g_ooff004_d = '0'    #项次
+   LET g_ooff005_d = ' '
+   LET g_ooff006_d = ' '
+   LET g_ooff007_d = ' '
+   LET g_ooff008_d = ' '
+   LET g_ooff009_d = ' '
+   LET g_ooff010_d = ' '
+   LET g_ooff011_d = ' '
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      SUBDIALOG aoo_aooi360_01.aooi360_01_input   #备注单身
+      
+      ON ACTION accept  
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄) 
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+         LET g_detail_idx_list[3] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+         CALL g_curr_diag.setCurrentRow("s_detail3",1)
+ 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+         LET g_detail_idx_list[3] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+         CALL g_curr_diag.setCurrentRow("s_detail3",1)
+ 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   CLOSE axmt420_cl
+   
+   CALL s_transaction_end('Y','0')
+   
+   CALL aooi360_01_b_fill(g_ooff001_d,g_ooff002_d,g_ooff003_d,g_ooff004_d,g_ooff005_d,g_ooff006_d,g_ooff007_d,g_ooff008_d,g_ooff009_d,g_ooff010_d,g_ooff011_d)   #备注单身 
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

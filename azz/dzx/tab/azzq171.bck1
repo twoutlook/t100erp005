@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzq171" module="azz" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="00824" crtdt="2014-02-27 10:39:22" modid="00824" moddt="2015-04-28 15:21:34" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="library函式說明查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="gzwa001,gzwa002,gzwa003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),gzwa001,prog_b_gzwa001(string),gzwa001_desc(chr500),gzwa002,gzwa003,gzwa005,gzwa006,gzwa007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzwb006,gzwb007,gzwb008,gzwb009,gzwb010"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),gzwa001(b_gzwa001),prog_b_gzwa001(prog_b_gzwa001),gzwa001_desc(b_gzwa001_desc),gzwa002(b_gzwa002),gzwa003(b_gzwa003),gzwa005(b_gzwa005),gzwa006(b_gzwa006),gzwa007(b_gzwa007)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzwb006(b_gzwb006),gzwb007(b_gzwb007),gzwb008(b_gzwb008),gzwb009(b_gzwb009),gzwb010(b_gzwb010)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <cluster id="prog_b_gzwa001" qry_field="gzwa001" prog="azzi901" parameter="gzwa001"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_azzi901" prog="azzi901" parameter="gzwa001"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzq171" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzwa005,gzwa006,gzwa007" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="gzwb006,gzwb007,gzwb008,gzwb009,gzwb010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="gzwa001(b_gzwa001),gzwa005(b_gzwa005),gzwa006(b_gzwa006),gzwa007(b_gzwa007)"/>
+      <construct id="body" page="2" field="gzwb006(b_gzwb006),gzwb007(b_gzwb007),gzwb008(b_gzwb008),gzwb009(b_gzwb009),gzwb010(b_gzwb010)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="gzwa001">
+        <after>
+          <reference field="gzwa001_desc" ref_field="gzwa001" map_field="b_gzwa001" ref_sql="SELECT gzdel003 FROM gzdel_t WHERE gzdel001=? AND gzdel002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzza001_1" state="c"/>
+      </column>
+      <column id="prog_b_gzwa001"/>
+      <column id="gzwa001_desc"/>
+      <column id="gzwa002"/>
+      <column id="gzwa003"/>
+      <column id="gzwa005"/>
+      <column id="gzwa006"/>
+      <column id="gzwa007"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzwb006" def_scc="58"/>
+      <column id="gzwb007"/>
+      <column id="gzwb008"/>
+      <column id="gzwb009"/>
+      <column id="gzwb010"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzwa_t" page="1" linked="" pk="gzwa001,gzwa002">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,gzwa001,&apos;&apos;,gzwa002,gzwa003,gzwa005,gzwa006,gzwa007 FROM gzwa_t WHERE 1=1 "/>
+    </body>
+    <body id="gzwb_t" page="2" linked="" pk="gzwb006,gzwb007" fk="gzwb001,gzwb002" detail="Y">
+      <sql id="b_fill_sql" query="SELECT gzwb006,gzwb007,gzwb008,gzwb009,gzwb010 FROM gzwb_t WHERE gzwb001=? AND gzwb002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

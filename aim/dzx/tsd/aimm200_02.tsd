@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aimm200_02" std_prog="aimm200_02" erpver="1.0" ver="2" module="AIM" type="S" booking="Y" class="I" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="imak_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：挑選產品特徵的子作業，完成後將挑選的產品特徵組合成一個字串回傳給呼叫的作業。
+作業功能：修改/確定/放棄/說明/離開
+作業類型：子作業
+輸入模式：單檔多欄模式F002_00
+作業資料來源(Detail)：imak_t(料號特徵檔)
+                      imeb_t(料件特徵群組單身檔)
+傳入參數：p_imak001(料件編號)
+回傳值：r_item_feature(組合後的產品特徵值)。
+    例：有個料號是運動外套,它的產品特徵有兩種類型-顏色與尺寸,
+        顏色有RED(Red)/BLU(Blue)/YEL(Yellow)/GRE(Green)等3碼長特徵值,
+        尺寸有S /M /L /XL等2碼長的特徵值,
+        若顏色挑了GRE(Green),尺寸挑了L,
+        則回傳GREL (將兩個特徵值組合成一個字串,L後面有個空白是因為尺寸特徵值為2碼長)
+其他說明：若本料號沒有庫存層級的特徵(imea002='N'),則直接組合imak003的值後回傳,不須開啟本子作業畫面
+離開說明(確定時)：檢查單身每一筆的imak003是否都有值,
+1.若有null值則提示"單身特徵值未全部輸入,請輸入資料!"
+2.若都有值則ORDER BY imeb002,將imak003依序組合成一個字串r_item_feature後回傳此字串值
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.只能維護特徵值這個欄位,其他欄位都是參考用
+2.抓取imeb_t資料時,ORDER BY imeb002
+3.組合產品特徵時,依照imeb002的升冪順序一一組合imak003的值]]>
+  </di_all>
+  <field cite_std="N" name="imak_t.imak001" ver="1" src="s" column="imak001" table="imak_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imak_t.imak002" ver="1" src="s" column="imak002" table="imak_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[特徵類型：
+  1.預設值:SELECT imeb004 FROM imeb_t JOIN imaa_t ON imeb001=imaa005
+            WHERE imaa001=p_imak001 ORDER BY imeb002]]>
+  </field>
+  <field cite_std="N" name="imak_t.imak003" ver="1" src="s" column="imak003" table="imak_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="q_imec003" c_zoom="q_imec003" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[特徵值：
+  1.預設值:(1)若特徵類型對應到imak_t的imak003有值,則直接帶出,不可修改
+           (2)若(1)抓不到值,imeb005='4'時,抓取imeb009,不可修改
+           (3)若(2)抓不到值,imeb005<>'4'時,抓取imeb009帶出,可修改
+  2.校驗:1.不允許空白
+          2.呼叫應用元件s_aimi092檢查輸入值
+  3.計算或處理:在此欄位時，若該特徵類型的賦值方式=1.動態指定時，於左下角顯示「碼長：imeb007，小數位數：imeb008」
+                           若該特徵類型的賦值方式=3.限定範圍時，於左下角顯示「輸入範圍：imeb010 ~ imeb011」
+ ●開窗處理：
+     查詢或新增/修改時：用傳入的料件取得特徵群組+單身的特徵類型去抓取[T:料件特徵群組單身檔].[C:賦值方式]，
+                        若[C:賦值方式]=2.預定列表，新增/修改才可開窗
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:料件特徵群組特徵值檔].[C:特徵群組代碼],[T:應用分類碼多語言檔].[C:說明],
+               [T:料件特徵群組單身檔].[C:類型],[T:應用分類碼多語言檔].[C:說明],
+               [T:料件特徵群組特徵值檔].[C:特徵值],[T:料件特徵群組特徵值多語言檔].[C:說明]
+     過濾條件：有效資料
+     新增/修改時過濾條件：[T:料件特徵群組特徵值檔].[C:特徵類型]=[T:料號特徵檔].[C:特徵]
+     回值類型：查詢時多重回值,新增/修改時單一回值
+]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_imak002" depend_field="imak_t.imak002" src="s" status="">
+      <program order="1" type="1" name="aimi018"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_imak003" depend_field="imak_t.imak003" src="s" status="">
+      <program order="1" type="1" name="aimi092"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="imak002_desc" src="s" depend_field="imak_t.imak002" correspon_key="&apos;273&apos;,imak002" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="imak003_desc" src="s" depend_field="imak_t.imak003" correspon_key="imak003" ref_table="imecl_t" ref_fk="imecl003" ref_dlang="imecl004" ref_rtn="imecl005" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="imak_t.imak001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imak_t.imak002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imak_t.imak003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_imak001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imak002" text="特徵類型" lstr=""/>
+    <sfield name="lbl_oocql004" text="特徵類型說明" lstr=""/>
+    <sfield name="lbl_imak003" text="特徵值" lstr=""/>
+    <sfield name="lbl_imecl005" text="特徵值說明" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

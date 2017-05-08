@@ -1,0 +1,2575 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ammt405_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2016-08-09 18:39:04), PR版次:0005(2016-11-16 16:38:27)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000034
+#+ Filename...: ammt405_01
+#+ Description: 會員卡批量發卡
+#+ Creator....: 07142(2016-07-22 08:58:11)
+#+ Modifier...: 07142 -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="ammt405_01.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#160318-00005#38  2016/03/29 By 07900   重复错误讯息修改
+#160318-00025#52  2016/04/27 By 07673   將重複內容的錯誤訊息置換為公用錯誤訊息
+#add by geza 20160707 #160708-00002#1   所属品类能够多选开窗，按照品类过滤资料，数量后面增加单位栏位，根据商品主档设置来确定是否可以修改。
+#161111-00028#4   2016/11/16 by 02481   标准程式定义采用宣告模式,弃用.*写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammt405_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+ TYPE type_g_mmaa_d RECORD
+       mmaa059  LIKE mmaa_t.mmaa059,
+       mmaa001  LIKE mmaa_t.mmaa001,
+       mmaa008  LIKE mmaa_t.mmaa008,
+       mmaa015  LIKE mmaa_t.mmaa015,
+       mmaa044  LIKE mmaa_t.mmaa044,       
+       mmaa044_desc LIKE mmanl_t.mmanl003, 
+       mmaq014  LIKE mmaq_t.mmaq014,
+       mmaq014_desc LIKE mmaq_t.mmaq014,   
+       mmaq015   LIKE mmaq_t.mmaq015,       
+       mmaq015_desc LIKE mmaq_t.mmaq015, 
+       mmaq016 LIKE mmaq_t.mmaq016,
+       mmaq016_desc like mmaq_t.mmaq016     
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_mmaa_d          DYNAMIC ARRAY OF type_g_mmaa_d #單身變數
+DEFINE g_mmaa_d_t        type_g_mmaa_d                  #單身備份
+DEFINE g_mmaa_d_o        type_g_mmaa_d                  #單身備份
+DEFINE g_mmaa_d_mask_o   DYNAMIC ARRAY OF type_g_mmaa_d #單身變數
+DEFINE g_mmaa_d_mask_n   DYNAMIC ARRAY OF type_g_mmaa_d #單身變數
+ 
+ 
+DEFINE g_rec_b              LIKE type_t.num5
+DEFINE g_success             LIKE type_t.num5
+DEFINE g_wc                 STRING      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+DEFINE g_ac                 INT 
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_mmeaseq            LIKE mmea_t.mmeaseq
+DEFINE g_mmea004            LIKE mmea_t.mmea004
+DEFINE g_mmea006            LIKE mmea_t.mmea006
+DEFINE g_mmea007            LIKE mmea_t.mmea007
+DEFINE g_mmea009            LIKE mmea_t.mmea009
+DEFINE g_mmea010            LIKE mmea_t.mmea010
+DEFINE g_mmea011            LIKE mmea_t.mmea011
+DEFINE g_mmea012            LIKE mmea_t.mmea012
+DEFINE g_mmea013            LIKE mmea_t.mmea013
+DEFINE g_mmea014            LIKE mmea_t.mmea014
+DEFINE g_mmea015            LIKE mmea_t.mmea015   #160729-00077#5 160823 by lori add
+DEFINE g_mmea016            LIKE mmea_t.mmea016   #160729-00077#5 160823 by lori add
+DEFINE g_mmea003            LIKE mmea_t.mmea003
+DEFINE g_mmea005            LIKE mmea_t.mmea005
+DEFINE g_mmea001            LIKE mmea_t.mmea001
+DEFINE g_mmea002            LIKE mmea_t.mmea002
+DEFINE g_mmaa057            LIKE mmaa_t.mmaa057
+DEFINE g_mmaa057_desc       LIKE mmbyl_t.mmbyl004
+DEFINE g_mmea008            LIKE mmea_t.mmea008
+DEFINE g_sdate              LIKE mmaq_t.mmaq013
+DEFINE g_edate              LIKE mmaq_t.mmaq013
+DEFINE g_mmaq014            LIKE mmaq_t.mmaq014
+DEFINE g_mmaq015            LIKE mmaq_t.mmaq015
+DEFINE g_mmaq016            LIKE mmaq_t.mmaq016
+DEFINE g_mmaq014_desc       LIKE type_t.num10
+DEFINE g_mmaq015_desc       LIKE type_t.num10
+DEFINE g_mmaq016_desc       LIKE type_t.num10
+DEFINE g_rtiasite   LIKE rtia_t.rtiasite
+DEFINE g_rtiadocno  LIKE rtia_t.rtiadocno
+DEFINE g_rtia001    LIKE rtia_t.rtia001
+DEFINE g_rtia026    LIKE rtia_t.rtia026
+DEFINE g_rtia027    LIKE rtia_t.rtia027
+DEFINE g_rtia028    LIKE rtia_t.rtia028
+DEFINE g_rtia034    LIKE rtia_t.rtia034
+DEFINE g_rtia035    LIKE rtia_t.rtia035
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammt405_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#DEFINE g_success             LIKE type_t.num5
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammt405_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="ammt405_01.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION ammt405_01(--)
+   #add-point:main段變數傳入
+   p_rtiasite,p_rtiadocno,p_rtia001,p_rtia026,p_rtia027,p_rtia028,p_rtia034,p_rtia035
+   
+   #end add-point
+   )
+   #add-point:main段define
+
+   #end add-point
+   #add-point:main段define(客製用)
+   DEFINE p_rtiasite   LIKE rtia_t.rtiasite
+   DEFINE p_rtiadocno  LIKE rtia_t.rtiadocno
+   DEFINE p_rtia001    LIKE rtia_t.rtia001
+   DEFINE p_rtia026    LIKE rtia_t.rtia026
+   DEFINE p_rtia027    LIKE rtia_t.rtia027
+   DEFINE p_rtia028    LIKE rtia_t.rtia028
+   DEFINE p_rtia034    LIKE rtia_t.rtia034
+   DEFINE p_rtia035    LIKE rtia_t.rtia035
+   #end add-point
+
+   CREATE TEMP TABLE ammt405_01_tmp (
+       mmaq001  LIKE mmaq_t.mmaq001,
+       mmaa001  LIKE mmaa_t.mmaa001,
+       mmaa008  LIKE mmaa_t.mmaa008,
+       mmaa015  LIKE mmaa_t.mmaa015,
+       mmaq002  LIKE mmaq_t.mmaq002,       
+       mmaq002_desc LIKE mmanl_t.mmanl003, 
+       mmaq014  LIKE mmaq_t.mmaq014,
+       mmaq014_desc LIKE mmaq_t.mmaq014,   
+       mmaq015   LIKE mmaq_t.mmaq015,       
+       mmaq015_desc LIKE mmaq_t.mmaq015, 
+       mmaq016 LIKE mmaq_t.mmaq016,
+       mmaq016_desc LIKE mmaq_t.mmaq016)  
+   CREATE TEMP TABLE ammt405_01_tmp1 (
+       sel  LIKE mmea_t.mmeaseq,
+       mmea001  LIKE mmea_t.mmea001
+        )  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_ammt405_01 WITH FORM cl_ap_formpath("amm","ammt405_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_rtiasite =p_rtiasite 
+   LET g_rtiadocno=p_rtiadocno
+   LET g_rtia001  =p_rtia001  
+   LET g_rtia026  =p_rtia026  
+   LET g_rtia027  =p_rtia027  
+   LET g_rtia028  =p_rtia028  
+   LET g_rtia034  =p_rtia034  
+   LET g_rtia035  =p_rtia035 
+   CALL ammt405_01_vip_acc('mmag004','2024')   
+   #程式初始化
+   CALL ammt405_01_init()
+   CALL ammt405_01_input()
+
+   #畫面關閉
+   CLOSE WINDOW w_ammt405_01
+
+
+
+   #add-point:離開前
+   DROP TABLE ammt405_01_tmp
+   DROP TABLE ammt405_01_tmp1
+   #end add-point
+   #RETURN g_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_input()
+DEFINE l_cnt        LIKE type_t.num5
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_where      STRING
+DEFINE l_sql        STRING
+DEFINE l_sys        LIKE type_t.num5   
+DEFINE l_n          LIKE type_t.num5
+DEFINE l_m          LIKE type_t.num5
+DEFINE r_success    LIKE type_t.num5
+DEFINE li_idx       LIKE type_t.num10
+DEFINE l_mmaa034       LIKE mmaa_t.mmaa034
+DEFINE l_mmby005     LIKE mmby_t.mmby005
+
+   CLEAR FORM
+   CALL g_mmaa_d.clear()
+   
+   #call ammt405_01_query()
+   
+   INITIALIZE g_wc,g_mmea003,g_mmea005,g_mmea001,g_mmea002,g_mmaa057,g_mmea008 TO NULL
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+       DISPLAY ARRAY g_mmaa_d TO s_detail1.*
+       
+       END DISPLAY 
+       
+       CONSTRUCT BY NAME g_wc ON mmaq002,mmag004,mmaq023,mmaf015,imaa009,imaa126
+         BEFORE CONSTRUCT
+               
+         #一般欄位開窗相關處理
+         #---------------------------<  Master  >---------------------------
+         ON ACTION controlp INFIELD mmaq002
+
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " mman015= 'Y'"
+            CALL q_mman001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaq002  #顯示到畫面上
+            NEXT FIELD mmaq002 
+#         ON ACTION controlp INFIELD mmaa038
+#           INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = 'c' 
+#            LET g_qryparam.reqry = FALSE
+#            CALL q_oocq002()                           #呼叫開窗
+#            DISPLAY g_qryparam.return1 TO mmaa038  #顯示到畫面上
+#            NEXT FIELD mmaa038                   #返回原欄位  
+
+         ON ACTION controlp INFIELD imaa009
+           INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa009()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+            NEXT FIELD imaa009
+            
+         ON ACTION controlp INFIELD imaa126
+           INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002_2002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa126  #顯示到畫面上
+            NEXT FIELD imaa126
+            
+      END CONSTRUCT
+  
+       INPUT g_mmea003,g_mmea005,g_mmea001,g_mmea002,g_mmaa057,g_mmea008,
+              g_sdate,g_edate,g_mmaq014,g_mmaq015,g_mmaq016,g_mmaq014_desc,g_mmaq015_desc,g_mmaq016_desc 
+       FROM mmea003,mmea005,mmea001,mmea002,mmaa057,mmea008,
+           l_sdate,l_edate,mmaq014,mmaq015,mmaq016,l_num_M,l_num_N,l_num_O 
+       ATTRIBUTE(WITHOUT DEFAULTS) 
+         
+         
+         BEFORE INPUT
+         
+         LET g_sdate=''
+         LET g_edate=''
+         let g_mmaq014=''
+         LET g_mmaq014_desc=''
+         LET g_mmaq015=''
+         LET g_mmaq015_desc=''
+         LET g_mmaq016=''
+         LET g_mmaq016_desc=''
+         
+         AFTER FIELD mmea003
+         IF not cl_null(g_mmea003) then 
+            select count(*) INTO l_m 
+            from mman_t
+            where mmanent=g_enterprise and mman001=g_mmea003 and mmanstus='Y' 
+            if l_m=0 then 
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "amm-00003"
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               NEXT FIELD  mmea003
+            END IF 
+         END IF
+         AFTER FIELD mmea005
+         IF NOT cl_null(g_mmea005) THEN 
+            IF g_mmea005 <=0 THEN 
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "amm-00765"
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               NEXT FIELD  mmea005
+             END IF 
+          END IF              
+         AFTER FIELD mmea001
+           IF NOT cl_null(g_mmea001) THEN 
+               CALL ammt405_01_mmea001_chk(g_mmea001)
+               IF NOT cl_null(g_errno) THEN 
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD mmea001
+               END IF
+               IF NOT cl_null(g_mmea002) THEN 
+                  CALL ammt405_01_key(g_mmea001,g_mmea002)
+                  IF NOT cl_null(g_errno) THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD mmea001
+                  END IF
+               END IF
+               IF g_mmea008 > 0 THEN 
+                  CALL ammt405_01_mmea008_chk()
+                  IF NOT cl_null(g_errno) THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD mmea001
+                  END IF 
+               END IF 
+               IF NOT cl_null(g_mmea008) THEN 
+                  CALL ammt405_01_mmea008() RETURNING r_success
+                  IF NOT r_success THEN 
+                     NEXT FIELD mmea001
+                  END IF 
+               END IF  
+               CALL ammt405_01_mmea001(g_mmea001,g_mmea002) 
+            END IF
+         AFTER FIELD mmea002
+            IF NOT cl_null(g_mmea002) THEN 
+               CALL ammt405_01_mmea001_chk(g_mmea002)
+               IF NOT cl_null(g_errno) THEN 
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD mmea002
+               END IF
+               IF NOT cl_null(g_mmea001) THEN 
+                  CALL ammt405_01_key(g_mmea001,g_mmea002)
+                  IF NOT cl_null(g_errno) THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD mmea002
+                  END IF
+               END IF
+               IF g_mmea008 > 0 THEN 
+                  CALL ammt405_01_mmea008_chk()
+                  IF NOT cl_null(g_errno) THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD mmea002
+                  END IF 
+               END IF 
+               IF NOT cl_null(g_mmea008) THEN 
+                  CALL ammt405_01_mmea008() RETURNING r_success
+                  IF NOT r_success THEN 
+                     NEXT FIELD mmea002
+                  END IF 
+               END IF  
+               CALL ammt405_01_mmea001(g_mmea001,g_mmea002) 
+            END IF
+         AFTER FIELD mmaa057
+             IF NOT cl_null(g_mmaa057) THEN
+                SELECT COUNT(*) INTO l_n FROM mmby_t
+                WHERE mmbyent=g_enterprise
+                  AND mmby001=g_mmaa057
+                  AND mmbysite = g_rtiasite 
+                  AND mmby004 = '2'
+                  AND mmby015>=g_today
+               IF l_n=0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'amm-00761'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD mmaa057
+               END IF
+               IF NOT cl_null(g_mmea003) THEN
+                  SELECT mmby005 INTO l_mmby005
+                    FROM mmby_t 
+                   WHERE mmbyent = g_enterprise
+                     AND mmby001 = g_mmaa057
+                     AND mmbysite = g_rtiasite
+                  IF l_mmby005 <> g_mmea003 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'amm-00763'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD mmaa057
+                  END IF
+                  CALL ammt405_01_mmaa057_desc()
+               END IF
+            END IF   
+         AFTER FIELD mmea008
+            IF NOT cl_null(g_mmea008) THEN 
+               IF g_mmea008 < 0 THEN 
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00005'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD mmea008
+               END IF 
+               CALL ammt405_01_mmea008_chk() 
+               IF NOT cl_null(g_errno) THEN 
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD mmea008
+               END IF 
+               CALL ammt405_01_mmea008() RETURNING r_success
+               IF NOT r_success THEN 
+                  NEXT FIELD mmea008
+               END IF 
+            END IF 
+                     
+         ON ACTION controlp INFIELD mmea003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_mman001()                  #呼叫開窗
+            LET g_mmea003 = g_qryparam.return1
+            DISPLAY BY NAME g_mmea003           
+            NEXT FIELD mmea003 
+         ON ACTION controlp INFIELD mmea001
+            INITIALIZE g_qryparam.* TO NULL 
+            LET g_qryparam.state = "i"
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = ""
+            LET g_qryparam.arg1 = g_rtiasite
+            LET g_qryparam.where = " mmaq002 IN(SELECT mmap002 FROM mmap_t WHERE mmapent = '",g_enterprise,"' AND mmap001 = 'ammm320' ",
+                                   "             AND (mmap003 = '",g_rtiasite,"' OR (mmap003 IN(SELECT ooed005 FROM ooed_t ",
+                                   "    START WITH ooed004= '",g_rtiasite,"' AND ooed001 = '8' AND ooedent = '",g_enterprise,"' ",
+                                   "      AND ooed006<='",g_today,"' ",
+                                   "      AND (ooed007 >='",g_today,"' OR ooed007 IS NULL)",
+                                   "  CONNECT BY  NOCYCLE PRIOR ooed005=ooed004 ",
+                                   "      AND ooed001='8' AND ooedent = '",g_enterprise,"'",
+                                   "      AND ooed006 <='",g_today,"' ",
+                                   "      AND (ooed007 >='",g_today,"' OR ooed007 IS NULL)) AND mmap005 = 'Y')) AND mmapstus = 'Y')",
+                                   " AND mmaq006 = '1' "
+            IF g_mmea003 IS NOT NULL THEN
+               LET g_qryparam.where=g_qryparam.where," AND mmaq002 = '",g_mmea003,"'"
+            END IF
+            CALL q_mmaq001_7()
+            LET g_mmea001 = g_qryparam.return1
+            DISPLAY BY NAME g_mmea001           
+            NEXT FIELD mmea001
+    
+         ON ACTION controlp INFIELD mmea002
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = ""
+            LET g_qryparam.arg1 = g_rtiasite
+            #LET g_qryparam.where =" mmaq002='",g_mmea003,"' and mmaq006='3' and mmaq003 is null "
+           LET g_qryparam.where = " mmaq002 IN(SELECT mmap002 FROM mmap_t WHERE mmapent = '",g_enterprise,"' AND mmap001 = 'ammm320' ",
+                                   "             AND (mmap003 = '",g_rtiasite,"' OR (mmap003 IN(SELECT ooed005 FROM ooed_t ",
+                                   "    START WITH ooed004= '",g_rtiasite,"' AND ooed001 = '8' AND ooedent = '",g_enterprise,"' ",
+                                   "      AND ooed006<='",g_today,"' ",
+                                   "      AND (ooed007 >='",g_today,"' OR ooed007 IS NULL)",
+                                   "  CONNECT BY  NOCYCLE PRIOR ooed005=ooed004 ",
+                                   "      AND ooed001='8' AND ooedent = '",g_enterprise,"'",
+                                   "      AND ooed006 <='",g_today,"' ",
+                                   "      AND (ooed007 >='",g_today,"' OR ooed007 IS NULL)) AND mmap005 = 'Y')) AND mmapstus = 'Y')",
+                                   " AND mmaq006 = '1' "
+            IF g_mmea003 IS NOT NULL THEN
+               LET g_qryparam.where=g_qryparam.where," AND mmaq002 = '",g_mmea003,"'"
+            END IF
+            CALL q_mmaq001_7()                  #呼叫開窗
+            LET g_mmea002 = g_qryparam.return1
+            DISPLAY BY NAME g_mmea002           
+            NEXT FIELD mmea002 
+         
+         ON ACTION controlp INFIELD mmaa057
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_mmaa057
+            LET g_qryparam.arg1 = '2' #s
+            LET g_qryparam.where=" mmby015 >= '",g_today,"'  "
+            IF g_mmea003 IS NOT NULL THEN
+               LET g_qryparam.where=g_qryparam.where," AND mmby005 = '",g_mmea003,"'"
+            END IF
+            CALL q_mmby001() 
+ 
+            LET g_mmaa057 = g_qryparam.return1              
+
+            DISPLAY g_mmaa057 TO mmaa057            
+            NEXT FIELD mmaa057
+                           
+                    
+      END INPUT
+      
+      
+      
+      
+#      INPUT ARRAY g_mmaa_d FROM s_detail1.*
+#          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+#                  INSERT ROW = FALSE, 
+#                  DELETE ROW = FALSE,
+#                  APPEND ROW = FALSE)
+#         
+#         BEFORE INPUT
+#            CALL ammt405_01_b_fill()           
+#            LET g_rec_b = g_mmaa_d.getLength()
+#            DISPLAY "g_rec_b:",g_rec_b
+#            
+#         BEFORE ROW
+#            LET l_ac = ARR_CURR()
+#            LET g_mmaa_d_t.* = g_mmaa_d[l_ac].*
+#            LET g_mmaa_d_o.* = g_mmaa_d[l_ac].*  
+#            CALL ammt405_01_set_entry_b("a")
+#            CALL ammt405_01_set_no_entry_b("a")
+#
+#         #add by geza 20160707 #160708-00002#1(S)
+#         BEFORE FIELD mmaa034
+#            #add by geza 20160707 #160708-00002#1(S)          
+#            SELECT stan024 INTO l_stan024
+#              FROM stan_t
+#             WHERE stanent = g_enterprise
+#               AND stan001 = g_mmaa_d[l_ac].star004
+#            IF l_stan024 = 'N' THEN
+#               NEXT FIELD sel
+#            END IF               
+#            #add by geza 20160707 #160708-00002#1(E)
+#         AFTER FIELD mmaa034
+#            IF NOT cl_ap_chk_range(g_mmaa_d[l_ac].mmaa034,"0.000","1","","","azz-00079",1) THEN
+#               NEXT FIELD mmaa034
+#            END IF             
+#            
+#            IF NOT cl_null(g_mmaa_d[l_ac].mmaa034) THEN
+#               #抓出单价
+#               LET l_mmaa034 =''
+#               SELECT stas011 INTO l_mmaa034
+#                 FROM stas_t,star_t
+#                WHERE stasent = g_enterprise
+#                  AND starent = stasent
+#                  AND starsite = stassite
+#                  AND star001 = stas001
+#                  AND stas001 = g_mmaa_d[l_ac].star001
+#                  AND g_pmds.pmdsdocdt BETWEEN stas026 AND stas027
+#                  AND stas003 = g_mmaa_d[l_ac].mmaa001
+#                  AND starstus = 'Y'          
+#                  AND stassite = g_mmaa_d[l_ac].starsite
+#               IF l_mmaa034 IS  NULL THEN
+#                  SELECT stas010 INTO l_mmaa034
+#                    FROM stas_t,star_t
+#                   WHERE stasent = g_enterprise
+#                     AND starent = stasent
+#                     AND starsite = stassite
+#                     AND star001 = stas001
+#                     AND stas001 = g_mmaa_d[l_ac].star001
+#                     AND stas003 = g_mmaa_d[l_ac].mmaa001
+#                     AND starstus = 'Y'          
+#                     AND stassite = g_mmaa_d[l_ac].starsite
+#               END IF
+#               #單價容差率控卡
+#               IF NOT s_apm_price_get_stan025_chk(g_mmaa_d[l_ac].star004,g_mmaa_d[l_ac].mmaa034,l_mmaa034) THEN
+#                  NEXT FIELD CURRENT 
+#               ELSE
+#                  #更新临时表价格
+#                  UPDATE ammt405_01_tmp
+#                     SET mmaa034 = g_mmaa_d[l_ac].mmaa034
+#                   WHERE mmaa001 = g_mmaa_d[l_ac].mmaa001                  
+#               END IF 
+#            END IF
+         #add by geza 20160707 #160708-00002#1(E)
+         #要貨包裝數量
+#         AFTER FIELD l_pmdb212
+#            IF NOT cl_ap_chk_range(g_mmaa_d[l_ac].l_pmdb212,"0","0","","","azz-00079",1) THEN
+#               NEXT FIELD l_pmdb212
+#            END IF             
+#            
+#            IF NOT cl_null(g_mmaa_d[l_ac].l_pmdb212) THEN
+#               IF g_mmaa_d[l_ac].l_pmdb212 != g_mmaa_d_o.l_pmdb212 OR cl_null(g_mmaa_d_o.l_pmdb212) THEN                         
+#                  #150903-00007#1 150903 by sakura mark&add(S)
+#                  #CALL ammt405_01_num_change()
+#                  IF NOT ammt405_01_num_change() THEN
+#                     NEXT FIELD l_pmdb212
+#                  END IF
+#                  #150903-00007#1 150903 by sakura mark&add(E)
+#               END IF
+#            END IF
+#            CALL ammt405_01_pmdb006_upd()  
+#            LET g_mmaa_d_o.l_pmdb212 = g_mmaa_d[l_ac].l_pmdb212
+#            LET g_mmaa_d_o.l_pmdb006 = g_mmaa_d[l_ac].l_pmdb006
+#            CALL ammt405_01_set_entry_b("a")
+#            CALL ammt405_01_set_no_entry_b("a")
+         
+         #要貨數量
+#         AFTER FIELD l_pmdb006
+#            IF NOT cl_ap_chk_range(g_mmaa_d[l_ac].l_pmdb006,"0","0","","","azz-00079",1) THEN
+#               NEXT FIELD l_pmdb006
+#            END IF                 
+#            
+#            IF NOT cl_null(g_mmaa_d[l_ac].l_pmdb006) THEN
+#               IF g_mmaa_d[l_ac].l_pmdb006 != g_mmaa_d_o.l_pmdb006 OR cl_null(g_mmaa_d_o.l_pmdb006) THEN          
+#                  #150903-00007#1 150903 by sakura mark&add(S)
+#                  #CALL ammt405_01_num_change()
+#                  IF NOT ammt405_01_num_change() THEN
+#                     NEXT FIELD l_pmdb006
+#                  END IF                  
+#                  #150903-00007#1 150903 by sakura mark&add(E)
+#               END IF
+#            END IF
+#            CALL ammt405_01_pmdb006_upd()                
+#            LET g_mmaa_d_o.l_pmdb212 = g_mmaa_d[l_ac].l_pmdb212
+#            LET g_mmaa_d_o.l_pmdb006 = g_mmaa_d[l_ac].l_pmdb006
+#            CALL ammt405_01_set_entry_b("a")
+#            CALL ammt405_01_set_no_entry_b("a")
+
+         #ON CHANGE sel    
+            
+ #        ON ROW CHANGE        
+ #           
+ #     END INPUT
+      
+     ON ACTION detail_sc
+        
+         CALL ammt405_01_b_fill() 
+     ON ACTION detail_pz
+        CALL ammt405_01_b_fill()
+         IF g_ac>0  THEN 
+              LET g_success=true            
+              IF NOT ammt405_01_ins_fill() THEN
+                IF NOT cl_ask_confirm('apm-00284') THEN #產生失敗，是否繼續
+                   LET g_success = FALSE                 
+                   RETURN
+                END IF
+              ELSE
+                IF cl_ask_confirm('apm-00285') THEN #產生成功，是否繼續
+                   CALL g_mmaa_d.clear()
+                   clear form 
+                   DELETE FROM ammt405_01_tmp
+                   DELETE FROM ammt405_01_tmp1
+                   IF SQLCA.sqlcode THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = SQLCA.sqlcode
+                      LET g_errparam.extend = 'Del ammt405_01_tmp'
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+                   END IF                                       
+                ELSE
+                   LET INT_FLAG = TRUE 
+                   EXIT DIALOG
+                END IF
+             END IF
+       ELSE
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'ast-00401'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+           LET INT_FLAG = TRUE 
+           EXIT DIALOG            
+       END IF 
+         
+#      ON ACTION gen_pmdb
+         ##產生要貨明細單身
+     
+#         IF g_rec_b > 0 THEN                             
+#             LET g_success = FALSE         
+#             FOR li_idx = 1 TO g_mmaa_d.getLength()
+#                IF g_mmaa_d[li_idx].sel = "Y" THEN
+#                   IF cl_null(g_mmaa_d[li_idx].l_pmdb212) THEN  
+#                      NEXT FIELD l_pmdb212
+#                   END IF
+#                   IF cl_null(g_mmaa_d[li_idx].l_pmdb006) THEN
+#                      NEXT FIELD l_pmdb006
+#                   END IF
+#                   LET g_success = TRUE
+#                END IF
+#             END FOR            
+#             IF NOT g_success THEN 
+#                INITIALIZE g_errparam TO NULL
+#                LET g_errparam.code = '-400'
+#                LET g_errparam.extend = ''
+#                LET g_errparam.popup = TRUE
+#                CALL cl_err() 
+#                NEXT FIELD sel                
+#             END IF 
+#             LET g_success = TRUE
+#             IF NOT ammt405_01_gen_detail() THEN
+#                IF NOT cl_ask_confirm('apm-00284') THEN #產生失敗，是否繼續
+#                   LET g_success = FALSE                 
+#                   RETURN
+#                END IF
+#             ELSE
+#                IF cl_ask_confirm('apm-00285') THEN #產生成功，是否繼續
+#                   CALL g_mmaa_d.clear()
+#                   DELETE FROM ammt405_01_tmp
+#                   IF SQLCA.sqlcode THEN
+#                      INITIALIZE g_errparam TO NULL
+#                      LET g_errparam.code = SQLCA.sqlcode
+#                      LET g_errparam.extend = 'Del ammt405_01_tmp'
+#                      LET g_errparam.popup = TRUE
+#                      CALL cl_err()
+#                   END IF
+#                   CALL ammt405_01_gen_mmaa() 
+#                   CALL ammt405_01_set_entry_b("a")
+#                   CALL ammt405_01_set_no_entry_b("a")                                       
+#                   NEXT FIELD sel 
+#                ELSE
+#                   LET INT_FLAG = TRUE 
+#                   EXIT DIALOG
+#                END IF
+#             END IF
+#         ELSE
+#            INITIALIZE g_errparam TO NULL
+#            LET g_errparam.code = 'apm-00292'
+#            LET g_errparam.extend = ''
+#            LET g_errparam.popup = TRUE
+#            CALL cl_err()      
+#         END IF
+          
+      ON ACTION accept
+         CALL ammt405_01_b_fill()
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION ammt405_01_b_fill()
+DEFINE l_sql          STRING
+DEFINE l_sql1          STRING
+DEFINE l_success      LIKE type_t.num5
+DEFINE l_where        STRING
+DEFINE l_cou_sql       STRING 
+DEFINE l_where1        STRING
+DEFINE l_where2        STRING
+DEFINE l_where3        STRING
+DEFINE l_where4        STRING
+DEFINE l_where5        STRING
+DEFINE l_where6        STRING
+DEFINE l_n             INT 
+
+    CALL g_mmaa_d.clear()
+    LET l_ac = 1
+    DELETE FROM ammt405_01_tmp
+    
+    CALL ammt405_01_ins_tmp() 
+    IF cl_null(g_wc)  THEN 
+       LET g_wc="1=1"
+    END IF 
+    IF NOT cl_null(g_sdate) AND NOT cl_null(g_edate) THEN 
+       LET l_where = " AND rtjadocdt BETWEEN '",g_sdate,"' AND '",g_edate,"' "
+    ELSE 
+       LET l_where = " AND 1=1 "
+    END IF 
+    IF NOT cl_null(g_mmaq014) THEN 
+       LET l_where1= "  mmaq014 >= ",g_mmaq014," "
+    ELSE 
+       LET l_where1= "  1=1 "
+    END IF 
+    IF NOT cl_null(g_mmaq015) THEN 
+       LET l_where2= " AND mmaq015 >= ",g_mmaq015," "
+    ELSE 
+       LET l_where2= " AND 1=1 "
+    END IF 
+    IF NOT cl_null(g_mmaq016) THEN 
+       LET l_where3= " AND mmaq016 >= ",g_mmaq016," "
+    ELSE 
+       LET l_where3= " AND 1=1 "
+    END IF 
+    IF NOT cl_null(g_mmaq014_desc) THEN 
+       LET l_where4= "  mmaq014_desc<= ",g_mmaq014_desc," "
+    ELSE 
+       LET l_where4= "  1=1 "
+    END IF
+    IF NOT cl_null(g_mmaq015_desc) THEN 
+       LET l_where5= " AND mmaq015_desc <= ",g_mmaq015_desc," "
+    ELSE 
+       LET l_where5= " AND 1=1 "
+    END IF 
+    IF NOT cl_null(g_mmaq016_desc) THEN 
+       LET l_where6= " AND mmaq016_desc <= ",g_mmaq016_desc," "
+    ELSE 
+       LET l_where6= " AND 1=1 "
+    END IF
+    
+#    LET l_sql="select mmaa059,mmaa001,mmaa008,mmaa015,mmaa044,mmaa044_desc,",
+#              " mmaq014,mmaq014_desc,",
+#              " mmaq015,mmaq015_desc,mmaq016,mmaq016_desc from ",
+#             "(select mmaq001,mmaa001,mmaa008,mmaa015,mmaa044,",
+#              "(select mmanl003 FROM mmanl_t WHERE mmanlent='",g_enterprise,"' ",
+#              " AND mmanl001=mmaa044 AND mmanl002='"||g_dlang||"' ) mmaa044_desc,", 
+#              " mmaq014, DENSE_RANK() OVER( ORDER BY mmaq014 DESC) mmaq014_desc,",
+#              " mmaq015,DENSE_RANK() OVER( ORDER BY mmaq015 DESC) mmaq015_desc,mmaq016,DENSE_RANK() OVER( ORDER BY mmaq016 DESC) mmaq016_desc",
+#              " FROM mmaq_t,mmaa_t ",
+#              " WHERE mmaaent=mmaqent AND mmaa001=mmaq003 AND mmaa059=mmaq001 and mmaastus='Y'  ",
+#              " and mmaa001||'|'||mmaa002 in (select mmaa001||'|'||max(mmaa002) from mmaa_t where mmaaent='",g_enterprise,"'  group by mmaa001)",
+#              " AND mmaaent='",g_enterprise,"'  AND ",g_wc,l_where,l_where1,l_where2,l_where3,")",
+#              " where ",l_where4,l_where5,l_where6
+
+
+let l_sql="select '',mmaf001,mmaf008,mmaf015,mmaq002,mmaq002_desc,",
+          "mmaq014,mmaq014_desc,mmaq015,mmaq015_desc,mmaq016,mmaq016_desc from ",
+          "(select mmaf001,mmaf008,mmaf015,mmaq002,mmaq002_desc,",
+          " SUM(mmaq014) mmaq014,DENSE_RANK() OVER( ORDER BY SUM(mmaq014) DESC) mmaq014_desc,",
+          " SUM(mmaq015) mmaq015,DENSE_RANK() OVER( ORDER BY SUM(mmaq015) DESC) mmaq015_desc,",
+          " SUM(mmaq016) mmaq016,DENSE_RANK() OVER( ORDER BY SUM(mmaq016) DESC) mmaq016_desc from ",
+          "(select mmaf001,mmaf008,mmaf015,",
+          "mmaq002,",
+          "(select mmanl003 FROM mmanl_t ", 
+          " WHERE mmanlent='",g_enterprise,"' and mmanl001=mmaq002 and mmanl002='"||g_dlang||"') mmaq002_desc, ",
+          " COUNT(rtjadocno) mmaq014,'' mmaq014_desc,",
+          " sum(rtja049) mmaq015,'' mmaq015_desc,",
+          " sum(rtja016) mmaq016,'' mmaq016_desc ",
+          " from mmaf_t",
+          " LEFT JOIN mmag_t on mmafent=mmagent and mmaf001=mmag001 and mmag002='002' ",
+          " , mmaq_t ",
+          " LEFT JOIN rtja_t on rtjaent=mmaqent and rtja001=mmaq001 and rtja032<>'4' and rtja000 in ('artt621','artt600','artt610','artt620','artt700') and rtjasite='",g_rtiasite,"' ",
+          " LEFT JOIN rtjb_t on rtjbent=rtjaent and rtjbdocno=rtjadocno ",
+          " LEFT JOIN imaa_t  on  imaaent=rtjbent and imaa001=rtjb004 ",
+          " where  mmafent='",g_enterprise,"'  and mmaqent=mmafent and  mmaf001=mmaq003 ",
+          " and rtjadocno in (select rtjadocno from rtja_t  where rtjaent='",g_enterprise,"' and rtjasite='",g_rtiasite,"' group by rtjadocno having sum(rtja049)>0)",
+          "  AND ",g_wc,l_where,
+          " group by mmaf001,mmaf008,mmaf015,mmaq002) ",
+          " where ",l_where1,l_where2,l_where3,
+          " group by mmaf001,mmaf008,mmaf015,mmaq002,mmaq002_desc) ",
+          " where ",l_where4,l_where5,l_where6,
+          " order by mmaq015_desc"
+    DISPLAY l_sql
+    LET l_cou_sql= "select count(*) FROM ( ",l_sql," ) "
+    PREPARE ammt405_cou_pb FROM l_cou_sql  
+    EXECUTE ammt405_cou_pb into l_n
+    IF l_n < g_mmea005 THEN 
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "amm-00767"
+       LET g_errparam.extend = ''
+       LET g_errparam.popup = TRUE
+       LET g_errparam.replace[1]=l_n
+       CALL cl_err()
+    ELSE
+       LET l_sql="INSERT INTO ammt405_01_tmp ",l_sql
+           PREPARE ammt405_01_ins_tmp FROM l_sql  
+           EXECUTE ammt405_01_ins_tmp
+       IF SQLCA.sqlcode<>0 AND SQLCA.sqlcode<>100 THEN
+          INITIALIZE g_errparam TO NULL 
+          LET g_errparam.extend = "EXECUTE:ammt405_01_ins_tmp" 
+          LET g_errparam.code   = SQLCA.sqlcode 
+          LET g_errparam.popup  = TRUE 
+          CALL cl_err()
+       END IF
+       
+       LET l_sql1 = "select ",
+                    " mmaa001,mmaa008,mmaa015,mmaq002,",
+                      "mmaq002_desc,mmaq014,mmaq014_desc,mmaq015,mmaq015_desc,mmaq016,mmaq016_desc",                   
+                      " FROM ammt405_01_tmp "
+         PREPARE ammt405_mmaa_pb FROM l_sql1
+         DECLARE ammt405_mmaa_cs CURSOR FOR ammt405_mmaa_pb
+         FOREACH ammt405_mmaa_cs
+            INTO g_mmaa_d[l_ac].mmaa001,           g_mmaa_d[l_ac].mmaa008,                   
+                 g_mmaa_d[l_ac].mmaa015,              g_mmaa_d[l_ac].mmaa044,           g_mmaa_d[l_ac].mmaa044_desc,      
+                 g_mmaa_d[l_ac].mmaq014,              g_mmaa_d[l_ac].mmaq014_desc,      g_mmaa_d[l_ac].mmaq015, 
+                 g_mmaa_d[l_ac].mmaq015_desc,         g_mmaa_d[l_ac].mmaq016,           g_mmaa_d[l_ac].mmaq016_desc          
+                        
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "Foreach ammt405_01_mmaa_cs"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               EXIT FOREACH
+            END IF
+             SELECT mmea001 into g_mmaa_d[l_ac].mmaa059
+             FROM (select mmea001 from ammt405_01_tmp1 order by dbms_random.value) where rownum < 2
+             IF g_mmaa_d[l_ac].mmaa059 IS NULL THEN 
+                EXIT FOREACH
+             END IF 
+            UPDATE ammt405_01_tmp SET mmaq001= g_mmaa_d[l_ac].mmaa059
+            WHERE mmaa001= g_mmaa_d[l_ac].mmaa001 
+            DELETE FROM ammt405_01_tmp1  WHERE mmea001=g_mmaa_d[l_ac].mmaa059
+            UPDATE ammt405_01_tmp SET mmaq001= g_mmaa_d[l_ac].mmaa059
+            WHERE mmaa001= g_mmaa_d[l_ac].mmaa001 and  mmaq015_desc= g_mmaa_d[l_ac].mmaq015_desc    
+            LET l_ac = l_ac + 1
+            IF l_ac > g_max_rec AND g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9035
+               LET g_errparam.extend =  ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               EXIT FOREACH
+            END IF
+         END FOREACH
+         let g_ac=l_ac-1
+         CALL g_mmaa_d.deleteElement(g_mmaa_d.getLength()) 
+         LET l_ac = g_mmaa_d.getLength()
+    END IF 
+        
+    #DISPLAY ARRAY g_mmaa_d TO s_detail1.*
+    #END DISPLAY
+END FUNCTION
+
+PRIVATE FUNCTION ammt405_01_init()
+
+   CALL g_mmaa_d.clear()
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   LET g_error_show = 1
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_ins_fill()
+
+DEFINE g_mmaa001  LIKE mmaa_t.mmaa001
+DEFINE l_sql  STRING
+DEFINE l_sql1  STRING
+DEFINE r_mmed            RECORD                #儲值資訊
+             mmed006  LIKE mmed_t.mmed006,     #折扣比率             
+             mmed007  LIKE mmed_t.mmed007,     #折扣金額             
+             mmed008  LIKE mmed_t.mmed008,     #加值金額             
+             mmed009  LIKE mmed_t.mmed009,     #此次儲值成本 
+             mmed010  LIKE mmed_t.mmed010,     #儲值後卡內餘額
+             mmed011  LIKE mmed_t.mmed011,     #儲值後卡內成本
+             mmed012  LIKE mmed_t.mmed012      #實際應付金額
+                         END RECORD
+DEFINE r_success         LIKE type_t.num5      #處理狀態
+DEFINE r_suc         LIKE type_t.num5
+DEFINE l_n         LIKE type_t.num10
+DEFINE l_mmea001   LIKE mmea_t.mmea001
+DEFINE r_exists          LIKE type_t.num5
+DEFINE r_prei009         LIKE prei_t.prei009
+DEFINE r_prei010         LIKE prei_t.prei010
+DEFINE r_preg001         LIKE preg_t.preg001
+DEFINE l_success LIKE type_t.num5
+DEFINE l_seq    LIKE mmea_t.mmeaseq
+
+   LET r_suc = TRUE
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   
+CALL s_artt220_default(g_rtiasite,'6')  RETURNING  l_success,g_mmea013
+LET l_sql = "select mmaq001,mmaa001 FROM ammt405_01_tmp where mmaq001 is not null"
+    PREPARE ammt405_mmaa_pb1 FROM l_sql
+    DECLARE ammt405_mmaa_cs1 CURSOR FOR ammt405_mmaa_pb1
+    FOREACH ammt405_mmaa_cs1 INTO g_mmea001,g_mmaa001
+    LET g_mmea004=g_mmaa001
+    SELECT mmeaseq INTO l_seq from mmea_t WHERE mmeaent=g_enterprise AND mmeadocno=g_rtiadocno AND mmea001=g_mmea001 
+    if not cl_null(l_seq) then 
+      DELETE FROM mmea_t WHERE mmeaent=g_enterprise AND mmeadocno=g_rtiadocno AND mmea001=g_mmea001 and mmeaseq=l_seq
+      DELETE FROM rtib_t WHERE rtibent= g_enterprise and rtibdocno= g_rtiadocno and rtib030=l_seq
+      DELETE FROM rtic_t where rticent= g_enterprise and rticdocno= g_rtiadocno  and rticseq in (select rtibseq  FROM rtib_t WHERE rtibent= g_enterprise and rtibdocno= g_rtiadocno and rtib030=l_seq)   
+    END IF 
+    SELECT max(mmeaseq) INTO g_mmeaseq from mmea_t
+    WHERE mmeaent=g_enterprise AND mmeadocno=g_rtiadocno
+    IF cl_null(g_mmeaseq) THEN
+      LET g_mmeaseq=1
+    ELSE
+      LET g_mmeaseq=g_mmeaseq+1
+    END IF 
+    CALL ammt405_01_mmea008()  RETURNING r_success
+    IF NOT r_success THEN
+       LET r_suc=false    
+       EXIT FOREACH           
+    END IF
+        
+    CALL ammt405_01_mmea001(g_mmea001,g_mmea001)
+    
+    INSERT INTO mmea_t(mmeaent,mmeadocno,mmeaseq, mmea001,mmea002,
+                       mmea003,mmea004,  mmea005, mmea006,mmea007,
+                       mmea008,mmea009,  mmea010, mmea011,mmea012,
+                       mmea013,mmea014,  mmeaunit,mmeasite,
+                       mmea015,mmea016)                              #160729-00077#5 160823 by lori add:mmea015,mmea016
+            VALUES(g_enterprise,g_rtiadocno,g_mmeaseq, g_mmea001,g_mmea001,
+                   g_mmea003,   g_mmea004,  g_mmea005, g_mmea006,g_mmea007, 
+                   g_mmea008,   g_mmea009,  g_mmea010, g_mmea011,g_mmea012,
+                   g_mmea013,   g_mmea014,  g_rtiasite,g_rtiasite,
+                   g_mmea015,   g_mmea016)                           #160729-00077#5 160823 by lori add:mmea015,mmea016
+    
+    CALL ammt405_01_ins_rtib() RETURNING r_success
+    IF NOT r_success THEN
+       let r_suc=false
+       EXIT FOREACH    
+       #CALL s_transaction_end('N','0')              
+    END IF
+        
+    END FOREACH
+    IF NOT r_suc THEN  
+       CALL s_transaction_end('N','0')
+       CALL cl_err_collect_show()
+    ELSE
+       CALL s_transaction_end('Y','0')              
+    END IF
+    return r_suc    
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........: 2016/08/23 By Lori   s_card_value_cal增加回傳r_mmed.mmed015,r_mmed.mmed016
+################################################################################
+PRIVATE FUNCTION ammt405_01_mmea008()
+DEFINE r_mmed            RECORD                #儲值資訊
+             mmed006  LIKE mmed_t.mmed006,     #折扣比率             
+             mmed007  LIKE mmed_t.mmed007,     #折扣金額             
+             mmed008  LIKE mmed_t.mmed008,     #加值金額             
+             mmed009  LIKE mmed_t.mmed009,     #此次儲值成本 
+             mmed010  LIKE mmed_t.mmed010,     #儲值後卡內餘額
+             mmed011  LIKE mmed_t.mmed011,     #儲值後卡內成本
+             mmed012  LIKE mmed_t.mmed012,     #實際應付金額
+             mmed015  LIKE mmed_t.mmed015,     #活動規則編號   #160729-00077#5 160823 by lori add
+             mmed016  LIKE mmed_t.mmed016      #活動規則版本   #160729-00077#5 160823 by lori add
+                         END RECORD
+DEFINE r_success         LIKE type_t.num5      #處理狀態
+DEFINE l_n         LIKE type_t.num10
+DEFINE l_mmea001   LIKE mmea_t.mmea001
+DEFINE r_exists          LIKE type_t.num5
+DEFINE r_prei009         LIKE prei_t.prei009
+DEFINE r_prei010         LIKE prei_t.prei010
+DEFINE r_preg001         LIKE preg_t.preg001
+
+
+   LET l_mmea001 = g_mmea001
+   IF cl_null(l_mmea001) THEN 
+      RETURN 
+   END IF 
+   LET r_success = TRUE
+   IF cl_null(g_mmea008) THEN 
+      LET g_mmea008 = 0
+   END IF 
+   IF g_mmea008 > 0 THEN 
+         CALL s_aprp310_get_exchange(g_rtiasite,g_rtia001,'1',g_mmea001,g_mmea008,'','')
+                           RETURNING r_exists,r_prei009,r_prei010,r_preg001
+      #如果有百貨促銷---aprm310，則取aprm310的折扣率
+      IF r_exists THEN
+         LET g_mmea009 = r_prei009*100
+         LET g_mmea010 =0    #加值為零
+         LET g_mmea012 = g_mmea005*r_prei010+g_mmea007
+      ELSE     
+         CALL s_card_value_cal(g_prog,'2',g_rtiadocno,l_mmea001,g_rtiasite,g_rtia034,
+                               g_rtia035,g_mmea008,g_rtia026)
+           RETURNING r_success,r_mmed.*
+         IF NOT r_success THEN 
+            RETURN r_success
+         END IF
+         LET g_mmea009 = r_mmed.mmed006
+         LET g_mmea010 = r_mmed.mmed008     
+         LET g_mmea012 = g_mmea005 * (r_mmed.mmed012 + g_mmea006) 
+         LET g_mmea015 = r_mmed.mmed015      #活動規則編號   #160729-00077#5 160823 by lori add
+         LET g_mmea016 = r_mmed.mmed016      #活動規則版本   #160729-00077#5 160823 by lori add         
+         
+      END IF       
+   ELSE
+      LET g_mmea010 = 0
+      LET g_mmea012 = g_mmea005 * g_mmea006    
+   END IF       
+
+   LET g_mmea011 = g_mmea005*(g_mmea010+g_mmea008)
+   IF cl_null(g_mmea010) THEN 
+      LET g_mmea010 = 0
+   END IF 
+   IF cl_null(g_mmea011) THEN 
+      LET g_mmea011 = 0
+   END IF 
+   IF cl_null(g_mmea012) THEN 
+      LET g_mmea012 = 0
+   END IF 
+
+   IF g_mmea012 = 0 THEN 
+         LET g_mmea014 = "Y"
+   ELSE
+         LET g_mmea014 = "N"
+   END IF 
+   LET g_mmea010 = s_curr_round(g_rtiasite,g_rtia026,g_mmea010,'1')
+   LET g_mmea011 = s_curr_round(g_rtiasite,g_rtia026,g_mmea011,'2')
+   LET g_mmea012 = s_curr_round(g_rtiasite,g_rtia026,g_mmea012,'2')
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_mmea001(p_card,p_card2)
+   DEFINE p_card      LIKE mmea_t.mmea001
+   DEFINE p_card2     LIKE mmea_t.mmea002
+   DEFINE l_card      LIKE mmea_t.mmea001
+   DEFINE l_mman015   LIKE mman_t.mman015   
+   DEFINE l_mman006   LIKE mman_t.mman006
+   DEFINE l_mman005   LIKE mman_t.mman005
+   DEFINE l_mman042   LIKE mman_t.mman042
+   DEFINE l_mman053   LIKE mman_t.mman053
+   DEFINE l_mman069   LIKE mman_t.mman069
+   DEFINE r_success   LIKE type_t.num5
+   
+   IF NOT cl_null(p_card) THEN 
+      LET l_card = p_card
+   ELSE
+      LET l_card = p_card2
+   END IF 
+
+   SELECT mmaq002,mman011,mman015,mman005,mman006,mman048,mman042,mman053,mman069
+     INTO g_mmea003,g_mmea006,l_mman015,l_mman005,l_mman006,
+          g_mmea009,l_mman042,l_mman053,l_mman069
+     FROM mman_t,mmaq_t
+    WHERE mmaqent = mmanent
+      AND mmaq001 = l_card
+      AND mman001 = mmaq002
+      AND mmanent = g_enterprise 
+           
+    IF NOT cl_null(p_card) AND NOT cl_null(p_card2) THEN 
+      #卡張數
+      LET g_mmea005 = p_card2[l_mman006+1,l_mman005] - p_card[l_mman006+1,l_mman005] + 1   
+      #總購卡金額
+      LET g_mmea007 = g_mmea005 * g_mmea006
+   END IF 
+   IF l_mman042 = 'N' THEN 
+      LET g_mmea008 = 0
+   END IF 
+   IF cl_null(g_mmea009) THEN 
+      LET g_mmea009 = 100
+   END IF 
+   IF cl_null(g_mmea006) THEN 
+      LET g_mmea006 = 0
+   END IF 
+   IF cl_null(g_mmea007) THEN 
+      LET g_mmea007 = 0
+   END IF 
+   IF cl_null(g_mmea008) THEN 
+      LET g_mmea008 = 0
+   END IF 
+   IF cl_null(g_mmea009) THEN 
+      LET g_mmea009 = 0
+   END IF 
+   LET g_mmea006 = s_curr_round(g_rtiasite,g_rtia026,g_mmea006,'1')
+   LET g_mmea007 = s_curr_round(g_rtiasite,g_rtia026,g_mmea007,'1')
+   LET g_mmea008 = s_curr_round(g_rtiasite,g_rtia026,g_mmea008,'1')
+   LET g_mmea009 = s_curr_round(g_rtiasite,g_rtia026,g_mmea009,'1')
+   IF NOT cl_null(g_mmea008) THEN 
+      CALL ammt405_01_mmea008() RETURNING r_success
+   END IF
+   #add by yangxf ---start----
+   IF cl_null(g_mmea013) THEN 
+      SELECT rtdx044 INTO g_mmea013
+        FROM rtdx_t
+       WHERE rtdxent = g_enterprise
+         AND rtdx001 = l_mman053
+         AND rtdxsite = g_rtiasite
+   END IF 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_ins_rtib()
+DEFINE l_rtib RECORD  #銷售交易商品明細檔
+       rtibent LIKE rtib_t.rtibent, #企業編號
+       rtibsite LIKE rtib_t.rtibsite, #營運據點
+       rtibunit LIKE rtib_t.rtibunit, #應用組織
+       rtiborga LIKE rtib_t.rtiborga, #帳務組織
+       rtibdocno LIKE rtib_t.rtibdocno, #單據編號
+       rtibseq LIKE rtib_t.rtibseq, #項次
+       rtib001 LIKE rtib_t.rtib001, #來源單號
+       rtib002 LIKE rtib_t.rtib002, #來源單號項次
+       rtib003 LIKE rtib_t.rtib003, #商品條碼
+       rtib004 LIKE rtib_t.rtib004, #商品編號
+       rtib005 LIKE rtib_t.rtib005, #特徵碼
+       rtib006 LIKE rtib_t.rtib006, #稅別編號
+       rtib007 LIKE rtib_t.rtib007, #銷售開立發票
+       rtib008 LIKE rtib_t.rtib008, #標準售價
+       rtib009 LIKE rtib_t.rtib009, #促銷售價
+       rtib010 LIKE rtib_t.rtib010, #交易售價
+       rtib011 LIKE rtib_t.rtib011, #成本售價
+       rtib012 LIKE rtib_t.rtib012, #銷售數量
+       rtib013 LIKE rtib_t.rtib013, #銷售單位
+       rtib014 LIKE rtib_t.rtib014, #庫存數量
+       rtib015 LIKE rtib_t.rtib015, #庫存單位
+       rtib016 LIKE rtib_t.rtib016, #銷售庫存單位換算率
+       rtib017 LIKE rtib_t.rtib017, #計價數量
+       rtib018 LIKE rtib_t.rtib018, #計價單位
+       rtib019 LIKE rtib_t.rtib019, #銷售計價單位換算率
+       rtib020 LIKE rtib_t.rtib020, #折價金額
+       rtib021 LIKE rtib_t.rtib021, #應收金額
+       rtib022 LIKE rtib_t.rtib022, #未稅金額
+       rtib023 LIKE rtib_t.rtib023, #成本金額
+       rtib024 LIKE rtib_t.rtib024, #理由碼
+       rtib025 LIKE rtib_t.rtib025, #庫區
+       rtib026 LIKE rtib_t.rtib026, #儲位
+       rtib027 LIKE rtib_t.rtib027, #批號
+       rtib028 LIKE rtib_t.rtib028, #專櫃編號
+       rtib029 LIKE rtib_t.rtib029, #分攤積點
+       rtib030 LIKE rtib_t.rtib030, #卡券銷售明細對應項次
+       rtib031 LIKE rtib_t.rtib031, #本幣應收金額
+       rtib032 LIKE rtib_t.rtib032, #庫存管理特徵
+       rtib033 LIKE rtib_t.rtib033, #營業員
+       rtib034 LIKE rtib_t.rtib034, #掃描碼
+       rtib035 LIKE rtib_t.rtib035, #交易類型
+       rtib036 LIKE rtib_t.rtib036, #商品屬性
+       rtib037 LIKE rtib_t.rtib037, #捆綁條碼項次
+       rtib038 LIKE rtib_t.rtib038, #結算扣率
+       rtib039 LIKE rtib_t.rtib039, #贈品否
+       rtib040 LIKE rtib_t.rtib040, #卡種/券種編號
+       rtib041 LIKE rtib_t.rtib041, #卡號/券號
+       rtib101 LIKE rtib_t.rtib101, #退貨退回商品(租賃)
+       rtib102 LIKE rtib_t.rtib102, #產品品類(租賃)
+       rtib103 LIKE rtib_t.rtib103, #品牌(租賃)
+       rtib104 LIKE rtib_t.rtib104, #商戶編號(租賃)
+       rtib105 LIKE rtib_t.rtib105, #合約編號(租賃)
+       rtib106 LIKE rtib_t.rtib106, #單位兌換積分
+       rtib107 LIKE rtib_t.rtib107, #促銷單位兌換積分
+       rtib108 LIKE rtib_t.rtib108, #總兌換積分
+       rtib042 LIKE rtib_t.rtib042, #退貨方式
+       rtib043 LIKE rtib_t.rtib043, #發票編號
+       rtib044 LIKE rtib_t.rtib044, #發票號碼
+       rtib109 LIKE rtib_t.rtib109  #返現金額
+       END RECORD
+DEFINE l_rtic RECORD  #銷售交易折扣明細檔
+       rticent LIKE rtic_t.rticent, #企業編號
+       rticsite LIKE rtic_t.rticsite, #營運據點
+       rticunit LIKE rtic_t.rticunit, #應用組織
+       rticdocno LIKE rtic_t.rticdocno, #單據編號
+       rticseq LIKE rtic_t.rticseq, #項次
+       rticseq1 LIKE rtic_t.rticseq1, #折扣序
+       rtic001 LIKE rtic_t.rtic001, #單據類型
+       rtic002 LIKE rtic_t.rtic002, #折價方式
+       rtic003 LIKE rtic_t.rtic003, #促銷規則
+       rtic004 LIKE rtic_t.rtic004, #活動類別
+       rtic005 LIKE rtic_t.rtic005, #活動子類別
+       rtic006 LIKE rtic_t.rtic006, #促銷方式
+       rtic007 LIKE rtic_t.rtic007, #入機方式
+       rtic008 LIKE rtic_t.rtic008, #參與數量
+       rtic009 LIKE rtic_t.rtic009, #參與金額
+       rtic010 LIKE rtic_t.rtic010, #贈送基數
+       rtic011 LIKE rtic_t.rtic011, #贈送幅度
+       rtic012 LIKE rtic_t.rtic012, #折扣率
+       rtic013 LIKE rtic_t.rtic013, #折讓金額
+       rtic014 LIKE rtic_t.rtic014, #贈卡券種
+       rtic015 LIKE rtic_t.rtic015, #贈卡券號
+       rtic016 LIKE rtic_t.rtic016, #贈送面額
+       rtic017 LIKE rtic_t.rtic017, #贈送面額單位金額
+       rtic018 LIKE rtic_t.rtic018, #接卡券種
+       rtic019 LIKE rtic_t.rtic019, #接卡券號
+       rtic020 LIKE rtic_t.rtic020, #接收基數
+       rtic021 LIKE rtic_t.rtic021, #接收幅度
+       rtic022 LIKE rtic_t.rtic022, #接收面額
+       rtic023 LIKE rtic_t.rtic023, #接收面額單位金額
+       rtic024 LIKE rtic_t.rtic024, #接卡券折扣率
+       rtic025 LIKE rtic_t.rtic025, #來源類型
+       rtic026 LIKE rtic_t.rtic026, #來源單號
+       rtic027 LIKE rtic_t.rtic027, #來源折價方式
+       rtic028 LIKE rtic_t.rtic028, #承擔比例
+       rtic029 LIKE rtic_t.rtic029  #轉費用否
+       END RECORD
+
+#160215-00002#7 160516 by sakura add(E)
+DEFINE l_mman053       LIKE mman_t.mman053
+DEFINE l_mman054       LIKE mman_t.mman054
+DEFINE l_gcaf013       LIKE gcaf_t.gcaf013
+DEFINE l_gcaf041       LIKE gcaf_t.gcaf041   #已開發票禮券稅別#160215-00002#7 160414 by sakura add
+DEFINE l_rate          LIKE inaj_t.inaj014
+DEFINE l_rate1         LIKE inaj_t.inaj014
+DEFINE l_success       LIKE type_t.num5
+DEFINE r_success       LIKE type_t.num5
+DEFINE l_oodb011       LIKE oodb_t.oodb011
+DEFINE l_xrcd103       LIKE xrcd_t.xrcd103,
+       l_xrcd104       LIKE xrcd_t.xrcd104,
+       l_xrcd105       LIKE xrcd_t.xrcd105,
+       l_xrcd113       LIKE xrcd_t.xrcd113,
+       l_xrcd114       LIKE xrcd_t.xrcd114,
+       l_xrcd115       LIKE xrcd_t.xrcd115,
+       l_xrcd123       LIKE xrcd_t.xrcd113,
+       l_xrcd124       LIKE xrcd_t.xrcd114,
+       l_xrcd125       LIKE xrcd_t.xrcd115,
+       l_xrcd133       LIKE xrcd_t.xrcd113,
+       l_xrcd134       LIKE xrcd_t.xrcd114,
+       l_xrcd135       LIKE xrcd_t.xrcd115
+DEFINE l_ooef016       LIKE ooef_t.ooef016
+DEFINE l_mman014       LIKE mman_t.mman014   #补卡工本费
+DEFINE l_mman013       LIKE mman_t.mman013   #换卡工本费
+#150720-00022#3---add--20151207---by huangrh----begin----
+DEFINE l_preh003       LIKE preh_t.preh003
+DEFINE l_preh005       LIKE preh_t.preh005
+DEFINE l_sql           STRING
+DEFINE l_flag          LIKE type_t.chr1
+DEFINE l_mmea003       LIKE mmea_t.mmea003
+DEFINE l_mmaq003       LIKE mmaq_t.mmaq003
+DEFINE l_mmag004       LIKE mmag_t.mmag004
+DEFINE l_oocq009       LIKE oocq_t.oocq009
+DEFINE r_exists        LIKE type_t.num5
+DEFINE r_prei009       LIKE prei_t.prei009
+DEFINE r_prei010       LIKE prei_t.prei010
+DEFINE r_preg001       LIKE preg_t.preg001
+
+    LET r_success = TRUE
+   SELECT ooef016 INTO l_ooef016
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_rtiasite
+      #删除存在商品资料
+      DELETE FROM rtib_t 
+       WHERE rtibent = g_enterprise 
+         AND rtibdocno = g_rtiadocno
+         AND rtib030 = g_mmeaseq
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "rtib_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_rtib.rtibent = g_enterprise
+      LET l_rtib.rtibsite = g_rtiasite
+      LET l_rtib.rtibunit = g_rtiasite
+      LET l_rtib.rtiborga = g_rtiasite
+      LET l_rtib.rtibdocno = g_rtiadocno
+      LET l_rtib.rtib025 = g_mmea013
+      LET l_rtib.rtib030 = g_mmeaseq
+      LET l_rtib.rtib035 = '1'
+      SELECT MAX(rtibseq) + 1 
+        INTO l_rtib.rtibseq
+        FROM rtib_t
+       WHERE rtibent = g_enterprise
+         AND rtibdocno = g_rtiadocno
+      IF cl_null(l_rtib.rtibseq) THEN 
+         LET l_rtib.rtibseq = 1
+      END IF 
+      #获取卡种对应商品编号
+      SELECT mman053,mman054 INTO l_mman053,l_mman054
+        FROM mman_t
+       WHERE mmanent = g_enterprise 
+         AND mman001 = g_mmea003
+      
+      #发卡商品明细
+      LET l_rtib.rtib004 = l_mman053 
+      
+      SELECT oodb011 INTO l_oodb011
+        FROM oodb_t,ooef_t
+       WHERE oodbent = ooefent
+         AND oodb001 = ooef019
+         AND oodb002 = g_rtia028
+         AND ooef001 = g_rtiasite
+      IF l_oodb011 = '2' THEN 
+         #带出税别
+         SELECT rtdx014 INTO l_rtib.rtib006
+           FROM rtdx_t
+          WHERE rtdxent = g_enterprise 
+            AND rtdxsite = g_rtiasite
+            AND rtdx001 = l_rtib.rtib004
+         IF cl_null(l_rtib.rtib006) THEN 
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'amm-00410'
+            LET g_errparam.extend = l_rtib.rtib004
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+      ELSE
+         LET l_rtib.rtib006 = g_rtia028
+      END IF 
+
+      #商品条码
+      SELECT rtdx002 INTO l_rtib.rtib003
+        FROM rtdx_t
+       WHERE rtdxent = g_enterprise
+         AND rtdxsite = g_rtiasite
+         AND rtdx001 = l_rtib.rtib004       
+      #售卡
+      LET l_rtib.rtib008 = g_mmea006
+      #促销
+      LET l_rtib.rtib009  = g_mmea006
+      LET l_rtib.rtib010  = g_mmea006
+      LET l_rtib.rtib012  = g_mmea005
+      #带出销售单位
+      SELECT imaa105 INTO l_rtib.rtib013
+        FROM imaa_t
+       WHERE imaaent = g_enterprise
+         AND imaa001 = l_rtib.rtib004
+       #库存单位,計價單位
+       SELECT imaa104,imaa106
+         INTO l_rtib.rtib015,l_rtib.rtib018
+         FROM imaa_t
+        WHERE imaaent = g_enterprise
+          AND imaa001 = l_rtib.rtib004
+             
+       #计算销售单位与库存单位转换率
+      #141224-00013#15---sakura---mod---str 
+       CALL s_aimi190_get_convert(l_rtib.rtib004,l_rtib.rtib013,l_rtib.rtib015) RETURNING l_success,l_rate
+       CALL s_aooi250_convert_qty(l_rtib.rtib004,l_rtib.rtib013,l_rtib.rtib015,l_rtib.rtib012) RETURNING l_success,l_rtib.rtib014
+      
+       #计算销售单位与计价单位转换率
+       CALL s_aimi190_get_convert(l_rtib.rtib004,l_rtib.rtib013,l_rtib.rtib018) RETURNING l_success,l_rate1
+       CALL s_aooi250_convert_qty(l_rtib.rtib004,l_rtib.rtib013,l_rtib.rtib018,l_rtib.rtib012) RETURNING l_success,l_rtib.rtib017
+       
+       #库存数量
+      #LET l_rtib.rtib014 = l_rtib.rtib012 * l_rate
+       #銷售庫存單位換算率
+       LET l_rtib.rtib016 = l_rate
+       #計價數量     
+      #LET l_rtib.rtib017 = l_rtib.rtib012 * l_rate1
+      #141224-00013#15---sakura---mod---end 
+       #銷售計價單位換算率
+       LET l_rtib.rtib019 = l_rate1
+       LET l_rtib.rtib020 = 0
+       LET l_rtib.rtib021 = l_rtib.rtib012*l_rtib.rtib010
+       #计算本币应收金额
+       LET l_rtib.rtib031 = l_rtib.rtib021 * g_rtia027
+       IF cl_null(l_rtib.rtib031) THEN 
+          LET l_rtib.rtib031 = 0
+       END IF 
+       LET l_rtib.rtib031 = s_curr_round(g_rtiasite,l_ooef016,l_rtib.rtib031,'2')          
+                     #單號              項次                    項次2   營運據點           應收金額
+       CALL s_tax_ins(g_rtiadocno,l_rtib.rtibseq        ,'0',   g_rtiasite,l_rtib.rtib021,
+                         #稅別          數量           幣別             匯率             帳套  匯率2 匯率3
+                         l_rtib.rtib006,l_rtib.rtib012,g_rtia026,g_rtia027,' ',  ' ',  ' ')
+                    #原幣未稅金額 原幣稅額   原幣含稅金額 本幣未稅金額(AR/AP使用) 本幣稅額(AR/AP使用) 本幣含稅金額(AR/AP使用)
+          RETURNING l_xrcd103,    l_xrcd104, l_xrcd105,   l_xrcd113,              l_xrcd114,          l_xrcd115,
+                    l_xrcd123,l_xrcd124,l_xrcd125,l_xrcd133,l_xrcd134,l_xrcd135
+       LET l_rtib.rtib022 = l_xrcd103
+       IF cl_null(l_rtib.rtib039) THEN LET l_rtib.rtib039='N' END IF 
+       
+       #INSERT INTO rtib_t VALUES(l_rtib.*)   #160215-00002#7 160516 by sakura mark
+       #160215-00002#7 160516 by sakura add(S)
+       INSERT INTO rtib_t (rtibent,rtibsite,rtibunit,rtiborga,rtibdocno,
+                           rtibseq,rtib001 ,rtib002 ,rtib003 ,rtib004,
+                           rtib005,rtib006 ,rtib007 ,rtib008 ,rtib009,
+                           rtib010,rtib011 ,rtib012 ,rtib013 ,rtib014,
+                           rtib015,rtib016 ,rtib017 ,rtib018 ,rtib019,
+                           rtib020,rtib021 ,rtib022 ,rtib023 ,rtib024,
+                           rtib025,rtib026 ,rtib027 ,rtib028 ,rtib029,
+                           rtib030,rtib031 ,rtib032 ,rtib033 ,rtib034,
+                           rtib035,rtib036 ,rtib037 ,rtib038 ,rtib039,
+                           rtib040,rtib041 ,rtib101)
+       VALUES (l_rtib.rtibent,l_rtib.rtibsite,l_rtib.rtibunit,l_rtib.rtiborga,l_rtib.rtibdocno,
+               l_rtib.rtibseq,l_rtib.rtib001 ,l_rtib.rtib002 ,l_rtib.rtib003 ,l_rtib.rtib004,
+               l_rtib.rtib005,l_rtib.rtib006 ,l_rtib.rtib007 ,l_rtib.rtib008 ,l_rtib.rtib009,
+               l_rtib.rtib010,l_rtib.rtib011 ,l_rtib.rtib012 ,l_rtib.rtib013 ,l_rtib.rtib014,
+               l_rtib.rtib015,l_rtib.rtib016 ,l_rtib.rtib017 ,l_rtib.rtib018 ,l_rtib.rtib019,
+               l_rtib.rtib020,l_rtib.rtib021 ,l_rtib.rtib022 ,l_rtib.rtib023 ,l_rtib.rtib024,
+               l_rtib.rtib025,l_rtib.rtib026 ,l_rtib.rtib027 ,l_rtib.rtib028 ,l_rtib.rtib029,
+               l_rtib.rtib030,l_rtib.rtib031 ,l_rtib.rtib032 ,l_rtib.rtib033 ,l_rtib.rtib034,
+               l_rtib.rtib035,l_rtib.rtib036 ,l_rtib.rtib037 ,l_rtib.rtib038 ,l_rtib.rtib039,
+               l_rtib.rtib040,l_rtib.rtib041 ,l_rtib.rtib101)
+       #160215-00002#7 160516 by sakura add(E)       
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "rtib_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       IF g_mmea008 >= 0 THEN     #add by yangxf 2016/01/22
+          SELECT MAX(rtibseq) + 1 
+            INTO l_rtib.rtibseq
+            FROM rtib_t
+           WHERE rtibent = g_enterprise
+             AND rtibdocno = g_rtiadocno
+          IF cl_null(l_rtib.rtibseq) THEN 
+             LET l_rtib.rtibseq = 1
+          END IF 
+          #发卡商品明细
+          LET l_rtib.rtib004 = l_mman054 
+          
+         SELECT oodb011 INTO l_oodb011
+           FROM oodb_t,ooef_t
+          WHERE oodbent = ooefent
+            AND oodb001 = ooef019
+            AND oodb002 = g_rtia028
+            AND ooef001 = g_rtiasite
+         IF l_oodb011 = '2' THEN 
+            #带出税别
+            SELECT rtdx014 INTO l_rtib.rtib006
+              FROM rtdx_t
+             WHERE rtdxent = g_enterprise 
+               AND rtdxsite = g_rtiasite
+               AND rtdx001 = l_rtib.rtib004
+            IF cl_null(l_rtib.rtib006) THEN 
+               INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'amm-00410'
+            LET g_errparam.extend = l_rtib.rtib004
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+               LET r_success = FALSE
+               RETURN r_success
+            END IF
+         ELSE
+            LET l_rtib.rtib006 = g_rtia028
+         END IF 
+          SELECT imaa105 INTO l_rtib.rtib013
+            FROM imaa_t
+           WHERE imaaent = g_enterprise
+             AND imaa001 = l_rtib.rtib004
+          #储值
+          LET l_rtib.rtib008 = g_mmea008 + g_mmea010
+          LET l_rtib.rtib009  = g_mmea008 * (g_mmea009/100) 
+          LET l_rtib.rtib010  = g_mmea008 * (g_mmea009/100)         
+          LET l_rtib.rtib012  = g_mmea005
+          #库存单位,計價單位
+          SELECT imaa104,imaa106
+            INTO l_rtib.rtib015,l_rtib.rtib018
+            FROM imaa_t
+           WHERE imaaent = g_enterprise
+             AND imaa001 = l_rtib.rtib004
+         
+          #计算销售单位与库存单位转换率
+         #141224-00013#15---sakura---mod---str 
+          CALL s_aimi190_get_convert(l_rtib.rtib004,l_rtib.rtib013,l_rtib.rtib015) RETURNING l_success,l_rate
+          CALL s_aooi250_convert_qty(l_rtib.rtib004,l_rtib.rtib013,l_rtib.rtib015,l_rtib.rtib012) RETURNING l_success,l_rtib.rtib014
+         
+          #计算销售单位与计价单位转换率
+          CALL s_aimi190_get_convert(l_rtib.rtib004,l_rtib.rtib013,l_rtib.rtib018) RETURNING l_success,l_rate1
+          CALL s_aooi250_convert_qty(l_rtib.rtib004,l_rtib.rtib013,l_rtib.rtib018,l_rtib.rtib012) RETURNING l_success,l_rtib.rtib017
+         
+          #库存数量
+         #LET l_rtib.rtib014 = l_rtib.rtib012 * l_rate
+          #銷售庫存單位換算率
+          LET l_rtib.rtib016 = l_rate
+          #計價數量     
+         #LET l_rtib.rtib017 = l_rtib.rtib012 * l_rate1
+         #141224-00013#15---sakura---mod---end
+          #銷售計價單位換算率
+          LET l_rtib.rtib019 = l_rate1
+         
+         LET l_rtib.rtib020 = g_mmea005*(g_mmea008 * (1-g_mmea009/100) + g_mmea010)
+         LET l_rtib.rtib021 = l_rtib.rtib012*l_rtib.rtib010
+         
+         #计算本币应收金额
+         LET l_rtib.rtib031 = l_rtib.rtib021 * g_rtia027    
+         IF cl_null(l_rtib.rtib031) THEN 
+           LET l_rtib.rtib031 = 0
+         END IF 
+         LET l_rtib.rtib031 = s_curr_round(g_rtiasite,l_ooef016,l_rtib.rtib031,'2')            
+                        #單號              項次                    項次2   營運據點           應收金額
+         CALL s_tax_ins(g_rtiadocno,l_rtib.rtibseq        ,'0',   g_rtiasite,l_rtib.rtib021,
+                            #稅別          數量           幣別             匯率             帳套  匯率2 匯率3
+                            l_rtib.rtib006,l_rtib.rtib012,g_rtia026,g_rtia027,' ',  ' ',  ' ')
+                       #原幣未稅金額 原幣稅額   原幣含稅金額 本幣未稅金額(AR/AP使用) 本幣稅額(AR/AP使用) 本幣含稅金額(AR/AP使用)
+             RETURNING l_xrcd103,    l_xrcd104, l_xrcd105,   l_xrcd113,              l_xrcd114,          l_xrcd115,
+                       l_xrcd123,l_xrcd124,l_xrcd125,l_xrcd133,l_xrcd134,l_xrcd135
+         LET l_rtib.rtib022 = l_xrcd103
+         IF cl_null(l_rtib.rtib039) THEN LET l_rtib.rtib039='N' END IF 
+         
+         #INSERT INTO rtib_t VALUES(l_rtib.*)   #160215-00002#7 160516 by sakura mark
+         #160215-00002#7 160516 by sakura add(S)
+         INSERT INTO rtib_t (rtibent,rtibsite,rtibunit,rtiborga,rtibdocno,
+                             rtibseq,rtib001 ,rtib002 ,rtib003 ,rtib004,
+                             rtib005,rtib006 ,rtib007 ,rtib008 ,rtib009,
+                             rtib010,rtib011 ,rtib012 ,rtib013 ,rtib014,
+                             rtib015,rtib016 ,rtib017 ,rtib018 ,rtib019,
+                             rtib020,rtib021 ,rtib022 ,rtib023 ,rtib024,
+                             rtib025,rtib026 ,rtib027 ,rtib028 ,rtib029,
+                             rtib030,rtib031 ,rtib032 ,rtib033 ,rtib034,
+                             rtib035,rtib036 ,rtib037 ,rtib038 ,rtib039,
+                             rtib040,rtib041 ,rtib101)
+         VALUES (l_rtib.rtibent,l_rtib.rtibsite,l_rtib.rtibunit,l_rtib.rtiborga,l_rtib.rtibdocno,
+                 l_rtib.rtibseq,l_rtib.rtib001 ,l_rtib.rtib002 ,l_rtib.rtib003 ,l_rtib.rtib004,
+                 l_rtib.rtib005,l_rtib.rtib006 ,l_rtib.rtib007 ,l_rtib.rtib008 ,l_rtib.rtib009,
+                 l_rtib.rtib010,l_rtib.rtib011 ,l_rtib.rtib012 ,l_rtib.rtib013 ,l_rtib.rtib014,
+                 l_rtib.rtib015,l_rtib.rtib016 ,l_rtib.rtib017 ,l_rtib.rtib018 ,l_rtib.rtib019,
+                 l_rtib.rtib020,l_rtib.rtib021 ,l_rtib.rtib022 ,l_rtib.rtib023 ,l_rtib.rtib024,
+                 l_rtib.rtib025,l_rtib.rtib026 ,l_rtib.rtib027 ,l_rtib.rtib028 ,l_rtib.rtib029,
+                 l_rtib.rtib030,l_rtib.rtib031 ,l_rtib.rtib032 ,l_rtib.rtib033 ,l_rtib.rtib034,
+                 l_rtib.rtib035,l_rtib.rtib036 ,l_rtib.rtib037 ,l_rtib.rtib038 ,l_rtib.rtib039,
+                 l_rtib.rtib040,l_rtib.rtib041 ,l_rtib.rtib101)
+         #160215-00002#7 160516 by sakura add(E)          
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "rtib_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+       END IF  
+    #更新单头应收金额
+    UPDATE rtia_t SET rtia031 = (SELECT SUM(rtib021)
+                                   FROM rtib_t
+                                  WHERE rtibent = g_enterprise
+                                    AND rtibdocno = g_rtiadocno),
+                      rtia049 = (SELECT SUM(rtib031)
+                                   FROM rtib_t
+                                  WHERE rtibent = g_enterprise
+                                    AND rtibdocno = g_rtiadocno)              
+     WHERE rtiaent = g_enterprise
+       AND rtiadocno = g_rtiadocno
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = SQLCA.sqlcode
+       LET g_errparam.extend = "rtia_t"
+       LET g_errparam.popup = FALSE
+       CALL cl_err()
+
+       LET r_success = FALSE
+       RETURN r_success
+    END IF
+    DELETE FROM rtic_t 
+     WHERE rticent = g_enterprise 
+       AND rticdocno = g_rtiadocno
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = SQLCA.sqlcode
+       LET g_errparam.extend = "rtic_t"
+       LET g_errparam.popup = FALSE
+       CALL cl_err()
+
+       LET r_success = FALSE
+       RETURN r_success
+    END IF
+    INITIALIZE l_rtib.* TO NULL
+    #写入折价明细
+   #DECLARE rtic_cs CURSOR FOR SELECT * FROM rtib_t  #161111-00028#4--MARK
+   #161111-00028#4--ADD---BEGIN-----------
+    DECLARE rtic_cs CURSOR FOR SELECT rtibent,rtibsite,rtibunit,rtiborga,rtibdocno,rtibseq,rtib001,rtib002,
+                                      rtib003,rtib004,rtib005,rtib006,rtib007,rtib008,rtib009,rtib010,rtib011,
+                                      rtib012,rtib013,rtib014,rtib015,rtib016,rtib017,rtib018,rtib019,rtib020,
+                                      rtib021,rtib022,rtib023,rtib024,rtib025,rtib026,rtib027,rtib028,rtib029,
+                                      rtib030,rtib031,rtib032,rtib033,rtib034,rtib035,rtib036,rtib037,rtib038,
+                                      rtib039,rtib040,rtib041,rtib101,rtib102,rtib103,rtib104,rtib105,rtib106,
+                                      rtib107,rtib108,rtib042,rtib043,rtib044,rtib109 FROM rtib_t 
+   #161111-00028#4--ADD---END-------------
+                                WHERE rtibent = g_enterprise
+                                  AND rtibdocno = g_rtiadocno
+                                  AND rtib020 <> 0 
+    FOREACH rtic_cs INTO l_rtib.*
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = "FOREACH:"
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+
+          LET r_success = FALSE
+          EXIT FOREACH
+       END IF
+       INITIALIZE l_rtic.* TO NULL
+       LET l_rtic.rtic002 = '13'
+       LET l_rtic.rticent = g_enterprise
+       LET l_rtic.rticsite = g_rtiasite
+       LET l_rtic.rticunit = g_rtiasite
+       LET l_rtic.rticdocno = g_rtiadocno
+       LET l_rtic.rticseq = l_rtib.rtibseq
+       SELECT MAX(rticseq1) + 1 INTO l_rtic.rticseq1
+         FROM rtic_t
+        WHERE rticent = g_enterprise
+          AND rticdocno =  g_rtiadocno
+          AND rticseq = l_rtic.rticseq
+       IF cl_null(l_rtic.rticseq1) THEN 
+          LET l_rtic.rticseq1 = 1
+       END IF
+       LET l_rtic.rtic001 = g_prog
+       LET l_rtic.rtic008 = l_rtib.rtib012
+       LET l_rtic.rtic009 = l_rtib.rtib008 * l_rtib.rtib012
+       LET l_rtic.rtic010 = l_rtic.rtic009
+       LET l_rtic.rtic011 = l_rtib.rtib020
+       LET l_rtic.rtic013 = l_rtib.rtib020
+
+       LET l_rtic.rtic012 = (1-l_rtic.rtic013/l_rtic.rtic009)*100
+       IF cl_null(l_rtic.rtic012) THEN 
+           LET l_rtic.rtic012 = 0
+       END IF 
+       LET l_rtic.rtic012 = s_curr_round(g_rtiasite,g_rtia026,l_rtic.rtic012,'2')    #依幣別取位
+       INSERT INTO rtic_t (rticent ,rticsite,rticunit,rticdocno,rticseq,
+                           rticseq1,rtic001 ,rtic002 ,rtic003  ,rtic004,
+                           rtic005 ,rtic006 ,rtic007 ,rtic008  ,rtic009,
+                           rtic010 ,rtic011 ,rtic012 ,rtic013  ,rtic014,
+                           rtic015 ,rtic016 ,rtic017 ,rtic018  ,rtic019,
+                           rtic020 ,rtic021 ,rtic022 ,rtic023  ,rtic024,
+                           rtic025 ,rtic026 ,rtic027 ,rtic028  ,rtic029)
+       VALUES(l_rtic.rticent ,l_rtic.rticsite,l_rtic.rticunit,l_rtic.rticdocno,l_rtic.rticseq,
+              l_rtic.rticseq1,l_rtic.rtic001 ,l_rtic.rtic002 ,l_rtic.rtic003  ,l_rtic.rtic004,
+              l_rtic.rtic005 ,l_rtic.rtic006 ,l_rtic.rtic007 ,l_rtic.rtic008  ,l_rtic.rtic009,
+              l_rtic.rtic010 ,l_rtic.rtic011 ,l_rtic.rtic012 ,l_rtic.rtic013  ,l_rtic.rtic014,
+              l_rtic.rtic015 ,l_rtic.rtic016 ,l_rtic.rtic017 ,l_rtic.rtic018  ,l_rtic.rtic019,
+              l_rtic.rtic020 ,l_rtic.rtic021 ,l_rtic.rtic022 ,l_rtic.rtic023  ,l_rtic.rtic024,
+              l_rtic.rtic025 ,l_rtic.rtic026 ,l_rtic.rtic027 ,l_rtic.rtic028  ,l_rtic.rtic029)     
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = "rtic_t"
+          LET g_errparam.popup = FALSE
+          CALL cl_err()
+
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+    END FOREACH  
+
+
+        LET l_preh003=cl_get_today()
+
+        LET l_preh005=cl_get_time()
+  #     LET l_sql=" SELECT rtib_t.*,mmea003 ",  #161111-00028#4--mark
+  #161111-00028#4---add---begin---------
+        LET l_sql=" SELECT rtibent,rtibsite,rtibunit,rtiborga,rtibdocno,rtibseq,rtib001,rtib002,rtib003,",
+                   "rtib004,rtib005,rtib006,rtib007,rtib008,rtib009,rtib010,rtib011,rtib012,rtib013,rtib014,",
+                   "rtib015,rtib016,rtib017,rtib018,rtib019,rtib020,rtib021,rtib022,rtib023,rtib024,rtib025,",
+                   "rtib026,rtib027,rtib028,rtib029,rtib030,rtib031,rtib032,rtib033,rtib034,rtib035,rtib036,",
+                   "rtib037,rtib038,rtib039,rtib040,rtib041,rtib101,rtib102,rtib103,rtib104,rtib105,rtib106,",
+                   "rtib107,rtib108,rtib042,rtib043,rtib044,rtib109,mmea003 ", 
+  #161111-00028#4---add---end-----------
+                    "   FROM rtib_t,rtia_t,mmea_t,mman_t", 
+                    "  WHERE rtibent = '",g_enterprise,"'",
+                    "    AND rtibdocno = '",g_rtiadocno,"'",
+                    "    AND rtibent=rtiaent",
+                    "    AND rtibdocno=rtiadocno",
+                    "    AND mmeaent=rtiaent",
+                    "    AND mmeadocno=rtiadocno",
+                    "    AND rtib030=mmeaseq",
+                    "    AND mmanent=rtibent",
+                    "    AND mman001=mmea003",
+                    "    AND mman054=rtib004",
+                    "    AND mmanstus='Y'",
+                    "    AND EXISTS(SELECT 1 FROM preg_t,prei_t,preh_t",
+                    "                       WHERE pregent=preient",
+                    "                         AND preg001=prei001",
+                    "                         AND pregent=prehent",
+                    "                         AND preg001=preh001",
+                    "                         AND pregsite=rtiasite",  #門店編號
+                    "                         AND pregstus='F'",       #已發佈
+                    "                         AND prei081='1'",        #已發佈
+                    "                         AND preg004='1'",        #買換
+                    "                         AND preg005='1'",        #卡種
+                    "                         AND preg006=mmea003",    #券種編號
+                    "                         AND prehacti='Y'",
+                    "                         AND ((preh003<'",l_preh003,"' AND preh004>'",l_preh003,"') OR (preh003='",l_preh003,"' AND preh005<='",l_preh005,"') OR (preh004='",l_preh003,"' AND preh006>='",l_preh005,"'))",
+                    "               )"    
+                                                                                                                       
+       PREPARE ammt405_selrtib_pre FROM l_sql    
+       DECLARE ammt405_selrtib_cur CURSOR FOR ammt405_selrtib_pre     
+       
+       INITIALIZE l_rtib.* TO NULL
+       
+       FOREACH ammt405_selrtib_cur INTO l_rtib.*,l_mmea003
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = SQLCA.sqlcode
+             LET g_errparam.extend = "FOREACH:"
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+       
+             LET r_success = FALSE
+             EXIT FOREACH
+          END IF
+          LET l_flag='1' #卡種     
+             DELETE FROM rtic_t 
+                   WHERE rticent=g_enterprise 
+                     AND rticsite=g_rtiasite 
+                     AND rticdocno=g_rtiadocno 
+                     AND rticseq=l_rtib.rtibseq             
+                  
+          INITIALIZE l_rtic.* TO NULL
+          
+          LET l_rtic.rtic001='aprm310'  #促銷談判條件
+          LET l_rtic.rtic002 = '7'      #滿額滿量促銷
+          LET l_rtic.rticent = g_enterprise
+          LET l_rtic.rticsite = g_rtiasite
+          LET l_rtic.rticunit = g_rtiasite
+          LET l_rtic.rticdocno = g_rtiadocno
+          LET l_rtic.rticseq = l_rtib.rtibseq
+          SELECT MAX(rticseq1) + 1 INTO l_rtic.rticseq1
+            FROM rtic_t
+           WHERE rticent = g_enterprise
+             AND rticdocno =  g_rtiadocno
+             AND rticseq = l_rtic.rticseq
+          IF cl_null(l_rtic.rticseq1) THEN 
+             LET l_rtic.rticseq1 = 1
+          END IF
+                    
+          SELECT DISTINCT preg001 INTO l_rtic.rtic003  #規則編號
+            FROM preg_t,prei_t,preh_t
+           WHERE pregent=preient
+             AND preg001=prei001
+             AND pregent=prehent
+             AND preg001=preh001
+             AND pregsite=g_rtiasite  #門店編號
+             AND pregstus='F'       #已發佈
+             AND prei081='1'        #已發佈
+             AND preg004='1'        #買換
+             AND preg005=l_flag     #卡種/券種
+             AND preg006=l_mmea003  #卡種/券種編號
+             AND prehacti='Y'
+             AND ((preh003<l_preh003 AND preh004>l_preh003) OR (preh003=l_preh003 AND preh005<=l_preh005) OR (preh004=l_preh003 AND preh006>=l_preh005))          
+          
+          LET l_rtic.rtic006 = '2'    #折扣
+          LET l_rtic.rtic007 = '2'    #實收         
+          LET l_rtic.rtic008 = l_rtib.rtib012
+          LET l_rtic.rtic009 = l_rtib.rtib008 * l_rtib.rtib012
+          
+          IF cl_null(g_rtia001) THEN #散客
+             SELECT DISTINCT prei009,prei010 INTO l_rtic.rtic010,l_rtic.rtic011
+               FROM prei_t
+              WHERE preient=g_enterprise
+                AND prei001=l_rtic.rtic003
+                AND prei081='1'
+          ELSE #會員
+             #會員編號
+             SELECT DISTINCT mmaq003 INTO l_mmaq003
+               FROM mmaq_t
+              WHERE mmaqent=g_enterprise
+                AND mmaq001=g_rtia001
+             #會員等級編號   
+             SELECT DISTINCT mmag004 INTO l_mmag004
+               FROM mmag_t
+              WHERE mmagent=g_enterprise
+                AND mmag001=l_mmaq003
+                AND mmag002='2049'
+                AND mmag003='09'
+                
+             #會員等級    
+             LET l_oocq009=''
+             SELECT DISTINCT oocq009 INTO l_oocq009  #會員等級
+                 FROM oocq_t
+                WHERE oocqent = g_enterprise
+                  AND oocq001 = '2024'
+                  AND oocq002=l_mmag004
+                  AND oocqstus='Y'
+                  AND (oocq009='1' OR oocq009='2' OR oocq009='3' OR oocq009='4' OR oocq009='5')  #会员等级一\会员等级二\会员等级三\会员等级四\会员等级五  
+             
+             IF l_oocq009='1' THEN  #會員等級一
+                #只可能有一筆資料，換贈促銷，同一門店，同一卡種/券種，在一定日期時間範圍內，不可能有多筆促銷規則，也不能可能有對同一對象（散客/會與昂等級1-5）有不同促銷率
+                SELECT DISTINCT prei011,prei012 INTO l_rtic.rtic010,l_rtic.rtic011
+                  FROM prei_t
+                 WHERE preient=g_enterprise
+                   AND prei001=l_rtic.rtic003
+                   AND prei081='1'             
+             END IF
+             
+             IF l_oocq009='2' THEN  #會員等級二
+                #只可能有一筆資料，換贈促銷，同一門店，同一卡種/券種，在一定日期時間範圍內，不可能有多筆促銷規則，也不能可能有對同一對象（散客/會與昂等級1-5）有不同促銷率
+                SELECT DISTINCT prei013,prei014 INTO l_rtic.rtic010,l_rtic.rtic011
+                  FROM prei_t
+                 WHERE preient=g_enterprise
+                   AND prei001=l_rtic.rtic003
+                   AND prei081='1'               
+             END IF 
+             
+             IF l_oocq009='3' THEN  #會員等級三
+                #只可能有一筆資料，換贈促銷，同一門店，同一卡種/券種，在一定日期時間範圍內，不可能有多筆促銷規則，也不能可能有對同一對象（散客/會與昂等級1-5）有不同促銷率
+                SELECT DISTINCT prei015,prei016 INTO l_rtic.rtic010,l_rtic.rtic011
+                  FROM prei_t
+                 WHERE preient=g_enterprise
+                   AND prei001=l_rtic.rtic003
+                   AND prei081='1' 
+             END IF 
+             
+             IF l_oocq009='4' THEN  #會員等級四
+                #只可能有一筆資料，換贈促銷，同一門店，同一卡種/券種，在一定日期時間範圍內，不可能有多筆促銷規則，也不能可能有對同一對象（散客/會與昂等級1-5）有不同促銷率
+                SELECT DISTINCT prei017,prei018 INTO l_rtic.rtic010,l_rtic.rtic011
+                  FROM prei_t
+                 WHERE preient=g_enterprise
+                   AND prei001=l_rtic.rtic003
+                   AND prei081='1'                
+             END IF    
+             
+             IF l_oocq009='5' THEN  #會員等級四
+                #只可能有一筆資料，換贈促銷，同一門店，同一卡種/券種，在一定日期時間範圍內，不可能有多筆促銷規則，也不能可能有對同一對象（散客/會與昂等級1-5）有不同促銷率
+                SELECT DISTINCT prei019,prei020 INTO l_rtic.rtic010,l_rtic.rtic011
+                  FROM prei_t
+                 WHERE preient=g_enterprise
+                   AND prei001=l_rtic.rtic003
+                   AND prei081='1'              
+             END IF 
+          
+          END IF
+
+          LET l_rtic.rtic012 = l_rtic.rtic010/l_rtic.rtic011*100
+          LET l_rtic.rtic013 = (l_rtic.rtic011-l_rtic.rtic010)/l_rtic.rtic011*l_rtib.rtib008 * l_rtib.rtib012
+          IF cl_null(l_rtic.rtic012) THEN 
+              LET l_rtic.rtic012 = 0
+          END IF 
+          LET l_rtic.rtic012 = s_curr_round(g_rtiasite,g_rtia026,l_rtic.rtic012,'2')    #依幣別取位
+          INSERT INTO rtic_t (rticent ,rticsite,rticunit,rticdocno,rticseq,
+                              rticseq1,rtic001 ,rtic002 ,rtic003  ,rtic004,
+                              rtic005 ,rtic006 ,rtic007 ,rtic008  ,rtic009,
+                              rtic010 ,rtic011 ,rtic012 ,rtic013  ,rtic014,
+                              rtic015 ,rtic016 ,rtic017 ,rtic018  ,rtic019,
+                              rtic020 ,rtic021 ,rtic022 ,rtic023  ,rtic024,
+                              rtic025 ,rtic026 ,rtic027 ,rtic028  ,rtic029)
+          VALUES(l_rtic.rticent ,l_rtic.rticsite,l_rtic.rticunit,l_rtic.rticdocno,l_rtic.rticseq,
+                 l_rtic.rticseq1,l_rtic.rtic001 ,l_rtic.rtic002 ,l_rtic.rtic003  ,l_rtic.rtic004,
+                 l_rtic.rtic005 ,l_rtic.rtic006 ,l_rtic.rtic007 ,l_rtic.rtic008  ,l_rtic.rtic009,
+                 l_rtic.rtic010 ,l_rtic.rtic011 ,l_rtic.rtic012 ,l_rtic.rtic013  ,l_rtic.rtic014,
+                 l_rtic.rtic015 ,l_rtic.rtic016 ,l_rtic.rtic017 ,l_rtic.rtic018  ,l_rtic.rtic019,
+                 l_rtic.rtic020 ,l_rtic.rtic021 ,l_rtic.rtic022 ,l_rtic.rtic023  ,l_rtic.rtic024,
+                 l_rtic.rtic025 ,l_rtic.rtic026 ,l_rtic.rtic027 ,l_rtic.rtic028  ,l_rtic.rtic029)
+          #160215-00002#7 160516 by sakura add(E) 
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = SQLCA.sqlcode
+             LET g_errparam.extend = "rtic_t"
+             LET g_errparam.popup = FALSE
+             CALL cl_err()
+       
+             LET r_success = FALSE
+             RETURN r_success
+          END IF
+       END FOREACH      
+    DELETE FROM xrcd_t
+     WHERE xrcdseq2 = 0
+       AND xrcddocno = g_rtiadocno
+       AND xrcdent = g_enterprise
+       AND NOT EXISTS(SELECT 1 FROM rtib_t
+                       WHERE rtibent = g_enterprise 
+                         AND rtibdocno = xrcddocno
+                         AND xrcdseq = rtibseq
+                         AND xrcdseq2 = 0)
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = SQLCA.sqlcode
+       LET g_errparam.extend = "DELETE xrcd_t"
+       LET g_errparam.popup = FALSE
+       CALL cl_err()
+       LET r_success = FALSE
+       RETURN r_success
+    END IF
+    RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_ins_tmp()
+DEFINE l_mmea001  like mmea_t.mmea001
+DEFINE l_seq      int
+DEFINE l_sql      string 
+DEFINE i          INT 
+DEFINE l_m         INT 
+DEFINE l_mman005  LIKE mman_t.mman005
+DEFINE l_mman006  LIKE mman_t.mman006
+DEFINE l_mman007  LIKE mman_t.mman007
+DEFINE l_mman008  LIKE mman_t.mman008
+DELETE FROM ammt405_01_tmp1
+select mman005,mman006,mman007,mman008 into l_mman005,l_mman006,l_mman007,l_mman008
+from mman_t 
+where mman001=g_mmea003
+  and mmanent=g_enterprise
+LET l_mmea001=g_mmea001
+LET l_sql="SELECT rownum,lpad(lpad(substr('",g_mmea001,"', ",l_mman006,"+1, ",l_mman005,") + LEVEL - 1,",l_mman008,",0),",l_mman005,",'",l_mman007,"') FROM dual", 
+          " CONNECT BY LEVEL <= ",g_mmea005," "
+LET l_sql="INSERT INTO ammt405_01_tmp1 ",l_sql
+    PREPARE ammt405_ins_tmp FROM l_sql  
+    EXECUTE ammt405_ins_tmp
+IF SQLCA.sqlcode THEN
+   INITIALIZE g_errparam TO NULL 
+   LET g_errparam.extend = "ammt405_01_tmp1:",SQLERRMESSAGE 
+   LET g_errparam.code   = SQLCA.sqlcode 
+   LET g_errparam.popup  = TRUE 
+   CALL cl_err()
+END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_query()
+
+DEFINE l_cnt        LIKE type_t.num5
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_where      STRING
+DEFINE l_sql        STRING
+DEFINE l_sys        LIKE type_t.num5   
+DEFINE l_n          LIKE type_t.num5
+DEFINE li_idx       LIKE type_t.num10
+DEFINE l_mmaa034       LIKE mmaa_t.mmaa034 #add by geza 20160707 #160708-00002#1
+   CLEAR FORM
+   CALL g_mmaa_d.clear()
+
+   INITIALIZE g_wc TO NULL
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      CONSTRUCT BY NAME g_wc ON mmaa044,mmaa038,mmaa053,mmaa015,imaa009,imaa126
+         BEFORE CONSTRUCT 
+         #一般欄位開窗相關處理
+         #---------------------------<  Master  >---------------------------
+         ON ACTION controlp INFIELD mmaa044
+
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_mman001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaa044  #顯示到畫面上
+            NEXT FIELD mmaa044 
+         ON ACTION controlp INFIELD mmaa038
+           INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaa038  #顯示到畫面上
+            NEXT FIELD mmaa038                   #返回原欄位  
+
+         ON ACTION controlp INFIELD imaa009
+           INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtax001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+            NEXT FIELD imaa009
+            
+         ON ACTION controlp INFIELD imaa126
+           INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa126  #顯示到畫面上
+            NEXT FIELD imaa126
+            
+      END CONSTRUCT
+
+
+       INPUT g_sdate,g_edate,g_mmaq014,g_mmaq015,g_mmaq016,g_mmaq014_desc,g_mmaq015_desc,g_mmaq016_desc 
+       FROM  l_sdate,l_edate,mmaq014,mmaq015,mmaq016,l_num_M,l_num_N,l_num_O 
+       ATTRIBUTE(WITHOUT DEFAULTS) 
+         
+           
+         BEFORE INPUT
+         LET g_sdate=''
+         LET g_edate=''
+         let g_mmaq014=''
+         LET g_mmaq014_desc=''
+         LET g_mmaq015=''
+         LET g_mmaq015_desc=''
+         LET g_mmaq016=''
+         LET g_mmaq016_desc=''        
+                    
+      END INPUT
+
+      
+     ON ACTION detail_sc
+         CALL ammt405_01_b_fill() 
+         
+     ON ACTION detail_pz
+         IF g_ac>0  THEN 
+            if g_ac<=g_mmea005 then
+              LET g_success=true            
+              IF NOT ammt405_01_ins_fill() THEN
+                IF NOT cl_ask_confirm('apm-00284') THEN #產生失敗，是否繼續
+                   LET g_success = FALSE                 
+                   RETURN
+                END IF
+              ELSE
+                IF cl_ask_confirm('apm-00285') THEN #產生成功，是否繼續
+                   CALL g_mmaa_d.clear()
+                   clear form 
+                   DELETE FROM ammt405_01_tmp
+                   DELETE FROM ammt405_01_tmp1
+                   IF SQLCA.sqlcode THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = SQLCA.sqlcode
+                      LET g_errparam.extend = 'Del ammt405_01_tmp'
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+                   END IF                                       
+                ELSE
+                   LET INT_FLAG = TRUE 
+                   EXIT DIALOG
+                END IF
+             END IF
+         ELSE
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'apm-00292'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET INT_FLAG = TRUE 
+            EXIT DIALOG            
+         END IF
+       ELSE
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'apm-00292'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+           LET INT_FLAG = TRUE 
+           EXIT DIALOG            
+       END IF 
+         
+
+          
+      ON ACTION accept
+         CALL ammt405_01_b_fill()
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_mmea008_chk()
+   DEFINE l_mman054   LIKE mman_t.mman054
+   DEFINE l_oodb011   LIKE oodb_t.oodb011
+   DEFINE l_mman053   LIKE mman_t.mman053
+   DEFINE l_rtdx014   LIKE rtdx_t.rtdx014
+   
+   LET g_errno = ''
+   IF cl_null(g_mmea003) THEN 
+      RETURN 
+   END IF 
+   SELECT mman054 INTO l_mman054
+     FROM mman_t
+    WHERE mmanent = g_enterprise
+      AND mman001 = g_mmea003
+   IF cl_null(l_mman054) THEN 
+      LET g_errno = 'amm-00345'
+      RETURN 
+   END IF
+   
+   CALL ammt405_01_rtib_chk(l_mman054) RETURNING g_errno
+   IF NOT cl_null(g_errno) THEN 
+      RETURN 
+   END IF 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_card(p_card)
+   DEFINE l_sql   STRING 
+   DEFINE p_card  LIKE mmaq_t.mmaq001
+   DEFINE r_no    LIKE type_t.num5
+   LET r_no = 0
+   LET l_sql = " SELECT COUNT(*) ", 
+               "   FROM mmaq_t ",
+               "  WHERE mmaqent = '",g_enterprise,"'",
+               "    AND mmaq001 = '",p_card,"'",
+               "    AND mmaq002 IN (SELECT mmap002 FROM mmap_t WHERE mmapent = '",g_enterprise,"' AND mmap001 = 'ammm320' ",
+               "             AND (mmap003 = '",g_rtiasite,"' OR (mmap003 IN(SELECT ooed005 FROM ooed_t ",
+               "    START WITH ooed004= '",g_rtiasite,"' AND ooed001 = '8' AND ooedent = '",g_enterprise,"' ",
+               "      AND ooed006 <='",g_today,"' ",
+               "      AND (ooed007 >='",g_today,"' OR ooed007 IS NULL)",
+               "  CONNECT BY  NOCYCLE PRIOR ooed005=ooed004 ",
+               "      AND ooed001='8' AND ooedent = '",g_enterprise,"'",
+               "      AND ooed006 <='",g_today,"' ",
+               "      AND (ooed007 >='",g_today,"' OR ooed007 IS NULL)) AND mmap005 = 'Y')) AND mmapstus = 'Y')"
+   PREPARE sel_num FROM l_sql
+   EXECUTE sel_num INTO r_no
+   RETURN r_no
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_rtib_chk(p_mman053)
+   DEFINE p_mman053   LIKE mman_t.mman053
+   DEFINE l_rtdx014   LIKE rtdx_t.rtdx014
+   DEFINE l_oodb011   LIKE oodb_t.oodb011
+   DEFINE l_n         LIKE type_t.num5
+
+   LET g_errno = ''
+   LET l_n = 0
+   #检查卡对应商品是否存在商品清单中
+   SELECT COUNT(*) INTO l_n
+     FROM rtdx_t
+    WHERE rtdxent = g_enterprise 
+      AND rtdxsite = g_rtiasite
+      AND rtdx001 = p_mman053
+   IF l_n = 0 THEN 
+      LET g_errno = 'amm-00426'
+      RETURN g_errno
+   END IF 
+   SELECT oodb011 INTO l_oodb011
+     FROM oodb_t,ooef_t
+    WHERE oodbent = ooefent
+      AND oodbent = g_enterprise      #160720-00001#1 by 08172
+      AND oodb001 = ooef019
+      AND oodb002 = g_rtia028
+      AND ooef001 = g_rtiasite
+   IF l_oodb011 = '2' THEN 
+      #带出税别
+      SELECT rtdx014 INTO l_rtdx014
+        FROM rtdx_t
+       WHERE rtdxent = g_enterprise 
+         AND rtdxsite = g_rtiasite
+         AND rtdx001 = p_mman053
+      IF cl_null(l_rtdx014) THEN
+         LET g_errno = 'amm-00410'
+         RETURN g_errno
+      END IF
+   END IF 
+   RETURN g_errno
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_mmea001_chk(p_card)
+   DEFINE p_card      LIKE mmea_t.mmea001
+   DEFINE l_mmaq006   LIKE mmaq_t.mmaq006
+   DEFINE l_mmaq002   LIKE mmaq_t.mmaq002
+   DEFINE l_n         LIKE type_t.num5
+   DEFINE l_mmap003   LIKE mmap_t.mmap003
+   DEFINE l_mmap005   LIKE mmap_t.mmap005
+   DEFINE l_mmanstus  LIKE mman_t.mmanstus
+   DEFINE l_mman053   LIKE mman_t.mman053
+   DEFINE l_mman054   LIKE mman_t.mman054
+   DEFINE l_sql       STRING
+   
+   LET g_errno = ''
+   #检查卡号属否存在且为1.发行状态
+   SELECT mmaq006,mmaq002,mmanstus,mman053,mman054 
+     INTO l_mmaq006,l_mmaq002,l_mmanstus,l_mman053,l_mman054
+     FROM mmaq_t,mman_t
+    WHERE mmaqent = g_enterprise
+      AND mmaq001 = p_card
+      AND mmanent = mmaqent
+      AND mman001 = mmaq002
+   CASE 
+      WHEN SQLCA.SQLCODE = 100 LET g_errno = 'amm-00323'
+      WHEN l_mmaq006 <> '1'    LET g_errno = 'amm-00324'
+      WHEN l_mmanstus <> 'Y'   LET g_errno = 'amm-00418'
+      OTHERWISE                LET g_errno = SQLCA.SQLCODE USING '-------'
+   END CASE
+   IF cl_null(g_errno) THEN 
+      CALL ammt405_01_card(p_card) RETURNING l_n
+      IF l_n = 0 THEN 
+         LET g_errno = 'amm-00325'
+         RETURN 
+      END IF 
+   END IF 
+   IF cl_null(g_errno) THEN 
+      #检查卡对应商品是否存在商品清单中
+      CALL ammt405_01_rtib_chk(l_mman053) RETURNING g_errno
+      IF NOT cl_null(g_errno) THEN 
+         RETURN 
+      END IF 
+      IF g_mmea008 > 0 THEN 
+         CALL ammt405_01_rtib_chk(l_mman054) RETURNING g_errno
+         IF NOT cl_null(g_errno) THEN 
+            RETURN 
+         END IF
+      END IF
+   END IF 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_key(p_card,p_card2)
+ DEFINE p_card      LIKE mmea_t.mmea001
+   DEFINE p_card2     LIKE mmea_t.mmea002
+   DEFINE l_n         LIKE type_t.num5
+   DEFINE l_n1        LIKE type_t.num5
+   DEFINE l_mmaq002   LIKE mmaq_t.mmaq002
+   DEFINE l_mman005   LIKE mmaq_t.mmaq005
+   DEFINE l_mman006   LIKE mmaq_t.mmaq006
+
+   LET g_errno = ''
+   SELECT mmaq002 INTO l_mmaq002 
+     FROM mmaq_t
+    WHERE mmaqent = g_enterprise
+      AND mmaq001 = p_card
+      
+   LET l_n = 0
+   #检查开始卡号与结束卡号卡种是否一直
+   SELECT COUNT(*) INTO l_n
+     FROM mmaq_t
+    WHERE mmaqent = g_enterprise
+      AND mmaq001 = p_card
+      AND mmaq002 IN (SELECT mmaq002 FROM mmaq_t WHERE mmaqent = g_enterprise AND mmaq001 = p_card2)
+   IF l_n = 0 THEN 
+      LET g_errno = 'amm-00326'
+      RETURN
+   END IF 
+   #检查开始卡号必须小于等于结束卡号
+   IF p_card > p_card2 THEN 
+      LET g_errno = 'amm-00327'
+      RETURN 
+   END IF
+   #卡号总长度，固定码长度
+   SELECT mman005,mman006
+     INTO l_mman005,l_mman006
+     FROM mman_t
+    WHERE mman001 = l_mmaq002
+      AND mmanent = g_enterprise    ##160720-00001#1   by 08172
+          
+   LET l_n1 = p_card2[l_mman006+1,l_mman005] - p_card[l_mman006+1,l_mman005] + 1   
+   #检查开始和结束卡号之前是否有没有发行的卡号
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n
+     FROM mmaq_t
+    WHERE mmaqent = g_enterprise
+      AND mmaq001 BETWEEN p_card AND p_card2
+      AND mmaq002 = l_mmaq002
+      AND mmaq006 = '1'
+   IF l_n <> l_n1 THEN 
+      LET g_errno = 'amm-00328'
+      RETURN 
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_mmaa057_desc()
+ DEFINE  l_mmby002   LIKE mmby_t.mmby002   
+   SELECT MAX(mmby002) INTO l_mmby002
+     FROM mmby_t
+    WHERE mmbyent = g_enterprise
+      AND mmby001 = g_mmaa057
+      AND mmbysite = g_rtiasite
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_mmaa057
+   LET g_ref_fields[2] = l_mmby002
+   CALL ap_ref_array2(g_ref_fields,"SELECT DISTINCT mmbyl004 FROM mmbyl_t WHERE mmbylent='"||g_enterprise||"' AND mmbyl001=? AND mmbyl002 = ? AND mmbyl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_mmaa057_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_mmaa057_desc
+   DISPLAY g_mmaa057_desc TO formonly.mmaa057_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammt405_01_vip_acc(p_field,p_oocq001)
+DEFINE p_field     LIKE type_t.chr20              #栏位名称
+   DEFINE p_oocq001   LIKE oocq_t.oocq001            #应用分类
+   DEFINE l_oocq002   LIKE oocq_t.oocq002            #应用分类码
+   DEFINE l_oocql004  LIKE oocql_t.oocql004          #说明
+   DEFINE l_sql       STRING
+   DEFINE cb004          ui.ComboBox
+   
+   IF cl_null(p_field) OR cl_null(p_oocq001) THEN
+      RETURN
+   END IF
+   LET cb004 = ui.ComboBox.forName(p_field)
+   CALL cb004.clear()
+   LET l_sql=" SELECT oocq002,oocql004",
+               " FROM oocq_t",
+               " LEFT JOIN oocql_t ON oocqlent=oocqent AND oocql001=oocq001 AND oocql002=oocq002",
+                " AND oocql003='",g_dlang,"'",
+              " WHERE oocqent='",g_enterprise,"'",
+                " AND oocq001='",p_oocq001,"'",
+                " AND oocqstus='Y'"
+   PREPARE ammt500_vip_acc_pre FROM l_sql
+   DECLARE ammt500_vip_acc_cur CURSOR FOR ammt500_vip_acc_pre
+   FOREACH ammt500_vip_acc_cur INTO l_oocq002,l_oocql004
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "ammt500_vip_acc_cur:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      LET l_oocql004=l_oocq002,'.',l_oocql004
+      IF cl_null(l_oocql004) THEN
+         CALL cb004.addItem(l_oocq002,l_oocq002)
+      ELSE
+         CALL cb004.addItem(l_oocq002,l_oocql004)
+      END IF
+   END FOREACH
+END FUNCTION
+
+ 
+{</section>}
+ 

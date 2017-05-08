@@ -1,0 +1,1878 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="asfq302" std_prog="asfq302" erpver="1.0" module="ASF" ver="2" env="s" zone="t10dev" booking="N" type="M" identity="s">
+  <other>
+    <code_template value="Q" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="detail_show.body3.reference" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      SELECT sfaa010,imaal003,imaal004,sfaa016,sfaa017,sfaa057
+        INTO g_sfce3_d[l_ac].sfaa010,g_sfce3_d[l_ac].imaal003,g_sfce3_d[l_ac].imaal004,g_sfce3_d[l_ac].sfaa016,
+             g_sfce3_d[l_ac].sfaa017,l_sfaa057
+        FROM sfaa_t LEFT OUTER JOIN imaal_t ON sfaaent = imaalent AND sfaa010 = imaal001 AND imaal002 = g_dlang
+       WHERE sfaaent   = g_enterprise
+         AND sfaadocno = g_sfce3_d[l_ac].sfcgdocno
+
+      IF l_sfaa057 = '2' THEN
+         INITIALIZE g_chkparam.* TO NULL
+         LET g_chkparam.arg1 = g_sfce3_d[l_ac].sfaa017
+         CALL cl_ref_val("v_pmaal004")
+         LET g_sfce3_d[l_ac].pmaal004 = g_chkparam.return1
+      ELSE
+         CALL s_desc_get_department_desc(g_sfce3_d[l_ac].sfaa017) RETURNING g_sfce3_d[l_ac].pmaal004
+      END IF
+      #INITIALIZE g_ref_fields TO NULL 
+      #LET g_ref_fields[1] = g_sfce_d[g_detail_idx].sfcfdocno
+      #LET g_ref_fields[2] = g_sfce_d[l_ac].sfcfseq
+      #CALL ap_ref_array2(g_ref_fields," SELECT sfcgdocno,sfcg004,sfcg002,sfcg003,sfcg005 FROM sfcg_t WHERE sfcgent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+      #LET g_sfce3_d[l_ac].sfcgdocno = g_rtn_fields[1] 
+      #LET g_sfce3_d[l_ac].sfcg004 = g_rtn_fields[2] 
+      #LET g_sfce3_d[l_ac].sfcg002 = g_rtn_fields[3] 
+      #LET g_sfce3_d[l_ac].sfcg003 = g_rtn_fields[4] 
+      #LET g_sfce3_d[l_ac].sfcg005 = g_rtn_fields[5] 
+      #DISPLAY BY NAME g_sfce3_d[l_ac].sfcgdocno,g_sfce3_d[l_ac].sfcg004,g_sfce3_d[l_ac].sfcg002,g_sfce3_d[l_ac].sfcg003,g_sfce3_d[l_ac].sfcg005]]>
+  </point>
+  <point name="detail_show.body4.reference" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+      #INITIALIZE g_ref_fields TO NULL 
+      #LET g_ref_fields[1] = g_sfce_d[g_detail_idx].sfcfdocno
+      #LET g_ref_fields[2] = g_sfce_d[l_ac].sfcfseq
+      #CALL ap_ref_array2(g_ref_fields," SELECT sfch004,sfch005 FROM sfch_t WHERE sfchent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+      #LET g_sfce4_d[l_ac].sfch004 = g_rtn_fields[1] 
+      #LET g_sfce4_d[l_ac].sfch005 = g_rtn_fields[2] 
+      #DISPLAY BY NAME g_sfce4_d[l_ac].sfch004,g_sfce4_d[l_ac].sfch005]]>
+  </point>
+  <point name="input.a.page1.sfce001" order="0" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfce_d[g_detail_idx].sfcedocno IS NOT NULL AND g_sfce_d[g_detail_idx].sfce001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfce_d[g_detail_idx].sfcedocno != g_sfce_d_t.sfcedocno OR g_sfce_d[g_detail_idx].sfce001 != g_sfce_d_t.sfce001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfce_t WHERE "||"sfceent = '" ||g_enterprise|| "' AND "||"sfcedocno = '"||g_sfce_d[g_detail_idx].sfcedocno ||"' AND "|| "sfce001 = '"||g_sfce_d[g_detail_idx].sfce001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.sfcedocno" order="0" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfce_d[g_detail_idx].sfcedocno IS NOT NULL AND g_sfce_d[g_detail_idx].sfce001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfce_d[g_detail_idx].sfcedocno != g_sfce_d_t.sfcedocno OR g_sfce_d[g_detail_idx].sfce001 != g_sfce_d_t.sfce001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfce_t WHERE "||"sfceent = '" ||g_enterprise|| "' AND "||"sfcedocno = '"||g_sfce_d[g_detail_idx].sfcedocno ||"' AND "|| "sfce001 = '"||g_sfce_d[g_detail_idx].sfce001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.sfcfdocno" order="0" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfce_d[g_detail_idx].sfcedocno IS NOT NULL AND g_sfce_d[g_detail_idx].sfce001 IS NOT NULL AND g_sfce2_d[g_detail_idx2].sfcfdocno IS NOT NULL AND g_sfce2_d[g_detail_idx2].sfcfseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfce_d[g_detail_idx].sfcedocno != g_sfce_d[g_detail_idx].sfcedocno OR g_sfce_d[g_detail_idx].sfce001 != g_sfce_d[g_detail_idx].sfce001 OR g_sfce2_d[g_detail_idx2].sfcfdocno != g_sfce2_d_t.sfcfdocno OR g_sfce2_d[g_detail_idx2].sfcfseq != g_sfce2_d_t.sfcfseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfcf_t WHERE "||"sfcfent = '" ||g_enterprise|| "' AND "||"sfcf001 = '"||g_sfce_d[g_detail_idx].sfcedocno ||"' AND "|| "sfcfdocno = '"||g_sfce_d[g_detail_idx].sfce001 ||"' AND "|| "sfcfseq = '"||g_sfce2_d[g_detail_idx2].sfcfdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.sfcfseq" order="0" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfce_d[g_detail_idx].sfcedocno IS NOT NULL AND g_sfce_d[g_detail_idx].sfce001 IS NOT NULL AND g_sfce2_d[g_detail_idx2].sfcfdocno IS NOT NULL AND g_sfce2_d[g_detail_idx2].sfcfseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfce_d[g_detail_idx].sfcedocno != g_sfce_d[g_detail_idx].sfcedocno OR g_sfce_d[g_detail_idx].sfce001 != g_sfce_d[g_detail_idx].sfce001 OR g_sfce2_d[g_detail_idx2].sfcfdocno != g_sfce2_d_t.sfcfdocno OR g_sfce2_d[g_detail_idx2].sfcfseq != g_sfce2_d_t.sfcfseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfcf_t WHERE "||"sfcfent = '" ||g_enterprise|| "' AND "||"sfcf001 = '"||g_sfce_d[g_detail_idx].sfcedocno ||"' AND "|| "sfcfdocno = '"||g_sfce_d[g_detail_idx].sfce001 ||"' AND "|| "sfcfseq = '"||g_sfce2_d[g_detail_idx2].sfcfdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.sfce001_3" order="0" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfce3_d[g_detail_idx].sfcedocno IS NOT NULL AND g_sfce3_d[g_detail_idx].sfce001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfce3_d[g_detail_idx].sfcedocno != g_sfce3_d_t.sfcedocno OR g_sfce3_d[g_detail_idx].sfce001 != g_sfce3_d_t.sfce001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfce_t WHERE "||"sfceent = '" ||g_enterprise|| "' AND "||"sfcedocno = '"||g_sfce3_d[g_detail_idx].sfcedocno ||"' AND "|| "sfce001 = '"||g_sfce3_d[g_detail_idx].sfce001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.sfcedocno_3" order="0" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfce3_d[g_detail_idx].sfcedocno IS NOT NULL AND g_sfce3_d[g_detail_idx].sfce001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfce3_d[g_detail_idx].sfcedocno != g_sfce3_d_t.sfcedocno OR g_sfce3_d[g_detail_idx].sfce001 != g_sfce3_d_t.sfce001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfce_t WHERE "||"sfceent = '" ||g_enterprise|| "' AND "||"sfcedocno = '"||g_sfce3_d[g_detail_idx].sfcedocno ||"' AND "|| "sfce001 = '"||g_sfce3_d[g_detail_idx].sfce001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page4.sfcfdocno_4" order="0" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfce_d[g_detail_idx].sfcedocno IS NOT NULL AND g_sfce_d[g_detail_idx].sfce001 IS NOT NULL AND g_sfce4_d[g_detail_idx2].sfcfdocno IS NOT NULL AND g_sfce4_d[g_detail_idx2].sfcfseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfce_d[g_detail_idx].sfcedocno != g_sfce_d[g_detail_idx].sfcedocno OR g_sfce_d[g_detail_idx].sfce001 != g_sfce_d[g_detail_idx].sfce001 OR g_sfce4_d[g_detail_idx2].sfcfdocno != g_sfce4_d_t.sfcfdocno OR g_sfce4_d[g_detail_idx2].sfcfseq != g_sfce4_d_t.sfcfseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfcf_t WHERE "||"sfcfent = '" ||g_enterprise|| "' AND "||"sfcf001 = '"||g_sfce_d[g_detail_idx].sfcedocno ||"' AND "|| "sfcfdocno = '"||g_sfce_d[g_detail_idx].sfce001 ||"' AND "|| "sfcfseq = '"||g_sfce4_d[g_detail_idx2].sfcfdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page4.sfcfseq_4" order="0" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfce_d[g_detail_idx].sfcedocno IS NOT NULL AND g_sfce_d[g_detail_idx].sfce001 IS NOT NULL AND g_sfce4_d[g_detail_idx2].sfcfdocno IS NOT NULL AND g_sfce4_d[g_detail_idx2].sfcfseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfce_d[g_detail_idx].sfcedocno != g_sfce_d[g_detail_idx].sfcedocno OR g_sfce_d[g_detail_idx].sfce001 != g_sfce_d[g_detail_idx].sfce001 OR g_sfce4_d[g_detail_idx2].sfcfdocno != g_sfce4_d_t.sfcfdocno OR g_sfce4_d[g_detail_idx2].sfcfseq != g_sfce4_d_t.sfcfseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfcf_t WHERE "||"sfcfent = '" ||g_enterprise|| "' AND "||"sfcf001 = '"||g_sfce_d[g_detail_idx].sfcedocno ||"' AND "|| "sfcfdocno = '"||g_sfce_d[g_detail_idx].sfce001 ||"' AND "|| "sfcfseq = '"||g_sfce4_d[g_detail_idx2].sfcfdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="b_fill.array_deleteElement" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_sfce3_d.clear() 
+   LET g_rec_b1 = l_ac - 1
+END IF]]>
+  </point>
+  <point name="b_fill.others.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#如果画面未下查询条件，则不作查询
+IF g_wc2 != " 1=1" THEN
+   LET g_sql = "SELECT  UNIQUE sfcgdocno,'','',sfcg001,sfcgdocdt,sfcg004,'','','','',sfcg002,sfcg003,sfcg005 FROM sfcg_t",
+               " LEFT JOIN sfch_t ON sfchent = sfcgent AND sfchdocno = sfcgdocno AND sfch001=sfcg001",
+               " WHERE sfcgent= ? AND 1=1 AND ", g_wc2
+    
+   LET g_sql = g_sql, " ORDER BY sfcg_t.sfcgdocno,sfcg_t.sfcg001"
+   #end add-point
+  
+   PREPARE asfq302_pb3 FROM g_sql
+   DECLARE b_fill_curs3 CURSOR FOR asfq302_pb3
+   
+   OPEN b_fill_curs3 USING g_enterprise
+   CALL g_sfce3_d.clear()   
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs3 INTO 
+       g_sfce3_d[l_ac].sfcgdocno,g_sfce3_d[l_ac].sfaa017,g_sfce3_d[l_ac].pmaal004,g_sfce3_d[l_ac].sfcg001,g_sfce3_d[l_ac].sfcgdocdt,g_sfce3_d[l_ac].sfcg004, 
+       g_sfce3_d[l_ac].sfaa010,g_sfce3_d[l_ac].imaal003,g_sfce3_d[l_ac].imaal004,g_sfce3_d[l_ac].sfaa016, 
+       g_sfce3_d[l_ac].sfcg002,g_sfce3_d[l_ac].sfcg003,g_sfce3_d[l_ac].sfcg005
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET g_sfce3_d[l_ac].sel_g = "N"
+ 
+      #add-point:b_fill段資料填充
+
+      #end add-point
+      
+      CALL asfq302_detail_show("'3'")      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_sfce3_d.deleteElement(g_sfce3_d.getLength())  
+   LET g_rec_b3 = l_ac - 1 
+   CLOSE b_fill_curs3
+   FREE asfq302_pb3
+END IF
+
+   LET l_ac1 = 1
+   LET l_ac3 = 1
+   ]]>
+  </point>
+  <point name="b_fill.sql_after" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[END IF
+
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+#如果画面未下查询条件，则不作查询
+IF g_wc != " 1=1" THEN
+   LET g_sql = "SELECT  UNIQUE sfcedocno,'','',sfce001,sfcedocdt,sfce004,'','','','',sfce002,sfce003,sfce005, 
+       '','','','','','','','','','','','','','' FROM sfce_t",
+ 
+               " LEFT JOIN sfcf_t ON sfcfent = sfceent AND sfcfdocno = sfcedocno AND sfcf001=sfce001",
+               " WHERE sfceent= ? AND 1=1 AND ", g_wc
+   LET g_sql = g_sql, " ORDER BY sfce_t.sfcedocno,sfce_t.sfce001"]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[IF 1=2 THEN]]>
+  </point>
+  <point name="construct.c.page1.b_sfce002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "221" #應用分類
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_sfce002 #顯示到畫面上
+            NEXT FIELD b_sfce002]]>
+  </point>
+  <point name="construct.c.page1.b_sfcedocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " sfaasite ='",g_site,"' "
+            CALL q_sfaadocno_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_sfcedocno #顯示到畫面上
+            NEXT FIELD b_sfcedocno                   #返回原欄位]]>
+  </point>
+  <point name="construct.c.page2.b_sfcfdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " sfaasite ='",g_site,"' "
+            CALL q_sfaadocno_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_sfcfdocno #顯示到畫面上
+            NEXT FIELD b_sfcfdocno                  #返回原欄位]]>
+  </point>
+  <point name="cs.after_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   #g_wc 为拆分查询条件
+   #g_wc2为合并查询条件
+   LET g_wc2 = " 1=1"
+   IF NOT cl_null(g_wc3_table3) AND g_wc3_table3 <> " 1=1" THEN
+      LET g_wc2 = g_wc2, " AND ", g_wc3_table3
+   END IF
+   IF NOT cl_null(g_wc4_table4) AND g_wc4_table4 <> " 1=1" THEN
+      LET g_wc2 = g_wc2, " AND ", g_wc4_table4
+   END IF]]>
+  </point>
+  <point name="detail_show.body.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      SELECT sfaa010,imaal003,imaal004,sfaa016,sfaa017,sfaa057
+        INTO g_sfce_d[l_ac].sfaa010,g_sfce_d[l_ac].imaal003,g_sfce_d[l_ac].imaal004,g_sfce_d[l_ac].sfaa016,
+             g_sfce_d[l_ac].sfaa017,l_sfaa057
+        FROM sfaa_t LEFT OUTER JOIN imaal_t ON sfaaent = imaalent AND sfaa010 = imaal001 AND imaal002 = g_dlang
+       WHERE sfaaent   = g_enterprise
+         AND sfaadocno = g_sfce_d[l_ac].sfcedocno
+
+      IF l_sfaa057 = '2' THEN
+         INITIALIZE g_chkparam.* TO NULL
+         LET g_chkparam.arg1 = g_sfce_d[l_ac].sfaa017
+         CALL cl_ref_val("v_pmaal004")
+         LET g_sfce_d[l_ac].pmaal004 = g_chkparam.return1
+      ELSE
+         CALL s_desc_get_department_desc(g_sfce_d[l_ac].sfaa017) RETURNING g_sfce_d[l_ac].pmaal004
+      END IF
+         ]]>
+  </point>
+  <point name="detail_show.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_sfaa057  LIKE sfaa_t.sfaa057]]>
+  </point>
+  <point name="fetch.after_fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_sfce4_d.clear()
+   LET g_sql = "SELECT  UNIQUE sfchdocno,sfchseq,sfch004,sfch005 FROM sfch_t",    
+               " WHERE sfchent=? AND sfchdocno=? AND sfch001=?"
+ 
+   IF NOT cl_null(g_wc4_table4) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc4_table4 CLIPPED
+   END IF
+ 
+   LET g_sql = g_sql, " ORDER BY sfch_t.sfchseq" 
+                      
+   #add-point:單身填充前
+   #IF cl_null(g_detail_idx) OR g_detail_idx = 0 THEN
+      LET g_detail_idx = l_ac3
+   #END IF
+   IF cl_null(g_detail_idx) OR g_detail_idx = 0 THEN
+      LET g_detail_idx = 1
+   END IF
+   #end add-point
+   
+   PREPARE asfq302_pb4 FROM g_sql
+   DECLARE b_fill_curs4 CURSOR FOR asfq302_pb4
+   
+   OPEN b_fill_curs4 USING g_enterprise,g_sfce3_d[g_detail_idx].sfcgdocno
+                                  ,g_sfce3_d[g_detail_idx].sfcg001
+ 
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs4 INTO g_sfce4_d[l_ac].sfchdocno,g_sfce4_d[l_ac].sfchseq,g_sfce4_d[l_ac].sfch004, g_sfce4_d[l_ac].sfch005
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+ 
+      #add-point:b_fill段資料填充
+
+      #end add-point
+ 
+      CALL asfq302_detail_show("'4'")
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( "", 9035, 1 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_rec_b4 = l_ac - 1 
+   
+   CLOSE b_fill_curs4
+   FREE asfq302_pb4]]>
+  </point>
+  <point name="fetch.array_deleteElement" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   #LET g_detail_cnt_t = g_detail_cnt
+   LET g_detail_cnt = 1  #不要跳没资料的信息]]>
+  </point>
+  <point name="fetch.before_fill2" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   #IF cl_null(g_detail_idx) OR g_detail_idx = 0 THEN
+      LET g_detail_idx = l_ac1
+   #END IF
+   IF cl_null(g_detail_idx) OR g_detail_idx = 0 THEN
+      LET g_detail_idx = 1
+   END IF]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_wc3_table3   STRING
+DEFINE g_wc4_table4   STRING
+DEFINE g_rec_b1       LIKE type_t.num10
+DEFINE g_rec_b2       LIKE type_t.num10
+DEFINE g_rec_b3       LIKE type_t.num10
+DEFINE g_rec_b4       LIKE type_t.num10
+DEFINE l_ac1          LIKE type_t.num5
+DEFINE l_ac2          LIKE type_t.num5
+DEFINE l_ac3          LIKE type_t.num5
+DEFINE l_ac4          LIKE type_t.num5]]>
+  </point>
+  <point name="input.body.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               #上面fetch不好用，重新fetch
+               LET l_ac1 = l_ac
+               CALL asfq302_fetch()]]>
+  </point>
+  <point name="input.body3.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               #上面fetch不好用，重新fetch
+               LET l_ac3 = l_ac
+               CALL asfq302_fetch()]]>
+  </point>
+  <point name="menu.query" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)]]>
+  </point>
+  <point name="query.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_wc=''
+   LET g_wc2=''
+   LET g_wc_table=''
+   LET g_wc2_table2=''
+   LET g_wc3_table3=''
+   LET g_wc4_table4='']]>
+  </point>
+  <point name="query.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      CONSTRUCT g_wc3_table3 ON sfcgdocno,sfcg001,sfcgdocdt,sfcg004,sfcg002,sfcg003,sfcg005
+           FROM s_detail3[1].sfcgdocno,s_detail3[1].sfcg001,s_detail3[1].sfcgdocdt,s_detail3[1].sfcg004, 
+               s_detail3[1].sfcg002,s_detail3[1].sfcg003,s_detail3[1].sfcg005
+                      
+         BEFORE CONSTRUCT
+            
+         ON ACTION controlp INFIELD sfcgdocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " sfaasite ='",g_site,"' "
+            CALL q_sfaadocno_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfcgdocno #顯示到畫面上
+            NEXT FIELD sfcgdocno                   #返回原欄位
+
+         ON ACTION controlp INFIELD sfcg002
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "221" #應用分類
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfcg002 #顯示到畫面上
+            NEXT FIELD sfcg002
+
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc4_table4 ON sfchdocno,sfchseq,sfch004,sfch005
+           FROM s_detail4[1].sfchdocno,s_detail4[1].sfchseq,s_detail4[1].sfch004,s_detail4[1].sfch005 
+                      
+         BEFORE CONSTRUCT
+
+         ON ACTION controlp INFIELD sfchdocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " sfaasite ='",g_site,"' "
+            CALL q_sfaadocno_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfchdocno #顯示到畫面上
+            NEXT FIELD sfchdocno                  #返回原欄位
+       
+      END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.bef_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)]]>
+  </point>
+  <section id="asfq302.b_fill" ver="11" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION asfq302_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+   
+   LET g_sql = "SELECT  UNIQUE sfcedocno,'','',sfce001,sfcedocdt,sfce004,'','','','',sfce002,sfce003, 
+       sfce005,'','','','','','','','','','','','','','' FROM sfce_t",
+ 
+               " LEFT JOIN sfcf_t ON sfcfent = sfceent AND sfcedocno = sfcfdocno AND sfce001 = sfcf001",
+ 
+ 
+               "",
+               " WHERE sfceent= ? AND 1=1 AND ", ls_wc,cl_sql_add_filter("sfce_t")
+    
+   LET g_sql = g_sql, cl_sql_add_filter("sfce_t"),
+                      " ORDER BY sfce_t.sfcedocno,sfce_t.sfce001"
+  
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+  
+   PREPARE asfq302_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR asfq302_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_sfce_d.clear()
+   CALL g_sfce3_d.clear()   
+ 
+ 
+   #add-point:陣列清空
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_sfce_d[l_ac].sfcedocno,g_sfce_d[l_ac].sfaa017,g_sfce_d[l_ac].pmaal004, 
+       g_sfce_d[l_ac].sfce001,g_sfce_d[l_ac].sfcedocdt,g_sfce_d[l_ac].sfce004,g_sfce_d[l_ac].sfaa010, 
+       g_sfce_d[l_ac].imaal003,g_sfce_d[l_ac].imaal004,g_sfce_d[l_ac].sfaa016,g_sfce_d[l_ac].sfce002, 
+       g_sfce_d[l_ac].sfce003,g_sfce_d[l_ac].sfce005,g_sfce3_d[l_ac].sel_g,g_sfce3_d[l_ac].sfcgdocno, 
+       g_sfce3_d[l_ac].sfaa017,g_sfce3_d[l_ac].pmaal004,g_sfce3_d[l_ac].sfcg001,g_sfce3_d[l_ac].sfcgdocdt, 
+       g_sfce3_d[l_ac].sfcg004,g_sfce3_d[l_ac].sfaa010,g_sfce3_d[l_ac].imaal003,g_sfce3_d[l_ac].imaal004, 
+       g_sfce3_d[l_ac].sfaa016,g_sfce3_d[l_ac].sfcg002,g_sfce3_d[l_ac].sfcg003,g_sfce3_d[l_ac].sfcg005 
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET g_sfce_d[l_ac].sel = "N"
+      #LET g_sfce_d[l_ac].statepic = cl_get_actipic(g_sfce_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL asfq302_detail_show("'1'")      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_sfce_d.deleteElement(g_sfce_d.getLength())   
+   CALL g_sfce3_d.deleteElement(g_sfce3_d.getLength())
+ 
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE asfq302_pb
+   
+   LET l_ac = 1
+   CALL asfq302_fetch()
+   
+      CALL asfq302_filter_show('sfcedocno','b_sfcedocno')
+   CALL asfq302_filter_show('sfce001','b_sfce001')
+   CALL asfq302_filter_show('sfcedocdt','b_sfcedocdt')
+   CALL asfq302_filter_show('sfce004','b_sfce004')
+   CALL asfq302_filter_show('sfce002','b_sfce002')
+   CALL asfq302_filter_show('sfce003','b_sfce003')
+   CALL asfq302_filter_show('sfce005','b_sfce005')
+   CALL asfq302_filter_show('sfcfdocno','b_sfcfdocno')
+   CALL asfq302_filter_show('sfcfseq','b_sfcfseq')
+   CALL asfq302_filter_show('sfcf004','b_sfcf004')
+   CALL asfq302_filter_show('sfcf005','b_sfcf005')
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.delete" ver="1" status="" src="s">
+    <![CDATA[#+ delete
+PRIVATE FUNCTION asfq302_delete()
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point
+ 
+   #add-point:delete段control
+   {<point name="delete.control"/>}
+   #end add-point 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.description" ver="38" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000046
+#+ 
+#+ Filename...: asfq302
+#+ Description: RUNCARD拆分合併查詢作業
+#+ Creator....: 00768(2014/05/13)
+#+ Modifier...: 00768(2014/06/30)
+#+ Buildtype..: 應用 q02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="asfq302.detail_show" ver="3" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION asfq302_detail_show(ps_page)
+   DEFINE ps_page    STRING
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+   
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body2.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'3'",1) > 0 THEN
+      #帶出公用欄位reference值page3
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body3.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'4'",1) > 0 THEN
+      #帶出公用欄位reference值page4
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body4.reference"/>}
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.fetch" ver="8" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION asfq302_fetch()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   CALL g_sfce2_d.clear()
+ 
+   CALL g_sfce4_d.clear()
+ 
+ 
+   #add-point:陣列清空
+   {<point name="fetch.array_clear" />}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   LET g_sql = "SELECT  UNIQUE sfcfdocno,sfcfseq,sfcf004,sfcf005,'','','','' FROM sfcf_t",    
+               "",
+               " WHERE sfcfent=? AND sfcfdocno=? AND sfcf001=?"
+ 
+   IF NOT cl_null(g_wc2_table2) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+   END IF
+ 
+   LET g_sql = g_sql, " ORDER BY sfcf_t.sfcfseq" 
+                      
+   #add-point:單身填充前
+   {<point name="fetch.before_fill2" />}
+   #end add-point
+   
+   PREPARE asfq302_pb2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR asfq302_pb2
+   
+   OPEN b_fill_curs2 USING g_enterprise,g_sfce_d[g_detail_idx].sfcedocno
+                                  ,g_sfce_d[g_detail_idx].sfce001
+ 
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs2 INTO g_sfce2_d[l_ac].sfcfdocno,g_sfce2_d[l_ac].sfcfseq,g_sfce2_d[l_ac].sfcf004, 
+       g_sfce2_d[l_ac].sfcf005,g_sfce4_d[l_ac].sfchdocno,g_sfce4_d[l_ac].sfchseq,g_sfce4_d[l_ac].sfch004, 
+       g_sfce4_d[l_ac].sfch005
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+ 
+      #add-point:b_fill段資料填充
+      {<point name="fetch.fill2"/>}
+      #end add-point
+      
+      CALL asfq302_detail_show("'2'")      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( "", 9035, 1 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+ 
+ 
+   
+   #DISPLAY g_detail_cnt TO FORMONLY.cnt
+ 
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   CALL g_sfce2_d.deleteElement(g_sfce2_d.getLength())   
+   #單身總筆數顯示
+   LET g_detail_cnt = g_sfce2_d.getLength()
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   IF g_detail_cnt > 0 THEN
+      LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx
+   END IF
+ 
+   CALL g_sfce4_d.deleteElement(g_sfce4_d.getLength())   
+   #單身總筆數顯示
+   LET g_detail_cnt = g_sfce4_d.getLength()
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   IF g_detail_cnt > 0 THEN
+      LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx
+   END IF
+ 
+ 
+   #add-point:陣列筆數調整
+   {<point name="fetch.array_deleteElement" />}
+   #end add-point
+ 
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.filter" ver="8" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION asfq302_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+   
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON sfcedocno,sfce001,sfcedocdt,sfce004,sfce002,sfce003,sfce005
+                          FROM s_detail1[1].b_sfcedocno,s_detail1[1].b_sfce001,s_detail1[1].b_sfcedocdt, 
+                              s_detail1[1].b_sfce004,s_detail1[1].b_sfce002,s_detail1[1].b_sfce003,s_detail1[1].b_sfce005 
+
+ 
+         BEFORE CONSTRUCT
+#saki       CALL cl_qbe_init()
+                     DISPLAY asfq302_filter_parser('sfcedocno') TO s_detail1[1].b_sfcedocno
+            DISPLAY asfq302_filter_parser('sfce001') TO s_detail1[1].b_sfce001
+            DISPLAY asfq302_filter_parser('sfcedocdt') TO s_detail1[1].b_sfcedocdt
+            DISPLAY asfq302_filter_parser('sfce004') TO s_detail1[1].b_sfce004
+            DISPLAY asfq302_filter_parser('sfce002') TO s_detail1[1].b_sfce002
+            DISPLAY asfq302_filter_parser('sfce003') TO s_detail1[1].b_sfce003
+            DISPLAY asfq302_filter_parser('sfce005') TO s_detail1[1].b_sfce005
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL asfq302_filter_show('sfcedocno','b_sfcedocno')
+   CALL asfq302_filter_show('sfce001','b_sfce001')
+   CALL asfq302_filter_show('sfcedocdt','b_sfcedocdt')
+   CALL asfq302_filter_show('sfce004','b_sfce004')
+   CALL asfq302_filter_show('sfce002','b_sfce002')
+   CALL asfq302_filter_show('sfce003','b_sfce003')
+   CALL asfq302_filter_show('sfce005','b_sfce005')
+   CALL asfq302_filter_show('sfcfdocno','b_sfcfdocno')
+   CALL asfq302_filter_show('sfcfseq','b_sfcfseq')
+   CALL asfq302_filter_show('sfcf004','b_sfcf004')
+   CALL asfq302_filter_show('sfcf005','b_sfcf005')
+ 
+    
+   CALL asfq302_b_fill()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION asfq302_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.filter_show" ver="3" status="" src="s">
+    <![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION asfq302_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = asfq302_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.global" ver="10" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_sfce_d RECORD
+       #statepic       LIKE type_t.chr1,
+       sel            LIKE type_t.chr1,
+       sfcedocno LIKE sfce_t.sfcedocno, 
+   sfaa017 LIKE sfaa_t.sfaa017, 
+   pmaal004 LIKE pmaal_t.pmaal004, 
+   sfce001 LIKE sfce_t.sfce001, 
+   sfcedocdt LIKE sfce_t.sfcedocdt, 
+   sfce004 LIKE sfce_t.sfce004, 
+   sfaa010 LIKE sfaa_t.sfaa010, 
+   imaal003 LIKE imaal_t.imaal003, 
+   imaal004 LIKE imaal_t.imaal004, 
+   sfaa016 LIKE sfaa_t.sfaa016, 
+   sfce002 LIKE sfce_t.sfce002, 
+   sfce003 LIKE sfce_t.sfce003, 
+   sfce005 LIKE sfce_t.sfce005 
+       END RECORD
+PRIVATE TYPE type_g_sfce2_d RECORD
+       sfcfdocno LIKE sfcf_t.sfcfdocno, 
+   sfcfseq LIKE sfcf_t.sfcfseq, 
+   sfcf004 LIKE sfcf_t.sfcf004, 
+   sfcf005 LIKE sfcf_t.sfcf005
+       END RECORD
+ 
+PRIVATE TYPE type_g_sfce3_d RECORD
+       sel_g LIKE type_t.chr80, 
+   sfcgdocno LIKE type_t.chr20, 
+   sfaa017 LIKE sfaa_t.sfaa017, 
+   pmaal004 LIKE pmaal_t.pmaal004, 
+   sfcg001 LIKE type_t.num10, 
+   sfcgdocdt LIKE type_t.dat, 
+   sfcg004 LIKE type_t.num10, 
+   sfaa010 LIKE sfaa_t.sfaa010, 
+   imaal003 LIKE imaal_t.imaal003, 
+   imaal004 LIKE imaal_t.imaal004, 
+   sfaa016 LIKE sfaa_t.sfaa016, 
+   sfcg002 LIKE type_t.chr10, 
+   sfcg003 LIKE type_t.chr10, 
+   sfcg005 LIKE type_t.num20_6
+       END RECORD
+ 
+PRIVATE TYPE type_g_sfce4_d RECORD
+       sfchdocno LIKE type_t.chr20, 
+   sfchseq LIKE type_t.num10, 
+   sfch004 LIKE type_t.num10, 
+   sfch005 LIKE type_t.num20_6
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_sfce_d
+DEFINE g_master_t                   type_g_sfce_d
+DEFINE g_sfce_d          DYNAMIC ARRAY OF type_g_sfce_d
+DEFINE g_sfce_d_t        type_g_sfce_d
+DEFINE g_sfce2_d   DYNAMIC ARRAY OF type_g_sfce2_d
+DEFINE g_sfce2_d_t type_g_sfce2_d
+ 
+DEFINE g_sfce3_d   DYNAMIC ARRAY OF type_g_sfce3_d
+DEFINE g_sfce3_d_t type_g_sfce3_d
+ 
+DEFINE g_sfce4_d   DYNAMIC ARRAY OF type_g_sfce4_d
+DEFINE g_sfce4_d_t type_g_sfce4_d
+ 
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_detail_idx2        LIKE type_t.num5
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+ 
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+DEFINE g_wc2_table2   STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+DEFINE g_wc2_filter_table2   STRING
+ 
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asfq302.init" ver="1" status="" src="s">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION asfq302_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   
+   
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.insert" ver="1" status="" src="s">
+    <![CDATA[#+ insert
+PRIVATE FUNCTION asfq302_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point
+ 
+   #add-point:insert段control
+   {<point name="insert.control"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.main" ver="2" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE asfq302_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE asfq302_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE asfq302_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asfq302 WITH FORM cl_ap_formpath("asf",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL asfq302_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL asfq302_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_asfq302
+      
+   END IF 
+   
+   CLOSE asfq302_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="asfq302.modify" ver="1" status="" src="s">
+    <![CDATA[#+ modify
+PRIVATE FUNCTION asfq302_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+ 
+   #add-point:modify段control
+   {<point name="modify.control"/>}
+   #end add-point 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="asfq302.query" ver="11" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION asfq302_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_sfce_d.clear()
+   LET g_wc_filter = " 1=1"
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON sfcedocno,sfce001,sfcedocdt,sfce004,sfce002,sfce003,sfce005
+           FROM s_detail1[1].b_sfcedocno,s_detail1[1].b_sfce001,s_detail1[1].b_sfcedocdt,s_detail1[1].b_sfce004, 
+               s_detail1[1].b_sfce002,s_detail1[1].b_sfce003,s_detail1[1].b_sfce005
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #----<<b_sfcedocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfcedocno
+            #add-point:BEFORE FIELD b_sfcedocno
+            {<point name="construct.b.page1.b_sfcedocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfcedocno
+            
+            #add-point:AFTER FIELD b_sfcedocno
+            {<point name="construct.a.page1.b_sfcedocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_sfcedocno
+         ON ACTION controlp INFIELD b_sfcedocno
+            #add-point:ON ACTION controlp INFIELD b_sfcedocno
+            {<point name="construct.c.page1.b_sfcedocno" />}
+            #END add-point
+ 
+         #----<<sfaa017_e>>----
+         #----<<pmaal004_e>>----
+         #----<<b_sfce001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfce001
+            #add-point:BEFORE FIELD b_sfce001
+            {<point name="construct.b.page1.b_sfce001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfce001
+            
+            #add-point:AFTER FIELD b_sfce001
+            {<point name="construct.a.page1.b_sfce001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_sfce001
+         ON ACTION controlp INFIELD b_sfce001
+            #add-point:ON ACTION controlp INFIELD b_sfce001
+            {<point name="construct.c.page1.b_sfce001" />}
+            #END add-point
+ 
+         #----<<b_sfcedocdt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfcedocdt
+            #add-point:BEFORE FIELD b_sfcedocdt
+            {<point name="construct.b.page1.b_sfcedocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfcedocdt
+            
+            #add-point:AFTER FIELD b_sfcedocdt
+            {<point name="construct.a.page1.b_sfcedocdt" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_sfcedocdt
+         ON ACTION controlp INFIELD b_sfcedocdt
+            #add-point:ON ACTION controlp INFIELD b_sfcedocdt
+            {<point name="construct.c.page1.b_sfcedocdt" />}
+            #END add-point
+ 
+         #----<<b_sfce004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfce004
+            #add-point:BEFORE FIELD b_sfce004
+            {<point name="construct.b.page1.b_sfce004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfce004
+            
+            #add-point:AFTER FIELD b_sfce004
+            {<point name="construct.a.page1.b_sfce004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_sfce004
+         ON ACTION controlp INFIELD b_sfce004
+            #add-point:ON ACTION controlp INFIELD b_sfce004
+            {<point name="construct.c.page1.b_sfce004" />}
+            #END add-point
+ 
+         #----<<sfaa010_e>>----
+         #----<<imaal003_e>>----
+         #----<<imaal004_e>>----
+         #----<<sfaa016_e>>----
+         #----<<b_sfce002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfce002
+            #add-point:BEFORE FIELD b_sfce002
+            {<point name="construct.b.page1.b_sfce002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfce002
+            
+            #add-point:AFTER FIELD b_sfce002
+            {<point name="construct.a.page1.b_sfce002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_sfce002
+         ON ACTION controlp INFIELD b_sfce002
+            #add-point:ON ACTION controlp INFIELD b_sfce002
+            {<point name="construct.c.page1.b_sfce002" />}
+            #END add-point
+ 
+         #----<<b_sfce003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfce003
+            #add-point:BEFORE FIELD b_sfce003
+            {<point name="construct.b.page1.b_sfce003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfce003
+            
+            #add-point:AFTER FIELD b_sfce003
+            {<point name="construct.a.page1.b_sfce003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_sfce003
+         ON ACTION controlp INFIELD b_sfce003
+            #add-point:ON ACTION controlp INFIELD b_sfce003
+            {<point name="construct.c.page1.b_sfce003" />}
+            #END add-point
+ 
+         #----<<b_sfce005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfce005
+            #add-point:BEFORE FIELD b_sfce005
+            {<point name="construct.b.page1.b_sfce005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfce005
+            
+            #add-point:AFTER FIELD b_sfce005
+            {<point name="construct.a.page1.b_sfce005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_sfce005
+         ON ACTION controlp INFIELD b_sfce005
+            #add-point:ON ACTION controlp INFIELD b_sfce005
+            {<point name="construct.c.page1.b_sfce005" />}
+            #END add-point
+ 
+         #----<<sel_g>>----
+         #----<<sfcgdocno>>----
+         #----<<sfaa017_g>>----
+         #----<<pmaal004_g>>----
+         #----<<sfcg001>>----
+         #----<<sfcgdocdt>>----
+         #----<<sfcg004>>----
+         #----<<sfaa010_g>>----
+         #----<<imaal003_g>>----
+         #----<<imaal004_g>>----
+         #----<<sfaa016_g>>----
+         #----<<sfcg002>>----
+         #----<<sfcg003>>----
+         #----<<sfcg005>>----
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+      CONSTRUCT g_wc2_table2 ON sfcfdocno,sfcfseq,sfcf004,sfcf005
+           FROM s_detail2[1].b_sfcfdocno,s_detail2[1].b_sfcfseq,s_detail2[1].b_sfcf004,s_detail2[1].b_sfcf005 
+
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.body2.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+                #----<<b_sfcfdocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfcfdocno
+            #add-point:BEFORE FIELD b_sfcfdocno
+            {<point name="construct.b.page2.b_sfcfdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfcfdocno
+            
+            #add-point:AFTER FIELD b_sfcfdocno
+            {<point name="construct.a.page2.b_sfcfdocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.b_sfcfdocno
+         ON ACTION controlp INFIELD b_sfcfdocno
+            #add-point:ON ACTION controlp INFIELD b_sfcfdocno
+            {<point name="construct.c.page2.b_sfcfdocno" />}
+            #END add-point
+ 
+         #----<<b_sfcfseq>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfcfseq
+            #add-point:BEFORE FIELD b_sfcfseq
+            {<point name="construct.b.page2.b_sfcfseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfcfseq
+            
+            #add-point:AFTER FIELD b_sfcfseq
+            {<point name="construct.a.page2.b_sfcfseq" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.b_sfcfseq
+         ON ACTION controlp INFIELD b_sfcfseq
+            #add-point:ON ACTION controlp INFIELD b_sfcfseq
+            {<point name="construct.c.page2.b_sfcfseq" />}
+            #END add-point
+ 
+         #----<<b_sfcf004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfcf004
+            #add-point:BEFORE FIELD b_sfcf004
+            {<point name="construct.b.page2.b_sfcf004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfcf004
+            
+            #add-point:AFTER FIELD b_sfcf004
+            {<point name="construct.a.page2.b_sfcf004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.b_sfcf004
+         ON ACTION controlp INFIELD b_sfcf004
+            #add-point:ON ACTION controlp INFIELD b_sfcf004
+            {<point name="construct.c.page2.b_sfcf004" />}
+            #END add-point
+ 
+         #----<<b_sfcf005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_sfcf005
+            #add-point:BEFORE FIELD b_sfcf005
+            {<point name="construct.b.page2.b_sfcf005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_sfcf005
+            
+            #add-point:AFTER FIELD b_sfcf005
+            {<point name="construct.a.page2.b_sfcf005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.b_sfcf005
+         ON ACTION controlp INFIELD b_sfcf005
+            #add-point:ON ACTION controlp INFIELD b_sfcf005
+            {<point name="construct.c.page2.b_sfcf005" />}
+            #END add-point
+ 
+         #----<<sfchdocno>>----
+         #----<<sfchseq>>----
+         #----<<sfch004>>----
+         #----<<sfch005>>----
+   
+       
+      END CONSTRUCT
+ 
+ 
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+   ELSE
+      LET g_master_idx = 1
+   END IF
+   
+   LET g_wc = g_wc_table 
+ 
+   IF NOT cl_null(g_wc2_table2) AND g_wc2_table2 <> " 1=1" THEN
+      LET g_wc = g_wc, " AND ", g_wc2_table2
+   END IF
+ 
+ 
+        
+   LET g_wc2 = " 1=1"
+   IF NOT cl_null(g_wc2_table2) AND g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2, " AND ", g_wc2_table2
+   END IF
+ 
+ 
+        
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL asfq302_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.reproduce" ver="1" status="" src="s">
+    <![CDATA[#+ reproduce
+PRIVATE FUNCTION asfq302_reproduce()
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #add-point:reproduce段control
+   {<point name="reproduce.control"/>}
+   #end add-point 
+END FUNCTION
+]]>
+  </section>
+  <section id="asfq302.ui_dialog" ver="5" status="" src="s">
+    <![CDATA[#+ 功能選單 
+PRIVATE FUNCTION asfq302_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   CALL asfq302_query()
+   
+   WHILE TRUE
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_sfce_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_sfce_d.getLength() TO FORMONLY.h_count
+               CALL asfq302_fetch()
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               {<point name="input.body.before_row"/>}
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         DISPLAY ARRAY g_sfce3_d TO s_detail3.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 3
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_sfce3_d.getLength() TO FORMONLY.h_count
+               CALL asfq302_fetch()
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               {<point name="input.body3.before_row"/>}
+               #end add-point  
+            #自訂ACTION(detail_show,page_3)
+            
+               
+         END DISPLAY
+ 
+ 
+         
+         DISPLAY ARRAY g_sfce2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 2
+            
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               DISPLAY g_sfce2_d.getLength() TO FORMONLY.cnt
+               #add-point:input段before row
+               {<point name="input.body2.before_row"/>}
+               #end add-point 
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_sfce4_d TO s_detail4.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 4
+            
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail4")
+               LET l_ac = g_detail_idx2
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               DISPLAY g_sfce4_d.getLength() TO FORMONLY.cnt
+               #add-point:input段before row
+               {<point name="input.body4.before_row"/>}
+               #end add-point 
+            #自訂ACTION(detail_show,page_4)
+            
+               
+         END DISPLAY
+ 
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG      
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+ 
+            NEXT FIELD sel
+      
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL asfq302_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL asfq302_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+      
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_sfce_d.getLength()
+               LET g_sfce_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_sfce_d.getLength()
+               LET g_sfce_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_sfce_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_sfce_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_sfce_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_sfce_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL asfq302_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+ 
+         ON ACTION datarefresh   # 重新整理
+            LET g_error_show = 1
+            CALL asfq302_b_fill()
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

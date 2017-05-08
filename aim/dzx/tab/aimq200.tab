@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimq200" module="aim" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="05423" crtdt="2016-08-04 17:40:54" modid="05423" moddt="2016-09-29 17:06:19" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件變更記錄查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="imaa001,imaa004,imaa009,imaa003,imaa005,imaa010,l_cha_col,l_cha_dt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),imaa001,imaa001_desc(chr500),imaa001_desc_1(chr500),imaa004,imaa009,url_b_imaa009(string),imaa009_desc(chr500),imaa003,url_b_imaa003(string),imaa003_desc(chr500),imaa005,imaa005_desc(chr500),imaa010,imaa010_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="l_seq(num10),l_col(chr500),l_col_desc(chr500),l_cha_b(chr500),l_cha_a(chr500),l_logc005(chr10),l_logc005_desc(chr500),l_logc002(chr20),l_logc002_desc(chr500),l_logc001(chr20),l_logc001_desc(chr500),imaamoddt(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),imaa001(b_imaa001),imaa001_desc(b_imaa001_desc),imaa001_desc_1(b_imaa001_desc_1),imaa004(b_imaa004),imaa009(b_imaa009),url_b_imaa009(url_b_imaa009),imaa009_desc(b_imaa009_desc),imaa003(b_imaa003),url_b_imaa003(url_b_imaa003),imaa003_desc(b_imaa003_desc),imaa005(b_imaa005),imaa005_desc(b_imaa005_desc),imaa010(b_imaa010),imaa010_desc(b_imaa010_desc)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="l_seq(l_seq),l_col(l_col),l_col_desc(l_col_desc),l_cha_b(l_cha_b),l_cha_a(l_cha_a),l_logc005(l_logc005),l_logc005_desc(l_logc005_desc),l_logc002(l_logc002),l_logc002_desc(l_logc002_desc),l_logc001(l_logc001),l_logc001_desc(l_logc001_desc),imaamoddt(imaamoddt)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <cluster id="url_b_imaa009" qry_field="imaa009" prog="aimi010" parameter="imaa009"/>
+      <cluster id="url_b_imaa003" qry_field="imaa003" prog="aimi100" parameter="imaa003"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_aimi010" prog="aimi010" parameter="imaa009"/>
+        <action id="prog_aimi100" prog="aimi100" parameter="imaa003"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimq200" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="imaa001,imaa004,imaa009,imaa003,imaa005,imaa010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="imaa001(b_imaa001),imaa004(b_imaa004),imaa009(b_imaa009),imaa003(b_imaa003),imaa005(b_imaa005),imaa010(b_imaa010)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="imaa001">
+        <after>
+          <reference field="imaa001_desc" ref_field="imaa001" map_field="imaaent,imaa001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaa001_desc"/>
+      <column id="imaa001_desc_1"/>
+      <column id="imaa004" def_scc="1001"/>
+      <column id="imaa009">
+        <after>
+          <check chkid="v_rtax001" id="isExist"/>
+          <reference field="imaa009_desc" ref_field="imaa009" map_field="b_imaa009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="url_b_imaa009"/>
+      <column id="imaa009_desc"/>
+      <column id="imaa003">
+        <after>
+          <reference field="imaa003_desc" ref_field="imaa003" map_field="imaa003" ref_sql="SELECT imckl003 FROM imckl_t WHERE imcklent=$varg_enterprise$var AND imckl001=? AND imckl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imck001" state="c"/>
+      </column>
+      <column id="url_b_imaa003"/>
+      <column id="imaa003_desc"/>
+      <column id="imaa005">
+        <after>
+          <check chkid="v_imea001" id="isExist"/>
+          <reference field="imaa005_desc" ref_field="imaa005" map_field="imaa005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;211&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imea001" state="c"/>
+      </column>
+      <column id="imaa005_desc"/>
+      <column id="imaa010">
+        <after>
+          <reference field="imaa010_desc" ref_field="imaa010" map_field="imaa010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imaa010_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="l_seq"/>
+      <column id="l_col">
+        <after/>
+      </column>
+      <column id="l_col_desc"/>
+      <column id="l_cha_b"/>
+      <column id="l_cha_a"/>
+      <column id="l_logc005">
+        <after/>
+      </column>
+      <column id="l_logc005_desc"/>
+      <column id="l_logc002">
+        <after/>
+      </column>
+      <column id="l_logc002_desc"/>
+      <column id="l_logc001">
+        <after/>
+      </column>
+      <column id="l_logc001_desc"/>
+      <column id="imaamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="imaa_t" page="1,2" linked="" pk="imaa001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,imaa001,&apos;&apos;,&apos;&apos;,imaa004,imaa009,&apos;&apos;,imaa003,&apos;&apos;,imaa005,&apos;&apos;,imaa010,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM imaa_t WHERE imaaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

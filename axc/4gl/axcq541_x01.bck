@@ -1,0 +1,456 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axcq541_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2015-04-21 13:53:35), PR版次:0001(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000042
+#+ Filename...: axcq541_x01
+#+ Description: 工單在製累計投入和轉出打印作業
+#+ Creator....: 03297(2015-04-21 09:31:59)
+#+ Modifier...: 03297 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="axcq541_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:7)
+#add-point:填寫註解說明
+
+#end add-point
+#add-point:填寫註解說明
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       table STRING                   #tmptable
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axcq541_x01.main" readonly="Y" >}
+PUBLIC FUNCTION axcq541_x01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 STRING                  #tm.table  tmptable
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.table = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axcq541_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axcq541_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axcq541_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axcq541_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axcq541_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axcq541_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq541_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION axcq541_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "xccdcomp.xccd_t.xccdcomp,xccdcomp_desc.type_t.chr100,xccdld.xccd_t.xccdld,xccdld_desc.type_t.chr100,xccd004.xccd_t.xccd004,xccd005.xccd_t.xccd005,xccd001.xccd_t.xccd001,xccd001_desc.type_t.chr100,xccd003.xccd_t.xccd003,xccd003_desc.type_t.chr100,xccd002.xccd_t.xccd002,xccd002_desc.type_t.chr100,xccd006.xccd_t.xccd006,sfaa_t_sfaa019.sfaa_t.sfaa019,sfaa_t_sfaa020.sfaa_t.sfaa020,xccd007.xccd_t.xccd007,xccd007_desc.type_t.chr100,sfaa_t_sfaa012.sfaa_t.sfaa012,sfaa_t_sfaa049.sfaa_t.sfaa049,xccd301_sum.type_t.num20_6,xccd301.xccd_t.xccd301,xcbk_t_xcbk100.xcbk_t.xcbk100,xcbk100_1.type_t.num20_6,xcce002.xcce_t.xcce002,xcce002_desc.type_t.chr100,xcce007.xcce_t.xcce007,xcce007_desc.type_t.chr100,xcce007_desc_1.type_t.chr100,xcce008.xcce_t.xcce008,xcce009.xcce_t.xcce009,xcbb_t_xcbb005.xcbb_t.xcbb005,xcbb005_desc.type_t.chr100,xcce201.xcce_t.xcce201,xcce202a.xcce_t.xcce202a,xcce202b.xcce_t.xcce202b,xcce202c.xcce_t.xcce202c,xcce202d.xcce_t.xcce202d,xcce202e.xcce_t.xcce202e,xcce202f.xcce_t.xcce202f,xcce202g.xcce_t.xcce202g,xcce202h.xcce_t.xcce202h,xcce202.xcce_t.xcce202,xcce301.xcce_t.xcce301,xcce302a.xcce_t.xcce302a,xcce302b.xcce_t.xcce302b,xcce302c.xcce_t.xcce302c,xcce302d.xcce_t.xcce302d,xcce302e.xcce_t.xcce302e,xcce302f.xcce_t.xcce302f,xcce302g.xcce_t.xcce302g,xcce302h.xcce_t.xcce302h,xcce302.xcce_t.xcce302,xcce_price.xccc_t.xccc280,xcce_conv_rate.type_t.num26_10,xcce_conv_price.xccc_t.xccc280,xcce303.xcce_t.xcce303,xcce304a.xcce_t.xcce304a,xcce304b.xcce_t.xcce304b,xcce304c.xcce_t.xcce304c,xcce304d.xcce_t.xcce304d,xcce304e.xcce_t.xcce304e,xcce304f.xcce_t.xcce304f,xcce304g.xcce_t.xcce304g,xcce304h.xcce_t.xcce304h,xcce304.xcce_t.xcce304,xcce901.xcce_t.xcce901,xcce902a.xcce_t.xcce902a,xcce902b.xcce_t.xcce902b,xcce902c.xcce_t.xcce902c,xcce902d.xcce_t.xcce902d,xcce902e.xcce_t.xcce902e,xcce902f.xcce_t.xcce902f,xcce902g.xcce_t.xcce902g,xcce902h.xcce_t.xcce902h,xcce902.xcce_t.xcce902,xcce201_sum.type_t.num20_6,xcce202a_sum.type_t.num20_6,xcce202b_sum.type_t.num20_6,xcce202c_sum.type_t.num20_6,xcce202d_sum.type_t.num20_6,xcce202e_sum.type_t.num20_6,xcce202f_sum.type_t.num20_6,xcce202g_sum.type_t.num20_6,xcce202h_sum.type_t.num20_6,xcce202_sum.type_t.num20_6,xcce202_total.type_t.num20_6,xcce301_sum.type_t.num20_6,xcce302a_sum.type_t.num20_6,xcce302b_sum.type_t.num20_6,xcce302c_sum.type_t.num20_6,xcce302d_sum.type_t.num20_6,xcce302e_sum.type_t.num20_6,xcce302f_sum.type_t.num20_6,xcce302g_sum.type_t.num20_6,xcce302h_sum.type_t.num20_6,xcce302_sum.type_t.num20_6,xcce302_total.type_t.num20_6,xcce303_sum.type_t.num20_6,xcce304a_sum.type_t.num20_6,xcce304b_sum.type_t.num20_6,xcce304c_sum.type_t.num20_6,xcce304d_sum.type_t.num20_6,xcce304e_sum.type_t.num20_6,xcce304f_sum.type_t.num20_6,xcce304g_sum.type_t.num20_6,xcce304h_sum.type_t.num20_6,xcce304_sum.type_t.num20_6,xcce304_total.type_t.num20_6,xcce901_sum.type_t.num20_6,xcce902a_sum.type_t.num20_6,xcce902b_sum.type_t.num20_6,xcce902c_sum.type_t.num20_6,xcce902d_sum.type_t.num20_6,xcce902e_sum.type_t.num20_6,xcce902f_sum.type_t.num20_6,xcce902g_sum.type_t.num20_6,xcce902h_sum.type_t.num20_6,xcce902_sum.type_t.num20_6,xcce902_total.type_t.num20_6" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq541_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION axcq541_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq541_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axcq541_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT xccdcomp,NULL,xccdld,NULL,xccd004,xccd005,xccd001,NULL,xccd003,NULL,xccd002, 
+       NULL,xccd006,sfaa_t.sfaa019,sfaa_t.sfaa020,xccd007,NULL,sfaa_t.sfaa012,sfaa_t.sfaa049,0,xccd301, 
+       xcbk_t.xcbk100,NULL,xcce002,NULL,xcce007,NULL,NULL,xcce008,xcce009,xcbb_t.xcbb005,NULL,xcce201, 
+       xcce202a,xcce202b,xcce202c,xcce202d,xcce202e,xcce202f,xcce202g,xcce202h,xcce202,xcce301,xcce302a, 
+       xcce302b,xcce302c,xcce302d,xcce302e,xcce302f,xcce302g,xcce302h,xcce302,NULL,NULL,NULL,xcce303, 
+       xcce304a,xcce304b,xcce304c,xcce304d,xcce304e,xcce304f,xcce304g,xcce304h,xcce304,xcce901,xcce902a, 
+       xcce902b,xcce902c,xcce902d,xcce902e,xcce902f,xcce902g,xcce902h,xcce902,NULL,NULL,NULL,NULL,NULL, 
+       NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, 
+       NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, 
+       NULL"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   
+   #end add-point
+    LET g_from = " FROM xccd_t,xcce_t,xcbk_t,xcbb_t,sfaa_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xccd_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_sql = "SELECT * FROM ",tm.table
+   #end add-point
+   PREPARE axcq541_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axcq541_x01_curs CURSOR FOR axcq541_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq541_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axcq541_x01_ins_data()
+DEFINE sr RECORD 
+   xccdcomp LIKE xccd_t.xccdcomp, 
+   xccdcomp_desc LIKE type_t.chr100, 
+   xccdld LIKE xccd_t.xccdld, 
+   xccdld_desc LIKE type_t.chr100, 
+   xccd004 LIKE xccd_t.xccd004, 
+   xccd005 LIKE xccd_t.xccd005, 
+   xccd001 LIKE xccd_t.xccd001, 
+   xccd001_desc LIKE type_t.chr100, 
+   xccd003 LIKE xccd_t.xccd003, 
+   xccd003_desc LIKE type_t.chr100, 
+   xccd002 LIKE xccd_t.xccd002, 
+   xccd002_desc LIKE type_t.chr100, 
+   xccd006 LIKE xccd_t.xccd006, 
+   sfaa_t_sfaa019 LIKE sfaa_t.sfaa019, 
+   sfaa_t_sfaa020 LIKE sfaa_t.sfaa020, 
+   xccd007 LIKE xccd_t.xccd007, 
+   xccd007_desc LIKE type_t.chr100, 
+   sfaa_t_sfaa012 LIKE sfaa_t.sfaa012, 
+   sfaa_t_sfaa049 LIKE sfaa_t.sfaa049, 
+   xccd301_sum LIKE type_t.num20_6, 
+   xccd301 LIKE xccd_t.xccd301, 
+   xcbk_t_xcbk100 LIKE xcbk_t.xcbk100, 
+   xcbk100_1 LIKE type_t.num20_6, 
+   xcce002 LIKE xcce_t.xcce002, 
+   xcce002_desc LIKE type_t.chr100, 
+   xcce007 LIKE xcce_t.xcce007, 
+   xcce007_desc LIKE type_t.chr100, 
+   xcce007_desc_1 LIKE type_t.chr100, 
+   xcce008 LIKE xcce_t.xcce008, 
+   xcce009 LIKE xcce_t.xcce009, 
+   xcbb_t_xcbb005 LIKE xcbb_t.xcbb005, 
+   xcbb005_desc LIKE type_t.chr100, 
+   xcce201 LIKE xcce_t.xcce201, 
+   xcce202a LIKE xcce_t.xcce202a, 
+   xcce202b LIKE xcce_t.xcce202b, 
+   xcce202c LIKE xcce_t.xcce202c, 
+   xcce202d LIKE xcce_t.xcce202d, 
+   xcce202e LIKE xcce_t.xcce202e, 
+   xcce202f LIKE xcce_t.xcce202f, 
+   xcce202g LIKE xcce_t.xcce202g, 
+   xcce202h LIKE xcce_t.xcce202h, 
+   xcce202 LIKE xcce_t.xcce202, 
+   xcce301 LIKE xcce_t.xcce301, 
+   xcce302a LIKE xcce_t.xcce302a, 
+   xcce302b LIKE xcce_t.xcce302b, 
+   xcce302c LIKE xcce_t.xcce302c, 
+   xcce302d LIKE xcce_t.xcce302d, 
+   xcce302e LIKE xcce_t.xcce302e, 
+   xcce302f LIKE xcce_t.xcce302f, 
+   xcce302g LIKE xcce_t.xcce302g, 
+   xcce302h LIKE xcce_t.xcce302h, 
+   xcce302 LIKE xcce_t.xcce302, 
+   xcce_price LIKE xccc_t.xccc280, 
+   xcce_conv_rate LIKE type_t.num26_10, 
+   xcce_conv_price LIKE xccc_t.xccc280, 
+   xcce303 LIKE xcce_t.xcce303, 
+   xcce304a LIKE xcce_t.xcce304a, 
+   xcce304b LIKE xcce_t.xcce304b, 
+   xcce304c LIKE xcce_t.xcce304c, 
+   xcce304d LIKE xcce_t.xcce304d, 
+   xcce304e LIKE xcce_t.xcce304e, 
+   xcce304f LIKE xcce_t.xcce304f, 
+   xcce304g LIKE xcce_t.xcce304g, 
+   xcce304h LIKE xcce_t.xcce304h, 
+   xcce304 LIKE xcce_t.xcce304, 
+   xcce901 LIKE xcce_t.xcce901, 
+   xcce902a LIKE xcce_t.xcce902a, 
+   xcce902b LIKE xcce_t.xcce902b, 
+   xcce902c LIKE xcce_t.xcce902c, 
+   xcce902d LIKE xcce_t.xcce902d, 
+   xcce902e LIKE xcce_t.xcce902e, 
+   xcce902f LIKE xcce_t.xcce902f, 
+   xcce902g LIKE xcce_t.xcce902g, 
+   xcce902h LIKE xcce_t.xcce902h, 
+   xcce902 LIKE xcce_t.xcce902, 
+   xcce201_sum LIKE type_t.num20_6, 
+   xcce202a_sum LIKE type_t.num20_6, 
+   xcce202b_sum LIKE type_t.num20_6, 
+   xcce202c_sum LIKE type_t.num20_6, 
+   xcce202d_sum LIKE type_t.num20_6, 
+   xcce202e_sum LIKE type_t.num20_6, 
+   xcce202f_sum LIKE type_t.num20_6, 
+   xcce202g_sum LIKE type_t.num20_6, 
+   xcce202h_sum LIKE type_t.num20_6, 
+   xcce202_sum LIKE type_t.num20_6, 
+   xcce202_total LIKE type_t.num20_6, 
+   xcce301_sum LIKE type_t.num20_6, 
+   xcce302a_sum LIKE type_t.num20_6, 
+   xcce302b_sum LIKE type_t.num20_6, 
+   xcce302c_sum LIKE type_t.num20_6, 
+   xcce302d_sum LIKE type_t.num20_6, 
+   xcce302e_sum LIKE type_t.num20_6, 
+   xcce302f_sum LIKE type_t.num20_6, 
+   xcce302g_sum LIKE type_t.num20_6, 
+   xcce302h_sum LIKE type_t.num20_6, 
+   xcce302_sum LIKE type_t.num20_6, 
+   xcce302_total LIKE type_t.num20_6, 
+   xcce303_sum LIKE type_t.num20_6, 
+   xcce304a_sum LIKE type_t.num20_6, 
+   xcce304b_sum LIKE type_t.num20_6, 
+   xcce304c_sum LIKE type_t.num20_6, 
+   xcce304d_sum LIKE type_t.num20_6, 
+   xcce304e_sum LIKE type_t.num20_6, 
+   xcce304f_sum LIKE type_t.num20_6, 
+   xcce304g_sum LIKE type_t.num20_6, 
+   xcce304h_sum LIKE type_t.num20_6, 
+   xcce304_sum LIKE type_t.num20_6, 
+   xcce304_total LIKE type_t.num20_6, 
+   xcce901_sum LIKE type_t.num20_6, 
+   xcce902a_sum LIKE type_t.num20_6, 
+   xcce902b_sum LIKE type_t.num20_6, 
+   xcce902c_sum LIKE type_t.num20_6, 
+   xcce902d_sum LIKE type_t.num20_6, 
+   xcce902e_sum LIKE type_t.num20_6, 
+   xcce902f_sum LIKE type_t.num20_6, 
+   xcce902g_sum LIKE type_t.num20_6, 
+   xcce902h_sum LIKE type_t.num20_6, 
+   xcce902_sum LIKE type_t.num20_6, 
+   xcce902_total LIKE type_t.num20_6
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axcq541_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.xccdcomp,sr.xccdcomp_desc,sr.xccdld,sr.xccdld_desc,sr.xccd004,sr.xccd005,sr.xccd001,sr.xccd001_desc,sr.xccd003,sr.xccd003_desc,sr.xccd002,sr.xccd002_desc,sr.xccd006,sr.sfaa_t_sfaa019,sr.sfaa_t_sfaa020,sr.xccd007,sr.xccd007_desc,sr.sfaa_t_sfaa012,sr.sfaa_t_sfaa049,sr.xccd301_sum,sr.xccd301,sr.xcbk_t_xcbk100,sr.xcbk100_1,sr.xcce002,sr.xcce002_desc,sr.xcce007,sr.xcce007_desc,sr.xcce007_desc_1,sr.xcce008,sr.xcce009,sr.xcbb_t_xcbb005,sr.xcbb005_desc,sr.xcce201,sr.xcce202a,sr.xcce202b,sr.xcce202c,sr.xcce202d,sr.xcce202e,sr.xcce202f,sr.xcce202g,sr.xcce202h,sr.xcce202,sr.xcce301,sr.xcce302a,sr.xcce302b,sr.xcce302c,sr.xcce302d,sr.xcce302e,sr.xcce302f,sr.xcce302g,sr.xcce302h,sr.xcce302,sr.xcce_price,sr.xcce_conv_rate,sr.xcce_conv_price,sr.xcce303,sr.xcce304a,sr.xcce304b,sr.xcce304c,sr.xcce304d,sr.xcce304e,sr.xcce304f,sr.xcce304g,sr.xcce304h,sr.xcce304,sr.xcce901,sr.xcce902a,sr.xcce902b,sr.xcce902c,sr.xcce902d,sr.xcce902e,sr.xcce902f,sr.xcce902g,sr.xcce902h,sr.xcce902,sr.xcce201_sum,sr.xcce202a_sum,sr.xcce202b_sum,sr.xcce202c_sum,sr.xcce202d_sum,sr.xcce202e_sum,sr.xcce202f_sum,sr.xcce202g_sum,sr.xcce202h_sum,sr.xcce202_sum,sr.xcce202_total,sr.xcce301_sum,sr.xcce302a_sum,sr.xcce302b_sum,sr.xcce302c_sum,sr.xcce302d_sum,sr.xcce302e_sum,sr.xcce302f_sum,sr.xcce302g_sum,sr.xcce302h_sum,sr.xcce302_sum,sr.xcce302_total,sr.xcce303_sum,sr.xcce304a_sum,sr.xcce304b_sum,sr.xcce304c_sum,sr.xcce304d_sum,sr.xcce304e_sum,sr.xcce304f_sum,sr.xcce304g_sum,sr.xcce304h_sum,sr.xcce304_sum,sr.xcce304_total,sr.xcce901_sum,sr.xcce902a_sum,sr.xcce902b_sum,sr.xcce902c_sum,sr.xcce902d_sum,sr.xcce902e_sum,sr.xcce902f_sum,sr.xcce902g_sum,sr.xcce902h_sum,sr.xcce902_sum,sr.xcce902_total
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axcq541_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq541_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axcq541_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcq541_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

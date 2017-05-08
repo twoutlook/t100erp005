@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimm200_01" module="aim" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="01258" crtdt="2013-08-16 10:40:13" modid="02294" moddt="2014-10-30 17:40:24" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="產品特徵值">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1_aimm200_01" page_id="1_aimm200_01" value="imak001,imak002,imak002_desc(chr500),imak003,imak003_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_aimi018" prog="aimi018" parameter="imak002"/>
+        <action id="prog_aimi092" prog="aimi092" parameter="imak003"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimm200_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="imak001,imak002,imak003" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="imak001"/>
+      <column id="imak002">
+        <after>
+          <reference field="imak002_desc" ref_field="imak002" map_field="imak002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;273&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imeb004" state="i"/>
+        <controlp form="q_imeb004" state="c"/>
+      </column>
+      <column id="imak002_desc"/>
+      <column id="imak003">
+        <after>
+          <reference field="imak003_desc" ref_field="imak_t.imak003" map_field="imak003" ref_sql="SELECT imecl005 FROM imecl_t WHERE imeclent=$varg_enterprise$var AND imecl003=? AND imecl004=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imec003" state="i"/>
+        <controlp form="q_imec003" state="c"/>
+      </column>
+      <column id="imak003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="imak_t" page="1" linked="" pk="imak001,imak002">
+      <sql id="forupd_sql_detail" query="SELECT imak001,imak002,&apos;&apos;,imak003,&apos;&apos; FROM imak_t WHERE imakent=? AND imak001=? AND imak002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imak001,imak002,&apos;&apos;,imak003,&apos;&apos; FROM imak_t WHERE imakent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

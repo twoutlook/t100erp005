@@ -1,0 +1,485 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aooq100.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2013-10-18 14:11:13), PR版次:0003(2016-11-11 09:39:04)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000175
+#+ Filename...: aooq100
+#+ Description: 組織結構查詢作業
+#+ Creator....: 02482(2013-10-16 14:54:28)
+#+ Modifier...: 02482 -SD/PR- 08734
+ 
+{</section>}
+ 
+{<section id="aooq100.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#161108-00012#3    2016/11/09 By 08734   g_browser_cnt 由num5改為num10
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位  
+       #外顯欄位
+       b_show          LIKE type_t.chr100,
+       #父節點id
+       b_pid           LIKE type_t.chr100,
+       #本身節點id
+       b_id            LIKE type_t.chr100,
+       #是否展開
+       b_exp           LIKE type_t.chr100,
+       #是否有子節點
+       b_hasC          LIKE type_t.num5,
+       #是否已展開
+       b_isExp         LIKE type_t.num5,
+       #展開值
+       b_expcode       LIKE type_t.num5,
+       #tree自定義欄位
+       b_ooed001       LIKE ooed_t.ooed001,
+       b_ooed002       LIKE ooed_t.ooed002,
+       b_ooed003       LIKE ooed_t.ooed003,
+       b_ooed004       LIKE ooed_t.ooed004,
+       b_ooed005       LIKE ooed_t.ooed005
+       END RECORD
+DEFINE g_ooed001             LIKE ooed_t.ooed001
+DEFINE g_ooed006             LIKE ooed_t.ooed006
+DEFINE g_ooed001_t           LIKE ooed_t.ooed001
+DEFINE g_ooed006_t           LIKE ooed_t.ooed006
+DEFINE g_wc                  STRING
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10      
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10    #161108-00012#3 num5==》num10        
+DEFINE l_ac                  LIKE type_t.num10    #161108-00012#2 num5==》num10
+#DEFINE g_browser_cnt         LIKE type_t.num5   #161108-00012#3  2016/11/09 By 08734 mark
+DEFINE g_browser_cnt         LIKE type_t.num10   #161108-00012#3  2016/11/09 By 08734 add
+DEFINE g_browser_root        DYNAMIC ARRAY OF INTEGER
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aooq100.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define name="main.define"
+   
+   #end add-point    
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aoo","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+ 
+   #add-point:SQL_define name="main.define_sql"
+   LET g_forupd_sql = "SELECT ooed001,ooed002,ooed003,ooed004,ooed006,ooed005 FROM ooed_t WHERE ooedent= ? AND ooed001=? AND ooed002=? AND ooed003=? AND ooed004=? FOR UPDATE"
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE aooq100_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aooq100 WITH FORM cl_ap_formpath("aoo",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL aooq100_init()
+ 
+      #進入選單 Menu (='N')
+      CALL aooq100_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_aooq100
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aooq100.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+#+ 初始化
+PRIVATE FUNCTION aooq100_init()
+   
+   CALL cl_set_combo_scc('ooed001',100)
+END FUNCTION
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aooq100_ui_dialog()
+DEFINE li_exit      LIKE type_t.num5    #判別是否為離開作業
+
+      
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #INPUT g_ooed001,g_ooed006 FROM formonly.ooed001,formonly.ooed006
+      #   BEFORE INPUT
+      #END INPUT
+      
+      #左側瀏覽頁簽
+      DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+      
+         BEFORE ROW
+         
+         BEFORE DISPLAY
+            LET l_ac = DIALOG.getCurrentRow("s_browse")
+               
+      END DISPLAY
+      
+      BEFORE DIALOG
+ 	   
+     	AFTER DIALOG 
+ 
+      ON ACTION query
+         LET g_action_choice="query"
+         IF cl_auth_chk_act("query") THEN
+            CALL aooq100_query()
+         END IF
+          
+      ON ACTION exit
+         LET g_action_choice="exit"
+         LET INT_FLAG = FALSE
+         LET li_exit = TRUE
+         EXIT DIALOG 
+      
+      ON ACTION close
+         LET li_exit = TRUE
+         EXIT DIALOG
+         
+      ON ACTION group
+         LET g_action_choice="group"
+         IF cl_auth_chk_act("group") THEN
+            LET l_ac = DIALOG.getCurrentRow("s_browse")
+            IF cl_null(l_ac) OR l_ac = 0 THEN
+               LET l_ac = 1
+            END IF
+            IF cl_null(g_browser[l_ac].b_ooed004) AND cl_null(g_browser[l_ac].b_ooed005) THEN
+               CALL cl_cmdrun(" aooi100 '"||g_browser[l_ac].b_ooed002||"' ") 
+            ELSE
+               CALL cl_cmdrun(" aooi100 '"||g_browser[l_ac].b_ooed004||"' ")
+            END IF
+         END IF
+         
+      &include "main_menu.4gl"
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      
+   END DIALOG 
+END FUNCTION
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aooq100_query()
+   DEFINE ls_wc STRING
+
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+ 
+   CALL aooq100_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      DISPLAY "1" TO ooed001
+      DISPLAY g_today TO ooed006
+      CALL g_browser.clear()
+      RETURN
+   ELSE
+      CALL g_browser.clear()
+   END IF
+
+   CALL aooq100_browser_fill()
+
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = '-100'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+END FUNCTION
+#+ QBE資料查詢
+PRIVATE FUNCTION aooq100_construct()
+   #清除畫面
+   CLEAR FORM 
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT g_ooed001,g_ooed006 FROM ooed001,ooed006
+         BEFORE INPUT
+            LET g_ooed001 = "1"
+            LET g_ooed006 = g_today
+            DISPLAY g_ooed001 TO ooed001
+            DISPLAY g_ooed006 TO ooed006
+         
+      END INPUT
+
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+         
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG
+  
+   END DIALOG
+   
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+END FUNCTION
+#+ 樹顯示
+PRIVATE FUNCTION aooq100_browser_fill()
+DEFINE l_n        LIKE type_t.num5
+DEFINE l_pid      LIKE type_t.chr50   #用於樹的第一層
+DEFINE l_sql      STRING
+DEFINE l_n2       LIKE type_t.num5
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   LET l_n = 1
+   #第一層的資料
+   LET l_sql = " SELECT UNIQUE ooed002,ooed003 FROM ooed_t ",
+               "  WHERE ooedent = '",g_enterprise,"'",
+               "    AND ooed001 = '",g_ooed001,"' ",
+               "    AND ooed006 <= '",g_ooed006,"' ",
+               "    AND (ooed007 IS NULL OR ooed007 >= '",g_ooed006,"' ) ",
+               "  ORDER BY ooed002 "
+   PREPARE master_type_0 FROM l_sql
+   DECLARE master_typecur_0 CURSOR FOR master_type_0
+   #第二層的資料
+   LET l_sql = " SELECT UNIQUE ooed004,ooed003 FROM ooed_t ",
+               "  WHERE ooedent = '",g_enterprise,"'",
+               "    AND ooed001 = '",g_ooed001,"' ",
+               "    AND ooed006 <= '",g_ooed006,"' ",
+               "    AND (ooed007 IS NULL OR ooed007 >= '",g_ooed006,"' ) ",
+               "    AND ooed002 = ? ",
+               "    AND ooed003 = ? ",
+               "    AND ooed002 = ooed005 ",
+               "    AND ooed004 <> ooed005 ",
+               "  ORDER BY ooed004 "
+   PREPARE master_type_1 FROM l_sql
+   DECLARE master_typecur_1 CURSOR FOR master_type_1
+
+   INITIALIZE g_browser_root TO NULL
+   #初始化l_ac
+   LET l_ac = 1
+   FOREACH master_typecur_0 INTO g_browser[l_ac].b_ooed002,g_browser[l_ac].b_ooed003
+      #確定第一层root節點所在
+      LET g_browser_root[g_browser_root.getLength()+1] = l_ac
+      #此處(LV-1)
+      LET g_browser[l_ac].b_ooed002 = g_browser[l_ac].b_ooed002
+      LET g_browser[l_ac].b_pid = '0' CLIPPED
+      LET g_browser[l_ac].b_id = l_ac USING "<<<"
+      LET g_browser[l_ac].b_exp = TRUE
+      LET g_browser[l_ac].b_hasC = TRUE
+      LET g_browser[l_ac].b_isExp = TRUE
+      #第一層節點編號
+      LET l_pid = g_browser[l_ac].b_id CLIPPED
+      LET l_ac = l_ac + 1
+      LET g_cnt = l_ac
+      FOREACH master_typecur_1 USING g_browser[l_ac-1].b_ooed002,g_browser[l_ac-1].b_ooed003 INTO g_browser[g_cnt].b_ooed004,g_browser[g_cnt].b_ooed003
+         LET g_browser[g_cnt].b_ooed002 = g_browser[l_ac-1].b_ooed002
+         LET g_browser[g_cnt].b_ooed004 = g_browser[g_cnt].b_ooed004
+         LET g_browser[g_cnt].b_ooed005 = g_browser[l_ac-1].b_ooed004
+         LET g_browser[g_cnt].b_pid = l_pid
+         LET g_browser[g_cnt].b_id = l_pid,".",g_cnt USING "<<<"
+         LET g_browser[g_cnt].b_exp = TRUE
+         LET g_browser[g_cnt].b_hasC = aooq100_chk_hasC(g_cnt)
+         IF g_browser[g_cnt].b_hasC = 1 THEN
+            CALL aooq100_browser_expand(g_cnt)
+            LET g_cnt = g_browser.getLength()
+         END IF
+         LET g_cnt = g_cnt +1
+      END FOREACH
+      LET l_ac = g_browser.getLength()
+   END FOREACH
+   LET l_ac = l_ac - 1
+   CALL g_browser.deleteElement(l_ac+1)
+   FOR l_ac = 1 TO g_browser.getLength()
+       CALL aooq100_desc_show(l_ac)
+   END FOR
+
+   LET g_browser_cnt = g_browser.getLength() - g_browser_root.getLength()
+
+   FREE master_type_0
+   FREE master_type_1
+   
+   FOR l_n2 = 1 TO g_browser.getLength()
+       IF g_browser[l_n2].b_isExp is null THEN
+         CALL aooq100_browser_expand(l_n2)
+      END IF
+   END FOR
+END FUNCTION
+#+ 檢查是否有下節
+PRIVATE FUNCTION aooq100_chk_hasC(pi_id)
+DEFINE pi_id    INTEGER
+DEFINE li_cnt   INTEGER
+
+
+   LET g_sql = "SELECT COUNT(*) FROM ooed_t ",
+               " WHERE ooedent = '" ||g_enterprise|| "'",
+               "   AND ooed004 <> ooed005 ",
+               "   AND ooed001 = '",g_ooed001,"' ",
+               "   AND ooed006 <= '",g_ooed006,"' ",
+               "   AND (ooed007 IS NULL OR ooed007 >= '",g_ooed006,"' ) ", 
+               "   AND ooed005 = ? ",
+               "   AND ooed002 = ? ",
+               "   AND ooed003 = ? "
+   PREPARE aooq100_master_chk1 FROM g_sql 
+   EXECUTE aooq100_master_chk1 USING g_browser[pi_id].b_ooed004,g_browser[pi_id].b_ooed002,g_browser[pi_id].b_ooed003 INTO li_cnt
+   FREE aooq100_master_chk1
+   IF li_cnt > 0 THEN
+      RETURN TRUE
+   ELSE
+      RETURN FALSE
+   END IF
+END FUNCTION
+#+ Tree子節點展開
+PRIVATE FUNCTION aooq100_browser_expand(p_id)
+DEFINE p_id          LIKE type_t.num10
+DEFINE l_id          LIKE type_t.num10
+DEFINE l_cnt         LIKE type_t.num10
+DEFINE l_keyvalue    LIKE type_t.chr50
+DEFINE l_typevalue   LIKE type_t.chr50
+DEFINE l_type        LIKE type_t.chr50
+DEFINE l_sql         LIKE type_t.chr500
+DEFINE ls_source     LIKE type_t.chr500
+DEFINE ls_exp_code   LIKE type_t.chr500
+DEFINE l_return      LIKE type_t.num5
+
+   #若已經展開
+   IF g_browser[p_id].b_isExp = 1 THEN
+      RETURN
+   END IF
+   
+   LET g_browser[p_id].b_isExp = 1 
+   LET l_return = FALSE
+ 
+   LET l_keyvalue = g_browser[p_id].b_ooed004
+   
+         
+   LET l_sql = "SELECT UNIQUE ooed004,ooed003 ",
+               "  FROM ooed_t ",
+               " WHERE ooedent = '",g_enterprise,"' ",
+               "   AND ooed005 = '",l_keyvalue,"' ",
+               "   AND ooed004 <> ooed005",
+               "   AND ooed001 = '",g_ooed001,"'", 
+               "   AND ooed006 <= '",g_ooed006,"' ",
+               "   AND ooed002 = '",g_browser[p_id].b_ooed002,"' ",
+               "   AND ooed003 = '",g_browser[p_id].b_ooed003,"' ",
+               "   AND (ooed007 IS NULL OR ooed007 >= '",g_ooed006,"' ) ",
+               " ORDER BY ooed004"
+   
+   PREPARE tree_expand1 FROM l_sql
+   DECLARE tree_ex_cur1 CURSOR FOR tree_expand1
+  
+   LET l_id = p_id + 1
+   CALL g_browser.insertElement(l_id)
+   LET l_cnt = 1
+   FOREACH tree_ex_cur1 INTO g_browser[l_id].b_ooed004,g_browser[l_id].b_ooed003
+      IF cl_null(g_browser[l_id].b_ooed004) THEN
+         EXIT FOREACH
+      END IF
+      #pid=父節點id
+      LET g_browser[l_id].b_pid  = g_browser[p_id].b_id
+      #id=本身節點id(採流水號遞增)
+      LET g_browser[l_id].b_id  = g_browser[p_id].b_id||"."||l_cnt
+      LET g_browser[l_id].b_exp = TRUE
+      LET g_browser[l_id].b_ooed005 = g_browser[p_id].b_ooed004
+      LET g_browser[l_id].b_ooed002 = g_browser[p_id].b_ooed002
+      #hasC=確認該節點是否有子孫
+      CALL aooq100_desc_show(l_id)
+      LET g_browser[l_id].b_hasC = aooq100_chk_hasC(l_id)
+      LET l_id = l_id + 1
+      CALL g_browser.insertElement(l_id)
+      LET l_cnt = l_cnt + 1
+      LET l_return = TRUE
+   END FOREACH
+   LET l_cnt = l_cnt -1
+   #刪除空資料
+   CALL g_browser.deleteElement(l_id)
+END FUNCTION
+#+ 組合顯示在畫面上的資訊
+PRIVATE FUNCTION aooq100_desc_show(pi_ac)
+DEFINE pi_ac          LIKE type_t.num10  #161108-00012#3 num5==》num10
+DEFINE li_tmp         LIKE type_t.num10  #161108-00012#3 num5==》num10
+DEFINE l_ooed004_desc LIKE type_t.chr80 
+DEFINE ls_msg         STRING
+
+   LET li_tmp = l_ac
+   LET l_ac = pi_ac
+   IF cl_null(l_ac) OR l_ac = 0 THEN
+      LET l_ac = 1
+   END IF
+   
+   IF cl_null(g_browser[l_ac].b_ooed004) AND cl_null(g_browser[l_ac].b_ooed005) THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[l_ac].b_ooed002
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET l_ooed004_desc = g_rtn_fields[1]
+      LET ls_msg = cl_getmsg("aoo-00232",g_lang)
+      LET g_browser[l_ac].b_show = g_browser[l_ac].b_ooed002,' (',l_ooed004_desc,')','(',ls_msg,g_browser[l_ac].b_ooed003,')'
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[l_ac].b_ooed004
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET l_ooed004_desc = g_rtn_fields[1]
+      LET g_browser[l_ac].b_show = g_browser[l_ac].b_ooed004,' (',l_ooed004_desc,')'
+   END IF
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aprr280" module="apr" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05948" crtdt="2016-08-31 16:57:10" modid="05948" moddt="2016-08-31 16:57:10" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="促銷後台換贈/返現登記報表打印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtjadocno,rtjadocdt,rtja108,rtja108_desc(chr80),chr1"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="apr" filename="aprr280" method="dialog">
+    <section id="input">
+      <input id="head" field="chr1"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtjadocno,rtjadocdt,rtja108"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtjadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_rtjadocno" state="c"/>
+      </column>
+      <column id="rtjadocdt"/>
+      <column id="rtja108">
+        <after>
+          <reference field="rtja108_desc" ref_field="rtja_t.rtja108" map_field="rtja108" ref_sql="SELECT prdwl003 FROM prdwl_t WHERE prdwlent=$varg_enterprise$var AND prdwl001=? AND prdwl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtja108_desc"/>
+      <column id="chr1"/>
+    </init>
+  </form>
+</assembly>
+

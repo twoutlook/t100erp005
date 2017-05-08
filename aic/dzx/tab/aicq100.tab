@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aicq100" module="aic" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="04226" crtdt="2014-11-10 14:35:54" modid="04543" moddt="2015-04-10 14:21:00" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="(停用)多角貿易查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="xmda031,xmda050,xmdadocno,xmdadocdt,xmda004,xmda002,xmdastus,xmda010,xmda009,xmda011,xmda035"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),doctype(chr500),xmdasite,xmda031,xmda050,xmda050_desc(chr500),xmdadocno,xmdadocdt,xmda004,xmda004_desc(chr500),xmda002,xmda002_desc(chr500),xmdastus,xmda010,xmda010_desc(chr500),xmda009,xmda009_desc(chr500),xmda011,xmda011_desc(chr500),xmda035,xmda035_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="doctype1(chr500),xmdcdocno,xmdcseq,xmdc019,xmdc001,xmdc001_desc(chr500),xmdc001_desc_desc(chr500),xmdc002,xmdc006,xmdc006_desc(chr500),xmdc007,xmdl035,xmdd014,xrcb007"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),doctype(b_doctype),xmdasite(b_xmdasite),xmda031(b_xmda031),xmda050(b_xmda050),xmda050_desc(b_xmda050_desc),xmdadocno(b_xmdadocno),xmdadocdt(b_xmdadocdt),xmda004(b_xmda004),xmda004_desc(b_xmda004_desc),xmda002(b_xmda002),xmda002_desc(b_xmda002_desc),xmdastus(b_xmdastus),xmda010(b_xmda010),xmda010_desc(b_xmda010_desc),xmda009(b_xmda009),xmda009_desc(b_xmda009_desc),xmda011(b_xmda011),xmda011_desc(b_xmda011_desc),xmda035(b_xmda035),xmda035_desc(b_xmda035_desc)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="doctype1(b_doctype1),xmdcdocno(b_xmdcdocno),xmdcseq(b_xmdcseq),xmdc019(b_xmdc019),xmdc001(b_xmdc001),xmdc001_desc(b_xmdc001_desc),xmdc001_desc_desc(b_xmdc001_desc_desc),xmdc002(b_xmdc002),xmdc006(b_xmdc006),xmdc006_desc(b_xmdc006_desc),xmdc007(b_xmdc007),xmdl035(b_xmdl035),xmdd014(b_xmdd014),xrcb007(b_xrcb007)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aic" filename="aicq100" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="doctype,xmdasite,xmda031,xmda050,xmdadocdt,xmda004,xmda002,xmdastus,xmda010,xmda009,xmda011,xmda011_desc,xmda035,xmda035_desc" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="doctype1,xmdcdocno,xmdcseq,xmdc019,xmdc001,xmdc002,xmdc006,xmdc007,xmdl035,xmdd014,xrcb007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="xmdasite(b_xmdasite),xmda031(b_xmda031),xmda050(b_xmda050),xmdadocno(b_xmdadocno),xmdadocdt(b_xmdadocdt),xmda004(b_xmda004),xmda002(b_xmda002),xmdastus(b_xmdastus),xmda010(b_xmda010),xmda009(b_xmda009),xmda011(b_xmda011),xmda035(b_xmda035)"/>
+      <construct id="body" page="2" field="xmdcdocno(b_xmdcdocno),xmdcseq(b_xmdcseq),xmdc019(b_xmdc019),xmdc001(b_xmdc001),xmdc002(b_xmdc002),xmdc006(b_xmdc006),xmdc007(b_xmdc007),xmdl035(b_xmdl035),xmdd014(b_xmdd014),xrcb007(b_xrcb007)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="doctype"/>
+      <column id="xmdasite"/>
+      <column id="xmda031"/>
+      <column id="xmda050">
+        <after>
+          <reference field="xmda050_desc" ref_field="xmda050" map_field="b_xmda050" ref_sql="SELECT icaal004 FROM icaal_t WHERE icaalent=$varg_enterprise$var AND icaal001=? AND icaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmda050_desc"/>
+      <column id="xmdadocno"/>
+      <column id="xmdadocdt"/>
+      <column id="xmda004">
+        <after>
+          <reference field="xmda004_desc" ref_field="xmda004" map_field="b_xmda004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmda004_desc"/>
+      <column id="xmda002">
+        <after>
+          <reference field="xmda002_desc" ref_field="xmda002" map_field="b_xmda002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="xmda002_desc"/>
+      <column id="xmdastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="C" pic="closed"/>
+        <stus id="H" pic="hold"/>
+        <stus id="UH" pic="unhold"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="xmda010">
+        <after>
+          <reference field="xmda010_desc" ref_field="b_xmda010" map_field="b_xmda010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;238&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmda010_desc"/>
+      <column id="xmda009">
+        <after>
+          <reference field="xmda009_desc" ref_field="xmda009" map_field="b_xmda009" ref_sql="SELECT ooibl004 FROM ooibl_t WHERE ooiblent=$varg_enterprise$var AND ooibl002=? AND ooibl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmda009_desc"/>
+      <column id="xmda011">
+        <after/>
+      </column>
+      <column id="xmda011_desc"/>
+      <column id="xmda035">
+        <after/>
+      </column>
+      <column id="xmda035_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="doctype1"/>
+      <column id="xmdcdocno"/>
+      <column id="xmdcseq"/>
+      <column id="xmdc019" type="S" default="1" def_scc="2055"/>
+      <column id="xmdc001">
+        <after>
+          <check chkid="v_imaa001_5" id="isExist"/>
+          <reference field="xmdc001_desc" ref_field="xmdc001" map_field="xmdc001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="xmdc001_desc">
+        <after>
+          <reference field="xmdc001_desc_desc" ref_field="xmdc001" map_field="b_xmdc001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdc001_desc_desc"/>
+      <column id="xmdc002"/>
+      <column id="xmdc006">
+        <after>
+          <reference field="xmdc006_desc" ref_field="xmdc006" map_field="xmdc006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdc006_desc"/>
+      <column id="xmdc007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdl035" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdd014" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xrcb007" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xmda_t" page="1" linked="" pk="xmdadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,xmdasite,xmda031,xmda050,&apos;&apos;,xmdadocno,xmdadocdt,xmda004,&apos;&apos;,xmda002,&apos;&apos;,xmdastus,xmda010,&apos;&apos;,xmda009,&apos;&apos;,xmda011,&apos;&apos;,xmda035,&apos;&apos; FROM xmda_t WHERE xmdaent= ? AND 1=1 "/>
+    </body>
+    <body id="xmdc_t" page="2" linked="" pk="xmdcseq" fk="xmdcdocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xmdcdocno,xmdcseq,xmdc019,xmdc001,&apos;&apos;,&apos;&apos;,xmdc002,xmdc006,&apos;&apos;,xmdc007,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xmdc_t WHERE xmdcent=? AND xmdcdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

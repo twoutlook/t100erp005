@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afar500_g07" module="afa" jobmode="N" type="g01" industry="std" crtid="02291" crtdt="2015-10-10 09:35:38" modid="06821" moddt="2016-05-25 17:52:14" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|condotion:where),tm.a1(STRING|資產中心),tm.a2(STRING|資產性質),tm.a3(STRING|資產狀態)">
+    <var seq="1" value="fabaent,fabadocno,fabadocdt,faba001,faba004,faba005,faba006,faba003,fabkseq,fabk001,fabk002,fabk005,fabk003,fabk006,fabk008"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="fabaent(fabaent|fabaent),fabadocno(fabadocno|fabadocno),fabadocdt(fabadocdt|fabadocdt),faba001(faba001|faba001),faba004(faba004|faba004),faba005(faba005|faba005),faba006(faba006|faba006),faba003(faba003|faba003),fabkseq(fabkseq|fabkseq),fabk001(fabk001|fabk001),fabk002(fabk002|fabk002),fabk005(fabk005|fabk005),fabk003(fabk003|fabk003),fabk006(fabk006|fabk006),fabk008(fabk008|fabk008)"/>
+    <sql id="g_from" query="faba_t,fabk_t"/>
+    <sql id="g_where" query="" maintable="faba_t"/>
+    <sql id="g_order" query="fabadocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="fabadocno,fabkseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="fabadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fabaent,fabadocno"/>
+      <rep type="fabkseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="fabaent,fabadocno,fabkseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="fabaent,fabadocno,fabkseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="fabadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fabaent,fabadocno"/>
+      <rep type="fabkseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

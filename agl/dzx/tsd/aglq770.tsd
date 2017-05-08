@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aglq770" std_prog="aglq770" erpver="1.0" ver="1" module="AGL" booking="Y" class="q" template="Q001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="Q" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="datainfo,insert,output,query"/>
+  <table ver="1" cite_std="N">
+    <tbl name="glaq_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 明細分類帳按核算項查詢
+標準作業功能：單選/單選取消/多選/多選取消/新增/報表/詳細資料/查詢/篩選/條件查詢/條件儲存/說明/離開/重新整理
+作業類型：查詢作業
+輸入模式：列表模式-Q001_00
+作業資料來源(Detail)：
+ 資料來源表：xxxx_t(單頭檔)
+
+資料處理：
+1.來源檔案
+  帳別會科基本資料檔(glad_t)
+  會計科目各期餘額檔(glar_t)
+  傳票憑證單頭單身檔(glap_t,glaq_t)
+
+2.處理邏輯
+　2-1.取值邏輯
+　　　2-1-1.先分別取得條件選項中輸入的起始日期(S)/截止日期(E)對應的會計週期資料
+            CALL s_get_accdate 傳入S, 取得:條件選項中輸入的起始日期(S)對應的會計年度(S.year),期別(S.period),當期起始日(S.sdate),當期截止日(S.edate)
+　　　　　　CALL s_get_accdate 傳入E, 取得:條件選項中輸入的截止日期(E)對應的會計年度(E.year),期別(E.period),當期起始日(E.sdate),當期截止日(E.edate)
+            以下規格均以()裡的代號表達
+
+      2-1.2.每筆符合條件篩選出來的該帳別會計科目資料(glad_t.glad001)做以下各欄位的取值
+            期初餘額: IF S=S.sdate (即輸入的起始日期=當期的起始日）　
+　　　　　　　　　　　　 期初餘額= 取會計科目餘額檔(glar_t).年度=(S.year)且期別=S.period-1(前一期）的借貸方合計差額,取正數列於單身'餘額'欄位,並於單身'借貸'欄位表達'借'/'貸'/'平'三種餘額狀況
+                      ELSE (表示為破期）
+ 　　　　　　　　　　　　期初餘額= 取會計科目餘額檔(glar_t).年度=(S.year)且期別=S.period-1(前一期）的借貸方金額合計 
+                                   再累加　傳票憑證單頭單身檔(glap_t,glaq_t).傳票日期 BETWEEN S.sdate AND S 這段日期區間已過帳的傳票金額,借貸方合計差額,取正數列於單身'餘額'欄位,並於單身'借貸'欄位表達'借'/'貸'/'平'三種餘額狀況
+　　　　　　　　　　　END IF
+            本期合計: IF S=S.sdate AND E=E.edate (即輸入的起始截止日符合完整的期別區間)
+                         期間異動= 取會計科目餘額檔(glar_t).年度=(S.year)且期別=S.period 到 年度=(E.year)且期別=E.period 的借貸方金額合計,借貸方金額分別列示,並累加上述期初餘額,將累加結果的借貸方合計差額,取正數列於單身'餘額'欄位,並於單身'借貸'欄位表達'借'/'貸'/'平'三種餘額狀況 
+                      ELSE (表示為破期）
+                         期間異動= 傳票憑證單頭單身檔(glap_t,glaq_t).傳票日期 BETWEEN S AND E 這段日期區間已過帳的傳票金額,借貸方金額分別列示,並累加上述期初餘額,將累加結果的借貸方合計差額,取正數列於單身'餘額'欄位,並於單身'借貸'欄位表達'借'/'貸'/'平'三種餘額狀況
+                      END IF
+            本年累計: IF E=E.edate (即輸入的截止日期為期別的最末日）
+　　　　　　　　　　　　 本年累計= 取會計科目餘額檔(glar_t).年度=(E.year)且期別<=E.period 的借貸方合計差額,取正數列於單身'餘額'欄位,並於單身'借貸'欄位表達'借'/'貸'/'平'三種餘額狀況
+　　　　　　　　　　　ELSE (表示為破期）
+                         本年累計= 取會計科目餘額檔(glar_t).年度=(E.year)且期別<=E.period-1(前一期) 的借貸方金額合計
+                                   再累加　傳票憑證單頭單身檔(glap_t,glaq_t).傳票日期 BETWEEN E.sdate AND E 這段日期區間已過帳的借貸方合計差額,取正數列於單身'餘額'欄位,並於單身'借貸'欄位表達'借'/'貸'/'平'三種餘額狀況
+                      END IF
+
+    　2-1-3.以上取值邏輯,在SUM科目餘額或傳票憑證資料時,其where條件的維度除科目外,另加入經勾選後的核算項欄位
+
+      2-1.4.各取值欄位對應
+   　　　   會計科目各期餘額檔(glar_t)→
+　　　　　　原幣幣別=glar009
+ 　　　     原幣借方金額=glar010
+ 　　　     原幣貸方金額=glar011
+ 　　　     本幣借方金額=glar005
+  　　　    本幣貸方金額=glar006
+   　　　   本幣二借方金額=glar034
+　　　　　　本幣二貸方金額=glar035
+   　　　   本幣三借方金額=glar036
+ 　　　     本幣三貸方金額=glar037
+ 　　　     傳票憑證單頭單身檔(glap_t,glaq_t)→
+  　　　    原幣幣別=glaq005
+ 　　　     原幣借/貸方金額=glaq010(其借貸方的判斷依本幣金額所在方向認定）
+   　　　   本幣借方金額=glaq003
+  　　　    本幣貸方金額=glaq004
+  　　　    本幣二借方金額=glaq040
+　　　　　　本幣二貸方金額=glaq041
+ 　　　     本幣三借方金額=glaq043
+  　　　    本幣三貸方金額=glaq044
+
+  2-2.條件選項的處理邏輯
+　　　本作業標準都是取過帳後餘額檔,及已過帳傳票資料
+      若輸入的條件選項中,'單據狀態'選擇'2.含已確認未過帳傳票',則除2-1的取值邏輯外,各欄位的取值均另外累加符合取值條件且狀態碼(glapstus)='Y'的傳票金額(排除月結CE及年結YE傳票）
+      若輸入的條件選項中,'單據狀態'選擇'3.全部',則除2-1的取值邏輯外,各欄位的取值均另外累加符合取值條件且狀態碼(glapstus)='Y'or'N'的傳票金額(排除月結CE及年結YE傳票）
+      若輸入的條件選項中,'含月結傳票'未勾選,則除2-1的取值邏輯外,各欄位的取值均另外累減上符合條件且來源類型(glap007)='CE'且狀態碼='S'已過帳的傳票金額;反之則累加之
+      若輸入的條件選項中,'含年結傳票'未勾選,則除2-1的取值邏輯外,各欄位的取值均另外累減上符合條件且來源類型(glap007)='YE'且狀態碼='S'已過帳的傳票金額;反之則累加之]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[條件選項輸入完畢後,程序進到本單身,可針對'科目編號'/'傳票日期'/'傳票編號'/'原幣幣別'進行QBE,enter後開始進行資料處理段的邏輯
+]]>
+  </db_all>
+  <field cite_std="N" name="acc_p" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.預設 'N'
+2.若='Y',單身明細請按'科目編號' 分頁顯示
+]]>
+  </field>
+  <field cite_std="N" name="b_glaq002" ver="1" src="s" column="glaq002" table="glaq_t" attribute="C502" type="varchar2(24)" req="N" i_zoom="" c_zoom="aglt310_04" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq017" ver="1" src="s" column="glaq017" table="glaq_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooea001" c_zoom="q_ooea001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq018" ver="1" src="s" column="glaq018" table="glaq_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooea001" c_zoom="q_ooea001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq019" ver="1" src="s" column="glaq019" table="glaq_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooea001" c_zoom="q_ooea001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq020" ver="1" src="s" column="glaq020" table="glaq_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq021" ver="1" src="s" column="glaq021" table="glaq_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq022" ver="1" src="s" column="glaq022" table="glaq_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq023" ver="1" src="s" column="glaq023" table="glaq_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq024" ver="1" src="s" column="glaq024" table="glaq_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_rtax001_1" c_zoom="q_rtax001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq025" ver="1" src="s" column="glaq025" table="glaq_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="q_ooag001_2" c_zoom="q_ooag001_2" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq026" ver="1" src="s" column="glaq026" table="glaq_t" attribute="C509" type="varchar2(10)" req="N" i_zoom="q_bgaa001" c_zoom="q_bgaa001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq027" ver="1" src="s" column="glaq027" table="glaq_t" attribute="C090" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaq028" ver="1" src="s" column="glaq028" table="glaq_t" attribute="C091" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="comp" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.本區塊為固定核算項的顯示勾選,預設營運據點管理='Y',其餘均預設='N'
+2.單身各核算項欄位依'顯示核算項'的勾選與否動態顯示於單身,做為科目+傳票日期+傳票編號+核算項的查詢維度,未勾選的核算項不需列示於單身
+3.當程式觸發執行產生查詢結果後,本區塊自動隱藏,重新查詢時再自動開啟供輸入勾選
+]]>
+  </field>
+  <field cite_std="N" name="ctype" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[1.若帳別基本資料檔.啟用本位幣二(glaa015)及啟用本位幣三(glaa019)均未勾選,則本欄位隱藏;反之,任一有勾選,本欄位則顯示並供下拉選擇
+2.當'只有' 啟用本位幣二(glaa015)='Y'時, 預設本欄位='1'
+  當'只有' 啟用本位幣二(glaa015)='Y'時, 預設本欄位='2'
+  以上兩者均啟用時, 預設本欄位='3'
+3.本欄位值='1.顯示本位幣二'時,則本位幣二相關餘額欄位應顯示 
+  本欄位值='2.顯示本位幣三'時,則本位幣三相關餘額欄位應顯示
+  本欄位值='3.全部'時,則本位幣二及三相關餘額欄位均應顯示
+scc=9921
+]]>
+  </field>
+  <field cite_std="N" name="curr_o" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.預設'顯示外幣'='N','按幣別分頁'='N'
+2.勾選'顯示外幣',則原幣幣別/匯率/原幣借方金額/原幣貸方金額/原幣餘額欄位需顯示,反之則隱藏不顯示
+3.當'顯示外幣'有勾選時,'按幣別分頁'才可進行勾選
+]]>
+  </field>
+  <field cite_std="N" name="curr_p" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.預設'按幣別分頁'='N'
+2.若'按幣別分頁'='Y',則查詢出的資料依'原幣幣別'分頁顯示,order by 幣別+科目編號
+]]>
+  </field>
+  <field cite_std="N" name="edate" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[1.預設g_today對應會計週期資料檔(glav_t).歸屬期別(glav006)的截止日(參考共用元件 s_get_accdate 取得會計週期資料)
+
+]]>
+  </field>
+  <field cite_std="N" name="eperiod" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：期別
+   ●欄位控管：
+     資料欄位:Display Only
+     預設值:由起始日期輸入後call s_get_accdate帶值]]>
+  </field>
+  <field cite_std="N" name="eyear" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：年度
+   ●欄位控管：
+     資料欄位:Display Only
+     預設值:由起始日期輸入後call s_get_accdate帶值
+]]>
+  </field>
+  <field cite_std="N" name="glaa001" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：幣別
+   ●欄位控管：
+     資料欄位:Display Only
+     由帳別基本資料檔抓取該帳別的使用幣別,僅顯示用
+     ]]>
+  </field>
+  <field cite_std="N" name="glaa016" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：本位幣二幣別
+   ●欄位控管：
+     資料欄位:Display Only
+     由帳別基本資料檔抓取該帳別的第二本位幣之使用幣別,僅顯示用,啟用本位幣二(glaa015)='N'時本欄位應隱藏]]>
+  </field>
+  <field cite_std="N" name="glaa020" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：本位幣三幣別
+   ●欄位控管：
+     資料欄位:Display Only
+     由帳別基本資料檔抓取該帳別的第三本位幣之使用幣別,僅顯示用,啟用本位幣三(glaa019)='N'時本欄位應隱藏
+ ]]>
+  </field>
+  <field cite_std="N" name="glaacomp" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：法人編號
+   ●欄位控管：
+     資料欄位:Display Only
+     由帳別基本資料檔抓取該帳別的歸屬法人,僅顯示用,不可修改]]>
+  </field>
+  <field cite_std="N" name="glaald" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：帳別
+   ●欄位控管：Display Only
+     預設值:該法人編號預設的主帳別(可透過帳別切換action更改帳別）]]>
+  </field>
+  <field cite_std="N" name="glac005" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="99" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glac009" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.預設'含內部管理科目'='Y'
+2.若未勾選'含內部管理科目',則科目基本資料檔.內部管理科目(glac009)='Y'的科目不顯示
+]]>
+  </field>
+  <field cite_std="N" name="glap004" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glapdocdt" ver="1" src="s" column="" table="" attribute="" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[傳票日期與傳票編號兩欄位,於期初餘額～本期合計之間,列示傳票明細時才需要顯示,期初餘額/本期合計/本年累計三列均顯示空白]]>
+  </field>
+  <field cite_std="N" name="glaq005" ver="1" src="s" column="" table="" attribute="" type="varchar2(10)" req="N" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaq006" ver="1" src="s" column="" table="" attribute="" type="number(20,10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaq025_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaqdocno" ver="1" src="s" column="" table="" attribute="" type="varchar2(20)" req="N" i_zoom="" c_zoom="aglt310_04" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sdate" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[1.預設g_today對應會計週期資料檔(glav_t).歸屬期別(glav006)的起始日(參考共用元件 s_get_accdate 取得會計週期資料)
+]]>
+  </field>
+  <field cite_std="N" name="show_acc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.預設'顯示統制科目'='Y'
+2.若未勾選'顯示統制科目',則科目基本資料檔.統制明細別(glac003)='1'的科目不顯示
+]]>
+  </field>
+  <field cite_std="N" name="show_ce" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.預設'含月結傳票'='Y'
+2.若有勾選'含月結傳票',而期間內的'月結傳票',即傳票憑證單頭檔.來源類型(glap007)='CE'的傳票,其狀態碼!='S'且!='X',則抓取餘額檔外,CE傳票的金額應累加入對應的借/貸方欄位; 反之,若選擇不含月結傳票,而期間內的月結傳票已過帳(已入餘額檔),則應相應扣減之.
+]]>
+  </field>
+  <field cite_std="N" name="show_ye" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.預設'含月結傳票'='Y'
+2.若有勾選'含月結傳票',而期間內的'月結傳票',即傳票憑證單頭檔.來源類型(glap007)='CE'的傳票,其狀態碼!='S'且!='X',則抓取餘額檔外,CE傳票的金額應累加入對應的借/貸方欄位; 反之,若選擇不含月結傳票,而期間內的月結傳票已過帳(已入餘額檔),則應相應扣減之.]]>
+  </field>
+  <field cite_std="N" name="speriod" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：期別
+   ●欄位控管：
+     資料欄位:Display Only
+     預設值:由起始日期輸入後call s_get_accdate帶值]]>
+  </field>
+  <field cite_std="N" name="state" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[scc=9926]]>
+  </field>
+  <field cite_std="N" name="stus" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[1.預設'1.已過帳傳票',取符合條件選項且狀態碼為已過帳(glapstus='S')的傳票資料
+2.若選擇'含已確認未過帳傳票',取符合條件選項且狀態碼為已過帳(glapstus='S')或已確認未過帳傳票(glapstus='Y')的傳票資料
+3.若選擇'全部',取符合條件選項且狀態碼!=作廢(glapstus!='X')的傳票資料
+scc=9922
+资料来源：
+1.預設'1.已過帳傳票',代表按期餘額檔資料抓取
+2.若選擇'含已確認未過帳傳票',則除了期餘額檔的資料外,另取傳票基本資料檔(glap_t,glaq_t),將符合條件選項且狀態碼為未過帳(glapstus='Y')的傳票資料
+3.若選擇'全部',則除了期餘額檔的資料外,另取傳票基本資料檔(glap_t,glaq_t),將符合條件選項且狀態碼為未過帳(glapstus='Y')或未確認(glapstus='N')的傳票資料
+]]>
+  </field>
+  <field cite_std="N" name="style" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[scc=9927]]>
+  </field>
+  <field cite_std="N" name="syear" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：年度
+   ●欄位控管：
+     資料欄位:Display Only
+     預設值:由起始日期輸入後call s_get_accdate帶值
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_glaq017_desc" src="s" depend_field="b_glaq017" correspon_key="glaqent,glaq017" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_glaq018_desc" src="s" depend_field="b_glaq018" correspon_key="glaqent,glaq018" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_glaq019_desc" src="s" depend_field="b_glaq019" correspon_key="glaqent,glaq019" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_glaq020_desc" src="s" depend_field="b_glaq020" correspon_key="glaqent,&apos;281&apos;,glaq020" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_glaq021_desc" src="s" depend_field="b_glaq021" correspon_key="glaqent,glaq021" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_glaq022_desc" src="s" depend_field="b_glaq022" correspon_key="glaqent,glaq022" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_glaq023_desc" src="s" depend_field="b_glaq023" correspon_key="glaqent,&apos;281&apos;,glaq023" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_glaq024_desc" src="s" depend_field="b_glaq024" correspon_key="glaqent,glaq024" ref_table="rtaxl_t" ref_fk="rtaxlent,rtaxl001" ref_dlang="rtaxl002" ref_rtn="rtaxl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_glaq026_desc" src="s" depend_field="b_glaq026" correspon_key="glaqent,glaq026" ref_table="bgaal_t" ref_fk="bgaalent,bgaal001" ref_dlang="bgaal002" ref_rtn="bgaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="glaacomp_desc" src="s" depend_field="glaacomp" correspon_key="glaaent,glaacomp" ref_table="ooefl_t" ref_fk="ooelfent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="glaald_desc" src="s" depend_field="glaald" correspon_key="glaaent,glaald" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="acc_p" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaq028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="comp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ctype" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="curr_o" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="curr_p" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="edate" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="eperiod" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="eyear" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaacomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaald" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glac005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glac009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glap004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glapdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaq005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaq006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaq025_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaqdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sdate" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="show_acc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="show_ce" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="show_ye" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="speriod" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="state" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="style" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="syear" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="datainfo" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="exchange_ld" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="group1" text="帳別資訊" lstr=""/>
+    <sfield name="lbl_glaald" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_glarcomp" text="法人" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明" lstr=""/>
+    <sfield name="lbl_glaa001" text="使用幣別" lstr=""/>
+    <sfield name="group2" text="條件選項" lstr=""/>
+    <sfield name="lbl_sdate" text="起始日期" lstr=""/>
+    <sfield name="lbl_curr_o" text="顯示外幣" lstr=""/>
+    <sfield name="lbl_show_acc" text="顯示統制科目" lstr=""/>
+    <sfield name="lbl_glac009" text="含內部管理科目" lstr=""/>
+    <sfield name="lbl_edate" text="截止日期" lstr=""/>
+    <sfield name="lbl_curr_p" text="按幣別分頁" lstr=""/>
+    <sfield name="lbl_glac005" text="科目層級(&lt;=)" lstr=""/>
+    <sfield name="lbl_show_ce" text="含月結傳票" lstr=""/>
+    <sfield name="lbl_ctype" text="多本位幣" lstr=""/>
+    <sfield name="lbl_acc_p" text="按科目分頁" lstr=""/>
+    <sfield name="lbl_stus" text="狀態" lstr=""/>
+    <sfield name="lbl_show_ye" text="含年結傳票" lstr=""/>
+    <sfield name="group3" text="顯示核算項" lstr=""/>
+    <sfield name="lbl_comp" text="營運據點管理" lstr=""/>
+    <sfield name="lbl_glad008" text="利潤成本管理" lstr=""/>
+    <sfield name="lbl_glad010" text="交易客商管理" lstr=""/>
+    <sfield name="lbl_glad011" text="客群管理" lstr=""/>
+    <sfield name="lbl_glad013" text="人員管理" lstr=""/>
+    <sfield name="lbl_glad015" text="專案管理" lstr=""/>
+    <sfield name="lbl_glad007" text="部門管理" lstr=""/>
+    <sfield name="lbl_gladd009" text="區域管理" lstr=""/>
+    <sfield name="lbl_glad027" text="帳款客商管理" lstr=""/>
+    <sfield name="lbl_glad012" text="產品類別管理" lstr=""/>
+    <sfield name="lbl_glad014" text="預算管理" lstr=""/>
+    <sfield name="lbl_glad016" text="WBS管理" lstr=""/>
+    <sfield name="group4" text="明細查詢" lstr=""/>
+    <sfield name="lbl_sel" text="選取項目" lstr=""/>
+    <sfield name="lbl_glaq002" text="科目編號" lstr=""/>
+    <sfield name="lbl_glacl004" text="說明" lstr=""/>
+    <sfield name="lbl_glaq017" text="營運據點" lstr=""/>
+    <sfield name="lbl_glaq018" text="部門" lstr=""/>
+    <sfield name="lbl_glaq019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq020" text="區域編號" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_glaq021" text="交易客商" lstr=""/>
+    <sfield name="lbl_pmaal004" text="簡稱" lstr=""/>
+    <sfield name="lbl_glaq022" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq023" text="客群" lstr=""/>
+    <sfield name="lbl_glaq024" text="產品類別" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_glaq025" text="人員編號" lstr=""/>
+    <sfield name="lbl_glaq025_desc" text="名稱" lstr=""/>
+    <sfield name="lbl_glaq026" text="預算編號" lstr=""/>
+    <sfield name="lbl_bgaal003" text="說明" lstr=""/>
+    <sfield name="lbl_glaq027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glaq028" text="WBS" lstr=""/>
+    <sfield name="lbl_glapdocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_glaqdocno" text="單號" lstr=""/>
+    <sfield name="lbl_glap004" text="期別" lstr=""/>
+    <sfield name="lbl_style" text="說明" lstr=""/>
+    <sfield name="lbl_glaq005" text="交易幣別" lstr=""/>
+    <sfield name="lbl_glaq006" text="匯率" lstr=""/>
+    <sfield name="lbl_glaq010d" text="原幣借方金額" lstr=""/>
+    <sfield name="lbl_glaq010c" text="原幣貸方金額" lstr=""/>
+    <sfield name="lbl_glaq003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glaq004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glaq039" text="(本幣二)匯率" lstr=""/>
+    <sfield name="lbl_glaq040" text="(本幣二)借方金額" lstr=""/>
+    <sfield name="lbl_glaq041" text="(本幣二)貸方金額" lstr=""/>
+    <sfield name="lbl_glaq042" text="(本幣三)匯率" lstr=""/>
+    <sfield name="lbl_glaq043" text="(本幣三)借方金額" lstr=""/>
+    <sfield name="lbl_glaq044" text="(本幣三)貸方金額" lstr=""/>
+    <sfield name="lbl_state" text="借貸" lstr=""/>
+    <sfield name="lbl_amt" text="原幣餘額" lstr=""/>
+    <sfield name="lbl_amt1" text="本幣餘額" lstr=""/>
+    <sfield name="lbl_amt2" text="(本幣二)餘額" lstr=""/>
+    <sfield name="lbl_amt3" text="(本幣三)餘額" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_group_1" text="切換帳別" lstr=""/>
+    <sfield name="lbl_glapld_1" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glapld" text="帳別" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_page_1" text="資產類" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_glac002" text="會計科目編號" lstr=""/>
+    <sfield name="lbl_page_2" text="負債類" lstr=""/>
+    <sfield name="lbl_page_3" text="公用類" lstr=""/>
+    <sfield name="lbl_page_4" text="股東權益類" lstr=""/>
+    <sfield name="lbl_page_5" text="成本類" lstr=""/>
+    <sfield name="lbl_page_6" text="損益類" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="lbl_pmaa001" text="交易對象編號" lstr=""/>
+    <sfield name="lbl_pmaal003" text="交易對象全名" lstr=""/>
+    <sfield name="lbl_rtax001" text="品類編號" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_bgaa001" text="預算編號" lstr=""/>
+    <sfield name="lbl_glapdocno" text="單號" lstr=""/>
+    <sfield name="lbl_glap006" text="收支科目" lstr=""/>
+    <sfield name="lbl_glap007" text="來源碼" lstr=""/>
+    <sfield name="lbl_glap008" text="帳款類型" lstr=""/>
+    <sfield name="lbl_ooai001" text="幣別編號" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_glaacomp" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_glaa004" text="會計科目參照表號" lstr=""/>
+    <sfield name="lbl_glaa008" text="平行記帳否" lstr=""/>
+    <sfield name="lbl_glaa014" text="主帳套" lstr=""/>
+    <sfield name="lbl_glaastus" text="狀態碼" lstr=""/>
+    <sact name="exchange_ld" text="切換帳套" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

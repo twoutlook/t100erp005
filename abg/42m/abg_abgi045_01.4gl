@@ -1,0 +1,494 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgi045_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2014-07-30 09:57:54), PR版次:0002(2014-07-30 10:08:58)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000168
+#+ Filename...: abgi045_01
+#+ Description: 整批產生
+#+ Creator....: 02416(2014-02-11 11:21:58)
+#+ Modifier...: 02291 -SD/PR- 02291
+ 
+{</section>}
+ 
+{<section id="abgi045_01.global" >}
+#應用 c01c 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+ type type_g_bgae_m        RECORD
+       bgae006 LIKE bgae_t.bgae006,
+   bgae006_desc LIKE type_t.chr80,
+   bgae001 LIKE bgae_t.bgae001,
+   bgae037 LIKE bgae_t.bgae037,
+   bgae015 LIKE bgae_t.bgae015,
+   bgae016 LIKE bgae_t.bgae016,
+   bgae017 LIKE bgae_t.bgae017,
+   bgae018 LIKE bgae_t.bgae018,
+   bgae019 LIKE bgae_t.bgae019,
+   bgae020 LIKE bgae_t.bgae020,
+   bgae021 LIKE bgae_t.bgae021,
+   bgae022 LIKE bgae_t.bgae022,
+   bgae023 LIKE bgae_t.bgae023,
+   bgae024 LIKE bgae_t.bgae024,
+   bgae025 LIKE bgae_t.bgae025,
+   bgae026 LIKE bgae_t.bgae026,
+   bgae027 LIKE bgae_t.bgae027,
+   bgae028 LIKE bgae_t.bgae028,
+   bgae029 LIKE bgae_t.bgae029,
+   bgae030 LIKE bgae_t.bgae030,
+   bgae031 LIKE bgae_t.bgae031,
+   bgae032 LIKE bgae_t.bgae032,
+   bgae033 LIKE bgae_t.bgae033,
+   bgae034 LIKE bgae_t.bgae034,
+   bgae035 LIKE bgae_t.bgae035
+       END RECORD
+DEFINE g_bgae_m          type_g_bgae_m
+DEFINE g_bgae_m_t        type_g_bgae_m
+DEFINE g_bgae_m_o        type_g_bgae_m
+DEFINE g_bgae006    LIKE bgae_t.bgae006
+DEFINE g_p_wc       STRING
+ TYPE type_g_bgae_d        RECORD
+          bgae001   LIKE bgae_t.bgae006,
+          bgael003  LIKE bgael_t.bgael003
+       END RECORD
+DEFINE g_bgae_d          DYNAMIC ARRAY OF type_g_bgae_d
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_detail_idx          LIKE type_t.num5 
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point  
+ 
+{</section>}
+ 
+{<section id="abgi045_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION abgi045_01(--)
+   #add-point:construct段變數傳入 name="construct.get_var"
+   p_bgae006,
+   p_wc2
+   #end add-point
+   )
+   #add-point:construct段define name="construct.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="construct.define"
+   DEFINE p_bgae006       LIKE bgae_t.bgae006
+   DEFINE p_wc2           STRING
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_abgi045_01 WITH FORM cl_ap_formpath("abg","abgi045_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="construct.pre_construct"
+   LET g_bgae006 = p_bgae006
+   IF cl_null(p_bgae006) THEN RETURN END IF
+   LET g_p_wc    = p_wc2
+   LET g_bgae_m.bgae006 = p_bgae006
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON bgae006,bgae001 
+      
+            #add-point:自定義action name="construct.action"
+            
+            #end add-point
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理 name="construct.before_construct"
+            IF NOT cl_null(g_bgae006)THEN
+               DISPLAY p_bgae006 TO bgae006
+               NEXT FIELD bgae001
+            END IF
+            
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理 name="construct.after_construct"
+            DISPLAY BY NAME g_bgae_m.bgae006
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgae_m.bgae006
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='11' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgae_m.bgae006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgae_m.bgae006_desc   
+            CALL abgi045_01_b_fill(g_wc)    
+             
+
+        AFTER FIELD bgae006
+           CALL FGL_DIALOG_GETBUFFER() RETURNING g_bgae006
+           LET g_bgae_m.bgae006 = g_bgae006
+           
+        ON ACTION controlp INFIELD bgae006
+            #add-point:ON ACTION controlp INFIELD bgae006
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+            CALL q_bgae006()              #呼叫開窗
+            LET g_bgae006 = g_qryparam.return1
+            DISPLAY  g_bgae006 TO bgae006  #顯示到畫面上
+
+            NEXT FIELD bgae006  
+            #返回原欄位
+         ON ACTION controlp INFIELD bgae001
+            #add-point:ON ACTION controlp INFIELD bgae001
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.where = " bgae007='1' AND bgae006='",g_bgae006,"'"
+            CALL q_bgae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bgae001  #顯示到畫面上
+
+            NEXT FIELD bgae001                     #返回原欄位
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct name="construct.more_construct"
+      DISPLAY ARRAY g_bgae_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b)  
+      
+         BEFORE ROW
+            
+            LET l_ac = 1
+        
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(l_ac)      
+      END DISPLAY  
+
+      INPUT BY NAME g_bgae_m.bgae015,g_bgae_m.bgae016,g_bgae_m.bgae017,g_bgae_m.bgae018,g_bgae_m.bgae019,
+                  g_bgae_m.bgae020,g_bgae_m.bgae021,g_bgae_m.bgae022,g_bgae_m.bgae023,g_bgae_m.bgae024,g_bgae_m.bgae025,
+                  g_bgae_m.bgae026,g_bgae_m.bgae027,g_bgae_m.bgae028,g_bgae_m.bgae029,g_bgae_m.bgae030,g_bgae_m.bgae031,
+                  g_bgae_m.bgae032,g_bgae_m.bgae033,g_bgae_m.bgae034,g_bgae_m.bgae035
+             ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+
+                   
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            IF s_transaction_chk("N",0) THEN
+                CALL s_transaction_begin()
+            END IF
+           
+       END INPUT
+       
+       BEFORE DIALOG
+          CALL g_bgae_d.clear()
+          LET g_bgae_m.bgae037 = "Y"
+             LET g_bgae_m.bgae015 = "N"
+         LET g_bgae_m.bgae016 = "N"
+         LET g_bgae_m.bgae017 = "N"
+         LET g_bgae_m.bgae018 = "N"
+         LET g_bgae_m.bgae019 = "N"
+         LET g_bgae_m.bgae020 = "N"
+         LET g_bgae_m.bgae021 = "N"
+         LET g_bgae_m.bgae022 = "N"
+         LET g_bgae_m.bgae023 = "N"
+         LET g_bgae_m.bgae024 = "N"
+         LET g_bgae_m.bgae025 = "N"
+         LET g_bgae_m.bgae026 = "N"
+         LET g_bgae_m.bgae027 = "N"
+         LET g_bgae_m.bgae028 = "N"
+         LET g_bgae_m.bgae029 = "N"
+         LET g_bgae_m.bgae030 = "N"
+         LET g_bgae_m.bgae031 = "N"
+         LET g_bgae_m.bgae032 = "N"
+         LET g_bgae_m.bgae033 = "N"
+         LET g_bgae_m.bgae034 = "N"
+         LET g_bgae_m.bgae035 = "N"
+            DISPLAY BY NAME g_bgae_m.bgae037,g_bgae_m.bgae015,g_bgae_m.bgae016,g_bgae_m.bgae017,g_bgae_m.bgae018,g_bgae_m.bgae019,
+                            g_bgae_m.bgae020,g_bgae_m.bgae021,g_bgae_m.bgae022,g_bgae_m.bgae023,g_bgae_m.bgae024,g_bgae_m.bgae025,
+                            g_bgae_m.bgae026,g_bgae_m.bgae027,g_bgae_m.bgae028,g_bgae_m.bgae029,g_bgae_m.bgae030,g_bgae_m.bgae031,
+                             g_bgae_m.bgae032,g_bgae_m.bgae033,g_bgae_m.bgae034,g_bgae_m.bgae035      
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="construct.before_close"
+#   DISPLAY BY NAME g_bgae_m.bgae006
+#   INITIALIZE g_ref_fields TO NULL
+#   LET g_ref_fields[1] = g_bgae_m.bgae006
+#   CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='11' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#   LET g_bgae_m.bgae006_desc = '', g_rtn_fields[1] , ''
+#   DISPLAY BY NAME g_bgae_m.bgae006_desc   
+#   CALL abgi045_01_b_fill(g_wc)
+#   CALL abgi045_01_input()
+   IF NOT INT_FLAG THEN 
+      CALL abgi045_01_update_bgae()
+   END IF
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_abgi045_01 
+   
+   #add-point:construct段after construct name="construct.post_construct"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgi045_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="abgi045_01.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 填充顯示項目編號資料
+# Memo...........:
+# Usage..........: CALL abgi045_01_b_fill(传入参数)
+# Input parameter: p_wc 條件
+# Return code....: 無
+# Date & Author..: 14/02/11 By yuhuabao
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi045_01_b_fill(p_wc)
+DEFINE p_wc    STRING
+DEFINE l_sql   STRING
+DEFINE l_cnt   LIKE type_t.num5
+   IF p_wc IS NULL THEN LET p_wc = " 1=1" END IF
+   LET l_cnt = 1
+   LET l_sql = "SELECT DISTINCT bgae001,bgael003 ",
+               "  FROM bgae_t LEFT OUTER JOIN bgael_t ON bgae001=bgael001 AND bgae006=bgael006 AND bgaeent=bgaelent ",
+               " WHERE bgaeent = '",g_enterprise,"' AND bgaestus = 'Y' ",
+               "   AND ",p_wc CLIPPED
+   IF NOT cl_null(g_p_wc) THEN
+      LET l_sql = l_sql CLIPPED," AND ",g_p_wc
+   END IF
+   IF NOT cl_null(g_bgae006) THEN
+      LET l_sql = l_sql CLIPPED," AND bgae006='",g_bgae006,"'"
+   END IF
+   PREPARE bgae_pre FROM l_sql
+   DECLARE bgae_cur CURSOR FOR bgae_pre
+   FOREACH bgae_cur INTO g_bgae_d[l_cnt].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      LET l_cnt = l_cnt + 1
+      IF l_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   CALL g_bgae_d.deleteElement(g_bgae_d.getLength())
+   LET g_rec_b = l_cnt
+
+END FUNCTION
+################################################################################
+# Descriptions...: 整批更改資料
+# Memo...........:
+# Usage..........: CALL abgi045_01_input()
+#                  RETURNING 無
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 14/02/11 By yuhuabao
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi045_01_input()
+      LET g_bgae_m.bgae037 = "Y"
+      LET g_bgae_m.bgae015 = "N"
+      LET g_bgae_m.bgae016 = "N"
+      LET g_bgae_m.bgae017 = "N"
+      LET g_bgae_m.bgae018 = "N"
+      LET g_bgae_m.bgae019 = "N"
+      LET g_bgae_m.bgae020 = "N"
+      LET g_bgae_m.bgae021 = "N"
+      LET g_bgae_m.bgae022 = "N"
+      LET g_bgae_m.bgae023 = "N"
+      LET g_bgae_m.bgae024 = "N"
+      LET g_bgae_m.bgae025 = "N"
+      LET g_bgae_m.bgae026 = "N"
+      LET g_bgae_m.bgae027 = "N"
+      LET g_bgae_m.bgae028 = "N"
+      LET g_bgae_m.bgae029 = "N"
+      LET g_bgae_m.bgae030 = "N"
+      LET g_bgae_m.bgae031 = "N"
+      LET g_bgae_m.bgae032 = "N"
+      LET g_bgae_m.bgae033 = "N"
+      LET g_bgae_m.bgae034 = "N"
+      LET g_bgae_m.bgae035 = "N"
+   DISPLAY BY NAME g_bgae_m.bgae037,g_bgae_m.bgae015,g_bgae_m.bgae016,g_bgae_m.bgae017,g_bgae_m.bgae018,g_bgae_m.bgae019,
+                  g_bgae_m.bgae020,g_bgae_m.bgae021,g_bgae_m.bgae022,g_bgae_m.bgae023,g_bgae_m.bgae024,g_bgae_m.bgae025,
+                  g_bgae_m.bgae026,g_bgae_m.bgae027,g_bgae_m.bgae028,g_bgae_m.bgae029,g_bgae_m.bgae030,g_bgae_m.bgae031,
+                  g_bgae_m.bgae032,g_bgae_m.bgae033,g_bgae_m.bgae034,g_bgae_m.bgae035
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)                
+      INPUT BY NAME g_bgae_m.bgae015,g_bgae_m.bgae016,g_bgae_m.bgae017,g_bgae_m.bgae018,g_bgae_m.bgae019,
+                  g_bgae_m.bgae020,g_bgae_m.bgae021,g_bgae_m.bgae022,g_bgae_m.bgae023,g_bgae_m.bgae024,g_bgae_m.bgae025,
+                  g_bgae_m.bgae026,g_bgae_m.bgae027,g_bgae_m.bgae028,g_bgae_m.bgae029,g_bgae_m.bgae030,g_bgae_m.bgae031,
+                  g_bgae_m.bgae032,g_bgae_m.bgae033,g_bgae_m.bgae034,g_bgae_m.bgae035
+             ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+           
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            IF s_transaction_chk("N",0) THEN
+                CALL s_transaction_begin()
+            END IF
+           
+       END INPUT
+      DISPLAY ARRAY g_bgae_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b)  
+      
+         BEFORE ROW
+            LET l_ac = 1
+        
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(l_ac)      
+      END DISPLAY 
+      
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG   
+END FUNCTION
+################################################################################
+# Descriptions...: 整批更新
+# Memo...........:
+# Usage..........: CALL abgi045_01_update_bgae()
+#                  RETURNING 無
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 14/02/11 By yuhuabao
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi045_01_update_bgae()
+DEFINE  l_sql  STRING               
+       LET l_sql = "UPDATE bgae_t SET (bgae037,bgae015,bgae016,bgae017,bgae018,bgae019,bgae020,  ",
+                   "                   bgae021,bgae022,bgae023,bgae024,bgae025,bgae026,bgae027,bgae028,bgae029,bgae030,bgae031, ",
+                   "                   bgae032,bgae033,bgae034,bgae035) = ('",g_bgae_m.bgae037, "',",
+                   "                   '",g_bgae_m.bgae015,"', '",g_bgae_m.bgae016,"', '",g_bgae_m.bgae017,"', '",g_bgae_m.bgae018,"',", 
+                   "                   '",g_bgae_m.bgae019,"', '",g_bgae_m.bgae020,"', '",g_bgae_m.bgae021,"', '",g_bgae_m.bgae022,"',",
+                   "                   '",g_bgae_m.bgae023,"', '",g_bgae_m.bgae024,"', '",g_bgae_m.bgae025,"', '",g_bgae_m.bgae026,"',",
+                   "                   '",g_bgae_m.bgae027,"', '",g_bgae_m.bgae028,"', '",g_bgae_m.bgae029,"', '",g_bgae_m.bgae030,"',",
+                   "                   '",g_bgae_m.bgae031,"', '",g_bgae_m.bgae032,"', '",g_bgae_m.bgae033,"', '",g_bgae_m.bgae034,"',",
+                   "                   '",g_bgae_m.bgae035,"') ",
+                   " WHERE bgaeent = '",g_enterprise,"' AND bgaestus = 'Y' ",
+                   "   AND ",g_wc
+      IF NOT cl_null(g_p_wc) THEN
+         LET l_sql = l_sql CLIPPED," AND ",g_p_wc
+      END IF
+      IF NOT cl_null(g_bgae006) THEN
+         LET l_sql = l_sql CLIPPED ," AND bgae006='",g_bgae006,"'"
+      END IF         
+      PREPARE bgae_upd  FROM l_sql
+      EXECUTE bgae_upd
+      
+END FUNCTION
+
+ 
+{</section>}
+ 

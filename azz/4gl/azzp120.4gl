@@ -1,0 +1,593 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzp120.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0010(1900-01-01 00:00:00), PR版次:0010(2016-11-11 16:05:51)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000052
+#+ Filename...: azzp120
+#+ Description: 資料庫資料匯出器
+#+ Creator....: 01856(2014-08-11 11:20:12)
+#+ Modifier...: 00000 -SD/PR- 01856
+ 
+{</section>}
+ 
+{<section id="azzp120.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#+ Modifier...: No.160712-00003 #1   2016/7/12   jrg542   select 欄位1, 欄位2 出現-217 錯誤碼
+#+ Modifier...: No.161111-00051 #1   2016/11/11  jrg542   unloadx 輸出資料檔案格式 為xxx.txt 避免 load 解析錯誤造成無法 load 到db
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_msg     LIKE type_t.chr1000
+DEFINE gc_db     LIKE type_t.chr50
+DEFINE gs_file   STRING
+DEFINE gs_sql    STRING
+DEFINE gs_cmd    STRING
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp120.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+   LET g_bgjob = 'Y'
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+   LET gs_cmd  = g_argv[1]  #unload or unloadx
+   LET gc_db   = g_argv[2]  #db name
+   LET gs_sql  = g_argv[3]  #table name or sql
+   LET gs_file = g_argv[4]  #file name
+   
+   #161111-00051 start
+   IF gs_file.getIndexOf(".txt",1) THEN
+   ELSE 
+      LET gs_file = gs_file,".txt"
+   END IF 
+   #161111-00051 end   
+   
+   #未輸入參數時中止作業
+   IF cl_null(gs_sql) THEN CALL azzp120_msg() END IF
+   
+   CALL cl_getmsg('azz-00021',g_lang) RETURNING g_msg  #資料是重要機密，注意你是否擁有此權限
+   DISPLAY "Warning:",g_msg
+
+   #整併unload/unloadx 
+   #如果是unload  執行unload 的用法： unload  ds ima_file [ima_file.txt]
+   #如果是unloadx 執行unloadx 的用法：unloadx ds ima_file.txt "select * from ima_file"
+   CALL azzp120_action()
+   #end add-point
+ 
+   #add-point:SQL_define
+
+   #end add-point
+#   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+#   DECLARE azzp120_cl CURSOR FROM g_forupd_sql 
+#   
+#   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+
+      #end add-point
+#   ELSE
+#      #畫面開啟 (identifier)
+#      OPEN WINDOW w_azzp120 WITH FORM cl_ap_formpath("azz",g_code)
+#   
+#      #程式初始化
+#      CALL azzp120_init()
+#   
+#      #瀏覽頁簽資料初始化
+#      CALL cl_ui_init()
+#   
+#      #進入選單 Menu (='N')
+#      CALL azzp120_ui_dialog()
+#   
+#      #畫面關閉
+#      CLOSE WINDOW w_azzp120
+#   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="azzp120.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION azzp120_action()
+   DEFINE l_tmp       STRING
+   DEFINE li_rtn      LIKE type_t.num5
+   DEFINE ls_table    STRING
+   DEFINE fields      STRING 
+   DEFINE ls_column   STRING 
+   
+   #DISCONNECT CURRENT
+   #CONNECT TO gc_db
+   #DB 連線 改呼叫 cl_db_connect
+   #CALL cl_db_connect(gc_db,FALSE)
+   CALL cl_db_connect(gc_db,TRUE) #160309-00004 1.
+
+   #整併unload/unloadx
+   #如果是unload  執行unload 的用法： unload  ds gzza_t [gzza.txt]
+   #如果是unloadx 執行unloadx 的用法：unloadx ds gzza_t.txt "select * from gzza_t"
+   IF gs_cmd = "unload" THEN
+       LET ls_table = gs_sql
+       LET gs_sql = "SELECT * FROM ",ls_table CLIPPED
+   END IF
+
+   #驗正sql
+  CALL azzp120_chk_sql(gs_sql) RETURNING li_rtn,gs_sql,fields,ls_column
+  #table 不存在就 return
+  IF NOT li_rtn THEN
+     RETURN
+  END IF
+
+  #把欄位寫到file 副檔名是.sch
+  #16/02/16 start
+  #CALL azzp120_output_file(fields) 
+  CALL azzp120_output_file(ls_column)
+  #16/02/16 end
+  
+   #T100 #CALL p_db_psw_check("system", tmpsw.ed4_4 CLIPPED) 先暫時不作判斷，目前在shell 判斷
+   UNLOAD TO gs_file gs_sql
+   #0 = OK, 100 = not row found, <0 = error
+   LET li_rtn = TRUE
+   IF SQLCA.sqlcode  < 0  OR SQLCA.sqlcode  = 100 THEN
+      LET li_rtn = FALSE
+      DISPLAY "UNLOAD=",SQLCA.sqlcode
+   END IF
+
+   IF li_rtn THEN
+      LET l_tmp = "DB : ",gc_db CLIPPED,"\nUNLOAD TO ",gs_file," ",gs_sql,"\nresult : Success......"
+   ELSE
+      LET l_tmp = "DB : ",gc_db CLIPPED,"\nUNLOAD TO ",gs_file," ",gs_sql,"\nresult : False........"
+   END IF
+   DISPLAY l_tmp
+   #留下系統紀錄
+   IF cl_log_sys_operation("S","A",l_tmp) THEN END IF
+
+END FUNCTION
+#+檢查欄位blob
+PRIVATE FUNCTION azzp120_chk_fields_blob(p_table,ps_fields)
+   DEFINE ps_fields        STRING
+   DEFINE li_cnt           LIKE type_t.num5
+   DEFINE l_token          base.StringTokenizer
+   DEFINE lc_dzeb001       LIKE dzeb_t.dzeb001
+   DEFINE p_table          LIKE dzeb_t.dzeb002
+   DEFINE ls_next          STRING
+   DEFINE li_token_cnt     LIKE type_t.num5
+   DEFINE li               LIKE type_t.num5
+   DEFINE ls_fields        STRING
+
+   LET l_token = base.StringTokenizer.create(ps_fields, ",")
+   LET li_token_cnt = l_token.countTokens()
+   LET li = 0
+   
+   WHILE l_token.hasMoreTokens()
+      LET ls_next = l_token.nextToken()
+      LET ls_next = ls_next.trim()
+      LET li = li + 1
+      LET lc_dzeb001 = ls_next
+      IF NOT azzp120_chk_table(lc_dzeb001) THEN 
+         DISPLAY "ERROR!!! 資料表不存在:",lc_dzeb001
+         RETURN FALSE ,lc_dzeb001
+      END IF 
+      
+      SELECT COUNT(*) INTO li_cnt FROM gztz_t
+       WHERE gztz002 = lc_dzeb001 
+         AND gztz003 = 11 #BYTE (blob)
+      #遇到blob 用空白取代
+      IF li_cnt > 0 THEN
+         #LET ls_next = "' '"
+         LET ls_next = "''"
+      END IF
+
+      LET ls_fields = ls_fields,ls_next
+      IF li !=  li_token_cnt THEN
+         LET ls_fields = ls_fields ,","
+      END IF
+   END WHILE
+
+   RETURN TRUE,ls_fields
+
+END FUNCTION
+#+檢查sql
+PRIVATE FUNCTION azzp120_chk_sql(ps_l_sql)
+   DEFINE ps_l_sql     STRING
+   DEFINE ls_fields    STRING
+   DEFINE ls_column    STRING  #轉換過欄位
+   DEFINE li_spos      LIKE type_t.num5
+   DEFINE li_mpos      LIKE type_t.num5
+   DEFINE li_epos      LIKE type_t.num5
+   DEFINE ls_table     STRING
+   DEFINE li_rtn       LIKE type_t.num5
+   DEFINE ls_field     STRING
+   DEFINE ls_tmp_sql   STRING
+
+   #先不考慮 sub query 、join
+   LET ps_l_sql = ps_l_sql.toLowerCase()
+   LET li_spos = ps_l_sql.getIndexOf("select", 1)
+   LET li_mpos = ps_l_sql.getIndexOf("from", 1)
+   LET li_epos = ps_l_sql.getIndexOf("where", 1)
+   #是否有WHERE
+   IF li_epos > 0  THEN
+      LET ls_table = ps_l_sql.subString(li_mpos+4,li_epos-1)
+   ELSE
+      LET ls_table = ps_l_sql.subString(li_mpos+4,ps_l_sql.getLength())
+   END IF
+   
+   LET ls_fields = DOWNSHIFT(ps_l_sql.subString(li_spos+6,li_mpos-1)) #取select到from的columns
+   LET ls_table = DOWNSHIFT(ls_table.trim()) #取table id 
+   #判斷 sql statement 
+   #1. select count(*) from xxxx
+   #2. select * from xxxx_t  
+   #3. select xxxx,xxxx from xxxx_t    
+   CASE
+      # COUNT(*) 先不檔
+      WHEN ls_fields.getIndexOf("COUNT(*)",1)
+
+
+      #select * from xxxx_t
+      WHEN ls_fields.getIndexOf("*",1)
+           #對table 然後展開column做處理判斷 blob                    #有轉換blob欄位 ,實際欄位
+           CALL azzp120_chk_table_blob(ls_table) RETURNING li_rtn,ls_column,ls_field
+           IF NOT li_rtn THEN 
+              RETURN li_rtn,"",ls_column,ls_field 
+                                
+
+           END IF  
+           DISPLAY "1. 自動濾除blob 型態的欄位 \n",
+                   "2. 以空值取代blob型態 \n"
+
+           IF li_epos > 0  THEN  #表示有where 條件
+              LET ls_tmp_sql =  ps_l_sql.subString(li_spos,li_spos+6) || ls_column CLIPPED
+               || " " || ps_l_sql.subString(li_mpos,li_epos-1) CLIPPED ||
+               " ", gs_sql.subString(li_epos,gs_sql.getLength()) CLIPPED
+           ELSE
+              LET ls_tmp_sql =  ps_l_sql.subString(li_spos,li_spos+6) || ls_column CLIPPED
+               || " " || ps_l_sql.subString(li_mpos,ps_l_sql.getLength()) CLIPPED
+           END IF
+
+      # fields(欄位)
+
+      OTHERWISE
+  
+         DISPLAY "1. 自動濾除blob 型態的欄位 \n",
+                 "2. 以空值取代blob型態 \n"
+         #對 column 做處理判斷 blob         
+         CALL azzp120_chk_fields_blob(ls_table,ls_fields) RETURNING li_rtn,ls_column
+         IF NOT li_rtn THEN 
+            RETURN li_rtn,"",ls_column,ls_field
+         END IF  
+         
+         IF li_epos > 0  THEN  #表示有where 條件
+            LET ls_tmp_sql =  ps_l_sql.subString(li_spos,li_spos+6) || ls_column CLIPPED
+               || " " || ps_l_sql.subString(li_mpos,li_epos-1) CLIPPED ||
+               " ", gs_sql.subString(li_epos,gs_sql.getLength()) CLIPPED
+         ELSE
+            LET ls_tmp_sql =  ps_l_sql.subString(li_spos,li_spos+6) || ls_column CLIPPED
+             || " " || ps_l_sql.subString(li_mpos,ps_l_sql.getLength()) CLIPPED
+
+         END IF
+         #160712-00003 #1
+         LET ls_field = ls_fields 
+         #160712-00003 #1
+   END CASE
+   IF g_t100debug = "9" THEN
+      DISPLAY "ls_tmp_sql(整句sql): ",ls_tmp_sql 
+      DISPLAY "ls_column(轉換blob欄位): ",ls_column
+      DISPLAY "ls_field(實際欄位): ",ls_field 
+   #DISPLAY "ls_fields: ",ls_fields 
+   END IF
+               #整句sql   ,#有轉換blob欄位 ,實際欄位
+   RETURN TRUE,ls_tmp_sql,ls_column,ls_field
+END FUNCTION
+#+以欄位檢查table
+PRIVATE FUNCTION azzp120_chk_table(ps_field)
+   DEFINE ps_field STRING
+   DEFINE ls_sql  STRING
+   DEFINE li_cnt  LIKE type_t.num5
+
+   LET ls_sql = "SELECT COUNT(*) FROM gztz_t " ,
+                 " WHERE gztz002= '",ps_field,"'"              
+   PREPARE azzp120_chk_table_pre  FROM ls_sql
+   EXECUTE  azzp120_chk_table_pre INTO  li_cnt
+
+   FREE azzp120_chk_table_pre
+   #table 是否存在
+   IF li_cnt > 0 THEN
+       RETURN TRUE
+   ELSE
+      RETURN FALSE
+   END  IF
+END FUNCTION
+#+檢查blob
+PRIVATE FUNCTION azzp120_chk_table_blob(ps_table)
+   DEFINE ps_table    STRING
+   DEFINE ls_fields   STRING
+   DEFINE ls_column   STRING 
+   DEFINE li_rtn      LIKE type_t.num5
+
+   CASE
+      #有兩個table 以上
+      WHEN ps_table.getIndexOf(",",1)
+         
+         #ex:From Table1,Table2
+         CALL azzp120_chk_token(ps_table) RETURNING li_rtn,ls_fields,ls_column
+      
+      #有join 
+      WHEN ps_table.getIndexOf("join",1)
+         #join 的判斷
+         CALL azzp120_chk2_token(ps_table) RETURNING li_rtn,ls_fields,ls_column
+
+      #單一table
+      OTHERWISE
+         IF ps_table.getIndexOf(".",1) THEN 
+            LET ps_table = ps_table.subString(ps_table.getIndexOf(".",1)+1,ps_table.getLength()) 
+         END IF 
+         
+         IF NOT azzp120_chk_table_token(ps_table) THEN
+            DISPLAY "ERROR!!! 資料表不存在:",ps_table
+            LET li_rtn = FALSE
+            RETURN li_rtn,ls_fields,ls_column
+         END IF 
+         LET li_rtn = TRUE 
+         CALL azzp120_chk_gztz_blob(ps_table)RETURNING ls_fields,ls_column
+   END CASE 
+
+                 #轉換blob過欄位 ,#實際欄位
+   RETURN li_rtn,ls_fields,ls_column 
+END FUNCTION
+
+PRIVATE FUNCTION azzp120_msg()
+   DISPLAY "Error. Missing Parameters."
+   DISPLAY " "
+   DISPLAY "Usage: unloadx dbname tablename filename sql_statement"
+   DISPLAY "       unload dbname[:db-password:system-password] tablename filename [sql_statement]"
+   DISPLAY "   OR  unload dbname[:db-password:system-password] [tablename] filename sql_statement"
+   DISPLAY "Ex1  : unload ds gzza_t gzza.txt "
+   DISPLAY "Ex2  : unload ds gzza_t.txt 'select * from gzza_t'"
+   EXIT PROGRAM(1)
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 以表格檢查table
+# Memo...........:
+# Usage..........: CALL azzp120_chk_table_token(ps_table)
+#                  RETURNING TRUE/FALSE
+# Input parameter: ps_table STRING 表格
+# Return code....: TRUE:存在/FALSE:不存在
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp120_chk_table_token(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_sql   STRING
+   DEFINE li_cnt   LIKE type_t.num5
+
+   LET ls_sql = "SELECT COUNT(*) FROM gztz_t " ,
+                 " WHERE gztz001= '",ps_table,"'"              
+   PREPARE azzp120_chk_table_token  FROM ls_sql
+   EXECUTE azzp120_chk_table_token INTO  li_cnt
+
+   FREE azzp120_chk_table_token
+   #table 是否存在
+   IF li_cnt > 0 THEN
+       RETURN TRUE
+   ELSE
+      RETURN FALSE
+   END  IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 切截有","的table字串
+# Memo...........:
+# Usage..........: CALL azzp120_chk_token(ps_token)
+#                  RETURNING TRUE/FALSE
+# Input parameter: ps_token STRING 
+# Return code....: li_rtn TRUE：存在/FALSE:不存在
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp120_chk_token(ps_token)
+   DEFINE ps_token   STRING
+   DEFINE l_token    base.StringTokenizer
+   DEFINE ls_token   STRING
+   DEFINE li_rtn     LIKE type_t.num5
+   DEFINE ls_fields  STRING 
+   DEFINE ls_fields2 STRING 
+   DEFINE ls_column  STRING 
+   DEFINE ls_column2  STRING
+
+   LET ps_token = ps_token.trim()
+   LET ls_fields = ""
+   #針對參數組進行token
+   LET l_token = base.StringTokenizer.create(ps_token,",")
+   LET li_rtn = TRUE 
+   WHILE l_token.hasMoreTokens()
+      LET ls_token = l_token.nextToken()
+      LET ls_token = ls_token.trim()
+      #檢核表格存不存在
+      IF NOT azzp120_chk_table_token(ls_token) THEN
+         DISPLAY "ERROR!!! 資料表不存在:",ls_token
+         LET li_rtn = FALSE
+         EXIT WHILE
+      END IF
+      CALL azzp120_chk_gztz_blob(ls_token)RETURNING ls_fields,ls_fields2  
+      LET ls_column = ls_column,ls_fields,"," 
+      LET ls_column2 = ls_column2,ls_fields2,"," 
+   END WHILE
+   LET ls_column = ls_column.subString(1,ls_column.getLength()-1)
+   LET ls_column2 = ls_column.subString(1,ls_column2.getLength()-1) 
+   RETURN li_rtn,ls_column,ls_column2
+END FUNCTION
+
+################################################################################
+# Descriptions...: 切截有join table字串
+# Memo...........:
+# Usage..........: CALL azzp120_chk2_token(ps_table)
+#                  RETURNING TRUE/FALSE 
+# Input parameter: ps_table STRING 
+# Return code....: TRUE:存在/FASLE:不存在
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp120_chk2_token(ps_table)
+   DEFINE ps_table   STRING
+   DEFINE ls_table   STRING 
+   DEFINE li_pos     LIKE type_t.num5 
+   DEFINE li_rtn     LIKE type_t.num5
+   DEFINE ls_fields  STRING 
+   DEFINE ls_fields2 STRING
+   DEFINE ls_column  STRING
+   DEFINE ls_column2 STRING
+   
+   LET li_rtn = TRUE
+   LET li_pos = 1
+       WHILE TRUE 
+          LET li_pos = ps_table.getIndexOf("_t",li_pos)
+          IF li_pos > 0 THEN 
+             LET ls_table = ps_table.subString(li_pos-4,li_pos+1)
+             LET ls_table = ls_table.trim()
+             #檢核表格存不存在
+             IF NOT azzp120_chk_table_token(ls_table) THEN
+                #判斷是不是多語言檔或是提速檔
+                LET ls_table = ps_table.subString(li_pos-5,li_pos+1) 
+                IF NOT azzp120_chk_table_token(ls_table) THEN
+                   DISPLAY "ERROR!!! 資料表不存在:",ls_table
+                   LET li_rtn = FALSE
+                   EXIT WHILE
+                END IF 
+             END IF
+             LET ps_table = ps_table.subString(li_pos,ps_table.getLength()) 
+             CALL azzp120_chk_gztz_blob(ls_table)RETURNING ls_fields,ls_fields2 
+             LET ls_column = ls_column,ls_fields,","  
+             LET ls_column2 = ls_column2,ls_fields2,","  
+          ELSE 
+             EXIT WHILE    
+          END IF 
+       END WHILE 
+
+    LET ls_column = ls_column.subString(1,ls_column.getLength()-1)   
+    LET ls_column2 = ls_column.subString(1,ls_column.getLength()-1)    
+    RETURN li_rtn,ls_column,ls_column2 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 比對gztz 是否blob
+# Memo...........:
+# Usage..........: CALL azzp120_chk_gztz_blob(ps_table)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp120_chk_gztz_blob(ps_table)
+   DEFINE ps_table     STRING
+   DEFINE ls_sql       STRING
+   DEFINE lc_gztz002   LIKE gztz_t.gztz002
+   DEFINE lc_gztz002_1 LIKE gztz_t.gztz002
+   DEFINE lc_gztz003   LIKE gztz_t.gztz003
+   DEFINE ls_fields    STRING
+   DEFINE ls_column    STRING
+
+   LET ls_sql = "SELECT gztz002,gztz003 FROM gztz_t " ,
+                 " WHERE gztz001='",ps_table,"'",
+                 " ORDER BY gztz005 "
+
+   PREPARE azzp120_chk_gztz_pre  FROM ls_sql
+   DECLARE azzp120_chk_gztz_curs CURSOR FOR azzp120_chk_gztz_pre
+
+   FOREACH azzp120_chk_gztz_curs INTO lc_gztz002,lc_gztz003
+      #依照 genero 文件 說明 判斷 blob 
+      #data type codes TEXT 12 (clob) BYTE 11 (blob)
+      LET lc_gztz002_1 = lc_gztz002
+      ##遇到blob 用空白取代
+      IF lc_gztz003 = 11 THEN
+         LET lc_gztz002 = "''"
+      END IF
+
+      LET ls_fields = ls_fields,lc_gztz002,","
+      LET ls_column = ls_column,lc_gztz002_1,","
+      LET ls_fields = ls_fields.trim()
+      LET ls_column = ls_column.trim()
+
+   END FOREACH
+   LET ls_fields = ls_fields.subString(1,ls_fields.getLength()-1) #有轉換blob欄位
+   LET ls_column = ls_column.subString(1,ls_column.getLength()-1) #實際欄位
+   RETURN ls_fields,ls_column
+END FUNCTION
+
+################################################################################
+# Descriptions...: 輸出檔案xx.sch
+# Memo...........:
+# Usage..........: CALL azzp120_output_file()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 2015/11/12 By jrg542
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp120_output_file(fields)
+   DEFINE fields   STRING 
+   DEFINE l_ch     base.Channel
+   DEFINE ls_file  STRING 
+
+   LET l_ch = base.Channel.create()
+   LET ls_file = gs_file CLIPPED,".sch"
+   LET ls_file = os.Path.join(os.Path.pwd(),ls_file)   
+
+   IF NOT os.Path.exists(ls_file) THEN
+      CALL l_ch.openFile(ls_file, "w")      
+   ELSE 
+      IF os.Path.delete(ls_file) THEN 
+         CALL l_ch.openFile(ls_file, "w") 
+      END IF    
+   END IF
+
+   CALL l_ch.writeLine(fields)
+   DISPLAY "Output File ",gs_file,".sch Success...... "
+   CALL l_ch.close()
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

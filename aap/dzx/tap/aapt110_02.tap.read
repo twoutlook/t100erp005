@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aapt110_02" std_prog="aapt110_02" erpver="1.0" module="AAP" ver="2" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="construct.action" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[         #入庫單
+         ON ACTION controlp INFIELD pmdsdocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = p_wc_apbaorga            #帳務中心
+            LET g_qryparam.arg2 = p_apbb002                #交易對象
+            IF p_apbb050 = "2" THEN #紅字發票只開倉退單
+               LET g_qryparam.arg3 = "('7','14','15','19')"  #150629-00038#1 add 19
+            ELSE #入庫單+倉退單
+               LET g_qryparam.arg3 = "('3','4','6','7','12','13','14','15','17','18','19','20')"   #150629-00038#1 add 17 18 19 20
+            END IF
+            LET g_qryparam.arg4 = p_apbb012                #稅別
+            LET g_qryparam.where = " pmds037 ='",p_apbb014,"'"
+            CALL q_pmdtdocno_5()
+            DISPLAY g_qryparam.return1 TO pmdsdocno
+            NEXT FIELD pmdsdocno
+            
+         #收貨人員
+         ON ACTION controlp INFIELD pmds002
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()
+            DISPLAY g_qryparam.return1 TO pmds002
+            NEXT FIELD pmds002
+         
+         #收貨部門
+         ON ACTION controlp INFIELD pmds003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()
+            DISPLAY g_qryparam.return1 TO pmds003
+            NEXT FIELD pmds003]]>
+  </point>
+  <point name="construct.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET g_wc = " 1=2 "
+      LET INT_FLAG = 0
+   END IF]]>
+  </point>
+  <point name="construct.before_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF g_l_type = "1" THEN
+               LET g_wc = " 1=1 "
+               NEXT FIELD l_type 
+            END IF]]>
+  </point>
+  <point name="construct.c.pmds002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmds002  #顯示到畫面上
+            NEXT FIELD pmds002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.pmds003" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmds003  #顯示到畫面上
+            NEXT FIELD pmds003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.pmdsdocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmdsdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmdsdocno  #顯示到畫面上
+            NEXT FIELD pmdsdocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_apbb004       LIKE apbb_t.apbb004     #帳務中心
+   DEFINE p_apbb002       LIKE apbb_t.apbb002     #交易對象
+   DEFINE p_apbb012       LIKE apbb_t.apbb012     #稅別
+   DEFINE p_apbb014       LIKE apbb_t.apbb014     #幣別
+   DEFINE p_apbb050       LIKE apbb_t.apbb050     #發票性質
+   DEFINE p_wc_apbaorga   STRING                  #帳務組織條件]]>
+  </point>
+  <point name="construct.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_apbb004,p_apbb002,p_apbb012,p_apbb014,p_apbb050,p_wc_apbaorga]]>
+  </point>
+  <point name="construct.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+      INPUT g_l_type FROM l_type ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         ON CHANGE l_type
+            CLEAR FORM
+      END INPUT
+]]>
+  </point>
+  <point name="construct.post_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   RETURN g_wc]]>
+  </point>
+  <point name="construct.pre_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('l_type','9963')
+   LET g_l_type = "1"
+   CALL s_fin_create_account_center_tmp()]]>
+  </point>
+  <point name="global.memo" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[#150629-00038#1  albireo 入庫單類型增加20委外採購入庫;17~19借貨相關]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_l_type              LIKE type_t.num5    #使用哪種方式產生]]>
+  </point>
+  <point name="input.a.pmds002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_pmds_m.pmds002) THEN 
+#應用 a19 樣板自動產生(Version:2)
+               #校驗代值
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_pmds_m.pmds002
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_ooag001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmds_m.pmds002
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            #LET g_pmds_m.pmds002_desc = '', g_rtn_fields[1] , ''
+            #DISPLAY BY NAME g_pmds_m.pmds002_desc
+
+]]>
+  </point>
+  <point name="input.a.pmds003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_pmds_m.pmds003) THEN 
+#應用 a19 樣板自動產生(Version:2)
+               #校驗代值
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_pmds_m.pmds003
+               LET g_chkparam.arg2 = '參數2'
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_ooeg001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmds_m.pmds003
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            #LET g_pmds_m.pmds003_desc = '', g_rtn_fields[1] , ''
+            #DISPLAY BY NAME g_pmds_m.pmds003_desc
+
+]]>
+  </point>
+  <point name="input.a.pmdsdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmds_m.pmdsdocno
+            #CALL ap_ref_array2(g_ref_fields,"SELECT oodbl003 FROM oodbl_t WHERE oodblent='"||g_enterprise||"' AND oodbl001=? AND oodbl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            #LET g_pmds_m.pmdsdocno_desc = '', g_rtn_fields[1] , ''
+            #DISPLAY BY NAME g_pmds_m.pmdsdocno_desc
+
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_pmds_m.pmdsdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_pmds_m.pmdsdocno != g_pmdsdocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmds_t WHERE "||"pmdsent = '" ||g_enterprise|| "' AND "||"pmdsdocno = '"||g_pmds_m.pmdsdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.c.pmds002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmds_m.pmds002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_pmds_m.pmds002 = g_qryparam.return1              
+
+            DISPLAY g_pmds_m.pmds002 TO pmds002              #
+
+            NEXT FIELD pmds002                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.pmds003" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmds_m.pmds003             #給予default值
+            LET g_qryparam.default2 = "" #g_pmds_m.ooeg001 #部門編號
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_ooeg001()                                #呼叫開窗
+
+            LET g_pmds_m.pmds003 = g_qryparam.return1              
+            #LET g_pmds_m.ooeg001 = g_qryparam.return2 
+            DISPLAY g_pmds_m.pmds003 TO pmds003              #
+            #DISPLAY g_pmds_m.ooeg001 TO ooeg001 #部門編號
+            NEXT FIELD pmds003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.pmdsdocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmds_m.pmdsdocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_pmds_m.pmdsdocno = g_qryparam.return1              
+
+            DISPLAY g_pmds_m.pmdsdocno TO pmdsdocno              #
+
+            NEXT FIELD pmdsdocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="menu.prog_pmds002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               #應用 a45 樣板自動產生(Version:2)
+               CALL cl_user_contact("aooi130", "ooag_t", "ooag002", "ooag001",'')
+ 
+
+]]>
+  </point>
+  <point name="menu2.prog_pmds002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               #應用 a45 樣板自動產生(Version:2)
+               CALL cl_user_contact("aooi130", "ooag_t", "ooag002", "ooag001",'')
+ 
+
+]]>
+  </point>
+  <section id="aapt110_02.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000025
+#+ 
+#+ Filename...: aapt110_02
+#+ Description: 產生對帳明細
+#+ Creator....: 04152(2015-01-13 23:38:16)
+#+ Modifier...: 04152(2015-01-14 20:30:34) -SD/PR-
+]]>
+  </section>
+  <section id="aapt110_02.global" ver="5" status="" src="s" readonly="">
+    <![CDATA[#應用 c01c 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point  
+]]>
+  </section>
+  <section id="aapt110_02.input" ver="9" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aapt110_02(--)
+   #add-point:construct段變數傳入
+   {<point name="construct.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define
+   {<point name="construct.define" edit="s"/>}
+   #end add-point
+   #add-point:construct段define
+   {<point name="construct.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt110_02 WITH FORM cl_ap_formpath("aap","aapt110_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="construct.pre_construct"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON pmdsdocno,pmds001,pmds002,pmds003 
+      
+            #add-point:自定義action
+            {<point name="construct.action"/>}
+            #end add-point
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            {<point name="construct.before_construct"/>}
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            {<point name="construct.after_construct"/>}
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct
+      {<point name="construct.more_construct"/>}
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="construct.before_close"/>}
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt110_02 
+   
+   #add-point:construct段after construct 
+   {<point name="construct.post_construct"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt110_02.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aapt110_02.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

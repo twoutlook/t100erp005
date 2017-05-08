@@ -1,0 +1,492 @@
+{<section id="aooi410_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2015-08-18 18:02:40), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000247
+#+ Filename...: aooi410_01
+#+ Description: 例假日產生
+#+ Creator....: 01258(2013-08-16 10:53:43)
+#+ Modifier...: 01534 -SD/PR-
+{</section>}
+
+
+
+{<section id="aooi410_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_oogb_m        RECORD
+       oogb001 LIKE oogb_t.oogb001, 
+   oogb001_desc LIKE type_t.chr80, 
+   bdate LIKE type_t.chr500, 
+   edate LIKE type_t.chr500, 
+   lbl_ooga002_1 LIKE type_t.chr500, 
+   lbl_ooga002_2 LIKE type_t.chr500, 
+   lbl_ooga002_3 LIKE type_t.chr500, 
+   lbl_ooga002_4 LIKE type_t.chr500, 
+   lbl_ooga002_5 LIKE type_t.chr500, 
+   lbl_ooga002_6 LIKE type_t.chr500, 
+   lbl_ooga002_7 LIKE type_t.chr500, 
+   oogb003 LIKE oogb_t.oogb003, 
+   oogb003_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_oogb_m        type_g_oogb_m
+ 
+   DEFINE g_oogb001_t LIKE oogb_t.oogb001
+
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="aooi410_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aooi410_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aooi410_01 WITH FORM cl_ap_formpath("aoo","aooi410_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_oogb_m.bdate,g_oogb_m.edate,g_oogb_m.lbl_ooga002_1,g_oogb_m.lbl_ooga002_2,g_oogb_m.lbl_ooga002_3,g_oogb_m.lbl_ooga002_4,g_oogb_m.lbl_ooga002_5,g_oogb_m.lbl_ooga002_6,g_oogb_m.lbl_ooga002_7,g_oogb_m.oogb003 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bdate
+            #add-point:BEFORE FIELD bdate name="input.b.bdate"
+            {<point name="input.b.bdate" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bdate
+            
+            #add-point:AFTER FIELD bdate name="input.a.bdate"
+            {<point name="input.a.bdate" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bdate
+            #add-point:ON CHANGE bdate name="input.g.bdate"
+            {<point name="input.g.bdate" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD edate
+            #add-point:BEFORE FIELD edate name="input.b.edate"
+            {<point name="input.b.edate" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD edate
+            
+            #add-point:AFTER FIELD edate name="input.a.edate"
+            {<point name="input.a.edate" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE edate
+            #add-point:ON CHANGE edate name="input.g.edate"
+            {<point name="input.g.edate" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_1
+            #add-point:BEFORE FIELD lbl_ooga002_1 name="input.b.lbl_ooga002_1"
+            {<point name="input.b.lbl_ooga002_1" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_1
+            
+            #add-point:AFTER FIELD lbl_ooga002_1 name="input.a.lbl_ooga002_1"
+            {<point name="input.a.lbl_ooga002_1" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_1
+            #add-point:ON CHANGE lbl_ooga002_1 name="input.g.lbl_ooga002_1"
+            {<point name="input.g.lbl_ooga002_1" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_2
+            #add-point:BEFORE FIELD lbl_ooga002_2 name="input.b.lbl_ooga002_2"
+            {<point name="input.b.lbl_ooga002_2" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_2
+            
+            #add-point:AFTER FIELD lbl_ooga002_2 name="input.a.lbl_ooga002_2"
+            {<point name="input.a.lbl_ooga002_2" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_2
+            #add-point:ON CHANGE lbl_ooga002_2 name="input.g.lbl_ooga002_2"
+            {<point name="input.g.lbl_ooga002_2" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_3
+            #add-point:BEFORE FIELD lbl_ooga002_3 name="input.b.lbl_ooga002_3"
+            {<point name="input.b.lbl_ooga002_3" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_3
+            
+            #add-point:AFTER FIELD lbl_ooga002_3 name="input.a.lbl_ooga002_3"
+            {<point name="input.a.lbl_ooga002_3" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_3
+            #add-point:ON CHANGE lbl_ooga002_3 name="input.g.lbl_ooga002_3"
+            {<point name="input.g.lbl_ooga002_3" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_4
+            #add-point:BEFORE FIELD lbl_ooga002_4 name="input.b.lbl_ooga002_4"
+            {<point name="input.b.lbl_ooga002_4" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_4
+            
+            #add-point:AFTER FIELD lbl_ooga002_4 name="input.a.lbl_ooga002_4"
+            {<point name="input.a.lbl_ooga002_4" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_4
+            #add-point:ON CHANGE lbl_ooga002_4 name="input.g.lbl_ooga002_4"
+            {<point name="input.g.lbl_ooga002_4" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_5
+            #add-point:BEFORE FIELD lbl_ooga002_5 name="input.b.lbl_ooga002_5"
+            {<point name="input.b.lbl_ooga002_5" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_5
+            
+            #add-point:AFTER FIELD lbl_ooga002_5 name="input.a.lbl_ooga002_5"
+            {<point name="input.a.lbl_ooga002_5" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_5
+            #add-point:ON CHANGE lbl_ooga002_5 name="input.g.lbl_ooga002_5"
+            {<point name="input.g.lbl_ooga002_5" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_6
+            #add-point:BEFORE FIELD lbl_ooga002_6 name="input.b.lbl_ooga002_6"
+            {<point name="input.b.lbl_ooga002_6" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_6
+            
+            #add-point:AFTER FIELD lbl_ooga002_6 name="input.a.lbl_ooga002_6"
+            {<point name="input.a.lbl_ooga002_6" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_6
+            #add-point:ON CHANGE lbl_ooga002_6 name="input.g.lbl_ooga002_6"
+            {<point name="input.g.lbl_ooga002_6" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_ooga002_7
+            #add-point:BEFORE FIELD lbl_ooga002_7 name="input.b.lbl_ooga002_7"
+            {<point name="input.b.lbl_ooga002_7" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_ooga002_7
+            
+            #add-point:AFTER FIELD lbl_ooga002_7 name="input.a.lbl_ooga002_7"
+            {<point name="input.a.lbl_ooga002_7" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_ooga002_7
+            #add-point:ON CHANGE lbl_ooga002_7 name="input.g.lbl_ooga002_7"
+            {<point name="input.g.lbl_ooga002_7" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD oogb003
+            
+            #add-point:AFTER FIELD oogb003 name="input.a.oogb003"
+            {<point name="input.a.oogb003" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD oogb003
+            #add-point:BEFORE FIELD oogb003 name="input.b.oogb003"
+            {<point name="input.b.oogb003" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE oogb003
+            #add-point:ON CHANGE oogb003 name="input.g.oogb003"
+            {<point name="input.g.oogb003" />}
+            #END add-point 
+
+
+ #欄位檢查
+                  #Ctrlp:input.c.bdate
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bdate
+            #add-point:ON ACTION controlp INFIELD bdate name="input.c.bdate"
+            {<point name="input.c.bdate" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.edate
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD edate
+            #add-point:ON ACTION controlp INFIELD edate name="input.c.edate"
+            {<point name="input.c.edate" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.lbl_ooga002_1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_1
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_1 name="input.c.lbl_ooga002_1"
+            {<point name="input.c.lbl_ooga002_1" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.lbl_ooga002_2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_2
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_2 name="input.c.lbl_ooga002_2"
+            {<point name="input.c.lbl_ooga002_2" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.lbl_ooga002_3
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_3
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_3 name="input.c.lbl_ooga002_3"
+            {<point name="input.c.lbl_ooga002_3" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.lbl_ooga002_4
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_4
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_4 name="input.c.lbl_ooga002_4"
+            {<point name="input.c.lbl_ooga002_4" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.lbl_ooga002_5
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_5
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_5 name="input.c.lbl_ooga002_5"
+            {<point name="input.c.lbl_ooga002_5" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.lbl_ooga002_6
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_6
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_6 name="input.c.lbl_ooga002_6"
+            {<point name="input.c.lbl_ooga002_6" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.lbl_ooga002_7
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_ooga002_7
+            #add-point:ON ACTION controlp INFIELD lbl_ooga002_7 name="input.c.lbl_ooga002_7"
+            {<point name="input.c.lbl_ooga002_7" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.oogb003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD oogb003
+            #add-point:ON ACTION controlp INFIELD oogb003 name="input.c.oogb003"
+            {<point name="input.c.oogb003" />}
+            #END add-point
+
+
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aooi410_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="aooi410_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="aooi410_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="azzi500" std_prog="azzi500" erpver="1.0" ver="7" module="AZZ" type="M" booking="N" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="gzou_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail1_info" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：設定ERP系統內可以支援的企業(編號)及相關的參數設定。
+作業功能：新增/修改/刪除/複製/列印/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：單檔多欄模式F002_00
+作業資料來源(Detail)：
+ 資料來源表：gzou_t(單身檔)]]>
+  </all>
+  <field cite_std="N" name="gzou_t.gzou001" ver="1" src="s" column="gzou001" table="gzou_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="30000" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[1.資料欄位: 企業編號/可Display可Input
+2.預設值: 無
+3.校驗:
+  1).不允許空白
+  2).資料必須為 <= 30000 、>0 的整數
+  2).輸入值不可重複，錯誤訊息「本欄位為鍵值不可重複, 請重新輸入!」
+  3).新增時報錯恢復為空白
+      修改時報錯恢復為舊值
+4.帶值: 無
+5.計算或處理: 無
+6.查詢時：
+  不提供開窗
+7.新增時：
+  不提供開窗]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzou003" ver="1" src="s" column="gzou003" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_gzda001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[(1)資料欄位: [T:國家地區檔].[C:本號主資料庫]/可Display可Input
+(2)預設值: 無
+(3)校驗:
+    1.不允許空白
+    2.輸入值需存在[T:洲別檔].[C:資料庫]，不存在則報錯「無此資料庫, 請重新輸入!」
+    3.輸入值需存在[T:洲別檔].[C:資料庫]且有效，無效則報錯「資料庫已無效, 請重新輸入!」
+(4)帶值:無
+(5)計算或處理: 無
+(6)開窗:
+      參考函式：q_gzda001
+      查詢欄位：[T:資料庫設定檔].[C:資料庫編號], [T:資料庫設定檔].[C:資料庫說明]
+      回值類型：單一回傳]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzou004" ver="1" src="s" column="gzou004" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[(1)資料欄位: [T:國家地區檔].[C:採用分散式部署]/可Display可Input
+(2)預設值: N
+(3)校驗:
+    1.不允許空白
+(4)帶值: 無
+(5)計算或處理: 無
+(6)開窗: 無]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzou005" ver="1" src="s" column="gzou005" table="gzou_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[(1)資料欄位: [T:國家地區檔].[C:預設年月表現方式]
+(2)允許空白: No
+(3)預設值: 無
+(4)資料選項來源: 
+    資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=10的資料,
+　　　  　    　[T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                         [T:系統分類值多語言檔].[C:說明]為下拉選項說明]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzou006" ver="1" src="s" column="gzou006" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_gzda001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[(1)資料欄位: [T:國家地區檔].[C:本號主資料庫]/可Display可Input
+(2)預設值: 無
+(3)校驗:
+    1.不允許空白
+    2. 若gzou004採用分散式部署設定為 N，則本欄位不可輸入
+    2.輸入值需存在[T:資料庫檔設定檔].[C:資料庫]，不存在則報錯「無此資料庫, 請重新輸入!」
+    3.輸入值需存在[T:資料庫檔]設定檔.[C:資料庫]且有效，無效則報錯「資料庫已無效, 請重新輸入!」
+(4)帶值:無
+(5)計算或處理: 無
+(6)開窗:
+      參考函式：q_gzda001
+      查詢欄位：[T:資料庫設定檔].[C:資料庫編號], [T:資料庫設定檔].[C:資料庫說明]
+      回值類型：單一回傳]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzoucrtdp" ver="1" src="s" column="gzoucrtdp" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzoucrtdt" ver="1" src="s" column="gzoucrtdt" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzoucrtid" ver="1" src="s" column="gzoucrtid" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzoumoddt" ver="1" src="s" column="gzoumoddt" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzoumodid" ver="1" src="s" column="gzoumodid" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzouowndp" ver="1" src="s" column="gzouowndp" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzouownid" ver="1" src="s" column="gzouownid" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzou_t.gzoustus" ver="1" src="s" column="gzoustus" table="gzou_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="gzou_t.gzou003" depend_field="gzou_t.gzou003" src="s" status="">
+      <program order="1" type="1" name="azzi085"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="gzoucrtdp_desc" src="s" depend_field="gzou_t.gzoucrtdp" correspon_key="gzoucrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="gzoucrtid_desc" src="s" depend_field="gzou_t.gzoucrtid" correspon_key="gzoucrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="gzoumodid_desc" src="s" depend_field="gzou_t.gzoumodid" correspon_key="gzoumodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="gzouowndp_desc" src="s" depend_field="gzou_t.gzouowndp" correspon_key="gzouowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="gzouownid_desc" src="s" depend_field="gzou_t.gzouownid" correspon_key="gzouownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="5" name="gzoul_t.gzoul003" src="s" depend_field="gzou_t.gzou001" correspon_key="gzou001" lang_table="gzoul_t" lang_fk="gzoul001" lang_dlang="gzoul002" lang_rtn="gzoul003" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzou001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzou003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzou004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzou005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzou006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzoucrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzoucrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzoucrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzoumoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzoumodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzouowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzouownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzou_t.gzoustus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="enterprise_login_url" ver="2" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_gdc" text="GDC連結網址:" lstr=""/>
+    <sfield name="lbl_gwc" text="GWC連結網址:" lstr=""/>
+    <sfield name="btn_gwc" text="prog_gwc" lstr=""/>
+    <sfield name="btn_exit" text="OK" lstr=""/>
+    <sfield name="bpage_1" text="項目" lstr=""/>
+    <sfield name="lbl_gzoustus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_gzou001" text="企業編號" lstr=""/>
+    <sfield name="lbl_gzoul003" text="企業編號說明" lstr=""/>
+    <sfield name="lbl_gzou003" text="本號主資料庫" lstr=""/>
+    <sfield name="lbl_gzou004" text="採用分散式部署" lstr=""/>
+    <sfield name="lbl_gzou006" text="本號分散部署資料庫" lstr=""/>
+    <sfield name="lbl_gzou005" text="預設年月日表現方式" lstr=""/>
+    <sfield name="bpage_info" text="異動資訊" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzoul001" text="企業編號" lstr=""/>
+    <sfield name="lbl_gzoul002" text="語言別" lstr=""/>
+    <sfield name="lbl_gzoul004" text="助記碼" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="enterprise_login_url" text="企業登入位址" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

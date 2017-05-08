@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq210" module="ain" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02295" crtdt="2014-11-20 18:06:02" modid="06021" moddt="2017-02-22 09:23:00" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件BIN卡查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="inag001,inag002,inag003,inag004,inag005,inag006,inad014,inad011,yy,stage,a,l_inag002,l_inag003,l_inag004,l_inag005,l_inag006,l_inag007"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),inag001,inag001_desc(chr500),inag001_desc_1(chr500),inag002,inag002_desc(chr500),inag003,inag004,inag004_desc(chr500),inag005,inag005_desc(chr500),inag006,inag007,inag007_desc(chr500),inag032,inag032_desc(chr500),qty1(num20_6),inag033,inag024,inag024_desc(chr500),qty2(chr500),inag025"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="inaj006(chr500),inaj006_desc(chr500),inaj007(chr500),inaj008(chr500),inaj008_desc(chr500),inaj009(chr500),inaj009_desc(chr500),inaj010(chr30),inaj022(chr500),inaj023(dat),inaj024(chr8),inaj015(chr20),inaj001(chr20),inaj002(num10),inaj003(num10),inaj044(chr20),inaj045(chr10),inaj045_desc(chr500),inaj012(chr10),inaj012_desc(chr500),inaj011(num20_6),qty3(chr500),qty4(chr500),inaj026(chr10),inaj026_desc(chr500),inaj027(num20_6),qty5(chr500),qty6(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),inag001(b_inag001),inag001_desc(b_inag001_desc),inag001_desc_1(b_inag001_desc_1),inag002(b_inag002),inag002_desc(b_inag002_desc),inag003(b_inag003),inag004(b_inag004),inag004_desc(b_inag004_desc),inag005(b_inag005),inag005_desc(b_inag005_desc),inag006(b_inag006),inag007(b_inag007),inag007_desc(b_inag007_desc),inag032(b_inag032),inag032_desc(b_inag032_desc),qty1(b_qty1),inag033(b_inag033),inag024(b_inag024),inag024_desc(b_inag024_desc),qty2(b_qty2),inag025(b_inag025)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="inaj006(inaj006),inaj006_desc(inaj006_desc),inaj007(inaj007),inaj008(inaj008),inaj008_desc(inaj008_desc),inaj009(inaj009),inaj009_desc(inaj009_desc),inaj010(inaj010),inaj022(inaj022),inaj023(inaj023),inaj024(inaj024),inaj015(inaj015),inaj001(inaj001),inaj002(inaj002),inaj003(inaj003),inaj044(inaj044),inaj045(inaj045),inaj045_desc(inaj045_desc),inaj012(inaj012),inaj012_desc(inaj012_desc),inaj011(inaj011),qty3(qty3),qty4(qty4),inaj026(inaj026),inaj026_desc(inaj026_desc),inaj027(inaj027),qty5(qty5),qty6(qty6)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainq210" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="inag001,inag002,inag002_desc,inag003,inag004,inag005,inag006,inag007,inag032,qty1,inag033,inag024,qty2,inag025" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="inag001(b_inag001),inag002(b_inag002),inag003(b_inag003),inag004(b_inag004),inag005(b_inag005),inag006(b_inag006),inag007(b_inag007),inag032(b_inag032),inag033(b_inag033),inag024(b_inag024),inag025(b_inag025)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="inag001">
+        <after>
+          <reference field="inag001_desc" ref_field="inag001" map_field="inagent,inag001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_7" state="c"/>
+      </column>
+      <column id="inag001_desc"/>
+      <column id="inag001_desc_1"/>
+      <column id="inag002">
+        <after/>
+        <controlp form="q_inag002" state="c"/>
+      </column>
+      <column id="inag002_desc"/>
+      <column id="inag003">
+        <controlp form="q_inag003" state="c"/>
+      </column>
+      <column id="inag004">
+        <after>
+          <reference field="inag004_desc" ref_field="inag004" map_field="inag004" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag004_2" state="c"/>
+      </column>
+      <column id="inag004_desc"/>
+      <column id="inag005">
+        <after>
+          <reference field="inag005_desc" ref_field="inag004,inag005" map_field="inag004,inag005" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inag005_5" state="c"/>
+      </column>
+      <column id="inag005_desc"/>
+      <column id="inag006">
+        <controlp form="q_inag006_1" state="c"/>
+      </column>
+      <column id="inag007">
+        <after>
+          <reference field="inag007_desc" ref_field="inag007" map_field="inag007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag007" state="c"/>
+      </column>
+      <column id="inag007_desc"/>
+      <column id="inag032">
+        <after>
+          <reference field="inag032_desc" ref_field="inag032" map_field="inag032" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inag032_desc"/>
+      <column id="qty1"/>
+      <column id="inag033"/>
+      <column id="inag024">
+        <after>
+          <reference field="inag024_desc" ref_field="inag024" map_field="inagent,inag024" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inag024_desc"/>
+      <column id="qty2"/>
+      <column id="inag025"/>
+    </init>
+    <init id="body" page="2">
+      <column id="inaj006">
+        <after/>
+      </column>
+      <column id="inaj006_desc"/>
+      <column id="inaj007"/>
+      <column id="inaj008">
+        <after/>
+      </column>
+      <column id="inaj008_desc"/>
+      <column id="inaj009">
+        <after/>
+      </column>
+      <column id="inaj009_desc"/>
+      <column id="inaj010"/>
+      <column id="inaj022"/>
+      <column id="inaj023"/>
+      <column id="inaj024"/>
+      <column id="inaj015"/>
+      <column id="inaj001"/>
+      <column id="inaj002"/>
+      <column id="inaj003"/>
+      <column id="inaj044"/>
+      <column id="inaj045">
+        <after/>
+      </column>
+      <column id="inaj045_desc"/>
+      <column id="inaj012">
+        <after/>
+      </column>
+      <column id="inaj012_desc"/>
+      <column id="inaj011"/>
+      <column id="qty3"/>
+      <column id="qty4"/>
+      <column id="inaj026">
+        <after/>
+      </column>
+      <column id="inaj026_desc"/>
+      <column id="inaj027"/>
+      <column id="qty5"/>
+      <column id="qty6"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="inag_t" page="1" linked="" pk="inag001,inag002,inag003,inag004,inag005,inag006,inag007">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,inag001,&apos;&apos;,&apos;&apos;,inag002,&apos;&apos;,inag003,inag004,&apos;&apos;,inag005,&apos;&apos;,inag006,inag007,&apos;&apos;,inag032,&apos;&apos;,&apos;&apos;,inag033,inag024,&apos;&apos;,&apos;&apos;,inag025 FROM inag_t WHERE inagent= ? AND inagsite= ? AND 1=1 "/>
+    </body>
+    <body id="inaj_t" page="2" linked="" pk="inaj001,inaj002,inaj003,inaj004" fk="" detail="Y">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inaj_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

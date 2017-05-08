@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci114" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02295" crtdt="2013-12-13 11:03:21" modid="01727" moddt="2015-12-03 17:52:10" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="科目與成本次要素設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcayld,xcayld_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcaystus,xcay001,xcay001_desc(chr500),xcay002,xcay002_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcay001,xcayownid,xcayownid_desc(chr500),xcayowndp,xcayowndp_desc(chr500),xcaycrtid,xcaycrtid_desc(chr500),xcaycrtdp,xcaycrtdp_desc(chr500),xcaycrtdt,xcaymodid,xcaymodid_desc(chr500),xcaymoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci114" method="dialog">
+    <section id="input">
+      <input id="head" field="xcayld"/>
+      <input id="body" page="1" field="xcaystus,xcay001,xcay001_desc,xcay002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcayld"/>
+      <construct id="body" page="1" field="xcaystus,xcay001,xcay001_desc,xcay002"/>
+      <construct id="body" page="2" field="xcayownid,xcayowndp,xcaycrtid,xcaycrtdp,xcaycrtdt,xcaymodid,xcaymoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcayld"/>
+      <set id="head" type="no_entry" field="xcayld"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcayld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcayld_desc" ref_field="xcay_t.xcayld" map_field="xcayent,xcayld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcayld_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcaystus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xcay001">
+        <after>
+          <check chkid="v_glac002_5" id="isExist"/>
+        </after>
+        <controlp form="q_glac002_5" state="i"/>
+        <controlp form="q_glac002_5" state="c"/>
+      </column>
+      <column id="xcay001_desc"/>
+      <column id="xcay002">
+        <after>
+          <check chkid="v_xcau001" id="isExist"/>
+          <reference field="xcay002_desc" ref_field="xcay_t.xcay002" map_field="xcayent,xcay002" ref_sql="SELECT xcaul003 FROM xcaul_t WHERE xcaulent=$varg_enterprise$var AND xcaul001=? AND xcaul002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcau001" state="i"/>
+        <controlp form="q_xcau001" state="c"/>
+      </column>
+      <column id="xcay002_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcayownid">
+        <after>
+          <reference field="xcayownid_desc" ref_field="xcay_t.xcayownid" map_field="xcayownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcayownid_desc"/>
+      <column id="xcayowndp">
+        <after>
+          <reference field="xcayowndp_desc" ref_field="xcay_t.xcayowndp" map_field="xcayowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcayowndp_desc"/>
+      <column id="xcaycrtid">
+        <after>
+          <reference field="xcaycrtid_desc" ref_field="xcay_t.xcaycrtid" map_field="xcaycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcaycrtid_desc"/>
+      <column id="xcaycrtdp">
+        <after>
+          <reference field="xcaycrtdp_desc" ref_field="xcay_t.xcaycrtdp" map_field="xcaycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcaycrtdp_desc"/>
+      <column id="xcaycrtdt"/>
+      <column id="xcaymodid">
+        <after>
+          <reference field="xcaymodid_desc" ref_field="xcay_t.xcaymodid" map_field="xcaymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcaymodid_desc"/>
+      <column id="xcaymoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcay_t" pk="xcayld">
+      <sql id="forupd_sql" type="sql" query="SELECT xcayld,&apos;&apos; FROM xcay_t WHERE xcayent= ? AND xcayld=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcayld,&apos;&apos; FROM xcay_t" order="xcayld"/>
+    </head>
+    <body id="xcay_t" page="1,2" linked="" pk="xcay001" fk="xcayld">
+      <sql id="forupd_sql_detail" query="SELECT xcaystus,xcay001,&apos;&apos;,xcay002,&apos;&apos;,&apos;&apos;,xcayownid,&apos;&apos;,xcayowndp,&apos;&apos;,xcaycrtid,&apos;&apos;,xcaycrtdp,&apos;&apos;,xcaycrtdt,xcaymodid,&apos;&apos;,xcaymoddt FROM xcay_t WHERE xcayent=? AND xcayld=? AND xcay001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcaystus,xcay001,&apos;&apos;,xcay002,&apos;&apos;,&apos;&apos;,xcayownid,&apos;&apos;,xcayowndp,&apos;&apos;,xcaycrtid,&apos;&apos;,xcaycrtdp,&apos;&apos;,xcaycrtdt,xcaymodid,&apos;&apos;,xcaymoddt FROM xcay_t WHERE xcayent= ? AND xcayld=?"/>
+    </body>
+  </dataset>
+</assembly>
+

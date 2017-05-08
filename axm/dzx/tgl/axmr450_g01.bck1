@@ -1,0 +1,1048 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmr450_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:3(2016-03-03 17:51:16), PR版次:
+#+ Customerized Version.: SD版次:(), PR版次:
+#+ Build......: 000097
+#+ Filename...: axmr450_g01
+#+ Description: 銷售合約變更單
+#+ Creator....: 05293(2014-07-02 17:25:02)
+#+ Modifier...: 07024 -SD/PR-
+
+{</section>}
+
+{<section id="axmr450_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:11)
+#add-point:填寫註解說明
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   xmea902 LIKE xmea_t.xmea902, 
+   xmea011 LIKE xmea_t.xmea011, 
+   xmea030 LIKE xmea_t.xmea030, 
+   xmea903 LIKE xmea_t.xmea903, 
+   xmea904 LIKE xmea_t.xmea904, 
+   xmeb007 LIKE xmeb_t.xmeb007, 
+   xmeb020 LIKE xmeb_t.xmeb020, 
+   xmeb023 LIKE xmeb_t.xmeb023, 
+   xmeb004 LIKE xmeb_t.xmeb004, 
+   xmeb011 LIKE xmeb_t.xmeb011, 
+   xmeb012 LIKE xmeb_t.xmeb012, 
+   xmebseq LIKE xmeb_t.xmebseq, 
+   xmeadocno LIKE xmea_t.xmeadocno, 
+   xmeb009 LIKE xmeb_t.xmeb009, 
+   xmeb002 LIKE xmeb_t.xmeb002, 
+   xmeb018 LIKE xmeb_t.xmeb018, 
+   xmeb024 LIKE xmeb_t.xmeb024, 
+   xmea004 LIKE xmea_t.xmea004, 
+   xmea006 LIKE xmea_t.xmea006, 
+   xmea008 LIKE xmea_t.xmea008, 
+   xmea016 LIKE xmea_t.xmea016, 
+   xmeadocdt LIKE xmea_t.xmeadocdt, 
+   xmeb003 LIKE xmeb_t.xmeb003, 
+   xmea005 LIKE xmea_t.xmea005, 
+   xmeaacti LIKE xmea_t.xmeaacti, 
+   xmeb008 LIKE xmeb_t.xmeb008, 
+   xmeb005 LIKE xmeb_t.xmeb005, 
+   xmebsite LIKE xmeb_t.xmebsite, 
+   xmea003 LIKE xmea_t.xmea003, 
+   xmea014 LIKE xmea_t.xmea014, 
+   xmea015 LIKE xmea_t.xmea015, 
+   xmea900 LIKE xmea_t.xmea900, 
+   xmea009 LIKE xmea_t.xmea009, 
+   xmeasite LIKE xmea_t.xmeasite, 
+   xmeastus LIKE xmea_t.xmeastus, 
+   xmeb006 LIKE xmeb_t.xmeb006, 
+   xmeb022 LIKE xmeb_t.xmeb022, 
+   xmeb014 LIKE xmeb_t.xmeb014, 
+   xmeb019 LIKE xmeb_t.xmeb019, 
+   xmeb901 LIKE xmeb_t.xmeb901, 
+   xmeb903 LIKE xmeb_t.xmeb903, 
+   xmea002 LIKE xmea_t.xmea002, 
+   xmea010 LIKE xmea_t.xmea010, 
+   xmea017 LIKE xmea_t.xmea017, 
+   xmea018 LIKE xmea_t.xmea018, 
+   xmea020 LIKE xmea_t.xmea020, 
+   xmeb021 LIKE xmeb_t.xmeb021, 
+   xmeb013 LIKE xmeb_t.xmeb013, 
+   xmeb902 LIKE xmeb_t.xmeb902, 
+   xmea007 LIKE xmea_t.xmea007, 
+   xmea012 LIKE xmea_t.xmea012, 
+   xmea019 LIKE xmea_t.xmea019, 
+   xmea901 LIKE xmea_t.xmea901, 
+   xmeb010 LIKE xmeb_t.xmeb010, 
+   xmeb001 LIKE xmeb_t.xmeb001, 
+   xmeb030 LIKE xmeb_t.xmeb030, 
+   xmea000 LIKE xmea_t.xmea000, 
+   xmea001 LIKE xmea_t.xmea001, 
+   xmeb017 LIKE xmeb_t.xmeb017, 
+   t2_oofa011 LIKE oofa_t.oofa011, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   pmaal_t_pmaal004 LIKE pmaal_t.pmaal004, 
+   ooail_t_ooail003 LIKE ooail_t.ooail003, 
+   oofa_t_oofa011 LIKE oofa_t.oofa011, 
+   t4_pmaal004 LIKE pmaal_t.pmaal004, 
+   t3_ooefl003 LIKE ooefl_t.ooefl003, 
+   ooibl_t_ooibl004 LIKE ooibl_t.ooibl004, 
+   t1_oocql004 LIKE oocql_t.oocql004, 
+   x_t5_oocql004 LIKE oocql_t.oocql004, 
+   x_t6_imaal003 LIKE imaal_t.imaal003, 
+   x_imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   x_oocal_t_oocal003 LIKE oocal_t.oocal003, 
+   x_t7_oocql004 LIKE oocql_t.oocql004, 
+   x_t8_oocql004 LIKE oocql_t.oocql004, 
+   x_t9_oocql004 LIKE oocql_t.oocql004, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   l_xmea004_ooefl003 LIKE type_t.chr1000, 
+   l_xmea003_pmaal004 LIKE type_t.chr100, 
+   l_xmea002_oofa011 LIKE type_t.chr300, 
+   l_xmea003_ooefl003 LIKE type_t.chr1000, 
+   l_xmea004_pmaal004 LIKE type_t.chr100, 
+   l_xmea002_oofa_t_oofa011 LIKE type_t.chr300, 
+   xmeaent LIKE xmea_t.xmeaent, 
+   l_order LIKE type_t.chr30, 
+   l_oodbl004 LIKE type_t.chr30, 
+   l_money LIKE type_t.num20_6
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       a1 LIKE type_t.chr1          #列印選項
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+
+{</section>}
+
+{<section id="axmr450_g01.main" readonly="Y" >}
+PUBLIC FUNCTION axmr450_g01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr1         #tm.a1  列印選項
+#add-point:init段define (客製用) name="component_name.define_customerization"
+{<point name="component_name.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+{<point name="component_name.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   {<point name="component.arg.prep" />}
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "axmr450_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL axmr450_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL axmr450_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL axmr450_g01_rep_data()
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="axmr450_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axmr450_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   {<point name="sel_prep.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   {<point name="sel_prep.define"/>}
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT xmea902,xmea011,xmea030,xmea903,xmea904,xmeb007,xmeb020,xmeb023,xmeb004,xmeb011, 
+       xmeb012,xmebseq,xmeadocno,xmeb009,xmeb002,xmeb018,xmeb024,xmea004,xmea006,xmea008,xmea016,xmeadocdt, 
+       xmeb003,xmea005,xmeaacti,xmeb008,xmeb005,xmebsite,xmea003,xmea014,xmea015,xmea900,xmea009,xmeasite, 
+       xmeastus,xmeb006,xmeb022,xmeb014,xmeb019,xmeb901,xmeb903,xmea002,xmea010,xmea017,xmea018,xmea020, 
+       xmeb021,xmeb013,xmeb902,xmea007,xmea012,xmea019,xmea901,xmeb010,xmeb001,xmeb030,xmea000,xmea001, 
+       xmeb017,( SELECT oofa011 FROM oofa_t t2 WHERE t2.oofaent = xmea_t.xmeaent AND t2.oofa001 = xmea_t.xmea002), 
+       ( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = xmea_t.xmeaent AND ooefl_t.ooefl001 = xmea_t.xmea004 AND ooefl_t.ooefl002 = '" , 
+       g_dlang,"'" ,"),( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaalent = xmea_t.xmeaent AND pmaal_t.pmaal001 = xmea_t.xmea003 AND pmaal_t.pmaal002 = '" , 
+       g_dlang,"'" ,"),( SELECT ooail003 FROM ooail_t WHERE ooail_t.ooailent = xmea_t.xmeaent AND ooail_t.ooail001 = xmea_t.xmea005 AND ooail_t.ooail002 = '" , 
+       g_dlang,"'" ,"),( SELECT oofa011 FROM oofa_t WHERE oofa_t.oofaent = xmea_t.xmeaent AND oofa_t.oofa003 = xmea_t.xmea002), 
+       ( SELECT pmaal004 FROM pmaal_t t4 WHERE t4.pmaalent = xmea_t.xmeaent AND t4.pmaal001 = xmea_t.xmea004 AND t4.pmaal002 = '" , 
+       g_dlang,"'" ,"),( SELECT ooefl003 FROM ooefl_t t3 WHERE t3.ooeflent = xmea_t.xmeaent AND t3.ooefl001 = xmea_t.xmea003 AND t3.ooefl002 = '" , 
+       g_dlang,"'" ,"),( SELECT ooibl004 FROM ooibl_t WHERE ooibl_t.ooiblent = xmea_t.xmeaent AND ooibl_t.ooibl002 = xmea_t.xmea009 AND ooibl_t.ooibl003 = '" , 
+       g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t t1 WHERE t1.oocqlent = xmea_t.xmeaent AND t1.oocql001 = '238' AND t1.oocql002 = xmea_t.xmea011 AND t1.oocql003 = '" , 
+       g_dlang,"'" ,"),x.t5_oocql004,x.t6_imaal003,x.imaal_t_imaal004,x.oocal_t_oocal003,x.t7_oocql004, 
+       x.t8_oocql004,x.t9_oocql004,( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocqlent = xmea_t.xmeaent AND oocql_t.oocql001 = '282' AND oocql_t.oocql002 = xmea_t.xmea903 AND oocql_t.oocql003 = '" , 
+       g_dlang,"'" ,"),trim(xmea004)||'.'||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = xmea_t.xmeaent AND ooefl_t.ooefl001 = xmea_t.xmea004 AND ooefl_t.ooefl002 = '" , 
+       g_dlang,"'" ,")),trim(xmea003)||'.'||trim((SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaalent = xmea_t.xmeaent AND pmaal_t.pmaal001 = xmea_t.xmea003 AND pmaal_t.pmaal002 = '" , 
+       g_dlang,"'" ,")),trim(xmea002)||'.'||trim((SELECT oofa011 FROM oofa_t t2 WHERE t2.oofaent = xmea_t.xmeaent AND t2.oofa001 = xmea_t.xmea002)), 
+       trim(xmea003)||'.'||trim((SELECT ooefl003 FROM ooefl_t t3 WHERE t3.ooeflent = xmea_t.xmeaent AND t3.ooefl001 = xmea_t.xmea003 AND t3.ooefl002 = '" , 
+       g_dlang,"'" ,")),trim(xmea004)||'.'||trim((SELECT pmaal004 FROM pmaal_t t4 WHERE t4.pmaalent = xmea_t.xmeaent AND t4.pmaal001 = xmea_t.xmea004 AND t4.pmaal002 = '" , 
+       g_dlang,"'" ,")),trim(xmea002)||'.'||trim((SELECT oofa011 FROM oofa_t WHERE oofa_t.oofaent = xmea_t.xmeaent AND oofa_t.oofa003 = xmea_t.xmea002)), 
+       xmeaent,'','',''"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM xmea_t LEFT OUTER JOIN ( SELECT xmeb_t.*,( SELECT oocql004 FROM oocql_t t5 WHERE t5.oocqlent = xmeb_t.xmebent AND t5.oocql001 = '221' AND t5.oocql002 = xmeb_t.xmeb006 AND t5.oocql003 = '" , 
+        g_dlang,"'" ,") t5_oocql004,( SELECT imaal003 FROM imaal_t t6 WHERE t6.imaalent = xmeb_t.xmebent AND t6.imaal001 = xmeb_t.xmeb002 AND t6.imaal002 = '" , 
+        g_dlang,"'" ,") t6_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaalent = xmeb_t.xmebent AND imaal_t.imaal001 = xmeb_t.xmeb001 AND imaal_t.imaal002 = '" , 
+        g_dlang,"'" ,") imaal_t_imaal004,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = xmeb_t.xmeb008 AND oocal_t.oocalent = xmeb_t.xmebent AND oocal_t.oocal002 = '" , 
+        g_dlang,"'" ,") oocal_t_oocal003,( SELECT oocql004 FROM oocql_t t7 WHERE t7.oocqlent = xmeb_t.xmebent AND t7.oocql001 = '277' AND t7.oocql002 = xmeb_t.xmeb014 AND t7.oocql003 = '" , 
+        g_dlang,"'" ,") t7_oocql004,( SELECT oocql004 FROM oocql_t t8 WHERE t8.oocqlent = xmeb_t.xmebent AND t8.oocql001 = '263' AND t8.oocql002 = xmeb_t.xmeb013 AND t8.oocql003 = '" , 
+        g_dlang,"'" ,") t8_oocql004,( SELECT oocql004 FROM oocql_t t9 WHERE t9.oocqlent = xmeb_t.xmebent AND t9.oocql001 = '282' AND t9.oocql002 = xmeb_t.xmeb902 AND t9.oocql003 = '" , 
+        g_dlang,"'" ,") t9_oocql004 FROM xmeb_t ) x  ON xmea_t.xmeaent = x.xmebent AND xmea_t.xmeadocno  
+        = x.xmebdocno AND xmea_t.xmea900 = x.xmeb900"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+    LET g_order = " ORDER BY xmeadocno,xmea900,xmebseq"
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xmea_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE axmr450_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE axmr450_g01_curs CURSOR FOR axmr450_g01_prepare
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="axmr450_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axmr450_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   xmea902 LIKE xmea_t.xmea902, 
+   xmea011 LIKE xmea_t.xmea011, 
+   xmea030 LIKE xmea_t.xmea030, 
+   xmea903 LIKE xmea_t.xmea903, 
+   xmea904 LIKE xmea_t.xmea904, 
+   xmeb007 LIKE xmeb_t.xmeb007, 
+   xmeb020 LIKE xmeb_t.xmeb020, 
+   xmeb023 LIKE xmeb_t.xmeb023, 
+   xmeb004 LIKE xmeb_t.xmeb004, 
+   xmeb011 LIKE xmeb_t.xmeb011, 
+   xmeb012 LIKE xmeb_t.xmeb012, 
+   xmebseq LIKE xmeb_t.xmebseq, 
+   xmeadocno LIKE xmea_t.xmeadocno, 
+   xmeb009 LIKE xmeb_t.xmeb009, 
+   xmeb002 LIKE xmeb_t.xmeb002, 
+   xmeb018 LIKE xmeb_t.xmeb018, 
+   xmeb024 LIKE xmeb_t.xmeb024, 
+   xmea004 LIKE xmea_t.xmea004, 
+   xmea006 LIKE xmea_t.xmea006, 
+   xmea008 LIKE xmea_t.xmea008, 
+   xmea016 LIKE xmea_t.xmea016, 
+   xmeadocdt LIKE xmea_t.xmeadocdt, 
+   xmeb003 LIKE xmeb_t.xmeb003, 
+   xmea005 LIKE xmea_t.xmea005, 
+   xmeaacti LIKE xmea_t.xmeaacti, 
+   xmeb008 LIKE xmeb_t.xmeb008, 
+   xmeb005 LIKE xmeb_t.xmeb005, 
+   xmebsite LIKE xmeb_t.xmebsite, 
+   xmea003 LIKE xmea_t.xmea003, 
+   xmea014 LIKE xmea_t.xmea014, 
+   xmea015 LIKE xmea_t.xmea015, 
+   xmea900 LIKE xmea_t.xmea900, 
+   xmea009 LIKE xmea_t.xmea009, 
+   xmeasite LIKE xmea_t.xmeasite, 
+   xmeastus LIKE xmea_t.xmeastus, 
+   xmeb006 LIKE xmeb_t.xmeb006, 
+   xmeb022 LIKE xmeb_t.xmeb022, 
+   xmeb014 LIKE xmeb_t.xmeb014, 
+   xmeb019 LIKE xmeb_t.xmeb019, 
+   xmeb901 LIKE xmeb_t.xmeb901, 
+   xmeb903 LIKE xmeb_t.xmeb903, 
+   xmea002 LIKE xmea_t.xmea002, 
+   xmea010 LIKE xmea_t.xmea010, 
+   xmea017 LIKE xmea_t.xmea017, 
+   xmea018 LIKE xmea_t.xmea018, 
+   xmea020 LIKE xmea_t.xmea020, 
+   xmeb021 LIKE xmeb_t.xmeb021, 
+   xmeb013 LIKE xmeb_t.xmeb013, 
+   xmeb902 LIKE xmeb_t.xmeb902, 
+   xmea007 LIKE xmea_t.xmea007, 
+   xmea012 LIKE xmea_t.xmea012, 
+   xmea019 LIKE xmea_t.xmea019, 
+   xmea901 LIKE xmea_t.xmea901, 
+   xmeb010 LIKE xmeb_t.xmeb010, 
+   xmeb001 LIKE xmeb_t.xmeb001, 
+   xmeb030 LIKE xmeb_t.xmeb030, 
+   xmea000 LIKE xmea_t.xmea000, 
+   xmea001 LIKE xmea_t.xmea001, 
+   xmeb017 LIKE xmeb_t.xmeb017, 
+   t2_oofa011 LIKE oofa_t.oofa011, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   pmaal_t_pmaal004 LIKE pmaal_t.pmaal004, 
+   ooail_t_ooail003 LIKE ooail_t.ooail003, 
+   oofa_t_oofa011 LIKE oofa_t.oofa011, 
+   t4_pmaal004 LIKE pmaal_t.pmaal004, 
+   t3_ooefl003 LIKE ooefl_t.ooefl003, 
+   ooibl_t_ooibl004 LIKE ooibl_t.ooibl004, 
+   t1_oocql004 LIKE oocql_t.oocql004, 
+   x_t5_oocql004 LIKE oocql_t.oocql004, 
+   x_t6_imaal003 LIKE imaal_t.imaal003, 
+   x_imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   x_oocal_t_oocal003 LIKE oocal_t.oocal003, 
+   x_t7_oocql004 LIKE oocql_t.oocql004, 
+   x_t8_oocql004 LIKE oocql_t.oocql004, 
+   x_t9_oocql004 LIKE oocql_t.oocql004, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   l_xmea004_ooefl003 LIKE type_t.chr1000, 
+   l_xmea003_pmaal004 LIKE type_t.chr100, 
+   l_xmea002_oofa011 LIKE type_t.chr300, 
+   l_xmea003_ooefl003 LIKE type_t.chr1000, 
+   l_xmea004_pmaal004 LIKE type_t.chr100, 
+   l_xmea002_oofa_t_oofa011 LIKE type_t.chr300, 
+   xmeaent LIKE xmea_t.xmeaent, 
+   l_order LIKE type_t.chr30, 
+   l_oodbl004 LIKE type_t.chr30, 
+   l_money LIKE type_t.num20_6
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+{<point name="ins_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH axmr450_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].xmea902 = sr_s.xmea902
+       LET sr[l_cnt].xmea011 = sr_s.xmea011
+       LET sr[l_cnt].xmea030 = sr_s.xmea030
+       LET sr[l_cnt].xmea903 = sr_s.xmea903
+       LET sr[l_cnt].xmea904 = sr_s.xmea904
+       LET sr[l_cnt].xmeb007 = sr_s.xmeb007
+       LET sr[l_cnt].xmeb020 = sr_s.xmeb020
+       LET sr[l_cnt].xmeb023 = sr_s.xmeb023
+       LET sr[l_cnt].xmeb004 = sr_s.xmeb004
+       LET sr[l_cnt].xmeb011 = sr_s.xmeb011
+       LET sr[l_cnt].xmeb012 = sr_s.xmeb012
+       LET sr[l_cnt].xmebseq = sr_s.xmebseq
+       LET sr[l_cnt].xmeadocno = sr_s.xmeadocno
+       LET sr[l_cnt].xmeb009 = sr_s.xmeb009
+       LET sr[l_cnt].xmeb002 = sr_s.xmeb002
+       LET sr[l_cnt].xmeb018 = sr_s.xmeb018
+       LET sr[l_cnt].xmeb024 = sr_s.xmeb024
+       LET sr[l_cnt].xmea004 = sr_s.xmea004
+       LET sr[l_cnt].xmea006 = sr_s.xmea006
+       LET sr[l_cnt].xmea008 = sr_s.xmea008
+       LET sr[l_cnt].xmea016 = sr_s.xmea016
+       LET sr[l_cnt].xmeadocdt = sr_s.xmeadocdt
+       LET sr[l_cnt].xmeb003 = sr_s.xmeb003
+       LET sr[l_cnt].xmea005 = sr_s.xmea005
+       LET sr[l_cnt].xmeaacti = sr_s.xmeaacti
+       LET sr[l_cnt].xmeb008 = sr_s.xmeb008
+       LET sr[l_cnt].xmeb005 = sr_s.xmeb005
+       LET sr[l_cnt].xmebsite = sr_s.xmebsite
+       LET sr[l_cnt].xmea003 = sr_s.xmea003
+       LET sr[l_cnt].xmea014 = sr_s.xmea014
+       LET sr[l_cnt].xmea015 = sr_s.xmea015
+       LET sr[l_cnt].xmea900 = sr_s.xmea900
+       LET sr[l_cnt].xmea009 = sr_s.xmea009
+       LET sr[l_cnt].xmeasite = sr_s.xmeasite
+       LET sr[l_cnt].xmeastus = sr_s.xmeastus
+       LET sr[l_cnt].xmeb006 = sr_s.xmeb006
+       LET sr[l_cnt].xmeb022 = sr_s.xmeb022
+       LET sr[l_cnt].xmeb014 = sr_s.xmeb014
+       LET sr[l_cnt].xmeb019 = sr_s.xmeb019
+       LET sr[l_cnt].xmeb901 = sr_s.xmeb901
+       LET sr[l_cnt].xmeb903 = sr_s.xmeb903
+       LET sr[l_cnt].xmea002 = sr_s.xmea002
+       LET sr[l_cnt].xmea010 = sr_s.xmea010
+       LET sr[l_cnt].xmea017 = sr_s.xmea017
+       LET sr[l_cnt].xmea018 = sr_s.xmea018
+       LET sr[l_cnt].xmea020 = sr_s.xmea020
+       LET sr[l_cnt].xmeb021 = sr_s.xmeb021
+       LET sr[l_cnt].xmeb013 = sr_s.xmeb013
+       LET sr[l_cnt].xmeb902 = sr_s.xmeb902
+       LET sr[l_cnt].xmea007 = sr_s.xmea007
+       LET sr[l_cnt].xmea012 = sr_s.xmea012
+       LET sr[l_cnt].xmea019 = sr_s.xmea019
+       LET sr[l_cnt].xmea901 = sr_s.xmea901
+       LET sr[l_cnt].xmeb010 = sr_s.xmeb010
+       LET sr[l_cnt].xmeb001 = sr_s.xmeb001
+       LET sr[l_cnt].xmeb030 = sr_s.xmeb030
+       LET sr[l_cnt].xmea000 = sr_s.xmea000
+       LET sr[l_cnt].xmea001 = sr_s.xmea001
+       LET sr[l_cnt].xmeb017 = sr_s.xmeb017
+       LET sr[l_cnt].t2_oofa011 = sr_s.t2_oofa011
+       LET sr[l_cnt].ooefl_t_ooefl003 = sr_s.ooefl_t_ooefl003
+       LET sr[l_cnt].pmaal_t_pmaal004 = sr_s.pmaal_t_pmaal004
+       LET sr[l_cnt].ooail_t_ooail003 = sr_s.ooail_t_ooail003
+       LET sr[l_cnt].oofa_t_oofa011 = sr_s.oofa_t_oofa011
+       LET sr[l_cnt].t4_pmaal004 = sr_s.t4_pmaal004
+       LET sr[l_cnt].t3_ooefl003 = sr_s.t3_ooefl003
+       LET sr[l_cnt].ooibl_t_ooibl004 = sr_s.ooibl_t_ooibl004
+       LET sr[l_cnt].t1_oocql004 = sr_s.t1_oocql004
+       LET sr[l_cnt].x_t5_oocql004 = sr_s.x_t5_oocql004
+       LET sr[l_cnt].x_t6_imaal003 = sr_s.x_t6_imaal003
+       LET sr[l_cnt].x_imaal_t_imaal004 = sr_s.x_imaal_t_imaal004
+       LET sr[l_cnt].x_oocal_t_oocal003 = sr_s.x_oocal_t_oocal003
+       LET sr[l_cnt].x_t7_oocql004 = sr_s.x_t7_oocql004
+       LET sr[l_cnt].x_t8_oocql004 = sr_s.x_t8_oocql004
+       LET sr[l_cnt].x_t9_oocql004 = sr_s.x_t9_oocql004
+       LET sr[l_cnt].oocql_t_oocql004 = sr_s.oocql_t_oocql004
+       LET sr[l_cnt].l_xmea004_ooefl003 = sr_s.l_xmea004_ooefl003
+       LET sr[l_cnt].l_xmea003_pmaal004 = sr_s.l_xmea003_pmaal004
+       LET sr[l_cnt].l_xmea002_oofa011 = sr_s.l_xmea002_oofa011
+       LET sr[l_cnt].l_xmea003_ooefl003 = sr_s.l_xmea003_ooefl003
+       LET sr[l_cnt].l_xmea004_pmaal004 = sr_s.l_xmea004_pmaal004
+       LET sr[l_cnt].l_xmea002_oofa_t_oofa011 = sr_s.l_xmea002_oofa_t_oofa011
+       LET sr[l_cnt].xmeaent = sr_s.xmeaent
+       LET sr[l_cnt].l_order = sr_s.l_order
+       LET sr[l_cnt].l_oodbl004 = sr_s.l_oodbl004
+       LET sr[l_cnt].l_money = sr_s.l_money
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    {<point name="ins_data.after"/>}
+    #end add-point
+END FUNCTION
+
+{</section>}
+
+{<section id="axmr450_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axmr450_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       {<point name="rep_data.before"/>}
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT axmr450_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT axmr450_g01_rep(sr[l_i].*)
+          END FOR
+          FINISH REPORT axmr450_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       {<point name="rep_data.after"/>}
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    {<point name="rep_data.end.before"/>}
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    {<point name="rep_data.end.after"/>}
+    #end add-point    
+END FUNCTION
+
+{</section>}
+
+{<section id="axmr450_g01.rep" readonly="Y" >}
+PRIVATE REPORT axmr450_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+{<point name="rep.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+{<point name="rep.define"/>}
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    {<point name="rep.order.before" mark="Y"/>}
+    #end add-point
+    ORDER EXTERNAL BY sr1.l_order,sr1.xmebseq
+    #add-point:rep段ORDER_after name="rep.order.after"
+    {<point name="rep.order.after"/>}
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.l_order
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            {<point name="rep.header"  mark="Y"/>}
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.l_order
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+            {<point name="rep.apr.signstr.before"  mark="Y"/>}              
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'xmeaent=' ,sr1.xmeaent,'{+}xmeadocno=' ,sr1.xmeadocno,'{+}xmea900=' ,sr1.xmea900         
+            CALL cl_gr_init_apr(sr1.l_order)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+            {<point name="rep.apr.signstr"/>}              
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.l_order.before name="rep.b_group.l_order.before"
+           {<point name="rep.b_group.l_order.before"/>}
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           {<point name="rep.sub01.before"/>}
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           {<point name="rep.sub01.sql" mark="Y"/>}
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooffent = '", 
+                sr1.xmeaent CLIPPED ,"'", " AND  ooff002 = '", sr1.l_order CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           {<point name="rep.sub01.afsql"/>}
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE axmr450_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE axmr450_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT axmr450_g01_subrep01
+           DECLARE axmr450_g01_repcur01 CURSOR FROM g_sql
+           FOREACH axmr450_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "axmr450_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              {<point name="rep.sub01.foreach"/>}
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT axmr450_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT axmr450_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           {<point name="rep.sub01.after"/>}
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.l_order.after name="rep.b_group.l_order.after"
+           {<point name="rep.b_group.l_order.after"/>}
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.xmebseq
+ 
+           #add-point:rep.b_group.xmebseq.before name="rep.b_group.xmebseq.before"
+           {<point name="rep.b_group.xmebseq.before"/>}
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.xmebseq.after name="rep.b_group.xmebseq.after"
+           {<point name="rep.b_group.xmebseq.after"/>}
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          {<point name="rep.everyrow.before"/>}
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           {<point name="rep.sub02.before"/>}
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           {<point name="rep.sub02.sql" mark="Y"/>}
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.xmeaent CLIPPED ,"'", " AND  ooff002 = '", sr1.l_order CLIPPED ,"'", " AND  ooff003 = '", 
+                sr1.xmebseq CLIPPED ,"'"
+ 
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           {<point name="rep.sub02.afsql"/>}
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE axmr450_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE axmr450_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT axmr450_g01_subrep02
+           DECLARE axmr450_g01_repcur02 CURSOR FROM g_sql
+           FOREACH axmr450_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "axmr450_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              {<point name="rep.sub02.foreach"/>}
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT axmr450_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT axmr450_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           {<point name="rep.sub02.after"/>}
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          {<point name="rep.everyrow.beforerow"/>}
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          {<point name="rep.everyrow.afterrow"/>}
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           {<point name="rep.sub03.before"/>}
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           {<point name="rep.sub03.sql" mark="Y"/>}
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooffent = '", 
+                sr1.xmeaent CLIPPED ,"'", " AND  ooff002 = '", sr1.l_order CLIPPED ,"'", " AND  ooff003 = '", 
+                sr1.xmebseq CLIPPED ,"'"
+ 
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           {<point name="rep.sub03.afsql"/>}
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE axmr450_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE axmr450_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT axmr450_g01_subrep03
+           DECLARE axmr450_g01_repcur03 CURSOR FROM g_sql
+           FOREACH axmr450_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "axmr450_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              {<point name="rep.sub03.foreach"/>}
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT axmr450_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT axmr450_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           {<point name="rep.sub03.after"/>}
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          {<point name="rep.everyrow.after"/>}
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.l_order
+ 
+           #add-point:rep.a_group.l_order.before name="rep.a_group.l_order.before"
+           {<point name="rep.a_group.l_order.before"/>}
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           {<point name="rep.sub04.before"/>}
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           {<point name="rep.sub04.sql" mark="Y"/>}
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooffent = '", 
+                sr1.xmeaent CLIPPED ,"'", " AND  ooff002 = '", sr1.l_order CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           {<point name="rep.sub04.afsql"/>}
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE axmr450_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE axmr450_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT axmr450_g01_subrep04
+           DECLARE axmr450_g01_repcur04 CURSOR FROM g_sql
+           FOREACH axmr450_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "axmr450_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              {<point name="rep.sub04.foreach"/>}
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT axmr450_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT axmr450_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           {<point name="rep.sub04.after"/>}
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.l_order.after name="rep.a_group.l_order.after"
+           {<point name="rep.a_group.l_order.after"/>}
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.xmebseq
+ 
+           #add-point:rep.a_group.xmebseq.before name="rep.a_group.xmebseq.before"
+           {<point name="rep.a_group.xmebseq.before"/>}
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.xmebseq.after name="rep.a_group.xmebseq.after"
+           {<point name="rep.a_group.xmebseq.after"/>}
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+            {<point name="rep.lastrow.before"/>}        
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            {<point name="rep.lastrow.after"/>}
+            #end add-point :rep.lastrow.after
+END REPORT
+
+{</section>}
+
+{<section id="axmr450_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT axmr450_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+{<point name="sub01.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+{<point name="sub01.define"/>}
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    {<point name="sub01.order.before"/>}
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+            {<point name="sub01.everyrow.before"/>}              
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            {<point name="sub01.everyrow.after"/>}
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT axmr450_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+{<point name="sub02.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+{<point name="sub02.define"/>}
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    {<point name="sub02.order.before"/>}
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+            {<point name="sub02.everyrow.before"/>}              
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            {<point name="sub02.everyrow.after"/>}
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT axmr450_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+{<point name="sub03.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+{<point name="sub03.define"/>}
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    {<point name="sub03.order.before"/>}
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+            {<point name="sub03.everyrow.before"/>}              
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            {<point name="sub03.everyrow.after"/>}
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT axmr450_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+{<point name="sub04.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+{<point name="sub04.define"/>}
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    {<point name="sub04.order.before"/>}
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+            {<point name="sub04.everyrow.before"/>}              
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            {<point name="sub04.everyrow.after"/>}
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="axmr450_g01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+
+{<section id="axmr450_g01.other_report" readonly="Y" >}
+{<point name="other.report"/>}
+
+{</section>}
+

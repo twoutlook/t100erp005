@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmq510" module="anm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="05426" crtdt="2014-11-13 09:22:51" modid="03080" moddt="2016-11-30 11:13:48" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="客戶收款及應收票據查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmbbseq,nmbb028,nmbb028_desc(chr500),nmbborga(chr10),nmbbdocno,nmbadocdt(dat),nmbastus(chr10),nmbb030,nmbb042,nmbb065,nmbb045,nmbb031,l_nmck012(dat),nmbb004(chr500),nmbb006,nmbb008,nmbb007,nmbb009,nmbb026,l_nmbb026_desc(chr500),nmbb003,nmbb003_desc(chr500),nmbb046,nmbb046_desc(chr500),l_nmbs003(chr20),nmbbcomp"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmbbseq(b_nmbbseq),nmbb028(b_nmbb028),nmbb028_desc(b_nmbb028_desc),nmbborga(b_nmbborga),nmbbdocno(b_nmbbdocno),nmbadocdt(nmbadocdt),nmbastus(nmbastus),nmbb030(b_nmbb030),nmbb042(b_nmbb042),nmbb065(b_nmbb065),nmbb045(b_nmbb045),nmbb031(b_nmbb031),l_nmck012(l_nmck012),nmbb004(b_nmbb004),nmbb006(b_nmbb006),nmbb008(b_nmbb008),nmbb007(b_nmbb007),nmbb009(b_nmbb009),nmbb026(b_nmbb026),l_nmbb026_desc(l_nmbb026_desc),nmbb003(b_nmbb003),nmbb003_desc(b_nmbb003_desc),nmbb046(b_nmbb046),nmbb046_desc(b_nmbb046_desc),l_nmbs003(l_nmbs003),nmbbcomp(b_nmbbcomp)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="open_anmt510"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmq510" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmbbseq,nmbb028,nmbborga,nmbbdocno,nmbb030,nmbb042,nmbb065,nmbb045,nmbb031,nmbb004,nmbb006,nmbb008,nmbb007,nmbb009,nmbb026,nmbb003,nmbb046,nmbbcomp" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmbbseq(b_nmbbseq),nmbb028(b_nmbb028),nmbbdocno(b_nmbbdocno),nmbb030(b_nmbb030),nmbb042(b_nmbb042),nmbb065(b_nmbb065),nmbb045(b_nmbb045),nmbb031(b_nmbb031),nmbb006(b_nmbb006),nmbb008(b_nmbb008),nmbb007(b_nmbb007),nmbb009(b_nmbb009),nmbb026(b_nmbb026),nmbb003(b_nmbb003),nmbb046(b_nmbb046),nmbbcomp(b_nmbbcomp)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmbbseq"/>
+      <column id="nmbb028">
+        <after>
+          <reference field="nmbb028_desc" ref_field="nmbb028" map_field="nmbbent,nmbb028" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooie001" state="c"/>
+      </column>
+      <column id="nmbb028_desc"/>
+      <column id="nmbborga">
+        <controlp form="q_nmbborga_2" state="i"/>
+        <controlp form="q_nmbborga_2" state="c"/>
+      </column>
+      <column id="nmbbdocno">
+        <controlp form="q_nmbadocno" state="c"/>
+      </column>
+      <column id="nmbadocdt"/>
+      <column id="nmbastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="V" pic="verify"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="nmbb030"/>
+      <column id="nmbb042" type="S" default="1" def_scc="8714"/>
+      <column id="nmbb065"/>
+      <column id="nmbb045"/>
+      <column id="nmbb031"/>
+      <column id="l_nmck012"/>
+      <column id="nmbb004"/>
+      <column id="nmbb006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbb008" type="S" default="0"/>
+      <column id="nmbb007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmbb009" type="S" default="0"/>
+      <column id="nmbb026" type="S" default="MISC">
+        <after/>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="l_nmbb026_desc"/>
+      <column id="nmbb003">
+        <after>
+          <reference field="nmbb003_desc" ref_field="nmbb003" map_field="nmbbent,nmbb003" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmbb003_desc"/>
+      <column id="nmbb046">
+        <after>
+          <reference field="nmbb046_desc" ref_field="nmbb046" map_field="nmbbent,nmbb046" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmbb046_desc"/>
+      <column id="l_nmbs003"/>
+      <column id="nmbbcomp"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmbb_t" page="1" linked="" pk="nmbbseq" fk="nmbbcomp,nmbbdocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT nmbbseq,nmbb028,&apos;&apos;,&apos;&apos;,nmbbdocno,&apos;&apos;,&apos;&apos;,nmbb030,nmbb042,nmbb065,nmbb045,nmbb031,&apos;&apos;,&apos;&apos;,nmbb006,nmbb008,nmbb007,nmbb009,nmbb026,&apos;&apos;,nmbb003,&apos;&apos;,nmbb046,&apos;&apos;,&apos;&apos;,nmbbcomp FROM nmbb_t WHERE nmbbent=? AND nmbbcomp=? AND nmbbdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

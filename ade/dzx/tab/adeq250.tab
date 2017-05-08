@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq250" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06541" crtdt="2015-06-24 12:03:29" modid="06541" moddt="2015-06-25 13:24:25" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店收入周結查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="decw018,decw019,decw020,decwsite,decwsite_desc(chr500),decw005,decw005_desc(chr500),decw007,decw007_desc(chr500),decw014,decw014_desc(chr500),decw008,decw008_desc(chr500),decw010,decw011,decw012,decw009,decw013"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="decw018(b_decw018),decw019(b_decw019),decw020(b_decw020),decwsite(b_decwsite),decwsite_desc(b_decwsite_desc),decw005(b_decw005),decw005_desc(b_decw005_desc),decw007(b_decw007),decw007_desc(b_decw007_desc),decw014(b_decw014),decw014_desc(b_decw014_desc),decw008(b_decw008),decw008_desc(b_decw008_desc),decw010(b_decw010),decw011(b_decw011),decw012(b_decw012),decw009(b_decw009),decw013(b_decw013)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq250" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="decw018,decw019,decw020,decwsite,decw005,decw007,decw014,decw008,decw010,decw011,decw012,decw009,decw013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="decw018(b_decw018),decw019(b_decw019),decw020(b_decw020),decwsite(b_decwsite),decw005(b_decw005),decw007(b_decw007),decw014(b_decw014),decw008(b_decw008),decw010(b_decw010),decw011(b_decw011),decw012(b_decw012),decw009(b_decw009),decw013(b_decw013)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="decw018"/>
+      <column id="decw019" type="S" default="0"/>
+      <column id="decw020" type="S" default="0"/>
+      <column id="decwsite">
+        <after>
+          <reference field="decwsite_desc" ref_field="decwsite" map_field="decwent,decwsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="decwsite_desc"/>
+      <column id="decw005">
+        <after/>
+        <controlp form="q_mhae001_3" state="c"/>
+      </column>
+      <column id="decw005_desc"/>
+      <column id="decw007">
+        <after>
+          <reference field="decw007_desc" ref_field="decw007" map_field="decwent,decw007" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_2" state="c"/>
+      </column>
+      <column id="decw007_desc"/>
+      <column id="decw014">
+        <after>
+          <reference field="decw014_desc" ref_field="decwsit,decw014" map_field="decwsit,decw014" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_7" state="c"/>
+      </column>
+      <column id="decw014_desc"/>
+      <column id="decw008">
+        <after>
+          <reference field="decw008_desc" ref_field="decw008" map_field="decwent,decw008" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002" state="c"/>
+      </column>
+      <column id="decw008_desc"/>
+      <column id="decw010" type="S" default="0"/>
+      <column id="decw011" type="S" default="0"/>
+      <column id="decw012" type="S" default="0"/>
+      <column id="decw009" type="S" default="0"/>
+      <column id="decw013" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="decw_t" page="1" linked="" pk="decwsite,decw005,decw007,decw008,decw014,decw018,decw019,decw020">
+      <sql id="b_fill_sql" query="SELECT decw018,decw019,decw020,decwsite,&apos;&apos;,decw005,&apos;&apos;,decw007,&apos;&apos;,decw014,&apos;&apos;,decw008,&apos;&apos;,decw010,decw011,decw012,decw009,decw013 FROM decw_t WHERE decwent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,1044 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axct201_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2016-08-01 10:55:47), PR版次:0009(2016-12-19 17:29:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000115
+#+ Filename...: axct201_02
+#+ Description: 整批產生
+#+ Creator....: 02114(2014-05-13 10:48:12)
+#+ Modifier...: 02295 -SD/PR- 01996
+ 
+{</section>}
+ 
+{<section id="axct201_02.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#151208-00020#1  15/12/15  by Sarah       產生資料時,增加帳款對象(xcbl024)=glar017,人員(xcbl025)=glar020
+#160318-00025#11 16/04/25  By 07675       將重複內容的錯誤訊息置換為公用錯誤訊息(r.v）
+#161124-00048#19 2016/12/13 By xujing     整批调整系统RECORD LIKE xxxx_t.* 星号写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xcbl_m        RECORD
+       xcbl001 LIKE xcbl_t.xcbl001, 
+   xcblld LIKE xcbl_t.xcblld, 
+   xcblld_desc LIKE type_t.chr80, 
+   xcbl002 LIKE xcbl_t.xcbl002, 
+   xcbl003 LIKE xcbl_t.xcbl003, 
+   xcbl004 LIKE xcbl_t.xcbl004, 
+   xcbl004_desc LIKE type_t.chr80, 
+   xcbl005 LIKE xcbl_t.xcbl005
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_glaacomp    LIKE glaa_t.glaacomp
+DEFINE g_glaa004     LIKE glaa_t.glaa004 
+DEFINE g_wc          STRING
+DEFINE g_sql         STRING
+DEFINE g_para_data   LIKE type_t.chr80    #啟用次要素否 140924
+#end add-point
+ 
+DEFINE g_xcbl_m        type_g_xcbl_m
+ 
+   DEFINE g_xcbl001_t LIKE xcbl_t.xcbl001
+DEFINE g_xcblld_t LIKE xcbl_t.xcblld
+DEFINE g_xcbl002_t LIKE xcbl_t.xcbl002
+DEFINE g_xcbl003_t LIKE xcbl_t.xcbl003
+DEFINE g_xcbl004_t LIKE xcbl_t.xcbl004
+DEFINE g_xcbl005_t LIKE xcbl_t.xcbl005
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axct201_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axct201_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE l_year          LIKE type_t.num5
+   DEFINE l_month         LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_errno         LIKE gzze_t.gzze001
+   #dorislai-20151023-add----(S)
+   DEFINE l_comp        LIKE xccc_t.xccccomp
+   DEFINE l_ld          LIKE xccc_t.xcccld
+   DEFINE l_calc_type   LIKE xccc_t.xccc003
+   #dorislai-20151023-add----(E)
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axct201_02 WITH FORM cl_ap_formpath("axc","axct201_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   CALL cl_set_combo_scc('xcbl001','8908')
+   CALL cl_set_combo_scc('xcbl005','8909')
+   LET g_errshow = 1
+   #dorislai-20151023-moidfy----(S)
+#   CALL cl_get_para(g_enterprise,g_site,'S-FIN-6010') RETURNING l_year
+#   CALL cl_get_para(g_enterprise,g_site,'S-FIN-6011') RETURNING l_month
+   CALL s_axc_set_site_default() RETURNING l_comp,l_ld,l_year,l_month,l_calc_type
+   #dorislai-20151023-moidfy----(S)
+   CALL s_fin_ld_carry('',g_user)
+   RETURNING l_success,g_xcbl_m.xcblld,g_glaacomp,l_errno
+   CALL axct201_02_ref_show()
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xcbl_m.xcbl001,g_xcbl_m.xcblld,g_xcbl_m.xcbl002,g_xcbl_m.xcbl003,g_xcbl_m.xcbl004, 
+          g_xcbl_m.xcbl005 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            LET g_xcbl_m.xcbl002 = l_year
+            LET g_xcbl_m.xcbl003 = l_month
+            LET g_xcbl_m.xcblld = l_ld         #dorislai-20151023-add
+            LET g_xcbl_m.xcbl004 = l_calc_type #dorislai-20151023-add
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcbl001
+            #add-point:BEFORE FIELD xcbl001 name="input.b.xcbl001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcbl001
+            
+            #add-point:AFTER FIELD xcbl001 name="input.a.xcbl001"
+            #此段落由子樣板a05產生
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcbl001
+            #add-point:ON CHANGE xcbl001 name="input.g.xcbl001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcblld
+            
+            #add-point:AFTER FIELD xcblld name="input.a.xcblld"
+            CALL axct201_02_ref_show()
+            IF NOT cl_null(g_xcbl_m.xcblld) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xcbl_m.xcblld
+               #160318-00025#11--add--str
+               LET g_errshow = TRUE 
+               LET g_chkparam.err_str[1] = "agl-00051:sub-01302|agli010|",cl_get_progname("agli010",g_lang,"2"),"|:EXEPROGagli010"
+               #160318-00025#11--add--end   
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_glaald") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  CALL s_ld_chk_authorization(g_user,g_xcbl_m.xcblld) RETURNING l_success
+                  IF l_success = FALSE THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axr-00022'
+                     LET g_errparam.extend = g_xcbl_m.xcblld
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xcbl_m.xcblld = ''
+                     CALL axct201_02_ref_show()
+                     NEXT FIELD CURRENT
+                  END IF 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_xcbl_m.xcblld = ''
+                  CALL axct201_02_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+            #fengmy 141231--b
+            SELECT glaa004,glaacomp
+              INTO g_glaa004,g_glaacomp
+              FROM glaa_t
+             WHERE glaaent = g_enterprise
+               AND glaald = g_xcbl_m.xcblld
+            #fengmy 141231--e
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcblld
+            #add-point:BEFORE FIELD xcblld name="input.b.xcblld"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcblld
+            #add-point:ON CHANGE xcblld name="input.g.xcblld"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcbl002
+            #add-point:BEFORE FIELD xcbl002 name="input.b.xcbl002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcbl002
+            
+            #add-point:AFTER FIELD xcbl002 name="input.a.xcbl002"
+            #此段落由子樣板a05產生
+
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcbl002
+            #add-point:ON CHANGE xcbl002 name="input.g.xcbl002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcbl003
+            #add-point:BEFORE FIELD xcbl003 name="input.b.xcbl003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcbl003
+            
+            #add-point:AFTER FIELD xcbl003 name="input.a.xcbl003"
+            #此段落由子樣板a05產生
+
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcbl003
+            #add-point:ON CHANGE xcbl003 name="input.g.xcbl003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcbl004
+            
+            #add-point:AFTER FIELD xcbl004 name="input.a.xcbl004"
+            CALL axct201_02_ref_show()
+            IF NOT cl_null(g_xcbl_m.xcbl004) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xcbl_m.xcbl004
+               LET g_chkparam.arg2 = g_today
+               #160318-00025#11--add--str
+               LET g_errshow = TRUE 
+               LET g_chkparam.err_str[1] = "aoo-00029:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+               #160318-00025#11--add--end   
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooeg001_4") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_xcbl_m.xcbl004 = ''
+                  CALL axct201_02_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            
+
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcbl004
+            #add-point:BEFORE FIELD xcbl004 name="input.b.xcbl004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcbl004
+            #add-point:ON CHANGE xcbl004 name="input.g.xcbl004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcbl005
+            #add-point:BEFORE FIELD xcbl005 name="input.b.xcbl005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcbl005
+            
+            #add-point:AFTER FIELD xcbl005 name="input.a.xcbl005"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcbl005
+            #add-point:ON CHANGE xcbl005 name="input.g.xcbl005"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xcbl001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcbl001
+            #add-point:ON ACTION controlp INFIELD xcbl001 name="input.c.xcbl001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcblld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcblld
+            #add-point:ON ACTION controlp INFIELD xcblld name="input.c.xcblld"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcbl_m.xcblld             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept 
+            
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_xcbl_m.xcblld = g_qryparam.return1              
+            CALL axct201_02_ref_show()
+            DISPLAY g_xcbl_m.xcblld TO xcblld              #
+
+            NEXT FIELD xcblld                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcbl002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcbl002
+            #add-point:ON ACTION controlp INFIELD xcbl002 name="input.c.xcbl002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcbl003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcbl003
+            #add-point:ON ACTION controlp INFIELD xcbl003 name="input.c.xcbl003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcbl004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcbl004
+            #add-point:ON ACTION controlp INFIELD xcbl004 name="input.c.xcbl004"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcbl_m.xcbl004             #給予default值
+            LET g_qryparam.where = " ooeg003 = '3'"
+            #給予arg
+            LET g_qryparam.arg1 = g_today
+
+            
+            CALL q_ooeg001_4()                                #呼叫開窗
+
+            LET g_xcbl_m.xcbl004 = g_qryparam.return1              
+            CALL axct201_02_ref_show()
+            DISPLAY g_xcbl_m.xcbl004 TO xcbl004              #
+
+            NEXT FIELD xcbl004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcbl005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcbl005
+            #add-point:ON ACTION controlp INFIELD xcbl005 name="input.c.xcbl005"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      CONSTRUCT BY NAME g_wc ON glar001,glar013
+         BEFORE CONSTRUCT
+         
+         ON ACTION controlp INFIELD glar001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+           #LET g_qryparam.where = " glac003 != '1' "  fengmy mark 141231
+            LET g_qryparam.where = "glac001 = '",g_glaa004,"' AND  glac003 <>'1'"  #fengmy add 141231
+            CALL aglt310_04()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glar001       #顯示到畫面上
+            NEXT FIELD glar001                          #返回原欄位
+         
+         ON ACTION controlp INFIELD glar013
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                          #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glar013       #顯示到畫面上
+            NEXT FIELD glar013                          #返回原欄位
+         
+      END CONSTRUCT
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   IF INT_FLAG THEN
+      LET INT_FLAG = TRUE 
+   ELSE
+      CALL axct201_02_ins_xcbl()
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axct201_02 
+   
+   #add-point:input段after input name="input.post_input"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axct201_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axct201_02.other_function" readonly="Y" >}
+# 參考欄位帶值
+PRIVATE FUNCTION axct201_02_ref_show()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xcbl_m.xcblld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xcbl_m.xcblld_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xcbl_m.xcblld_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xcbl_m.xcblld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaa004 FROM glaa_t WHERE glaaent='"||g_enterprise||"' AND glaald=? ","") RETURNING g_rtn_fields
+   LET g_glaa004 = '', g_rtn_fields[1] , ''
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xcbl_m.xcbl004
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xcbl_m.xcbl004_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xcbl_m.xcbl004_desc
+END FUNCTION
+# 整批產生
+PRIVATE FUNCTION axct201_02_ins_xcbl()
+#   DEFINE l_xcbl               RECORD  LIKE  xcbl_t.*  #161124-00048#12 mark
+  #161124-00048#12 add(s)
+  DEFINE l_xcbl RECORD  #人工制費收集維護檔
+       xcblent LIKE xcbl_t.xcblent, #企业编号
+       xcblcomp LIKE xcbl_t.xcblcomp, #法人组织
+       xcblld LIKE xcbl_t.xcblld, #账套
+       xcbl001 LIKE xcbl_t.xcbl001, #费用类型
+       xcbl002 LIKE xcbl_t.xcbl002, #年度
+       xcbl003 LIKE xcbl_t.xcbl003, #期别
+       xcbl004 LIKE xcbl_t.xcbl004, #成本中心
+       xcbl005 LIKE xcbl_t.xcbl005, #分摊方式
+       xcblseq LIKE xcbl_t.xcblseq, #项次
+       xcbl010 LIKE xcbl_t.xcbl010, #科目编号
+       xcbl011 LIKE xcbl_t.xcbl011, #营运组织
+       xcbl012 LIKE xcbl_t.xcbl012, #部门
+       xcbl013 LIKE xcbl_t.xcbl013, #收付款客商
+       xcbl014 LIKE xcbl_t.xcbl014, #客群
+       xcbl015 LIKE xcbl_t.xcbl015, #区域
+       xcbl016 LIKE xcbl_t.xcbl016, #成本中心
+       xcbl017 LIKE xcbl_t.xcbl017, #经营类别
+       xcbl018 LIKE xcbl_t.xcbl018, #渠道
+       xcbl019 LIKE xcbl_t.xcbl019, #品类
+       xcbl020 LIKE xcbl_t.xcbl020, #品牌
+       xcbl021 LIKE xcbl_t.xcbl021, #项目编号
+       xcbl022 LIKE xcbl_t.xcbl022, #WBS
+       xcbl023 LIKE xcbl_t.xcbl023, #成本次要素
+       xcbl100 LIKE xcbl_t.xcbl100, #分摊成本
+       xcbl110 LIKE xcbl_t.xcbl110, #分摊成本(本位币二)
+       xcbl120 LIKE xcbl_t.xcbl120, #分摊成本(本位币三)
+       xcblownid LIKE xcbl_t.xcblownid, #资料所有者
+       xcblowndp LIKE xcbl_t.xcblowndp, #资料所有部门
+       xcblcrtid LIKE xcbl_t.xcblcrtid, #资料录入者
+       xcblcrtdp LIKE xcbl_t.xcblcrtdp, #资料录入部门
+       xcblcrtdt LIKE xcbl_t.xcblcrtdt, #资料创建日
+       xcblmodid LIKE xcbl_t.xcblmodid, #资料更改者
+       xcblmoddt LIKE xcbl_t.xcblmoddt, #最近更改日
+       xcblstus LIKE xcbl_t.xcblstus, #状态码
+       xcbl024 LIKE xcbl_t.xcbl024, #账款对象
+       xcbl025 LIKE xcbl_t.xcbl025  #人员
+END RECORD
+  #161124-00048#12 add(e)
+#   DEFINE l_glar               RECORD  LIKE  glar_t.*  #161124-00048#19 mark
+   #161124-00048#19 add(s)
+   DEFINE l_glar RECORD  #會計科目各期餘額檔
+       glarent LIKE glar_t.glarent, #企业编号
+       glarcomp LIKE glar_t.glarcomp, #法人
+       glarld LIKE glar_t.glarld, #账套
+       glar001 LIKE glar_t.glar001, #会计科目
+       glar002 LIKE glar_t.glar002, #年度
+       glar003 LIKE glar_t.glar003, #期别
+       glar004 LIKE glar_t.glar004, #组合要素(key)
+       glar005 LIKE glar_t.glar005, #借方金额
+       glar006 LIKE glar_t.glar006, #贷方金额
+       glar007 LIKE glar_t.glar007, #借方笔数
+       glar008 LIKE glar_t.glar008, #贷方笔数
+       glar009 LIKE glar_t.glar009, #交易币种
+       glar010 LIKE glar_t.glar010, #原币借方金额
+       glar011 LIKE glar_t.glar011, #原币贷方金额
+       glar012 LIKE glar_t.glar012, #营运据点
+       glar013 LIKE glar_t.glar013, #部门
+       glar014 LIKE glar_t.glar014, #利润/成本中心
+       glar015 LIKE glar_t.glar015, #区域
+       glar016 LIKE glar_t.glar016, #收付款客商
+       glar017 LIKE glar_t.glar017, #账款客商
+       glar018 LIKE glar_t.glar018, #客群
+       glar019 LIKE glar_t.glar019, #产品类别
+       glar020 LIKE glar_t.glar020, #人员
+       glar021 LIKE glar_t.glar021, #no use
+       glar022 LIKE glar_t.glar022, #项目编号
+       glar023 LIKE glar_t.glar023, #WBS
+       glar024 LIKE glar_t.glar024, #自由核算项一
+       glar025 LIKE glar_t.glar025, #自由核算项二
+       glar026 LIKE glar_t.glar026, #自由核算项三
+       glar027 LIKE glar_t.glar027, #自由核算项四
+       glar028 LIKE glar_t.glar028, #自由核算项五
+       glar029 LIKE glar_t.glar029, #自由核算项六
+       glar030 LIKE glar_t.glar030, #自由核算项七
+       glar031 LIKE glar_t.glar031, #自由核算项八
+       glar032 LIKE glar_t.glar032, #自由核算项九
+       glar033 LIKE glar_t.glar033, #自由核算项十
+       glar034 LIKE glar_t.glar034, #借方金额(本位币二)
+       glar035 LIKE glar_t.glar035, #贷方金额(本位币二)
+       glar036 LIKE glar_t.glar036, #借方金额(本位币三)
+       glar037 LIKE glar_t.glar037, #贷方金额(本位币三)
+       glar051 LIKE glar_t.glar051, #经营方式
+       glar052 LIKE glar_t.glar052, #渠道
+       glar053 LIKE glar_t.glar053  #品牌
+END RECORD
+   #161124-00048#19 add(e)
+   DEFINE l_xcbl100_sum        LIKE xcbl_t.xcbl100
+   DEFINE l_xcbl110_sum        LIKE xcbl_t.xcbl110
+   DEFINE l_xcbl120_sum        LIKE xcbl_t.xcbl120
+   DEFINE l_glac008            LIKE glac_t.glac008
+   DEFINE l_amt1               LIKE glar_t.glar005
+   DEFINE l_amt2               LIKE glar_t.glar005
+   DEFINE l_amt3               LIKE glar_t.glar005
+   DEFINE l_n                  LIKE type_t.num5
+   DEFINE l_flag               LIKE type_t.chr1
+   
+   CALL s_transaction_begin()
+   LET g_success = 'Y'
+   LET l_flag = 'N'
+   #140928 fengmy add begin
+   CALL cl_err_collect_init() 
+   LET g_coll_title[1] = cl_getmsg("axc-00584",g_lang) #法人
+   LET g_coll_title[2] = cl_getmsg("axc-00585",g_lang) #账套
+   LET g_coll_title[3] = cl_getmsg("axc-00582",g_lang) #科目
+   #140928 fengmy add end
+   SELECT COUNT(*) INTO l_n 
+     FROM xcbl_t
+    WHERE xcblent = g_enterprise
+      AND xcblld  = g_xcbl_m.xcblld
+      AND xcbl001 = g_xcbl_m.xcbl001
+      AND xcbl002 = g_xcbl_m.xcbl002
+      AND xcbl003 = g_xcbl_m.xcbl003
+      
+   IF l_n > 0 THEN 
+      IF cl_ask_confirm('axc-00531') THEN
+         DELETE FROM xcbl_t
+          WHERE xcblent = g_enterprise
+            AND xcblld  = g_xcbl_m.xcblld
+            AND xcbl001 = g_xcbl_m.xcbl001
+            AND xcbl002 = g_xcbl_m.xcbl002
+            AND xcbl003 = g_xcbl_m.xcbl003
+      END IF
+   END IF
+   
+#   LET g_sql = "SELECT * FROM glar_t", #161124-00048#19 mark
+   #161124-00048#19 add(s)
+   LET g_sql = "SELECT glarent,glarcomp,glarld,glar001,glar002,glar003,glar004,glar005,",
+               "       glar006,glar007,glar008,glar009,glar010,glar011,glar012,glar013,",
+               "       glar014,glar015,glar016,glar017,glar018,glar019,glar020,glar021,",
+               "       glar022,glar023,glar024,glar025,glar026,glar027,glar028,glar029,",
+               "       glar030,glar031,glar032,glar033,glar034,glar035,glar036,glar037,",
+               "       glar051,glar052,glar053 FROM glar_t",
+   #161124-00048#19 add(e)
+               " WHERE glarent = '",g_enterprise,"'",
+               "   AND glarld = '",g_xcbl_m.xcblld,"'",
+               "   AND glar002 = '",g_xcbl_m.xcbl002,"'",
+               "   AND glar003 = '",g_xcbl_m.xcbl003,"'",
+               "   AND ",g_wc
+   PREPARE xcba_pre FROM g_sql
+   DECLARE xcba_cur CURSOR FOR xcba_pre   
+
+   FOREACH xcba_cur INTO l_glar.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      LET l_flag = 'Y'
+       
+      LET l_xcbl.xcblent  = g_enterprise
+      LET l_xcbl.xcblcomp = g_glaacomp
+      LET l_xcbl.xcblld   = g_xcbl_m.xcblld
+      LET l_xcbl.xcbl001  = g_xcbl_m.xcbl001
+      LET l_xcbl.xcbl002  = g_xcbl_m.xcbl002
+      LET l_xcbl.xcbl003  = g_xcbl_m.xcbl003
+      LET l_xcbl.xcbl004  = g_xcbl_m.xcbl004
+      LET l_xcbl.xcbl005  = g_xcbl_m.xcbl005
+      SELECT MAX(xcblseq) + 1 INTO l_xcbl.xcblseq
+        FROM xcbl_t
+       WHERE xcblent = g_enterprise
+         AND xcblld = g_xcbl_m.xcblld
+         AND xcbl001 = g_xcbl_m.xcbl001
+         AND xcbl002 = g_xcbl_m.xcbl002
+         AND xcbl003 = g_xcbl_m.xcbl003
+         AND xcbl004 = g_xcbl_m.xcbl004
+         AND xcbl005 = g_xcbl_m.xcbl005
+         
+       IF cl_null(l_xcbl.xcblseq) THEN 
+          LET l_xcbl.xcblseq = 1
+       END IF 
+       
+       LET l_xcbl.xcbl010 = l_glar.glar001
+       LET l_xcbl.xcbl011 = l_glar.glar012
+       LET l_xcbl.xcbl012 = l_glar.glar013
+       LET l_xcbl.xcbl013 = l_glar.glar016
+       LET l_xcbl.xcbl014 = l_glar.glar018
+       LET l_xcbl.xcbl015 = l_glar.glar015
+       LET l_xcbl.xcbl016 = l_glar.glar014
+       LET l_xcbl.xcbl017 = ''
+       LET l_xcbl.xcbl018 = ''
+       LET l_xcbl.xcbl019 = l_glar.glar019
+       LET l_xcbl.xcbl020 = ''
+       LET l_xcbl.xcbl021 = l_glar.glar022
+       LET l_xcbl.xcbl022 = l_glar.glar023
+       LET l_xcbl.xcbl024 = l_glar.glar017  #151208-00020#1 add
+       LET l_xcbl.xcbl025 = l_glar.glar020  #151208-00020#1 add
+       
+       #判断是否超额分摊：
+       #根据该账套、年度、期别、科目+营运组织+部门+交易对象+客群+区域+成本中心+经营类别+渠
+       #道+品类+品牌+项目编号+WBS从xcbl_t中抓取已分摊的金额sum(xcbl100),sum(xcbl110),sum(xcbl120)
+       SELECT sum(xcbl100),sum(xcbl110),sum(xcbl120)
+         INTO l_xcbl100_sum,l_xcbl110_sum,l_xcbl120_sum
+         FROM xcbl_t
+        WHERE xcblent = g_enterprise
+          AND xcblld  = g_xcbl_m.xcblld
+          AND xcbl002 = g_xcbl_m.xcbl002
+          AND xcbl003 = g_xcbl_m.xcbl003
+          AND xcbl010 = l_xcbl.xcbl010
+          AND xcbl011 = l_xcbl.xcbl011
+          AND xcbl012 = l_xcbl.xcbl012
+          AND xcbl013 = l_xcbl.xcbl013
+          AND xcbl014 = l_xcbl.xcbl014
+          AND xcbl015 = l_xcbl.xcbl015
+          AND xcbl016 = l_xcbl.xcbl016
+          AND xcbl017 = l_xcbl.xcbl017
+          AND xcbl018 = l_xcbl.xcbl018
+          AND xcbl019 = l_xcbl.xcbl019
+          AND xcbl020 = l_xcbl.xcbl020
+          AND xcbl021 = l_xcbl.xcbl021
+          AND xcbl022 = l_xcbl.xcbl022
+          
+       IF cl_null(l_xcbl100_sum) THEN 
+          LET l_xcbl100_sum = 0
+       END IF 
+       
+       IF cl_null(l_xcbl110_sum) THEN 
+          LET l_xcbl100_sum = 0
+       END IF
+       
+       IF cl_null(l_xcbl120_sum) THEN 
+          LET l_xcbl100_sum = 0
+       END IF
+          
+       #科目正常余额形态
+       SELECT glac008 INTO l_glac008
+         FROM glac_t
+        WHERE glacent = g_enterprise
+          AND glac001 = g_glaa004
+          AND glac002 = l_glar.glar001   
+          
+       IF cl_null(l_glar.glar005) THEN 
+          LET l_glar.glar005 = 0
+       END IF
+       
+       IF cl_null(l_glar.glar006) THEN 
+          LET l_glar.glar006 = 0
+       END IF
+       
+       IF cl_null(l_glar.glar034) THEN 
+          LET l_glar.glar034 = 0
+       END IF
+       
+       IF cl_null(l_glar.glar035) THEN 
+          LET l_glar.glar035 = 0
+       END IF
+       
+       IF cl_null(l_glar.glar036) THEN 
+          LET l_glar.glar036 = 0
+       END IF
+       
+       IF cl_null(l_glar.glar037) THEN 
+          LET l_glar.glar037 = 0
+       END IF   
+          
+       LET l_amt1 = 0
+       LET l_amt2 = 0
+       LET l_amt3 = 0   
+          
+       IF l_glac008 = '1' THEN
+          SELECT SUM(glar006 - glar005) INTO l_amt1
+            FROM glar_t
+           WHERE glarent = g_enterprise
+             AND glarld = g_xcbl_m.xcblld
+             AND glar001 = l_glar.glar001
+             AND glar002 = g_xcbl_m.xcbl002
+             AND glar003 = g_xcbl_m.xcbl003
+             AND glar004 = ' '
+             
+          IF cl_null(l_amt1) THEN 
+             LET l_amt1 = 0
+          END IF
+          
+          SELECT SUM(glar035 - glar034) INTO l_amt2
+            FROM glar_t
+           WHERE glarent = g_enterprise
+             AND glarld = g_xcbl_m.xcblld
+             AND glar001 = l_glar.glar001
+             AND glar002 = g_xcbl_m.xcbl002
+             AND glar003 = g_xcbl_m.xcbl003
+             AND glar004 = ' '
+             
+          IF cl_null(l_amt2) THEN 
+             LET l_amt2 = 0
+          END IF
+             
+          SELECT SUM(glar037 - glar036) INTO l_amt3
+            FROM glar_t
+           WHERE glarent = g_enterprise
+             AND glarld = g_xcbl_m.xcblld
+             AND glar001 = l_glar.glar001
+             AND glar002 = g_xcbl_m.xcbl002
+             AND glar003 = g_xcbl_m.xcbl003
+             AND glar004 = ' '
+             
+          IF cl_null(l_amt3) THEN 
+             LET l_amt3 = 0
+          END IF
+           
+          #分摊成本(xcbl100)=借方金额(glar005)-贷方金额(glar006)+结转类凭证发生额
+          #分摊成本本位币二(xcbl110)=借方金额(glar034)-贷方金额(glar035)+结转类凭证发生额
+          #分摊成本本位币三(xcbl120)=借方金额(glar036)-贷方金额(glar037)+结转类凭证发生额           
+          LET l_xcbl.xcbl100 = l_glar.glar005 - l_glar.glar006 + l_amt1
+          LET l_xcbl.xcbl110 = l_glar.glar034 - l_glar.glar035 + l_amt2
+          LET l_xcbl.xcbl120 = l_glar.glar036 - l_glar.glar037 + l_amt3
+          
+          
+          
+       ELSE
+          SELECT SUM(glar005 - glar006) INTO l_amt1
+            FROM glar_t
+           WHERE glarent = g_enterprise
+             AND glarld = g_xcbl_m.xcblld
+             AND glar001 = l_glar.glar001
+             AND glar002 = g_xcbl_m.xcbl002
+             AND glar003 = g_xcbl_m.xcbl003
+             AND glar004 = ' '
+             
+          SELECT SUM(glar034 - glar035) INTO l_amt2
+            FROM glar_t
+           WHERE glarent = g_enterprise
+             AND glarld = g_xcbl_m.xcblld
+             AND glar001 = l_glar.glar001
+             AND glar002 = g_xcbl_m.xcbl002
+             AND glar003 = g_xcbl_m.xcbl003
+             AND glar004 = ' '
+             
+          SELECT SUM(glar036 - glar037) INTO l_amt3
+            FROM glar_t
+           WHERE glarent = g_enterprise
+             AND glarld = g_xcbl_m.xcblld
+             AND glar001 = l_glar.glar001
+             AND glar002 = g_xcbl_m.xcbl002
+             AND glar003 = g_xcbl_m.xcbl003
+             AND glar004 = ' '
+           
+          #分摊成本(xcbl100)=贷方金额(glar006)-借方金额(glar005)+结转类凭证发生额
+          #分摊成本本位币二(xcbl110)=贷方金额(glar035)-借方金额(glar034)+结转类凭证发生额
+          #分摊成本本位币三(xcbl120)=贷方金额(glar037)-借方金额(glar036)+结转类凭证发生额          
+          LET l_xcbl.xcbl100 = l_glar.glar006 - l_glar.glar005 + l_amt1
+          LET l_xcbl.xcbl110 = l_glar.glar035 - l_glar.glar034 + l_amt2
+          LET l_xcbl.xcbl120 = l_glar.glar037 - l_glar.glar036 + l_amt3
+          
+          
+       END IF   
+       
+       #IF  分摊成本(xcbl100)>已分摊的金额sum(xcbl100) THEN
+       #     分摊成本(xcbl100)=分摊成本(xcbl100)-已分摊的金额sum(xcbl100)
+       #     分摊成本本位币二(xcbl110)= 分摊成本本位币二(xcbl110)-已分摊的金额sum(xcbl110)
+       #     分摊成本本位币二(xcbl120)= 分摊成本本位币二(xcbl120)-已分摊的金额sum(xcbl120)
+       #END IF
+       IF l_xcbl.xcbl100 > l_xcbl100_sum THEN 
+          LET l_xcbl.xcbl100 = l_xcbl.xcbl100 - l_xcbl100_sum
+       END IF
+       
+       IF l_xcbl.xcbl110 > l_xcbl110_sum THEN 
+          LET l_xcbl.xcbl110 = l_xcbl.xcbl110 - l_xcbl110_sum
+       END IF
+       
+       IF l_xcbl.xcbl120 > l_xcbl120_sum THEN 
+          LET l_xcbl.xcbl120 = l_xcbl.xcbl120 - l_xcbl120_sum
+       END IF
+       
+       IF cl_null(l_xcbl.xcbl100) THEN 
+          LET l_xcbl.xcbl100 = 0
+       END IF
+       
+       IF cl_null(l_xcbl.xcbl110) THEN 
+          LET l_xcbl.xcbl110 = 0
+       END IF
+       
+       IF cl_null(l_xcbl.xcbl120) THEN 
+          LET l_xcbl.xcbl120 = 0
+       END IF
+       
+       #IF  分摊成本(xcbl100)<=已分摊的金额sum(xcbl100) THEN
+       #     CONTINUE FOREACH
+       #END IF
+       IF l_xcbl.xcbl100 <= l_xcbl100_sum THEN 
+          CONTINUE FOREACH
+       END IF
+       
+       IF l_xcbl.xcbl110 <= l_xcbl110_sum THEN 
+          CONTINUE FOREACH
+       END IF
+          
+       IF l_xcbl.xcbl120 <= l_xcbl120_sum THEN 
+          CONTINUE FOREACH
+       END IF
+       #成本次要素 fengmy140924--begin
+       CALL cl_get_para(g_enterprise,g_site,'S-FIN-6015') RETURNING g_para_data
+       IF g_para_data = 'Y' THEN
+          SELECT xcay002 INTO l_xcbl.xcbl023 FROM xcay_t 
+           WHERE xcay001 = l_xcbl.xcbl010
+             AND xcayent = g_enterprise
+             AND xcayld = l_xcbl.xcblld
+             AND xcaystus = 'Y' 
+          IF cl_null(l_xcbl.xcbl023)  THEN 
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code   = 'axc-00583' 
+             LET g_errparam.extend = ''
+             LET g_errparam.popup = TRUE
+             LET g_errparam.coll_vals[1] = l_xcbl.xcblcomp
+             LET g_errparam.coll_vals[2] = l_xcbl.xcblld
+             LET g_errparam.coll_vals[3] = l_xcbl.xcbl010
+             LET g_errparam.sqlerr = 0
+             CALL cl_err()
+             LET l_xcbl.xcbl023 = ' '  
+          END IF                                
+       ELSE
+          LET  l_xcbl.xcbl023 = ' '               
+       END IF 
+       #fengmy140924--end  
+       LET l_xcbl.xcblownid = g_user
+       LET l_xcbl.xcblowndp = g_dept
+       LET l_xcbl.xcblcrtid = g_user
+       LET l_xcbl.xcblcrtdp = g_dept 
+       LET l_xcbl.xcblcrtdt = cl_get_current()
+       LET l_xcbl.xcblmodid = ""
+       LET l_xcbl.xcblmoddt = ""
+       
+#              INSERT INTO xcbl_t VALUES(l_xcbl.*)  #161124-00048#12
+              #161124-00048#12 add(s)
+              INSERT INTO xcbl_t(xcblent,xcblcomp,xcblld,xcbl001,xcbl002,xcbl003,xcbl004,xcbl005,xcblseq,xcbl010,
+                                 xcbl011,xcbl012,xcbl013,xcbl014,xcbl015,xcbl016,xcbl017,xcbl018,xcbl019,xcbl020,
+                                 xcbl021,xcbl022,xcbl023,xcbl100,xcbl110,xcbl120,xcblownid,xcblowndp,xcblcrtid,
+                                 xcblcrtdp,xcblcrtdt,xcblmodid,xcblmoddt,xcblstus,xcbl024,xcbl025)
+                          VALUES(l_xcbl.xcblent,l_xcbl.xcblcomp,l_xcbl.xcblld,l_xcbl.xcbl001,l_xcbl.xcbl002,l_xcbl.xcbl003,l_xcbl.xcbl004,l_xcbl.xcbl005,l_xcbl.xcblseq,l_xcbl.xcbl010,
+                                 l_xcbl.xcbl011,l_xcbl.xcbl012,l_xcbl.xcbl013,l_xcbl.xcbl014,l_xcbl.xcbl015,l_xcbl.xcbl016,l_xcbl.xcbl017,l_xcbl.xcbl018,l_xcbl.xcbl019,l_xcbl.xcbl020,
+                                 l_xcbl.xcbl021,l_xcbl.xcbl022,l_xcbl.xcbl023,l_xcbl.xcbl100,l_xcbl.xcbl110,l_xcbl.xcbl120,l_xcbl.xcblownid,l_xcbl.xcblowndp,l_xcbl.xcblcrtid,
+                                 l_xcbl.xcblcrtdp,l_xcbl.xcblcrtdt,l_xcbl.xcblmodid,l_xcbl.xcblmoddt,l_xcbl.xcblstus,l_xcbl.xcbl024,l_xcbl.xcbl025)
+              #161124-00048#12 add(e)
+       
+       IF SQLCA.SQLcode  THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = "l_xcbl"
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+  
+          LET g_success = 'N'                        
+       END IF
+          
+   END FOREACH 
+   CALL cl_err_collect_show()   #140928  fengmy add
+   IF g_success = 'N' THEN
+      CALL s_transaction_end('N','1') 
+   ELSE
+      IF l_flag = 'N' THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = 'axc-00530' 
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')  
+      ELSE
+         CALL s_transaction_end('Y','1')
+      END IF
+   END IF
+    
+END FUNCTION
+
+ 
+{</section>}
+ 

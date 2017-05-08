@@ -1,0 +1,428 @@
+{<section id="axmr001_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:10(2016-12-21 17:43:45), PR版次:
+#+ Customerized Version.: SD版次:(), PR版次:
+#+ Build......: 000102
+#+ Filename...: axmr001_x01
+#+ Description: ...
+#+ Creator....: 05384(2014-07-22 11:28:24)
+#+ Modifier...: 08993 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="axmr001_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+{</section>}
+ 
+{<section id="axmr001_x01.main" readonly="Y" >}
+PUBLIC FUNCTION axmr001_x01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define(客製用) name="component.define_customerization"
+{<point name="component.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axmr001_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axmr001_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axmr001_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axmr001_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axmr001_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axmr001_x01_rep_data()
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="axmr001_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION axmr001_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "xmdadocno.xmda_t.xmdadocno,xmda001.xmda_t.xmda001,l_xmdastus_desc.gzcbl_t.gzcbl004,xmda044.xmda_t.xmda044,l_xmda044_desc.xmaol_t.xmaol004,xmdadocdt.xmda_t.xmdadocdt,xmda002.xmda_t.xmda002,xmda004.xmda_t.xmda004,xmda033.xmda_t.xmda033,xmdd003.xmdd_t.xmdd003,l_xmdd003_desc.type_t.chr500,xmdd001.xmdd_t.xmdd001,x_imaal_t_imaal003.imaal_t.imaal003,x_imaal_t_imaal004.imaal_t.imaal004,xmdd002.xmdd_t.xmdd002,l_xmdd002_desc.type_t.chr1000,xmdd011.xmdd_t.xmdd011,xmdd006.xmdd_t.xmdd006,xmdd004.xmdd_t.xmdd004,xmdd014.xmdd_t.xmdd014,xmdd016.xmdd_t.xmdd016,l_xmdd006_xmdd014.type_t.num20_6,l_xmdc050.xmdc_t.xmdc050,xmddseq.xmdd_t.xmddseq,xmddseq1.xmdd_t.xmddseq1,xmddseq2.xmdd_t.xmddseq2,xmda003.xmda_t.xmda003,xmda005.xmda_t.xmda005,xmda009.xmda_t.xmda009,xmda010.xmda_t.xmda010,xmda011.xmda_t.xmda011,xmda012.xmda_t.xmda012,xmda013.xmda_t.xmda013,xmda015.xmda_t.xmda015,xmda016.xmda_t.xmda016,xmda027.xmda_t.xmda027,xmda032.xmda_t.xmda032,xmdd015.xmdd_t.xmdd015,l_xmda002_ref.type_t.chr30,l_xmda003_ref.type_t.chr30,l_xmda004_ref.type_t.chr30,l_xmda009_desc.type_t.chr30,l_xmda010_desc.type_t.chr30,l_xmda011_desc.type_t.chr30,l_xmda015_desc.type_t.chr30,l_xmda027_desc.type_t.chr30,l_xmda032_desc.type_t.chr30,l_imaa127_desc.type_t.chr30,l_imaa127.type_t.chr30" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+{</section>}
+ 
+{<section id="axmr001_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION axmr001_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+{<point name="ins_prep.define_customerization" edit="c" mark="Y"/>}
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)" 
+
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+{</section>}
+ 
+{<section id="axmr001_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axmr001_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+{<point name="sel_prep.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT xmdadocno,xmda001,'',xmda044,'',xmdadocdt,xmda002,( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = xmda_t.xmda002 AND ooag_t.ooagent = xmda_t.xmdaent), 
+       xmda004,( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda004 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = '" , 
+       g_dlang,"'" ,"),xmda033,xmdd003,'',xmdd001,x.imaal_t_imaal003,x.imaal_t_imaal004,xmdd002,'',xmdd011, 
+       xmdd006,xmdd004,xmdd014,xmdd016,'','',xmdaent,xmdasite,xmdastus,xmdaunit,xmddseq,xmddseq1,xmddseq2, 
+       xmddsite,x.t11_ooag011,( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = xmda_t.xmda003 AND ooefl_t.ooeflent = xmda_t.xmdaent AND ooefl_t.ooefl002 = '" , 
+       g_dlang,"'" ,"),( SELECT pmaal003 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda022 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = '" , 
+       g_dlang,"'" ,"),( SELECT pmaal003 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda034 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = '" , 
+       g_dlang,"'" ,"),( SELECT pmaal003 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda021 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = '" , 
+       g_dlang,"'" ,"),( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda036 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = '" , 
+       g_dlang,"'" ,"),( SELECT ooibl004 FROM ooibl_t WHERE ooibl_t.ooibl002 = xmda_t.xmda009 AND ooibl_t.ooiblent = xmda_t.xmdaent AND ooibl_t.ooibl003 = '" , 
+       g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '275' AND oocql_t.oocql002 = xmda_t.xmda023 AND oocql_t.oocqlent = xmda_t.xmdaent AND oocql_t.oocql003 = '" , 
+       g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '295' AND oocql_t.oocql002 = xmda_t.xmda024 AND oocql_t.oocqlent = xmda_t.xmdaent AND oocql_t.oocql003 = '" , 
+       g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '297' AND oocql_t.oocql002 = xmda_t.xmda032 AND oocql_t.oocqlent = xmda_t.xmdaent AND oocql_t.oocql003 = '" , 
+       g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '238' AND oocql_t.oocql002 = xmda_t.xmda010 AND oocql_t.oocqlent = xmda_t.xmdaent AND oocql_t.oocql003 = '" , 
+       g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '263' AND oocql_t.oocql002 = xmda_t.xmda020 AND oocql_t.oocqlent = xmda_t.xmdaent AND oocql_t.oocql003 = '" , 
+       g_dlang,"'" ,"),x.t12_oocql004,( SELECT ooail003 FROM ooail_t WHERE ooail_t.ooail001 = xmda_t.xmda015 AND ooail_t.ooailent = xmda_t.xmdaent AND ooail_t.ooail002 = '" , 
+       g_dlang,"'" ,"),( SELECT xmahl003 FROM xmahl_t WHERE xmahl_t.xmahl001 = xmda_t.xmda017 AND xmahl_t.xmahlent = xmda_t.xmdaent AND xmahl_t.xmahl002 = '" , 
+       g_dlang,"'" ,"),( SELECT ooidl003 FROM ooidl_t WHERE ooidl_t.ooidl001 = xmda_t.xmda018 AND ooidl_t.ooidlent = xmda_t.xmdaent AND ooidl_t.ooidl002 = '" , 
+       g_dlang,"'" ,"),( SELECT oofb011 FROM oofb_t WHERE oofb_t.oofb001 = xmda_t.xmda025 AND oofb_t.oofbent = xmda_t.xmdaent), 
+       ( SELECT oofb011 FROM oofb_t WHERE oofb_t.oofb001 = xmda_t.xmda026 AND oofb_t.oofbent = xmda_t.xmdaent), 
+       ( SELECT oofa011 FROM oofa_t WHERE oofa_t.oofa001 = xmda_t.xmda027 AND oofa_t.oofaent = xmda_t.xmdaent), 
+       x.oocal_t_oocal003,x.t10_oocal003,x.t13_oocal003,'','','','',xmda003,xmda005,xmda009,xmda010, 
+       xmda011,xmda012,xmda013,xmda015,xmda016,xmda027,xmda032,xmdd015,'','','','','','','','','','', 
+       ''"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM xmda_t LEFT OUTER JOIN ( SELECT xmdd_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = xmdd_t.xmdd001 AND imaal_t.imaalent = xmdd_t.xmddent AND imaal_t.imaal002 = '" , 
+        g_dlang,"'" ,") imaal_t_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = xmdd_t.xmdd001 AND imaal_t.imaalent = xmdd_t.xmddent AND imaal_t.imaal002 = '" , 
+        g_dlang,"'" ,") imaal_t_imaal004,( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = xmdd_t.xmdd022 AND ooag_t.ooagent = xmdd_t.xmddent) t11_ooag011, 
+        ( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '274' AND oocql_t.oocql002 = xmdd_t.xmdd010 AND oocql_t.oocqlent = xmdd_t.xmddent AND oocql_t.oocql003 = '" , 
+        g_dlang,"'" ,") t12_oocql004,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = xmdd_t.xmdd026 AND oocal_t.oocalent = xmdd_t.xmddent AND oocal_t.oocal002 = '" , 
+        g_dlang,"'" ,") oocal_t_oocal003,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = xmdd_t.xmdd024 AND oocal_t.oocalent = xmdd_t.xmddent AND oocal_t.oocal002 = '" , 
+        g_dlang,"'" ,") t10_oocal003,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = xmdd_t.xmdd004 AND oocal_t.oocalent = xmdd_t.xmddent AND oocal_t.oocal002 = '" , 
+        g_dlang,"'" ,") t13_oocal003 FROM xmdd_t ) x  ON xmda_t.xmdaent = x.xmddent AND xmda_t.xmdadocno  
+        = x.xmdddocno"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE xmda_t.xmdastus IN ('Y','H') AND " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xmda_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE axmr001_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axmr001_x01_curs CURSOR FOR axmr001_x01_prepare
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="axmr001_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axmr001_x01_ins_data()
+DEFINE sr RECORD 
+   xmdadocno LIKE xmda_t.xmdadocno, 
+   xmda001 LIKE xmda_t.xmda001, 
+   l_xmdastus_desc LIKE gzcbl_t.gzcbl004, 
+   xmda044 LIKE xmda_t.xmda044, 
+   l_xmda044_desc LIKE xmaol_t.xmaol004, 
+   xmdadocdt LIKE xmda_t.xmdadocdt, 
+   xmda002 LIKE xmda_t.xmda002, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   xmda004 LIKE xmda_t.xmda004, 
+   t8_pmaal004 LIKE pmaal_t.pmaal004, 
+   xmda033 LIKE xmda_t.xmda033, 
+   xmdd003 LIKE xmdd_t.xmdd003, 
+   l_xmdd003_desc LIKE type_t.chr500, 
+   xmdd001 LIKE xmdd_t.xmdd001, 
+   x_imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   x_imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   xmdd002 LIKE xmdd_t.xmdd002, 
+   l_xmdd002_desc LIKE type_t.chr1000, 
+   xmdd011 LIKE xmdd_t.xmdd011, 
+   xmdd006 LIKE xmdd_t.xmdd006, 
+   xmdd004 LIKE xmdd_t.xmdd004, 
+   xmdd014 LIKE xmdd_t.xmdd014, 
+   xmdd016 LIKE xmdd_t.xmdd016, 
+   l_xmdd006_xmdd014 LIKE type_t.num20_6, 
+   l_xmdc050 LIKE xmdc_t.xmdc050, 
+   xmdaent LIKE xmda_t.xmdaent, 
+   xmdasite LIKE xmda_t.xmdasite, 
+   xmdastus LIKE xmda_t.xmdastus, 
+   xmdaunit LIKE xmda_t.xmdaunit, 
+   xmddseq LIKE xmdd_t.xmddseq, 
+   xmddseq1 LIKE xmdd_t.xmddseq1, 
+   xmddseq2 LIKE xmdd_t.xmddseq2, 
+   xmddsite LIKE xmdd_t.xmddsite, 
+   x_t11_ooag011 LIKE ooag_t.ooag011, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   pmaal_t_pmaal003 LIKE pmaal_t.pmaal003, 
+   t5_pmaal003 LIKE pmaal_t.pmaal003, 
+   t6_pmaal003 LIKE pmaal_t.pmaal003, 
+   t9_pmaal004 LIKE pmaal_t.pmaal004, 
+   ooibl_t_ooibl004 LIKE ooibl_t.ooibl004, 
+   t1_oocql004 LIKE oocql_t.oocql004, 
+   t2_oocql004 LIKE oocql_t.oocql004, 
+   t4_oocql004 LIKE oocql_t.oocql004, 
+   t7_oocql004 LIKE oocql_t.oocql004, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   x_t12_oocql004 LIKE oocql_t.oocql004, 
+   ooail_t_ooail003 LIKE ooail_t.ooail003, 
+   xmahl_t_xmahl003 LIKE xmahl_t.xmahl003, 
+   ooidl_t_ooidl003 LIKE ooidl_t.ooidl003, 
+   oofb_t_oofb011 LIKE oofb_t.oofb011, 
+   t3_oofb011 LIKE oofb_t.oofb011, 
+   oofa_t_oofa011 LIKE oofa_t.oofa011, 
+   x_oocal_t_oocal003 LIKE oocal_t.oocal003, 
+   x_t10_oocal003 LIKE oocal_t.oocal003, 
+   x_t13_oocal003 LIKE oocal_t.oocal003, 
+   l_xmdc029 LIKE type_t.chr10, 
+   l_xmdc028 LIKE type_t.chr10, 
+   l_inayl003 LIKE type_t.chr500, 
+   l_inab003 LIKE type_t.chr500, 
+   xmda003 LIKE xmda_t.xmda003, 
+   xmda005 LIKE xmda_t.xmda005, 
+   xmda009 LIKE xmda_t.xmda009, 
+   xmda010 LIKE xmda_t.xmda010, 
+   xmda011 LIKE xmda_t.xmda011, 
+   xmda012 LIKE xmda_t.xmda012, 
+   xmda013 LIKE xmda_t.xmda013, 
+   xmda015 LIKE xmda_t.xmda015, 
+   xmda016 LIKE xmda_t.xmda016, 
+   xmda027 LIKE xmda_t.xmda027, 
+   xmda032 LIKE xmda_t.xmda032, 
+   xmdd015 LIKE xmdd_t.xmdd015, 
+   l_xmda002_ref LIKE type_t.chr30, 
+   l_xmda003_ref LIKE type_t.chr30, 
+   l_xmda004_ref LIKE type_t.chr30, 
+   l_xmda009_desc LIKE type_t.chr30, 
+   l_xmda010_desc LIKE type_t.chr30, 
+   l_xmda011_desc LIKE type_t.chr30, 
+   l_xmda015_desc LIKE type_t.chr30, 
+   l_xmda027_desc LIKE type_t.chr30, 
+   l_xmda032_desc LIKE type_t.chr30, 
+   l_imaa127_desc LIKE type_t.chr30, 
+   l_imaa127 LIKE type_t.chr30
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+{<point name="ins_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axmr001_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.xmdadocno,sr.xmda001,sr.l_xmdastus_desc,sr.xmda044,sr.l_xmda044_desc,sr.xmdadocdt,sr.xmda002,sr.xmda004,sr.xmda033,sr.xmdd003,sr.l_xmdd003_desc,sr.xmdd001,sr.x_imaal_t_imaal003,sr.x_imaal_t_imaal004,sr.xmdd002,sr.l_xmdd002_desc,sr.xmdd011,sr.xmdd006,sr.xmdd004,sr.xmdd014,sr.xmdd016,sr.l_xmdd006_xmdd014,sr.l_xmdc050,sr.xmddseq,sr.xmddseq1,sr.xmddseq2,sr.xmda003,sr.xmda005,sr.xmda009,sr.xmda010,sr.xmda011,sr.xmda012,sr.xmda013,sr.xmda015,sr.xmda016,sr.xmda027,sr.xmda032,sr.xmdd015,sr.l_xmda002_ref,sr.l_xmda003_ref,sr.l_xmda004_ref,sr.l_xmda009_desc,sr.l_xmda010_desc,sr.l_xmda011_desc,sr.l_xmda015_desc,sr.l_xmda027_desc,sr.l_xmda032_desc,sr.l_imaa127_desc,sr.l_imaa127
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axmr001_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="axmr001_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axmr001_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+{<point name="rep_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+{</section>}
+ 
+{<section id="axmr001_x01.other_function" readonly="Y" >} 
+{<point name="other.function"/>}
+{</section>}

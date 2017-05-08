@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcp210" module="axc" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02291" crtdt="2014-04-03 10:48:51" modid="02295" moddt="2016-06-03 14:21:35" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="料件庫存量按帳套期統計作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imaa001(chr500),imaa003(chr500),glaacomp(chr500),glaacomp_desc(chr80),glaald(chr500),glaald_desc(chr80),year(chr500),month(chr500),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcp210" method="dialog">
+    <section id="input">
+      <input id="head" field="imaa001,imaa003,glaacomp,glaald,year,month"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imaa001,imaa003,glaacomp,glaald,year,month"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imaa001">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaa003">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glaacomp">
+        <after>
+          <reference field="glaacomp_desc" ref_field="glaacomp" map_field="glaaent,glaacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="glaacomp_desc"/>
+      <column id="glaald">
+        <after>
+          <reference field="glaald_desc" ref_field="glaald" map_field="glaaent,glaald" ref_sql="SELECT glaal003 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaal001=? AND glaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="glaald_desc"/>
+      <column id="year"/>
+      <column id="month"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

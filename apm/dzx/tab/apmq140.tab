@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmq140" module="apm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="04226" crtdt="2014-07-17 16:40:54" modid="04226" moddt="2014-07-24 16:56:14" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="供應商評核綜合得分查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="pmbq004,pmaa080,pmbq003,pmbq001,pmbq002,pmbq007,pmbqsite,pmbq005,pmbq006,pmbq008,pmbq009,pmbq010,pmbq011,pmbq012,pmbr005,pmbr006,pmbr007,pmbr008,pmbr009,pmbr010"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pmbqsite,pmbq003,pmbq003_desc(chr500),pmbq001,pmbq002,pmbq004,pmbq004_desc(chr500),pmbq005,pmbq006,pmbq007,pmbq007_desc(chr500),pmbq008,pmbq008_desc(chr500),pmbq009,pmbk008(chr500),pmbk009(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmbr005,pmbr006,pmbr006_desc(chr500),pmbr007,pmbr008,pmbm003(chr500),pmbr009"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pmbqsite(b_pmbqsite),pmbq003(b_pmbq003),pmbq003_desc(b_pmbq003_desc),pmbq001(b_pmbq001),pmbq002(b_pmbq002),pmbq004(b_pmbq004),pmbq004_desc(b_pmbq004_desc),pmbq005(b_pmbq005),pmbq006(b_pmbq006),pmbq007(b_pmbq007),pmbq007_desc(b_pmbq007_desc),pmbq008(b_pmbq008),pmbq008_desc(b_pmbq008_desc),pmbq009(b_pmbq009),pmbk008(b_pmbk008),pmbk009(b_pmbk009)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmbr005(b_pmbr005),pmbr006(b_pmbr006),pmbr006_desc(b_pmbr006_desc),pmbr007(b_pmbr007),pmbr008(b_pmbr008),pmbm003(pmbm003),pmbr009(b_pmbr009)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmq140" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmbqsite,pmbq003,pmbq001,pmbq002,pmbq004,pmbq005,pmbq006,pmbq007,pmbq008,pmbq009,pmbk008,pmbk009" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="pmbr005,pmbr006,pmbr006_desc,pmbr007,pmbr008,pmbr009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="pmbqsite(b_pmbqsite),pmbq003(b_pmbq003),pmbq001(b_pmbq001),pmbq002(b_pmbq002),pmbq004(b_pmbq004),pmbq005(b_pmbq005),pmbq006(b_pmbq006),pmbq007(b_pmbq007),pmbq008(b_pmbq008),pmbq009(b_pmbq009)"/>
+      <construct id="body" page="2" field="pmbr005(b_pmbr005),pmbr006(b_pmbr006),pmbr007(b_pmbr007),pmbr008(b_pmbr008),pmbr009(b_pmbr009)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pmbqsite"/>
+      <column id="pmbq003">
+        <after>
+          <reference field="pmbq003_desc" ref_field="pmbq003" map_field="pmbq003" ref_sql="SELECT pmbk002 FROM pmbk_t WHERE pmbkent=$varg_enterprise$var AND pmbk001=? "/>
+        </after>
+        <controlp form="q_pmbk001" state="c"/>
+      </column>
+      <column id="pmbq003_desc"/>
+      <column id="pmbq001"/>
+      <column id="pmbq002"/>
+      <column id="pmbq004">
+        <after>
+          <reference field="pmbq004_desc" ref_field="pmbq004" map_field="pmbq004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="pmbq004_desc"/>
+      <column id="pmbq005"/>
+      <column id="pmbq006"/>
+      <column id="pmbq007">
+        <after>
+          <reference field="pmbq007_desc" ref_field="pmbq007" map_field="pmbq007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2053&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmbq007_desc"/>
+      <column id="pmbq008">
+        <after>
+          <reference field="pmbq008_desc" ref_field="pmbq008" map_field="pmbq008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2054&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmbq008_desc"/>
+      <column id="pmbq009"/>
+      <column id="pmbk008"/>
+      <column id="pmbk009"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pmbr005" def_scc="6002"/>
+      <column id="pmbr006">
+        <after/>
+      </column>
+      <column id="pmbr006_desc"/>
+      <column id="pmbr007"/>
+      <column id="pmbr008"/>
+      <column id="pmbm003"/>
+      <column id="pmbr009"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmbq_t" page="1" linked="" pk="pmbqsite,pmbq001,pmbq002,pmbq003,pmbq004">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pmbqsite,pmbq003,&apos;&apos;,pmbq001,pmbq002,pmbq004,&apos;&apos;,pmbq005,pmbq006,pmbq007,&apos;&apos;,pmbq008,&apos;&apos;,pmbq009,&apos;&apos;,&apos;&apos; FROM pmbq_t WHERE pmbqent= ? AND 1=1 "/>
+    </body>
+    <body id="pmbr_t" page="2" linked="" pk="pmbr005,pmbr006" fk="pmbrsite,pmbr001,pmbr002,pmbr003,pmbr004" detail="Y">
+      <sql id="b_fill_sql" query="SELECT pmbr005,pmbr006,&apos;&apos;,pmbr007,pmbr008,&apos;&apos;,pmbr009 FROM pmbr_t WHERE pmbrent=? AND pmbrsite=? AND pmbr001=? AND pmbr002=? AND pmbr003=? AND pmbr004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

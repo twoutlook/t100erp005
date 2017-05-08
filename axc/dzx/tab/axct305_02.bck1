@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct305_02" module="axc" jobmode="N" type="c01a" industry="std" fix_arg="0" crtid="00537" crtdt="2014-09-14 15:48:04" modid="00000" moddt="1900-01-01 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="axct305整批匯入">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcdbcomp,xcdbcomp_desc(chr80),xcdbld,xcdbld_desc(chr80),format(chr500),char(chr500),dir(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+    <section id="master_input">
+      <action id="browser"/>
+      <action id="off"/>
+      <action id="produce"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct305_02" method="dialog">
+    <section id="input">
+      <input id="head" field="xcdbcomp,xcdbld,format,char,dir"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcdbcomp,xcdbld,format,char,dir"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcdbld,xcdb001,xcdb002,xcdb003,xcdb004,xcdb005,xcdb006,xcdb007,xcdb008,xcdb009,xcdb010"/>
+      <set id="head" type="no_entry" field="xcdbld,xcdb001,xcdb002,xcdb003,xcdb004,xcdb005,xcdb006,xcdb007,xcdb008,xcdb009,xcdb010"/>
+    </init>
+    <init id="head">
+      <column id="xcdbcomp">
+        <after>
+          <reference field="xcdbcomp_desc" ref_field="xcdb_t.xcdbcomp" map_field="xcdbent,xcdbcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdbcomp_desc"/>
+      <column id="xcdbld">
+        <after>
+          <reference field="xcdbld_desc" ref_field="xcdb_t.xcdbld" map_field="xcdbent,xcdbld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdbld_desc"/>
+      <column id="format"/>
+      <column id="char"/>
+      <column id="dir"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcdb_t" pk="xcdbld,xcdb001,xcdb002,xcdb003,xcdb004,xcdb005,xcdb006,xcdb007,xcdb008,xcdb009,xcdb010">
+      <sql id="forupd_sql" type="sql" query="SELECT xcdbcomp,&apos;&apos;,xcdbld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdb_t WHERE xcdbent= ? AND xcdbld=? AND xcdb001=? AND xcdb002=? AND xcdb003=? AND xcdb004=? AND xcdb005=? AND xcdb006=? AND xcdb007=? AND xcdb008=? AND xcdb009=? AND xcdb010=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xcdbld,xcdb001,xcdb002,xcdb003,xcdb004,xcdb005,xcdb006,xcdb007,xcdb008,xcdb009,xcdb010"/>
+    </head>
+  </dataset>
+</assembly>
+

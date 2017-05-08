@@ -1,0 +1,146 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afai021" module="afa" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02291" crtdt="2014-03-13 17:35:21" modid="01531" moddt="2016-08-08 09:51:44" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="資產主要類型依帳套設定科目作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="faalld,faalld_desc(chr80),glaacomp,glaacomp_desc(chr80),faal001,faal001_desc(chr80),glaa004,glaa004_desc(chr80),glaa014,glaa008,faal002,faal003,faal004,faal005,faal006,faalstus,faalownid,faalownid_desc(chr80),faalowndp,faalowndp_desc(chr80),faalcrtid,faalcrtid_desc(chr80),faalcrtdp,faalcrtdp_desc(chr80),faalcrtdt,faalmodid,faalmodid_desc(chr80),faalmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glab001,glab003,glab003_desc(chr500),glab005,glab005_desc(chr500),glab011"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afai021" method="dialog">
+    <section id="input">
+      <input id="head" field="faalld,faal001,faal002,faal003,faal004,faal005,faal006,faalstus"/>
+      <input id="body" page="1" field="glab001,glab003,glab003_desc,glab005,glab011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="faalld,glaacomp_desc,faal001,glaa004_desc,faal002,faal003,faal004,faal005,faal006,faalstus,faalownid,faalowndp,faalcrtid,faalcrtdp,faalcrtdt,faalmodid,faalmoddt"/>
+      <construct id="body" page="1" field="glab001,glab003,glab003_desc,glab005,glab011"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="faalld,faal001"/>
+      <set id="head" type="no_entry" field="faalld,faal001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="faalld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="faalld_desc" ref_field="faal_t.faalld" map_field="faalent,faalld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="faalld_desc"/>
+      <column id="glaacomp">
+        <after/>
+        <controlp form="q_ooea001_2" state="i"/>
+        <controlp form="q_ooea001_2" state="c"/>
+      </column>
+      <column id="glaacomp_desc"/>
+      <column id="faal001">
+        <after>
+          <check chkid="v_faac001" id="isExist"/>
+          <reference field="faal001_desc" ref_field="faal_t.faal001" map_field="faalent,faal001" ref_sql="SELECT faacl003 FROM faacl_t WHERE faaclent=$varg_enterprise$var AND faacl001=? AND faacl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_faac001" state="i"/>
+        <controlp form="q_faac001" state="c"/>
+      </column>
+      <column id="faal001_desc"/>
+      <column id="glaa004">
+        <after>
+          <check chkid="v_ooal002_7" id="isExist"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="glaa004_desc"/>
+      <column id="glaa014" type="S" default="N"/>
+      <column id="glaa008" type="S" default="N"/>
+      <column id="faal002" type="S" default="N"/>
+      <column id="faal003" type="S" default="N"/>
+      <column id="faal004" type="S" default="N"/>
+      <column id="faal005"/>
+      <column id="faal006" type="S" default="2"/>
+      <column id="faalstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="faalownid">
+        <after>
+          <reference field="faalownid_desc" ref_field="faal_t.faalownid" map_field="faalownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faalownid_desc"/>
+      <column id="faalowndp">
+        <after>
+          <reference field="faalowndp_desc" ref_field="faal_t.faalowndp" map_field="faalowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="faalowndp_desc"/>
+      <column id="faalcrtid">
+        <after>
+          <reference field="faalcrtid_desc" ref_field="faal_t.faalcrtid" map_field="faalcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faalcrtid_desc"/>
+      <column id="faalcrtdp">
+        <after>
+          <reference field="faalcrtdp_desc" ref_field="faal_t.faalcrtdp" map_field="faalcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="faalcrtdp_desc"/>
+      <column id="faalcrtdt"/>
+      <column id="faalmodid">
+        <after>
+          <reference field="faalmodid_desc" ref_field="faal_t.faalmodid" map_field="faalmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faalmodid_desc"/>
+      <column id="faalmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glab001" type="S" default="90"/>
+      <column id="glab003">
+        <after/>
+      </column>
+      <column id="glab003_desc"/>
+      <column id="glab005">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+          <reference field="glab005_desc" ref_field="glab005" map_field="glab005" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glab005_desc"/>
+      <column id="glab011" type="S" default="1" def_scc="8315"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="faal_t" pk="faalld,faal001">
+      <sql id="forupd_sql" type="sql" query="SELECT faalld,&apos;&apos;,&apos;&apos;,&apos;&apos;,faal001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,faal002,faal003,faal004,faal005,faal006,faalstus,faalownid,&apos;&apos;,faalowndp,&apos;&apos;,faalcrtid,&apos;&apos;,faalcrtdp,&apos;&apos;,faalcrtdt,faalmodid,&apos;&apos;,faalmoddt FROM faal_t WHERE faalent= ? AND faalld=? AND faal001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT faalld,&apos;&apos;,&apos;&apos;,&apos;&apos;,faal001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,faal002,faal003,faal004,faal005,faal006,faalstus,faalownid,&apos;&apos;,faalowndp,&apos;&apos;,faalcrtid,&apos;&apos;,faalcrtdp,&apos;&apos;,faalcrtdt,faalmodid,&apos;&apos;,faalmoddt FROM faal_t" order="faalld,faal001"/>
+    </head>
+    <body id="glab_t" page="1" linked="" pk="glab001,glab003" fk="glabld,glab002">
+      <sql id="forupd_sql_detail" query="SELECT glab001,glab003,&apos;&apos;,glab005,&apos;&apos;,glab011 FROM glab_t WHERE glabent=? AND glabld=? AND glab002=? AND glab001=? AND glab003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glab001,glab003,&apos;&apos;,glab005,&apos;&apos;,glab011 FROM glab_t WHERE glabent=? AND glabld=? AND glab002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

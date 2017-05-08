@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt100_03" module="apm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02294" crtdt="2013-10-21 16:20:22" modid="02294" moddt="2014-10-27 14:45:00" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="交易對象允許收/付款條件申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1_apmt100_03" page_id="1_apmt100_03" value="pmbdstus,pmbddocno,pmbd001,pmbd002,pmbd002_desc(chr500),pmbd003,pmbd004"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="apm" filename="apmt100_03" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmbdstus,pmbddocno,pmbd001,pmbd002,pmbd003,pmbd004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmbdstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmbddocno" type="S" default="Y"/>
+      <column id="pmbd001"/>
+      <column id="pmbd002">
+        <after>
+          <reference field="pmbd002_desc" ref_field="pmbd_t.pmbd002" map_field="pmad002" ref_sql="SELECT ooibl004 FROM ooibl_t WHERE ooiblent=$varg_enterprise$var AND ooibl002=? AND ooibl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmbd002_desc"/>
+      <column id="pmbd003"/>
+      <column id="pmbd004" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmbd_t" page="1" linked="" pk="pmbddocno,pmbd002,pmbd003">
+      <sql id="forupd_sql_detail" query="SELECT pmbdstus,pmbddocno,pmbd001,pmbd002,&apos;&apos;,pmbd003,pmbd004 FROM pmbd_t WHERE pmbdent=? AND pmbddocno=? AND pmbd002=? AND pmbd003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmbdstus,pmbddocno,pmbd001,pmbd002,&apos;&apos;,pmbd003,pmbd004 FROM pmbd_t WHERE pmbdent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

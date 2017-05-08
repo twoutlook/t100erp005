@@ -1,0 +1,549 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artm740" module="art" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="04226" crtdt="2014-04-21 15:40:19" modid="08172" moddt="2016-05-23 17:15:35" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="4" tabver="10001" description="自動補貨補貨資料模型維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtkhunit,rtkhunit_desc(chr80),rtkh001,rtkhl003(chr500),rtkhl004(chr500),rtkhstus,rtkh002,rtkh003,rtkh004,rtkh005,rtkh005_desc(chr80),rtkh006,rtkh007,rtkh008,rtkh009,rtkh010,rtkh011,rtkh012,rtkh013,rtkh014,rtkhownid,rtkhownid_desc(chr80),rtkhowndp,rtkhowndp_desc(chr80),rtkhcrtid,rtkhcrtid_desc(chr80),rtkhcrtdp,rtkhcrtdp_desc(chr80),rtkhcrtdt,rtkhmodid,rtkhmodid_desc(chr80),rtkhcnfid,rtkhcnfid_desc(chr80),rtkhmoddt,rtkhcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtkiunit,rtki002,rtki002_desc(chr500),rtki003,rtki004,rtki005,rtki006,rtki007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtkjunit,rtkj002,rtkj002_desc(chr500),rtkj101,rtkj102,rtkj103,rtkj104,rtkj105,rtkj106,rtkj107,rtkj108,rtkj109,rtkj110,rtkj111,rtkj112,rtkj113,rtkj114,rtkj115,rtkj116,rtkj117,rtkj118,rtkj119,rtkj120,rtkj121,rtkj122,rtkj123,rtkj124,rtkj125,rtkj126,rtkj127,rtkj128,rtkj129,rtkj130,rtkj131,rtkj132,rtkj133,rtkj134,rtkj135,rtkj136,rtkj137,rtkj138,rtkj139,rtkj140,rtkj141,rtkj142,rtkj143,rtkj144,rtkj145,rtkj146,rtkj147,rtkj148,rtkj149,rtkj150,rtkj151,rtkj152"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="rtklunit,rtkl002,rtkl002_desc(chr500),rtkl101,rtkl102,rtkl103,rtkl104,rtkl105,rtkl106,rtkl107"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="rtkkunit,rtkk002,rtkk003,rtkk004"/>
+      <var id="bs_field" value="rtkhunit,rtkhunit_desc(chr80),rtkh001,rtkh001_desc(chr80),rtkh001_desc_desc(chr80)" pk="rtkh001" order=""/>
+      <bs_reference field="rtkhunit_desc" ref_field="rtkhunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="rtkh001_desc" ref_field="rtkh001" ref_sql="SELECT rtkhl003 FROM rtkhl_t WHERE rtkhlent=$varg_enterprise$var AND rtkhl001=? AND rtkhl002=$varg_dlang$var"/>
+      <bs_reference field="rtkh001_desc_desc" ref_field="rtkh001" ref_sql="SELECT rtkhl004 FROM rtkhl_t WHERE rtkhlent=$varg_enterprise$var AND rtkhl001=? AND rtkhl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artm740" method="dialog">
+    <section id="input">
+      <input id="head" field="rtkhunit,rtkh001,rtkhl003,rtkhl004,rtkhstus,rtkh002,rtkh003,rtkh004,rtkh005,rtkh006,rtkh007,rtkh008,rtkh009,rtkh010,rtkh011,rtkh012,rtkh013,rtkh014"/>
+      <input id="body" page="1" field="rtkiunit,rtki002,rtki003,rtki004,rtki005,rtki006,rtki007" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="rtkjunit,rtkj002,rtkj101,rtkj102,rtkj103,rtkj104,rtkj105,rtkj106,rtkj107,rtkj108,rtkj109,rtkj110,rtkj111,rtkj112,rtkj113,rtkj114,rtkj115,rtkj116,rtkj117,rtkj118,rtkj119,rtkj120,rtkj121,rtkj122,rtkj123,rtkj124,rtkj125,rtkj126,rtkj127,rtkj128,rtkj129,rtkj130,rtkj131,rtkj132,rtkj133,rtkj134,rtkj135,rtkj136,rtkj137,rtkj138,rtkj139,rtkj140,rtkj141,rtkj142,rtkj143,rtkj144,rtkj145,rtkj146,rtkj147,rtkj148,rtkj149,rtkj150,rtkj151,rtkj152" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="rtklunit,rtkl002,rtkl101,rtkl102,rtkl103,rtkl104,rtkl105,rtkl106,rtkl107" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="4" field="rtkkunit,rtkk002,rtkk003,rtkk004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtkhunit,rtkh001,rtkhl003,rtkhl004,rtkhstus,rtkh002,rtkh003,rtkh004,rtkh005,rtkh006,rtkh007,rtkh008,rtkh009,rtkh010,rtkh011,rtkh012,rtkh013,rtkh014,rtkhownid,rtkhowndp,rtkhcrtid,rtkhcrtdp,rtkhcrtdt,rtkhmodid,rtkhcnfid,rtkhmoddt,rtkhcnfdt"/>
+      <construct id="body" page="1" field="rtkiunit,rtki002,rtki003,rtki004,rtki005,rtki006,rtki007"/>
+      <construct id="body" page="2" field="rtkjunit,rtkj002,rtkj101,rtkj102,rtkj103,rtkj104,rtkj105,rtkj106,rtkj107,rtkj108,rtkj109,rtkj110,rtkj111,rtkj112,rtkj113,rtkj114,rtkj115,rtkj116,rtkj117,rtkj118,rtkj119,rtkj120,rtkj121,rtkj122,rtkj123,rtkj124,rtkj125,rtkj126,rtkj127,rtkj128,rtkj129,rtkj130,rtkj131,rtkj132,rtkj133,rtkj134,rtkj135,rtkj136,rtkj137,rtkj138,rtkj139,rtkj140,rtkj141,rtkj142,rtkj143,rtkj144,rtkj145,rtkj146,rtkj147,rtkj148,rtkj149,rtkj150,rtkj151,rtkj152"/>
+      <construct id="body" page="3" field="rtklunit,rtkl002,rtkl101,rtkl102,rtkl103,rtkl104,rtkl105,rtkl106,rtkl107"/>
+      <construct id="body" page="4" field="rtkkunit,rtkk002,rtkk003,rtkk004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtkh001"/>
+      <set id="head" type="no_entry" field="rtkh001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtkhunit">
+        <after>
+          <reference field="rtkhunit_desc" ref_field="rtkh_t.rtkhunit" map_field="rtkhunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtkhunit_desc"/>
+      <column id="rtkh001">
+        <controlp form="q_rtkh001" state="c"/>
+      </column>
+      <column id="rtkhl003"/>
+      <column id="rtkhl004"/>
+      <column id="rtkhstus" scc="50" type="S" default="N">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="rtkh002" type="S" default="01" def_scc="6301"/>
+      <column id="rtkh003" type="S" default="1">
+        <after>
+          <check id="range" st="1.00" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkh004" type="S" default="1">
+        <after>
+          <check id="range" st="1.00" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkh005">
+        <after>
+          <check chkid="v_rtkg001" id="isExist"/>
+          <reference field="rtkh005_desc" ref_field="rtkh_t.rtkh005" map_field="rthk005" ref_sql="SELECT rtkgl003 FROM rtkgl_t WHERE rtkglent=$varg_enterprise$var AND rtkgl001=? AND rtkgl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtkg001" state="i"/>
+        <controlp form="q_rtkg001" state="c"/>
+      </column>
+      <column id="rtkh005_desc"/>
+      <column id="rtkh006" type="S" default="Y"/>
+      <column id="rtkh007" type="S" default="N"/>
+      <column id="rtkh008" type="S" default="N"/>
+      <column id="rtkh009" type="S" default="Y"/>
+      <column id="rtkh010" type="S" default="Y"/>
+      <column id="rtkh011" type="S" default="N"/>
+      <column id="rtkh012">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkh013">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkh014">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkhownid">
+        <after>
+          <reference field="rtkhownid_desc" ref_field="rtkh_t.rtkhownid" map_field="rtkhownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkhownid_desc"/>
+      <column id="rtkhowndp">
+        <after>
+          <reference field="rtkhowndp_desc" ref_field="rtkh_t.rtkhowndp" map_field="rtkhowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkhowndp_desc"/>
+      <column id="rtkhcrtid">
+        <after>
+          <reference field="rtkhcrtid_desc" ref_field="rtkh_t.rtkhcrtid" map_field="rtkhcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkhcrtid_desc"/>
+      <column id="rtkhcrtdp">
+        <after>
+          <reference field="rtkhcrtdp_desc" ref_field="rtkh_t.rtkhcrtdp" map_field="rtkhcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkhcrtdp_desc"/>
+      <column id="rtkhcrtdt"/>
+      <column id="rtkhmodid">
+        <after>
+          <reference field="rtkhmodid_desc" ref_field="rtkh_t.rtkhmodid" map_field="rtkhmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkhmodid_desc"/>
+      <column id="rtkhcnfid">
+        <after>
+          <reference field="rtkhcnfid_desc" ref_field="rtkh_t.rtkhcnfid" map_field="rtkhcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkhcnfid_desc"/>
+      <column id="rtkhmoddt"/>
+      <column id="rtkhcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtkiunit"/>
+      <column id="rtki002">
+        <after>
+          <check chkid="v_rtax001_1" id="isExist"/>
+          <reference field="rtki002_desc" ref_field="rtki_t.rtki002" map_field="rtki002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_6" state="i"/>
+        <controlp form="q_rtax001_6" state="c"/>
+      </column>
+      <column id="rtki002_desc"/>
+      <column id="rtki003" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtki004" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtki005" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtki006" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtki007" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="rtkjunit"/>
+      <column id="rtkj002">
+        <after>
+          <check chkid="v_rtax001_1" id="isExist"/>
+          <reference field="rtkj002_desc" ref_field="rtkj_t.rtkj002" map_field="rtkj002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_6" state="i"/>
+        <controlp form="q_rtax001_6" state="c"/>
+      </column>
+      <column id="rtkj002_desc"/>
+      <column id="rtkj101" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj102" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj103" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj104" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj105" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj106" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj107" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj108" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj109" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj110" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj111" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj112" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj113" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj114" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj115" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj116" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj117" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj118" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj119" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj120" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj121" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj122" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj123" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj124" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj125" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj126" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj127" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj128" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj129" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj130" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj131" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj132" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj133" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj134" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj135" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj136" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj137" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj138" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj139" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj140" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj141" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj142" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj143" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj144" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj145" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj146" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj147" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj148" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj149" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj150" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj151" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkj152" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="3">
+      <column id="rtklunit"/>
+      <column id="rtkl002">
+        <after>
+          <check chkid="v_rtax001_1" id="isExist"/>
+          <reference field="rtkl002_desc" ref_field="rtkl_t.rtkl002" map_field="rtkl002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_6" state="i"/>
+        <controlp form="q_rtax001_6" state="c"/>
+      </column>
+      <column id="rtkl002_desc"/>
+      <column id="rtkl101" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkl102" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkl103" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkl104" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkl105" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkl106" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkl107" type="S" default="1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="4">
+      <column id="rtkkunit"/>
+      <column id="rtkk002"/>
+      <column id="rtkk003"/>
+      <column id="rtkk004">
+        <after>
+          <check id="range" st="1.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtkh_t" pk="rtkh001">
+      <sql id="forupd_sql" type="sql" query="SELECT rtkhunit,&apos;&apos;,rtkh001,&apos;&apos;,&apos;&apos;,rtkhstus,rtkh002,rtkh003,rtkh004,rtkh005,&apos;&apos;,rtkh006,rtkh007,rtkh008,rtkh009,rtkh010,rtkh011,rtkh012,rtkh013,rtkh014,rtkhownid,&apos;&apos;,rtkhowndp,&apos;&apos;,rtkhcrtid,&apos;&apos;,rtkhcrtdp,&apos;&apos;,rtkhcrtdt,rtkhmodid,&apos;&apos;,rtkhcnfid,&apos;&apos;,rtkhmoddt,rtkhcnfdt FROM rtkh_t WHERE rtkhent= ? AND rtkh001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtkhunit,&apos;&apos;,rtkh001,&apos;&apos;,&apos;&apos;,rtkhstus,rtkh002,rtkh003,rtkh004,rtkh005,&apos;&apos;,rtkh006,rtkh007,rtkh008,rtkh009,rtkh010,rtkh011,rtkh012,rtkh013,rtkh014,rtkhownid,&apos;&apos;,rtkhowndp,&apos;&apos;,rtkhcrtid,&apos;&apos;,rtkhcrtdp,&apos;&apos;,rtkhcrtdt,rtkhmodid,&apos;&apos;,rtkhcnfid,&apos;&apos;,rtkhmoddt,rtkhcnfdt FROM rtkh_t" order="rtkh001"/>
+      <sql id="append" type="lang" target="rtkhl003,rtkhl004" table="rtkhl_t" fk="rtkh001" pk="rtkhl001,rtkhl002" field="rtkhl003,rtkhl004"/>
+    </head>
+    <body id="rtki_t" page="1" linked="" pk="rtki002" fk="rtki001">
+      <sql id="forupd_sql_detail" query="SELECT rtkiunit,rtki002,&apos;&apos;,rtki003,rtki004,rtki005,rtki006,rtki007 FROM rtki_t WHERE rtkient=? AND rtki001=? AND rtki002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtkiunit,rtki002,&apos;&apos;,rtki003,rtki004,rtki005,rtki006,rtki007 FROM rtki_t WHERE rtkient=? AND rtki001=?"/>
+    </body>
+    <body id="rtkj_t" page="2" linked="" pk="rtkj002" fk="rtkj001">
+      <sql id="forupd_sql_detail" query="SELECT rtkjunit,rtkj002,&apos;&apos;,rtkj101,rtkj102,rtkj103,rtkj104,rtkj105,rtkj106,rtkj107,rtkj108,rtkj109,rtkj110,rtkj111,rtkj112,rtkj113,rtkj114,rtkj115,rtkj116,rtkj117,rtkj118,rtkj119,rtkj120,rtkj121,rtkj122,rtkj123,rtkj124,rtkj125,rtkj126,rtkj127,rtkj128,rtkj129,rtkj130,rtkj131,rtkj132,rtkj133,rtkj134,rtkj135,rtkj136,rtkj137,rtkj138,rtkj139,rtkj140,rtkj141,rtkj142,rtkj143,rtkj144,rtkj145,rtkj146,rtkj147,rtkj148,rtkj149,rtkj150,rtkj151,rtkj152 FROM rtkj_t WHERE rtkjent=? AND rtkj001=? AND rtkj002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtkjunit,rtkj002,&apos;&apos;,rtkj101,rtkj102,rtkj103,rtkj104,rtkj105,rtkj106,rtkj107,rtkj108,rtkj109,rtkj110,rtkj111,rtkj112,rtkj113,rtkj114,rtkj115,rtkj116,rtkj117,rtkj118,rtkj119,rtkj120,rtkj121,rtkj122,rtkj123,rtkj124,rtkj125,rtkj126,rtkj127,rtkj128,rtkj129,rtkj130,rtkj131,rtkj132,rtkj133,rtkj134,rtkj135,rtkj136,rtkj137,rtkj138,rtkj139,rtkj140,rtkj141,rtkj142,rtkj143,rtkj144,rtkj145,rtkj146,rtkj147,rtkj148,rtkj149,rtkj150,rtkj151,rtkj152 FROM rtkj_t WHERE rtkjent=? AND rtkj001=?"/>
+    </body>
+    <body id="rtkl_t" page="3" linked="" pk="rtkl002" fk="rtkl001">
+      <sql id="forupd_sql_detail" query="SELECT rtklunit,rtkl002,&apos;&apos;,rtkl101,rtkl102,rtkl103,rtkl104,rtkl105,rtkl106,rtkl107 FROM rtkl_t WHERE rtklent=? AND rtkl001=? AND rtkl002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtklunit,rtkl002,&apos;&apos;,rtkl101,rtkl102,rtkl103,rtkl104,rtkl105,rtkl106,rtkl107 FROM rtkl_t WHERE rtklent=? AND rtkl001=?"/>
+    </body>
+    <body id="rtkk_t" page="4" linked="" pk="rtkk002,rtkk003" fk="rtkk001">
+      <sql id="forupd_sql_detail" query="SELECT rtkkunit,rtkk002,rtkk003,rtkk004 FROM rtkk_t WHERE rtkkent=? AND rtkk001=? AND rtkk002=? AND rtkk003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtkkunit,rtkk002,rtkk003,rtkk004 FROM rtkk_t WHERE rtkkent=? AND rtkk001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

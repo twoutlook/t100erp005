@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afar102_g01" module="afa" jobmode="N" type="g01" industry="std" crtid="07900" crtdt="2016-11-03 18:04:47" modid="07900" moddt="2016-12-09 16:11:27" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="faai002,faai003,faai006,l_faai006_desc(chr100|&apos;&apos;),faai012,faai013,faai004,faai005,faai014,faai016,l_faai016_desc(chr80|&apos;&apos;),faaient"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="faai002(faai002|faai002),faai003(faai003|faai003),faai006(faai006|faai006),l_faai006_desc(chr100|&apos;&apos;),faai012(faai012|faai012),faai013(faai013|faai013),faai004(faai004|faai004),faai005(faai005|faai005),faai014(faai014|faai014),faai016(faai016|faai016),l_faai016_desc(chr80|&apos;&apos;),faaient(faaient|faaient)"/>
+    <sql id="g_from" query="faai_t,faah_t"/>
+    <sql id="g_where" query="" maintable="faai_t"/>
+    <sql id="g_order" query="faaient"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="faaient"/>
+    <section id="b_group" reptype="d01">
+      <rep type="faaient" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="faaient,faaient"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="faaient,faaient"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="faaient,faaient"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="faaient" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="faaient,faaient"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

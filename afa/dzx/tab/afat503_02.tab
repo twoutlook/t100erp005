@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afat503_02" module="afa" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="01531" crtdt="2014-09-18 15:05:10" modid="01727" moddt="2015-12-02 10:03:25" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="憑證預覽">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fabhdocno,fabhld,fabhseq,fabh036,fabh021(chr500),fabh021_desc(chr500),amt1(num20_6),amt2(num20_6),amt3(num20_6),amt4(num20_6),amt5(num20_6),amt6(num20_6)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afat503_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fabhdocno,fabhld,fabhseq,fabh036,fabh021,fabh021_desc,amt1,amt2,amt3,amt4,amt5,amt6" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="fabhdocno,fabhld,fabhseq,fabh036,fabh021,fabh021_desc,amt1,amt2,amt3,amt4,amt5,amt6"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="fabhdocno"/>
+      <column id="fabhld"/>
+      <column id="fabhseq"/>
+      <column id="fabh036"/>
+      <column id="fabh021">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabh021_desc"/>
+      <column id="amt1"/>
+      <column id="amt2"/>
+      <column id="amt3"/>
+      <column id="amt4"/>
+      <column id="amt5"/>
+      <column id="amt6"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="fabh_t" page="1" linked="" pk="fabhld,fabhdocno,fabhseq">
+      <sql id="forupd_sql_detail" query="SELECT fabhdocno,fabhld,fabhseq,fabh036,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM fabh_t WHERE fabhent=? AND fabhld=? AND fabhdocno=? AND fabhseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fabhdocno,fabhld,fabhseq,fabh036,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM fabh_t WHERE fabhent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

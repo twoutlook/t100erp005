@@ -1,0 +1,4447 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aooi920.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2016-06-13 14:58:28), PR版次:0005(2016-12-26 13:43:07)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000027
+#+ Filename...: aooi920
+#+ Description: 檢核節點維護作業(停用)
+#+ Creator....: 05423(2016-04-25 10:17:31)
+#+ Modifier...: 05423 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="aooi920.global" >}
+#應用 i01 樣板自動產生(Version:50)
+#add-point:填寫註解說明 name="global.memo"
+#160622-00009#1   2016/06/24  By  zhujing    添加开启报表回传条件
+#160905-00007#3   2016/09/05  By  zhujing    调整系统中无ENT的SQL条件增加ent
+#161223-00052#1   2016/12/23  By  zhujing    调整节点编号的排序方式，改为by number顺序。
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT FGL azz_azzi310        #160622-00009#1 add
+IMPORT FGL azz_azzi310_01     #160622-00009#1 add
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"  
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_ooka_m RECORD
+       ooka002 LIKE ooka_t.ooka002, 
+   ooka001 LIKE ooka_t.ooka001, 
+   ookal003 LIKE ookal_t.ookal003, 
+   ookal004 LIKE ookal_t.ookal004, 
+   ooka003 LIKE ooka_t.ooka003, 
+   ooka003_desc LIKE type_t.chr80, 
+   ooka004 LIKE ooka_t.ooka004, 
+   ooka005 LIKE ooka_t.ooka005, 
+   ooka006 LIKE ooka_t.ooka006, 
+   ookastus LIKE ooka_t.ookastus, 
+   ookaownid LIKE ooka_t.ookaownid, 
+   ookaownid_desc LIKE type_t.chr80, 
+   ookaowndp LIKE ooka_t.ookaowndp, 
+   ookaowndp_desc LIKE type_t.chr80, 
+   ookacrtid LIKE ooka_t.ookacrtid, 
+   ookacrtid_desc LIKE type_t.chr80, 
+   ookacrtdp LIKE ooka_t.ookacrtdp, 
+   ookacrtdp_desc LIKE type_t.chr80, 
+   ookacrtdt LIKE ooka_t.ookacrtdt, 
+   ookamodid LIKE ooka_t.ookamodid, 
+   ookamodid_desc LIKE type_t.chr80, 
+   ookamoddt LIKE ooka_t.ookamoddt
+       END RECORD
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD  #查詢方案用陣列 
+         b_statepic     LIKE type_t.chr50,
+            b_ooka001 LIKE ooka_t.ooka001,
+   b_ooka001_desc LIKE type_t.chr80,
+      b_ooka003 LIKE ooka_t.ooka003,
+      b_ooka006 LIKE ooka_t.ooka006
+      END RECORD 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_dgenv               LIKE type_t.chr1              #客製標示:s-標準, c-客製
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_ooka_m        type_g_ooka_m  #單頭變數宣告
+DEFINE g_ooka_m_t      type_g_ooka_m  #單頭舊值宣告(系統還原用)
+DEFINE g_ooka_m_o      type_g_ooka_m  #單頭舊值宣告(其他用途)
+DEFINE g_ooka_m_mask_o type_g_ooka_m  #轉換遮罩前資料
+DEFINE g_ooka_m_mask_n type_g_ooka_m  #轉換遮罩後資料
+ 
+   DEFINE g_ooka001_t LIKE ooka_t.ooka001
+ 
+   
+ 
+   
+DEFINE g_master_multi_table_t    RECORD
+      ookal001 LIKE ookal_t.ookal001,
+      ookal003 LIKE ookal_t.ookal003,
+      ookal004 LIKE ookal_t.ookal004
+      END RECORD
+ 
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10             #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10             #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10             #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num10             #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)
+DEFINE g_row_index           LIKE type_t.num10             #階層樹狀用指標
+DEFINE g_add_browse          STRING                        #新增填充用WC
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization" 
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aooi920.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aoo","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT ooka002,ooka001,'','',ooka003,'',ooka004,ooka005,ooka006,ookastus,ookaownid, 
+       '',ookaowndp,'',ookacrtid,'',ookacrtdp,'',ookacrtdt,ookamodid,'',ookamoddt", 
+                      " FROM ooka_t",
+                      " WHERE ookaent= ? AND ooka001=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aooi920_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.ooka002,t0.ooka001,t0.ooka003,t0.ooka004,t0.ooka005,t0.ooka006,t0.ookastus, 
+       t0.ookaownid,t0.ookaowndp,t0.ookacrtid,t0.ookacrtdp,t0.ookacrtdt,t0.ookamodid,t0.ookamoddt,t1.gzzal003 , 
+       t2.ooag011 ,t3.ooefl003 ,t4.ooag011 ,t5.ooefl003 ,t6.ooag011",
+               " FROM ooka_t t0",
+                              " LEFT JOIN gzzal_t t1 ON t1.gzzal001=t0.ooka004 AND t1.gzzal002='"||g_lang||"' ",
+               " LEFT JOIN ooag_t t2 ON t2.ooagent="||g_enterprise||" AND t2.ooag001=t0.ookaownid  ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent="||g_enterprise||" AND t3.ooefl001=t0.ookaowndp AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t4 ON t4.ooagent="||g_enterprise||" AND t4.ooag001=t0.ookacrtid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent="||g_enterprise||" AND t5.ooefl001=t0.ookacrtdp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t6 ON t6.ooagent="||g_enterprise||" AND t6.ooag001=t0.ookamodid  ",
+ 
+               " WHERE t0.ookaent = " ||g_enterprise|| " AND t0.ooka001 = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE aooi920_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aooi920 WITH FORM cl_ap_formpath("aoo",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aooi920_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aooi920_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aooi920
+      
+   END IF 
+   
+   CLOSE aooi920_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aooi920.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aooi920_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   #定義combobox狀態
+      CALL cl_set_combo_scc_part('ookastus','17','N,Y')
+ 
+   
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc('ooka002','4077')
+   IF cl_null(g_dgenv) THEN
+      LET g_dgenv = FGL_GETENV("DGENV")     #"s":標準; "c":客製
+   END IF
+   #end add-point
+   
+   #根據外部參數進行搜尋
+   CALL aooi920_default_search()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aooi920_ui_dialog() 
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num10       #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10       #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 0
+ 
+   #若有外部參數查詢, 則直接顯示資料(隱藏查詢方案)
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL aooi920_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_ooka_m.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL aooi920_init()
+      END IF
+      
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+    
+      #確保g_current_idx位於正常區間內
+      #小於,等於0則指到第1筆
+      IF g_current_idx <= 0 THEN
+         LET g_current_idx = 1
+      END IF
+               
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+               #先填充browser資料
+               CALL aooi920_browser_fill(g_wc,"")
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aooi920_fetch("")   
+               END IF               
+               #add-point:ui_dialog段 before menu name="ui_dialog.before_menu"
+               
+               #end add-point
+            
+            #狀態碼切換
+            ON ACTION statechange
+               CALL aooi920_statechange()
+               LET g_action_choice="statechange"
+               #根據資料狀態切換action狀態
+               CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+               CALL aooi920_set_act_visible()
+               CALL aooi920_set_act_no_visible()
+               IF NOT (g_ooka_m.ooka001 IS NULL
+ 
+                 ) THEN
+                  #組合條件
+                  LET g_add_browse = " ookaent = " ||g_enterprise|| " AND",
+                                     " ooka001 = '", g_ooka_m.ooka001, "' "
+ 
+                  #填到對應位置
+                  CALL aooi920_browser_fill(g_wc,"")
+               END IF
+               
+            #第一筆資料
+            ON ACTION first
+               CALL aooi920_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL aooi920_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            #指定筆資料
+            ON ACTION jump
+               CALL aooi920_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            #上一筆資料
+            ON ACTION previous
+               CALL aooi920_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            #最後筆資料
+            ON ACTION last 
+               CALL aooi920_fetch("L")  
+               LET g_current_row = g_current_idx
+            
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            #主頁摺疊
+            ON ACTION mainhidden   
+               LET g_action_choice = "mainhidden"            
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+            
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aooi920_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aooi920_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL aooi920_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aooi920_modify()
+               #add-point:ON ACTION modify name="menu2.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aooi920_delete()
+               #add-point:ON ACTION delete name="menu2.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aooi920_insert()
+               #add-point:ON ACTION insert name="menu2.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu2.output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu2.quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL aooi920_reproduce()
+               #add-point:ON ACTION reproduce name="menu2.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aooi920_query()
+               #add-point:ON ACTION query name="menu2.query"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+            
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aooi920_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.menu.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aooi920_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.menu.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aooi920_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.menu.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu_exit_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL aooi920_fetch("")
+ 
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+    
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+            
+            #end add-point
+ 
+            #查詢方案用
+            SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+            SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+         
+            BEFORE DIALOG
+               #先填充browser資料
+               IF g_action_choice <> "mainhidden" THEN
+                  CALL aooi920_browser_fill(g_wc,"")
+               END IF
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #還原為原本指定筆數
+               IF g_current_row > 1 THEN
+                  #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+                  IF g_current_row > g_browser.getLength() THEN
+                     LET g_current_row = g_browser.getLength()
+                  END IF 
+                  LET g_current_idx = g_current_row
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aooi920_fetch("")   
+               END IF          
+               CALL cl_notice()
+               
+               #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+               
+               #end add-point  
+            
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+               
+               #end add-point
+            
+            #狀態碼切換
+            ON ACTION statechange
+               CALL aooi920_statechange()
+               LET g_action_choice="statechange"
+               #根據資料狀態切換action狀態
+               CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+               CALL aooi920_set_act_visible()
+               CALL aooi920_set_act_no_visible()
+               IF NOT (g_ooka_m.ooka001 IS NULL
+ 
+                 ) THEN
+                  #組合條件
+                  LET g_add_browse = " ookaent = " ||g_enterprise|| " AND",
+                                     " ooka001 = '", g_ooka_m.ooka001, "' "
+ 
+                  #填到對應位置
+                  CALL aooi920_browser_fill(g_wc,"")
+               END IF
+         
+            #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+               
+               #end add-point
+               CALL aooi920_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+            
+            #第一筆資料
+            ON ACTION first
+               CALL aooi920_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL aooi920_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            #指定筆資料
+            ON ACTION jump
+               CALL aooi920_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            #上一筆資料
+            ON ACTION previous
+               CALL aooi920_fetch("P")
+               LET g_current_row = g_current_idx
+          
+            #最後筆資料
+            ON ACTION last 
+               CALL aooi920_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+    
+            #主頁摺疊
+            ON ACTION mainhidden 
+               LET g_action_choice = "mainhidden"                
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               #EXIT DIALOG
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               #EXIT DIALOG
+         
+            ON ACTION exporttoexcel
+               LET g_action_choice="exporttoexcel"
+               IF cl_auth_chk_act("exporttoexcel") THEN
+                  #browser
+                  CALL g_export_node.clear()
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               END IF
+         
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aooi920_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aooi920_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL aooi920_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aooi920_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aooi920_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aooi920_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL aooi920_reproduce()
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aooi920_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+ 
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aooi920_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aooi920_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aooi920_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu_exit_dialog.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      
+      #(ver:50) ---start---
+      IF li_exit THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+      #(ver:50) --- end ---
+ 
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.browser_fill" >}
+#應用 a29 樣板自動產生(Version:15)
+#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION aooi920_browser_fill(p_wc,ps_page_action) 
+   #add-point:browser_fill段define name="browser_fill.define_customerization"
+   
+   #end add-point
+   DEFINE p_wc              STRING
+   DEFINE ls_wc             STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="browser_fill.pre_function"
+   
+   #end add-point
+   
+   LET l_searchcol = "ooka001"
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   #add-point:browser_fill段wc控制 name="browser_fill.wc"
+   LET l_searchcol = 'to_number(ooka001)'       #161223-00052#1 add
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(1) FROM ooka_t ",
+               "  ",
+               "  LEFT JOIN ookal_t ON ookalent = "||g_enterprise||" AND ooka001 = ookal001 AND ookal002 = '",g_dlang,"' ",
+               " WHERE ookaent = " ||g_enterprise|| " AND ", 
+               p_wc CLIPPED, cl_sql_add_filter("ooka_t")
+                
+   #add-point:browser_fill段cnt_sql name="browser_fill.cnt_sql"
+   
+   #end add-point
+                
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt
+      FREE header_cnt_pre 
+   END IF
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt 
+         LET g_errparam.code   = 9035
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+   END IF
+   
+   LET g_error_show = 0
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM
+      INITIALIZE g_ooka_m.* TO NULL
+      CALL g_browser.clear()
+      LET g_cnt = 1
+      LET ls_wc = p_wc
+   ELSE
+      LET ls_wc = g_add_browse
+      LET g_cnt = g_current_idx
+   END IF
+   
+   LET g_sql = " SELECT t0.ookastus,t0.ooka001,t0.ooka003,t0.ooka006,t1.ookal003",
+               " FROM ooka_t t0 ",
+               "  ",
+                              " LEFT JOIN ookal_t t1 ON t1.ookalent="||g_enterprise||" AND t1.ookal001=t0.ooka001 AND t1.ookal002='"||g_dlang||"' ",
+ 
+               " WHERE t0.ookaent = " ||g_enterprise|| " AND ", ls_wc, cl_sql_add_filter("ooka_t")
+   #add-point:browser_fill段fill_wc name="browser_fill.fill_wc"
+    
+   #end add-point 
+   LET g_sql = g_sql, " ORDER BY ",l_searchcol," ",g_order
+   #add-point:browser_fill段before_pre name="browser_fill.before_pre"
+   
+   #end add-point                    
+ 
+   #LET g_sql = cl_sql_add_tabid(g_sql,"ooka_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_ooka001,g_browser[g_cnt].b_ooka003, 
+          g_browser[g_cnt].b_ooka006,g_browser[g_cnt].b_ooka001_desc
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "foreach:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+         
+         
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+         
+         #遮罩相關處理
+         CALL aooi920_browser_mask()
+         
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/inactive.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/active.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+ 
+      FREE browse_pre
+ 
+   END IF
+ 
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_ooka001) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_current_cnt = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_rec_b = g_browser.getLength()
+   LET g_cnt = 0
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aooi920.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aooi920_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+   
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE g_ooka_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON ooka002,ooka001,ookal003,ookal004,ooka003,ooka004,ooka005,ooka006,ookastus, 
+          ookaownid,ookaowndp,ookacrtid,ookacrtdp,ookacrtdt,ookamodid,ookamoddt
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct name="cs.before_construct"
+            
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<ookacrtdt>>----
+         AFTER FIELD ookacrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<ookamoddt>>----
+         AFTER FIELD ookamoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<ookacnfdt>>----
+         
+         #----<<ookapstdt>>----
+ 
+ 
+ 
+      
+         #一般欄位
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka002
+            #add-point:BEFORE FIELD ooka002 name="construct.b.ooka002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka002
+            
+            #add-point:AFTER FIELD ooka002 name="construct.a.ooka002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ooka002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka002
+            #add-point:ON ACTION controlp INFIELD ooka002 name="construct.c.ooka002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.ooka001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka001
+            #add-point:ON ACTION controlp INFIELD ooka001 name="construct.c.ooka001"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooka001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooka001  #顯示到畫面上
+            NEXT FIELD ooka001                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka001
+            #add-point:BEFORE FIELD ooka001 name="construct.b.ooka001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka001
+            
+            #add-point:AFTER FIELD ooka001 name="construct.a.ooka001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookal003
+            #add-point:BEFORE FIELD ookal003 name="construct.b.ookal003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookal003
+            
+            #add-point:AFTER FIELD ookal003 name="construct.a.ookal003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ookal003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookal003
+            #add-point:ON ACTION controlp INFIELD ookal003 name="construct.c.ookal003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookal004
+            #add-point:BEFORE FIELD ookal004 name="construct.b.ookal004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookal004
+            
+            #add-point:AFTER FIELD ookal004 name="construct.a.ookal004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ookal004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookal004
+            #add-point:ON ACTION controlp INFIELD ookal004 name="construct.c.ookal004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.ooka003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka003
+            #add-point:ON ACTION controlp INFIELD ooka003 name="construct.c.ooka003"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "(gzza002 = 'R' OR gzza001 = 'azzi310') "
+            CALL q_gzzz001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooka003  #顯示到畫面上
+            NEXT FIELD ooka003                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka003
+            #add-point:BEFORE FIELD ooka003 name="construct.b.ooka003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka003
+            
+            #add-point:AFTER FIELD ooka003 name="construct.a.ooka003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka004
+            #add-point:BEFORE FIELD ooka004 name="construct.b.ooka004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka004
+            
+            #add-point:AFTER FIELD ooka004 name="construct.a.ooka004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ooka004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka004
+            #add-point:ON ACTION controlp INFIELD ooka004 name="construct.c.ooka004"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka005
+            #add-point:BEFORE FIELD ooka005 name="construct.b.ooka005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka005
+            
+            #add-point:AFTER FIELD ooka005 name="construct.a.ooka005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ooka005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka005
+            #add-point:ON ACTION controlp INFIELD ooka005 name="construct.c.ooka005"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka006
+            #add-point:BEFORE FIELD ooka006 name="construct.b.ooka006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka006
+            
+            #add-point:AFTER FIELD ooka006 name="construct.a.ooka006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ooka006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka006
+            #add-point:ON ACTION controlp INFIELD ooka006 name="construct.c.ooka006"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookastus
+            #add-point:BEFORE FIELD ookastus name="construct.b.ookastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookastus
+            
+            #add-point:AFTER FIELD ookastus name="construct.a.ookastus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ookastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookastus
+            #add-point:ON ACTION controlp INFIELD ookastus name="construct.c.ookastus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.ookaownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookaownid
+            #add-point:ON ACTION controlp INFIELD ookaownid name="construct.c.ookaownid"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ookaownid  #顯示到畫面上
+            NEXT FIELD ookaownid                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookaownid
+            #add-point:BEFORE FIELD ookaownid name="construct.b.ookaownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookaownid
+            
+            #add-point:AFTER FIELD ookaownid name="construct.a.ookaownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ookaowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookaowndp
+            #add-point:ON ACTION controlp INFIELD ookaowndp name="construct.c.ookaowndp"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ookaowndp  #顯示到畫面上
+            NEXT FIELD ookaowndp                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookaowndp
+            #add-point:BEFORE FIELD ookaowndp name="construct.b.ookaowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookaowndp
+            
+            #add-point:AFTER FIELD ookaowndp name="construct.a.ookaowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ookacrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookacrtid
+            #add-point:ON ACTION controlp INFIELD ookacrtid name="construct.c.ookacrtid"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ookacrtid  #顯示到畫面上
+            NEXT FIELD ookacrtid                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookacrtid
+            #add-point:BEFORE FIELD ookacrtid name="construct.b.ookacrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookacrtid
+            
+            #add-point:AFTER FIELD ookacrtid name="construct.a.ookacrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ookacrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookacrtdp
+            #add-point:ON ACTION controlp INFIELD ookacrtdp name="construct.c.ookacrtdp"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ookacrtdp  #顯示到畫面上
+            NEXT FIELD ookacrtdp                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookacrtdp
+            #add-point:BEFORE FIELD ookacrtdp name="construct.b.ookacrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookacrtdp
+            
+            #add-point:AFTER FIELD ookacrtdp name="construct.a.ookacrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookacrtdt
+            #add-point:BEFORE FIELD ookacrtdt name="construct.b.ookacrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.ookamodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookamodid
+            #add-point:ON ACTION controlp INFIELD ookamodid name="construct.c.ookamodid"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ookamodid  #顯示到畫面上
+            NEXT FIELD ookamodid                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookamodid
+            #add-point:BEFORE FIELD ookamodid name="construct.b.ookamodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookamodid
+            
+            #add-point:AFTER FIELD ookamodid name="construct.a.ookamodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookamoddt
+            #add-point:BEFORE FIELD ookamoddt name="construct.b.ookamoddt"
+            
+            #END add-point
+ 
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct name="cs.more_construct"
+      
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct name="cs.after_construct"
+   
+   #end add-point
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION aooi920_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON ooka001,ooka003,ooka006
+                          FROM s_browse[1].b_ooka001,s_browse[1].b_ooka003,s_browse[1].b_ooka006
+ 
+         BEFORE CONSTRUCT
+               DISPLAY aooi920_filter_parser('ooka001') TO s_browse[1].b_ooka001
+            DISPLAY aooi920_filter_parser('ooka003') TO s_browse[1].b_ooka003
+            DISPLAY aooi920_filter_parser('ooka006') TO s_browse[1].b_ooka006
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL aooi920_filter_show('ooka001')
+   CALL aooi920_filter_show('ooka003')
+   CALL aooi920_filter_show('ooka006')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aooi920_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION aooi920_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aooi920_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aooi920_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc STRING
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL g_browser.clear() 
+ 
+   #browser panel折疊
+   IF g_worksheet_hidden THEN
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   
+   #單頭折疊
+   IF g_header_hidden THEN
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_ooka_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL aooi920_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL aooi920_browser_fill(g_wc,"F")
+      CALL aooi920_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   #根據條件從新抓取資料
+   LET g_error_show = 1
+   CALL aooi920_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL aooi920_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aooi920_fetch(p_fl)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   #根據傳入的條件決定抓取的資料
+   CASE p_fl
+      WHEN "F" 
+         LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         #LET g_current_idx = g_header_cnt        
+         LET g_current_idx = g_browser.getLength()    
+      WHEN "/"
+         #詢問要指定的筆數
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+ 
+   #筆數顯示
+   LET g_browser_idx = g_current_idx 
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+   END IF
+   
+   
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength() 
+   END IF
+   
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt) 
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   #根據選定的筆數給予key欄位值
+   LET g_ooka_m.ooka001 = g_browser[g_current_idx].b_ooka001
+ 
+                       
+   #讀取單頭所有欄位資料
+   EXECUTE aooi920_master_referesh USING g_ooka_m.ooka001 INTO g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ooka003, 
+       g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid,g_ooka_m.ookaowndp, 
+       g_ooka_m.ookacrtid,g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamoddt, 
+       g_ooka_m.ooka003_desc,g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid_desc, 
+       g_ooka_m.ookacrtdp_desc,g_ooka_m.ookamodid_desc
+   
+   #遮罩相關處理
+   LET g_ooka_m_mask_o.* =  g_ooka_m.*
+   CALL aooi920_ooka_t_mask()
+   LET g_ooka_m_mask_n.* =  g_ooka_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aooi920_set_act_visible()
+   CALL aooi920_set_act_no_visible()
+ 
+   #add-point:fetch段action控制 name="fetch.action_control"
+   
+   #end add-point  
+   
+   
+   
+   #保存單頭舊值
+   LET g_ooka_m_t.* = g_ooka_m.*
+   LET g_ooka_m_o.* = g_ooka_m.*
+   
+   LET g_data_owner = g_ooka_m.ookaownid      
+   LET g_data_dept  = g_ooka_m.ookaowndp
+   
+   #重新顯示
+   CALL aooi920_show()
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION aooi920_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:insert段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE g_ooka_m.* TO NULL             #DEFAULT 設定
+   LET g_ooka001_t = NULL
+ 
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      
+      #公用欄位給值
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_ooka_m.ookaownid = g_user
+      LET g_ooka_m.ookaowndp = g_dept
+      LET g_ooka_m.ookacrtid = g_user
+      LET g_ooka_m.ookacrtdp = g_dept 
+      LET g_ooka_m.ookacrtdt = cl_get_current()
+      LET g_ooka_m.ookamodid = g_user
+      LET g_ooka_m.ookamoddt = cl_get_current()
+      LET g_ooka_m.ookastus = 'Y'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_ooka_m.ooka002 = "1"
+ 
+ 
+      #add-point:單頭預設值 name="insert.default"
+      LET g_ooka_m.ookastus = "Y"
+      IF g_dgenv ='s' THEN
+         LET g_ooka_m.ooka006 = 'N'
+      ELSE
+         LET g_ooka_m.ooka006 = 'Y'
+         LET g_ooka_m.ooka004 = '8'   #8.客制
+      END IF
+      #end add-point   
+     
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_ooka_m.ookastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+     
+      #資料輸入
+      CALL aooi920_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         #取消
+         LET INT_FLAG = 0
+         DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+         INITIALIZE g_ooka_m.* TO NULL
+         CALL aooi920_show()
+         CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aooi920_set_act_visible()
+   CALL aooi920_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_ooka001_t = g_ooka_m.ooka001
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " ookaent = " ||g_enterprise|| " AND",
+                      " ooka001 = '", g_ooka_m.ooka001, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL aooi920_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+ 
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE aooi920_master_referesh USING g_ooka_m.ooka001 INTO g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ooka003, 
+       g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid,g_ooka_m.ookaowndp, 
+       g_ooka_m.ookacrtid,g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamoddt, 
+       g_ooka_m.ooka003_desc,g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid_desc, 
+       g_ooka_m.ookacrtdp_desc,g_ooka_m.ookamodid_desc
+   
+   
+   #遮罩相關處理
+   LET g_ooka_m_mask_o.* =  g_ooka_m.*
+   CALL aooi920_ooka_t_mask()
+   LET g_ooka_m_mask_n.* =  g_ooka_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ookal003,g_ooka_m.ookal004,g_ooka_m.ooka003, 
+       g_ooka_m.ooka003_desc,g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid, 
+       g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid,g_ooka_m.ookacrtid_desc, 
+       g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdp_desc,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamodid_desc, 
+       g_ooka_m.ookamoddt
+ 
+   #add-point:新增結束後 name="insert.after"
+   CALL aooi920_show()
+   #end add-point 
+ 
+   LET g_data_owner = g_ooka_m.ookaownid      
+   LET g_data_dept  = g_ooka_m.ookaowndp
+ 
+   #功能已完成,通報訊息中心
+   CALL aooi920_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION aooi920_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="modify.pre_function"
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_ooka_m.ooka001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF 
+ 
+   ERROR ""
+  
+   #備份key值
+   LET g_ooka001_t = g_ooka_m.ooka001
+ 
+   
+   CALL s_transaction_begin()
+   
+   #先lock資料
+   OPEN aooi920_cl USING g_enterprise,g_ooka_m.ooka001
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aooi920_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE aooi920_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aooi920_master_referesh USING g_ooka_m.ooka001 INTO g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ooka003, 
+       g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid,g_ooka_m.ookaowndp, 
+       g_ooka_m.ookacrtid,g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamoddt, 
+       g_ooka_m.ooka003_desc,g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid_desc, 
+       g_ooka_m.ookacrtdp_desc,g_ooka_m.ookamodid_desc
+ 
+   #檢查是否允許此動作
+   IF NOT aooi920_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #遮罩相關處理
+   LET g_ooka_m_mask_o.* =  g_ooka_m.*
+   CALL aooi920_ooka_t_mask()
+   LET g_ooka_m_mask_n.* =  g_ooka_m.*
+   
+   
+ 
+   #顯示資料
+   CALL aooi920_show()
+   
+   WHILE TRUE
+      LET g_ooka_m.ooka001 = g_ooka001_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      LET g_ooka_m.ookamodid = g_user 
+LET g_ooka_m.ookamoddt = cl_get_current()
+LET g_ooka_m.ookamodid_desc = cl_get_username(g_ooka_m.ookamodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      LET g_ooka_m.ookastus = "Y"
+      IF g_dgenv ='c' THEN
+         IF cl_ask_confirm('aoo-00667') THEN #此节点编号为标准节点编号，修改将转为客制！是否确定修改？
+            LET g_ooka_m.ooka006 = 'Y'
+         ELSE
+            RETURN
+         END IF
+      END IF
+      #end add-point
+ 
+      #資料輸入
+      CALL aooi920_input("u")     
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         LET g_ooka_m.* = g_ooka_m_t.*
+         CALL aooi920_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+      UPDATE ooka_t SET (ookamodid,ookamoddt) = (g_ooka_m.ookamodid,g_ooka_m.ookamoddt)
+       WHERE ookaent = g_enterprise AND ooka001 = g_ooka001_t
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aooi920_set_act_visible()
+   CALL aooi920_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " ookaent = " ||g_enterprise|| " AND",
+                      " ooka001 = '", g_ooka_m.ooka001, "' "
+ 
+   #填到對應位置
+   CALL aooi920_browser_fill(g_wc,"")
+ 
+   CLOSE aooi920_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL aooi920_msgcentre_notify('modify')
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+ 
+{</section>}
+ 
+{<section id="aooi920.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION aooi920_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num10       #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num10       #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num10
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   #160622-00009#1 add-S
+   DEFINE la_param  RECORD
+                    prog   STRING,
+                    param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #160622-00009#1 add-E
+   #end add-point
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   DEFINE l_success        LIKE type_t.num5
+   #end add-point
+   
+   #切換至輸入畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ookal003,g_ooka_m.ookal004,g_ooka_m.ooka003, 
+       g_ooka_m.ooka003_desc,g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid, 
+       g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid,g_ooka_m.ookacrtid_desc, 
+       g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdp_desc,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamodid_desc, 
+       g_ooka_m.ookamoddt
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   #a-新增,r-複製,u-修改
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL aooi920_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL aooi920_set_no_entry(p_cmd)
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   #add-point:資料輸入前 name="input.before_input"
+   
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ookal003,g_ooka_m.ookal004,g_ooka_m.ooka003, 
+          g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ookastus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item name="input.master_input.update_item"
+               IF NOT cl_null(g_ooka_m.ooka001)  THEN
+                  CALL n_ookal(g_ooka_m.ooka001)    # n_glacl:對應多語言表格 。 g_glac_m.glac002: 對應值
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_ooka_m.ooka001                  
+#                  CALL ap_ref_array2(g_ref_fields," SELECT ookal003,ookal004 FROM ookal_t WHERE ookal001 = ? AND ookal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields       #160905-00007#3 marked
+                  CALL ap_ref_array2(g_ref_fields," SELECT ookal003,ookal004 FROM ookal_t WHERE ookal001 = ? AND ookalent = "||g_enterprise||" AND ookal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields       #160905-00007#3 mod
+                  LET g_ooka_m.ookal003 = g_rtn_fields[1]
+                  LET g_ooka_m.ookal004 = g_rtn_fields[2]
+                  DISPLAY BY NAME g_ooka_m.ookal003
+                  DISPLAY BY NAME g_ooka_m.ookal004
+               END IF
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION l_open_exception
+            LET g_action_choice="l_open_exception"
+            IF cl_auth_chk_act("l_open_exception") THEN
+               
+               #add-point:ON ACTION l_open_exception name="input.master_input.l_open_exception"
+               #160622-00009#1 add-S
+               IF NOT cl_null(g_ooka_m.ooka003) THEN
+#                  LET la_param.prog    = g_ooka_m.ooka003
+#                  LET ls_js = util.JSON.stringify( la_param )
+#                  CALL cl_cmdrun(ls_js)
+                  LET g_ooka_m.ooka004 = azzi310_01_get_JsonCondition(g_ooka_m.ooka003)
+               ELSE
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_ooka_m.ooka003
+                  LET g_errparam.code   = 'aoo-00707'    #检核来源报表不可为空！
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               END IF
+               #160622-00009#1 add-E
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION l_open_warning
+            LET g_action_choice="l_open_warning"
+            IF cl_auth_chk_act("l_open_warning") THEN
+               
+               #add-point:ON ACTION l_open_warning name="input.master_input.l_open_warning"
+               #160622-00009#1 add-S
+               IF NOT cl_null(g_ooka_m.ooka003) THEN
+#                  LET la_param.prog    = g_ooka_m.ooka003
+#                  LET ls_js = util.JSON.stringify( la_param )
+#                  CALL cl_cmdrun(ls_js)
+                  LET g_ooka_m.ooka005 = azzi310_01_get_JsonCondition(g_ooka_m.ooka003)
+               ELSE
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_ooka_m.ooka003
+                  LET g_errparam.code   = 'aoo-00707'    #检核来源报表不可为空！
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               END IF
+               #160622-00009#1 add-E
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            LET g_master_multi_table_t.ookal001 = g_ooka_m.ooka001
+LET g_master_multi_table_t.ookal003 = g_ooka_m.ookal003
+LET g_master_multi_table_t.ookal004 = g_ooka_m.ookal004
+ 
+            #add-point:input開始前 name="input.before.input"
+            
+            #end add-point
+   
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka002
+            #add-point:BEFORE FIELD ooka002 name="input.b.ooka002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka002
+            
+            #add-point:AFTER FIELD ooka002 name="input.a.ooka002"
+            IF p_cmd = 'a'  THEN
+               IF g_dgenv = 's' AND g_ooka_m.ooka002 = '8' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = "aoo-00670"   #标准环境下不可新增客制模块的节点编码！
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD ooka002
+               END IF
+               
+               CALL aooi920_auto_code(g_ooka_m.ooka002)
+                  RETURNING g_ooka_m.ooka001 
+               DISPLAY BY NAME g_ooka_m.ooka001
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooka002
+            #add-point:ON CHANGE ooka002 name="input.g.ooka002"
+            IF p_cmd = 'a'  THEN
+               CALL aooi920_auto_code(g_ooka_m.ooka002)
+                  RETURNING g_ooka_m.ooka001 
+               DISPLAY BY NAME g_ooka_m.ooka001
+            END IF 
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka001
+            #add-point:BEFORE FIELD ooka001 name="input.b.ooka001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka001
+            
+            #add-point:AFTER FIELD ooka001 name="input.a.ooka001"
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF  NOT cl_null(g_ooka_m.ooka001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_ooka_m.ooka001 != g_ooka001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ooka_t WHERE "||"ookaent = '" ||g_enterprise|| "' AND "||"ooka001 = '"||g_ooka_m.ooka001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            CALL aooi920_ooka001_chk(g_ooka_m.ooka001,g_ooka_m.ooka002) RETURNING l_success
+            IF NOT l_success THEN 
+               IF p_cmd = 'a' THEN 
+                  LET g_ooka_m.ooka001 = ''
+               ELSE
+                  LET g_ooka_m.ooka001 = g_ooka_m_t.ooka001
+               END IF 
+               NEXT FIELD ooka001
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooka001
+            #add-point:ON CHANGE ooka001 name="input.g.ooka001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookal003
+            #add-point:BEFORE FIELD ookal003 name="input.b.ookal003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookal003
+            
+            #add-point:AFTER FIELD ookal003 name="input.a.ookal003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ookal003
+            #add-point:ON CHANGE ookal003 name="input.g.ookal003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookal004
+            #add-point:BEFORE FIELD ookal004 name="input.b.ookal004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookal004
+            
+            #add-point:AFTER FIELD ookal004 name="input.a.ookal004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ookal004
+            #add-point:ON CHANGE ookal004 name="input.g.ookal004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka003
+            
+            #add-point:AFTER FIELD ooka003 name="input.a.ooka003"
+            IF NOT cl_null(g_ooka_m.ooka003) THEN 
+               IF aooi920_ooka003_chk(g_ooka_m.ooka003) THEN
+               
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_ooka_m.ooka003 = g_ooka_m_t.ooka003
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooka_m.ooka003
+            CALL ap_ref_array2(g_ref_fields,"SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002='"||g_lang||"'","") RETURNING g_rtn_fields
+            LET g_ooka_m.ooka003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooka_m.ooka003_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka003
+            #add-point:BEFORE FIELD ooka003 name="input.b.ooka003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooka003
+            #add-point:ON CHANGE ooka003 name="input.g.ooka003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka004
+            #add-point:BEFORE FIELD ooka004 name="input.b.ooka004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka004
+            
+            #add-point:AFTER FIELD ooka004 name="input.a.ooka004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooka004
+            #add-point:ON CHANGE ooka004 name="input.g.ooka004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooka005
+            #add-point:BEFORE FIELD ooka005 name="input.b.ooka005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooka005
+            
+            #add-point:AFTER FIELD ooka005 name="input.a.ooka005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooka005
+            #add-point:ON CHANGE ooka005 name="input.g.ooka005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ookastus
+            #add-point:BEFORE FIELD ookastus name="input.b.ookastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ookastus
+            
+            #add-point:AFTER FIELD ookastus name="input.a.ookastus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ookastus
+            #add-point:ON CHANGE ookastus name="input.g.ookastus"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.ooka002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka002
+            #add-point:ON ACTION controlp INFIELD ooka002 name="input.c.ooka002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ooka001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka001
+            #add-point:ON ACTION controlp INFIELD ooka001 name="input.c.ooka001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ookal003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookal003
+            #add-point:ON ACTION controlp INFIELD ookal003 name="input.c.ookal003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ookal004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookal004
+            #add-point:ON ACTION controlp INFIELD ookal004 name="input.c.ookal004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ooka003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka003
+            #add-point:ON ACTION controlp INFIELD ooka003 name="input.c.ooka003"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_ooka_m.ooka003             #給予default值
+            LET g_qryparam.where = "(gzza002 = 'R' OR gzza001 = 'azzi310') "
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+ 
+            CALL q_gzzz001_1()                                #呼叫開窗
+ 
+            LET g_ooka_m.ooka003 = g_qryparam.return1              
+
+            DISPLAY g_ooka_m.ooka003 TO ooka003              #
+
+            NEXT FIELD ooka003                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ooka004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka004
+            #add-point:ON ACTION controlp INFIELD ooka004 name="input.c.ooka004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ooka005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooka005
+            #add-point:ON ACTION controlp INFIELD ooka005 name="input.c.ooka005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ookastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ookastus
+            #add-point:ON ACTION controlp INFIELD ookastus name="input.c.ookastus"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #若點選cancel則離開dialog
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+  
+            IF p_cmd <> "u" THEN
+               #當p_cmd不為u代表為新增/複製
+               LET l_count = 1  
+ 
+               #確定新增的資料不存在(不重複)
+               SELECT COUNT(1) INTO l_count FROM ooka_t
+                WHERE ookaent = g_enterprise AND ooka001 = g_ooka_m.ooka001
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前 name="input.head.b_insert"
+                  
+                  #end add-point
+               
+                  #將新增的單頭資料寫入資料庫
+                  INSERT INTO ooka_t (ookaent,ooka002,ooka001,ooka003,ooka004,ooka005,ooka006,ookastus, 
+                      ookaownid,ookaowndp,ookacrtid,ookacrtdp,ookacrtdt,ookamodid,ookamoddt)
+                  VALUES (g_enterprise,g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ooka003,g_ooka_m.ooka004, 
+                      g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid,g_ooka_m.ookaowndp, 
+                      g_ooka_m.ookacrtid,g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamoddt)  
+ 
+                  
+                  #add-point:單頭新增中 name="input.head.m_insert"
+                  
+                  #end add-point
+                  
+                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "ooka_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                           INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_ooka_m.ooka001 = g_master_multi_table_t.ookal001 AND
+         g_ooka_m.ookal003 = g_master_multi_table_t.ookal003 AND 
+         g_ooka_m.ookal004 = g_master_multi_table_t.ookal004  THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'ookalent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_ooka_m.ooka001
+            LET l_field_keys[02] = 'ookal001'
+            LET l_var_keys_bak[02] = g_master_multi_table_t.ookal001
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'ookal002'
+            LET l_var_keys_bak[03] = g_dlang
+            LET l_vars[01] = g_ooka_m.ookal003
+            LET l_fields[01] = 'ookal003'
+            LET l_vars[02] = g_ooka_m.ookal004
+            LET l_fields[02] = 'ookal004'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'ookal_t')
+         END IF 
+ 
+                  
+                  #add-point:單頭新增後 name="input.head.a_insert"
+                  
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL s_transaction_end('N','0')
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_ooka_m.ooka001
+                  LET g_errparam.code   = "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               END IF 
+            ELSE
+               #add-point:單頭修改前 name="input.head.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL aooi920_ooka_t_mask_restore('restore_mask_o')
+               
+               UPDATE ooka_t SET (ooka002,ooka001,ooka003,ooka004,ooka005,ooka006,ookastus,ookaownid, 
+                   ookaowndp,ookacrtid,ookacrtdp,ookacrtdt,ookamodid,ookamoddt) = (g_ooka_m.ooka002, 
+                   g_ooka_m.ooka001,g_ooka_m.ooka003,g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006, 
+                   g_ooka_m.ookastus,g_ooka_m.ookaownid,g_ooka_m.ookaowndp,g_ooka_m.ookacrtid,g_ooka_m.ookacrtdp, 
+                   g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamoddt)
+                WHERE ookaent = g_enterprise AND ooka001 = g_ooka001_t #
+ 
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "ooka_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "ooka_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                              INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_ooka_m.ooka001 = g_master_multi_table_t.ookal001 AND
+         g_ooka_m.ookal003 = g_master_multi_table_t.ookal003 AND 
+         g_ooka_m.ookal004 = g_master_multi_table_t.ookal004  THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'ookalent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_ooka_m.ooka001
+            LET l_field_keys[02] = 'ookal001'
+            LET l_var_keys_bak[02] = g_master_multi_table_t.ookal001
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'ookal002'
+            LET l_var_keys_bak[03] = g_dlang
+            LET l_vars[01] = g_ooka_m.ookal003
+            LET l_fields[01] = 'ookal003'
+            LET l_vars[02] = g_ooka_m.ookal004
+            LET l_fields[02] = 'ookal004'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'ookal_t')
+         END IF 
+ 
+                     
+                     #將遮罩欄位進行遮蔽
+                     CALL aooi920_ooka_t_mask_restore('restore_mask_n')
+                     
+                     #add-point:單頭修改後 name="input.head.a_update"
+                     
+                     #end add-point
+                     #修改歷程記錄(單頭修改)
+                     LET g_log1 = util.JSON.stringify(g_ooka_m_t)
+                     LET g_log2 = util.JSON.stringify(g_ooka_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+               
+            END IF
+           #controlp
+      END INPUT
+      
+      #add-point:input段more input  name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()
+         #add-point:input段before_dialog  name="input.before_dialog"
+         
+         #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      #放棄輸入
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close 
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+    
+      #toolbar 離開
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION aooi920_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point
+   DEFINE l_newno     LIKE ooka_t.ooka001 
+   DEFINE l_oldno     LIKE ooka_t.ooka001 
+ 
+   DEFINE l_master    RECORD LIKE ooka_t.* #此變數樣板目前無使用
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #先確定key值無遺漏
+   IF g_ooka_m.ooka001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #備份key值
+   LET g_ooka001_t = g_ooka_m.ooka001
+ 
+   
+   #清空key值
+   LET g_ooka_m.ooka001 = ""
+ 
+    
+   CALL aooi920_set_entry("a")
+   CALL aooi920_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_ooka_m.ookaownid = g_user
+      LET g_ooka_m.ookaowndp = g_dept
+      LET g_ooka_m.ookacrtid = g_user
+      LET g_ooka_m.ookacrtdp = g_dept 
+      LET g_ooka_m.ookacrtdt = cl_get_current()
+      LET g_ooka_m.ookamodid = g_user
+      LET g_ooka_m.ookamoddt = cl_get_current()
+      LET g_ooka_m.ookastus = 'Y'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   LET g_ooka_m.ookastus = "Y"
+   IF g_dgenv ='s' THEN
+      LET g_ooka_m.ooka006 = 'N'
+   ELSE
+      LET g_ooka_m.ooka006 = 'Y'
+      LET g_ooka_m.ooka002 = '8'   #8.客制
+   END IF
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_ooka_m.ookastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+   
+   
+   #資料輸入
+   CALL aooi920_input("r")
+   
+   IF INT_FLAG THEN
+      #取消
+      INITIALIZE g_ooka_m.* TO NULL
+      CALL aooi920_show()
+      CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前 name="reproduce.head.b_insert"
+   
+   #end add-point
+   
+   #add-point:單頭複製中 name="reproduce.head.m_insert"
+   
+   #end add-point
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "ooka_t:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後 name="reproduce.head.a_insert"
+   
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aooi920_set_act_visible()
+   CALL aooi920_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_ooka001_t = g_ooka_m.ooka001
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " ookaent = " ||g_enterprise|| " AND",
+                      " ooka001 = '", g_ooka_m.ooka001, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL aooi920_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+              
+   LET g_data_owner = g_ooka_m.ookaownid      
+   LET g_data_dept  = g_ooka_m.ookaowndp
+              
+   #功能已完成,通報訊息中心
+   CALL aooi920_msgcentre_notify('reproduce')
+                 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.show" >}
+#+ 資料顯示 
+PRIVATE FUNCTION aooi920_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   
+   #end add-point  
+   
+   #add-point:show段Function前置處理  name="show.before"
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+    
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL aooi920_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_ooka_m.ooka001
+   CALL ap_ref_array2(g_ref_fields," SELECT ookal003,ookal004 FROM ookal_t WHERE ookalent = '"||g_enterprise||"' AND ookal001 = ? AND ookal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooka_m.ookal003 = g_rtn_fields[1] 
+   LET g_ooka_m.ookal004 = g_rtn_fields[2] 
+   DISPLAY g_ooka_m.ookal003 TO ookal003
+   DISPLAY g_ooka_m.ookal003 TO ookal004
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_ooka_m.ooka003
+   CALL ap_ref_array2(g_ref_fields,"SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002='"||g_lang||"'","") RETURNING g_rtn_fields
+   LET g_ooka_m.ooka003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_ooka_m.ooka003_desc
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ookal003,g_ooka_m.ookal004,g_ooka_m.ooka003, 
+       g_ooka_m.ooka003_desc,g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid, 
+       g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid,g_ooka_m.ookacrtid_desc, 
+       g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdp_desc,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamodid_desc, 
+       g_ooka_m.ookamoddt
+   
+   #儲存PK
+   LET l_ac = g_current_idx
+   CALL aooi920_set_pk_array()
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_ooka_m.ookastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+ 
+   #顯示有特殊格式設定的欄位或說明
+   CALL cl_show_fld_cont()
+ 
+   #add-point:show段之後 name="show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION aooi920_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_ooka_m.ooka001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+    
+   LET g_ooka001_t = g_ooka_m.ooka001
+ 
+   
+   LET g_master_multi_table_t.ookal001 = g_ooka_m.ooka001
+LET g_master_multi_table_t.ookal003 = g_ooka_m.ookal003
+LET g_master_multi_table_t.ookal004 = g_ooka_m.ookal004
+ 
+ 
+   OPEN aooi920_cl USING g_enterprise,g_ooka_m.ooka001
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aooi920_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE aooi920_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aooi920_master_referesh USING g_ooka_m.ooka001 INTO g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ooka003, 
+       g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid,g_ooka_m.ookaowndp, 
+       g_ooka_m.ookacrtid,g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamoddt, 
+       g_ooka_m.ooka003_desc,g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid_desc, 
+       g_ooka_m.ookacrtdp_desc,g_ooka_m.ookamodid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT aooi920_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_ooka_m_mask_o.* =  g_ooka_m.*
+   CALL aooi920_ooka_t_mask()
+   LET g_ooka_m_mask_n.* =  g_ooka_m.*
+   
+   #將最新資料顯示到畫面上
+   CALL aooi920_show()
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      IF g_dgenv ='c' THEN
+         IF g_ooka_m.ooka002 <> '8' THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aoo-00669'   #客制环境下不可删除标准模块的节点编码资料！
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN
+         END IF
+      END IF
+      #若该节点编号在后续作业中有使用，则也不允许删除
+      IF NOT aooi920_ooka001_use_chk(g_ooka_m.ooka001) THEN
+         RETURN
+      END IF
+      #end add-point
+ 
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aooi920_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+ 
+      DELETE FROM ooka_t 
+       WHERE ookaent = g_enterprise AND ooka001 = g_ooka_m.ooka001 
+ 
+ 
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "ooka_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+  
+      INITIALIZE l_var_keys_bak TO NULL 
+   INITIALIZE l_field_keys   TO NULL 
+   LET l_var_keys_bak[01] = g_enterprise
+   LET l_field_keys[01] = 'ookalent'
+   LET l_var_keys_bak[02] = g_master_multi_table_t.ookal001
+   LET l_field_keys[02] = 'ookal001'
+   CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'ookal_t')
+ 
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      DELETE FROM ookal_t
+       WHERE ookal001 = g_ooka_m.ooka001
+         AND ookalent = g_enterprise
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ookal_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      #end add-point
+      
+       
+ 
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_ooka_m)   #(ver:49)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:49)
+         CLOSE aooi920_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      CLEAR FORM
+      CALL aooi920_ui_browser_refresh()
+      
+      #確保畫面上保有資料
+      IF g_browser_cnt > 0 THEN
+         #CALL aooi920_browser_fill(g_wc,"")
+         CALL aooi920_fetch("P")
+      ELSE
+         CLEAR FORM
+      END IF
+      CALL s_transaction_end('Y','0')
+   ELSE    
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE aooi920_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL aooi920_msgcentre_notify('delete')
+ 
+   #add-point:單頭刪除完成後 name="delete.a_delete"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION aooi920_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_ooka001 = g_ooka_m.ooka001
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+       END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt  TO FORMONLY.h_count     #page count
+  
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aooi920_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization" 
+   
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point     
+    
+   #add-point:Function前置處理 name="set_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("ooka001",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      CALL cl_set_comp_entry("ooka002",TRUE)
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aooi920_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("ooka001",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      CALL cl_set_comp_entry("ooka002",FALSE)
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION aooi920_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization" 
+   
+   #end add-point  
+   #add-point:set_act_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION aooi920_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point
+   #add-point:set_act_no_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION aooi920_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization" 
+   
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.pre_function"
+   
+   #end add-point
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point  
+   
+   #根據外部參數(g_argv)組合wc
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " ooka001 = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      #若有外部參數則根據該參數組合
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.mask_functions" >}
+&include "erp/aoo/aooi920_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aooi920.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION aooi920_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_ooka_m.ooka001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN aooi920_cl USING g_enterprise,g_ooka_m.ooka001
+   IF STATUS THEN
+      CLOSE aooi920_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aooi920_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE aooi920_master_referesh USING g_ooka_m.ooka001 INTO g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ooka003, 
+       g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid,g_ooka_m.ookaowndp, 
+       g_ooka_m.ookacrtid,g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamoddt, 
+       g_ooka_m.ooka003_desc,g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid_desc, 
+       g_ooka_m.ookacrtdp_desc,g_ooka_m.ookamodid_desc
+   
+ 
+   #檢查是否允許此動作
+   IF NOT aooi920_action_chk() THEN
+      CLOSE aooi920_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ookal003,g_ooka_m.ookal004,g_ooka_m.ooka003, 
+       g_ooka_m.ooka003_desc,g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid, 
+       g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid,g_ooka_m.ookacrtid_desc, 
+       g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdp_desc,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid,g_ooka_m.ookamodid_desc, 
+       g_ooka_m.ookamoddt
+ 
+   CASE g_ooka_m.ookastus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_ooka_m.ookastus
+            
+            WHEN "N"
+               HIDE OPTION "inactive"
+            WHEN "Y"
+               HIDE OPTION "active"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      
+      #end add-point
+      
+      
+	  
+      ON ACTION inactive
+         IF cl_auth_chk_act("inactive") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.inactive"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION active
+         IF cl_auth_chk_act("active") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.active"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+      
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      ) OR 
+      g_ooka_m.ookastus = lc_state OR cl_null(lc_state) THEN
+      CLOSE aooi920_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   
+   #end add-point
+   
+   LET g_ooka_m.ookamodid = g_user
+   LET g_ooka_m.ookamoddt = cl_get_current()
+   LET g_ooka_m.ookastus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE ooka_t 
+      SET (ookastus,ookamodid,ookamoddt) 
+        = (g_ooka_m.ookastus,g_ooka_m.ookamodid,g_ooka_m.ookamoddt)     
+    WHERE ookaent = g_enterprise AND ooka001 = g_ooka_m.ooka001
+ 
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE aooi920_master_referesh USING g_ooka_m.ooka001 INTO g_ooka_m.ooka002,g_ooka_m.ooka001, 
+          g_ooka_m.ooka003,g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus,g_ooka_m.ookaownid, 
+          g_ooka_m.ookaowndp,g_ooka_m.ookacrtid,g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid, 
+          g_ooka_m.ookamoddt,g_ooka_m.ooka003_desc,g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid_desc, 
+          g_ooka_m.ookacrtdp_desc,g_ooka_m.ookamodid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_ooka_m.ooka002,g_ooka_m.ooka001,g_ooka_m.ookal003,g_ooka_m.ookal004,g_ooka_m.ooka003, 
+          g_ooka_m.ooka003_desc,g_ooka_m.ooka004,g_ooka_m.ooka005,g_ooka_m.ooka006,g_ooka_m.ookastus, 
+          g_ooka_m.ookaownid,g_ooka_m.ookaownid_desc,g_ooka_m.ookaowndp,g_ooka_m.ookaowndp_desc,g_ooka_m.ookacrtid, 
+          g_ooka_m.ookacrtid_desc,g_ooka_m.ookacrtdp,g_ooka_m.ookacrtdp_desc,g_ooka_m.ookacrtdt,g_ooka_m.ookamodid, 
+          g_ooka_m.ookamodid_desc,g_ooka_m.ookamoddt
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   
+   #end add-point  
+ 
+   CLOSE aooi920_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL aooi920_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aooi920.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="aooi920.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION aooi920_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_ooka_m.ooka001
+   LET g_pk_array[1].column = 'ooka001'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aooi920.other_dialog" readonly="Y" >}
+ 
+ 
+{</section>}
+ 
+{<section id="aooi920.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION aooi920_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL aooi920_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_ooka_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aooi920.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION aooi920_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization" 
+   
+   #end add-point
+   #add-point:action_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi920.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 根据模组别自动编码
+# Memo...........:
+# Usage..........: CALL aooi920_auto_code()
+#                  RETURNING r_ooka001
+################################################################################
+PRIVATE FUNCTION aooi920_auto_code(p_ooka002)
+DEFINE p_ooka002 LIKE ooka_t.ooka002
+DEFINE l_tmp     LIKE type_t.num5
+DEFINE r_ooka001 LIKE ooka_t.ooka001
+   
+   LET l_tmp  = 0
+   IF p_ooka002 = 1 THEN
+      #161223-00052#1 mod-S
+#      SELECT MAX(ooka001) INTO l_tmp FROM ooka_t
+      SELECT MAX(to_number(ooka001)) INTO l_tmp FROM ooka_t
+      #161223-00052#1 mod-E
+       WHERE ooka002 = 1
+         AND ookaent = g_enterprise #160905-00007#3 add
+      IF cl_null(l_tmp) THEN
+         LET l_tmp = 1
+      ELSE
+         LET l_tmp = l_tmp +1
+      END IF 
+      IF l_tmp >1000 THEN
+         SELECT MIN(ooka001+1) INTO l_tmp FROM ooka_t 
+#          WHERE ooka001 <=1000 AND ooka001+1 NOT IN (select ooka001 FROM ooka_t)   #160905-00007#3 marked
+          WHERE ooka001 <=1000 AND ooka001+1 NOT IN (SELECT ooka001 FROM ooka_t WHERE ookaent = g_enterprise)    #160905-00007#3 mod
+            AND ookaent = g_enterprise    #160905-00007#3 add
+         IF l_tmp >=1000 THEN
+            LET l_tmp = "1"
+         END IF
+      END IF 
+   END IF 
+   IF p_ooka002 = 2 THEN
+      #161223-00052#1 mod-S
+#      SELECT MAX(ooka001) INTO l_tmp FROM ooka_t
+      SELECT MAX(to_number(ooka001)) INTO l_tmp FROM ooka_t
+      #161223-00052#1 mod-E
+       WHERE ooka002 = 2
+         AND ookaent = g_enterprise #160905-00007#3 add
+      IF cl_null(l_tmp) THEN
+         LET l_tmp = 1001
+      ELSE
+         LET l_tmp = l_tmp +1
+      END IF 
+      IF l_tmp >2000 THEN
+         SELECT min(ooka001+1) INTO l_tmp FROM ooka_t 
+#          WHERE ooka001 <2001 AND ooka001 >=1001 AND ooka001+1 NOT IN (select ooka001 FROM ooka_t) #160905-00007#3 marked
+          WHERE ooka001 <2001 AND ooka001 >=1001 AND ooka001+1 NOT IN (SELECT ooka001 FROM ooka_t WHERE ookaent = g_enterprise) #160905-00007#3 mod
+            AND ookaent = g_enterprise #160905-00007#3 add
+         IF l_tmp >=2000 THEN
+            LET l_tmp = "1001"
+         END IF
+      END IF 
+   END IF 
+   IF p_ooka002 = 3 THEN
+      #161223-00052#1 mod-S
+#      SELECT MAX(ooka001) INTO l_tmp FROM ooka_t
+      SELECT MAX(to_number(ooka001)) INTO l_tmp FROM ooka_t
+      #161223-00052#1 mod-E
+       WHERE ooka002 = 3
+         AND ookaent = g_enterprise #160905-00007#3 add
+      IF cl_null(l_tmp) THEN
+         LET l_tmp = "2001"
+      ELSE
+         LET l_tmp = l_tmp +1
+      END IF
+      IF l_tmp >3000 THEN
+         SELECT min(ooka001+1) INTO l_tmp FROM ooka_t 
+#          WHERE ooka001 <3001 AND ooka001 >=2001 AND ooka001+1 NOT IN (select ooka001 FROM ooka_t) #160905-00007#3 marked
+          WHERE ooka001 <3001 AND ooka001 >=2001 AND ooka001+1 NOT IN (SELECT ooka001 FROM ooka_t WHERE ookaent = g_enterprise) #160905-00007#3 mod
+            AND ookaent = g_enterprise #160905-00007#3 add
+         IF l_tmp >=3000 THEN
+            LET l_tmp = "2001"
+         END IF
+      END IF
+   END IF
+   IF p_ooka002 = "4" THEN
+      #161223-00052#1 mod-S
+#      SELECT MAX(ooka001) INTO l_tmp FROM ooka_t
+      SELECT MAX(to_number(ooka001)) INTO l_tmp FROM ooka_t
+      #161223-00052#1 mod-E
+       WHERE ooka002 = '4'
+         AND ookaent = g_enterprise #160905-00007#3 add
+      IF cl_null(l_tmp) THEN
+         LET l_tmp = "3001"
+      ELSE
+         LET l_tmp = l_tmp +1
+      END IF
+      IF l_tmp >4000 THEN
+         SELECT min(ooka001+1) INTO l_tmp FROM ooka_t 
+#          WHERE ooka001 <4001 AND ooka001 >=3001 AND ooka001+1 NOT IN (select ooka001 FROM ooka_t) #160905-00007#3 marked
+          WHERE ooka001 <4001 AND ooka001 >=3001 AND ooka001+1 NOT IN (SELECT ooka001 FROM ooka_t WHERE ookaent = g_enterprise) #160905-00007#3 mod
+            AND ookaent = g_enterprise #160905-00007#3 add
+         IF l_tmp >=4000 THEN
+            LET l_tmp = "3001"
+         END IF
+      END IF
+   END IF 
+   IF p_ooka002 = "5" THEN
+      #161223-00052#1 mod-S
+#      SELECT MAX(ooka001) INTO l_tmp FROM ooka_t
+      SELECT MAX(to_number(ooka001)) INTO l_tmp FROM ooka_t
+      #161223-00052#1 mod-E
+       WHERE ooka002 = '5'
+         AND ookaent = g_enterprise #160905-00007#3 add
+      IF cl_null(l_tmp) THEN
+         LET l_tmp = "4001"
+      ELSE
+         LET l_tmp = l_tmp +1
+      END IF
+      IF l_tmp >5000 THEN
+         SELECT min(ooka001+1) INTO l_tmp FROM ooka_t 
+#          WHERE ooka001 <5001 AND ooka001 >=4001 AND ooka001+1 NOT IN (select ooka001 FROM ooka_t) #160905-00007#3 marked
+          WHERE ooka001 <5001 AND ooka001 >=4001 AND ooka001+1 NOT IN (SELECT ooka001 FROM ooka_t WHERE ookaent = g_enterprise) #160905-00007#3 mod
+            AND ookaent = g_enterprise #160905-00007#3 add
+         IF l_tmp >=5000 THEN
+            LET l_tmp = "4001"
+         END IF
+      END IF
+   END IF 
+   IF p_ooka002 = "6" THEN
+      #161223-00052#1 mod-S
+#      SELECT MAX(ooka001) INTO l_tmp FROM ooka_t
+      SELECT MAX(to_number(ooka001)) INTO l_tmp FROM ooka_t
+      #161223-00052#1 mod-E
+       WHERE ooka002 = '6'
+         AND ookaent = g_enterprise #160905-00007#3 add
+      IF cl_null(l_tmp) THEN
+         LET l_tmp = "5001"
+      ELSE
+         LET l_tmp = l_tmp +1
+      END IF
+      IF l_tmp >6000 THEN
+         SELECT min(ooka001+1) INTO l_tmp FROM ooka_t 
+#          WHERE ooka001 <6001 AND ooka001 >=5001 AND ooka001+1 NOT IN (select ooka001 FROM ooka_t) #160905-00007#3 marked
+          WHERE ooka001 <6001 AND ooka001 >=5001 AND ooka001+1 NOT IN (SELECT ooka001 FROM ooka_t WHERE ookaent = g_enterprsie) #160905-00007#3 mod
+            AND ookaent = g_enterprise #160905-00007#3 add
+         IF l_tmp >=6000 THEN
+            LET l_tmp = "5001"
+         END IF
+      END IF
+   END IF 
+   IF p_ooka002 = "7" THEN
+      #161223-00052#1 mod-S
+#      SELECT MAX(ooka001) INTO l_tmp FROM ooka_t
+      SELECT MAX(to_number(ooka001)) INTO l_tmp FROM ooka_t
+      #161223-00052#1 mod-E
+       WHERE ooka002 = '7'
+         AND ookaent = g_enterprise #160905-00007#3 add
+      IF cl_null(l_tmp) THEN
+         LET l_tmp = "6001"
+      ELSE
+         LET l_tmp = l_tmp +1
+      END IF
+      IF l_tmp >7000 THEN
+         SELECT min(ooka001+1) INTO l_tmp FROM ooka_t 
+#          WHERE ooka001 >=6001 AND ooka001 <= 7000 AND ooka001+1 NOT IN (select ooka001 FROM ooka_t)  #160905-00007#3 marked
+          WHERE ooka001 >=6001 AND ooka001 <= 7000 AND ooka001+1 NOT IN (SELECT ooka001 FROM ooka_t WHERE ookaent = g_enterprise)   #160905-00007#3 mod
+            AND ookaent = g_enterprise #160905-00007#3 add
+         IF l_tmp >=7000 THEN
+            LET l_tmp = "6001"
+         END IF
+      END IF
+   END IF 
+   IF p_ooka002 = "8" THEN
+      #161223-00052#1 mod-S
+#      SELECT MAX(ooka001) INTO l_tmp FROM ooka_t
+      SELECT MAX(to_number(ooka001)) INTO l_tmp FROM ooka_t
+      #161223-00052#1 mod-E
+       WHERE ooka002 = '8'
+         AND ookaent = g_enterprise #160905-00007#3 add
+      IF cl_null(l_tmp) THEN
+         LET l_tmp = "9001"
+      ELSE
+         LET l_tmp = l_tmp +1
+      END IF
+      IF l_tmp >9999 THEN
+         SELECT min(ooka001+1) INTO l_tmp FROM ooka_t 
+#          WHERE ooka001 >=9001 AND ooka001 <= 9999 AND ooka001+1 NOT IN (select ooka001 FROM ooka_t)     #160905-00007#3 marked
+          WHERE ooka001 >=9001 AND ooka001 <= 9999 AND ooka001+1 NOT IN (SELECT ooka001 FROM ooka_t WHERE ookaent = g_enterprise)   #160905-00007#3 mod
+            AND ookaent = g_enterprise #160905-00007#3 add
+         IF l_tmp >=9999 THEN
+            LET l_tmp = "9001"
+         END IF
+      END IF
+   END IF 
+   LET r_ooka001 = l_tmp USING '<<<<<'
+   RETURN r_ooka001
+END FUNCTION
+
+################################################################################
+# Descriptions...: 检核ooka001的编码范围
+# Memo...........:
+# Usage..........: CALL aooi920_ooka001_chk(p_ooka001,p_ooka002)
+#                  RETURNING r_success
+################################################################################
+PRIVATE FUNCTION aooi920_ooka001_chk(p_ooka001,p_ooka002)
+DEFINE p_ooka001   LIKE type_t.num5
+DEFINE p_ooka002   LIKE ooka_t.ooka002
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_str       LIKE type_t.num5
+DEFINE l_end       LIKE type_t.num5
+
+   LET r_success = TRUE
+
+   CASE p_ooka002
+      WHEN 1   #銷售及收款循環
+         LET l_str = 1
+         LET l_end = 1000
+      WHEN 2   #採購及付款循環
+         LET l_str = 1001
+         LET l_end = 2000
+      WHEN 3   #研發循環
+         LET l_str = 2001
+         LET l_end = 3000
+      WHEN 4   #生產循環
+         LET l_str = 3001
+         LET l_end = 4000
+      WHEN 5   #固定資產循環
+         LET l_str = 4001
+         LET l_end = 5000
+      WHEN 6   #融資循環
+         LET l_str = 5001
+         LET l_end = 6000
+      WHEN 7   #投資循環
+         LET l_str = 6001
+         LET l_end = 7000
+      WHEN 8   #客制
+         LET l_str = 9001
+         LET l_end = 9999
+   END CASE
+   IF p_ooka001 < l_str OR p_ooka001 > l_end THEN 
+      LET r_success = FALSE
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "aoo-00671" #节点编码应介于%1~%2之间。
+      LET g_errparam.popup  = TRUE
+      LET g_errparam.replace[1] = l_str CLIPPED
+      LET g_errparam.replace[2] = l_end CLIPPED
+      CALL cl_err()
+   END IF
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 检核是否为报表作业或azzi310
+# Memo...........:
+# Usage..........: CALL aooi920_ooka003_chk(p_ooka003)
+#                  RETURNING r_success
+################################################################################
+PRIVATE FUNCTION aooi920_ooka003_chk(p_ooka003)
+DEFINE p_ooka003  LIKE ooka_t.ooka003
+DEFINE r_success  LIKE type_t.num5
+DEFINE l_cnt      LIKE type_t.num5
+
+   LET r_success = TRUE
+   LET l_cnt = 0
+   SELECT COUNT(gzzz001) INTO l_cnt
+     FROM gzzz_t,gzza_t
+    WHERE gzzz002 = gzza001 
+      AND gzzzstus = 'Y' 
+      AND (gzza002 = 'R' OR gzza001 = 'azzi310')
+      AND gzzz001 = p_ooka003
+      
+   IF cl_null(l_cnt) OR l_cnt = 0 THEN
+      #报错该检核报表作业非报表
+      LET r_success = FALSE
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "aoo-00668" #输入的来源报表非报表或自定义报表作业！
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 检核节点编号是否被其他程式使用
+# Memo...........:
+# Usage..........: CALL aooi920_ooka001_use_chk(p_ooka001)
+#                  RETURNING r_success
+################################################################################
+PRIVATE FUNCTION aooi920_ooka001_use_chk(p_ooka001)
+DEFINE p_ooka001  LIKE ooka_t.ooka001
+DEFINE r_success  LIKE type_t.num5
+DEFINE l_cnt      LIKE type_t.num5
+
+   LET r_success = TRUE
+   LET l_cnt = 0
+   SELECT COUNT(ookb002) INTO l_cnt
+     FROM ookb_t
+    WHERE ookb002 = p_ooka001
+      AND ookb004 = '2'
+      AND ookbent = g_enterprise
+      
+   IF l_cnt>0 THEN
+      #报错该检核报表作业非报表
+      LET r_success = FALSE
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "aoo-00672" #该节点编码已存在[异常管理检核设置作业(aooi921)]中，不可删除！
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,156 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt150" module="afm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="06862" crtdt="2015-11-18 14:03:15" modid="03538" moddt="2016-07-29 14:04:59" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="融資質押及解除設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmddsite,fmddsite_desc(chr80),fmddcomp,fmddcomp_desc(chr80),fmdd001,fmdddocno,fmdddocdt,fmdd002,fmddstus,fmddownid,fmddownid_desc(chr80),fmddowndp,fmddowndp_desc(chr80),fmddcrtid,fmddcrtid_desc(chr80),fmddcrtdp,fmddcrtdp_desc(chr80),fmddcrtdt,fmddmodid,fmddmodid_desc(chr80),fmddmoddt,fmddcnfid,fmddcnfid_desc(chr80),fmddcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmdeseq,fmde001,fmde002,fmde003,fmde003_desc(chr500),fmde003_desc_2(chr500),fmde003_desc_3(chr500),fmde003_desc_4(chr500),fmde003_desc_5(chr500),fmde003_desc_6(chr500),fmde003_desc_7(chr500),fmde004"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt150" method="dialog">
+    <section id="input">
+      <input id="head" field="fmddsite,fmdd001,fmdddocno,fmdddocdt,fmdd002,fmddstus"/>
+      <input id="body" page="1" field="fmde001,fmde002,fmde003,fmde004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmddsite,fmddcomp,fmdd001,fmdddocno,fmdddocdt,fmdd002,fmddstus,fmddownid,fmddowndp,fmddcrtid,fmddcrtdp,fmddcrtdt,fmddmodid,fmddmoddt,fmddcnfid,fmddcnfdt"/>
+      <construct id="body" page="1" field="fmdeseq,fmde001,fmde002,fmde003,fmde004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmdddocno"/>
+      <set id="head" type="no_entry" field="fmdddocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmddsite">
+        <after>
+          <check chkid="v_ooef001_42" id="isExist"/>
+          <reference field="fmddsite_desc" ref_field="fmdd_t.fmddsite" map_field="fmddent,fmddsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmddsite_desc"/>
+      <column id="fmddcomp">
+        <after>
+          <reference field="fmddcomp_desc" ref_field="fmdd_t.fmddcomp" map_field="fmddent,fmddcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef017_01" state="c"/>
+      </column>
+      <column id="fmddcomp_desc"/>
+      <column id="fmdd001" type="S" default="1" def_scc="8808"/>
+      <column id="fmdddocno">
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_fmdd001_01" state="c"/>
+      </column>
+      <column id="fmdddocdt"/>
+      <column id="fmdd002"/>
+      <column id="fmddstus" scc="13">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="fmddownid">
+        <after>
+          <reference field="fmddownid_desc" ref_field="fmdd_t.fmddownid" map_field="fmddownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmddownid_desc"/>
+      <column id="fmddowndp">
+        <after>
+          <reference field="fmddowndp_desc" ref_field="fmdd_t.fmddowndp" map_field="fmddowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmddowndp_desc"/>
+      <column id="fmddcrtid">
+        <after>
+          <reference field="fmddcrtid_desc" ref_field="fmdd_t.fmddcrtid" map_field="fmddcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmddcrtid_desc"/>
+      <column id="fmddcrtdp">
+        <after>
+          <reference field="fmddcrtdp_desc" ref_field="fmdd_t.fmddcrtdp" map_field="fmddcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmddcrtdp_desc"/>
+      <column id="fmddcrtdt"/>
+      <column id="fmddmodid">
+        <after>
+          <reference field="fmddmodid_desc" ref_field="fmdd_t.fmddmodid" map_field="fmddmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmddmodid_desc"/>
+      <column id="fmddmoddt"/>
+      <column id="fmddcnfid">
+        <after>
+          <reference field="fmddcnfid_desc" ref_field="fmdd_t.fmddcnfid" map_field="fmddcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmddcnfid_desc"/>
+      <column id="fmddcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmdeseq"/>
+      <column id="fmde001">
+        <after>
+          <check chkid="v_fmcj001" id="isExist"/>
+        </after>
+        <controlp form="q_fmcj001" state="i"/>
+        <controlp form="q_fmcj001" state="c"/>
+      </column>
+      <column id="fmde002">
+        <controlp form="q_fmcj001_1" state="i"/>
+        <controlp form="q_fmcj001_1" state="c"/>
+      </column>
+      <column id="fmde003">
+        <after/>
+        <controlp form="q_fmcj001_2" state="i"/>
+        <controlp form="q_fmcj001_2" state="c"/>
+      </column>
+      <column id="fmde003_desc"/>
+      <column id="fmde003_desc_2"/>
+      <column id="fmde003_desc_3"/>
+      <column id="fmde003_desc_4"/>
+      <column id="fmde003_desc_5"/>
+      <column id="fmde003_desc_6"/>
+      <column id="fmde003_desc_7"/>
+      <column id="fmde004">
+        <controlp form="q_inbddocno_2" state="i"/>
+        <controlp form="q_inbddocno_2" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmdd_t" pk="fmdddocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fmddsite,&apos;&apos;,fmddcomp,&apos;&apos;,fmdd001,fmdddocno,fmdddocdt,fmdd002,fmddstus,fmddownid,&apos;&apos;,fmddowndp,&apos;&apos;,fmddcrtid,&apos;&apos;,fmddcrtdp,&apos;&apos;,fmddcrtdt,fmddmodid,&apos;&apos;,fmddmoddt,fmddcnfid,&apos;&apos;,fmddcnfdt FROM fmdd_t WHERE fmddent= ? AND fmdddocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmddsite,&apos;&apos;,fmddcomp,&apos;&apos;,fmdd001,fmdddocno,fmdddocdt,fmdd002,fmddstus,fmddownid,&apos;&apos;,fmddowndp,&apos;&apos;,fmddcrtid,&apos;&apos;,fmddcrtdp,&apos;&apos;,fmddcrtdt,fmddmodid,&apos;&apos;,fmddmoddt,fmddcnfid,&apos;&apos;,fmddcnfdt FROM fmdd_t" order="fmdddocno"/>
+    </head>
+    <body id="fmde_t" page="1" linked="" pk="fmdeseq" fk="fmdedocno">
+      <sql id="forupd_sql_detail" query="SELECT fmdeseq,fmde001,fmde002,fmde003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmde004 FROM fmde_t WHERE fmdeent=? AND fmdedocno=? AND fmdeseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmdeseq,fmde001,fmde002,fmde003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmde004 FROM fmde_t WHERE fmdeent=? AND fmdedocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

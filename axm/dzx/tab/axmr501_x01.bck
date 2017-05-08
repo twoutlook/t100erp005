@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmr501_x01" module="axm" jobmode="N" type="x01" industry="std" crtid="07024" crtdt="2016-04-21 10:29:31" modid="08993" moddt="2016-12-22 15:43:50" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="xmdadocno,xmdadocdt,xmda004,t9_pmaal004(pmaal004|t9.pmaal004),xmda002,ooag_t_ooag011(ooag011|ooag_t.ooag011),xmda003,ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),xmddseq,xmddseq1,xmddseq2,xmdd001,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),xmdd002,l_xmdd002_desc(inaml004|NULL),xmdd011,l_xmdg028(xmdg028|NULL),l_xmdk001(xmdk001|NULL),l_now_stus(chr50|NULL),l_next_stand(chr50|NULL)"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="xmdaent,xmdasite,xmdadocno,xmdadocdt,xmda004,t9_pmaal004(pmaal004|( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = xmda_t.xmda004 AND pmaal_t.pmaalent = xmda_t.xmdaent AND pmaal_t.pmaal002 = g_dlang)),xmda002,ooag_t_ooag011(ooag011|( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = xmda_t.xmda002 AND ooag_t.ooagent = xmda_t.xmdaent)),xmda003,ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = xmda_t.xmda003 AND ooefl_t.ooeflent = xmda_t.xmdaent AND ooefl_t.ooefl002 = g_dlang)),xmddseq,xmddseq1,xmddseq2,xmdd001,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),xmdd002,l_xmdd002_desc(inaml004|NULL),xmdd011,l_xmdg028(xmdg028|NULL),l_xmdk001(xmdk001|NULL),l_now_stus(chr50|NULL),l_next_stand(chr50|NULL)"/>
+    <sql id="g_from" query="xmda_t LEFT OUTER JOIN ( SELECT xmdd_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = xmdd_t.xmdd001 AND imaal_t.imaalent = xmdd_t.xmddent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = xmdd_t.xmdd001 AND imaal_t.imaalent = xmdd_t.xmddent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal004 FROM xmdd_t ) x  ON xmda_t.xmdaent = x.xmddent AND xmda_t.xmdadocno = x.xmdddocno"/>
+    <sql id="g_where" query="" maintable="xmda_t"/>
+  </selprep>
+</assembly>
+

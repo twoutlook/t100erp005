@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="abmi002" std_prog="abmi002" erpver="1.0" ver="1" module="ABM" booking="Y" class="i" template="F003_sc" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="bmze_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="bmzf_t" main="N" head="N" pk="" fk_detail="" parent="bmze_t" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 產品結構用量公式設定作業
+作業功能：新增/修改/刪除/單身/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：bmze_t(BOM用量公式單頭檔)
+作業資料來源(Detail)： bmzf_t(BOM用量公式單身檔)
+查詢方案設定：
+ (1)瀏覽Browse顯示欄位及型態：
+    bmze001(公式代號)：ButtonEdit
+    bmze002(公式說明)：Edit
+topMenu:
+整單操作下：
+ACTION名稱：驗証公式
+   處理:開啟畫面: 有，執行子畫面abmi002_1，輸入參數值驗証公式結果
+]]>
+  </all>
+  <field cite_std="N" name="b_bmze001" ver="1" src="s" column="bmze001" table="bmze_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_bmze002" ver="1" src="s" column="bmze002" table="bmze_t" attribute="C102" type="varchar2(255)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmze003_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[由公式欄位值經過參數轉換為參數說明顯示在下方
+可通過一組$符號分割取值
+要考慮$符號是否是在第一位的兩種情況，兩種清空處理方式不同
+1.例如：$1$+2+$2$
+  $在第一位置，取到的是$符號後面的值，即單身項次，再去單身查詢相應的參數說明，顯示在相應位置，
+   第二次再去取$符號後面的值，則直接顯示即可，因為此組$x$已經結束，如此循環，
+2.(1+$1$*$2$)
+   $不在第一位置，取到的是$符號前面的值，直接顯示即可，
+   第二次再去取$符號前面的值即單身項次，再去單身查詢相應的參數說明，顯示在相應位置，
+   則此組$x$已經結束，如此循環
+]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmze001" ver="1" src="s" column="bmze001" table="bmze_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_bmze001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[輸入值不可重複  ]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmze002" ver="1" src="s" column="bmze002" table="bmze_t" attribute="C102" type="varchar2(255)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[輸入值不可重複
+]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmze003" ver="1" src="s" column="bmze003" table="bmze_t" attribute="C107" type="varchar2(500)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：公式
+   ●欄位控管：可Display可Input
+     校驗:1.不允許空白
+          2.輸入的參數需存在參數設定裡
+            例如公式中有$3$，代表參數設定必須要有項次3
+     帶值:公式輸入後，自動將參數的部分轉換為說明，顯示在下方
+     計算或處理:(下面兩個功能暫時無法實現，等IT技術支持)
+     1.輸入時需可由參數單身用拖曳的方式直接填入公式內，
+       例如從項次3拖曳到公式內，公式由原來輸入的文字再加上$3$文字
+     2.輸入時需可由函數單身用拖曳的方式直接填入公式內，
+       例如從ROUND拖曳，公式由原來輸入文字再加上ROUND文字]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmzecrtdp" ver="1" src="s" column="bmzecrtdp" table="bmze_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmzecrtdt" ver="1" src="s" column="bmzecrtdt" table="bmze_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmzecrtid" ver="1" src="s" column="bmzecrtid" table="bmze_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmzemoddt" ver="1" src="s" column="bmzemoddt" table="bmze_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmzemodid" ver="1" src="s" column="bmzemodid" table="bmze_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmzeowndp" ver="1" src="s" column="bmzeowndp" table="bmze_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmzeownid" ver="1" src="s" column="bmzeownid" table="bmze_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmze_t.bmzestus" ver="1" src="s" column="bmzestus" table="bmze_t" attribute="C822" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmzf_t.bmzf002" ver="1" src="s" column="bmzf002" table="bmzf_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,1.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[輸入值不可重複
+]]>
+  </field>
+  <field cite_std="N" name="bmzf_t.bmzf003" ver="1" src="s" column="bmzf003" table="bmzf_t" attribute="C103" type="varchar2(80)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmzf_t.bmzf004" ver="1" src="s" column="bmzf004" table="bmzf_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1112" default="1" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[計算或處理:
+       1.當選項=2.主件料件主檔 or 3.元件料件主檔，來源檔案及來源欄位可維護，其餘選項不可維護
+       2.當選項=4.主件產品特徵 5.元件產品特徵 特徵可維護，其餘選項不可維護]]>
+  </field>
+  <field cite_std="N" name="bmzf_t.bmzf005" ver="1" src="s" column="bmzf005" table="bmzf_t" attribute="C803" type="varchar2(15)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1113" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[校驗:1.輸入值須存在料件主檔的table中
+計算或處理:當來源為2 or 3時才可輸入]]>
+  </field>
+  <field cite_std="N" name="bmzf_t.bmzf006" ver="1" src="s" column="bmzf006" table="bmzf_t" attribute="C804" type="varchar2(20)" req="Y" i_zoom="q_dzeb002_2" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.來源為2 or 3時，不允許空白
+          2.輸入值須存在來源檔案內的欄位，且為數字型態
+
+   ●開窗處理：
+     1.查詢時：
+       不提供開窗功能
+     2.新增/修改時：
+       傳入參數 arg1 = g_bmzf_m.bmzf005
+       傳入條件 欄位是數字型態 dzeb007 = 'number' ]]>
+  </field>
+  <field cite_std="N" name="bmzf_t.bmzf007" ver="1" src="s" column="bmzf007" table="bmzf_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.來源=4、5、6、7時，不允許空白
+          2.校驗:呼叫元件 CALL s_azzi650_chk_exist('273',g_bmzf_d[l_ac].bmzf007) RETURNING l_success 检查输入值是否為有效資料
+開窗處理：
+       傳入參數 arg1 = '273 '  g_qryparam.arg1 = '273 '
+計算或處理:來源=4、5、6、7時才可輸入
+呼叫元件 CALL s_azzi650_chk_exist('273',g_bmzf_d[l_ac].bmzf007) RETURNING l_success 检查输入值是否合理
+]]>
+  </field>
+  <field cite_std="N" name="bmzf_t.bmzf008" ver="1" src="s" column="bmzf008" table="bmzf_t" attribute="N101" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[校驗:1.來源=1.固定值 ，不允許空白]]>
+  </field>
+  <field cite_std="N" name="gzcb_t.gzcb002" ver="1" src="s" column="gzcb002" table="gzcb_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzcbl_t.gzcbl004" ver="1" src="s" column="gzcbl004" table="gzcbl_t" attribute="C104" type="varchar2(500)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_str1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="bmzecrtdp_desc" src="s" depend_field="bmze_t.bmzecrtdp" correspon_key="bmzecrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="bmzecrtid_desc" src="s" depend_field="bmze_t.bmzecrtid" correspon_key="&apos;2&apos;,bmzecrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="bmzemodid_desc" src="s" depend_field="bmze_t.bmzemodid" correspon_key="&apos;2&apos;,bmzemodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="bmzeowndp_desc" src="s" depend_field="bmze_t.bmzeowndp" correspon_key="bmzeowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="bmzeownid_desc" src="s" depend_field="bmze_t.bmzeownid" correspon_key="&apos;2&apos;,bmzeownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="bmzf006_desc" src="s" depend_field="bmzf_t.bmzf006" correspon_key="bmzf005,bmzf006" ref_table="dzeb_t" ref_fk="dzeb001,dzeb002" ref_dlang="" ref_rtn="dzeb003" status=""/>
+    <rfield cite_std="N" ver="1" name="bmzf007_desc" src="s" depend_field="bmzf_t.bmzf007" correspon_key="&apos;273&apos;,bmzf007" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_bmze001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_bmze002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmze001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmze002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmze003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmzecrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmzecrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmzecrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmzemoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmzemodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmzeowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmzeownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmze_t.bmzestus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmzf_t.bmzf002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmzf_t.bmzf003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmzf_t.bmzf004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmzf_t.bmzf005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmzf_t.bmzf006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmzf_t.bmzf007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmzf_t.bmzf008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzcb_t.gzcb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzcbl_t.gzcbl004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_str1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_yzgs" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[   處理:開啟畫面: 有，執行子畫面abmi002_01，輸入參數值驗証公式結果]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_bmze001" text="公式代號" lstr=""/>
+    <sfield name="lbl_bmze002" text="公式說明" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_bmzestus" text="狀態碼" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_bmzf002" text="參數項次" lstr=""/>
+    <sfield name="lbl_bmzf003" text="參數說明" lstr=""/>
+    <sfield name="lbl_bmzf004" text="來源" lstr=""/>
+    <sfield name="lbl_bmzf005" text="來源檔案" lstr=""/>
+    <sfield name="lbl_bmzf006" text="來源欄位" lstr=""/>
+    <sfield name="lbl_dzeb003" text="欄位說明" lstr=""/>
+    <sfield name="lbl_bmzf007" text="特徵" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_bmzf008" text="固定值" lstr=""/>
+    <sfield name="lbl_bmze003" text="公式" lstr=""/>
+    <sfield name="lbl_str1" text="說明：$1$代表參數1，$2$代表參數2，以此類推" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzcb002" text="函數" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="函數說明" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_extra_1" text="額外欄位一" lstr=""/>
+    <sfield name="lbl_extra_2" text="額外欄位二" lstr=""/>
+    <sfield name="lbl_extra_3" text="額外欄位三" lstr=""/>
+    <sfield name="lbl_extra_4" text="額外欄位四" lstr=""/>
+    <sfield name="lbl_extra_5" text="額外欄位五" lstr=""/>
+    <sfield name="lbl_extra_6" text="額外欄位六" lstr=""/>
+    <sfield name="lbl_extra_7" text="額外欄位七" lstr=""/>
+    <sfield name="lbl_extra_8" text="額外欄位八" lstr=""/>
+    <sfield name="lbl_extra_9" text="額外欄位九" lstr=""/>
+    <sfield name="lbl_extra_10" text="額外欄位十" lstr=""/>
+    <sfield name="lbl_extra_11" text="額外欄位11" lstr=""/>
+    <sfield name="lbl_extra_12" text="額外欄位12" lstr=""/>
+    <sfield name="lbl_extra_13" text="額外欄位13" lstr=""/>
+    <sfield name="lbl_extra_14" text="額外欄位14" lstr=""/>
+    <sfield name="lbl_extra_15" text="額外欄位15" lstr=""/>
+    <sfield name="lbl_extra_16" text="額外欄位16" lstr=""/>
+    <sfield name="lbl_extra_17" text="額外欄位17" lstr=""/>
+    <sfield name="lbl_extra_18" text="額外欄位18" lstr=""/>
+    <sfield name="lbl_extra_19" text="額外欄位19" lstr=""/>
+    <sfield name="lbl_extra_20" text="額外欄位20" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_bmzf001" text="公式代號" lstr=""/>
+    <sfield name="lbl_result" text="計算結果=" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件關聯位置" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件內容" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_dzeb002" text="欄位代號" lstr=""/>
+    <sfield name="lbl_dzeb007" text="資料型態" lstr=""/>
+    <sfield name="lbl_dzeb008" text="欄位長度" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sact name="open_yzgs" text="驗證公式" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="s_detail2" status=""/>
+  </exclude>
+</spec>

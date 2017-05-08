@@ -1,0 +1,170 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apct500" module="apc" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="03247" crtdt="2015-06-22 21:41:27" modid="03247" moddt="2016-05-16 13:48:09" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="Service差異調整作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pcapsite,pcapsite_desc(chr80),pcapdocdt,pcapdocno,pcap003,pcap001,pcap001_desc(chr80),pcap002,pcap002_desc(chr80),pcapunit,pcapstus,pcapownid,pcapownid_desc(chr80),pcapowndp,pcapowndp_desc(chr80),pcapcrtid,pcapcrtid_desc(chr80),pcapcrtdp,pcapcrtdp_desc(chr80),pcapcrtdt,pcapmodid,pcapmodid_desc(chr80),pcapmoddt,pcapcnfid,pcapcnfid_desc(chr80),pcapcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pcaqseq,pcaqsite,pcaqsite_desc(chr500),pcaqunit,pcaq001,pcaq015,pcaq012,pcaq012_desc(chr500),pcaq003,pcaq002,pcaq007,pcaq006,pcaq004,pcaq005,pcaq016,pcaq008,pcaq009,pcaq010,pcaq011,pcaq013,pcaq014"/>
+      <var id="bs_field" value="pcapsite,pcapdocdt,pcapdocno,pcap001,pcap002,pcap003" pk="pcapdocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="sel_data"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apct500" method="dialog">
+    <section id="input">
+      <input id="head" field="pcapsite,pcapdocdt,pcapdocno,pcap003,pcap001,pcap002,pcapunit,pcapstus"/>
+      <input id="body" page="1" field="pcaqseq,pcaqsite,pcaqunit,pcaq001,pcaq015,pcaq012,pcaq003,pcaq002,pcaq007,pcaq006,pcaq004,pcaq005,pcaq016,pcaq008,pcaq009,pcaq010,pcaq011,pcaq013,pcaq014" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pcapsite,pcapdocdt,pcapdocno,pcap003,pcap001,pcap002,pcapunit,pcapstus,pcapownid,pcapowndp,pcapcrtid,pcapcrtdp,pcapcrtdt,pcapmodid,pcapmoddt,pcapcnfid,pcapcnfdt"/>
+      <construct id="body" page="1" field="pcaqseq,pcaqsite,pcaqunit,pcaq001,pcaq015,pcaq012,pcaq003,pcaq002,pcaq007,pcaq006,pcaq004,pcaq005,pcaq016,pcaq008,pcaq009,pcaq010,pcaq011,pcaq013,pcaq014"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pcapdocno"/>
+      <set id="head" type="no_entry" field="pcapdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pcapsite">
+        <after>
+          <reference field="pcapsite_desc" ref_field="pcap_t.pcapsite" map_field="pcapsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="pcapsite_desc"/>
+      <column id="pcapdocdt"/>
+      <column id="pcapdocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_pcapdocno" state="c"/>
+      </column>
+      <column id="pcap003"/>
+      <column id="pcap001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="pcap001_desc" ref_field="pcap_t.pcap001" map_field="pcap001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="i"/>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="pcap001_desc"/>
+      <column id="pcap002">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="pcap002_desc" ref_field="pcap_t.pcap002" map_field="pcap002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="pcap002_desc"/>
+      <column id="pcapunit"/>
+      <column id="pcapstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="pcapownid">
+        <after>
+          <reference field="pcapownid_desc" ref_field="pcap_t.pcapownid" map_field="pcapownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcapownid_desc"/>
+      <column id="pcapowndp">
+        <after>
+          <reference field="pcapowndp_desc" ref_field="pcap_t.pcapowndp" map_field="pcapowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcapowndp_desc"/>
+      <column id="pcapcrtid">
+        <after>
+          <reference field="pcapcrtid_desc" ref_field="pcap_t.pcapcrtid" map_field="pcapcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcapcrtid_desc"/>
+      <column id="pcapcrtdp">
+        <after>
+          <reference field="pcapcrtdp_desc" ref_field="pcap_t.pcapcrtdp" map_field="pcapcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcapcrtdp_desc"/>
+      <column id="pcapcrtdt"/>
+      <column id="pcapmodid">
+        <after>
+          <reference field="pcapmodid_desc" ref_field="pcap_t.pcapmodid" map_field="pcapmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcapmodid_desc"/>
+      <column id="pcapmoddt"/>
+      <column id="pcapcnfid">
+        <after>
+          <reference field="pcapcnfid_desc" ref_field="pcap_t.pcapcnfid" map_field="pcapcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcapcnfid_desc"/>
+      <column id="pcapcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pcaqseq" type="S" default="0"/>
+      <column id="pcaqsite">
+        <after>
+          <reference field="pcaqsite_desc" ref_field="pcaq_t.pcaqsite" map_field="pcaqsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="pcaqsite_desc"/>
+      <column id="pcaqunit"/>
+      <column id="pcaq001"/>
+      <column id="pcaq015"/>
+      <column id="pcaq012">
+        <after>
+          <reference field="pcaq012_desc" ref_field="pcaq_t.pcaq012" map_field="pcaq012" ref_sql="SELECT pcaal003 FROM pcaal_t WHERE pcaalent=$varg_enterprise$var AND pcaal001=? AND pcaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pcaa001_1" state="c"/>
+      </column>
+      <column id="pcaq012_desc"/>
+      <column id="pcaq003"/>
+      <column id="pcaq002" def_scc="6827"/>
+      <column id="pcaq007"/>
+      <column id="pcaq006" def_scc="6828"/>
+      <column id="pcaq004"/>
+      <column id="pcaq005"/>
+      <column id="pcaq016"/>
+      <column id="pcaq008"/>
+      <column id="pcaq009"/>
+      <column id="pcaq010"/>
+      <column id="pcaq011" type="S" default="0"/>
+      <column id="pcaq013" type="S" default="0"/>
+      <column id="pcaq014"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pcap_t" pk="pcapdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT pcapsite,&apos;&apos;,pcapdocdt,pcapdocno,pcap003,pcap001,&apos;&apos;,pcap002,&apos;&apos;,pcapunit,pcapstus,pcapownid,&apos;&apos;,pcapowndp,&apos;&apos;,pcapcrtid,&apos;&apos;,pcapcrtdp,&apos;&apos;,pcapcrtdt,pcapmodid,&apos;&apos;,pcapmoddt,pcapcnfid,&apos;&apos;,pcapcnfdt FROM pcap_t WHERE pcapent= ? AND pcapdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pcapsite,&apos;&apos;,pcapdocdt,pcapdocno,pcap003,pcap001,&apos;&apos;,pcap002,&apos;&apos;,pcapunit,pcapstus,pcapownid,&apos;&apos;,pcapowndp,&apos;&apos;,pcapcrtid,&apos;&apos;,pcapcrtdp,&apos;&apos;,pcapcrtdt,pcapmodid,&apos;&apos;,pcapmoddt,pcapcnfid,&apos;&apos;,pcapcnfdt FROM pcap_t" order="pcapdocno"/>
+    </head>
+    <body id="pcaq_t" page="1" linked="" pk="pcaqseq" fk="pcaqdocno">
+      <sql id="forupd_sql_detail" query="SELECT pcaqseq,pcaqsite,&apos;&apos;,pcaqunit,pcaq001,pcaq015,pcaq012,&apos;&apos;,pcaq003,pcaq002,pcaq007,pcaq006,pcaq004,pcaq005,pcaq016,pcaq008,pcaq009,pcaq010,pcaq011,pcaq013,pcaq014 FROM pcaq_t WHERE pcaqent=? AND pcaqdocno=? AND pcaqseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcaqseq,pcaqsite,&apos;&apos;,pcaqunit,pcaq001,pcaq015,pcaq012,&apos;&apos;,pcaq003,pcaq002,pcaq007,pcaq006,pcaq004,pcaq005,pcaq016,pcaq008,pcaq009,pcaq010,pcaq011,pcaq013,pcaq014 FROM pcaq_t WHERE pcaqent=? AND pcaqdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

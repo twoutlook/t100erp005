@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axmt510_03" std_prog="axmt510_03" erpver="1.0" ver="1" module="AXM" booking="Y" class="T" template="F002_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xmej_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：提供維護訂單變更多交期資料
+標準作業功能取消：
+狀態功能：無
+作業類型：批處處理作業
+輸入模式：單檔多欄版型
+資料來源:   xmej_t
+
+1.執行此程式需傳入2個參數，當此參數為NULL時則不可以執行
+  1-1.p_xmdcdocno(訂購單號):
+  1-2.p_xmdcseq(訂購項次):
+2.傳入的訂購項次資料需有勾選多交期時才可以維護此子作業
+3.傳入的採購單號+採購項次已經有對應的xmej_t資料時，則自動帶出供維護
+4.離開時回傳約定交貨日期最早的那一分批序的約定交貨日期、預計簽收日期
+]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[●產生訂單交期明細資料:
+  1.產生資料時，若該筆項次是訂單原有的項次+項序+分批序，且是否有欄位與[T:訂單交期明細檔]對應欄位的值不一樣，
+    若有的話需將xmeh901(單身變更類型)更新成"2:單身修改"，且須同步新增[T:訂單變更歷程檔]
+    1-1.刪除訂單號+變更序+訂單項次+項序+分批序+變更欄位所對應的[T:訂單變更歷程檔]資料
+    1-2.針對有變更的單身欄位需同步新增[T:訂單變更歷程檔]
+        [T:訂單變更歷程檔]新增時欄位預設值:
+          [C:訂單單號]     = xmeedocno
+          [C:訂單項次]   = xmehseq
+          [C:項序]       = xmehseq1
+          [C:分批序]     = xmehseq2
+          [C:變更序]     = xmee900
+          [C:變更類型]   = 2(單身修改)
+          [C:變更欄位]   = 變更的訂單欄位編號(例如:訂單人員從001變成002，則此欄位紀錄的是xmdl002)
+          [C:變更前內容] = 原始訂單上的內容(例如:訂單人員從001變成002，則此欄位紀錄的是001)
+          [C:變更後內容] = 訂單變更單上變更後的內容(例如:訂單人員從001變成002，則此欄位紀錄的是002)
+          [C:最後變更時間] = DATETIME
+          [C:欄位說明SQL]  = 變更前內容抓取說明之SQL
+
+  2.產生資料時，若該筆項次是訂單原有的項次+項序+分批序是新增的資料時，並需同步更新[T:訂單變更歷程檔]
+    2-1.刪除訂單號+變更序+訂單項次+項序+分批序+變更欄位所對應的[T:訂單變更歷程檔]資料
+    2-2.針對單身所有的欄位需同步新增[T:訂單變更歷程檔]
+        [T:訂單變更歷程檔]新增時欄位預設值:
+          [C:訂單單號]   = xmeedocno
+          [C:訂單項次]   = xmehseq
+          [C:項序]       = xmehseq1
+          [C:分批序]     = xmehseq2
+          [C:變更序]     = xmee900
+          [C:變更類型]   = 3(單身新增)
+          [C:變更欄位]   = 變更的訂單欄位編號(例如:訂單人員從001變成002，則此欄位紀錄的是xmdl002)
+          [C:變更前內容] = null
+          [C:變更後內容] = 訂單變更單上變更後的內容(例如:訂單人員從001變成002，則此欄位紀錄的是002)
+          [C:最後變更時間] = DATETIME
+          [C:欄位說明SQL]  = null
+
+  3.產生資料時，若訂單原有的項次+項序+分批序資料需刪除時
+    1.檢查該項次+項序+分批序不可已轉收貨單
+    2-1.刪除訂單號+變更序+訂單項次+項序+分批序+變更欄位所對應的[T:訂單變更歷程檔]資料
+    2-2.針對單身所有的欄位需同步新增[T:訂單變更歷程檔]
+        [T:訂單變更歷程檔]新增時欄位預設值:
+          [C:訂單單號]   = xmeedocno
+          [C:訂單項次]   = xmehseq
+          [C:項序]       = xmehseq1
+          [C:分批序]     = xmehseq2
+          [C:變更序]     = xmee900
+          [C:變更類型]   = 4(單身刪除)
+          [C:變更欄位]   = 變更的訂單欄位編號(例如:訂單人員從001變成002，則此欄位紀錄的是xmdl002)
+          [C:變更前內容] = 原始訂單上的內容(例如:訂單人員從001變成002，則此欄位紀錄的是001)
+          [C:變更後內容] = null
+          [C:最後變更時間] = DATETIME
+          [C:欄位說明SQL]  = null]]>
+  </mi_all>
+  <field cite_std="N" name="xmej_t.xmej002" ver="1" src="s" column="xmej002" table="xmej_t" attribute="N101" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[ 校驗:1.不可空白
+          2.不可小於等於0
+          3.以登打的分批數量總合+本分批數量不可以大於採購數量]]>
+  </field>
+  <field cite_std="N" name="xmej_t.xmej003" ver="1" src="s" column="xmej003" table="xmej_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmej_t.xmej004" ver="1" src="s" column="xmej004" table="xmej_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmej_t.xmej005" ver="1" src="s" column="xmej005" table="xmej_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_274" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[[T:應用分類碼多語言檔].[C:應用分類]=274
+校驗：傳入參數 arg1 = xmej005
+
+]]>
+  </field>
+  <field cite_std="N" name="xmej_t.xmej006" ver="1" src="s" column="xmej006" table="xmej_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmej_t.xmej900" ver="1" src="s" column="xmej900" table="xmej_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmej_t.xmej901" ver="1" src="s" column="xmej901" table="xmej_t" attribute="C001" type="varchar2(1)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmej_t.xmejdocno" ver="1" src="s" column="xmejdocno" table="xmej_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmej_t.xmejseq" ver="1" src="s" column="xmejseq" table="xmej_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmej_t.xmejseq2" ver="1" src="s" column="xmejseq2" table="xmej_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmej_t.xmejsite" ver="1" src="s" column="xmejsite" table="xmej_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xmej005_desc" src="s" depend_field="xmej_t.xmej005" correspon_key="&apos;274&apos;,xmej005" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmej002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmej003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmej004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmej005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmej006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmej900" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmej901" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmejdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmejseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmejseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmej_t.xmejsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_xmejsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_xmej901" text="變更類型" lstr=""/>
+    <sfield name="lbl_xmejdocno" text="訂單單號" lstr=""/>
+    <sfield name="lbl_xmejseq" text="訂單項次" lstr=""/>
+    <sfield name="lbl_xmej900" text="變更序" lstr=""/>
+    <sfield name="lbl_xmejseq2" text="分批序" lstr=""/>
+    <sfield name="lbl_xmej002" text="分批數量" lstr=""/>
+    <sfield name="lbl_xmej003" text="約定交貨日期" lstr=""/>
+    <sfield name="lbl_xmej004" text="預計簽收日期" lstr=""/>
+    <sfield name="lbl_xmej005" text="出貨時段" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_xmej006" text="MRP凍結否" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

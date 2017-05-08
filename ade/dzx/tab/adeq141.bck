@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq141" module="ade" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02749" crtdt="2016-11-11 19:07:43" modid="02749" moddt="2016-11-23 15:15:04" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店會員消費統計查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="decasite,deca008,l_date_s,l_date_e"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),decasite,decasite_desc(chr500),deca008,l_amount_n(num20_6),l_amount_o(num20_6),l_doccnt_n(num20_6),l_doccnt_o(num20_6),l_sale_n(num20_6),l_sale_o(num20_6),l_docprice_n(num20_6),l_docprice_o(num20_6),l_ratio_n(num20_6),l_ratio_o(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),decasite(b_decasite),decasite_desc(b_decasite_desc),deca008(b_deca008),l_amount_n(l_amount_n),l_amount_o(l_amount_o),l_doccnt_n(l_doccnt_n),l_doccnt_o(l_doccnt_o),l_sale_n(l_sale_n),l_sale_o(l_sale_o),l_docprice_n(l_docprice_n),l_docprice_o(l_docprice_o),l_ratio_n(l_ratio_n),l_ratio_o(l_ratio_o)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq141" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="decasite(b_decasite),deca008(b_deca008)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="decasite">
+        <after>
+          <reference field="decasite_desc" ref_field="decasite" map_field="decasitee" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_01" state="c"/>
+      </column>
+      <column id="decasite_desc"/>
+      <column id="deca008"/>
+      <column id="l_amount_n"/>
+      <column id="l_amount_o"/>
+      <column id="l_doccnt_n"/>
+      <column id="l_doccnt_o"/>
+      <column id="l_sale_n"/>
+      <column id="l_sale_o"/>
+      <column id="l_docprice_n"/>
+      <column id="l_docprice_o"/>
+      <column id="l_ratio_n"/>
+      <column id="l_ratio_o"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="deca_t" page="1" linked="" pk="decasite,deca002,deca005,deca009,deca017,deca018,deca019,deca020,deca035">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,decasite,&apos;&apos;,deca008,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM deca_t WHERE decaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

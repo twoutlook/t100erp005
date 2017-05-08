@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi260" module="anm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="00810" crtdt="2014-09-04 14:49:44" modid="00810" moddt="2014-09-24 14:35:46" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="網銀支付狀態維護">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmat001,nmat001_desc(chr500),nmat002,nmatl004,nmat003,nmatstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmat001,nmat002,nmatownid,nmatownid_desc(chr500),nmatowndp,nmatowndp_desc(chr500),nmatcrtid,nmatcrtid_desc(chr500),nmatcrtdp,nmatcrtdp_desc(chr500),nmatcrtdt,nmatmodid,nmatmodid_desc(chr500),nmatmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi260" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmat001,nmat002,nmatl004,nmat003,nmatstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmat001,nmat002,nmatl004,nmat003,nmatstus"/>
+      <construct id="body" page="2" field="nmatownid,nmatowndp,nmatcrtid,nmatcrtdp,nmatcrtdt,nmatmodid,nmatmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmat001">
+        <after>
+          <check chkid="v_nmaq001" id="chkandReturn"/>
+          <reference field="nmat001_desc" ref_field="nmat_t.nmat001" map_field="nmatent,nmat001" ref_sql="SELECT nmanl003 FROM nmanl_t WHERE nmanlent=$varg_enterprise$var AND nmanl001=? AND nmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nman001" state="i"/>
+        <controlp form="q_nman001" state="c"/>
+      </column>
+      <column id="nmat001_desc"/>
+      <column id="nmat002"/>
+      <column id="nmatl004"/>
+      <column id="nmat003" def_scc="9950"/>
+      <column id="nmatstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmatownid">
+        <after>
+          <reference field="nmatownid_desc" ref_field="nmat_t.nmatownid" map_field="nmatownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmatownid_desc"/>
+      <column id="nmatowndp">
+        <after>
+          <reference field="nmatowndp_desc" ref_field="nmat_t.nmatowndp" map_field="nmatowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmatowndp_desc"/>
+      <column id="nmatcrtid">
+        <after>
+          <reference field="nmatcrtid_desc" ref_field="nmat_t.nmatcrtid" map_field="nmatcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmatcrtid_desc"/>
+      <column id="nmatcrtdp">
+        <after>
+          <reference field="nmatcrtdp_desc" ref_field="nmat_t.nmatcrtdp" map_field="nmatcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmatcrtdp_desc"/>
+      <column id="nmatcrtdt"/>
+      <column id="nmatmodid">
+        <after>
+          <reference field="nmatmodid_desc" ref_field="nmat_t.nmatmodid" map_field="nmatmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmatmodid_desc"/>
+      <column id="nmatmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmat_t" page="1,2" linked="" pk="nmat001,nmat002">
+      <sql id="forupd_sql_detail" query="SELECT nmat001,&apos;&apos;,nmat002,&apos;&apos;,nmat003,nmatstus,&apos;&apos;,&apos;&apos;,nmatownid,&apos;&apos;,nmatowndp,&apos;&apos;,nmatcrtid,&apos;&apos;,nmatcrtdp,&apos;&apos;,nmatcrtdt,nmatmodid,&apos;&apos;,nmatmoddt FROM nmat_t WHERE nmatent=? AND nmat001=? AND nmat002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmat001,&apos;&apos;,nmat002,&apos;&apos;,nmat003,nmatstus,&apos;&apos;,&apos;&apos;,nmatownid,&apos;&apos;,nmatowndp,&apos;&apos;,nmatcrtid,&apos;&apos;,nmatcrtdp,&apos;&apos;,nmatcrtdt,nmatmodid,&apos;&apos;,nmatmoddt FROM nmat_t WHERE nmatent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="nmatl_t.nmatl004" table="nmatl_t" fk="nmat002,nmat001" pk="nmatl002,nmatl001,nmatl003" field="nmatl004"/>
+    </body>
+  </dataset>
+</assembly>
+

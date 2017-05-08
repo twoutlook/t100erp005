@@ -1,0 +1,190 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="astt840_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-11-08 14:32:13), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000002
+#+ Filename...: astt840_02
+#+ Description: 費用項列印選擇
+#+ Creator....: 07142(2016-11-08 14:15:34)
+#+ Modifier...: 07142 -SD/PR-
+
+{</section>}
+
+{<section id="astt840_02.global" >}
+#應用 c02c 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+{<point name="global.memo" />}
+#end add-point
+#add-point:填寫註解說明(客製用)
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num10   
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gfrm_curr            ui.Form 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+{<point name="global.variable"/>}
+#end add-point
+     
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+     
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point     
+
+{</section>}
+
+{<section id="astt840_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION astt840_02(--)
+   #add-point:construct段變數傳入
+{<point name="construct.get_var"/>}
+   #end add-point
+   )
+   #add-point:construct段define
+{<point name="construct.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:construct段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+{<point name="construct.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_astt840_02 WITH FORM cl_ap_formpath("ast","astt840_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #LET g_qryparam.state = "i"
+   
+   #LET l_allow_insert = cl_auth_detail_input("insert")
+   #LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+{<point name="construct.pre_construct"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+    
+      #輸入開始
+#      CONSTRUCT g_wc ON sel,stbeseq,stbe001,stbe002,stbe003,stbe004,stbe028,stbe005,stbe035,stbe036, 
+#          l_stae003,stbe024,stbe025,stbe006,stbe007,stbe008,stbe009,stbe011,stbe012,stbe013,stbe014, 
+#          stbe015,stbe016,stbe017,stbe018,stbesite,stbe020,stbe019,stbe032 
+#           FROM s_detail1[1].sel,s_detail1[1].stbeseq,s_detail1[1].stbe001,s_detail1[1].stbe002,s_detail1[1].stbe003, 
+#               s_detail1[1].stbe004,s_detail1[1].stbe028,s_detail1[1].stbe005,s_detail1[1].stbe035,s_detail1[1].stbe036, 
+#               s_detail1[1].l_stae003,s_detail1[1].stbe024,s_detail1[1].stbe025,s_detail1[1].stbe006, 
+#               s_detail1[1].stbe007,s_detail1[1].stbe008,s_detail1[1].stbe009,s_detail1[1].stbe011,s_detail1[1].stbe012, 
+#               s_detail1[1].stbe013,s_detail1[1].stbe014,s_detail1[1].stbe015,s_detail1[1].stbe016,s_detail1[1].stbe017, 
+#               s_detail1[1].stbe018,s_detail1[1].stbesite,s_detail1[1].stbe020,s_detail1[1].stbe019, 
+#               s_detail1[1].stbe032 
+         
+         #自訂ACTION
+         #add-point:自訂ACTION
+{<point name="construct.action"/>}
+         #end add-point
+         
+#         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+{<point name="construct.body.before_construct"/>}
+            #end add-point
+            
+#         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+{<point name="construct.body.after_construct"/>}
+            #end add-point
+            
+         #單身公用欄位開窗相關處理
+         
+           
+         #單身一般欄位開窗相關處理
+           
+            
+#      END CONSTRUCT
+    
+      #add-point:自定義construct
+{<point name="construct.more_construct"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION select_all
+         call astt840_02_select_all()
+      
+      ON ACTION select_no
+         call astt840_02_select_no()
+         
+      ON ACTION accept
+         call astt840_02_wc() returning g_wcc
+         LET l_wc = "stbddocno = '",g_docno,"'"
+         #CALL astr840_g01(l_wc,g_wcc)
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+{<point name="construct.before_close"/>}
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_astt840_02 
+   
+   #add-point:construct段after construct 
+{<point name="construct.post_construct"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="astt840_02.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="astt840_02.other_function" readonly="Y" >}
+{<point name="other.function"/>} 
+
+{</section>}
+

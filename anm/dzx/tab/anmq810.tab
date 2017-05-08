@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmq810" module="anm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02291" crtdt="2014-08-11 09:25:49" modid="06821" moddt="2015-07-22 16:39:40" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="調匯明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),nmde004(chr20),nmdecomp,nmde100,d(num26_10),nmde101,nmde102,nmde103,nmde104,nmde105,nmde106"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmde004_desc2(chr200),nmdecomp,nmde100,d2(num26_10),nmde111,nmde113,nmde114,nmde115,nmde116"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="nmde004_desc3(chr200),nmdecomp,nmde100,d3(num26_10),nmde121,nmde123,nmde124,nmde125,nmde126"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),nmde004(b_nmde004),nmdecomp_1(nmdecomp_1),nmde100(b_nmde100),d(d),nmde101(b_nmde101),nmde102(b_nmde102),nmde103(b_nmde103),nmde104(b_nmde104),nmde105(b_nmde105),nmde106(b_nmde106)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmde004_desc2(nmde004_desc2),nmdecomp_2(nmdecomp_2),nmde100_2(nmde100_2),d2(d2),nmde111(b_nmde111),nmde113(b_nmde113),nmde114(b_nmde114),nmde115(b_nmde115),nmde116(b_nmde116)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="nmde004_desc3(nmde004_desc3),nmdecomp_3(nmdecomp_3),nmde100_3(nmde100_3),d3(d3),nmde121(b_nmde121),nmde123(b_nmde123),nmde124(b_nmde124),nmde125(b_nmde125),nmde126(b_nmde126)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmq810" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmde004,nmde100,nmde101,nmde102,nmde103,nmde104,nmde105,nmde106" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="nmde111,nmde113,nmde114,nmde115,nmde116" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="nmde121,nmde123,nmde124,nmde125,nmde126" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmde100(b_nmde100),nmde101(b_nmde101),nmde102(b_nmde102),nmde103(b_nmde103),nmde104(b_nmde104),nmde105(b_nmde105),nmde106(b_nmde106)"/>
+      <construct id="body" page="2" field="nmde111(b_nmde111),nmde113(b_nmde113),nmde114(b_nmde114),nmde115(b_nmde115),nmde116(b_nmde116)"/>
+      <construct id="body" page="3" field="nmde121(b_nmde121),nmde123(b_nmde123),nmde124(b_nmde124),nmde125(b_nmde125),nmde126(b_nmde126)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="nmde004"/>
+      <column id="nmde100"/>
+      <column id="d"/>
+      <column id="nmde101"/>
+      <column id="nmde102" type="S" default="0"/>
+      <column id="nmde103" type="S" default="0"/>
+      <column id="nmde104" type="S" default="0"/>
+      <column id="nmde105" type="S" default="0"/>
+      <column id="nmde106" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="nmde004_desc2"/>
+      <column id="d2"/>
+      <column id="nmde111"/>
+      <column id="nmde113" type="S" default="0"/>
+      <column id="nmde114" type="S" default="0"/>
+      <column id="nmde115" type="S" default="0"/>
+      <column id="nmde116" type="S" default="0"/>
+    </init>
+    <init id="body" page="3">
+      <column id="nmde004_desc3"/>
+      <column id="d3"/>
+      <column id="nmde121"/>
+      <column id="nmde123" type="S" default="0"/>
+      <column id="nmde124" type="S" default="0"/>
+      <column id="nmde125" type="S" default="0"/>
+      <column id="nmde126" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmde_t" page="1,2,3" linked="" pk="nmdeld,nmde001,nmde002,nmde004">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,nmde100,&apos;&apos;,nmde101,nmde102,nmde103,nmde104,nmde105,nmde106,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmde111,nmde113,nmde114,nmde115,nmde116,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmde121,nmde123,nmde124,nmde125,nmde126 FROM nmde_t WHERE nmdeent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

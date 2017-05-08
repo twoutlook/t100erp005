@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmt300_03" module="abm" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="01258" crtdt="2013-08-16 10:38:58" modid="02482" moddt="2013-09-30 14:23:58" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="ECN取替代料限定客戶">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bmfbdocno,bmfb005,bmfb006,bmfb002,bmfb005_desc(chr500),bmfb006_desc(chr500),bmfb003,bmfb005_desc1(chr500),bmfb006_desc1(chr500),bmfa003,bmfb008,bmfb008_desc(chr80),bmfa003_desc(chr500),bmfb009,bmfb009_desc(chr80),bmfa003_desc1(chr500),bmfb010"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmfo003,bmfo003_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="insert" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmt300_03" method="dialog">
+    <section id="input">
+      <input id="head" field="bmfa003,bmfb010"/>
+      <input id="body" page="1" field="bmfo003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bmfbdocno,bmfb005,bmfb006,bmfb002,bmfb003,bmfa003,bmfb008,bmfb009,bmfb010"/>
+      <construct id="body" page="1" field="bmfo003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bmfbdocno,bmfb002"/>
+      <set id="head" type="no_entry" field="bmfbdocno,bmfb002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bmfbdocno"/>
+      <column id="bmfb005">
+        <after/>
+        <controlp form="q_imaa001_2" state="i"/>
+        <controlp form="q_imaa001_2" state="c"/>
+      </column>
+      <column id="bmfb006">
+        <after/>
+        <controlp form="q_imaa001_2" state="i"/>
+        <controlp form="q_imaa001_2" state="c"/>
+      </column>
+      <column id="bmfb002"/>
+      <column id="bmfb005_desc"/>
+      <column id="bmfb006_desc"/>
+      <column id="bmfb003" def_scc="1109"/>
+      <column id="bmfb005_desc1"/>
+      <column id="bmfb006_desc1"/>
+      <column id="bmfa003">
+        <after/>
+        <controlp form="q_bmaa001" state="i"/>
+        <controlp form="q_bmaa001" state="c"/>
+      </column>
+      <column id="bmfb008">
+        <after>
+          <reference field="bmfb008_desc" ref_field="bmfb_t.bmfb008" map_field="bmfbent,bmfb008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmfb008_desc"/>
+      <column id="bmfa003_desc"/>
+      <column id="bmfb009">
+        <after>
+          <reference field="bmfb009_desc" ref_field="bmfb_t.bmfb009" map_field="bmfbent,bmfb009" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmfb009_desc"/>
+      <column id="bmfa003_desc1"/>
+      <column id="bmfb010"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bmfo003">
+        <after>
+          <reference field="bmfo003_desc" ref_field="bmfo_t.bmfo003" map_field="bmfoent,bmfo003" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="bmfo003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bmfb_t" pk="bmfbdocno,bmfb002">
+      <sql id="forupd_sql" type="sql" query="SELECT bmfbdocno,bmfb005,bmfb006,bmfb002,&apos;&apos;,&apos;&apos;,bmfb003,&apos;&apos;,&apos;&apos;,&apos;&apos;,bmfb008,&apos;&apos;,&apos;&apos;,bmfb009,&apos;&apos;,&apos;&apos;,bmfb010 FROM bmfb_t WHERE bmfbent= ? AND bmfbsite= ? AND bmfbdocno=? AND bmfb002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bmfbdocno,bmfb005,bmfb006,bmfb002,&apos;&apos;,&apos;&apos;,bmfb003,&apos;&apos;,&apos;&apos;,&apos;&apos;,bmfb008,&apos;&apos;,&apos;&apos;,bmfb009,&apos;&apos;,&apos;&apos;,bmfb010 FROM bmfb_t" order="bmfbdocno,bmfb002"/>
+    </head>
+    <body id="bmfo_t" page="1" linked="" pk="bmfo003" fk="bmfodocno,bmfo002">
+      <sql id="forupd_sql_detail" query="SELECT bmfo003,&apos;&apos; FROM bmfo_t WHERE bmfoent=? AND bmfosite=? AND bmfodocno=? AND bmfo002=? AND bmfo003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmfo003,&apos;&apos; FROM bmfo_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

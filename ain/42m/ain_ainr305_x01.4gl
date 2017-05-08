@@ -1,0 +1,853 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ainr305_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:6(2016-03-30 12:05:06), PR版次:0006(2016-03-30 14:48:31)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000076
+#+ Filename...: ainr305_x01
+#+ Description: ...
+#+ Creator....: 05423(2014-11-28 14:03:45)
+#+ Modifier...: 05423 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="ainr305_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+#160325-00006#1 16/03/25 By zhujing    报废理由码未印出理由说明    
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       wc1 STRING,                  #l_where1 
+       wc2 STRING,                  #l_where2 
+       wc3 STRING,                  #l_where3 
+       wc4 STRING,                  #l_where4 
+       stus STRING,                  #l_stus 
+       pr STRING                   #l_pr
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_wc1   STRING               #对应于inba_t
+DEFINE g_wc2   STRING               #对应于inbi_t
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ainr305_x01.main" readonly="Y" >}
+PUBLIC FUNCTION ainr305_x01(p_arg1,p_arg2,p_arg3,p_arg4,p_arg5,p_arg6,p_arg7)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 STRING                  #tm.wc1  l_where1 
+DEFINE  p_arg3 STRING                  #tm.wc2  l_where2 
+DEFINE  p_arg4 STRING                  #tm.wc3  l_where3 
+DEFINE  p_arg5 STRING                  #tm.wc4  l_where4 
+DEFINE  p_arg6 STRING                  #tm.stus  l_stus 
+DEFINE  p_arg7 STRING                  #tm.pr  l_pr
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.wc1 = p_arg2
+   LET tm.wc2 = p_arg3
+   LET tm.wc3 = p_arg4
+   LET tm.wc4 = p_arg5
+   LET tm.stus = p_arg6
+   LET tm.pr = p_arg7
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   LET g_wc1 = " 1=1 "
+   LET g_wc2 = " 1=1 "
+   IF NOT cl_null(tm.wc1) THEN
+      LET g_wc1 = "(",tm.wc1," )"
+      IF NOT cl_null(tm.wc2) THEN
+         LET g_wc1 = g_wc1 CLIPPED, " OR (",tm.wc2 ," )"
+      END IF
+   ELSE
+      IF NOT cl_null(tm.wc2) THEN
+         LET g_wc1 = "(",tm.wc2 ," )"
+      END IF
+   END IF
+   IF NOT cl_null(tm.wc3) THEN
+      LET g_wc2 = "(",tm.wc3," )"
+      IF NOT cl_null(tm.wc4) THEN
+         LET g_wc2 = g_wc2 CLIPPED, " OR (",tm.wc4 ," )"
+      END IF
+   ELSE
+      IF NOT cl_null(tm.wc4) THEN
+         LET g_wc2 = "(",tm.wc4 ," )"
+      END IF
+   END IF   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "ainr305_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL ainr305_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL ainr305_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL ainr305_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL ainr305_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL ainr305_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr305_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION ainr305_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "inba004.inba_t.inba004,l_inba004_desc.type_t.chr30,l_type.type_t.chr30,inba007.inba_t.inba007,l_inba007_desc.type_t.chr30,inbadocdt.inba_t.inbadocdt,inba002.inba_t.inba002,inbadocno.inba_t.inbadocno,inbastus.inba_t.inbastus,l_inbastus_desc.type_t.chr30,inbbseq.inbb_t.inbbseq,inbb001.inbb_t.inbb001,imaal_t_imaal003.imaal_t.imaal003,imaal_t_imaal004.imaal_t.imaal004,inbb010.inbb_t.inbb010,inbb011.inbb_t.inbb011,inbb014.inbb_t.inbb014,inbc_t_inbc005.inbc_t.inbc005,l_inbc005_desc.type_t.chr30,inbc_t_inbc006.inbc_t.inbc006,l_inbc006_desc.type_t.chr30,inbc_t_inbc007.inbc_t.inbc007,inbb012.inbb_t.inbb012,inbb015.inbb_t.inbb015,l_keys.type_t.chr200,l_flag.type_t.chr10,inba003.inba_t.inba003,inba005.inba_t.inba005,inba006.inba_t.inba006,inba008.inba_t.inba008,inbb016.inbb_t.inbb016,inbb017.inbb_t.inbb017,inbb018.inbb_t.inbb018,inbb019.inbb_t.inbb019,inbb020.inbb_t.inbb020,inbc_t_inbc001.inbc_t.inbc001,inbc_t_inbc002.inbc_t.inbc002,inbc_t_inbc003.inbc_t.inbc003,inbc_t_inbc004.inbc_t.inbc004,inbc_t_inbc009.inbc_t.inbc009,inbc_t_inbc010.inbc_t.inbc010,inbc_t_inbc011.inbc_t.inbc011,inbc_t_inbc015.inbc_t.inbc015,inbc_t_inbc016.inbc_t.inbc016,inbc_t_inbc017.inbc_t.inbc017,inbc_t_inbc018.inbc_t.inbc018,inbc_t_inbc019.inbc_t.inbc019,inbc_t_inbc020.inbc_t.inbc020,inbc_t_inbc021.inbc_t.inbc021,inbc_t_inbc022.inbc_t.inbc022,inbc_t_inbc023.inbc_t.inbc023,inbc_t_inbcseq.inbc_t.inbcseq,inbc_t_inbcseq1.inbc_t.inbcseq1,l_inbadocno_desc.type_t.chr50,l_inba003_desc.type_t.chr50,l_inba005_desc.type_t.chr50,l_inbb016_desc.type_t.chr100,l_inbc004_desc.type_t.chr50,l_inbc020_desc.type_t.chr100,l_inbc021_desc.type_t.chr100,l_inbc002_desc.type_t.chr100,l_inbc022_desc.type_t.chr100,l_inbc023_desc.type_t.chr100,l_imaa127_desc.type_t.chr80,l_inbadocnodesc.type_t.chr100,l_inbastusdesc.type_t.chr50,l_inba003desc.type_t.chr100,l_inba004desc.type_t.chr100,l_inba005desc.type_t.chr100,l_inba007desc.type_t.chr30,l_inbb016desc.type_t.chr80,l_inbc004desc.type_t.chr100,l_inbc020desc.type_t.chr80,l_inbc002desc.type_t.chr80,l_inbc005desc.type_t.chr80,l_inbc006desc.type_t.chr80,l_inbc021desc.type_t.chr80,l_inbc022desc.type_t.chr80,l_inbc023desc.type_t.chr80,l_imaa127desc.type_t.chr80" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+#   #子報表TEMP TABLE的欄位SQL   
+   LET g_sql = "inao008.inao_t.inao008,inao009.inao_t.inao009,inao010.inao_t.inao010,inao012.inao_t.inao012,l_key.type_t.chr200"
+  
+   #建立TEMP TABLE,子報表序號2 
+   IF NOT cl_xg_create_tmptable(g_sql,2) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr305_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION ainr305_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         WHEN 2
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[2] CLIPPED," VALUES(?,?,?,?,?)"
+         PREPARE insert_prep1 FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr305_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ainr305_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+DEFINE g_order       STRING
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   #dorislai-modify-20150706----(S) 
+#         LET g_select = " SELECT DISTINCT inba004,ooefl003,NULL,inba007,oocql004,inbadocdt,inba002,inbadocno,inbastus,gzcbl004,",
+#                        " NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL "
+#   LET g_select = " SELECT DISTINCT inba004,ooefl003,NULL,inba007,oocql004,inbadocdt,inba002,inbadocno,inbastus,gzcbl004,",
+   LET g_select = " SELECT DISTINCT inba004,ooefl003,type,inba007,oocql004,inbadocdt,inba002,inbadocno,inbastus,gzcbl004,",      #20160330 zhujing add
+                        "NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,",
+                        " inba003,inba005,inba006,inba008,NULL,NULL,",
+                        " NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,",  
+                        " NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,", 
+                        " NULL,NULL,NULL,NULL,NULL,NULL,NULL, ",
+                        " NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, ",
+                        " NULL,NULL,NULL,NULL,NULL,NULL"
+
+
+   #dorislai-modify-20150706----(E)                     
+
+#   #end add-point
+#   LET g_select = " SELECT inba004,NULL,NULL,inba007,NULL,inbadocdt,inba002,inbadocno,inbastus,NULL, 
+#       inbbseq,inbb001,imaal_t.imaal003,imaal_t.imaal004,inbb010,inbb011,inbb014,inbc_t.inbc005,NULL, 
+#       inbc_t.inbc006,NULL,inbc_t.inbc007,inbb012,inbb015,NULL,NULL,inba003,inba005,inba006,inba008, 
+#       inbb016,inbb017,inbb018,inbb019,inbb020,inbc_t.inbc001,inbc_t.inbc002,inbc_t.inbc003,inbc_t.inbc004, 
+#       inbc_t.inbc009,inbc_t.inbc010,inbc_t.inbc011,inbc_t.inbc015,inbc_t.inbc016,inbc_t.inbc017,inbc_t.inbc018, 
+#       inbc_t.inbc019,inbc_t.inbc020,inbc_t.inbc021,inbc_t.inbc022,inbc_t.inbc023,inbc_t.inbcseq,inbc_t.inbcseq1, 
+#       NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, 
+#       NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   #160325-00006#1 16/03/25 By zhujing marked---(S)
+#   LET g_from = " FROM ((SELECT DISTINCT inba004,ooefl003,NULL,inba007,oocql004,inbadocdt,inba002,inbadocno,inbastus,gzcbl004,",
+#                " NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,inba003,inba005,inba006,inba008 ",
+#                " FROM inba_t LEFT OUTER JOIN ooefl_t ON inbaent = ooeflent AND inba004 = ooefl001 AND ooefl002 = '",g_dlang,"' ",
+#                "             LEFT OUTER JOIN oocql_t ON inbaent = oocqlent AND inba007 = oocql002 AND oocql001 = '216' AND oocql003 = '",g_dlang,"' ",
+#                "             LEFT OUTER JOIN gzcbl_t ON inbastus = gzcbl002 AND gzcbl001 = '13' AND gzcbl003 = '",g_dlang,"'  WHERE " ,g_wc1 CLIPPED,")",
+##                " UNION (SELECT DISTINCT inbi002,ooefl003,NULL,inbi003,oocql004,inbidocdt,NULL,inbidocno,inbistus,gzcbl004,",   
+#                " NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL ",
+#                " FROM inbi_t LEFT OUTER JOIN ooefl_t ON inbient = ooeflent AND inbi002 = ooefl001 AND ooefl002 = '",g_dlang,"' ",
+#                "             LEFT OUTER JOIN oocql_t ON inbient = oocqlent AND inbi003 = oocql002 AND oocql001 = '302' AND oocql003 = '",g_dlang,"' ",
+#                "             LEFT OUTER JOIN gzcbl_t ON inbistus = gzcbl002 AND gzcbl001 = '13' AND gzcbl003 = '",g_dlang,"'  WHERE " ,g_wc2 CLIPPED,"))"
+   #160325-00006#1 16/03/25 By zhujing marked---(E)
+   #160325-00006#1 16/03/25 By zhujing mod---(S)
+#   LET g_from = " FROM ((SELECT DISTINCT inba004,ooefl003,NULL,inba007,oocql004,inbadocdt,inba002,inbadocno,inbastus,gzcbl004,",
+   LET g_from = " FROM ((SELECT DISTINCT inba004,ooefl003,trim('1')||trim(inba001) AS type,inba007,oocql004,inbadocdt,inba002,inbadocno,inbastus,gzcbl004,",
+                " NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,inba003,inba005,inba006,inba008 ",
+                " FROM inba_t LEFT OUTER JOIN ooefl_t ON inbaent = ooeflent AND inba004 = ooefl001 AND ooefl002 = '",g_dlang,"' ",
+                "             LEFT OUTER JOIN oocql_t ON inbaent = oocqlent AND inba007 = oocql002 AND oocql001 = '216' AND oocql003 = '",g_dlang,"' ",
+                "             LEFT OUTER JOIN gzcbl_t ON inbastus = gzcbl002 AND gzcbl001 = '13' AND gzcbl003 = '",g_dlang,"'  WHERE " ,g_wc1 CLIPPED,")",
+#                " UNION (SELECT DISTINCT inbi002,ooefl003,NULL,inbi003,oocql004,inbidocdt,inbi007,inbidocno,inbistus,gzcbl004,", 
+                " UNION (SELECT DISTINCT inbi002,ooefl003,trim('2')||trim(inbi000) AS type,inbi003,oocql004,inbidocdt,inbi007,inbidocno,inbistus,gzcbl004,", 
+                " NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL ",
+                " FROM inbi_t LEFT OUTER JOIN ooefl_t ON inbient = ooeflent AND inbi002 = ooefl001 AND ooefl002 = '",g_dlang,"' ",
+                "             LEFT OUTER JOIN oocql_t ON inbient = oocqlent AND inbi003 = oocql002 AND oocql001 = '302' AND oocql003 = '",g_dlang,"' ",
+                "             LEFT OUTER JOIN gzcbl_t ON inbistus = gzcbl002 AND gzcbl001 = '13' AND gzcbl003 = '",g_dlang,"'  WHERE " ,g_wc2 CLIPPED,"))" 
+   #160325-00006#1 16/03/25 By zhujing mod---(E)
+
+#   #end add-point
+#    LET g_from = " FROM inba_t,inbb_t,inbc_t,imaal_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   LET g_where = " WHERE 1=1 " 
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+   LET g_order = " ORDER BY inba004,inbadocdt,inbadocno,inbastus "
+
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("inba_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_where = g_where ,cl_sql_add_filter("inba_t")   #資料過濾功能
+   LET g_sql = g_sql CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+   #end add-point
+   PREPARE ainr305_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE ainr305_x01_curs CURSOR FOR ainr305_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr305_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION ainr305_x01_ins_data()
+DEFINE sr RECORD 
+   inba004 LIKE inba_t.inba004, 
+   l_inba004_desc LIKE type_t.chr30, 
+   l_type LIKE type_t.chr30, 
+   inba007 LIKE inba_t.inba007, 
+   l_inba007_desc LIKE type_t.chr30, 
+   inbadocdt LIKE inba_t.inbadocdt, 
+   inba002 LIKE inba_t.inba002, 
+   inbadocno LIKE inba_t.inbadocno, 
+   inbastus LIKE inba_t.inbastus, 
+   l_inbastus_desc LIKE type_t.chr30, 
+   inbbseq LIKE inbb_t.inbbseq, 
+   inbb001 LIKE inbb_t.inbb001, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   inbb010 LIKE inbb_t.inbb010, 
+   inbb011 LIKE inbb_t.inbb011, 
+   inbb014 LIKE inbb_t.inbb014, 
+   inbc_t_inbc005 LIKE inbc_t.inbc005, 
+   l_inbc005_desc LIKE type_t.chr30, 
+   inbc_t_inbc006 LIKE inbc_t.inbc006, 
+   l_inbc006_desc LIKE type_t.chr30, 
+   inbc_t_inbc007 LIKE inbc_t.inbc007, 
+   inbb012 LIKE inbb_t.inbb012, 
+   inbb015 LIKE inbb_t.inbb015, 
+   l_keys LIKE type_t.chr200, 
+   l_flag LIKE type_t.chr10, 
+   inba003 LIKE inba_t.inba003, 
+   inba005 LIKE inba_t.inba005, 
+   inba006 LIKE inba_t.inba006, 
+   inba008 LIKE inba_t.inba008, 
+   inbb016 LIKE inbb_t.inbb016, 
+   inbb017 LIKE inbb_t.inbb017, 
+   inbb018 LIKE inbb_t.inbb018, 
+   inbb019 LIKE inbb_t.inbb019, 
+   inbb020 LIKE inbb_t.inbb020, 
+   inbc_t_inbc001 LIKE inbc_t.inbc001, 
+   inbc_t_inbc002 LIKE inbc_t.inbc002, 
+   inbc_t_inbc003 LIKE inbc_t.inbc003, 
+   inbc_t_inbc004 LIKE inbc_t.inbc004, 
+   inbc_t_inbc009 LIKE inbc_t.inbc009, 
+   inbc_t_inbc010 LIKE inbc_t.inbc010, 
+   inbc_t_inbc011 LIKE inbc_t.inbc011, 
+   inbc_t_inbc015 LIKE inbc_t.inbc015, 
+   inbc_t_inbc016 LIKE inbc_t.inbc016, 
+   inbc_t_inbc017 LIKE inbc_t.inbc017, 
+   inbc_t_inbc018 LIKE inbc_t.inbc018, 
+   inbc_t_inbc019 LIKE inbc_t.inbc019, 
+   inbc_t_inbc020 LIKE inbc_t.inbc020, 
+   inbc_t_inbc021 LIKE inbc_t.inbc021, 
+   inbc_t_inbc022 LIKE inbc_t.inbc022, 
+   inbc_t_inbc023 LIKE inbc_t.inbc023, 
+   inbc_t_inbcseq LIKE inbc_t.inbcseq, 
+   inbc_t_inbcseq1 LIKE inbc_t.inbcseq1, 
+   l_inbadocno_desc LIKE type_t.chr50, 
+   l_inba003_desc LIKE type_t.chr50, 
+   l_inba005_desc LIKE type_t.chr50, 
+   l_inbb016_desc LIKE type_t.chr100, 
+   l_inbc004_desc LIKE type_t.chr50, 
+   l_inbc020_desc LIKE type_t.chr100, 
+   l_inbc021_desc LIKE type_t.chr100, 
+   l_inbc002_desc LIKE type_t.chr100, 
+   l_inbc022_desc LIKE type_t.chr100, 
+   l_inbc023_desc LIKE type_t.chr100, 
+   l_imaa127_desc LIKE type_t.chr80, 
+   l_inbadocnodesc LIKE type_t.chr100, 
+   l_inbastusdesc LIKE type_t.chr50, 
+   l_inba003desc LIKE type_t.chr100, 
+   l_inba004desc LIKE type_t.chr100, 
+   l_inba005desc LIKE type_t.chr100, 
+   l_inba007desc LIKE type_t.chr30, 
+   l_inbb016desc LIKE type_t.chr80, 
+   l_inbc004desc LIKE type_t.chr100, 
+   l_inbc020desc LIKE type_t.chr80, 
+   l_inbc002desc LIKE type_t.chr80, 
+   l_inbc005desc LIKE type_t.chr80, 
+   l_inbc006desc LIKE type_t.chr80, 
+   l_inbc021desc LIKE type_t.chr80, 
+   l_inbc022desc LIKE type_t.chr80, 
+   l_inbc023desc LIKE type_t.chr80, 
+   l_imaa127desc LIKE type_t.chr80
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE sr1 RECORD 
+   inao008  LIKE inao_t.inao008, 
+   inao009  LIKE inao_t.inao009, 
+   inao010  LIKE inao_t.inao010, 
+   inao012  LIKE inao_t.inao012, 
+   l_key    LIKE type_t.chr200
+ END RECORD
+ DEFINE sr2 RECORD 
+   inba004 LIKE inba_t.inba004, 
+   l_inba004_desc LIKE type_t.chr30, 
+   l_type LIKE type_t.chr30, 
+   inba007 LIKE inba_t.inba007, 
+   l_inba007_desc LIKE type_t.chr30, 
+   inbadocdt LIKE inba_t.inbadocdt, 
+   inbadocno LIKE inba_t.inbadocno, 
+   inbastus LIKE inba_t.inbastus, 
+   l_inbastus_desc LIKE type_t.chr30
+END RECORD
+ DEFINE l_cnt  LIKE type_t.num10
+ DEFINE l_type LIKE type_t.chr5
+ DEFINE l_sql         STRING
+
+ DEFINE l_success  LIKE type_t.num5     #              20150707 by dorislai add---(S)
+ DEFINE l_ooef025  LIKE ooef_t.ooef025  #品管參照表號
+ DEFINE l_imaa127  LIKE imaa_t.imaa127  #系列          20150707 by dorislai add---(E)
+ 
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH ainr305_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       LET l_sql = " SELECT DISTINCT inbbseq,inbb001,imaal003,imaal004,inbb010,inbb011,inbb014,inbc005, ",
+                   " inbc005_desc,inbc006,inbc006_desc,inbc007,inbb012,inbb015,key,type,",
+                   " inbb016,inbb017,inbb018,inbb019,inbb020,",
+                   " inbc001,inbc002,inbc003,inbc004,inbc009,inbc010,inbc011,inbc015,inbc016,inbc017,inbc018,inbc019,inbc020,inbc021,",
+                   " inbc022,inbc023,inbcseq,inbcseq1 ",    
+                   
+                   " FROM (( SELECT DISTINCT inbbseq,inbb001,imaal003,imaal004,inbb010,inbb011,inbb014,inbc005, ",
+                   " (trim(inbc005)||'.'||trim(inayl003)) AS inbc005_desc,inbc006,(trim(inbc006)||'.'||trim(inab003)) AS inbc006_desc,inbc007,inbb012,inbb015,",
+                   " (trim(inbaent)||'-'||trim(inbadocno)||'-'||trim(inbbseq)||'-'||trim(inbb001)||'-'||trim(inbb002)||'-'||trim(inbb003)||'-'||trim(inbc005)||'-'||trim(inbc006)||'-'||trim(inbc007)) AS key,trim('1')||trim(inba001) AS type,",
+                   " inbb016,inbb017,inbb018,inbb019,inbb020,",
+                   " inbc001,inbc002,inbc003,inbc004,inbc009,inbc010,inbc011,inbc015,inbc016,inbc017,inbc018,inbc019,inbc020,inbc021,",
+                   " inbc022,inbc023,inbcseq,inbcseq1 ",                   
+                   
+                   " FROM inbb_t LEFT OUTER JOIN inba_t ON inbaent = inbbent AND inbadocno = inbbdocno ",
+                   "             LEFT OUTER JOIN inbc_t ON inbbent = inbcent AND inbbdocno = inbcdocno AND inbbseq = inbcseq ",
+                   "             LEFT OUTER JOIN imaal_t ON inbbent = imaalent AND inbb001 = imaal001 AND imaal002 = '",g_dlang,"' ",
+                   "             LEFT OUTER JOIN ooefl_t ON inbaent = ooeflent AND inba004 = ooefl001 AND ooefl002 = '",g_dlang,"' ",
+                   "             LEFT OUTER JOIN inayl_t ON inbcent = inaylent AND inbc005 = inayl001 AND inayl002 = '",g_dlang,"' ",
+                   "             LEFT OUTER JOIN inab_t ON inbcent = inabent AND inbc005 = inab001 AND inbc006 = inab002 AND inbcsite = inabsite ",
+                   
+                   " WHERE inbbdocno = '",sr.inbadocno,"' ",
+                   " AND inbbent = '",g_enterprise,"' AND inbbsite = '",g_site,"')",
+                   " UNION (SELECT DISTINCT inbjseq,inbj001,imaal003,imaal004,inbj008,inbj009,inbj012,inbj005, ",
+                   " (trim(inbj005)||'.'||trim(inayl003)) AS inbc005_desc,inbj006,(trim(inbj006)||'.'||trim(inab003)) AS inbc006_desc,inbj007,inbj010,inbj013,",
+                   " (trim(inbient)||'-'||trim(inbidocno)||'-'||trim(inbjseq)||'-'||trim(inbj001)||'-'||trim(inbj002)||'-'||trim(inbj003)||'-'||trim(inbj005)||'-'||trim(inbj006)||'-'||trim(inbj007)) AS key,trim('2')||trim(inbi000) AS type,",
+                   " NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,",
+                   " NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL",
+
+                   " FROM inbj_t LEFT OUTER JOIN inbi_t ON inbient = inbjent AND inbidocno = inbjdocno ",
+                   "             LEFT OUTER JOIN imaal_t ON inbjent = imaalent AND inbj001 = imaal001 AND imaal002 = '",g_dlang,"' ",
+                   "             LEFT OUTER JOIN inayl_t ON inbjent = inaylent AND inbj005 = inayl001 AND inayl002 = '",g_dlang,"' ",
+                   "             LEFT OUTER JOIN inab_t ON inbjent = inabent AND inbj005 = inab001 AND inbj006 = inab002 AND inbjsite = inabsite ",
+                   " WHERE inbjdocno = '",sr.inbadocno,"' ",
+                   " AND inbjent = '",g_enterprise,"' AND inbjsite = '",g_site,"' ))",
+                   " ORDER BY inbbseq "
+                   
+
+       INITIALIZE sr2.* TO NULL       
+       PREPARE ainr305_x01_prepare1 FROM l_sql
+       IF STATUS THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'prepare:'
+         LET g_errparam.code   = STATUS
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET g_rep_success = 'N' 
+       END IF       
+       DECLARE ainr305_x01_curs1 CURSOR FOR ainr305_x01_prepare1
+       LET l_cnt = 1
+       
+       FOREACH ainr305_x01_curs1 INTO sr.inbbseq,sr.inbb001,sr.imaal_t_imaal003,sr.imaal_t_imaal004,sr.inbb010,sr.inbb011,sr.inbb014,sr.inbc_t_inbc005,sr.l_inbc005_desc,sr.inbc_t_inbc006,sr.l_inbc006_desc,sr.inbc_t_inbc007,sr.inbb012,sr.inbb015,sr.l_keys,l_type,sr.inbb016,sr.inbb017,sr.inbb018,sr.inbb019,sr.inbb020,sr.inbc_t_inbc001,sr.inbc_t_inbc002,sr.inbc_t_inbc003,sr.inbc_t_inbc004,sr.inbc_t_inbc009,sr.inbc_t_inbc010,sr.inbc_t_inbc011,sr.inbc_t_inbc015,sr.inbc_t_inbc016,sr.inbc_t_inbc017,sr.inbc_t_inbc018,sr.inbc_t_inbc019,sr.inbc_t_inbc020,sr.inbc_t_inbc021,sr.inbc_t_inbc022,sr.inbc_t_inbc023,sr.inbc_t_inbcseq,sr.inbc_t_inbcseq1
+
+          IF STATUS THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = 'foreach:'
+            LET g_errparam.code   = STATUS
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            LET g_rep_success = 'N'
+            EXIT FOREACH
+          END IF 
+          IF cl_null(sr.inbc_t_inbc005) THEN
+             LET sr.l_inbc005_desc = sr.inbc_t_inbc005
+          END IF
+          IF cl_null(sr.inbc_t_inbc006) THEN
+             LET sr.l_inbc006_desc = sr.inbc_t_inbc006
+          END IF
+          CASE l_type
+            WHEN '11'
+               LET l_type = '1'
+            WHEN '12'
+               LET l_type = '2'
+            WHEN '21'
+               LET l_type = '3'
+            WHEN '22'
+               LET l_type = '4'
+         END CASE              
+         SELECT gzcbl004 INTO sr.l_type
+           FROM gzcbl_t
+          WHERE gzcbl001 = '4043'
+            AND gzcbl002 = l_type
+            AND gzcbl003 = g_dlang         
+         #子報表
+         LET l_sql = " SELECT DISTINCT inao008,inao009,inao010,inao012,(trim(inaoent)||'-'||trim(inaodocno)||'-'||trim(inaoseq)||'-'||trim(inao001)||'-'||trim(inao002)||'-'||trim(inao003)||'-'||trim(inao005)||'-'||trim(inao006)||'-'||trim(inao007))",
+                     " FROM inao_t ",
+                     " WHERE (trim(inaoent)||'-'||trim(inaodocno)||'-'||trim(inaoseq)||'-'||trim(inao001)||'-'||trim(inao002)||'-'||trim(inao003)||'-'||trim(inao005)||'-'||trim(inao006)||'-'||trim(inao007)) = '",sr.l_keys,"' AND inaoent = '",g_enterprise,"' AND inaosite = '",g_site,"' ",
+                     " ORDER BY inao008,inao009 "
+         PREPARE ainr305_x01_prepare2 FROM l_sql
+         IF STATUS THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = 'prepare:'
+            LET g_errparam.code   = STATUS
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            LET g_rep_success = 'N' 
+         END IF
+         DECLARE ainr305_x01_curs2 CURSOR FOR ainr305_x01_prepare2
+         FOREACH ainr305_x01_curs2 INTO sr1.*                               
+             IF STATUS THEN
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.extend = 'foreach:'
+                LET g_errparam.code   = STATUS
+                LET g_errparam.popup  = TRUE
+                CALL cl_err()
+                LET g_rep_success = 'N'
+                EXIT FOREACH
+             END IF 
+          
+             IF tm.pr = 'N' THEN
+               INITIALIZE sr1.* TO NULL
+               EXIT FOREACH   
+                     
+             END IF
+
+
+         #子報表EXECUTE
+            EXECUTE insert_prep1 USING sr1.*
+ 
+            IF SQLCA.sqlcode THEN
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.extend = "ainr305_x01_subrep01_execute"
+                LET g_errparam.code   = SQLCA.sqlcode
+                LET g_errparam.popup  = FALSE
+                CALL cl_err()       
+                LET g_rep_success = 'N'
+                EXIT FOREACH
+            END IF
+         END FOREACH
+         #zhujing 2016-3-28 add--若没有抓到单头的资料，则跳出此次foreach-(S)
+#         IF cl_null(sr.inbbseq) THEN
+#            CONTINUE FOREACH
+#         END IF
+         #zhujing 2016-3-28 add--若没有抓到单头的资料，则跳出此次foreach-(E)
+         #dorislai-20150706-add----(S)
+         #組欄位與說明
+         #-單頭-
+         #----單據編號&說明(l_inbadocno_desc)
+         LET sr.l_inbadocno_desc = ''
+         LET sr.l_inbadocnodesc = ''
+         CALL s_aooi200_get_slip_desc(sr.inbadocno) RETURNING sr.l_inbadocno_desc
+         IF NOT cl_null(sr.l_inbadocno_desc) THEN
+            LET sr.l_inbadocnodesc = sr.inbadocno,'.',sr.l_inbadocno_desc
+         END IF
+         #----狀態碼&說明(l_inbadocnodesc)
+         LET sr.l_inbastusdesc = ''
+         IF NOT cl_null(sr.l_inbastus_desc) THEN
+            LET sr.l_inbastusdesc = sr.inbastus,'.',sr.l_inbastus_desc 
+         END IF
+         #----申請人員&說明(l_inba003_desc)
+         LET sr.l_inba003_desc = ''
+	      LET sr.l_inba003desc = ''
+         SELECT ooag011 INTO sr.l_inba003_desc FROM ooag_t 
+          WHERE ooagent = g_enterprise AND ooag001 =  sr.inba003
+         IF NOT cl_null(sr.l_inba003_desc) THEN
+            LET sr.l_inba003desc = sr.inba003,'.',sr.l_inba003_desc
+         END IF
+	      #----申請部門&說明 (l_inba004desc)
+	      LET sr.l_inba004desc = ''
+	      SELECT ooefl003 INTO sr.l_inba004desc FROM ooefl_t 
+	       WHERE ooeflent = g_enterprise AND ooefl001 = sr.inba004 AND ooefl002 = g_dlang
+	      IF NOT cl_null(sr.l_inba004desc) THEN
+	         LET  sr.l_inba004desc = sr.inba004,'.',sr.l_inba004desc
+	      END IF
+         #----來源資料類型&說明(l_inba005_desc)
+         LET sr.l_inba005_desc = ''
+         LET sr.l_inba005desc = ''
+         CALL s_desc_gzcbl004_desc('2051',sr.inba005) RETURNING sr.l_inba005_desc
+         IF NOT cl_null(sr.l_inba005_desc) THEN
+            LET sr.l_inba005desc = sr.inba005,'.',sr.l_inba005_desc
+         END IF
+         #----理由碼&說明(l_inba007_desc)
+#         #160325-00006#1 zhujing marked----（S） inba007对应于216，inbi007对应于302，在sql中已做处理
+#         LET sr.l_inba007_desc = ''
+#         LET sr.l_inba007desc = ''
+#         SELECT oocql004 INTO sr.l_inba007_desc 
+#            FROM oocql_t WHERE oocqlent = g_enterprise
+#             AND oocql001= '216' AND oocql002 = sr.inba007 AND oocql003 = g_dlang
+#         #160325-00006#1 zhujing marked----（E） 
+         IF NOT cl_null(sr.l_inba007_desc) THEN
+            LET sr.l_inba007desc = sr.inba007,'.',sr.l_inba007_desc  #組合說明 
+         END IF
+         #-單身-異動申請明細-
+         #-----包裝容器&說明(l_inbc004_desc)
+         LET sr.l_inbc004_desc = ''
+         LET sr.l_inbc004desc = ''
+         SELECT imaal003 INTO sr.l_inbc004_desc FROM imaal_t 
+          WHERE imaalent = g_enterprise  AND imaal001 = sr.inbc_t_inbc004 AND imaal002 = g_dlang
+         IF NOT cl_null(sr.l_inbc004_desc) THEN
+            LET sr.l_inbc004desc = sr.inbc_t_inbc004,'.',sr.l_inbc004_desc
+         END IF
+         #----理由碼&說明(l_inbb16_desc)
+         LET sr.l_inbb016_desc = ''
+         LET sr.l_inbb016desc = ''
+         #160325-00006#1 zhujing mod---(S) inba007对应于216，inbi007对应于302，在sql中已做处理
+         IF l_type = '3' OR l_type = '4' THEN
+            SELECT oocql004 INTO sr.l_inbb016_desc 
+            FROM oocql_t WHERE oocqlent = g_enterprise
+             AND oocql001= '302' AND oocql002 = sr.inbb016 AND oocql003 = g_dlang
+         ELSE
+            SELECT oocql004 INTO sr.l_inbb016_desc 
+            FROM oocql_t WHERE oocqlent = g_enterprise
+             AND oocql001= '216' AND oocql002 = sr.inbb016 AND oocql003 = g_dlang
+         END IF
+         IF NOT cl_null(sr.l_inbb016_desc) THEN
+            LET sr.l_inbb016desc = sr.inbb016,'.',sr.l_inbb016_desc  #組合說明 
+         END IF
+         #160325-00006#1 zhujing mod---(E)
+         
+         #-單身-入庫明細-
+         #----判定結果&判定結果說明(l_inbc020_desc)
+            #先抓取品管參照表號
+         LET l_ooef025 = ''
+         SELECT ooef025 INTO l_ooef025 FROM ooef_t 
+          WHERE ooefent = g_enterprise AND ooef001 = g_site
+         IF cl_null(l_ooef025) THEN
+            LET l_ooef025 = ' '
+         END IF
+            #換抓取判定結果
+         LET sr.l_inbc020_desc = ''
+         LET sr.l_inbc020desc = ''
+         SELECT qcaol004 INTO sr.l_inbc020_desc FROM qcaol_t 
+          WHERE qcaolent = g_enterprise
+            AND qcaol001 = l_ooef025 AND qcaol002 = sr.inbc_t_inbc020 AND qcaol003= g_dlang 
+         IF NOT cl_null(sr.l_inbc020_desc) THEN
+            LET sr.l_inbc020desc = sr.inbc_t_inbc020,'.',sr.l_inbc020_desc  #組合說明 
+         END IF
+         #----產品特徵&產品特徵說明(l_inbc002_desc)
+         LET sr.l_inbc002_desc = ''
+         LET sr.l_inbc002desc = ''
+         CALL s_feature_description(sr.inbc_t_inbc001,sr.inbc_t_inbc002) RETURNING l_success,sr.l_inbc002_desc
+         IF NOT cl_null(sr.l_inbc002_desc) THEN
+            LET sr.l_inbc002desc = sr.inbc_t_inbc002,'.',sr.l_inbc002_desc  #組合說明 
+         END IF
+         #----庫位&庫位名稱(l_inbc005_desc)
+         LET sr.l_inbc005_desc = ''
+         LET sr.l_inbc005desc = ''
+         CALL s_desc_get_stock_desc(g_site,sr.inbc_t_inbc005) RETURNING sr.l_inbc005_desc
+         IF NOT cl_null(sr.l_inbc005_desc) THEN
+            LET sr.l_inbc005desc = sr.inbc_t_inbc005,'.',sr.l_inbc005_desc  #組合說明
+         END IF
+         #----儲位&儲位名稱(l_inbc006_desc)
+         LET sr.l_inbc006_desc = ''
+         LET sr.l_inbc006desc = ''
+         CALL s_desc_get_locator_desc(g_site,sr.inbc_t_inbc005,sr.inbc_t_inbc006) RETURNING sr.l_inbc006_desc
+         IF NOT cl_null(sr.l_inbc006_desc) THEN
+            LET sr.l_inbc006desc = sr.inbc_t_inbc006,'.',sr.l_inbc006_desc  #組合說明
+         END IF
+         #----專案編號&說明(l_inbc021_desc)
+         LET sr.l_inbc021_desc = ''
+         LET sr.l_inbc021desc = ''
+         CALL s_desc_get_project_desc(sr.inbc_t_inbc021) RETURNING sr.l_inbc021_desc
+         IF NOT cl_null(sr.l_inbc021_desc) THEN
+            LET sr.l_inbc021desc = sr.inbc_t_inbc021,'.',sr.l_inbc021_desc  #組合說明
+         END IF
+         #----WBS&說明(l_inbc022_desc)
+         LET sr.l_inbc022_desc = ''
+         LET sr.l_inbc022desc = ''
+         CALL s_desc_get_wbs_desc(sr.inbc_t_inbc021,sr.inbc_t_inbc022) RETURNING sr.l_inbc022_desc
+         IF NOT cl_null(sr.l_inbc022_desc) THEN
+            LET sr.l_inbc022desc = sr.inbc_t_inbc022,'.',sr.l_inbc022_desc  #組合說明
+         END IF
+         #----活動編號&說明(l_inbc023_desc)
+         LET sr.l_inbc023_desc = ''
+         LET sr.l_inbc023desc = ''
+         CALL s_desc_get_activity_desc(sr.inbc_t_inbc021,sr.inbc_t_inbc023) RETURNING sr.l_inbc023_desc
+         IF NOT cl_null(sr.l_inbc023_desc) THEN
+            LET sr.l_inbc023desc = sr.inbc_t_inbc023,'.',sr.l_inbc023_desc  #組合說明
+         END IF
+         #組合系列&說明
+         LET sr.l_imaa127_desc = ''
+         LET sr.l_imaa127desc = ''
+            #用料號抓取系列
+         SELECT imaa127 INTO l_imaa127 FROM imaa_t
+          WHERE imaa001 = sr.inbc_t_inbc001
+            AND imaaent = g_enterprise
+            #抓取系列說明
+         CALL s_desc_get_acc_desc('2003',l_imaa127)  RETURNING sr.l_imaa127_desc
+         IF NOT cl_null(sr.l_imaa127_desc) THEN         
+            LET sr.l_imaa127desc = l_imaa127,'.',sr.l_imaa127_desc   
+         END IF
+         #dorislai-20150706-add----(E)
+         INITIALIZE sr1.* TO NULL
+         IF l_cnt = 1 THEN
+            LET sr.l_flag = 'Y'
+            
+         ELSE 
+            LET sr.l_flag = 'N'
+         END IF
+         EXECUTE insert_prep USING sr.inba004,sr.l_inba004_desc,sr.l_type,sr.inba007,sr.l_inba007_desc,sr.inbadocdt,sr.inba002,sr.inbadocno,sr.inbastus,sr.l_inbastus_desc,sr.inbbseq,sr.inbb001,sr.imaal_t_imaal003,sr.imaal_t_imaal004,sr.inbb010,sr.inbb011,sr.inbb014,sr.inbc_t_inbc005,sr.l_inbc005_desc,sr.inbc_t_inbc006,sr.l_inbc006_desc,sr.inbc_t_inbc007,sr.inbb012,sr.inbb015,sr.l_keys,sr.l_flag,sr.inba003,sr.inba005,sr.inba006,sr.inba008,sr.inbb016,sr.inbb017,sr.inbb018,sr.inbb019,sr.inbb020,sr.inbc_t_inbc001,sr.inbc_t_inbc002,sr.inbc_t_inbc003,sr.inbc_t_inbc004,sr.inbc_t_inbc009,sr.inbc_t_inbc010,sr.inbc_t_inbc011,sr.inbc_t_inbc015,sr.inbc_t_inbc016,sr.inbc_t_inbc017,sr.inbc_t_inbc018,sr.inbc_t_inbc019,sr.inbc_t_inbc020,sr.inbc_t_inbc021,sr.inbc_t_inbc022,sr.inbc_t_inbc023,sr.inbc_t_inbcseq,sr.inbc_t_inbcseq1,sr.l_inbadocno_desc,sr.l_inba003_desc,sr.l_inba005_desc,sr.l_inbb016_desc,sr.l_inbc004_desc,sr.l_inbc020_desc,sr.l_inbc021_desc,sr.l_inbc002_desc,sr.l_inbc022_desc,sr.l_inbc023_desc,sr.l_imaa127_desc,sr.l_inbadocnodesc,sr.l_inbastusdesc,sr.l_inba003desc,sr.l_inba004desc,sr.l_inba005desc,sr.l_inba007desc,sr.l_inbb016desc,sr.l_inbc004desc,sr.l_inbc020desc,sr.l_inbc002desc,sr.l_inbc005desc,sr.l_inbc006desc,sr.l_inbc021desc,sr.l_inbc022desc,sr.l_inbc023desc,sr.l_imaa127desc
+         LET l_cnt = l_cnt + 1
+       END FOREACH
+       IF cl_null(sr.inbbseq) AND NOT cl_null(sr.l_type) THEN
+         CASE sr.l_type
+            WHEN '11'
+               LET l_type = '1'
+            WHEN '12'
+               LET l_type = '2'
+            WHEN '21'
+               LET l_type = '3'
+            WHEN '22'
+               LET l_type = '4'
+         END CASE     
+         SELECT gzcbl004 INTO sr.l_type
+           FROM gzcbl_t
+          WHERE gzcbl001 = '4043'
+            AND gzcbl002 = l_type
+            AND gzcbl003 = g_dlang
+          EXECUTE insert_prep USING sr.inba004,sr.l_inba004_desc,sr.l_type,sr.inba007,sr.l_inba007_desc,sr.inbadocdt,sr.inba002,sr.inbadocno,sr.inbastus,sr.l_inbastus_desc,sr.inbbseq,sr.inbb001,sr.imaal_t_imaal003,sr.imaal_t_imaal004,sr.inbb010,sr.inbb011,sr.inbb014,sr.inbc_t_inbc005,sr.l_inbc005_desc,sr.inbc_t_inbc006,sr.l_inbc006_desc,sr.inbc_t_inbc007,sr.inbb012,sr.inbb015,sr.l_keys,sr.l_flag,sr.inba003,sr.inba005,sr.inba006,sr.inba008,sr.inbb016,sr.inbb017,sr.inbb018,sr.inbb019,sr.inbb020,sr.inbc_t_inbc001,sr.inbc_t_inbc002,sr.inbc_t_inbc003,sr.inbc_t_inbc004,sr.inbc_t_inbc009,sr.inbc_t_inbc010,sr.inbc_t_inbc011,sr.inbc_t_inbc015,sr.inbc_t_inbc016,sr.inbc_t_inbc017,sr.inbc_t_inbc018,sr.inbc_t_inbc019,sr.inbc_t_inbc020,sr.inbc_t_inbc021,sr.inbc_t_inbc022,sr.inbc_t_inbc023,sr.inbc_t_inbcseq,sr.inbc_t_inbcseq1,sr.l_inbadocno_desc,sr.l_inba003_desc,sr.l_inba005_desc,sr.l_inbb016_desc,sr.l_inbc004_desc,sr.l_inbc020_desc,sr.l_inbc021_desc,sr.l_inbc002_desc,sr.l_inbc022_desc,sr.l_inbc023_desc,sr.l_imaa127_desc,sr.l_inbadocnodesc,sr.l_inbastusdesc,sr.l_inba003desc,sr.l_inba004desc,sr.l_inba005desc,sr.l_inba007desc,sr.l_inbb016desc,sr.l_inbc004desc,sr.l_inbc020desc,sr.l_inbc002desc,sr.l_inbc005desc,sr.l_inbc006desc,sr.l_inbc021desc,sr.l_inbc022desc,sr.l_inbc023desc,sr.l_imaa127desc
+       END IF
+       
+       
+       
+       CONTINUE FOREACH
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.inba004,sr.l_inba004_desc,sr.l_type,sr.inba007,sr.l_inba007_desc,sr.inbadocdt,sr.inba002,sr.inbadocno,sr.inbastus,sr.l_inbastus_desc,sr.inbbseq,sr.inbb001,sr.imaal_t_imaal003,sr.imaal_t_imaal004,sr.inbb010,sr.inbb011,sr.inbb014,sr.inbc_t_inbc005,sr.l_inbc005_desc,sr.inbc_t_inbc006,sr.l_inbc006_desc,sr.inbc_t_inbc007,sr.inbb012,sr.inbb015,sr.l_keys,sr.l_flag,sr.inba003,sr.inba005,sr.inba006,sr.inba008,sr.inbb016,sr.inbb017,sr.inbb018,sr.inbb019,sr.inbb020,sr.inbc_t_inbc001,sr.inbc_t_inbc002,sr.inbc_t_inbc003,sr.inbc_t_inbc004,sr.inbc_t_inbc009,sr.inbc_t_inbc010,sr.inbc_t_inbc011,sr.inbc_t_inbc015,sr.inbc_t_inbc016,sr.inbc_t_inbc017,sr.inbc_t_inbc018,sr.inbc_t_inbc019,sr.inbc_t_inbc020,sr.inbc_t_inbc021,sr.inbc_t_inbc022,sr.inbc_t_inbc023,sr.inbc_t_inbcseq,sr.inbc_t_inbcseq1,sr.l_inbadocno_desc,sr.l_inba003_desc,sr.l_inba005_desc,sr.l_inbb016_desc,sr.l_inbc004_desc,sr.l_inbc020_desc,sr.l_inbc021_desc,sr.l_inbc002_desc,sr.l_inbc022_desc,sr.l_inbc023_desc,sr.l_imaa127_desc,sr.l_inbadocnodesc,sr.l_inbastusdesc,sr.l_inba003desc,sr.l_inba004desc,sr.l_inba005desc,sr.l_inba007desc,sr.l_inbb016desc,sr.l_inbc004desc,sr.l_inbc020desc,sr.l_inbc002desc,sr.l_inbc005desc,sr.l_inbc006desc,sr.l_inbc021desc,sr.l_inbc022desc,sr.l_inbc023desc,sr.l_imaa127desc
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "ainr305_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr305_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION ainr305_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr305_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

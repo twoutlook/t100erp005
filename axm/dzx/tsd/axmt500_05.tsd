@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axmt500_05" std_prog="axmt500_05" erpver="1.0" ver="2" module="AXM" type="S" booking="Y" class="T" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xmdq_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：提供維護訂單附屬零件資料
+標準作業功能取消：
+狀態功能：無
+作業類型：批處處理作業
+輸入模式：單檔多欄版型
+資料來源:xmdq_t
+
+
+1.執行此程式需傳入2個參數，當此參數為ULL時則不可以執行
+  1-1.p_xmdadocno(訂單單號):
+  1-2.p_xmdcseq(訂單項次):
+2.傳入訂單項次的料號需有勾選'使用附屬零件(imaf018)'時採可以維護此作業
+3.依據訂單料號抓取BOM所有對應的附屬零件清單(bmba025='Y')
+4.抓取BOM資料時特性欄位統一用訂單料號設定的特性(imae037)展BOM
+5.若該訂單項次未維護過附屬零件資料時，自動抓取BOM的資料顯示並預設為選擇，
+  相關欄位預設值如下:
+   [C:附屬零件] = 訂單料號展BOM的附屬零件編號
+   [C:標準組成用量] = BOM設置的組成用量
+   [C:標準主件底數] = BOM設置的主件底數
+   [C:組成用量] = BOM設置的組成用量
+   [C:主件底數] = BOM設置的主件底數
+   [C:單位] = BOM設置的發料單位
+   [C:數量] = 訂單數量*標準組成用量/標準主件底數
+   [C:上階料號] = 附屬零件對應的上階主件
+   [C:作業編號] = BOM設置的作業編號
+   [C:作業序] = BOM設置的作業序
+6.若該訂單項次已經有維護過附屬零件明細資料時，則除了抓取對應的xmdq_t顯示，需再展BOM加上
+  未在xmdq_t的附屬零件資料，由xmdq_t抓取出的資料預設為勾選，若是由展BOM的資料則預設為未勾選
+7.子作業維護確定時將勾選的資料新增到xmdq_t中]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[此單身不可以進行新增刪除只可以維護選擇、組成用量、主件底數等3個欄位]]>
+  </mi_all>
+  <field cite_std="N" name="imaal0041" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal0042" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sel" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdq001" ver="1" src="s" column="xmdq001" table="xmdq_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdq002" ver="1" src="s" column="xmdq002" table="xmdq_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdq004" ver="1" src="s" column="xmdq004" table="xmdq_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdq005" ver="1" src="s" column="xmdq005" table="xmdq_t" attribute="C402" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdq006" ver="1" src="s" column="xmdq006" table="xmdq_t" attribute="N101" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值：BOM設置的組成用量
+需自動推算數量，公式等於訂單項次的數量*組成用量/主件底數]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdq007" ver="1" src="s" column="xmdq007" table="xmdq_t" attribute="N101" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值：BOM設置的主件底數
+需自動推算數量，公式等於訂單項次的數量*組成用量/主件底數]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdq008" ver="1" src="s" column="xmdq008" table="xmdq_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdq009" ver="1" src="s" column="xmdq009" table="xmdq_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdq010" ver="1" src="s" column="xmdq010" table="xmdq_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdq011" ver="1" src="s" column="xmdq011" table="xmdq_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdqdocno" ver="1" src="s" column="xmdqdocno" table="xmdq_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdqseq" ver="1" src="s" column="xmdqseq" table="xmdq_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmdq_t.xmdqseq1" ver="1" src="s" column="xmdqseq1" table="xmdq_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xmdq001_desc" src="s" depend_field="xmdq_t.xmdq001" correspon_key="xmdq001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdq002_desc" src="s" depend_field="xmdq_t.xmdq002" correspon_key="xmdq002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmdq008_desc" src="s" depend_field="xmdq_t.xmdq008" correspon_key="xmdq008" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="imaal0041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal0042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdq001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdq002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdq004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdq005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdq006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdq007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdq008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdq009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdq010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdq011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdqdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdqseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmdq_t.xmdqseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_sel" text="選擇" lstr=""/>
+    <sfield name="lbl_xmdqdocno" text="訂單單號" lstr=""/>
+    <sfield name="lbl_xmdqseq" text="項次" lstr=""/>
+    <sfield name="lbl_xmdqseq1" text="項序" lstr=""/>
+    <sfield name="lbl_xmdq001" text="附屬零件" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal0041" text="規格" lstr=""/>
+    <sfield name="lbl_xmdq010" text="標準組成用量" lstr=""/>
+    <sfield name="lbl_xmdq011" text="標準主件底數" lstr=""/>
+    <sfield name="lbl_xmdq006" text="組成用量" lstr=""/>
+    <sfield name="lbl_xmdq007" text="主件底數" lstr=""/>
+    <sfield name="lbl_xmdq008" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_xmdq009" text="數量" lstr=""/>
+    <sfield name="lbl_xmdq002" text="上階料號" lstr=""/>
+    <sfield name="lbl_imaal0042" text="規格" lstr=""/>
+    <sfield name="lbl_xmdq004" text="作業編號" lstr=""/>
+    <sfield name="lbl_xmdq005" text="作業序" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

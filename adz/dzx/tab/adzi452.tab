@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adzi452" module="adz" jobmode="N" type="i12" industry="std" crtid="00537" crtdt="2013/10/12" modid="00537" moddt="2013/10/12" sdver="1" page="2" tabver="10001" description="應用元件改名批量處理作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="dzdk001,dzdk002,dzdk003"/>
+      <var id="body" page="1" record="s_detail1" value="dzdk004,dzdk005,dzdk006,dzdk007(datetime)"/>
+      <var id="body" page="2" record="s_detail2" value="dzdk004"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="reproduce" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="adz" filename="adzi452" method="dialog">
+    <section id="input">
+      <input id="head" field="dzdk001,dzdk002,dzdk003"/>
+      <input id="body" page="1" field="dzdk004,dzdk005,dzdk006,dzdk007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="dzdk001,dzdk002,dzdk003"/>
+      <construct id="body" page="1" field="dzdk004,dzdk005,dzdk006,dzdk007"/>
+      <construct id="body" page="2" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="dzdk001,dzdk002"/>
+      <set id="head" type="no_entry" field="dzdk001,dzdk002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="dzdk001"/>
+      <column id="dzdk002"/>
+      <column id="dzdk003"/>
+    </init>
+    <init id="body" page="1">
+      <column id="dzdk004"/>
+      <column id="dzdk005"/>
+      <column id="dzdk006"/>
+      <column id="dzdk007"/>
+    </init>
+    <init id="body" page="2"/>
+  </form>
+  <dataset>
+    <head id="dzdk_t" pk="dzdk001,dzdk002">
+      <sql id="forupd_sql" type="sql" query="SELECT dzdk001,dzdk002,dzdk003 FROM dzdk_t WHERE dzdk001=? AND dzdk002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT dzdk001,dzdk002,dzdk003 FROM dzdk_t" order="dzdk001,dzdk002"/>
+    </head>
+    <body id="dzdk_t" page="1,2" linked="" pk="dzdk004" fk="dzdk001,dzdk002">
+      <sql id="forupd_sql_detail" query="SELECT dzdk004,dzdk005,dzdk006,dzdk007,&apos;&apos; FROM dzdk_t WHERE dzdk001=? AND dzdk002=? AND dzdk004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT dzdk004,dzdk005,dzdk006,dzdk007,&apos;&apos; FROM dzdk_t WHERE dzdk001=? AND dzdk002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

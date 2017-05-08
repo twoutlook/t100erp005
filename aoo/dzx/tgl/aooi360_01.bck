@@ -1,0 +1,656 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aooi360_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2014-10-30 16:16:45), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000207
+#+ Filename...: aooi360_01
+#+ Description: 備註維護子程式
+#+ Creator....: 01258(2013-08-16 10:53:15)
+#+ Modifier...: 02294 -SD/PR-
+
+{</section>}
+
+{<section id="aooi360_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_ooff_d        RECORD
+       ooff001 LIKE ooff_t.ooff001, 
+   ooff002 LIKE ooff_t.ooff002, 
+   ooff004 LIKE ooff_t.ooff004, 
+   ooff005 LIKE ooff_t.ooff005, 
+   ooff006 LIKE ooff_t.ooff006, 
+   ooff007 LIKE ooff_t.ooff007, 
+   ooff008 LIKE ooff_t.ooff008, 
+   ooff009 LIKE ooff_t.ooff009, 
+   ooff010 LIKE ooff_t.ooff010, 
+   ooff011 LIKE ooff_t.ooff011, 
+   ooff003 LIKE ooff_t.ooff003, 
+   ooff012 LIKE ooff_t.ooff012, 
+   ooff013 LIKE ooff_t.ooff013, 
+   ooff014 LIKE ooff_t.ooff014
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_ooff_d          DYNAMIC ARRAY OF type_g_ooff_d
+DEFINE g_ooff_d_t        type_g_ooff_d
+ 
+ 
+DEFINE g_ooff001_t   LIKE ooff_t.ooff001    #Key值備份
+DEFINE g_ooff002_t      LIKE ooff_t.ooff002    #Key值備份
+DEFINE g_ooff003_t      LIKE ooff_t.ooff003    #Key值備份
+DEFINE g_ooff004_t      LIKE ooff_t.ooff004    #Key值備份
+DEFINE g_ooff005_t      LIKE ooff_t.ooff005    #Key值備份
+DEFINE g_ooff006_t      LIKE ooff_t.ooff006    #Key值備份
+DEFINE g_ooff007_t      LIKE ooff_t.ooff007    #Key值備份
+DEFINE g_ooff008_t      LIKE ooff_t.ooff008    #Key值備份
+DEFINE g_ooff009_t      LIKE ooff_t.ooff009    #Key值備份
+DEFINE g_ooff010_t      LIKE ooff_t.ooff010    #Key值備份
+DEFINE g_ooff011_t      LIKE ooff_t.ooff011    #Key值備份
+DEFINE g_ooff012_t      LIKE ooff_t.ooff012    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+
+{</section>}
+
+{<section id="aooi360_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aooi360_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aooi360_01 WITH FORM cl_ap_formpath("aoo","aooi360_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_ooff_d FROM s_detail1_aooi360_01.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff001
+            #add-point:BEFORE FIELD ooff001 name="input.b.page1_aooi360_01.ooff001"
+            {<point name="input.b.page1_aooi360_01.ooff001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff001
+            
+            #add-point:AFTER FIELD ooff001 name="input.a.page1_aooi360_01.ooff001"
+            {<point name="input.a.page1_aooi360_01.ooff001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff001
+            #add-point:ON CHANGE ooff001 name="input.g.page1_aooi360_01.ooff001"
+            {<point name="input.g.page1_aooi360_01.ooff001" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff002
+            #add-point:BEFORE FIELD ooff002 name="input.b.page1_aooi360_01.ooff002"
+            {<point name="input.b.page1_aooi360_01.ooff002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff002
+            
+            #add-point:AFTER FIELD ooff002 name="input.a.page1_aooi360_01.ooff002"
+            {<point name="input.a.page1_aooi360_01.ooff002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff002
+            #add-point:ON CHANGE ooff002 name="input.g.page1_aooi360_01.ooff002"
+            {<point name="input.g.page1_aooi360_01.ooff002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff004
+            #add-point:BEFORE FIELD ooff004 name="input.b.page1_aooi360_01.ooff004"
+            {<point name="input.b.page1_aooi360_01.ooff004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff004
+            
+            #add-point:AFTER FIELD ooff004 name="input.a.page1_aooi360_01.ooff004"
+            {<point name="input.a.page1_aooi360_01.ooff004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff004
+            #add-point:ON CHANGE ooff004 name="input.g.page1_aooi360_01.ooff004"
+            {<point name="input.g.page1_aooi360_01.ooff004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff005
+            #add-point:BEFORE FIELD ooff005 name="input.b.page1_aooi360_01.ooff005"
+            {<point name="input.b.page1_aooi360_01.ooff005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff005
+            
+            #add-point:AFTER FIELD ooff005 name="input.a.page1_aooi360_01.ooff005"
+            {<point name="input.a.page1_aooi360_01.ooff005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff005
+            #add-point:ON CHANGE ooff005 name="input.g.page1_aooi360_01.ooff005"
+            {<point name="input.g.page1_aooi360_01.ooff005" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff006
+            #add-point:BEFORE FIELD ooff006 name="input.b.page1_aooi360_01.ooff006"
+            {<point name="input.b.page1_aooi360_01.ooff006" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff006
+            
+            #add-point:AFTER FIELD ooff006 name="input.a.page1_aooi360_01.ooff006"
+            {<point name="input.a.page1_aooi360_01.ooff006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff006
+            #add-point:ON CHANGE ooff006 name="input.g.page1_aooi360_01.ooff006"
+            {<point name="input.g.page1_aooi360_01.ooff006" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff007
+            #add-point:BEFORE FIELD ooff007 name="input.b.page1_aooi360_01.ooff007"
+            {<point name="input.b.page1_aooi360_01.ooff007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff007
+            
+            #add-point:AFTER FIELD ooff007 name="input.a.page1_aooi360_01.ooff007"
+            {<point name="input.a.page1_aooi360_01.ooff007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff007
+            #add-point:ON CHANGE ooff007 name="input.g.page1_aooi360_01.ooff007"
+            {<point name="input.g.page1_aooi360_01.ooff007" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff008
+            #add-point:BEFORE FIELD ooff008 name="input.b.page1_aooi360_01.ooff008"
+            {<point name="input.b.page1_aooi360_01.ooff008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff008
+            
+            #add-point:AFTER FIELD ooff008 name="input.a.page1_aooi360_01.ooff008"
+            {<point name="input.a.page1_aooi360_01.ooff008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff008
+            #add-point:ON CHANGE ooff008 name="input.g.page1_aooi360_01.ooff008"
+            {<point name="input.g.page1_aooi360_01.ooff008" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff009
+            #add-point:BEFORE FIELD ooff009 name="input.b.page1_aooi360_01.ooff009"
+            {<point name="input.b.page1_aooi360_01.ooff009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff009
+            
+            #add-point:AFTER FIELD ooff009 name="input.a.page1_aooi360_01.ooff009"
+            {<point name="input.a.page1_aooi360_01.ooff009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff009
+            #add-point:ON CHANGE ooff009 name="input.g.page1_aooi360_01.ooff009"
+            {<point name="input.g.page1_aooi360_01.ooff009" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff010
+            #add-point:BEFORE FIELD ooff010 name="input.b.page1_aooi360_01.ooff010"
+            {<point name="input.b.page1_aooi360_01.ooff010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff010
+            
+            #add-point:AFTER FIELD ooff010 name="input.a.page1_aooi360_01.ooff010"
+            {<point name="input.a.page1_aooi360_01.ooff010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff010
+            #add-point:ON CHANGE ooff010 name="input.g.page1_aooi360_01.ooff010"
+            {<point name="input.g.page1_aooi360_01.ooff010" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff011
+            #add-point:BEFORE FIELD ooff011 name="input.b.page1_aooi360_01.ooff011"
+            {<point name="input.b.page1_aooi360_01.ooff011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff011
+            
+            #add-point:AFTER FIELD ooff011 name="input.a.page1_aooi360_01.ooff011"
+            {<point name="input.a.page1_aooi360_01.ooff011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff011
+            #add-point:ON CHANGE ooff011 name="input.g.page1_aooi360_01.ooff011"
+            {<point name="input.g.page1_aooi360_01.ooff011" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff003
+            #add-point:BEFORE FIELD ooff003 name="input.b.page1_aooi360_01.ooff003"
+            {<point name="input.b.page1_aooi360_01.ooff003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff003
+            
+            #add-point:AFTER FIELD ooff003 name="input.a.page1_aooi360_01.ooff003"
+            {<point name="input.a.page1_aooi360_01.ooff003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff003
+            #add-point:ON CHANGE ooff003 name="input.g.page1_aooi360_01.ooff003"
+            {<point name="input.g.page1_aooi360_01.ooff003" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff012
+            #add-point:BEFORE FIELD ooff012 name="input.b.page1_aooi360_01.ooff012"
+            {<point name="input.b.page1_aooi360_01.ooff012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff012
+            
+            #add-point:AFTER FIELD ooff012 name="input.a.page1_aooi360_01.ooff012"
+            {<point name="input.a.page1_aooi360_01.ooff012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff012
+            #add-point:ON CHANGE ooff012 name="input.g.page1_aooi360_01.ooff012"
+            {<point name="input.g.page1_aooi360_01.ooff012" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff013
+            #add-point:BEFORE FIELD ooff013 name="input.b.page1_aooi360_01.ooff013"
+            {<point name="input.b.page1_aooi360_01.ooff013" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff013
+            
+            #add-point:AFTER FIELD ooff013 name="input.a.page1_aooi360_01.ooff013"
+            {<point name="input.a.page1_aooi360_01.ooff013" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff013
+            #add-point:ON CHANGE ooff013 name="input.g.page1_aooi360_01.ooff013"
+            {<point name="input.g.page1_aooi360_01.ooff013" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooff014
+            #add-point:BEFORE FIELD ooff014 name="input.b.page1_aooi360_01.ooff014"
+            {<point name="input.b.page1_aooi360_01.ooff014" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooff014
+            
+            #add-point:AFTER FIELD ooff014 name="input.a.page1_aooi360_01.ooff014"
+            {<point name="input.a.page1_aooi360_01.ooff014" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooff014
+            #add-point:ON CHANGE ooff014 name="input.g.page1_aooi360_01.ooff014"
+            {<point name="input.g.page1_aooi360_01.ooff014" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1_aooi360_01.ooff001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff001
+            #add-point:ON ACTION controlp INFIELD ooff001 name="input.c.page1_aooi360_01.ooff001"
+            {<point name="input.c.page1_aooi360_01.ooff001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff002
+            #add-point:ON ACTION controlp INFIELD ooff002 name="input.c.page1_aooi360_01.ooff002"
+            {<point name="input.c.page1_aooi360_01.ooff002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff004
+            #add-point:ON ACTION controlp INFIELD ooff004 name="input.c.page1_aooi360_01.ooff004"
+            {<point name="input.c.page1_aooi360_01.ooff004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff005
+            #add-point:ON ACTION controlp INFIELD ooff005 name="input.c.page1_aooi360_01.ooff005"
+            {<point name="input.c.page1_aooi360_01.ooff005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff006
+            #add-point:ON ACTION controlp INFIELD ooff006 name="input.c.page1_aooi360_01.ooff006"
+            {<point name="input.c.page1_aooi360_01.ooff006" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff007
+            #add-point:ON ACTION controlp INFIELD ooff007 name="input.c.page1_aooi360_01.ooff007"
+            {<point name="input.c.page1_aooi360_01.ooff007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff008
+            #add-point:ON ACTION controlp INFIELD ooff008 name="input.c.page1_aooi360_01.ooff008"
+            {<point name="input.c.page1_aooi360_01.ooff008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff009
+            #add-point:ON ACTION controlp INFIELD ooff009 name="input.c.page1_aooi360_01.ooff009"
+            {<point name="input.c.page1_aooi360_01.ooff009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff010
+            #add-point:ON ACTION controlp INFIELD ooff010 name="input.c.page1_aooi360_01.ooff010"
+            {<point name="input.c.page1_aooi360_01.ooff010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff011
+            #add-point:ON ACTION controlp INFIELD ooff011 name="input.c.page1_aooi360_01.ooff011"
+            {<point name="input.c.page1_aooi360_01.ooff011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff003
+            #add-point:ON ACTION controlp INFIELD ooff003 name="input.c.page1_aooi360_01.ooff003"
+            {<point name="input.c.page1_aooi360_01.ooff003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff012
+            #add-point:ON ACTION controlp INFIELD ooff012 name="input.c.page1_aooi360_01.ooff012"
+            {<point name="input.c.page1_aooi360_01.ooff012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff013
+            #add-point:ON ACTION controlp INFIELD ooff013 name="input.c.page1_aooi360_01.ooff013"
+            {<point name="input.c.page1_aooi360_01.ooff013" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aooi360_01.ooff014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooff014
+            #add-point:ON ACTION controlp INFIELD ooff014 name="input.c.page1_aooi360_01.ooff014"
+            {<point name="input.c.page1_aooi360_01.ooff014" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aooi360_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aooi360_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="aooi360_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrp370_01" module="asr" jobmode="N" type="c03c" industry="std" fix_arg="0" crtid="00768" crtdt="2014-11-11 16:12:15" modid="00768" moddt="2014-11-24 10:18:51" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="0" tabver="10001" description="重複性生產調撥產生作業——擬調撥生產計劃挑選">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sraa001,srab005(chr30),srab004(chr500),srab006(chr500),ware(chr500),ware_desc(chr80),yy(chr500),mm(chr500),loca(chr500),loca_desc(chr80),workno(chr500),workno_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+    </section>
+  </structure>
+  <form id="0" module="asr" filename="asrp370_01" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field="sraa001"/>
+    </section>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="sraa001"/>
+      <column id="srab005"/>
+      <column id="srab004"/>
+      <column id="srab006"/>
+      <column id="ware">
+        <after>
+          <reference field="ware_desc" ref_field="ware" map_field="ware" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ware_desc"/>
+      <column id="yy">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mm">
+        <after>
+          <check id="range" st="12.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="loca">
+        <after>
+          <reference field="loca_desc" ref_field="loca" map_field="loca" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND ware=? AND loca=? AND inab001,inab002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="loca_desc"/>
+      <column id="workno">
+        <after>
+          <reference field="workno_desc" ref_field="workno" map_field="workno" ref_sql="SELECT ecba003 FROM ecba_t WHERE ecbaent=$varg_enterprise$var AND ecba002=? "/>
+        </after>
+      </column>
+      <column id="workno_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="sraa_t" pk="sraa000,sraa001,sraa002,sraa003">
+      <sql id="forupd_sql" type="sql" query="SELECT sraa001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM sraa_t WHERE sraaent= ? AND sraasite= ? AND sraa000=? AND sraa001=? AND sraa002=? AND sraa003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="sraa000,sraa001,sraa002,sraa003"/>
+    </head>
+  </dataset>
+</assembly>
+
